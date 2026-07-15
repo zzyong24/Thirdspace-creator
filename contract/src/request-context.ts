@@ -11,14 +11,15 @@
 // distinguishes a human request from machine-originated work (ingestion / AI),
 // carrying the originating run/task id when applicable.
 //
-// [T-136 切片 a] `accountId` is the SECOND ownership dimension (多抖音号 / 多人设):
-// 「本次请求作用在哪个号」。`null` / `undefined` = 未选号 / 全局视图 (§E 退化). It is
-// derived server-side in `resolveRequestContext` from the `x-account-id` header and
-// **only after** verifying the account is owned by `userId` (SPEC §A BLOCKER-1: never
-// trust the client-supplied header — a forged id pointing at another user's account
-// must degrade to null, not穿透 the per-account repo filter). 切片 a establishes the
-// dimension end-to-end (select → header → server owner-check → RequestContext); repo
-// consumption of it lands in切片 b.
+// [T-136 切片 a → T-332 S3] `accountId` is the SECOND ownership dimension (多抖音号 /
+// 多人设):「本次请求作用在哪个号」。`null` / `undefined` = 未选号 = **引导态**(per-account
+// 域读写被 backend 以 AccountRequiredError 拒绝,SPEC §4.2;「未选号 = 全局视图」的退化
+// 已随账号全域隔离退役)。It is derived server-side in `resolveRequestContext` from the
+// `x-account-id` header and **only after** verifying the account is owned by `userId`
+// AND active (SPEC BLOCKER-1 + T-332 §4.3: never trust the client-supplied header — a
+// forged / archived / nonexistent id is REJECTED with OwnershipError 404, no longer
+// silently degraded to null). RSC 读路径(session cookie 解析)是唯一的宽松点:坏 cookie
+// 按未选号处理(引导态),不拒绝整页渲染。
 //
 // Type-only module — no runtime, no non-determinism.
 export interface RequestContext {

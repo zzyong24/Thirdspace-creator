@@ -11,6 +11,7 @@ import { readSessionCookie } from "../v1/auth/_session";
 import {
   resolveRequestContext,
   isAuthError,
+  isOwnershipError,
 } from "@/lib/request-context.server";
 import {
   isLoopbackRequest,
@@ -117,9 +118,10 @@ export async function POST(req: Request): Promise<Response> {
   // 鉴权:同 dispatch —— [T-046 单机免登录] 有 cookie 验 token,无/失效 cookie 以本机
   // 主用户直通;401 仅剩「库中无任何用户」的异常态兜底。
   const rawToken = readSessionCookie(req);
-  // [T-220] x-account-id header = 前端当前选中的抖音号(与 dispatch route 同源,http-transport
-  //   从 localStorage 注入)。**绝不信任**:resolveRequestContext 内部以真实 userId 查号验属主,
-  //   不属主 → 降级 null。带号后 chat 工具产的 asset(material.screenshot / cover 回填等经此 ctx)
+  // [T-220 → T-332 S3] x-account-id header = 前端当前选中的抖音号(与 dispatch route 同源,
+  //   http-transport 从 localStorage 注入)。**绝不信任**:resolveRequestContext 内部以真实
+  //   userId 查号验属主 + active;验不过(不存在/不属主/已归档)→ 抛 OwnershipError → 下方转
+  //   404 拒绝(不再降级 null,SPEC §4.3)。带号后 chat 工具产的 asset(material.screenshot / cover 回填等经此 ctx)
   //   才 stamp 当前号 → 修「截图 asset account_id=NULL → 读侧 accountGate 严格 eq 排除 → blob
   //   取回 404 → 前端紫色占位」的写侧根因(此前 chat route 漏读 header → 全程无号)。
   const accountId = req.headers.get("x-account-id");
@@ -135,6 +137,13 @@ export async function POST(req: Request): Promise<Response> {
       return NextResponse.json(
         { error: err instanceof Error ? err.message : "unauthorized" },
         { status: 401 },
+      );
+    }
+    // [T-332 S3] 无效 x-account-id(不存在/不属主/已归档)→ 404 拒绝(同 dispatch 语义)。
+    if (isOwnershipError(err)) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "not found" },
+        { status: 404 },
       );
     }
     throw err;

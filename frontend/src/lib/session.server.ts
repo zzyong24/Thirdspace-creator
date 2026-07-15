@@ -7,6 +7,8 @@ import {
   type UserDTO,
 } from "@creatoros/backend/modules/identity";
 import { SESSION_COOKIE } from "@/app/api/v1/auth/_session";
+import { CURRENT_ACCOUNT_COOKIE } from "@/lib/http-transport";
+import { verifyAccountSelection } from "@/lib/request-context.server";
 
 // Server-only session helper (Module 00, Task 11). The (creator) layout session
 // guard reads the httpOnly session cookie from the RSC request store, resolves a
@@ -14,10 +16,36 @@ import { SESSION_COOKIE } from "@/app/api/v1/auth/_session";
 // SPEC §22), and returns the current user for the Shell user card. Routes still
 // read the cookie off the raw Request; RSCs use next/headers cookies() — the two
 // agree on the SESSION_COOKIE name (single source of truth in _session.ts).
+//
+// [T-332 S3·关 GAP-01] resolveSession 现在还解析**当前选中抖音号**:读非 httpOnly 的
+// `creatoros_current_account` cookie(写端在 http-transport:每次 RPC 把 localStorage
+// 真值镜像进来;S4 切换器切号时同步写),经与 RPC 同一个校验器 verifyAccountSelection
+// 验属主 + active 后落进 ctx.accountId —— RSC 首屏与 client RPC 从此同号,消
+// 「首屏 user 级、水合后按号」的裂缝。坏 cookie(号已删/已归档/切户残留)按**未选号
+// 引导态**处理(mode="unselected"),不拒绝整页渲染——RSC 是读路径,引导由页面层给。
 
 export interface ResolvedSession {
   readonly ctx: RequestContext;
   readonly user: UserDTO;
+}
+
+// [T-332 S3] 把 current-account cookie 解析进 ctx(RSC 读路径,宽松档)。
+async function withAccountFromCookie(
+  ctx: RequestContext,
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+): Promise<RequestContext> {
+  const raw = cookieStore.get(CURRENT_ACCOUNT_COOKIE)?.value;
+  // 写端 encodeURIComponent 的对称读;损坏值(非法 % 序列)不许炸整页 → 按原串
+  // 送校验(校验不过自然落未选号引导态)。
+  let accountId: string | null = raw || null;
+  if (accountId) {
+    try {
+      accountId = decodeURIComponent(accountId);
+    } catch {
+      /* 保留原串 */
+    }
+  }
+  return verifyAccountSelection(ctx, accountId, "unselected");
 }
 
 /**
@@ -35,7 +63,7 @@ export async function resolveSession(): Promise<ResolvedSession | null> {
     try {
       const ctx = await identity.resolveContextFromToken(rawToken);
       const user = await identity.getCurrentUser(ctx);
-      return { ctx, user };
+      return { ctx: await withAccountFromCookie(ctx, cookieStore), user };
     } catch (err) {
       // 失效 token → 落到下方本机用户直通(与无 cookie 同路径)。
       if (!(err instanceof AuthenticationError)) throw err;
@@ -45,7 +73,7 @@ export async function resolveSession(): Promise<ResolvedSession | null> {
   try {
     const ctx = await identity.resolveLocalContext();
     const user = await identity.getCurrentUser(ctx);
-    return { ctx, user };
+    return { ctx: await withAccountFromCookie(ctx, cookieStore), user };
   } catch (err) {
     if (err instanceof AuthenticationError) return null;
     throw err;

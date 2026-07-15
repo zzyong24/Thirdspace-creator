@@ -26,6 +26,10 @@ export enum ErrorCode {
   RateLimitError = "RateLimitError",
   ExternalDependencyError = "ExternalDependencyError",
   UnexpectedError = "UnexpectedError",
+  // [T-332 S3] 账号全域隔离(SPEC §4.2):per-account op 在「未选号」ctx 下被拒。
+  // 语义是引导态(前端翻译成「请先绑定/选择抖音号」),不是校验失败也不是越权,
+  // 故独立成码;HTTP 用 428 Precondition Required(前置条件 = 已选中一个账号)。
+  AccountRequiredError = "AccountRequiredError",
 }
 
 export const ERROR_HTTP: Record<ErrorCode, number> = {
@@ -36,6 +40,7 @@ export const ERROR_HTTP: Record<ErrorCode, number> = {
   [ErrorCode.RateLimitError]: 429,
   [ErrorCode.ExternalDependencyError]: 502,
   [ErrorCode.UnexpectedError]: 500,
+  [ErrorCode.AccountRequiredError]: 428,
 };
 
 // `code` is a free string (domain codes like PROJECT_NOT_FOUND) but every

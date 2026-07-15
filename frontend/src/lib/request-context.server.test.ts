@@ -25,7 +25,11 @@ vi.mock("@/server/persistence-client", () => ({
   }),
 }));
 
-import { resolveRequestContext } from "./request-context.server";
+import {
+  resolveRequestContext,
+  verifyAccountSelection,
+  isOwnershipError,
+} from "./request-context.server";
 
 const LOCAL = { userId: "user-zyongzhu", requestId: "r", source: "user" as const };
 
@@ -129,22 +133,27 @@ describe("resolveRequestContext — rejectInvalidToken(写类明确身份或拒�
 });
 
 /**
- * [T-136 切片 a · gate BLOCKER-1] accountId 属主硬校验 + 退化。
+ * [T-136 切片 a · gate BLOCKER-1 → T-332 S3·关 GAP-02] accountId 属主硬校验:拒绝不降级。
  *
  * `resolveRequestContext(rawToken, accountId)` 读到前端传来的 x-account-id 后,**绝不信任**——
  * 必须查 platform_accounts 确认 `account.user_id === ctx.userId`(getAccount 已按 ctx.userId
- * 域内查,不属主 → 抛 OwnershipError/404)。属主不符 / 号不存在 → 降级 accountId=null,不返他人
- * 数据(否则伪造 header 指他人号 = 水平越权穿透 repo 门)。校验在任何按号过滤前。
+ * 域内查,不属主 → 抛 OwnershipError/404),且号必须 active。S3 起验不过 → **抛 OwnershipError
+ * 拒绝请求**(dispatch/chat 转 404),不再静默降级 null:降级在 strict 世界里会把失效/伪造的号
+ * 伪装成「未选号引导态」,不诚实(SPEC §4.3)。不存在与不属主同貌,不泄露存在性。
  */
-describe("resolveRequestContext — accountId 属主硬校验(BLOCKER-1)+ 退化", () => {
-  it("不传 accountId → ctx 不带 accountId(未选号 / 全局,兼容旧调用)", async () => {
+describe("resolveRequestContext — accountId 属主硬校验(S3:拒绝不降级)", () => {
+  it("不传 accountId → ctx 不带 accountId(未选号引导态,兼容旧调用)", async () => {
     const ctx = await resolveRequestContext(null);
     expect(ctx.accountId).toBeUndefined();
     expect(getAccount).not.toHaveBeenCalled();
   });
 
-  it("传属于本 user 的 accountId(getAccount 成功)→ accountId 落进 ctx", async () => {
-    getAccount.mockResolvedValue({ id: "acct-1", userId: "user-zyongzhu" });
+  it("传属于本 user 的 active 号(getAccount 成功)→ accountId 落进 ctx", async () => {
+    getAccount.mockResolvedValue({
+      id: "acct-1",
+      userId: "user-zyongzhu",
+      status: "active",
+    });
     const ctx = await resolveRequestContext(null, "acct-1");
     expect(getAccount).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "user-zyongzhu" }),
@@ -153,24 +162,50 @@ describe("resolveRequestContext — accountId 属主硬校验(BLOCKER-1)+ 退化
     expect(ctx.accountId).toBe("acct-1");
   });
 
-  it("[越权] accountId 指向非本 user 的号(getAccount 抛 OwnershipError)→ 降级 null,不返他人数据", async () => {
+  it("[越权] accountId 指向非本 user 的号(getAccount 抛 OwnershipError)→ 拒绝(照抛 404 同貌),不降级", async () => {
     const { OwnershipError } = await import(
       "@creatoros/backend/modules/identity"
     );
     getAccount.mockRejectedValue(new OwnershipError());
-    const ctx = await resolveRequestContext(null, "acct-of-another-user");
-    expect(ctx.accountId).toBeNull();
+    await expect(
+      resolveRequestContext(null, "acct-of-another-user"),
+    ).rejects.toSatisfy(isOwnershipError);
   });
 
-  it("[退化] accountId 指向已删/不存在的号 → getAccount 抛 404 → 降级 null(不崩)", async () => {
-    // 号被删后 localStorage 仍存旧 id → getAccount 找不到 → OwnershipError/404 → 降级 null。
+  it("[伪造/已删] accountId 指向不存在的号(跨 bundle 复制的 OwnershipError,仅 name/code 同)→ 仍拒绝", async () => {
     const notFound = Object.assign(new Error("not found"), {
       name: "OwnershipError",
       code: "OwnershipError",
     });
     getAccount.mockRejectedValue(notFound);
-    const ctx = await resolveRequestContext(null, "acct-deleted");
-    expect(ctx.accountId).toBeNull();
+    await expect(
+      resolveRequestContext(null, "acct-deleted"),
+    ).rejects.toSatisfy(isOwnershipError);
+  });
+
+  it("[已归档] 号属主但 status=archived → 拒绝,OwnershipError 同貌 + details.reason=account_archived", async () => {
+    getAccount.mockResolvedValue({
+      id: "acct-old",
+      userId: "user-zyongzhu",
+      status: "archived",
+    });
+    const err = await resolveRequestContext(null, "acct-old").then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).not.toBeNull();
+    expect(isOwnershipError(err)).toBe(true);
+    // 属主已验实,归档原因可以诚实给出(前端翻译「重新激活后数据原样回来」)。
+    expect((err as { details?: { reason?: string } }).details?.reason).toBe(
+      "account_archived",
+    );
+  });
+
+  it("非 ownership 错误(DB 断等)→ 照抛原错,绝不伪装成引导态或拒绝语义", async () => {
+    getAccount.mockRejectedValue(new Error("db connection lost"));
+    await expect(resolveRequestContext(null, "acct-1")).rejects.toThrow(
+      "db connection lost",
+    );
   });
 
   it("空串 accountId(header 存在但为空)→ 视作未选,不查号也不落 accountId", async () => {
@@ -182,12 +217,71 @@ describe("resolveRequestContext — accountId 属主硬校验(BLOCKER-1)+ 退化
   it("校验用的是 token 解析出的真实 userId(而非前端可控)——防越权基石", async () => {
     const tokenCtx = { userId: "u-real", requestId: "r2", source: "user" as const };
     resolveContextFromToken.mockResolvedValue(tokenCtx);
-    getAccount.mockResolvedValue({ id: "acct-x", userId: "u-real" });
+    getAccount.mockResolvedValue({
+      id: "acct-x",
+      userId: "u-real",
+      status: "active",
+    });
     await resolveRequestContext("good-token", "acct-x");
     // getAccount 收到的 ctx 必须带 token 真实 userId,platform-account service 据此域内查权。
     expect(getAccount).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "u-real" }),
       "acct-x",
     );
+  });
+});
+
+/**
+ * [T-332 S3·关 GAP-01] verifyAccountSelection 的 RSC 宽松档("unselected"):
+ * RSC 读 current-account cookie 是**读路径引导态**——坏 cookie(号已删/已归档/切户残留)
+ * 按未选号处理(accountId=null),不拒绝整页渲染;与 RPC("reject")共用同一校验器,
+ * 保证两条路径对「什么号有效」的判断恒一致。
+ */
+describe("verifyAccountSelection — RSC 宽松档(unselected)vs RPC 拒绝档(reject)", () => {
+  const BASE = LOCAL;
+
+  it("有效 active 号 → 两档同样落 accountId", async () => {
+    getAccount.mockResolvedValue({
+      id: "acct-1",
+      userId: "user-zyongzhu",
+      status: "active",
+    });
+    const rsc = await verifyAccountSelection(BASE, "acct-1", "unselected");
+    const rpc = await verifyAccountSelection(BASE, "acct-1", "reject");
+    expect(rsc.accountId).toBe("acct-1");
+    expect(rpc.accountId).toBe("acct-1");
+  });
+
+  it("坏 cookie(号不存在/不属主)→ unselected 档按未选号处理(accountId=null),不抛", async () => {
+    const notFound = Object.assign(new Error("not found"), {
+      name: "OwnershipError",
+      code: "OwnershipError",
+    });
+    getAccount.mockRejectedValue(notFound);
+    const ctx = await verifyAccountSelection(BASE, "acct-stale", "unselected");
+    expect(ctx.accountId).toBeNull();
+  });
+
+  it("已归档号 → unselected 档同样按未选号处理(数据保留,不可当当前号)", async () => {
+    getAccount.mockResolvedValue({
+      id: "acct-old",
+      userId: "user-zyongzhu",
+      status: "archived",
+    });
+    const ctx = await verifyAccountSelection(BASE, "acct-old", "unselected");
+    expect(ctx.accountId).toBeNull();
+  });
+
+  it("未传号 → 两档都保持未选号形状,不查库", async () => {
+    const ctx = await verifyAccountSelection(BASE, null, "unselected");
+    expect(ctx.accountId).toBeUndefined();
+    expect(getAccount).not.toHaveBeenCalled();
+  });
+
+  it("非 ownership 错误(DB 断)→ unselected 档也照抛,不吞成引导态", async () => {
+    getAccount.mockRejectedValue(new Error("db down"));
+    await expect(
+      verifyAccountSelection(BASE, "acct-1", "unselected"),
+    ).rejects.toThrow("db down");
   });
 });

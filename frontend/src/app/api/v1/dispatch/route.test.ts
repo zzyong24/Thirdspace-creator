@@ -162,6 +162,69 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     expect(res.status).toBe(200);
   });
 
+  // ── [T-332 S3] 账号咽喉:无效 x-account-id 拒绝不降级(关 GAP-02)+ 错误码 round-trip ──
+
+  it("[S3] 伪造/不存在的 x-account-id → 404 拒绝(OwnershipError 同貌),不再降级全量", async () => {
+    const res = await dispatch(
+      "projects.list",
+      { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined },
+      "",
+      "acct-forged-does-not-exist",
+    );
+    expect(res.status).toBe(404);
+    const json = (await res.json()) as { error: { code: string } };
+    expect(json.error.code).toBe("OwnershipError");
+  });
+
+  it("[S3] 已归档号当当前号 → 404 拒绝 + details.reason=account_archived(属主已验实,可诚实)", async () => {
+    // 建第二个号再归档它(末号保护:必须还剩 ≥1 个 active 才准归档)。
+    const second = await dispatch(
+      "accounts.create",
+      {
+        params: undefined,
+        query: undefined,
+        body: { platform: "douyin", accountHandle: "@to-be-archived" },
+      },
+      "",
+      "",
+    );
+    const secondId = ((await second.json()) as { data: { id: string } }).data.id;
+    const archived = await dispatch(
+      "accounts.archive",
+      { params: { accountId: secondId }, query: undefined, body: undefined },
+      "",
+      "", // 归档操作本身是 user 域 op,不需要当前号
+    );
+    expect(archived.status).toBe(200);
+
+    const res = await dispatch(
+      "projects.list",
+      { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined },
+      "",
+      secondId,
+    );
+    expect(res.status).toBe(404);
+    const json = (await res.json()) as {
+      error: { code: string; details: { reason?: string } };
+    };
+    expect(json.error.code).toBe("OwnershipError");
+    expect(json.error.details.reason).toBe("account_archived");
+  });
+
+  it("[S3] 未选号打 per-account op → 428 AccountRequiredError(backend 抛 → dispatch 按 code 映射 → client 可判)", async () => {
+    // 完整 round-trip:S2 的 requireAccountId 抛 AccountRequiredError → S3 contract 枚举
+    // 收编 + ERROR_HTTP 映射 → 428 结构化 envelope(此前未知 code 走 500 兜底,S2 交接残留)。
+    const res = await dispatch(
+      "projects.list",
+      { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined },
+      "",
+      "", // 显式不带 x-account-id = 未选号
+    );
+    expect(res.status).toBe(428);
+    const json = (await res.json()) as { error: { code: string } };
+    expect(json.error.code).toBe("AccountRequiredError");
+  });
+
   it("serves a persisted op WITH a valid session cookie (ctx threaded → 200)", async () => {
     // [T-050] 先建一条(种子已退役),再验证带 session 的 list 能读回 ctx 归属行。
     await dispatch("projects.create", {

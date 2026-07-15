@@ -34,4 +34,21 @@ describe("envelope", () => {
     expect(ERROR_HTTP[ErrorCode.OwnershipError]).toBe(404);
     expect(ERROR_HTTP[ErrorCode.ValidationError]).toBe(400);
   });
+
+  // [T-332 S3] 账号全域隔离:未选号访问 per-account 域 → AccountRequiredError。
+  // 枚举值必须与 backend AccountRequiredError.code 的字符串字面量一致(dispatch 按
+  // `.code` 结构化映射,跨包不靠 instanceof);HTTP 428 Precondition Required。
+  it("carries AccountRequiredError (未选号引导态) and maps it to 428", () => {
+    expect(ErrorCode.AccountRequiredError).toBe("AccountRequiredError");
+    expect(ERROR_HTTP[ErrorCode.AccountRequiredError]).toBe(428);
+    const parsed = errorEnvelope.parse({
+      error: {
+        code: ErrorCode.AccountRequiredError,
+        message: "当前未选择账号",
+        details: {},
+      },
+      meta: { requestId: "r1" },
+    });
+    expect(parsed.error.code).toBe(ErrorCode.AccountRequiredError);
+  });
 });
