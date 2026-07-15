@@ -190,6 +190,64 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     expect(ai.failures[0]).toContain("执行超时");
   }, 10_000);
 
+  // [RT-H06] network 约束的诚实执行门。
+  describe("network constraint gate (RT-H06)", () => {
+    it("rejects network: allowlist honestly (no enforcement mechanism exists)", async () => {
+      const registry = createExecutorRegistry();
+      registerBuiltinExecutors(registry);
+      const ai = makeFakeAi();
+      await runExecutionTask(
+        ctx,
+        {
+          id: "t-allowlist",
+          inputData: specInput({
+            inputs: [],
+            constraints: { timeoutSec: 60, network: "allowlist", maxOutputMB: 8 },
+          }),
+        },
+        depsWith(registry, ai),
+      );
+      expect(ai.failures[0]).toContain("allowlist 尚无真实强制手段");
+      expect(ai.statuses).toEqual(["failed"]); // 拒在 markRunning 之前,不假跑
+    });
+
+    it("rejects network: deny for an executor that declares direct network access", async () => {
+      const registry = createExecutorRegistry();
+      registry.register({
+        taskType: "echo.manifest",
+        networkPosture: "direct",
+        async run() {
+          throw new Error("不该跑到这里");
+        },
+      });
+      const ai = makeFakeAi();
+      await runExecutionTask(
+        ctx,
+        { id: "t-direct", inputData: specInput({ inputs: [] }) }, // 缺省 network: deny
+        depsWith(registry, ai),
+      );
+      expect(ai.failures[0]).toContain("需要直接联网");
+      expect(ai.failures[0]).toContain("诚实拒绝");
+    });
+
+    it("degrades network: deny with an explicit honest step for a no-network executor", async () => {
+      const registry = createExecutorRegistry();
+      registerBuiltinExecutors(registry);
+      const ai = makeFakeAi();
+      await runExecutionTask(
+        ctx,
+        { id: "t-deny", inputData: specInput() },
+        depsWith(registry, ai),
+      );
+      expect(ai.failures).toEqual([]);
+      // 降级明示进步骤流:说清无 OS 级网络沙箱 + env 收窄,绝不静默假装隔离。
+      const denyStep = ai.steps.find((s) => s.text.includes("network: deny"));
+      expect(denyStep).toBeDefined();
+      expect(denyStep!.text).toContain("无 OS 级网络沙箱");
+      expect(denyStep!.text).toContain("env 收窄");
+    });
+  });
+
   it("abortExecutionTask (discard) interrupts an in-flight run", async () => {
     const registry = createExecutorRegistry();
     let started: (() => void) | null = null;

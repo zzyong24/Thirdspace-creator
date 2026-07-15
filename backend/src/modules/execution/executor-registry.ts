@@ -43,6 +43,16 @@ export interface ExecutionExecutor {
    * 命名与循环类型不一致的 executor 装配就被拒,防「什么都塞 agent」/「agentic 名挂确定性壳」)。
    */
   loopType?: LoopType;
+  /**
+   * [RT-H06] 网络姿态声明 —— 编排 network 门(run-execution-task)据此诚实执行任务的
+   * `constraints.network` 声明(v1 真实边界:桌面单机无 OS 级网络沙箱,不假装隔离):
+   *   - "none"(缺省):executor 及其子进程不主动出网 —— `deny` 以「声明 + 子进程 env
+   *     收窄(child-env.ts,密钥/DB/S3 不进沙箱进程树)」降级满足,降级明示进步骤流;
+   *   - "brain-ports":网络仅经平台受控端口出(agentic:模型调用/领域工具适配器),
+   *     沙箱内不跑任意联网代码;
+   *   - "direct":executor 自身直接任意联网(当前无此类)—— 收到 `deny` 会被诚实拒绝。
+   */
+  networkPosture?: "none" | "brain-ports" | "direct";
   /** per-taskType params 细化校验(可选);编排在执行前 parse,失败 → 任务 failed。 */
   paramsSchema?: z.ZodTypeAny;
   /**

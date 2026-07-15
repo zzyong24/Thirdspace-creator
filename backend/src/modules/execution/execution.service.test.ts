@@ -209,14 +209,83 @@ describe("confirm (采纳)", () => {
       { assetType: "document", name: "manifest.json", mimeType: "application/json" },
       { assetType: "video", name: "clip.mp4", mimeType: "video/mp4" },
     ]);
-    expect(state.aux[0]).toEqual({
-      resultType: "execution_adopted",
-      resultData: { adoptedAssetIds: ["asset-1", "asset-2"] },
-    });
+    // [RT-H10] 逐项日志行(每采纳完一个产物立刻记)+ 最终聚合行。
+    expect(state.aux).toEqual([
+      {
+        resultType: "execution_adopted_item",
+        resultData: { path: "manifest.json", assetId: "asset-1" },
+      },
+      {
+        resultType: "execution_adopted_item",
+        resultData: { path: "clip.mp4", assetId: "asset-2" },
+      },
+      {
+        resultType: "execution_adopted",
+        resultData: { adoptedAssetIds: ["asset-1", "asset-2"] },
+      },
+    ]);
     expect(state.succeeded).toEqual(["task-1"]);
     expect(dto.status).toBe("succeeded");
     expect(dto.adoptedAssetIds).toEqual(["asset-1", "asset-2"]);
     // 采纳后沙箱已清。
+    expect(await fs.stat(path.join(root, "task-1")).catch(() => null)).toBeNull();
+  });
+
+  // [RT-H10] 逐项幂等:第 N 个产物入库失败 → 重试跳过前 N-1 个,不重复建 asset。
+  it("retries after a mid-batch failure without re-adopting already adopted artifacts (RT-H10)", async () => {
+    const outDir = path.join(root, "task-1", "out");
+    await fs.mkdir(outDir, { recursive: true });
+    await fs.writeFile(path.join(outDir, "a.txt"), "aa");
+    await fs.writeFile(path.join(outDir, "b.txt"), "bb");
+    await fs.writeFile(path.join(outDir, "c.txt"), "cc");
+
+    const state = baseState();
+    state.results = [
+      manifestResult([
+        { path: "a.txt", fileName: "a.txt", size: 2, mimeType: "text/plain" },
+        { path: "b.txt", fileName: "b.txt", size: 2, mimeType: "text/plain" },
+        { path: "c.txt", fileName: "c.txt", size: 2, mimeType: "text/plain" },
+      ]),
+    ];
+    // 资产端口:第 2 次调用(b.txt)首跑时炸,之后恢复 —— 模拟批中失败 + 用户重试。
+    const createdNames: string[] = [];
+    let failNextB = true;
+    const { service } = makeService(state, {
+      assets: {
+        async createGeneratedAsset(_c, input) {
+          if (failNextB && input.name === "b.txt") {
+            failNextB = false;
+            throw new Error("对象存储抖了");
+          }
+          createdNames.push(input.name);
+          return { id: `asset-${input.name}` };
+        },
+      },
+    });
+
+    // 首跑:a 落库 + 记逐项日志;b 炸 → 整单失败,任务留在 awaiting_confirmation,沙箱保留。
+    await expect(service.confirm(ctx, "task-1")).rejects.toThrow("对象存储抖了");
+    expect(createdNames).toEqual(["a.txt"]);
+    expect(state.aux).toEqual([
+      {
+        resultType: "execution_adopted_item",
+        resultData: { path: "a.txt", assetId: "asset-a.txt" },
+      },
+    ]);
+    expect(state.succeeded).toEqual([]); // 不半采半收尾
+    expect(state.task.status).toBe("awaiting_confirmation");
+    expect(await fs.stat(path.join(root, "task-1")).catch(() => null)).not.toBeNull();
+
+    // 重试:a 按日志跳过(不重复建 asset),只补 b、c;终态 succeeded,聚合行含全部 3 个 id。
+    const dto = await service.confirm(ctx, "task-1");
+    expect(createdNames).toEqual(["a.txt", "b.txt", "c.txt"]); // a 只建了一次
+    expect(state.succeeded).toEqual(["task-1"]);
+    expect(dto.status).toBe("succeeded");
+    expect(dto.adoptedAssetIds).toEqual([
+      "asset-a.txt", // 复用首跑已建的 id
+      "asset-b.txt",
+      "asset-c.txt",
+    ]);
     expect(await fs.stat(path.join(root, "task-1")).catch(() => null)).toBeNull();
   });
 

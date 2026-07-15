@@ -88,6 +88,10 @@ export function createAgenticExecutor(
   return {
     taskType: deps.taskType,
     loopType: "agentic", // 判定规则:register 期强制 classifyLoopType(taskType)==="agentic"
+    // [RT-H06] 网络姿态:自主循环进程内跑,网络仅经平台受控端口出(resolveLlm/resolveLlmConfig
+    // 的模型调用 + resolveTools 的领域工具适配器,均 ctx-bound 平台代码);沙箱内不起子进程、
+    // 不执行任意联网代码 —— `network: deny` 的沙箱面语义可满足,编排 network 门降级明示。
+    networkPosture: "brain-ports",
     async run(
       sandbox: ExecutorSandboxView,
       params: Record<string, unknown>,

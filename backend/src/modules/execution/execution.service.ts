@@ -14,7 +14,9 @@ import {
 } from "@creatoros/contract";
 import type { AITaskResource, AITaskResultResource } from "../ai/ai.schema";
 import {
+  adoptedItemsOf,
   EXEC_TASK_TYPE_PREFIX,
+  EXECUTION_ADOPTED_ITEM_RESULT_TYPE,
   EXECUTION_ADOPTED_RESULT_TYPE,
   isExecutionTaskType,
   latestManifest,
@@ -211,8 +213,22 @@ export function createExecutionService(
       // 采纳:逐个产物从沙箱 out/ 读实体(路径防护+denylist 在 readArtifactBytes 内)
       // → createGeneratedAsset 入资产库(对象存储写入只经 AssetsService,G5 边界)。
       // 实体缺失 → 整单失败(诚实:不半采半丢;沙箱保留,可重试 confirm)。
+      //
+      // [RT-H10] 逐项幂等(DATA-H06 adopted-keys 同款,稳定键 = 产物 out/ 相对路径,
+      // 同一 manifest 内唯一):每采纳完一个产物立刻记 execution_adopted_item 结果行;
+      // 第 N 个失败 → 任务留在 awaiting_confirmation,重试跳过前 N-1 个(复用已建
+      // assetId),不再重复入库。为什么不是整批 Drizzle 事务:落库走跨模块端口(assets/
+      // ai),端口实现绑根 db,与 PGlite transactionMutex 的组合已实测死锁(DATA-H06
+      // 探针),弃用。残余窗口:单个产物「asset 已建、日志行未记」之间崩溃 → 重试最多
+      // 重复**该一个**产物(旧行为重复前 N-1 个,收敛到常数),诚实标注于此。
+      const journal = adoptedItemsOf(results);
       const adoptedAssetIds: string[] = [];
       for (const artifact of manifest.artifacts) {
+        const prior = journal.get(artifact.path);
+        if (prior) {
+          adoptedAssetIds.push(prior); // 上次已采纳 → 复用,不重复建 asset
+          continue;
+        }
         const bytes = await readArtifactBytes(
           deps.workspacesRoot,
           taskId,
@@ -228,6 +244,11 @@ export function createExecutionService(
           name: artifact.fileName,
           bytes,
           mimeType: artifact.mimeType ?? "application/octet-stream",
+        });
+        // 该产物落完立刻记日志行 —— 下一个产物失败时本条进度已持久化。
+        await deps.ai.recordAuxResult(ctx, taskId, {
+          resultType: EXECUTION_ADOPTED_ITEM_RESULT_TYPE,
+          resultData: { path: artifact.path, assetId: created.id },
         });
         adoptedAssetIds.push(created.id);
       }

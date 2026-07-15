@@ -19,6 +19,7 @@ import { execFile, spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { videoRenderParams, type VideoRenderProps } from "@creatoros/contract";
+import { buildChildEnv } from "../child-env";
 import type { ExecutionExecutor, ExecutorRunOpts, ExecutorSandboxView } from "../executor-registry";
 import { resolveInsideDir } from "../sandbox";
 import { collectMediaFiles, generateVideoRenderHtml } from "./template";
@@ -64,7 +65,9 @@ function execFileAsync(
     execFile(
       file,
       args,
-      { signal, maxBuffer: 16 * 1024 * 1024 },
+      // [RT-H06] env 收窄:ffprobe/ffmpeg/which 子进程只拿运行必需变量,
+      // 密钥/DB/S3/master key 不进子进程(见 child-env.ts)。
+      { signal, maxBuffer: 16 * 1024 * 1024, env: buildChildEnv() },
       (err, stdout, stderr) => {
         if (err) {
           reject(new Error(`${path.basename(file)} 失败: ${stderr?.slice(0, 400) || err.message}`));
@@ -256,12 +259,14 @@ async function renderWithHyperframesCli(opts: {
       process.execPath,
       [cliJs, "render", opts.projectDir, "--output", opts.outputFile, "--fps", String(opts.fps)],
       {
-        env: {
-          ...process.env,
+        // [RT-H06] env 收窄(修「子进程继承全量 process.env」):hyperframes CLI 及其
+        // 再起的 Chromium 只拿运行必需变量 + 两个任务级显式变量;模型 key/DB/S3/
+        // master key/NODE_OPTIONS 一律不透传(见 child-env.ts allowlist)。
+        env: buildChildEnv({
           HYPERFRAMES_BROWSER_PATH: opts.chromiumPath,
           HYPERFRAMES_TELEMETRY: "0",
           // CLI 交互态探测走 TTY;子进程无 TTY 天然非交互。
-        },
+        }),
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
@@ -375,6 +380,11 @@ export function createVideoRenderExecutor(
 ): ExecutionExecutor {
   return {
     taskType: "video.render",
+    // [RT-H06] 网络姿态:渲染链(ffmpeg/hyperframes/Chromium)只处理沙箱本地文件,
+    // 不主动出网(模板只引用 work/media/ 本地文件 + 本地 gsap)。诚实边界:无 OS 级
+    // 网络沙箱,Chromium 理论上能访问网络 —— 但子进程 env 已收窄,进程树里没有任何
+    // 密钥可外传(见编排 network 门 + child-env.ts)。
+    networkPosture: "none",
     paramsSchema: videoRenderParams, // spec.params = { props };goal 由编排 parse 后才混入
     async run(sandbox: ExecutorSandboxView, params, opts: ExecutorRunOpts) {
       const { signal, reportStep } = opts;

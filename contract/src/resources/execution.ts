@@ -29,8 +29,12 @@ export const executionTaskInput = z.object({
 });
 export type ExecutionTaskInput = z.infer<typeof executionTaskInput>;
 
-// 执行约束:超时硬顶 + 网络策略(无 docker 前提下网络隔离是弱保证,v1 默认 deny,
-// 渲染类本就不需要网)+ 产物总量硬顶(收割时超限 → 任务失败,诚实不截断)。
+// 执行约束:超时硬顶 + 网络策略 + 产物总量硬顶(收割时超限 → 任务失败,诚实不截断)。
+// [RT-H06] network 的诚实语义(执行在 backend run-execution-task 的 network 门):
+//   - "deny"(默认):平台无 OS 级网络沙箱,不假装隔离 —— 以「executor 网络姿态声明
+//     (不出网/仅经平台受控端口)+ 子进程 env allowlist 收窄(密钥/DB/S3 不进沙箱进程树)」
+//     降级满足,降级明示进步骤流;声明直接联网的 executor 收到 deny 会被诚实拒绝;
+//   - "allowlist":尚无强制机制(无域名代理)→ 执行门诚实拒绝,枚举保留为将来真机制落地位。
 export const executionConstraints = z.object({
   timeoutSec: z.number().int().positive().max(3600).default(600),
   network: z.enum(["deny", "allowlist"]).default("deny"),

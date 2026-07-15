@@ -26,8 +26,30 @@ export function execTypeOf(taskType: string): string | null {
 
 /** 结果行里的采纳记录 resultType(确认门采纳后 recordAuxResult 写)。 */
 export const EXECUTION_ADOPTED_RESULT_TYPE = "execution_adopted";
+/**
+ * [RT-H10] 逐产物采纳日志 resultType(DATA-H06 adopted-keys 同款思路):confirm 每采纳
+ * 完**一个**产物立刻记一行 { path, assetId }(稳定键 = 产物 out/ 相对路径,同一 manifest
+ * 内唯一 —— 收割自 fs 遍历)。第 N 个失败 → 任务留在 awaiting_confirmation,重试按日志
+ * 跳过前 N-1 个(复用已建 assetId),不再重复入库。
+ */
+export const EXECUTION_ADOPTED_ITEM_RESULT_TYPE = "execution_adopted_item";
 /** 结果行里的产物清单候选 resultType(runExecutionTask recordCandidate 写)。 */
 export const EXECUTION_MANIFEST_RESULT_TYPE = "execution_manifest";
+
+/** [RT-H10] 从结果行集读逐产物采纳日志:artifact path → 已建 assetId(形状不合法的行跳过)。 */
+export function adoptedItemsOf(
+  results: readonly AITaskResultResource[],
+): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const r of results) {
+    if (r.resultType !== EXECUTION_ADOPTED_ITEM_RESULT_TYPE) continue;
+    const d = r.resultData as { path?: unknown; assetId?: unknown };
+    if (typeof d.path === "string" && typeof d.assetId === "string") {
+      map.set(d.path, d.assetId);
+    }
+  }
+  return map;
+}
 
 /** 从结果行集取最新 manifest(无/形状不合法 → null,诚实不编)。 */
 export function latestManifest(

@@ -151,7 +151,35 @@ export async function runExecutionTask(
       params = p.data as Record<string, unknown>;
     }
 
+    // 2.5) [RT-H06] network 约束的诚实执行门。
+    // 真实边界(v1,取舍见审计 RT-H06):桌面单机运行时(无 docker/无网络命名空间)没有
+    // 能真正强制子进程断网的 OS 级沙箱 —— macOS sandbox-exec 已被 Apple 弃用,且嵌套
+    // Chromium 自身的 Seatbelt 沙箱会崩,不假装有。能真做到并已做的:
+    //   ① 子进程 env allowlist 收窄(child-env.ts):密钥/DB/S3/master key/NODE_OPTIONS
+    //     不进沙箱进程树 —— 即便代码出网,也没有 secrets 可外传;
+    //   ② executor 网络姿态声明(executor-registry.networkPosture)+ 本门:`deny` 对声明
+    //     直接联网的 executor 诚实拒绝,可满足的场景降级明示进步骤流;
+    //   ③ `allowlist` 策略无任何强制机制(无域名代理)→ 诚实拒绝,绝不静默假装隔离。
+    const networkPosture = executor.networkPosture ?? "none";
+    if (spec.constraints.network === "allowlist") {
+      throw new Error(
+        "network: allowlist 尚无真实强制手段(平台无 OS 级网络沙箱/域名代理),诚实拒绝执行 —— 请改用 network: deny",
+      );
+    }
+    if (networkPosture === "direct") {
+      throw new Error(
+        `任务声明 network: deny,但 executor ${spec.taskType} 需要直接联网 —— 矛盾,诚实拒绝执行`,
+      );
+    }
+
     await deps.ai.markRunning(ctx, taskId);
+
+    // network: deny 的降级明示(诚实,不宣称 OS 级隔离):记进步骤流,用户可见。
+    await step(
+      networkPosture === "brain-ports"
+        ? "network: deny(沙箱面)—— 自主循环仅经平台受控端口出网(模型/领域工具适配器);沙箱不跑任意联网代码,子进程 env 已收窄不透传密钥"
+        : "network: deny —— 平台无 OS 级网络沙箱,降级执行:executor 声明不出网 + 子进程 env 收窄(密钥/DB/S3 配置不进沙箱进程树)",
+    );
 
     // 3) 建沙箱 + 物化 inputs(只读)。
     await step(`建沙箱 workspaces/${taskId}/`);

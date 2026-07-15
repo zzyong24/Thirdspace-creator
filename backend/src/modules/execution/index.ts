@@ -75,10 +75,15 @@ export {
   EXEC_TASK_TYPE_PREFIX,
   EXECUTION_MANIFEST_RESULT_TYPE,
   EXECUTION_ADOPTED_RESULT_TYPE,
+  EXECUTION_ADOPTED_ITEM_RESULT_TYPE,
+  adoptedItemsOf,
   isExecutionTaskType,
   execTypeOf,
   toExecutionTaskDto,
 } from "./execution.schema";
+
+// [RT-H06] 执行层子进程 env 收窄(allowlist;密钥/DB/S3/master key 不进沙箱进程树)。
+export { buildChildEnv } from "./child-env";
 
 export {
   ConflictError,
