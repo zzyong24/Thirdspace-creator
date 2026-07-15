@@ -31,7 +31,7 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const candidates = pgTable("candidates", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离(soft FK → platform_accounts.id);nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(soft FK → platform_accounts.id);nullable 稳定终态
   title: text("title").notNull(),
   angle: text("angle").notNull().default(""), // 切入角度
   source: text("source").notNull(), // trend|benchmark|demand|idea|favorites([T-235c] 收藏夹跟拍)
@@ -61,7 +61,7 @@ export const candidates = pgTable("candidates", {
 export const topicPreferences = pgTable("topic_preferences", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
-  accountId: text("account_id"), // [T-201 账号锚点] 按号 stamp;不入身份唯一键(见迁移注释)
+  accountId: text("account_id").notNull(), // [T-201 账号锚点] 按号 stamp;不入身份唯一键(见迁移注释)
   keyword: text("keyword").notNull(), // 匹配候选标题/角度的短词(护栏按 includes 命中)
   direction: text("direction").notNull().default("avoid"), // avoid(压分)|prefer(抬分)
   signal: text("signal").notNull().default(""), // 一句人话偏好
@@ -76,7 +76,7 @@ export const topicPreferences = pgTable("topic_preferences", {
 export const audienceSignals = pgTable("audience_signals", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;采集 stamp 归到「哪个号」的评论/信号
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;采集 stamp 归到「哪个号」的评论/信号
   source: text("source").notNull(), // comment|dm|consultation|review
   rawText: text("raw_text").notNull().default(""),
   demandTag: text("demand_tag"), // 需求标签 (nullable)
@@ -102,7 +102,7 @@ export const audienceSignals = pgTable("audience_signals", {
 export const topicPromotions = pgTable("topic_promotions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   candidateId: text("candidate_id").notNull(), // FK → candidates
   projectId: text("project_id").notNull(), // FK → projects (the promoted Project)
   promotedAt: text("promoted_at").notNull(),
@@ -119,7 +119,7 @@ export const CANDIDATE_DDL = `
 CREATE TABLE IF NOT EXISTS candidates (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   title TEXT NOT NULL,
   angle TEXT NOT NULL DEFAULT '',
   source TEXT NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS candidates (
 CREATE TABLE IF NOT EXISTS audience_signals (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   source TEXT NOT NULL,
   raw_text TEXT NOT NULL DEFAULT '',
   demand_tag TEXT,
@@ -153,14 +153,15 @@ CREATE TABLE IF NOT EXISTS audience_signals (
 CREATE TABLE IF NOT EXISTS topic_promotions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   candidate_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   promoted_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_audience_signals_candidate ON audience_signals (linked_candidate_id);
 CREATE INDEX IF NOT EXISTS ix_audience_signals_pub ON audience_signals (user_id, publication_id);
-CREATE UNIQUE INDEX IF NOT EXISTS ux_audience_signals_user_source_external ON audience_signals (user_id, source, external_id) WHERE external_id IS NOT NULL;
+-- [T-332 S1] 唯一键补 account 维(迁移 0042):同一评论被两个号各自采集应各归其号。account_id 已 NOT NULL。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_audience_signals_user_source_external_v2 ON audience_signals (user_id, account_id, source, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS ix_candidates_user_status ON candidates (user_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_topic_promotions_candidate ON topic_promotions (candidate_id);
 -- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
@@ -175,7 +176,7 @@ ALTER TABLE candidates ADD COLUMN IF NOT EXISTS drop_reason TEXT;
 CREATE TABLE IF NOT EXISTS topic_preferences (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   keyword TEXT NOT NULL,
   direction TEXT NOT NULL DEFAULT 'avoid',
   signal TEXT NOT NULL DEFAULT '',

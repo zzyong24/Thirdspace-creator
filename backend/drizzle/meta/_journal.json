@@ -295,6 +295,13 @@
       "when": 1782381630000,
       "tag": "0041_account_scoped_unique_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1782381640000,
+      "tag": "0042_account_isolation_notnull",
+      "breakpoints": true
     }
   ]
 }

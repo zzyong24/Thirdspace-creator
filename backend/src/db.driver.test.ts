@@ -124,6 +124,7 @@ describe("file-backed PGlite 落盘 + 迁移一致 + 重启不丢(L0 验收)", (
     await first.db.insert(projects).values({
       id: "proj-l0",
       userId: "u-l0",
+      accountId: "acct-l0", // [T-332 S1] account_id 已 NOT NULL(迁移 0042)
       title: "落盘验收作品",
       brief: "",
       creationMode: "guided",
@@ -288,6 +289,7 @@ describe("PGlite 单连接并发落盘(gate 点名:串行化不锁竞争/不丢�
       db.insert(projects).values({
         id: `proj-cc-${i}`,
         userId: "u-cc",
+        accountId: "acct-cc", // [T-332 S1] account_id 已 NOT NULL(迁移 0042)
         title: `并发作品 ${i}`,
         brief: "",
         creationMode: "guided",

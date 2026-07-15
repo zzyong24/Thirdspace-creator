@@ -21,7 +21,7 @@ export const knowledgeItems = pgTable("knowledge_items", {
   // [T-136 多账号 · OQ1 裁决=按号独立] 按号隔离维度(soft FK → platform_accounts.id)。
   // nullable 稳定终态(SPEC §6 MAJOR-3)。子表 revisions/relations 无 user_id、经父门透传
   // 属主,不加 account_id(同 user_id 范式)。
-  accountId: text("account_id"),
+  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042;C-01=A 案独立)
   currentRevisionId: text("current_revision_id").notNull(),
   knowledgeType: text("knowledge_type").notNull().default("note"),
   title: text("title").notNull(),
@@ -66,7 +66,7 @@ export const KNOWLEDGE_DDL = `
 CREATE TABLE IF NOT EXISTS knowledge_items (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   current_revision_id TEXT NOT NULL,
   knowledge_type TEXT NOT NULL DEFAULT 'note',
   title TEXT NOT NULL,

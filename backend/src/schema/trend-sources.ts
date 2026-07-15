@@ -19,7 +19,7 @@ import { pgTable, text, boolean } from "drizzle-orm/pg-core";
 export const trendSources = pgTable("trend_sources", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   name: text("name").notNull().default(""), // 展示名(缺省用 domain)
   url: text("url").notNull(), // 信源 URL(幂等锚)
   sourceType: text("source_type").notNull().default("web"), // web | rss
@@ -35,7 +35,7 @@ export const TREND_SOURCES_DDL = `
 CREATE TABLE IF NOT EXISTS trend_sources (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   name TEXT NOT NULL DEFAULT '',
   url TEXT NOT NULL,
   source_type TEXT NOT NULL DEFAULT 'web',
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS trend_sources (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_trend_sources_identity ON trend_sources (user_id, url);
+-- [T-332 S1] 唯一键补 account 维(迁移 0042):两个号登记同一 URL 信源合法。account_id 已 NOT NULL。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_trend_sources_identity_v2 ON trend_sources (user_id, account_id, url);
 CREATE INDEX IF NOT EXISTS ix_trend_sources_user_account ON trend_sources (user_id, account_id);
 `;

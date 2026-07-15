@@ -30,8 +30,9 @@ export const scheduledJobs = pgTable("scheduled_job", {
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   // [T-200] 第二属主维度(按抖音号):建 job 时从 ctx.accountId stamp。cron 到点触发时,采集
   //   runtime ctx.accountId 由此列派生(triggerScheduledJob),使采集落库 stamp 正确 account_id,
-  //   而非系统调度 ctx 的 null 号(串号根因)。nullable(旧 job / 未选号退化,稳定终态)。
-  accountId: text("account_id"),
+  //   而非系统调度 ctx 的 null 号(串号根因)。
+  // [T-332 S1] per-account 收口 NOT NULL(迁移 0042);绑号 bootstrap 建的采集 job 全部账号绑定。
+  accountId: text("account_id").notNull(),
   name: text("name").notNull(),
   prompt: text("prompt").notNull().default(""), // Agent 发现路径用;内建采集器源可空
   sourceKind: text("source_kind").notNull(), // self.metrics | comments (contract Zod 校验)
@@ -50,6 +51,10 @@ export const jobRuns = pgTable("job_run", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   jobId: text("job_id").notNull(), // → scheduled_job (reached via requireJob gate)
+  // [T-332 S1 · GAP-08] 计划触发时刻锚(迁移 0042)。nullable —— 存量 run / 临时「立即运行」不带;
+  // cron 到点触发时由 S2/D3 写入(计划 tick 的 ISO 时刻),与 (job_id, scheduled_for) 部分唯一
+  // 配合根治「先查再建」无约束下的重复触发。约束仅在 scheduled_for IS NOT NULL 时生效(部分唯一)。
+  scheduledFor: text("scheduled_for"),
   aiTaskId: text("ai_task_id"), // nullable — 本次触发产的 ai_task id(D3 回填)
   status: text("status").notNull().default("running"), // running|succeeded|failed|needs_reconnect
   itemsNew: integer("items_new").notNull().default(0), // 本次新增条数
@@ -75,7 +80,7 @@ export const SCHEDULING_DDL = `
 CREATE TABLE IF NOT EXISTS scheduled_job (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   name TEXT NOT NULL,
   prompt TEXT NOT NULL DEFAULT '',
   source_kind TEXT NOT NULL,
@@ -98,12 +103,16 @@ CREATE TABLE IF NOT EXISTS job_run (
   items_new INTEGER NOT NULL DEFAULT 0,
   items_updated INTEGER NOT NULL DEFAULT 0,
   error TEXT,
+  scheduled_for TEXT,
   started_at TEXT NOT NULL,
   finished_at TEXT
 );
 -- [T-152] 采集实时进度列(additive、幂等、nullable)。与 0026_job_run_progress.sql 对齐
 -- (迁移才是运行时真正建列的那份;此 const 供 seed/doc 有处可读)。
 ALTER TABLE job_run ADD COLUMN IF NOT EXISTS progress JSONB;
+-- [T-332 S1 · GAP-08] 计划触发时刻锚 + (job_id, scheduled_for) 部分唯一(迁移 0042)。
+ALTER TABLE job_run ADD COLUMN IF NOT EXISTS scheduled_for TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_job_run_job_scheduled_for ON job_run (job_id, scheduled_for) WHERE scheduled_for IS NOT NULL;
 -- [T-200] scheduled_job 按号维度列(additive、幂等、nullable)。与 0030_scheduled_job_account.sql
 -- 对齐(迁移才是运行时真正建列的那份)。cron 到点触发的采集 ctx.accountId 由此列派生。
 ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT;

@@ -30,7 +30,7 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const reviews = pgTable("reviews", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离(复盘归到号);nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(复盘归到号);nullable 稳定终态
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable — only set when reviewType="output"
   reportArtifactId: text("report_artifact_id"), // nullable — optional review_report ArtifactVersion link
@@ -45,7 +45,7 @@ export const reviews = pgTable("reviews", {
 export const reviewInsights = pgTable("review_insights", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   reviewId: text("review_id").notNull(),
   insightType: text("insight_type").notNull(),
   title: text("title").notNull(),
@@ -71,7 +71,7 @@ export const REVIEWS_DDL = `
 CREATE TABLE IF NOT EXISTS reviews (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   content_output_id TEXT,
   report_artifact_id TEXT,
@@ -86,7 +86,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_project ON reviews (user_id, project_id);
 CREATE TABLE IF NOT EXISTS review_insights (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   review_id TEXT NOT NULL,
   insight_type TEXT NOT NULL,
   title TEXT NOT NULL,

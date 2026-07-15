@@ -74,6 +74,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS platform_accounts_external_ux ON platform_acco
 CREATE INDEX IF NOT EXISTS platform_accounts_user_created_ix ON platform_accounts(user_id, created_at);
 ALTER TABLE publications ADD COLUMN IF NOT EXISTS account_id TEXT;
 CREATE INDEX IF NOT EXISTS publications_account_ix ON publications(account_id);
-ALTER TABLE project_target_platforms ADD COLUMN IF NOT EXISTS account_id TEXT;
-CREATE INDEX IF NOT EXISTS project_target_platforms_account_ix ON project_target_platforms(account_id);
+-- [T-332 S1] project_target_platforms.account_id 幽灵列已退役(迁移 0042 DROP;Drizzle 从不建模、
+--   全仓无 .accountId 读写 —— codegraph/grep 实证;项目已 per-account,子表经父锚隔离,不需冗余维度)。
 `;

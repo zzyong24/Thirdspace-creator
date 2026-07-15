@@ -33,7 +33,7 @@ export const aiConversations = pgTable("ai_conversations", {
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   // [T-136 多账号 · OQ2 裁决=按号切] AI 编导对话按号隔离(切号=换对话桶)。nullable 稳定终态。
   // 子表 ai_messages 经 requireConversation 门透传属主,不加 account_id。
-  accountId: text("account_id"),
+  accountId: text("account_id").notNull(),
   projectId: text("project_id"), // nullable
   // T-096 会话作用域(SPEC 2026-07-03 chat-session-scope-contract §1.1)—— 入口级隔离与延续的
   // 一等公民字段。文法:'global' | 'project:<id>' | 'surface:<name>'(<name>:<entityId> 扩展位
@@ -71,7 +71,7 @@ export const aiTasks = pgTable("ai_tasks", {
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   // [T-136 多账号 · OQ2 裁决=按号切] AI 任务按号隔离。nullable 稳定终态。子表
   // ai_task_references/results/steps 经 requireTask 门透传属主,不加 account_id。
-  accountId: text("account_id"),
+  accountId: text("account_id").notNull(),
   projectId: text("project_id"), // nullable
   contentOutputId: text("content_output_id"), // nullable
   taskType: text("task_type").notNull(),
@@ -130,7 +130,7 @@ export const AI_DDL = `
 CREATE TABLE IF NOT EXISTS ai_conversations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   project_id TEXT,
   scope TEXT NOT NULL DEFAULT 'global',
   title TEXT NOT NULL,
@@ -153,7 +153,7 @@ CREATE INDEX IF NOT EXISTS idx_ai_messages_conversation ON ai_messages (conversa
 CREATE TABLE IF NOT EXISTS ai_tasks (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   project_id TEXT,
   content_output_id TEXT,
   task_type TEXT NOT NULL,

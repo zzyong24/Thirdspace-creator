@@ -23,7 +23,7 @@ import { pgTable, text, doublePrecision, jsonb } from "drizzle-orm/pg-core";
 export const topicAttributions = pgTable("topic_attributions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   publicationId: text("publication_id").notNull(), // soft FK → publications.id(幂等锚)
   projectId: text("project_id"), // soft FK → projects.id(溯源;与 learnings 的关联锚)
   performanceTier: text("performance_tier").notNull().default("normal"), // viral|normal|low(相对本账号基线)
@@ -45,7 +45,7 @@ export const TOPIC_ATTRIBUTION_DDL = `
 CREATE TABLE IF NOT EXISTS topic_attributions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   publication_id TEXT NOT NULL,
   project_id TEXT,
   performance_tier TEXT NOT NULL DEFAULT 'normal',

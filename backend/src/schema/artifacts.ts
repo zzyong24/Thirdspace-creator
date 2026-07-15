@@ -25,7 +25,7 @@ export const artifacts = pgTable("artifacts", {
   // [T-136 多账号] 按号隔离维度(soft FK → platform_accounts.id)。nullable 稳定终态
   // (SPEC §6 MAJOR-3)。子表 artifact_versions/relations/script_sections/timeline_segments
   // 无 user_id、经 requireArtifact 门透传属主,故不加 account_id(同 user_id 范式)。
-  accountId: text("account_id"),
+  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable → contract id|null
   // Nullable in the DB only during the create UoW (artifact row inserted before
@@ -104,7 +104,7 @@ export const ARTIFACTS_DDL = `
 CREATE TABLE IF NOT EXISTS artifacts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   content_output_id TEXT,
   current_version_id TEXT,

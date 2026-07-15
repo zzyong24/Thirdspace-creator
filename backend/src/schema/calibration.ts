@@ -29,7 +29,7 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const rubrics = pgTable("rubrics", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离(校准闭环 per 号);nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(校准闭环 per 号);nullable 稳定终态
   name: text("name").notNull(),
   currentVersionId: text("current_version_id"), // nullable until first version inserted
   createdAt: text("created_at").notNull(),
@@ -40,7 +40,7 @@ export const rubrics = pgTable("rubrics", {
 export const rubricVersions = pgTable("rubric_versions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   rubricId: text("rubric_id").notNull(),
   versionNumber: integer("version_number").notNull(),
   dimensions: jsonb("dimensions").notNull().default([]), // array of { key, label, weight }
@@ -53,7 +53,7 @@ export const rubricVersions = pgTable("rubric_versions", {
 export const predictions = pgTable("predictions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   subjectType: text("subject_type").notNull(), // content_output|publication
   subjectId: text("subject_id").notNull(),
   rubricVersionId: text("rubric_version_id").notNull(),
@@ -71,7 +71,7 @@ export const predictions = pgTable("predictions", {
 export const calibrationResults = pgTable("calibration_results", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   predictionId: text("prediction_id").notNull(),
   ingestionRunId: text("ingestion_run_id").notNull(), // §C-4: references a real IngestionRun
   actualMetrics: jsonb("actual_metrics").notNull().default({}),
@@ -93,7 +93,7 @@ export const calibrationRuleSuggestions = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+    accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
     learningId: text("learning_id").notNull(), // the source 复盘 Learning
     rubricId: text("rubric_id").notNull(), // the target Rubric this suggestion bumps
     status: text("status").notNull().default("pending"), // pending|adopted|dismissed
@@ -114,7 +114,7 @@ export const CALIBRATION_DDL = `
 CREATE TABLE IF NOT EXISTS rubrics (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   name TEXT NOT NULL,
   current_version_id TEXT,
   created_at TEXT NOT NULL
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS rubrics (
 CREATE TABLE IF NOT EXISTS rubric_versions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   rubric_id TEXT NOT NULL,
   version_number INTEGER NOT NULL,
   dimensions JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -133,7 +133,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS rubric_versions_rubric_ver_uq ON rubric_versio
 CREATE TABLE IF NOT EXISTS predictions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   subject_type TEXT NOT NULL,
   subject_id TEXT NOT NULL,
   rubric_version_id TEXT NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS predictions (
 CREATE TABLE IF NOT EXISTS calibration_results (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   prediction_id TEXT NOT NULL,
   ingestion_run_id TEXT NOT NULL,
   actual_metrics JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -160,7 +160,7 @@ CREATE INDEX IF NOT EXISTS calibration_results_run_idx ON calibration_results (i
 CREATE TABLE IF NOT EXISTS calibration_rule_suggestions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   learning_id TEXT NOT NULL,
   rubric_id TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',

@@ -29,7 +29,7 @@ export const assets = pgTable("assets", {
   // [T-136 多账号 · OQ1 裁决=按号独立] 按号隔离维度(soft FK → platform_accounts.id)。
   // nullable 稳定终态(SPEC §6 MAJOR-3)。子表 asset_files 无 user_id、经父门透传属主,
   // 不加 account_id。asset_uploads 是临时上传会话(非内容表),不按号隔离。
-  accountId: text("account_id"),
+  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   currentFileId: text("current_file_id"), // nullable until first file → contract id (set on completeUpload)
   assetType: text("asset_type").notNull(),
   name: text("name").notNull(),
@@ -88,7 +88,7 @@ export const ASSETS_DDL = `
 CREATE TABLE IF NOT EXISTS assets (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   current_file_id TEXT,
   asset_type TEXT NOT NULL,
   name TEXT NOT NULL,

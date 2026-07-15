@@ -37,7 +37,7 @@ import {
 export const metricSnapshots = pgTable("metric_snapshots", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号 · SPEC §D] 采集 stamp 归到号;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号 · SPEC §D] 采集 stamp 归到号;nullable 稳定终态
   publicationId: text("publication_id").notNull(),
   ingestionRunId: text("ingestion_run_id"), // nullable — seed/fixture appends carry null
   capturedAt: text("captured_at").notNull(),
@@ -49,7 +49,7 @@ export const metricSnapshots = pgTable("metric_snapshots", {
 export const metricValues = pgTable("metric_values", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   metricSnapshotId: text("metric_snapshot_id").notNull(),
   metricKey: text("metric_key").notNull(),
   numericValue: doublePrecision("numeric_value").notNull(),
@@ -60,7 +60,7 @@ export const metricValues = pgTable("metric_values", {
 export const retentionPoints = pgTable("retention_points", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   publicationId: text("publication_id").notNull(),
   capturedAt: text("captured_at").notNull(),
   positionMs: integer("position_ms").notNull(),
@@ -71,7 +71,7 @@ export const retentionPoints = pgTable("retention_points", {
 export const audienceSnapshots = pgTable("audience_snapshots", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   publicationId: text("publication_id").notNull(),
   capturedAt: text("captured_at").notNull(),
   dimensionType: text("dimension_type").notNull(),
@@ -90,7 +90,7 @@ export const ANALYTICS_DDL = `
 CREATE TABLE IF NOT EXISTS metric_snapshots (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   publication_id TEXT NOT NULL,
   ingestion_run_id TEXT,
   captured_at TEXT NOT NULL,
@@ -104,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_metric_snapshots_user ON metric_snapshots (user_i
 CREATE TABLE IF NOT EXISTS metric_values (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   metric_snapshot_id TEXT NOT NULL,
   metric_key TEXT NOT NULL,
   numeric_value DOUBLE PRECISION NOT NULL,
@@ -115,7 +115,7 @@ CREATE INDEX IF NOT EXISTS idx_metric_values_snapshot ON metric_values (user_id,
 CREATE TABLE IF NOT EXISTS retention_points (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   publication_id TEXT NOT NULL,
   captured_at TEXT NOT NULL,
   position_ms INTEGER NOT NULL,
@@ -126,7 +126,7 @@ CREATE INDEX IF NOT EXISTS idx_retention_points_pub ON retention_points (user_id
 CREATE TABLE IF NOT EXISTS audience_snapshots (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   publication_id TEXT NOT NULL,
   captured_at TEXT NOT NULL,
   dimension_type TEXT NOT NULL,

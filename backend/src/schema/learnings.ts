@@ -30,7 +30,7 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const learnings = pgTable("learnings", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离(经验/复盘归到号);nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(经验/复盘归到号);nullable 稳定终态
   reviewId: text("review_id"), // nullable — a Learning can exist without a Review (SPEC §22 reuse)
   // [T-118a gate-F3] 复盘产经验的来源作品(project-scoped 读的锚)。nullable —— 手录/非复盘
   // 来源的经验没有归属作品。review.analyze 的 learning_list 采纳时带上 task.projectId(见
@@ -50,7 +50,7 @@ export const learnings = pgTable("learnings", {
 export const learningApplications = pgTable("learning_applications", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   learningId: text("learning_id").notNull(),
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable
@@ -67,7 +67,7 @@ export const LEARNINGS_DDL = `
 CREATE TABLE IF NOT EXISTS learnings (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   review_id TEXT,
   project_id TEXT,
   learning_type TEXT NOT NULL DEFAULT 'strategy',
@@ -87,7 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_learnings_project ON learnings (user_id, project_
 CREATE TABLE IF NOT EXISTS learning_applications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   learning_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   content_output_id TEXT,

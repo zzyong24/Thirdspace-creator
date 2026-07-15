@@ -22,7 +22,7 @@ import { pgTable, text, boolean, jsonb } from "drizzle-orm/pg-core";
 export const favoritesFolders = pgTable("favorites_folders", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   name: text("name").notNull(), // 收藏夹名(幂等锚:同 user 同名唯一;须与抖音收藏夹同名)
   collectsId: text("collects_id"), // 抖音 collects_id_str(首采按名匹配回填;未匹配 NULL)
   note: text("note"), // 备注(可选,如「只收对标爆款」)
@@ -35,7 +35,7 @@ export const favoritesFolders = pgTable("favorites_folders", {
 export const favoritesItems = pgTable("favorites_items", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   folderId: text("folder_id").notNull(), // soft FK → favorites_folders.id(夹删后台账保留溯源)
   awemeId: text("aweme_id").notNull(), // 幂等锚:同 user 同视频只记一次
   title: text("title").notNull().default(""), // 视频 desc 截 80(展示/进池标题)
@@ -62,7 +62,7 @@ export const FAVORITES_DDL = `
 CREATE TABLE IF NOT EXISTS favorites_folders (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   name TEXT NOT NULL,
   collects_id TEXT,
   note TEXT,
@@ -77,7 +77,7 @@ CREATE INDEX IF NOT EXISTS ix_favorites_folders_user_account ON favorites_folder
 CREATE TABLE IF NOT EXISTS favorites_items (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   folder_id TEXT NOT NULL,
   aweme_id TEXT NOT NULL,
   title TEXT NOT NULL DEFAULT '',

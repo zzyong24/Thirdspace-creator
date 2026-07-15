@@ -18,7 +18,7 @@ import { pgTable, text, integer, boolean, doublePrecision } from "drizzle-orm/pg
 export const benchmarkSources = pgTable("benchmark_sources", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id"), // [T-201] 按号隔离(哪个号在对标);nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-201] 按号隔离(哪个号在对标);nullable 稳定终态
   platform: text("platform").notNull().default("douyin"),
   externalAccountId: text("external_account_id").notNull(), // sec_uid(稳定身份键)
   nickname: text("nickname"), // 博主昵称/备注名(可选)
@@ -32,7 +32,7 @@ export const benchmarkSources = pgTable("benchmark_sources", {
 export const benchmarkWorks = pgTable("benchmark_works", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
+  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   sourceId: text("source_id").notNull(), // soft FK → benchmark_sources.id
   sourceExternalAccountId: text("source_external_account_id").notNull(), // 冗余 sec_uid(便于按源查)
   platform: text("platform").notNull().default("douyin"),
@@ -64,7 +64,7 @@ export const BENCHMARK_DDL = `
 CREATE TABLE IF NOT EXISTS benchmark_sources (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   platform TEXT NOT NULL DEFAULT 'douyin',
   external_account_id TEXT NOT NULL,
   nickname TEXT,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS benchmark_sources (
 CREATE TABLE IF NOT EXISTS benchmark_works (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  account_id TEXT,
+  account_id TEXT NOT NULL,
   source_id TEXT NOT NULL,
   source_external_account_id TEXT NOT NULL,
   platform TEXT NOT NULL DEFAULT 'douyin',
@@ -99,9 +99,10 @@ CREATE TABLE IF NOT EXISTS benchmark_works (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_benchmark_sources_identity ON benchmark_sources (user_id, platform, external_account_id);
+-- [T-332 S1] 唯一键补 account 维(迁移 0042):两个号对标同博主/采同 aweme 合法。account_id 已 NOT NULL。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_benchmark_sources_identity_v2 ON benchmark_sources (user_id, account_id, platform, external_account_id);
 CREATE INDEX IF NOT EXISTS ix_benchmark_sources_user_account ON benchmark_sources (user_id, account_id);
-CREATE UNIQUE INDEX IF NOT EXISTS ux_benchmark_works_aweme ON benchmark_works (user_id, platform, aweme_id);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_benchmark_works_aweme_v2 ON benchmark_works (user_id, account_id, platform, aweme_id);
 CREATE INDEX IF NOT EXISTS ix_benchmark_works_source ON benchmark_works (source_id);
 CREATE INDEX IF NOT EXISTS ix_benchmark_works_user_viral ON benchmark_works (user_id, is_viral, teardown_status);
 `;
