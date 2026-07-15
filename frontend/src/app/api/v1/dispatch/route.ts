@@ -11,7 +11,14 @@ import {
   OwnershipError,
 } from "@creatoros/backend/modules/identity";
 import { readSessionCookie } from "../auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  resolveRequestContext,
+  isAuthError,
+} from "@/lib/request-context.server";
+import {
+  isLoopbackRequest,
+  loopbackForbidden,
+} from "@/lib/loopback-guard.server";
 
 // RPC dispatch over HTTP. The browser's HttpTransport POSTs { id, input };
 // this runs the matching contract operation against the SERVER store and
@@ -39,6 +46,9 @@ function errorEnvelope(
 }
 
 export async function POST(req: Request): Promise<Response> {
+  // [RT-H01] 有副作用的 RPC 入口:先挡非本机/跨站请求(DNS rebinding + CSRF)。
+  if (!isLoopbackRequest(req)) return loopbackForbidden();
+
   let payload: { id?: unknown; input?: unknown };
   try {
     payload = (await req.json()) as { id?: unknown; input?: unknown };
@@ -58,12 +68,22 @@ export async function POST(req: Request): Promise<Response> {
   // **绝不信任**:resolveRequestContext 内部会以真实 userId 查号验属主,不属主 → 降级 null。
   const rawToken = readSessionCookie(req);
   const accountId = req.headers.get("x-account-id");
+  // [RT-H01] 状态变更类 op 要求「明确身份或拒绝」:present-but-invalid cookie 不静默降级
+  //   主用户 → 上抛 → 401(缺失 cookie 仍走单机免登录直通,读 op 保持宽松)。契约 HttpMethod
+  //   只有 GET/POST/PATCH/PUT/DELETE(无 HEAD),故「非 GET 即写路径」。
+  const isMutation = endpoint.method !== "GET";
   let ctx;
   try {
-    ctx = await resolveRequestContext(rawToken, accountId);
+    ctx = await resolveRequestContext(rawToken, accountId, {
+      rejectInvalidToken: isMutation,
+    });
   } catch (err) {
-    if (err instanceof AuthenticationError) {
-      return errorEnvelope(ErrorCode.AuthenticationError, err.message);
+    // 结构化识别鉴权错误(跨 Next bundle 边界 instanceof 不可靠,故并用 code/name)。
+    if (isAuthError(err)) {
+      return errorEnvelope(
+        ErrorCode.AuthenticationError,
+        err instanceof Error ? err.message : "unauthorized",
+      );
     }
     throw err;
   }

@@ -77,6 +77,58 @@ describe("resolveRequestContext — 失效 cookie 回落本机主用户", () => 
 });
 
 /**
+ * [RT-H01·部分] 状态变更类路由的严格身份:present-but-invalid cookie 不静默降级主用户。
+ * dispatch 写 op / chat / web-session 传 { rejectInvalidToken: true } —— 失效 token 上抛(→ 401);
+ * 缺失 cookie 仍单机直通(不锁死 app)。读类不传此项,行为不变(上面的 describe 已锁)。
+ */
+describe("resolveRequestContext — rejectInvalidToken(写类明确身份或拒绝)", () => {
+  it("失效 token + rejectInvalidToken → 抛(不降级主用户)", async () => {
+    const { AuthenticationError } = await import(
+      "@creatoros/backend/modules/identity"
+    );
+    resolveContextFromToken.mockRejectedValue(new AuthenticationError());
+    await expect(
+      resolveRequestContext("stale", null, { rejectInvalidToken: true }),
+    ).rejects.toBeTruthy();
+    expect(resolveLocalContext).not.toHaveBeenCalled();
+  });
+
+  it("跨 bundle 复制的 AuthenticationError + rejectInvalidToken → 仍抛(结构化识别)", async () => {
+    const bundleCopied = Object.assign(new Error("Invalid credentials"), {
+      name: "AuthenticationError",
+      code: "AuthenticationError",
+    });
+    resolveContextFromToken.mockRejectedValue(bundleCopied);
+    await expect(
+      resolveRequestContext("stale-x", null, { rejectInvalidToken: true }),
+    ).rejects.toBeTruthy();
+  });
+
+  it("缺失 cookie + rejectInvalidToken → 仍走本机主用户(缺 cookie 不锁死 app)", async () => {
+    const ctx = await resolveRequestContext(null, null, {
+      rejectInvalidToken: true,
+    });
+    expect(ctx).toEqual(LOCAL);
+    expect(resolveContextFromToken).not.toHaveBeenCalled();
+  });
+
+  it("有效 token + rejectInvalidToken → 正常用 token ctx(不受影响)", async () => {
+    const tokenCtx = { userId: "u-ok", requestId: "r", source: "user" as const };
+    resolveContextFromToken.mockResolvedValue(tokenCtx);
+    expect(
+      await resolveRequestContext("good", null, { rejectInvalidToken: true }),
+    ).toEqual(tokenCtx);
+  });
+
+  it("非鉴权错误 + rejectInvalidToken → 照抛原错(不吞)", async () => {
+    resolveContextFromToken.mockRejectedValue(new Error("db down"));
+    await expect(
+      resolveRequestContext("tok", null, { rejectInvalidToken: true }),
+    ).rejects.toThrow("db down");
+  });
+});
+
+/**
  * [T-136 切片 a · gate BLOCKER-1] accountId 属主硬校验 + 退化。
  *
  * `resolveRequestContext(rawToken, accountId)` 读到前端传来的 x-account-id 后,**绝不信任**——

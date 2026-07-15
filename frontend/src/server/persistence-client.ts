@@ -273,6 +273,12 @@ import {
   webDomainFromUrl,
   type WebLoginHandle,
 } from "@/server/ingestion/web-session";
+// [B-01] Web Session 域名净化/校验(防路径穿越递归删应用数据/上级目录)。纯函数,与 route 入口共用。
+import {
+  assertSafeWebDomain,
+  isSafeWebDomain,
+  WebDomainError,
+} from "@/lib/web-domain";
 // [T-217b] Web Reader —— 带 .auth/web 登录态读正文全文(编导 web.read 端口用)。
 import {
   readUrl as readWebUrlSidecar,
@@ -1307,8 +1313,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const webAuthDirBase =
     process.env.CREATOROS_WEB_AUTH_DIR ??
     nodePath.join(process.cwd(), ".auth", "web");
-  const webAuthDirFor = (domain: string): string =>
-    nodePath.join(webAuthDirBase, domain);
+  // [B-01] domain → 目录路径的纵深防御(FS 边界二次校验,不信任任何上游):
+  //   ① 白名单校验(assertSafeWebDomain 拒 `..`/分隔符/编码分隔符/绝对路径/非法字符);
+  //   ② containment:path.resolve 后必须严格位于 webAuthDirBase 之内(path.relative 非空、
+  //      不以 `..` 开头、非绝对)——挡任何绕过白名单的解析逃逸。任一不过 → 抛 WebDomainError。
+  // symlink 逃逸复查(realpath,防御③)在真删除处(removeSession)做,详见下方。
+  const webAuthDirFor = (domain: string): string => {
+    const safe = assertSafeWebDomain(domain);
+    const resolved = nodePath.resolve(webAuthDirBase, safe);
+    const rel = nodePath.relative(webAuthDirBase, resolved);
+    if (!rel || rel.startsWith("..") || nodePath.isAbsolute(rel)) {
+      throw new WebDomainError(
+        `域名解析越出登录态保管库根,已拒绝:${JSON.stringify(domain)}`,
+      );
+    }
+    return resolved;
+  };
 
   // Deterministic clock/ids keep the seeded dataset reproducible (visual/test
   // parity); new creates get collision-free ids distinct from the slug seeds.
@@ -1688,6 +1708,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const out: Array<{ domain: string; lastLoginAt: string | null }> = [];
       for (const domain of entries) {
         if (domain.startsWith(".")) continue; // 跳过隐藏项(.DS_Store 等)
+        // [B-01] 白名单预检:磁盘上不合规的遗留目录名(旧版本产物/用户手放)跳过即可,
+        //   不让 webAuthDirFor 的硬校验抛错炸穿整个列表(列表是读操作,宜宽容)。
+        if (!isSafeWebDomain(domain)) continue;
         const dir = webAuthDirFor(domain);
         let lastLoginAt: string | null = null;
         try {
@@ -1752,9 +1775,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     removeSession: async (domain: string): Promise<{ removed: boolean }> => {
       const d = domain.trim().toLowerCase().replace(/^www\./, "");
-      const { rm } = await import("node:fs/promises");
+      // 防御①②:非法/越界 domain → webAuthDirFor 抛,绝不触碰文件系统。
+      let target: string;
       try {
-        await rm(webAuthDirFor(d), { recursive: true, force: true });
+        target = webAuthDirFor(d);
+      } catch (err) {
+        console.warn(
+          "[web-session] removeSession 拒绝非法 domain(路径穿越防线):",
+          err instanceof Error ? err.message : String(err),
+        );
+        return { removed: false };
+      }
+      const { rm, realpath } = await import("node:fs/promises");
+      try {
+        // 防御③:真删除前 realpath 复查——目标的**真实路径**(解开 symlink)必须仍严格位于
+        //   base 的真实路径之内。挡「.auth/web/<domain> 是指向上级的软链」这类逃逸。
+        const baseReal = await realpath(webAuthDirBase);
+        let targetReal: string;
+        try {
+          targetReal = await realpath(target);
+        } catch {
+          // 目标不存在(从未登录过该域)→ 无可删,诚实返 false(不创建、不误删)。
+          return { removed: false };
+        }
+        const rel = nodePath.relative(baseReal, targetReal);
+        if (!rel || rel.startsWith("..") || nodePath.isAbsolute(rel)) {
+          console.warn(
+            "[web-session] removeSession 拒绝:真实路径越出保管库根(疑似 symlink 逃逸):",
+            targetReal,
+          );
+          return { removed: false };
+        }
+        await rm(targetReal, { recursive: true, force: true });
         return { removed: true };
       } catch {
         return { removed: false };
@@ -6917,34 +6969,45 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       };
     };
   };
+  // [RT-H07] 自主循环领域端口:真实端口(联网检索 / ingestion 采集 / 素材库读写 / 知识 pending 写入)
+  //   的接线为**后续任务**(见交付报告 follow-up)。在真端口接上前,这些 seam **绝不伪装成功**——
+  //   此前它们返回「假 pendingId(`staged-…`)/ 固定 ok:true 结果 0 / 空成功」,违反「严禁假按钮 ·
+  //   诚实置 0」:模型会把「什么都没做」当成「搜到 0 条 / 已采集 / 已写入」,据此继续推理产出幻觉。
+  //   改为一律抛「未实现」错误(501 语义)。deterministic-engine 不吞 tool 异常(tool.execute 直接
+  //   冒泡),故任一工具被调用即让自主任务**诚实失败**,模型/UI 明确知道「暂无此能力」。真端口落地
+  //   即用真实现替换这些 throw(端口形状不变,executor 注册与框架校验零改动)。
+  class AgenticPortNotImplementedError extends Error {
+    readonly code = "NotImplemented";
+    constructor(port: string) {
+      super(`自主循环端口「${port}」尚未接线(未实现),暂不可用。`);
+      this.name = "AgenticPortNotImplementedError";
+    }
+  }
   const agenticResearchPorts: ResearchPorts = {
-    // 真联网检索端口未接进本路径 → 诚实降级(grounding=model_memory,需核实);真接见报告。
     async webSearch() {
-      return { grounding: "model_memory", results: [] };
+      throw new AgenticPortNotImplementedError("web.search");
     },
-    async webRead({ url }) {
-      return { needLogin: false, title: "", fullText: "", sourceUrl: url };
+    async webRead() {
+      throw new AgenticPortNotImplementedError("web.read");
     },
-    // 铁律②:staged seam(不碰 live 知识库);真 pending 落库为 follow-up。
     async knowledgeWrite() {
-      return { pendingId: `staged-${Date.now()}` };
+      throw new AgenticPortNotImplementedError("knowledge.write");
     },
   };
   const agenticCollectionPorts: CollectionPorts = {
     async listTargets() {
-      return { targets: [] };
+      throw new AgenticPortNotImplementedError("collect.plan");
     },
     async runCollection() {
-      // 真 ingestion 采集端口(限流/防封在端口)为 follow-up;此 seam 不触发真采集。
-      return { ok: true, itemsNew: 0, itemsUpdated: 0 };
+      throw new AgenticPortNotImplementedError("collect.run");
     },
   };
   const agenticMaterialPorts: MaterialPorts = {
     async searchMaterials() {
-      return { items: [] };
+      throw new AgenticPortNotImplementedError("material.search");
     },
-    async organizeMaterials({ assetIds }) {
-      return { affected: assetIds.length };
+    async organizeMaterials() {
+      throw new AgenticPortNotImplementedError("material.organize");
     },
   };
   // [T-313] 引擎切 Pi:createPiAgenticEngine 真接 pi-coding-agent SDK 自主循环;**保留确定性兜底**

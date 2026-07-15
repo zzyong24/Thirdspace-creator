@@ -1,17 +1,21 @@
 import { NextResponse } from "next/server";
 import { consumeStream, type UIMessage } from "ai";
 import type { RequestContext } from "@creatoros/contract";
-import {
-  AuthenticationError,
-  OwnershipError,
-} from "@creatoros/backend/modules/identity";
+import { OwnershipError } from "@creatoros/backend/modules/identity";
 import { getChatRuntime } from "@/server/persistence-client";
 import {
   runChatStream,
   type ChatContext,
 } from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../v1/auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  resolveRequestContext,
+  isAuthError,
+} from "@/lib/request-context.server";
+import {
+  isLoopbackRequest,
+  loopbackForbidden,
+} from "@/lib/loopback-guard.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 上下文感知 ChatBox 的流式入口(SPEC §3.3)—— 全程 Vercel AI SDK,**不走 RPC envelope**:
@@ -100,6 +104,9 @@ function textOf(message: UIMessage | undefined): string {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  // [RT-H01] 有副作用的对话入口(落库 + dispatch 工具任务):先挡非本机/跨站请求。
+  if (!isLoopbackRequest(req)) return loopbackForbidden();
+
   let body: ChatRequestBody;
   try {
     body = (await req.json()) as ChatRequestBody;
@@ -118,10 +125,17 @@ export async function POST(req: Request): Promise<Response> {
   const accountId = req.headers.get("x-account-id");
   let ctx: RequestContext;
   try {
-    ctx = await resolveRequestContext(rawToken, accountId);
+    // 对话恒为状态变更类(落库 + 触发工具任务)→ present-but-invalid cookie 明确拒(401),不静默降级主用户。
+    ctx = await resolveRequestContext(rawToken, accountId, {
+      rejectInvalidToken: true,
+    });
   } catch (err) {
-    if (err instanceof AuthenticationError) {
-      return NextResponse.json({ error: err.message }, { status: 401 });
+    // 结构化识别鉴权错误(跨 bundle instanceof 不可靠)。
+    if (isAuthError(err)) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "unauthorized" },
+        { status: 401 },
+      );
     }
     throw err;
   }

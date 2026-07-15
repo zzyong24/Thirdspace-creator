@@ -11,12 +11,20 @@ import { AuthenticationError } from "@creatoros/backend/modules/identity";
 // 会漏判(Object.setPrototypeOf 只在同实例内有效),导致失效 token 既不回落也不转 401、裸抛 500
 // (清库/换环境/cookie 过期后浏览器残留旧 session cookie → 全站 dispatch 500 的真凶)。改用
 // 结构化 code/name(跨 bundle 边界稳定)。
-function isAuthError(err: unknown): boolean {
+export function isAuthError(err: unknown): boolean {
   return (
     err instanceof AuthenticationError ||
     (err as { code?: unknown })?.code === ErrorCode.AuthenticationError ||
     (err as { name?: unknown })?.name === "AuthenticationError"
   );
+}
+
+// [RT-H01·部分] 有副作用路由的解析选项。rejectInvalidToken=true(状态变更类:dispatch 的写 op /
+//   chat / web-session)时,**present-but-invalid** 的 token 不再静默降级为本机主用户,而是上抛
+//   AuthenticationError → route 转 401(「明确身份或拒绝」)。缺失 cookie(rawToken 为空)不受影响,
+//   仍走 T-046 单机免登录直通,避免锁死装机版(它常态不发 session cookie)。读类路由不传此项,保持宽松。
+export interface ResolveContextOptions {
+  rejectInvalidToken?: boolean;
 }
 
 // [T-046 单机免登录] route 层的统一 ctx 解析:有 session token 照旧验 token;无 token 或
@@ -27,24 +35,30 @@ function isAuthError(err: unknown): boolean {
 export async function resolveRequestContext(
   rawToken: string | null | undefined,
   accountId?: string | null,
+  opts?: ResolveContextOptions,
 ): Promise<RequestContext> {
-  const base = await resolveBaseContext(rawToken);
+  const base = await resolveBaseContext(rawToken, opts);
   return withVerifiedAccount(base, accountId);
 }
 
 // 先解析出「本次请求是谁」(userId 维度)——与 accountId 无关的既有逻辑(T-046/T-142)。
 async function resolveBaseContext(
   rawToken: string | null | undefined,
+  opts?: ResolveContextOptions,
 ): Promise<RequestContext> {
   const identity = await getIdentityService();
   if (rawToken) {
     try {
       return await identity.resolveContextFromToken(rawToken);
     } catch (err) {
-      // 失效 token → 落到本机用户直通(与无 token 同路径);非鉴权错误照抛。
+      // 非鉴权错误(DB 断等)照抛。
       if (!isAuthError(err)) throw err;
+      // [RT-H01] 状态变更类:present-but-invalid token 不静默降级主用户 → 上抛(route 转 401)。
+      if (opts?.rejectInvalidToken) throw err;
+      // 读类:失效 token → 落本机用户直通(与无 token 同路径,兼容残留旧 cookie,不破 T-046)。
     }
   }
+  // 缺失 cookie:无论读写,仍走本机主用户直通(单机免登录,别锁死 app;真正身份绑定靠 follow-up 启动令牌)。
   return identity.resolveLocalContext();
 }
 
