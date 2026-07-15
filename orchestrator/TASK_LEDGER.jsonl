@@ -32,3 +32,4 @@
 {"id":"T-032","phase":"P3","title":"[Task] 重打 Mac 安装包(含 T-029 loginDouyin fire-and-forget + T-031 win-video-tutor 22 节知识库预填)","status":"done","created":"2026-07-08","ref":""}
 {"id":"T-033","phase":"P2","title":"[Feature] 发布/项目列表默认只显示已通过:detail ingest 同步 platform_status 进 publications;listPublications 过滤 hidden_at + (platform_status='已通过' OR NULL),'显示已隐藏'开关打开才显所有(修 T-073 死按钮+加 status 维度)","status":"wip","created":"2026-07-08","ref":""}
 {"id":"T-326","phase":"AUDIT","title":"上线前全面工程审查:功能模块、数据全链路、UX、安全、稳定性与可发布性(以代码和实跑为准)","status":"done","created":"2026-07-15","ref":"docs/research/2026-07-15-prelaunch-full-engineering-data-audit-research.md","closed":"2026-07-15"}
+{"id":"T-327","phase":"ARCH","title":"基于上线审查补齐真实数据地图、功能模块串联、产品 PRD 与修复后目标架构落地计划","status":"done","created":"2026-07-15","ref":"docs/superpowers/plans/2026-07-15-creatoros-post-audit-architecture-documentation-plan.md","closed":"2026-07-15"}
