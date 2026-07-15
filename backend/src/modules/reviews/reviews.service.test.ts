@@ -18,7 +18,7 @@ import {
 // insight-on-completed guard.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-a" }; // [T-332 S2] strict 门下 ctx 必带号
 
 function fakeProjects(): ReviewsProjectsPort & {
   verifyProjectOwned: ReturnType<typeof vi.fn>;

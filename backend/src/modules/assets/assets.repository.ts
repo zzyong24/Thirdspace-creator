@@ -1,4 +1,4 @@
-import { and, asc, eq, desc, inArray, isNull, type Db } from "@creatoros/backend";
+import { and, asc, eq, desc, inArray, type Db } from "@creatoros/backend";
 import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
 import { OwnershipError } from "./assets.errors";
@@ -67,42 +67,40 @@ export interface InsertAssetFileInput {
 export interface AssetRepository {
   seedAssets(rows: AssetRow[]): Promise<void>;
   seedAssetFiles(rows: AssetFileRow[]): Promise<void>;
-  // [T-200] 认领存量 account_id IS NULL 的 assets 给 accountId(该 user 名下)。修采集(封面/
-  //   素材)在无号 ctx 下落的 null 号 —— 读侧严格 eq gate 排除 null 号 → 封面/素材占位的根因。
-  //   幂等:已归属的不动。返回改动行数。
-  claimOrphanAssets(userId: string, accountId: string): Promise<number>;
-  // [T-219] 确认门:把 user 名下某 pending asset 翻成 active + stamp accountId(当前号)。**只**
-  //   命中 status='pending' 的行(幂等:已 active / 不存在 / 越权 → 返 null,不误翻 active/archived/
-  //   deleted)。account gate 不叠加(pending 可能 account_id=NULL,不能用 eq gate 排除自己),
-  //   属主用 userId 收窄;stamp 时把 accountId 一并写(与创建时若已带号则重写同值,幂等安全)。
+  // [T-332 S2] claimOrphanAssets 已退役(SPEC §4.4):清库世界没有孤儿,采集/AI 生成
+  //   的 asset 出生即带号(ctx 账号由绑定/job 派生),不存在「先落 NULL 再认领」的窗口。
+  // [T-219] 确认门:把 user 名下某 pending asset 翻成 active(幂等:已 active / 不存在 /
+  //   越权 → 返 null,不误翻 archived/deleted)。[T-332 S2] accountId 收紧为必填 string 且
+  //   叠进 WHERE:pending 出生即带号(ISO-03),跨号确认 → 不命中 → null(§4.6 确认门
+  //   二次校验:换号后不能把 A 号的 pending 确认进 B 号)。
   commitPendingAsset(
     userId: string,
     assetId: string,
-    accountId: string | null,
+    accountId: string,
   ): Promise<AssetRow | null>;
-  // [T-136 切片 b] owned-root(assets)方法加**可选** accountId(additive:旧调用不传
-  // = undefined → 门退化不过滤 = 返该 user 全部,行为不变)。有号时按号过滤(读)/ stamp
-  // (写)。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
+  // [T-332 S2] owned-root(assets)方法的 accountId 收紧为**必填 string**(strict 门,
+  // SPEC §4.1):service 层断言 requireAccountId 后传入,repo 不再有 undefined 退化全量
+  // 的分支。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
   listAssets(
     userId: string,
     query: ListAssetsQuery,
-    accountId?: string | null,
+    accountId: string,
   ): Promise<AssetRow[]>;
   getAsset(
     userId: string,
     assetId: string,
-    accountId?: string | null,
+    accountId: string,
   ): Promise<AssetRow | null>;
   /**
    * [T-251] 按来源 URL 反查最近一条 document 类 asset(web.read 落库时把 sourceUrl 存进
    * current file 的 mediaMetadata)。**pending/active 都算**(pending = 已抓到全文但用户还没点
-   * 「存入素材库」——重读同 URL 不重新抓取的语义对它同样成立)。查不到 → null。user-scoped;
-   * accountId 可选叠加(与 getAsset 同门)。
+   * 「存入素材库」——重读同 URL 不重新抓取的语义对它同样成立)。查不到 → null。user-scoped +
+   * strict 按号门(与 getAsset 同门)。
    */
   findAssetBySourceUrl(
     userId: string,
     sourceUrl: string,
-    accountId?: string | null,
+    accountId: string,
   ): Promise<AssetRow | null>;
   insertAsset(
     userId: string,
@@ -114,7 +112,7 @@ export interface AssetRepository {
       //   才进素材库(list 按 active 过滤,pending 天然不显示)。
       status?: string;
     },
-    accountId?: string | null,
+    accountId: string,
   ): Promise<AssetRow>;
   updateAssetStatus(
     userId: string,
@@ -125,14 +123,20 @@ export interface AssetRepository {
       currentFileId?: string;
       isFavorite?: boolean;
     },
-    accountId?: string | null,
+    accountId: string,
   ): Promise<AssetRow | null>;
   // 用料反查 (mirror material-links list, inverse direction): the user-scoped 用料链
   // edges whose entity_type='asset' AND entity_id=assetId — i.e. which 创作 use
   // this asset. Newest-first. No ownership gate on the asset itself here; the
   // SERVICE asserts asset ownership first (requireAsset) before calling this.
   listAssetUsage(userId: string, assetId: string): Promise<MaterialLinkRow[]>;
-  listAssetFiles(userId: string, assetId: string): Promise<AssetFileRow[]>;
+  // [T-332 S2] 子表(asset_files)方法带必填 accountId:父锚(assets)by-id 门叠号
+  // (§4.5 号一致性门),跨号 asset 的文件不可达。
+  listAssetFiles(
+    userId: string,
+    assetId: string,
+    accountId: string,
+  ): Promise<AssetFileRow[]>;
   /**
    * [T-061] Batch-read asset_files by id — the list/get 投影 join(current file
    * 元数据进 assetResource)。IDs must come from already user-scoped asset rows
@@ -145,6 +149,7 @@ export interface AssetRepository {
     userId: string,
     assetId: string,
     patch: Record<string, unknown>,
+    accountId: string,
   ): Promise<void>;
   // [T-146 切片 a] 落文档抽取结果到 current file:extractedText(全文,可空)+ extractStatus
   // (done/failed/unsupported)。文件不存在 → no-op(诚实静默,抽取是增强)。要点卡 materialSummary
@@ -153,10 +158,12 @@ export interface AssetRepository {
     userId: string,
     assetId: string,
     patch: { extractedText?: string | null; extractStatus?: string },
+    accountId: string,
   ): Promise<void>;
   insertAssetFile(
     userId: string,
     input: InsertAssetFileInput,
+    accountId: string,
   ): Promise<AssetFileRow>;
   createUploadSession(
     userId: string,
@@ -183,22 +190,21 @@ export function createAssetRepository(
   db: Db,
   deps: RepoDeps,
 ): AssetRepository {
-  // [T-136 切片 b] 按号隔离条件门:有号叠加 `eq(assets.accountId, …)`,无号(undefined/null,
-  // 全局视图/存量)返 undefined → drizzle `and()` 忽略 → 退化为只按 userId 过滤。
-  // **账号隔离是设计要求**:严格 eq,不放宽 null(放宽会串号)。asset 必须在创建时带正确 account_id
-  //   (采集侧 T-200 修:ctx.accountId 传进 createGeneratedAsset/insertAsset),而不是读侧放宽。
-  function accountGate(accountId?: string | null) {
-    return accountId ? eq(assets.accountId, accountId) : undefined;
+  // [T-332 S2] 按号隔离 strict 门:一律 `eq(assets.accountId, accountId)`,参数必填
+  // string(service 层 requireAccountId 断言后传入)—— 不再有 undefined 退化全量的
+  // lenient 分支(拍板 ② 废除存量兜底)。asset 出生即带号(ISO-03),读侧永不放宽。
+  function accountGate(accountId: string) {
+    return eq(assets.accountId, accountId);
   }
 
   // Internal ownership gate reused by the file methods (cross-user / unknown id
-  // is indistinguishable → 404, never reveal existence). accountId 可选:owned-root
-  // 直接读点(getAsset 等)传号叠加过滤;子表方法(insertAssetFile/listAssetFiles)经
-  // 此门透传属主但**不叠加账号门**(assetId 已唯一定位,账号维度在父读点隔离,SPEC §9)。
+  // is indistinguishable → 404, never reveal existence). [T-332 S2] accountId 必填:
+  // by-id 读叠「号一致性门」(SPEC §4.5)—— 跨号 asset 与不存在同貌(404),子表方法
+  // (insertAssetFile/listAssetFiles)经此门透传属主 + 账号维度。
   async function requireOwnedAsset(
     userId: string,
     assetId: string,
-    accountId?: string | null,
+    accountId: string,
   ): Promise<AssetRow> {
     const rows = await db
       .select()
@@ -216,36 +222,37 @@ export function createAssetRepository(
   }
 
   return {
-    async claimOrphanAssets(userId, accountId) {
-      const updated = await db
-        .update(assets)
-        .set({ accountId, updatedAt: deps.now() })
-        .where(and(eq(assets.userId, userId), isNull(assets.accountId)))
-        .returning({ id: assets.id });
-      return updated.length;
-    },
-
     async commitPendingAsset(userId, assetId, accountId) {
-      // 只翻 pending → active(WHERE status='pending' 保证幂等 + 不误动其他态)。stamp accountId
-      // (当前号)—— pending 若 account_id=NULL(未选号时创建)在此补号;有号则同值重写。
+      // 只翻 pending → active(WHERE status='pending' 保证幂等 + 不误动其他态)。
+      // [T-332 S2] WHERE 叠账号门:pending 出生即带号(ISO-03),确认时二次校验与当前
+      // ctx 一致(SPEC §4.6)—— 换号后确认别号的 pending → 不命中 → null(service 404)。
       await db
         .update(assets)
-        .set({ status: "active", accountId: accountId ?? null, updatedAt: deps.now() })
+        .set({ status: "active", updatedAt: deps.now() })
         .where(
           and(
             eq(assets.id, assetId),
             eq(assets.userId, userId),
+            accountGate(accountId),
             eq(assets.status, "pending"),
           ),
         );
-      // 回读 user-scoped:WHERE 未命中(非 pending / 越权 / 不存在)→ 读也返 null → service 抛 404。
+      // 回读 user+account-scoped:WHERE 未命中(非 pending / 越权 / 跨号 / 不存在)→
+      // 读也返 null → service 抛 404。
       const rows = await db
         .select()
         .from(assets)
-        .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, userId),
+            accountGate(accountId),
+          ),
+        );
       const row = rows[0];
-      // 命中且已 active 才算翻转成功;若该 id 是本 user 的但当时非 pending(已 active/deleted),
-      // 回读会拿到它但状态不是我们刚翻的 —— 用 status==='active' 兜底判定(commit 幂等语义)。
+      // 命中且已 active 才算翻转成功;若该 id 是本 user 本号的但当时非 pending(已
+      // active/deleted),回读会拿到它但状态不是我们刚翻的 —— 用 status==='active'
+      // 兜底判定(commit 幂等语义)。
       return row && row.status === "active" ? row : null;
     },
 
@@ -340,8 +347,9 @@ export function createAssetRepository(
       await db.insert(assets).values({
         id,
         userId,
-        // [T-136 切片 b] create stamp:归到当前号(null 兜底,列 nullable)。
-        accountId: accountId ?? null,
+        // [T-332 S2] create stamp:归到当前号(必填 string,service 断言后传入;ISO-03
+        //   出生即带号,不再有 null 兜底)。
+        accountId,
         currentFileId: input.currentFileId,
         assetType: input.assetType,
         name: input.name,
@@ -411,8 +419,8 @@ export function createAssetRepository(
       return db.select().from(assetFiles).where(inArray(assetFiles.id, fileIds));
     },
 
-    async listAssetFiles(userId, assetId) {
-      await requireOwnedAsset(userId, assetId); // ownership gate
+    async listAssetFiles(userId, assetId, accountId) {
+      await requireOwnedAsset(userId, assetId, accountId); // ownership + 账号门
       const rows = await db
         .select()
         .from(assetFiles)
@@ -421,8 +429,8 @@ export function createAssetRepository(
       return rows.map(parseFile);
     },
 
-    async mergeFileMetadata(userId, assetId, patch) {
-      const files = await this.listAssetFiles(userId, assetId);
+    async mergeFileMetadata(userId, assetId, patch, accountId) {
+      const files = await this.listAssetFiles(userId, assetId, accountId);
       const current = files[files.length - 1];
       if (!current) return;
       await db
@@ -436,9 +444,9 @@ export function createAssetRepository(
         .where(eq(assetFiles.id, current.id));
     },
 
-    async updateFileExtraction(userId, assetId, patch) {
+    async updateFileExtraction(userId, assetId, patch, accountId) {
       // [T-146 切片 a] 写 current file 的抽取列。文件不存在 → 静默(与 mergeFileMetadata 一致)。
-      const files = await this.listAssetFiles(userId, assetId);
+      const files = await this.listAssetFiles(userId, assetId, accountId);
       const current = files[files.length - 1];
       if (!current) return;
       const set: Record<string, unknown> = {};
@@ -448,9 +456,9 @@ export function createAssetRepository(
       await db.update(assetFiles).set(set).where(eq(assetFiles.id, current.id));
     },
 
-    async insertAssetFile(userId, input) {
-      // Caller must own the asset (cross-user → OwnershipError, no leak).
-      await requireOwnedAsset(userId, input.assetId);
+    async insertAssetFile(userId, input, accountId) {
+      // Caller must own the asset (cross-user/跨号 → OwnershipError, no leak)。
+      await requireOwnedAsset(userId, input.assetId, accountId);
       const existing = await db
         .select()
         .from(assetFiles)

@@ -23,7 +23,13 @@ export {
   createPersistenceTransport,
   UnsupportedOperationError,
 } from "./persistence-transport";
-export { AuthenticationError, OwnershipError } from "./errors";
+export {
+  AuthenticationError,
+  OwnershipError,
+  // [T-332 S2] 账号全域隔离:未选号访问 per-account 域的引导态错误 + service 入口统一断言。
+  AccountRequiredError,
+  requireAccountId,
+} from "./errors";
 export {
   projects,
   projectActivities,

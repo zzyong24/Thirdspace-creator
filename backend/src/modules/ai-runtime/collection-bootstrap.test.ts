@@ -9,6 +9,8 @@ import type { RequestContext } from "@creatoros/contract";
 
 // T-189a —— 绑定抖音成功后:幂等建三个每天定时采集 job(self.metrics / self.detail / comments)+
 //   按序初始化触发一次拉全量。纯编排 + 注入端口,零成本单测(不碰真抖音/不建真 job)。
+// [T-332 S2] claimOrphans/hasOtherActiveDouyinAccount(T-200/T-331)已全链退役(SPEC §4.4):
+//   绑定 = 只建号绑定 job + 初始化触发,零 claim;本文件的「绑定链零 claim」用例是该裁决的守护。
 
 const ctx: RequestContext = {
   userId: "u1",
@@ -18,29 +20,20 @@ const ctx: RequestContext = {
 };
 
 // 无既有 job 的 fake deps:createJob 递增发 id,trigger 记录被触发的 job(顺序即调用序)。
-// [T-331] 默认注入首绑门(hasOtherActiveDouyinAccount → false = 无其它 active 号):claim
-//   相关既有用例保持 T-200 首绑语义;二绑用例显式覆写为 true。
 function makeDeps(
   existingBySourceKind: Record<string, { id: string; accountId?: string | null }[]> = {},
 ): CollectionBootstrapDeps & {
   _listJobs: ReturnType<typeof vi.fn>;
   _createJob: ReturnType<typeof vi.fn>;
   _trigger: ReturnType<typeof vi.fn>;
-  _claimOrphans: ReturnType<typeof vi.fn>;
-  _hasOtherActive: ReturnType<typeof vi.fn>;
   createdJobs: { sourceKind: string; schedule: string; name: string }[];
   triggeredSourceKinds: string[];
   triggeredAccountIds: (string | null | undefined)[];
-  claimCallOrder: number[];
-  callCounter: { n: number };
 } {
   let seq = 0;
   const createdJobs: { sourceKind: string; schedule: string; name: string }[] = [];
   const triggeredSourceKinds: string[] = [];
   const triggeredAccountIds: (string | null | undefined)[] = [];
-  // 记录 claim 相对 create/trigger 的调用顺序(claim 必须最先,让存量先归号)。
-  const claimCallOrder: number[] = [];
-  const callCounter = { n: 0 };
   const _listJobs = vi.fn(async (_c: RequestContext, sourceKind: string) => {
     return existingBySourceKind[sourceKind] ?? [];
   });
@@ -55,7 +48,6 @@ function makeDeps(
         target: Record<string, unknown>;
       },
     ) => {
-      callCounter.n += 1;
       createdJobs.push({
         sourceKind: input.sourceKind,
         schedule: input.schedule,
@@ -74,41 +66,21 @@ function makeDeps(
         accountId?: string | null;
       },
     ) => {
-      callCounter.n += 1;
       triggeredSourceKinds.push(job.sourceKind);
       triggeredAccountIds.push(job.accountId);
     },
   );
-  const _claimOrphans = vi.fn(async (_c: RequestContext) => {
-    claimCallOrder.push(callCounter.n); // 记录 claim 时 create/trigger 已发生几次(应为 0)
-    return {
-      projects: 3,
-      publications: 2,
-      metricSnapshots: 5,
-      metricValues: 10,
-      assets: 4,
-      scheduledJobs: 1,
-    };
-  });
-  // [T-331] 默认首绑(无其它 active 抖音号);二绑用例 mockResolvedValue(true) 覆写。
-  const _hasOtherActive = vi.fn(async (_c: RequestContext) => false);
   return {
     listJobsBySourceKind: _listJobs,
     createJob: _createJob,
     trigger: _trigger,
-    claimOrphans: _claimOrphans,
-    hasOtherActiveDouyinAccount: _hasOtherActive,
     target: {},
     _listJobs,
     _createJob,
     _trigger,
-    _claimOrphans,
-    _hasOtherActive,
     createdJobs,
     triggeredSourceKinds,
     triggeredAccountIds,
-    claimCallOrder,
-    callCounter,
   };
 }
 
@@ -288,86 +260,25 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     ]);
   });
 
-  it("[T-200] 既有 job 无号(旧 job)→ 退化用 ctx.accountId 触发", async () => {
-    const deps = makeDeps({
-      "self.metrics": [{ id: "old-metrics", accountId: null }],
-    });
-    await bootstrapDouyinCollectionJobs(ctx, deps);
-    // old-metrics 无号 → 退化 acct-1;其余新建 → acct-1。
-    expect(deps.triggeredAccountIds).toEqual([
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-    ]);
-  });
-
-  it("[T-200] 认领存量无号采集数据:claimOrphans 在建 job/触发之前调一次", async () => {
+  it("[T-332 S2] 绑定链零 claim:bootstrap 只走 listJobs/createJob/trigger 三个端口,不触碰任何数据行归属", async () => {
+    // claimOrphans/hasOtherActiveDouyinAccount 已从 CollectionBootstrapDeps 整体删除(编译期
+    // 保证不可能再被接线);行为上,绑定编排对注入端口的调用 = 每源一次 listJobs + 缺则 createJob +
+    // 一次 trigger,除此之外零副作用 —— 绑第二个号不改动任何既有行归属(ISO-08 前提)。
     const deps = makeDeps();
-    await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(deps._claimOrphans).toHaveBeenCalledTimes(1);
-    // claim 时 create/trigger 均未发生(claimCallOrder 记录的计数应为 0 = 最先跑)。
-    expect(deps.claimCallOrder).toEqual([0]);
-    // [T-331] 首绑判定确实经收敛门(带绑定 ctx)。
-    expect(deps._hasOtherActive).toHaveBeenCalledTimes(1);
-    expect(deps._hasOtherActive).toHaveBeenCalledWith(ctx);
-  });
+    // 类型守护:deps 形状里不存在 claim 相关键(运行时再断言一次,防有人偷偷加回可选钩子)。
+    expect("claimOrphans" in deps).toBe(false);
+    expect("hasOtherActiveDouyinAccount" in deps).toBe(false);
 
-  it("[T-331] 已有其它 active 抖音号(二绑)→ claimOrphans 零调用,建 job/触发照常", async () => {
-    const deps = makeDeps();
-    deps._hasOtherActive.mockResolvedValue(true); // 该 user 已有别的 active 号
-    const res = await bootstrapDouyinCollectionJobs(
-      { ...ctx, accountId: "acct-2" },
-      deps,
-    );
-    // 核心断言:二绑绝不认领(NULL 存量属谁未知,认领 = 把旧号数据错认给新号)。
-    expect(deps._claimOrphans).not.toHaveBeenCalled();
-    // 建 job / 初始化触发不受影响(收敛门只挡 claim,不挡 bootstrap 主流程)。
+    const secondBindCtx: RequestContext = { ...ctx, accountId: "acct-2" };
+    const res = await bootstrapDouyinCollectionJobs(secondBindCtx, deps);
+
+    // 二绑照常建 job + 触发(strict 门下 listJobs 只见 acct-2 的 job → 全量补建)。
     expect(res.created).toHaveLength(6);
     expect(res.triggered).toHaveLength(6);
-  });
-
-  it("[T-331] 收敛门未注入 → fail-closed 跳过 claim(不阻断建 job/触发)", async () => {
-    const deps = makeDeps();
-    delete (deps as { hasOtherActiveDouyinAccount?: unknown })
-      .hasOtherActiveDouyinAccount;
-    const res = await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(deps._claimOrphans).not.toHaveBeenCalled();
-    expect(res.created).toHaveLength(6);
-    expect(res.triggered).toHaveLength(6);
-  });
-
-  it("[T-331] 收敛门查询抛错 → fail-closed 跳过 claim(不阻断建 job/触发)", async () => {
-    const deps = makeDeps();
-    deps._hasOtherActive.mockRejectedValueOnce(new Error("accounts boom"));
-    const res = await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(deps._claimOrphans).not.toHaveBeenCalled();
-    expect(res.created).toHaveLength(6);
-    expect(res.triggered).toHaveLength(6);
-  });
-
-  it("[T-200] claimOrphans 抛错 → 不阻断建 job/触发(best-effort)", async () => {
-    const deps = makeDeps();
-    deps._claimOrphans.mockRejectedValueOnce(new Error("claim boom"));
-    const res = await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(res.created).toEqual([
-      "self.metrics",
-      "self.detail",
-      "comments",
-      "benchmark",
-      "topic.daily",
-      "favorites",
-    ]);
-    expect(res.triggered).toEqual([
-      "self.metrics",
-      "self.detail",
-      "comments",
-      "benchmark",
-      "topic.daily",
-      "favorites",
-    ]);
+    // 端口调用次数恰为:listJobs 6 + createJob 6 + trigger 6(无任何额外「认领」动作)。
+    expect(deps._listJobs).toHaveBeenCalledTimes(6);
+    expect(deps._createJob).toHaveBeenCalledTimes(6);
+    expect(deps._trigger).toHaveBeenCalledTimes(6);
   });
 
   it("[T-227] ensureCollectionJobs:存量账号只补建缺的 job,不触发采集(启动兜底)", async () => {

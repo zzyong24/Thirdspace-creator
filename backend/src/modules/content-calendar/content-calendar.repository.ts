@@ -12,6 +12,12 @@ import { OwnershipError, ValidationError } from "./content-calendar.errors";
 // when the scoped select returns empty — never revealing cross-user existence
 // (foundation §2: 404 not 403).
 //
+// [T-332 S2] 号一致性门(SPEC 2026-07-15 account-full-isolation §4.5):`accountId`
+// (= ctx 当前号,service 已 requireAccountId 断言)也 baked 进 deps;**所有 by-id
+// 读写叠号**——跨号 by-id 与跨 user 同语义(OwnershipError → 404,不泄露存在)。
+// 两张表出生即 account_id NOT NULL(全仓 strict 终态范本),列表/节奏读本就
+// strict eq(accountId),无 OR-NULL、无 null 退化。
+//
 // The not-both-bound invariant (an entry binds a ContentOutput OR a Candidate, never
 // both — §7.2) is enforced here (a pglite CHECK across two nullable columns is awkward)
 // AND re-validated on update. The cadence (user_id, account_id) UNIQUE backs upsert:
@@ -30,6 +36,9 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
+  // [T-332 S2] ctx 当前号(service 已断言非空)。by-id 读写的号一致性门用它叠号
+  // (§4.5:跨号 by-id → 404);列表/节奏路径仍走显式 accountId 参数(strict eq)。
+  accountId: string;
 }
 
 export interface CreateEntryInput {
@@ -127,6 +136,9 @@ export function createContentCalendarRepository(
       .where(
         and(
           eq(contentCalendarEntries.userId, deps.userId),
+          // [T-332 S2] 号一致性门(§4.5):by-id 叠当前号;跨号与跨 user 同语义
+          // (404,不泄露存在)。
+          eq(contentCalendarEntries.accountId, deps.accountId),
           eq(contentCalendarEntries.id, entryId),
         ),
       );
@@ -225,6 +237,8 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
+            // [T-332 S2] 写 WHERE 同步叠号(与门一致,防 TOCTOU 漂移)。
+            eq(contentCalendarEntries.accountId, deps.accountId),
             eq(contentCalendarEntries.id, entryId),
           ),
         )
@@ -245,6 +259,8 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
+            // [T-332 S2] 写 WHERE 同步叠号(与门一致)。
+            eq(contentCalendarEntries.accountId, deps.accountId),
             eq(contentCalendarEntries.id, entryId),
           ),
         )
@@ -259,6 +275,8 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
+            // [T-332 S2] 删除 WHERE 同步叠号(与门一致)。
+            eq(contentCalendarEntries.accountId, deps.accountId),
             eq(contentCalendarEntries.id, entryId),
           ),
         );

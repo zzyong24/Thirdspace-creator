@@ -20,15 +20,16 @@ describe("search db-schema (SEARCH_DDL round-trip)", () => {
   it("search_documents round-trips (INSERT … RETURNING, snake_case columns)", async () => {
     const res = await client.query(`
       INSERT INTO search_documents
-        (id, user_id, entity_type, entity_id, title, body, search_text, embedding, indexed_at)
+        (id, user_id, account_id, entity_type, entity_id, title, body, search_text, embedding, indexed_at)
       VALUES
-        ('doc-1', 'user-a', 'project', 'project-1', '标题', '正文', '标题\n正文', '[]', '2026-06-21T00:00:00.000Z')
-      RETURNING id, user_id, entity_type, entity_id, title, body, search_text, embedding, indexed_at;
+        ('doc-1', 'user-a', 'acct-a', 'project', 'project-1', '标题', '正文', '标题\n正文', '[]', '2026-06-21T00:00:00.000Z')
+      RETURNING id, user_id, account_id, entity_type, entity_id, title, body, search_text, embedding, indexed_at;
     `);
     expect(res.rows).toHaveLength(1);
     const row = res.rows[0] as Record<string, unknown>;
     expect(row.id).toBe("doc-1");
     expect(row.user_id).toBe("user-a");
+    expect(row.account_id).toBe("acct-a"); // [T-332 S1] account_id NOT NULL
     expect(row.entity_type).toBe("project");
     expect(row.entity_id).toBe("project-1");
     expect(row.search_text).toBe("标题\n正文");
@@ -39,9 +40,9 @@ describe("search db-schema (SEARCH_DDL round-trip)", () => {
     const insert = (id: string, user: string) =>
       client.query(`
         INSERT INTO search_documents
-          (id, user_id, entity_type, entity_id, title, body, search_text, embedding, indexed_at)
+          (id, user_id, account_id, entity_type, entity_id, title, body, search_text, embedding, indexed_at)
         VALUES
-          ('${id}', '${user}', 'project', 'project-1', 't', '', 't', '[]', '2026-06-21T00:00:00.000Z');
+          ('${id}', '${user}', 'acct-${user}', 'project', 'project-1', 't', '', 't', '[]', '2026-06-21T00:00:00.000Z');
       `);
     await insert("d-a", "user-a");
     // Same user + entity → unique violation. A different user is allowed.

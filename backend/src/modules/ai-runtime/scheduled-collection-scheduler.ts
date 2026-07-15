@@ -26,9 +26,16 @@ export interface SchedulerAiPort {
 
 /** 调度器需要的 job_run 端口(host 绑 schedulingService)。 */
 export interface SchedulerRunsPort {
+  // [T-332 S2 · GAP-08] scheduledFor:cron 到点触发时传计划 tick 的分钟 ISO(写 job_run.
+  //   scheduled_for,激活 (job_id, scheduled_for) 部分唯一约束);「立即运行」/绑定初始化不传。
   createRun(
     ctx: RequestContext,
-    input: { jobId: string; aiTaskId?: string | null; status?: string },
+    input: {
+      jobId: string;
+      aiTaskId?: string | null;
+      status?: string;
+      scheduledFor?: string | null;
+    },
   ): Promise<{ id: string }>;
   listRunsByJob(
     ctx: RequestContext,
@@ -107,14 +114,19 @@ export async function triggerScheduledJob(
   ctx: RequestContext,
   job: SchedulableJob,
   deps: TriggerDeps,
+  // [T-332 S2 · GAP-08] options.scheduledFor:cron 到点触发传该 tick 的分钟 ISO(写入
+  //   job_run.scheduled_for,让 (job_id, scheduled_for) 部分唯一约束真生效,根治「先查再建」
+  //   竞态重复触发);「立即运行」(runJobNow)与绑定初始化触发不带锚(即时动作,无计划 tick)。
+  options?: { scheduledFor?: string },
 ): Promise<TriggerResult> {
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
 
-  // [T-200] 采集 runtime ctx:userId 保持调用方(cron=canonical / bind/runNow=请求 user,均正确),
-  //   只把 accountId 派生成 job.account_id —— cron 系统 ctx 无 accountId,不派生就落 null 号(串号根因)。
-  //   job 无号(旧 job / 未选号)时退化用 ctx.accountId(runNow/bind 的请求号),再无则 null。
-  //   task/run/dispatch 全用这个 ctx,使 ai_task + 下游采集落库 stamp 正确 account_id。
+  // [T-200 → T-332 S2] 采集 runtime ctx:userId 保持调用方(cron=canonical / bind/runNow=请求
+  //   user,均正确),accountId 由 job.account_id 派生(ISO-06)—— cron 系统 ctx 无 accountId,
+  //   不派生就无号。S1 后 scheduled_job.account_id NOT NULL,job 恒有号;ctx.accountId 兜底分支
+  //   仅为投影类型宽松(SchedulableJob.accountId 可缺省)保留。task/run/dispatch 全用这个 ctx,
+  //   使 ai_task + 下游采集落库 stamp 正确 account_id(strict 门下无号写会被 service 断言拒绝)。
   const collectionCtx: RequestContext = {
     ...ctx,
     accountId: job.accountId ?? ctx.accountId ?? null,
@@ -170,10 +182,12 @@ export async function triggerScheduledJob(
   });
 
   // 写 job_run(running, aiTaskId);再把 jobRunId 塞进 task.inputData 交 runner 回填。
+  // [GAP-08] cron 到点触发带 scheduledFor 锚(部分唯一约束兜竞态);即时触发不带。
   const run = await deps.runs.createRun(collectionCtx, {
     jobId: job.id,
     aiTaskId: task.id,
     status: "running",
+    scheduledFor: options?.scheduledFor ?? null,
   });
 
   const dispatchInput = {
@@ -303,12 +317,18 @@ export async function tick(
 ): Promise<void> {
   const jobs = await deps.listRunnableJobs(deps.ctx);
   const now = new Date(deps.now());
+  // [T-332 S2 · GAP-08] 计划触发锚 = 本次 tick 的分钟(秒/毫秒归零的 ISO)。同一计划分钟的
+  //   重复触发(轮询竞态/进程重入)会撞 (job_id, scheduled_for) 部分唯一 → createRun 报错被
+  //   下方 catch 吞掉记日志,不产生重复 run —— 约束层兜底,in-flight 幂等闸仍是第一道。
+  const anchor = new Date(now);
+  anchor.setSeconds(0, 0);
+  const scheduledFor = anchor.toISOString();
   for (const job of jobs) {
     if (!job.enabled) continue;
     if (!cron.validate(job.schedule)) continue;
     if (!cronMatchesMinute(job.schedule, now)) continue;
     try {
-      await triggerScheduledJob(deps.ctx, job, deps);
+      await triggerScheduledJob(deps.ctx, job, deps, { scheduledFor });
     } catch (e) {
       console.error(`[scheduler] job ${job.id} 触发失败:`, e);
     }

@@ -6,8 +6,9 @@ import {
   type MetricSnapshotRow,
 } from "./analytics.repository";
 
-// Task 2 — user-scoped, append-idempotent repository (pglite-backed).
-//   - Ownership: A's rows never leak to B (every query filters user_id).
+// Task 2 — user + account 双维 scoped, append-idempotent repository (pglite-backed).
+//   - Ownership: A's rows never leak to B (every query filters user_id AND account_id
+//     —— [T-332 S2] strict,accountId 必填,lenient OR-IS-NULL 已退役)。
 //   - Idempotency: a duplicate (publicationId, source, capturedAt) append is a
 //     no-op (created:false), child metric_values count unchanged.
 //   - Idempotency by distinct captured_at: same pub+source different captured_at
@@ -15,6 +16,8 @@ import {
 //   - Pagination: total reflects the full match count; rows capped at pageSize.
 
 const NOW = "2026-06-21T00:00:00.000Z";
+// [T-332 S2] strict 门下测试统一的默认号;双号用例显式传别的号。
+const ACCT = "acct-1";
 
 function makeRepo(db: Db, tag = "a"): AnalyticsRepository {
   let seq = 0;
@@ -34,11 +37,13 @@ function snapshotRow(
     source: "platform_api",
     rawMetrics: {},
     createdAt: NOW,
+    // [T-332 S1] account_id NOT NULL:seed 行必带号(用例可覆写)。
+    accountId: ACCT,
     ...overrides,
   } as MetricSnapshotRow;
 }
 
-describe("analytics repository (user-scoped, append-idempotent)", () => {
+describe("analytics repository (user+account-scoped, append-idempotent)", () => {
   let db: Db;
 
   beforeEach(async () => {
@@ -51,11 +56,11 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       snapshotRow({ id: "ms-A", userId: "user-a", capturedAt: "2026-06-12T10:00:00.000Z" }),
       snapshotRow({ id: "ms-B", userId: "user-b", capturedAt: "2026-06-12T11:00:00.000Z" }),
     ]);
-    const a = await repo.listSnapshotsByPublication("user-a", "pub-1", 1, 20);
+    const a = await repo.listSnapshotsByPublication("user-a", ACCT, "pub-1", 1, 20);
     expect(a.total).toBe(1);
     expect(a.rows.map((r) => r.id)).toEqual(["ms-A"]);
 
-    const b = await repo.listSnapshotsByPublication("user-b", "pub-1", 1, 20);
+    const b = await repo.listSnapshotsByPublication("user-b", ACCT, "pub-1", 1, 20);
     expect(b.total).toBe(1);
     expect(b.rows.map((r) => r.id)).toEqual(["ms-B"]);
   });
@@ -68,6 +73,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       capturedAt: "2026-06-12T10:00:00.000Z",
       source: "platform_api",
       rawMetrics: { views: 100 },
+      accountId: ACCT,
       values: [
         { metricKey: "views", numericValue: 100, unit: "count", dimensions: {} },
         { metricKey: "conversion_clicks", numericValue: 12, unit: "count", dimensions: {} },
@@ -79,10 +85,10 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     expect(second.created).toBe(false);
     expect(second.snapshot.id).toBe(first.snapshot.id);
 
-    const list = await repo.listSnapshotsByPublication("user-a", "pub-1", 1, 20);
+    const list = await repo.listSnapshotsByPublication("user-a", ACCT, "pub-1", 1, 20);
     expect(list.total).toBe(1);
 
-    const values = await repo.listValuesBySnapshot("user-a", first.snapshot.id);
+    const values = await repo.listValuesBySnapshot("user-a", ACCT, first.snapshot.id);
     expect(values.length).toBe(2); // child rows not duplicated
   });
 
@@ -93,6 +99,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       ingestionRunId: null,
       source: "platform_api",
       rawMetrics: {},
+      accountId: ACCT,
       values: [],
     };
     const a = await repo.appendSnapshot("user-a", { ...base, capturedAt: "2026-06-12T10:00:00.000Z" });
@@ -101,7 +108,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     expect(b.created).toBe(true);
     expect(a.snapshot.id).not.toBe(b.snapshot.id);
 
-    const list = await repo.listSnapshotsByPublication("user-a", "pub-1", 1, 20);
+    const list = await repo.listSnapshotsByPublication("user-a", ACCT, "pub-1", 1, 20);
     expect(list.total).toBe(2);
     // ORDER BY captured_at DESC → newest first
     expect(list.rows[0]!.capturedAt).toBe("2026-06-13T10:00:00.000Z");
@@ -116,13 +123,14 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
         capturedAt: `2026-06-1${i}T10:00:00.000Z`,
         source: "platform_api",
         rawMetrics: {},
+        accountId: ACCT,
         values: [],
       });
     }
-    const page1 = await repo.listSnapshotsByPublication("user-a", "pub-1", 1, 2);
+    const page1 = await repo.listSnapshotsByPublication("user-a", ACCT, "pub-1", 1, 2);
     expect(page1.total).toBe(5);
     expect(page1.rows.length).toBe(2);
-    const page3 = await repo.listSnapshotsByPublication("user-a", "pub-1", 3, 2);
+    const page3 = await repo.listSnapshotsByPublication("user-a", ACCT, "pub-1", 3, 2);
     expect(page3.rows.length).toBe(1);
   });
 
@@ -133,11 +141,11 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       snapshotRow({ id: "ms-2", userId: "user-a", publicationId: "pub-2", capturedAt: "2026-06-13T10:00:00.000Z" }),
       snapshotRow({ id: "ms-3", userId: "user-b", publicationId: "pub-1", capturedAt: "2026-06-14T10:00:00.000Z" }),
     ]);
-    const res = await repo.listSnapshotsByProject("user-a", ["pub-1", "pub-2"], 1, 20);
+    const res = await repo.listSnapshotsByProject("user-a", ACCT, ["pub-1", "pub-2"], 1, 20);
     expect(res.total).toBe(2);
     expect(res.rows.map((r) => r.id).sort()).toEqual(["ms-1", "ms-2"]);
     // empty id list → empty page (valid)
-    const empty = await repo.listSnapshotsByProject("user-a", [], 1, 20);
+    const empty = await repo.listSnapshotsByProject("user-a", ACCT, [], 1, 20);
     expect(empty.total).toBe(0);
     expect(empty.rows).toEqual([]);
   });
@@ -179,7 +187,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       }),
     ]);
 
-    const r = await repo.getDashboardRollup("user-a");
+    const r = await repo.getDashboardRollup("user-a", ACCT);
     expect(r.snapshotCount).toBe(2); // pub-1 (newest) + pub-2
     // sums over the two latest-per-pub snapshots (100+50, 10+4, 5+1, 2+0, 4+6, 3+7)
     expect(r.plays).toBe(150);
@@ -225,7 +233,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       }),
     ]);
 
-    const r = await repo.getDashboardRollup("user-a");
+    const r = await repo.getDashboardRollup("user-a", ACCT);
     expect(r.snapshotCount).toBe(2);
     expect(r.plays).toBe(150);
     expect(r.likes).toBe(10);
@@ -237,7 +245,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
 
   it("getDashboardRollup: no snapshots → all-zero rollup, snapshotCount 0 (no throw)", async () => {
     const repo = makeRepo(db);
-    const r = await repo.getDashboardRollup("user-empty");
+    const r = await repo.getDashboardRollup("user-empty", ACCT);
     expect(r).toEqual({
       plays: 0,
       likes: 0,
@@ -252,9 +260,9 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     });
   });
 
-  // [T-136 §D 切片 c] 采集 stamp:appendSnapshot 带 accountId → metric_snapshots /
-  //   metric_values 都归到该号(采集数据无号归属 = 切号看不到该号真实指标)。
-  it("[T-136] appendSnapshot stamps account_id onto snapshot and its metric_values", async () => {
+  // [T-332 S2] 采集 stamp(strict):appendSnapshot 的 accountId 必填 → metric_snapshots /
+  //   metric_values 出生即归号,不存在「无号落 NULL」写路径(schema 已 NOT NULL)。
+  it("appendSnapshot stamps account_id onto snapshot and its metric_values (strict)", async () => {
     const repo = makeRepo(db);
     const res = await repo.appendSnapshot("user-a", {
       publicationId: "pub-acct",
@@ -269,28 +277,17 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     });
     expect(res.created).toBe(true);
     expect(res.snapshot.accountId).toBe("acct-1"); // 快照归号
-    const values = await repo.listValuesBySnapshot("user-a", res.snapshot.id);
+    const values = await repo.listValuesBySnapshot("user-a", "acct-1", res.snapshot.id);
     expect(values.length).toBe(1);
     expect(values[0]!.accountId).toBe("acct-1"); // 子指标值随快照归同号
   });
 
-  it("[T-136] appendSnapshot without accountId stamps null (存量 / 未选号兜底)", async () => {
-    const repo = makeRepo(db);
-    const res = await repo.appendSnapshot("user-a", {
-      publicationId: "pub-null",
-      capturedAt: "2026-06-12T10:00:00.000Z",
-      source: "ingestion",
-      rawMetrics: { views: 1 },
-    });
-    expect(res.snapshot.accountId).toBeNull();
-  });
-
-  // [T-326 DATA-H01] 聚合读按号隔离:语义 =「当前号 OR 未标记(account_id IS NULL)」。
-  //   两个号的 dashboard/趋势不再混读;存量 NULL 快照(老数据/未选号采集)不凭空消失;
-  //   未选号(不传 accountId)→ 全量 user-scoped,现状不变。
-  describe("[T-326 DATA-H01] account-scoped aggregate reads", () => {
-    // 三形态数据:acct-1 stamp / acct-2 stamp / 存量 NULL。
-    async function seedTwoAccountsWithLegacy(repo: AnalyticsRepository) {
+  // [T-332 S2] strict 按号隔离(SPEC §4.1):读一律 eq(account_id, 当前号)——
+  //   两个号的 dashboard/趋势/明细绝不混读;lenient「当前号 OR 未标记(IS NULL)」与
+  //   「未选号 → 全量」退化均已随用户拍板 ②(清库重来)退役。
+  describe("[T-332 S2] strict account-scoped reads", () => {
+    // 双号数据:acct-1 / acct-2(同一 user)。
+    async function seedTwoAccounts(repo: AnalyticsRepository) {
       await repo.seedSnapshots([
         // acct-1 的作品,两天(day1 累计 100 → day2 累计 150)
         snapshotRow({
@@ -326,53 +323,79 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
           rawMetrics: { views: 3000 },
           accountId: "acct-2",
         }),
-        // 存量 NULL(未标记)作品,两天(10 → 20)—— 任一号下都仍可见
-        snapshotRow({
-          id: "ms-n1-d1",
-          userId: "user-a",
-          publicationId: "pub-n1",
-          capturedAt: "2026-06-11T10:00:00.000Z",
-          rawMetrics: { views: 10 },
-          accountId: null,
-        }),
-        snapshotRow({
-          id: "ms-n1-d2",
-          userId: "user-a",
-          publicationId: "pub-n1",
-          capturedAt: "2026-06-12T10:00:00.000Z",
-          rawMetrics: { views: 20 },
-          accountId: null,
-        }),
       ]);
     }
 
-    it("getDashboardRollup(acct-1) = 本号 + 存量 NULL,不含 acct-2", async () => {
+    it("getDashboardRollup:双号各见本号,交叉泄漏为 0(ISO-08)", async () => {
       const repo = makeRepo(db);
-      await seedTwoAccountsWithLegacy(repo);
-      const r1 = await repo.getDashboardRollup("user-a", undefined, "acct-1");
-      expect(r1.snapshotCount).toBe(2); // pub-a1 + 存量 pub-n1
-      expect(r1.plays).toBe(150 + 20); // 不含 acct-2 的 3000
-      const r2 = await repo.getDashboardRollup("user-a", undefined, "acct-2");
-      expect(r2.snapshotCount).toBe(2); // pub-b1 + 存量 pub-n1
-      expect(r2.plays).toBe(3000 + 20);
+      await seedTwoAccounts(repo);
+      const r1 = await repo.getDashboardRollup("user-a", "acct-1");
+      expect(r1.snapshotCount).toBe(1); // 仅 pub-a1
+      expect(r1.plays).toBe(150); // 不含 acct-2 的 3000
+      const r2 = await repo.getDashboardRollup("user-a", "acct-2");
+      expect(r2.snapshotCount).toBe(1); // 仅 pub-b1
+      expect(r2.plays).toBe(3000);
     });
 
-    it("getDashboardRollup 未选号 → 全量 user-scoped(现状不变)", async () => {
+    it("getDailyPlayTrend:差分只含本号", async () => {
       const repo = makeRepo(db);
-      await seedTwoAccountsWithLegacy(repo);
-      const r = await repo.getDashboardRollup("user-a");
-      expect(r.snapshotCount).toBe(3);
-      expect(r.plays).toBe(150 + 3000 + 20);
+      await seedTwoAccounts(repo);
+      const t1 = await repo.getDailyPlayTrend("user-a", "acct-1", undefined, 7);
+      // day2 新增 = 150 - 100 = 50(若混入 acct-2 会是 2050)
+      expect(t1).toEqual([{ day: "2026-06-12", plays: 50 }]);
+      const t2 = await repo.getDailyPlayTrend("user-a", "acct-2", undefined, 7);
+      expect(t2).toEqual([{ day: "2026-06-12", plays: 2000 }]);
     });
 
-    it("getDailyPlayTrend(acct-1) 差分只含本号 + 存量 NULL", async () => {
+    it("明细读(listSnapshotsByPublication / listValuesBySnapshot)跨号 → 空,不泄漏", async () => {
       const repo = makeRepo(db);
-      await seedTwoAccountsWithLegacy(repo);
-      const t1 = await repo.getDailyPlayTrend("user-a", undefined, 7, "acct-1");
-      // day2 新增 = (150+20) - (100+10) = 60(若混入 acct-2 会是 2060)
-      expect(t1).toEqual([{ day: "2026-06-12", plays: 60 }]);
-      const tAll = await repo.getDailyPlayTrend("user-a", undefined, 7);
-      expect(tAll).toEqual([{ day: "2026-06-12", plays: 2060 }]);
+      await seedTwoAccounts(repo);
+      // acct-2 的作品在 acct-1 ctx 下:空页(strict,与列表同语义)。
+      const cross = await repo.listSnapshotsByPublication(
+        "user-a",
+        "acct-1",
+        "pub-b1",
+        1,
+        20,
+      );
+      expect(cross.total).toBe(0);
+      expect(cross.rows).toEqual([]);
+      const crossValues = await repo.listValuesBySnapshot(
+        "user-a",
+        "acct-1",
+        "ms-b1-d1",
+      );
+      expect(crossValues).toEqual([]);
+    });
+
+    // [T-332 S2 / spec-review minor #5] B 号(无任何数据)的聚合读必须返回空集/0,
+    // 不产 NULL、不炸 contract Zod(聚合在 JS reduce,起点全 0)。
+    it("无数据号(acct-empty)聚合读:rollup 全 0、trend 空数组、明细空页(不炸)", async () => {
+      const repo = makeRepo(db);
+      await seedTwoAccounts(repo);
+      const r = await repo.getDashboardRollup("user-a", "acct-empty");
+      expect(r).toEqual({
+        plays: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        favorites: 0,
+        followerGain: 0,
+        ctrAvg: 0,
+        finishAvg: 0,
+        finishCount: 0,
+        snapshotCount: 0,
+      });
+      const t = await repo.getDailyPlayTrend("user-a", "acct-empty", undefined, 7);
+      expect(t).toEqual([]);
+      const page = await repo.listSnapshotsByPublication(
+        "user-a",
+        "acct-empty",
+        "pub-a1",
+        1,
+        20,
+      );
+      expect(page).toEqual({ rows: [], total: 0 });
     });
   });
 });

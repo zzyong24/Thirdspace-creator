@@ -44,11 +44,12 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
-  // [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。仅 owned-root ai_conversations /
-  // ai_tasks 叠号门(非空才 eq;null → 退化不过滤,create 落 NULL)。子表经父门透传。
+  // [T-332 S2 · ISO-02/03] 第二所有权维度,**必填 strict**:owned-root ai_conversations /
+  // ai_tasks 恒叠号门(无「无号 → 退化全量」分支;未选号在 service 入口 requireAccountId
+  // 就被拒,SPEC §4.2 / C-07:0 号禁建会话与任务)。子表经父门透传。
   // ⚠️ model_configurations / agent_configurations 是「用户级」模型/密钥配置(跨号共享,
   // 非号级资源),故不叠号门(见文件尾注)。
-  accountId: string | null;
+  accountId: string;
 }
 
 export interface CreateConversationInput {
@@ -188,10 +189,8 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       .where(
         and(
           eq(aiConversations.userId, deps.userId),
-          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤,§A)。
-          deps.accountId
-            ? eq(aiConversations.accountId, deps.accountId)
-            : undefined,
+          // [T-332 S2 · §4.5 by-id 门] strict 恒叠号:跨号会话与未知 id 同样 404。
+          eq(aiConversations.accountId, deps.accountId),
           eq(aiConversations.id, conversationId),
         ),
       );
@@ -211,8 +210,8 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       .where(
         and(
           eq(aiTasks.userId, deps.userId),
-          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-          deps.accountId ? eq(aiTasks.accountId, deps.accountId) : undefined,
+          // [T-332 S2 · §4.5 by-id 门] strict 恒叠号:跨号任务与未知 id 同样 404。
+          eq(aiTasks.accountId, deps.accountId),
           eq(aiTasks.id, taskId),
         ),
       );
@@ -237,13 +236,11 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
     async listConversations({ limit, offset, scope }) {
       // T-096:scope 过滤是 user ownership 门的内层 —— 跨 scope 的会话在列表里**不出现**
       // (隔离语义:不可见,不是置灰)。不传 scope 维持全量(旧调用不破)。
-      // [T-136 切片 b] 号维度收窄是 user ownership 门的内层(非空才叠;null → 不过滤,
-      // 旧行为);scope 过滤再叠一层。
+      // [T-332 S2 · ISO-02] 号维度 strict 恒叠(user 门内层,无「无号全量」退化);
+      // scope 过滤再叠一层。
       const where = and(
         eq(aiConversations.userId, deps.userId),
-        deps.accountId
-          ? eq(aiConversations.accountId, deps.accountId)
-          : undefined,
+        eq(aiConversations.accountId, deps.accountId),
         scope ? eq(aiConversations.scope, scope) : undefined,
       );
       const rows = await db
@@ -266,7 +263,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .values({
           id: deps.nextId("ai-conv"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          // [T-332 S2 · ISO-03/C-07] 号维度盖章(必填;0 号/未选号在 service 入口即被拒)。
           accountId: deps.accountId,
           projectId: input.projectId ?? null,
           // T-096:落作用域(缺省 global,与列 DEFAULT / 迁移 backfill 语义一致)。
@@ -330,9 +327,11 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       // the user (mirrors listConversations), newest-requested first.
       // [T-116c] additive 读过滤:传了 projectId / taskType 就再叠一层 eq(纯读窄化,
       // 用户归属门始终在最外层);都不传维持全量馈,旧调用零破坏。
-      const filters = [eq(aiTasks.userId, deps.userId)];
-      // [T-136 切片 b] 号维度收窄(非空才叠;null → 全量,旧行为)。
-      if (deps.accountId) filters.push(eq(aiTasks.accountId, deps.accountId));
+      const filters = [
+        eq(aiTasks.userId, deps.userId),
+        // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
+        eq(aiTasks.accountId, deps.accountId),
+      ];
       if (projectId) filters.push(eq(aiTasks.projectId, projectId));
       if (taskType) filters.push(eq(aiTasks.taskType, taskType));
       // [T-255a] 前缀过滤(LIKE 'exec.%')。转义 %/_ 防通配注入(前缀是代码内常量,防御性)。
@@ -353,9 +352,10 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
     },
 
     async findTaskByIdempotencyKey(idempotencyKey) {
-      // [T-136 切片 b · 诚实例外] 幂等 dedup 是「用户级」——UNIQUE(user_id, idempotency_key)
-      // 不含 account_id。这里**故意不叠号门**:若叠了,同一 key 在另一个号下会漏查既有行 →
-      // 触发 UNIQUE 冲突插入失败。幂等语义按 (user, key) 归一,与号无关,保持 userId-only。
+      // [T-332 S2 · 诚实例外] 幂等 dedup 查询保持「用户级」——UNIQUE(user_id, idempotency_key)
+      // 不含 account_id,叠号门会漏查既有行 → UNIQUE 冲突插入失败。跨号隔离由 service 层
+      // 把幂等键按号命名空间化(`{accountId}:{key}`)保证:双号同 key 不互撞、也绝不
+      // 跨号返回对方任务(见 ai.service createTask)。
       const rows = await db
         .select()
         .from(aiTasks)
@@ -374,7 +374,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .values({
           id: deps.nextId("ai-task"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          // [T-332 S2 · ISO-03] 号维度盖章(必填;未选号 → service 入口 AccountRequiredError)。
           accountId: deps.accountId,
           projectId: input.projectId ?? null,
           contentOutputId: input.contentOutputId ?? null,
@@ -526,7 +526,8 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .update(assets)
         .set({
           status: "active",
-          accountId: deps.accountId ?? null,
+          // [T-332 S2] stamp 必填当前号(assets.account_id 自 S1 起 NOT NULL)。
+          accountId: deps.accountId,
           updatedAt: deps.now(),
         })
         .where(

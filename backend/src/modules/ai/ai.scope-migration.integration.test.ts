@@ -28,10 +28,11 @@ describe("[T-096] 0019_ai_conversation_scope 迁移(pglite)", () => {
 
     // 伪造迁移前存量:两类旧行(有项目归属 / 无项目归属),scope 均为增列后的 DEFAULT 'global'。
     await client.exec(`
-      INSERT INTO ai_conversations (id, user_id, project_id, scope, title, created_at, updated_at) VALUES
-        ('conv-old-proj', 'user-a', 'proj-9', 'global', '稿面对话', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
-        ('conv-old-null', 'user-a', NULL,     'global', '浮层对话', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
-        ('conv-new-surface', 'user-a', NULL,  'surface:topics', '新契约会话', '2026-01-02T00:00:00.000Z', '2026-01-02T00:00:00.000Z');
+      -- [T-332 S1] account_id NOT NULL:迁移测试行补号维。
+      INSERT INTO ai_conversations (id, user_id, account_id, project_id, scope, title, created_at, updated_at) VALUES
+        ('conv-old-proj', 'user-a', 'acct-a', 'proj-9', 'global', '稿面对话', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
+        ('conv-old-null', 'user-a', 'acct-a', NULL,     'global', '浮层对话', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
+        ('conv-new-surface', 'user-a', 'acct-a', NULL,  'surface:topics', '新契约会话', '2026-01-02T00:00:00.000Z', '2026-01-02T00:00:00.000Z');
     `);
 
     // 第一次(重)执行:ADD COLUMN IF NOT EXISTS 无害,backfill 只动 scope='global' 且有项目的行。

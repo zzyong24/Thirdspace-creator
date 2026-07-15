@@ -15,18 +15,45 @@ import { PRODUCTION_OP_IDS } from "@creatoros/backend/modules/production";
 // the Projects service (primaryAssetId on the seeded output) over the same store.
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:production 域父锚闭合(content_output ⋈ project 按
+// (userId, accountId) strict 过滤,SPEC §3.2)→ ctx 必须带 accountId,且 outputId 必须
+// 真实存在于当前号的项目下。测试号按 userId 派生;composite 层 ctx 可信,无需真建账号行。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 beforeEach(() => {
   __resetPersistenceForTests();
 });
 
-// A seeded content output owned by the canonical user.
-const OUTPUT_ID = "output-ainativebrowser-main";
+// [T-332 S2] 原引用的退役 fixture output id(output-ainativebrowser-main)在 seeded 库里
+// 并不存在 —— S2 前 ensureProductionForOutput 不做父锚校验才侥幸通过;strict 父锚门下
+// 会被正确判 OwnershipError。改走真 op 链现建 project + output(同 publishing 集成测试
+// createRealOutput 的 DATA-H03 修法),归属链真实、账号维一致。
+async function createRealOutput(owner: RequestContext): Promise<string> {
+  const proj = (await compositeTransport.request(
+    ep("projects.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: { title: "production 集成测试项目", brief: "" },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  const output = (await compositeTransport.request(
+    ep("projects.outputs.create"),
+    {
+      params: { projectId: proj.data.id },
+      query: undefined,
+      body: { title: "production 集成测试作品" },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  return output.data.id;
+}
 
 describe("production ops registered in the composite transport", () => {
   it("the 6 production op ids are persistence-backed (not the mock)", async () => {
@@ -42,8 +69,9 @@ describe("production ops registered in the composite transport", () => {
 
   it("get → put → segment → export → complete round-trips over the shared store", async () => {
     const owner = ctx(canonicalDataset.user.id);
+    const OUTPUT_ID = await createRealOutput(owner);
 
-    // GET get-or-creates a drafting production for the seeded output.
+    // GET get-or-creates a drafting production for the real output.
     const got = (await compositeTransport.request(
       ep("outputs.production.get"),
       { params: { outputId: OUTPUT_ID }, query: undefined, body: undefined } as never,
@@ -89,17 +117,18 @@ describe("production ops registered in the composite transport", () => {
     )) as { data: { id: string; status: string } };
     expect(exp.data.status).toBe("queued");
 
-    // POST complete (导出视频 phase 2) → ready + cross-module primary-asset link.
+    // POST complete (导出视频 phase 2) → ready + cross-module primary-asset link。
+    // resultAssetId 只作事实落库(fan-out 副作用失败会被吞,SPEC §11),不校验存在性。
     const done = (await compositeTransport.request(
       ep("exports.complete"),
       {
         params: { exportId: exp.data.id },
         query: undefined,
-        body: { resultAssetId: "av-ainativebrowser-output-script" },
+        body: { resultAssetId: "asset-export-e2e" },
       } as never,
       owner,
     )) as { data: { status: string; resultAssetId: string } };
     expect(done.data.status).toBe("ready");
-    expect(done.data.resultAssetId).toBe("av-ainativebrowser-output-script");
+    expect(done.data.resultAssetId).toBe("asset-export-e2e");
   });
 });

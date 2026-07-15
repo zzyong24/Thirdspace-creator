@@ -18,7 +18,9 @@ const A = "user-a";
 const B = "user-b";
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function deterministicDeps(userId: string, accountId: string | null = null) {
+// [T-332 S2] RepoDeps.accountId 已收成必填 string(strict 门):缺省固定测试号,
+// 「null 全局视图」形态随 SPEC §4.2 裁决删除。
+function deterministicDeps(userId: string, accountId = "acct-default") {
   const counters = new Map<string, number>();
   return {
     now: () => NOW,
@@ -28,7 +30,7 @@ function deterministicDeps(userId: string, accountId: string | null = null) {
     nextId: (prefix: string) => {
       const n = (counters.get(prefix) ?? 0) + 1;
       counters.set(prefix, n);
-      return `${prefix}-${userId}-${accountId ?? "g"}-${n}`;
+      return `${prefix}-${userId}-${accountId}-${n}`;
     },
     userId,
     accountId,
@@ -282,9 +284,9 @@ describe("artifacts.repository — origin provenance (F1)", () => {
   });
 });
 
-// [T-136 切片 b] 同一 user 下按号(account_id)隔离门。artifacts 是 owned-root;子表经
-// requireArtifact 门透传。三态:设号只见该号 / null 见全部 / create stamp 正确。
-describe("artifacts.repository — per-account isolation (T-136 slice b)", () => {
+// [T-332 S2 · ISO-02/08] 同一 user 下按号(account_id)strict 隔离门。artifacts 是
+// owned-root;子表经 requireArtifact 父锚门透传继承。无「null 全局视图」形态。
+describe("artifacts.repository — per-account strict isolation (T-332 S2)", () => {
   it("accountId 设时 listByProject 只返该号的 artifact", async () => {
     const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
     const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
@@ -306,26 +308,6 @@ describe("artifacts.repository — per-account isolation (T-136 slice b)", () =>
     expect(list2.map((a) => a.title)).toEqual(["号2稿"]);
   });
 
-  it("accountId null(全局视图)时 listByProject 返该 user 全部号的 artifact", async () => {
-    const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
-    const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
-    const repoGlobal = createArtifactRepository(db, deterministicDeps(A, null));
-    await repoAcct1.create({
-      projectId: "proj-shared",
-      title: "号1稿",
-      artifactType: "master_script",
-      stage: "script",
-    });
-    await repoAcct2.create({
-      projectId: "proj-shared",
-      title: "号2稿",
-      artifactType: "master_script",
-      stage: "script",
-    });
-    const all = await repoGlobal.listByProject("proj-shared");
-    expect(all.map((a) => a.title).sort()).toEqual(["号1稿", "号2稿"]);
-  });
-
   it("accountId 设时 requireArtifact 拿不到别号的行 → OwnershipError", async () => {
     const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
     const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
@@ -338,9 +320,8 @@ describe("artifacts.repository — per-account isolation (T-136 slice b)", () =>
     await expect(repoAcct1.requireArtifact(a2.id)).rejects.toBeInstanceOf(
       OwnershipError,
     );
-    // 全局视图能拿到。
-    const repoGlobal = createArtifactRepository(db, deterministicDeps(A, null));
-    expect((await repoGlobal.requireArtifact(a2.id)).id).toBe(a2.id);
+    // 归属号能拿到。
+    expect((await repoAcct2.requireArtifact(a2.id)).id).toBe(a2.id);
   });
 
   it("create stamp:artifact 行落库带 accountId", async () => {
@@ -352,14 +333,28 @@ describe("artifacts.repository — per-account isolation (T-136 slice b)", () =>
       stage: "script",
     });
     expect(a.accountId).toBe("acct-1");
-    // null 号 create → 存 null 兜底。
-    const repoGlobal = createArtifactRepository(db, deterministicDeps(A, null));
-    const g = await repoGlobal.create({
+  });
+
+  // [T-332 S2 · §4.5 父锚继承核验] 子表 script_sections 经父锚门透传:跨号 version id
+  // 读 getScriptSections → OwnershipError 404(不再依赖调用方先 getArtifact 的口头约定)。
+  it("getScriptSections 跨号 version → OwnershipError;本号读回结构化内容", async () => {
+    const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
+    const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
+    const a1 = await repoAcct1.create({
       projectId: "proj-shared",
-      title: "存量稿",
+      title: "号1稿",
       artifactType: "master_script",
       stage: "script",
     });
-    expect(g.accountId).toBeNull();
+    await repoAcct1.replaceStructuredContent(a1.currentVersionId!, {
+      scriptSections: [{ sectionType: "hook", title: "开场", content: "钩子", position: 0 }],
+    });
+    // 本号:父锚门放行,读回结构化内容。
+    const sections = await repoAcct1.getScriptSections(a1.currentVersionId!);
+    expect(sections.map((x) => x.title)).toEqual(["开场"]);
+    // 跨号:父锚门 404,子表行零泄漏。
+    await expect(
+      repoAcct2.getScriptSections(a1.currentVersionId!),
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 });

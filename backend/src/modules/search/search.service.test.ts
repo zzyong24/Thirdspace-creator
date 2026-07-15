@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, requireAccountId, AccountRequiredError } from "@creatoros/backend";
+import type { Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createSearchRepository,
@@ -20,8 +21,10 @@ import { createSearchService, type SearchService } from "./search.service";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user" };
+// [T-332 S2] ctx 一律带号(未选号 = 引导态禁读写,单独用 ctxNoAccount 断言)。
+const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user", accountId: "acct-b" };
+const ctxNoAccount: RequestContext = { userId: "user-a", requestId: "req-x", source: "user" };
 
 // Build a real-pglite-backed service: per-ctx repo over the shared db.
 function realService(db: Db): SearchService {
@@ -32,7 +35,8 @@ function realService(db: Db): SearchService {
         now: () => NOW,
         nextId: (p) => `${p}-${++seq}`,
         userId: ctx.userId,
-        accountId: ctx.accountId ?? null, // [T-136 切片 b] 透传按号维度
+        // [T-332 S2] service 入口已 requireAccountId;此处再断言收窄类型(与组合根同款)。
+        accountId: requireAccountId(ctx.accountId, "search.repository"),
       }),
     { now: () => NOW },
   );
@@ -222,6 +226,31 @@ describe("SearchService", () => {
     const facets = await svc.facets(ctxA, "ai");
     expect(facets.entityType).toEqual([{ value: "asset", count: 1 }]);
     expect(facets.tag).toEqual([]);
+  });
+
+  // [T-332 S2 · SPEC §4.2] 未选号 = 引导态:搜索面读写一律 AccountRequiredError。
+  it("8. 未选号 ctx:读写入口全部抛 AccountRequiredError(引导态禁读写)", async () => {
+    const svc = realService(db);
+    await expect(
+      svc.upsertDocument(ctxNoAccount, { entityType: "project", entityId: "p", title: "t", body: "" }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(svc.search(ctxNoAccount, "hook")).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(svc.facets(ctxNoAccount, "hook")).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(svc.listHistory(ctxNoAccount)).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      svc.rebuildUserIndex(ctxNoAccount, []),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+  });
+
+  // [T-332 S2 · ISO-08] 同 user 双号隔离:各建同名文档,搜索零交叉。
+  it("9. 同 user 双号:search 严格按当前号,跨号文档不可见", async () => {
+    const svc = realService(db);
+    const ctxAcct1: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-1" };
+    const ctxAcct2: RequestContext = { userId: "user-a", requestId: "r2", source: "user", accountId: "acct-2" };
+    await svc.upsertDocument(ctxAcct1, { entityType: "project", entityId: "p1", title: "Hook 甲", body: "" });
+    await svc.upsertDocument(ctxAcct2, { entityType: "project", entityId: "p2", title: "Hook 乙", body: "" });
+    expect((await svc.search(ctxAcct1, "hook")).map((d) => d.entityId)).toEqual(["p1"]);
+    expect((await svc.search(ctxAcct2, "hook")).map((d) => d.entityId)).toEqual(["p2"]);
   });
 });
 

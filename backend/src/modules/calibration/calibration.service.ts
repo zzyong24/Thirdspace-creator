@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createCalibrationRepository,
   type CalibrationRepository,
@@ -372,13 +372,14 @@ export function createCalibrationService(
 ): CalibrationService {
   const { db, now, nextId, ingestion, learnings, overview } = deps;
 
-  function repoFor(ctx: RequestContext): CalibrationRepository {
-    // [T-136 切片 b] 号维度透传(ctx.accountId 属主已由 resolveRequestContext 校验)。
+  // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
+  // (引导态禁读写),有号则 strict 收窄到该号。op 标注抛点便于前端归因。
+  function repoFor(ctx: RequestContext, op: string): CalibrationRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: ctx.accountId ?? null,
+      accountId: requireAccountId(ctx.accountId, op),
     };
     return createCalibrationRepository(db, repoDeps);
   }
@@ -386,7 +387,7 @@ export function createCalibrationService(
   return {
     async createRubric(ctx, input) {
       validateDimensions(input.dimensions);
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.createRubric");
       // First-insert circular-FK order (§7.5): rubric (NULL currentVersionId) → v1 →
       // patch currentVersionId.
       const rubric = await repo.createRubric({ name: input.name });
@@ -402,7 +403,7 @@ export function createCalibrationService(
 
     async bumpRubricVersion(ctx, rubricId, input) {
       validateDimensions(input.dimensions);
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.bumpRubricVersion");
       await repo.getRubric(rubricId); // ownership gate
       // versionNumber = current count + 1 (assigned under the scoped read — §7.5
       // concurrency: the (rubric_id, version_number) UNIQUE rejects a racing duplicate).
@@ -418,14 +419,14 @@ export function createCalibrationService(
     },
 
     async getRubric(ctx, rubricId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.getRubric");
       const rubric = await repo.getRubric(rubricId); // ownership gate
       const current = await repo.getRubricVersion(rubric.currentVersionId!);
       return toRubricDto(rubric, current);
     },
 
     async getCurrentRubricVersion(ctx, rubricId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.getCurrentRubricVersion");
       const rubric = await repo.getRubric(rubricId); // ownership gate
       const current = await repo.getRubricVersion(rubric.currentVersionId!);
       return toRubricVersionDto(current);
@@ -436,7 +437,7 @@ export function createCalibrationService(
       // version's dimensions), but reached from the AI confirm seam rather than the contract
       // op. The status starts 'draft' (the user reviews + locks the 盲预测 themselves; the AI
       // never auto-locks — 盲预测不可改 only kicks in after the user locks).
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.createDraftPrediction");
       const version = await repo.getRubricVersion(input.rubricVersionId); // ownership gate
       const dimensions = (version.dimensions ?? []) as RubricDimension[];
       const predictedScore = deriveScore(
@@ -457,7 +458,7 @@ export function createCalibrationService(
     },
 
     async getOverview(ctx) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.getOverview");
       // ONE pass over the user's predictions + results; everything below is DERIVED from
       // these real rows (零造假 — a metric with no backing row is 0 / "" / [] / "none").
       const predictionRows = await repo.listAllPredictions();
@@ -620,7 +621,7 @@ export function createCalibrationService(
     },
 
     async createPrediction(ctx, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.createPrediction");
       // Ownership: the rubric version must be owned (cross-user → OwnershipError → 404).
       const version = await repo.getRubricVersion(input.rubricVersionId);
       const dimensions = (version.dimensions ?? []) as RubricDimension[];
@@ -643,7 +644,7 @@ export function createCalibrationService(
     },
 
     async lockPrediction(ctx, predictionId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.lockPrediction");
       const current = await repo.getPrediction(predictionId); // ownership gate
       // Idempotent: an already-locked prediction returns its existing row WITHOUT
       // re-stamping lockedAt (mirrors Reviews `complete` idempotency). The盲预测 is never
@@ -656,17 +657,17 @@ export function createCalibrationService(
     },
 
     async getPrediction(ctx, predictionId) {
-      const row = await repoFor(ctx).getPrediction(predictionId); // ownership gate
+      const row = await repoFor(ctx, "calibration.getPrediction").getPrediction(predictionId); // ownership gate
       return toPredictionDto(row);
     },
 
     async listPredictions(ctx, page) {
-      const { rows, total } = await repoFor(ctx).listPredictions(page);
+      const { rows, total } = await repoFor(ctx, "calibration.listPredictions").listPredictions(page);
       return { rows: rows.map(toPredictionDto), total };
     },
 
     async recordResult(ctx, predictionId, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.recordResult");
       // 1. Ownership + state guard: the prediction must be LOCKED (cannot calibrate an
       //    unlocked, still-editable 盲预测 → ConflictError).
       const prediction = await repo.getPrediction(predictionId); // ownership gate
@@ -722,7 +723,7 @@ export function createCalibrationService(
     },
 
     async createRuleSuggestion(ctx, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.createRuleSuggestion");
       // Ownership gate on the target Rubric (cross-user / unknown → OwnershipError → 404)
       // BEFORE any suggestion row is written.
       await repo.getRubric(input.rubricId);
@@ -737,12 +738,12 @@ export function createCalibrationService(
 
     async listRuleSuggestions(ctx, page) {
       const { rows, total } =
-        await repoFor(ctx).listPendingRuleSuggestions(page);
+        await repoFor(ctx, "calibration.listRuleSuggestions").listPendingRuleSuggestions(page);
       return { rows: rows.map(toRuleSuggestionDto), total };
     },
 
     async adoptRuleSuggestion(ctx, suggestionId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.adoptRuleSuggestion");
       // 1. Ownership + terminal guard: the suggestion must be PENDING (a re-adopt of an
       //    already 采纳/dismissed suggestion → ConflictError; never double-bumps the rubric).
       const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
@@ -784,7 +785,7 @@ export function createCalibrationService(
     // [T-063e] 忽略一条回流建议:pending 守卫后标记 dismissed(终态),不碰 rubric 版本链。
     // adoptedVersionId 留 null(没有采纳产物),adoptedAt 记录裁决时间(终态时间戳复用同列)。
     async dismissRuleSuggestion(ctx, suggestionId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "calibration.dismissRuleSuggestion");
       const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
       if (suggestion.status !== "pending") {
         throw new ConflictError(

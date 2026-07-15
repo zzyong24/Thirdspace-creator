@@ -10,10 +10,11 @@ import {
   toFavoritesFolderDto,
   type FavoritesFolderResource,
 } from "./favorites.schema";
-import { ValidationError } from "./favorites.errors";
+import { ValidationError, requireAccountId } from "./favorites.errors";
 
-// [T-235c] Favorites service(foundation §5.3,照 trend-sources 先例)—— 每个公开方法 (ctx, …),
-// 构 repo bound to ctx.userId 使 scoping 结构化。account_id 从 ctx.accountId stamp(按号隔离)。
+// [T-235c → T-332 S2] Favorites service(foundation §5.3,照 trend-sources 先例)—— 每个公开
+// 方法 (ctx, …),构 repo bound to ctx.userId + ctx.accountId 使 scoping 结构化。每个入口经
+// requireAccountId 断言:未选号 = 引导态,读写一律 AccountRequiredError(SPEC §4.2)。
 // 收藏夹登记 CRUD(list/create/toggle/remove)+ 采集侧只读/写口:
 //   listEnabledFolders(采集只读投影)/ updateFolderSync(首采按名匹配回填 collectsId)/
 //   recordItems(aweme_id 幂等台账,只插新)/ listPendingItems + markItemPromoted(限量进池流转)。
@@ -209,27 +210,30 @@ function toDistillPending(row: FavoritesItemRow): DistillPendingItem {
 export function createFavoritesService(deps: ServiceDeps): FavoritesService {
   const { db, now, nextId } = deps;
 
-  function repoFor(ctx: RequestContext): FavoritesRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+  function repoFor(ctx: RequestContext, op: string): FavoritesRepository {
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
+      accountId: requireAccountId(ctx.accountId, op),
+    };
     return createFavoritesRepository(db, repoDeps);
   }
 
   return {
     async listFolders(ctx, query) {
-      const { rows, total } = await repoFor(ctx).listFolders(
-        ctx.accountId ?? null,
-        {
-          limit: query.pageSize,
-          offset: (query.page - 1) * query.pageSize,
-        },
-      );
+      const { rows, total } = await repoFor(ctx, "favorites.listFolders").listFolders({
+        limit: query.pageSize,
+        offset: (query.page - 1) * query.pageSize,
+      });
       return { rows: rows.map(toFavoritesFolderDto), total };
     },
 
     async createFolder(ctx, input) {
       guardCreate(input);
-      const row = await repoFor(ctx).createFolder({
-        accountId: ctx.accountId ?? null,
+      // [T-332 S2] 号由 repo deps stamp(§4.6 防绕过),不再经 input 传递。
+      const row = await repoFor(ctx, "favorites.createFolder").createFolder({
         name: input.name.trim(), // 幂等锚:trim 后同名 = 同一夹(抖音夹名精确匹配)
         note: input.note ?? null,
         enabled: input.enabled,
@@ -238,17 +242,20 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async toggleFolder(ctx, folderId, enabled) {
-      const row = await repoFor(ctx).setFolderEnabled(folderId, enabled);
+      const row = await repoFor(ctx, "favorites.toggleFolder").setFolderEnabled(
+        folderId,
+        enabled,
+      );
       return toFavoritesFolderDto(row);
     },
 
     async removeFolder(ctx, folderId) {
-      const row = await repoFor(ctx).removeFolder(folderId);
+      const row = await repoFor(ctx, "favorites.removeFolder").removeFolder(folderId);
       return toFavoritesFolderDto(row);
     },
 
     async listEnabledFolders(ctx) {
-      const rows = await repoFor(ctx).listEnabledFolders(ctx.accountId ?? null);
+      const rows = await repoFor(ctx, "favorites.listEnabledFolders").listEnabledFolders();
       return rows.map((r) => ({
         id: r.id,
         accountId: r.accountId ?? null,
@@ -259,14 +266,17 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async updateFolderSync(ctx, folderId, patch) {
-      const row = await repoFor(ctx).updateFolderSync(folderId, patch);
+      const row = await repoFor(ctx, "favorites.updateFolderSync").updateFolderSync(
+        folderId,
+        patch,
+      );
       return toFavoritesFolderDto(row);
     },
 
     async recordItems(ctx, folderId, items) {
-      return repoFor(ctx).recordItems(
+      // [T-332 S2] 号由 repo deps stamp(采集 runtime ctx 账号由 job 行派生,ISO-06)。
+      return repoFor(ctx, "favorites.recordItems").recordItems(
         items.map((item) => ({
-          accountId: ctx.accountId ?? null,
           folderId,
           awemeId: item.awemeId,
           title: item.title,
@@ -277,42 +287,47 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
     },
 
     async listPendingItems(ctx, limit) {
-      const rows = await repoFor(ctx).listPendingItems(
-        ctx.accountId ?? null,
+      const rows = await repoFor(ctx, "favorites.listPendingItems").listPendingItems(
         limit,
       );
       return rows.map(toPendingItem);
     },
 
     async markItemPromoted(ctx, itemId, candidateId) {
-      await repoFor(ctx).markItemPromoted(itemId, candidateId);
+      await repoFor(ctx, "favorites.markItemPromoted").markItemPromoted(
+        itemId,
+        candidateId,
+      );
     },
 
     // ── [T-235d-distill] 蒸馏链落点 ──
     async listItemsForDistill(ctx, limit) {
-      const rows = await repoFor(ctx).listItemsForDistill(
-        ctx.accountId ?? null,
-        limit,
-      );
+      const rows = await repoFor(
+        ctx,
+        "favorites.listItemsForDistill",
+      ).listItemsForDistill(limit);
       return rows.map(toDistillCandidate);
     },
 
     async saveTranscript(ctx, itemId, transcript) {
-      await repoFor(ctx).saveTranscript(itemId, transcript);
+      await repoFor(ctx, "favorites.saveTranscript").saveTranscript(
+        itemId,
+        transcript,
+      );
     },
 
     async saveDistillVerdict(ctx, itemId, verdict) {
-      await repoFor(ctx).saveDistillVerdict(itemId, {
+      await repoFor(ctx, "favorites.saveDistillVerdict").saveDistillVerdict(itemId, {
         status: verdict.status,
         result: verdict.result,
       });
     },
 
     async listDistillPending(ctx, limit) {
-      const rows = await repoFor(ctx).listDistillPending(
-        ctx.accountId ?? null,
-        limit,
-      );
+      const rows = await repoFor(
+        ctx,
+        "favorites.listDistillPending",
+      ).listDistillPending(limit);
       return rows.map(toDistillPending);
     },
   };

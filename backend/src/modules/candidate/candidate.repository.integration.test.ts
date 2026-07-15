@@ -16,11 +16,13 @@ import { OwnershipError, DerivedFieldError } from "./candidate.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// [T-332 S2] repo deps.accountId 已必填(service 经 requireAccountId 收窄后传入);
+// 测试给默认号 acct-main,按号隔离用例显式传不同号。
 function repoFor(
   db: Db,
   userId: string,
-  accountId: string | null = null,
-  tag = `${userId}-${accountId ?? "g"}`,
+  accountId: string = "acct-main",
+  tag = `${userId}-${accountId}`,
 ): CandidateRepository {
   let seq = 0;
   return createCandidateRepository(db, {
@@ -223,10 +225,10 @@ describe("candidate repository (integration)", () => {
   });
 });
 
-// [T-136 切片 b] 同一 user 下按号(account_id)隔离门。三表(candidates/audience_signals/
-// topic_promotions)均 owned-root、各带 account_id。三态:设号只见该号 / null 见全部 /
-// create stamp 正确。
-describe("candidate repository — per-account isolation (T-136 slice b)", () => {
+// [T-332 S2] 同一 user 下按号(account_id)隔离门。四表(candidates/audience_signals/
+// topic_promotions/topic_preferences)均 per-account(account_id NOT NULL)。strict:
+// 读写一律无条件叠 eq(account_id),不存在「null = 全局视图」退化。
+describe("candidate repository — per-account isolation (T-332 S2 strict)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
@@ -255,24 +257,10 @@ describe("candidate repository — per-account isolation (T-136 slice b)", () =>
     await expect(repo1.getCandidate(c2.id)).rejects.toBeInstanceOf(OwnershipError);
   });
 
-  it("candidates:accountId null(全局视图)时 listCandidates 见该 user 全部号", async () => {
+  it("candidates:create stamp 落库带 accountId(必有号,无 null 兜底)", async () => {
     const repo1 = repoFor(db, "user-a", "acct-1");
-    const repo2 = repoFor(db, "user-a", "acct-2");
-    const repoGlobal = repoFor(db, "user-a", null);
-    const c1 = await repo1.createCandidate(mkCand());
-    const c2 = await repo2.createCandidate(mkCand());
-    const cg = await repoGlobal.createCandidate(mkCand()); // accountId=null 存量
-    const ids = (await repoGlobal.listCandidates({})).rows.map((r) => r.id).sort();
-    expect(ids).toEqual([c1.id, c2.id, cg.id].sort());
-  });
-
-  it("candidates:create stamp 落库带 accountId(null 兜底)", async () => {
-    const repo1 = repoFor(db, "user-a", "acct-1");
-    const repoGlobal = repoFor(db, "user-a", null);
     const c1 = await repo1.createCandidate(mkCand());
     expect(c1.accountId).toBe("acct-1");
-    const cg = await repoGlobal.createCandidate(mkCand());
-    expect(cg.accountId).toBeNull();
   });
 
   it("audience_signals:accountId 设时 listSignals 只见该号 + create stamp 正确", async () => {
@@ -297,10 +285,9 @@ describe("candidate repository — per-account isolation (T-136 slice b)", () =>
     expect(s1.row.accountId).toBe("acct-1");
     const list1 = await repo1.listSignals({});
     expect(list1.rows.map((r) => r.rawText)).toEqual(["号1评论"]);
-    // 全局视图见两条。
-    const repoGlobal = repoFor(db, "user-a", null);
-    const all = await repoGlobal.listSignals({});
-    expect(all.rows.map((r) => r.rawText).sort()).toEqual(["号1评论", "号2评论"]);
+    // strict:号2 视图只见自己的一条(无全局视图)。
+    const list2 = await repo2.listSignals({});
+    expect(list2.rows.map((r) => r.rawText)).toEqual(["号2评论"]);
   });
 
   it("topic_promotions:createPromotion stamp + topicsOverviewCounts 按号计数", async () => {
@@ -314,18 +301,17 @@ describe("candidate repository — per-account isolation (T-136 slice b)", () =>
     });
     await repo2.createPromotion({ candidateId: c2.id, projectId: "proj-2" });
     expect(promo1.accountId).toBe("acct-1");
-    // 号1 总览只算号1的:1 个 pool(c1)、1 个 promotion。
+    // 号1 总览只算号1的:1 个 promotion(strict,不见号2 的)。
     const counts1 = await repo1.topicsOverviewCounts();
     expect(counts1.promotionsCount).toBe(1);
-    // 全局总览:2 个 promotion。
-    const repoGlobal = repoFor(db, "user-a", null);
-    const countsG = await repoGlobal.topicsOverviewCounts();
-    expect(countsG.promotionsCount).toBe(2);
+    const counts2 = await repo2.topicsOverviewCounts();
+    expect(counts2.promotionsCount).toBe(1);
   });
 
-  // [T-326 DATA-H02] topic preference 身份键升级为 (user_id, account_id, keyword,
-  //   direction)(迁移 0041,NULLS NOT DISTINCT):第二账号同关键词偏好独立成行,不再
-  //   改写第一账号;同号(含"未选号"的 NULL 桶)重复 upsert 仍归并强化。
+  // [T-326 DATA-H02 → T-332 S2] topic preference 身份键 ux_topic_preferences_identity_v2
+  //   (user_id, account_id, keyword, direction)(迁移 0041):第二账号同关键词偏好独立
+  //   成行,不再改写第一账号;同号重复 upsert 仍归并强化。account_id 已 NOT NULL(0042),
+  //   「未选号 NULL 桶」不复存在(service 入口 requireAccountId 拦截)。
   describe("upsertTopicPreference — 账号维度身份键 (T-326 DATA-H02)", () => {
     const prefInput = {
       keyword: "职场",
@@ -368,18 +354,40 @@ describe("candidate repository — per-account isolation (T-136 slice b)", () =>
       expect(second.weight).toBe(-7);
     });
 
-    it("未选号(NULL 桶)重复 upsert 仍幂等(NULLS NOT DISTINCT 根治多 NULL 互不冲突)", async () => {
-      const repoNull = repoFor(db, "user-a", null);
-      const first = await repoNull.upsertTopicPreference(prefInput);
-      const second = await repoNull.upsertTopicPreference({
-        ...prefInput,
-        exampleCount: 5,
-      });
-      expect(second.id).toBe(first.id); // NULL 桶自身归并,不产平行行
-      expect(second.exampleCount).toBe(5);
-      // 存量 NULL 行在全局视图可读(不凭空消失)。
-      const listNull = await repoNull.listActiveTopicPreferences();
-      expect(listNull.length).toBe(1);
+  });
+
+  // [T-332 S2] audience_signals 幂等锚升级为 _v2(user, account, source, external_id)
+  //   的核心回归:conflict target 必须与新索引列一致(不改会 ON CONFLICT 不命中直接报错);
+  //   两个号采同一评论各归其号,同号重复采仍去重。
+  describe("createSignal — external_id 幂等锚账号维度 (_v2, T-332 S2)", () => {
+    const sigInput = {
+      source: "comment",
+      rawText: "同一条评论",
+      demandTag: null,
+      payingIntent: null,
+      linkedCandidateId: null,
+      ingestionRunId: "run-1",
+      externalId: "douyin:comment:c-777",
+    };
+
+    it("两个号采同一 external_id → 各自成行;同号重复采 → 命中锚返回本号原行", async () => {
+      const repo1 = repoFor(db, "user-a", "acct-1");
+      const repo2 = repoFor(db, "user-a", "acct-2");
+      const r1 = await repo1.createSignal(sigInput);
+      expect(r1.inserted).toBe(true);
+      // 号2 同 external_id → 新行(旧 user 级唯一键下这里会被号1 的行吞掉)。
+      const r2 = await repo2.createSignal({ ...sigInput, rawText: "号2采集" });
+      expect(r2.inserted).toBe(true);
+      expect(r2.row.id).not.toBe(r1.row.id);
+      expect(r2.row.accountId).toBe("acct-2");
+      // 号1 重复采 → 幂等命中,回读的是号1 自己的行(不是号2 的)。
+      const r1again = await repo1.createSignal(sigInput);
+      expect(r1again.inserted).toBe(false);
+      expect(r1again.row.id).toBe(r1.row.id);
+      expect(r1again.row.accountId).toBe("acct-1");
+      // 各号列表各见一条。
+      expect((await repo1.listSignals({})).total).toBe(1);
+      expect((await repo2.listSignals({})).total).toBe(1);
     });
   });
 });

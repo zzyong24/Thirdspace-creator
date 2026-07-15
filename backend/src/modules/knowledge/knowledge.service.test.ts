@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, AccountRequiredError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createKnowledgeRepository } from "./knowledge.repository";
 import {
@@ -32,8 +32,32 @@ function deterministicDeps() {
   };
 }
 
-const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user" };
+// [T-332 S2] service 入口 requireAccountId:ctx 必须带当前号(未选号 = 引导态禁读写)。
+const ctxA: RequestContext = {
+  userId: "user-a",
+  accountId: "acct-a",
+  requestId: "req-a",
+  source: "user",
+};
+const ctxB: RequestContext = {
+  userId: "user-b",
+  accountId: "acct-b",
+  requestId: "req-b",
+  source: "user",
+};
+// 同 user-a 的第二个抖音号(双账号隔离断言用)。
+const ctxA2: RequestContext = {
+  userId: "user-a",
+  accountId: "acct-a2",
+  requestId: "req-a2",
+  source: "user",
+};
+// 未选号(引导态)。
+const ctxNoAccount: RequestContext = {
+  userId: "user-a",
+  requestId: "req-na",
+  source: "user",
+};
 
 let db: Db;
 let service: KnowledgeService;
@@ -105,6 +129,46 @@ describe("knowledge.service — invariants", () => {
     const aList = await service.listKnowledge(ctxA);
     expect(aList).toHaveLength(1);
     expect(aList[0]!.userId).toBe("user-a");
+  });
+});
+
+// [T-332 S2] 账号全域隔离:strict 号门 + 未选号引导态(SPEC §4.1/§4.2/§4.5)。
+describe("knowledge.service — account isolation (T-332 S2)", () => {
+  it("双账号隔离:A 号知识 B 号不可见(同 user 两个号,双向零泄漏)", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "号a 的知识" });
+    const a2 = await service.createKnowledge(ctxA2, { title: "号a2 的知识" });
+    expect(a.accountId).toBe("acct-a");
+    expect(a2.accountId).toBe("acct-a2");
+
+    const listA = await service.listKnowledge(ctxA);
+    expect(listA.map((r) => r.id)).toEqual([a.id]);
+    const listA2 = await service.listKnowledge(ctxA2);
+    expect(listA2.map((r) => r.id)).toEqual([a2.id]);
+  });
+
+  it("by-id 跨号 → OwnershipError 404(号一致性门,§4.5,不泄露存在)", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "号a 的知识" });
+    await expect(service.getKnowledge(ctxA2, a.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    await expect(
+      service.createRevision(ctxA2, a.id, { content: "跨号篡改" }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    await expect(service.archiveKnowledge(ctxA2, a.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+  });
+
+  it("未选号 → AccountRequiredError(引导态禁读写,不隐式全量/不隐式填号)", async () => {
+    await expect(service.listKnowledge(ctxNoAccount)).rejects.toBeInstanceOf(
+      AccountRequiredError,
+    );
+    await expect(
+      service.createKnowledge(ctxNoAccount, { title: "无号写入" }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      service.listAllRelations(ctxNoAccount),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
   });
 });
 

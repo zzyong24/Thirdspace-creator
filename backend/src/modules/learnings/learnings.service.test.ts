@@ -13,7 +13,7 @@ import { ConflictError, OwnershipError } from "./learnings.errors";
 // recompute formula, the cross-user apply guard, and getSuggestions.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-a" }; // [T-332 S2] strict 门下 ctx 必带号
 
 function makeProjectsPort(): LearningsProjectsPort & {
   assertOwnsProject: ReturnType<typeof vi.fn>;

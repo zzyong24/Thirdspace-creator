@@ -17,6 +17,9 @@
 import { ErrorCode } from "@creatoros/contract";
 
 export { OwnershipError } from "@creatoros/backend";
+// [T-332 S2] 账号全域隔离:未选号访问 per-account 域(assets)→ 引导态错误 + 统一断言。
+// asset_uploads 是唯一例外(C-08 裁决:临时上传会话保持 user 级,不加号断言)。
+export { AccountRequiredError, requireAccountId } from "@creatoros/backend";
 
 export class InvalidTransitionError extends Error {
   readonly code = ErrorCode.ConflictError;

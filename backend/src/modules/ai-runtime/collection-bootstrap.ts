@@ -117,22 +117,9 @@ export interface CollectionBootstrapDeps {
       accountId?: string | null;
     },
   ) => Promise<void>;
-  /** [T-200] 认领存量 account_id IS NULL 的采集数据(projects/publications/metric_snapshots/
-   *  assets + scheduled_job)给 ctx.accountId(单账号现实下安全)。host 绑各模块公开 claim 端口的
-   *  组合。幂等:已归属的不动;ctx.accountId 缺省(未选号)→ no-op。返回各表认领行数(诊断用)。
-   *  best-effort:失败不阻断建 job / 初始化触发。
-   *  [T-331] 收敛:仅当 hasOtherActiveDouyinAccount 判定「首绑」时才会被调用(见下)。 */
-  claimOrphans?: (ctx: RequestContext) => Promise<Record<string, number>>;
-  /** [T-331] 绑定 claim 收敛门:该 user 是否存在**其它** active 抖音号(≠ ctx.accountId)。
-   *  背景:T-200 的 claimOrphans 是「单号现实」下的修串号逻辑 —— 无条件把该 user 全部
-   *  account_id IS NULL 的存量认领给触发绑定的号。用户绑**第二个**号时,这会把旧号时代落的
-   *  NULL 存量(属谁未知)整批错认给新号:旧号按号门(当前号 OR NULL)看不见 → 明细匹不上、
-   *  比率指标永远「待采集」;新号名下挂一堆不属于它的作品(T-331 真机数据污染)。
-   *  语义:false = 首绑(该 user 没有其它 active 抖音号)→ claim 照旧(兼容 T-200 修串号原意,
-   *  重扫同一号也算);true = 二绑及以后 → **绝不 claim**(NULL 存量留 NULL,lenient 门继续可见,
-   *  等未来按 sec_uid 证据再收编)。host 绑 platformAccountService.listAccounts 组合。
-   *  fail-closed:未注入 / 查询抛错 → 视为「未知」一律跳过 claim(宁可少认领,不再造污染)。 */
-  hasOtherActiveDouyinAccount?: (ctx: RequestContext) => Promise<boolean>;
+  // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)已全链退役(SPEC §4.4):
+  //   清库世界没有孤儿 —— 所有 per-account 写在 service 层强制 stamp ctx.accountId(ISO-03),
+  //   不存在「先落 NULL 再认领」的窗口;绑定第二个号不再改动任何既有行归属(ISO-08)。
   /** 各 job 的 target(默认 {} —— 采集器空 target 时自 ensureDouyinSource 兜底解析源)。 */
   target?: Record<string, unknown>;
 }
@@ -183,7 +170,8 @@ export async function ensureCollectionJobs(
       const existing = await deps.listJobsBySourceKind(ctx, tpl.sourceKind);
       if (existing.length > 0) {
         // 幂等:已有同 sourceKind job → 复用既有 id,不重建(重复绑定/重启不重复建)。
-        // [T-200] 带既有 job 的属主号(claim 已把旧 null 号归号);若仍无号则退化用 ctx.accountId。
+        // [T-332 S2] 带既有 job 的属主号(S1 后 scheduled_job.account_id NOT NULL,恒有号;
+        //   listJobs 已按当前号 strict 过滤,复用的必是本号 job);?? 兜底仅为投影类型宽松保留。
         jobsInOrder.push({
           id: existing[0]!.id,
           sourceKind: tpl.sourceKind,
@@ -230,45 +218,9 @@ export async function bootstrapDouyinCollectionJobs(
   ctx: RequestContext,
   deps: CollectionBootstrapDeps,
 ): Promise<CollectionBootstrapResult> {
-  // ⓪ [T-200] 认领存量无号采集数据给当前绑定号(单账号现实下安全)。best-effort、幂等:失败不阻断
-  //   建 job / 触发;已归属的不动;未选号 → no-op。必须在建 job / 触发**之前**跑,让存量数据先归号
-  //   (含把旧 scheduled_job 归号,使后续复用既有 job 的触发能读到正确 accountId)。
-  //   [T-331] 收敛门:仅**首绑**(该 user 无其它 active 抖音号)才 claim —— 二绑及以后 NULL 存量
-  //   属谁未知,无条件认领会把旧号数据整批错认给新号(真机数据污染根因)。fail-closed:门未注入 /
-  //   查询失败 → 一律跳过 claim(宁可留 NULL 让 lenient 门可见,不再造污染)。
-  if (deps.claimOrphans) {
-    let firstBind = false;
-    if (!deps.hasOtherActiveDouyinAccount) {
-      console.warn(
-        "[collection-bootstrap] [T-331] 未注入 hasOtherActiveDouyinAccount 收敛门 → 跳过存量认领(fail-closed 防串号)",
-      );
-    } else {
-      try {
-        firstBind = !(await deps.hasOtherActiveDouyinAccount(ctx));
-        if (!firstBind) {
-          console.log(
-            `[collection-bootstrap] [T-331] 该 user 已有其它 active 抖音号 → 跳过存量认领(account=${ctx.accountId ?? "∅"};NULL 存量留待按证据收编)`,
-          );
-        }
-      } catch (err) {
-        console.error(
-          "[collection-bootstrap] [T-331] 收敛门查询失败 → 跳过存量认领(fail-closed,不阻断建 job/触发):",
-          err,
-        );
-      }
-    }
-    if (firstBind) {
-      try {
-        const claimed = await deps.claimOrphans(ctx);
-        console.log(
-          `[collection-bootstrap] 认领存量无号采集数据(account=${ctx.accountId ?? "∅"}):`,
-          claimed,
-        );
-      } catch (err) {
-        console.error("[collection-bootstrap] 认领存量数据失败(不阻断建 job/触发):", err);
-      }
-    }
-  }
+  // [T-332 S2] 原第 ⓪ 步「claim 存量无号数据」(T-200)及其 T-331 收敛门已全链退役(SPEC §4.4):
+  //   strict 世界所有 per-account 行出生即带号(ISO-01/03),绑定 = 只建号绑定 job + 初始化触发,
+  //   **零 claim** —— 绑第二个号不改动任何既有行归属(ISO-08 双号验收前提)。
 
   // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → benchmark → topic.daily
   //   → favorites)。

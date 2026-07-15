@@ -15,6 +15,10 @@ import { OwnershipError, ConflictError } from "./knowledge.errors";
 
 const A = "user-a";
 const B = "user-b";
+// [T-332 S2] strict 号维度:repo 一律要求非空 accountId(service 层 requireAccountId
+// 已断言),测试里为两个 user 各配一个默认号。
+const ACC_A = "acct-a";
+const ACC_B = "acct-b";
 const NOW = "2026-06-21T00:00:00.000Z";
 
 function deterministicDeps() {
@@ -39,57 +43,57 @@ beforeEach(async () => {
 
 describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
   it("list is user-scoped: A sees only A's items", async () => {
-    await repo.create(A, null, { title: "A 的笔记" });
-    await repo.create(B, null, { title: "B 的笔记" });
-    const aRows = await repo.list(A, null);
+    await repo.create(A, ACC_A, { title: "A 的笔记" });
+    await repo.create(B, ACC_B, { title: "B 的笔记" });
+    const aRows = await repo.list(A, ACC_A);
     expect(aRows).toHaveLength(1);
     expect(aRows[0]!.title).toBe("A 的笔记");
     expect(aRows[0]!.userId).toBe(A);
   });
 
   it("get(B, aItemId) throws OwnershipError (no existence leak)", async () => {
-    const a = await repo.create(A, null, { title: "A 的笔记" });
-    await expect(repo.get(B, null, a.id)).rejects.toBeInstanceOf(OwnershipError);
+    const a = await repo.create(A, ACC_A, { title: "A 的笔记" });
+    await expect(repo.get(B, ACC_B, a.id)).rejects.toBeInstanceOf(OwnershipError);
     // A can still get its own.
-    const got = await repo.get(A, null, a.id);
+    const got = await repo.get(A, ACC_A, a.id);
     expect(got.id).toBe(a.id);
   });
 
   it("createRevision(B, aItemId) throws — cannot revise A's item", async () => {
-    const a = await repo.create(A, null, { title: "A 的笔记" });
+    const a = await repo.create(A, ACC_A, { title: "A 的笔记" });
     await expect(
-      repo.createRevision(B, null, a.id, { content: "篡改" }),
+      repo.createRevision(B, ACC_B, a.id, { content: "篡改" }),
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 
   it("[T-211] renameTitle 只改标题(content/status/currentRevisionId 不变)", async () => {
-    const a = await repo.create(A, null, { title: "旧标题", content: "正文" });
-    const renamed = await repo.renameTitle(A, null, a.id, "新标题");
+    const a = await repo.create(A, ACC_A, { title: "旧标题", content: "正文" });
+    const renamed = await repo.renameTitle(A, ACC_A, a.id, "新标题");
     expect(renamed.title).toBe("新标题");
     expect(renamed.status).toBe("active");
     // 不新建 revision:currentRevisionId 保持,内容不变。
     expect(renamed.currentRevisionId).toBe(a.currentRevisionId);
-    const rev = await repo.getRevision(A, null, renamed.currentRevisionId);
+    const rev = await repo.getRevision(A, ACC_A, renamed.currentRevisionId);
     expect(rev.content).toBe("正文");
     // 读回确认落库。
-    const got = await repo.get(A, null, a.id);
+    const got = await repo.get(A, ACC_A, a.id);
     expect(got.title).toBe("新标题");
   });
 
   it("[T-211] renameTitle(B, aItemId) throws — 跨用户不能改 A 的标题", async () => {
-    const a = await repo.create(A, null, { title: "A 的标题" });
+    const a = await repo.create(A, ACC_A, { title: "A 的标题" });
     await expect(
-      repo.renameTitle(B, null, a.id, "被篡改"),
+      repo.renameTitle(B, ACC_B, a.id, "被篡改"),
     ).rejects.toBeInstanceOf(OwnershipError);
     // A 的标题未被动。
-    expect((await repo.get(A, null, a.id)).title).toBe("A 的标题");
+    expect((await repo.get(A, ACC_A, a.id)).title).toBe("A 的标题");
   });
 
   it("createRelation cannot link to B's item (both ends must be owned)", async () => {
-    const a1 = await repo.create(A, null, { title: "A1" });
-    const b1 = await repo.create(B, null, { title: "B1" });
+    const a1 = await repo.create(A, ACC_A, { title: "A1" });
+    const b1 = await repo.create(B, ACC_B, { title: "B1" });
     await expect(
-      repo.createRelation(A, null, a1.id, {
+      repo.createRelation(A, ACC_A, a1.id, {
         targetKnowledgeId: b1.id,
         relationType: "references",
       }),
@@ -97,9 +101,9 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
   });
 
   it("createRelation rejects a self-link with ConflictError", async () => {
-    const a1 = await repo.create(A, null, { title: "A1" });
+    const a1 = await repo.create(A, ACC_A, { title: "A1" });
     await expect(
-      repo.createRelation(A, null, a1.id, {
+      repo.createRelation(A, ACC_A, a1.id, {
         targetKnowledgeId: a1.id,
         relationType: "references",
       }),
@@ -107,36 +111,36 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
   });
 
   it("create produces revision #1 and sets currentRevisionId", async () => {
-    const a = await repo.create(A, null, { title: "A", content: "v1" });
+    const a = await repo.create(A, ACC_A, { title: "A", content: "v1" });
     expect(a.status).toBe("active");
     expect(a.sourceType).toBe("manual");
-    const rev = await repo.getRevision(A, null, a.currentRevisionId);
+    const rev = await repo.getRevision(A, ACC_A, a.currentRevisionId);
     expect(rev.revisionNumber).toBe(1);
     expect(rev.content).toBe("v1");
   });
 
   it("a second revision yields #2, repoints currentRevisionId, leaves #1 unchanged (append-only)", async () => {
-    const a = await repo.create(A, null, { title: "A", content: "v1" });
+    const a = await repo.create(A, ACC_A, { title: "A", content: "v1" });
     const firstRevId = a.currentRevisionId;
-    const firstRevBefore = await repo.getRevision(A, null, firstRevId);
+    const firstRevBefore = await repo.getRevision(A, ACC_A, firstRevId);
 
-    const rev2 = await repo.createRevision(A, null, a.id, { content: "v2" });
+    const rev2 = await repo.createRevision(A, ACC_A, a.id, { content: "v2" });
     expect(rev2.revisionNumber).toBe(2);
     expect(rev2.content).toBe("v2");
 
-    const itemAfter = await repo.get(A, null, a.id);
+    const itemAfter = await repo.get(A, ACC_A, a.id);
     expect(itemAfter.currentRevisionId).toBe(rev2.id);
     expect(itemAfter.currentRevisionId).not.toBe(firstRevId);
 
     // Revision #1 row is byte-identical (append-only — never UPDATEd/DELETEd).
-    const firstRevAfter = await repo.getRevision(A, null, firstRevId);
+    const firstRevAfter = await repo.getRevision(A, ACC_A, firstRevId);
     expect(firstRevAfter).toEqual(firstRevBefore);
   });
 
   it("createRelation between two owned items returns a numeric strength", async () => {
-    const a1 = await repo.create(A, null, { title: "A1" });
-    const a2 = await repo.create(A, null, { title: "A2" });
-    const rel = await repo.createRelation(A, null, a1.id, {
+    const a1 = await repo.create(A, ACC_A, { title: "A1" });
+    const a2 = await repo.create(A, ACC_A, { title: "A2" });
+    const rel = await repo.createRelation(A, ACC_A, a1.id, {
       targetKnowledgeId: a2.id,
       relationType: "references",
     });
@@ -148,47 +152,60 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
     expect(rel.createdByType).toBe("user");
   });
 
-  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号(account-a / account-b)。
-  // 存量 account_id=null 的知识是历史/全局知识,选中具体号时也要能读(否则
-  // 服务端列表无号门可见,客户端预览带 x-account-id 后 404)。
-  it("accountId scopes reads within a user while including legacy null-account knowledge", async () => {
-    const ACC_A = "account-a";
-    const ACC_B = "account-b";
-    const legacy = await repo.create(A, null, { title: "存量全局笔记" });
+  // [T-332 S2] 号维度 strict 隔离(SPEC §4.1/§4.5):同一 user 下两个抖音号,
+  // 读写一律 eq(account_id)——无 OR-NULL 兼容分支、无 null 退化全量。
+  it("accountId scopes reads strictly within a user (A 号知识 B 号不可见)", async () => {
+    const ACC_1 = "account-1";
+    const ACC_2 = "account-2";
     // 同一 user A,分别以两个号 create(号维度随调用透传)。
-    const kA = await repo.create(A, ACC_A, { title: "号a 笔记" });
-    const kB = await repo.create(A, ACC_B, { title: "号b 笔记" });
-    // create stamp:account_id 落到行上。
-    expect(kA.accountId).toBe(ACC_A);
-    expect(kB.accountId).toBe(ACC_B);
+    const k1 = await repo.create(A, ACC_1, { title: "号1 笔记" });
+    const k2 = await repo.create(A, ACC_2, { title: "号2 笔记" });
+    // create stamp:account_id 落到行上(NOT NULL,ISO-01)。
+    expect(k1.accountId).toBe(ACC_1);
+    expect(k2.accountId).toBe(ACC_2);
 
-    // 号a 视角 list 见号a + 存量 null;号b 见号b + 存量 null。
-    const listA = await repo.list(A, ACC_A);
-    expect(listA.map((r) => r.id).sort()).toEqual([legacy.id, kA.id].sort());
-    const listB = await repo.list(A, ACC_B);
-    expect(listB.map((r) => r.id).sort()).toEqual([legacy.id, kB.id].sort());
-    // null 号(未选号/存量)→ 退化不过滤,两条都见。
-    const listNull = await repo.list(A, null);
-    expect(listNull.map((r) => r.id).sort()).toEqual(
-      [legacy.id, kA.id, kB.id].sort(),
-    );
+    // strict list:每号只见自己的行,双向零泄漏(ISO-02/ISO-08)。
+    const list1 = await repo.list(A, ACC_1);
+    expect(list1.map((r) => r.id)).toEqual([k1.id]);
+    const list2 = await repo.list(A, ACC_2);
+    expect(list2.map((r) => r.id)).toEqual([k2.id]);
 
-    // 跨号 get:号b 视角取号a 的行 → OwnershipError(404,不泄露存在)。
-    await expect(repo.get(A, ACC_B, kA.id)).rejects.toBeInstanceOf(
+    // 跨号 by-id:号2 视角取号1 的行 → OwnershipError(404,不泄露存在,§4.5)。
+    await expect(repo.get(A, ACC_2, k1.id)).rejects.toBeInstanceOf(
       OwnershipError,
     );
-    // 本号 get 正常;任意选中号可取存量 null;null 号可取任意本人行。
-    expect((await repo.get(A, ACC_A, kA.id)).id).toBe(kA.id);
-    expect((await repo.get(A, ACC_A, legacy.id)).id).toBe(legacy.id);
-    expect((await repo.get(A, ACC_B, legacy.id)).id).toBe(legacy.id);
-    expect((await repo.get(A, null, kB.id)).id).toBe(kB.id);
+    await expect(repo.get(A, ACC_1, k2.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 本号 get 正常。
+    expect((await repo.get(A, ACC_1, k1.id)).id).toBe(k1.id);
+    expect((await repo.get(A, ACC_2, k2.id)).id).toBe(k2.id);
+  });
+
+  // [T-332 S2 · ISO-06 例外口] 组合根种子巡检:user 级跨号读 + 跨号标题修复。
+  it("listAllAccountsSystem / renameTitleSystem are user-level (跨号可见/可改,仅系统巡检用)", async () => {
+    const k1 = await repo.create(A, "account-1", { title: "号1 笔记" });
+    const k2 = await repo.create(A, "account-2", { title: "号2 笔记" });
+    await repo.create(B, ACC_B, { title: "别人的" });
+
+    // user 级全量:同 user 跨号全见;他人不可见。
+    const all = await repo.listAllAccountsSystem(A);
+    expect(all.map((r) => r.id).sort()).toEqual([k1.id, k2.id].sort());
+
+    // 跨号标题修复:无 account 门,但 user 门仍在。
+    const renamed = await repo.renameTitleSystem(A, k2.id, "改过的号2 笔记");
+    expect(renamed.title).toBe("改过的号2 笔记");
+    expect(renamed.currentRevisionId).toBe(k2.currentRevisionId);
+    await expect(
+      repo.renameTitleSystem(B, k1.id, "越权"),
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 });
 
 // [T-079a] 出处 + 战绩投影(SPEC 2026-07-03-knowledge-asset-redesign §1)。
 describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", () => {
   it("create 透传 sourceNote,get/list 原样读回;缺省为 NULL", async () => {
-    const withNote = await repo.create(A, null, {
+    const withNote = await repo.create(A, ACC_A, {
       title: "时区、UA、TLS 指纹任何两项一致就会被标记",
       knowledgeType: "quote",
       sourceNote: "Reddit r/ClaudeAI 用户 @sysadmthrowaway 原帖,需核实",
@@ -198,10 +215,10 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       "Reddit r/ClaudeAI 用户 @sysadmthrowaway 原帖,需核实",
     );
 
-    const without = await repo.create(A, null, { title: "无出处" });
+    const without = await repo.create(A, ACC_A, { title: "无出处" });
     expect(without.sourceNote).toBeNull();
 
-    const listed = await repo.list(A, null);
+    const listed = await repo.list(A, ACC_A);
     expect(listed.find((r) => r.id === withNote.id)!.sourceNote).toContain(
       "需核实",
     );
@@ -210,15 +227,15 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
 
   it("四原子类型可落库(claim/evidence/quote/qa)", async () => {
     for (const t of ["claim", "evidence", "quote", "qa"]) {
-      const row = await repo.create(A, null, { title: `原子-${t}`, knowledgeType: t });
+      const row = await repo.create(A, ACC_A, { title: `原子-${t}`, knowledgeType: t });
       expect(row.knowledgeType).toBe(t);
     }
   });
 
   it("usedCount = materialLinks(entity_type='knowledge') 反查计数;无用料 = 0", async () => {
     const { materialLinks } = await import("@creatoros/backend");
-    const used = await repo.create(A, null, { title: "被用两次" });
-    const unused = await repo.create(A, null, { title: "没被用" });
+    const used = await repo.create(A, ACC_A, { title: "被用两次" });
+    const unused = await repo.create(A, ACC_A, { title: "没被用" });
     await db.insert(materialLinks).values([
       {
         id: "ml-1",
@@ -271,10 +288,10 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       },
     ]);
 
-    const listed = await repo.list(A, null);
+    const listed = await repo.list(A, ACC_A);
     expect(listed.find((r) => r.id === used.id)!.usedCount).toBe(2);
     expect(listed.find((r) => r.id === unused.id)!.usedCount).toBe(0);
-    const got = await repo.get(A, null, used.id);
+    const got = await repo.get(A, ACC_A, used.id);
     expect(got.usedCount).toBe(2);
     expect(got.usedInPublished).toBe(false); // 无 published publication
   });
@@ -283,8 +300,8 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
     const { materialLinks, contentOutputs, publications } = await import(
       "@creatoros/backend"
     );
-    const hit = await repo.create(A, null, { title: "进过已发布项目" });
-    const miss = await repo.create(A, null, { title: "只进过草稿项目" });
+    const hit = await repo.create(A, ACC_A, { title: "进过已发布项目" });
+    const miss = await repo.create(A, ACC_A, { title: "只进过草稿项目" });
     await db.insert(materialLinks).values([
       {
         id: "ml-p1",
@@ -336,6 +353,8 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       {
         id: "pub-1",
         userId: A,
+        // [T-332 S1] publications.account_id NOT NULL 收口后,测试夹具必须带号。
+        accountId: ACC_A,
         contentOutputId: "co-pub",
         platform: "douyin",
         accountReference: "acc-1",
@@ -347,6 +366,7 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       {
         id: "pub-2",
         userId: A,
+        accountId: ACC_A,
         contentOutputId: "co-draft",
         platform: "douyin",
         accountReference: "acc-1",
@@ -356,10 +376,10 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       },
     ]);
 
-    const listed = await repo.list(A, null);
+    const listed = await repo.list(A, ACC_A);
     expect(listed.find((r) => r.id === hit.id)!.usedInPublished).toBe(true);
     expect(listed.find((r) => r.id === hit.id)!.usedCount).toBe(1);
     expect(listed.find((r) => r.id === miss.id)!.usedInPublished).toBe(false);
-    expect((await repo.get(A, null, hit.id)).usedInPublished).toBe(true);
+    expect((await repo.get(A, ACC_A, hit.id)).usedInPublished).toBe(true);
   });
 });

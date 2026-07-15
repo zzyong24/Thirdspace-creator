@@ -16,6 +16,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner for created rows
+  // [T-332 S2] projects.account_id 已 NOT NULL(账号全域隔离 S1):遗留 repo 的 create
+  // 同样必须 stamp 属主号 —— 从 deps 带入(调用方 = 旧底座 persistence-transport 的
+  // per-ctx factory,从 requestCtx.accountId 透传),必填 string,不 stamp null。
+  accountId: string;
 }
 
 type ProjectRow = typeof projects.$inferSelect;
@@ -62,6 +66,7 @@ export function createProjectRepository(db: Db, deps: RepoDeps): ProjectReposito
         .values({
           id: deps.nextId("project"),
           userId: deps.userId,
+          accountId: deps.accountId, // [T-332 S2] NOT NULL schema:出生即带号
           title,
           brief: brief ?? "",
           contentCategory: "",

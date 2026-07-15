@@ -28,6 +28,7 @@ const ctx: RequestContext = {
   userId: "user-1",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-1", // [T-332 S2]
 };
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;

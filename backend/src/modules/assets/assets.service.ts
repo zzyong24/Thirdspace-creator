@@ -13,6 +13,7 @@ import {
   InvalidTransitionError,
   ConflictError,
   UploadValidationError,
+  requireAccountId,
 } from "./assets.errors";
 import { extForFileName, extForMime } from "../../lib/mime-ext";
 
@@ -54,9 +55,10 @@ export interface AssetUploadDto {
 }
 
 export interface AssetsService {
-  // [T-200] 认领存量无号 assets 给 ctx.accountId(修采集封面/素材在无号 ctx 下落的 null 号 →
-  //   读侧严格 eq gate 排除 → 占位的根因)。幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数。
-  claimOrphanAssets(ctx: RequestContext): Promise<number>;
+  // [T-332 S2] claimOrphanAssets 已随 claimOrphans 全链退役(SPEC §4.4):清库世界没有
+  //   孤儿,采集/AI 生成的 asset 出生即带号。所有经 ctx 的入口(读+写)统一断言
+  //   requireAccountId(§4.2 未选号=引导态禁读写);唯一例外是 createUpload(asset_uploads
+  //   临时会话 user 级,C-08 裁决),账号断言在确认落 assets 的 completeUpload。
   listAssets(ctx: RequestContext, query: ListAssetsQuery): Promise<AssetRow[]>;
   /** [T-061] Batch-read current files for the list/get 投影(ids 来自 user-scoped rows)。 */
   listFilesByIds(ctx: RequestContext, fileIds: string[]): Promise<AssetFileRow[]>;
@@ -173,37 +175,42 @@ export function createAssetsService(
   },
 ): AssetsService {
   // Load an owned asset or raise OwnershipError (404, no existence leak).
+  // [T-332 S2] by-id 读叠「号一致性门」(SPEC §4.5):未选号 → AccountRequiredError
+  // (引导态);跨号 asset → 与不存在同貌 404(strict 世界里别号内容就该不存在)。
   async function requireAsset(
     ctx: RequestContext,
     assetId: string,
   ): Promise<AssetRow> {
-    const row = await repo.getAsset(ctx.userId, assetId, ctx.accountId ?? null);
+    const accountId = requireAccountId(ctx.accountId, "assets.getAsset");
+    const row = await repo.getAsset(ctx.userId, assetId, accountId);
     if (!row) throw new OwnershipError("Asset not found");
     return row;
   }
 
   return {
-    async claimOrphanAssets(ctx) {
-      if (!ctx.accountId) return 0; // 未选号:无号可认领
-      return repo.claimOrphanAssets(ctx.userId, ctx.accountId);
-    },
-
     async commitPendingAsset(ctx, assetId) {
-      // pending → active + stamp 当前号(确认门经 dispatch route,ctx 带 x-account-id 校验后的号)。
+      // pending → active(确认门经 dispatch route,ctx 带 x-account-id 校验后的号)。
+      // [T-332 S2] 确认门二次校验(SPEC §4.6):repo WHERE 叠账号门,跨号 pending → null → 404。
       const row = await repo.commitPendingAsset(
         ctx.userId,
         assetId,
-        ctx.accountId ?? null,
+        requireAccountId(ctx.accountId, "assets.commitPendingAsset"),
       );
-      if (!row) throw new OwnershipError("Asset not found"); // 非 pending / 越权 / 不存在
+      if (!row) throw new OwnershipError("Asset not found"); // 非 pending / 越权 / 跨号 / 不存在
       return row;
     },
 
     async listAssets(ctx, query) {
-      return repo.listAssets(ctx.userId, query, ctx.accountId ?? null);
+      return repo.listAssets(
+        ctx.userId,
+        query,
+        requireAccountId(ctx.accountId, "assets.listAssets"),
+      );
     },
 
-    async listFilesByIds(_ctx, fileIds) {
+    async listFilesByIds(ctx, fileIds) {
+      // ids 来自已按号过滤的 asset 行(list/get 投影),这里仍统一断言引导态语义。
+      requireAccountId(ctx.accountId, "assets.listFilesByIds");
       return repo.listFilesByIds(fileIds);
     },
 
@@ -215,13 +222,14 @@ export function createAssetsService(
       return repo.findAssetBySourceUrl(
         ctx.userId,
         sourceUrl,
-        ctx.accountId ?? null,
+        requireAccountId(ctx.accountId, "assets.findAssetBySourceUrl"),
       );
     },
 
     async getDownloadUrl(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.getDownloadUrl");
       const asset = await requireAsset(ctx, assetId);
-      const files = await repo.listAssetFiles(ctx.userId, assetId);
+      const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
       const current =
         files.find((f) => f.id === asset.currentFileId) ??
         files[files.length - 1];
@@ -241,8 +249,9 @@ export function createAssetsService(
       return { url, fileName };
     },
     async getAssetBytes(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.getAssetBytes");
       await requireAsset(ctx, assetId);
-      const files = await repo.listAssetFiles(ctx.userId, assetId);
+      const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
       const current = files[files.length - 1];
       if (!current) return null;
       const storage = await objectStorageForCtx(ctx);
@@ -252,13 +261,18 @@ export function createAssetsService(
     },
 
     async mergeAiAnnotation(ctx, assetId, patch) {
+      const accountId = requireAccountId(ctx.accountId, "assets.mergeAiAnnotation");
       await requireAsset(ctx, assetId);
-      await repo.mergeFileMetadata(ctx.userId, assetId, patch);
+      await repo.mergeFileMetadata(ctx.userId, assetId, patch, accountId);
     },
 
     async updateFileExtraction(ctx, assetId, patch) {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "assets.updateFileExtraction",
+      );
       await requireAsset(ctx, assetId);
-      await repo.updateFileExtraction(ctx.userId, assetId, patch);
+      await repo.updateFileExtraction(ctx.userId, assetId, patch, accountId);
     },
 
     async createUpload(ctx, input) {
@@ -317,6 +331,9 @@ export function createAssetsService(
     },
 
     async completeUpload(ctx, uploadId, input) {
+      // [T-332 S2 · C-08] 确认落 assets 的入口:上传会话本身 user 级,但物化 asset
+      // 必须归号 —— 未选号 → AccountRequiredError(不 stamp null)。
+      const accountId = requireAccountId(ctx.accountId, "assets.completeUpload");
       // Load the session scoped to the ctx user (foreign/unknown → 404).
       const session = await repo.getUploadSession(ctx.userId, uploadId);
       if (!session) throw new OwnershipError("Upload session not found");
@@ -336,32 +353,42 @@ export function createAssetsService(
           name: input.name,
           currentFileId: null,
         },
-        ctx.accountId ?? null,
+        accountId,
       );
-      const file = await repo.insertAssetFile(ctx.userId, {
-        assetId: asset.id,
-        storageKey: session.storageKey,
-        mimeType: head.mimeType || session.mimeType,
-        fileSize: head.fileSize || session.fileSize,
-        checksum: head.checksum,
-        width: head.width,
-        height: head.height,
-        durationMs: head.durationMs,
-        mediaMetadata: head.mediaMetadata,
-      });
+      const file = await repo.insertAssetFile(
+        ctx.userId,
+        {
+          assetId: asset.id,
+          storageKey: session.storageKey,
+          mimeType: head.mimeType || session.mimeType,
+          fileSize: head.fileSize || session.fileSize,
+          checksum: head.checksum,
+          width: head.width,
+          height: head.height,
+          durationMs: head.durationMs,
+          mediaMetadata: head.mediaMetadata,
+        },
+        accountId,
+      );
       const updated = await repo.updateAssetStatus(
         ctx.userId,
         asset.id,
         {
           currentFileId: file.id,
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       await repo.markUploadCompleted(ctx.userId, uploadId);
       return updated ?? asset;
     },
 
     async createGeneratedAsset(ctx, input) {
+      // [T-332 S2] 服务端直写(采集封面/AI 生成)的落 assets 入口:出生即带号(ISO-03)。
+      //   采集/AI 链路的 ctx 账号由绑定/job/ai_task 派生(ISO-06),恒有号,门不误伤。
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "assets.createGeneratedAsset",
+      );
       // SPEC §20 input validation (mirror createUpload phase 1).
       if (!ASSET_TYPES.has(input.assetType)) {
         throw new UploadValidationError(`Invalid assetType: ${input.assetType}`);
@@ -380,7 +407,8 @@ export function createAssetsService(
         mimeType: input.mimeType,
         fileSize: input.bytes.byteLength,
         // [T-157] 服务端直写(采集封面/AI 生成)同样按当前号分区,与客户端上传布局一致。
-        accountId: ctx.accountId ?? null,
+        // [T-332 S2] 已在入口断言,直接用断言后的号。
+        accountId,
       });
       // Direct-write the in-process bytes (the runner already generated them) — no HTTP
       // blob-route round-trip. Then head the object to get the authoritative size/checksum.
@@ -402,46 +430,55 @@ export function createAssetsService(
           // [T-219] 截图端口传 pending → 生为待确认态(素材库 list 按 active 过滤,不显示)。
           status: input.pending ? "pending" : "active",
         },
-        ctx.accountId ?? null,
+        accountId,
       );
-      const file = await repo.insertAssetFile(ctx.userId, {
-        assetId: asset.id,
-        storageKey,
-        mimeType: head.mimeType || input.mimeType,
-        fileSize: head.fileSize || input.bytes.byteLength,
-        checksum: head.checksum,
-        width: head.width,
-        height: head.height,
-        durationMs: head.durationMs,
-        mediaMetadata: head.mediaMetadata,
-      });
+      const file = await repo.insertAssetFile(
+        ctx.userId,
+        {
+          assetId: asset.id,
+          storageKey,
+          mimeType: head.mimeType || input.mimeType,
+          fileSize: head.fileSize || input.bytes.byteLength,
+          checksum: head.checksum,
+          width: head.width,
+          height: head.height,
+          durationMs: head.durationMs,
+          mediaMetadata: head.mediaMetadata,
+        },
+        accountId,
+      );
       const updated = await repo.updateAssetStatus(
         ctx.userId,
         asset.id,
         {
           currentFileId: file.id,
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return updated ?? asset;
     },
 
     async addAssetFile(ctx, assetId, input) {
+      const accountId = requireAccountId(ctx.accountId, "assets.addAssetFile");
       // Verify ownership (C2) before touching storage/repo.
       await requireAsset(ctx, assetId);
       const storage = await objectStorageForCtx(ctx);
       const head = await storage.headObject(input.storageKey);
-      const file = await repo.insertAssetFile(ctx.userId, {
-        assetId,
-        storageKey: input.storageKey,
-        mimeType: head.mimeType,
-        fileSize: head.fileSize,
-        checksum: head.checksum,
-        width: head.width,
-        height: head.height,
-        durationMs: head.durationMs,
-        mediaMetadata: head.mediaMetadata,
-      });
+      const file = await repo.insertAssetFile(
+        ctx.userId,
+        {
+          assetId,
+          storageKey: input.storageKey,
+          mimeType: head.mimeType,
+          fileSize: head.fileSize,
+          checksum: head.checksum,
+          width: head.width,
+          height: head.height,
+          durationMs: head.durationMs,
+          mediaMetadata: head.mediaMetadata,
+        },
+        accountId,
+      );
       // Advance currentFileId to the new file (the favorite/version affordance).
       await repo.updateAssetStatus(
         ctx.userId,
@@ -449,12 +486,13 @@ export function createAssetsService(
         {
           currentFileId: file.id,
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return file;
     },
 
     async trashAsset(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.trashAsset");
       const asset = await requireAsset(ctx, assetId);
       if (asset.status !== "active") {
         throw new InvalidTransitionError(
@@ -468,12 +506,13 @@ export function createAssetsService(
           status: "deleted",
           deletedAt: deps.now(),
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return updated!;
     },
 
     async restoreAsset(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.restoreAsset");
       const asset = await requireAsset(ctx, assetId);
       if (asset.status !== "deleted") {
         throw new InvalidTransitionError(
@@ -487,7 +526,7 @@ export function createAssetsService(
           status: "active",
           deletedAt: null,
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return updated!;
     },
@@ -496,6 +535,7 @@ export function createAssetsService(
       // 收藏翻转 (mirror trashAsset's load→update shape). 收藏 is orthogonal to the
       // §12 status machine, so there is NO transition guard — any owned asset can
       // be (un)favorited. Flips the current isFavorite and re-reads the row.
+      const accountId = requireAccountId(ctx.accountId, "assets.toggleFavorite");
       const asset = await requireAsset(ctx, assetId);
       const updated = await repo.updateAssetStatus(
         ctx.userId,
@@ -503,19 +543,21 @@ export function createAssetsService(
         {
           isFavorite: !asset.isFavorite,
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return updated!;
     },
 
     async listAssetUsage(ctx, assetId) {
-      // 用料反查: assert ownership first (foreign/unknown → 404, no leak), then
+      requireAccountId(ctx.accountId, "assets.listAssetUsage");
+      // 用料反查: assert ownership first (foreign/unknown/跨号 → 404, no leak), then
       // return the 用料链 edges that reference this asset.
       await requireAsset(ctx, assetId);
       return repo.listAssetUsage(ctx.userId, assetId);
     },
 
     async archiveAsset(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.archiveAsset");
       // §12 active ↔ archived. No FE wiring yet; exists to satisfy the state
       // machine completeness (plan C8).
       const asset = await requireAsset(ctx, assetId);
@@ -530,12 +572,13 @@ export function createAssetsService(
         {
           status: "archived",
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return updated!;
     },
 
     async unarchiveAsset(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.unarchiveAsset");
       const asset = await requireAsset(ctx, assetId);
       if (asset.status !== "archived") {
         throw new InvalidTransitionError(
@@ -548,7 +591,7 @@ export function createAssetsService(
         {
           status: "active",
         },
-        ctx.accountId ?? null,
+        accountId,
       );
       return updated!;
     },

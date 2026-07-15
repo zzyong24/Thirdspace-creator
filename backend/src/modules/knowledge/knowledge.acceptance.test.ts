@@ -24,8 +24,19 @@ function deterministicDeps() {
     },
   };
 }
-const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user" };
+// [T-332 S2] service 入口 requireAccountId:ctx 必须带当前号。
+const ctxA: RequestContext = {
+  userId: "user-a",
+  accountId: "acct-a",
+  requestId: "ra",
+  source: "user",
+};
+const ctxB: RequestContext = {
+  userId: "user-b",
+  accountId: "acct-b",
+  requestId: "rb",
+  source: "user",
+};
 
 describe("G1 — module-structure acceptance", () => {
   it("has the foundation §5 layout files", () => {
@@ -72,13 +83,13 @@ describe("G2 — domain acceptance (SPEC §22)", () => {
     const firstRevId = item.currentRevisionId;
     const before = await repo.getRevision(
       ctxA.userId,
-      ctxA.accountId ?? null,
+      ctxA.accountId!,
       firstRevId,
     );
     await service.createRevision(ctxA, item.id, { content: "v2" });
     const after = await repo.getRevision(
       ctxA.userId,
-      ctxA.accountId ?? null,
+      ctxA.accountId!,
       firstRevId,
     );
     expect(after).toEqual(before);

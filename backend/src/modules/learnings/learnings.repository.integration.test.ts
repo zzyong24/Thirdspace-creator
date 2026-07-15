@@ -10,11 +10,13 @@ import { OwnershipError } from "./learnings.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// [T-332 S2] RepoDeps.accountId 已收成必填 string(strict 门):缺省固定测试号,
+// 「null 全局视图」形态随 SPEC §4.2 裁决删除。
 function repoFor(
   db: Db,
   userId: string,
   tag = userId,
-  accountId: string | null = null,
+  accountId = "acct-default",
 ) {
   let seq = 0;
   return createLearningsRepository(db, {
@@ -120,7 +122,7 @@ describe("learnings repository (integration, user-scoped)", () => {
       now: () => `2026-06-2${++seq}T00:00:00.000Z`,
       nextId: (prefix: string) => `${prefix}-${seq}`,
       userId: "user-a",
-      accountId: null,
+      accountId: "acct-default",
     });
     const first = await repo.createLearning({
       title: "first",
@@ -294,8 +296,8 @@ describe("learnings repository (integration, user-scoped)", () => {
     expect(await repo.countApplications(y.id)).toBe(0);
   });
 
-  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号(account-a / account-b)。
-  it("accountId-scoped repo only sees its own account's learnings; null sees all; create stamps accountId", async () => {
+  // [T-332 S2 · ISO-02/08] 号维度 strict 隔离:同一 user 下两个抖音号(无 null 全局视图)。
+  it("accountId-scoped repo only sees its own account's learnings; create stamps accountId", async () => {
     const mk = (title: string) => ({
       title,
       insight: "",
@@ -306,7 +308,6 @@ describe("learnings repository (integration, user-scoped)", () => {
     });
     const repoA = repoFor(db, "user-a", "acc-a", "account-a");
     const repoB = repoFor(db, "user-a", "acc-b", "account-b");
-    const repoNull = repoFor(db, "user-a", "acc-n", null);
 
     const a = await repoA.createLearning(mk("A-号"));
     const b = await repoB.createLearning(mk("B-号"));
@@ -320,10 +321,6 @@ describe("learnings repository (integration, user-scoped)", () => {
     // 号 B 只看到 B 的。
     const listB = await repoB.listLearnings({ limit: 50, offset: 0 });
     expect(listB.rows.map((r) => r.id)).toEqual([b.id]);
-    // null 号(未选号/存量)→ 退化不过滤,两条都看到。
-    const listNull = await repoNull.listLearnings({ limit: 50, offset: 0 });
-    expect(listNull.rows.map((r) => r.id).sort()).toEqual([a.id, b.id].sort());
-
     // 跨号 get 门:号 B 的 repo 取号 A 的 learning → OwnershipError(404,不泄露存在)。
     await expect(repoB.getLearningRowById(a.id)).rejects.toBeInstanceOf(
       OwnershipError,

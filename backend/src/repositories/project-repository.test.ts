@@ -14,6 +14,7 @@ function deterministicDeps() {
       return `${prefix}-db-${n}`;
     },
     userId: "user-1",
+    accountId: "acct-1", // [T-332 S2] NOT NULL schema:create stamp 必填号
   };
 }
 
@@ -76,7 +77,8 @@ describe("ProjectRepository (pglite-backed real persistence)", () => {
     const seedRow = {
       id: "seed-1",
       userId: "user-1",
-      accountId: null,
+      accountId: "acct-1", // [T-332 S2] NOT NULL schema
+
       title: "种子项目",
       brief: "",
       briefDetail: {},

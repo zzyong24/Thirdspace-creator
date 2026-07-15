@@ -10,6 +10,8 @@
 import { ErrorCode } from "@creatoros/contract";
 
 export { OwnershipError } from "@creatoros/backend";
+// [T-332 S2] 账号全域隔离:未选号访问 per-account 域(projects)→ 引导态错误 + 统一断言。
+export { AccountRequiredError, requireAccountId } from "@creatoros/backend";
 
 export class StageTransitionError extends Error {
   readonly code = ErrorCode.ConflictError;

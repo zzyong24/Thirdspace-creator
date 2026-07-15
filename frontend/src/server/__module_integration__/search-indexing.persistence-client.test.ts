@@ -20,10 +20,14 @@ import { canonicalDataset } from "@/fixtures/canonical";
 
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:search_documents 及其源实体(projects/knowledge/publications)
+// 全部 per-account,ctx 必须带 accountId(未选号 → AccountRequiredError,SPEC §4.2)。
+// 同一派生号贯穿写入与搜索,保证投影/命中在同号域内闭环。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 // pages.search.get 回包形状(只取本测断言用到的字段)。

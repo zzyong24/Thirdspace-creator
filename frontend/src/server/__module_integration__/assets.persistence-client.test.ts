@@ -15,10 +15,14 @@ import { ASSET_OP_IDS } from "@creatoros/backend/modules/assets";
 
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:assets 域 per-account,ctx 必须带 accountId(未选号 →
+// AccountRequiredError,SPEC §4.2)。测试号按 userId 派生 → A/B 天然异号,多租户
+// (user + account 双维)隔离断言语义保持。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 // [T-135] canonical assets seed 已退役(新库/新用户开箱空),原来依赖「启动时 seed 一批

@@ -28,9 +28,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
-  // [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。非空 → 读门叠 eq(table.accountId);
-  // null(存量/未选号)→ 读门退化不过滤,create 落 NULL 兜底。逐个 list/get/count/exists 都叠。
-  accountId: string | null;
+  // [T-332 S2 · ISO-02/03] 第二所有权维度,**必填 strict**:逐个 list/get/count 读门恒叠
+  // eq(table.accountId),写路径盖章当前号。未选号在 service 入口 requireAccountId 即被拒
+  // (SPEC §4.2 引导态),无「null → 退化全量」分支。
+  accountId: string;
 }
 
 export interface RubricDimension {
@@ -156,8 +157,8 @@ export function createCalibrationRepository(
       .where(
         and(
           eq(rubrics.userId, deps.userId),
-          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤,§A)。
-          deps.accountId ? eq(rubrics.accountId, deps.accountId) : undefined,
+          // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+          eq(rubrics.accountId, deps.accountId),
           eq(rubrics.id, rubricId),
         ),
       );
@@ -177,10 +178,8 @@ export function createCalibrationRepository(
       .where(
         and(
           eq(rubricVersions.userId, deps.userId),
-          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-          deps.accountId
-            ? eq(rubricVersions.accountId, deps.accountId)
-            : undefined,
+          // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+          eq(rubricVersions.accountId, deps.accountId),
           eq(rubricVersions.id, versionId),
         ),
       );
@@ -200,10 +199,8 @@ export function createCalibrationRepository(
       .where(
         and(
           eq(predictions.userId, deps.userId),
-          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-          deps.accountId
-            ? eq(predictions.accountId, deps.accountId)
-            : undefined,
+          // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+          eq(predictions.accountId, deps.accountId),
           eq(predictions.id, predictionId),
         ),
       );
@@ -251,7 +248,7 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("rubric"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
           accountId: deps.accountId,
           name,
           currentVersionId: null,
@@ -268,7 +265,7 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("rubricver"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(与父 rubric 同号;null 兜底)。
+          // [T-332 S2 · ISO-03] 号维度盖章(与父 rubric 同号;必填)。
           accountId: deps.accountId,
           rubricId: input.rubricId,
           versionNumber: input.versionNumber,
@@ -306,10 +303,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(rubricVersions.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(rubricVersions.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(rubricVersions.accountId, deps.accountId),
             eq(rubricVersions.rubricId, rubricId),
           ),
         )
@@ -323,10 +318,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(rubricVersions.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(rubricVersions.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(rubricVersions.accountId, deps.accountId),
             eq(rubricVersions.rubricId, rubricId),
           ),
         );
@@ -339,7 +332,7 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("pred"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
           accountId: deps.accountId,
           subjectType: input.subjectType,
           subjectId: input.subjectId,
@@ -380,10 +373,10 @@ export function createCalibrationRepository(
     },
 
     async listPredictions({ limit, offset }) {
-      // [T-136 切片 b] 号维度收窄:accountId 非空才叠 eq(null → 只按 userId,全量,旧行为)。
+      // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
       const where = and(
         eq(predictions.userId, deps.userId),
-        deps.accountId ? eq(predictions.accountId, deps.accountId) : undefined,
+        eq(predictions.accountId, deps.accountId),
       );
       const rows = await db
         .select()
@@ -407,7 +400,7 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("calibres"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(与父 prediction 同号;null 兜底)。
+          // [T-332 S2 · ISO-03] 号维度盖章(与父 prediction 同号;必填)。
           accountId: deps.accountId,
           predictionId: input.predictionId,
           ingestionRunId: input.ingestionRunId,
@@ -422,10 +415,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationResults.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(calibrationResults.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(calibrationResults.accountId, deps.accountId),
             eq(calibrationResults.predictionId, input.predictionId),
           ),
         );
@@ -439,10 +430,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationResults.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(calibrationResults.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(calibrationResults.accountId, deps.accountId),
             eq(calibrationResults.predictionId, predictionId),
           ),
         );
@@ -456,10 +445,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(predictions.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(predictions.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(predictions.accountId, deps.accountId),
           ),
         )
         .orderBy(desc(predictions.createdAt));
@@ -472,10 +459,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationResults.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(calibrationResults.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(calibrationResults.accountId, deps.accountId),
           ),
         )
         .orderBy(desc(calibrationResults.createdAt));
@@ -491,10 +476,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(calibrationRuleSuggestions.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(calibrationRuleSuggestions.accountId, deps.accountId),
             eq(calibrationRuleSuggestions.learningId, input.learningId),
             eq(calibrationRuleSuggestions.rubricId, input.rubricId),
             eq(calibrationRuleSuggestions.status, "pending"),
@@ -506,7 +489,7 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("calibsug"),
           userId: deps.userId,
-          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
           accountId: deps.accountId,
           learningId: input.learningId,
           rubricId: input.rubricId,
@@ -528,10 +511,8 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            deps.accountId
-              ? eq(calibrationRuleSuggestions.accountId, deps.accountId)
-              : undefined,
+            // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
+            eq(calibrationRuleSuggestions.accountId, deps.accountId),
             eq(calibrationRuleSuggestions.id, suggestionId),
           ),
         );
@@ -545,12 +526,10 @@ export function createCalibrationRepository(
     },
 
     async listPendingRuleSuggestions({ limit, offset }) {
-      // [T-136 切片 b] 号维度收窄(非空才叠;null → 只按 userId+status,全量,旧行为)。
+      // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
       const where = and(
         eq(calibrationRuleSuggestions.userId, deps.userId),
-        deps.accountId
-          ? eq(calibrationRuleSuggestions.accountId, deps.accountId)
-          : undefined,
+        eq(calibrationRuleSuggestions.accountId, deps.accountId),
         eq(calibrationRuleSuggestions.status, "pending"),
       );
       const rows = await db

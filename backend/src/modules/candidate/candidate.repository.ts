@@ -29,11 +29,11 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
-  // [T-136 切片 b] 第二属主维度(按号 / 多人设)。三表(candidates/audience_signals/
-  // topic_promotions)均 owned-root 且各自有 account_id 列。null = 未选号 / 全局视图 /
-  // 存量兜底(§E 退化):读点条件叠加为 undefined → drizzle `and()` 忽略 → 只按 userId
-  // 过滤(返该 user 全部);写点 stamp null 兜底。
-  accountId: string | null;
+  // [T-332 S2] 第二属主维度(账号全域隔离,SPEC §2 ISO-02/03)。四表(candidates/
+  // audience_signals/topic_promotions/topic_preferences)均 per-account(0042 起
+  // account_id NOT NULL)。必填 string:service 入口经 requireAccountId 收窄后传入,
+  // 未选号根本到不了 repo(引导态禁读写,不存在「null = 全局视图」退化)。
+  accountId: string;
 }
 
 export type CandidateSort =
@@ -99,8 +99,9 @@ export interface CreateSignalInput {
   publicationId?: string | null;
   // 评论点赞数 (T-042 热榜排序依据) — 采集带的 digg_count;无值 → null。
   likeCount?: number | null;
-  // 评论粒度幂等锚 (T-065) — 形如 `douyin:comment:<cid>`。带锚时 createSignal 走
-  // onConflictDoNothing(user+source+external_id 部分唯一索引),重复采集不重复入库。
+  // 评论粒度幂等锚 (T-065 → T-332 S2) — 形如 `douyin:comment:<cid>`。带锚时 createSignal 走
+  // onConflictDoNothing(_v2:user+account+source+external_id 部分唯一索引),同号重复采集
+  // 不重复入库;不同号各归其号。
   externalId?: string | null;
 }
 
@@ -203,21 +204,13 @@ export function createCandidateRepository(
     }
   }
 
-  // [T-136 切片 b] 按号隔离条件门(每表一个,列相同语义)。有号叠加 `eq(table.accountId,
-  // deps.accountId)`,null 返 undefined → `and()` 忽略 → 退化只按 userId(返该 user 全部)。
-  const candAccountGate = deps.accountId
-    ? eq(candidates.accountId, deps.accountId)
-    : undefined;
-  const sigAccountGate = deps.accountId
-    ? eq(audienceSignals.accountId, deps.accountId)
-    : undefined;
-  const promoAccountGate = deps.accountId
-    ? eq(topicPromotions.accountId, deps.accountId)
-    : undefined;
-  // [T-212d] 偏好信号按号读点门(与其它表同语义:有号叠加,null 退化只按 userId)。
-  const prefAccountGate = deps.accountId
-    ? eq(topicPreferences.accountId, deps.accountId)
-    : undefined;
+  // [T-332 S2] 按号隔离条件门(每表一个,列相同语义)。strict:无条件
+  // `eq(table.accountId, deps.accountId)`(SPEC §4.1 全仓统一 strict,退化分支已删)。
+  const candAccountGate = eq(candidates.accountId, deps.accountId);
+  const sigAccountGate = eq(audienceSignals.accountId, deps.accountId);
+  const promoAccountGate = eq(topicPromotions.accountId, deps.accountId);
+  // [T-212d] 偏好信号按号读点门(与其它表同语义,strict)。
+  const prefAccountGate = eq(topicPreferences.accountId, deps.accountId);
 
   return {
     async seedCandidates(rows) {
@@ -226,8 +219,7 @@ export function createCandidateRepository(
     },
 
     async listCandidates({ status, source, sort, limit = 100, offset = 0 }) {
-      const filters = [eq(candidates.userId, deps.userId)];
-      if (candAccountGate) filters.push(candAccountGate);
+      const filters = [eq(candidates.userId, deps.userId), candAccountGate];
       if (status) filters.push(eq(candidates.status, status));
       if (source) filters.push(eq(candidates.source, source));
       const where = and(...filters);
@@ -253,7 +245,7 @@ export function createCandidateRepository(
         .values({
           id: deps.nextId("cand"),
           userId: deps.userId,
-          // [T-136 切片 b] create stamp:归到当前号(null 兜底,列 nullable)。
+          // [T-332 S2] create stamp:归到当前号(service 经 requireAccountId 保证非空)。
           accountId: deps.accountId,
           title: input.title,
           angle: input.angle,
@@ -392,7 +384,7 @@ export function createCandidateRepository(
         .values({
           id: deps.nextId("promo"),
           userId: deps.userId,
-          // [T-136 切片 b] create stamp:晋升记录归到当前号(null 兜底)。
+          // [T-332 S2] create stamp:晋升记录归到当前号(必有号)。
           accountId: deps.accountId,
           candidateId: input.candidateId,
           projectId: input.projectId,
@@ -406,9 +398,10 @@ export function createCandidateRepository(
       const values = {
         id: deps.nextId("sig"),
         userId: deps.userId,
-        // [T-136 切片 b] create stamp:采集/信号归到当前号(null 兜底)。诚实存疑:幂等锚
-        // ux_audience_signals_user_source_external 是 (user, source, external_id),**不含
-        // account_id** —— 同一评论被两个号采集会被去重到先入库的号(设计层问题,非本切片能定)。
+        // [T-332 S2] create stamp:采集/信号归到当前号。幂等锚已升级为
+        // ux_audience_signals_user_source_external_v2 (user, account, source, external_id)
+        // (迁移 0042)—— 同一评论被两个号各自采集,各归其号,不再被先入库的号吞掉
+        // (T-136 时代自认的设计缺陷在此关闭)。
         accountId: deps.accountId,
         source: input.source,
         rawText: input.rawText,
@@ -421,8 +414,10 @@ export function createCandidateRepository(
         externalId: input.externalId ?? null,
         createdAt: deps.now(),
       };
-      // T-065 评论粒度幂等:带 external_id 的写入撞 ux_audience_signals_user_source_external
-      // (user+source+external_id 部分唯一索引)即跳过,返回已存在行 + inserted=false。
+      // T-065 评论粒度幂等:带 external_id 的写入撞
+      // ux_audience_signals_user_source_external_v2(user+account+source+external_id
+      // 部分唯一索引,迁移 0042)即跳过,返回已存在行 + inserted=false。conflict target
+      // 必须与 _v2 索引列完全一致(含 account_id),否则 PG 找不到匹配约束直接报错。
       // 无锚(external_id 空,dm/consultation 等)保持原样直插。
       if (input.externalId) {
         const inserted = await db
@@ -431,6 +426,7 @@ export function createCandidateRepository(
           .onConflictDoNothing({
             target: [
               audienceSignals.userId,
+              audienceSignals.accountId,
               audienceSignals.source,
               audienceSignals.externalId,
             ],
@@ -439,12 +435,15 @@ export function createCandidateRepository(
           })
           .returning();
         if (inserted[0]) return { row: inserted[0], inserted: true };
+        // 回读已存在行:同样叠 account 条件 —— _v2 键下同 (source, external_id) 可在
+        // 别的号名下另有一行,必须回读**本号**那行。
         const existing = await db
           .select()
           .from(audienceSignals)
           .where(
             and(
               eq(audienceSignals.userId, deps.userId),
+              sigAccountGate,
               eq(audienceSignals.source, input.source),
               eq(audienceSignals.externalId, input.externalId),
             ),
@@ -485,8 +484,7 @@ export function createCandidateRepository(
       limit = 100,
       offset = 0,
     }) {
-      const filters = [eq(audienceSignals.userId, deps.userId)];
-      if (sigAccountGate) filters.push(sigAccountGate);
+      const filters = [eq(audienceSignals.userId, deps.userId), sigAccountGate];
       if (source) filters.push(eq(audienceSignals.source, source));
       if (demandTag) filters.push(eq(audienceSignals.demandTag, demandTag));
       if (linkedCandidateId)
@@ -676,10 +674,11 @@ export function createCandidateRepository(
 
     async upsertTopicPreference(input) {
       const nowTs = deps.now();
-      // [T-326 DATA-H02] 身份键升级为 (user_id, account_id, keyword, direction)(迁移 0041,
-      // NULLS NOT DISTINCT):同号命中即累计强化(更新计数/权重/信号 + 刷新 last_reinforced_at
-      // 重置 8 周衰减时钟,并复活可能已归档的行 → 回到传入 status);不同号(含"未选号"的
-      // NULL 桶 vs 真号)互不冲突 → 第二账号的偏好独立成行,不再改写第一账号数据。
+      // [T-326 DATA-H02 → T-332 S2] 身份键 ux_topic_preferences_identity_v2
+      // (user_id, account_id, keyword, direction)(迁移 0041):同号命中即累计强化
+      // (更新计数/权重/信号 + 刷新 last_reinforced_at 重置 8 周衰减时钟,并复活可能
+      // 已归档的行 → 回到传入 status);不同号互不冲突 → 第二账号的偏好独立成行,
+      // 不再改写第一账号数据。account_id 自 0042 起 NOT NULL(未选号在 service 已被拦)。
       const inserted = await db
         .insert(topicPreferences)
         .values({

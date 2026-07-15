@@ -9,7 +9,13 @@ import {
 // [T-212d] 防茧房校准 service-level 单测 —— 淘汰带原因 + 偏好 upsert 护栏 + 评分前置注入 + 8 周归档。
 // 用真 pglite(createDb 跑 0033 迁移),fake now/nextId(now 可变以测衰减/归档)。
 
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] per-account 域读写必须带号。
+const ctx: RequestContext = {
+  userId: "user-a",
+  requestId: "r1",
+  source: "user",
+  accountId: "acc-a",
+};
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
 function makeService(db: Db, nowRef: { iso: string }) {

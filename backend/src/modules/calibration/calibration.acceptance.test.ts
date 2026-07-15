@@ -28,8 +28,9 @@ import { OwnershipError, ConflictError } from "./calibration.errors";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user" };
+// [T-332 S2] strict 门下 ctx 必带号。
+const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user", accountId: "acct-b" };
 
 const DIMENSIONS = [
   { key: "hook", label: "hook 强度", weight: 0.4 },

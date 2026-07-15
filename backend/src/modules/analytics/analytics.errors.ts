@@ -16,3 +16,6 @@ export {
   UnsupportedOperationError,
   AuthenticationError,
 } from "@creatoros/backend";
+// [T-332 S2] 未选号访问 per-account 域 → 引导态错误(SPEC §4.2);service 各 ctx 入口经
+// requireAccountId 断言 ctx.accountId,缺失即抛 —— 不存在「未选号 = 全量」退化。
+export { AccountRequiredError, requireAccountId } from "@creatoros/backend";

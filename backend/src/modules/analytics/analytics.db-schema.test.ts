@@ -24,6 +24,7 @@ describe("analytics db-schema round-trip", () => {
       await db.insert(metricSnapshots).values({
         id: "ms-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         publicationId: "pub-1",
         ingestionRunId: "run-1",
         capturedAt: CAPTURED,
@@ -34,6 +35,7 @@ describe("analytics db-schema round-trip", () => {
       await db.insert(metricValues).values({
         id: "mv-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         metricSnapshotId: "ms-1",
         metricKey: "conversion_clicks",
         numericValue: 312.5,
@@ -43,6 +45,7 @@ describe("analytics db-schema round-trip", () => {
       await db.insert(retentionPoints).values({
         id: "rp-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         publicationId: "pub-1",
         capturedAt: CAPTURED,
         positionMs: 60000,
@@ -52,6 +55,7 @@ describe("analytics db-schema round-trip", () => {
       await db.insert(audienceSnapshots).values({
         id: "aud-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         publicationId: "pub-1",
         capturedAt: CAPTURED,
         dimensionType: "intent",
@@ -64,6 +68,7 @@ describe("analytics db-schema round-trip", () => {
       expect(snap).toMatchObject({
         id: "ms-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         publicationId: "pub-1",
         ingestionRunId: "run-1",
         capturedAt: CAPTURED,
@@ -76,6 +81,7 @@ describe("analytics db-schema round-trip", () => {
       expect(value).toMatchObject({
         id: "mv-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         metricSnapshotId: "ms-1",
         metricKey: "conversion_clicks",
         numericValue: 312.5,
@@ -87,6 +93,7 @@ describe("analytics db-schema round-trip", () => {
       expect(point).toMatchObject({
         id: "rp-1",
         userId: USER,
+        accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL,插行必带号
         positionMs: 60000,
         retentionRate: 0.78,
         viewerCount: 14368,
@@ -111,6 +118,7 @@ describe("analytics db-schema round-trip", () => {
     const row = {
       id: "ms-a",
       userId: USER,
+      accountId: "acct-schema-test", // [T-332 S1] account_id NOT NULL
       publicationId: "pub-1",
       ingestionRunId: null,
       capturedAt: CAPTURED,

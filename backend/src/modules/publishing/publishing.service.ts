@@ -6,7 +6,12 @@ import {
   type PublicationRow,
   type PublicationRevisionRow,
 } from "./publishing.repository";
-import { ConflictError, OwnershipError, ValidationError } from "./publishing.errors";
+import {
+  ConflictError,
+  OwnershipError,
+  ValidationError,
+  requireAccountId,
+} from "./publishing.errors";
 import type { PlatformPublisherPort } from "./platform-publisher";
 
 // Publishing service (foundation §5.3) — RequestContext-taking methods that thread
@@ -231,9 +236,6 @@ export interface PublishingService {
     publicationId: string,
     coverAssetId: string,
   ): Promise<PublicationRevisionRow>;
-  // [T-200] 认领存量无号 publications 给 ctx.accountId(修采集导入作品在无号 ctx 下落的 null 号)。
-  //   幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数(诊断用)。
-  claimOrphanPublications(ctx: RequestContext): Promise<number>;
   // [T-321 治本] register(登记已发布)成功后跃迁该 output 属主项目到已发布态(best-effort,
   //   经注入的 markOwnerProjectPublished 端口;未注入/失败 → 静默 no-op,绝不阻断登记)。
   markOwnerPublished(ctx: RequestContext, outputId: string): Promise<void>;
@@ -264,8 +266,9 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      // [T-136 §D 切片 c] 按号 stamp 下推(采集导入作品经 createImportedPublication 归号)。
-      accountId: ctx.accountId ?? null,
+      // [T-332 S2] strict 按号:未选号 ctx → AccountRequiredError(SPEC §4.2 引导态,
+      //   读写同门);写路径 stamp / 读路径 eq 都用这一个断言后的号。
+      accountId: requireAccountId(ctx.accountId, "publishing"),
     });
   }
 
@@ -332,11 +335,6 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
   }
 
   return {
-    async claimOrphanPublications(ctx) {
-      if (!ctx.accountId) return 0; // 未选号:无号可认领
-      return repoFor(ctx).claimOrphanPublications(ctx.accountId);
-    },
-
     async markOwnerPublished(ctx, outputId) {
       // [T-321 治本] best-effort:属主项目跃迁到已发布态(实现见 markOwnerPublishedBestEffort)。
       await markOwnerPublishedBestEffort(ctx, outputId);

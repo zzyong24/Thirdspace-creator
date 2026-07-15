@@ -2,10 +2,12 @@ import { and, asc, desc, eq, isNull, type Db } from "@creatoros/backend";
 import { favoritesFolders, favoritesItems } from "./favorites.db-schema";
 import { OwnershipError } from "./favorites.errors";
 
-// [T-235c] Favorites repository —— user-scoped(userId baked into deps,照 trend-sources 先例)。
-// EVERY 查询 filter eq(userId) / EVERY insert stamp userId。toggle/remove/updateSync 先
-// ownership-scoped select,缺失 → OwnershipError(404,不泄露跨用户行存在)。account_id 从输入
-// stamp(按号隔离)。items 侧:aweme_id 幂等台账(recordItems 只插新)+ pending→promoted 流转。
+// [T-235c → T-332 S2] Favorites repository —— user+account scoped(userId/accountId baked
+// into deps,照 trend-sources 先例)。EVERY 查询 filter eq(userId) AND eq(accountId)
+// (strict,SPEC §4.1)/ EVERY insert stamp userId+accountId(repo 不接受调用方显式传号,
+// §4.6)。toggle/remove/updateSync 先 ownership-scoped select(叠号门),缺失/跨号 →
+// OwnershipError(404)。items 侧:(user, account, aweme_id) 幂等台账(recordItems 只插新)
+// + pending→promoted 流转。
 
 export type FavoritesFolderRow = typeof favoritesFolders.$inferSelect;
 export type FavoritesItemRow = typeof favoritesItems.$inferSelect;
@@ -14,17 +16,17 @@ export interface RepoDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   userId: string; // 所有权边界,构造时 baked in
+  // [T-332 S2] 第二属主维度(账号全域隔离)。必填:service 入口经 requireAccountId 收窄后传入。
+  accountId: string;
 }
 
 export interface CreateFolderInput {
-  accountId?: string | null;
   name: string;
   note?: string | null;
   enabled?: boolean;
 }
 
 export interface RecordItemInput {
-  accountId?: string | null;
   folderId: string;
   awemeId: string;
   title: string;
@@ -33,12 +35,12 @@ export interface RecordItemInput {
 }
 
 export interface FavoritesRepository {
-  listFolders(
-    accountId: string | null,
-    query: { limit: number; offset: number },
-  ): Promise<{ rows: FavoritesFolderRow[]; total: number }>;
-  /** 采集用:列该号(accountId=null → 全量)enabled 的收藏夹。 */
-  listEnabledFolders(accountId: string | null): Promise<FavoritesFolderRow[]>;
+  listFolders(query: {
+    limit: number;
+    offset: number;
+  }): Promise<{ rows: FavoritesFolderRow[]; total: number }>;
+  /** 采集用:列该号(deps.accountId,strict)enabled 的收藏夹。 */
+  listEnabledFolders(): Promise<FavoritesFolderRow[]>;
   /** 幂等 create:同 (user, account, name) 已存在 → 更新展示字段/enabled 并返回既有(不新建)。 */
   createFolder(input: CreateFolderInput): Promise<FavoritesFolderRow>;
   /** 切 enabled(ownership gate;不存在 → OwnershipError 404)。 */
@@ -52,17 +54,14 @@ export interface FavoritesRepository {
   ): Promise<FavoritesFolderRow>;
   /** 幂等落台账:按 (user_id, account_id, aweme_id) 去重,只插新;返回真写入条数。 */
   recordItems(items: RecordItemInput[]): Promise<{ recordedNew: number }>;
-  /** 待进池条目(status=pending,createdAt 升序 = 先收藏先进池),限量。 */
-  listPendingItems(accountId: string | null, limit: number): Promise<FavoritesItemRow[]>;
+  /** 待进池条目(status=pending,createdAt 升序 = 先收藏先进池),限量。该号 strict。 */
+  listPendingItems(limit: number): Promise<FavoritesItemRow[]>;
   /** 进池流转:status→promoted + candidate_id 溯源(ownership gate)。 */
   markItemPromoted(itemId: string, candidateId: string): Promise<FavoritesItemRow>;
 
   // ── [T-235d-distill] 蒸馏链落点(与进池 status 正交:一条收藏既是跟拍候选,又可判知识) ──
-  /** 待入蒸馏链条目(distill_status IS NULL,createdAt 升序 = 先收藏先蒸),限量。 */
-  listItemsForDistill(
-    accountId: string | null,
-    limit: number,
-  ): Promise<FavoritesItemRow[]>;
+  /** 待入蒸馏链条目(distill_status IS NULL,createdAt 升序 = 先收藏先蒸),限量。该号 strict。 */
+  listItemsForDistill(limit: number): Promise<FavoritesItemRow[]>;
   /** 落逐字稿(他人作品独立落点,不建 project artifact;ownership gate)。 */
   saveTranscript(itemId: string, transcript: string): Promise<FavoritesItemRow>;
   /** 落判库裁决 + 蒸馏产物(distill_status + distill_result;ownership gate)。 */
@@ -70,11 +69,8 @@ export interface FavoritesRepository {
     itemId: string,
     verdict: { status: string; result: Record<string, unknown> },
   ): Promise<FavoritesItemRow>;
-  /** 知识确认门待采纳读面(distill_status='knowledge',updatedAt 降序 = 新蒸的先看),限量。 */
-  listDistillPending(
-    accountId: string | null,
-    limit: number,
-  ): Promise<FavoritesItemRow[]>;
+  /** 知识确认门待采纳读面(distill_status='knowledge',updatedAt 降序 = 新蒸的先看),限量。该号 strict。 */
+  listDistillPending(limit: number): Promise<FavoritesItemRow[]>;
 }
 
 export function createFavoritesRepository(
@@ -82,13 +78,12 @@ export function createFavoritesRepository(
   deps: RepoDeps,
 ): FavoritesRepository {
   return {
-    async listFolders(accountId, { limit, offset }) {
-      const where = accountId
-        ? and(
-            eq(favoritesFolders.userId, deps.userId),
-            eq(favoritesFolders.accountId, accountId),
-          )
-        : eq(favoritesFolders.userId, deps.userId);
+    async listFolders({ limit, offset }) {
+      // [T-332 S2] strict:无条件叠号门(无「无号 → 全量」退化)。
+      const where = and(
+        eq(favoritesFolders.userId, deps.userId),
+        eq(favoritesFolders.accountId, deps.accountId),
+      );
       const rows = await db
         .select()
         .from(favoritesFolders)
@@ -103,17 +98,12 @@ export function createFavoritesRepository(
       return { rows, total: all.length };
     },
 
-    async listEnabledFolders(accountId) {
-      const where = accountId
-        ? and(
-            eq(favoritesFolders.userId, deps.userId),
-            eq(favoritesFolders.accountId, accountId),
-            eq(favoritesFolders.enabled, true),
-          )
-        : and(
-            eq(favoritesFolders.userId, deps.userId),
-            eq(favoritesFolders.enabled, true),
-          );
+    async listEnabledFolders() {
+      const where = and(
+        eq(favoritesFolders.userId, deps.userId),
+        eq(favoritesFolders.accountId, deps.accountId),
+        eq(favoritesFolders.enabled, true),
+      );
       return db.select().from(favoritesFolders).where(where);
     },
 
@@ -124,7 +114,8 @@ export function createFavoritesRepository(
         .values({
           id: deps.nextId("favfld"),
           userId: deps.userId,
-          accountId: input.accountId ?? null,
+          // [T-332 S2] stamp 当前号(repo 不接受调用方显式传号,§4.6)。
+          accountId: deps.accountId,
           name: input.name,
           collectsId: null, // 首采按名匹配回填(登记时用户只知道夹名)
           note: input.note ?? null,
@@ -133,9 +124,10 @@ export function createFavoritesRepository(
           createdAt: nowIso,
           updatedAt: nowIso,
         })
-        // [T-326 DATA-H02] 幂等:命中 (user, account, name) 唯一(迁移 0041,NULLS NOT
-        // DISTINCT)→ 更新展示字段/enabled(不冒重复夹;collectsId 保留既有匹配)。不同号可
-        // 各自登记同名夹(第二账号不再复用/改写第一账号的登记)。
+        // [T-326 DATA-H02 → T-332 S2] 幂等:命中 ux_favorites_folders_identity_v2
+        // (user, account, name)(迁移 0041)→ 更新展示字段/enabled(不冒重复夹;collectsId
+        // 保留既有匹配)。不同号可各自登记同名夹(第二账号不再复用/改写第一账号的登记);
+        // account_id 已 NOT NULL(0042),NULL 桶不复存在。
         .onConflictDoUpdate({
           target: [
             favoritesFolders.userId,
@@ -153,13 +145,14 @@ export function createFavoritesRepository(
     },
 
     async setFolderEnabled(folderId, enabled) {
-      await requireOwnedFolder(db, deps.userId, folderId);
+      await requireOwnedFolder(db, deps, folderId);
       const updated = await db
         .update(favoritesFolders)
         .set({ enabled, updatedAt: deps.now() })
         .where(
           and(
             eq(favoritesFolders.userId, deps.userId),
+            eq(favoritesFolders.accountId, deps.accountId),
             eq(favoritesFolders.id, folderId),
           ),
         )
@@ -168,12 +161,13 @@ export function createFavoritesRepository(
     },
 
     async removeFolder(folderId) {
-      const row = await requireOwnedFolder(db, deps.userId, folderId);
+      const row = await requireOwnedFolder(db, deps, folderId);
       await db
         .delete(favoritesFolders)
         .where(
           and(
             eq(favoritesFolders.userId, deps.userId),
+            eq(favoritesFolders.accountId, deps.accountId),
             eq(favoritesFolders.id, folderId),
           ),
         );
@@ -181,7 +175,7 @@ export function createFavoritesRepository(
     },
 
     async updateFolderSync(folderId, patch) {
-      await requireOwnedFolder(db, deps.userId, folderId);
+      await requireOwnedFolder(db, deps, folderId);
       const set: Partial<typeof favoritesFolders.$inferInsert> = {
         updatedAt: deps.now(),
       };
@@ -193,6 +187,7 @@ export function createFavoritesRepository(
         .where(
           and(
             eq(favoritesFolders.userId, deps.userId),
+            eq(favoritesFolders.accountId, deps.accountId),
             eq(favoritesFolders.id, folderId),
           ),
         )
@@ -210,7 +205,8 @@ export function createFavoritesRepository(
           .values({
             id: deps.nextId("favitm"),
             userId: deps.userId,
-            accountId: item.accountId ?? null,
+            // [T-332 S2] stamp 当前号(repo 不接受调用方显式传号,§4.6)。
+            accountId: deps.accountId,
             folderId: item.folderId,
             awemeId: item.awemeId,
             title: item.title,
@@ -221,9 +217,10 @@ export function createFavoritesRepository(
             createdAt: nowIso,
             updatedAt: nowIso,
           })
-          // [T-326 DATA-H02] 幂等:命中 (user, account, aweme_id) 唯一(迁移 0041,NULLS NOT
-          // DISTINCT)→ 跳过(同号已记过的视频不重复进台账/进池)。不同号收藏同一视频各记
-          // 一行(账号隔离,第二账号不再被第一账号的台账吞掉)。
+          // [T-326 DATA-H02 → T-332 S2] 幂等:命中 ux_favorites_items_identity_v2
+          // (user, account, aweme_id)(迁移 0041)→ 跳过(同号已记过的视频不重复进台账/
+          // 进池)。不同号收藏同一视频各记一行(账号隔离,第二账号不再被第一账号的台账
+          // 吞掉);account_id 已 NOT NULL(0042)。
           .onConflictDoNothing({
             target: [
               favoritesItems.userId,
@@ -237,17 +234,13 @@ export function createFavoritesRepository(
       return { recordedNew };
     },
 
-    async listPendingItems(accountId, limit) {
-      const where = accountId
-        ? and(
-            eq(favoritesItems.userId, deps.userId),
-            eq(favoritesItems.accountId, accountId),
-            eq(favoritesItems.status, "pending"),
-          )
-        : and(
-            eq(favoritesItems.userId, deps.userId),
-            eq(favoritesItems.status, "pending"),
-          );
+    async listPendingItems(limit) {
+      // [T-332 S2] strict:无条件叠号门。
+      const where = and(
+        eq(favoritesItems.userId, deps.userId),
+        eq(favoritesItems.accountId, deps.accountId),
+        eq(favoritesItems.status, "pending"),
+      );
       return db
         .select()
         .from(favoritesItems)
@@ -257,12 +250,14 @@ export function createFavoritesRepository(
     },
 
     async markItemPromoted(itemId, candidateId) {
+      // [T-332 S2] by-id 读写叠号一致性门(跨号 → OwnershipError 404,§4.5)。
       const rows = await db
         .select()
         .from(favoritesItems)
         .where(
           and(
             eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.accountId, deps.accountId),
             eq(favoritesItems.id, itemId),
           ),
         );
@@ -277,6 +272,7 @@ export function createFavoritesRepository(
         .where(
           and(
             eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.accountId, deps.accountId),
             eq(favoritesItems.id, itemId),
           ),
         )
@@ -285,17 +281,13 @@ export function createFavoritesRepository(
     },
 
     // ── [T-235d-distill] 蒸馏链落点 ──
-    async listItemsForDistill(accountId, limit) {
-      const where = accountId
-        ? and(
-            eq(favoritesItems.userId, deps.userId),
-            eq(favoritesItems.accountId, accountId),
-            isNull(favoritesItems.distillStatus),
-          )
-        : and(
-            eq(favoritesItems.userId, deps.userId),
-            isNull(favoritesItems.distillStatus),
-          );
+    async listItemsForDistill(limit) {
+      // [T-332 S2] strict:无条件叠号门。
+      const where = and(
+        eq(favoritesItems.userId, deps.userId),
+        eq(favoritesItems.accountId, deps.accountId),
+        isNull(favoritesItems.distillStatus),
+      );
       return db
         .select()
         .from(favoritesItems)
@@ -311,6 +303,7 @@ export function createFavoritesRepository(
         .where(
           and(
             eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.accountId, deps.accountId),
             eq(favoritesItems.id, itemId),
           ),
         )
@@ -334,6 +327,7 @@ export function createFavoritesRepository(
         .where(
           and(
             eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.accountId, deps.accountId),
             eq(favoritesItems.id, itemId),
           ),
         )
@@ -346,17 +340,13 @@ export function createFavoritesRepository(
       return updated[0];
     },
 
-    async listDistillPending(accountId, limit) {
-      const where = accountId
-        ? and(
-            eq(favoritesItems.userId, deps.userId),
-            eq(favoritesItems.accountId, accountId),
-            eq(favoritesItems.distillStatus, "knowledge"),
-          )
-        : and(
-            eq(favoritesItems.userId, deps.userId),
-            eq(favoritesItems.distillStatus, "knowledge"),
-          );
+    async listDistillPending(limit) {
+      // [T-332 S2] strict:无条件叠号门。
+      const where = and(
+        eq(favoritesItems.userId, deps.userId),
+        eq(favoritesItems.accountId, deps.accountId),
+        eq(favoritesItems.distillStatus, "knowledge"),
+      );
       return db
         .select()
         .from(favoritesItems)
@@ -367,17 +357,22 @@ export function createFavoritesRepository(
   };
 }
 
-// Ownership gate:跨用户 / 未知 id select 空 → OwnershipError(404,不泄露行存在)。
+// Ownership gate:跨用户 / 跨号 / 未知 id select 空 → OwnershipError(404,不泄露行存在;
+// [T-332 S2] by-id 读叠号一致性门,SPEC §4.5)。
 async function requireOwnedFolder(
   db: Db,
-  userId: string,
+  deps: Pick<RepoDeps, "userId" | "accountId">,
   folderId: string,
 ): Promise<FavoritesFolderRow> {
   const rows = await db
     .select()
     .from(favoritesFolders)
     .where(
-      and(eq(favoritesFolders.userId, userId), eq(favoritesFolders.id, folderId)),
+      and(
+        eq(favoritesFolders.userId, deps.userId),
+        eq(favoritesFolders.accountId, deps.accountId),
+        eq(favoritesFolders.id, folderId),
+      ),
     );
   const row = rows[0];
   if (!row) {

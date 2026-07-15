@@ -5,6 +5,7 @@ import {
   createTopicAttributionService,
   type TopicAttributionService,
 } from "./topic-attribution.service";
+import { AccountRequiredError } from "./topic-attribution.errors";
 
 // [T-235d] TopicAttribution service 单测(fake now/nextId, pglite db,照 trend-sources 范式)——
 // 落库/读回、幂等锚(同 publication upsert 覆盖更新不重复行)、hasAttribution、
@@ -98,5 +99,56 @@ describe("topic-attribution service", () => {
     // 跨用户不可见。
     const other = await svc.listAttributions(ctxB, PAGE);
     expect(other.total).toBe(0);
+  });
+
+  // ── [T-332 S2] 账号全域隔离:同 user 双号隔离 + 未选号引导态 ──
+  describe("账号隔离与未选号 (T-332 S2)", () => {
+    const ctxA1: RequestContext = {
+      userId: "user-a",
+      requestId: "ra1",
+      source: "user",
+      accountId: "acct-1",
+    };
+    const ctxA2: RequestContext = {
+      userId: "user-a",
+      requestId: "ra2",
+      source: "user",
+      accountId: "acct-2",
+    };
+    const noAcct: RequestContext = { userId: "user-a", requestId: "rn", source: "user" };
+
+    it("同 user 双号:list/hasAttribution 各自 scoped(strict,跨号诚实 false/空)", async () => {
+      await svc.saveAttribution(ctxA1, { ...BASE_INPUT, publicationId: "pub-a1" });
+      // 号2 视图看不到号1 的归因(strict)。
+      expect((await svc.listAttributions(ctxA2, PAGE)).total).toBe(0);
+      expect(await svc.hasAttribution(ctxA2, "pub-a1")).toBe(false);
+      // 号1 自己可见。
+      expect((await svc.listAttributions(ctxA1, PAGE)).total).toBe(1);
+      expect(await svc.hasAttribution(ctxA1, "pub-a1")).toBe(true);
+    });
+
+    it("accountId 从 ctx stamp;同号重跑 upsert 幂等((user, publication) 键保持,SPEC §3.1)", async () => {
+      const first = await svc.saveAttribution(ctxA1, { ...BASE_INPUT, publicationId: "pub-x" });
+      expect(first.accountId).toBe("acct-1");
+      const again = await svc.saveAttribution(ctxA1, {
+        ...BASE_INPUT,
+        publicationId: "pub-x",
+        topicType: "观点",
+      });
+      expect(again.id).toBe(first.id); // upsert 命中,不重复行
+      expect((await svc.listAttributions(ctxA1, PAGE)).total).toBe(1);
+    });
+
+    it("未选号 → 读写均 AccountRequiredError(引导态,禁读写)", async () => {
+      await expect(svc.saveAttribution(noAcct, BASE_INPUT)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(svc.listAttributions(noAcct, PAGE)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(svc.hasAttribution(noAcct, "pub-1")).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+    });
   });
 });

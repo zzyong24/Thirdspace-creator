@@ -15,6 +15,9 @@ import { ErrorCode } from "@creatoros/contract";
 
 export { OwnershipError } from "@creatoros/backend";
 export { UnsupportedOperationError, AuthenticationError } from "@creatoros/backend";
+// [T-332 S2] 账号全域隔离:production 域自身无 account 列(父锚继承),读写必须经
+// content_output → project 的 strict 门闭合(SPEC §3.2);未选号 → 引导态错误。
+export { AccountRequiredError, requireAccountId } from "@creatoros/backend";
 
 export class ConflictError extends Error {
   readonly code = ErrorCode.ConflictError;

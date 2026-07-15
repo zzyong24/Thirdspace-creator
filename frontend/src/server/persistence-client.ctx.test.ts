@@ -18,10 +18,14 @@ import { canonicalDataset } from "@/fixtures/canonical";
 
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
 
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:per-account op 必须带 ctx.accountId(未选号 → AccountRequiredError,
+// SPEC §4.2)。测试号按 userId 派生(天然 A/B 异号,双用户隔离断言语义保持);composite 层
+// ctx 是可信输入(属主校验在 dispatch route 的 withVerifiedAccount),故无需真建账号行。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 const noInput = { params: undefined, query: undefined, body: undefined } as never;

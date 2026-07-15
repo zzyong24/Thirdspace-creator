@@ -7,6 +7,9 @@ export { OwnershipError } from "@creatoros/backend";
 export {
   UnsupportedOperationError,
   AuthenticationError,
+  // [T-332 S2] 账号全域隔离:未选号访问 per-account 域(favorites 两表)→ 引导态错误 + 统一断言。
+  AccountRequiredError,
+  requireAccountId,
 } from "@creatoros/backend";
 
 export class ValidationError extends Error {

@@ -1,10 +1,16 @@
 import { and, asc, eq, type Db } from "@creatoros/backend";
+// [T-332 S2] 父锚闭合(SPEC §3.2):production 域自身无 account 列,唯一合法入口是
+// content_output → project(project 门 strict)。此前实现只按 userId 收窄 —— 同一 user
+// 换号后仍能 by-id 读/建别号项目下的 production(绕过父锚的真洞)。这里引用共享基座的
+// canonical 表(同 projects.repository 的 T-102 先例:只引用列做归属校验,不跨模块
+// 调 service/repo),把每个读写点闭合到 content_outputs ⋈ projects 的 (userId, accountId) 门。
+import { contentOutputs, projects } from "@creatoros/backend";
 import {
   productions,
   productionSegments,
   exportRecords,
 } from "./production.db-schema";
-import { OwnershipError } from "./production.errors";
+import { OwnershipError, requireAccountId } from "./production.errors";
 
 // Production repository (foundation §5.2) — user-scoped queries ONLY. `user_id`
 // lives on EVERY owned row; every read/write filters `eq(table.userId,
@@ -26,6 +32,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner — baked in; the service mints one repo per ctx
+  // [T-332 S2] 父锚账号维度:production 自身不加 account 列(§3.2 裁决,避免冗余 stamp
+  // 漂移),但每个读写点都经 content_output → project 的 strict 门校验归属号。未选号
+  // (null)→ 读写点直接抛 AccountRequiredError(引导态禁读写)。
+  accountId: string | null;
 }
 
 export interface ProductionRepository {
@@ -78,8 +88,33 @@ export function createProductionRepository(
 ): ProductionRepository {
   const userId = deps.userId;
 
+  // [T-332 S2] 父锚门:outputId 必须属于「本 user 的当前号」的项目(content_outputs ⋈
+  // projects,strict eq(accountId))。跨 user / 跨号 / 不存在同貌 → OwnershipError 404
+  // (§4.5 号一致性门);未选号 → AccountRequiredError(引导态)。production 的所有读写
+  // 都收敛过这道门(by-productionId / by-exportId 先解析出 contentOutputId 再过门)。
+  async function requireOwnedOutput(outputId: string): Promise<void> {
+    const accountId = requireAccountId(deps.accountId, "production.ownershipGate");
+    const rows = await db
+      .select({ id: contentOutputs.id })
+      .from(contentOutputs)
+      .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
+      .where(
+        and(
+          eq(contentOutputs.id, outputId),
+          eq(projects.userId, userId),
+          eq(projects.accountId, accountId),
+        ),
+      );
+    if (!rows[0]) {
+      throw new OwnershipError(
+        `OwnershipError: content output not found: ${outputId}`,
+      );
+    }
+  }
+
   // Private ownership gate — a cross-user / unknown id is indistinguishable from
   // a missing one (foundation §2: 404, never reveal existence) → OwnershipError.
+  // [T-332 S2] 再叠父锚门:行命中后还要求其 content_output 属于当前号(见 §3.2)。
   async function getProductionRowById(
     productionId: string,
   ): Promise<ProductionRow> {
@@ -93,12 +128,14 @@ export function createProductionRepository(
     if (!row) {
       throw new OwnershipError(`OwnershipError: production not found: ${productionId}`);
     }
+    await requireOwnedOutput(row.contentOutputId);
     return row;
   }
 
   async function getProductionByOutput(
     outputId: string,
   ): Promise<ProductionRow> {
+    await requireOwnedOutput(outputId); // [T-332 S2] 父锚门先行
     const rows = await db
       .select()
       .from(productions)
@@ -129,6 +166,8 @@ export function createProductionRepository(
       // Get-or-create scoped by output. The UNIQUE index on content_output_id
       // makes the row at-most-one per output (data-model 0..1), so a second call
       // returns the SAME id (idempotent — backs the initial GET load).
+      // [T-332 S2] 父锚门先行:不能给不属于当前号(或不存在)的 output 建 production。
+      await requireOwnedOutput(outputId);
       const existing = await db
         .select()
         .from(productions)
@@ -282,6 +321,8 @@ export function createProductionRepository(
     if (!row) {
       throw new OwnershipError(`OwnershipError: export not found: ${exportId}`);
     }
+    // [T-332 S2] 父锚闭合:export → production → content_output → project 的号门。
+    await getProductionRowById(row.productionId);
     return row;
   }
 }

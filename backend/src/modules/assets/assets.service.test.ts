@@ -20,11 +20,13 @@ const ctxA: RequestContext = {
   userId: "user-a",
   requestId: "req-a",
   source: "user",
+  accountId: "acct-a", // [T-332 S2] per-account strict:service 入口 requireAccountId
 };
 const ctxB: RequestContext = {
   userId: "user-b",
   requestId: "req-b",
   source: "user",
+  accountId: "acct-b",
 };
 
 function deterministicDeps() {
@@ -341,5 +343,59 @@ describe("assets.service — §12 archive (C8)", () => {
     await expect(service.archiveAsset(ctxA, asset.id)).rejects.toBeInstanceOf(
       InvalidTransitionError,
     );
+  });
+});
+
+// [T-332 S2] service 入口账号断言 + 双账号隔离(未选号=引导态;by-id 跨号 404)。
+describe("assets.service — per-account strict (T-332 S2)", () => {
+  it("未选号(ctx.accountId 缺失)读写 → AccountRequiredError;createUpload 例外(C-08 user 级)", async () => {
+    const noAcct: RequestContext = {
+      userId: "user-a",
+      requestId: "req-na",
+      source: "user",
+      accountId: null,
+    };
+    await expect(
+      service.listAssets(noAcct, { limit: 10, cursor: null }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
+    await expect(service.getAsset(noAcct, "asset-x")).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+    // C-08:上传会话是 user 级,未选号也能开(账号断言在 completeUpload)。
+    const session = await service.createUpload(noAcct, {
+      assetType: "image",
+      mimeType: "image/png",
+      fileSize: 10,
+    });
+    expect(session.uploadId).toBeTruthy();
+    // 确认落 assets 的入口必须有号。
+    await expect(
+      service.completeUpload(noAcct, session.uploadId, { name: "x" }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
+  });
+
+  it("双账号 asset 隔离 + by-id 跨号 404(同 user 两个号)", async () => {
+    const ctxA2: RequestContext = {
+      userId: "user-a",
+      requestId: "req-a2",
+      source: "user",
+      accountId: "acct-a2",
+    };
+    const a1 = await upload(ctxA, "号1素材");
+    const a2 = await upload(ctxA2, "号2素材");
+    const list1 = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(list1.map((r) => r.name)).toContain("号1素材");
+    expect(list1.map((r) => r.name)).not.toContain("号2素材");
+    // by-id 跨号 → OwnershipError 404(号一致性门,§4.5)。
+    await expect(service.getAsset(ctxA, a2.id)).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+    await expect(service.trashAsset(ctxA2, a1.id)).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+    // 本号内正常。
+    await expect(service.getAsset(ctxA2, a2.id)).resolves.toMatchObject({
+      id: a2.id,
+    });
   });
 });

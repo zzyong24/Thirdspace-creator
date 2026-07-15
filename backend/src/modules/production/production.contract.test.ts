@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, type Db, projects, contentOutputs } from "@creatoros/backend";
 import {
   successEnvelope,
   type Endpoint,
@@ -24,7 +24,63 @@ const ctx: RequestContext = {
   userId: "user-1",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-1", // [T-332 S2] 父锚 strict 门
 };
+const NOW = "2026-06-21T04:00:00.000Z";
+
+// [T-332 S2] 父锚种子:production 的读写都要经 content_output → project 的 strict 门,
+// 测试先种宿主 project + content_output(带号),再操作 production。
+async function seedOutput(
+  db: Db,
+  outputId: string,
+  userId: string,
+  accountId: string,
+): Promise<void> {
+  const projectId = `proj-of-${outputId}`;
+  await db
+    .insert(projects)
+    .values({
+      id: projectId,
+      userId,
+      accountId,
+      title: "宿主项目",
+      brief: "",
+      briefDetail: {},
+      contentCategory: "",
+      source: "manual",
+      platformRef: {},
+      creationMode: "guided",
+      status: "active",
+      currentStage: "production",
+      progressPct: 0,
+      starred: false,
+      startedAt: NOW,
+      targetCompletedAt: null,
+      completedAt: null,
+      archivedAt: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+  await db
+    .insert(contentOutputs)
+    .values({
+      id: outputId,
+      projectId,
+      title: "宿主产出",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: null,
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+}
+
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 
 let db: Db;
@@ -35,10 +91,11 @@ beforeEach(async () => {
   let seq = 0;
   const service = createProductionService({
     db,
-    now: () => "2026-06-21T04:00:00.000Z",
+    now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
   });
   transport = createProductionTransport(() => service);
+  await seedOutput(db, "output-1", "user-1", "acct-1"); // [T-332 S2] 父锚种子
 });
 
 async function call(id: string, input: unknown) {

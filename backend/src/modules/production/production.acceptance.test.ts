@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, type Db, projects, contentOutputs } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createProductionService,
@@ -22,8 +22,62 @@ import { OwnershipError } from "./production.errors";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user" };
+const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user", accountId: "acct-b" };
+
+// [T-332 S2] 父锚种子:production 的读写都要经 content_output → project 的 strict 门,
+// 测试先种宿主 project + content_output(带号),再操作 production。
+async function seedOutput(
+  db: Db,
+  outputId: string,
+  userId: string,
+  accountId: string,
+): Promise<void> {
+  const projectId = `proj-of-${outputId}`;
+  await db
+    .insert(projects)
+    .values({
+      id: projectId,
+      userId,
+      accountId,
+      title: "宿主项目",
+      brief: "",
+      briefDetail: {},
+      contentCategory: "",
+      source: "manual",
+      platformRef: {},
+      creationMode: "guided",
+      status: "active",
+      currentStage: "production",
+      progressPct: 0,
+      starred: false,
+      startedAt: NOW,
+      targetCompletedAt: null,
+      completedAt: null,
+      archivedAt: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+  await db
+    .insert(contentOutputs)
+    .values({
+      id: outputId,
+      projectId,
+      title: "宿主产出",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: null,
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+}
+
 
 function makeService(
   db: Db,
@@ -103,6 +157,10 @@ describe("G10 — domain acceptance (SPEC §22)", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+    // [T-332 S2] 父锚种子:各租户/各号的宿主 output。
+    await seedOutput(db, "output-acc-1", "user-a", "acct-a");
+    await seedOutput(db, "output-a", "user-a", "acct-a");
+    await seedOutput(db, "output-b", "user-b", "acct-b");
   });
 
   it("ExportRecord export/complete is idempotent — second complete does not re-fan-out", async () => {

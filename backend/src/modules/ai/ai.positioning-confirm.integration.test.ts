@@ -16,7 +16,7 @@ import {
 // never have an AI generate one). Deterministic clock/ids, pglite db.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-a" }; // [T-332 S2] strict 门下 ctx 必带号
 
 function makeWiredService(db: Db) {
   let seq = 0;

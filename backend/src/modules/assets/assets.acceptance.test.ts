@@ -25,8 +25,8 @@ function deterministicDeps() {
     },
   };
 }
-const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user" };
+const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user", accountId: "acct-b" };
 
 function buildService(db: Db) {
   const deps = deterministicDeps();

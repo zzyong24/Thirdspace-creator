@@ -40,14 +40,14 @@ import { OwnershipError } from "./projects.errors";
 
 const NOW = "2026-06-13T10:00:00+08:00";
 
-const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user" };
+const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user", accountId: "acct-b" };
 
 function projectRow(over: Partial<ProjectRow> & { id: string; userId: string }): ProjectRow {
   return {
     id: over.id,
     userId: over.userId,
-    accountId: over.accountId ?? null,
+    accountId: over.accountId ?? "acct-a",
     title: over.title ?? "项目",
     brief: over.brief ?? "",
     briefDetail: over.briefDetail ?? {},
@@ -234,10 +234,10 @@ describe("ProjectRepository — multi-tenant ownership (Task 2)", () => {
   });
 });
 
-// [T-136 切片 b] 同一 user 下的按号(account_id)隔离门。projects 是 owned-root(有自身
-// account_id 列)。三态:accountId 设时只见该号行 / accountId null(全局视图)时见该 user
-// 全部 / create stamp 正确。
-describe("ProjectRepository — per-account isolation (T-136 slice b)", () => {
+// [T-332 S2] 同一 user 下的按号(account_id)strict 隔离门。projects 是 owned-root(有
+// 自身 account_id NOT NULL 列)。语义:有号只见该号行;未选号(null)→ AccountRequiredError
+// (引导态禁读写,不存在「全局视图」);by-id 跨号 → OwnershipError 404(§4.5)。
+describe("ProjectRepository — per-account strict isolation (T-332 S2)", () => {
   const ctxA1: RequestContext = {
     userId: "user-a",
     requestId: "r-a1",
@@ -250,7 +250,7 @@ describe("ProjectRepository — per-account isolation (T-136 slice b)", () => {
     source: "user",
     accountId: "acct-2",
   };
-  const ctxAglobal: RequestContext = {
+  const ctxNoAcct: RequestContext = {
     userId: "user-a",
     requestId: "r-ag",
     source: "user",
@@ -258,7 +258,7 @@ describe("ProjectRepository — per-account isolation (T-136 slice b)", () => {
   };
 
   beforeEach(async () => {
-    // 同 user-a、两个号各一 project + 一条 accountId=null 的存量行。
+    // 同 user-a、两个号各一 project(双账号隔离样本)。
     await repo.insertProject(
       ctxA1,
       projectRow({ id: "P1", userId: "user-a", accountId: "acct-1", title: "号1项目" }),
@@ -267,40 +267,52 @@ describe("ProjectRepository — per-account isolation (T-136 slice b)", () => {
       ctxA2,
       projectRow({ id: "P2", userId: "user-a", accountId: "acct-2", title: "号2项目" }),
     );
-    await repo.insertProject(
-      ctxAglobal,
-      projectRow({ id: "P0", userId: "user-a", accountId: null, title: "存量项目" }),
-    );
   });
 
-  it("accountId 设时 list 只返该号行", async () => {
+  it("list 只返当前号的行(双账号互不泄漏,ISO-08)", async () => {
     const rows1 = await repo.list(ctxA1);
     expect(rows1.map((p) => p.id)).toEqual(["P1"]);
     const rows2 = await repo.list(ctxA2);
     expect(rows2.map((p) => p.id)).toEqual(["P2"]);
   });
 
-  it("accountId null(全局视图)时 list 返该 user 全部行(退化不过滤)", async () => {
-    const rows = await repo.list(ctxAglobal);
-    expect(rows.map((p) => p.id).sort()).toEqual(["P0", "P1", "P2"]);
+  it("未选号(accountId null)→ 读写一律 AccountRequiredError(引导态,无全局视图)", async () => {
+    await expect(repo.list(ctxNoAcct)).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+    await expect(repo.get(ctxNoAcct, "P1")).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+    await expect(
+      repo.insertProject(
+        ctxNoAcct,
+        projectRow({ id: "P_NULL", userId: "user-a", title: "无号项目" }),
+      ),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
+    await expect(
+      repo.updateProjectRow(ctxNoAcct, "P1", { title: "hijack" }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
   });
 
-  it("accountId 设时 get 拿不到别号的行 → OwnershipError(不泄露存在性)", async () => {
+  it("by-id 跨号 get → OwnershipError 404(号一致性门,不泄露存在性,§4.5)", async () => {
     await expect(repo.get(ctxA1, "P2")).rejects.toBeInstanceOf(OwnershipError);
     // 本号内可正常拿到。
     expect((await repo.get(ctxA1, "P1")).id).toBe("P1");
-    // 全局视图能拿到任一号的行。
-    expect((await repo.get(ctxAglobal, "P2")).id).toBe("P2");
+    expect((await repo.get(ctxA2, "P2")).id).toBe("P2");
   });
 
-  it("create stamp:insertProject 落库带上 ctx 传入的 accountId", async () => {
+  it("create stamp:insertProject 只信 ctx.accountId(调用方行值被覆盖,§4.6 防绕过)", async () => {
     const p1 = await repo.get(ctxA1, "P1");
     expect(p1.accountId).toBe("acct-1");
-    const p0 = await repo.get(ctxAglobal, "P0");
-    expect(p0.accountId).toBeNull();
+    // 行值谎报 acct-2、ctx 是 acct-1 → 落库仍是 acct-1。
+    await repo.insertProject(
+      ctxA1,
+      projectRow({ id: "P_SPOOF", userId: "user-a", accountId: "acct-2", title: "谎报号" }),
+    );
+    expect((await repo.get(ctxA1, "P_SPOOF")).accountId).toBe("acct-1");
   });
 
-  it("accountId 设时 updateProjectRow 改不到别号的行 → OwnershipError", async () => {
+  it("updateProjectRow 改不到别号的行 → OwnershipError", async () => {
     await expect(
       repo.updateProjectRow(ctxA1, "P2", { title: "hijack" }),
     ).rejects.toBeInstanceOf(OwnershipError);
@@ -337,9 +349,9 @@ describe("ProjectRepository — per-account isolation (T-136 slice b)", () => {
     // 号1 ctx 反查号2 的 output/task → OwnershipError(父 project 账号门挡住)。
     await expect(repo.getOutput(ctxA1, "o_P2")).rejects.toBeInstanceOf(OwnershipError);
     await expect(repo.getTask(ctxA1, "t_P2")).rejects.toBeInstanceOf(OwnershipError);
-    // 号2 ctx 自己能拿到;全局视图也能拿到。
+    // 号2 ctx 自己能拿到。
     expect((await repo.getOutput(ctxA2, "o_P2")).id).toBe("o_P2");
-    expect((await repo.getTask(ctxAglobal, "t_P2")).id).toBe("t_P2");
+    expect((await repo.getTask(ctxA2, "t_P2")).id).toBe("t_P2");
   });
 });
 
@@ -375,6 +387,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(publications).values({
       id: pubId,
       userId: "user-a",
+      accountId: "acct-a",
       contentOutputId: oId,
       platform: "douyin",
       accountReference: "acct-ref",
@@ -414,6 +427,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(metricSnapshots).values({
       id: `ms-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       publicationId: pubId,
       capturedAt: NOW,
       source: "douyin_export",
@@ -422,6 +436,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(metricValues).values({
       id: `mv-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       metricSnapshotId: `ms-${suffix}`,
       metricKey: "play_count",
       numericValue: 100,
@@ -429,6 +444,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(retentionPoints).values({
       id: `rp-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       publicationId: pubId,
       capturedAt: NOW,
       positionMs: 1000,
@@ -438,6 +454,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(audienceSnapshots).values({
       id: `as-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       publicationId: pubId,
       capturedAt: NOW,
       dimensionType: "age",
@@ -449,6 +466,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(topicAttributions).values({
       id: `ta-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       publicationId: pubId,
       projectId,
       topicType: "教程",
@@ -461,6 +479,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(learnings).values({
       id: `L-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       projectId,
       title: `经验-${suffix}`,
       createdAt: NOW,
@@ -469,6 +488,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(learningApplications).values({
       id: `app-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       learningId: `L-${suffix}`,
       projectId,
       appliedAt: NOW,
@@ -477,7 +497,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(contentCalendarEntries).values({
       id: `ce-${suffix}`,
       userId: "user-a",
-      accountId: "acct-1",
+      accountId: "acct-a",
       plannedAt: NOW,
       contentOutputId: oId,
       createdAt: NOW,
@@ -487,6 +507,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(predictions).values({
       id: `pred-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       subjectType: "publication",
       subjectId: pubId,
       rubricVersionId: "rv-1",
@@ -496,6 +517,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(calibrationResults).values({
       id: `cr-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       predictionId: `pred-${suffix}`,
       ingestionRunId: "run-1",
       createdAt: NOW,
@@ -512,6 +534,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(searchDocuments).values({
       id: `sd-${suffix}`,
       userId: "user-a",
+      accountId: "acct-a",
       entityType: "project",
       entityId: projectId,
       title: `链路-${suffix}`,
@@ -537,6 +560,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(reviews).values({
       id: "rev-del",
       userId: "user-a",
+      accountId: "acct-a",
       projectId: "P_DEL",
       reviewType: "output",
       status: "draft",
@@ -547,6 +571,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(learnings).values({
       id: "L-manual",
       userId: "user-a",
+      accountId: "acct-a",
       projectId: null,
       reviewId: "rev-del",
       title: "手录经验",
@@ -557,6 +582,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(learningApplications).values({
       id: "app-cross",
       userId: "user-a",
+      accountId: "acct-a",
       learningId: "L-del",
       projectId: "P_KEEP",
       appliedAt: NOW,
@@ -565,6 +591,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     await db.insert(aiTasks).values({
       id: "ait-output-scoped",
       userId: "user-a",
+      accountId: "acct-a",
       projectId: null,
       contentOutputId: delChain.oId,
       taskType: "script_polish",

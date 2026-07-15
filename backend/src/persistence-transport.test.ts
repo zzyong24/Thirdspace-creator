@@ -27,6 +27,8 @@ beforeEach(async () => {
       now: () => "2026-06-13T10:00:00+08:00",
       nextId: (prefix) => `${prefix}-db-1`,
       userId: requestCtx.userId,
+      // [T-332 S2] projects.account_id NOT NULL:遗留 repo create 从 ctx 透传号。
+      accountId: requestCtx.accountId ?? "acct-test",
     }),
   );
 });

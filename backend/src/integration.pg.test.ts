@@ -63,6 +63,7 @@ suite("real Postgres integration (node-postgres driver + migrations)", () => {
     await rt.db.insert(aiTasks).values({
       id: "pgtest-task-A",
       userId: UA,
+      accountId: "pgtest-acct-A", // [T-332 S2] ai_tasks.account_id NOT NULL
       taskType: "planning.thesis",
       idempotencyKey: "k-A",
       requestedAt: NOW,

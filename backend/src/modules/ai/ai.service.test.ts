@@ -16,7 +16,8 @@ import { ConflictError } from "./ai.errors";
 // awaiting_confirmation deterministically (no Agent SDK).
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] ctx 一律带号(strict 门下未选号 = 引导态禁读写;C-07 断言单列)。
+const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-a" };
 
 function makeService(
   db: Db,
@@ -683,7 +684,7 @@ describe("ai service", () => {
   it("listConversations is user-scoped (A cannot see B)", async () => {
     const { service } = makeService(db);
     await service.createConversation(ctx, { title: "A", projectId: null });
-    const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user" };
+    const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user", accountId: "acct-b" };
     const listB = await service.listConversations(ctx, { limit: 20, offset: 0 });
     expect(listB.total).toBe(1);
     const onlyB = await service.listConversations(ctxB, { limit: 20, offset: 0 });
@@ -737,7 +738,7 @@ describe("ai service", () => {
     });
     const got = await service.getConversation(ctx, conv.id);
     expect(got.scope).toBe("global");
-    const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user" };
+    const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user", accountId: "acct-b" };
     await expect(service.getConversation(ctxB, conv.id)).rejects.toThrow(
       /OwnershipError/,
     );
@@ -912,10 +913,16 @@ describe("[DATA-H07] generated_asset:pending 候选态 → 采纳 active / 拒�
     ({ db } = await createDb());
   });
 
-  async function seedAsset(id: string, status: string, userId = "user-a") {
+  async function seedAsset(
+    id: string,
+    status: string,
+    userId = "user-a",
+    accountId = "acct-a", // [T-332 S1] assets.account_id NOT NULL
+  ) {
     await db.insert(assets).values({
       id,
       userId,
+      accountId,
       assetType: "image",
       name: `asset-${id}`,
       status,
@@ -1025,11 +1032,132 @@ describe("[DATA-H07] generated_asset:pending 候选态 → 采纳 active / 拒�
       userId: "user-b",
       requestId: "r2",
       source: "user",
+      accountId: "acct-b",
     };
     await service.discardGeneratedAsset(ctxB, "asset-p4");
     expect((await assetRow("asset-p4")).status).toBe("pending"); // 分毫未动
     // 属主自己清理才生效(runner 失败窗口 seam)。
     await service.discardGeneratedAsset(ctx, "asset-p4");
     expect((await assetRow("asset-p4")).status).toBe("deleted");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-332 S2] 账号全域隔离:未选号引导态(C-07)+ 双号 strict 隔离(ISO-02/08)
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { AccountRequiredError } from "@creatoros/backend";
+import { OwnershipError } from "./ai.errors";
+
+describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  const ctxNoAccount: RequestContext = {
+    userId: "user-a",
+    requestId: "r-none",
+    source: "user",
+  };
+  const ctxAcct1: RequestContext = {
+    userId: "user-a",
+    requestId: "r-a1",
+    source: "user",
+    accountId: "acct-1",
+  };
+  const ctxAcct2: RequestContext = {
+    userId: "user-a",
+    requestId: "r-a2",
+    source: "user",
+    accountId: "acct-2",
+  };
+
+  it("C-07:未选号(0 号)ctx 禁建会话/任务,读路径同样引导态拒绝", async () => {
+    const { service } = makeService(db);
+    await expect(
+      service.createConversation(ctxNoAccount, { title: "闲聊", projectId: null }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      service.createTask(ctxNoAccount, { taskType: "topic.generate" }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      service.listConversations(ctxNoAccount, { limit: 20, offset: 0 }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      service.listTasks(ctxNoAccount, { limit: 20, offset: 0 }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+  });
+
+  it("双号隔离:会话/任务各归各号,列表零交叉,by-id 跨号 404", async () => {
+    const { service } = makeService(db);
+    const conv1 = await service.createConversation(ctxAcct1, {
+      title: "号1会话",
+      projectId: null,
+    });
+    const task1 = await service.createTask(ctxAcct1, {
+      taskType: "topic.generate",
+      inputData: { basis: "positioning" },
+    });
+    const conv2 = await service.createConversation(ctxAcct2, {
+      title: "号2会话",
+      projectId: null,
+    });
+
+    const list1 = await service.listConversations(ctxAcct1, { limit: 20, offset: 0 });
+    expect(list1.rows.map((r) => r.id)).toEqual([conv1.id]);
+    const list2 = await service.listConversations(ctxAcct2, { limit: 20, offset: 0 });
+    expect(list2.rows.map((r) => r.id)).toEqual([conv2.id]);
+
+    const tasks2 = await service.listTasks(ctxAcct2, { limit: 20, offset: 0 });
+    expect(tasks2.total).toBe(0);
+    // §4.5 by-id 门:跨号读与未知 id 同语义(OwnershipError → 404)。
+    await expect(service.getTask(ctxAcct2, task1.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    await expect(
+      service.getConversation(ctxAcct2, conv1.id),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("§4.6 确认门:跨号 confirmTask 被拒(strict requireTask → 404),同号可确认", async () => {
+    const { service, port } = makeService(db);
+    const task = await service.createTask(ctxAcct1, {
+      taskType: "script.rewrite",
+      inputData: { artifactId: "artifact-1" },
+    });
+    await service.recordCandidate(ctxAcct1, task.id, {
+      resultType: "artifact_version",
+      artifactId: "artifact-1",
+      resultData: { body: "新稿" },
+    });
+    // 号2 确认号1的任务:strict by-id 门直接 404(产物绝不落到错号)。
+    await expect(service.confirmTask(ctxAcct2, task.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    expect(port.createVersion).not.toHaveBeenCalled();
+    // 归属号确认成功。
+    const done = await service.confirmTask(ctxAcct1, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(port.createVersion).toHaveBeenCalledTimes(1);
+  });
+
+  it("幂等键按号命名空间化:双号提交同 explicit key 各建各的任务,不跨号 dedup/相撞", async () => {
+    const { service } = makeService(db);
+    const t1 = await service.createTask(ctxAcct1, {
+      taskType: "topic.generate",
+      inputData: { idempotencyKey: "same-key" },
+    });
+    const t2 = await service.createTask(ctxAcct2, {
+      taskType: "topic.generate",
+      inputData: { idempotencyKey: "same-key" },
+    });
+    expect(t2.id).not.toBe(t1.id);
+    // 同号重复提交仍正常 dedup(in-flight)。
+    const t1again = await service.createTask(ctxAcct1, {
+      taskType: "topic.generate",
+      inputData: { idempotencyKey: "same-key" },
+    });
+    expect(t1again.id).toBe(t1.id);
   });
 });

@@ -16,7 +16,13 @@ import { createSchedulingTransport } from "./scheduling.transport";
 // candidate contract test.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] strict 门下 per-account op 必须带号(未选号 → AccountRequiredError 引导态)。
+const ctx: RequestContext = {
+  userId: "user-a",
+  requestId: "r1",
+  source: "user",
+  accountId: "acct-a",
+};
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 async function call(

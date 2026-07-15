@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createPositioningRepository,
   type PositioningRepository,
@@ -147,18 +147,17 @@ export function createPositioningService(
 ): PositioningService {
   const { db, now, nextId, projects } = deps;
 
-  function repoFor(ctx: RequestContext): PositioningRepository {
-    // [T-136 切片 ④ · SPEC §C/§D] 号维度透传:ctx.accountId 属主已由
-    // resolveRequestContext 校验可信(不属主 / 未知号已降级 null)。非空 → repo 门按号
-    // 收窄(每号一套定位母版);null(存量 / 未选号)→ 退化按 user。getPositioningCenter /
-    // upsertProfile / createStatementVersion / evaluateGate 全经此,故定位全消费面(positioning
-    // 页 / creative-context positioning facet / script-review-runner / positioning-runner)
-    // 随 ctx.accountId 自动按号。
+  // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
+  // (引导态禁读写),有号则 strict 收窄到该号(每号一套定位母版)。getPositioningCenter /
+  // upsertProfile / createStatementVersion / evaluateGate 全经此,故定位全消费面(positioning
+  // 页 / creative-context positioning facet / script-review-runner / positioning-runner)
+  // 随 ctx.accountId 自动按号。op 标注抛点便于前端归因。
+  function repoFor(ctx: RequestContext, op: string): PositioningRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: ctx.accountId ?? null,
+      accountId: requireAccountId(ctx.accountId, op),
     };
     return createPositioningRepository(db, repoDeps);
   }
@@ -224,7 +223,7 @@ export function createPositioningService(
 
   return {
     async upsertProfile(ctx, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "positioning.upsertProfile");
       const existing = await repo.getProfile();
       // [T-049 B3] 缺省 = **保留现值**(partial merge),不再清空。旧语义「缺省=空串」
       // 是真事故根因:采纳 AI 定位建议(ai.service confirm / Copilot 聊天卡都只传 5 个
@@ -273,7 +272,7 @@ export function createPositioningService(
     },
 
     async createStatementVersion(ctx, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "positioning.createStatementVersion");
       const { profileId } = await requireProfileId(repo);
 
       if (input.keywords.length !== 3) {
@@ -300,22 +299,22 @@ export function createPositioningService(
     },
 
     async listStatements(ctx, page) {
-      const { rows, total } = await repoFor(ctx).listStatements(page);
+      const { rows, total } = await repoFor(ctx, "positioning.listStatements").listStatements(page);
       return { rows: rows.map(toPositioningStatementDto), total };
     },
 
     async getStatement(ctx, statementId) {
-      const row = await repoFor(ctx).getStatement(statementId);
+      const row = await repoFor(ctx, "positioning.getStatement").getStatement(statementId);
       return toPositioningStatementDto(row);
     },
 
     async getProfile(ctx) {
-      const row = await repoFor(ctx).getProfile();
+      const row = await repoFor(ctx, "positioning.getProfile").getProfile();
       return row ? toCreatorProfileDto(row) : null;
     },
 
     async evaluateGate(ctx, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "positioning.evaluateGate");
 
       // Resolve the statement: explicit statementId (ownership-checked) else the
       // user's current (max-version) statement; none → GateSubjectError.
@@ -367,7 +366,7 @@ export function createPositioningService(
     },
 
     async getPositioningCenter(ctx) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "positioning.getPositioningCenter");
       const profileRow = await repo.getProfile();
       if (!profileRow) {
         // Empty-state (brand-new user) — render the page, never an error.

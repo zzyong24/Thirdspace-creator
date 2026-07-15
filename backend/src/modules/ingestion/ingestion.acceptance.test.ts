@@ -26,8 +26,8 @@ import { ingestionRunResource } from "./ingestion.schema";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user" };
+const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user", accountId: "acct-b" };
 
 interface Captured {
   artifactCandidate: number;
@@ -83,13 +83,13 @@ async function seedSource(db: Db, userId: string): Promise<void> {
     now: () => NOW,
     nextId: (p: string) => `${p}-seed-${userId}-${++seq}`,
     userId,
-    accountId: null, // [T-136] seed helper 无号(存量兜底)
+    accountId: `acct-${userId.replace("user-", "")}`, // [T-332 S2] seed 带号
   });
   await repo.seedExternalSources([
     {
       id: `src-${userId}`,
       userId,
-      accountId: null,
+      accountId: `acct-${userId.replace("user-", "")}`,
       sourceType: "mock",
       name: "Mock",
       sourceIdentifier: "mock://x",

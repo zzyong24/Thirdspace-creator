@@ -24,6 +24,7 @@ const ctx: RequestContext = {
   userId: "user-a",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-a", // [T-332 S2] per-account strict
 };
 
 const ep = (key: keyof typeof ENDPOINTS): Endpoint =>
@@ -35,13 +36,13 @@ async function seedSource(db: Db): Promise<void> {
     now: () => NOW,
     nextId: (p: string) => `${p}-seed-${++seq}`,
     userId: "user-a",
-    accountId: null, // [T-136] seed helper 无号(存量兜底)
+    accountId: "acct-a", // [T-332 S2] seed 带号
   });
   await repo.seedExternalSources([
     {
       id: "src-a",
       userId: "user-a",
-      accountId: null,
+      accountId: "acct-a",
       sourceType: "mock",
       name: "Mock",
       sourceIdentifier: "mock://x",

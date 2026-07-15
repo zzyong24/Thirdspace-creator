@@ -129,6 +129,9 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
+      // [T-332 S2] 父锚账号维度下推:repo 每个读写点经 content_output → project 的
+      // strict 门闭合(§3.2);未选号 → AccountRequiredError(引导态禁读写)。
+      accountId: ctx.accountId ?? null,
     });
   }
 

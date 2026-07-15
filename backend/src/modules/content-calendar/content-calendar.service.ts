@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createContentCalendarRepository,
   type ContentCalendarRepository,
@@ -231,9 +231,34 @@ export function createContentCalendarService(
 ): ContentCalendarService {
   const { db, now, nextId, clock } = deps;
 
-  function repoFor(ctx: RequestContext): ContentCalendarRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+  // [T-332 S2] 每个公开方法入口先 requireAccountId(SPEC §4.2:未选号 = 引导态禁
+  // 读写,抛 AccountRequiredError);repo 以 ctx 当前号 baked 构造,by-id 读写叠号
+  // (§4.5 号一致性门)。显式 accountId 参数(路由 /accounts/:accountId/…)必须与
+  // ctx 当前号一致——不一致按跨号处理(OwnershipError 404,§4.5/§4.6,防「从 A 号
+  // 工作区写 B 号日历」的绕过)。
+  function repoFor(
+    ctx: RequestContext,
+    currentAccountId: string,
+  ): ContentCalendarRepository {
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      accountId: currentAccountId,
+    };
     return createContentCalendarRepository(db, repoDeps);
+  }
+
+  // 显式 accountId 参数与 ctx 当前号的一致性门(§4.5 同语义,404 不泄露存在)。
+  function assertCurrentAccount(
+    currentAccountId: string,
+    paramAccountId: string,
+  ): void {
+    if (paramAccountId !== currentAccountId) {
+      throw new OwnershipError(
+        `OwnershipError: account not found: ${paramAccountId}`,
+      );
+    }
   }
 
   // Cross-module FK validation (C-3) — never create a Candidate, only validate it.
@@ -268,7 +293,8 @@ export function createContentCalendarService(
     window: WindowQuery,
     cadence: PublishingCadenceResource | null,
   ): Promise<void> {
-    const repo = repoFor(ctx);
+    // 调用链上游已断言 accountId === ctx 当前号(assertCurrentAccount)。
+    const repo = repoFor(ctx, accountId);
     const entries = await repo.entriesForAttainment(accountId, window);
     const nowMs = Date.parse(clock.now());
     const grace = graceForFrequency(cadence?.frequency ?? "weekly");
@@ -304,7 +330,8 @@ export function createContentCalendarService(
     accountId: string,
     window: WindowQuery,
   ): Promise<CadenceAttainmentResource> {
-    const repo = repoFor(ctx);
+    // 调用链上游已断言 accountId === ctx 当前号(assertCurrentAccount)。
+    const repo = repoFor(ctx, accountId);
     const cadence = await repo.getCadence(accountId);
     const cadenceDto = cadence ? toPublishingCadenceDto(cadence) : null;
     await reconcile(ctx, accountId, window, cadenceDto);
@@ -357,8 +384,10 @@ export function createContentCalendarService(
 
   return {
     async listCalendar(ctx, accountId, window, pagination) {
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.listCalendar");
+      assertCurrentAccount(acc, accountId); // 号一致性门(§4.5)
       await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
-      const { rows, total } = await repoFor(ctx).listEntries(accountId, {
+      const { rows, total } = await repoFor(ctx, acc).listEntries(accountId, {
         from: window.from,
         to: window.to,
         limit: pagination.limit,
@@ -368,9 +397,11 @@ export function createContentCalendarService(
     },
 
     async createEntry(ctx, accountId, body) {
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.createEntry");
+      assertCurrentAccount(acc, accountId); // 写路径 stamp 必须来自 ctx 当前号(§4.6)
       await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
       await validateBindings(ctx, body.contentOutputId, body.candidateId);
-      const row = await repoFor(ctx).createEntry(accountId, {
+      const row = await repoFor(ctx, acc).createEntry(accountId, {
         plannedAt: body.plannedAt,
         contentOutputId: body.contentOutputId ?? null,
         candidateId: body.candidateId ?? null,
@@ -380,7 +411,8 @@ export function createContentCalendarService(
     },
 
     async updateEntry(ctx, entryId, patch) {
-      const repo = repoFor(ctx);
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.updateEntry");
+      const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId); // ownership gate
       await validateBindings(ctx, patch.contentOutputId, patch.candidateId);
       // missed → planned implicit reschedule when plannedAt moves into the future.
@@ -409,7 +441,8 @@ export function createContentCalendarService(
           `ValidationError: unknown calendar entry status '${next}'`,
         );
       }
-      const repo = repoFor(ctx);
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.transition");
+      const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId); // ownership gate
       const current = existing.status;
       // Idempotency: same-status transition is a no-op (returns existing DTO).
@@ -430,16 +463,21 @@ export function createContentCalendarService(
     },
 
     async deleteEntry(ctx, entryId) {
-      return repoFor(ctx).deleteEntry(entryId); // getEntry inside gates ownership
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.deleteEntry");
+      return repoFor(ctx, acc).deleteEntry(entryId); // getEntry inside gates ownership
     },
 
     async getCadence(ctx, accountId) {
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.getCadence");
+      assertCurrentAccount(acc, accountId); // 号一致性门(§4.5)
       await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
-      const row = await repoFor(ctx).getCadence(accountId);
+      const row = await repoFor(ctx, acc).getCadence(accountId);
       return row ? toPublishingCadenceDto(row) : null;
     },
 
     async upsertCadence(ctx, accountId, body) {
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.upsertCadence");
+      assertCurrentAccount(acc, accountId); // 写路径 stamp 必须来自 ctx 当前号(§4.6)
       await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
       if (!VALID_FREQUENCIES.has(body.frequency)) {
         throw new ValidationError(
@@ -458,7 +496,7 @@ export function createContentCalendarService(
           );
         }
       }
-      const row = await repoFor(ctx).upsertCadence(accountId, {
+      const row = await repoFor(ctx, acc).upsertCadence(accountId, {
         frequency: body.frequency,
         preferredSlots: body.preferredSlots,
       });
@@ -466,13 +504,23 @@ export function createContentCalendarService(
     },
 
     async attainment(ctx, accountId, window) {
+      const acc = requireAccountId(ctx.accountId, "contentCalendar.attainment");
+      assertCurrentAccount(acc, accountId); // 号一致性门(§4.5;reconcile 会写状态)
       await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
       return attainmentFor(ctx, accountId, window);
     },
 
     async getLaggingAccounts(ctx, accountIds, window) {
+      const acc = requireAccountId(
+        ctx.accountId,
+        "contentCalendar.getLaggingAccounts",
+      );
       const lagging: LaggingAccount[] = [];
       for (const accountId of accountIds) {
+        // [T-332 S2 · ISO-07] 跨号总览无隐式路径:只扫 ctx 当前号(reconcile 会写
+        // 入 entry 状态,跨号扫描 = 跨号写)。将来要真·多号总览须走显式 scope=all
+        // 产品能力(SPEC §8.2,本期不做)。非当前号直接跳过,不 404(总览语义)。
+        if (accountId !== acc) continue;
         // ownership gate per account (skips foreign ids structurally via the port).
         await deps.platformAccounts.getAccount(ctx, accountId);
         const a = await attainmentFor(ctx, accountId, window);

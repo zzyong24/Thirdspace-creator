@@ -1,3 +1,5 @@
+import { eq, type Db } from "@creatoros/backend";
+import { searchDocuments } from "./search.db-schema";
 import type { SearchDocumentRow } from "./search.repository";
 
 // Wave-1 search-index seed (plan open-question #4). SPEC §16 says "索引内容由拥有数据
@@ -14,17 +16,19 @@ import type { SearchDocumentRow } from "./search.repository";
 // Minimal structural shape of the canonical dataset slices this seed reads. We
 // keep it loose (string indexers) so the seed never couples to the full domain
 // types — it consumes only the fields it denormalizes.
-// [T-136 MAJOR-4] 各源投影带可选 accountId,让派生 search_documents 承源实体的号;
-// 松散结构,缺省(seed fixture / 存量)回落 null,真实 canonical 数据带号则透传。
+// [T-332 S2 · ISO-06 系统路径] 各源投影 accountId **必填**:源实体行(projects/
+// knowledge_items/assets/publications)自 S1 起 account_id NOT NULL,派生
+// search_documents 的号直接由源行派生(不经 ctx.accountId、不落 null)。调用方
+// (persistence-client 启动重建)从 DB 真值行透传 row.accountId。
 interface CanonicalLike {
   user: { id: string };
   projects: ReadonlyArray<{
-    id: string; title: string; brief: string; currentStage: string; progressPct: number; accountId?: string | null;
+    id: string; title: string; brief: string; currentStage: string; progressPct: number; accountId: string;
   }>;
-  knowledgeItems: ReadonlyArray<{ id: string; title: string; currentRevisionId: string; accountId?: string | null }>;
+  knowledgeItems: ReadonlyArray<{ id: string; title: string; currentRevisionId: string; accountId: string }>;
   knowledgeRevisions: ReadonlyArray<{ id: string; knowledgeItemId: string; content?: string }>;
-  assets: ReadonlyArray<{ id: string; name: string; assetType: string; accountId?: string | null }>;
-  publications: ReadonlyArray<{ id: string; platform: string; currentRevisionId: string | null; accountId?: string | null }>;
+  assets: ReadonlyArray<{ id: string; name: string; assetType: string; accountId: string }>;
+  publications: ReadonlyArray<{ id: string; platform: string; currentRevisionId: string | null; accountId: string }>;
   publicationRevisions: ReadonlyArray<{ id: string; title?: string }>;
 }
 
@@ -43,7 +47,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-project-${p.id}`,
       userId,
-      accountId: p.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号
+      accountId: p.accountId, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
       entityType: "project",
       entityId: p.id,
       title: p.title,
@@ -67,7 +71,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-knowledge-${k.id}`,
       userId,
-      accountId: k.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号
+      accountId: k.accountId, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
       entityType: "knowledge",
       entityId: k.id,
       title: k.title,
@@ -82,7 +86,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-asset-${a.id}`,
       userId,
-      accountId: a.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号
+      accountId: a.accountId, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
       entityType: "asset",
       entityId: a.id,
       title: a.name,
@@ -101,7 +105,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-video-${pub.id}`,
       userId,
-      accountId: pub.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号(publications 已带 account_id)
+      accountId: pub.accountId, // [T-332 S2] 派生索引承源实体的号(publications 行 NOT NULL)
       entityType: "video",
       entityId: pub.id,
       title,
@@ -113,4 +117,22 @@ export function buildCanonicalSearchDocuments(
   }
 
   return rows;
+}
+
+// [T-332 S2 · ISO-06 系统路径] 启动全量重建(显式 *System 命名):user 级整删该用户的
+// 全部派生索引文档,再把 buildCanonicalSearchDocuments 投影出的行(每行 accountId 由
+// **源实体行**派生,跨号各归各号)整批重播。这是唯一允许不经 ctx.accountId 按号门的
+// 搜索写路径 —— 它不是「无号退化全量」,而是「逐行自带号」的多号重建;经 ctx 的业务
+// 读写(SearchService)一律 requireAccountId strict。幂等:先删后插,重跑结果一致。
+export async function rebuildSearchIndexSystem(
+  db: Db,
+  userId: string,
+  rows: SearchDocumentRow[],
+): Promise<void> {
+  await db.delete(searchDocuments).where(eq(searchDocuments.userId, userId));
+  // 防御:只重播该 user 的行(调用方本就按 user 投影;越界行直接丢弃,不静默落别家)。
+  const owned = rows.filter((r) => r.userId === userId);
+  if (owned.length > 0) {
+    await db.insert(searchDocuments).values(owned);
+  }
 }

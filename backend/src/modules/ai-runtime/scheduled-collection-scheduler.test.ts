@@ -293,6 +293,56 @@ describe("runJobNow(D5「立即运行」手动触发)", () => {
   });
 });
 
+describe("[T-332 S2 · GAP-08] scheduled_for 计划触发锚", () => {
+  it("cron 到点触发(带 options.scheduledFor)→ createRun 写入该锚", async () => {
+    const deps = makeTriggerDeps([]);
+    await triggerScheduledJob(ctx, job, deps, {
+      scheduledFor: "2026-07-01T09:00:00.000Z",
+    });
+    expect(deps._createRun).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        jobId: "job1",
+        scheduledFor: "2026-07-01T09:00:00.000Z",
+      }),
+    );
+  });
+
+  it("「立即运行」(runJobNow,无 options)→ scheduledFor 为 null(即时动作无计划 tick,不受唯一约束)", async () => {
+    const base = makeTriggerDeps([]);
+    const getJob = vi.fn(async () => ({
+      id: "job1",
+      sourceKind: "self.metrics",
+      target: {},
+    }));
+    await runJobNow(ctx, "job1", { ...base, job: { getJob } });
+    expect(base._createRun).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ scheduledFor: null }),
+    );
+  });
+
+  it("tick:到点 job 的触发带「本 tick 分钟(秒/毫秒归零)」的 ISO 锚", async () => {
+    const deps = makeTriggerDeps([]);
+    const loopDeps: SchedulerLoopDeps = {
+      ...deps,
+      ctx,
+      listRunnableJobs: async () => [
+        // schedule 用 * * * * *(每分钟必到点)—— cronMatchesMinute 按本地时区解析,
+        // 固定 时:分 的表达式在不同时区跑测试会假红。
+        { ...job, schedule: "* * * * *", enabled: true },
+      ],
+    };
+    // deps.now = 2026-07-01T09:00:00.000Z(整分)→ 锚 = 该分钟(秒/毫秒归零)的 ISO。
+    const { tick } = await import("./scheduled-collection-scheduler");
+    await tick(loopDeps, { validate: () => true });
+    expect(deps._createRun).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ scheduledFor: "2026-07-01T09:00:00.000Z" }),
+    );
+  });
+});
+
 describe("dayKeyOf / cronMatchesMinute(手写 cron 匹配器)", () => {
   it("dayKeyOf:ISO → YYYY-MM-DD", () => {
     expect(dayKeyOf("2026-07-01T09:00:00.000Z")).toBe("2026-07-01");

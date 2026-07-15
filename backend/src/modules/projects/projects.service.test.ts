@@ -38,7 +38,7 @@ import {
 } from "./projects.errors";
 
 const NOW = "2026-06-13T10:00:00+08:00";
-const ctx: RequestContext = { userId: "user-1", requestId: "req-1", source: "user" };
+const ctx: RequestContext = { userId: "user-1", requestId: "req-1", source: "user", accountId: "acct-1" };
 
 function deterministicDeps() {
   const counters = new Map<string, number>();
@@ -145,6 +145,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
       userId: "user-2",
       requestId: "req-2",
       source: "user",
+      accountId: "acct-2",
     };
     // 别人删我的项目 → 404。
     await expect(
@@ -180,6 +181,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(artifacts).values({
       id: "art-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       projectId,
       contentOutputId: outputId,
       currentVersionId: "artv-1",
@@ -209,6 +211,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(publications).values({
       id: "pub-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       contentOutputId: outputId,
       platform: "douyin",
       accountReference: "acc-1",
@@ -230,6 +233,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(audienceSignals).values({
       id: "sig-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       source: "comment",
       rawText: "好视频",
       publicationId: "pub-1",
@@ -239,6 +243,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(reviews).values({
       id: "rev-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       projectId,
       reviewType: "project",
       status: "completed",
@@ -249,6 +254,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(reviewInsights).values({
       id: "ri-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       reviewId: "rev-1",
       insightType: "success",
       title: "洞察",
@@ -276,6 +282,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(aiConversations).values({
       id: "conv-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       projectId,
       scope: `project:${projectId}`,
       title: "会话",
@@ -292,6 +299,7 @@ describe("deleteProject 级联物理删除 (T-102)", () => {
     await db.insert(aiTasks).values({
       id: "task-1",
       userId: ctx.userId,
+      accountId: "acct-1",
       projectId,
       taskType: "script.generate",
       status: "succeeded",
@@ -697,7 +705,7 @@ describe("getDashboardSummary (GAP-DASH-1)", () => {
   function projectRow(over: Partial<ProjectRow> & Pick<ProjectRow, "id" | "updatedAt">): ProjectRow {
     return {
       userId: ctx.userId,
-      accountId: over.accountId ?? null,
+      accountId: over.accountId ?? "acct-1",
       title: over.title ?? over.id,
       brief: "",
       briefDetail: {},
@@ -1129,6 +1137,7 @@ describe("Brief stage gate (立项 Brief 地基)", () => {
       {
         id: "p-noname",
         userId: ctx.userId,
+        accountId: "acct-1", // [T-332 S2] NOT NULL
         title: "",
         brief: "",
         briefDetail: FULL_BRIEF,
@@ -1220,5 +1229,50 @@ describe("Brief stage gate (立项 Brief 地基)", () => {
     });
     const rows = await repo.listTargetPlatforms(ctx, p.id);
     expect(rows.map((r) => r.platform).sort()).toEqual(["douyin", "xiaohongshu"]);
+  });
+});
+
+// [T-332 S2] service 入口账号断言 + 双账号隔离(SPEC §4.2 未选号=引导态禁读写)。
+describe("projects.service — per-account strict (T-332 S2)", () => {
+  it("未选号(ctx.accountId 缺失)写/读 → AccountRequiredError", async () => {
+    const noAcct: RequestContext = {
+      userId: "user-1",
+      requestId: "req-na",
+      source: "user",
+      accountId: null,
+    };
+    await expect(
+      service.createProject(noAcct, { title: "无号项目" }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
+    await expect(service.getDashboardSummary(noAcct)).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+    await expect(service.hasImportedProjects(noAcct)).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+  });
+
+  it("双账号项目隔离 + by-id 跨号 404(同 user 两个号)", async () => {
+    const ctx2: RequestContext = {
+      userId: "user-1",
+      requestId: "req-a2",
+      source: "user",
+      accountId: "acct-2",
+    };
+    const p1 = await service.createProject(ctx, { title: "号1项目" });
+    const p2 = await service.createProject(ctx2, { title: "号2项目" });
+    expect(p1.accountId).toBe("acct-1");
+    expect(p2.accountId).toBe("acct-2");
+    // by-id 跨号 → OwnershipError 404(号一致性门,§4.5)。
+    await expect(service.patchProject(ctx, p2.id, { title: "hijack" })).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+    await expect(service.validateStageGate(ctx2, p1.id, "brief")).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+    // 本号内正常。
+    await expect(service.patchProject(ctx2, p2.id, { title: "改" })).resolves.toMatchObject({
+      title: "改",
+    });
   });
 });

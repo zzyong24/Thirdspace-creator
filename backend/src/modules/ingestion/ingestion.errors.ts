@@ -8,4 +8,8 @@ export { OwnershipError } from "@creatoros/backend";
 export {
   UnsupportedOperationError,
   AuthenticationError,
+  // [T-332 S2] 账号全域隔离:external_sources / ingestion_runs 是 per-account 表,
+  // 未选号读写 → 引导态错误 + 统一断言(采集链路 ctx 的账号由绑定/job 派生,恒有号)。
+  AccountRequiredError,
+  requireAccountId,
 } from "@creatoros/backend";

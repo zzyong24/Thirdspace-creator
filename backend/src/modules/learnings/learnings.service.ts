@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createLearningsRepository,
   type LearningsRepository,
@@ -284,14 +284,14 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
   // [T-183] 改稿 delta 摘要器:默认真实纯 diff,测试可注入抛错实现验证降级路径。
   const summarizeEditDelta = deps.summarizeEditDelta ?? defaultSummarizeEditDelta;
 
-  function repoFor(ctx: RequestContext): LearningsRepository {
-    // [T-136 切片 b] 号维度透传:ctx.accountId 属主已由 resolveRequestContext 校验可信;
-    // 缺省(未选号/存量)→ null → repo 读门退化不过滤。
+  // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
+  // (引导态禁读写),有号则 strict 收窄到该号。op 标注抛点便于前端归因。
+  function repoFor(ctx: RequestContext, op: string): LearningsRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: ctx.accountId ?? null,
+      accountId: requireAccountId(ctx.accountId, op),
     };
     return createLearningsRepository(db, repoDeps);
   }
@@ -311,7 +311,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
 
   return {
     async listLearnings(ctx, page, filter) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "learnings.listLearnings");
       // [T-118a] 归属门(repoFor 已把 userId 烘进 repo)最外层;filter 只做 AND 窄化透传。
       const { rows, total } = await repo.listLearnings(page, filter);
       // Reuse signal: one grouped read of learningApplications for the page's ids
@@ -329,7 +329,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async getLearning(ctx, learningId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "learnings.getLearning");
       const row = await repo.getLearningRowById(learningId); // ownership gate
       let reuseCount = 0;
       try {
@@ -344,7 +344,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       // [T-049 B17] learningType 透传(富录入表单用户可选);缺省 strategy 向后兼容。
       // [T-118a gate-F3] projectId 透传(复盘 learning_list 采纳时带上 task.projectId);
       // 手录/无来源作品时为 null。
-      const row = await repoFor(ctx).createLearning({
+      const row = await repoFor(ctx, "learnings.createLearning").createLearning({
         title: body.title,
         insight: body.insight ?? "",
         learningType: body.learningType ?? "strategy",
@@ -357,7 +357,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async promoteReviewInsight(ctx, input) {
-      const row = await repoFor(ctx).createLearning({
+      const row = await repoFor(ctx, "learnings.promoteReviewInsight").createLearning({
         title: input.insightTitle,
         insight: input.insightBody,
         learningType: input.learningType,
@@ -392,7 +392,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       // 仿 promoteReviewInsight 落一条 candidate learning(source=edit_delta,带 projectId
       // 溯源到作品;validationStatus 默认 candidate → 进既有裁决台)。artifactId 附在 insight
       // 尾注,便于溯源到具体脚本 artifact。
-      const row = await repoFor(ctx).createLearning({
+      const row = await repoFor(ctx, "learnings.captureEditDelta").createLearning({
         title,
         insight: `${insight}\n(来源脚本 artifact: ${input.artifactId})`,
         learningType: "edit_delta",
@@ -405,7 +405,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async applyLearning(ctx, learningId, body) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "learnings.applyLearning");
       // 1. Parent-learning ownership gate (cross-user / unknown → OwnershipError →
       //    404) BEFORE the project gate / any write.
       await repo.getLearningRowById(learningId);
@@ -427,7 +427,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async patchLearning(ctx, learningId, body) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "learnings.patchLearning");
       const row = await repo.patchLearning(learningId, body); // ownership gate inside
       let reuseCount = 0;
       try {
@@ -439,7 +439,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async evaluateLearning(ctx, learningId, body) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "learnings.evaluateLearning");
       const current = await repo.getLearningRowById(learningId); // ownership gate
       const nextStatus = body.validationStatus ?? current.validationStatus;
 
@@ -479,7 +479,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       const limit = opts.limit ?? 3;
       // Scoped read of the user's learnings; filter to validated, sort by
       // confidenceScore desc, cap at limit. A bounded page is enough for the feed.
-      const { rows } = await repoFor(ctx).listLearnings({
+      const { rows } = await repoFor(ctx, "learnings.getSuggestions").listLearnings({
         limit: 200,
         offset: 0,
       });
@@ -493,7 +493,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     async suggestCalibrationRule(ctx, learningId, input) {
       // 1. Ownership gate: the Learning must be owned (cross-user / unknown →
       //    OwnershipError → 404) BEFORE any cross-module write.
-      const learning = await repoFor(ctx).getLearningRowById(learningId);
+      const learning = await repoFor(ctx, "learnings.suggestCalibrationRule").getLearningRowById(learningId);
       // 2. The reflow needs a wired Calibration seam + a target Rubric. No seam OR no
       //    rubric ⇒ nothing to bump ⇒ ConflictError (the FE only shows 回流到校准 when a
       //    rubric exists, so this is the honest defensive path, never a fake success).

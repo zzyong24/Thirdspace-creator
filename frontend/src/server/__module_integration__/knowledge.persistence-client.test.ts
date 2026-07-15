@@ -28,10 +28,14 @@ afterAll(() => {
 // GAP-RES-1 soft-delete ops (knowledge.archive, knowledge.relations.delete).
 
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:知识库按号独立(SPEC C-01),ctx 必须带 accountId
+// (未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生即可(composite
+// 层 ctx 可信,无需真建账号行);开箱空断言不受影响(该号下本就没有任何条目)。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 beforeEach(() => {

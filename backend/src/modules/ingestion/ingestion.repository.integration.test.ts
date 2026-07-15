@@ -20,7 +20,7 @@ const NOW = "2026-06-21T00:00:00.000Z";
 function makeRepo(
   db: Db,
   userId: string,
-  accountId: string | null = null, // [T-136] 默认无号;按号门用例显式传号
+  accountId: string | null = "acct-a", // [T-332 S2] strict 门:默认带号;未选号用例显式传 null
 ): IngestionRepository {
   let seq = 0;
   return createIngestionRepository(db, {
@@ -34,7 +34,7 @@ function makeRepo(
 const sourceRow = (userId: string, id: string): ExternalSourceRow => ({
   id,
   userId,
-  accountId: null,
+  accountId: "acct-a", // [T-332 S2] NOT NULL:seed 带号
   sourceType: "mock",
   name: "Mock Source",
   sourceIdentifier: "mock://canonical",
@@ -239,9 +239,9 @@ describe("ingestion repository — account gate (T-136)", () => {
     );
   });
 
-  it("unscoped repo (accountId=null) sees runs regardless of stamped account_id (存量兜底 / 全局视图)", async () => {
+  it("未选号 repo(accountId=null)读写一律 AccountRequiredError(引导态,无全局视图退化)", async () => {
     const repoAcct1 = makeRepo(db, "user-a", "acct-1");
-    const repoUnscoped = makeRepo(db, "user-a", null);
+    const repoNoAcct = makeRepo(db, "user-a", null);
     await repoAcct1.seedExternalSources([
       { ...sourceRow("user-a", "src-1"), accountId: "acct-1" },
     ]);
@@ -250,10 +250,20 @@ describe("ingestion repository — account gate (T-136)", () => {
       runType: "metrics",
       idempotencyKey: "idem-null",
     });
-    // 无号门 repo(null)→ 门忽略 → 看得到该 user 任意号的 run(存量 / 全局视图退化)。
-    await expect(repoUnscoped.getRun(run.id)).resolves.toMatchObject({
-      id: run.id,
+    // [T-332 S2] strict:未选号 → 抛(不再是「门忽略见全部」)。
+    await expect(repoNoAcct.getRun(run.id)).rejects.toMatchObject({
+      name: "AccountRequiredError",
     });
+    await expect(repoNoAcct.getExternalSource("src-1")).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+    await expect(
+      repoNoAcct.createRun({
+        externalSourceId: "src-1",
+        runType: "metrics",
+        idempotencyKey: "idem-null-2",
+      }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
   });
 
   it("getExternalSource is account-scoped: acct-2 repo cannot see acct-1's source", async () => {
@@ -301,7 +311,7 @@ describe("ingestion repository — deduplicateDouyinSources (T-136 MINOR-3)", ()
 
   const douyinSrc = (
     id: string,
-    accountId: string | null,
+    accountId: string,
     createdAt: string,
   ): ExternalSourceRow => ({
     id,
@@ -334,14 +344,15 @@ describe("ingestion repository — deduplicateDouyinSources (T-136 MINOR-3)", ()
   });
 
   it("different accounts with the same name are independent — never deduped", async () => {
-    // 无号 repo → 看该 user 全部,按各行自身 account 分组;acct-1 / acct-2 各一条同名源。
-    const repo = makeRepo(db, "user-a", null);
-    await repo.seedExternalSources([
+    // [T-332 S2] strict 门:各号 repo 只看自己号的源;两号各一条同名源互不干扰。
+    const repo1 = makeRepo(db, "user-a", "acct-1");
+    const repo2 = makeRepo(db, "user-a", "acct-2");
+    await repo1.seedExternalSources([
       douyinSrc("d-a1", "acct-1", "2026-01-01T00:00:00.000Z"),
       douyinSrc("d-a2", "acct-2", "2026-01-01T00:00:00.000Z"),
     ]);
-    const marked = await repo.deduplicateDouyinSources();
-    expect(marked).toBe(0); // 不同 account 相同 name 视独立源,不去重
+    expect(await repo1.deduplicateDouyinSources()).toBe(0); // 各组只有一条,不去重
+    expect(await repo2.deduplicateDouyinSources()).toBe(0);
   });
 
   it("is idempotent — a second run marks nothing new", async () => {

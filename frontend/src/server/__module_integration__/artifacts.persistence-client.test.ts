@@ -14,10 +14,14 @@ import { ARTIFACT_OP_IDS } from "@creatoros/backend/modules/artifacts";
 
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:per-account op(projects/artifacts)必须带 ctx.accountId
+// (未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生;composite 层 ctx
+// 是可信输入,无需真建账号行。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 // [T-050] canonical demo 项目/artifact 种子已退役 → 每个用例前自建

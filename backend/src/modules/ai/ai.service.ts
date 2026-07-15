@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createAiRepository,
   type AiRepository,
@@ -439,24 +439,28 @@ function stableHash(parts: string[]): string {
 }
 
 export function createAiService(deps: ServiceDeps): AiService {
-  function repoFor(ctx: RequestContext): AiRepository {
+  // [T-332 S2 · SPEC §4.2/C-07] 每个经 ctx 的入口都经此建 repo:未选号(0 号 / 引导态)
+  // → AccountRequiredError(前端译成「绑定抖音号后开始」,禁建会话/任务、禁读历史)。
+  // 系统路径(runner / 调度链)不受影响:其 ctx.accountId 由 ai_tasks / scheduled_job 行
+  // 派生(ISO-06,恒有号),requireAccountId 恰好放行。
+  function repoFor(ctx: RequestContext, op: string): AiRepository {
     return createAiRepository(deps.db, {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      // [T-136 切片 b] 号维度透传(ctx.accountId 属主已由 resolveRequestContext 校验)。
-      accountId: ctx.accountId ?? null,
+      accountId: requireAccountId(ctx.accountId, op),
     });
   }
 
   return {
     async listConversations(ctx, page) {
-      const { rows, total } = await repoFor(ctx).listConversations(page);
+      const { rows, total } = await repoFor(ctx, "ai.listConversations").listConversations(page);
       return { rows: rows.map(toConversationDto), total };
     },
 
     async createConversation(ctx, body) {
-      const row = await repoFor(ctx).createConversation({
+      // C-07:0 号禁建 AI 会话(repoFor 内 requireAccountId 抛 AccountRequiredError)。
+      const row = await repoFor(ctx, "ai.createConversation").createConversation({
         title: body.title,
         projectId: body.projectId ?? null,
         scope: body.scope,
@@ -467,12 +471,12 @@ export function createAiService(deps: ServiceDeps): AiService {
     async getConversation(ctx, conversationId) {
       // T-096:ownership 门复用 requireConversation(跨用户/未知 id → OwnershipError → 404,
       // 不泄漏存在性)。路由用它做续接的 scope 一致性校验。
-      const row = await repoFor(ctx).requireConversation(conversationId);
+      const row = await repoFor(ctx, "ai.getConversation").requireConversation(conversationId);
       return toConversationDto(row);
     },
 
     async createMessage(ctx, conversationId, body) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.createMessage");
       // Write ONLY the user message. The real assistant reply is produced async by the
       // composition-layer copilot runner (positioning-aware Claude on the user's
       // subscription token) and appended via appendAssistantMessage; the UI surfaces it
@@ -487,7 +491,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async appendAssistantMessage(ctx, conversationId, content, parts, opts) {
-      const row = await repoFor(ctx).createMessage(conversationId, {
+      const row = await repoFor(ctx, "ai.appendAssistantMessage").createMessage(conversationId, {
         role: "assistant",
         content,
         // [T-128] 存全 parts(含 tool-result 卡数据),恢复时据它重建卡渲染。
@@ -503,17 +507,23 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async listMessages(ctx, conversationId) {
-      const rows = await repoFor(ctx).listMessages(conversationId);
+      const rows = await repoFor(ctx, "ai.listMessages").listMessages(conversationId);
       return rows.map(toMessageDto);
     },
 
     async createTask(ctx, body) {
-      const repo = repoFor(ctx);
+      // C-07:0 号禁建 AI 任务;调度/绑定链的派生 ctx 恒有号,此门不拦系统路径。
+      const accountId = requireAccountId(ctx.accountId, "ai.createTask");
+      const repo = repoFor(ctx, "ai.createTask");
       const inputData = body.inputData ?? {};
-      let idempotencyKey =
+      // [T-332 S2 · ISO-08] 幂等键按号命名空间化:UNIQUE(user_id, idempotency_key) 不含
+      // account_id(平台幂等锚保持 user 级),前缀当前号则双号提交同 key 互不相撞、
+      // findTaskByIdempotencyKey 也绝不跨号命中对方任务(拍板 ② 清库世界,无旧键兼容负担)。
+      const rawKey =
         typeof inputData.idempotencyKey === "string" && inputData.idempotencyKey
           ? inputData.idempotencyKey
           : stableHash([ctx.userId, body.taskType, JSON.stringify(inputData)]);
+      let idempotencyKey = `${accountId}:${rawKey}`;
 
       // Idempotency (SPEC §17 / design-spec §7): dedup only IN-FLIGHT duplicates
       // (queued/running) — that is the real double-submit / network-retry case. An
@@ -562,8 +572,18 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async confirmTask(ctx, taskId) {
-      const repo = repoFor(ctx);
+      const accountId = requireAccountId(ctx.accountId, "ai.confirmTask");
+      const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
+      // [T-332 S2 · §4.6 AI 采纳/确认门] 二次校验:候选产物只能沿发起任务时的
+      // ai_tasks.account_id 落库,确认 ctx 必须同号。requireTask 的 strict 门已保证跨号
+      // 任务 404(结构性挡住);此断言是防御层——若门语义未来变化/数据被旁路写坏,
+      // 在物化前显式拒绝,提示切回任务归属号,绝不静默跨号落库。
+      if (task.accountId !== accountId) {
+        throw new ConflictError(
+          `AI task ${taskId} belongs to account ${task.accountId}; switch to that account before confirming`,
+        );
+      }
       if (
         task.status !== "awaiting_confirmation" ||
         !canTransition(task.status, "succeeded")
@@ -1074,7 +1094,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async cancelTask(ctx, taskId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.cancelTask");
       const task = await repo.requireTask(taskId);
       if (!canTransition(task.status, "cancelled")) {
         throw new ConflictError(
@@ -1107,21 +1127,21 @@ export function createAiService(deps: ServiceDeps): AiService {
     async discardGeneratedAsset(ctx, assetId) {
       // [DATA-H07] runner 失败清理 seam(asset 已建、recordCandidate 失败的窗口)。
       // repo 层只清 pending + user_id 收窄 → 越权/已采纳/不存在均静默 no-op。
-      await repoFor(ctx).discardGeneratedAsset(assetId);
+      await repoFor(ctx, "ai.discardGeneratedAsset").discardGeneratedAsset(assetId);
     },
 
     async listTasks(ctx, page) {
-      const { rows, total } = await repoFor(ctx).listTasks(page);
+      const { rows, total } = await repoFor(ctx, "ai.listTasks").listTasks(page);
       return { rows: rows.map(toTaskDto), total };
     },
 
     async getTask(ctx, taskId) {
-      const task = await repoFor(ctx).requireTask(taskId);
+      const task = await repoFor(ctx, "ai.getTask").requireTask(taskId);
       return toTaskDto(task);
     },
 
     async markRunning(ctx, taskId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.markRunning");
       const task = await repo.requireTask(taskId);
       if (task.status === "queued") {
         await repo.updateTaskStatus(taskId, {
@@ -1134,7 +1154,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     async markSucceeded(ctx, taskId) {
       // Deterministic runner (T-007 D3) terminal — running→succeeded, stamps completedAt.
       // best-effort: swallow if already terminal (finally 可能二次落态)。
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.markSucceeded");
       const task = await repo.requireTask(taskId);
       if (!canTransition(task.status, "succeeded")) return;
       await repo.updateTaskStatus(taskId, {
@@ -1146,7 +1166,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     async markFailed(ctx, taskId, errorMessage) {
       // Deterministic runner (T-007 D3) terminal — running→failed, stamps completedAt +
       // errorMessage. best-effort: swallow if already terminal。
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.markFailed");
       const task = await repo.requireTask(taskId);
       if (!canTransition(task.status, "failed")) return;
       await repo.updateTaskStatus(taskId, {
@@ -1157,20 +1177,20 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async listResults(ctx, taskId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.listResults");
       await repo.requireTask(taskId); // ownership gate (404 on cross-user)
       const rows = await repo.listResults(taskId);
       return rows.map(toResultDto);
     },
 
     async patchResultItems(ctx, taskId, items) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.patchResultItems");
       const row = await repo.patchLatestResultItems(taskId, items);
       return toResultDto(row);
     },
 
     async recordAuxResult(ctx, taskId, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.recordAuxResult");
       await repo.requireTask(taskId); // ownership gate (404 on cross-user)
       await repo.insertResult({
         aiTaskId: taskId,
@@ -1183,7 +1203,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async recordStep(ctx, taskId, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.recordStep");
       await repo.insertStep({
         aiTaskId: taskId,
         stepNo: input.stepNo,
@@ -1194,7 +1214,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async listSteps(ctx, taskId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.listSteps");
       await repo.requireTask(taskId); // ownership gate (404 on cross-user)
       const rows = await repo.listSteps(taskId);
       return rows.map((r) => ({
@@ -1207,7 +1227,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async listReferences(ctx, taskId) {
-      const refs = await repoFor(ctx).listReferences(taskId);
+      const refs = await repoFor(ctx, "ai.listReferences").listReferences(taskId);
       return refs.map((r) => ({
         entityType: r.entityType,
         entityId: r.entityId,
@@ -1216,7 +1236,7 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async recordCandidate(ctx, taskId, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "ai.recordCandidate");
       const task = await repo.requireTask(taskId);
       // The worker claims the queued task (queued→running, stamping startedAt) then
       // records the candidate (running→awaiting_confirmation). Mirror that here so a

@@ -12,6 +12,7 @@ import {
   PromoteStateError,
   DanglingRunError,
   OwnershipError,
+  AccountRequiredError,
 } from "./candidate.errors";
 
 // Candidate service test (Task 3) — fake now/nextId, pglite db, stubbed peer ports.
@@ -23,12 +24,19 @@ import {
 // atomic project+status+promotion). Deterministic clock/ids (no Date.now/Math.random).
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] per-account 域读写必须带号(未选号 → AccountRequiredError,见专项用例)。
+const ctx: RequestContext = {
+  userId: "user-a",
+  requestId: "r1",
+  source: "user",
+  accountId: "acc-a",
+};
 const ingestCtx: RequestContext = {
   userId: "user-a",
   requestId: "r2",
   source: "ingestion",
   ingestionRunId: "run-1",
+  accountId: "acc-a",
 };
 
 function makePorts() {
@@ -279,6 +287,7 @@ describe("candidate service", () => {
       userId: "user-b",
       requestId: "rb",
       source: "user",
+      accountId: "acc-b",
     };
     await expect(svc.getCandidate(ctxB, cand.id)).rejects.toBeInstanceOf(
       OwnershipError,
@@ -286,6 +295,40 @@ describe("candidate service", () => {
     await expect(svc.promote(ctxB, cand.id)).rejects.toBeInstanceOf(
       OwnershipError,
     );
+  });
+
+  // [T-332 S2] 未选号 = 引导态,per-account 读写一律 AccountRequiredError(SPEC §4.2)。
+  it("未选号(ctx 无 accountId)→ 读写均抛 AccountRequiredError", async () => {
+    const noAcctCtx: RequestContext = {
+      userId: "user-a",
+      requestId: "rn",
+      source: "user",
+    };
+    await expect(
+      svc.createCandidate(noAcctCtx, { title: "无号选题" }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      svc.listCandidates(noAcctCtx, { limit: 10, offset: 0 }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(svc.getTopicsOverview(noAcctCtx)).rejects.toBeInstanceOf(
+      AccountRequiredError,
+    );
+  });
+
+  // [T-332 S2] 同 user 双号隔离:B 号看不到 A 号的候选,by-id 跨号 → OwnershipError 404。
+  it("同 user 双号隔离:跨号 get → 404,list 互不可见", async () => {
+    const ctxAcc2: RequestContext = {
+      userId: "user-a",
+      requestId: "r2",
+      source: "user",
+      accountId: "acc-b",
+    };
+    const cand = await svc.createCandidate(ctx, { title: "号A选题", angle: "" });
+    await expect(svc.getCandidate(ctxAcc2, cand.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    const list = await svc.listCandidates(ctxAcc2, { limit: 100, offset: 0 });
+    expect(list.rows).toHaveLength(0);
   });
 
   it("listCandidates sorts by demandCount desc when requested", async () => {
@@ -364,6 +407,7 @@ describe("listCommentsForPublication (T-030 D6)", () => {
     requestId: "r",
     source: "ingestion",
     ingestionRunId: runId,
+    accountId: "acc-a",
   });
 
   beforeEach(async () => {
@@ -458,6 +502,7 @@ describe("listCommentsForPublication (T-030 D6)", () => {
       userId: "user-b",
       requestId: "r",
       source: "user",
+      accountId: "acc-b",
     };
     const rows = await svc.listCommentsForPublication(otherCtx, "pub-P", 100);
     expect(rows).toEqual([]);

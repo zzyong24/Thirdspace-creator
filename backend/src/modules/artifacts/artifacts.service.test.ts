@@ -20,15 +20,18 @@ import { OwnershipError, ConflictError } from "./artifacts.errors";
 //      current one (immutable-plan guard, ConflictError).
 
 const NOW = "2026-06-21T03:00:00.000Z";
+// [T-332 S2] strict 门下 ctx 必带号。
 const ctxA: RequestContext = {
   userId: "user-a",
   requestId: "req-a",
   source: "user",
+  accountId: "acct-a",
 };
 const ctxB: RequestContext = {
   userId: "user-b",
   requestId: "req-b",
   source: "user",
+  accountId: "acct-b",
 };
 
 function makeService(db: Db): ArtifactsService {
@@ -240,5 +243,76 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
     });
     await svc.createVersion(ctxA, artifact.id, { contentText: "用户改选题" });
     expect(calls).toHaveLength(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-332 S2] 账号全域隔离:未选号引导态 + 双号 strict 隔离(ISO-02/08)
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { AccountRequiredError } from "@creatoros/backend";
+
+describe("[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉", () => {
+  const ctxNoAccount: RequestContext = {
+    userId: "user-a",
+    requestId: "req-none",
+    source: "user",
+  };
+  const ctxAcct1: RequestContext = {
+    userId: "user-a",
+    requestId: "req-a1",
+    source: "user",
+    accountId: "acct-1",
+  };
+  const ctxAcct2: RequestContext = {
+    userId: "user-a",
+    requestId: "req-a2",
+    source: "user",
+    accountId: "acct-2",
+  };
+
+  it("未选号 ctx:创建/读取入口全部 AccountRequiredError(SPEC §4.2 引导态)", async () => {
+    await expect(seedArtifact(ctxNoAccount)).rejects.toBeInstanceOf(
+      AccountRequiredError,
+    );
+    await expect(
+      service.listProjectArtifacts(ctxNoAccount, "project-1"),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      service.getArtifact(ctxNoAccount, "artifact-x"),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+  });
+
+  it("双号隔离:同项目下各建稿,list 零交叉,by-id 跨号 404,版本链承父锚", async () => {
+    const a1 = await service.createArtifact(ctxAcct1, {
+      projectId: "proj-shared",
+      title: "号1稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    const a2 = await service.createArtifact(ctxAcct2, {
+      projectId: "proj-shared",
+      title: "号2稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    expect(
+      (await service.listProjectArtifacts(ctxAcct1, "proj-shared")).map((x) => x.id),
+    ).toEqual([a1.id]);
+    expect(
+      (await service.listProjectArtifacts(ctxAcct2, "proj-shared")).map((x) => x.id),
+    ).toEqual([a2.id]);
+    // §4.5 by-id 门:跨号读与未知 id 同语义。
+    await expect(service.getArtifact(ctxAcct2, a1.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 子表(versions)父锚继承:跨号 listVersions 同样 404。
+    await expect(service.listVersions(ctxAcct2, a1.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 跨号 createVersion(写路径)同样被父锚门挡住。
+    await expect(
+      service.createVersion(ctxAcct2, a1.id, { contentText: "越号改稿" }),
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 });

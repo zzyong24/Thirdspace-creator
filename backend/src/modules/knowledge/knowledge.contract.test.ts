@@ -27,7 +27,13 @@ import {
 // `structuredData` are records, and nullable `sourceUrl`/`archivedAt` serialize.
 
 const NOW = "2026-06-21T02:00:00.000Z";
-const ctx: RequestContext = { userId: "user-1", requestId: "req-1", source: "user" };
+// [T-332 S2] service 入口 requireAccountId:ctx 必须带当前号。
+const ctx: RequestContext = {
+  userId: "user-1",
+  accountId: "acct-1",
+  requestId: "req-1",
+  source: "user",
+};
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
 
 function deterministicDeps() {

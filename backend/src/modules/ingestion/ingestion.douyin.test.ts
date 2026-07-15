@@ -19,6 +19,7 @@ const ctx: RequestContext = {
   userId: "user-zyongzhu",
   requestId: "r1",
   source: "user",
+  accountId: "acct-zyongzhu", // [T-332 S2] per-account strict
 };
 
 interface Cap {
@@ -67,14 +68,14 @@ async function seedSource(
   db: Db,
   id: string,
   sourceType: string,
-  accountId: string | null = null, // [T-136] 可给源 stamp 号(按号门测试用)
+  accountId: string = ctx.accountId as string, // [T-332 S2] 源 stamp 号(缺省当前号)
 ): Promise<void> {
   let seq = 0;
   await createIngestionRepository(db, {
     now: () => NOW,
     nextId: (p: string) => `${p}-seed-${++seq}`,
     userId: ctx.userId,
-    accountId: null, // seedExternalSources 直插行,repo 门不影响 seed;行自带 accountId
+    accountId, // seedExternalSources 直插行,repo 门不影响 seed;行自带 accountId
   }).seedExternalSources([
     {
       id,
@@ -267,7 +268,7 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
       now: () => NOW,
       nextId: (p: string) => `${p}-r-${++seq}`,
       userId: ctx.userId,
-      accountId: null,
+      accountId: ctx.accountId as string, // [T-332 S2] strict 门:读回同号
     }).getExternalSource(id);
   }
 
@@ -475,14 +476,12 @@ describe("ingestion.checkDouyinStatus — 抖音登录态被动探针 (T-032a)",
     });
   });
 
-  it("[T-136] 存量回落:选号但只有 T-144 旧 user 级源 → sourceReady 仍 true(不判假阴性)", async () => {
+  it("[T-332 S2] 未选号(accountId 缺失)→ AccountRequiredError(引导态;存量回落链已随清库退役)", async () => {
     const { db } = await createDb();
     const svc = statusService(db, true);
-    // 只有存量 `extsrc-douyin-<userId>`,无 acct-1 新源。
-    await svc.ensureDouyinSource(ctx); // ctx 无号 → 建 user 级源
-    await expect(svc.checkDouyinStatus(ctxA1)).resolves.toEqual({
-      loggedIn: true,
-      sourceReady: true, // findDouyinSourceId 回落命中存量源
+    const noAcct: RequestContext = { ...ctx, accountId: null };
+    await expect(svc.checkDouyinStatus(noAcct)).rejects.toMatchObject({
+      name: "AccountRequiredError",
     });
   });
 });
@@ -518,7 +517,8 @@ describe("ingestion.ensureDouyinSource — 确保真实抖音采集源 (T-144)",
     const { db } = await createDb();
     const svc = bareService(db);
     const id = await svc.ensureDouyinSource(ctx);
-    expect(id).toBe(`extsrc-douyin-${ctx.userId}`);
+    // [T-332 S2] 每号独立源:id 带当前号(不再是 user 级 id)。
+    expect(id).toBe(`extsrc-douyin-${ctx.accountId}`);
     expect(id).not.toContain("canonical");
     // 建出的源可被 refreshDouyin 校验为 douyin(此前 canonical 查无 → 0 条)。
     const run = await svc.refreshDouyin(ctx, { externalSourceId: id });
@@ -535,11 +535,11 @@ describe("ingestion.ensureDouyinSource — 确保真实抖音采集源 (T-144)",
 
   it("已存在同 id 的源被复用,不覆盖其 name/handle(onConflictDoNothing)", async () => {
     const { db } = await createDb();
-    // 预置一条同确定 id、用户自定义 name 的源。
-    await seedSource(db, `extsrc-douyin-${ctx.userId}`, "douyin");
+    // 预置一条同确定 id、用户自定义 name 的源(带当前号,[T-332 S2])。
+    await seedSource(db, `extsrc-douyin-${ctx.accountId}`, "douyin");
     const svc = bareService(db);
     const id = await svc.ensureDouyinSource(ctx);
-    expect(id).toBe(`extsrc-douyin-${ctx.userId}`);
+    expect(id).toBe(`extsrc-douyin-${ctx.accountId}`);
   });
 
   // [T-136 §D 切片 c] 每号独立源:选号 → id 变 `extsrc-douyin-<accountId>`;两号各建独立源。
@@ -556,26 +556,29 @@ describe("ingestion.ensureDouyinSource — 确保真实抖音采集源 (T-144)",
     expect(id1).not.toBe(id2); // 两号独立源
   });
 
-  it("[T-136] 存量兼容:选号但无该号新源、有 T-144 旧 user 级源 → 回落复用旧 id(不孤立存量)", async () => {
+  it("[T-332 S2] 换号 ensure → 建该号自己的新源(不回落别的 id;存量回落链已随清库退役)", async () => {
     const { db } = await createDb();
     const svc = bareService(db);
-    // 预置 T-144 存量:`extsrc-douyin-<userId>`(account_id=null)。
-    await seedSource(db, `extsrc-douyin-${ctx.userId}`, "douyin");
-    const id = await svc.ensureDouyinSource(ctxAcct1);
-    // 回落到存量旧 id(不新建 `extsrc-douyin-acct-1`,避免存量源孤立)。
-    expect(id).toBe(`extsrc-douyin-${ctx.userId}`);
+    // acct-1 已有源;acct-2 ensure → 各建各的,互不借用。
+    const id1 = await svc.ensureDouyinSource(ctxAcct1);
+    const id2 = await svc.ensureDouyinSource(ctxAcct2);
+    expect(id1).toBe("extsrc-douyin-acct-1");
+    expect(id2).toBe("extsrc-douyin-acct-2");
+    // 该号新源能被 refreshDouyin(带号 ctx)校验通过。
+    const run = await svc.refreshDouyin(ctxAcct1, { externalSourceId: id1 });
+    expect(run.status).toBe("completed");
   });
 
-  it("[T-136] 存量回落 id 仍能被 refreshDouyin(带号 ctx)校验通过(不抛「外部来源不存在」)", async () => {
+  it("[T-332 S2] 未选号 ensureDouyinSource / refreshDouyin → AccountRequiredError(引导态禁读写)", async () => {
     const { db } = await createDb();
     const svc = bareService(db);
-    // 存量源 account_id=null;选号后 ensure 回落到该旧 id。
-    await seedSource(db, `extsrc-douyin-${ctx.userId}`, "douyin");
-    const id = await svc.ensureDouyinSource(ctxAcct1);
-    expect(id).toBe(`extsrc-douyin-${ctx.userId}`);
-    // 带号 ctx 用回落 id 刷 —— 带号门查不到存量(account_id=null),回落无号门校验通过。
-    const run = await svc.refreshDouyin(ctxAcct1, { externalSourceId: id });
-    expect(run.status).toBe("completed"); // 不再因带号门 miss 而抛「外部来源不存在」
+    const noAcct: RequestContext = { ...ctx, accountId: null };
+    await expect(svc.ensureDouyinSource(noAcct)).rejects.toMatchObject({
+      name: "AccountRequiredError",
+    });
+    await expect(
+      svc.refreshDouyin(noAcct, { externalSourceId: "extsrc-douyin-x" }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
   });
 
   it("[T-136] 选号后再 ensure 幂等:第二次复用第一次建的该号源", async () => {
@@ -937,7 +940,7 @@ describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", 
         followerCount: 42,
       },
     ]);
-    // 绑定编排带真号(建 job/claimOrphans/初始化采集全落新号,不落 null)。
+    // 绑定编排带真号(建号绑定 job/初始化采集全落新号,不落 null;claim 已随 T-332 S2 退役,新数据出生即带号)。
     expect(boundCtxs).toHaveLength(1);
     expect(boundCtxs[0]!.accountId).toBe("acct-new");
     // 每号独立源已建:以新号 ctx 查 sourceReady=true。

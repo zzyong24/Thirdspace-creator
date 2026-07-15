@@ -10,7 +10,7 @@ import { createLearningsService } from "../learnings/learnings.service";
 // 真接线才能证明 project-scoped 读的前提(采纳带 projectId 写进 learning 行)真正落地。
 
 const NOW = "2026-07-04T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user", accountId: "acct-a" }; // [T-332 S2] strict 门下 ctx 必带号
 
 function compose(db: Db) {
   let seq = 0;

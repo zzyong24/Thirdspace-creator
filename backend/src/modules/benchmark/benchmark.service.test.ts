@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createBenchmarkService, type BenchmarkService } from "./benchmark.service";
-import { OwnershipError, ValidationError } from "./benchmark.errors";
+import {
+  OwnershipError,
+  ValidationError,
+  AccountRequiredError,
+} from "./benchmark.errors";
 
 // [T-212a] Benchmark service 单测（fake now/nextId, pglite db）——对标源 CRUD 可见性、
 // 幂等 create、toggle/remove ownership 404-class、按号隔离、recordWork 幂等落库。
@@ -106,5 +110,75 @@ describe("benchmark service", () => {
     expect(first.inserted).toBe(true);
     const second = await svc.recordWork(ctxA, { ...base, diggCount: 22222 });
     expect(second.inserted).toBe(false);
+  });
+
+  // ── [T-332 S2] 账号全域隔离:_v2 唯一键回归 + 未选号引导态 ──
+  describe("账号维度唯一键与未选号 (T-332 S2)", () => {
+    const ctxA1: RequestContext = {
+      userId: "user-a",
+      requestId: "ra1",
+      source: "user",
+      accountId: "acct-1",
+    };
+    const ctxA2: RequestContext = {
+      userId: "user-a",
+      requestId: "ra2",
+      source: "user",
+      accountId: "acct-2",
+    };
+    const noAcct: RequestContext = { userId: "user-a", requestId: "rn", source: "user" };
+
+    it("同 user 两个号对标同一博主(sec_uid)→ 各自成行互不改写;同号重复登记仍幂等命中 _v2 键", async () => {
+      const s1 = await svc.createSource(ctxA1, { externalAccountId: "sec-dup", nickname: "号1名" });
+      const s2 = await svc.createSource(ctxA2, { externalAccountId: "sec-dup", nickname: "号2名" });
+      expect(s2.id).not.toBe(s1.id); // 旧 (user, platform, sec_uid) 键下这里会 upsert 改写号1
+      // 同号重复 → upsert 更新(不新建),证明 ON CONFLICT 真命中 _v2 索引。
+      const s1again = await svc.createSource(ctxA1, { externalAccountId: "sec-dup", nickname: "号1新名" });
+      expect(s1again.id).toBe(s1.id);
+      expect(s1again.nickname).toBe("号1新名");
+      // 号2 未被号1 的重复登记改写。
+      const { rows: rows2 } = await svc.listSources(ctxA2, PAGE);
+      expect(rows2).toHaveLength(1);
+      expect(rows2[0]!.nickname).toBe("号2名");
+    });
+
+    it("两个号各自采同一 aweme → 各自成行;同号重跑为 update(_v2 upsert 回归)", async () => {
+      const s1 = await svc.createSource(ctxA1, { externalAccountId: "sec-w1" });
+      const s2 = await svc.createSource(ctxA2, { externalAccountId: "sec-w2" });
+      const base = (sourceId: string) => ({
+        sourceId,
+        sourceExternalAccountId: "sec-w1",
+        awemeId: "aw-same",
+        diggCount: 100,
+        capturedAt: NOW,
+      });
+      expect((await svc.recordWork(ctxA1, base(s1.id))).inserted).toBe(true);
+      // 号2 同 aweme → 新行(旧 user 级键下 inserted=false 且会改写号1 的统计)。
+      expect((await svc.recordWork(ctxA2, base(s2.id))).inserted).toBe(true);
+      // 同号重跑 → 幂等 update。
+      expect((await svc.recordWork(ctxA1, base(s1.id))).inserted).toBe(false);
+    });
+
+    it("同 user 跨号 toggle/remove → OwnershipError(号一致性门,§4.5)", async () => {
+      const s1 = await svc.createSource(ctxA1, { externalAccountId: "sec-gate" });
+      await expect(svc.toggleSource(ctxA2, s1.id, false)).rejects.toBeInstanceOf(
+        OwnershipError,
+      );
+      await expect(svc.removeSource(ctxA2, s1.id)).rejects.toBeInstanceOf(
+        OwnershipError,
+      );
+    });
+
+    it("未选号 → 读写均 AccountRequiredError(引导态,禁读写)", async () => {
+      await expect(
+        svc.createSource(noAcct, { externalAccountId: "sec-x" }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+      await expect(svc.listSources(noAcct, PAGE)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(svc.listEnabledSources(noAcct)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+    });
   });
 });

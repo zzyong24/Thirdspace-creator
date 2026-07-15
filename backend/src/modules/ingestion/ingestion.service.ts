@@ -6,6 +6,7 @@ import {
   type IngestionRunRow,
   type IngestionErrorRow,
 } from "./ingestion.repository";
+import { requireAccountId } from "./ingestion.errors";
 import {
   deriveRecordKey,
   parseMetricRecord,
@@ -362,43 +363,21 @@ export function createIngestionService(args: {
     onDouyinBound,
   } = args;
 
-  // T-144 → [T-136 §D 切片 c] 抖音采集源的确定性 id,**每号独立源**:
-  //   `extsrc-douyin-${accountId ?? userId}`。选了号 → 该号独立源;未选号(存量 / 单号)→
-  //   回落 user 级源 `extsrc-douyin-${userId}`(与 T-144 存量源同 id,平滑兼容不丢存量)。
+  // T-144 → [T-332 S2] 抖音采集源的确定性 id,**每号独立源**:
+  //   `extsrc-douyin-${accountId}`(未选号 → AccountRequiredError)。旧「回落 user 级
+  //   存量源 extsrc-douyin-${userId}」的兼容链随拍板 ②(清库,account_id NOT NULL)退役:
+  //   strict 世界不存在无号存量源,回落只会掩盖串号。
   const douyinSourceId = (ctx: RequestContext): string =>
-    `extsrc-douyin-${ctx.accountId ?? ctx.userId}`;
-  // 存量兼容:T-144 只建过 `extsrc-douyin-${userId}`(无号)。选号后新 id 是
-  //   `extsrc-douyin-${accountId}`,查不到存量源;回落到旧 id 复用,避免存量源被孤立。
-  const legacyDouyinSourceId = (ctx: RequestContext): string =>
-    `extsrc-douyin-${ctx.userId}`;
+    `extsrc-douyin-${requireAccountId(ctx.accountId, "ingestion.douyinSource")}`;
 
-  // 无号门 repo(accountId=null)—— 查存量 account_id=null 的旧源用(带号门会 miss)。
-  function unscopedRepo(ctx: RequestContext): IngestionRepository {
-    return createIngestionRepository(db, {
-      now: deps.now,
-      nextId: deps.nextId,
-      userId: ctx.userId,
-      accountId: null,
-    });
-  }
-
-  // 解析「当前号已就绪的抖音源 id」:先当前号新源,再回落存量旧 user 级源;都无 → null。
-  // ensureDouyinSource(建/复用)与 checkDouyinStatus(sourceReady)共用同一查找,避免选号后
-  // 存量源被判「未就绪」的假阴性。
+  // 解析「当前号已就绪的抖音源 id」:strict 只认当前号的源;无 → null。
+  // ensureDouyinSource(建/复用)与 checkDouyinStatus(sourceReady)共用同一查找。
   async function findDouyinSourceId(
     ctx: RequestContext,
   ): Promise<string | null> {
     const sourceId = douyinSourceId(ctx);
     const existing = await repoFor(ctx).getExternalSource(sourceId);
-    if (existing) return sourceId;
-    if (ctx.accountId) {
-      const legacyId = legacyDouyinSourceId(ctx);
-      if (legacyId !== sourceId) {
-        const legacy = await unscopedRepo(ctx).getExternalSource(legacyId);
-        if (legacy) return legacyId;
-      }
-    }
-    return null;
+    return existing ? sourceId : null;
   }
 
   function repoFor(ctx: RequestContext): IngestionRepository {
@@ -406,7 +385,8 @@ export function createIngestionService(args: {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      // [T-136 §D 切片 c] 按号第二维度下推(null = 未选号 / 存量兜底 → repo 门退化)。
+      // [T-332 S2] 按号第二维度下推;repo 内每个读写点 strict 断言(未选号 → 抛,
+      // 不再有门退化)。采集链路 ctx 的账号由绑定/job 派生(ISO-06),恒有号。
       accountId: ctx.accountId ?? null,
     });
   }
@@ -471,7 +451,8 @@ export function createIngestionService(args: {
   //   ① staging 隔离扫码(全新空目录必出二维码)→ ② 同步读回身份(不再依赖 fire-and-forget
   //   刷新;身份是 ensureAccount 的输入)→ ③ 按 sec_uid/昵称 upsert 账号(同号重扫命中既有行
   //   =自动更新不重复)→ ④ staging 搬到 `.auth/douyin/<accountId>` 正式目录 → ⑤ 身份回填 +
-  //   每号独立源 → ⑥ 绑定编排(建 job/claimOrphans/初始化采集)沿现链传真号。
+  //   每号独立源 → ⑥ 绑定编排(建号绑定 job + 初始化采集;claim 已随 T-332 S2 退役,
+  //   新数据出生即带号)沿现链传真号。
   //   诚实(铁律):身份读不回 → 清理 staging + 抛明确错误;**绝不**把 staging 默默挂到
   //   _default/旧号,也绝不建占位账号冒充绑定成功。
   async function loginDouyinForceNew(
@@ -574,8 +555,9 @@ export function createIngestionService(args: {
     if (sourceId) {
       await applyDouyinIdentity(boundCtx, sourceId, identity);
     }
-    // ⑥ 绑定成功编排沿现链(T-189a):onDouyinBound(建 job + claimOrphans + 初始化采集)
-    //   fire-and-forget,传真号;未注入时回退 Bug-13 内联 refreshDouyin(同现链语义)。
+    // ⑥ 绑定成功编排沿现链(T-189a):onDouyinBound(建号绑定 job + 初始化采集;claim 已随
+    //   T-332 S2 退役 —— 清库世界没有孤儿,新数据出生即带号)fire-and-forget,传真号;
+    //   未注入时回退 Bug-13 内联 refreshDouyin(同现链语义)。
     if (onDouyinBound) {
       try {
         onDouyinBound(boundCtx);
@@ -608,6 +590,7 @@ export function createIngestionService(args: {
     parse: (record: Record<string, unknown>, key: string) => ValidationResult<T>,
     write: (dctx: RequestContext, value: T) => Promise<void>,
   ): Promise<IngestionRunRow> {
+    requireAccountId(ctx.accountId, "ingestion.ingest"); // [T-332 S2] 未选号=引导态禁写
     const repo = repoFor(ctx);
     await repo.getRun(input.runId); // ownership gate (404 if cross-user/unknown)
     await repo.markRunRunning(input.runId);
@@ -651,6 +634,7 @@ export function createIngestionService(args: {
 
   const service: IngestionService = {
     async createRun(ctx, input) {
+      requireAccountId(ctx.accountId, "ingestion.createRun"); // [T-332 S2]
       const repo = repoFor(ctx);
       // §17.3 — a duplicate (external_source_id, idempotency_key) returns the
       // ORIGINAL run unchanged (no second row).
@@ -663,16 +647,20 @@ export function createIngestionService(args: {
     },
 
     async ensureManualRun(ctx, idempotencyKey) {
+      // [T-332 S2] external_sources 是 per-account 表:手动源也每号一条(确定性 id 带号),
+      //   未选号 → AccountRequiredError(引导态)。旧 user 级 id(extsrc-manual-<userId>)
+      //   随拍板 ②(清库)退役,不留跨号共享源。
+      const accountId = requireAccountId(ctx.accountId, "ingestion.ensureManualRun");
       const repo = repoFor(ctx);
-      // 1. 确保该用户有一个 source='manual' 的 ExternalSource(确定性 id,幂等 seed)。
-      const sourceId = `extsrc-manual-${ctx.userId}`;
+      // 1. 确保该号有一个 source='manual' 的 ExternalSource(确定性 id,幂等 seed)。
+      const sourceId = `extsrc-manual-${accountId}`;
       const existingSrc = await repo.getExternalSource(sourceId);
       if (!existingSrc) {
         await repo.seedExternalSources([
           {
             id: sourceId,
             userId: ctx.userId,
-            accountId: ctx.accountId ?? null, // [T-136] 按号隔离;无当前号时 NULL(存量兜底)
+            accountId, // [T-332 S2] 出生即带号(ISO-03)
             sourceType: "manual",
             name: "手动录入",
             sourceIdentifier: "",
@@ -693,6 +681,7 @@ export function createIngestionService(args: {
     },
 
     async ensureImportedProject(ctx, input) {
+      requireAccountId(ctx.accountId, "ingestion.ensureImportedProject"); // [T-332 S2]
       // 数据底座(SPEC §1.3)。projects 端口未注入(旧最小组合)→ 返回 null,调用方回退。
       if (!ports.projects) return null;
       // [T-321] 主去重键 = publications.externalId(不是 projects.platform_ref)。先按
@@ -845,8 +834,9 @@ export function createIngestionService(args: {
     },
 
     async completeRun(ctx, input) {
+      requireAccountId(ctx.accountId, "ingestion.completeRun"); // [T-332 S2]
       const repo = repoFor(ctx);
-      const run = await repo.getRun(input.runId); // ownership gate
+      const run = await repo.getRun(input.runId); // ownership gate(含 strict 按号门)
       // Explicit status wins (e.g. "failed"); else completed/partial by reject count.
       const status =
         input.status ?? (run.recordsRejected > 0 ? "partial" : "completed");
@@ -854,25 +844,24 @@ export function createIngestionService(args: {
     },
 
     async getRun(ctx, runId) {
+      requireAccountId(ctx.accountId, "ingestion.getRun"); // [T-332 S2]
       return repoFor(ctx).getRun(runId);
     },
 
     async listErrors(ctx, runId) {
+      requireAccountId(ctx.accountId, "ingestion.listErrors"); // [T-332 S2]
       return repoFor(ctx).listErrors(runId);
     },
 
     async refreshDouyin(ctx, input) {
+      requireAccountId(ctx.accountId, "ingestion.refreshDouyin"); // [T-332 S2]
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
       }
       const repo = repoFor(ctx);
-      // [T-136 §D 切片 c] 源校验:先带号门查(当前号的源);查不到再回落无号门(存量源
-      //   account_id=null,选号后带号门会 miss —— ensureDouyinSource 回落复用存量旧 id 时正是
-      //   此情形)。无号门仍是同 user 内(按 userId+id 查确定源 id),不构成越权。
-      let src = await repo.getExternalSource(input.externalSourceId);
-      if (!src && ctx.accountId) {
-        src = await unscopedRepo(ctx).getExternalSource(input.externalSourceId);
-      }
+      // [T-332 S2] 源校验 strict 只认当前号的源:旧「回落无号门查存量源」的兼容链随
+      //   拍板 ②(清库,NOT NULL)退役 —— 不存在无号存量源,回落只会掩盖串号。
+      const src = await repo.getExternalSource(input.externalSourceId);
       if (!src) {
         throw new Error(`外部来源不存在:${input.externalSourceId}`);
       }
@@ -938,19 +927,20 @@ export function createIngestionService(args: {
     },
 
     async ensureDouyinSource(ctx) {
-      // T-144 → [T-136 §D 切片 c] 每号独立源。无源 seed 一条真实 source_type=douyin,有源
-      //   (onConflictDoNothing)复用不覆盖用户自定义 name/handle。
-      // 1) 当前号新源 or 存量旧源已在 → 复用其 id(存量不孤立,见 findDouyinSourceId)。
+      // T-144 → [T-332 S2] 每号独立源(未选号 → AccountRequiredError)。无源 seed 一条
+      //   真实 source_type=douyin,有源(onConflictDoNothing)复用不覆盖用户自定义 name/handle。
+      const accountId = requireAccountId(ctx.accountId, "ingestion.ensureDouyinSource");
+      // 1) 当前号的源已在 → 复用其 id。
       const resolved = await findDouyinSourceId(ctx);
       if (resolved) return resolved;
 
-      // 2) 无任何存量 → seed 该号的新源(stamp 当前号;未选号时 accountId=null)。
+      // 2) 无 → seed 该号的新源(stamp 断言后的当前号,ISO-03 出生即带号)。
       const sourceId = douyinSourceId(ctx);
       await repoFor(ctx).seedExternalSources([
         {
           id: sourceId,
           userId: ctx.userId,
-          accountId: ctx.accountId ?? null, // [T-136] 按号隔离;无当前号时 NULL(存量兜底)
+          accountId,
           sourceType: "douyin",
           // handle 在扫码阶段拿不到(登录态 cookie 不含昵称)→ 占位;真实昵称由 T-136 §D
           // 采集到主页信息后回填(此处不阻塞采集能用)。
@@ -987,15 +977,11 @@ export function createIngestionService(args: {
       // platform_account(端口注入时),让「设置徽标 / 切换器 / 日历」三处同源。ensure 是尽力
       // 而为:建绑定失败绝不把"已成功的扫码"翻成失败(登录态已落 .auth/,是真的)。
       if (loggedIn) {
-        try {
-          await service.ensureDouyinSource(ctx);
-        } catch (err) {
-          console.error("[ingestion] loginDouyin: ensure external_source 失败:", err);
-        }
-        // [T-201a] 绑定成功后 ctx.accountId 常为 null(新绑,号是本次 ensureAccount 刚建/复用的)。
-        //   捕获其 id 派生 boundCtx,让下游(建 job / claimOrphans 认领存量 / 初始化采集)全落**真号**,
-        //   而非 null → 根治「采集/认领全落 null 号 → webview 带真号严格 eq 0 命中 → 封面 OwnershipError
-        //   紫色」(Bug-1)。ctx.accountId 已有(已有账户刷新路径)则尊重它,不覆盖。
+        // [T-201a → T-332 S2] 绑定成功后 ctx.accountId 常为 null(新绑,号是本次
+        //   ensureAccount 刚建/复用的)。先 ensureAccount 派生 boundCtx(带真号),再建
+        //   每号独立源 —— strict 世界里 ensureDouyinSource 未选号会抛(引导态),必须先有号。
+        //   ctx.accountId 已有(已有账户刷新路径)则尊重它,不覆盖。claim 已随 T-332 S2
+        //   退役:绑定即建号绑定 job,新数据出生即带号,无「认领存量 null 行」一步。
         let boundCtx = ctx;
         if (platformAccount) {
           try {
@@ -1008,13 +994,21 @@ export function createIngestionService(args: {
             console.error("[ingestion] loginDouyin: ensure platform_account 失败:", err);
           }
         }
+        try {
+          await service.ensureDouyinSource(boundCtx);
+        } catch (err) {
+          // 未注入 platformAccount 且 ctx 无号 → AccountRequiredError(诚实:无号建不了
+          // per-account 源);其余失败同样只告警 —— 不把已成功的扫码翻成失败。
+          console.error("[ingestion] loginDouyin: ensure external_source 失败:", err);
+        }
         // [T-189a] 绑定成功 → 组合根 bootstrap:幂等建三个每天定时采集 job(self.metrics /
         //   self.detail / comments)+ 立即初始化跑一次拉全量(按序,gate-F5 串行链)。fire-and-forget
         //   (回调内部 void,不阻塞绑定返回)。「已有账户」路径也复用 loginDouyin,故此处同样触发。
         //   identity backfill 由初始化的 self.metrics(=refreshDouyin→applyDouyinIdentity)顺带完成,
         //   故 onDouyinBound 注入时**不再**跑下方 Bug-13 内联 refreshDouyin(避免双跑 Chromium 抢号)。
-        //   [T-201a] 传 boundCtx(带真号)→ claimOrphans 认领存量 null 数据落真号、建的 job/初始化采集
-        //   ctx 也带真号(triggerScheduledJob 由 job.accountId 派生采集 ctx)。
+        //   [T-201a → T-332 S2] 传 boundCtx(带真号)→ 建的 job/初始化采集 ctx 带真号
+        //   (triggerScheduledJob 由 job.accountId 派生采集 ctx);claim 已随 T-332 S2 退役,
+        //   绑定即建号绑定 job,新数据出生即带号。
         if (onDouyinBound) {
           try {
             onDouyinBound(boundCtx);
@@ -1031,10 +1025,10 @@ export function createIngestionService(args: {
           // [Bug-13] 用 findDouyinSourceId 拿真源 ID(上一步 ensureDouyinSource 刚建过,这里能拿到),
           // 不能传空串(refreshDouyin 会因「外部来源不存在」抛错,反而把成功扫码翻失败)。
           try {
-            const sourceId = await findDouyinSourceId(ctx);
+            const sourceId = await findDouyinSourceId(boundCtx);
             if (sourceId) {
               void service
-                .refreshDouyin(ctx, { externalSourceId: sourceId })
+                .refreshDouyin(boundCtx, { externalSourceId: sourceId })
                 .catch((refreshErr) => {
                   console.error(
                     "[ingestion] loginDouyin: refreshDouyin 刷新昵称失败(cookies 可能没就绪):",
@@ -1056,6 +1050,9 @@ export function createIngestionService(args: {
     },
 
     async checkDouyinStatus(ctx) {
+      // [T-332 S2] 登录态/源就绪都是「当前号」的属性:未选号 → 引导态(AccountRequiredError,
+      //   前端翻译成绑定引导)。0 号新用户的绑定动作走 loginDouyin(绑定入口,不设此门)。
+      requireAccountId(ctx.accountId, "ingestion.checkDouyinStatus");
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
       }

@@ -1,4 +1,4 @@
-import { and, eq, or, asc, inArray, isNull, sql, type Db } from "@creatoros/backend";
+import { and, eq, or, asc, inArray, sql, type Db } from "@creatoros/backend";
 import {
   projects,
   projectActivities,
@@ -55,7 +55,7 @@ import {
   searchDocuments,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { OwnershipError } from "./projects.errors";
+import { OwnershipError, requireAccountId } from "./projects.errors";
 
 // Projects repository (foundation §5.2) — user-scoped queries ONLY. Every method
 // takes `ctx: RequestContext` first. Every ROOT query filters
@@ -93,11 +93,8 @@ export interface ProjectRepository {
   // 数据底座(SPEC §1.4):user-scoped 且 source='imported' 的项目(真实采集导入)。
   //   "优先读真"判据 hasImportedProjects + 三向 portfolio 让位的物理读源。
   listImported(ctx: RequestContext): Promise<ProjectRow[]>;
-  // [T-200] 认领存量无号采集导入项目(source='imported')给 accountId(修采集串号)。返回改动行数。
-  claimOrphanImportedProjects(
-    ctx: RequestContext,
-    accountId: string,
-  ): Promise<number>;
+  // [T-332 S2] claimOrphanImportedProjects 已退役(SPEC §4.4):清库世界没有孤儿,
+  // 新数据出生即带号(绑定即建号绑定 job),不存在「先落 NULL 再认领」的窗口。
   get(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   insertProject(ctx: RequestContext, row: ProjectRow): Promise<ProjectRow>;
   // 数据底座(SPEC §1.3):按平台引用查既有 imported 项目(幂等键
@@ -200,13 +197,16 @@ export interface ProjectRepository {
 }
 
 export function createProjectRepository(db: Db): ProjectRepository {
-  // [T-136 切片 b] 按号隔离条件门:当 ctx.accountId 有值时叠加 `eq(projects.accountId, …)`,
-  // 为 null/undefined(未选号 / 全局视图 / 存量兜底,§E 退化)时返回 undefined —— drizzle
-  // `and()` 忽略 undefined,门退化为「只按 userId 过滤,返回该 user 全部行」。projects 是
-  // 唯一 owned-root(有自身 account_id 列)的表;子表(activities/stages/platforms/outputs/
-  // output_stages/tasks 无 account_id 列)经父 project 门透传,不强加(SPEC §9)。
+  // [T-332 S2] 按号隔离 strict 门(SPEC §4.1/§4.2):一律 `eq(projects.accountId,
+  // ctx.accountId)`;未选号(null/undefined)→ 直接抛 AccountRequiredError(引导态,
+  // 禁读写)—— 不再有「无号退化为该 user 全量」的 lenient 分支(拍板 ② 已废除存量兜底)。
+  // projects 是唯一 owned-root(有自身 account_id 列)的表;子表(activities/stages/
+  // platforms/outputs/output_stages/tasks 无 account_id 列)经父 project 门透传(SPEC §9)。
   function accountGate(ctx: RequestContext) {
-    return ctx.accountId ? eq(projects.accountId, ctx.accountId) : undefined;
+    return eq(
+      projects.accountId,
+      requireAccountId(ctx.accountId, "projects.accountGate"),
+    );
   }
 
   // Resolve + ownership-check a project; cross-user/missing is indistinguishable
@@ -337,30 +337,19 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .orderBy(asc(projects.createdAt));
     },
 
-    async claimOrphanImportedProjects(ctx, accountId) {
-      // [T-200] 认领存量 account_id IS NULL 的**采集导入**项目(source='imported')给 accountId。
-      //   幂等:已归属的不动。只认领 imported(真采集),不碰 manual(演示 fixture / 用户手建)。
-      const updated = await db
-        .update(projects)
-        .set({ accountId })
-        .where(
-          and(
-            eq(projects.userId, ctx.userId),
-            eq(projects.source, "imported"),
-            isNull(projects.accountId),
-          ),
-        )
-        .returning({ id: projects.id });
-      return updated.length;
-    },
-
     get,
 
     async insertProject(ctx, row) {
       // Stamp ownership on the root row regardless of what the caller passed.
+      // [T-332 S2] accountId 同样只信 ctx(SPEC §4.6:repo 不接受调用方显式传号,防绕过);
+      // 未选号 → AccountRequiredError(写路径禁 stamp null,ISO-03)。
       const inserted = await db
         .insert(projects)
-        .values({ ...row, userId: ctx.userId })
+        .values({
+          ...row,
+          userId: ctx.userId,
+          accountId: requireAccountId(ctx.accountId, "projects.insertProject"),
+        })
         .returning();
       return inserted[0]!;
     },

@@ -4,8 +4,6 @@ import {
   eq,
   desc,
   inArray,
-  isNull,
-  or,
   sql,
   type Db,
   // [T-079a] 战绩投影的只读跨表直查(SPEC §1)。仓内跨模块 seam 惯例是 service 层
@@ -63,11 +61,12 @@ export interface RepoDeps {
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
 }
 
-// [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。knowledge 的 repo 一次构造、
-// userId 逐调用传入(非 baked deps),故 accountId 也随调用透传(与 userId 并列):
-// 非空 → owned-root(knowledge_items)读门叠 eq(accountId);null(存量/未选号)→ 退化
-// 不过滤,create 落 NULL 兜底。子表 revisions/relations 无此列,经父行门透传。
-export type AccountScope = string | null;
+// [T-332 S2] 第二所有权维度(多抖音号 / 多人设)。knowledge 的 repo 一次构造、
+// userId 逐调用传入(非 baked deps),故 accountId 也随调用透传(与 userId 并列)。
+// SPEC 2026-07-15 account-full-isolation §4.1/§4.2:一律 strict——调用方(service)
+// 已用 requireAccountId 断言非空,repo 侧类型收紧为 string,不存在「null → 退化
+// 不过滤」路径。子表 revisions/relations 无此列,经父行门透传。
+export type AccountScope = string;
 
 export interface KnowledgeRepository {
   seedKnowledge(rows: KnowledgeItemRow[]): Promise<void>;
@@ -75,7 +74,7 @@ export interface KnowledgeRepository {
   seedRelations(rows: KnowledgeRelationDbRow[]): Promise<void>;
   // [T-079a] list/get 返回带战绩投影的行(usedCount/usedInPublished);写路径的
   // 内部所有权门仍走轻量行读,不为门查询付统计成本。
-  // [T-136 切片 b] 每个方法 userId 后紧跟 accountId(号维度收窄;null → 不过滤)。
+  // [T-332 S2] 每个方法 userId 后紧跟 accountId(strict:eq 收窄,无 null 退化)。
   list(userId: string, accountId: AccountScope): Promise<KnowledgeItemWithStats[]>;
   get(
     userId: string,
@@ -159,6 +158,18 @@ export interface KnowledgeRepository {
     sourceKnowledgeId: string,
     input: { targetKnowledgeId: string; relationType: string },
   ): Promise<KnowledgeRelationRow>;
+  // [T-332 S2 · ISO-06 例外口] 组合根(persistence-client)win-video-tutor 种子巡检
+  // 专用:启动时跨号扫 canonical user 的 seed 条目(按 sourceMetadata.origin 幂等
+  // 补 tag / 去旧标题前缀)。user 级、无 account 过滤——这是**显式命名**的系统巡检
+  // 方法,非隐式全量退化;任何经 ctx 的业务读写严禁调用。
+  listAllAccountsSystem(userId: string): Promise<KnowledgeItemWithStats[]>;
+  // [T-332 S2 · ISO-06 例外口] 同上:种子条目标题修复(user 级门,跨号可改)。
+  // 只改 title + updatedAt,不动 content/revision/status。
+  renameTitleSystem(
+    userId: string,
+    knowledgeId: string,
+    title: string,
+  ): Promise<KnowledgeItemWithStats>;
 }
 
 function parseRelation(row: KnowledgeRelationDbRow): KnowledgeRelationRow {
@@ -169,13 +180,13 @@ export function createKnowledgeRepository(
   db: Db,
   deps: RepoDeps,
 ): KnowledgeRepository {
+  // [T-332 S2] strict 号门(SPEC §4.1,退役 lenient OR-NULL):当前号 = 唯一可见集。
+  // 存量 NULL 行兼容前提已被拍板 ②(清库重拉)废除;调用方已断言 accountId 非空。
   const accountVisibility = (accountId: AccountScope) =>
-    accountId
-      ? or(eq(knowledgeItems.accountId, accountId), isNull(knowledgeItems.accountId))
-      : undefined;
+    eq(knowledgeItems.accountId, accountId);
 
   // 轻量行读:写路径/子实体的所有权门用它(不付战绩统计成本)。
-  // [T-136 切片 b] accountId 非空 → 读当前号 + 存量 null 号知识;null → 退化不过滤。
+  // [T-332 S2] strict:仅当前号的行可见;跨号 by-id → OwnershipError(404,§4.5)。
   async function getRow(
     userId: string,
     accountId: AccountScope,
@@ -278,7 +289,7 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeItems.userId, userId),
-            // [T-136 切片 b] 非空号读当前号 + 存量 null 号知识;null → 不过滤。
+            // [T-332 S2] strict:只读当前号的知识(无 OR-NULL、无退化)。
             accountVisibility(accountId),
           ),
         )
@@ -326,7 +337,7 @@ export function createKnowledgeRepository(
     async listAllRelations(userId, accountId) {
       // [T-091] 全量边:relations 无 user_id 列 → join source 端 knowledge_items
       // 以 user_id 收窄(createRelation 已保证两端同 owner,source 端过滤即够)。
-      // [T-136 切片 b] 号维度:经 source 端 knowledge_items.account_id 收窄(非空才叠)。
+      // [T-332 S2] 号维度:经 source 端 knowledge_items.account_id strict 收窄。
       const rows = await db
         .select({ relation: knowledgeRelations })
         .from(knowledgeRelations)
@@ -352,7 +363,7 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeItems.userId, userId),
-            // [T-136 切片 b] 非空号读当前号 + 存量 null 号知识;null → 不过滤。
+            // [T-332 S2] strict:回流锚幂等集也按号隔离(A 号回流过的评论,B 号可再回流)。
             accountVisibility(accountId),
             eq(knowledgeItems.status, "active"),
             sql`${knowledgeItems.sourceMetadata} ->> 'origin' = 'comment_backflow'`,
@@ -380,7 +391,7 @@ export function createKnowledgeRepository(
       await db.insert(knowledgeItems).values({
         id: itemId,
         userId,
-        // [T-136 切片 b] 号维度盖章(null 兜底)。
+        // [T-332 S2] 号维度盖章(service 已断言非空;列 NOT NULL,ISO-01/03)。
         accountId,
         currentRevisionId: revId,
         knowledgeType: input.knowledgeType ?? "note",
@@ -549,6 +560,54 @@ export function createKnowledgeRepository(
         .delete(knowledgeRelations)
         .where(eq(knowledgeRelations.id, row.id));
       return parseRelation(row);
+    },
+
+    async listAllAccountsSystem(userId) {
+      // [T-332 S2 · ISO-06 例外口] 组合根种子巡检专用:user 级全量读(跨号,无
+      // account 过滤)。显式命名区别于业务 list——非隐式全量退化;经 ctx 的业务
+      // 路径一律走 list(userId, accountId) strict 门。
+      const rows = await db
+        .select()
+        .from(knowledgeItems)
+        .where(eq(knowledgeItems.userId, userId))
+        .orderBy(asc(knowledgeItems.createdAt));
+      return attachStats(userId, rows);
+    },
+
+    async renameTitleSystem(userId, knowledgeId, title) {
+      // [T-332 S2 · ISO-06 例外口] 组合根种子巡检专用:user 级门(跨号可改 seed
+      // 条目标题)。WHERE 收窄 id + userId,跨用户 = 404;只改 title + updatedAt。
+      const rows = await db
+        .select()
+        .from(knowledgeItems)
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+          ),
+        );
+      if (!rows[0]) throw new OwnershipError("Knowledge item not found");
+      const now = deps.now();
+      await db
+        .update(knowledgeItems)
+        .set({ title, updatedAt: now })
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+          ),
+        );
+      const after = await db
+        .select()
+        .from(knowledgeItems)
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+          ),
+        );
+      const [withStats] = await attachStats(userId, [after[0]!]);
+      return withStats!;
     },
   };
 }

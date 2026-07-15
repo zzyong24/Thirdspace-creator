@@ -9,10 +9,11 @@ import {
   toTrendSourceDto,
   type TrendSourceResource,
 } from "./trend-sources.schema";
-import { ValidationError } from "./trend-sources.errors";
+import { ValidationError, requireAccountId } from "./trend-sources.errors";
 
-// [T-235b] TrendSources service(foundation §5.3,照 benchmark 先例)—— 每个公开方法 (ctx, …),
-// 构 repo bound to ctx.userId 使 scoping 结构化。account_id 从 ctx.accountId stamp(按号隔离)。
+// [T-235b → T-332 S2] TrendSources service(foundation §5.3,照 benchmark 先例)—— 每个公开
+// 方法 (ctx, …),构 repo bound to ctx.userId + ctx.accountId 使 scoping 结构化。每个入口经
+// requireAccountId 断言:未选号 = 引导态,读写一律 AccountRequiredError(SPEC §4.2)。
 // 信源 CRUD(list/create/toggle/remove)+ 抓取用只读口(listEnabledSources 投影)。
 //
 // URL 归一/派生(登记时一次算好,抓取端零猜测):
@@ -110,20 +111,23 @@ export function createTrendSourcesService(
 ): TrendSourcesService {
   const { db, now, nextId } = deps;
 
-  function repoFor(ctx: RequestContext): TrendSourcesRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+  function repoFor(ctx: RequestContext, op: string): TrendSourcesRepository {
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
+      accountId: requireAccountId(ctx.accountId, op),
+    };
     return createTrendSourcesRepository(db, repoDeps);
   }
 
   return {
     async listSources(ctx, query) {
-      const { rows, total } = await repoFor(ctx).listSources(
-        ctx.accountId ?? null,
-        {
-          limit: query.pageSize,
-          offset: (query.page - 1) * query.pageSize,
-        },
-      );
+      const { rows, total } = await repoFor(ctx, "trendSources.listSources").listSources({
+        limit: query.pageSize,
+        offset: (query.page - 1) * query.pageSize,
+      });
       return { rows: rows.map(toTrendSourceDto), total };
     },
 
@@ -132,8 +136,8 @@ export function createTrendSourcesService(
       const url = input.url.trim();
       const domain = trendSourceDomain(url);
       const sourceType = input.sourceType ?? deriveSourceType(url);
-      const row = await repoFor(ctx).createSource({
-        accountId: ctx.accountId ?? null,
+      // [T-332 S2] 号由 repo deps stamp(§4.6 防绕过),不再经 input 传递。
+      const row = await repoFor(ctx, "trendSources.createSource").createSource({
         url,
         name: (input.name ?? "").trim() || domain, // 展示兜底:缺名用 domain
         sourceType,
@@ -145,17 +149,20 @@ export function createTrendSourcesService(
     },
 
     async toggleSource(ctx, sourceId, enabled) {
-      const row = await repoFor(ctx).setSourceEnabled(sourceId, enabled);
+      const row = await repoFor(ctx, "trendSources.toggleSource").setSourceEnabled(
+        sourceId,
+        enabled,
+      );
       return toTrendSourceDto(row);
     },
 
     async removeSource(ctx, sourceId) {
-      const row = await repoFor(ctx).removeSource(sourceId);
+      const row = await repoFor(ctx, "trendSources.removeSource").removeSource(sourceId);
       return toTrendSourceDto(row);
     },
 
     async listEnabledSources(ctx) {
-      const rows = await repoFor(ctx).listEnabledSources(ctx.accountId ?? null);
+      const rows = await repoFor(ctx, "trendSources.listEnabledSources").listEnabledSources();
       return rows.map((r) => ({
         id: r.id,
         accountId: r.accountId ?? null,

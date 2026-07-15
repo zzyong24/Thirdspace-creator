@@ -36,6 +36,8 @@ function row(over: Partial<NotificationRow> & { id: string }): NotificationRow {
   return {
     id: over.id,
     userId: over.userId ?? ctx.userId,
+    // [T-332 S2] 缺省 null = 系统级(全局可见);ctx 无号时也可见。
+    accountId: over.accountId ?? null,
     notificationType: over.notificationType ?? "task",
     title: over.title ?? "标题",
     body: over.body ?? "正文",
@@ -65,8 +67,12 @@ describe("notifications.transport (contract conformance)", () => {
         createdAt: "2026-06-12T10:30:00.000Z",
       }),
     ]);
+    let seq = 0;
     transport = createNotificationsTransport(() =>
-      createNotificationsService(repo, { now: () => NOW }),
+      createNotificationsService(repo, {
+        now: () => NOW,
+        nextId: (prefix: string) => `${prefix}-${++seq}`,
+      }),
     );
   });
 

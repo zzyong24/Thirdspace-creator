@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, AccountRequiredError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createContentCalendarService,
@@ -24,9 +24,25 @@ import {
 const ACC = "acct-1";
 const CLOCK = "2026-07-20T00:00:00.000Z"; // "today" for reconcile/overdue
 
+// [T-332 S2] service 入口 requireAccountId + 号一致性门:ctx 必须带当前号,
+// 且显式 accountId 参数须与 ctx 当前号一致。
 const ctx: RequestContext = {
   userId: "user-a",
+  accountId: ACC,
   requestId: "req-1",
+  source: "user",
+};
+// 同 user 的第二个号(双账号隔离断言用)。
+const ctxAcc2: RequestContext = {
+  userId: "user-a",
+  accountId: "acct-2",
+  requestId: "req-2",
+  source: "user",
+};
+// 未选号(引导态)。
+const ctxNoAccount: RequestContext = {
+  userId: "user-a",
+  requestId: "req-na",
   source: "user",
 };
 
@@ -270,5 +286,80 @@ describe("content-calendar service", () => {
     });
     expect(updated.status).toBe("planned");
     expect(updated.plannedAt).toBe("2026-07-28T09:00:00.000Z");
+  });
+
+  // ── [T-332 S2] 账号全域隔离:requireAccountId + 号一致性门(§4.2/§4.5/§4.6)──
+  describe("account isolation (T-332 S2)", () => {
+    it("未选号 → AccountRequiredError(引导态禁读写,不隐式全量/不隐式填号)", async () => {
+      const { service } = makeService(db);
+      const window = {
+        from: "2026-07-01T00:00:00.000Z",
+        to: "2026-07-31T00:00:00.000Z",
+      };
+      await expect(
+        service.listCalendar(ctxNoAccount, ACC, window, { limit: 20, offset: 0 }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+      await expect(
+        service.createEntry(ctxNoAccount, ACC, {
+          plannedAt: "2026-07-21T09:00:00.000Z",
+        }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+      await expect(
+        service.upsertCadence(ctxNoAccount, ACC, {
+          frequency: "weekly",
+          preferredSlots: [],
+        }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+    });
+
+    it("显式 accountId 参数 ≠ ctx 当前号 → OwnershipError(防从 A 号工作区写 B 号日历)", async () => {
+      const { service } = makeService(db);
+      // ctx 当前号 acct-1,却对 acct-2 发起读写 → 404 语义拒绝。
+      await expect(
+        service.createEntry(ctx, "acct-2", {
+          plannedAt: "2026-07-21T09:00:00.000Z",
+        }),
+      ).rejects.toBeInstanceOf(OwnershipError);
+      await expect(
+        service.getCadence(ctx, "acct-2"),
+      ).rejects.toBeInstanceOf(OwnershipError);
+    });
+
+    it("双账号隔离:A 号排期 B 号不可见;跨号 by-id → 404(§4.5)", async () => {
+      const { service } = makeService(db);
+      const window = {
+        from: "2026-07-01T00:00:00.000Z",
+        to: "2026-07-31T00:00:00.000Z",
+      };
+      const e1 = await service.createEntry(ctx, ACC, {
+        plannedAt: "2026-07-21T09:00:00.000Z",
+      });
+      const e2 = await service.createEntry(ctxAcc2, "acct-2", {
+        plannedAt: "2026-07-22T09:00:00.000Z",
+      });
+
+      // 列表 strict:每号只见自己的行(双向零泄漏,ISO-08)。
+      const seen1 = await service.listCalendar(ctx, ACC, window, {
+        limit: 20,
+        offset: 0,
+      });
+      expect(seen1.rows.map((r) => r.id)).toEqual([e1.id]);
+      const seen2 = await service.listCalendar(ctxAcc2, "acct-2", window, {
+        limit: 20,
+        offset: 0,
+      });
+      expect(seen2.rows.map((r) => r.id)).toEqual([e2.id]);
+
+      // 跨号 by-id 读/写/删 → OwnershipError(404,不泄露存在)。
+      await expect(
+        service.updateEntry(ctxAcc2, e1.id, { note: "跨号篡改" }),
+      ).rejects.toBeInstanceOf(OwnershipError);
+      await expect(
+        service.transition(ctxAcc2, e1.id, { status: "published" }),
+      ).rejects.toBeInstanceOf(OwnershipError);
+      await expect(service.deleteEntry(ctxAcc2, e1.id)).rejects.toBeInstanceOf(
+        OwnershipError,
+      );
+    });
   });
 });

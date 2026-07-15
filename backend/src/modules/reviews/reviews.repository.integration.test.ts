@@ -19,11 +19,13 @@ import {
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// [T-332 S2] RepoDeps.accountId 已收成必填 string(strict 门):缺省固定测试号,
+// 「null 全局视图」形态随 SPEC §4.2 裁决删除。
 function makeRepo(
   db: Db,
   userId: string,
   tag = userId,
-  accountId: string | null = null,
+  accountId = "acct-default",
 ): ReviewsRepository {
   let seq = 0;
   return createReviewsRepository(db, {
@@ -44,6 +46,7 @@ describe("reviews schema round-trip (Step 1)", () => {
     await db.insert(reviews).values({
       id: "review-1",
       userId: "user-a",
+      accountId: "acct-a", // [T-332 S1] account_id NOT NULL
       projectId: "project-1",
       contentOutputId: null,
       reportArtifactId: null,
@@ -74,6 +77,7 @@ describe("reviews schema round-trip (Step 1)", () => {
     await db.insert(reviewInsights).values({
       id: "insight-1",
       userId: "user-a",
+      accountId: "acct-a", // [T-332 S1] account_id NOT NULL
       reviewId: "review-1",
       insightType: "success",
       title: "保留率提升",
@@ -238,8 +242,8 @@ describe("reviews repository (user-scoped, Step 2)", () => {
     expect(done.completedAt).toBe(NOW);
   });
 
-  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号。
-  it("accountId-scoped repo only sees its own account's reviews; null sees all; create stamps accountId", async () => {
+  // [T-332 S2 · ISO-02/08] 号维度 strict 隔离:同一 user 下两个抖音号(无 null 全局视图)。
+  it("accountId-scoped repo only sees its own account's reviews; create stamps accountId", async () => {
     const mk = (projectId: string) => ({
       projectId,
       reviewType: "project",
@@ -250,7 +254,6 @@ describe("reviews repository (user-scoped, Step 2)", () => {
     });
     const repoA = makeRepo(db, "user-a", "acc-a", "account-a");
     const repoB = makeRepo(db, "user-a", "acc-b", "account-b");
-    const repoNull = makeRepo(db, "user-a", "acc-n", null);
 
     const rA = await repoA.createReview(mk("proj-shared"));
     const rB = await repoB.createReview(mk("proj-shared"));
@@ -265,11 +268,6 @@ describe("reviews repository (user-scoped, Step 2)", () => {
     expect(
       (await repoB.listReviewsByProject("proj-shared")).map((r) => r.id),
     ).toEqual([rB.id]);
-    // null 号 → 不过滤,两条都见。
-    expect(
-      (await repoNull.listReviewsByProject("proj-shared")).map((r) => r.id).sort(),
-    ).toEqual([rA.id, rB.id].sort());
-
     // 跨号 get → 404。
     await expect(repoB.getReview(rA.id)).rejects.toThrow();
 

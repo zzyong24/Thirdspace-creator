@@ -9,11 +9,25 @@ import { __resetPersistenceForTests } from "@/server/persistence-client";
 // dispatch 照旧解析到规范租户,无需 mint 会话。
 const SESSION_COOKIE = "";
 
-function dispatch(id: string, input: unknown, cookie = SESSION_COOKIE) {
+// [T-332 S2] strict 账号门:per-account op(projects/pages 等)必须解析出 ctx.accountId,
+// dispatch 链路的号来自 `x-account-id` header(route 内 withVerifiedAccount 以真实 userId
+// 查号验属主,不属主/不存在 → 降级 null → AccountRequiredError)。所以测试必须先经
+// dispatch 真建一条 platform account,再把它的 id 当默认 header 携带 —— 走的就是浏览器
+// 端「当前选中号」的真实调用路径。beforeEach 里填充。
+let ACCOUNT_ID = "";
+
+function dispatch(
+  id: string,
+  input: unknown,
+  cookie = SESSION_COOKIE,
+  accountId: string | null = null, // null = 用默认真建号;"" = 显式不带号
+) {
   const headers: Record<string, string> = {
     "content-type": "application/json",
   };
   if (cookie) headers.cookie = cookie;
+  const acc = accountId ?? ACCOUNT_ID;
+  if (acc) headers["x-account-id"] = acc;
   return POST(
     new Request("http://localhost/api/v1/dispatch", {
       method: "POST",
@@ -21,6 +35,26 @@ function dispatch(id: string, input: unknown, cookie = SESSION_COOKIE) {
       body: JSON.stringify({ id, input }),
     }),
   );
+}
+
+// 真建一条 platform account(user 级 op,不需要选号),返回 id 作后续请求的当前号。
+async function createFixtureAccount(): Promise<string> {
+  const res = await dispatch(
+    "accounts.create",
+    {
+      params: undefined,
+      query: undefined,
+      body: {
+        platform: "douyin",
+        accountHandle: "@dispatch-route-fixture",
+        followerBaseline: 300,
+      },
+    },
+    "",
+    "", // 建号请求本身不带 x-account-id
+  );
+  const json = (await res.json()) as { data: { id: string } };
+  return json.data.id;
 }
 
 async function listProjectIds(): Promise<string[]> {
@@ -38,6 +72,8 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     resetStore(); // mock-backed ops (outputs/tasks/pages)
     __resetPersistenceForTests(); // fresh pglite seed (project ops)
     // 免登录:不 mint 会话,dispatch 不带 cookie → 本机主用户直通(seed canonical)。
+    // [T-332 S2] 真建当前号(开箱空,canonical account seed 已随 T-135 退役)。
+    ACCOUNT_ID = await createFixtureAccount();
   });
 
   it("serves a project read from the persistence store", async () => {
@@ -95,6 +131,8 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     // PlatformAccountService ownership gate rejects an unknown account id with
     // OwnershipError → 404 (SPEC §14: 404 not 403, no existence leak). This proves the
     // op is persistence-backed (not a 501 stub) AND multi-tenant from end to end.
+    // [T-332 S2] ctx 带真建号(默认 header),params 指未知号 → 号一致性门(§4.5)同貌
+    // OwnershipError 404,断言语义不变。
     const res = await dispatch("accounts.cadence.attainment", {
       params: { accountId: "acct-does-not-exist" },
       query: { from: "2026-07-01T00:00:00.000Z", to: "2026-07-31T00:00:00.000Z" },

@@ -37,10 +37,11 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner — baked in; the service mints one repo per ctx
-  // [T-136 切片 b] 第二属主维度(按号 / 多人设)。null = 未选号 / 全局视图 / 存量兜底
-  // (§E 退化)。owned-root(artifacts)读点条件叠加 `eq(artifacts.accountId, …)`;为 null
-  // 时门退化(and 忽略 undefined)= 只按 userId 返该 user 全部行。子表经 requireArtifact 透传。
-  accountId: string | null;
+  // [T-332 S2 · ISO-02/03] 第二属主维度,**必填 strict**:owned-root(artifacts)读点
+  // 恒叠 `eq(artifacts.accountId, …)`,create 盖章当前号。未选号在 service 入口
+  // requireAccountId 即被拒(SPEC §4.2 引导态)。子表(versions / relations /
+  // script_sections / timeline_segments)经 requireArtifact 父锚门透传继承号维。
+  accountId: string;
 }
 
 export interface StructuredContent {
@@ -126,11 +127,9 @@ export function createArtifactRepository(
 ): ArtifactRepository {
   const userId = deps.userId;
 
-  // [T-136 切片 b] 按号隔离条件门:有号叠加过滤,null(全局视图/存量)返 undefined →
-  // drizzle `and()` 忽略 → 退化为只按 userId 过滤(返该 user 全部行)。
-  const accountGate = deps.accountId
-    ? eq(artifacts.accountId, deps.accountId)
-    : undefined;
+  // [T-332 S2 · ISO-02] 按号隔离条件门:strict 恒开(无「null → 退化全量」分支)。
+  // 所有 owned-root 读/更新点复用它;子表经 requireArtifact 透传继承。
+  const accountGate = eq(artifacts.accountId, deps.accountId);
 
   async function requireArtifact(artifactId: string): Promise<ArtifactRow> {
     const rows = await db
@@ -230,7 +229,7 @@ export function createArtifactRepository(
       await db.insert(artifacts).values({
         id: artifactId,
         userId,
-        // [T-136 切片 b] create stamp:落库把行归到当前号(null 兜底,列 nullable)。
+        // [T-332 S2 · ISO-03] create stamp:落库把行归到当前号(必填,列 NOT NULL)。
         accountId: deps.accountId,
         projectId: input.projectId,
         contentOutputId: input.contentOutputId ?? null,
@@ -425,6 +424,16 @@ export function createArtifactRepository(
     },
 
     async getScriptSections(artifactVersionId) {
+      // [T-332 S2 · §4.5 父锚继承核验] 子表无 user_id/account_id,读前必经父锚门:
+      // version → 父 artifact requireArtifact(user + account strict)。跨用户/跨号/未知
+      // version id 一律 OwnershipError 404,不再依赖「调用方先 getArtifact」的口头约定。
+      const versionRows = await db
+        .select()
+        .from(artifactVersions)
+        .where(eq(artifactVersions.id, artifactVersionId));
+      const version = versionRows[0];
+      if (!version) throw new OwnershipError("Version not found");
+      await requireArtifact(version.artifactId);
       return db
         .select()
         .from(scriptSections)

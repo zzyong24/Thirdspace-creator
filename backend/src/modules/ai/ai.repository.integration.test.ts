@@ -11,10 +11,12 @@ import { OwnershipError } from "./ai.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// [T-332 S2] RepoDeps.accountId 已收成必填 string(strict 门):缺省用固定测试号,
+// 「null 全局视图」形态随 SPEC §4.2 裁决删除。
 function repoFor(
   db: Db,
   userId: string,
-  accountId: string | null = null,
+  accountId = "acct-default",
   tag = userId,
 ) {
   let seq = 0;
@@ -342,11 +344,11 @@ describe("ai repository (pglite)", () => {
     expect(listB.total).toBe(0);
   });
 
-  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号,ai_conversations / ai_tasks 盖章 + 号门。
-  it("accountId-scoped repo isolates conversations/tasks across accounts; null sees all; create stamps accountId", async () => {
+  // [T-332 S2 · ISO-02/08] 号维度 strict 隔离:同一 user 下两个抖音号,
+  // ai_conversations / ai_tasks 盖章 + 恒开号门(无 null 全局视图)。
+  it("accountId-scoped repo isolates conversations/tasks across accounts; create stamps accountId", async () => {
     const repoA = repoFor(db, "user-a", "account-a", "acc-a");
     const repoB = repoFor(db, "user-a", "account-b", "acc-b");
-    const repoNull = repoFor(db, "user-a", null, "acc-n");
 
     const convA = await repoA.createConversation({
       title: "号A 会话",
@@ -370,12 +372,6 @@ describe("ai repository (pglite)", () => {
         (r) => r.id,
       ),
     ).toEqual([convB.id]);
-    expect(
-      (await repoNull.listConversations({ limit: 20, offset: 0 })).rows
-        .map((r) => r.id)
-        .sort(),
-    ).toEqual([convA.id, convB.id].sort());
-
     // 跨号 requireConversation → 404。
     await expect(repoB.requireConversation(convA.id)).rejects.toBeInstanceOf(
       OwnershipError,

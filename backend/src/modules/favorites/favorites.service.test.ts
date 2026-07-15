@@ -5,7 +5,11 @@ import {
   createFavoritesService,
   type FavoritesService,
 } from "./favorites.service";
-import { OwnershipError, ValidationError } from "./favorites.errors";
+import {
+  OwnershipError,
+  ValidationError,
+  AccountRequiredError,
+} from "./favorites.errors";
 
 // [T-235c] Favorites service 单测(fake now/nextId, pglite db,照 trend-sources.service.test
 // 范式)—— 收藏夹登记 CRUD 可见性、同名幂等 upsert、toggle/remove ownership 404-class、按号隔离
@@ -234,10 +238,11 @@ describe("favorites service", () => {
     });
   });
 
-  // [T-326 DATA-H02] 唯一键升级为账号维度(迁移 0041,NULLS NOT DISTINCT):同一用户的
-  //   第二个号可以登记同名夹 / 收藏同一视频(各自成行),不再复用/改写第一号的数据;
-  //   同号(含"未选号"的 NULL 桶)重复写仍幂等。
-  describe("账号维度唯一键 (T-326 DATA-H02)", () => {
+  // [T-326 DATA-H02 → T-332 S2] 唯一键账号维度(_v2,迁移 0041):同一用户的第二个号可以
+  //   登记同名夹 / 收藏同一视频(各自成行),不再复用/改写第一号的数据;同号重复写仍幂等
+  //   (证明 conflict target 真命中 _v2 索引)。account_id 已 NOT NULL(0042),未选号 =
+  //   引导态直接 AccountRequiredError(SPEC §4.2),NULL 桶不复存在。
+  describe("账号维度唯一键与未选号 (T-332 S2)", () => {
     const ctxA1: RequestContext = {
       userId: "user-a",
       requestId: "r-a1",
@@ -250,32 +255,45 @@ describe("favorites service", () => {
       source: "user",
       accountId: "acct-2",
     };
-    // 未选号 ctx(存量/兜底写路径 → account_id NULL 桶)。
+    // 未选号 ctx(localStorage 失效等边缘)→ 引导态,禁读写。
     const ctxANull: RequestContext = {
       userId: "user-a",
       requestId: "r-an",
       source: "user",
     };
 
-    it("同 user 两个号登记同名夹 → 各自成行,互不改写", async () => {
+    it("同 user 两个号登记同名夹 → 各自成行,互不改写;同号重复登记仍幂等命中 _v2 键", async () => {
       const f1 = await svc.createFolder(ctxA1, { name: "选题库", note: "号1" });
       const f2 = await svc.createFolder(ctxA2, { name: "选题库", note: "号2" });
       expect(f2.id).not.toBe(f1.id); // 第二号新建,不复用第一号的行
       expect(f1.accountId).toBe("acct-1");
       expect(f2.accountId).toBe("acct-2");
-      // 号1 视图只见自己的夹,note 未被号2 改写。
+      // 同号重复登记 → upsert 归并(不新建),证明 ON CONFLICT 真命中 _v2 索引。
+      const f1again = await svc.createFolder(ctxA1, { name: "选题库", note: "号1新" });
+      expect(f1again.id).toBe(f1.id);
+      // 号1 视图只见自己的夹,note 未被号2 改写(且被同号 upsert 更新)。
       const { rows: rows1 } = await svc.listFolders(ctxA1, PAGE);
       expect(rows1.length).toBe(1);
-      expect(rows1[0]!.note).toBe("号1");
+      expect(rows1[0]!.note).toBe("号1新");
+      // 号2 未受影响。
+      const { rows: rows2 } = await svc.listFolders(ctxA2, PAGE);
+      expect(rows2.length).toBe(1);
+      expect(rows2[0]!.note).toBe("号2");
     });
 
-    it("未选号(NULL 桶)同名重复登记仍幂等(NULLS NOT DISTINCT)", async () => {
-      const first = await svc.createFolder(ctxANull, { name: "存量夹" });
-      const second = await svc.createFolder(ctxANull, { name: "存量夹", note: "更新" });
-      expect(second.id).toBe(first.id); // NULL 桶自身归并,不产平行行
-      // 存量 NULL 行在全局视图(未选号)仍可读。
-      const { rows } = await svc.listFolders(ctxANull, PAGE);
-      expect(rows.some((r) => r.id === first.id)).toBe(true);
+    it("未选号 → 读写均 AccountRequiredError(引导态,禁读写;SPEC §4.2)", async () => {
+      await expect(
+        svc.createFolder(ctxANull, { name: "无号夹" }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+      await expect(svc.listFolders(ctxANull, PAGE)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(svc.listPendingItems(ctxANull, 10)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(svc.listItemsForDistill(ctxANull, 10)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
     });
 
     it("两个号收藏同一视频 → 各记一行台账(第二号不再被吞)", async () => {
@@ -291,6 +309,21 @@ describe("favorites service", () => {
       // 各号 pending 各自可见一条。
       expect((await svc.listPendingItems(ctxA1, 10)).length).toBe(1);
       expect((await svc.listPendingItems(ctxA2, 10)).length).toBe(1);
+    });
+
+    it("同 user 跨号 toggle/updateFolderSync/markItemPromoted → OwnershipError(号一致性门,§4.5)", async () => {
+      const f1 = await svc.createFolder(ctxA1, { name: "号1夹" });
+      await svc.recordItems(ctxA1, f1.id, [item("aw-gate")]);
+      const [pending] = await svc.listPendingItems(ctxA1, 1);
+      await expect(svc.toggleFolder(ctxA2, f1.id, false)).rejects.toBeInstanceOf(
+        OwnershipError,
+      );
+      await expect(
+        svc.updateFolderSync(ctxA2, f1.id, { collectsId: "x" }),
+      ).rejects.toBeInstanceOf(OwnershipError);
+      await expect(
+        svc.markItemPromoted(ctxA2, pending!.id, "cand-x"),
+      ).rejects.toBeInstanceOf(OwnershipError);
     });
   });
 });

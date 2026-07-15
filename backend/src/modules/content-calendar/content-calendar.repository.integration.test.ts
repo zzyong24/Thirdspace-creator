@@ -20,12 +20,18 @@ import { OwnershipError, ValidationError } from "./content-calendar.errors";
 
 const ACC = "acct-1";
 
-function repoFor(db: Db, userId: string): ContentCalendarRepository {
+// [T-332 S2] repo deps 增加 baked accountId(ctx 当前号):by-id 读写叠号一致性门。
+function repoFor(
+  db: Db,
+  userId: string,
+  accountId: string = ACC,
+): ContentCalendarRepository {
   let seq = 0;
   return createContentCalendarRepository(db, {
     now: () => "2026-06-21T00:00:00.000Z",
-    nextId: (prefix: string) => `${prefix}-${userId}-${++seq}`,
+    nextId: (prefix: string) => `${prefix}-${userId}-${accountId}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -144,6 +150,7 @@ describe("content-calendar repository", () => {
       now: () => `2026-06-21T00:00:0${clock++}.000Z`,
       nextId: (p: string) => `${p}-u-1`,
       userId: "user-a",
+      accountId: ACC,
     });
     const entry = await a.createEntry(ACC, {
       plannedAt: "2026-06-25T09:00:00.000Z",
@@ -168,5 +175,35 @@ describe("content-calendar repository", () => {
     const res = await a.deleteEntry(entry.id);
     expect(res).toEqual({ id: entry.id, deleted: true });
     await expect(a.getEntry(entry.id)).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  // [T-332 S2] 双账号隔离:同 user 两个号,by-id 叠号一致性门(§4.5)。
+  it("scopes by-id reads/writes per account: 跨号 by-id → 404(同 user 双号零泄漏)", async () => {
+    const ACC_2 = "acct-2";
+    const viewAcc1 = repoFor(db, "user-a", ACC);
+    const viewAcc2 = repoFor(db, "user-a", ACC_2);
+    const e1 = await viewAcc1.createEntry(ACC, {
+      plannedAt: "2026-06-25T09:00:00.000Z",
+    });
+    const e2 = await viewAcc2.createEntry(ACC_2, {
+      plannedAt: "2026-06-26T09:00:00.000Z",
+    });
+
+    // 列表 strict:每号只见自己的行。
+    const win = { from: "2026-06-01T00:00:00.000Z", to: "2026-06-30T23:59:59.000Z" };
+    expect((await viewAcc1.listEntries(ACC, win)).rows.map((r) => r.id)).toEqual([e1.id]);
+    expect((await viewAcc2.listEntries(ACC_2, win)).rows.map((r) => r.id)).toEqual([e2.id]);
+
+    // 跨号 by-id 读/写/删 → OwnershipError(404,不泄露存在)。
+    await expect(viewAcc2.getEntry(e1.id)).rejects.toBeInstanceOf(OwnershipError);
+    await expect(
+      viewAcc2.updateEntry(e1.id, { note: "跨号篡改" }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    await expect(viewAcc2.deleteEntry(e1.id)).rejects.toBeInstanceOf(OwnershipError);
+    await expect(
+      viewAcc1.setEntryStatus(e2.id, { status: "published" }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    // 本号 by-id 正常。
+    expect((await viewAcc1.getEntry(e1.id)).id).toBe(e1.id);
   });
 });

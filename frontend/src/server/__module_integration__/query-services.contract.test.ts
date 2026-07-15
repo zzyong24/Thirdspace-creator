@@ -20,10 +20,15 @@ import { QUERY_SERVICES_OP_IDS } from "@creatoros/backend/modules/query-services
 // inherited-scope invariant end-to-end (SPEC §19/§20; foundation §9).
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门:页面组合读的底层 service 全部 per-account,ctx 必须带
+// accountId(未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生 →
+// OWNER/OTHER 天然异号:OTHER 读 OWNER 项目走 (userId, accountId) 双维过滤落空 →
+// OwnershipError 404(跨租户断言语义保持,且不会误抛 AccountRequiredError)。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
 });
 
 const OWNER = canonicalDataset.user.id; // user-zyongzhu (seeded)

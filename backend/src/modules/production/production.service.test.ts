@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, type Db, projects, contentOutputs } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createProductionService,
@@ -25,7 +25,62 @@ const ctx: RequestContext = {
   userId: "user-a",
   requestId: "req-a",
   source: "user",
+  accountId: "acct-a", // [T-332 S2] 父锚 strict 门
 };
+
+// [T-332 S2] 父锚种子:production 的读写都要经 content_output → project 的 strict 门,
+// 测试先种宿主 project + content_output(带号),再操作 production。
+async function seedOutput(
+  db: Db,
+  outputId: string,
+  userId: string,
+  accountId: string,
+): Promise<void> {
+  const projectId = `proj-of-${outputId}`;
+  await db
+    .insert(projects)
+    .values({
+      id: projectId,
+      userId,
+      accountId,
+      title: "宿主项目",
+      brief: "",
+      briefDetail: {},
+      contentCategory: "",
+      source: "manual",
+      platformRef: {},
+      creationMode: "guided",
+      status: "active",
+      currentStage: "production",
+      progressPct: 0,
+      starred: false,
+      startedAt: NOW,
+      targetCompletedAt: null,
+      completedAt: null,
+      archivedAt: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+  await db
+    .insert(contentOutputs)
+    .values({
+      id: outputId,
+      projectId,
+      title: "宿主产出",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: null,
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+}
+
 
 let db: Db;
 let setPrimaryOutputAsset: ReturnType<typeof vi.fn>;
@@ -52,6 +107,7 @@ beforeEach(async () => {
   searchIndexAsset = vi.fn(() => Promise.resolve());
   recordExportActivity = vi.fn(() => Promise.resolve());
   service = makeService();
+  await seedOutput(db, "output-1", "user-a", "acct-a"); // [T-332 S2] 父锚种子
 });
 
 describe("production.service — status machine (Step 3)", () => {

@@ -1,4 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
+import { requireAccountId } from "@creatoros/backend";
 import type {
   KnowledgeRepository,
   KnowledgeItemWithStats,
@@ -91,35 +92,42 @@ export interface KnowledgeService {
 export function createKnowledgeService(
   repo: KnowledgeRepository,
 ): KnowledgeService {
-  // [T-136 切片 b] 号维度透传:ctx.accountId 属主已由 resolveRequestContext 校验可信;
-  // 缺省(未选号/存量)→ null → repo owned-root 读门退化不过滤。每个 repo 调用 userId 后紧跟它。
+  // [T-332 S2] 号维度断言 + 透传:ctx.accountId 属主已由 resolveRequestContext 校验
+  // 可信;每个经 ctx 的入口(读+写)先 requireAccountId(SPEC §4.2:未选号 = 引导态
+  // 禁读写,抛 AccountRequiredError,不隐式全量/不隐式填号),再以 string 传 repo。
   return {
     async listKnowledge(ctx) {
-      return repo.list(ctx.userId, ctx.accountId ?? null);
+      const accountId = requireAccountId(ctx.accountId, "knowledge.list");
+      return repo.list(ctx.userId, accountId);
     },
 
     async getKnowledge(ctx, knowledgeId) {
-      return repo.get(ctx.userId, ctx.accountId ?? null, knowledgeId);
+      const accountId = requireAccountId(ctx.accountId, "knowledge.get");
+      return repo.get(ctx.userId, accountId, knowledgeId);
     },
 
     async listRevisions(ctx, knowledgeId) {
       // Read op: the parent's ownership gate lives in the repo (404 on a
       // cross-user / 跨号 / unknown id). Returns newest-first so the head revision
       // (with the current content) is rows[0].
-      return repo.listRevisions(ctx.userId, ctx.accountId ?? null, knowledgeId);
+      const accountId = requireAccountId(ctx.accountId, "knowledge.listRevisions");
+      return repo.listRevisions(ctx.userId, accountId, knowledgeId);
     },
 
     async listRelations(ctx, knowledgeId) {
       // Read op: relations of the (owned) source item; repo gates ownership.
-      return repo.listRelations(ctx.userId, ctx.accountId ?? null, knowledgeId);
+      const accountId = requireAccountId(ctx.accountId, "knowledge.listRelations");
+      return repo.listRelations(ctx.userId, accountId, knowledgeId);
     },
 
     async listAllRelations(ctx) {
       // [T-091] 全量边读:所有权由 repo 的 source 端 join 收窄。
-      return repo.listAllRelations(ctx.userId, ctx.accountId ?? null);
+      const accountId = requireAccountId(ctx.accountId, "knowledge.listAllRelations");
+      return repo.listAllRelations(ctx.userId, accountId);
     },
 
     async createKnowledge(ctx, input) {
+      const accountId = requireAccountId(ctx.accountId, "knowledge.create");
       // [T-092] 回流层幂等(并发兜底):携 signalExternalIds 的 qa 创建,采纳前
       // 再校验一次已回流锚集合——任一锚已入库即拒(同义合并组任一评论已回流 =
       // 整组视为已回流,SPEC §2.3),ConflictError → 409,确认门标注「已入库」跳过。
@@ -127,7 +135,7 @@ export function createKnowledgeService(
       if (anchors.length > 0) {
         const backflowed = await repo.listBackflowedSignalExternalIds(
           ctx.userId,
-          ctx.accountId ?? null,
+          accountId,
         );
         const hit = anchors.find((anchor) => backflowed.has(anchor));
         if (hit) {
@@ -137,13 +145,13 @@ export function createKnowledgeService(
         }
       }
       // Items are born active with revision #1 (repo owns the UoW + stamps).
-      return repo.create(ctx.userId, ctx.accountId ?? null, input);
+      return repo.create(ctx.userId, accountId, input);
     },
 
     async createRevision(ctx, knowledgeId, input) {
       // Read the current head number before appending so we can assert the new
       // revision strictly increases it (append-only invariant, defence-in-depth).
-      const acc = ctx.accountId ?? null;
+      const acc = requireAccountId(ctx.accountId, "knowledge.createRevision");
       const before = await repo.get(ctx.userId, acc, knowledgeId);
       const head = await repo.getRevision(ctx.userId, acc, before.currentRevisionId);
       const rev = await repo.createRevision(ctx.userId, acc, knowledgeId, input);
@@ -158,12 +166,8 @@ export function createKnowledgeService(
     async createRelation(ctx, knowledgeId, input) {
       // Self-link + cross-user / 跨号 ownership are enforced by the repo; surface
       // unswallowed (Conflict→409, Ownership→404 at the dispatch route).
-      return repo.createRelation(
-        ctx.userId,
-        ctx.accountId ?? null,
-        knowledgeId,
-        input,
-      );
+      const accountId = requireAccountId(ctx.accountId, "knowledge.createRelation");
+      return repo.createRelation(ctx.userId, accountId, knowledgeId, input);
     },
 
     async archiveKnowledge(ctx, knowledgeId) {
@@ -171,7 +175,7 @@ export function createKnowledgeService(
       // assets.trashAsset). The service owns the transition guard — archiving an
       // already-archived item is an InvalidTransitionError (→409); the repo only
       // gates ownership + stamps the new status/archivedAt.
-      const acc = ctx.accountId ?? null;
+      const acc = requireAccountId(ctx.accountId, "knowledge.archive");
       const item = await repo.get(ctx.userId, acc, knowledgeId);
       if (item.status !== "active") {
         throw new InvalidTransitionError(
@@ -185,12 +189,8 @@ export function createKnowledgeService(
       // Drop one outgoing relation off the (owned) source item. Ownership of the
       // source + existence of the relation are enforced by the repo (a missing
       // relation → OwnershipError → 404, no existence leak).
-      return repo.removeRelation(
-        ctx.userId,
-        ctx.accountId ?? null,
-        knowledgeId,
-        input,
-      );
+      const accountId = requireAccountId(ctx.accountId, "knowledge.removeRelation");
+      return repo.removeRelation(ctx.userId, accountId, knowledgeId, input);
     },
   };
 }

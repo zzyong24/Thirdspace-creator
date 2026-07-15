@@ -34,11 +34,13 @@ const BLANK_RULES = {
   expressionRule: "",
 };
 
+// [T-332 S2] RepoDeps.accountId 已收成必填 string(strict 门):缺省固定测试号,
+// 「null 全局视图」形态随 SPEC §4.2 裁决删除。
 function repoFor(
   db: Db,
   userId: string,
-  accountId: string | null = null,
-  tag = accountId ?? userId,
+  accountId = "acct-default",
+  tag = accountId,
 ): PositioningRepository {
   let seq = 0;
   return createPositioningRepository(db, {
@@ -238,15 +240,12 @@ describe("positioning repository (integration, user-scoped)", () => {
     ).resolves.toMatchObject({ accountId: "acc-2" });
   });
 
-  it("accountId=null 退化：不按号过滤，读到该 user 的存量母版（全局视图兜底）", async () => {
-    // 存量场景:先建一条带号的母版(模拟已迁移存量),再用 null-account repo 读 —— 应能读到。
+  // [T-332 S2] 原「accountId=null 退化全局视图」用例随 SPEC §4.2 裁决删除:
+  // strict 门下不存在无号读路径(未选号在 service 入口即 AccountRequiredError)。
+  it("strict 门:别号 repo 读不到本号母版(getProfile 空,非全量兜底)", async () => {
     const repoAcc1 = repoFor(db, "user-a", "acc-1");
-    const stamped = await repoAcc1.insertProfile(mkProfileInput("存量母版"));
-
-    const repoNull = repoFor(db, "user-a", null);
-    const seen = await repoNull.getProfile();
-    // null 退化不按号过滤 → 读到该 user 的(唯一)母版。
-    expect(seen).toBeDefined();
-    expect(seen!.id).toBe(stamped.id);
+    await repoAcc1.insertProfile(mkProfileInput("号1母版"));
+    const repoAcc2 = repoFor(db, "user-a", "acc-2");
+    expect(await repoAcc2.getProfile()).toBeUndefined();
   });
 });

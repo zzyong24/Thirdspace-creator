@@ -3,6 +3,8 @@ import {
   createConfiguredDb,
   UnsupportedOperationError,
   resolveMasterKey,
+  // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
+  requireAccountId,
 } from "@creatoros/backend";
 import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
@@ -51,7 +53,12 @@ import {
   // [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
   type HybridSearchHit,
 } from "@creatoros/backend/modules/search";
-import { buildCanonicalSearchDocuments } from "@creatoros/backend/modules/search";
+import {
+  buildCanonicalSearchDocuments,
+  // [T-332 S2 · ISO-06] 启动全量重建的显式系统路径:整删该 user 派生索引 → 按源实体行
+  //   自带的 accountId 整批重播(跨号各归各号,不经 ctx.accountId)。
+  rebuildSearchIndexSystem,
+} from "@creatoros/backend/modules/search";
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
 import {
   projects as projectsTable,
@@ -927,10 +934,13 @@ const TOPIC_ATTRIBUTION_OPS = new Set<string>(TOPIC_ATTRIBUTION_OP_IDS);
 // The set of op ids owned by the scheduling module's transport (module 23, T-007).
 const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 
-// The shared canonical 变现加权 Rubric id seeded below (the calibration page + the 复盘飞轮回流
-// 轨B Learning→校准 reflow both target it). Kept as one const so the seed + the reflow seam
-// agree on the same key.
-const CANONICAL_RUBRIC_ID = "rubric-canonical";
+// [T-332 S2] canonical 变现加权 Rubric 改为 **per-account** 种子(SPEC §3.2:rubrics 是
+// per-account 域、每号一套打分口径,account_id NOT NULL 后不能再有「系统级 null 号」rubric)。
+// id 约定 = `rubric-canonical:<accountId>`;seed(逐 active 号)与所有运行时解析点
+// (复盘回流轨B / 编导评分 worker / ChatBox context)都经本 helper 达成同一把 key。
+// ctx 未选号 → 返回不可能命中的哨兵 id,调用方 lookup 失败走各自的诚实空态(null/回退)。
+const canonicalRubricIdFor = (ctx: RequestContext): string =>
+  `rubric-canonical:${ctx.accountId ?? "__no-account__"}`;
 
 // [T-277] 可审整稿的最短正文阈值 —— 低于此视作「还没有整稿」(空稿/占位/整稿未落地)。一份
 // 6-10 镜的真实分镜脚本正文恒在数百字级,25 字级的陈旧占位稿会被这道门拦下,不进审核。
@@ -1533,8 +1543,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createSearchRepository(db, {
         ...deps,
         userId: ctx.userId,
-        // [T-136 切片 b] 搜索索引按号隔离维度透传;未选号/全局视图为 null(§E 退化)。
-        accountId: ctx.accountId ?? null,
+        // [T-332 S2] strict:搜索投影/检索是 per-account 域(跨号搜到=串味),未选号 →
+        //   AccountRequiredError(引导态);「未选号=全局视图」退化已废除(SPEC §4.2)。
+        accountId: requireAccountId(ctx.accountId, "search.repo"),
       }),
     deps,
   );
@@ -1679,7 +1690,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       assetId: string,
     ): Promise<string | null> => {
       const asset = await assetsService.getAsset(ctx, assetId); // OwnershipError → 上抛
-      const files = await assetsRepo.listAssetFiles(ctx.userId, assetId);
+      // [T-332 S2] asset_files 经父 asset 号门透传:未选号 → AccountRequiredError。
+      const files = await assetsRepo.listAssetFiles(
+        ctx.userId,
+        assetId,
+        requireAccountId(ctx.accountId, "assets.listAssetFiles"),
+      );
       const current =
         files.find((f) => f.id === (asset as { currentFileId?: string | null }).currentFileId) ??
         files[files.length - 1] ??
@@ -2318,14 +2334,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // cross-module repo import, SPEC §22). Lazy thunks — `calibrationService` is constructed
     // BELOW; these run at request time, never at construction (TDZ-safe, same as the AI
     // module's positioning/candidate/calibration confirm thunks). The current rubric resolves
-    // to the shared canonical rubric (`rubric-canonical`) when the user can read it; null
-    // (→ honest ConflictError) when no rubric exists.
+    // to 当前号的 canonical rubric(`rubric-canonical:<accountId>`,[T-332 S2] per-account)
+    // when the user can read it; null(→ honest ConflictError)when no rubric exists.
     calibration: {
       resolveCurrentRubricId: async (ctx) => {
         try {
           const rubric = await calibrationService.getRubric(
             ctx,
-            CANONICAL_RUBRIC_ID,
+            canonicalRubricIdFor(ctx),
           );
           return rubric.id;
         } catch {
@@ -2567,7 +2583,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const repo = createArtifactRepository(db, {
           ...deps,
           userId: c.userId,
-          accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+          // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+          accountId: requireAccountId(c.accountId, "artifacts.repo"),
         });
         for (const r of rows) {
           if (r.artifactType !== "output_script") continue;
@@ -3223,9 +3240,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   // version's dimensions are exactly what the agent scores. inputData may
                   // override the rubricVersionId; otherwise resolve the default rubric's
                   // current version.
+                  // [T-332 S2] per-account 默认 rubric(当前号的 canonical id)。
                   const v = await calibrationService.getCurrentRubricVersion(
                     c,
-                    "rubric-canonical",
+                    canonicalRubricIdFor(c),
                   );
                   return {
                     rubricVersionId: v.id,
@@ -3286,7 +3304,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     const version =
                       await calibrationService.getCurrentRubricVersion(
                         c,
-                        "rubric-canonical",
+                        canonicalRubricIdFor(c), // [T-332 S2] per-account 默认 rubric
                       );
                     for (const d of version.dimensions) {
                       labelByKey.set(d.key, d.label);
@@ -4026,7 +4044,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 const repo = createArtifactRepository(db, {
                   ...deps,
                   userId: c.userId,
-                  accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+                  // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+            accountId: requireAccountId(c.accountId, "artifacts.repo"),
                 });
                 for (const r of rows) {
                   if (r.artifactType !== "output_script") continue;
@@ -4087,7 +4106,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     const repo = createArtifactRepository(db, {
                       ...deps,
                       userId: cc.userId,
-                      accountId: cc.accountId ?? null, // [T-136 切片 b] 透传按号维度
+                      // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+                      accountId: requireAccountId(cc.accountId, "artifacts.repo"),
                     });
                     const version = await repo.getVersion(versionId);
                     const data = version.contentData;
@@ -4153,7 +4173,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 const repo = createArtifactRepository(db, {
                   ...deps,
                   userId: c.userId,
-                  accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+                  // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+            accountId: requireAccountId(c.accountId, "artifacts.repo"),
                 });
                 for (const r of rows) {
                   if (r.artifactType !== "output_script") continue;
@@ -6006,6 +6027,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         /* 登录态迁移 best-effort:失败则 statusDouyin 仍回退可查(见 douyinAuthDirFor 回退),不阻断绑定 */
       }
     }
+    // [T-332 S2] 新号绑定即补种该号的默认变现加权 rubric(rubrics 是 per-account 域,
+    //   NOT NULL;不种则该号校准/编导评分无默认口径,要等下次启动)。幂等
+    //   (onConflictDoNothing);fire-and-forget,失败不阻断绑定。
+    //   注:ensureCanonicalRubricForAccount 在本工厂靠后定义 —— 绑定回调只在构造完成后
+    //   触发,无 TDZ 风险(与 calibrationService lazy thunk 同款模式)。
+    if (ctx.accountId) {
+      void ensureCanonicalRubricForAccount(ctx.accountId).catch((err) =>
+        console.warn("[seed] 绑定补种默认 rubric 失败(不阻断绑定):", err),
+      );
+    }
     void bootstrapDouyinCollectionJobs(ctx, {
       listJobsBySourceKind: async (c, sourceKind) => {
         const { rows } = await schedulingService.listJobs(c, {
@@ -6030,45 +6061,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       trigger: async (c, job) => {
         await triggerScheduledJob(c, job, triggerDeps);
       },
-      // [T-331] 绑定 claim 收敛门:该 user 是否存在**其它** active 抖音号(≠ 本次绑定号)。
-      //   true → 二绑及以后,collection-bootstrap 会跳过下方 claimOrphans(NULL 存量属谁未知,
-      //   无条件认领会把旧号数据整批错认给新号 —— 真机数据污染根因);false → 首绑(或重扫同一号),
-      //   claim 照旧(T-200 修串号原意)。listAccounts 只按 douyin + active 计数;查询失败由
-      //   collection-bootstrap fail-closed(跳过 claim),此处不吞错。
-      hasOtherActiveDouyinAccount: async (c) => {
-        const { rows } = await platformAccountService.listAccounts(c, {
-          limit: 100,
-          offset: 0,
-        });
-        return rows.some(
-          (a) =>
-            a.platform === "douyin" &&
-            a.status === "active" &&
-            a.id !== c.accountId,
-        );
-      },
-      // [T-200] 认领存量无号采集数据给 ctx.accountId(单账号现实下安全):经各模块公开 claim 端口
-      //   (不跨模块直连 repo);projects(imported)/publications/metric_snapshots+values/assets/
-      //   scheduled_job 各自认领。幂等、best-effort;返回各表认领行数(诊断日志用)。
-      //   多账号诚实边界:此认领把 orphan 归给触发绑定的号(单号现实安全);多账号精确 targeting
-      //   是 T-136 §D 后续。[T-331] 仅首绑执行(见上方收敛门)。
-      claimOrphans: async (c) => {
-        const [projectsN, pubsN, metrics, assetsN, jobsN] = await Promise.all([
-          projectsService.claimOrphanImportedProjects(c),
-          publishingService.claimOrphanPublications(c),
-          analyticsService.claimOrphanMetrics(c),
-          assetsService.claimOrphanAssets(c),
-          schedulingService.claimOrphanJobs(c),
-        ]);
-        return {
-          projects: projectsN,
-          publications: pubsN,
-          metricSnapshots: metrics.snapshots,
-          metricValues: metrics.values,
-          assets: assetsN,
-          scheduledJobs: jobsN,
-        };
-      },
+      // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)接线已全链退役
+      //   (SPEC §4.4):strict + NOT NULL 世界不存在无号存量,绑定 = 只建号绑定 job + 初始化
+      //   触发,零 claim —— 绑第二个号不改动任何既有行归属(ISO-08)。
       // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与手动建的 job 一致)。
       target: {},
     }).catch((err) =>
@@ -6182,14 +6177,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ctx: schedulerCtx,
     listRunnableJobs: async (c) => {
       // enabled job 全取,再逐个用最近一次 run 过滤掉"最近 needs_reconnect"的(§6 停跑)。
-      const { rows } = await schedulingService.listJobs(c, {
+      // [T-332 S2 · ISO-06] 调度器是系统 daemon:枚举走显式 listJobsSystem(跨号全见;用户面
+      //   listJobs 已 strict 按号,系统 ctx 无号会被断言拒绝)。逐 job 的 run 读用该 job 的
+      //   account_id 派生 ctx(读写恒同号,过 strict 门)。
+      const { rows } = await schedulingService.listJobsSystem(c, {
         enabled: true,
         limit: 200,
         offset: 0,
       });
       const runnable: SchedulableCronJob[] = [];
       for (const job of rows) {
-        const recent = await schedulingService.listRunsByJob(c, job.id, {
+        const jobCtx: RequestContext = { ...c, accountId: job.accountId ?? null };
+        const recent = await schedulingService.listRunsByJob(jobCtx, job.id, {
           limit: 1,
           offset: 0,
         });
@@ -6704,40 +6703,55 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 存量带前缀条目由下方 fixupWinVideoTutorTitles 幂等改名。
   try {
     // [T-218] tag 写侧 service:与 taxonomy transport 同一 repo/db,给 seed 挂 module
-    // tag + 给存量回填。canonical ctx(userId + accountId)与知识条目同 scope。
+    // tag + 给存量回填(tags 是 user 级词表,C-04,不随号切)。
     const canonTaxonomyService = createTaxonomyService(taxonomyRepo);
-    const canonTagCtx = { userId: CANONICAL_USER_ID, accountId: null };
-    const seeded = await seedWinVideoTutor(knowledgeService, {
+    // [T-332 S2] 知识库按号独立(SPEC C-01,strict + NOT NULL):课程预设按 active 账号
+    // **逐号**种入(每号一套知识库,一套预设;seed 幂等判据 origin 是 per-account ctx 读的,
+    // 每号各判各的)。0 账号 → 跳过(引导态无处落号;绑号后下次启动自动补种)。
+    const wvtSeedCtx: RequestContext = {
       userId: CANONICAL_USER_ID,
-      accountId: null,
-    }, { taxonomyService: canonTaxonomyService });
-    if (seeded > 0) {
-      console.log(
-        `[seed] win-video-tutor 课程已写入 ${seeded} 节到 canonical user 知识库`,
-      );
-    }
-    // [T-218] 存量按 module 挂 tag 回填:seed 早于 T-218 的装机(现网 22/23 条)只有
-    // knowledge item、无 tag → 观点地图(默认视图,按 tag 聚类)开箱即空。这里对已存在的
-    // origin=win-video-tutor 条目按 sourceMetadata.module 幂等补挂 module tag,用户不用
-    // reset、下次启动观点地图即填充。幂等(tag 名 per-user 唯一 + entity_tags 唯一)。
-    const backfilledTags = await fixupWinVideoTutorModuleTags(
-      knowledgeService,
-      canonTaxonomyService,
-      canonTagCtx,
+      requestId: "seed-win-video-tutor",
+      source: "ingestion",
+    };
+    const { rows: wvtAccounts } = await platformAccountService.listAccounts(
+      wvtSeedCtx,
+      { limit: 100, offset: 0 },
     );
-    if (backfilledTags > 0) {
-      console.log(
-        `[seed] win-video-tutor ${backfilledTags} 条存量已按 module 回填 tag(观点地图)`,
+    for (const wvtAcct of wvtAccounts.filter((a) => a.status === "active")) {
+      const acctCtx = { userId: CANONICAL_USER_ID, accountId: wvtAcct.id };
+      const seeded = await seedWinVideoTutor(knowledgeService, acctCtx, {
+        taxonomyService: canonTaxonomyService,
+      });
+      if (seeded > 0) {
+        console.log(
+          `[seed] win-video-tutor 课程已写入 ${seeded} 节到账号 ${wvtAcct.id} 的知识库`,
+        );
+      }
+      // [T-218] 存量按 module 挂 tag 回填:seed 早于 T-218 的装机(现网 22/23 条)只有
+      // knowledge item、无 tag → 观点地图(默认视图,按 tag 聚类)开箱即空。这里对已存在的
+      // origin=win-video-tutor 条目按 sourceMetadata.module 幂等补挂 module tag,用户不用
+      // reset、下次启动观点地图即填充。幂等(tag 名 per-user 唯一 + entity_tags 唯一)。
+      const backfilledTags = await fixupWinVideoTutorModuleTags(
+        knowledgeService,
+        canonTaxonomyService,
+        acctCtx,
       );
+      if (backfilledTags > 0) {
+        console.log(
+          `[seed] win-video-tutor ${backfilledTags} 条存量已按 module 回填 tag(观点地图,账号 ${wvtAcct.id})`,
+        );
+      }
     }
     // [T-211] 存量去前缀 fixup:已装机(seed 早于本改动)的条目标题仍带「Win 短视频私教 · 」
     // 前缀 —— 经仓储幂等 strip(drizzle 留在后端,不在前端引 drizzle-orm)。安全边界:
-    // ①仅 canonical user 名下(repo.list userId 收窄);②仅 sourceMetadata.origin=
+    // ①仅 canonical user 名下(System 方法 userId 收窄);②仅 sourceMetadata.origin=
     // 'win-video-tutor' 的 seed 条目(不碰用户自己的笔记);③仅标题仍带旧前缀者(已去过
-    // 的跳过 → 幂等,重启不重复动)。renameTitle 只改 title + updatedAt(不动 content/
-    // revision/status);同批 lesson 间自然序仍保留(lesson 1 先改 → updatedAt 最早)。
+    // 的跳过 → 幂等,重启不重复动)。renameTitleSystem 只改 title + updatedAt(不动 content/
+    // revision/status)。[T-332 S2 · ISO-06] 种子巡检跨号扫描走显式 *System 方法(组合根
+    // 种子维护语义),不是隐式全量读退化。
     const legacyPrefix = WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX;
-    const canonKnowledgeRows = await knowledgeRepo.list(CANONICAL_USER_ID, null);
+    const canonKnowledgeRows =
+      await knowledgeRepo.listAllAccountsSystem(CANONICAL_USER_ID);
     let renamed = 0;
     for (const row of canonKnowledgeRows) {
       const meta = row.sourceMetadata as { origin?: unknown } | null;
@@ -6747,9 +6761,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         (meta as { origin?: unknown }).origin === "win-video-tutor";
       if (!isSeed) continue;
       if (!row.title.startsWith(legacyPrefix)) continue;
-      await knowledgeRepo.renameTitle(
+      await knowledgeRepo.renameTitleSystem(
         CANONICAL_USER_ID,
-        null,
         row.id,
         row.title.slice(legacyPrefix.length),
       );
@@ -6767,49 +6780,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     );
   }
 
-  // [T-220] 启动认领存量无号 asset(现网破图修复)。截图/封面在**无号 chat ctx**(此前 chat
-  //   route 漏读 x-account-id → 全程无号)下落的 asset account_id=NULL → 读侧 accountGate 严格
-  //   eq 排除 → getDownloadUrl/requireAsset 404 → 前端紫色占位。写侧根因已在 chat route + 截图
-  //   端口治本;此块补认领**存量** NULL asset,让 build 后现网破图直接恢复(不用 reset/重扫)。
-  //   单账号现实下安全:把该 user 名下唯一 active 号认领 account_id IS NULL 的 asset(claimOrphanAssets
-  //   = userId + isNull(account_id) → set 该号,幂等,已归属的不动)。0 号 / 多号 → 跳过(多号精确
-  //   targeting 归 T-136 §D);best-effort:失败只告警,不阻断启动。
-  try {
-    const startupClaimCtx: RequestContext = {
-      userId: canonicalDataset.user.id,
-      requestId: "startup-asset-claim",
-      source: "ingestion",
-    };
-    const { rows: claimAccounts } = await platformAccountService.listAccounts(
-      startupClaimCtx,
-      { limit: 100, offset: 0 },
-    );
-    const activeAccounts = claimAccounts.filter((a) => a.status === "active");
-    if (activeAccounts.length === 1) {
-      const claimed = await assetsService.claimOrphanAssets({
-        ...startupClaimCtx,
-        accountId: activeAccounts[0]!.id,
-      });
-      if (claimed > 0) {
-        console.log(
-          `[T-220] 启动认领 ${claimed} 条无号 asset 归当前号 ${activeAccounts[0]!.id}(截图/封面破图恢复)`,
-        );
-      }
-    }
-  } catch (claimErr) {
-    console.warn(
-      "[T-220] 启动认领存量无号 asset 失败(已 ignore,app 仍可启动):",
-      claimErr instanceof Error ? claimErr.message : claimErr,
-    );
-  }
+  // [T-332 S2] T-220「启动认领存量无号 asset」已随 claimOrphans 全链退役(SPEC §4.4):
+  //   strict + NOT NULL 世界不存在无号 asset(写侧 chat route / 截图端口已治本 stamp 真号),
+  //   存量污染走「设置 → 重置工作区」(S5),不再有任何启动期归属改写。
 
   // [T-227] 启动幂等 ensure 全部 DEFAULT_JOBS(存量账号回填缺失采集 job)。根因:collection-
   //   bootstrap 只在**绑定抖音时**跑一次 —— 账号绑定早于新 job 模板上线(T-212 benchmark /
   //   T-235a topic.daily)的存量号,模板后加的 job 永远缺(真机曾现「还没有对标采集作业」)。
   //   修:启动时对 active 账号跑 ensureCollectionJobs(有则跳无则建,**只建不触发** —— 新 job 等
-  //   下一次到点跑,不在每次启动拉一轮采集)。job 查询本就 user-scoped(scheduling repo 按 userId
-  //   收窄),单账号现实下用首个 active 号 stamp 新 job 属主;多号精确 targeting 归 T-136 §D(与
-  //   claimOrphans 同款诚实边界)。best-effort:失败只告警,不阻断启动。
+  //   下一次到点跑,不在每次启动拉一轮采集)。
+  //   [T-332 S2] 账号全域隔离后 scheduled_job strict 按号:**逐个** active 账号各自 ensure
+  //   (listJobs 在该号 ctx 下只见该号 job → 每号缺啥补啥,job 出生即带号)。0 号 → 跳过。
+  //   best-effort:失败只告警,不阻断启动。
   try {
     const ensureJobsCtx: RequestContext = {
       userId: canonicalDataset.user.id,
@@ -6821,9 +6803,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       { limit: 100, offset: 0 },
     );
     const activeForEnsure = ensureAccounts.filter((a) => a.status === "active");
-    if (activeForEnsure.length > 0) {
+    for (const ensureAcct of activeForEnsure) {
       const { created } = await ensureCollectionJobs(
-        { ...ensureJobsCtx, accountId: activeForEnsure[0]!.id },
+        { ...ensureJobsCtx, accountId: ensureAcct.id },
         {
           listJobsBySourceKind: async (c, sourceKind) => {
             const { rows } = await schedulingService.listJobs(c, {
@@ -6849,7 +6831,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       );
       if (created.length > 0) {
         console.log(
-          `[T-227] 启动回填缺失采集 job(账号 ${activeForEnsure[0]!.id}):${created.join(", ")}`,
+          `[T-227] 启动回填缺失采集 job(账号 ${ensureAcct.id}):${created.join(", ")}`,
         );
       }
     }
@@ -6882,12 +6864,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   2 个)若 seed id 已占位就永不回填。rebuildUserIndex 先 deleteAllDocuments(user-scoped)
   //   再从 DB 真值逐条 re-upsert —— 幂等、刷新标题、清孤儿,把存量一并索引。启动时跑一次即可
   //   (运行时 create/patch/delete 由上面的 fan-out wrapper 增量维护)。
+  // [T-332 S2] 启动全量重建改走 rebuildSearchIndexSystem(ISO-06 显式系统路径):
+  //   search_documents 是 per-account 投影(NOT NULL),重建行的号由**源实体行**派生
+  //   (projects/knowledge_items/assets/publications 自 S1 起 account_id NOT NULL)——
+  //   不是「无号退化全量」,而是「逐行自带号」的多号重播;经 ctx 的业务读写
+  //   (searchService)一律 strict 按号。语义与旧 rebuildUserIndex 相同:先整删该 user
+  //   派生索引再重播(幂等、刷新标题、清孤儿)。
   {
-    const startupRebuildCtx: RequestContext = {
-      userId: canonicalDataset.user.id,
-      requestId: "startup-search-rebuild",
-      source: "ingestion",
-    };
     const [dbProjects, dbKnowledge, dbKRevisions, dbAssets, dbPubs, dbPubRevs] =
       await Promise.all([
         db.select().from(projectsTable),
@@ -6897,11 +6880,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         db.select().from(publicationsTable),
         db.select().from(publicationRevisionsTable),
       ]);
-    // buildCanonicalSearchDocuments 投影出的 SearchDocumentRow[](publication 已归一为
-    //   entity_type='video',payload 与读侧对齐)→ 转成 rebuildUserIndex 期望的 RebuildDoc[]
-    //   (只取 entityType/entityId/title/body/searchText/embedding;id/userId/indexedAt 由
-    //   service 重新分配,保证与运行时 upsert 同源)。
-    const rebuildDocs = buildCanonicalSearchDocuments(
+    const rebuildRows = buildCanonicalSearchDocuments(
       {
         user: { id: canonicalDataset.user.id },
         projects: dbProjects.map((p) => ({
@@ -6910,11 +6889,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           brief: p.brief ?? "",
           currentStage: p.currentStage,
           progressPct: p.progressPct ?? 0,
+          accountId: p.accountId, // [T-332 S2] 源行派生号
         })),
         knowledgeItems: dbKnowledge.map((k) => ({
           id: k.id,
           title: k.title,
           currentRevisionId: k.currentRevisionId ?? "",
+          accountId: k.accountId, // [T-332 S2] 源行派生号
         })),
         knowledgeRevisions: dbKRevisions.map((r) => ({
           id: r.id,
@@ -6925,11 +6906,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           id: a.id,
           name: a.name,
           assetType: a.assetType,
+          accountId: a.accountId, // [T-332 S2] 源行派生号
         })),
         publications: dbPubs.map((pub) => ({
           id: pub.id,
           platform: pub.platform,
           currentRevisionId: pub.currentRevisionId ?? null,
+          accountId: pub.accountId, // [T-332 S2] 源行派生号
         })),
         publicationRevisions: dbPubRevs.map((r) => ({
           id: r.id,
@@ -6937,15 +6920,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         })),
       },
       FIXED_NOW_ISO,
-    ).map((row) => ({
-      entityType: row.entityType,
-      entityId: row.entityId,
-      title: row.title,
-      body: row.body,
-      searchText: row.searchText,
-      embedding: (row.embedding as number[]) ?? [],
-    }));
-    await searchService.rebuildUserIndex(startupRebuildCtx, rebuildDocs);
+    );
+    await rebuildSearchIndexSystem(db, canonicalDataset.user.id, rebuildRows);
   }
 
   // [T-050] canonical analytics 种子已退役(快照/留存/观众全挂在已删除的 demo 发布上)。
@@ -7497,7 +7473,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const aiSeedRepo = createAiRepository(db, {
     ...deps,
     userId: canonicalDataset.user.id,
-    accountId: null, // [T-136] seed = 系统默认,不绑号
+    // [T-332 S2] 本 repo 实例只跑 seedModelConfigs/seedAgentConfigs —— 这两张是 **user 级**
+    //   表(model_configurations/agent_configurations,SPEC §3.2「模型配置共享」用户拍板),
+    //   行上无 account 维。RepoDeps.accountId 已收紧为必填 string(为 conversations/tasks
+    //   的 per-account 门),此处给显式占位哨兵:任何误用本实例走会话/任务读写都只会命中
+    //   不存在的号(空集/404),不会串号。
+    accountId: "__seed-user-level-only__",
   });
   await aiSeedRepo.seedModelConfigs(
     buildAiModelConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
@@ -7529,23 +7510,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // Seed the canonical 变现加权 rubric (module 20): one Rubric + its immutable v1
   // RubricVersion (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度,
-  // weights sum to 1.0), owned by the canonical user, so the calibration FE surface +
-  // the Candidate 变现加权 ranking resolve a real current RubricVersion under the seeded
-  // login (foundation §2). Deterministic ids/clock (FIXED_NOW_ISO). seed* are
-  // onConflictDoNothing → a re-built singleton never double-seeds. The version is seeded
-  // first so currentVersionId resolves.
-  const calibrationSeedRepo = createCalibrationRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-    accountId: null, // [T-136] seed = 系统默认,不绑号
-  });
-  const canonicalRubricVersion: CalibrationRubricVersionRow = {
-    id: "rubricver-canonical-1",
-    userId: canonicalDataset.user.id,
-    accountId: null, // [T-136] 默认 rubric = 系统级默认,不绑号(nullable 兜底,§6 MAJOR-3)
-    rubricId: "rubric-canonical",
-    versionNumber: 1,
-    dimensions: [
+  // weights sum to 1.0), so the calibration FE surface + the Candidate 变现加权 ranking
+  // resolve a real current RubricVersion under the seeded login (foundation §2).
+  // [T-332 S2] rubrics 是 per-account 域(SPEC §3.2:每号一套打分口径,NOT NULL):默认
+  // rubric 改为**逐 active 号**种入(id = rubric-canonical:<accountId>,运行时经
+  // canonicalRubricIdFor(ctx) 解析);0 号 → 跳过(绑号时 bootstrapDouyinOnBind 即时补种,
+  // 兜底下次启动再补)。Deterministic ids/clock (FIXED_NOW_ISO);seed* onConflictDoNothing
+  // → 重建单例/重复绑定不双写。version 先种,currentVersionId 才解析得到。
+  const canonicalRubricDimensions = [
       {
         key: "hook",
         label: "钩子强度",
@@ -7588,61 +7560,63 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         description:
           "有几句能被截图、离开视频独立传播。0=全叙述无金句；3=结尾一句；5=多句分布开场/中间/结尾、能在评论与转发里独立存活",
       },
-    ],
-    changeSummary:
-      "v2 借鉴 cheat-on-content 的已校准 rubric：合并传播驱动（钩子/情感/社会/金句）与变现维度（为产品铺路/CTA），每维带 0/3/5 锚点",
-    createdAt: FIXED_NOW_ISO,
+  ];
+  // [T-332 S2] 按号幂等 ensure 默认 rubric(启动逐 active 号 + 绑定编排即时调;两处同一实体)。
+  //   id 约定与 canonicalRubricIdFor(ctx) 恒一致;onConflictDoNothing 幂等。
+  const ensureCanonicalRubricForAccount = async (
+    accountId: string,
+  ): Promise<void> => {
+    const calibrationSeedRepo = createCalibrationRepository(db, {
+      ...deps,
+      userId: canonicalDataset.user.id,
+      accountId,
+    });
+    const versionRow: CalibrationRubricVersionRow = {
+      id: `rubricver-canonical-1:${accountId}`,
+      userId: canonicalDataset.user.id,
+      accountId, // per-account stamp(NOT NULL 终态)
+      rubricId: `rubric-canonical:${accountId}`,
+      versionNumber: 1,
+      dimensions: canonicalRubricDimensions,
+      changeSummary:
+        "v2 借鉴 cheat-on-content 的已校准 rubric：合并传播驱动（钩子/情感/社会/金句）与变现维度（为产品铺路/CTA），每维带 0/3/5 锚点",
+      createdAt: FIXED_NOW_ISO,
+    };
+    const rubricRow: CalibrationRubricRow = {
+      id: `rubric-canonical:${accountId}`,
+      userId: canonicalDataset.user.id,
+      accountId, // per-account stamp(NOT NULL 终态)
+      name: "变现加权评分标准",
+      currentVersionId: versionRow.id,
+      createdAt: FIXED_NOW_ISO,
+    };
+    await calibrationSeedRepo.seedRubricVersions([versionRow]);
+    await calibrationSeedRepo.seedRubrics([rubricRow]);
   };
-  const canonicalRubric: CalibrationRubricRow = {
-    id: "rubric-canonical",
-    userId: canonicalDataset.user.id,
-    accountId: null, // [T-136] 默认 rubric = 系统级默认,不绑号(nullable 兜底,§6 MAJOR-3)
-    name: "变现加权评分标准",
-    currentVersionId: canonicalRubricVersion.id,
-    createdAt: FIXED_NOW_ISO,
-  };
-  await calibrationSeedRepo.seedRubricVersions([canonicalRubricVersion]);
-  await calibrationSeedRepo.seedRubrics([canonicalRubric]);
+  // 启动:逐 active 号补种(存量号/重启幂等);0 号 → 静默跳过(引导态)。best-effort。
+  try {
+    const rubricSeedCtx: RequestContext = {
+      userId: canonicalDataset.user.id,
+      requestId: "seed-canonical-rubric",
+      source: "ingestion",
+    };
+    const { rows: rubricAccounts } = await platformAccountService.listAccounts(
+      rubricSeedCtx,
+      { limit: 100, offset: 0 },
+    );
+    for (const acct of rubricAccounts.filter((a) => a.status === "active")) {
+      await ensureCanonicalRubricForAccount(acct.id);
+    }
+  } catch (rubricSeedErr) {
+    console.warn(
+      "[seed] canonical rubric 按号种入失败(已 ignore,app 仍可启动):",
+      rubricSeedErr instanceof Error ? rubricSeedErr.message : rubricSeedErr,
+    );
+  }
 
-  // Seed canonical 盲预测 + 回流 (module 20, 校准中心大改 Slice 1) so the 校准中心 surface
-  // resolves REAL data: 3 locked predictions carrying the 维度评分约定 jsonb
-  // (predictedConversion.dimensions = 6 维 1–5 评分 + 理由 + 建议; predictedMetrics =
-  // performance chips + 编导诊断), attached to 3 real published content_outputs; + 2
-  // calibration_results so the KPI (completedReflows / avgDeviation / latestFinding) +
-  // 发布后回流对照 + 经验沉淀 have live rows. Deterministic ids/clock (FIXED_NOW_ISO);
-  // ingestionRunId is a synthetic seed reference (the seed repo writes the row directly,
-  // bypassing the service's §C-4 IngestionRun guard — the guard only applies to the live
-  // results.create op). predictedScore is the deterministic 变现加权 weighted-sum (here 0 —
-  // the 1–5 维度评分 lives in the dimensions array, not at the conversion-map top level; the
-  // 1–5 评分 is the primary 校准 signal, predictedScore a secondary aggregate). seed* is
-  // onConflictDoNothing → idempotent across a re-built singleton.
-  const calUser = canonicalDataset.user.id;
-  const calRubricVer = canonicalRubricVersion.id;
-  // 维度评分约定 — one prediction's predictedConversion jsonb (6 维 1–5 + 理由 + 建议).
-  const predDimensions = (
-    scores: Array<[string, number, string, string]>,
-  ) => ({
-    dimensions: scores.map(([key, score, reason, suggestion]) => ({
-      key,
-      score,
-      reason,
-      suggestion,
-    })),
-  });
-  const predMetrics = (
-    perf: [number | null, number | null, number | null, number | null],
-    verdict: string,
-    mainIssues: string[],
-    priorityFixes: string[],
-  ) => ({
-    performance: {
-      完播率: perf[0],
-      收藏率: perf[1],
-      评论率: perf[2],
-      转化意向: perf[3],
-    },
-    diagnosis: { verdict, mainIssues, priorityFixes },
-  });
+  // [T-050][T-332 S2] canonical 盲预测/回流结果种子已随 demo 数据整体退役,其残留的
+  // calUser/calRubricVer/predDimensions/predMetrics 死代码本次一并清除(calRubricVer 曾
+  // 引用旧的系统级 canonicalRubricVersion —— 该常量已被 per-account 默认 rubric 种子取代)。
   // [T-050] canonical 盲预测/回流结果种子已退役(主体 dy-out-* 已随 demo 数据删除;
   // 审计 B30:seed 预测把校准页撕成两个数据世界)。真实预测由用户在校准中心创建。
 
@@ -7892,7 +7866,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const repo = createArtifactRepository(db, {
             ...deps,
             userId: c.userId,
-            accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+            // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+            accountId: requireAccountId(c.accountId, "artifacts.repo"),
           });
           const artifacts = await Promise.all(
             artifactRows.map(async (a) => {
@@ -8130,7 +8105,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const repo = createArtifactRepository(db, {
             ...deps,
             userId: c.userId,
-            accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+            // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+            accountId: requireAccountId(c.accountId, "artifacts.repo"),
           });
           const items = await Promise.all(
             artifactRows.map(async (a) => {
@@ -8194,7 +8170,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const repo = createArtifactRepository(db, {
             ...deps,
             userId: c.userId,
-            accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+            // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+            accountId: requireAccountId(c.accountId, "artifacts.repo"),
           });
           const version = await repo.getVersion(target.currentVersionId);
           const fullText = extractArtifactText(
@@ -8489,7 +8466,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         try {
           const version = await calibrationService.getCurrentRubricVersion(
             c,
-            "rubric-canonical",
+            canonicalRubricIdFor(c), // [T-332 S2] per-account 默认 rubric
           );
           rubric = {
             name: "校准评分标准",

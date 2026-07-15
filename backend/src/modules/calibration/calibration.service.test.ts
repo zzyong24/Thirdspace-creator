@@ -21,7 +21,13 @@ import {
 const NOW = "2026-06-21T00:00:00.000Z";
 
 function ctxFor(userId: string): RequestContext {
-  return { userId, requestId: "req-1", source: "user" } as RequestContext;
+  // [T-332 S2] strict 门下 ctx 必带号(未选号 = 引导态禁读写)。
+  return {
+    userId,
+    requestId: "req-1",
+    source: "user",
+    accountId: `acct-${userId}`,
+  } as RequestContext;
 }
 
 const DIMENSIONS = [

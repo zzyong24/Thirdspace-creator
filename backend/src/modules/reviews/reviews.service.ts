@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createReviewsRepository,
   type ReviewsRepository,
@@ -106,13 +106,14 @@ export interface ReviewsService {
 export function createReviewsService(deps: ServiceDeps): ReviewsService {
   const { db, now, nextId, projects, publishing, analytics } = deps;
 
-  function repoFor(ctx: RequestContext): ReviewsRepository {
-    // [T-136 切片 b] 号维度透传(ctx.accountId 属主已由 resolveRequestContext 校验)。
+  // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
+  // (引导态禁读写),有号则 strict 收窄到该号。op 标注抛点便于前端归因。
+  function repoFor(ctx: RequestContext, op: string): ReviewsRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: ctx.accountId ?? null,
+      accountId: requireAccountId(ctx.accountId, op),
     };
     return createReviewsRepository(db, repoDeps);
   }
@@ -165,7 +166,7 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
 
       // 3. Persist. reportArtifactId is null at creation (the review_report artifact
       //    is linked later via the AI vertical — not in the create body).
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "reviews.createReview");
       const row = await repo.createReview({
         projectId,
         reviewType,
@@ -187,19 +188,19 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
     },
 
     async getReview(ctx, reviewId) {
-      const row = await repoFor(ctx).getReview(reviewId);
+      const row = await repoFor(ctx, "reviews.getReview").getReview(reviewId);
       return toReviewDto(row);
     },
 
     async listReviews(ctx, projectId) {
       // Ownership gate first (cross-user / unknown project → OwnershipError 404).
       await projects.verifyProjectOwned(ctx, projectId);
-      const rows = await repoFor(ctx).listReviewsByProject(projectId);
+      const rows = await repoFor(ctx, "reviews.listReviews").listReviewsByProject(projectId);
       return rows.map(toReviewDto);
     },
 
     async createInsight(ctx, reviewId, body) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "reviews.createInsight");
       // 1. Ownership + state guard: insights only on an in_progress review.
       const review = await repo.getReview(reviewId);
       if (review.status !== "in_progress") {
@@ -226,7 +227,7 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
     },
 
     async completeReview(ctx, reviewId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "reviews.completeReview");
       const review = await repo.getReview(reviewId); // ownership gate
       // Review.status machine (SPEC §12 / roadmap §4):
       //   completed  → idempotent (return existing, no re-stamp)
@@ -252,7 +253,7 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
     },
 
     async listCompletedReviewInsights(ctx, projectId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "reviews.listCompletedReviewInsights");
       const reviews = await repo.listReviewsByProject(projectId);
       const completed = reviews.filter((r) => r.status === "completed");
       const out: ReviewInsightResource[] = [];

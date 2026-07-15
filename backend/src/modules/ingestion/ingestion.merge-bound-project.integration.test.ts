@@ -24,6 +24,7 @@ const ctx: RequestContext = {
   userId: "user-zyongzhu",
   requestId: "r1",
   source: "user",
+  accountId: "acct-zyongzhu", // [T-332 S2]
 };
 
 function deterministicDeps() {
@@ -122,7 +123,7 @@ async function seedDouyinSource(db: Db): Promise<void> {
     {
       id: "src-douyin",
       userId: ctx.userId,
-      accountId: null,
+      accountId: "acct-zyongzhu", // [T-332 S2] 源与 ctx 同号(strict 门)
       sourceType: "douyin",
       name: "抖音",
       sourceIdentifier: "douyin://creator",

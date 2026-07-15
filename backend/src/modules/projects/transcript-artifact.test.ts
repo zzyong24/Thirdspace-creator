@@ -27,6 +27,7 @@ const ctx: RequestContext = {
   userId: "user-zyongzhu",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-zyongzhu", // [T-332 S2]
 };
 const PLATFORM = "douyin";
 
@@ -57,7 +58,7 @@ function wire(db: Db): Wired {
   const artifactsRepo = createArtifactRepository(db, {
     ...deps,
     userId: ctx.userId,
-    accountId: ctx.accountId ?? null, // [T-136 切片 b]
+    accountId: ctx.accountId as string, // [T-332 S2] strict:测试 ctx 恒带号
   });
   const warnings: string[] = [];
 

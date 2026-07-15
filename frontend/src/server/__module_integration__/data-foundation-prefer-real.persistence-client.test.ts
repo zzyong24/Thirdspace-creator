@@ -16,10 +16,14 @@ import { canonicalDataset } from "@/fixtures/canonical";
 // outputs.publications.create(transition published),与 T-001 落库形状一致(source/外发布)。
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
+// [T-332 S2] strict 账号门:projects/publications/calibration 全部 per-account,ctx 必须
+// 带 accountId(未选号 → AccountRequiredError,SPEC §4.2)。同一派生号贯穿种入与三向读,
+// 保证「种的数据」与「dashboard/复盘读到的数据」在同号域内闭环。
 const owner: RequestContext = {
   userId: canonicalDataset.user.id,
   requestId: "req-test",
   source: "user",
+  accountId: `acct-of-${canonicalDataset.user.id}`,
 };
 
 // 一条 seed 的 fixture 抖音作品标题(dy-pub-00 的 revision 标题)—— 兜底分支必须出现它,

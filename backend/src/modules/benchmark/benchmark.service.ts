@@ -9,10 +9,11 @@ import {
   toBenchmarkSourceDto,
   type BenchmarkSourceResource,
 } from "./benchmark.schema";
-import { ValidationError } from "./benchmark.errors";
+import { ValidationError, requireAccountId } from "./benchmark.errors";
 
-// [T-212a] Benchmark service（foundation §5.3）—— 每个公开方法 (ctx, …)，构 repo bound to
-// ctx.userId 使 scoping 结构化。account_id 从 ctx.accountId stamp（按号隔离，T-201）。
+// [T-212a → T-332 S2] Benchmark service（foundation §5.3）—— 每个公开方法 (ctx, …)，构 repo
+// bound to ctx.userId + ctx.accountId 使 scoping 结构化。每个入口经 requireAccountId 断言:
+// 未选号 = 引导态,读写一律 AccountRequiredError(SPEC §4.2,不存在「null = 全量」退化)。
 // 对标源 CRUD（list/create/toggle/remove）+ 采集用只读/写口（listEnabledSources/recordWork）。
 
 export interface ServiceDeps {
@@ -121,27 +122,30 @@ function guardCreate(input: CreateSourceInput): void {
 export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
   const { db, now, nextId } = deps;
 
-  function repoFor(ctx: RequestContext): BenchmarkRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+  function repoFor(ctx: RequestContext, op: string): BenchmarkRepository {
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
+      accountId: requireAccountId(ctx.accountId, op),
+    };
     return createBenchmarkRepository(db, repoDeps);
   }
 
   return {
     async listSources(ctx, query) {
-      const { rows, total } = await repoFor(ctx).listSources(
-        ctx.accountId ?? null,
-        {
-          limit: query.pageSize,
-          offset: (query.page - 1) * query.pageSize,
-        },
-      );
+      const { rows, total } = await repoFor(ctx, "benchmark.listSources").listSources({
+        limit: query.pageSize,
+        offset: (query.page - 1) * query.pageSize,
+      });
       return { rows: rows.map(toBenchmarkSourceDto), total };
     },
 
     async createSource(ctx, input) {
       guardCreate(input);
-      const row = await repoFor(ctx).createSource({
-        accountId: ctx.accountId ?? null,
+      // [T-332 S2] 号由 repo deps stamp(§4.6 防绕过),不再经 input 传递。
+      const row = await repoFor(ctx, "benchmark.createSource").createSource({
         platform: input.platform,
         externalAccountId: input.externalAccountId.trim(),
         nickname: input.nickname ?? null,
@@ -153,17 +157,20 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async toggleSource(ctx, sourceId, enabled) {
-      const row = await repoFor(ctx).setSourceEnabled(sourceId, enabled);
+      const row = await repoFor(ctx, "benchmark.toggleSource").setSourceEnabled(
+        sourceId,
+        enabled,
+      );
       return toBenchmarkSourceDto(row);
     },
 
     async removeSource(ctx, sourceId) {
-      const row = await repoFor(ctx).removeSource(sourceId);
+      const row = await repoFor(ctx, "benchmark.removeSource").removeSource(sourceId);
       return toBenchmarkSourceDto(row);
     },
 
     async listEnabledSources(ctx) {
-      const rows = await repoFor(ctx).listEnabledSources(ctx.accountId ?? null);
+      const rows = await repoFor(ctx, "benchmark.listEnabledSources").listEnabledSources();
       return rows.map((r) => ({
         id: r.id,
         accountId: r.accountId ?? null,
@@ -175,8 +182,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async listPendingViralWorks(ctx, limit = 5) {
-      const rows = await repoFor(ctx).listPendingViral(
-        ctx.accountId ?? null,
+      const rows = await repoFor(ctx, "benchmark.listPendingViralWorks").listPendingViral(
         limit,
       );
       return rows.map((r) => ({
@@ -198,12 +204,12 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async markTeardownDone(ctx, workId) {
-      await repoFor(ctx).markTeardownDone(workId);
+      await repoFor(ctx, "benchmark.markTeardownDone").markTeardownDone(workId);
     },
 
     async recordWork(ctx, input) {
-      const { inserted } = await repoFor(ctx).upsertWork({
-        accountId: ctx.accountId ?? null,
+      // [T-332 S2] 号由 repo deps stamp(采集 runtime ctx 账号由 job 行派生,ISO-06)。
+      const { inserted } = await repoFor(ctx, "benchmark.recordWork").upsertWork({
         sourceId: input.sourceId,
         sourceExternalAccountId: input.sourceExternalAccountId,
         platform: input.platform,

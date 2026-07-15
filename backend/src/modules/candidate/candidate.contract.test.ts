@@ -17,7 +17,13 @@ import { UnsupportedOperationError } from "./candidate.errors";
 // throws UnsupportedOperationError. Mirrors the positioning contract test.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] per-account 域 op 必须带号(未选号在 service 入口 AccountRequiredError)。
+const ctx: RequestContext = {
+  userId: "user-a",
+  requestId: "r1",
+  source: "user",
+  accountId: "acc-a",
+};
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 async function call(
@@ -153,6 +159,7 @@ describe("candidate contract", () => {
       requestId: "ri",
       source: "ingestion",
       ingestionRunId: "run-1",
+      accountId: "acc-a",
     };
     let sigSeq = 0;
     const svc = createCandidateService({

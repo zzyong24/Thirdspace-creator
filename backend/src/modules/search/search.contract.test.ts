@@ -16,18 +16,19 @@ import { globalSearchPage } from "./search.schema";
 // user B's documents never appear in A's groups (foundation §9 smoke).
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user" };
+// [T-332 S2] ctx 一律带号(strict 门下未选号 = 引导态,契约面按已选号跑)。
+const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user", accountId: "acct-b" };
 
 const ep = (id: string) => ({ id, isList: false }) as unknown as Endpoint;
 
-function repoFor(db: Db, userId: string): SearchRepository {
+function repoFor(db: Db, userId: string, accountId = `acct-${userId.replace("user-", "")}`): SearchRepository {
   let seq = 0;
   return createSearchRepository(db, {
     now: () => NOW,
     nextId: (p) => `${p}-${userId}-${++seq}`,
     userId,
-    accountId: null, // [T-136 切片 b] 契约测试走全局视图(不过滤号)
+    accountId, // [T-332 S2] strict 必填(契约测试按每 user 一号跑)
   });
 }
 
@@ -38,7 +39,7 @@ describe("search.transport (pages.search.get contract conformance)", () => {
   beforeEach(async () => {
     ({ db } = await createDb());
     const service = createSearchService(
-      (ctx) => repoFor(db, ctx.userId),
+      (ctx) => repoFor(db, ctx.userId, ctx.accountId ?? undefined),
       { now: () => NOW },
     );
     transport = createSearchTransport(() => service);

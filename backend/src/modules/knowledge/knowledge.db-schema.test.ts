@@ -20,16 +20,17 @@ describe("knowledge db-schema (KNOWLEDGE_DDL round-trip)", () => {
   });
 
   it("knowledge_items round-trips (jsonb source_metadata survives as object)", async () => {
+    // [T-332 S1] account_id NOT NULL 收口后,裸 SQL 夹具必须带号。
     const res = await client.query(`
       INSERT INTO knowledge_items
-        (id, user_id, current_revision_id, knowledge_type, title, source_type,
+        (id, user_id, account_id, current_revision_id, knowledge_type, title, source_type,
          source_url, source_metadata, status, archived_at, source_note,
          created_at, updated_at)
       VALUES
-        ('k-1', 'user-a', 'rev-1', 'note', '标题', 'manual',
+        ('k-1', 'user-a', 'acct-a', 'rev-1', 'note', '标题', 'manual',
          NULL, '{"sampleSize":120}', 'active', NULL, '来源:人工整理',
          '2026-06-21T00:00:00.000Z', '2026-06-21T00:00:00.000Z')
-      RETURNING id, user_id, current_revision_id, knowledge_type, title,
+      RETURNING id, user_id, account_id, current_revision_id, knowledge_type, title,
                 source_type, source_url, source_metadata, status, archived_at,
                 source_note, created_at, updated_at;
     `);
@@ -37,6 +38,7 @@ describe("knowledge db-schema (KNOWLEDGE_DDL round-trip)", () => {
     const row = res.rows[0] as Record<string, unknown>;
     expect(row.id).toBe("k-1");
     expect(row.user_id).toBe("user-a");
+    expect(row.account_id).toBe("acct-a");
     expect(row.current_revision_id).toBe("rev-1");
     expect(row.knowledge_type).toBe("note");
     expect(row.source_url).toBeNull();

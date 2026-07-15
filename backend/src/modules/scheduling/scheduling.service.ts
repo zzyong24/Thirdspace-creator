@@ -96,16 +96,25 @@ export interface SchedulingService {
     jobId: string,
     enabled: boolean,
   ): Promise<ScheduledJobResource>;
-  // [T-200] 认领存量无号 job 给 ctx.accountId(修 0030 前建的旧 job 的串号)。返回改动行数。
-  //   ctx.accountId 缺省(未选号)→ 直接返回 0(无号可认领,不动数据)。
-  claimOrphanJobs(ctx: RequestContext): Promise<number>;
+  // [T-332 S2 · ISO-06] 系统 daemon 专用:cron 调度器跨号枚举该 user 全部 job(触发时逐 job
+  //   用其 account_id 派生采集 ctx)。显式命名,非隐式全量;用户面 op 一律走 listJobs(strict)。
+  listJobsSystem(
+    ctx: RequestContext,
+    query: ListJobsQuery,
+  ): Promise<{ rows: ScheduledJobResource[]; total: number }>;
 
   // job_run — the thin trigger record. createRun/updateRun are the base write methods the
   // scheduler (D3) drives; getRun/listRunsByJob back the contract read ops. All ownership
   // -gated (createRun/listRunsByJob ride requireJob).
+  // [T-332 S2 · GAP-08] scheduledFor:cron 到点触发传计划 tick 的分钟 ISO;「立即运行」不传。
   createRun(
     ctx: RequestContext,
-    input: { jobId: string; aiTaskId?: string | null; status?: string },
+    input: {
+      jobId: string;
+      aiTaskId?: string | null;
+      status?: string;
+      scheduledFor?: string | null;
+    },
   ): Promise<JobRunResource>;
   getRun(ctx: RequestContext, runId: string): Promise<JobRunResource>;
   listRunsByJob(
@@ -127,7 +136,14 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
   const { db, now, nextId } = deps;
 
   function repoFor(ctx: RequestContext): SchedulingRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    // [T-332 S2] accountId 透传进 repo(strict 双维门在 repo 内落地:用户路径未选号 → 抛
+    //   AccountRequiredError;null 仅系统 daemon 路径合法,见 RepoDeps 注释)。
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      accountId: ctx.accountId ?? null,
+    };
     return createSchedulingRepository(db, repoDeps);
   }
 
@@ -145,15 +161,15 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
         target: input.target ?? {},
         schedule: input.schedule,
         toolGrants: input.toolGrants ?? [],
-        // [T-200] 建 job 时 stamp 当前号(从 ctx 透传);未选号 → null(退化)。
-        accountId: ctx.accountId ?? null,
+        // [T-332 S2] 属主号由 repo 从 deps.accountId stamp(§4.6 防绕过);未选号 → 抛。
       });
       return toScheduledJobDto(row);
     },
 
-    async claimOrphanJobs(ctx) {
-      if (!ctx.accountId) return 0; // 未选号:无号可认领
-      return repoFor(ctx).claimOrphanJobs(ctx.accountId);
+    async listJobsSystem(ctx, query) {
+      // [T-332 S2 · ISO-06] 系统跨号枚举(cron 调度器):不经账号门;触发时逐 job 派生账号 ctx。
+      const { rows, total } = await repoFor(ctx).listJobsAllAccountsSystem(query);
+      return { rows: rows.map(toScheduledJobDto), total };
     },
 
     async getJob(ctx, jobId) {
@@ -182,6 +198,8 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
         jobId: input.jobId,
         aiTaskId: input.aiTaskId ?? null,
         status: input.status,
+        // [GAP-08] 计划触发锚透传(cron 到点才有;「立即运行」缺省 null)。
+        scheduledFor: input.scheduledFor ?? null,
       });
       return toJobRunDto(row);
     },
@@ -196,6 +214,8 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async listRunningRuns(ctx) {
+      // [T-332 S2 · ISO-06] 系统 sweep 专用(启动扫超时):job_run 父锚继承,系统路径仅按
+      //   userId 收窄(见 repo.listRunsByStatus 注释);用户面 run 读走 listRunsByJob(经父门)。
       const rows = await repoFor(ctx).listRunsByStatus("running");
       return rows.map(toJobRunDto);
     },

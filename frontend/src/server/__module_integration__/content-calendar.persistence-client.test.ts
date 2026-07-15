@@ -19,10 +19,19 @@ import { CONTENT_CALENDAR_OP_IDS } from "@creatoros/backend/modules/content-cale
 // 里先由 owner 自建一条账号(公开 accounts.create op),再用它的 id 当 accountId。
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;
-const ctx = (userId: string): RequestContext => ({
+// [T-332 S2] strict 账号门 + 号一致性门(SPEC §4.2/§4.5):日历 op 的 params.accountId
+// 必须等于 ctx.accountId(assertCurrentAccount),且账号须真实存在(ownership gate 走真
+// PlatformAccountService)。故先建真账号,再用 onAccount 把该号落进 ctx 当「当前选中号」。
+const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
+  accountId,
+});
+// 把真建出来的账号 id 设为 ctx 当前号(写路径 stamp / 号一致性门都取自它)。
+const onAccount = (base: RequestContext, accountId: string): RequestContext => ({
+  ...base,
+  accountId,
 });
 const WINDOW = { from: "2026-07-01T00:00:00.000Z", to: "2026-07-31T00:00:00.000Z" };
 
@@ -62,6 +71,8 @@ describe("content-calendar ops registered in the composite transport", () => {
   it("entries.create round-trips: the new entry is then listable in window", async () => {
     const owner = ctx(canonicalDataset.user.id);
     const ACC = await createAccount(owner);
+    // [T-332 S2] 号一致性门:params.accountId 必须 = ctx.accountId → 后续调用切到真建号。
+    const ownerOnAcc = onAccount(owner, ACC);
     const created = (await compositeTransport.request(
       ep("accounts.calendar.entries.create"),
       {
@@ -69,7 +80,7 @@ describe("content-calendar ops registered in the composite transport", () => {
         query: undefined,
         body: { plannedAt: "2026-07-21T09:00:00.000Z", note: "smoke" },
       } as never,
-      owner,
+      ownerOnAcc,
     )) as { data: { id: string; status: string; accountId: string } };
     expect(created.data.status).toBe("planned");
     expect(created.data.accountId).toBe(ACC);
@@ -81,7 +92,7 @@ describe("content-calendar ops registered in the composite transport", () => {
         query: { ...WINDOW, page: 1, pageSize: 50 },
         body: undefined,
       } as never,
-      owner,
+      ownerOnAcc,
     )) as { data: Array<{ id: string; userId: string }> };
     expect(list.data.some((r) => r.id === created.data.id)).toBe(true);
     for (const row of list.data) {

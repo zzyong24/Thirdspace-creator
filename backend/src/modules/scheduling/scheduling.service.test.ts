@@ -5,16 +5,37 @@ import {
   createSchedulingService,
   type SchedulingService,
 } from "./scheduling.service";
-import { OwnershipError } from "./scheduling.errors";
+import { OwnershipError, AccountRequiredError } from "./scheduling.errors";
 
-// Scheduling service test (T-007 D1) — the service builds a user-scoped repo per request
-// (repoFor bakes ctx.userId). Proves: create/list/get/update/setEnabled land the right
-// state + DTO shape; job_run createRun/getRun/listRunsByJob ride requireJob; a cross-user
-// ctx sees nothing (OwnershipError → 404). now/nextId are injected stubs (deterministic).
+// Scheduling service test (T-007 D1 → T-332 S2) — the service builds a (user, account)
+// 双维 scoped repo per request(repoFor bakes ctx.userId + ctx.accountId)。Proves:
+// create/list/get/update/setEnabled land the right state + DTO shape; job_run
+// createRun/getRun/listRunsByJob ride requireJob; a cross-user ctx sees nothing
+// (OwnershipError → 404);未选号 → AccountRequiredError(引导态);双账号 strict 隔离;
+// 系统枚举走显式 listJobsSystem。now/nextId are injected stubs (deterministic).
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user" };
+const ctxA: RequestContext = {
+  userId: "user-a",
+  requestId: "r1",
+  source: "user",
+  accountId: "acct-a",
+};
+const ctxB: RequestContext = {
+  userId: "user-b",
+  requestId: "r2",
+  source: "user",
+  accountId: "acct-b",
+};
+// 同 user-a 的第二个号(双账号 strict 隔离用)。
+const ctxA2: RequestContext = {
+  userId: "user-a",
+  requestId: "r3",
+  source: "user",
+  accountId: "acct-a2",
+};
+// 未选号(引导态)。
+const ctxNoAcct: RequestContext = { userId: "user-a", requestId: "r4", source: "user" };
 
 function makeService(db: Db): SchedulingService {
   let seq = 0;
@@ -41,6 +62,7 @@ describe("scheduling service", () => {
     });
     expect(job).toMatchObject({
       userId: "user-a",
+      accountId: "acct-a", // [T-332 S2] 属主号从 ctx stamp(§4.6)
       name: "每天抓我评论",
       prompt: "",
       sourceKind: "comments",
@@ -179,5 +201,77 @@ describe("scheduling service", () => {
     await expect(
       svc.updateRun(ctxB, run.id, { status: "failed" }),
     ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("[T-332 S2] 未选号 → 用户面 job 读写一律抛 AccountRequiredError(引导态)", async () => {
+    await expect(
+      svc.createJob(ctxNoAcct, {
+        name: "j",
+        sourceKind: "self.metrics",
+        schedule: "0 9 * * *",
+      }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      svc.listJobs(ctxNoAcct, { limit: 100, offset: 0 }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(svc.getJob(ctxNoAcct, "any")).rejects.toBeInstanceOf(
+      AccountRequiredError,
+    );
+  });
+
+  it("[T-332 S2] 双账号 strict 隔离:A 号 job 对 A2 号不可见;by-id 跨号 404;系统枚举跨号全见", async () => {
+    const jobA = await svc.createJob(ctxA, {
+      name: "A 号作业",
+      sourceKind: "self.metrics",
+      schedule: "0 9 * * *",
+    });
+    const jobA2 = await svc.createJob(ctxA2, {
+      name: "A2 号作业",
+      sourceKind: "self.metrics",
+      schedule: "0 9 * * *",
+    });
+
+    const listA = await svc.listJobs(ctxA, { limit: 100, offset: 0 });
+    expect(listA.rows.map((r) => r.id)).toEqual([jobA.id]);
+    const listA2 = await svc.listJobs(ctxA2, { limit: 100, offset: 0 });
+    expect(listA2.rows.map((r) => r.id)).toEqual([jobA2.id]);
+
+    // by-id 跨号(§4.5)→ 404 语义。
+    await expect(svc.getJob(ctxA2, jobA.id)).rejects.toBeInstanceOf(OwnershipError);
+
+    // [ISO-06] 系统枚举(cron 调度器)显式走 listJobsSystem → 该 user 两号 job 全见。
+    const sysCtx: RequestContext = {
+      userId: "user-a",
+      requestId: "scheduler",
+      source: "ingestion",
+    };
+    const all = await svc.listJobsSystem(sysCtx, { limit: 100, offset: 0 });
+    expect(new Set(all.rows.map((r) => r.id))).toEqual(new Set([jobA.id, jobA2.id]));
+  });
+
+  it("[T-332 S2 · GAP-08] createRun 透传 scheduledFor 落库(cron 锚;DTO 不外露,读回行核验)", async () => {
+    const job = await svc.createJob(ctxA, {
+      name: "j",
+      sourceKind: "self.metrics",
+      schedule: "0 9 * * *",
+    });
+    const anchored = await svc.createRun(ctxA, {
+      jobId: job.id,
+      scheduledFor: "2026-06-21T09:00:00.000Z",
+    });
+    const manual = await svc.createRun(ctxA, { jobId: job.id });
+    // scheduled_for 是内部幂等锚(不在 contract DTO 里,S3 再议外露)→ 直接读行核验落库。
+    const { createSchedulingRepository } = await import("./scheduling.repository");
+    let seq = 0;
+    const repo = createSchedulingRepository(db, {
+      now: () => NOW,
+      nextId: (p: string) => `${p}-verify-${++seq}`,
+      userId: "user-a",
+      accountId: "acct-a",
+    });
+    expect((await repo.getRun(anchored.id)).scheduledFor).toBe(
+      "2026-06-21T09:00:00.000Z",
+    );
+    expect((await repo.getRun(manual.id)).scheduledFor).toBeNull();
   });
 });

@@ -6,7 +6,11 @@ import {
   deriveSourceType,
   type TrendSourcesService,
 } from "./trend-sources.service";
-import { OwnershipError, ValidationError } from "./trend-sources.errors";
+import {
+  OwnershipError,
+  ValidationError,
+  AccountRequiredError,
+} from "./trend-sources.errors";
 
 // [T-235b] TrendSources service 单测(fake now/nextId, pglite db,照 benchmark.service.test 范式)——
 // 信源 CRUD 可见性、URL 归一/类型派生、幂等 create、toggle/remove ownership 404-class、按号隔离。
@@ -113,5 +117,59 @@ describe("trend-sources service", () => {
     expect((await svc.listSources(ctxB, PAGE)).total).toBe(0);
     await svc.removeSource(ctxA, s.id);
     expect((await svc.listSources(ctxA, PAGE)).total).toBe(0);
+  });
+
+  // ── [T-332 S2] 账号全域隔离:_v2 唯一键回归 + 未选号引导态 ──
+  describe("账号维度唯一键与未选号 (T-332 S2)", () => {
+    const ctxA1: RequestContext = {
+      userId: "user-a",
+      requestId: "ra1",
+      source: "user",
+      accountId: "acct-1",
+    };
+    const ctxA2: RequestContext = {
+      userId: "user-a",
+      requestId: "ra2",
+      source: "user",
+      accountId: "acct-2",
+    };
+    const noAcct: RequestContext = { userId: "user-a", requestId: "rn", source: "user" };
+
+    it("同 user 两个号登记同一 URL → 各自成行互不改写;同号重复登记仍幂等命中 _v2 键", async () => {
+      const s1 = await svc.createSource(ctxA1, { url: "https://x.com/hot", name: "号1名" });
+      const s2 = await svc.createSource(ctxA2, { url: "https://x.com/hot", name: "号2名" });
+      expect(s2.id).not.toBe(s1.id); // 旧 (user, url) 键下这里会 upsert 改写号1
+      // 同号重复 → upsert 更新(不新建),证明 ON CONFLICT 真命中 _v2 索引。
+      const s1again = await svc.createSource(ctxA1, { url: "https://x.com/hot", name: "号1新名" });
+      expect(s1again.id).toBe(s1.id);
+      expect(s1again.name).toBe("号1新名");
+      // 号2 未被号1 的重复登记改写,各号各见一条。
+      const { rows: rows2 } = await svc.listSources(ctxA2, PAGE);
+      expect(rows2).toHaveLength(1);
+      expect(rows2[0]!.name).toBe("号2名");
+      expect((await svc.listSources(ctxA1, PAGE)).total).toBe(1);
+    });
+
+    it("同 user 跨号 toggle/remove → OwnershipError(号一致性门,§4.5)", async () => {
+      const s1 = await svc.createSource(ctxA1, { url: "https://gate.com/a" });
+      await expect(svc.toggleSource(ctxA2, s1.id, false)).rejects.toBeInstanceOf(
+        OwnershipError,
+      );
+      await expect(svc.removeSource(ctxA2, s1.id)).rejects.toBeInstanceOf(
+        OwnershipError,
+      );
+    });
+
+    it("未选号 → 读写均 AccountRequiredError(引导态,禁读写)", async () => {
+      await expect(
+        svc.createSource(noAcct, { url: "https://no.com/a" }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+      await expect(svc.listSources(noAcct, PAGE)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(svc.listEnabledSources(noAcct)).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+    });
   });
 });

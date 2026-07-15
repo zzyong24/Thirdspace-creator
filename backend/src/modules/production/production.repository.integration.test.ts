@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db, eq } from "@creatoros/backend";
+import { createDb, type Db, eq, projects, contentOutputs } from "@creatoros/backend";
 import {
   productions,
   productionSegments,
@@ -23,7 +23,7 @@ const A = "user-a";
 const B = "user-b";
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function deterministicDeps(userId: string) {
+function deterministicDeps(userId: string, accountId: string | null = `acct-${userId}`) {
   const counters = new Map<string, number>();
   return {
     now: () => NOW,
@@ -34,8 +34,63 @@ function deterministicDeps(userId: string) {
       return `${prefix}-${userId}-${n}`;
     },
     userId,
+    accountId, // [T-332 S2] 父锚账号维度(strict)
   };
 }
+
+// [T-332 S2] 父锚种子:production 的读写都要经 content_output → project 的 strict 门,
+// 测试先种宿主 project + content_output(带号),再操作 production。
+async function seedOutput(
+  db: Db,
+  outputId: string,
+  userId: string,
+  accountId: string,
+): Promise<void> {
+  const projectId = `proj-of-${outputId}`;
+  await db
+    .insert(projects)
+    .values({
+      id: projectId,
+      userId,
+      accountId,
+      title: "宿主项目",
+      brief: "",
+      briefDetail: {},
+      contentCategory: "",
+      source: "manual",
+      platformRef: {},
+      creationMode: "guided",
+      status: "active",
+      currentStage: "production",
+      progressPct: 0,
+      starred: false,
+      startedAt: NOW,
+      targetCompletedAt: null,
+      completedAt: null,
+      archivedAt: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+  await db
+    .insert(contentOutputs)
+    .values({
+      id: outputId,
+      projectId,
+      title: "宿主产出",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: null,
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    .onConflictDoNothing();
+}
+
 
 let db: Db;
 let repoA: ProductionRepository;
@@ -43,6 +98,8 @@ let repoA: ProductionRepository;
 beforeEach(async () => {
   ({ db } = await createDb());
   repoA = createProductionRepository(db, deterministicDeps(A));
+  // 宿主链:user-a / acct-user-a 名下的 output-1(父锚门要求真实存在且归属当前号)。
+  await seedOutput(db, "output-1", A, `acct-${A}`);
 });
 
 describe("production.repository — schema round-trip (Step 1)", () => {
@@ -124,6 +181,29 @@ describe("production.repository — ownership (Step 2)", () => {
     await expect(
       repoB.getProductionByOutput("output-1"),
     ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("[T-332 S2] 同 user 跨号 by-id/by-output → OwnershipError 404(父锚号一致性门)", async () => {
+    const prod = await repoA.ensureProductionForOutput("output-1");
+    // 同 user、另一个号的 repo:读不到 acct-user-a 项目下的 production。
+    const repoA2 = createProductionRepository(db, deterministicDeps(A, "acct-2"));
+    await expect(
+      repoA2.getProductionByOutput("output-1"),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    await expect(repoA2.getProductionById(prod.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    await expect(
+      repoA2.ensureProductionForOutput("output-1"),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("[T-332 S2] 未选号(accountId=null)→ AccountRequiredError(引导态禁读写)", async () => {
+    await repoA.ensureProductionForOutput("output-1");
+    const repoNoAcct = createProductionRepository(db, deterministicDeps(A, null));
+    await expect(
+      repoNoAcct.getProductionByOutput("output-1"),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
   });
 
   it("user B cannot complete user A's export", async () => {

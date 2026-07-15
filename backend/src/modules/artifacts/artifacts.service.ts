@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createArtifactRepository,
   type ArtifactRepository,
@@ -138,33 +138,34 @@ export interface ArtifactsService {
 }
 
 export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
-  function repoFor(ctx: RequestContext): ArtifactRepository {
+  // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
+  // (引导态禁读写),有号则 strict 收窄到该号。op 标注抛点便于前端归因。
+  function repoFor(ctx: RequestContext, op: string): ArtifactRepository {
     return createArtifactRepository(deps.db, {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      // [T-136 切片 b] 按号隔离维度透传;未选号/全局视图为 null(§E 退化)。
-      accountId: ctx.accountId ?? null,
+      accountId: requireAccountId(ctx.accountId, op),
     });
   }
 
   return {
     async listProjectArtifacts(ctx, projectId) {
-      return repoFor(ctx).listByProject(projectId);
+      return repoFor(ctx, "artifacts.listProjectArtifacts").listByProject(projectId);
     },
 
     async getArtifact(ctx, artifactId) {
-      return repoFor(ctx).requireArtifact(artifactId);
+      return repoFor(ctx, "artifacts.getArtifact").requireArtifact(artifactId);
     },
 
     async createArtifact(ctx, input) {
       // origin threads straight to the repo (default null ≡ 'user'; auto-fill
       // passes 'reconstructed' — F1, SPEC §4.5).
-      return repoFor(ctx).create(input);
+      return repoFor(ctx, "artifacts.createArtifact").create(input);
     },
 
     async createVersion(ctx, artifactId, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "artifacts.createVersion");
       // [T-183] 改稿 delta 捕捉:在 append 重指针「前」先抓「前一版 = 当前版」快照(内容 +
       // createdByType),用于判定「AI 产出 → 用户手改」并算 before→after 差异。best-effort:
       // 仅在 recordEditDelta seam 已接线时才读,失败不影响主流程。
@@ -230,20 +231,20 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     },
 
     async listVersions(ctx, artifactId) {
-      return repoFor(ctx).listVersions(artifactId);
+      return repoFor(ctx, "artifacts.listVersions").listVersions(artifactId);
     },
 
     async restoreVersion(ctx, artifactId, versionId) {
-      return repoFor(ctx).restore(artifactId, versionId);
+      return repoFor(ctx, "artifacts.restoreVersion").restore(artifactId, versionId);
     },
 
     async createRelation(ctx, artifactId, input) {
       // Both ends owned is enforced by the repo (cross-user → OwnershipError 404).
-      return repoFor(ctx).createRelation(artifactId, input);
+      return repoFor(ctx, "artifacts.createRelation").createRelation(artifactId, input);
     },
 
     async replaceStructuredContent(ctx, artifactId, artifactVersionId, payload) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "artifacts.replaceStructuredContent");
       // Ownership gate + immutable-plan guard: structured content is only ever
       // written against the artifact's CURRENT version (roadmap §5 callout 5).
       const artifact = await repo.requireArtifact(artifactId);
@@ -259,11 +260,11 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     async getScriptSections(ctx, artifactVersionId) {
       // Ownership is transitive via the version's parent; this read is scoped to
       // the version id (callers reach it only after an owned getArtifact).
-      return repoFor(ctx).getScriptSections(artifactVersionId);
+      return repoFor(ctx, "artifacts.getScriptSections").getScriptSections(artifactVersionId);
     },
 
     async assertArtifactOwned(ctx, artifactId) {
-      return repoFor(ctx).requireArtifact(artifactId);
+      return repoFor(ctx, "artifacts.assertArtifactOwned").requireArtifact(artifactId);
     },
   };
 }

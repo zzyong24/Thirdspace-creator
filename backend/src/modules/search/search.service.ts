@@ -1,4 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
+import { requireAccountId } from "@creatoros/backend";
 import type {
   SearchRepository,
   SearchDocumentRow,
@@ -192,8 +193,13 @@ export function createSearchService(
   repoForCtx: (ctx: RequestContext) => SearchRepository,
   _deps: ServiceDeps,
 ): SearchService {
+  // [T-332 S2 · SPEC §4.2] 未选号 = 引导态,搜索面禁读写:每个经 ctx 的入口先断言
+  // ctx.accountId 非空(缺失 → AccountRequiredError,前端译成绑定引导)。search_history
+  // 虽是 user 级表,但它只经搜索面到达,同门处理(不给引导态留旁路)。系统重建走
+  // rebuildSearchIndexSystem(search.seed.ts),不经这里。
   return {
     async upsertDocument(ctx, input) {
+      requireAccountId(ctx.accountId, "search.upsertDocument");
       const repo = repoForCtx(ctx);
       const row = await repo.upsertDocument({
         entityType: input.entityType,
@@ -207,17 +213,20 @@ export function createSearchService(
     },
 
     async removeDocument(ctx, entityType, entityId) {
+      requireAccountId(ctx.accountId, "search.removeDocument");
       // Idempotent: the repo DELETE is a no-op when the (user-scoped) doc is
       // absent. Removal of DERIVED data never errors on "not found".
       await repoForCtx(ctx).removeDocument(entityType, entityId);
     },
 
     async search(ctx, query, opts) {
+      requireAccountId(ctx.accountId, "search.search");
       const rows = await repoForCtx(ctx).search(query, opts);
       return rows.map(toResource);
     },
 
     async hybridSearch(ctx, query, opts) {
+      requireAccountId(ctx.accountId, "search.hybridSearch");
       const trimmed = query.trim();
       if (trimmed === "") return [];
       const repo = repoForCtx(ctx);
@@ -262,11 +271,13 @@ export function createSearchService(
     },
 
     async listDocumentsByEntityType(ctx, entityType) {
+      requireAccountId(ctx.accountId, "search.listDocumentsByEntityType");
       const rows = await repoForCtx(ctx).listByEntityType(entityType);
       return rows.map(toResource);
     },
 
     async facets(ctx, query) {
+      requireAccountId(ctx.accountId, "search.facets");
       const normalized = query.trim();
       // Empty/whitespace query ⇒ all buckets empty (mirrors search()'s guard;
       // the repo also short-circuits, so this is belt-and-suspenders).
@@ -293,6 +304,7 @@ export function createSearchService(
     },
 
     async recordSearch(ctx, input) {
+      requireAccountId(ctx.accountId, "search.recordSearch");
       // Index/history failure must NEVER roll back the owning module's write
       // (SPEC §16/§11). Swallow the repo error into a retryable record instead of
       // throwing — the caller (the read transport) ignores the outcome and the
@@ -314,9 +326,10 @@ export function createSearchService(
     },
 
     async rebuildUserIndex(ctx, docs) {
+      requireAccountId(ctx.accountId, "search.rebuildUserIndex");
       const repo = repoForCtx(ctx);
-      // Drop the user's whole index then re-upsert — the index is derived and
-      // rebuildable (SPEC §16). All under ctx.userId (the repo is user-scoped).
+      // [T-332 S2] 语义收窄:strict repo 下这里重建的是**当前号**的索引切片(删当前号
+      // 文档、以当前号 stamp 重播)。跨全用户的多号重建走 rebuildSearchIndexSystem。
       await repo.deleteAllDocuments();
       for (const doc of docs) {
         await repo.upsertDocument({
@@ -332,6 +345,7 @@ export function createSearchService(
     },
 
     async listHistory(ctx, limit) {
+      requireAccountId(ctx.accountId, "search.listHistory");
       return repoForCtx(ctx).listHistory(limit);
     },
   };

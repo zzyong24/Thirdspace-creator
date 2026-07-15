@@ -31,7 +31,7 @@ import {
 // (per-item for isList). A returning call == DTO conformance (foundation §5.4).
 
 const NOW = "2026-06-13T02:00:00.000Z";
-const ctx: RequestContext = { userId: "user-1", requestId: "req-1", source: "user" };
+const ctx: RequestContext = { userId: "user-1", requestId: "req-1", source: "user", accountId: "acct-1" };
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
 
 function deterministicDeps() {

@@ -18,7 +18,14 @@ import { UnsupportedOperationError } from "./content-calendar.errors";
 
 const NOW = "2026-07-20T00:00:00.000Z";
 const ACC = "acct-1";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] service 入口 requireAccountId + 号一致性门:ctx 带当前号,且与路由
+// 参数 accountId 一致。
+const ctx: RequestContext = {
+  userId: "user-a",
+  accountId: ACC,
+  requestId: "r1",
+  source: "user",
+};
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 async function call(
@@ -130,9 +137,13 @@ describe("content-calendar contract", () => {
   });
 
   it("accounts.cadence.get → publishingCadenceResource (nullable; null when none)", async () => {
-    const none = await call(transport, "accounts.cadence.get", {
-      params: { accountId: "acct-none" },
-    });
+    // [T-332 S2] 号一致性门:查「无节奏」的号也必须是 ctx 当前号 → 用带该号的 ctx。
+    const none = await call(
+      transport,
+      "accounts.cadence.get",
+      { params: { accountId: "acct-none" } },
+      { ...ctx, accountId: "acct-none" },
+    );
     expect(ENDPOINTS.getCadence.response.parse(none.data)).toBeNull();
 
     await call(transport, "accounts.cadence.upsert", {

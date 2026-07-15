@@ -4,8 +4,6 @@ import {
   desc,
   eq,
   inArray,
-  isNull,
-  or,
   sql,
   type Db,
 } from "@creatoros/backend";
@@ -16,12 +14,14 @@ import {
   audienceSnapshots,
 } from "./analytics.db-schema";
 
-// Analytics repository (foundation §5.2) — user-scoped queries ONLY. The
-// denormalized `user_id` lives on EVERY metric row; every read filters
-// `eq(table.userId, userId)` and every write stamps `userId`. Unlike the
-// publishing/knowledge repos, `userId` is NOT baked into deps — it is passed PER
-// CALL (the plan's RepoDeps shape minus the per-repo userId), because the metric
-// store is append-only and shared across the service's read/write seams.
+// Analytics repository (foundation §5.2) — user + account 双维 scoped queries ONLY.
+// The denormalized `user_id` AND `account_id` live on EVERY metric row; every read
+// filters `eq(table.userId, userId) AND eq(table.accountId, accountId)`(strict,
+// T-332 S2 —— 旧「当前号 OR account_id IS NULL」lenient 门已随用户拍板 ② 退役)and
+// every write stamps both. Unlike the publishing/knowledge repos, `userId` /
+// `accountId` are NOT baked into deps — they are passed PER CALL(accountId 必填
+// string,由 service 层 requireAccountId 断言后传入;未选号根本到不了 repo), because
+// the metric store is append-only and shared across the service's read/write seams.
 //
 // Append is IDEMPOTENT (SPEC §22): `INSERT … ON CONFLICT (publication_id, source,
 // captured_at) DO NOTHING RETURNING *`; when nothing comes back the snapshot
@@ -54,10 +54,10 @@ export interface AppendSnapshotInput {
   source: string;
   rawMetrics?: Record<string, unknown>;
   values?: ReadonlyArray<AppendValueInput>;
-  // [T-136 §D 切片 c] 采集结果按号 stamp —— metric_snapshots / metric_values 归到「哪个号」。
-  //   service 从 ctx.accountId 透传;null = 未选号 / 存量兜底(nullable 稳定终态)。读侧(复盘/
-  //   看板)按号隔离归切片 d/消费面,此处只保证写 stamp(采集数据无号归属 = 切号看不到)。
-  accountId?: string | null;
+  // [T-332 S2] 采集结果按号 stamp(strict)—— metric_snapshots / metric_values 归到「哪个号」。
+  //   必填:service 层经 requireAccountId(input.accountId ?? ctx.accountId) 断言后传入,
+  //   不存在「null = 未选号兜底」的写路径(schema 已 NOT NULL,S1 收口)。
+  accountId: string;
 }
 
 export interface Page<T> {
@@ -93,20 +93,24 @@ export interface AnalyticsRepository {
     userId: string,
     input: AppendSnapshotInput,
   ): Promise<{ snapshot: MetricSnapshotRow; created: boolean }>;
+  // [T-332 S2] 所有读一律 user + account 双维 strict(accountId 必填,service 断言后传入)。
   listSnapshotsByPublication(
     userId: string,
+    accountId: string,
     publicationId: string,
     page: number,
     pageSize: number,
   ): Promise<Page<MetricSnapshotRow>>;
   listSnapshotsByProject(
     userId: string,
+    accountId: string,
     publicationIds: ReadonlyArray<string>,
     page: number,
     pageSize: number,
   ): Promise<Page<MetricSnapshotRow>>;
   listValuesBySnapshot(
     userId: string,
+    accountId: string,
     metricSnapshotId: string,
   ): Promise<MetricValueRow[]>;
   // GAP-DASH-2 — user-scoped aggregate read over metric_snapshots ONLY. For each
@@ -120,30 +124,25 @@ export interface AnalyticsRepository {
    * 播放,按日求和后与前一日差分 = 当日新增播放。第一天无前日基线不产点;有效
    * 天数 < 2 → 空数组(上层显引导,不编固定形状假曲线)。
    */
-  // [T-326 DATA-H01] 聚合读贯穿 accountId(语义 =「当前号 OR 未标记」:有号 →
-  // (account_id = 号 OR account_id IS NULL),存量 NULL 快照不消失;无号/缺省 → 全量
-  // user-scoped,现状不变)。写侧 stamp(appendSnapshot)早已按号;此前读侧只按 user →
-  // 两个号的趋势/dashboard 混读,本参数补上读门。by-id 读(listSnapshotsByPublication /
-  // listSnapshotsByProject / listValuesBySnapshot)不加号门:publication id 已经过 Publishing
-  // 的所有权/按号解析,一条 publication 的快照不可能跨号混。
+  // [T-332 S2] 聚合读贯穿 accountId(strict eq,必填):两个号的趋势/dashboard 绝不混读。
+  // 旧「当前号 OR 未标记(IS NULL)」lenient 语义及「无号 → 全量」退化均已退役(拍板 ②)。
+  // by-id 读(listSnapshotsByPublication / listSnapshotsByProject / listValuesBySnapshot)
+  // 同样叠 strict 号门:与 strict 列表保持同一语义面,不留「列表看不见但 by-id 能读」裂缝。
+  // 空集语义:当前号无数据 → 返回空数组([]),不产 NULL(聚合在 JS 层 reduce,无 SQL
+  // sum/avg 的 NULL 行为)。
   getDailyPlayTrend(
     userId: string,
+    accountId: string,
     publicationIds: readonly string[] | undefined,
     days: number,
-    accountId?: string | null,
   ): Promise<Array<{ day: string; plays: number }>>;
 
+  // 空集语义:当前号无快照 → all-zero rollup(snapshotCount 0),字段全 0,不产 NULL。
   getDashboardRollup(
     userId: string,
-    publicationIds?: readonly string[],
-    accountId?: string | null,
-  ): Promise<DashboardRollup>;
-  // [T-200] 认领存量 account_id IS NULL 的 metric_snapshots + metric_values 给 accountId
-  //   (该 user 名下)。修采集在无号 ctx 下落的 null 号(串号根因)。幂等;返回 { snapshots, values }。
-  claimOrphanMetrics(
-    userId: string,
     accountId: string,
-  ): Promise<{ snapshots: number; values: number }>;
+    publicationIds?: readonly string[],
+  ): Promise<DashboardRollup>;
 }
 
 export function createAnalyticsRepository(
@@ -151,27 +150,6 @@ export function createAnalyticsRepository(
   deps: RepoDeps,
 ): AnalyticsRepository {
   return {
-    async claimOrphanMetrics(userId, accountId) {
-      const snaps = await db
-        .update(metricSnapshots)
-        .set({ accountId })
-        .where(
-          and(
-            eq(metricSnapshots.userId, userId),
-            isNull(metricSnapshots.accountId),
-          ),
-        )
-        .returning({ id: metricSnapshots.id });
-      const vals = await db
-        .update(metricValues)
-        .set({ accountId })
-        .where(
-          and(eq(metricValues.userId, userId), isNull(metricValues.accountId)),
-        )
-        .returning({ id: metricValues.id });
-      return { snapshots: snaps.length, values: vals.length };
-    },
-
     async seedSnapshots(rows) {
       if (rows.length === 0) return;
       await db.insert(metricSnapshots).values(rows).onConflictDoNothing();
@@ -199,8 +177,8 @@ export function createAnalyticsRepository(
         .values({
           id,
           userId,
-          // [T-136 §D 切片 c] 采集 stamp:快照归到当前号(null 兜底 → 存量 / 未选号)。
-          accountId: input.accountId ?? null,
+          // [T-332 S2] 采集 stamp:快照出生即归当前号(strict,必填,无 null 兜底)。
+          accountId: input.accountId,
           publicationId: input.publicationId,
           ingestionRunId: input.ingestionRunId ?? null,
           capturedAt: input.capturedAt,
@@ -227,8 +205,8 @@ export function createAnalyticsRepository(
             values.map((v) => ({
               id: deps.nextId("mv"),
               userId,
-              // [T-136] 子指标值随快照 stamp 同一号(承 snapshot.accountId)。
-              accountId: input.accountId ?? null,
+              // [T-332 S2] 子指标值随快照 stamp 同一号(strict,承 snapshot.accountId)。
+              accountId: input.accountId,
               metricSnapshotId: snapshot.id,
               metricKey: v.metricKey,
               numericValue: v.numericValue,
@@ -240,24 +218,36 @@ export function createAnalyticsRepository(
         return { snapshot, created: true };
       }
 
-      // Conflict — the snapshot already exists. SELECT it user-scoped.
+      // Conflict — the snapshot already exists. SELECT it user + account scoped
+      // ([T-332 S2] strict:同一 publication 的快照恒同号 —— ingestion ctx 账号由 job 行
+      // 派生,不可能跨号;命中不到 = 冲突行归属别的号,是数据 bug,诚实抛错不静默)。
       const existing = await db
         .select()
         .from(metricSnapshots)
         .where(
           and(
             eq(metricSnapshots.userId, userId),
+            eq(metricSnapshots.accountId, input.accountId),
             eq(metricSnapshots.publicationId, input.publicationId),
             eq(metricSnapshots.source, input.source),
             eq(metricSnapshots.capturedAt, input.capturedAt),
           ),
         );
-      return { snapshot: existing[0]!, created: false };
+      const snapshot = existing[0];
+      if (!snapshot) {
+        throw new Error(
+          `analytics 数据 bug:快照幂等锚 (${input.publicationId}, ${input.source}, ${input.capturedAt}) ` +
+            `冲突但命中行不属当前号 ${input.accountId} —— 同一 publication 的快照不可能跨号,请排查采集调用链。`,
+        );
+      }
+      return { snapshot, created: false };
     },
 
-    async listSnapshotsByPublication(userId, publicationId, page, pageSize) {
+    async listSnapshotsByPublication(userId, accountId, publicationId, page, pageSize) {
+      // [T-332 S2] strict 双维门(user + account):跨号 publicationId → 空页,与列表同语义。
       const where = and(
         eq(metricSnapshots.userId, userId),
+        eq(metricSnapshots.accountId, accountId),
         eq(metricSnapshots.publicationId, publicationId),
       );
       const rows = await db
@@ -274,10 +264,12 @@ export function createAnalyticsRepository(
       return { rows, total: Number(totalRows[0]?.value ?? 0) };
     },
 
-    async listSnapshotsByProject(userId, publicationIds, page, pageSize) {
+    async listSnapshotsByProject(userId, accountId, publicationIds, page, pageSize) {
       if (publicationIds.length === 0) return { rows: [], total: 0 };
+      // [T-332 S2] strict 双维门(user + account)。
       const where = and(
         eq(metricSnapshots.userId, userId),
+        eq(metricSnapshots.accountId, accountId),
         inArray(metricSnapshots.publicationId, [...publicationIds]),
       );
       const rows = await db
@@ -294,38 +286,35 @@ export function createAnalyticsRepository(
       return { rows, total: Number(totalRows[0]?.value ?? 0) };
     },
 
-    async listValuesBySnapshot(userId, metricSnapshotId) {
+    async listValuesBySnapshot(userId, accountId, metricSnapshotId) {
+      // [T-332 S2] strict 双维门(user + account):跨号 snapshotId → 空数组。
       return db
         .select()
         .from(metricValues)
         .where(
           and(
             eq(metricValues.userId, userId),
+            eq(metricValues.accountId, accountId),
             eq(metricValues.metricSnapshotId, metricSnapshotId),
           ),
         )
         .orderBy(asc(metricValues.metricKey));
     },
 
-    async getDailyPlayTrend(userId, publicationIds, days, accountId) {
+    async getDailyPlayTrend(userId, accountId, publicationIds, days) {
       // [T-071] 真逐日趋势:替换掉「总量按固定周形状分摊」的假曲线(用户实锤)。
       // 每 (publication, 日) 取当日最新快照的累计播放 → 按日求和 → 与前一日差分 =
       // 当日新增播放。第一天没有前日基线,不产点;有效点 < 2 → 空(上层显引导)。
+      // 空集语义:当前号无快照 → rows 空 → 返回 [](JS 差分,无 SQL NULL 风险)。
       if (publicationIds && publicationIds.length === 0) return [];
-      // [T-326 DATA-H01] 按号门(当前号 or 未标记);无号 → undefined → and() 忽略。
-      const accountGate = accountId
-        ? or(
-            eq(metricSnapshots.accountId, accountId),
-            isNull(metricSnapshots.accountId),
-          )
-        : undefined;
       const rows = await db
         .select()
         .from(metricSnapshots)
         .where(
           and(
             eq(metricSnapshots.userId, userId),
-            accountGate,
+            // [T-332 S2] strict 按号门(只见当前号;lenient OR-IS-NULL 已退役)。
+            eq(metricSnapshots.accountId, accountId),
             publicationIds
               ? inArray(metricSnapshots.publicationId, [...publicationIds])
               : undefined,
@@ -374,7 +363,7 @@ export function createAnalyticsRepository(
       return trend.slice(-days);
     },
 
-    async getDashboardRollup(userId, publicationIds, accountId) {
+    async getDashboardRollup(userId, accountId, publicationIds) {
       // Pull ALL of the user's snapshots newest-first, then in JS keep the first
       // (newest) row per publicationId. Data volume per user is small, so the
       // dedup-then-reduce path is correct and simple (the task explicitly allows
@@ -397,21 +386,16 @@ export function createAnalyticsRepository(
           snapshotCount: 0,
         };
       }
-      // [T-326 DATA-H01] 按号门(当前号 or 未标记):写侧早已 stamp accountId,读侧此前
-      // 只按 user → 两个号的 dashboard 混读。无号 → undefined → and() 忽略(现状不变)。
-      const accountGate = accountId
-        ? or(
-            eq(metricSnapshots.accountId, accountId),
-            isNull(metricSnapshots.accountId),
-          )
-        : undefined;
       const rows = await db
         .select()
         .from(metricSnapshots)
         .where(
           and(
             eq(metricSnapshots.userId, userId),
-            accountGate,
+            // [T-332 S2] strict 按号门(只见当前号;lenient OR-IS-NULL 已退役)。
+            // 空集语义:当前号无快照 → rows 空 → latest.length===0 → all-zero rollup
+            // (snapshotCount 0),JS reduce 起点全 0,无 SQL sum/avg 的 NULL 风险。
+            eq(metricSnapshots.accountId, accountId),
             publicationIds
               ? inArray(metricSnapshots.publicationId, [...publicationIds])
               : undefined,

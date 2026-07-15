@@ -15,6 +15,7 @@ import {
   TaskStateError,
   ProjectStateError,
   StageGateError,
+  requireAccountId,
 } from "./projects.errors";
 
 // Projects service (foundation §5.3) — all public methods (ctx, command). The
@@ -174,10 +175,9 @@ export interface EnsureImportedProjectResult {
 }
 
 export interface ProjectsService {
+  // [T-332 S2] 所有经 ctx 的入口(读+写)统一断言 requireAccountId(SPEC §4.2:未选号 =
+  //   引导态,创作域禁读写);claimOrphanImportedProjects 已随 claimOrphans 全链退役(§4.4)。
   createProject(ctx: RequestContext, cmd: CreateProjectCommand): Promise<ProjectRow>;
-  // [T-200] 认领存量无号采集导入项目(source='imported')给 ctx.accountId(修采集串号)。
-  //   幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数(诊断用)。
-  claimOrphanImportedProjects(ctx: RequestContext): Promise<number>;
   // 数据底座(SPEC §1.3):为一条真实已发布作品就地建历史项目 + 其 content_output。
   //   幂等键 (userId, platform, externalId):命中既有 imported 项目则直接返回其
   //   (projectId, outputId, created:false),否则新建(created:true)。ingestion 经
@@ -677,12 +677,8 @@ export function createProjectsService(
   // 命名 const(非裸 return 对象字面量),让方法间可互调(ensureImportedProject 复用
   // createProject/createOutput,同 ingestion.service 的 `service.createRun` 自引用套路)。
   const service: ProjectsService = {
-    async claimOrphanImportedProjects(ctx) {
-      if (!ctx.accountId) return 0; // 未选号:无号可认领
-      return repo.claimOrphanImportedProjects(ctx, ctx.accountId);
-    },
-
     async createProject(ctx, cmd) {
+      requireAccountId(ctx.accountId, "projects.createProject");
       const ts = deps.now();
       const projectId = deps.nextId("project");
       // 数据底座(SPEC §1.2/§1.3):source 默认 manual;imported 是真实采集导入的历史
@@ -715,7 +711,9 @@ export function createProjectsService(
       const project = await repo.insertProject(ctx, {
         id: projectId,
         userId: ctx.userId,
-        accountId: ctx.accountId ?? null, // [T-136] 按号隔离;无当前号时 NULL(存量兜底,service 后续切片强制带号)
+        // [T-332 S2] 写 stamp 一律来自断言后的 ctx.accountId(ISO-03,不再有 null 兜底);
+        //   repo.insertProject 会再次以 ctx 为准覆盖(SPEC §4.6 防绕过)。
+        accountId: requireAccountId(ctx.accountId, "projects.createProject"),
         title: cmd.title,
         brief: cmd.brief ?? "",
         briefDetail: briefDetailMirror,
@@ -780,6 +778,7 @@ export function createProjectsService(
     },
 
     async ensureImportedProject(ctx, input) {
+      requireAccountId(ctx.accountId, "projects.ensureImportedProject"); // [T-332 S2] 未选号=引导态禁读写
       // 数据底座(SPEC §1.3):幂等于 (userId, platform, externalId)。先查既有 imported
       //   项目 + 其 content_output;命中则直接返回(不重复建)。
       const existing = await repo.findImportedByRef(ctx, {
@@ -826,6 +825,7 @@ export function createProjectsService(
     },
 
     async getProjectIdByOutput(ctx, outputId) {
+      requireAccountId(ctx.accountId, "projects.getProjectIdByOutput"); // [T-332 S2] 未选号=引导态禁读写
       // [T-321] 经 repo.getOutput(所有权门 join output→project)拿属主 projectId。
       //   越权/不存在 → OwnershipError,吞成 null(诚实降级,调用方据此回退到 create 路径)。
       try {
@@ -837,6 +837,7 @@ export function createProjectsService(
     },
 
     async getOutputOwnerSummary(ctx, outputId) {
+      requireAccountId(ctx.accountId, "projects.getOutputOwnerSummary"); // [T-332 S2] 未选号=引导态禁读写
       // [T-323] = getProjectIdByOutput(所有权门拿属主 projectId)+ repo.get 取该项目 source。
       //   任何一步越权/不存在都吞成 null(诚实降级 → register 重锚分支据此走保守「不抢」)。
       const projectId = await service.getProjectIdByOutput(ctx, outputId);
@@ -850,6 +851,7 @@ export function createProjectsService(
     },
 
     async markPublished(ctx, projectId) {
+      requireAccountId(ctx.accountId, "projects.markPublished"); // [T-332 S2] 未选号=引导态禁读写
       // [T-321] 幂等跃迁到「已发布/复盘」态,复用 createProject 的 imported 阶段布局
       //   (前置阶段 completed、review in_progress、全阶段进度 100 → recomputeProgress=100)。
       //   不改 source:manual 项目登记发布后仍 manual(不被 reconstruct/transcribe auto-fill 吃到)。
@@ -888,6 +890,7 @@ export function createProjectsService(
     },
 
     async mergePublishedWork(ctx, projectId, input) {
+      requireAccountId(ctx.accountId, "projects.mergePublishedWork"); // [T-332 S2] 未选号=引导态禁读写
       // [T-321] 合并日拉真实发布数据进属主项目(不新建重复)。决策:**保持原 source**
       //   —— 若把 manual 属主翻 imported,reconstruct-runner(断言仅 imported)会把该项目当
       //   历史作品 AI 重建逐字稿/研究/策划,覆盖用户手写内容(见 reconstruct-runner.ts:57 +
@@ -933,6 +936,7 @@ export function createProjectsService(
     },
 
     async setImportedProjectHidden(ctx, input) {
+      requireAccountId(ctx.accountId, "projects.setImportedProjectHidden"); // [T-332 S2] 未选号=引导态禁读写
       // [T-073] 幂等可见性同步:merge platform_ref jsonb(保留 externalId/publishedAt
       //   等既有键),只翻 hidden。未导入 → null(诚实跳过,不硬造)。
       const existing = await repo.findImportedByRef(ctx, {
@@ -952,6 +956,7 @@ export function createProjectsService(
     },
 
     async patchProject(ctx, projectId, patch) {
+      requireAccountId(ctx.accountId, "projects.patchProject"); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.get(ctx, projectId);
       if (current.status === "archived") {
         throw new ProjectStateError("Project is archived (read-only)");
@@ -987,6 +992,7 @@ export function createProjectsService(
     },
 
     async archiveProject(ctx, projectId) {
+      requireAccountId(ctx.accountId, "projects.archiveProject"); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.get(ctx, projectId);
       if (current.status === "archived") {
         throw new ProjectStateError("Project already archived");
@@ -1010,6 +1016,7 @@ export function createProjectsService(
     },
 
     async deleteProject(ctx, projectId) {
+      requireAccountId(ctx.accountId, "projects.deleteProject"); // [T-332 S2] 未选号=引导态禁读写
       // ownership 校验在 repo.deleteProjectCascade 内(删前 get());这里不再另守 archived
       // 态 —— 物理删除是终极下线,归档项目照样可删(与 archive 的 already-archived 409
       // 守卫正交)。级联清理 + 删根一个事务包裹(见 repository.deleteProjectCascade)。
@@ -1018,6 +1025,7 @@ export function createProjectsService(
     },
 
     async transitionProjectStage(ctx, projectId, stage, cmd) {
+      requireAccountId(ctx.accountId, "projects.transitionProjectStage"); // [T-332 S2] 未选号=引导态禁读写
       const project = await repo.get(ctx, projectId);
       if (project.status === "archived") {
         throw new ProjectStateError("Project is archived (read-only)");
@@ -1094,11 +1102,13 @@ export function createProjectsService(
     },
 
     async validateStageGate(ctx, projectId, fromStage) {
+      requireAccountId(ctx.accountId, "projects.validateStageGate"); // [T-332 S2] 未选号=引导态禁读写
       await repo.get(ctx, projectId); // ownership before reading peer deliverables
       return validateStageGate(ctx, projectId, fromStage);
     },
 
     async createOutput(ctx, projectId, cmd) {
+      requireAccountId(ctx.accountId, "projects.createOutput"); // [T-332 S2] 未选号=引导态禁读写
       await repo.get(ctx, projectId); // ownership before the UoW
       const ts = deps.now();
       const outputId = deps.nextId("output");
@@ -1140,6 +1150,7 @@ export function createProjectsService(
     },
 
     async patchOutput(ctx, outputId, patch) {
+      requireAccountId(ctx.accountId, "projects.patchOutput"); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.getOutput(ctx, outputId);
       const set: Partial<ContentOutputRow> = { updatedAt: deps.now() };
       if (patch.title !== undefined) set.title = patch.title;
@@ -1164,6 +1175,7 @@ export function createProjectsService(
     },
 
     async transitionOutputStage(ctx, outputId, stage, cmd) {
+      requireAccountId(ctx.accountId, "projects.transitionOutputStage"); // [T-332 S2] 未选号=引导态禁读写
       const output = await repo.getOutput(ctx, outputId);
       const row = await repo.getOutputStage(ctx, outputId, stage);
       const target = nextStageStatus(row.status as StageStatus, cmd.reason);
@@ -1206,6 +1218,7 @@ export function createProjectsService(
     },
 
     async createTask(ctx, projectId, cmd) {
+      requireAccountId(ctx.accountId, "projects.createTask"); // [T-332 S2] 未选号=引导态禁读写
       await repo.get(ctx, projectId); // ownership
       const task = await repo.insertTask(ctx, {
         id: deps.nextId("task"),
@@ -1227,6 +1240,7 @@ export function createProjectsService(
     },
 
     async patchTask(ctx, taskId, patch) {
+      requireAccountId(ctx.accountId, "projects.patchTask"); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.getTask(ctx, taskId);
       const set: Partial<TaskRow> = {};
       if (patch.title !== undefined) set.title = patch.title;
@@ -1246,6 +1260,7 @@ export function createProjectsService(
     },
 
     async listOutputIdsByProject(ctx, projectId) {
+      requireAccountId(ctx.accountId, "projects.listOutputIdsByProject"); // [T-332 S2] 未选号=引导态禁读写
       // repo.listOutputs gates the parent project's ownership (cross-user /
       // unknown → OwnershipError) then returns the user-scoped outputs; we expose
       // only the ids so downstream resolvers never see the full row.
@@ -1254,6 +1269,7 @@ export function createProjectsService(
     },
 
     async hasImportedProjects(ctx) {
+      requireAccountId(ctx.accountId, "projects.hasImportedProjects"); // [T-332 S2] 未选号=引导态禁读写
       // 数据底座(SPEC §1.4)单一判据:存在 ≥1 个 source='imported' 项目。repo.listImported
       //   已 user-scoped + source 过滤,故 length>0 即"该用户拉过真账号"。
       const imported = await repo.listImported(ctx);
@@ -1261,11 +1277,13 @@ export function createProjectsService(
     },
 
     async listImportedProjectIds(ctx) {
+      requireAccountId(ctx.accountId, "projects.listImportedProjectIds"); // [T-332 S2] 未选号=引导态禁读写
       const imported = await repo.listImported(ctx);
       return imported.map((p) => p.id);
     },
 
     async listImportedWorks(ctx) {
+      requireAccountId(ctx.accountId, "projects.listImportedWorks"); // [T-332 S2] 未选号=引导态禁读写
       // [T-151 / T-037 缺口 A] imported 项目 → { projectId, platform, externalId }。externalId 从
       //   platformRef(JSON {platform, externalId})取;无锚(异常行)诚实过滤掉(无法触发逐字稿/重建)。
       const imported = await repo.listImported(ctx);
@@ -1286,6 +1304,7 @@ export function createProjectsService(
     },
 
     async getDashboardSummary(ctx) {
+      requireAccountId(ctx.accountId, "projects.getDashboardSummary"); // [T-332 S2] 未选号=引导态禁读写
       // continueCreating = most-recently-updated non-archived project (in-module
       // read only; repo.list is already user-scoped).
       const projectRows = await repo.list(ctx);

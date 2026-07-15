@@ -7,6 +7,7 @@ import {
 } from "./publishing.service";
 import { createMockPublisher, type MockPublisher } from "./platform-publisher";
 import {
+  AccountRequiredError,
   ConflictError,
   OwnershipError,
   ValidationError,
@@ -19,7 +20,13 @@ import {
 // current, invalid-platform guard.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+// [T-332 S2] per-account 域 service 一律要求 ctx.accountId(strict);测试 ctx 统一带号。
+const ctx: RequestContext = {
+  userId: "user-a",
+  requestId: "r1",
+  source: "user",
+  accountId: "acct-1",
+};
 
 let db: Db;
 let publisher: MockPublisher;
@@ -62,6 +69,35 @@ function build(db: Db) {
 beforeEach(async () => {
   ({ db } = await createDb());
   build(db);
+});
+
+// [T-332 S2] 未选号(ctx.accountId 缺失)= 引导态,per-account 域禁读写(SPEC §4.2):
+// 每个经 ctx 的 service 入口(repoFor)统一 requireAccountId,缺号 → AccountRequiredError,
+// 不存在「未选号 → 全量 user-scoped」退化。
+describe("service — 未选号 ctx → AccountRequiredError (T-332 S2)", () => {
+  const noAcctCtx: RequestContext = {
+    userId: "user-a",
+    requestId: "r-noacct",
+    source: "user",
+  };
+
+  it("写路径(createPublication)未选号 → AccountRequiredError", async () => {
+    await expect(
+      service.createPublication(noAcctCtx, "output-1", {
+        platform: "douyin",
+        accountReference: "@a",
+      }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+  });
+
+  it("读路径(listPublicationsForUser / getPublication)未选号同样禁读", async () => {
+    await expect(
+      service.listPublicationsForUser(noAcctCtx, { limit: 10, offset: 0 }),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(
+      service.getPublication(noAcctCtx, "pub-any"),
+    ).rejects.toBeInstanceOf(AccountRequiredError);
+  });
 });
 
 // [DATA-H03] create 前校验 outputId 归属:复用已注入的 resolveOutputOwner 端口(越权/不存在

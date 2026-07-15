@@ -21,10 +21,12 @@ import {
 // integer versionNumber, record contentData, enum coercion, and the list meta
 // envelope (requestId + page/pageSize/total).
 
+// [T-332 S2] strict 门下 ctx 必带号。
 const ctx: RequestContext = {
   userId: "user-1",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-1",
 };
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;

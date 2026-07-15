@@ -25,10 +25,12 @@ import {
 // OQ4), the list item shape, and the publications.transition → published happy path
 // producing a DTO whose status parses as "published" with non-null external fields.
 
+// [T-332 S2] per-account 域 service 一律要求 ctx.accountId(strict);测试 ctx 统一带号。
 const ctx: RequestContext = {
   userId: "user-1",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-1",
 };
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 

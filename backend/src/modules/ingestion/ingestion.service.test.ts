@@ -16,6 +16,7 @@ const ctx: RequestContext = {
   userId: "user-a",
   requestId: "req-1",
   source: "user",
+  accountId: "acct-a", // [T-332 S2]
 };
 
 interface FakeCalls {
@@ -110,13 +111,13 @@ async function seedSource(db: Db, userId = "user-a"): Promise<void> {
     now: () => NOW,
     nextId: (p: string) => `${p}-seed-${++seq}`,
     userId,
-    accountId: null, // [T-136] seed helper 无号(存量兜底)
+    accountId: "acct-a", // [T-332 S2] seed 带号
   });
   await repo.seedExternalSources([
     {
       id: "src-a",
       userId,
-      accountId: null,
+      accountId: "acct-a",
       sourceType: "mock",
       name: "Mock",
       sourceIdentifier: "mock://x",
@@ -367,6 +368,7 @@ describe("ingestion service — run lifecycle + idempotency", () => {
       userId: "user-b",
       requestId: "req-b",
       source: "user",
+      accountId: "acct-b",
     };
     await expect(service.getRun(ctxB, run.id)).rejects.toThrow();
   });

@@ -22,11 +22,12 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner — baked in; the service mints one repo per ctx
-  // [T-136 §D 切片 c → T-326 DATA-H01] 第二属主维度(按号)。写路径 create 时 stamp 归号;
-  //   null = 未选号 / 存量兜底(write stamp null)。读路径:**列表/聚合读**叠加按号门(语义
-  //   为「当前号 OR 未标记(account_id IS NULL)」,存量 NULL 数据不消失,claimOrphan 逐步
-  //   收编后 NULL 桶收敛);by-id / external-key 读仍只按 userId(见 accountGate 注释)。
-  accountId?: string | null;
+  // [T-332 S2] 第二属主维度(按号,strict)。必填:service 层经 requireAccountId 断言
+  //   ctx.accountId 后注入(未选号 → AccountRequiredError,引导态,不再有「null = 全量」
+  //   退化)。写路径 create 一律 stamp 本号;读路径(列表/聚合/by-id)一律
+  //   eq(account_id, deps.accountId) —— 无任何 OR-IS-NULL lenient 分支(用户拍板 ②:
+  //   清库重来,不存在待兼容的存量 NULL 行)。唯一例外是 findByExternalKey(见其注释)。
+  accountId: string;
 }
 
 export interface CreatePublicationInput {
@@ -70,8 +71,6 @@ export interface UpdateStatusPatch {
 }
 
 export interface PublishingRepository {
-  // [T-200] 认领存量无号 publications 给 accountId(修采集串号)。返回改动行数。
-  claimOrphanPublications(accountId: string): Promise<number>;
   seedPublications(rows: PublicationRow[]): Promise<void>;
   seedRevisions(rows: PublicationRevisionRow[]): Promise<void>;
   createPublication(
@@ -156,25 +155,21 @@ export function createPublishingRepository(
 ): PublishingRepository {
   const userId = deps.userId;
 
-  // [T-326 DATA-H01] 按号隔离条件门(列表/聚合读用)。语义 =「当前号 OR 未标记」:
-  //   有号 → (account_id = 当前号 OR account_id IS NULL) —— 存量/未选号写入的 NULL 行仍可见
-  //   (老数据不凭空消失;T-200 claimOrphanPublications 在采集 bootstrap 时逐步把 NULL 行
-  //   收编到真号,NULL 桶随之收敛);无号(ctx 未选号)→ undefined → and() 忽略 → 退化只按
-  //   userId(全量,现状不变)。
-  //   **不加此门的读**(有意为之,别扩大):
-  //   · getPublicationRowById(by-id 所有权门)—— id 不可枚举,user 级已是安全边界;加号门
-  //     会让跨号打开详情/状态机操作 404,误伤 ingestion / UI 深链。
-  //   · findByExternalKey —— (platform, external_id) 唯一索引是**用户级**幂等锚;加号门会让
-  //     跨号/存量行不可见 → createImportedPublication 重复 INSERT → 唯一索引违约炸采集。
-  const accountGate = deps.accountId
-    ? or(
-        eq(publications.accountId, deps.accountId),
-        isNull(publications.accountId),
-      )
-    : undefined;
+  // [T-332 S2] 按号隔离条件门(strict,SPEC §4.1)。语义 = eq(account_id, 当前号):
+  //   切号 = 切工作区,另一个号的行在本 ctx 下一律不可见 —— 旧 lenient
+  //   「当前号 OR account_id IS NULL」分支已随用户拍板 ②(清库重来,无存量 NULL 行)
+  //   退役,不存在「未选号 → 全量」退化(service 层 requireAccountId 已挡住无号 ctx)。
+  //   · by-id 读(getPublicationRowById)同样上号门(SPEC §4.5:strict 列表 + user 级
+  //     详情会留下「列表看不见但 URL 能打开」的裂缝;跨号命中 → OwnershipError 404,
+  //     与跨 user 同语义,不泄漏存在性)。
+  //   · **唯一例外 findByExternalKey**(C-09 裁决):(platform, external_id) 是平台事实
+  //     唯一锚,查询保持 user 级(加号过滤会让跨号行不可见 → 重复 INSERT 炸唯一索引、
+  //     破幂等);命中后断言归属号与 ctx 一致,不一致按数据 bug 报错,绝不静默返回。
+  const accountGate = eq(publications.accountId, deps.accountId);
 
   // Private ownership gate — a cross-user / unknown id is indistinguishable from a
   // missing one (foundation §2: 404, never reveal existence) → OwnershipError.
+  // [T-332 S2] 叠加号一致性门(SPEC §4.5):跨号 by-id 与跨 user 同为 404。
   async function getPublicationRowById(
     publicationId: string,
   ): Promise<PublicationRow> {
@@ -182,7 +177,11 @@ export function createPublishingRepository(
       .select()
       .from(publications)
       .where(
-        and(eq(publications.id, publicationId), eq(publications.userId, userId)),
+        and(
+          eq(publications.id, publicationId),
+          eq(publications.userId, userId),
+          accountGate,
+        ),
       );
     const row = rows[0];
     if (!row) {
@@ -194,17 +193,6 @@ export function createPublishingRepository(
   }
 
   return {
-    // [T-200] 认领存量 account_id IS NULL 的 publications 给 accountId(该 user 名下)。
-    //   幂等:已归属的不动。修采集导入作品在无号 ctx 下落的 null 号(串号根因)。返回改动行数。
-    async claimOrphanPublications(accountId) {
-      const updated = await db
-        .update(publications)
-        .set({ accountId, updatedAt: deps.now() })
-        .where(and(eq(publications.userId, userId), isNull(publications.accountId)))
-        .returning({ id: publications.id });
-      return updated.length;
-    },
-
     async seedPublications(rows) {
       if (rows.length === 0) return;
       await db.insert(publications).values(rows).onConflictDoNothing();
@@ -221,8 +209,8 @@ export function createPublishingRepository(
       await db.insert(publications).values({
         id,
         userId,
-        // [T-136 §D] 按号 stamp(激活预留列;发布草稿归当前号,null 兜底)。
-        accountId: deps.accountId ?? null,
+        // [T-332 S2] 按号 stamp(strict:deps.accountId 必填,发布草稿出生即归当前号)。
+        accountId: deps.accountId,
         contentOutputId: outputId,
         platform: input.platform,
         accountReference: input.accountReference,
@@ -254,8 +242,8 @@ export function createPublishingRepository(
         await tx.insert(publications).values({
           id: pubId,
           userId,
-          // [T-136 §D 切片 c] 采集 stamp:导入作品归到当前号(null 兜底 → 存量 / 未选号)。
-          accountId: deps.accountId ?? null,
+          // [T-332 S2] 采集 stamp:导入作品出生即归当前号(strict,deps.accountId 必填)。
+          accountId: deps.accountId,
           contentOutputId: outputId,
           platform: input.platform,
           accountReference: input.accountReference,
@@ -306,7 +294,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
-            accountGate, // [T-326 DATA-H01] 按号(当前号 or 未标记);无号 → 忽略
+            accountGate, // [T-332 S2] strict 按号门(只见当前号)
             eq(publications.contentOutputId, outputId),
             visibility,
           ),
@@ -334,7 +322,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
-            accountGate, // [T-326 DATA-H01] 发布列表/最近发布按号隔离(当前号 or 未标记)
+            accountGate, // [T-332 S2] 发布列表/最近发布 strict 按号隔离
             visibility,
           ),
         )
@@ -353,7 +341,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
-            accountGate, // [T-326 DATA-H01] 项目→发布解析按号(Analytics 项目读随之隔离)
+            accountGate, // [T-332 S2] 项目→发布解析 strict 按号(Analytics 项目读随之隔离)
             inArray(publications.contentOutputId, [...outputIds]),
           ),
         );
@@ -515,7 +503,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
-            accountGate, // [T-326 DATA-H01] 封面回填候选按号(别烧别号的限流预算)
+            accountGate, // [T-332 S2] 封面回填候选 strict 按号(别烧别号的限流预算)
             eq(publications.platform, platform),
             eq(publications.status, "published"),
             isNull(publications.hiddenAt),
@@ -536,6 +524,10 @@ export function createPublishingRepository(
     },
 
     async findByExternalKey(platform, externalId) {
+      // [T-332 S2 / C-09 裁决] 查询保持 user 级:(platform, external_id) 是平台事实唯一锚
+      //   (一个抖音作品在平台上只属于一个号),加号过滤会让跨号行不可见 → 重复 INSERT
+      //   炸唯一索引、破幂等。命中后断言归属号与当前 ctx 一致 —— 不一致说明采集/登记链
+      //   在错误的号 ctx 下触碰了别号的作品,是数据 bug,必须炸出来,绝不静默返回。
       const rows = await db
         .select()
         .from(publications)
@@ -546,7 +538,15 @@ export function createPublishingRepository(
             eq(publications.externalId, externalId),
           ),
         );
-      return rows[0] ?? null;
+      const row = rows[0] ?? null;
+      if (row && row.accountId !== deps.accountId) {
+        throw new Error(
+          `publishing 数据 bug:外键 (${platform}, ${externalId}) 命中行归属号与当前 ctx 不一致 —— ` +
+            `publication ${row.id} 属号 ${row.accountId},当前 ctx 号 ${deps.accountId}。` +
+            `平台唯一锚不可能跨号双属,说明采集/登记在错误的账号上下文下运行,请排查调用链。`,
+        );
+      }
+      return row;
     },
 
     async reAnchorPublicationOutput(publicationId, newOutputId) {

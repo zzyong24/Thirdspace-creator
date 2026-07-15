@@ -29,8 +29,9 @@ import { LEARNINGS_OP_IDS } from "./learnings.transport";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user" };
-const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user" };
+// [T-332 S2] strict 门下 ctx 必带号。
+const ctxA: RequestContext = { userId: "user-a", requestId: "ra", source: "user", accountId: "acct-a" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "rb", source: "user", accountId: "acct-b" };
 
 const noopProjects: LearningsProjectsPort = {
   assertOwnsProject: async () => {},
@@ -144,5 +145,6 @@ describe("learnings acceptance (SPEC §22)", () => {
 });
 
 function ctx0(): RequestContext {
-  return { userId: "user-a", requestId: "r0", source: "user" };
+  // [T-332 S2] strict 门下 ctx 必带号。
+  return { userId: "user-a", requestId: "r0", source: "user", accountId: "acct-a" };
 }

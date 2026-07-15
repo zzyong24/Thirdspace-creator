@@ -44,4 +44,8 @@ export {
   type SearchDocumentResource,
 } from "./search.schema";
 
-export { buildCanonicalSearchDocuments } from "./search.seed";
+export {
+  buildCanonicalSearchDocuments,
+  // [T-332 S2 · ISO-06] 启动全量重建的显式系统入口(逐行自带源实体号,非无号退化)。
+  rebuildSearchIndexSystem,
+} from "./search.seed";

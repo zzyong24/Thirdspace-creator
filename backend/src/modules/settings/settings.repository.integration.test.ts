@@ -249,22 +249,32 @@ describe("settings.repository (storage config — item B)", () => {
       assetType: string,
       bytes: number,
     ) {
-      const asset = await assetsRepo.insertAsset(ctx.userId, {
-        assetType,
-        name: `${assetType}-asset`,
-        currentFileId: null,
-      });
-      await assetsRepo.insertAssetFile(ctx.userId, {
-        assetId: asset.id,
-        storageKey: `${assetType}/${asset.id}`,
-        mimeType: "application/octet-stream",
-        fileSize: bytes,
-        checksum: "",
-        width: null,
-        height: null,
-        durationMs: null,
-        mediaMetadata: {},
-      });
+      // [T-332 S2] assets 是 per-account 域:insert 必带账号(存储用量聚合本身仍 user 级)。
+      const accountId = `acct-${ctx.userId}`;
+      const asset = await assetsRepo.insertAsset(
+        ctx.userId,
+        {
+          assetType,
+          name: `${assetType}-asset`,
+          currentFileId: null,
+        },
+        accountId,
+      );
+      await assetsRepo.insertAssetFile(
+        ctx.userId,
+        {
+          assetId: asset.id,
+          storageKey: `${assetType}/${asset.id}`,
+          mimeType: "application/octet-stream",
+          fileSize: bytes,
+          checksum: "",
+          width: null,
+          height: null,
+          durationMs: null,
+          mediaMetadata: {},
+        },
+        accountId,
+      );
     }
 
     await seedAssetWithFile(ctxA, "image", 1000);

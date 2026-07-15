@@ -16,11 +16,13 @@ import { OwnershipError } from "./calibration.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// [T-332 S2] RepoDeps.accountId 已收成必填 string(strict 门):缺省固定测试号,
+// 「null 全局视图」形态随 SPEC §4.2 裁决删除。
 function repoFor(
   db: Db,
   userId: string,
   tag = userId,
-  accountId: string | null = null,
+  accountId = "acct-default",
 ): CalibrationRepository {
   let seq = 0;
   return createCalibrationRepository(db, {
@@ -250,11 +252,11 @@ describe("calibration repository (integration, user-scoped)", () => {
     expect(listAfter.total).toBe(0);
   });
 
-  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号,rubric→version→prediction 全链盖章 + 号门。
-  it("accountId-scoped repo isolates rubrics/predictions across accounts; null sees all; create stamps accountId", async () => {
+  // [T-332 S2 · ISO-02/08] 号维度 strict 隔离:同一 user 下两个抖音号,
+  // rubric→version→prediction 全链盖章 + 恒开号门(无 null 全局视图)。
+  it("accountId-scoped repo isolates rubrics/predictions across accounts; create stamps accountId", async () => {
     const repoA = repoFor(db, "user-a", "acc-a", "account-a");
     const repoB = repoFor(db, "user-a", "acc-b", "account-b");
-    const repoNull = repoFor(db, "user-a", "acc-n", null);
 
     const rubricA = await repoA.createRubric({ name: "号A rubric" });
     const rubricB = await repoB.createRubric({ name: "号B rubric" });
@@ -290,14 +292,11 @@ describe("calibration repository (integration, user-scoped)", () => {
     // 本号 get 正常。
     expect((await repoA.getRubric(rubricA.id)).id).toBe(rubricA.id);
 
-    // listAllPredictions 号门:A 只见自己那条;null 见全部。
+    // listAllPredictions 号门:A 只见自己那条;B 零交叉。
     expect((await repoA.listAllPredictions()).map((p) => p.id)).toEqual([
       predA.id,
     ]);
     expect((await repoB.listAllPredictions()).map((p) => p.id)).toEqual([]);
-    expect((await repoNull.listAllPredictions()).map((p) => p.id)).toEqual([
-      predA.id,
-    ]);
 
     // listRubricVersions 号门。
     expect((await repoA.listRubricVersions(rubricA.id)).map((v) => v.id)).toEqual(

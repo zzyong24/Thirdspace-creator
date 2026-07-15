@@ -20,6 +20,7 @@ import {
 import {
   PromoteStateError,
   DanglingRunError,
+  requireAccountId,
 } from "./candidate.errors";
 // [T-212d] 防茧房校准护栏(纯函数):±10 封顶 / ≥3 例升级 / 8 周衰减 / 探索位。
 import {
@@ -327,13 +328,14 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
   const { db, now, nextId, projects, positioning, ingestion, overview } = deps;
   const dispatchPreferenceDistill = deps.dispatchPreferenceDistill;
 
-  function repoFor(ctx: RequestContext): CandidateRepository {
+  function repoFor(ctx: RequestContext, op: string): CandidateRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      // [T-136 切片 b] 按号隔离维度透传;未选号/全局视图为 null(§E 退化)。
-      accountId: ctx.accountId ?? null,
+      // [T-332 S2] 未选号 = 引导态,创作域禁读写(SPEC §4.2)—— 读写同门,
+      // ctx.accountId 缺失直接抛 AccountRequiredError,不存在「null = 全局视图」退化。
+      accountId: requireAccountId(ctx.accountId, op),
     };
     return createCandidateRepository(db, repoDeps);
   }
@@ -357,7 +359,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     ctx: RequestContext,
     query: RankTopicsQuery,
   ): Promise<RankedTopicResource[]> {
-    const repo = repoFor(ctx);
+    const repo = repoFor(ctx, "candidate.rankTopicsWithGuardrails");
     // 护栏③:读前先归档过期偏好(lastReinforcedAt 早于 now-8周)——过期偏好不再注入评分。
     const cutoff = new Date(
       Date.parse(now()) - PREFERENCE_DECAY_WEEKS * 7 * 24 * 60 * 60 * 1000,
@@ -418,12 +420,12 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         const ranked = await rankGuardrail(ctx, { limit: query.limit });
         return { rows: ranked, total: ranked.length };
       }
-      const { rows, total } = await repoFor(ctx).listCandidates(query);
+      const { rows, total } = await repoFor(ctx, "candidate.listCandidates").listCandidates(query);
       return { rows: rows.map(toCandidateDto), total };
     },
 
     async createCandidate(ctx, input) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "candidate.createCandidate");
       const angle = input.angle ?? "";
       const positioningFit = await fitFor(ctx, {
         title: input.title,
@@ -448,7 +450,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async getCandidate(ctx, candidateId) {
-      return toCandidateDto(await repoFor(ctx).getCandidate(candidateId));
+      return toCandidateDto(await repoFor(ctx, "candidate.getCandidate").getCandidate(candidateId));
     },
 
     async patchCandidate(ctx, candidateId, patch) {
@@ -459,7 +461,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         patch.card !== undefined
           ? { ...patch, card: pickCardFields(patch.card) }
           : patch;
-      const row = await repoFor(ctx).patchCandidate(candidateId, cleaned);
+      const row = await repoFor(ctx, "candidate.patchCandidate").patchCandidate(candidateId, cleaned);
       // [T-212d] 淘汰(status→dropped)且带原因 → 后台蒸馏偏好信号(fire-and-forget,不阻塞淘汰返回)。
       // 蒸馏每次从**全部**累积原因重算,累计到 ≥3 例才被 service 护栏升级为硬偏好(单次不立即改规则)。
       if (
@@ -474,7 +476,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async promote(ctx, candidateId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "candidate.promote");
       const cand = await repo.getCandidate(candidateId); // ownership gate (404)
       if (cand.status === "promoted") {
         throw new PromoteStateError(
@@ -528,7 +530,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async createFromAIResult(ctx, result) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "candidate.createFromAIResult");
       // Idempotent on aiTaskId — confirmResult may retry; never duplicate.
       const existing = await repo.findCandidateByAiTaskId(result.aiTaskId);
       if (existing) return toCandidateDto(existing);
@@ -558,7 +560,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // 3 metrics, defaults applied), then REPLACE the stored card. getCandidate inside
       // enrichCard gates ownership (cross-user / unknown → OwnershipError → 404).
       const cleaned = toCardDto(card) as unknown as Record<string, unknown>;
-      const row = await repoFor(ctx).enrichCard(candidateId, cleaned);
+      const row = await repoFor(ctx, "candidate.enrichCard").enrichCard(candidateId, cleaned);
       return toCandidateDto(row);
     },
 
@@ -573,7 +575,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // RISK-005 — the run must be a REAL IngestionRun (cross-user / unknown →
       // OwnershipError) BEFORE any signal row references it.
       await ingestion.assertRunExists(ctx, runId);
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "candidate.ingestAudienceSignal");
       const { row: signal, inserted } = await repo.createSignal({
         source: record.source,
         rawText: record.rawText,
@@ -602,7 +604,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // come from ONE user-scoped repo read. Cross-module aggregates (定位 / 知识库 /
       // 历史爆款 / 复盘回流) come from the SOFT overview port — absent / rejecting calls
       // degrade to "" / 0 (honest, never fabricated).
-      const counts = await repoFor(ctx).topicsOverviewCounts();
+      const counts = await repoFor(ctx, "candidate.getTopicsOverview").topicsOverviewCounts();
 
       const soft = async <T>(p: Promise<T> | undefined, fallback: T): Promise<T> => {
         if (!p) return fallback;
@@ -622,7 +624,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // from candidates.source='idea'; 项目复盘 from learnings. A channel with no backing
       // data source reports 0 (never fabricated).
       const bySrc = counts.signalsBySource;
-      const ideaRows = await repoFor(ctx).listCandidates({
+      const ideaRows = await repoFor(ctx, "candidate.getTopicsOverview").listCandidates({
         source: "idea",
         limit: 1000,
         offset: 0,
@@ -668,12 +670,12 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async listSignals(ctx, query) {
-      const { rows, total } = await repoFor(ctx).listSignals(query);
+      const { rows, total } = await repoFor(ctx, "candidate.listSignals").listSignals(query);
       return { rows: rows.map(toAudienceSignalDto), total };
     },
 
     async listCommentsForPublication(ctx, publicationId, limit) {
-      const rows = await repoFor(ctx).listCommentsForPublication(
+      const rows = await repoFor(ctx, "candidate.listCommentsForPublication").listCommentsForPublication(
         publicationId,
         limit,
       );
@@ -681,7 +683,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async linkSignalToCandidate(ctx, signalId, candidateId) {
-      const repo = repoFor(ctx);
+      const repo = repoFor(ctx, "candidate.linkSignalToCandidate");
       const signal = await repo.getSignal(signalId); // ownership gate (404)
       let targetId = candidateId;
       if (!targetId) {
@@ -711,7 +713,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
 
     // ── [T-212d] 防茧房校准 ──────────────────────────────────────────────────
     async listDropReasons(ctx) {
-      return repoFor(ctx).listDropReasons();
+      return repoFor(ctx, "candidate.listDropReasons").listDropReasons();
     },
 
     async upsertTopicPreference(ctx, input) {
@@ -724,7 +726,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       const status: "candidate" | "active" = isHardPreference(input.exampleCount)
         ? "active"
         : "candidate";
-      return repoFor(ctx).upsertTopicPreference({
+      return repoFor(ctx, "candidate.upsertTopicPreference").upsertTopicPreference({
         keyword: input.keyword,
         direction: input.direction,
         signal: input.signal,
@@ -735,7 +737,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async listActiveTopicPreferences(ctx) {
-      return repoFor(ctx).listActiveTopicPreferences();
+      return repoFor(ctx, "candidate.listActiveTopicPreferences").listActiveTopicPreferences();
     },
 
     async rankTopicsWithGuardrails(ctx, query) {

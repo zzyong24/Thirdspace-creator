@@ -15,7 +15,13 @@ import { metricSnapshotResource } from "./analytics.schema";
 // succeeds; list meta carries page/pageSize/total.
 
 const NOW = "2026-06-21T00:00:00.000Z";
-const ctx: RequestContext = { userId: "user-a", requestId: "req-1", source: "user" };
+// [T-332 S2] per-account 域 service 一律要求 ctx.accountId(strict);测试 ctx 统一带号。
+const ctx: RequestContext = {
+  userId: "user-a",
+  requestId: "req-1",
+  source: "user",
+  accountId: "acct-1",
+};
 
 const pubEndpoint = ENDPOINTS.getPublicationAnalytics as unknown as Endpoint;
 const projEndpoint = ENDPOINTS.getProjectAnalytics as unknown as Endpoint;

@@ -9,12 +9,15 @@ export {
   createNotificationsService,
   type NotificationsService,
   type ServiceDeps,
+  // [T-332 S2] 写路径入参(组合根 notify seam 接线用)。
+  type CreateNotificationInput,
 } from "./notifications.service";
 
 export {
   createNotificationRepository,
   type NotificationRepository,
   type NotificationRow,
+  type NotificationAccountScope,
 } from "./notifications.repository";
 
 export {
