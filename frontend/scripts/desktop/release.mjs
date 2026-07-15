@@ -9,7 +9,8 @@
 // latest.json 结构(与 Tauri updater plugin + skills-manager 一致):
 //   { version, notes, pub_date, platforms: { "<updater-target>": { signature, url } } }
 //
-// endpoint(url 前缀)默认 GitHub-releases 式,可经 env CREATOROS_UPDATE_BASE_URL 覆盖(P5 定 R2/CDN)。
+// endpoint(url 前缀)必须经 env CREATOROS_UPDATE_BASE_URL 提供(https,无 OWNER/REPO 占位残留);
+// 缺失/非法 → 硬失败(T-326 ENG-H03)。本地开发预览可 CREATOROS_UPDATE_ALLOW_PLACEHOLDER=1 显式放行占位。
 
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
@@ -74,6 +75,65 @@ export function buildLatestJson({ version, signature, url, notes = "", pubDate =
   };
 }
 
+// ── [T-326 ENG-H03] updater base URL 解析 + 校验(纯函数,便于单测)─────────────
+//
+// 旧行为:未设 CREATOROS_UPDATE_BASE_URL 时默认 `https://github.com/OWNER/REPO/...`,
+// 只 warning 不失败 → 签名更新包配着不可下载的正式元数据出厂,客户端升级必失败。
+// 新行为:
+//   1. 未设 env → **硬失败**(exit 非 0),除非显式 opt-out CREATOROS_UPDATE_ALLOW_PLACEHOLDER=1
+//      (本地开发预览专用,占位 URL + 显眼警告)。
+//   2. 设了 env → 必须是合法 https URL,且路径不得残留 OWNER/REPO 字面占位段。
+//      opt-out 变量**不放行**显式设置的非法值 —— 它只覆盖「本地没配 URL」这一种场景。
+//
+// @param {NodeJS.ProcessEnv} env
+// @param {string} version
+// @returns {{ok:true, baseUrl:string, placeholder:boolean} | {ok:false, error:string}}
+export function resolveUpdateBaseUrl(env, version) {
+  const raw = (env.CREATOROS_UPDATE_BASE_URL ?? "").trim();
+  const allowPlaceholder = env.CREATOROS_UPDATE_ALLOW_PLACEHOLDER === "1";
+
+  if (!raw) {
+    if (allowPlaceholder) {
+      return {
+        ok: true,
+        baseUrl: `https://github.com/OWNER/REPO/releases/download/v${version}`,
+        placeholder: true,
+      };
+    }
+    return {
+      ok: false,
+      error:
+        "未设 CREATOROS_UPDATE_BASE_URL —— 拒绝产出带占位下载地址的 latest.json(客户端升级必失败)。\n" +
+        "  正式发布:export CREATOROS_UPDATE_BASE_URL=<真实下载前缀,如 https://github.com/<owner>/<repo>/releases/download/v" +
+        version +
+        ">\n" +
+        "  本地开发预览(明知 URL 不可下载):export CREATOROS_UPDATE_ALLOW_PLACEHOLDER=1",
+    };
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return { ok: false, error: `CREATOROS_UPDATE_BASE_URL 不是合法 URL:${raw}` };
+  }
+  if (parsed.protocol !== "https:") {
+    return {
+      ok: false,
+      error: `CREATOROS_UPDATE_BASE_URL 必须是 https(updater 元数据走明文/其它协议不接受):${raw}`,
+    };
+  }
+  // 路径段级检查:字面 OWNER / REPO 段视为模板残留(真实 owner/repo 不会全大写恰为这两个词)。
+  const segments = parsed.pathname.split("/");
+  if (segments.includes("OWNER") || segments.includes("REPO")) {
+    return {
+      ok: false,
+      error: `CREATOROS_UPDATE_BASE_URL 残留 OWNER/REPO 占位段,请替换为真实 owner/repo:${raw}`,
+    };
+  }
+  return { ok: true, baseUrl: raw.replace(/\/+$/, ""), placeholder: false };
+}
+
 function run(name, cmd, args, env = {}) {
   console.log(`\n[release] ▶ ${name}\n[release]   $ ${cmd} ${args.join(" ")}`);
   const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, env: { ...process.env, ...env } });
@@ -95,6 +155,14 @@ function main() {
 
   const version = readVersion();
   const target = updaterTarget();
+
+  // [T-326 ENG-H03] base URL 缺失/占位/非法 → 开工前就硬失败(别等一轮打包跑完才报)。
+  const resolved = resolveUpdateBaseUrl(process.env, version);
+  if (!resolved.ok) {
+    console.error(`[release] ✗ ${resolved.error}`);
+    process.exit(1);
+  }
+
   console.log(`[release] CreatorOS 发布打包开始(version=${version}, target=${target})。`);
 
   // 1) 走 package 流水线(build-sidecar → obfuscate → tauri build → codesign → notarize)。
@@ -110,10 +178,7 @@ function main() {
   }
   const signature = readFileSync(found.sig, "utf8").trim();
   const artifactName = found.artifact.split("/").pop();
-  const baseUrl =
-    process.env.CREATOROS_UPDATE_BASE_URL ??
-    `https://github.com/OWNER/REPO/releases/download/v${version}`;
-  const url = `${baseUrl.replace(/\/$/, "")}/${artifactName}`;
+  const url = `${resolved.baseUrl}/${artifactName}`;
 
   // 3) 生成/更新 latest.json。
   const latest = buildLatestJson({ version, signature, url, target });
@@ -122,8 +187,10 @@ function main() {
   console.log(`\n[release] ✅ latest.json 已生成: ${latestPath}`);
   console.log(`[release]   version=${version} · target=${target}`);
   console.log(`[release]   url=${url}`);
-  if (baseUrl.includes("OWNER/REPO")) {
-    console.log("[release]   ⚠️ url 用了占位 OWNER/REPO;分发前 export CREATOROS_UPDATE_BASE_URL=<真实前缀>。");
+  if (resolved.placeholder) {
+    // 只有显式 CREATOROS_UPDATE_ALLOW_PLACEHOLDER=1 才会走到这里 —— 刷屏级警告,防止误分发。
+    console.warn("[release] ⚠️⚠️⚠️ 本次 latest.json 的 url 是占位 OWNER/REPO(CREATOROS_UPDATE_ALLOW_PLACEHOLDER=1)。");
+    console.warn("[release] ⚠️⚠️⚠️ 仅限本地开发预览 —— **严禁分发**;正式发布必须设 CREATOROS_UPDATE_BASE_URL。");
   }
 
   // 4) release manifest 记 updater 状态。

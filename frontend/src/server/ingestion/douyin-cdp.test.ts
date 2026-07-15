@@ -1080,7 +1080,7 @@ function makeFakeMetricsContext(
 ) {
   const calls = { openContext: 0, close: 0, goto: 0, wheel: 0 };
   type MetricsResp = { url(): string; json(): Promise<unknown> };
-  let handlers: Array<(resp: MetricsResp) => void> = [];
+  const handlers: Array<(resp: MetricsResp) => void> = [];
   const emit = (works: Array<{ aweme_id: string }>) => {
     const resp: MetricsResp = {
       url: () => "https://creator.douyin.com/aweme/v1/creator/item/list?count=12",

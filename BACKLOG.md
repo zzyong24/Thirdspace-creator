@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-339 | frontend lint 债务清零:全仓 eslint 2461 errors(历史累积),分簇清完后把 verify.yml 的 lint 步骤从 continue-on-error 改回硬门 | 📋 | .github/workflows/verify.yml lint 步 | 2026-07-15 ENG-H01 落 CI 时发现;typecheck/test/build 已是硬门 |
 | T-333 | 🔨 T-332·S1 schema 收口迁移:per-account 表 SET NOT NULL+前置 NULL guard+唯一键升级(benchmark/trend/audience_signals 补 account 维)+job_run 唯一+幽灵列清理 | 🔨 开工 | [SPEC](docs/superpowers/specs/2026-07-15-account-full-isolation-spec.md) §7-S1 | 依赖:无。全隔离的地基 |
 | T-334 | T-332·S2 backend strict 门统一+claimOrphans 全链退役:lenient→strict(publishing/analytics/knowledge)+无门补门(notifications/production)+写入口 AccountRequiredError+by-id 号一致门+删 claimOrphan* 全链 | 📋 待用户裁争议点(PASS 已过) | [SPEC](docs/superpowers/specs/2026-07-15-account-full-isolation-spec.md) §7-S2 | 依赖 S1。覆盖并终结 T-331 的止血 |
 | T-335 | T-332·S3 账号上下文咽喉收紧:无效/归档 x-account-id 拒绝不降级+当前号入服务端 session+AccountRequiredError contract 错误码 | 📋 待用户裁争议点(PASS 已过) | [SPEC](docs/superpowers/specs/2026-07-15-account-full-isolation-spec.md) §7-S3 | 依赖 S2。与 W2b 残留认领去重 |

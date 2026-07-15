@@ -1,0 +1,103 @@
+# [T-326 ENG-H01] main/PR 验证门禁 —— 此前唯一 workflow 是可写仓的 Autonomous Harness
+# (harness.yml,固定 feat/service-contract,不跑任何校验),main 曾可在零门禁下演进。
+# 本 workflow 补上:boundary 扫描 + lint + 全包 typecheck + 全包单测 + frontend 生产构建。
+#
+# Node 版本:setup-node 读 .nvmrc(=25),满足根 package.json engines ">=25 <26"。
+# pnpm 版本:pnpm/action-setup@v4 自动读根 package.json 的 packageManager 字段(pnpm@10.32.1),
+#           不在此处重复写死,升级只改一处。
+# harness.yml 保持不动(职责不同:它是无人值守构建循环,本文件是验证门禁)。
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 只读门禁 —— 不需要也不该有写权限(与 harness.yml 的 contents:write 形成对照)。
+permissions:
+  contents: read
+
+# 同一分支/PR 的新提交取消旧跑批,省 runner 时长。
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # lint / boundary / typecheck / 各包单测 —— 快反馈通道。
+  checks:
+    name: lint + typecheck + 单测
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm 版本来自根 package.json 的 packageManager 字段。
+      - uses: pnpm/action-setup@v4
+
+      # Node 25(.nvmrc 单一真值;根 engines ">=25 <26")+ pnpm store 缓存。
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 安装依赖(锁定 lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # 架构边界扫描(基线感知:只挡新增违规,存量 5 条在基线内)。
+      - name: boundary 扫描
+        run: pnpm boundary
+
+      # lint 目前只有 frontend 配了 eslint;其余包暂无 lint script(有什么跑什么)。
+      # [诚实标注] 存量 lint 债务 ~2461 errors(历史累积,BACKLOG 已立清理任务)——lint 先作
+      # 非阻塞可见信号(continue-on-error),typecheck/test/build 才是硬门;债务清零后改回硬门。
+      - name: lint(frontend eslint,非阻塞·存量债务清理中)
+        run: pnpm --filter creatoros-frontend lint
+        continue-on-error: true
+
+      # 全包 tsc --noEmit(frontend 的 typecheck script 自带 next typegen 前置)。
+      - name: typecheck(全 workspace)
+        run: pnpm -r typecheck
+
+      # 单测逐包分步跑 —— 失败时一眼看清挂在哪个包,而非交错日志里捞。
+      # 全部走 vitest + 内存 PGlite(NODE_ENV=test 分支),不需要 Postgres 服务。
+      - name: 单测 contract
+        run: pnpm --filter @creatoros/contract test
+
+      - name: 单测 backend
+        run: pnpm --filter @creatoros/backend test
+
+      - name: 单测 ai-worker
+        run: pnpm --filter @creatoros/ai-worker test
+
+      - name: 单测 mcp-server
+        run: pnpm --filter @creatoros/mcp-server test
+
+      - name: 单测 frontend
+        run: pnpm --filter creatoros-frontend test
+
+  # frontend 生产构建 —— 长通道,与 checks 并行。
+  build:
+    name: frontend 生产构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: 安装依赖(锁定 lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: build(next build)
+        env:
+          # [ENG-H02 隔离带] 当前 next build 仍会构造 persistence(seed/回填/cron 副作用),
+          # 无 DATABASE_URL 时 db driver 默认落盘 ~/.creatoros/db —— 在 CI 里把它显式圈进
+          # runner 临时目录,副作用不出沙箱。ENG-H02 根治(build 零 DB 副作用)后此变量仍无害,
+          # 届时可作为双保险保留或移除。
+          PGLITE_DATA_DIR: ${{ runner.temp }}/creatoros-pglite-build
+        run: pnpm --filter creatoros-frontend build
