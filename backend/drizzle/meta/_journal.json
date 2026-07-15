@@ -281,6 +281,13 @@
       "when": 1782381610000,
       "tag": "0039_favorites_distill",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1782381620000,
+      "tag": "0040_backfill_imported_publication_revision",
+      "breakpoints": true
     }
   ]
 }

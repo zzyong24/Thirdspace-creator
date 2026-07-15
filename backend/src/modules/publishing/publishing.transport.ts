@@ -1,4 +1,4 @@
-import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import { iso8601, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
   UnsupportedOperationError,
@@ -35,17 +35,23 @@ export const PUBLISHING_OP_IDS = [
 ] as const;
 
 function toPublicationResource(row: PublicationRow): PublicationResource {
+  // [B-02] currentRevisionId 在 contract 里是非空 id(z.string().min(1))。所有写路径
+  //   (createPublication auto-mint / register 补铸 / createImportedPublication 原子建
+  //   revision-1)都保证它是真实 id;存量 null 由迁移 0040 回填。真为 null = 数据不变量被
+  //   破坏 —— 诚实抛错让上游 500 暴露,绝不用 "" 占位伪装(空串会让 client 的 Zod parse 整
+  //   条响应失败,毒化 publication list/detail)。
+  if (!row.currentRevisionId) {
+    throw new Error(
+      `publishing invariant violation: publication ${row.id} has no current revision`,
+    );
+  }
   return {
     id: row.id,
     contentOutputId: row.contentOutputId,
     platform: row.platform as PublicationResource["platform"],
     accountReference: row.accountReference,
     status: row.status as PublicationResource["status"],
-    // currentRevisionId is non-nullable in the contract (id, non-empty string).
-    // createPublication auto-mints revision-1 (OQ4) so this is always a real id;
-    // coerce a defensive null to "" should a legacy row ever lack one (the FE keys
-    // off the publication id, not this, for routing).
-    currentRevisionId: row.currentRevisionId ?? "",
+    currentRevisionId: row.currentRevisionId,
     externalId: row.externalId ?? null,
     externalUrl: row.externalUrl ?? null,
     scheduledAt: row.scheduledAt ?? null,
@@ -80,6 +86,22 @@ function toRevisionResource(
 }
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
+
+// [DATA-M03] register 入口规范化辅助:契约输入未在 dispatch 层做 Zod 校验,故在 transport
+//   兜底,防脏值落库后毒化 publicationResource 的读回解析(见 register handler 注释)。
+function normalizePublishedAt(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  // 与输出 publicationResource.publishedAt 同一 iso8601 校验;非法 → null(回退 now)。
+  return iso8601.safeParse(trimmed).success ? trimmed : null;
+}
+
+function normalizeExternalUrl(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  return trimmed === "" ? null : trimmed;
+}
 
 function paginationFrom(query: unknown): {
   limit: number;
@@ -163,17 +185,29 @@ export function createPublishingTransport(
             publishedAt?: string | null;
             title?: string;
           };
+          // [DATA-M03] 入口规范化(dispatch 不按 contract 校验 body,故在此兜底,防脏值毒化
+          //   publicationResource 的解析):
+          //   - publishedAt:非合法 ISO8601 → null(输出是 iso8601|null,落脏串会让读回解析失败;
+          //     置 null 后 repo 回退到 now,不阻断登记这条事实)。
+          //   - externalUrl:trim;空串 → null(resource 允许任意字符串,仅做去空白/空值归一)。
+          const normExternalUrl = normalizeExternalUrl(b.externalUrl);
+          const normPublishedAt = normalizePublishedAt(b.publishedAt);
           let row = await service.registerOwnerPublication(
             ctx,
             p.outputId ?? "",
             {
               platform: b.platform,
               externalId: b.externalId,
-              externalUrl: b.externalUrl ?? null,
-              publishedAt: b.publishedAt ?? null,
+              externalUrl: normExternalUrl,
+              publishedAt: normPublishedAt,
+              // [B-02] 登记项目标题带进原子补铸的 revision-1(currentRevisionId 恒非空;
+              //   下方补铸分支仅为存量 null 行自愈,新建路径不再触发)。
+              title: b.title ?? "",
             },
           );
           if (!row.currentRevisionId) {
+            // 存量兜底:迁移前遗留的 null-current 行(理论上迁移 0040 已清)—— 补铸一版避免
+            //   toPublicationResource 抛不变量错。
             await service.createRevision(ctx, row.id, {
               title: b.title ?? "",
               description: "",

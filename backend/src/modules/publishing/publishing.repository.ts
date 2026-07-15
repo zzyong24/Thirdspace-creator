@@ -43,6 +43,10 @@ export interface CreateImportedPublicationInput {
   externalId: string;
   externalUrl?: string | null;
   publishedAt?: string | null;
+  // [B-02] 原子补铸的 revision-1 标题(缺省空,与 register/createPublication 的 auto-mint
+  //   同语义)。register 登记时把用户项目标题带进 revision-1;日拉导入不传 → 空(标题走
+  //   content_output 回退链)。
+  title?: string;
 }
 
 export interface CreateRevisionInput {
@@ -218,30 +222,51 @@ export function createPublishingRepository(
     },
 
     async createImportedPublication(outputId, input) {
-      // 数据底座(SPEC §1.3):直接落 published + external_id=aweme_id。无 revision
-      //   (导入作品的标题挂在 content_output / project,不强造空 revision)。publishedAt
-      //   用真实发布时刻(缺则 now)。
+      // 数据底座(SPEC §1.3):直接落 published + external_id=aweme_id,publishedAt 用真实
+      //   发布时刻(缺则 now)。
+      // [B-02] 在同一事务里原子补铸 revision-1(title 缺省空)并把 current_revision_id 指向它
+      //   —— contract 的 currentRevisionId 是非空 id(z.string().min(1)),旧实现落 null 后被
+      //   transport 用 "" 占位伪装,会让 client 的 Zod parse 整体失败(日拉一条作品即毒化
+      //   publication list/detail 响应)。原子建 revision 使 currentRevisionId 恒为真实 id,
+      //   与 createPublication 的 auto-mint、register 的补铸同语义。
       const now = deps.now();
-      const id = deps.nextId("pub");
-      await db.insert(publications).values({
-        id,
-        userId,
-        // [T-136 §D 切片 c] 采集 stamp:导入作品归到当前号(null 兜底 → 存量 / 未选号)。
-        accountId: deps.accountId ?? null,
-        contentOutputId: outputId,
-        platform: input.platform,
-        accountReference: input.accountReference,
-        status: "published",
-        currentRevisionId: null,
-        externalId: input.externalId,
-        externalUrl: input.externalUrl ?? null,
-        scheduledAt: null,
-        publishedAt: input.publishedAt ?? now,
-        removedAt: null,
-        createdAt: now,
-        updatedAt: now,
+      const pubId = deps.nextId("pub");
+      const revId = deps.nextId("rev");
+      await db.transaction(async (tx) => {
+        await tx.insert(publications).values({
+          id: pubId,
+          userId,
+          // [T-136 §D 切片 c] 采集 stamp:导入作品归到当前号(null 兜底 → 存量 / 未选号)。
+          accountId: deps.accountId ?? null,
+          contentOutputId: outputId,
+          platform: input.platform,
+          accountReference: input.accountReference,
+          status: "published",
+          currentRevisionId: revId, // 原子指向下面同事务铸出的 revision-1
+          externalId: input.externalId,
+          externalUrl: input.externalUrl ?? null,
+          scheduledAt: null,
+          publishedAt: input.publishedAt ?? now,
+          removedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+        await tx.insert(publicationRevisions).values({
+          id: revId,
+          userId,
+          publicationId: pubId,
+          revisionNumber: 1,
+          title: input.title ?? "",
+          description: "",
+          coverAssetId: null,
+          category: "",
+          series: "",
+          platformTags: [],
+          platformSettings: {},
+          createdAt: now,
+        });
       });
-      return getPublicationRowById(id);
+      return getPublicationRowById(pubId);
     },
 
     async listPublicationsByOutput(outputId, page) {

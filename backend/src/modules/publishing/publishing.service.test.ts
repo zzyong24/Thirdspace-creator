@@ -6,7 +6,11 @@ import {
   type PublishingService,
 } from "./publishing.service";
 import { createMockPublisher, type MockPublisher } from "./platform-publisher";
-import { ConflictError, ValidationError } from "./publishing.errors";
+import {
+  ConflictError,
+  OwnershipError,
+  ValidationError,
+} from "./publishing.errors";
 
 // Step 3 — service: §12 state machine (draft → scheduled → published; draft →
 // published; scheduled → failed; published → removed), external fact-of-record via
@@ -58,6 +62,90 @@ function build(db: Db) {
 beforeEach(async () => {
   ({ db } = await createDb());
   build(db);
+});
+
+// [DATA-H03] create 前校验 outputId 归属:复用已注入的 resolveOutputOwner 端口(越权/不存在
+// → null → OwnershipError,不建悬空/跨属主 publication)。端口未注入(单测退化态)→ 放行。
+describe("createPublication — [DATA-H03] output 归属校验", () => {
+  it("output 不属当前用户 / 不存在 → OwnershipError,不建悬空 publication", async () => {
+    let seq = 0;
+    const guarded = createPublishingService({
+      db,
+      now: () => NOW,
+      nextId: (p: string) => `${p}-h03-${++seq}`,
+      publisher: createMockPublisher(),
+      resolveOutputOwner: (_c, outputId) =>
+        Promise.resolve(
+          outputId === "output-mine"
+            ? { projectId: "proj-mine", source: "manual" }
+            : null,
+        ),
+    });
+    await expect(
+      guarded.createPublication(ctx, "output-theirs", {
+        platform: "douyin",
+        accountReference: "@a",
+      }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    // 属主 output → 正常建(currentRevisionId 非空,auto-mint revision-1)。
+    const ok = await guarded.createPublication(ctx, "output-mine", {
+      platform: "douyin",
+      accountReference: "@a",
+    });
+    expect(ok.status).toBe("draft");
+    expect(ok.currentRevisionId).not.toBe("");
+  });
+
+  it("端口未注入(退化态)→ 跳过校验放行(生产组合根恒接线)", async () => {
+    // 默认 build() 不注入 resolveOutputOwner → createPublication 不被校验拦。
+    const pub = await service.createPublication(ctx, "output-any", {
+      platform: "douyin",
+      accountReference: "@a",
+    });
+    expect(pub.status).toBe("draft");
+  });
+});
+
+// [DATA-H04] 平台发布副作用与本地 rollup 三步非原子:先调平台 → 更 publication → 更
+// output/project。若 rollup 中途失败,publication 已 published 但项目永久未跃迁。同状态重试
+// 补跑幂等 rollup 让其自愈(不重发平台)。
+describe("transition — [DATA-H04] 已发布重试补跑 rollup 对账", () => {
+  it("首发 rollup 失败(项目未跃迁)→ 同状态重试补跑成功,平台不重发", async () => {
+    let seq = 0;
+    let promoted = false;
+    let attempts = 0;
+    const mock = createMockPublisher();
+    const svc = createPublishingService({
+      db,
+      now: () => NOW,
+      nextId: (p: string) => `${p}-h04-${++seq}`,
+      publisher: mock,
+      markOutputPublished: () => {
+        attempts += 1;
+        if (attempts === 1) {
+          // 首发 rollup 失败:publish 已落库(published),项目留在未跃迁态。
+          throw new Error("rollup failed mid-flight");
+        }
+        promoted = true;
+        return Promise.resolve();
+      },
+    });
+    const pub = await svc.createPublication(ctx, "output-1", {
+      platform: "bilibili",
+      accountReference: "@a",
+    });
+    // 首发:平台 publish 成功、publication → published,但 rollup 抛错使 transition 抛。
+    await expect(
+      svc.transition(ctx, pub.id, { status: "published" }),
+    ).rejects.toThrow();
+    const after = await svc.getPublication(ctx, pub.id);
+    expect(after.status).toBe("published"); // 平台事实已落
+    expect(promoted).toBe(false); // 但项目未跃迁
+    // 同状态重试 → 命中重试对账,补跑 rollup 成功(平台不重发)。
+    await svc.transition(ctx, pub.id, { status: "published" });
+    expect(promoted).toBe(true);
+    expect(mock.records().length).toBe(1); // 平台只发过一次
+  });
 });
 
 describe("createPublication (OQ4: auto-mints revision 1)", () => {
@@ -173,8 +261,12 @@ describe("transition — idempotency (SPEC §17/§22)", () => {
     expect(spy).not.toHaveBeenCalled();
     expect(second.externalId).toBe(first.externalId);
     expect(second.status).toBe("published");
-    // markOutputPublished ran exactly once across both calls.
-    expect(calls.markPublished).toBe(1);
+    // [DATA-H04] 平台 publish 不重放,但幂等 rollup 在重进 published 时补跑对账
+    //   (自愈「已发布但项目未跃迁」)—— markOutputPublished 两次调用。派生副作用
+    //   (search/activity/notify)不重放(仍各 1 次)。
+    expect(calls.markPublished).toBe(2);
+    expect(calls.search).toBe(1);
+    expect(calls.notify).toBe(1);
   });
 
   it("same-status transition is a no-op returning the existing DTO", async () => {

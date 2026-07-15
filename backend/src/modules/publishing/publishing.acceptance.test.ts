@@ -135,8 +135,10 @@ describe("G9 — domain acceptance (SPEC §22)", () => {
       status: "published",
     });
     expect(second.externalId).toBe(first.externalId);
-    // markOutputPublished / search fan-out ran exactly once total.
-    expect(calls).toEqual({ markPublished: 1, search: 1 });
+    // [DATA-H04] 平台 publish / search 派生副作用不重放(search 仍恰 1 次);但同状态重试
+    //   会补跑幂等 rollup 对账(markOutputPublished 2 次)—— 自愈「已 published 但属主项目
+    //   未跃迁」的中断态,幂等重跑安全。
+    expect(calls).toEqual({ markPublished: 2, search: 1 });
   });
 
   it("removed retains externalId + metrics anchor (no row delete; SPEC §13.3)", async () => {

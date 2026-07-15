@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
-import { id, paginationQuery } from "../primitives";
+import { id, iso8601, paginationQuery } from "../primitives";
 import {
   publicationResource,
   publicationRevisionResource,
@@ -82,11 +82,15 @@ export const publishingOperations = {
     method: "POST",
     path: "/outputs/:outputId/publications/register",
     params: outputParams,
+    // [DATA-M03] 输入与输出（publicationResource）同源规范:
+    //   - publishedAt 用 iso8601 校验（输出 publishedAt 是 iso8601|null,输入放任意字符串会
+    //     落库后毒化响应解析）。缺省/未提供仍合法(可选)。
+    //   - externalUrl 规范化:trim + 合法 URL（前端粘链接场景防前后空白/半截串)。
     body: z.object({
       platform: z.string().min(1),
       externalId: z.string().min(1),
-      externalUrl: z.string().nullable().optional(),
-      publishedAt: z.string().nullable().optional(),
+      externalUrl: z.string().trim().url().nullable().optional(),
+      publishedAt: iso8601.nullable().optional(),
       title: z.string().optional(),
     }),
     response: publicationResource,

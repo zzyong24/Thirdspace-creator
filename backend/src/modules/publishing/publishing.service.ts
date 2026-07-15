@@ -6,7 +6,7 @@ import {
   type PublicationRow,
   type PublicationRevisionRow,
 } from "./publishing.repository";
-import { ConflictError, ValidationError } from "./publishing.errors";
+import { ConflictError, OwnershipError, ValidationError } from "./publishing.errors";
 import type { PlatformPublisherPort } from "./platform-publisher";
 
 // Publishing service (foundation §5.3) — RequestContext-taking methods that thread
@@ -187,6 +187,8 @@ export interface PublishingService {
       accountReference?: string;
       externalUrl?: string | null;
       publishedAt?: string | null;
+      // [B-02] 新建 pub 时原子补铸的 revision-1 标题(缺省空)。
+      title?: string;
     },
   ): Promise<PublicationRow>;
   // Cross-module resolver for Analytics (SPEC §11/§22): the user-scoped
@@ -250,6 +252,8 @@ export interface PublishingService {
       accountReference?: string;
       externalUrl?: string | null;
       publishedAt?: string | null;
+      // [B-02] 新建分支下原子补铸的 revision-1 标题(登记用户项目标题;缺省空)。
+      title?: string;
     },
   ): Promise<PublicationRow>;
 }
@@ -292,6 +296,41 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     }
   }
 
+  // [DATA-H03] createPublication 前校验 outputId 存在且属当前用户 —— 复用已注入的
+  //   resolveOutputOwner 端口(= projectsService.getOutputOwnerSummary:越权 / 不存在 →
+  //   null)。挡住「认证用户用任意 outputId 建跨属主 / 悬空 publication,平台发布成功后才暴露
+  //   本地状态错误」。fail-closed:能校验就必须过;端口未注入(仅单测退化态)才降级放行 ——
+  //   生产组合根恒接线,dispatch 路径必校验。
+  async function assertOutputOwned(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<void> {
+    if (!deps.resolveOutputOwner) return; // 端口未注入 → 无法校验,降级放行(生产已接线)
+    const owner = await deps.resolveOutputOwner(ctx, outputId);
+    if (!owner) {
+      // 跨用户 / 不存在 → OwnershipError(→404,不泄露行存在性,与本模块所有权门一致)。
+      throw new OwnershipError(
+        `OwnershipError: content output not found: ${outputId}`,
+      );
+    }
+  }
+
+  // [DATA-H04] 重试对账:publication 已 published,但属主项目 rollup 可能因上一次发布中途
+  //   中断而没跃迁(先调平台 → 更 publication → 更 output/project 三步非原子)。同状态重试
+  //   若「直接早返回」,项目会永久留在未跃迁态。markOutputPublished 幂等,重进 published 时
+  //   补跑一次让「已 published 但项目未跃迁」自愈(只补 rollup —— publisher.publish 与
+  //   派生副作用 search/activity/notify 不重放,避免重复发平台 / 重复通知)。
+  async function reconcilePublishedRollup(
+    ctx: RequestContext,
+    pub: PublicationRow,
+  ): Promise<void> {
+    if (!deps.markOutputPublished) return;
+    await deps.markOutputPublished(ctx, {
+      outputId: pub.contentOutputId,
+      publicationId: pub.id,
+    });
+  }
+
   return {
     async claimOrphanPublications(ctx) {
       if (!ctx.accountId) return 0; // 未选号:无号可认领
@@ -317,6 +356,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
           `ValidationError: unknown platform: ${body.platform}`,
         );
       }
+      // [DATA-H03] 建 pub 前校验 output 归属(不建跨属主 / 悬空行)。
+      await assertOutputOwned(ctx, outputId);
       const repo = repoFor(ctx);
       const pub = await repo.createPublication(outputId, body);
       // OQ4 (b-auto): auto-mint an empty revision-1 and set it current so the DTO
@@ -364,8 +405,13 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const current = pub.status;
       const next = body.status;
 
-      // 2. Idempotency (SPEC §17/§22): same-status transition is a no-op.
+      // 2. Idempotency (SPEC §17/§22): same-status transition is a no-op —— 但重进
+      //    published 时必须补跑属主项目 rollup 对账([DATA-H04]:上一次发布可能落了平台事实
+      //    却在 rollup 前中断,项目永久未跃迁;markOutputPublished 幂等,重跑安全)。
       if (next === current) {
+        if (next === "published") {
+          await reconcilePublishedRollup(ctx, pub);
+        }
         return pub;
       }
       // Entering published: if a published row already carries that external key,
@@ -376,6 +422,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
           pub.externalId,
         );
         if (existing && existing.status === "published") {
+          // [DATA-H04] 同上:命中既有 published 行 → 补跑 rollup 对账再返回。
+          await reconcilePublishedRollup(ctx, existing);
           return existing;
         }
       }
@@ -550,6 +598,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         externalId: input.externalId,
         externalUrl: input.externalUrl ?? null,
         publishedAt: input.publishedAt ?? null,
+        title: input.title,
       });
     },
 
@@ -587,6 +636,9 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
           externalId: input.externalId,
           externalUrl: input.externalUrl ?? null,
           publishedAt: input.publishedAt ?? null,
+          // [B-02] 把登记项目标题带进原子补铸的 revision-1(currentRevisionId 恒非空,
+          //   且保留旧行为下 transport 补铸 revision 时捕获的用户标题)。
+          title: input.title,
         });
         await markOwnerPublishedBestEffort(ctx, outputId);
         return created;
