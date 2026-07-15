@@ -6030,11 +6030,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       trigger: async (c, job) => {
         await triggerScheduledJob(c, job, triggerDeps);
       },
+      // [T-331] 绑定 claim 收敛门:该 user 是否存在**其它** active 抖音号(≠ 本次绑定号)。
+      //   true → 二绑及以后,collection-bootstrap 会跳过下方 claimOrphans(NULL 存量属谁未知,
+      //   无条件认领会把旧号数据整批错认给新号 —— 真机数据污染根因);false → 首绑(或重扫同一号),
+      //   claim 照旧(T-200 修串号原意)。listAccounts 只按 douyin + active 计数;查询失败由
+      //   collection-bootstrap fail-closed(跳过 claim),此处不吞错。
+      hasOtherActiveDouyinAccount: async (c) => {
+        const { rows } = await platformAccountService.listAccounts(c, {
+          limit: 100,
+          offset: 0,
+        });
+        return rows.some(
+          (a) =>
+            a.platform === "douyin" &&
+            a.status === "active" &&
+            a.id !== c.accountId,
+        );
+      },
       // [T-200] 认领存量无号采集数据给 ctx.accountId(单账号现实下安全):经各模块公开 claim 端口
       //   (不跨模块直连 repo);projects(imported)/publications/metric_snapshots+values/assets/
       //   scheduled_job 各自认领。幂等、best-effort;返回各表认领行数(诊断日志用)。
       //   多账号诚实边界:此认领把 orphan 归给触发绑定的号(单号现实安全);多账号精确 targeting
-      //   是 T-136 §D 后续。
+      //   是 T-136 §D 后续。[T-331] 仅首绑执行(见上方收敛门)。
       claimOrphans: async (c) => {
         const [projectsN, pubsN, metrics, assetsN, jobsN] = await Promise.all([
           projectsService.claimOrphanImportedProjects(c),

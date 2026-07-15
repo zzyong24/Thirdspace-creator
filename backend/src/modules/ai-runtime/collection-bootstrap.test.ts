@@ -18,6 +18,8 @@ const ctx: RequestContext = {
 };
 
 // 无既有 job 的 fake deps:createJob 递增发 id,trigger 记录被触发的 job(顺序即调用序)。
+// [T-331] 默认注入首绑门(hasOtherActiveDouyinAccount → false = 无其它 active 号):claim
+//   相关既有用例保持 T-200 首绑语义;二绑用例显式覆写为 true。
 function makeDeps(
   existingBySourceKind: Record<string, { id: string; accountId?: string | null }[]> = {},
 ): CollectionBootstrapDeps & {
@@ -25,6 +27,7 @@ function makeDeps(
   _createJob: ReturnType<typeof vi.fn>;
   _trigger: ReturnType<typeof vi.fn>;
   _claimOrphans: ReturnType<typeof vi.fn>;
+  _hasOtherActive: ReturnType<typeof vi.fn>;
   createdJobs: { sourceKind: string; schedule: string; name: string }[];
   triggeredSourceKinds: string[];
   triggeredAccountIds: (string | null | undefined)[];
@@ -87,16 +90,20 @@ function makeDeps(
       scheduledJobs: 1,
     };
   });
+  // [T-331] 默认首绑(无其它 active 抖音号);二绑用例 mockResolvedValue(true) 覆写。
+  const _hasOtherActive = vi.fn(async (_c: RequestContext) => false);
   return {
     listJobsBySourceKind: _listJobs,
     createJob: _createJob,
     trigger: _trigger,
     claimOrphans: _claimOrphans,
+    hasOtherActiveDouyinAccount: _hasOtherActive,
     target: {},
     _listJobs,
     _createJob,
     _trigger,
     _claimOrphans,
+    _hasOtherActive,
     createdJobs,
     triggeredSourceKinds,
     triggeredAccountIds,
@@ -303,6 +310,42 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps._claimOrphans).toHaveBeenCalledTimes(1);
     // claim 时 create/trigger 均未发生(claimCallOrder 记录的计数应为 0 = 最先跑)。
     expect(deps.claimCallOrder).toEqual([0]);
+    // [T-331] 首绑判定确实经收敛门(带绑定 ctx)。
+    expect(deps._hasOtherActive).toHaveBeenCalledTimes(1);
+    expect(deps._hasOtherActive).toHaveBeenCalledWith(ctx);
+  });
+
+  it("[T-331] 已有其它 active 抖音号(二绑)→ claimOrphans 零调用,建 job/触发照常", async () => {
+    const deps = makeDeps();
+    deps._hasOtherActive.mockResolvedValue(true); // 该 user 已有别的 active 号
+    const res = await bootstrapDouyinCollectionJobs(
+      { ...ctx, accountId: "acct-2" },
+      deps,
+    );
+    // 核心断言:二绑绝不认领(NULL 存量属谁未知,认领 = 把旧号数据错认给新号)。
+    expect(deps._claimOrphans).not.toHaveBeenCalled();
+    // 建 job / 初始化触发不受影响(收敛门只挡 claim,不挡 bootstrap 主流程)。
+    expect(res.created).toHaveLength(6);
+    expect(res.triggered).toHaveLength(6);
+  });
+
+  it("[T-331] 收敛门未注入 → fail-closed 跳过 claim(不阻断建 job/触发)", async () => {
+    const deps = makeDeps();
+    delete (deps as { hasOtherActiveDouyinAccount?: unknown })
+      .hasOtherActiveDouyinAccount;
+    const res = await bootstrapDouyinCollectionJobs(ctx, deps);
+    expect(deps._claimOrphans).not.toHaveBeenCalled();
+    expect(res.created).toHaveLength(6);
+    expect(res.triggered).toHaveLength(6);
+  });
+
+  it("[T-331] 收敛门查询抛错 → fail-closed 跳过 claim(不阻断建 job/触发)", async () => {
+    const deps = makeDeps();
+    deps._hasOtherActive.mockRejectedValueOnce(new Error("accounts boom"));
+    const res = await bootstrapDouyinCollectionJobs(ctx, deps);
+    expect(deps._claimOrphans).not.toHaveBeenCalled();
+    expect(res.created).toHaveLength(6);
+    expect(res.triggered).toHaveLength(6);
   });
 
   it("[T-200] claimOrphans 抛错 → 不阻断建 job/触发(best-effort)", async () => {
