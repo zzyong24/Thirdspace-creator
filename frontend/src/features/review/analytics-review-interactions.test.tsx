@@ -181,15 +181,25 @@ describe("AnalyticsReviewPage interactions", () => {
     expect(cards).toHaveLength(7);
   });
 
-  it("toggles the primary chart tab", () => {
+  // [T-329] 「趋势 / 漏斗」chip 假切换已删(两图常挂、chip 只切强调态,无真切换语义):
+  // 断言 tablist / chip 无残骸,两图直接并排常挂。
+  it("does NOT render the removed 趋势/漏斗 chart-tab chips; both charts stay mounted", () => {
     const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
-    const funnelTab = container.querySelector<HTMLButtonElement>(
-      '[data-slot="primary-chart-tab"][data-chart-tab="funnel"]',
-    );
-    expect(funnelTab).not.toBeNull();
-    expect(funnelTab!.getAttribute("data-pressed")).toBe("false");
-    fireEvent.click(funnelTab!);
-    expect(funnelTab!.getAttribute("data-pressed")).toBe("true");
+    expect(
+      container.querySelector('[data-slot="primary-chart-tabs"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="primary-chart-tab"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="primary-charts"] [role="tablist"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="views-trend-chart"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="conversion-funnel"]'),
+    ).not.toBeNull();
   });
 
   // [T-116b] 关键时刻区已移除(无真数据源 op)—— 断言它不再渲染。
@@ -244,7 +254,7 @@ describe("AnalyticsReviewPage states", () => {
     ).not.toBeNull();
   });
 
-  it("renders the EMPTY state", () => {
+  it("renders the EMPTY state (narrowed to the metrics/charts region)", () => {
     const vm = buildPageScenario(
       () => buildAnalyticsReviewViewModel(PROJECT_ID),
       "empty",
@@ -255,6 +265,30 @@ describe("AnalyticsReviewPage states", () => {
     expect(container.querySelector('[data-page-state="empty"]')).not.toBeNull();
     expect(
       container.querySelector('[data-slot="page-state-empty"]'),
+    ).not.toBeNull();
+    // [T-329] 空态收窄到指标/图表区:指标卡与主图不渲。
+    expect(container.querySelector('[data-slot="core-metrics-row"]')).toBeNull();
+    expect(container.querySelector('[data-slot="primary-charts"]')).toBeNull();
+  });
+
+  // [T-329] 拆掉 isEmpty 吞噬门:指标空时复盘编辑面板 + 复盘记录始终渲染
+  // (手动复盘不依赖指标采集,不该被指标空态吞掉)。
+  it("EMPTY state still renders the 复盘编辑 panel and 复盘记录 card", () => {
+    const vm = buildPageScenario(
+      () => buildAnalyticsReviewViewModel(PROJECT_ID),
+      "empty",
+    );
+    const { container } = render(
+      <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
+    );
+    expect(
+      container.querySelector('[data-slot="review-authoring-panel"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="review-history-card"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="add-insight-form"]'),
     ).not.toBeNull();
   });
 });
@@ -293,11 +327,13 @@ describe("AnalyticsReviewPage analytics.projects.get-backed ViewModel", () => {
       <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
     );
     // The page rendered the metric row from the op-backed ViewModel.
+    // [T-329] 指标全量:op 路径 12 张卡(总播放/点赞/评论/分享/收藏/新增粉丝/主页访问/
+    // 完播率/5s完播率/封面CTR/2s跳出率/平均播放时长)。
     expect(
       container.querySelectorAll(
         '[data-slot="core-metrics-row"] [data-slot="metric-card"]',
       ),
-    ).toHaveLength(7);
+    ).toHaveLength(12);
   });
 
   it("removes the 查看全部 decorative button; keeps top-published cards inert (decorative)", () => {

@@ -293,8 +293,13 @@ export function isPublicationRunnableForHeavyWork(row: {
  *   外加明细独有键(5s完播 / 2s跳出 / 主页访问)承载 D8a 新字段,供漏斗 / 后续消费。
  * 注:复盘 view-model 读「封面点击率」用的键是 `ctr`(见 analytics-review-view-model.ts),
  *   故 coverCtr 映射到 `ctr`(而非 cover_ctr),这样复盘卡即刻显真值。
+ * [T-329] 补 `genre`(体裁,字符串,如 "1-3min视频"/"图文")——此前明细 16 列唯一
+ *   没进 rawMetrics 的字段;仅在非空时带上(空串不落假键)。复盘「热门作品发布列表」
+ *   行内展示体裁(不做指标卡)。
  */
-export function detailToRawMetrics(d: DouyinWorkDetail): Record<string, number> {
+export function detailToRawMetrics(
+  d: DouyinWorkDetail,
+): Record<string, number | string> {
   return {
     plays: d.plays,
     ctr: d.coverCtr, // 封面点击率 → 复盘读侧键 `ctr`(0/fixture → 真)
@@ -309,6 +314,8 @@ export function detailToRawMetrics(d: DouyinWorkDetail): Record<string, number> 
     finish_5s_rate: d.finish5sRate,
     bounce_2s_rate: d.bounce2sRate,
     profile_visits: d.profileVisits,
+    // [T-329] 体裁(字符串键;空串不带,诚实不落空键)。
+    ...(d.genre ? { genre: d.genre } : {}),
   };
 }
 

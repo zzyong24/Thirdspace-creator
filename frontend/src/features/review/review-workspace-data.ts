@@ -207,6 +207,65 @@ export interface ReviewDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // [T-329] 真作品标题/平台装配(outputs→publications 两跳,与对照区同两 op)——
+  // 「热门作品发布列表」与 REV-2 对比行显真标题而非 id 截断。可选:旧 client 缺省 →
+  // labels 空,读侧回退稳定占位(诚实降级)。
+  listOutputs?(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  listPublications?(input: {
+    params: { outputId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+/**
+ * [T-329] 装配 publicationId → { title, platform } 标签(真标题;outputs→publications
+ * 两跳)。任一读失败 → 已装配的部分保留(诚实局部);全失败 → {}(读侧回退占位)。
+ */
+async function readPublicationLabels(
+  client: ReviewDataClient,
+  projectId: string,
+): Promise<Record<string, { title: string; platform: string }>> {
+  if (!client.listOutputs || !client.listPublications) return {};
+  const labels: Record<string, { title: string; platform: string }> = {};
+  try {
+    const outputsRaw = await client.listOutputs({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    });
+    const outputs = (Array.isArray(outputsRaw) ? outputsRaw : []) as Array<{
+      id: string;
+    }>;
+    for (const o of outputs) {
+      try {
+        const pubsRaw = await client.listPublications({
+          params: { outputId: o.id },
+          query: { page: 1, pageSize: 20 },
+          body: undefined,
+        });
+        for (const p of (Array.isArray(pubsRaw) ? pubsRaw : []) as Array<{
+          id: string;
+          title?: string;
+          platform?: string;
+        }>) {
+          labels[p.id] = {
+            title: typeof p.title === "string" ? p.title : "",
+            platform: typeof p.platform === "string" ? p.platform : "",
+          };
+        }
+      } catch {
+        // 单产出读失败 → 跳过,不沉整批标签。
+      }
+    }
+  } catch {
+    return {};
+  }
+  return labels;
 }
 
 // Subset of `reviewResource` (reviews.list).
@@ -242,6 +301,9 @@ async function readReviewHistory(
       title: `${r.reviewType === "project" ? "项目复盘" : "作品复盘"} · ${r.periodStart.slice(0, 10)} ~ ${r.periodEnd.slice(0, 10)}`,
       completedAt: r.completedAt ?? r.createdAt,
       tone: r.status === "completed" ? ("positive" as const) : ("neutral" as const),
+      // [T-329] 状态透传:复盘编辑面板据此接管「进行中」的复盘(刷新后继续记洞察,
+      // 不再另起新复盘)。
+      status: r.status,
     }));
   } catch {
     return [];
@@ -353,7 +415,10 @@ export async function buildReviewWorkspaceViewModel(
       query: { page: 1, pageSize: 100 },
       body: undefined,
     })) as ReadonlyArray<MetricSnapshotDto>;
-    base = buildAnalyticsReviewViewModelFromOp(projectId, snapshots);
+    // [T-329] 真标题/平台标签(outputs→publications 两跳)——热门作品发布列表 +
+    // REV-2 对比行显真标题;读失败 → {}(读侧回退稳定占位,诚实降级)。
+    const labels = await readPublicationLabels(client, projectId);
+    base = buildAnalyticsReviewViewModelFromOp(projectId, snapshots, labels);
   } catch {
     base = buildAnalyticsReviewViewModelFromOp(projectId, []);
   }

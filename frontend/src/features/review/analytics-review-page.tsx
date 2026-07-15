@@ -3,26 +3,22 @@
  *
  * The `project-workspace` Header mode landing page for the Review
  * stage. Composes:
- *  - an `AnalyticsTabs` row of page tabs,
- *  - a `MainAnalytics` block with four regions in the spec order
- *      CoreMetricsRow (7 MetricCards in a single row) →
+ *  - a `MainAnalytics` block in the order
+ *      CoreMetricsRow ([T-329] 12 张紧凑指标卡,auto-fit 响应式网格) →
  *      PrimaryCharts (ViewsTrendChart as a line +
- *        ConversionFunnel as a triangle / funnel) →
- *      SecondaryCharts (AudienceProfile donut +
- *        AudienceSource horizontal bars +
- *        RetentionCurve) →
- *      KeyMomentsSection.
- *  - a `RightRail` with two cards in the locked order
- *      InsightCard → ReviewHistoryCard.
+ *        ConversionFunnel as a triangle / funnel,并排常挂) →
+ *      TopPublished → Comments → CurrentPeriodLearnings.
+ *  - a `RightRail` with the locked order
+ *      InsightCard → ReviewAuthoringPanel → ReviewHistoryCard.
  *
- * Layout invariants (locked by page-specs §10):
- *  - exactly SEVEN CoreMetricsRow cards in a single row,
+ * Layout invariants:
  *  - PrimaryCharts expose two distinct visual shapes (line vs.
  *    funnel) — no chart type changes, no new metrics introduced,
  *  - the AI Analysis card lives inside the right rail (NOT a
  *    modal / overlay layer),
  *  - every chart provides a sr-only textual summary so the data
- *    is not conveyed by color alone (D-007).
+ *    is not conveyed by color alone (D-007),
+ *  - [T-329] 指标空态只收窄到图表/指标区;复盘编辑面板与复盘记录始终渲染。
  *
  * The page is a Server Component. It does not own a Sidebar or a
  * TopHeader — those live in `(creator)/layout.tsx` and are mounted
@@ -33,7 +29,6 @@
 import * as React from "react";
 
 import {
-  EmptyState,
   ErrorState,
   LoadingState,
   resolvePageState,
@@ -93,11 +88,15 @@ export function AnalyticsReviewPage({
   predictionComparison,
 }: AnalyticsReviewPageProps) {
   const vm = viewModel ?? buildAnalyticsReviewViewModel(projectId);
-  const isEmpty =
+  const metricsEmpty =
     vm.metrics.length === 0 &&
     vm.viewsTrend.length === 0 &&
     vm.conversionFunnel.length === 0;
-  const state = resolvePageState(vm, isEmpty);
+  const state = resolvePageState(vm, metricsEmpty);
+  // [T-329] 拆掉 isEmpty 吞噬门:指标空 ≠ 整页空。此前空指标把整个 interactive region
+  // (含复盘编辑面板/复盘记录 —— 与指标采集无依赖的真 op 面)整体吞掉,用户在没跑
+  // 「拉明细」前连手动复盘都做不了。现在空态收窄到图表/指标区(region 内部渲窄化
+  // EmptyState),编辑面板/记录/评论等区始终渲染(各自带诚实空态)。
   return (
     <main
       data-app="creatoros"
@@ -110,23 +109,11 @@ export function AnalyticsReviewPage({
         <LoadingState label="正在加载数据复盘…" rows={6} />
       ) : state === "error" ? (
         <ErrorState error={vm.error} />
-      ) : state === "empty" ? (
-        <>
-          <EmptyState
-            title="该作品暂无明细数据"
-            description="还没有拉到这个作品的播放/互动明细。去自动化跑「拉明细」采集，数据回收后即可在此查看复盘分析。"
-          />
-          {/* [T-063e] 已锁定盲预测但数据未回流,正是空指标态 —— 对照区照渲(等待回流)。 */}
-          {predictionComparison !== undefined ? (
-            <PredictionComparisonSection vm={predictionComparison} />
-          ) : null}
-          {/* [T-247] 已回流校准(待采纳)建议列表(user-scoped;0 条不渲)。 */}
-          <CalibrationSuggestionsCard />
-        </>
       ) : (
         <>
           <ReviewAnalyzeIsland projectId={vm.projectId} />
-          {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。 */}
+          {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。空指标态也照渲 ——
+              已锁定盲预测、数据还没回流,正是「等待回流」该被看见的时刻。 */}
           {predictionComparison !== undefined ? (
             <PredictionComparisonSection vm={predictionComparison} />
           ) : null}
@@ -135,6 +122,7 @@ export function AnalyticsReviewPage({
           <AnalyticsReviewInteractiveRegion
             viewModel={vm}
             reviewsWiring={reviewsWiring}
+            metricsEmpty={state === "empty"}
           />
         </>
       )}

@@ -204,6 +204,32 @@ describe("detailToRawMetrics — 明细 → 复盘读侧键位(0/fixture → 真
     expect(raw.finish_5s_rate).toBe(8);
     expect(raw.bounce_2s_rate).toBe(15);
     expect(raw.profile_visits).toBe(120);
+    // [T-329] 体裁(字符串键)—— 明细 16 列最后一个未进 rawMetrics 的字段,补齐。
+    expect(raw.genre).toBe("视频");
+  });
+
+  // [T-329] genre 空串 → 不落键(诚实:没有体裁就不摆空字符串假键)。
+  it("genre 为空串时不落 genre 键", () => {
+    const d: DouyinWorkDetail = {
+      title: "t",
+      pubDate: "2026-06-21",
+      genre: "",
+      status: "已通过",
+      plays: 1,
+      finishRate: 0,
+      finish5sRate: 0,
+      coverCtr: 0,
+      bounce2sRate: 0,
+      avgDurationSec: 0,
+      likes: 0,
+      shares: 0,
+      comments: 0,
+      favorites: 0,
+      profileVisits: 0,
+      followerGain: 0,
+    };
+    const raw = detailToRawMetrics(d);
+    expect("genre" in raw).toBe(false);
   });
 });
 

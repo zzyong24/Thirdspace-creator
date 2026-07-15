@@ -34,6 +34,11 @@ export interface MetricCard {
   readonly delta: string;
   readonly trend: "up" | "down" | "flat";
   readonly tone: "neutral" | "positive" | "negative" | "warning" | "info";
+  /**
+   * [T-329] 卡内小字副标签(如「待采集」)。可选 additive:此前「暂无(待采集)」
+   * 语义靠 label 后缀撑长标签;改为 note 承载,label 保持干净短标签。
+   */
+  readonly note?: string;
 }
 
 export interface StatusTab {
@@ -463,6 +468,11 @@ export interface TopPublishedCard {
   readonly platform: string;
   readonly views: string;
   readonly tone: "primary" | "compact";
+  /**
+   * [T-329] 体裁(抖音明细「体裁」列,如 "1-3min视频" / "图文")。可选 additive:
+   * 仅当该作品的采集帧真带 genre 才显;无 → 不摆(诚实)。
+   */
+  readonly genre?: string | null;
 }
 
 // REV-2 对比分析 tab — one row per publication of the project, derived by
@@ -509,6 +519,11 @@ export interface AnalyticsViewModel extends BasePageViewModel {
     readonly title: string;
     readonly completedAt: Iso8601;
     readonly tone: "positive" | "warning" | "neutral";
+    /**
+     * [T-329] 复盘状态(reviewResource.status:in_progress / completed / abandoned)。
+     * 可选 additive:复盘编辑面板据此接管「进行中」的复盘(刷新后不再另起新复盘)。
+     */
+    readonly status?: string;
   }>;
   // REV-2 对比分析 tab. Optional + additive: pages that don't render this tab
   // ignore it; absence means "no real data" → empty state.

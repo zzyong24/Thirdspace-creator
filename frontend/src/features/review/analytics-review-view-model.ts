@@ -7,11 +7,12 @@
  * retention shapes that have NO owned contract op) and then OVERLAYS the REAL
  * signal carried by the returned snapshots' `rawMetrics`:
  *   - `empty`: a project with zero owned snapshots renders the empty state.
- *   - with snapshots: the 7 core metric cards (总播放/点赞/评论/新增粉丝/完播率/
- *     封面点击率/分享) + the conversion funnel + the views trend are recomputed
- *     from the REAL aggregated `rawMetrics` (the user's Douyin creator-center
- *     numbers seeded into analytics). Deltas are dropped (no period-over-period
- *     source) so the page never shows a fabricated "+12%".
+ *   - with snapshots: the 12 core metric cards ([T-329] 全量:总播放/点赞/评论/
+ *     分享/收藏/新增粉丝/主页访问/完播率/5s完播率/封面点击率/2s跳出率/平均播放
+ *     时长) + the conversion funnel + the views trend are recomputed from the
+ *     REAL aggregated `rawMetrics` (the user's Douyin creator-center numbers
+ *     seeded into analytics). Deltas are dropped (no period-over-period source)
+ *     so the page never shows a fabricated "+12%".
  *
  * Pure + deterministic: no `Date.now` / `Math.random` / `fetch`. The fetch lives
  * in the route (`page.tsx`); this module only shapes the already-fetched data.
@@ -24,6 +25,7 @@ import type {
   ComparisonRow,
   ComparisonTab,
   MetricCard,
+  TopPublishedCard,
 } from "@/types/view-models";
 
 // The subset of the `metricSnapshotResource` DTO this builder reads. Mirrors
@@ -44,6 +46,38 @@ function num(raw: Record<string, unknown>, key: string): number {
 function formatCount(value: number): string {
   if (value >= 10000) return `${(value / 10000).toFixed(1)} 万`;
   return value.toLocaleString("zh-CN");
+}
+
+// [T-329] 平均播放时长格式化:<60s → "42.6s";≥60s → "1:05"(分:秒)。输入是秒(明细
+// avg_duration_sec,已保留 1 位小数)。
+export function formatDurationSec(seconds: number): string {
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    // 进位边界:59.6s 四舍五入到 60 → 挪进分钟位,不显 "1:60"。
+    if (s === 60) return `${m + 1}:00`;
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  // 整数秒不带小数点(12s 比 12.0s 干净);带小数保留 1 位。
+  return Number.isInteger(seconds) ? `${seconds}s` : `${seconds.toFixed(1)}s`;
+}
+
+// [T-329] 平台代码 → 中文展示标签(publication.platform 是平台 id;热门作品行显中文)。
+function platformDisplayLabel(platform: string): string {
+  switch (platform) {
+    case "douyin":
+      return "抖音";
+    case "xiaohongshu":
+      return "小红书";
+    case "bilibili":
+      return "B 站";
+    case "youtube":
+      return "YouTube";
+    case "wechatVideo":
+      return "视频号";
+    default:
+      return platform;
+  }
 }
 
 // 播放趋势(真日级序列) — T-035b 诚实化。
@@ -225,18 +259,24 @@ export function buildAnalyticsReviewViewModelFromOp(
 
   // Aggregate the REAL rawMetrics across the project's LATEST-per-publication
   // snapshots. plays/likes/comments/shares/favorites/follower_gain sum;
-  // ctr/finish_rate average across the snapshots that actually carry them
-  // (views-keyed 采集帧无 ctr/finish_rate — 用其求均会把真值稀释为 0)。
+  // ctr/finish_rate/finish_5s_rate/bounce_2s_rate/avg_duration_sec average across
+  // the snapshots that actually carry them (views-keyed 采集帧无这些明细键 —— 用其
+  // 求均/求和会把真值稀释成 0);profile_visits sum over carrying frames only。
   let views = 0,
     likes = 0,
     comments = 0,
     shares = 0,
     favorites = 0,
-    follower = 0,
-    ctrSum = 0,
-    ctrN = 0,
-    finSum = 0,
-    finN = 0;
+    follower = 0;
+  // 键存在性敏感的聚合(sum/avg + 携带帧计数)——无任何帧携带 → 卡显「暂无 · 待采集」。
+  const keyed = {
+    ctr: { sum: 0, n: 0 },
+    finish_rate: { sum: 0, n: 0 },
+    finish_5s_rate: { sum: 0, n: 0 },
+    bounce_2s_rate: { sum: 0, n: 0 },
+    avg_duration_sec: { sum: 0, n: 0 },
+    profile_visits: { sum: 0, n: 0 },
+  };
   for (const s of latest) {
     const r = s.rawMetrics ?? {};
     views += playsOf(r);
@@ -245,42 +285,59 @@ export function buildAnalyticsReviewViewModelFromOp(
     shares += num(r, "shares");
     favorites += num(r, "favorites");
     follower += num(r, "follower_gain");
-    if ("ctr" in r) {
-      ctrSum += num(r, "ctr");
-      ctrN += 1;
-    }
-    if ("finish_rate" in r) {
-      finSum += num(r, "finish_rate");
-      finN += 1;
+    for (const key of Object.keys(keyed) as Array<keyof typeof keyed>) {
+      if (key in r) {
+        keyed[key].sum += num(r, key);
+        keyed[key].n += 1;
+      }
     }
   }
-  const ctr = ctrN > 0 ? ctrSum / ctrN : 0; // percent (0–100); 0 = 无采集帧携带
-  const finish = finN > 0 ? finSum / finN : 0; // percent; 0 = 无采集帧携带
+  const avgOf = (k: keyof typeof keyed): number =>
+    keyed[k].n > 0 ? keyed[k].sum / keyed[k].n : 0;
+  const ctr = avgOf("ctr"); // percent (0–100); 0 = 无采集帧携带
   const interactions = likes + comments + shares + favorites;
 
-  // 7 core metric cards from REAL values. delta "" + trend "flat": no
-  // period-over-period source, so we show the real number without a fake change.
+  // [T-329] 12 core metric cards from REAL values(全量消费明细 16 列里的指标键)。
+  // delta "" + trend "flat": no period-over-period source, so we show the real
+  // number without a fake change.
   const card = (
     id: string,
     label: string,
     value: string,
     tone: MetricCard["tone"],
-  ): MetricCard => ({ id, label, value, delta: "", trend: "flat", tone });
-  // 完播率 / 封面点击率:仅当最新采集帧真的携带该字段才显真值;否则「暂无」——
-  // 该作品的最新采集是 views-only 帧(无 ctr/finish_rate),不编「0.0%」(读起来像
-  // 「0% 完播」的假值)。诚实标暂无 → 去自动化跑「拉明细」采集。
-  // [Bug-3 T-016] 该作品的最新采集是 views-only(无 ctr/finish_rate)时,label 加「待采集」提示,
-  // 让用户一眼知道「暂无」= 没跑明细采集,不是 0%。value 仍诚实标暂无(不编假 0.0%)。
-  const completionLabel = finN > 0 ? "完播率" : "完播率(待采集)";
-  const ctrLabel = ctrN > 0 ? "封面点击率" : "封面点击率(待采集)";
+    note?: string,
+  ): MetricCard => ({ id, label, value, delta: "", trend: "flat", tone, ...(note ? { note } : {}) });
+  // 比率/时长/主页访问:仅当采集帧真的携带该键才显真值;否则「暂无」+ 卡内小字
+  // 「待采集」(不编「0.0%」这种读起来像真 0 的假值;宪法 §8)。[T-329] 「待采集」
+  // 从 label 后缀改为卡内 note 副标签,label 保持短。
+  const rateCard = (
+    id: string,
+    label: string,
+    key: keyof typeof keyed,
+    tone: MetricCard["tone"],
+  ): MetricCard =>
+    keyed[key].n > 0
+      ? card(id, label, `${avgOf(key).toFixed(1)}%`, tone)
+      : card(id, label, "暂无", tone, "待采集");
   const metrics: ReadonlyArray<MetricCard> = [
     card("m-views", "总播放量", formatCount(views), "positive"),
     card("m-likes", "点赞数", formatCount(likes), "positive"),
     card("m-comments", "评论数", formatCount(comments), "neutral"),
-    card("m-followers", "新增粉丝", formatCount(follower), "positive"),
-    card("m-completion", completionLabel, finN > 0 ? `${finish.toFixed(1)}%` : "暂无", "info"),
-    card("m-ctr", ctrLabel, ctrN > 0 ? `${ctr.toFixed(1)}%` : "暂无", "info"),
     card("m-shares", "分享数", formatCount(shares), "positive"),
+    card("m-favorites", "收藏数", formatCount(favorites), "positive"),
+    card("m-followers", "新增粉丝", formatCount(follower), "positive"),
+    // 主页访问量:明细独有键 —— 无携带帧显「暂无」,不编 0(views-only 采集测不到它)。
+    keyed.profile_visits.n > 0
+      ? card("m-profile-visits", "主页访问量", formatCount(keyed.profile_visits.sum), "neutral")
+      : card("m-profile-visits", "主页访问量", "暂无", "neutral", "待采集"),
+    rateCard("m-completion", "完播率", "finish_rate", "info"),
+    rateCard("m-finish-5s", "5s完播率", "finish_5s_rate", "info"),
+    rateCard("m-ctr", "封面点击率", "ctr", "info"),
+    rateCard("m-bounce-2s", "2s跳出率", "bounce_2s_rate", "info"),
+    // 平均播放时长:秒 → "42.6s" / "1:05";无携带帧 → 暂无。
+    keyed.avg_duration_sec.n > 0
+      ? card("m-avg-duration", "平均播放时长", formatDurationSec(avgOf("avg_duration_sec")), "info")
+      : card("m-avg-duration", "平均播放时长", "暂无", "info", "待采集"),
   ];
 
   // Conversion funnel from REAL numbers ONLY (§8 不摆假). 抖音 exposes 播放(plays)
@@ -301,6 +358,13 @@ export function buildAnalyticsReviewViewModelFromOp(
   // 项目 → 单点 + mode "single"(页面显「需多次采集」),绝不用假 weekday 权重铺假曲线。
   const { trend: viewsTrend, mode: viewsTrendMode } = buildRealViewsTrend(snapshots);
 
+  // [T-329] 热门作品发布列表:真项目从真快照构建(播放量降序 top 4,带体裁 genre);
+  // canonical demo 保留 fixture 基座(有真作品标题的演示数据)。此前真项目该区恒空
+  // (base 对非 fixture 项目返回 []),明细已在库却不展示。
+  const topPublished = isFixtureAnalyticsProject(projectId)
+    ? base.topPublished
+    : buildTopPublishedFromSnapshots(snapshots, latest, labels);
+
   return {
     ...base,
     scenario: "default",
@@ -308,7 +372,51 @@ export function buildAnalyticsReviewViewModelFromOp(
     conversionFunnel,
     viewsTrend,
     viewsTrendMode,
+    topPublished,
     // REV-2: per-publication comparison over the SAME snapshots (empty <2 pubs).
     comparison: buildComparisonViewModel(snapshots, labels),
   };
+}
+
+/**
+ * [T-329] 从真快照构建「热门作品发布列表」(播放量降序 top 4)。
+ *  - title/platform 来自 labels(route 层经 outputs→publications 装配的真标题);
+ *    无 label → 稳定回退「作品 <id 前 8 位>」(诚实占位,不编标题)。
+ *  - genre(体裁)取该发布**最新携带 genre 的采集帧**(明细帧才带;views-only 帧无。
+ *    没有任何帧带 → 不摆,行内不渲染体裁徽标)。
+ */
+function buildTopPublishedFromSnapshots(
+  snapshots: ReadonlyArray<MetricSnapshotDto>,
+  latestByPublication: ReadonlyArray<MetricSnapshotDto>,
+  labels: Readonly<Record<string, { title: string; platform: string }>>,
+): ReadonlyArray<TopPublishedCard> {
+  // 发布 → 最新一帧携带 genre 的采集(明细帧);latest 帧可能是 views-only(无 genre)。
+  const genreByPub = new Map<string, { capturedAt: string; genre: string }>();
+  for (const s of snapshots) {
+    if (!s.publicationId) continue;
+    const g = (s.rawMetrics ?? {}).genre;
+    if (typeof g !== "string" || g.length === 0) continue;
+    const prev = genreByPub.get(s.publicationId);
+    if (!prev || s.capturedAt > prev.capturedAt) {
+      genreByPub.set(s.publicationId, { capturedAt: s.capturedAt, genre: g });
+    }
+  }
+
+  const playsOf = (r: Record<string, unknown>): number =>
+    num(r, "views") || num(r, "plays");
+  return latestByPublication
+    .slice()
+    .sort((a, b) => playsOf(b.rawMetrics ?? {}) - playsOf(a.rawMetrics ?? {}))
+    .slice(0, 4)
+    .map((s, index): TopPublishedCard => {
+      const label = labels[s.publicationId];
+      return {
+        id: `tp-${s.publicationId}`,
+        title: label?.title || `作品 ${s.publicationId.slice(0, 8)}`,
+        platform: platformDisplayLabel(label?.platform || "douyin"),
+        views: `${formatCount(playsOf(s.rawMetrics ?? {}))} 播放`,
+        tone: index === 0 ? "primary" : "compact",
+        genre: genreByPub.get(s.publicationId)?.genre ?? null,
+      };
+    });
 }

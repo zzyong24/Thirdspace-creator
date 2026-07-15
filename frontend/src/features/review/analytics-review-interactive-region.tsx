@@ -14,14 +14,16 @@
  * 复盘页现为单一滚动视图,只渲真数据区。
  *
  * Wired interactions:
- *  - Chart tab toggle (趋势 / 漏斗): toggles which primary chart is
- *    emphasised; both stay mounted (no chart type change — page-specs
- *    §10 invariant)。这是真的、切不同数据,保留。
- *  - Review-history 行选中(拉 reviews.get 详情)。
+ *  - Review-history 行选中(拉 reviews.get 详情;失败内联可见)。
+ *  - 复盘编辑([T-329] 直接可用):洞察表单常显,「添加洞察」无进行中 review 时
+ *    隐式先 reviews.create 再 insights.create;「完成复盘」为收尾动作(禁用带原因)。
  *
  * [T-116b] 移除规划中占位:观众画像 / 观众来源 / 留存曲线三个无数据源 op 的 PlannedRegion
  * 区、关键时刻区(真项目恒空)、3 个纯装饰按钮(查看全部 / 添加发布 / 生成复盘报告)一并删除。
  * 观众细分/留存 待单视频采集 T-100 做了再加回(见各删除处注释)。
+ *
+ * [T-329] 删掉「趋势 / 漏斗」chip 假切换:两图本就常挂、chip 只切强调态,无真切换
+ * 语义(不换数据、不换图型)—— 图表区改为直接并排布,chartTab state 一并移除。
  */
 
 import * as React from "react";
@@ -34,8 +36,10 @@ import { client } from "@/lib/contract-client";
 import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
 import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-chart";
 import { InsightCard } from "@/components/analytics/insight-card";
-import { MetricCard } from "@/components/project/metric-card";
+import { EmptyState } from "@/components/state/page-state";
 import { SectionCard } from "@/components/project/section-card";
+// [T-329] 复盘专用紧凑指标卡(12 卡响应式网格;共享 MetricCard 不动,别的页面在用)。
+import { ReviewMetricCard } from "./review-metric-card";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 // [T-209] 复盘内容区把当前 viewModel 发布到 module 桥,供 header「导出报告」按钮读取。
 import { publishReviewExportModel } from "./review-report-export";
@@ -99,17 +103,27 @@ interface ReviewDto {
 export function AnalyticsReviewInteractiveRegion({
   viewModel,
   reviewsWiring,
+  metricsEmpty = false,
 }: {
   readonly viewModel: AnalyticsViewModel;
   readonly reviewsWiring?: ReviewsWiring;
+  /**
+   * [T-329] 指标/图表区空态(该作品还没拉到明细快照)。true → 主列的指标卡 + 主图
+   * 收窄成一块 EmptyState;其余区(热门作品/评论/本期经验/右栏复盘编辑/记录)照渲
+   * (各自带诚实空态)—— 复盘编辑不依赖指标采集,不该被指标空态吞掉。
+   */
+  readonly metricsEmpty?: boolean;
 }) {
-  const [chartTab, setChartTab] = React.useState<"trend" | "funnel">("trend");
   const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
     null,
   );
   // Review-history drill (wired-local → backend): the selected review's detail
   // (reviews.get). A read-only drill — no router.refresh().
   const [reviewDetail, setReviewDetail] = React.useState<ReviewDto | null>(null);
+  // [T-329] 详情读失败内联可见(此前 getReview 失败是未处理的 rejection,静默无反馈)。
+  const [reviewDetailError, setReviewDetailError] = React.useState<
+    string | null
+  >(null);
 
   // [T-209] 发布当前 viewModel 到 module 桥,让 header 的「导出报告」按钮能就地生成
   // 自包含报告(header 与本内容区在不同子树,context 上浮不到,故用单例桥)。unmount 清空。
@@ -122,17 +136,30 @@ export function AnalyticsReviewInteractiveRegion({
     (id: string) => {
       setActiveReviewId(id);
       if (!reviewsWiring) return; // inert without the ops surface (fixture-only)
+      setReviewDetailError(null);
       void (async () => {
-        const detail = (await client.getReview({
-          params: { reviewId: id },
-          query: undefined,
-          body: undefined,
-        })) as ReviewDto;
-        setReviewDetail(detail);
+        try {
+          const detail = (await client.getReview({
+            params: { reviewId: id },
+            query: undefined,
+            body: undefined,
+          })) as ReviewDto;
+          setReviewDetail(detail);
+        } catch (err) {
+          setReviewDetail(null);
+          setReviewDetailError(
+            describeUserError(err, "读取复盘详情失败，请重试。"),
+          );
+        }
       })();
     },
     [reviewsWiring],
   );
+
+  // [T-329] 进行中的复盘(reviews.list status=in_progress)→ 复盘编辑面板接管它
+  // (刷新后继续「添加洞察 / 完成复盘」,不再另起新复盘)。取最新一条。
+  const inProgressReviewId =
+    viewModel.reviewHistory.find((r) => r.status === "in_progress")?.id ?? null;
 
   // [T-116a] 单一诚实视图:直接渲 server 装配的真 viewModel(去掉按 tab 的时间窗重派生 —— 那
   // 只对 demo 假项目生效、真项目零反馈)。viewsTrendMode 缺省时按点数推断(单点 single / 多点 daily)。
@@ -144,17 +171,26 @@ export function AnalyticsReviewInteractiveRegion({
       {/* [T-209] 主列竖向间距 gap-3(12px)与右栏/外层网格 gap-card-gap(16px)不齐 →
           统一为 card-gap,消除左右两列节奏错位的「布局奇怪」观感。 */}
       <div data-slot="analytics-main-column" className="flex flex-col gap-card-gap">
-        <CoreMetricsRow metrics={viewModel.metrics} />
-        <PrimaryCharts
-          viewsTrend={viewModel.viewsTrend}
-          viewsTrendMode={
-            viewModel.viewsTrendMode ??
-            (viewModel.viewsTrend.length > 1 ? "daily" : "single")
-          }
-          conversionFunnel={viewModel.conversionFunnel}
-          chartTab={chartTab}
-          onChartTabChange={setChartTab}
-        />
+        {metricsEmpty ? (
+          // [T-329] 空态收窄到指标/图表区:没拉到明细快照时只这块显空态引导,
+          // 复盘编辑/记录等真 op 面照常可用。
+          <EmptyState
+            title="该作品暂无明细数据"
+            description="还没有拉到这个作品的播放/互动明细。去自动化跑「拉明细」采集，数据回收后即可在此查看指标与图表；下方评论与右侧复盘编辑不受影响。"
+          />
+        ) : (
+          <>
+            <CoreMetricsRow metrics={viewModel.metrics} />
+            <PrimaryCharts
+              viewsTrend={viewModel.viewsTrend}
+              viewsTrendMode={
+                viewModel.viewsTrendMode ??
+                (viewModel.viewsTrend.length > 1 ? "daily" : "single")
+              }
+              conversionFunnel={viewModel.conversionFunnel}
+            />
+          </>
+        )}
         {/* [T-116b] 观众画像 / 观众来源 / 留存曲线(SecondaryCharts)+ 关键时刻区已移除:
             均无数据源 op(需单视频采集 T-100),真项目恒空占位。待 T-100 做了再加回。 */}
         <TopPublishedList items={viewModel.topPublished} />
@@ -177,12 +213,14 @@ export function AnalyticsReviewInteractiveRegion({
         <ReviewAuthoringPanel
           projectId={viewModel.projectId}
           wiring={reviewsWiring}
+          inProgressReviewId={inProgressReviewId}
         />
         <ReviewHistoryCard
           items={viewModel.reviewHistory}
           activeId={activeReviewId}
           onSelect={onSelectReview}
           detail={reviewDetail}
+          detailError={reviewDetailError}
         />
       </div>
     </div>
@@ -190,7 +228,11 @@ export function AnalyticsReviewInteractiveRegion({
 }
 
 // ---------------------------------------------------------------------------
-// CoreMetricsRow — 7 cards in a single row
+// CoreMetricsRow — [T-329] 12 张紧凑指标卡,auto-fit 响应式网格
+//
+// 此前 7 卡 lg:grid-cols-7 等分,宽度一变就挤爆;改成
+// repeat(auto-fit, minmax(128px, 1fr)):容器多宽放多少列,12 卡在宽屏自然折成
+// 两排、窄屏三/四排,永不横向溢出。卡片用复盘专用紧凑变体(ReviewMetricCard)。
 // ---------------------------------------------------------------------------
 
 function CoreMetricsRow({ metrics }: { metrics: ReadonlyArray<MetricCardVm> }) {
@@ -198,18 +240,10 @@ function CoreMetricsRow({ metrics }: { metrics: ReadonlyArray<MetricCardVm> }) {
     <section
       data-slot="core-metrics-row"
       aria-label="核心指标"
-      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7"
+      className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2"
     >
       {metrics.map((metric) => (
-        <MetricCard
-          key={metric.id}
-          id={metric.id}
-          label={metric.label}
-          value={metric.value}
-          delta={metric.delta}
-          trend={metric.trend}
-          tone={metric.tone}
-        />
+        <ReviewMetricCard key={metric.id} metric={metric} />
       ))}
     </section>
   );
@@ -217,54 +251,22 @@ function CoreMetricsRow({ metrics }: { metrics: ReadonlyArray<MetricCardVm> }) {
 
 // ---------------------------------------------------------------------------
 // PrimaryCharts — ViewsTrendChart (line) + ConversionFunnel (funnel)
+//
+// [T-329] 「趋势 / 漏斗」chip 假切换已删:两图本就常挂,chip 只切强调态,不换数据
+// 不换图型,无真切换语义 —— 图表区直接并排布(chartTab state / tablist 一并移除)。
 // ---------------------------------------------------------------------------
 
 function PrimaryCharts({
   viewsTrend,
   viewsTrendMode,
   conversionFunnel,
-  chartTab,
-  onChartTabChange,
 }: {
   viewsTrend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   viewsTrendMode: "daily" | "single" | "empty";
   conversionFunnel: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  chartTab: "trend" | "funnel";
-  onChartTabChange: (tab: "trend" | "funnel") => void;
 }) {
   return (
     <div data-slot="primary-charts" className="flex flex-col gap-card-gap">
-      <div
-        data-slot="primary-chart-tabs"
-        role="tablist"
-        aria-label="主图切换"
-        className="flex items-center gap-1.5"
-      >
-        <button
-          type="button"
-          role="tab"
-          data-slot="primary-chart-tab"
-          data-chart-tab="trend"
-          data-pressed={chartTab === "trend"}
-          aria-selected={chartTab === "trend"}
-          onClick={() => onChartTabChange("trend")}
-          className="inline-flex h-7 items-center rounded-full border border-border bg-surface px-3 text-[11px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
-        >
-          趋势
-        </button>
-        <button
-          type="button"
-          role="tab"
-          data-slot="primary-chart-tab"
-          data-chart-tab="funnel"
-          data-pressed={chartTab === "funnel"}
-          aria-selected={chartTab === "funnel"}
-          onClick={() => onChartTabChange("funnel")}
-          className="inline-flex h-7 items-center rounded-full border border-border bg-surface px-3 text-[11px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
-        >
-          漏斗
-        </button>
-      </div>
       <div className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <SectionCard
           title="播放趋势"
@@ -406,8 +408,19 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
               <span className="line-clamp-2 text-[11px] font-medium text-foreground">
                 {item.title}
               </span>
-              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-                {item.platform} · {item.views}
+              <span className="flex flex-wrap items-center gap-1 font-mono text-[10px] tabular-nums text-muted-foreground">
+                <span>
+                  {item.platform} · {item.views}
+                </span>
+                {/* [T-329] 体裁(明细「体裁」列):仅当采集帧真带 genre 才显,不摆假。 */}
+                {item.genre ? (
+                  <span
+                    data-slot="top-published-genre"
+                    className="inline-flex items-center rounded-full border border-border bg-surface-subtle px-1.5 py-px font-sans text-[10px] text-muted-foreground"
+                  >
+                    {item.genre}
+                  </span>
+                ) : null}
               </span>
             </div>
           </li>
@@ -777,11 +790,14 @@ function ReviewHistoryCard({
   activeId,
   onSelect,
   detail,
+  detailError,
 }: {
   items: ReadonlyArray<ReviewHistoryItem>;
   activeId: string | null;
   onSelect: (id: string) => void;
   detail?: ReviewDto | null;
+  /** [T-329] reviews.get 读失败的可见反馈(此前静默 rejection)。 */
+  detailError?: string | null;
 }) {
   return (
     <article
@@ -793,6 +809,15 @@ function ReviewHistoryCard({
         <h3 className="text-md font-semibold text-foreground">复盘记录</h3>
         <p className="text-xs text-muted-foreground">历史复盘条目</p>
       </header>
+      {items.length === 0 ? (
+        // [T-329] 诚实空态:还没有任何复盘记录(编辑面板首次「添加洞察」会自动创建)。
+        <p
+          data-slot="review-history-empty"
+          className="rounded-md border border-dashed border-border bg-surface-subtle px-3 py-3 text-xs text-muted-foreground"
+        >
+          还没有复盘记录 —— 在上方「复盘编辑」添加第一条洞察即可开始。
+        </p>
+      ) : null}
       <ul
         data-slot="review-history-list"
         className="flex flex-col gap-1.5"
@@ -821,6 +846,17 @@ function ReviewHistoryCard({
           );
         })}
       </ul>
+      {detailError ? (
+        // [T-329] 详情读失败可见(role=status 供读屏);点其它行会重试。
+        <p
+          data-slot="review-detail-error"
+          role="status"
+          aria-live="polite"
+          className="text-[11px] text-destructive"
+        >
+          {detailError}
+        </p>
+      ) : null}
       {detail ? (
         <div
           data-slot="review-detail-panel"
@@ -841,67 +877,59 @@ function ReviewHistoryCard({
 }
 
 // ---------------------------------------------------------------------------
-// ReviewAuthoringPanel — the greenfield review-authoring surface (roadmap §4
-// Gap / G13). Each control maps to exactly one Reviews op; mutations call the op
-// then router.refresh(). Without `wiring` the panel renders inert (no client
-// call) so the fixture-only page render + visual baseline hold.
+// ReviewAuthoringPanel — the review-authoring surface (roadmap §4 Gap / G13)。
+//
+// [T-329] 交互从「开始复盘 → 添加洞察 → 完成复盘」三段式改成**直接可用**:
+//  - 洞察表单常显;「添加洞察」时若无进行中 review → 隐式先 reviews.create 再
+//    insights.create(链式,任一步失败内联可见);
+//  - 「完成复盘」保留为收尾动作:有进行中 review 且本会话 ≥1 洞察(或接管的
+//    进行中复盘,其洞察在服务端、本地无从计数 → 放行)才可用,否则禁用 + 说明;
+//  - 无 wiring(无登录会话)→ 按钮禁用态 + 明示原因,绝不静默 no-op([T-329]
+//    此前各动作 `if (!wiring) return` 是点了没反应的假按钮观感)。
+// 每个写动作 = 一个真 Reviews op + router.refresh();内联反馈沿 T-209 模式。
 // [T-116b] 未接通的装饰控件(添加发布 / 生成复盘报告)已删除;只保留有真 op 的控件。
 // ---------------------------------------------------------------------------
 
 function ReviewAuthoringPanel({
   projectId,
   wiring,
+  inProgressReviewId = null,
 }: {
   projectId: string;
   wiring?: ReviewsWiring;
+  /** [T-329] 服务端已存在的进行中复盘(reviews.list)—— 面板接管它继续记洞察。 */
+  inProgressReviewId?: string | null;
 }) {
   const router = useRouter();
-  // The active in_progress review id created via 开始复盘 (kept client-local so 添加洞察
-  // / 完成复盘 know which review to target). Null until a review is started.
+  // 本面板当前操作的 review:优先接管服务端进行中的复盘;否则 null,首次
+  // 「添加洞察」隐式创建。sessionCreated 区分「本会话创建(洞察数可本地计)」。
   const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
-    null,
+    inProgressReviewId,
   );
+  const resumedReview =
+    activeReviewId !== null && activeReviewId === inProgressReviewId;
   const [insightType, setInsightType] = React.useState<string>(
     INSIGHT_TYPES[0]!.value,
   );
   const [title, setTitle] = React.useState<string>("");
   const [description, setDescription] = React.useState<string>("");
-  // [T-209] 复盘编辑可见反馈:此前开始/添加/完成都只 router.refresh(),用户看不到结果 →
-  // 像假按钮。加内联状态提示(成功绿 / 失败红),让每步都有肉眼可见的确认。
+  // 本会话已成功添加的洞察数(完成复盘的 ≥1 洞察门;接管的进行中复盘其洞察在
+  // 服务端,契约无按 review 列洞察的读 op,本地无从计数 → resumedReview 放行)。
+  const [insightCount, setInsightCount] = React.useState(0);
+  // [T-209] 复盘编辑可见反馈:内联状态提示(成功绿 / 失败红),让每步都有肉眼可见的确认。
   const [feedback, setFeedback] = React.useState<{
     tone: "success" | "error";
     text: string;
   } | null>(null);
   const [busy, setBusy] = React.useState(false);
 
-  const startReview = React.useCallback(() => {
-    if (!wiring || busy) return;
-    setBusy(true);
-    setFeedback(null);
-    void (async () => {
-      try {
-        const review = (await client.createReview({
-          params: { projectId },
-          query: undefined,
-          body: { reviewType: "project", contentOutputId: null },
-        })) as { id: string };
-        setActiveReviewId(review.id);
-        setFeedback({ tone: "success", text: "已开始复盘，可以记录洞察了" });
-        router.refresh();
-      } catch (err) {
-        setFeedback({ tone: "error", text: describeUserError(err, "开始复盘失败，请重试。") });
-      } finally {
-        setBusy(false);
-      }
-    })();
-  }, [wiring, projectId, router, busy]);
+  // [T-329] 无 wiring = 无登录会话:控件禁用 + 明示原因(绝不静默 no-op)。
+  const noWiringReason = wiring
+    ? null
+    : "登录会话未就绪，暂时无法保存复盘。请先登录后再试。";
 
   const addInsight = React.useCallback(() => {
-    if (!wiring || busy) return;
-    if (!activeReviewId) {
-      setFeedback({ tone: "error", text: "请先点「开始复盘」创建一次复盘" });
-      return;
-    }
+    if (!wiring || busy) return; // 按钮已 disabled;此处仅防御
     if (title.trim() === "") {
       setFeedback({ tone: "error", text: "洞察标题不能为空" });
       return;
@@ -909,9 +937,31 @@ function ReviewAuthoringPanel({
     setBusy(true);
     setFeedback(null);
     void (async () => {
+      // ① 无进行中 review → 隐式先创建(失败可见,单独收口,不吞进「添加失败」)。
+      let reviewId = activeReviewId;
+      if (!reviewId) {
+        try {
+          const review = (await client.createReview({
+            params: { projectId },
+            query: undefined,
+            body: { reviewType: "project", contentOutputId: null },
+          })) as { id: string };
+          reviewId = review.id;
+          setActiveReviewId(review.id);
+          setInsightCount(0);
+        } catch (err) {
+          setFeedback({
+            tone: "error",
+            text: describeUserError(err, "创建复盘失败，洞察未保存，请重试。"),
+          });
+          setBusy(false);
+          return;
+        }
+      }
+      // ② 往该 review 添加洞察。
       try {
         await client.createReviewInsight({
-          params: { reviewId: activeReviewId },
+          params: { reviewId },
           query: undefined,
           body: {
             insightType: insightType as
@@ -923,24 +973,37 @@ function ReviewAuthoringPanel({
             description,
           },
         });
+        setInsightCount((c) => c + 1);
         setTitle("");
         setDescription("");
         setFeedback({ tone: "success", text: "已添加洞察" });
         router.refresh();
       } catch (err) {
-        setFeedback({ tone: "error", text: describeUserError(err, "添加洞察失败，请重试。") });
+        setFeedback({
+          tone: "error",
+          text: describeUserError(err, "添加洞察失败，请重试。"),
+        });
       } finally {
         setBusy(false);
       }
     })();
-  }, [wiring, activeReviewId, insightType, title, description, router, busy]);
+  }, [wiring, busy, activeReviewId, projectId, insightType, title, description, router]);
+
+  // 完成门:有进行中 review 且(本会话 ≥1 洞察 或 接管的服务端进行中复盘)。
+  const canComplete =
+    Boolean(wiring) &&
+    activeReviewId !== null &&
+    (insightCount > 0 || resumedReview);
+  const completeHint = !wiring
+    ? null // 无 wiring 的原因统一显示在面板底部,不重复
+    : activeReviewId === null
+      ? "添加第 1 条洞察后会自动创建本次复盘，随后可完成"
+      : !canComplete
+        ? "需先添加至少 1 条洞察才能完成复盘"
+        : null;
 
   const completeReview = React.useCallback(() => {
-    if (!wiring || busy) return;
-    if (!activeReviewId) {
-      setFeedback({ tone: "error", text: "还没有进行中的复盘可完成" });
-      return;
-    }
+    if (!wiring || busy || !canComplete || !activeReviewId) return;
     setBusy(true);
     setFeedback(null);
     void (async () => {
@@ -951,6 +1014,7 @@ function ReviewAuthoringPanel({
           body: undefined,
         });
         setActiveReviewId(null);
+        setInsightCount(0);
         setFeedback({ tone: "success", text: "已完成复盘" });
         router.refresh();
       } catch (err) {
@@ -959,34 +1023,31 @@ function ReviewAuthoringPanel({
         setBusy(false);
       }
     })();
-  }, [wiring, activeReviewId, router, busy]);
+  }, [wiring, activeReviewId, router, busy, canComplete]);
 
   return (
     <article
       data-slot="review-authoring-panel"
+      data-active-review={activeReviewId ?? ""}
       aria-label="复盘编辑"
       className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
     >
       <header className="flex flex-col gap-1">
         <h3 className="text-md font-semibold text-foreground">复盘编辑</h3>
-        <p className="text-xs text-muted-foreground">创建复盘、记录洞察并完成</p>
+        <p className="text-xs text-muted-foreground">
+          {resumedReview
+            ? "继续进行中的复盘：记录洞察，随时完成"
+            : "直接记录洞察（首次添加自动创建复盘），随时完成"}
+        </p>
       </header>
-      <button
-        type="button"
-        data-slot="start-review-button"
-        data-has-active={activeReviewId ? "true" : "false"}
-        onClick={startReview}
-        className="inline-flex h-8 items-center justify-center rounded-md border border-brand/60 bg-brand-soft px-3 text-xs font-medium text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      >
-        开始复盘
-      </button>
 
       <div data-slot="add-insight-form" className="flex flex-col gap-1.5">
         <select
           data-slot="insight-type-select"
           value={insightType}
+          disabled={!wiring}
           onChange={(e) => setInsightType(e.target.value)}
-          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground"
+          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         >
           {INSIGHT_TYPES.map((t) => (
             <option key={t.value} value={t.value}>
@@ -997,37 +1058,63 @@ function ReviewAuthoringPanel({
         <input
           data-slot="insight-title-input"
           value={title}
+          disabled={!wiring}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="洞察标题"
-          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground"
+          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         />
         <input
           data-slot="insight-description-input"
           value={description}
+          disabled={!wiring}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="补充说明（可选）"
-          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground"
+          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground disabled:opacity-50"
         />
         <button
           type="button"
           data-slot="add-insight-button"
+          disabled={!wiring || busy}
+          title={noWiringReason ?? undefined}
           onClick={addInsight}
-          className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="inline-flex h-8 items-center justify-center rounded-md border border-brand/60 bg-brand-soft px-3 text-xs font-medium text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          添加洞察
+          {busy ? "保存中…" : "添加洞察"}
         </button>
       </div>
 
       <button
         type="button"
         data-slot="complete-review-button"
+        disabled={!wiring || busy || !canComplete}
+        title={noWiringReason ?? completeHint ?? undefined}
         onClick={completeReview}
-        className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
       >
         完成复盘
       </button>
+      {/* [T-329] 完成门禁用原因明示(有 wiring 时;无 wiring 的原因见底部统一段)。 */}
+      {completeHint ? (
+        <p
+          data-slot="complete-review-hint"
+          className="text-[11px] text-muted-foreground"
+        >
+          {completeHint}
+        </p>
+      ) : null}
 
-      {/* [T-209] 可见反馈:开始/添加/完成的结果内联回显(成功绿 / 失败红),消除「假按钮」观感。 */}
+      {/* [T-329] 无登录会话:禁用 + 明示原因(绝不静默 no-op)。 */}
+      {noWiringReason ? (
+        <p
+          data-slot="review-authoring-no-wiring"
+          role="status"
+          className="rounded-md border border-dashed border-border bg-surface-subtle px-2 py-1.5 text-[11px] text-muted-foreground"
+        >
+          {noWiringReason}
+        </p>
+      ) : null}
+
+      {/* [T-209] 可见反馈:添加/完成的结果内联回显(成功绿 / 失败红),消除「假按钮」观感。 */}
       {feedback ? (
         <p
           data-slot="review-authoring-feedback"

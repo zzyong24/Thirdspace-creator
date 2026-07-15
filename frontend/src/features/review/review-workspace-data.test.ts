@@ -307,3 +307,113 @@ describe("本期经验 candidate learnings (T-118a §A)", () => {
     expect(vm.candidateLearnings).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// [T-329] 复盘记录 status 透传 + 真标题 labels 装配(热门作品发布列表)
+// ---------------------------------------------------------------------------
+
+describe("复盘记录 status 透传 (T-329)", () => {
+  it("reviews.list 的 status 进 reviewHistory(编辑面板据此接管进行中复盘)", async () => {
+    const client = {
+      async getProjectAnalytics() {
+        return [];
+      },
+      async listPublicationComments() {
+        return [];
+      },
+      async listReviews() {
+        return [
+          {
+            id: "r-open",
+            reviewType: "project",
+            status: "in_progress",
+            periodStart: "2026-07-01T00:00:00.000Z",
+            periodEnd: "2026-07-07T00:00:00.000Z",
+            createdAt: "2026-07-01T00:00:00.000Z",
+            completedAt: null,
+          },
+          {
+            id: "r-done",
+            reviewType: "output",
+            status: "completed",
+            periodStart: "2026-06-01T00:00:00.000Z",
+            periodEnd: "2026-06-07T00:00:00.000Z",
+            createdAt: "2026-06-01T00:00:00.000Z",
+            completedAt: "2026-06-08T00:00:00.000Z",
+          },
+        ];
+      },
+    } as unknown as ReviewDataClient;
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.reviewHistory.map((r) => ({ id: r.id, status: r.status }))).toEqual([
+      { id: "r-open", status: "in_progress" },
+      { id: "r-done", status: "completed" },
+    ]);
+    expect(vm.reviewHistory[0].tone).toBe("neutral");
+    expect(vm.reviewHistory[1].tone).toBe("positive");
+  });
+});
+
+describe("热门作品真标题装配 (T-329)", () => {
+  it("outputs→publications 两跳装配 labels → topPublished 显真标题 + genre", async () => {
+    const client = {
+      async getProjectAnalytics() {
+        return [
+          {
+            id: "s1",
+            publicationId: "pub-1",
+            capturedAt: "2026-07-10T10:00:00.000Z",
+            source: "platform_api",
+            rawMetrics: { plays: 3000, genre: "1min-视频" },
+          },
+        ];
+      },
+      async listOutputs() {
+        return [{ id: "out-1" }];
+      },
+      async listPublications(input: { params: { outputId: string } }) {
+        expect(input.params.outputId).toBe("out-1");
+        return [{ id: "pub-1", title: "真标题·作品一", platform: "douyin" }];
+      },
+      async listPublicationComments() {
+        return [];
+      },
+    } as unknown as ReviewDataClient;
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.topPublished).toHaveLength(1);
+    expect(vm.topPublished[0]).toMatchObject({
+      title: "真标题·作品一",
+      platform: "抖音",
+      genre: "1min-视频",
+    });
+  });
+
+  it("labels 读失败 → topPublished 回退稳定占位(诚实降级,不炸)", async () => {
+    const client = {
+      async getProjectAnalytics() {
+        return [
+          {
+            id: "s1",
+            publicationId: "pub-abcdef12",
+            capturedAt: "2026-07-10T10:00:00.000Z",
+            source: "platform_api",
+            rawMetrics: { views: 100 },
+          },
+        ];
+      },
+      async listOutputs() {
+        throw new Error("boom");
+      },
+      async listPublications() {
+        return [];
+      },
+      async listPublicationComments() {
+        return [];
+      },
+    } as unknown as ReviewDataClient;
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.topPublished).toHaveLength(1);
+    expect(vm.topPublished[0].title).toBe("作品 pub-abcd");
+    expect(vm.topPublished[0].genre).toBeNull();
+  });
+});
