@@ -65,13 +65,17 @@ const CHILD_ENV_ALLOWLIST: readonly string[] = [
 export function buildChildEnv(
   extra: Record<string, string> = {},
   source: Record<string, string | undefined> = process.env,
-): Record<string, string> {
-  // 不用 NodeJS.ProcessEnv:frontend 的全局类型增强把 NODE_ENV 声明为必填,
-  // 该类型在跨包 tsc 视角下无法用 {} 初始化;spawn/execFile 的 env 形参兼容普通 Record。
+): NodeJS.ProcessEnv {
+  // [T-326 ENG 修复] 返回类型必须是 NodeJS.ProcessEnv,不能是 Record<string,string>:
+  // frontend 的 Next 全局类型增强把 ProcessEnv.NODE_ENV 声明为**必填 readonly**,导致
+  // Record<string,string> 在 frontend tsc 视角下不再兼容 spawn/execFile 的 env 形参
+  // (backend 自己的 tsc 过、frontend 的挂 —— 跨包 tsc 真门在 frontend)。构造仍用普通
+  // Record(NODE_ENV 必填的增强类型无法用 {} 初始化),出口断言为 ProcessEnv:运行时
+  // 语义不变(Node 不要求子进程 env 含 NODE_ENV;allowlist 收窄行为原样)。
   const env: Record<string, string> = {};
   for (const key of CHILD_ENV_ALLOWLIST) {
     const v = source[key];
     if (typeof v === "string") env[key] = v;
   }
-  return { ...env, ...extra };
+  return { ...env, ...extra } as NodeJS.ProcessEnv;
 }
