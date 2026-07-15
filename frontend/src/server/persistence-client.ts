@@ -4919,190 +4919,209 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
             await ingestionService.ensureDouyinSource(ctx);
       const capturedAt = deps.now();
-      // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
-      // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
-      // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
-      report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
-      const bytes = await fetchDouyinWorkListExport(
-        { authDir: douyinAuthDirFor(ctx.accountId) }, // [T-136] 按当前号登录态
-        { gateway: douyinGateway },
-      );
-      // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
-      // [T-152] 阶段③:解析明细(N 条)。
-      report({ stage: "parse", processed: 0, total: null, message: "解析明细数据" });
-      const details = await parseDouyinWorkListXlsx(bytes);
-      // [T-202] 导出/解析条数落 console(不止 job_run progress):真机排「隐藏 0 标」时,先看这行——
-      //   details.length===0 → 导出本身 0 条(登录态/tab/导出按钮问题,查上面 debugShot);
-      //   details.length>0 但下方 hiddenSynced===0 → 同步/匹配问题(看 [douyin-detail-visibility])。
-      console.log(
-        `[douyin-detail-export] 解析 xlsx 得 ${details.length} 条明细行(bytes ${bytes.byteLength})`,
-      );
-      report({
-        stage: "parse",
-        processed: details.length,
-        total: null,
-        message: `解析出 ${details.length} 条明细`,
-      });
-      // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
-      //    T-034 断裂修复:导入作品(external_id=aweme_id)故意无 revision(见 publishing.repository
-      //    createImportedPublication),故 getRecentPublicationsWithTitle 回来的 title 为空 —— 与
-      //    L3004 dossier 装配同款回退:revision title 空时取 content_output 真实标题(导入时落在
-      //    projects/content_output 上)。不回退 → 72 条采集作品 catalog title 恒空 → xlsx 明细
-      //    永远匹配不上 → items_new 恒 0(断裂根因)。
-      const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
-        limit: 500,
-      });
-      const catalog: PublicationCatalogEntry[] = [];
-      for (const p of pubs) {
-        let title = p.title;
-        if (!title) {
+      // [T-322] detailWritten 提到 try 外(下方封面回填段 return 读它)。导出→解析→可见性
+      //   同步→明细落库整段包 try:任一抛错只 console.error + 报一条 export 降级,**不**
+      //   rethrow,让控制流继续到下方 runDouyinHeavyBackfill(封面回填不依赖导出结果,§④修点 A)。
+      let detailWritten = 0;
+      try {
+        // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
+        // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
+        // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
+        report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
+        const bytes = await fetchDouyinWorkListExport(
+          { authDir: douyinAuthDirFor(ctx.accountId) }, // [T-136] 按当前号登录态
+          { gateway: douyinGateway },
+        );
+        // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
+        // [T-152] 阶段③:解析明细(N 条)。
+        report({ stage: "parse", processed: 0, total: null, message: "解析明细数据" });
+        const details = await parseDouyinWorkListXlsx(bytes);
+        // [T-202] 导出/解析条数落 console(不止 job_run progress):真机排「隐藏 0 标」时,先看这行——
+        //   details.length===0 → 导出本身 0 条(登录态/tab/导出按钮问题,查上面 debugShot);
+        //   details.length>0 但下方 hiddenSynced===0 → 同步/匹配问题(看 [douyin-detail-visibility])。
+        console.log(
+          `[douyin-detail-export] 解析 xlsx 得 ${details.length} 条明细行(bytes ${bytes.byteLength})`,
+        );
+        report({
+          stage: "parse",
+          processed: details.length,
+          total: null,
+          message: `解析出 ${details.length} 条明细`,
+        });
+        // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
+        //    T-034 断裂修复:导入作品(external_id=aweme_id)故意无 revision(见 publishing.repository
+        //    createImportedPublication),故 getRecentPublicationsWithTitle 回来的 title 为空 —— 与
+        //    L3004 dossier 装配同款回退:revision title 空时取 content_output 真实标题(导入时落在
+        //    projects/content_output 上)。不回退 → 72 条采集作品 catalog title 恒空 → xlsx 明细
+        //    永远匹配不上 → items_new 恒 0(断裂根因)。
+        const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
+          limit: 500,
+        });
+        const catalog: PublicationCatalogEntry[] = [];
+        for (const p of pubs) {
+          let title = p.title;
+          if (!title) {
+            try {
+              const out = await projectsRepo.getOutput(ctx, p.contentOutputId);
+              title = out.title;
+            } catch {
+              // 防御:取不到作品标题就保持空(该条明细自然匹配不上,诚实跳过)。
+            }
+          }
+          catalog.push({
+            id: p.id,
+            platform: p.platform,
+            title,
+            publishedAt: p.publishedAt,
+            // [T-036] 同名同刻双轨(fixture 无 externalId / imported 有)消歧优先 imported ——
+            // 落库锚就是 externalId,匹到 fixture 轨整条明细会被 toDetailMetricRecords 丢弃。
+            externalId: p.externalId ?? null,
+          });
+        }
+        const externalIdById = new Map<string, string>();
+        for (const p of pubs) {
+          if (p.externalId) externalIdById.set(p.id, p.externalId);
+        }
+        const matches = matchDetailsToPublications(details, catalog);
+        // 3b) [T-073] 平台侧可见性同步:明细「审核状态」列(如「仅自己可见」/「已通过」)
+        //     → publication.hidden_at + 导入项目 platform_ref.hidden。判定不了(审核中/
+        //     未通过/空)诚实跳过,不动既有标记;找不到承载行也跳过(不硬造)。放在指标
+        //     落库之前、且不受 records.length===0 早退影响(隐藏作品也可能产不出 record)。
+        // [T-151 缺口 C 诊断] 可见性同步逐档计数 —— 存量真机 hidden_at 全 NULL 的根因需真机 xlsx
+        //   才能定位(是 title 匹配不上?还是「审核状态」列没解析到值?还是状态字面量不含隐藏口径?)。
+        //   加这组计数 + 采样,让下次真扫**自证根因**(不改数据、不硬猜),诚实分层。
+        const visDiag = {
+          total: matches.length,
+          unmatched: 0, // publicationId=null(title 匹配不上 → T-034 断裂域)
+          unknownStatus: 0, // 匹上了但审核状态判不出(列没解析 / 字面量不含隐藏口径)
+          noExtId: 0, // 匹上了但无 externalId 锚(fixture 轨)
+          hiddenSynced: 0, // 真标了 hidden
+          visibleSynced: 0, // 真标了 visible
+        };
+        const statusSamples = new Set<string>();
+        // [T-202] 未匹配明细的「作品标题」采样(锚 = title,匹不上多因 title 断裂 T-034)。真机看到
+        //   具体标题 → 立刻能判是 catalog title 空、还是 xlsx 标题被截断/带表情不一致导致匹不上。
+        const unmatchedTitleSamples = new Set<string>();
+        for (const m of matches) {
+          if (!m.publicationId) {
+            visDiag.unmatched += 1;
+            // 采样未匹配明细的「审核状态」原值 + 「标题」(去重,最多留几个),便于真机比对列/字面量。
+            if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
+            if (unmatchedTitleSamples.size < 8)
+              unmatchedTitleSamples.add(m.detail.title ?? "");
+            continue;
+          }
+          const vis = visibilityFromDetailStatus(m.detail.status);
+          if (vis === "unknown") {
+            visDiag.unknownStatus += 1;
+            if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
+            continue;
+          }
+          const extId = externalIdById.get(m.publicationId);
+          if (!extId) {
+            visDiag.noExtId += 1;
+            continue; // 无 externalId 锚(fixture 轨)→ 跳过
+          }
+          const hidden = vis === "hidden";
           try {
-            const out = await projectsRepo.getOutput(ctx, p.contentOutputId);
-            title = out.title;
+            await publishingService.setVisibilityByExternalKey(ctx, {
+              platform: "douyin",
+              externalId: extId,
+              hidden,
+            });
+            // [T-033] 同步平台侧审核状态,供 list「默认只显示已通过」+ 重活判据
+            //   (isPublicationRunnableForHeavyWork)的 `platformStatus = '已通过'` 用。
+            // [T-206] **归一**:真机 xlsx 原值是「公开」/「自见」而非「已通过」/「仅自己可见」——
+            //   若直落原值,可见作品(公开)的 platformStatus='公开' 会被过滤器/判据 `=已通过` 误杀
+            //   (连列表都不显)。故 visible → 落规范值「已通过」(过滤器/判据放行);hidden 由 hidden_at
+            //   兜住(过滤器先判 hiddenAt IS NULL),platformStatus 保留原值方便诊断。
+            await publishingService.setPlatformStatusByExternalKey(ctx, {
+              platform: "douyin",
+              externalId: extId,
+              platformStatus: hidden ? (m.detail.status ?? null) : "已通过",
+            });
+            await projectsService.setImportedProjectHidden(ctx, {
+              platform: "douyin",
+              externalId: extId,
+              hidden,
+            });
+            if (hidden) visDiag.hiddenSynced += 1;
+            else visDiag.visibleSynced += 1;
           } catch {
-            // 防御:取不到作品标题就保持空(该条明细自然匹配不上,诚实跳过)。
+            // 可见性同步失败不拖垮整批指标落库(best-effort;下轮采集会再同步)。
           }
         }
-        catalog.push({
-          id: p.id,
-          platform: p.platform,
-          title,
-          publishedAt: p.publishedAt,
-          // [T-036] 同名同刻双轨(fixture 无 externalId / imported 有)消歧优先 imported ——
-          // 落库锚就是 externalId,匹到 fixture 轨整条明细会被 toDetailMetricRecords 丢弃。
-          externalId: p.externalId ?? null,
-        });
-      }
-      const externalIdById = new Map<string, string>();
-      for (const p of pubs) {
-        if (p.externalId) externalIdById.set(p.id, p.externalId);
-      }
-      const matches = matchDetailsToPublications(details, catalog);
-      // 3b) [T-073] 平台侧可见性同步:明细「审核状态」列(如「仅自己可见」/「已通过」)
-      //     → publication.hidden_at + 导入项目 platform_ref.hidden。判定不了(审核中/
-      //     未通过/空)诚实跳过,不动既有标记;找不到承载行也跳过(不硬造)。放在指标
-      //     落库之前、且不受 records.length===0 早退影响(隐藏作品也可能产不出 record)。
-      // [T-151 缺口 C 诊断] 可见性同步逐档计数 —— 存量真机 hidden_at 全 NULL 的根因需真机 xlsx
-      //   才能定位(是 title 匹配不上?还是「审核状态」列没解析到值?还是状态字面量不含隐藏口径?)。
-      //   加这组计数 + 采样,让下次真扫**自证根因**(不改数据、不硬猜),诚实分层。
-      const visDiag = {
-        total: matches.length,
-        unmatched: 0, // publicationId=null(title 匹配不上 → T-034 断裂域)
-        unknownStatus: 0, // 匹上了但审核状态判不出(列没解析 / 字面量不含隐藏口径)
-        noExtId: 0, // 匹上了但无 externalId 锚(fixture 轨)
-        hiddenSynced: 0, // 真标了 hidden
-        visibleSynced: 0, // 真标了 visible
-      };
-      const statusSamples = new Set<string>();
-      // [T-202] 未匹配明细的「作品标题」采样(锚 = title,匹不上多因 title 断裂 T-034)。真机看到
-      //   具体标题 → 立刻能判是 catalog title 空、还是 xlsx 标题被截断/带表情不一致导致匹不上。
-      const unmatchedTitleSamples = new Set<string>();
-      for (const m of matches) {
-        if (!m.publicationId) {
-          visDiag.unmatched += 1;
-          // 采样未匹配明细的「审核状态」原值 + 「标题」(去重,最多留几个),便于真机比对列/字面量。
-          if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
-          if (unmatchedTitleSamples.size < 8)
-            unmatchedTitleSamples.add(m.detail.title ?? "");
-          continue;
-        }
-        const vis = visibilityFromDetailStatus(m.detail.status);
-        if (vis === "unknown") {
-          visDiag.unknownStatus += 1;
-          if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
-          continue;
-        }
-        const extId = externalIdById.get(m.publicationId);
-        if (!extId) {
-          visDiag.noExtId += 1;
-          continue; // 无 externalId 锚(fixture 轨)→ 跳过
-        }
-        const hidden = vis === "hidden";
-        try {
-          await publishingService.setVisibilityByExternalKey(ctx, {
-            platform: "douyin",
-            externalId: extId,
-            hidden,
+        // [缺口 C 诊断] 打印逐档结果 + 未判定明细的审核状态采样。真机看这行即知根因:
+        //   unmatched 高 → title 匹配断裂;unknownStatus 高 + 采样非空 → 列/字面量口径需扩;
+        //   hidden/visibleSynced 有值 → 同步链本身通(问题只在存量那一次)。
+        console.log(
+          `[douyin-detail-visibility] 明细 ${visDiag.total}(catalog ${catalog.length} 条作品):未匹配 ${visDiag.unmatched},状态判不出 ${visDiag.unknownStatus},无锚 ${visDiag.noExtId},标隐藏 ${visDiag.hiddenSynced},标可见 ${visDiag.visibleSynced}` +
+            (statusSamples.size > 0
+              ? ` · 未判定审核状态采样: ${Array.from(statusSamples)
+                  .map((s) => JSON.stringify(s))
+                  .join(", ")}`
+              : "") +
+            (unmatchedTitleSamples.size > 0
+              ? ` · 未匹配标题采样: ${Array.from(unmatchedTitleSamples)
+                  .map((s) => JSON.stringify(s))
+                  .join(", ")}`
+              : ""),
+        );
+        // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
+        const records = toDetailMetricRecords(
+          matches,
+          (pubId) => externalIdById.get(pubId) ?? null,
+          capturedAt,
+        );
+        // [T-195] records 空(一条都没匹配上)时**不早退**:可见性已在上面同步(hidden_at/
+        //   platform_status 已标),缺封面 / 待重建的可见作品仍应跑重活。故只跳过「建空 run」,
+        //   下面的初始化重活(封面回填 + 逐字稿/重建)无论 records 是否为空都要跑。
+        if (records.length > 0) {
+          // [T-152] 阶段④:匹配落库(records.length 条匹配上的明细 → ingestMetrics)。
+          report({
+            stage: "ingest",
+            processed: 0,
+            total: records.length,
+            message: `匹配落库 ${records.length} 条明细`,
           });
-          // [T-033] 同步平台侧审核状态,供 list「默认只显示已通过」+ 重活判据
-          //   (isPublicationRunnableForHeavyWork)的 `platformStatus = '已通过'` 用。
-          // [T-206] **归一**:真机 xlsx 原值是「公开」/「自见」而非「已通过」/「仅自己可见」——
-          //   若直落原值,可见作品(公开)的 platformStatus='公开' 会被过滤器/判据 `=已通过` 误杀
-          //   (连列表都不显)。故 visible → 落规范值「已通过」(过滤器/判据放行);hidden 由 hidden_at
-          //   兜住(过滤器先判 hiddenAt IS NULL),platformStatus 保留原值方便诊断。
-          await publishingService.setPlatformStatusByExternalKey(ctx, {
-            platform: "douyin",
-            externalId: extId,
-            platformStatus: hidden ? (m.detail.status ?? null) : "已通过",
+          const run = await ingestionService.createRun(ctx, {
+            externalSourceId,
+            runType: "douyin_detail",
+            idempotencyKey: `${externalSourceId}:detail:${capturedAt}`,
           });
-          await projectsService.setImportedProjectHidden(ctx, {
-            platform: "douyin",
-            externalId: extId,
-            hidden,
+          const result = await ingestionService.ingestMetrics(ctx, {
+            runId: run.id,
+            records: records as unknown as Array<Record<string, unknown>>,
           });
-          if (hidden) visDiag.hiddenSynced += 1;
-          else visDiag.visibleSynced += 1;
-        } catch {
-          // 可见性同步失败不拖垮整批指标落库(best-effort;下轮采集会再同步)。
+          await ingestionService.completeRun(ctx, { runId: run.id });
+          report({
+            stage: "ingest",
+            processed: result.recordsWritten,
+            total: records.length,
+            message: `已落库 ${result.recordsWritten} 条明细`,
+          });
+          detailWritten = result.recordsWritten;
         }
-      }
-      // [缺口 C 诊断] 打印逐档结果 + 未判定明细的审核状态采样。真机看这行即知根因:
-      //   unmatched 高 → title 匹配断裂;unknownStatus 高 + 采样非空 → 列/字面量口径需扩;
-      //   hidden/visibleSynced 有值 → 同步链本身通(问题只在存量那一次)。
-      console.log(
-        `[douyin-detail-visibility] 明细 ${visDiag.total}(catalog ${catalog.length} 条作品):未匹配 ${visDiag.unmatched},状态判不出 ${visDiag.unknownStatus},无锚 ${visDiag.noExtId},标隐藏 ${visDiag.hiddenSynced},标可见 ${visDiag.visibleSynced}` +
-          (statusSamples.size > 0
-            ? ` · 未判定审核状态采样: ${Array.from(statusSamples)
-                .map((s) => JSON.stringify(s))
-                .join(", ")}`
-            : "") +
-          (unmatchedTitleSamples.size > 0
-            ? ` · 未匹配标题采样: ${Array.from(unmatchedTitleSamples)
-                .map((s) => JSON.stringify(s))
-                .join(", ")}`
-            : ""),
-      );
-      // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
-      const records = toDetailMetricRecords(
-        matches,
-        (pubId) => externalIdById.get(pubId) ?? null,
-        capturedAt,
-      );
-      // [T-195] records 空(一条都没匹配上)时**不早退**:可见性已在上面同步(hidden_at/
-      //   platform_status 已标),缺封面 / 待重建的可见作品仍应跑重活。故只跳过「建空 run」,
-      //   下面的初始化重活(封面回填 + 逐字稿/重建)无论 records 是否为空都要跑。
-      let detailWritten = 0;
-      if (records.length > 0) {
-        // [T-152] 阶段④:匹配落库(records.length 条匹配上的明细 → ingestMetrics)。
+        // [T-202] 落库条数落 console:与上面 export/visibility 三行拼成完整链路证据
+        //   (导出 N 行 → 匹配 M 条 → 落库 detailWritten 条),真机一眼定位断点。
+        console.log(
+          `[douyin-detail-ingest] 明细落库 ${detailWritten} 条快照(匹配上 ${records.length} 条 record)`,
+        );
+      } catch (detailErr) {
+        // [T-322] 导出/解析/可见性/落库任一失败 → 只记日志 + 报一条 export 降级,**不**
+        //   rethrow:继续跑下方封面回填(候选是纯 DB 查、分享页独立拉,不依赖 xlsx;可见性
+        //   未同步 → platformStatus NULL 仍被重活判据 isPublicationRunnableForHeavyWork 放行,§②)。
+        console.error(
+          "[douyin-detail] 明细导出/解析/同步失败,跳过明细、继续回填封面:",
+          detailErr,
+        );
         report({
-          stage: "ingest",
+          stage: "export",
           processed: 0,
-          total: records.length,
-          message: `匹配落库 ${records.length} 条明细`,
+          total: null,
+          message: "明细导出失败,跳过明细、继续回填封面",
         });
-        const run = await ingestionService.createRun(ctx, {
-          externalSourceId,
-          runType: "douyin_detail",
-          idempotencyKey: `${externalSourceId}:detail:${capturedAt}`,
-        });
-        const result = await ingestionService.ingestMetrics(ctx, {
-          runId: run.id,
-          records: records as unknown as Array<Record<string, unknown>>,
-        });
-        await ingestionService.completeRun(ctx, { runId: run.id });
-        report({
-          stage: "ingest",
-          processed: result.recordsWritten,
-          total: records.length,
-          message: `已落库 ${result.recordsWritten} 条明细`,
-        });
-        detailWritten = result.recordsWritten;
       }
-      // [T-202] 落库条数落 console:与上面 export/visibility 三行拼成完整链路证据
-      //   (导出 N 行 → 匹配 M 条 → 落库 detailWritten 条),真机一眼定位断点。
-      console.log(
-        `[douyin-detail-ingest] 明细落库 ${detailWritten} 条快照(匹配上 ${records.length} 条 record)`,
-      );
       // 5) [T-195] 明细落库(可见性已标)后跑初始化重活:①封面回填(只对可见作品)②逐字稿 +
       //    重建排队(隐藏经 isWorkHidden 跳)。整体从 self.metrics 尾挪到这里 —— 此刻 hidden_at /
       //    platform_status 已标,故重活天然只对可见作品跑(不撞隐藏作品空 item_list 分享页)。两步
