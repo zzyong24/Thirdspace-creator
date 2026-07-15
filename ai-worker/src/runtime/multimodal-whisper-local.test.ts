@@ -285,6 +285,55 @@ describe("createFfmpegPcmDecoder —— f32le 解析(fake spawn,不跑真 ffmpeg
     });
     await expect(decode(new Uint8Array([1, 2, 3]))).rejects.toThrow(/非 0 退出/);
   });
+
+  // [T-326 RT-H09] ffmpeg 路径改统一解析链:未显式注入 ffmpegPath 时走 resolveFfmpeg
+  // (默认真 resolveFfmpegPath;单测注 fake),解析失败 → decode 惰性 reject(诚实报错,
+  // 不在装配期崩)、且绝不 spawn。
+  it("未注 ffmpegPath → 用注入的 resolveFfmpeg 结果当 spawn 命令", async () => {
+    const { createFfmpegPcmDecoder } = await import("./multimodal-whisper-local");
+    let capturedCmd = "";
+    const decode = createFfmpegPcmDecoder({
+      resolveFfmpeg: () => "/bundled/bin/ffmpeg",
+      spawn: (cmd) => {
+        capturedCmd = cmd;
+        const handlers: Record<string, ((arg: unknown) => void)[]> = {};
+        return {
+          stdout: { on: () => {} },
+          stderr: { on: () => {} },
+          stdin: {
+            write: () => {},
+            end: () => {
+              queueMicrotask(() => {
+                for (const cb of handlers["close"] || []) cb(1 as never);
+              });
+            },
+            on: () => {},
+          },
+          on: (ev: string, cb: (arg: unknown) => void) => {
+            (handlers[ev] ||= []).push(cb);
+          },
+        } as never;
+      },
+    });
+    await expect(decode(new Uint8Array([1]))).rejects.toThrow(); // close(1) 只为收尾
+    expect(capturedCmd).toBe("/bundled/bin/ffmpeg");
+  });
+
+  it("解析链抛错(全 miss)→ decode reject 原始诚实报错,且不 spawn", async () => {
+    const { createFfmpegPcmDecoder } = await import("./multimodal-whisper-local");
+    let spawned = false;
+    const decode = createFfmpegPcmDecoder({
+      resolveFfmpeg: () => {
+        throw new Error("未找到 ffmpeg(转录/抽音频必需)。请安装 ffmpeg(brew install ffmpeg)");
+      },
+      spawn: () => {
+        spawned = true;
+        throw new Error("不该走到 spawn");
+      },
+    });
+    await expect(decode(new Uint8Array([1]))).rejects.toThrow(/未找到 ffmpeg/);
+    expect(spawned).toBe(false);
+  });
 });
 
 // 静默 vi 未用告警(保留导入以便将来扩展)。

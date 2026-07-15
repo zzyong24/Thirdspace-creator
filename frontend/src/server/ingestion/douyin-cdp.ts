@@ -1,6 +1,9 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
+// [T-326 RT-H09] ffmpeg 路径统一解析链(env → 随包 sidecar → PATH/常见目录 → 诚实报错)——
+// 与 ai-worker whisper-local PCM 解码共用同一把解析器,根治硬编码 /opt/homebrew/bin/ffmpeg。
+import { resolveFfmpegPath } from "@creatoros/ai-worker";
 // [T-326 B-04] 错误类抽到零依赖叶子模块(见下方 re-export 注释);本文件内部 throw/instanceof 用它。
 import { DouyinNotLoggedInError } from "./douyin-errors";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
@@ -560,8 +563,10 @@ export interface SpawnedProcess {
 
 export interface StreamAudioDeps {
   spawn: (command: string, args: string[]) => SpawnedProcess;
-  /** ffmpeg 可执行路径(默认 /opt/homebrew/bin/ffmpeg,已确认存在;可注入覆盖)。 */
+  /** ffmpeg 可执行路径(显式注入则短路解析链;默认走 resolveFfmpegPath 四级解析,RT-H09)。 */
   ffmpegPath?: string;
+  /** 解析器可注入(单测 fake 解析链结果/抛错;默认真 resolveFfmpegPath)。 */
+  resolveFfmpeg?: () => string;
 }
 
 const REAL_SPAWN_DEPS: StreamAudioDeps = {
@@ -571,7 +576,8 @@ const REAL_SPAWN_DEPS: StreamAudioDeps = {
     const { spawn } = require("node:child_process") as typeof import("node:child_process");
     return spawn(command, args) as unknown as SpawnedProcess;
   },
-  ffmpegPath: "/opt/homebrew/bin/ffmpeg",
+  // ffmpegPath 不再硬编码 —— 每次抽音时惰性走 resolveFfmpegPath 解析链
+  // (env CREATOROS_FFMPEG_PATH → 随包 sidecar bin/ → PATH/常见安装目录 → 诚实报错)。
 };
 
 /**
@@ -580,12 +586,22 @@ const REAL_SPAWN_DEPS: StreamAudioDeps = {
  *   ffmpeg -headers "Referer: https://www.douyin.com/\r\n" -i {url} -vn -ar 16000 -ac 1 -b:a 64k -f mp3 pipe:1
  * spawn 可注入(默认 child_process.spawn),故 D2 runner 里这层单测注 fake(返固定 bytes / 模拟非 0 退出)。
  * 非 0 退出 / spawn error / 无 bytes → 抛 DouyinAudioFetchError(runner 标该 aweme 失败,其余继续)。
+ * ffmpeg 找不到(解析链全 miss / env 配错)同样归 DouyinAudioFetchError —— 信息里带安装/配置
+ * 引导,任务失败明细能看到「装 ffmpeg 或配 CREATOROS_FFMPEG_PATH」,不静默。
  */
 export async function streamAudioFromVideo(
   playUrl: string,
   deps: StreamAudioDeps = REAL_SPAWN_DEPS,
 ): Promise<Uint8Array> {
-  const ffmpegPath = deps.ffmpegPath ?? "ffmpeg";
+  // 解析链:显式注入 ffmpegPath > 注入的解析器 > 真 resolveFfmpegPath(env → 随包 → PATH → 报错)。
+  let ffmpegPath: string;
+  try {
+    ffmpegPath = deps.ffmpegPath ?? (deps.resolveFfmpeg ?? resolveFfmpegPath)();
+  } catch (err) {
+    throw new DouyinAudioFetchError(
+      `streamAudioFromVideo: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   // -headers 需以 \r\n 结尾(ffmpeg HTTP header 注入格式,对齐 skill headers_str)。
   const args = [
     "-y",

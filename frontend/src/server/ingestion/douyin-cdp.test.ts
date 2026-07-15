@@ -12,6 +12,7 @@ import {
   fetchDouyinMetrics,
   DouyinNotLoggedInError,
   parseDouyinVideoUrl,
+  streamAudioFromVideo,
   DouyinAudioFetchError,
   fetchDouyinWorkListExport,
   gotoWithRetry,
@@ -641,6 +642,89 @@ describe("parseDouyinVideoUrl 纯函数(iesdouyin 取直链,T-030-D2)", () => {
       loaderData: { "video_(id)/page": { videoInfoRes: { item_list: [] } } },
     });
     expect(() => parseDouyinVideoUrl(emptyHtml)).toThrow(DouyinAudioFetchError);
+  });
+});
+
+// —— streamAudioFromVideo 的 ffmpeg 路径解析(T-326 RT-H09)——
+// fake spawn + fake 解析器,不跑真 ffmpeg:①未注 ffmpegPath → 用注入 resolveFfmpeg 的结果
+// 当 spawn 命令;②解析链抛错(全 miss)→ 归一成 DouyinAudioFetchError(信息保留安装引导,
+// runner 标该 aweme 失败时用户能看到怎么修),且绝不 spawn。
+describe("streamAudioFromVideo —— ffmpeg 路径解析链(fake spawn,RT-H09)", () => {
+  /** fake ffmpeg 进程:stdin→stdout 不模拟,直接吐 bytes 后 close(0)。 */
+  const makeFakeSpawn = (onCmd: (cmd: string) => void) => (cmd: string) => {
+    onCmd(cmd);
+    const handlers: Record<string, ((arg: unknown) => void)[]> = {};
+    queueMicrotask(() => {
+      for (const cb of handlers["stdout:data"] || []) cb(new Uint8Array([7]));
+      for (const cb of handlers["close"] || []) cb(0 as never);
+    });
+    return {
+      stdout: {
+        on: (ev: string, cb: (c: Uint8Array) => void) => {
+          (handlers[`stdout:${ev}`] ||= []).push(cb as never);
+        },
+      },
+      stderr: { on: () => {} },
+      on: (ev: string, cb: (arg: unknown) => void) => {
+        (handlers[ev] ||= []).push(cb);
+      },
+    } as never;
+  };
+
+  it("未注 ffmpegPath → 用注入 resolveFfmpeg 的结果当 spawn 命令", async () => {
+    let capturedCmd = "";
+    const out = await streamAudioFromVideo("https://cdn.example/play", {
+      spawn: makeFakeSpawn((cmd) => {
+        capturedCmd = cmd;
+      }),
+      resolveFfmpeg: () => "/bundled/bin/ffmpeg",
+    });
+    expect(capturedCmd).toBe("/bundled/bin/ffmpeg");
+    expect(Array.from(out)).toEqual([7]);
+  });
+
+  it("显式 ffmpegPath 短路解析链(resolveFfmpeg 不被调)", async () => {
+    let resolved = false;
+    let capturedCmd = "";
+    await streamAudioFromVideo("https://cdn.example/play", {
+      spawn: makeFakeSpawn((cmd) => {
+        capturedCmd = cmd;
+      }),
+      ffmpegPath: "/explicit/ffmpeg",
+      resolveFfmpeg: () => {
+        resolved = true;
+        return "/should/not/be/used";
+      },
+    });
+    expect(capturedCmd).toBe("/explicit/ffmpeg");
+    expect(resolved).toBe(false);
+  });
+
+  it("解析链全 miss → DouyinAudioFetchError(保留安装/配置引导),且不 spawn", async () => {
+    let spawned = false;
+    const p = streamAudioFromVideo("https://cdn.example/play", {
+      spawn: () => {
+        spawned = true;
+        throw new Error("不该走到 spawn");
+      },
+      resolveFfmpeg: () => {
+        throw new Error(
+          "未找到 ffmpeg(转录/抽音频必需)。请安装 ffmpeg(brew install ffmpeg),或设置环境变量 CREATOROS_FFMPEG_PATH",
+        );
+      },
+    });
+    await expect(p).rejects.toBeInstanceOf(DouyinAudioFetchError);
+    await expect(
+      streamAudioFromVideo("https://cdn.example/play", {
+        spawn: () => {
+          throw new Error("不该走到 spawn");
+        },
+        resolveFfmpeg: () => {
+          throw new Error("未找到 ffmpeg…CREATOROS_FFMPEG_PATH");
+        },
+      }),
+    ).rejects.toThrow(/streamAudioFromVideo: 未找到 ffmpeg/);
+    expect(spawned).toBe(false);
   });
 });
 

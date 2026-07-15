@@ -33,6 +33,8 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { platform, arch } from "node:process";
 import { homedir } from "node:os";
+// [T-326 RT-H09] 静态 ffmpeg 拉取(缓存 + GitHub release 下载 + 冒烟),供 bundleFfmpeg 实拷进 sidecar。
+import { ensureFfmpegStatic } from "./fetch-ffmpeg.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -564,6 +566,58 @@ function ensureOnnxRuntimeDylib() {
   }
 }
 
+// [T-326 RT-H09] 把**静态** ffmpeg 实拷进 sidecar → `sidecar/frontend/bin/ffmpeg[.exe]`。
+//   为什么:douyin 抽音(douyin-cdp streamAudioFromVideo)与本地转录(whisper-local PCM 解码)
+//   此前默认硬编码 /opt/homebrew/bin/ffmpeg —— Intel Mac / Windows / 无 Homebrew 用户稳定失败。
+//   运行时已改 resolveFfmpegPath 四级解析链(ai-worker/src/runtime/ffmpeg-path.ts),其第②级
+//   约定随包位置 = `<cwd>/bin/ffmpeg`(打包版 server.js 的 cwd = sidecar/frontend,与 T-284
+//   PLAYWRIGHT_BROWSERS_PATH=<cwd>/browsers 同款约定)。本函数把它放到位。
+//   二进制源:eugeneware/ffmpeg-static release 的静态构建(fetch-ffmpeg.mjs 拉取+缓存+冒烟;
+//   **不能**拷 Homebrew ffmpeg —— 那是动态链接,无 Homebrew 的用户机 dyld 必崩,同 libnode 坑)。
+//   失败姿态(与 bundleChromiumBrowser 一致):拉不到 → warn + 跳过,不阻塞打包 —— 打包版
+//   回落解析链③(PATH/常见目录)= 依赖用户自装 ffmpeg;全 miss 时运行时诚实报错引导安装。
+//   ⚠️ 许可:ffmpeg-static 是 GPL 构建,随包分发需在第三方许可声明里带 ffmpeg(GPL)条目。
+function bundleFfmpeg(triple) {
+  const isWinTarget = triple.includes("windows");
+  const destDir = join(SIDECAR_RUNTIME, "frontend", "bin");
+  const dest = join(destDir, isWinTarget ? "ffmpeg.exe" : "ffmpeg");
+  let src;
+  try {
+    src = ensureFfmpegStatic(triple);
+  } catch (e) {
+    console.warn(
+      `[build-sidecar] ⚠ [RT-H09] 静态 ffmpeg 未就绪(${e.message})—— 跳过随包。打包版将回落` +
+        ` resolveFfmpegPath 解析链(PATH/常见目录/env),无 ffmpeg 的用户机上转录/抽音会诚实报错引导安装。`,
+    );
+    return;
+  }
+  mkdirSync(destDir, { recursive: true });
+  rmSync(dest, { force: true });
+  copyFileSync(src, dest);
+  if (!isWinTarget) chmodSync(dest, 0o755);
+  // 硬自检:实拷后必须存在;host 可跑的 target 再跑一次 -version(不容半截二进制进包 ——
+  //   教训同 playwright 自检②:只拷不验会假通过)。交叉 target 跑不动,诚实标注留待目标机验证。
+  if (!existsSync(dest)) {
+    throw new Error(`[build-sidecar] 自检失败[RT-H09]:ffmpeg 实拷后不存在(${dest})`);
+  }
+  const hostTriple = targetTriple();
+  if (triple === hostTriple) {
+    const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
+    if (r.status !== 0 || !`${r.stdout}`.startsWith("ffmpeg version")) {
+      throw new Error(
+        `[build-sidecar] 自检失败[RT-H09]:sidecar 内 ffmpeg -version 未通过(status=${r.status})→ 不出必崩的包`,
+      );
+    }
+    console.log(
+      `[build-sidecar]   ✓ [RT-H09] 静态 ffmpeg 随包就绪 → sidecar/frontend/bin/(${`${r.stdout}`.split("\n")[0]})`,
+    );
+  } else {
+    console.log(
+      `[build-sidecar]   ✓ [RT-H09] 静态 ffmpeg 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证 —— 诚实标注)`,
+    );
+  }
+}
+
 function main() {
   // [T-164 P6] tauri.conf.json beforeBuildCommand 会在 tauri build 阶段再跑本脚本重建 sidecar,
   //   会**覆盖 desktop:package 步2 的 JS 混淆结果**。package.mjs 在 tauri build 前已跑过
@@ -728,6 +782,10 @@ function main() {
   ensureOnnxRuntimeDylib();
   // [T-225b] sharp 0.32.x 原生补拷(修 @xenova/transformers 顶层 import 连坐崩,同上第二层)。
   ensureSharpNative();
+
+  // [T-326 RT-H09] 静态 ffmpeg 实拷(douyin 抽音 + whisper-local 解码的运行时解析链第②级)——
+  //   放打 tarball 前,让 sidecar/frontend/bin/ffmpeg 进包。拉不到 → warn 跳过(回落用户自装)。
+  bundleFfmpeg(triple);
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。

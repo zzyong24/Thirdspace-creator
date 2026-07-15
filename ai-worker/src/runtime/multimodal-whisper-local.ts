@@ -16,8 +16,9 @@
 //   (归一化 [-1,1] 的 16kHz mono PCM),自身不带 mp3/m4a 解码器。
 // 解码路径选型(SPEC §3.2 权衡,如实标注):
 //   - 用 **ffmpeg** 把 MP3 → raw f32le PCM(`ffmpeg -i pipe:0 -f f32le -ar 16000 -ac 1 pipe:1`),
-//     Buffer 直接 view 成 Float32Array。ffmpeg **已是项目硬依赖**(douyin-cdp 抽音已在用
-//     /opt/homebrew/bin/ffmpeg),故解码**不新增重依赖**——复用同一把 ffmpeg,只是 decode 一步。
+//     Buffer 直接 view 成 Float32Array。ffmpeg **已是项目硬依赖**(douyin-cdp 抽音在用,
+//     路径统一走 ffmpeg-path.ts 的 resolveFfmpegPath 解析链,RT-H09),故解码**不新增重依赖**
+//     ——复用同一把 ffmpeg,只是 decode 一步。
 //     纯 JS mp3 解码库(如需 wavefile 只吃 wav;mp3 需额外库且解码质量/维护存疑)不选。
 //   - decode 与 getPipeline 都做成**可注入 deps**:适配器逻辑单测零成本(注 fake,不下 500MB
 //     模型、不 spawn 真 ffmpeg);真跑时走默认(真 ffmpeg spawn + 真 transformers pipeline)。
@@ -29,6 +30,7 @@ import {
   type MultimodalSpec,
   type TranscribeAudioOptions,
 } from "./multimodal-factory";
+import { resolveFfmpegPath } from "./ffmpeg-path";
 
 /** Whisper 级别(体积/速度/精度权衡)。默认 small(中文效果/体积平衡,SPEC §3.3)。
  *  spec.model 传 "tiny"/"base"/"small"/"medium" 之一;其它值 → 回退 small。 */
@@ -223,8 +225,11 @@ export interface FfmpegDecoderDeps {
     on(event: "error", cb: (err: Error) => void): void;
     on(event: "close", cb: (code: number | null) => void): void;
   };
-  /** ffmpeg 可执行路径(默认 /opt/homebrew/bin/ffmpeg,与 douyin-cdp streamAudioFromVideo 对齐)。 */
+  /** ffmpeg 可执行路径(显式注入则短路解析链;默认走 resolveFfmpegPath 四级解析,
+   *  与 douyin-cdp streamAudioFromVideo 同一把解析器 —— RT-H09 根治硬编码)。 */
   ffmpegPath?: string;
+  /** 解析器可注入(单测 fake 解析链结果/抛错;默认真 resolveFfmpegPath)。 */
+  resolveFfmpeg?: () => string;
 }
 
 function realFfmpegDeps(): FfmpegDecoderDeps {
@@ -236,7 +241,8 @@ function realFfmpegDeps(): FfmpegDecoderDeps {
         FfmpegDecoderDeps["spawn"]
       >;
     },
-    ffmpegPath: process.env.CREATOROS_FFMPEG_PATH?.trim() || "/opt/homebrew/bin/ffmpeg",
+    // ffmpegPath 不在装配期定死 —— 每次 decode 时惰性走 resolveFfmpegPath 解析链
+    // (env → 随包 sidecar → PATH/常见目录 → 诚实报错),见 createFfmpegPcmDecoder。
   };
 }
 
@@ -245,14 +251,26 @@ function realFfmpegDeps(): FfmpegDecoderDeps {
  * 喂 Transformers.js ASR pipeline。命令(stdin 收字节 → stdout 出 raw f32le):
  *   ffmpeg -i pipe:0 -f f32le -acodec pcm_f32le -ar 16000 -ac 1 pipe:1
  * f32le 的字节流直接 view 成 Float32Array(小端;Node/主流平台都是小端,直接零拷贝 view)。
- * 复用 ffmpeg(项目已装,douyin-cdp 抽音在用)—— 解码**不新增重依赖**。
+ * 复用 ffmpeg(douyin-cdp 抽音同一把)—— 解码**不新增重依赖**。
+ *
+ * ffmpeg 路径解析(RT-H09):**每次 decode 惰性解析**(不在装配期)——
+ * createDefaultWhisperLocalAdapter 在 host 装配时就会构造本 decoder,若装配期解析并抛错,
+ * 会把「机器没装 ffmpeg」升级成「整个 server 起不来」;惰性解析让缺 ffmpeg 只在真转录时
+ * 以 MultimodalGenerationError 诚实浮出(错误信息含安装/配置引导)。
  */
 export function createFfmpegPcmDecoder(
   deps: FfmpegDecoderDeps = realFfmpegDeps(),
 ): (audioBytes: Uint8Array) => Promise<Float32Array> {
-  const ffmpegPath = deps.ffmpegPath ?? "ffmpeg";
   return (audioBytes: Uint8Array) =>
     new Promise<Float32Array>((resolve, reject) => {
+      // 解析链:显式注入 ffmpegPath > 注入的解析器 > 真 resolveFfmpegPath(env → 随包 → PATH → 报错)。
+      let ffmpegPath: string;
+      try {
+        ffmpegPath = deps.ffmpegPath ?? (deps.resolveFfmpeg ?? resolveFfmpegPath)();
+      } catch (err) {
+        reject(err instanceof Error ? err : new Error(String(err)));
+        return;
+      }
       const args = [
         "-hide_banner",
         "-loglevel",
