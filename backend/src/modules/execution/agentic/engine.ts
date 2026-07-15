@@ -93,6 +93,12 @@ export interface RawLlmConfig {
   model: string;
   authStyle: "bearer" | "x-api-key";
   token: string;
+  /**
+   * 用户每-capability 可配的自由参数(= ResolvedLlmConfig.settings,运行时经 buildAgenticLlmConfig
+   * 透传)。pi-engine 从中读**用户配的** maxTokens / contextWindow / reasoning 等 —— 不再硬编造
+   * pi-ai 模型描述符(SPEC「模型须可配」/ 用户 2026-07-14 拍板)。缺失字段各自兜底,不阻断。
+   */
+  settings?: Record<string, unknown>;
 }
 
 /**

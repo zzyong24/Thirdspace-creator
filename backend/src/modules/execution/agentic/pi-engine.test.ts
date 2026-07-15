@@ -94,6 +94,27 @@ describe("pi-engine §6.1 provider 映射(纯)", () => {
     expect(reg.config.authHeader).toBeUndefined();
     expect(reg.config.baseUrl).toBe("https://api.deepseek.com/v1");
   });
+
+  it("[可配] maxTokens/contextWindow/reasoning 读用户 model-config settings(缺则兜底,不硬编)", () => {
+    // 用户在 settings 配了 → 用用户的(不再硬编 8192/200000)。
+    const cfgd = buildPiProviderRegistration({
+      ...ANTHROPIC_BEARER,
+      settings: { maxTokens: 4096, contextWindow: 245760, reasoning: true },
+    });
+    const m = (cfgd.config.models as Array<Record<string, unknown>>)[0]!;
+    expect(m.maxTokens).toBe(4096);
+    expect(m.contextWindow).toBe(245760);
+    expect(m.reasoning).toBe(true);
+    // 没配 settings → 兜底(不崩、不硬塞用户没配的值)。
+    const fb = (
+      buildPiProviderRegistration(ANTHROPIC_BEARER).config.models as Array<
+        Record<string, unknown>
+      >
+    )[0]!;
+    expect(fb.maxTokens).toBe(8192);
+    expect(fb.contextWindow).toBe(200000);
+    expect(fb.reasoning).toBe(false);
+  });
 });
 
 describe("pi-engine zodToPiParameters(zod→JSON Schema)", () => {

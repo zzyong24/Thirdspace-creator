@@ -75,6 +75,16 @@ export function piApiForFormat(apiFormat: RawLlmConfig["apiFormat"]): string {
   return apiFormat === "anthropic" ? "anthropic-messages" : "openai-completions";
 }
 
+/** 从用户 model-config 的 settings 读正数配置(缺/非法 → 兜底)。模型描述符不再硬编。 */
+function numFromSettings(
+  settings: Record<string, unknown> | undefined,
+  key: string,
+  fallback: number,
+): number {
+  const v = settings?.[key];
+  return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : fallback;
+}
+
 export interface PiProviderRegistration {
   name: string;
   config: Record<string, unknown>;
@@ -114,11 +124,17 @@ export function buildPiProviderRegistration(
           id: llmConfig.model,
           name: llmConfig.model,
           api: piApi,
-          reasoning: false,
+          // reasoning/contextWindow/maxTokens 读**用户 model-config 的 settings**(缺则兜底),不硬编。
+          reasoning: llmConfig.settings?.reasoning === true,
           input: ["text"],
+          // cost 恒 0 = **故意**:预算/计费不走 pi-ai 成本核算,由 LoopController 记你真实 usage token。
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-          contextWindow: 200000,
-          maxTokens: 8192,
+          contextWindow: numFromSettings(
+            llmConfig.settings,
+            "contextWindow",
+            200000,
+          ),
+          maxTokens: numFromSettings(llmConfig.settings, "maxTokens", 8192),
         },
       ],
     },
