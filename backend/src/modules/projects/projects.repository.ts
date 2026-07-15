@@ -1,4 +1,4 @@
-import { and, eq, asc, inArray, isNull, sql, type Db } from "@creatoros/backend";
+import { and, eq, or, asc, inArray, isNull, sql, type Db } from "@creatoros/backend";
 import {
   projects,
   projectActivities,
@@ -34,6 +34,25 @@ import {
   aiTaskSteps,
   audienceSignals,
   topicPromotions,
+  // [T-326 DATA-H05] 删除事务补全:production / analytics / topic attribution /
+  // learning / 日历槽 / 校准预测 / 标签 / 搜索索引 —— 全是无 FK 软引用,删项目不清会留孤儿
+  // (dashboard 仍聚合已删项目)。同 T-102 裁决:共享 schema 级联删,不动各模块 service/repo。
+  productions,
+  productionSegments,
+  segmentAssets,
+  exportRecords,
+  metricSnapshots,
+  metricValues,
+  retentionPoints,
+  audienceSnapshots,
+  topicAttributions,
+  learnings,
+  contentCalendarEntries,
+  predictions,
+  calibrationResults,
+  tags,
+  entityTags,
+  searchDocuments,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "./projects.errors";
@@ -422,10 +441,19 @@ export function createProjectRepository(db: Db): ProjectRepository {
           .from(aiConversations)
           .where(eq(aiConversations.projectId, projectId));
         const conversationIds = convoRows.map((r) => r.id);
+        // [T-326 DATA-H05] 收敛键补 output 维度:output-scoped 的 AI 任务可能只带
+        // content_output_id 不带 project_id(两列都 nullable),只按 projectId 收会漏。
         const aiTaskRows = await tx
           .select({ id: aiTasks.id })
           .from(aiTasks)
-          .where(eq(aiTasks.projectId, projectId));
+          .where(
+            outputIds.length > 0
+              ? or(
+                  eq(aiTasks.projectId, projectId),
+                  inArray(aiTasks.contentOutputId, outputIds),
+                )
+              : eq(aiTasks.projectId, projectId),
+          );
         const aiTaskIds = aiTaskRows.map((r) => r.id);
         // 该项目的 review ids(review_insights / review_publications 经它收敛)。
         const reviewRows = await tx
@@ -433,6 +461,70 @@ export function createProjectRepository(db: Db): ProjectRepository {
           .from(reviews)
           .where(eq(reviews.projectId, projectId));
         const reviewIds = reviewRows.map((r) => r.id);
+        // ── [T-326 DATA-H05] 制作/指标/校准/经验的派生子键 ─────────────────
+        // production 链:productions 经 content_output_id 收敛(0..1 per output),
+        // segments 经 production_id,segment_assets 经 segment_id。
+        const productionRows =
+          outputIds.length > 0
+            ? await tx
+                .select({ id: productions.id })
+                .from(productions)
+                .where(inArray(productions.contentOutputId, outputIds))
+            : [];
+        const productionIds = productionRows.map((r) => r.id);
+        const segmentRows =
+          productionIds.length > 0
+            ? await tx
+                .select({ id: productionSegments.id })
+                .from(productionSegments)
+                .where(inArray(productionSegments.productionId, productionIds))
+            : [];
+        const segmentIds = segmentRows.map((r) => r.id);
+        // analytics 事实表:metric_snapshots 经 publication_id 收敛,
+        // metric_values 经 metric_snapshot_id。
+        const snapshotRows =
+          publicationIds.length > 0
+            ? await tx
+                .select({ id: metricSnapshots.id })
+                .from(metricSnapshots)
+                .where(inArray(metricSnapshots.publicationId, publicationIds))
+            : [];
+        const snapshotIds = snapshotRows.map((r) => r.id);
+        // 校准链:predictions 的 subject 是本项目的 output/publication,
+        // calibration_results 经 prediction_id 收敛。subject_id NOT NULL 无法解锚 → 删。
+        const predictionSubjectConds = [
+          ...(outputIds.length > 0
+            ? [
+                and(
+                  eq(predictions.subjectType, "content_output"),
+                  inArray(predictions.subjectId, outputIds),
+                ),
+              ]
+            : []),
+          ...(publicationIds.length > 0
+            ? [
+                and(
+                  eq(predictions.subjectType, "publication"),
+                  inArray(predictions.subjectId, publicationIds),
+                ),
+              ]
+            : []),
+        ];
+        const predictionRows =
+          predictionSubjectConds.length > 0
+            ? await tx
+                .select({ id: predictions.id })
+                .from(predictions)
+                .where(or(...predictionSubjectConds))
+            : [];
+        const predictionIds = predictionRows.map((r) => r.id);
+        // 本项目产的经验(learnings.project_id 锚,T-118a):随项目删;它们被其他项目
+        // 引用的应用行(learning_applications.learning_id)也要清,否则悬挂。
+        const learningRows = await tx
+          .select({ id: learnings.id })
+          .from(learnings)
+          .where(eq(learnings.projectId, projectId));
+        const learningIds = learningRows.map((r) => r.id);
 
         // ── 自底向上删除(先孙后子再父) ───────────────────────────────────
         // artifact 结构表(script_sections / timeline_segments 挂 artifact_version)。
@@ -476,6 +568,72 @@ export function createProjectRepository(db: Db): ProjectRepository {
             .delete(publications)
             .where(inArray(publications.id, publicationIds));
         }
+        // [T-326 DATA-H05] analytics 事实表(metric_snapshots/metric_values/
+        // retention_points/audience_snapshots 都按 publication_id 软引用,publication
+        // 删了指标就是孤儿 —— dashboard 会继续聚合已删项目)。先孙(values)后子(snapshots)。
+        if (snapshotIds.length > 0) {
+          await tx
+            .delete(metricValues)
+            .where(inArray(metricValues.metricSnapshotId, snapshotIds));
+        }
+        if (publicationIds.length > 0) {
+          await tx
+            .delete(metricSnapshots)
+            .where(inArray(metricSnapshots.publicationId, publicationIds));
+          await tx
+            .delete(retentionPoints)
+            .where(inArray(retentionPoints.publicationId, publicationIds));
+          await tx
+            .delete(audienceSnapshots)
+            .where(inArray(audienceSnapshots.publicationId, publicationIds));
+        }
+        // [T-326 DATA-H05] 选题归因(topic_attributions):双锚收敛 —— publication_id
+        // (幂等锚,NOT NULL)命中本项目发布,或 project_id(溯源锚,nullable)直指本项目。
+        await tx
+          .delete(topicAttributions)
+          .where(
+            publicationIds.length > 0
+              ? or(
+                  eq(topicAttributions.projectId, projectId),
+                  inArray(topicAttributions.publicationId, publicationIds),
+                )
+              : eq(topicAttributions.projectId, projectId),
+          );
+        // [T-326 DATA-H05] 校准链:subject(output/publication)已删 → 预测失去对象,
+        // calibration_results 经 prediction_id 收敛先删。
+        if (predictionIds.length > 0) {
+          await tx
+            .delete(calibrationResults)
+            .where(inArray(calibrationResults.predictionId, predictionIds));
+          await tx
+            .delete(predictions)
+            .where(inArray(predictions.id, predictionIds));
+        }
+        // [T-326 DATA-H05] production 链(productions 0..1 per output → segments →
+        // segment_assets;export_records 挂 production)。自底向上。
+        if (segmentIds.length > 0) {
+          await tx
+            .delete(segmentAssets)
+            .where(inArray(segmentAssets.productionSegmentId, segmentIds));
+        }
+        if (productionIds.length > 0) {
+          await tx
+            .delete(productionSegments)
+            .where(inArray(productionSegments.productionId, productionIds));
+          await tx
+            .delete(exportRecords)
+            .where(inArray(exportRecords.productionId, productionIds));
+          await tx
+            .delete(productions)
+            .where(inArray(productions.id, productionIds));
+        }
+        // [T-326 DATA-H05] 内容日历槽:content_output_id 指向被删 output 的排期行
+        // 失去对象 → 删(candidate 锚的排期行不动)。
+        if (outputIds.length > 0) {
+          await tx
+            .delete(contentCalendarEntries)
+            .where(inArray(contentCalendarEntries.contentOutputId, outputIds));
+        }
         // output 阶段行 + outputs 本身。
         if (outputIds.length > 0) {
           await tx
@@ -501,6 +659,25 @@ export function createProjectRepository(db: Db): ProjectRepository {
           .delete(scriptReviewReports)
           .where(eq(scriptReviewReports.projectId, projectId));
 
+        // [T-326 DATA-H05] 本项目产的经验(learnings.project_id 锚)随项目删;
+        // 其他项目引用这些经验的应用行(learning_applications.learning_id)一并清,
+        // 否则「复用了已删经验」的应用行悬挂。
+        if (learningIds.length > 0) {
+          await tx
+            .delete(learningApplications)
+            .where(inArray(learningApplications.learningId, learningIds));
+          await tx.delete(learnings).where(inArray(learnings.id, learningIds));
+        }
+        // 非本项目(project_id 异项目/NULL,如手录经验后来挂上本项目 review)但 review 锚
+        // 指向被删 review 的经验:知识本身可跨项目复用(SPEC §22),不删 —— 解锚 review_id,
+        // 学 audience_signals 的解锚先例,避免悬挂引用。
+        if (reviewIds.length > 0) {
+          await tx
+            .update(learnings)
+            .set({ reviewId: null })
+            .where(inArray(learnings.reviewId, reviewIds));
+        }
+
         // AI 会话/消息 + AI 任务/引用/结果/步骤。
         if (conversationIds.length > 0) {
           await tx
@@ -520,8 +697,9 @@ export function createProjectRepository(db: Db): ProjectRepository {
           await tx
             .delete(aiTaskSteps)
             .where(inArray(aiTaskSteps.aiTaskId, aiTaskIds));
+          // [T-326 DATA-H05] 按收敛出的 ids 删(含 output-scoped、project_id 为 NULL 的任务)。
+          await tx.delete(aiTasks).where(inArray(aiTasks.id, aiTaskIds));
         }
-        await tx.delete(aiTasks).where(eq(aiTasks.projectId, projectId));
 
         // 素材关联 + 复用应用 + 选题晋升链(candidate 本身不删 —— 只解绑晋升)。
         await tx
@@ -545,6 +723,56 @@ export function createProjectRepository(db: Db): ProjectRepository {
         await tx
           .delete(projectActivities)
           .where(eq(projectActivities.projectId, projectId));
+
+        // [T-326 DATA-H05] 泛实体软引用清理:标签指派(entity_tags)与搜索索引
+        // (search_documents)都按 (entity_type, entity_id) 泛引用被删实体。实体 id 全局
+        // 唯一(带前缀铸造)+ user 域限定,按 entity_id 收敛安全。搜索索引虽是派生可重建,
+        // 但不删会留幽灵命中(搜到已删项目)。knowledge/asset 不随项目删,其标签/索引不动。
+        const deletedEntityIds = [
+          projectId,
+          ...outputIds,
+          ...artifactIds,
+          ...publicationIds,
+          ...reviewIds,
+          ...learningIds,
+        ];
+        // tags.usage_count 是服务层维护的去范式计数:先按 tag 聚合回补,再删指派行,
+        // 避免删完计数漂移(GREATEST 兜底不下穿 0)。
+        const tagCountRows = await tx
+          .select({
+            tagId: entityTags.tagId,
+            n: sql<number>`count(*)::int`,
+          })
+          .from(entityTags)
+          .where(
+            and(
+              eq(entityTags.userId, ctx.userId),
+              inArray(entityTags.entityId, deletedEntityIds),
+            ),
+          )
+          .groupBy(entityTags.tagId);
+        for (const { tagId, n } of tagCountRows) {
+          await tx
+            .update(tags)
+            .set({ usageCount: sql`GREATEST(${tags.usageCount} - ${n}, 0)` })
+            .where(and(eq(tags.id, tagId), eq(tags.userId, ctx.userId)));
+        }
+        await tx
+          .delete(entityTags)
+          .where(
+            and(
+              eq(entityTags.userId, ctx.userId),
+              inArray(entityTags.entityId, deletedEntityIds),
+            ),
+          );
+        await tx
+          .delete(searchDocuments)
+          .where(
+            and(
+              eq(searchDocuments.userId, ctx.userId),
+              inArray(searchDocuments.entityId, deletedEntityIds),
+            ),
+          );
 
         // 最后删项目根行(user-scoped + 账号门再兜一层;删前 get() 已含账号门守过)。
         await tx

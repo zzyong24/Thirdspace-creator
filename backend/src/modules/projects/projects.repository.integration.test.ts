@@ -1,5 +1,29 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import {
+  createDb,
+  type Db,
+  // [T-326 DATA-H05] 删除级联全链路断言要直插/直读的共享 schema 表。
+  publications,
+  productions,
+  productionSegments,
+  segmentAssets,
+  exportRecords,
+  metricSnapshots,
+  metricValues,
+  retentionPoints,
+  audienceSnapshots,
+  topicAttributions,
+  learnings,
+  learningApplications,
+  contentCalendarEntries,
+  predictions,
+  calibrationResults,
+  tags,
+  entityTags,
+  searchDocuments,
+  reviews,
+  aiTasks,
+} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createProjectRepository,
@@ -316,5 +340,270 @@ describe("ProjectRepository — per-account isolation (T-136 slice b)", () => {
     // 号2 ctx 自己能拿到;全局视图也能拿到。
     expect((await repo.getOutput(ctxA2, "o_P2")).id).toBe("o_P2");
     expect((await repo.getTask(ctxAglobal, "t_P2")).id).toBe("t_P2");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-326 DATA-H05] deleteProjectCascade 全链路无孤儿 + 隔离断言。
+// 建一个带全链路数据的项目(production/analytics/attribution/learning/日历/校准/
+// 标签/搜索索引各来一行)→ 删除 → 断言各软引用表无孤儿;同 user 另一项目的数据不受伤。
+// ─────────────────────────────────────────────────────────────────────────────
+describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", () => {
+  // 给两个项目(P_DEL 被删 / P_KEEP 留存)各铺一条全链路:output → publication →
+  // production 链 + analytics 事实 + 归因 + 经验/应用 + 日历槽 + 预测/校准 + 标签 + 索引。
+  async function seedChain(suffix: "del" | "keep", projectId: string) {
+    const oId = `o-${suffix}`;
+    const pubId = `pub-${suffix}`;
+    await repo.insertProject(
+      ctxA,
+      projectRow({ id: projectId, userId: "user-a", title: `链路-${suffix}` }),
+    );
+    await repo.insertOutput(ctxA, {
+      id: oId,
+      projectId,
+      title: `产出-${suffix}`,
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: "traffic",
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(publications).values({
+      id: pubId,
+      userId: "user-a",
+      contentOutputId: oId,
+      platform: "douyin",
+      accountReference: "acct-ref",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    // production 链:production → segment → segment_asset;export_record 挂 production。
+    await db.insert(productions).values({
+      id: `prod-${suffix}`,
+      userId: "user-a",
+      contentOutputId: oId,
+      updatedAt: NOW,
+    });
+    await db.insert(productionSegments).values({
+      id: `seg-${suffix}`,
+      userId: "user-a",
+      productionId: `prod-${suffix}`,
+      title: "开场",
+    });
+    await db.insert(segmentAssets).values({
+      id: `sa-${suffix}`,
+      userId: "user-a",
+      productionSegmentId: `seg-${suffix}`,
+      assetId: `asset-${suffix}`,
+      usageType: "broll",
+    });
+    await db.insert(exportRecords).values({
+      id: `exp-${suffix}`,
+      userId: "user-a",
+      productionId: `prod-${suffix}`,
+      format: "mp4",
+      resolution: "1080p",
+      aspectRatio: "9:16",
+      createdAt: NOW,
+    });
+    // analytics 事实:snapshot → value;retention/audience 直挂 publication。
+    await db.insert(metricSnapshots).values({
+      id: `ms-${suffix}`,
+      userId: "user-a",
+      publicationId: pubId,
+      capturedAt: NOW,
+      source: "douyin_export",
+      createdAt: NOW,
+    });
+    await db.insert(metricValues).values({
+      id: `mv-${suffix}`,
+      userId: "user-a",
+      metricSnapshotId: `ms-${suffix}`,
+      metricKey: "play_count",
+      numericValue: 100,
+    });
+    await db.insert(retentionPoints).values({
+      id: `rp-${suffix}`,
+      userId: "user-a",
+      publicationId: pubId,
+      capturedAt: NOW,
+      positionMs: 1000,
+      retentionRate: 0.8,
+      viewerCount: 80,
+    });
+    await db.insert(audienceSnapshots).values({
+      id: `as-${suffix}`,
+      userId: "user-a",
+      publicationId: pubId,
+      capturedAt: NOW,
+      dimensionType: "age",
+      dimensionValue: "18-23",
+      percentage: 0.4,
+      audienceCount: 40,
+    });
+    // 选题归因(publication 幂等锚 + project 溯源锚)。
+    await db.insert(topicAttributions).values({
+      id: `ta-${suffix}`,
+      userId: "user-a",
+      publicationId: pubId,
+      projectId,
+      topicType: "教程",
+      hookType: "具体数字",
+      structureFormula: "三步教程",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    // 经验(project 锚)+ 应用(project 锚)。
+    await db.insert(learnings).values({
+      id: `L-${suffix}`,
+      userId: "user-a",
+      projectId,
+      title: `经验-${suffix}`,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(learningApplications).values({
+      id: `app-${suffix}`,
+      userId: "user-a",
+      learningId: `L-${suffix}`,
+      projectId,
+      appliedAt: NOW,
+    });
+    // 内容日历槽(output 锚)。
+    await db.insert(contentCalendarEntries).values({
+      id: `ce-${suffix}`,
+      userId: "user-a",
+      accountId: "acct-1",
+      plannedAt: NOW,
+      contentOutputId: oId,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    // 校准链:prediction(subject=publication)→ calibration_result。
+    await db.insert(predictions).values({
+      id: `pred-${suffix}`,
+      userId: "user-a",
+      subjectType: "publication",
+      subjectId: pubId,
+      rubricVersionId: "rv-1",
+      confidence: "high",
+      createdAt: NOW,
+    });
+    await db.insert(calibrationResults).values({
+      id: `cr-${suffix}`,
+      userId: "user-a",
+      predictionId: `pred-${suffix}`,
+      ingestionRunId: "run-1",
+      createdAt: NOW,
+    });
+    // 标签指派(project 实体)+ 搜索索引(project 实体)。
+    await db.insert(entityTags).values({
+      id: `et-${suffix}`,
+      userId: "user-a",
+      tagId: "tg-1",
+      entityType: "project",
+      entityId: projectId,
+      createdAt: NOW,
+    });
+    await db.insert(searchDocuments).values({
+      id: `sd-${suffix}`,
+      userId: "user-a",
+      entityType: "project",
+      entityId: projectId,
+      title: `链路-${suffix}`,
+      searchText: `链路-${suffix}`,
+      indexedAt: NOW,
+    });
+    return { oId, pubId };
+  }
+
+  it("删除清空 production/analytics/attribution/learning/日历/校准/标签/索引,另一项目不受伤", async () => {
+    // 共享 tag(usage_count=2:P_DEL + P_KEEP 各一次指派)。
+    await db.insert(tags).values({
+      id: "tg-1",
+      userId: "user-a",
+      name: "干货",
+      usageCount: 2,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    const delChain = await seedChain("del", "P_DEL");
+    await seedChain("keep", "P_KEEP");
+    // 解锚样本:手录经验(project 归属为 NULL)后来挂上 P_DEL 的 review —— 知识不删,解锚。
+    await db.insert(reviews).values({
+      id: "rev-del",
+      userId: "user-a",
+      projectId: "P_DEL",
+      reviewType: "output",
+      status: "draft",
+      periodStart: NOW,
+      periodEnd: NOW,
+      createdAt: NOW,
+    });
+    await db.insert(learnings).values({
+      id: "L-manual",
+      userId: "user-a",
+      projectId: null,
+      reviewId: "rev-del",
+      title: "手录经验",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    // 派生引用样本:P_KEEP 复用了 P_DEL 产的经验(learning_id 指向被删经验)→ 应用行须清。
+    await db.insert(learningApplications).values({
+      id: "app-cross",
+      userId: "user-a",
+      learningId: "L-del",
+      projectId: "P_KEEP",
+      appliedAt: NOW,
+    });
+    // output-scoped AI 任务(project_id 为 NULL,只带 content_output_id)→ 收敛键补维后应删。
+    await db.insert(aiTasks).values({
+      id: "ait-output-scoped",
+      userId: "user-a",
+      projectId: null,
+      contentOutputId: delChain.oId,
+      taskType: "script_polish",
+      idempotencyKey: "idem-1",
+      requestedAt: NOW,
+    });
+
+    await repo.deleteProjectCascade(ctxA, "P_DEL");
+
+    // ── 全链路无孤儿(*-del 行全没了),*-keep 行全在(隔离) ──────────────
+    const ids = (rows: Array<{ id: string }>) => rows.map((r) => r.id).sort();
+    expect(ids(await db.select().from(productions))).toEqual(["prod-keep"]);
+    expect(ids(await db.select().from(productionSegments))).toEqual(["seg-keep"]);
+    expect(ids(await db.select().from(segmentAssets))).toEqual(["sa-keep"]);
+    expect(ids(await db.select().from(exportRecords))).toEqual(["exp-keep"]);
+    expect(ids(await db.select().from(metricSnapshots))).toEqual(["ms-keep"]);
+    expect(ids(await db.select().from(metricValues))).toEqual(["mv-keep"]);
+    expect(ids(await db.select().from(retentionPoints))).toEqual(["rp-keep"]);
+    expect(ids(await db.select().from(audienceSnapshots))).toEqual(["as-keep"]);
+    expect(ids(await db.select().from(topicAttributions))).toEqual(["ta-keep"]);
+    expect(ids(await db.select().from(contentCalendarEntries))).toEqual(["ce-keep"]);
+    expect(ids(await db.select().from(predictions))).toEqual(["pred-keep"]);
+    expect(ids(await db.select().from(calibrationResults))).toEqual(["cr-keep"]);
+    expect(ids(await db.select().from(entityTags))).toEqual(["et-keep"]);
+    expect(ids(await db.select().from(searchDocuments))).toEqual(["sd-keep"]);
+    // 经验:P_DEL 产的删;P_KEEP 的留;手录经验留但 review 锚已解。
+    expect(ids(await db.select().from(learnings))).toEqual(["L-keep", "L-manual"]);
+    const manual = (await db.select().from(learnings)).find((r) => r.id === "L-manual");
+    expect(manual?.reviewId).toBeNull();
+    // 应用行:P_DEL 自己的(app-del)按 project 清;P_KEEP 引用被删经验的(app-cross)
+    // 按 learning_id 清;P_KEEP 自己的留。
+    expect(ids(await db.select().from(learningApplications))).toEqual(["app-keep"]);
+    // output-scoped AI 任务(project_id NULL)也被收敛删除。
+    expect(ids(await db.select().from(aiTasks))).toEqual([]);
+    // 标签 usage_count 回补:2 → 1(P_DEL 的指派没了,P_KEEP 的还在)。
+    const tag = (await db.select().from(tags)).find((r) => r.id === "tg-1");
+    expect(tag?.usageCount).toBe(1);
+    // 项目根行:P_DEL 没了,P_KEEP 完好。
+    await expect(repo.get(ctxA, "P_DEL")).rejects.toBeInstanceOf(OwnershipError);
+    expect((await repo.get(ctxA, "P_KEEP")).title).toBe("链路-keep");
   });
 });
