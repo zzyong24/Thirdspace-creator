@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 0f6d177
+LAST_SYNCED: main @ bffa82e
 
 ## 这是什么(定位)
 
@@ -28,10 +28,11 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 - [open] T-011 (P5) 多模型按 capability(DeepSeek写文案/GPT做图/Claude推理)+ 即时可视化 spec
 - [open] T-012 (P6) (后续 YAGNI)Redis+BullMQ 持久队列 + worker 独立进程 + DB 写属主收口
 - [open] T-013 (SKILL) 房子图纸 gate + 门卫 + pmem + 大白话输出规则 promote 进 skill lab
+- [wip] T-033 (P2) [Feature] 发布/项目列表默认只显示已通过:detail ingest 同步 platform_status 进 publications;listPublications 过滤 hidden_at + (platform_status='已通过' OR NULL),'显示已隐藏'开关打开才显所有(修 T-073 死按钮+加 status 维度)
 
 全部任务:`node orchestrator/process/pmem.mjs tasks`
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `ai-runtime` · `analytics` · `artifacts` · `assets` · `calibration` · `candidate` · `content-calendar` · `identity` · `ingestion` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy`
+`ai` · `ai-runtime` · `analytics` · `artifacts` · `assets` · `benchmark` · `calibration` · `candidate` · `content-calendar` · `execution` · `favorites` · `identity` · `ingestion` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources`
 
