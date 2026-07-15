@@ -89,3 +89,26 @@ config = { name, api, baseUrl, apiKey, authHeader?, streamSimple?, models:[{id,n
 4. **photon-node(wasm)/pi-tui 打包**:headless 未触发 photon(仅 image 工具用);sdk.js 链路只拉 pi-tui `getCapabilities`(纯探测,已验无 TTY 安全)。打包实拷需带上但运行时不 eager 加载 TUI(深导入绕开 barrel)。
 5. **turn 粒度余量**:步数硬顶按 turn 重标定,abort 异步 ≤1 turn 余量(已单测锚 `≤maxSteps+1`);若产品要精确到步,需低层 `Agent` 的 `shouldStopAfterTurn`(coding-agent 未暴露,得下沉 pi-agent-core,不在本切片)。
 6. **未接**:记忆层(T-315)/会话续(T-316)/偏好捕捉(T-317)/skill 进化(T-318)—— 本切片只点亮引擎;`sessionManager: inMemory()`(会话不落盘,待 T-316 指 appDataDir)。
+
+## 7. 打包实拷落地(T-313 收尾,子代理 2026-07-14 补)
+
+**证实 §6 未决②的假设**:重建的 sidecar `.pnpm` 里 pi 树 **0 个**(pi-coding-agent / openai / chalk / debug / ws 全无)—— Next standalone tracing 对 `serverExternalPackages` + file-URL 深导入的 pi 整棵树完全没拖进来。已在 `build-sidecar.mjs` 加 `bundlePiEngine()`(照 playwright/gsap 三件套)。
+
+**依赖闭包(build 时算,不硬编码版本名)**:从源 `.pnpm` 的 pi-coding-agent 条目 BFS 走 pnpm symlink 依赖图 → 收全可达 entry。pi 版本一升 peer-suffix 目录名全变,硬编码会静默失配,故自适应算。
+
+**L3 剪枝(省 ~91MB)**:装 0.80.7 现场核实——pi-ai 的 provider api 全走 `*.lazy.js`(compat.js 静态只引 lazy shim),具体 provider `.js` 运行时才动态 import;CreatorOS 的 `piApiForFormat` 只产 `anthropic-messages` / `openai-completions` 两种 api → bedrock/google/mistral **永不被 import**。故剪掉这三个 provider 顶包(连带独占传递依赖 @smithy/@aws-sdk/@google/genai/@mistralai/@protobufjs/google-auth-library 等)。**openai + @anthropic-ai/sdk 必留**(两格式各需一)。剪枝安全网 = 自检真深导入 sdk.js,剪多了 import 崩 → build 失败。
+
+- **闭包**:61 entry(全量 218 → 剪 157;去重 61 包)。~90MB(verbatimSymlinks 共享依赖只存一份;若 dereference 会既撑大又断深传递解析链)。
+- **拷法**:逐 entry `cpSync(verbatimSymlinks:true)` 进 `SIDECAR_RUNTIME/node_modules/.pnpm/<entry>`(保 `../../<dep>@ver` 相对链,整份闭包同 `.pnpm/` 内自洽解析);目标 = pi-engine `locatePiCoreDir()` 的 root② `../node_modules/.pnpm/...` 分支。
+- **photon-node wasm**:`photon_rs_bg.wasm`(1.9MB)纯文件,verbatim 已覆盖 + 硬自检文件在。
+- **HARD 自检**:sidecar node deep-import sdk.js + model-registry/auth-storage/session-manager,断言 `createAgentSession` 是函数 + 三注册表在 → `PI-SELFCHECK-OK`。假通过零容忍。
+
+**验证结果**:
+- `build-sidecar` 单跑:实拷 61 entry + photon wasm 到位 + 深导入自检 `PI-SELFCHECK-OK`。
+- `pnpm desktop:package`(**`CREATOROS_SKIP_SMOKE=1`**——step 2.5 冒烟真起 sidecar 且未隔离 DB dir,会与 51661 上正跑的打包 app 抢同一 PGlite 单写者库,任务硬禁,故跳过运行时冒烟):`CreatorOS.app` + `.dmg` **成功 bundle**;仅在**其后**的 updater 签名步失败(`no private key / TAURI_SIGNING_PRIVATE_KEY`)—— 与 pi 无关,是既有「未签名/占位」P6 边界(需用户证书)。
+- 文件级:`CreatorOS.app/Contents/Resources/sidecar.tar.gz`(315MB)内含 `pi-coding-agent/dist/core/sdk.js` + pi-ai/compat.js + pi-agent-core/pi-tui + openai + @anthropic-ai/sdk@0.91.1 + typebox + photon wasm。
+- **import 级(用打包产物的 node)**:解压 tarball 到 scratch,`server.app/Contents/MacOS/creatoros-server`(+DYLD_LIBRARY_PATH→lib/libnode.127.dylib)深导入 sdk.js → `createAgentSession=function` + ModelRegistry/AuthStorage/SessionManager 全在;两运行时 provider api（anthropic-messages / openai-completions）`streamSimple=function` → `PACKAGED-IMPORT-SMOKE-OK`。
+
+**改动**:`frontend/scripts/desktop/build-sidecar.mjs` +`readlinkSync` import + `bundlePiEngine()` 函数 + main() 里在 `bundleRenderDeps()` 后调用。**未 commit**(留主 agent 复核)。
+
+**留主 agent**:运行时验(启 app 真跑一条 `agentic.research` 循环,证打包版 Pi 引擎不再退兜底、真接上 model-config provider)。updater 签名是既有独立问题(配 `TAURI_SIGNING_PRIVATE_KEY`),与本切片无关。

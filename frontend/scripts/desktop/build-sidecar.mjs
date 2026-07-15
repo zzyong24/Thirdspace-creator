@@ -27,7 +27,7 @@
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -218,6 +218,144 @@ function bundleRenderDeps() {
     }
   }
   console.log("[build-sidecar]   ✓ 自检:gsap.min.js + hyperframes cli.js 到位");
+}
+
+// [T-313 打包实拷] 实拷 Pi 引擎(@earendil-works/pi-coding-agent)运行时依赖闭包进 sidecar。
+//   病根:pi-engine.ts 运行时**深文件导入** `dist/core/sdk.js`(+ model-registry/auth-storage/
+//   session-manager),而 pi 是 serverExternalPackages + 动态 import → Next standalone tracing
+//   **整棵 pi 树没拖进 sidecar**(实测:打包 sidecar 的 .pnpm 里 0 个 pi-coding-agent / openai / chalk
+//   / debug / ws)→ locatePiCoreDir() 找不到 sdk.js → Pi 引擎永远退确定性兜底,「点亮」名存实亡。
+//   修:照 playwright/gsap 三件套,把 pi 的**完整依赖闭包**实拷进 sidecar node_modules/.pnpm。
+//
+//   闭包如何算(不硬编码版本名 —— pi 版本一升,peer-suffix 目录名全变,硬编码会静默失配):
+//     从源 .pnpm 的 pi-coding-agent 条目出发,**走 pnpm 的 symlink 依赖图**(每个 <entry>/node_modules/
+//     下的相对 symlink → 兄弟 entry),BFS 收全可达 entry。→ 与安装现场一致,自适应版本。
+//   为何**保留 symlink**(verbatimSymlinks,不 dereference):pi 树是深传递依赖(pi-coding-agent →
+//     pi-ai → openai → ws …),pnpm 靠每个 entry 的 `../../<dep>@ver` 相对 symlink 逐级解析。整份闭包
+//     都拷进同一个 .pnpm/ 后,这些相对链在 sidecar 内自洽解析(与主 standalone 树同款 verbatim 拷法),
+//     且**共享依赖只存一份**(实测 ~90MB;若 dereference 会因逐 entry 展平既撑大体积又断传递解析链)。
+//   L3 剪枝(控体积):pi-ai 的 provider api 是 `*.lazy.js` → 运行时才动态 import 具体 provider `.js`
+//     (静态图**不**引 @aws-sdk/@google/@mistralai;装 0.80.7 现场核实)。CreatorOS 的 piApiForFormat
+//     只产 "anthropic-messages" / "openai-completions" 两种 api → bedrock/google/mistral 三个 provider
+//     **永不被 import**。故剪掉这三个 provider 顶包(连带其独占传递依赖 @smithy/@protobufjs/google-auth
+//     等,省 ~91MB);**openai + @anthropic-ai/sdk 必留**(两种格式各需其一,均在闭包内)。剪枝安全网 =
+//     下面 HARD 自检真深导入 sdk.js:若剪多了导致 import 崩,build 直接失败(不假通过)。
+function bundlePiEngine() {
+  console.log("[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…");
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
+  if (!existsSync(srcPnpm) || !existsSync(destPnpm)) {
+    throw new Error(`[build-sidecar] .pnpm 目录缺(src=${existsSync(srcPnpm)} dest=${existsSync(destPnpm)})`);
+  }
+  const PI_PKG = "@earendil-works/pi-coding-agent";
+  const PI_PNPM = PI_PKG.replace("/", "+"); // scope "/"→"+"(pnpm 目录名编码)
+  // lazy-only 且 CreatorOS 永不用的 provider 顶包 —— 剪掉不进闭包(连带其独占传递依赖)。
+  const CUT_PKG = ["@aws-sdk/client-bedrock-runtime", "@google/genai", "@mistralai/mistralai"];
+  const pkgNameOfEntry = (entry) => {
+    if (entry.startsWith("@")) {
+      const at2 = entry.indexOf("@", 1);
+      return entry.slice(0, at2).replace("+", "/");
+    }
+    return entry.slice(0, entry.indexOf("@"));
+  };
+  const isCut = (entry) => CUT_PKG.includes(pkgNameOfEntry(entry));
+
+  // 某 .pnpm entry 的直接依赖 entry(读其 node_modules 下所有 symlink 的目标 → 兄弟 entry 名)。
+  const depsOfEntry = (entryName) => {
+    const nm = join(srcPnpm, entryName, "node_modules");
+    const out = new Set();
+    if (!existsSync(nm)) return out;
+    const walk = (dir) => {
+      let entries;
+      try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        const p = join(dir, e.name);
+        if (e.isSymbolicLink()) {
+          let target;
+          try { target = resolve(dir, readlinkSync(p)); } catch { continue; }
+          const idx = target.indexOf("/.pnpm/");
+          if (idx >= 0) {
+            const entry = target.slice(idx + "/.pnpm/".length).split("/node_modules/")[0];
+            if (entry) out.add(entry);
+          }
+        } else if (e.isDirectory() && e.name.startsWith("@")) {
+          walk(p); // scope 目录(@earendil-works 等)下继续找 symlink;真实包目录不含 symlink,无害
+        }
+      }
+    };
+    walk(nm);
+    return out;
+  };
+
+  // 定位 pi-coding-agent 根 entry;缺 → pi 没装(feature 层可退兜底)→ 警告跳过,不硬阻塞打包。
+  const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
+  if (!rootEntry) {
+    console.warn(
+      `[build-sidecar] ⚠ 源 .pnpm 无 ${PI_PKG}@*(未装?)—— 跳过 Pi 实拷。打包版 Pi 引擎将退确定性兜底。`,
+    );
+    return;
+  }
+
+  // BFS 算闭包(剪掉 provider 顶包子树)。
+  const visited = new Set([rootEntry]);
+  const q = [rootEntry];
+  while (q.length) {
+    const cur = q.shift();
+    for (const d of depsOfEntry(cur)) {
+      if (isCut(d)) continue;
+      if (!visited.has(d)) { visited.add(d); q.push(d); }
+    }
+  }
+
+  // 逐 entry 实拷(verbatimSymlinks 保相对链;整份闭包在同一 .pnpm/ 内自洽解析)。
+  //   覆盖已存在条目无害:同版本源自同一仓库 .pnpm,内容一致(complete ⊇ Next 部分 trace),app 不受损。
+  let copied = 0;
+  for (const e of visited) {
+    const src = join(srcPnpm, e);
+    const dest = join(destPnpm, e);
+    rmSync(dest, { recursive: true, force: true });
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
+    copied++;
+  }
+  console.log(`[build-sidecar]   实拷 ${copied} 个 pi 闭包 entry(剪 bedrock/google/mistral;含 openai+@anthropic-ai/sdk)`);
+
+  // photon-node 的 .wasm 特殊资源核实(纯文件,verbatim 应已覆盖;缺则 pi 图像工具会崩)。
+  const photonEntry = [...visited].find((e) => e.startsWith("@silvia-odwyer+photon-node@"));
+  if (photonEntry) {
+    const wasm = join(destPnpm, photonEntry, "node_modules", "@silvia-odwyer", "photon-node", "photon_rs_bg.wasm");
+    if (!existsSync(wasm)) {
+      throw new Error(`[build-sidecar] 自检失败[T-313]:photon-node .wasm 未随实拷到位(${wasm})`);
+    }
+    console.log("[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位");
+  }
+
+  // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟(与 pi-engine locatePiCoreDir 同路径),
+  //   断言 createAgentSession 是函数 + ModelRegistry/AuthStorage/SessionManager 均在。这条同时验证:
+  //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
+  //   假通过零容忍(教训同 playwright 自检②):import 崩则 throw,宁 build 失败也不出「点亮却失活」的包。
+  const coreDir = join(destPnpm, rootEntry, "node_modules", PI_PKG, "dist", "core");
+  const selfCheck = `
+    import { pathToFileURL } from 'node:url';
+    import path from 'node:path';
+    const base = ${JSON.stringify(coreDir)};
+    const imp = (f) => import(pathToFileURL(path.join(base, f)).href);
+    const [sdk, mr, as, sm] = await Promise.all([imp('sdk.js'), imp('model-registry.js'), imp('auth-storage.js'), imp('session-manager.js')]);
+    const ok = typeof sdk.createAgentSession === 'function' && !!mr.ModelRegistry && !!as.AuthStorage && !!sm.SessionManager;
+    console.log('PI createAgentSession=' + typeof sdk.createAgentSession + ' ModelRegistry=' + !!mr.ModelRegistry + ' AuthStorage=' + !!as.AuthStorage + ' SessionManager=' + !!sm.SessionManager);
+    if (!ok) { console.error('PI-SELFCHECK-FAIL'); process.exit(1); }
+    console.log('PI-SELFCHECK-OK');
+  `;
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", selfCheck], {
+    cwd: join(SIDECAR_RUNTIME, "frontend"),
+    encoding: "utf8",
+  });
+  if (r.status !== 0 || !`${r.stdout}`.includes("PI-SELFCHECK-OK")) {
+    throw new Error(
+      `[build-sidecar] 自检失败[T-313]:sidecar 内深导入 pi sdk.js 未通过 → 打包版 Pi 引擎会失活\n${r.stdout}${r.stderr}`,
+    );
+  }
+  console.log(`[build-sidecar]   ✓ 自检:sidecar 深导入 pi sdk.js 通过(${`${r.stdout}`.trim().split("\n").pop()})`);
 }
 
 // [T-284] 把 Chromium 浏览器二进制打进 sidecar(用户拍板:视频渲染永不下载 / 永不「Chromium
@@ -581,6 +719,10 @@ function main() {
   // [T-289] 实拷 gsap/hyperframes 完整包(补 Next tracing 漏的 dist/cli.js/gsap.min.js)——
   //   视频渲染「生成合成模板」步的依赖,不补齐必崩(见 bundleRenderDeps 注释)。放打 tarball 前。
   bundleRenderDeps();
+
+  // [T-313] 实拷 Pi 引擎依赖闭包(补 Next tracing 漏的整棵 @earendil-works/pi-coding-agent 树)——
+  //   pi-engine.ts 运行时深导入 dist/core/sdk.js;不实拷则打包版 Pi 引擎永退兜底(见 bundlePiEngine 注释)。放打 tarball 前。
+  bundlePiEngine();
 
   // [T-225] onnxruntime 原生库补拷(修 whisper-local 逐字稿转录 dlopen 崩)—— 在打 tarball 前，让 dylib 进包。
   ensureOnnxRuntimeDylib();
