@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
-import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
+import { ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE } from "../grounding-facets";
 
 /**
  * 写文案/分镜脚本 skill 模板(script.draft)—— 用户的旗舰例子:写文案 = 模板 ⊕ {定位,风格,knowledge,横竖屏,策划产物}。
@@ -66,6 +66,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
 若上方给了【本条内容立项硬约束】,**整条脚本的主张必须与其核心信息一致、不得自创与之矛盾的论点,内容目标里的『避免/不要…』是负向硬约束**。
 若上方给了【策划结构方案】/【论点树】/【内容合同】,**必须据此铺分镜**:按结构方案的段落顺序展开、把论点树的核心/支撑/证据写进口播、遵守内容合同的受众定位与价值主张,不要另起一套结构。
 若上方给了【对标参照·复刻用】,那是这条内容复刻的原爆款拆解——**可借鉴它「为什么爆」的底层逻辑与结构编排,但严禁照搬原文案、原标题、原句子**,必须用本账号的定位/人设/真实素材换一套表达重做。
+${AUDIENCE_MINDSET_CLAUSE}
 ${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"shots": [...]},shots 是分镜数组,每一项:
 {"口播"(这一镜要说的话),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s")}。

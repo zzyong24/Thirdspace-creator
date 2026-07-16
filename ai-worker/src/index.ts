@@ -143,6 +143,8 @@ export {
 export {
   ANTI_FABRICATION_CLAUSE,
   antiFabricationBlock,
+  // [T-355] 观众心智预设写法纪律段(script.draft/script.hooks/platform.adapt 文案生成面共用)。
+  AUDIENCE_MINDSET_CLAUSE,
   SPECIFIC_CLAIM_PATTERNS,
   UNGROUNDED_MARK,
   buildGroundingHaystack,

@@ -519,6 +519,8 @@ export function buildHooksPrompt(input: {
   userMaterialHard?: string;
   userMaterialRef?: string;
   antiFabrication?: string;
+  /** [T-355] 观众心智预设写法纪律段(单一真值 AUDIENCE_MINDSET_CLAUSE,调用方从 ai-worker 取)。 */
+  audienceMindset?: string;
 }): string {
   return [
     "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。",
@@ -539,6 +541,9 @@ ${input.positioningBrief}`
     input.direction ? `方向要求:${input.direction}` : "",
     input.extraBrief ? `${EXTRA_BRIEF_HEADING}\n${input.extraBrief}` : "",
     '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。选「数据冲击」角度时,数字必须能追溯到上方素材/定位/立项资料原文;追溯不到就不用具体数字,改用可溯的反差或场景。',
+    // [T-355] 观众心智预设写法纪律(单一真值 AUDIENCE_MINDSET_CLAUSE):钩子是最贴观众的一句,
+    // 归因外置铁律在此最要紧(激将式钩子=高危区)。
+    input.audienceMindset ? `\n${input.audienceMindset}` : "",
     // [T-269] 可溯硬约束段(下沉自对话外层 honesty rule #9,单一真值)。
     input.antiFabrication ? `\n${input.antiFabrication}` : "",
     '只输出 JSON 数组,形如 [{"text":"hook 文案","angle":"切角名"}],不要多余文字。',
@@ -946,7 +951,7 @@ export async function buildChatAssembly(
       // topic 时用选中项目标题(稿面右栏常驻 = 当前项目)。产出走 ChatHookCard 逐条写入稿面。
       const effTopic = topic?.trim() || selectionTitle || "";
       // [T-269/T-270] 接地根:antiFabrication 常量 + 可溯后处理纯函数从 ai-worker 取(单一真值)。
-      const { runAgentNode, ANTI_FABRICATION_CLAUSE, buildGroundingHaystack, annotateUngroundedClaims } =
+      const { runAgentNode, ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE, buildGroundingHaystack, annotateUngroundedClaims } =
         await import("@creatoros/ai-worker");
       const prompt = buildHooksPrompt({
         topic: effTopic,
@@ -959,6 +964,8 @@ export async function buildChatAssembly(
         userMaterialHard: context.userMaterialHardBrief || undefined,
         userMaterialRef: context.userMaterialRefBrief || undefined,
         antiFabrication: ANTI_FABRICATION_CLAUSE,
+        // [T-355] 观众心智预设写法纪律(激将式钩子=归因外置铁律的高危区)。
+        audienceMindset: AUDIENCE_MINDSET_CLAUSE,
       });
       const res = await runAgentNode({
         model,

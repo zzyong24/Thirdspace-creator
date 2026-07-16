@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
+import { AUDIENCE_MINDSET_CLAUSE } from "../grounding-facets";
 
 /**
  * 一稿多平台 skill 模板(platform.adapt)—— 从 platform-adapt-runner 的内联 buildAdaptPrompt 提取。
@@ -57,6 +58,8 @@ export const PLATFORM_ADAPT_TEMPLATE: PromptTemplate = {
 
 【任务】像一个专业自媒体编导那样,把同一份内容**一稿改多平台**。针对下面每个目标平台,产出符合该平台调性的标题/正文/标签/封面创意:
 {{targets}}
+
+${AUDIENCE_MINDSET_CLAUSE}
 
 【平台规格(按目标平台调标签数/风格/时长)】
 · 抖音 douyin：竖屏 30-60s,钩子+冲击,强标题拉完播,标签 **1-3 个**(不堆砌)。
