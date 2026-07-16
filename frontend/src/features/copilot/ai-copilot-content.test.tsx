@@ -85,18 +85,14 @@ describe("AI Copilot dialog (Task 24)", () => {
     expect(slot(dialog, "suggested-action-chips")).not.toBeNull();
     expect(slot(dialog, "submit-button")).not.toBeNull();
 
-    // CopilotDashboard 3 columns
-    expect(slot(dialog, "copilot-dashboard")).not.toBeNull();
-    expect(slot(dialog, "recommended-commands")).not.toBeNull();
-    expect(slot(dialog, "recent-tasks")).not.toBeNull();
-    expect(slot(dialog, "continuing-tasks")).not.toBeNull();
-
-    // Bottom region
-    expect(slot(dialog, "quick-entries")).not.toBeNull();
-    expect(slot(dialog, "smart-recommendation")).not.toBeNull();
+    // [T-354] 次区(CopilotDashboard 三卡:推荐指令/最近任务/继续任务 + 快捷入口/智能推荐)
+    // 已整体下架(用户真机反馈冗余)—— 对话 + 快捷 chip 已覆盖;任务进度走对话区顶部通知卡。
+    expect(slot(dialog, "copilot-dashboard")).toBeNull();
+    expect(slot(dialog, "quick-entries")).toBeNull();
+    expect(slot(dialog, "smart-recommendation")).toBeNull();
   });
 
-  it("exposes the four approved visual regions in reference order", () => {
+  it("exposes the prompt region only ([T-354] secondary regions removed)", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog");
 
@@ -104,7 +100,7 @@ describe("AI Copilot dialog (Task 24)", () => {
       Array.from(dialog.querySelectorAll('[data-slot-region="copilot-region"]')).map(
         (node) => node.getAttribute("data-region"),
       ),
-    ).toEqual(["prompt", "dashboard", "quick-entries", "recommendation"]);
+    ).toEqual(["prompt"]);
   });
 
   it("renders the reference fixture counts", () => {
@@ -112,22 +108,11 @@ describe("AI Copilot dialog (Task 24)", () => {
     const dialog = screen.getByRole("dialog");
     // [T-231⑨] 6 → 5:「优化标题」chip 已删(无对应工具,诚实优先);余下 5 个全部
     // 绑 functionKey + 完整预填话术(真预调,见 fixtures/selectors/copilot.ts)。
+    // [T-354] 次区计数断言随次区下架删除(recommended-command/recent-task/continuing-task/
+    // quick-entry/smart-recommendation 均不再渲染)。
     expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(5);
-    expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(5);
-    // RecentTasks is now backed by the REAL global feed (GAP-COP-feed / ai.tasks.list):
-    // on first synchronous render the feed is still loading (no fixture rows), so there
-    // are no recent-task rows yet — the loading slot is present instead. Honest, not fake.
-    expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(0);
-    expect(slot(dialog, "recent-tasks-loading")).not.toBeNull();
-    // ContinuingTasks is now backed by the REAL global feed (GAP-COP-1 / ai.tasks.list),
-    // filtered to in-progress (queued/running/awaiting_confirmation) tasks. Like
-    // RecentTasks, on first synchronous render the feed is still loading (no fixture
-    // rows), so there are no continuing-task rows yet — the loading slot is present
-    // instead of fake progress.
-    expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(0);
-    expect(slot(dialog, "continuing-tasks-loading")).not.toBeNull();
-    expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(6);
-    expect(dialog.querySelectorAll('[data-slot="smart-recommendation-item"]')).toHaveLength(2);
+    expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(0);
+    expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(0);
   });
 
   it("renders the close button with data-overlay-close so the controller's delegated click handler closes the dialog", () => {

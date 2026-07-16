@@ -411,63 +411,6 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(objectChip).not.toBeNull();
   });
 
-  it("renders the REAL continuing-task feed (in-progress only) and 「继续」 routes to the task's project/stage", async () => {
-    const user = userEvent.setup();
-    listTasks.mockResolvedValue([
-      {
-        id: "t-running",
-        projectId: "proj-1",
-        taskType: "script.draft",
-        status: "running",
-        requestedAt: "2026-06-25T00:00:00.000Z",
-      },
-      {
-        id: "t-done",
-        projectId: "proj-3",
-        taskType: "research.gather",
-        status: "succeeded",
-        requestedAt: "2026-06-25T00:00:00.000Z",
-      },
-      {
-        id: "t-global",
-        projectId: null,
-        taskType: "topic.generate",
-        status: "queued",
-        requestedAt: "2026-06-25T00:00:00.000Z",
-      },
-    ]);
-
-    render(<AICopilotContent viewModel={VM} />);
-
-    await waitFor(() => {
-      expect(
-        document.querySelector(
-          '[data-slot="continuing-task"][data-task-id="t-running"]',
-        ),
-      ).not.toBeNull();
-    });
-    // terminal task filtered OUT of 继续任务.
-    expect(
-      document.querySelector(
-        '[data-slot="continuing-task"][data-task-id="t-done"]',
-      ),
-    ).toBeNull();
-
-    // global (no-projectId) task shown but its 继续 disabled.
-    const globalResume = document.querySelector(
-      '[data-slot="continuing-resume"][data-task-id="t-global"]',
-    ) as HTMLButtonElement;
-    expect(globalResume).not.toBeNull();
-    expect(globalResume.disabled).toBe(true);
-
-    const resume = document.querySelector(
-      '[data-slot="continuing-resume"][data-task-id="t-running"]',
-    ) as HTMLButtonElement;
-    await user.click(resume);
-    // [T-076] 两阶段化:script.* 任务的「继续」落稿面(/projects/<id>),不再拼阶段子路由。
-    expect(routerPush).toHaveBeenCalledWith("/projects/proj-1");
-  });
-
   it("clicking a suggested-action chip fills the composer with its label", async () => {
     const user = userEvent.setup();
     render(<AICopilotContent viewModel={VM} />);
@@ -837,15 +780,12 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     it("首帧已是终态的历史任务不推通知(只播种)", async () => {
       listTasks.mockResolvedValue([wireTask({ status: "succeeded" })]);
       render(<AICopilotContent viewModel={VM} />);
-      // 首屏 feed 载入(最近任务出现),但不该有任何通知卡。
+      // [T-354] 次区任务 feed 已下架,等待锚改为「首轮 listTasks 已发 + flush」——播种逻辑
+      // 本体保留(喂通知卡),首帧终态只播种、不该推任何通知卡。
       await waitFor(() =>
         expect(listTasks).toHaveBeenCalled(),
       );
-      await waitFor(() =>
-        expect(
-          document.querySelector('[data-slot="recent-task"][data-task-id="t1"]'),
-        ).not.toBeNull(),
-      );
+      await new Promise((r) => setTimeout(r, 0));
       expect(
         document.querySelector('[data-slot="task-notification"]'),
       ).toBeNull();
@@ -853,14 +793,12 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
 
     it("在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭", async () => {
       const user = userEvent.setup();
-      // 首帧:running(播种快照,不通知)。
+      // 首帧:running(播种快照,不通知)。[T-354] 次区 feed 已下架,等待锚改为
+      // 「首轮 listTasks 已发 + flush」(播种逻辑本体保留,喂通知卡)。
       listTasks.mockResolvedValue([wireTask({ status: "running" })]);
       const { rerender } = render(<AICopilotContent viewModel={VM} />);
-      await waitFor(() =>
-        expect(
-          document.querySelector('[data-slot="continuing-task"][data-task-id="t1"]'),
-        ).not.toBeNull(),
-      );
+      await waitFor(() => expect(listTasks).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 0));
       expect(
         document.querySelector('[data-slot="task-notification"]'),
       ).toBeNull();
@@ -896,11 +834,9 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     it("失败任务 → 通知诚实带原因", async () => {
       listTasks.mockResolvedValue([wireTask({ status: "running" })]);
       const { rerender } = render(<AICopilotContent viewModel={VM} />);
-      await waitFor(() =>
-        expect(
-          document.querySelector('[data-slot="continuing-task"][data-task-id="t1"]'),
-        ).not.toBeNull(),
-      );
+      // [T-354] 次区 feed 已下架,等待锚改为「首轮 listTasks 已发 + flush」(播种)。
+      await waitFor(() => expect(listTasks).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 0));
 
       listTasks.mockResolvedValue([
         wireTask({ status: "failed", errorMessage: "渲染器超时,请重试" }),

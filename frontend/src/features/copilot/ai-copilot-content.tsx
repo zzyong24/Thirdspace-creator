@@ -55,7 +55,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { useForegroundActivity } from "@/lib/foreground-activity";
 import ReactMarkdown, { type Components } from "react-markdown";
@@ -95,10 +95,6 @@ import {
   type LocalReadCandidates,
 } from "./chat-local-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
-// [T-255a] 执行结果确认卡(exec.* 任务的产物清单 + 采纳/重试/丢弃确认门)。
-import { ExecutionTaskCard } from "./execution-task-card";
-// [T-248B①] 未终态任务「取消」按钮(Dialog 确认门 → ai.tasks.cancel → 重拉 feed)。
-import { TaskCancelButton } from "./ai-task-cancel";
 import {
   ChatLearningCard,
   type ChatLearningSuggestion,
@@ -126,29 +122,20 @@ import {
 } from "./chat-result-cards";
 import {
   ArrowUp,
-  BookOpenText,
   ChartLine,
   Clock3,
   Crosshair,
   FileSearch,
-  FileText,
   FolderOpen,
-  Lightbulb,
   Plus,
-  Search as SearchIcon,
-  Send,
   Sparkles,
   Wand2,
   Image as ImageIcon,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { buildCopilotViewModel } from "@/fixtures/selectors";
 import {
@@ -252,153 +239,6 @@ export interface CopilotContentViewModel extends BasePageViewModel {
 }
 
 // ---------------------------------------------------------------------------
-// Icon helpers
-// ---------------------------------------------------------------------------
-
-const TONE_BG: Record<string, string> = {
-  pink: "bg-pink-100 text-pink-600",
-  violet: "bg-violet-100 text-violet-600",
-  mint: "bg-emerald-100 text-emerald-600",
-  orange: "bg-orange-100 text-orange-600",
-  indigo: "bg-indigo-100 text-indigo-600",
-};
-
-
-// Quick-entry → real route map. The fixture rows carry a stable `id` (no `href`
-// field in the shared VM), so this island owns the id→route mapping rather than
-// adding a VM field. Every target is an existing (creator) route. Unmapped ids
-// degrade gracefully to the projects index.
-const QUICK_ENTRY_HREF: Record<string, string> = {
-  "new-project": "/projects/new",
-  "open-project": "/projects",
-  search: "/search",
-  assets: "/assets",
-  publish: "/publishing",
-  knowledge: "/knowledge",
-};
-
-// Small "规划中" (planned) badge. The recent/continuing task lists below are
-// fixture-only — Copilot needs a CROSS-project task feed and there is no global
-// tasks op (projects.tasks.list is project-scoped; see INTERACTION_SPEC GAP-COP-1
-// decision D-COP-a). Rather than render fake progress as if it were live, the
-// lists are explicitly labelled 规划中 so nothing misleads the user.
-function PlannedBadge() {
-  return (
-    <Badge
-      data-slot="copilot-planned-badge"
-      className="rounded-md border-0 bg-muted px-1.5 py-0 text-[9px] font-medium text-muted-foreground"
-    >
-      规划中
-    </Badge>
-  );
-}
-
-function RecommendedIcon({
-  kind,
-  tone,
-}: {
-  kind:
-    | "crosshair"
-    | "file"
-    | "file-search"
-    | "sparkles"
-    | "line-chart";
-  tone: "pink" | "violet" | "mint" | "orange" | "indigo";
-}) {
-  const toneClass = TONE_BG[tone] ?? TONE_BG.violet;
-  switch (kind) {
-    case "crosshair":
-      return (
-        <span
-          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
-        >
-          <Crosshair className="size-3.5" aria-hidden="true" />
-        </span>
-      );
-    case "file":
-      return (
-        <span
-          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
-        >
-          <FileText className="size-3.5" aria-hidden="true" />
-        </span>
-      );
-    case "file-search":
-      return (
-        <span
-          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
-        >
-          <FileSearch className="size-3.5" aria-hidden="true" />
-        </span>
-      );
-    case "sparkles":
-      return (
-        <span
-          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
-        >
-          <Wand2 className="size-3.5" aria-hidden="true" />
-        </span>
-      );
-    case "line-chart":
-      return (
-        <span
-          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
-        >
-          <ChartLine className="size-3.5" aria-hidden="true" />
-        </span>
-      );
-  }
-}
-
-function ChipIcon({
-  kind,
-}: {
-  kind:
-    | "crosshair"
-    | "wand"
-    | "file-search"
-    | "sparkles"
-    | "image"
-    | "line-chart";
-}) {
-  switch (kind) {
-    case "crosshair":
-      return <Crosshair className="size-3.5" aria-hidden="true" />;
-    case "wand":
-      return <Wand2 className="size-3.5" aria-hidden="true" />;
-    case "file-search":
-      return <FileSearch className="size-3.5" aria-hidden="true" />;
-    case "sparkles":
-      return <Sparkles className="size-3.5" aria-hidden="true" />;
-    case "image":
-      return <ImageIcon className="size-3.5" aria-hidden="true" />;
-    case "line-chart":
-      return <ChartLine className="size-3.5" aria-hidden="true" />;
-  }
-}
-
-function QuickIcon({
-  kind,
-}: {
-  kind: "plus" | "folder" | "search" | "image" | "send" | "book";
-}) {
-  switch (kind) {
-    case "plus":
-      return <Plus className="size-4" aria-hidden="true" />;
-    case "folder":
-      return <FolderOpen className="size-4" aria-hidden="true" />;
-    case "search":
-      return <SearchIcon className="size-4" aria-hidden="true" />;
-    case "image":
-      return <ImageIcon className="size-4" aria-hidden="true" />;
-    case "send":
-      return <Send className="size-4" aria-hidden="true" />;
-    case "book":
-      return <BookOpenText className="size-4" aria-hidden="true" />;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -490,17 +330,36 @@ interface WireProject {
 }
 
 // @项目引用下拉一次展示的最大候选数(过滤后截断,避免长列表)。
+// 快捷 chip(composer 下方一排)图标 —— [T-354] 次区已删,本组件是 chips 专用、保留。
+function ChipIcon({
+  kind,
+}: {
+  kind:
+    | "crosshair"
+    | "wand"
+    | "file-search"
+    | "sparkles"
+    | "image"
+    | "line-chart";
+}) {
+  switch (kind) {
+    case "crosshair":
+      return <Crosshair className="size-3.5" aria-hidden="true" />;
+    case "wand":
+      return <Wand2 className="size-3.5" aria-hidden="true" />;
+    case "file-search":
+      return <FileSearch className="size-3.5" aria-hidden="true" />;
+    case "sparkles":
+      return <Sparkles className="size-3.5" aria-hidden="true" />;
+    case "image":
+      return <ImageIcon className="size-3.5" aria-hidden="true" />;
+    case "line-chart":
+      return <ChartLine className="size-3.5" aria-hidden="true" />;
+  }
+}
+
 const MENTION_MAX_OPTIONS = 8;
 
-// AI task status → human label for the 最近任务 feed. Honest mirror of the §12 machine.
-const TASK_STATUS_LABEL: Record<WireTask["status"], string> = {
-  queued: "排队中",
-  running: "进行中",
-  awaiting_confirmation: "待确认",
-  succeeded: "已完成",
-  failed: "失败",
-  cancelled: "已取消",
-};
 
 // bug #6:taskType(如 "calibration.diagnose")是机器枚举,用户看不懂。这里给一张中文 label +
 // 一句简短副文映射,任务卡显中文标题 + 副文。未知 taskType 回退到原串(诚实兜底,不编一个假中文)。
@@ -553,26 +412,8 @@ function parentDirOf(p: string): string {
   const idx = trimmed.lastIndexOf("/");
   return idx > 0 ? trimmed.slice(0, idx) : "";
 }
-function taskTitle(t: WireTask): string {
-  return taskTypeLabel(t.taskType);
-}
 
-// taskType → 中文副文(任务卡第二行)。未命中返回 null(不渲染副文)。
-function taskSubtitle(t: WireTask): string | null {
-  return (
-    TASK_TYPE_LABEL[t.taskType]?.sub ??
-    SCHEDULED_TASK_TYPE_LABELS[t.taskType]?.sub ??
-    null
-  );
-}
 
-// [T-095] 任务卡第二行:有副文显副文;没副文但挂了项目显「项目:<id>」;两者皆无返回 null
-// (调用侧整行不渲)—— 替换原「项目:—」无意义占位(采集类/全局任务本就不挂单项目)。
-function taskSecondLine(t: WireTask): string | null {
-  const sub = taskSubtitle(t);
-  if (sub) return sub;
-  return t.projectId ? `项目：${t.projectId}` : null;
-}
 
 // [T-095③] Copilot 首屏「最近任务/继续任务」只显与创作直接相关的 AI 任务 —— 调度采集任务
 // (scheduled.*)是后台巡航噪音,已有自动化页承载,这里过滤掉,避免首屏被
@@ -630,37 +471,8 @@ const NOTIFY_STATUS_META: Record<
   },
 };
 
-// taskType prefix (the segment before the first ".") → the creator project STAGE
-// route segment that owns that node. [T-076] 两阶段化:review.* 落复盘页,其余全部
-// 落稿面(research/topic/script/material/publish 的可执行入口都在稿面内;
-// production/research/planning 工作台已删)。
-const TASK_TYPE_STAGE: Record<string, string> = {
-  review: "review",
-};
 
-// Derive the 「继续」 route for an in-progress task from projectId + taskType. Returns
-// null when the task has no projectId (a global task with no project route to resume
-// into — the button degrades to disabled). Resume granularity is the stage route; a
-// deep-link anchor would need a new resume field on ai.tasks.list (see sharedChangesNeeded).
-function resumeHref(t: WireTask): string | null {
-  if (!t.projectId) return null;
-  const prefix = t.taskType.split(".")[0] ?? "";
-  const stage = TASK_TYPE_STAGE[prefix];
-  return stage
-    ? `/projects/${t.projectId}/${stage}`
-    : `/projects/${t.projectId}`;
-}
 
-// bug #7:status → 既有 Badge 组件的 variant + 中文 label(honest mirror of the §12 machine,
-// 无假进度)。复用设计 token(default/secondary/outline),与全局徽章一致,不再手搓 inline 颜色类。
-const CONTINUING_STATUS_META: Record<
-  string,
-  { label: string; variant: "default" | "secondary" | "outline" }
-> = {
-  queued: { label: "排队中", variant: "outline" },
-  running: { label: "进行中", variant: "default" },
-  awaiting_confirmation: { label: "待确认", variant: "secondary" },
-};
 
 // 一键岛预调(SPEC §3.4)—— 工作台「出题/诊断/分析」等按钮打开 ChatBox 时,在 URL 上带
 // surface(页面层)+ fn(按钮层 functionKey)。Copilot 面板读它们装配 ChatContext + 预调该工具。
@@ -778,7 +590,6 @@ export function AICopilotContent({
   embed,
 }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
-  const router = useRouter();
 
   // T-004 ChatBox:useChat 驱动流式对话(替掉旧的 createMessage→轮询 listMessages)。
   // transport 把请求打到 /api/chat(Vercel AI SDK streamText),body 带 ChatContext(三层注入)。
@@ -834,11 +645,8 @@ export function AICopilotContent({
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
   // 只是后续轮次不带 selection/projectId)。
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
-  // T-029:次区(推荐指令 / 最近任务 / 继续任务 / 快捷入口)只在「全局助手」模式展示 —— 即右下角
-  // 浮标 / ⌘K 全局唤醒(落到默认 surface、无 functionKey、无选中态)。从工作台上下文打开的 surface
-  // Copilot 聚焦当前任务,不展示次区(真机反馈:非右下角/全局唤醒不需要下面的推荐指令和全局入口)。
-  const showSecondary =
-    !embed && surface === DEFAULT_SURFACE && !functionKey && !selKind;
+  // [T-354] 次区(推荐指令 / 最近任务 / 继续任务 三卡)已整体下架 —— 用户真机反馈冗余(对话 +
+  // 快捷 chip 已覆盖其功能;任务进度经对话区顶部完成通知卡呈现)。底层任务轮询保留(喂通知卡)。
   // 会话持久化(本切片):前端持一个 conversationId,放进 transport body(和 chatContext 并列)
   // 让后端续接同一会话;并从 /api/chat 的响应头 `x-conversation-id` 捕获后端 lazy 建/复用的
   // 会话 id 存起来。conversationId 随 scope 切换重置(不同入口各自独立会话)。
@@ -1376,14 +1184,6 @@ export function AICopilotContent({
     };
   }, [refreshRecentTasks]);
 
-  // GAP-COP-1 做真: 「继续任务」 reuses the SAME ai.tasks.list fetch (no second
-  // round-trip) and filters to the user's CROSS-project in-progress tasks
-  // (queued / running / awaiting_confirmation). `null` while loading, `[]` when
-  // there is genuinely nothing in flight → honest empty state.
-  const continuingTasks = React.useMemo<ReadonlyArray<WireTask> | null>(() => {
-    if (recentTasks === null) return null;
-    return recentTasks.filter((t) => CONTINUING_STATUSES.has(t.status));
-  }, [recentTasks]);
 
   // [T-239g] 有在途任务时才轮询 feed(检测其到终态 → 推通知);全部终态即停,省网络、不空转。
   // 一旦某在途任务转终态,通知已推 + 它移出 continuingTasks → 无在途则本 effect 清 interval。
@@ -2572,314 +2372,6 @@ export function AICopilotContent({
         </Card>
       </div>
 
-      {/* 次区(bug #5)—— 控制台/快捷入口/智能推荐折进一个有界、可滚的区域,不挤占对话主区。
-          给一个较小的上限高度(max-h)并自身滚动,把垂直空间让给上面的对话主区。
-          T-029:仅「全局助手」模式(右下角/⌘K)展示;surface Copilot 聚焦任务、不展示次区。
-          [T-095] 板块重合修复:原 shrink-0 让次区在空间不足时拒绝收缩,对话主区(min-h-0)反被
-          压到小于其最小内容 → 输入框直接画在三卡上(重叠实锤)。改成可收缩(去 shrink-0),
-          flex 在空间不足时压缩次区自身(内部继续滚动),永不与主区重叠。 */}
-      {showSecondary && (
-      <div
-        data-slot="copilot-secondary"
-        className="@container flex max-h-[230px] min-h-0 flex-col gap-3 overflow-y-auto"
-      >
-      {/* CopilotDashboard ---------------------------------------------- */}
-      <section
-        aria-labelledby="ai-copilot-dashboard-title"
-        data-slot="copilot-dashboard"
-        data-region="dashboard"
-        data-slot-region="copilot-region"
-        className="grid shrink-0 grid-cols-1 gap-3 @[640px]:grid-cols-3"
-      >
-        <h3 id="ai-copilot-dashboard-title" className="sr-only">
-          Copilot 控制台
-        </h3>
-
-        {/* RecommendedCommands */}
-        <Card
-          data-slot="recommended-commands"
-          className="overflow-hidden border border-border"
-        >
-          <CardHeader className="px-3 pb-1 pt-2.5">
-            <CardTitle className="text-[12px] font-semibold">
-              推荐指令
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
-            {vm.recommendedCommands.map((cmd) => (
-              <button
-                key={cmd.id}
-                type="button"
-                // [T-231⑨] 推荐指令同机制:完整话术预填 + 工具置顶(缺省退化为填 title)。
-                onClick={() => applyQuickPrompt(cmd, cmd.title)}
-                data-slot="recommended-command"
-                data-command-id={cmd.id}
-                className="flex min-h-9 items-start gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                <RecommendedIcon kind={cmd.icon} tone={cmd.tone} />
-                <div className="flex flex-col gap-0">
-                  <span className="text-[11px] font-medium text-foreground leading-tight">
-                    {cmd.title}
-                  </span>
-                  <span className="text-[9.5px] leading-tight text-muted-foreground">
-                    {cmd.description}
-                  </span>
-                </div>
-              </button>
-            ))}
-            <span
-              data-slot="recommended-view-all"
-              className="mt-1 flex items-center justify-center gap-1 text-[10px] font-medium text-muted-foreground"
-            >
-              查看所有指令
-              <PlannedBadge />
-            </span>
-          </CardContent>
-        </Card>
-
-        {/* RecentTasks — REAL global AI-task feed (GAP-COP-feed / ai.tasks.list). */}
-        <Card data-slot="recent-tasks" className="overflow-hidden border border-border">
-          <CardHeader className="px-3 pb-1 pt-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2 px-3 pb-2.5 pt-0">
-            {recentTasks === null ? (
-              <span
-                data-slot="recent-tasks-loading"
-                className="text-[10px] leading-tight text-muted-foreground"
-              >
-                加载中…
-              </span>
-            ) : recentTasks.length === 0 ? (
-              <span
-                data-slot="recent-tasks-empty"
-                className="text-[10px] leading-tight text-muted-foreground"
-              >
-                暂无 AI 任务，发起一个创作节点后会出现在这里。
-              </span>
-            ) : (
-              recentTasks.map((task) => (
-                <div
-                  key={task.id}
-                  data-slot="recent-task"
-                  data-task-id={task.id}
-                  className="flex flex-col gap-0"
-                >
-                  <div className="flex items-start gap-1.5">
-                    <FileText
-                      className="mt-0.5 size-3.5 text-muted-foreground"
-                      aria-hidden="true"
-                    />
-                    <span className="text-[11px] font-medium text-foreground leading-tight">
-                      {taskTitle(task)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 pl-5">
-                    {/* [T-095②] 副文:有词表副文/项目关联才渲,不再渲无意义的「项目:—」。 */}
-                    <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
-                      {taskSecondLine(task) ?? ""}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1">
-                      <span className="text-[9.5px] leading-tight text-muted-foreground">
-                        {TASK_STATUS_LABEL[task.status]}
-                      </span>
-                      {/* [T-248B①] 未终态任务可取消(组件内部对终态返回 null)。 */}
-                      <TaskCancelButton
-                        taskId={task.id}
-                        status={task.status}
-                        onCancelled={refreshRecentTasks}
-                      />
-                    </span>
-                  </div>
-                  {/* [T-255a] 执行层任务(exec.*)在 feed 内嵌执行结果确认卡:进行中显
-                      步骤流,待确认渲产物清单 + 采纳/重试/丢弃(确认门,铁律②)。 */}
-                  {task.taskType.startsWith("exec.") &&
-                  CONTINUING_STATUSES.has(task.status) ? (
-                    <div className="pl-5">
-                      <ExecutionTaskCard taskId={task.id} />
-                    </div>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ContinuingTasks — REAL cross-project in-progress feed (GAP-COP-1 / ai.tasks.list). */}
-        <Card
-          data-slot="continuing-tasks"
-          className="overflow-hidden border border-border"
-        >
-          <CardHeader className="px-3 pb-1 pt-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">
-            {continuingTasks === null ? (
-              <span
-                data-slot="continuing-tasks-loading"
-                className="text-[10px] leading-tight text-muted-foreground"
-              >
-                加载中…
-              </span>
-            ) : continuingTasks.length === 0 ? (
-              <span
-                data-slot="continuing-tasks-empty"
-                className="text-[10px] leading-tight text-muted-foreground"
-              >
-                暂无进行中的任务。
-              </span>
-            ) : (
-              continuingTasks.map((task) => {
-                // bug #7:状态徽章 + 「继续」按钮改用项目既有 Badge/Button 组件 + 设计 token,
-                // 与全局一致(原为手搓 inline class,灰扑扑、样式怪)。
-                const status = CONTINUING_STATUS_META[task.status] ??
-                  CONTINUING_STATUS_META.running;
-                // [T-095②] 第二行说人话:词表副文 > 项目关联 > 不渲(不再显「项目:—」)。
-                const sub = taskSecondLine(task);
-                const href = resumeHref(task);
-                return (
-                  <div
-                    key={task.id}
-                    data-slot="continuing-task"
-                    data-task-id={task.id}
-                    className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-[11px] font-medium text-foreground leading-tight">
-                        {taskTitle(task)}
-                      </span>
-                      <Badge
-                        variant={status.variant}
-                        className="shrink-0 px-1.5 py-0 text-[9px] font-medium"
-                      >
-                        {status.label}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
-                        {sub ?? ""}
-                      </span>
-                      {/* [T-248B①] 继续任务全部是未终态 → 都可取消(Dialog 确认门)。 */}
-                      <TaskCancelButton
-                        taskId={task.id}
-                        status={task.status}
-                        onCancelled={refreshRecentTasks}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="xs"
-                        data-slot="continuing-resume"
-                        data-task-id={task.id}
-                        disabled={href === null}
-                        title={
-                          href === null
-                            ? "该任务未关联项目，暂无法继续"
-                            : undefined
-                        }
-                        onClick={() => {
-                          if (href) router.push(href);
-                        }}
-                        className="shrink-0"
-                      >
-                        继续
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
-      <div className="grid grid-cols-[1.1fr_0.9fr] gap-3">
-        {/* QuickEntries ------------------------------------------------- */}
-        <section
-          aria-labelledby="ai-copilot-quick-entries-title"
-          data-slot="quick-entries"
-          data-region="quick-entries"
-          data-slot-region="copilot-region"
-          className="rounded-lg border border-border p-3"
-        >
-          <h3
-            id="ai-copilot-quick-entries-title"
-            className="mb-2 text-[11px] font-semibold text-foreground"
-          >
-            快捷入口
-          </h3>
-          <div className="grid grid-cols-6 gap-1">
-            {vm.quickEntries.map((entry) => (
-              <Link
-                key={entry.id}
-                href={QUICK_ENTRY_HREF[entry.id] ?? "/projects"}
-                data-slot="quick-entry"
-                data-entry-id={entry.id}
-                className="flex flex-col items-center gap-1 rounded-md px-1 py-1 text-center transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                <span className="text-foreground/70">
-                  <QuickIcon kind={entry.icon} />
-                </span>
-                <span className="text-[10px] font-medium text-foreground leading-tight">
-                  {entry.title}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* SmartRecommendation ----------------------------------------- */}
-        <section
-          aria-labelledby="ai-copilot-smart-recommendation-title"
-          data-slot="smart-recommendation"
-          data-region="recommendation"
-          data-slot-region="copilot-region"
-          className="flex flex-col gap-2 rounded-lg border border-border p-3"
-        >
-          <div className="flex items-center gap-1.5">
-            <Lightbulb
-              className="size-3.5 text-brand"
-              aria-hidden="true"
-            />
-            <h3
-              id="ai-copilot-smart-recommendation-title"
-              className="text-[11px] font-semibold text-foreground"
-            >
-              快速开始
-            </h3>
-          </div>
-          {/* bug #5:原「检测到你最近在研究『AI 浏览器』」是 fixture 假数据 + 推「竞品策略」(对标已砍),
-              误导用户。改成不编造、不涉对标的通用创作起点话术,点了直接填入对话。 */}
-          <p className="text-[10px] leading-snug text-muted-foreground">
-            不知道从哪开始？试试这些：
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {vm.smartRecommendations.map((rec) => (
-              <button
-                key={rec.id}
-                type="button"
-                // [T-231⑨] 快速开始同机制:预填 + 工具置顶(缺省退化为填 title)。
-                onClick={() => applyQuickPrompt(rec, rec.title)}
-                data-slot="smart-recommendation-item"
-                data-rec-id={rec.id}
-                className="rounded-lg border border-brand/30 bg-surface px-2.5 py-1 text-[10px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                {rec.title}
-              </button>
-            ))}
-          </div>
-        </section>
-      </div>
-      </div>
-      )}
     </div>
   );
 }
