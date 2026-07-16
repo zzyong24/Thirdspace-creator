@@ -120,3 +120,9 @@
 **正解(恢复)**:PGlite data dir = 标准 PG16 格式。`cp` 副本 → 删残留 `postmaster.pid` → 本机 `postgresql@16` 的 `pg_resetwal -f` 重置半写 WAL → PGlite 即可重开(代价=丢最后未 checkpoint 的事务;本次丢了最后绑的账号+其未落盘写入,其余全回)。corrupt 原件永远保留不动。
 
 **正解(预防)**:①装机脚本**禁 pkill 硬杀**——`osascript quit` 后轮询等 sidecar 自然退出(超时才升级);②sidecar 收 SIGTERM 应 graceful close PGlite(产品缺陷,T-362);③绝不在 app 运行中用第二进程碰同一 PGlite 目录(单写者)。
+
+## 换库/清库会带走 user 级共享配置(2026-07-16 模型配置丢失)
+
+**坑**:model_configurations(含加密 key)存 db 内;装机「归档旧库换新库」+ 后续「清理旧归档」= 配置无声丢失,且采集/转写有本地兜底不报错,丢失长时间不暴露。
+
+**正解**:①清库/换库前 sanity check:老库有非空 model_configurations 而新库没有 → 迁移或明确提醒;②根治=T-363(配置独立于工作区库存储/导出导入)。
