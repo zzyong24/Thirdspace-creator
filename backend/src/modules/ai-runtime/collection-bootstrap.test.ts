@@ -135,14 +135,9 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps._createJob).not.toHaveBeenCalled();
     expect(res.created).toEqual([]);
     // 但仍初始化触发既有 job(拉全量)——复用既有 id。
-    expect(res.triggered).toEqual([
-      "self.metrics",
-      "self.detail",
-      "comments",
-      "benchmark",
-      "topic.daily",
-      "favorites",
-    ]);
+    // [T-359] 只触发默认启用的两个(自己作品);默认关的(评论/对标/出题/收藏夹)前置未配,
+    // 初始化触发=空跑噪音,跳过。
+    expect(res.triggered).toEqual(["self.metrics", "self.detail"]);
   });
 
   it("② 部分已存在 → 只补建缺的(幂等,不重复)", async () => {
@@ -162,30 +157,15 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     ]);
   });
 
-  it("③ 绑定 → 触发一次初始化采集(每源各一次,顺序 self.metrics→self.detail→comments→benchmark→topic.daily)", async () => {
+  it("③ 绑定 → 初始化只触发默认启用的自己作品两源([T-359] 分层)", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._trigger).toHaveBeenCalledTimes(6);
-    // 顺序铁律(接 T-190:self.metrics 先建 publication → self.detail 落可见性 → comments);
-    // benchmark 无依赖,追加最后(无对标源时诚实空跑);[T-235a] topic.daily 压轴(当天新拆解可入引用,
-    // 未配模型诚实跳过)。
-    expect(deps.triggeredSourceKinds).toEqual([
-      "self.metrics",
-      "self.detail",
-      "comments",
-      "benchmark",
-      "topic.daily",
-      "favorites",
-    ]);
-    expect(res.triggered).toEqual([
-      "self.metrics",
-      "self.detail",
-      "comments",
-      "benchmark",
-      "topic.daily",
-      "favorites",
-    ]);
+    // [T-359] 初始化只触发默认启用的两个(顺序铁律仍在:self.metrics 先建 publication →
+    // self.detail 落可见性);默认关的四类(comments/benchmark/topic.daily/favorites)建而不触发。
+    expect(deps._trigger).toHaveBeenCalledTimes(2);
+    expect(deps.triggeredSourceKinds).toEqual(["self.metrics", "self.detail"]);
+    expect(res.triggered).toEqual(["self.metrics", "self.detail"]);
   });
 
   it("③ 触发用的是新建/复用的真实 job id(不是空串)", async () => {
@@ -216,28 +196,15 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "topic.daily",
       "favorites",
     ]);
-    // self.detail 建失败 → 不触发它;其余仍触发。
-    expect(res.triggered).toEqual([
-      "self.metrics",
-      "comments",
-      "benchmark",
-      "topic.daily",
-      "favorites",
-    ]);
+    // self.detail 建失败 → 不触发它;[T-359] 默认关的四类也不触发 → 只剩 self.metrics。
+    expect(res.triggered).toEqual(["self.metrics"]);
   });
 
   it("[T-200] 触发的 job 带当前号(新建 job accountId = ctx.accountId)", async () => {
     const deps = makeDeps();
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    // 六条触发都带 acct-1(采集 ctx.accountId 由此派生 → 落正确号,修串号根因)。
-    expect(deps.triggeredAccountIds).toEqual([
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-    ]);
+    // [T-359] 初始化只触发默认启用两条,均带 acct-1(采集 ctx.accountId 由此派生,修串号根因)。
+    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1"]);
   });
 
   it("[T-200] 复用既有 job → 带既有 job 的属主号给触发", async () => {
@@ -250,14 +217,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       favorites: [{ id: "existing-favorites", accountId: "acct-1" }],
     });
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(deps.triggeredAccountIds).toEqual([
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-      "acct-1",
-    ]);
+    // [T-359] 初始化只触发默认启用两条(self.metrics/self.detail),均带既有 job 的属主号。
+    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1"]);
   });
 
   it("[T-332 S2] 绑定链零 claim:bootstrap 只走 listJobs/createJob/trigger 三个端口,不触碰任何数据行归属", async () => {
@@ -274,11 +235,29 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
 
     // 二绑照常建 job + 触发(strict 门下 listJobs 只见 acct-2 的 job → 全量补建)。
     expect(res.created).toHaveLength(6);
-    expect(res.triggered).toHaveLength(6);
-    // 端口调用次数恰为:listJobs 6 + createJob 6 + trigger 6(无任何额外「认领」动作)。
+    // [T-359] 建 6 条(默认关的 4 条建即 disabled),初始化只触发默认启用的 2 条。
+    expect(res.triggered).toHaveLength(2);
+    // 端口调用次数恰为:listJobs 6 + createJob 6 + trigger 2(无任何额外「认领」动作)。
     expect(deps._listJobs).toHaveBeenCalledTimes(6);
     expect(deps._createJob).toHaveBeenCalledTimes(6);
-    expect(deps._trigger).toHaveBeenCalledTimes(6);
+    expect(deps._trigger).toHaveBeenCalledTimes(2);
+  });
+
+  it("[T-359] 分层启用:自己作品两源建即 enabled=true,评论/对标/出题/收藏夹建即 enabled=false", async () => {
+    const deps = makeDeps();
+    await bootstrapDouyinCollectionJobs(ctx, deps);
+    const byKind = new Map(
+      deps._createJob.mock.calls.map((c) => [
+        (c[1] as { sourceKind: string }).sourceKind,
+        (c[1] as { enabled?: boolean }).enabled,
+      ]),
+    );
+    expect(byKind.get("self.metrics")).toBe(true);
+    expect(byKind.get("self.detail")).toBe(true);
+    expect(byKind.get("comments")).toBe(false);
+    expect(byKind.get("benchmark")).toBe(false);
+    expect(byKind.get("topic.daily")).toBe(false);
+    expect(byKind.get("favorites")).toBe(false);
   });
 
   it("[T-227] ensureCollectionJobs:存量账号只补建缺的 job,不触发采集(启动兜底)", async () => {

@@ -50,6 +50,8 @@ export interface CreateJobInput {
   target: Record<string, unknown>;
   schedule: string;
   toolGrants: unknown[];
+  /** [T-359] 新绑号分层启用:缺省 undefined = true(旧调用方零变);默认关的模板建即 false。 */
+  enabled?: boolean;
   // [T-332 S2] 属主号不再由调用方显式传入(SPEC §4.6 防绕过):repo 从 deps.accountId stamp,
   //   未选号 → AccountRequiredError。cron 到点触发时采集 ctx.accountId 由该列派生(ISO-06)。
 }
@@ -206,7 +208,8 @@ export function createSchedulingRepository(
           schedule: input.schedule,
           toolGrants: input.toolGrants,
           recipe: null,
-          enabled: true,
+          // [T-359] 尊重入参(分层启用:默认关的模板建即 disabled);缺省保持旧行为 true。
+          enabled: input.enabled ?? true,
           lastRunAt: null,
           nextRunAt: null,
           createdAt: deps.now(),

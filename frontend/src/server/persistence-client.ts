@@ -6126,6 +6126,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           sourceKind: input.sourceKind,
           schedule: input.schedule,
           target: input.target,
+          // [T-359] 分层启用透传:默认关的模板建即 disabled(缺省 undefined = service 默认 true)。
+          enabled: input.enabled,
         });
         return { id: job.id };
       },
@@ -6955,6 +6957,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               sourceKind: input.sourceKind,
               schedule: input.schedule,
               target: input.target,
+              // [T-359] 启动兜底补建同样分层:默认关的补建即 disabled。
+              enabled: input.enabled,
             });
             return { id: job.id };
           },

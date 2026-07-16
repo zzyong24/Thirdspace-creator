@@ -60,6 +60,16 @@ import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { notifyAccountsChanged } from "@/lib/account-events";
 import { Switch } from "@/components/ui/switch";
+
+// [T-359] 新绑号分层启用:默认关的任务开关旁写明**启用前置**(条件齐了一键开)。
+// 与 collection-bootstrap 的 enabledByDefault 分层对齐;仅 job 禁用时显示,不啰嗦。
+const ENABLEMENT_HINTS: Record<string, string> = {
+  favorites: "先去 选题 → 信号源 登记指定收藏夹",
+  benchmark: "先去 选题 → 信号源 登记对标博主",
+  "topic.daily": "先去 设置 配好文本模型",
+  comments: "有导入作品后再开(评论抓自己作品)",
+};
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -530,8 +540,8 @@ export function JobRow({
         {formatDateTime(job.nextRunAt)}
       </span>
 
-      {/* enabled 开关 */}
-      <div className="flex items-center gap-2">
+      {/* enabled 开关 + [T-359] 禁用态的启用前置提示 */}
+      <div className="flex flex-col items-start gap-1">
         <Switch
           aria-label={`${job.name} 启用开关`}
           data-slot="automation-enabled-switch"
@@ -539,6 +549,14 @@ export function JobRow({
           disabled={pendingToggle}
           onCheckedChange={(v) => onToggle(v)}
         />
+        {!job.enabled && ENABLEMENT_HINTS[job.sourceKind] ? (
+          <span
+            data-slot="automation-enablement-hint"
+            className="max-w-[160px] text-[10px] leading-snug text-text-subtle"
+          >
+            {ENABLEMENT_HINTS[job.sourceKind]}
+          </span>
+        ) : null}
       </div>
 
       {/* 操作:编辑(T-248)+ needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}

@@ -29,6 +29,9 @@ export interface CollectionJobDefault {
   readonly prompt: string;
   /** 每天定时 cron(5 段:minute hour dom month dow;node-cron / cronMatchesMinute 认)。 */
   readonly schedule: string;
+  /** [T-359] 新绑号默认是否启用:有外部前置(登记收藏夹/对标源/配模型)或用户拍板后放的
+   *  默认关(建 job 但 enabled=false,不初始化触发、不到点空跑);绑号即有意义的默认开。 */
+  readonly enabledByDefault: boolean;
 }
 
 // 每天定时的默认采集 job(顺序即初始化触发顺序:self.metrics → self.detail → comments → benchmark
@@ -43,18 +46,21 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     name: "每天抓我的新作品指标",
     prompt: "每天抓我主页的新作品和最新指标",
     schedule: "0 9 * * *",
+    enabledByDefault: true, // [T-359] 绑号即有意义(自己作品)
   },
   {
     sourceKind: "self.detail",
     name: "每天拉我的作品明细数据",
     prompt: "每天拉取我作品的后台明细数据(完播、封面点击、留存)",
     schedule: "10 9 * * *",
+    enabledByDefault: true, // [T-359] 绑号即有意义(自己作品)
   },
   {
     sourceKind: "comments",
     name: "每天抓我作品的最新评论",
     prompt: "每天抓我所有作品的最新评论",
     schedule: "20 9 * * *",
+    enabledByDefault: false, // [T-359] 用户拍板后放:有导入作品后手动开
   },
   // [T-212a] 对标他号爆款采集:读该号 enabled 对标源 → 抓公开作品 → detectViral 筛爆款落库
   //   (供 T-212c 拆解转化进选题池)。无对标源时诚实空跑(非失败),登记对标源后即生效。错峰 9:30。
@@ -63,6 +69,7 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     name: "每天抓对标号的爆款作品",
     prompt: "每天抓我登记的对标博主主页的公开爆款作品",
     schedule: "30 9 * * *",
+    enabledByDefault: false, // [T-359] 前置=信号源登记对标博主
   },
   // [T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点 brief)→ topic.generate 同模板
   //   出题 → T-212d 护栏排序(探索位防茧房)→ 候选落 pool(防灌库 ≤N/天,默认 5)。错峰 9:40
@@ -74,6 +81,7 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     name: "每天自动出题",
     prompt: "每天结合我的定位、评论信号、知识库和当下热点,自动出一批选题进选题池",
     schedule: "40 9 * * *",
+    enabledByDefault: false, // [T-359] 前置=配文本模型(+定位),新号先跑通自己数据
   },
   // [T-235c] 指定收藏夹采集:读该号登记的指定抖音收藏夹(信号源→收藏夹)→ 按名匹配回填
   //   collects_id → 拉夹内视频落台账 → 限量(≤3/run)进候选池(source=favorites)。过
@@ -84,6 +92,7 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     name: "每天采我的指定收藏夹",
     prompt: "每天采集我登记的抖音指定收藏夹里的视频,作为跟拍选题候选",
     schedule: "50 9 * * *",
+    enabledByDefault: false, // [T-359] 前置=信号源登记指定收藏夹
   },
 ];
 
@@ -103,6 +112,8 @@ export interface CollectionBootstrapDeps {
       sourceKind: string;
       schedule: string;
       target: Record<string, unknown>;
+      /** [T-359] 新绑号分层启用:默认关的 job 建即 enabled=false(不到点空跑)。 */
+      enabled?: boolean;
     },
   ) => Promise<{ id: string }>;
   /** 触发一次采集(初始化拉全量)。host 绑 triggerScheduledJob(triggerDeps)。fire-and-forget:
@@ -146,6 +157,8 @@ export interface EnsureCollectionJobsResult {
     sourceKind: string;
     target: Record<string, unknown>;
     accountId?: string | null;
+    /** [T-359] 模板默认启用层(bootstrap 初始化只触发默认开的;既有复用 job 视为已按用户意愿设置)。 */
+    enabledByDefault: boolean;
   }[];
 }
 
@@ -177,6 +190,7 @@ export async function ensureCollectionJobs(
           sourceKind: tpl.sourceKind,
           target,
           accountId: existing[0]!.accountId ?? ctx.accountId ?? null,
+          enabledByDefault: tpl.enabledByDefault,
         });
         continue;
       }
@@ -186,6 +200,8 @@ export async function ensureCollectionJobs(
         sourceKind: tpl.sourceKind,
         schedule: tpl.schedule,
         target,
+        // [T-359] 分层启用:默认关的建即 disabled(列表可见、开关旁提示前置,条件齐一键开)。
+        enabled: tpl.enabledByDefault,
       });
       created.push(tpl.sourceKind);
       // [T-200] 新建 job 的属主号 = ctx.accountId(createJob 已 stamp);带给 trigger 派生采集 ctx。
@@ -194,6 +210,7 @@ export async function ensureCollectionJobs(
         sourceKind: tpl.sourceKind,
         target,
         accountId: ctx.accountId ?? null,
+        enabledByDefault: tpl.enabledByDefault,
       });
     } catch (err) {
       // 单源建 job 失败不阻断其余(诚实记错;该源既无 job 也不触发)。
@@ -228,8 +245,11 @@ export async function bootstrapDouyinCollectionJobs(
   const { created, jobsInOrder } = await ensureCollectionJobs(ctx, deps);
 
   // ② 初始化拉全量:按序触发一次(self.metrics 先建 publication → self.detail 落可见性 → comments)。
+  //   [T-359] 只触发**默认启用**的(自己作品指标/明细);默认关的(收藏夹/对标/出题/评论)前置未配,
+  //   初始化触发=纯空跑噪音,跳过——用户配好前置打开开关后,到点/立即运行照常跑。
   const triggered: string[] = [];
   for (const job of jobsInOrder) {
+    if (!job.enabledByDefault) continue;
     try {
       await deps.trigger(ctx, job);
       triggered.push(job.sourceKind);

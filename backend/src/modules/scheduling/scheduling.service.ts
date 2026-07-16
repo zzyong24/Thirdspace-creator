@@ -42,6 +42,8 @@ export interface CreateJobInput {
   target?: Record<string, unknown>;
   schedule: string;
   toolGrants?: unknown[];
+  /** [T-359] 新绑号分层启用:缺省 undefined = true(旧调用方零变);默认关的模板建即 false。 */
+  enabled?: boolean;
 }
 
 export interface UpdateJobInput {
@@ -161,6 +163,8 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
         target: input.target ?? {},
         schedule: input.schedule,
         toolGrants: input.toolGrants ?? [],
+        // [T-359] 分层启用透传(缺省 undefined → repo 默认 true,旧调用方零变)。
+        enabled: input.enabled,
         // [T-332 S2] 属主号由 repo 从 deps.accountId stamp(§4.6 防绕过);未选号 → 抛。
       });
       return toScheduledJobDto(row);
