@@ -337,6 +337,74 @@ function motionTween(
   t.push(`tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`);
 }
 
+// ── [T-320b] 确定性文本测高估算器(替换硬编码卡高:治「文字重合」)──────────────────
+// 病根(见 docs/research/2026-07-14-...-research.md §1):renderCardBase 各 kind 返回写死/
+// 按条目数线性估的 height,但内容是不定长文本 + 自动换行,长文本换行 → 真实高度超估 →
+// place() 用少算的 h 定下一行 py → 后卡压进前卡真实内容区 → 视觉重合。
+//
+// 解法:纯函数确定性近似换行行数(不引真实 DOM/无头测量——太重;目标是「不再低估」)。
+// 逐字累加「排版宽度」:CJK/全角 advance ≈ 1em(fontSize),半角 latin/数字/空格/标点 ≈ 0.5em,
+// 全角标点落 CJK 区间天然按 1em。lines = ceil(总排版宽 / 可用宽),显式 \n 硬分段各自求行再累加。
+// 铁律:宁可略高估(卡间多留白)也不低估(低估=重叠,本 bug 根因)。
+
+const LH_RATIO = 1.4; // 比例字体行高 ≈ 1.4×font-size(偏保守取上界,不低估多行 CJK)
+
+export interface AdvanceOpts {
+  /** 半角字符 advance / font-size(默认 0.5em)。 */
+  latinFactor?: number;
+  /** 全角 / CJK 字符 advance / font-size(默认 1.0em)。 */
+  cjkFactor?: number;
+}
+
+/** 该码点是否按全角(≈1em)排版:CJK 表意/假名/谚文/CJK 标点/全角 ASCII 等。 */
+function isFullWidthCode(code: number): boolean {
+  return (
+    (code >= 0x1100 && code <= 0x115f) || // Hangul Jamo
+    (code >= 0x2e80 && code <= 0x303e) || // CJK 部首补充 + 符号/标点(含 、。「」)
+    (code >= 0x3041 && code <= 0x33ff) || // 平/片假名 … CJK 兼容
+    (code >= 0x3400 && code <= 0x4dbf) || // CJK 扩展 A
+    (code >= 0x4e00 && code <= 0x9fff) || // CJK 统一表意
+    (code >= 0xa000 && code <= 0xa4cf) || // 彝文
+    (code >= 0xac00 && code <= 0xd7a3) || // 谚文音节
+    (code >= 0xf900 && code <= 0xfaff) || // CJK 兼容表意
+    (code >= 0xfe30 && code <= 0xfe4f) || // CJK 兼容形式
+    (code >= 0xff01 && code <= 0xff60) || // 全角 ASCII + 标点
+    (code >= 0xffe0 && code <= 0xffe6) // 全角符号
+  );
+}
+
+/**
+ * 估算文本在给定可用宽度、字号下的换行行数(确定性近似,offset「不再低估」)。
+ * - 逐 code point 累加 advance(全角≈cjkFactor·em,半角≈latinFactor·em),ceil(总宽/可用宽)得软换行行数。
+ * - 显式换行符 `\n`(如 code kind pre-wrap)按硬换行分段,每段各自软换行行数求和。
+ * - 边界:空串 / 空段 → 1 行(不塌);恰好整行 → 不多算一行。
+ */
+export function estimateWrappedLines(
+  text: string,
+  availWidthPx: number,
+  fontSizePx: number,
+  opts: AdvanceOpts = {},
+): number {
+  const latinFactor = opts.latinFactor ?? 0.5;
+  const cjkFactor = opts.cjkFactor ?? 1.0;
+  const avail = availWidthPx > 0 ? availWidthPx : fontSizePx; // 可用宽非正兜底防除零/负
+  let lines = 0;
+  for (const seg of text.split("\n")) {
+    let w = 0;
+    for (const ch of seg) {
+      const code = ch.codePointAt(0)!;
+      w += fontSizePx * (isFullWidthCode(code) ? cjkFactor : latinFactor);
+    }
+    lines += Math.max(1, Math.ceil(w / avail));
+  }
+  return Math.max(1, lines);
+}
+
+/** 单行盒高(font-size × 行高比,向上取整——不低估)。 */
+function lineBox(fontSizePx: number, ratio = LH_RATIO): number {
+  return Math.ceil(fontSizePx * ratio);
+}
+
 const CARD_BASE = `background:${TK.surface};border:1px solid ${TK.border};border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;`;
 
 interface CardBox {
@@ -362,22 +430,30 @@ function renderCardBase(
         ? `<span style="color:${TK.fg2};font-size:30px;font-weight:600">${esc(card.unit)}</span>`
         : "";
       // [T-295] 数值裹进 .stat-val 独立 span:counter 的 onUpdate 只写它、不吞掉 strike 子层。
+      // [T-320b] 高度 = 上下 padding(18×2) + label 换行行数×行高(17px) + 大数字行(84px,line-height:1 固定)。
+      const STAT_W = 360;
+      const statLabelLines = estimateWrappedLines(card.label, STAT_W - 22 * 2, 17);
       return {
-        width: 360,
-        height: 160,
+        width: STAT_W,
+        height: 18 * 2 + statLabelLines * lineBox(17) + 84,
         style: `${CARD_BASE}padding:18px 22px;min-width:340px;`,
         inner:
           `<div style="color:${TK.muted};font-size:17px;font-weight:600">${esc(card.label)}</div>` +
           `<div style="display:flex;align-items:baseline;gap:10px"><span style="position:relative;color:${col(card.tone)};font-size:84px;font-weight:800;letter-spacing:-.03em;line-height:1"><span class="stat-val">${esc(card.value)}</span>${strike}</span>${unit}</div>`,
       };
     }
-    case "quote":
+    case "quote": {
+      // [T-320b] 高度 = 上下 padding(18×2) + text 换行行数×行高(30px)。原固定 92 在 576px 可用宽下
+      // 换 2–3 行远超,后卡被压。可用宽 = 620 - 22×2。
+      const QUOTE_W = 620;
+      const quoteLines = estimateWrappedLines(card.text, QUOTE_W - 22 * 2, 30);
       return {
-        width: 620,
-        height: 92,
+        width: QUOTE_W,
+        height: 18 * 2 + quoteLines * lineBox(30),
         style: `background:${col(card.tone)}12;border:1px solid ${TK.border};border-left:3px solid ${col(card.tone)};border-radius:12px;padding:18px 22px;`,
         inner: `<span style="color:${TK.fg};font-size:30px;font-weight:700;letter-spacing:-.01em">${esc(card.text)}</span>`,
       };
+    }
     case "list": {
       const title = card.title
         ? `<div style="color:${TK.muted};font-size:18px;font-weight:700;margin-bottom:12px">${esc(card.title)}</div>`
@@ -390,9 +466,22 @@ function renderCardBase(
             `<span style="color:${TK.fg};font-size:26px;font-weight:600">${esc(item.text)}</span></div>`,
         )
         .join("");
+      // [T-320b] 高度 = 上下 padding(16×2) + title(换行×18px + margin-bottom 12)+ 各 item 高度。
+      // item 可用宽 = 560 - padding(20×2) - ✓图标 28 - gap 12;单条 item 超一行时按真实行数(原每条按 1 行,少算)。
+      // 单条 item 盒高 = max(图标 28, 文本行数×行高 26px);首条无 margin-top,其余 +10。
+      const LIST_W = 560;
+      const listTitleH = card.title
+        ? estimateWrappedLines(card.title, LIST_W - 20 * 2, 18) * lineBox(18) + 12
+        : 0;
+      const itemAvail = LIST_W - 20 * 2 - 28 - 12;
+      let listItemsH = 0;
+      card.items.forEach((item, i) => {
+        const itemLines = estimateWrappedLines(item.text, itemAvail, 26);
+        listItemsH += Math.max(28, itemLines * lineBox(26)) + (i === 0 ? 0 : 10);
+      });
       return {
-        width: 560,
-        height: 60 + card.items.length * 50 + (card.title ? 34 : 0),
+        width: LIST_W,
+        height: 16 * 2 + listTitleH + listItemsH,
         style: `${CARD_BASE}padding:16px 20px;`,
         inner: title + items,
       };
@@ -413,10 +502,26 @@ function renderCardBase(
           )
           .join("") +
         `</div>`;
-      const rows = Math.max(card.left.items.length, card.right.items.length);
+      // [T-320b] 高度 = 卡上下 padding(14×2) + 较高一侧栏高度。每半栏可用宽 ≈ (760 - 卡 padding 14×2
+      // - gap 12)/2 - 侧 padding(16×2);item(20px)换行按真实行数(原 32/行且不算换行,窄栏必少算)。
+      const CMP_W = 760;
+      const sideAvail = (CMP_W - 14 * 2 - 12) / 2 - 16 * 2;
+      const sideHeight = (s: {
+        title: string;
+        items: string[];
+        tone: VideoRenderTone;
+      }): number => {
+        let h = 14 * 2; // 侧 padding(上下)
+        if (withBar) h += 8 + 10; // growbar 高 8 + margin-bottom 10
+        h += estimateWrappedLines(s.title, sideAvail, 20) * lineBox(20);
+        for (const it of s.items) {
+          h += estimateWrappedLines(it, sideAvail, 20) * lineBox(20) + 8; // 每 item margin-top:8
+        }
+        return h;
+      };
       return {
-        width: 760,
-        height: 96 + rows * 32 + (withBar ? 18 : 0),
+        width: CMP_W,
+        height: 14 * 2 + Math.max(sideHeight(card.left), sideHeight(card.right)),
         style: `${CARD_BASE}padding:14px;`,
         inner: `<div style="display:flex;gap:12px">${side(card.left)}${side(card.right)}</div>`,
       };
@@ -425,10 +530,20 @@ function renderCardBase(
       const label = card.label
         ? `<div style="color:${TK.muted};font-size:17px;font-weight:600;margin-bottom:10px">${esc(card.label)}</div>`
         : "";
-      const lines = card.code.split("\n");
+      // [T-320b] 高度 = 上下 padding(16×2) + label(换行×17px + margin-bottom 10)+ 代码软换行总行数×行高。
+      // pre 是 white-space:pre-wrap:长行会软换,原按硬 \n 行数算,长行少算。等宽字 advance:半角 ≈ 0.6em、
+      // 全角 ≈ 1.2em(monospace CJK 双宽);line-height:1.5 → 行高固定 30。
+      const CODE_W = 720;
+      const codeLabelH = card.label
+        ? estimateWrappedLines(card.label, CODE_W - 20 * 2, 17) * lineBox(17) + 10
+        : 0;
+      const codeLines = estimateWrappedLines(card.code, CODE_W - 20 * 2, 20, {
+        latinFactor: 0.6,
+        cjkFactor: 1.2,
+      });
       return {
-        width: 720,
-        height: 64 + lines.length * 30 + (card.label ? 28 : 0),
+        width: CODE_W,
+        height: 16 * 2 + codeLabelH + codeLines * 30,
         style: `${CARD_BASE}padding:16px 20px;background:${TK.bg};`,
         inner:
           label +

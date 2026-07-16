@@ -2,7 +2,12 @@
 // 断言(PiP 规则/双语字幕夹断/媒体清单)。
 import { describe, expect, it } from "vitest";
 import { videoRenderProps, type VideoRenderProps } from "@creatoros/contract";
-import { collectMediaFiles, generateVideoRenderHtml, resolveSceneMode } from "./template";
+import {
+  collectMediaFiles,
+  estimateWrappedLines,
+  generateVideoRenderHtml,
+  resolveSceneMode,
+} from "./template";
 
 /** 覆盖六 kind + 三 special + PiP/right 切换 + B-roll + 双语字幕的全量 fixture。 */
 function fullProps(): VideoRenderProps {
@@ -296,6 +301,178 @@ describe("resolveSceneMode(PiP 规则:≥3 视觉节点→圆;hook/cta 且 <3 �
   });
   it("body 少节点默认 pip(口播为主的正文段不抢右侧)", () => {
     expect(resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 0)).toBe("pip");
+  });
+});
+
+// [T-320b] 确定性文本测高估算器:CJK-aware 换行行数近似(纯函数,不再低估)。
+describe("estimateWrappedLines([T-320b] 确定性测高)", () => {
+  it("空串 → 1 行(不塌)", () => {
+    expect(estimateWrappedLines("", 300, 30)).toBe(1);
+  });
+
+  it("CJK 短文本单行:10 字 @30px 落进 576 宽 → 1 行", () => {
+    // 10 全角 × 30px = 300 排版宽 < 576 → 1 行
+    expect(estimateWrappedLines("一二三四五六七八九十", 576, 30)).toBe(1);
+  });
+
+  it("CJK 长文本换行:40 字 @30px 在 576 宽 → 40×30=1200 → ceil(1200/576)=3 行", () => {
+    const text = "一二三四五六七八九十".repeat(4); // 40 全角字
+    expect(estimateWrappedLines(text, 576, 30)).toBe(3);
+  });
+
+  it("恰好整行边界:10 全角 @30px 在 300 宽(=300)→ 不多算一行 = 1 行", () => {
+    expect(estimateWrappedLines("一二三四五六七八九十", 300, 30)).toBe(1);
+    // 再加一个全角(330 > 300)→ 2 行
+    expect(estimateWrappedLines("一二三四五六七八九十甲", 300, 30)).toBe(2);
+  });
+
+  it("latin 半角按 0.5em:40 个半角 @20px = 40×10=400 → 在 300 宽 → ceil(400/300)=2 行", () => {
+    expect(estimateWrappedLines("a".repeat(40), 300, 20)).toBe(2);
+  });
+
+  it("CJK/latin 混排:全角 1em + 半角 0.5em 分别累加", () => {
+    // 10 全角(300)+ 20 半角(20×10=200)= 500 排版宽,在 240 宽 → ceil(500/240)=3 行
+    const mixed = "一二三四五六七八九十" + "a".repeat(20);
+    expect(estimateWrappedLines(mixed, 240, 30)).toBe(3);
+  });
+
+  it("显式 \\n 硬分段:每段各自软换行行数求和", () => {
+    // 3 段,每段短 → 各 1 行 → 3 行
+    expect(estimateWrappedLines("行一\n行二\n行三", 500, 20)).toBe(3);
+    // 中间一段长(40 全角 @20px=800,在 300 宽 → 3 行)+ 两短段各 1 行 → 5 行
+    const longMid = "一二三四五六七八九十".repeat(4);
+    expect(estimateWrappedLines(`短\n${longMid}\n短`, 300, 20)).toBe(5);
+  });
+
+  it("opts 可调 advance 系数:等宽 latin 0.6em 比默认 0.5em 更宽 → 行数不减", () => {
+    const wide = estimateWrappedLines("a".repeat(50), 300, 20, { latinFactor: 0.6 });
+    const narrow = estimateWrappedLines("a".repeat(50), 300, 20, { latinFactor: 0.5 });
+    expect(wide).toBeGreaterThanOrEqual(narrow);
+  });
+
+  it("可用宽非正兜底:不除零、返回 ≥1", () => {
+    expect(estimateWrappedLines("文字", 0, 30)).toBeGreaterThanOrEqual(1);
+    expect(estimateWrappedLines("文字", -5, 30)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// [T-320b] 各 kind 高度改用估算器:长内容显著大于旧硬编码(证明不再低估)、短内容不塌。
+// 走公开 API:竖版(1080×1920,rightEdge=1020)下放待测卡 + 一张会换行的卡,读第 2 张卡的
+// top(= contentY.pip 340 + 第 1 张卡真实高度 + GAP 18),间接验证第 1 张卡高度随内容增长。
+describe("各 kind 卡高随内容测高([T-320b] 不再低估)", () => {
+  const CONTENT_Y = 340; // 竖版 contentY.pip
+  const GAP = 18;
+
+  /** 竖版单场景 props(待测卡在前,后跟换行卡)。 */
+  function vProps(cards: unknown[]): VideoRenderProps {
+    return videoRenderProps.parse({
+      meta: { title: "测高" },
+      talkingHead: { file: "th.mp4", durationSec: 30 },
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      scenes: [{ id: "s1", label: "L", title: "T", startSec: 0, endSec: 30, cards }],
+    });
+  }
+
+  /** 第 2 张卡的 top(反推第 1 张卡真实高度 = top - CONTENT_Y - GAP)。 */
+  function secondCardTop(cards: unknown[]): number {
+    const html = generateVideoRenderHtml(vProps(cards));
+    const tops = [...html.matchAll(/id="c\d+"[^>]*top:(\d+)px/g)].map((m) => Number(m[1]));
+    expect(tops.length).toBeGreaterThanOrEqual(2);
+    return tops[1]!;
+  }
+
+  it("quote:金句换 3 行,高度 >> 旧固定 92(不再低估)且 > 单行短句", () => {
+    const long = "一二三四五六七八九十".repeat(4); // 40 全角 → 3 行
+    const longTop = secondCardTop([
+      { kind: "quote", at: 1, text: long },
+      { kind: "quote", at: 2, text: "占位" },
+    ]);
+    const shortTop = secondCardTop([
+      { kind: "quote", at: 1, text: "短" },
+      { kind: "quote", at: 2, text: "占位" },
+    ]);
+    const oldTop = CONTENT_Y + 92 + GAP; // 旧硬编码高度推的 top
+    expect(longTop).toBeGreaterThan(oldTop);
+    expect(longTop).toBeGreaterThan(shortTop);
+  });
+
+  it("stat:label 换 2 行,高度 > 旧固定 160(长 label 不再被吞)", () => {
+    const longLabel = "一二三四五六七八九十".repeat(3); // 30 全角 @17px 在 316 宽 → 2 行
+    const longTop = secondCardTop([
+      { kind: "stat", at: 1, value: "42", label: longLabel },
+      { kind: "quote", at: 2, text: "占位换行卡" },
+    ]);
+    const shortTop = secondCardTop([
+      { kind: "stat", at: 1, value: "42", label: "短" },
+      { kind: "quote", at: 2, text: "占位换行卡" },
+    ]);
+    const oldTop = CONTENT_Y + 160 + GAP;
+    expect(longTop).toBeGreaterThan(oldTop);
+    expect(longTop).toBeGreaterThan(shortTop);
+  });
+
+  it("list:3 条每条超一行,高度 >> 旧 60+items*50(每条单行的少算被修正)", () => {
+    const longItem = "一二三四五六七八九十".repeat(3); // 30 全角 @26px 在 480 宽 → 2 行
+    const longTop = secondCardTop([
+      {
+        kind: "list",
+        at: 1,
+        items: [{ text: longItem }, { text: longItem }, { text: longItem }],
+      },
+      { kind: "list", at: 2, items: [{ text: "占位" }] },
+    ]);
+    const shortTop = secondCardTop([
+      {
+        kind: "list",
+        at: 1,
+        items: [{ text: "甲" }, { text: "乙" }, { text: "丙" }],
+      },
+      { kind: "list", at: 2, items: [{ text: "占位" }] },
+    ]);
+    const oldTop = CONTENT_Y + (60 + 3 * 50) + GAP; // 旧:3 条 × 50
+    expect(longTop).toBeGreaterThan(oldTop);
+    expect(longTop).toBeGreaterThan(shortTop);
+  });
+
+  it("compare:窄半栏 item 换行,高度 > 旧 96+rows*32(每半栏 ~328 宽的少算被修正)", () => {
+    const longItem = "一二三四五六七八九十".repeat(3); // 30 全角 @20px 在 328 宽 → 2 行
+    const longTop = secondCardTop([
+      {
+        kind: "compare",
+        at: 1,
+        left: { title: "左", items: [longItem, longItem] },
+        right: { title: "右", items: [longItem, longItem] },
+      },
+      { kind: "compare", at: 2, left: { title: "l", items: ["x"] }, right: { title: "r", items: ["y"] } },
+    ]);
+    const shortTop = secondCardTop([
+      {
+        kind: "compare",
+        at: 1,
+        left: { title: "左", items: ["甲", "乙"] },
+        right: { title: "右", items: ["丙", "丁"] },
+      },
+      { kind: "compare", at: 2, left: { title: "l", items: ["x"] }, right: { title: "r", items: ["y"] } },
+    ]);
+    // 旧:96 + rows(2)*32 + bar 18 = 178
+    const oldTop = CONTENT_Y + 178 + GAP;
+    expect(longTop).toBeGreaterThan(oldTop);
+    expect(longTop).toBeGreaterThan(shortTop);
+  });
+
+  it("code:pre-wrap 长行软换,高度 > 旧 64+lines*30(长行少算被修正)", () => {
+    const longLine = "x".repeat(200); // 200 半角 @20px×0.6=12 → 2400 宽,在 680 宽 → 4 行
+    const longTop = secondCardTop([
+      { kind: "code", at: 1, code: longLine },
+      { kind: "code", at: 2, code: "y" },
+    ]);
+    const shortTop = secondCardTop([
+      { kind: "code", at: 1, code: "y" },
+      { kind: "code", at: 2, code: "y" },
+    ]);
+    const oldTop = CONTENT_Y + (64 + 1 * 30) + GAP; // 旧:1 硬 \n 行 × 30
+    expect(longTop).toBeGreaterThan(oldTop);
+    expect(longTop).toBeGreaterThan(shortTop);
   });
 });
 
