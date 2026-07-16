@@ -112,3 +112,11 @@
 - **creator layout 无降级地等待通知请求**(FE-H03):铃铛接口一坏,首页/项目/素材/发布/设置全部不可用。次要功能的请求失败不得阻塞 layout。
 - **长任务轮询三件套缺一不可**(FE-H01,production-workbench):决策轮询 ~10 分钟静默退出、渲染轮询不处理 `failed` 永久转圈、刷新恢复漏 `queued/running` 与 failed render——全终态匹配 + 超时上限 + 刷新恢复枚举中间态。
 - **日历"今天"写死 `REFERENCE_INSTANT=2026-07-03`**(FE-H04):过去/未来/默认月份全由它派生,7 月 15 日还允许把 7 月 10 日排为未来。时钟必须注入,写死的参考时钟属于"非数据 fixture",出生即登记退役条件。
+
+## 装机换包时 pkill 硬杀 sidecar → PGlite 半写损坏(2026-07-16 数据事故)
+
+**坑**:装机流程 `osascript quit + pkill -f creatoros-server` 硬杀 sidecar;当时后台采集任务正在写库,PGlite(WASM Postgres)WAL 半写 → 下次启动 `RuntimeError: Aborted()` 打不开 → app 判损坏移目录建空库,用户当天数据"消失"。
+
+**正解(恢复)**:PGlite data dir = 标准 PG16 格式。`cp` 副本 → 删残留 `postmaster.pid` → 本机 `postgresql@16` 的 `pg_resetwal -f` 重置半写 WAL → PGlite 即可重开(代价=丢最后未 checkpoint 的事务;本次丢了最后绑的账号+其未落盘写入,其余全回)。corrupt 原件永远保留不动。
+
+**正解(预防)**:①装机脚本**禁 pkill 硬杀**——`osascript quit` 后轮询等 sidecar 自然退出(超时才升级);②sidecar 收 SIGTERM 应 graceful close PGlite(产品缺陷,T-362);③绝不在 app 运行中用第二进程碰同一 PGlite 目录(单写者)。
