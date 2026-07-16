@@ -58,6 +58,44 @@ describe("learnings service (validationStatus machine + confidence + apply)", ()
     expect(learning.reviewId).toBeNull();
   });
 
+  // [T-284c G3-A] 真实数据背书才自动晋级(守宪法②第二道闸唯一放开口)。
+  it("createLearning evidenceStrength=grounded → 自动 validated(无需人工裁决)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const learning = await service.createLearning(ctx, {
+      title: "数字承诺 + 三步拆解",
+      insight: "开头给数字承诺(来源:归因)",
+      evidenceStrength: "grounded",
+    });
+    expect(learning.validationStatus).toBe("validated");
+  });
+
+  it("createLearning 无 evidenceStrength(纯 AI 推断)→ 仍 candidate 人工裁决", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const a = await service.createLearning(ctx, { title: "凭空推断" });
+    expect(a.validationStatus).toBe("candidate");
+    const b = await service.createLearning(ctx, {
+      title: "显式 null",
+      evidenceStrength: null,
+    });
+    expect(b.validationStatus).toBe("candidate");
+  });
+
+  it("grounded 经验无需裁决即进 getSuggestions(下次生成 prompt 出现它)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    // 无背书的候选不进 suggestions;grounded 的直接进(不调 evaluateLearning)。
+    await service.createLearning(ctx, { title: "候选·不进生成" });
+    const grounded = await service.createLearning(ctx, {
+      title: "已背书公式·直接进生成",
+      evidenceStrength: "grounded",
+    });
+    const suggestions = await service.getSuggestions(ctx, { limit: 10 });
+    const ids = suggestions.map((s) => s.id);
+    expect(ids).toContain(grounded.id);
+    expect(suggestions.every((s) => s.validationStatus === "validated")).toBe(
+      true,
+    );
+  });
+
   it("status machine valid: candidate→validated bumps confidence (0 apps → 40)", async () => {
     const service = makeService(db, makeProjectsPort());
     const learning = await service.createLearning(ctx, { title: "L" });

@@ -43,6 +43,11 @@ export const learnings = pgTable("learnings", {
   recommendation: text("recommendation").notNull().default(""),
   validationStatus: text("validation_status").notNull().default("candidate"),
   confidenceScore: integer("confidence_score").notNull().default(0),
+  // [T-284c G3-A] 真实证据强度派生列:'grounded' = 该经验扎在真实发布数据上(review.insights
+  // 来自已发布+有 metric_snapshots 的作品复盘;attribution 来自逐字稿依据 + ≥N 条真实指标),
+  // capture 时算好并据此自动 validated;NULL = 无真实数据背书(纯 AI 推断)→ 留 candidate 人工裁决。
+  // 守宪法②:只放行「客观真实数据背书」的经验自动流,凭空推断仍卡第二道人工门。
+  evidenceStrength: text("evidence_strength"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -84,6 +89,9 @@ CREATE INDEX IF NOT EXISTS idx_learnings_status ON learnings (user_id, validatio
 -- ADD COLUMN IF NOT EXISTS 幂等且不动存量行(旧行 NULL);同款范式见 positioning.ts / publishing.ts。
 ALTER TABLE learnings ADD COLUMN IF NOT EXISTS project_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_learnings_project ON learnings (user_id, project_id, validation_status);
+-- [T-284c G3-A] additive:真实证据强度派生列('grounded' | NULL)。ADD COLUMN IF NOT EXISTS 幂等,
+-- 不动存量行(旧行 NULL,行为不变:候选仍走人工裁决门)。同款范式见上方 project_id / positioning.ts。
+ALTER TABLE learnings ADD COLUMN IF NOT EXISTS evidence_strength TEXT;
 CREATE TABLE IF NOT EXISTS learning_applications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

@@ -279,6 +279,74 @@ describe("runTopicAttribution 编排", () => {
   });
 });
 
+// [T-284b G2 / T-284c G3-A] 可复用公式回流成 learning + 真实数据背书 → 天然 grounded。
+describe("可复用公式回流 learning(G2/G3-A)", () => {
+  it("reusable_formula 非空 + 有逐字稿 + ≥N 真实指标 → createLearning(evidenceStrength=grounded)", async () => {
+    const learnings: Array<{
+      title: string;
+      insight: string;
+      learningType?: string;
+      evidenceStrength: "grounded" | null;
+    }> = [];
+    const deps = makeDeps({
+      createLearning: async (_c, input) => {
+        learnings.push(input);
+      },
+    });
+    const result = await runTopicAttribution(ctx, deps);
+    expect(result.attributed).toBe(1);
+    expect(learnings).toHaveLength(1);
+    // 标题 = reusable_formula 一句话;insight 带归因溯源尾注;attribution 天然 grounded。
+    expect(learnings[0]!.title).toBe("数字承诺 + 三步拆解");
+    expect(learnings[0]!.insight).toContain("attributionId=attr-1");
+    expect(learnings[0]!.evidenceStrength).toBe("grounded");
+    expect(learnings[0]!.learningType).toBe("conversion_pattern");
+  });
+
+  it("reusable_formula 为空 → 不产 learning(诚实,无据不回流)", async () => {
+    const learnings: unknown[] = [];
+    const deps = makeDeps({
+      attribute: async () => ({ ...AI_OUT, reusable_formula: "  " }),
+      createLearning: async (_c, input) => {
+        learnings.push(input);
+      },
+    });
+    await runTopicAttribution(ctx, deps);
+    expect(learnings).toHaveLength(0);
+  });
+
+  it("真实指标条数 < N(阈值)→ 不给 grounded(留 candidate)", async () => {
+    const learnings: Array<{ evidenceStrength: "grounded" | null }> = [];
+    const deps = makeDeps({
+      // 只有 1 条真实指标,阈值 N=2 → 不达标。
+      getMetrics: async () => ({ plays: 30000, likes: null, raw: { views: 30000 } }),
+      groundingMinMetrics: 2,
+      createLearning: async (_c, input) => {
+        learnings.push(input);
+      },
+    });
+    await runTopicAttribution(ctx, deps);
+    expect(learnings).toHaveLength(1);
+    expect(learnings[0]!.evidenceStrength).toBeNull();
+  });
+
+  it("createLearning 失败 → 不崩批(归因仍落库)", async () => {
+    const deps = makeDeps({
+      createLearning: async () => {
+        throw new Error("boom");
+      },
+    });
+    const result = await runTopicAttribution(ctx, deps);
+    expect(result.attributed).toBe(1); // 归因已落是真的
+  });
+
+  it("未绑 createLearning 端口 → 归因照常(不回流,best-effort)", async () => {
+    const deps = makeDeps(); // 无 createLearning
+    const result = await runTopicAttribution(ctx, deps);
+    expect(result.attributed).toBe(1);
+  });
+});
+
 describe("experimentTitle / experimentAngle 纯函数", () => {
   it("title 前缀「实验|」(T-235b 🔥跟拍| 同款先例)", () => {
     expect(experimentTitle(" 新题 ")).toBe("实验|新题");

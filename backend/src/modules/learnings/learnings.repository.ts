@@ -31,6 +31,11 @@ export interface CreateLearningInput {
   // [T-118a gate-F3] 来源作品(project-scoped 复盘读的锚);手录/非复盘来源传 null。
   projectId?: string | null;
   confidenceScore: number;
+  // [T-284c G3-A] 落地状态可显式传(默认 candidate,向后兼容):grounded 经验 capture 时直接
+  // validated 自动进生成。service 据 evidenceStrength 决定,repo 只忠实落库。
+  validationStatus?: string;
+  // [T-284c G3-A] 真实证据强度('grounded' | null);派生列,service 算好传入。
+  evidenceStrength?: string | null;
 }
 
 // [T-118a] listLearnings 的 additive 读过滤。都可选;都不传 → 全量(经验库/裁决台全量读)。
@@ -163,8 +168,11 @@ export function createLearningsRepository(
           title: input.title,
           insight: input.insight,
           recommendation: input.recommendation,
-          validationStatus: "candidate",
+          // [T-284c G3-A] 默认 candidate(旧行为);grounded 经验 service 传 'validated' 自动进生成。
+          validationStatus: input.validationStatus ?? "candidate",
           confidenceScore: input.confidenceScore,
+          // [T-284c G3-A] 真实证据强度派生列(service 算好;无背书 → null)。
+          evidenceStrength: input.evidenceStrength ?? null,
           createdAt: deps.now(),
           updatedAt: deps.now(),
         })

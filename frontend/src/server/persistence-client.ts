@@ -2399,8 +2399,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 机制④⑤ 复盘 — confirmTask materializes a learning_list into Learnings (which then
     // feed back into later nodes' context). learningsService is constructed above.
     learnings: {
-      createLearning: (ctx, body) =>
-        learningsService.createLearning(ctx, body),
+      // [T-284c G3-A] review.insights 的 capture 点算 evidenceStrength:来自一条**已发布 + 有真实
+      // metric_snapshots** 的作品复盘 → grounded → 该 learning 直接 validated 自动进生成;无真实数据
+      // 背书(纯 AI 推断 / 无来源作品 / 作品无指标)→ 留 candidate 走人工裁决门(守宪法②)。判据从既有
+      // 数据算:getProjectAnalytics total>0 = 该项目有已发布作品的真实指标快照(metric_snapshots
+      // 只对已发布作品采集)。best-effort:读失败 → 无背书退 candidate,绝不误判 grounded。
+      createLearning: async (ctx, body) => {
+        let evidenceStrength: "grounded" | null = null;
+        if (body.projectId) {
+          try {
+            const { total } = await analyticsService.getProjectAnalytics(
+              ctx,
+              body.projectId,
+              1,
+              1,
+            );
+            if (total > 0) evidenceStrength = "grounded";
+          } catch {
+            // 读不到指标 → 无背书,退 candidate(诚实,不放行)。
+          }
+        }
+        return learningsService.createLearning(ctx, { ...body, evidenceStrength });
+      },
     },
     // 机制③ 一稿多平台 — confirmTask materializes a publication_drafts candidate into real
     // Publications (+ an initial revision carrying the adapted title/body) via the
@@ -5537,6 +5557,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }
           return { id: cand.id };
         },
+        // [T-284b G2 / T-284c G3-A] 可复用公式回流成 learning(复用 learnings 管线)。
+        // attribution 只在「已发布 + 有真实指标 + 有真逐字稿」作品跑,故其经验天然扎在真实发布
+        // 数据上 → evidenceStrength='grounded' → learningsService 直接落 validated 自动进生成
+        // (守宪法②第二道闸唯一放开口:只放行客观真实数据背书,不放 AI 空想)。best-effort。
+        createLearning: async (c, input) => {
+          await learningsService.createLearning(c, {
+            title: input.title,
+            insight: input.insight,
+            learningType: input.learningType,
+            evidenceStrength: input.evidenceStrength,
+          });
+        },
+        // grounded 判据阈值 N(真实指标条数下限;env 配置化,默认 1)。
+        groundingMinMetrics: (() => {
+          const n = Number(process.env.CREATOROS_LEARNING_GROUNDING_MIN_METRICS);
+          return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
+        })(),
         // 单轮归因上限(省 token,默认 3;env 配置化)。
         maxWorksPerRun: (() => {
           const n = Number(process.env.CREATOROS_TOPIC_ATTRIBUTION_LIMIT);

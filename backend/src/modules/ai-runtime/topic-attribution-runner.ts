@@ -183,6 +183,24 @@ export interface TopicAttributionDeps {
     ctx: RequestContext,
     input: { title: string; angle: string; attributionId: string },
   ) => Promise<{ id: string }>;
+  /**
+   * [T-284b G2 / T-284c G3-A] 可复用公式回流:reusable_formula 非空且有逐字稿依据时,capture 成
+   * 一条 learning(复用 learnings 管线,不造第二条通道)。host 绑 learningsService.createLearning。
+   * evidenceStrength='grounded' → 该 learning 直接 validated 自动进生成(attribution 天然扎在真实
+   * 发布数据上:有逐字稿依据 + ≥groundingMinMetrics 条真实指标)。可选(best-effort,不崩批;
+   * 未绑 → 不回流,归因照落库)。
+   */
+  createLearning?: (
+    ctx: RequestContext,
+    input: {
+      title: string;
+      insight: string;
+      learningType?: string;
+      evidenceStrength: "grounded" | null;
+    },
+  ) => Promise<void>;
+  /** [T-284c G3-A] grounded 判据阈值 N:真实指标条数下限(host 经 env 配置化;默认 1)。 */
+  groundingMinMetrics?: number;
   /** 单轮最多归因几条作品(默认 3,控 token;host 经 env 配置化)。 */
   maxWorksPerRun?: number;
   /** 单轮最多几条实验候选进池(默认 3,防灌库,SPEC)。全 run 全局上限。 */
@@ -366,6 +384,35 @@ export async function runTopicAttribution(
         },
       });
       result.attributed += 1;
+
+      // [T-284b G2 / T-284c G3-A] 可复用公式回流成 learning(复用 learnings 管线,不造第二条通道)。
+      // reusable_formula 非空且有逐字稿依据(transcript 到此必非空)才产;来源尾注拼进 insight
+      // (learnings 无 sourceNote 字段,仿 captureEditDelta 惯例)。attribution 天然 grounded:
+      // 有逐字稿依据 + ≥N 条真实指标 → evidenceStrength='grounded' → 该 learning 直接 validated 自动
+      // 进生成。best-effort:创建失败只丢该条经验(归因已落库是真的),不崩整批。
+      if (deps.createLearning) {
+        const formula = (out.reusable_formula ?? "").trim();
+        if (formula) {
+          const minMetrics = deps.groundingMinMetrics ?? 1;
+          const metricCount = Object.keys(metrics.raw).length;
+          const grounded = transcript.length > 0 && metricCount >= minMetrics;
+          const why = (out.why_it_worked ?? "").trim();
+          try {
+            await deps.createLearning(ctx, {
+              title: formula.slice(0, 120),
+              insight: `${why ? `${why}\n` : ""}(来源:归因 attributionId=${saved.id})`,
+              // 可复用公式 = 本账号被验证过的转化/复用模式,归 conversion_pattern 枚举。
+              learningType: "conversion_pattern",
+              evidenceStrength: grounded ? "grounded" : null,
+            });
+          } catch (err) {
+            console.error(
+              `[topic-attribution] 可复用公式回流 learning 失败(跳过该条,归因已落库):${formula}`,
+              err,
+            );
+          }
+        }
+      }
 
       // next_experiments → 候选池(≤maxExperiments/run 全局防灌库;空 title 不进池)。
       // 单条进池失败只丢该条(归因已落是真的),不崩整批。

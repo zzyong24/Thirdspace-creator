@@ -43,6 +43,8 @@ import { ReviewAnalyzeIsland } from "./review-analyze-island";
 import { PredictionComparisonSection } from "./prediction-comparison-section";
 // [T-247] 校准回流建议采纳/驳回门(client 岛;0 条/读失败不渲)。
 import { CalibrationSuggestionsCard } from "./calibration-suggestions-card";
+// [T-284b G2] 本账号可复用公式(归因回流可见性;client 岛,按 projectId 过滤,0 条/读失败不渲)。
+import { ReusableFormulaCard } from "./reusable-formula-card";
 import type { PredictionComparisonVm } from "./review-workspace-data";
 
 // ---------------------------------------------------------------------------
@@ -119,6 +121,8 @@ export function AnalyticsReviewPage({
           ) : null}
           {/* [T-247] 已回流校准(待采纳):复盘裁决产生的评分维度建议 → 采纳/驳回门。 */}
           <CalibrationSuggestionsCard />
+          {/* [T-284b G2] 本账号可复用公式:归因产的 reusable_formula/why_worked 明细(按本项目过滤)。 */}
+          <ReusableFormulaCard projectId={vm.projectId} />
           <AnalyticsReviewInteractiveRegion
             viewModel={vm}
             reviewsWiring={reviewsWiring}

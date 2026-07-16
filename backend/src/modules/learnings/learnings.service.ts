@@ -156,6 +156,10 @@ export interface LearningsService {
       insight?: string;
       learningType?: string;
       projectId?: string | null;
+      // [T-284c G3-A] 真实证据强度(capture 时由调用方从既有数据算好):'grounded' = 扎在真实
+      // 发布数据上 → 该经验直接 validated 自动进生成(守宪法②的第二道闸唯一放开口);缺省/null =
+      // 无真实数据背书(纯 AI 推断)→ 留 candidate 人工裁决。手录/契约 create op 永不传 → 恒 candidate。
+      evidenceStrength?: "grounded" | null;
     },
   ): Promise<LearningResource>;
   // The Reviews→Learnings bridge (roadmap §4 G13/G14). Called by ReviewsService via
@@ -344,6 +348,10 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       // [T-049 B17] learningType 透传(富录入表单用户可选);缺省 strategy 向后兼容。
       // [T-118a gate-F3] projectId 透传(复盘 learning_list 采纳时带上 task.projectId);
       // 手录/无来源作品时为 null。
+      // [T-284c G3-A] 真实证据强度背书 → 自动晋级:grounded 经验 capture 时直接 validated
+      // 进生成(getSuggestions 只读 validated);无背书 → candidate 走既有人工裁决门。这是守
+      // 宪法②「AI 产候选走确认门」的第二道闸唯一放开口 —— 只放行「客观真实数据背书」,不放 AI 空想。
+      const grounded = body.evidenceStrength === "grounded";
       const row = await repoFor(ctx, "learnings.createLearning").createLearning({
         title: body.title,
         insight: body.insight ?? "",
@@ -352,6 +360,8 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         reviewId: null,
         projectId: body.projectId ?? null,
         confidenceScore: 0,
+        validationStatus: grounded ? "validated" : "candidate",
+        evidenceStrength: grounded ? "grounded" : null,
       });
       return toLearningDto(row);
     },
