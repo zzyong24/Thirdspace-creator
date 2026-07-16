@@ -313,6 +313,13 @@ export async function smokeBootAfterObfuscation(opts = {}) {
     srv.on("error", rej);
   });
 
+  // [T-332 S1 配套] 冒烟必须用**全新临时数据目录**:不设 PGLITE_DATA_DIR 会落到持久默认
+  // 目录——上次冒烟(旧 schema)遗留的 NULL account_id 行会触发 0042 迁移 guard 正确中止,
+  // 冒烟误报为「混淆破坏运行时」。mkdtemp 每次干净,顺带隔离 .auth(不碰真实登录态)。
+  const { mkdtempSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const smokeDataRoot = mkdtempSync(join(tmpdir(), "creatoros-smoke-"));
+
   const child = spawn(process.execPath, [serverJs], {
     env: {
       ...process.env,
@@ -320,6 +327,9 @@ export async function smokeBootAfterObfuscation(opts = {}) {
       HOSTNAME: "127.0.0.1",
       NODE_ENV: "production",
       CREATOROS_DESKTOP: "1",
+      DATABASE_URL: "",
+      PGLITE_DATA_DIR: join(smokeDataRoot, "db"),
+      CREATOROS_DB_DIR: join(smokeDataRoot, "db"),
       DYLD_LIBRARY_PATH: libDir,
       LD_LIBRARY_PATH: libDir,
     },
