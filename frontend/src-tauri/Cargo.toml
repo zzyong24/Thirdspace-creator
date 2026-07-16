@@ -17,6 +17,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# [T-365] macOS 进程组树杀(killpg):app 退出必须带走 sidecar 全家(node+Chrome+ffmpeg)。
+libc = "0.2"
 # tauri 核心:壳/窗口/生命周期。features 保持最小(默认已含 wry webview)。
 tauri = { version = "2", features = [] }
 # shell 插件:唯一用途 = spawn/kill Next standalone sidecar 二进制(externalBin)。

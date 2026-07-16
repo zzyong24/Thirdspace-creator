@@ -15,6 +15,17 @@
  */
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  // [T-365/T-362] 桌面态装 sidecar 生命周期守护:SIGTERM 优雅退出(flush PGlite)+ 孤儿自检
+  //   (ppid==1 自杀,盖壳崩溃/强退)。dev(next dev)不装——ppid 是终端 shell,SIGINT 归 next 管。
+  if (process.env.CREATOROS_DESKTOP === "1") {
+    try {
+      const { installSidecarLifecycle } = await import("@/server/sidecar-lifecycle");
+      installSidecarLifecycle(process as never);
+      console.log("[instrumentation] sidecar 生命周期守护已装(SIGTERM 优雅退出 + 孤儿自检)");
+    } catch {
+      /* 装不上不阻塞启动(守护是兜底,主线在壳侧 killpg) */
+    }
+  }
   if (process.env.PLAYWRIGHT_BROWSERS_PATH) return;
   try {
     const path = await import("node:path");

@@ -178,7 +178,32 @@ impl SidecarChild {
         match self {
             #[cfg(target_os = "macos")]
             SidecarChild::Std(mut c) => {
-                let _ = c.kill();
+                // [T-365/T-362] 树杀 + 优雅窗口:此前 `Child::kill()` = SIGKILL 单个 node ——
+                //   ① Chrome/ffmpeg 子进程直接孤儿(真机实锤:孤儿 next-server 带 headless Chrome 树);
+                //   ② 正在写 PGlite 时硬杀 = WAL 半写库损坏(2026-07-16 数据事故根因)。
+                // 现在:对**进程组**(spawn 时 process_group(0),组长=sidecar pid)先 SIGTERM
+                //   (sidecar instrumentation 挂了 graceful handler:flush PGlite 后自退;Chrome 收到
+                //   SIGTERM 也自关)→ 轮询等最多 5s → 还活着才 SIGKILL 组兜底。
+                let pid = c.id() as i32;
+                unsafe {
+                    let _ = libc::killpg(pid, libc::SIGTERM);
+                }
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+                loop {
+                    match c.try_wait() {
+                        Ok(Some(_)) => break, // sidecar 已优雅退出
+                        Ok(None) if std::time::Instant::now() < deadline => {
+                            std::thread::sleep(std::time::Duration::from_millis(150));
+                        }
+                        _ => {
+                            unsafe {
+                                let _ = libc::killpg(pid, libc::SIGKILL);
+                            }
+                            let _ = c.wait();
+                            break;
+                        }
+                    }
+                }
             }
             #[cfg(not(target_os = "macos"))]
             SidecarChild::Shell(c) => {
@@ -448,6 +473,13 @@ pub fn run() {
                     .join("creatoros-server");
 
                 let mut cmd = std::process::Command::new(&inner_bin);
+                // [T-365] 新进程组(组长=sidecar 自身 pid):退出时 killpg 整组带走 node +
+                //   Playwright Chrome + ffmpeg 全家;sidecar 侧孤儿自杀也按组清子进程。
+                #[cfg(target_os = "macos")]
+                {
+                    use std::os::unix::process::CommandExt;
+                    cmd.process_group(0);
+                }
                 cmd.arg(&server_js_str)
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
@@ -638,7 +670,10 @@ pub fn run() {
         .run(|app_handle, event| {
             // 退出前 kill sidecar,避免 orphan Node 进程占端口/落盘句柄。
             // [T-172] 句柄是 SidecarChild(mac=std::process::Child / Win-Linux=CommandChild),统一 kill。
-            if let RunEvent::ExitRequested { .. } = event {
+            // [T-365] 双挂 ExitRequested + Exit:某些退出路径(restart/异常终止序列)只发其一;
+            //   take() 幂等,两处都到也只 kill 一次。崩溃/强退(SIGKILL 壳)两者都不到 —— 由
+            //   sidecar 侧孤儿自检(instrumentation 轮询 ppid==1 优雅自退)兜底,双保险。
+            if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
                     child.kill();
                 }

@@ -1322,7 +1322,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   3. 内存 PGlite     → 仅 测试/vitest;runtime 无任何配置则本地优先默认落盘(非内存,重启不丢)。
   // 三条都套同一份 drizzle 迁移(0000…),test/runtime schema 一致。dispose 当前进程不
   // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
-  const { db, driver } = await createConfiguredDb();
+  const { db, driver, dispose } = await createConfiguredDb();
+  // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
+  //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
+  //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
+  //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
+  (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
+    async () => { await dispose(); };
 
   // [T-136 §D 切片 c] 抖音登录态**按号分目录**:`.auth/douyin/<accountId>`(每号独立
   //   persistent context / sessionid,互不顶号)。accountId 为 null(单号 / 未选号 / 存量)→
