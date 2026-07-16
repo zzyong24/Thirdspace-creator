@@ -190,9 +190,19 @@ export async function runTopicGenerateV2(
     // 2) 懒加载 runtime(AI SDK 不进 Next server 顶层 bundle)。
     const { modelFor, runTopicTask } = await import("@creatoros/ai-worker");
     // 3) 装配定位简报。
+    // [T-284d G4] 出题不裸奔:有项目上下文时(inputData.projectId 由创建 task 的 dispatch 带入)
+    //   透传真 projectId → assembleCreativeContext 能吃到该项目的策划/立项沉淀(thesis/contract/
+    //   outline/brief/materials 项目态 facet),让选题站在项目已有沉淀之上。账号态出题(topic.daily
+    //   等无项目上下文)inputData 无 projectId → 保持 null(此时本就无项目态数据,行为正确不变)。
+    //   注:chat 出题路径的 context 已由 chat-runner(T-039a)透传 chatContext.projectId,本片补的是
+    //   ai_task(runTopicGenerateV2)这条 dispatch。
+    const projectId =
+      typeof task.inputData.projectId === "string" && task.inputData.projectId
+        ? task.inputData.projectId
+        : null;
     const context = await assembleCreativeContext(
       ctx,
-      { projectId: null, topic: "" },
+      { projectId, topic: "" },
       deps,
     );
     // [T-238] 信号质量画像输入:best-effort 读评论信号/定位中心/知识库原始行(单源失败 → 空,
