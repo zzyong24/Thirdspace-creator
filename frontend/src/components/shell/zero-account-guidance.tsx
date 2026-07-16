@@ -22,8 +22,16 @@ const ZERO_ACCOUNT_ALLOWED_PREFIXES = [
   "/login",
 ] as const;
 
-/** 纯判定:0 号时该路径是否仍放行(不渲染绑定引导)。 */
+/**
+ * 纯判定:0 号时该路径是否仍放行(不渲染绑定引导)。
+ *
+ * [T-348] 首页 `/` 放行 —— 恢复完整引导流:0 号进首页看 OnboardingCard 有序引导
+ * (绑号 = 高亮第一步),而非被守卫盖成光秃秃「去绑定」页。首页自身的 per-account 读
+ * (pages.dashboard.get)降级由首页 route 自己 catch(见 app/(creator)/page.tsx),
+ * 不再靠全局守卫兜底 —— 守卫兜底会把整条引导流一并切掉(T-344 的回归根因)。
+ */
 export function isZeroAccountAllowedPath(pathname: string): boolean {
+  if (pathname === "/") return true; // 首页 = 引导流主场,恒放行
   return ZERO_ACCOUNT_ALLOWED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
@@ -56,6 +64,14 @@ export function ZeroAccountGuidance() {
         className="mt-2 inline-flex h-10 items-center justify-center rounded-card bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
       >
         去绑定抖音号
+      </a>
+      {/* [T-348] 次级动作:回首页看完整上手引导(0 号首页已恢复 OnboardingCard 有序引导流)。 */}
+      <a
+        href="/"
+        data-testid="zero-account-home-link"
+        className="text-xs font-medium text-brand underline-offset-4 hover:underline"
+      >
+        或回首页看完整上手引导
       </a>
     </main>
   );

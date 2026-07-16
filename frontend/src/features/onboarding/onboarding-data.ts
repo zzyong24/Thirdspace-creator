@@ -68,8 +68,9 @@ export async function loadState(): Promise<OnboardingState> {
   ]);
   return {
     configuredCapabilities,
-    // [T-189b] origin:localStorage 显式选择**优先**;无显式选择但已绑抖音 / 已有导入作品 → 回灌
-    // existing(已有存量的人不再被问新 / 老,直接解锁 existing 分支导入步)。显式 fresh 不被覆盖。
+    // [T-189b / T-348] origin:localStorage 显式选择**优先**;无显式选择但**已有导入作品** → 回灌
+    // existing(真有存量的人不再被问新 / 老)。**绑号(douyinLoggedIn)不再触发回灌**——全隔离后
+    // 绑号是全员前提,新号也绑,绑号≠有存量;绑号后仍问新 / 老才准(见 resolveOrigin §T-348)。
     origin: resolveOrigin(readOrigin(), { douyinLoggedIn, hasImportedWorks }),
     douyinLoggedIn,
     hasImportedWorks,

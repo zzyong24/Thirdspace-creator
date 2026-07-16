@@ -1,9 +1,10 @@
 /**
- * [T-161] OnboardingCard 有序引导流集成测(重构自 T-132 三档清单测):
+ * [T-161/T-348] OnboardingCard 有序引导流集成测(重构自 T-132 三档清单测):
  *  - 显隐:hidden(localStorage)→ null;isComplete(可见步全 done)→ null;有缺口 → 渲染。
  *  - 步序渲染:竖向编号步,order 升序;当前步(第一个未 done 未 blocked)高亮。
- *  - 门控:步1 未 done → 步2 blocked(锁);步1 done → 步2 解锁。
- *  - 起点分支:未选 origin → 不显 existing 专属步;选「已有存量」→ 显扫码导入/后台初始化。
+ *  - [T-348] 0 号:绑定抖音号 = 高亮第一步(current)+ CTA→/accounts;后续步(配模型…)blocked 置灰。
+ *  - 门控:绑号未 done → 配模型 blocked(锁);绑号 done → 配模型解锁。
+ *  - 起点分支:未选 origin → 不显 init-data(existing 专属);选「已有存量」→ 显后台初始化。
  *  - 起点二选一:点「从零开始/已有存量」→ 写 localStorage origin + 卡内重算。
  *  - 清理:web-search / asr 步不再出现。
  *  - 「不再显示」→ 写 hidden + 卡隐藏。
@@ -58,7 +59,7 @@ function makeAllFail() {
   clientMock.statusDouyin.mockRejectedValue(new Error("no backend"));
 }
 
-/** 只配了文本模型(步1 done),其余未 → 步2 解锁、后续未完成。 */
+/** 只配了文本模型(未绑号),其余未 → 起点选择步在卡内可见、init-data 仍随 origin 隐。 */
 function makeTextModelDone() {
   clientMock.listModels.mockResolvedValue([
     { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
@@ -69,7 +70,21 @@ function makeTextModelDone() {
   clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
 }
 
-/** fresh 全 done(文本模型 + 定位 + 项目;起点由 localStorage 预置 fresh)→ isComplete=true。 */
+/**
+ * [T-348] 已绑号 + 已配文本模型(步1、步2 done)→ 步3「确认起点」成为当前步(unblocked),
+ * 卡内起点二选一按钮显示。用于走「起点分支」的用例(需先越过绑号+配模型两道门)。
+ */
+function makeBoundTextModelDone() {
+  clientMock.listModels.mockResolvedValue([
+    { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
+  ]);
+  clientMock.getProfile.mockRejectedValue(new Error("404"));
+  clientMock.getPositioningCenter.mockResolvedValue({ profile: null });
+  clientMock.listProjects.mockResolvedValue([]);
+  clientMock.statusDouyin.mockResolvedValue({ loggedIn: true }); // 已绑号 → 步1 done
+}
+
+/** fresh 全 done(绑号 + 文本模型 + 定位 + 项目;起点由 localStorage 预置 fresh)→ isComplete=true。 */
 function makeFreshComplete() {
   clientMock.listModels.mockResolvedValue([
     { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
@@ -77,7 +92,8 @@ function makeFreshComplete() {
   clientMock.getProfile.mockResolvedValue({ id: "p", persona: "x" });
   clientMock.getPositioningCenter.mockResolvedValue({ profile: { id: "p", persona: "x" } });
   clientMock.listProjects.mockResolvedValue([{ id: "proj-1", title: "T", source: "manual" }]);
-  clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
+  // [T-348] 全隔离:fresh 也须绑号,否则绑号步未完成 → onboarding 不算完成。
+  clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
 }
 
 beforeEach(() => {
@@ -98,7 +114,7 @@ afterEach(() => {
 });
 
 describe("[T-161] OnboardingCard — 显隐矩阵", () => {
-  it("有缺口(全读失败)→ 渲染卡片,含进度与步序", async () => {
+  it("有缺口(全读失败=0 号)→ 渲染卡片,含进度与步序", async () => {
     makeAllFail();
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
@@ -106,11 +122,12 @@ describe("[T-161] OnboardingCard — 显隐矩阵", () => {
     await waitFor(() => {
       expect(document.querySelector('[data-slot="onboarding-card"]')).not.toBeNull();
     });
-    // 步1(文本模型)在,未完成。
-    const s1 = document.querySelector('[data-step-key="text-model"]');
+    // [T-348] 步1(绑定抖音号)在,未完成。
+    const s1 = document.querySelector('[data-step-key="import-account"]');
     expect(s1).not.toBeNull();
     expect(s1?.getAttribute("data-done")).toBe("false");
-    // 步2(确认起点)在。
+    // 步2(配置文本模型)、步3(确认起点)在。
+    expect(document.querySelector('[data-step-key="text-model"]')).not.toBeNull();
     expect(document.querySelector('[data-step-key="confirm-origin"]')).not.toBeNull();
   });
 
@@ -139,54 +156,75 @@ describe("[T-161] OnboardingCard — 显隐矩阵", () => {
   });
 });
 
-describe("[T-161] OnboardingCard — 门控 / 高亮", () => {
-  it("步1 未 done → 步2(确认起点)blocked(锁提示)", async () => {
+describe("[T-161/T-348] OnboardingCard — 门控 / 高亮", () => {
+  it("[T-348] 0 号:绑定抖音号 = 当前高亮步 + CTA→/accounts;配模型 blocked 置灰", async () => {
+    makeAllFail(); // 全 per-account 读失败 = 0 号
+    const { OnboardingCard } = await importCard();
+    render(<OnboardingCard />);
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-key="import-account"]')).not.toBeNull();
+    });
+    const bind = document.querySelector('[data-step-key="import-account"]');
+    // 绑号 = 当前步(高亮)、未完成、未锁。
+    expect(bind?.getAttribute("data-current")).toBe("true");
+    expect(bind?.getAttribute("data-done")).toBe("false");
+    expect(bind?.getAttribute("data-blocked")).toBe("false");
+    // CTA 深链 → /accounts(绑号步内唯一的 <a> 即 CTA)。
+    const cta = bind?.querySelector("a");
+    expect(cta?.getAttribute("href")).toBe("/accounts");
+    // 步2(配置文本模型)被绑号门锁住(置灰 + 锁提示)。
+    const s2 = document.querySelector('[data-step-key="text-model"]');
+    expect(s2?.getAttribute("data-blocked")).toBe("true");
+    expect(s2?.querySelector('[data-slot="onboarding-step-locked"]')).not.toBeNull();
+  });
+
+  it("绑号未 done → 配模型 blocked(锁提示,无 CTA)", async () => {
     makeAllFail();
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
-      expect(document.querySelector('[data-step-key="confirm-origin"]')).not.toBeNull();
+      expect(document.querySelector('[data-step-key="text-model"]')).not.toBeNull();
     });
-    const s2 = document.querySelector('[data-step-key="confirm-origin"]');
+    const s2 = document.querySelector('[data-step-key="text-model"]');
     expect(s2?.getAttribute("data-blocked")).toBe("true");
-    // 锁提示在。
-    expect(
-      s2?.querySelector('[data-slot="onboarding-step-locked"]'),
-    ).not.toBeNull();
-    // 起点二选一按钮不显(blocked)。
-    expect(s2?.querySelector('[data-slot="onboarding-origin-choice"]')).toBeNull();
+    expect(s2?.querySelector('[data-slot="onboarding-step-locked"]')).not.toBeNull();
+    // blocked 步不渲 CTA。
+    expect(s2?.querySelector('[data-slot="onboarding-step-cta"]')).toBeNull();
   });
 
-  it("步1 done → 步2 解锁 + 成为当前步(高亮)+ 起点二选一按钮显示", async () => {
-    makeTextModelDone();
+  it("[T-348] 绑号 + 配模型 done → 确认起点解锁 + 成为当前步 + 起点二选一按钮显示", async () => {
+    makeBoundTextModelDone();
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
       expect(document.querySelector('[data-step-key="confirm-origin"]')).not.toBeNull();
     });
-    const s1 = document.querySelector('[data-step-key="text-model"]');
-    const s2 = document.querySelector('[data-step-key="confirm-origin"]');
-    expect(s1?.getAttribute("data-done")).toBe("true");
-    expect(s2?.getAttribute("data-blocked")).toBe("false");
-    expect(s2?.getAttribute("data-current")).toBe("true");
-    expect(s2?.querySelector('[data-slot="onboarding-origin-choice"]')).not.toBeNull();
+    const s1 = document.querySelector('[data-step-key="import-account"]');
+    const s2 = document.querySelector('[data-step-key="text-model"]');
+    const s3 = document.querySelector('[data-step-key="confirm-origin"]');
+    expect(s1?.getAttribute("data-done")).toBe("true"); // 绑号 done
+    expect(s2?.getAttribute("data-done")).toBe("true"); // 配模型 done
+    expect(s3?.getAttribute("data-blocked")).toBe("false");
+    expect(s3?.getAttribute("data-current")).toBe("true");
+    expect(s3?.querySelector('[data-slot="onboarding-origin-choice"]')).not.toBeNull();
   });
 });
 
-describe("[T-161] OnboardingCard — 起点分支", () => {
-  it("未选 origin → 不显 existing 专属步(扫码导入 / 后台初始化)", async () => {
-    makeTextModelDone(); // origin 未选(localStorage 空)
+describe("[T-161/T-348] OnboardingCard — 起点分支", () => {
+  it("未选 origin → 不显 init-data(existing 专属);绑号(全员)恒显", async () => {
+    makeBoundTextModelDone(); // 绑号+配模型 done → 起点步可操作;origin 未选(localStorage 空)
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
       expect(document.querySelector('[data-step-key="confirm-origin"]')).not.toBeNull();
     });
-    expect(document.querySelector('[data-step-key="import-account"]')).toBeNull();
+    // [T-348] 绑号是全员步,恒显;init-data 仍随 origin 隐。
+    expect(document.querySelector('[data-step-key="import-account"]')).not.toBeNull();
     expect(document.querySelector('[data-step-key="init-data"]')).toBeNull();
   });
 
-  it("点「已有存量」→ 写 localStorage origin=existing + 显示扫码导入 / 后台初始化步", async () => {
-    makeTextModelDone();
+  it("点「已有存量」→ 写 localStorage origin=existing + 显示后台初始化步", async () => {
+    makeBoundTextModelDone();
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
@@ -198,15 +236,15 @@ describe("[T-161] OnboardingCard — 起点分支", () => {
       '[data-slot="onboarding-origin-existing"]',
     ) as HTMLButtonElement;
     fireEvent.click(btn);
+    // 选 existing → init-data(后台初始化)现身。
     await waitFor(() => {
-      expect(document.querySelector('[data-step-key="import-account"]')).not.toBeNull();
+      expect(document.querySelector('[data-step-key="init-data"]')).not.toBeNull();
     });
-    expect(document.querySelector('[data-step-key="init-data"]')).not.toBeNull();
     expect(window.localStorage.getItem(ORIGIN_KEY)).toBe("existing");
   });
 
-  it("点「从零开始」→ 写 origin=fresh + 不显 existing 专属步(跳过 3/4)", async () => {
-    makeTextModelDone();
+  it("点「从零开始」→ 写 origin=fresh + 不显 init-data(从零无历史可导)", async () => {
+    makeBoundTextModelDone();
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
@@ -221,8 +259,9 @@ describe("[T-161] OnboardingCard — 起点分支", () => {
     await waitFor(() => {
       expect(window.localStorage.getItem(ORIGIN_KEY)).toBe("fresh");
     });
-    expect(document.querySelector('[data-step-key="import-account"]')).toBeNull();
     expect(document.querySelector('[data-step-key="init-data"]')).toBeNull();
+    // 绑号(全员)仍在。
+    expect(document.querySelector('[data-step-key="import-account"]')).not.toBeNull();
     // 起点步变 done(打勾),定位步成为下一个可做步。
     expect(
       document
@@ -282,9 +321,9 @@ describe("[T-161] OnboardingCard — 清理 / 交互", () => {
 });
 
 describe("[T-189b] OnboardingCard — 引导与实际行为双向绑定", () => {
-  it("Gap A:账号绑定广播 → 重拉引导态(绑号后 statusDouyin 翻真 → 步3「扫码导入」变已完成)", async () => {
+  it("Gap A:账号绑定广播 → 重拉引导态(绑号后 statusDouyin 翻真 → 步1「绑定抖音号」变已完成)", async () => {
     window.localStorage.setItem(ORIGIN_KEY, "existing");
-    makeTextModelDone(); // 初始 statusDouyin loggedIn=false → 步3 未完成
+    makeTextModelDone(); // 初始 statusDouyin loggedIn=false → 绑号步未完成
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
@@ -312,30 +351,32 @@ describe("[T-189b] OnboardingCard — 引导与实际行为双向绑定", () => 
     });
   });
 
-  it("Gap B:已绑抖音 + localStorage 无起点选择 → 回灌 existing(步2 done + 导入步可见,不落盘)", async () => {
-    // 无 ORIGIN_KEY;statusDouyin 登录 → loadState 回灌 origin=existing。
+  it("[T-348] Gap B:仅已绑抖音(无导入作品)+ 无起点选择 → 不回灌,确认起点步现身让用户手选新/老", async () => {
+    // 无 ORIGIN_KEY;statusDouyin 登录但无导入作品 → 绑号≠有存量 → 不回灌,origin 仍为 null。
     clientMock.listModels.mockResolvedValue([
       { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
     ]);
     clientMock.getProfile.mockRejectedValue(new Error("404"));
-    clientMock.listProjects.mockResolvedValue([]);
-    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
+    clientMock.getPositioningCenter.mockResolvedValue({ profile: null });
+    clientMock.listProjects.mockResolvedValue([]); // 无导入作品
+    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true }); // 已绑号
     const { OnboardingCard } = await importCard();
     render(<OnboardingCard />);
     await waitFor(() => {
       expect(
-        document.querySelector('[data-step-key="import-account"]'),
+        document.querySelector('[data-step-key="confirm-origin"]'),
       ).not.toBeNull();
     });
-    // 步2 起点已回灌 → done(不再追问新 / 老)。
+    const s3 = document.querySelector('[data-step-key="confirm-origin"]');
+    // 未回灌 → 确认起点未 done,成为当前步(绑号+配模型 done 已越过前两门),起点二选一按钮显示。
+    expect(s3?.getAttribute("data-done")).toBe("false");
+    expect(s3?.getAttribute("data-current")).toBe("true");
     expect(
-      document
-        .querySelector('[data-step-key="confirm-origin"]')
-        ?.getAttribute("data-done"),
-    ).toBe("true");
-    // existing 分支步(后台初始化)可见。
-    expect(document.querySelector('[data-step-key="init-data"]')).not.toBeNull();
-    // 回灌只影响渲染,不写 localStorage。
+      s3?.querySelector('[data-slot="onboarding-origin-choice"]'),
+    ).not.toBeNull();
+    // 未回灌 existing → 后台初始化(init-data)不显。
+    expect(document.querySelector('[data-step-key="init-data"]')).toBeNull();
+    // 不落盘。
     expect(window.localStorage.getItem(ORIGIN_KEY)).toBeNull();
   });
 
@@ -376,9 +417,9 @@ describe("[T-189b] OnboardingCard — 引导与实际行为双向绑定", () => 
         document.querySelector('[data-step-key="confirm-origin"]'),
       ).not.toBeNull();
     });
-    // 手选 fresh → existing 专属步不显(未被回灌)。
-    expect(document.querySelector('[data-step-key="import-account"]')).toBeNull();
+    // [T-348] 手选 fresh → init-data(existing 专属)不显(未被回灌);绑号(全员)仍在。
     expect(document.querySelector('[data-step-key="init-data"]')).toBeNull();
+    expect(document.querySelector('[data-step-key="import-account"]')).not.toBeNull();
   });
 });
 

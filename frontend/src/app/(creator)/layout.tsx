@@ -116,11 +116,14 @@ export default async function CreatorLayout({
     initials: initialsFromName(session.user.displayName),
   };
 
-  // [T-332 S4] 0 号全局引导守卫(SPEC §4.2):该 user 名下没有任何 active 抖音号 →
+  // [T-332 S4 / T-348] 0 号全局引导守卫(SPEC §4.2):该 user 名下没有任何 active 抖音号 →
   // per-account 创作域页面整页替换为绑定引导(壳/侧栏保留);账号管理/设置等 user 级
-  // 页面放行(白名单),否则用户没入口去绑号。判定读 accounts.list(user 级读,不需要
-  // 当前号);读失败 fail-open 照常渲染 children —— 守卫是引导,不是安全门(安全边界
-  // 在 backend strict 门),绝不能因一次读失败把整个 app 锁死。
+  // 页面放行(白名单),否则用户没入口去绑号。
+  //   [T-348] **首页 `/` 现在也放行**:首页承接完整引导流(OnboardingCard,绑号=高亮
+  //   第一步),不再被守卫盖成光秃秃「去绑定」页;首页的 per-account 读降级由 page.tsx
+  //   自己 catch(AccountRequiredError → 诚实空 dashboard)。白名单判定见 isZeroAccountAllowedPath。
+  // 判定读 accounts.list(user 级读,不需要当前号);读失败 fail-open 照常渲染 children ——
+  // 守卫是引导,不是安全门(安全边界在 backend strict 门),绝不能因一次读失败把整个 app 锁死。
   let hasActiveAccount = true;
   try {
     const accounts = (await createServerClient(session.ctx).listAccounts({

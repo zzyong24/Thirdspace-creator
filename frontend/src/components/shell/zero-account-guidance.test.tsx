@@ -19,9 +19,12 @@ describe("isZeroAccountAllowedPath", () => {
     expect(isZeroAccountAllowedPath("/activate")).toBe(true);
   });
 
-  it("per-account 创作域页面不放行 → 引导", () => {
+  it("[T-348] 首页 `/` 放行 —— 首页承接完整引导流(OnboardingCard),不被守卫盖掉", () => {
+    expect(isZeroAccountAllowedPath("/")).toBe(true);
+  });
+
+  it("首页外的 per-account 创作域页面不放行 → 守卫引导", () => {
     for (const p of [
-      "/",
       "/projects",
       "/projects/p-1",
       "/topics",
@@ -36,9 +39,11 @@ describe("isZeroAccountAllowedPath", () => {
     }
   });
 
-  it("前缀匹配是路径段级,不误放行相似前缀(/accountsX)", () => {
+  it("前缀匹配是路径段级,不误放行相似前缀(/accountsX);首页只精确匹配 `/`", () => {
     expect(isZeroAccountAllowedPath("/accountsX")).toBe(false);
     expect(isZeroAccountAllowedPath("/settingsX")).toBe(false);
+    // 首页放行是精确匹配 `/`,不把所有路径都当首页放行。
+    expect(isZeroAccountAllowedPath("/projects")).toBe(false);
   });
 });
 
@@ -52,6 +57,14 @@ describe("ZeroAccountGuidance", () => {
     expect(screen.getByTestId("zero-account-bind-link")).toHaveAttribute(
       "href",
       "/accounts",
+    );
+  });
+
+  it("[T-348] 次级动作:回首页看完整上手引导(深链 → `/`)", () => {
+    render(<ZeroAccountGuidance />);
+    expect(screen.getByTestId("zero-account-home-link")).toHaveAttribute(
+      "href",
+      "/",
     );
   });
 });

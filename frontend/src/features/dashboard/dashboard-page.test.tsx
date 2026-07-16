@@ -301,3 +301,41 @@ describe("DashboardPage", () => {
     expect(card.textContent ?? "").not.toContain("多平台");
   });
 });
+
+// [T-348] 0 号(未绑号)首页降级:page.tsx catch AccountRequiredError → zeroAccountDashboardViewModel。
+// 锁住「dashboard 0 号不崩」——用该空 VM 渲染 DashboardPage,5 张占位指标齐、各卡走诚实空态,不报错。
+describe("[T-348] DashboardPage — 0 号降级(未绑号,诚实空态)", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("用 zeroAccountDashboardViewModel 渲染:5 张占位指标 + 各卡诚实空态,不崩", async () => {
+    const { zeroAccountDashboardViewModel } = await import(
+      "./zero-account-dashboard"
+    );
+    const { container } = await renderDashboard({
+      viewModel: zeroAccountDashboardViewModel(),
+    });
+    // 顶部一排仍是 5 张指标(占位「—」)。
+    const summary = container.querySelector(
+      '[data-slot="dashboard-summary-metrics"]',
+    );
+    expect(summary!.querySelectorAll('[data-slot="metric-card"]')).toHaveLength(
+      5,
+    );
+    expect(summary!.textContent ?? "").toContain("—"); // 占位值,不伪造 0 播放
+    // 继续创作 / 热门选题 / 创作建议 / 数据概览 全走诚实空态(不摆演示假数据)。
+    expect(
+      container.querySelector('[data-slot="continue-creating-empty"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="trending-topics-empty"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="creation-suggestions-empty"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="data-overview-empty"]'),
+    ).not.toBeNull();
+  });
+});

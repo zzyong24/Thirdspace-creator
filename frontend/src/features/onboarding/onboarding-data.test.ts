@@ -133,7 +133,7 @@ describe("[T-161] origin 起点落盘(localStorage)", () => {
   });
 });
 
-describe("[T-189b] loadState — origin 回灌(显式选择优先 > 绑定态,不落盘)", () => {
+describe("[T-189b / T-348] loadState — origin 回灌(显式选择优先 > 已有作品,不落盘)", () => {
   beforeEach(() => {
     listModels.mockReset();
     listProjects.mockReset();
@@ -151,12 +151,13 @@ describe("[T-189b] loadState — origin 回灌(显式选择优先 > 绑定态,�
     statusDouyin.mockResolvedValue({ loggedIn: false });
   });
 
-  it("localStorage 无选择 + douyinLoggedIn=true → origin 回灌 existing", async () => {
+  it("[T-348] localStorage 无选择 + 仅 douyinLoggedIn=true(绑号但无作品)→ origin=null(绑号≠有存量,仍问新/老)", async () => {
     statusDouyin.mockResolvedValue({ loggedIn: true });
     const s = await loadState();
-    expect(s.origin).toBe("existing");
+    // 全隔离后绑号是全员前提,新号也绑;绑号不再回灌 existing。
+    expect(s.origin).toBeNull();
     expect(s.douyinLoggedIn).toBe(true);
-    // 回灌只是运行时派生,不写 localStorage。
+    // 不写 localStorage。
     expect(window.localStorage.getItem(ORIGIN_KEY)).toBeNull();
   });
 

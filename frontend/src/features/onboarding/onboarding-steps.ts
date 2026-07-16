@@ -3,14 +3,19 @@
  *
  * 新用户引导从「并列打勾清单」重构为**有序引导流**:按新用户真实旅程一步步带,
  * 含前置门(未满足则后续步锁/灰)+ 从零/有存量分支(origin)。流程(SPEC
- * `2026-07-06-onboarding-guided-flow-design.md` §3.1):
- *   1. 配置文本模型(前置门 —— 所有 AI 能力地基)
- *   2. 确认起点(你之前在抖音发过作品吗?→ fresh / existing)
- *   3. 扫码导入抖音号            (仅 existing;复用 T-136§D 扫码链)
+ * `2026-07-06-onboarding-guided-flow-design.md` §3.1;[T-348] 顺序按账号全隔离语义重排):
+ *   1. 绑定抖音号(前置门 —— 全隔离下 0 号是一切前提,先绑号才有专属工作区;复用 T-136§D 扫码链)
+ *   2. 配置文本模型(所有 AI 能力地基;user 级共享配置)
+ *   3. 确认起点(你之前在抖音发过作品吗?→ fresh / existing)
  *   4. 后台数据初始化           (仅 existing;复用 T-151 一键初始化三定时任务)
  *   5. 创建定位                 (existing 基于导入作品预设,复用 positioning.generate;fresh 手动)
  *   6. 创建首个项目
- * fresh 分支跳过 3/4;existing 走全程。
+ * fresh 分支跳过 4(从零无历史可导);existing 走全程。
+ *
+ * [T-348] 关键改动:原「扫码导入抖音号」是 existing 专属步(fresh 跳过);账号全隔离(T-332)
+ * 后**绑号成了全员前提**(0 号 = 无工作区),故把它提为**全员第一步**且高亮 CTA→/accounts,
+ * 后续步(配模型/确认起点/定位/初始化)沿用既有 blocked 机制置灰待解锁。fresh/existing 的分叉
+ * 现只决定「是否导入历史作品(init-data)」,不再决定「是否绑号」。
  *
  * 本模块是**纯函数 + 静态配置数组**,不 import 任何 client / React —— 好单测、好复用。
  * 装配层(onboarding-data.ts)并行拉真值填 OnboardingState,再喂 deriveGuidedSteps。
@@ -93,11 +98,11 @@ function hasCapability(state: OnboardingState, capability: string): boolean {
 }
 
 /**
- * 有序引导流的 step-set(SPEC §3.1 六步)。branch=existing 的两步只在 origin=existing 时可见。
- * href 深链:
+ * 有序引导流的 step-set([T-348] 按账号全隔离语义重排)。branch=existing 的 init-data 只在
+ * origin=existing 时可见;import-account(绑号)已提为**全员第一步**。href 深链:
+ *   - import-account → `/accounts`(扫码绑号,account-manager「扫码绑定新抖音号」主操作;全员第一步)。
  *   - text-model → 设置页高亮文本模型卡。
  *   - confirm-origin → 特殊值 `#origin`:卡内二选一,不跳页(onboarding-card 拦截)。
- *   - import-account → `/accounts`(扫码绑号,account-manager「扫码绑定新抖音号」主操作)。
  *   - init-data → `/automations`(用模板一键建三采集任务 + 立即运行,复用 T-151 链)。
  *   - positioning-profile → `/positioning`(existing 走 positioning.generate 基于导入作品预设,
  *     深链由 card 在 existing 场景带 prefill,见 onboarding-card)。
@@ -105,36 +110,37 @@ function hasCapability(state: OnboardingState, capability: string): boolean {
  */
 export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
   {
-    key: "text-model",
+    key: "import-account",
     order: 1,
+    branch: "all",
+    title: "绑定你的抖音号",
+    why: "CreatorOS 的工作区按抖音号完全隔离——先绑定一个抖音号,才有专属的选题、项目、数据与知识库空间。已有作品的话,绑定后还能把历史作品同步进来。",
+    href: "/accounts",
+    isDone: (s) => s.douyinLoggedIn === true,
+    // 第一步无前置(全隔离下绑号是一切前提)。
+    blockedReason: "",
+  },
+  {
+    key: "text-model",
+    order: 2,
     branch: "all",
     title: "配置文本模型",
     why: "这是所有 AI 能力(选题、写稿、定位、审核)的地基。先配好它,后面的步骤才能用起来。",
     // [T-132] href 带 ?highlight=<key>:settings 页据此滚动 + 高亮对应配置卡。
     href: "/settings?highlight=text-model",
     isDone: (s) => hasCapability(s, "default"),
-    blockedReason: "",
+    blockedReason: "先绑定抖音号,再来配置模型与后续步骤。",
   },
   {
     key: "confirm-origin",
-    order: 2,
+    order: 3,
     branch: "all",
     title: "确认你的起点",
     why: "你之前在抖音发过作品吗?告诉我们是「从零开始」还是「已有存量」,后面的引导会为你量身安排。",
     // 特殊深链:卡内二选一,不跳页(onboarding-card 据 `#origin` 拦截,渲染起点选择 UI)。
     href: "#origin",
     isDone: (s) => s.origin === "fresh" || s.origin === "existing",
-    blockedReason: "先配好文本模型,再来确认起点。",
-  },
-  {
-    key: "import-account",
-    order: 3,
-    branch: "existing",
-    title: "扫码导入你的抖音号",
-    why: "扫码绑定后,我们就能把你已发布的作品、指标、评论同步进来,让定位和复盘立足你的真实数据。",
-    href: "/accounts",
-    isDone: (s) => s.douyinLoggedIn === true,
-    blockedReason: "先确认起点(有存量),再扫码导入。",
+    blockedReason: "先配置文本模型,再来确认起点。",
   },
   {
     key: "init-data",
@@ -144,7 +150,7 @@ export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
     why: "一键跑三个采集任务(作品指标 + 逐字稿 + 明细),把你的历史创作沉淀成可分析的底座。后台自动跑,不用一直盯着。",
     href: "/automations",
     isDone: (s) => s.hasImportedWorks === true,
-    blockedReason: "先扫码导入抖音号,才能拉取你的作品数据。",
+    blockedReason: "先确认你的起点(有存量),再来后台初始化。",
   },
   {
     key: "positioning-profile",
@@ -170,16 +176,22 @@ export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
 ];
 
 /**
- * [T-189b] 解析实际生效的 origin —— **显式选择优先,绑定态回灌兜底**(引导与实际行为双向绑定)。
+ * [T-189b / T-348] 解析实际生效的 origin —— **显式选择优先,已有作品回灌兜底**(引导与实际行为双向绑定)。
  *
  * 优先级:
  *   1. 用户卡内显式二选一(localStorage `creatoros:onboarding:origin`)—— fresh / existing 都尊重,
- *      **绝不被自动回灌覆盖**(已手选 fresh 的人不该因绑了号被强改成 existing)。
- *   2. 无显式选择时,若已绑抖音(douyinLoggedIn)或已有导入作品(hasImportedWorks)→ 回灌 existing:
- *      已绑 / 已有作品的人显然是「有存量」,不该再被问新 / 老,直接进 existing 分支解锁导入步。
+ *      **绝不被自动回灌覆盖**(已手选 fresh 的人不该被强改成 existing)。
+ *   2. 无显式选择时,若**已有导入作品**(hasImportedWorks)→ 回灌 existing:真有存量的人不该再被
+ *      问新 / 老,直接进 existing 分支。
  *   3. 都没有 → null(仍未分叉,等用户手点)。
  *
+ * [T-348] **关键:不再用「已绑抖音(douyinLoggedIn)」回灌 existing**。账号全隔离(T-332)后绑号成了
+ * 全员前提 —— 从零新人也要绑一个(可能是全新空号),「绑了号」不再等于「有存量」。若仍按绑号回灌
+ * existing,新号会被塞进「后台初始化(导入历史)」分支却无作品可导 → 卡死。故只认真实导入作品这一信号:
+ * 绑号后 origin 仍为 null → 「确认起点」步现身让用户手选新 / 老,分叉才准。
+ *
  * 纯派生、不落盘:回灌只影响本次渲染,localStorage 仍留空,用户后续仍可手点覆盖。
+ * `douyinLoggedIn` 保留在签名里(装配层照传),但不再作为回灌信号。
  */
 export function resolveOrigin(
   explicit: OnboardingOrigin,
@@ -189,7 +201,7 @@ export function resolveOrigin(
   },
 ): OnboardingOrigin {
   if (explicit === "fresh" || explicit === "existing") return explicit;
-  if (signals.douyinLoggedIn === true || signals.hasImportedWorks === true) {
+  if (signals.hasImportedWorks === true) {
     return "existing";
   }
   return null;
@@ -197,8 +209,8 @@ export function resolveOrigin(
 
 /**
  * 某步在给定 origin 下是否可见。
- *   - branch=all → 恒可见。
- *   - branch=existing → 仅 origin=existing 可见(fresh 跳过;null 未分叉时也不显)。
+ *   - branch=all → 恒可见(含绑号=第一步:全隔离下全员必绑)。
+ *   - branch=existing → 仅 origin=existing 可见(init-data 后台初始化;fresh 跳过;null 未分叉时也不显)。
  */
 function isVisible(spec: GuidedStepSpec, origin: OnboardingOrigin): boolean {
   return spec.branch === "all" || origin === "existing";
@@ -209,8 +221,9 @@ function isVisible(spec: GuidedStepSpec, origin: OnboardingOrigin): boolean {
  *
  * - 显隐:按 origin 过滤 existing 专属步(fresh / null → 只留全员步)。
  * - done:各步 isDone 从 state 派生(诚实降级)。
- * - blocked:该步的**前一个可见步**未 done → blocked(前置未满足 → 灰/锁)。第一步永不 blocked。
- *   门控沿「可见步链」逐级传导:existing 时步5 的前置是步4;fresh 时步5 的前置是步2(3/4 已隐)。
+ * - blocked:该步的**前一个可见步**未 done → blocked(前置未满足 → 灰/锁)。第一步(绑号)永不 blocked。
+ *   门控沿「可见步链」逐级传导:existing 时定位(步5)的前置是初始化(步4);fresh 时定位的前置是
+ *   确认起点(步3,init-data 已隐)。0 号时全链只有绑号(步1)可做,其余全灰。
  * 返回顺序 = order 升序(声明序已如此)。
  */
 export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
