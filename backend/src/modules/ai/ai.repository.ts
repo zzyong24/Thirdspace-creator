@@ -148,6 +148,13 @@ export interface AiRepository {
     taskTypePrefix?: string;
   }): Promise<{ rows: TaskRow[]; total: number }>;
   findTaskByIdempotencyKey(idempotencyKey: string): Promise<TaskRow | null>;
+  /** [T-332 S2 修补] 系统级 sweep 专用:跨账号列该 user 所有 status='running' 的 ai_task
+   *  最小投影(启动扫僵尸 sweepStaleAiTasks 用)。**不叠账号门** —— 扫僵尸是系统 daemon
+   *  路径(schedulerCtx 无选中号),与 scheduling.listRunsByStatus 同族;用户面 listTasks
+   *  仍 strict 按号。 */
+  listRunningTasksSystem(): Promise<
+    { id: string; startedAt: string | null; requestedAt: string }[]
+  >;
   createTask(input: CreateTaskInput): Promise<TaskRow>;
   requireTask(taskId: string): Promise<TaskRow>;
   addReferences(taskId: string, refs: ReferenceInput[]): Promise<void>;
@@ -349,6 +356,22 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .offset(offset);
       const all = await db.select({ id: aiTasks.id }).from(aiTasks).where(where);
       return { rows, total: all.length };
+    },
+
+    async listRunningTasksSystem() {
+      // [T-332 S2 修补] 只按 userId 收窄 + status='running',**不叠 accountId**(系统 daemon
+      //   跨号扫僵尸)。占位 accountId 不进 WHERE,故工厂传什么号都不影响结果。
+      const rows = await db
+        .select({
+          id: aiTasks.id,
+          startedAt: aiTasks.startedAt,
+          requestedAt: aiTasks.requestedAt,
+        })
+        .from(aiTasks)
+        .where(
+          and(eq(aiTasks.userId, deps.userId), eq(aiTasks.status, "running")),
+        );
+      return rows;
     },
 
     async findTaskByIdempotencyKey(idempotencyKey) {

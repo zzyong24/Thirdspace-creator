@@ -6151,11 +6151,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // running 且 startedAt(缺失退 requestedAt)超 2h(CREATOROS_STALE_AI_TASK_MS 可配)→
   // markFailed(stale-on-boot)。fire-and-forget,不阻断启动。
   void sweepStaleAiTasks({
+    // [T-332 S2 修补] 扫僵尸是系统 daemon(schedulerCtx 无选中号):走系统级
+    //   listRunningTasksSystem(跨号、只 running、不经 requireAccountId),不再用
+    //   用户面 listTasks(S2 已 strict 按号,无号会抛 AccountRequiredError)。
     listRunningTasks: async (c) => {
-      const { rows } = await aiService.listTasks(c, { limit: 500, offset: 0 });
-      return rows
-        .filter((t) => t.status === "running")
-        .map((t) => ({ id: t.id, startedAt: t.startedAt ?? t.requestedAt }));
+      return aiService.listRunningTasksSystem(c);
     },
     markFailed: (c, taskId, msg) => aiService.markFailed(c, taskId, msg),
     ctx: schedulerCtx,

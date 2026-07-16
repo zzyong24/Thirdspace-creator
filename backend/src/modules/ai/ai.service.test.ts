@@ -1120,6 +1120,21 @@ describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", ()
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 
+  it("[T-332 修补] listRunningTasksSystem:系统 daemon 扫僵尸不经 requireAccountId,跨号列 running", async () => {
+    const { service } = makeService(db);
+    // 号1 建任务并翻 running;号2 建任务保持 queued。
+    const t1 = await service.createTask(ctxAcct1, { taskType: "topic.generate" });
+    await service.markRunning(ctxAcct1, t1.id);
+    const t2 = await service.createTask(ctxAcct2, { taskType: "topic.generate" });
+    await service.markRunning(ctxAcct2, t2.id);
+    // 无号系统 ctx(scheduler 启动路径)—— 不抛 AccountRequiredError,跨两号都列出。
+    const running = await service.listRunningTasksSystem(ctxNoAccount);
+    const ids = running.map((r) => r.id).sort();
+    expect(ids).toEqual([t1.id, t2.id].sort());
+    // 每条都带 startedAt(markRunning 后有)或 requestedAt 兜底,供 sweep 判超时。
+    expect(running.every((r) => typeof r.startedAt === "string")).toBe(true);
+  });
+
   it("§4.6 确认门:跨号 confirmTask 被拒(strict requireTask → 404),同号可确认", async () => {
     const { service, port } = makeService(db);
     const task = await service.createTask(ctxAcct1, {

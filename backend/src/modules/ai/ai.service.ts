@@ -277,6 +277,12 @@ export interface AiService {
       taskTypePrefix?: string;
     },
   ): Promise<{ rows: AITaskResource[]; total: number }>;
+  /** [T-332 S2 修补] 系统级扫僵尸(启动 sweepStaleAiTasks 用):跨账号列该 user 所有
+   *  running ai_task 的 {id, startedAt} 投影。**不经 requireAccountId** —— 调用方是系统
+   *  daemon(schedulerCtx 无选中号)。用户面 listTasks 仍 strict 按号。 */
+  listRunningTasksSystem(
+    ctx: RequestContext,
+  ): Promise<{ id: string; startedAt: string | null }[]>;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
@@ -1133,6 +1139,19 @@ export function createAiService(deps: ServiceDeps): AiService {
     async listTasks(ctx, page) {
       const { rows, total } = await repoFor(ctx, "ai.listTasks").listTasks(page);
       return { rows: rows.map(toTaskDto), total };
+    },
+
+    async listRunningTasksSystem(ctx) {
+      // [T-332 S2 修补] 系统 daemon 扫僵尸:不经 requireAccountId,用占位号建 repo(占位不进
+      //   WHERE,repo 的 listRunningTasksSystem 只按 userId+status='running' 收窄)。
+      const repo = createAiRepository(deps.db, {
+        now: deps.now,
+        nextId: deps.nextId,
+        userId: ctx.userId,
+        accountId: "__system-sweep__",
+      });
+      const rows = await repo.listRunningTasksSystem();
+      return rows.map((r) => ({ id: r.id, startedAt: r.startedAt ?? r.requestedAt }));
     },
 
     async getTask(ctx, taskId) {
