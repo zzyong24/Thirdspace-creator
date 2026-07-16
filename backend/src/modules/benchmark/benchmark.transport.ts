@@ -14,6 +14,11 @@ export const BENCHMARK_OP_IDS = [
   "benchmark.sources.create",
   "benchmark.sources.toggle",
   "benchmark.sources.remove",
+  // [T-349] composition-only op：module transport 不认它(default → UnsupportedOperationError),
+  //   persistence-client 的 benchmarkWithTranscribe wrapper 在到达 module transport 前拦截。
+  //   列入 OP_IDS 让 PERSISTED_OPS/dispatch 把它路由到 benchmark transport(同 scheduledJobs.runNow
+  //   在 SCHEDULING_OP_IDS 却无 module case 的先例)。
+  "benchmark.works.transcribe",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };

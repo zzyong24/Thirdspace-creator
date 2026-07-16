@@ -491,6 +491,7 @@ import {
   createBenchmarkService,
   createBenchmarkTransport,
   BENCHMARK_OP_IDS,
+  OwnershipError as BenchmarkOwnershipError,
   type BenchmarkService,
 } from "@creatoros/backend/modules/benchmark";
 // [T-235b] 热点信源(通用网页/RSS 信源登记,热点多源证据)。
@@ -4726,6 +4727,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       : DEFAULT_COVER_BACKFILL_LIMIT;
   };
 
+  // [T-349] 单条按需逐字稿公共原语(iesdouyin 直链 → ffmpeg 抽音 → 云 ASR)。抽成 buildPersistence
+  //   作用域内具名闭包 —— favorites-distill(收藏他人作品)与 benchmark(对标他号作品)复用同一份,
+  //   **绝不复制**。图集/无口播 → 返 null(诚实 skip)。[T-136] 按当前号(c.accountId)登录态指纹。
+  //   origin 隔离:两条调用方都**不**走 ensureTranscriptArtifact —— 逐字稿落各自表自身,永不建 imported。
+  const transcribeOneAweme = async (
+    c: RequestContext,
+    awemeId: string,
+  ): Promise<string | null> => {
+    const cdp = await loadDouyinCdp();
+    const src = await cdp.fetchDouyinVideoSource({
+      awemeId,
+      authDir: douyinAuthDirFor(c.accountId),
+      gateway: douyinGateway,
+    });
+    if (src.kind === "image-album") return null;
+    const audioBytes = await cdp.streamAudioFromVideo(src.playUrl);
+    const spec = await resolveTranscribeSpecFn(c, {
+      getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
+      env: process.env,
+    });
+    const { text } = await transcribeAudioFn(
+      spec,
+      { audioBytes, language: "zh" },
+      asrRegistry,
+    );
+    return text && text.trim() ? text : null;
+  };
+
   const scheduledCollectors: Record<string, ScheduledCollector> = {
     // 自己主页作品+指标:直接复用 ingestionService.refreshDouyin(内部:校验源 → fetchDouyin
     // Metrics(launchPersistentContext 复用扫码登录态)→ ensureImportedProject×N →
@@ -5883,28 +5912,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             favoritesService.saveTranscript(c, itemId, t),
           saveVerdict: (c, itemId, v) =>
             favoritesService.saveDistillVerdict(c, itemId, v),
-          // 取逐字稿:复用与 transcribe-runner 同一套原语(iesdouyin 直链 → ffmpeg 抽音 → 云 ASR)。
-          //   图集/无口播 → 返 null(runner 诚实 skip)。[T-136] 按当前号登录态。
-          transcribeOne: async (c, awemeId) => {
-            const cdp = await loadDouyinCdp();
-            const src = await cdp.fetchDouyinVideoSource({
-              awemeId,
-              authDir: douyinAuthDirFor(c.accountId),
-              gateway: douyinGateway,
-            });
-            if (src.kind === "image-album") return null;
-            const audioBytes = await cdp.streamAudioFromVideo(src.playUrl);
-            const spec = await resolveTranscribeSpecFn(c, {
-              getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
-              env: process.env,
-            });
-            const { text } = await transcribeAudioFn(
-              spec,
-              { audioBytes, language: "zh" },
-              asrRegistry,
-            );
-            return text && text.trim() ? text : null;
-          },
+          // 取逐字稿:复用 [T-349] 抽出的公共原语 transcribeOneAweme(iesdouyin 直链 → ffmpeg
+          //   抽音 → 云 ASR)。图集/无口播 → 返 null(runner 诚实 skip)。行为零变(原内联段抽出)。
+          transcribeOne: (c, awemeId) => transcribeOneAweme(c, awemeId),
           // 判库(favorites.triage)+ 知识蒸馏(knowledge.distill)—— capability 经 model-config 解析,不写死。
           triage: createFavoritesTriagePort({ resolveModelSpec }),
           distillKnowledge: (c, content) =>
@@ -6284,6 +6294,59 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-212a] 对标源 CRUD transport(benchmarkService 已在 collectors 装配前创建,此处复用同一实例)。
   const benchmark = createBenchmarkTransport(() => benchmarkService);
+  // [T-349] 单条按需逐字稿(composition-only op):wrap benchmark transport,拦
+  //   benchmark.works.transcribe(module transport 不认它 —— 触发要 transcribe 原语 + 号登录态,
+  //   在 composition 层才可见,同 schedulingWithRunNow / scheduledJobs.runNow 约定)。其余 op 透传。
+  //   origin 隔离:逐字稿落 benchmark_works 自身(saveWorkTranscript),**永不建 imported project/artifact**。
+  const benchmarkWithTranscribe: Transport = {
+    async request(endpoint, input, ctx) {
+      if (endpoint.id === "benchmark.works.transcribe") {
+        if (!ctx) throw new Error("AuthenticationError: transcribe requires ctx");
+        const { params, body } = (input ?? {}) as {
+          params?: { workId?: string };
+          body?: { workId?: string };
+        };
+        const workId = params?.workId ?? body?.workId ?? "";
+        // 叠号门:查不到/跨号 → null → ownership 404(不泄露行存在)。
+        const work = await benchmarkService.getWork(ctx, workId);
+        if (!work) {
+          throw new BenchmarkOwnershipError(
+            `OwnershipError: benchmark work not found: ${workId}`,
+          );
+        }
+        // 已有非空逐字稿 → 复用,不重抓(单条按需的幂等)。
+        if (work.transcript && work.transcript.trim()) {
+          return {
+            data: { status: "reused", transcript: work.transcript },
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        // 标记抓取中(前端可渲 pending)。
+        await benchmarkService.saveWorkTranscript(ctx, workId, null, "pending");
+        try {
+          const text = await transcribeOneAweme(ctx, work.awemeId);
+          if (!text) {
+            // 图集/无口播 → transcribeOne 返 null → skipped(诚实,非失败)。
+            await benchmarkService.saveWorkTranscript(ctx, workId, null, "skipped");
+            return {
+              data: { status: "skipped", transcript: null },
+              meta: { requestId: ctx.requestId },
+            };
+          }
+          await benchmarkService.saveWorkTranscript(ctx, workId, text, "done");
+          return {
+            data: { status: "done", transcript: text },
+            meta: { requestId: ctx.requestId },
+          };
+        } catch (err) {
+          // 抓取抛错 → failed(可重试)→ 重新抛错(前端渲失败可重试)。
+          await benchmarkService.saveWorkTranscript(ctx, workId, null, "failed");
+          throw err;
+        }
+      }
+      return benchmark.request(endpoint, input, ctx);
+    },
+  };
   // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
   const trendSources = createTrendSourcesTransport(() => trendSourcesService);
   // [T-235c] 指定收藏夹登记 CRUD transport(favoritesService 已在 collectors 装配前创建,复用同一实例)。
@@ -9261,7 +9324,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     scheduling: schedulingWithRunNow, // wrap:透传 CRUD + 拦 scheduledJobs.runNow(D5)
     contentCalendar,
     materialLinks,
-    benchmark,
+    benchmark: benchmarkWithTranscribe, // wrap:透传 CRUD + 拦 benchmark.works.transcribe(T-349)
     trendSources,
     favoritesFolders,
     topicAttribution,

@@ -109,6 +109,24 @@ export interface BenchmarkService {
   listPendingViralWorks(ctx: RequestContext, limit?: number): Promise<PendingViralWork[]>;
   /** [T-212c] 拆解用：置一条对标作品拆解完成（teardown_status=done，幂等防重拆）。 */
   markTeardownDone(ctx: RequestContext, workId: string): Promise<void>;
+  /** [T-349] 单条按需逐字稿:按 id 读一行投影(叠号门;查不到/跨号 → null)。 */
+  getWork(
+    ctx: RequestContext,
+    workId: string,
+  ): Promise<{
+    id: string;
+    awemeId: string;
+    platform: string;
+    transcript: string | null;
+    transcriptStatus: string | null;
+  } | null>;
+  /** [T-349] 单条按需逐字稿:落 transcript + status(origin 隔离落 benchmark_works 自身)。 */
+  saveWorkTranscript(
+    ctx: RequestContext,
+    workId: string,
+    transcript: string | null,
+    status: string,
+  ): Promise<void>;
 }
 
 function guardCreate(input: CreateSourceInput): void {
@@ -205,6 +223,26 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
 
     async markTeardownDone(ctx, workId) {
       await repoFor(ctx, "benchmark.markTeardownDone").markTeardownDone(workId);
+    },
+
+    async getWork(ctx, workId) {
+      const row = await repoFor(ctx, "benchmark.getWork").getWorkById(workId);
+      if (!row) return null;
+      return {
+        id: row.id,
+        awemeId: row.awemeId,
+        platform: row.platform,
+        transcript: row.transcript ?? null,
+        transcriptStatus: row.transcriptStatus ?? null,
+      };
+    },
+
+    async saveWorkTranscript(ctx, workId, transcript, status) {
+      await repoFor(ctx, "benchmark.saveWorkTranscript").saveTranscript(
+        workId,
+        transcript,
+        status,
+      );
     },
 
     async recordWork(ctx, input) {

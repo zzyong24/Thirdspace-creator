@@ -52,6 +52,11 @@ export const benchmarkWorks = pgTable("benchmark_works", {
   authorFollowerCount: integer("author_follower_count"), // 作者粉丝数(黑马赞粉比分母;对标采集不抓,NULL)
   discoveryKeyword: text("discovery_keyword"), // 黑马命中的搜索关键词(溯源;对标行 NULL)
   teardownStatus: text("teardown_status").notNull().default("pending"), // 拆解状态:pending 待拆(T-212c 转 done)
+  // [T-349] 对标作品逐字稿(单条按需抓)。**origin 隔离铁律**:他人对标作品逐字稿落 benchmark_works
+  //   **自身**(同 favorites_items.transcript 先例 T-235d-distill),**永不建 imported project/artifact**
+  //   (否则污染 creative-context/candidate 的 imported/reconstructed origin 隔离,把他人作品当本人已确认前提)。
+  transcript: text("transcript"), // 逐字稿(NULL=未抓;图集/无口播 → skipped 且此列 NULL)
+  transcriptStatus: text("transcript_status"), // null(未抓)/pending(抓取中)/done/failed(可重试)/skipped(诚实,非失败)
   capturedAt: text("captured_at").notNull(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
@@ -95,6 +100,9 @@ CREATE TABLE IF NOT EXISTS benchmark_works (
   author_follower_count INTEGER,
   discovery_keyword TEXT,
   teardown_status TEXT NOT NULL DEFAULT 'pending',
+  -- [T-349] 对标作品逐字稿单条按需抓;origin 隔离:落本表自身,永不建 imported project/artifact。
+  transcript TEXT,
+  transcript_status TEXT,
   captured_at TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

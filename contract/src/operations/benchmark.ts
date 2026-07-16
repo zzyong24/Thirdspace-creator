@@ -50,4 +50,19 @@ export const benchmarkOperations = {
     response: benchmarkSourceResource,
     fr: ["FR-BENCHMARK-SOURCE-REMOVE"],
   }),
+  // [T-349] 对标作品单条按需逐字稿抓取。composition-only op（module transport 不认它,由
+  //   persistence-client 拦截 —— 触发要 transcribe 原语 + 号登录态,在 composition 层才可见,
+  //   同 scheduledJobs.runNow 约定）。origin 隔离:逐字稿落 benchmark_works 自身,永不建 imported。
+  //   status ∈ done | skipped(图集/无口播) | failed(可重试) | reused(已有非空,不重抓)。
+  transcribeBenchmarkWork: defineEndpoint({
+    id: "benchmark.works.transcribe",
+    method: "POST",
+    path: "/benchmark/works/:workId/transcribe",
+    params: z.object({ workId: id }),
+    response: z.object({
+      status: z.string(),
+      transcript: z.string().nullable(),
+    }),
+    fr: ["FR-BENCHMARK-WORK-TRANSCRIBE"],
+  }),
 } as const;

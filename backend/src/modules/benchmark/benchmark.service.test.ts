@@ -181,4 +181,78 @@ describe("benchmark service", () => {
       );
     });
   });
+
+  // ── [T-349] 单条按需逐字稿:getWork 账号隔离 + saveWorkTranscript 落状态 ──
+  describe("单条按需逐字稿 (T-349)", () => {
+    const noAcct: RequestContext = { userId: "user-a", requestId: "rn", source: "user" };
+
+    // 建一条对标作品并取回 id(recordWork 只返 inserted;经 listPendingViralWorks 拿 id)。
+    async function seedWork(ctx: RequestContext, awemeId = "aw-t"): Promise<string> {
+      const s = await svc.createSource(ctx, { externalAccountId: "sec-t" });
+      await svc.recordWork(ctx, {
+        sourceId: s.id,
+        sourceExternalAccountId: "sec-t",
+        awemeId,
+        diggCount: 9999,
+        isViral: true,
+        viralMultiple: 3.3,
+        capturedAt: NOW,
+      });
+      const pending = await svc.listPendingViralWorks(ctx, 10);
+      const row = pending.find((w) => w.awemeId === awemeId)!;
+      return row.id;
+    }
+
+    it("getWork 返投影;新作品 transcript/transcriptStatus 为 null", async () => {
+      const workId = await seedWork(ctxA);
+      const work = await svc.getWork(ctxA, workId);
+      expect(work).not.toBeNull();
+      expect(work!.id).toBe(workId);
+      expect(work!.awemeId).toBe("aw-t");
+      expect(work!.platform).toBe("douyin");
+      expect(work!.transcript).toBeNull();
+      expect(work!.transcriptStatus).toBeNull();
+    });
+
+    it("saveWorkTranscript 落 transcript + status,getWork 反映", async () => {
+      const workId = await seedWork(ctxA);
+      await svc.saveWorkTranscript(ctxA, workId, "口播逐字稿正文", "done");
+      const work = await svc.getWork(ctxA, workId);
+      expect(work!.transcript).toBe("口播逐字稿正文");
+      expect(work!.transcriptStatus).toBe("done");
+    });
+
+    it("skipped 态:transcript=null + status=skipped(图集/无口播)", async () => {
+      const workId = await seedWork(ctxA);
+      await svc.saveWorkTranscript(ctxA, workId, null, "skipped");
+      const work = await svc.getWork(ctxA, workId);
+      expect(work!.transcript).toBeNull();
+      expect(work!.transcriptStatus).toBe("skipped");
+    });
+
+    it("跨号 getWork → null(不泄露行存在)", async () => {
+      const workId = await seedWork(ctxA);
+      expect(await svc.getWork(ctxB, workId)).toBeNull();
+    });
+
+    it("未知 id getWork → null", async () => {
+      expect(await svc.getWork(ctxA, "bmwork-nope")).toBeNull();
+    });
+
+    it("跨号 saveWorkTranscript → OwnershipError(404-class)", async () => {
+      const workId = await seedWork(ctxA);
+      await expect(
+        svc.saveWorkTranscript(ctxB, workId, "x", "done"),
+      ).rejects.toBeInstanceOf(OwnershipError);
+    });
+
+    it("未选号 → getWork/saveWorkTranscript 均 AccountRequiredError", async () => {
+      await expect(svc.getWork(noAcct, "bmwork-1")).rejects.toBeInstanceOf(
+        AccountRequiredError,
+      );
+      await expect(
+        svc.saveWorkTranscript(noAcct, "bmwork-1", "x", "done"),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+    });
+  });
 });

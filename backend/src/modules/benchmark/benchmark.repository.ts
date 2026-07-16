@@ -73,6 +73,16 @@ export interface BenchmarkRepository {
   /** [T-212c] 拆解完成 → 置 teardown_status='done'（ownership gate；不存在 → OwnershipError 404）。
    *  幂等：已 done 的行再置 done 无副作用（防重拆）。 */
   markTeardownDone(workId: string): Promise<BenchmarkWorkRow>;
+  /** [T-349] 按 id 读一行(叠号门:id + userId + accountId,strict)。查不到/跨号 → 返 null
+   *  (不抛,交调用方决定 404 语义;拦截层据此判 ownership)。 */
+  getWorkById(workId: string): Promise<BenchmarkWorkRow | null>;
+  /** [T-349] 落逐字稿 + 状态(单条按需抓,origin 隔离落本表自身)。where id+userId+accountId,
+   *  更新 transcript / transcript_status / updatedAt。不存在 → OwnershipError 404。 */
+  saveTranscript(
+    workId: string,
+    transcript: string | null,
+    status: string,
+  ): Promise<BenchmarkWorkRow>;
 }
 
 export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepository {
@@ -282,6 +292,38 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
       const updated = await db
         .update(benchmarkWorks)
         .set({ teardownStatus: "done", updatedAt: deps.now() })
+        .where(
+          and(
+            eq(benchmarkWorks.userId, deps.userId),
+            eq(benchmarkWorks.accountId, deps.accountId),
+            eq(benchmarkWorks.id, workId),
+          ),
+        )
+        .returning();
+      return updated[0]!;
+    },
+
+    async getWorkById(workId) {
+      // [T-349] 叠号门(id + userId + accountId,strict);跨号/未知 → null(不泄露行存在)。
+      const rows = await db
+        .select()
+        .from(benchmarkWorks)
+        .where(
+          and(
+            eq(benchmarkWorks.userId, deps.userId),
+            eq(benchmarkWorks.accountId, deps.accountId),
+            eq(benchmarkWorks.id, workId),
+          ),
+        );
+      return rows[0] ?? null;
+    },
+
+    async saveTranscript(workId, transcript, status) {
+      // [T-349] ownership gate(缺失/跨号 → OwnershipError 404),再 where id+userId+accountId 更新。
+      await requireOwnedWork(db, deps, workId);
+      const updated = await db
+        .update(benchmarkWorks)
+        .set({ transcript, transcriptStatus: status, updatedAt: deps.now() })
         .where(
           and(
             eq(benchmarkWorks.userId, deps.userId),
