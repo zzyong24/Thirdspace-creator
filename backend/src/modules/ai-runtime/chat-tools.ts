@@ -114,6 +114,22 @@ export interface ChatToolDeps {
     extraBrief?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
+   * [T-350a] publish.package 核心 —— 稿面「生成发布物料」:复用既有 publish.platform_adapt runner
+   * (platform.adapt 模板已内嵌 cheat-package 发布审核 SOP),**单平台抖音**(platforms=["douyin"])。
+   * 与 script.draft/planning.thesis 同款异步 dispatch 范式:ensure 内容产出挂点(outputId,采纳时
+   * createPublicationFromDraft 在其下铸真 Publication)+ 读当前整稿正文(空/过短诚实门,不生成空物料)
+   * → createTask(taskType publish.platform_adapt,inputData.{outputId,scriptText,platforms,topic})
+   * → live dispatch,立即返回 { taskId, projectId }(不阻塞回合)。前端候选卡据 taskId 轮询 →
+   * awaiting_confirmation 渲 标题/简介/标签/封面文案/审核结论 → 采纳物化真 Publication → publishPack 回填。
+   * projectId 由 chat-runner 从 chatContext 注入(项目对话才有);无项目上下文 → 不 dispatch,诚实回 error。
+   */
+  dispatchPublishPackage: (input: {
+    /** 显式项目 id(模型从 selection 拿到时可传);缺省用 chatContext.projectId。 */
+    projectId?: string;
+    /** 本期选题/内容主题(可选,喂进物料生成上下文);缺省由 runner 从定位/项目兜底。 */
+    topic?: string;
+  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  /**
    * [T-057④/T-084a] material.gather 核心 —— 先真联网检索(resolveSearchSpec+searchWeb),再
    * runResearchNode 结构化综合(检索结果前置注入,非模型工具),诚实降级。产物经 ChatGatherCard
    * 逐条「存入弹药」(knowledge.create+materialLink,人采纳)。
@@ -790,6 +806,20 @@ export interface ScriptDraftToolResult {
   error: string | null;
 }
 
+// [T-350a] publish.package 工具结果 —— dispatch 了一次异步发布物料生成(单平台抖音,立即返回,后台跑)。
+// 前端候选卡据 taskId 轮询 getTask → awaiting_confirmation 后 listTaskResults 拿 publication_drafts
+// 候选(标题/简介/标签/封面文案/审核结论)→ 用户「采纳」confirmTask 物化真 Publication+revision →
+// publishPack 回填。projectId 供卡兜底。dispatch 失败 / 无项目上下文 / 空稿门 → error 非 null。
+export interface PublishPackageToolResult {
+  kind: "publish.package";
+  /** dispatch 出的 publish.platform_adapt 任务 id(卡据此轮询 getTask;失败为 null)。 */
+  taskId: string | null;
+  /** 目标项目 id(卡兜底 + 回填定位;无项目上下文为 null)。 */
+  projectId: string | null;
+  /** dispatch 失败 / 无项目上下文 / 空稿门时的诚实错误(成功为 null)。 */
+  error: string | null;
+}
+
 export interface MaterialGatherToolResult {
   kind: "material.gather";
   // [T-084a] 整体信源打标:web=经联网检索、model_memory=未配/降级(前端据此渲黄条)。
@@ -1459,6 +1489,18 @@ const SCRIPT_DRAFT_PARAMS = jsonSchema<{
     topic: { type: "string", description: "内容主题/标题(缺省用当前项目标题)" },
     angle: { type: "string", description: "切入角度/风格要求,可选" },
     extraBrief: EXTRA_BRIEF_PROPERTY,
+  },
+  additionalProperties: false,
+});
+
+// [T-350a] publish.package 入参 —— 单平台抖音发布物料,平台固定不给模型选(稿面聚焦抖音)。
+const PUBLISH_PACKAGE_PARAMS = jsonSchema<{ topic?: string }>({
+  type: "object",
+  properties: {
+    topic: {
+      type: "string",
+      description: "这条内容的主题/选题(可选;缺省由定位/项目兜底)",
+    },
   },
   additionalProperties: false,
 });
@@ -2173,6 +2215,35 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         } catch (err) {
           return {
             kind: "script.draft",
+            taskId: null,
+            projectId: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }, deps.humanizeError),
+    // [T-350a] 发布物料生成进对话(同 script.draft 异步 dispatch 范式):execute **不直接生成** ——
+    // dispatch 既有 publish.platform_adapt runner(platform.adapt 模板,已内嵌 cheat-package 发布审核
+    // SOP),**单平台抖音**,立即返回 { taskId, projectId }。前端候选卡据 taskId 轮询 →
+    // awaiting_confirmation 渲 标题/简介/标签/封面文案/审核结论 → 采纳物化真 Publication → publishPack 回填。
+    // 无项目上下文 / 空稿门 / dispatch 失败 → error 非 null(卡渲诚实错误态)。
+    "publish.package": defineChatTool("publish.package", {
+      description:
+        "为**当前项目**生成一份抖音发布物料(标题 + 简介文案 + 标签 + 封面文案),并**自动过一遍发布合规审核**(营销导流/绝对化用语/夸大/降权词等,命中会改成合规版并给出审核结论)。当用户要「生成发布物料/发布文案/写标题简介/打包发布/生成发布包」、点稿面「生成发布物料」时调用。物料生成在后台跑(不阻塞对话),结果渲成发布物料候选卡;用户点卡上「采纳」才落成正式发布行(铁律②确认门)——你没有直接写发布物料的能力,绝不口头宣称「发布物料已生成/已写入」。只能为当前项目对话生成;没有项目上下文、或稿面还没有整稿(空稿)时会诚实提示先去写整稿。平台固定为抖音(单平台),不必让用户选平台。",
+      inputSchema: PUBLISH_PACKAGE_PARAMS,
+      execute: async ({ topic }): Promise<PublishPackageToolResult> => {
+        try {
+          const { taskId, projectId: pid, error } =
+            await deps.dispatchPublishPackage({
+              topic:
+                typeof topic === "string" && topic.trim()
+                  ? topic.trim()
+                  : undefined,
+            });
+          return { kind: "publish.package", taskId, projectId: pid, error };
+        } catch (err) {
+          return {
+            kind: "publish.package",
             taskId: null,
             projectId: null,
             error: err instanceof Error ? err.message : String(err),
@@ -3185,6 +3256,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "topic.enrich",
   "script.hooks",
   "script.draft",
+  // [T-350a] 发布物料生成(dispatch publish.platform_adapt 单平台抖音 → 发布物料候选卡 + 采纳物化 Publication)。
+  "publish.package",
   "material.gather",
   "material.screenshot",
   "web.read",
@@ -3271,6 +3344,8 @@ const CREATION_TOOL_NAMES: readonly string[] = [
   "topic.enrich",
   "script.hooks",
   "script.draft",
+  // [T-350a] 发布物料生成是创作产出工具(需项目上下文 + 整稿;无则工具诚实降级报「去项目稿面写整稿」)。
+  "publish.package",
   // [T-265] 论点树是创作产出工具(需项目上下文;无项目时工具诚实降级报「去项目稿面立」)。
   "planning.thesis",
   // [T-271] 制作封面是创作产出工具(封面锚项目核心信息/口播稿;无项目时工具诚实降级报「去项目稿面生成」)。

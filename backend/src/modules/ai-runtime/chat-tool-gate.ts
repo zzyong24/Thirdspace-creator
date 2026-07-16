@@ -62,6 +62,9 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   // [T-268] script.draft —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文 →
   // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
   "script.draft": { kind: "script.draft", extras: { taskId: null, projectId: null } },
+  // [T-350a] publish.package —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文/空稿门 →
+  // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
+  "publish.package": { kind: "publish.package", extras: { taskId: null, projectId: null } },
   "material.gather": {
     kind: "material.gather",
     // grounding 占位取保守值(错误态卡渲空列表;model_memory 对应「需核实」黄条,不夸大)。

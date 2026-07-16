@@ -294,6 +294,16 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
   ) => Promise<{ taskId: string }>;
+  /**
+   * [T-350a] publish.package 端口 —— dispatch 既有 publish.platform_adapt runner(单平台抖音,
+   * platform.adapt 模板已内嵌 cheat-package 发布审核 SOP)。绑定层先过空稿诚实门 + ensure 内容产出
+   * 挂点 outputId(采纳时 createPublicationFromDraft 在其下铸真 Publication),再 createTask。由
+   * composition root 绑。可选:未装配 → 工具报「发布物料能力未接入」(诚实降级)。
+   */
+  dispatchPublishPackagePort?: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 /**
@@ -1009,6 +1019,46 @@ export async function buildChatAssembly(
           ...(effTopic ? { topic: effTopic } : {}),
           ...(angle ? { angle } : {}),
           ...(extraBrief ? { extraBrief } : {}),
+        });
+        return { taskId, projectId: pid, error: null };
+      } catch (err) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    // [T-350a] 发布物料生成 —— 同 dispatchScriptDraft 范式:无项目上下文 / 端口未装配 → 诚实 error;
+    // topic 缺省用工作台选中标题兜底。空稿门 / ensure outputId 在绑定层(dispatchPublishPackagePort)内。
+    dispatchPublishPackage: async ({ projectId, topic }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "发布物料要落进具体项目 —— 请在项目稿面右栏的编导对话里让我生成发布物料。",
+        };
+      }
+      if (!deps.dispatchPublishPackagePort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "发布物料能力当前未接入(服务端未装配发布物料分派) —— 暂时无法生成。",
+        };
+      }
+      const effTopic =
+        (typeof topic === "string" && topic.trim() ? topic.trim() : "") ||
+        selectionTitle ||
+        "";
+      try {
+        const { taskId } = await deps.dispatchPublishPackagePort(ctx, {
+          projectId: pid,
+          ...(effTopic ? { topic: effTopic } : {}),
         });
         return { taskId, projectId: pid, error: null };
       } catch (err) {

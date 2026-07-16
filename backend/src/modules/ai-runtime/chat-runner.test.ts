@@ -488,6 +488,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
       // [T-265] 论点树对话内真生成(创作产出工具,dispatch planning.thesis;排序:'pl' < 'po')。
       "planning.thesis",
       "positioning.generate",
+      // [T-350a] 发布物料生成(创作产出工具,dispatch publish.package;排序:'po' < 'pu' < 's')。
+      "publish.package",
       // [T-240③] review.analyze / review.script 被场景砍掉:选题页无单条作品的复盘/审核语境。
       "script.draft",
       "script.hooks",
@@ -684,7 +686,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(33); // [T-240③] topics 场景集(11 产出[T-265 含 planning.thesis + T-271 cover.generate] + 7 素材 + 15 只读)
+    expect(names.length).toBe(34); // [T-240③] topics 场景集(12 产出[T-265 含 planning.thesis + T-271 cover.generate + T-350a publish.package] + 7 素材 + 15 只读)
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -787,7 +789,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("review.analyze");
       expect(names).toContain("review.script"); // 稿面审核按钮深链落 project
       expect(names).toContain("calibration.diagnose"); // 盲预测按钮深链落 project
-      expect(names.length).toBe(34); // project 全集 35（[T-265] 含 planning.thesis + [T-271] cover.generate）− 阶段感知砍掉的 review.analyze
+      expect(names.length).toBe(35); // project 全集 36（[T-265] 含 planning.thesis + [T-271] cover.generate + [T-350a] publish.package）− 阶段感知砍掉的 review.analyze
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -808,7 +810,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
         deps,
       );
       expect(Object.keys(a.tools)).toContain("review.analyze");
-      expect(Object.keys(a.tools).length).toBe(35);
+      expect(Object.keys(a.tools).length).toBe(36);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -819,13 +821,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
         noReaders,
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
-      expect(Object.keys(b.tools).length).toBe(35);
+      expect(Object.keys(b.tools).length).toBe(36);
     });
 
-    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 35 工具(向后兼容)", async () => {
+    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 36 工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(35);
+      expect(Object.keys(a.tools).length).toBe(36);
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
     });
@@ -840,7 +842,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(34); // 33(topics 场景集，[T-271] 含 cover.generate)+ 补回的 1
+      expect(Object.keys(a.tools).length).toBe(35); // 34(topics 场景集，[T-350a] 含 publish.package)+ 补回的 1
     });
   });
 

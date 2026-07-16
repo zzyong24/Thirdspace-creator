@@ -1300,6 +1300,13 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
   ) => Promise<{ taskId: string }>;
+  // [T-350a] publish.package 端口 —— ensure 内容产出挂点(outputId)+ 读整稿正文(空稿诚实门)
+  // + dispatch 既有 publish.platform_adapt runner(单平台抖音,platform.adapt 模板已内嵌审核 SOP),
+  // 立即返回 taskId。发布物料工具(publish.package)据此触发,前端候选卡轮询 → 采纳物化 Publication。
+  dispatchPublishPackage: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -9140,6 +9147,64 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
         throw new Error("dispatchScriptDraft: 起 script.draft task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
+    // [T-350a] publish.package 端口 —— 稿面「生成发布物料」:复用既有 publish.platform_adapt runner
+    // (platform.adapt 模板已内嵌 cheat-package 发布审核 SOP),**单平台抖音**。
+    //   ① 空稿诚实门:当前整稿为空/过短 → 抛友好错误(同 dispatchScriptReview 口径,不生成空物料);
+    //   ② ensure 内容产出挂点 outputId(采纳时 createPublicationFromDraft 在其下铸真 Publication;
+    //      无产出行 → 抛错,理论上项目建时即建首个 output);
+    //   ③ createTask(taskType publish.platform_adapt,inputData.{outputId,scriptText,platforms:["douyin"],
+    //      topic,projectId})→ live dispatch 分支触发 runPlatformAdapt,立即返回 taskId。
+    dispatchPublishPackage: async (
+      ctx: RequestContext,
+      input: { projectId: string; topic?: string },
+    ) => {
+      const currentScript = await makeReviewSubjectReader().getScript(
+        ctx,
+        input.projectId,
+      );
+      if (currentScript.trim().length < MIN_REVIEWABLE_SCRIPT_CHARS) {
+        throw new Error(
+          "当前项目还没有可用的整稿(稿面为空或太短)—— 先生成整稿并采纳写入稿面,再来生成发布物料,别给空稿打包。",
+        );
+      }
+      const outputIds = await projectsService.listOutputIdsByProject(
+        ctx,
+        input.projectId,
+      );
+      const outputId = outputIds[0];
+      if (!outputId) {
+        throw new Error(
+          "dispatchPublishPackage: 项目还没有内容产出挂点(outputId)—— 无法铸发布物料。",
+        );
+      }
+      const res = await ai.request(
+        ENDPOINTS.createAITask,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "publish.platform_adapt",
+            inputData: {
+              outputId,
+              scriptText: currentScript,
+              // [T-350a] 稿面聚焦单平台抖音(不给模型选平台;多平台走发布中心既有全平台链)。
+              platforms: ["douyin"],
+              projectId: input.projectId,
+              ...(input.topic ? { topic: input.topic } : {}),
+            },
+          },
+        },
+        ctx,
+      );
+      const task = (res as { data?: { id?: unknown } }).data;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error(
+          "dispatchPublishPackage: 起 publish.platform_adapt task 失败(无 taskId)",
+        );
       }
       return { taskId };
     },

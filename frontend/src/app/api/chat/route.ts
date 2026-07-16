@@ -313,6 +313,8 @@ export async function POST(req: Request): Promise<Response> {
         dispatchPlanningThesisPort: runtime.dispatchPlanningThesis,
         // [T-268] script.draft 端口 —— ensure output_script artifact + dispatch 异步整稿(采纳写稿面)。
         dispatchScriptDraftPort: runtime.dispatchScriptDraft,
+        // [T-350a] publish.package 端口 —— 空稿门 + ensure outputId + dispatch 单平台抖音发布物料(采纳物化 Publication)。
+        dispatchPublishPackagePort: runtime.dispatchPublishPackage,
       },
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。

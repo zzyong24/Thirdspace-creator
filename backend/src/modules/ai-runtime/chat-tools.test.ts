@@ -39,6 +39,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
   dispatchPlanningThesis: ReturnType<typeof vi.fn>;
+  dispatchPublishPackage: ReturnType<typeof vi.fn>;
   dispatchGenerateCover: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
@@ -302,6 +303,11 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     projectId: "proj-1",
     error: null as string | null,
   }));
+  const dispatchPublishPackage = vi.fn(async () => ({
+    taskId: "task-pkg-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const gatherMaterials = vi.fn(async () => ({
     grounding: "model_memory" as const,
     items: [
@@ -430,6 +436,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     enrichTopic,
     generateHooks,
     dispatchScriptDraft,
+    dispatchPublishPackage,
     gatherMaterials,
     captureScreenshot,
     readWeb,
@@ -466,6 +473,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     deps,
     generateTopics,
     enrichTopic,
+    dispatchPublishPackage,
     captureScreenshot,
     readWeb,
     readLocal,
@@ -959,6 +967,56 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
     expect(result.error).toContain("未接入");
+  });
+});
+
+// [T-350a] 发布物料生成对话内 dispatch —— 稿面「生成发布物料」(execute → dispatchPublishPackage)。
+describe("[T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch)", () => {
+  const WHITELIST = ["publish.package"] as const;
+
+  it("可挂 + 在 ALL_CHAT_TOOL_NAMES 单一真值里(否则 functionKey=publish.package 深链死链)", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    expect(Object.keys(tools)).toEqual(["publish.package"]);
+    expect(ALL_CHAT_TOOL_NAMES).toContain("publish.package");
+  });
+
+  it("execute 调注入的 dispatchPublishPackage,topic trim 透传,返回 taskId + projectId(kind=publish.package)", async () => {
+    const { deps, dispatchPublishPackage } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["publish.package"]!, {
+      topic: "  AI 原生浏览器  ",
+    })) as {
+      kind: string;
+      taskId: string | null;
+      projectId: string | null;
+      error: string | null;
+    };
+    // 不直接生成(异步 dispatch,不阻塞回合);projectId 由 chat-runner 端口从 chatContext 兜底,tool 只传 topic。
+    expect(dispatchPublishPackage).toHaveBeenCalledWith({ topic: "AI 原生浏览器" });
+    expect(result.kind).toBe("publish.package");
+    expect(result.taskId).toBe("task-pkg-1");
+    expect(result.projectId).toBe("proj-1");
+    expect(result.error).toBeNull();
+  });
+
+  it("空 topic → 缺省不传(由端口从定位/项目兜底)", async () => {
+    const { deps, dispatchPublishPackage } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["publish.package"]!, { topic: "   " });
+    expect(dispatchPublishPackage).toHaveBeenCalledWith({});
+  });
+
+  it("端口抛错 → execute 接住转 error 非 null(卡渲诚实错误态,不裸抛)", async () => {
+    const { deps, dispatchPublishPackage } = makeDeps();
+    dispatchPublishPackage.mockRejectedValueOnce(new Error("空稿门:先写整稿"));
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["publish.package"]!, {})) as {
+      taskId: string | null;
+      error: string | null;
+    };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toBe("空稿门:先写整稿");
   });
 });
 
