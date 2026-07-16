@@ -30,7 +30,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, type LucideIcon } from "lucide-react";
+import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, Loader2, ExternalLink, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -51,7 +51,10 @@ import type {
   CandidateResource,
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
-import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
+import type {
+  BenchmarkSourceResource,
+  BenchmarkWorkListItemResource,
+} from "@creatoros/backend/modules/benchmark";
 // [T-279] 今日新选题条带卡点击的跨 island 选中信号(条带在本 island 外发,这里订阅)。
 import { subscribeTopicFocus } from "./topic-focus-signal";
 
@@ -1208,6 +1211,237 @@ export function BenchmarkSourcesPanel({
         <BenchmarkCollectNowButton disabled={!sources.some((s) => s.enabled)} />
       </div>
       <BenchmarkSourceList sources={sources} />
+    </div>
+  );
+}
+
+// ── 对标作品面板 (T-349b · 单条按需逐字稿) ──────────────────────────────────────────
+// 列采集到的对标作品(benchmark.works.list)+ 每条一个「抓逐字稿」按钮
+// (benchmark.works.transcribe，composition-only op → persistence-client 拦截)。抓取是分钟级
+// 后台 ASR:点击 → 按钮进 loading → 按返回 status 更新该行(done 存逐字稿 / skipped 图集无口播 /
+// failed 可重试 / reused 已有复用)。**非全局「全部抓」——每条独立按需**,诚实态不装成功。
+// 视觉镜像 BenchmarkSourceRow/List(不自创样式,用户要求照现风格)。
+type WorkRowState = {
+  readonly status: string | null;
+  readonly transcript: string | null;
+};
+
+/** 单条对标作品(标题 + 爆款数 + 爆款徽标 + 原视频链接 + 抓逐字稿/查看/重试/图集态)。 */
+function BenchmarkWorkRow({
+  work,
+}: {
+  readonly work: BenchmarkWorkListItemResource;
+}) {
+  // 逐字稿状态由本行局部 state 承接(seed 自 props),抓取成功按返回值就地更新——不 router.refresh
+  // 避免清掉展开态/loading;整页服务端读只在下次刷新时对齐。
+  const [state, setState] = React.useState<WorkRowState>({
+    status: work.transcriptStatus,
+    transcript: work.transcript,
+  });
+  const [running, setRunning] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
+  const [error, setError] = React.useState(false);
+
+  // 原视频链接(新窗口打开;抖音作品页,同拆解候选参考链接约定)。
+  const videoUrl = `https://www.douyin.com/video/${work.awemeId}`;
+  const hasTranscript =
+    !!state.transcript &&
+    (state.status === "done" || state.status === "reused");
+
+  function transcribe() {
+    if (running) return;
+    setRunning(true);
+    setError(false);
+    setState((s) => ({ ...s, status: "pending" }));
+    void (async () => {
+      try {
+        const res = (await client.transcribeBenchmarkWork({
+          params: { workId: work.id },
+          query: undefined,
+          body: undefined,
+        })) as { status: string; transcript: string | null };
+        setState({ status: res.status, transcript: res.transcript });
+        // 抓到正文(done/reused)→ 自动展开让用户看到结果。
+        if (res.transcript && (res.status === "done" || res.status === "reused")) {
+          setExpanded(true);
+        }
+      } catch {
+        // 抓取失败(拦截层 failed 已落库并重抛)→ 诚实标失败,可重试。
+        setError(true);
+        setState((s) => ({ ...s, status: "failed" }));
+      } finally {
+        setRunning(false);
+      }
+    })();
+  }
+
+  function renderAction() {
+    if (running || state.status === "pending") {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled
+          className="h-7 gap-1.5 px-2 text-xs"
+        >
+          <Loader2 className="size-3.5 animate-spin" />
+          抓取中…
+        </Button>
+      );
+    }
+    if (hasTranscript) {
+      return (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          data-testid="benchmark-work-view-transcript"
+          className="h-7 gap-1.5 px-2 text-xs"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          <FileText className="size-3.5" />
+          {expanded ? "收起逐字稿" : "查看逐字稿"}
+        </Button>
+      );
+    }
+    if (state.status === "skipped") {
+      // 图集/无口播 → 诚实灰字,不给可点按钮(重抓也拿不到口播)。
+      return (
+        <span
+          data-testid="benchmark-work-skipped"
+          className="text-[11px] text-muted-foreground"
+        >
+          无口播/图集
+        </span>
+      );
+    }
+    if (state.status === "failed") {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-testid="benchmark-work-retry"
+          className="h-7 gap-1.5 px-2 text-xs"
+          onClick={transcribe}
+        >
+          <RotateCcw className="size-3.5" />
+          重试
+        </Button>
+      );
+    }
+    // null / 未抓 → 抓逐字稿。
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        data-testid="benchmark-work-transcribe"
+        className="h-7 gap-1.5 px-2 text-xs"
+        onClick={transcribe}
+      >
+        <FileText className="size-3.5" />
+        抓逐字稿
+      </Button>
+    );
+  }
+
+  return (
+    <li
+      data-testid="benchmark-work-row"
+      data-work-id={work.id}
+      data-status={state.status ?? "none"}
+      className="flex flex-col gap-2 rounded-control border border-border bg-surface px-3 py-2"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-medium text-foreground">
+              {work.description || work.awemeId}
+            </span>
+            {work.isViral ? (
+              <Badge
+                variant="outline"
+                className="shrink-0 border-warning/50 text-[10px] text-warning"
+              >
+                爆款
+              </Badge>
+            ) : null}
+          </span>
+          <span className="flex items-center gap-2 text-[11px] text-text-subtle">
+            <Badge variant="secondary" className="shrink-0 text-[10px] tabular-nums">
+              {work.diggCount} 赞
+            </Badge>
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-0.5 text-brand hover:underline"
+            >
+              原视频
+              <ExternalLink className="size-3" />
+            </a>
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">{renderAction()}</div>
+      </div>
+      {expanded && state.transcript ? (
+        <div
+          data-testid="benchmark-work-transcript"
+          className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-control bg-surface-subtle/60 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground"
+        >
+          {state.transcript}
+        </div>
+      ) : null}
+      {error ? (
+        <p
+          data-testid="benchmark-work-error"
+          className="text-[11px] text-warning"
+        >
+          抓取失败,请稍后重试(不影响其他作品)。
+        </p>
+      ) : null}
+    </li>
+  );
+}
+
+function BenchmarkWorksList({
+  works,
+}: {
+  readonly works: BenchmarkWorkListItemResource[];
+}) {
+  if (works.length === 0) {
+    return (
+      <p
+        data-testid="benchmark-works-empty"
+        className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
+      >
+        还没有对标作品。先在上方「对标博主」登记 sec_uid 并采集，抓到的公开作品会逐条列在这里，可单独抓逐字稿。
+      </p>
+    );
+  }
+  return (
+    <ul data-testid="benchmark-works-list" className="flex flex-col gap-2">
+      {works.map((w) => (
+        <BenchmarkWorkRow key={w.id} work={w} />
+      ))}
+    </ul>
+  );
+}
+
+// [T-349b] 对标作品面板 —— 挂进「信号源」弹窗「对标博主」tab(BenchmarkSourcesPanel 下方)。
+export function BenchmarkWorksPanel({
+  works,
+}: {
+  readonly works: BenchmarkWorkListItemResource[];
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        采集到的对标作品。每条可单独抓口播逐字稿——图集/无口播会诚实标注，失败可重试。
+      </p>
+      <BenchmarkWorksList works={works} />
     </div>
   );
 }

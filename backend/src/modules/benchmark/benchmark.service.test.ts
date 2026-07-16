@@ -182,6 +182,73 @@ describe("benchmark service", () => {
     });
   });
 
+  // ── [T-349b] 列对标作品:账号隔离 + 分页 + 投影含 transcript 两列 ──
+  describe("列对标作品 listWorks (T-349b)", () => {
+    const noAcct: RequestContext = { userId: "user-a", requestId: "rn", source: "user" };
+
+    async function seedWorks(ctx: RequestContext, count: number): Promise<void> {
+      const s = await svc.createSource(ctx, { externalAccountId: "sec-lw" });
+      for (let i = 0; i < count; i++) {
+        await svc.recordWork(ctx, {
+          sourceId: s.id,
+          sourceExternalAccountId: "sec-lw",
+          awemeId: `aw-${i}`,
+          diggCount: 1000 + i,
+          isViral: i % 2 === 0,
+          viralMultiple: 2.5,
+          // capturedAt 递增 → 降序时最后一条最先(断言顺序用)。
+          capturedAt: `2026-07-11T00:0${i}:00.000Z`,
+        });
+      }
+    }
+
+    it("列出本号对标作品(降序 capturedAt),投影含 transcript/transcriptStatus 两列", async () => {
+      await seedWorks(ctxA, 2);
+      const { rows, total } = await svc.listWorks(ctxA, { limit: 100, offset: 0 });
+      expect(total).toBe(2);
+      // capturedAt 降序 → aw-1(00:01)在 aw-0(00:00)前。
+      expect(rows[0]!.awemeId).toBe("aw-1");
+      expect(rows[1]!.awemeId).toBe("aw-0");
+      // 新作品逐字稿两列为 null(未抓);投影字段齐全。
+      expect(rows[0]!.transcript).toBeNull();
+      expect(rows[0]!.transcriptStatus).toBeNull();
+      expect(rows[0]!.diggCount).toBe(1001);
+      expect(rows[0]!.isViral).toBe(false); // i=1
+      expect(rows[1]!.isViral).toBe(true); // i=0
+    });
+
+    it("投影反映已落逐字稿状态(done + 正文)", async () => {
+      await seedWorks(ctxA, 1);
+      const { rows } = await svc.listWorks(ctxA, { limit: 100, offset: 0 });
+      await svc.saveWorkTranscript(ctxA, rows[0]!.id, "逐字稿正文", "done");
+      const after = await svc.listWorks(ctxA, { limit: 100, offset: 0 });
+      expect(after.rows[0]!.transcript).toBe("逐字稿正文");
+      expect(after.rows[0]!.transcriptStatus).toBe("done");
+    });
+
+    it("分页:limit/offset 生效,total 为全量", async () => {
+      await seedWorks(ctxA, 3);
+      const page1 = await svc.listWorks(ctxA, { limit: 2, offset: 0 });
+      expect(page1.total).toBe(3);
+      expect(page1.rows).toHaveLength(2);
+      const page2 = await svc.listWorks(ctxA, { limit: 2, offset: 2 });
+      expect(page2.rows).toHaveLength(1);
+    });
+
+    it("账号隔离:ctxA 的作品 ctxB 看不到", async () => {
+      await seedWorks(ctxA, 2);
+      const { rows, total } = await svc.listWorks(ctxB, { limit: 100, offset: 0 });
+      expect(total).toBe(0);
+      expect(rows).toHaveLength(0);
+    });
+
+    it("未选号 → AccountRequiredError(引导态禁读)", async () => {
+      await expect(
+        svc.listWorks(noAcct, { limit: 100, offset: 0 }),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+    });
+  });
+
   // ── [T-349] 单条按需逐字稿:getWork 账号隔离 + saveWorkTranscript 落状态 ──
   describe("单条按需逐字稿 (T-349)", () => {
     const noAcct: RequestContext = { userId: "user-a", requestId: "rn", source: "user" };

@@ -7,7 +7,9 @@ import {
 } from "./benchmark.repository";
 import {
   toBenchmarkSourceDto,
+  toBenchmarkWorkListItemDto,
   type BenchmarkSourceResource,
+  type BenchmarkWorkListItemResource,
 } from "./benchmark.schema";
 import { ValidationError, requireAccountId } from "./benchmark.errors";
 
@@ -100,6 +102,12 @@ export interface BenchmarkService {
     ctx: RequestContext,
     sourceId: string,
   ): Promise<BenchmarkSourceResource>;
+  /** [T-349b] 列该 ctx（含号）对标作品分页投影（信号源弹窗「对标作品」面板 + 单条抓逐字稿入口）。
+   *  经 requireAccountId（未选号 → AccountRequiredError，跨号不泄露）。 */
+  listWorks(
+    ctx: RequestContext,
+    query: { limit: number; offset: number },
+  ): Promise<{ rows: BenchmarkWorkListItemResource[]; total: number }>;
   /** 采集用：列该 ctx（含号）enabled 的对标源（投影，采集器只需身份/主页）。 */
   listEnabledSources(ctx: RequestContext): Promise<EnabledSource[]>;
   /** 采集用：幂等落库一条对标作品；返回是否新写入（诊断计数用）。 */
@@ -185,6 +193,14 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     async removeSource(ctx, sourceId) {
       const row = await repoFor(ctx, "benchmark.removeSource").removeSource(sourceId);
       return toBenchmarkSourceDto(row);
+    },
+
+    async listWorks(ctx, query) {
+      const { rows, total } = await repoFor(ctx, "benchmark.listWorks").listWorks({
+        limit: query.limit,
+        offset: query.offset,
+      });
+      return { rows: rows.map(toBenchmarkWorkListItemDto), total };
     },
 
     async listEnabledSources(ctx) {

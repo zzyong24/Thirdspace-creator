@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import { id, paginationQuery } from "../primitives";
-import { benchmarkSourceResource } from "../resources/benchmark";
+import {
+  benchmarkSourceResource,
+  benchmarkWorkListItemResource,
+} from "../resources/benchmark";
 
 const sourceParams = z.object({ sourceId: id });
 
@@ -49,6 +52,18 @@ export const benchmarkOperations = {
     params: sourceParams,
     response: benchmarkSourceResource,
     fr: ["FR-BENCHMARK-SOURCE-REMOVE"],
+  }),
+  // [T-349b] 列对标作品(信号源弹窗「对标作品」面板逐条渲染 + 单条抓逐字稿入口)。真读 op:
+  //   module benchmark.transport 里 service.listWorks(叠号门,requireAccountId)真处理,非
+  //   composition-only(不同于下方 transcribe)。分页范式同 benchmark.sources.list。
+  listBenchmarkWorks: defineEndpoint({
+    id: "benchmark.works.list",
+    method: "GET",
+    path: "/benchmark/works",
+    query: paginationQuery,
+    response: benchmarkWorkListItemResource,
+    isList: true,
+    fr: ["FR-BENCHMARK-WORK-LIST"],
   }),
   // [T-349] 对标作品单条按需逐字稿抓取。composition-only op（module transport 不认它,由
   //   persistence-client 拦截 —— 触发要 transcribe 原语 + 号登录态,在 composition 层才可见,

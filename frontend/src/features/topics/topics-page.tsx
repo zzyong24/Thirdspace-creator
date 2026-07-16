@@ -25,7 +25,10 @@ import type {
   CandidateResource,
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
-import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
+import type {
+  BenchmarkSourceResource,
+  BenchmarkWorkListItemResource,
+} from "@creatoros/backend/modules/benchmark";
 import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
 // [T-235c] 指定收藏夹登记(信号源弹窗第 4 tab)。
 import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
@@ -58,6 +61,8 @@ export type TopicsReadClient = Pick<
   // [T-248 批C] pendingTopicReview 已随契约 op ai.tasks.pending_topic_review 删除(T-060 退役残留)。
   // [T-216] 对标源登记面板的服务端读源(选题/对标强化 §2.1)。
   | "listBenchmarkSources"
+  // [T-349b] 对标作品面板读源(信号源弹窗「对标博主」tab 下方「对标作品」区)。
+  | "listBenchmarkWorks"
   // [T-235e] 信号源弹窗 tab1(网页信源)读源。
   | "listTrendSources"
   // [T-235c] 信号源弹窗 tab4(指定收藏夹)读源。
@@ -87,6 +92,8 @@ export interface TopicsViewModel {
   readonly pendingReview: null;
   /** [T-216] 已登记的对标源(对标源登记面板)。可选:测试/无源账号缺省空列表。 */
   readonly benchmarkSources?: BenchmarkSourceResource[];
+  /** [T-349b] 采集到的对标作品(信号源弹窗「对标作品」区)。可选:缺省空列表。 */
+  readonly benchmarkWorks?: BenchmarkWorkListItemResource[];
   /** [T-235e] 已登记的网页信源(信号源弹窗 tab1)。可选:缺省空列表。 */
   readonly trendSources?: TrendSourceResource[];
   /** [T-235c] 已登记的指定收藏夹(信号源弹窗 tab4)。可选:缺省空列表。 */
@@ -189,6 +196,18 @@ async function loadViewModel(
     query: { page: 1, pageSize: 100 },
     body: undefined,
   })) as unknown as BenchmarkSourceResource[];
+  // [T-349b] 对标作品列表(信号源弹窗「对标作品」区)—— 独立 try/catch 诚实降级(读挂 → 空列表,
+  //   不拖垮整页)。契约 list envelope → data 数组。
+  let benchmarkWorks: BenchmarkWorkListItemResource[] = [];
+  try {
+    benchmarkWorks = (await client.listBenchmarkWorks({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as BenchmarkWorkListItemResource[];
+  } catch {
+    benchmarkWorks = [];
+  }
   // [T-235e] 信号源 / 健康条 / 黑马关键词 —— 每路独立 try/catch:任一读挂了只降级该环节
   // (显「—」/ 空列表),不拖垮整页(诚实降级,不编数)。
   let trendSources: TrendSourceResource[] = [];
@@ -262,6 +281,7 @@ async function loadViewModel(
     poolCandidates,
     pendingReview: null,
     benchmarkSources,
+    benchmarkWorks,
     trendSources,
     favoritesFolders,
     supplyHealth,
@@ -284,6 +304,7 @@ export function TopicsView({
     poolCandidates,
     pendingReview,
     benchmarkSources = [],
+    benchmarkWorks = [],
     trendSources = [],
     favoritesFolders = [],
     supplyHealth,
@@ -310,6 +331,7 @@ export function TopicsView({
             替换原「对标源」按钮 —— 心智=「我的选题信号源」。 */}
         <SignalSourcesButton
           benchmarkSources={benchmarkSources}
+          benchmarkWorks={benchmarkWorks}
           trendSources={trendSources}
           favoritesFolders={favoritesFolders}
           darkhorseKeywords={darkhorseKeywords}

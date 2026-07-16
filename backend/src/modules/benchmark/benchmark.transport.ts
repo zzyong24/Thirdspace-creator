@@ -14,6 +14,8 @@ export const BENCHMARK_OP_IDS = [
   "benchmark.sources.create",
   "benchmark.sources.toggle",
   "benchmark.sources.remove",
+  // [T-349b] 真读 op:列对标作品(module transport 真处理,调 service.listWorks;非 composition-only)。
+  "benchmark.works.list",
   // [T-349] composition-only op：module transport 不认它(default → UnsupportedOperationError),
   //   persistence-client 的 benchmarkWithTranscribe wrapper 在到达 module transport 前拦截。
   //   列入 OP_IDS 让 PERSISTED_OPS/dispatch 把它路由到 benchmark transport(同 scheduledJobs.runNow
@@ -40,6 +42,17 @@ export function createBenchmarkTransport(
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 100;
           const { rows, total } = await service.listSources(ctx, { page, pageSize });
+          return { data: rows, meta: { requestId, page, pageSize, total } };
+        }
+        case "benchmark.works.list": {
+          // [T-349b] 分页范式同 benchmark.sources.list;service 收 { limit, offset }(叠号门内做)。
+          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          const page = q.page ?? 1;
+          const pageSize = q.pageSize ?? 100;
+          const { rows, total } = await service.listWorks(ctx, {
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
           return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "benchmark.sources.create": {

@@ -49,3 +49,20 @@ export const benchmarkWorkResource = z.object({
   updatedAt: iso8601,
 });
 export type BenchmarkWorkResource = z.infer<typeof benchmarkWorkResource>;
+
+// [T-349b] 对标作品列表投影 —— 信号源弹窗「对标作品」面板逐条渲染 + 单条抓逐字稿入口用。
+// 只暴露列表卡渲染 + 逐字稿两态(有/无)所需字段(benchmark.works.list op 的 response item);
+// 完整作品行(含统计/黑马/拆解态)仍走 benchmarkWorkResource,面板不需要那么宽。
+export const benchmarkWorkListItemResource = z.object({
+  id,
+  awemeId: z.string(),
+  platform: z.string(),
+  description: z.string(),
+  diggCount: z.number().int(),
+  isViral: z.boolean(),
+  transcript: z.string().nullable(), // NULL=未抓/图集无口播
+  transcriptStatus: z.string().nullable(), // null(未抓)/pending/done/failed/skipped
+});
+export type BenchmarkWorkListItemResource = z.infer<
+  typeof benchmarkWorkListItemResource
+>;

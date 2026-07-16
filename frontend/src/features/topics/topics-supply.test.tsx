@@ -36,6 +36,11 @@ const mockClient = {
   createBenchmarkSource: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   toggleBenchmarkSource: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   removeBenchmarkSource: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
+  // [T-349b] 对标作品单条抓逐字稿。
+  transcribeBenchmarkWork: vi.fn(
+    (_i: unknown): Promise<unknown> =>
+      Promise.resolve({ status: "done", transcript: "抓到的逐字稿正文" }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -52,6 +57,7 @@ vi.mock("@/lib/contract-client", () => ({
     createBenchmarkSource: (i: unknown) => mockClient.createBenchmarkSource(i),
     toggleBenchmarkSource: (i: unknown) => mockClient.toggleBenchmarkSource(i),
     removeBenchmarkSource: (i: unknown) => mockClient.removeBenchmarkSource(i),
+    transcribeBenchmarkWork: (i: unknown) => mockClient.transcribeBenchmarkWork(i),
   },
 }));
 
@@ -67,6 +73,7 @@ import { CandidateCard } from "./topics-interactive-region";
 import type { CandidateResource } from "@creatoros/backend/modules/candidate";
 import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
 import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
+import type { BenchmarkWorkListItemResource } from "@creatoros/backend/modules/benchmark";
 
 // 固定「今天」:本地 2026-07-11 零点(dayStartIso 由服务端算好传入,测试显式构造)。
 const DAY_START = new Date(2026, 6, 11, 0, 0, 0, 0);
@@ -134,6 +141,23 @@ function trendSource(
     enabled: true,
     createdAt: TODAY_ISO,
     updatedAt: TODAY_ISO,
+    ...over,
+  };
+}
+
+// [T-349b] 对标作品 fixture(信号源弹窗「对标作品」区)。
+function benchmarkWork(
+  over: Partial<BenchmarkWorkListItemResource> = {},
+): BenchmarkWorkListItemResource {
+  return {
+    id: "bmwork-1",
+    awemeId: "7300000000000000000",
+    platform: "douyin",
+    description: "对标作品标题",
+    diggCount: 12345,
+    isViral: true,
+    transcript: null,
+    transcriptStatus: null,
     ...over,
   };
 }
@@ -450,6 +474,145 @@ describe("[T-235e] 信号源弹窗", () => {
     await user.click(screen.getByTestId("signal-sources-trigger"));
     expect(screen.getByTestId("darkhorse-keywords-empty")).toHaveTextContent(
       "关键词跟随定位",
+    );
+  });
+});
+
+// ── [T-349b] 对标作品面板 + 单条抓逐字稿 ──────────────────────────────────────────────
+describe("[T-349b] 对标作品面板", () => {
+  it("对标博主 tab 下方渲染对标作品列表 + 四态(none/done/failed/skipped)", async () => {
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        benchmarkWorks={[
+          benchmarkWork({ id: "w-none", description: "未抓作品" }),
+          benchmarkWork({
+            id: "w-done",
+            description: "已抓作品",
+            transcript: "已有逐字稿",
+            transcriptStatus: "done",
+          }),
+          benchmarkWork({
+            id: "w-failed",
+            description: "失败作品",
+            transcriptStatus: "failed",
+          }),
+          benchmarkWork({
+            id: "w-skipped",
+            description: "图集作品",
+            isViral: false,
+            transcriptStatus: "skipped",
+          }),
+        ]}
+        defaultTab="benchmark"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    expect(screen.getByTestId("benchmark-works-heading")).toBeInTheDocument();
+    const rows = screen.getAllByTestId("benchmark-work-row");
+    expect(rows).toHaveLength(4);
+    // 未抓 → 抓逐字稿按钮;已抓 → 查看逐字稿;失败 → 重试;图集 → 无口播/图集灰字。
+    expect(screen.getByTestId("benchmark-work-transcribe")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("benchmark-work-view-transcript"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("benchmark-work-retry")).toBeInTheDocument();
+    expect(screen.getByTestId("benchmark-work-skipped")).toHaveTextContent(
+      "无口播/图集",
+    );
+    // 原视频链接 → 抖音作品页新窗口。
+    const link = within(rows[0]!).getByText("原视频").closest("a");
+    expect(link).toHaveAttribute(
+      "href",
+      "https://www.douyin.com/video/7300000000000000000",
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("点抓逐字稿 → client.transcribeBenchmarkWork(params.workId)→ 按返回 done 展示逐字稿", async () => {
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        benchmarkWorks={[benchmarkWork({ id: "w-1" })]}
+        defaultTab="benchmark"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    // 抓取前无逐字稿正文。
+    expect(screen.queryByTestId("benchmark-work-transcript")).toBeNull();
+    await user.click(screen.getByTestId("benchmark-work-transcribe"));
+    await waitFor(() =>
+      expect(mockClient.transcribeBenchmarkWork).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.transcribeBenchmarkWork.mock.calls[0]![0] as {
+      params: { workId: string };
+    };
+    expect(arg.params.workId).toBe("w-1");
+    // 返回 done + transcript → 该行就地更新为可查看,自动展开显示正文。
+    await waitFor(() =>
+      expect(screen.getByTestId("benchmark-work-transcript")).toHaveTextContent(
+        "抓到的逐字稿正文",
+      ),
+    );
+  });
+
+  it("skipped 返回(图集/无口播)→ 诚实标注,不装成功", async () => {
+    mockClient.transcribeBenchmarkWork.mockResolvedValueOnce({
+      status: "skipped",
+      transcript: null,
+    });
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        benchmarkWorks={[benchmarkWork({ id: "w-skip" })]}
+        defaultTab="benchmark"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    await user.click(screen.getByTestId("benchmark-work-transcribe"));
+    await waitFor(() =>
+      expect(screen.getByTestId("benchmark-work-skipped")).toHaveTextContent(
+        "无口播/图集",
+      ),
+    );
+    expect(screen.queryByTestId("benchmark-work-transcript")).toBeNull();
+  });
+
+  it("抓取抛错(failed)→ 诚实失败提示 + 重试可再抓", async () => {
+    mockClient.transcribeBenchmarkWork.mockRejectedValueOnce(
+      new Error("transcribe failed"),
+    );
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        benchmarkWorks={[benchmarkWork({ id: "w-fail" })]}
+        defaultTab="benchmark"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    await user.click(screen.getByTestId("benchmark-work-transcribe"));
+    await waitFor(() =>
+      expect(screen.getByTestId("benchmark-work-error")).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId("benchmark-work-retry")).toBeInTheDocument();
+  });
+
+  it("空态诚实:无对标作品 → 引导去对标博主登记采集", async () => {
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        benchmarkWorks={[]}
+        defaultTab="benchmark"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    expect(screen.getByTestId("benchmark-works-empty")).toHaveTextContent(
+      "还没有对标作品",
     );
   });
 });

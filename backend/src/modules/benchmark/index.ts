@@ -31,10 +31,14 @@ export { OwnershipError, ValidationError } from "./benchmark.errors";
 export {
   benchmarkSourceResource,
   benchmarkWorkResource,
+  // [T-349b] 对标作品列表投影(信号源弹窗「对标作品」面板)。
+  benchmarkWorkListItemResource,
   toBenchmarkSourceDto,
   toBenchmarkWorkDto,
+  toBenchmarkWorkListItemDto,
   type BenchmarkSourceResource,
   type BenchmarkWorkResource,
+  type BenchmarkWorkListItemResource,
 } from "./benchmark.schema";
 
 // [T-212b] 爆款判定纯函数（统计学，可单测）。

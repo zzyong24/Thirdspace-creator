@@ -49,7 +49,10 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { CandidateResource } from "@creatoros/backend/modules/candidate";
-import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
+import type {
+  BenchmarkSourceResource,
+  BenchmarkWorkListItemResource,
+} from "@creatoros/backend/modules/benchmark";
 import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
 // [T-235c] 指定收藏夹登记(信号源弹窗第 4 tab)。
 import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
@@ -58,6 +61,8 @@ import {
   useMutation,
   FieldRow,
   BenchmarkSourcesPanel,
+  // [T-349b] 对标作品面板(挂进「对标博主」tab,BenchmarkSourcesPanel 下方)。
+  BenchmarkWorksPanel,
 } from "./topics-interactive-region";
 // [T-248B②] 受众信号入口(独立按钮+弹窗,audienceSignals.list / linkToCandidate 接线)。
 import { AudienceSignalsButton } from "./topics-audience-signals";
@@ -724,12 +729,15 @@ function DarkhorseKeywordsTab({
 // ── ③ 统一「信号源」按钮 + 弹窗三 tab(替换原「对标源」按钮)────────────────────────────
 export function SignalSourcesButton({
   benchmarkSources,
+  benchmarkWorks = [],
   trendSources = [],
   favoritesFolders = [],
   darkhorseKeywords = [],
   defaultTab = "web",
 }: {
   readonly benchmarkSources: BenchmarkSourceResource[];
+  /** [T-349b] 采集到的对标作品(「对标博主」tab 下方「对标作品」区,单条抓逐字稿)。缺省空列表。 */
+  readonly benchmarkWorks?: BenchmarkWorkListItemResource[];
   readonly trendSources?: TrendSourceResource[];
   /** [T-235c] 已登记的指定收藏夹(第 4 tab)。可选:缺省空列表。 */
   readonly favoritesFolders?: FavoritesFolderResource[];
@@ -810,7 +818,19 @@ export function SignalSourcesButton({
               className="min-h-0 flex-1 overflow-y-auto"
             >
               {/* [T-216/T-222] 对标源登记 + 立即采集整体迁入 tab(组件原样复用,行为不变)。 */}
-              <BenchmarkSourcesPanel sources={benchmarkSources} />
+              <div className="flex flex-col gap-4">
+                <BenchmarkSourcesPanel sources={benchmarkSources} />
+                {/* [T-349b] 对标作品区:采集到的作品逐条列出,每条可单独抓逐字稿。 */}
+                <div className="border-t border-border pt-4">
+                  <h4
+                    data-testid="benchmark-works-heading"
+                    className="mb-2 text-xs font-semibold text-foreground"
+                  >
+                    对标作品
+                  </h4>
+                  <BenchmarkWorksPanel works={benchmarkWorks} />
+                </div>
+              </div>
             </TabsContent>
             <TabsContent
               value="darkhorse"

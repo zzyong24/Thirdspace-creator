@@ -200,6 +200,9 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/benchmark/sources"],
   ["POST", "/benchmark/sources/:sourceId/toggle"],
   ["POST", "/benchmark/sources/:sourceId/remove"],
+  // [T-349b] 列对标作品(信号源弹窗「对标作品」面板);[T-349] 单条按需逐字稿抓取
+  ["GET", "/benchmark/works"],
+  ["POST", "/benchmark/works/:workId/transcribe"],
   // [T-235b] 热点信源 CRUD(热点多源证据,SPEC 2026-07-11 daily-topic-autopilot §2.2)
   ["GET", "/trend/sources"],
   ["POST", "/trend/sources"],

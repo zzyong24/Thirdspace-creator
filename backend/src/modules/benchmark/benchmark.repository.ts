@@ -66,6 +66,12 @@ export interface BenchmarkRepository {
   removeSource(sourceId: string): Promise<BenchmarkSourceRow>;
   /** 幂等 upsert 对标作品（同 (user, account, platform, aweme_id) 冲突 → 更新统计/爆款/时间）。返回 inserted 标志。 */
   upsertWork(input: UpsertWorkInput): Promise<{ row: BenchmarkWorkRow; inserted: boolean }>;
+  /** [T-349b] 列该号(deps.accountId,strict)对标作品分页(按 capturedAt 降序,最新采集在前)。
+   *  照 listSources 分页范式返回 { rows, total }(total 供 list envelope meta)。 */
+  listWorks(query: {
+    limit: number;
+    offset: number;
+  }): Promise<{ rows: BenchmarkWorkRow[]; total: number }>;
   /** [T-212c] 采集用：列该号(deps.accountId,strict)**待拆的爆款作品**（is_viral=true AND
    *  teardown_status='pending'），按爆款倍数降序（越突出越先拆），上限 limit。命中
    *  ix_benchmark_works_user_viral (user_id, is_viral, teardown_status) 索引。 */
@@ -268,6 +274,26 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         })
         .returning();
       return { row: rows[0]!, inserted: !wasExisting };
+    },
+
+    async listWorks({ limit, offset }) {
+      // [T-349b] strict:无条件叠号门(无「无号 → 全量」退化,同 listSources)。
+      const where = and(
+        eq(benchmarkWorks.userId, deps.userId),
+        eq(benchmarkWorks.accountId, deps.accountId),
+      );
+      const rows = await db
+        .select()
+        .from(benchmarkWorks)
+        .where(where)
+        .orderBy(desc(benchmarkWorks.capturedAt))
+        .limit(limit)
+        .offset(offset);
+      const all = await db
+        .select({ id: benchmarkWorks.id })
+        .from(benchmarkWorks)
+        .where(where);
+      return { rows, total: all.length };
     },
 
     async listPendingViral(limit) {

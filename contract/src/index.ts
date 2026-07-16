@@ -87,6 +87,9 @@ export {
   type BenchmarkSourceResource,
   benchmarkWorkResource,
   type BenchmarkWorkResource,
+  // [T-349b] 对标作品列表投影(信号源弹窗「对标作品」面板)。
+  benchmarkWorkListItemResource,
+  type BenchmarkWorkListItemResource,
 } from "./resources/benchmark";
 // [T-235b] 热点信源(热点多源证据)。
 export {
