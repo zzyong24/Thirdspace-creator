@@ -336,74 +336,32 @@ describe("AnalyticsReviewPage analytics.projects.get-backed ViewModel", () => {
     ).toHaveLength(12);
   });
 
-  it("removes the 查看全部 decorative button; keeps top-published cards inert (decorative)", () => {
+  it("[T-356②] 热门作品发布列表整区下架(单项目复盘页不挂账号级全作品列表)", () => {
     const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
-    // [T-116b] 纯装饰「查看全部」按钮已删除。
     expect(
-      container.querySelector('[data-slot="top-published-view-all"]'),
+      container.querySelector('[data-slot="top-published-section"]'),
     ).toBeNull();
-
-    const cards = container.querySelectorAll<HTMLLIElement>(
-      '[data-slot="top-published-card"]',
-    );
-    expect(cards.length).toBeGreaterThan(0);
-    cards.forEach((card) => {
-      expect(card.getAttribute("data-inert")).toBe("decorative");
-      expect(card.onclick).toBeNull();
-    });
+    expect(
+      container.querySelectorAll('[data-slot="top-published-card"]'),
+    ).toHaveLength(0);
   });
 });
 
-// [T-116c] AI 分析卡:真本期渲染 + 诚实标题 + 诚实空态 + CTA。
-describe("AnalyticsReviewPage AI 分析卡 (T-116c)", () => {
-  it("标题诚实(基于本条视频),有要点 → 逐条渲染", () => {
+// [T-356③] 「AI 要点 · 本期复盘摘要」卡已下架:与主列「本期经验 · 可采纳沉淀」同源
+// (一次「帮我复盘」review.analyze 同时产要点+经验候选),两块并存=概念重复。
+// 帮我复盘入口由本期经验区承接(空态 CTA + 非空态区头常驻,见 current-period-learnings.test)。
+describe("AnalyticsReviewPage([T-356③] AI 要点卡下架)", () => {
+  it("ai-analysis-card 不再渲染(有无要点数据均不渲)", () => {
     const base = buildAnalyticsReviewViewModel(PROJECT_ID);
     const vm = {
       ...base,
       aiAnalysis: [
         { id: "ri-1", title: "开头钩子扎实", body: "前 3 秒抛冲突" },
-        { id: "ri-2", title: "结尾 CTA 明确", body: "" },
       ],
     };
     const { container } = render(
       <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
     );
-    const card = container.querySelector('[data-slot="ai-analysis-card"]')!;
-    expect(card.getAttribute("data-empty")).toBe("false");
-    // [T-118a §D] 诚实标题 + 数据源标注:AI 卡 = 只读要点摘要,与本期经验区(可裁决)区分。
-    // 不再写「本期复盘数据」这种在全站数据上撒谎的话。
-    expect(card.textContent ?? "").toContain("AI 要点 · 本期复盘摘要");
-    expect(card.textContent ?? "").toContain("来源:帮我复盘生成的要点");
-    expect(card.textContent ?? "").not.toContain("本期复盘数据");
-    expect(
-      card.querySelectorAll('[data-slot="ai-analysis-item"]'),
-    ).toHaveLength(2);
-    // 空 body 项不摆空段。
-    expect(card.textContent ?? "").toContain("前 3 秒抛冲突");
-  });
-
-  it("本视频没跑过复盘 → 诚实空态 + 「帮我复盘」CTA(不摆假要点)", () => {
-    const base = buildAnalyticsReviewViewModel(PROJECT_ID);
-    const vm = { ...base, aiAnalysis: [] };
-    const { container } = render(
-      <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
-    );
-    const card = container.querySelector('[data-slot="ai-analysis-card"]')!;
-    expect(card.getAttribute("data-empty")).toBe("true");
-    // 没有任何要点条目(不摆假)。
-    expect(
-      card.querySelectorAll('[data-slot="ai-analysis-item"]'),
-    ).toHaveLength(0);
-    const empty = card.querySelector('[data-slot="ai-analysis-empty"]')!;
-    expect(empty).not.toBeNull();
-    expect(empty.textContent ?? "").toContain("本条视频还没生成 AI 复盘要点");
-    // CTA 指向 Copilot review.analyze 链路(带本项目 selId)。
-    const cta = card.querySelector<HTMLAnchorElement>(
-      '[data-slot="ai-analysis-cta"]',
-    )!;
-    expect(cta).not.toBeNull();
-    expect(cta.getAttribute("href") ?? "").toContain("surface=review");
-    expect(cta.getAttribute("href") ?? "").toContain("fn=review.analyze");
-    expect(cta.getAttribute("href") ?? "").toContain(`selId=${PROJECT_ID}`);
+    expect(container.querySelector('[data-slot="ai-analysis-card"]')).toBeNull();
   });
 });

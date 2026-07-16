@@ -626,23 +626,6 @@ function AccountInformationCard({
             </Button>
           </div>
         </SettingsFormRow>
-        <SettingsFormRow
-          label="邮箱"
-          controlId="account-email"
-          help="邮箱是登录标识与唯一键，暂不支持在此修改。"
-        >
-          {/* 邮箱 stays read-only: it is the login identifier + users_email_uk
-              unique key. Editing it needs a re-auth / uniqueness flow with no
-              route yet — shown as a read-only field. */}
-          <Input
-            id="account-email"
-            type="email"
-            data-slot="account-email-input"
-            value={viewModel.account.email}
-            readOnly
-            aria-readonly="true"
-          />
-        </SettingsFormRow>
       </div>
     </SectionCard>
   );

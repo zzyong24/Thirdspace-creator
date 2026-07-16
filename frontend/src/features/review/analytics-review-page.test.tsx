@@ -250,17 +250,17 @@ describe("AnalyticsReviewPage", () => {
     expect(container.querySelector('[data-slot="key-moment-row"]')).toBeNull();
   });
 
-  it("preserves the approved order of Main column blocks (metrics → primary → 热门发布 → 评论)", async () => {
+  it("preserves the approved order of Main column blocks (metrics → primary → 评论;[T-356②] 热门发布已下架)", async () => {
     const { container } = await renderWorkspace();
     const main = container.querySelector(
       '[data-slot="analytics-main-column"]',
     ) as HTMLElement;
     expect(main).not.toBeNull();
     // [T-116a/b] 单一诚实视图剩下的真数据区,按上→下顺序。
+    // [T-356②] top-published-section 已下架:单项目复盘页拉账号级全作品列表=凑数。
     const expectedSlots = [
       "core-metrics-row",
       "primary-charts",
-      "top-published-section",
       "review-comments-section",
     ];
     const orderedNodes = expectedSlots.map((slot) =>
@@ -275,48 +275,20 @@ describe("AnalyticsReviewPage", () => {
     }
   });
 
-  it("renders the right rail with InsightCard and ReviewHistoryCard in that order", async () => {
+  it("renders the right rail:[T-356③] AI 要点卡已下架,复盘记录卡在场且有条目", async () => {
     const { container } = await renderWorkspace();
     const rightRail = container.querySelector(
       '[data-slot="analytics-right-rail"]',
     ) as HTMLElement;
     expect(rightRail).not.toBeNull();
-    const expectedSlots = ["ai-analysis-card", "review-history-card"];
-    const orderedNodes = expectedSlots.map((slot) =>
-      rightRail.querySelector(`[data-slot="${slot}"]`),
-    );
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      const relation = previous.compareDocumentPosition(node);
-      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    }
-    // Each right-rail card surfaces at least one item so the slot is
-    // not an empty shell.
-    expect(
-      rightRail
-        .querySelector('[data-slot="ai-analysis-card"]')
-        ?.querySelectorAll('[data-slot="ai-analysis-item"]').length ?? 0,
-    ).toBeGreaterThanOrEqual(1);
+    // 「AI 要点 · 本期复盘摘要」与主列「本期经验」同源(一次 review.analyze 产要点+候选),
+    // 冗余卡整块下架;右栏收敛为 复盘编辑 → 复盘记录。
+    expect(rightRail.querySelector('[data-slot="ai-analysis-card"]')).toBeNull();
     expect(
       rightRail
         .querySelector('[data-slot="review-history-card"]')
         ?.querySelectorAll('[data-slot="review-history-item"]').length ?? 0,
     ).toBeGreaterThanOrEqual(1);
-  });
-
-  it("does not promote the AI analysis into a modal / overlay", async () => {
-    const { container } = await renderWorkspace();
-    // The AI analysis lives inside the right rail — never as a
-    // top-layer overlay, modal, or portal slot.
-    const ai = container.querySelector(
-      '[data-slot="ai-analysis-card"]',
-    ) as HTMLElement;
-    expect(ai).not.toBeNull();
-    expect(ai.getAttribute("data-overlay")).not.toBe("true");
-    // No dialog role appears for the analysis card.
-    expect(ai.getAttribute("role")).not.toBe("dialog");
   });
 
   it("provides a sr-only textual summary for every chart (a11y)", async () => {

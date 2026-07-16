@@ -193,32 +193,25 @@ describe("Settings identity section (Task 12)", () => {
     expect(text).toContain(STUB_IDENTITY.locale);
   });
 
-  it("populates the nickname + email inputs from the injected identity", () => {
+  it("populates the nickname input from the injected identity; [T-356①] 邮箱行已下架", () => {
     renderSettings();
     const nickname = document.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
-    );
-    const email = document.querySelector<HTMLInputElement>(
-      '[data-slot="account-email-input"]',
     );
     expect(nickname).not.toBeNull();
-    expect(email).not.toBeNull();
     expect(nickname!.value).toBe(STUB_IDENTITY.displayName);
-    expect(email!.value).toBe(STUB_IDENTITY.email);
+    // [T-356①] 单机免登录产品已无邮箱概念(T-046/T-135):只读邮箱行徒增困惑,整行下架。
+    expect(
+      document.querySelector('[data-slot="account-email-input"]'),
+    ).toBeNull();
   });
 
-  it("renders the nickname input editable + the email input read-only", () => {
-    // 昵称 is now真持久 via `PATCH /me` (identity.profile.patch) — editable, no
-    // longer read-only. 邮箱 stays read-only (login identifier + unique key).
+  it("renders the nickname input editable(真持久 PATCH /me)", () => {
     renderSettings();
     const nickname = document.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
     );
-    const email = document.querySelector<HTMLInputElement>(
-      '[data-slot="account-email-input"]',
-    );
     expect(nickname!.readOnly).toBe(false);
-    expect(email!.readOnly).toBe(true);
   });
 
   it("saving an edited nickname calls patchProfile({ displayName }) then refresh", async () => {

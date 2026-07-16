@@ -56,7 +56,19 @@ export function createReviewsTransport(
         }
         case "reviews.list": {
           const reviews = await service.listReviews(ctx, p.projectId ?? "");
-          return { data: reviews, meta: { requestId } };
+          // [T-356④] isList 端点的响应 envelope 是 listMeta(page/pageSize/total 必填)——此前只返
+          // { requestId },client 侧 envelope.parse 必抛 ZodError → readReviewHistory 静默 catch 成
+          // 空 → 「复盘记录」永远空(洞察写入全成功、读回被吞,用户以为没写进去)。dispatch 路由不做
+          // envelope 校验所以 curl 可读,坑只咬 RSC/浏览器 client。该 op 无分页参数,按全量单页回填。
+          return {
+            data: reviews,
+            meta: {
+              requestId,
+              page: 1,
+              pageSize: Math.max(1, reviews.length),
+              total: reviews.length,
+            },
+          };
         }
         case "reviews.get": {
           const review = await service.getReview(ctx, p.reviewId ?? "");

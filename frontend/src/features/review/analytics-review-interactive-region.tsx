@@ -35,7 +35,6 @@ import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
 import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-chart";
-import { InsightCard } from "@/components/analytics/insight-card";
 import { EmptyState } from "@/components/state/page-state";
 import { SectionCard } from "@/components/project/section-card";
 // [T-329] 复盘专用紧凑指标卡(12 卡响应式网格;共享 MetricCard 不动,别的页面在用)。
@@ -51,7 +50,6 @@ import {
 import type {
   AnalyticsViewModel,
   MetricCard as MetricCardVm,
-  TopPublishedCard,
 } from "@/types/view-models";
 
 // ---------------------------------------------------------------------------
@@ -59,7 +57,6 @@ import type {
 // AnalyticsViewModel fields).
 // ---------------------------------------------------------------------------
 
-type TopPublished = TopPublishedCard;
 type ReviewHistoryItem = AnalyticsViewModel["reviewHistory"][number];
 // 复盘每作品评论 (T-030 D6) — 一条真实评论 (文本 + demand_tag 若有)。
 type CommentItem = NonNullable<AnalyticsViewModel["comments"]>[number];
@@ -193,7 +190,8 @@ export function AnalyticsReviewInteractiveRegion({
         )}
         {/* [T-116b] 观众画像 / 观众来源 / 留存曲线(SecondaryCharts)+ 关键时刻区已移除:
             均无数据源 op(需单视频采集 T-100),真项目恒空占位。待 T-100 做了再加回。 */}
-        <TopPublishedList items={viewModel.topPublished} />
+        {/* [T-356②] 热门作品发布列表已下架:单项目复盘页拉账号级全作品列表=凑数
+            (聚焦单作品 surface 不挂宽域列表,同 chatbox-scope-tools-to-task 教训)。 */}
         <CommentsSection comments={viewModel.comments ?? []} />
         {/* [T-118a §A/§D] 本期经验裁决区:本作品复盘提炼的经验候选,当场采纳/翻案。
             与 AI 要点卡(右栏,只读摘要)视觉分隔 + 数据源标注,防混淆。 */}
@@ -206,10 +204,9 @@ export function AnalyticsReviewInteractiveRegion({
         data-slot="analytics-right-rail"
         className="flex flex-col gap-card-gap"
       >
-        <InsightCard
-          items={viewModel.aiAnalysis}
-          projectId={viewModel.projectId}
-        />
+        {/* [T-356③] 「AI 要点 · 本期复盘摘要」卡已下架:与下方「本期经验 · 可采纳沉淀」
+            同源(一次「帮我复盘」review.analyze 同时产要点+经验候选),两块并存=概念重复
+            (用户真机反馈分不清)。收敛为单一「本期经验」区:帮我复盘 → 候选出现 → 采纳/翻案。 */}
         <ReviewAuthoringPanel
           projectId={viewModel.projectId}
           wiring={reviewsWiring}
@@ -351,85 +348,6 @@ function funnelConversionRate(
 // main column.
 // ---------------------------------------------------------------------------
 
-function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
-  const list = items;
-  return (
-    <section
-      data-slot="top-published-section"
-      aria-label="热门作品发布列表"
-      className="flex flex-col gap-1.5"
-    >
-      <header className="flex items-center justify-between px-1">
-        <div className="flex flex-col gap-0">
-          <h3 className="text-[13px] font-semibold text-foreground">
-            热门作品发布列表
-          </h3>
-        </div>
-        {/* [T-116b] 纯装饰「查看全部」按钮(无后端)已删除。 */}
-      </header>
-      {list.length === 0 ? (
-        <div
-          data-slot="top-published-empty"
-          data-empty="true"
-          className="flex flex-col items-start gap-1 rounded-lg border border-dashed border-border bg-surface-subtle px-3 py-4"
-        >
-          <p className="text-[12px] font-medium text-foreground">暂无作品</p>
-          <p className="text-[11px] text-muted-foreground">
-            该项目还没有导入 / 发布的作品，作品发布后会显示在这里。
-          </p>
-        </div>
-      ) : (
-      <ul
-        data-slot="top-published-list"
-        className="grid grid-cols-1 gap-1.5 md:grid-cols-2 lg:grid-cols-4"
-        aria-label="热门作品发布"
-      >
-        {list.map((item) => (
-          <li
-            key={item.id}
-            data-slot="top-published-card"
-            data-published-id={item.id}
-            data-tone={item.tone}
-            data-inert="decorative"
-            className={
-              item.tone === "primary"
-                ? "col-span-1 flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-card md:col-span-2 md:row-span-1 md:flex-row"
-                : "flex items-center gap-1.5 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-card"
-            }
-          >
-            <TopPublishedThumb tone={item.tone} platform={item.platform} />
-            <div
-              className={
-                item.tone === "primary"
-                  ? "flex min-w-0 flex-1 flex-col gap-0.5 p-1"
-                  : "flex min-w-0 flex-1 flex-col gap-0"
-              }
-            >
-              <span className="line-clamp-2 text-[11px] font-medium text-foreground">
-                {item.title}
-              </span>
-              <span className="flex flex-wrap items-center gap-1 font-mono text-[10px] tabular-nums text-muted-foreground">
-                <span>
-                  {item.platform} · {item.views}
-                </span>
-                {/* [T-329] 体裁(明细「体裁」列):仅当采集帧真带 genre 才显,不摆假。 */}
-                {item.genre ? (
-                  <span
-                    data-slot="top-published-genre"
-                    className="inline-flex items-center rounded-full border border-border bg-surface-subtle px-1.5 py-px font-sans text-[10px] text-muted-foreground"
-                  >
-                    {item.genre}
-                  </span>
-                ) : null}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-      )}
-    </section>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // CommentsSection — 复盘每作品评论 (T-030 §10 / D6)
@@ -672,13 +590,29 @@ function CurrentPeriodLearnings({
       aria-label="本期经验"
       className="flex flex-col gap-2 rounded-xl border border-brand/25 border-t-4 border-t-brand/50 bg-brand-soft/20 p-3 shadow-card"
     >
-      <header className="flex flex-col gap-0.5 px-1">
-        <h3 className="text-[13px] font-semibold text-foreground">
-          本期经验 · 可采纳沉淀
-        </h3>
-        <p className="text-[11px] text-muted-foreground">
-          来源:本作品复盘提炼、待你裁决
-        </p>
+      <header className="flex items-start justify-between gap-2 px-1">
+        <div className="flex flex-col gap-0.5">
+          <h3 className="text-[13px] font-semibold text-foreground">
+            本期经验 · 可采纳沉淀
+          </h3>
+          <p className="text-[11px] text-muted-foreground">
+            来源:「帮我复盘」从本期评论/指标提炼,待你裁决;采纳后沉淀进知识库的经验区
+          </p>
+        </div>
+        {/* [T-356③] 常驻再跑入口(原「AI 要点」卡下架后,非空态也要能再复盘)。 */}
+        {isEmpty ? null : (
+          <Link
+            href={copilotDeepLink("review", "review.analyze", {
+              kind: "project",
+              id: projectId,
+            })}
+            data-slot="current-period-learnings-rerun"
+            className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-control border border-brand/30 bg-brand-soft/50 px-3 text-[11px] font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft"
+          >
+            <Sparkles className="size-3.5" />
+            帮我复盘
+          </Link>
+        )}
       </header>
       {isEmpty ? (
         <div
@@ -710,76 +644,8 @@ function CurrentPeriodLearnings({
   );
 }
 
-function TopPublishedThumb({
-  tone,
-  platform,
-}: {
-  tone: "primary" | "compact";
-  platform: string;
-}) {
-  const palette = paletteForPlatform(platform);
-  const sizeClass =
-    tone === "primary"
-      ? "h-14 w-full md:h-16 md:w-28 md:shrink-0"
-      : "h-10 w-10 shrink-0";
-  return (
-    <div
-      data-slot="top-published-thumb"
-      data-platform={platform}
-      aria-hidden="true"
-      className={`flex items-center justify-center rounded-md ${palette.bg} ${sizeClass}`}
-    >
-      <span className={`text-sm font-semibold ${palette.fg}`}>
-        {platformInitial(platform)}
-      </span>
-    </div>
-  );
-}
 
-interface Palette {
-  readonly bg: string;
-  readonly fg: string;
-}
 
-function paletteForPlatform(platform: string): Palette {
-  switch (platform) {
-    case "抖音":
-      return { bg: "bg-rose-100", fg: "text-rose-600" };
-    case "小红书":
-      return { bg: "bg-pink-100", fg: "text-pink-600" };
-    case "B 站":
-    case "bilibili":
-      return { bg: "bg-sky-100", fg: "text-sky-600" };
-    case "YouTube":
-    case "youtube":
-      return { bg: "bg-red-100", fg: "text-red-600" };
-    case "视频号":
-    case "wechatVideo":
-      return { bg: "bg-emerald-100", fg: "text-emerald-600" };
-    default:
-      return { bg: "bg-violet-100", fg: "text-violet-600" };
-  }
-}
-
-function platformInitial(platform: string): string {
-  switch (platform) {
-    case "抖音":
-      return "抖";
-    case "小红书":
-      return "书";
-    case "B 站":
-    case "bilibili":
-      return "B";
-    case "YouTube":
-    case "youtube":
-      return "Y";
-    case "视频号":
-    case "wechatVideo":
-      return "视";
-    default:
-      return "作";
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Right rail — InsightCard → ReviewHistoryCard

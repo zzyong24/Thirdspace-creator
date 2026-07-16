@@ -354,11 +354,144 @@ export function createFfmpegPcmDecoder(
     });
 }
 
+// ── [T-356] worker 化推理 + 串行队列(白屏根因根治)────────────────────────────────
+// 真机事故:Transformers.js 的 whisper 推理(mel 特征提取 + WASM/onnx 推理循环)跑在 sidecar
+// **主线程**,单条音频几分钟 CPU 拉满 → 事件循环卡死 → 全 app 页面请求挂起(NODE-CRON 连报
+// missed execution,用户切页白屏)。修:推理挪 **worker_threads 常驻单 worker**——
+//   · 单 worker 天然串行(用户拍板「一定要队列一个个跑」):一次只推理一条,其余排队;
+//   · 主线程只 postMessage/await,事件循环永不被推理阻塞;
+//   · worker 代码用 **eval 内联字符串**(不落独立文件)——绕开 Next standalone tracing 会漏
+//     worker 文件的打包坑(desktop-sidecar 打包三连坑先例);worker 内 createRequire(requireBase)
+//     解析 @xenova/transformers(sidecar 运行时 cwd=sidecar/frontend,node_modules 就位);
+//   · worker 崩溃/退出 → reject 所有在途任务 + 置空句柄,下次调用重建(不永久钉死);
+//   · pipeline memo 活在 worker 内(同级别模型只加载一次,与旧 provider 同语义)。
+
+/** worker 内代码(eval 字符串;自包含,不依赖打包器追踪任何文件)。
+ *  协议:主线程发 { id, modelId, cacheDir, pcm: ArrayBuffer, options } →
+ *  worker 回 { id, ok: true, text } 或 { id, ok: false, error }。 */
+const WHISPER_WORKER_SOURCE = `
+const { parentPort, workerData } = require("node:worker_threads");
+const { createRequire } = require("node:module");
+const req = createRequire(workerData.requireBase);
+const memo = new Map();
+function getPipeline(modelId, cacheDir) {
+  let p = memo.get(modelId);
+  if (p) return p;
+  p = (async () => {
+    const { pipeline, env } = req("@xenova/transformers");
+    env.cacheDir = cacheDir;
+    env.allowLocalModels = true;
+    return pipeline("automatic-speech-recognition", modelId);
+  })();
+  memo.set(modelId, p);
+  p.catch(() => memo.delete(modelId));
+  return p;
+}
+parentPort.on("message", async (msg) => {
+  try {
+    const pipe = await getPipeline(msg.modelId, msg.cacheDir);
+    const pcm = new Float32Array(msg.pcm);
+    const result = await pipe(pcm, msg.options);
+    const text = Array.isArray(result) ? result.map((r) => r.text).join("") : result.text;
+    parentPort.postMessage({ id: msg.id, ok: true, text });
+  } catch (err) {
+    parentPort.postMessage({ id: msg.id, ok: false, error: String((err && err.message) || err) });
+  }
+});
+`;
+
+/** worker 句柄可注入面(单测注 fake worker,不真加载 transformers)。 */
+export interface WhisperWorkerLike {
+  postMessage(msg: unknown, transfer?: ArrayBuffer[]): void;
+  on(event: "message", cb: (msg: { id: number; ok: boolean; text?: string; error?: string }) => void): void;
+  on(event: "error", cb: (err: Error) => void): void;
+  on(event: "exit", cb: (code: number) => void): void;
+  terminate(): Promise<number>;
+}
+
+/**
+ * [T-356] worker 化 pipeline provider:返回与 createDefaultPipelineProvider 同签名的
+ * `(modelId) => Promise<AsrPipeline>`,但拿到的 AsrPipeline 实际是「经串行队列发给常驻
+ * worker」的代理 —— transcribeAudio 主逻辑零改动即吃到 worker 化。
+ * spawnWorker 可注入(单测 fake;默认真 worker_threads eval)。
+ */
+export function createWorkerPipelineProvider(
+  spawnWorker?: () => WhisperWorkerLike,
+): (modelId: string) => Promise<AsrPipeline> {
+  let worker: WhisperWorkerLike | null = null;
+  let nextId = 1;
+  const pending = new Map<number, { resolve: (text: string) => void; reject: (err: Error) => void }>();
+  // 串行队列(用户拍板「一个个跑」):promise 链,前一条推理(成败皆可)结束才发下一条。
+  let queue: Promise<unknown> = Promise.resolve();
+
+  const spawn = spawnWorker ?? ((): WhisperWorkerLike => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Worker } = require("node:worker_threads") as typeof import("node:worker_threads");
+    // requireBase:worker 内解析 @xenova/transformers 的锚 —— sidecar 运行时 cwd =
+    // sidecar/frontend(node_modules 就位);dev 下 cwd = frontend(同样可解析)。
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require("node:path") as typeof import("node:path");
+    return new Worker(WHISPER_WORKER_SOURCE, {
+      eval: true,
+      workerData: { requireBase: path.join(process.cwd(), "package.json") },
+    }) as unknown as WhisperWorkerLike;
+  });
+
+  function failAllPending(err: Error): void {
+    for (const [, p] of pending) p.reject(err);
+    pending.clear();
+    worker = null; // 下次调用重建,不永久钉死
+  }
+
+  function ensureWorker(): WhisperWorkerLike {
+    if (worker) return worker;
+    const w = spawn();
+    w.on("message", (msg) => {
+      const p = pending.get(msg.id);
+      if (!p) return;
+      pending.delete(msg.id);
+      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text);
+      else p.reject(new MultimodalGenerationError(`whisper-local(worker)推理失败: ${msg.error ?? "未知错误"}`));
+    });
+    w.on("error", (err) => failAllPending(new MultimodalGenerationError(`whisper-local worker 崩溃: ${err.message}`)));
+    w.on("exit", (code) => {
+      if (code !== 0) failAllPending(new MultimodalGenerationError(`whisper-local worker 非 0 退出 (code=${code})`));
+      else worker = null;
+    });
+    worker = w;
+    return w;
+  }
+
+  return async (modelId: string) => {
+    // 返回的「pipeline」= worker 代理:每次调用进串行队列,一次只跑一条。
+    const proxy: AsrPipeline = (audio, options) => {
+      const job = () =>
+        new Promise<{ text: string }>((resolve, reject) => {
+          const w = ensureWorker();
+          const id = nextId++;
+          pending.set(id, { resolve: (text) => resolve({ text }), reject });
+          // pcm buffer 以 transferable 转移(零拷贝;主线程用完即弃)。
+          // 注意 subarray 场景:确保传整段 —— decode 产的是独立 buffer,直接转移安全。
+          const buf = audio.buffer as ArrayBuffer;
+          w.postMessage(
+            { id, modelId, cacheDir: defaultCacheDir(), pcm: buf, options: options ?? {} },
+            [buf],
+          );
+        });
+      const run = queue.then(job, job);
+      queue = run.catch(() => {});
+      return run;
+    };
+    return proxy;
+  };
+}
+
 /** 便捷装配:host 默认 deps(真 transformers pipeline + 真 ffmpeg 解码)。测试**不用**这个,
- *  而是给 createWhisperLocalAdapter 注 fake deps。 */
+ *  而是给 createWhisperLocalAdapter 注 fake deps。
+ *  [T-356] 推理走 worker 化 provider(常驻单 worker + 串行队列)—— 主线程永不被推理阻塞。 */
 export function createDefaultWhisperLocalAdapter(): MultimodalProviderAdapter {
   return createWhisperLocalAdapter({
-    getPipeline: createDefaultPipelineProvider(),
+    getPipeline: createWorkerPipelineProvider(),
     decodeAudioToFloat32: createFfmpegPcmDecoder(),
   });
 }

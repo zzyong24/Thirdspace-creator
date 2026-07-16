@@ -305,7 +305,10 @@ async function readReviewHistory(
       // 不再另起新复盘)。
       status: r.status,
     }));
-  } catch {
+  } catch (err) {
+    // [T-356④] 读失败仍诚实空,但**必须留痕**:此前静默吞掉 envelope ZodError,让
+    // 「transport 漏 listMeta → 复盘记录永远空」这类结构性 bug 无声潜伏(用户以为没写进去)。
+    console.error("[review] readReviewHistory 读失败(诚实空,但这不是正常态):", err);
     return [];
   }
 }

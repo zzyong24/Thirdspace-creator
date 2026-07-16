@@ -71,25 +71,23 @@ function candidate(
   };
 }
 
-describe("本期经验区 vs AI 要点卡 语义边界 (T-118a §D)", () => {
-  it("两区 data-slot 不同,且同页共存", () => {
+describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛为单一区)", () => {
+  it("[T-356③] AI 要点卡已下架(与本期经验区同源冗余),只剩本期经验单一区", () => {
     const { container } = render(
       <AnalyticsReviewPage
         projectId={PROJECT_ID}
         viewModel={vmWith([candidate({})])}
       />,
     );
-    const learningsRegion = container.querySelector(
-      '[data-slot="current-period-learnings"]',
-    );
-    const aiCard = container.querySelector('[data-slot="ai-analysis-card"]');
-    expect(learningsRegion).not.toBeNull();
-    expect(aiCard).not.toBeNull();
-    // 两区是不同 DOM 节点(不是同一个区)。
-    expect(learningsRegion).not.toBe(aiCard);
+    expect(
+      container.querySelector('[data-slot="current-period-learnings"]'),
+    ).not.toBeNull();
+    // 「AI 要点 · 本期复盘摘要」卡与本期经验区同源(一次 review.analyze 产要点+候选),
+    // 两块并存=概念重复(用户真机反馈分不清)→ 卡整块下架。
+    expect(container.querySelector('[data-slot="ai-analysis-card"]')).toBeNull();
   });
 
-  it("本期经验区标题/副标题 = 可裁决语义;AI 卡 = 只读摘要语义", () => {
+  it("本期经验区标题/副标题 = 可裁决语义 + 采纳去处", () => {
     const { container } = render(
       <AnalyticsReviewPage
         projectId={PROJECT_ID}
@@ -100,16 +98,11 @@ describe("本期经验区 vs AI 要点卡 语义边界 (T-118a §D)", () => {
       '[data-slot="current-period-learnings"]',
     )!;
     expect(region.textContent).toContain("本期经验 · 可采纳沉淀");
-    expect(region.textContent).toContain("来源:本作品复盘提炼、待你裁决");
-
-    const aiCard = container.querySelector<HTMLElement>(
-      '[data-slot="ai-analysis-card"]',
-    )!;
-    expect(aiCard.textContent).toContain("AI 要点 · 本期复盘摘要");
-    expect(aiCard.textContent).toContain("来源:帮我复盘生成的要点");
+    // [T-356③] 副标题讲清全链路:来源(帮我复盘提炼)→ 裁决 → 采纳后的统一去处(知识库经验区)。
+    expect(region.textContent).toContain("采纳后沉淀进知识库的经验区");
   });
 
-  it("有候选:本期经验区渲 AdjudicationQueue(有采纳按钮);AI 卡无采纳动作", () => {
+  it("有候选:渲 AdjudicationQueue(采纳/翻案按钮)+ 区头常驻帮我复盘", () => {
     const { container } = render(
       <AnalyticsReviewPage
         projectId={PROJECT_ID}
@@ -132,12 +125,10 @@ describe("本期经验区 vs AI 要点卡 语义边界 (T-118a §D)", () => {
       region.querySelector('[data-slot="learning-discard"]'),
     ).not.toBeNull();
 
-    // AI 卡无任何采纳/裁决动作(只读)。
-    const aiCard = container.querySelector<HTMLElement>(
-      '[data-slot="ai-analysis-card"]',
-    )!;
-    expect(aiCard.querySelector('[data-slot="learning-adopt"]')).toBeNull();
-    expect(aiCard.querySelector("button")).toBeNull();
+    // [T-356③] 非空态区头有常驻「帮我复盘」再跑入口(原 AI 要点卡下架后由此承接)。
+    expect(
+      region.querySelector('[data-slot="current-period-learnings-rerun"]'),
+    ).not.toBeNull();
   });
 
   it("无候选:本期经验区渲差异化空态 + 「帮我复盘」CTA(深链本项目 review.analyze)", () => {

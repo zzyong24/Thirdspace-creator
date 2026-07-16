@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
   ENDPOINTS,
+  listEnvelope,
   type Endpoint,
   type RequestContext,
   type Transport,
@@ -83,6 +84,24 @@ describe("reviews contract (each op validates against its DTO)", () => {
     }, ctx);
     const parsed = ENDPOINTS.getReview.response.parse(env.data);
     expect(parsed.id).toBe(id);
+  });
+
+  it("[T-356④] reviews.list → 完整 listEnvelope(listMeta page/pageSize/total 必填)可 parse", async () => {
+    // 回归锚:isList 端点的响应必须过 listEnvelope(此前 transport 只返 meta:{requestId},
+    // client 侧 envelope.parse 必抛 → readReviewHistory 静默 catch 成空 → 复盘记录永远空。
+    // 本用例把「transport 原始响应 → client envelope 校验」这层锚死,漏 listMeta 即红。
+    const transport = makeTransport(db);
+    await call(transport, "reviews.create", {
+      params: { projectId: "project-1" },
+      body: { reviewType: "project", contentOutputId: null },
+    }, ctx);
+    const raw = await transport.request(ep("reviews.list"), {
+      params: { projectId: "project-1" },
+    } as never, ctx);
+    const parsed = listEnvelope(ENDPOINTS.listReviews.response).parse(raw);
+    expect(parsed.data).toHaveLength(1);
+    expect(parsed.meta.total).toBe(1);
+    expect(parsed.meta.page).toBe(1);
   });
 
   it("reviews.insights.create → reviewInsightResource (evidence object, priority int)", async () => {
