@@ -183,20 +183,13 @@ describe("Assets needs-backend wiring", () => {
     );
   });
 
-  // [T-231③] 复制链接:真实签名链接尚未接入 → 按钮常驻 disabled + 「规划中」徽标,
-  // 点击不发任何请求、不写剪贴板(原来会写 `mock://` 死链)。
-  it("E4 复制链接 is disabled (规划中) and issues no request", async () => {
+  // [T-360②] 复制链接已整体下架(原 T-231③ 规划中占位):单机本地产品无对象存储/签名链接
+  // 语义(用户拍板),本地文件定位走「Finder」。
+  it("E4 复制链接已下架(按钮不再渲染)", async () => {
     const { container } = await renderIsland();
-    const btn = container.querySelector<HTMLButtonElement>(
-      '[data-slot="asset-action-copy"]',
-    );
-    expect(btn).not.toBeNull();
-    expect(btn!.disabled).toBe(true);
     expect(
-      btn!.querySelector('[data-slot="asset-copy-planned-badge"]')?.textContent,
-    ).toBe("规划中");
-    fireEvent.click(btn!);
-    expect(mockClient.getAsset).not.toHaveBeenCalled();
+      container.querySelector('[data-slot="asset-action-copy"]'),
+    ).toBeNull();
   });
 
   it("E5 收藏 calls assets.favorite.toggle then refresh (not the addAssetFile hack)", async () => {

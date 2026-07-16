@@ -154,7 +154,7 @@ function emptyAssetsViewModel(): AssetsViewModel {
     storage: {
       usedBytes: 0,
       totalBytes: 0,
-      usedLabel: "0.00 GB",
+      usedLabel: "0 MB",
       totalLabel: "",
     },
   };
@@ -225,9 +225,15 @@ async function assembleUsageHistory(
  * totalLabel 只显「已用 X GB」不摆假分母)。
  */
 async function assembleStorage(client: AssetsDataClient): Promise<StorageUsage> {
-  // 与 settings-interactive-region 的 gb() / sidebar-storage-card 完全一致:bytes/1e9,1 位小数。
-  const gib = (bytes: number): string =>
-    `${(bytes / 1_000_000_000).toFixed(1)} GB`;
+  // [T-360①] 自适应单位:此前死绑 GB 一位小数,几 MB 真实用量显示「0.0 GB」被用户判为
+  // 统计 bug(后端 usedBytes 其实有值)。<1GB 显 MB、<1MB 显 KB,不再抹成 0。三处同款
+  // (settings gb() / sidebar-storage-card)一并改。
+  const gib = (bytes: number): string => {
+    if (bytes >= 1_000_000_000) return (bytes / 1_000_000_000).toFixed(1) + " GB";
+    if (bytes >= 1_000_000) return (bytes / 1_000_000).toFixed(1) + " MB";
+    if (bytes > 0) return Math.max(1, Math.round(bytes / 1_000)) + " KB";
+    return "0 MB";
+  };
   try {
     const s = (await client.getStorage({
       params: undefined,

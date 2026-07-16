@@ -185,9 +185,9 @@ describe("AppShell", () => {
     const card = container.querySelector(
       '[data-slot="sidebar-contextual-card"][data-variant="storage"]',
     ) as HTMLElement;
-    // 真值到达后 badge 显 "0.1 / 530.8 GB"(bytes/1e9,与设置页同口径)。
+    // [T-360①] 自适应单位后 badge 显 "107.4 MB / 530.8 GB"(<1GB 显 MB,不再抹成 0.1 GB)。
     await waitFor(() => {
-      expect(card.textContent).toContain("0.1 / 530.8 GB");
+      expect(card.textContent).toContain("107.4 MB / 530.8 GB");
     });
     // 旧假串必须消失。
     expect(card.textContent).not.toContain("12.4 / 50 GB");

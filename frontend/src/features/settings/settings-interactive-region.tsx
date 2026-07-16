@@ -1823,9 +1823,12 @@ const DENSITY_OPTIONS: ReadonlyArray<{ value: Density; label: string }> = [
 // StorageUsageCard
 // ---------------------------------------------------------------------------
 
-// Format bytes as a GB string with one decimal (decimal GB, 1e9). Real values.
+// [T-360①] 自适应单位(带后缀):此前死绑 GB,几 MB 用量显示 0.0 被判统计 bug。
 function gb(bytes: number): string {
-  return (bytes / 1e9).toFixed(1);
+  if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + " GB";
+  if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + " MB";
+  if (bytes > 0) return Math.max(1, Math.round(bytes / 1e3)) + " KB";
+  return "0 MB";
 }
 
 // item B — StorageUsageCard 做真. Shows the REAL backend + media root (editable +
@@ -1918,8 +1921,8 @@ function StorageUsageCard({
           max={storage.totalBytes > 0 ? storage.totalBytes : storage.usedBytes || 1}
           label={
             totalGb
-              ? `已用 ${usedGb} GB / ${totalGb} GB`
-              : `已用 ${usedGb} GB`
+              ? `已用 ${usedGb} / ${totalGb}`
+              : `已用 ${usedGb}`
           }
           showValue
           tone="brand"
@@ -1941,7 +1944,7 @@ function StorageUsageCard({
                 {row.label}
               </span>
               <span className="font-mono tabular-nums text-xs text-muted-foreground">
-                {gb(row.bytes)} GB
+                {gb(row.bytes)}
               </span>
             </li>
           ))}

@@ -39,9 +39,26 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
   const rawToken = readSessionCookie(req);
+  // [T-360③] 当前选中号:webview 的 fetch 同源自带 `creatoros_current_account` cookie(与
+  // dispatch 的 x-account-id header 同真值)。此前没解析 → ctx.accountId 恒空 → assets.getAsset
+  // 撞 T-332 strict 门(AccountRequiredError)→「Finder」按钮 500(真机日志实锤)。header 优先、
+  // cookie 兜底,经 resolveRequestContext 内 verifyAccountSelection 验属主(不可信输入照旧硬校验)。
+  let accountId: string | null = req.headers.get("x-account-id");
+  if (!accountId) {
+    const m = /(?:^|;\s*)creatoros_current_account=([^;]+)/.exec(
+      req.headers.get("cookie") ?? "",
+    );
+    if (m?.[1]) {
+      try {
+        accountId = decodeURIComponent(m[1]);
+      } catch {
+        accountId = m[1];
+      }
+    }
+  }
   let ctx;
   try {
-    ctx = await resolveRequestContext(rawToken);
+    ctx = await resolveRequestContext(rawToken, accountId);
   } catch {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

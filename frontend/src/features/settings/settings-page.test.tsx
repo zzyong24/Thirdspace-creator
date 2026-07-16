@@ -234,7 +234,7 @@ describe("SettingsPage", () => {
       expect(vm.storage.breakdown).toHaveLength(0);
     });
 
-    it("无 model/storage props(读取失败态)→ 模型卡输入为空(不预填伪造模型),存储诚实显 0.0 GB", async () => {
+    it("无 model/storage props(读取失败态)→ 模型卡输入为空(不预填伪造模型),存储诚实显 0 MB", async () => {
       await renderSettings();
       // 模型卡的供应商 / 模型输入不被伪造值预填(原来 fixture 会填 anthropic / claude-opus-4-8)。
       const provider = document.querySelector(
@@ -250,7 +250,8 @@ describe("SettingsPage", () => {
       const storage = document.querySelector(
         '[data-slot="storage-usage-card"]',
       ) as HTMLElement;
-      expect(storage.textContent ?? "").toContain("0.0 GB");
+      // [T-360①] 自适应单位:零用量显「0 MB」(旧 0.0 GB 会把 MB 级真值也抹成 0)。
+      expect(storage.textContent ?? "").toContain("0 MB");
       expect(storage.textContent ?? "").not.toContain("18.0 GB");
     });
   });

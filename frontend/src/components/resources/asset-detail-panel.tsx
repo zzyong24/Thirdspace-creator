@@ -100,31 +100,8 @@ export function AssetDetailPanel({
                 </svg>
                 <span>下载</span>
               </button>
-              {/* [T-231③] 复制链接:真实对象存储签名链接尚未接入,原实现往剪贴板写
-                  `mock://` 死链。按诚实空壳范式(参考 Copilot PlannedBadge)常驻
-                  disabled + 「规划中」徽标,不再写剪贴板。 */}
-              <button
-                type="button"
-                data-slot="asset-action-copy"
-                disabled
-                aria-disabled="true"
-                title="公开链接规划中:真实对象存储签名链接尚未接入"
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground disabled:opacity-50"
-              >
-                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
-                  <rect x={5} y={5} width={9} height={9} rx={1.2} />
-                  <path d="M3 11 V3 H11" />
-                </svg>
-                <span className="inline-flex items-center gap-1">
-                  复制链接
-                  <span
-                    data-slot="asset-copy-planned-badge"
-                    className="rounded-md bg-muted px-1 py-0 text-[9px] font-medium text-muted-foreground"
-                  >
-                    规划中
-                  </span>
-                </span>
-              </button>
+              {/* [T-360②] 「复制链接」已下架(原 T-231③ 规划中占位):单机本地产品无对象存储/
+                  签名链接语义(用户拍板去掉),本地文件定位走「Finder」。 */}
               <button
                 type="button"
                 data-slot="asset-action-favorite"

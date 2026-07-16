@@ -29,9 +29,12 @@ type LoadState =
   | { readonly kind: "ready"; readonly data: StorageSnapshot }
   | { readonly kind: "error" };
 
-// GB 显示与设置页一致:bytes / 1e9 保留 1 位小数(见 settings-interactive-region 的 gb())。
+// [T-360①] 自适应单位(带单位后缀):此前死绑 GB,几 MB 用量显示 0.0 被判统计 bug。
 function gb(bytes: number): string {
-  return (bytes / 1_000_000_000).toFixed(1);
+  if (bytes >= 1_000_000_000) return (bytes / 1_000_000_000).toFixed(1) + " GB";
+  if (bytes >= 1_000_000) return (bytes / 1_000_000).toFixed(1) + " MB";
+  if (bytes > 0) return Math.max(1, Math.round(bytes / 1_000)) + " KB";
+  return "0 MB";
 }
 
 export function SidebarStorageCard() {
@@ -79,8 +82,8 @@ export function SidebarStorageCard() {
             {/* 与设置页完全一致的口径:真实 已用 / 真实磁盘容量。totalBytes 未知(0)时
                 只显已用,不摆假分母。 */}
             {state.data.totalBytes > 0
-              ? `${gb(state.data.usedBytes)} / ${gb(state.data.totalBytes)} GB`
-              : `${gb(state.data.usedBytes)} GB`}
+              ? `${gb(state.data.usedBytes)} / ${gb(state.data.totalBytes)}`
+              : `${gb(state.data.usedBytes)}`}
           </Badge>
         ) : null}
       </div>
