@@ -73,6 +73,7 @@ import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-car
 import { ChatEnrichCard, type ChatEnrichCardData } from "./chat-enrich-card";
 import { ChatHookCard, type ChatHookItem } from "./chat-hook-card";
 import { ChatScriptDraftCard } from "./chat-script-draft-card";
+import { ChatPublishPackageCard } from "./chat-publish-package-card";
 import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
 // [T-084b/c] 截图卡(公开页真截图 → 加入弹药)+ 生成卡(dispatch asset.generate → 轮询采纳)。
 import {
@@ -2045,6 +2046,30 @@ export function AICopilotContent({
                         <React.Fragment key={key}>
                           {traceRow}
                           <ChatScriptDraftCard
+                            taskId={o.taskId ?? null}
+                            projectId={o.projectId ?? activeProjectChip?.id ?? null}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
+                      );
+                    }
+                    // [T-350a/b] 发布物料(publish.package)→ 据 taskId 轮询 → awaiting_confirmation 渲
+                    // 抖音物料候选(标题/简介/标签/封面文案/审核结论)→「采纳」(confirmTask →
+                    // createPublicationFromDraft 物化 Publication → 稿面发布包回填)。
+                    // dispatch 失败/无项目上下文/空稿门 → 卡渲诚实错误态。
+                    if (
+                      name === "publish.package" &&
+                      out.kind === "publish.package"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        projectId?: string | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatPublishPackageCard
                             taskId={o.taskId ?? null}
                             projectId={o.projectId ?? activeProjectChip?.id ?? null}
                             error={o.error ?? null}

@@ -30,6 +30,7 @@ import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
+import { PublishPackageCta } from "./publish-package-cta";
 import {
   ScriptReviewGate,
   ReviewSoftGateHint,
@@ -275,6 +276,16 @@ function PublishPackSection({
           )}
         </div>
       </div>
+      {/* [T-350b] 发布物料生成入口:解锁后、还没发布时展示(已发布不再重复生成物料)。
+          点击自动发话术进右栏常驻编导对话(functionKey=publish.package,单平台抖音),
+          候选卡采纳后回填发布包(标题/标签)。 */}
+      {unlocked && publishPack?.status !== "published" ? (
+        <PublishPackageCta
+          projectId={projectId}
+          projectTitle={projectTitle}
+          outputId={outputId}
+        />
+      ) : null}
       {/* [T-086 软门] 发布前动作旁的合规软门提示(不阻断,一键跳审核门)。 */}
       {unlocked ? (
         <ReviewSoftGateHint
