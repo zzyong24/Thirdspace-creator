@@ -73,6 +73,14 @@ export interface CandidateProjectsPort {
         durationEstimate?: string;
         coreMessage?: string;
         successCriteria?: string;
+        // [T-284a] 复刻补链 G1 —— benchmark 转化候选立项时携带的原爆款拆解要素(复刻参照)。
+        benchmarkRef?: {
+          钩子拆解?: string;
+          结构拆解?: string;
+          为什么爆?: string;
+          可借鉴点?: string[];
+          适配本账号建议?: string;
+        };
       };
       contentType?: string;
       creationMode?: string;
@@ -493,12 +501,20 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       //     source         → 来源标注(写进 brief 文本,便于追溯)
       const dto = toCandidateDto(cand);
       const card = dto.card;
-      const briefDraft = {
+      // [T-284a] 复刻补链 G1:若被立项的候选带原爆款拆解要素(card.teardown,即 benchmark 复刻选题),
+      //   把它复制进新 project 的 briefDetail.benchmarkRef —— 「这条复刻自某爆款,原爆款拆解在此」,
+      //   供 creative-context 回流写稿。非 benchmark 候选(无 card.teardown)→ 不写(普通创作不携带、不污染)。
+      const briefDraft: NonNullable<
+        Parameters<CandidateProjectsPort["createProject"]>[1]["briefDetail"]
+      > = {
         targetAudience: card.targetAudience,
         contentGoal: card.proposal,
         contentFormat: card.format,
         coreMessage: card.oneLiner ?? (dto.angle || undefined),
       };
+      if (card.teardown) {
+        briefDraft.benchmarkRef = card.teardown;
+      }
       const SOURCE_LABELS: Record<string, string> = {
         trend: "行业热点",
         benchmark: "对标拆解",

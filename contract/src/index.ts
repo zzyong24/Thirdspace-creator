@@ -39,11 +39,13 @@ export {
 export {
   candidateResource,
   candidateCard,
+  benchmarkTeardownRef,
   audienceSignalResource,
   topicPromotionResource,
   topicsOverviewResource,
   type CandidateResource,
   type CandidateCard,
+  type BenchmarkTeardownRef,
   type AudienceSignalResource,
   type TopicPromotionResource,
   type TopicsOverviewResource,

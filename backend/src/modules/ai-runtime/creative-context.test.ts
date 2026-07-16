@@ -7,6 +7,7 @@ import {
   materialQueryTerms,
   markReconstructedBrief,
   renderProjectBriefHard,
+  renderBenchmarkRef,
   buildKnowledgeQuery,
   truncateKnowledgeBriefToBudget,
   KNOWLEDGE_BRIEF_BUDGET_CHARS,
@@ -890,5 +891,85 @@ describe("[T-270] assembleCreativeContext — projectBriefHard 仅项目态注�
       deps,
     );
     expect(context.projectBriefHard).toBe("");
+  });
+});
+
+// [T-284a] 复刻补链 G1 —— renderBenchmarkRef 渲染(带诚实门段头)+ assembleCreativeContext
+//   仅复刻项目态注入 benchmarkRefBrief(非复刻/账号态空,不污染)。
+describe("[T-284a] renderBenchmarkRef — 对标参照·复刻用段渲染(诚实门)", () => {
+  it("全 5 段 → 渲成参照段,段头带「禁照搬原文案」诚实门", () => {
+    const block = renderBenchmarkRef({
+      钩子拆解: "开头抛反常识",
+      结构拆解: "总分总",
+      为什么爆: "信息增量高 + 情绪反差",
+      可借鉴点: ["数字钩子", "反差结尾"],
+      适配本账号建议: "换本账号真实案例重做",
+    });
+    // 诚实门:仅结构参照、严禁照搬原文案/原标题。
+    expect(block).toContain("复刻用");
+    expect(block).toContain("严禁照搬原文案");
+    expect(block).toContain("原爆款为什么爆：信息增量高 + 情绪反差");
+    expect(block).toContain("结构拆解：总分总");
+    expect(block).toContain("钩子拆解：开头抛反常识");
+    expect(block).toContain("可借鉴点：数字钩子；反差结尾");
+    expect(block).toContain("适配本账号建议：换本账号真实案例重做");
+  });
+
+  it("只有部分段 → 只渲有值行;全空 / null → 空串(不注空壳)", () => {
+    const partial = renderBenchmarkRef({ 为什么爆: "只有为什么爆" });
+    expect(partial).toContain("只有为什么爆");
+    expect(partial).not.toContain("结构拆解");
+    expect(renderBenchmarkRef(null)).toBe("");
+    expect(renderBenchmarkRef(undefined)).toBe("");
+    expect(renderBenchmarkRef({})).toBe("");
+    expect(renderBenchmarkRef({ 为什么爆: "  ", 可借鉴点: [] })).toBe("");
+  });
+});
+
+describe("[T-284a] assembleCreativeContext — benchmarkRefBrief 仅复刻项目态注入", () => {
+  const refDeps = (benchmarkRef?: {
+    钩子拆解?: string;
+    结构拆解?: string;
+    为什么爆?: string;
+    可借鉴点?: string[];
+    适配本账号建议?: string;
+  }): ContextDeps => ({
+    positioning: {
+      getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
+    },
+    brief: {
+      getBriefDetail: async () => ({
+        coreMessage: "本账号主张",
+        benchmarkRef,
+      }),
+    },
+  });
+
+  it("复刻项目(briefDetail.benchmarkRef 非空)→ benchmarkRefBrief 渲染(带诚实门)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "" },
+      refDeps({ 为什么爆: "信息增量高", 结构拆解: "总分总" }),
+    );
+    expect(context.benchmarkRefBrief).toContain("信息增量高");
+    expect(context.benchmarkRefBrief).toContain("严禁照搬原文案");
+  });
+
+  it("非复刻项目(briefDetail 无 benchmarkRef)→ benchmarkRefBrief 空串(不污染普通创作)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "" },
+      refDeps(undefined),
+    );
+    expect(context.benchmarkRefBrief).toBe("");
+  });
+
+  it("账号态(projectId=null)→ benchmarkRefBrief 空串(选题链边界)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "某选题" },
+      refDeps({ 为什么爆: "信息增量高" }),
+    );
+    expect(context.benchmarkRefBrief).toBe("");
   });
 });

@@ -58,6 +58,13 @@ export interface CreativeContext {
   // 账号态(选题链)/ 无 project / brief 全空 → 空串(下游整段省略,不注空壳)。套用 formatUserMaterialBrief
   // 的「必须遵守」硬约束范式。注进 script.draft / planning.thesis / hooks / 对话 system(项目态)。
   projectBriefHard: string;
+  // [T-284a] 复刻补链 G1 —— 「对标参照·复刻用」段(渲染好的 prompt 块):这条 project 若复刻自某爆款
+  //   (briefDetail.benchmarkRef 存在),渲成「原爆款为什么爆 / 结构拆解 / 钩子拆解 / 可借鉴点 / 适配建议」
+  //   段,段头带**诚实门**「他号拆解·仅作结构参照,禁照搬原文案」。注进 script.draft / planning.thesis /
+  //   planning.outline,让写文案/立论点/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」。**仅复刻
+  //   项目态**(deps.brief 装配 + projectId 有值 + briefDetail.benchmarkRef 非空);非复刻/账号态 → 空串
+  //   (下游整段省略,不污染普通创作)。诚实门对齐 benchmark.teardown「绝不抄袭」硬约束。
+  benchmarkRefBrief: string;
   // ── 复盘专用字段(review.analyze)—— 只在有 projectId + 装配了 reviewSubject reader 时才填。
   //    复盘要「就这一条作品」提炼经验,而非账号级泛论,故把本作品的真实文案/标题/数据/评论读进来
   //    分别喂给 review prompt 的对应占位符(有则注入、空则该块在 prompt 里省略)。全部诚实空兜底:
@@ -287,6 +294,16 @@ export interface ProjectBriefReader {
     contentFormat?: string;
     targetAudience?: string;
     successCriteria?: string;
+    // [T-284a] 复刻补链 G1 —— 复刻项目携带的原爆款拆解要素(briefDetail.benchmarkRef)。
+    //   仅复刻项目(从 benchmark 转化候选立项)有此字段;普通创作/账号态为空。装配层 makeBriefReader
+    //   已从 brief_detail jsonb 带出。creative-context 据此产 benchmarkRefBrief 回流写稿(诚实门在段头)。
+    benchmarkRef?: {
+      钩子拆解?: string;
+      结构拆解?: string;
+      为什么爆?: string;
+      可借鉴点?: string[];
+      适配本账号建议?: string;
+    };
   } | null>;
 }
 
@@ -573,17 +590,22 @@ export async function assembleCreativeContext(
   // 画幅取向(横/竖屏)+ [T-270] 立项 Brief 硬锚 —— best-effort,从项目立项 Brief 读(一次读取两用)。
   // orientation 映射中文 label 供 script.draft 调节奏;core 字段渲成 projectBriefHard 硬约束段。
   // **仅项目态**(deps.brief 装配 + input.projectId 有值);账号态(选题链)天然跳过(projectBriefHard="")。
+  // [T-284a] 复刻补链 G1:复刻参照段(benchmarkRefBrief)—— 与 orientation/projectBriefHard 同源一次读取
+  //   (brief reader),避免二次读库。仅复刻项目(detail.benchmarkRef 非空)才产段;非复刻/账号态为空。
   let orientationHint = "";
   let projectBriefHard = "";
+  let benchmarkRefBrief = "";
   if (deps.brief && input.projectId) {
     try {
       const detail = await deps.brief.getBriefDetail(ctx, input.projectId);
       if (detail?.orientation === "landscape") orientationHint = "横屏";
       else if (detail?.orientation === "portrait") orientationHint = "竖屏";
       projectBriefHard = renderProjectBriefHard(detail);
+      benchmarkRefBrief = renderBenchmarkRef(detail?.benchmarkRef);
     } catch {
       orientationHint = ""; // never block a node on the brief read
       projectBriefHard = "";
+      benchmarkRefBrief = "";
     }
   }
 
@@ -665,6 +687,7 @@ export async function assembleCreativeContext(
     outlineBrief,
     orientationHint,
     projectBriefHard,
+    benchmarkRefBrief,
     reviewTitle,
     reviewScript,
     reviewMetrics,
@@ -948,6 +971,59 @@ export function renderProjectBriefHard(
   if (lines.length === 0) return "";
   return [
     "【本条内容立项硬约束 —— 必须遵守】以下是创作者对这条内容的立项决策,是钦定前提,不得偏离、不得自创与之矛盾的主张:",
+    ...lines,
+  ].join("\n");
+}
+
+// ── [T-284a] 复刻补链 G1 —— 「对标参照·复刻用」段组装 ────────────────────────────────────
+// 复刻项目(从 benchmark 转化候选立项)的 briefDetail.benchmarkRef 存有原爆款的 5 段拆解要素
+// (他号作品 AI 拆解:钩子/结构/为什么爆/可借鉴点/适配本账号建议)。渲成一段给创作生成链的参照文本,
+// **段头带诚实门**:「他号拆解·仅作结构参照,禁照搬原文案」,对齐 benchmark.teardown 的「绝不抄袭」硬约束
+// —— 让写文案/立论点/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」,而非搬运原文。全字段空 → 空串
+// (非复刻项目/账号态天然为空,下游整段省略,不污染普通创作)。纯函数,导出供单测。仅项目态调用
+// (assembleCreativeContext 内 deps.brief && projectId 时,从 brief reader 带出的 benchmarkRef 传入)。
+const BENCHMARK_REF_FIELD_MAX = 400; // 单字段防爆(拆解段可能较长)
+export function renderBenchmarkRef(
+  ref:
+    | {
+        钩子拆解?: string;
+        结构拆解?: string;
+        为什么爆?: string;
+        可借鉴点?: string[];
+        适配本账号建议?: string;
+      }
+    | null
+    | undefined,
+): string {
+  if (!ref) return "";
+  const clip = (v?: string) => {
+    const s = (v ?? "").trim();
+    if (!s) return "";
+    return s.length > BENCHMARK_REF_FIELD_MAX
+      ? `${s.slice(0, BENCHMARK_REF_FIELD_MAX)}…`
+      : s;
+  };
+  const why = clip(ref.为什么爆);
+  const structure = clip(ref.结构拆解);
+  const hook = clip(ref.钩子拆解);
+  const points = (ref.可借鉴点 ?? [])
+    .map((x) => (typeof x === "string" ? x.trim() : ""))
+    .filter((x) => x.length > 0)
+    .map((x) =>
+      x.length > BENCHMARK_REF_FIELD_MAX
+        ? `${x.slice(0, BENCHMARK_REF_FIELD_MAX)}…`
+        : x,
+    );
+  const adapt = clip(ref.适配本账号建议);
+  const lines: string[] = [];
+  if (why) lines.push(`· 原爆款为什么爆：${why}`);
+  if (structure) lines.push(`· 结构拆解：${structure}`);
+  if (hook) lines.push(`· 钩子拆解：${hook}`);
+  if (points.length > 0) lines.push(`· 可借鉴点：${points.join("；")}`);
+  if (adapt) lines.push(`· 适配本账号建议：${adapt}`);
+  if (lines.length === 0) return "";
+  return [
+    "【对标参照 · 复刻用】这条内容复刻自某爆款,以下是原爆款的拆解要素(**他号作品的 AI 拆解,仅作结构/逻辑参照,严禁照搬原文案、原标题**——必须换本账号的定位/人设重做):",
     ...lines,
   ].join("\n");
 }

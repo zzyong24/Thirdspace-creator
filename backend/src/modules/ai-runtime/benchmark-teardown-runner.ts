@@ -1,4 +1,4 @@
-import type { RequestContext } from "@creatoros/contract";
+import type { RequestContext, BenchmarkTeardownRef } from "@creatoros/contract";
 import type { ModelSpec, BenchmarkTeardownOutput } from "@creatoros/ai-worker";
 import type { PendingViralWork } from "../benchmark";
 
@@ -42,6 +42,15 @@ export interface BenchmarkTeardownDeps {
     ctx: RequestContext,
     input: { title: string; angle: string; source: "benchmark" },
   ) => Promise<{ id: string }>;
+  /** [T-284a] 复刻补链 G1 —— 给刚建的 benchmark 候选补写原爆款拆解要素(5 段)到 card.teardown。
+   *  CreateCandidateInput 无 card 字段(card 只在 PatchCandidateInput),故两步写:createCandidate
+   *  拿 id → patchCandidate(id, { card: { teardown } }) 补挂。host 绑 candidateService.patchCandidate。
+   *  best-effort:失败不崩整批(候选已建,只是少了 teardown card)。 */
+  patchCandidate: (
+    ctx: RequestContext,
+    candidateId: string,
+    patch: { card: { teardown: BenchmarkTeardownRef } },
+  ) => Promise<void>;
   /** 置一条作品拆解完成（teardown_status=done，幂等防重拆）。host 绑 benchmarkService.markTeardownDone。 */
   markTeardownDone: (ctx: RequestContext, workId: string) => Promise<void>;
   /** 单次处理几条待拆作品（默认 3，控 token + 防灌库）。 */
@@ -66,6 +75,27 @@ export function benchmarkVideoUrl(platform: string, awemeId: string): string {
 /** [T-235b] 黑马雷达发现的作品(discovery=darkhorse):时效敏感,拆解/转化都要带跟拍语义。 */
 function isDarkhorse(work: PendingViralWork): boolean {
   return work.discovery === "darkhorse";
+}
+
+/** [T-284a] 复刻补链 G1 —— 从 teardown AI 输出抽出 5 段可迁移拆解要素(丢弃「转化选题」,它本身是候选)。
+ *  空段不带(诚实);全空 → null(该 work 拆解无可参照要素,候选不补 card.teardown)。纯函数,导出供单测。 */
+export function extractTeardownRef(
+  teardown: BenchmarkTeardownOutput,
+): BenchmarkTeardownRef | null {
+  const out: BenchmarkTeardownRef = {};
+  const hook = (teardown.钩子拆解 ?? "").trim();
+  if (hook) out.钩子拆解 = hook;
+  const structure = (teardown.结构拆解 ?? "").trim();
+  if (structure) out.结构拆解 = structure;
+  const why = (teardown.为什么爆 ?? "").trim();
+  if (why) out.为什么爆 = why;
+  const points = (teardown.可借鉴点 ?? [])
+    .map((x) => (typeof x === "string" ? x.trim() : ""))
+    .filter((x) => x.length > 0);
+  if (points.length > 0) out.可借鉴点 = points;
+  const adapt = (teardown.适配本账号建议 ?? "").trim();
+  if (adapt) out.适配本账号建议 = adapt;
+  return Object.keys(out).length > 0 ? out : null;
 }
 
 /** 转化选题的 angle 附上参考链接 + 爆款倍数（provenance —— 候选表无独立 metadata 字段，落 angle）。
@@ -192,6 +222,10 @@ export async function runBenchmarkTeardown(
   for (const work of works) {
     try {
       const teardown = await deps.teardown(ctx, { work, positioningBrief });
+      // [T-284a] 复刻补链 G1:抽出 5 段可迁移拆解要素(不含「转化选题」——它本身就是候选),给本 work
+      //   产的每条候选补挂进 card.teardown(立项时复制进 briefDetail.benchmarkRef 回流写稿)。一次算好、
+      //   多条候选共用(同一 work 的拆解)。他号拆解只挂候选 card,不进 knowledge 库(SPEC 决策 A)。
+      const teardownRef = extractTeardownRef(teardown);
       // 只转化 fit=high 且有标题的选题（medium/low 仅在拆解里记录，不进池 —— 防灌库 + 保质）。
       const highFit = teardown.转化选题.filter(
         (t) => t.fit === "high" && t.title.trim().length > 0,
@@ -203,11 +237,26 @@ export async function runBenchmarkTeardown(
         const title = isDarkhorse(work)
           ? `🔥跟拍|${topic.title.trim()}`
           : topic.title.trim();
-        await deps.createCandidate(ctx, {
+        const cand = await deps.createCandidate(ctx, {
           title,
           angle: buildAngle(topic.angle, work),
           source: "benchmark",
         });
+        // [T-284a] 两步写第二步:补挂原爆款拆解要素到候选 card.teardown。best-effort —— patch 失败
+        //   只记日志、不回滚候选、不中断本批(候选已建,只是少了 teardown card,复刻回流少一段参照)。
+        if (teardownRef) {
+          try {
+            await deps.patchCandidate(ctx, cand.id, {
+              card: { teardown: teardownRef },
+            });
+          } catch (patchErr) {
+            // eslint-disable-next-line no-console
+            console.error(
+              `[benchmark-teardown] 候选 ${cand.id} 补挂拆解要素(card.teardown)失败,跳过(候选已建):`,
+              patchErr,
+            );
+          }
+        }
         promoted += 1;
       }
       // 拆完置 done（即便 0 高适配也标 —— 已分析过，不重拆）。幂等。

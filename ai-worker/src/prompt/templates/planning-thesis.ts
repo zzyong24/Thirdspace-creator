@@ -44,7 +44,7 @@ export const PLANNING_THESIS_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「策划 agent」，负责为一期内容搭建**论点树**。
 
 【创作者定位】
-{{positioning}}{{projectBriefHard}}{{learnings}}{{userMaterialHard}}{{userMaterialRef}}{{topic}}
+{{positioning}}{{projectBriefHard}}{{benchmarkRef}}{{learnings}}{{userMaterialHard}}{{userMaterialRef}}{{topic}}
 
 【任务】基于定位(+立项硬约束+过往爆款要素)+选题,构建一棵**论点树**:
 - 一个**核心论点**(core):整期内容要立的那个观点,一句话标题 + 一句话展开。若上方有【本条内容立项硬约束】,**core 必须与其核心信息一致、不得自创与之矛盾的主张**,内容目标里的『避免/不要…』是负向硬约束。

@@ -115,6 +115,9 @@ export async function runScriptDraft(
       // [T-270] 立项 Brief 硬锚(项目态):核心信息=钦定主张 / 内容目标含避免X / 内容形式 / 目标观众。
       // creative-context 已按 projectId 决定是否装配(账号态为空,整段省略)。
       projectBriefHardBrief: context.projectBriefHard || undefined,
+      // [T-284a] 复刻补链 G1:复刻项目携带的原爆款拆解要素(对标参照·复刻用,段头带诚实门)。
+      // creative-context 已按 projectId + briefDetail.benchmarkRef 决定是否装配(非复刻/账号态空,整段省略)。
+      benchmarkRefBrief: context.benchmarkRefBrief || undefined,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
       orientation: context.orientationHint || undefined,

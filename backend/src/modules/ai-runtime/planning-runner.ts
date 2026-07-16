@@ -73,6 +73,11 @@ function thesisFacets(
     projectBriefHard: context.projectBriefHard
       ? `\n${context.projectBriefHard}`
       : "",
+    // [T-284a] 复刻补链 G1:复刻参照段(段头含诚实门,creative-context 已装配)—— core 论点可借鉴原
+    // 爆款「为什么爆」的底层逻辑,但换本账号定位立论,不照搬。非复刻/账号态为空,整段省略。
+    benchmarkRef: context.benchmarkRefBrief
+      ? `\n${context.benchmarkRefBrief}`
+      : "",
     learnings: context.learningsBrief
       ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
       : "",

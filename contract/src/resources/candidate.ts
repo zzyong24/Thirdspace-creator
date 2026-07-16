@@ -10,6 +10,19 @@ import {
 
 // 七步整合设计 §5 — 选题情报层 (Candidate + AudienceSignal + TopicPromotion).
 
+// [T-284a] 复刻补链 G1 —— 原爆款拆解要素引用(他号作品 AI 拆解的 5 段可迁移要素,不含转化选题)。
+// benchmarkTeardownSchema(ai-worker)6 段里,「转化选题」本身已是候选,这里只留其余 5 段作复刻参照。
+// 全字段 optional(拆解偶缺某段也合法)。语义=AI 分析(非原文保真),故只挂候选 card + 立项 briefDetail,
+// 不进 knowledge 库(避免污染本账号资产)。
+export const benchmarkTeardownRef = z.object({
+  钩子拆解: z.string().optional(), // 前3秒/开头怎么抓人
+  结构拆解: z.string().optional(), // 内容结构/节奏编排
+  为什么爆: z.string().optional(), // 爆的底层原因(需求/情绪/信息增量)
+  可借鉴点: z.array(z.string()).optional(), // 可迁移的要素清单
+  适配本账号建议: z.string().optional(), // 结合本账号定位怎么改造
+});
+export type BenchmarkTeardownRef = z.infer<typeof benchmarkTeardownRef>;
+
 // 选题卡 (topic.enrich, 选题中心大改) — the AI-filled 详情 (一句话/观众/痛点/冲突/Hook/
 // 结构/形式/素材/风险/建议) + 指标 (受众痛感/素材充足/制作难度) a candidate carries once a
 // topic.enrich task formalizes it. EVERY field is optional/default so a bare `{}` is a
@@ -33,6 +46,12 @@ export const candidateCard = z.object({
   // [T-235d] 溯源(additive)—— 实验候选(正向归因回流的 next_experiments 进池)绑定它的
   // 归因行 id(soft ref → topic_attributions.id;UI「实验」徽标点开看归因依据)。非实验候选缺省。
   attributionId: id.optional(),
+  // [T-284a] 复刻补链 G1(additive)—— benchmark 拆解转化选题携带的**原爆款拆解要素**(他号作品的
+  //   AI 拆解 5 段:钩子/结构/为什么爆/可借鉴点/适配本账号建议;不含「转化选题」它本身就是候选)。
+  //   benchmark-teardown-runner 建候选后 patch 挂上,立项时复制进 project.briefDetail.benchmarkRef,
+  //   creative-context 装配成「对标参照·复刻用」段回流写稿(诚实门:仅结构参照,禁照搬原文案)。
+  //   非 benchmark 候选缺省。零新表(复用 candidate.card jsonb)。
+  teardown: benchmarkTeardownRef.optional(),
 });
 export type CandidateCard = z.infer<typeof candidateCard>;
 

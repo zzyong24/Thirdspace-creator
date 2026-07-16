@@ -53,9 +53,13 @@ function makeDeps(over: Partial<BenchmarkTeardownDeps> = {}): {
   deps: BenchmarkTeardownDeps;
   created: Array<{ title: string; angle: string; source: string }>;
   doneIds: string[];
+  patched: Array<{ candidateId: string; card: Record<string, unknown> }>;
 } {
   const created: Array<{ title: string; angle: string; source: string }> = [];
   const doneIds: string[] = [];
+  // [T-284a] 捕获补挂的 card.teardown —— 断言复刻拆解要素落库。
+  const patched: Array<{ candidateId: string; card: Record<string, unknown> }> =
+    [];
   const deps: BenchmarkTeardownDeps = {
     listPendingViralWorks: async () => [work()],
     getPositioningBrief: async () => "领域：AI 编导",
@@ -64,12 +68,15 @@ function makeDeps(over: Partial<BenchmarkTeardownDeps> = {}): {
       created.push(input);
       return { id: `cand-${created.length}` };
     },
+    patchCandidate: async (_c, candidateId, patch) => {
+      patched.push({ candidateId, card: patch.card });
+    },
     markTeardownDone: async (_c, id) => {
       doneIds.push(id);
     },
     ...over,
   };
-  return { deps, created, doneIds };
+  return { deps, created, doneIds, patched };
 }
 
 describe("runBenchmarkTeardown", () => {
@@ -97,6 +104,54 @@ describe("runBenchmarkTeardown", () => {
     expect(created[0]!.angle).toContain("爆款倍数 8.5x");
     // 拆完标 done(幂等锚)。
     expect(doneIds).toEqual(["w1"]);
+  });
+
+  // [T-284a] 复刻补链 G1:每条 benchmark 候选建好后补挂 5 段原爆款拆解要素到 card.teardown。
+  it("补挂 card.teardown(5 段拆解要素,不含转化选题)", async () => {
+    const { deps, created, patched } = makeDeps();
+    await runBenchmarkTeardown(ctx, deps);
+    expect(created).toHaveLength(1);
+    expect(patched).toHaveLength(1);
+    expect(patched[0]!.candidateId).toBe("cand-1");
+    const teardown = patched[0]!.card.teardown as Record<string, unknown>;
+    expect(teardown).toEqual({
+      钩子拆解: "开头抛反常识",
+      结构拆解: "总分总",
+      为什么爆: "信息增量高",
+      可借鉴点: ["数字钩子"],
+      适配本账号建议: "换本账号场景",
+    });
+    // 「转化选题」不进 card.teardown(它本身就是候选)。
+    expect(teardown).not.toHaveProperty("转化选题");
+  });
+
+  // [T-284a] patch 失败 best-effort:候选已建、标 done,不崩整批,只是少了 teardown card。
+  it("补挂 card.teardown 失败 → 候选仍建、仍标 done(best-effort)", async () => {
+    const { deps, created, doneIds } = makeDeps({
+      patchCandidate: async () => {
+        throw new Error("patch boom");
+      },
+    });
+    const res = await runBenchmarkTeardown(ctx, deps);
+    expect(res).toEqual({ worksProcessed: 1, promoted: 1 });
+    expect(created).toHaveLength(1);
+    expect(doneIds).toEqual(["w1"]);
+  });
+
+  // [T-284a] 拆解 5 段全空 → 不 patch(诚实:无可参照要素,候选不补空壳 teardown)。
+  it("拆解要素全空 → 不补挂 card.teardown", async () => {
+    const { deps, patched } = makeDeps({
+      teardown: async () =>
+        teardownOut({
+          钩子拆解: "",
+          结构拆解: "",
+          为什么爆: "",
+          可借鉴点: [],
+          适配本账号建议: "",
+        }),
+    });
+    await runBenchmarkTeardown(ctx, deps);
+    expect(patched).toHaveLength(0);
   });
 
   it("只转化 fit=high(medium/low 不进池)", async () => {

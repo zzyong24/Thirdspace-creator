@@ -2737,6 +2737,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           contentFormat?: string;
           targetAudience?: string;
           successCriteria?: string;
+          // [T-284a] 复刻补链 G1 —— 复刻项目携带的原爆款拆解要素(briefDetail.benchmarkRef jsonb)。
+          benchmarkRef?: {
+            钩子拆解?: string;
+            结构拆解?: string;
+            为什么爆?: string;
+            可借鉴点?: string[];
+            适配本账号建议?: string;
+          };
         };
         return {
           orientation: d.orientation,
@@ -2745,6 +2753,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           contentFormat: d.contentFormat,
           targetAudience: d.targetAudience,
           successCriteria: d.successCriteria,
+          // [T-284a] 带出复刻参照(creative-context 据此产 benchmarkRefBrief 回流写稿/立论点/搭结构)。
+          benchmarkRef: d.benchmarkRef,
         };
       } catch {
         return null; // best-effort;读不到 brief 绝不阻塞写文案/立论点
@@ -3564,6 +3574,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               contract: contractReader,
               // F2:反推论点树/合同注入结构方案上下文时标「未经确认」。
               artifactOrigin: artifactOriginReader,
+              // [T-284a] 复刻补链 G1:装配 brief reader,让 creative-context 带出 benchmarkRef →
+              //   结构方案参照原爆款结构编排(段头诚实门,非复刻项目为空,不污染)。
+              brief: briefReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):结构方案节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
@@ -5667,6 +5680,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         createCandidate: async (c, input) => {
           const cand = await candidateService.createCandidate(c, input);
           return { id: cand.id };
+        },
+        // [T-284a] 复刻补链 G1:给刚建的 benchmark 候选补挂原爆款拆解要素(card.teardown)。绑
+        //   candidateService.patchCandidate(card partial 浅合并;pickCardFields 已放行 teardown 对象)。
+        patchCandidate: async (c, candidateId, patch) => {
+          await candidateService.patchCandidate(c, candidateId, patch);
         },
         markTeardownDone: (c, workId) =>
           benchmarkService.markTeardownDone(c, workId),

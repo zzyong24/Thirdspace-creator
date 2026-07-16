@@ -271,6 +271,48 @@ describe("candidate service", () => {
     expect(cmd.brief).toContain("手动灵感");
   });
 
+  // [T-284a] 复刻补链 G1:benchmark 转化候选(card.teardown 存在)立项时,把原爆款 5 段拆解要素
+  //   复制进 briefDetail.benchmarkRef —— creative-context 据此回流写稿。
+  it("promote carries card.teardown into briefDetail.benchmarkRef (复刻携带链)", async () => {
+    const cand = await svc.createCandidate(ctx, {
+      title: "本账号新题",
+      angle: "换本账号角度重做",
+      source: "benchmark",
+    });
+    await svc.patchCandidate(ctx, cand.id, {
+      card: {
+        oneLiner: "一句话主张",
+        teardown: {
+          钩子拆解: "开头抛反常识",
+          结构拆解: "总分总",
+          为什么爆: "信息增量高",
+          可借鉴点: ["数字钩子", "反差"],
+          适配本账号建议: "换本账号场景",
+        },
+      },
+    });
+    await svc.promote(ctx, cand.id);
+    const [, cmd] = ports.projects.createProject.mock.calls[0]!;
+    expect(cmd.briefDetail?.benchmarkRef).toEqual({
+      钩子拆解: "开头抛反常识",
+      结构拆解: "总分总",
+      为什么爆: "信息增量高",
+      可借鉴点: ["数字钩子", "反差"],
+      适配本账号建议: "换本账号场景",
+    });
+  });
+
+  // [T-284a] 非 benchmark 候选(无 card.teardown)→ 立项不写 benchmarkRef(普通创作不携带、不污染)。
+  it("promote of a non-benchmark candidate leaves benchmarkRef undefined (不污染)", async () => {
+    const cand = await svc.createCandidate(ctx, {
+      title: "普通选题",
+      angle: "普通角度",
+    });
+    await svc.promote(ctx, cand.id);
+    const [, cmd] = ports.projects.createProject.mock.calls[0]!;
+    expect(cmd.briefDetail?.benchmarkRef).toBeUndefined();
+  });
+
   it("promote on an already-promoted Candidate throws PromoteStateError (no double-promote)", async () => {
     const cand = await svc.createCandidate(ctx, { title: "选题", angle: "" });
     await svc.promote(ctx, cand.id);

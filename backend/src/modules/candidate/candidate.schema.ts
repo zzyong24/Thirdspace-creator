@@ -49,6 +49,31 @@ function score(v: unknown): number | null {
   return Math.round(v);
 }
 
+// [T-284a] 复刻补链 G1 —— 原爆款拆解要素(candidate.card.teardown)的解析。5 段可迁移要素
+// (钩子/结构/为什么爆/可借鉴点/适配本账号建议),benchmark-teardown-runner 建候选后 patch 挂上。
+// 全字段可空;整体无任一有效段 → undefined(候选 card 里不留空壳,读端 toCardDto 也就不带 teardown)。
+// 纯函数(无 zod 依赖,mirrors toCardDto 手写解析风格)。导出供单测直接断言。
+export function parseTeardownRef(
+  raw: unknown,
+): CandidateCard["teardown"] | undefined {
+  if (raw == null || typeof raw !== "object") return undefined;
+  const t = raw as Record<string, unknown>;
+  const points = Array.isArray(t.可借鉴点)
+    ? t.可借鉴点.filter((x): x is string => typeof x === "string" && x.length > 0)
+    : undefined;
+  const out: NonNullable<CandidateCard["teardown"]> = {};
+  const hook = str(t.钩子拆解);
+  if (hook) out.钩子拆解 = hook;
+  const structure = str(t.结构拆解);
+  if (structure) out.结构拆解 = structure;
+  const why = str(t.为什么爆);
+  if (why) out.为什么爆 = why;
+  if (points && points.length > 0) out.可借鉴点 = points;
+  const adapt = str(t.适配本账号建议);
+  if (adapt) out.适配本账号建议 = adapt;
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 // jsonb → the full contract card. Drops unknown keys, clamps the metrics, and applies
 // the contract defaults (contentStructure:[], the 3 metrics:null). Pure + deterministic
 // (no zod dependency in the frontend package — mirrors the hand-rolled signal parser).
@@ -78,6 +103,9 @@ export function toCardDto(raw: unknown): CandidateCard {
     productionDifficulty: difficulty,
     // [T-235d] 归因溯源(additive)—— 实验候选携带其归因行 id(soft ref),UI 点开看依据。
     attributionId: str(c.attributionId),
+    // [T-284a] 复刻补链 G1(additive)—— benchmark 转化候选携带的原爆款拆解要素(5 段),
+    //   立项时复制进 briefDetail.benchmarkRef 回流写稿。非 benchmark 候选无此字段。
+    teardown: parseTeardownRef(c.teardown),
   };
 }
 
@@ -119,6 +147,13 @@ export function pickCardFields(raw: unknown): Record<string, unknown> {
     PRODUCTION_DIFFICULTY.has(c.productionDifficulty)
   ) {
     out.productionDifficulty = c.productionDifficulty;
+  }
+  // [T-284a] 复刻补链 G1 —— teardown 是对象(非 string),CARD_DETAIL_KEYS 只过 string,故单独放行。
+  //   benchmark-teardown-runner 建候选后 `patchCandidate({ card: { teardown } })` 补写;patch 白名单
+  //   不能丢它(否则 5 段拆解永远存不进 card,复刻回流断链)。解析失败/空 → 不写(不覆盖既有)。
+  if ("teardown" in c) {
+    const parsed = parseTeardownRef(c.teardown);
+    if (parsed) out.teardown = parsed;
   }
   return out;
 }

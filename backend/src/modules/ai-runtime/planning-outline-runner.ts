@@ -54,6 +54,11 @@ function outlineFacets(
     positioning: context.positioningBrief
       ? context.positioningBrief
       : "（创作者尚未设置定位——按通用爆款逻辑产结构方案）",
+    // [T-284a] 复刻补链 G1:复刻参照段(段头含诚实门,creative-context 已装配)—— 结构方案可参照原
+    // 爆款的结构编排/钩子逻辑,但换本账号定位重排,不照搬原文案。非复刻/账号态为空,整段省略。
+    benchmarkRef: context.benchmarkRefBrief
+      ? `\n${context.benchmarkRefBrief}`
+      : "",
     contract: context.contractBrief
       ? `\n【已确认的内容合同】\n${context.contractBrief}`
       : "",

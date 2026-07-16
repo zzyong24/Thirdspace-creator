@@ -130,6 +130,17 @@ export interface BriefDetail {
   durationEstimate?: string;
   coreMessage?: string;
   successCriteria?: string;
+  // [T-284a] 复刻补链 G1 —— 若这条 project 是「复刻某爆款」(从 benchmark 转化候选立项),携带原
+  //   爆款的 5 段拆解要素(他号作品 AI 拆解),供 creative-context 装配成「对标参照·复刻用」段回流写稿。
+  //   仅复刻项目有此字段(candidate.card.teardown 存在时立项复制进来);普通创作不携带(不污染)。
+  //   诚实门在装配段头保证(仅结构参照·禁照搬原文案)。零新表(复用 brief_detail jsonb)。
+  benchmarkRef?: {
+    钩子拆解?: string;
+    结构拆解?: string;
+    为什么爆?: string;
+    可借鉴点?: string[];
+    适配本账号建议?: string;
+  };
 }
 
 // 数据底座(宪法 §7 / SPEC §1.2)—— 导入项目的平台引用。装在 projects.platform_ref
@@ -460,7 +471,39 @@ export function normalizeBriefDetail(raw: unknown): BriefDetail {
   if (cm) out.coreMessage = cm;
   const sc = s(c.successCriteria);
   if (sc) out.successCriteria = sc;
+  // [T-284a] 复刻补链 G1 —— 保留复刻参照(benchmarkRef)。normalizeBriefDetail 逐字段重建(丢未知键),
+  //   若不显式保留,立项复制进来的 benchmarkRef 会在 createProject 落库时被抹掉 → facet 恒空、复刻回流断。
+  //   只留有效段(空段丢),整体无有效段 → 不写(不留空壳)。
+  const br = parseBenchmarkRef(c.benchmarkRef);
+  if (br) out.benchmarkRef = br;
   return out;
+}
+
+// [T-284a] 复刻补链 G1 —— 解析 briefDetail.benchmarkRef(原爆款 5 段拆解要素)。逐字段裁空,
+//   整体无任一有效段 → undefined(不留空壳)。纯函数,导出供单测。
+export function parseBenchmarkRef(
+  raw: unknown,
+): BriefDetail["benchmarkRef"] | undefined {
+  if (raw == null || typeof raw !== "object") return undefined;
+  const t = raw as Record<string, unknown>;
+  const s = (v: unknown): string | undefined =>
+    typeof v === "string" && v.trim().length > 0 ? v.trim() : undefined;
+  const out: NonNullable<BriefDetail["benchmarkRef"]> = {};
+  const hook = s(t.钩子拆解);
+  if (hook) out.钩子拆解 = hook;
+  const structure = s(t.结构拆解);
+  if (structure) out.结构拆解 = structure;
+  const why = s(t.为什么爆);
+  if (why) out.为什么爆 = why;
+  const points = Array.isArray(t.可借鉴点)
+    ? t.可借鉴点
+        .map((x) => (typeof x === "string" ? x.trim() : ""))
+        .filter((x) => x.length > 0)
+    : [];
+  if (points.length > 0) out.可借鉴点 = points;
+  const adapt = s(t.适配本账号建议);
+  if (adapt) out.适配本账号建议 = adapt;
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 // SPEC §1.2 SKL-09 数据源收敛:从「立项时已知的目标平台集」算出关系表行

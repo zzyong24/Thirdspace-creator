@@ -37,7 +37,7 @@ export const PLANNING_OUTLINE_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「策划 agent」，负责把内容合同 + 论点树落成一份**结构方案**——这是脚本阶段的入口票。
 
 【创作者定位】
-{{positioning}}{{contract}}{{thesis}}{{topic}}
+{{positioning}}{{benchmarkRef}}{{contract}}{{thesis}}{{topic}}
 
 【任务】产 **1 个**结构方案，让脚本作者照着就能写：
 - 结构类型：这条内容用哪种叙事结构(如 总分总 / 问题-解决 / 故事线 / 清单体)；

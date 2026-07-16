@@ -35,6 +35,12 @@ export interface RunScriptNodeInput {
    * 定位之后、任务之前,让脚本主张锚定钦定核心信息、不漂移。账号态/无 brief → 空,整段省略。
    */
   projectBriefHardBrief?: string;
+  /**
+   * [T-284a] 复刻补链 G1 —— 「对标参照·复刻用」段(选填,复刻项目态):creative-context.renderBenchmarkRef
+   * 已装配含诚实门段头「他号拆解·仅作结构参照,禁照搬原文案」+ 原爆款为什么爆/结构拆解/钩子/可借鉴点/
+   * 适配建议。有则注入(照这条爆款的结构逻辑换本账号定位重做);非复刻/账号态 → 空,整段省略。
+   */
+  benchmarkRefBrief?: string;
   /** 本期选题标题/切入(选填)。 */
   topicTitle?: string;
   topicAngle?: string;
@@ -117,6 +123,11 @@ export async function runScriptNode(
       // 空(账号态/无 brief)则整段省略。放在 positioning 之后,让模型先读到本条立项的钦定前提。
       projectBriefHard: input.projectBriefHardBrief
         ? `\n${input.projectBriefHardBrief}`
+        : "",
+      // [T-284a] 复刻补链 G1:复刻参照段(段头含诚实门,creative-context 已装配)。空(非复刻/账号态)
+      // 则整段省略。放在立项硬约束之后,让模型先读到本条立项的钦定前提、再读复刻参照。
+      benchmarkRef: input.benchmarkRefBrief
+        ? `\n${input.benchmarkRefBrief}`
         : "",
       learnings: input.learningsBrief
         ? `\n【过往复盘爆款要素】\n${input.learningsBrief}`
