@@ -252,7 +252,7 @@ describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
         ],
       },
     });
-    const lines = await decideSubtitles({ srtLines }, call);
+    const lines = await decideSubtitles({ srtLines, script: SCRIPT }, call);
     expect(lines).toHaveLength(4);
     expect(lines.map((l) => [l.startSec, l.endSec])).toEqual(
       srtLines.map((l) => [l.startSec, l.endSec]),
@@ -260,6 +260,26 @@ describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
     expect(lines[2]!.zh).toBe("第二个技巧是提供实例");
     expect(lines[3]!.zh).toBe("记得点赞关注"); // 守门退回
     expect(lines[1]!.en).toBe("Tip 1: give the model a role");
+  });
+
+  it("[T-320] 校正基准=口播稿:script 作为 facet 真喂进 video.subtitles skill", async () => {
+    let capturedFacets: Record<string, unknown> | undefined;
+    const call: StructuredCall = async <T>({
+      skillId,
+      facets,
+    }: {
+      skillId: string;
+      facets?: Record<string, unknown>;
+    }) => {
+      if (skillId === "video.subtitles") capturedFacets = facets;
+      return {
+        lines: srtLines.map((l) => ({ index: l.index, zh: l.text, en: "en" })),
+      } as T;
+    };
+    await decideSubtitles({ srtLines, script: SCRIPT }, call);
+    // 口播稿进了 skill 的 script facet(否则=SRT 自我纠错,纠不了「对口播稿的认错字」)。
+    expect(capturedFacets?.script).toBe(SCRIPT);
+    expect(typeof capturedFacets?.srt).toBe("string");
   });
 });
 

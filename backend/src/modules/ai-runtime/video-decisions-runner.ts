@@ -370,14 +370,16 @@ function lineSimilarity(a: string, b: string): number {
   return (2 * inter) / (sa.size + sb.size);
 }
 
-/** ④ 双语字幕:行数/时间轴不变(时间从原行回填);zh 改动过大退回原文(改动最小铁律)。 */
+/** ④ 双语字幕:行数/时间轴不变(时间从原行回填);zh 改动过大退回原文(改动最小铁律)。
+ *  [T-320] 文本校正接口口播稿:script 作校正基准喂进 skill —— ASR 认错字(同音/近音/专名)按
+ *  口播稿改回,对不上口播稿的一律不动(改动最小 + SUBTITLE_REWRITE_GUARD 双保险)。时间不动(§2 铁律)。 */
 export async function decideSubtitles(
-  input: { srtLines: readonly SrtLine[] },
+  input: { srtLines: readonly SrtLine[]; script: string },
   call: StructuredCall,
 ): Promise<BilingualSubtitleLine[]> {
   const out = await call<VideoSubtitlesOutput>({
     skillId: "video.subtitles",
-    facets: { srt: srtFacet(input.srtLines) },
+    facets: { srt: srtFacet(input.srtLines), script: input.script },
     outputSchema: buildSubtitlesDecisionSchema(input.srtLines),
   });
   const byIndex = new Map(out.lines.map((l) => [l.index, l]));
@@ -517,7 +519,9 @@ export async function runVideoDecisions(
     );
 
     stepIdx = 3;
-    const subtitles = await decideSubtitles({ srtLines }, call);
+    // [T-320] 字幕文本校正接口口播稿:script 作校正基准(与 decideScenes/decideCards 同源),
+    //   让 ASR 认错字按口播稿改回(改动最小,时间不动)。
+    const subtitles = await decideSubtitles({ srtLines, script }, call);
     await step(3, `${VIDEO_DECISION_STEPS[3]}:${subtitles.length} 行`);
 
     const decisions: VideoDecisions = { scenes, cards, broll, subtitles, srtLines };
