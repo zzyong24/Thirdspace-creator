@@ -6636,8 +6636,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
           // [T-074 用户裁决] 总粉丝只统计抖音(B站 8400 系 seed 幻觉数据已清,
           // 用户:「不要统计B站」);未来接别的平台前不并入总数。
+          // [T-358] 账号隔离:只取**当前选中号**的基线——T-071 单号时代的「全号求和」在多号下
+          // 变成跨号加总(真机实锤:两号 1103+2570=3673 同值串号,ISO-08 反例)。dashboard 其余
+          // 指标走 per-account rollup 本就隔离,粉丝这条此前漏改。
           const baselineSum = accounts
-            .filter((a) => a.status === "active" && a.platform === "douyin")
+            .filter(
+              (a) =>
+                a.status === "active" &&
+                a.platform === "douyin" &&
+                a.id === ctx.accountId,
+            )
             .reduce((acc, a) => acc + (a.followerBaseline ?? 0), 0);
           if (baselineSum > 0) {
             followerTotal = { label: "总粉丝", value: fmt(baselineSum) };
