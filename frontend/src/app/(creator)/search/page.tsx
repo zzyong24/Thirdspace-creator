@@ -25,6 +25,7 @@ import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 import { SearchPage } from "@/features/search/search-page";
 import { globalSearchPageToViewModel } from "@/features/search/search-view-model";
+import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
 
 interface SearchRoutePageProps {
   readonly searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -54,6 +55,13 @@ export default async function SearchRoutePage({
     // No session (the (creator) layout guard will already have redirected on a
     // real request). Render the fixture-composed fallback so SSR never crashes.
     return <SearchPage initialQuery={q} activeType={type} />;
+  }
+
+  // [T-353] 未选号(含 0 号)= 引导态(T-332 §4.2):本页 per-account 读会撞 S2 strict 门
+  // (AccountRequiredError → 整页错误边界)。layout 的零账号守卫只在首次渲染判定(App Router
+  // 客户端导航不重渲 layout),故页面自兜:ctx 无选中号 → 渲绑定引导,不发注定失败的读。
+  if (!session.ctx.accountId) {
+    return <ZeroAccountGuidance />;
   }
 
   const page = (await createServerClient(session.ctx).getGlobalSearch({

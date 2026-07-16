@@ -26,6 +26,7 @@ import type { KnowledgeDataClient } from "@/features/knowledge/knowledge-data";
 import { buildKnowledgeDashboardViewModel } from "@/features/knowledge/knowledge-data";
 import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
+import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
 
 interface KnowledgeRoutePageProps {
   readonly searchParams?: Promise<
@@ -65,6 +66,13 @@ export default async function KnowledgeRoutePage({
     // the fixture seam: `<KnowledgePage />` 无 VM 走 singleton(canonical ctx),
     // SSR/测试不崩。
     return <KnowledgePage />;
+  }
+
+  // [T-353] 未选号(含 0 号)= 引导态(T-332 §4.2):本页 per-account 读会撞 S2 strict 门
+  // (AccountRequiredError → 整页错误边界)。layout 的零账号守卫只在首次渲染判定(App Router
+  // 客户端导航不重渲 layout),故页面自兜:ctx 无选中号 → 渲绑定引导,不发注定失败的读。
+  if (!session.ctx.accountId) {
+    return <ZeroAccountGuidance />;
   }
 
   // Bind reads to the request's session ctx so knowledge.* / learnings.* stay
