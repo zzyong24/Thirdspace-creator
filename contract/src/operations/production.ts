@@ -5,6 +5,7 @@ import {
   productionResource,
   productionSegmentResource,
   exportRecordResource,
+  materialExportResource,
 } from "../resources/production";
 
 const outputParams = z.object({ outputId: id });
@@ -78,6 +79,17 @@ export const productionOperations = {
     }),
     response: exportRecordResource,
     fr: ["FR-PRODUCTION-EXPORT-CREATE"],
+  }),
+  // [T-366b] 素材包统一导出:项目关联全部素材 + 口播稿 + 编导说明 readme + manifest
+  // 本地打包成 zip 落 asset(P-04 不出网),返回签名下载 URL。诚实门:包是「原素材+
+  // 编导说明」,不是可一键导入的剪映工程(VP-05,文案在前端与 readme 头)。
+  exportProductionMaterials: defineEndpoint({
+    id: "productions.exports.materials",
+    method: "POST",
+    path: "/productions/:productionId/exports/materials",
+    params: productionParams,
+    response: materialExportResource,
+    fr: ["FR-PRODUCTION-EXPORT-MATERIALS"],
   }),
   completeExport: defineEndpoint({
     id: "exports.complete",

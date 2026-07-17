@@ -21,6 +21,19 @@
  *      渲染任务采纳→completeExport(resultAssetId)+ ready。
  *
  * ffmpeg/Chromium 未就绪:executor 诚实报错,这里经 humanizeRenderError 给安装引导。
+ *
+ * [T-366a] 制作方式二选一(SPEC 2026-07-17 §4.1):默认「用 CreatorOS 制作」= 上述
+ * 现状流零破坏;「直接上传成品视频」= 复用同一条两阶段上传链传成品(mp4/mov 收窄 +
+ * 时长>0 探针,坏文件诚实拒收)→ 不 dispatch 四决策/不渲染 → createProductionExport +
+ * completeExport(resultAssetId=成品)→ 状态机到 ready。状态机跳转语义(SPEC §5 待决点1):
+ * 后端 putProduction 只接受相邻 +1(跨步 ConflictError),故选「补记中间态」—— 复用
+ * statusStepsTo 依次 PUT recording→editing→rendering→ready,不改状态机语义。
+ * 可退回(VP-03):completeExport 前随时切回;已被 publication 登记 → 禁覆盖(§5.1③,
+ * 只提示先解除登记/新增,绝不静默换片)。飞轮不脱钩(§5.1⑤):盲预测/发布物料/登记发布
+ * 都锚 outputId/publication(稿面 PublishPack 链),与成片怎么来的正交,此处零改动。
+ *
+ * [T-366b] 「导出素材包」辅助入口:调 productions.exports.materials(后端本地 zip →
+ * asset → 签名下载 URL),诚实门文案「原素材+编导说明,非可一键导入的剪映工程」。
  */
 
 import * as React from "react";
@@ -268,6 +281,30 @@ export function ProductionWorkbench({
   );
   const [flowError, setFlowError] = React.useState<string | null>(null);
 
+  // ── [T-366a] 制作方式二选一 ──────────────────────────────────────────────────
+  const [method, setMethod] = React.useState<"creatoros" | "upload">(
+    "creatoros",
+  );
+  const [finalBusy, setFinalBusy] = React.useState(false);
+  const [finalError, setFinalError] = React.useState<string | null>(null);
+  const [finalNotice, setFinalNotice] = React.useState<string | null>(null);
+  // 已有成片时的替换确认门(§4.1:已 ready 覆盖需二次确认,不静默丢)。
+  const [replaceOk, setReplaceOk] = React.useState(false);
+  // §5.1③:成片已被 publication 登记 → 禁覆盖(null=未探测/无需探测)。
+  const [pubLocked, setPubLocked] = React.useState<boolean | null>(null);
+  const finalInputRef = React.useRef<HTMLInputElement>(null);
+
+  // ── [T-366b] 素材包导出 ─────────────────────────────────────────────────────
+  const [exportBusy, setExportBusy] = React.useState(false);
+  const [exportError, setExportError] = React.useState<string | null>(null);
+  const [exportDone, setExportDone] = React.useState<{
+    fileName: string;
+    fileCount: number;
+    hasDecisions: boolean;
+  } | null>(null);
+  // 预计大小(项目素材 fileSize 求和;读不到就不提示,不编数)。
+  const [estBytes, setEstBytes] = React.useState<number | null>(null);
+
   // ── [T-285] mount 恢复已上传素材 ─────────────────────────────────────────────
   //   病根:粗剪视频 + SRT 两阶段上传已落库(materialLink stage=production),但 video/srt 只
   //   在组件 state → 离开本页组件卸载即清,回来空白、被迫从零重传(用户实测)。这里 mount 时按
@@ -300,6 +337,13 @@ export function ProductionWorkbench({
             .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0] ?? null;
         const videoLink = latestOf("clip");
         const srtLink = latestOf("reference");
+        // [T-366a] 上传成品路径的恢复:role=final 存在 → 回到「直接上传成品」视图 +
+        // 成片预览(与 CreatorOS 渲染成片互不干扰,role 隔离)。
+        const finalLink = latestOf("final");
+        if (finalLink) {
+          setMethod("upload");
+          setFinalVideoAssetId((prev) => prev ?? finalLink.entityId);
+        }
         if (videoLink) {
           // 视频时长在上传时由 File 客户端读得,离开后无源 → null(时长校验优雅跳过,不阻断)。
           setVideo((prev) =>
@@ -528,6 +572,215 @@ export function ProductionWorkbench({
     },
     [loadBroll],
   );
+
+  // ── [T-366a] 直接上传成品视频(跳过四决策/渲染直登成片)──────────────────────
+  //   §5.1③ 探测:已有成片 + 该 output 已有 publication 登记 → 禁覆盖(先解除登记或
+  //   新增产出,绝不静默换片)。只在 upload 视图且存在既有成片时探测(best-effort)。
+  const hasExistingFinal = Boolean(finalVideoAssetId || status === "ready");
+  React.useEffect(() => {
+    if (method !== "upload" || !outputId || !hasExistingFinal) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 离开探测语境时复位(同 FinalVideoPreview 复位先例)
+      setPubLocked(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const pubs = (await client.listPublications({
+          params: { outputId },
+          query: { page: 1, pageSize: 50 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<{ id: string }>;
+        if (!cancelled) setPubLocked(pubs.length > 0);
+      } catch {
+        if (!cancelled) setPubLocked(null); // 探测失败 → 上传时再兜一次
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [method, outputId, hasExistingFinal]);
+
+  const onFinalFile = React.useCallback(
+    async (file: File) => {
+      setFinalError(null);
+      setFinalNotice(null);
+      // 基本校验(§5.1⑤):格式收窄 mp4/mov + 可读时长探针,坏文件诚实拒收不直登 ready。
+      const isMp4Mov =
+        /\.(mp4|mov)$/i.test(file.name) ||
+        file.type === "video/mp4" ||
+        file.type === "video/quicktime";
+      if (!isMp4Mov) {
+        setFinalError("成品只收 mp4 / mov 格式 —— 请从剪辑软件导出后再上传。");
+        return;
+      }
+      setFinalBusy(true);
+      try {
+        const durationSec = await readVideoDuration(file);
+        if (durationSec == null || durationSec <= 0) {
+          setFinalError(
+            "读不出有效时长(文件可能损坏或不是视频)—— 已拒收,请检查文件后重试。",
+          );
+          return;
+        }
+        // §5.1③ 禁覆盖:已有成片且该产出已被 publication 登记 → 不覆盖已登记事实。
+        if (hasExistingFinal && outputId) {
+          let locked = pubLocked;
+          if (locked === null) {
+            try {
+              const pubs = (await client.listPublications({
+                params: { outputId },
+                query: { page: 1, pageSize: 50 },
+                body: undefined,
+              })) as unknown as ReadonlyArray<{ id: string }>;
+              locked = pubs.length > 0;
+            } catch {
+              locked = null; // 探测不到 → 保守放行(登记事实在服务端仍不可变)
+            }
+          }
+          if (locked) {
+            setPubLocked(true);
+            setFinalError(
+              "当前成片已登记过发布 —— 不能覆盖已登记的事实。请先在发布面解除登记,或新建产出再上传。",
+            );
+            return;
+          }
+        }
+        // 复用两阶段上传链(role=final,与粗剪 clip / B-roll 隔离)。
+        const assetId = await uploadProductionAsset(
+          projectId,
+          file,
+          "video",
+          "final",
+        );
+        // 状态机跳转语义(SPEC §5 待决点 1,选「补记中间态」):后端 putProduction 只接受
+        // 相邻 +1(跨步 → ConflictError),不为本路径开非相邻跳 —— 复用 statusStepsTo 依次
+        // PUT recording→editing→rendering(advanceStatus 内部逐步),语义零改动。
+        const productionId = await advanceStatus("rendering");
+        if (!productionId) {
+          throw new Error("production 状态机推进失败,请重试");
+        }
+        // 复用既有导出范式:export 建档(queued)→ completeExport(resultAssetId=成品)。
+        // completeExport 的后端 fan-out 会把成品挂为 output primary asset —— 发布登记 /
+        // 盲预测 / 发布物料链照常(§5.1⑤ 飞轮不脱钩)。
+        const exp = (await client.createProductionExport({
+          params: { productionId },
+          query: undefined,
+          body: {
+            format: "mp4",
+            resolution:
+              orientation === "portrait" ? "1080x1920" : "1920x1080",
+            aspectRatio: orientation === "portrait" ? "9:16" : "16:9",
+          },
+        })) as unknown as { id: string };
+        await client.completeExport({
+          params: { exportId: exp.id },
+          query: undefined,
+          body: { resultAssetId: assetId },
+        });
+        await advanceStatus("ready");
+        setFinalVideoAssetId(assetId);
+        setReplaceOk(false);
+        setFinalNotice(
+          `成品「${file.name}」已登记为本项目成片(export ready)。盲预测 / 发布物料 / 登记发布照常可用。`,
+        );
+      } catch (err) {
+        setFinalError(
+          err instanceof Error ? err.message : "成品上传失败,请重试",
+        );
+      } finally {
+        setFinalBusy(false);
+      }
+    },
+    [
+      projectId,
+      readVideoDuration,
+      advanceStatus,
+      orientation,
+      hasExistingFinal,
+      outputId,
+      pubLocked,
+    ],
+  );
+
+  // ── [T-366b] 素材包导出(辅助入口)────────────────────────────────────────────
+  // 预计大小:项目素材 fileSize 求和(asset 投影自带 fileSize;读不到就不提示,不编数)。
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const links = (await client.listMaterialLinks({
+          params: undefined,
+          query: { projectId, page: 1, pageSize: 100 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<{ entityType: string; entityId: string }>;
+        const assetIds = links
+          .filter((l) => l.entityType === "asset")
+          .map((l) => l.entityId);
+        let sum = 0;
+        let any = false;
+        for (const id of assetIds) {
+          try {
+            const a = (await client.getAsset({
+              params: { assetId: id },
+              query: undefined,
+              body: undefined,
+            })) as unknown as { fileSize: number | null };
+            if (typeof a.fileSize === "number") {
+              sum += a.fileSize;
+              any = true;
+            }
+          } catch {
+            /* 单条读不到跳过 */
+          }
+        }
+        if (!cancelled && any) setEstBytes(sum);
+      } catch {
+        /* 估算失败 → 不显示提示(诚实跳过) */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  const onExportMaterials = React.useCallback(async () => {
+    setExportBusy(true);
+    setExportError(null);
+    setExportDone(null);
+    try {
+      const oid = await ensureOutputId();
+      const prod = (await client.getOutputProduction({
+        params: { outputId: oid },
+        query: undefined,
+        body: undefined,
+      })) as unknown as WireProduction;
+      const res = (await client.exportProductionMaterials({
+        params: { productionId: prod.id },
+        query: undefined,
+        body: undefined,
+      })) as unknown as {
+        downloadUrl: string;
+        fileName: string;
+        fileCount: number;
+        hasDecisions: boolean;
+      };
+      setExportDone(res);
+      // 经既有签名下载 URL 通道触发浏览器下载。
+      const a = document.createElement("a");
+      a.href = res.downloadUrl;
+      a.download = res.fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      setExportError(
+        err instanceof Error ? err.message : "素材包导出失败,请重试",
+      );
+    } finally {
+      setExportBusy(false);
+    }
+  }, [ensureOutputId]);
 
   // ── ② AI 分场决策 dispatch + 轮询 ───────────────────────────────────────────
   const dispatchDecisions = React.useCallback(async () => {
@@ -930,7 +1183,147 @@ export function ProductionWorkbench({
         )}
       </section>
 
-      {/* ① 备料区:上传粗剪 + SRT */}
+      {/* [T-366a] 制作方式二选一(默认现状流,零破坏;可切换/可退回 VP-03) */}
+      <section
+        data-slot="production-method"
+        className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
+      >
+        <h3 className="text-sm font-medium">制作方式</h3>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            data-slot="method-creatoros"
+            data-active={method === "creatoros"}
+            disabled={finalBusy}
+            onClick={() => setMethod("creatoros")}
+            className={`inline-flex h-8 items-center rounded-control border px-3 text-sm transition disabled:opacity-50 ${
+              method === "creatoros"
+                ? "border-brand bg-brand/10 font-medium text-foreground"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            用 CreatorOS 制作
+          </button>
+          <button
+            type="button"
+            data-slot="method-upload"
+            data-active={method === "upload"}
+            disabled={finalBusy}
+            onClick={() => setMethod("upload")}
+            className={`inline-flex h-8 items-center rounded-control border px-3 text-sm transition disabled:opacity-50 ${
+              method === "upload"
+                ? "border-brand bg-brand/10 font-medium text-foreground"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            直接上传成品视频
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {method === "creatoros"
+            ? "上传粗剪 + SRT,AI 四决策过目确认后受控渲染成片(现状流程)。"
+            : "在剪映等工具剪好的成品直接上传登记为成片 —— 跳过四决策与渲染;盲预测 / 发布物料 / 登记发布照常可用。"}
+        </p>
+      </section>
+
+      {method === "upload" ? (
+        /* [T-366a] 上传成品视频路径(复用两阶段上传链;mp4/mov + 时长探针;§5.1③ 禁覆盖) */
+        <section
+          data-slot="production-final-upload"
+          className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
+        >
+          <h3 className="text-sm font-medium">② 上传成品视频</h3>
+          <input
+            ref={finalInputRef}
+            type="file"
+            accept=".mp4,.mov,video/mp4,video/quicktime"
+            aria-label="上传成品视频"
+            className="sr-only"
+            disabled={finalBusy}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onFinalFile(f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            data-slot="production-final-picker"
+            disabled={
+              finalBusy ||
+              pubLocked === true ||
+              (hasExistingFinal && !replaceOk)
+            }
+            onClick={() => finalInputRef.current?.click()}
+            className={`flex flex-col items-center justify-center gap-1 rounded-control border border-dashed px-3 py-5 text-center transition disabled:opacity-50 ${
+              finalVideoAssetId
+                ? "border-brand/50 bg-brand/5 text-foreground"
+                : "border-border bg-surface-subtle/40 text-muted-foreground hover:border-brand/60 hover:text-foreground"
+            }`}
+          >
+            <span className="font-medium">
+              {finalBusy
+                ? "成品上传登记中…"
+                : finalVideoAssetId
+                  ? "✓ 已登记成片,点此重新上传"
+                  : "点击选择成品视频"}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              仅收 mp4 / mov;上传前会探测时长,坏文件诚实拒收
+            </span>
+          </button>
+          {/* 已有成片 → 替换需二次确认(§4.1 不静默丢);已登记发布 → 禁覆盖(§5.1③)。 */}
+          {pubLocked === true ? (
+            <p
+              data-slot="final-pub-locked"
+              className="text-xs text-destructive"
+            >
+              当前成片已登记过发布 —— 不能覆盖已登记的事实。请先在发布面解除登记,
+              或新建产出再上传(绝不静默换片)。
+            </p>
+          ) : hasExistingFinal ? (
+            <label
+              data-slot="final-replace-confirm"
+              className="flex items-center gap-2 text-xs"
+            >
+              <input
+                type="checkbox"
+                checked={replaceOk}
+                onChange={(e) => setReplaceOk(e.target.checked)}
+              />
+              已有成片 —— 我确认要替换当前成片(替换后旧成片仍留在素材库)
+            </label>
+          ) : null}
+          {finalError ? (
+            <p data-slot="final-error" className="text-xs text-destructive">
+              {finalError}
+            </p>
+          ) : null}
+          {finalNotice ? (
+            <p data-slot="final-notice" className="text-xs text-foreground">
+              {finalNotice}
+            </p>
+          ) : null}
+          {finalVideoAssetId ? (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-medium text-foreground">成片预览</p>
+              <FinalVideoPreview
+                assetId={finalVideoAssetId}
+                orientation={orientation}
+              />
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              上传成功即登记为本项目成片(状态机到「成片就绪」);想改用受控成片,
+              上方随时切回「用 CreatorOS 制作」。
+            </p>
+          )}
+        </section>
+      ) : null}
+
+      {/* ① 备料区:上传粗剪 + SRT(仅 CreatorOS 制作路径;上传成品路径整段隐藏) */}
+      {method === "creatoros" ? (
+      <>
       <section
         data-slot="production-uploads"
         className="flex flex-col gap-3 rounded-control border border-border bg-surface p-4"
@@ -1236,6 +1629,51 @@ export function ProductionWorkbench({
           )}
         </section>
       ) : null}
+      </>
+      ) : null}
+
+      {/* [T-366b] 导出素材包(辅助入口,不占主流程;两种制作方式下都可用) */}
+      <section
+        data-slot="production-material-export"
+        className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
+      >
+        <h3 className="text-sm font-medium">导出素材包(zip)</h3>
+        <p className="text-xs text-muted-foreground">
+          把本项目关联的<b className="text-foreground">全部素材 + 口播稿 + 编导说明</b>
+          打包成一个 zip,供你手动在剪映等工具重建成片 ——
+          <b className="text-foreground">不是可一键导入的剪映工程</b>
+          (剪映没有通用工程导入格式);本地打包,不出网。
+        </p>
+        {estBytes != null ? (
+          <p data-slot="export-estimate" className="text-xs text-muted-foreground">
+            预计大小约 {(estBytes / (1024 * 1024)).toFixed(1)} MB(素材求和;
+            B-roll 多时可能较大,打包需要一会儿)
+          </p>
+        ) : null}
+        <button
+          type="button"
+          data-slot="export-materials"
+          disabled={exportBusy}
+          onClick={() => void onExportMaterials()}
+          className="inline-flex h-8 w-fit items-center rounded-control border border-border px-3 text-sm hover:bg-muted/50 disabled:opacity-50"
+        >
+          {exportBusy ? "打包中…(素材多时可能需要一会儿)" : "导出素材包"}
+        </button>
+        {exportError ? (
+          <p data-slot="export-error" className="text-xs text-destructive">
+            {exportError}
+          </p>
+        ) : null}
+        {exportDone ? (
+          <p data-slot="export-done" className="text-xs text-foreground">
+            已导出「{exportDone.fileName}」({exportDone.fileCount} 个文件),
+            浏览器已开始下载。
+            {!exportDone.hasDecisions
+              ? " 注意:本项目未跑四决策,包内编导说明为素材清单(诚实空态)。"
+              : ""}
+          </p>
+        ) : null}
+      </section>
     </div>
   );
 }

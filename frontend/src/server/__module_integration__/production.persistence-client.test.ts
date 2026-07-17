@@ -56,7 +56,7 @@ async function createRealOutput(owner: RequestContext): Promise<string> {
 }
 
 describe("production ops registered in the composite transport", () => {
-  it("the 6 production op ids are persistence-backed (not the mock)", async () => {
+  it("the 7 production op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of PRODUCTION_OP_IDS) {
@@ -64,7 +64,8 @@ describe("production ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(PRODUCTION_OP_IDS).toHaveLength(6);
+    // [T-366b] +1:productions.exports.materials(素材包统一导出)。
+    expect(PRODUCTION_OP_IDS).toHaveLength(7);
   });
 
   it("get → put → segment → export → complete round-trips over the shared store", async () => {
@@ -130,5 +131,48 @@ describe("production ops registered in the composite transport", () => {
     )) as { data: { status: string; resultAssetId: string } };
     expect(done.data.status).toBe("ready");
     expect(done.data.resultAssetId).toBe("asset-export-e2e");
+  });
+
+  // [T-366b] 素材包统一导出:真实 wiring 全链(materialLinks 聚合 → 本地 zip →
+  // createGeneratedAsset 落库 → 签名下载 URL)。空项目(无素材/无稿/无四决策)也要
+  // 产出合法包:readme(§5.1② 空态诚实)+ manifest,两个文件;hasDecisions=false。
+  it("productions.exports.materials round-trips: zip asset + download url + honest empty-state", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const OUTPUT_ID = await createRealOutput(owner);
+    const got = (await compositeTransport.request(
+      ep("outputs.production.get"),
+      { params: { outputId: OUTPUT_ID }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { id: string } };
+
+    const res = (await compositeTransport.request(
+      ep("productions.exports.materials"),
+      { params: { productionId: got.data.id }, query: undefined, body: undefined } as never,
+      owner,
+    )) as {
+      data: {
+        assetId: string;
+        downloadUrl: string;
+        fileName: string;
+        fileCount: number;
+        totalBytes: number;
+        hasDecisions: boolean;
+      };
+    };
+    expect(res.data.assetId).toBeTruthy();
+    expect(res.data.downloadUrl).toBeTruthy();
+    expect(res.data.fileName).toMatch(/\.zip$/);
+    expect(res.data.fileCount).toBe(2); // readme + manifest(诚实空态,不塞假素材)
+    expect(res.data.totalBytes).toBeGreaterThan(0);
+    expect(res.data.hasDecisions).toBe(false);
+
+    // 落成的 asset 真在素材库(同一 store 读回)。
+    const asset = (await compositeTransport.request(
+      ep("assets.get"),
+      { params: { assetId: res.data.assetId }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { name: string; assetType: string } };
+    expect(asset.data.name).toBe(res.data.fileName);
+    expect(asset.data.assetType).toBe("document");
   });
 });

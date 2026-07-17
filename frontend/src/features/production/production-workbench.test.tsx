@@ -68,6 +68,18 @@ const mockClient = vi.hoisted(() => ({
     errorMessage: null as string | null,
   })),
   listExecutionTasks: vi.fn(async (): Promise<unknown[]> => []),
+  // [T-366a/b] 上传成品二选一 + 素材包导出的读写点。
+  listMaterialLinks: vi.fn(async (): Promise<unknown[]> => []),
+  getAsset: vi.fn(async () => ({ fileSize: null as number | null })),
+  listPublications: vi.fn(async (): Promise<unknown[]> => []),
+  exportProductionMaterials: vi.fn(async () => ({
+    assetId: "asset-zip-1",
+    downloadUrl: "http://localhost/blob/zip?token=t",
+    fileName: "素材包-上下文工程-20260717.zip",
+    fileCount: 6,
+    totalBytes: 1234,
+    hasDecisions: true,
+  })),
 }));
 
 vi.mock("@/lib/contract-client", () => ({ client: mockClient }));
@@ -152,6 +164,17 @@ beforeEach(() => {
   mockClient.listTaskResults.mockResolvedValue([]);
   mockClient.listTaskSteps.mockResolvedValue([]);
   mockClient.listExecutionTasks.mockResolvedValue([]);
+  mockClient.listMaterialLinks.mockResolvedValue([]);
+  mockClient.getAsset.mockResolvedValue({ fileSize: null });
+  mockClient.listPublications.mockResolvedValue([]);
+  mockClient.exportProductionMaterials.mockResolvedValue({
+    assetId: "asset-zip-1",
+    downloadUrl: "http://localhost/blob/zip?token=t",
+    fileName: "素材包-上下文工程-20260717.zip",
+    fileCount: 6,
+    totalBytes: 1234,
+    hasDecisions: true,
+  });
   mockClient.getExecutionTask.mockResolvedValue({
     id: "exec-1",
     execType: "video.render",
@@ -436,6 +459,205 @@ describe("ProductionWorkbench", () => {
     expect(mockClient.createAITask).not.toHaveBeenCalled();
     // 进行中态可见(承诺「后台跑,可离开」)。
     expect(container.textContent).toContain("四决策进行中");
+  });
+
+  // ── [T-366a] 制作方式二选一(上传成品直登成片) ────────────────────────────────
+
+  it("[T-366a] 默认「用 CreatorOS 制作」= 现状流零破坏;切换按钮在,成品上传区不在", () => {
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    expect(
+      container.querySelector('[data-slot="method-creatoros"]')?.getAttribute("data-active"),
+    ).toBe("true");
+    expect(dispatchButton(container)).toBeTruthy(); // 现状四决策链 UI 原样
+    expect(
+      container.querySelector('[data-slot="production-final-upload"]'),
+    ).toBeNull();
+  });
+
+  it("[T-366a] 上传成品:跳过四决策/渲染,export 建档+complete(resultAssetId=成品),状态机补记中间态到 ready", async () => {
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    fireEvent.click(container.querySelector('[data-slot="method-upload"]')!);
+    const file = new File(["final-bytes"], "成片.mp4", { type: "video/mp4" });
+    fireEvent.change(fileInput(container, "上传成品视频"), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() =>
+      expect(mockClient.completeExport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { exportId: "exp-1" },
+          body: { resultAssetId: "asset-video-1" },
+        }),
+      ),
+    );
+    // 上传链复用(assetType=video)+ 用料链 role=final(与粗剪 clip 隔离)。
+    expect(mockClient.createUpload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ assetType: "video" }),
+      }),
+    );
+    expect(mockClient.createMaterialLink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ role: "final", stage: "production" }),
+      }),
+    );
+    // export 建档挂在真 productionId 上。
+    expect(mockClient.createProductionExport).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { productionId: "prod-1" } }),
+    );
+    // 状态机「补记中间态」:相邻步进 recording→editing→rendering→ready(不开非相邻跳)。
+    await waitFor(() => {
+      const statuses = mockClient.putOutputProduction.mock.calls.map(
+        (c) => (c[0] as { body: { status?: string } }).body.status,
+      );
+      expect(statuses).toEqual(["recording", "editing", "rendering", "ready"]);
+    });
+    // 跳过四决策与渲染:两类任务都绝不发起。
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
+    expect(mockClient.createExecutionTask).not.toHaveBeenCalled();
+    // §5.1⑤ 飞轮不脱钩:成功文案明示盲预测/发布物料/登记发布照常。
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="final-notice"]')?.textContent,
+      ).toContain("盲预测 / 发布物料 / 登记发布照常可用"),
+    );
+  });
+
+  it("[T-366a] 坏文件诚实拒收:非 mp4/mov 格式拒;探针读不出时长拒 —— 都不进上传链", async () => {
+    const { container } = render(
+      <ProductionWorkbench
+        {...makeProps({ readVideoDuration: async () => null })}
+      />,
+    );
+    fireEvent.click(container.querySelector('[data-slot="method-upload"]')!);
+
+    // ① 格式收窄:.avi 直接拒。
+    fireEvent.change(fileInput(container, "上传成品视频"), {
+      target: { files: [new File(["x"], "成片.avi", { type: "video/avi" })] },
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="final-error"]')?.textContent,
+      ).toContain("只收 mp4 / mov"),
+    );
+    // ② 探针失败(时长读不出)→ 拒收不直登 ready。
+    fireEvent.change(fileInput(container, "上传成品视频"), {
+      target: { files: [new File(["x"], "坏.mp4", { type: "video/mp4" })] },
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="final-error"]')?.textContent,
+      ).toContain("已拒收"),
+    );
+    expect(mockClient.createUpload).not.toHaveBeenCalled();
+    expect(mockClient.completeExport).not.toHaveBeenCalled();
+  });
+
+  it("[T-366a §5.1③] 成片已被 publication 登记 → 禁覆盖(提示解除登记,不静默换片)", async () => {
+    state.prodStatus = "ready";
+    mockClient.listPublications.mockResolvedValue([{ id: "pub-1" }]);
+    const { container } = render(
+      <ProductionWorkbench {...makeProps({ initialStatus: "ready" })} />,
+    );
+    fireEvent.click(container.querySelector('[data-slot="method-upload"]')!);
+    // 探测到已登记 → 锁提示 + 选择器禁用。
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="final-pub-locked"]')?.textContent,
+      ).toContain("不能覆盖已登记的事实"),
+    );
+    expect(
+      (container.querySelector(
+        '[data-slot="production-final-picker"]',
+      ) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    // 绕过按钮直接触发 change(防御纵深):handler 同样拒,绝不进上传链。
+    fireEvent.change(fileInput(container, "上传成品视频"), {
+      target: {
+        files: [new File(["x"], "新成片.mp4", { type: "video/mp4" })],
+      },
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="final-error"]')?.textContent,
+      ).toContain("不能覆盖已登记的事实"),
+    );
+    expect(mockClient.createUpload).not.toHaveBeenCalled();
+  });
+
+  it("[T-366a VP-03] 可退回:切到上传成品再切回,CreatorOS 现状链 UI 原样恢复", async () => {
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    fireEvent.click(container.querySelector('[data-slot="method-upload"]')!);
+    expect(
+      container.querySelector('[data-slot="production-decisions"]'),
+    ).toBeNull();
+    fireEvent.click(container.querySelector('[data-slot="method-creatoros"]')!);
+    expect(
+      container.querySelector('[data-slot="production-decisions"]'),
+    ).toBeTruthy();
+    expect(dispatchButton(container)).toBeTruthy();
+  });
+
+  // ── [T-366b] 素材包导出 ─────────────────────────────────────────────────────
+
+  it("[T-366b] 导出素材包:诚实门文案在;点击调 op(真 productionId)并给下载结果;无四决策附空态注记", async () => {
+    mockClient.exportProductionMaterials.mockResolvedValue({
+      assetId: "asset-zip-1",
+      downloadUrl: "http://localhost/blob/zip?token=t",
+      fileName: "素材包-上下文工程-20260717.zip",
+      fileCount: 6,
+      totalBytes: 1234,
+      hasDecisions: false,
+    });
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    // 诚实门:UI 明示非剪映工程。
+    expect(
+      container.querySelector('[data-slot="production-material-export"]')
+        ?.textContent,
+    ).toContain("不是可一键导入的剪映工程");
+
+    fireEvent.click(container.querySelector('[data-slot="export-materials"]')!);
+    await waitFor(() =>
+      expect(mockClient.exportProductionMaterials).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { productionId: "prod-1" } }),
+      ),
+    );
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="export-done"]')?.textContent,
+      ).toContain("素材包-上下文工程-20260717.zip"),
+    );
+    // §5.1② 空态诚实透传:未跑四决策 → 明示说明是素材清单。
+    expect(
+      container.querySelector('[data-slot="export-done"]')?.textContent,
+    ).toContain("未跑四决策");
+  });
+
+  it("[T-366b] 预计大小:素材 fileSize 求和显示;读不到不编数", async () => {
+    mockClient.listMaterialLinks.mockResolvedValue([
+      { entityType: "asset", entityId: "a1", role: "broll", stage: "production", createdAt: "2026-07-17T00:00:00.000Z" },
+    ]);
+    mockClient.getAsset.mockResolvedValue({ fileSize: 10 * 1024 * 1024 });
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="export-estimate"]')?.textContent,
+      ).toContain("10.0 MB"),
+    );
+  });
+
+  it("[T-366b] 打包失败诚实报错(不给假下载)", async () => {
+    mockClient.exportProductionMaterials.mockRejectedValue(
+      new Error("素材总量超出 zip 4GB 上限,无法一次打包 —— 请分批(如先剔除部分 B-roll)导出"),
+    );
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    fireEvent.click(container.querySelector('[data-slot="export-materials"]')!);
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="export-error"]')?.textContent,
+      ).toContain("4GB 上限"),
+    );
+    expect(container.querySelector('[data-slot="export-done"]')).toBeNull();
   });
 
   it("[FE-H01] 决策轮询持续不放弃:远超旧「~10 分钟(150 次)」上限仍在轮询(不静默退出)", async () => {

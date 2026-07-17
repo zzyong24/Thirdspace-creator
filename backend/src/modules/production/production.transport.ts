@@ -29,6 +29,8 @@ export const PRODUCTION_OP_IDS = [
   "productions.segments.create",
   "productions.segments.list",
   "productions.exports.create",
+  // [T-366b] 素材包统一导出(本地 zip → asset → 签名下载 URL)。
+  "productions.exports.materials",
   "exports.complete",
 ] as const;
 
@@ -141,6 +143,11 @@ export function createProductionTransport(
           };
           const row = await service.requestExport(ctx, p.productionId ?? "", b);
           return { data: toExportResource(row), meta: { requestId } };
+        }
+        case "productions.exports.materials": {
+          // [T-366b] 结果已是 wire 形状(service 组好 DTO,无 row 投影层)。
+          const data = await service.exportMaterials(ctx, p.productionId ?? "");
+          return { data, meta: { requestId } };
         }
         case "exports.complete": {
           const b = (body ?? {}) as { resultAssetId: string };

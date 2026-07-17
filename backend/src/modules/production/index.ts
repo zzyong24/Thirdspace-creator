@@ -14,7 +14,28 @@ export {
   type SetPrimaryOutputAsset,
   type SearchIndexAsset,
   type RecordExportActivity,
+  // [T-366b] 素材包导出接线类型(组合根 wiring 用)。
+  type MaterialExportWiring,
+  type MaterialExportResult,
 } from "./production.service";
+
+// [T-366b] 素材包导出纯函数层(组合根接 ports;文案常量供前端/测试对齐诚实门)。
+export {
+  aggregateMaterialExport,
+  buildStoreZip,
+  crc32,
+  coerceDecisions,
+  renderDirectorReadme,
+  renderManifest,
+  sanitizeZipName,
+  MATERIAL_EXPORT_HONESTY_NOTE,
+  NO_DECISIONS_NOTE,
+  type MaterialExportPorts,
+  type MaterialExportBundle,
+  type DecisionsShape,
+  type ZipEntry,
+  type ManifestLine,
+} from "./material-export";
 
 export {
   createProductionRepository,

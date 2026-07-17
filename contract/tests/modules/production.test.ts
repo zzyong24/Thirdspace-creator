@@ -48,4 +48,33 @@ describe("production contract", () => {
       productionOperations.getOutputProduction.fr.length,
     ).toBeGreaterThan(0);
   });
+
+  // [T-366b] 素材包统一导出 op:POST + materialExportResource 返回形状。
+  it("registers productions.exports.materials and parses its resource", () => {
+    expect(productionOperations.exportProductionMaterials.method).toBe("POST");
+    expect(productionOperations.exportProductionMaterials.path).toBe(
+      "/productions/:productionId/exports/materials",
+    );
+    const parsed =
+      productionOperations.exportProductionMaterials.response.parse({
+        assetId: "asset-zip-1",
+        downloadUrl: "http://localhost/blob/zip?token=t",
+        fileName: "素材包-demo.zip",
+        fileCount: 5,
+        totalBytes: 1234,
+        hasDecisions: false,
+      });
+    expect(parsed).toMatchObject({ fileCount: 5, hasDecisions: false });
+    // 空 downloadUrl 不合法(诚实:没有下载通道就是失败,不返回空壳)。
+    expect(() =>
+      productionOperations.exportProductionMaterials.response.parse({
+        assetId: "a",
+        downloadUrl: "",
+        fileName: "x.zip",
+        fileCount: 0,
+        totalBytes: 0,
+        hasDecisions: false,
+      }),
+    ).toThrow();
+  });
 });

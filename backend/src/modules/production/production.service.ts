@@ -7,7 +7,15 @@ import {
   type ProductionSegmentRow,
   type ExportRecordRow,
 } from "./production.repository";
-import { ConflictError } from "./production.errors";
+import {
+  ConflictError,
+  OwnershipError,
+  UnsupportedOperationError,
+} from "./production.errors";
+import {
+  aggregateMaterialExport,
+  type MaterialExportPorts,
+} from "./material-export";
 
 // Production service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into a user-scoped repository built per-call via `repoFor(ctx)`
@@ -51,6 +59,39 @@ export type RecordExportActivity = (
   },
 ) => Promise<unknown>;
 
+// [T-366b] 素材包导出的组合根接线(全部经各模块公开 service,无跨模块 repo import)。
+// 数据取数缝在 MaterialExportPorts(material-export.ts);此外还需两个产物落点缝:
+// zip 字节 → asset(AssetsService.createGeneratedAsset)+ 签名下载 URL
+// (AssetsService.getDownloadUrl),以及 production → 属主项目的反查
+// (ProjectsService.getProjectIdByOutput)。未接线时该 op 诚实抛 Unsupported。
+export interface MaterialExportWiring {
+  ports: MaterialExportPorts;
+  /** content_output → 属主 projectId(越权/不存在 → null → 404 语义)。 */
+  resolveProjectIdByOutput(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<string | null>;
+  /** zip 字节落成一个 asset(服务端直写,P-04 本地打包不出网)。 */
+  storeZipAsset(
+    ctx: RequestContext,
+    input: { name: string; bytes: Uint8Array },
+  ): Promise<{ assetId: string }>;
+  /** 既有签名下载 URL 通道(assets.downloadUrl 同源)。 */
+  getDownloadUrl(
+    ctx: RequestContext,
+    assetId: string,
+  ): Promise<{ url: string; fileName: string }>;
+}
+
+export interface MaterialExportResult {
+  assetId: string;
+  downloadUrl: string;
+  fileName: string;
+  fileCount: number;
+  totalBytes: number;
+  hasDecisions: boolean;
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
@@ -61,6 +102,8 @@ export interface ServiceDeps {
   searchIndexAsset?: SearchIndexAsset;
   /** Post-commit activity record (ProjectsService.recordActivity / equivalent). */
   recordExportActivity?: RecordExportActivity;
+  /** [T-366b] 素材包导出接线(可选缝,unit-test 可 stub;未接线 → op 诚实拒)。 */
+  materialExport?: MaterialExportWiring;
 }
 
 export interface ProductionService {
@@ -101,6 +144,12 @@ export interface ProductionService {
     exportId: string,
     body: { resultAssetId: string },
   ): Promise<ExportRecordRow>;
+  // [T-366b] 素材包统一导出:聚合项目全部素材 + 口播稿 + 编导说明 → 本地 zip →
+  // 落 asset → 返回签名下载 URL(productions.exports.materials)。
+  exportMaterials(
+    ctx: RequestContext,
+    productionId: string,
+  ): Promise<MaterialExportResult>;
 }
 
 // bitrate has no contract input field but is a non-null DTO field. Derive it from
@@ -252,6 +301,48 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       }
 
       return completed;
+    },
+
+    // [T-366b] 素材包统一导出(SPEC §4.2)。所有权门:repo.getProductionById 按
+    // ctx 收窄(跨用户/未知 → OwnershipError → 404);production → content_output →
+    // 属主项目经注入的 Projects 公开缝反查(解析不出同 404,不泄露存在性)。聚合与
+    // 打包在 material-export.ts 纯函数层(可 stub 单测);zip 落 asset + 签名下载
+    // URL 走 Assets 公开缝 —— P-04 本地打包,全程不出网。
+    async exportMaterials(ctx, productionId) {
+      const wiring = deps.materialExport;
+      if (!wiring) {
+        // 组合根没接线 = 该环境不支持素材包导出;诚实拒,不静默空包。
+        throw new UnsupportedOperationError("productions.exports.materials");
+      }
+      const repo = repoFor(ctx);
+      const production = await repo.getProductionById(productionId); // ownership gate
+      const projectId = await wiring.resolveProjectIdByOutput(
+        ctx,
+        production.contentOutputId,
+      );
+      if (!projectId) {
+        throw new OwnershipError();
+      }
+      const bundle = await aggregateMaterialExport(
+        ctx,
+        { projectId, nowIso: deps.now() },
+        wiring.ports,
+      );
+      const stored = await wiring.storeZipAsset(ctx, {
+        name: bundle.zipFileName,
+        bytes: bundle.zipBytes,
+      });
+      const { url } = await wiring.getDownloadUrl(ctx, stored.assetId);
+      return {
+        assetId: stored.assetId,
+        downloadUrl: url,
+        // 文件名用打包时的人话名(素材包-<项目>-<日期>.zip);getDownloadUrl 的建议名
+        // 是 storageKey 末段(mock/对象存储下是机器名),对用户不诚实不采用。
+        fileName: bundle.zipFileName,
+        fileCount: bundle.fileCount,
+        totalBytes: bundle.totalBytes,
+        hasDecisions: bundle.hasDecisions,
+      };
     },
   };
 }

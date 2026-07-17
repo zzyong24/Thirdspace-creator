@@ -223,3 +223,90 @@ describe("production.service — export lifecycle (Step 3)", () => {
     expect(recordExportActivity).toHaveBeenCalledTimes(1);
   });
 });
+
+// ── [T-366b] 素材包统一导出(exportMaterials 服务层胶水) ────────────────────────
+
+describe("production.service — exportMaterials (T-366b)", () => {
+  const enc = new TextEncoder();
+
+  function makeWiring() {
+    const storeZipAsset = vi.fn(
+      async (_c: RequestContext, _input: { name: string; bytes: Uint8Array }) => ({
+        assetId: "asset-zip-1",
+      }),
+    );
+    const getDownloadUrl = vi.fn(async () => ({
+      url: "http://localhost/blob/zip?token=t",
+      fileName: "素材包.zip",
+    }));
+    const wiring = {
+      resolveProjectIdByOutput: vi.fn(async (_c: RequestContext, outputId: string) =>
+        outputId === "output-1" ? "proj-of-output-1" : null,
+      ),
+      storeZipAsset,
+      getDownloadUrl,
+      ports: {
+        listMaterialAssets: vi.fn(async () => [
+          { assetId: "a-clip", role: "clip" },
+        ]),
+        getAssetName: vi.fn(async () => "粗剪.mp4"),
+        getAssetBytes: vi.fn(async () => ({ bytes: enc.encode("clip-bytes") })),
+        getScriptText: vi.fn(async () => "口播稿全文"),
+        getVideoDecisions: vi.fn(async () => null),
+        getProjectTitle: vi.fn(async () => "宿主项目"),
+      },
+    };
+    return { wiring, storeZipAsset, getDownloadUrl };
+  }
+
+  function makeServiceWithWiring(wiring: unknown): ProductionService {
+    let seq = 0;
+    return createProductionService({
+      db,
+      now: () => NOW,
+      nextId: (prefix: string) => `${prefix}-${++seq}`,
+      materialExport: wiring as never,
+    });
+  }
+
+  it("聚合 → zip 落 asset → 签名下载 URL,DTO 带诚实的 hasDecisions=false", async () => {
+    const { wiring, storeZipAsset } = makeWiring();
+    const svc = makeServiceWithWiring(wiring);
+    const prod = await svc.getProduction(ctx, "output-1");
+    const res = await svc.exportMaterials(ctx, prod.id);
+    expect(res.assetId).toBe("asset-zip-1");
+    expect(res.downloadUrl).toContain("token=t");
+    expect(res.hasDecisions).toBe(false); // 没跑四决策 → 诚实 false
+    // 素材 + 口播稿 + readme + manifest = 4 个文件。
+    expect(res.fileCount).toBe(4);
+    const stored = storeZipAsset.mock.calls[0]![1];
+    expect(stored.name).toMatch(/^素材包-宿主项目-\d{8}\.zip$/);
+    expect(stored.bytes.length).toBe(res.totalBytes);
+  });
+
+  it("未接线 materialExport → UnsupportedOperationError(诚实拒,不静默空包)", async () => {
+    const prod = await service.getProduction(ctx, "output-1");
+    await expect(service.exportMaterials(ctx, prod.id)).rejects.toThrow(
+      /not implemented/,
+    );
+  });
+
+  it("output → 项目反查失败 → 404 语义(OwnershipError),不硬造空包", async () => {
+    const { wiring } = makeWiring();
+    wiring.resolveProjectIdByOutput = vi.fn(async () => null);
+    const svc = makeServiceWithWiring(wiring);
+    const prod = await svc.getProduction(ctx, "output-1");
+    await expect(svc.exportMaterials(ctx, prod.id)).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+  });
+
+  it("跨用户 productionId → OwnershipError(所有权门在聚合之前)", async () => {
+    const { wiring } = makeWiring();
+    const svc = makeServiceWithWiring(wiring);
+    await expect(
+      svc.exportMaterials(ctx, "production-of-someone-else"),
+    ).rejects.toMatchObject({ name: "OwnershipError" });
+    expect(wiring.ports.listMaterialAssets).not.toHaveBeenCalled();
+  });
+});

@@ -1897,6 +1897,96 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         primaryAssetId: input.assetId,
       }),
     searchIndexAsset: (ctx, input) => searchService.upsertDocument(ctx, input),
+    // [T-366b] 素材包统一导出接线 —— 全部经各模块公开 service(无跨模块 repo):
+    //   素材枚举 materialLinksService.list / 素材名+字节 assetsService / 口播稿
+    //   makeReviewSubjectReader().getScript(与复盘同一读法)/ 四决策 aiService
+    //   listTasks+listResults(video.decisions 最近候选)/ zip 落 asset
+    //   createGeneratedAsset(服务端直写,P-04 本地不出网)/ 下载 getDownloadUrl。
+    //   下方各 const(materialLinksService/aiService/makeReviewSubjectReader)在
+    //   request 时才求值(lazy 箭头,TDZ-safe,同 learningsService thunk 范式)。
+    materialExport: {
+      resolveProjectIdByOutput: (ctx, outputId) =>
+        projectsService.getProjectIdByOutput(ctx, outputId),
+      storeZipAsset: async (ctx, input) => {
+        const asset = await assetsService.createGeneratedAsset(ctx, {
+          assetType: "document",
+          name: input.name,
+          bytes: input.bytes,
+          mimeType: "application/zip",
+        });
+        return { assetId: asset.id };
+      },
+      getDownloadUrl: (ctx, assetId) =>
+        assetsService.getDownloadUrl(ctx, assetId),
+      ports: {
+        // 项目关联素材全量(VP-04 不挑不减):materialLinks entityType=asset。
+        listMaterialAssets: async (ctx, projectId) => {
+          const { rows } = await materialLinksService.list(ctx, {
+            projectId,
+            page: 1,
+            pageSize: 100,
+          });
+          return rows
+            .filter((l) => l.entityType === "asset")
+            .map((l) => ({ assetId: l.entityId, role: l.role }));
+        },
+        getAssetName: async (ctx, assetId) => {
+          try {
+            const a = await assetsService.getAsset(ctx, assetId);
+            return a.name ?? assetId;
+          } catch {
+            return null; // 越权/已删 → 聚合层进 missing 诚实列出
+          }
+        },
+        getAssetBytes: async (ctx, assetId) => {
+          try {
+            const blob = await assetsService.getAssetBytes(ctx, assetId);
+            return blob ? { bytes: blob.bytes } : null;
+          } catch {
+            return null;
+          }
+        },
+        // 口播稿:与复盘 reader 同一读法(output_script 当前版本,transcript 优先)。
+        getScriptText: (ctx, projectId) =>
+          makeReviewSubjectReader().getScript(ctx, projectId),
+        // 最近一次 video.decisions 候选产物(newest-first;failed/cancelled 跳过)。
+        // 没跑过/读不到 → null(readme 按 §5.1② 空态诚实)。
+        getVideoDecisions: async (ctx, projectId) => {
+          try {
+            const { rows } = await aiService.listTasks(ctx, {
+              limit: 10,
+              offset: 0,
+              projectId,
+              taskType: "video.decisions",
+            });
+            for (const task of rows) {
+              if (task.status === "failed" || task.status === "cancelled") {
+                continue;
+              }
+              const results = await aiService.listResults(ctx, task.id);
+              const hit = [...results]
+                .reverse()
+                .find((r) => r.resultType === "video_decisions");
+              const data = hit?.resultData as
+                | { decisions?: unknown }
+                | undefined;
+              if (data?.decisions) return data.decisions;
+            }
+            return null;
+          } catch {
+            return null;
+          }
+        },
+        getProjectTitle: async (ctx, projectId) => {
+          try {
+            const row = await projectsRepo.get(ctx, projectId);
+            return row.title ?? "";
+          } catch {
+            return "";
+          }
+        },
+      },
+    },
   });
   const production = createProductionTransport(() => productionService);
 
