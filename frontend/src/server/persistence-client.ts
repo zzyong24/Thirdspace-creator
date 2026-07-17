@@ -11,6 +11,8 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
+// [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
+import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
@@ -6659,6 +6661,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return benchmark.request(endpoint, input, ctx);
     },
   };
+  // [T-374] 自己作品单条立抓逐字稿(composition-only op):wrap projects transport,拦
+  //   projects.transcribe(解析 platformRef 抖音锚 → ai transport 排 transcribe.douyin →
+  //   live dispatch 后台跑;无锚 → ValidationError 400)。逻辑抽在 projects-transcribe-wrap.ts
+  //   工厂(注入假 transports 可确定性单测,同文件头注释);此处只绑真 projects + ai。
+  const projectsWithTranscribe = createProjectsWithTranscribe({ projects, ai });
   // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
   const trendSources = createTrendSourcesTransport(() => trendSourcesService);
   // [T-235c] 指定收藏夹登记 CRUD transport(favoritesService 已在 collectors 装配前创建,复用同一实例)。
@@ -9622,7 +9629,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   return {
     reapplySkillOverrides,
-    projects,
+    projects: projectsWithTranscribe, // wrap:透传 CRUD + 拦 projects.transcribe(T-374)
     taxonomy,
     notifications,
     search,

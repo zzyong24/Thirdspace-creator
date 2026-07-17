@@ -37,6 +37,12 @@ interface ProjectDto {
   readonly currentStage: ProjectStageName;
   readonly source?: string;
   readonly briefDetail?: ProjectBriefDetail | null;
+  // [T-374] 平台锚(projects.get 随行带;默认空形状 {platform:"",externalId:""})。
+  //   douyin + 非空 externalId → 顶条渲「立即抓取逐字稿」按钮。
+  readonly platformRef?: {
+    readonly platform?: string;
+    readonly externalId?: string;
+  } | null;
 }
 
 interface OutputDto {
@@ -181,6 +187,11 @@ export interface DraftWorkbenchVm {
     readonly currentStage: ProjectStageName;
     readonly imported: boolean;
     readonly briefDetail: ProjectBriefDetail | null;
+    /**
+     * [T-374] 项目关联的抖音作品 aweme_id(platformRef.platform=douyin 且 externalId 非空
+     * 时才有);null = 无抖音锚 → 顶条不渲「立即抓取逐字稿」按钮(诚实,无锚无法抓)。
+     */
+    readonly douyinExternalId: string | null;
   };
   /** 脚本区:DB 解析的 artifactId(null=还没有,首存/AI 起草时 ensure)。 */
   readonly scriptArtifactId: string | null;
@@ -465,6 +476,12 @@ export async function buildDraftWorkbenchVm(
       currentStage: project.currentStage,
       imported: project.source === "imported",
       briefDetail: project.briefDetail ?? null,
+      // [T-374] 抖音锚:douyin + 非空 externalId 才算(手动项目为空形状 → null)。
+      douyinExternalId:
+        project.platformRef?.platform === "douyin" &&
+        (project.platformRef.externalId ?? "").trim()
+          ? project.platformRef.externalId!.trim()
+          : null,
     },
     scriptArtifactId,
     outputId,

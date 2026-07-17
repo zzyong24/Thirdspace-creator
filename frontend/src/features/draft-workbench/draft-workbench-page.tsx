@@ -28,6 +28,8 @@ import { AmmoDumpZone } from "./ammo-dump-zone";
 // [T-146] 弹药卡列表 + 双击预览抽为 client 组件(Modal 交互)。
 import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
+// [T-374] 顶条「立即抓取逐字稿」:自己作品(有抖音锚)单条立抓,不等每日自动任务。
+import { TranscribeNowButton } from "./transcribe-now-button";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import { PublishPackageCta } from "./publish-package-cta";
@@ -64,6 +66,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             >
               真实导入作品
             </span>
+          ) : null}
+          {/* [T-374] 有抖音锚(douyinExternalId)才渲染;位置用户拍板:「看复盘」左边。 */}
+          {project.douyinExternalId ? (
+            <TranscribeNowButton projectId={project.id} />
           ) : null}
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction

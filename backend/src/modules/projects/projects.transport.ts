@@ -48,6 +48,11 @@ export const PROJECT_OP_IDS = [
   "projects.tasks.create",
   "tasks.patch",
   "projects.activity.list",
+  // [T-374] composition-only op:module transport 不认它(default → UnsupportedOperationError),
+  //   persistence-client 的 projectsWithTranscribe wrapper 在到达 module transport 前拦截
+  //   (触发要 ai transport transcribe.douyin 排队,在 composition 层才可见)。列入 OP_IDS 让
+  //   PERSISTED_OPS/dispatch 把它路由到 projects transport(同 benchmark.works.transcribe 先例)。
+  "projects.transcribe",
 ] as const;
 
 // jsonb(unknown)→ 契约 projectBriefDetail 的规范形状(立项 Brief 地基)。丢未知键、

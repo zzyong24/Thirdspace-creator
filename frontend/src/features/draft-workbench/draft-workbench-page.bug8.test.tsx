@@ -41,6 +41,12 @@ vi.mock("./draft-primary-action", () => ({
 vi.mock("./reveal-project-button", () => ({
   RevealProjectButton: () => null,
 }));
+// [T-374] 顶条「立即抓取逐字稿」:mock 成可探测占位(真组件拉 contract-client)。
+vi.mock("./transcribe-now-button", () => ({
+  TranscribeNowButton: ({ projectId }: { projectId: string }) => (
+    <div data-slot="mock-transcribe-now" data-project-id={projectId} />
+  ),
+}));
 vi.mock("./register-published-form", () => ({
   RegisterPublishedForm: () => null,
 }));
@@ -80,6 +86,7 @@ function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
       briefDetail: null,
       currentStage: "review",
       imported: false,
+      douyinExternalId: null,
     },
     scriptArtifactId: null,
     outputId: "out-1",
@@ -115,6 +122,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
             briefDetail: null,
             currentStage: "review",
             imported: true,
+            douyinExternalId: null,
           },
         })}
       />,
@@ -146,6 +154,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
             briefDetail: null,
             currentStage: "review",
             imported: true,
+            douyinExternalId: null,
           },
           script: { editorHtml: "<p>已有稿</p>", sections: [], versionCount: 1 },
         })}
@@ -155,5 +164,36 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
     const hint = section.parentElement?.textContent ?? "";
     expect(hint).toContain("v1");
     expect(hint).toContain("写你的口播稿");
+  });
+});
+
+// [T-374] 顶条「立即抓取逐字稿」按钮门:有抖音锚(douyinExternalId)才渲染。
+describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
+  it("有 douyinExternalId → 渲染按钮(带 projectId)", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          project: {
+            id: "p-1",
+            title: "已导入作品",
+            brief: "",
+            briefDetail: null,
+            currentStage: "review",
+            imported: true,
+            douyinExternalId: "aweme-1",
+          },
+        })}
+      />,
+    );
+    const btn = container.querySelector('[data-slot="mock-transcribe-now"]');
+    expect(btn).not.toBeNull();
+    expect(btn?.getAttribute("data-project-id")).toBe("p-1");
+  });
+
+  it("无 douyinExternalId(手动项目)→ 不渲染(诚实,无锚无法抓)", () => {
+    const { container } = render(<DraftWorkbenchPage vm={baseVm()} />);
+    expect(
+      container.querySelector('[data-slot="mock-transcribe-now"]'),
+    ).toBeNull();
   });
 });

@@ -11,6 +11,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/projects/:projectId/archive"],
   // T-102 物理删除(additive):归档之外的第二种下线动作。
   ["DELETE", "/projects/:projectId"],
+  // T-374 自己作品单条立抓逐字稿(composition-only,persistence-client 拦截)。
+  ["POST", "/projects/:projectId/transcribe"],
   ["POST", "/projects/:projectId/stages/:stage/transition"],
   ["GET", "/projects/:projectId/overview"],
   ["GET", "/projects/:projectId/stages"],

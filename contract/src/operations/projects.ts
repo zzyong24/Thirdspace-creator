@@ -217,4 +217,18 @@ export const projectsOperations = {
     isList: true,
     fr: ["FR-ACTIVITY-LIST"],
   }),
+  // [T-374] 自己作品单条立抓逐字稿(项目页顶条「立即抓取逐字稿」)。composition-only op
+  //   (module transport 不认它,由 persistence-client 的 projectsWithTranscribe 拦截 ——
+  //   触发要 ai transport 的 transcribe.douyin 排队 + live dispatch,在 composition 层才可见,
+  //   同 benchmark.works.transcribe / scheduledJobs.runNow 约定)。落点与每日自动链同源:
+  //   runTranscribe → ensureTranscriptArtifact(imported artifact 链),幂等已有稿跳过。
+  //   项目无 platformRef.externalId → ValidationError 400(诚实,无锚无法抓)。
+  transcribeProjectWork: defineEndpoint({
+    id: "projects.transcribe",
+    method: "POST",
+    path: "/projects/:projectId/transcribe",
+    params: projectParams,
+    response: z.object({ taskId: z.string() }),
+    fr: ["FR-PROJECT-TRANSCRIBE"],
+  }),
 } as const;
