@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-373 | 项目页 tab 高亮错位 + 跨号项目半渲染:看历史项目时内容在脚本面、顶部 tab 却高亮「复盘」;同时刻日志 readReviewHistory OwnershipError(项目属另一号,当前号读被隔离挡下但页面半渲染)【bug·真机 2026-07-17 截图+日志】 | 🔨 排查中 | — | 疑两因:①tab 高亮按 project.stage(已发布→复盘)而非当前 URL/实际渲染面 → 内容与高亮错位;②跨号项目页应整页 404/引导(账号隔离语义),现状部分读被挡其余照渲 → 半渲染。查 projects/[projectId] 布局 tab 判定 + 跨号访问整页门。 |
 | T-372 L1s | **服务端前置(外部依赖·非本仓)**:activation-manager(license.aitongban.cloud)加 Ed25519 响应签名端点(签 `(request-target)+host+date+digest`,私钥仅服务端)+ 响应体加 `serverTime/expiresAt/revoked/graceSeconds/nonce` 字段 + 内测(graceSeconds=86400)/买断(=2592000)码型区分下发 | 📋 已过审(gate CONCERNS 已处理·可开工) | [SPEC §4](docs/superpowers/specs/2026-07-17-license-hardening-and-dual-platform-design.md) | **阻塞项**:客户端强验签在此片上线前会全拒;须先交付。协议照抄 Keygen 签名规范。 |
 | T-372 L2 | Rust 校验门纵切:校验决策链迁 `src-tauri/`(内嵌公钥验签+防重放 nonce/date>300s+last-seen 回拨检测双点冗余容差1h+会话单调时钟)+ `.license` 加密文件放行权威 + `activation_state` 三列迁移(last_seen_at/grace_seconds/revoked)+ sidecar 入口哈希校验 + 启动级 nonce 握手 token + Rust/状态机单测(不真联网) | 📋 已过审(gate CONCERNS 已处理·可开工) | [SPEC §6/§9/§13](docs/superpowers/specs/2026-07-17-license-hardening-and-dual-platform-design.md) | S2/S3/S4 收口;放行权威必须在 Rust(不经可 patch 的 JS);web/dev 保持 P5 不变式不被卡。 |
 | T-372 L3 | 码型分支:内测(到期硬跳/宽限24h/心跳60min)vs 买断(fail-open 网络不可达不降级/心跳30d/仅签名 revoked→停更新+提示不锁功能)显式分支 + 设置页「上次确认于 X 天前」+更新旁提示 UI + 对照表逐行单测 | 📋 已过审(gate CONCERNS 已处理·可开工) | [SPEC §7/§8](docs/superpowers/specs/2026-07-17-license-hardening-and-dual-platform-design.md) | S1 收口;内测 fail-closed vs 买断 fail-open 是根本区别,不可共用分支。 |
