@@ -397,8 +397,12 @@ import { runPlatformAdapt } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
+// [T-387c] dedupeBrollRefs(聚合去重纯函数,与制作页 UI 共用)+ StoryboardSectionRef
+// (凝固分镜投影,readStoryboard 端口回参)。
 import {
   runVideoDecisions,
+  dedupeBrollRefs,
+  storyboardFromContentData,
   type BrollAssetRef,
 } from "@creatoros/backend/modules/ai-runtime";
 import { runPositioningGenerate } from "@creatoros/backend/modules/ai-runtime";
@@ -2764,6 +2768,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createDraftPrediction: (ctx, input) =>
         calibrationService.createDraftPrediction(ctx, input),
     },
+    // [T-387b] 分镜凝固 pass 的素材库只读端口 —— confirmTask 物化整稿前,用真实 asset id 集合
+    // 校验 sections[].visual.assetRefs(不存在的剔除挪 missing)。只读 id,不取内容。
+    assetLibrary: {
+      listAssetIds: async (ctx) =>
+        (await assetsService.listAssets(ctx, { limit: 500, cursor: null })).map(
+          (a) => a.id,
+        ),
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 
@@ -3827,6 +3839,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 contextReaderRegistry,
               ),
               positioning: positioningReader,
+              // [T-387a] 项目弹药 reader(materialLinks ⋈ assets/knowledge 轻量 id+标题+类型
+              // 投影,与稿面 readAmmo 同一数据源)—— runner 产树后据此对支撑/证据节点做
+              // 确定性词面匹配预挂 1-2 条(source:"ai")。best-effort:单条读失败跳过,
+              // 整体失败 runner 侧吞掉不阻塞(零回归)。
+              projectAmmo: {
+                list: async (c: RequestContext, projectId: string) => {
+                  const { rows: links } = await materialLinksService.list(c, {
+                    projectId,
+                    page: 1,
+                    pageSize: 30,
+                  });
+                  const items: Array<{ id: string; title: string; kind: string }> =
+                    [];
+                  for (const link of links) {
+                    try {
+                      if (link.entityType === "knowledge") {
+                        const k = await knowledgeService.getKnowledge(
+                          c,
+                          link.entityId,
+                        );
+                        items.push({ id: k.id, title: k.title, kind: "knowledge" });
+                      } else if (link.entityType === "asset") {
+                        const a = await assetsService.getAsset(c, link.entityId);
+                        items.push({ id: a.id, title: a.name, kind: a.assetType });
+                      }
+                    } catch {
+                      continue; // 单条越权/已删跳过,不牵连整批
+                    }
+                  }
+                  return items;
+                },
+              },
               // Vercel AI SDK 路径(弃 LlmCompleter):论点树节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
@@ -4007,23 +4051,83 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             {
               ai: aiService,
               resolveModelSpec,
+              // [T-387c] B-roll 备料自动聚合:数据源从「项目 material-links」扩为——
+              //   ① 脚本凝固分镜点名的素材(visual.assetRefs,source:"script")
+              //   ② 论点树挂载的图/视频素材(thesis_tree nodes[].materialRefs,source:"thesis")
+              //   ③ 项目弹药 image/video 资产(material-links;role=broll 手动上传标 "manual",
+              //      其余标 "ammo";role=clip 口播原片仍排除)
+              // 统一 dedupeBrollRefs 去重(先到先得:script → thesis → links),来源徽标随
+              // source 字段进预览卡;项目全空 → 回退整库投影(旧行为,不带 source)。
               listBrollInventory: async (c, projectId) => {
                 const rows: BrollAssetRef[] = [];
-                const pushAsset = (a: {
-                  id: string;
-                  name: string;
-                  assetType: string;
-                  description: string;
-                }) => {
+                const pushAsset = (
+                  a: {
+                    id: string;
+                    name: string;
+                    assetType: string;
+                    description: string;
+                  },
+                  source?: BrollAssetRef["source"],
+                ) => {
                   if (a.assetType !== "video" && a.assetType !== "image") return;
                   rows.push({
                     assetId: a.id,
                     label: a.name,
                     kind: a.assetType,
                     description: a.description ?? "",
+                    ...(source ? { source } : {}),
                   });
                 };
+                const tryPush = async (
+                  assetId: string,
+                  source: BrollAssetRef["source"],
+                ) => {
+                  try {
+                    pushAsset(await assetsService.getAsset(c, assetId), source);
+                  } catch {
+                    /* 单条越权/已删/非素材 id 跳过,不牵连整批 */
+                  }
+                };
                 if (projectId) {
+                  // ① 脚本凝固分镜点名素材(output_script 当前版本 sections[].visual.assetRefs)。
+                  try {
+                    const scriptData = await readArtifactContentData(
+                      c,
+                      projectId,
+                      "output_script",
+                    );
+                    for (const sec of storyboardFromContentData(scriptData)) {
+                      for (const ref of sec.assetRefs) await tryPush(ref, "script");
+                    }
+                  } catch {
+                    /* 无脚本/读失败 → 该来源为空 */
+                  }
+                  // ② 论点树挂载素材(thesis_tree nodes[].materialRefs;知识条目 getAsset 会
+                  //    失败 → 自然跳过,只留图/视频资产)。
+                  try {
+                    const thesisData = await readArtifactContentData(
+                      c,
+                      projectId,
+                      "thesis_tree",
+                    );
+                    const nodes = Array.isArray(thesisData?.nodes)
+                      ? (thesisData!.nodes as unknown[])
+                      : [];
+                    for (const raw of nodes) {
+                      const refs = (raw as { materialRefs?: unknown } | null)
+                        ?.materialRefs;
+                      if (!Array.isArray(refs)) continue;
+                      for (const r of refs) {
+                        const id = (r as { id?: unknown } | null)?.id;
+                        if (typeof id === "string" && id)
+                          await tryPush(id, "thesis");
+                      }
+                    }
+                  } catch {
+                    /* 无论点树/读失败 → 该来源为空 */
+                  }
+                  // ③ 项目弹药(material-links):手动上传 B-roll(role=broll)标 manual,
+                  //    其余非 clip 资产标 ammo。
                   const { rows: links } = await materialLinksService.list(c, {
                     projectId,
                     page: 1,
@@ -4033,22 +4137,35 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     if (link.entityType !== "asset") continue;
                     // [T-294] 排除粗剪口播原片(role=clip):它是成片主体,不能被当空镜 B-roll 插回。
                     if (link.role === "clip") continue;
-                    try {
-                      pushAsset(await assetsService.getAsset(c, link.entityId));
-                    } catch {
-                      continue; // 单条越权/已删跳过,不牵连整批
-                    }
+                    await tryPush(
+                      link.entityId,
+                      link.role === "broll" ? "manual" : "ammo",
+                    );
                   }
                 }
-                if (rows.length === 0) {
-                  // 项目没挂素材 → 回退整库投影(仍全是真实 assetId)。
+                const deduped = dedupeBrollRefs(rows);
+                if (deduped.length === 0) {
+                  // 项目没挂素材 → 回退整库投影(仍全是真实 assetId;旧行为,不带 source)。
                   const all = await assetsService.listAssets(c, {
                     limit: 100,
                     cursor: null,
                   });
                   for (const a of all) pushAsset(a);
+                  return dedupeBrollRefs(rows);
                 }
-                return rows;
+                return deduped;
+              },
+              // [T-387c] 凝固分镜 reader:output_script 当前版本 contentData → 分镜投影
+              // (storyboardFromContentData 宽容解析;旧稿无 visual → 空数组 → facet 空 = 现状)。
+              readStoryboard: async (c, projectId) => {
+                if (!projectId) return [];
+                try {
+                  return storyboardFromContentData(
+                    await readArtifactContentData(c, projectId, "output_script"),
+                  );
+                } catch {
+                  return [];
+                }
               },
             },
           );

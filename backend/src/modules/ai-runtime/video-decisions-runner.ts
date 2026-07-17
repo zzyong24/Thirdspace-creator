@@ -82,12 +82,33 @@ export interface BilingualSubtitleLine {
   en: string;
 }
 
-/** 素材清单投影(项目 material-links/assets 的 label+描述,B-roll 决策的唯一可选集)。 */
+/** [T-387c] B-roll 候选来源(自动聚合徽标):脚本画面点名 / 论点树挂载 / 项目弹药 / 手动上传。 */
+export type BrollSource = "script" | "thesis" | "ammo" | "manual";
+
+/** 素材清单投影(项目 material-links/assets 的 label+描述,B-roll 决策的唯一可选集)。
+ *  [T-387c] additive source 字段:自动聚合来源徽标(缺省 = 旧投影/回退整库,UI 不渲徽标)。 */
 export interface BrollAssetRef {
   assetId: string;
   label: string;
   kind: string;
   description: string;
+  source?: BrollSource;
+}
+
+/** [T-387c] 聚合去重(纯函数,server 端 listBrollInventory 与制作页 UI 共用同一逻辑):
+ *  按 assetId 去重,保留**先出现**的条目(调用方按来源优先级排序传入:script → thesis →
+ *  manual/ammo → 整库回退)。 */
+export function dedupeBrollRefs(
+  items: ReadonlyArray<BrollAssetRef>,
+): BrollAssetRef[] {
+  const seen = new Set<string>();
+  const out: BrollAssetRef[] = [];
+  for (const it of items) {
+    if (!it.assetId || seen.has(it.assetId)) continue;
+    seen.add(it.assetId);
+    out.push(it);
+  }
+  return out;
 }
 
 /** 四决策完整产物(预览卡渲染 + 确认后组装 props 的单一输入)。 */
@@ -223,6 +244,92 @@ export function libraryFacet(inventory: readonly BrollAssetRef[]): string {
     .join("\n");
 }
 
+// ── [T-387c] 凝固分镜 facet(四决策的「对齐器」输入)─────────────────────────────
+
+/** 凝固分镜的一段投影(读自 output_script 当前版本 contentData.sections[].visual)。 */
+export interface StoryboardSectionRef {
+  /** 段口播摘要(section body 的口播行/正文截断,给模型对位用)。 */
+  narration: string;
+  /** authored 画面描述(visual.description)。 */
+  visualDescription: string;
+  /** 点名的真实素材 assetId(凝固 pass 已校验存在)。 */
+  assetRefs: string[];
+}
+
+/**
+ * [T-387c] 从 output_script 当前版本的 contentData 解析凝固分镜投影(composition root 的
+ * readStoryboard 端口用)。宽容防御(jsonb 自由形状):无 sections / 段无 visual → 不产行;
+ * 全稿无任何 visual → 空数组(→ facet 空串,零回归)。narration 取段 body 的「口播：」行,
+ * 无则 body 首 60 字。纯函数,导出供单测。
+ */
+export function storyboardFromContentData(
+  contentData: Record<string, unknown> | null | undefined,
+): StoryboardSectionRef[] {
+  const rawSections = Array.isArray(contentData?.sections)
+    ? (contentData!.sections as unknown[])
+    : [];
+  const out: StoryboardSectionRef[] = [];
+  let any = false;
+  for (const raw of rawSections) {
+    const s = (raw ?? {}) as Record<string, unknown>;
+    const body = typeof s.body === "string" ? s.body : "";
+    const narrationLine = body
+      .split("\n")
+      .map((l) => l.trim())
+      .find((l) => l.startsWith("口播：") || l.startsWith("口播:"));
+    const narration = (narrationLine
+      ? narrationLine.replace(/^口播[：:]/, "")
+      : body
+    )
+      .trim()
+      .slice(0, 60);
+    const v = (s.visual ?? null) as Record<string, unknown> | null;
+    const visualDescription =
+      v && typeof v.description === "string" ? v.description.trim() : "";
+    const assetRefs =
+      v && Array.isArray(v.assetRefs)
+        ? (v.assetRefs as unknown[]).filter(
+            (x): x is string => typeof x === "string" && x.trim().length > 0,
+          )
+        : [];
+    if (visualDescription || assetRefs.length > 0) any = true;
+    out.push({ narration, visualDescription, assetRefs });
+  }
+  return any ? out : [];
+}
+
+/**
+ * 组装 storyboard facet:凝固分镜表 + **对齐硬约束**(SPEC §2b 四决策=对齐器)。
+ * 无凝固分镜(空数组)→ 返回空串(模板占位替换为空,行为=现状,零回归——测锚)。
+ * 纯函数,导出供单测。
+ */
+export function storyboardFacet(
+  sections: readonly StoryboardSectionRef[],
+): string {
+  const withIntent = sections.filter(
+    (s) => s.visualDescription || s.assetRefs.length > 0,
+  );
+  if (withIntent.length === 0) return "";
+  const lines = sections.map((s, i) => {
+    const parts = [
+      `${i + 1} | 口播:${s.narration || "（无摘要）"}`,
+      `画面:${s.visualDescription || "（未写,该段可自主决策）"}`,
+    ];
+    if (s.assetRefs.length > 0) parts.push(`点名素材:${s.assetRefs.join(", ")}`);
+    return `· ${parts.join(" | ")}`;
+  });
+  return `
+【已凝固分镜表(创作者采纳定稿时确定的 authored 视觉意图 —— 你是对齐器,不是再创作者)】
+(每行: 段序号 | 口播摘要 | 画面意图 | 点名素材 assetId)
+${lines.join("\n")}
+【对齐硬约束(违反即废)】
+- 有画面意图的段:**尊重并落实它,绝不推翻重新发明**;场景(scene)切分尽量与分镜段边界对齐(时间仍必须吸附 SRT 行 start)。
+- 分镜点名了素材(assetRefs)的段:B-roll **必须优先选用被点名的素材**(它们在素材清单里)。
+- 信息卡不得与该段 authored 画面意图冲突(该段已计划满屏素材/实拍时,不再叠大卡抢焦点)。
+- 分镜「（未写）」的段:按你的专业判断自主决策(仅空白处自主)。
+`;
+}
+
 // ── 结构化调用抽象(默认走 runStructuredNode;测试注入 fake)────────────────────
 
 export interface StructuredCallInput<T> {
@@ -236,15 +343,21 @@ export type StructuredCall = <T>(input: StructuredCallInput<T>) => Promise<T>;
 
 // ── 四决策函数(纯编排:调模型 → 后处理吸附/剔除;各自可独测)──────────────────
 
-/** ① 语义分场:边界吸附 SRT 行 start,排序去重,首场对齐首行,endSec = 下场 start / 总时长。 */
+/** ① 语义分场:边界吸附 SRT 行 start,排序去重,首场对齐首行,endSec = 下场 start / 总时长。
+ *  [T-387c] storyboard(凝固分镜 facet,可选):有 authored 意图段 → scene 切分对齐段边界
+ *  (仍吸附 SRT);空串/缺省 → 占位替换为空 = 现状(零回归)。 */
 export async function decideScenes(
-  input: { srtLines: readonly SrtLine[]; script: string },
+  input: { srtLines: readonly SrtLine[]; script: string; storyboard?: string },
   call: StructuredCall,
 ): Promise<VideoScene[]> {
   const starts = srtStartSet(input.srtLines);
   const out = await call<VideoScenesOutput>({
     skillId: "video.scenes",
-    facets: { srt: srtFacet(input.srtLines), script: input.script },
+    facets: {
+      srt: srtFacet(input.srtLines),
+      script: input.script,
+      storyboard: input.storyboard ?? "",
+    },
     outputSchema: buildScenesDecisionSchema(starts),
   });
   const total = srtTotalDurationSec(input.srtLines);
@@ -270,6 +383,8 @@ export async function decideCards(
     scenes: readonly VideoScene[];
     srtLines: readonly SrtLine[];
     script: string;
+    /** [T-387c] 凝固分镜 facet(可选):cards 不与 authored 画面冲突;空 = 现状。 */
+    storyboard?: string;
   },
   call: StructuredCall,
 ): Promise<VideoInfoCard[]> {
@@ -280,6 +395,7 @@ export async function decideCards(
       scenes: scenesFacet(input.scenes),
       srt: srtFacet(input.srtLines),
       script: input.script,
+      storyboard: input.storyboard ?? "",
     },
     outputSchema: buildCardsDecisionSchema(input.scenes.length, starts),
   });
@@ -321,6 +437,8 @@ export async function decideBroll(
     scenes: readonly VideoScene[];
     srtLines: readonly SrtLine[];
     inventory: readonly BrollAssetRef[];
+    /** [T-387c] 凝固分镜 facet(可选):点名素材的段 broll 必选点名素材;空 = 现状。 */
+    storyboard?: string;
   },
   call: StructuredCall,
 ): Promise<VideoBrollPick[]> {
@@ -332,6 +450,7 @@ export async function decideBroll(
     facets: {
       scenes: scenesFacet(input.scenes),
       library: libraryFacet(input.inventory),
+      storyboard: input.storyboard ?? "",
     },
     outputSchema: buildBrollDecisionSchema(ids, input.scenes.length),
   });
@@ -432,6 +551,15 @@ export interface VideoDecisionsDeps {
     ctx: RequestContext,
     projectId: string | null,
   ) => Promise<BrollAssetRef[]>;
+  /**
+   * [T-387c] 凝固分镜 reader(output_script 当前版本 contentData.sections[].visual 投影;
+   * composition root 绑)。Optional:未绑 / 无 projectId / 读失败 / 旧稿无 visual → 空数组 →
+   * storyboard facet 空串 = 现状(零回归)。
+   */
+  readStoryboard?: (
+    ctx: RequestContext,
+    projectId: string | null,
+  ) => Promise<StoryboardSectionRef[]>;
   /** 测试逃生口:替换真模型调用(默认 modelFor + runStructuredNode + registry 模板)。 */
   callStructured?: StructuredCall;
 }
@@ -500,17 +628,45 @@ export async function runVideoDecisions(
       });
     };
 
+    // [T-387c] 凝固分镜(采纳定稿时刻产的分镜真源)→ storyboard facet,喂 scenes/cards/broll
+    // 当**对齐硬约束**(四决策=对齐器)。best-effort:未绑 reader / 读失败 / 旧稿无 visual →
+    // 空串 → 模板占位替换为空,行为=现状(零回归,测锚)。
+    let storyboard = "";
+    if (deps.readStoryboard) {
+      try {
+        storyboard = storyboardFacet(
+          await deps.readStoryboard(ctx, task.projectId),
+        );
+      } catch {
+        storyboard = "";
+      }
+    }
+
     stepIdx = 0;
-    const scenes = await decideScenes({ srtLines, script }, call);
+    const scenes = await decideScenes({ srtLines, script, storyboard }, call);
     await step(0, `${VIDEO_DECISION_STEPS[0]}:${scenes.length} 场`);
 
     stepIdx = 1;
-    const cards = await decideCards({ scenes, srtLines, script }, call);
+    const cards = await decideCards({ scenes, srtLines, script, storyboard }, call);
     await step(1, `${VIDEO_DECISION_STEPS[1]}:${cards.length} 张(可溯校验后)`);
 
     stepIdx = 2;
-    const inventory = await deps.listBrollInventory(ctx, task.projectId);
-    const broll = await decideBroll({ scenes, srtLines, inventory }, call);
+    // [T-387c] 备料③「人可剔」:制作页聚合清单里被用户剔除的自动项经 inputData.excludedAssetIds
+    // 传入,这里从决策可选集里滤掉(手动上传/未剔除项照常)。缺省 = 不滤(旧任务零回归)。
+    const excluded = new Set(
+      Array.isArray(task.inputData.excludedAssetIds)
+        ? (task.inputData.excludedAssetIds as unknown[]).filter(
+            (x): x is string => typeof x === "string",
+          )
+        : [],
+    );
+    const inventory = (
+      await deps.listBrollInventory(ctx, task.projectId)
+    ).filter((a) => !excluded.has(a.assetId));
+    const broll = await decideBroll(
+      { scenes, srtLines, inventory, storyboard },
+      call,
+    );
     await step(
       2,
       inventory.length === 0

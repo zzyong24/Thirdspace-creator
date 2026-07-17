@@ -389,6 +389,14 @@ export interface PlanningViewModel extends BasePageViewModel {
 // Script workspace
 // ---------------------------------------------------------------------------
 
+// [T-387b] 一段的结构化视觉意图 / 凝固分镜(采纳定稿时刻经「分镜凝固 pass」校验后即分镜真源):
+// description = 画面描述;assetRefs = 点名的真实素材 assetId;missing = 需要但项目里没有的素材。
+export interface ScriptSectionVisualView {
+  readonly description: string;
+  readonly assetRefs: ReadonlyArray<string>;
+  readonly missing: ReadonlyArray<string>;
+}
+
 export interface ScriptSectionView {
   readonly id: Id;
   readonly type: "hook" | "intro" | "body" | "transition" | "outro" | "golden_quote";
@@ -397,6 +405,8 @@ export interface ScriptSectionView {
   readonly emphasis: boolean;
   readonly startSeconds: number | null;
   readonly endSeconds: number | null;
+  /** [T-387b] 可选凝固分镜(旧稿无此字段 → undefined,渲染零回归)。 */
+  readonly visual?: ScriptSectionVisualView | null;
 }
 
 export interface ScriptViewModel extends BasePageViewModel {

@@ -16,6 +16,10 @@ import {
   type AITaskResultResource,
 } from "./ai.schema";
 import { ConflictError } from "./ai.errors";
+import {
+  freezeStoryboardSections,
+  hasStoryboardVisual,
+} from "./storyboard-freeze";
 
 // AI service (foundation §5.3) — every public method takes `(ctx: RequestContext, …)`
 // and builds a repository bound to `ctx.userId` (createAiRepository(db, { now, nextId,
@@ -184,6 +188,13 @@ export interface AiCalibrationPort {
   ): Promise<unknown>;
 }
 
+// [T-387b] 素材库存在性 seam(分镜凝固 pass 用):confirmTask 物化整稿前,对照**真实素材库**
+// 校验 contentData.sections[].visual.assetRefs(不存在的剔除挪 missing,诚实)。只读 id 集合,
+// 不取内容。Optional:未绑(旧测试 fake / 存量组合根)→ 凝固 pass 跳过(零回归,不假校验)。
+export interface AiAssetLibraryPort {
+  listAssetIds(ctx: RequestContext): Promise<string[]>;
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
@@ -196,6 +207,8 @@ export interface ServiceDeps {
   materialLinks: AiMaterialLinksPort;
   positioning: AiPositioningPort;
   calibration: AiCalibrationPort;
+  // [T-387b] 分镜凝固 pass 的素材库只读端口(optional,未绑则凝固跳过)。
+  assetLibrary?: AiAssetLibraryPort;
 }
 
 export interface CreateTaskInput {
@@ -1080,12 +1093,34 @@ export function createAiService(deps: ServiceDeps): AiService {
       // service (immutable append, createdByType:"ai"). Forward the structured
       // `contentData` (e.g. the script.draft node's editable 分镜 sections) when the
       // candidate carries one, so an AI-confirmed version round-trips into the editor.
-      const contentData =
+      let contentData =
         data.contentData !== null &&
         typeof data.contentData === "object" &&
         !Array.isArray(data.contentData)
           ? (data.contentData as Record<string, unknown>)
           : undefined;
+      // [T-387b] 分镜凝固 pass —— **挂点**:confirmTask 的 artifact_version 分支是所有
+      // 「采纳整稿」路径的唯一收口(对话整稿卡 / 稿面候选卡都经 client.confirmTask 到这),
+      // 在物化前对照真实素材库做一次确定性凝固(SPEC §2:采纳定稿时刻 = 分镜正式生成阶段):
+      //   visual.assetRefs 里不存在的 asset 剔除挪 missing(诚实);凝固后 sections[].visual
+      //   即分镜真源,随 contentData 落 artifact 版本(不建新表)。
+      // 只在 contentData 带 visual 时触发(论点树 nodes / 结构方案 sections 等其它
+      // artifact_version 形状零影响);assetLibrary 端口未绑 → 跳过(不假校验,零回归)。
+      if (contentData && deps.assetLibrary && hasStoryboardVisual(contentData)) {
+        try {
+          const ids = await deps.assetLibrary.listAssetIds(ctx);
+          const frozen = freezeStoryboardSections(contentData, new Set(ids));
+          contentData = frozen.contentData;
+          if (frozen.removedRefs.length > 0) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `[storyboard-freeze] task ${taskId}: 剔除 ${frozen.removedRefs.length} 条失效素材引用(${frozen.removedRefs.join(", ")})`,
+            );
+          }
+        } catch {
+          // 素材库读失败 → 不凝固(保留意图草稿原样落库),绝不阻塞采纳。
+        }
+      }
       await deps.artifacts.createVersion(ctx, artifactId, {
         contentText: body,
         changeSummary: typeof data.summary === "string" ? data.summary : "",

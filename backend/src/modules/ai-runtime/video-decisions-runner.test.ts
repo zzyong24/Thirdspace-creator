@@ -15,6 +15,9 @@ import {
   VIDEO_DECISIONS_RESULT_TYPE,
   VIDEO_DECISION_STEPS,
   SNAP_TOLERANCE_SEC,
+  storyboardFacet,
+  storyboardFromContentData,
+  dedupeBrollRefs,
   type StructuredCall,
   type VideoScene,
   type BrollAssetRef,
@@ -368,6 +371,97 @@ describe("runVideoDecisions(编排)", () => {
     expect(failStep?.text).toContain("模型端点 500");
   });
 
+  // ── [T-387c] storyboard facet(四决策=对齐器)────────────────────────────────
+
+  it("[T-387c] 有凝固分镜 → storyboard facet 真喂进 scenes/cards/broll;subtitles 不吃", async () => {
+    const seen: Record<string, string | undefined> = {};
+    const call: StructuredCall = async <T>({
+      skillId,
+      facets,
+    }: {
+      skillId: string;
+      facets: Readonly<Record<string, string | undefined>>;
+    }) => {
+      seen[skillId] = facets.storyboard;
+      return HAPPY_OUTPUTS[skillId] as T;
+    };
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
+    deps.callStructured = call;
+    deps.readStoryboard = async () => [
+      {
+        narration: "今天讲三个提示词技巧",
+        visualDescription: "屏幕录屏演示",
+        assetRefs: ["asset-1"],
+      },
+    ];
+    await runVideoDecisions(ctx, TASK, deps);
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    for (const id of ["video.scenes", "video.cards", "video.broll"]) {
+      expect(seen[id]).toContain("已凝固分镜表");
+      expect(seen[id]).toContain("asset-1");
+      expect(seen[id]).toContain("对齐硬约束");
+    }
+    // 字幕决策(文本校正)不吃 storyboard facet。
+    expect(seen["video.subtitles"]).toBeUndefined();
+  });
+
+  it("[T-387c] 无 visual(旧项目)→ facet 空串 = 现状(零回归);reader 未绑同样零回归", async () => {
+    const seen: Record<string, string | undefined> = {};
+    const call: StructuredCall = async <T>({
+      skillId,
+      facets,
+    }: {
+      skillId: string;
+      facets: Readonly<Record<string, string | undefined>>;
+    }) => {
+      seen[skillId] = facets.storyboard;
+      return HAPPY_OUTPUTS[skillId] as T;
+    };
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
+    deps.callStructured = call;
+    deps.readStoryboard = async () => []; // 旧稿无 visual → 投影空数组
+    await runVideoDecisions(ctx, TASK, deps);
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    expect(seen["video.scenes"]).toBe("");
+    expect(seen["video.broll"]).toBe("");
+  });
+
+  it("[T-387c] inputData.excludedAssetIds → 决策可选集里滤掉被剔项(人可剔)", async () => {
+    const twoAssets: BrollAssetRef[] = [
+      { assetId: "asset-1", label: "A", kind: "image", description: "" },
+      { assetId: "asset-2", label: "B", kind: "video", description: "" },
+    ];
+    let seenLibrary = "";
+    const call: StructuredCall = async <T>({
+      skillId,
+      facets,
+    }: {
+      skillId: string;
+      facets: Readonly<Record<string, string | undefined>>;
+    }) => {
+      if (skillId === "video.broll") seenLibrary = facets.library ?? "";
+      return HAPPY_OUTPUTS[skillId] as T;
+    };
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS, twoAssets);
+    deps.callStructured = call;
+    await runVideoDecisions(
+      ctx,
+      { ...TASK, inputData: { ...TASK.inputData, excludedAssetIds: ["asset-2"] } },
+      deps,
+    );
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    expect(seenLibrary).toContain("asset-1");
+    expect(seenLibrary).not.toContain("asset-2");
+    // 候选携带的清单快照也是过滤后的(预览卡换选下拉不出现被剔项)。
+    const [, , result] = calls.recordCandidate.mock.calls[0]! as unknown as [
+      unknown,
+      string,
+      { resultData: Record<string, unknown> },
+    ];
+    const inv = result.resultData.inventory as BrollAssetRef[];
+    expect(inv.map((a) => a.assetId)).toEqual(["asset-1"]);
+  });
+
   it("SRT 解析不出 → 备料失败诚实终态(不调模型)", async () => {
     const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -383,5 +477,78 @@ describe("runVideoDecisions(编排)", () => {
       .map((c) => (c as unknown as [unknown, string, { kind: string; text: string }])[2])
       .find((s) => s.kind === "failed");
     expect(failStep?.text).toContain("备料");
+  });
+});
+
+// ── [T-387c] 纯函数:storyboardFacet / storyboardFromContentData / dedupeBrollRefs ──
+
+describe("[T-387c] storyboardFacet(凝固分镜 → 对齐器 facet)", () => {
+  it("无任何 authored 意图(空数组 / 全空段)→ 空串(零回归测锚)", () => {
+    expect(storyboardFacet([])).toBe("");
+    expect(
+      storyboardFacet([
+        { narration: "只有口播", visualDescription: "", assetRefs: [] },
+      ]),
+    ).toBe("");
+  });
+
+  it("有意图段 → 渲分镜表 + 对齐硬约束;未写画面的段标注可自主", () => {
+    const facet = storyboardFacet([
+      {
+        narration: "开场钩子",
+        visualDescription: "产品特写",
+        assetRefs: ["asset-1"],
+      },
+      { narration: "第二段", visualDescription: "", assetRefs: [] },
+    ]);
+    expect(facet).toContain("已凝固分镜表");
+    expect(facet).toContain("产品特写");
+    expect(facet).toContain("asset-1");
+    expect(facet).toContain("对齐硬约束");
+    expect(facet).toContain("绝不推翻");
+    expect(facet).toContain("未写"); // 空白段可自主
+  });
+});
+
+describe("[T-387c] storyboardFromContentData(凝固分镜投影)", () => {
+  it("sections[].visual → 投影行;narration 取「口播：」行", () => {
+    const out = storyboardFromContentData({
+      sections: [
+        {
+          heading: "1. 钩子",
+          body: "口播：三个技巧\n画面：录屏",
+          visual: { description: "录屏演示", assetRefs: ["a1"], missing: [] },
+        },
+        { heading: "2. 正文", body: "纯正文" },
+      ],
+    });
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({
+      narration: "三个技巧",
+      visualDescription: "录屏演示",
+      assetRefs: ["a1"],
+    });
+    expect(out[1]!.visualDescription).toBe("");
+  });
+
+  it("旧稿无任何 visual / contentData 为空 → 空数组(→ facet 空,零回归)", () => {
+    expect(storyboardFromContentData(null)).toEqual([]);
+    expect(
+      storyboardFromContentData({ sections: [{ heading: "h", body: "b" }] }),
+    ).toEqual([]);
+  });
+});
+
+describe("[T-387c] dedupeBrollRefs(聚合去重,先到先得)", () => {
+  it("同 assetId 保留先出现的(来源优先级由调用方排序保证)", () => {
+    const out = dedupeBrollRefs([
+      { assetId: "a1", label: "脚本点名", kind: "image", description: "", source: "script" },
+      { assetId: "a1", label: "弹药同款", kind: "image", description: "", source: "ammo" },
+      { assetId: "a2", label: "论点挂载", kind: "video", description: "", source: "thesis" },
+      { assetId: "", label: "坏行", kind: "image", description: "" },
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toMatchObject({ assetId: "a1", source: "script" });
+    expect(out[1]).toMatchObject({ assetId: "a2", source: "thesis" });
   });
 });

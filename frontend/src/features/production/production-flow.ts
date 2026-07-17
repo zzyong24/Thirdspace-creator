@@ -79,3 +79,75 @@ export function humanizeRenderError(message: string | null): string | null {
   }
   return null;
 }
+
+// ── [T-387c] B-roll 自动聚合(备料③;纯函数,workbench 客户端岛与单测共用)────────
+//
+// 数据源扩为自动列入:脚本凝固分镜点名素材(visual.assetRefs)+ 论点树 materialRefs +
+// 项目弹药 image/video 资产;统一按 assetId 去重(先到先得,调用方按 script → thesis →
+// ammo 优先级传入),已手动上传为 B-roll(role=broll)的素材不重复列(手动列表单独渲)。
+// 「人可剔」= 剔除集只进本次决策任务的 inputData.excludedAssetIds,不动用料链。
+
+/** 一条自动聚合的 B-roll 候选(来源徽标渲染用)。 */
+export interface AutoBrollItem {
+  assetId: string;
+  name: string;
+  kind: string;
+  source: "script" | "thesis" | "ammo";
+}
+
+export const BROLL_SOURCE_LABEL: Record<AutoBrollItem["source"], string> = {
+  script: "脚本画面",
+  thesis: "论点",
+  ammo: "弹药",
+};
+
+/**
+ * 聚合去重:按 assetId 保留**先出现**的条目(调用方按来源优先级排序传入),
+ * 并剔除已在手动 B-roll 列表(manualAssetIds)里的(不重复列)。
+ */
+export function aggregateAutoBroll(
+  items: ReadonlyArray<AutoBrollItem>,
+  manualAssetIds: ReadonlyArray<string>,
+): AutoBrollItem[] {
+  const seen = new Set(manualAssetIds);
+  const out: AutoBrollItem[] = [];
+  for (const it of items) {
+    if (!it.assetId || seen.has(it.assetId)) continue;
+    seen.add(it.assetId);
+    out.push(it);
+  }
+  return out;
+}
+
+/** 从脚本 artifact 当前版本 contentData 宽容抽出各段 visual.assetRefs(旧稿无 → [])。 */
+export function assetRefsFromScriptContentData(
+  contentData: unknown,
+): string[] {
+  const data = (contentData ?? {}) as { sections?: unknown };
+  const sections = Array.isArray(data.sections) ? data.sections : [];
+  const out: string[] = [];
+  for (const raw of sections) {
+    const v = (raw as { visual?: { assetRefs?: unknown } } | null)?.visual;
+    if (!v || !Array.isArray(v.assetRefs)) continue;
+    for (const id of v.assetRefs) {
+      if (typeof id === "string" && id.trim()) out.push(id.trim());
+    }
+  }
+  return out;
+}
+
+/** 从论点树 artifact 当前版本 contentData 宽容抽出各节点 materialRefs 的 id(无 → [])。 */
+export function refIdsFromThesisContentData(contentData: unknown): string[] {
+  const data = (contentData ?? {}) as { nodes?: unknown };
+  const nodes = Array.isArray(data.nodes) ? data.nodes : [];
+  const out: string[] = [];
+  for (const raw of nodes) {
+    const refs = (raw as { materialRefs?: unknown } | null)?.materialRefs;
+    if (!Array.isArray(refs)) continue;
+    for (const r of refs) {
+      const id = (r as { id?: unknown } | null)?.id;
+      if (typeof id === "string" && id.trim()) out.push(id.trim());
+    }
+  }
+  return out;
+}

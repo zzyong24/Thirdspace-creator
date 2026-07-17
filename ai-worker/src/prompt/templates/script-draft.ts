@@ -18,12 +18,26 @@ import { ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE } from "../grounding-f
  * 裸数组在部分 provider 不可靠。四字段各 `.default("")` 让模型偶尔缺字段也能过校验(缺则空串)。
  */
 
+// [T-387b] 结构化视觉意图(SPEC G2:画面列从纯文本升级为可消费结构)。**全 optional + default**
+// (照 motion 可选先例,T-295):弱模型不产 visual 也过校验(缺省 = 无结构化意图,行为同旧)。
+//   description:画面描述(视觉意图草稿,写稿阶段可粗——真源在采纳时的「分镜凝固 pass」);
+//   assetRefs:点名的**项目内真实素材 assetId**(只能来自注入的素材清单,禁虚构);
+//   missing:需要但项目里没有的素材描述(诚实缺,采纳后汇总进「缺素材清单」)。
+export const scriptShotVisualSchema = z.object({
+  description: z.string().default(""),
+  assetRefs: z.array(z.string()).default([]),
+  missing: z.array(z.string()).default([]),
+});
+export type ScriptShotVisual = z.infer<typeof scriptShotVisualSchema>;
+
 // 一个分镜 = 爆款公式的一拍。四字段独立(口播/画面/字幕/时长),配合 CollabField 逐字段可改。
 export const scriptShotSchema = z.object({
   口播: z.string().default(""),
   画面: z.string().default(""),
   字幕: z.string().default(""),
   时长: z.string().default(""),
+  // [T-387b] 可选结构化视觉意图(弱模型不产也过;画面文本列保留,向后兼容)。
+  visual: scriptShotVisualSchema.optional(),
 });
 // 顶层输出契约:一个 shots 数组(顶层对象,非裸数组)。
 export const scriptDraftSchema = z.object({
@@ -33,7 +47,8 @@ export type ScriptDraftOutput = z.infer<typeof scriptDraftSchema>;
 
 export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   id: "script.draft",
-  version: "v4",
+  // [T-387b] v5:画面列结构化(shots[].visual 可选:description/assetRefs/missing)+ 注入项目素材库清单。
+  version: "v5",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry 取它
   // 绑 generateObject,模型必须吐 { shots:[...] },校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: scriptDraftSchema,
@@ -52,7 +67,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   // [T-269] 模板正文尾部嵌 ANTI_FABRICATION_CLAUSE(可溯硬约束段,单一真值 grounding-facets)——
   //   把对话外层 honesty rule #9 下沉进写稿子调用,弱模型也不敢编数字/偷换事实。
   template: `【创作者定位】
-{{positioning}}{{projectBriefHard}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
+{{positioning}}{{projectBriefHard}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
 
 【任务】基于定位(+立项硬约束+过往爆款要素)+选题+**用户第一手资料**,写一条**分镜脚本**。
 
@@ -69,7 +84,9 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
 ${AUDIENCE_MINDSET_CLAUSE}
 ${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"shots": [...]},shots 是分镜数组,每一项:
-{"口播"(这一镜要说的话),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s")}。
+{"口播"(这一镜要说的话),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s"),
+ "visual"(可选,结构化视觉意图):{"description"(这一镜配什么画面,一句),"assetRefs"(点名素材的 assetId 数组),"missing"(需要但项目里没有的素材描述数组)}}。
+【visual 硬约束(诚实门)】若上方给了【项目素材库】清单:assetRefs **只能**填清单里出现过的真实 assetId(优先引用已有素材,让画面落到实拍/实图);清单里没有合适素材时,把需要的素材如实写进 missing(如「产品操作录屏」),**绝不虚构 assetId**。没给清单则 assetRefs 留空、需要的素材写 missing。
 第一镜必须是前3秒钩子,最后一镜必须落在 CTA。6-10 镜为宜。`,
   requiredFacets: ["positioning"],
   // [T-184] 声明式 context 注入 —— 本模板要装配层注入的 context 源 reader(key = 组合根 ContextDeps
@@ -89,5 +106,8 @@ ${ANTI_FABRICATION_CLAUSE}
     "artifactOrigin",
     "projectMaterials",
     "brief",
+    // [T-387b] 素材库清单(id | 名称 (类型))—— visual.assetRefs 点名真实 assetId 的唯一可选集。
+    // 中央 registry 已有 assets reader(assetsBrief),声明即注入(缺清单 → facet 空,整段省略)。
+    "assets",
   ],
 };

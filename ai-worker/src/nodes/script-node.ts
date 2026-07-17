@@ -13,11 +13,21 @@ import { SCRIPT_DRAFT_TEMPLATE } from "../prompt/templates/script-draft";
 // 数组 → 抛「未产出可解析分镜」→ 任务 cancelled(AI 初稿出不来的根因)。结构化 + 兜底后任何模型都产
 // 可解析分镜。parseShots 仍作纯工具导出(采纳卡预览等复用),不再是本节点的解析主路。
 
+// [T-387b] 结构化视觉意图(与 scriptShotVisualSchema 同形):写稿阶段的**意图草稿**(非真源;
+// 真源在采纳定稿时刻的「分镜凝固 pass」对照真实素材库校验后凝固,见 backend ai.service confirm)。
+export interface ScriptShotVisual {
+  description: string;
+  assetRefs: string[];
+  missing: string[];
+}
+
 export interface ScriptShot {
   口播: string;
   画面: string;
   字幕: string;
   时长: string;
+  /** [T-387b] 可选结构化视觉意图(弱模型不产 → 缺省,行为同旧;画面文本列保留)。 */
+  visual?: ScriptShotVisual;
 }
 
 export interface RunScriptNodeInput {
@@ -64,6 +74,12 @@ export interface RunScriptNodeInput {
    * [T-146c] 用户参考素材·参考级(选填):normal 优先(AI 找的二手)素材,进普通参考段,非硬约束。
    */
   userMaterialRefBrief?: string;
+  /**
+   * [T-387b] 项目素材库清单(选填,creative-context assetsBrief:「· id | 名称 (类型)」行列表)——
+   * visual.assetRefs 点名真实 assetId 的唯一可选集。空 → 整段省略,模板指令要求 assetRefs 留空、
+   * 需要的素材如实进 missing(禁虚构)。
+   */
+  assetsBrief?: string;
   /** 步骤回调 —— 喂窗口步骤日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
   /** 护栏:结构化校验失败的最大重试次数(默认 2,透传 runStructuredNode)。 */
@@ -73,6 +89,22 @@ export interface RunScriptNodeInput {
 export interface RunScriptNodeResult {
   shots: ScriptShot[];
   steps: AgentStepEvent[];
+}
+
+/** [T-387b] visual 归一(纯函数,导出供单测):trim、滤空串;三段全空 → null(不带字段)。 */
+export function normalizeShotVisual(
+  raw:
+    | { description?: string; assetRefs?: string[]; missing?: string[] }
+    | undefined,
+): ScriptShotVisual | null {
+  if (!raw) return null;
+  const description = (raw.description ?? "").trim();
+  const clean = (arr: string[] | undefined) =>
+    (arr ?? []).map((x) => (typeof x === "string" ? x.trim() : "")).filter(Boolean);
+  const assetRefs = clean(raw.assetRefs);
+  const missing = clean(raw.missing);
+  if (!description && assetRefs.length === 0 && missing.length === 0) return null;
+  return { description, assetRefs, missing };
 }
 
 /** 从 agent 文本里宽容抽出分镜 JSON 数组(容忍 ``` 包裹 / 前后散文)。 */
@@ -168,17 +200,27 @@ export async function runScriptNode(
       userMaterialRef: input.userMaterialRefBrief
         ? `\n【参考素材（AI 搜集，参考级）】\n${input.userMaterialRefBrief}`
         : "",
+      // [T-387b] 项目素材库清单 —— visual.assetRefs 只能点名这里出现过的真实 assetId(诚实门
+      // 指令在模板正文);库空/未装配 → 整段省略。
+      assetsLibrary: input.assetsBrief
+        ? `\n【项目素材库（visual.assetRefs 可点名的真实素材清单，每行: assetId | 名称 (类型)）】\n${input.assetsBrief}`
+        : "",
     },
     maxRetries: input.maxRetries,
   });
   // schema 让缺字段落成空串,故这里 trim + 滤掉三主字段全空的空镜(不摆空格子)。
+  // [T-387b] visual 归一:trim、滤空串;三段全空 → 不带字段(与「模型没产」同义,诚实缺省)。
   const shots: ScriptShot[] = (object.shots ?? [])
-    .map((s) => ({
-      口播: (s.口播 ?? "").trim(),
-      画面: (s.画面 ?? "").trim(),
-      字幕: (s.字幕 ?? "").trim(),
-      时长: (s.时长 ?? "").trim(),
-    }))
+    .map((s) => {
+      const visual = normalizeShotVisual(s.visual);
+      return {
+        口播: (s.口播 ?? "").trim(),
+        画面: (s.画面 ?? "").trim(),
+        字幕: (s.字幕 ?? "").trim(),
+        时长: (s.时长 ?? "").trim(),
+        ...(visual ? { visual } : {}),
+      };
+    })
     .filter((s) => s.口播 || s.画面 || s.字幕);
   if (shots.length === 0) {
     throw new Error("script-node: agent 未产出可解析分镜");

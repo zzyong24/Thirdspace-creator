@@ -81,7 +81,10 @@ vi.mock("./draft-resizable-layout", () => ({
   ),
 }));
 
-import { DraftWorkbenchPage } from "./draft-workbench-page";
+import {
+  DraftWorkbenchPage,
+  collectMissingMaterials,
+} from "./draft-workbench-page";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 
 function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
@@ -225,6 +228,57 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
     const { container } = render(<DraftWorkbenchPage vm={baseVm()} />);
     expect(
       container.querySelector('[data-slot="mock-transcribe-now"]'),
+    ).toBeNull();
+  });
+});
+// ── [T-387b] 缺素材清单(凝固分镜 missing 汇总)────────────────────────────────
+
+describe("DraftWorkbenchPage — T-387b 缺素材清单", () => {
+  it("collectMissingMaterials:各段 visual.missing 汇总去重;无 visual → []", () => {
+    expect(
+      collectMissingMaterials([
+        { visual: { missing: ["产品操作录屏", "对比图表"] } },
+        { visual: { missing: ["产品操作录屏"] } },
+        {},
+      ]),
+    ).toEqual(["产品操作录屏", "对比图表"]);
+    expect(collectMissingMaterials([{}, { visual: { missing: [] } }])).toEqual(
+      [],
+    );
+  });
+
+  it("脚本有凝固 missing → 渲「缺素材清单」条(带搜/传引导);无 → 不渲(零回归)", () => {
+    const sections = [
+      {
+        id: "s-1",
+        type: "hook" as const,
+        heading: "钩子",
+        body: "口播",
+        emphasis: false,
+        startSeconds: null,
+        endSeconds: null,
+        visual: {
+          description: "d",
+          assetRefs: [],
+          missing: ["产品操作录屏"],
+        },
+      },
+    ];
+    const { container, rerender } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          script: { editorHtml: null, sections, versionCount: 1 } as never,
+        })}
+      />,
+    );
+    const note = container.querySelector('[data-slot="draft-missing-materials"]');
+    expect(note).not.toBeNull();
+    expect(note!.textContent).toContain("产品操作录屏");
+    expect(note!.textContent).toContain("搜素材");
+
+    rerender(<DraftWorkbenchPage vm={baseVm()} />);
+    expect(
+      container.querySelector('[data-slot="draft-missing-materials"]'),
     ).toBeNull();
   });
 });

@@ -109,6 +109,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               有哪些素材/资料,再立论点、写脚本(此前埋在最底部,写完才发现有料没用上)。 */}
           <AmmoDrawer ammo={ammo} projectId={project.id} />
 
+          {/* [T-387b] 缺素材清单:采纳整稿的「分镜凝固 pass」把各段 visual.missing 汇总到这
+              (弹药区下,离补料入口最近)。无缺项 → 不渲(零回归)。 */}
+          <MissingMaterialsNote sections={script.sections} />
+
           {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面 +
               可编辑(加/删/重排/挂用料链素材 → 保存追加新版本),空态引导立论点。 */}
           <ThesisSkeletonPanel
@@ -324,6 +328,58 @@ function PublishPackSection({
           scriptVersion={scriptVersion}
         />
       ) : null}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// [T-387b] 缺素材清单(凝固分镜的 missing 汇总;Server Component 纯读)
+// ---------------------------------------------------------------------------
+
+// 从当前脚本各段凝固 visual 汇总缺素材(去重)。导出供单测。
+export function collectMissingMaterials(
+  sections: ReadonlyArray<{
+    readonly visual?: { readonly missing: ReadonlyArray<string> } | null;
+  }>,
+): string[] {
+  const out: string[] = [];
+  for (const s of sections) {
+    for (const m of s.visual?.missing ?? []) {
+      const t = m.trim();
+      if (t) out.push(t);
+    }
+  }
+  return Array.from(new Set(out));
+}
+
+function MissingMaterialsNote({
+  sections,
+}: {
+  sections: ReadonlyArray<{
+    readonly visual?: { readonly missing: ReadonlyArray<string> } | null;
+  }>;
+}) {
+  const missing = collectMissingMaterials(sections);
+  if (missing.length === 0) return null;
+  return (
+    <section
+      data-slot="draft-missing-materials"
+      aria-label="缺素材清单"
+      className="rounded-card border border-amber-300/60 bg-amber-50/60 px-4 py-3 dark:border-amber-400/30 dark:bg-amber-400/10"
+    >
+      <p className="text-[13px] font-semibold text-amber-800 dark:text-amber-300">
+        缺素材清单({missing.length} 项)
+      </p>
+      <ul className="mt-1 flex flex-col gap-0.5">
+        {missing.map((m) => (
+          <li key={m} className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
+            · {m}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1.5 text-[11px] text-amber-700/80 dark:text-amber-400/80">
+        这些是脚本画面点名但项目里还没有的素材 —— 用上方「搜素材(联网)/＋上传素材」补齐,再进制作。
+      </p>
     </section>
   );
 }

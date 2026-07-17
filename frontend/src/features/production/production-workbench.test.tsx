@@ -72,6 +72,10 @@ const mockClient = vi.hoisted(() => ({
   listMaterialLinks: vi.fn(async (): Promise<unknown[]> => []),
   getAsset: vi.fn(async () => ({ fileSize: null as number | null })),
   listPublications: vi.fn(async (): Promise<unknown[]> => []),
+  // [T-387c] B-roll 自动聚合读脚本/论点树 artifact(缺省空 → 无自动项,老用例零影响)。
+  listArtifacts: vi.fn(async (): Promise<unknown[]> => []),
+  getArtifact: vi.fn(async () => ({ currentVersionId: null as string | null })),
+  listArtifactVersions: vi.fn(async (): Promise<unknown[]> => []),
   exportProductionMaterials: vi.fn(async () => ({
     assetId: "asset-zip-1",
     downloadUrl: "http://localhost/blob/zip?token=t",
@@ -167,6 +171,10 @@ beforeEach(() => {
   mockClient.listMaterialLinks.mockResolvedValue([]);
   mockClient.getAsset.mockResolvedValue({ fileSize: null });
   mockClient.listPublications.mockResolvedValue([]);
+  // [T-387c] 自动聚合读 artifact 的三连:默认空(无脚本/论点树)。
+  mockClient.listArtifacts.mockResolvedValue([]);
+  mockClient.getArtifact.mockResolvedValue({ currentVersionId: null });
+  mockClient.listArtifactVersions.mockResolvedValue([]);
   mockClient.exportProductionMaterials.mockResolvedValue({
     assetId: "asset-zip-1",
     downloadUrl: "http://localhost/blob/zip?token=t",
@@ -254,7 +262,13 @@ describe("ProductionWorkbench", () => {
       expect.objectContaining({
         body: {
           taskType: "video.decisions",
-          inputData: { projectId: "p-1", srtText: GOOD_SRT, script: SCRIPT },
+          inputData: {
+            projectId: "p-1",
+            srtText: GOOD_SRT,
+            script: SCRIPT,
+            // [T-387c] 备料③自动聚合的人剔除集(未剔任何项 → 空数组)。
+            excludedAssetIds: [],
+          },
         },
       }),
     );
@@ -678,5 +692,90 @@ describe("ProductionWorkbench", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+// ── [T-387c] 备料③ B-roll 自动聚合(来源徽标 + 人可剔 → excludedAssetIds)────────
+
+describe("ProductionWorkbench — T-387c B-roll 自动聚合", () => {
+  it("脚本点名素材 + 弹药资产自动列入(来源徽标);剔除后 dispatch 带 excludedAssetIds", async () => {
+    // 脚本 artifact(output_script)当前版本带凝固 visual 点名 a-script。
+    mockClient.listArtifacts.mockResolvedValue([
+      { id: "art-s", artifactType: "output_script" },
+    ]);
+    mockClient.getArtifact.mockResolvedValue({ currentVersionId: "v1" });
+    mockClient.listArtifactVersions.mockResolvedValue([
+      {
+        id: "v1",
+        versionNumber: 1,
+        contentData: {
+          sections: [
+            {
+              heading: "1. 钩子",
+              body: "口播：x",
+              visual: { description: "d", assetRefs: ["a-script"], missing: [] },
+            },
+          ],
+        },
+      },
+    ]);
+    // 项目弹药链(非 broll/clip)→ ammo 来源。
+    mockClient.listMaterialLinks.mockResolvedValue([
+      { id: "l1", entityType: "asset", entityId: "a-ammo", role: "reference" },
+    ]);
+    mockClient.getAsset.mockImplementation((async (input: unknown) => {
+      const id = (input as { params?: { assetId?: string } })?.params?.assetId;
+      if (id === "a-script")
+        return { assetType: "video", name: "点名录屏", fileSize: null };
+      if (id === "a-ammo")
+        return { assetType: "image", name: "弹药示意图", fileSize: null };
+      return { fileSize: null };
+    }) as never);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() => {
+      expect(
+        container.querySelectorAll('[data-slot="broll-auto-item"]'),
+      ).toHaveLength(2);
+    });
+    const items = container.querySelectorAll('[data-slot="broll-auto-item"]');
+    // 来源徽标:脚本画面 优先于 弹药(先到先得排序)。
+    expect(items[0]!.getAttribute("data-source")).toBe("script");
+    expect(items[0]!.textContent).toContain("脚本画面");
+    expect(items[0]!.textContent).toContain("点名录屏");
+    expect(items[1]!.getAttribute("data-source")).toBe("ammo");
+    expect(items[1]!.textContent).toContain("弹药");
+
+    // 剔除脚本点名项 → data-excluded 翻真。
+    fireEvent.click(
+      items[0]!.querySelector('[data-slot="broll-auto-toggle"]')!,
+    );
+    expect(
+      container
+        .querySelector('[data-slot="broll-auto-item"]')!
+        .getAttribute("data-excluded"),
+    ).toBe("true");
+
+    // 备料齐 → dispatch 决策:inputData.excludedAssetIds 带被剔项。
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+    fireEvent.click(dispatchButton(container));
+    await waitFor(() =>
+      expect(mockClient.createAITask).toHaveBeenCalledTimes(1),
+    );
+    // createAITask 的 mock 声明无参(calls 元素被推成空元组)→ 显式 cast 取第 0 个入参。
+    const calls = mockClient.createAITask.mock.calls as unknown as Array<
+      [{ body: { inputData: { excludedAssetIds: string[] } } }]
+    >;
+    expect(calls[0]![0].body.inputData.excludedAssetIds).toEqual(["a-script"]);
+  });
+
+  it("无脚本 visual / 无弹药 → 不渲自动列表(零回归)", async () => {
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    // 等 loadBroll effect 完成(listMaterialLinks 被调过)。
+    await waitFor(() =>
+      expect(mockClient.listMaterialLinks).toHaveBeenCalled(),
+    );
+    expect(container.querySelector('[data-slot="broll-auto"]')).toBeNull();
   });
 });

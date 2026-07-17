@@ -4,6 +4,7 @@ import type { RequestContext } from "@creatoros/contract";
 import {
   createAiService,
   type AiArtifactsPort,
+  type AiAssetLibraryPort,
   type AiKnowledgePort,
   type AiPositioningPort,
 } from "./ai.service";
@@ -24,6 +25,8 @@ function makeService(
   artifactsPort?: Partial<AiArtifactsPort>,
   knowledgePort?: Partial<AiKnowledgePort>,
   positioningPort?: AiPositioningPort,
+  // [T-387b] 分镜凝固 pass 的素材库端口(optional —— 缺省不绑,老 case 凝固跳过,零回归)。
+  assetLibraryPort?: AiAssetLibraryPort,
 ) {
   let seq = 0;
   const port: AiArtifactsPort = {
@@ -61,6 +64,7 @@ function makeService(
     materialLinks,
     positioning,
     calibration,
+    ...(assetLibraryPort ? { assetLibrary: assetLibraryPort } : {}),
   });
   return {
     service,
@@ -585,6 +589,106 @@ describe("ai service", () => {
       (input as { contentData?: { sections?: unknown[] } }).contentData
         ?.sections,
     ).toEqual([{ heading: "1. 钩子", body: "口播：…" }]);
+  });
+
+  // ── [T-387b] 分镜凝固 pass(采纳定稿时刻;confirmTask artifact_version 分支)────────
+
+  it("[T-387b] confirmTask 凝固 pass:visual.assetRefs 里不存在的 asset 剔除挪 missing 后才落版本", async () => {
+    const createVersion =
+      vi.fn<AiArtifactsPort["createVersion"]>(async () => ({ id: "version-2" }));
+    const { service } = makeService(db, { createVersion }, undefined, undefined, {
+      listAssetIds: async () => ["asset-real"],
+    });
+    const task = await service.createTask(ctx, {
+      taskType: "script.draft",
+      inputData: { artifactId: "artifact-1", idempotencyKey: "k-frz" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "artifact_version",
+      artifactId: "artifact-1",
+      resultData: {
+        body: "整稿",
+        contentData: {
+          sections: [
+            {
+              heading: "1. 钩子",
+              body: "口播：…",
+              visual: {
+                description: "产品特写",
+                assetRefs: ["asset-real", "asset-fake"],
+                missing: [],
+              },
+            },
+          ],
+        },
+      },
+    });
+    const confirmed = await service.confirmTask(ctx, task.id);
+    expect(confirmed.status).toBe("succeeded");
+    const [, , input] = createVersion.mock.calls[0]!;
+    const sections = (input as {
+      contentData?: { sections?: Array<{ visual?: { assetRefs: string[]; missing: string[] } }> };
+    }).contentData?.sections;
+    // 凝固后:真实 asset 保留,虚构引用剔除并诚实挪进 missing(分镜真源落 artifact,不建新表)。
+    expect(sections?.[0]?.visual?.assetRefs).toEqual(["asset-real"]);
+    expect(sections?.[0]?.visual?.missing).toEqual(["素材引用失效：asset-fake"]);
+  });
+
+  it("[T-387b] 无 visual 的 contentData(旧整稿/论点树)→ 凝固 pass 不触碰,原样透传(零回归)", async () => {
+    const createVersion =
+      vi.fn<AiArtifactsPort["createVersion"]>(async () => ({ id: "version-2" }));
+    const listAssetIds = vi.fn(async () => ["asset-real"]);
+    const { service } = makeService(db, { createVersion }, undefined, undefined, {
+      listAssetIds,
+    });
+    const task = await service.createTask(ctx, {
+      taskType: "script.rewrite",
+      inputData: { artifactId: "artifact-1", idempotencyKey: "k-old" },
+    });
+    const contentData = { sections: [{ heading: "1. 钩子", body: "口播：…" }] };
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "artifact_version",
+      artifactId: "artifact-1",
+      resultData: { body: "旧整稿", contentData },
+    });
+    await service.confirmTask(ctx, task.id);
+    const [, , input] = createVersion.mock.calls[0]!;
+    expect((input as { contentData?: unknown }).contentData).toEqual(contentData);
+    // 无 visual 时连素材库都不读(不做无谓 IO)。
+    expect(listAssetIds).not.toHaveBeenCalled();
+  });
+
+  it("[T-387b] 素材库端口读失败 → 保留意图草稿原样落库,绝不阻塞采纳", async () => {
+    const createVersion =
+      vi.fn<AiArtifactsPort["createVersion"]>(async () => ({ id: "version-2" }));
+    const { service } = makeService(db, { createVersion }, undefined, undefined, {
+      listAssetIds: async () => {
+        throw new Error("boom");
+      },
+    });
+    const task = await service.createTask(ctx, {
+      taskType: "script.draft",
+      inputData: { artifactId: "artifact-1", idempotencyKey: "k-err" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "artifact_version",
+      artifactId: "artifact-1",
+      resultData: {
+        body: "整稿",
+        contentData: {
+          sections: [
+            { visual: { description: "d", assetRefs: ["a1"], missing: [] } },
+          ],
+        },
+      },
+    });
+    const confirmed = await service.confirmTask(ctx, task.id);
+    expect(confirmed.status).toBe("succeeded");
+    const [, , input] = createVersion.mock.calls[0]!;
+    const sections = (input as {
+      contentData?: { sections?: Array<{ visual?: { assetRefs: string[] } }> };
+    }).contentData?.sections;
+    expect(sections?.[0]?.visual?.assetRefs).toEqual(["a1"]); // 原样(不假校验)
   });
 
   it("cancelTask transitions queued/awaiting_confirmation → cancelled; rejects from a terminal state", async () => {

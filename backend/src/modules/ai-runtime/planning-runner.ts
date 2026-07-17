@@ -6,6 +6,7 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
+import { tokenizeForOverlap } from "./srt";
 
 // 论点树 runner (planning.thesis node, 机制③④). Mirrors script-runner but DRAFTS a
 // thesis tree (论点树) from the creative context, then records an `artifact_version`
@@ -26,6 +27,14 @@ export interface PlanningDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  /**
+   * [T-387a] 项目弹药 reader(materialLinks ⋈ assets/knowledge 的轻量 id+标题+类型投影)——
+   * 产树后对支撑/证据节点做**确定性词面匹配**预挂 1-2 条素材(materialRefs, source:"ai")。
+   * Optional:未装配 / 无 projectId / 读失败 → 不预挂(零回归,人挂机制照旧)。
+   */
+  projectAmmo?: {
+    list(ctx: RequestContext, projectId: string): Promise<ThesisAmmoItem[]>;
+  };
 }
 
 export interface PlanningTask {
@@ -49,11 +58,87 @@ interface ThesisTree {
   branches: ThesisBranch[];
 }
 
+// [T-387a] 一件项目弹药(用料链挂载的知识/素材)的轻量投影 —— AI 预挂素材匹配的唯一可选集。
+// 铁律:预挂只引用**真实存在**的弹药(id 来自用料链真值),绝不虚构。
+export interface ThesisAmmoItem {
+  id: string;
+  title: string;
+  /** "knowledge" | asset 的 assetType("image"/"video"/"document"…)。 */
+  kind: string;
+}
+
+// [T-387a] 节点上挂的素材引用(与稿面 ThesisMaterialRef 同形 + additive source 字段):
+// source:"ai" = AI 预挂(UI 渲「AI」小标,可整条移除/替换);缺省 = 人挂(向后兼容)。
+export interface ThesisNodeMaterialRef {
+  id: string;
+  title: string;
+  source?: "ai";
+}
+
 // A serialized node as it rides into contentData.nodes (writer side of the contract).
 interface ThesisNode {
   column: "core" | ThesisColumn;
   title: string;
   summary: string;
+  /** [T-387a] AI 预挂素材(仅支撑/证据节点、且匹配到才带;缺省 = 无预挂,读侧按 [] 兜底)。 */
+  materialRefs?: ThesisNodeMaterialRef[];
+}
+
+// ── [T-387a] 确定性词面相似度匹配(纯函数,不调 AI)────────────────────────────
+//
+// 对每个支撑/证据节点,从项目弹药按「标题/要点 vs 弹药标题」的词面重合度挑 1-2 条预挂。
+// 打分 = token 集 Dice 系数(tokenizeForOverlap:CJK 单字 + 拉丁词,与 SRT 相似度同一套
+// token 化)+ 子串包含加成(弹药标题整体出现在节点文本里 = 强信号)。置信度低宁缺勿滥
+// (低于阈值一条不挂,渲「缺素材」徽标引导人补)。
+
+/** 匹配阈值:Dice 低于它视为「置信度低」,宁缺勿滥。 */
+export const AMMO_MATCH_THRESHOLD = 0.28;
+/** 每节点最多预挂条数(SPEC:1-2 条)。 */
+export const AMMO_MATCH_MAX_REFS = 2;
+
+/** 节点文本 vs 弹药标题的词面相似度(0~1,确定性纯函数)。 */
+export function scoreAmmoMatch(nodeText: string, ammoTitle: string): number {
+  const a = new Set(tokenizeForOverlap(nodeText));
+  const b = new Set(tokenizeForOverlap(ammoTitle));
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  const dice = (2 * inter) / (a.size + b.size);
+  // 子串包含加成:弹药标题(≥4 字符,防「图1」之类短名误伤)整体出现在节点文本 → 强信号。
+  const title = ammoTitle.trim();
+  if (title.length >= 4 && nodeText.includes(title)) {
+    return Math.max(dice, 0.9);
+  }
+  return dice;
+}
+
+/**
+ * 给一个支撑/证据节点从项目弹药匹配 1-2 条素材(按分数降序,同分按弹药原顺序稳定)。
+ * 低于阈值的一律不挂(诚实缺 → 面板渲「缺素材」徽标)。纯函数,导出供单测。
+ */
+export function matchAmmoForNode(
+  node: { title: string; summary: string },
+  ammo: ReadonlyArray<ThesisAmmoItem>,
+  opts?: { threshold?: number; maxRefs?: number },
+): ThesisNodeMaterialRef[] {
+  const threshold = opts?.threshold ?? AMMO_MATCH_THRESHOLD;
+  const maxRefs = opts?.maxRefs ?? AMMO_MATCH_MAX_REFS;
+  const nodeText = `${node.title} ${node.summary}`.trim();
+  if (!nodeText) return [];
+  const scored = ammo
+    .map((a, i) => ({
+      item: a,
+      score: a.id && a.title ? scoreAmmoMatch(nodeText, a.title) : 0,
+      i,
+    }))
+    .filter((s) => s.score >= threshold)
+    .sort((x, y) => y.score - x.score || x.i - y.i)
+    .slice(0, maxRefs);
+  return scored.map((s) => ({
+    id: s.item.id,
+    title: s.item.title,
+    source: "ai" as const,
+  }));
 }
 
 // 把 CreativeContext 映射成 planning.thesis 模板的 facets(占位化原 buildThesisPrompt 的上下文块）。
@@ -140,6 +225,23 @@ function renderNodes(tree: ThesisTree): ThesisNode[] {
   return nodes;
 }
 
+/**
+ * [T-387a] 对序列化后的节点做 AI 预挂:仅支撑(support)/证据(evidence)节点参与匹配,
+ * 匹配到才带 materialRefs(source:"ai");core/counter 与未匹配节点原样返回(不带空数组,
+ * 读侧 loadThesisSkeleton 缺字段按 [] 兜底,向后兼容)。纯函数,导出供单测。
+ */
+export function prefillMaterialRefs(
+  nodes: ReadonlyArray<ThesisNode>,
+  ammo: ReadonlyArray<ThesisAmmoItem>,
+): ThesisNode[] {
+  if (ammo.length === 0) return nodes.slice();
+  return nodes.map((n) => {
+    if (n.column !== "support" && n.column !== "evidence") return n;
+    const refs = matchAmmoForNode(n, ammo);
+    return refs.length > 0 ? { ...n, materialRefs: refs } : n;
+  });
+}
+
 const COLUMN_LABEL: Record<"core" | ThesisColumn, string> = {
   core: "核心论点",
   support: "支撑依据",
@@ -221,9 +323,20 @@ export async function runPlanningThesis(
     for (const b of tree.branches) {
       b.summary = annotateUngroundedClaims(b.summary, haystack).text;
     }
-    const nodes = renderNodes(tree);
+    let nodes = renderNodes(tree);
     if (nodes.length === 0) {
       throw new Error("planning-runner: agent returned no parseable thesis nodes");
+    }
+    // [T-387a] AI 预挂素材:从项目弹药(用料链真值,只引用真实存在的条目)按确定性词面
+    // 相似度给支撑/证据节点匹配 1-2 条 → materialRefs(source:"ai",UI 可整条移除/替换)。
+    // best-effort:未装配 reader / 无 projectId / 读失败 → 不预挂(零回归)。
+    if (deps.projectAmmo && task.projectId) {
+      try {
+        const ammo = await deps.projectAmmo.list(ctx, task.projectId);
+        nodes = prefillMaterialRefs(nodes, ammo);
+      } catch {
+        /* 弹药读失败不阻塞论点树落候选 */
+      }
     }
     // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
     await deps.ai.recordStep(ctx, task.id, {

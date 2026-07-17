@@ -50,7 +50,9 @@ const TYPE_ORDER: ReadonlyArray<SectionType> = [
 
 type SaveStatus = "saved" | "saving" | "dirty";
 
-/** 结构编辑的本地段模型(可变副本;保存时组装回 sections shape)。 */
+/** 结构编辑的本地段模型(可变副本;保存时组装回 sections shape)。
+ *  [T-387b] visual = 凝固分镜(只读透传:结构编辑不动它,保存时原样带回,防结构编辑把
+ *  凝固分镜洗掉;编辑分镜内容走稿面/后续分镜编辑面,不在本视图)。 */
 interface EditableSection {
   id: string;
   type: SectionType;
@@ -59,6 +61,7 @@ interface EditableSection {
   emphasis: boolean;
   startSeconds: number | null;
   endSeconds: number | null;
+  visual?: ScriptSectionView["visual"];
 }
 
 function toEditable(sections: ReadonlyArray<ScriptSectionView>): EditableSection[] {
@@ -70,6 +73,7 @@ function toEditable(sections: ReadonlyArray<ScriptSectionView>): EditableSection
     emphasis: s.emphasis,
     startSeconds: s.startSeconds,
     endSeconds: s.endSeconds,
+    ...(s.visual ? { visual: s.visual } : {}),
   }));
 }
 
@@ -270,6 +274,8 @@ function ScriptStructureEditor({
         emphasis: s.type === "golden_quote" ? true : s.emphasis,
         startSeconds: s.startSeconds,
         endSeconds: s.endSeconds,
+        // [T-387b] 凝固分镜原样带回(结构编辑不洗掉分镜真源;无 visual 的段不带字段)。
+        ...(s.visual ? { visual: s.visual } : {}),
       }));
       await client.createArtifactVersion({
         params: { artifactId: targetId },
@@ -474,6 +480,45 @@ function SectionCard({
         ariaLabel={`第 ${index + 1} 段正文`}
         onChange={(value) => onUpdate(index, { body: value })}
       />
+      {/* [T-387b] 凝固分镜(采纳定稿时对照真实素材库凝固的 visual)—— 只读渲染:画面描述 +
+          点名素材 chips + 该段缺素材。旧稿无 visual → 整块不渲(零回归)。 */}
+      {section.visual ? (
+        <div
+          data-slot="script-section-visual"
+          className="mt-1.5 flex flex-col gap-1 rounded-md border border-border/70 bg-surface-subtle/50 px-2.5 py-1.5"
+        >
+          {section.visual.description ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              <span className="font-medium text-foreground">画面：</span>
+              {section.visual.description}
+            </p>
+          ) : null}
+          {section.visual.assetRefs.length > 0 ? (
+            <p
+              data-slot="script-visual-assets"
+              className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground"
+            >
+              <span className="shrink-0">点名素材：</span>
+              {section.visual.assetRefs.map((ref) => (
+                <span
+                  key={ref}
+                  className="inline-flex max-w-full items-center truncate rounded-full border border-border bg-surface px-1.5 py-px"
+                >
+                  {ref}
+                </span>
+              ))}
+            </p>
+          ) : null}
+          {section.visual.missing.length > 0 ? (
+            <p
+              data-slot="script-visual-missing"
+              className="text-[11px] text-amber-700 dark:text-amber-400"
+            >
+              缺素材：{section.visual.missing.join("；")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </li>
   );
 }

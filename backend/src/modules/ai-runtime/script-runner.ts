@@ -56,9 +56,15 @@ function renderBody(board: Storyboard): string {
 // One section per shot: heading = a short 时长/口播-derived label, body = 口播 + 画面 +
 // 字幕. These ride alongside the Markdown `body` as `contentData.sections` so the confirmed
 // ArtifactVersion carries editable structure (not only the flat contentText blob).
+// [T-387b] shot.visual(结构化视觉意图草稿)原样带进 section(缺省不带字段,旧稿零回归)——
+// 采纳时 ai.service confirm 的「分镜凝固 pass」对照真实素材库校验后,它凝固为分镜真源。
 function renderSections(
   board: Storyboard,
-): Array<{ heading: string; body: string }> {
+): Array<{
+  heading: string;
+  body: string;
+  visual?: { description: string; assetRefs: string[]; missing: string[] };
+}> {
   return board.sections.map((shot, i) => {
     const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
     const heading = shot.时长 ? `${i + 1}. ${label}（${shot.时长}）` : `${i + 1}. ${label}`;
@@ -67,7 +73,11 @@ function renderSections(
       shot.画面 && `画面：${shot.画面}`,
       shot.字幕 && `字幕：${shot.字幕}`,
     ].filter((l): l is string => Boolean(l));
-    return { heading, body: bodyLines.join("\n") };
+    return {
+      heading,
+      body: bodyLines.join("\n"),
+      ...(shot.visual ? { visual: shot.visual } : {}),
+    };
   });
 }
 
@@ -130,6 +140,9 @@ export async function runScriptDraft(
       // 参考段。creative-context 已按 material_link.priority 分流 + 装配好段头(硬约束 + 事实地基)。
       userMaterialHardBrief: context.userMaterialHardBrief || undefined,
       userMaterialRefBrief: context.userMaterialRefBrief || undefined,
+      // [T-387b] 项目素材库清单(assets reader 装配「· id | 名称 (类型)」行)—— visual.assetRefs
+      // 点名真实 assetId 的唯一可选集;库空/未装配 → undefined(模板整段省略,missing 承接诚实缺)。
+      assetsBrief: context.assetsBrief || undefined,
       onStep: async (e) => {
         await deps.ai.recordStep(ctx, task.id, {
           stepNo: e.stepNo,

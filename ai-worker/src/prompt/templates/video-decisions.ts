@@ -17,6 +17,13 @@ import type { PromptTemplate } from "../template";
  * 诚实硬约束(prompt 侧,与 T-224 同源):
  *   - 信息卡数值/文案**只从口播原文提取,禁编造**(runner 侧另有可溯校验剔除);
  *   - B-roll **精确匹配被讲对象,禁近似替代**;assetId 必须来自清单;label 禁内部词。
+ *
+ * [T-387c] 四决策 = **对齐器**(SPEC 2026-07-17 §2b):scenes/cards/broll 模板加可选
+ * `{{storyboard}}` facet(采纳定稿时凝固的分镜表:per-section 口播摘要 + visual 描述 +
+ * assetRefs,含对齐硬约束,由 backend video-decisions-runner storyboardFacet 组装)——
+ * 有 authored 意图段:scene 边界对齐 section(仍吸附 SRT)、broll 必选点名素材、cards 不与
+ * authored 画面冲突;无意图段自主。旧项目无凝固分镜 → facet 空串,占位替换为空,行为=现状
+ * (零回归)。subtitles(文本校正)不吃 storyboard。
  */
 
 /** 信息卡六 kind 枚举(e03 Scene/Card 打法的天然 props schema,SPEC §3.2)。 */
@@ -73,7 +80,7 @@ export const VIDEO_SCENES_TEMPLATE: PromptTemplate = {
 
 【口播稿全文】
 {{script}}
-
+{{storyboard}}
 【任务】按内容语义切场:开场钩子、每个论点/段落、结尾 CTA 各自成场。一般 3-8 场。
 【硬约束】
 - 每场的 startSec **必须等于上面某一 SRT 行的起秒**(场景边界只能落在 SRT 行边界上,绝不能取行中间的时间)。
@@ -116,7 +123,7 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 
 【口播稿全文】
 {{script}}
-
+{{storyboard}}
 【任务】挑口播里**值得可视化**的信息做卡片:数据→stat,金句→quote,要点清单→list,对比→compare,代码/命令→code,需要配图的对象→image。不是每场都必须有卡,宁缺毋滥。
 【硬约束(诚实门,违反即废)】
 - 卡片上的**数值、文案只能从口播稿原文提取**,一个数字都不许编造、不许换算、不许"优化措辞"。
@@ -166,7 +173,7 @@ export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
 
 【可用素材清单】(每行: assetId | 名称 (类型) | 描述)
 {{library}}
-
+{{storyboard}}
 【任务】判断哪些场景适合插 B-roll、插哪条素材、什么时刻插、插多久。
 【硬约束(违反即废)】
 - assetId **必须**是清单里出现过的真实 id,绝对不要编造。

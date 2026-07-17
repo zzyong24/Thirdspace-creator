@@ -273,4 +273,68 @@ describe("ThesisSkeletonPanel(可编辑 + 挂素材)", () => {
     fireEvent.click(within(coreRow).getByRole("button", { name: "挂素材" }));
     expect(within(coreRow).getByText(/还没有可挂的素材/)).toBeInTheDocument();
   });
+
+  // ── [T-387a] AI 预挂标记 + 缺素材徽标 ──────────────────────────────────────
+
+  it("[T-387a] source:'ai' 的挂载素材渲「AI」小标;人挂的不渲", () => {
+    const withAiRef: ThesisSkeleton = {
+      artifactId: "art-thesis-1",
+      nodes: [
+        {
+          column: "evidence",
+          title: "实测数据",
+          summary: "",
+          materialRefs: [
+            { id: "kn-1", title: "AI 预挂案例", source: "ai" },
+            { id: "kn-2", title: "人挂案例" },
+          ],
+        },
+      ],
+    };
+    render(<ThesisSkeletonPanel thesis={withAiRef} ammo={AMMO} />);
+    const panel = screen.getByRole("region", { name: "论点骨架" });
+    const chips = panel.querySelectorAll('[data-slot="thesis-material-chip"]');
+    expect(chips).toHaveLength(2);
+    expect(chips[0]!.getAttribute("data-material-source")).toBe("ai");
+    expect(
+      within(chips[0] as HTMLElement).getByText("AI"),
+    ).toBeInTheDocument();
+    expect(chips[1]!.getAttribute("data-material-source")).toBe("human");
+    expect(within(chips[1] as HTMLElement).queryByText("AI")).toBeNull();
+  });
+
+  it("[T-387a] 支撑/证据节点无挂载素材 → 「缺素材」徽标 + 搜/传引导;core/counter 不渲", () => {
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
+    const panel = screen.getByRole("region", { name: "论点骨架" });
+    const badges = panel.querySelectorAll(
+      '[data-slot="thesis-missing-material"]',
+    );
+    // NODES:2 support + 1 evidence 均无 materialRefs → 3 个徽标;core/counter 不渲。
+    expect(badges).toHaveLength(3);
+    expect(badges[0]!.textContent).toContain("缺素材");
+    expect(badges[0]!.textContent).toContain("搜素材");
+  });
+
+  it("[T-387a] serializeNodes / toEditNodes 保留 source:'ai'(编辑往返不丢标记)", () => {
+    const nodes: ThesisSkeletonNode[] = [
+      {
+        column: "support",
+        title: "s",
+        summary: "",
+        materialRefs: [{ id: "kn-1", title: "案例", source: "ai" }],
+      },
+    ];
+    const edit = toEditNodes(nodes);
+    expect(edit[0]!.materialRefs[0]).toEqual({
+      id: "kn-1",
+      title: "案例",
+      source: "ai",
+    });
+    const ser = serializeNodes(edit);
+    expect(ser[0]!.materialRefs[0]).toEqual({
+      id: "kn-1",
+      title: "案例",
+      source: "ai",
+    });
+  });
 });

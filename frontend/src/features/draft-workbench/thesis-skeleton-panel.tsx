@@ -74,7 +74,7 @@ export interface EditNode {
   materialRefs: ThesisMaterialRef[];
 }
 
-// 落库节点 → 可编辑草稿(稳定 key)。
+// 落库节点 → 可编辑草稿(稳定 key)。[T-387a] source 透传(AI 预挂标记不因编辑往返丢失)。
 export function toEditNodes(
   nodes: ReadonlyArray<ThesisSkeletonNode>,
 ): EditNode[] {
@@ -83,7 +83,11 @@ export function toEditNodes(
     column: n.column,
     title: n.title,
     summary: n.summary,
-    materialRefs: n.materialRefs.map((r) => ({ id: r.id, title: r.title })),
+    materialRefs: n.materialRefs.map((r) => ({
+      id: r.id,
+      title: r.title,
+      ...(r.source === "ai" ? { source: "ai" as const } : {}),
+    })),
   }));
 }
 
@@ -141,9 +145,11 @@ export function serializeNodes(
       column: n.column,
       title: n.title.trim(),
       summary: n.summary.trim(),
+      // [T-387a] source 透传落库(AI 预挂标记保存后仍在;人挂条目不带字段)。
       materialRefs: n.materialRefs.map((r) => ({
         id: r.id,
         title: r.title,
+        ...(r.source === "ai" ? { source: "ai" as const } : {}),
       })),
     }))
     .filter((n) => n.title || n.summary);
@@ -509,15 +515,39 @@ function ThesisNodeRow({
         rows={2}
         className="w-full resize-none rounded border border-transparent bg-transparent px-1 py-0.5 text-xs leading-relaxed text-muted-foreground placeholder:text-text-subtle focus-visible:border-border focus-visible:bg-surface focus-visible:outline-none"
       />
+      {/* [T-387a] 证据/支撑节点无挂载素材 → 「缺素材」徽标 + 引导文案(指向稿面已有的
+          「搜素材/上传素材」入口 CreationFlowCtas,不新做弹窗;诚实缺 = 引导人补)。 */}
+      {(column === "support" || column === "evidence") &&
+      node.materialRefs.length === 0 ? (
+        <p
+          data-slot="thesis-missing-material"
+          className="flex flex-wrap items-center gap-1.5 text-[11px] text-text-subtle"
+        >
+          <span className="inline-flex items-center rounded-full border border-amber-300/60 bg-amber-50 px-1.5 py-px font-medium text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400">
+            缺素材
+          </span>
+          用上方「搜素材(联网)/＋上传素材」补一条支撑素材,再回来挂载 —— 图文并茂更立得住。
+        </p>
+      ) : null}
       {/* 挂载的素材 chips(× 卸载)+ 挂素材入口。 */}
       <div data-slot="thesis-node-materials" className="flex flex-wrap items-center gap-1">
         {node.materialRefs.map((r) => (
           <span
             key={r.id}
             data-slot="thesis-material-chip"
+            data-material-source={r.source === "ai" ? "ai" : "human"}
             className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] text-muted-foreground"
           >
             <Paperclip className="size-3 shrink-0" aria-hidden="true" />
+            {/* [T-387a] AI 预挂条目渲「AI」小标(人可用现有 × 移除、再手挂替换)。 */}
+            {r.source === "ai" ? (
+              <span
+                data-slot="thesis-material-ai-badge"
+                className="shrink-0 rounded bg-brand-soft px-1 text-[10px] font-medium leading-tight text-brand"
+              >
+                AI
+              </span>
+            ) : null}
             <span className="truncate">{r.title || r.id}</span>
             <button
               type="button"

@@ -59,6 +59,12 @@ import {
   statusStepsTo,
   buildRenderInputs,
   humanizeRenderError,
+  // [T-387c] B-roll 自动聚合(脚本画面点名 + 论点树挂载 + 项目弹药,纯函数)。
+  aggregateAutoBroll,
+  assetRefsFromScriptContentData,
+  refIdsFromThesisContentData,
+  BROLL_SOURCE_LABEL,
+  type AutoBrollItem,
   type ProductionStatus,
 } from "./production-flow";
 
@@ -271,6 +277,14 @@ export function ProductionWorkbench({
     ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
   >([]);
   const [brollBusy, setBrollBusy] = React.useState(false);
+  // [T-387c] 自动聚合的 B-roll 候选(脚本画面点名/论点树挂载/项目弹药,带来源徽标)+
+  // 人剔除集(只影响本次决策的 inputData.excludedAssetIds,不动用料链)。
+  const [autoBroll, setAutoBroll] = React.useState<ReadonlyArray<AutoBrollItem>>(
+    [],
+  );
+  const [excludedAuto, setExcludedAuto] = React.useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   const [renderTaskId, setRenderTaskId] = React.useState<string | null>(null);
   const [renderEnvHint, setRenderEnvHint] = React.useState<string | null>(null);
@@ -488,6 +502,9 @@ export function ProductionWorkbench({
   );
 
   // ── [T-294] B-roll 素材:列 / 补传(role=broll)/ 剔除 ────────────────────────
+  // [T-387c] 扩自动聚合:除手动上传(role=broll)外,把脚本凝固分镜点名素材(visual.assetRefs)、
+  // 论点树挂载素材(materialRefs)、项目弹药 image/video 资产也自动列入(来源徽标,人可剔)。
+  // 服务端决策的 listBrollInventory 用同一批来源;这里的剔除经 inputData.excludedAssetIds 传给决策。
   const loadBroll = React.useCallback(async () => {
     try {
       const links = (await client.listMaterialLinks({
@@ -522,7 +539,99 @@ export function ProductionWorkbench({
           }
         }),
       );
-      setBrollItems(items.filter((i): i is NonNullable<typeof i> => i !== null));
+      const manual = items.filter((i): i is NonNullable<typeof i> => i !== null);
+      setBrollItems(manual);
+
+      // ── 自动聚合(best-effort:任一来源读失败只丢该来源,不牵连)────────────
+      // 读某类型 artifact 当前版本 contentData(与稿面读侧同款 listArtifacts →
+      // getArtifact → listArtifactVersions 三连;失败 → null)。
+      const readContentData = async (
+        artifactType: string,
+      ): Promise<unknown> => {
+        try {
+          const listed = (await client.listArtifacts({
+            params: { projectId },
+            query: { page: 1, pageSize: 200 },
+            body: undefined,
+          })) as unknown as Array<{ id: string; artifactType: string }>;
+          const target = (Array.isArray(listed) ? listed : []).find(
+            (a) => a.artifactType === artifactType,
+          );
+          if (!target) return null;
+          const artifact = (await client.getArtifact({
+            params: { artifactId: target.id },
+            query: undefined,
+            body: undefined,
+          })) as unknown as { currentVersionId?: string };
+          const versions = (await client.listArtifactVersions({
+            params: { artifactId: target.id },
+            query: { page: 1, pageSize: 100 },
+            body: undefined,
+          })) as unknown as Array<{
+            id: string;
+            versionNumber: number;
+            contentData?: unknown;
+          }>;
+          const rows = Array.isArray(versions) ? versions : [];
+          const current =
+            rows.find((v) => v.id === artifact.currentVersionId) ??
+            rows.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
+          return current?.contentData ?? null;
+        } catch {
+          return null;
+        }
+      };
+      const [scriptData, thesisData] = await Promise.all([
+        readContentData("output_script"),
+        readContentData("thesis_tree"),
+      ]);
+      // 候选 id(按来源优先级 script → thesis → ammo;聚合时先到先得)。
+      const candidates: Array<{ assetId: string; source: AutoBrollItem["source"] }> =
+        [
+          ...assetRefsFromScriptContentData(scriptData).map((id) => ({
+            assetId: id,
+            source: "script" as const,
+          })),
+          ...refIdsFromThesisContentData(thesisData).map((id) => ({
+            assetId: id,
+            source: "thesis" as const,
+          })),
+          ...links
+            .filter(
+              (l) =>
+                l.entityType === "asset" &&
+                l.role !== "clip" &&
+                l.role !== "broll",
+            )
+            .map((l) => ({ assetId: l.entityId, source: "ammo" as const })),
+        ];
+      const resolved = await Promise.all(
+        candidates.map(async (cand) => {
+          try {
+            const a = (await client.getAsset({
+              params: { assetId: cand.assetId },
+              query: undefined,
+              body: undefined,
+            })) as unknown as { assetType: string; name: string };
+            // 只有图/视频能当 B-roll(文档/知识条目自然被 getAsset 失败或类型过滤掉)。
+            if (a.assetType !== "video" && a.assetType !== "image") return null;
+            return {
+              assetId: cand.assetId,
+              name: a.name,
+              kind: a.assetType,
+              source: cand.source,
+            } satisfies AutoBrollItem;
+          } catch {
+            return null; // 知识条目 id / 越权 / 已删 → 跳过
+          }
+        }),
+      );
+      setAutoBroll(
+        aggregateAutoBroll(
+          resolved.filter((i): i is AutoBrollItem => i !== null),
+          manual.map((m) => m.assetId),
+        ),
+      );
     } catch {
       /* 读失败静默(可重传) */
     }
@@ -793,7 +902,13 @@ export function ProductionWorkbench({
         query: undefined,
         body: {
           taskType: "video.decisions",
-          inputData: { projectId, srtText: srt.text, script: scriptText },
+          inputData: {
+            projectId,
+            srtText: srt.text,
+            script: scriptText,
+            // [T-387c] 备料③人剔除的自动聚合项 → 决策可选集里滤掉(不动用料链)。
+            excludedAssetIds: Array.from(excludedAuto),
+          },
         },
       })) as unknown as WireAITask;
       setDecisionsTaskId(task.id);
@@ -804,7 +919,7 @@ export function ProductionWorkbench({
     } finally {
       setDecisionsBusy(false);
     }
-  }, [projectId, srt, scriptText]);
+  }, [projectId, srt, scriptText, excludedAuto]);
 
   const loadDecisionResult = React.useCallback(
     async (taskId: string): Promise<boolean> => {
@@ -1517,9 +1632,67 @@ export function ProductionWorkbench({
           </ul>
         ) : (
           <p className="text-xs text-muted-foreground">
-            还没有 B-roll 素材;不传也能出片(成片只有口播 + 信息卡)。
+            还没有手动上传的 B-roll 素材;不传也能出片(成片只有口播 + 信息卡)。
           </p>
         )}
+        {/* [T-387c] 自动列入的候选(脚本画面点名/论点树挂载/项目弹药):带来源徽标,
+            人可剔(剔除只影响本次决策,不删素材/不动用料链)。 */}
+        {autoBroll.length > 0 ? (
+          <div data-slot="broll-auto" className="flex flex-col gap-1.5">
+            <p className="text-xs text-muted-foreground">
+              以下素材已自动列入 B-roll 候选(来自脚本画面点名 / 论点树挂载 /
+              项目弹药),不想用的点「剔除」:
+            </p>
+            <ul
+              data-slot="broll-auto-list"
+              className="flex flex-col gap-1"
+            >
+              {autoBroll.map((it) => {
+                const excluded = excludedAuto.has(it.assetId);
+                return (
+                  <li
+                    key={it.assetId}
+                    data-slot="broll-auto-item"
+                    data-source={it.source}
+                    data-excluded={excluded}
+                    className={
+                      "flex items-center gap-2 rounded-control border border-border px-2 py-1 text-xs " +
+                      (excluded ? "opacity-50" : "")
+                    }
+                  >
+                    <span
+                      data-slot="broll-source-badge"
+                      className="shrink-0 rounded-full bg-surface-subtle px-1.5 py-px text-[10px] text-muted-foreground"
+                    >
+                      {BROLL_SOURCE_LABEL[it.source]}
+                    </span>
+                    <span className={"min-w-0 truncate" + (excluded ? " line-through" : "")}>
+                      {it.name}
+                    </span>
+                    <span className="shrink-0 text-[10px] text-text-subtle">
+                      {it.kind}
+                    </span>
+                    <button
+                      type="button"
+                      data-slot="broll-auto-toggle"
+                      onClick={() =>
+                        setExcludedAuto((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(it.assetId)) next.delete(it.assetId);
+                          else next.add(it.assetId);
+                          return next;
+                        })
+                      }
+                      className="ml-auto shrink-0 rounded-control border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/50"
+                    >
+                      {excluded ? "恢复" : "剔除"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
         {decisions && brollItems.length > 0 ? (
           <p
             data-slot="broll-restale-hint"

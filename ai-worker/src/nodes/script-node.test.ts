@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
-import { runScriptNode, parseShots } from "./script-node";
+import { runScriptNode, parseShots, normalizeShotVisual } from "./script-node";
+import { scriptDraftSchema } from "../prompt/templates/script-draft";
 
 function finalText(text: string): LanguageModelV4GenerateResult {
   return {
@@ -165,5 +166,78 @@ describe("runScriptNode", () => {
   it("parseShots 容忍 ``` 包裹(纯工具,仍导出)", () => {
     const s = parseShots("```json\n" + SHOTS_ARRAY_JSON + "\n```");
     expect(s).toHaveLength(3);
+  });
+
+  // ── [T-387b] visual 结构化(schema 兼容 + 归一)────────────────────────────────
+
+  it("[T-387b] schema 兼容:弱模型不产 visual 也过校验(全 optional,照 motion 先例)", () => {
+    // 旧形状(无 visual)照常通过。
+    const legacy = scriptDraftSchema.parse({ shots: SHOTS });
+    expect(legacy.shots).toHaveLength(3);
+    expect(legacy.shots[0]!.visual).toBeUndefined();
+    // 带 visual 的新形状也通过(字段各 default)。
+    const withVisual = scriptDraftSchema.parse({
+      shots: [{ 口播: "x", visual: { assetRefs: ["a1"] } }],
+    });
+    expect(withVisual.shots[0]!.visual).toEqual({
+      description: "",
+      assetRefs: ["a1"],
+      missing: [],
+    });
+  });
+
+  it("[T-387b] 模型产 visual → shots 带归一后的 visual;不产 → 不带字段(零回归)", async () => {
+    const shotsWithVisual = [
+      {
+        ...SHOTS[0],
+        visual: {
+          description: " 对比图表 ",
+          assetRefs: ["asset-1", " "],
+          missing: ["产品实拍"],
+        },
+      },
+      SHOTS[1],
+    ];
+    const model = new MockLanguageModelV4({
+      doGenerate: async () =>
+        finalText(JSON.stringify({ shots: shotsWithVisual })),
+    });
+    const res = await runScriptNode({ model, positioningBrief: "x" });
+    expect(res.shots[0]!.visual).toEqual({
+      description: "对比图表",
+      assetRefs: ["asset-1"], // 空白项被滤
+      missing: ["产品实拍"],
+    });
+    expect(res.shots[1]!.visual).toBeUndefined();
+  });
+
+  it("[T-387b] assetsBrief 注入素材库清单段;不传则省略", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    await runScriptNode({
+      model,
+      positioningBrief: "x",
+      assetsBrief: "· asset-9 | 产品发布会实录 (video)",
+    });
+    expect(seenPrompt).toContain("项目素材库");
+    expect(seenPrompt).toContain("asset-9");
+
+    await runScriptNode({ model, positioningBrief: "x" });
+    expect(seenPrompt).not.toContain("项目素材库（visual.assetRefs");
+  });
+
+  it("[T-387b] normalizeShotVisual:三段全空 → null(不带字段,与「没产」同义)", () => {
+    expect(normalizeShotVisual(undefined)).toBeNull();
+    expect(
+      normalizeShotVisual({ description: " ", assetRefs: [""], missing: [] }),
+    ).toBeNull();
+    expect(
+      normalizeShotVisual({ description: "d", assetRefs: [], missing: [] }),
+    ).toEqual({ description: "d", assetRefs: [], missing: [] });
   });
 });

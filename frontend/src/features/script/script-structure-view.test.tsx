@@ -285,3 +285,51 @@ describe("ScriptStructureEditor(保存)", () => {
     expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
   });
 });
+
+// ── [T-387b] 凝固分镜 visual:渲染 + 保存透传 ─────────────────────────────────
+
+describe("ScriptStructureEditor(凝固分镜 visual)", () => {
+  const WITH_VISUAL: ScriptSectionView[] = [
+    {
+      ...SECTIONS[0]!,
+      visual: {
+        description: "产品操作录屏特写",
+        assetRefs: ["asset-9"],
+        missing: ["对比图表"],
+      },
+    },
+    SECTIONS[1]!,
+  ];
+
+  it("有 visual 的段渲画面描述/点名素材/缺素材;无 visual 的段不渲(旧稿零回归)", () => {
+    renderToggle(WITH_VISUAL, { artifactId: "art-1" });
+    const blocks = document.querySelectorAll(
+      '[data-slot="script-section-visual"]',
+    );
+    expect(blocks).toHaveLength(1); // 只有第一段有
+    expect(blocks[0]!.textContent).toContain("产品操作录屏特写");
+    expect(blocks[0]!.textContent).toContain("asset-9");
+    expect(blocks[0]!.textContent).toContain("对比图表");
+  });
+
+  it("结构编辑保存 → visual 原样带回(不洗掉分镜真源);无 visual 的段不带字段", async () => {
+    renderToggle(WITH_VISUAL, { artifactId: "art-1" });
+    fireEvent.change(screen.getByDisplayValue("开场钩子"), {
+      target: { value: "改标题" },
+    });
+    fireEvent.click(
+      document.querySelector('[data-slot="structure-save-button"]')!,
+    );
+    await screen.findByText("已保存");
+    const input = mockCreateArtifactVersion.mock.calls[0]![0] as {
+      body: { contentData: { sections: Array<Record<string, unknown>> } };
+    };
+    const sections = input.body.contentData.sections;
+    expect(sections[0]!.visual).toEqual({
+      description: "产品操作录屏特写",
+      assetRefs: ["asset-9"],
+      missing: ["对比图表"],
+    });
+    expect(sections[1]!.visual).toBeUndefined();
+  });
+});

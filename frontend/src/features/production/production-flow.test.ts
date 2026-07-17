@@ -8,6 +8,10 @@ import {
   statusStepsTo,
   buildRenderInputs,
   humanizeRenderError,
+  aggregateAutoBroll,
+  assetRefsFromScriptContentData,
+  refIdsFromThesisContentData,
+  type AutoBrollItem,
 } from "./production-flow";
 
 describe("statusStepsTo(production 状态机相邻步进)", () => {
@@ -95,5 +99,61 @@ describe("humanizeRenderError(环境错误人话化)", () => {
   it("其他错误 → null(不编造解释,保留原始错误)", () => {
     expect(humanizeRenderError("模板生成失败:props.scenes 为空")).toBeNull();
     expect(humanizeRenderError(null)).toBeNull();
+  });
+});
+
+// ── [T-387c] B-roll 自动聚合(备料③)────────────────────────────────────────────
+
+describe("[T-387c] aggregateAutoBroll(去重 + 手动项不重复列)", () => {
+  const item = (
+    assetId: string,
+    source: AutoBrollItem["source"],
+  ): AutoBrollItem => ({ assetId, name: assetId, kind: "image", source });
+
+  it("同 assetId 保留先出现的(script → thesis → ammo 优先级由调用方排序)", () => {
+    const out = aggregateAutoBroll(
+      [item("a1", "script"), item("a1", "ammo"), item("a2", "thesis")],
+      [],
+    );
+    expect(out.map((i) => [i.assetId, i.source])).toEqual([
+      ["a1", "script"],
+      ["a2", "thesis"],
+    ]);
+  });
+
+  it("已手动上传为 B-roll 的素材不重复列(手动列表单独渲)", () => {
+    const out = aggregateAutoBroll([item("a1", "script"), item("a2", "ammo")], [
+      "a1",
+    ]);
+    expect(out.map((i) => i.assetId)).toEqual(["a2"]);
+  });
+});
+
+describe("[T-387c] assetRefsFromScriptContentData / refIdsFromThesisContentData(宽容解析)", () => {
+  it("脚本 sections[].visual.assetRefs 抽取;旧稿无 visual → []", () => {
+    expect(
+      assetRefsFromScriptContentData({
+        sections: [
+          { heading: "1", visual: { assetRefs: ["a1", " ", "a2"] } },
+          { heading: "2" },
+        ],
+      }),
+    ).toEqual(["a1", "a2"]);
+    expect(
+      assetRefsFromScriptContentData({ sections: [{ heading: "旧" }] }),
+    ).toEqual([]);
+    expect(assetRefsFromScriptContentData(null)).toEqual([]);
+  });
+
+  it("论点树 nodes[].materialRefs 的 id 抽取;无 → []", () => {
+    expect(
+      refIdsFromThesisContentData({
+        nodes: [
+          { column: "evidence", materialRefs: [{ id: "k1" }, { id: "" }] },
+          { column: "core" },
+        ],
+      }),
+    ).toEqual(["k1"]);
+    expect(refIdsFromThesisContentData({})).toEqual([]);
   });
 });

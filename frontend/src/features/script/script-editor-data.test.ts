@@ -22,7 +22,11 @@ vi.mock("@/lib/contract-client.server", () => ({
   },
 }));
 
-import { loadPlanningOutline, loadThesisSkeleton } from "./script-editor-data";
+import {
+  loadPlanningOutline,
+  loadScriptEditorSections,
+  loadThesisSkeleton,
+} from "./script-editor-data";
 import type { ScriptDataClient } from "./script-editor-data";
 
 interface FakeData {
@@ -244,6 +248,37 @@ describe("loadThesisSkeleton (T-127)", () => {
     expect(result!.nodes[1]!.materialRefs).toEqual([]);
   });
 
+  it("[T-387a] 读回 materialRefs 的 source:'ai' 标记(缺省 = 人挂,不带字段)", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-thesis", artifactType: "thesis_tree" }],
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: {
+            nodes: [
+              {
+                column: "evidence",
+                title: "实测",
+                summary: "",
+                materialRefs: [
+                  { id: "kn-1", title: "AI 预挂", source: "ai" },
+                  { id: "kn-2", title: "人挂" },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const result = await loadThesisSkeleton("project-x", client);
+    expect(result!.nodes[0]!.materialRefs).toEqual([
+      { id: "kn-1", title: "AI 预挂", source: "ai" },
+      { id: "kn-2", title: "人挂" },
+    ]);
+  });
+
   it("无 projectId → null", async () => {
     expect(await loadThesisSkeleton(null, makeClient({}))).toBeNull();
   });
@@ -291,5 +326,65 @@ describe("loadThesisSkeleton (T-127)", () => {
       },
     };
     expect(await loadThesisSkeleton("project-x", client)).toBeNull();
+  });
+});
+
+// ── [T-387b] 凝固分镜 visual 读回(loadScriptEditorSections)────────────────────
+
+describe("loadScriptEditorSections — T-387b visual 读回", () => {
+  it("段带 visual → 规整读回;无 visual 的段不带字段(旧稿零回归)", async () => {
+    const client = makeClient({
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: {
+            sections: [
+              {
+                heading: "1. 钩子",
+                body: "口播：x",
+                visual: {
+                  description: " 产品特写 ",
+                  assetRefs: ["asset-1", ""],
+                  missing: ["对比图表"],
+                },
+              },
+              { heading: "2. 正文", body: "b" },
+            ],
+          },
+        },
+      ],
+    });
+    const sections = await loadScriptEditorSections("art-1", client);
+    expect(sections![0]!.visual).toEqual({
+      description: "产品特写",
+      assetRefs: ["asset-1"],
+      missing: ["对比图表"],
+    });
+    expect(sections![1]!.visual).toBeUndefined();
+  });
+
+  it("visual 三段全空(空壳)→ 不带字段", async () => {
+    const client = makeClient({
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: {
+            sections: [
+              {
+                heading: "h",
+                body: "b",
+                visual: { description: "", assetRefs: [], missing: [] },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const sections = await loadScriptEditorSections("art-1", client);
+    expect(sections![0]!.visual).toBeUndefined();
   });
 });

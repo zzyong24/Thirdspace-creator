@@ -21,9 +21,19 @@ export {
   type ServiceDeps,
   type AiArtifactsPort,
   type AiKnowledgePort,
+  // [T-387b] 分镜凝固 pass 的素材库只读端口(组合根绑 assetsService.listAssets 的 id 投影)。
+  type AiAssetLibraryPort,
   type CreateTaskInput,
   type RecordCandidateInput,
 } from "./ai.service";
+
+// [T-387b] 分镜凝固 pass(纯函数,采纳定稿时刻的确定性凝固;单测锚)。
+export {
+  freezeStoryboardSections,
+  hasStoryboardVisual,
+  type FreezeResult,
+  type FrozenSectionVisual,
+} from "./storyboard-freeze";
 
 export {
   createAiRepository,

@@ -190,6 +190,8 @@ export {
   SCRIPT_DRAFT_TEMPLATE,
   scriptDraftSchema,
   scriptShotSchema,
+  // [T-387b] 结构化视觉意图 schema(shots[].visual 可选:description/assetRefs/missing)。
+  scriptShotVisualSchema,
   type ScriptDraftOutput,
 } from "./prompt/templates/script-draft";
 // 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
@@ -299,7 +301,10 @@ export {
 export {
   runScriptNode,
   parseShots,
+  // [T-387b] visual 归一纯函数 + 类型(backend script-runner 落 contentData.sections[].visual 用)。
+  normalizeShotVisual,
   type ScriptShot,
+  type ScriptShotVisual,
   type RunScriptNodeInput,
   type RunScriptNodeResult,
 } from "./nodes/script-node";

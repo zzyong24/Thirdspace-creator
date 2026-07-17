@@ -53,6 +53,28 @@ interface SavedSection {
   emphasis?: unknown;
   startSeconds?: unknown;
   endSeconds?: unknown;
+  // [T-387b] 凝固分镜(采纳时 ai.service 凝固 pass 校验后的 visual;旧稿无 → undefined)。
+  visual?: unknown;
+}
+
+// [T-387b] 宽容读回一段的 visual(contentData 是 jsonb 自由形状,防御解析;三段全空 → null)。
+function coerceSectionVisual(
+  raw: unknown,
+): { description: string; assetRefs: string[]; missing: string[] } | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  const description =
+    typeof o.description === "string" ? o.description.trim() : "";
+  const strArr = (v: unknown): string[] =>
+    Array.isArray(v)
+      ? v
+          .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+          .map((x) => x.trim())
+      : [];
+  const assetRefs = strArr(o.assetRefs);
+  const missing = strArr(o.missing);
+  if (!description && assetRefs.length === 0 && missing.length === 0) return null;
+  return { description, assetRefs, missing };
 }
 
 function coerceSavedSections(
@@ -79,6 +101,8 @@ function coerceSavedSections(
           : "body";
     const num = (v: unknown): number | null =>
       typeof v === "number" && Number.isFinite(v) ? v : null;
+    // [T-387b] 读回凝固分镜(缺字段 → 不带,旧稿零回归)。
+    const visual = coerceSectionVisual(s.visual);
     out.push({
       id,
       type,
@@ -87,6 +111,7 @@ function coerceSavedSections(
       emphasis,
       startSeconds: num(s.startSeconds),
       endSeconds: num(s.endSeconds),
+      ...(visual ? { visual } : {}),
     });
   }
   return out.length > 0 ? out : null;
@@ -368,9 +393,12 @@ export async function loadPlanningOutline(
 export type ThesisColumn = "core" | "support" | "evidence" | "counter";
 // [T-127] 分论点挂载的素材引用(用户拍板②「每分论点挂 1-2 素材」)。存 entity id + 冗余 title
 // 供展示(免二次读用料链)。AI 生成的节点无此字段 → []。
+// [T-387a] additive source 字段:"ai" = planning.thesis 产树时确定性词面匹配预挂(面板渲
+// 「AI」小标,复用现有删/换机制);缺省 = 人挂(向后兼容,旧数据无此字段)。
 export interface ThesisMaterialRef {
   readonly id: string;
   readonly title: string;
+  readonly source?: "ai";
 }
 export interface ThesisSkeletonNode {
   readonly column: ThesisColumn;
@@ -437,7 +465,14 @@ export async function loadThesisSkeleton(
         const ro = (r ?? {}) as Record<string, unknown>;
         const id = typeof ro.id === "string" ? ro.id : "";
         const t = typeof ro.title === "string" ? ro.title.trim() : "";
-        if (id) materialRefs.push({ id, title: t });
+        // [T-387a] 读回 AI 预挂标记(source:"ai";缺省 = 人挂,不带字段)。
+        if (id) {
+          materialRefs.push({
+            id,
+            title: t,
+            ...(ro.source === "ai" ? { source: "ai" as const } : {}),
+          });
+        }
       }
       out.push({ column: column as ThesisColumn, title, summary, materialRefs });
     }
