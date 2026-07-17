@@ -64,6 +64,17 @@ export interface CoverGenerateDeps extends ContextDeps {
   registry: MultimodalProviderRegistry;
   // 命名避开 ContextDeps.assets(那是素材库 AssetsReader);这是「建生成 asset」的写端口。
   generatedAssets: CoverGenerateAssetsPort;
+  /**
+   * [T-380] 以图生图风格参考的读端口(host 绑 assetsService.getAssetBytes,user-scoped)。
+   * task.inputData.referenceAssetId 存在时读该素材字节喂生图 adapter(image-to-image)。
+   * 可选:未装配 / 读不到 → 诚实降级为纯文生图并在步骤流注记(不假装用了参考图)。
+   */
+  referenceAssets?: {
+    getAssetBytes(
+      ctx: RequestContext,
+      assetId: string,
+    ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
+  };
 }
 
 export interface CoverGenerateTask {
@@ -261,11 +272,57 @@ export async function runCoverGenerate(
     const aspectRatio =
       orientation === "竖屏" ? "9:16" : orientation === "横屏" ? "16:9" : undefined;
 
+    // 3.5) [T-380] 以图生图风格参考:inputData.referenceAssetId 存在 → host 端口读该素材
+    //      字节(user-scoped)喂 adapter 的 image-to-image。读不到/端口未装配 → **诚实降级**
+    //      为纯文生图并注记步骤(绝不假装用了参考图);读到 → 注记「已带参考图」。
+    const referenceAssetId =
+      typeof task.inputData.referenceAssetId === "string" &&
+      task.inputData.referenceAssetId.trim()
+        ? task.inputData.referenceAssetId.trim()
+        : null;
+    let referenceImage: { bytes: Uint8Array; mimeType: string } | undefined;
+    if (referenceAssetId) {
+      let refNote: string;
+      if (!deps.referenceAssets) {
+        refNote = "参考图能力未接入,本次按纯文生图生成(未使用参考图)";
+      } else {
+        try {
+          const ref = await deps.referenceAssets.getAssetBytes(
+            ctx,
+            referenceAssetId,
+          );
+          if (ref && ref.bytes.byteLength > 0) {
+            referenceImage = { bytes: ref.bytes, mimeType: ref.mimeType };
+            refNote = "已读取参考封面,将以它为风格参考生图(以图生图)";
+          } else {
+            refNote = `参考素材读取不到(id=${referenceAssetId}),本次按纯文生图生成(未使用参考图)`;
+          }
+        } catch {
+          refNote = `参考素材读取失败(id=${referenceAssetId}),本次按纯文生图生成(未使用参考图)`;
+        }
+      }
+      try {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: 0,
+          kind: "step",
+          text: refNote,
+          toolCalls: [],
+        });
+      } catch {
+        /* 注记失败不阻断生成 */
+      }
+    }
+
     // 4) 生图(image.generate 用户可配;上层统一 { assetBytes };未配/超时/审核 → 抛 → 下方 catch）。
     const imgSpec = await deps.resolveMultimodalSpec(ctx, "image.generate");
     const { assetBytes } = await generateImage(
       imgSpec,
-      { prompt: imagePrompt, ...(aspectRatio ? { aspectRatio } : {}) },
+      {
+        prompt: imagePrompt,
+        ...(aspectRatio ? { aspectRatio } : {}),
+        // [T-380] 有参考图才带(adapter 走 images/edits / subject_reference);无则纯文生图零回归。
+        ...(referenceImage ? { referenceImage } : {}),
+      },
       deps.registry,
     );
     if (!assetBytes || assetBytes.byteLength === 0) {

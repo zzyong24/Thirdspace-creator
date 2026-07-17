@@ -1127,6 +1127,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
     expect(dispatchGenerateCover).toHaveBeenCalledWith({
       projectId: "proj-1",
       topic: "纪律是护城河",
+      referenceAssetId: undefined,
     });
     expect(result.kind).toBe("cover.generate");
     expect(result.taskId).toBe("task-cover-1");
@@ -1141,6 +1142,22 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
     expect(dispatchGenerateCover).toHaveBeenCalledWith({
       projectId: undefined,
       topic: undefined,
+      referenceAssetId: undefined,
+    });
+  });
+
+  // [T-380] 以图生图:referenceAssetId trim 后透传(端口 → inputData → cover-runner 读字节)。
+  it("referenceAssetId trim 后透传给 dispatchGenerateCover(以图生图风格参考)", async () => {
+    const { deps, dispatchGenerateCover } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["cover.generate"]!, {
+      projectId: "proj-1",
+      referenceAssetId: "  asset-ref-9  ",
+    });
+    expect(dispatchGenerateCover).toHaveBeenCalledWith({
+      projectId: "proj-1",
+      topic: undefined,
+      referenceAssetId: "asset-ref-9",
     });
   });
 
@@ -1357,10 +1374,33 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
     const result = (await runExecute(tools["context.materials"]!, {
       query: "封面",
       limit: 2,
-    })) as { kind: string; items: unknown[] };
+    })) as { kind: string; items: unknown[]; query: string; note: string | null };
     expect(searchMaterials).toHaveBeenCalledWith({ query: "封面", limit: 2 });
     expect(result.kind).toBe("context.materials");
     expect(result.items).toHaveLength(1);
+    // [T-380] 有命中 → 无诚实注记;query 回传供前端空态分文案。
+    expect(result.query).toBe("封面");
+    expect(result.note).toBeNull();
+  });
+
+  // [T-380] 素材搜索诚实:带词 0 命中 ≠ 库空(仅标题匹配)→ note 明示 + 引导无 query 列全量。
+  it("context.materials 带 query 空命中 → note 注记「仅按标题匹配,没搜到≠库空」", async () => {
+    const { deps } = makeDeps({ searchMaterials: vi.fn(async () => []) });
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.materials"]!, {
+      query: "健身",
+    })) as { items: unknown[]; query: string; note: string | null };
+    expect(result.items).toEqual([]);
+    expect(result.query).toBe("健身");
+    expect(result.note).toContain("仅按标题关键词匹配");
+    expect(result.note).toContain("素材库为空");
+    // 无 query 空命中(库真的空)→ note 为 null(前端渲「库空」空态,不再叠注记)。
+    const emptyAll = (await runExecute(tools["context.materials"]!, {})) as {
+      query: string;
+      note: string | null;
+    };
+    expect(emptyAll.query).toBe("");
+    expect(emptyAll.note).toBeNull();
   });
 
   it("context 工具返回空(端口无数据)→ items 为空数组(诚实,不塞假数据)", async () => {

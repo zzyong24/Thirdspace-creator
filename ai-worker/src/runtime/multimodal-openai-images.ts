@@ -52,6 +52,21 @@ function generationsUrl(spec: MultimodalSpec): string {
   return `${root}/v1/images/generations`;
 }
 
+/**
+ * [T-380] 以图生图端点 URL(`POST {root}/v1/images/edits`)。三态归一与 generationsUrl 同款;
+ * 额外一态:baseUrl 配成了完整 generations 端点 → 换末段成 /images/edits(用户在设置里常
+ * 直接贴 generations 完整端点,参考图请求不能打回 generations)。
+ */
+function editsUrl(spec: MultimodalSpec): string {
+  const trimmed = (spec.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+  if (trimmed.endsWith("/images/edits")) return trimmed;
+  if (trimmed.endsWith("/images/generations")) {
+    return `${trimmed.slice(0, -"/generations".length)}/edits`;
+  }
+  const root = trimmed.endsWith("/v1") ? trimmed.slice(0, -"/v1".length) : trimmed;
+  return `${root}/v1/images/edits`;
+}
+
 // aspectRatio → OpenAI 兼容 size。只映射 gpt-image 系公版三档;别的比例(如 21:9)不硬猜
 // —— 省略 size 让端点用默认,比发一个各家都可能拒的尺寸稳。竖屏(抖音 9:16/3:4)→ 竖版,
 // 横屏 → 横版,方 → 方。
@@ -93,23 +108,48 @@ async function generateImage(
   deps: OpenaiImagesAdapterDeps,
 ): Promise<GeneratedAsset> {
   const size = sizeFromAspectRatio(opts.aspectRatio);
-  const res = await deps.fetch(generationsUrl(spec), {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${spec.token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: spec.model, // 如 "gpt-image-2-4K" / 中转站转发的任意生图 model id
-      prompt: opts.prompt,
-      n: 1,
-      ...(size ? { size } : {}),
-      // 不发 response_format(gpt-image 系拒收该参数);响应侧 b64_json / url 双支持。
-    }),
-  });
+  // [T-380] 带参考图 → 走 image-to-image(`POST /v1/images/edits`,multipart form:
+  // image+prompt+model+size —— 注意与 generations 的 JSON body 是两种编码);无参考图 →
+  // 原 generations JSON 路径,行为完全不变(零回归)。两路响应形状相同,统一在下方解析。
+  let res: Response;
+  if (opts.referenceImage) {
+    const form = new FormData();
+    const ref = opts.referenceImage;
+    // Uint8Array → Blob(FormData 文件字段;Node18+/edge 均有全局 Blob/FormData)。
+    form.append(
+      "image",
+      new Blob([ref.bytes.buffer.slice(ref.bytes.byteOffset, ref.bytes.byteOffset + ref.bytes.byteLength) as ArrayBuffer], { type: ref.mimeType }),
+      ref.mimeType.includes("png") ? "reference.png" : "reference.jpg",
+    );
+    form.append("prompt", opts.prompt);
+    form.append("model", spec.model);
+    form.append("n", "1");
+    if (size) form.append("size", size);
+    res = await deps.fetch(editsUrl(spec), {
+      method: "POST",
+      // 不手写 Content-Type:multipart boundary 由 fetch 按 FormData 自动生成。
+      headers: { Authorization: `Bearer ${spec.token}` },
+      body: form,
+    });
+  } else {
+    res = await deps.fetch(generationsUrl(spec), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${spec.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: spec.model, // 如 "gpt-image-2-4K" / 中转站转发的任意生图 model id
+        prompt: opts.prompt,
+        n: 1,
+        ...(size ? { size } : {}),
+        // 不发 response_format(gpt-image 系拒收该参数);响应侧 b64_json / url 双支持。
+      }),
+    });
+  }
   if (!res.ok) {
     throw new MultimodalGenerationError(
-      `OpenAI 兼容 images/generations ${classifyHttpError(res.status, await safeText(res))}`,
+      `OpenAI 兼容 images/${opts.referenceImage ? "edits" : "generations"} ${classifyHttpError(res.status, await safeText(res))}`,
     );
   }
   const json = (await res.json()) as OpenaiImagesResponse;

@@ -78,6 +78,20 @@ async function generateImage(
       model: spec.model, // 如 "image-01"
       prompt: opts.prompt,
       ...(opts.aspectRatio ? { aspect_ratio: opts.aspectRatio } : {}),
+      // [T-380] 以图生图(风格/主体参考):MiniMax image_generation 的 subject_reference
+      // 入参 —— 数组,每项 { type:"character", image_file:<data URL base64> }(按官方公开
+      // 文档惯例写;⚠️ 本环境无真 key,字段名/编码待真 key 实测核实,与本文件头部诚实边界
+      // 一致)。无参考图 → 不发该字段,行为与纯文生图完全一致(零回归)。
+      ...(opts.referenceImage
+        ? {
+            subject_reference: [
+              {
+                type: "character",
+                image_file: `data:${opts.referenceImage.mimeType};base64,${Buffer.from(opts.referenceImage.bytes).toString("base64")}`,
+              },
+            ],
+          }
+        : {}),
       response_format: "base64", // 直接拿字节,免二次 GET url(url 24h 过期)
       n: 1,
       prompt_optimizer: true,

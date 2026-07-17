@@ -43,6 +43,12 @@ export interface GenerateImageOptions {
   prompt: string;
   /** 如 "9:16"(抖音竖屏优先)/ "16:9" / "1:1"。适配器把它翻成各厂商入参。 */
   aspectRatio?: string;
+  /**
+   * [T-380] 以图生图(风格参考):可选参考图字节+mime。给了 → 适配器走各家 image-to-image
+   * 形态(openai 兼容 = POST /v1/images/edits multipart;minimax = subject_reference);
+   * 不给 → 行为与纯文生图完全一致(零回归)。出参契约不变({ assetBytes })。
+   */
+  referenceImage?: { bytes: Uint8Array; mimeType: string };
 }
 
 export interface GenerateVideoOptions {

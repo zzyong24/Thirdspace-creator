@@ -93,7 +93,14 @@ export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>
   // T-055c 活范式原卡,归入注册表统一分发(行为不变:逐条「加入弹药」)。
   "context.materials": (out, ctx) => {
     const o = out as unknown as Partial<ContextMaterialsToolResult>;
-    return <ChatMaterialListCard items={o.items ?? []} projectId={ctx.projectId} />;
+    return (
+      <ChatMaterialListCard
+        items={o.items ?? []}
+        projectId={ctx.projectId}
+        // [T-380] 空态诚实:带词没搜到 ≠ 库空(仅标题匹配),卡内按 query 分文案。
+        query={o.query ?? ""}
+      />
+    );
   },
   // [T-099b] 切片二:详情类。数据从 tool-result part.output 直渲,不二次请求。
   "context.project.detail": (out) => {

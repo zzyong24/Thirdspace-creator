@@ -262,6 +262,82 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
+
+  // ── [T-380] 以图生图风格参考 ────────────────────────────────────────────
+  it("inputData.referenceAssetId → host 端口读素材字节 → referenceImage 喂进 generateImage", async () => {
+    const made = makeDeps(FULL_PLAN);
+    const getAssetBytes = vi.fn(async () => ({
+      bytes: new Uint8Array([5, 6, 7]),
+      mimeType: "image/png",
+    }));
+    (made.deps as Record<string, unknown>).referenceAssets = { getAssetBytes };
+    await runCoverGenerate(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: { referenceAssetId: "asset-ref-1" } },
+      made.deps,
+    );
+    expect(getAssetBytes).toHaveBeenCalledWith(ctx, "asset-ref-1");
+    const imgCall = generateImage.mock.calls.at(-1) as unknown as [
+      unknown,
+      { referenceImage?: { bytes: Uint8Array; mimeType: string } },
+      unknown,
+    ];
+    expect(imgCall[1].referenceImage).toEqual({
+      bytes: new Uint8Array([5, 6, 7]),
+      mimeType: "image/png",
+    });
+    // 步骤流注记「已读取参考封面」(诚实观测)。
+    const stepTexts = made.recordStep.mock.calls.map(
+      (c) => (c as unknown as [unknown, unknown, { text: string }])[2].text,
+    );
+    expect(stepTexts.some((t) => t.includes("参考封面"))).toBe(true);
+    expect(made.recordCandidate).toHaveBeenCalledTimes(1);
+  });
+
+  it("referenceAssetId 读不到(null)→ 诚实降级纯文生图 + 步骤注记「未使用参考图」,不失败", async () => {
+    const made = makeDeps(FULL_PLAN);
+    const getAssetBytes = vi.fn(async () => null);
+    (made.deps as Record<string, unknown>).referenceAssets = { getAssetBytes };
+    await runCoverGenerate(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: { referenceAssetId: "asset-gone" } },
+      made.deps,
+    );
+    const imgCall = generateImage.mock.calls.at(-1) as unknown as [
+      unknown,
+      { referenceImage?: unknown },
+      unknown,
+    ];
+    expect(imgCall[1].referenceImage).toBeUndefined();
+    const stepTexts = made.recordStep.mock.calls.map(
+      (c) => (c as unknown as [unknown, unknown, { text: string }])[2].text,
+    );
+    expect(stepTexts.some((t) => t.includes("未使用参考图"))).toBe(true);
+    // 降级不阻断:候选照记,任务不 cancel。
+    expect(made.recordCandidate).toHaveBeenCalledTimes(1);
+    expect(made.cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("无 referenceAssetId → 不读端口、generateImage 不带 referenceImage(零回归)", async () => {
+    const made = makeDeps(FULL_PLAN);
+    const getAssetBytes = vi.fn(async () => ({
+      bytes: new Uint8Array([1]),
+      mimeType: "image/png",
+    }));
+    (made.deps as Record<string, unknown>).referenceAssets = { getAssetBytes };
+    await runCoverGenerate(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: {} },
+      made.deps,
+    );
+    expect(getAssetBytes).not.toHaveBeenCalled();
+    const imgCall = generateImage.mock.calls.at(-1) as unknown as [
+      unknown,
+      { referenceImage?: unknown },
+      unknown,
+    ];
+    expect(imgCall[1].referenceImage).toBeUndefined();
+  });
 });
 
 describe("[T-271] composeCoverImagePrompt —— 生图 prompt 由结构化 facet 确定性组装", () => {

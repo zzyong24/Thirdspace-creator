@@ -69,6 +69,35 @@ describe("MiniMax 适配器 —— image(同步)", () => {
     expect(calls).toHaveLength(1);
   });
 
+  // [T-380] 以图生图:带 referenceImage → body 加 subject_reference(data URL base64);
+  // 无参考图 → 不发该字段(零回归)。字段名按官方文档惯例写,真 key 实测待用户验(文件头诚实边界)。
+  it("referenceImage → body 带 subject_reference[{type:'character',image_file:<data URL>}];无参考不发", async () => {
+    const helloB64 = Buffer.from("hello").toString("base64");
+    const bodies: Array<Record<string, unknown>> = [];
+    const fakeFetch = (async (_url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return jsonResponse({
+        data: { image_base64: [helloB64] },
+        metadata: { success_count: 1, failed_count: 0 },
+      });
+    }) as unknown as typeof fetch;
+
+    const adapter = createMinimaxAdapter(deps(fakeFetch));
+    await adapter.generateImage!(spec, {
+      prompt: "延续参考封面风格",
+      referenceImage: { bytes: new Uint8Array([9, 9]), mimeType: "image/png" },
+    });
+    await adapter.generateImage!(spec, { prompt: "纯文生图" });
+
+    const ref = bodies[0]!.subject_reference as Array<Record<string, unknown>>;
+    expect(Array.isArray(ref)).toBe(true);
+    expect(ref[0]!.type).toBe("character");
+    expect(ref[0]!.image_file).toBe(
+      `data:image/png;base64,${Buffer.from([9, 9]).toString("base64")}`,
+    );
+    expect(bodies[1]!.subject_reference).toBeUndefined();
+  });
+
   it("success_count=0 / 无 image_base64 → MultimodalGenerationError(内容审核态)", async () => {
     const fakeFetch = (async () =>
       jsonResponse({

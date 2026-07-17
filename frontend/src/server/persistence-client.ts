@@ -4161,6 +4161,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   };
                 },
               },
+              // [T-380] 以图生图风格参考读端口(user-scoped 读素材字节;inputData.
+              // referenceAssetId 存在时 runner 读它喂生图 adapter 的 image-to-image)。
+              referenceAssets: {
+                getAssetBytes: (c, assetId) =>
+                  assetsService.getAssetBytes(c, assetId),
+              },
             },
           );
         } else if (
@@ -9549,7 +9555,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // artifact**(复用既有 asset 采纳门,无需 artifactId)。立即返回 { taskId },不阻塞对话回合。
     dispatchGenerateCover: async (
       ctx: RequestContext,
-      input: { projectId: string; topic?: string },
+      // [T-380] referenceAssetId = 以图生图风格参考(素材库 asset id,走 inputData 透传;
+      // cover-runner host 侧 getAssetBytes 读字节喂生图 adapter 的 image-to-image)。
+      input: { projectId: string; topic?: string; referenceAssetId?: string },
     ) => {
       const res = await ai.request(
         // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
@@ -9562,6 +9570,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             inputData: {
               projectId: input.projectId,
               ...(input.topic ? { topic: input.topic } : {}),
+              ...(input.referenceAssetId
+                ? { referenceAssetId: input.referenceAssetId }
+                : {}),
             },
           },
         },

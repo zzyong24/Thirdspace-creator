@@ -36,6 +36,8 @@ import {
 import { AssetCard } from "@/components/resources/asset-card";
 import { AssetDetailPanel } from "@/components/resources/asset-detail-panel";
 import type { AssetSummary, AssetsViewModel } from "./assets-page";
+// [T-381] 统一「按新旧」排序(独立模块;从 assets-page 直导会拖 server-only 链进 client)。
+import { sortAssetsByNewest } from "./assets-sort";
 
 // A project the user can attach an asset to (用料链 consumption from the library).
 export interface ProjectOption {
@@ -71,16 +73,24 @@ export function AssetsInteractiveRegion({
   viewModel,
   gallery,
 }: AssetsInteractiveRegionProps) {
-  // When the page supplies a derived gallery, render its filtered+paged rows;
-  // otherwise (tests) fall back to the whole view-model list.
-  const allAssets = gallery?.assets ?? viewModel.assets;
+  // When the page supplies a derived gallery, render its filtered+paged rows
+  // (already newest-first per [T-381]); otherwise (tests) fall back to the
+  // whole view-model list, sorted newest-first for the same 统一新旧序。
+  const allAssets = React.useMemo(
+    () => gallery?.assets ?? sortAssetsByNewest(viewModel.assets),
+    [gallery?.assets, viewModel.assets],
+  );
   // [T-060③b] 视图切换:全部 | 按项目(项目=文件夹,点进去看该项目素材)。
   // 分组键来自 usageHistory(material_links 反查):asset ∈ 其挂过的每个项目;
   // 没挂任何项目的进「通用素材」组(素材中心直传的那批)。
   // [T-248 批B] 新增「回收站」视图:assets.list?status=deleted 真读的已回收素材,
   // 每项带「还原」(assets.restore)—— 补上 trash 之后看得见、回得来的闭环。
   const [view, setView] = React.useState<"all" | "byProject" | "trash">("all");
-  const trashedAssets = viewModel.trashedAssets ?? [];
+  // [T-381] 回收站同样按新旧排(统一排序纪律)。
+  const trashedAssets = React.useMemo(
+    () => sortAssetsByNewest(viewModel.trashedAssets ?? []),
+    [viewModel.trashedAssets],
+  );
   const [openProjectId, setOpenProjectId] = React.useState<string | null>(null);
   const projectGroups = React.useMemo(() => {
     const byProject = new Map<
@@ -161,6 +171,41 @@ export function AssetsInteractiveRegion({
           setActionStatus(`已开始下载「${dto.fileName}」。`);
         } catch {
           setActionStatus("下载失败：文件缺失或存储不可用。");
+        }
+      });
+    },
+    [],
+  );
+
+  // [T-381] 复制地址:/api/v1/local/path 解析该 asset 的本机绝对路径(media-root+
+  // storageKey,route 侧 gate-F1 三重防护)→ 写剪贴板 → 状态行「已复制」。桌面版语义:
+  // 路径只在本机有意义(用途:把原图路径喂给外部 AI 生图工具)。
+  const handleCopyPath = React.useCallback(
+    (assetId: string) => {
+      startTransition(async () => {
+        try {
+          const res = await fetch("/api/v1/local/path", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assetId }),
+          });
+          if (!res.ok) {
+            setActionStatus(
+              res.status === 404
+                ? "复制地址失败：文件已不存在或不可访问。"
+                : "复制地址失败，请重试。",
+            );
+            return;
+          }
+          const data = (await res.json()) as { path?: string };
+          if (!data.path) {
+            setActionStatus("复制地址失败：未取到文件路径。");
+            return;
+          }
+          await navigator.clipboard.writeText(data.path);
+          setActionStatus("已复制文件地址。");
+        } catch {
+          setActionStatus("复制地址失败：本地服务或剪贴板不可用。");
         }
       });
     },
@@ -399,6 +444,7 @@ export function AssetsInteractiveRegion({
           asset={selected}
           usageHistory={viewModel.usageHistory}
           onDownload={handleDownload}
+          onCopyPath={handleCopyPath}
           onFavorite={handleFavorite}
           onTrash={handleTrash}
           onReveal={handleReveal}

@@ -376,6 +376,12 @@ export interface ChatToolDeps {
     projectId?: string;
     /** 本期选题(可选,喂进封面方案上下文);缺省用 chatContext.selection 兜底。 */
     topic?: string;
+    /**
+     * [T-380] 以图生图风格参考:素材库 asset id(可选)。给了 → cover-runner host 侧读该
+     * asset 字节 → 生图 adapter 走 image-to-image(延续该参考封面的风格);不给 → 纯文生图,
+     * 行为完全不变。
+     */
+    referenceAssetId?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
    * [T-103b] review.script 核心 —— **不直接审**(script.review 后台跑 L1 违禁词 lint + L2 豆包
@@ -1154,6 +1160,12 @@ export interface ContextKnowledgeToolResult {
 export interface ContextMaterialsToolResult {
   kind: "context.materials";
   items: Array<{ id: string; title: string; kind: string }>;
+  // [T-380] 素材搜索诚实:回传本次生效的 query(空串=列全量),前端空态据此渲「没搜到
+  // 匹配『X』(仅按标题搜)」而非误导性的「素材库是空的」。
+  query: string;
+  // [T-380] 诚实注记:带 query 且 0 命中时明确「仅按标题关键词匹配,没搜到≠素材库为空;
+  // 可不带关键词列全量」;其余情况 null。模型必须读它,不得凭一次空搜断言库空。
+  note: string | null;
 }
 
 // [T-099b] 详情档长文本字段的统一形状(§3 详情档预算):只回前 200 字 + totalChars,并带
@@ -1709,7 +1721,11 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<{
 // [T-271] cover.generate 入参 —— 全可选:封面锚「当前项目」(缺省用项目对话的 projectId + 选中标题)。
 // 封面文案的接地来源(核心信息/口播稿/素材)由 runner 从项目上下文读,不靠模型传 —— 故无 prompt 入参
 // (与 material.generate 的裸 prompt 透传相反,这正是封面链接地的核心)。
-const COVER_GENERATE_PARAMS = jsonSchema<{ projectId?: string; topic?: string }>({
+const COVER_GENERATE_PARAMS = jsonSchema<{
+  projectId?: string;
+  topic?: string;
+  referenceAssetId?: string;
+}>({
   type: "object",
   properties: {
     projectId: {
@@ -1720,6 +1736,11 @@ const COVER_GENERATE_PARAMS = jsonSchema<{ projectId?: string; topic?: string }>
     topic: {
       type: "string",
       description: "本期选题(可选,喂进封面方案上下文;缺省用工作台选中的标题兜底)。",
+    },
+    referenceAssetId: {
+      type: "string",
+      description:
+        "[以图生图]风格参考图的素材 id(可选)。用户给了参考封面、或要「延续历史封面风格/照着这张做」时:先用 context.materials 在素材库找到那张参考图,把它的 asset id 传进来——生图会以它为风格参考(image-to-image)。不传 = 纯文生图。",
     },
   },
   additionalProperties: false,
@@ -1956,7 +1977,8 @@ const CONTEXT_MATERIALS_PARAMS = jsonSchema<{ query?: string; limit?: number }>(
   properties: {
     query: {
       type: "string",
-      description: "搜索关键词(可选;缺省回最近若干条)。",
+      description:
+        "搜索关键词(可选,**仅按素材标题匹配**;省略/空 = 列全量最近素材,按新旧排序)。想知道素材库真实存量时省略它。",
     },
     limit: {
       type: "number",
@@ -2691,9 +2713,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 文案诚实门(数字/成绩只从内容提取禁编造),生图 prompt 由结构化方案组装(非裸自由文本)。
     "cover.generate": defineChatTool("cover.generate", {
       description:
-        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。若未配置生图模型,任务会失败并在卡上提示去设置(不假装能生成)。",
+        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。若未配置生图模型,任务会失败并在卡上提示去设置(不假装能生成)。支持以图生图:用户给了参考封面、或要延续历史封面风格时,先用 context.materials 找到那张参考图的 asset id,经 referenceAssetId 传入(生图以它为风格参考)。",
       inputSchema: COVER_GENERATE_PARAMS,
-      execute: async ({ projectId, topic }): Promise<CoverGenerateToolResult> => {
+      execute: async ({
+        projectId,
+        topic,
+        referenceAssetId,
+      }): Promise<CoverGenerateToolResult> => {
         try {
           const { taskId, projectId: pid, error } = await deps.dispatchGenerateCover({
             projectId:
@@ -2702,6 +2728,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                 : undefined,
             topic:
               typeof topic === "string" && topic.trim() ? topic.trim() : undefined,
+            // [T-380] 以图生图风格参考(可选;素材库 asset id,cover-runner host 侧读字节)。
+            referenceAssetId:
+              typeof referenceAssetId === "string" && referenceAssetId.trim()
+                ? referenceAssetId.trim()
+                : undefined,
           });
           return { kind: "cover.generate", taskId, projectId: pid, error };
         } catch (err) {
@@ -2972,14 +3003,20 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "context.materials": defineChatTool("context.materials", {
       description:
-        "只读:搜索创作者的素材库(assets,返回 id/名称/类型)。当用户问「我有哪些素材 / 素材库里有没有 X / 找一下我的图/视频/文件」时调它拿真实数据来回答,不要瞎答。纯读取上下文,不产候选、不写库。",
+        "只读:搜索创作者的素材库(assets,返回 id/名称/类型)。当用户问「我有哪些素材 / 素材库里有没有 X / 找一下我的图/视频/文件」时调它拿真实数据来回答,不要瞎答。**匹配只按素材标题关键词**(不搜内容/标签):带 query 搜到 0 条 ≠ 素材库为空,素材很可能存在只是标题不含这个词——**绝不能凭一次空搜就断言「素材库里没有」**;先不带 query 调一次列全量(按新旧排序)看真实存量,再换词缩小。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_MATERIALS_PARAMS,
       execute: async ({ query, limit }): Promise<ContextMaterialsToolResult> => {
+        const effQuery = (query ?? "").trim();
         const items = await deps.searchMaterials({
-          query: query ?? "",
+          query: effQuery,
           limit: clampContextLimit(limit),
         });
-        return { kind: "context.materials", items };
+        // [T-380] 诚实注记:带词空结果 ≠ 库空(仅标题匹配);引导先无 query 列全量。
+        const note =
+          effQuery && items.length === 0
+            ? `仅按标题关键词匹配,没搜到「${effQuery}」≠ 素材库为空 —— 素材可能存在但标题不含此词;可不带 query 再调一次列全量(按新旧排序)确认真实存量。`
+            : null;
+        return { kind: "context.materials", items, query: effQuery, note };
       },
     }, deps.humanizeError),
     // ── [T-099b] 只读 context 详情工具(切片二)—— 单实体全字段。人机同源:结果同一份真值,

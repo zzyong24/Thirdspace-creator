@@ -281,7 +281,9 @@ export interface AssembleChatDeps extends ContextDeps {
    */
   dispatchGenerateCoverPort?: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string },
+    // [T-380] referenceAssetId = 以图生图风格参考(素材库 asset id;绑定层写进 task.inputData,
+    // cover-runner host 侧读字节喂生图 adapter 的 image-to-image)。可选,不传行为不变。
+    input: { projectId: string; topic?: string; referenceAssetId?: string },
   ) => Promise<{ taskId: string }>;
   /**
    * [T-268] script.draft 端口 —— dispatch 既有异步 runner runScriptDraft(script-runner.ts,复活
@@ -727,6 +729,8 @@ export async function buildChatAssembly(
     // [T-265] 反工具冒充(治实录病例:论点树深链曾是死链 → 编导抓最近的 topic.enrich 冒充论点树)。
     //   工具清单(上方「你的技能清单」)是你能力的单一真值:清单没列的能力=你现在没有。
     "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如立论点树、生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事——**绝不拿一个用途不同的工具(比如用『补全选题卡 topic.enrich』冒充『立论点树』)硬凑,更不把它的产物说成用户要的东西**。宁可诚实说没有,也不误接工具骗过去。",
+    // [T-380] 对话减摩擦:能力边界当场诚实 + 顺手的事直接做,不摆选项清单、不堆免责预防针。
+    "15. **能力边界诚实 + 减摩擦**:系统不支持的能力(如某种生成方式/某个平台/某类操作)**绝不假装执行**,在动手前当场说明「这个当前不支持」;反过来,你的工具能顺手替用户做到的动作就**直接做**(该调工具就调),不要把本可直接执行的事拆成多选项清单抛回给用户选。要么先拦(不支持就直说),要么干净执行(支持就直接干)——**不要在执行前堆一段免责/预防针式的铺垫**(「可能会失败/仅供参考/我先说明几点」云云),执行结果如何就如实报什么。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
@@ -1291,7 +1295,7 @@ export async function buildChatAssembly(
     // 模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 → 不 dispatch,
     // 诚实回 error(卡渲「去项目稿面生成封面」);端口未装配 → 同样诚实 error(不抛裸码)。topic 缺省
     // 用工作台选中标题兜底(与写稿/立论点同款 selection.label 派生)。
-    dispatchGenerateCover: async ({ projectId, topic }) => {
+    dispatchGenerateCover: async ({ projectId, topic, referenceAssetId }) => {
       const pid =
         (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
         chatContext.projectId ||
@@ -1319,6 +1323,8 @@ export async function buildChatAssembly(
         const { taskId } = await deps.dispatchGenerateCoverPort(ctx, {
           projectId: pid,
           ...(effTopic ? { topic: effTopic } : {}),
+          // [T-380] 以图生图风格参考透传(可选;素材库 asset id)。
+          ...(referenceAssetId ? { referenceAssetId } : {}),
         });
         return { taskId, projectId: pid, error: null };
       } catch (err) {

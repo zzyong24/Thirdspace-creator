@@ -40,6 +40,9 @@ export interface AssetDetailPanelProps {
   // actions fire the mapped contract op (download/favorite/trash/reveal)。
   // [T-231③] 复制链接不再接 handler:常驻 disabled + 「规划中」徽标。
   readonly onDownload?: (assetId: string) => void;
+  // [T-381] 复制地址:复制该素材原始文件的本机绝对路径(media-root+storageKey 解析;
+  // 桌面版语义,路径只在本机有意义 —— 用途:喂给外部 AI 生图工具)。
+  readonly onCopyPath?: (assetId: string) => void;
   readonly onFavorite?: (assetId: string) => void;
   readonly onTrash?: (assetId: string) => void;
   // [T-055d SPEC §7.2] 在 Finder 显示(open -R 定位文件;单机产品 server 与用户同机)。
@@ -52,6 +55,7 @@ export function AssetDetailPanel({
   asset,
   usageHistory,
   onDownload,
+  onCopyPath,
   onFavorite,
   onTrash,
   onReveal,
@@ -86,6 +90,21 @@ export function AssetDetailPanel({
             className="gap-1.5"
           >
             <div data-slot="asset-actions" className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
+              {/* [T-381] 复制地址:本机绝对路径写剪贴板(桌面版语义;喂外部 AI 生图用)。 */}
+              <button
+                type="button"
+                data-slot="asset-action-copy-path"
+                aria-label="复制文件地址"
+                disabled={actionsPending}
+                onClick={onCopyPath ? () => onCopyPath(asset.id) : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+              >
+                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
+                  <rect x={5.5} y={5.5} width={8} height={8} rx={1} />
+                  <path d="M10.5 5.5 V3.5 A1 1 0 0 0 9.5 2.5 H3.5 A1 1 0 0 0 2.5 3.5 V9.5 A1 1 0 0 0 3.5 10.5 H5.5" />
+                </svg>
+                <span>复制地址</span>
+              </button>
               <button
                 type="button"
                 data-slot="asset-action-download"

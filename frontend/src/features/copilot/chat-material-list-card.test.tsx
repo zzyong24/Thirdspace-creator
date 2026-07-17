@@ -57,8 +57,15 @@ describe("ChatMaterialListCard", () => {
     expect(screen.getByText("AI 工作流录屏.mp4")).toBeTruthy();
   });
 
-  it("空命中 → 诚实空态引导去制作台倒素材", () => {
+  // [T-380] 空态分两种诚实:带词没搜到 ≠ 库空(仅标题匹配);不带词空 = 库真的空。
+  it("带 query 空命中 → 「仅按标题搜,素材可能存在但标题不含此词」(不误报库空)", () => {
+    render(<ChatMaterialListCard items={[]} projectId="proj-1" query="健身" />);
+    expect(screen.getByText(/没搜到匹配「健身」的素材/)).toBeTruthy();
+    expect(screen.getByText(/素材可能存在但标题不含此词/)).toBeTruthy();
+  });
+
+  it("无 query 空命中(全量为空)→ 诚实空态引导去制作台倒素材", () => {
     render(<ChatMaterialListCard items={[]} projectId="proj-1" />);
-    expect(screen.getByText(/没搜到匹配的素材/)).toBeTruthy();
+    expect(screen.getByText(/素材库里还没有素材/)).toBeTruthy();
   });
 });

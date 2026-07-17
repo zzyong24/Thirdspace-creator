@@ -23,9 +23,13 @@ export interface ChatMaterialItem {
 export function ChatMaterialListCard({
   items,
   projectId,
+  query,
 }: {
   items: ReadonlyArray<ChatMaterialItem>;
   projectId: string | null;
+  // [T-380] 本次生效的搜索词(空串/缺省 = 列全量)。空态据此区分「带词没搜到(仅标题匹配,
+  // 素材可能存在)」vs「库真的是空的」,不再误导性地一律说去倒素材。
+  query?: string;
 }) {
   const router = useRouter();
   // 逐条关联态:idle | linking | linked | error。
@@ -59,13 +63,16 @@ export function ChatMaterialListCard({
   );
 
   if (items.length === 0) {
+    const q = (query ?? "").trim();
     return (
       <div
         data-slot="chat-material-card"
         data-empty="true"
         className="mt-1 rounded-[10px] border border-dashed border-border px-3 py-2 text-[11px] text-text-subtle"
       >
-        素材库里没搜到匹配的素材 —— 去制作工作台倒一些进来。
+        {q
+          ? `没搜到匹配「${q}」的素材(仅按标题搜)—— 素材可能存在但标题不含此词。`
+          : "素材库里还没有素材 —— 去制作工作台倒一些进来。"}
       </div>
     );
   }

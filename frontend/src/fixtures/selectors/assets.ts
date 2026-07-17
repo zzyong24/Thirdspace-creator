@@ -71,6 +71,8 @@ export interface AssetListRow {
   readonly name: string;
   readonly description: string;
   readonly updatedAt: string;
+  // [T-381] 入库时间(assetResource.createdAt;素材中心统一「按新旧」排序键)。
+  readonly createdAt?: string;
   // [T-051 2e] 收藏 flag(契约 assetResource.isFavorite)。
   readonly isFavorite?: boolean;
   // [T-061] file 派生字段(op 现随行带真值;此前只能 canonical 兜底 → 真上传素材
@@ -116,6 +118,8 @@ export function buildAssetSummariesFromResources(
       tags: tagsForAsset,
       thumbnailToken: thumbnailTokenFor(asset.assetType, asset.id),
       updatedAt: asset.updatedAt,
+      // [T-381] 入库时间透传(统一「按新旧」排序键;op 行必带,缺省回退 updatedAt)。
+      createdAt: asset.createdAt ?? asset.updatedAt,
       // [T-051 2e] 收藏读回:此前 toggle 落库但投影不带,全 UI 无痕迹。
       isFavorite: asset.isFavorite ?? false,
       // [T-146 切片 a] 文档抽取投影透传(op 真值;非文档/未抽 → 缺省)。
@@ -161,6 +165,8 @@ export function buildAssetsViewModel(): AssetsViewModel {
         tags: tagsForAsset,
         thumbnailToken: thumbnailTokenFor(asset.assetType, asset.id),
         updatedAt: asset.updatedAt,
+        // [T-381] 入库时间(统一「按新旧」排序键)。
+        createdAt: asset.createdAt,
       };
     });
 

@@ -123,6 +123,63 @@ describe("OpenAI 兼容生图适配器 —— generateImage(同步一次请求)"
     expect(bodies[3]!.size).toBeUndefined(); // 未给比例 → 省略
   });
 
+  // [T-380] 以图生图:带 referenceImage → 走 /v1/images/edits multipart(image+prompt+
+  // model+size),与 generations 的 JSON 是两种编码;无参考图路径完全不变(上面各测已覆盖)。
+  it("referenceImage → POST /v1/images/edits,multipart form(image/prompt/model/size),不发 JSON", async () => {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    const fakeFetch = (async (url: string, init?: RequestInit) => {
+      calls.push({ url: String(url), init });
+      return jsonResponse({ data: [{ b64_json: PNG_B64 }] });
+    }) as unknown as typeof fetch;
+
+    const adapter = createOpenaiImagesAdapter({ fetch: fakeFetch });
+    const out = await adapter.generateImage!(spec, {
+      prompt: "延续参考封面风格",
+      aspectRatio: "9:16",
+      referenceImage: { bytes: new Uint8Array([7, 7, 7]), mimeType: "image/png" },
+    });
+
+    expect(out.assetBytes).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toBe("https://dudu.mom/v1/images/edits");
+
+    const init = calls[0]!.init!;
+    expect(init.method).toBe("POST");
+    const headers = init.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer sk-img-test");
+    // multipart:不得手写 Content-Type(boundary 由 fetch 按 FormData 生成)。
+    expect(headers["Content-Type"]).toBeUndefined();
+    expect(init.body).toBeInstanceOf(FormData);
+    const form = init.body as FormData;
+    expect(form.get("prompt")).toBe("延续参考封面风格");
+    expect(form.get("model")).toBe("gpt-image-2-4K");
+    expect(form.get("n")).toBe("1");
+    expect(form.get("size")).toBe("1024x1536");
+    const image = form.get("image") as Blob;
+    expect(image).toBeInstanceOf(Blob);
+    expect(image.type).toBe("image/png");
+    expect(new Uint8Array(await image.arrayBuffer())).toEqual(
+      new Uint8Array([7, 7, 7]),
+    );
+  });
+
+  it("baseUrl 配成完整 generations 端点 + referenceImage → 换末段成 /images/edits", async () => {
+    const calls: string[] = [];
+    const fakeFetch = (async (url: string) => {
+      calls.push(String(url));
+      return jsonResponse({ data: [{ b64_json: PNG_B64 }] });
+    }) as unknown as typeof fetch;
+    const adapter = createOpenaiImagesAdapter({ fetch: fakeFetch });
+    await adapter.generateImage!(
+      { ...spec, baseUrl: "https://dudu.mom/v1/images/generations" },
+      {
+        prompt: "p",
+        referenceImage: { bytes: new Uint8Array([1]), mimeType: "image/jpeg" },
+      },
+    );
+    expect(calls).toEqual(["https://dudu.mom/v1/images/edits"]);
+  });
+
   it("url 型响应 → 再 GET 下载字节,归一成 { assetBytes }", async () => {
     const calls: string[] = [];
     const fakeFetch = (async (url: string, init?: RequestInit) => {

@@ -66,6 +66,8 @@ import {
 import { AssetUploadButton } from "./asset-upload-button";
 import { AssetsToolbarSearch } from "./assets-toolbar-search";
 import { buildAssetsViewModelReal } from "./assets-data";
+// [T-381] 统一「按新旧」排序(独立模块,client 岛也用,勿并回本文件 —— server-only 链)。
+import { sortAssetsByNewest } from "./assets-sort";
 
 // The asset-type enum used by the filter sidebar. Mirrors contract
 // `primitives.assetType`; these are the ONLY values `?type=` accepts.
@@ -145,6 +147,10 @@ export interface AssetSummary {
   readonly tags: ReadonlyArray<string>;
   readonly thumbnailToken: string;
   readonly updatedAt: string;
+  // [T-381] 入库时间(assetResource.createdAt)—— 素材中心统一「按新旧」排序的键
+  // (asset 无「作品发布时间」字段,createdAt = 该素材进库的时间,最贴近作品新旧)。
+  // 可选:旧 fixture/测试 seam 不带时回退 updatedAt 排序。
+  readonly createdAt?: string;
   // [T-051 2e] 收藏痕迹(assets.favorite.toggle 写库的 isFavorite 读回)。
   readonly isFavorite?: boolean;
   // [T-146 切片 a] 文档抽取投影(仅 document;非文档缺省)。详情面板据此显资料要点卡 / 诚实失败提示。
@@ -225,7 +231,10 @@ function deriveGallery(
   const query = (opts.q ?? "").trim();
   const needle = query.toLowerCase();
 
-  const filtered = all.filter((asset) => {
+  // [T-381] 先统一按新旧排(createdAt desc),再过滤分页 —— 不依赖上游读序。
+  const sorted = sortAssetsByNewest(all);
+
+  const filtered = sorted.filter((asset) => {
     if (activeType !== null && asset.type !== activeType) return false;
     if (needle.length > 0) {
       const haystack = [
