@@ -25,6 +25,11 @@ export interface CreativeContext {
   // who this person already is on-platform. Empty until the accounts reader is wired
   // (Plan Phase A) or when the creator has connected no accounts.
   accountsBrief: string;
+  // [T-382] 当前选中号一行画像(「platform | handle | 粉丝 N」)—— ctx.accountId 与
+  // AccountsReader 行 id 匹配时非空。chat-runner 据它渲「当前操作的抖音号」system 块,
+  // 让编导能直接回答「我当前登录的是哪个账号」、并把「我的账号/我的数据」默认锚到它。
+  // Optional(additive):旧测试 fixture / 未匹配(无 ctx.accountId、reader 无 id)→ 空/缺省。
+  currentAccountLine?: string;
   // 受众信号 brief — a compact listing of the creator's audience signals (评论/私信/咨询/
   // 复盘 raw text + demand tag) so the topic.generate `comments` basis can出题 from real
   // demand. Empty until the signals reader is wired or when there are no signals.
@@ -181,11 +186,20 @@ export interface ProjectMaterialsReader {
 // follower baseline). Optional: only the positioning.generate node passes it (it grounds
 // a positioning suggestion in the on-platform identity); other nodes omit it. The
 // composition root binds it to the platform-account public service's list method.
+// [T-382] 行扩 optional `id`(platform account id)—— 装配层据它与 ctx.accountId(x-account-id
+// 已验属主的当前选中号)匹配,把当前号在画像里显式标「⭐当前选中号」并产 currentAccountLine
+// (治实录病例:用户问「我当前登录的是哪个账号」,AI 答「没法判断」—— 系统明明知道)。
+// 旧绑定/测试 fake 不给 id 也照常跑(无 id → 不标当前号,诚实降级)。
 export interface AccountsReader {
   list(
     ctx: RequestContext,
   ): Promise<
-    Array<{ platform: string; accountHandle: string; followerBaseline: number }>
+    Array<{
+      id?: string;
+      platform: string;
+      accountHandle: string;
+      followerBaseline: number;
+    }>
   >;
 }
 
@@ -452,17 +466,26 @@ export async function assembleCreativeContext(
   }
 
   let accountsBrief = "";
+  let currentAccountLine = "";
   if (deps.accounts) {
     try {
       const rows = await deps.accounts.list(ctx);
+      // [T-382] 当前选中号标注:平台账号 registry 是 user-scoped(跨号全列,这是账号切换器
+      // 的数据源、非隔离缺口)——但画像里必须标明哪个是 ctx.accountId 指向的当前号,否则
+      // 模型面对两个号不知道「我的账号」指谁(实录:答「没法判断你登录的是哪个号」)。
       accountsBrief = rows
-        .map(
-          (a) =>
-            `· ${a.platform} | ${a.accountHandle} | 粉丝 ${a.followerBaseline}`,
-        )
+        .map((a) => {
+          const line = `${a.platform} | ${a.accountHandle} | 粉丝 ${a.followerBaseline}`;
+          const isCurrent = Boolean(
+            a.id && ctx.accountId && a.id === ctx.accountId,
+          );
+          if (isCurrent && !currentAccountLine) currentAccountLine = line;
+          return isCurrent ? `· ⭐当前选中号 | ${line}` : `· ${line}`;
+        })
         .join("\n");
     } catch {
       accountsBrief = ""; // 抖音账号画像 is best-effort context; never block a node on it
+      currentAccountLine = "";
     }
   }
 
@@ -680,6 +703,7 @@ export async function assembleCreativeContext(
     userMaterialRefBrief,
     userMaterialQueryTerms,
     accountsBrief,
+    currentAccountLine,
     signalsBrief,
     knowledgeBrief,
     thesisBrief,

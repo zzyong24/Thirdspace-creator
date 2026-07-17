@@ -1770,3 +1770,59 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     expect(res.trendNote).toContain("未拉到已登记信源的实时信号");
   });
 });
+
+// ── [T-382] 当前选中号 system 块 ────────────────────────────────────────────────────
+// 治实录病例:用户问「我当前登录的是哪个账号」,编导答「从你这侧的登录状态我没法判断」——
+// ctx.accountId(x-account-id 已验属主)命中账号画像行时,装配层必须把「当前操作的抖音号」
+// 渲成明确 system 事实 + 「绝不反问当前是哪个号」指令(任何 surface 都注);未选号/无匹配 → 不注。
+describe("chat-runner T-382 — 当前选中号注入", () => {
+  const ctxWithAccount = {
+    userId: "u-1",
+    correlationId: "c-1",
+    accountId: "acc-1",
+  } as never;
+  const accountsOver = {
+    accounts: {
+      list: async () => [
+        {
+          id: "acc-1",
+          platform: "douyin",
+          accountHandle: "@月明水清深",
+          followerBaseline: 42000,
+        },
+        {
+          id: "acc-2",
+          platform: "douyin",
+          accountHandle: "@第二个号",
+          followerBaseline: 300,
+        },
+      ],
+    },
+  } as Partial<AssembleChatDeps>;
+
+  it("ctx.accountId 命中 → 任意 surface 的 system 含「当前选中的抖音号」块 + 禁反问指令", async () => {
+    const { deps } = makeDeps(accountsOver);
+    const a = await buildChatAssembly(ctxWithAccount, { surface: "topics" }, deps);
+    expect(a.system).toContain("【当前选中的抖音号】");
+    expect(a.system).toContain("douyin | @月明水清深 | 粉丝 42000");
+    expect(a.system).toContain("绝不要反问用户当前是哪个号");
+  });
+
+  it("定位对话:画像段标 ⭐当前选中号(其余号仅并列),且 system 含当前号块", async () => {
+    const { deps } = makeDeps(accountsOver);
+    const a = await buildChatAssembly(
+      ctxWithAccount,
+      { surface: "positioning" },
+      deps,
+    );
+    expect(a.system).toContain("⭐当前选中号 | douyin | @月明水清深");
+    expect(a.system).not.toContain("⭐当前选中号 | douyin | @第二个号");
+    expect(a.system).toContain("【当前选中的抖音号】");
+  });
+
+  it("未选号(ctx 无 accountId)→ 不注当前号块(诚实,不猜)", async () => {
+    const { deps } = makeDeps(accountsOver);
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).not.toContain("【当前选中的抖音号】");
+  });
+});

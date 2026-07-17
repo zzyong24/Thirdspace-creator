@@ -48,3 +48,31 @@ describe("chatbox.positioning — T-210 访谈式多轮定位", () => {
     expect(chatboxPositioningSchema.safeParse({}).success).toBe(false);
   });
 });
+
+// [T-382] 定位流程「先拉数据再问」—— 锚定新的第 0 步语义,防回退成「不拉数据反问用户」。
+// 实录病例:用户开局「结合我的账号画像给 X 号生成定位提案」,编导不拉数据反问「你想定位哪个号/
+// 是不是已经在做/想做什么领域」(画像与 49 条作品早就回答了)。
+describe("chatbox.positioning — T-382 先拉数据再问", () => {
+  const sys = CHATBOX_POSITIONING_TEMPLATE.system;
+
+  it("system 第 0 步要求先并行拉四个 context 真数据源", () => {
+    expect(sys).toContain("先并行调 context.projects + context.metrics + context.comments + context.positioning.detail");
+  });
+
+  it("老号(有真实作品数据)不走完整访谈:直接产提案或最多问 1-2 个数据答不了的高质量问题", () => {
+    expect(sys).toContain("不走完整访谈");
+    expect(sys).toContain("1-2 个");
+    // 画像/作品已能回答的绝不再问(重复问 = 浪费用户)。
+    expect(sys).toMatch(/已能回答的问题[\s\S]*绝不再问/);
+  });
+
+  it("完整 5 问访谈只属零作品新号", () => {
+    expect(sys).toContain("零作品新号");
+    expect(sys).toContain("仅零作品新号");
+  });
+
+  it("tools preferred 序补 context.metrics / context.positioning.detail(第 0 步要用)", () => {
+    expect(CHATBOX_POSITIONING_TEMPLATE.tools).toContain("context.metrics");
+    expect(CHATBOX_POSITIONING_TEMPLATE.tools).toContain("context.positioning.detail");
+  });
+});

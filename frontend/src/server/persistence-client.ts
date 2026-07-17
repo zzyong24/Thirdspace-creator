@@ -3177,6 +3177,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 offset: 0,
               })
             ).rows.map((a) => ({
+              // [T-382] 透传账号 id —— 装配层据它与 ctx.accountId 匹配标「⭐当前选中号」。
+              id: a.id,
               platform: a.platform,
               accountHandle: a.accountHandle,
               followerBaseline: a.followerBaseline,
@@ -8194,6 +8196,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               offset: 0,
             })
           ).rows.map((a) => ({
+            // [T-382] 透传账号 id —— 装配层据它与 ctx.accountId(x-account-id 已验属主的
+            // 当前选中号)匹配,画像标「⭐当前选中号」+ 渲「当前操作的抖音号」system 块。
+            id: a.id,
             platform: a.platform,
             accountHandle: a.accountHandle,
             followerBaseline: a.followerBaseline,
@@ -8476,6 +8481,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           platform: string;
           accountHandle: string;
           followerBaseline: number;
+          current?: boolean;
         }> = [];
         try {
           const res = await platformAccountService.listAccounts(c, {
@@ -8486,6 +8492,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             platform: a.platform,
             accountHandle: a.accountHandle,
             followerBaseline: a.followerBaseline,
+            // [T-382] 当前选中号标注(ctx.accountId 已验属主)—— 模型读工具结果时能直接
+            // 回答「我当前登录的是哪个账号」,不再把两个号当并列无主态。
+            ...(c.accountId != null && a.id === c.accountId
+              ? { current: true }
+              : {}),
           }));
         } catch {
           accounts = [];

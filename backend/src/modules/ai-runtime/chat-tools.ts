@@ -746,11 +746,12 @@ export interface PositioningDetailRaw {
   currentStatement: { oneLiner: string; keywords: string[] } | null;
   /** 陈述版本数(创建过多少条定位陈述;拿不到 → null,不编)。 */
   statementCount: number | null;
-  /** 账号画像(并入,不单开账号工具)。 */
+  /** 账号画像(并入,不单开账号工具)。[T-382] current=true 标 ctx.accountId 指向的当前选中号。 */
   accounts: Array<{
     platform: string;
     accountHandle: string;
     followerBaseline: number;
+    current?: boolean;
   }>;
 }
 
@@ -2272,7 +2273,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       // [T-245] 热点能力认知:明说 basis=trend 会自动拉真实热点信号(T-235b 信源系统 + web 搜索),
       // 治编导自称「没有实时热点拉取能力」的认知错位(prompt 没告诉它,能力其实在)。
       description:
-        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①已登记网页信源的实时信号(标题/热度/链接,信源在选题页『信号源』登记,如 36氪热榜等热榜站点)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
+        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。[T-382] 出题依据(定位/评论信号/知识库)由系统按 basis 自动注入——**不需要先问用户「你的定位是什么/受众是谁」这类系统已知的信息**,直接按用户意图选 basis 调用即可。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①已登记网页信源的实时信号(标题/热度/链接,信源在选题页『信号源』登记,如 36氪热榜等热榜站点)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
       inputSchema: TOPIC_GENERATE_PARAMS,
       execute: async ({ basis, extraBrief }): Promise<TopicGenerateToolResult> => {
         const res = await deps.generateTopics({
@@ -2812,7 +2813,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "calibration.diagnose": defineChatTool("calibration.diagnose", {
       description:
-        "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。结果是诊断候选,需人采纳后才落预测——不直接写库。**只有标题、没拿到真实文稿时,如实按「仅标题可评」的口径评并明说局限;上游内容还没就绪就先诚实告知,不许假装读过全文、不许输出「待补文稿后再评」这类占位结论。**",
+        "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。[T-382] 诊断的是**系统里已有稿子的项目/作品**时,先用 context.artifact.text(传 projectId,projectId 从 context.projects/context.metrics 拿)把真实文稿读出来经 script 传入,**不要只拿标题评、更不要让用户手动贴系统里已有的稿子**。结果是诊断候选,需人采纳后才落预测——不直接写库。**只有标题、系统里也没有文稿时,如实按「仅标题可评」的口径评并明说局限;上游内容还没就绪就先诚实告知,不许假装读过全文、不许输出「待补文稿后再评」这类占位结论。**",
       inputSchema: CALIBRATION_DIAGNOSE_PARAMS,
       execute: async ({
         title,
@@ -2947,7 +2948,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "positioning.generate": defineChatTool("positioning.generate", {
       description:
-        "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。[T-210] 定位访谈答齐后调用:把访谈 5 问(新手/老手、领域受众、目标、内容形态、对标风格)的回答连同已翻过的真数据/聊出的定位洞察整理进 extraBrief 一并传入(否则访谈结论会丢、只会复读旧档案)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
+        "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。[T-382] 调用前先并行用 context.projects/context.metrics/context.comments/context.positioning.detail 拉真数据:**老号(有真实作品数据)拉完即可直接调本工具**,把作品表现规律/受众信号/画像洞察整理进 extraBrief;[T-210] 零作品新号才走完整访谈,5 问(新手/老手、领域受众、目标、内容形态、对标风格)答齐后调用、回答整理进 extraBrief(否则结论会丢、只会复读旧档案)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
       inputSchema: POSITIONING_GENERATE_PARAMS,
       execute: async ({ extraBrief }): Promise<PositioningGenerateToolResult> => {
         const suggestion = await deps.generatePositioning({
@@ -3118,7 +3119,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "context.positioning.detail": defineChatTool("context.positioning.detail", {
       description:
-        "只读:拉取创作者的**定位档案全档**(定位母版 9 facets:人设/领域/人群/差异化/内容范围/不做什么/核心痛点/核心价值/表达风格 + 5 条下游硬约束 downstreamRules + 当前定位陈述 + 陈述版本数 + 抖音账号画像)。当用户问「我的定位是什么 / 我的人设 / 我在平台上是谁 / 定位约束」时调它拿真实定位档案回答。无入参(母版就一份)。纯读取上下文,不产候选、不写库(要改定位用 positioning.generate 产提案卡)。",
+        "只读:拉取创作者的**定位档案全档**(定位母版 9 facets:人设/领域/人群/差异化/内容范围/不做什么/核心痛点/核心价值/表达风格 + 5 条下游硬约束 downstreamRules + 当前定位陈述 + 陈述版本数 + 抖音账号画像)。当用户问「我的定位是什么 / 我的人设 / 我在平台上是谁 / 定位约束」时调它拿真实定位档案回答。[T-382] accounts 里 current=true 的行是用户**当前操作的抖音号**——「我的账号/给我的号做定位」默认指它,不要问用户当前是哪个号。无入参(母版就一份)。纯读取上下文,不产候选、不写库(要改定位用 positioning.generate 产提案卡)。",
       inputSchema: CONTEXT_POSITIONING_DETAIL_PARAMS,
       execute: async (): Promise<ContextPositioningDetailToolResult> => {
         const empty: PositioningDetailRaw = {

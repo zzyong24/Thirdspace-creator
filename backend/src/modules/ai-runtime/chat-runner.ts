@@ -793,6 +793,17 @@ export async function buildChatAssembly(
   // [T-240①] 阶段判据块 —— 项目对话把「创作前(未发布)/已发布(可复盘)」渲成明确场景信号
   // (formatProjectStageBlock 纯函数);读不到项目详情(projectStage=null)→ 不注(不喂猜测)。
   const stageBlock = projectStage ? formatProjectStageBlock(projectStage) : "";
+  // [T-382] 当前选中号块 —— ctx.accountId(x-account-id 已验属主)命中账号画像行时,把「用户
+  // 当前操作的抖音号是谁」渲成明确 system 事实 + 指令。治实录病例:用户问「我当前登录的是哪个
+  // 账号」,编导答「从你这侧的登录状态我没法判断」—— 系统明明知道(header 已验属主、画像已注入),
+  // 只是没标哪个是当前号。所有 surface 都注(不限定位对话:「我的账号/我的数据」在任何面都该
+  // 默认指当前号);未选号 / reader 无 id / 无匹配 → 空串不注(诚实,不猜)。
+  const currentAccountBlock = context.currentAccountLine
+    ? [
+        `【当前选中的抖音号】用户当前操作的抖音号:${context.currentAccountLine}。`,
+        "用户说「我的账号 / 我的数据 / 我当前登录的是哪个账号」时,默认都指这个号——直接如实回答、直接拉它的数据;**绝不要说「我没法判断你登录的是哪个号」、也绝不要反问用户当前是哪个号**(系统已把当前号告诉你了)。",
+      ].join("\n")
+    : "";
   // [T-270] 立项 Brief 硬锚块 —— 项目态对话把「本条内容立项硬约束(钦定核心信息/内容目标含避免X/
   // 内容形式/目标观众)」注进 system,让编导聊 hook/论点/整稿前就锚定钦定前提,不再漂移/自创矛盾主张。
   // 作**权威约束块**(与 stageBlock/currentProjectBlock 同类,不套 <user_data> 数据边界——brief 是
@@ -803,6 +814,7 @@ export async function buildChatAssembly(
     baseSystem,
     honestyBlock,
     skillsBriefBlock,
+    currentAccountBlock,
     currentProjectBlock,
     briefHardBlock,
     stageBlock,

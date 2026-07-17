@@ -973,3 +973,72 @@ describe("[T-284a] assembleCreativeContext — benchmarkRefBrief 仅复刻项目
     expect(context.benchmarkRefBrief).toBe("");
   });
 });
+
+// ── [T-382] 当前选中号标注(accountsBrief ⭐ + currentAccountLine)───────────────────
+// 治实录病例:两个号并列进画像、没标哪个是 ctx.accountId 指向的当前号 → 编导答「没法判断
+// 你登录的是哪个号」。装配层据 reader 行 id 与 ctx.accountId 匹配:命中行标「⭐当前选中号」
+// 且 currentAccountLine 非空;无 ctx.accountId / reader 无 id → 不标(诚实降级,不猜)。
+describe("creative-context T-382 — 当前选中号标注", () => {
+  const ROWS = [
+    {
+      id: "acc-1",
+      platform: "douyin",
+      accountHandle: "@月明水清深",
+      followerBaseline: 42000,
+    },
+    {
+      id: "acc-2",
+      platform: "douyin",
+      accountHandle: "@第二个号",
+      followerBaseline: 300,
+    },
+  ];
+  const accountDeps: ContextDeps = {
+    positioning: {
+      getPositioningCenter: async () => ({
+        profile: null,
+        currentStatement: null,
+      }),
+    },
+    accounts: { list: async () => ROWS },
+  };
+
+  it("ctx.accountId 命中行 → 该行标 ⭐当前选中号,其余行不标,currentAccountLine 为当前号一行画像", async () => {
+    const context = await assembleCreativeContext(
+      { ...ctx, accountId: "acc-1" },
+      { projectId: null, topic: "" },
+      accountDeps,
+    );
+    expect(context.accountsBrief).toContain("· ⭐当前选中号 | douyin | @月明水清深 | 粉丝 42000");
+    expect(context.accountsBrief).toContain("· douyin | @第二个号 | 粉丝 300");
+    expect(context.accountsBrief).not.toContain("⭐当前选中号 | douyin | @第二个号");
+    expect(context.currentAccountLine).toBe("douyin | @月明水清深 | 粉丝 42000");
+  });
+
+  it("无 ctx.accountId(未选号)→ 不标 ⭐、currentAccountLine 空(诚实,不猜)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "" },
+      accountDeps,
+    );
+    expect(context.accountsBrief).not.toContain("⭐");
+    expect(context.currentAccountLine).toBe("");
+  });
+
+  it("旧绑定 reader 不回 id → 不标 ⭐(additive 兼容,不崩)", async () => {
+    const context = await assembleCreativeContext(
+      { ...ctx, accountId: "acc-1" },
+      { projectId: null, topic: "" },
+      {
+        ...accountDeps,
+        accounts: {
+          list: async () =>
+            ROWS.map(({ id: _id, ...rest }) => rest),
+        },
+      },
+    );
+    expect(context.accountsBrief).toContain("@月明水清深");
+    expect(context.accountsBrief).not.toContain("⭐");
+    expect(context.currentAccountLine).toBe("");
+  });
+});
