@@ -120,6 +120,27 @@ describe("runModelConnectionTest — image.generate(真实最小生图)", () => 
     expect(deps.generateImageMinimal).toHaveBeenCalledTimes(1);
   });
 
+  // [T-379] openai 兼容 provider(gpt-image 系/中转站)与 minimax 同一分支:走真实最小生图,
+  // spec(provider/baseUrl/model/token)原样进 generateImageMinimal(host 侧 registry 按
+  // provider="openai" 路由到 createOpenaiImagesAdapter)。
+  it("openai 兼容 provider → 同走真实最小生图,spec 原样透传", async () => {
+    const openaiSpec = {
+      provider: "openai",
+      baseUrl: "https://dudu.mom",
+      model: "gpt-image-2-4K",
+      token: "k",
+    };
+    const deps = makeDeps({
+      resolveMultimodal: vi.fn(async () => openaiSpec),
+    });
+    const r = await runModelConnectionTest(ctx, "image.generate", deps);
+    expect(r.ok).toBe(true);
+    expect(r.provider).toBe("openai");
+    expect(r.model).toBe("gpt-image-2-4K");
+    expect(r.detail).toContain("额度");
+    expect(deps.generateImageMinimal).toHaveBeenCalledWith(openaiSpec);
+  });
+
   it("生图调用抛错 → 「已配置,但调用失败:<原因>」", async () => {
     const deps = makeDeps({
       generateImageMinimal: vi.fn(async () => {

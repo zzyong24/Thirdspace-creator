@@ -469,6 +469,27 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
 
+  // [T-379] 生图去 MiniMax 唯一:provider 候选加 openai(OpenAI 兼容 images API,中转站
+  // 通用),帮助文案如实列内置适配;生视频文案如实「仅 minimax,Sora/Veo/Kling 待适配」。
+  it("文生图 provider 候选含 openai + 文案列内置适配;文生视频文案如实仅 minimax", () => {
+    const doc = renderDialog();
+    const imageOptions = Array.from(
+      doc.querySelectorAll("#multimodal-image-provider-suggestions option"),
+    ).map((o) => (o as HTMLOptionElement).value);
+    expect(imageOptions).toEqual(["openai", "minimax"]);
+    expect(doc.body.textContent).toContain(
+      "内置适配:minimax / openai 兼容(中转站通用)",
+    );
+
+    const videoOptions = Array.from(
+      doc.querySelectorAll("#multimodal-video-provider-suggestions option"),
+    ).map((o) => (o as HTMLOptionElement).value);
+    expect(videoOptions).toEqual(["minimax"]);
+    expect(doc.body.textContent).toContain(
+      "内置适配:minimax;Sora / Veo / Kling 等需后续适配",
+    );
+  });
+
   it("saving the 文生图 form PUTs the image.generate capability (provider/model/baseUrl/secret, no apiFormat/temperature)", async () => {
     const doc = renderDialog();
     const provider = doc.querySelector(

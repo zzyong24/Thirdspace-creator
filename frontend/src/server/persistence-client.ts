@@ -437,6 +437,8 @@ import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/res
 // transcribeAudio = ASR 工厂(按 provider 取适配器 → { text })。
 import {
   createMinimaxAdapter,
+  // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
+  createOpenaiImagesAdapter,
   createOpenaiAsrAdapter,
   // [T-160] 本地 Whisper 适配器(ASR 选配的兜底后端;未配云端 ASR 时走它,免 key、自动下模型)。
   createDefaultWhisperLocalAdapter,
@@ -7770,8 +7772,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 异步轮询状态机 submit→poll→retrieve + 超时);加 provider = 在此注册一个适配器,不改 runner
   // 与业务代码([gate-F1])。真出图/视频要真 image.generate/video.generate key(本环境无 →
   // 未配抛错、诚实禁用);单测装配用 M1 的 fake provider 注入,不碰这个真 registry。
+  // [T-379] "openai" = OpenAI 兼容 images API 适配器(POST /v1/images/generations)——
+  // 覆盖 gpt-image 系官方 + one-api/new-api 系中转站(Seedream/Flux/Nano Banana 等经中转
+  // 同形状;用户配中转 baseUrl + 任意生图 model id 即通)。生视频仍仅 minimax(各家视频
+  // API 形态不统一,裁决见 docs/research/2026-07-17-image-video-gen-provider-landscape-research.md)。
   const multimodalRegistry: MultimodalProviderRegistry = {
     minimax: createMinimaxAdapter(),
+    openai: createOpenaiImagesAdapter(),
   };
   // ASR provider 注册表(T-030-D2 逐字稿转写)—— 一个 OpenAI 兼容 adapter 覆盖 SiliconFlow/
   // OpenAI/Groq(转写端点同形状,SPEC D-d)。按用户可能所配的 provider 名各挂同一适配器实例

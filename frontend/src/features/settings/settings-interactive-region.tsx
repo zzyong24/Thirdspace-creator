@@ -2473,13 +2473,17 @@ const MULTIMODAL_META = {
     icon: Palette,
     description:
       "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
-    providerSuggestions: ["minimax"] as ReadonlyArray<string>,
-    providerPlaceholder: "minimax",
-    providerHelp: "多模态厂商名,可自定义(当前内置适配 minimax;其他厂商需接入适配器)。",
+    // [T-379] openai = OpenAI 兼容 images API(gpt-image 系及 one-api/new-api 中转站通用)。
+    providerSuggestions: ["openai", "minimax"] as ReadonlyArray<string>,
+    providerPlaceholder: "openai",
+    providerHelp:
+      "内置适配:minimax / openai 兼容(中转站通用)。openai = OpenAI 兼容 images API —— gpt-image 系及各中转站(one-api/new-api)通用,配中转就选它;其他厂商需接入适配器。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
-    modelHelp: "文生图模型 id 自由填(示例:image-01;仅示例,以你的服务商最新型号为准)。",
-    modelPlaceholder: "示例:image-01(以服务商最新为准)",
-    baseUrlPlaceholder: "示例:https://api.minimaxi.com/v1(留空=provider 默认)",
+    modelHelp:
+      "文生图模型 id 自由填(示例:gpt-image-2 / image-01;仅示例,以你的服务商最新型号为准)。",
+    modelPlaceholder: "示例:gpt-image-2(以服务商最新为准)",
+    baseUrlPlaceholder:
+      "示例:https://你的中转站域名 或 https://api.minimaxi.com/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   video: {
@@ -2490,7 +2494,10 @@ const MULTIMODAL_META = {
       "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
     providerSuggestions: ["minimax"] as ReadonlyArray<string>,
     providerPlaceholder: "minimax",
-    providerHelp: "多模态厂商名,可自定义(当前内置适配 minimax;其他厂商需接入适配器)。",
+    // [T-379] 生视频各家 API 形态不统一(异步任务/专有协议),本期只内置 minimax;
+    // 裁决与后续适配建议见 docs/research/2026-07-17-image-video-gen-provider-landscape-research.md。
+    providerHelp:
+      "内置适配:minimax;Sora / Veo / Kling 等需后续适配(各家视频 API 形态不统一,见调研)。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
     modelHelp: "文生视频模型 id 自由填(示例:video-01;仅示例,以你的服务商最新型号为准)。",
     modelPlaceholder: "示例:video-01(以服务商最新为准)",

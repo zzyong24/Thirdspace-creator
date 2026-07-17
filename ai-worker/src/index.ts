@@ -53,6 +53,14 @@ export {
   createMinimaxAdapter,
   type MinimaxAdapterDeps,
 } from "./runtime/multimodal-minimax";
+// OpenAI 兼容生图适配器(T-379)—— host 注册进 registry(keyed by "openai" 等用户所配
+// provider 名)。直连 `POST {baseUrl}/v1/images/generations`(JSON model+prompt+size,Bearer),
+// 响应 b64_json/url 双支持 → 统一 `{ assetBytes }`。一个适配器覆盖 gpt-image 系官方 +
+// one-api/new-api 系中转站(Seedream/Flux/Nano Banana 等经中转同形状)。deps 可注入供单测。
+export {
+  createOpenaiImagesAdapter,
+  type OpenaiImagesAdapterDeps,
+} from "./runtime/multimodal-openai-images";
 // OpenAI 兼容 ASR 适配器(T-030-D1 的默认真 ASR provider)—— host 注册进 registry(keyed by
 // "siliconflow"/"openai"/"groq" 等用户所配 provider 名)。deps 可注入(fake fetch)供单测;
 // 直连 `POST {baseUrl}/v1/audio/transcriptions`(multipart file+model,Bearer)。
