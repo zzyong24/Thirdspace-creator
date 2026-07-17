@@ -1463,13 +1463,16 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
     expect(result.query).toBe("健身");
     expect(result.note).toContain("仅按标题关键词匹配");
     expect(result.note).toContain("素材库为空");
-    // 无 query 空命中(库真的空)→ note 为 null(前端渲「库空」空态,不再叠注记)。
+    // [T-388] 无 query 空命中 ≠ 库空:素材按抖音号隔离,当前号空可能只是归属其它号
+    // → note 明示账号维度,禁止模型断言「素材库是空的」。
     const emptyAll = (await runExecute(tools["context.materials"]!, {})) as {
       query: string;
       note: string | null;
     };
     expect(emptyAll.query).toBe("");
-    expect(emptyAll.note).toBeNull();
+    expect(emptyAll.note).toContain("当前账号维度下无素材");
+    expect(emptyAll.note).toContain("素材按抖音号隔离");
+    expect(emptyAll.note).toContain("不要说素材库是空的");
   });
 
   it("context 工具返回空(端口无数据)→ items 为空数组(诚实,不塞假数据)", async () => {

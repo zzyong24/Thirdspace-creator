@@ -433,12 +433,49 @@ export async function sweepStaleRuns(deps: SweepStaleDeps): Promise<number> {
 // 把后续同键任务挡住。启动时把「running 超过合理时长」的 task 标 failed(fire-and-forget)。
 // ---------------------------------------------------------------------------
 
+// [T-389] 进程内 runner 的 taskType 全集 —— 从 persistence-client dispatch 分支枚举(凡
+// `void runXxx(...)` live dispatch 的都在此):这些 runner 跑在 app 进程内,进程重启即死,
+// 表里残留的 running 是确定僵尸 → 启动扫到**直接判死,不看年龄**。
+// 不在此集的保留宽阈值(2h):transcribe.douyin(worker+限流冷却重试是合法长活)、
+// agentic.*(走 Pi 外部引擎自主循环)、未知类型(诚实保守,不乱标)。
+const IN_PROCESS_RUNNER_TASK_TYPES: ReadonlySet<string> = new Set([
+  "research.gather_material",
+  "topic.generate",
+  "topic.enrich",
+  "calibration.diagnose",
+  "calibration.score",
+  "script.draft",
+  "planning.thesis",
+  "planning.contract",
+  "planning.outline",
+  "review.analyze",
+  "script.review",
+  "publish.platform_adapt",
+  "material.match",
+  "video.decisions",
+  "positioning.generate",
+  "asset.generate",
+  "cover.generate",
+  "asset.classify",
+  "material.extract",
+  "reconstruct.project",
+]);
+
+/** [T-389] 该 taskType 是否进程内 runner(重启即死)。`scheduled.*` 前缀整族算进程内
+ *  (dispatchScheduledCollection 确定性采集也跑在 app 进程内)。 */
+export function isInProcessRunnerTaskType(taskType: string): boolean {
+  return (
+    IN_PROCESS_RUNNER_TASK_TYPES.has(taskType) ||
+    taskType.startsWith("scheduled.")
+  );
+}
+
 export interface SweepStaleAiTasksDeps {
   /** 列出该用户当前 status='running' 的 ai_task 投影(host 绑 aiService.listTasks 过滤;
-   *  startedAt 缺失时 host 用 requestedAt 兜底填入)。 */
+   *  startedAt 缺失时 host 用 requestedAt 兜底填入;[T-389] 带 taskType 做类型感知)。 */
   listRunningTasks: (
     ctx: RequestContext,
-  ) => Promise<{ id: string; startedAt: string | null }[]>;
+  ) => Promise<{ id: string; taskType: string; startedAt: string | null }[]>;
   /** 标 failed(host 绑 aiService.markFailed;no-op-safe,已终态吞冲突)。 */
   markFailed: (
     ctx: RequestContext,
@@ -450,12 +487,21 @@ export interface SweepStaleAiTasksDeps {
   /** 超时阈值(毫秒;默认 2h —— ai_task 里有合法长活如转录+限流冷却延迟重试,阈值比
    *  job_run 宽)。host 可从 env(CREATOROS_STALE_AI_TASK_MS)注入覆盖。 */
   staleMs?: number;
+  /** [T-389] 本进程启动时刻(ISO)。**不传 = 启动扫语义**:进程内 runner 类型扫到 running
+   *  一律立即判死。传了 = 周期复扫语义:进程内类型仅当 startedAt 早于此锚(= 上一进程遗留)
+   *  才立即判死 —— 本进程内正在跑的活任务不误杀,落回年龄门兜底。 */
+  processStartedAt?: string;
 }
 
 /**
- * [T-207] 启动 sweep 僵尸 ai_task:running 且 started_at(缺失退 requestedAt,由 host 兜底)
- * 早于 now-staleMs(默认 2h)→ markFailed(reason=stale-on-boot)。单条失败不阻断其余
- * (best-effort,记日志继续);startedAt 解析不出 → 跳过(诚实不乱标)。返回扫掉的条数。
+ * [T-207] 启动 sweep 僵尸 ai_task,[T-389] 类型感知:
+ * - **进程内 runner 类型**(isInProcessRunnerTaskType):扫到 running 直接 markFailed
+ *   (人话原因「应用重启导致任务中断,请重试」),**不看年龄** —— runner 跑在 app 进程内,
+ *   本次(重)启动还能扫到 running 就是确定僵尸,没有"还在跑"的可能。
+ * - 其余类型(transcribe.douyin / agentic.* / 未知):保留年龄门 —— running 且 started_at
+ *   (缺失退 requestedAt,由 host 兜底)早于 now-staleMs(默认 2h)→ markFailed
+ *   (reason=stale-on-boot)。startedAt 解析不出 → 跳过(诚实不乱标)。
+ * 单条失败不阻断其余(best-effort,记日志继续)。返回扫掉的条数。
  */
 export async function sweepStaleAiTasks(
   deps: SweepStaleAiTasksDeps,
@@ -464,17 +510,35 @@ export async function sweepStaleAiTasks(
   const nowMs = new Date(deps.now()).getTime();
   const running = await deps.listRunningTasks(deps.ctx);
   let swept = 0;
+  const processStartMs = deps.processStartedAt
+    ? new Date(deps.processStartedAt).getTime()
+    : null;
   for (const t of running) {
-    if (!t.startedAt) continue; // 无时间锚 → 不乱标(诚实跳过)
-    const startedMs = new Date(t.startedAt).getTime();
-    if (!Number.isFinite(startedMs)) continue;
-    if (nowMs - startedMs < staleMs) continue;
+    let reason: string | null = null;
+    if (isInProcessRunnerTaskType(t.taskType)) {
+      // [T-389] 进程内 runner:重启即死。启动扫(无 processStartedAt 锚)→ 立即判死,
+      // 不看年龄、不要时间锚;周期复扫(带锚)→ 仅 startedAt 早于本进程启动的遗留判死,
+      // 本进程内正在跑的不误杀(落回下方年龄门兜底)。
+      const startedMs = t.startedAt ? new Date(t.startedAt).getTime() : NaN;
+      if (
+        processStartMs === null ||
+        !Number.isFinite(processStartMs) ||
+        !Number.isFinite(startedMs) ||
+        startedMs < processStartMs
+      ) {
+        reason = "应用重启导致任务中断,请重试";
+      }
+    }
+    if (reason === null) {
+      if (!t.startedAt) continue; // 无时间锚 → 不乱标(诚实跳过)
+      const startedMs = new Date(t.startedAt).getTime();
+      if (!Number.isFinite(startedMs)) continue;
+      if (nowMs - startedMs < staleMs) continue;
+      reason =
+        "启动扫超时(stale-on-boot):进程重启前该任务仍悬挂在 running,标记为 failed";
+    }
     try {
-      await deps.markFailed(
-        deps.ctx,
-        t.id,
-        "启动扫超时(stale-on-boot):进程重启前该任务仍悬挂在 running,标记为 failed",
-      );
+      await deps.markFailed(deps.ctx, t.id, reason);
       swept += 1;
     } catch (e) {
       // 单条 markFailed 失败不阻断其余(fire-and-forget 兜底语义)。

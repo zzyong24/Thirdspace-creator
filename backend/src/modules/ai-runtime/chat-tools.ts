@@ -3069,7 +3069,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "context.materials": defineChatTool("context.materials", {
       description:
-        "只读:搜索创作者的素材库(assets,返回 id/名称/类型)。当用户问「我有哪些素材 / 素材库里有没有 X / 找一下我的图/视频/文件」时调它拿真实数据来回答,不要瞎答。**匹配只按素材标题关键词**(不搜内容/标签):带 query 搜到 0 条 ≠ 素材库为空,素材很可能存在只是标题不含这个词——**绝不能凭一次空搜就断言「素材库里没有」**;先不带 query 调一次列全量(按新旧排序)看真实存量,再换词缩小。纯读取上下文,不产候选、不写库。",
+        "只读:搜索创作者的素材库(assets,返回 id/名称/类型)。当用户问「我有哪些素材 / 素材库里有没有 X / 找一下我的图/视频/文件」时调它拿真实数据来回答,不要瞎答。素材按抖音号隔离,列表=当前选中号名下的素材。**匹配只按素材标题关键词**(不搜内容/标签):带 query 搜到 0 条 ≠ 素材库为空,素材很可能存在只是标题不含这个词——**绝不能凭一次空搜就断言「素材库里没有」**;先不带 query 调一次列全量(按新旧排序)看真实存量,再换词缩小。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_MATERIALS_PARAMS,
       execute: async ({ query, limit }): Promise<ContextMaterialsToolResult> => {
         const effQuery = (query ?? "").trim();
@@ -3078,9 +3078,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           limit: clampContextLimit(limit),
         });
         // [T-380] 诚实注记:带词空结果 ≠ 库空(仅标题匹配);引导先无 query 列全量。
+        // [T-388] 全量空也给注记:素材按抖音号隔离,当前号空 ≠ 库空(可能在其它号名下)。
         const note =
-          effQuery && items.length === 0
-            ? `仅按标题关键词匹配,没搜到「${effQuery}」≠ 素材库为空 —— 素材可能存在但标题不含此词;可不带 query 再调一次列全量(按新旧排序)确认真实存量。`
+          items.length === 0
+            ? effQuery
+              ? `仅按标题关键词匹配,没搜到「${effQuery}」≠ 素材库为空 —— 素材可能存在但标题不含此词;可不带 query 再调一次列全量(按新旧排序)确认真实存量。`
+              : "当前账号维度下无素材;素材按抖音号隔离,可能在其它号名下——如实告知用户,不要说素材库是空的。"
             : null;
         return { kind: "context.materials", items, query: effQuery, note };
       },

@@ -410,16 +410,21 @@ describe("sweepStaleRuns(gate finding-3 启动扫超时)", () => {
 
 // [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
 // transcribe 挂 running 2.5h+),撞 createTask in-flight 幂等闸。默认阈值 2h,可注入覆盖。
+// [T-389] 类型感知:进程内 runner 类型重启即死 → 启动扫到 running 立即判死(不看年龄);
+// transcribe.douyin/agentic.*/未知类型保留年龄门。
 describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
   const NOW = "2026-07-11T12:00:00.000Z";
 
-  it("running 超 2h → markFailed(stale-on-boot);未超时/无时间锚 → 留着", async () => {
+  it("非进程内类型(transcribe)running 超 2h → markFailed(stale-on-boot);未超时/无时间锚 → 留着", async () => {
     const markFailed = vi.fn(async () => undefined);
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
-        { id: "zombie", startedAt: "2026-07-11T09:00:00.000Z" }, // 3h 前(>2h)
-        { id: "fresh", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
-        { id: "no-anchor", startedAt: null }, // 无时间锚 → 不乱标
+        // 3h 前(>2h)
+        { id: "zombie", taskType: "transcribe.douyin", startedAt: "2026-07-11T09:00:00.000Z" },
+        // 30min 前 —— worker+冷却重试是合法长活,年龄门放过
+        { id: "fresh", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" },
+        // 无时间锚 → 不乱标
+        { id: "no-anchor", taskType: "transcribe.douyin", startedAt: null },
       ],
       markFailed,
       ctx,
@@ -434,11 +439,70 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     );
   });
 
+  // [T-389] 核心:进程内 runner(planning.thesis/script.draft/cover.generate…)重启即死,
+  // 启动扫到 running **立即判死**(哪怕才跑 1 分钟),原因是人话「应用重启导致任务中断」。
+  it("[T-389] 进程内 runner 类型 running → 立即 markFailed(不看年龄);转录 <2h 放过", async () => {
+    const markFailed = vi.fn(async () => undefined);
+    const swept = await sweepStaleAiTasks({
+      listRunningTasks: async () => [
+        // 才 1 分钟前,但进程内 runner 重启即死 → 立即判死
+        { id: "thesis", taskType: "planning.thesis", startedAt: "2026-07-11T11:59:00.000Z" },
+        { id: "cover", taskType: "cover.generate", startedAt: "2026-07-11T11:59:00.000Z" },
+        // scheduled.* 前缀整族也是进程内(dispatchScheduledCollection)
+        { id: "sched", taskType: "scheduled.self.metrics", startedAt: "2026-07-11T11:59:00.000Z" },
+        // 进程内类型无时间锚也判死(启动扫语义:重启即死不需要锚)
+        { id: "thesis-no-anchor", taskType: "script.draft", startedAt: null },
+        // 转录 30min 前(<2h)→ 合法长活,放过
+        { id: "transcribe-fresh", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" },
+        // agentic.* 走外部引擎 → 保留宽阈值,30min 前放过
+        { id: "agentic-fresh", taskType: "agentic.research", startedAt: "2026-07-11T11:30:00.000Z" },
+      ],
+      markFailed,
+      ctx,
+      now: () => NOW,
+    });
+    expect(swept).toBe(4);
+    for (const id of ["thesis", "cover", "sched", "thesis-no-anchor"]) {
+      expect(markFailed).toHaveBeenCalledWith(
+        ctx,
+        id,
+        expect.stringContaining("应用重启导致任务中断"),
+      );
+    }
+    expect(markFailed).not.toHaveBeenCalledWith(ctx, "transcribe-fresh", expect.anything());
+    expect(markFailed).not.toHaveBeenCalledWith(ctx, "agentic-fresh", expect.anything());
+  });
+
+  // [T-389] 周期复扫(带 processStartedAt 锚):进程内类型只判上一进程遗留(startedAt 早于
+  // 本进程启动),本进程内正在跑的活任务不误杀(落回年龄门)。
+  it("[T-389] 周期复扫带 processStartedAt:本进程启动后开跑的进程内任务不误杀,遗留照判死", async () => {
+    const markFailed = vi.fn(async () => undefined);
+    const swept = await sweepStaleAiTasks({
+      listRunningTasks: async () => [
+        // 上一进程遗留(startedAt 早于本进程启动 11:00)→ 判死
+        { id: "leftover", taskType: "planning.thesis", startedAt: "2026-07-11T10:00:00.000Z" },
+        // 本进程内 5 分钟前开跑的活任务 → 不误杀(年龄门 <2h 放过)
+        { id: "live", taskType: "cover.generate", startedAt: "2026-07-11T11:55:00.000Z" },
+      ],
+      markFailed,
+      ctx,
+      now: () => NOW,
+      processStartedAt: "2026-07-11T11:00:00.000Z",
+    });
+    expect(swept).toBe(1);
+    expect(markFailed).toHaveBeenCalledTimes(1);
+    expect(markFailed).toHaveBeenCalledWith(
+      ctx,
+      "leftover",
+      expect.stringContaining("应用重启导致任务中断"),
+    );
+  });
+
   it("阈值可注入(env 由 host 解析后传入):staleMs=10min 时 30min 前的也被扫", async () => {
     const markFailed = vi.fn(async () => undefined);
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
-        { id: "t1", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
+        { id: "t1", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
       ],
       markFailed,
       ctx,
@@ -456,8 +520,8 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
       .mockName("markFailed");
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
-        { id: "boom", startedAt: "2026-07-11T08:00:00.000Z" },
-        { id: "zombie2", startedAt: "2026-07-11T08:00:00.000Z" },
+        { id: "boom", taskType: "transcribe.douyin", startedAt: "2026-07-11T08:00:00.000Z" },
+        { id: "zombie2", taskType: "transcribe.douyin", startedAt: "2026-07-11T08:00:00.000Z" },
       ],
       markFailed,
       ctx,

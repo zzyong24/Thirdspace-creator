@@ -6521,20 +6521,43 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
   // transcribe 挂 running 2.5h+),撞 createTask 的 in-flight 幂等闸挡后续同键任务。
-  // running 且 startedAt(缺失退 requestedAt)超 2h(CREATOROS_STALE_AI_TASK_MS 可配)→
-  // markFailed(stale-on-boot)。fire-and-forget,不阻断启动。
-  void sweepStaleAiTasks({
+  // [T-389] 类型感知:进程内 runner 类型(planning.thesis/script.draft/cover.generate 等
+  // live dispatch void runXxx 的)重启即死 → 启动扫到 running 直接判死(不看年龄);
+  // transcribe.douyin/agentic.* 保留宽阈值 —— running 且 startedAt(缺失退 requestedAt)
+  // 超 2h(CREATOROS_STALE_AI_TASK_MS 可配)→ markFailed(stale-on-boot)。
+  // fire-and-forget,不阻断启动。
+  const sweepAiTaskDeps = {
     // [T-332 S2 修补] 扫僵尸是系统 daemon(schedulerCtx 无选中号):走系统级
     //   listRunningTasksSystem(跨号、只 running、不经 requireAccountId),不再用
     //   用户面 listTasks(S2 已 strict 按号,无号会抛 AccountRequiredError)。
-    listRunningTasks: async (c) => {
+    listRunningTasks: async (c: RequestContext) => {
       return aiService.listRunningTasksSystem(c);
     },
-    markFailed: (c, taskId, msg) => aiService.markFailed(c, taskId, msg),
+    markFailed: (c: RequestContext, taskId: string, msg: string) =>
+      aiService.markFailed(c, taskId, msg),
     ctx: schedulerCtx,
     now: deps.now,
     staleMs: envMsOf("CREATOROS_STALE_AI_TASK_MS", 2 * 60 * 60 * 1000),
-  }).catch((e) => console.error("[scheduler] 启动扫僵尸 ai_task 失败:", e));
+  };
+  void sweepStaleAiTasks(sweepAiTaskDeps).catch((e) =>
+    console.error("[scheduler] 启动扫僵尸 ai_task 失败:", e),
+  );
+  // [T-389] 低频周期复扫(默认 30min,CREATOROS_AI_TASK_SWEEP_INTERVAL_MS 可配):兜
+  // 「启动扫单条 markFailed 失败」与「本进程运行期悬挂超阈值」的残留。带 processStartedAt
+  // 锚 → 进程内类型只判上一进程遗留,本进程正在跑的活任务不误杀(落回年龄门)。
+  // fire-and-forget,best-effort;测试/CI 环境不起(与 startScheduler 同守卫族),unref
+  // 不占进程退出。
+  if (
+    !(process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI)
+  ) {
+    const processStartedAt = deps.now();
+    const sweepTimer = setInterval(() => {
+      void sweepStaleAiTasks({ ...sweepAiTaskDeps, processStartedAt }).catch(
+        (e) => console.error("[scheduler] 周期复扫僵尸 ai_task 失败:", e),
+      );
+    }, envMsOf("CREATOROS_AI_TASK_SWEEP_INTERVAL_MS", 30 * 60 * 1000));
+    sweepTimer.unref?.();
+  }
 
   // [T-255a] 启动清扫孤儿沙箱(T-207 sweep 兜底同族):采纳/丢弃/失败本会清沙箱,
   // 残留 = 进程中途被杀的孤儿;超 7 天(mtime)一律清除。fire-and-forget,不阻断启动。

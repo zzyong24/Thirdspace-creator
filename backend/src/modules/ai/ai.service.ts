@@ -278,11 +278,12 @@ export interface AiService {
     },
   ): Promise<{ rows: AITaskResource[]; total: number }>;
   /** [T-332 S2 修补] 系统级扫僵尸(启动 sweepStaleAiTasks 用):跨账号列该 user 所有
-   *  running ai_task 的 {id, startedAt} 投影。**不经 requireAccountId** —— 调用方是系统
-   *  daemon(schedulerCtx 无选中号)。用户面 listTasks 仍 strict 按号。 */
+   *  running ai_task 的 {id, taskType, startedAt} 投影。**不经 requireAccountId** —— 调用方是
+   *  系统 daemon(schedulerCtx 无选中号)。用户面 listTasks 仍 strict 按号。
+   *  [T-389] 投影带 taskType:sweep 类型感知(进程内 runner 重启即死,立即判死不看年龄)。 */
   listRunningTasksSystem(
     ctx: RequestContext,
-  ): Promise<{ id: string; startedAt: string | null }[]>;
+  ): Promise<{ id: string; taskType: string; startedAt: string | null }[]>;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
@@ -1151,7 +1152,11 @@ export function createAiService(deps: ServiceDeps): AiService {
         accountId: "__system-sweep__",
       });
       const rows = await repo.listRunningTasksSystem();
-      return rows.map((r) => ({ id: r.id, startedAt: r.startedAt ?? r.requestedAt }));
+      return rows.map((r) => ({
+        id: r.id,
+        taskType: r.taskType, // [T-389] 透传给 sweep 做类型感知判死
+        startedAt: r.startedAt ?? r.requestedAt,
+      }));
     },
 
     async getTask(ctx, taskId) {

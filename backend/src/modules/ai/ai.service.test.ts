@@ -1133,6 +1133,8 @@ describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", ()
     expect(ids).toEqual([t1.id, t2.id].sort());
     // 每条都带 startedAt(markRunning 后有)或 requestedAt 兜底,供 sweep 判超时。
     expect(running.every((r) => typeof r.startedAt === "string")).toBe(true);
+    // [T-389] 投影带 taskType:sweep 类型感知(进程内 runner 重启即死立即判死)靠它分流。
+    expect(running.every((r) => r.taskType === "topic.generate")).toBe(true);
   });
 
   it("§4.6 确认门:跨号 confirmTask 被拒(strict requireTask → 404),同号可确认", async () => {

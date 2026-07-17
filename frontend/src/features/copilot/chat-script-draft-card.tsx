@@ -254,7 +254,7 @@ export function ChatScriptDraftCard({
           <p className="text-[12px] leading-relaxed text-destructive">
             {error
               ? error
-              : "没能写出整稿 —— 可能是还没配置脚本生成模型，或本次生成失败。"}
+              : "没能写出整稿 —— 可能是还没配置脚本生成模型、应用重启中断了任务，或本次生成失败;可在对话里再说一声重新生成。"}
           </p>
           {error ? null : (
             <a

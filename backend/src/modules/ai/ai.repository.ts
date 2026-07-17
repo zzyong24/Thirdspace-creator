@@ -153,7 +153,12 @@ export interface AiRepository {
    *  路径(schedulerCtx 无选中号),与 scheduling.listRunsByStatus 同族;用户面 listTasks
    *  仍 strict 按号。 */
   listRunningTasksSystem(): Promise<
-    { id: string; startedAt: string | null; requestedAt: string }[]
+    {
+      id: string;
+      taskType: string;
+      startedAt: string | null;
+      requestedAt: string;
+    }[]
   >;
   createTask(input: CreateTaskInput): Promise<TaskRow>;
   requireTask(taskId: string): Promise<TaskRow>;
@@ -364,6 +369,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       const rows = await db
         .select({
           id: aiTasks.id,
+          taskType: aiTasks.taskType, // [T-389] sweep 类型感知:进程内 runner 重启即死,判死不看年龄
           startedAt: aiTasks.startedAt,
           requestedAt: aiTasks.requestedAt,
         })
