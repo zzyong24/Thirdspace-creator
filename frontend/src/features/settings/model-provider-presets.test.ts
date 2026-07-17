@@ -75,11 +75,12 @@ describe("matchPresetByConfig 回显匹配", () => {
 });
 
 describe("presetModels 候选取用", () => {
-  it("已知预设返回其候选;custom / 未知返回空", () => {
-    expect(presetModels("deepseek")).toEqual([
-      "deepseek-chat",
-      "deepseek-reasoner",
-    ]);
+  // [T-377] 模型候选不再硬编码:供应商上新频繁,旧候选(如 MiniMax-M2)会误导用户以为
+  // 没有更新型号 —— model 名一律自由填,以服务商最新为准。presetModels 恒空。
+  it("所有预设候选恒为空(去硬编码;model 名自由填)", () => {
+    for (const p of MODEL_PROVIDER_PRESETS) {
+      expect(presetModels(p.id)).toEqual([]);
+    }
     expect(presetModels(CUSTOM_PRESET_ID)).toEqual([]);
     expect(presetModels("does-not-exist")).toEqual([]);
   });

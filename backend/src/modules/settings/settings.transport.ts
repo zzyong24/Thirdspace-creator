@@ -37,6 +37,10 @@ export const SETTINGS_OP_IDS = [
   "settings.preferences.patch",
   "settings.models.put",
   "settings.models.list",
+  // [T-377] 测试连接:composition-only(本 transport 不实现 —— 探测要组合根的解析器 +
+  // adapter registry,由 persistence-client 的 settingsWithModelTest wrap 拦截,同
+  // projects.transcribe 约定;列在此处仅为进 PERSISTED_OPS 并路由到 settings 束)。
+  "settings.models.test",
   // [T-248 批C] settings.agents.create 已删(孤 op,零调用方);service/repository 的
   // createAgentConfiguration 链保留(见 contract/src/operations/settings.ts 注)。
   "settings.storage.get",

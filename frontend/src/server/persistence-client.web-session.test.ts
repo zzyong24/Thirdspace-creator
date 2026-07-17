@@ -150,3 +150,47 @@ describe("listSessions —— 磁盘遗留的不合规目录名跳过(读操作�
     expect(domains).not.toContain("bad..name");
   });
 });
+
+// [T-378] 惰性迁移归档目录(`.migrated-` 后缀)曾被当域名列出 → 设置页探针又触发
+// 「迁移→归档」→ `x.migrated-a.migrated-b` 增殖 + DB 脏行。列表必须过滤,探针必须短路。
+describe("[T-378] 归档目录不当域名(增殖回归)", () => {
+  it("listSessions 不列 .migrated-* 归档目录(一层/嵌套都不列)", async () => {
+    await mkdir(nodePath.join(base, "bing.com"), { recursive: true });
+    await mkdir(nodePath.join(base, "bing.com.migrated-1784300846731"), {
+      recursive: true,
+    });
+    const out = await runtime.listSessions(ctx);
+    const domains = out.map((s) => s.domain);
+    expect(domains).toContain("bing.com");
+    expect(domains.some((d) => d.includes(".migrated-"))).toBe(false);
+  });
+
+  it("listSessions best-effort 清理**嵌套**归档目录(归档的归档无价值);一层归档保留", async () => {
+    const one = nodePath.join(base, "sogou.com.migrated-1784300846731");
+    const nested = nodePath.join(
+      base,
+      "sogou.com.migrated-1784300846731.migrated-1784300961712",
+    );
+    await mkdir(one, { recursive: true });
+    await mkdir(nested, { recursive: true });
+    await writeFile(nodePath.join(nested, "junk.txt"), "x");
+    await runtime.listSessions(ctx);
+    // rm 是 fire-and-forget(void …catch),给一拍事件循环落地。
+    await new Promise((r) => setTimeout(r, 100));
+    expect(await exists(nested)).toBe(false); // 嵌套归档已删
+    expect(await exists(one)).toBe(true); // 一层归档保留(可能还有未迁移登录态)
+  });
+
+  it("sessionStatus 对归档名直接返未登录(不起浏览器、不触发迁移、不产新归档)", async () => {
+    const archivedDir = nodePath.join(base, "qq.com.migrated-1784300846731");
+    await mkdir(archivedDir, { recursive: true });
+    await writeFile(nodePath.join(archivedDir, "Cookies"), "x"); // 有「登录痕迹」也不迁
+    const res = await runtime.sessionStatus(ctx, "qq.com.migrated-1784300846731");
+    expect(res).toEqual({
+      domain: "qq.com.migrated-1784300846731",
+      loggedIn: false,
+    });
+    // 目录原样:没有被再归档成 x.migrated-a.migrated-b。
+    expect(await exists(archivedDir)).toBe(true);
+  });
+});

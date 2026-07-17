@@ -9,7 +9,7 @@
  * 点击 → projects.transcribe(composition-only op,persistence-client 拦截:解析 externalId
  * → 排 transcribe.douyin ai_task → live dispatch 后台跑)。转写是分钟级 ASR,不轮询到完成:
  * 排队成功 → 「已排队,完成后刷新可见」;runner 幂等 —— 已有逐字稿会自动跳过,重点无害。
- * 失败诚实报错可重试。样式镜像旁边「在 Finder 打开」(reveal-project-button)。
+ * 失败诚实报错可重试。样式镜像旁边「导出素材包」(export-materials-button)。
  */
 
 import * as React from "react";

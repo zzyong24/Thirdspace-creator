@@ -4,6 +4,7 @@ import {
   resolveMultimodalSpec,
   resolveTranscribeSpec,
   MultimodalConfigError,
+  describeMultimodalFailure,
 } from "./resolve";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
@@ -265,5 +266,45 @@ describe("resolveTranscribeSpec — 3 层回退(kind=audio)", () => {
     });
     expect(spec.provider).toBe("siliconflow");
     expect(spec.model).toBe("FunAudioLLM/SenseVoiceSmall");
+  });
+});
+
+// [T-376] 失败分类人话:「未配置」vs「配置了但调用失败」——runner 写步骤流末条前的分类器。
+// 病根测锚:此前一切失败被前端吞成「很可能是还没配置生图模型」,用户配了也被冤枉。
+describe("describeMultimodalFailure — 失败分类(T-376)", () => {
+  it("MultimodalConfigError(resolve 层,message 含「未配置」)→ 原样透传指路文案", () => {
+    const err = new MultimodalConfigError(
+      'capability "image.generate" 未配置生图模型:请在设置里配 provider/model/key',
+    );
+    const text = describeMultimodalFailure(err, "生图");
+    expect(text).toContain("未配置生图模型");
+    expect(text).not.toContain("已配置,但调用失败");
+  });
+
+  it("同名 MultimodalConfigError 但 message 无「未配置」(factory 层:未知 provider/不支持)→ 「配置有问题」", () => {
+    // 模拟 ai-worker multimodal-factory 那份同名类(跨包 instanceof 不可靠 → 按 name 判)。
+    const err = new Error('未知 provider "minimaxx":registry 里没有这个适配器');
+    err.name = "MultimodalConfigError";
+    const text = describeMultimodalFailure(err, "生图");
+    expect(text).toContain("生图模型配置有问题");
+    expect(text).toContain("minimaxx");
+  });
+
+  it("普通调用错误(key 无效/网络/审核)→ 「已配置,但调用失败:<真实原因>」,不冤枉未配置", () => {
+    const text = describeMultimodalFailure(
+      new Error("minimax API 401: invalid api key"),
+      "生图",
+    );
+    expect(text).toContain("生图模型已配置,但调用失败");
+    expect(text).toContain("invalid api key");
+    expect(text).not.toContain("未配置");
+  });
+
+  it("LlmCredentialError(封面链的文案 LLM 凭据)→ 指明是文本模型问题,不指向生图配置", () => {
+    const err = new Error("文本模型未配置可用凭据");
+    err.name = "LlmCredentialError";
+    const text = describeMultimodalFailure(err, "生图");
+    expect(text).toContain("文本模型凭据问题");
+    expect(text).toContain("非生图模型");
   });
 });

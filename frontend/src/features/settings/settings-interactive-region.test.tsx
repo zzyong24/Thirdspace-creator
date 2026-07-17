@@ -34,6 +34,11 @@ const mockClient = {
     (_input: unknown): Promise<{ loggedIn: boolean }> =>
       Promise.resolve({ loggedIn: true }),
   ),
+  // [T-377] 测试连接(settings.models.test):默认 ✓ 连通;失败态各测试自行覆盖。
+  testModelConnection: vi.fn(
+    (_input: unknown): Promise<{ ok: boolean; detail: string }> =>
+      Promise.resolve({ ok: true, detail: "已发 1 token 真实补全,连通。" }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -43,6 +48,7 @@ vi.mock("@/lib/contract-client", () => ({
     putStorage: (input: unknown) => mockClient.putStorage(input),
     statusDouyin: (input: unknown) => mockClient.statusDouyin(input),
     loginDouyin: (input: unknown) => mockClient.loginDouyin(input),
+    testModelConnection: (input: unknown) => mockClient.testModelConnection(input),
   },
 }));
 
@@ -160,6 +166,11 @@ beforeEach(() => {
   mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
   mockClient.loginDouyin.mockClear();
   mockClient.loginDouyin.mockResolvedValue({ loggedIn: true });
+  mockClient.testModelConnection.mockClear();
+  mockClient.testModelConnection.mockResolvedValue({
+    ok: true,
+    detail: "已发 1 token 真实补全,连通。",
+  });
 });
 
 afterEach(() => cleanup());
@@ -302,11 +313,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(trigger).not.toBeNull();
     // 关闭态即高亮匹配到的预设(SelectValue 显示 label)。
     expect(trigger.textContent ?? "").toContain("Anthropic 官方");
-    expect(modelDatalistValues(doc)).toEqual([
-      "claude-opus-4-8",
-      "claude-sonnet-5",
-      "claude-haiku-4-5",
-    ]);
+    // [T-377] 模型候选不再硬编码(供应商上新频繁会误导)→ datalist 恒空,纯自由输入。
+    expect(modelDatalistValues(doc)).toEqual([]);
   });
 
   it("[T-325] 已保存配置按 baseUrl/apiFormat 回显匹配预设(DeepSeek),匹配不到显示自定义", () => {
@@ -322,10 +330,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       '[data-slot="model-preset-trigger"]',
     ) as HTMLElement;
     expect(trigger.textContent ?? "").toContain("DeepSeek");
-    expect(modelDatalistValues(deepseekDoc)).toEqual([
-      "deepseek-chat",
-      "deepseek-reasoner",
-    ]);
+    // [T-377] 候选去硬编码 → 恒空。
+    expect(modelDatalistValues(deepseekDoc)).toEqual([]);
 
     cleanup();
 
@@ -367,7 +373,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       target: { value: "https://api.minimaxi.com/anthropic" },
     });
     expect(trigger.textContent ?? "").toContain("MiniMax");
-    expect(modelDatalistValues(doc)).toEqual(["MiniMax-M2", "abab6.5s-chat"]);
+    // [T-377] 候选去硬编码 → 恒空(高亮仍按 baseUrl/格式回显)。
+    expect(modelDatalistValues(doc)).toEqual([]);
   });
 
   it("[T-325] 选预设填 baseUrl/接口格式 + 切模型候选;仍可自由输入模型,保存带回填字段", async () => {
@@ -394,15 +401,13 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     const provider = doc.querySelector(
       '[data-slot="model-provider-input"]',
     ) as HTMLInputElement;
-    // 预设一次性填 baseUrl / provider;接口格式 → openai_chat;模型候选切成 deepseek。
+    // 预设一次性填 baseUrl / provider;接口格式 → openai_chat。
     await waitFor(() =>
       expect(baseUrl.value).toBe("https://api.deepseek.com"),
     );
     expect(provider.value).toBe("deepseek");
-    expect(modelDatalistValues(doc)).toEqual([
-      "deepseek-chat",
-      "deepseek-reasoner",
-    ]);
+    // [T-377] 候选去硬编码 → 恒空(模型名自由填)。
+    expect(modelDatalistValues(doc)).toEqual([]);
 
     // 模型仍可自由输入(不锁死候选)。
     const modelName = doc.querySelector(
@@ -452,8 +457,9 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     const dl = doc.querySelector(
       "#multimodal-fallback-model-suggestions",
     ) as HTMLDataListElement;
+    // [T-377] 候选去硬编码 → 恒空(模型名自由填)。
     expect(Array.from(dl.querySelectorAll("option")).map((o) => o.value)).toEqual(
-      ["deepseek-chat", "deepseek-reasoner"],
+      [],
     );
     // 预设行只挂在 fallback 卡,其它文本模态卡(如文生图)不渲染。
     expect(
@@ -981,5 +987,57 @@ describe("Settings 诊断日志卡 (T-259)", () => {
     expect(
       doc.querySelector('[data-slot="diagnostic-logs-action"]'),
     ).toBeNull();
+  });
+});
+
+// [T-377] 「测试连接」:每个 capability 卡旁,点击 → settings.models.test(测已保存配置)
+// → 诚实渲「✓ 连通」/「✗ 失败:<真实原因>」。
+describe("Settings 测试连接 (T-377)", () => {
+  it("主模型卡点「测试连接」→ testModelConnection({capability:'default'}),成功渲 ✓ 连通", async () => {
+    const doc = renderDialog();
+    const btn = doc.querySelector(
+      '[data-slot="model-test-connection"]',
+    ) as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    fireEvent.click(btn);
+    await waitFor(() =>
+      expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1),
+    );
+    expect(mockClient.testModelConnection).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { capability: "default" } }),
+    );
+    const result = await waitFor(() => {
+      const el = doc.querySelector('[data-slot="model-test-result"]');
+      if (!el) throw new Error("result not rendered yet");
+      return el;
+    });
+    expect(result.getAttribute("data-ok")).toBe("true");
+    expect(result.textContent ?? "").toContain("✓ 连通");
+  });
+
+  it("文生图卡测试失败 → ✗ 失败带真实原因(区分「未配置」vs「配置了但调用失败」由 host 侧分类)", async () => {
+    mockClient.testModelConnection.mockResolvedValueOnce({
+      ok: false,
+      detail: "生图模型已配置,但调用失败:minimax API 401: invalid api key",
+    });
+    const doc = renderDialog();
+    const btn = doc.querySelector(
+      '[data-slot="multimodal-image-test-connection"]',
+    ) as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    fireEvent.click(btn);
+    await waitFor(() =>
+      expect(mockClient.testModelConnection).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { capability: "image.generate" } }),
+      ),
+    );
+    const result = await waitFor(() => {
+      const el = doc.querySelector('[data-slot="multimodal-image-test-result"]');
+      if (!el) throw new Error("result not rendered yet");
+      return el;
+    });
+    expect(result.getAttribute("data-ok")).toBe("false");
+    expect(result.textContent ?? "").toContain("✗ 失败");
+    expect(result.textContent ?? "").toContain("invalid api key");
   });
 });

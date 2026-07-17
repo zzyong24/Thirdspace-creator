@@ -11,6 +11,8 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
+// [T-376] 失败分类人话(「未配置」vs「配置了但调用失败」),写进步骤流末条供前端诚实展示。
+import { describeMultimodalFailure } from "./multimodal/resolve";
 
 // 封面 runner (cover.generate node) —— [T-271] 制作封面链 0→1。
 //
@@ -327,6 +329,18 @@ export async function runCoverGenerate(
           cleanupErr,
         );
       }
+    }
+    // [T-376] 失败原因分类后写进步骤流末条(kind:"error")—— 前端失败卡读末条原样展示,
+    // 区分「未配置生图模型」vs「配置了但调用失败:<真实原因>」vs「文本模型凭据问题」。
+    try {
+      await deps.ai.recordStep(ctx, task.id, {
+        stepNo: 99,
+        kind: "error",
+        text: describeMultimodalFailure(err, "生图"),
+        toolCalls: [],
+      });
+    } catch {
+      /* 记原因失败不阻断终态收口 */
     }
     // Best-effort cancel; swallow so a background failure never crashes the server.
     // 「未配文本/生图模型 / 生成失败 / 内容审核 / 轮询超时」全部坍缩到这里 → 诚实终态(cancelled)。

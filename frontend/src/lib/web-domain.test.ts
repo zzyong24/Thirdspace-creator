@@ -8,6 +8,8 @@ import {
   isSafeWebDomain,
   assertSafeWebDomain,
   normalizeWebDomain,
+  isArchivedWebProfileName,
+  isNestedArchivedWebProfileName,
   WebDomainError,
 } from "./web-domain";
 
@@ -64,6 +66,38 @@ describe("isSafeWebDomain —— 合法 hostname 必须放行", () => {
       expect(isSafeWebDomain(d)).toBe(true);
     });
   }
+});
+
+// [T-378] 惰性迁移归档目录名(`.migrated-` 后缀)不是域名 —— 曾被当域名探针触发
+// 「迁移→归档」增殖(`x.migrated-a.migrated-b` + DB 脏行),必须整族拒绝。
+describe("isSafeWebDomain —— 归档目录名(.migrated-)必须拒绝(T-378 增殖回归)", () => {
+  const archived = [
+    "bing.com.migrated-1784300846731",
+    "bing.com.migrated-1784300846731.migrated-1784300961712", // 嵌套(归档的归档)
+    "chatgpt.com.migrated-1",
+  ];
+  for (const a of archived) {
+    it(`拒绝: ${JSON.stringify(a)}`, () => {
+      expect(isSafeWebDomain(a)).toBe(false);
+    });
+  }
+});
+
+describe("isArchivedWebProfileName / isNestedArchivedWebProfileName(T-378)", () => {
+  it("裸域名不是归档名", () => {
+    expect(isArchivedWebProfileName("bing.com")).toBe(false);
+    expect(isNestedArchivedWebProfileName("bing.com")).toBe(false);
+  });
+  it("一层归档:是归档名、非嵌套(保留 —— 可能还有未迁移登录态)", () => {
+    const one = "bing.com.migrated-1784300846731";
+    expect(isArchivedWebProfileName(one)).toBe(true);
+    expect(isNestedArchivedWebProfileName(one)).toBe(false);
+  });
+  it("嵌套归档:两者皆真(归档的归档,可清理)", () => {
+    const nested = "bing.com.migrated-1784300846731.migrated-1784300961712";
+    expect(isArchivedWebProfileName(nested)).toBe(true);
+    expect(isNestedArchivedWebProfileName(nested)).toBe(true);
+  });
 });
 
 describe("assertSafeWebDomain —— 合法归一 / 非法抛 WebDomainError", () => {

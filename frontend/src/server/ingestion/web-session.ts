@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isSafeWebDomain } from "@/lib/web-domain";
+
 // [T-217a] Web Session Vault(登录态保管库)—— 把抖音采集已有的「launchPersistentContext +
 // .auth/ 持久 profile + 被动探针」(douyin-cdp.ts)**泛化成任意域名**的登录态保管库。
 //
@@ -388,6 +390,9 @@ export async function importLegacyProfileState(
   deps: WebSessionDeps = {},
 ): Promise<string | null> {
   if (!deps.saveState) return null;
+  // [T-378] 迁移候选只认**裸域名**:归档目录名(`x.migrated-<ts>`)被当域名传进来 → 直接跳过,
+  //   绝不对归档目录再触发「迁移→归档」(否则产出 `x.migrated-a.migrated-b` 嵌套 + DB 脏行增殖)。
+  if (!isSafeWebDomain(opts.domain)) return null;
   const hasData = deps.legacyProfileHasData ?? realLegacyProfileHasData;
   const archive = deps.archiveLegacyProfile ?? realArchiveLegacyProfile;
   const openContext = deps.openContext ?? realOpenWebContext;

@@ -1999,7 +1999,7 @@ function ProviderPresetRow({
     <SettingsFormRow
       label="供应商预设"
       controlId={`${idPrefix}-preset`}
-      help="选一个供应商快速填入接口地址 / 格式 / 模型候选;所有字段仍可自由改(参考起始值,可能随供应商变动)。选「自定义」不填充。"
+      help="选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。"
     >
       <Select
         value={presetId}
@@ -2030,6 +2030,86 @@ function ProviderPresetRow({
         </SelectContent>
       </Select>
     </SettingsFormRow>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TestConnectionButton — [T-377] 每个 capability 配置卡的「测试连接」
+// ---------------------------------------------------------------------------
+//
+// 点击 → settings.models.test(composition-only op,host 侧按该 capability **现有解析链**
+// 解析「已保存」的配置 → 发一次最小真实调用 / 最便宜鉴权探测,策略见
+// server/settings-model-test-wrap.ts 头注)→ 诚实渲「✓ 连通」或「✗ 失败:<真实原因>」。
+// 注意:测的是**已保存**的配置 —— 表单里没保存的草稿不参与(hint 里明示)。
+function TestConnectionButton({
+  capability,
+  slotPrefix,
+  quotaHint,
+}: {
+  capability: string;
+  /** data-slot 前缀,如 "model" | "multimodal-image"。 */
+  slotPrefix: string;
+  /** 额度提示(如生图/付费搜索会真实调用消耗少量额度);null = 不提示。 */
+  quotaHint?: string | null;
+}) {
+  const [testing, setTesting] = React.useState(false);
+  const [result, setResult] = React.useState<{
+    ok: boolean;
+    detail: string;
+  } | null>(null);
+
+  const runTest = React.useCallback(async () => {
+    setTesting(true);
+    setResult(null);
+    try {
+      const res = (await client.testModelConnection({
+        params: { capability },
+        query: undefined,
+        body: undefined,
+      })) as unknown as { ok: boolean; detail: string };
+      setResult({ ok: res.ok, detail: res.detail });
+    } catch (err) {
+      setResult({
+        ok: false,
+        detail: err instanceof Error ? err.message : "测试请求失败,请重试",
+      });
+    } finally {
+      setTesting(false);
+    }
+  }, [capability]);
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          测试的是已保存的配置(改动请先保存)
+          {quotaHint ? `;${quotaHint}` : ""}
+        </span>
+        <Button
+          type="button"
+          data-slot={`${slotPrefix}-test-connection`}
+          variant="outline"
+          size="sm"
+          disabled={testing}
+          onClick={() => void runTest()}
+        >
+          {testing ? "测试中…" : "测试连接"}
+        </Button>
+      </div>
+      {result ? (
+        <p
+          data-slot={`${slotPrefix}-test-result`}
+          data-ok={result.ok ? "true" : "false"}
+          className={
+            result.ok
+              ? "text-xs text-success"
+              : "text-xs text-destructive"
+          }
+        >
+          {result.ok ? `✓ 连通:${result.detail}` : `✗ 失败:${result.detail}`}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -2148,7 +2228,7 @@ function ModelConfigurationCard({
         <SettingsFormRow
           label="模型"
           controlId="model-name"
-          help="模型 id,如 claude-opus-4-8 / MiniMax-M3。选预设后可从候选下拉挑,也可自由输入。"
+          help="模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。"
         >
           <Input
             id="model-name"
@@ -2169,7 +2249,7 @@ function ModelConfigurationCard({
         <SettingsFormRow
           label="接口地址"
           controlId="model-base-url"
-          help="自定义 baseUrl(中转 / MiniMax);留空走官方默认。"
+          help="自定义 baseUrl(中转 / 你的服务商);留空走官方默认。"
         >
           <Input
             id="model-base-url"
@@ -2275,7 +2355,9 @@ function ModelConfigurationCard({
             aria-label="模型温度"
           />
         </SettingsFormRow>
-        <div className="flex justify-end">
+        <div className="flex items-start justify-between gap-3">
+          {/* [T-377] 测试连接:1 token 真实补全验已保存的主模型配置。 */}
+          <TestConnectionButton capability={MODEL_CAPABILITY} slotPrefix="model" />
           <Button
             type="button"
             data-slot="model-save"
@@ -2393,10 +2475,11 @@ const MULTIMODAL_META = {
       "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
     providerSuggestions: ["minimax"] as ReadonlyArray<string>,
     providerPlaceholder: "minimax",
-    providerHelp: "多模态厂商名,可自定义(当前已适配 minimax)。",
-    modelHelp: "文生图模型 id,如 image-01(MiniMax)。",
-    modelPlaceholder: "",
-    baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
+    providerHelp: "多模态厂商名,可自定义(当前内置适配 minimax;其他厂商需接入适配器)。",
+    // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
+    modelHelp: "文生图模型 id 自由填(示例:image-01;仅示例,以你的服务商最新型号为准)。",
+    modelPlaceholder: "示例:image-01(以服务商最新为准)",
+    baseUrlPlaceholder: "示例:https://api.minimaxi.com/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   video: {
@@ -2407,10 +2490,11 @@ const MULTIMODAL_META = {
       "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
     providerSuggestions: ["minimax"] as ReadonlyArray<string>,
     providerPlaceholder: "minimax",
-    providerHelp: "多模态厂商名,可自定义(当前已适配 minimax)。",
-    modelHelp: "文生视频模型 id,如 video-01(MiniMax / Hailuo)。",
-    modelPlaceholder: "",
-    baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
+    providerHelp: "多模态厂商名,可自定义(当前内置适配 minimax;其他厂商需接入适配器)。",
+    // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
+    modelHelp: "文生视频模型 id 自由填(示例:video-01;仅示例,以你的服务商最新型号为准)。",
+    modelPlaceholder: "示例:video-01(以服务商最新为准)",
+    baseUrlPlaceholder: "示例:https://api.minimaxi.com/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   // 逐字稿 ASR(T-030-D1 / **T-160 改选配**)—— 与图/视频同款 cc-switch 表单,provider 走 OpenAI
@@ -2520,7 +2604,7 @@ const MULTIMODAL_META = {
     providerSuggestions: ["anthropic", "minimax", "deepseek", "openai"] as ReadonlyArray<string>,
     providerPlaceholder: "anthropic",
     providerHelp: "任意厂商名,可自定义(建议与主模型不同厂商,故障不同时发生)。",
-    modelHelp: "模型 id,如 claude-opus-4-8 / MiniMax-M3 / deepseek-chat。",
+    modelHelp: "模型 id 自由填(示例:claude-opus-4-8 / deepseek-chat;仅示例,以你的服务商最新型号为准)。",
     modelPlaceholder: "",
     baseUrlPlaceholder: "https://api.anthropic.com(留空=provider 默认)",
     disabledHint: "未配 → 主模型重试耗尽后直接报错。",
@@ -2849,7 +2933,20 @@ function MultimodalModelCard({
             ) : null}
           </div>
         </SettingsFormRow>
-        <div className="flex justify-end">
+        <div className="flex items-start justify-between gap-3">
+          {/* [T-377] 测试连接:按能力走最小真实调用/最便宜鉴权探测(生图/付费搜索会真实
+              调用 → 额度提示;生视频只验鉴权不真生成)。 */}
+          <TestConnectionButton
+            capability={meta.capability}
+            slotPrefix={`multimodal-${kind}`}
+            quotaHint={
+              kind === "image"
+                ? "生图无免费探测端点,测试会真实生成一张最小图,消耗少量额度"
+                : kind === "search"
+                  ? "付费搜索(bocha/tavily/serpapi)会发一次最小真实检索,消耗少量额度"
+                  : null
+            }
+          />
           <Button
             type="button"
             data-slot={`multimodal-${kind}-save`}

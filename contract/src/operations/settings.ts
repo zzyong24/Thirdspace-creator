@@ -73,6 +73,25 @@ export const settingsOperations = {
     response: z.array(modelConfigurationResource),
     fr: ["FR-SETTINGS-MODEL-LIST"],
   }),
+  // [T-377] 测试连接:按 capability 用**现有解析链**(resolveLlmConfig / resolveMultimodalSpec
+  // / resolveSearchSpec 等)解析已保存的配置,发一次最小真实调用 / 最便宜鉴权探测,诚实回
+  // 「✓ 连通」或「✗ 失败:<真实原因人话>」。composition-only op(settings module transport 不认
+  // 它,由 persistence-client 的 settingsWithModelTest 拦截 —— 解析器/adapter registry 都住组合根,
+  // 同 projects.transcribe / scheduledJobs.runNow 约定)。
+  testModelConnection: defineEndpoint({
+    id: "settings.models.test",
+    method: "POST",
+    path: "/settings/models/:capability/test",
+    params: z.object({ capability: z.string().min(1) }),
+    response: z.object({
+      ok: z.boolean(),
+      provider: z.string(),
+      model: z.string(),
+      // 人话结果:成功=探测方式说明;失败=真实原因(未配置 / 鉴权失败 / 调用错误)。
+      detail: z.string(),
+    }),
+    fr: ["FR-SETTINGS-MODEL-TEST"],
+  }),
   // [T-248 批C] settings.agents.create 已删 —— 孤 op(全仓无任何调用方,前端/mcp 均不触达)。
   // agentConfigurationResource 与 agent_configurations 表、backend service/repository 的
   // createAgentConfiguration 链保留(整组暂无其他 op 消费,仅契约面收敛;详见 BACKLOG T-248)。

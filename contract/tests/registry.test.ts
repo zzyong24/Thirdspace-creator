@@ -126,6 +126,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["PATCH", "/settings/preferences"],
   ["GET", "/settings/models"],
   ["PUT", "/settings/models/:capability"],
+  // [T-377] 测试连接(composition-only,persistence-client settingsWithModelTest 拦截)。
+  ["POST", "/settings/models/:capability/test"],
   // [T-248 批C] POST /settings/agents 已删(孤 op,零调用方)。
   ["GET", "/settings/storage"],
   ["PUT", "/settings/storage"],

@@ -81,6 +81,14 @@ function makeDeps(opts: {
       };
     },
   );
+  // [T-376] 失败原因步骤流 seam:runner 失败时 recordStep(kind:"error") 写真实原因。
+  const recordStep = vi.fn(
+    async (
+      _ctx: RequestContext,
+      _taskId: string,
+      _input: { stepNo: number; kind: string; text: string; toolCalls: unknown[] },
+    ) => undefined,
+  );
   return {
     deps: {
       ai: {
@@ -88,6 +96,7 @@ function makeDeps(opts: {
         recordCandidate,
         cancelTask,
         discardGeneratedAsset,
+        recordStep,
       } as never,
       resolveMultimodalSpec,
       registry: opts.registry,
@@ -99,6 +108,7 @@ function makeDeps(opts: {
     discardGeneratedAsset,
     createGeneratedAsset,
     resolveMultimodalSpec,
+    recordStep,
   };
 }
 
@@ -210,7 +220,7 @@ describe("runAssetGenerate — 失败诚实处置(cancelTask,不假成功)", () 
 
   it("未配 image.generate model(MultimodalConfigError)→ cancelTask,不落候选", async () => {
     const registry = { fake: createFakeAdapter() };
-    const { deps, recordCandidate, cancelTask } = makeDeps({
+    const { deps, recordCandidate, cancelTask, recordStep } = makeDeps({
       registry,
       resolveThrows: true,
     });
@@ -223,6 +233,38 @@ describe("runAssetGenerate — 失败诚实处置(cancelTask,不假成功)", () 
 
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledTimes(1);
+    // [T-376] 未配置 → 步骤流末条(kind:"error")说「未配置」,不含「已配置,但调用失败」。
+    expect(recordStep).toHaveBeenCalledTimes(1);
+    const step = recordStep.mock.calls[0]![2];
+    expect(step.kind).toBe("error");
+    expect(step.text).toContain("未配置");
+    expect(step.text).not.toContain("已配置,但调用失败");
+  });
+
+  it("[T-376] 配置了但 provider 调用失败(如 key 无效)→ 步骤流记「已配置,但调用失败:<真实原因>」,不冤枉「未配置」", async () => {
+    // fake provider 直接抛真实调用错误(模拟 401 invalid api key)。
+    const failing = {
+      generateImage: async () => {
+        throw new Error("minimax API 401: invalid api key");
+      },
+    } as unknown as MultimodalProviderRegistry[string];
+    const registry = { fake: failing } as MultimodalProviderRegistry;
+    const { deps, recordCandidate, cancelTask, recordStep } = makeDeps({ registry });
+
+    await runAssetGenerate(
+      ctx,
+      { id: "t4b", projectId: "p1", inputData: { prompt: "x", kind: "image" } },
+      deps,
+    );
+
+    expect(recordCandidate).not.toHaveBeenCalled();
+    expect(cancelTask).toHaveBeenCalledTimes(1);
+    expect(recordStep).toHaveBeenCalledTimes(1);
+    const step = recordStep.mock.calls[0]![2];
+    expect(step.kind).toBe("error");
+    expect(step.text).toContain("生图模型已配置,但调用失败");
+    expect(step.text).toContain("invalid api key");
+    expect(step.text).not.toContain("未配置");
   });
 
   it("provider 不支持该能力(fake 只出图,却要 video)→ cancelTask", async () => {

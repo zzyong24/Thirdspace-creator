@@ -29,7 +29,9 @@ export interface ModelProviderPreset {
    * (如 Anthropic 官方留空即可)。
    */
   readonly baseUrl: string;
-  /** 参考候选 model id(挂到「模型」输入的 datalist,仍允许自由输入)。 */
+  /** [T-377] 恒为空:模型候选**不再硬编码**(供应商上新频繁,旧候选如 MiniMax-M2 会误导
+   *  用户以为没有 M3 —— 2026-07-17 真机反馈)。model 名一律自由填,以服务商最新为准;
+   *  字段保留是为 UI datalist 结构零改动(空数组 = 纯自由输入)。 */
   readonly models: readonly string[];
   /** 推理档能力(信息性,暂不驱动 UI):levels=分级 / toggle=开关 / none=无。 */
   readonly reasoning?: "levels" | "toggle" | "none";
@@ -50,7 +52,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "Anthropic 官方",
     apiFormat: "anthropic",
     baseUrl: "", // 留空 = 官方默认端点
-    models: ["claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"],
+    models: [],
     reasoning: "toggle",
   },
   {
@@ -58,7 +60,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "MiniMax",
     apiFormat: "anthropic",
     baseUrl: "https://api.minimaxi.com/anthropic",
-    models: ["MiniMax-M2", "abab6.5s-chat"],
+    models: [],
     reasoning: "toggle",
   },
   {
@@ -66,7 +68,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "DeepSeek",
     apiFormat: "openai_chat",
     baseUrl: "https://api.deepseek.com",
-    models: ["deepseek-chat", "deepseek-reasoner"],
+    models: [],
     reasoning: "levels",
   },
   {
@@ -74,7 +76,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "智谱 GLM",
     apiFormat: "anthropic",
     baseUrl: "https://open.bigmodel.cn/api/anthropic",
-    models: ["glm-4.6", "glm-4.5"],
+    models: [],
     reasoning: "toggle",
   },
   {
@@ -82,7 +84,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "Kimi(Moonshot)",
     apiFormat: "anthropic",
     baseUrl: "https://api.moonshot.cn/anthropic",
-    models: ["kimi-k2-0905-preview", "moonshot-v1-128k"],
+    models: [],
     reasoning: "toggle",
   },
   {
@@ -90,7 +92,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "通义千问(百炼)",
     apiFormat: "openai_chat",
     baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    models: ["qwen-max", "qwen-plus", "qwen3-coder-plus"],
+    models: [],
     reasoning: "toggle",
   },
   {
@@ -98,14 +100,14 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "阶跃 StepFun",
     apiFormat: "openai_chat",
     baseUrl: "https://api.stepfun.com/v1",
-    models: ["step-2-16k"],
+    models: [],
   },
   {
     id: "siliconflow",
     label: "硅基流动",
     apiFormat: "openai_chat",
     baseUrl: "https://api.siliconflow.cn/v1",
-    models: ["deepseek-ai/DeepSeek-V3", "Qwen/Qwen2.5-72B-Instruct"],
+    models: [],
     note: "聚合平台,模型众多,可自填其它 model id。",
   },
   {
@@ -113,7 +115,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "魔搭 ModelScope",
     apiFormat: "openai_chat",
     baseUrl: "https://api-inference.modelscope.cn/v1",
-    models: [], // 聚合,model id 到魔搭控制台查后自填
+    models: [],
     note: "聚合平台,model id 请到魔搭控制台查后自填。",
   },
   {
@@ -121,7 +123,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "火山方舟(豆包)",
     apiFormat: "openai_chat",
     baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
-    models: ["doubao-pro-32k"],
+    models: [],
     note: "也可填 ep-* 推理接入点。",
   },
   {
@@ -129,7 +131,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "OpenRouter",
     apiFormat: "openai_chat",
     baseUrl: "https://openrouter.ai/api/v1",
-    models: [], // 聚合,model id 形如 vendor/model,自填
+    models: [],
     note: "聚合平台,model id 形如 vendor/model,自填。",
   },
   {
@@ -137,7 +139,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
     label: "OpenAI 官方",
     apiFormat: "openai_chat",
     baseUrl: "https://api.openai.com/v1",
-    models: ["gpt-5.2", "gpt-4o"],
+    models: [],
   },
   {
     id: CUSTOM_PRESET_ID,

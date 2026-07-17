@@ -4,6 +4,8 @@ import type {
   MultimodalSpec,
   MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
+// [T-376] 失败分类人话(「未配置」vs「配置了但调用失败」),写进步骤流末条供前端诚实展示。
+import { describeMultimodalFailure } from "./multimodal/resolve";
 
 // asset.generate runner (L5 录制 · SPEC 2026-07-01 §3 + §8 M2) —— AI 生成素材 → 落对象存储 →
 // 建 asset → 记候选(非直接物化)。仿 research-runner 的生命周期(markRunning → 跑节点 →
@@ -166,6 +168,20 @@ export async function runAssetGenerate(
           cleanupErr,
         );
       }
+    }
+    // [T-376] 失败原因分类后写进步骤流末条(kind:"error",stepNo 高位保证排最后)——
+    // 前端失败卡读 listTaskSteps 末条原样展示,不再把一切失败吞成「还没配置生图模型」。
+    // best-effort:记录失败绝不盖掉 cancelTask 收终态。
+    try {
+      const label = task.inputData.kind === "video" ? "生视频" : "生图";
+      await deps.ai.recordStep(ctx, task.id, {
+        stepNo: 99,
+        kind: "error",
+        text: describeMultimodalFailure(err, label),
+        toolCalls: [],
+      });
+    } catch {
+      /* 记原因失败不阻断终态收口 */
     }
     // Best-effort cancel; swallow so a background failure never crashes the server.
     // 「轮询超时 / 未配 key / 生成失败 / 内容审核」全部坍缩到这里 → 诚实终态(cancelled)。

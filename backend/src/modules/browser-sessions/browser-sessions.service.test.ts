@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createHash } from "node:crypto";
-import { createDb, browserSessions, eq, type Db } from "@creatoros/backend";
+import { createDb, browserSessions, eq, sql, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createBrowserSessionsService,
@@ -144,5 +144,27 @@ describe("browser-sessions service(加密存取,迁移 0047 建表)", () => {
     const a = await svc.listDomains(ctxA);
     expect(a.map((d) => d.domain).sort()).toEqual(["chatgpt.com", "github.com"]);
     expect(a[0]).toEqual({ domain: expect.any(String), updatedAt: NOW });
+  });
+
+  // [T-378] 迁移 0048:清 T-370a 惰性迁移增殖 bug 写入的 scope_key 脏行(`x.migrated-<ts>`)。
+  //   fresh db 已跑过 0048(空表清空,无感);这里造脏行后重放同一条 DELETE,验证:
+  //   ① 只删 `.migrated-` 脏行,合法域名行零误伤;② 幂等(重放第二次结果不变)。
+  it("[T-378] 迁移 0048 语句:造脏行 → 执行 → 只删净 .migrated- 行,幂等", async () => {
+    const svc = makeService(db, KEY_A);
+    await svc.saveState(ctxA, "bing.com", STATE); // 合法行(须保留)
+    // 增殖 bug 产出的脏行形态(一层 + 嵌套)。
+    await svc.saveState(ctxA, "bing.com.migrated-1784300846731", STATE);
+    await svc.saveState(
+      ctxA,
+      "bing.com.migrated-1784300846731.migrated-1784300961712",
+      STATE,
+    );
+    const cleanup = sql`DELETE FROM browser_sessions WHERE scope_key LIKE '%.migrated-%'`;
+    await db.execute(cleanup);
+    let rows = await db.select().from(browserSessions);
+    expect(rows.map((r) => r.scopeKey)).toEqual(["bing.com"]);
+    await db.execute(cleanup); // 幂等重放
+    rows = await db.select().from(browserSessions);
+    expect(rows.map((r) => r.scopeKey)).toEqual(["bing.com"]);
   });
 });

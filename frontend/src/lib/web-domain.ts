@@ -23,6 +23,22 @@ export class WebDomainError extends Error {
 //   (`%2e`/`%2f`)、盘符(`c:`)天然落选;`..` 再由下方显式禁连缀兜底。
 const HOSTNAME_RE = /^[a-z0-9][a-z0-9.-]{0,252}$/;
 
+// [T-378] 惰性迁移(T-370a)归档旧 profile 目录 = 改名加 `.migrated-<ts>` 后缀。该后缀全是
+//   [a-z0-9.-] 合法字符 → 曾通过 HOSTNAME_RE 被当成「域名」列出/探针/再迁移,造成
+//   `x.migrated-a.migrated-b` 无限增殖 + DB 脏行。归档目录名**永远不是合法域名**,统一在此拒。
+const ARCHIVE_MARKER = ".migrated-";
+
+/** [T-378] 是否为惰性迁移归档目录名(`<domain>.migrated-<ts>`,可能嵌套多层)。 */
+export function isArchivedWebProfileName(raw: string): boolean {
+  return normalizeWebDomain(raw).includes(ARCHIVE_MARKER);
+}
+
+/** [T-378] 是否为**嵌套**归档目录名(`x.migrated-a.migrated-b`,归档的归档,无价值可删)。 */
+export function isNestedArchivedWebProfileName(raw: string): boolean {
+  const d = normalizeWebDomain(raw);
+  return d.split(ARCHIVE_MARKER).length > 2;
+}
+
 /** 归一化:trim + 转小写(是否 strip `www.` 由调用方各自决定,此处不动结构)。 */
 export function normalizeWebDomain(raw: string): string {
   return raw.trim().toLowerCase();
@@ -37,6 +53,9 @@ export function isSafeWebDomain(raw: string): boolean {
   if (d.includes("..")) return false;
   if (d.includes("/") || d.includes("\\")) return false;
   if (d.includes("%")) return false;
+  // [T-378] 归档目录名(`.migrated-` 后缀)不是域名:挡「归档目录被当域名探针 → 再触发迁移
+  //   → 再归档」的增殖链(listSessions 目录过滤 / route 入口 400 / webAuthDirFor 硬拒同享此判定)。
+  if (d.includes(ARCHIVE_MARKER)) return false;
   return true;
 }
 

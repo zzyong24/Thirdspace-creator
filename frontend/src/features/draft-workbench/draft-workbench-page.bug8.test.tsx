@@ -38,8 +38,15 @@ vi.mock("./ammo-card-list", () => ({
 vi.mock("./draft-primary-action", () => ({
   DraftPrimaryAction: () => <div data-slot="mock-primary-action" />,
 }));
-vi.mock("./reveal-project-button", () => ({
-  RevealProjectButton: () => null,
+// [T-375] 顶条「导出素材包」(替换原「在 Finder 打开」):mock 成可探测占位(真组件拉 contract-client)。
+vi.mock("./export-materials-button", () => ({
+  ExportMaterialsButton: ({ projectId, outputId }: { projectId: string; outputId: string | null }) => (
+    <div
+      data-slot="mock-export-materials"
+      data-project-id={projectId}
+      data-output-id={outputId ?? ""}
+    />
+  ),
 }));
 // [T-374] 顶条「立即抓取逐字稿」:mock 成可探测占位(真组件拉 contract-client)。
 vi.mock("./transcribe-now-button", () => ({
@@ -164,6 +171,30 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
     const hint = section.parentElement?.textContent ?? "";
     expect(hint).toContain("v1");
     expect(hint).toContain("写你的口播稿");
+  });
+});
+
+// [T-375] 顶条「导出素材包」(替换原「在 Finder 打开」):恒渲染,带 projectId/outputId。
+describe("DraftWorkbenchPage — T-375 顶条导出素材包按钮", () => {
+  it("顶条渲染导出按钮(带 projectId + outputId),不再渲染 Finder 按钮", () => {
+    const { container } = render(<DraftWorkbenchPage vm={baseVm()} />);
+    const btn = container.querySelector('[data-slot="mock-export-materials"]');
+    expect(btn).not.toBeNull();
+    expect(btn?.getAttribute("data-project-id")).toBe("p-1");
+    expect(btn?.getAttribute("data-output-id")).toBe("out-1");
+    // 原「在 Finder 打开」已移除(项目文件夹永远空,名不副实)。
+    expect(
+      container.querySelector('[data-slot="draft-reveal-project"]'),
+    ).toBeNull();
+  });
+
+  it("无 outputId(没进过制作面)→ 仍渲染(按钮内自动 ensure)", () => {
+    const { container } = render(
+      <DraftWorkbenchPage vm={baseVm({ outputId: null })} />,
+    );
+    const btn = container.querySelector('[data-slot="mock-export-materials"]');
+    expect(btn).not.toBeNull();
+    expect(btn?.getAttribute("data-output-id")).toBe("");
   });
 });
 

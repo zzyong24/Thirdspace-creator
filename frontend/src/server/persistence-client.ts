@@ -297,6 +297,8 @@ import {
 // [B-01] Web Session 域名净化/校验(防路径穿越递归删应用数据/上级目录)。纯函数,与 route 入口共用。
 import {
   assertSafeWebDomain,
+  isArchivedWebProfileName,
+  isNestedArchivedWebProfileName,
   isSafeWebDomain,
   WebDomainError,
 } from "@/lib/web-domain";
@@ -439,8 +441,12 @@ import {
   // [T-160] 本地 Whisper 适配器(ASR 选配的兜底后端;未配云端 ASR 时走它,免 key、自动下模型)。
   createDefaultWhisperLocalAdapter,
   transcribeAudio as transcribeAudioFn,
+  // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
+  generateImage as generateImageFn,
   type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
+// [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
+import { createSettingsWithModelTest } from "./settings-model-test-wrap";
 // [T-084a] 联网检索工厂 + 三家 provider 适配器 —— host 注册进 registry(keyed by provider),
 // gatherMaterials 前置检索用。与多模态 registry 并列;加 provider = 在此注册一个适配器。
 import {
@@ -1783,12 +1789,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     listSessions: async (
       ctx: RequestContext,
     ): Promise<Array<{ domain: string; lastLoginAt: string | null }>> => {
-      const { readdir, stat } = await import("node:fs/promises");
+      const { readdir, stat, rm } = await import("node:fs/promises");
       // [T-370a] DB 加密记录是单一真值(惰性迁移会归档旧目录 → 只看目录会漏)∪ 旧 profile
       //   目录(未迁移存量仍可见)。同域取 DB updatedAt 优先。
       const byDomain = new Map<string, string | null>();
       const dbRows = await browserSessionsService.listDomains(ctx).catch(() => []);
-      for (const r of dbRows) byDomain.set(r.domain, r.updatedAt);
+      // [T-378] DB 侧同样过滤脏行(增殖 bug 曾把 `x.migrated-<ts>` 当域名写进 browser_sessions;
+      //   迁移 0048 删存量,这里兜底防旧库/慢迁移把归档名再列给设置页 → 再触发探针增殖)。
+      for (const r of dbRows) {
+        if (!isSafeWebDomain(r.domain)) continue;
+        byDomain.set(r.domain, r.updatedAt);
+      }
       let entries: string[] = [];
       try {
         entries = await readdir(webAuthDirBase);
@@ -1797,6 +1808,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       for (const domain of entries) {
         if (domain.startsWith(".")) continue; // 跳过隐藏项(.DS_Store 等)
+        // [T-378] 嵌套归档目录(`x.migrated-a.migrated-b` = 增殖 bug 产物,归档的归档无价值)
+        //   顺手 best-effort 删;一层归档(`x.migrated-a`)保留 —— 可能还有未迁移的登录态。
+        //   entry 是 readdir basename(无路径分隔符),join 不会越出 base。
+        if (isNestedArchivedWebProfileName(domain)) {
+          void rm(nodePath.join(webAuthDirBase, domain), {
+            recursive: true,
+            force: true,
+          }).catch(() => {});
+          continue;
+        }
         // [B-01] 白名单预检:磁盘上不合规的遗留目录名(旧版本产物/用户手放/归档后缀)跳过,
         //   不让 webAuthDirFor 的硬校验抛错炸穿整个列表(列表是读操作,宜宽容)。
         if (!isSafeWebDomain(domain)) continue;
@@ -1870,6 +1891,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       domain: string,
     ): Promise<{ domain: string; loggedIn: boolean }> => {
       const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      // [T-378] 归档目录名(`x.migrated-<ts>`)被当域名探针 → 直接返未登录,绝不起浏览器/
+      //   触发迁移(增殖链的探针侧闸门;route 入口 400 兜一层,这里防别的调用方绕过 route)。
+      //   其余非法域名(路径穿越等)仍走下方 webAuthDirFor 白名单硬拒抛 WebDomainError(B-01)。
+      if (isArchivedWebProfileName(d)) return { domain: d, loggedIn: false };
       // [T-370a] DB state 注入回灌探针(§2.5)+ 存量惰性迁移(旧目录导入 DB 后归档)。
       const { loggedIn } = await checkWebSessionStatus(
         {
@@ -7795,6 +7820,62 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const spec = await resolveSearchSpec(ctx);
     return searchWebFn(spec, query, searchRegistry, opts);
   };
+
+  // ── [T-377] settings.models.test「测试连接」拦截:各能力现有解析链 + 最小真实调用/
+  //    最便宜鉴权探测(策略见 settings-model-test-wrap.ts 头注)。解析器与 registry 都住
+  //    组合根 → composition-only op(同 projects.transcribe 约定)。
+  const settingsWithModelTest = createSettingsWithModelTest({
+    settings,
+    resolveLlm: (ctx, capability) =>
+      resolveLlmConfig(ctx, capability, {
+        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        env: process.env,
+      }),
+    resolveDedicatedLlm: (ctx, capability) =>
+      resolveDedicatedLlmConfig(ctx, capability, {
+        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        env: process.env,
+      }),
+    resolveMultimodal: (ctx, capability) =>
+      resolveMultimodalSpecFn(
+        ctx,
+        capability as "image.generate" | "video.generate" | "asset.classify",
+        {
+          getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+          env: process.env,
+        },
+      ),
+    resolveTranscribe: (ctx) =>
+      resolveTranscribeSpecFn(ctx, {
+        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        env: process.env,
+      }),
+    resolveEmbed: (ctx) =>
+      resolveEmbedSpec(ctx).then((spec) =>
+        spec ? { ...spec, authStyle: "bearer" as const } : null,
+      ),
+    resolveSearch: (ctx) => resolveSearchSpec(ctx),
+    // 真实最小生图(与 runner 同一工厂真路径;kind 补齐成 MultimodalSpec)。
+    generateImageMinimal: async (spec) => {
+      const { assetBytes } = await generateImageFn(
+        { ...spec, kind: "image" },
+        { prompt: "连接测试:一个纯色小圆点", aspectRatio: "1:1" },
+        multimodalRegistry,
+      );
+      return { byteLength: assetBytes?.byteLength ?? 0 };
+    },
+    // 真实最小检索(count=1;bocha/tavily/serpapi 消耗少量额度)。
+    searchMinimal: async (_ctx, spec) => {
+      const results = await searchWebFn(
+        { ...spec, model: spec.model ?? "" },
+        "连接测试",
+        searchRegistry,
+        { count: 1 },
+      );
+      return results.length;
+    },
+    fetchImpl: fetch,
+  });
   // [T-235b] 已登记信源信号端口(热点多源证据主路)—— trend 出题(topic.generate trend basis /
   //   topic.daily)经它逐 enabled 信源抓信号:
   //   · web 型:readUrl(webAuthDirFor(domain),T-217b 带登录态读正文,**只 import 不改**)→
@@ -9633,7 +9714,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     taxonomy,
     notifications,
     search,
-    settings,
+    settings: settingsWithModelTest, // wrap:透传 CRUD + 拦 settings.models.test(T-377)
     knowledge,
     assets,
     artifacts,

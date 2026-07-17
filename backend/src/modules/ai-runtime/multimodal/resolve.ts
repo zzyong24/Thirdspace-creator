@@ -60,6 +60,27 @@ export class TranscribeConfigError extends Error {
   }
 }
 
+/** [T-376] 把 runner catch 到的失败分类成人话 —— 区分「未配置」vs「配置了但调用失败」,
+ *  写进 task 步骤流末条(kind:"error"),前端失败卡原样展示。病根:此前 runner 把一切失败
+ *  (key 无效/模型名不对/网络/审核/超时)统一吞成 cancelTask,UI 兜底文案一律「很可能是还没
+ *  配置生图模型」—— 用户明明配了也被指去配置(2026-07-17 真机反馈)。 */
+export function describeMultimodalFailure(err: unknown, label: string): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const name = err instanceof Error ? err.name : "";
+  // 按 name 判而非 instanceof:MultimodalConfigError 在本文件与 ai-worker multimodal-factory
+  // 各有一份同名类(结构投影两处声明),instanceof 跨包/跨 dedupe 不可靠,name 两处一致。
+  if (name === "MultimodalConfigError") {
+    // resolve 层「未配置…去设置里配」全文自带指路;factory 层「未知 provider / 不支持该能力」
+    // 也是配置问题,补上下文前缀。
+    return msg.includes("未配置") ? msg : `${label}模型配置有问题:${msg}`;
+  }
+  // 文本 LLM 凭据错误(封面链先跑文案 LLM)—— 不冤枉生图配置。
+  if (name === "LlmCredentialError") {
+    return `文本模型凭据问题(非${label}模型):${msg}`;
+  }
+  return `${label}模型已配置,但调用失败:${msg}`;
+}
+
 type MultimodalKind = "image" | "video" | "audio" | "vision";
 
 const CAP_TO_KIND: Record<MultimodalCapability, MultimodalKind> = {

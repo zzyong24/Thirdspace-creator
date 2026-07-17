@@ -370,6 +370,32 @@ describe("[T-370a] 存量惰性迁移(§3.3:旧目录 → DB 导入 → 归档)"
     }
   });
 
+  it("[T-378] 归档目录名被当域名传入 → 直接跳过(不读目录/不起 context/不 save/不归档)", async () => {
+    // 增殖回归:归档目录 `x.migrated-<ts>` 一旦被当「域名」再迁移,会产出
+    // `x.migrated-a.migrated-b` 嵌套归档 + scope_key 脏行。候选只认裸域名。
+    const out = await importLegacyProfileState(
+      {
+        authDir: "/auth/web/bing.com.migrated-1784300846731",
+        domain: "bing.com.migrated-1784300846731",
+      },
+      {
+        openContext: async () => {
+          throw new Error("不应该起 context");
+        },
+        saveState: async () => {
+          throw new Error("不应该 save");
+        },
+        legacyProfileHasData: async () => {
+          throw new Error("不应该读目录");
+        },
+        archiveLegacyProfile: async () => {
+          throw new Error("不应该归档");
+        },
+      },
+    );
+    expect(out).toBeNull();
+  });
+
   it("checkWebSessionStatus:DB 无 state → 走惰性迁移导入 + 归档,再注入判定", async () => {
     // 第一次 openContext = 迁移读取(storageState 有料);第二次 = 注入探针。
     const migrateCtx = makeStatefulCtx({ storageState: STATE });
