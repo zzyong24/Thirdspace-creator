@@ -1502,12 +1502,30 @@ export function RunDetailDialog({
 //
 // 列表页顶部的模板卡:点一张 → 打开新建弹窗并预填 {name, prompt, sourceKind, cadence}。
 // 全部模板可点 —— D8a 明细导出落地后,原「灰置模板」机制(disabled 字段 + 灰置分支)已整体移除。
+//
+// [T-367] 查重:同 sourceKind 已有 job(通常是绑号 bootstrap 自动建的,可能 disabled)时,
+// 该卡改「已存在」态 —— 点它**不再走 create**(根治「点模板卡想开启禁用 job,结果建出第二条」
+// 的重复),而是回调 onEnableExisting 交给 island 启用既有 job + 滚动定位到那行。
 
 export function TemplateCards({
   onPick,
+  jobs = [],
+  onEnableExisting,
 }: {
   readonly onPick: (tpl: CollectionTemplate) => void;
+  /** [T-367] 现存 job 列表(island 透传),按 sourceKind 查重定「已存在」态。 */
+  readonly jobs?: ReadonlyArray<ScheduledJobResource>;
+  /** [T-367] 已存在 kind 的卡被点 → 启用/定位既有 job(不 create)。 */
+  readonly onEnableExisting?: (job: ScheduledJobResource) => void;
 }) {
+  // 每个 sourceKind 取第一条既有 job(0046 唯一约束后同 kind 至多一条)。
+  const existingBySourceKind = React.useMemo(() => {
+    const m = new Map<string, ScheduledJobResource>();
+    for (const job of jobs) {
+      if (!m.has(job.sourceKind)) m.set(job.sourceKind, job);
+    }
+    return m;
+  }, [jobs]);
   return (
     <section
       data-slot="automation-templates"
@@ -1527,13 +1545,18 @@ export function TemplateCards({
             SOURCE_META[tpl.sourceKind]?.icon ??
             EXTRA_SOURCE_ICONS[tpl.sourceKind] ??
             BarChart3;
+          // [T-367] 该 kind 已有 job → 「已存在」态:点卡走启用/定位既有 job,不再 create。
+          const existing = existingBySourceKind.get(tpl.sourceKind) ?? null;
           return (
             <button
               key={tpl.id}
               type="button"
               data-slot="automation-template-card"
               data-template-id={tpl.id}
-              onClick={() => onPick(tpl)}
+              data-existing={existing ? "true" : undefined}
+              onClick={() =>
+                existing ? onEnableExisting?.(existing) : onPick(tpl)
+              }
               className="flex flex-col items-start gap-2 rounded-card border border-border bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-soft/40"
             >
               <span className="flex items-center gap-2">
@@ -1550,10 +1573,22 @@ export function TemplateCards({
               <span className="text-xs leading-snug text-muted-foreground">
                 {tpl.description}
               </span>
-              <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand">
-                <Plus className="size-3" />
-                用此模板新建
-              </span>
+              {existing ? (
+                <span
+                  data-slot="automation-template-existing"
+                  className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground"
+                >
+                  <CheckCircle2 className="size-3" />
+                  {existing.enabled
+                    ? "已有此任务 → 去查看/编辑"
+                    : "已有此任务 → 去启用/编辑"}
+                </span>
+              ) : (
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand">
+                  <Plus className="size-3" />
+                  用此模板新建
+                </span>
+              )}
             </button>
           );
         })}
@@ -1784,6 +1819,19 @@ export function AutomationsIsland({
     setCreateOpen(true);
   }, []);
 
+  // [T-367] 已存在 kind 的模板卡被点 → 不 create:disabled 的既有 job 直接启用(复用
+  //   setScheduledJobEnabled toggle 链,router.refresh 翻篇),已启用的只滚动定位到那行,
+  //   让用户看到「任务已经在了」。
+  const enableExisting = React.useCallback(
+    async (job: ScheduledJobResource) => {
+      if (!job.enabled) await toggle(job, true);
+      document
+        .querySelector(`[data-job-id="${job.id}"]`)
+        ?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    },
+    [toggle],
+  );
+
   // 空白新建:清预填后打开。
   const openBlank = React.useCallback(() => {
     setPrefill(null);
@@ -1851,8 +1899,13 @@ export function AutomationsIsland({
 
   return (
     <section data-testid="automations-region" className="flex flex-col gap-6">
-      {/* 从模板入手(WorkBuddy 式) */}
-      <TemplateCards onPick={openFromTemplate} />
+      {/* 从模板入手(WorkBuddy 式)。[T-367] 透传现存 jobs 查重:已存在 kind 的卡显
+          「已存在」态,点它启用/定位既有 job,不再建第二条。 */}
+      <TemplateCards
+        onPick={openFromTemplate}
+        jobs={jobs}
+        onEnableExisting={enableExisting}
+      />
 
       {/* 顶部操作条 */}
       <div className="flex items-center justify-between">
@@ -1935,7 +1988,8 @@ export function AutomationsIsland({
           </div>
           <ul className="divide-y divide-border" role="list">
             {jobs.map((job) => (
-              <li key={job.id} className="list-none">
+              // [T-367] data-job-id:模板卡「已存在」态点击后滚动定位锚点。
+              <li key={job.id} data-job-id={job.id} className="list-none">
                 <JobRow
                   job={job}
                   currentAccount={currentAccount}

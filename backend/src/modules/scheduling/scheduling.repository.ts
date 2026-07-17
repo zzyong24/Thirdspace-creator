@@ -22,6 +22,39 @@ import { OwnershipError, requireAccountId } from "./scheduling.errors";
 export type ScheduledJobRow = typeof scheduledJobs.$inferSelect;
 export type JobRunRow = typeof jobRuns.$inferSelect;
 
+// [T-367] 6 类采集 sourceKind —— createJob 对这些 kind 幂等复用(同 user+号+kind 至多
+// 一条)。与三处保持一致:contract scheduledJobSourceKind 枚举、collection-bootstrap
+// DAILY_COLLECTION_JOB_DEFAULTS、迁移 0046 部分唯一索引 ux_scheduled_job_user_account_source
+// 的 WHERE 列表。非采集类 kind 不在集合内 → 行为不变(可多实例)。
+export const COLLECTION_JOB_SOURCE_KINDS: ReadonlySet<string> = new Set([
+  "self.metrics",
+  "self.detail",
+  "comments",
+  "benchmark",
+  "topic.daily",
+  "favorites",
+]);
+
+/** [T-367] 撞唯一约束判据(PGlite/PG 语义:code 23505 或错误文案带索引名)。 */
+function isUniqueViolation(err: unknown): boolean {
+  const seen = new Set<unknown>();
+  let cur: unknown = err;
+  while (cur && typeof cur === "object" && !seen.has(cur)) {
+    seen.add(cur);
+    const e = cur as { code?: unknown; message?: unknown; cause?: unknown };
+    if (e.code === "23505") return true;
+    if (
+      typeof e.message === "string" &&
+      (e.message.includes("ux_scheduled_job_user_account_source") ||
+        e.message.includes("duplicate key value"))
+    ) {
+      return true;
+    }
+    cur = e.cause;
+  }
+  return false;
+}
+
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
@@ -194,29 +227,80 @@ export function createSchedulingRepository(
     },
 
     async createJob(input) {
-      const inserted = await db
-        .insert(scheduledJobs)
-        .values({
-          id: deps.nextId("job"),
-          userId: deps.userId,
-          // [T-332 S2] 从 deps stamp(§4.6:repo 不接受调用方显式传号);未选号 → 抛。
-          accountId: requireAccountId(deps.accountId, "scheduling.createJob"),
-          name: input.name,
-          prompt: input.prompt,
-          sourceKind: input.sourceKind,
-          target: input.target,
-          schedule: input.schedule,
-          toolGrants: input.toolGrants,
-          recipe: null,
-          // [T-359] 尊重入参(分层启用:默认关的模板建即 disabled);缺省保持旧行为 true。
-          enabled: input.enabled ?? true,
-          lastRunAt: null,
-          nextRunAt: null,
-          createdAt: deps.now(),
-          updatedAt: deps.now(),
-        })
-        .returning();
-      return inserted[0]!;
+      // [T-332 S2] 从 deps stamp(§4.6:repo 不接受调用方显式传号);未选号 → 抛。
+      const accountId = requireAccountId(deps.accountId, "scheduling.createJob");
+      const isCollectionKind = COLLECTION_JOB_SOURCE_KINDS.has(input.sourceKind);
+      // [T-359] 尊重入参(分层启用:默认关的模板建即 disabled);缺省保持旧行为 true。
+      const wantEnabled = input.enabled ?? true;
+
+      // [T-367] 采集类 kind 幂等复用:同 (user, account, sourceKind) 已有 job → 不再建
+      //   第二条,返回已有行。用户在模板卡/新建弹窗对已有(通常 disabled 的 bootstrap)
+      //   job 再「新建」的真实意图是「开启它」—— 故传入 enabled=true 且已有行 disabled
+      //   时顺手 update 开启;**只开不关**(传入 enabled=false 不把用户已开启的 job 关掉,
+      //   bootstrap ensure 对默认关模板传 false,竞态撞上时不得反向覆盖用户意愿)。
+      //   非采集类 kind 不查重,行为不变。
+      const findExisting = async (): Promise<ScheduledJobRow | undefined> => {
+        const rows = await db
+          .select()
+          .from(scheduledJobs)
+          .where(
+            and(
+              eq(scheduledJobs.userId, deps.userId),
+              eq(scheduledJobs.accountId, accountId),
+              eq(scheduledJobs.sourceKind, input.sourceKind),
+            ),
+          );
+        return rows[0];
+      };
+      const reuse = async (row: ScheduledJobRow): Promise<ScheduledJobRow> => {
+        if (wantEnabled && !row.enabled) {
+          const updated = await db
+            .update(scheduledJobs)
+            .set({ enabled: true, updatedAt: deps.now() })
+            .where(eq(scheduledJobs.id, row.id))
+            .returning();
+          return updated[0]!;
+        }
+        return row;
+      };
+
+      if (isCollectionKind) {
+        const existing = await findExisting();
+        if (existing) return reuse(existing);
+      }
+
+      try {
+        const inserted = await db
+          .insert(scheduledJobs)
+          .values({
+            id: deps.nextId("job"),
+            userId: deps.userId,
+            accountId,
+            name: input.name,
+            prompt: input.prompt,
+            sourceKind: input.sourceKind,
+            target: input.target,
+            schedule: input.schedule,
+            toolGrants: input.toolGrants,
+            recipe: null,
+            enabled: wantEnabled,
+            lastRunAt: null,
+            nextRunAt: null,
+            createdAt: deps.now(),
+            updatedAt: deps.now(),
+          })
+          .returning();
+        return inserted[0]!;
+      } catch (err) {
+        // [T-367] 先查后插的 TOCTOU 竞态:并发方先插成功 → 本次撞部分唯一索引
+        //   ux_scheduled_job_user_account_source(迁移 0046)。幂等收敛:查回已有行复用
+        //   (同样按 wantEnabled 只开不关)。非采集 kind / 非唯一冲突照原样抛。
+        if (isCollectionKind && isUniqueViolation(err)) {
+          const existing = await findExisting();
+          if (existing) return reuse(existing);
+        }
+        throw err;
+      }
     },
 
     async getJob(id) {

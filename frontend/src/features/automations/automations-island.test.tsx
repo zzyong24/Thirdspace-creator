@@ -478,6 +478,56 @@ describe("TemplateCards — 从模板入手", () => {
     expect(tpl.sourceKind).toBe("comments");
   });
 
+  // [T-367] 模板卡查重:已存在 sourceKind 的卡显「已存在」态,点它不再走 create(根治
+  // 「点模板卡想开启 bootstrap 建的禁用 job,结果建出第二条」的重复)。
+  it("[T-367] 已存在 kind 的卡显「已有此任务」态;点它调 onEnableExisting(不调 onPick)", () => {
+    const onPick = vi.fn();
+    const onEnableExisting = vi.fn();
+    const existingJob = makeJob({
+      id: "job-bm",
+      sourceKind: "benchmark",
+      enabled: false,
+    });
+    render(
+      <TemplateCards
+        onPick={onPick}
+        jobs={[existingJob]}
+        onEnableExisting={onEnableExisting}
+      />,
+    );
+    const card = document.querySelector(
+      '[data-template-id="daily-benchmark"]',
+    ) as HTMLButtonElement;
+    // 「已存在」态:disabled 既有 job → 文案引导去启用,不再是「用此模板新建」。
+    expect(card).toHaveAttribute("data-existing", "true");
+    expect(card.textContent).toContain("已有此任务 → 去启用/编辑");
+    expect(card.textContent).not.toContain("用此模板新建");
+    fireEvent.click(card);
+    expect(onPick).not.toHaveBeenCalled();
+    expect(onEnableExisting).toHaveBeenCalledTimes(1);
+    expect(onEnableExisting.mock.calls[0]![0]).toBe(existingJob);
+    // 不存在的 kind 保持「用此模板新建」现状。
+    const commentsCard = document.querySelector(
+      '[data-template-id="daily-comments"]',
+    ) as HTMLButtonElement;
+    expect(commentsCard).not.toHaveAttribute("data-existing");
+    expect(commentsCard.textContent).toContain("用此模板新建");
+  });
+
+  it("[T-367] 已存在且已启用的 kind → 文案「去查看/编辑」", () => {
+    render(
+      <TemplateCards
+        onPick={vi.fn()}
+        jobs={[makeJob({ sourceKind: "self.metrics", enabled: true })]}
+        onEnableExisting={vi.fn()}
+      />,
+    );
+    const card = document.querySelector(
+      '[data-template-id="daily-self-metrics"]',
+    ) as HTMLButtonElement;
+    expect(card.textContent).toContain("已有此任务 → 去查看/编辑");
+  });
+
   it("明细模板(T-030-D8a)已翻真:可点,pick 带 self.detail", () => {
     const onPick = vi.fn();
     render(<TemplateCards onPick={onPick} />);
@@ -524,6 +574,51 @@ describe("AutomationsIsland — 新建接线", () => {
     expect(arg.body.schedule).toBe("0 9 * * *");
     expect(arg.body.prompt).toBe("每天抓我主页的新作品");
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  // [T-367] island 接线:已存在(disabled)kind 的模板卡 → 直接启用既有 job,不调 create。
+  it("[T-367] 点已存在 kind 模板卡 → setScheduledJobEnabled(既有 job, true),不调 createScheduledJob", async () => {
+    render(
+      <AutomationsIsland
+        jobs={[
+          makeJob({ id: "job-bm", sourceKind: "benchmark", enabled: false, name: "对标采集" }),
+        ]}
+      />,
+    );
+    fireEvent.click(
+      screen
+        .getByText("每天抓对标号的爆款作品")
+        .closest("button") as HTMLButtonElement,
+    );
+    await waitFor(() =>
+      expect(mockClient.setScheduledJobEnabled).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.setScheduledJobEnabled.mock.calls[0]![0] as {
+      params: { jobId: string };
+      body: { enabled: boolean };
+    };
+    expect(arg.params.jobId).toBe("job-bm");
+    expect(arg.body.enabled).toBe(true);
+    // 不走 create(根治重复建第二条)。
+    expect(mockClient.createScheduledJob).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("[T-367] 已存在且已启用的 kind 模板卡:点击既不 create 也不重复 setEnabled", async () => {
+    render(
+      <AutomationsIsland
+        jobs={[makeJob({ id: "job-m", sourceKind: "self.metrics", enabled: true })]}
+      />,
+    );
+    fireEvent.click(
+      screen
+        .getByText("每天抓我的新作品指标")
+        .closest("button") as HTMLButtonElement,
+    );
+    // 给微任务队列一拍:无 create、无 setEnabled(只定位既有行)。
+    await Promise.resolve();
+    expect(mockClient.createScheduledJob).not.toHaveBeenCalled();
+    expect(mockClient.setScheduledJobEnabled).not.toHaveBeenCalled();
   });
 
   it("点模板卡「每天抓我作品的最新评论」→ 弹窗预填并可直接创建(sourceKind=comments)", async () => {

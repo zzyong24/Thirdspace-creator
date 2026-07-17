@@ -118,4 +118,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_job_run_job_scheduled_for ON job_run (job_i
 ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT;
 CREATE INDEX IF NOT EXISTS ix_scheduled_job_user_enabled ON scheduled_job (user_id, enabled);
 CREATE INDEX IF NOT EXISTS ix_job_run_job ON job_run (job_id, started_at);
+-- [T-367] 采集类 job 的 (user_id, account_id, source_kind) 部分唯一 —— 同 user+号+采集
+-- kind 至多一条,DB 层兜底并发 TOCTOU(应用层 createJob 幂等复用 + 前端模板卡查重是
+-- 主路径,这里是最后一道闸)。部分索引仅约束 6 类采集 kind,不限制未来非采集类 job
+-- 多实例。与 0046_scheduled_job_unique_source.sql 对齐(迁移才是运行时真正建索引的那份;
+-- 迁移同时清了存量重复:enabled 优先 → created_at 最早保留)。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_scheduled_job_user_account_source ON scheduled_job (user_id, account_id, source_kind) WHERE source_kind IN ('self.metrics','self.detail','comments','benchmark','topic.daily','favorites');
 `;
