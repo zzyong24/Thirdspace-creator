@@ -1511,6 +1511,34 @@ describe("[T-269] buildEnrichPrompt — anti-fabrication 注入", () => {
     const prompt = buildEnrichPrompt(CTX, { title: "提示词技巧", angle: "" });
     expect(prompt).not.toContain(ANTI_FABRICATION_CLAUSE);
   });
+
+  // [T-371] 先搜后卡:联网核实素材段 + materialBasis 诚实门(有→据实引用;无→如实标注未核实,
+  // 禁「待联网拉取/暂无素材需搜集」占位承诺冒充产出)。
+  it("[T-371] 传 verifiedBrief → prompt 含联网核实素材段 + 据实引用指令,禁占位承诺", () => {
+    const prompt = buildEnrichPrompt(
+      CTX,
+      { title: "kimi 新模型解读", angle: "" },
+      ANTI_FABRICATION_CLAUSE,
+      "Kimi 今日发布新模型,来源:https://example.com/news",
+    );
+    expect(prompt).toContain("【本轮联网核实素材(来自对话检索,据实引用)】");
+    expect(prompt).toContain("Kimi 今日发布新模型,来源:https://example.com/news");
+    expect(prompt).toContain("据实引用");
+    expect(prompt).toContain("绝不写「待联网拉取/暂无素材需搜集」这类占位承诺");
+  });
+
+  it("[T-371] 不传 verifiedBrief → 素材依据段走「未联网核实」诚实门,禁伪承诺占位", () => {
+    const prompt = buildEnrichPrompt(
+      CTX,
+      { title: "提示词技巧", angle: "" },
+      ANTI_FABRICATION_CLAUSE,
+    );
+    expect(prompt).not.toContain("【本轮联网核实素材");
+    expect(prompt).toContain("未联网核实,以下基于模型已有认知");
+    expect(prompt).toContain("待联网拉取/暂无素材,需搜集补充");
+    // 旧文案「没有可依托素材就如实写『暂无现成素材,需搜集』」已被诚实门替换(那正是事故占位话术)。
+    expect(prompt).not.toContain("暂无现成素材,需搜集」");
+  });
 });
 
 // [T-055c] script.hooks 的宽容 JSON 解析。

@@ -55,6 +55,43 @@ describe("[T-270] 项目态模板带立项 Brief 硬锚 + 用户素材占位", (
   });
 });
 
+// [T-371] topic.enrich 模板的素材依据诚实门:有【本轮联网核实素材】→ 据实引用;没有 → 如实写
+// 「未联网核实,以下基于模型已有认知」;禁「待联网拉取/暂无素材需搜集」伪承诺占位(真机事故:
+// 搜索没完成就出卡,materialBasis 拿占位文案冒充产出)。
+describe("[T-371] topic.enrich 模板 — 素材依据诚实门 + verifiedBrief 占位", () => {
+  it("模板带 {{verifiedBrief}} 选填占位(联网核实素材段通道)", () => {
+    expect(TOPIC_ENRICH_TEMPLATE.template).toContain("{{verifiedBrief}}");
+    // 选填:不在 requiredFacets(后台任务路径无此 facet,缺省替空串)。
+    expect(TOPIC_ENRICH_TEMPLATE.requiredFacets).not.toContain("verifiedBrief");
+  });
+
+  it("素材依据指令:有核实素材据实引用,无则如实标「未联网核实」,禁伪承诺占位", () => {
+    const t = TOPIC_ENRICH_TEMPLATE.template;
+    expect(t).toContain("【本轮联网核实素材】");
+    expect(t).toContain("据实引用");
+    expect(t).toContain("未联网核实,以下基于模型已有认知");
+    expect(t).toContain("待联网拉取/暂无素材,需搜集补充");
+    // 旧文案「没有可依托素材就如实写『暂无现成素材,需搜集』」已移除(正是事故占位话术的出处)。
+    expect(t).not.toContain("暂无现成素材,需搜集」");
+  });
+
+  it("bindPrompt:传 verifiedBrief facet(含段头)→ 落进 prompt;缺省 → 无残留占位", () => {
+    const facets = {
+      positioning: "AI 编导科普",
+      title: "kimi 新模型解读",
+      angle: "时效角",
+    };
+    const withBrief = bindPrompt(TOPIC_ENRICH_TEMPLATE, {
+      ...facets,
+      verifiedBrief:
+        "\n【本轮联网核实素材(来自对话检索,据实引用)】\nKimi 今日发布新模型,来源:https://example.com/news",
+    });
+    expect(withBrief.prompt).toContain("Kimi 今日发布新模型");
+    const without = bindPrompt(TOPIC_ENRICH_TEMPLATE, facets);
+    expect(without.prompt).not.toMatch(/\{\{[a-zA-Z]/); // 无占位残留
+  });
+});
+
 // [T-355] 观众心智预设写法纪律段(用户拍板文案观的消化版)嵌入文案生成面 —— 单一真值
 // AUDIENCE_MINDSET_CLAUSE。核心不变量:归因外置(禁写让观众觉得「我不行」的话)逐字在场。
 describe("[T-355] 观众心智预设段下沉到文案生成模板", () => {

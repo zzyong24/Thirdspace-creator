@@ -83,6 +83,10 @@ export function buildEnrichPrompt(
   // 带同款反编造约束——治「materialBasis 凭空称能依托某资料」的编造敞口。调用方(chat-runner)传入常量;
   // 缺省(旧调用/单测不传)→ 不注(向后兼容)。
   antiFabrication?: string,
+  // [T-371] 本轮联网核实到的真实事实/来源(对话先搜后卡顺序门:模型先 material.gather/web.read
+  // 再 enrich,核实结果经 verifiedBrief 进素材依据段)。缺省 → 素材依据段走「未联网核实」诚实门,
+  // 禁止「待联网拉取/暂无素材需搜集」这类伪承诺占位。
+  verifiedBrief?: string,
 ): string {
   const positioning = context.positioningBrief
     ? context.positioningBrief
@@ -97,17 +101,25 @@ export function buildEnrichPrompt(
     ? `\n【可依托的知识库资料】\n${context.knowledgeBrief}`
     : "";
   const antiFab = antiFabrication ? `\n${antiFabrication}` : "";
+  // [T-371] 联网核实素材段 + 素材依据段的诚实门(有核实素材 → 据实引用来源;没有 → 如实标注
+  // 「未联网核实」,禁止占位承诺冒充产出)。
+  const verified = verifiedBrief
+    ? `\n【本轮联网核实素材(来自对话检索,据实引用)】\n${verifiedBrief}`
+    : "";
+  const materialRule = verifiedBrief
+    ? "特别地:materialBasis(素材依据)必须**据实引用**上方【本轮联网核实素材】里的事实与来源(可再加其他真实存在的资料/经历),绝不凭空声称「能依托某资料」,也绝不写「待联网拉取/暂无素材需搜集」这类占位承诺。"
+    : "特别地:materialBasis(素材依据)只能写**真实存在**的资料/经历,绝不凭空声称「能依托某资料」;本轮**未联网核实**,没有可依托素材时就如实写「未联网核实,以下基于模型已有认知」——**禁止**写「待联网拉取/暂无素材,需搜集补充」这类伪承诺占位(那是拿承诺冒充产出)。";
   return `你是这位创作者的「选题策划 agent」。下面是一条**待补全的选题**,请把它扩展成一张完整的**选题卡**。
 
 【创作者定位】
-${positioning}${learnings}${signals}${knowledge}
+${positioning}${learnings}${signals}${knowledge}${verified}
 
 【待补全选题】
 标题:${subject.title}
 切入角度:${subject.angle || "（未给出,请你补一个最锋利的角度)"}
 
 【任务】像一个专业自媒体主编那样,把这条选题想透——观众是谁、痛在哪、核心冲突、怎么开头钩住、内容怎么排、用什么形式、有没有素材、风险在哪、要不要立项。指标只给你有把握的,拿不准就给 null(别编)。${antiFab}
-特别地:materialBasis(素材依据)只能写**真实存在**的资料/经历,绝不凭空声称「能依托某资料」;没有可依托素材就如实写「暂无现成素材,需搜集」。
+${materialRule}
 
 【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹),形如:
 {"oneLiner":"一句话选题(把这条选题浓缩成一句)",

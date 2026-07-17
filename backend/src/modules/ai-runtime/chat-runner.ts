@@ -909,7 +909,7 @@ export async function buildChatAssembly(
       // execute 兼容旧裸数组;无注记时 trendNote=null,execute 侧不渲字段)。
       return { items, trendNote };
     },
-    enrichTopic: async ({ title, angle }) => {
+    enrichTopic: async ({ title, angle, verifiedBrief }) => {
       // [T-111] 选中某选题(编导起草深链 selection.kind="candidate")时,补全**一律锚定这条选题的
       // 标题** —— 别让模型把开场选中的选题当「新选题」、或拿自己另生成的候选替换掉它(实录:模型
       // 传错标题把《Hermes对比》补成不相干的《Claude Code 装好第一步报错》)。无 candidate 选中时
@@ -924,10 +924,13 @@ export async function buildChatAssembly(
       // 真值 grounding-facets)——治「materialBasis 凭空称能依托某资料」的编造敞口。enrich 是账号态
       // (projectId=null),不注 brief 硬锚(不项目化,守审计边界),只上 anti-fabrication。
       const { runAgentNode, ANTI_FABRICATION_CLAUSE } = await import("@creatoros/ai-worker");
+      // [T-371] 先搜后卡:对话里联网核实到的事实经 verifiedBrief 进 enrich prompt(素材依据段
+      // 据实引用来源);缺省走「未联网核实」诚实门,禁「待联网拉取」占位承诺。
       const prompt = buildEnrichPrompt(
         context,
         { title: effTitle, angle },
         ANTI_FABRICATION_CLAUSE,
+        verifiedBrief,
       );
       const res = await runAgentNode({
         model,

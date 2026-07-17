@@ -7,7 +7,9 @@ import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
  * 把一条待补全选题扩展成完整选题卡(10 详情字段 + 3 指标)。
  * facets 由 CreativeContext + subject 映射:
  *   positioning(必需,调用方已默认兜底)· learnings/signals/knowledge(选填上下文块,调用方按对应 brief 计算)·
- *   title(必需:待补全选题标题)· angle(必需:切入角度,调用方按 subject.angle 兜底)。
+ *   title(必需:待补全选题标题)· angle(必需:切入角度,调用方按 subject.angle 兜底)·
+ *   verifiedBrief(选填,[T-371]:本轮联网核实素材段,含段头;缺省空 → 素材依据段走「未联网核实」
+ *   诚实门,禁「待联网拉取」占位承诺)。
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  *
  * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),让用户
@@ -43,7 +45,7 @@ export const TOPIC_ENRICH_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「选题策划 agent」。下面是一条**待补全的选题**,请把它扩展成一张完整的**选题卡**。
 
 【创作者定位】
-{{positioning}}{{learnings}}{{signals}}{{knowledge}}
+{{positioning}}{{learnings}}{{signals}}{{knowledge}}{{verifiedBrief}}
 
 【待补全选题】
 标题:{{title}}
@@ -51,7 +53,7 @@ export const TOPIC_ENRICH_TEMPLATE: PromptTemplate = {
 
 【任务】像一个专业自媒体主编那样,把这条选题想透——观众是谁、痛在哪、核心冲突、怎么开头钩住、内容怎么排、用什么形式、有没有素材、风险在哪、要不要立项。指标只给你有把握的,拿不准就给 null(别编)。
 ${ANTI_FABRICATION_CLAUSE}
-特别地:materialBasis(素材依据)只能写**真实存在**的资料/经历,绝不凭空声称「能依托某资料」;没有可依托素材就如实写「暂无现成素材,需搜集」。
+特别地:materialBasis(素材依据)只能写**真实存在**的资料/经历,绝不凭空声称「能依托某资料」。若上方提供了【本轮联网核实素材】,materialBasis 必须**据实引用**其中的事实与来源;若未提供且没有其他可依托素材,如实写「未联网核实,以下基于模型已有认知」——**禁止**写「待联网拉取/暂无素材,需搜集补充」这类伪承诺占位(那是拿承诺冒充产出)。
 
 【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹),形如:
 {"oneLiner":"一句话选题(把这条选题浓缩成一句)",

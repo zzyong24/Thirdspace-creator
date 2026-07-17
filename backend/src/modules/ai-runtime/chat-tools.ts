@@ -64,7 +64,16 @@ export interface ChatToolDeps {
    * 随 tool-result 一并持久化 —— 刷新会话后前端仍能据它定位 patch 目标(而非依赖易失的
    * 当前 selection),null 时前端采纳走 createCandidate 新建(不再死胡同禁用)。
    */
-  enrichTopic: (input: { title: string; angle: string }) => Promise<{
+  enrichTopic: (input: {
+    title: string;
+    angle: string;
+    /**
+     * [T-371] 本轮联网核实到的真实事实/来源(先搜后卡顺序门):模型先用 material.gather /
+     * web.read 拿到真实信息后经此参传入,拼进 enrich prompt 的素材依据段——治「搜索没完成
+     * 就出卡、materialBasis 写『待联网拉取』占位冒充产出」的欺骗敞口。
+     */
+    verifiedBrief?: string;
+  }) => Promise<{
     card: {
       oneLiner: string;
       targetAudience: string;
@@ -891,6 +900,12 @@ export interface WebReadToolResult {
   hasMore?: boolean;
   /** [T-251] true = 未重新抓取(命中已落库的同 URL 正文素材,直接按窗读已存全文)。 */
   fromCache?: boolean;
+  /**
+   * [T-371] SERP 诚实注记:目标 URL 是搜索引擎结果页时非空(WEB_READ_SERP_NOTE)——此时窗口
+   * 压到 1500 字(SERP 是检索噪音不是正文),模型据此不把结果页当正文素材灌、引导走
+   * material.gather 或具体文章 URL。普通网页无此字段。
+   */
+  serpNote?: string;
 }
 
 // [T-253] local.read 工具结果 —— 本机文件读取四态(互斥):
@@ -1250,6 +1265,48 @@ export interface TextWindow {
 // excerpt/元数据留足余量(网页正文比库内产物长得多,4k 窗对 24 轮对话翻窗次数过多)。导出供单测。
 export const WEB_READ_WINDOW_MAX_CHARS = 12000;
 
+// [T-371] SERP(搜索结果页)窗口上限:搜索结果页整页正文是 SERP 噪音(标题+摘要碎片),不是
+// 文章正文——真机事故里 bing 结果页整页被渲成大素材卡。命中 SERP 时窗口压到 1500 字(默认
+// 12000 只收 SERP,T-251 窗口协议本身不动),并附诚实注记引导走 material.gather / 具体文章 URL。
+export const WEB_READ_SERP_MAX_CHARS = 1500;
+
+// [T-371] SERP 命中时随结果回的诚实注记(导出供单测锚定;模型据此不把 SERP 当正文素材灌)。
+export const WEB_READ_SERP_NOTE =
+  "这是搜索引擎的搜索结果页摘要(已截断),不是文章正文;要系统检索素材请用 material.gather,要读某条结果的正文请给出该结果的具体文章 URL 再调 web.read。";
+
+// [T-371] SERP 识别纯函数(导出可测):URL 是否主流搜索引擎的搜索结果页。只认「搜索结果路径」
+// (bing.com/search、baidu.com/s、google.*/search、so.com/s、sogou.com/web 等),不误伤普通文章
+// URL(如 example.com/search-tips)。解析失败/非 http(s) → false(交给下游诚实报错)。
+export function isSerpUrl(rawUrl: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+  const host = u.hostname.toLowerCase();
+  const path = u.pathname;
+  const onHost = (domain: string): boolean =>
+    host === domain || host.endsWith(`.${domain}`);
+  // bing:www.bing.com/search、cn.bing.com/search
+  if (onHost("bing.com") && path === "/search") return true;
+  // baidu:www.baidu.com/s、m.baidu.com/s
+  if (onHost("baidu.com") && path === "/s") return true;
+  // google:google.com/search + 各国别域(google.com.hk 等)—— host 含「google.」且路径 /search。
+  if (/(^|\.)google\.[a-z.]{2,}$/.test(host) && path === "/search") return true;
+  // 360 搜索:www.so.com/s
+  if (onHost("so.com") && path === "/s") return true;
+  // 搜狗:www.sogou.com/web
+  if (onHost("sogou.com") && path === "/web") return true;
+  // DuckDuckGo:duckduckgo.com/?q=…(结果页在根路径带 q 参数)或 /html。
+  if (onHost("duckduckgo.com") && (u.searchParams.has("q") || path === "/html"))
+    return true;
+  // Yahoo:search.yahoo.com/search
+  if (host.endsWith("search.yahoo.com") && path.startsWith("/search")) return true;
+  return false;
+}
+
 // [T-099c] maxChars 夹取:非法/缺省 → 默认 4000;>8000 → 封顶 8000;≤0 → 默认。导出供单测。
 // [T-251] limits 可选覆盖(web.read 用 12000/12000),缺省保持 §3 全文档预算(4000/8000)。
 export function clampWindowMaxChars(
@@ -1449,11 +1506,22 @@ const TOPIC_GENERATE_PARAMS = jsonSchema<{
   additionalProperties: false,
 });
 
-const TOPIC_ENRICH_PARAMS = jsonSchema<{ title: string; angle?: string }>({
+const TOPIC_ENRICH_PARAMS = jsonSchema<{
+  title: string;
+  angle?: string;
+  verifiedBrief?: string;
+}>({
   type: "object",
   properties: {
     title: { type: "string", description: "要补全的选题标题(必填)。" },
     angle: { type: "string", description: "切入角度(可选,没有就留空让 AI 补)。" },
+    // [T-371] 先搜后卡:联网核实到的真实事实经此参进 enrich prompt(素材依据段据实引用)。
+    verifiedBrief: {
+      type: "string",
+      maxLength: 2000,
+      description:
+        "本轮**已联网核实**的关键事实/来源(来自 material.gather / web.read 的真实结果,带来源更好),原样拼进选题卡的素材依据段。时效性/事实型选题必填;没搜到就别编造此参。",
+    },
   },
   required: ["title"],
   additionalProperties: false,
@@ -2161,15 +2229,23 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       },
     }, deps.humanizeError),
     "topic.enrich": defineChatTool("topic.enrich", {
+      // [T-371] 先搜后卡顺序门:治真机事故「搜索未完成就渲选题卡,materialBasis 写『待联网
+      // 拉取』占位冒充产出」——时效性选题必须先真搜、核实到的事实经 verifiedBrief 进卡。
       description:
-        "把一条已有选题补全成完整选题卡(观众/痛点/钩子/结构/风险/立项建议)。结果是候选卡,需人采纳后才落到该选题——不直接写库。",
+        "把一条已有选题补全成完整选题卡(观众/痛点/钩子/结构/风险/立项建议)。结果是候选卡,需人采纳后才落到该选题——不直接写库。\n\n**先搜后卡(硬性顺序,不可跳)**:时效性/新事件/事实型选题(用户提到「今天/刚发布/最新/新模型/联网搜」等)**必须先用 material.gather 或 web.read 拿到真实信息、再调本工具**,并把核实到的关键事实/来源经 verifiedBrief 参数传入;没搜到/搜不出来就先诚实告知用户,不许先出卡再补——卡上写「待联网拉取/暂无素材需搜集」这类占位文案冒充产出=欺骗。",
       inputSchema: TOPIC_ENRICH_PARAMS,
-      execute: async ({ title, angle }): Promise<TopicEnrichToolResult> => {
+      execute: async ({
+        title,
+        angle,
+        verifiedBrief,
+      }): Promise<TopicEnrichToolResult> => {
         // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的
         // 已有候选(selection.kind==="candidate"),随结果持久化,前端据它 patch/新建二选一。
         const { card, candidateId } = await deps.enrichTopic({
           title,
           angle: angle ?? "",
+          // [T-371] 联网核实事实透传(照 extraBrief 清洗范式:trim + 截 2000,空→undefined)。
+          verifiedBrief: clampExtraBrief(verifiedBrief),
         });
         return { kind: "topic.card", card, candidateId };
       },
@@ -2353,11 +2429,17 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           }
           // [T-251] 窗口化:端口回了全文 → 按窗返回(默认/封顶 12000,T-239a 16k 预算内留余量);
           // 旧端口无 fullText → 退回 excerpt(window=null,诚实无窗口真相,不假装看全)。
+          // [T-371] SERP 例外:搜索结果页整页正文是检索噪音(真机事故:bing 结果页被渲成大素材
+          // 卡)——命中 SERP 时窗口压到 1500 字并附诚实注记(默认 12000 不变,只收 SERP)。
+          const serp = isSerpUrl(target);
+          const windowCap = serp
+            ? WEB_READ_SERP_MAX_CHARS
+            : WEB_READ_WINDOW_MAX_CHARS;
           const window =
             typeof res.fullText === "string"
               ? readTextWindow(res.fullText, { offset, maxChars }, {
-                  defaultMaxChars: WEB_READ_WINDOW_MAX_CHARS,
-                  capChars: WEB_READ_WINDOW_MAX_CHARS,
+                  defaultMaxChars: windowCap,
+                  capChars: windowCap,
                 })
               : null;
           return {
@@ -2389,6 +2471,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
               : null,
             hasMore: window ? window.hasMore : false,
             ...(res.fromCache ? { fromCache: true } : {}),
+            // [T-371] SERP 诚实注记:模型据此不把结果页当正文素材,引导 material.gather/具体 URL。
+            ...(serp ? { serpNote: WEB_READ_SERP_NOTE } : {}),
           };
         } catch (err) {
           // 逐类诚实报错(WebCaptureError:打不开 / HTTP 码 / 抽不出正文)原样转述。
@@ -2632,7 +2716,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "calibration.diagnose": defineChatTool("calibration.diagnose", {
       description:
-        "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。结果是诊断候选,需人采纳后才落预测——不直接写库。",
+        "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。结果是诊断候选,需人采纳后才落预测——不直接写库。**只有标题、没拿到真实文稿时,如实按「仅标题可评」的口径评并明说局限;上游内容还没就绪就先诚实告知,不许假装读过全文、不许输出「待补文稿后再评」这类占位结论。**",
       inputSchema: CALIBRATION_DIAGNOSE_PARAMS,
       execute: async ({
         title,
@@ -2699,7 +2783,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 产物挂进稿面「论点骨架」面板。无项目上下文 / dispatch 失败 → error 非 null(卡渲诚实错误态)。
     "planning.thesis": defineChatTool("planning.thesis", {
       description:
-        "为**当前项目**生成一棵论点树(核心论点 + 支撑/证据/反驳分支),产出可挂进稿面「论点骨架」面板、写脚本时被引用的 thesis_tree 产物。当用户说「立论点树 / 帮我立论点 / 搭个论点骨架 / 核心论点加支撑证据反驳」时调用。论点树基于创作者的定位、选题、立项 brief 与已搜集素材构建(有据可依,不凭空编数字)。生成在后台跑(不阻塞对话),结果渲成论点树候选卡;用户点卡上「采纳」才落成 thesis_tree 产物、挂进论点骨架面板(铁律②确认门)——你没有直接写树的能力,绝不口头宣称「论点树已立好/已写入骨架」。只能为当前项目对话立论点;没有项目上下文时会诚实提示去项目稿面里立。",
+        "为**当前项目**生成一棵论点树(核心论点 + 支撑/证据/反驳分支),产出可挂进稿面「论点骨架」面板、写脚本时被引用的 thesis_tree 产物。当用户说「立论点树 / 帮我立论点 / 搭个论点骨架 / 核心论点加支撑证据反驳」时调用。论点树基于创作者的定位、选题、立项 brief 与已搜集素材构建(有据可依,不凭空编数字)。**上游素材/立项 brief 还没就绪时先诚实告知用户(或先用 material.gather/web.read 真搜集再立),绝不在产出里写「待搜集/待联网拉取」这类占位承诺冒充论据。**生成在后台跑(不阻塞对话),结果渲成论点树候选卡;用户点卡上「采纳」才落成 thesis_tree 产物、挂进论点骨架面板(铁律②确认门)——你没有直接写树的能力,绝不口头宣称「论点树已立好/已写入骨架」。只能为当前项目对话立论点;没有项目上下文时会诚实提示去项目稿面里立。",
       inputSchema: PLANNING_THESIS_PARAMS,
       execute: async ({ projectId, topic }): Promise<PlanningThesisToolResult> => {
         try {

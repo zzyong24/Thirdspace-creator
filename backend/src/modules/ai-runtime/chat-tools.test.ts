@@ -19,6 +19,9 @@ import {
   TEXT_WINDOW_DEFAULT_MAX_CHARS,
   TEXT_WINDOW_CAP_CHARS,
   WEB_READ_WINDOW_MAX_CHARS,
+  WEB_READ_SERP_MAX_CHARS,
+  WEB_READ_SERP_NOTE,
+  isSerpUrl,
   type ChatToolDeps,
 } from "./chat-tools";
 
@@ -2945,5 +2948,158 @@ describe("[T-256a] local.workspace 工具 — 工作区目录感知(复用授权
     };
     expect(result.dirs).toEqual([]);
     expect(result.error).toContain("未接入");
+  });
+});
+
+// ── [T-371] AI 行为诚实门 ────────────────────────────────────────────────────────────────
+// 真机事故:①「联网搜今天 kimi 新模型再补选题卡」→ 搜索没完成就出卡,materialBasis 写「待联网
+// 拉取」占位冒充产出;② web.read 把 bing 搜索结果页整页正文渲成大素材卡(SERP 噪音)。
+
+describe("[T-371] topic.enrich 先搜后卡 — verifiedBrief 透传 + 顺序门描述", () => {
+  it("verifiedBrief 透传到 deps.enrichTopic(照 extraBrief 清洗范式:trim)", async () => {
+    const { deps, enrichTopic } = makeDeps();
+    const tools = buildChatTools(["topic.enrich"], deps);
+    await runExecute(tools["topic.enrich"]!, {
+      title: "kimi 新模型解读",
+      angle: "时效角",
+      verifiedBrief: "  Kimi 今日发布新模型,来源:https://example.com/news  ",
+    });
+    expect(enrichTopic).toHaveBeenCalledWith({
+      title: "kimi 新模型解读",
+      angle: "时效角",
+      verifiedBrief: "Kimi 今日发布新模型,来源:https://example.com/news",
+    });
+  });
+
+  it("verifiedBrief 缺省 → 透传 undefined(不注空噪声,行为与旧入参一致)", async () => {
+    const { deps, enrichTopic } = makeDeps();
+    const tools = buildChatTools(["topic.enrich"], deps);
+    await runExecute(tools["topic.enrich"]!, { title: "普通选题" });
+    expect(enrichTopic).toHaveBeenCalledWith({
+      title: "普通选题",
+      angle: "",
+      verifiedBrief: undefined,
+    });
+  });
+
+  it("工具描述含「先搜后卡」硬顺序门:先 material.gather/web.read → verifiedBrief → 禁占位冒充", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["topic.enrich"], deps);
+    const desc = (tools["topic.enrich"]! as { description?: string }).description!;
+    expect(desc).toContain("先搜后卡");
+    expect(desc).toContain("material.gather");
+    expect(desc).toContain("web.read");
+    expect(desc).toContain("verifiedBrief");
+    // 占位文案冒充产出 = 欺骗,硬话在场。
+    expect(desc).toContain("待联网拉取");
+    expect(desc).toContain("欺骗");
+  });
+});
+
+describe("[T-371] isSerpUrl — 搜索结果页识别纯函数", () => {
+  it("命中主流搜索引擎结果页", () => {
+    expect(isSerpUrl("https://www.bing.com/search?q=kimi+新模型")).toBe(true);
+    expect(isSerpUrl("https://cn.bing.com/search?q=kimi")).toBe(true);
+    expect(isSerpUrl("https://www.baidu.com/s?wd=kimi")).toBe(true);
+    expect(isSerpUrl("https://m.baidu.com/s?wd=kimi")).toBe(true);
+    expect(isSerpUrl("https://www.google.com/search?q=kimi")).toBe(true);
+    expect(isSerpUrl("https://www.google.com.hk/search?q=kimi")).toBe(true);
+    expect(isSerpUrl("https://www.so.com/s?q=kimi")).toBe(true);
+    expect(isSerpUrl("https://www.sogou.com/web?query=kimi")).toBe(true);
+    expect(isSerpUrl("https://duckduckgo.com/?q=kimi")).toBe(true);
+    expect(isSerpUrl("https://search.yahoo.com/search?p=kimi")).toBe(true);
+  });
+
+  it("不误伤普通 URL(路径相似/域名相似/文章页)", () => {
+    // 普通文章页/首页。
+    expect(isSerpUrl("https://example.com/article/kimi-release")).toBe(false);
+    expect(isSerpUrl("https://www.kimi.com/")).toBe(false);
+    // 路径像但域不是搜索引擎。
+    expect(isSerpUrl("https://example.com/search?q=x")).toBe(false);
+    expect(isSerpUrl("https://example.com/s?wd=x")).toBe(false);
+    // 域是搜索引擎但路径不是结果页(bing 首页/博客、google maps、百度百科)。
+    expect(isSerpUrl("https://www.bing.com/")).toBe(false);
+    expect(isSerpUrl("https://blogs.bing.com/search-quality-insights")).toBe(false);
+    expect(isSerpUrl("https://www.google.com/maps")).toBe(false);
+    expect(isSerpUrl("https://baike.baidu.com/item/Kimi")).toBe(false);
+    // 伪装域(evil-baidu.com 不是 *.baidu.com)。
+    expect(isSerpUrl("https://evil-baidu.com/s?wd=x")).toBe(false);
+    // 非法输入/非 http(s)。
+    expect(isSerpUrl("not a url")).toBe(false);
+    expect(isSerpUrl("ftp://www.bing.com/search")).toBe(false);
+  });
+});
+
+describe("[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记", () => {
+  const WHITELIST = ["web.read"] as const;
+  const serpReadWeb = () =>
+    vi.fn(async () => ({
+      needLogin: false as const,
+      assetId: "as-serp-1",
+      name: "正文·搜索结果页",
+      previewUrl: null,
+      sourceUrl: "https://www.bing.com/search?q=kimi",
+      title: "kimi - 搜索",
+      excerpt: "搜索结果摘要…",
+      extractor: "readability",
+      fullText: "字".repeat(5000),
+    }));
+
+  it("SERP URL → 窗口压到 1500 字 + serpNote 诚实注记 + hasMore 真相", async () => {
+    const { deps } = makeDeps({ readWeb: serpReadWeb() });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://www.bing.com/search?q=kimi",
+    })) as {
+      window: { offset: number; length: number; total: number } | null;
+      hasMore: boolean;
+      serpNote?: string;
+      error: string | null;
+    };
+    expect(result.error).toBeNull();
+    expect(result.window?.length).toBe(WEB_READ_SERP_MAX_CHARS);
+    expect(result.window?.total).toBe(5000);
+    expect(result.hasMore).toBe(true);
+    expect(result.serpNote).toBe(WEB_READ_SERP_NOTE);
+    // 注记内容:是 SERP 摘要非正文 + 指路 material.gather / 具体文章 URL。
+    expect(WEB_READ_SERP_NOTE).toContain("搜索结果页");
+    expect(WEB_READ_SERP_NOTE).toContain("material.gather");
+  });
+
+  it("SERP 上模型请求 maxChars=12000 也被封顶 1500(cap 同压,绕不过)", async () => {
+    const { deps } = makeDeps({ readWeb: serpReadWeb() });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://www.baidu.com/s?wd=kimi",
+      maxChars: 12000,
+    })) as { window: { length: number } | null };
+    expect(result.window?.length).toBe(WEB_READ_SERP_MAX_CHARS);
+  });
+
+  it("普通文章 URL → 默认 12000 窗口不变、无 serpNote(T-251 协议零变)", async () => {
+    const { deps } = makeDeps({
+      readWeb: vi.fn(async () => ({
+        needLogin: false as const,
+        assetId: "as-read-2",
+        name: "正文·长文",
+        previewUrl: null,
+        sourceUrl: "https://example.com/article",
+        title: "长文",
+        excerpt: "…",
+        extractor: "readability",
+        fullText: "字".repeat(13000),
+      })),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/article",
+    })) as {
+      window: { length: number; total: number } | null;
+      hasMore: boolean;
+      serpNote?: string;
+    };
+    expect(result.window?.length).toBe(WEB_READ_WINDOW_MAX_CHARS);
+    expect(result.hasMore).toBe(true);
+    expect(result.serpNote).toBeUndefined();
   });
 });
