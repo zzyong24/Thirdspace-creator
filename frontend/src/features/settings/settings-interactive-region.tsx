@@ -2039,7 +2039,8 @@ function ProviderPresetRow({
 //
 // 点击 → settings.models.test(composition-only op,host 侧按该 capability **现有解析链**
 // 解析「已保存」的配置 → 发一次最小真实调用 / 最便宜鉴权探测,策略见
-// server/settings-model-test-wrap.ts 头注)→ 诚实渲「✓ 连通」或「✗ 失败:<真实原因>」。
+// server/settings-model-test-wrap.ts 头注)→ 诚实渲三态「✓ 连通」/「⚠ 无法探测(非失败,
+// T-384)」/「✗ 失败:<真实原因>」。
 // 注意:测的是**已保存**的配置 —— 表单里没保存的草稿不参与(hint 里明示)。
 function TestConnectionButton({
   capability,
@@ -2053,8 +2054,10 @@ function TestConnectionButton({
   quotaHint?: string | null;
 }) {
   const [testing, setTesting] = React.useState(false);
+  // [T-384] 三态:"warn" = 无法探测但也无法证伪配置(如 ASR 厂商无 /v1/models 端点)——
+  // 诚实中间态,不当失败渲。旧二态响应无 status 字段 → 按 ok 推导,向后兼容。
   const [result, setResult] = React.useState<{
-    ok: boolean;
+    status: "ok" | "warn" | "fail";
     detail: string;
   } | null>(null);
 
@@ -2066,11 +2069,11 @@ function TestConnectionButton({
         params: { capability },
         query: undefined,
         body: undefined,
-      })) as unknown as { ok: boolean; detail: string };
-      setResult({ ok: res.ok, detail: res.detail });
+      })) as unknown as { ok: boolean; detail: string; status?: "ok" | "warn" | "fail" };
+      setResult({ status: res.status ?? (res.ok ? "ok" : "fail"), detail: res.detail });
     } catch (err) {
       setResult({
-        ok: false,
+        status: "fail",
         detail: err instanceof Error ? err.message : "测试请求失败,请重试",
       });
     } finally {
@@ -2099,14 +2102,21 @@ function TestConnectionButton({
       {result ? (
         <p
           data-slot={`${slotPrefix}-test-result`}
-          data-ok={result.ok ? "true" : "false"}
+          data-ok={result.status === "fail" ? "false" : "true"}
+          data-status={result.status}
           className={
-            result.ok
+            result.status === "ok"
               ? "text-xs text-success"
-              : "text-xs text-destructive"
+              : result.status === "warn"
+                ? "text-xs text-warning"
+                : "text-xs text-destructive"
           }
         >
-          {result.ok ? `✓ 连通:${result.detail}` : `✗ 失败:${result.detail}`}
+          {result.status === "ok"
+            ? `✓ 连通:${result.detail}`
+            : result.status === "warn"
+              ? `⚠ ${result.detail}`
+              : `✗ 失败:${result.detail}`}
         </p>
       ) : null}
     </div>

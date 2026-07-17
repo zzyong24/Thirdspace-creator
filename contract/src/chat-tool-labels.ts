@@ -93,6 +93,12 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "复盘提炼",
     purpose: "基于当前作品的真实数据与评论提炼可复用爆款要素",
   },
+  // [T-385] 复盘无稿门的可执行动作:对话内一键对该作品发起单条逐字稿抓取(后台 1-3 分钟)。
+  "project.transcribe": {
+    name: "抓取逐字稿",
+    purpose:
+      "作品缺逐字稿时(复盘/拆解被无稿门拦),对该作品立即发起单条逐字稿抓取(后台约 1-3 分钟,完成后可重新拆解)",
+  },
   "positioning.generate": {
     name: "生成定位提案",
     purpose: "结合账号画像产结构化定位提案卡,采纳可写入定位母版",

@@ -1877,6 +1877,36 @@ export function AICopilotContent({
                         </React.Fragment>
                       );
                     }
+                    // [T-385] 抓逐字稿(project.transcribe)→ 简单状态文本(转写分钟级后台跑,
+                    // 不轮询 —— 完成后用户让编导重新拆解即可);失败(无项目上下文/无抖音锚/
+                    // dispatch 失败)→ 诚实错误态。
+                    if (
+                      name === "project.transcribe" &&
+                      out.kind === "project.transcribe"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <p
+                            data-slot="copilot-transcribe-status"
+                            data-ok={o.error ? "false" : "true"}
+                            className={
+                              o.error
+                                ? "mt-1 text-xs text-destructive"
+                                : "mt-1 text-xs text-success"
+                            }
+                          >
+                            {o.error
+                              ? `✗ ${o.error}`
+                              : "✓ 已发起逐字稿抓取(后台转写约 1-3 分钟)—— 完成后让我重新拆解这条作品即可。"}
+                          </p>
+                        </React.Fragment>
+                      );
+                    }
                     // [T-057④/T-084a] 搜素材(material.gather)→ 逐条「存入弹药」(knowledge+
                     // materialLink);grounding=model_memory 时卡片渲黄条 + 需核实徽标(未配联网)。
                     if (

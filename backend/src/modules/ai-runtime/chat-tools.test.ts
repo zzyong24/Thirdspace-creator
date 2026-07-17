@@ -43,6 +43,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   dispatchScriptReview: ReturnType<typeof vi.fn>;
   dispatchPlanningThesis: ReturnType<typeof vi.fn>;
   dispatchPublishPackage: ReturnType<typeof vi.fn>;
+  dispatchProjectTranscribe: ReturnType<typeof vi.fn>;
   dispatchGenerateCover: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
@@ -311,6 +312,12 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     projectId: "proj-1",
     error: null as string | null,
   }));
+  // [T-385] project.transcribe 核心(fake:dispatch 单条 transcribe.douyin → 返回 taskId)。
+  const dispatchProjectTranscribe = vi.fn(async () => ({
+    taskId: "task-trans-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const gatherMaterials = vi.fn(async () => ({
     grounding: "model_memory" as const,
     items: [
@@ -440,6 +447,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     generateHooks,
     dispatchScriptDraft,
     dispatchPublishPackage,
+    dispatchProjectTranscribe,
     gatherMaterials,
     captureScreenshot,
     readWeb,
@@ -477,6 +485,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     generateTopics,
     enrichTopic,
     dispatchPublishPackage,
+    dispatchProjectTranscribe,
     captureScreenshot,
     readWeb,
     readLocal,
@@ -1020,6 +1029,66 @@ describe("[T-350a] publish.package 工具 — 发布物料生成(单平台抖音
     };
     expect(result.taskId).toBeNull();
     expect(result.error).toBe("空稿门:先写整稿");
+  });
+});
+
+// [T-385] 复盘无稿 → 对话内一键抓逐字稿(execute → dispatchProjectTranscribe,复用 T-374
+// projects.transcribe 链)。同 publish.package 异步 dispatch 范式。
+describe("[T-385] project.transcribe 工具 — 对话内一键抓逐字稿", () => {
+  const WHITELIST = ["project.transcribe"] as const;
+
+  it("可挂 + 在 ALL_CHAT_TOOL_NAMES 单一真值里 + 在 project/review 场景白名单里", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    expect(Object.keys(tools)).toEqual(["project.transcribe"]);
+    expect(ALL_CHAT_TOOL_NAMES).toContain("project.transcribe");
+    // 复盘无稿门在 project/review 两场景触发 → 工具必须在这两个场景可见。
+    const { SURFACE_TOOL_SCOPES, getSurfaceToolScope } = await import("./chat-tools");
+    expect(SURFACE_TOOL_SCOPES.project).toContain("project.transcribe");
+    expect(SURFACE_TOOL_SCOPES.review).toContain("project.transcribe");
+    // 创作前(未发布)项目与 review.analyze 同命运被砍(无已发布作品可抓)。
+    expect(
+      getSurfaceToolScope("project", { projectPublished: false }),
+    ).not.toContain("project.transcribe");
+  });
+
+  it("execute 调注入的 dispatchProjectTranscribe,projectId trim 透传,返回 taskId(kind=project.transcribe)", async () => {
+    const { deps, dispatchProjectTranscribe } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    const result = (await runExecute(tools["project.transcribe"]!, {
+      projectId: "  proj-9  ",
+    })) as {
+      kind: string;
+      taskId: string | null;
+      projectId: string | null;
+      error: string | null;
+    };
+    expect(dispatchProjectTranscribe).toHaveBeenCalledWith({ projectId: "proj-9" });
+    expect(result.kind).toBe("project.transcribe");
+    expect(result.taskId).toBe("task-trans-1");
+    expect(result.projectId).toBe("proj-1");
+    expect(result.error).toBeNull();
+  });
+
+  it("空 projectId → 缺省不传(由 chat-runner 端口从 chatContext 兜底)", async () => {
+    const { deps, dispatchProjectTranscribe } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    await runExecute(tools["project.transcribe"]!, { projectId: "   " });
+    expect(dispatchProjectTranscribe).toHaveBeenCalledWith({});
+  });
+
+  it("端口抛错(如无抖音锚 ValidationError)→ execute 接住转 error 非 null(诚实错误态,不裸抛)", async () => {
+    const { deps, dispatchProjectTranscribe } = makeDeps();
+    dispatchProjectTranscribe.mockRejectedValueOnce(
+      new Error("ValidationError: 该项目没有关联抖音作品,无法抓取逐字稿"),
+    );
+    const tools = buildChatTools([...WHITELIST], deps);
+    const result = (await runExecute(tools["project.transcribe"]!, {})) as {
+      taskId: string | null;
+      error: string | null;
+    };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("没有关联抖音作品");
   });
 });
 

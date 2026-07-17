@@ -209,6 +209,58 @@ describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路�
     expect(r.detail).toContain("本地 Whisper");
   });
 
+  // [T-384] 云端 ASR 三态探测:200 → ✓;404/405(厂商无 /v1/models 端点)→ ⚠ 诚实中间态
+  // (不误报失败 —— SiliconFlow 等无此端点,配置本可能正常);401 → ✗ 真失败。
+  const cloudAsrDeps = (fetchImpl: typeof fetch) =>
+    makeDeps({
+      resolveTranscribe: vi.fn(async () => ({
+        provider: "openai-asr",
+        baseUrl: "https://api.siliconflow.cn",
+        model: "FunAudioLLM/SenseVoiceSmall",
+        token: "k",
+      })),
+      fetchImpl,
+    });
+
+  it("云端 ASR GET /v1/models 200 → ✓ status ok", async () => {
+    const deps = cloudAsrDeps(vi.fn(async () => jsonResponse(200, {})) as unknown as typeof fetch);
+    const r = await runModelConnectionTest(ctx, "transcribe.audio", deps);
+    expect(r.ok).toBe(true);
+    expect(r.status).toBe("ok");
+    const url = (deps.fetchImpl as ReturnType<typeof vi.fn>).mock.calls[0]![0] as string;
+    expect(url).toBe("https://api.siliconflow.cn/v1/models");
+  });
+
+  it("云端 ASR /v1/models 404 → ⚠ warn(无法探测≠失败,不误报)", async () => {
+    const deps = cloudAsrDeps(
+      vi.fn(async () => new Response("not found", { status: 404 })) as unknown as typeof fetch,
+    );
+    const r = await runModelConnectionTest(ctx, "transcribe.audio", deps);
+    expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
+    expect(r.detail).toContain("无法探测");
+    expect(r.detail).toContain("真实转写");
+    expect(r.detail).not.toContain("失败");
+  });
+
+  it("云端 ASR /v1/models 405 → ⚠ warn(同 404,端点不存在类)", async () => {
+    const deps = cloudAsrDeps(
+      vi.fn(async () => new Response("", { status: 405 })) as unknown as typeof fetch,
+    );
+    const r = await runModelConnectionTest(ctx, "transcribe.audio", deps);
+    expect(r.status).toBe("warn");
+  });
+
+  it("云端 ASR /v1/models 401 → ✗ fail(鉴权失败照旧诚实报)", async () => {
+    const deps = cloudAsrDeps(
+      vi.fn(async () => new Response("invalid key", { status: 401 })) as unknown as typeof fetch,
+    );
+    const r = await runModelConnectionTest(ctx, "transcribe.audio", deps);
+    expect(r.ok).toBe(false);
+    expect(r.status).toBe("fail");
+    expect(r.detail).toContain("401");
+  });
+
   it("web.search browser → ✓ 免 key;bocha 最小检索成功 → ✓ 带额度提示", async () => {
     const browserDeps = makeDeps({
       resolveSearch: vi.fn(async () => ({

@@ -315,6 +315,8 @@ export async function POST(req: Request): Promise<Response> {
         dispatchScriptDraftPort: runtime.dispatchScriptDraft,
         // [T-350a] publish.package 端口 —— 空稿门 + ensure outputId + dispatch 单平台抖音发布物料(采纳物化 Publication)。
         dispatchPublishPackagePort: runtime.dispatchPublishPackage,
+        // [T-385] project.transcribe 端口 —— 复用 T-374 projects.transcribe 链,对话内一键抓单条逐字稿。
+        dispatchProjectTranscribePort: runtime.dispatchProjectTranscribe,
       },
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。

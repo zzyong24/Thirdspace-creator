@@ -306,6 +306,17 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
   ) => Promise<{ taskId: string }>;
+  /**
+   * [T-385] project.transcribe 端口 —— 复用 T-374 的 projects.transcribe composition-only
+   * 链(解析该项目 platformRef 抖音锚 → ai transport 排单条 transcribe.douyin → live dispatch
+   * 后台跑;无锚 → ValidationError 诚实拒,由工具层接住转 error)。由 composition root 绑
+   * (persistence-client 的 projectsWithTranscribe transport)。可选:未装配 → 工具报
+   * 「抓逐字稿能力未接入」(诚实降级)。
+   */
+  dispatchProjectTranscribePort?: (
+    ctx: RequestContext,
+    input: { projectId: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 /**
@@ -735,7 +746,7 @@ export async function buildChatAssembly(
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
     // [T-224 诚实门·场景半] 无稿门只管「拆解/复盘已发布作品」;创作前立框架不适用(S2)。
-    "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:用 context.metrics / context.projects 拿到该作品的 projectId,再调 context.artifact.text(传该 projectId)读它的真文案;拆经验就调 review.analyze 并传该 projectId(它会强制读真稿,读不到会拒绝产卡)。读不到真稿就直说做不到、要用户给 projectId 或贴逐字稿,绝不推测充数。",
+    "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:用 context.metrics / context.projects 拿到该作品的 projectId,再调 context.artifact.text(传该 projectId)读它的真文案;拆经验就调 review.analyze 并传该 projectId(它会强制读真稿,读不到会拒绝产卡)。读不到真稿时,若该作品关联了抖音,**顺手调 project.transcribe(传该 projectId)帮用户立即抓逐字稿**(约 1-3 分钟,完成后再拆);抓不了(无抖音锚)就直说做不到、要用户贴逐字稿,绝不推测充数。",
     "S2.(仅在为**创作前(未发布)**的项目立框架时生效)立论点/写大纲/起草脚本的依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝立框架的理由。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
@@ -1083,6 +1094,42 @@ export async function buildChatAssembly(
         };
       }
     },
+    // [T-385] 对话内一键抓逐字稿 —— 同 dispatchPublishPackage 范式:projectId 模型显式传参优先,
+    // 否则 chatContext.projectId 兜底;无项目上下文 / 端口未装配 → 诚实 error(不抛裸码)。
+    // 无抖音锚等 ValidationError 由端口抛出 → catch 转 error 原样透传(persistence 层文案已是人话)。
+    dispatchProjectTranscribe: async ({ projectId }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "抓逐字稿要落到具体作品 —— 传要抓的作品 projectId(从 context.metrics / context.projects 每行拿),或在该作品的项目对话里让我抓。",
+        };
+      }
+      if (!deps.dispatchProjectTranscribePort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "抓逐字稿能力当前未接入(服务端未装配转写分派) —— 暂时无法发起抓取。",
+        };
+      }
+      try {
+        const { taskId } = await deps.dispatchProjectTranscribePort(ctx, {
+          projectId: pid,
+        });
+        return { taskId, projectId: pid, error: null };
+      } catch (err) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
     gatherMaterials: async ({ query }) => {
       // [T-057④/T-084a] 两步:①先真联网检索(searchWeb,失败/未配降级)②runResearchNode 结构化
       // 综合(检索结果前置注入,非模型工具 —— 保住任何模型都产可解析输出,ffb7951 教训)。
@@ -1413,7 +1460,8 @@ export async function buildChatAssembly(
         return {
           items: [],
           error:
-            "我没读到这条作品的真实逐字稿,不能凭标题、指标或账号通用规律编方法论当经验。请把该作品的 projectId 告诉我(从 context.metrics / context.projects 每行的 projectId 拿),或直接把逐字稿贴给我,我再基于真稿拆。",
+            // [T-385] 不止让用户贴稿 —— 引导模型顺手调 project.transcribe 帮用户立即抓取(能顺手做直接做)。
+            "我没读到这条作品的真实逐字稿,不能凭标题、指标或账号通用规律编方法论当经验。这条作品若关联了抖音,可直接调 project.transcribe 工具(传该作品 projectId)帮用户立即发起逐字稿抓取,约 1-3 分钟完成后重新拆解;或让用户把逐字稿贴进来,我再基于真稿拆。",
         };
       }
       // subject 优先级:模型显式传 > 目标作品真标题 > 工作台选中标题(reviewFacets 内还有兜底)。

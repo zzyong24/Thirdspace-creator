@@ -620,7 +620,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("context.metrics");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names.length).toBe(24); // 2 产出 + 7 素材([T-253] 含 local.read、[T-256a] 含 local.tools/local.workspace)+ 15 只读
+    expect(names.length).toBe(25); // 3 产出([T-385] 含 project.transcribe 无稿门顺手抓稿)+ 7 素材([T-253] 含 local.read、[T-256a] 含 local.tools/local.workspace)+ 15 只读
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -789,7 +789,9 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("review.analyze");
       expect(names).toContain("review.script"); // 稿面审核按钮深链落 project
       expect(names).toContain("calibration.diagnose"); // 盲预测按钮深链落 project
-      expect(names.length).toBe(35); // project 全集 36（[T-265] 含 planning.thesis + [T-271] cover.generate + [T-350a] publish.package）− 阶段感知砍掉的 review.analyze
+      // [T-385] project.transcribe 与 review.analyze 同被阶段感知砍(创作前无已发布作品可抓稿)。
+      expect(names).not.toContain("project.transcribe");
+      expect(names.length).toBe(35); // project 全集 37（[T-350a] publish.package + [T-385] project.transcribe）− 阶段感知砍掉的 review.analyze + project.transcribe
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -810,7 +812,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
         deps,
       );
       expect(Object.keys(a.tools)).toContain("review.analyze");
-      expect(Object.keys(a.tools).length).toBe(36);
+      expect(Object.keys(a.tools).length).toBe(37); // [T-385] +project.transcribe
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -821,13 +823,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
         noReaders,
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
-      expect(Object.keys(b.tools).length).toBe(36);
+      expect(Object.keys(b.tools).length).toBe(37); // [T-385] +project.transcribe
     });
 
-    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 36 工具(向后兼容)", async () => {
+    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 37 工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(36);
+      expect(Object.keys(a.tools).length).toBe(37); // [T-385] +project.transcribe
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
     });

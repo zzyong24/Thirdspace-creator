@@ -1341,6 +1341,13 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
   ) => Promise<{ taskId: string }>;
+  // [T-385] project.transcribe 端口 —— 复用 T-374 projectsWithTranscribe 拦截链(解析该项目
+  // platformRef 抖音锚 → ai.tasks.create 排单条 transcribe.douyin → live dispatch 后台跑;
+  // 无锚 → ValidationError 人话拒)。对话工具 project.transcribe 据此触发(复盘无稿门的可执行动作)。
+  dispatchProjectTranscribe: (
+    ctx: RequestContext,
+    input: { projectId: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -9695,6 +9702,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (!taskId) {
         throw new Error(
           "dispatchPublishPackage: 起 publish.platform_adapt task 失败(无 taskId)",
+        );
+      }
+      return { taskId };
+    },
+    // [T-385] project.transcribe 端口 —— 直调 T-374 的 projectsWithTranscribe 拦截链(单一真值:
+    // 属主门/抖音锚解析/排 transcribe.douyin 全在 wrap 里,这里不复述)。无锚 ValidationError
+    // 人话文案原样抛出 → chat-runner catch 转工具 error 卡渲。
+    dispatchProjectTranscribe: async (
+      ctx: RequestContext,
+      input: { projectId: string },
+    ) => {
+      const res = await projectsWithTranscribe.request(
+        ENDPOINTS.transcribeProjectWork,
+        { params: { projectId: input.projectId }, query: undefined, body: undefined },
+        ctx,
+      );
+      const data = (res as { data?: { taskId?: unknown } }).data;
+      const taskId = data && typeof data.taskId === "string" ? data.taskId : "";
+      if (!taskId) {
+        throw new Error(
+          "dispatchProjectTranscribe: 起 transcribe.douyin task 失败(无 taskId)",
         );
       }
       return { taskId };

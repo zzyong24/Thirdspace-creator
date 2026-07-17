@@ -27,7 +27,7 @@
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -222,6 +222,49 @@ function bundleRenderDeps() {
   console.log("[build-sidecar]   ✓ 自检:gsap.min.js + hyperframes cli.js 到位");
 }
 
+// ── pnpm 依赖闭包工具(T-313 抽出;T-383 复用)────────────────────────────────
+// 某 .pnpm entry 的直接依赖 entry(读其 node_modules 下所有 symlink 的目标 → 兄弟 entry 名)。
+function pnpmDepsOfEntry(srcPnpm, entryName) {
+  const nm = join(srcPnpm, entryName, "node_modules");
+  const out = new Set();
+  if (!existsSync(nm)) return out;
+  const walk = (dir) => {
+    let entries;
+    try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      const p = join(dir, e.name);
+      if (e.isSymbolicLink()) {
+        let target;
+        try { target = resolve(dir, readlinkSync(p)); } catch { continue; }
+        const idx = target.indexOf("/.pnpm/");
+        if (idx >= 0) {
+          const entry = target.slice(idx + "/.pnpm/".length).split("/node_modules/")[0];
+          if (entry) out.add(entry);
+        }
+      } else if (e.isDirectory() && e.name.startsWith("@")) {
+        walk(p); // scope 目录(@earendil-works 等)下继续找 symlink;真实包目录不含 symlink,无害
+      }
+    }
+  };
+  walk(nm);
+  return out;
+}
+
+// 从 rootEntry 出发走 pnpm symlink 依赖图 BFS 收全可达 entry(isCut 可剪子树)。
+// 不硬编码版本名:与安装现场一致,自适应版本(T-313 注释详述)。
+function collectPnpmClosure(srcPnpm, rootEntry, isCut = () => false) {
+  const visited = new Set([rootEntry]);
+  const q = [rootEntry];
+  while (q.length) {
+    const cur = q.shift();
+    for (const d of pnpmDepsOfEntry(srcPnpm, cur)) {
+      if (isCut(d)) continue;
+      if (!visited.has(d)) { visited.add(d); q.push(d); }
+    }
+  }
+  return visited;
+}
+
 // [T-313 打包实拷] 实拷 Pi 引擎(@earendil-works/pi-coding-agent)运行时依赖闭包进 sidecar。
 //   病根:pi-engine.ts 运行时**深文件导入** `dist/core/sdk.js`(+ model-registry/auth-storage/
 //   session-manager),而 pi 是 serverExternalPackages + 动态 import → Next standalone tracing
@@ -262,33 +305,6 @@ function bundlePiEngine() {
   };
   const isCut = (entry) => CUT_PKG.includes(pkgNameOfEntry(entry));
 
-  // 某 .pnpm entry 的直接依赖 entry(读其 node_modules 下所有 symlink 的目标 → 兄弟 entry 名)。
-  const depsOfEntry = (entryName) => {
-    const nm = join(srcPnpm, entryName, "node_modules");
-    const out = new Set();
-    if (!existsSync(nm)) return out;
-    const walk = (dir) => {
-      let entries;
-      try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
-      for (const e of entries) {
-        const p = join(dir, e.name);
-        if (e.isSymbolicLink()) {
-          let target;
-          try { target = resolve(dir, readlinkSync(p)); } catch { continue; }
-          const idx = target.indexOf("/.pnpm/");
-          if (idx >= 0) {
-            const entry = target.slice(idx + "/.pnpm/".length).split("/node_modules/")[0];
-            if (entry) out.add(entry);
-          }
-        } else if (e.isDirectory() && e.name.startsWith("@")) {
-          walk(p); // scope 目录(@earendil-works 等)下继续找 symlink;真实包目录不含 symlink,无害
-        }
-      }
-    };
-    walk(nm);
-    return out;
-  };
-
   // 定位 pi-coding-agent 根 entry;缺 → pi 没装(feature 层可退兜底)→ 警告跳过,不硬阻塞打包。
   const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
   if (!rootEntry) {
@@ -299,15 +315,7 @@ function bundlePiEngine() {
   }
 
   // BFS 算闭包(剪掉 provider 顶包子树)。
-  const visited = new Set([rootEntry]);
-  const q = [rootEntry];
-  while (q.length) {
-    const cur = q.shift();
-    for (const d of depsOfEntry(cur)) {
-      if (isCut(d)) continue;
-      if (!visited.has(d)) { visited.add(d); q.push(d); }
-    }
-  }
+  const visited = collectPnpmClosure(srcPnpm, rootEntry, isCut);
 
   // 逐 entry 实拷(verbatimSymlinks 保相对链;整份闭包在同一 .pnpm/ 内自洽解析)。
   //   覆盖已存在条目无害:同版本源自同一仓库 .pnpm,内容一致(complete ⊇ Next 部分 trace),app 不受损。
@@ -358,6 +366,84 @@ function bundlePiEngine() {
     );
   }
   console.log(`[build-sidecar]   ✓ 自检:sidecar 深导入 pi sdk.js 通过(${`${r.stdout}`.trim().split("\n").pop()})`);
+}
+
+// [T-383] 实拷 @xenova/transformers 完整闭包(修打包版 whisper-local 崩
+//   「Cannot find module '@xenova/transformers'」)。
+//   病根:T-356 把 whisper 推理挪进 worker_threads(eval 内联源码,worker 内
+//   `createRequire(<cwd>/package.json)` 解析 @xenova/transformers,cwd = sidecar/frontend)→
+//   Next standalone tracing ①追不到 eval 字符串里的 require;②对主线程惰性 import 只 trace 出
+//   **残缺包**(sidecar .pnpm 里只剩 package.json + src,dist 全缺);③frontend/node_modules 顶层
+//   没有 @xenova 解析锚 → 打包版 worker require 必崩。此前 T-225/T-225b 只补拷了它的原生**依赖**
+//   (onnxruntime dylib / sharp .node),主包本体一直没进 sidecar。
+//   修(照 playwright/pi 三件套先例):
+//     ① 从源 .pnpm 以 @xenova+transformers 为根 BFS 收依赖闭包(@huggingface/jinja、
+//        onnxruntime-node/web/common、sharp@0.32.x 及其传递依赖),verbatimSymlinks 整拷覆盖
+//        sidecar .pnpm 残缺版(相对 symlink 在闭包内自洽解析,同 bundlePiEngine 拷法;含 sharp
+//        build/Release 与 onnxruntime bin/ 原生产物 —— 后续 ensureOnnxRuntimeDylib/ensureSharpNative
+//        仍作安全网跑一遍)。
+//     ② 建解析锚:sidecar/frontend/node_modules/@xenova/transformers → 相对 symlink 指进 .pnpm
+//        真身(与 sidecar 里 next 的链同款;worker 从 cwd=sidecar/frontend walk-up 即命中;tar 打包
+//        原样保留 symlink)。
+//     ③ HARD 自检:sidecar node 以**与 worker 完全相同的调用路径**(cwd=sidecar/frontend,
+//        createRequire(<cwd>/package.json) → req('@xenova/transformers'))真加载主包,断言 pipeline
+//        是函数 —— 真加载会连带 dlopen onnxruntime binding + sharp .node,把 T-225/T-225b 层一并
+//        验掉;失败即 build 炸(教训同 playwright 自检②:只拷不验会假通过,装机后才发现)。
+function bundleXenovaTransformers() {
+  console.log("[build-sidecar] 实拷 @xenova/transformers 闭包(修 T-356 worker 化后打包版 whisper-local 崩,T-383)…");
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
+  if (!existsSync(srcPnpm) || !existsSync(destPnpm)) {
+    throw new Error(`[build-sidecar] .pnpm 目录缺(src=${existsSync(srcPnpm)} dest=${existsSync(destPnpm)})`);
+  }
+  const PKG = "@xenova/transformers";
+  const PNPM_KEY = PKG.replace("/", "+"); // @xenova/transformers → @xenova+transformers
+  const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PNPM_KEY}@`));
+  if (!rootEntry) {
+    // whisper-local 是产品内置 ASR 默认档;缺它不出「转录必崩」的包 —— 硬失败,不学 pi 的软跳过。
+    throw new Error(`[build-sidecar] 源 .pnpm 无 ${PKG}@*(装依赖?)→ 打包版 whisper-local 必崩,不出包`);
+  }
+  // ① BFS 闭包 + verbatim 整拷覆盖(不剪枝:sharp/onnxruntime 树都是运行时真用的)。
+  const closure = collectPnpmClosure(srcPnpm, rootEntry);
+  let copied = 0;
+  for (const e of closure) {
+    const src = join(srcPnpm, e);
+    const dest = join(destPnpm, e);
+    rmSync(dest, { recursive: true, force: true });
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
+    copied++;
+  }
+  console.log(`[build-sidecar]   实拷 ${copied} 个 transformers 闭包 entry(覆盖 Next-traced 残缺版)`);
+  // ② 解析锚:frontend/node_modules/@xenova/transformers → .pnpm 真身(相对链;worker cwd walk-up 命中)。
+  const anchorDir = join(SIDECAR_RUNTIME, "frontend", "node_modules", "@xenova");
+  const anchor = join(anchorDir, "transformers");
+  mkdirSync(anchorDir, { recursive: true });
+  rmSync(anchor, { recursive: true, force: true });
+  symlinkSync(
+    join("..", "..", "..", "node_modules", ".pnpm", rootEntry, "node_modules", "@xenova", "transformers"),
+    anchor,
+  );
+  // ③ HARD 自检:worker 同路径真加载(见函数头注释③)。
+  const selfCheck = `
+    const { createRequire } = require('node:module');
+    const path = require('node:path');
+    const req = createRequire(path.join(process.cwd(), 'package.json'));
+    const resolved = req.resolve('@xenova/transformers');
+    const m = req('@xenova/transformers');
+    if (typeof m.pipeline !== 'function' || !m.env) { console.error('XENOVA-SELFCHECK-FAIL'); process.exit(1); }
+    console.log('XENOVA-SELFCHECK-OK ' + resolved);
+  `;
+  const r = spawnSync(process.execPath, ["-e", selfCheck], {
+    cwd: join(SIDECAR_RUNTIME, "frontend"),
+    encoding: "utf8",
+  });
+  if (r.status !== 0 || !`${r.stdout}`.includes("XENOVA-SELFCHECK-OK")) {
+    throw new Error(
+      `[build-sidecar] 自检失败[T-383]:sidecar 内与 worker 同路径 require('@xenova/transformers') 未通过 → 打包版 whisper-local 必崩\n${r.stdout}${r.stderr}`,
+    );
+  }
+  console.log(`[build-sidecar]   ✓ 自检[T-383]:sidecar 内 @xenova/transformers 可解析+真加载(worker 同路径,连带 onnx/sharp 原生 dlopen)`);
 }
 
 // [T-284] 把 Chromium 浏览器二进制打进 sidecar(用户拍板:视频渲染永不下载 / 永不「Chromium
@@ -619,6 +705,18 @@ function bundleFfmpeg(triple) {
 }
 
 function main() {
+  // [T-383] 开发验证开关:只跑 @xenova/transformers 拷贝段(against 已组装的 sidecar,不重建
+  //   standalone / 不打 tarball)。全量 build 很慢;这个开关让「拷贝 + 自检」段可独立真跑验证。
+  //   正式出包仍走完整流程(main 里 bundleXenovaTransformers 常规在链上)。
+  if (process.env.CREATOROS_SIDECAR_XENOVA_ONLY === "1") {
+    if (!existsSync(join(SIDECAR_RUNTIME, "frontend", "server.js"))) {
+      throw new Error("[build-sidecar] CREATOROS_SIDECAR_XENOVA_ONLY=1 需已存在组装好的 sidecar(先跑一次完整 build)");
+    }
+    bundleXenovaTransformers();
+    console.log("[build-sidecar] ✅ XENOVA_ONLY 段完成(未重打 tarball;出包请跑完整流程)。");
+    return;
+  }
+
   // [T-164 P6] tauri.conf.json beforeBuildCommand 会在 tauri build 阶段再跑本脚本重建 sidecar,
   //   会**覆盖 desktop:package 步2 的 JS 混淆结果**。package.mjs 在 tauri build 前已跑过
   //   build-sidecar + obfuscate,故此阶段注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让本脚本短路
@@ -777,6 +875,10 @@ function main() {
   // [T-313] 实拷 Pi 引擎依赖闭包(补 Next tracing 漏的整棵 @earendil-works/pi-coding-agent 树)——
   //   pi-engine.ts 运行时深导入 dist/core/sdk.js;不实拷则打包版 Pi 引擎永退兜底(见 bundlePiEngine 注释)。放打 tarball 前。
   bundlePiEngine();
+
+  // [T-383] 实拷 @xenova/transformers 完整闭包(修 T-356 worker 化后打包版 whisper-local
+  //   「Cannot find module '@xenova/transformers'」)—— 放 T-225/T-225b 安全网之前、打 tarball 前。
+  bundleXenovaTransformers();
 
   // [T-225] onnxruntime 原生库补拷(修 whisper-local 逐字稿转录 dlopen 崩)—— 在打 tarball 前，让 dylib 进包。
   ensureOnnxRuntimeDylib();

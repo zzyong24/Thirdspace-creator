@@ -139,6 +139,18 @@ export interface ChatToolDeps {
     topic?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
+   * [T-385] project.transcribe 核心 —— 复盘/拆解被无稿门拦时,对话内一键对该作品发起单条
+   * 逐字稿抓取。复用 T-374 的 projects.transcribe composition-only op(解析该项目
+   * platformRef 抖音锚 → ai transport 排单条 transcribe.douyin → live dispatch 后台跑;
+   * 无锚 → ValidationError 诚实拒)。同 publish.package 异步 dispatch 范式:立即返回
+   * { taskId, projectId },不阻塞回合;转写分钟级,前端渲简单状态文本(不轮询),完成后
+   * 用户让编导重新拆解即可。projectId 由 chat-runner 从 chatContext 兜底。
+   */
+  dispatchProjectTranscribe: (input: {
+    /** 显式项目 id(模型从 context.metrics/context.projects 拿到时可传);缺省用 chatContext.projectId。 */
+    projectId?: string;
+  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  /**
    * [T-057④/T-084a] material.gather 核心 —— 先真联网检索(resolveSearchSpec+searchWeb),再
    * runResearchNode 结构化综合(检索结果前置注入,非模型工具),诚实降级。产物经 ChatGatherCard
    * 逐条「存入弹药」(knowledge.create+materialLink,人采纳)。
@@ -832,6 +844,19 @@ export interface PublishPackageToolResult {
   /** 目标项目 id(卡兜底 + 回填定位;无项目上下文为 null)。 */
   projectId: string | null;
   /** dispatch 失败 / 无项目上下文 / 空稿门时的诚实错误(成功为 null)。 */
+  error: string | null;
+}
+
+// [T-385] project.transcribe 工具结果 —— dispatch 了一次单条逐字稿抓取(transcribe.douyin,
+// 立即返回,后台跑,1-3 分钟)。前端渲简单状态文本(不轮询):成功 = 「已发起抓取,完成后重新
+// 拆解」;error 非 null = 诚实错误态(无项目上下文 / 无抖音锚 / dispatch 失败)。
+export interface ProjectTranscribeToolResult {
+  kind: "project.transcribe";
+  /** dispatch 出的 transcribe.douyin 任务 id(失败为 null)。 */
+  taskId: string | null;
+  /** 目标项目 id(无项目上下文为 null)。 */
+  projectId: string | null;
+  /** dispatch 失败 / 无项目上下文 / 无抖音锚时的诚实错误(成功为 null)。 */
   error: string | null;
 }
 
@@ -1580,6 +1605,19 @@ const PUBLISH_PACKAGE_PARAMS = jsonSchema<{ topic?: string }>({
     topic: {
       type: "string",
       description: "这条内容的主题/选题(可选;缺省由定位/项目兜底)",
+    },
+  },
+  additionalProperties: false,
+});
+
+// [T-385] project.transcribe 入参 —— 目标作品 projectId(缺省用当前对话项目)。
+const PROJECT_TRANSCRIBE_PARAMS = jsonSchema<{ projectId?: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要抓逐字稿的作品 projectId(从 context.metrics / context.projects 每行拿;缺省用当前对话项目)",
     },
   },
   additionalProperties: false,
@@ -2342,6 +2380,33 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         } catch (err) {
           return {
             kind: "publish.package",
+            taskId: null,
+            projectId: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }, deps.humanizeError),
+    // [T-385] 复盘无稿 → 对话内一键抓逐字稿(复用 T-374 projects.transcribe 链:解析抖音锚 →
+    // 排单条 transcribe.douyin → live dispatch 后台跑)。同 publish.package 异步 dispatch 范式:
+    // 立即返回 { taskId, projectId },不阻塞回合;无项目上下文 / 无抖音锚 → error 非 null(诚实)。
+    "project.transcribe": defineChatTool("project.transcribe", {
+      description:
+        "对一条自己的作品**立即发起单条逐字稿抓取**(后台跑,约 1-3 分钟)。作品缺逐字稿时(复盘/拆解被无稿门拦、review.analyze 报「没读到真实逐字稿」)用它顺手帮用户抓,别只让用户手动贴稿。projectId 从 context.metrics / context.projects 每行拿(当前对话项目可不传)。只对关联了抖音作品的项目有效(手动项目无抓取锚会诚实报错)。抓取完成后让用户再让你重新拆解/复盘即可 —— 你自己不用轮询等待。",
+      inputSchema: PROJECT_TRANSCRIBE_PARAMS,
+      execute: async ({ projectId }): Promise<ProjectTranscribeToolResult> => {
+        try {
+          const { taskId, projectId: pid, error } =
+            await deps.dispatchProjectTranscribe({
+              projectId:
+                typeof projectId === "string" && projectId.trim()
+                  ? projectId.trim()
+                  : undefined,
+            });
+          return { kind: "project.transcribe", taskId, projectId: pid, error };
+        } catch (err) {
+          return {
+            kind: "project.transcribe",
             taskId: null,
             projectId: null,
             error: err instanceof Error ? err.message : String(err),
@@ -3379,6 +3444,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "script.draft",
   // [T-350a] 发布物料生成(dispatch publish.platform_adapt 单平台抖音 → 发布物料候选卡 + 采纳物化 Publication)。
   "publish.package",
+  // [T-385] 复盘无稿时对话内一键抓逐字稿(复用 projects.transcribe 链,dispatch 单条 transcribe.douyin)。
+  "project.transcribe",
   "material.gather",
   "material.screenshot",
   "web.read",
@@ -3491,6 +3558,8 @@ export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = 
     ...CREATION_TOOL_NAMES,
     "review.script",
     "review.analyze",
+    // [T-385] 复盘/拆解被无稿门拦 → 对话内顺手抓逐字稿(review.analyze 在的场景它就该在)。
+    "project.transcribe",
     ...MATERIAL_TOOL_NAMES,
     ...CONTEXT_TOOL_NAMES,
   ],
@@ -3511,6 +3580,8 @@ export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = 
   // 复盘页:复盘提炼 + 记经验;不给 topic.generate 等创作产出(2026-07-02 实测污染源先例)。
   review: [
     "review.analyze",
+    // [T-385] 复盘无稿门拦下时可对话内一键抓逐字稿(抓完重拆)。
+    "project.transcribe",
     "learning.capture",
     ...MATERIAL_TOOL_NAMES,
     ...CONTEXT_TOOL_NAMES,
@@ -3537,7 +3608,9 @@ export function getSurfaceToolScope(
   const base = SURFACE_TOOL_SCOPES[surface];
   if (!base) return null;
   if (surface === "project" && opts?.projectPublished === false) {
-    return base.filter((n) => n !== "review.analyze");
+    // [T-385] project.transcribe 与 review.analyze 同命运:创作前(未发布)项目无已发布作品
+    // 可抓逐字稿(也无抖音锚),留着只会诱导模型空调工具吃诚实错误。
+    return base.filter((n) => n !== "review.analyze" && n !== "project.transcribe");
   }
   return base;
 }

@@ -89,6 +89,10 @@ export const settingsOperations = {
       model: z.string(),
       // 人话结果:成功=探测方式说明;失败=真实原因(未配置 / 鉴权失败 / 调用错误)。
       detail: z.string(),
+      // [T-384] 三态:"warn" = 无法探测但也无法证伪配置(如部分 ASR 厂商/中转无 /v1/models
+      // 端点回 404)—— 诚实中间态,非失败(此时 ok=true)。缺省按 ok 二态解释(ok→"ok",
+      // !ok→"fail"),向后兼容。
+      status: z.enum(["ok", "warn", "fail"]).optional(),
     }),
     fr: ["FR-SETTINGS-MODEL-TEST"],
   }),

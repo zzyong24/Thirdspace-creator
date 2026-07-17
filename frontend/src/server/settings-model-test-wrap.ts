@@ -55,6 +55,9 @@ export interface ModelTestResult {
   provider: string;
   model: string;
   detail: string;
+  /** [T-384] 三态:"warn" = 无法探测但也无法证伪配置(诚实中间态,ok=true);
+   *  缺省按 ok 二态解释(ok→"ok",!ok→"fail"),向后兼容。 */
+  status?: "ok" | "warn" | "fail";
 }
 
 export interface SettingsModelTestDeps {
@@ -211,23 +214,35 @@ async function generationAuthProbe(
 }
 
 // ── OpenAI 兼容 GET /v1/models 鉴权探测(云端 ASR)────────────────────────────────
+// [T-384] 三态:并非所有 OpenAI 兼容厂商/中转都有 /v1/models(SiliconFlow ASR 域等回 404)——
+//   404/405 = 「端点不存在」而非「配置错」,无法证伪用户配置 → 回 ⚠ warn 诚实中间态,
+//   不再误报 ✗ 失败(真机 T-384:用户配置本正常,被 404 判死)。鉴权类失败(401/403 等)照旧 ✗。
 async function modelsListProbe(
   spec: MmSpecLite,
   fetchImpl: typeof fetch,
-): Promise<{ ok: boolean; detail: string }> {
+): Promise<{ ok: boolean; detail: string; status?: "ok" | "warn" | "fail" }> {
   try {
     const url = `${trimBase(spec.baseUrl ?? SILICONFLOW_ASR_DEFAULT)}/v1/models`;
     const res = await fetchImpl(url, {
       method: "GET",
       headers: { Authorization: `Bearer ${spec.token}` },
     });
-    if (res.ok) return { ok: true, detail: "鉴权通过(GET /v1/models 连通)。" };
+    if (res.ok) return { ok: true, status: "ok", detail: "鉴权通过(GET /v1/models 连通)。" };
+    if (res.status === 404 || res.status === 405) {
+      return {
+        ok: true,
+        status: "warn",
+        detail:
+          `无法探测(该厂商无 /v1/models 端点,HTTP ${res.status}),配置可能正常 —— 将在真实转写时验证。`,
+      };
+    }
     return {
       ok: false,
+      status: "fail",
       detail: `调用失败(HTTP ${res.status}):${await bodyHead(res)}`,
     };
   } catch (err) {
-    return { ok: false, detail: `网络/调用错误:${errMsg(err)}` };
+    return { ok: false, status: "fail", detail: `网络/调用错误:${errMsg(err)}` };
   }
 }
 
