@@ -415,6 +415,27 @@ function bundleXenovaTransformers() {
     copied++;
   }
   console.log(`[build-sidecar]   实拷 ${copied} 个 transformers 闭包 entry(覆盖 Next-traced 残缺版)`);
+  // ①b [T-383 修打包炸] 平台剪枝:整拷带进了 onnxruntime-node 的**全平台** bin(linux/win32/x64…),
+  //   T-225 自检遍历所有 binding 目录要求本机 libExt → 异平台目录必炸(且分发包不该带异平台二进制,
+  //   剪掉省体积)。只留 bin/napi-v3/<本机 platform>/<本机 arch>,其余目录整删。
+  {
+    const napiRoots = [];
+    for (const e of closure) {
+      const cand = join(destPnpm, e, "node_modules", "onnxruntime-node", "bin", "napi-v3");
+      if (existsSync(cand)) napiRoots.push(cand);
+    }
+    let pruned = 0;
+    for (const root of napiRoots) {
+      for (const plat of readdirSync(root)) {
+        const platDir = join(root, plat);
+        if (plat !== platform) { rmSync(platDir, { recursive: true, force: true }); pruned++; continue; }
+        for (const a of readdirSync(platDir)) {
+          if (a !== arch) { rmSync(join(platDir, a), { recursive: true, force: true }); pruned++; }
+        }
+      }
+    }
+    if (pruned > 0) console.log(`[build-sidecar]   ✂ onnxruntime 异平台 bin 剪枝 ${pruned} 个目录(只留 ${platform}/${arch})`);
+  }
   // ② 解析锚:frontend/node_modules/@xenova/transformers → .pnpm 真身(相对链;worker cwd walk-up 命中)。
   const anchorDir = join(SIDECAR_RUNTIME, "frontend", "node_modules", "@xenova");
   const anchor = join(anchorDir, "transformers");
