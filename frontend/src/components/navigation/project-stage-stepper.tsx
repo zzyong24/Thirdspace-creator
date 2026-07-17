@@ -111,8 +111,11 @@ export function ProjectStageStepper({
           const segmentClassName = cn(
             "flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground",
             index === 0 && "border-l",
-            stage.status === "in_progress" &&
-              "border-brand/30 bg-brand-soft font-medium text-brand",
+            // [T-373] 高亮跟随「正在查看的面」(isCurrent),不再跟 status(项目成熟度)。
+            // 此前两套判定分叉:已发布项目(currentStage=review)打开稿面(脚本工作面)
+            // 时,内容是脚本、高亮却是「复盘」。成熟度仍由左侧状态点(STATUS_INDICATOR)
+            // 表达;无 currentStage 时 isCurrent 退回 in_progress,旧调用方行为不变。
+            isCurrent && "border-brand/30 bg-brand-soft font-medium text-brand",
             navigable
               ? "cursor-pointer transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               : !reachable && "cursor-not-allowed opacity-70",

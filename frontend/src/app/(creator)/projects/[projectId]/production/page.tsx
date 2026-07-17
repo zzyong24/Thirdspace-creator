@@ -18,6 +18,8 @@ import {
   resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
 } from "@/features/script/script-editor-data";
+import { isOwnershipError } from "@/features/project-overview/project-overview-workspace-data";
+import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 
@@ -39,6 +41,12 @@ interface ScopedClient {
   listProjects(input: {
     params: undefined;
     query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  // [T-373] 跨号整页门的所有权探针(OwnershipError → 整页诚实引导)。
+  getProject(input: {
+    params: { projectId: string };
+    query: undefined;
     body: undefined;
   }): Promise<unknown>;
   listOutputs(input: {
@@ -128,6 +136,33 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
   const scoped = createServerClient(session.ctx) as unknown as ScopedClient;
   const project = await resolveProject(scoped, param);
   const projectId = project?.id ?? param;
+
+  // [T-373] 跨号整页门:项目按当前号读不到(OwnershipError,跨号/未知同貌,不泄露
+  // 存在性)→ 整页诚实引导(与稿面根路由 T-332 S4 / review 页同款),不再半渲染
+  // (此前逐区 best-effort 降级,跨号项目照渲工作台空壳)。其他读失败维持原降级。
+  try {
+    await scoped.getProject({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    });
+  } catch (err) {
+    if (isOwnershipError(err)) {
+      return (
+        <main
+          data-app="creatoros"
+          data-page="project-cross-account-404"
+          className="flex flex-col gap-card-gap"
+        >
+          <CrossAccountEmptyState
+            entityLabel="项目"
+            backHref="/projects"
+            backLabel="回项目列表"
+          />
+        </main>
+      );
+    }
+  }
 
   // 口播稿(稿面同一读路径;读失败 → null 诚实空态)。
   const scriptArtifactId = await resolveScriptArtifactIdFromDb(

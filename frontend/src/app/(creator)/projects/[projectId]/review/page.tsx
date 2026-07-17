@@ -28,6 +28,8 @@ import {
   type PredictionComparisonClient,
   type ReviewDataClient,
 } from "@/features/review/review-workspace-data";
+import { isOwnershipError } from "@/features/project-overview/project-overview-workspace-data";
+import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 
@@ -36,11 +38,17 @@ interface AnalyticsReviewRouteProps {
 }
 
 // Minimal client shape `resolveProjectIdParam` needs (projects.list) — narrower
-// than ReviewDataClient, which has no listProjects op.
+// than ReviewDataClient, which has no listProjects op. [T-373] getProject 是
+// 跨号整页门的所有权探针(OwnershipError → 整页诚实引导)。
 interface ProjectListClient {
   listProjects(input: {
     params: undefined;
     query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  getProject(input: {
+    params: { projectId: string };
+    query: undefined;
     body: undefined;
   }): Promise<unknown>;
 }
@@ -60,6 +68,33 @@ export default async function AnalyticsReviewRoute({
     scoped as unknown as ProjectListClient,
     projectId,
   );
+  // [T-373] 跨号整页门:项目按当前号读不到(OwnershipError,跨号/未知同貌,不泄露
+  // 存在性)→ 整页诚实引导,与稿面根路由(page.tsx T-332 S4)同款语义。此前本页
+  // 逐区 catch 成「诚实空」,跨号项目被隔离挡了读却照渲页面壳 → 半渲染。
+  // 其他读失败(transport 等)维持原逐区降级路径,不新增 404。
+  try {
+    await (scoped as unknown as ProjectListClient).getProject({
+      params: { projectId: resolvedId },
+      query: undefined,
+      body: undefined,
+    });
+  } catch (err) {
+    if (isOwnershipError(err)) {
+      return (
+        <main
+          data-app="creatoros"
+          data-page="project-cross-account-404"
+          className="flex flex-col gap-card-gap"
+        >
+          <CrossAccountEmptyState
+            entityLabel="项目"
+            backHref="/projects"
+            backLabel="回项目列表"
+          />
+        </main>
+      );
+    }
+  }
   const viewModel = await buildReviewWorkspaceViewModel(
     resolvedId,
     scoped as unknown as ReviewDataClient,

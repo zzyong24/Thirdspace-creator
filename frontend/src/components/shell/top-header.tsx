@@ -217,7 +217,11 @@ function ProjectIdentityBlock({
 }) {
   const segments = pathname.split("/").filter(Boolean);
   const routeProjectId = segments[1];
-  const currentStage = segments[2];
+  // [T-373] 稿面根路由(/projects/[id],无 stage 子段)渲染的就是脚本工作面
+  // (projectWorkspaceHref(id, "script") 也指回它)→ 阶段条高亮与实际渲染面同源:
+  // 无子段即视为 "script",不再让 stepper 退回「按 status(项目成熟度)高亮」
+  // ——那会把已发布项目(currentStage=review)的稿面高亮成「复盘」。
+  const currentStage = segments[2] ?? "script";
   return (
     <div
       data-slot="header-project-identity"
