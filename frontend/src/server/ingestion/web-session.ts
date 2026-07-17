@@ -104,8 +104,8 @@ async function realOpenWebContext(
 ): Promise<WebSessionCapableContext> {
   const { chromium } = await import("@playwright/test");
   const { mkdir } = await import("node:fs/promises");
+  const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
   await mkdir(authDir, { recursive: true }).catch(() => {});
-  await clearSingletonLocks(authDir);
   // [T-236] 登录窗优先用**系统正式 Chrome**(channel:"chrome"),而非 Playwright 自带的
   //   测试构建 Chromium:真机实测 Google OAuth 对测试构建/自动化痕迹格外警惕(强制 passkey
   //   /拒登「browser may not be secure」),正式 Chrome 构建接受度高得多。仍是**独立隔离
@@ -115,26 +115,25 @@ async function realOpenWebContext(
   const baseOpts = {
     headless,
     viewport: { width: 1440, height: 900 },
+    ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox(登录窗警告横幅根因)
     args: ["--disable-blink-features=AutomationControlled"],
     ignoreDefaultArgs: ["--enable-automation"],
   };
   // [T-307] 统一浏览器选择(优先系统 Chrome → 回落**打包全量 chromium**):原来 catch 分支回落
   //   裸 baseOpts(无 executablePath)→ 无系统 Chrome 时 headless 状态探针会找 chrome-headless-shell 崩;
   //   且必须和 web-reader 读取用**同一套**选择,登录态 profile 才互通。
+  // [T-369] guardedLaunch:预检杀残留+清锁(只清锁,不动登录态)→ 同 profile 串行(登录窗跨请求
+  //   保持打开时,同域状态探针不会把活窗的锁清掉/进程杀掉)→ 超时人话报错。
   const { launchWithBrowser } = await import("./douyin-cdp");
-  const ctx = await launchWithBrowser((sel) =>
-    chromium.launchPersistentContext(authDir, { ...baseOpts, ...sel }),
+  const ctx = await guardedLaunch(
+    authDir,
+    () =>
+      launchWithBrowser((sel) =>
+        chromium.launchPersistentContext(authDir, { ...baseOpts, ...sel }),
+      ),
+    { label: "登录浏览器窗口" },
   );
   return ctx as unknown as WebSessionCapableContext;
-}
-
-// 持久 profile 的 Singleton 锁清理(与 douyin-cdp 同问题:上次异常退出残留锁会让 launch 失败)。
-async function clearSingletonLocks(authDir: string): Promise<void> {
-  const { rm } = await import("node:fs/promises");
-  const { join } = await import("node:path");
-  for (const f of ["SingletonLock", "SingletonCookie", "SingletonSocket"]) {
-    await rm(join(authDir, f), { force: true }).catch(() => {});
-  }
 }
 
 /**

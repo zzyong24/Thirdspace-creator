@@ -111,24 +111,28 @@ async function realOpenReaderContext(
   authDir: string,
 ): Promise<ReaderCapableContext> {
   const { chromium } = await import("@playwright/test");
-  const { mkdir, rm } = await import("node:fs/promises");
-  const { join } = await import("node:path");
+  const { mkdir } = await import("node:fs/promises");
+  const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
   await mkdir(authDir, { recursive: true }).catch(() => {});
-  for (const f of ["SingletonLock", "SingletonCookie", "SingletonSocket"]) {
-    await rm(join(authDir, f), { force: true }).catch(() => {});
-  }
   // 有头/无头:读取用 headless(不弹窗,复用 .auth/web 登录态);与 web-session.loginWeb 分工。
   // [T-307] 必须和 web-session.loginWeb **同一套浏览器选择**(优先系统 Chrome → 回落打包 chromium):
   //   登录写 profile 的浏览器和读 profile 的浏览器不一致 → Chrome 钥匙串加密的 cookie 读不出 → 误报「未登录」。
   //   channel:"chrome" headless 用系统 Chrome 二进制(非 chrome-headless-shell),顺带绕 T-299 那个坑。
+  // [T-369] guardedLaunch:预检杀残留+清锁(只清锁,不动登录态)→ 同 profile 串行 → 超时人话报错。
   const { launchWithBrowser } = await import("./douyin-cdp");
-  const ctx = await launchWithBrowser((sel) =>
-    chromium.launchPersistentContext(authDir, {
-      headless: true,
-      ...sel,
-      viewport: { width: 1440, height: 900 },
-      args: ["--disable-blink-features=AutomationControlled"],
-    }),
+  const ctx = await guardedLaunch(
+    authDir,
+    () =>
+      launchWithBrowser((sel) =>
+        chromium.launchPersistentContext(authDir, {
+          headless: true,
+          ...sel,
+          ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox
+          viewport: { width: 1440, height: 900 },
+          args: ["--disable-blink-features=AutomationControlled"],
+        }),
+      ),
+    { label: "网页读取浏览器" },
   );
   return ctx as unknown as ReaderCapableContext;
 }

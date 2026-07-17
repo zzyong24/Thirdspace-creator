@@ -744,15 +744,8 @@ const CREATOR_COMMENT_MANAGE =
 const CREATOR_DATA_CENTER_CONTENT =
   "https://creator.douyin.com/creator-micro/data-center/content";
 
-// launchPersistentContext 前清掉上次异常退出残留的单例锁,否则 relaunch 报
-// "SingletonLock: File exists" 直接 abort。
-async function clearSingletonLocks(authDir: string): Promise<void> {
-  const { rm } = await import("node:fs/promises");
-  const { join } = await import("node:path");
-  for (const n of ["SingletonLock", "SingletonCookie", "SingletonSocket"]) {
-    await rm(join(authDir, n), { force: true }).catch(() => {});
-  }
-}
+// [T-369] 启动预检/并发防抖/超时报错统一收进 chromium-guard.guardedLaunch(原地清锁的
+// clearSingletonLocks 升级为「杀残留进程+清锁+同 profile 串行+15s 超时人话报错」共享 helper)。
 
 // [T-173] Chromium 浏览器二进制(~344M)不打进桌面包 —— 首次用采集/扫码时**自动下载**到 Playwright
 //   默认缓存(Mac: ~/Library/Caches/ms-playwright;Win: %LOCALAPPDATA%\ms-playwright)。跨 Win/Mac:
@@ -868,20 +861,27 @@ async function openContext(authDir: string, headless: boolean) {
   await ensureChromiumInstalled(); // [T-173] 首启自动下载 Chromium(装过秒过)
   const { chromium } = await import("@playwright/test");
   const { mkdir } = await import("node:fs/promises");
+  const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
   await mkdir(authDir, { recursive: true }).catch(() => {});
-  await clearSingletonLocks(authDir);
   // [T-299] 显式全量 chromium(headless 也用它,绕开缺失的 chrome-headless-shell)。
   const executablePath = await resolveChromiumExecutable();
-  return chromium.launchPersistentContext(authDir, {
-    headless,
-    ...(executablePath ? { executablePath } : {}),
-    viewport: { width: 1440, height: 900 },
-    acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
-    args: [
-      "--disable-blink-features=AutomationControlled",
-      "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
-    ],
-  });
+  // [T-369] guardedLaunch:预检杀残留+清锁(只清锁,不动登录态)→ 同 profile 串行 → 超时人话报错。
+  return guardedLaunch(
+    authDir,
+    () =>
+      chromium.launchPersistentContext(authDir, {
+        headless,
+        ...(executablePath ? { executablePath } : {}),
+        ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox(警告横幅根因)
+        viewport: { width: 1440, height: 900 },
+        acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
+        args: [
+          "--disable-blink-features=AutomationControlled",
+          "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
+        ],
+      }),
+    { label: "抖音浏览器窗口" },
+  );
 }
 
 async function isLoggedIn(

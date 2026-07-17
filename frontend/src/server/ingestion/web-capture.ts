@@ -105,17 +105,25 @@ function toCaptureError(err: unknown): Error {
 export async function realOpenContext(): Promise<CaptureCapableContext> {
   const { chromium } = await import("@playwright/test");
   const { launchWithBrowser } = await import("./douyin-cdp");
+  const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
   // [T-307] 统一浏览器选择(优先系统 Chrome → 回落打包全量 chromium):原来裸 chromium.launch
   //   在打包版 headless 下找 chrome-headless-shell(没打)→ 截图崩,同 T-299 漏网点。
-  const browser = await launchWithBrowser((sel) =>
-    chromium.launch({
-      headless: true,
-      ...sel,
-      args: [
-        "--disable-blink-features=AutomationControlled",
-        "--no-proxy-server",
-      ],
-    }),
+  // [T-369] guardedLaunch(无持久 profile → 传 null,只做超时+人话报错包装,不做锁预检)。
+  const browser = await guardedLaunch(
+    null,
+    () =>
+      launchWithBrowser((sel) =>
+        chromium.launch({
+          headless: true,
+          ...sel,
+          ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox
+          args: [
+            "--disable-blink-features=AutomationControlled",
+            "--no-proxy-server",
+          ],
+        }),
+      ),
+    { label: "截图浏览器" },
   );
   const context = await browser.newContext({
     userAgent: DESKTOP_UA,
