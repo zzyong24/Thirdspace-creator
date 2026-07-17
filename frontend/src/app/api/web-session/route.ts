@@ -58,9 +58,12 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const rawToken = readSessionCookie(req);
+  // [T-370a] ctx 不再丢弃:登录态真值迁 browser_sessions 加密表(user 级域名维),
+  //   list/login/status/remove 需 ctx.userId stamp/filter。
+  let ctx;
   try {
     // 状态变更类(login/remove)→ present-but-invalid cookie 明确拒;缺失 cookie 仍单机直通(不锁死 app)。
-    await resolveRequestContext(rawToken, null, { rejectInvalidToken: true });
+    ctx = await resolveRequestContext(rawToken, null, { rejectInvalidToken: true });
   } catch {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
@@ -69,7 +72,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     switch (body.action) {
       case "list": {
-        const sessions = await runtime.listSessions();
+        const sessions = await runtime.listSessions(ctx);
         return NextResponse.json({ sessions });
       }
       case "login": {
@@ -82,7 +85,7 @@ export async function POST(req: Request): Promise<Response> {
         }
         // [T-221] 开窗即返(不阻塞、不赌 cookie 自动关):弹独立 Chromium 让用户自己登,返回
         //   { domain, pending:true }。登好由前端触发 loginConfirm 才关窗持久化。非法 URL → 抛 → 400。
-        const result = await runtime.loginSession(url);
+        const result = await runtime.loginSession(ctx, url);
         return NextResponse.json(result);
       }
       case "loginConfirm": {
@@ -105,14 +108,14 @@ export async function POST(req: Request): Promise<Response> {
         const domain = typeof body.domain === "string" ? body.domain.trim() : "";
         const bad = rejectBadDomain(domain);
         if (bad) return bad;
-        const result = await runtime.sessionStatus(domain);
+        const result = await runtime.sessionStatus(ctx, domain);
         return NextResponse.json(result);
       }
       case "remove": {
         const domain = typeof body.domain === "string" ? body.domain.trim() : "";
         const bad = rejectBadDomain(domain);
         if (bad) return bad;
-        const result = await runtime.removeSession(domain);
+        const result = await runtime.removeSession(ctx, domain);
         return NextResponse.json(result);
       }
       default:

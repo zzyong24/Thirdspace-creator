@@ -93,7 +93,10 @@ export interface ReaderCapableContext {
   close(): Promise<void>;
 }
 
-/** readUrl 的可注入依赖(默认真 launchPersistentContext(webAuthDirFor(domain));单测注 fake ctx)。 */
+/** readUrl 的可注入依赖(单测注 fake ctx)。
+ *  [T-370b] 运行时(persistence-client)注入 **profile 池** openContext(pool.checkout(domain):
+ *  域亲和 sticky + DB browser_sessions 解密注入,close = 回写 DB + clearCookies + 归还)——
+ *  默认 realOpenReaderContext(直开 authDir persistent profile)保留为无池调用方/存量兜底。 */
 export interface ReadUrlDeps {
   openContext?: (authDir: string) => Promise<ReaderCapableContext>;
   /** [T-326·RT-H04] SSRF 守卫(默认真 assertUrlAllowed:协议白名单 + 私网/回环/链路本地/

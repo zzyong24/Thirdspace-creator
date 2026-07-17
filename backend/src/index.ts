@@ -194,6 +194,11 @@ export {
   topicAttributions,
   TOPIC_ATTRIBUTION_DDL,
 } from "./schema/topic-attribution";
+// [T-370a] 浏览器登录态系统化(web 域 storageState 加密单一真值;抖音红线不进本表)。
+export {
+  browserSessions,
+  BROWSER_SESSIONS_DDL,
+} from "./schema/browser-sessions";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
 export { activationState } from "./schema/activation";
 export type { ActivationStateRow } from "./schema/activation";

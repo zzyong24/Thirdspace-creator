@@ -37,6 +37,8 @@ import * as favoritesSchema from "./schema/favorites";
 import * as topicAttributionSchema from "./schema/topic-attribution";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态)。
 import * as activationSchema from "./schema/activation";
+// [T-370a] 浏览器登录态系统化(web 域 storageState 加密单一真值;抖音红线不进)。
+import * as browserSessionsSchema from "./schema/browser-sessions";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -86,6 +88,7 @@ const schema = {
   ...favoritesSchema,
   ...topicAttributionSchema,
   ...activationSchema,
+  ...browserSessionsSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;

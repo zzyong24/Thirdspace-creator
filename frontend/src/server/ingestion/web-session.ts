@@ -73,6 +73,97 @@ export function hasSessionCookie(cookies: readonly CookieLike[]): boolean {
   });
 }
 
+// ── [T-370a] storageState 注入/回写(SPEC 2026-07-17 browser-session-pool §2.5)──────────
+// `launchPersistentContext` **不接受 storageState 选项** → 注入 = `context.addCookies(cookies)`
+// + `addInitScript` 按 origin 回灌 localStorage(init script 每次导航都跑,只在 key 缺失时 set,
+// 不覆盖站点会话中刷新的新值);回写 = `context.storageState()` 全量读(cookies+origins)。
+// 本组纯函数/窄接口供 web-session 探针 + browser-pool(T-370b)共用。
+
+/** playwright storageState 的结构子集(全量 JSON 原样存 DB,这里只解读两块)。 */
+export interface StorageStateOrigin {
+  origin: string;
+  localStorage?: Array<{ name: string; value: string }>;
+}
+export interface StorageStateLike {
+  cookies?: unknown[];
+  origins?: StorageStateOrigin[];
+}
+
+/** 注入所需的最小 context 能力(真 BrowserContext 结构上满足;fake 可只实现用到的)。 */
+export interface StorageInjectableContext {
+  addCookies?(cookies: unknown[]): Promise<void>;
+  addInitScript?(script: string): Promise<void>;
+}
+
+/**
+ * 生成「按 origin 回灌 localStorage」的 init script(每次导航都执行,自包含、防
+ * `</script>` 注入的 `<` 转义)。只在 key 缺失时 set —— 不覆盖站点自己刷新的新 token。
+ */
+export function buildLocalStorageInitScript(
+  origins: readonly StorageStateOrigin[],
+): string {
+  const map: Record<string, Array<{ name: string; value: string }>> = {};
+  for (const o of origins) {
+    if (!o?.origin || !Array.isArray(o.localStorage) || !o.localStorage.length) continue;
+    map[o.origin] = o.localStorage
+      .filter((e) => typeof e?.name === "string" && typeof e?.value === "string")
+      .map((e) => ({ name: e.name, value: e.value }));
+  }
+  const payload = JSON.stringify(map).replace(/</g, "\\u003c");
+  return `(() => {
+  try {
+    var data = ${payload};
+    var entries = data[window.location.origin];
+    if (!entries) return;
+    for (var i = 0; i < entries.length; i++) {
+      try {
+        if (window.localStorage.getItem(entries[i].name) === null) {
+          window.localStorage.setItem(entries[i].name, entries[i].value);
+        }
+      } catch (e) {}
+    }
+  } catch (e) {}
+})();`;
+}
+
+/**
+ * 把 DB 里的 storageState JSON 注入一个(persistent)context:addCookies + localStorage
+ * init script。JSON 损坏/空 state → 返 false(诚实视为无登录态,不抛)。
+ */
+export async function injectStorageState(
+  ctx: StorageInjectableContext,
+  stateJson: string,
+): Promise<boolean> {
+  let state: StorageStateLike;
+  try {
+    state = JSON.parse(stateJson) as StorageStateLike;
+  } catch {
+    return false;
+  }
+  let injected = false;
+  if (Array.isArray(state.cookies) && state.cookies.length && ctx.addCookies) {
+    await ctx.addCookies(state.cookies);
+    injected = true;
+  }
+  if (Array.isArray(state.origins) && state.origins.length && ctx.addInitScript) {
+    const script = buildLocalStorageInitScript(state.origins);
+    await ctx.addInitScript(script);
+    injected = true;
+  }
+  return injected;
+}
+
+/** 一份 storageState 是否携带任何登录材料(cookies 或 localStorage origins)。 */
+export function storageStateHasData(state: unknown): state is StorageStateLike {
+  if (!state || typeof state !== "object") return false;
+  const s = state as StorageStateLike;
+  return (
+    (Array.isArray(s.cookies) && s.cookies.length > 0) ||
+    (Array.isArray(s.origins) &&
+      s.origins.some((o) => (o.localStorage?.length ?? 0) > 0))
+  );
+}
+
 // ── 可注入端口(收窄浏览器能力,便于 fake ctx 单测,不起真 Chromium)─────────────
 // 真实 Playwright BrowserContext/Page 结构上满足(默认注入时向上转型目标),与 douyin-cdp 一致。
 export interface WebSessionCapablePage {
@@ -84,6 +175,10 @@ export interface WebSessionCapableContext {
   newPage(): Promise<WebSessionCapablePage>;
   cookies(url?: string): Promise<CookieLike[]>;
   close(): Promise<void>;
+  // [T-370a] 注入/回写能力(可选:真 BrowserContext 都有;老 fake 不实现也不破)。
+  storageState?(): Promise<unknown>;
+  addCookies?(cookies: unknown[]): Promise<void>;
+  addInitScript?(script: string): Promise<void>;
 }
 
 /** loginWeb / checkWebSessionStatus 的可注入依赖(默认真 openWebContext;单测注 fake ctx)。 */
@@ -92,6 +187,31 @@ export interface WebSessionDeps {
     authDir: string,
     headless: boolean,
   ) => Promise<WebSessionCapableContext>;
+  // [T-370a] 登录态 DB 端口(persistence-client 绑 browserSessionsService + ctx 注入;缺省 =
+  // 旧行为,只走 profile 目录)。saveState 失败(master-key 不可用)会**上抛人话错**(gate F-3
+  // 拒存,绝不静默),getState 失败视为未登录。
+  saveState?: (domain: string, stateJson: string) => Promise<void>;
+  getState?: (domain: string) => Promise<string | null>;
+  /** 存量惰性迁移 fs 端口(单测注 fake):旧 profile 目录是否有内容 / 归档(mv 加后缀)。 */
+  legacyProfileHasData?: (authDir: string) => Promise<boolean>;
+  archiveLegacyProfile?: (authDir: string) => Promise<void>;
+}
+
+// 旧 `.auth/web/<domain>` 目录是否存在且非空(有过登录/使用痕迹)。ENOENT → false。
+async function realLegacyProfileHasData(authDir: string): Promise<boolean> {
+  const { readdir } = await import("node:fs/promises");
+  try {
+    const entries = await readdir(authDir);
+    return entries.some((e) => !e.startsWith(".") && !e.startsWith("Singleton"));
+  } catch {
+    return false;
+  }
+}
+
+// 归档旧 profile 目录(mv 加后缀,不删 —— 可回滚;导入 DB 成功后才调)。
+async function realArchiveLegacyProfile(authDir: string): Promise<void> {
+  const { rename } = await import("node:fs/promises");
+  await rename(authDir, `${authDir}.migrated-${Date.now()}`);
 }
 
 // 自起独立 Chromium + 持久化 profile(与 douyin-cdp.openContext 同款做法:反自动化标记)。
@@ -156,13 +276,38 @@ export async function loginWeb(
       .catch(() => {}); // 打不开也不阻断登录窗口(用户可手动导航)
     for (let i = 0; i < timeoutSec; i++) {
       const cookies = await ctx.cookies(cookieUrl).catch(() => [] as CookieLike[]);
-      if (hasSessionCookie(cookies)) return { loggedIn: true };
+      if (hasSessionCookie(cookies)) {
+        // [T-370a] 登录成功检测点:storageState 全量读 → 经端口回写 DB(单一真值)。
+        // 拒存(master-key 不可用)上抛人话错 —— 绝不静默假装保存成功。
+        await persistContextState(ctx, opts.domain, deps);
+        return { loggedIn: true };
+      }
       await page.waitForTimeout(1000);
     }
     return { loggedIn: false };
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的独立 Chromium(非用户浏览器)
   }
+}
+
+// [T-370a] 从活 context 读 storageState 全量 JSON → saveState 端口回写 DB。
+//   · 端口缺省 / context 无 storageState 能力(老 fake)→ no-op(旧行为);
+//   · 读不到 state(浏览器已崩等)→ no-op(profile 目录仍是兜底);
+//   · saveState 抛(master-key 不可用,gate F-3 拒存)→ **原样上抛**(人话错到 UI)。
+async function persistContextState(
+  ctx: WebSessionCapableContext,
+  domain: string,
+  deps: WebSessionDeps,
+): Promise<void> {
+  if (!deps.saveState || typeof ctx.storageState !== "function") return;
+  let stateJson: string | null = null;
+  try {
+    const state = await ctx.storageState();
+    if (storageStateHasData(state)) stateJson = JSON.stringify(state);
+  } catch {
+    return; // 读不到 → 不回写(诚实 no-op,不编造)
+  }
+  if (stateJson) await deps.saveState(domain, stateJson);
 }
 
 // ── [T-221] 显式确认登录窗口(治「浏览器秒关」)──────────────────────────────
@@ -210,13 +355,71 @@ export async function openWebLoginWindow(
   return {
     domain: opts.domain,
     confirm: async () => {
+      // [T-370a] 用户确认登录成功 = 回写点:先趁 context 还活着读 storageState 全量,
+      // 关窗后再经端口落 DB(拒存错误上抛人话 —— 窗已关、profile 已落盘,登录本身不丢)。
+      let stateJson: string | null = null;
+      if (!settled && deps.saveState && typeof ctx.storageState === "function") {
+        try {
+          const state = await ctx.storageState();
+          if (storageStateHasData(state)) stateJson = JSON.stringify(state);
+        } catch {
+          // 读不到(窗被用户手关等)→ 不回写,仍走关窗确认
+        }
+      }
       await closeOnce();
+      if (stateJson && deps.saveState) await deps.saveState(opts.domain, stateJson);
       return { loggedIn: true };
     },
     cancel: async () => {
       await closeOnce();
     },
   };
+}
+
+// ── [T-370a] 存量惰性迁移(SPEC §3.3,一次性 best-effort)────────────────────────
+/**
+ * DB 无该域记录时,尝试从旧 `.auth/web/<domain>` persistent profile 导入:目录非空 → 起一次
+ * headless context 读 storageState → saveState 落 DB → **成功后**才归档旧目录(mv 加后缀,
+ * 不删可回滚)。任何一步不成 → 返 null(诚实要求重新登录,不硬凑)。saveState 拒存
+ * (master-key 不可用)→ warn + 不归档,本次仍可用读到的 state(下次再迁)。
+ */
+export async function importLegacyProfileState(
+  opts: { authDir: string; domain: string },
+  deps: WebSessionDeps = {},
+): Promise<string | null> {
+  if (!deps.saveState) return null;
+  const hasData = deps.legacyProfileHasData ?? realLegacyProfileHasData;
+  const archive = deps.archiveLegacyProfile ?? realArchiveLegacyProfile;
+  const openContext = deps.openContext ?? realOpenWebContext;
+  if (!(await hasData(opts.authDir).catch(() => false))) return null;
+  let stateJson: string | null = null;
+  const ctx = await openContext(opts.authDir, true);
+  try {
+    if (typeof ctx.storageState === "function") {
+      const state = await ctx.storageState().catch(() => null);
+      if (storageStateHasData(state)) stateJson = JSON.stringify(state);
+    }
+  } finally {
+    await ctx.close().catch(() => {});
+  }
+  if (!stateJson) return null; // 目录坏/无登录材料 → 诚实要求重新登录
+  try {
+    await deps.saveState(opts.domain, stateJson);
+  } catch (err) {
+    // 拒存(master-key 不可用等)→ 不归档(旧目录仍是唯一真值),本次探针仍可用读到的 state。
+    console.warn(
+      `[web-session] ${opts.domain} 存量登录态导入 DB 失败(旧目录保留,未归档):`,
+      err instanceof Error ? err.message : String(err),
+    );
+    return stateJson;
+  }
+  await archive(opts.authDir).catch((err) => {
+    console.warn(
+      `[web-session] ${opts.domain} 旧 profile 归档失败(DB 已导入,不影响使用):`,
+      err instanceof Error ? err.message : String(err),
+    );
+  });
+  return stateJson;
 }
 
 /**
@@ -229,8 +432,20 @@ export async function checkWebSessionStatus(
   deps: WebSessionDeps = {},
 ): Promise<{ loggedIn: boolean }> {
   const openContext = deps.openContext ?? realOpenWebContext;
+  // [T-370a] DB 单一真值优先:有该域加密 state → 注入回灌(addCookies + localStorage init
+  // script,§2.5)后按 cookie 判定(Chromium 会丢弃过期 cookie,注入后读回 = 真实有效性);
+  // 无 → 存量惰性迁移(旧 `.auth/web/<domain>` 目录导入 DB 后归档);都无 → 旧行为
+  // (profile 目录裸探针,通常未登录)。
+  let stateJson: string | null = null;
+  if (deps.getState) {
+    stateJson = await deps.getState(opts.domain).catch(() => null);
+  }
+  if (!stateJson) {
+    stateJson = await importLegacyProfileState(opts, deps);
+  }
   const ctx = await openContext(opts.authDir, true);
   try {
+    if (stateJson) await injectStorageState(ctx, stateJson);
     const cookies = await ctx
       .cookies(`https://${opts.domain}`)
       .catch(() => [] as CookieLike[]);

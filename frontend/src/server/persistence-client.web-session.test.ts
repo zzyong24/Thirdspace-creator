@@ -19,6 +19,16 @@ import {
   getWebSessionRuntime,
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
+import type { RequestContext } from "@creatoros/contract";
+
+// [T-370a] runtime 各操作带 ctx(登录态真值迁 browser_sessions 加密表,user 级 stamp)。
+// 本文件只验路径穿越防线(文件系统侧),ctx 用固定测试用户即可。
+const ctx: RequestContext = {
+  userId: "user-b01",
+  requestId: "r-b01",
+  source: "user",
+  accountId: null,
+};
 
 let root: string; // 临时根:root/web = 保管库基目录;root/victim = 库外受害哨兵
 let base: string;
@@ -71,7 +81,7 @@ describe("removeSession —— 路径穿越攻击一律拒删(防御①②,解�
 
   for (const a of attacks) {
     it(`拒删并不触碰文件系统: ${JSON.stringify(a)}`, async () => {
-      const res = await runtime.removeSession(a);
+      const res = await runtime.removeSession(ctx, a);
       expect(res).toEqual({ removed: false });
       // 库外哨兵完好 = 未发生任何越界删除。
       expect(await exists(nodePath.join(victim, "master-key.txt"))).toBe(true);
@@ -86,7 +96,7 @@ describe("removeSession —— symlink 逃逸拒删(防御③,realpath 复查)",
     // evil.com 通过白名单(合法 hostname)、containment 也过(base/evil.com 在库内),
     // 但真实路径指向库外 victim —— 只有 realpath 复查能挡住。
     await symlink(victim, nodePath.join(base, "evil.com"), "dir");
-    const res = await runtime.removeSession("evil.com");
+    const res = await runtime.removeSession(ctx, "evil.com");
     expect(res).toEqual({ removed: false });
     expect(await exists(nodePath.join(victim, "master-key.txt"))).toBe(true);
     // 软链本体也未被动(保守:整个操作拒绝,不做部分清理)。
@@ -99,7 +109,7 @@ describe("removeSession —— 正向路径不误伤", () => {
     const dir = nodePath.join(base, "chatgpt.com");
     await mkdir(dir, { recursive: true });
     await writeFile(nodePath.join(dir, "state.json"), "{}");
-    const res = await runtime.removeSession("chatgpt.com");
+    const res = await runtime.removeSession(ctx, "chatgpt.com");
     expect(res).toEqual({ removed: true });
     expect(await exists(dir)).toBe(false);
     // 只删该域,库外哨兵完好。
@@ -107,14 +117,14 @@ describe("removeSession —— 正向路径不误伤", () => {
   });
 
   it("合法 hostname 但从未登录过(目录不存在)→ 诚实 removed:false", async () => {
-    const res = await runtime.removeSession("never-logged-in.example.org");
+    const res = await runtime.removeSession(ctx, "never-logged-in.example.org");
     expect(res).toEqual({ removed: false });
   });
 
   it("www. 前缀归一后删除(www.zhihu.com → zhihu.com)", async () => {
     const dir = nodePath.join(base, "zhihu.com");
     await mkdir(dir, { recursive: true });
-    const res = await runtime.removeSession("www.zhihu.com");
+    const res = await runtime.removeSession(ctx, "www.zhihu.com");
     expect(res).toEqual({ removed: true });
     expect(await exists(dir)).toBe(false);
   });
@@ -123,7 +133,7 @@ describe("removeSession —— 正向路径不误伤", () => {
 describe("sessionStatus —— 解析处同样设防(webAuthDirFor 白名单硬拒,不起浏览器不碰 FS)", () => {
   for (const a of ["../..", "%2e%2e%2f", "/etc/passwd", "..\\..\\"]) {
     it(`拒绝: ${JSON.stringify(a)}(抛 WebDomainError)`, async () => {
-      await expect(runtime.sessionStatus(a)).rejects.toMatchObject({
+      await expect(runtime.sessionStatus(ctx, a)).rejects.toMatchObject({
         code: "WebDomainError",
       });
     });
@@ -134,7 +144,7 @@ describe("listSessions —— 磁盘遗留的不合规目录名跳过(读操作�
   it("只列合法 hostname 目录,不合规名不炸列表", async () => {
     await mkdir(nodePath.join(base, "example.org"), { recursive: true });
     await mkdir(nodePath.join(base, "bad..name"), { recursive: true }); // 不合规(含 ..)
-    const out = await runtime.listSessions();
+    const out = await runtime.listSessions(ctx);
     const domains = out.map((s) => s.domain);
     expect(domains).toContain("example.org");
     expect(domains).not.toContain("bad..name");

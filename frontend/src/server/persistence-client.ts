@@ -289,6 +289,7 @@ import {
   openWebLoginWindow,
   checkWebSessionStatus,
   webDomainFromUrl,
+  importLegacyProfileState,
   type WebLoginHandle,
 } from "@/server/ingestion/web-session";
 // [B-01] Web Session 域名净化/校验(防路径穿越递归删应用数据/上级目录)。纯函数,与 route 入口共用。
@@ -297,6 +298,17 @@ import {
   isSafeWebDomain,
   WebDomainError,
 } from "@/lib/web-domain";
+// [T-370a] 浏览器登录态系统化:web 域 storageState 加密单一真值(host 内部 service,无契约 op)。
+import {
+  createBrowserSessionsService,
+  type BrowserSessionsService,
+} from "@creatoros/backend/modules/browser-sessions";
+// [T-370b] 持久 profile 池(域亲和 sticky + 征用擦除 + FIFO 排队);web-reader 读取走池。
+import {
+  createBrowserPool,
+  type BrowserPool,
+  type PoolCapableContext,
+} from "@/server/ingestion/browser-pool";
 // [T-217b] Web Reader —— 带 .auth/web 登录态读正文全文(编导 web.read 端口用)。
 import {
   readUrl as readWebUrlSidecar,
@@ -1094,22 +1106,33 @@ interface PersistenceBundle {
   //   sidecar 浏览器 + 文件系统能力,非 DB/非 user-scoped,per-machine 全局)据此列站点/有头
   //   登录/被动探针/移除。与 localFileRuntime / knowledgeSearchRuntime 同款「无 endpoint 的
   //   runtime 逃生口」(而非 DB 契约 transport op —— 保管库无 DB 层,套 transport 只是空壳 service)。
+  // [T-370a] 登录态真值迁到 browser_sessions 加密表(user 级域名维)→ 各操作带 ctx
+  //   (route 已解析 RequestContext,原先丢弃,现传入 stamp ctx.userId)。
   webSessionRuntime: {
-    /** 列已保存站点会话(域名 + 上次登录时间;不逐站起浏览器,状态由 status 按需查)。 */
-    listSessions: () => Promise<
-      Array<{ domain: string; lastLoginAt: string | null }>
-    >;
+    /** 列已保存站点会话(DB 加密记录 ∪ 旧 profile 目录;域名 + 上次登录时间)。 */
+    listSessions: (
+      ctx: RequestContext,
+    ) => Promise<Array<{ domain: string; lastLoginAt: string | null }>>;
     /** [T-221] 开一个有头登录窗口(弹独立 Chromium,用户自己登录)并**保持打开**,不再赌 cookie 名
      *  自动关(治「浏览器秒关」)。返回 pending=true;登好由用户在 vault 卡点「我登好了」→ confirmSession。 */
-    loginSession: (url: string) => Promise<{ domain: string; pending: boolean }>;
-    /** [T-221] 用户显式「我登好了」:关登录窗(持久化 profile 到 `.auth/web/<domain>/`),认可成功。 */
+    loginSession: (
+      ctx: RequestContext,
+      url: string,
+    ) => Promise<{ domain: string; pending: boolean }>;
+    /** [T-221] 用户显式「我登好了」:storageState 回写 DB(T-370a)+ 关登录窗,认可成功。 */
     confirmSession: (domain: string) => Promise<{ domain: string; loggedIn: boolean }>;
     /** [T-221] 用户「取消」登录:关登录窗,不留登录承诺。 */
     cancelSession: (domain: string) => Promise<{ domain: string; cancelled: boolean }>;
-    /** 被动探针(headless 不弹窗)查某域名是否已登录 / 过期。 */
-    sessionStatus: (domain: string) => Promise<{ domain: string; loggedIn: boolean }>;
-    /** 移除某域名的持久 profile(登出 + 删本地登录态)。 */
-    removeSession: (domain: string) => Promise<{ removed: boolean }>;
+    /** 被动探针(headless 不弹窗):DB state 注入回灌后查是否已登录(含存量惰性迁移)。 */
+    sessionStatus: (
+      ctx: RequestContext,
+      domain: string,
+    ) => Promise<{ domain: string; loggedIn: boolean }>;
+    /** 移除某域名登录态(DB 加密记录 + 持久 profile 目录都删)。 */
+    removeSession: (
+      ctx: RequestContext,
+      domain: string,
+    ) => Promise<{ removed: boolean }>;
   };
 }
 
@@ -1383,6 +1406,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: persistent ? () => new Date().toISOString() : () => FIXED_NOW_ISO,
     nextId: (prefix: string) => `${prefix}-${idBase}-${++createSeq}`,
   };
+
+  // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
+  // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
+  // browser_sessions(web 登录态密文)与 settings(模型 key)共用同一把 key/同一 crypto。
+  const { key: masterKey, degraded: masterKeyDegraded } = resolveMasterKey(
+    process.env,
+  );
+  if (masterKeyDegraded) {
+    console.warn(
+      "[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。" +
+        "桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。",
+    );
+  }
+
+  // [T-370a] 浏览器登录态系统化:web 域 storageState 加密单一真值(host 内部 service,
+  // 无契约 op —— web-session 保管库 / browser-pool 经端口闭包用它,不暴露 API)。
+  // gate F-3:service 内 master-key 不可用/加密失败 → 抛人话错拒存,绝不明文落库。
+  const browserSessionsService: BrowserSessionsService =
+    createBrowserSessionsService({ db, now: deps.now, nextId: deps.nextId, masterKey });
 
   // ── T-038b 抖音采集限流网关(单例接线,SPEC §4.1/§4.4)────────────────────────────
   // 一个 module 单例 DouyinRequestGateway(per-channel 串行 + 最小间隔 + jitter + 指数退避 +
@@ -1736,46 +1778,61 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     return entry.handle;
   };
   const webSessionRuntime = {
-    listSessions: async (): Promise<
-      Array<{ domain: string; lastLoginAt: string | null }>
-    > => {
+    listSessions: async (
+      ctx: RequestContext,
+    ): Promise<Array<{ domain: string; lastLoginAt: string | null }>> => {
       const { readdir, stat } = await import("node:fs/promises");
+      // [T-370a] DB 加密记录是单一真值(惰性迁移会归档旧目录 → 只看目录会漏)∪ 旧 profile
+      //   目录(未迁移存量仍可见)。同域取 DB updatedAt 优先。
+      const byDomain = new Map<string, string | null>();
+      const dbRows = await browserSessionsService.listDomains(ctx).catch(() => []);
+      for (const r of dbRows) byDomain.set(r.domain, r.updatedAt);
       let entries: string[] = [];
       try {
         entries = await readdir(webAuthDirBase);
       } catch {
-        return []; // 目录不存在(还没登录过任何站)= 空列表(诚实,不报错)
+        entries = []; // 目录不存在(还没登录过任何站)→ 只看 DB(诚实,不报错)
       }
-      const out: Array<{ domain: string; lastLoginAt: string | null }> = [];
       for (const domain of entries) {
         if (domain.startsWith(".")) continue; // 跳过隐藏项(.DS_Store 等)
-        // [B-01] 白名单预检:磁盘上不合规的遗留目录名(旧版本产物/用户手放)跳过即可,
+        // [B-01] 白名单预检:磁盘上不合规的遗留目录名(旧版本产物/用户手放/归档后缀)跳过,
         //   不让 webAuthDirFor 的硬校验抛错炸穿整个列表(列表是读操作,宜宽容)。
         if (!isSafeWebDomain(domain)) continue;
+        if (byDomain.has(domain)) continue; // DB 已有 → 以 DB 为准
         const dir = webAuthDirFor(domain);
-        let lastLoginAt: string | null = null;
         try {
           const s = await stat(dir);
           if (!s.isDirectory()) continue;
-          lastLoginAt = s.mtime.toISOString(); // profile 目录 mtime ≈ 上次登录/使用时间
+          byDomain.set(domain, s.mtime.toISOString()); // profile 目录 mtime ≈ 上次登录/使用时间
         } catch {
           continue;
         }
-        out.push({ domain, lastLoginAt });
       }
-      return out.sort((a, b) => (b.lastLoginAt ?? "").localeCompare(a.lastLoginAt ?? ""));
+      return [...byDomain.entries()]
+        .map(([domain, lastLoginAt]) => ({ domain, lastLoginAt }))
+        .sort((a, b) => (b.lastLoginAt ?? "").localeCompare(a.lastLoginAt ?? ""));
     },
     // [T-221] 开窗即返(不阻塞、不赌 cookie 自动关):弹独立 Chromium 让用户自己登,返回 pending;
     //   登好由用户在 vault 卡点「我登好了」→ confirmSession 才关窗持久化。重复登同一域先关旧窗。
-    loginSession: async (url: string): Promise<{ domain: string; pending: boolean }> => {
+    // [T-370a] saveState 端口在开窗时绑 ctx —— confirm 关窗前 storageState 回写 DB(单一真值)。
+    loginSession: async (
+      ctx: RequestContext,
+      url: string,
+    ): Promise<{ domain: string; pending: boolean }> => {
       const domain = webDomainFromUrl(url); // 非法 URL → 抛,route 转 400
       const stale = disposePendingLogin(domain);
       if (stale) await stale.cancel().catch(() => {}); // 同域重复开窗:先关上一次遗留窗
-      const handle = await openWebLoginWindow({
-        authDir: webAuthDirFor(domain),
-        url,
-        domain,
-      });
+      const handle = await openWebLoginWindow(
+        {
+          authDir: webAuthDirFor(domain),
+          url,
+          domain,
+        },
+        {
+          saveState: (d, stateJson) =>
+            browserSessionsService.saveState(ctx, d, stateJson),
+        },
+      );
       const timer = setTimeout(
         () => {
           const h = disposePendingLogin(domain);
@@ -1806,15 +1863,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (handle) await handle.cancel().catch(() => {});
       return { domain: d, cancelled: true };
     },
-    sessionStatus: async (domain: string): Promise<{ domain: string; loggedIn: boolean }> => {
+    sessionStatus: async (
+      ctx: RequestContext,
+      domain: string,
+    ): Promise<{ domain: string; loggedIn: boolean }> => {
       const d = domain.trim().toLowerCase().replace(/^www\./, "");
-      const { loggedIn } = await checkWebSessionStatus({
-        authDir: webAuthDirFor(d),
-        domain: d,
-      });
+      // [T-370a] DB state 注入回灌探针(§2.5)+ 存量惰性迁移(旧目录导入 DB 后归档)。
+      const { loggedIn } = await checkWebSessionStatus(
+        {
+          authDir: webAuthDirFor(d),
+          domain: d,
+        },
+        {
+          getState: (dom) => browserSessionsService.getState(ctx, dom),
+          saveState: (dom, stateJson) =>
+            browserSessionsService.saveState(ctx, dom, stateJson),
+        },
+      );
       return { domain: d, loggedIn };
     },
-    removeSession: async (domain: string): Promise<{ removed: boolean }> => {
+    removeSession: async (
+      ctx: RequestContext,
+      domain: string,
+    ): Promise<{ removed: boolean }> => {
       const d = domain.trim().toLowerCase().replace(/^www\./, "");
       // 防御①②:非法/越界 domain → webAuthDirFor 抛,绝不触碰文件系统。
       let target: string;
@@ -1827,6 +1898,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         );
         return { removed: false };
       }
+      // [T-370a] DB 加密记录一并删(登出必须清单一真值,否则删目录后池注入仍复活登录态)。
+      const dbRemoved = await browserSessionsService
+        .removeState(ctx, d)
+        .catch(() => false);
       const { rm, realpath } = await import("node:fs/promises");
       try {
         // 防御③:真删除前 realpath 复查——目标的**真实路径**(解开 symlink)必须仍严格位于
@@ -1836,8 +1911,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         try {
           targetReal = await realpath(target);
         } catch {
-          // 目标不存在(从未登录过该域)→ 无可删,诚实返 false(不创建、不误删)。
-          return { removed: false };
+          // 目录不存在(已惰性迁移归档/从未登录)→ 无目录可删;DB 删过即算移除成功。
+          return { removed: dbRemoved };
         }
         const rel = nodePath.relative(baseReal, targetReal);
         if (!rel || rel.startsWith("..") || nodePath.isAbsolute(rel)) {
@@ -1845,14 +1920,98 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             "[web-session] removeSession 拒绝:真实路径越出保管库根(疑似 symlink 逃逸):",
             targetReal,
           );
-          return { removed: false };
+          return { removed: dbRemoved };
         }
         await rm(targetReal, { recursive: true, force: true });
         return { removed: true };
       } catch {
-        return { removed: false };
+        return { removed: dbRemoved };
       }
     },
+  };
+
+  // ── [T-370b] web 域读取 profile 池(SPEC §2.3/§3.2)────────────────────────────────
+  // `.auth/pool/p1..pN`(N=env CREATOROS_BROWSER_POOL_SIZE 默认 5;目录与 `.auth/web` 同级,
+  // 桌面端随 CREATOROS_WEB_AUTH_DIR 落 appDataDir)。启动走 T-369 chromium-guard 的
+  // guardedLaunch(**guard 零语义改动,只调用**,gate F-4)+ T-307 统一浏览器选择
+  // (channel:"chrome" → 回落打包 chromium),参数对齐 web-reader.realOpenReaderContext。
+  // 红线:抖音不进池(douyin-cdp 零改动,§2.1)。
+  const browserPoolDir =
+    process.env.CREATOROS_BROWSER_POOL_DIR ??
+    nodePath.join(nodePath.dirname(webAuthDirBase), "pool");
+  const launchPoolMember = async (
+    memberDir: string,
+  ): Promise<PoolCapableContext> => {
+    const { chromium } = await import("@playwright/test");
+    const { mkdir } = await import("node:fs/promises");
+    const { guardedLaunch, chromiumSandboxOpts } = await import(
+      "@/server/ingestion/chromium-guard"
+    );
+    const { launchWithBrowser } = await import("@/server/ingestion/douyin-cdp");
+    await mkdir(memberDir, { recursive: true }).catch(() => {});
+    const ctx = await guardedLaunch(
+      memberDir,
+      () =>
+        launchWithBrowser((sel) =>
+          chromium.launchPersistentContext(memberDir, {
+            headless: true,
+            ...sel,
+            ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox
+            viewport: { width: 1440, height: 900 },
+            args: ["--disable-blink-features=AutomationControlled"],
+          }),
+        ),
+      { label: "网页读取浏览器" },
+    );
+    return ctx as unknown as PoolCapableContext;
+  };
+  const browserPool: BrowserPool = createBrowserPool({
+    poolDir: browserPoolDir,
+    launch: launchPoolMember,
+  });
+
+  // [T-370b] 读取路径统一入口:pool.checkout(domain)(域亲和 sticky + DB state 注入),
+  // 适配成 web-reader 的 ReaderCapableContext(close = handle.release:storageState 回写 DB
+  // → clearCookies → 归还唤醒)。checkout 前若 DB 无该域记录,先走存量惰性迁移(§3.3,
+  // 旧 `.auth/web/<domain>` 导入 DB 后归档;失败诚实 → 干净 context 撞登录墙要求重登)。
+  const openPooledReaderContext = async (
+    ctx: RequestContext,
+    domain: string,
+  ): Promise<{
+    pages: () => never[];
+    newPage: () => Promise<never>;
+    close: () => Promise<void>;
+  }> => {
+    const session = {
+      getState: (d: string) => browserSessionsService.getState(ctx, d),
+      saveState: (d: string, stateJson: string) =>
+        browserSessionsService.saveState(ctx, d, stateJson),
+    };
+    const existing = await session.getState(domain).catch(() => null);
+    if (!existing) {
+      try {
+        await importLegacyProfileState(
+          { authDir: webAuthDirFor(domain), domain },
+          session,
+        );
+      } catch (err) {
+        // 迁移 best-effort:失败不阻断读取(干净 context 会诚实撞登录墙 → 引导重登)。
+        console.warn(
+          `[browser-pool] ${domain} 存量登录态迁移失败(继续无状态读取):`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+    const handle = await browserPool.checkout(domain, session);
+    const poolCtx = handle.context as unknown as {
+      pages(): never[];
+      newPage(): Promise<never>;
+    };
+    return {
+      pages: () => poolCtx.pages(),
+      newPage: () => poolCtx.newPage(),
+      close: () => handle.release(),
+    };
   };
   const assets = createAssetsTransport(() => assetsService);
 
@@ -7171,18 +7330,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // foundation §1). The preference/model/agent mutations are user-scoped via the
   // per-ctx repo. resolveModelForCapability (public on the service) is what the AI
   // worker reads. Clock/ids share the deterministic `deps`.
-  // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
-  // 由 Rust keyring 注入 / web-dev 降级),注入 settings repo 后 model_configurations
-  // .secret_value 静态加密(AES-256-GCM),读出透明解密。web 路径永不崩(降级 key)。
-  const { key: masterKey, degraded: masterKeyDegraded } = resolveMasterKey(
-    process.env,
-  );
-  if (masterKeyDegraded) {
-    console.warn(
-      "[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。" +
-        "桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。",
-    );
-  }
+  // T-147 P2 本地加密 —— master key 已在工厂前段解析([T-370a] 与 browser_sessions 共用),
+  // 注入 settings repo 后 model_configurations.secret_value 静态加密(AES-256-GCM),
+  // 读出透明解密。web 路径永不崩(降级 key)。
   const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
   const settingsService = createSettingsService(
     () => settingsRepo,
@@ -7648,9 +7798,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const trendSourceSignalsPort = (ctx: RequestContext) =>
     collectTrendSourceSignals(ctx, {
       listEnabledSources: (c) => trendSourcesService.listEnabledSources(c),
-      readWebSource: async (_c, source) => {
+      readWebSource: async (c, source) => {
+        // [T-370b] 读取走 profile 池(域亲和 checkout + DB 登录态注入;authDir 仅作
+        //   存量惰性迁移的旧目录定位,openContext 注入后不再直开该目录)。
         const result = await readWebUrlSidecar(source.url, {
           authDir: webAuthDirFor(source.domain),
+        }, {
+          openContext: () =>
+            openPooledReaderContext(c, source.domain) as never,
         });
         return { text: result.text };
       },
@@ -8829,9 +8984,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       let read;
       try {
         // [T-239c] signal 透传进 readUrl:用户点「停止」→ 关带登录态浏览器提前退出(AbortError)。
+        // [T-370b] 读取走 profile 池(域亲和 checkout + DB 登录态注入;authDir 仅作存量惰性
+        //   迁移的旧目录定位,openContext 注入后不再直开该目录)。
         read = await readWebUrlSidecar(input.url, {
           authDir: webAuthDirFor(domain),
           signal: input.signal,
+        }, {
+          openContext: () => openPooledReaderContext(ctx, domain) as never,
         });
       } catch (err) {
         if (err instanceof WebReaderLoginRequiredError) {
