@@ -41,12 +41,28 @@ Web 域登录态(ChatGPT/GitHub 等 web-session 保管库)从「埋在 `.auth/we
 - 崩溃恢复:成员目录残留(进程死没 return)→ 下次 checkout 时 guard 清理即可,DB 真值不受影响
   ——这正是对 T-369「打不开」的根治:**登录态不再依赖 profile 目录活着**。
 
+### 2.4 跨域隔离(gate F-1 HIGH,开工前置)
+成员只清 cookie 不够——persistent profile 里 localStorage/indexedDB/service worker 会把前一个域的
+登录态(JWT 类)泄给下一个域。双保险:
+- **域亲和 sticky(主)**:成员记 lastDomain,checkout 严格优先同域成员;域数 ≤ 池上限时**永不跨域复用**。
+- **目录级存储擦除(征用时)**:域数超上限须征用他域成员时,删该成员 profile 内站点存储子目录
+  (Default/Local Storage、IndexedDB、Session Storage、Service Worker、Cache*)+ clearCookies 后才注入;
+  擦除失败 → 拒用该成员换下一个(诚实,绝不带脏注入)。
+
+### 2.5 注入机制(gate F-2,实现级钉死)
+`launchPersistentContext` **不接受 storageState 选项**。注入 = `context.addCookies(state.cookies)` +
+`addInitScript` 按 origin 回灌 `state.origins` 的 localStorage;回写 = `context.storageState()` 全量读
+(含 cookies+origins)。T-370c 验收必须用一个 localStorage-token 站点验「杀 profile 目录仍登录」,
+防 cookie-only 假通过。
+
 ## 3. 设计
 
 ### 3.1 新表 `browser_sessions`(迁移 0047)
 `id / user_id NOT NULL / scope_kind('web-domain') / scope_key(domain) / state_encrypted(TEXT,
 master-key 加密的 storageState JSON) / updated_at`;唯一键 (user_id, scope_kind, scope_key)。
-预留 scope_kind 枚举扩展位但**本期只 web-domain**(抖音红线不进)。account_id 不加:web 登录保管库
+预留 scope_kind 枚举扩展位但**本期只 web-domain**(抖音红线不进)。**master-key 不可用时拒存**
+(人话错引导先解决 keychain),**绝不明文落库**(gate F-3:不同于模型 key 的向后兼容明文降级——
+cookie 是完整会话劫持材料);读侧解密失败视为未登录(复用 settings「视为未配置」降级思想)。account_id 不加:web 登录保管库
 现状即用户级(域名维),不随抖音号切换——保持语义不变。
 
 ### 3.2 pool manager(`frontend/src/server/ingestion/browser-pool.ts` 新)
@@ -71,8 +87,10 @@ web-session(登录窗+探针)/ web-reader / web-capture(需登录态时)→ 全�
 
 - **T-370a**:`browser_sessions` 表+迁移 0047+加密存取(复用 settings master-key helper)+
   web-session 登录成功回写/checkout 注入(单域先通,含存量惰性迁移)。
-- **T-370b**:browser-pool.ts 池管理(≤5/排队/guard 集成/return 回写)+ web-reader/web-capture 接线。
-- **T-370c**:真机验(登录一次→DB 有加密记录→杀 profile 目录→再打开仍登录[真值在系统]→并发多窗不抢)。
+- **T-370b**:browser-pool.ts 池管理(≤5/域亲和/征用擦除/排队/guard 集成/return 回写)+
+  web-reader/web-capture 接线。验收含 gate F-4:**chromium-guard 零语义改动** + 抖音路径回归测。
+- **T-370c**:真机验(登录一次→DB 有加密记录→杀 profile 目录→再打开仍登录[含 localStorage-token
+  站点,防 cookie-only 假通过]→并发多窗不抢→崩溃后 DB 滞后场景「诚实要求重登」兜底[gate F-5])。
 
 ## 6. gate
 
