@@ -193,18 +193,18 @@ export function AnalyticsReviewInteractiveRegion({
         {/* [T-356②] 热门作品发布列表已下架:单项目复盘页拉账号级全作品列表=凑数
             (聚焦单作品 surface 不挂宽域列表,同 chatbox-scope-tools-to-task 教训)。 */}
         <CommentsSection comments={viewModel.comments ?? []} />
-        {/* [T-118a §A/§D] 本期经验裁决区:本作品复盘提炼的经验候选,当场采纳/翻案。
-            与 AI 要点卡(右栏,只读摘要)视觉分隔 + 数据源标注,防混淆。 */}
-        <CurrentPeriodLearnings
-          candidates={viewModel.candidateLearnings ?? []}
-          projectId={viewModel.projectId}
-        />
       </div>
       <div
         data-slot="analytics-right-rail"
         className="flex flex-col gap-card-gap"
       >
-        {/* [T-356③] 「AI 要点 · 本期复盘摘要」卡已下架:与下方「本期经验 · 可采纳沉淀」
+        {/* [T-404 用户拍板 2026-07-18] 本期经验裁决区(含「帮我复盘」CTA)从左列移到右栏、
+            复盘编辑之上 —— 帮我复盘是复盘编辑的入口动作,放一起动线更顺。 */}
+        <CurrentPeriodLearnings
+          candidates={viewModel.candidateLearnings ?? []}
+          projectId={viewModel.projectId}
+        />
+        {/* [T-356③] 「AI 要点 · 本期复盘摘要」卡已下架:与「本期经验 · 可采纳沉淀」
             同源(一次「帮我复盘」review.analyze 同时产要点+经验候选),两块并存=概念重复
             (用户真机反馈分不清)。收敛为单一「本期经验」区:帮我复盘 → 候选出现 → 采纳/翻案。 */}
         <ReviewAuthoringPanel

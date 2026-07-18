@@ -34,7 +34,8 @@ export interface DouyinWorkDetail {
   /** 5s 完播率(0-100 百分数)。 */
   finish5sRate: number;
   /** 封面点击率(0-100 百分数)。 */
-  coverCtr: number;
+  /** 封面点击率(0-100 百分数);**null = 抖音无数据**(区别于真 0,复盘卡显「暂无」不显 0.0%)。 */
+  coverCtr: number | null;
   /** 2s 跳出率(0-100 百分数)。 */
   bounce2sRate: number;
   /** 平均播放时长(秒,保留 1 位小数)。 */
@@ -79,6 +80,28 @@ function safeInt(v: unknown, def = 0): number {
 function asPct(v: unknown): number {
   const n = safeFloat(v);
   return n < 1 ? Math.round(n * 10000) / 100 : Math.round(n * 100) / 100;
+}
+
+/**
+ * [T-403] 「率」列(封面点击率等)专用:区分**无数据**与**真 0**,并修 asPct 的边界 bug。
+ *
+ * 真机 xlsx 实证(2026-07-18 用户导出的 `作品列表.xlsx`):封面点击率列取值有 `"-"`(抖音无
+ * 数据,8/29 条)、`"0.000000"`(真 0)、`"1"`(=100%)、`"0.592233"`(=59.22%)。两个 bug:
+ *   ① asPct 把 `"-"` 经 safeFloat 归 0 → 与真 0 混同 → UI 全显「0.0%」(用户那条 44244 播放
+ *      作品即 `"-"`,被误显 0.0%);
+ *   ② asPct 的 `n≥1 原样` 分支把 `"1"`(=100% 小数)错当「1%」——该列恒是 0–1 小数,应恒 ×100。
+ * 修:`"-"`/空/非数值 → `null`(无数据,落库侧不带该键 → 复盘卡显「暂无·待采集」而非 0.0%);
+ *   数值一律按 0–1 小数 ×100(>1 容错视为已是百分数,几乎不出现)。
+ */
+function asRatePct(v: unknown): number | null {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  if (s === "" || s === "-" || s === "—" || s === "None" || s === "null") {
+    return null;
+  }
+  const n = Number(s.replace(/%/g, "").replace(/,/g, "").trim());
+  if (!Number.isFinite(n)) return null;
+  return Math.round((n <= 1 ? n * 100 : n) * 100) / 100;
 }
 
 /** 单元格 → 去空白/换行的字符串(标题/体裁/状态用)。 */
@@ -190,7 +213,7 @@ export async function parseDouyinWorkListXlsx(
       plays: safeInt(at(row, playIdx)),
       finishRate: asPct(at(row, finishIdx)),
       finish5sRate: asPct(at(row, finish5sIdx)),
-      coverCtr: asPct(at(row, coverCtrIdx)),
+      coverCtr: asRatePct(at(row, coverCtrIdx)),
       bounce2sRate: asPct(at(row, bounceIdx)),
       avgDurationSec: Math.round(safeFloat(at(row, durIdx)) * 10) / 10,
       likes: safeInt(at(row, likeIdx)),
@@ -302,7 +325,9 @@ export function detailToRawMetrics(
 ): Record<string, number | string> {
   return {
     plays: d.plays,
-    ctr: d.coverCtr, // 封面点击率 → 复盘读侧键 `ctr`(0/fixture → 真)
+    // [T-403] 封面点击率 → 复盘读侧键 `ctr`。**null(抖音无数据)时不落该键** —— 复盘 view-model
+    //   按「携带帧数 n」聚合,无帧携带 ctr → 卡显「暂无·待采集」,不再把无数据误显 0.0%。
+    ...(d.coverCtr !== null ? { ctr: d.coverCtr } : {}),
     finish_rate: d.finishRate, // 完播率 → 复盘读侧键 `finish_rate`
     avg_duration_sec: d.avgDurationSec,
     likes: d.likes,

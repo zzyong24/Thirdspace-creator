@@ -124,6 +124,45 @@ describe("parseDouyinWorkListXlsx — 16 字段容错解析(移植 TzFilm parse_
     expect(b!.followerGain).toBe(2);
   });
 
+  it("[T-403] 封面点击率:真机 xlsx 值区分无数据/真0/小数/100%(用户 2026-07-18 导出实证)", async () => {
+    // 真机 `作品列表.xlsx` 封面点击率列真实取值:"-"(抖音无数据)/"0.000000"(真0)/
+    // "1"(=100% 小数)/"0.592233"(=59.22%)。其余明细列给合法值避免整行被跳过。
+    const rowFor = (coverCtr: unknown): unknown[] => [
+      "标题",
+      "2026-07-18",
+      "3-5min视频",
+      "已通过",
+      "5985",
+      0.0117, // 完播率
+      0.2704, // 5s完播率
+      coverCtr, // 封面点击率(被测)
+      0.4615, // 2s跳出率
+      8.4,
+      10,
+      1,
+      1,
+      1,
+      1,
+      1,
+    ];
+    const bytes = await buildXlsx(HEADERS_STANDARD, [
+      rowFor("-"),
+      rowFor("0.000000"),
+      rowFor("1"),
+      rowFor("0.592233"),
+    ]);
+    const [noData, real0, full, frac] = await parseDouyinWorkListXlsx(bytes);
+    expect(noData!.coverCtr).toBeNull(); // "-" → null(无数据,非 0)
+    expect(real0!.coverCtr).toBe(0); // "0.000000" → 真 0
+    expect(full!.coverCtr).toBe(100); // "1" → 100%(修 asPct n≥1 当 1% 的边界 bug)
+    expect(frac!.coverCtr).toBe(59.22); // 0.592233 → 59.22%
+
+    // detailToRawMetrics:无数据(null)不落 ctr 键 → 复盘卡显「暂无」;真 0 落 ctr:0。
+    expect("ctr" in detailToRawMetrics(noData!)).toBe(false);
+    expect(detailToRawMetrics(real0!).ctr).toBe(0);
+    expect(detailToRawMetrics(full!).ctr).toBe(100);
+  });
+
   it("列序变化 + 表头带后缀仍容错匹配(仿 TzFilm 关键词模糊匹配)", async () => {
     // 打乱列序 + 表头加后缀("(次)" / "（%）"),关键词子串匹配应仍命中。
     const shuffled = [
