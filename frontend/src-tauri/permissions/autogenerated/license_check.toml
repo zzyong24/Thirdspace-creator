@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-license-check"
+description = "Enables the license_check command without any pre-configured scope."
+commands.allow = ["license_check"]
+
+[[permission]]
+identifier = "deny-license-check"
+description = "Denies the license_check command without any pre-configured scope."
+commands.deny = ["license_check"]

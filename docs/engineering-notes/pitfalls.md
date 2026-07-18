@@ -66,6 +66,26 @@
 ## Tauri webview 细节
 
 - webview 吞 target=_blank;tauri-plugin-opener 自带注入脚本(拦 _blank 链接);自己再拦截会双输(stopPropagation 废掉官方脚本)→ 只把缺 target 的跨域链接补成 _blank,让官方脚本接管(T-252)。
+- **sidecar 架构(窗口 `WebviewUrl::External(http://127.0.0.1:PORT)`)= 远程 origin,Tauri v2 ACL 对它的 `invoke` 默认全拒**(T-408,2026-07-18 真机:激活直接失败,devtools 抓到 `Command license_activate not allowed by ACL`,Rust 决策链零执行/零日志/零网络)。修两块缺一不可:① capability 加 `"remote": {"urls": ["http://127.0.0.1:*", "http://localhost:*"]}`;② **app 自定义命令的 `allow-*` 权限默认根本不存在**——必须 build.rs `tauri_build::try_build(Attributes::new().app_manifest(AppManifest::new().commands(&[...])))` 声明命令,构建期才自动生成 `allow-<command-kebab>`(`_`→`-`,tauri-utils acl/build.rs 源码坐实),capability 再引用。**坑的阴险处**:init script 注入、Rust→JS 事件广播、sidecar fetch 全正常,只有 JS→Rust `invoke` 静默死 → 无 IPC 的功能全好,极易误判成服务器/签名问题(本次先在服务器侧逐环验了一整圈才回头)。排查铁律:从终端 exec 内层二进制看 Rust stderr 是否根本没到命令(Finder 启动 stderr 被丢)+ devtools 看 JS 真实报错。最小授权:remote capability 绝不含 `shell:execute/kill`(spawn sidecar 是 Rust 的事,前端拿到 = 被投毒页面可执行任意进程)。
+
+## serde 容错解析:服务端下发 snake+camel 双份键 → strict 结构体 duplicate-field 崩解析(T-408)
+
+- **症状**:桌面激活死活不成,报「响应 nonce 与请求不一致(疑似重放)」,但服务器**明明返回 `success:true` 且 nonce 正确回显**(诊断日志:发/收 nonce 完全一致、cache=MISS、无压缩)。
+- **根因**:activation-manager 对同一字段**同时下发 snake_case + camelCase 两份**(`expires_at` 和 `expiresAt`、`license_mode` 和 `licenseMode` 都在)。Rust 端 `#[derive(Deserialize)] + #[serde(rename_all="camelCase")] + #[serde(alias="expires_at")]` 遇到「rename 目标键 + alias 键**同时**出现」→ serde 判 **duplicate field → 整个 body 解析直接 Err** → `unwrap_or_default()` 把 `nonce` 抹成 `None` → 决策链 `body.nonce != req_nonce` 成立 → 误判疑似重放拒绝。
+- **为何潜伏到最后才现形**:壳层激活链一路被上游卡点(Tauri ACL 拒 invoke → CDN TLS 证书 → …)挡在前面,**从没真正跑到"解析成功响应"这步**(`.license` 从没写成),所以这个从第一天就在的解析 bug 一直没暴露。诊断法:临时在 HTTP 端口打印「发出的 nonce vs 收到的 nonce vs cache 状态 vs body 片段」,一眼看出"服务器回得对、是客户端解析丢了"。
+- **正解**:不要用 strict 结构体解析"字段可能重复/可能 snake 可能 camel"的外部响应。走 `serde_json::Value`(**重复键 last-wins,不报错**)+ 每字段 camel/snake 双取(`v.get("expiresAt").or_else(|| v.get("expires_at"))`),和前端 `license-client.ts` 的 `body.licenseMode ?? body.license_mode` 同策略。**测试要用真实响应形状**(含双份键)锚定,别只用自己造的干净单份 body(FakeServer 的 `valid_body` 只有单份 → 测过也漏)。
+
+## 机密从 env 迁到 stdin/fd 时,消费点要全量改(T-408 master key 漏改)
+
+- **症状**:桌面激活成功后无限跳转激活页。Rust 壳 `licensed=true 已激活`,但 sidecar 日志 `[activation] .license 解析失败…缺 master key,无法解密`。
+- **根因**:T-391 H-key 把 master key 从 `env.CREATOROS_MASTER_KEY` 明文改成经 Tauri ChildStdin(fd 0)注入 + `resolveMasterKey`(fd 通道 + `fdKeyCache` 缓存,stdin 只能读一次靠它兜)。DB 加密路(secret-crypto / persistence-client)改到了,但**另一个消费点** `license-file.server.ts` 还直读旧 `env.CREATOROS_MASTER_KEY`(已 undefined)→ 缺 key。修:所有 master key 消费点统一走 `resolveMasterKey`(从 `@creatoros/backend` 引,与 DB 层**同模块实例同缓存** —— 靠 bundler 去重,别各自造轮子)。
+- **教训**:把一个机密的传递方式换掉(env→stdin/fd、明文→keychain 等),必须 `grep` 出**所有**读取点全量迁移,漏一个就潜伏。尤其"只在某条从没端到端跑通的链路上才被消费"的点最容易漏(本例 sidecar 读 `.license` 直到激活首次成功才被触发)。
+- **调 fd 单读要缓存**:stdin/fd 是一次性流,多个消费点必须共享一次读取的缓存(`fdKeyCache`),否则第二个消费点读到 EOF→空→降级/错 key。
+
+## 桌面激活 0→1 的"层层潜伏 bug"教训(T-408,一次剥 5 层)
+
+- 桌面壳层激活链**从没端到端真正跑通过**(`.license` 从没成功写盘),导致 5 个独立 bug 层层叠压、只有修掉上一层才暴露下一层:① Tauri v2 远程 origin invoke 被 ACL 拒(见「Tauri webview 细节」)→ ② CDN 边缘证书 SAN 不含域名 TLS 失败 → ③ 瞬态验签失败把「疑似重放」甩用户脸上(缺重试自愈+友好文案)→ ④ WireBody 对服务端 snake+camel 双份键 duplicate-field 崩解析(见「serde 容错解析」)→ ⑤ 本条 master key 漏改。
+- **教训**:一条关键用户链路(激活/支付/登录)在**真机端到端至少成功跑通一次**之前,别信"各层单测都过";多层潜伏 bug 只有真机逐层剥。诊断法屡试不爽:从终端 exec 内层二进制看 Rust stderr + 临时打诊断日志(发/收对比)+ 逐环 curl 反证「哪一侧才是坏的」。
 
 ## Next build / 工程门禁(T-326 ENG-H02 / B-04)
 

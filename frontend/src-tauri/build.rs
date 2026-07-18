@@ -22,5 +22,17 @@ fn main() {
     println!("cargo:rustc-env=CREATOROS_SIDECAR_SHA256={hash}");
     println!("cargo:rerun-if-changed=sidecar.tar.gz");
 
-    tauri_build::build();
+    // [T-408] 主窗口是 sidecar 远程 http origin(WebviewUrl::External),Tauri v2 ACL 对远程
+    // origin 的 app 自定义命令**默认全拒**("Command license_activate not allowed by ACL",
+    // 2026-07-18 真机实锤)。app 命令的权限不会自动存在——必须在此声明,tauri-build 才会
+    // 自动生成 `allow-<command>` / `deny-<command>` 权限,供 capabilities/remote-sidecar.json
+    // 显式引用放行。三个命令 = generate_handler 全集(license 决策链 IPC,SPEC §9)。
+    tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
+        tauri_build::AppManifest::new().commands(&[
+            "license_activate",
+            "license_check",
+            "license_last_decision",
+        ]),
+    ))
+    .expect("tauri_build 失败");
 }

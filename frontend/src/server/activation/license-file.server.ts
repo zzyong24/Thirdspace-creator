@@ -2,6 +2,8 @@ import { createHash, createDecipheriv } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
+import { resolveMasterKey } from "@creatoros/backend";
+
 // [T-372 L2] `.license` 放行权威文件的**只读**端(SPEC §9/§13)。
 //
 // 写者唯一 = Rust 壳(src-tauri/src/license.rs):校验决策链(验签/防重放/防回拨)在 Rust
@@ -120,9 +122,13 @@ export async function readLicenseVerdict(
   if (options.masterKey !== undefined) {
     key = options.masterKey;
   } else {
-    const raw = env.CREATOROS_MASTER_KEY?.trim();
-    const master = raw ? Buffer.from(raw, "base64") : null;
-    key = master && master.length === 32 ? deriveLicenseKey(master) : null;
+    // [T-408] master key 经 Tauri ChildStdin(fd 0)注入(T-391 H-key),env 里只剩非机密 fd 号。
+    //   必须走 resolveMasterKey(fd 通道 + fdKeyCache,与 persistence-client/DB 同源同缓存),
+    //   **不能**直读 env.CREATOROS_MASTER_KEY —— 那是 T-391 前的旧路径,现已 undefined → 「缺
+    //   master key」解不开 .license → 激活成功后 sidecar 门仍判未激活 → 无限跳转激活页
+    //   (2026-07-18 真机:激活链首次真正跑通、.license 首次写盘,才暴露此 T-391 漏改)。
+    const { key: master } = resolveMasterKey(env);
+    key = master.length === 32 ? deriveLicenseKey(master) : null;
   }
   try {
     return decodeLicenseVerdict(content, key);

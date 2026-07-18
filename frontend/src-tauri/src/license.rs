@@ -38,6 +38,10 @@ pub const LICENSE_SERVER_PUBLIC_KEY_B64: &str = "";
 
 /// 响应 date 头与可信时间的最大允许偏差(SPEC §5:300 秒)。
 const MAX_DATE_SKEW_MS: i64 = 300_000;
+/// [T-408] 在线校验瞬态自愈重试次数:验签/nonce/网络抖动等瞬态失败换新 nonce 重发的总尝试上限。
+/// 真被篡改/重放则每次都挂、不会误放行(licensed 仍只由「验签通过 + valid」决定);瞬态(CDN 边缘
+/// 抖动/连接复用/短暂坏缓存)通常一两次即恢复,不再把「疑似重放」这类术语糊到正版用户脸上。
+const MAX_ONLINE_ATTEMPTS: u32 = 3;
 /// last-seen 回拨容差(SPEC §6:3600 秒,容忍 DST 与合法小幅校时)。
 const ROLLBACK_TOLERANCE_MS: i64 = 3_600_000;
 /// [T-372 L3] 内测码(trial)离线宽限兜底:86400s = 24h(SPEC §7/§8 对照表「graceSeconds 下发」行;
@@ -545,6 +549,20 @@ fn randomized_backoff() {
     }
 }
 
+/// [T-408] 瞬态重试小退避:第 n 次重试前睡 150ms×n(1→150,2→300),让 CDN 边缘/连接抖动过去。
+/// 仅非测试构建生效(测试零耗时)。
+#[inline(always)]
+fn transient_backoff(attempt: u32) {
+    #[cfg(not(test))]
+    {
+        std::thread::sleep(std::time::Duration::from_millis(150u64 * attempt as u64));
+    }
+    #[cfg(test)]
+    {
+        let _ = attempt;
+    }
+}
+
 /// [SPEC §7 去单点化 + 反调试] 运行期放行门:在 3 个独立调用点各跑一次。
 ///   · 探到调试器 trace **或** 决策证据不自洽(如 licensed 被单独 patch 成 true 而 status
 ///     并非 active/grace)→ **静默降级**:licensed=false + status=untrusted,**绝不 panic、
@@ -964,6 +982,45 @@ struct WireBody {
     nonce: Option<String>,
 }
 
+impl WireBody {
+    /// [T-408] 容错解析真实服务器响应。
+    ///
+    /// **踩点(2026-07-18 真机)**:activation-manager 对同一字段**同时下发 snake + camel 两份**
+    /// (`expires_at` 与 `expiresAt`、`license_mode` 与 `licenseMode` 都在)。上面的 `#[derive(Deserialize)]`
+    /// + `rename_all="camelCase"` + `alias` 组合遇到「rename 目标键 + alias 键同时出现」会判 **duplicate
+    /// field** → **整个 body 解析直接失败** → `unwrap_or_default()` 把 `nonce` 抹成 `None` → 决策链误判
+    /// 「响应 nonce 与请求不一致(疑似重放)」拒绝激活。而服务器 nonce 明明回显正确(诊断实证)。
+    /// 这条路径 app 从没成功跑过(`.license` 从没写成),故此 bug 一直潜伏到 IPC+网络都通后才现形。
+    ///
+    /// 改走 `serde_json::Value`(重复键 **last-wins**,不报错)+ camel/snake 双取,和 sidecar 的
+    /// `license-client.ts`(`body.licenseMode ?? body.license_mode`)同策略。解析不出 → 全 None(宽容)。
+    fn from_response_bytes(bytes: &[u8]) -> WireBody {
+        let v: serde_json::Value =
+            serde_json::from_slice(bytes).unwrap_or(serde_json::Value::Null);
+        let str_of = |ck: &str, sk: &str| {
+            v.get(ck)
+                .or_else(|| v.get(sk))
+                .and_then(|x| x.as_str())
+                .map(|s| s.to_string())
+        };
+        let bool_of = |k: &str| v.get(k).and_then(|x| x.as_bool());
+        WireBody {
+            success: bool_of("success"),
+            valid: bool_of("valid"),
+            message: v.get("message").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            expires_at: str_of("expiresAt", "expires_at"),
+            license_mode: str_of("licenseMode", "license_mode"),
+            server_time: str_of("serverTime", "server_time"),
+            revoked: bool_of("revoked"),
+            grace_seconds: v
+                .get("graceSeconds")
+                .or_else(|| v.get("grace_seconds"))
+                .and_then(|x| x.as_i64()),
+            nonce: v.get("nonce").and_then(|x| x.as_str()).map(|s| s.to_string()),
+        }
+    }
+}
+
 /// 校验决策链(SPEC §9):这是放行判定的唯一权威实现,sidecar/前端不再持有判定逻辑。
 pub fn run_license_chain(
     deps: &ChainDeps<'_>,
@@ -1025,67 +1082,136 @@ pub fn run_license_chain(
         },
     };
 
-    // ③ 组装带随机 nonce 的请求(防重放第一半:请求 nonce 进 JSON body)。
-    let nonce = gen_nonce();
-    let req_body = serde_json::json!({
-        "code": code,
-        "machineId": cfg.machine_id,
-        "projectKey": cfg.project_key,
-        "nonce": nonce,
-    })
-    .to_string();
+    // ③④⑤⑥ 在线调用 + 验签 + nonce 回显 —— 带**瞬态自愈重试**(T-408)。
+    //   动机:接 CDN 后偶发「响应 nonce 不一致 / 验签未过 / 网络抖动」等瞬态(边缘抖动 / 连接复用 /
+    //   短暂坏缓存),单发即硬拒会把「疑似重放」这种安全术语糊到正版用户脸上。换个新 nonce 重发通常
+    //   即恢复;真被篡改 / 重放则每次都失败,重试不会放行(licensed 仍只由「验签通过 + valid」决定,
+    //   安全模型不变)。时钟偏差类**不重试**(3 次内钟不会变),直接给可操作提示。技术原因只进日志。
     let url = format!("{}{}", cfg.base_url.trim_end_matches('/'), path);
     let host = host_of(&cfg.base_url);
-
-    // ④ 在线调用。网络不可达 → 离线分支(Status 走宽限;Activate 直接失败)。
-    let resp = match deps.http.post(&url, &req_body) {
-        Ok(r) => r,
-        Err(net_err) => {
-            return offline_outcome(deps, &op, existing, wall, seen_max, strict, &net_err);
+    // 强验签公钥先解一次:占位/坏钥是配置类错误(非瞬态),retry 无意义 → 立即诚实降级。
+    let verify_key = if strict {
+        match resolve_public_key(&cfg.public_key_b64) {
+            Ok(k) => Some(k),
+            Err(e) => {
+                return untrusted_outcome(
+                    existing,
+                    wall,
+                    strict,
+                    &e,
+                    "授权校验暂时不可用,请稍后重试",
+                );
+            }
         }
+    } else {
+        None
     };
 
-    // ⑤ 验签 + 防重放(强验签模式;gate-F2 flag=0 退回仅校 success+valid = P5 现状)。
+    let resp: LicenseHttpResponse;
+    let body: WireBody;
     let mut signature_verified = false;
-    if strict {
-        let key = match resolve_public_key(&cfg.public_key_b64) {
-            Ok(k) => k,
-            Err(e) => {
-                eprintln!("[license] {e}");
-                return untrusted_outcome(existing, wall, strict, &e);
+    let mut attempt: u32 = 0;
+    loop {
+        let last_attempt = attempt + 1 >= MAX_ONLINE_ATTEMPTS;
+        // ③ 每次尝试都用**新随机 nonce**(重发时旧 nonce 作废,防重放第一半)。
+        let cur_nonce = gen_nonce();
+        let req_body = serde_json::json!({
+            "code": code,
+            "machineId": cfg.machine_id,
+            "projectKey": cfg.project_key,
+            "nonce": cur_nonce,
+        })
+        .to_string();
+
+        // ④ 在线调用。网络不可达 → 重试;耗尽 → 离线分支(Status 走宽限;Activate 友好失败)。
+        let r = match deps.http.post(&url, &req_body) {
+            Ok(r) => r,
+            Err(net_err) => {
+                if last_attempt {
+                    return offline_outcome(deps, &op, existing, wall, seen_max, strict, &net_err);
+                }
+                attempt += 1;
+                transient_backoff(attempt);
+                continue;
             }
         };
-        if let Err(e) = verify_response_signature(&key, target, &host, &resp) {
-            eprintln!("[license] 验签拒绝: {e}");
-            return untrusted_outcome(existing, wall, strict, &e);
+
+        // 弱验签(gate-F2 flag=0):不校签名 / nonce,直接采信布尔(P5 现状)。
+        if !strict {
+            body = WireBody::from_response_bytes(&r.body);
+            resp = r;
+            break;
         }
-        // date 偏移防重放:X-License-Date 与可信时间(max(墙钟, last_seen))偏差 > 300s 拒。
-        let date_ms = match resp.date.as_deref().map(parse_rfc1123_ms) {
+
+        let key = verify_key.as_ref().expect("strict ⟹ 公钥已解析");
+        // ⑤ 验签(瞬态:CDN 抖动 / 坏响应 → 重试)。
+        if let Err(e) = verify_response_signature(key, target, &host, &r) {
+            if last_attempt {
+                return untrusted_outcome(
+                    existing,
+                    wall,
+                    strict,
+                    &e,
+                    "授权服务响应校验未通过,请稍后重试",
+                );
+            }
+            eprintln!("[license] 验签未过(第{}次,将重试): {e}", attempt + 1);
+            attempt += 1;
+            transient_backoff(attempt);
+            continue;
+        }
+        // date 头(瞬态:CDN 可能短暂不透传该头 → 重试)。
+        let date_ms = match r.date.as_deref().map(parse_rfc1123_ms) {
             Some(Ok(ms)) => ms,
             _ => {
-                return untrusted_outcome(existing, wall, strict, "X-License-Date 头缺失或不可解析");
+                if last_attempt {
+                    return untrusted_outcome(
+                        existing,
+                        wall,
+                        strict,
+                        "X-License-Date 头缺失或不可解析",
+                        "授权服务响应校验未通过,请稍后重试",
+                    );
+                }
+                attempt += 1;
+                transient_backoff(attempt);
+                continue;
             }
         };
+        // date 偏移防重放:与可信时间(max(墙钟, last_seen))偏差 > 300s。**不重试**(3 次内系统钟
+        //   不会变),给可操作提示;技术原因(疑似重放/时钟不准)进日志。
         let trusted_ref = seen_max.map_or(wall, |s| s.max(wall));
         if (date_ms - trusted_ref).abs() > MAX_DATE_SKEW_MS {
             return untrusted_outcome(
                 existing,
                 wall,
                 strict,
-                "响应时间戳与可信时间偏差超过 5 分钟(疑似重放)",
+                "响应时间戳与可信时间偏差超过 5 分钟(疑似重放或系统时钟不准)",
+                "系统时间可能不准,请校准系统时间后重试",
             );
         }
-        signature_verified = true;
-    }
-
-    // ⑥ 解析业务 body(宽容;确切字节已在 ⑤ 做过摘要校验)。
-    let body: WireBody = serde_json::from_slice(&resp.body).unwrap_or_default();
-
-    // nonce 回显必须一致(防重放第二半)。强验签下硬性;弱验签(P5 现状契约无 nonce)跳过。
-    if strict {
-        if body.nonce.as_deref() != Some(nonce.as_str()) {
-            return untrusted_outcome(existing, wall, strict, "响应 nonce 与请求不一致(疑似重放)");
+        // ⑥ nonce 回显必须一致(防重放第二半;瞬态:CDN 串响应 / 坏缓存 → 重试)。
+        let b = WireBody::from_response_bytes(&r.body);
+        if b.nonce.as_deref() != Some(cur_nonce.as_str()) {
+            if last_attempt {
+                return untrusted_outcome(
+                    existing,
+                    wall,
+                    strict,
+                    "响应 nonce 与请求不一致(疑似重放)",
+                    "授权服务暂时无法验证,请稍后重试",
+                );
+            }
+            eprintln!("[license] nonce 未回显一致(第{}次,将重试)", attempt + 1);
+            attempt += 1;
+            transient_backoff(attempt);
+            continue;
         }
+
+        signature_verified = true;
+        body = b;
+        resp = r;
+        break;
     }
 
     let success = body.success == Some(true) && (200..300).contains(&resp.status);
@@ -1448,12 +1574,18 @@ fn offline_outcome(
 /// 与网络不可达同置(SPEC §8:仅签名验签通过的 revoked 才降级)。已放行的买断快照照常
 /// 放行且**不动快照**(攻击者既不能借伪造响应锁死付费用户,也不能借它抹掉已有的
 /// updatesBlocked 撤销态)。内测码维持 L2 语义:不可信即不放行。
+/// [T-408] 在线校验未通过(验签/nonce/时钟/公钥等)统一收口:**技术原因(`log_reason`)只进日志,
+/// 对用户一律友好文案(`user_msg`)**。「疑似重放」「响应不可信」这类安全术语对正版用户是惊吓;瞬态
+/// 失败已在上游重试自愈,走到这里说明重试后仍不过——也不该把内部术语甩给用户。安全语义不变:除买断
+/// fail-open 外一律 licensed=false、status=untrusted、不落放行快照。
 fn untrusted_outcome(
     existing: Option<&LicenseSnapshot>,
     wall: i64,
     strict: bool,
-    reason: &str,
+    log_reason: &str,
+    user_msg: &str,
 ) -> ChainOutcome {
+    eprintln!("[license] 在线校验未通过(对用户降级为友好提示): {log_reason}");
     if let Some(s) = existing {
         if s.expires_at.is_none() && s.allowed {
             let mut d = decision(
@@ -1463,7 +1595,7 @@ fn untrusted_outcome(
                 s.revoked,
                 s.signature_verified,
                 strict,
-                &format!("授权响应不可信({reason}),已忽略;买断授权照常可用"),
+                "授权服务暂时无法验证,买断授权照常可用",
             );
             d.updates_blocked = s.updates_blocked;
             return ChainOutcome {
@@ -1472,12 +1604,11 @@ fn untrusted_outcome(
             };
         }
     }
-    let msg = format!("授权响应不可信:{reason}");
     let snap = existing.map(|s| LicenseSnapshot {
         allowed: false,
         status: "untrusted".to_string(),
         verdict_at_ms: wall,
-        message: msg.clone(),
+        message: user_msg.to_string(),
         ..s.clone()
     });
     ChainOutcome {
@@ -1488,7 +1619,7 @@ fn untrusted_outcome(
             existing.map(|s| s.revoked).unwrap_or(false),
             false,
             strict,
-            &msg,
+            user_msg,
         ),
         snapshot: snap,
     }
@@ -1875,6 +2006,8 @@ mod tests {
         wrong_nonce: bool,
         network_error: bool,
         no_signature_headers: bool,
+        /// [T-408] 前 N 次调用故意坏(回错 nonce)模拟瞬态,第 N+1 次起正常 → 验重试自愈。
+        fail_first: u32,
         last_request: RefCell<Option<serde_json::Value>>,
         calls: Cell<u32>,
     }
@@ -1891,6 +2024,7 @@ mod tests {
                 wrong_nonce: false,
                 network_error: false,
                 no_signature_headers: false,
+                fail_first: 0,
                 last_request: RefCell::new(None),
                 calls: Cell::new(0),
             }
@@ -1906,8 +2040,10 @@ mod tests {
             let req: serde_json::Value = serde_json::from_str(body_json).unwrap();
             *self.last_request.borrow_mut() = Some(req.clone());
             let req_nonce = req["nonce"].as_str().unwrap_or("").to_string();
+            // [T-408] 前 fail_first 次回错 nonce 模拟瞬态(CDN 抖动/坏缓存),之后正常回显。
+            let transient_bad = self.calls.get() <= self.fail_first;
             let mut body = self.body_template.clone();
-            body["nonce"] = serde_json::Value::String(if self.wrong_nonce {
+            body["nonce"] = serde_json::Value::String(if self.wrong_nonce || transient_bad {
                 "deadbeef".to_string()
             } else {
                 req_nonce
@@ -2101,6 +2237,69 @@ mod tests {
         assert_eq!(out.decision.status, "untrusted");
     }
 
+    // ④b [T-408] 瞬态 nonce 不一致(前 2 次坏,第 3 次正常)→ 重试自愈,最终激活成功。
+    #[test]
+    fn transient_nonce_mismatch_self_heals_by_retry() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.fail_first = 2; // 前两次瞬态坏,第三次好
+        let cfg = config(&pk, true);
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Activate { code: "CODE-1" },
+            None,
+        );
+        assert!(out.decision.licensed, "重试后应激活成功: {:?}", out.decision);
+        assert_eq!(out.decision.status, "active");
+        assert_eq!(server.calls.get(), 3, "应重试到第 3 次才成功");
+    }
+
+    // ④c [T-408] 持续 nonce 不一致(每次都坏)→ 重试耗尽后拒绝,但用户文案友好(无「疑似重放」)。
+    #[test]
+    fn persistent_nonce_mismatch_rejects_with_friendly_message() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.wrong_nonce = true; // 每次都坏
+        let cfg = config(&pk, true);
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Activate { code: "CODE-1" },
+            None,
+        );
+        assert!(!out.decision.licensed);
+        assert_eq!(out.decision.status, "untrusted");
+        assert_eq!(server.calls.get(), MAX_ONLINE_ATTEMPTS, "应重试满 MAX_ONLINE_ATTEMPTS 次");
+        // 关键:不把「疑似重放」等安全术语甩给用户。
+        assert!(!out.decision.message.contains("重放"), "{}", out.decision.message);
+        assert!(!out.decision.message.contains("不可信"), "{}", out.decision.message);
+        assert!(out.decision.message.contains("重试"), "应给可操作提示: {}", out.decision.message);
+    }
+
+    // ④d [T-408] 真实服务器对同一字段下发 snake+camel 双份 → 旧 strict 结构体判 duplicate field 解析
+    //   失败 → nonce 丢 → 误判「疑似重放」拒激活。容错解析必须取到 nonce(2026-07-18 真机根因)。
+    #[test]
+    fn wire_body_tolerates_dual_snake_camel_keys() {
+        let raw = r#"{"success":true,"message":"激活码激活成功","expires_at":"2026-07-19T16:42:16Z","expiresAt":"2026-07-19T16:42:16Z","remaining_count":null,"license_mode":"TRIAL","licenseMode":"TRIAL","isActivated":true,"is_activated":true,"valid":true,"serverTime":"2026-07-18T18:30:23Z","revoked":false,"graceSeconds":86400,"nonce":"abc123"}"#.as_bytes();
+        // 反证:旧 strict 结构体解析对含双份键的真实响应确实失败(root cause)。
+        let strict: Result<WireBody, _> = serde_json::from_slice(raw);
+        assert!(strict.is_err(), "旧 strict 解析应因 duplicate field 失败(证明根因)");
+        // 容错解析取到全部关键字段,尤其 nonce 不丢。
+        let wb = WireBody::from_response_bytes(raw);
+        assert_eq!(wb.nonce.as_deref(), Some("abc123"), "双份键不该丢 nonce");
+        assert_eq!(wb.success, Some(true));
+        assert_eq!(wb.valid, Some(true));
+        assert_eq!(wb.expires_at.as_deref(), Some("2026-07-19T16:42:16Z"));
+        assert_eq!(wb.license_mode.as_deref(), Some("TRIAL"));
+        assert_eq!(wb.server_time.as_deref(), Some("2026-07-18T18:30:23Z"));
+        assert_eq!(wb.grace_seconds, Some(86400));
+    }
+
     // ⑤ date 偏移 > 300s → 拒绝(重放旧响应)。
     #[test]
     fn date_skew_rejected() {
@@ -2118,7 +2317,10 @@ mod tests {
             None,
         );
         assert!(!out.decision.licensed);
-        assert!(out.decision.message.contains("偏差"), "{}", out.decision.message);
+        assert_eq!(out.decision.status, "untrusted");
+        // [T-408] 用户文案友好可操作(校准时间),不含「疑似重放」等安全术语;技术原因只进日志。
+        assert!(out.decision.message.contains("校准"), "{}", out.decision.message);
+        assert!(!out.decision.message.contains("重放"), "不该把安全术语给用户: {}", out.decision.message);
     }
 
     // ⑥ 回拨:墙钟 < last-seen − 1h → 判过期(网络都不必发起)。
@@ -2244,8 +2446,10 @@ mod tests {
             LicenseOp::Activate { code: "CODE-1" },
             None,
         );
+        // 占位公钥 → 诚实不放行(status=untrusted);技术原因(公钥未配置)进日志,用户见友好文案。
         assert!(!out.decision.licensed);
-        assert!(out.decision.message.contains("公钥"), "{}", out.decision.message);
+        assert_eq!(out.decision.status, "untrusted");
+        assert!(!out.decision.message.contains("重放"), "{}", out.decision.message);
     }
 
     // ⑪ 网络不可达 → 宽限窗内放行(grace),超窗拒;Activate 离线直接失败。
