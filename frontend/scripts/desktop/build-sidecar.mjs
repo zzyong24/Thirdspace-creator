@@ -475,6 +475,32 @@ function bundleXenovaTransformers() {
     encoding: "utf8",
   });
   if (r.status !== 0 || !`${r.stdout}`.includes("XENOVA-SELFCHECK-OK")) {
+    // [W-diag] 失败时 dump 关键 entry 的 node_modules 链状态(Windows junction 拷贝行为
+    // 无法本机复现,只有 CI 真机能给证据:每项是 symlink/junction/真目录?目标是什么?解析到吗?)
+    for (const probe of [rootEntry, [...closure].find((e) => e.startsWith("onnxruntime-node@"))]) {
+      if (!probe) continue;
+      const nm = join(destPnpm, probe, "node_modules");
+      console.error(`[W-diag] ${probe}/node_modules 链状态:`);
+      try {
+        const dump = (dir, prefix) => {
+          for (const n of readdirSync(dir, { withFileTypes: true })) {
+            const p = join(dir, n.name);
+            if (n.name.startsWith("@") && n.isDirectory() && !lstatSync(p).isSymbolicLink()) {
+              dump(p, `${n.name}/`);
+              continue;
+            }
+            const st = lstatSync(p);
+            const kind = st.isSymbolicLink()
+              ? `link → ${(() => { try { return readlinkSync(p); } catch (e) { return `readlink失败:${e.code}`; } })()}`
+              : st.isDirectory() ? "真目录" : "文件";
+            console.error(`[W-diag]   ${prefix}${n.name}: ${kind}; 解析=${existsSync(p)}`);
+          }
+        };
+        dump(nm, "");
+      } catch (e) {
+        console.error(`[W-diag]   dump 失败:${e.message}`);
+      }
+    }
     throw new Error(
       `[build-sidecar] 自检失败[T-383]:sidecar 内与 worker 同路径 require('@xenova/transformers') 未通过 → 打包版 whisper-local 必崩\n${r.stdout}${r.stderr}`,
     );
@@ -842,6 +868,32 @@ function main() {
   if (existsSync(pnpmHoist)) {
     rmSync(pnpmHoist, { recursive: true, force: true });
     console.log("[build-sidecar] 剪除 pnpm hoist 冗余层 node_modules/.pnpm/node_modules/");
+  }
+
+  // [T-392 安全] 剥离 standalone trace 混进的源码/文档/测试产物(2026-07-18 实包盘点:
+  //   src/ 269 个 .ts 明文源码 + docs/ 47MB 设计文档截图 + specs/ + SPEC.md 等 —— 源码进包
+  //   = 混淆白做,设计文档 = 给逆向者的地图)。已验运行时零引用(编译产物 grep 这些路径
+  //   0 命中,仅 nextjs.org/docs URL 假命中);删后有混淆步的运行时冒烟兜底,删坏必炸不出包。
+  {
+    const fe = join(SIDECAR_RUNTIME, "frontend");
+    const leaks = [
+      "src", "docs", "specs", "tests", "scripts", "playwright-report", "test-results",
+      "SPEC.md", "AGENT-PROTOCOL.md", "IMPLEMENTATION-ARCHITECTURE.md",
+      "TDD-PLAN.md", "TESTING.md", "README.md",
+      "eslint.config.mjs", "playwright.config.ts", "vitest.config.ts",
+    ];
+    let pruned = 0;
+    for (const name of leaks) {
+      const p = join(fe, name);
+      if (existsSync(p)) { rmSync(p, { recursive: true, force: true }); pruned++; }
+    }
+    // 剥离自检:运行必需物必须还在(防手滑加错清单)。
+    for (const must of ["server.js", ".next", "package.json", "node_modules", "public"]) {
+      if (!existsSync(join(fe, must))) {
+        throw new Error(`[build-sidecar] 源码剥离误删运行必需物 frontend/${must} —— 检查 leaks 清单`);
+      }
+    }
+    console.log(`[build-sidecar] ✂ 剥离源码/文档泄露 ${pruned} 项(T-392;冒烟兜底)`);
   }
 
   // 注:sidecar 内保留 pnpm 的相对 symlink 结构(frontend/node_modules/next → .pnpm/next@ver/…,

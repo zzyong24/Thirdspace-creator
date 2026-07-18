@@ -12,6 +12,13 @@ name: desktop-release
 
 on:
   workflow_dispatch:
+    inputs:
+      only:
+        description: "只跑某端(留空=双端;迭代单端问题时省另一端陪跑)"
+        required: false
+        type: choice
+        options: ["", "macos", "windows"]
+        default: ""
   push:
     tags: ["v*"]
 
@@ -30,6 +37,7 @@ jobs:
           - os: windows-latest
             updater_target: windows-x86_64
     runs-on: ${{ matrix.os }}
+    if: ${{ github.event.inputs.only == '' || github.event.inputs.only == null || contains(matrix.os, github.event.inputs.only) }}
     timeout-minutes: 90
     defaults:
       run:
