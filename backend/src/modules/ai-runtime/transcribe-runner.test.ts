@@ -528,3 +528,106 @@ describe("[T-230] 冷却类失败 → 延迟重试一次", () => {
     expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1); // 无重试
   });
 });
+
+describe("[T-357] 采集逐字稿后处理(落库前一遍,失败诚实落原文不阻断)", () => {
+  it("后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功", async () => {
+    const awemeIds = ["a1"];
+    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
+    const postprocess = vi.fn(
+      async (_c: RequestContext, input: { awemeId: string; transcript: string }) => ({
+        applied: true,
+        transcript: `${input.transcript}(已校正)`,
+      }),
+    );
+    await runTranscribe(
+      ctx,
+      { id: "t-pp1", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      { ...deps, postprocessTranscript: postprocess },
+    );
+    expect(postprocess).toHaveBeenCalledTimes(1);
+    expect(postprocess.mock.calls[0]![1]).toEqual({
+      awemeId: "a1",
+      transcript: "逐字稿X",
+    });
+    expect(ensureCalls[0]!.transcript).toBe("逐字稿X(已校正)"); // 落库的是校正稿
+    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
+    expect(stepTexts.some((t) => t.includes("后处理:纠错+断句完成"))).toBe(true);
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+  });
+
+  it("后处理未执行(applied:false + reason)→ 落 ASR 原文,步骤注记「后处理未执行:<原因>」,不阻断", async () => {
+    const awemeIds = ["a1"];
+    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
+    const postprocess = vi.fn(
+      async (_c: RequestContext, input: { awemeId: string; transcript: string }) => ({
+        applied: false,
+        transcript: input.transcript,
+        reason: "模型未配置(无可用 LLM 凭据)",
+      }),
+    );
+    await runTranscribe(
+      ctx,
+      { id: "t-pp2", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      { ...deps, postprocessTranscript: postprocess },
+    );
+    expect(ensureCalls[0]!.transcript).toBe("逐字稿X"); // 诚实落原文
+    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
+    expect(
+      stepTexts.some((t) => t.includes("后处理未执行:模型未配置")),
+    ).toBe(true);
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1); // 转写链不因后处理挂掉
+    expect(spies.markFailed).not.toHaveBeenCalled();
+  });
+
+  it("后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功", async () => {
+    const awemeIds = ["a1"];
+    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
+    const postprocess = vi.fn(async () => {
+      throw new Error("后处理内部崩了");
+    });
+    await runTranscribe(
+      ctx,
+      { id: "t-pp3", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      { ...deps, postprocessTranscript: postprocess },
+    );
+    expect(ensureCalls[0]!.transcript).toBe("逐字稿X");
+    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
+    expect(stepTexts.some((t) => t.includes("后处理未执行:后处理内部崩了"))).toBe(
+      true,
+    );
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+  });
+
+  it("未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记", async () => {
+    const awemeIds = ["a1"];
+    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
+    await runTranscribe(
+      ctx,
+      { id: "t-pp4", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      deps, // 不带 postprocessTranscript
+    );
+    expect(ensureCalls[0]!.transcript).toBe("逐字稿X");
+    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
+    expect(stepTexts.some((t) => t.includes("后处理"))).toBe(false);
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+  });
+
+  it("图集占位锚路径不走后处理(占位文本非 ASR 产文本)", async () => {
+    const awemeIds = ["album1"];
+    const { deps, spies } = makeDeps({
+      awemeIds,
+      videoSourceFor: () => ({ kind: "image-album" }),
+    });
+    const postprocess = vi.fn(async () => ({
+      applied: true,
+      transcript: "不该被调用",
+    }));
+    await runTranscribe(
+      ctx,
+      { id: "t-pp5", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      { ...deps, postprocessTranscript: postprocess },
+    );
+    expect(postprocess).not.toHaveBeenCalled();
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+  });
+});

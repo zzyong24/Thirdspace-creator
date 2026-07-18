@@ -83,6 +83,8 @@ export * from "./topic-enrich-runner";
 export * from "./topic-runner";
 export * from "./topic-task-adapter";
 export * from "./transcribe-runner";
+// [T-357] 采集逐字稿后处理(同音错字纠正+补标点+语义分段;落库前一遍,失败诚实落原文)。
+export * from "./transcript-postprocess";
 // [T-254b] 制作视频四决策(runVideoDecisions 编排 + 四决策函数 + 动态 refine schema 构造器
 // + 可溯校验)与 SRT 纯函数(解析/时长匹配/口播稿相似度/吸附;T-254c 上传校验共用)。
 export * from "./srt";

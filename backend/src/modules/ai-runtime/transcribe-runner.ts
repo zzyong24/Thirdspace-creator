@@ -166,6 +166,15 @@ export interface TranscribeRunnerDeps {
   /** 可选语言提示(默认 "zh";省略让端点自动检测)。 */
   language?: string;
 
+  /** [T-357] 采集逐字稿后处理(ASR 文本落库前一遍):同音错字纠正 + 补标点 + 语义分段。
+   *  host 绑 runTranscriptPostprocess(model-config capability 解析,绝不写死厂商);实现自身
+   *  **绝不抛**(失败/越权/未配模型 → applied:false + 原文 + reason),runner 侧再套 try/catch
+   *  双保险 —— 转写链绝不因后处理挂掉。缺省(旧 host / 单测)→ 不后处理,零回归。 */
+  postprocessTranscript?: (
+    ctx: RequestContext,
+    input: { awemeId: string; transcript: string },
+  ) => Promise<{ applied: boolean; transcript: string; reason?: string }>;
+
   // ── [T-230] 限流冷却批级延迟重试的可选端口(全部缺省 → 旧行为:冷却失败即终态,零回归)──
   /** 判一个异常是否是「限流冷却快速失败」(host 绑 `(e) => e instanceof DouyinCooldownActiveError`;
    *  runner 不 import 前端 ingestion 的错误类,保持包边界,同 scheduled-collection-runner 的
@@ -311,10 +320,34 @@ export async function runTranscribe(
         if (!text || !text.trim()) {
           throw new Error("ASR 返回空逐字稿");
         }
+        // [T-357] 后处理(轻 AI 校正:同音错字+标点+语义分段)—— **落库前一遍,单一收口点**:
+        // 所有走本 runner → ensureTranscriptArtifact 的采集转写路径(每日批量 transcribe.douyin、
+        // T-374 单条手动 projects.transcribe 排的同类型任务)统一在此生效。实现自身诚实落原文
+        // 不抛;这里再套 try/catch 双保险 —— 后处理任何异常都只带注记,绝不让该 aweme 失败。
+        let finalText = text;
+        let postNote = "";
+        if (deps.postprocessTranscript) {
+          try {
+            const post = await deps.postprocessTranscript(ctx, {
+              awemeId,
+              transcript: text,
+            });
+            if (post.applied && post.transcript.trim()) {
+              finalText = post.transcript;
+              postNote = " · 后处理:纠错+断句完成";
+            } else {
+              postNote = ` · 后处理未执行:${post.reason ?? "未知原因"}`;
+            }
+          } catch (postErr) {
+            postNote = ` · 后处理未执行:${
+              postErr instanceof Error ? postErr.message : String(postErr)
+            }`;
+          }
+        }
         // 3) 绑作品(此刻带真 transcript;若并发下已被别处写入,ensure 幂等返回 already-exists 亦可)。
         const bound = await deps.ensureTranscriptArtifact(ctx, {
           awemeId,
-          transcript: text,
+          transcript: finalText,
           source: "transcribed",
         });
         stepNo += 1;
@@ -327,7 +360,7 @@ export async function runTranscribe(
         await deps.ai.recordStep(ctx, task.id, {
           stepNo,
           kind: "transcribe",
-          text: `作品 ${awemeId}:转写完成(${text.length} 字)· ${boundNote}`,
+          text: `作品 ${awemeId}:转写完成(${finalText.length} 字)${postNote} · ${boundNote}`,
           toolCalls: [],
         });
         ok += 1;

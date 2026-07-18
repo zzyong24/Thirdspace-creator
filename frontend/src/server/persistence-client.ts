@@ -423,6 +423,8 @@ import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 import { runCoverGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
+// [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
+import { runTranscriptPostprocess } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetClassify } from "@creatoros/backend/modules/ai-runtime";
 // [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
 import {
@@ -4596,6 +4598,41 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   ? Math.floor(raw)
                   : 30 * 60 * 1000;
               })(),
+              // [T-357] 采集逐字稿后处理:ASR 文本落库前轻 AI 校正(同音错字+补标点+语义分段)。
+              //   capability 复用 video.subtitles(T-320a「ASR 认错字校正」同任务族既有档,未配
+              //   自动回退 default 行 → env,零新增配置负担,绝不写死厂商);上下文可选注入:
+              //   账号定位 oneLiner + imported 作品标题(有就带,拿不到就裸纠,best-effort 不抛);
+              //   runTranscriptPostprocess 自身绝不抛(失败/越权改写 → 落原文 + reason 注记)。
+              postprocessTranscript: async (c, ppInput) => {
+                let accountPositioning: string | undefined;
+                let title: string | undefined;
+                try {
+                  const center =
+                    await positioningService.getPositioningCenter(c);
+                  accountPositioning =
+                    center.currentStatement?.oneLiner || undefined;
+                } catch {
+                  /* 可选上下文,拿不到就裸纠 */
+                }
+                try {
+                  const p = await projectsRepo.findImportedByRef(c, {
+                    platform: "douyin",
+                    externalId: ppInput.awemeId,
+                  });
+                  title = p?.title || undefined;
+                } catch {
+                  /* 同上 */
+                }
+                return runTranscriptPostprocess(
+                  c,
+                  {
+                    transcript: ppInput.transcript,
+                    accountPositioning,
+                    title,
+                  },
+                  { resolveModelSpec },
+                );
+              },
               // 幂等绑作品:ensureTranscriptArtifact + 其 5 端口(projectsRepo/artifactsService 现成实例)。
               ensureTranscriptArtifact: (c, ensureInput) =>
                 ensureTranscriptArtifact(c, ensureInput, {
