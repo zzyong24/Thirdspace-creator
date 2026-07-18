@@ -13,6 +13,8 @@ import {
 // resolveModelSpec 两个非 facet 基础设施),来源见 git 历史里那段手列 deps:
 //   positioning · learnings · knowledge · thesis · contract · outline · artifactOrigin ·
 //   projectMaterials · brief
+// [T-387b] 冻结清单有意扩一项 assets:script.draft 模板 v5 加 assetsLibrary facet(画面列
+// assetRefs 只准引用真实素材 id,须喂素材库清单)—— 这是声明式注入下的**有意变更**,非漂移。
 const EXPECTED_SCRIPT_DRAFT_KEYS = [
   "positioning",
   "learnings",
@@ -23,6 +25,7 @@ const EXPECTED_SCRIPT_DRAFT_KEYS = [
   "artifactOrigin",
   "projectMaterials",
   "brief",
+  "assets",
 ] as const;
 
 // 一个「全源齐备」的假 registry:每个 key 挂一个可辨识的哨兵对象(不需要真 reader 逻辑,只验挑选)。
@@ -64,8 +67,8 @@ describe("[T-184] resolveContextDeps — 声明式 context 注入", () => {
         (fullRegistry as Record<string, unknown>)[key],
       );
     }
-    // 声明里没有的源(如 assets/accounts/signals)绝不被注入(不 over-inject)。
-    expect(deps).not.toHaveProperty("assets");
+    // 声明里没有的源(如 accounts/signals)绝不被注入(不 over-inject)。
+    // [T-387b] assets 已进声明(assetsLibrary facet),从「绝不注入」名单移除。
     expect(deps).not.toHaveProperty("accounts");
     expect(deps).not.toHaveProperty("signals");
   });
