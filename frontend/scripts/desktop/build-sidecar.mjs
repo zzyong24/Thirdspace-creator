@@ -733,6 +733,33 @@ function ensureOnnxRuntimeDylib() {
   };
   walk(SIDECAR_RUNTIME);
   if (bindingDirs.length === 0) return; // sidecar 没用到 onnxruntime → 无需处理
+  // [T-372 W] 异平台 binding 目录剪除:win 的 junction deref 展平会把 onnxruntime 全平台
+  // bin 目录物化成真目录(linux/darwin 的 binding.node 也进来;npm 包自带全平台 binding,
+  // 仅 DLL 按平台 postinstall 下载)。异平台目录既不该进分发包,也永远补不齐本平台库——
+  // 此前对它们报缺即炸 = 假阳性(第 8 轮 CI 实证)。按 <platform>/<arch> 尾段过滤,异平台
+  // 整叶剪掉省体积。mac 上闭包已有平台剪枝 + hyperframes 是 symlink 被 walk 跳过 → no-op。
+  {
+    const keep = [];
+    let prunedForeign = 0;
+    for (const bd of bindingDirs) {
+      const segs = bd.split(/[/\\]/).filter(Boolean);
+      const a = segs[segs.length - 1];
+      const p = segs[segs.length - 2];
+      if (p === platform && a === arch) {
+        keep.push(bd);
+        continue;
+      }
+      rmSync(bd, { recursive: true, force: true });
+      prunedForeign++;
+    }
+    if (prunedForeign > 0) {
+      console.log(
+        `[build-sidecar]   ✂ [T-225] 剪除异平台 onnx binding 目录 ${prunedForeign} 个(只留 ${platform}/${arch})`,
+      );
+    }
+    bindingDirs.length = 0;
+    bindingDirs.push(...keep);
+  }
   // 源库:从 REPO/node_modules/.pnpm 找同尾路径(bin/napi-v3/<plat>/<arch>)的 libonnxruntime*.<ext>。
   const findSourceLibs = (bindingDir) => {
     const tail = bindingDir.split(/onnxruntime-node[/\\]/).pop(); // e.g. bin/napi-v3/darwin/arm64
