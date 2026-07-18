@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: isDesktopBuild
     ? { "/**": ["src-tauri/**/*"] }
     : {},
+  // [T-415 P0-B] handshake fail-closed 烘焙开关:桌面**打包产物**把 `CREATOROS_HANDSHAKE_REQUIRED`
+  //   内联成字面量 "1"(Next env 在 build 时替换 `process.env.CREATOROS_HANDSHAKE_REQUIRED`,
+  //   裸 `node server.js` 运行时省不掉、改不了)。loopback-guard 据此在**缺握手 token**时 fail-CLOSED
+  //   (堵「解压 sidecar 裸跑」白嫖);web/dev 不烘焙 → undefined → fail-open,行为完全不变(不变式)。
+  //   诚实边界:明文 sidecar 的检查终可 patch,此层是把白嫖从「一条命令」抬到「须 patch 混淆产物」。
+  env: isDesktopBuild ? { CREATOROS_HANDSHAKE_REQUIRED: "1" } : {},
   // pglite ships WASM; keep it external so the server bundler requires it at
   // runtime instead of trying to bundle the WASM asset.
   serverExternalPackages: [

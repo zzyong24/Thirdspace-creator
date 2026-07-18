@@ -76,8 +76,17 @@ export function hasValidHandshake(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   const token = env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN?.trim();
-  if (!token) return true; // 非桌面壳启动(dev/web/单测)→ 不启用
-  return req.headers.get(HANDSHAKE_HEADER) === token;
+  if (token) return req.headers.get(HANDSHAKE_HEADER) === token;
+  // [T-415 P0-B] 缺 token 的处置:
+  //   · 桌面**打包产物**:next.config 对 isDesktopBuild 把 `process.env.CREATOROS_HANDSHAKE_REQUIRED`
+  //     烘焙成字面量 "1"(裸 node 省不掉)→ **fail-CLOSED**。真机永远有 Rust 注入的 token,走不到这里;
+  //     只有「解压 sidecar + 裸 node server.js」白嫖才缺 token → 403(堵攻击链 2)。
+  //   · web/dev/单测:未烘焙 → undefined → **fail-open**(P5 行为不变,pnpm dev 无 Rust 注入 token 仍跑)。
+  //   env 参数分支供单测注入;`process.env.CREATOROS_HANDSHAKE_REQUIRED` 字面量是打包烘焙的真门(勿改成变量,否则不被 Next 内联)。
+  const required =
+    (env.CREATOROS_HANDSHAKE_REQUIRED ??
+      process.env.CREATOROS_HANDSHAKE_REQUIRED) === "1";
+  return !required;
 }
 
 /**

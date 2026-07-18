@@ -151,6 +151,25 @@ describe("hasValidHandshake / isTrustedLocalRequest —— 握手 token", () => 
     ).toBe(false);
   });
 
+  it("[T-415 P0-B] 打包态(HANDSHAKE_REQUIRED=1)+ 缺 token → fail-CLOSED(堵裸 node 白嫖)", () => {
+    // 桌面打包产物烘焙 CREATOROS_HANDSHAKE_REQUIRED="1";裸 node server.js 缺 Rust 注入的
+    // token env → 此前 fail-open(白嫖),现 fail-closed 返 false → route 拒答 403。
+    expect(
+      hasValidHandshake(mkReq(okUrl, okHeaders), {
+        CREATOROS_HANDSHAKE_REQUIRED: "1",
+      }),
+    ).toBe(false);
+    // 有 token 的真机路径不受 required 影响(照常按 token 逐字节比对)。
+    expect(
+      hasValidHandshake(mkReq(okUrl, { ...okHeaders, [HANDSHAKE_HEADER]: TOKEN }), {
+        CREATOROS_SIDECAR_HANDSHAKE_TOKEN: TOKEN,
+        CREATOROS_HANDSHAKE_REQUIRED: "1",
+      }),
+    ).toBe(true);
+    // 未烘焙(web/dev)+ 缺 token → 仍 fail-open(不变式)。
+    expect(hasValidHandshake(mkReq(okUrl, okHeaders), {})).toBe(true);
+  });
+
   it("isTrustedLocalRequest = loopback ∧ 握手:非 loopback 即使 token 对也拒", () => {
     const env = { CREATOROS_SIDECAR_HANDSHAKE_TOKEN: TOKEN };
     expect(
