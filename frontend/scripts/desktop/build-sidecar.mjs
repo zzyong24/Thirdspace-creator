@@ -265,6 +265,41 @@ function pnpmDepsOfEntry(srcPnpm, entryName) {
   return out;
 }
 
+// .pnpm entry 名 → 包名(@scope+name@ver → @scope/name;name@ver → name)。
+function pkgNameOfEntry(entry) {
+  if (entry.startsWith("@")) {
+    const at2 = entry.indexOf("@", 1);
+    return entry.slice(0, at2).replace("+", "/");
+  }
+  return entry.slice(0, entry.indexOf("@"));
+}
+
+// [T-372 W] npm 经典嵌套物化:把 .pnpm entry 的包真身 + 其依赖**递归嵌套**拷到 destPkgDir
+// (每个包的 node_modules 里放自己依赖的真拷贝;全真文件,零 symlink/junction)。
+//   为何 Windows 需要它(CI W-diag 2026-07-18 实证):cpSync 对 pnpm 的 junction 会**静默
+//   解引用成真目录且只展平一层**——entry 的 node_modules 下依赖变真拷贝,但真拷贝内部没有
+//   自己的依赖 → 传递依赖(如 onnxruntime-node→onnxruntime-common)walk-up 找不到即崩。
+//   嵌套布局是 Node 解析的原生语义,tar/用户机无 symlink 权限需求,天然可搬。
+//   防环:seenChain 记当前链上 entry,再遇即跳(walk-up 自然命中祖先层,npm 同语义)。
+//   体积:树内共享依赖重复拷(浅树可接受);mac 保持 .pnpm+相对链方案不走此路。
+function materializeNestedEntryTree(srcPnpm, entryName, destPkgDir, seenChain) {
+  const pkgName = pkgNameOfEntry(entryName);
+  const srcPkgDir = join(srcPnpm, entryName, "node_modules", ...pkgName.split("/"));
+  if (!existsSync(srcPkgDir)) {
+    throw new Error(`[build-sidecar] 嵌套物化:entry 真身缺失 ${srcPkgDir}`);
+  }
+  cpSync(srcPkgDir, destPkgDir, { recursive: true, dereference: true });
+  for (const depEntry of pnpmDepsOfEntry(srcPnpm, entryName)) {
+    const depName = pkgNameOfEntry(depEntry);
+    if (depName === pkgName) continue; // pnpm 的 self-link,跳过
+    if (seenChain.has(depEntry)) continue; // 环:祖先层已有,walk-up 可命中
+    const depDest = join(destPkgDir, "node_modules", ...depName.split("/"));
+    seenChain.add(depEntry);
+    materializeNestedEntryTree(srcPnpm, depEntry, depDest, seenChain);
+    seenChain.delete(depEntry);
+  }
+}
+
 // 从 rootEntry 出发走 pnpm symlink 依赖图 BFS 收全可达 entry(isCut 可剪子树)。
 // 不硬编码版本名:与安装现场一致,自适应版本(T-313 注释详述)。
 function collectPnpmClosure(srcPnpm, rootEntry, isCut = () => false) {
@@ -311,14 +346,7 @@ function bundlePiEngine() {
   const PI_PNPM = PI_PKG.replace("/", "+"); // scope "/"→"+"(pnpm 目录名编码)
   // lazy-only 且 CreatorOS 永不用的 provider 顶包 —— 剪掉不进闭包(连带其独占传递依赖)。
   const CUT_PKG = ["@aws-sdk/client-bedrock-runtime", "@google/genai", "@mistralai/mistralai"];
-  const pkgNameOfEntry = (entry) => {
-    if (entry.startsWith("@")) {
-      const at2 = entry.indexOf("@", 1);
-      return entry.slice(0, at2).replace("+", "/");
-    }
-    return entry.slice(0, entry.indexOf("@"));
-  };
-  const isCut = (entry) => CUT_PKG.includes(pkgNameOfEntry(entry));
+  const isCut = (entry) => CUT_PKG.includes(pkgNameOfEntry(entry)); // pkgNameOfEntry 已提模块级
 
   // 定位 pi-coding-agent 根 entry;缺 → pi 没装(feature 层可退兜底)→ 警告跳过,不硬阻塞打包。
   const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
@@ -418,27 +446,57 @@ function bundleXenovaTransformers() {
     // whisper-local 是产品内置 ASR 默认档;缺它不出「转录必崩」的包 —— 硬失败,不学 pi 的软跳过。
     throw new Error(`[build-sidecar] 源 .pnpm 无 ${PKG}@*(装依赖?)→ 打包版 whisper-local 必崩,不出包`);
   }
-  // ① BFS 闭包 + verbatim 整拷覆盖(不剪枝:sharp/onnxruntime 树都是运行时真用的)。
-  const closure = collectPnpmClosure(srcPnpm, rootEntry);
-  let copied = 0;
-  for (const e of closure) {
-    const src = join(srcPnpm, e);
-    const dest = join(destPnpm, e);
-    rmSync(dest, { recursive: true, force: true });
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
-    copied++;
-  }
-  console.log(`[build-sidecar]   实拷 ${copied} 个 transformers 闭包 entry(覆盖 Next-traced 残缺版)`);
-  // ①b [T-383 修打包炸] 平台剪枝:整拷带进了 onnxruntime-node 的**全平台** bin(linux/win32/x64…),
-  //   T-225 自检遍历所有 binding 目录要求本机 libExt → 异平台目录必炸(且分发包不该带异平台二进制,
-  //   剪掉省体积)。只留 bin/napi-v3/<本机 platform>/<本机 arch>,其余目录整删。
-  {
-    const napiRoots = [];
+  const anchorDir = join(SIDECAR_RUNTIME, "frontend", "node_modules", "@xenova");
+  const anchor = join(anchorDir, "transformers");
+  mkdirSync(anchorDir, { recursive: true });
+  rmSync(anchor, { recursive: true, force: true });
+  const napiRoots = []; // onnxruntime-node/bin/napi-v3 位置(两种布局各自登记,统一剪枝)
+  if (platform === "win32") {
+    // [T-372 W] Windows:cpSync 对 pnpm junction 静默 deref 且只展平一层 → 传递依赖断
+    //   (CI W-diag 实证:@xenova entry 下 onnxruntime-node 成真目录,其 require
+    //   'onnxruntime-common' walk-up 无处命中)。改 npm 经典嵌套物化直接落 anchor 位置:
+    //   全真文件零链,tar/用户机无 symlink 权限需求。mac 走下方 .pnpm+相对链原方案不动。
+    materializeNestedEntryTree(srcPnpm, rootEntry, anchor, new Set([rootEntry]));
+    console.log(`[build-sidecar]   嵌套物化 @xenova/transformers 全树 → frontend/node_modules(win 无链布局)`);
+    const walk = (dir, depth) => {
+      if (depth > 8) return;
+      for (const n of readdirSync(dir, { withFileTypes: true })) {
+        if (!n.isDirectory()) continue;
+        const p = join(dir, n.name);
+        if (n.name === "onnxruntime-node") {
+          const cand = join(p, "bin", "napi-v3");
+          if (existsSync(cand)) napiRoots.push(cand);
+        } else walk(p, depth + 1);
+      }
+    };
+    walk(anchor, 0);
+  } else {
+    // ① BFS 闭包 + verbatim 整拷覆盖(不剪枝:sharp/onnxruntime 树都是运行时真用的)。
+    const closure = collectPnpmClosure(srcPnpm, rootEntry);
+    let copied = 0;
+    for (const e of closure) {
+      const src = join(srcPnpm, e);
+      const dest = join(destPnpm, e);
+      rmSync(dest, { recursive: true, force: true });
+      mkdirSync(dirname(dest), { recursive: true });
+      cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
+      copied++;
+    }
+    console.log(`[build-sidecar]   实拷 ${copied} 个 transformers 闭包 entry(覆盖 Next-traced 残缺版)`);
     for (const e of closure) {
       const cand = join(destPnpm, e, "node_modules", "onnxruntime-node", "bin", "napi-v3");
       if (existsSync(cand)) napiRoots.push(cand);
     }
+    // ② 解析锚:frontend/node_modules/@xenova/transformers → .pnpm 真身(相对链;worker cwd walk-up 命中)。
+    symlinkSync(
+      join("..", "..", "..", "node_modules", ".pnpm", rootEntry, "node_modules", "@xenova", "transformers"),
+      anchor,
+    );
+  }
+  // ①b [T-383 修打包炸] 平台剪枝:onnxruntime-node 自带**全平台** bin(linux/win32/x64…),
+  //   T-225 自检遍历所有 binding 目录要求本机 libExt → 异平台目录必炸(且分发包不该带异平台二进制,
+  //   剪掉省体积)。只留 bin/napi-v3/<本机 platform>/<本机 arch>,其余目录整删。
+  {
     let pruned = 0;
     for (const root of napiRoots) {
       for (const plat of readdirSync(root)) {
@@ -451,15 +509,6 @@ function bundleXenovaTransformers() {
     }
     if (pruned > 0) console.log(`[build-sidecar]   ✂ onnxruntime 异平台 bin 剪枝 ${pruned} 个目录(只留 ${platform}/${arch})`);
   }
-  // ② 解析锚:frontend/node_modules/@xenova/transformers → .pnpm 真身(相对链;worker cwd walk-up 命中)。
-  const anchorDir = join(SIDECAR_RUNTIME, "frontend", "node_modules", "@xenova");
-  const anchor = join(anchorDir, "transformers");
-  mkdirSync(anchorDir, { recursive: true });
-  rmSync(anchor, { recursive: true, force: true });
-  symlinkSync(
-    join("..", "..", "..", "node_modules", ".pnpm", rootEntry, "node_modules", "@xenova", "transformers"),
-    anchor,
-  );
   // ③ HARD 自检:worker 同路径真加载(见函数头注释③)。
   const selfCheck = `
     const { createRequire } = require('node:module');
@@ -475,12 +524,16 @@ function bundleXenovaTransformers() {
     encoding: "utf8",
   });
   if (r.status !== 0 || !`${r.stdout}`.includes("XENOVA-SELFCHECK-OK")) {
-    // [W-diag] 失败时 dump 关键 entry 的 node_modules 链状态(Windows junction 拷贝行为
+    // [W-diag] 失败时 dump 关键位置的 node_modules 链状态(Windows junction 拷贝行为
     // 无法本机复现,只有 CI 真机能给证据:每项是 symlink/junction/真目录?目标是什么?解析到吗?)
-    for (const probe of [rootEntry, [...closure].find((e) => e.startsWith("onnxruntime-node@"))]) {
-      if (!probe) continue;
-      const nm = join(destPnpm, probe, "node_modules");
-      console.error(`[W-diag] ${probe}/node_modules 链状态:`);
+    const probes =
+      platform === "win32"
+        ? [join(anchor, "node_modules"), join(anchor, "node_modules", "onnxruntime-node", "node_modules")]
+        : [join(destPnpm, rootEntry, "node_modules"),
+           (() => { const e = readdirSync(destPnpm).find((x) => x.startsWith("onnxruntime-node@")); return e ? join(destPnpm, e, "node_modules") : null; })()];
+    for (const nm of probes) {
+      if (!nm) continue;
+      console.error(`[W-diag] ${nm.slice(SIDECAR_RUNTIME.length)} 链状态:`);
       try {
         const dump = (dir, prefix) => {
           for (const n of readdirSync(dir, { withFileTypes: true })) {
