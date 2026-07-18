@@ -797,10 +797,13 @@ pub fn run() {
                 .join(".license")
                 .to_string_lossy()
                 .to_string();
-            // [gate-F2] 强验签开关透传(默认 "1";L1s 未上线可临时置 "0" 弱验签,sidecar 侧
-            //   门与 UI 依赖同一开关做「签名校验未启用」诚实标注)。
+            // [gate-F2] 强验签开关透传。**内测过渡期默认 "0" 弱验签**(SPEC §15 gate-F2 显式
+            //   过渡,非静默降级):L1s 服务端签名私钥尚未部署,strict 下验签全拒 → 存量已激活
+            //   用户 .license 永远落不了盘,业务页 gate 与 /activate 互踢成无限重定向环(2026-07-18
+            //   真机白屏实证)。**翻回条件(T-372 遗留项)**:L1s 私钥部署 + 真码 E2E 过 → 改默认
+            //   "1"。外部显式设 env 时始终尊重外部值。
             let strict_verify_str = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
-                .unwrap_or_else(|_| "1".to_string());
+                .unwrap_or_else(|_| "0".to_string());
 
             // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
             let license_ctx = std::sync::Arc::new(license::ShellLicenseCtx {

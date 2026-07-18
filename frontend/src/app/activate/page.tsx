@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ActivateForm } from "./activate-form";
 import { getActivationService } from "@/server/persistence-client";
 import { isDesktopRuntime } from "@/server/activation";
+import { isActivationAllowed } from "@/lib/activation-gate.server";
 
 // T-147 P5 桌面激活授权 —— 激活界面(/activate)。
 //
@@ -27,12 +28,17 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
     redirect("/");
   }
 
-  const service = await getActivationService();
-  const check = await service.check();
-  // 桌面态已激活/宽限内:不该停在激活页 → 回首页(gate 会放行)。
-  if (check.allowed) {
+  // [T-372 修环] 「已激活跳回首页」必须与 (creator)/layout gate **同一判定权威**
+  // (isActivationAllowed:.license 优先,弱验签回退 DB check)。此前本页直读 DB 而 gate
+  // 读 .license——strict 下 .license 缺失时两源分裂:gate 判未激活踢来 /activate,本页
+  // 判已激活踢回 / → 无限重定向环,webview 白屏(2026-07-18 真机实证)。
+  if (await isActivationAllowed()) {
     redirect("/");
   }
+
+  // DB check 仅用于展示态文案(到期 vs 未激活),不再参与跳转判定。
+  const service = await getActivationService();
+  const check = await service.check();
 
   // 状态可读提示:到期 vs 从未激活,措辞不同。
   const heading =
