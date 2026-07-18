@@ -337,6 +337,9 @@ export async function smokeBootAfterObfuscation(opts = {}) {
   });
   let stderr = "";
   child.stderr.on("data", (d) => (stderr += d.toString()));
+  // stdout 必须消费:①Next standalone 部分报错走 stdout;②pipe 不读会背压堵死 server。
+  let stdout = "";
+  child.stdout.on("data", (d) => (stdout += d.toString()));
 
   const cleanup = () => {
     try {
@@ -409,6 +412,12 @@ export async function smokeBootAfterObfuscation(opts = {}) {
     }
 
     return { ready: true, rootStatus, renderedStatus, dispatchStatus };
+  } catch (e) {
+    // httpProbe 的网络错(如 ECONNRESET=进程处理请求中途崩)会不带 sidecar 输出直接冒泡,
+    // 只见「read ECONNRESET」无从诊断(win 首跑实测)——统一附上 stderr/stdout 尾部。
+    if (/stderr:/.test(`${e?.message}`)) throw e; // 三处显式 throw 已带诊断,原样
+    const tail = (label, s) => (s.trim() ? `\n${label}(尾部):\n${s.slice(-2000)}` : "");
+    throw new Error(`${e?.message ?? e}${tail("stderr", stderr)}${tail("stdout", stdout)}`);
   } finally {
     cleanup();
   }
