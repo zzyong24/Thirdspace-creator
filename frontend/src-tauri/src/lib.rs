@@ -401,7 +401,49 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             }
         }
     }
+    // [T-364] 升级后旧版本 runtime 目录清理:appDataDir/runtime/<version>/ 每版 ~400MB,
+    // 旧版本目录永不删 → 多次升级沉默堆积数 GB。当前版本目录已就绪(解压完成/复用)后,
+    // 后台 best-effort 删非当前版本目录。回滚无代价:旧壳二进制自带自己的 tarball 资源,
+    // 回装后首启会重新解压出自己的 runtime。
+    if let Ok(data_dir) = app.path().app_data_dir() {
+        let runtime_root = data_dir.join("runtime");
+        let keep = version.clone();
+        std::thread::spawn(move || {
+            cleanup_stale_runtimes(&runtime_root, &keep);
+        });
+    }
     Ok(dest)
+}
+
+/// [T-364] 删 `runtime/` 下**非当前版本**的旧解压目录。best-effort:单目录删失败只记日志
+/// 不中断(下次启动再试);`runtime/` 不存在/不可读 → 0。只删目录项(杂散文件不动)。
+/// 返回删除数,供单测断言。
+fn cleanup_stale_runtimes(runtime_root: &std::path::Path, keep_version: &str) -> usize {
+    let entries = match std::fs::read_dir(runtime_root) {
+        Ok(e) => e,
+        Err(_) => return 0,
+    };
+    let mut removed = 0;
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        if name.to_string_lossy() == keep_version {
+            continue;
+        }
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        match std::fs::remove_dir_all(&path) {
+            Ok(()) => {
+                removed += 1;
+                eprintln!("[shell] 已清理旧版本 runtime 目录:{}", path.display());
+            }
+            Err(e) => {
+                eprintln!("[shell] 清理旧版本 runtime 失败 {}:{e}", path.display());
+            }
+        }
+    }
+    removed
 }
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
@@ -857,5 +899,57 @@ mod lifecycle_tests {
     #[test]
     fn 停机哨兵与_sidecar_lifecycle_ts_契约一致() {
         assert_eq!(super::SIDECAR_SHUTDOWN_SENTINEL, "__CREATOROS_SHUTDOWN__");
+    }
+}
+
+// [T-364] 旧版本 runtime 目录清理单测(纯 std,照 workspace_reset 临时目录范式)。
+#[cfg(test)]
+mod runtime_cleanup_tests {
+    use std::path::PathBuf;
+
+    fn temp_runtime_root(tag: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "creatoros-runtime-cleanup-{tag}-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn 删非当前版本目录且保留当前版本与杂散文件() {
+        let root = temp_runtime_root("basic");
+        for v in ["0.1.0", "0.2.0", "0.3.0"] {
+            std::fs::create_dir_all(root.join(v).join("sidecar")).unwrap();
+            std::fs::write(root.join(v).join("sidecar").join("server.js"), "x").unwrap();
+        }
+        std::fs::write(root.join("stray.log"), "keep").unwrap();
+        let removed = super::cleanup_stale_runtimes(&root, "0.3.0");
+        assert_eq!(removed, 2);
+        assert!(root.join("0.3.0").join("sidecar").join("server.js").exists());
+        assert!(!root.join("0.1.0").exists());
+        assert!(!root.join("0.2.0").exists());
+        assert!(root.join("stray.log").exists()); // 非目录项不动
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn runtime_根不存在返_0_不抛() {
+        let root = std::env::temp_dir().join(format!(
+            "creatoros-runtime-cleanup-missing-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&root);
+        assert_eq!(super::cleanup_stale_runtimes(&root, "0.3.0"), 0);
+    }
+
+    #[test]
+    fn 只有当前版本时零删除() {
+        let root = temp_runtime_root("only-current");
+        std::fs::create_dir_all(root.join("0.3.0")).unwrap();
+        assert_eq!(super::cleanup_stale_runtimes(&root, "0.3.0"), 0);
+        assert!(root.join("0.3.0").exists());
+        let _ = std::fs::remove_dir_all(&root);
     }
 }
