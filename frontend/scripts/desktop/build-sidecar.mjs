@@ -775,8 +775,14 @@ function main() {
   console.log(`[build-sidecar] target triple = ${triple}`);
 
   // 1) next standalone build(桌面模式)。
+  //    直接 spawn node + next 的 JS 入口(同 package.mjs 跑 tauri.js 的惯例),不走
+  //    `pnpm exec` —— Windows 上 pnpm 是 pnpm.cmd 批处理 shim,spawnSync 无 shell 解析不了
+  //    → ENOENT、next 零输出直接死(Windows 首次构建实测)。node + JS 入口天然跨平台。
   console.log("[build-sidecar] 1/3 next standalone build (CREATOROS_DESKTOP=1)…");
-  run("pnpm", ["exec", "next", "build"], { env: { ...process.env, CREATOROS_DESKTOP: "1" } });
+  const nextBin = join(FRONTEND, "node_modules", "next", "dist", "bin", "next");
+  run(process.execPath, [nextBin, "build"], {
+    env: { ...process.env, CREATOROS_DESKTOP: "1" },
+  });
   if (!existsSync(join(STANDALONE_SRC, "frontend", "server.js"))) {
     throw new Error(
       `[build-sidecar] 未找到 standalone server.js(期望 ${join(STANDALONE_SRC, "frontend", "server.js")})。` +
