@@ -1,4 +1,4 @@
-import { pgTable, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, text } from "drizzle-orm/pg-core";
 
 // T-147 P5 桌面激活授权 —— 一机一码激活态本地持久层(接 activation-manager 在线服务)。
 //
@@ -27,6 +27,16 @@ export const activationState = pgTable("activation_state", {
   activatedAt: text("activated_at").notNull(),
   // 最后一次**在线**校验(status)成功时刻 ISO —— 离线宽限窗从这里算(now - lastOnlineCheckAt)。
   lastOnlineCheckAt: text("last_online_check_at").notNull(),
+  // ── [T-372 L2] 安全门展示副本三列(迁移 0049)──────────────────────────────
+  // 放行权威在 Rust 侧 `.license` 文件(SPEC §9/§13);下面三列只是 Rust 放行后经
+  // loopback RPC(/api/v1/local/license-sync)同步来的**展示副本**(设置页用),
+  // 门控判定不读它们。写者仍是 sidecar backend(BR-01 单一写者不破)。
+  // 防回拨单调递增 last-seen(ISO UTC;真值在 Rust 双冗余点,此处仅展示)。
+  lastSeenAt: text("last_seen_at"),
+  // 服务端按码型下发的离线宽限秒数(内测 86400 / 买断 2592000)。
+  graceSeconds: integer("grace_seconds"),
+  // 签名响应的吊销标志(0/1)。
+  revoked: integer("revoked").default(0),
 });
 
 export type ActivationStateRow = typeof activationState.$inferSelect;

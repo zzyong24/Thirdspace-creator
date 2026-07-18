@@ -13,10 +13,13 @@
 //!
 //! 不归档的内容(与 SPEC §5.4「激活态保留」一致):
 //!   - `.master-key` / `machine-id` —— 机器级身份,清掉会导致重激活/换机判定;
+//!   - [T-372 L2] `.license` / `.license-seen` —— Rust 侧放行权威快照 + 防回拨 last-seen
+//!     冗余点(license.rs)。落 appDataDir 顶层、不在 ARCHIVE_TARGETS 内 → 重置**天然保留**
+//!     (对应 PRESERVE 清单里 activation_state 的「清库不清激活态」语义;单测锚死);
 //!   - `logs/` —— 排障日志,非用户数据;
 //!   - `runtime/` —— sidecar 解压缓存,与数据无关(删了也只是重解压)。
-//!   注:activation_state 表在 db 里,归档后随新库丢 —— 桌面激活走「重新激活」路径
-//!   (机器码不变,同码重激活不占新名额,见 T-178)。
+//!   注:activation_state 表在 db 里,归档后随新库丢 —— 但它自 T-372 起只是**展示副本**,
+//!   放行权威在保留下来的 `.license`;Rust 启动同步线程会把副本重新灌回新库(BR-01 通道)。
 
 use std::path::{Path, PathBuf};
 
@@ -169,6 +172,9 @@ mod tests {
         std::fs::create_dir_all(dir.join(".auth").join("douyin")).unwrap();
         std::fs::create_dir_all(dir.join("logs")).unwrap();
         std::fs::write(dir.join(".master-key"), b"k").unwrap();
+        // [T-372 L2] 放行权威文件 + last-seen 冗余点:重置必须保留(PRESERVE 语义)。
+        std::fs::write(dir.join(".license"), b"enc:v1:xxxx").unwrap();
+        std::fs::write(dir.join(".license-seen"), b"123").unwrap();
         std::fs::write(dir.join(RESET_MARKER_FILE), b"{}").unwrap();
 
         let outcome = apply_pending_workspace_reset(&dir).expect("应执行归档");
@@ -194,6 +200,9 @@ mod tests {
         assert!(!dir.join(RESET_MARKER_FILE).exists());
         assert!(dir.join("logs").exists());
         assert!(dir.join(".master-key").exists());
+        // [T-372 L2] `.license` 放行权威 + last-seen 冗余点:重置保留(清库不清激活态)。
+        assert!(dir.join(".license").exists());
+        assert!(dir.join(".license-seen").exists());
         let _ = std::fs::remove_dir_all(&dir);
     }
 

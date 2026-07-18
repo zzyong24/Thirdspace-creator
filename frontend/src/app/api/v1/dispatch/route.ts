@@ -17,7 +17,7 @@ import {
   isOwnershipError,
 } from "@/lib/request-context.server";
 import {
-  isLoopbackRequest,
+  isTrustedLocalRequest,
   loopbackForbidden,
 } from "@/lib/loopback-guard.server";
 
@@ -48,7 +48,7 @@ function errorEnvelope(
 
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 有副作用的 RPC 入口:先挡非本机/跨站请求(DNS rebinding + CSRF)。
-  if (!isLoopbackRequest(req)) return loopbackForbidden();
+  if (!isTrustedLocalRequest(req)) return loopbackForbidden();
 
   let payload: { id?: unknown; input?: unknown };
   try {

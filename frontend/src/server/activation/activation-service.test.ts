@@ -20,6 +20,10 @@ function makeRepo(initial: StoredActivation | null = null): {
     write: async (s) => {
       state.value = s;
     },
+    // [T-372 L2] 展示副本 upsert(Rust 同步入口;fake 直接整行覆写)。
+    writeMirror: async (m) => {
+      state.value = { ...m };
+    },
     clear: async () => {
       state.value = null;
     },
@@ -400,6 +404,38 @@ describe("activation state machine — getStatus (local, no network)", () => {
     });
     const v = await svc.getStatus();
     expect(v.status).toBe("grace");
+    expect(license.status).not.toHaveBeenCalled();
+  });
+});
+
+// ── [T-372 L2] Rust 壳同步入口(BR-01 窄通道)────────────────────────────────
+describe("activation service — syncFromShell", () => {
+  it("把 Rust 展示副本经 repo.writeMirror 落库(不触发任何在线校验)", async () => {
+    const { repo, state } = makeRepo();
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      now: () => new Date("2026-07-17T12:00:00Z"),
+    });
+    await svc.syncFromShell({
+      machineId: "M-fixture",
+      code: "SHELL-CODE",
+      licenseMode: "TIME",
+      projectKey: "test",
+      expiresAt: "2026-07-20T12:00:00Z",
+      activatedAt: "2026-07-17T12:00:00Z",
+      lastOnlineCheckAt: "2026-07-17T12:00:00Z",
+      lastSeenAt: "2026-07-17T12:00:00Z",
+      graceSeconds: 86400,
+      revoked: false,
+    });
+    expect(state.value?.code).toBe("SHELL-CODE");
+    expect(state.value?.lastSeenAt).toBe("2026-07-17T12:00:00Z");
+    expect(state.value?.graceSeconds).toBe(86400);
+    // 纯落库通道:绝不打网络(activate/status 都不该被触发)。
+    expect(license.activate).not.toHaveBeenCalled();
     expect(license.status).not.toHaveBeenCalled();
   });
 });

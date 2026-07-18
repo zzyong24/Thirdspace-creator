@@ -14,7 +14,7 @@ import {
   isOwnershipError,
 } from "@/lib/request-context.server";
 import {
-  isLoopbackRequest,
+  isTrustedLocalRequest,
   loopbackForbidden,
 } from "@/lib/loopback-guard.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
@@ -106,7 +106,7 @@ function textOf(message: UIMessage | undefined): string {
 
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 有副作用的对话入口(落库 + dispatch 工具任务):先挡非本机/跨站请求。
-  if (!isLoopbackRequest(req)) return loopbackForbidden();
+  if (!isTrustedLocalRequest(req)) return loopbackForbidden();
 
   let body: ChatRequestBody;
   try {

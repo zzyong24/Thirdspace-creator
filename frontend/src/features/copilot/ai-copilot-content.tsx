@@ -149,6 +149,7 @@ import {
 } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { readCurrentAccountId } from "@/lib/http-transport";
+import { handshakeHeaders } from "@/lib/handshake-client";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
   readStoredConversationId,
@@ -743,7 +744,11 @@ export function AICopilotContent({
         //   account_id=NULL → blob 取回 404 破图。未选号 → 不带(server 退化全局)。
         headers: (): Record<string, string> => {
           const acct = readCurrentAccountId();
-          return acct ? { "x-account-id": acct } : {};
+          return {
+            // [T-372 L2] 桌面壳启动级握手 token(loopback-guard 校验;web/dev 为空不带)。
+            ...handshakeHeaders(),
+            ...(acct ? { "x-account-id": acct } : {}),
+          };
         },
         // body 是 Resolvable(每次发请求求值):把当前 conversationId(ref 读最新)和 chatContext
         // 一起带上。首轮 conversationId 为 null → 不带,后端 lazy 建;拿到响应头后续轮带上续接。

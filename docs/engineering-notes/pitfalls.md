@@ -126,3 +126,9 @@
 **坑**:model_configurations(含加密 key)存 db 内;装机「归档旧库换新库」+ 后续「清理旧归档」= 配置无声丢失,且采集/转写有本地兜底不报错,丢失长时间不暴露。
 
 **正解**:①清库/换库前 sanity check:老库有非空 model_configurations 而新库没有 → 迁移或明确提醒;②根治=T-363(配置独立于工作区库存储/导出导入)。
+
+## 手写 drizzle 迁移多语句必须加 `--> statement-breakpoint`(2026-07-17 T-372)
+
+**坑**:0049 手写迁移一个文件里放 3 条 `ALTER TABLE`,不加分隔标记 → PGlite 报 `cannot insert multiple commands into a prepared statement`,所有走真库的 vitest 全红。drizzle migrator 只按 `--> statement-breakpoint` 切句,分号不算。
+
+**正解**:手写 `.sql` 迁移每条语句之间插一行 `--> statement-breakpoint`(先例:0000/0009/0047);单语句迁移(0045 式)不用。写完新迁移先跑一个真 pglite 的 repository 测试验证迁移能 apply,再跑全量。

@@ -17,6 +17,15 @@ export interface ActivationConfig {
   injectedMachineId?: string;
 }
 
+// [T-372 L2·gate-F2] 强验签开关:默认 "1"(强验签,判定在 Rust 侧);置 "0" = L1s 服务端
+// 签名端点未上线前的显式过渡降级(仅校 success+valid = P5 现状 + 「签名校验未启用」诚实标注)。
+// sidecar 侧用它决定:.license 缺失时是否允许回退 P5 legacy check(见 activation-gate.server.ts)。
+export function isStrictVerifyEnabled(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return (env.CREATOROS_LICENSE_STRICT_VERIFY ?? "1").trim() !== "0";
+}
+
 export const DEFAULT_LICENSE_BASE_URL = "https://license.aitongban.cloud";
 export const DEFAULT_PROJECT_KEY = "test";
 export const DEFAULT_GRACE_DAYS = 7;

@@ -5,7 +5,12 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { isLoopbackRequest } from "./loopback-guard.server";
+import {
+  HANDSHAKE_HEADER,
+  hasValidHandshake,
+  isLoopbackRequest,
+  isTrustedLocalRequest,
+} from "./loopback-guard.server";
 
 function mkReq(
   url: string,
@@ -104,6 +109,63 @@ describe("isLoopbackRequest —— 拒跨站 / DNS rebinding / 异常源", () =>
           host: "127.0.0.1.evil.com",
           origin: "http://127.0.0.1.evil.com",
         }),
+      ),
+    ).toBe(false);
+  });
+});
+
+// ── [T-372 L2] 启动级 nonce 握手 token(原 follow-up 落地)────────────────────
+describe("hasValidHandshake / isTrustedLocalRequest —— 握手 token", () => {
+  const TOKEN = "a".repeat(64);
+  const okUrl = "http://127.0.0.1:6000/api/v1/dispatch";
+  const okHeaders = { host: "127.0.0.1:6000", origin: "http://127.0.0.1:6000" };
+
+  it("dev/web(env 无 token)→ 检查不启用,带不带头都放行(P5 行为不变)", () => {
+    expect(hasValidHandshake(mkReq(okUrl, okHeaders), {})).toBe(true);
+    expect(
+      hasValidHandshake(
+        mkReq(okUrl, { ...okHeaders, [HANDSHAKE_HEADER]: "whatever" }),
+        {},
+      ),
+    ).toBe(true);
+  });
+
+  it("桌面态(env 有 token):头逐字节一致 → 放行", () => {
+    const env = { CREATOROS_SIDECAR_HANDSHAKE_TOKEN: TOKEN };
+    expect(
+      hasValidHandshake(
+        mkReq(okUrl, { ...okHeaders, [HANDSHAKE_HEADER]: TOKEN }),
+        env,
+      ),
+    ).toBe(true);
+  });
+
+  it("桌面态:缺头 / 头不匹配 → 拒", () => {
+    const env = { CREATOROS_SIDECAR_HANDSHAKE_TOKEN: TOKEN };
+    expect(hasValidHandshake(mkReq(okUrl, okHeaders), env)).toBe(false);
+    expect(
+      hasValidHandshake(
+        mkReq(okUrl, { ...okHeaders, [HANDSHAKE_HEADER]: "b".repeat(64) }),
+        env,
+      ),
+    ).toBe(false);
+  });
+
+  it("isTrustedLocalRequest = loopback ∧ 握手:非 loopback 即使 token 对也拒", () => {
+    const env = { CREATOROS_SIDECAR_HANDSHAKE_TOKEN: TOKEN };
+    expect(
+      isTrustedLocalRequest(
+        mkReq(okUrl, { ...okHeaders, [HANDSHAKE_HEADER]: TOKEN }),
+        env,
+      ),
+    ).toBe(true);
+    expect(
+      isTrustedLocalRequest(
+        mkReq("http://evil.com/api/v1/dispatch", {
+          host: "evil.com",
+          [HANDSHAKE_HEADER]: TOKEN,
+        }),
+        env,
       ),
     ).toBe(false);
   });

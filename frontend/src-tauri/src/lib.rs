@@ -12,6 +12,8 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
+// [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
+mod license;
 // [T-259] 桌面日志系统:sidecar stdout/stderr tee 落盘 + 脱敏 + 轮转(见 logging.rs)。
 mod logging;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
@@ -240,6 +242,39 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
     false
 }
 
+/// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
+/// SHA-256(build.rs 经 rustc-env 注入)。不匹配 → Err(人话)→ 拒绝 spawn。
+///
+/// 诚实边界(SPEC §9 gate-F4):此校验只防 **JS 层篡改**(改 tarball 里的 server.js 等);
+/// ① patch 本 Rust 二进制可绕;② 已解压的 runtime 缓存目录(appDataDir/runtime/…)被直接
+/// 改写不在每次启动的校验范围内(tarball 尺寸指纹变了才重解压)——不假装形成全链路防篡改。
+fn verify_sidecar_tarball(tarball: &std::path::Path) -> Result<(), String> {
+    // build.rs 恒注入该 env:打包构建 = tarball 真哈希;dev(无 tarball)= 空串。
+    let expected = env!("CREATOROS_SIDECAR_SHA256");
+    if expected.is_empty() {
+        // dev 构建(cargo check/test 时无 tarball)→ 无基准可比,诚实跳过并留日志。
+        eprintln!("[shell] 构建期未内嵌 sidecar 哈希(dev 构建),跳过入口完整性校验");
+        return Ok(());
+    }
+    let bytes = std::fs::read(tarball)
+        .map_err(|e| format!("读 sidecar.tar.gz 失败,无法校验完整性: {e}"))?;
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(&bytes);
+    let actual = hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+    if actual != expected {
+        return Err(format!(
+            "sidecar 入口文件完整性校验失败(期望 {expected} 实际 {actual})。\
+             应用文件可能被篡改或安装损坏,请重新安装 CreatorOS。"
+        ));
+    }
+    Ok(())
+}
+
 /// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
 /// sidecar 保留 pnpm 相对 symlink 结构,而 **Tauri resource 拷贝会丢 symlink**(T-169 实测:源 180 个
 /// → bundle 0 个 → node 解析 next 断 → sidecar 起不来)。故 bundle 里带的是**单文件 tarball**
@@ -247,17 +282,22 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
 ///   ① CREATOROS_SIDECAR_DIR env 覆盖(打包/测试可指定);
 ///   ② dev:CARGO_MANIFEST_DIR/sidecar(编译期常量,指向源目录,symlink 完好);
 ///   ③ bundle:资源里的 sidecar.tar.gz → 首启解压到 appDataDir/runtime/<version>/sidecar(复用)。
-fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
+/// [T-372 L2] 返回 Err = 入口完整性校验失败 → 上层**拒绝 spawn**(不再静默把被篡改的
+/// sidecar 跑起来)。其余路径语义不变。
+fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     if let Ok(dir) = std::env::var("CREATOROS_SIDECAR_DIR") {
         let p = PathBuf::from(dir);
         if p.exists() {
-            return p;
+            // 显式覆盖(打包验证/测试用)→ 信任操作者,跳过哈希校验(有日志,不静默)。
+            eprintln!("[shell] CREATOROS_SIDECAR_DIR 显式覆盖,跳过入口完整性校验");
+            return Ok(p);
         }
     }
     // dev:源目录(symlink 完好)。CARGO_MANIFEST_DIR 是 src-tauri/ 的编译期绝对路径。
+    // dev 源目录无 tarball 基准,完整性校验不适用(构建期 env 也为空串)。
     let dev_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("sidecar");
     if dev_dir.join("frontend").join("server.js").exists() {
-        return dev_dir;
+        return Ok(dev_dir);
     }
     // ③ bundle 兜底:资源里是 sidecar.tar.gz(单文件,规避 Tauri resource 丢 symlink)。
     let tarball = match app
@@ -266,13 +306,15 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
     {
         Ok(p) if p.exists() => p,
         // 资源里没 tarball(理论不会到这):退回 dev_dir,让上层探活失败,便于诊断而非静默乱指。
-        _ => return dev_dir,
+        _ => return Ok(dev_dir),
     };
+    // [T-372 L2] spawn 前的入口哈希校验:tarball 与构建期内嵌哈希不符 → 拒绝 spawn。
+    verify_sidecar_tarball(&tarball)?;
     // 解压目标按版本隔离:appDataDir/runtime/<version>/sidecar。升级(新版本)→ 新目录 → 自动重解压。
     let version = app.package_info().version.to_string();
     let dest = match app.path().app_data_dir() {
         Ok(d) => d.join("runtime").join(&version).join("sidecar"),
-        Err(_) => return dev_dir,
+        Err(_) => return Ok(dev_dir),
     };
     // 首启(或版本升级后首启)才解压;server.js 在位即认为已解压过,直接复用(避免每启动重解 598M)。
     let marker = dest.join("frontend").join("server.js");
@@ -317,7 +359,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
             }
         }
     }
-    dest
+    Ok(dest)
 }
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
@@ -330,6 +372,12 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         // [T-180] process 插件 —— 更新装好后 relaunch() 重启 app。
         .plugin(tauri_plugin_process::init())
+        // [T-372 L2] 校验决策链 IPC:前端(激活页/设置页)只经这两个 command 拿放行结果,
+        //   验签/防重放/防回拨逻辑全在 Rust(SPEC §9「前端只拿结果」)。
+        .invoke_handler(tauri::generate_handler![
+            license::license_activate,
+            license::license_check
+        ])
         .manage(SidecarHandle::default())
         .setup(|app| {
             let handle = app.handle().clone();
@@ -382,7 +430,15 @@ pub fn run() {
             //       故 dev **不走 Tauri resource 拷贝**,直接读源目录 src-tauri/sidecar(symlink 完好)。
             //    解析顺序:①CREATOROS_SIDECAR_DIR(显式覆盖)②源目录 <manifest>/sidecar(dev)
             //       ③resource 目录(bundle 兜底)。
-            let sidecar_dir = resolve_sidecar_dir(&app.handle());
+            // [T-372 L2] 入口完整性不过 → 拒绝 spawn(eprintln 人话后 panic;此刻 logger 尚未
+            // 初始化,dev/终端可见;打包态 crash 报告可见 panic message。不把被篡改的 JS 跑起来)。
+            let sidecar_dir = match resolve_sidecar_dir(&app.handle()) {
+                Ok(d) => d,
+                Err(e) => {
+                    eprintln!("[shell] {e}");
+                    panic!("{e}");
+                }
+            };
             let server_js_str = sidecar_dir
                 .join("frontend")
                 .join("server.js")
@@ -421,6 +477,35 @@ pub fn run() {
             // node 侧 resolveMachineId 优先用它(桌面最稳);下面还注入 `CREATOROS_DESKTOP=1`
             // 作为**运行时**桌面标记(激活门只桌面拦 / web 跳的唯一判据)。
             let machine_id = resolve_machine_id(&app.handle());
+
+            // [T-372 L2] 启动级 nonce 握手 token(loopback-guard.server.ts:18 的 follow-up 落地):
+            //   Rust 每次启动随机生成 → 注入 sidecar env(guard 校验基准)+ WebView 初始化脚本
+            //   (前端请求携带)。dev/web 无此 env → guard 不启用该检查,行为不变(P5 不变式)。
+            let handshake_token = license::gen_handshake_token();
+            // [T-372 L2] `.license` 放行权威文件路径,显式注入给 sidecar(激活门只读它判放行,
+            //   不再读 activation_state 表;见 frontend/src/server/activation/license-file.server.ts)。
+            let license_file_str = app_data_dir
+                .join(".license")
+                .to_string_lossy()
+                .to_string();
+            // [gate-F2] 强验签开关透传(默认 "1";L1s 未上线可临时置 "0" 弱验签,sidecar 侧
+            //   门与 UI 依赖同一开关做「签名校验未启用」诚实标注)。
+            let strict_verify_str = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
+                .unwrap_or_else(|_| "1".to_string());
+
+            // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
+            let license_ctx = std::sync::Arc::new(license::ShellLicenseCtx {
+                app_data_dir: app_data_dir.clone(),
+                machine_id: machine_id.clone().unwrap_or_default(),
+                master_key_b64: master_key.clone(),
+                handshake_token: handshake_token.clone(),
+                sidecar_port: port,
+                chain_lock: Mutex::new(()),
+                session: license::SessionMonotonic::new(),
+            });
+            app.manage(license::LicenseState(license_ctx.clone()));
+            // 启动必查一次(在线校验 + 落 .license;sidecar 就绪后补展示副本同步)。
+            license::startup_license_task(license_ctx.clone());
 
             // [T-205] 抖音登录态(.auth/douyin/<accountId>)目录 —— 注入 sidecar env
             //   `CREATOROS_DOUYIN_AUTH_DIR`,落**稳定**的 `<appDataDir>/.auth/douyin`,而非默认的
@@ -495,6 +580,10 @@ pub fn run() {
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
+                    // [T-372 L2] 握手 token / .license 路径 / 强验签开关(见上方注释)。
+                    .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
+                    .env("CREATOROS_LICENSE_FILE", &license_file_str)
+                    .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     .stdout(Stdio::piped())
@@ -571,6 +660,10 @@ pub fn run() {
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
+                    // [T-372 L2] 握手 token / .license 路径 / 强验签开关(与 macOS 分支一致)。
+                    .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
+                    .env("CREATOROS_LICENSE_FILE", &license_file_str)
+                    .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 
@@ -638,6 +731,11 @@ pub fn run() {
             // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
             // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
             let ready_logger = logger.clone();
+            // [T-372 L2] 握手 token 经 WebView 初始化脚本下发(token 为 hex,无注入面);
+            //   前端 handshake-client.ts 读该全局并附到有副作用请求的 x-creatoros-handshake 头。
+            let webview_token_script = format!(
+                "window.__CREATOROS_HANDSHAKE_TOKEN__=\"{handshake_token}\";"
+            );
             std::thread::spawn(move || {
                 let ready = wait_until_ready(port, Duration::from_secs(60));
                 let url = format!("http://127.0.0.1:{port}/");
@@ -659,6 +757,8 @@ pub fn run() {
                         .title("CreatorOS")
                         .inner_size(1440.0, 900.0)
                         .min_inner_size(1024.0, 680.0)
+                        // [T-372 L2] 注入握手 token 全局(每次导航都会重跑初始化脚本)。
+                        .initialization_script(&webview_token_script)
                         .build();
                 });
             });

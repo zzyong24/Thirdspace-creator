@@ -4,7 +4,7 @@ import { getWebSessionRuntime } from "@/server/persistence-client";
 import { readSessionCookie } from "../v1/auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
 import {
-  isLoopbackRequest,
+  isTrustedLocalRequest,
   loopbackForbidden,
 } from "@/lib/loopback-guard.server";
 import { isSafeWebDomain } from "@/lib/web-domain";
@@ -48,7 +48,7 @@ function rejectBadDomain(domain: string): NextResponse | null {
 
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 登录态保管库入口(有头开窗 / 删本地登录态,per-machine 敏感):先挡非本机/跨站请求。
-  if (!isLoopbackRequest(req)) return loopbackForbidden();
+  if (!isTrustedLocalRequest(req)) return loopbackForbidden();
 
   let body: WebSessionBody;
   try {

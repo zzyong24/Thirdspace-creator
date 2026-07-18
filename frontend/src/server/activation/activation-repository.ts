@@ -7,6 +7,7 @@ import {
 } from "@creatoros/backend";
 import type {
   ActivationRepository,
+  ActivationSecurityMirror,
   StoredActivation,
 } from "./activation-service";
 
@@ -64,6 +65,10 @@ export function createActivationRepository(
         expiresAt: row.expiresAt,
         activatedAt: row.activatedAt,
         lastOnlineCheckAt: row.lastOnlineCheckAt,
+        // [T-372 L2] 安全门展示副本三列(可为 null;真值在 Rust 侧)。
+        lastSeenAt: row.lastSeenAt ?? null,
+        graceSeconds: row.graceSeconds ?? null,
+        revoked: row.revoked === 1,
       };
     },
 
@@ -77,6 +82,10 @@ export function createActivationRepository(
         expiresAt: state.expiresAt,
         activatedAt: state.activatedAt,
         lastOnlineCheckAt: state.lastOnlineCheckAt,
+        // 未带安全态时不抹掉既有副本(undefined → 沿用列默认/既有值语义:insert 用 null/0)。
+        lastSeenAt: state.lastSeenAt ?? null,
+        graceSeconds: state.graceSeconds ?? null,
+        revoked: state.revoked ? 1 : 0,
       };
       await db
         .insert(activationState)
@@ -92,6 +101,32 @@ export function createActivationRepository(
             activatedAt: row.activatedAt,
             lastOnlineCheckAt: row.lastOnlineCheckAt,
           },
+        });
+    },
+
+    // [T-372 L2] Rust 壳同步入口专用:整行 upsert(含 last_seen_at/grace_seconds/revoked)。
+    // 与 write() 分开:write() 是 P5 状态机路径(不动安全三列,避免旧路径抹掉 Rust 同步值);
+    // writeMirror() 是展示副本全量覆写(来源单一 = Rust 决策链产物)。
+    async writeMirror(mirror: ActivationSecurityMirror): Promise<void> {
+      const row = {
+        id: SINGLETON_ID,
+        machineId: mirror.machineId,
+        code: enc(mirror.code),
+        licenseMode: mirror.licenseMode,
+        projectKey: mirror.projectKey,
+        expiresAt: mirror.expiresAt,
+        activatedAt: mirror.activatedAt,
+        lastOnlineCheckAt: mirror.lastOnlineCheckAt,
+        lastSeenAt: mirror.lastSeenAt,
+        graceSeconds: mirror.graceSeconds,
+        revoked: mirror.revoked ? 1 : 0,
+      };
+      await db
+        .insert(activationState)
+        .values(row)
+        .onConflictDoUpdate({
+          target: activationState.id,
+          set: { ...row },
         });
     },
 

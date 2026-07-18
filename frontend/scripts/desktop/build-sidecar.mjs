@@ -90,6 +90,9 @@ function run(cmd, args, opts = {}) {
 //   tar 默认把 symlink 存为 symlink(不 -h 解引用)—— 正是所需。
 function packSidecarTarball() {
   const tarball = join(SRC_TAURI, "sidecar.tar.gz");
+  // [T-372 L2] 入口完整性链:本脚本(beforeBuildCommand)先产 tarball → 随后的 cargo 构建里
+  //   src-tauri/build.rs 对它算 SHA-256 并经 rustc-env 内嵌进壳二进制 → 运行时 lib.rs 解压前
+  //   比对,不匹配拒绝 spawn(改 JS 必先动 Rust)。哈希不在此处算 —— 单一实现在 build.rs。
   console.log(`[build-sidecar] 打 sidecar.tar.gz(保留 symlink,供 bundle resource;解压见 lib.rs)…`);
   const r = spawnSync("tar", ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], { stdio: "inherit" });
   if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);

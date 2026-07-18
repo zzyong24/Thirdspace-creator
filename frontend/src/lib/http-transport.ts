@@ -1,4 +1,5 @@
 import { ErrorCode, type Endpoint, type Transport } from "@creatoros/contract";
+import { handshakeHeaders } from "@/lib/handshake-client";
 
 // [T-136 切片 a] 当前选中抖音号的 localStorage 键(与 account-switcher 同一真值)。切号写它,
 // 每次请求读它注入 x-account-id header。server 端会验属主([T-332 S3] 验不过 → 404 拒绝,
@@ -101,6 +102,8 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
       syncCurrentAccountCookie(currentAccountId);
       const headers: Record<string, string> = {
         "content-type": "application/json",
+        // [T-372 L2] 桌面壳启动级握手 token(loopback-guard 校验;web/dev 为空不带)。
+        ...handshakeHeaders(),
       };
       if (currentAccountId) headers["x-account-id"] = currentAccountId;
       const res = await fetch(`${baseUrl}/dispatch`, {

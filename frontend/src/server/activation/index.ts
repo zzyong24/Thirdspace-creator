@@ -87,6 +87,8 @@ export async function assembleActivationService(
 }
 
 // 门控便捷判据:web/dev 永远放行(门不触发);桌面态走 check()。
+// [T-372 L2] 注:真实激活门已改走 activation-gate.server.ts(桌面态读 Rust 侧 `.license`
+// 放行权威,不再经 service.check());本函数是 P5 legacy 辅助,仅弱验签回退语义等价,勿新增调用。
 export async function evaluateActivationGate(
   service: ActivationService,
   env: Record<string, string | undefined> = process.env,

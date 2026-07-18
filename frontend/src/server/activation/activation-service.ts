@@ -22,11 +22,32 @@ export interface StoredActivation {
   expiresAt: string | null; // ISO;null = 永久
   activatedAt: string;
   lastOnlineCheckAt: string;
+  // ── [T-372 L2] 安全门展示副本三列(可缺;由 Rust 壳经 syncFromShell 同步)────
+  lastSeenAt?: string | null;
+  graceSeconds?: number | null;
+  revoked?: boolean;
+}
+
+// [T-372 L2] Rust 壳放行后经 loopback RPC 同步来的完整展示副本(BR-01:表仍由
+// sidecar backend 写,Rust 只经此窄入口触发)。放行权威在 Rust `.license`,本记录仅供展示。
+export interface ActivationSecurityMirror {
+  machineId: string;
+  code: string; // 明文(repo 落库前加密)
+  licenseMode: string;
+  projectKey: string;
+  expiresAt: string | null;
+  activatedAt: string;
+  lastOnlineCheckAt: string;
+  lastSeenAt: string | null;
+  graceSeconds: number | null;
+  revoked: boolean;
 }
 
 export interface ActivationRepository {
   read(): Promise<StoredActivation | null>;
   write(state: StoredActivation): Promise<void>;
+  // [T-372 L2] 展示副本 upsert(Rust 同步入口专用;整行覆写,含三列安全态)。
+  writeMirror(mirror: ActivationSecurityMirror): Promise<void>;
   clear(): Promise<void>;
 }
 
@@ -245,7 +266,14 @@ export function createActivationService(deps: ActivationServiceDeps) {
     };
   }
 
-  return { activate, check, getStatus };
+  // [T-372 L2] BR-01 窄同步入口:Rust 壳放行判定后,经 /api/v1/local/license-sync 调这里,
+  // 把安全态展示副本(last_seen_at/grace_seconds/revoked + 领域字段)落进 activation_state。
+  // 表的写者仍是 sidecar backend(本方法);Rust 绝不跨模块直改表。放行判定不读本表。
+  async function syncFromShell(mirror: ActivationSecurityMirror): Promise<void> {
+    await repo.writeMirror(mirror);
+  }
+
+  return { activate, check, getStatus, syncFromShell };
 }
 
 export type ActivationService = ReturnType<typeof createActivationService>;

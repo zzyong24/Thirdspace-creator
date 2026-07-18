@@ -15,7 +15,10 @@ import { NextResponse } from "next/server";
 //     **无法**在跨源 POST 上省略 Origin,故「无 Origin」可靠地代表「非跨站浏览器请求」。
 //
 // 只挂在**有副作用**的路由(dispatch/chat/web-session);纯读路由不强制(避免误伤 & 保持宽松)。
-// 完整的启动级 nonce 令牌(WebView 与 sidecar 握手,彻底身份绑定)需 Tauri 侧协作,列为 follow-up。
+// [T-372 L2] 启动级 nonce 握手 token 已落地(原 follow-up):Rust 壳每次启动随机生成 token,
+//   注入 sidecar env `CREATOROS_SIDECAR_HANDSHAKE_TOKEN` + WebView 初始化脚本全局
+//   `__CREATOROS_HANDSHAKE_TOKEN__`;前端有副作用请求带 `x-creatoros-handshake` 头,
+//   `hasValidHandshake` 比对。dev/web 无该 env → 检查不启用,行为与 P5 完全一致(不变式)。
 
 // 集合用无括号形式(`::1` 而非 `[::1]`)——hostnameOf 统一剥方括号后再查表。`localhost` 兼容 dev 与
 //   vitest(`new Request("http://localhost/...")`)。
@@ -59,6 +62,33 @@ export function isLoopbackRequest(req: Request): boolean {
     if (!oHost || !LOOPBACK_HOSTS.has(oHost)) return false;
   }
   return true;
+}
+
+/** [T-372 L2] 握手 token 请求头名(Rust sync_mirror_to_sidecar / 前端 handshake-client 共用)。 */
+export const HANDSHAKE_HEADER = "x-creatoros-handshake";
+
+/**
+ * [T-372 L2] 启动级 nonce 握手校验:桌面态(env 有 token)要求请求头逐字节一致;
+ * dev/web(无 token env)→ 恒 true(检查不启用,P5 行为不变)。
+ */
+export function hasValidHandshake(
+  req: Request,
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  const token = env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN?.trim();
+  if (!token) return true; // 非桌面壳启动(dev/web/单测)→ 不启用
+  return req.headers.get(HANDSHAKE_HEADER) === token;
+}
+
+/**
+ * [T-372 L2] 有副作用路由的统一判据 = loopback(Host/Origin)+ 握手 token。
+ * dispatch/chat/web-session 用它替换裸 isLoopbackRequest。
+ */
+export function isTrustedLocalRequest(
+  req: Request,
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return isLoopbackRequest(req) && hasValidHandshake(req, env);
 }
 
 /** 统一的 403 拒答(跨站/异常 Origin/非 loopback Host)。 */

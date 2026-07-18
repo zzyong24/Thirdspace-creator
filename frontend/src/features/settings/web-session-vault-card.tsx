@@ -13,6 +13,7 @@
  */
 
 import * as React from "react";
+import { handshakeHeaders } from "@/lib/handshake-client";
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,8 @@ interface WebSession {
 async function callWebSession(body: Record<string, unknown>): Promise<unknown> {
   const res = await fetch("/api/web-session", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    // [T-372 L2] 桌面壳启动级握手 token(loopback-guard 校验;web/dev 为空不带)。
+    headers: { "content-type": "application/json", ...handshakeHeaders() },
     body: JSON.stringify(body),
   });
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
