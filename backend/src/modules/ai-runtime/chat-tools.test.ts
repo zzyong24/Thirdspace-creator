@@ -22,6 +22,10 @@ import {
   WEB_READ_SERP_MAX_CHARS,
   WEB_READ_SERP_NOTE,
   isSerpUrl,
+  isSearchResultsPageUrl,
+  MATERIAL_SCREENSHOT_SERP_ERROR,
+  WEB_READ_BLOCKED_ALTERNATES_NOTE,
+  WEB_READ_BLOCKED_NO_ALTERNATES_NOTE,
   type ChatToolDeps,
 } from "./chat-tools";
 
@@ -3173,8 +3177,9 @@ describe("[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记", () => {
     expect(result.window?.total).toBe(5000);
     expect(result.hasMore).toBe(true);
     expect(result.serpNote).toBe(WEB_READ_SERP_NOTE);
-    // 注记内容:是 SERP 摘要非正文 + 指路 material.gather / 具体文章 URL。
-    expect(WEB_READ_SERP_NOTE).toContain("搜索结果页");
+    // 注记内容:是结果列表页摘要非正文 + 指路 material.gather / 具体文章 URL。
+    // [T-390] 措辞已覆盖站内搜索列表页(「搜索结果列表页」)。
+    expect(WEB_READ_SERP_NOTE).toContain("搜索结果列表页");
     expect(WEB_READ_SERP_NOTE).toContain("material.gather");
   });
 
@@ -3213,5 +3218,155 @@ describe("[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记", () => {
     expect(result.window?.length).toBe(WEB_READ_WINDOW_MAX_CHARS);
     expect(result.hasMore).toBe(true);
     expect(result.serpNote).toBeUndefined();
+  });
+});
+
+// ── [T-390] 素材搜集韧性三改:①web.read 被拒多路回退(alternates)②搜索结果列表页硬拒
+// ③截图默认首屏(fullPage 仅用户明确要求)─────────────────────────────────────────────
+
+describe("[T-390] isSearchResultsPageUrl — 结果列表页判定(引擎 SERP + 站内搜索页)", () => {
+  it("引擎 SERP 全部命中(isSerpUrl 超集)", () => {
+    expect(isSearchResultsPageUrl("https://www.bing.com/search?q=kimi")).toBe(true);
+    expect(isSearchResultsPageUrl("https://www.baidu.com/s?wd=kimi")).toBe(true);
+  });
+
+  it("站内搜索列表页命中:36氪/知乎/B站/微博", () => {
+    // 真机事故场景:36氪搜索列表页截图无意义。
+    expect(isSearchResultsPageUrl("https://36kr.com/search/articles/AI")).toBe(true);
+    expect(isSearchResultsPageUrl("https://www.zhihu.com/search?type=content&q=AI")).toBe(true);
+    expect(isSearchResultsPageUrl("https://search.bilibili.com/all?keyword=AI")).toBe(true);
+    expect(isSearchResultsPageUrl("https://s.weibo.com/weibo?q=AI")).toBe(true);
+  });
+
+  it("不误伤:文章 slug 含 search-、普通文章页、非法输入", () => {
+    expect(isSearchResultsPageUrl("https://example.com/search-tips")).toBe(false);
+    expect(isSearchResultsPageUrl("https://36kr.com/p/3341234567")).toBe(false);
+    expect(isSearchResultsPageUrl("https://example.com/article/research")).toBe(false);
+    expect(isSearchResultsPageUrl("not a url")).toBe(false);
+    expect(isSearchResultsPageUrl("ftp://example.com/search")).toBe(false);
+  });
+});
+
+describe("[T-390] material.screenshot — 结果列表页硬拒 + 首屏默认", () => {
+  const WHITELIST = ["material.screenshot"] as const;
+
+  it("搜索结果列表页 URL → 不调截图端口,error 引导点进单篇(确定性门)", async () => {
+    const { deps, captureScreenshot } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.screenshot"]!, {
+      url: "https://36kr.com/search/articles/AI",
+    })) as { asset: unknown; error: string | null };
+    expect(captureScreenshot).not.toHaveBeenCalled();
+    expect(result.asset).toBeNull();
+    expect(result.error).toBe(MATERIAL_SCREENSHOT_SERP_ERROR);
+    // 拒绝文案本身给出正确路径:点进单篇 + material.gather。
+    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("单篇");
+    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("material.gather");
+  });
+
+  it("引擎 SERP 同样硬拒(bing 结果页)", async () => {
+    const { deps, captureScreenshot } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.screenshot"]!, {
+      url: "https://www.bing.com/search?q=AI",
+    })) as { error: string | null };
+    expect(captureScreenshot).not.toHaveBeenCalled();
+    expect(result.error).toBe(MATERIAL_SCREENSHOT_SERP_ERROR);
+  });
+
+  it("fullPage 入参描述锚定「仅用户明确要求才传 true」(首屏默认,prompt 层纪律)", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const schema = (
+      tools["material.screenshot"]! as unknown as {
+        inputSchema: { jsonSchema: { properties: { fullPage: { description: string } } } };
+      }
+    ).inputSchema.jsonSchema;
+    expect(schema.properties.fullPage.description).toContain("明确要求");
+    // 工具描述同样声明默认首屏。
+    expect(
+      (tools["material.screenshot"]! as unknown as { description: string }).description,
+    ).toContain("首屏");
+  });
+});
+
+describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates", () => {
+  const WHITELIST = ["web.read"] as const;
+  const ALTS = [
+    { title: "同题报道 A", url: "https://other.example.com/a", snippet: "摘要A" },
+    { title: "同题报道 B", url: "https://another.example.com/b", snippet: "摘要B" },
+  ];
+
+  it("端口回 blocked+alternates → error=message+行动指引,alternates 透传给模型", async () => {
+    const { deps } = makeDeps({
+      readWeb: async () => ({
+        blocked: true as const,
+        status: 403,
+        message: "页面返回 HTTP 403:该链接不可访问(可能已下架或需要权限)",
+        alternates: ALTS,
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://36kr.com/p/123",
+    })) as {
+      asset: unknown;
+      needLogin: unknown;
+      error: string | null;
+      alternates?: Array<{ title: string; url: string }>;
+    };
+    expect(result.asset).toBeNull();
+    expect(result.needLogin).toBeNull();
+    expect(result.error).toContain("HTTP 403");
+    expect(result.error).toContain(WEB_READ_BLOCKED_ALTERNATES_NOTE.trim());
+    expect(result.alternates).toHaveLength(2);
+    expect(result.alternates?.[0]?.url).toBe("https://other.example.com/a");
+    // 指引本身:挑一条再读 + 不编内容。
+    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("web.read");
+    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("绝不编内容");
+  });
+
+  it("blocked 但替代来源为空 → error 带诚实到底指引,不带 alternates 字段", async () => {
+    const { deps } = makeDeps({
+      readWeb: async () => ({
+        blocked: true as const,
+        status: 500,
+        message: "页面返回 HTTP 500:该链接不可访问(可能已下架或需要权限)",
+        alternates: [],
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://36kr.com/p/456",
+    })) as { error: string | null; alternates?: unknown };
+    expect(result.error).toContain("HTTP 500");
+    expect(result.error).toContain(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE.trim());
+    expect(result.alternates).toBeUndefined();
+    expect(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE).toContain("绝不编内容");
+  });
+
+  it("站内搜索列表页正文同样窗口压缩 + serpNote(T-371 扩展到站内搜索)", async () => {
+    const { deps } = makeDeps({
+      readWeb: vi.fn(async () => ({
+        needLogin: false as const,
+        assetId: "as-serp-2",
+        name: "正文·36氪搜索页",
+        previewUrl: null,
+        sourceUrl: "https://36kr.com/search/articles/AI",
+        title: "AI - 搜索",
+        excerpt: "结果列表…",
+        extractor: "readability",
+        fullText: "字".repeat(5000),
+      })),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://36kr.com/search/articles/AI",
+    })) as {
+      window: { length: number } | null;
+      serpNote?: string;
+    };
+    expect(result.window?.length).toBe(WEB_READ_SERP_MAX_CHARS);
+    expect(result.serpNote).toBe(WEB_READ_SERP_NOTE);
   });
 });

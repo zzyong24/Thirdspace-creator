@@ -285,7 +285,16 @@ import {
 import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
 import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttle-state-port.pglite";
 // [T-084b] 通用网页截图(公开页无头 Chromium)—— material.screenshot 端口用。
-import { captureUrl } from "@/server/ingestion/web-capture";
+import {
+  captureUrl,
+  WebCaptureError,
+  isBlockedHttpCaptureError,
+} from "@/server/ingestion/web-capture";
+// [T-390] web.read 被拒(403/5xx 等)→ 搜索引擎找替代来源(纯编排,searcher 在本组合根注入)。
+import {
+  findAlternatesViaSearch,
+  type AlternateSearcher,
+} from "@/server/ingestion/web-read-fallback";
 // [T-217a] Web Session Vault —— 泛化抖音登录态底座成任意域名保管库(有头登录 + headless 探针)。
 import {
   openWebLoginWindow,
@@ -1237,6 +1246,14 @@ export interface ChatRuntime {
         fromCache?: boolean;
       }
     | { needLogin: true; domain: string }
+    // [T-390] HTTP 被拒(403 反爬/404 下架/5xx)→ 多路搜索找到的替代来源候选(可为空,诚实);
+    //   message 已是人话(含未登录时的保管库引导),编导据 alternates 挑一条再 web.read。
+    | {
+        blocked: true;
+        status: number | null;
+        message: string;
+        alternates: Array<{ title: string; url: string; snippet: string }>;
+      }
   >;
   // [T-253] local.read 端口 —— 读本机文件(任意路径 + 运行时逐次授权)。端口内:路径归一/realpath
   // 穿越防护 → 敏感 denylist 硬拒(无论授权与否)→ 授权表查询(未授权返 needApproval 渲确认卡)→
@@ -9164,10 +9181,47 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       input: { url: string; fullPage?: boolean; signal?: AbortSignal },
     ) => {
       // [T-239c] signal 透传进 captureUrl:用户点「停止」→ 关无头浏览器提前退出(AbortError)。
-      const shot = await captureUrl(input.url, {
-        fullPage: input.fullPage,
-        signal: input.signal,
-      });
+      // [T-390] 素材搜集韧性:媒体站对干净无头 context 常回 403/5xx —— 若该域在保管库有登录态
+      // (browser_sessions),带登录态经 profile 池**重试一次**(登录态访问通常能过);没有登录态
+      // 则在诚实报错上追加可行动引导(去保管库登录 / material.gather 换路检索),不静默吞。
+      let shot;
+      try {
+        shot = await captureUrl(input.url, {
+          fullPage: input.fullPage,
+          signal: input.signal,
+        });
+      } catch (err) {
+        if (!isBlockedHttpCaptureError(err)) throw err;
+        const blockedErr = err as WebCaptureError;
+        const domain = (() => {
+          try {
+            return webDomainFromUrl(input.url);
+          } catch {
+            return null;
+          }
+        })();
+        const hasSession = domain
+          ? await browserSessionsService
+              .getState(ctx, domain)
+              .then((s) => s !== null)
+              .catch(() => false)
+          : false;
+        if (!hasSession || !domain) {
+          throw new WebCaptureError(
+            `${blockedErr.message}。可在「设置 → 网站登录保管库」登录该网站后重试(带登录态访问通常能过),或用 material.gather 换路检索同主题素材。`,
+            { status: blockedErr.status ?? undefined },
+          );
+        }
+        // 带登录态重试(池 context 满足 CaptureCapableContext:newPage + close=回写归还)。
+        shot = await captureUrl(
+          input.url,
+          { fullPage: input.fullPage, signal: input.signal },
+          {
+            openContext: () =>
+              openPooledReaderContext(ctx, domain) as never,
+          },
+        );
+      }
       const name = `截图·${(shot.title || shot.finalUrl).slice(0, 40)}`;
       // [T-219] 铁律②:AI 写入需人确认。截图落 **pending** asset(素材库 list 按 active 过滤 →
       //   不显示、不进库),对话确认门卡「存入素材库」→ assets.commit 翻 active 才入库。
@@ -9255,7 +9309,63 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         if (err instanceof WebReaderLoginRequiredError) {
           return { needLogin: true as const, domain: err.domain };
         }
-        throw err; // 三墙其余分类(打不开/HTTP 码/抽不出正文)原样上抛,工具 execute 转人话
+        // [T-390] 素材搜集韧性:HTTP 被拒(403 反爬 / 404 下架 / 5xx)→ 不当场认输,多路搜索
+        // (已配 search provider → 必应 → 百度,后两路免 key 浏览器采集)用原 URL 找「同一内容
+        // 的替代来源」,结构化返回给编导挑一条再读。登录态第一次就带着(池注入),不重复重试;
+        // 该域没登录过则在 message 里如实引导去保管库登录。全部搜不到 → alternates=[](诚实空)。
+        if (
+          err instanceof WebCaptureError &&
+          err.status !== null &&
+          err.status >= 400
+        ) {
+          const searchers: AlternateSearcher[] = [];
+          const configured = await resolveSearchSpec(ctx).catch(() => null);
+          if (
+            configured &&
+            configured.provider !== "rss" &&
+            configured.provider !== "browser"
+          ) {
+            // 用户已配的真检索 provider(bocha/tavily/serpapi)优先。
+            searchers.push((q, count) =>
+              searchWebFn(configured, q, searchRegistry, { count }),
+            );
+          }
+          const browserSpec = (baseUrl: string | null) => ({
+            provider: "browser",
+            baseUrl,
+            model: "",
+            token: "",
+          });
+          // 免 key 浏览器采集:必应(browser 适配器默认引擎)→ 百度(引擎感知解析)。
+          searchers.push((q, count) =>
+            searchWebFn(browserSpec(null), q, searchRegistry, { count }),
+          );
+          searchers.push((q, count) =>
+            searchWebFn(
+              browserSpec("https://www.baidu.com/s?wd={q}"),
+              q,
+              searchRegistry,
+              { count },
+            ),
+          );
+          const alternates = await findAlternatesViaSearch(
+            input.url,
+            searchers,
+          ).catch(() => []);
+          const hasSession = await browserSessionsService
+            .getState(ctx, domain)
+            .then((s) => s !== null)
+            .catch(() => false);
+          return {
+            blocked: true as const,
+            status: err.status,
+            message: hasSession
+              ? err.message
+              : `${err.message}(该站还没在「设置 → 网站登录保管库」登录过 —— 登录后重试,带登录态访问更容易通过)`,
+            alternates,
+          };
+        }
+        throw err; // 三墙其余分类(打不开/抽不出正文)原样上抛,工具 execute 转人话
       }
       const name = `正文·${(read.title || read.finalUrl).slice(0, 40)}`;
       const bytes = new TextEncoder().encode(read.text);

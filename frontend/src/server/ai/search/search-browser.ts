@@ -90,6 +90,64 @@ export function parseBingResults(html: string): SearchResult[] {
   return out;
 }
 
+/**
+ * [T-390] 纯函数:百度 SERP HTML → SearchResult[]。百度自然结果结构:
+ *   <div class="result c-container …" mu="真实URL"> … <h3 …><a href="baidu.com/link?url=…">Title</a></h3> …
+ * 关键点:`mu` 属性带**真实落地 URL**(href 是 baidu.com/link 跳转链,对上层无用)——只收
+ * 开标签同时含 `class="…result…"` 与 `mu="http(s)://…"` 的块。同 Bing 解析一样天生脆弱
+ * (百度改版即失效)→ 解析不出返 [],上层降级诚实。导出供单测。
+ */
+export function parseBaiduResults(html: string): SearchResult[] {
+  const out: SearchResult[] = [];
+  const tagRe = /<div\b[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = tagRe.exec(html)) !== null) {
+    const tag = m[0];
+    if (!/class="[^"]*\bresult\b[^"]*"/i.test(tag)) continue;
+    const mu = /\bmu="(https?:\/\/[^"]+)"/i.exec(tag);
+    if (!mu) continue;
+    const url = stripHtml(mu[1] ?? "");
+    if (!/^https?:\/\//i.test(url)) continue;
+    // 标题/摘要在本块后续片段里(到下一个 result 块或 3000 字符窗口内,best-effort)。
+    const windowEnd = html.slice(m.index + tag.length, m.index + tag.length + 3000);
+    const a = /<h3[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i.exec(windowEnd);
+    const title = a ? stripHtml(a[1] ?? "") : "";
+    const sn = /<span[^>]*class="[^"]*content-right[^"]*"[^>]*>([\s\S]*?)<\/span>/i.exec(
+      windowEnd,
+    );
+    const snippet = sn ? stripHtml(sn[1] ?? "") : "";
+    let siteName = "";
+    try {
+      siteName = new URL(url).hostname;
+    } catch {
+      siteName = "";
+    }
+    out.push({
+      title: title || url,
+      url,
+      snippet,
+      ...(siteName ? { siteName } : {}),
+    });
+  }
+  return out;
+}
+
+/** [T-390] 按 SERP 最终 URL 的 host 选解析器(baidu → 百度解析,其余 → Bing 解析);主解析
+ *  空结果时再试另一家(engine 模板可自定义,host 判断失误时兜底)。导出供单测。 */
+export function parseSerpResults(finalUrl: string, html: string): SearchResult[] {
+  let host = "";
+  try {
+    host = new URL(finalUrl).hostname.toLowerCase();
+  } catch {
+    host = "";
+  }
+  const isBaidu = host === "baidu.com" || host.endsWith(".baidu.com");
+  const primary = isBaidu ? parseBaiduResults : parseBingResults;
+  const secondary = isBaidu ? parseBingResults : parseBaiduResults;
+  const first = primary(html);
+  return first.length ? first : secondary(html);
+}
+
 // query → 文件名安全 slug(截断 40)。
 function slugify(query: string): string {
   return (
@@ -166,7 +224,8 @@ export function createBrowserScrapeAdapter(
         } catch {
           /* 截图失败不阻断检索 */
         }
-        return parseBingResults(html).slice(0, opts.count);
+        // [T-390] 引擎感知解析:baseUrl 可指到百度(/s?wd={q})—— 按最终 host 选解析器。
+        return parseSerpResults(finalUrl, html).slice(0, opts.count);
       } finally {
         await ctx.close().catch(() => {}); // 关我们自起的无头 Chromium(非用户浏览器)
       }

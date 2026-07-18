@@ -3,6 +3,7 @@ import {
   captureUrl,
   detectLoginWall,
   WebCaptureError,
+  isBlockedHttpCaptureError,
   type CaptureCapableContext,
   type CaptureCapablePage,
 } from "./web-capture";
@@ -97,6 +98,25 @@ describe("captureUrl — 三类诚实报错", () => {
     await expect(
       captureUrl("https://example.com/gone", {}, { openContext: async () => ctx }),
     ).rejects.toThrow(/HTTP 404/);
+  });
+
+  it("[T-390] HTTP 错误携带结构化 status(供多路回退判定,不解析 message)", async () => {
+    const { ctx } = makeFakeContext({ status: 403 });
+    const err = await captureUrl("https://blocked.example.com", {}, {
+      openContext: async () => ctx,
+    }).catch((e) => e as unknown);
+    expect(err).toBeInstanceOf(WebCaptureError);
+    expect((err as WebCaptureError).status).toBe(403);
+    // 判定纯函数:403/5xx 算「被拒」,404 不触发登录态重试(下架≠反爬)。
+    expect(isBlockedHttpCaptureError(err)).toBe(true);
+    expect(
+      isBlockedHttpCaptureError(new WebCaptureError("x", { status: 500 })),
+    ).toBe(true);
+    expect(
+      isBlockedHttpCaptureError(new WebCaptureError("x", { status: 404 })),
+    ).toBe(false);
+    expect(isBlockedHttpCaptureError(new WebCaptureError("打不开"))).toBe(false);
+    expect(isBlockedHttpCaptureError(new Error("HTTP 403"))).toBe(false);
   });
 
   it("登录墙 / 验证码启发式命中 → WebCaptureError「需要登录/有反爬验证」(不产垃圾图)", async () => {

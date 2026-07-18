@@ -177,6 +177,14 @@ export interface AssembleChatDeps extends ContextDeps {
         fromCache?: boolean;
       }
     | { needLogin: true; domain: string }
+    // [T-390] HTTP 被拒(403 反爬/404 下架/5xx)→ 端口已多路搜索(已配 provider→必应→百度)
+    //   找替代来源;alternates 可为空(诚实)。message 人话(含未登录时的保管库引导)。
+    | {
+        blocked: true;
+        status: number | null;
+        message: string;
+        alternates: Array<{ title: string; url: string; snippet: string }>;
+      }
   >;
   /**
    * [T-253] local.read 端口 —— 读用户本机文件(任意路径 + 运行时逐次授权)。composition root

@@ -46,12 +46,27 @@ export function makeAbortError(what: string): Error {
 }
 
 /** 截图失败 —— 逐类诚实(导航打不开 / HTTP 错误码 / 登录墙·验证码)。工具 execute 接住原样
- *  转述给模型(honestyBlock #5)。区别于「成功但空图」——本类是根本没截成。 */
+ *  转述给模型(honestyBlock #5)。区别于「成功但空图」——本类是根本没截成。
+ *  [T-390] status:HTTP 错误码分类时携带结构化状态码(403/500 等),供上层多路回退判定
+ *  (登录态重试 / 搜索引擎找替代来源),不再靠解析 message 文本;非 HTTP 类失败为 null。 */
 export class WebCaptureError extends Error {
-  constructor(message: string) {
+  readonly status: number | null;
+  constructor(message: string, opts?: { status?: number }) {
     super(message);
     this.name = "WebCaptureError";
+    this.status = opts?.status ?? null;
   }
+}
+
+/** [T-390] 是否「被站点拒之门外」的 HTTP 失败(403 反爬拒绝 / 5xx 服务端错)——多路回退的
+ *  触发判定:material.screenshot 用它决定是否带登录态(web-session 池)重试;web.read 用
+ *  更宽的 status≥400(404 已下架同样值得搜替代来源)。纯函数,导出供单测。 */
+export function isBlockedHttpCaptureError(err: unknown): boolean {
+  return (
+    err instanceof WebCaptureError &&
+    err.status !== null &&
+    (err.status === 403 || err.status >= 500)
+  );
 }
 
 // 桌面 UA(对齐 douyin-cdp 做法:桌面 UA 头 + 慢速导航节奏,尽量拿到公开页正常渲染)。
@@ -247,6 +262,7 @@ export async function captureUrl(
     if (status >= 400) {
       throw new WebCaptureError(
         `页面返回 HTTP ${status}:该链接不可访问(可能已下架或需要权限)`,
+        { status },
       );
     }
     const finalUrl = (resp ? resp.url() : "") || page.url();

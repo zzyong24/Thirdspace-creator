@@ -540,8 +540,11 @@ export async function readUrl(
     if (signal?.aborted) throw makeAbortError("网页读取");
     const status = resp ? resp.status() : 0;
     if (status >= 400) {
+      // [T-390] 带结构化 status:上层(persistence-client readWebUrl 端口)据此触发多路回退
+      // (搜索引擎找同内容替代来源),不解析 message 文本。
       throw new WebCaptureError(
         `页面返回 HTTP ${status}:该链接不可访问(可能已下架或需要权限)`,
+        { status },
       );
     }
     const finalUrl = (resp ? resp.url() : "") || page.url();

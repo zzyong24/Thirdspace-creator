@@ -125,3 +125,70 @@ describe("createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图�
     ).rejects.toBeInstanceOf(SearchExecutionError);
   });
 });
+
+// ── [T-390] 百度 SERP 解析 + 引擎感知选择(素材搜集韧性:web.read 被拒回退多引擎)────────
+
+const BAIDU_HTML = `<html><body><div id="content_left">
+  <div class="result c-container new-pmd" srcid="1599" id="1" mu="https://a.com/article-1">
+    <h3 class="c-title t t-tts"><a href="https://www.baidu.com/link?url=xyz" target="_blank">抖音<em>运营</em>指南</a></h3>
+    <div class="c-gap"><span class="content-right_8Zs40">讲抖音运营的方法与技巧,涨粉实操路径。</span></div>
+  </div>
+  <div class="result-op c-container" id="2">运营卡片(无 mu,应跳过)</div>
+  <div class="result c-container" id="3" mu="https://b.com/article-2">
+    <h3><a href="https://www.baidu.com/link?url=abc">短视频脚本模板</a></h3>
+  </div>
+</div></body></html>`;
+
+describe("[T-390] parseBaiduResults — 纯函数百度 SERP 解析", () => {
+  it("从 result 块的 mu 属性取真实 URL(href 是 baidu.com/link 跳转链,不用),标题/摘要 best-effort", async () => {
+    const { parseBaiduResults } = await import("./search-browser");
+    const results = parseBaiduResults(BAIDU_HTML);
+    expect(results).toHaveLength(2);
+    expect(results[0]!.url).toBe("https://a.com/article-1");
+    expect(results[0]!.title).toBe("抖音 运营 指南"); // <em> 标签剥离处空格归一
+    expect(results[0]!.snippet).toContain("涨粉实操");
+    expect(results[0]!.siteName).toBe("a.com");
+    expect(results[1]!.url).toBe("https://b.com/article-2");
+    expect(results[1]!.title).toBe("短视频脚本模板");
+  });
+
+  it("结构变了/无 mu → 诚实返 [](上层降级,不硬凑)", async () => {
+    const { parseBaiduResults } = await import("./search-browser");
+    expect(parseBaiduResults("<html>改版了</html>")).toEqual([]);
+    expect(parseBaiduResults(BING_HTML)).toEqual([]);
+  });
+});
+
+describe("[T-390] parseSerpResults — 按最终 host 选解析器", () => {
+  it("baidu host → 百度解析;其余 → Bing 解析", async () => {
+    const { parseSerpResults } = await import("./search-browser");
+    const fromBaidu = parseSerpResults("https://www.baidu.com/s?wd=x", BAIDU_HTML);
+    expect(fromBaidu[0]!.url).toBe("https://a.com/article-1");
+    const fromBing = parseSerpResults("https://www.bing.com/search?q=x", BING_HTML);
+    expect(fromBing[0]!.url).toBe("https://a.com/1");
+  });
+
+  it("主解析空结果时兜底试另一家(host 判断失误不归零)", async () => {
+    const { parseSerpResults } = await import("./search-browser");
+    // host 说是 bing,HTML 却是百度结构 → Bing 解析空 → 百度解析兜底。
+    const out = parseSerpResults("https://www.bing.com/search?q=x", BAIDU_HTML);
+    expect(out[0]!.url).toBe("https://a.com/article-1");
+  });
+});
+
+describe("[T-390] createBrowserScrapeAdapter — baseUrl 指到百度也能解析", () => {
+  it("百度 SERP(finalUrl baidu.com)→ 引擎感知解析出结果", async () => {
+    const { deps } = fakeDeps({
+      html: BAIDU_HTML,
+      finalUrl: "https://www.baidu.com/s?wd=x",
+    });
+    const adapter = createBrowserScrapeAdapter(deps);
+    const results = await adapter.search(
+      browserSpec("https://www.baidu.com/s?wd={q}"),
+      "抖音运营",
+      OPTS,
+    );
+    expect(results).toHaveLength(2);
+    expect(results[0]!.url).toBe("https://a.com/article-1");
+  });
+});
