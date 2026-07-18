@@ -201,7 +201,8 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
   <div class="hd an" style="animation-delay:.05s">
     <div class="tag">▸ HOW THE LOOP CLOSES · 闭环全景</div>
     <h1>一个想法怎么变成<span class="g">真的软件</span>——AI 为什么骗不过这套系统</h1>
-    <div class="credit">取百家之长 · DISTILLED FROM　<b>spec-kit</b>(SDD 规格驱动)· <b>superpowers</b>(判例法 gate / 反合理化)· <b>BMAD</b>(规模分级)· <b>metaswarm</b>(量规化评审)· <b>tdd-guard</b>(TDD 强制)· <b>conductor</b>(preflight)· <b>gsd</b>(缩水黑名单)—— 蒸馏其精华,不照搬</div>
+    <div class="credit" style="margin-top:6px">四个入口 · ENTRY　<b>新想法</b>(一句话起步) · <b>半成品</b>(PRD/设计稿/笔记导入对齐) · <b>已有项目</b>(stage-router 从最早未完成阶段续跑) · <b>老项目</b>(init --update 刷新引擎)—— 全部汇入同一条流水线</div>
+  <div class="credit">取百家之长 · DISTILLED FROM　<b>spec-kit</b>(SDD 规格驱动)· <b>superpowers</b>(判例法 gate / 反合理化)· <b>BMAD</b>(规模分级)· <b>metaswarm</b>(量规化评审)· <b>tdd-guard</b>(TDD 强制)· <b>conductor</b>(preflight)· <b>gsd</b>(缩水黑名单)—— 蒸馏其精华,不照搬</div>
   </div>
   <div class="legend an" style="animation-delay:.2s">
     <span class="lg"><i></i>证据流</span>
@@ -220,7 +221,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
   <!-- ====== 顶带:五阶段主管线 ====== -->
   <div class="chip an" style="left:120px;animation-delay:.3s">
     <span class="idx">STAGE 1 ▸</span><h3>规划<small>PLAN</small></h3>
-    <p>一份 SPEC · 🔍 跨模型审</p>
+    <p>SPEC+价值风险层 · 🔍 跨模型审</p>
   </div>
   <div class="chip an" style="left:430px;animation-delay:.42s">
     <span class="idx">STAGE 2 ▸</span><h3>契约<small>CONTRACT</small></h3>
@@ -228,7 +229,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
   </div>
   <div class="chip an" style="left:740px;animation-delay:.54s">
     <span class="idx">STAGE 3 ▸</span><h3>设计<small>DESIGN</small></h3>
-    <p>No API, no UI</p>
+    <p>No API no UI · 🎨 mock 人审</p>
   </div>
   <div class="chip hot an" style="left:1050px;animation-delay:.66s">
     <span class="idx">STAGE 4 ▸</span><h3>实现<small>BUILD</small></h3>
@@ -236,7 +237,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
   </div>
   <div class="chip an" style="left:1360px;animation-delay:.78s">
     <span class="idx">STAGE 5 ▸</span><h3>发布<small>SHIP</small></h3>
-    <p>真数据走查 · 销账</p>
+    <p>上线前审计 · 真数据走查</p>
   </div>
   <div class="gate an" style="left:359px;top:143px;animation-delay:.9s"><b>①</b></div>
   <div class="gate an" style="left:669px;top:143px;animation-delay:.98s"><b>②</b></div>
@@ -300,6 +301,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
       <li><span class="b">①</span><div>产品确认<small>这是不是你要的</small></div></li>
       <li><span class="b">②</span><div>范围确认<small>要做的全部,就这些</small></div></li>
       <li><span class="b">③</span><div>发布放行<small>证据齐了才有资格问你</small></div></li>
+      <li><span class="b">🎨</span><div>UI 拍板<small>风格+总览图过审才逐屏</small></div></li>
       <li><span class="b">✋</span><div>HOLD 仲裁<small>高危/分歧 → 升级给人</small></div></li>
     </ul>
     <div class="note">▸ 其余时间,不打扰。</div>
@@ -317,7 +319,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
   </div>
   <div class="node blue an" style="left:860px;top:820px;width:280px;animation-delay:3.4s">
     <span class="idx">V3 ▸ 固化</span><h3>教训变守卫脚本</h3>
-    <p>boundary-scan · backlog-health · knowledge-drift</p>
+    <p>boundary-scan · backlog-health · docs-health · knowledge-drift</p>
   </div>
   <div class="node blue an" style="left:1230px;top:820px;width:250px;animation-delay:3.5s">
     <span class="idx">V4 ▸ 常驻</span><h3>reconcile 每轮重跑</h3>
@@ -381,7 +383,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;poin
   <span class="al b" style="left:150px;top:660px;animation-delay:3.75s">根因任务进队列</span>
   <span class="al b" style="left:1290px;top:560px;animation-delay:3.85s">坑变成门 · 防复发</span>
 
-  <div class="foot an" style="animation-delay:4s">状态·验证·恢复 全在<b>模型之外</b> —— AI 可以遗忘、跑偏、说谎,流程依然成立</div>
+  <div class="foot an" style="animation-delay:4s">状态·验证·恢复 全在<b>模型之外</b> —— AI 可以遗忘、跑偏、说谎,流程依然成立 · 对齐 skill <b>v3.6.18</b>(2026-07-16)</div>
 
 </div></div>
 
@@ -403,26 +405,26 @@ function fit(){
 addEventListener('resize',fit);fit();
 /* ===== 讲解内容 + 分步揭示(可当提词器)===== */
 const EXPLAIN={
-  stage1:{k:'STAGE 1 · PLAN',t:'规划:先想清楚,再动手',p:'你就说一句话,比如"我想做个记账工具"。它不急着写代码,先帮你把这事想透:给谁用、解决什么、有哪些功能、数据长什么样,写成一份完整的规格书。这份规格书就是整个项目的宪法,后面每个决定都得对着它。',h:'写完还不算数,它会换一个别家的 AI 来挑毛病,挑不过关,不许往下走。'},
+  stage1:{k:'STAGE 1 · PLAN',t:'规划:先想清楚,再动手',p:'你就说一句话,比如"我想做个记账工具"。它不急着写代码,先帮你把这事想透:给谁用、解决什么、有哪些功能、数据长什么样,写成一份完整的规格书。这份规格书就是整个项目的宪法,后面每个决定都得对着它。',h:'SPEC 里现在还有一章「价值与风险」:先写发布日新闻稿逼真价值现形,价值/可用性/商业/依赖各风险逐条给证据,致命又便宜可验的假设先验掉再签核。写完还要换别家 AI(GPT-5.6 Sol)挑毛病,挑不过关不许往下走。'},
   stage2:{k:'STAGE 2 · CONTRACT',t:'契约:先证明数据接得上,才准画界面',p:'这一步最较真。大多数人是先画界面,好看了再想数据怎么接。这套反过来:每条功能,先证明数据从哪来、存哪、怎么读回来。证不出来的功能,根本不许画界面。',h:'一条一条判:能做、是块硬骨头、还是干脆砍掉,不许留空白。',pit:'我踩过的坑:界面做得漂亮,点进去一整排按钮全是死的。就是因为先画后接。'},
-  stage3:{k:'STAGE 3 · DESIGN',t:'设计:界面不许承诺数据给不了的东西',p:'到这儿才画界面。规矩就一条:界面上每个能点的按钮,背后都得连着上一步证过的真功能。连不上的,要么去改契约,要么老实标上"规划中",要么就别画。',h:'每个页面还得把四种状态想全:加载中、没数据、出错、真数据。省一个都不行。'},
+  stage3:{k:'STAGE 3 · DESIGN',t:'设计:先看图拍板,界面不许开空头支票',p:'到这儿才做视觉。先按你的品牌设计语言(白底紫魂)出一张全产品总览图给你定调——你没点头,一张细化图都不许往下走;过审后才逐屏细化、还原成可编辑设计稿。老规矩不变:每个能点的按钮背后都得连着契约里的真功能。',h:'图由 gpt-image-2 生成、Stitch 还原,提示词从规格机器装配不靠文笔;AI 不代你拍审美——审美 tokens 必须能追溯到你的选择记录。每页四态(加载/空/错/真)一个不许省。',pit:'踩过的坑:AI 自作主张定了个暗黑风写进规范,忠实渲染到底,我看到图才发现方向全错。所以现在:先看图,后定规范。'},
   stage4:{k:'STAGE 4 · BUILD',t:'实现:一次做透一个,数据从第一天就是真的',p:'开始真写代码。一次只做透一个功能,从数据到界面一条龙打通,做完一个再拿下一个。',h:'干活的不是一个 AI,是一队,各领一小块同时开工。而且测试先写、先让它红,再写到绿。'},
-  stage5:{k:'STAGE 5 · SHIP',t:'发布:当个真用户,亲手走一遍',p:'最后不是看报告,是拿真数据、当一个真用户,把整个流程亲手走通。走通了、假数据清干净了、文档和代码对得上,才准发。',h:'专门防"每个零件都对、装起来是坏的"。',pit:'我吃过这亏:几十个任务显示全绿,合起来一跑,394 个 bug。'},
+  stage5:{k:'STAGE 5 · SHIP',t:'发布:当个真用户,亲手走一遍',p:'最后不是看报告,是拿真数据、当一个真用户,把整个流程亲手走通。走通了、假数据清干净了、文档和代码对得上,才准发。',h:'发布前还有一道独立工程审计:安全、策略言行一致、数据完整、构建发布链、门禁健康、可观测性,六个维度拿到 GO 才有资格问你能不能发;发布证据必须在干净环境(CI)可重复,"本地跑过"不算。',pit:'我吃过这亏:几十个任务显示全绿,合起来一跑,394 个 bug。'},
   conf1:{k:'人类时刻 ①',t:'第一次确认:这是你要的产品吗',p:'整条流水线只在几个地方需要你出场,这是第一个。AI 把产品规格写好了,给你看一眼:这是不是你想要的?你点头,才往下走。'},
   conf2:{k:'人类时刻 ②',t:'第二次确认:范围就这些,不多不少',p:'到这儿要做的东西已经全钉死了,给你一个"范围信封":就这些。你确认之后,它后面就能放开手自己干,不用一直问你。'},
   conf3:{k:'人类时刻 ③',t:'第三次确认:能发吗',p:'最后一次。所有证据都齐了,它才有资格来问你:能发吗?你说发,才发。之前它连问都没资格问。'},
   rc:{k:'成品 · RELEASE',t:'交付:一个带完整证据链的版本',p:'这就是最后交出来的东西。不是"应该能用",是每一步都验过、每个功能都有证据的可发布版本。'},
   manager:{k:'总承包 · MANAGER',t:'主 Agent:工地的包工头',p:'这是整个工地的总指挥。它不亲自砌墙,它干三件事:把活派下去、把干完的合到一起、盯着质量。',h:'关键是,只有它一个人能把代码合进主线。所以再多 AI 同时干,也乱不了。'},
-  A:{k:'引擎 · A',t:'任务看板:唯一的一张活清单',p:'所有要干的活都在这张清单上,这是唯一的真相。你随口提个需求,它立刻记上去,绝不让需求消失在聊天记录里。',h:'干活永远从清单最上面往下拿,不是你最后一句话说什么就干什么。'},
+  A:{k:'引擎 · A',t:'任务看板:唯一的一张活清单',p:'所有要干的活都在这张清单上,这是唯一的真相。你随口提个需求,它立刻记上去,绝不让需求消失在聊天记录里。',h:'干活永远从清单最上面往下拿,不是你最后一句话说什么就干什么。台账自己也有体检:膨胀过线会被拦下先瘦身,完成的活自动归档,状态列不许塞小作文。'},
   B:{k:'引擎 · B(机器门)',t:'审核闸:没许可证不准动工',p:'想开工?先过这道闸。这个功能没通过审核,门直接把你拦在外面,想都别想。',h:'它是个机器,不是 AI。AI 再想抄近道,机器不认。'},
   C:{k:'引擎 · C',t:'任务包编译:只给它这次要用的一小块',p:'派活之前,先给这个 AI 编一份刚好够用的工单:这次干什么、能改哪些文件、做完拿什么验收。',h:'不是把整个仓库丢给它。信息太多它会淹死、干着干着就糊涂。上下文只给这一小块。'},
-  D:{k:'引擎 · D(一队 AI)',t:'Worker 编队:一群 AI 同时在干',p:'真正写代码的地方。干活的不是一个 AI,是一队,每个领一个工单,同时开工。',h:'每个在自己隔离的工作区里干,谁也别踩谁的文件。卡住了试两次不行就停下来喊人,绝不原地打转烧钱。'},
+  D:{k:'引擎 · D(一队 AI)',t:'Worker 编队:一群 AI 同时在干',p:'真正写代码的地方。干活的不是一个 AI,是一队,每个领一个工单,同时开工。',h:'开波前先规划功能线:算出每队要改哪些文件,互不相交才并行,共享的活提前先干(hoist)。每队在隔离工作区干,合并像排队过安检——一次合一队,全量验证绿了才轮下一队。卡住试两次就停下来喊人,绝不原地打转烧钱。'},
   E:{k:'引擎 · E(铁面机器)',t:'硬检查:机器说不合格就是不合格',p:'活干完,机器先查:类型对不对、测试过没过、代码有没有放错地方。',h:'任何一项红了,一票否决,打回重做。这里机器说了算,AI 说"我觉得没问题"没用。'},
-  F:{k:'引擎 · F(两个 AI 互审)',t:'双评审:两个不同模型,互相挑刺',p:'机器查完,再上两个 AI 审查员。两个不同的模型,互相不通气,其中一个还专门假设"这活是坏的"来找茬。',h:'它俩只有看的权限,只能说过或不过,碰不了任何东西。一个模型的盲区,另一个能补上。'},
+  F:{k:'引擎 · F(两个 AI 互审)',t:'双评审:两个不同模型,互相挑刺',p:'机器查完,再上两个 AI 审查员。两个不同家族的模型(GPT-5.6 Sol 打头阵),互相不通气,其中一个专门假设"这活是坏的"来找茬;送审时不带作者结论,防止先入为主。',h:'它俩只有看的权限,只能说过或不过,碰不了任何东西。一个模型的盲区,另一个能补上。'},
   G:{k:'引擎 · G(机器盖章)',t:'判决器:两个都点头才算过',p:'收齐审查意见,机器来判。两个审查员都说"过",才盖章通过。',h:'只要有一个没吭声,哪怕它是去上厕所忘了回话,一律挂起。沉默,永远不等于通过。'},
-  H:{k:'引擎 · H',t:'证据落账:没发票不给报销',p:'通过的活,必须附上证据才算完成:测试跑过的记录、真数据的截图、提交号。',h:'没有证据的"我做完了",系统直接拒收。全记进一本谁也改不了的流水账,随时能查。'},
+  H:{k:'引擎 · H',t:'证据落账:没发票不给报销',p:'通过的活,必须附上证据才算完成:测试跑过的记录、真数据的截图、提交号。',h:'没有证据的"我做完了",系统直接拒收。收工还要核对四端一致:代码、文档、项目规则、记忆——行为改了却留着旧文档,就是给下个会话埋雷。全记进一本只增不改的流水账,随时能查。'},
   hold:{k:'拦截 · HOLD',t:'挂起:宁可误停,不可放行',p:'只要没拿到两个"通过",活就卡在这,红章一盖,绝不放行。宁可错拦一个,也不放一个没验过的东西出去。'},
-  human:{k:'人类时刻',t:'你只管这几件事,其余不打扰',p:'整条流水线,只在四个地方需要你:确认产品、确认范围、放行发布,还有遇到高风险的活它会主动升级上来问你。剩下的时间,它自己扛,不烦你。'},
+  human:{k:'人类时刻',t:'你只管这几件事,其余不打扰',p:'整条流水线,只在五个地方需要你:确认产品、确认范围、UI 风格与总览图拍板、放行发布,还有高风险升级仲裁。选图这种事分钟级,但没有你点头,链条就停在那——AI 不代你做的,就真的不做。'},
   V1:{k:'进化 · V1',t:'发现:让问题浮出水面',p:'每次踩了坑、或发现哪不对劲,先让它冒出来。发布走查、每干十个任务做一次整体体检,专门抓这些。'},
   V2:{k:'进化 · V2',t:'归因:记根子,不记表面',p:'把这个坑记下来,记的是根子上的原因,不是"这次碰巧错了"这种表面现象。'},
   V3:{k:'进化 · V3(精髓)',t:'固化:把坑变成一道自动的门',p:'这一步是精髓。它不是让我"下次小心",而是把这个坑变成一个自动执行的守卫脚本,装回流水线里。',h:'学费只交一次。以后同样的坑再想犯,系统直接报错拦住。'},
@@ -439,14 +441,14 @@ function keyOf(el){
 }
 /* 学术名词 + 借鉴来源(悬浮时以绿标显示)*/
 const TERM={
-  stage1:'SDD 规格驱动开发 · 借鉴 spec-kit', stage2:'Contract-First 契约优先',
-  stage3:'No API, no UI · 绑定完整性', stage4:'TDD 测试驱动 · 垂直切片 · 借鉴 tdd-guard',
-  stage5:'集成验收 · 产品完整性审计', conf1:'Human-in-the-loop 关键确认',
+  stage1:'SDD + 价值风险层(四大风险/PR-FAQ/RAT)', stage2:'Contract-First 契约优先',
+  stage3:'视觉收敛链 图→tokens→图 · 人审硬门', stage4:'TDD 测试驱动 · 垂直切片 · 借鉴 tdd-guard',
+  stage5:'Launch Readiness(PRR/OWASP 借形)+ CI 可重复', conf1:'Human-in-the-loop 关键确认',
   conf2:'Scope Envelope 范围信封', conf3:'Release Gate 发布门',
   rc:'Release Candidate · 证据链交付', manager:'Manager 模式 · Orchestrator · 借鉴 OpenAI Agents',
   A:'单一真相源 SSOT · 需求即任务', B:'确定性 Gate · hook 强制 · 借鉴 tdd-guard',
-  C:'上下文工程 · 注意力预算(Anthropic)', D:'并行子代理 · Write-set 隔离 · Worktree',
-  E:'判例法 Gate · 反合理化 · 借鉴 superpowers', F:'对抗式异构评审 · Rubric 量规 · 借鉴 metaswarm',
+  C:'上下文工程 · 注意力预算(Anthropic)', D:'Lane 规划 · write_set 连通分量 · 单机 Merge Queue',
+  E:'判例法 Gate · 反合理化 · 借鉴 superpowers', F:'对抗式异构评审 · GPT-5.6 Sol 跨家族 · 防锚定',
   G:'Fail-Closed · 双人同意 Two-man rule', H:'事件溯源 Event Sourcing · Append-only',
   hold:'Fail-Closed · 拦截优先', human:'Human-in-the-loop · Blast-radius 分级 · 借鉴 BMAD',
   V1:'产品完整性审计 · Journey Walk', V2:'根因归因 Root-Cause',
