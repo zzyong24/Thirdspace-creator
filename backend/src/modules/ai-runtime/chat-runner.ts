@@ -22,7 +22,10 @@ import {
   assembleChatSystem,
   assembleSelectionContext,
   wrapUserData,
+  selectRecentChatTasks,
+  formatRecentTasksBlock,
   type ChatContext,
+  type RecentTaskTruth,
 } from "./chat-context";
 import {
   buildChatTools,
@@ -186,6 +189,13 @@ export interface AssembleChatDeps extends ContextDeps {
         alternates: Array<{ title: string; url: string; snippet: string }>;
       }
   >;
+  /**
+   * [T-386] 后台任务状态真值端口 —— 每轮对话开始前查该账号近期任务的**库内真实状态**
+   * (composition root 绑 aiService.listTasks 投影),装配层渲成「后台任务状态真值」system 块。
+   * 治「整稿卡已显✓写入稿面,编导仍说还在后台跑」的记忆断言幻觉。可选:未装配/读失败 →
+   * 不注块(best-effort 增强,绝不阻断装配),honesty 第 16 条仍兜底「不确定就看卡片」。
+   */
+  listRecentTasksPort?: (ctx: RequestContext) => Promise<RecentTaskTruth[]>;
   /**
    * [T-253] local.read 端口 —— 读用户本机文件(任意路径 + 运行时逐次授权)。composition root
    * (persistence-client)绑:路径归一/realpath + 敏感 denylist 硬门 + 授权表(内存一次授权 +
@@ -642,6 +652,21 @@ export async function buildChatAssembly(
     }
   }
 
+  // [T-386] 后台任务状态真值(best-effort):每轮开始前查该账号近期 chat 派发类任务的库内
+  // 真实状态,渲成 system 块 —— 让模型每轮都拿到「现在」的任务状态,而不是凭上轮记忆断言。
+  // 端口未装配/读失败 → 空块不注(增强不阻断),honesty 第 16 条兜底。
+  let recentTasks: RecentTaskTruth[] = [];
+  if (deps.listRecentTasksPort) {
+    try {
+      recentTasks = selectRecentChatTasks(
+        await deps.listRecentTasksPort(ctx),
+        Date.now(),
+      );
+    } catch {
+      recentTasks = [];
+    }
+  }
+
   // 工具层(SPEC §3.2 第 1+2 层 + [T-240③] 场景真收窄):
   //   1. 场景白名单:surface 声明允许工具集(getSurfaceToolScope);未知 surface(global/兜底)
   //      → 回落全量(向后兼容)。project surface 阶段感知:明确未发布 → 砍 review.analyze。
@@ -750,6 +775,9 @@ export async function buildChatAssembly(
     "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如立论点树、生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事——**绝不拿一个用途不同的工具(比如用『补全选题卡 topic.enrich』冒充『立论点树』)硬凑,更不把它的产物说成用户要的东西**。宁可诚实说没有,也不误接工具骗过去。",
     // [T-380] 对话减摩擦:能力边界当场诚实 + 顺手的事直接做,不摆选项清单、不堆免责预防针。
     "15. **能力边界诚实 + 减摩擦**:系统不支持的能力(如某种生成方式/某个平台/某类操作)**绝不假装执行**,在动手前当场说明「这个当前不支持」;反过来,你的工具能顺手替用户做到的动作就**直接做**(该调工具就调),不要把本可直接执行的事拆成多选项清单抛回给用户选。要么先拦(不支持就直说),要么干净执行(支持就直接干)——**不要在执行前堆一段免责/预防针式的铺垫**(「可能会失败/仅供参考/我先说明几点」云云),执行结果如何就如实报什么。",
+    // [T-386] 治实录病例:整稿卡已显「✓写入稿面」,编导下轮仍说「整稿还在后台跑,先审 brief
+    // 草案」—— 凭对话记忆断言任务状态 + 凭记忆叙述稿面内容(其实已被采纳的新稿覆盖)。
+    "16. **后台任务状态绝不凭记忆断言**:整稿/发布物料/论点树/封面/审核/逐字稿这类后台任务的状态,**只信系统注入的【后台任务状态真值】块和界面卡片**——你上一轮说「在后台跑」不代表现在还在跑,任务状态在你回答之间随时变化。真值块显示已完成/已写入的任务,绝不再说「还在跑/还没好/先等等」;不确定时直说「以卡片显示的状态为准」,绝不猜。同理,**要评价/审核/引用稿面当前内容时,先调 context.artifact.text 读当前版本再叙述**——你记忆里的「草案」可能已被用户采纳的新稿覆盖,凭记忆叙述旧版本 = 对着不存在的东西发言。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
@@ -818,6 +846,8 @@ export async function buildChatAssembly(
   // 创作者自己对本项目的钦定决策,须以「必须遵守」的指令力生效,而非当外部数据降权)。account 态
   // (projectId=null)→ context.projectBriefHard 恒空 → filter(Boolean) 略过,不注空壳。
   const briefHardBlock = context.projectBriefHard || "";
+  // [T-386] 后台任务状态真值块(recentTasks 上方已 best-effort 读取;空列表 → 空串不注)。
+  const taskTruthBlock = formatRecentTasksBlock(recentTasks, Date.now());
   const system = [
     baseSystem,
     honestyBlock,
@@ -826,6 +856,7 @@ export async function buildChatAssembly(
     currentProjectBlock,
     briefHardBlock,
     stageBlock,
+    taskTruthBlock,
     reviewSubjectBlock,
     selectionBlock,
   ]

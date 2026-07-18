@@ -180,3 +180,117 @@ export function assembleChatSystem(
 
   return blocks.join("\n\n");
 }
+
+// ── [T-386] 后台任务状态真值块(纯函数)────────────────────────────────────────────────
+// 治实录病例:整稿卡已显「✓写入稿面」,编导下轮仍说「整稿还在后台跑,先审 brief 草案」——
+// 模型凭对话记忆断言后台任务状态,而任务状态在它上轮回答后早已变化。修法(装配层轻量):
+// 每轮把该账号**近期 chat 派发类任务**的真实状态(aiService.listTasks 真值)渲成 system 块
+// 注入,配 honesty 第 16 条「任务状态绝不凭记忆断言」。本层是纯函数(筛选/格式化),
+// 真值读取由 composition root 经 listRecentTasksPort 注入。
+
+/** 一条任务状态真值(AITaskResource 的最小投影;composition root 从 aiService.listTasks 映射)。 */
+export interface RecentTaskTruth {
+  id: string;
+  taskType: string;
+  status: string;
+  requestedAt: string | Date;
+  completedAt?: string | Date | null;
+  errorMessage?: string | null;
+}
+
+/** chat 会派发/引导的后台任务类型(只注这些,滤掉定时采集等系统任务噪声)。 */
+export const CHAT_TASK_TRUTH_TYPES: readonly string[] = [
+  "script.draft",
+  "publish.platform_adapt",
+  "planning.thesis",
+  "cover.generate",
+  "script.review",
+  "asset.generate",
+  "transcribe.douyin",
+];
+
+/** 真值块行数上限 + 时间窗(只注 24h 内的近期任务,陈年任务与本轮对话无关)。 */
+export const CHAT_TASK_TRUTH_MAX_ROWS = 8;
+export const CHAT_TASK_TRUTH_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+const TASK_TYPE_LABELS: Record<string, string> = {
+  "script.draft": "整稿生成",
+  "publish.platform_adapt": "发布物料",
+  "planning.thesis": "论点树",
+  "cover.generate": "封面生成",
+  "script.review": "脚本审核",
+  "asset.generate": "素材生成",
+  "transcribe.douyin": "逐字稿抓取",
+};
+
+// 状态 → 人话(带行动语义:awaiting_confirmation 是「等用户采纳」,不是「还在跑」)。
+function taskStatusPhrase(t: RecentTaskTruth): string {
+  switch (t.status) {
+    case "queued":
+      return "排队中(还没开始跑)";
+    case "running":
+      return "后台运行中";
+    case "awaiting_confirmation":
+      return "候选已生成,等用户在卡片上点「采纳」(还没写入)";
+    case "succeeded":
+      return "已完成(采纳/写入类任务 = 结果已生效)";
+    case "failed": {
+      const why = (t.errorMessage ?? "").trim();
+      return why ? `已失败:${why.slice(0, 80)}` : "已失败";
+    }
+    case "cancelled":
+      return "已取消";
+    default:
+      return t.status; // 未知状态原样透出(诚实,不猜语义)
+  }
+}
+
+function taskAgePhrase(at: string | Date | null | undefined, nowMs: number): string {
+  if (!at) return "";
+  const ts = new Date(at).getTime();
+  if (!Number.isFinite(ts)) return "";
+  const mins = Math.max(0, Math.round((nowMs - ts) / 60_000));
+  if (mins < 1) return "刚刚";
+  if (mins < 60) return `${mins} 分钟前`;
+  const hours = Math.round(mins / 60);
+  return `${hours} 小时前`;
+}
+
+/** 从 listTasks 原始行筛「chat 相关 + 24h 内」的近期任务,取最新 CHAT_TASK_TRUTH_MAX_ROWS 条
+ *  (入参已按 requestedAt desc 排序 —— aiService.listTasks 的既有排序)。 */
+export function selectRecentChatTasks(
+  rows: RecentTaskTruth[],
+  nowMs: number,
+): RecentTaskTruth[] {
+  return rows
+    .filter((r) => CHAT_TASK_TRUTH_TYPES.includes(r.taskType))
+    .filter((r) => {
+      const ts = new Date(r.requestedAt).getTime();
+      return Number.isFinite(ts) && nowMs - ts <= CHAT_TASK_TRUTH_WINDOW_MS;
+    })
+    .slice(0, CHAT_TASK_TRUTH_MAX_ROWS);
+}
+
+/**
+ * 渲「后台任务状态真值」system 块:每任务一行(类型人话 + 状态人话 + 发起/完成时间),
+ * 尾接硬指令(以本块+卡片为准,绝不凭记忆断言)。空列表 → 空串(不注空壳噪声)。
+ */
+export function formatRecentTasksBlock(
+  tasks: RecentTaskTruth[],
+  nowMs: number,
+): string {
+  if (!tasks.length) return "";
+  const lines = tasks.map((t) => {
+    const label = TASK_TYPE_LABELS[t.taskType] ?? t.taskType;
+    const when =
+      t.status === "succeeded" || t.status === "failed" || t.status === "cancelled"
+        ? taskAgePhrase(t.completedAt ?? t.requestedAt, nowMs)
+        : taskAgePhrase(t.requestedAt, nowMs);
+    return `- ${label}(${t.taskType},id=${t.id}):${taskStatusPhrase(t)}${when ? `(${when})` : ""}`;
+  });
+  return [
+    "【后台任务状态真值 —— 系统本轮刚查的库内真实状态,以此为准】",
+    ...lines,
+    "任务状态**只信本块与界面卡片**,绝不凭你上一轮的记忆断言(你说「在后台跑」之后它很可能已经完成/失败了)。本块显示已完成的任务,绝不再说「还在跑/还没好/先等等」;awaiting_confirmation 表示候选已出、等用户在卡片上采纳,引导 TA 看卡片操作即可。本块没列的任务不确定时,直说「以卡片显示的状态为准」。",
+  ].join("\n");
+}

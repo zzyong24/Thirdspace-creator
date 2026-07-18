@@ -1826,3 +1826,69 @@ describe("chat-runner T-382 — 当前选中号注入", () => {
     expect(a.system).not.toContain("【当前选中的抖音号】");
   });
 });
+
+// ── [T-386] 后台任务状态真值注入 + 诚实第 16 条(治「整稿已写入稿面仍说还在后台跑」)────────
+
+describe("[T-386] buildChatAssembly — 后台任务状态真值块", () => {
+  const nowIso = () => new Date().toISOString();
+
+  it("listRecentTasksPort 有近期任务 → system 注真值块(id+状态人话+硬指令)", async () => {
+    const { deps } = makeDeps({
+      listRecentTasksPort: async () => [
+        {
+          id: "task-1",
+          taskType: "script.draft",
+          status: "succeeded",
+          requestedAt: nowIso(),
+          completedAt: nowIso(),
+        },
+        {
+          id: "task-2",
+          taskType: "publish.platform_adapt",
+          status: "awaiting_confirmation",
+          requestedAt: nowIso(),
+        },
+      ],
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("系统本轮刚查的库内真实状态");
+    expect(a.system).toContain("task-1");
+    expect(a.system).toContain("整稿生成");
+    expect(a.system).toContain("已完成");
+    expect(a.system).toContain("等用户在卡片上点「采纳」");
+    expect(a.system).toContain("绝不凭你上一轮的记忆断言");
+  });
+
+  it("端口抛错 / 未装配 → 不注块、装配不崩(best-effort);诚实第 16 条恒在", async () => {
+    const throwing = makeDeps({
+      listRecentTasksPort: async () => {
+        throw new Error("db down");
+      },
+    });
+    const a1 = await buildChatAssembly(ctx, { surface: "topics" }, throwing.deps);
+    expect(a1.system).not.toContain("系统本轮刚查的库内真实状态");
+
+    const { deps } = makeDeps(); // 未装配端口
+    const a2 = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a2.system).not.toContain("系统本轮刚查的库内真实状态");
+    // 第 16 条全局条款(不依赖端口):不凭记忆断言 + 叙述稿面前先读当前版本。
+    expect(a2.system).toContain("后台任务状态绝不凭记忆断言");
+    expect(a2.system).toContain("context.artifact.text 读当前版本");
+  });
+
+  it("非 chat 派发类任务(定时采集等)被滤掉,不喂噪声", async () => {
+    const { deps } = makeDeps({
+      listRecentTasksPort: async () => [
+        {
+          id: "task-sys",
+          taskType: "scheduled.self.metrics",
+          status: "running",
+          requestedAt: nowIso(),
+        },
+      ],
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).not.toContain("task-sys");
+    expect(a.system).not.toContain("系统本轮刚查的库内真实状态");
+  });
+});

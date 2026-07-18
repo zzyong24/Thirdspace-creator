@@ -7,6 +7,9 @@ import {
   wrapUserData,
   USER_DATA_GUARD,
   DEFAULT_CHAT_SKILL,
+  selectRecentChatTasks,
+  formatRecentTasksBlock,
+  CHAT_TASK_TRUTH_MAX_ROWS,
 } from "./chat-context";
 
 // ChatContext 三层注入的纯装配单测(SPEC §3.2 / §7「ChatContext 三层注入选对 skill」)。
@@ -222,5 +225,120 @@ describe("[T-134 / P4①] <user_data> prompt-injection 硬边界", () => {
       label: "某选题标题",
     });
     expect(block).toContain("标题:<user_data>\n《某选题标题》\n</user_data>");
+  });
+});
+
+// ── [T-386] 后台任务状态真值(纯函数:筛选 + 格式化)────────────────────────────────
+
+describe("[T-386] selectRecentChatTasks — 类型白名单 + 24h 窗 + 条数上限", () => {
+  const NOW = 1_700_000_000_000;
+  const at = (agoMs: number) => new Date(NOW - agoMs).toISOString();
+  const t = (over: Record<string, unknown>) => ({
+    id: "t-1",
+    taskType: "script.draft",
+    status: "running",
+    requestedAt: at(60_000),
+    ...over,
+  });
+
+  it("只留 chat 派发类任务;定时采集/未知类型滤掉", () => {
+    const rows = [
+      t({ id: "a", taskType: "script.draft" }),
+      t({ id: "b", taskType: "scheduled.self.metrics" }),
+      t({ id: "c", taskType: "benchmark.collect" }),
+      t({ id: "d", taskType: "transcribe.douyin" }),
+    ];
+    const out = selectRecentChatTasks(rows as never, NOW);
+    expect(out.map((x: { id: string }) => x.id)).toEqual(["a", "d"]);
+  });
+
+  it("超 24h 的陈年任务滤掉;非法时间滤掉", () => {
+    const rows = [
+      t({ id: "fresh", requestedAt: at(60_000) }),
+      t({ id: "stale", requestedAt: at(25 * 60 * 60 * 1000) }),
+      t({ id: "bad", requestedAt: "not-a-date" }),
+    ];
+    const out = selectRecentChatTasks(rows as never, NOW);
+    expect(out.map((x: { id: string }) => x.id)).toEqual(["fresh"]);
+  });
+
+  it("最多取前 8 条(入参已 newest-first)", () => {
+    const rows = Array.from({ length: 12 }, (_, i) => t({ id: `t-${i}` }));
+    const out = selectRecentChatTasks(rows as never, NOW);
+    expect(out).toHaveLength(CHAT_TASK_TRUTH_MAX_ROWS);
+    expect(out[0]!.id).toBe("t-0");
+  });
+});
+
+describe("[T-386] formatRecentTasksBlock — 状态人话 + 硬指令", () => {
+  const NOW = 1_700_000_000_000;
+  const at = (agoMs: number) => new Date(NOW - agoMs).toISOString();
+
+  it("空列表 → 空串(不注空壳)", () => {
+    expect(formatRecentTasksBlock([], NOW)).toBe("");
+  });
+
+  it("逐状态人话:succeeded=已完成 / awaiting_confirmation=等采纳还没写入 / running / failed 带原因截断", () => {
+    const block = formatRecentTasksBlock(
+      [
+        {
+          id: "t-ok",
+          taskType: "script.draft",
+          status: "succeeded",
+          requestedAt: at(10 * 60_000),
+          completedAt: at(5 * 60_000),
+        },
+        {
+          id: "t-wait",
+          taskType: "planning.thesis",
+          status: "awaiting_confirmation",
+          requestedAt: at(3 * 60_000),
+        },
+        {
+          id: "t-run",
+          taskType: "cover.generate",
+          status: "running",
+          requestedAt: at(60_000),
+        },
+        {
+          id: "t-bad",
+          taskType: "transcribe.douyin",
+          status: "failed",
+          requestedAt: at(2 * 60_000),
+          completedAt: at(60_000),
+          errorMessage: "x".repeat(200),
+        },
+      ],
+      NOW,
+    );
+    expect(block).toContain("【后台任务状态真值");
+    expect(block).toContain("整稿生成");
+    expect(block).toContain("已完成");
+    expect(block).toContain("等用户在卡片上点「采纳」(还没写入)");
+    expect(block).toContain("后台运行中");
+    expect(block).toContain("已失败:");
+    // errorMessage 截 80 字(不整段灌)。
+    expect(block).not.toContain("x".repeat(81));
+    expect(block).toContain("x".repeat(80));
+    // 硬指令:只信本块与卡片,完成的不再说还在跑。
+    expect(block).toContain("绝不凭你上一轮的记忆断言");
+    expect(block).toContain("绝不再说「还在跑/还没好/先等等」");
+    // 时间人话(5 分钟前完成)。
+    expect(block).toContain("5 分钟前");
+  });
+
+  it("未知状态原样透出(诚实,不猜语义)", () => {
+    const block = formatRecentTasksBlock(
+      [
+        {
+          id: "t-x",
+          taskType: "script.draft",
+          status: "weird_status",
+          requestedAt: at(60_000),
+        },
+      ],
+      NOW,
+    );
+    expect(block).toContain("weird_status");
   });
 });

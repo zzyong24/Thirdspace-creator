@@ -1255,6 +1255,18 @@ export interface ChatRuntime {
         alternates: Array<{ title: string; url: string; snippet: string }>;
       }
   >;
+  // [T-386] 后台任务状态真值端口 —— 每轮对话前查该账号近期任务的库内真实状态(aiService.listTasks
+  //   最小投影),装配层渲「后台任务状态真值」块,治「凭记忆断言任务还在跑」的幻觉。
+  listRecentTasks: (ctx: RequestContext) => Promise<
+    Array<{
+      id: string;
+      taskType: string;
+      status: string;
+      requestedAt: string | Date;
+      completedAt?: string | Date | null;
+      errorMessage?: string | null;
+    }>
+  >;
   // [T-253] local.read 端口 —— 读本机文件(任意路径 + 运行时逐次授权)。端口内:路径归一/realpath
   // 穿越防护 → 敏感 denylist 硬拒(无论授权与否)→ 授权表查询(未授权返 needApproval 渲确认卡)→
   // 大小上限 1MB + 二进制拒读 → 文本全文/目录清单。IO 失败抛错(工具 execute 转 error)。
@@ -9410,6 +9422,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         fullText: read.text,
         fromCache: false,
       };
+    },
+    // [T-386] 后台任务状态真值端口 —— aiService.listTasks(strict 按当前号)最新 30 条最小投影;
+    // 类型筛选/时间窗/格式化在 chat-runner 装配层纯函数做(selectRecentChatTasks)。读失败上抛
+    // 由 runner catch 成空(best-effort 增强不阻断对话)。
+    listRecentTasks: async (ctx: RequestContext) => {
+      const { rows } = await aiService.listTasks(ctx, { limit: 30, offset: 0 });
+      return rows.map((r) => ({
+        id: r.id,
+        taskType: r.taskType,
+        status: r.status,
+        requestedAt: r.requestedAt,
+        completedAt: r.completedAt ?? null,
+        errorMessage: r.errorMessage ?? null,
+      }));
     },
     // [T-253] local.read 端口 —— 编导读本机文件的全链:归一/realpath 穿越防护 → 敏感 denylist
     // 硬拒(授权之上,无论授权与否)→ 授权表(未授权 → needApproval 渲确认卡;授权经
