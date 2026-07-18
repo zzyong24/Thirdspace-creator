@@ -73,8 +73,8 @@ const WRAP_BLOCK_LEN: usize = 4 + 32 + 12 + 48;
 ///
 /// **全为空 / 全无效 → [`init_sidecar_logger`] 返回 `None`,全降级为不写日志**(诚实,不假装加密)。
 const DEV_LOG_PUBKEYS_B64: &[&str] = &[
-    // 例:"kQf3...=="(用户生成后填入;为空则本次会话不落盘日志)
-    "",
+    // key_id=c01bada2(2026-07-17 生成;私钥冷备于开发者本机 ~/.creatoros/log-privkey.key)
+    "7XwdZ5gdluFgvYparjusHi2adR0ldpUbDZ4yjLLMxz4=",
 ];
 
 /// 一个收件人(开发者)= 其公钥 + 由公钥派生的 4B `key_id`。
@@ -936,20 +936,21 @@ mod tests {
     }
 
     #[test]
-    fn enc_downgrade_when_no_pubkey_writes_nothing() {
-        // 降级路径:内嵌公钥占位空 → init 返回 None 且不写任何文件(诚实全降级,SPEC §5)。
-        assert!(
-            embedded_recipients().is_empty(),
-            "占位公钥应为空(用户尚未填);若此断言失败说明已填入生产公钥,需同步调整该测试"
+    fn enc_production_pubkey_embedded_and_downgrade_logic_intact() {
+        // 生产公钥已填(2026-07-17,key_id=c01bada2)→ 锚定嵌入值正确解析,防手滑填错/改坏。
+        let recips = embedded_recipients();
+        assert_eq!(recips.len(), 1, "应恰有 1 个生产日志公钥");
+        assert_eq!(
+            recips[0].key_id,
+            [0xc0, 0x1b, 0xad, 0xa2],
+            "嵌入公钥 key_id 应为 c01bada2(与冷备私钥配对)"
         );
-        let dir = unique_temp_path("downgrade-dir");
-        let logger = init_sidecar_logger(&dir);
-        assert!(logger.is_none(), "空公钥应全降级返回 None");
+        // 降级判定(收件人为空 → None,诚实不产出)仍在:经同一 recipients.is_empty()
+        // 判定的 encrypt_lines 层验证(init_sidecar_logger 的空判定同构,SPEC §5)。
         assert!(
-            !dir.join("sidecar.log.enc").exists(),
-            "全降级不应写任何日志文件"
+            encrypt_lines(&[], &[b"x"]).is_none(),
+            "空收件人应降级返回 None"
         );
-        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]

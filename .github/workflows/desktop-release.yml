@@ -1,0 +1,140 @@
+# T-372 W-ci:GitHub Actions 双端桌面打包(macOS aarch64 + Windows x86_64)。
+#
+# 复用本仓 release.mjs 完整链(sidecar→混淆→运行时冒烟→tauri build→latest.json),
+# 不用 tauri-action——那会绕开混淆与冒烟,违背「验证走真实调用路径」。
+#
+# 触发:手动 workflow_dispatch(内测节奏)或 push v* tag(自动建 draft Release 挂产物)。
+# 签名现状(内测拍板,SPEC §12):OS 层不签名(signed:false 如实标);updater minisign
+# 签名不可关,私钥在 repo secret TAURI_SIGNING_PRIVATE_KEY(无密码)。
+# 偏离 SPEC §12 已论证:mac x86_64 不出——GitHub 托管 Intel runner 已退役,交叉编译
+# 会产出错架构原生依赖(better-sqlite3 等);Intel Mac 内测覆盖列遗留。
+name: desktop-release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            updater_target: darwin-aarch64
+          - os: windows-latest
+            updater_target: windows-x86_64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # 版本读根 package.json 的 packageManager
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "25" # engines: >=25 <26
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: frontend/src-tauri
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 安装 Playwright Chromium(T-284 打进包,永不运行时下载)
+        run: pnpm -C frontend exec playwright install chromium
+
+      - name: 读版本号
+        id: version
+        run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: 打包(release.mjs 全链)
+        working-directory: frontend
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+          CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
+        run: node scripts/desktop/release.mjs
+
+      - name: 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+        run: |
+          ls -d frontend/src-tauri/sidecar/frontend/browsers/chromium-* \
+            || { echo "::error::Chromium 未打进 sidecar——bundleChromiumBrowser 被静默跳过"; exit 1; }
+
+      - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+        run: |
+          found=$(find frontend/src-tauri/target/release/bundle \
+            -name "*.app.tar.gz" -o -name "*.msi.zip" -o -name "*.nsis.zip" -o -name "*setup*.exe.sig" -o -name "*.sig" | head -5)
+          echo "$found"
+          test -n "$found" || { echo "::error::未找到 updater 产物/.sig"; exit 1; }
+
+      - name: 收集产物
+        run: |
+          mkdir -p dist-upload
+          find frontend/src-tauri/target/release/bundle \
+            \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.msi" -o -name "*-setup.exe" \
+               -o -name "*.msi.zip" -o -name "*.nsis.zip" -o -name "*.sig" -o -name "latest.json" \) \
+            -exec cp {} dist-upload/ \;
+          # latest.json 按端改名,merge job 汇总时不互相覆盖
+          mv dist-upload/latest.json "dist-upload/latest-${{ matrix.updater_target }}.json"
+          ls -la dist-upload/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.updater_target }}
+          path: dist-upload/
+          if-no-files-found: error
+
+  merge-latest:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: 合并双端 latest.json(复用 release.mjs mergeLatestJson)
+        run: |
+          node --input-type=module -e '
+            import { readFileSync, writeFileSync, readdirSync } from "node:fs";
+            import { mergeLatestJson } from "./frontend/scripts/desktop/release.mjs";
+            const files = readdirSync("artifacts").filter(f => /^latest-.*\.json$/.test(f));
+            if (files.length === 0) { console.error("无 latest-*.json"); process.exit(1); }
+            let merged = null;
+            for (const f of files) {
+              const one = JSON.parse(readFileSync(`artifacts/${f}`, "utf8"));
+              merged = merged ? mergeLatestJson(merged, one) : one;
+            }
+            writeFileSync("artifacts/latest.json", JSON.stringify(merged, null, 2));
+            console.log("合并平台:", Object.keys(merged.platforms).join(", "));
+          '
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: latest-json-merged
+          path: artifacts/latest.json
+
+      - name: 建 draft Release 挂产物(仅 tag 触发;draft 等人工检查后 publish)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "内测构建(未 OS 签名,signed:false;updater 已 minisign 签名)"
+          gh release upload "$tag" artifacts/* --clobber

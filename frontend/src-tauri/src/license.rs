@@ -281,12 +281,17 @@ pub fn build_signing_string(request_target: &str, host: &str, date: &str, digest
 /// `resolve_public_key` 会诚实全拒(见 `placeholder_pubkey_fails_honestly_in_strict`)。
 /// 诚实边界(SPEC §8):灭靶点只对静态逆向有效,对 Frida 运行时无效(程序一跑内存还原)。
 fn embedded_pubkey_b64() -> String {
-    // 占位空钥:真钥填入前两片(及掩码/指纹)皆空。填真钥步骤见上方 doc + reassemble_pubkey_fragments。
-    let frag_a: &[u8] = obfstr::obfbytes!(b"");
-    let frag_b: &[u8] = obfstr::obfbytes!(b"");
-    let mask_a: &[u8] = obfstr::obfbytes!(b"");
-    let mask_b: &[u8] = obfstr::obfbytes!(b"");
-    let fingerprint: &[u8] = obfstr::obfbytes!(b""); // sha256(raw)[..4]
+    // 真钥已填(2026-07-17,L1s activation-manager dfe7cfc 配对私钥;冷备 ~/.creatoros/license-signing-keypair.txt):
+    // raw = frag_a^mask_a || frag_b^mask_b,fingerprint = sha256(raw)[..4]。
+    let frag_a: &[u8] =
+        obfstr::obfbytes!(b"\xb4\x74\xd0\x36\x01\x48\x2d\x38\xe0\x60\xdd\x14\x02\x93\x1f\xd7");
+    let frag_b: &[u8] =
+        obfstr::obfbytes!(b"\xe4\x98\xf8\x0f\x48\xd5\x20\xf1\x2d\x7b\x1e\x60\x26\xa3\x90\xe3");
+    let mask_a: &[u8] =
+        obfstr::obfbytes!(b"\xfa\x0b\xaf\x3a\xd0\xfd\xad\xeb\xbb\xb9\x20\xe3\xa1\x42\x9f\xec");
+    let mask_b: &[u8] =
+        obfstr::obfbytes!(b"\xc4\xd3\x1e\x14\x9a\x2a\xec\x85\x38\x9d\xa9\xeb\xd9\x47\xf1\x9e");
+    let fingerprint: &[u8] = obfstr::obfbytes!(b"\xe1\xd4\x82\xc5"); // sha256(raw)[..4]
     match reassemble_pubkey_fragments(frag_a, frag_b, mask_a, mask_b, fingerprint) {
         Some(raw) => base64::engine::general_purpose::STANDARD.encode(raw),
         // 占位空钥(L1s 服务端公钥待填)——沿用既有占位常量,strict 下诚实全拒。
@@ -2713,8 +2718,14 @@ mod tests {
 
         // 占位空钥(两片皆空)→ None(strict 下诚实拒绝)。
         assert!(reassemble_pubkey_fragments(&[], &[], &[], &[], &[]).is_none());
-        // 当前生产内嵌为占位空钥 → embedded_pubkey_b64 返回空串。
-        assert_eq!(embedded_pubkey_b64(), "");
+        // 真钥已填(2026-07-17,L1s 服务端配对)→ 重组出的公钥必须等于服务端 raw 公钥,
+        // 且能解析为合法 Ed25519 验签钥(防拆片/掩码/指纹任一手滑)。
+        let b64 = embedded_pubkey_b64();
+        assert_eq!(
+            b64, "Tn9/DNG1gNNb2f33o9GAOyBL5hvS/8x0Fea3i//kYX0=",
+            "嵌入公钥重组结果应与 L1s 服务端公钥一致"
+        );
+        assert!(resolve_public_key(&b64).is_ok(), "嵌入公钥应为合法 Ed25519 钥");
     }
 
     // ── 灭靶点:构建后二进制内无 license 相关明文定位串(post-build 断言,读 current_exe) ──
