@@ -713,7 +713,12 @@ function ensureSharpNative() {
 //   与 .node 同目录(rpath 首选就近查同目录)。硬自检:补完仍缺则 throw(不容假通过,教训同 playwright 自检②)。
 function ensureOnnxRuntimeDylib() {
   const libExt = platform === "darwin" ? ".dylib" : platform === "win32" ? ".dll" : ".so";
-  const isLib = (f) => f.startsWith("libonnxruntime") && f.endsWith(libExt);
+  // Windows 的 DLL 无 lib 前缀(MSVC 惯例:onnxruntime.dll)——硬套 libonnxruntime* 会假阴性:
+  // 文件在、dlopen 已通过(T-383 真加载自检),T-225 却报缺(CI 实测「补拷 0 + 仍缺」)。
+  const isLib = (f) =>
+    platform === "win32"
+      ? f.startsWith("onnxruntime") && f.endsWith(".dll")
+      : f.startsWith("libonnxruntime") && f.endsWith(libExt);
   // 递归找 sidecar 里所有 onnxruntime_binding.node 所在目录(可能多份:frontend/ 与根 node_modules)。
   const bindingDirs = [];
   const walk = (dir) => {
