@@ -16,6 +16,10 @@ use std::time::Duration;
 mod license;
 // [T-259] 桌面日志系统:sidecar stdout/stderr tee 落盘 + 脱敏 + 轮转(见 logging.rs)。
 mod logging;
+// [T-372 W-core W3] Windows 进程树杀:Job Object(KILL_ON_JOB_CLOSE)——T-365 数据损坏
+// 防线的 Win 等价(Win 无 POSIX 进程组/killpg)。整个模块 cfg(windows),mac/Linux 不编译。
+#[cfg(windows)]
+mod win_job;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
 
@@ -41,6 +45,14 @@ const KEYCHAIN_KEY_NAME: &str = "master-key";
 const PROMPT_BUNDLE_URL: &str = "https://creatoros.aitongban.cloud/prompts/bundle.json";
 const PROMPT_BUNDLE_PUBLIC_KEY: &str =
     "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArmDGPC34VMSU2Isf3X+gULIwOH+5X3GBHwlXYFbgjg4=\n-----END PUBLIC KEY-----\n";
+
+/// [T-372 W-core W4] 壳 → sidecar 的停机哨兵(Windows 用):Node 在 Windows 收不到真
+/// SIGTERM(process.kill 的 'SIGTERM' 实为无条件 TerminateProcess)→ 壳的优雅停机改为
+/// 经 stdin 写 `哨兵 + \n`,sidecar(sidecar-lifecycle.ts Win 分支)读到即 flush PGlite
+/// 自退;壳等 5s 后才 Job Object 硬杀 —— 与 macOS「SIGTERM → 5s → SIGKILL」同构。
+/// ⚠️ 与 frontend/src/server/sidecar-lifecycle.ts 的 `SHUTDOWN_SENTINEL` 必须一致,
+/// 两侧单测各自钉住字面值(改任一侧必挂测)。macOS 构建也保留此常量(单测在 mac 跑)。
+pub const SIDECAR_SHUTDOWN_SENTINEL: &str = "__CREATOROS_SHUTDOWN__";
 
 /// 取/建 32B master key,base64 返回,供注入 sidecar env `CREATOROS_MASTER_KEY`。
 ///
@@ -171,8 +183,14 @@ enum SidecarChild {
     #[cfg(target_os = "macos")]
     Std(std::process::Child),
     /// Win/Linux：tauri sidecar(externalBin)的子进程。
+    /// [T-372 W3] Windows 额外持有 Job Object 守护(KILL_ON_JOB_CLOSE):壳退出/崩溃
+    /// → Job 句柄被 OS 回收 → sidecar 整棵进程树(含 Chrome/ffmpeg)内核级必死。
     #[cfg(not(target_os = "macos"))]
-    Shell(CommandChild),
+    Shell {
+        child: CommandChild,
+        #[cfg(windows)]
+        job: Option<win_job::SidecarJob>,
+    },
 }
 
 impl SidecarChild {
@@ -207,9 +225,27 @@ impl SidecarChild {
                     }
                 }
             }
-            #[cfg(not(target_os = "macos"))]
-            SidecarChild::Shell(c) => {
-                let _ = c.kill();
+            // [T-372 W3/W4] Windows 停机序列(对齐 macOS「killpg SIGTERM → 等 5s → SIGKILL」):
+            //   ① 经 stdin 写停机哨兵(Node 在 Win 收不到真 SIGTERM)→ sidecar-lifecycle Win
+            //     分支读到即优雅退出(flush PGlite 防 WAL 半写);
+            //   ② SidecarJob::shutdown:等最多 5s → 超时 TerminateJobObject 硬杀 Job 内整树
+            //     (node + Playwright Chrome + ffmpeg)→ 关句柄。
+            //   Job 建失败(spawn 时已留日志)→ 退化为单进程 kill(至少杀 sidecar 本体,诚实降级)。
+            //   壳崩溃/强杀(本函数到不了)→ OS 回收 Job 句柄,KILL_ON_JOB_CLOSE 内核兜底整树杀。
+            #[cfg(windows)]
+            SidecarChild::Shell { child, job } => {
+                let mut child = child;
+                let _ = child.write(format!("{SIDECAR_SHUTDOWN_SENTINEL}\n").as_bytes());
+                match job {
+                    Some(job) => job.shutdown(5_000),
+                    None => {
+                        let _ = child.kill();
+                    }
+                }
+            }
+            #[cfg(all(not(target_os = "macos"), not(windows)))]
+            SidecarChild::Shell { child } => {
+                let _ = child.kill();
             }
         }
     }
@@ -336,12 +372,18 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         }
         // 系统 tar 解压(-x 解 / -z gzip / -f 文件 / -C 目标)。macOS bsdtar、Win10+ tar.exe、Linux
         //   GNU tar 均原生按 symlink 还原 —— 这是选 tar 而非 Rust 解压库的关键(免依赖 + 保 symlink)。
-        let status = std::process::Command::new("tar")
-            .arg("-xzf")
-            .arg(&tarball)
-            .arg("-C")
-            .arg(&dest)
-            .status();
+        //   (Win10+ tar.exe 对 symlink/junction 的**保真度**是 §11.2 spike 1 的验证对象,归 W-spike。)
+        let mut tar_cmd = std::process::Command::new("tar");
+        tar_cmd.arg("-xzf").arg(&tarball).arg("-C").arg(&dest);
+        // [T-372 W5] Windows:tar.exe 是 console 子系统程序,GUI 壳(windows_subsystem="windows")
+        //   spawn 它会闪一个黑色 console 窗 → CREATE_NO_WINDOW 抑制。mac/Linux 无此概念,不编译。
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt as _;
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+            tar_cmd.creation_flags(CREATE_NO_WINDOW);
+        }
+        let status = tar_cmd.status();
         match status {
             Ok(s) if s.success() => {
                 let _ = std::fs::write(&stamp, tarball_size.to_string());
@@ -548,7 +590,10 @@ pub fn run() {
             //     GUI app、不进 Dock(解决用户看到「两个图标」)。tauri sidecar 走的是 externalBin 那份**裸**
             //     node,会被注册进 Dock,故 macOS 不用它。
             //   · Win/Linux 保持原 `app.shell().sidecar("creatoros-server")`(externalBin)逻辑不动
-            //     (那边 Dock 图标不是问题;Windows console 窗口是另一议题,本任务不管)。
+            //     (那边 Dock 图标不是问题)。[T-372 W5] Windows console 黑窗已闭环:壳自身
+            //     main.rs `windows_subsystem="windows"`;sidecar node.exe 由 tauri-plugin-shell
+            //     spawn,其 Command 构造恒带 CREATE_NO_WINDOW(plugin 2.3.5 process/mod.rs:173,
+            //     已核实源码);sidecar 再往下的 ffmpeg/子进程由 Node 侧 spawn windowsHide 抑制。
             let handle_state = app.state::<SidecarHandle>();
 
             #[cfg(target_os = "macos")]
@@ -693,11 +738,27 @@ pub fn run() {
                     }
                 };
 
-                handle_state
-                    .0
-                    .lock()
-                    .unwrap()
-                    .replace(SidecarChild::Shell(child));
+                // [T-372 W3] Windows:spawn 后立刻建 Job Object(KILL_ON_JOB_CLOSE)把 sidecar
+                //   挂进去 —— 越早挂,sidecar 后续拉起的 Chrome/ffmpeg 越必然继承 Job 归属。
+                //   建失败(权限/句柄异常,极端)→ 降级单进程 kill,留日志不静默(T-365 防线
+                //   在该机器上退化,诚实可见)。
+                #[cfg(windows)]
+                let job = match win_job::SidecarJob::assign(child.pid()) {
+                    Ok(j) => Some(j),
+                    Err(e) => {
+                        eprintln!("[shell] Job Object 创建失败(退化为单进程 kill,退出可能残留子进程): {e}");
+                        if let Some(l) = &logger {
+                            l.log("shell", &format!("Job Object 创建失败(树杀防线退化): {e}"));
+                        }
+                        None
+                    }
+                };
+
+                handle_state.0.lock().unwrap().replace(SidecarChild::Shell {
+                    child,
+                    #[cfg(windows)]
+                    job,
+                });
 
                 // 把 sidecar 的 stdout/stderr 打到本壳日志:eprintln(dev 可见)+ tee 到 logs/sidecar.log
                 // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
@@ -785,4 +846,16 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod lifecycle_tests {
+    // [T-372 W-core §14] 跨语言停机哨兵契约:与 sidecar-lifecycle.ts 的 SHUTDOWN_SENTINEL
+    // 钉同一字面值(TS 侧 vitest 同样钉住)。改任一侧,两套测试各自即刻挂 —— 防止
+    // 「壳写哨兵、sidecar 认不出 → Windows 永远走不到优雅停机、只剩 5s 后硬杀」的静默回归。
+    // (本测试平台无关,macOS 上 cargo test 即验;Job Object 行为本身归 Windows 真机/W-ci。)
+    #[test]
+    fn 停机哨兵与_sidecar_lifecycle_ts_契约一致() {
+        assert_eq!(super::SIDECAR_SHUTDOWN_SENTINEL, "__CREATOROS_SHUTDOWN__");
+    }
 }

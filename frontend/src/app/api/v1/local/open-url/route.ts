@@ -37,7 +37,8 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: plan.error }, { status: plan.status });
   }
   try {
-    await execFileAsync(plan.cmd, plan.args);
+    // [T-372 W5] windowsHide:win32 计划是 `cmd /c start`(console 程序),不抑制会闪黑窗。
+    await execFileAsync(plan.cmd, plan.args, { windowsHide: true });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[local/open-url] failed:", err);

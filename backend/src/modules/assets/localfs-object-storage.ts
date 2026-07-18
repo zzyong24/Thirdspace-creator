@@ -64,7 +64,8 @@ const EMPTY_PROBE: ProbedMedia = { durationMs: null, width: null, height: null }
 function locateFfprobe(): Promise<string | null> {
   return new Promise((resolve) => {
     const cmd = process.platform === "win32" ? "where" : "which";
-    execFile(cmd, ["ffprobe"], (err, stdout) => {
+    // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn console 程序会闪黑窗。
+    execFile(cmd, ["ffprobe"], { windowsHide: true }, (err, stdout) => {
       if (err) return resolve(null);
       const first = stdout
         .split(/\r?\n/)
@@ -80,7 +81,8 @@ function probeMedia(ffprobe: string, absKey: string): Promise<ProbedMedia> {
     execFile(
       ffprobe,
       ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", absKey],
-      { maxBuffer: 8 * 1024 * 1024, timeout: 15000 },
+      // [T-372 W5] windowsHide 同上(ffprobe 黑窗抑制;mac/Linux 无操作)。
+      { maxBuffer: 8 * 1024 * 1024, timeout: 15000, windowsHide: true },
       (err, stdout) => {
         if (err) return resolve(EMPTY_PROBE);
         try {

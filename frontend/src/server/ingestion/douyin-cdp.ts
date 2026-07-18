@@ -574,7 +574,8 @@ const REAL_SPAWN_DEPS: StreamAudioDeps = {
     // 动态引入 child_process(server-only;避免打进客户端 bundle)。
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { spawn } = require("node:child_process") as typeof import("node:child_process");
-    return spawn(command, args) as unknown as SpawnedProcess;
+    // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn ffmpeg 会闪黑窗。
+    return spawn(command, args, { windowsHide: true }) as unknown as SpawnedProcess;
   },
   // ffmpegPath 不再硬编码 —— 每次抽音时惰性走 resolveFfmpegPath 解析链
   // (env CREATOROS_FFMPEG_PATH → 随包 sidecar bin/ → PATH/常见安装目录 → 诚实报错)。
@@ -783,6 +784,8 @@ export async function ensureChromiumInstalled(): Promise<void> {
     const child = spawn(process.execPath, [cli, "install", "chromium"], {
       stdio: "inherit", // 进度打到 sidecar 日志(UI 侧「扫码中…」覆盖等待;进度条 UI 列后续)
       env: process.env,
+      // [T-372 W5] windowsHide:Win 打包态抑制 node.exe console 黑窗。
+      windowsHide: true,
     });
     child.on("exit", (code) =>
       code === 0

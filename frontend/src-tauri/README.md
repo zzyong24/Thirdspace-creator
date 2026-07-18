@@ -57,6 +57,23 @@ pnpm -C frontend desktop:package    # = node scripts/desktop/package.mjs
 
 直跑 `target/debug/creatoros-desktop`:sidecar `✓ Ready` ~3s → `GET / → HTTP 200`(61KB 真实 app HTML)→ `POST /api/v1/dispatch → HTTP 200`(合法契约 envelope)→ PGlite 落盘 30MB 到 `~/Library/Application Support/cloud.aitongban.creatoros/db`;WebKit WebContent 进程起(窗口渲染);退出 0 orphan。
 
+## Windows 双端打包(T-372 W-core)
+
+- **bundle targets 双端拆分**:主配 `tauri.conf.json` 保持 `["app","dmg"]`;Windows 专属
+  `tauri.windows.conf.json`(Tauri v2 官方平台叠加配置,仅 Windows 构建时 JSON Merge Patch
+  合并)把 targets 覆盖为 `["nsis","msi"]`。**为什么不把 nsis/msi 直接加进主配 targets**:
+  tauri-bundler 对 NSIS 支持「实验性跨平台编译」(CLI 二进制内有
+  "Cross-platform compilation is experimental" 路径)——nsis 混进共享 targets 会让 macOS
+  打包尝试在 mac 上交叉出 NSIS 安装包(下载 NSIS 工具链、行为未知),违背「mac 产物零变化」。
+  平台叠加配置从构造上保证 mac 构建根本读不到 Windows targets。
+- **进程树杀(W3)**:Windows 无 POSIX 进程组/killpg → `src/win_job.rs` Job Object
+  (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`),壳退出/崩溃句柄一关整树内核级必死;优雅窗口
+  = 壳经 stdin 写停机哨兵(`SIDECAR_SHUTDOWN_SENTINEL`,与 sidecar-lifecycle.ts 两侧单测钉住)
+  → 等 5s → TerminateJobObject,与 macOS「SIGTERM → 5s → SIGKILL」同构。
+- **验证态**:macOS 上经 `cargo check --target x86_64-pc-windows-msvc` 静态验证 cfg(windows)
+  分支可编译;**未在 Windows 实机跑过**——真机四主链回归 + 0 孤儿断言归 W-ci/W-spike
+  (tar.exe symlink/junction 保真是 W-spike 第一验证项)。
+
 ## 诚实边界(P1 未做,留后续子项)
 
 - **未签名 / 未公证**:codesign/notarize(mac)+ Authenticode(win)需**用户的证书**,本 P1 出**未签名** .app → 首次打开需右键「打开」绕 Gatekeeper。属 P6。

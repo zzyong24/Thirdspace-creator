@@ -75,6 +75,27 @@ export function buildLatestJson({ version, signature, url, notes = "", pubDate =
   };
 }
 
+// ── [T-372 W-core §11.2-5] 双端 latest.json 合并(纯函数,便于单测)──────────────
+//
+// 旧行为:latest.json 每次整写单平台 platforms 键 → 双端分发时后打的平台**覆盖**先打的
+// (mac 包发完再打 Win 包,latest.json 只剩 windows-x86_64,mac 客户端升级 404)。
+// 新行为:同版本 → platforms 键合并(darwin-aarch64 + windows-x86_64 …并存);
+// 版本不同 → 新版本整体替换(旧版本的 platforms 不该混进新版本元数据)。
+// 双端产物在各自平台打包后,把 bundle 目录的 latest.json 汇到同一 endpoint 前跑本合并
+// (W-ci 的 matrix 汇合步骤用;本机单平台打包行为不变——没有已存在文件时 merge 即恒等)。
+//
+// @param {{version:string, platforms:Record<string,{signature:string,url:string}>}|null} existing
+// @param {{version:string, platforms:Record<string,{signature:string,url:string}>}} next
+export function mergeLatestJson(existing, next) {
+  if (!existing || typeof existing !== "object" || existing.version !== next.version) {
+    return next;
+  }
+  return {
+    ...next,
+    platforms: { ...(existing.platforms ?? {}), ...next.platforms },
+  };
+}
+
 // ── [T-326 ENG-H03] updater base URL 解析 + 校验(纯函数,便于单测)─────────────
 //
 // 旧行为:未设 CREATOROS_UPDATE_BASE_URL 时默认 `https://github.com/OWNER/REPO/...`,
@@ -180,9 +201,18 @@ function main() {
   const artifactName = found.artifact.split("/").pop();
   const url = `${resolved.baseUrl}/${artifactName}`;
 
-  // 3) 生成/更新 latest.json。
-  const latest = buildLatestJson({ version, signature, url, target });
+  // 3) 生成/更新 latest.json。[T-372 §11.2-5] 同版本已有文件(另一平台先打)→ platforms 合并,
+  //    不再整写覆盖;无已存在文件/版本变了 → 行为与旧实现一致。
   const latestPath = join(BUNDLE_DIR, "latest.json");
+  let existing = null;
+  if (existsSync(latestPath)) {
+    try {
+      existing = JSON.parse(readFileSync(latestPath, "utf8"));
+    } catch {
+      console.warn(`[release] ⚠ 已存在的 latest.json 解析失败,按全新生成处理:${latestPath}`);
+    }
+  }
+  const latest = mergeLatestJson(existing, buildLatestJson({ version, signature, url, target }));
   writeFileSync(latestPath, JSON.stringify(latest, null, 2) + "\n", "utf8");
   console.log(`\n[release] ✅ latest.json 已生成: ${latestPath}`);
   console.log(`[release]   version=${version} · target=${target}`);

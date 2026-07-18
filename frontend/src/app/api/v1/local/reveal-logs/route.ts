@@ -35,7 +35,8 @@ export async function POST(): Promise<Response> {
     // 目录可能还没建(首启即导出 / 落盘失败)→ 先建出来再开,用户预期「总能打开」。
     await fs.mkdir(dir, { recursive: true });
     const plan = planRevealLogs(dir, process.platform);
-    await execFileAsync(plan.cmd, plan.args);
+    // [T-372 W5] windowsHide:与其余本地命令一致抑制 Win console 黑窗(explorer 为 GUI,无操作)。
+    await execFileAsync(plan.cmd, plan.args, { windowsHide: true });
     return NextResponse.json({ ok: true, dir });
   } catch (err) {
     console.error("[local/reveal-logs] failed:", err);

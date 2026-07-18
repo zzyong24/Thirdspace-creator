@@ -35,6 +35,8 @@ import { platform, arch } from "node:process";
 import { homedir } from "node:os";
 // [T-326 RT-H09] 静态 ffmpeg 拉取(缓存 + GitHub release 下载 + 冒烟),供 bundleFfmpeg 实拷进 sidecar。
 import { ensureFfmpegStatic } from "./fetch-ffmpeg.mjs";
+// [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
+import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -501,12 +503,13 @@ function bundleChromiumBrowser() {
     console.warn("[build-sidecar] ⚠ browsers.json 无 chromium revision,跳过 Chromium 打包");
     return;
   }
-  // 目前只覆盖 mac 缓存路径(P1 本机 target);Win/Linux 缓存路径不同,留位回落下载。
-  if (platform !== "darwin") {
-    console.warn(`[build-sidecar] ⚠ 非 mac 平台暂不打包 Chromium(缓存路径不同),渲染回落运行时下载`);
+  // [T-372 W2] 缓存根目录按平台映射(mac ~/Library/Caches / Win %LOCALAPPDATA% / Linux XDG),
+  //   映射不到的平台才跳过(回落运行时下载)。mac 路径与旧实现逐字节一致(零回归)。
+  const cacheRoot = playwrightBrowsersCacheRoot(platform, process.env, homedir());
+  if (!cacheRoot) {
+    console.warn(`[build-sidecar] ⚠ 平台 ${platform} 无 Playwright 缓存路径映射,跳过 Chromium 打包(渲染回落运行时下载)`);
     return;
   }
-  const cacheRoot = join(homedir(), "Library", "Caches", "ms-playwright");
   const srcBrowser = join(cacheRoot, `chromium-${rev}`);
   if (!existsSync(srcBrowser)) {
     console.warn(

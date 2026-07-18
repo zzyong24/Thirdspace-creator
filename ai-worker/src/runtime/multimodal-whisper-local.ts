@@ -237,7 +237,8 @@ function realFfmpegDeps(): FfmpegDecoderDeps {
     spawn: (command, args) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { spawn } = require("node:child_process") as typeof import("node:child_process");
-      return spawn(command, args) as unknown as ReturnType<
+      // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn ffmpeg 会闪黑窗。
+      return spawn(command, args, { windowsHide: true }) as unknown as ReturnType<
         FfmpegDecoderDeps["spawn"]
       >;
     },

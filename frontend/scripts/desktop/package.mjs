@@ -16,6 +16,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
+import { platform } from "node:process";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -61,6 +62,10 @@ console.log("[desktop:package] CreatorOS 桌面端打包开始。");
 // 下的挂载,并删两处 rw.*.dmg 残留;清不掉只告警不 fail(不动主线 app/updater 打包)。
 // 手动解卡:node scripts/desktop/package.mjs --preclean-only
 function precleanDmgLeftovers() {
+  // [T-372 W-core §11.2-6] hdiutil / DMG 残留是 macOS 专属概念 —— Windows/Linux 打包机上
+  // spawn hdiutil 只会 ENOENT 噪音(status 非 0 本就跳过,但守卫掉更干净,也免 Win 上找不到
+  // 命令的告警干扰打包日志)。
+  if (platform !== "darwin") return;
   const bundleDir = join(FRONTEND, "src-tauri", "target", "release", "bundle");
   const info = spawnSync("hdiutil", ["info"], { encoding: "utf8" });
   if (info.status === 0 && info.stdout) {

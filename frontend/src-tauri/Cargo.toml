@@ -59,6 +59,20 @@ aes-gcm = "0.10"
 httpdate = "1"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
+# [T-372 W-core W3] Windows 进程树杀 —— Job Object(KILL_ON_JOB_CLOSE):壳退出/句柄
+# 关闭 → sidecar 整棵进程树(node + Playwright Chrome + ffmpeg)内核级必死,是 T-365
+# 「防孤儿进程并发写库致 WAL 半写损坏」防线的 Windows 等价(Win 无 POSIX 进程组/killpg)。
+# windows-sys 选型:锁 0.61(Cargo.lock 里 tauri 依赖树已有 0.61.2,dedupe 不引新版本);
+# target 限定 cfg(windows) → macOS/Linux 构建完全不编译、不下载。
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_System_JobObjects",
+  "Win32_System_Threading",
+  # CreateJobObjectW 的签名引用 SECURITY_ATTRIBUTES → windows-sys 把它门在 Win32_Security 后。
+  "Win32_Security",
+] }
+
 # 发布体积:release 用 opt-level=s + LTO + strip(桌面壳求小)。
 [profile.release]
 panic = "abort"

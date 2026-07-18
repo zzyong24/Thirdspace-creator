@@ -67,7 +67,8 @@ function execFileAsync(
       args,
       // [RT-H06] env 收窄:ffprobe/ffmpeg/which 子进程只拿运行必需变量,
       // 密钥/DB/S3/master key 不进子进程(见 child-env.ts)。
-      { signal, maxBuffer: 16 * 1024 * 1024, env: buildChildEnv() },
+      // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn console 程序会闪黑窗。
+      { signal, maxBuffer: 16 * 1024 * 1024, env: buildChildEnv(), windowsHide: true },
       (err, stdout, stderr) => {
         if (err) {
           reject(new Error(`${path.basename(file)} 失败: ${stderr?.slice(0, 400) || err.message}`));
@@ -268,6 +269,9 @@ async function renderWithHyperframesCli(opts: {
           // CLI 交互态探测走 TTY;子进程无 TTY 天然非交互。
         }),
         stdio: ["ignore", "pipe", "pipe"],
+        // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn node.exe(console
+        // 子系统)会闪黑窗;其下 Chromium 由 hyperframes 以 headless 起,无窗口面。
+        windowsHide: true,
       },
     );
     let lastErr = "";

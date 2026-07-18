@@ -3,7 +3,7 @@
 // (buildLatestJson 纯函数一并覆盖,保 latest.json 结构与 Tauri updater 约定一致。)
 
 import { describe, it, expect } from "vitest";
-import { resolveUpdateBaseUrl, buildLatestJson } from "./release.mjs";
+import { resolveUpdateBaseUrl, buildLatestJson, mergeLatestJson } from "./release.mjs";
 
 describe("resolveUpdateBaseUrl(ENG-H03:占位/缺失硬失败)", () => {
   it("未设 CREATOROS_UPDATE_BASE_URL → 失败(不再默认占位成功)", () => {
@@ -114,5 +114,65 @@ describe("buildLatestJson(latest.json 结构)", () => {
         "darwin-aarch64": { signature: "sig==", url: "https://cdn.example.com/app.tar.gz" },
       },
     });
+  });
+});
+
+// [T-372 W-core §11.2-5] 双端 latest.json 合并:同版本 platforms 并存,不再互相覆盖。
+describe("mergeLatestJson(双端 platforms 合并)", () => {
+  const mac = buildLatestJson({
+    version: "1.2.3",
+    signature: "mac-sig",
+    url: "https://cdn.example.com/CreatorOS.app.tar.gz",
+    pubDate: "2026-07-17T00:00:00.000Z",
+    target: "darwin-aarch64",
+  });
+  const win = buildLatestJson({
+    version: "1.2.3",
+    signature: "win-sig",
+    url: "https://cdn.example.com/CreatorOS-setup.nsis.zip",
+    pubDate: "2026-07-17T01:00:00.000Z",
+    target: "windows-x86_64",
+  });
+
+  it("无已存在文件 → 恒等返回(单平台打包行为零变化)", () => {
+    expect(mergeLatestJson(null, mac)).toEqual(mac);
+  });
+
+  it("同版本 → platforms 键合并,双端并存(Win 后打不覆盖 mac)", () => {
+    const merged = mergeLatestJson(mac, win);
+    expect(merged.version).toBe("1.2.3");
+    expect(merged.platforms).toEqual({
+      "darwin-aarch64": { signature: "mac-sig", url: "https://cdn.example.com/CreatorOS.app.tar.gz" },
+      "windows-x86_64": { signature: "win-sig", url: "https://cdn.example.com/CreatorOS-setup.nsis.zip" },
+    });
+  });
+
+  it("同版本同平台重打 → 新产物覆盖同键(重出包更新签名/URL)", () => {
+    const macAgain = buildLatestJson({
+      version: "1.2.3",
+      signature: "mac-sig-v2",
+      url: "https://cdn.example.com/CreatorOS-2.app.tar.gz",
+      target: "darwin-aarch64",
+    });
+    const merged = mergeLatestJson(mac, macAgain);
+    expect(merged.platforms["darwin-aarch64"].signature).toBe("mac-sig-v2");
+  });
+
+  it("版本不同 → 整体替换(旧版本 platforms 不混入新版本元数据)", () => {
+    const next = buildLatestJson({
+      version: "1.3.0",
+      signature: "new-sig",
+      url: "https://cdn.example.com/next.app.tar.gz",
+      target: "darwin-aarch64",
+    });
+    const merged = mergeLatestJson(win, next);
+    expect(merged.version).toBe("1.3.0");
+    expect(merged.platforms).toEqual({
+      "darwin-aarch64": { signature: "new-sig", url: "https://cdn.example.com/next.app.tar.gz" },
+    });
+  });
+
+  it("已存在文件损坏(非对象)→ 按全新生成处理", () => {
+    expect(mergeLatestJson("garbage", mac)).toEqual(mac);
   });
 });

@@ -9671,9 +9671,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           let path: string | null = null;
           let version: string | null = null;
           // ① which <name>(argv,无 shell):拿到可执行路径 = 已装。
+          // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn console 程序会闪黑窗。
           try {
             const { stdout } = await run("which", [spec.name], {
               timeout: PROBE_TIMEOUT_MS,
+              windowsHide: true,
             });
             const first = stdout.trim().split("\n")[0]?.trim() ?? "";
             if (first) {
@@ -9688,6 +9690,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             try {
               const { stdout, stderr } = await run(spec.name, [...spec.versionArgs], {
                 timeout: PROBE_TIMEOUT_MS,
+                windowsHide: true,
               });
               version = parseToolVersion(stdout || stderr);
             } catch {
