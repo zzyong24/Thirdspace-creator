@@ -514,19 +514,25 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         }
     }
     // dev:源目录(symlink 完好)。CARGO_MANIFEST_DIR 是 src-tauri/ 的编译期绝对路径。
-    // dev 源目录无 tarball 基准,完整性校验不适用(构建期 env 也为空串)。
-    let dev_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("sidecar");
-    if dev_dir.join("frontend").join("server.js").exists() {
-        return Ok(dev_dir);
+    // **仅 debug 构建(`tauri dev`)可走**——release 分发包绝不引用编译机路径:此前无门控,
+    // 开发机上装到 /Applications 的正式包也命中仓库源目录(编译机路径恒存在)→ ①重打包
+    // rmSync 重建 sidecar/ 时抽走运行中 app 脚下文件(2026-07-18 实证:知识库/素材/发布页崩)
+    // ②T-372 入口哈希校验被 dev 分支整体绕过 ③「打包版验证」实际验的是源目录,全部失真。
+    #[cfg(debug_assertions)]
+    {
+        let dev_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("sidecar");
+        if dev_dir.join("frontend").join("server.js").exists() {
+            return Ok(dev_dir);
+        }
     }
-    // ③ bundle 兜底:资源里是 sidecar.tar.gz(单文件,规避 Tauri resource 丢 symlink)。
+    // ③ bundle:资源里是 sidecar.tar.gz(单文件,规避 Tauri resource 丢 symlink)。
     let tarball = match app
         .path()
         .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
     {
         Ok(p) if p.exists() => p,
-        // 资源里没 tarball(理论不会到这):退回 dev_dir,让上层探活失败,便于诊断而非静默乱指。
-        _ => return Ok(dev_dir),
+        // 资源缺 tarball = 打包不完整;诚实报错拒 spawn,不乱指编译机路径。
+        _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
     };
     // [T-372 L2] spawn 前的入口哈希校验:tarball 与构建期内嵌哈希不符 → 拒绝 spawn。
     verify_sidecar_tarball(&tarball)?;
@@ -534,7 +540,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     let version = app.package_info().version.to_string();
     let dest = match app.path().app_data_dir() {
         Ok(d) => d.join("runtime").join(&version).join("sidecar"),
-        Err(_) => return Ok(dev_dir),
+        Err(e) => return Err(format!("appDataDir 不可用,无法解压 sidecar runtime: {e}")),
     };
     // 首启(或版本升级后首启)才解压;server.js 在位即认为已解压过,直接复用(避免每启动重解 598M)。
     let marker = dest.join("frontend").join("server.js");
