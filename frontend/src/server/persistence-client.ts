@@ -5,6 +5,9 @@ import {
   resolveMasterKey,
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
+  // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
+  // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
+  restorePreservedUserAssets,
 } from "@creatoros/backend";
 import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
@@ -1402,6 +1405,33 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
     async () => { await dispose(); };
+
+  // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
+  // (reset-preserve.ts 单一真值:users/sessions/模型配置/skill 定制/激活态…)从最新
+  // `db.archived-<ts>` 归档库迁回刚建好的空库。位置刻意在**任何 seed 之前**(下方
+  // seedCanonicalUser 是 onConflictDoNothing,迁回的 users 行优先)。语义:
+  //   - 仅 file-pglite(桌面/本地落盘)路径;docker-PG 走 reset-db.ts 表级 PRESERVE,无归档;
+  //   - 一次性(归档目录内 .preserve-restored.json 标记)+ 幂等(新库非空表跳过);
+  //   - 失败诚实:只记日志不阻断启动,资产完整留在归档目录可手工找回(rename 不动字节)。
+  if (driver.kind === "file-pglite" && driver.target) {
+    try {
+      const restoreReport = await restorePreservedUserAssets({
+        dataDir: driver.target,
+        db,
+      });
+      if (restoreReport) {
+        console.warn(
+          `[persistence][T-363] 重置归档迁回${restoreReport.ok ? "完成" : "部分失败(下次启动重试)"}:` +
+            restoreReport.tables
+              .map((t) => `${t.table}=${t.status}${t.rows ? `(${t.rows})` : ""}`)
+              .join(", "),
+        );
+      }
+    } catch (err) {
+      // restorePreservedUserAssets 自身不 throw;此兜底只防未知装配错误拖垮启动。
+      console.error("[persistence][T-363] 迁回流程异常(不阻断启动):", err);
+    }
+  }
 
   // [T-136 §D 切片 c] 抖音登录态**按号分目录**:`.auth/douyin/<accountId>`(每号独立
   //   persistent context / sessionid,互不顶号)。accountId 为 null(单号 / 未选号 / 存量)→
@@ -10273,6 +10303,16 @@ export async function getIdentityService(): Promise<IdentityService> {
  */
 export async function getActivationService(): Promise<ActivationService> {
   return (await getBundle()).activationService;
+}
+
+/**
+ * [T-363] settings service 逃生口(同 identity/activation 姿态:无 dispatch endpoint 的
+ * route 直调 service)。模型配置导出/导入 route(/api/v1/settings-transfer/models)用它
+ * 走 exportModelConfigs / importModelConfigs —— 导出含密钥密文,绝不能过公开 DTO
+ * (listModels 把 secret 掩码成 hasSecret),故不走契约 op。
+ */
+export async function getSettingsService(): Promise<SettingsService> {
+  return (await getBundle()).settingsService;
 }
 
 /**

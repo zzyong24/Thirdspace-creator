@@ -112,6 +112,13 @@ function makeFakeRepo(
     async listModels() {
       return state._models;
     },
+    // [T-363] 导出原始读(fake 无加密,与 listModels 同源)+ 导入解包(明文透传)。
+    async listModelsRaw() {
+      return state._models;
+    },
+    unwrapExportedSecret(stored: string) {
+      return stored;
+    },
     async createAgent(_c: RequestContext, input: AgentCreateInput) {
       const row: AgentConfigurationRow = {
         id: "agent-fake",

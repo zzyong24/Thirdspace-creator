@@ -20,6 +20,8 @@ import { Pool } from "pg";
 import { rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+// [T-363] 保留表清单收口到单一真值(与「重置工作区」归档后的迁回共用,防两处漂移)。
+import { PRESERVE_TABLE_SET } from "../src/reset-preserve";
 
 const argv = process.argv.slice(2);
 const CONFIRM = argv.includes("--yes") || argv.includes("-y");
@@ -31,16 +33,8 @@ const url =
 const masked = url.replace(/:\/\/([^:]+):[^@]+@/, "://$1:***@");
 
 // 保留:纯身份 + 配置(清库后仍能直接用,不用重登/重配 AI key)。其余全清。
-const PRESERVE = new Set([
-  "users", // 登录身份
-  "sessions", // 保持登录态(免重登)
-  "user_preferences", // 用户偏好/设置
-  "model_configurations", // AI 模型 + key(免每次重配)
-  "agent_configurations", // AI agent 路由配置
-  "storage_configs", // 对象存储配置(blob 路由可用)
-  "skill_config_overrides", // 技能/prompt 覆盖配置
-  "activation_state", // T-147 P5 一机一码激活态(清库不清激活,免每次重激活)
-]);
+// [T-363] 清单本体在 src/reset-preserve.ts(单一真值;workspace-restore 迁回共用同一份)。
+const PRESERVE = PRESERVE_TABLE_SET;
 
 const pool = new Pool({ connectionString: url });
 let exitCode = 0;

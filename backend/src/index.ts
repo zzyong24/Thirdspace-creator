@@ -203,6 +203,18 @@ export {
 export { activationState } from "./schema/activation";
 export type { ActivationStateRow } from "./schema/activation";
 export type { RequestContext } from "./request-context";
+// [T-363] 清库/重置保留表单一真值清单 + 「重置工作区」归档后的 user 级资产迁回。
+export { PRESERVE_TABLES, PRESERVE_TABLE_SET } from "./reset-preserve";
+export {
+  restorePreservedUserAssets,
+  findPreserveRestoreCandidate,
+  PRESERVE_RESTORE_MARKER,
+} from "./workspace-restore";
+export type {
+  WorkspaceRestoreReport,
+  RestoreTableReport,
+  RestoreTableStatus,
+} from "./workspace-restore";
 // T-147 P2 本地加密 —— 模型 API key 静态加密工具(AES-256-GCM + keychain/env master key)。
 // settings.repository 透明加解密引用它;脚本(key 初始化/存量迁移)也从这里取。
 export {

@@ -17,6 +17,13 @@ export {
   type AccountProfilePatch,
   type ResolvedModel,
   type ModelConfigInternal,
+  // [T-363] 模型配置导出/导入(设置页兜底;route 直调 service,无契约 op)。
+  ModelConfigImportError,
+  type ModelConfigExportFile,
+  type ModelConfigExportRow,
+  type ModelConfigImportReport,
+  type ModelConfigImportRowResult,
+  type ModelConfigImportSecretOutcome,
 } from "./settings.service";
 
 export {

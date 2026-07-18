@@ -53,6 +53,18 @@ const RESET_SCOPE_ITEMS: ReadonlyArray<string> = [
   "账号绑定与抖音 / 网站登录态",
 ];
 
+/**
+ * [T-363] 确认弹层里列明「将保留什么」:重置只动清除范围 —— user 级资产(PRESERVE 清单,
+ * backend/src/reset-preserve.ts 单一真值)在归档后的首次启动自动迁回新库。
+ * 只加说明文案,确认交互(弹层 + 确认词 + route 再验)原样不动(用户硬约束)。
+ */
+const RESET_KEEP_ITEMS: ReadonlyArray<string> = [
+  "AI 模型配置与密钥",
+  "技能(skill)定制与版本历史",
+  "激活状态(无需重新输入激活码)",
+  "登录身份与偏好设置",
+];
+
 type Phase = "idle" | "submitting" | "scheduled" | "error";
 
 export function ResetWorkspaceCard() {
@@ -291,6 +303,21 @@ export function ResetWorkspaceCard() {
             </span>
             <ul className="flex list-disc flex-col gap-1 pl-4 text-xs text-muted-foreground">
               {RESET_SCOPE_ITEMS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* [T-363] 保留范围:PRESERVE 资产重启后自动迁回,弹层如实告知(只加文案,交互不动)。 */}
+          <div
+            data-slot="reset-workspace-keep-scope"
+            className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-3"
+          >
+            <span className="text-xs font-medium text-foreground">
+              将保留以下内容(重启后自动恢复):
+            </span>
+            <ul className="flex list-disc flex-col gap-1 pl-4 text-xs text-muted-foreground">
+              {RESET_KEEP_ITEMS.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>

@@ -56,6 +56,8 @@ import { SectionCard } from "@/components/project/section-card";
 import { WebSessionVaultCard } from "./web-session-vault-card";
 // [T-332 S5] 重置工作区危险区卡(存储页签底部;桌面端专属)。
 import { ResetWorkspaceCard } from "./reset-workspace-card";
+// [T-363] 模型配置导出/导入兜底卡(模型页签底部;文件含密钥,卡内常驻警示)。
+import { ModelConfigTransferCard } from "./model-config-transfer-card";
 import { TagChip } from "@/components/content/tag-chip";
 import {
   MODEL_PROVIDER_PRESETS,
@@ -470,6 +472,9 @@ export function SettingsDialog({
                     state={viewModel.multimodalModels.fallback}
                   />
                 </CollapsibleModelGroup>
+
+                {/* [T-363] 配置备份:导出/导入全部模型配置(重置/换机兜底;文件含密钥,卡内警示)。 */}
+                <ModelConfigTransferCard />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>

@@ -101,6 +101,64 @@ export interface ModelConfigInternal {
   settings: Record<string, unknown>;
 }
 
+// ── [T-363] 模型配置导出/导入(设置页兜底:重置/换机后一键找回)────────────────────
+//
+// 导出:secret_value 保持库中**存储形态**(enc:v1: 密文优先;仅无 master key 的存量明文
+// 行才是明文)——导出动作本身不解密、不落明文盘。secretForm 如实标注文件里密钥的形态,
+// UI 据此警示「文件含密钥,注意保管」。
+// 导入:走**既有 service 写路径** setModelConfiguration(按 (user_id, capability) upsert
+// 覆盖);enc 密文先经 repo.unwrapExportedSecret 解包(解不开 = 跨机器/换 key → 该行配置
+// 照导、密钥诚实标 unrecoverable 提示重填,绝不塞进库里假装可用)。
+export interface ModelConfigExportRow {
+  capability: string;
+  provider: string;
+  modelName: string;
+  secretReference: string;
+  /** 库中存储形态(enc:v1: 密文 / 存量明文 / null=未配 key)。 */
+  secretValue: string | null;
+  settings: Record<string, unknown>;
+  baseUrl: string | null;
+  apiFormat: string;
+  isDefault: boolean;
+}
+
+export interface ModelConfigExportFile {
+  kind: "creatoros.model-config-export";
+  version: 1;
+  exportedAt: string;
+  /** 文件内密钥形态:encrypted=全密文;plaintext=含明文;mixed=两者都有;none=无密钥。 */
+  secretForm: "encrypted" | "plaintext" | "mixed" | "none";
+  models: ModelConfigExportRow[];
+}
+
+export type ModelConfigImportSecretOutcome =
+  | "imported" // 密钥解包成功并随配置写入
+  | "kept-existing" // 文件行无密钥 → putModel 语义保留库中已存密钥
+  | "unrecoverable"; // 密文解不开(跨机器/换 key)→ 配置照导,密钥请重填
+
+export interface ModelConfigImportRowResult {
+  capability: string;
+  ok: boolean;
+  secret: ModelConfigImportSecretOutcome | null; // ok=false 时为 null
+  message?: string;
+}
+
+export interface ModelConfigImportReport {
+  total: number;
+  imported: number;
+  failed: number;
+  rows: ModelConfigImportRowResult[];
+}
+
+/** 导入文件校验失败(结构/版本不对)→ 400。 */
+export class ModelConfigImportError extends Error {
+  readonly code = "ValidationError";
+  constructor(message: string) {
+    super(message);
+    this.name = "ModelConfigImportError";
+  }
+}
+
 /** Reads the authenticated user's account row (Identity's getCurrentUser). */
 export type AccountReader = (ctx: RequestContext) => Promise<UserResource>;
 
@@ -148,6 +206,12 @@ export interface SettingsService {
   listModelConfigs(
     ctx: RequestContext,
   ): Promise<ModelConfigurationResource[]>;
+  // [T-363] 模型配置导出/导入(见上方类型注释;导入走 setModelConfiguration 既有写路径)。
+  exportModelConfigs(ctx: RequestContext): Promise<ModelConfigExportFile>;
+  importModelConfigs(
+    ctx: RequestContext,
+    file: unknown,
+  ): Promise<ModelConfigImportReport>;
   createAgentConfiguration(
     ctx: RequestContext,
     input: AgentCreateInput,
@@ -336,7 +400,9 @@ export function createSettingsService(
   migrate: typeof migrateStorageRoot = migrateStorageRoot,
 ): SettingsService {
   const skillIdValid = isValidSkillId ?? ((id: string) => REGISTERED_SKILL_IDS.has(id));
-  return {
+  // [T-363] 具名对象(而非直接 return 字面量):importModelConfigs 复用 service 自身的
+  // setModelConfiguration 既有写路径(upsert on (user_id, capability))。
+  const service: SettingsService = {
     async getAccount(ctx) {
       // Delegated to Identity (injected). Settings does not own `users`.
       return accountReader(ctx);
@@ -397,6 +463,99 @@ export function createSettingsService(
     async listModelConfigs(ctx) {
       const rows = await repoForCtx(ctx).listModels(ctx);
       return rows.map(toModelResource);
+    },
+
+    // [T-363] 导出:原始读(不解密),密钥保持库中存储形态;secretForm 如实标注。
+    async exportModelConfigs(ctx) {
+      const rows = await repoForCtx(ctx).listModelsRaw(ctx);
+      const models: ModelConfigExportRow[] = rows.map((row) => ({
+        capability: row.capability,
+        provider: row.provider,
+        modelName: row.modelName,
+        secretReference: row.secretReference,
+        secretValue: row.secretValue ?? null,
+        settings: (row.settings as Record<string, unknown>) ?? {},
+        baseUrl: row.baseUrl ?? null,
+        apiFormat: (row.apiFormat as string) ?? "anthropic",
+        isDefault: row.isDefault,
+      }));
+      const secrets = models
+        .map((m) => m.secretValue)
+        .filter((v): v is string => typeof v === "string" && v.length > 0);
+      const encCount = secrets.filter((v) => v.startsWith("enc:v1:")).length;
+      const secretForm: ModelConfigExportFile["secretForm"] =
+        secrets.length === 0
+          ? "none"
+          : encCount === secrets.length
+            ? "encrypted"
+            : encCount === 0
+              ? "plaintext"
+              : "mixed";
+      return {
+        kind: "creatoros.model-config-export",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        secretForm,
+        models,
+      };
+    },
+
+    // [T-363] 导入:结构校验 → 逐行走 setModelConfiguration 既有写路径(capability 冲突
+    // 即覆盖);密钥先解包,解不开 → 配置照导 + 该行诚实标 unrecoverable(提示重填)。
+    async importModelConfigs(ctx, file) {
+      const parsed = parseModelConfigExportFile(file);
+      const repo = repoForCtx(ctx);
+      const rows: ModelConfigImportRowResult[] = [];
+      for (const m of parsed.models) {
+        try {
+          let secret: string | undefined;
+          let secretOutcome: ModelConfigImportSecretOutcome = "kept-existing";
+          if (typeof m.secretValue === "string" && m.secretValue.length > 0) {
+            const plain = repo.unwrapExportedSecret(m.secretValue);
+            if (plain === null) {
+              secretOutcome = "unrecoverable";
+            } else {
+              secret = plain;
+              secretOutcome = "imported";
+            }
+          }
+          await service.setModelConfiguration(ctx, m.capability, {
+            provider: m.provider,
+            modelName: m.modelName,
+            secretReference: m.secretReference,
+            secret, // undefined = 保留库中已存密钥(putModel 既有语义)
+            baseUrl: m.baseUrl ?? undefined,
+            apiFormat:
+              m.apiFormat === "openai_chat" ? "openai_chat" : "anthropic",
+            settings: m.settings,
+            isDefault: m.isDefault,
+          });
+          rows.push({
+            capability: m.capability,
+            ok: true,
+            secret: secretOutcome,
+            ...(secretOutcome === "unrecoverable"
+              ? {
+                  message:
+                    "密钥无法解密(可能来自另一台机器或密钥已更换),配置已导入,请重新填写密钥",
+                }
+              : {}),
+          });
+        } catch (err) {
+          rows.push({
+            capability: m.capability,
+            ok: false,
+            secret: null,
+            message: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+      return {
+        total: rows.length,
+        imported: rows.filter((r) => r.ok).length,
+        failed: rows.filter((r) => !r.ok).length,
+        rows,
+      };
     },
 
     async createAgentConfiguration(ctx, input) {
@@ -527,6 +686,63 @@ export function createSettingsService(
       return buildStorageResource(row, usage);
     },
   };
+  return service;
+}
+
+// [T-363] 导入文件的结构校验(宽容:多余字段忽略;缺必填/形状不对 → ModelConfigImportError
+// → 400,绝不半吞)。settings/baseUrl 等可缺省;capability/provider/modelName 必须非空串。
+function parseModelConfigExportFile(file: unknown): {
+  models: ModelConfigExportRow[];
+} {
+  if (typeof file !== "object" || file === null) {
+    throw new ModelConfigImportError("导入内容不是 JSON 对象");
+  }
+  const o = file as Record<string, unknown>;
+  if (o.kind !== "creatoros.model-config-export") {
+    throw new ModelConfigImportError(
+      "不是 CreatorOS 模型配置导出文件(kind 不匹配)",
+    );
+  }
+  if (o.version !== 1) {
+    throw new ModelConfigImportError(`不支持的导出文件版本:${String(o.version)}`);
+  }
+  if (!Array.isArray(o.models)) {
+    throw new ModelConfigImportError("导出文件缺少 models 数组");
+  }
+  const models: ModelConfigExportRow[] = [];
+  for (const [i, raw] of o.models.entries()) {
+    if (typeof raw !== "object" || raw === null) {
+      throw new ModelConfigImportError(`models[${i}] 不是对象`);
+    }
+    const r = raw as Record<string, unknown>;
+    const str = (k: string): string | null =>
+      typeof r[k] === "string" && (r[k] as string).trim().length > 0
+        ? (r[k] as string).trim()
+        : null;
+    const capability = str("capability");
+    const provider = str("provider");
+    const modelName = str("modelName");
+    if (!capability || !provider || !modelName) {
+      throw new ModelConfigImportError(
+        `models[${i}] 缺必填字段(capability/provider/modelName)`,
+      );
+    }
+    models.push({
+      capability,
+      provider,
+      modelName,
+      secretReference: typeof r.secretReference === "string" ? r.secretReference : "",
+      secretValue: typeof r.secretValue === "string" ? r.secretValue : null,
+      settings:
+        typeof r.settings === "object" && r.settings !== null && !Array.isArray(r.settings)
+          ? (r.settings as Record<string, unknown>)
+          : {},
+      baseUrl: typeof r.baseUrl === "string" && r.baseUrl.length > 0 ? r.baseUrl : null,
+      apiFormat: typeof r.apiFormat === "string" ? r.apiFormat : "anthropic",
+      isDefault: r.isDefault === true,
+    });
+  }
+  return { models };
 }
 
 // Asset types surfaced in the StorageUsageCard breakdown (stable order). The

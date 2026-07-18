@@ -1,6 +1,6 @@
 import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
 import { assets, assetFiles } from "@creatoros/backend";
-import { encryptSecret, decryptSecret } from "@creatoros/backend";
+import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
 import {
   userPreferences,
   modelConfigurations,
@@ -120,6 +120,12 @@ export interface SettingsRepository {
     body: ModelPutBody,
   ): Promise<ModelConfigurationRow>;
   listModels(ctx: RequestContext): Promise<ModelConfigurationRow[]>;
+  // [T-363] 导出用原始读:secret_value 保持**库中存储形态**(enc:v1: 密文 / 存量明文 /
+  // NULL),**不解密** —— 导出文件里的密钥默认就是密文,不落明文盘。
+  listModelsRaw(ctx: RequestContext): Promise<ModelConfigurationRow[]>;
+  // [T-363] 导入侧解包:enc:v1: 密文 → 用本机 master key 解密(解不开 = 跨机器/换 key,
+  // 返回 null,调用方诚实提示重填);明文 → 原样透传(允许手编导出文件)。
+  unwrapExportedSecret(stored: string): string | null;
   getStorageConfig(ctx: RequestContext): Promise<StorageConfigRow | null>;
   putStorageConfig(
     ctx: RequestContext,
@@ -319,6 +325,28 @@ export function createSettingsRepository(
         .where(eq(modelConfigurations.userId, ctx.userId));
       // T-147 P2 — 每行读出即解密。
       return rows.map(decRow);
+    },
+
+    // [T-363] 导出用原始读 —— **不过 decRow**,secret_value 保持库中存储形态(密文/存量
+    // 明文/NULL)。导出文件默认只含密文;明文只在「无 master key 的存量明文行」出现,
+    // 由 service 层如实标注 secretForm 供 UI 警示。
+    async listModelsRaw(ctx) {
+      return db
+        .select()
+        .from(modelConfigurations)
+        .where(eq(modelConfigurations.userId, ctx.userId));
+    },
+
+    // [T-363] 导入侧解包(与 decRow 同一把 key、同款「解不开不硬崩」姿态)。
+    unwrapExportedSecret(stored) {
+      if (!isEncrypted(stored)) return stored; // 明文(手编文件/存量明文导出)透传
+      if (!key) return null; // 密文但本环境无 key → 诚实解不开
+      try {
+        return decryptSecret(stored, key);
+      } catch {
+        // auth tag 校验失败 = 非本机导出(master key 不符)→ null,调用方提示重填。
+        return null;
+      }
     },
 
     async getStorageConfig(ctx) {

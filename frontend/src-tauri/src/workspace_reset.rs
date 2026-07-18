@@ -20,6 +20,12 @@
 //!   - `runtime/` —— sidecar 解压缓存,与数据无关(删了也只是重解压)。
 //!   注:activation_state 表在 db 里,归档后随新库丢 —— 但它自 T-372 起只是**展示副本**,
 //!   放行权威在保留下来的 `.license`;Rust 启动同步线程会把副本重新灌回新库(BR-01 通道)。
+//!
+//! [T-363] 归档后的 user 级资产迁回:本模块只管整目录归档(清除范围不在这里收窄);
+//! PRESERVE 清单表(模型配置/skill 定制/激活态/登录身份…,单一真值
+//! backend/src/reset-preserve.ts)由 sidecar 在归档后的**首次启动**从
+//! `db.archived-<ts>` 迁回新库(backend/src/workspace-restore.ts:一次性、幂等、
+//! 失败诚实不阻断启动)。Rust 侧对迁回零感知,归档流程与本文件行为不变。
 
 use std::path::{Path, PathBuf};
 
