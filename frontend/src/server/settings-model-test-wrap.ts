@@ -105,6 +105,20 @@ function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+/**
+ * 探测失败的技术细节(状态码 / 响应体 / 异常)只进 console,**绝不**渲染给用户;
+ * prod 静默(与 lib/ai-error-humanize 的 describeUserError 同一纪律)。
+ */
+function logProbeFailure(where: string, ...detail: unknown[]): void {
+  if (
+    typeof process !== "undefined" &&
+    process.env?.NODE_ENV !== "production"
+  ) {
+    // eslint-disable-next-line no-console
+    console.error(`[settings.models.test] ${where}`, ...detail);
+  }
+}
+
 async function bodyHead(res: Response): Promise<string> {
   try {
     const text = await res.text();
@@ -138,9 +152,10 @@ async function chatProbe(
         }),
       });
       if (res.ok) return { ok: true, detail: "已发 1 token 真实补全,连通。" };
+      logProbeFailure("chatProbe/anthropic", res.status, await bodyHead(res));
       return {
         ok: false,
-        detail: `调用失败(HTTP ${res.status}):${await bodyHead(res)}`,
+        detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
       };
     }
     const url = `${trimBase(spec.baseUrl ?? OPENAI_DEFAULT)}/chat/completions`;
@@ -157,12 +172,17 @@ async function chatProbe(
       }),
     });
     if (res.ok) return { ok: true, detail: "已发 1 token 真实补全,连通。" };
+    logProbeFailure("chatProbe/openai", res.status, await bodyHead(res));
     return {
       ok: false,
-      detail: `调用失败(HTTP ${res.status}):${await bodyHead(res)}`,
+      detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
     };
   } catch (err) {
-    return { ok: false, detail: `网络/调用错误:${errMsg(err)}` };
+    logProbeFailure("chatProbe", err);
+    return {
+      ok: false,
+      detail: "连接失败,请检查网络和接口地址后重试。",
+    };
   }
 }
 
@@ -184,7 +204,11 @@ async function generationAuthProbe(
       body: JSON.stringify({ model: spec.model }),
     });
     if (res.status === 401 || res.status === 403) {
-      return { ok: false, detail: `鉴权失败(HTTP ${res.status}):密钥无效或无权限。` };
+      logProbeFailure("generationAuthProbe/auth", res.status);
+      return {
+        ok: false,
+        detail: "密钥无效或无权限,请检查 API 密钥后重试。",
+      };
     }
     // MiniMax 惯例:HTTP 200 + base_resp.status_code 载真实结果(1004=鉴权失败)。
     let parsed: { base_resp?: { status_code?: number; status_msg?: string } } = {};
@@ -195,13 +219,15 @@ async function generationAuthProbe(
     }
     const code = parsed.base_resp?.status_code;
     if (code === 1004) {
+      logProbeFailure("generationAuthProbe/1004", parsed.base_resp?.status_msg);
       return {
         ok: false,
-        detail: `鉴权失败:${parsed.base_resp?.status_msg ?? "invalid api key"}`,
+        detail: "密钥无效或无权限,请检查 API 密钥后重试。",
       };
     }
     if (res.status >= 500) {
-      return { ok: false, detail: `服务端错误(HTTP ${res.status}),稍后重试。` };
+      logProbeFailure("generationAuthProbe/5xx", res.status);
+      return { ok: false, detail: "对方服务开小差了,请稍后重试。" };
     }
     return {
       ok: true,
@@ -209,7 +235,11 @@ async function generationAuthProbe(
         "鉴权与端点可达(未实际生成视频 —— 生视频分钟级且计费,只校验了密钥与端点)。",
     };
   } catch (err) {
-    return { ok: false, detail: `网络/调用错误:${errMsg(err)}` };
+    logProbeFailure("generationAuthProbe", err);
+    return {
+      ok: false,
+      detail: "连接失败,请检查网络和接口地址后重试。",
+    };
   }
 }
 
@@ -236,13 +266,19 @@ async function modelsListProbe(
           `无法探测(该厂商无 /v1/models 端点,HTTP ${res.status}),配置可能正常 —— 将在真实转写时验证。`,
       };
     }
+    logProbeFailure("modelsListProbe", res.status, await bodyHead(res));
     return {
       ok: false,
       status: "fail",
-      detail: `调用失败(HTTP ${res.status}):${await bodyHead(res)}`,
+      detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
     };
   } catch (err) {
-    return { ok: false, status: "fail", detail: `网络/调用错误:${errMsg(err)}` };
+    logProbeFailure("modelsListProbe", err);
+    return {
+      ok: false,
+      status: "fail",
+      detail: "连接失败,请检查网络和接口地址后重试。",
+    };
   }
 }
 
@@ -262,12 +298,17 @@ async function embedProbe(
       body: JSON.stringify({ model: spec.model, input: "ping" }),
     });
     if (res.ok) return { ok: true, detail: "已算一条最小 embedding,连通。" };
+    logProbeFailure("embedProbe", res.status, await bodyHead(res));
     return {
       ok: false,
-      detail: `调用失败(HTTP ${res.status}):${await bodyHead(res)}`,
+      detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
     };
   } catch (err) {
-    return { ok: false, detail: `网络/调用错误:${errMsg(err)}` };
+    logProbeFailure("embedProbe", err);
+    return {
+      ok: false,
+      detail: "连接失败,请检查网络和接口地址后重试。",
+    };
   }
 }
 
@@ -348,18 +389,20 @@ export async function runModelConnectionTest(
               detail: "已真实生成一张最小测试图,连通(消耗了少量生图额度)。",
             };
           }
+          logProbeFailure("image.generate", "empty bytes");
           return {
             ok: false,
             provider: spec.provider,
             model: spec.model,
-            detail: "生图模型已配置,但调用失败:provider 返回空字节。",
+            detail: "连接失败:没能生成测试图,请核对密钥与接口地址后重试。",
           };
         } catch (err) {
+          logProbeFailure("image.generate", err);
           return {
             ok: false,
             provider: spec.provider,
             model: spec.model,
-            detail: `生图模型已配置,但调用失败:${errMsg(err)}`,
+            detail: "连接失败,请检查网络和接口地址后重试。",
           };
         }
       }
@@ -403,25 +446,28 @@ export async function runModelConnectionTest(
           }
           try {
             const res = await fetchImpl(firstFeed, { method: "GET" });
-            return res.ok
-              ? {
-                  ok: true,
-                  provider: spec.provider,
-                  model: "",
-                  detail: `feed 可达(${firstFeed})。`,
-                }
-              : {
-                  ok: false,
-                  provider: spec.provider,
-                  model: "",
-                  detail: `feed 拉取失败(HTTP ${res.status}):${firstFeed}`,
-                };
-          } catch (err) {
+            if (res.ok) {
+              return {
+                ok: true,
+                provider: spec.provider,
+                model: "",
+                detail: "信源可达,连通。",
+              };
+            }
+            logProbeFailure("web.search/rss", res.status, firstFeed);
             return {
               ok: false,
               provider: spec.provider,
               model: "",
-              detail: `feed 拉取失败:${errMsg(err)}`,
+              detail: "热点拉取失败,请检查网络后重试。",
+            };
+          } catch (err) {
+            logProbeFailure("web.search/rss", err);
+            return {
+              ok: false,
+              provider: spec.provider,
+              model: "",
+              detail: "热点拉取失败,请检查网络后重试。",
             };
           }
         }
@@ -435,11 +481,12 @@ export async function runModelConnectionTest(
             detail: `已发一次最小真实检索(返回 ${count} 条),连通(消耗少量检索额度)。`,
           };
         } catch (err) {
+          logProbeFailure("web.search", err);
           return {
             ok: false,
             provider: spec.provider,
             model: spec.model ?? "",
-            detail: `搜索已配置,但调用失败:${errMsg(err)}`,
+            detail: "连接失败,请检查网络和接口地址后重试。",
           };
         }
       }
@@ -452,9 +499,15 @@ export async function runModelConnectionTest(
         };
     }
   } catch (err) {
-    // 解析层抛错:未配置类 → 「未配置」;其它 → 真实原因透传。
+    // 解析层抛错:未配置类 → 「未配置」;其它 → 人话兜底(技术原因只进 console)。
     if (isUnconfiguredError(err)) return unconfigured(errMsg(err));
-    return { ok: false, provider: "", model: "", detail: `测试失败:${errMsg(err)}` };
+    logProbeFailure("runModelConnectionTest", err);
+    return {
+      ok: false,
+      provider: "",
+      model: "",
+      detail: "连接失败,请检查网络和接口地址后重试。",
+    };
   }
 }
 

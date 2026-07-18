@@ -438,7 +438,7 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
           data-slot="data-overview-empty"
           className="mt-1 rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
         >
-          暂无本周播放趋势。趋势需连续多日采集积累(顶部「总播放」是累计值)。
+          本周还没有足够的播放数据画趋势。多发几天、系统持续更新后,这里会出现走势图。
         </p>
       ) : (
       <div className="mt-1">

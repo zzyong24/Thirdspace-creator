@@ -380,7 +380,7 @@ describe("Reviews authoring wiring ([T-329] 直接可用)", () => {
       '[data-slot="review-authoring-no-wiring"]',
     );
     expect(reason).not.toBeNull();
-    expect(reason!.textContent ?? "").toContain("登录会话未就绪");
+    expect(reason!.textContent ?? "").toContain("登录状态还没准备好");
     fireEvent.click(addBtn);
     fireEvent.click(completeBtn);
     fireEvent.click(

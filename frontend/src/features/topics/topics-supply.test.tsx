@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // [T-235e] 选题中心「被服务感知」测试(SPEC daily-topic-autopilot §2.5,三决策):
 //   ① 今日新选题条带:createdAt≥dayStartIso 过滤、来源徽标(🔥跟拍|/实验|前缀 + source 枚举)、
-//     一句依据、空态诚实「今晨采集无新信号」。
+//     一句依据、空态诚实「今天早上暂时没找到新选题」。
 //   ② 供给链健康条:lastRun 缺失 → 「—」诚实降级;有实绩 → ✓HH:mm;计数派生纯函数。
 //   ③ 统一「信号源」弹窗三 tab 切换 + 网页信源登记 wiring(trend.sources.create → refresh)。
 //   ④ 候选卡「实验」徽标(card.attributionId)点开显示 angle 里的归因引用。
@@ -238,7 +238,7 @@ describe("[T-235e] 今日新选题条带", () => {
     window.removeEventListener("creatoros:topic-focus", listener);
   });
 
-  it("空态诚实:今日无新候选 → 「今晨采集无新信号」", () => {
+  it("空态诚实:今日无新候选 → 「今天早上暂时没找到新选题」", () => {
     render(
       <TodayTopicsStrip
         dayStartIso={DAY_START_ISO}
@@ -246,7 +246,7 @@ describe("[T-235e] 今日新选题条带", () => {
       />,
     );
     expect(screen.getByTestId("today-topics-empty")).toHaveTextContent(
-      "今晨采集无新信号",
+      "今天早上暂时没找到新选题",
     );
   });
 

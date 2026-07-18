@@ -150,7 +150,7 @@ export function AdjudicationQueue({ candidates }: AdjudicationQueueProps) {
           data-slot="learning-queue-empty"
           className="rounded-card bg-surface-subtle px-4 py-6 text-center text-sm text-muted-foreground"
         >
-          暂无待裁决经验——复盘后 AI 会把发现排进来
+          还没有待确认的经验。做过复盘后,AI 会把发现整理到这里等你确认。
         </p>
       ) : null}
       {candidates.map((learning) => (

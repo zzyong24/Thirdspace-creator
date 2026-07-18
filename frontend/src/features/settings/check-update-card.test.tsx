@@ -175,7 +175,7 @@ describe("CheckUpdateCard — 桌面态", () => {
 });
 
 // [T-372 L3] 买断撤销软降级(SPEC §8):revoked + expiresAt=null(买断)→ 更新入口旁
-// 显式提示「授权已被撤销:更新已停用,核心功能不受影响」+ 检查更新按钮停用;
+// 显式提示「更新服务已暂停,不影响你正常使用」+ 检查更新按钮停用;
 // 内测(expiresAt 非 null)revoked 不走此路(内测吊销 = 整体跳激活页,由 Rust 门负责)。
 describe("CheckUpdateCard — 买断撤销停更新 (T-372 L3)", () => {
   const baseActivation = {
@@ -205,8 +205,8 @@ describe("CheckUpdateCard — 买断撤销停更新 (T-372 L3)", () => {
       '[data-slot="check-update-revoked-alert"]',
     );
     expect(alert).not.toBeNull();
-    expect(alert?.textContent).toContain("授权已被撤销");
-    expect(alert?.textContent).toContain("核心功能不受影响");
+    expect(alert?.textContent).toContain("更新服务已暂停");
+    expect(alert?.textContent).toContain("不影响你正常使用");
     const action = document.querySelector(
       '[data-slot="check-update-action"]',
     ) as HTMLButtonElement;

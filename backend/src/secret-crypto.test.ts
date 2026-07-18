@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import { createHash } from "node:crypto";
 import { closeSync, mkdtempSync, openSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -108,10 +109,16 @@ describe("resolveMasterKey — desktop keychain env vs web/dev fallback", () => 
     expect(res.degraded).toBe(true);
   });
 
-  it("the dev fallback key is stable across calls (so a dev-written blob decrypts next boot)", () => {
+  it("[T-416 P0-A] dev fallback key is stable within a process, but random (not the old hardcoded constant)", () => {
+    // 同进程内稳定(能解回本次会话写的 blob),但**不再是**可公开推导的确定性常量
+    // (SHA256("creatoros-dev-fallback-master-key-v1"))—— 那会让降级态写的模型 key 被任何人解密。
     const a = resolveMasterKey({ NODE_ENV: "development" });
     const b = resolveMasterKey({ NODE_ENV: "development" });
-    expect(a.key.equals(b.key)).toBe(true);
+    expect(a.key.equals(b.key)).toBe(true); // 同进程稳定
+    const oldHardcoded = createHash("sha256")
+      .update("creatoros-dev-fallback-master-key-v1")
+      .digest();
+    expect(a.key.equals(oldHardcoded)).toBe(false); // 已去确定性常量
   });
 });
 

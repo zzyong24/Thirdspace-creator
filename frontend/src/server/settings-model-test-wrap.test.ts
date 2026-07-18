@@ -1,9 +1,9 @@
 /**
  * [T-377] settings.models.test「测试连接」通道单测(fake 解析器 / fetch / adapter,零网络):
- *   - 文本(default):1 token 补全探测,200 → ✓;401 → ✗ 带真实原因;未配 → 「未配置」。
+ *   - 文本(default):1 token 补全探测,200 → ✓;401 → ✗ 人话提示(不泄 HTTP 码/响应体);未配 → 「未配置」。
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
- *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → 「已配置,但调用失败」。
- *   - video.generate:鉴权探测 —— 401 → ✗;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
+ *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → ✗ 人话提示(不泄原始报错)。
+ *   - video.generate:鉴权探测 —— 401 → ✗ 密钥无效或无权限;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
  *   - transcribe.audio:whisper-local 回退 → ✓ 免测试。
  *   - web.search:browser 免 key → ✓;付费 provider 最小检索成功 → ✓。
  *   - wrap 透传:非 test op 原样进 settings transport。
@@ -73,7 +73,7 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     expect(url).toBe("https://api.example.com/v1/chat/completions");
   });
 
-  it("HTTP 401 → ✗ 带真实原因(不说「未配置」)", async () => {
+  it("HTTP 401 → ✗ 人话提示(不泄 HTTP 码/响应体,也不说「未配置」)", async () => {
     const deps = makeDeps({
       fetchImpl: vi.fn(async () =>
         new Response("invalid api key", { status: 401 }),
@@ -81,8 +81,9 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     });
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
-    expect(r.detail).toContain("401");
-    expect(r.detail).toContain("invalid api key");
+    expect(r.detail).toContain("连接失败");
+    expect(r.detail).not.toContain("401");
+    expect(r.detail).not.toContain("invalid api key");
     expect(r.detail).not.toContain("未配置");
   });
 
@@ -141,7 +142,7 @@ describe("runModelConnectionTest — image.generate(真实最小生图)", () => 
     expect(deps.generateImageMinimal).toHaveBeenCalledWith(openaiSpec);
   });
 
-  it("生图调用抛错 → 「已配置,但调用失败:<原因>」", async () => {
+  it("生图调用抛错 → ✗ 人话提示(不泄原始报错)", async () => {
     const deps = makeDeps({
       generateImageMinimal: vi.fn(async () => {
         throw new Error("minimax 401 invalid key");
@@ -149,8 +150,8 @@ describe("runModelConnectionTest — image.generate(真实最小生图)", () => 
     });
     const r = await runModelConnectionTest(ctx, "image.generate", deps);
     expect(r.ok).toBe(false);
-    expect(r.detail).toContain("已配置,但调用失败");
-    expect(r.detail).toContain("invalid key");
+    expect(r.detail).toContain("连接失败");
+    expect(r.detail).not.toContain("invalid key");
   });
 
   it("未配(resolve 抛 MultimodalConfigError)→ 「未配置」", async () => {
@@ -168,13 +169,14 @@ describe("runModelConnectionTest — image.generate(真实最小生图)", () => 
 });
 
 describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)", () => {
-  it("HTTP 401 → ✗ 鉴权失败", async () => {
+  it("HTTP 401 → ✗ 密钥无效或无权限(不泄 HTTP 码)", async () => {
     const deps = makeDeps({
       fetchImpl: vi.fn(async () => jsonResponse(401)) as unknown as typeof fetch,
     });
     const r = await runModelConnectionTest(ctx, "video.generate", deps);
     expect(r.ok).toBe(false);
-    expect(r.detail).toContain("鉴权失败");
+    expect(r.detail).toContain("密钥无效或无权限");
+    expect(r.detail).not.toContain("401");
   });
 
   it("参数级 400(缺 prompt)→ ✓ 鉴权/端点可达,且明示未真生成", async () => {
@@ -188,7 +190,7 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     expect(r.detail).toContain("未实际生成");
   });
 
-  it("MiniMax 惯例 HTTP 200 + base_resp 1004 → ✗ 鉴权失败", async () => {
+  it("MiniMax 惯例 HTTP 200 + base_resp 1004 → ✗ 密钥无效或无权限(不泄原始 status_msg)", async () => {
     const deps = makeDeps({
       fetchImpl: vi.fn(async () =>
         jsonResponse(200, {
@@ -198,7 +200,8 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     });
     const r = await runModelConnectionTest(ctx, "video.generate", deps);
     expect(r.ok).toBe(false);
-    expect(r.detail).toContain("invalid api key");
+    expect(r.detail).toContain("密钥无效或无权限");
+    expect(r.detail).not.toContain("invalid api key");
   });
 });
 
@@ -251,14 +254,15 @@ describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路�
     expect(r.status).toBe("warn");
   });
 
-  it("云端 ASR /v1/models 401 → ✗ fail(鉴权失败照旧诚实报)", async () => {
+  it("云端 ASR /v1/models 401 → ✗ fail(人话提示,不泄 HTTP 码)", async () => {
     const deps = cloudAsrDeps(
       vi.fn(async () => new Response("invalid key", { status: 401 })) as unknown as typeof fetch,
     );
     const r = await runModelConnectionTest(ctx, "transcribe.audio", deps);
     expect(r.ok).toBe(false);
     expect(r.status).toBe("fail");
-    expect(r.detail).toContain("401");
+    expect(r.detail).toContain("连接失败");
+    expect(r.detail).not.toContain("401");
   });
 
   it("web.search browser → ✓ 免 key;bocha 最小检索成功 → ✓ 带额度提示", async () => {

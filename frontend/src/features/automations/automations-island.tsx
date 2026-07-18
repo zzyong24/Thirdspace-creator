@@ -292,7 +292,7 @@ function runResultText(run: {
     case "needs_reconnect":
       return "⚠️ 需重连抖音 —— 去扫码登录";
     case "failed":
-      return run.error ? `❌ 失败:${run.error}` : "❌ 失败";
+      return "❌ 采集失败,请稍后重试;若一直失败,去账号管理重新扫码。";
     default:
       return `新增 ${run.itemsNew} · 更新 ${run.itemsUpdated}`;
   }

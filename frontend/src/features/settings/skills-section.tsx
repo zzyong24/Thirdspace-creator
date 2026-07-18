@@ -483,7 +483,7 @@ function SkillVersionHistory({
           ))
         ) : (
           <p className="text-xs text-muted-foreground">
-            暂无历史版本(保存或恢复默认后会记录快照)。
+            还没有历史版本。每次保存或恢复默认后,系统会自动留一份记录。
           </p>
         )}
       </div>

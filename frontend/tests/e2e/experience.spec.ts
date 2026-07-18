@@ -83,7 +83,7 @@ test.describe("经验裁决台 page", () => {
     if (candidateCount === 0) {
       await expect(
         queue.locator('[data-slot="learning-queue-empty"]'),
-      ).toContainText("暂无待裁决经验");
+      ).toContainText("还没有待确认的经验");
     } else {
       const firstCard = queue.locator('[data-slot="candidate-card"]').first();
       await expect(

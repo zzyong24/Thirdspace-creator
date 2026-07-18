@@ -264,7 +264,7 @@ export function ChatHookCard({
           data-slot="chat-hook-system-row"
           className="rounded-md bg-surface-subtle px-2.5 py-1.5 text-[11px] text-muted-foreground"
         >
-          已撤销 —— 稿面回滚到写入前版本。
+          已撤销,稿子已恢复到修改前。
         </p>
       ) : null}
       {state.phase === "error" ? (

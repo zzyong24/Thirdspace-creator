@@ -96,7 +96,7 @@ describe("ExecutionTaskCard", () => {
       ),
     );
     expect(
-      screen.getByText(/已采纳 2 个产物进素材库/),
+      screen.getByText(/已把 2 个成果收进素材库/),
     ).toBeInTheDocument();
   });
 
@@ -106,7 +106,7 @@ describe("ExecutionTaskCard", () => {
     await waitFor(() => expect(screen.getByText("丢弃")).toBeInTheDocument());
     await userEvent.click(screen.getByText("丢弃"));
     await waitFor(() =>
-      expect(screen.getByText(/任务已丢弃/)).toBeInTheDocument(),
+      expect(screen.getByText(/任务已取消/)).toBeInTheDocument(),
     );
   });
 
@@ -130,14 +130,16 @@ describe("ExecutionTaskCard", () => {
     expect(body.body.spec.params.retryOf).toBe("task-1");
   });
 
-  it("失败态诚实渲 errorMessage", async () => {
+  it("失败态渲人话提示(不泄露原始 errorMessage)", async () => {
     getExecutionTask.mockResolvedValue(
       makeTask({ status: "failed", manifest: null, errorMessage: "执行超时(>600s),已中止" }),
     );
     render(<ExecutionTaskCard taskId="task-1" />);
     await waitFor(() =>
-      expect(screen.getByText(/执行失败:执行超时/)).toBeInTheDocument(),
+      expect(screen.getByText(/这一步没跑成/)).toBeInTheDocument(),
     );
+    // 原始技术错误(errorMessage)绝不甩用户脸上。
+    expect(screen.queryByText(/执行超时/)).not.toBeInTheDocument();
   });
 });
 

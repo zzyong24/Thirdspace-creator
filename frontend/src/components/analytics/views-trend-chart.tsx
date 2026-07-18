@@ -133,7 +133,7 @@ export function ViewsTrendChart({
           data-slot="views-trend-single-note"
           className="text-[11px] leading-relaxed text-muted-foreground"
         >
-          仅 1 次采集快照 · 需多次采集积累日趋势
+          数据刚更新了一次,还画不出走势;过几天再来看趋势。
         </p>
       ) : null}
       <p data-slot="chart-summary" className="sr-only">

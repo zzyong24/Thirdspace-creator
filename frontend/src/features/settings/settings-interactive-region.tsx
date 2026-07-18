@@ -874,7 +874,7 @@ function AccountBindingCard({
                 : sourceReady
                   ? "登录态有效,可采集你的作品数据与评论。"
                   : // [T-144] 去虚假承诺:登录态有效但采集源未建时,别说「可采集」。
-                    "已扫码,采集源尚未就绪。重新扫码或运行一次采集即可建源。"}
+                    "已扫码,但还没开始同步。重新扫码,或手动同步一次即可。"}
             </span>
           </div>
           <Button
@@ -1226,7 +1226,7 @@ function ActivationStatusCard({
           <SettingsFormRow
             label="离线宽限剩余"
             controlId="activation-grace-countdown"
-            help="内测授权离线可用 24 小时,超时需联网重新校验;买断授权无此限制。"
+            help="内测版离线可用 24 小时,之后需联网确认一次;买断版无此限制。"
           >
             <span
               id="activation-grace-countdown"
@@ -1456,7 +1456,7 @@ function CheckUpdateCard({
             />
             <div className="flex min-w-0 flex-col gap-0.5">
               <span className="text-sm font-medium text-foreground">
-                授权已被撤销:更新已停用,核心功能不受影响
+                更新服务已暂停,不影响你正常使用。如需恢复接收新版本,请联系作者。
               </span>
               <span className="text-xs text-muted-foreground">
                 本机可继续正常使用,但不再接收新版本。如有疑问请联系作者恢复授权。

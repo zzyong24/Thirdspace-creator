@@ -343,7 +343,7 @@ export function ExecutionTaskCard({
 
       {status === "succeeded" ? (
         <p data-slot="execution-task-done" className="text-[12px] text-success">
-          ✓ 已采纳 {task?.adoptedAssetIds.length ?? 0} 个产物进素材库,沙箱已清理。
+          ✓ 已把 {task?.adoptedAssetIds.length ?? 0} 个成果收进素材库。
         </p>
       ) : null}
 
@@ -351,8 +351,8 @@ export function ExecutionTaskCard({
         <div data-slot="execution-task-error" className="flex flex-col gap-1">
           <p className="text-[12px] leading-relaxed text-destructive">
             {status === "cancelled"
-              ? "任务已丢弃,沙箱已清理。"
-              : `执行失败:${task?.errorMessage ?? "未知错误"}`}
+              ? "任务已取消。"
+              : "这一步没跑成,请点下方「重试」;若多次失败,换个模型或稍后再试。"}
           </p>
           <button
             type="button"

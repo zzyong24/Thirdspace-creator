@@ -794,7 +794,7 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
       '[data-slot="douyin-binding-hint"]',
     ) as HTMLElement;
     await waitFor(() =>
-      expect(hint.textContent).toContain("采集源"),
+      expect(hint.textContent).toContain("还没开始同步"),
     );
     // 去虚假承诺:登录态有效但无源时,绝不出现「可采集」承诺。
     expect(hint.textContent).not.toContain("可采集");

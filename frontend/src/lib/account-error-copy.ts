@@ -8,6 +8,7 @@
  * 供各 island 的 catch 分支复用,避免每处各写一遍。
  */
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { isAccountRequiredError } from "@/lib/http-transport";
 
 /** 未选号写操作的统一引导文案(§4.2:引导,不是报错)。 */
@@ -17,9 +18,10 @@ export const ACCOUNT_REQUIRED_MESSAGE =
 /**
  * 把 client 写路径的错误翻译成用户可读文案:
  *  - AccountRequiredError → 选号引导(固定文案);
- *  - 其它 → 透传后端 message(可判定信息别丢),空 message 回退 fallback。
+ *  - 其它 → describeUserError 收口成人话(AI 码 / 结构化码 → 人话,识别不出回退
+ *    fallback),**绝不**裸吐后端 message / 技术码。
  */
 export function translateClientError(err: unknown, fallback: string): string {
   if (isAccountRequiredError(err)) return ACCOUNT_REQUIRED_MESSAGE;
-  return err instanceof Error && err.message ? err.message : fallback;
+  return describeUserError(err, fallback);
 }

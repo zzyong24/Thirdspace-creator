@@ -156,6 +156,6 @@ describe("裁决队列(AdjudicationQueue)", () => {
     expect(
       container.querySelector('[data-slot="learning-queue-empty"]')!
         .textContent,
-    ).toContain("暂无待裁决经验——复盘后 AI 会把发现排进来");
+    ).toContain("还没有待确认的经验");
   });
 });

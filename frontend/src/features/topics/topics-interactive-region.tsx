@@ -932,7 +932,7 @@ function BenchmarkSourceForm() {
       <FieldRow label="sec_uid" required>
         <Input
           aria-label="对标源 sec_uid"
-          placeholder="博主 sec_uid（稳定身份键）"
+          placeholder="粘贴该博主的抖音主页链接"
           value={secUid}
           onChange={(e) => setSecUid(e.target.value)}
         />
@@ -1172,7 +1172,7 @@ function BenchmarkSourceList({
         data-testid="benchmark-source-empty"
         className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
       >
-        还没有对标源。登记一个博主 sec_uid，定时采集会抓它的公开爆款，拆解后自动进选题池。
+        贴一个想对标的博主主页链接,系统每天自动抓它的公开爆款,拆解后放进选题池。
       </p>
     );
   }
@@ -1417,7 +1417,7 @@ function BenchmarkWorksList({
         data-testid="benchmark-works-empty"
         className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
       >
-        还没有对标作品。先在上方「对标博主」登记 sec_uid 并采集，抓到的公开作品会逐条列在这里，可单独抓逐字稿。
+        还没有对标作品。先在上方「对标博主」贴一个博主主页链接并采集,抓到的公开作品会逐条列在这里,可单独抓逐字稿。
       </p>
     );
   }

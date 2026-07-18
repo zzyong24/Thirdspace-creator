@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { readSync } from "node:fs";
 
 // T-147 P2 本地加密 —— 模型 API key 的静态加密工具(收口在 settings.repository 层做透明加解密)。
@@ -84,12 +84,13 @@ export function decryptSecret(
   return plaintext.toString("utf8");
 }
 
-// 开发降级 key:从固定字符串派生(SHA-256 → 32B)。**只在 dev / 无 keychain 时用**,
-// 目的是让 web/dev 路径永不崩、且同一 dev 环境跨重启能解回自己写的 blob。安全性弱
-// (固定值,任何人可推导)——真桌面端必须用 keychain 注入的随机 key。
-const DEV_FALLBACK_KEY = createHash("sha256")
-  .update("creatoros-dev-fallback-master-key-v1")
-  .digest();
+// [T-416 P0-A] 开发降级 key:改「**每进程随机**」(去掉确定性常量)。原为
+//   `SHA256("creatoros-dev-fallback-master-key-v1")` —— 任何人可推导,正版偶发降级态
+//   (fd 竞态/keychain 打嗝)写的模型 key 就能被这个公开常量解密。改随机后:模块级
+//   `randomBytes` 在**同进程内稳定**(能解回本次会话自己写的 blob,app 不崩),跨进程/重启
+//   即变(降级态数据重启解不开 = 可接受:降级本不该在真桌面出现,fd 通道才是常态;dev 每次
+//   新进程换 key)。仍弱于 keychain(内存可 dump),但已灭「公开常量一把解密」这个最弱点。
+const DEV_FALLBACK_KEY = randomBytes(32);
 
 // [T-391 H-key] 从指定 fd(桌面端 = ChildStdin,fd 0)同步读 master key(base64),读到**换行符**
 //   或 EOF 即停 —— 不依赖 EOF(Win/Linux 的 tauri-plugin-shell 写端不关,靠换行终止;macOS std 写完

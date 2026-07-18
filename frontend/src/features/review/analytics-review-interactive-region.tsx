@@ -173,7 +173,7 @@ export function AnalyticsReviewInteractiveRegion({
           // 复盘编辑/记录等真 op 面照常可用。
           <EmptyState
             title="该作品暂无明细数据"
-            description="还没有拉到这个作品的播放/互动明细。去自动化跑「拉明细」采集，数据回收后即可在此查看指标与图表；下方评论与右侧复盘编辑不受影响。"
+            description="还没有这个作品的详细数据。去「自动化」里同步一次明细数据,回来即可看到指标和图表。"
           />
         ) : (
           <>
@@ -323,7 +323,7 @@ function buildTrendSummary(
   data: ReadonlyArray<{ readonly label: string; readonly value: number }>,
   mode: "daily" | "single" | "empty",
 ): string {
-  if (mode === "empty" || data.length === 0) return "播放趋势：暂无采集数据。";
+  if (mode === "empty" || data.length === 0) return "播放趋势：暂无数据。";
   if (mode === "single" || data.length === 1) {
     const p = data[data.length - 1]!;
     return `播放趋势：仅 1 次采集(${p.label}），播放量 ${p.value.toLocaleString()}。需多次采集积累日趋势。`;
@@ -792,7 +792,7 @@ function ReviewAuthoringPanel({
   // [T-329] 无 wiring = 无登录会话:控件禁用 + 明示原因(绝不静默 no-op)。
   const noWiringReason = wiring
     ? null
-    : "登录会话未就绪，暂时无法保存复盘。请先登录后再试。";
+    : "登录状态还没准备好,请先登录后再保存复盘。";
 
   const addInsight = React.useCallback(() => {
     if (!wiring || busy) return; // 按钮已 disabled;此处仅防御

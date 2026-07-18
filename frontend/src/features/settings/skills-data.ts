@@ -147,6 +147,42 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "素材匹配",
     purpose: "从素材库为脚本段落匹配可用素材。",
   },
+  "benchmark.teardown": {
+    name: "对标拆解",
+    purpose: "拆解对标爆款作品的钩子与结构,提炼可借鉴要素并转成选题。",
+  },
+  "favorites.triage": {
+    name: "收藏整理",
+    purpose: "把你收藏的内容自动判别去向(知识库 / 选题 / 忽略)。",
+  },
+  "topic.attribution": {
+    name: "爆款归因复盘",
+    purpose: "从已发布作品回流,提炼可复用的爆款公式与结构。",
+  },
+  "topic.preference": {
+    name: "选题偏好学习",
+    purpose: "从你对选题的取舍中学习偏好方向,让出题更懂你。",
+  },
+  "trend.extract": {
+    name: "热点提取",
+    purpose: "从你添加的信源里抽取最新热点信号,供出选题蹭热点。",
+  },
+  "video.scenes": {
+    name: "视频分场",
+    purpose: "把口播稿按语义切成一个个画面场次,作为分镜依据。",
+  },
+  "video.cards": {
+    name: "信息卡设计",
+    purpose: "为需要强调的信息点生成画面信息卡建议。",
+  },
+  "video.broll": {
+    name: "空镜匹配",
+    purpose: "为每个场次匹配合适的空镜 / B-roll 画面。",
+  },
+  "video.subtitles": {
+    name: "字幕生成",
+    purpose: "为视频生成字幕文本。",
+  },
   // —— 采集分类 ——
   "knowledge.classify": {
     name: "知识归类",

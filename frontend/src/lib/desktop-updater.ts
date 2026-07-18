@@ -132,8 +132,12 @@ function readableError(err: unknown): string {
       : typeof err === "string"
         ? err
         : "";
-  if (/network|fetch|timeout|connect|dns|reach/i.test(raw)) {
+  if (
+    /network|fetch|timeout|connect|dns|reach|sending request|request for url/i.test(
+      raw,
+    )
+  ) {
     return "检查更新失败:网络不可达,请检查网络后重试。";
   }
-  return raw ? `检查更新失败:${raw}` : "检查更新失败,请稍后重试。";
+  return "检查更新失败,请检查网络后重试。若多次失败,可稍后再试或联系作者。";
 }

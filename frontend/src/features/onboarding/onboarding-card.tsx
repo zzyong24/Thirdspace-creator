@@ -104,7 +104,7 @@ function positioningWhy(
   if (step.key !== "positioning-profile") return step.why;
   return origin === "existing"
     ? "基于你刚导入的作品,AI 会反推草拟第一版定位提案 —— 你过目采纳即可,不用从零手写。"
-    : "和 AI 聊几句,把你想做的方向、受众聊清楚,生成第一版定位。定位是下游选题 / 评分的约束源。";
+    : "和 AI 聊几句,把你想做的方向、受众聊清楚,生成第一版定位。之后选题和打分都会围绕这个定位来。";
 }
 
 type Load =

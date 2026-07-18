@@ -576,7 +576,7 @@ export function ChatPositioningCard({
             className="flex flex-col gap-0.5 rounded-control border border-warning/30 bg-warning/5 px-2 py-1.5"
           >
             <span className="text-[9.5px] font-medium uppercase tracking-wide text-warning">
-              硬约束（供下游选题/写稿/项目遵守）
+              这些是硬性要求,后续选题、写稿都会遵守。
             </span>
             {ruleRows.map(([label, value]) => (
               <div key={label} className="flex gap-1 text-[10px]">

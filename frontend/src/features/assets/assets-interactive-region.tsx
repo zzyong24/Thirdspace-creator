@@ -170,7 +170,7 @@ export function AssetsInteractiveRegion({
           a.remove();
           setActionStatus(`已开始下载「${dto.fileName}」。`);
         } catch {
-          setActionStatus("下载失败：文件缺失或存储不可用。");
+          setActionStatus("下载失败,文件可能已被移除,请刷新后重试。");
         }
       });
     },
@@ -199,13 +199,13 @@ export function AssetsInteractiveRegion({
           }
           const data = (await res.json()) as { path?: string };
           if (!data.path) {
-            setActionStatus("复制地址失败：未取到文件路径。");
+            setActionStatus("复制失败,请重试。");
             return;
           }
           await navigator.clipboard.writeText(data.path);
           setActionStatus("已复制文件地址。");
         } catch {
-          setActionStatus("复制地址失败：本地服务或剪贴板不可用。");
+          setActionStatus("复制失败,请重试。");
         }
       });
     },
@@ -242,7 +242,7 @@ export function AssetsInteractiveRegion({
           }
           setActionStatus("已在 Finder 中显示。");
         } catch {
-          setActionStatus("Finder 定位失败：本地服务不可达。");
+          setActionStatus("没能在访达中打开,请稍后重试。");
         }
       });
     },

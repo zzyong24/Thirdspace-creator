@@ -346,7 +346,7 @@ export function BriefWorkbench({
           >
             {/* 画幅:产品唯一的"类型"区分 —— 横屏 / 竖屏。整行醒目放最前。 */}
             <div className="mb-4">
-              <Field label="画幅" hint="横屏或竖屏,影响下游脚本节奏">
+              <Field label="画幅" hint="横屏或竖屏,会影响后面脚本的节奏。">
                 <div
                   data-slot="brief-orientation"
                   className="flex gap-2"

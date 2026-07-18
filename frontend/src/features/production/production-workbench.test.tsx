@@ -434,12 +434,12 @@ describe("ProductionWorkbench", () => {
         container.querySelector('[data-slot="production-render"]'),
       ).toBeTruthy(),
     );
-    // ExecutionTaskCard 显失败原因 + 重试(失败可恢复)。
+    // ExecutionTaskCard 显人话失败提示 + 重试(失败可恢复)。
     await waitFor(() =>
       expect(
         container.querySelector('[data-slot="execution-task-error"]')
           ?.textContent ?? "",
-      ).toContain("执行失败"),
+      ).toContain("这一步没跑成"),
     );
     // ffmpeg 环境错误被 humanize 成安装引导(workbench 的 render-env-hint)。
     await waitFor(() =>

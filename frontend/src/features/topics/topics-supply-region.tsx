@@ -156,7 +156,7 @@ export function TodayTopicsStrip({
           data-testid="today-topics-empty"
           className="rounded-control border border-dashed border-border px-3 py-2 text-xs text-muted-foreground"
         >
-          今晨采集无新信号 —— 定时供给跑过但没有新候选,或作业还没到点。
+          今天早上暂时没找到新选题。系统每天会自动找,晚点再来看看,或点上方手动找一批。
         </p>
       ) : (
         <ul
@@ -501,7 +501,7 @@ function TrendSourcesTab({
           data-testid="trend-source-empty"
           className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
         >
-          还没有网页信源。登记任意热榜页 / 垂类社区 / RSS feed，出题时会抓最新信号进热点依据。
+          还没有网页信源。贴一个热榜页或行业社区网址,出选题时系统会参考上面的最新热点。
         </p>
       ) : (
         <ul data-testid="trend-source-list" className="flex flex-col gap-2">

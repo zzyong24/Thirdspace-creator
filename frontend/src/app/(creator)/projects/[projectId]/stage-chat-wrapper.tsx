@@ -22,12 +22,15 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { DraftChatRail } from "@/features/draft-workbench/draft-chat-rail";
+import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 
 const STAGE_SEGMENTS = /\/projects\/[^/]+\/(review|production)(\/|$)/;
 
 // [T-297] 阶段编导栏宽度:独立持久键(不与稿面 creatoros:draft:rail-width 串味);
 // 默认 = 最大 640(与稿面 MAX_RAIL 对齐);拖拽/键盘钳到 [300,640]。
 const RAIL_WIDTH_KEY = "creatoros:stage:rail-width";
+// [T-411] 折叠态持久键(与稿面 creatoros:draft:rail-collapsed 分离,阶段页独立记忆)。
+const RAIL_COLLAPSED_KEY = "creatoros:stage:rail-collapsed";
 const DEFAULT_RAIL = 640;
 const MIN_RAIL = 300;
 const MAX_RAIL = 640;
@@ -52,6 +55,8 @@ export function StageChatWrapper({
 
   // Hooks 必须无条件调用(早返回在其后)。SSR 默认 640,挂载后读回持久宽度(避免 hydration 闪)。
   const [railWidth, setRailWidth] = React.useState<number>(DEFAULT_RAIL);
+  // [T-411] 折叠态(镜像稿面 DraftResizableLayout)。SSR/首帧默认展开避免 hydration 闪。
+  const [collapsed, setCollapsed] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const draggingRef = React.useRef(false);
 
@@ -71,6 +76,41 @@ export function StageChatWrapper({
       /* 写失败(隐私模式)→ 本次会话生效不持久 */
     }
   }, []);
+
+  // [T-411] 挂载后读回持久折叠态(仅 "1" → 收起),镜像稿面。
+  React.useEffect(() => {
+    try {
+      if (window.localStorage.getItem(RAIL_COLLAPSED_KEY) === "1") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时从 localStorage 同步折叠偏好
+        setCollapsed(true);
+      }
+    } catch {
+      /* storage 不可用 → 展开(默认) */
+    }
+  }, []);
+
+  const setCollapsedPersisted = React.useCallback((next: boolean) => {
+    setCollapsed(next);
+    try {
+      window.localStorage.setItem(RAIL_COLLAPSED_KEY, next ? "1" : "0");
+    } catch {
+      /* 写失败 → 本次会话生效不持久 */
+    }
+  }, []);
+
+  // [T-411] 收起态来了新 request(nonce 变)→ 自动展开,否则 AI 结果喂进隐藏 rail 丢失(镜像稿面)。
+  //   稿面外无 DraftChatRequestProvider 时 useDraftChatRequest 返回 NOOP(request=null),此 effect 永不触发,安全。
+  const { request } = useDraftChatRequest();
+  const nonce = request?.nonce ?? null;
+  const lastNonceRef = React.useRef<number | null>(nonce);
+  React.useEffect(() => {
+    const prev = lastNonceRef.current;
+    lastNonceRef.current = nonce;
+    if (nonce !== null && nonce !== prev) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 订阅外部请求 nonce 变化→展开
+      setCollapsed(false);
+    }
+  }, [nonce]);
 
   const onPointerDown = React.useCallback((e: React.PointerEvent) => {
     e.preventDefault();
@@ -135,37 +175,84 @@ export function StageChatWrapper({
     >
       <div className="min-w-0 flex-1">{children}</div>
 
-      {/* [T-297] 拖拽分隔条(pointer 拖 + 键盘 ←/→,role=separator);仅 xl+ 右栏可见时显示。 */}
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="调整编导栏宽度"
-        aria-valuenow={railWidth}
-        aria-valuemin={MIN_RAIL}
-        aria-valuemax={MAX_RAIL}
-        tabIndex={0}
-        data-slot="stage-rail-resize-handle"
-        data-testid="stage-rail-resize-handle"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onKeyDown={onKeyDown}
-        className={cn(
-          "hidden w-1.5 shrink-0 cursor-col-resize touch-none select-none bg-border/40 transition-colors",
-          "hover:bg-brand/40 focus-visible:bg-brand/60 focus-visible:outline-none xl:block",
-        )}
-      />
+      {/* [T-297] 拖拽分隔条(pointer 拖 + 键盘 ←/→,role=separator);仅 xl+ 右栏可见时显示。
+          [T-411] 收起态整条隐藏(连同右栏)。 */}
+      {!collapsed ? (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="调整编导栏宽度"
+          aria-valuenow={railWidth}
+          aria-valuemin={MIN_RAIL}
+          aria-valuemax={MAX_RAIL}
+          tabIndex={0}
+          data-slot="stage-rail-resize-handle"
+          data-testid="stage-rail-resize-handle"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onKeyDown={onKeyDown}
+          className={cn(
+            "hidden w-1.5 shrink-0 cursor-col-resize touch-none select-none bg-border/40 transition-colors",
+            "hover:bg-brand/40 focus-visible:bg-brand/60 focus-visible:outline-none xl:block",
+          )}
+        />
+      ) : null}
 
-      <aside
-        data-slot="stage-chat-rail"
-        style={{ width: railWidth }}
-        className="hidden shrink-0 border-l border-border bg-surface xl:block"
-      >
-        <div className="sticky top-0 h-[calc(100vh-4rem)]">
-          <DraftChatRail projectId={projectId} projectTitle={projectTitle} />
+      {!collapsed ? (
+        <aside
+          data-slot="stage-chat-rail"
+          style={{ width: railWidth }}
+          className="hidden shrink-0 border-l border-border bg-surface xl:block"
+        >
+          <div className="sticky top-0 flex h-[calc(100vh-4rem)] flex-col">
+            {/* [T-411] 右栏头部:显眼的「收起编导」开关(与稿面一致)。 */}
+            <div
+              data-slot="stage-rail-header"
+              className="flex shrink-0 items-center justify-end border-b border-border px-3 py-1.5"
+            >
+              <button
+                type="button"
+                data-slot="stage-rail-collapse-toggle"
+                data-testid="stage-rail-collapse-toggle"
+                aria-label="收起编导栏"
+                onClick={() => setCollapsedPersisted(true)}
+                className={cn(
+                  "flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs text-text-subtle transition-colors",
+                  "hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40",
+                )}
+              >
+                <span aria-hidden="true">⟩</span>
+                收起编导
+              </button>
+            </div>
+            <div className="min-h-0 flex-1">
+              <DraftChatRail projectId={projectId} projectTitle={projectTitle} />
+            </div>
+          </div>
+        </aside>
+      ) : (
+        /* [T-411] 收起态展开 affordance —— sticky 竖排「⟨ 编导」,点击展开(阶段页整页滚动故 sticky);
+           仅 xl+ 出现(右栏本就 hidden xl:block);窄屏本无右栏,不需此入口。 */
+        <div className="hidden shrink-0 xl:block">
+          <button
+            type="button"
+            data-slot="stage-rail-expand-toggle"
+            data-testid="stage-rail-expand-toggle"
+            aria-label="展开编导栏"
+            title="展开编导栏"
+            onClick={() => setCollapsedPersisted(false)}
+            className={cn(
+              "sticky top-0 flex h-[calc(100vh-4rem)] w-7 cursor-pointer flex-col items-center gap-1 border-l border-border bg-surface py-3 text-xs text-text-subtle transition-colors",
+              "hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand/40",
+            )}
+          >
+            <span aria-hidden="true">⟨</span>
+            <span className="[writing-mode:vertical-rl]">编导</span>
+          </button>
         </div>
-      </aside>
+      )}
     </div>
   );
 }
