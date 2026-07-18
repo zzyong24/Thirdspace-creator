@@ -93,9 +93,10 @@ export function ensureFfmpegStatic(triple) {
     return explicit;
   }
 
-  // ② 缓存命中。
+  // ② 缓存命中。win 资产落盘名补 .exe——Windows CreateProcess 不执行无扩展名文件,
+  //    否则 -version 冒烟必败被误删(CI 实测;GitHub 资产名本身无 .exe,仅本地落盘名补)。
   const cacheDir = join(homedir(), ".cache", "creatoros", "ffmpeg-static", RELEASE_TAG);
-  const cached = join(cacheDir, asset);
+  const cached = join(cacheDir, asset.includes("win32") ? `${asset}.exe` : asset);
   if (existsSync(cached)) {
     const ok = smokeTest(cached, asset);
     if (ok !== false) {

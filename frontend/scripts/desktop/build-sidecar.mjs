@@ -102,7 +102,14 @@ function packSidecarTarball() {
   //   src-tauri/build.rs 对它算 SHA-256 并经 rustc-env 内嵌进壳二进制 → 运行时 lib.rs 解压前
   //   比对,不匹配拒绝 spawn(改 JS 必先动 Rust)。哈希不在此处算 —— 单一实现在 build.rs。
   console.log(`[build-sidecar] 打 sidecar.tar.gz(保留 symlink,供 bundle resource;解压见 lib.rs)…`);
-  const r = spawnSync("tar", ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], { stdio: "inherit" });
+  // win 上必须显式用系统 bsdtar(System32\tar.exe):CI 的 bash 环境里 Git 的 GNU tar 排 PATH
+  // 前面,它把 `D:\...` 的盘符当远程主机名(实测「Cannot connect to D: resolve failed」)。
+  // 系统 bsdtar 处理 win 路径正确,且与用户机 lib.rs 解压器同源(W-spike 方案本意)。
+  const tarBin =
+    platform === "win32"
+      ? join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe")
+      : "tar";
+  const r = spawnSync(tarBin, ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], { stdio: "inherit" });
   if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);
   console.log(`[build-sidecar]   → ${tarball}`);
 }
