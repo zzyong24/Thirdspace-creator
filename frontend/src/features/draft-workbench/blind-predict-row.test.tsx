@@ -171,7 +171,7 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
-  it("已预测(已锁定):显示预测分 + 已锁定态,无锁定按钮,深链校准历史", () => {
+  it("已预测(已锁定):显示预测分 + 已锁定态,无锁定按钮,有盲预测结果弹窗入口", () => {
     renderWithProvider(
       <BlindPredictRow
         projectId="proj-1"
@@ -188,8 +188,9 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
     expect(screen.getByTestId("blind-predict-score").textContent).toBe("4.2");
     expect(screen.getByText("已锁定")).toBeInTheDocument();
     expect(screen.queryByTestId("blind-predict-lock-button")).toBeNull();
+    // [T-394] 原「看校准历史」深链 /settings?tab=calibration 是 404 死链,已改弹窗看盲预测结果。
     expect(
-      screen.getByTestId("blind-predict-history-link").getAttribute("href"),
-    ).toBe("/settings?tab=calibration");
+      screen.getByTestId("blind-predict-result-trigger").textContent,
+    ).toContain("看盲预测结果");
   });
 });

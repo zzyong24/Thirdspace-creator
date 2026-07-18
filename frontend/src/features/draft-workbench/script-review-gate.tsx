@@ -43,6 +43,7 @@ import {
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { useDraftChatRequest } from "./draft-chat-request";
+import { useLatestScriptReview } from "./use-latest-script-review";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
@@ -98,8 +99,9 @@ export function ScriptReviewGate({
 }) {
   // [T-108] 稿面对话请求协调器 —— 点击自动发进右栏常驻 rail(不开全局弹层)+ 发前 flush 编辑器。
   const { openChat, flushSave } = useDraftChatRequest();
-  // 报告是服务端首屏真值(getLatestScriptReview);对话内审核落库后 router.refresh 会重取。
-  const report = initialReport;
+  // [T-393] 首屏真值 + client 自愈:对话内审核落库后 router.refresh 不总覆盖到(真机实测:
+  // 重新审核完成后 stale 徽标不消)—— stale/未审时 hook 轻量轮询最新报告,追上即停。
+  const report = useLatestScriptReview(projectId, initialReport, currentVersion);
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [error, setError] = React.useState<string | null>(null);
   // 卸载后停止在 await 链里 setState(长任务守卫)。
@@ -591,20 +593,26 @@ function RewriteApplyButton({
  * 自包含 client 组件(scroll 逻辑内聚),故可从 server 组件 PublishPackSection 直接渲染。
  */
 export function ReviewSoftGateHint({
-  report,
+  report: initialReport,
   currentVersion,
+  projectId,
 }: {
   readonly report: ScriptReviewReportResource | null;
   readonly currentVersion: number;
+  readonly projectId: string;
 }) {
+  // [T-393] client 自愈:对话内审核完成后 server props 不刷新(真机实测横幅不消)——
+  // stale/未审时轮询最新报告,追上即消。
+  const report = useLatestScriptReview(projectId, initialReport, currentVersion);
+  // [T-393 用户拍板 2026-07-18] 横幅只管「当前版本审没审过」:重新审核完成(版本追上)即消,
+  // 无论 verdict、无论采纳与否。verdict=block 的后果由硬门(review-publish-gate hardBlocked
+  // 禁用登记/发布)管,不在此重复提示。
   const reason =
     report === null
       ? "当前稿未过合规审核"
       : report.artifactVersion < currentVersion
         ? "脚本已改动,当前稿未重新审核"
-        : report.verdict !== "pass"
-          ? `合规审核未通过(${report.verdict === "block" ? "阻断" : "有风险"})`
-          : null;
+        : null;
   if (reason === null) return null;
   return (
     <div
@@ -622,9 +630,11 @@ export function ReviewSoftGateHint({
         data-testid="script-review-soft-gate-action"
         className="h-6 px-2 text-[10px]"
         onClick={() =>
-          document
-            .getElementById("script")
-            ?.scrollIntoView({ behavior: "smooth" })
+          // [T-393] 滚到审核卡本体(原 #script 是脚本编辑框,用户点了落点不对)。
+          (
+            document.querySelector('[data-testid="script-review-gate"]') ??
+            document.getElementById("script")
+          )?.scrollIntoView({ behavior: "smooth", block: "center" })
         }
       >
         先去审核

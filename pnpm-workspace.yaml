@@ -13,3 +13,6 @@ onlyBuiltDependencies:
   - esbuild
   - protobufjs
   - "@google/genai"
+  # onnxruntime-node@1.2x(hyperframes 依赖)的原生 DLL/dylib 靠 install 脚本下载,
+  # 被跳过 → 源 .pnpm 无二进制 → win sidecar T-225 自检崩(1.14 是包自带二进制,不受影响)。
+  - onnxruntime-node

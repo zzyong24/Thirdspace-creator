@@ -24,13 +24,19 @@
  */
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Crosshair, Lock, MessagesSquare } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { useDraftChatRequest } from "./draft-chat-request";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export interface BlindPredictionInfo {
@@ -213,17 +219,243 @@ export function BlindPredictRow({
                 {phase === "locking" ? "锁定中…" : "锁定预测"}
               </Button>
             ) : null}
-            <Link
-              href="/settings?tab=calibration"
-              data-testid="blind-predict-history-link"
-              className="text-[11px] font-medium text-brand hover:underline"
-            >
-              看校准历史 →
-            </Link>
+            {/* [T-394 用户拍板] 原「看校准历史」深链 /settings?tab=calibration 是 404 死链,
+                且语义就是看这份盲预测 —— 改为弹窗展示预测详情(getPrediction 真数据)。 */}
+            <PredictionResultDialog
+              predictionId={prediction.predictionId}
+              predictedScore={prediction.predictedScore}
+              status={prediction.status}
+              lockedAt={prediction.lockedAt}
+            />
           </span>
         </div>
       )}
       {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
     </div>
+  );
+}
+
+// ── [T-394] 盲预测结果弹窗 ─────────────────────────────────────────────────────
+// 打开时拉 getPrediction 真数据:维度评分(predictedConversion.dimensions)+ 诊断
+// (predictedMetrics.diagnosis)+ 预测表现(predictedMetrics.performance)。字段是
+// 约定式 jsonb(契约 zod OPTIONAL),缺哪段就不渲哪段,零造假;拉取失败如实提示。
+
+interface PredictionDimensionView {
+  readonly key: string;
+  readonly score: number;
+  readonly reason: string;
+  readonly suggestion: string;
+}
+interface PredictionDetailView {
+  readonly dimensions: readonly PredictionDimensionView[];
+  readonly diagnosisVerdict: string;
+  readonly mainIssues: readonly string[];
+  readonly priorityFixes: readonly string[];
+  readonly performance: Readonly<Record<string, number>>;
+}
+
+/** 从自由 jsonb 窄化出可渲染视图(约定字段缺失/形状不符 → 对应段为空,不炸)。 */
+function parsePredictionDetail(raw: {
+  predictedConversion: Record<string, unknown>;
+  predictedMetrics: Record<string, unknown>;
+}): PredictionDetailView {
+  const dims: PredictionDimensionView[] = [];
+  const rawDims = (raw.predictedConversion as { dimensions?: unknown }).dimensions;
+  if (Array.isArray(rawDims)) {
+    for (const d of rawDims) {
+      if (d && typeof d === "object" && typeof (d as { key?: unknown }).key === "string") {
+        const o = d as { key: string; score?: unknown; reason?: unknown; suggestion?: unknown };
+        dims.push({
+          key: o.key,
+          score: typeof o.score === "number" ? o.score : 0,
+          reason: typeof o.reason === "string" ? o.reason : "",
+          suggestion: typeof o.suggestion === "string" ? o.suggestion : "",
+        });
+      }
+    }
+  }
+  const metrics = raw.predictedMetrics as {
+    diagnosis?: { verdict?: unknown; mainIssues?: unknown; priorityFixes?: unknown };
+    performance?: Record<string, unknown>;
+  };
+  const strArr = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  const performance: Record<string, number> = {};
+  for (const [k, v] of Object.entries(metrics.performance ?? {})) {
+    if (typeof v === "number") performance[k] = v;
+  }
+  return {
+    dimensions: dims,
+    diagnosisVerdict:
+      typeof metrics.diagnosis?.verdict === "string" ? metrics.diagnosis.verdict : "",
+    mainIssues: strArr(metrics.diagnosis?.mainIssues),
+    priorityFixes: strArr(metrics.diagnosis?.priorityFixes),
+    performance,
+  };
+}
+
+function PredictionResultDialog({
+  predictionId,
+  predictedScore,
+  status,
+  lockedAt,
+}: {
+  readonly predictionId: string;
+  readonly predictedScore: number;
+  readonly status: "draft" | "locked";
+  readonly lockedAt: string | null;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [detail, setDetail] = React.useState<PredictionDetailView | null>(null);
+  const [failed, setFailed] = React.useState(false);
+
+  // 打开时拉详情(只拉一次;失败可重开重试)。
+  React.useEffect(() => {
+    if (!open || detail !== null) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const raw = (await client.getPrediction({
+          params: { predictionId },
+          query: undefined,
+          body: undefined,
+        })) as {
+          predictedConversion: Record<string, unknown>;
+          predictedMetrics: Record<string, unknown>;
+        };
+        if (!cancelled) setDetail(parsePredictionDetail(raw));
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, detail, predictionId]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          data-testid="blind-predict-result-trigger"
+          className="text-[11px] font-medium text-brand hover:underline"
+        >
+          看盲预测结果 →
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-[15px]">
+            <Crosshair className="size-4 text-brand" />
+            盲预测结果
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 text-[13px]">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold tabular-nums text-foreground">
+              {predictedScore.toFixed(1)}
+            </span>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px]",
+                status === "locked"
+                  ? "bg-surface-subtle text-muted-foreground"
+                  : "bg-warning-soft text-warning",
+              )}
+            >
+              {status === "locked" ? "已锁定" : "草稿 · 未锁定"}
+            </span>
+            {lockedAt ? (
+              <span className="text-[11px] text-text-subtle">
+                锁定于 {lockedAt.slice(0, 16).replace("T", " ")}
+              </span>
+            ) : null}
+          </div>
+          {failed ? (
+            <p className="text-[12px] text-destructive">
+              预测详情拉取失败,关闭后重开可重试。
+            </p>
+          ) : detail === null ? (
+            <p className="text-[12px] text-muted-foreground">加载详情中…</p>
+          ) : (
+            <>
+              {detail.diagnosisVerdict ? (
+                <p className="rounded-md bg-surface-subtle px-3 py-2 text-[12px] leading-relaxed">
+                  {detail.diagnosisVerdict}
+                </p>
+              ) : null}
+              {Object.keys(detail.performance).length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(detail.performance).map(([k, v]) => (
+                    <span
+                      key={k}
+                      className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] tabular-nums"
+                    >
+                      {k} {v}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {detail.dimensions.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-[12px] font-semibold text-foreground">维度评分</p>
+                  {detail.dimensions.map((d) => (
+                    <div
+                      key={d.key}
+                      className="rounded-md border border-border/60 px-2.5 py-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{d.key}</span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {d.score}/5
+                        </span>
+                      </div>
+                      {d.reason ? (
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                          {d.reason}
+                        </p>
+                      ) : null}
+                      {d.suggestion ? (
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-brand">
+                          建议:{d.suggestion}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              {detail.mainIssues.length > 0 ? (
+                <div>
+                  <p className="text-[12px] font-semibold text-foreground">主要问题</p>
+                  <ul className="mt-1 list-disc pl-4 text-[12px] leading-relaxed text-muted-foreground">
+                    {detail.mainIssues.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {detail.priorityFixes.length > 0 ? (
+                <div>
+                  <p className="text-[12px] font-semibold text-foreground">优先修改</p>
+                  <ul className="mt-1 list-disc pl-4 text-[12px] leading-relaxed text-muted-foreground">
+                    {detail.priorityFixes.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {detail.dimensions.length === 0 &&
+              !detail.diagnosisVerdict &&
+              detail.mainIssues.length === 0 ? (
+                <p className="text-[12px] text-muted-foreground">
+                  这份预测没有存维度明细(早期数据),只有上面的综合预测分。
+                </p>
+              ) : null}
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

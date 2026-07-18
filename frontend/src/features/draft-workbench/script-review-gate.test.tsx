@@ -302,7 +302,9 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b · T-108 自动发+fl
 
 describe("ReviewSoftGateHint(软门提示,不阻断)", () => {
   it("无报告 → 显提示 +「先去审核」", () => {
-    render(<ReviewSoftGateHint report={null} currentVersion={2} />);
+    render(
+      <ReviewSoftGateHint report={null} currentVersion={2} projectId="p1" />,
+    );
     expect(screen.getByTestId("script-review-soft-gate")).toBeTruthy();
     expect(screen.getByTestId("script-review-soft-gate-action")).toBeTruthy();
   });
@@ -312,20 +314,33 @@ describe("ReviewSoftGateHint(软门提示,不阻断)", () => {
       <ReviewSoftGateHint
         report={{ ...passReport, verdict: "pass", artifactVersion: 2 }}
         currentVersion={2}
+        projectId="p1"
       />,
     );
     expect(screen.queryByTestId("script-review-soft-gate")).toBeNull();
   });
 
-  it("verdict≠pass → 显提示(不禁用原动作,operations 不阻断)", () => {
+  it("verdict≠pass 但版本一致(已重新审核)→ 不再提示(T-393 用户拍板:审过即过,block 由硬门管)", () => {
     render(
       <ReviewSoftGateHint
         report={{ ...passReport, verdict: "block", artifactVersion: 2 }}
         currentVersion={2}
+        projectId="p1"
+      />,
+    );
+    expect(screen.queryByTestId("script-review-soft-gate")).toBeNull();
+  });
+
+  it("报告 stale(版本落后)→ 显「脚本已改动」提示", () => {
+    render(
+      <ReviewSoftGateHint
+        report={{ ...passReport, verdict: "pass", artifactVersion: 1 }}
+        currentVersion={2}
+        projectId="p1"
       />,
     );
     expect(screen.getByTestId("script-review-soft-gate").textContent).toContain(
-      "阻断",
+      "脚本已改动",
     );
   });
 });

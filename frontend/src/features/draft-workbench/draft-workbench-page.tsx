@@ -307,6 +307,7 @@ function PublishPackSection({
         <ReviewSoftGateHint
           report={scriptReview}
           currentVersion={scriptVersion}
+          projectId={projectId}
         />
       ) : null}
       {/* [T-063e] 飞轮第一步:发布前先盲预测(解锁后常驻;已预测显预测分/锁定态)。 */}

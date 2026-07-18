@@ -752,8 +752,14 @@ function ensureOnnxRuntimeDylib() {
   for (const bd of bindingDirs) {
     let have = false;
     try { have = readdirSync(bd).some(isLib); } catch { /* noop */ }
+    // 逐目录打印(诊断:CI 上 binding 目录集合与本机不同——win deref 展平会物化出
+    // hyperframes 等传递依赖的副本,盲区靠这行日志暴露)。
+    console.log(`[build-sidecar]   [T-225] binding: ${bd.slice(SIDECAR_RUNTIME.length)} have=${have}`);
     if (have) continue;
     const srcs = findSourceLibs(bd);
+    if (srcs.length === 0) {
+      console.warn(`[build-sidecar]   [T-225] ⚠ 源 .pnpm 找不到该目录可补的原生库(tail 不匹配或源也缺)`);
+    }
     for (const src of srcs) {
       const dst = join(bd, src.split(/[/\\]/).pop());
       rmSync(dst, { force: true });
