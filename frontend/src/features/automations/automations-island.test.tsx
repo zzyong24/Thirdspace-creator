@@ -975,7 +975,7 @@ describe("T-032b — 采集反馈结果文案分档", () => {
     });
   });
 
-  it("failed → 行显「❌ 失败:{error}」(显真因)", async () => {
+  it("failed → 显友好摘要(不再拼「❌ 失败:{error}」),原因详情仍保留(T-410)", async () => {
     mockClient.listJobRunsByJob.mockResolvedValueOnce([
       makeRun({
         status: "failed",
@@ -985,9 +985,12 @@ describe("T-032b — 采集反馈结果文案分档", () => {
       }),
     ]);
     render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+    // T-410:失败摘要改为友好可操作文案,不再把 run.error 原样拼进「❌ 失败:{error}」甩用户脸上。
     await waitFor(() =>
-      expect(screen.getByText(/❌ 失败:采集抖音评论失败/)).toBeInTheDocument(),
+      expect(screen.getByText(/采集失败,请稍后重试/)).toBeInTheDocument(),
     );
+    // 反证:旧的「❌ 失败:{原始error}」格式已不再出现。
+    expect(screen.queryByText(/❌ 失败:采集抖音评论失败/)).not.toBeInTheDocument();
   });
 });
 
