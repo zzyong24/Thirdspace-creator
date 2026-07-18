@@ -27,17 +27,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        env:
+          ONLY: ${{ github.event.inputs.only }}
+        run: |
+          all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+          if [ -n "$ONLY" ]; then
+            echo "matrix=$(echo "$all" | jq -c "[.[]|select(.os|contains(\"$ONLY\"))]")" >> "$GITHUB_OUTPUT"
+          else
+            echo "matrix=$all" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: plan
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-latest
-            updater_target: darwin-aarch64
-          - os: windows-latest
-            updater_target: windows-x86_64
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
-    if: ${{ github.event.inputs.only == '' || github.event.inputs.only == null || contains(matrix.os, github.event.inputs.only) }}
     timeout-minutes: 90
     defaults:
       run:
