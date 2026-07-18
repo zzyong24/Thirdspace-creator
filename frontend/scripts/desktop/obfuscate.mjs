@@ -333,7 +333,11 @@ export async function smokeBootAfterObfuscation(opts = {}) {
       DYLD_LIBRARY_PATH: libDir,
       LD_LIBRARY_PATH: libDir,
     },
-    stdio: ["ignore", "pipe", "pipe"],
+    // stdin 必须是**保持打开的管道**,不能 "ignore":lifecycle 的 Win 孤儿自检以「stdin 管道
+    // 断开」判父进程已死,"ignore" 下 sidecar 启动即判孤儿 → 自觉优雅退出 → 首个请求
+    // ECONNRESET(第 11 轮 CI 实证)。真实 Tauri spawn 的 stdin 本就是管道(H-key 传 key 用),
+    // pipe 让冒烟更贴真实调用路径;mac 用 ppid 判定不受影响。
+    stdio: ["pipe", "pipe", "pipe"],
   });
   let stderr = "";
   child.stderr.on("data", (d) => (stderr += d.toString()));
