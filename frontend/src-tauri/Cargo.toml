@@ -59,6 +59,29 @@ aes-gcm = "0.10"
 httpdate = "1"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
+# [T-391 H-log] 加密日志(framed hybrid X25519 信封 + 每帧 AES-256-GCM;aes-gcm 已由 T-372 引入,复用)。
+#   x25519-dalek:临时/长期 X25519 密钥对 + ECDH(与 ed25519-dalek 共享 curve25519-dalek 4)。
+#   hkdf:HKDF-SHA256 从 ECDH 共享秘密派生 K_wrap(包裹 session_key)。
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+hkdf = "0.12"
+# [T-391 H-key] master key 传递加固:secrecy 包 SecretString(不进 Debug/log,Drop 时 zeroize);
+#   zeroize 注入 sidecar 后立即抹临时明文 buffer。
+secrecy = "0.8"
+zeroize = "1"
+# [T-391 H-native] native 校验硬化:secmem-proc 反调试(harden_process 返回 Result 不 abort,静默降级);
+#   obfstr 编译期字符串/字节常量混淆(灭静态 grep 靶点)。
+secmem-proc = "0.3.8"
+obfstr = "0.4.6"
+
+# [T-391 H-log] 开发者本地工具(不进分发包):解密 .enc 日志 + 生成 X25519 日志密钥对。
+[[bin]]
+name = "creatoros-logdec"
+path = "src/bin/creatoros-logdec.rs"
+
+[[bin]]
+name = "creatoros-logkeygen"
+path = "src/bin/creatoros-logkeygen.rs"
+
 # [T-372 W-core W3] Windows 进程树杀 —— Job Object(KILL_ON_JOB_CLOSE):壳退出/句柄
 # 关闭 → sidecar 整棵进程树(node + Playwright Chrome + ffmpeg)内核级必死,是 T-365
 # 「防孤儿进程并发写库致 WAL 半写损坏」防线的 Windows 等价(Win 无 POSIX 进程组/killpg)。

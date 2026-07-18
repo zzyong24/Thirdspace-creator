@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  [T-391 H-mac] macOS Hardened Runtime entitlements(见 SPEC §6)。
+
+  刻意保持**空 dict**——不授予任何放松签名约束的 entitlement。关键是**不含**:
+    · com.apple.security.cs.disable-library-validation
+        → 保留 library validation:只允许加载与主程序同 Team ID 签名(或系统)的 dylib,
+          封死 DYLD dylib 注入(co-ship 的 libnode.dylib 须随主程序同一身份签名,签名期落地)。
+    · com.apple.security.cs.get-task-allow(debug entitlement)
+        → 不放行 task_for_pid / 调试器 attach,封死非特权内存读写与运行时 patch。
+
+  WKWebView 在独立进程(com.apple.WebKit.WebContent)跑,JIT 由系统进程自带 entitlement 提供,
+  宿主 Rust 进程不执行 JS,故**无需** allow-jit / allow-unsigned-executable-memory。保持最小面。
+
+  内测不签名期:signingIdentity=null → Hardened Runtime 仅"配置就绪",真正生效在采购证书签名后
+  (对齐 SPEC §6「signed:false 如实标」)。
+-->
+<plist version="1.0">
+<dict>
+</dict>
+</plist>

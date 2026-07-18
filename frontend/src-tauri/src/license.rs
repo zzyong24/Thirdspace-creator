@@ -52,8 +52,16 @@ const TRIAL_HEARTBEAT_SECS: u64 = 3_600;
 const PERPETUAL_HEARTBEAT_SECS: u64 = 2_592_000;
 /// `.license` 快照封包版本。
 const SNAPSHOT_VERSION: u32 = 1;
-/// `.license` 加密密钥派生上下文(与 sidecar 侧 license-file.server.ts 必须一致)。
-const LICENSE_KEY_CONTEXT: &[u8] = b"creatoros-license-v1";
+/// [T-391 H-native §8 灭靶点] `.license` 加密密钥派生上下文(与 sidecar 侧
+/// license-file.server.ts 必须一致 = "creatoros-license-v1")。
+///
+/// 原为 `const &[u8]` 明文常量 —— 是 grep/熵扫描定位「license 密钥派生」的高价值靶点。
+/// 改为经 `obfstr::obfbytes!` 编译期混淆存储、运行时还原的函数:二进制内不再出现连续明文,
+/// 而运行期返回的字节与旧常量**逐字节相同**(HKDF 上下文不变 → 与 sidecar 解密兼容)。
+/// 诚实边界(SPEC §8):只抬静态 grep/pattern-scan 门槛,对 Frida 运行时无效(内存里仍还原)。
+fn license_key_context() -> [u8; 20] {
+    *obfstr::obfbytes!(b"creatoros-license-v1")
+}
 /// 与 sidecar secret-crypto 一致的密文前缀(enc:v1: + base64(iv12|tag16|ct))。
 const ENC_PREFIX: &str = "enc:v1:";
 
@@ -124,7 +132,8 @@ impl LicenseConfig {
             base_url,
             project_key,
             strict_verify,
-            public_key_b64: LICENSE_SERVER_PUBLIC_KEY_B64.to_string(),
+            // [T-391 H-native §8] 经拆分重组取内嵌公钥(灭连续 32B 靶点),占位空钥 → 空串。
+            public_key_b64: embedded_pubkey_b64(),
             machine_id,
         }
     }
@@ -262,14 +271,70 @@ pub fn build_signing_string(request_target: &str, host: &str, date: &str, digest
     format!("{request_target}\n{host}\n{date}\n{digest}")
 }
 
+/// [T-391 H-native §8 灭靶点] 重组内嵌 Ed25519 公钥的 base64。
+///
+/// 设计(去掉连续 32B 高熵靶点):真钥填入时把 raw 32B **拆两片**,每片先 XOR 一段掩码,
+/// 再各经 `obfstr::obfbytes!` 编译期混淆存储;运行时 XOR 还原后**重组**,并做 **3 处交叉校验**
+/// (①两片掩码还原 ②长度必须 32 ③SHA-256 前缀指纹比对,防单片被 patch)。二进制内不再有
+/// 连续 32B 的公钥常量可供 `binwalk`/熵扫描定位或直接 key-swap。
+/// 当前为**占位空钥**(L1s 服务端公钥待填)→ 两片皆空 → 返回空串;strict 下
+/// `resolve_public_key` 会诚实全拒(见 `placeholder_pubkey_fails_honestly_in_strict`)。
+/// 诚实边界(SPEC §8):灭靶点只对静态逆向有效,对 Frida 运行时无效(程序一跑内存还原)。
+fn embedded_pubkey_b64() -> String {
+    // 占位空钥:真钥填入前两片(及掩码/指纹)皆空。填真钥步骤见上方 doc + reassemble_pubkey_fragments。
+    let frag_a: &[u8] = obfstr::obfbytes!(b"");
+    let frag_b: &[u8] = obfstr::obfbytes!(b"");
+    let mask_a: &[u8] = obfstr::obfbytes!(b"");
+    let mask_b: &[u8] = obfstr::obfbytes!(b"");
+    let fingerprint: &[u8] = obfstr::obfbytes!(b""); // sha256(raw)[..4]
+    match reassemble_pubkey_fragments(frag_a, frag_b, mask_a, mask_b, fingerprint) {
+        Some(raw) => base64::engine::general_purpose::STANDARD.encode(raw),
+        // 占位空钥(L1s 服务端公钥待填)——沿用既有占位常量,strict 下诚实全拒。
+        None => LICENSE_SERVER_PUBLIC_KEY_B64.to_string(),
+    }
+}
+
+/// 公钥两片重组 + 交叉校验(纯函数,便于单测)。任一交叉校验不过 → None(视同未配置公钥,
+/// strict 下诚实全拒);两片皆空 = 占位空钥 → None。
+fn reassemble_pubkey_fragments(
+    frag_a: &[u8],
+    frag_b: &[u8],
+    mask_a: &[u8],
+    mask_b: &[u8],
+    fingerprint: &[u8],
+) -> Option<Vec<u8>> {
+    if frag_a.is_empty() && frag_b.is_empty() {
+        return None; // 占位空钥
+    }
+    // 交叉校验①:两片各 XOR 掩码还原(长度必须与掩码对齐)。
+    if frag_a.len() != mask_a.len() || frag_b.len() != mask_b.len() {
+        return None;
+    }
+    let mut raw = Vec::with_capacity(frag_a.len() + frag_b.len());
+    raw.extend(frag_a.iter().zip(mask_a).map(|(b, m)| b ^ m));
+    raw.extend(frag_b.iter().zip(mask_b).map(|(b, m)| b ^ m));
+    // 交叉校验②:Ed25519 公钥必须恰好 32B。
+    if raw.len() != 32 {
+        return None;
+    }
+    // 交叉校验③:SHA-256 前缀指纹比对(单片被 patch → 指纹不符 → 拒绝重组)。
+    if !fingerprint.is_empty() {
+        let digest = sha256_bytes(&raw);
+        let n = fingerprint.len().min(32);
+        if digest[..n] != fingerprint[..n] {
+            return None;
+        }
+    }
+    Some(raw)
+}
+
 /// 解析内嵌公钥。占位空串/坏值 → Err(人话),强验签下由调用方诚实拒绝。
 pub fn resolve_public_key(b64: &str) -> Result<VerifyingKey, String> {
     let trimmed = b64.trim();
     if trimmed.is_empty() {
-        return Err(
+        return Err(obfstr::obfstring!(
             "授权验签公钥尚未配置(L1s 服务端公钥待填,当前为占位常量)——强验签模式下无法信任任何响应"
-                .to_string(),
-        );
+        ));
     }
     let raw = base64::engine::general_purpose::STANDARD
         .decode(trimmed)
@@ -313,7 +378,187 @@ pub fn verify_response_signature(
 
     let signing_string = build_signing_string(request_target, host, date, &computed);
     key.verify(signing_string.as_bytes(), &sig)
-        .map_err(|_| "Ed25519 验签失败(签名伪造或响应被篡改)".to_string())
+        .map_err(|_| obfstr::obfstring!("Ed25519 验签失败(签名伪造或响应被篡改)"))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-391 H-native §7] 反调试自检 + 放行去单点化
+//
+// 诚实边界(SPEC §7/§16,不动摇):以下三样只把 attach/静态 patch 从「分钟级」抬到「需真
+// 逆向」——**都不防专业逆向**。反调试对 Frida spawn/gadget 预载无效;去单点化 patch 编译后
+// 二进制仍可绕;灭靶点只对静态 grep 有效。真正兜底靠 Part C 服务端吊销(非本仓,后续波次)。
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// 反调试探针(注入式端口:生产用系统调用,单测注入 fake「被 traced」信号)。
+pub trait DebugProbe {
+    fn is_traced(&self) -> bool;
+}
+
+/// 生产探针:macOS 走 `sysctl(KERN_PROC)` 查 `P_TRACED`;Windows(cfg,内测不编译)走
+/// `secmem-proc` 的 winapi 检测;其余平台恒 false(不误伤)。
+pub struct SysDebugProbe;
+impl DebugProbe for SysDebugProbe {
+    fn is_traced(&self) -> bool {
+        sys_is_traced()
+    }
+}
+
+#[inline(always)]
+fn sys_is_traced() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        macos_is_traced()
+    }
+    #[cfg(target_os = "windows")]
+    {
+        // [SPEC §7 gate-A1] Windows 分支挂靠 T-372 DEC-W,随 W-cluster 落地;内测 macOS 不编译。
+        // secmem-proc 的 check_tracer_winapi 内含 IsDebuggerPresent/CheckRemoteDebuggerPresent。
+        secmem_proc::components::check_tracer_winapi().is_err()
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        false
+    }
+}
+
+/// macOS 反调试探针:`sysctl(CTL_KERN, KERN_PROC, KERN_PROC_PID, pid)` 取本进程 `kinfo_proc`,
+/// 读 `kp_proc.p_flag & P_TRACED`(Apple TN2127「AmIBeingDebugged」经典手法)。
+///
+/// libc 0.2 未导出 `kinfo_proc` 结构体,故用**原始字节缓冲**接收内核写回的整块 `kinfo_proc`
+/// (先查所需字节数再分配,避免定义大结构体或写越界),再从固定偏移读 `p_flag`:
+/// 64-bit macOS 下 `extern_proc.p_flag` 偏移 = 32(p_un 16 + p_vmspace 8 + p_sigacts 8)。
+/// **任何系统调用失败一律返回 false**(保守判「未被 trace」,避免误伤正常用户;不硬崩、
+/// 不给「崩溃点=判定点」定位信号)。
+#[cfg(target_os = "macos")]
+fn macos_is_traced() -> bool {
+    const P_TRACED: i32 = 0x0000_0800; // <sys/proc.h>
+    const P_FLAG_OFFSET: usize = 32; // extern_proc.p_flag on 64-bit macOS
+    unsafe {
+        let mut mib: [libc::c_int; 4] = [
+            libc::CTL_KERN,
+            libc::KERN_PROC,
+            libc::KERN_PROC_PID,
+            libc::getpid(),
+        ];
+        // ① 查所需字节数(oldp=null)。
+        let mut size: libc::size_t = 0;
+        let rc = libc::sysctl(
+            mib.as_mut_ptr(),
+            4,
+            std::ptr::null_mut(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        );
+        if rc != 0 || size < P_FLAG_OFFSET + 4 {
+            return false;
+        }
+        // ② 分配并取回整块 kinfo_proc。
+        let mut buf = vec![0u8; size];
+        let rc = libc::sysctl(
+            mib.as_mut_ptr(),
+            4,
+            buf.as_mut_ptr() as *mut libc::c_void,
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        );
+        if rc != 0 || size < P_FLAG_OFFSET + 4 {
+            return false;
+        }
+        let p_flag = i32::from_ne_bytes([
+            buf[P_FLAG_OFFSET],
+            buf[P_FLAG_OFFSET + 1],
+            buf[P_FLAG_OFFSET + 2],
+            buf[P_FLAG_OFFSET + 3],
+        ]);
+        (p_flag & P_TRACED) != 0
+    }
+}
+
+/// 启动期反调试硬化(best-effort,**绝不阻断/panic/abort**):经 `secmem-proc` 做
+/// `PT_DENY_ATTACH`(macOS)+ 关 core dump(防崩溃转储捞密钥)+ Windows 进程 DACL/anti-tracer。
+/// 失败只静默(不打定位性日志,不给攻击者「这里在自检」的信号)。
+///
+/// 仅在 release 构建生效(`debug_assertions` 关):dev 构建保留可调试性,避免自我 DoS 开发流程;
+/// 内测/正式分发是 release → 硬化生效。检测本身(`is_traced`)不受此限,任何构建都跑。
+pub fn harden_anti_debug() {
+    #[cfg(not(debug_assertions))]
+    {
+        let _ = secmem_proc::harden_process(); // Err 静默吞掉:硬化失败不阻断启动
+    }
+}
+
+/// [SPEC §7 去单点化] 放行能力值:**不是读取一个 bool**,而是把判定的多项证据喂进 SHA-256
+/// 派生一个 32B 能力值。只有证据规范自洽(licensed=true、status∈{active,grace}、未被 trace)
+/// 时,派生值才等于同 mode 的「解锁指纹」(`unlock_fingerprint`)。任一证据翻转 → 派生值不同。
+///
+/// 「参与后续真实计算」:放行不是孤立的 `if licensed {}`,而是这个派生值在 3 个独立调用点
+/// (`run_chain_and_persist` / `license_check`·`license_activate` / `license_last_decision`)
+/// 各自复算并与指纹比对 —— hook/patch 掉其中一处,另两处仍复算降级(非「跳过照常跑」)。
+#[inline(always)]
+fn derive_capability(licensed: bool, status: &str, mode: &str, traced: bool) -> [u8; 32] {
+    let status_grants = matches!(status, "active" | "grace");
+    let mut h = Sha256::new();
+    h.update(obfstr::obfbytes!(b"creatoros-gate-capability-v1"));
+    h.update([licensed as u8, status_grants as u8, (!traced) as u8]);
+    h.update(mode.as_bytes());
+    h.finalize().into()
+}
+
+/// 规范放行输入(licensed=true、status=active、未 trace)在给定 mode 下的能力指纹。
+#[inline(always)]
+fn unlock_fingerprint(mode: &str) -> [u8; 32] {
+    derive_capability(true, "active", mode, false)
+}
+
+/// 判定是否「真正解锁」= 能力值命中指纹(去单点化的多点复算核心)。
+/// 注:status="grace"(离线宽限)与 "active" 同权放行 —— 用 status=active 的指纹归一化比对。
+#[inline(always)]
+fn is_capability_unlocked(d: &GateDecision, traced: bool) -> bool {
+    if traced {
+        return false;
+    }
+    let normalized_status = if matches!(d.status.as_str(), "active" | "grace") {
+        "active"
+    } else {
+        d.status.as_str()
+    };
+    let cap = derive_capability(d.licensed, normalized_status, &d.mode, traced);
+    cap == unlock_fingerprint(&d.mode)
+}
+
+/// [SPEC §7] 失败延迟随机化:降级路径上睡一小段随机时间,让「hook 后秒过」不稳定、增加
+/// pattern-scan 对齐判定点的难度。仅非测试构建生效(测试不引入耗时/抖动)。
+#[inline(always)]
+fn randomized_backoff() {
+    #[cfg(not(test))]
+    {
+        use rand::Rng as _;
+        let ms = rand::rngs::OsRng.gen_range(3u64..40);
+        std::thread::sleep(std::time::Duration::from_millis(ms));
+    }
+}
+
+/// [SPEC §7 去单点化 + 反调试] 运行期放行门:在 3 个独立调用点各跑一次。
+///   · 探到调试器 trace **或** 决策证据不自洽(如 licensed 被单独 patch 成 true 而 status
+///     并非 active/grace)→ **静默降级**:licensed=false + status=untrusted,**绝不 panic、
+///     绝不硬崩、绝不放行**(不给「崩溃点=判定点」信号,也不误伤 —— 正常放行原样返回)。
+///   · 证据自洽且未被 trace → **原样返回**(不改任何字段,保证 P5 弱验签/买断 fail-open 不被卡)。
+fn apply_runtime_gate(mut d: GateDecision, probe: &dyn DebugProbe) -> GateDecision {
+    if !d.licensed {
+        return d; // 本就不放行,无需复算(降级只针对「声称放行」的决策)
+    }
+    let traced = probe.is_traced();
+    if !is_capability_unlocked(&d, traced) {
+        randomized_backoff();
+        d.licensed = false;
+        d.updates_blocked = false;
+        d.offline_remaining = None;
+        d.status = "untrusted".to_string();
+        d.message = obfstr::obfstring!("授权状态无法确认,请联网重新校验");
+    }
+    d
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -513,7 +758,7 @@ pub fn derive_license_key(master_key_b64: &str) -> Option<[u8; 32]> {
     }
     let mut h = Sha256::new();
     h.update(&raw);
-    h.update(LICENSE_KEY_CONTEXT);
+    h.update(license_key_context());
     Some(h.finalize().into())
 }
 
@@ -1366,16 +1611,19 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
         write_snapshot_file(&path, snap, key.as_ref());
         sync_mirror_to_sidecar(ctx, snap);
     }
+    // [T-391 H-native §7 去单点化·复算点①] 落盘/缓存/广播前跑一次运行期放行门:
+    // 探到调试器 trace 或证据不自洽 → 静默降级(前端拿到 licensed=false 即跳激活页 = 功能坏)。
+    let gated = apply_runtime_gate(outcome.decision, &SysDebugProbe);
     // [T-372 L3] 记录最近判定 + 向 webview 广播(前端桥据此「立即跳激活页」/ 显示宽限倒计时,
     // 不必轮询 —— 轮询 license_check 会触发真网络请求,破坏码型 cadence)。
-    *ctx.last_decision.lock().unwrap() = Some(outcome.decision.clone());
+    *ctx.last_decision.lock().unwrap() = Some(gated.clone());
     if let Some(app) = &ctx.app_handle {
         use tauri::Emitter as _;
-        if let Err(e) = app.emit("creatoros://license-decision", &outcome.decision) {
+        if let Err(e) = app.emit("creatoros://license-decision", &gated) {
             eprintln!("[license] 广播授权判定事件失败: {e}");
         }
     }
-    outcome.decision
+    gated
 }
 
 /// BR-01 领域记录同步:放行判定后,把展示副本经 sidecar loopback RPC 写回
@@ -1463,6 +1711,9 @@ fn heartbeat_wait(ctx: &ShellLicenseCtx) {
 /// 选型:std::thread + 分片 sleep(与 L2 阻塞式 reqwest/线程模型一致,不为一个循环引 tokio)。
 pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
     std::thread::spawn(move || {
+        // [T-391 H-native §7] 启动期反调试硬化(best-effort,绝不阻断):PT_DENY_ATTACH +
+        // 关 core dump + Windows DACL/anti-tracer。仅 release 生效(见 harden_anti_debug)。
+        harden_anti_debug();
         let d = run_chain_and_persist(&ctx, LicenseOp::Status);
         eprintln!(
             "[license] 启动校验: licensed={} status={} mode={} 验签={}({})",
@@ -1521,7 +1772,12 @@ pub async fn license_activate(
 ) -> Result<GateDecision, String> {
     let ctx = state.0.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        run_chain_and_persist(&ctx, LicenseOp::Activate { code: &code })
+        // [T-391 H-native §7 去单点化·复算点②] 命令返回口再复算一次(与复算点①不同代码位置:
+        // patch 掉 run_chain_and_persist 的门,这里仍复算降级)。
+        apply_runtime_gate(
+            run_chain_and_persist(&ctx, LicenseOp::Activate { code: &code }),
+            &SysDebugProbe,
+        )
     })
     .await
     .map_err(|e| format!("激活任务执行失败: {e}"))
@@ -1533,9 +1789,12 @@ pub async fn license_check(
     state: tauri::State<'_, LicenseState>,
 ) -> Result<GateDecision, String> {
     let ctx = state.0.clone();
-    tauri::async_runtime::spawn_blocking(move || run_chain_and_persist(&ctx, LicenseOp::Status))
-        .await
-        .map_err(|e| format!("授权校验任务执行失败: {e}"))
+    tauri::async_runtime::spawn_blocking(move || {
+        // [T-391 H-native §7 去单点化·复算点②]
+        apply_runtime_gate(run_chain_and_persist(&ctx, LicenseOp::Status), &SysDebugProbe)
+    })
+    .await
+    .map_err(|e| format!("授权校验任务执行失败: {e}"))
 }
 
 /// [T-372 L3] 最近一次决策链结果(**零网络零重算**,读内存缓存)。前端桥/设置页倒计时的
@@ -1543,7 +1802,15 @@ pub async fn license_check(
 /// None = 启动查尚未跑完(前端按「未知」处理,等事件)。
 #[tauri::command]
 pub fn license_last_decision(state: tauri::State<'_, LicenseState>) -> Option<GateDecision> {
-    state.0.last_decision.lock().unwrap().clone()
+    // [T-391 H-native §7 去单点化·复算点③] 读缓存返回前再复算一次:此点在**读时**重探
+    // 调试器(攻击者在决策链跑完后才 attach 也会在这里被逮),且是第三个独立降级位置。
+    state
+        .0
+        .last_decision
+        .lock()
+        .unwrap()
+        .clone()
+        .map(|d| apply_runtime_gate(d, &SysDebugProbe))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2291,5 +2558,189 @@ mod tests {
         let snap = out.snapshot.unwrap();
         assert!(!snap.updates_blocked);
         assert!(!snap.revoked);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // [T-391 H-native] 反调试 + 去单点化 + 灭靶点 测试面(SPEC §12)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /// 注入式假探针:模拟「被 traced / 未被 traced」。
+    struct FakeProbe(bool);
+    impl DebugProbe for FakeProbe {
+        fn is_traced(&self) -> bool {
+            self.0
+        }
+    }
+
+    /// 构造一个「声称放行」的决策(licensed=true,status=active)。
+    fn decision_licensed(mode: &str) -> GateDecision {
+        GateDecision {
+            licensed: true,
+            status: "active".to_string(),
+            mode: mode.to_string(),
+            expires_at: if mode == "perpetual" {
+                None
+            } else {
+                Some("2999-01-01T00:00:00Z".to_string())
+            },
+            revoked: false,
+            updates_blocked: false,
+            offline_remaining: None,
+            signature_verified: true,
+            strict_verify: true,
+            message: "ok".to_string(),
+        }
+    }
+
+    // ── 反调试:注入 fake「被 traced」→ 静默降级(不 panic、不放行) ──────────────
+    #[test]
+    fn anti_debug_traced_degrades_silently_not_allowed() {
+        for mode in ["trial", "perpetual"] {
+            let d = decision_licensed(mode);
+            let gated = apply_runtime_gate(d, &FakeProbe(true));
+            assert!(!gated.licensed, "被 trace 应静默降级不放行(mode={mode})");
+            assert_eq!(gated.status, "untrusted", "降级为 untrusted(mode={mode})");
+            // 走到这里即证明未 panic / 未硬崩。
+        }
+    }
+
+    // ── 反调试:未被 traced 的正常放行不被误伤 ────────────────────────────────
+    #[test]
+    fn anti_debug_clean_does_not_false_degrade() {
+        for mode in ["trial", "perpetual"] {
+            let d = decision_licensed(mode);
+            let gated = apply_runtime_gate(d, &FakeProbe(false));
+            assert!(gated.licensed, "未被 trace 的合法放行不应误伤(mode={mode})");
+            assert_eq!(gated.status, "active");
+        }
+    }
+
+    // ── 去单点化:单独 patch 掉放行判定(翻 licensed bit 而证据不自洽)→ 复算降级 ──
+    // 断言的是「功能坏(licensed=false)」而非「跳过照常放行」。
+    #[test]
+    fn desingle_patched_allow_bit_does_not_survive_recompute() {
+        // 攻击者把一个 expired 决策的 licensed 单独翻成 true(典型「patch 掉判定」)。
+        let mut d = decision_licensed("trial");
+        d.status = "expired".to_string(); // 证据:实为过期
+        d.licensed = true; // 仅翻这一个 bool
+        let gated = apply_runtime_gate(d, &FakeProbe(false));
+        assert!(
+            !gated.licensed,
+            "单翻 allow bit 而证据不自洽,应被多点复算降级(非跳过照常)"
+        );
+        assert_eq!(gated.status, "untrusted");
+    }
+
+    // ── 去单点化:能力值只在证据规范自洽且未被 trace 时命中解锁指纹 ──────────────
+    #[test]
+    fn capability_unlocks_only_on_consistent_untraced_evidence() {
+        let live = decision_licensed("perpetual");
+        assert!(is_capability_unlocked(&live, false), "规范放行应解锁");
+        assert!(!is_capability_unlocked(&live, true), "被 trace 不解锁");
+        // grace(离线宽限)与 active 同权放行。
+        let mut grace = decision_licensed("trial");
+        grace.status = "grace".to_string();
+        assert!(is_capability_unlocked(&grace, false), "grace 应解锁");
+        // 证据不自洽(status 非 active/grace)→ 不解锁。
+        let mut bad = decision_licensed("trial");
+        bad.status = "expired".to_string();
+        assert!(!is_capability_unlocked(&bad, false));
+        let mut bad2 = decision_licensed("trial");
+        bad2.licensed = false;
+        assert!(!is_capability_unlocked(&bad2, false));
+    }
+
+    // ── 回归护栏:P5 弱验签不变式(signature_verified=false 但 status=active)不被去单点化卡住 ──
+    #[test]
+    fn desingle_does_not_break_p5_weak_verify_invariant() {
+        let mut d = decision_licensed("trial");
+        d.signature_verified = false; // 弱验签 P5
+        d.strict_verify = false;
+        d.message = "已激活(签名校验未启用)".to_string();
+        let gated = apply_runtime_gate(d, &FakeProbe(false));
+        assert!(
+            gated.licensed,
+            "P5 弱验签放行不能被去单点化误降级(桌面态外/弱验签必须放行)"
+        );
+        assert_eq!(gated.status, "active");
+    }
+
+    // ── 回归护栏:本就不放行的决策原样返回(降级只针对「声称放行」者) ────────────
+    #[test]
+    fn gate_leaves_already_unlicensed_untouched() {
+        let mut d = decision_licensed("trial");
+        d.licensed = false;
+        d.status = "expired".to_string();
+        let gated = apply_runtime_gate(d.clone(), &FakeProbe(true));
+        assert!(!gated.licensed);
+        assert_eq!(gated.status, "expired", "不放行者不被改写为 untrusted");
+    }
+
+    // ── 灭靶点:公钥拆分重组 + 交叉校验 + 存储态无连续 32B 靶点 ────────────────────
+    #[test]
+    fn mieba_dian_pubkey_split_reassemble_and_crosscheck() {
+        // 任意 32B 测试向量(非真钥)。
+        let raw: [u8; 32] = core::array::from_fn(|i| (i as u8).wrapping_mul(11).wrapping_add(5));
+        let mask_a: Vec<u8> = (0..16u8).map(|i| i.wrapping_mul(7).wrapping_add(1)).collect();
+        let mask_b: Vec<u8> = (0..16u8).map(|i| i.wrapping_mul(5).wrapping_add(3)).collect();
+        let frag_a: Vec<u8> = raw[..16].iter().zip(&mask_a).map(|(b, m)| b ^ m).collect();
+        let frag_b: Vec<u8> = raw[16..].iter().zip(&mask_b).map(|(b, m)| b ^ m).collect();
+        let fp = sha256_bytes(&raw)[..4].to_vec();
+
+        // 正常重组 == 原钥。
+        let got = reassemble_pubkey_fragments(&frag_a, &frag_b, &mask_a, &mask_b, &fp)
+            .expect("合法两片应重组成功");
+        assert_eq!(got, raw);
+
+        // 存储态(两片密文拼接)不含原钥的连续 32B(去掉高熵靶点)。
+        let mut stored = frag_a.clone();
+        stored.extend(&frag_b);
+        assert!(
+            !contains_subslice(&stored, &raw),
+            "拆分存储态不应含连续 32B 公钥靶点"
+        );
+
+        // 单片被 patch → SHA-256 前缀指纹交叉校验拒绝重组。
+        let mut tampered = frag_a.clone();
+        tampered[0] ^= 0xff;
+        assert!(
+            reassemble_pubkey_fragments(&tampered, &frag_b, &mask_a, &mask_b, &fp).is_none(),
+            "单片被篡改应被指纹交叉校验拒绝"
+        );
+
+        // 长度非 32 → 拒绝。
+        assert!(reassemble_pubkey_fragments(&frag_a, &[], &mask_a, &[], &fp).is_none());
+
+        // 占位空钥(两片皆空)→ None(strict 下诚实拒绝)。
+        assert!(reassemble_pubkey_fragments(&[], &[], &[], &[], &[]).is_none());
+        // 当前生产内嵌为占位空钥 → embedded_pubkey_b64 返回空串。
+        assert_eq!(embedded_pubkey_b64(), "");
+    }
+
+    // ── 灭靶点:构建后二进制内无 license 相关明文定位串(post-build 断言,读 current_exe) ──
+    // needle 用运行时拼接构造,避免本测试源码把明文写进测试二进制造成假命中。
+    #[test]
+    fn mieba_dian_no_plaintext_locators_in_binary() {
+        let exe = std::env::current_exe().expect("current_exe");
+        let bytes = std::fs::read(&exe).expect("read exe");
+        // needle 本身用 obfstr 承载:测试二进制内也不留这些明文串,避免「测试源码自证假命中」。
+        let needles = [
+            obfstr::obfstring!("creatoros-license-v1"), // license 密钥派生上下文
+            obfstr::obfstring!("creatoros-gate-capability-v1"), // 去单点化能力上下文
+        ];
+        for needle in needles {
+            assert!(
+                !contains_subslice(&bytes, needle.as_bytes()),
+                "灭靶点失败:二进制内出现明文定位串 {needle}(obfstr 未生效?)"
+            );
+        }
+    }
+
+    /// 子切片查找(测试辅助)。
+    fn contains_subslice(haystack: &[u8], needle: &[u8]) -> bool {
+        if needle.is_empty() || needle.len() > haystack.len() {
+            return false;
+        }
+        haystack.windows(needle.len()).any(|w| w == needle)
     }
 }

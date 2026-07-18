@@ -36,7 +36,9 @@
     "createUpdaterArtifacts": true,
     "macOS": {
       "minimumSystemVersion": "10.15",
-      "signingIdentity": null
+      "signingIdentity": null,
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist"
     },
     "windows": {
       "certificateThumbprint": null,

@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import { closeSync, mkdtempSync, openSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   resolveMasterKey,
   encryptSecret,
   decryptSecret,
   isEncrypted,
   ENC_PREFIX,
+  __resetFdKeyCacheForTest,
 } from "./secret-crypto";
 
 // A deterministic 32-byte key (base64) for round-trip tests.
@@ -13,6 +17,7 @@ const KEY_B64 = KEY.toString("base64");
 
 afterEach(() => {
   vi.restoreAllMocks();
+  __resetFdKeyCacheForTest();
 });
 
 describe("secret-crypto AES-256-GCM round-trip", () => {
@@ -107,6 +112,76 @@ describe("resolveMasterKey — desktop keychain env vs web/dev fallback", () => 
     const a = resolveMasterKey({ NODE_ENV: "development" });
     const b = resolveMasterKey({ NODE_ENV: "development" });
     expect(a.key.equals(b.key)).toBe(true);
+  });
+});
+
+describe("[T-391 H-key] master key via ChildStdin fd channel", () => {
+  it("reads the key from the injected fd reader (desktop path), source='fd'", () => {
+    const res = resolveMasterKey(
+      { CREATOROS_MASTER_KEY_FD: "0" },
+      { readFd: (fd) => (fd === 0 ? KEY_B64 : "") },
+    );
+    expect(res.key.equals(KEY)).toBe(true);
+    expect(res.source).toBe("fd");
+    expect(res.degraded).toBe(false);
+  });
+
+  it("desktop path does NOT need CREATOROS_MASTER_KEY env (no plaintext key in env)", () => {
+    // The Rust shell injects only the fd NUMBER, never the key itself in env.
+    const env = { CREATOROS_MASTER_KEY_FD: "0" } as Record<string, string>;
+    expect(env.CREATOROS_MASTER_KEY).toBeUndefined();
+    const res = resolveMasterKey(env, { readFd: () => KEY_B64 });
+    expect(res.source).toBe("fd");
+    expect(res.degraded).toBe(false);
+  });
+
+  it("fd channel takes precedence over a legacy env key", () => {
+    const otherKey = Buffer.alloc(32, 9).toString("base64");
+    const res = resolveMasterKey(
+      { CREATOROS_MASTER_KEY_FD: "0", CREATOROS_MASTER_KEY: otherKey },
+      { readFd: () => KEY_B64 },
+    );
+    expect(res.source).toBe("fd");
+    expect(res.key.equals(KEY)).toBe(true); // fd key wins
+  });
+
+  it("falls back to env when the fd yields a malformed key", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const res = resolveMasterKey(
+      { CREATOROS_MASTER_KEY_FD: "0", CREATOROS_MASTER_KEY: KEY_B64 },
+      { readFd: () => "not-a-valid-32b-key" },
+    );
+    expect(res.source).toBe("env"); // fd bad → env backward-compat path
+    expect(res.key.equals(KEY)).toBe(true);
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it("falls back to dev key when fd yields nothing and no env key", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const res = resolveMasterKey(
+      { CREATOROS_MASTER_KEY_FD: "0", NODE_ENV: "development" },
+      { readFd: () => "" },
+    );
+    expect(res.degraded).toBe(true);
+    expect(res.source).toBe("dev-fallback");
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it("reads-until-newline from a REAL fd and stops before trailing bytes (Win/Linux: writer stays open)", () => {
+    // Write "KEY\nGARBAGE" to a file, open it, and prove the default fd reader
+    // returns only the key (stops at \n), not the trailing bytes. This mirrors the
+    // shell path where stdin is NOT closed — termination is by newline, not EOF.
+    const dir = mkdtempSync(join(tmpdir(), "mkfd-"));
+    const file = join(dir, "key.bin");
+    writeFileSync(file, `${KEY_B64}\nTRAILING-GARBAGE-SHOULD-NOT-BE-READ`);
+    const fd = openSync(file, "r");
+    try {
+      const res = resolveMasterKey({ CREATOROS_MASTER_KEY_FD: String(fd) });
+      expect(res.source).toBe("fd");
+      expect(res.key.equals(KEY)).toBe(true);
+    } finally {
+      closeSync(fd);
+    }
   });
 });
 

@@ -1,11 +1,13 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { readSync } from "node:fs";
 
 // T-147 P2 本地加密 —— 模型 API key 的静态加密工具(收口在 settings.repository 层做透明加解密)。
 //
 // 设计(见 docs/superpowers/specs/2026-07-05-desktop-app-architecture-overview.md P2):
 //   - 算法:AES-256-GCM(密文 + 12B iv + 16B auth tag,一起 base64 打包)。
-//   - master key 来源:桌面 = OS keychain(Rust keyring crate 取/建,经 env
-//     `CREATOROS_MASTER_KEY` base64 注入 sidecar);web/dev = 同一 env,无则**开发降级**
+//   - master key 来源:桌面 = OS keychain(Rust keyring crate 取/建)[T-391 H-key]**经 ChildStdin
+//     (fd 0)传给 sidecar**,env 只放非机密的 fd 号 `CREATOROS_MASTER_KEY_FD`(不再 env 明文注入
+//     key 本体);web = 运维可显式配 env `CREATOROS_MASTER_KEY`(向后兼容),无则**开发降级**
 //     (固定 dev key + 警告,只 dev,web 路径绝不崩)。
 //   - 前缀标记 `enc:v1:`:读时有前缀→解密,无前缀→当**存量明文透传**(向后兼容,过渡期)。
 //
@@ -20,7 +22,7 @@ const IV_LEN = 12; // GCM 推荐 96-bit iv
 const TAG_LEN = 16; // GCM auth tag 128-bit
 const KEY_LEN = 32; // AES-256
 
-export type MasterKeySource = "env" | "dev-fallback";
+export type MasterKeySource = "fd" | "env" | "dev-fallback";
 
 export interface ResolvedMasterKey {
   key: Buffer; // 32 字节
@@ -89,36 +91,111 @@ const DEV_FALLBACK_KEY = createHash("sha256")
   .update("creatoros-dev-fallback-master-key-v1")
   .digest();
 
+// [T-391 H-key] 从指定 fd(桌面端 = ChildStdin,fd 0)同步读 master key(base64),读到**换行符**
+//   或 EOF 即停 —— 不依赖 EOF(Win/Linux 的 tauri-plugin-shell 写端不关,靠换行终止;macOS std 写完
+//   关 stdin 会给 EOF,同样终止)。key 很小(~44B),已被 Rust 在 spawn 后立即写入管道缓冲,故此处
+//   同步读不会长阻塞。结果**按 fd 记忆化**(fd 可能读到 EOF,二次读为空;memo 保证只读一次)。
+const fdKeyCache = new Map<number, string>();
+function readMasterKeyFromFd(fd: number): string {
+  const cached = fdKeyCache.get(fd);
+  if (cached !== undefined) return cached;
+  const bytes: number[] = [];
+  const one = Buffer.alloc(1);
+  // 上限保护:base64(32B)≈44 字符;给足 4096 防异常输入下死循环。
+  for (let i = 0; i < 4096; i++) {
+    let n = 0;
+    try {
+      n = readSync(fd, one, 0, 1, null);
+    } catch (e) {
+      // 非阻塞 fd 偶发 EAGAIN → 重试;其他错误 → 停(交由上层降级)。
+      if ((e as NodeJS.ErrnoException).code === "EAGAIN") continue;
+      break;
+    }
+    if (n === 0) break; // EOF
+    const b = one.readUInt8(0);
+    if (b === 0x0a) break; // 换行 → key 结束
+    bytes.push(b);
+  }
+  const key = Buffer.from(bytes).toString("utf8").trim();
+  fdKeyCache.set(fd, key);
+  return key;
+}
+
+/** @internal 测试专用:清空 fd → key 记忆化缓存。 */
+export function __resetFdKeyCacheForTest(): void {
+  fdKeyCache.clear();
+}
+
+function toKeyResult(
+  raw: string | undefined,
+  source: Exclude<MasterKeySource, "dev-fallback">,
+  label: string,
+): ResolvedMasterKey | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) return null;
+  try {
+    const key = Buffer.from(trimmed, "base64");
+    if (key.length === KEY_LEN) {
+      return { key, source, degraded: false };
+    }
+    console.warn(
+      `[secret-crypto] ${label} 长度 ${key.length}≠${KEY_LEN}B,忽略 → 降级 dev key`,
+    );
+  } catch {
+    console.warn(`[secret-crypto] ${label} 非法 base64,忽略 → 降级 dev key`);
+  }
+  return null;
+}
+
 /**
  * 解析 master key(32B)。
- *   1) env `CREATOROS_MASTER_KEY`(base64 32 字节)—— 桌面端由 Rust keyring 取/建后注入;
- *      web 部署也可用它(运维显式配)。合法 → source="env",degraded=false。
- *   2) 缺失 / 非法(非 32 字节)→ **开发降级**:固定 dev key + 一条警告,degraded=true。
+ *   1) [T-391 H-key] env `CREATOROS_MASTER_KEY_FD`(fd 号,非机密)在场 → 从该 fd 读 key
+ *      (桌面端 = Rust 经 ChildStdin 传的通道,**不再走 env 明文**)。合法 → source="fd"。
+ *   2) env `CREATOROS_MASTER_KEY`(base64 32 字节)—— **web 部署运维显式配**的向后兼容路径
+ *      (桌面端已不再注入此 env)。合法 → source="env"。
+ *   3) 缺失 / 非法(非 32 字节)→ **开发降级**:固定 dev key + 一条警告,degraded=true。
  *      **web 路径绝不抛**(加密是 best-effort at rest;没 key 也不能让 app 崩)。
+ *
+ * @param opts.readFd 可注入的 fd 读取器(测试用;默认走真 fs.readSync)。
  */
 export function resolveMasterKey(
   env: Record<string, string | undefined>,
+  opts?: { readFd?: (fd: number) => string },
 ): ResolvedMasterKey {
-  const raw = env.CREATOROS_MASTER_KEY?.trim();
-  if (raw) {
-    try {
-      const key = Buffer.from(raw, "base64");
-      if (key.length === KEY_LEN) {
-        return { key, source: "env", degraded: false };
+  // ① fd 通道(桌面端首选)。
+  const fdRaw = env.CREATOROS_MASTER_KEY_FD?.trim();
+  if (fdRaw) {
+    const fd = Number(fdRaw);
+    if (Number.isInteger(fd) && fd >= 0) {
+      let keyStr: string | undefined;
+      try {
+        keyStr = (opts?.readFd ?? readMasterKeyFromFd)(fd);
+      } catch {
+        console.warn(
+          `[secret-crypto] 从 fd ${fd} 读 master key 失败 → 尝试 env/降级`,
+        );
       }
+      const res = toKeyResult(keyStr, "fd", `master key(fd ${fd})`);
+      if (res) return res;
+    } else {
       console.warn(
-        `[secret-crypto] CREATOROS_MASTER_KEY 长度 ${key.length}≠${KEY_LEN}B,忽略 → 降级 dev key`,
-      );
-    } catch {
-      console.warn(
-        "[secret-crypto] CREATOROS_MASTER_KEY 非法 base64,忽略 → 降级 dev key",
+        `[secret-crypto] CREATOROS_MASTER_KEY_FD=${fdRaw} 非法 fd 号,忽略`,
       );
     }
   }
-  // 降级(dev 或无 keychain 的 web)。不抛,保证 app 不崩。
+
+  // ② env 明文(web 运维显式配的向后兼容;桌面端不再走此路)。
+  const envRes = toKeyResult(
+    env.CREATOROS_MASTER_KEY,
+    "env",
+    "CREATOROS_MASTER_KEY",
+  );
+  if (envRes) return envRes;
+
+  // ③ 降级(dev 或无 keychain 的 web)。不抛,保证 app 不崩。
   console.warn(
-    "[secret-crypto] 未取到 keychain master key(CREATOROS_MASTER_KEY 缺失/非法)—— " +
-      "使用开发降级 key。桌面端应由 Tauri keyring 注入随机 key;此降级安全性弱于 keychain。",
+    "[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY 均缺失或非法)—— " +
+      "使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 注入随机 key;此降级安全性弱于 keychain。",
   );
   return { key: DEV_FALLBACK_KEY, source: "dev-fallback", degraded: true };
 }
