@@ -4,3 +4,12 @@ packages:
   - contract
   - ai-worker
   - mcp-server
+
+# pnpm 10 默认不跑依赖 build 脚本(安全默认)。这些依赖靠 build 脚本产出原生二进制/平台产物,
+# 本机装时曾批准过所以有产物,但干净 CI 装会跳过 → sidecar 打包崩(如 sharp@0.32.6 的
+# sharp-<plat>.node 缺失致 @xenova/transformers require 失败)。显式 allowlist,让 CI 复现本机。
+onlyBuiltDependencies:
+  - sharp
+  - esbuild
+  - protobufjs
+  - "@google/genai"
