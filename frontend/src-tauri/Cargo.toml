@@ -6,6 +6,10 @@ authors = ["CreatorOS"]
 edition = "2021"
 # Tauri 2 需要 Rust 1.77+;本机 1.94.1 满足。
 rust-version = "1.77"
+# T-391 H-log 加了 src/bin/ 下的 dev 二进制(logkeygen/logdec)后,包内有多个 bin,
+# `tauri build` 不指定 --bin 时无从判定主程序 → 必须显式声明主 bin(否则 CI 报
+# "failed to find main binary, ... default-run")。dev 二进制仍可 `cargo run --bin` 单独跑。
+default-run = "creatoros-desktop"
 
 # main.rs 编译成同名可执行体;lib.rs 承载可复用的 run() 入口(Tauri 官方脚手架惯例,
 # 便于将来接 mobile / 单测)。

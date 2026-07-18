@@ -80,7 +80,13 @@ function run(cmd, args, opts = {}) {
   console.log(`[build-sidecar] $ ${cmd} ${args.join(" ")}`);
   const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, ...opts });
   if (r.status !== 0) {
-    throw new Error(`[build-sidecar] 命令失败(exit ${r.status}): ${cmd} ${args.join(" ")}`);
+    // status=null = 进程被信号杀/未能 spawn(非正常退出码);把 signal/error 一并暴露,
+    // 否则「exit null」无从诊断(Windows 首次构建曾因此看不出崩因)。
+    const detail =
+      r.status === null
+        ? `信号=${r.signal ?? "?"}${r.error ? ` error=${r.error.code ?? r.error.message}` : ""}`
+        : `exit ${r.status}`;
+    throw new Error(`[build-sidecar] 命令失败(${detail}): ${cmd} ${args.join(" ")}`);
   }
 }
 
