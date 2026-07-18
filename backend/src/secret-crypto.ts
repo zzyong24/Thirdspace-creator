@@ -97,28 +97,59 @@ const DEV_FALLBACK_KEY = randomBytes(32);
 //   关 stdin 会给 EOF,同样终止)。key 很小(~44B),已被 Rust 在 spawn 后立即写入管道缓冲,故此处
 //   同步读不会长阻塞。结果**按 fd 记忆化**(fd 可能读到 EOF,二次读为空;memo 保证只读一次)。
 const fdKeyCache = new Map<number, string>();
+
+// 同步小睡(非 busy-wait):Atomics.wait 阻塞当前线程 ms 毫秒。仅用于 fd 竞态等待。
+function sleepSyncMs(ms: number): void {
+  try {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+  } catch {
+    // SharedArrayBuffer 不可用(极老 runtime)→ 退回极短 busy-wait(仅 startup 偶发一次)。
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      /* spin */
+    }
+  }
+}
+
+// [T-408 fd 竞态修复] Rust 在 spawn sidecar 后**异步**往 stdin(fd 0)写 master key + 换行;若
+//   sidecar 首个消费者(DB 初始化)抢先在 Rust 写入前读 fd,非阻塞读连吃 EAGAIN → 4096 次微秒级
+//   空转后拿空 → 降级 → .license 解不开 → **偶发跳转激活页**(真机实测 ~1/4 启动会中招)。
+//   修:①EAGAIN / 未就绪的 0 返回时**同步小睡后重试**(给 Rust 写入留最多 3s 窗口,而非微秒空转);
+//   ②**空结果不缓存**(key 仍在管道,允许后续消费者——如激活门——重读到)。已读到主体后的
+//   EAGAIN/EOF 视为 key 结束正常收尾。
 function readMasterKeyFromFd(fd: number): string {
   const cached = fdKeyCache.get(fd);
   if (cached !== undefined) return cached;
   const bytes: number[] = [];
   const one = Buffer.alloc(1);
-  // 上限保护:base64(32B)≈44 字符;给足 4096 防异常输入下死循环。
-  for (let i = 0; i < 4096; i++) {
+  const deadline = Date.now() + 3000;
+  let sawData = false;
+  while (Date.now() < deadline) {
     let n = 0;
     try {
       n = readSync(fd, one, 0, 1, null);
     } catch (e) {
-      // 非阻塞 fd 偶发 EAGAIN → 重试;其他错误 → 停(交由上层降级)。
-      if ((e as NodeJS.ErrnoException).code === "EAGAIN") continue;
-      break;
+      if ((e as NodeJS.ErrnoException).code === "EAGAIN") {
+        if (sawData) break; // 已读到 key 主体后的 EAGAIN = 写端暂停,视为结束
+        sleepSyncMs(10); // key 还没到 → 等 Rust 写(不微秒空转)
+        continue;
+      }
+      break; // 其它错误 → 停(交由上层降级)
     }
-    if (n === 0) break; // EOF
+    if (n === 0) {
+      if (sawData) break; // 真 EOF(key 已读完)
+      sleepSyncMs(10); // 写端尚未就绪的 0 返回 → 等一下重试
+      continue;
+    }
+    sawData = true;
     const b = one.readUInt8(0);
     if (b === 0x0a) break; // 换行 → key 结束
     bytes.push(b);
+    if (bytes.length > 4096) break; // 上限保护(base64 32B≈44 字符,远小于此)
   }
   const key = Buffer.from(bytes).toString("utf8").trim();
-  fdKeyCache.set(fd, key);
+  // 只缓存**非空**:竞态拿空不缓存,后续消费者可重读到 Rust 已写入的 key(修跳转环根因)。
+  if (key) fdKeyCache.set(fd, key);
   return key;
 }
 
