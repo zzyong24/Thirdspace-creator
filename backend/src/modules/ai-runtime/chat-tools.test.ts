@@ -1707,6 +1707,34 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
     expect(result.hasMore).toBe(true);
   });
 
+  it("[T-405] context.artifact.text:读不到该 type → found:false 且带 availableTypes 自纠清单", async () => {
+    const { deps } = makeDeps({
+      getArtifactText: vi.fn(async () => null), // 传错 type → 读空
+      listProjectArtifacts: vi.fn(async () => ({
+        projectId: "proj-1",
+        projectTitle: "测试项目",
+        items: [
+          { artifactType: "output_script", currentVersion: 2, updatedAt: null, totalChars: 688 },
+          { artifactType: "master_script", currentVersion: 2, updatedAt: null, totalChars: 688 },
+        ],
+      })),
+    });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.artifact.text"]!, {
+      projectId: "proj-1",
+      artifactType: "transcript_guess", // AI 盲猜的不存在 type(真机实录场景)
+    })) as {
+      found: boolean;
+      availableTypes?: Array<{ artifactType: string; totalChars: number }>;
+    };
+    expect(result.found).toBe(false);
+    // 空态带真实产物类型清单 → AI 一轮换真 type 重读,不再编造「被覆写/没入库」推测。
+    expect(result.availableTypes).toEqual([
+      { artifactType: "output_script", totalChars: 688 },
+      { artifactType: "master_script", totalChars: 688 },
+    ]);
+  });
+
   it("context.artifact.text.execute:超长正文 maxChars 强制封顶 8000(execute 侧,非君子协定)", async () => {
     const { deps } = makeDeps({
       getArtifactText: vi.fn(async () => ({

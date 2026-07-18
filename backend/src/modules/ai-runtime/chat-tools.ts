@@ -1465,6 +1465,12 @@ export interface ContextArtifactTextToolResult extends TextWindow {
   kind: "context.artifact.text";
   found: boolean;
   artifactType: string;
+  /**
+   * [T-405] found:false 时带上该项目**实际存在**的产物类型清单(type + 字数)——AI 传错/
+   * 盲猜 artifactType 读到空后,一轮即可自纠换真 type 重读(真机实录:AI 猜错 type → 空 →
+   * 编造「被覆写/没入库」推测 → 再列索引 → 才试对,浪费两轮还输出误导)。found:true 缺席。
+   */
+  availableTypes?: Array<{ artifactType: string; totalChars: number }>;
 }
 
 // [T-099c] context.knowledge.text 工具结果 —— 知识长文窗口(全文档,SPEC §1 行#11,复用全文阅读卡)。
@@ -2990,7 +2996,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // (不读库不写库、不跑二次 LLM),故不占 ChatToolDeps —— 落库动作在前端卡上由人触发。
     "learning.capture": defineChatTool("learning.capture", {
       description:
-        "把对话中的经验教训整理成一条结构化经验候选(title + insight + learningType)。当用户说「记一条经验/这条教训记下来/沉淀一下」时调用,从 TA 的话里提炼填参。不会直接写库:结果渲成候选卡,用户点卡上「存为经验」按钮才落入裁决队列。",
+        "把对话中的经验教训整理成一条结构化经验候选(title + insight + learningType)。当用户说「记一条经验/这条教训记下来/沉淀一下」时调用,从 TA 的话里提炼填参。**用户指名要存某几条经验时(如复盘后说「第 1、3 条存上」),对指定的每条各调一次本工具渲出候选卡,让 TA 一键点「存为经验」确认——绝不要让用户『自己去经验库手动录入』,那是本工具的活**。不会直接写库:结果渲成候选卡,用户点卡上「存为经验」按钮才落入裁决队列。",
       inputSchema: LEARNING_CAPTURE_PARAMS,
       execute: async ({
         title,
@@ -3298,7 +3304,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "context.artifact.text": defineChatTool("context.artifact.text", {
       description:
-        "只读:按窗口读取某个项目某类产物的**正文全文**(脚本/逐字稿/结构方案等)。这是让你真正摸到作品正文的通路——绝不要拿标题脑补内容。入参 projectId + artifactType(从 context.artifacts 拿),offset/maxChars 控制窗口(默认 4000 字/封顶 8000)。返回 { artifactType, text(窗口正文), offset, totalChars, hasMore }:hasMore=true 时带 offset 继续翻窗读全,或如实告知还剩多少字没读。正文已在对话的全文阅读卡里渲给用户,你只有指针权(引用/归纳),别逐字复述整段。纯读取上下文,不产候选、不写库。",
+        "只读:按窗口读取某个项目某类产物的**正文全文**(脚本/逐字稿/结构方案等)。这是让你真正摸到作品正文的通路——绝不要拿标题脑补内容。入参 projectId + artifactType(**先从 context.artifacts 拿真实 type 名,不要凭常识猜**),offset/maxChars 控制窗口(默认 4000 字/封顶 8000)。返回 { artifactType, text(窗口正文), offset, totalChars, hasMore }:hasMore=true 时带 offset 继续翻窗读全,或如实告知还剩多少字没读。found:false 时结果里的 availableTypes 列出该项目**真实存在**的产物类型和字数——直接换成其中的 type 重读即可;读到空只说明你传的 type 名不存在,**绝不要**据此推测「产物被覆写/没入库/数据丢了」。正文已在对话的全文阅读卡里渲给用户,你只有指针权(引用/归纳),别逐字复述整段。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_ARTIFACT_TEXT_PARAMS,
       execute: async ({
         projectId,
@@ -3309,12 +3315,31 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const pid = typeof projectId === "string" ? projectId.trim() : "";
         const atype = typeof artifactType === "string" ? artifactType.trim() : "";
         const emptyWindow = readTextWindow("", { offset, maxChars });
+        // [T-405] 空态自纠:读不到该 type 时带上项目真实产物类型清单(best-effort,拉不到就缺席),
+        // AI 一轮换真 type 重读——不再「猜错 → 空 → 编造推测 → 列索引 → 再试」的三轮弯路。
+        const availableTypesOf = async (): Promise<
+          Array<{ artifactType: string; totalChars: number }> | undefined
+        > => {
+          if (!pid || !deps.listProjectArtifacts) return undefined;
+          try {
+            const idx = await deps.listProjectArtifacts({ projectId: pid });
+            return idx?.items.map((i) => ({
+              artifactType: i.artifactType,
+              totalChars: i.totalChars,
+            }));
+          } catch {
+            return undefined;
+          }
+        };
         if (!pid || !atype || !deps.getArtifactText) {
           return {
             kind: "context.artifact.text",
             found: false,
             artifactType: atype,
             ...emptyWindow,
+            ...(await availableTypesOf().then((t) =>
+              t ? { availableTypes: t } : {},
+            )),
           };
         }
         const raw = await deps.getArtifactText({ projectId: pid, artifactType: atype });
@@ -3324,6 +3349,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             found: false,
             artifactType: atype,
             ...emptyWindow,
+            ...(await availableTypesOf().then((t) =>
+              t ? { availableTypes: t } : {},
+            )),
           };
         }
         // §3 全文档预算(execute 侧强制,非君子协定):maxChars 默认 4000/封顶 8000,offset 按字符。
