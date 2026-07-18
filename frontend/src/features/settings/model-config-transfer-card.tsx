@@ -19,6 +19,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { handshakeHeaders } from "@/lib/handshake-client";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/project/section-card";
 import {
@@ -62,7 +63,12 @@ export function ModelConfigTransferCard() {
     setReport(null);
     void (async () => {
       try {
-        const res = await fetch("/api/v1/settings-transfer/models");
+        // [T-401] 桌面态有副作用/受保护路由要带启动级握手头,否则 isTrustedLocalRequest
+        //   在装机版拒 403(forbidden: request must originate from the local application)。
+        //   GET 导出也过 isTrustedLocalRequest,故一并带上。
+        const res = await fetch("/api/v1/settings-transfer/models", {
+          headers: { ...handshakeHeaders() },
+        });
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as { error?: string };
           throw new Error(data.error ?? `导出失败(HTTP ${res.status})`);
@@ -104,7 +110,10 @@ export function ModelConfigTransferCard() {
           }
           const res = await fetch("/api/v1/settings-transfer/models", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...handshakeHeaders(), // [T-401] 桌面态握手头,否则 403
+            },
             body: JSON.stringify(parsed),
           });
           const data = (await res.json().catch(() => ({}))) as {
