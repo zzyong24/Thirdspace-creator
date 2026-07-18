@@ -193,9 +193,15 @@ FRAME(每 flush 一个,append):len(u32 LE) | ct=AES-256-GCM(session_key, nonce=c
 
 ---
 
-## 7. 用户拍板(待回填)
+## 7. 用户拍板(2026-07-17)
 
-> 待用户确认 §8 方案与优先级、日志方案选型(framed hybrid vs age)、是否派生 SPEC 后回填:谁拍板/何时/条件。
+用户拍板(2026-07-17,提供抖音视频后):
+1. **加密日志走 framed hybrid**(X25519 信封 + 每 flush 一帧 AES-GCM;非 age),保「崩溃留最后几行」+ 部分可解密,自写解密 CLI。
+2. **暂不上硬件绑定**(Secure Enclave/TPM 排后)——master key 先走软加固(stdin/命名管道 + `zeroize`,消灭 env 明文注入)。§3.2 方案 D 标为「未来演进」不进本轮。
+3. **内测前必须上「加密防逆向」——用户定性为最高战略**(原话:「内测就一定要上加密防止逆向,不然就完了」)。内测两天后 → 本轮 SPEC 按「内测可交付子集」收口,server 侧破解经济学(更新绑授权/遥测吊销,依赖 L1s 服务端且非本仓)标为后续波次,不阻塞内测。
+4. **施工排序硬约束**:另一 session 正活跃改 `license.rs`(T-372 L2/L3),native 加固中动 `license.rs` 的部分(去单点化/反调试/灭靶点)须与其协调串行,避免并发冲突;**加密日志(`logging.rs` 独立文件)可先并行开工**。
+
+派生 SPEC:`docs/superpowers/specs/2026-07-17-native-hardening-and-encrypted-logging-design.md`(本轮写,过 spec-review gate)。
 
 ---
 
