@@ -174,6 +174,88 @@ describe("CheckUpdateCard — 桌面态", () => {
   });
 });
 
+// [T-372 L3] 买断撤销软降级(SPEC §8):revoked + expiresAt=null(买断)→ 更新入口旁
+// 显式提示「授权已被撤销:更新已停用,核心功能不受影响」+ 检查更新按钮停用;
+// 内测(expiresAt 非 null)revoked 不走此路(内测吊销 = 整体跳激活页,由 Rust 门负责)。
+describe("CheckUpdateCard — 买断撤销停更新 (T-372 L3)", () => {
+  const baseActivation = {
+    status: "active" as const,
+    machineId: "M-perp",
+    licenseMode: "TIME",
+    activatedAt: "2026-07-06T00:00:00.000Z",
+    lastOnlineCheckAt: "2026-07-16T00:00:00.000Z",
+    lastSeenAt: "2026-07-16T00:00:00.000Z",
+    graceSeconds: 2_592_000,
+  };
+
+  it("买断 + revoked → 更新入口旁提示 + 检查按钮停用(核心功能不受影响)", async () => {
+    mockIsDesktop.mockReturnValue(true);
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        activation={{ ...baseActivation, expiresAt: null, revoked: true }}
+      />,
+    );
+    await waitFor(() => {
+      const card = document.querySelector('[data-slot="check-update-card"]');
+      expect(card?.getAttribute("data-desktop")).toBe("true");
+      expect(card?.getAttribute("data-updates-blocked")).toBe("true");
+    });
+    const alert = document.querySelector(
+      '[data-slot="check-update-revoked-alert"]',
+    );
+    expect(alert).not.toBeNull();
+    expect(alert?.textContent).toContain("授权已被撤销");
+    expect(alert?.textContent).toContain("核心功能不受影响");
+    const action = document.querySelector(
+      '[data-slot="check-update-action"]',
+    ) as HTMLButtonElement;
+    expect(action.disabled).toBe(true);
+  });
+
+  it("内测(expiresAt 非 null)revoked → 不显停更新提示(码型不共用分支)", async () => {
+    mockIsDesktop.mockReturnValue(true);
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        activation={{
+          ...baseActivation,
+          expiresAt: "2026-07-20T00:00:00.000Z",
+          revoked: true,
+        }}
+      />,
+    );
+    await waitFor(() => {
+      const card = document.querySelector('[data-slot="check-update-card"]');
+      expect(card?.getAttribute("data-desktop")).toBe("true");
+    });
+    expect(
+      document.querySelector('[data-slot="check-update-revoked-alert"]'),
+    ).toBeNull();
+    const action = document.querySelector(
+      '[data-slot="check-update-action"]',
+    ) as HTMLButtonElement;
+    expect(action.disabled).toBe(false);
+  });
+
+  it("买断未撤销 → 无提示,按钮可用", async () => {
+    mockIsDesktop.mockReturnValue(true);
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        activation={{ ...baseActivation, expiresAt: null, revoked: false }}
+      />,
+    );
+    await waitFor(() => {
+      const card = document.querySelector('[data-slot="check-update-card"]');
+      expect(card?.getAttribute("data-updates-blocked")).toBe("false");
+    });
+    expect(
+      document.querySelector('[data-slot="check-update-revoked-alert"]'),
+    ).toBeNull();
+  });
+});
+
 describe("CheckUpdateCard — web 态", () => {
   it("非桌面 → 桌面端专属空态,无检查入口", async () => {
     mockIsDesktop.mockReturnValue(false);

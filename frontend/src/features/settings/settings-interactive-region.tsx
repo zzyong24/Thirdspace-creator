@@ -97,6 +97,12 @@ import {
   type AvailableUpdate,
   type UpdateProgress,
 } from "@/lib/desktop-updater";
+// [T-372 L3] Rust 壳授权判定薄封装:内测离线宽限倒计时的实时数据源(零网络,读缓存+订阅事件)。
+import {
+  fetchLastShellDecision,
+  subscribeShellDecision,
+  type ShellGateDecision,
+} from "@/lib/shell-license";
 
 import type {
   ActivationState,
@@ -380,8 +386,13 @@ export function SettingsDialog({
                 <WebSessionVaultCard />
                 {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
                 <ActivationStatusCard activation={activation} />
-                {/* [T-180] 软件更新卡:桌面端「检查更新」+ 下载并安装 + 重启;web → 桌面端专属空态。 */}
-                <CheckUpdateCard />
+                {/* [T-180] 软件更新卡:桌面端「检查更新」+ 下载并安装 + 重启;web → 桌面端专属空态。
+                    [T-372 L3] 买断撤销(revoked 且永久码)→ 更新入口旁提示停更新,不锁功能。 */}
+                <CheckUpdateCard
+                  updatesBlocked={
+                    activation?.revoked === true && activation?.expiresAt === null
+                  }
+                />
                 {/* [T-259] 诊断日志卡:桌面端一键在 Finder 打开日志目录发给开发者;web → 桌面端专属空态。 */}
                 <DiagnosticLogsCard />
               </div>
@@ -1000,6 +1011,29 @@ function expiryLabel(
   return formatIsoDate(expiresAt);
 }
 
+// [T-372 L3] 「上次与授权服务器确认于 X 天前」(SPEC §8:买断离线时设置页至多显示这个)。
+// 相对天数在客户端挂载后计算(nowMs=null 的 SSR 首帧只显绝对日期,避免水合漂移);
+// 脏值透传原文(诚实,不吞)。
+function lastConfirmedLabel(iso: string, nowMs: number | null): string {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return iso;
+  const dateText = formatIsoDate(iso);
+  if (nowMs === null) return dateText;
+  const days = Math.floor((nowMs - t) / 86_400_000);
+  if (days <= 0) return `今天(${dateText})`;
+  return `${days} 天前(${dateText})`;
+}
+
+// [T-372 L3] 离线宽限倒计时格式:HH:MM:SS(≤0 归零,由调用方给「已用尽」文案)。
+function formatCountdown(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
 // 机器码截断显示:一机一码,完整码较长,前 8 + 后 6 中间省略(hover title 显全码)。
 function truncateMachineId(machineId: string): string {
   if (machineId.length <= 18) return machineId;
@@ -1015,6 +1049,50 @@ function ActivationStatusCard({
 }: {
   activation?: ActivationState;
 }) {
+  // [T-372 L3] 相对时间基准:挂载后取本机时钟(SSR 首帧 null → 只显绝对日期,无水合漂移)。
+  const [nowMs, setNowMs] = React.useState<number | null>(null);
+  // [T-372 L3] 内测离线宽限实时态:来自 Rust 决策链(license_last_decision + 事件订阅,
+  // 零网络)。仅 trial + status=grace 时有值;anchoredAt 锚定收到判定的本机时刻,倒计时
+  // 在客户端本地递减(不轮询 Rust)。web 下封装短路 → 恒 null。
+  const [graceInfo, setGraceInfo] = React.useState<{
+    remaining: number;
+    anchoredAt: number;
+  } | null>(null);
+  const [, setCountdownTick] = React.useState(0);
+
+  React.useEffect(() => {
+    setNowMs(Date.now());
+    let disposed = false;
+    let unlisten: (() => void) | null = null;
+    const apply = (d: ShellGateDecision | null) => {
+      if (disposed || !d) return;
+      if (d.status === "grace" && d.mode === "trial" && d.offlineRemaining != null) {
+        setGraceInfo({ remaining: d.offlineRemaining, anchoredAt: Date.now() });
+      } else {
+        setGraceInfo(null);
+      }
+    };
+    void (async () => {
+      apply(await fetchLastShellDecision());
+      unlisten = await subscribeShellDecision(apply);
+      if (disposed && unlisten) {
+        unlisten();
+        unlisten = null;
+      }
+    })();
+    return () => {
+      disposed = true;
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  // 倒计时每秒重渲(仅宽限态才起 interval;非宽限零开销)。
+  React.useEffect(() => {
+    if (!graceInfo) return;
+    const timer = window.setInterval(() => setCountdownTick((v) => v + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [graceInfo]);
+
   // web / 未装配 / 读失败 → 诚实空态卡:激活是桌面端功能,web 端不显激活态(绝不假装)。
   if (!activation) {
     return (
@@ -1120,18 +1198,46 @@ function ActivationStatusCard({
             </span>
           </SettingsFormRow>
         ) : null}
-        {activation.lastOnlineCheckAt ? (
+        {/* [T-372 L3] 上次与授权服务器确认于 X 天前(SPEC §8:买断离线时至多显示这个)。
+            行恒渲染:缺数据(老库/尚未在线校过)→ 诚实「未知」,不藏行、不臆造时间。 */}
+        <SettingsFormRow
+          label="上次在线确认"
+          controlId="activation-last-check"
+          help="上次成功与授权服务器确认的时间。买断授权离线不影响使用。"
+        >
+          <span
+            id="activation-last-check"
+            data-slot="activation-last-check"
+            className="text-sm text-muted-foreground"
+          >
+            {activation.lastOnlineCheckAt
+              ? lastConfirmedLabel(activation.lastOnlineCheckAt, nowMs)
+              : "未知(尚无在线校验记录)"}
+          </span>
+        </SettingsFormRow>
+        {/* [T-372 L3] 内测离线宽限倒计时(SPEC §7:宽限窗内显示离线剩余)。数据来自 Rust
+            决策链实时判定(仅 trial+grace 有值);无实时判定但镜像态已是 grace → 诚实「未知」。 */}
+        {graceInfo || activation.status === "grace" ? (
           <SettingsFormRow
-            label="最后在线校验"
-            controlId="activation-last-check"
-            help="上次成功联网复校授权的时间。"
+            label="离线宽限剩余"
+            controlId="activation-grace-countdown"
+            help="内测授权离线可用 24 小时,超时需联网重新校验;买断授权无此限制。"
           >
             <span
-              id="activation-last-check"
-              data-slot="activation-last-check"
-              className="text-sm text-muted-foreground"
+              id="activation-grace-countdown"
+              data-slot="activation-grace-countdown"
+              className="font-mono text-sm text-warning"
             >
-              {formatIsoDate(activation.lastOnlineCheckAt)}
+              {graceInfo
+                ? (() => {
+                    const remaining =
+                      graceInfo.remaining -
+                      (Date.now() - graceInfo.anchoredAt) / 1000;
+                    return remaining > 0
+                      ? formatCountdown(remaining)
+                      : "已用尽,请联网重新校验授权";
+                  })()
+                : "未知"}
             </span>
           </SettingsFormRow>
         ) : null}
@@ -1184,7 +1290,17 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function CheckUpdateCard() {
+function CheckUpdateCard({
+  updatesBlocked = false,
+}: {
+  /**
+   * [T-372 L3] 买断码签名撤销的软降级(SPEC §8):true = 更新入口旁显式提示
+   * 「授权已被撤销:更新已停用,核心功能不受影响」并停用检查更新按钮。
+   * 由 SettingsDialog 从激活展示副本推导(revoked && expiresAt===null,即买断撤销态);
+   * 内测撤销走整体跳激活页,永不置此(码型语义在 Rust,此处只消费)。
+   */
+  updatesBlocked?: boolean;
+}) {
   // SSR 首帧 desktop=false → 渲空态;挂载后 isDesktopRuntimeClient() 翻真(无水合漂移)。
   const [isDesktop, setIsDesktop] = React.useState(false);
   const [version, setVersion] = React.useState<string | null>(null);
@@ -1319,8 +1435,30 @@ function CheckUpdateCard() {
       <div
         data-slot="check-update-card"
         data-desktop="true"
+        data-updates-blocked={updatesBlocked ? "true" : "false"}
         className="flex flex-col gap-3"
       >
+        {/* [T-372 L3] 买断撤销软降级提示(SPEC §8:提示挂「更新」入口旁,不锁核心功能)。 */}
+        {updatesBlocked ? (
+          <div
+            data-slot="check-update-revoked-alert"
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning-soft p-3"
+          >
+            <AlertCircle
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0 text-warning"
+            />
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-sm font-medium text-foreground">
+                授权已被撤销:更新已停用,核心功能不受影响
+              </span>
+              <span className="text-xs text-muted-foreground">
+                本机可继续正常使用,但不再接收新版本。如有疑问请联系作者恢复授权。
+              </span>
+            </div>
+          </div>
+        ) : null}
         <div className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3">
           <div
             aria-hidden="true"
@@ -1344,7 +1482,8 @@ function CheckUpdateCard() {
             size="sm"
             variant="outline"
             data-slot="check-update-action"
-            disabled={busy}
+            // [T-372 L3] 撤销停更新:检查入口一并停用(不只提示,真的不再拉更新)。
+            disabled={busy || updatesBlocked}
             onClick={check}
           >
             {phase === "checking" ? (
@@ -1379,7 +1518,7 @@ function CheckUpdateCard() {
                 size="sm"
                 data-slot="check-update-install"
                 onClick={install}
-                disabled={busy}
+                disabled={busy || updatesBlocked}
               >
                 <Download aria-hidden="true" className="size-4 shrink-0" />
                 下载并安装

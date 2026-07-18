@@ -31,6 +31,7 @@ import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
+import { LicenseHeartbeatBridge } from "@/components/shell/license-heartbeat-bridge";
 import {
   ZeroAccountGuidance,
   isZeroAccountAllowedPath,
@@ -153,6 +154,9 @@ export default async function CreatorLayout({
     <>
       {/* [T-051 2c] ⌘K 全局热键 → /search(让 TopHeader 的 kbd 提示言行一致)。 */}
       <GlobalSearchHotkey />
+      {/* [T-372 L3] 授权心跳桥:Rust 心跳(内测 60min/买断 30d)判定 licensed=false 时
+          立即跳激活页(内测到期/超宽限/吊销即时生效);web 下零副作用(封装内短路)。 */}
+      <LicenseHeartbeatBridge />
       {/* [T-257] 外链处理已上移到根 layout(app/layout.tsx),覆盖 (creator) 外的页面;此处不再重复挂,避免双监听外链开两次。 */}
       <ShellRouter user={user} notifications={notifications}>
         {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页

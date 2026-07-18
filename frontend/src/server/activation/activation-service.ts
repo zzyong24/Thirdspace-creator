@@ -77,6 +77,13 @@ export interface ActivationStatusView {
   expiresAt: string | null; // ISO;null = 永久
   activatedAt: string | null;
   lastOnlineCheckAt: string | null;
+  // ── [T-372 L3] 安全门展示副本三列透传(Rust 壳经 syncFromShell 同步来的) ────────
+  /** 防回拨 last-seen(ISO;展示用)。缺省 null = Rust 侧尚未同步过。 */
+  lastSeenAt: string | null;
+  /** 服务端按码型下发的离线宽限秒数(内测 86400 / 买断 2592000);null = 未同步。 */
+  graceSeconds: number | null;
+  /** 签名撤销标记(买断:revoked=true → 设置页更新入口旁提示停更新,不锁功能)。 */
+  revoked: boolean;
 }
 
 export interface ActivationServiceDeps {
@@ -107,17 +114,26 @@ function withinGrace(
 }
 
 // T-167 —— 纯本地态判定(**不联网**),供设置页 getStatus() 复用 check() 里的到期 + 宽限逻辑:
-//   - 本地已过期(expiresAt ≤ now)→ expired。
-//   - 未过期 + 距上次在线校 ≤ graceDays → active(在宽限窗内视作有效)。
-//   - 未过期 + 超宽限窗 → grace(本地未过期但久未在线复校,展示离线宽限中,等一次在线校收敛)。
-// 注:这是纯本地判定,不真联网;真正的 active/grace/expired 收敛仍以 check() 的在线校为准。
+//   - [T-372 L3] 买断(expiresAt=null)→ 恒 active:fail-open,离线/久未在线校**绝不降级展示**
+//     (SPEC §8「连不上网 ≠ 撤销」;撤销态由 revoked 列单独承载,提示挂更新入口旁,不改状态徽章)。
+//   - 内测已过期(expiresAt ≤ now)→ expired。
+//   - 内测未过期 + 距上次在线校 ≤ 宽限窗 → active;超窗 → grace(展示离线宽限中,等在线校收敛)。
+//     宽限窗优先用 Rust 同步来的码型 graceSeconds(内测 86400s),缺省退回 graceDays 旧配置。
+// 注:这是纯本地判定,不真联网;真正的放行权威在 Rust `.license`(activation-gate 读它)。
 export function deriveLocalStatus(
   stored: StoredActivation,
   graceDays: number,
   now: Date,
 ): ActivationStatus {
+  if (stored.expiresAt === null) return "active"; // 买断 fail-open(L3 码型分支)
   if (isLocallyExpired(stored.expiresAt, now)) return "expired";
-  if (withinGrace(stored.lastOnlineCheckAt, graceDays, now)) return "active";
+  const graceDaysEffective =
+    stored.graceSeconds != null && stored.graceSeconds > 0
+      ? stored.graceSeconds / 86_400
+      : graceDays;
+  if (withinGrace(stored.lastOnlineCheckAt, graceDaysEffective, now)) {
+    return "active";
+  }
   return "grace";
 }
 
@@ -254,6 +270,9 @@ export function createActivationService(deps: ActivationServiceDeps) {
         expiresAt: null,
         activatedAt: null,
         lastOnlineCheckAt: null,
+        lastSeenAt: null,
+        graceSeconds: null,
+        revoked: false,
       };
     }
     return {
@@ -263,6 +282,10 @@ export function createActivationService(deps: ActivationServiceDeps) {
       expiresAt: stored.expiresAt,
       activatedAt: stored.activatedAt,
       lastOnlineCheckAt: stored.lastOnlineCheckAt,
+      // [T-372 L3] 三列展示副本(Rust syncFromShell 同步;老库/未同步 → null/false 诚实缺省)。
+      lastSeenAt: stored.lastSeenAt ?? null,
+      graceSeconds: stored.graceSeconds ?? null,
+      revoked: stored.revoked === true,
     };
   }
 

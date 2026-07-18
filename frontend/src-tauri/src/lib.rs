@@ -376,7 +376,9 @@ pub fn run() {
         //   验签/防重放/防回拨逻辑全在 Rust(SPEC §9「前端只拿结果」)。
         .invoke_handler(tauri::generate_handler![
             license::license_activate,
-            license::license_check
+            license::license_check,
+            // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
+            license::license_last_decision
         ])
         .manage(SidecarHandle::default())
         .setup(|app| {
@@ -502,9 +504,13 @@ pub fn run() {
                 sidecar_port: port,
                 chain_lock: Mutex::new(()),
                 session: license::SessionMonotonic::new(),
+                // [T-372 L3] 最近判定缓存 + 事件句柄:决策链每轮跑完广播
+                //   `creatoros://license-decision`,前端桥据此即时跳激活页/显宽限倒计时。
+                last_decision: Mutex::new(None),
+                app_handle: Some(app.handle().clone()),
             });
             app.manage(license::LicenseState(license_ctx.clone()));
-            // 启动必查一次(在线校验 + 落 .license;sidecar 就绪后补展示副本同步)。
+            // 启动必查一次 + [T-372 L3] 心跳循环(周期按码型:内测 60min / 买断 30 天)。
             license::startup_license_task(license_ctx.clone());
 
             // [T-205] 抖音登录态(.auth/douyin/<accountId>)目录 —— 注入 sidecar env

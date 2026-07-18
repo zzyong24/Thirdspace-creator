@@ -320,10 +320,11 @@ describe("SettingsPage", () => {
         '[data-slot="activation-machine-id"]',
       );
       expect(machine?.getAttribute("title")).toBe("MACHINE-abcdef0123456789-XYZ");
+      // [T-372 L3] 上次在线确认:绝对日期 + 挂载后补相对天数(「X 天前」)。
       expect(
         document.querySelector('[data-slot="activation-last-check"]')
           ?.textContent,
-      ).toBe("2026-07-06");
+      ).toContain("2026-07-06");
       // 购买/续期入口存在。
       expect(
         document.querySelector('[data-slot="activation-purchase-link"]'),
@@ -389,6 +390,86 @@ describe("SettingsPage", () => {
       );
       expect(badge?.getAttribute("data-status")).toBe("expired");
       expect(badge?.textContent).toContain("已过期");
+    });
+
+    // ── [T-372 L3] 上次在线确认「X 天前」/ 未知 + 内测宽限倒计时行 ────────────────
+    it("[L3] 上次在线确认:有记录 → 「X 天前(日期)」相对文案", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "M-l3",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-07-06T00:00:00.000Z",
+          lastSeenAt: "2026-07-06T00:00:00.000Z",
+          graceSeconds: 86_400,
+          revoked: false,
+        },
+      });
+      const row = document.querySelector('[data-slot="activation-last-check"]');
+      expect(row?.textContent).toContain("天前");
+      expect(row?.textContent).toContain("2026-07-06");
+    });
+
+    it("[L3] 上次在线确认:无记录(null)→ 诚实「未知」,行不藏", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "M-l3",
+          licenseMode: "TIME",
+          expiresAt: null,
+          activatedAt: null,
+          lastOnlineCheckAt: null,
+          lastSeenAt: null,
+          graceSeconds: null,
+          revoked: false,
+        },
+      });
+      const row = document.querySelector('[data-slot="activation-last-check"]');
+      expect(row).not.toBeNull();
+      expect(row?.textContent).toContain("未知");
+    });
+
+    it("[L3] 内测离线宽限(grace)→ 显倒计时行;无壳层实时判定(web/单测)→ 诚实「未知」", async () => {
+      await renderSettings({
+        activation: {
+          status: "grace",
+          machineId: "M-grace",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-06-01T00:00:00.000Z",
+          lastSeenAt: "2026-06-01T00:00:00.000Z",
+          graceSeconds: 86_400,
+          revoked: false,
+        },
+      });
+      const countdown = document.querySelector(
+        '[data-slot="activation-grace-countdown"]',
+      );
+      expect(countdown).not.toBeNull();
+      // 单测/web 无 Tauri 壳 → 拿不到实时判定 → 不臆造秒数,显「未知」。
+      expect(countdown?.textContent).toBe("未知");
+    });
+
+    it("[L3] 非宽限态(active)→ 不渲染倒计时行", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "M-l3",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-07-06T00:00:00.000Z",
+          lastSeenAt: null,
+          graceSeconds: 86_400,
+          revoked: false,
+        },
+      });
+      expect(
+        document.querySelector('[data-slot="activation-grace-countdown"]'),
+      ).toBeNull();
     });
   });
 });

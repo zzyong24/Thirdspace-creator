@@ -135,6 +135,13 @@ export interface ActivationState {
   readonly expiresAt: string | null;
   readonly activatedAt: string | null;
   readonly lastOnlineCheckAt: string | null;
+  // ── [T-372 L3] 安全门展示副本(Rust 壳 syncFromShell 同步;老库缺省 → 诚实显「未知」) ──
+  /** 防回拨 last-seen(ISO)。 */
+  readonly lastSeenAt?: string | null;
+  /** 码型宽限秒数(内测 86400 / 买断 2592000)。 */
+  readonly graceSeconds?: number | null;
+  /** 签名撤销标记:买断 revoked → 更新入口旁提示「停更新,不锁功能」。 */
+  readonly revoked?: boolean;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */

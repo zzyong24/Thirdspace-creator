@@ -316,6 +316,10 @@ export default async function SettingsRoutePage() {
         expiresAt: status.expiresAt,
         activatedAt: status.activatedAt,
         lastOnlineCheckAt: status.lastOnlineCheckAt,
+        // [T-372 L3] 展示副本三列:上次确认 X 天前 / 码型宽限 / 撤销停更新提示。
+        lastSeenAt: status.lastSeenAt,
+        graceSeconds: status.graceSeconds,
+        revoked: status.revoked,
       };
     } catch {
       // 激活服务不可用(装配态 / transport race)→ 退回空态卡(诚实,不误显激活)。

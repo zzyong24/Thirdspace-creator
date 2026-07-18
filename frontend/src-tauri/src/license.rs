@@ -40,8 +40,16 @@ pub const LICENSE_SERVER_PUBLIC_KEY_B64: &str = "";
 const MAX_DATE_SKEW_MS: i64 = 300_000;
 /// last-seen 回拨容差(SPEC §6:3600 秒,容忍 DST 与合法小幅校时)。
 const ROLLBACK_TOLERANCE_MS: i64 = 3_600_000;
-/// 服务端未下发 graceSeconds 时的兜底宽限(P5 现状 7 天;L1s 上线后由服务端按码型下发)。
-const DEFAULT_GRACE_SECONDS: i64 = 7 * 86_400;
+/// [T-372 L3] 内测码(trial)离线宽限兜底:86400s = 24h(SPEC §7/§8 对照表「graceSeconds 下发」行;
+/// 服务端下发优先,未下发时按码型兜底,不再共用 7 天旧值)。
+const TRIAL_GRACE_SECONDS: i64 = 86_400;
+/// [T-372 L3] 买断码(perpetual)graceSeconds 兜底:2_592_000s = 30 天(SPEC §8 对照表)。
+/// 注:买断 fail-open,这个值不用于「锁」,只用于展示/心跳节奏参考。
+const PERPETUAL_GRACE_SECONDS: i64 = 2_592_000;
+/// [T-372 L3] 内测码心跳周期:3600s = 60min(SPEC §7「心跳 60 分钟」)。
+const TRIAL_HEARTBEAT_SECS: u64 = 3_600;
+/// [T-372 L3] 买断码心跳周期:2_592_000s = 30 天(SPEC §8「启动时一次 + 每 30 天」)。
+const PERPETUAL_HEARTBEAT_SECS: u64 = 2_592_000;
 /// `.license` 快照封包版本。
 const SNAPSHOT_VERSION: u32 = 1;
 /// `.license` 加密密钥派生上下文(与 sidecar 侧 license-file.server.ts 必须一致)。
@@ -150,6 +158,10 @@ pub struct LicenseSnapshot {
     /// 服务端下发的离线宽限秒数(内测 86400 / 买断 2592000;未下发用兜底)。
     pub grace_seconds: i64,
     pub revoked: bool,
+    /// [T-372 L3] 买断码被签名撤销后的软降级态:停止接收更新(不锁核心功能,SPEC §8)。
+    /// `#[serde(default)]`:L2 旧快照无此字段,解析按 false 兼容(不 bump 版本强迫重激活)。
+    #[serde(default)]
+    pub updates_blocked: bool,
     /// 本快照是否经过强验签(gate-F2 诚实标注;false = 「签名校验未启用」)。
     pub signature_verified: bool,
     /// 本判定产生时刻(Unix ms,展示/排障)。
@@ -163,10 +175,17 @@ pub struct LicenseSnapshot {
 pub struct GateDecision {
     pub licensed: bool,
     pub status: String,
-    /// "trial"(有到期)| "perpetual"(expiresAt=null 买断)。码型细分支为 L3 接口。
+    /// "trial"(有到期)| "perpetual"(expiresAt=null 买断)。[T-372 L3] 两码型显式分支贯穿全链。
     pub mode: String,
     pub expires_at: Option<String>,
     pub revoked: bool,
+    /// [T-372 L3] 买断码签名撤销的软降级(SPEC §8):true = 停更新 + 提示,核心功能照常。
+    /// 内测码永不置 true(内测 revoked = 直接不放行)。
+    pub updates_blocked: bool,
+    /// [T-372 L3] 内测码离线宽限剩余秒数(SPEC §7 倒计时展示);仅 status="grace" 时有值。
+    /// serde 名对齐 SPEC §9 前端形状 `offlineRemaining`。
+    #[serde(rename = "offlineRemaining")]
+    pub offline_remaining: Option<i64>,
     /// false + strict_verify=false ⇒ 前端应显示「签名校验未启用」诚实标注(gate-F2)。
     pub signature_verified: bool,
     pub strict_verify: bool,
@@ -179,6 +198,44 @@ fn mode_of(expires_at: &Option<String>) -> String {
     } else {
         "trial".to_string()
     }
+}
+
+/// [T-372 L3] graceSeconds 兜底按码型区分(SPEC §8 对照表:内测 86400 / 买断 2_592_000)。
+/// 服务端下发值优先,本函数只在未下发时使用。
+fn fallback_grace_seconds(expires_at: &Option<String>) -> i64 {
+    if expires_at.is_none() {
+        PERPETUAL_GRACE_SECONDS
+    } else {
+        TRIAL_GRACE_SECONDS
+    }
+}
+
+/// [T-372 L3] 心跳周期按码型(SPEC §7/§8 对照表「心跳周期」行:内测 60min / 买断 30 天)。
+pub fn heartbeat_interval_secs(mode: &str) -> u64 {
+    if mode == "perpetual" {
+        PERPETUAL_HEARTBEAT_SECS
+    } else {
+        TRIAL_HEARTBEAT_SECS
+    }
+}
+
+/// [T-372 L3] 下一次心跳应睡多少秒:基础 = 码型周期;内测另外在**到期时刻**前唤醒一次
+/// (SPEC §7「到期硬跳」:到点即查即跳,不等满一个 60min 周期)。纯函数,可单测。
+pub fn next_heartbeat_secs(mode: &str, expires_at_ms: Option<i64>, wall_ms: i64) -> u64 {
+    let base = heartbeat_interval_secs(mode);
+    if mode != "perpetual" {
+        if let Some(exp) = expires_at_ms {
+            let remaining = (exp - wall_ms) / 1000;
+            // 已到期(remaining ≤ 0)→ 1s 内立即复校;未到期但早于下个周期 → 到期时刻 +1s 唤醒。
+            if remaining <= 0 {
+                return 1;
+            }
+            if (remaining as u64) < base {
+                return remaining as u64 + 1;
+            }
+        }
+    }
+    base
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -349,13 +406,11 @@ pub fn is_clock_rollback(wall_ms: i64, max_seen_ms: Option<i64>) -> bool {
 }
 
 /// 会话内单调时钟(SPEC §6 第 3 源):进程内计时用 `Instant`,不受墙钟回拨影响。
-/// L2 记录会话起点供 L3 的宽限倒计时/心跳 cadence 使用(L3 接口,当前尚无调用方 → allow)。
-#[allow(dead_code)]
+/// [T-372 L3] 心跳循环的日志计时读它(改系统时间不影响心跳节奏与日志刻度)。
 pub struct SessionMonotonic {
     started: std::time::Instant,
 }
 
-#[allow(dead_code)]
 impl SessionMonotonic {
     pub fn new() -> Self {
         SessionMonotonic {
@@ -628,6 +683,9 @@ fn decision(
         mode: mode_of(&expires_at),
         expires_at,
         revoked,
+        // 码型专属字段默认关(updatesBlocked/offlineRemaining),由具体分支显式置值。
+        updates_blocked: false,
+        offline_remaining: None,
         signature_verified,
         strict_verify: strict,
         message: if !strict && !signature_verified {
@@ -668,7 +726,11 @@ pub fn run_license_chain(
     let seen_max = max_last_seen(deps.points, existing.map(|s| s.last_seen_ms));
 
     // ① 回拨检测先行(SPEC §6:墙钟 < max(last_seen) − 1h ⇒ 视同过期,回激活页)。
-    if is_clock_rollback(wall, seen_max) {
+    // [T-372 L3] 码型分支:回拨硬拦只对内测码 —— 回拨的唯一收益是给 expiresAt 延命,
+    // 买断(expiresAt=null)无到期可延,硬拦只会误伤改时区/校时的正常付费用户(fail-open,
+    // SPEC §8「连不上网/本地异常绝不降级」精神);重放攻击面仍由 ⑤ 的 date/nonce 防线兜底。
+    let existing_is_perpetual = existing.map(|s| s.expires_at.is_none()).unwrap_or(false);
+    if is_clock_rollback(wall, seen_max) && !existing_is_perpetual {
         let snap = existing.map(|s| LicenseSnapshot {
             allowed: false,
             status: "expired".to_string(),
@@ -843,46 +905,87 @@ pub fn run_license_chain(
         .clone()
         .or(existing.map(|s| s.license_mode.clone()))
         .unwrap_or_else(|| "TIME".to_string());
+    // [T-372 L3] graceSeconds:服务端下发 > 快照存量 > 码型兜底(内测 86400 / 买断 2_592_000)。
     let grace_seconds = body
         .grace_seconds
         .filter(|g| *g > 0)
         .or(existing.map(|s| s.grace_seconds).filter(|g| *g > 0))
-        .unwrap_or(DEFAULT_GRACE_SECONDS);
+        .unwrap_or_else(|| fallback_grace_seconds(&expires_at));
     let activated_at = match (&op, existing) {
         (LicenseOp::Activate { .. }, _) => format_iso_ms(trusted_now),
         (LicenseOp::Status, Some(s)) => s.activated_at.clone(),
         (LicenseOp::Status, None) => format_iso_ms(trusted_now),
     };
 
-    // ⑨ 吊销:签名响应 revoked=true → 不放行(L2 统一语义;买断「停更新不锁功能」为 L3 码型分支)。
+    // ⑨ 吊销 —— [T-372 L3] 码型显式分支(SPEC §8 对照表「签名 revoked」行,两码型不共用):
+    //   · 内测(trial):revoked 即时生效 → 不放行,立即跳激活页(SPEC §7「吊销即时生效」)。
+    //   · 买断(perpetual)+ 验签通过:软降级 → updatesBlocked(停更新 + 提示),**不锁核心
+    //     功能,照常放行主应用**(SPEC §8「仅签名撤销才降级」+ 宪法克制条款)。
+    //   · 买断 + 未验签(gate-F2 弱验签过渡):未签名的 revoked 不作数 —— 买断只认签名撤销,
+    //     防中间人用伪造 revoked 误伤离线权利;直接落到 ⑩/⑪ 正常放行链。
+    //     (强验签模式下未签名响应根本到不了这里,已在 ⑤ 被 untrusted 拒。)
     if revoked {
-        let msg = if server_msg.is_empty() {
-            "授权已被吊销".to_string()
-        } else {
-            server_msg
-        };
-        let snap = LicenseSnapshot {
-            v: SNAPSHOT_VERSION,
-            allowed: false,
-            status: "expired".to_string(),
-            code,
-            machine_id: cfg.machine_id.clone(),
-            license_mode,
-            project_key: cfg.project_key.clone(),
-            expires_at: expires_at.clone(),
-            activated_at,
-            last_online_check_ms: trusted_now,
-            last_seen_ms: new_seen,
-            grace_seconds,
-            revoked: true,
-            signature_verified,
-            verdict_at_ms: wall,
-            message: msg.clone(),
-        };
-        return ChainOutcome {
-            decision: decision(false, "expired", expires_at, true, signature_verified, strict, &msg),
-            snapshot: Some(snap),
-        };
+        let is_perpetual = expires_at.is_none();
+        if !is_perpetual {
+            let msg = if server_msg.is_empty() {
+                "授权已被吊销".to_string()
+            } else {
+                server_msg
+            };
+            let snap = LicenseSnapshot {
+                v: SNAPSHOT_VERSION,
+                allowed: false,
+                status: "expired".to_string(),
+                code,
+                machine_id: cfg.machine_id.clone(),
+                license_mode,
+                project_key: cfg.project_key.clone(),
+                expires_at: expires_at.clone(),
+                activated_at,
+                last_online_check_ms: trusted_now,
+                last_seen_ms: new_seen,
+                grace_seconds,
+                revoked: true,
+                updates_blocked: false,
+                signature_verified,
+                verdict_at_ms: wall,
+                message: msg.clone(),
+            };
+            return ChainOutcome {
+                decision: decision(false, "expired", expires_at, true, signature_verified, strict, &msg),
+                snapshot: Some(snap),
+            };
+        }
+        if signature_verified {
+            let msg = "授权已被撤销:更新已停用,核心功能不受影响".to_string();
+            let snap = LicenseSnapshot {
+                v: SNAPSHOT_VERSION,
+                allowed: true, // 买断撤销不锁功能:放行权威仍为 true
+                status: "active".to_string(),
+                code,
+                machine_id: cfg.machine_id.clone(),
+                license_mode,
+                project_key: cfg.project_key.clone(),
+                expires_at: expires_at.clone(),
+                activated_at,
+                last_online_check_ms: trusted_now,
+                last_seen_ms: new_seen,
+                grace_seconds,
+                revoked: true,
+                updates_blocked: true,
+                signature_verified,
+                verdict_at_ms: wall,
+                message: msg.clone(),
+            };
+            let mut d = decision(true, "active", expires_at, true, signature_verified, strict, &msg);
+            d.updates_blocked = true;
+            return ChainOutcome {
+                decision: d,
+                snapshot: Some(snap),
+            };
+        }
+        // 买断 + 未签名 revoked:忽略(仅签名撤销才降级),继续正常链。
+        eprintln!("[license] 买断码收到未签名 revoked,按 SPEC §8 忽略(仅签名撤销才降级)");
     }
 
     // ⑩ 到期判定(用可信时间,非本机墙钟;买断 expiresAt=null 永不到此)。
@@ -902,6 +1005,7 @@ pub fn run_license_chain(
             last_seen_ms: new_seen,
             grace_seconds,
             revoked: false,
+            updates_blocked: false,
             signature_verified,
             verdict_at_ms: wall,
             message: msg.clone(),
@@ -932,6 +1036,8 @@ pub fn run_license_chain(
         last_seen_ms: new_seen,
         grace_seconds,
         revoked: false,
+        // 一次干净的签名 valid 响应即解除买断停更新态(服务端已不再判 revoked)。
+        updates_blocked: false,
         signature_verified,
         verdict_at_ms: wall,
         message: msg.clone(),
@@ -942,8 +1048,12 @@ pub fn run_license_chain(
     }
 }
 
-/// 网络不可达分支:Status 走离线宽限(SPEC §7 语义,L2 用服务端下发/兜底 graceSeconds);
-/// Activate 无法离线完成 → 诚实失败。
+/// 网络不可达分支 —— [T-372 L3] 码型显式分支(SPEC §8 对照表「连不上网」行,两码型不共用):
+///   · 内测(trial):fail-closed —— 先判本地到期(硬跳无宽限延命),未到期才走 24h 离线宽限,
+///     超窗跳激活页;宽限窗内回报 offlineRemaining 供 UI 倒计时(SPEC §7)。
+///   · 买断(perpetual):fail-open —— 网络不可达 ≠ 撤销,**无限期离线可用,绝不降级**
+///     (JetBrains/Sketch/M365 共识,调研报告 §5);设置页只显「上次确认于 X 天前」。
+///   Activate 无法离线完成 → 诚实失败(两码型一致)。
 fn offline_outcome(
     deps: &ChainDeps<'_>,
     op: &LicenseOp<'_>,
@@ -975,6 +1085,38 @@ fn offline_outcome(
     };
     // 可信时间 = max(墙钟, last_seen)(墙钟被前拨会缩短宽限 → 保守方向,可接受)。
     let trusted_now = seen_max.map_or(wall, |m| m.max(wall));
+
+    // ── 买断(perpetual)fail-open:离线照常放行,不进宽限计时、不看窗口 ──────────
+    if s.expires_at.is_none() {
+        let new_seen = seen_max.unwrap_or(i64::MIN).max(wall);
+        for p in deps.points {
+            p.write(new_seen);
+        }
+        // 撤销态离线既不解除也不新增(updatesBlocked 沿用快照;解除只认签名 valid 响应)。
+        let mut d = decision(
+            true,
+            "active",
+            s.expires_at.clone(),
+            s.revoked,
+            s.signature_verified,
+            strict,
+            "买断授权:离线不影响使用(上次在线确认时间见设置页)",
+        );
+        d.updates_blocked = s.updates_blocked;
+        return ChainOutcome {
+            decision: d,
+            snapshot: Some(LicenseSnapshot {
+                allowed: true,
+                status: "active".to_string(),
+                last_seen_ms: new_seen,
+                verdict_at_ms: wall,
+                message: "买断授权离线放行(fail-open)".to_string(),
+                ..s.clone()
+            }),
+        };
+    }
+
+    // ── 内测(trial)fail-closed:到期硬跳(无宽限延命)→ 24h 宽限窗判定 ────────────
     if is_expired(&s.expires_at, trusted_now) {
         return ChainOutcome {
             decision: decision(
@@ -1003,16 +1145,20 @@ fn offline_outcome(
         p.write(new_seen);
     }
     if within {
+        // [T-372 L3] 宽限剩余秒数(SPEC §7:宽限窗内 UI 显示离线剩余倒计时)。
+        let remaining_secs = ((grace_ms - (trusted_now - s.last_online_check_ms)) / 1000).max(0);
+        let mut d = decision(
+            true,
+            "grace",
+            s.expires_at.clone(),
+            s.revoked,
+            s.signature_verified,
+            strict,
+            "离线宽限期内(暂无法连接授权服务)",
+        );
+        d.offline_remaining = Some(remaining_secs);
         ChainOutcome {
-            decision: decision(
-                true,
-                "grace",
-                s.expires_at.clone(),
-                s.revoked,
-                s.signature_verified,
-                strict,
-                "离线宽限期内(暂无法连接授权服务)",
-            ),
+            decision: d,
             snapshot: Some(LicenseSnapshot {
                 allowed: true,
                 status: "grace".to_string(),
@@ -1047,12 +1193,35 @@ fn offline_outcome(
 
 /// 不可信响应(验签失败/缺头/nonce 不符/date 偏移):视同校验失败,不放行、不落 active
 /// (SPEC §5)。保留原快照的领域字段但 allowed=false —— 假服务器不能延命也不能抹除激活记录。
+///
+/// [T-372 L3] 码型分支:**买断码例外** —— 不可信响应对买断 = 「无法确认」而非「撤销」,
+/// 与网络不可达同置(SPEC §8:仅签名验签通过的 revoked 才降级)。已放行的买断快照照常
+/// 放行且**不动快照**(攻击者既不能借伪造响应锁死付费用户,也不能借它抹掉已有的
+/// updatesBlocked 撤销态)。内测码维持 L2 语义:不可信即不放行。
 fn untrusted_outcome(
     existing: Option<&LicenseSnapshot>,
     wall: i64,
     strict: bool,
     reason: &str,
 ) -> ChainOutcome {
+    if let Some(s) = existing {
+        if s.expires_at.is_none() && s.allowed {
+            let mut d = decision(
+                true,
+                "active",
+                s.expires_at.clone(),
+                s.revoked,
+                s.signature_verified,
+                strict,
+                &format!("授权响应不可信({reason}),已忽略;买断授权照常可用"),
+            );
+            d.updates_blocked = s.updates_blocked;
+            return ChainOutcome {
+                decision: d,
+                snapshot: None, // 不可信输入不落盘:快照维持原样
+            };
+        }
+    }
     let msg = format!("授权响应不可信:{reason}");
     let snap = existing.map(|s| LicenseSnapshot {
         allowed: false,
@@ -1136,9 +1305,15 @@ pub struct ShellLicenseCtx {
     pub sidecar_port: u16,
     /// 决策链互斥(启动线程与 IPC command 可能并发跑链;串行化避免 .license 写竞争)。
     pub chain_lock: Mutex<()>,
-    /// 会话内单调时钟(L3 心跳/宽限倒计时接口,当前尚无读方 → allow)。
-    #[allow(dead_code)]
+    /// 会话内单调时钟([T-372 L3] 心跳日志用,墙钟无关)。
     pub session: SessionMonotonic,
+    /// [T-372 L3] 最近一次决策链结果(启动查 / 心跳 / IPC 共用)。前端经 `license_last_decision`
+    /// 读它做初始态(webview 挂载晚于启动查,单靠事件会漏第一发),**零网络零重算**。
+    pub last_decision: Mutex<Option<GateDecision>>,
+    /// [T-372 L3] 事件发射句柄:每次决策链跑完向 webview 广播 `creatoros://license-decision`,
+    /// 前端桥(license-heartbeat-bridge)收到 licensed=false 立即跳激活页(心跳吊销即时生效)。
+    /// None = 单测/无壳环境(不发事件,决策链本体不受影响)。
+    pub app_handle: Option<tauri::AppHandle>,
 }
 
 /// Tauri managed state 包装。
@@ -1191,6 +1366,15 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
         write_snapshot_file(&path, snap, key.as_ref());
         sync_mirror_to_sidecar(ctx, snap);
     }
+    // [T-372 L3] 记录最近判定 + 向 webview 广播(前端桥据此「立即跳激活页」/ 显示宽限倒计时,
+    // 不必轮询 —— 轮询 license_check 会触发真网络请求,破坏码型 cadence)。
+    *ctx.last_decision.lock().unwrap() = Some(outcome.decision.clone());
+    if let Some(app) = &ctx.app_handle {
+        use tauri::Emitter as _;
+        if let Err(e) = app.emit("creatoros://license-decision", &outcome.decision) {
+            eprintln!("[license] 广播授权判定事件失败: {e}");
+        }
+    }
     outcome.decision
 }
 
@@ -1238,10 +1422,45 @@ pub fn sync_mirror_to_sidecar(ctx: &ShellLicenseCtx, snap: &LicenseSnapshot) {
     }
 }
 
-/// 启动期授权校验任务(应用启动必查一次,SPEC §7):
+/// [T-372 L3] 读当前快照的码型 + 到期毫秒(心跳节奏的输入;无快照 = 未激活,按内测节奏,
+/// 激活落快照后下一轮自动收敛到真码型)。
+fn current_mode_and_expiry(ctx: &ShellLicenseCtx) -> (String, Option<i64>) {
+    let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
+    match read_snapshot_file(&license_file_path(&ctx.app_data_dir), key.as_ref()) {
+        Some(s) => {
+            let exp_ms = s.expires_at.as_deref().and_then(parse_iso_ms);
+            (mode_of(&s.expires_at), exp_ms)
+        }
+        None => ("trial".to_string(), None),
+    }
+}
+
+/// [T-372 L3] 心跳等待:按当前码型周期分片睡眠(60s 一片)。分片而非一觉睡满的原因:
+///   ① 买断 30 天的整段 sleep 无法响应「会话中途激活/换码」导致的码型与节奏变化 ——
+///      每片醒来重读快照重算目标,激活后 ≤60s 收敛到新码型节奏;
+///   ② 内测在到期时刻前唤醒(next_heartbeat_secs),做到到期即查即跳,不等满 60min。
+/// 计时用 `Instant`(单调),改系统时间拉不长也压不短心跳间隔。
+fn heartbeat_wait(ctx: &ShellLicenseCtx) {
+    let clock = SystemClock;
+    let started = std::time::Instant::now();
+    loop {
+        let (mode, exp_ms) = current_mode_and_expiry(ctx);
+        let target = next_heartbeat_secs(&mode, exp_ms, clock.wall_ms());
+        let elapsed = started.elapsed().as_secs();
+        if elapsed >= target {
+            return;
+        }
+        std::thread::sleep(std::time::Duration::from_secs((target - elapsed).min(60)));
+    }
+}
+
+/// 启动期授权校验任务(SPEC §7/§8:两码型都是「应用启动必查一次」):
 ///   ① 立即跑一次 Status 决策链(不依赖 sidecar;在线校验 + 落 .license 放行快照);
-///   ② 等 sidecar 端口就绪后补一次展示副本同步(①里的同步大概率因 sidecar 未启而落空)。
-/// 心跳 cadence(内测 60min / 买断 30d)按码型分支属 L3;本任务是它的挂载点。
+///   ② 等 sidecar 端口就绪后补一次展示副本同步(①里的同步大概率因 sidecar 未启而落空);
+///   ③ [T-372 L3] 心跳循环:周期按码型(内测 3600s / 买断 2_592_000s = 30 天),每轮复校
+///      更新 .license 快照与 last_decision,并广播事件给前端桥 —— 内测命中 revoked/到期
+///      即刻 licensed=false → 前端立即跳激活页;买断心跳失败(离线)被 fail-open 吸收。
+/// 选型:std::thread + 分片 sleep(与 L2 阻塞式 reqwest/线程模型一致,不为一个循环引 tokio)。
 pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
     std::thread::spawn(move || {
         let d = run_chain_and_persist(&ctx, LicenseOp::Status);
@@ -1261,9 +1480,22 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
                 {
                     sync_mirror_to_sidecar(&ctx, &snap);
                 }
-                return;
+                break;
             }
             std::thread::sleep(std::time::Duration::from_millis(500));
+        }
+        // ③ 心跳循环(进程存活期间常驻;窗口关闭即进程退出,线程随之回收)。
+        loop {
+            heartbeat_wait(&ctx);
+            let d = run_chain_and_persist(&ctx, LicenseOp::Status);
+            eprintln!(
+                "[license] 心跳复校(会话第 {} 分钟): licensed={} status={} mode={}({})",
+                ctx.session.elapsed_ms() / 60_000,
+                d.licensed,
+                d.status,
+                d.mode,
+                d.message
+            );
         }
     });
 }
@@ -1304,6 +1536,14 @@ pub async fn license_check(
     tauri::async_runtime::spawn_blocking(move || run_chain_and_persist(&ctx, LicenseOp::Status))
         .await
         .map_err(|e| format!("授权校验任务执行失败: {e}"))
+}
+
+/// [T-372 L3] 最近一次决策链结果(**零网络零重算**,读内存缓存)。前端桥/设置页倒计时的
+/// 初始态入口 —— 轮询 `license_check` 会触发真网络请求破坏码型 cadence,故另设此只读口。
+/// None = 启动查尚未跑完(前端按「未知」处理,等事件)。
+#[tauri::command]
+pub fn license_last_decision(state: tauri::State<'_, LicenseState>) -> Option<GateDecision> {
+    state.0.last_decision.lock().unwrap().clone()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1475,9 +1715,20 @@ mod tests {
             last_seen_ms: NOW_MS - 3_600_000,
             grace_seconds: 86_400,
             revoked: false,
+            updates_blocked: false,
             signature_verified: true,
             verdict_at_ms: NOW_MS - 3_600_000,
             message: String::new(),
+        }
+    }
+
+    /// [T-372 L3] 买断码快照:expiresAt=null、graceSeconds=30 天。
+    fn snapshot_perpetual() -> LicenseSnapshot {
+        LicenseSnapshot {
+            expires_at: None,
+            license_mode: "TIME".to_string(),
+            grace_seconds: 2_592_000,
+            ..snapshot_active()
         }
     }
 
@@ -1757,7 +2008,8 @@ mod tests {
         assert!(out3.snapshot.is_none());
     }
 
-    // ⑫ 在线明确 revoked=true(签名可信)→ 不放行。
+    // ⑫ [对照表·内测·签名 revoked 行] 在线明确 revoked=true(签名可信)→ 立即不放行
+    //   (= 前端桥收到 licensed=false 即跳激活页,心跳吊销即时生效,SPEC §7)。
     #[test]
     fn revoked_response_blocks() {
         let (sk, pk) = test_keypair();
@@ -1769,6 +2021,9 @@ mod tests {
         let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
         assert!(!out.decision.licensed);
         assert!(out.decision.revoked);
+        // 内测吊销 = 整体不放行,绝不是「仅停更新」软降级(那是买断专属语义)。
+        assert_eq!(out.decision.mode, "trial");
+        assert!(!out.decision.updates_blocked);
         let snap = out.snapshot.unwrap();
         assert!(snap.revoked);
         assert!(!snap.allowed);
@@ -1838,5 +2093,203 @@ mod tests {
         assert!(parse_iso_ms("not-a-date").is_none());
         assert!(parse_iso_ms("2026-07-17T12:00:00+08:00").is_none());
         assert_eq!(format_iso_ms(NOW_MS), "2026-07-17T12:00:00Z");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // [T-372 L3] 码型分支 —— SPEC §8 对照表逐行(内测/买断不共用分支)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // [对照表·内测·到期行] 到期硬跳:哪怕上次在线校验就在 1h 前(远在 24h 宽限窗内),
+    // 到期即 expired,离线宽限不给到期延命(SPEC §7「无宽限延命」)。
+    #[test]
+    fn trial_expiry_hard_blocks_without_grace() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.network_error = true; // 离线也一样:宽限只救「连不上」,救不了「到期」
+        let cfg = config(&pk, true);
+        let mut s = snapshot_active();
+        s.expires_at = Some("2026-07-17T11:00:00Z".to_string()); // 1h 前已到期
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&s));
+        assert!(!out.decision.licensed);
+        assert_eq!(out.decision.status, "expired");
+        assert_eq!(out.decision.mode, "trial");
+    }
+
+    // [对照表·内测·连不上网行] 离线宽限 = fail-closed:窗内放行且回报剩余秒数(UI 倒计时),
+    // 超 24h 跳激活页(已在 offline_grace_semantics 断言超窗拒;此处锚剩余秒数)。
+    #[test]
+    fn trial_offline_grace_reports_remaining_seconds() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.network_error = true;
+        let cfg = config(&pk, true);
+        let existing = snapshot_active(); // 上次在线校 1h 前,grace 86400s
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        assert!(out.decision.licensed);
+        assert_eq!(out.decision.status, "grace");
+        // 剩余 = 86400 - 3600 = 82800s(SPEC §7 宽限窗内显示离线剩余倒计时)。
+        assert_eq!(out.decision.offline_remaining, Some(82_800));
+    }
+
+    // [对照表·买断·连不上网行] fail-open:哪怕上次在线校验已是 100 天前,网络不可达
+    // 照常放行,无限期离线可用(SPEC §8「连不上网 ≠ 撤销」)。
+    #[test]
+    fn perpetual_offline_fail_open_indefinitely() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.network_error = true;
+        let cfg = config(&pk, true);
+        let mut s = snapshot_perpetual();
+        s.last_online_check_ms = NOW_MS - 100 * 86_400_000; // 100 天没连上服务器
+        s.last_seen_ms = NOW_MS - 3_600_000;
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&s));
+        assert!(out.decision.licensed, "{:?}", out.decision);
+        assert_eq!(out.decision.status, "active");
+        assert_eq!(out.decision.mode, "perpetual");
+        assert!(out.decision.offline_remaining.is_none(), "买断无宽限倒计时概念");
+        assert!(out.snapshot.unwrap().allowed);
+    }
+
+    // [对照表·买断·签名 revoked 行] 仅签名撤销才降级,且降级 = 停更新 + 提示,
+    // **不锁核心功能**(licensed 仍 true,快照 allowed 仍 true)。
+    #[test]
+    fn perpetual_signed_revoked_blocks_updates_only() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["expiresAt"] = serde_json::Value::Null;
+        body["revoked"] = serde_json::Value::Bool(true);
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let existing = snapshot_perpetual();
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        assert!(out.decision.licensed, "买断撤销不锁核心功能: {:?}", out.decision);
+        assert!(out.decision.revoked);
+        assert!(out.decision.updates_blocked, "撤销 → 停更新态");
+        assert!(out.decision.message.contains("核心功能不受影响"));
+        let snap = out.snapshot.unwrap();
+        assert!(snap.allowed, "放行权威仍为 true");
+        assert!(snap.revoked);
+        assert!(snap.updates_blocked);
+    }
+
+    // [对照表·买断·签名 revoked 行·反面] 未签名的 revoked 不作数(弱验签模式):
+    // 买断只认签名撤销,防伪造 revoked 误伤离线权利。
+    #[test]
+    fn perpetual_unsigned_revoked_ignored() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["expiresAt"] = serde_json::Value::Null;
+        body["revoked"] = serde_json::Value::Bool(true);
+        let mut server = FakeServer::ok(sk, body);
+        server.no_signature_headers = true; // 无签名头
+        let cfg = config(&pk, false); // gate-F2 弱验签
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&snapshot_perpetual()));
+        assert!(out.decision.licensed);
+        assert!(!out.decision.updates_blocked, "未签名 revoked 不触发停更新");
+    }
+
+    // [买断 fail-open 推论] 不可信响应(篡改/伪造)对买断 = 「无法确认」而非「撤销」:
+    // 照常放行且不动快照(伪造响应既锁不死付费用户,也抹不掉已有撤销态)。
+    #[test]
+    fn perpetual_untrusted_response_does_not_degrade() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.tamper_body_after_sign = true;
+        let cfg = config(&pk, true);
+        let existing = snapshot_perpetual();
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        assert!(out.decision.licensed, "{:?}", out.decision);
+        assert!(out.snapshot.is_none(), "不可信输入不落盘");
+        // 已有停更新态也不被伪造响应清除。
+        let mut blocked = snapshot_perpetual();
+        blocked.updates_blocked = true;
+        blocked.revoked = true;
+        let out2 = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&blocked));
+        assert!(out2.decision.licensed);
+        assert!(out2.decision.updates_blocked, "伪造响应清不掉撤销停更新态");
+        assert!(out2.snapshot.is_none());
+    }
+
+    // [买断 fail-open 推论] 回拨检测不硬拦买断:买断无到期可延命,回拨无收益,
+    // 硬拦只会误伤改时区/校时的付费用户(内测回拨拦截已在 clock_rollback_expires 锚定)。
+    #[test]
+    fn perpetual_clock_rollback_not_blocking() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body());
+        server.network_error = true; // 离线 + 回拨叠加,仍放行
+        let cfg = config(&pk, true);
+        let existing = snapshot_perpetual();
+        let p1 = MemPoint::new(Some(NOW_MS));
+        let rolled_back = NOW_MS - 4 * 3_600_000; // 回拨 4h(远超 1h 容差)
+        let out = run(&cfg, &server, rolled_back, &[&p1], LicenseOp::Status, Some(&existing));
+        assert!(out.decision.licensed, "{:?}", out.decision);
+        assert_eq!(out.decision.mode, "perpetual");
+    }
+
+    // [对照表·graceSeconds 下发行] 服务端未下发时兜底按码型区分:内测 86400 / 买断 2_592_000。
+    #[test]
+    fn grace_seconds_fallback_per_mode() {
+        let (sk, pk) = test_keypair();
+        let cfg = config(&pk, true);
+        // 内测:缺 graceSeconds → 86400。
+        let mut body = valid_body();
+        body.as_object_mut().unwrap().remove("graceSeconds");
+        let server = FakeServer::ok(sk.clone(), body);
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Activate { code: "C" }, None);
+        assert_eq!(out.snapshot.unwrap().grace_seconds, 86_400);
+        // 买断:缺 graceSeconds → 2_592_000。
+        let mut body2 = valid_body();
+        body2["expiresAt"] = serde_json::Value::Null;
+        body2.as_object_mut().unwrap().remove("graceSeconds");
+        let server2 = FakeServer::ok(sk, body2);
+        let out2 = run(&cfg, &server2, NOW_MS, &[], LicenseOp::Activate { code: "C" }, None);
+        assert_eq!(out2.snapshot.unwrap().grace_seconds, 2_592_000);
+    }
+
+    // [对照表·心跳周期行] 内测 3600s(60min)/ 买断 2_592_000s(30 天);
+    // 内测另在到期时刻前唤醒(到期即查即跳,不等满一个周期)。
+    #[test]
+    fn heartbeat_cadence_per_mode() {
+        assert_eq!(heartbeat_interval_secs("trial"), 3_600);
+        assert_eq!(heartbeat_interval_secs("perpetual"), 2_592_000);
+        // 买断:恒 30 天(无到期概念)。
+        assert_eq!(next_heartbeat_secs("perpetual", None, NOW_MS), 2_592_000);
+        // 内测:无到期信息 → 标准 60min。
+        assert_eq!(next_heartbeat_secs("trial", None, NOW_MS), 3_600);
+        // 内测:10 分钟后到期 → 在到期时刻(+1s)唤醒,而非等满 60min。
+        assert_eq!(
+            next_heartbeat_secs("trial", Some(NOW_MS + 600_000), NOW_MS),
+            601
+        );
+        // 内测:已到期 → 1s 内立即复校(触发 expired → 前端跳激活页)。
+        assert_eq!(next_heartbeat_secs("trial", Some(NOW_MS - 1), NOW_MS), 1);
+    }
+
+    // [兼容] L2 旧快照(无 updatesBlocked 字段)解析按 false 兜底,不强迫重激活。
+    #[test]
+    fn snapshot_updates_blocked_serde_default() {
+        let mut v = serde_json::to_value(snapshot_active()).unwrap();
+        v.as_object_mut().unwrap().remove("updatesBlocked");
+        let parsed: LicenseSnapshot = serde_json::from_value(v).unwrap();
+        assert!(!parsed.updates_blocked);
+    }
+
+    // [买断解除] 一次干净的签名 valid(revoked=false)响应即解除停更新态。
+    #[test]
+    fn perpetual_clean_response_clears_updates_blocked() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["expiresAt"] = serde_json::Value::Null;
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let mut blocked = snapshot_perpetual();
+        blocked.updates_blocked = true;
+        blocked.revoked = true;
+        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&blocked));
+        assert!(out.decision.licensed);
+        assert!(!out.decision.updates_blocked);
+        let snap = out.snapshot.unwrap();
+        assert!(!snap.updates_blocked);
+        assert!(!snap.revoked);
     }
 }

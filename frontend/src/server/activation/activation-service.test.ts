@@ -316,6 +316,10 @@ describe("activation state machine — getStatus (local, no network)", () => {
       expiresAt: null,
       activatedAt: null,
       lastOnlineCheckAt: null,
+      // [T-372 L3] 展示副本三列:未激活一并诚实缺省。
+      lastSeenAt: null,
+      graceSeconds: null,
+      revoked: false,
     });
     // 纯本地读:绝不打在线接口。
     expect(license.status).not.toHaveBeenCalled();
@@ -405,6 +409,74 @@ describe("activation state machine — getStatus (local, no network)", () => {
     const v = await svc.getStatus();
     expect(v.status).toBe("grace");
     expect(license.status).not.toHaveBeenCalled();
+  });
+
+  // ── [T-372 L3] 码型分支(SPEC §8 对照表)────────────────────────────────────
+  it("[L3] 买断(expiresAt=null)超宽限窗仍 active:fail-open 绝不因离线降级展示", async () => {
+    const { repo } = makeRepo(
+      storedFixture({
+        expiresAt: null,
+        licenseMode: "TIME",
+        // 100 天没在线校过 —— 内测早该 grace/expired,买断照常 active。
+        lastOnlineCheckAt: "2026-04-01T00:00:00.000Z",
+        graceSeconds: 2_592_000,
+      }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      graceDays: 7,
+      now: () => new Date("2026-07-10T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("active");
+    expect(v.graceSeconds).toBe(2_592_000);
+    expect(license.status).not.toHaveBeenCalled();
+  });
+
+  it("[L3] 内测宽限窗优先用码型 graceSeconds(86400s),而非旧 graceDays 配置", async () => {
+    const { repo } = makeRepo(
+      storedFixture({
+        expiresAt: "2027-07-06T00:00:00.000Z",
+        lastOnlineCheckAt: "2026-08-01T00:00:00.000Z",
+        graceSeconds: 86_400, // 内测 24h 窗
+      }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      graceDays: 7, // 旧配置 7 天 —— 若被误用,2 天前的在线校仍算窗内
+      now: () => new Date("2026-08-03T00:00:00Z"), // 距上次在线校 2 天 > 24h
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("grace");
+  });
+
+  it("[L3] 展示副本三列(lastSeenAt/graceSeconds/revoked)经 getStatus 透传", async () => {
+    const { repo } = makeRepo(
+      storedFixture({
+        expiresAt: null,
+        lastSeenAt: "2026-07-16T00:00:00.000Z",
+        graceSeconds: 2_592_000,
+        revoked: true, // 买断撤销:状态仍 active(不锁功能),revoked 供更新入口旁提示
+      }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      now: () => new Date("2026-07-17T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("active");
+    expect(v.lastSeenAt).toBe("2026-07-16T00:00:00.000Z");
+    expect(v.graceSeconds).toBe(2_592_000);
+    expect(v.revoked).toBe(true);
   });
 });
 
