@@ -247,9 +247,13 @@ function pnpmDepsOfEntry(srcPnpm, entryName) {
       if (e.isSymbolicLink()) {
         let target;
         try { target = resolve(dir, readlinkSync(p)); } catch { continue; }
-        const idx = target.indexOf("/.pnpm/");
+        // Windows 的 readlink/junction 目标是反斜杠路径,硬编码 "/.pnpm/" 会匹配失败 →
+        // 整个闭包只剩根 entry(Windows 首次构建实测:xenova 闭包只拷 1 个 → onnxruntime-common
+        // 缺失)。归一化为正斜杠后再匹配,pi/xenova 两处闭包共用此函数,一并修好。
+        const norm = target.replace(/\\/g, "/");
+        const idx = norm.indexOf("/.pnpm/");
         if (idx >= 0) {
-          const entry = target.slice(idx + "/.pnpm/".length).split("/node_modules/")[0];
+          const entry = norm.slice(idx + "/.pnpm/".length).split("/node_modules/")[0];
           if (entry) out.add(entry);
         }
       } else if (e.isDirectory() && e.name.startsWith("@")) {
