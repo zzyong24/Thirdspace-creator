@@ -52,7 +52,11 @@ export function findUpdaterArtifact(bundleDir = BUNDLE_DIR) {
     for (const n of readdirSync(dir, { withFileTypes: true })) {
       const p = join(dir, n.name);
       if (n.isDirectory()) walk(p);
-      else if (/\.(app\.tar\.gz|msi\.zip|nsis\.zip)$/.test(n.name)) results.push(p);
+      // Tauri v2 的 win updater 产物 = 直接签安装器本体(-setup.exe/.msi + .sig),
+      // 不再是 v1 的 .nsis.zip/.msi.zip(第 12 轮 win CI 实证:产物齐但旧正则找不到)。
+      // 两代命名都收;是否真 updater 产物由下方「伴生 .sig 存在」判定。
+      else if (/(\.app\.tar\.gz|\.msi\.zip|\.nsis\.zip|-setup\.exe|\.msi)$/.test(n.name))
+        results.push(p);
     }
   };
   walk(bundleDir);
