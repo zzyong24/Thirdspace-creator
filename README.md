@@ -125,13 +125,16 @@
 
 | 层 | 选型 | 说明 |
 |---|---|---|
-| 桌面壳 | **Tauri**(Rust core)+ WKWebView | 退出即关 sidecar;`server.app`(LSUIElement)后台隐身 |
+| 桌面壳 | **Tauri**(Rust core) | mac WKWebView / Win WebView2;退出即关 sidecar;`server.app`(LSUIElement)后台隐身 |
 | 应用 sidecar | **Next.js** standalone | `frontend` + `backend` + `ai-worker` 打进同一 Node 进程 |
 | 本地数据库 | **PGlite** | 单机、单写、落盘;除 LLM API 外全本地 |
 | 契约 | **ts-rest** + **Zod** | `contract/` 前后端单一真值,resources + operations |
 | AI 运行时 | **Vercel AI SDK** | 模型经 model-config 用户可配;全 `runStructuredNode` 结构化输出 |
 | 视频渲染 | **HyperFrames** + **GSAP** + **ffmpeg** | HTML+GSAP → headless Chromium 帧捕获 → ffmpeg 编码 |
 | 数据采集 | **Playwright** | `launchPersistentContext` 复用扫码登录态,抓抖音 |
+| 授权 / 防盗版 | **Ed25519** 机器绑定在线激活(Rust) | 授权终判在 Rust 壳;去单点化 + 反调试 + 灭靶点;裸 `node server.js` fail-closed |
+| 打包加固 | **javascript-obfuscator** + **bytenode** | L1 字符串加密(rc4 stringArray)→ L3 V8 字节码(`.jsc`);prompt/端点明文归零;X25519+AES-GCM 加密日志 |
+| CI / 发布 | **GitHub Actions** | macOS + Windows 双端 `tauri build` 出包 + updater 签名;verify 门禁(lint / typecheck / 全量单测);README 提交活动图每日重生成 |
 | 包管理 | **pnpm** workspace | `frontend` / `backend` / `contract` / `ai-worker` / `mcp-server` |
 
 <p align="right">(<a href="#readme-top">回到顶部</a>)</p>
@@ -316,6 +319,7 @@ WebView ──HTTP──► sidecar(Next standalone)──进程内库调──�
 - [Tauri](https://tauri.app) · [Next.js](https://nextjs.org) · [PGlite](https://pglite.dev) · [ts-rest](https://ts-rest.com)
 - [HyperFrames](https://www.npmjs.com/package/hyperframes)(Apache-2.0,视频渲染引擎)· [GSAP](https://gsap.com)
 - [Playwright](https://playwright.dev) · [ffmpeg](https://ffmpeg.org) · [Vercel AI SDK](https://sdk.vercel.ai)
+- [javascript-obfuscator](https://github.com/javascript-obfuscator/javascript-obfuscator) · [bytenode](https://github.com/bytenode/bytenode)(打包加固)
 - [Shields.io](https://shields.io) · [Simple Icons](https://simpleicons.org)
 
 <p align="right">(<a href="#readme-top">回到顶部</a>)</p>
@@ -323,7 +327,7 @@ WebView ──HTTP──► sidecar(Next standalone)──进程内库调──�
 <!-- MARKDOWN LINKS & IMAGES(静态徽章,私有仓也能渲染) -->
 [status-shield]: https://img.shields.io/badge/status-active-success.svg?style=for-the-badge
 [status-url]: BACKLOG.md
-[platform-shield]: https://img.shields.io/badge/platform-macOS%20(Tauri)-black.svg?style=for-the-badge
+[platform-shield]: https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20(Tauri)-black.svg?style=for-the-badge
 [platform-url]: https://tauri.app
 [node-shield]: https://img.shields.io/badge/node-%3E%3D25-339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=white
 [node-url]: https://nodejs.org
