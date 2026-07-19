@@ -122,6 +122,11 @@ step("sidecar JS 混淆(§3.1)", process.execPath, [join("scripts", "desktop", "
 //    失败 fail-fast。下面的冒烟(步2.5)因此测的是**字节码版**(turbopack require stub → 加载 .jsc)。
 step("sidecar V8 字节码化(§5,L1→L3)", process.execPath, [join("scripts", "desktop", "bytecode.mjs")]);
 
+// 2.3) [T-399a] 反 AI 破解被动欺骗诱饵注入(**字节码之后**:诱饵进 static/chunks 保持可读,不被 bytecode 碰)。
+//    往可读客户端面注入矛盾诱饵污染破解 AI 上下文;R2/R3 = 零引用/未进 manifest(浏览器永不加载)/删除即字节等价,
+//    注入后立即自审,违则回滚 fail-fast。seed 走 CREATOROS_DECOY_SEED(CI secret,SA-3),缺则本地 fallback。
+step("sidecar 反 AI 诱饵注入(T-399a)", process.execPath, [join("scripts", "desktop", "decoy.mjs")]);
+
 // 2.5) [T-164] 混淆+字节码后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
 //    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
 //    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
