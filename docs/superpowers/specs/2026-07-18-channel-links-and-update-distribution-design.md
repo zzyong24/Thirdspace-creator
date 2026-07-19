@@ -23,13 +23,21 @@
 
 ## 3. 数据模型(activation-manager,非本仓)
 
-- 项目(=代理/渠道)维度加 `channel_config` JSON 列:
+> **2026-07-19 修订(评审记录第 2 轮)**:渠道维度与 project 解耦。原文「项目(=代理/渠道)维度加列」与发码方 agent-hub(Thirdspace-growth)已过审契约冲突——其 FR-008 中 projectKey=**产品**维度(creatorOS 全体代理共用一个 projectKey,见其 `server/code_source.py` generate_codes 按产品路由),码→代理归属在 agent-hub 台账 `IssuedCode.agent_id`,AM 不认识"代理"。按项目挂链接只有两个结局:每代理一项目(打爆 agent-hub 产品路由模型)或全体代理共享一份链接(白标落空)。故渠道以独立实体挂在**码**上——这也正是拍板①「链接跟激活码走」的直译。客户端契约(§4/§5/§6/§7/§8)零变化。
+
+- 新增 `Channel` 实体:`channelKey`(唯一,`^[a-z0-9-]{1,64}$`)+ `name` + 链接三键:
   ```json
   { "purchaseUrl": "https://…", "supportUrl": "https://…", "downloadUrl": "https://…" }
   ```
-  三键皆可空;仅接受 `https://` 与飞书等白名单协议头,后台表单校验。
-- 官方直营 = 官方项目配官方链接;不配 = 客户端中性降级(见 §5)。
-- 应用版本公告:后台可编辑 `latestVersion` + `releaseNotes`(全局一份,downloadUrl 按渠道取各自 channel_config)。
+  三键皆可空;仅接受 `https://` 白名单协议头(飞书链接即 https),AM 服务端与表单双重校验。
+- `ActivationCode.channelRef` 可空列(索引):发码时由调用方指定——agent-hub 批准工单/自助发码传 `agent-<account_id>`,官方在 AM 后台直发默认 `official`。改链接只动 Channel 行,码上仅存 ref,存量装机随下次心跳生效(§4 时延语义不变)。
+- **`official` 渠道随 T-396a 部署 seed 自动创建**(初始三链接=现官方链接),不依赖人工前提——否则官方码激活即中性降级,与 §8-2 矛盾(评审第 2 轮 #1)。
+- **允许先发码后配渠道链接**(不阻塞 agent-hub 审批流):该代理渠道未配置期间激活=中性降级,配置后存量装机 ≤ 心跳周期自动跟上;"未配置"的可见性由 agent-hub 在批准/发码响应中以 warning 提示(评审第 2 轮 #3,agent-hub 侧契约 API-007 增量)。
+- 解析:activate/status/latest-version 按 `code.channelRef → Channel` 查 channelConfig;无 ref 或查不到 = null → 客户端中性降级(见 §5,红线不变)。
+- 渠道链接编辑面 = agent-hub 老板后台(调下述 channels 管理 API,agent-hub 仓 T-020);AM 自家后台提供同能力表单。「不做代理自助后台」非目标不变。
+- v1 不做代理树链接继承:下级未配置 = 中性降级(代理树在 agent-hub,将来要继承由它算好物化推送,AM 保持傻查表)。
+- 应用版本公告:后台可编辑 `latestVersion` + `releaseNotes`(全局一份,downloadUrl 按渠道取各自 channelConfig)。
+- 管理 API(供 agent-hub 与自家后台,admin 鉴权):`PUT/GET /api/admin/channels/{channelKey}`、`GET /api/admin/channels`、`POST /api/admin/codes/generate` 载荷新增可选 `channelRef`(**省略该字段 → 码的 channelRef=null,激活走中性降级**;向后兼容)、`POST /api/admin/codes/set-channel`(存量回填 `{codes[],channelRef}` → `{updated:n}`,set 语义天然幂等)。
 
 ## 4. 下发链路
 
@@ -48,7 +56,7 @@
 
 ## 6. 更新流改造
 
-- [check-update-card](../../../frontend/src/features/settings/check-update-card.tsx) 改:调 §4 版本检查端点 → 语义比较版本 → 新版:显示「发现新版本 vX.Y」+ releaseNotes + 「去下载」按钮(openUrl 渠道 downloadUrl;null → 显示「联系你的授权方获取新版」)。
+- [check-update-card](../../../frontend/src/features/settings/check-update-card.tsx) 改:调 §4 版本检查端点 → 语义比较版本 → 新版:显示「发现新版本 vX.Y」+ releaseNotes + 「去下载」按钮(openUrl 渠道 downloadUrl;null → 显示「联系你的授权方获取新版」——**若本地缓存 channelConfig 有 supportUrl 则该文案可点跳转(用缓存渲染,评审第 2 轮 #2/#4),无则纯文案**;latest-version 端点不因此加字段,「无码不泄默认渠道」红线不变)。
 - 内测码 revoked/过期:不提示更新(沿 T-372 L3「停更新」语义,实现反而更简单)。
 - Tauri updater:`tauri.conf.json` 移除 updater endpoint(插件保留,`createUpdaterArtifacts` 与 minisign 签名链保留——可逆开关)。**范围 = mac/win 双端一致**(共享 conf;更新检查改走渠道体系是双端同语义,与 DEC-W「Windows 入正式分发」不冲突——win 用户同样走「检查+跳渠道链接」)。
 - CI(desktop-release.yml):产物仍构建+签名+上传 artifact(内部取用);`merge-latest` 保留(latest.json 仅内部记录)。发布动作 = 手动传安装包到飞书/网盘 + 后台更新 latestVersion 与各渠道 downloadUrl。
