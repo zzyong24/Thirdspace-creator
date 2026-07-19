@@ -39,9 +39,16 @@ import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const SIDECAR = join(FRONTEND, "src-tauri", "sidecar");
-// 混淆靶目录:standalone 里的 Next server 编译产物。
+// SIDECAR 可经 env 覆盖(测试/浏览器冒烟指向 standalone 副本;正式打包不设 → 默认 src-tauri/sidecar)。
+const SIDECAR = process.env.CREATOROS_OBFUSCATE_SIDECAR
+  ? resolve(process.env.CREATOROS_OBFUSCATE_SIDECAR)
+  : join(FRONTEND, "src-tauri", "sidecar");
+// 混淆靶目录①:standalone 里的 Next **server** 编译产物(之后再被 bytecode 化)。
 const SERVER_DIR = join(SIDECAR, "frontend", ".next", "server");
+// 混淆靶目录②:[T-417 client] Next **client** 静态 chunks(`static/chunks/*.js`)—— 浏览器执行、无法字节码化,
+//   此前只 minify 未混淆 = **前端源码可一键还原的裸奔缺口**。同款 chunk-stringarray(数字模块 ID 不受
+//   影响,reservedStrings 已含 `chunks/`/`\.js$` 护住加载串);client turbopack 运行时另行硬排除。
+const CLIENT_DIR = join(SIDECAR, "frontend", ".next", "static");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 纯函数化的决策(单测直接测,不必端到端)。
@@ -71,7 +78,11 @@ export function shouldExclude(relPath) {
   //    loadChunkAsync/模块注册表的运行时基础设施,任何混淆(连 rename 都风险)都会破坏 chunk
   //    间加载(实测:混淆后 ChunkLoadError「Unexpected token '['」)。SPEC §4「默认排除 Next
   //    自身 runtime chunk」授权 → 硬排除。
-  if (/\[turbopack\]_runtime\.js$/.test(base)) return "Turbopack runtime chunk 加载器(碰坏 chunk 加载,SPEC §4 排除)";
+  if (/\[turbopack\]_runtime\.js$/.test(base)) return "Turbopack server runtime chunk 加载器(碰坏 chunk 加载,SPEC §4 排除)";
+  // [T-417 client] client 侧 turbopack 运行时:`static/chunks/turbopack-<hash>.js`,含 otherChunks/loadChunk/
+  //   registerChunk 的浏览器 chunk 加载器 —— 混淆碰坏 chunk 加载(白屏)。硬排除(业务 chunk 全 `<hash>.js`,
+  //   仅运行时带 `turbopack-` 前缀,可靠区分)。
+  if (/^turbopack-.*\.js$/.test(base)) return "Turbopack client runtime chunk 加载器(otherChunks/loadChunk,碰坏 chunk 加载)";
 
   return null;
 }
@@ -528,27 +539,30 @@ if (isMain()) {
         process.exit(1);
       });
   } else {
-  console.log("[obfuscate] ▶ sidecar bundle 混淆开始。");
-  console.log(`[obfuscate]   靶目录: ${SERVER_DIR}`);
+  console.log("[obfuscate] ▶ sidecar bundle 混淆开始(server + client)。");
 
-  const stat = runObfuscation();
-
-  console.log(
-    `[obfuscate] ✅ 混淆 ${stat.obfuscated} 个 .js(full=${stat.full} / rename-only=${stat.renameOnly})` +
-      (stat.skippedIdempotent ? ` · 幂等跳过 ${stat.skippedIdempotent}` : ""),
-  );
-  console.log(`[obfuscate] 排除 ${stat.excluded.length} 个(逐类原因):`);
-  for (const [reason, n] of Object.entries(stat.reasonCounts)) {
-    console.log(`[obfuscate]   - ${n} × ${reason}`);
-  }
-  if (stat.failures.length) {
-    console.warn(`[obfuscate] ⚠️ ${stat.failures.length} 个文件混淆失败(保原文件不动):`);
-    for (const f of stat.failures.slice(0, 10)) {
-      console.warn(`[obfuscate]     ✗ ${f.rel}: ${f.error}`);
+  // [T-417 client] server(后续 bytecode 化)+ client(浏览器执行,堵前端源码裸奔)两靶目录都混淆。
+  let anyFailure = false;
+  for (const [label, dir] of [["server", SERVER_DIR], ["client", CLIENT_DIR]]) {
+    console.log(`[obfuscate]   靶目录[${label}]: ${dir}`);
+    const stat = runObfuscation(dir);
+    console.log(
+      `[obfuscate] ✅ [${label}] 混淆 ${stat.obfuscated} 个 .js(full=${stat.full} / rename-only=${stat.renameOnly})` +
+        (stat.skippedIdempotent ? ` · 幂等跳过 ${stat.skippedIdempotent}` : ""),
+    );
+    for (const [reason, n] of Object.entries(stat.reasonCounts)) {
+      console.log(`[obfuscate]   - ${n} × ${reason}`);
     }
-    // 失败即 fail-fast(混淆器吃不下某 chunk 意味着可能有更深问题;别静默放行破坏产物)。
-    process.exit(1);
+    if (stat.failures.length) {
+      anyFailure = true;
+      console.warn(`[obfuscate] ⚠️ [${label}] ${stat.failures.length} 个文件混淆失败(保原文件不动):`);
+      for (const f of stat.failures.slice(0, 10)) {
+        console.warn(`[obfuscate]     ✗ ${f.rel}: ${f.error}`);
+      }
+    }
   }
+  // 失败即 fail-fast(混淆器吃不下某 chunk 意味着可能有更深问题;别静默放行破坏产物)。
+  if (anyFailure) process.exit(1);
 
   if (withSmoke) {
     console.log("[obfuscate] ▶ 运行时冒烟(真起 sidecar)…");

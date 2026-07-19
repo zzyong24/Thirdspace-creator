@@ -36,8 +36,8 @@ describe("shouldExclude(硬排除 §3.1 ①②③)", () => {
   });
 
   it("[T-164 真机踩点] 排除 turbopack runtime chunk 加载器", () => {
-    expect(shouldExclude("chunks/[turbopack]_runtime.js")).toMatch(/Turbopack runtime/);
-    expect(shouldExclude("chunks/ssr/[turbopack]_runtime.js")).toMatch(/Turbopack runtime/);
+    expect(shouldExclude("chunks/[turbopack]_runtime.js")).toMatch(/Turbopack server runtime/);
+    expect(shouldExclude("chunks/ssr/[turbopack]_runtime.js")).toMatch(/Turbopack server runtime/);
   });
 
   it("不排除普通 first-party chunk / app .js(它们走 rename-only,不是排除)", () => {
@@ -156,5 +156,25 @@ describe("obfuscateCode(preset 落到不同强度)", () => {
     expect(FULL_OPTIONS.renameGlobals).toBe(false);
     expect(RENAME_ONLY_OPTIONS.stringArray).toBe(false);
     expect(RENAME_ONLY_OPTIONS.controlFlowFlattening).toBe(false);
+  });
+});
+
+describe("[T-417 client] client static chunks 混淆扩展", () => {
+  it("client turbopack 运行时 turbopack-<hash>.js 被硬排除(碰坏 chunk 加载)", () => {
+    expect(shouldExclude("chunks/turbopack-1yotr_13s-5mt.js")).toMatch(/client runtime/);
+    expect(shouldExclude("static/chunks/turbopack-abc.js")).toMatch(/client runtime/);
+  });
+  it("client 业务 chunk(static/chunks/<hash>.js)不被排除", () => {
+    expect(shouldExclude("static/chunks/1_g9h2qn8jscx.js")).toBeNull();
+  });
+  it("client 业务 chunk 走 chunk-stringarray(rc4 加密,数字模块 ID 不受影响)", () => {
+    // turbopack client chunk:模块 ID 数字(e.i(302524)),无字面 require → chunk-stringarray。
+    const clientChunk = '(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push([document.currentScript,695816,e=>{var t=e.i(302524);}]);';
+    expect(pickPreset(clientChunk, "static/chunks/1_g9h2qn8jscx.js")).toBe("chunk-stringarray");
+  });
+  it("含 static/chunks/ 路径串的 client chunk 仍 chunk-stringarray(reservedStrings 护 chunks/ 加载串)", () => {
+    const withPath = 'e.push(["static/chunks/22r33t9q3kaf3.js"]);var x="license";';
+    // 无字面 require/import → chunk-stringarray;chunks/ 路径由 reservedStrings 保护不被 rc4。
+    expect(pickPreset(withPath, "static/chunks/213zzjvt-0azo.js")).toBe("chunk-stringarray");
   });
 });
