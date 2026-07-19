@@ -9,6 +9,7 @@ import {
   parseHookItems,
   resolveChatMaxSteps,
   buildChatPrepareStep,
+  buildForcedToolInstruction,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import { SKILLS_BRIEF_MAX_LINES } from "@creatoros/contract";
@@ -1583,16 +1584,25 @@ describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制
     expect(prep({ stepNumber: 4 })).toEqual({});
   });
 
-  it("[T-117 兼容] forcedTool:第 0 步仍强制该工具;末步照旧禁工具", () => {
+  it("[T-443] forcedTool **不再**走 API 层 toolChoice 强制(思考模型对它直接 400);末步照旧禁工具", () => {
     const prep = buildChatPrepareStep({
-      forcedTool: "topic.enrich",
+      forcedTool: "topic_enrich",
       maxSteps: 6,
     });
-    expect(prep({ stepNumber: 0 })).toEqual({
-      toolChoice: { type: "tool", toolName: "topic.enrich" },
-    });
+    // 第 0 步不再下发 `toolChoice:{type:'tool'}` —— DeepSeek thinking 等推理模型会
+    // 「Thinking mode does not support this tool_choice」400 拒,整轮打不开(2026-07-20 真机)。
+    expect(prep({ stepNumber: 0 })).toEqual({});
     expect(prep({ stepNumber: 1 })).toEqual({});
+    // 末步禁工具收尾(T-239f)不受影响。
     expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
+  });
+
+  it("[T-443] 强制意图改由 system 指令承担,且必须用**合规工具名**(与发给模型的 tools key 一致)", () => {
+    const s = buildForcedToolInstruction("topic_enrich");
+    expect(s).toContain("topic_enrich"); // 用合规名,否则模型按名找不到工具
+    expect(s).not.toContain("topic.enrich"); // 不能漏用原名
+    expect(s).toMatch(/必须首先调用/); // 强制语义仍在(T-117 的意图不丢)
+    expect(s).toMatch(/不要用文字描述/); // 防「谎称已渲卡」
   });
 });
 

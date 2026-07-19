@@ -1715,16 +1715,31 @@ export function buildChatPrepareStep(opts: {
   toolChoice?: "none" | { type: "tool"; toolName: string };
 } {
   return ({ stepNumber }) => {
-    if (opts.forcedTool && stepNumber === 0) {
-      return {
-        toolChoice: { type: "tool" as const, toolName: opts.forcedTool },
-      };
-    }
+    // [T-443] forcedTool **不再走 API 层 `toolChoice:{type:'tool'}` 强制**:推理/思考模型
+    //   (DeepSeek thinking「deepseek-v4-pro」、OpenAI o 系列同类)对它直接 400
+    //   「Thinking mode does not support this tool_choice」→ **整轮打不开**(2026-07-20 真机日志)。
+    //   改走 system 层强指令(buildForcedToolInstruction,由 runChatStream 拼进 system)。
+    //   失败模式对比:API 强制失败 = 硬 400、功能完全不可用;prompt 强指令失败 = 个别弱模型可能
+    //   不调工具(T-117 原本要防的场景)—— 后者可接受得多,且对「模型用户可配」定位天然兼容
+    //   (不必枚举哪些模型支持强制)。opts.forcedTool 保留在签名里:调用方据它决定是否拼指令。
     if (stepNumber >= opts.maxSteps - 1) {
       return { toolChoice: "none" as const };
     }
     return {};
   };
+}
+
+/**
+ * [T-443] forcedTool 的 **system 层**强指令 —— 替代 API 层 toolChoice 强制。
+ * 传入的必须是**发给模型的合规工具名**(sanitizeToolName 之后),否则模型按名找不到该工具。
+ */
+export function buildForcedToolInstruction(safeToolName: string): string {
+  return [
+    "【本轮硬性要求】用户是通过界面按钮/深链明确指定了要执行的操作,",
+    `你**必须首先调用 \`${safeToolName}\` 工具**来完成它。`,
+    "不要用文字描述你「将要做」或「已经做了」——必须真正发起这次工具调用,让结果以卡片呈现;",
+    "只有在该工具返回结果之后,才继续做后续说明。",
+  ].join("");
 }
 
 /**
@@ -1877,7 +1892,11 @@ export async function runChatStream(
     // [T-239c S2] 中断真一致:route 传 req.signal —— 用户点「停止」/断开,服务端本轮立停
     // (不再跑后续工具烧钱);SDK 会把 signal 经工具 execute 第二参 { abortSignal } 透传。
     abortSignal: input.abortSignal,
-    system: assembly.system,
+    // [T-443] forcedTool 改走 **system 层**强指令(API 层 toolChoice 强制会被思考模型 400 拒)。
+    //   指令里必须用**合规名**(与下面 tools 的 key 一致),否则模型按名找不到该工具。
+    system: assembly.forcedTool
+      ? `${assembly.system}\n\n${buildForcedToolInstruction(sanitizeToolName(assembly.forcedTool))}`
+      : assembly.system,
     messages: modelMessages,
     // [T-439] 发给模型前合规化工具名(点 → 下划线):DeepSeek/OpenAI/Anthropic 对
     //   `tools[].function.name` 一律要求 `^[a-zA-Z0-9_-]+$`,原样发出 → 400 秒拒 → copilot 全废
@@ -1887,7 +1906,8 @@ export async function runChatStream(
     // [T-117 确定性修] functionKey 命中真工具时,第 0 步 toolChoice 强制调它 → 必产 tool-result
     // → 前端渲真卡(弱 tool-calling 模型不再把卡当文本吐 + 谎称已渲卡);之后步恢复 auto,让模型
     // 据工具结果把话说完。[T-239f] 最后一步 toolChoice:'none' 禁工具,模型必须文字总结收尾。
-    // [T-439] toolChoice 里的 function.name 走同一套校验,故 forcedTool 同样要合规化。
+    // [T-443] forcedTool 已改由 system 强指令承担(见上),这里传入仅保留签名语义;
+    //   prepareStep 现在只负责末步 toolChoice:'none' 收尾。
     prepareStep: buildChatPrepareStep({
       forcedTool: assembly.forcedTool ? sanitizeToolName(assembly.forcedTool) : undefined,
       maxSteps,
