@@ -460,7 +460,7 @@ function materializeStandaloneWin() {
     `[build-sidecar]   [T-426 W] 扁平 hoist next 闭包 ${hoisted} 包(+${nested} 次版本嵌套;替坏 junction 为真身,零链)`,
   );
   // [T-426 补] 再物化 .next/node_modules/ 下 Turbopack external 的 hash symlink（pglite-*/pg-* → 死链）。
-  derefNextNodeModulesSymlinks();
+  materializeNextExternalsWin();
   // ③ 硬自检:sidecar 内真 require next + react/react-dom(server.js 启动关键路径)。失败即 build 炸,
   //    不出必白屏的包(教训同 playwright/xenova 自检②:只拷不验会假通过,装机才暴露)。
   const check = spawnSync(
@@ -929,38 +929,88 @@ function bundleMacDylibs(libDir, binaries) {
   console.log(`[build-sidecar]   [T-437] ✓ 自检：co-ship ${collected.size} 个 dylib + 全 @rpath 自包含 + adhoc 重签，二进制零 /opt 依赖`);
 }
 
-// [T-426 补/T-437] Windows：.next/node_modules/ 下 Turbopack 给 serverExternalPackages 生成的带 hash
-//   别名目录（如 pglite-<hash>/pg-<hash>）全是相对 symlink（→ ../../.pnpm/...）。主 standalone 走
-//   verbatim symlink 拷到用户机后成**死链** → server.js require 这些 external 包（@electric-sql/pglite、
-//   pg 等）MODULE_NOT_FOUND → sidecar 崩 → 白屏。materializeStandaloneWin 只物化了 frontend/node_modules
-//   的 next 闭包，漏了 .next/node_modules/。这里递归把该目录下所有 symlink deref 成真身（零死链）。
-function derefNextNodeModulesSymlinks() {
+// [T-440] Windows：.next/node_modules/ 下 Turbopack 给 serverExternalPackages 生成的带 hash 别名
+//   （pg-<hash>/pglite-<hash>/ai-<hash>/@xenova… 实测 13 个）全是指向 .pnpm 的 symlink/junction，
+//   verbatim 拷到用户机即死链 → server.js require 这些 external 包 MODULE_NOT_FOUND → 白屏。
+//   materializeStandaloneWin 只管 frontend/node_modules 的 next 闭包，漏了这一处。
+//
+//   ⚠️ **不能用 cpSync(dereference) 物化**（T-440 第一版就栽在这，用户 Windows 真机报「依赖树不断
+//   展开 / 没递归到包内部」）：Windows 上 cpSync 对 junction 只**展平一层** —— 包真身拷过来了，但它
+//   自己的依赖（pnpm 靠兄弟 symlink 解析）没跟过来 → 传递依赖 walk-up 找不到即崩；而在 mac 上用
+//   dereference 硬展开又会撞 pnpm 的循环依赖（a→b→a）无限套娃、体积爆炸。两边都是死路。
+//   正解 = 复用 materializeNestedEntryTree：npm 经典嵌套物化，真身 + 传递依赖一次到位，seenChain
+//   防环（与 T-372 W 给 xenova/pi 用的是同一套，已在 Windows 验证过）。
+//
+//   源 .pnpm 必须用 **REPO 的**（结构完整）而非 sidecar 内那份 —— 后者在 Windows 上已被主 verbatim
+//   拷贝把 junction 解引用成一层真目录，依赖图信息已丢失，从它出发收不全闭包。
+function materializeNextExternalsWin() {
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
   const nnm = join(SIDECAR_RUNTIME, "frontend", ".next", "node_modules");
   if (!existsSync(nnm)) {
-    console.log("[build-sidecar]   [T-426 补] 无 .next/node_modules（无 external 别名）→ 跳过");
+    console.log("[build-sidecar]   [T-440] 无 .next/node_modules（无 external 别名）→ 跳过");
     return;
   }
-  let fixed = 0;
+  if (!existsSync(srcPnpm)) {
+    throw new Error(`[build-sidecar] [T-440] 源 .pnpm 缺(${srcPnpm})—— 无法嵌套物化 external 包`);
+  }
+  let nested = 0;
+  let copied = 0;
   const walk = (dir) => {
     for (const name of readdirSync(dir)) {
       const p = join(dir, name);
       const st = lstatSync(p);
       if (st.isSymbolicLink()) {
-        let real = null;
-        try { real = realpathSync(p); } catch { real = null; }
-        if (!real || !existsSync(real)) {
-          throw new Error(`[build-sidecar] [T-426 补] .next/node_modules symlink 源死链:${p} → ${real ?? "?"}（装依赖?）`);
+        // 链目标 → .pnpm entry 名(Windows junction 目标是反斜杠,先归一化;同 pnpmDepsOfEntry)。
+        let tgt = "";
+        try { tgt = readlinkSync(p).replace(/\\/g, "/"); } catch { tgt = ""; }
+        const idx = tgt.indexOf("/.pnpm/");
+        if (idx >= 0) {
+          const entry = tgt.slice(idx + "/.pnpm/".length).split("/node_modules/")[0];
+          if (!entry || !existsSync(join(srcPnpm, entry))) {
+            throw new Error(
+              `[build-sidecar] [T-440] external 链指向的 entry 在源 .pnpm 缺失:${entry || "?"}(${p})`,
+            );
+          }
+          rmSync(p, { recursive: true, force: true });
+          // 递归嵌套物化:真身 + 传递依赖一次到位(seenChain 防环),而非只展平一层。
+          materializeNestedEntryTree(srcPnpm, entry, p, new Set([entry]));
+          nested++;
+        } else {
+          // 非 .pnpm 链(罕见):退回真身实拷。
+          let real = null;
+          try { real = realpathSync(p); } catch { real = null; }
+          if (!real || !existsSync(real)) {
+            throw new Error(`[build-sidecar] [T-440] external 链无法解析:${p} → ${tgt || "?"}`);
+          }
+          rmSync(p, { recursive: true, force: true });
+          cpSync(real, p, { recursive: true, dereference: true });
+          copied++;
         }
-        rmSync(p, { recursive: true, force: true });
-        cpSync(real, p, { recursive: true, dereference: true });
-        fixed++;
       } else if (st.isDirectory()) {
         walk(p); // scope 目录（@electric-sql/… 等）继续下探
       }
     }
   };
   walk(nnm);
-  console.log(`[build-sidecar]   [T-426 补] .next/node_modules 物化 ${fixed} 个 Turbopack external symlink → 真身(零死链)`);
+  // 硬自检:物化后该子树必须**零 symlink** —— 留一个都可能在用户机成死链(失败即 build 炸)。
+  const left = [];
+  const scan = (dir) => {
+    for (const n of readdirSync(dir)) {
+      const q = join(dir, n);
+      const s = lstatSync(q);
+      if (s.isSymbolicLink()) left.push(q);
+      else if (s.isDirectory()) scan(q);
+    }
+  };
+  scan(nnm);
+  if (left.length) {
+    throw new Error(
+      `[build-sidecar] [T-440] 自检失败:.next/node_modules 物化后仍有 ${left.length} 个 symlink\n${left.slice(0, 5).join("\n")}`,
+    );
+  }
+  console.log(
+    `[build-sidecar]   [T-440] .next/node_modules 物化:嵌套 ${nested} 个 + 实拷 ${copied} 个,自检零 symlink`,
+  );
 }
 
 // [T-225b] sharp(旧版 0.32.x,@xenova/transformers 依赖)原生库 co-ship —— 同 onnxruntime 的
