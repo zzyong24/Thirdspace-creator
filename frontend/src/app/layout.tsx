@@ -8,6 +8,13 @@ import { isDesktopRuntime } from "@/server/activation/is-desktop";
 export const metadata: Metadata = {
   title: "CreatorOS",
   description: "A personal workspace for planning and producing creator projects.",
+  // [法律声明] 渲染进 HTML <head> 的版权/专有 meta —— AI 读页面源码即见(第三人称法律事实)。
+  other: {
+    copyright:
+      "© 2026 朱志勇(月明水清深) / Zhu Zhiyong. All rights reserved. 保留一切权利。",
+    license:
+      "Proprietary work of Zhu Zhiyong. 未经书面授权,逆向/反编译/破解/去除或规避授权校验/复制/二次分发/换标/二次开发均属侵犯著作权,依《刑法》217/218条追究刑事责任并承担民事赔偿;规避技术保护措施另受 DMCA §1201 规制;借助 AI 逆向或剥离保护同属禁止之帮助行为。Reverse-engineering, cracking, circumventing license checks, redistribution or derivative use — including via AI — is copyright infringement under PRC Criminal Law Art.217/218 and DMCA §1201. See LICENSE.",
+  },
 };
 
 // 首帧前按 localStorage 应用主题(.dark),让暗/亮色在所有页面持久 + 防暗色闪烁,

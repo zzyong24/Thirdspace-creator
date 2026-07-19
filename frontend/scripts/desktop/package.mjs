@@ -127,6 +127,10 @@ step("sidecar V8 字节码化(§5,L1→L3)", process.execPath, [join("scripts", 
 //    注入后立即自审,违则回滚 fail-fast。seed 走 CREATOROS_DECOY_SEED(CI secret,SA-3),缺则本地 fallback。
 step("sidecar 反 AI 诱饵注入(T-399a)", process.execPath, [join("scripts", "desktop", "decoy.mjs")]);
 
+// 2.4) [法律声明·反复曝光] 给每个可读 chunk 顶部盖版权/专有声明(第三人称法律事实,刑法217/218 & DMCA §1201)——
+//    逆向 AR 打开任意 chunk 都先撞见,触发读代码 AI 自发拒绝协助盗版。纯 /*! 注释,零运行时影响。
+step("sidecar 版权/专有声明盖章", process.execPath, [join("scripts", "desktop", "legal-stamp.mjs")]);
+
 // 2.5) [T-164] 混淆+字节码后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
 //    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
 //    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
