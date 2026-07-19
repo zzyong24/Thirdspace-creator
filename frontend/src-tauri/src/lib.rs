@@ -465,6 +465,21 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
     false
 }
 
+/// [T-436] 内置启动 splash 的 data: URL(自包含,免打包资源;中文经 percent-encode 进 URL)。
+/// 点图标即用它建窗(秒出窗口+转圈),sidecar ready 后再 navigate 到真页面 —— 消除原实现
+/// 「解压+冷启动全程无窗口」的「卡很久才弹窗」观感。
+fn splash_data_url() -> String {
+    const HTML: &str = "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"color-scheme\" content=\"dark light\"><style>html,body{margin:0;height:100vh;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px}.s{width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:r .8s linear infinite}@keyframes r{to{transform:rotate(360deg)}}.t{font-size:14px;color:#8b8b93;letter-spacing:.3px}</style></head><body><div class=\"s\"></div><div class=\"t\">正在启动 CreatorOS…</div></body></html>";
+    let mut enc = String::with_capacity(HTML.len() * 2);
+    for &b in HTML.as_bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => enc.push(b as char),
+            _ => enc.push_str(&format!("%{b:02X}")),
+        }
+    }
+    format!("data:text/html;charset=utf-8,{enc}")
+}
+
 /// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
 /// SHA-256(build.rs 经 rustc-env 注入)。不匹配 → Err(人话)→ 拒绝 spawn。
 ///
@@ -1129,36 +1144,47 @@ pub fn run() {
             // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
             // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
             let ready_logger = logger.clone();
-            // [T-372 L2] 握手 token 经 WebView 初始化脚本下发(token 为 hex,无注入面);
-            //   前端 handshake-client.ts 读该全局并附到有副作用请求的 x-creatoros-handshake 头。
+            // [T-372 L2] 握手 token 经 WebView 初始化脚本下发(token 为 hex,无注入面);前端
+            //   handshake-client.ts 读该全局并附到有副作用请求的 x-creatoros-handshake 头。navigate
+            //   (splash→真页面)会重跑该初始化脚本 → token 始终在。
             let webview_token_script = format!(
                 "window.__CREATOROS_HANDSHAKE_TOKEN__=\"{handshake_token}\";"
             );
+            let sidecar_url = format!("http://127.0.0.1:{port}/");
+            // [T-436] 立即建主窗口载**内置 splash**(点图标秒出窗口+转圈),不再等 sidecar ready 才建窗
+            //   (原实现:解压+冷启动全程无窗口 → 用户「卡很久才弹窗」的观感来源)。setup 闭包在主线程,
+            //   可直接建窗;sidecar ready 后在后台线程 navigate 到真页面,就绪探测不阻塞 setup。
+            let win = WebviewWindowBuilder::new(
+                &handle,
+                "main",
+                WebviewUrl::External(splash_data_url().parse().expect("splash url 解析失败")),
+            )
+            .title("CreatorOS")
+            .inner_size(1440.0, 900.0)
+            .min_inner_size(1024.0, 680.0)
+            .initialization_script(&webview_token_script)
+            .build()
+            .expect("建主窗口失败");
             std::thread::spawn(move || {
                 let ready = wait_until_ready(port, Duration::from_secs(60));
-                let url = format!("http://127.0.0.1:{port}/");
-                let target = if ready {
-                    WebviewUrl::External(url.parse().expect("sidecar url 解析失败"))
-                } else {
-                    // 兜底:sidecar 60s 未起,仍开窗(将显示浏览器的连接失败页,便于用户看到问题
-                    //  而非白屏无提示)。诚实:P1 不做启动 splash / 重试 UI,后续子项完善。
-                    eprintln!("[shell] sidecar 60s 内未就绪,窗口仍指向 {url}");
+                if !ready {
+                    // 兜底:sidecar 60s 未起仍导航(显示连接失败页而非永久 splash,便于看到问题)。
+                    eprintln!("[shell] sidecar 60s 内未就绪,仍导航 {sidecar_url}");
                     if let Some(l) = &ready_logger {
-                        l.log("shell", &format!("sidecar 60s 内未就绪,窗口仍指向 {url}"));
+                        l.log("shell", &format!("sidecar 60s 内未就绪,仍导航 {sidecar_url}"));
                     }
-                    WebviewUrl::External(url.parse().expect("sidecar url 解析失败"))
-                };
-                // clone 一份给闭包用(handle 本身被 run_on_main_thread 借用,不能同时 move 进闭包)。
-                let build_handle = handle.clone();
-                let _ = handle.run_on_main_thread(move || {
-                    let _ = WebviewWindowBuilder::new(&build_handle, "main", target)
-                        .title("CreatorOS")
-                        .inner_size(1440.0, 900.0)
-                        .min_inner_size(1024.0, 680.0)
-                        // [T-372 L2] 注入握手 token 全局(每次导航都会重跑初始化脚本)。
-                        .initialization_script(&webview_token_script)
-                        .build();
-                });
+                }
+                match sidecar_url.parse::<tauri::Url>() {
+                    Ok(u) => {
+                        let win2 = win.clone();
+                        let _ = win.run_on_main_thread(move || {
+                            if let Err(e) = win2.navigate(u) {
+                                eprintln!("[shell] navigate 到 sidecar 失败: {e}");
+                            }
+                        });
+                    }
+                    Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
+                }
             });
 
             Ok(())
