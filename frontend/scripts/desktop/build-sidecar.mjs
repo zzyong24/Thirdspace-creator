@@ -336,7 +336,7 @@ function pkgNameOfEntry(entry) {
 //   嵌套布局是 Node 解析的原生语义,tar/用户机无 symlink 权限需求,天然可搬。
 //   防环:seenChain 记当前链上 entry,再遇即跳(walk-up 自然命中祖先层,npm 同语义)。
 //   体积:树内共享依赖重复拷(浅树可接受);mac 保持 .pnpm+相对链方案不走此路。
-function materializeNestedEntryTree(srcPnpm, entryName, destPkgDir, seenChain) {
+function materializeNestedEntryTree(srcPnpm, entryName, destPkgDir, seenChain, isCut = () => false) {
   const pkgName = pkgNameOfEntry(entryName);
   const srcPkgDir = join(srcPnpm, entryName, "node_modules", ...pkgName.split("/"));
   if (!existsSync(srcPkgDir)) {
@@ -344,12 +344,13 @@ function materializeNestedEntryTree(srcPnpm, entryName, destPkgDir, seenChain) {
   }
   cpSync(srcPkgDir, destPkgDir, { recursive: true, dereference: true });
   for (const depEntry of pnpmDepsOfEntry(srcPnpm, entryName)) {
+    if (isCut(depEntry)) continue; // [T-426] 剪枝子树(pi 的 lazy-only provider);默认不剪(xenova 调用)
     const depName = pkgNameOfEntry(depEntry);
     if (depName === pkgName) continue; // pnpm 的 self-link,跳过
     if (seenChain.has(depEntry)) continue; // 环:祖先层已有,walk-up 可命中
     const depDest = join(destPkgDir, "node_modules", ...depName.split("/"));
     seenChain.add(depEntry);
-    materializeNestedEntryTree(srcPnpm, depEntry, depDest, seenChain);
+    materializeNestedEntryTree(srcPnpm, depEntry, depDest, seenChain, isCut);
     seenChain.delete(depEntry);
   }
 }
@@ -367,6 +368,110 @@ function collectPnpmClosure(srcPnpm, rootEntry, isCut = () => false) {
     }
   }
   return visited;
+}
+
+// [T-426 W] Windows:把主 standalone 的 next 运行时闭包**扁平 hoist** 物化进 frontend/node_modules。
+//   病根(2026-07-19 阿里云无影真机实证):main() 的
+//   `cpSync(STANDALONE_SRC, SIDECAR_RUNTIME, {verbatimSymlinks:true})` 在 mac(pnpm 用**相对**
+//   symlink)拷完自洽,但 **Windows pnpm 用绝对 junction**(frontend/node_modules/next →
+//   `D:\a\<repo>\node_modules\.pnpm\next@…`,指向 CI 构建机盘符);verbatim 原样保留字面目标 → tar
+//   存绝对路径 → 用户机解压后 junction 指向不存在的 `D:\` → `frontend/server.js:16` 的
+//   `require('next')` 抛 `MODULE_NOT_FOUND` → sidecar 不 listen → webview「127.0.0.1 拒绝连接」白屏。
+//   顶层 6 包里 playwright/xenova 已各自 bundleXXX(有 win 分支)物化为真文件,**唯 next/bytenode 仍走
+//   verbatim → 断链**。
+//   修:从源 REPO .pnpm 以 next+bytenode 为根 BFS 收运行时闭包(实测 64 entry),每包**真身**扁平拷进
+//   frontend/node_modules 顶层(线性 ~349MB,零链;node 从 sidecar/frontend walk-up 即命中 —— spike
+//   实测扁平结构可 require next/react/react-dom)。为何**不**嵌套物化(materializeNestedEntryTree):
+//   64-entry 深依赖图按路径展开次数指数级、next 真身 169MB 会沿多条路径重复拷 → 体积爆炸;扁平每包
+//   一份=线性。多版本冲突(实测仅 semver×2):主版本(闭包内被依赖最多者)hoist 顶层 + 次版本嵌套到
+//   其依赖者的 node_modules(npm 经典 hoist 语义,保各自解析到正确版本)。硬自检真 require('next')
+//   (失败即 build 炸,不出必白屏的包 —— 教训同 playwright/xenova 自检②)。
+//   mac/linux **不走此路**(platform 守卫;main 的 line 986 verbatim .pnpm 原方案逐字节零改动)。
+//   ⚠️ Windows junction 拷贝行为 mac 无法复现:本函数逻辑靠 spike(解析正确性,平台无关)+ CI 出包
+//   自检 + 用户真机三重验证。
+function materializeStandaloneWin() {
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  const feNm = join(SIDECAR_RUNTIME, "frontend", "node_modules");
+  if (!existsSync(srcPnpm)) {
+    throw new Error(`[build-sidecar] [T-426 W] 源 .pnpm 缺(${srcPnpm})—— 无法物化 next 闭包`);
+  }
+  // 闭包根:主 standalone 顶层走 verbatim 的坏 junction 包(next 必有;bytenode=T-419 L3,可缺)。
+  //   自适应版本 hash:从源 .pnpm 找 <name>@ 开头 entry(不硬编码版本 → 升级不失配)。
+  const roots = [];
+  for (const n of ["next", "bytenode"]) {
+    const e = readdirSync(srcPnpm).find((x) => x.startsWith(n + "@"));
+    if (e) roots.push(e);
+    else if (n === "next") {
+      throw new Error(`[build-sidecar] [T-426 W] 源 .pnpm 无 next@*(装依赖?)→ 打包版必白屏,不出包`);
+    }
+  }
+  // BFS 收运行时闭包。
+  const closure = new Set();
+  for (const r of roots) for (const e of collectPnpmClosure(srcPnpm, r)) closure.add(e);
+  // 闭包内反向依赖图(选主版本 + 定次版本嵌套位置)。
+  const dependedBy = new Map(); // entry → Set(闭包内依赖它的 entry)
+  for (const e of closure) {
+    for (const d of pnpmDepsOfEntry(srcPnpm, e)) {
+      if (!closure.has(d)) continue;
+      if (!dependedBy.has(d)) dependedBy.set(d, new Set());
+      dependedBy.get(d).add(e);
+    }
+  }
+  // 按包名分组(同名多 entry = 多版本)。
+  const byName = new Map();
+  for (const e of closure) {
+    const name = pkgNameOfEntry(e);
+    if (!byName.has(name)) byName.set(name, []);
+    byName.get(name).push(e);
+  }
+  // 取 entry 的包真身目录(entry/node_modules/<pkgName>;不含它对兄弟 dep 的链,dep 从 hoist 顶层解析)。
+  const copyBody = (entry, destPkgDir) => {
+    const src = join(srcPnpm, entry, "node_modules", ...pkgNameOfEntry(entry).split("/"));
+    if (!existsSync(src)) throw new Error(`[build-sidecar] [T-426 W] 真身缺:${src}`);
+    rmSync(destPkgDir, { recursive: true, force: true });
+    mkdirSync(dirname(destPkgDir), { recursive: true });
+    cpSync(src, destPkgDir, { recursive: true, dereference: true });
+  };
+  // ① 每包名主版本(闭包内被依赖最多者;并列取 entry 名较大)hoist 到 frontend/node_modules 顶层。
+  const mainEntry = new Map(); // name → 主 entry
+  let hoisted = 0;
+  for (const [name, entries] of byName) {
+    const main = entries
+      .slice()
+      .sort((a, b) => ((dependedBy.get(a)?.size ?? 0) - (dependedBy.get(b)?.size ?? 0)) || (a < b ? -1 : 1))
+      .pop();
+    mainEntry.set(name, main);
+    copyBody(main, join(feNm, ...name.split("/")));
+    hoisted++;
+  }
+  // ② 次版本嵌套到其(闭包内)依赖者的顶层 hoist 包下 → 依赖者就近命中它需要的那个版本。
+  let nested = 0;
+  for (const [name, entries] of byName) {
+    for (const e of entries) {
+      if (e === mainEntry.get(name)) continue;
+      for (const dep of dependedBy.get(e) ?? []) {
+        const depName = pkgNameOfEntry(dep);
+        copyBody(e, join(feNm, ...depName.split("/"), "node_modules", ...name.split("/")));
+        nested++;
+      }
+    }
+  }
+  console.log(
+    `[build-sidecar]   [T-426 W] 扁平 hoist next 闭包 ${hoisted} 包(+${nested} 次版本嵌套;替坏 junction 为真身,零链)`,
+  );
+  // ③ 硬自检:sidecar 内真 require next + react/react-dom(server.js 启动关键路径)。失败即 build 炸,
+  //    不出必白屏的包(教训同 playwright/xenova 自检②:只拷不验会假通过,装机才暴露)。
+  const check = spawnSync(
+    process.execPath,
+    ["-e", "require('next'); require('react'); require('react-dom'); console.log('WIN-NEXT-OK ' + require.resolve('next'))"],
+    { cwd: join(SIDECAR_RUNTIME, "frontend"), encoding: "utf8" },
+  );
+  if (check.status !== 0 || !`${check.stdout}`.includes("WIN-NEXT-OK")) {
+    throw new Error(
+      `[build-sidecar] 自检失败[T-426 W]:hoist 后 sidecar 内 require('next') 未通过 → Windows 打包版必白屏\n${check.stdout}${check.stderr}`,
+    );
+  }
+  console.log(`[build-sidecar]   ✓ 自检[T-426 W]:sidecar 内 require('next')/react/react-dom 通过`);
 }
 
 // [T-313 打包实拷] 实拷 Pi 引擎(@earendil-works/pi-coding-agent)运行时依赖闭包进 sidecar。
@@ -414,22 +519,39 @@ function bundlePiEngine() {
   // BFS 算闭包(剪掉 provider 顶包子树)。
   const visited = collectPnpmClosure(srcPnpm, rootEntry, isCut);
 
-  // 逐 entry 实拷(verbatimSymlinks 保相对链;整份闭包在同一 .pnpm/ 内自洽解析)。
-  //   覆盖已存在条目无害:同版本源自同一仓库 .pnpm,内容一致(complete ⊇ Next 部分 trace),app 不受损。
   let copied = 0;
-  for (const e of visited) {
-    const src = join(srcPnpm, e);
-    const dest = join(destPnpm, e);
-    rmSync(dest, { recursive: true, force: true });
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
-    copied++;
+  if (platform === "win32") {
+    // [T-426 W] Windows:pnpm 的相对 symlink 在 Win 是**绝对 junction**,verbatim 拷进 .pnpm 后指向
+    //   构建机 D:\a\ → 用户机死链 → pi-engine 深导入 sdk.js 的传递依赖(pi-ai/pi-agent-core/ws…)断
+    //   → pi 引擎失活(现有 HARD 自检在**构建机** junction 有效故假过,只有用户机才崩,同 next 白屏根因)。
+    //   改**嵌套物化**整棵 pi 树到 pi-engine locatePiCoreDir 找的确切位置
+    //   (destPnpm/<rootEntry>/node_modules/PI_PKG,= 下方 coreDir 的父父父),全真文件零链、isCut 同剪
+    //   provider(spike 实测 177MB、深导入 sdk.js+3 兄弟通过)。mac 走下方 verbatim .pnpm 闭包原方案。
+    const piBody = join(destPnpm, rootEntry, "node_modules", ...PI_PKG.split("/"));
+    rmSync(piBody, { recursive: true, force: true });
+    mkdirSync(dirname(piBody), { recursive: true });
+    materializeNestedEntryTree(srcPnpm, rootEntry, piBody, new Set([rootEntry]), isCut);
+    copied = 1;
+    console.log(`[build-sidecar]   [T-426 W] 嵌套物化 pi 闭包 → .pnpm/${rootEntry}/…/${PI_PKG}(全真文件零链,剪 provider)`);
+  } else {
+    // 逐 entry 实拷(verbatimSymlinks 保相对链;整份闭包在同一 .pnpm/ 内自洽解析)。
+    //   覆盖已存在条目无害:同版本源自同一仓库 .pnpm,内容一致(complete ⊇ Next 部分 trace),app 不受损。
+    for (const e of visited) {
+      const src = join(srcPnpm, e);
+      const dest = join(destPnpm, e);
+      rmSync(dest, { recursive: true, force: true });
+      mkdirSync(dirname(dest), { recursive: true });
+      cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
+      copied++;
+    }
+    console.log(`[build-sidecar]   实拷 ${copied} 个 pi 闭包 entry(剪 bedrock/google/mistral;含 openai+@anthropic-ai/sdk)`);
   }
-  console.log(`[build-sidecar]   实拷 ${copied} 个 pi 闭包 entry(剪 bedrock/google/mistral;含 openai+@anthropic-ai/sdk)`);
 
-  // photon-node 的 .wasm 特殊资源核实(纯文件,verbatim 应已覆盖;缺则 pi 图像工具会崩)。
+  // photon-node 的 .wasm 特殊资源核实(纯文件,mac verbatim 布局在 destPnpm/<photonEntry>;缺则 pi
+  //   图像工具会崩)。Windows 走嵌套物化,photon 落在 pi 树内深处、路径不定 → 跳过此定点自检,由下方
+  //   HARD 深导入 sdk.js(嵌套树完整性总检)兜底。
   const photonEntry = [...visited].find((e) => e.startsWith("@silvia-odwyer+photon-node@"));
-  if (photonEntry) {
+  if (photonEntry && platform !== "win32") {
     const wasm = join(destPnpm, photonEntry, "node_modules", "@silvia-odwyer", "photon-node", "photon_rs_bg.wasm");
     if (!existsSync(wasm)) {
       throw new Error(`[build-sidecar] 自检失败[T-313]:photon-node .wasm 未随实拷到位(${wasm})`);
@@ -1013,6 +1135,15 @@ function main() {
   if (existsSync(pnpmHoist)) {
     rmSync(pnpmHoist, { recursive: true, force: true });
     console.log("[build-sidecar] 剪除 pnpm hoist 冗余层 node_modules/.pnpm/node_modules/");
+  }
+
+  // [T-426 W] Windows:主 standalone 的 next 闭包在 pnpm junction 下被 line 986 verbatim 拷成
+  //   指向构建机(D:\a\…)的死链 → 用户机 `require('next')` MODULE_NOT_FOUND → sidecar 不 listen →
+  //   webview「127.0.0.1 拒绝连接」白屏(2026-07-19 真机实证)。扁平 hoist 物化成真身补上。放主
+  //   verbatim 之后、源码剥离/bundleXXX/sanitize 之前 —— 让后续 .bin 脱敏与 tarball 都覆盖到 hoist
+  //   出来的真身。mac/linux 不进此路(走上方 verbatim .pnpm 原方案,零改动)。
+  if (isWin) {
+    materializeStandaloneWin();
   }
 
   // [T-392 安全] 剥离 standalone trace 混进的源码/文档/测试产物(2026-07-18 实包盘点:
