@@ -1,13 +1,15 @@
 /**
- * `desktop-updater.ts` — [T-180] 桌面软件更新的前端薄封装(client-only)。
+ * `desktop-updater.ts` — [T-180 → T-396c] 桌面软件更新的前端薄封装(client-only)。
  *
- * Rust 侧 `tauri-plugin-updater` 已装 + 初始化,`tauri.conf.json` 已配 pubkey +
- * `createUpdaterArtifacts` + endpoint(见 lib.rs / tauri.conf.json)。本模块只在**桌面壳**里
- * 动态 import `@tauri-apps/plugin-updater` / `@tauri-apps/plugin-process` / `@tauri-apps/api/app`
- * 触发检查/下载/重启 —— web / SSR(无 `__TAURI_INTERNALS__`)一律安全降级,绝不 throw、绝不
- * 假装有更新(诚实铁律:非桌面态返回 `unavailable`,不误导用户)。
+ * [T-396c] 更新流已渠道化:检查走 Rust IPC `license_latest_version`(latest-version 端点 +
+ * Ed25519 验签在 Rust,SPEC §4/§6),有新版跳渠道 downloadUrl 用户自行下载 —— 不再走
+ * `tauri-plugin-updater` 的 check()/downloadAndInstall()(endpoint 已从 tauri.conf.json
+ * 摘除;插件 + 签名产物链保留 = 可逆开关)。`relaunchApp` 仍供重置工作区等场景复用。
  *
- * 动态 import 是刻意的:这些插件模块在 web 环境 import 即会因缺 `__TAURI_INTERNALS__` 报错,
+ * web / SSR(无 `__TAURI_INTERNALS__`)一律安全降级,绝不 throw、绝不假装有更新
+ * (诚实铁律:非桌面态返回 `unavailable`,不误导用户)。
+ *
+ * 动态 import 是刻意的:Tauri api 模块在 web 环境 import 即会因缺 `__TAURI_INTERNALS__` 报错,
  * 故全部收敛到运行时按需 import + try/catch,SSR/web 走 `isDesktopRuntimeClient()` 前置短路。
  */
 
@@ -22,75 +24,41 @@ export function isDesktopRuntimeClient(): boolean {
   return "__TAURI_INTERNALS__" in w || "isTauri" in w;
 }
 
-/** 下载进度事件(归一化为累计已下载字节 + 可选总长)。 */
-export type UpdateProgress =
-  | { phase: "started"; contentLength?: number }
-  | { phase: "downloading"; downloaded: number; contentLength?: number }
-  | { phase: "finished" };
-
-/** 「有可用更新」结果 —— 携带绑定到底层 Update 句柄的 downloadAndInstall。 */
-export interface AvailableUpdate {
-  kind: "available";
-  /** 新版本号(如 "0.2.0")。 */
-  version: string;
-  /** 当前运行版本号。 */
+/** [T-396c] Rust `license_latest_version` 的结果形状(license.rs LatestVersionInfo,serde camelCase)。 */
+export interface LatestVersionInfo {
   currentVersion: string;
-  /** 更新说明(latest.json 的 notes/body),可能为空。 */
-  notes?: string;
+  /** null = 服务端未公告版本 / 授权失效不提示更新。 */
+  latestVersion: string | null;
+  releaseNotes: string | null;
   /**
-   * 下载并安装该更新。进度经 `onProgress` 回调回报(累计字节)。resolve 即安装完成
-   * (随后应调 `relaunchApp()` 重启生效)。
+   * 该码渠道的下载链接;null = 未激活/渠道未配 → UI 显「联系授权方」,
+   * **绝不回退官方链接**(SPEC §5/§7 红线)。
    */
-  downloadAndInstall: (onProgress?: (p: UpdateProgress) => void) => Promise<void>;
+  downloadUrl: string | null;
+  updateAvailable: boolean;
 }
 
-/** check() 归一化结果:诚实四态(有更新 / 已最新 / 非桌面 / 失败)。 */
-export type CheckUpdateResult =
-  | AvailableUpdate
+/** 检查结果归一化:诚实四态(有更新 / 已最新 / 非桌面 / 失败)。 */
+export type CheckLatestResult =
+  | { kind: "available"; info: LatestVersionInfo }
   | { kind: "uptodate"; currentVersion: string }
   | { kind: "unavailable" }
   | { kind: "error"; message: string };
 
 /**
- * 检查更新。非桌面态(web/SSR)直接返回 `unavailable`(不 import 插件、不 throw)。
- * 桌面态调插件 `check()`:返回 `null` → 已最新;返回 Update → 有更新(附 downloadAndInstall)。
- * 任何异常(网络失败 / endpoint 不可达 / 签名校验失败)→ `error` + 可读文案,绝不崩。
+ * [T-396c] 检查更新(渠道化):非桌面态直接 `unavailable`;桌面态经 IPC
+ * `license_latest_version` → Rust 调 latest-version 端点 + 验签 + 语义比较版本。
+ * Rust 侧 Err 即人话文案(并入 T-412),直接展示;IPC 本身异常 → 通用友好文案,绝不崩。
  */
-export async function checkForUpdate(): Promise<CheckUpdateResult> {
+export async function checkLatestVersion(): Promise<CheckLatestResult> {
   if (!isDesktopRuntimeClient()) return { kind: "unavailable" };
   try {
-    const { check } = await import("@tauri-apps/plugin-updater");
-    const update = await check();
-    if (!update) {
-      // check() 返回 null = 无可用更新(当前即最新)。currentVersion 另经 getAppVersion 读。
-      return { kind: "uptodate", currentVersion: "" };
+    const { invoke } = await import("@tauri-apps/api/core");
+    const info = await invoke<LatestVersionInfo>("license_latest_version");
+    if (info.updateAvailable) {
+      return { kind: "available", info };
     }
-    return {
-      kind: "available",
-      version: update.version,
-      currentVersion: update.currentVersion,
-      notes: update.body,
-      downloadAndInstall: async (onProgress) => {
-        let downloaded = 0;
-        let contentLength: number | undefined;
-        await update.downloadAndInstall((event) => {
-          if (!onProgress) return;
-          switch (event.event) {
-            case "Started":
-              contentLength = event.data.contentLength;
-              onProgress({ phase: "started", contentLength });
-              break;
-            case "Progress":
-              downloaded += event.data.chunkLength;
-              onProgress({ phase: "downloading", downloaded, contentLength });
-              break;
-            case "Finished":
-              onProgress({ phase: "finished" });
-              break;
-          }
-        });
-      },
-    };
+    return { kind: "uptodate", currentVersion: info.currentVersion };
   } catch (err) {
     return { kind: "error", message: readableError(err) };
   }
@@ -124,7 +92,10 @@ export async function getAppVersion(): Promise<string | null> {
   }
 }
 
-/** 把未知异常收敛成一句可读中文文案(网络失败等给友好提示,否则透传 message)。 */
+/**
+ * 把异常收敛成一句可读中文文案。[T-396c] Rust command 的 Err 已是人话(含中文),原样透传;
+ * 其余(IPC 桥异常/英文技术串)收敛为友好提示,不把 `error sending request…` 甩给用户(T-412)。
+ */
 function readableError(err: unknown): string {
   const raw =
     err instanceof Error
@@ -132,6 +103,10 @@ function readableError(err: unknown): string {
       : typeof err === "string"
         ? err
         : "";
+  // 含 CJK 字符 = Rust 侧人话文案,直接展示。
+  if (/[一-鿿]/.test(raw)) {
+    return raw;
+  }
   if (
     /network|fetch|timeout|connect|dns|reach|sending request|request for url/i.test(
       raw,

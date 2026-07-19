@@ -885,6 +885,96 @@ pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// [T-396b] 渠道链接缓存(`.channel-links`,Rust 独占写;sidecar/前端只读)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// 白标红线(SPEC §5/§7):客户端所有对外商业跳转(购买/续期、联系授权方、下载新版)按
+// 激活码所属渠道运行时下发;**包内不留官方链接硬编码,null 绝不回退官方链接**(防代理码
+// 用户看到官方定价)。本缓存只在决策链**接受**的响应(强验签 = 签名/date/nonce 全过;
+// 弱验签 = gate-F2 显式过渡)携带 `channelConfig` 字段时更新:
+//   · 字段缺失(旧服务端,T-396a 未上线)→ 不动缓存(向后兼容);
+//   · 字段显式 null(码无渠道 / 渠道未配置)→ 覆写为 null(中性降级,不回退旧链接以外
+//     的任何默认值 —— 服务端说没有就是没有);
+//   · 验签失败 / 离线 → 决策链在进 body 前已 return(untrusted/offline),到不了这里,
+//     旧缓存自然保留(SPEC §7「验签拒,弃用;沿用旧缓存或中性降级」)。
+// 明文 JSON(链接本就展示给用户,非机密;sidecar 无 master key 也须可读);带 schema
+// `version` 字段,读端不匹配即丢弃走心跳重取(向前兼容零迁移)。
+// 重置语义:workspace_reset 只归档 db/ 与 .auth/,appDataDir 根文件天然保留(测锚同 .license)。
+
+/// `.channel-links` 缓存 schema 版本(读端不匹配 → 丢弃重取)。
+pub const CHANNEL_LINKS_SCHEMA_VERSION: u32 = 1;
+
+/// 渠道链接三键(serde camelCase 与服务端契约/前端读端一致)。三键皆可空。
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelConfig {
+    pub purchase_url: Option<String>,
+    pub support_url: Option<String>,
+    pub download_url: Option<String>,
+}
+
+/// 协议头白名单:只收 `https://`(SPEC §3/§7;服务端已强校验,这里防线纵深再滤一次)。
+fn sanitize_channel_url(v: Option<&serde_json::Value>) -> Option<String> {
+    v.and_then(|x| x.as_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| s.starts_with("https://"))
+}
+
+/// 从响应 body 的 `channelConfig` 值解析(camel/snake 双取,与 WireBody 同宽容策略)。
+/// 非对象/脏值 → 各键按 null 处理(不臆造链接)。
+fn parse_channel_config(v: &serde_json::Value) -> ChannelConfig {
+    let pick = |ck: &str, sk: &str| sanitize_channel_url(v.get(ck).or_else(|| v.get(sk)));
+    ChannelConfig {
+        purchase_url: pick("purchaseUrl", "purchase_url"),
+        support_url: pick("supportUrl", "support_url"),
+        download_url: pick("downloadUrl", "download_url"),
+    }
+}
+
+pub fn channel_links_file_path(app_data_dir: &Path) -> PathBuf {
+    app_data_dir.join(".channel-links")
+}
+
+/// 缓存文件形状:`{"version":1,"channel":{…}|null}`。
+#[derive(Serialize, Deserialize)]
+struct ChannelLinksFile {
+    version: u32,
+    channel: Option<ChannelConfig>,
+}
+
+/// 落渠道链接缓存(明文 JSON;`update=None` = 服务端显式 null → 覆写为中性降级态)。
+pub fn write_channel_links_file(path: &Path, update: &Option<ChannelConfig>) {
+    let file = ChannelLinksFile {
+        version: CHANNEL_LINKS_SCHEMA_VERSION,
+        channel: update.clone(),
+    };
+    let content = match serde_json::to_string(&file) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("[license] 序列化渠道链接缓存失败: {e}");
+            return;
+        }
+    };
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Err(e) = std::fs::write(path, content) {
+        eprintln!("[license] 写 .channel-links 失败({}): {e}", path.display());
+    }
+}
+
+/// 读渠道链接缓存(Rust 侧 latest-version 降级链用;主要读端在 sidecar channel-links 模块)。
+/// 文件缺失 / 坏 JSON / schema 版本不匹配 → None(中性降级,绝不回退任何默认链接)。
+pub fn read_channel_links_file(path: &Path) -> Option<ChannelConfig> {
+    let content = std::fs::read_to_string(path).ok()?;
+    let file: ChannelLinksFile = serde_json::from_str(&content).ok()?;
+    if file.version != CHANNEL_LINKS_SCHEMA_VERSION {
+        return None;
+    }
+    file.channel
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 决策链本体(纯逻辑 + 端口,可单测)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -904,6 +994,12 @@ pub struct ChainOutcome {
     pub decision: GateDecision,
     /// Some = 应写入 `.license` 的新快照(调用方负责加密落盘);None = 不动现有文件。
     pub snapshot: Option<LicenseSnapshot>,
+    /// [T-396b] 渠道链接缓存更新指令(调用方负责落 `.channel-links`):
+    ///   · `None` = 本轮响应未携带 `channelConfig` 字段 / 未走到已接受的在线响应
+    ///     (离线/验签失败/回拨)→ **不动现有缓存**;
+    ///   · `Some(None)` = 服务端显式下发 null → 覆写为中性降级态;
+    ///   · `Some(Some(cfg))` = 覆写为新渠道链接。
+    pub channel_config: Option<Option<ChannelConfig>>,
 }
 
 fn gen_nonce() -> String {
@@ -980,6 +1076,8 @@ struct WireBody {
     revoked: Option<bool>,
     grace_seconds: Option<i64>,
     nonce: Option<String>,
+    /// [T-396b] 外层 Option = 字段是否出现;内层 Option = 显式 null 或对象(语义见 ChainOutcome)。
+    channel_config: Option<Option<ChannelConfig>>,
 }
 
 impl WireBody {
@@ -1017,6 +1115,13 @@ impl WireBody {
                 .or_else(|| v.get("grace_seconds"))
                 .and_then(|x| x.as_i64()),
             nonce: v.get("nonce").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            // [T-396b] 三态解析:字段缺失 → None(不动缓存);显式 null → Some(None)(覆写
+            // 中性降级);对象 → Some(Some(cfg))(https 白名单滤过)。
+            channel_config: match v.get("channelConfig").or_else(|| v.get("channel_config")) {
+                None => None,
+                Some(serde_json::Value::Null) => Some(None),
+                Some(obj) => Some(Some(parse_channel_config(obj))),
+            },
         }
     }
 }
@@ -1056,6 +1161,7 @@ pub fn run_license_chain(
                 "检测到系统时间被回拨,请校准系统时间并联网重新校验授权",
             ),
             snapshot: snap,
+            channel_config: None,
         };
     }
 
@@ -1067,6 +1173,7 @@ pub fn run_license_chain(
                 return ChainOutcome {
                     decision: decision(false, "inactive", None, false, false, strict, "请输入激活码"),
                     snapshot: None,
+                    channel_config: None,
                 };
             }
             (c.to_string(), "/api/license/activate", "post /api/license/activate")
@@ -1077,6 +1184,7 @@ pub fn run_license_chain(
                 return ChainOutcome {
                     decision: decision(false, "inactive", None, false, false, strict, "尚未激活"),
                     snapshot: None,
+                    channel_config: None,
                 };
             }
         },
@@ -1272,6 +1380,8 @@ pub fn run_license_chain(
                 &msg,
             ),
             snapshot: snap,
+            // [T-396b] 码无效(过期/被吊销)也更新渠道链接:续期入口正是这时最需要。
+            channel_config: body.channel_config.clone(),
         };
     }
 
@@ -1330,6 +1440,7 @@ pub fn run_license_chain(
             return ChainOutcome {
                 decision: decision(false, "expired", expires_at, true, signature_verified, strict, &msg),
                 snapshot: Some(snap),
+                channel_config: body.channel_config.clone(),
             };
         }
         if signature_verified {
@@ -1358,6 +1469,7 @@ pub fn run_license_chain(
             return ChainOutcome {
                 decision: d,
                 snapshot: Some(snap),
+                channel_config: body.channel_config.clone(),
             };
         }
         // 买断 + 未签名 revoked:忽略(仅签名撤销才降级),继续正常链。
@@ -1389,6 +1501,7 @@ pub fn run_license_chain(
         return ChainOutcome {
             decision: decision(false, "expired", expires_at, false, signature_verified, strict, &msg),
             snapshot: Some(snap),
+            channel_config: body.channel_config.clone(),
         };
     }
 
@@ -1421,6 +1534,7 @@ pub fn run_license_chain(
     ChainOutcome {
         decision: decision(true, "active", expires_at, false, signature_verified, strict, &msg),
         snapshot: Some(snap),
+        channel_config: body.channel_config.clone(),
     }
 }
 
@@ -1451,12 +1565,14 @@ fn offline_outcome(
                 &format!("无法连接授权服务,请检查网络后重试({net_err})"),
             ),
             snapshot: None,
+            channel_config: None,
         };
     }
     let Some(s) = existing else {
         return ChainOutcome {
             decision: decision(false, "inactive", None, false, false, strict, "尚未激活"),
             snapshot: None,
+            channel_config: None,
         };
     };
     // 可信时间 = max(墙钟, last_seen)(墙钟被前拨会缩短宽限 → 保守方向,可接受)。
@@ -1489,6 +1605,7 @@ fn offline_outcome(
                 message: "买断授权离线放行(fail-open)".to_string(),
                 ..s.clone()
             }),
+            channel_config: None,
         };
     }
 
@@ -1511,6 +1628,7 @@ fn offline_outcome(
                 message: "授权已过期".to_string(),
                 ..s.clone()
             }),
+            channel_config: None,
         };
     }
     let grace_ms = s.grace_seconds.max(0) * 1000;
@@ -1543,6 +1661,7 @@ fn offline_outcome(
                 message: "离线宽限期内".to_string(),
                 ..s.clone()
             }),
+            channel_config: None,
         }
     } else {
         ChainOutcome {
@@ -1563,6 +1682,7 @@ fn offline_outcome(
                 message: "离线宽限期已过".to_string(),
                 ..s.clone()
             }),
+            channel_config: None,
         }
     }
 }
@@ -1601,6 +1721,7 @@ fn untrusted_outcome(
             return ChainOutcome {
                 decision: d,
                 snapshot: None, // 不可信输入不落盘:快照维持原样
+                channel_config: None, // 不可信输入不动渠道缓存(SPEC §7 测锚)
             };
         }
     }
@@ -1622,6 +1743,7 @@ fn untrusted_outcome(
             user_msg,
         ),
         snapshot: snap,
+        channel_config: None,
     }
 }
 
@@ -1746,6 +1868,11 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
     if let Some(snap) = &outcome.snapshot {
         write_snapshot_file(&path, snap, key.as_ref());
         sync_mirror_to_sidecar(ctx, snap);
+    }
+    // [T-396b] 渠道链接缓存:仅在决策链接受的响应显式携带 channelConfig 字段时覆写
+    // (Some(None)=服务端显式 null → 中性降级;None=字段缺失/离线/验签失败 → 不动旧缓存)。
+    if let Some(update) = &outcome.channel_config {
+        write_channel_links_file(&channel_links_file_path(&ctx.app_data_dir), update);
     }
     // [T-391 H-native §7 去单点化·复算点①] 落盘/缓存/广播前跑一次运行期放行门:
     // 探到调试器 trace 或证据不自洽 → 静默降级(前端拿到 licensed=false 即跳激活页 = 功能坏)。
@@ -1947,6 +2074,222 @@ pub fn license_last_decision(state: tauri::State<'_, LicenseState>) -> Option<Ga
         .unwrap()
         .clone()
         .map(|d| apply_runtime_gate(d, &SysDebugProbe))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-396c] 版本检查(latest-version 端点;更新流 = 检查 + 跳渠道链接,不再内置下载)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// latest-version 结果(serde camelCase 直达前端 check-update-card)。
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LatestVersionInfo {
+    pub current_version: String,
+    /// null = 服务端未公告版本 / 授权失效不提示更新。
+    pub latest_version: Option<String>,
+    pub release_notes: Option<String>,
+    /// 该码渠道的下载链接;null = 未激活/渠道未配 → 前端显「联系授权方」,
+    /// **绝不回退官方链接**(SPEC §5/§7 红线,防泄官方定价)。
+    pub download_url: Option<String>,
+    pub update_available: bool,
+}
+
+/// 语义化版本比较:latest 是否比 current 新。按数字段逐段比较(容忍 `v` 前缀 /
+/// 非数字分隔);latest 解析不出数字段 → false(脏值不臆造新版,诚实不提示)。
+pub fn version_newer(latest: &str, current: &str) -> bool {
+    fn parts(v: &str) -> Vec<u64> {
+        v.trim()
+            .trim_start_matches(['v', 'V'])
+            .split(|c: char| !c.is_ascii_digit())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.parse::<u64>().unwrap_or(0))
+            .collect()
+    }
+    let l = parts(latest);
+    let c = parts(current);
+    if l.is_empty() {
+        return false;
+    }
+    for i in 0..l.len().max(c.len()) {
+        let a = l.get(i).copied().unwrap_or(0);
+        let b = c.get(i).copied().unwrap_or(0);
+        if a != b {
+            return a > b;
+        }
+    }
+    false
+}
+
+/// 调 `POST /api/app/latest-version`(契约见 SPEC §4):带激活码(未激活 → code=null,
+/// 服务端只回版本号、downloadUrl=null,不泄默认渠道)+ nonce,强验签模式走与决策链同款
+/// Ed25519 签名/date/nonce 校验。**错误一律人话**(并入 T-412:技术原因只进日志)。
+///
+/// 授权失效不提示更新(SPEC §6 / T-372 L3「停更新」语义):
+///   · 内测码 revoked / 快照未放行 → 不提示;
+///   · 买断码 updatesBlocked(签名撤销)→ 不提示(前端入口本已停用,这里双保险)。
+pub fn fetch_latest_version(
+    cfg: &LicenseConfig,
+    http: &dyn LicenseHttp,
+    clock: &dyn LicenseClock,
+    current_version: &str,
+    existing: Option<&LicenseSnapshot>,
+) -> Result<LatestVersionInfo, String> {
+    let no_prompt = LatestVersionInfo {
+        current_version: current_version.to_string(),
+        latest_version: None,
+        release_notes: None,
+        download_url: None,
+        update_available: false,
+    };
+    if let Some(s) = existing {
+        let trial_dead = s.expires_at.is_some() && (s.revoked || !s.allowed);
+        if trial_dead || s.updates_blocked {
+            return Ok(no_prompt);
+        }
+    }
+
+    let strict = cfg.strict_verify;
+    let verify_key = if strict {
+        match resolve_public_key(&cfg.public_key_b64) {
+            Ok(k) => Some(k),
+            Err(e) => {
+                eprintln!("[license] latest-version 公钥不可用: {e}");
+                return Err("更新服务暂时不可用,请稍后重试。".to_string());
+            }
+        }
+    } else {
+        None
+    };
+
+    let path = "/api/app/latest-version";
+    let url = format!("{}{}", cfg.base_url.trim_end_matches('/'), path);
+    let host = host_of(&cfg.base_url);
+    let target = format!("post {path}");
+    let wall = clock.wall_ms();
+
+    let mut attempt: u32 = 0;
+    let body_value: serde_json::Value = loop {
+        let last_attempt = attempt + 1 >= MAX_ONLINE_ATTEMPTS;
+        let cur_nonce = gen_nonce();
+        let req_body = serde_json::json!({
+            // 未激活 → code=null(契约:服务端只回版本号,downloadUrl=null,不泄默认渠道)。
+            "code": existing.map(|s| s.code.clone()),
+            "machineId": cfg.machine_id,
+            "projectKey": cfg.project_key,
+            "nonce": cur_nonce,
+        })
+        .to_string();
+
+        let r = match http.post(&url, &req_body) {
+            Ok(r) => r,
+            Err(net_err) => {
+                if last_attempt {
+                    eprintln!("[license] latest-version 网络不可达: {net_err}");
+                    return Err("无法连接更新服务,请检查网络后重试。".to_string());
+                }
+                attempt += 1;
+                transient_backoff(attempt);
+                continue;
+            }
+        };
+        if !(200..300).contains(&r.status) {
+            eprintln!("[license] latest-version HTTP {}", r.status);
+            return Err("更新服务暂时不可用,请稍后重试。".to_string());
+        }
+
+        if strict {
+            let key = verify_key.as_ref().expect("strict ⟹ 公钥已解析");
+            if let Err(e) = verify_response_signature(key, &target, &host, &r) {
+                if last_attempt {
+                    eprintln!("[license] latest-version 验签未过: {e}");
+                    return Err("更新服务响应校验未通过,请稍后重试。".to_string());
+                }
+                attempt += 1;
+                transient_backoff(attempt);
+                continue;
+            }
+            let date_ms = match r.date.as_deref().map(parse_rfc1123_ms) {
+                Some(Ok(ms)) => ms,
+                _ => {
+                    if last_attempt {
+                        eprintln!("[license] latest-version X-License-Date 缺失或不可解析");
+                        return Err("更新服务响应校验未通过,请稍后重试。".to_string());
+                    }
+                    attempt += 1;
+                    transient_backoff(attempt);
+                    continue;
+                }
+            };
+            if (date_ms - wall).abs() > MAX_DATE_SKEW_MS {
+                eprintln!("[license] latest-version 响应时间戳偏差超限(疑似重放或时钟不准)");
+                return Err("系统时间可能不准,请校准系统时间后重试。".to_string());
+            }
+            let v: serde_json::Value =
+                serde_json::from_slice(&r.body).unwrap_or(serde_json::Value::Null);
+            if v.get("nonce").and_then(|x| x.as_str()) != Some(cur_nonce.as_str()) {
+                if last_attempt {
+                    eprintln!("[license] latest-version nonce 未回显一致(疑似重放)");
+                    return Err("更新服务响应校验未通过,请稍后重试。".to_string());
+                }
+                attempt += 1;
+                transient_backoff(attempt);
+                continue;
+            }
+            break v;
+        }
+        break serde_json::from_slice(&r.body).unwrap_or(serde_json::Value::Null);
+    };
+
+    let str_of = |ck: &str, sk: &str| {
+        body_value
+            .get(ck)
+            .or_else(|| body_value.get(sk))
+            .and_then(|x| x.as_str())
+            .map(|s| s.to_string())
+    };
+    let latest_version = str_of("latestVersion", "latest_version");
+    let release_notes = str_of("releaseNotes", "release_notes");
+    // https 白名单同渠道链接(防线纵深;downloadUrl=null 前端显「联系授权方」不回退)。
+    let download_url = sanitize_channel_url(
+        body_value
+            .get("downloadUrl")
+            .or_else(|| body_value.get("download_url")),
+    );
+    let update_available = latest_version
+        .as_deref()
+        .map(|l| version_newer(l, current_version))
+        .unwrap_or(false);
+    Ok(LatestVersionInfo {
+        current_version: current_version.to_string(),
+        latest_version,
+        release_notes,
+        download_url,
+        update_available,
+    })
+}
+
+/// [T-396c] 检查更新 IPC:前端 check-update-card 调这里(替代 Tauri updater 插件的
+/// check();updater endpoint 已从 tauri.conf.json 摘除,签名产物链保留 = 可逆开关)。
+/// Err 即人话文案,前端直接展示(并入 T-412:不再把 `error sending request for url(…)`
+/// 这类技术报错甩给用户)。
+#[tauri::command]
+pub async fn license_latest_version(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, LicenseState>,
+) -> Result<LatestVersionInfo, String> {
+    let ctx = state.0.clone();
+    let current = app.package_info().version.to_string();
+    tauri::async_runtime::spawn_blocking(move || {
+        let config = LicenseConfig::from_env(ctx.machine_id.clone());
+        let http = ReqwestHttp {
+            timeout: std::time::Duration::from_secs(10),
+        };
+        let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
+        let existing = read_snapshot_file(&license_file_path(&ctx.app_data_dir), key.as_ref());
+        fetch_latest_version(&config, &http, &SystemClock, &current, existing.as_ref())
+    })
+    .await
+    .map_err(|e| format!("检查更新任务执行失败: {e}"))?
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2957,5 +3300,341 @@ mod tests {
             return false;
         }
         haystack.windows(needle.len()).any(|w| w == needle)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // [T-396b] 渠道链接缓存(SPEC §5/§7/§8 测锚)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    fn valid_body_with_channel() -> serde_json::Value {
+        let mut b = valid_body();
+        b["channelConfig"] = serde_json::json!({
+            "purchaseUrl": "https://agent.example.com/buy",
+            "supportUrl": "https://agent.example.com/contact",
+            "downloadUrl": "https://agent.example.com/download",
+        });
+        b
+    }
+
+    // 合法签名响应携带 channelConfig → 采纳为覆写指令(Some(Some(cfg)))。
+    #[test]
+    fn channel_config_adopted_on_valid_signed_response() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, valid_body_with_channel());
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert!(out.decision.licensed);
+        let update = out.channel_config.expect("应有渠道缓存覆写指令");
+        let ch = update.expect("应为具体渠道配置");
+        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
+        assert_eq!(ch.support_url.as_deref(), Some("https://agent.example.com/contact"));
+        assert_eq!(ch.download_url.as_deref(), Some("https://agent.example.com/download"));
+    }
+
+    // 字段缺失(旧服务端)→ None,不动现有缓存(向后兼容)。
+    #[test]
+    fn channel_config_absent_leaves_cache_untouched() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, valid_body());
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert!(out.decision.licensed);
+        assert!(out.channel_config.is_none(), "字段缺失不该产生覆写指令");
+    }
+
+    // 显式 null → Some(None):覆写为中性降级,**不回退官方链接**(红线)。
+    #[test]
+    fn channel_config_explicit_null_overwrites_to_neutral() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["channelConfig"] = serde_json::Value::Null;
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert_eq!(out.channel_config, Some(None), "显式 null 应覆写为中性降级态");
+    }
+
+    // 非 https 协议头被滤掉(白名单防线纵深;javascript:/http: 都不放行)。
+    #[test]
+    fn channel_config_non_https_urls_dropped() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["channelConfig"] = serde_json::json!({
+            "purchaseUrl": "http://insecure.example.com/buy",
+            "supportUrl": "javascript:alert(1)",
+            "downloadUrl": "https://ok.example.com/dl",
+        });
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let ch = out.channel_config.expect("有字段").expect("有对象");
+        assert!(ch.purchase_url.is_none(), "http:// 应被滤掉");
+        assert!(ch.support_url.is_none(), "javascript: 应被滤掉");
+        assert_eq!(ch.download_url.as_deref(), Some("https://ok.example.com/dl"));
+    }
+
+    // [SPEC §8-5 测锚] 假服务器坏签名 → untrusted,渠道缓存**不动**(保留旧缓存)。
+    #[test]
+    fn channel_config_rejected_on_bad_signature() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body_with_channel());
+        server.tamper_body_after_sign = true;
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert_eq!(out.decision.status, "untrusted");
+        assert!(out.channel_config.is_none(), "坏签名绝不产生渠道覆写指令(沿用旧缓存)");
+    }
+
+    // 码无效(过期)响应也更新渠道链接:续期入口正是这时最需要。
+    #[test]
+    fn channel_config_updated_even_on_invalid_code() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body_with_channel();
+        body["valid"] = serde_json::Value::Bool(false);
+        body["message"] = serde_json::Value::String("激活码已过期".to_string());
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert!(!out.decision.licensed);
+        let ch = out.channel_config.expect("有字段").expect("有对象");
+        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
+    }
+
+    // 离线 → 不动缓存(SPEC §7「离线用缓存」)。
+    #[test]
+    fn channel_config_untouched_when_offline() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, valid_body_with_channel());
+        server.network_error = true;
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(Some(NOW_MS - 1000));
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert!(out.channel_config.is_none(), "离线不该动渠道缓存");
+    }
+
+    // 缓存文件往返 + schema 版本不匹配丢弃(向前兼容零迁移)。
+    #[test]
+    fn channel_links_file_roundtrip_and_version_mismatch() {
+        let dir = std::env::temp_dir().join(format!(
+            "creatoros-channel-links-test-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = channel_links_file_path(&dir);
+
+        // 具体配置往返。
+        let cfg = ChannelConfig {
+            purchase_url: Some("https://agent.example.com/buy".to_string()),
+            support_url: None,
+            download_url: Some("https://agent.example.com/dl".to_string()),
+        };
+        write_channel_links_file(&path, &Some(cfg.clone()));
+        assert_eq!(read_channel_links_file(&path), Some(cfg));
+
+        // 显式 null 覆写 → 读回 None(中性降级,不残留旧链接)。
+        write_channel_links_file(&path, &None);
+        assert_eq!(read_channel_links_file(&path), None);
+
+        // schema 版本不匹配 → 丢弃。
+        std::fs::write(&path, r#"{"version":99,"channel":{"purchaseUrl":"https://x.example.com"}}"#)
+            .unwrap();
+        assert_eq!(read_channel_links_file(&path), None, "版本不匹配应丢弃");
+
+        // 坏 JSON → 丢弃(不 panic)。
+        std::fs::write(&path, "not-json").unwrap();
+        assert_eq!(read_channel_links_file(&path), None);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // [T-396c] 版本检查(SPEC §6/§8-4 测锚)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    fn latest_body(latest: &str, download: Option<&str>) -> serde_json::Value {
+        serde_json::json!({
+            "success": true,
+            "latestVersion": latest,
+            "releaseNotes": "修复若干问题",
+            "downloadUrl": download,
+            "serverTime": "2026-07-17T12:00:00Z",
+        })
+    }
+
+    #[test]
+    fn version_newer_semantics() {
+        assert!(version_newer("0.2.0", "0.1.0"));
+        assert!(version_newer("v1.0.0", "0.9.9"));
+        assert!(version_newer("0.1.10", "0.1.9"), "10 > 9 数字比较非字典序");
+        assert!(!version_newer("0.1.0", "0.1.0"));
+        assert!(!version_newer("0.0.9", "0.1.0"));
+        assert!(version_newer("0.2", "0.1.5"), "缺位按 0 补齐");
+        assert!(!version_newer("garbage", "0.1.0"), "脏值不臆造新版");
+    }
+
+    // 签名合法 + 新版可用 → update_available + 渠道 downloadUrl。
+    #[test]
+    fn latest_version_signed_update_available() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("0.2.0", Some("https://agent.example.com/dl")));
+        let cfg = config(&pk, true);
+        let info = fetch_latest_version(
+            &cfg,
+            &server,
+            &FixedClock(NOW_MS),
+            "0.1.0",
+            Some(&snapshot_active()),
+        )
+        .expect("应成功");
+        assert!(info.update_available);
+        assert_eq!(info.latest_version.as_deref(), Some("0.2.0"));
+        assert_eq!(info.download_url.as_deref(), Some("https://agent.example.com/dl"));
+        // 请求应携带快照里的激活码(渠道按码解析)。
+        let req = server.last_request.borrow().clone().unwrap();
+        assert_eq!(req["code"].as_str(), Some("CODE-1"));
+    }
+
+    // downloadUrl=null(未配渠道)→ 原样透传 null,**不回退任何官方链接**(红线)。
+    #[test]
+    fn latest_version_null_download_url_stays_null() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("0.2.0", None));
+        let cfg = config(&pk, true);
+        let info = fetch_latest_version(
+            &cfg,
+            &server,
+            &FixedClock(NOW_MS),
+            "0.1.0",
+            Some(&snapshot_active()),
+        )
+        .expect("应成功");
+        assert!(info.update_available);
+        assert!(info.download_url.is_none());
+    }
+
+    // 已是最新 → update_available=false。
+    #[test]
+    fn latest_version_up_to_date() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("0.1.0", Some("https://agent.example.com/dl")));
+        let cfg = config(&pk, true);
+        let info = fetch_latest_version(
+            &cfg,
+            &server,
+            &FixedClock(NOW_MS),
+            "0.1.0",
+            Some(&snapshot_active()),
+        )
+        .expect("应成功");
+        assert!(!info.update_available);
+    }
+
+    // [SPEC §8-4 测锚] revoked 内测码 → 不提示更新(甚至不打网络)。
+    #[test]
+    fn latest_version_revoked_trial_no_prompt() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("9.9.9", Some("https://agent.example.com/dl")));
+        let cfg = config(&pk, true);
+        let snap = LicenseSnapshot {
+            revoked: true,
+            allowed: false,
+            ..snapshot_active()
+        };
+        let info = fetch_latest_version(&cfg, &server, &FixedClock(NOW_MS), "0.1.0", Some(&snap))
+            .expect("应成功(静默无更新)");
+        assert!(!info.update_available);
+        assert!(info.latest_version.is_none());
+        assert_eq!(server.calls.get(), 0, "授权失效不该打更新网络请求");
+    }
+
+    // 买断撤销(updatesBlocked)→ 同样不提示(停更新语义双保险)。
+    #[test]
+    fn latest_version_updates_blocked_no_prompt() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("9.9.9", None));
+        let cfg = config(&pk, true);
+        let snap = LicenseSnapshot {
+            updates_blocked: true,
+            revoked: true,
+            ..snapshot_perpetual()
+        };
+        let info = fetch_latest_version(&cfg, &server, &FixedClock(NOW_MS), "0.1.0", Some(&snap))
+            .expect("应成功(静默无更新)");
+        assert!(!info.update_available);
+        assert_eq!(server.calls.get(), 0);
+    }
+
+    // [T-412 测锚] 网络不可达 → 人话文案,不甩技术报错。
+    #[test]
+    fn latest_version_network_error_human_message() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, latest_body("0.2.0", None));
+        server.network_error = true;
+        let cfg = config(&pk, true);
+        let err = fetch_latest_version(
+            &cfg,
+            &server,
+            &FixedClock(NOW_MS),
+            "0.1.0",
+            Some(&snapshot_active()),
+        )
+        .expect_err("应失败");
+        assert!(err.contains("无法连接更新服务"), "应为人话文案,实际: {err}");
+        assert!(!err.contains("connect refused"), "技术原因只进日志不进 UI");
+    }
+
+    // 坏签名 → 人话拒绝(强验签下 latest-version 同链纪律)。
+    #[test]
+    fn latest_version_bad_signature_rejected() {
+        let (sk, pk) = test_keypair();
+        let mut server = FakeServer::ok(sk, latest_body("0.2.0", Some("https://x.example.com")));
+        server.tamper_body_after_sign = true;
+        let cfg = config(&pk, true);
+        let err = fetch_latest_version(
+            &cfg,
+            &server,
+            &FixedClock(NOW_MS),
+            "0.1.0",
+            Some(&snapshot_active()),
+        )
+        .expect_err("坏签名应拒绝");
+        assert!(err.contains("请稍后重试"), "应为人话文案,实际: {err}");
+    }
+
+    // 未激活(无快照)→ code=null 照发(服务端只回版本号;不泄默认渠道)。
+    #[test]
+    fn latest_version_without_snapshot_sends_null_code() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("0.2.0", None));
+        let cfg = config(&pk, true);
+        let info = fetch_latest_version(&cfg, &server, &FixedClock(NOW_MS), "0.1.0", None)
+            .expect("应成功");
+        assert!(info.update_available);
+        assert!(info.download_url.is_none());
+        let req = server.last_request.borrow().clone().unwrap();
+        assert!(req["code"].is_null(), "未激活应发 code=null");
+    }
+
+    // 非 https downloadUrl 被滤掉(与渠道链接同白名单)。
+    #[test]
+    fn latest_version_non_https_download_dropped() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, latest_body("0.2.0", Some("http://evil.example.com/dl")));
+        let cfg = config(&pk, true);
+        let info = fetch_latest_version(
+            &cfg,
+            &server,
+            &FixedClock(NOW_MS),
+            "0.1.0",
+            Some(&snapshot_active()),
+        )
+        .expect("应成功");
+        assert!(info.download_url.is_none());
     }
 }

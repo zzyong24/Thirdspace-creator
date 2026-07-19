@@ -31,7 +31,9 @@ import {
   type MultimodalModelsState,
   type StorageState,
   type ActivationState,
+  type ChannelLinksState,
 } from "@/features/settings/settings-page";
+import { readChannelLinks } from "@/server/activation/channel-links.server";
 import {
   buildSkillItems,
   type BuiltinSkillShape,
@@ -327,6 +329,13 @@ export default async function SettingsRoutePage() {
     }
   }
 
+  // [T-396b] 渠道链接(读 Rust 落的 `.channel-links` 缓存,零网络)。web/dev 解析不出
+  // 路径 → null;null → 购买入口隐藏 / 联系文案纯文案(中性降级,绝不回退官方链接)。
+  let channelLinks: ChannelLinksState | undefined;
+  if (isDesktopRuntime()) {
+    channelLinks = (await readChannelLinks()) ?? undefined;
+  }
+
   return (
     <SettingsPage
       identity={identity}
@@ -336,6 +345,7 @@ export default async function SettingsRoutePage() {
       preferences={preferences}
       skills={skills}
       activation={activation}
+      channelLinks={channelLinks}
     />
   );
 }

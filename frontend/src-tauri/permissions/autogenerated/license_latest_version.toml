@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-license-latest-version"
+description = "Enables the license_latest_version command without any pre-configured scope."
+commands.allow = ["license_latest_version"]
+
+[[permission]]
+identifier = "deny-license-latest-version"
+description = "Denies the license_latest_version command without any pre-configured scope."
+commands.deny = ["license_latest_version"]

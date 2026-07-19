@@ -5,8 +5,9 @@ import { planOpenUrl } from "./plan";
 // [T-257 v4] open-url 安全核心:只允许 http(s),平台命令正确。
 describe("planOpenUrl", () => {
   it("darwin + https → open <url>", () => {
-    const p = planOpenUrl("https://creatoros.aitongban.cloud/#buy", "darwin");
-    expect(p).toEqual({ ok: true, cmd: "open", args: ["https://creatoros.aitongban.cloud/#buy"] });
+    // [T-396b] 夹具改中性 URL:官方购买链接已从代码树清零(源级扫描 #buy 零命中)。
+    const p = planOpenUrl("https://example.com/download", "darwin");
+    expect(p).toEqual({ ok: true, cmd: "open", args: ["https://example.com/download"] });
   });
 
   it("darwin + http → open <url>(允许)", () => {

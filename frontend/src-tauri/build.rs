@@ -32,6 +32,8 @@ fn main() {
             "license_activate",
             "license_check",
             "license_last_decision",
+            // [T-396c] 版本检查(渠道化更新流:检查 + 跳渠道链接,替代 updater 插件 check)。
+            "license_latest_version",
         ]),
     ))
     .expect("tauri_build 失败");

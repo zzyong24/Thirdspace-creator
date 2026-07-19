@@ -1,8 +1,10 @@
 /**
- * [T-180] CheckUpdateCard(软件更新卡)组件测试 —— 经 SettingsDialog 渲染。
+ * [T-180 → T-396c] CheckUpdateCard(软件更新卡)组件测试 —— 经 SettingsDialog 渲染。
  *
- * 覆盖:①桌面态 → 显当前版本 + 「检查更新」按钮;②web 态 → 桌面端专属空态,无检查入口;
- * ③check 失败 → 诚实错误态,不崩。`@/lib/desktop-updater` 全 mock(不真跑 Tauri)。
+ * 覆盖:①桌面态 → 显当前版本 + 「检查更新」按钮;②有新版 + 渠道 downloadUrl → 「去下载」
+ * 外开渠道页;③有新版 + downloadUrl=null → 「联系授权方」(有 supportUrl 可点 / 无则纯文案,
+ * **不回退官方链接**红线);④已最新;⑤失败 → 人话错误态不崩;⑥买断撤销停更新(T-372 L3);
+ * ⑦web 态 → 桌面端专属空态。`@/lib/desktop-updater` 全 mock(不真跑 Tauri IPC)。
  */
 
 import * as React from "react";
@@ -26,14 +28,14 @@ vi.mock("@/lib/contract-client", () => ({
   },
 }));
 
-// 被测薄封装 mock:逐用例控制桌面态探测 + check() 结果。
+// 被测薄封装 mock:逐用例控制桌面态探测 + checkLatestVersion() 结果。
 const mockIsDesktop = vi.fn<() => boolean>();
 const mockCheck = vi.fn();
 const mockGetVersion = vi.fn();
 vi.mock("@/lib/desktop-updater", () => ({
   isDesktopRuntimeClient: () => mockIsDesktop(),
   getAppVersion: () => mockGetVersion(),
-  checkForUpdate: () => mockCheck(),
+  checkLatestVersion: () => mockCheck(),
   relaunchApp: () => Promise.resolve(true),
 }));
 
@@ -83,6 +85,21 @@ const VM: SettingsViewModel = {
   douyinAccount: { loggedIn: false },
 };
 
+/** IPC 归一化结果构造(desktop-updater CheckLatestResult 的 available 分支)。 */
+function availableResult(over: Record<string, unknown> = {}) {
+  return {
+    kind: "available" as const,
+    info: {
+      currentVersion: "0.1.0",
+      latestVersion: "0.2.0",
+      releaseNotes: "修复若干问题",
+      downloadUrl: "https://agent.example.com/dl",
+      updateAvailable: true,
+      ...over,
+    },
+  };
+}
+
 beforeEach(() => {
   mockIsDesktop.mockReset();
   mockCheck.mockReset();
@@ -91,9 +108,18 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 
-function renderDialog() {
-  render(<SettingsDialog viewModel={VM} />);
+function renderDialog(props: Record<string, unknown> = {}) {
+  render(<SettingsDialog viewModel={VM} {...props} />);
   return document;
+}
+
+async function clickCheck(doc: Document) {
+  await waitFor(() =>
+    expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull(),
+  );
+  fireEvent.click(
+    doc.querySelector('[data-slot="check-update-action"]') as HTMLElement,
+  );
 }
 
 describe("CheckUpdateCard — 桌面态", () => {
@@ -114,41 +140,71 @@ describe("CheckUpdateCard — 桌面态", () => {
     expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull();
   });
 
-  it("点检查 → 有新版 → 显版本 + notes + 「下载并安装」", async () => {
+  it("[T-396c] 有新版 + 渠道 downloadUrl → 「去下载」外开渠道页(无内置下载安装)", async () => {
     mockIsDesktop.mockReturnValue(true);
-    mockCheck.mockResolvedValue({
-      kind: "available",
-      version: "0.2.0",
-      currentVersion: "0.1.0",
-      notes: "修复若干问题",
-      downloadAndInstall: vi.fn(() => Promise.resolve()),
-    });
+    mockCheck.mockResolvedValue(availableResult());
     const doc = renderDialog();
-    await waitFor(() =>
-      expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull(),
-    );
-    fireEvent.click(
-      doc.querySelector('[data-slot="check-update-action"]') as HTMLElement,
-    );
+    await clickCheck(doc);
     await waitFor(() =>
       expect(doc.querySelector('[data-slot="check-update-available"]')).not.toBeNull(),
     );
+    const block = doc.querySelector('[data-slot="check-update-available"]');
+    expect(block?.textContent).toContain("0.2.0");
+    expect(block?.textContent).toContain("修复若干问题");
+    const dl = doc.querySelector(
+      '[data-slot="check-update-download"]',
+    ) as HTMLAnchorElement;
+    expect(dl).not.toBeNull();
+    expect(dl.getAttribute("href")).toBe("https://agent.example.com/dl");
+    expect(dl.getAttribute("target")).toBe("_blank");
+    // 旧「下载并安装」入口已退役。
+    expect(doc.querySelector('[data-slot="check-update-install"]')).toBeNull();
+  });
+
+  it("[T-396c 红线] downloadUrl=null + 无 supportUrl → 纯文案「联系授权方」,零链接", async () => {
+    mockIsDesktop.mockReturnValue(true);
+    mockCheck.mockResolvedValue(availableResult({ downloadUrl: null }));
+    const doc = renderDialog();
+    await clickCheck(doc);
+    await waitFor(() =>
+      expect(doc.querySelector('[data-slot="check-update-contact"]')).not.toBeNull(),
+    );
+    const contact = doc.querySelector('[data-slot="check-update-contact"]');
+    expect(contact?.textContent).toContain("请联系你的授权方获取新版");
+    expect(contact?.querySelector("a")).toBeNull();
+    expect(doc.querySelector('[data-slot="check-update-download"]')).toBeNull();
+    // 绝不回退官方链接。
     expect(
-      doc.querySelector('[data-slot="check-update-available"]')?.textContent,
-    ).toContain("0.2.0");
-    expect(doc.querySelector('[data-slot="check-update-install"]')).not.toBeNull();
+      doc.querySelector('[data-slot="check-update-available"]')?.innerHTML ?? "",
+    ).not.toContain("aitongban");
+  });
+
+  it("[T-396c] downloadUrl=null + 缓存有 supportUrl → 联系文案可点跳渠道", async () => {
+    mockIsDesktop.mockReturnValue(true);
+    mockCheck.mockResolvedValue(availableResult({ downloadUrl: null }));
+    const doc = renderDialog({
+      channelLinks: {
+        purchaseUrl: null,
+        supportUrl: "https://agent.example.com/contact",
+        downloadUrl: null,
+      },
+    });
+    await clickCheck(doc);
+    await waitFor(() =>
+      expect(doc.querySelector('[data-slot="check-update-contact"]')).not.toBeNull(),
+    );
+    const link = doc
+      .querySelector('[data-slot="check-update-contact"]')
+      ?.querySelector("a");
+    expect(link).not.toBeNull();
+    expect(link?.getAttribute("href")).toBe("https://agent.example.com/contact");
   });
 
   it("点检查 → 已最新 → 「已是最新版」", async () => {
     mockIsDesktop.mockReturnValue(true);
     mockCheck.mockResolvedValue({ kind: "uptodate", currentVersion: "0.1.0" });
     const doc = renderDialog();
-    await waitFor(() =>
-      expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull(),
-    );
-    fireEvent.click(
-      doc.querySelector('[data-slot="check-update-action"]') as HTMLElement,
-    );
+    await clickCheck(doc);
     await waitFor(() => {
       const fb = doc.querySelector('[data-slot="check-update-feedback"]');
       expect(fb?.getAttribute("data-tone")).toBe("uptodate");
@@ -156,20 +212,18 @@ describe("CheckUpdateCard — 桌面态", () => {
     });
   });
 
-  it("点检查 → 失败 → 诚实错误态,不崩", async () => {
+  it("[T-412] 点检查 → 失败 → 人话错误态,不崩", async () => {
     mockIsDesktop.mockReturnValue(true);
-    mockCheck.mockResolvedValue({ kind: "error", message: "检查更新失败:网络不可达,请检查网络后重试。" });
+    mockCheck.mockResolvedValue({
+      kind: "error",
+      message: "无法连接更新服务,请检查网络后重试。",
+    });
     const doc = renderDialog();
-    await waitFor(() =>
-      expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull(),
-    );
-    fireEvent.click(
-      doc.querySelector('[data-slot="check-update-action"]') as HTMLElement,
-    );
+    await clickCheck(doc);
     await waitFor(() => {
       const fb = doc.querySelector('[data-slot="check-update-feedback"]');
       expect(fb?.getAttribute("data-tone")).toBe("error");
-      expect(fb?.textContent).toContain("失败");
+      expect(fb?.textContent).toContain("无法连接更新服务");
     });
   });
 });

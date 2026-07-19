@@ -121,6 +121,11 @@ export interface SettingsPageProps {
    * web / 未装配 / 读失败 → undefined:激活卡显「激活为桌面端功能」诚实空态,绝不假装已激活。
    */
   readonly activation?: ActivationState;
+  /**
+   * [T-396b] 渠道链接(route server 侧经 channel-links 模块读缓存)。
+   * 缺省/null 键 → 对应入口中性降级(购买按钮隐藏/联系文案无链接),不回退官方链接。
+   */
+  readonly channelLinks?: ChannelLinksState;
 }
 
 /**
@@ -142,6 +147,18 @@ export interface ActivationState {
   readonly graceSeconds?: number | null;
   /** 签名撤销标记:买断 revoked → 更新入口旁提示「停更新,不锁功能」。 */
   readonly revoked?: boolean;
+}
+
+/**
+ * [T-396b] 渠道链接视图段(route server 侧经 channel-links 模块读 Rust 落的
+ * `.channel-links` 缓存)。全部可序列化(server → client props)。
+ * **红线**:null = 未激活/渠道未配 → 对应入口整个隐藏/纯文案中性降级,
+ * **绝不回退官方链接**(SPEC §5/§7,防代理码用户看到官方定价)。
+ */
+export interface ChannelLinksState {
+  readonly purchaseUrl: string | null;
+  readonly supportUrl: string | null;
+  readonly downloadUrl: string | null;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -389,6 +406,7 @@ export function SettingsPage({
   preferences,
   skills,
   activation,
+  channelLinks,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -414,7 +432,12 @@ export function SettingsPage({
       data-settings-id="settings-root"
       className="flex flex-col gap-section-gap"
     >
-      <SettingsDialog viewModel={vm} skills={skills} activation={activation} />
+      <SettingsDialog
+        viewModel={vm}
+        skills={skills}
+        activation={activation}
+        channelLinks={channelLinks}
+      />
     </main>
   );
 }

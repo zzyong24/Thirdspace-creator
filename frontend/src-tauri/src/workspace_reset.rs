@@ -181,6 +181,8 @@ mod tests {
         // [T-372 L2] 放行权威文件 + last-seen 冗余点:重置必须保留(PRESERVE 语义)。
         std::fs::write(dir.join(".license"), b"enc:v1:xxxx").unwrap();
         std::fs::write(dir.join(".license-seen"), b"123").unwrap();
+        // [T-396b] 渠道链接缓存:同 .license 进 PRESERVE 语义(重置不丢渠道归属)。
+        std::fs::write(dir.join(".channel-links"), b"{\"version\":1,\"channel\":null}").unwrap();
         std::fs::write(dir.join(RESET_MARKER_FILE), b"{}").unwrap();
 
         let outcome = apply_pending_workspace_reset(&dir).expect("应执行归档");
@@ -209,6 +211,8 @@ mod tests {
         // [T-372 L2] `.license` 放行权威 + last-seen 冗余点:重置保留(清库不清激活态)。
         assert!(dir.join(".license").exists());
         assert!(dir.join(".license-seen").exists());
+        // [T-396b] 渠道链接缓存重置保留(SPEC §7「重置不丢」测锚)。
+        assert!(dir.join(".channel-links").exists());
         let _ = std::fs::remove_dir_all(&dir);
     }
 

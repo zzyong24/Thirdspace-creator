@@ -325,10 +325,36 @@ describe("SettingsPage", () => {
         document.querySelector('[data-slot="activation-last-check"]')
           ?.textContent,
       ).toContain("2026-07-06");
-      // 购买/续期入口存在。
+      // [T-396b 红线] 未传渠道链接(未激活/渠道未配)→ 购买/续期入口整个隐藏,
+      // 绝不回退官方链接(防代理码用户看到官方定价)。
       expect(
         document.querySelector('[data-slot="activation-purchase-link"]'),
-      ).not.toBeNull();
+      ).toBeNull();
+    });
+
+    it("[T-396b] 渠道 purchaseUrl 下发 → 购买/续期入口跳渠道链接", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "M-ch",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-07-06T00:00:00.000Z",
+        },
+        channelLinks: {
+          purchaseUrl: "https://agent.example.com/buy",
+          supportUrl: null,
+          downloadUrl: null,
+        },
+      });
+      const link = document.querySelector(
+        '[data-slot="activation-purchase-link"]',
+      );
+      expect(link).not.toBeNull();
+      expect(link?.getAttribute("href")).toBe("https://agent.example.com/buy");
+      // 渠道链接绝不含官方购买页。
+      expect(link?.getAttribute("href")).not.toContain("aitongban");
     });
 
     it("永久激活(expiresAt=null)→ 授权类型「永久激活」+ 到期「永久」", async () => {

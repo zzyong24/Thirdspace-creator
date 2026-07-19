@@ -8,6 +8,13 @@
 # 签名不可关,私钥在 repo secret TAURI_SIGNING_PRIVATE_KEY(无密码)。
 # 偏离 SPEC §12 已论证:mac x86_64 不出——GitHub 托管 Intel runner 已退役,交叉编译
 # 会产出错架构原生依赖(better-sqlite3 等);Intel Mac 内测覆盖列遗留。
+#
+# [T-396c] 分发模型已渠道化(SPEC 2026-07-18 channel-links §6):客户端 updater endpoint
+# 已摘除,更新 = 「版本检查(activation-manager latest-version 端点)+ 跳渠道 downloadUrl
+# (飞书/网盘)」。本 workflow 产物**只供内部取用**(artifact / draft release),latest.json
+# 仅内部记录不再被客户端拉取;minisign/createUpdaterArtifacts 签名链保留 = 可逆开关。
+# **发布动作 = 手动传安装包到各渠道飞书/网盘 + activation-manager 后台更新
+# latestVersion/releaseNotes 与各渠道 downloadUrl**(全流程见 docs/RELEASING.md)。
 name: desktop-release
 
 on:

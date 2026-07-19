@@ -13,6 +13,7 @@
     "opener:default",
     "allow-license-activate",
     "allow-license-check",
-    "allow-license-last-decision"
+    "allow-license-last-decision",
+    "allow-license-latest-version"
   ]
 }

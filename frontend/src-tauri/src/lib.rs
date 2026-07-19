@@ -648,7 +648,10 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         // [T-241] 外链转系统浏览器(webview 默认吞 target=_blank 新窗口请求)。
         .plugin(tauri_plugin_opener::init())
-        // T-147 P6 —— updater 插件(签名更新包校验;pubkey/endpoints 在 tauri.conf.json)。
+        // T-147 P6 —— updater 插件(签名更新包校验;pubkey 在 tauri.conf.json)。
+        // [T-396c] endpoints 已清空:更新流改「版本检查(license_latest_version)+ 跳渠道
+        // downloadUrl」;插件 + createUpdaterArtifacts + minisign 签名链保留 = 可逆开关
+        // (后续渠道 downloadUrl 换直链 + 回填 endpoint 即恢复一键更新)。
         .plugin(tauri_plugin_updater::Builder::new().build())
         // [T-180] process 插件 —— 更新装好后 relaunch() 重启 app。
         .plugin(tauri_plugin_process::init())
@@ -658,7 +661,9 @@ pub fn run() {
             license::license_activate,
             license::license_check,
             // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
-            license::license_last_decision
+            license::license_last_decision,
+            // [T-396c] 版本检查(latest-version 端点 + 渠道 downloadUrl,替代 updater check)。
+            license::license_latest_version
         ])
         .manage(SidecarHandle::default())
         .setup(|app| {
