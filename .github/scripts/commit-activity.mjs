@@ -36,8 +36,14 @@ const toUTC = (s) => {
 };
 const fromUTC = (ms) => new Date(ms).toISOString().slice(0, 10);
 
-// 展示时区 = 最近一次提交的时区偏移(±HHMM),"今天"按它折算
-const lastOffset = git("git log -1 --pretty=%ad --date=raw").trim().split(" ")[1] ?? "+0000";
+// 展示时区 = 最近一条「非 bot」提交的时区偏移(±HHMM),"今天"按它折算
+// (bot 自己的图表提交是 runner 的 UTC,取它会让展示时区退化成 UTC+0)
+const lastOffset =
+  git("git log -50 --pretty=%ad%x09%an --date=raw")
+    .split("\n")
+    .find((l) => l && !l.endsWith("\tgithub-actions[bot]"))
+    ?.split("\t")[0]
+    .split(" ")[1] ?? "+0000";
 const offsetMin =
   (lastOffset[0] === "-" ? -1 : 1) *
   (Number(lastOffset.slice(1, 3)) * 60 + Number(lastOffset.slice(3, 5)));
