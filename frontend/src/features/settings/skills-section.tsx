@@ -342,21 +342,24 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
       ) : null}
 
       <div className="flex items-center justify-end gap-2">
-        {/* 「恢复默认」仅已定制时显(未定制没有可恢复的 override —— 假按钮不上)。 */}
-        {skill.customized ? (
-          <Button
-            type="button"
-            data-slot="skill-restore-default"
-            variant="ghost"
-            size="sm"
-            disabled={pending}
-            onClick={restore}
-            title="清掉本地定制,回退内置提示词(put 空串字段)"
-          >
-            <RotateCcw aria-hidden="true" className="size-3.5 shrink-0" />
-            恢复默认
-          </Button>
-        ) : null}
+        {/* 「恢复默认」**每个技能都有**(用户要求):未定制时禁用(用的就是内置默认,无 override 可恢复),
+            已定制时可点 —— 清掉本地定制回退内置。禁用而非隐藏 = 按钮位置稳定、可发现,又不骗人。 */}
+        <Button
+          type="button"
+          data-slot="skill-restore-default"
+          variant="ghost"
+          size="sm"
+          disabled={pending || !skill.customized}
+          onClick={restore}
+          title={
+            skill.customized
+              ? "清掉本地定制,回退内置提示词"
+              : "当前用的就是内置默认,无需重置"
+          }
+        >
+          <RotateCcw aria-hidden="true" className="size-3.5 shrink-0" />
+          恢复默认
+        </Button>
         <Button
           type="button"
           data-slot="skill-save"

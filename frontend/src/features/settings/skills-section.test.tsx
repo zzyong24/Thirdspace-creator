@@ -4,7 +4,7 @@
  *   - 行内展开详情:system/template textarea 初值 = 当前生效值 + facets 说明卡([gate-F2])
  *     + tools/outputSchema 只读;
  *   - 「保存」→ client.putPrompt body = 两个草稿;
- *   - 「恢复默认」(仅已定制显)→ client.putPrompt body = 空串字段(T-040 归一语义);
+ *   - 「恢复默认」(每个技能都有,未定制禁用)→ client.putPrompt body = 空串字段(T-040 归一语义);
  *   - 空清单 → 诚实空态。
  */
 
@@ -139,10 +139,12 @@ describe("SkillsSection 详情(行内展开)", () => {
     expect(
       detail.querySelector('[data-slot="skill-output-schema"]'),
     ).not.toBeNull();
-    // 未定制 → 无「恢复默认」按钮(假按钮不上)。
-    expect(
-      detail.querySelector('[data-slot="skill-restore-default"]'),
-    ).toBeNull();
+    // 未定制 → 「恢复默认」按钮**仍在**(每个技能都有,用户要求),但**禁用**(用的就是内置默认,无 override 可恢复)。
+    const restoreBtn = detail.querySelector<HTMLButtonElement>(
+      '[data-slot="skill-restore-default"]',
+    );
+    expect(restoreBtn).not.toBeNull();
+    expect(restoreBtn!.disabled).toBe(true);
   });
 
   it("改 template 点保存 → putPrompt body = 两个草稿(settings.prompts.put)+ refresh", async () => {
