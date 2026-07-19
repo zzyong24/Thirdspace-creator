@@ -808,6 +808,18 @@ pub fn run() {
                 .join(".license")
                 .to_string_lossy()
                 .to_string();
+            // [T-425] master key **文件兜底通道** —— 消除「master key 只经 fd(ChildStdin)注入」
+            //   的单点:fd 竞态/挂起失败时 sidecar 会退随机 dev key,导致授权/模型密钥/登录态/激活码
+            //   **一起解不开**(静默失效)。给 sidecar 注入 `.master-key` 路径 + 反混淆种子,让它在
+            //   fd/env 都拿不到时自反混淆同一份 `.master-key` 拿真 key(算法与本壳
+            //   `deobfuscate_master_key_file` 同,见 backend secret-crypto.ts resolveMasterKey ②.5)。
+            //   `machine_uid` 是硬件 UUID(`ioreg` 本机任何进程可得,**非机密**),与
+            //   `resolve_or_create_master_key` 用的 machine_seed 同源;文件本身仍是机器绑定混淆存储。
+            let master_key_file_str = app_data_dir
+                .join(".master-key")
+                .to_string_lossy()
+                .to_string();
+            let master_key_seed = machine_uid::get().unwrap_or_default();
             // [gate-F2] 强验签开关透传。**默认 "1" 强验签**(2026-07-18 翻回):翻回条件已达成
             //   —— L1s 服务端签名私钥已部署上线(license.aitongban.cloud)+ 用户真码 Ed25519
             //   深验通过。此前内测过渡期默认 "0"(L1s 未上线时 strict 全拒 → /activate 无限
@@ -930,6 +942,9 @@ pub fn run() {
                 if let Some(m) = &machine_id {
                     cmd.env("CREATOROS_MACHINE_ID", m);
                 }
+                // [T-425] master key 文件兜底通道(非机密:路径 + 反混淆种子)。
+                cmd.env("CREATOROS_MASTER_KEY_FILE", &master_key_file_str)
+                    .env("CREATOROS_MACHINE_SEED", &master_key_seed);
 
                 // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
                 let mut child = match cmd.spawn() {
@@ -1027,6 +1042,10 @@ pub fn run() {
                     Some(m) => sidecar.env("CREATOROS_MACHINE_ID", m),
                     None => sidecar,
                 };
+                // [T-425] master key 文件兜底通道(非机密:路径 + 反混淆种子)。
+                let sidecar = sidecar
+                    .env("CREATOROS_MASTER_KEY_FILE", &master_key_file_str)
+                    .env("CREATOROS_MACHINE_SEED", &master_key_seed);
 
                 // [T-259] spawn 失败也落日志再 panic(打包态排障)。
                 let (mut rx, mut child) = match sidecar.spawn() {

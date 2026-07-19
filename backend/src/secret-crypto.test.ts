@@ -10,6 +10,7 @@ import {
   isEncrypted,
   ENC_PREFIX,
   __resetFdKeyCacheForTest,
+  deobfuscateMasterKeyFile,
 } from "./secret-crypto";
 
 // A deterministic 32-byte key (base64) for round-trip tests.
@@ -198,5 +199,70 @@ describe("end-to-end: encrypt under resolved key, decrypt under the same resolve
     const blob = encryptSecret("sk-live-key", key);
     const { key: key2 } = resolveMasterKey({ CREATOROS_MASTER_KEY: KEY_B64 });
     expect(decryptSecret(blob, key2)).toBe("sk-live-key");
+  });
+});
+
+describe("[T-425] .master-key 文件兜底 —— 与 Rust 同源反混淆", () => {
+  // 合成金标向量(**非用户真密钥**;由 Rust 同算法离线产出,锚定字节级一致)。
+  //   KEY = 32×0x2a → base64;SEED / nonce 固定。
+  const SEED = "TEST-MACHINE-SEED-0001";
+  const SYNTH_KEY_B64 = Buffer.alloc(32, 0x2a).toString("base64");
+  const V2_BLOB =
+    "v2:AAcOFRwjKjE4P0ZNVFtiaepG6Gz+0lp0Bg09ig3rcnI7DxKNHDKjrBm4353mFLVi8QG52ESbM91zWhdK";
+
+  it("golden vector:v2 blob + 正确 seed → 明文 key 串(字节级锚)", () => {
+    expect(deobfuscateMasterKeyFile(V2_BLOB, SEED)).toBe(SYNTH_KEY_B64);
+  });
+
+  it("错 seed → 不是原 key(反混淆机器绑定)", () => {
+    expect(deobfuscateMasterKeyFile(V2_BLOB, "WRONG-SEED")).not.toBe(
+      SYNTH_KEY_B64,
+    );
+  });
+
+  it("存量明文(无 v2: 前缀)→ 原样返回", () => {
+    expect(deobfuscateMasterKeyFile(`  ${KEY_B64}  `, SEED)).toBe(KEY_B64);
+  });
+
+  it("resolveMasterKey:fd/env 都缺 → 走文件兜底(source=file,拿到真 key)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mk-file-"));
+    const file = join(dir, ".master-key");
+    writeFileSync(file, V2_BLOB);
+    const res = resolveMasterKey({
+      CREATOROS_MASTER_KEY_FILE: file,
+      CREATOROS_MACHINE_SEED: SEED,
+    });
+    expect(res.source).toBe("file");
+    expect(res.degraded).toBe(false);
+    expect(res.key).toEqual(Buffer.from(SYNTH_KEY_B64, "base64"));
+  });
+
+  it("env CREATOROS_MASTER_KEY 优先于文件兜底(② 早于 ②.5)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mk-file-"));
+    const file = join(dir, ".master-key");
+    writeFileSync(file, V2_BLOB);
+    const res = resolveMasterKey({
+      CREATOROS_MASTER_KEY: KEY_B64, // 0x07 key
+      CREATOROS_MASTER_KEY_FILE: file, // 0x2a key
+      CREATOROS_MACHINE_SEED: SEED,
+    });
+    expect(res.source).toBe("env");
+    expect(res.key).toEqual(Buffer.alloc(32, 7));
+  });
+
+  it("无文件 env(dev/web)→ 兜底休眠,退降级 dev key(零影响)", () => {
+    const res = resolveMasterKey({ NODE_ENV: "development" });
+    expect(res.source).toBe("dev-fallback");
+  });
+
+  it("文件路径存在但反混淆坏(seed 不符致非 32B)→ 不误用,退降级", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mk-file-"));
+    const file = join(dir, ".master-key");
+    writeFileSync(file, V2_BLOB);
+    const res = resolveMasterKey({
+      CREATOROS_MASTER_KEY_FILE: file,
+      CREATOROS_MACHINE_SEED: "WRONG-SEED", // 反混淆出非 32B → toKeyResult 拒 → 降级
+    });
+    expect(res.source).toBe("dev-fallback");
   });
 });

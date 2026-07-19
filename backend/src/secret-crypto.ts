@@ -1,5 +1,10 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-import { readSync } from "node:fs";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
+import { readFileSync, readSync } from "node:fs";
 
 // T-147 P2 本地加密 —— 模型 API key 的静态加密工具(收口在 settings.repository 层做透明加解密)。
 //
@@ -22,7 +27,7 @@ const IV_LEN = 12; // GCM 推荐 96-bit iv
 const TAG_LEN = 16; // GCM auth tag 128-bit
 const KEY_LEN = 32; // AES-256
 
-export type MasterKeySource = "fd" | "env" | "dev-fallback";
+export type MasterKeySource = "fd" | "env" | "file" | "dev-fallback";
 
 export interface ResolvedMasterKey {
   key: Buffer; // 32 字节
@@ -158,6 +163,83 @@ export function __resetFdKeyCacheForTest(): void {
   fdKeyCache.clear();
 }
 
+// [T-425] `.master-key` 文件兜底 —— 与 Rust 壳 `src-tauri/src/lib.rs` 的
+//   `deobfuscate_master_key_file`/`master_key_keystream_xor` **逐字节同算法**:
+//     v2 格式 = `v2:` + base64( nonce[16] ‖ (明文base64key XOR keystream) );
+//     keystream 块 = SHA-256( SALT ‖ machineSeed ‖ nonce ‖ counter(LE u32) ),counter 从 0。
+//   动机(SPEC 根修):master key 原本**只**经 fd(ChildStdin)注入 sidecar,fd 竞态失败(T-408
+//   实测 ~1/4)→ sidecar 退随机 dev key → 授权/模型密钥/登录态/激活码**全部解不开**(静默失效)。
+//   这里给 sidecar 一条与 Rust 同源的稳定兜底:fd/env 都拿不到时,自己反混淆同一份 `.master-key`。
+//   machineSeed = `machine_uid::get()`(硬件 UUID,任何本机进程 `ioreg` 可得,**非机密**),由 Rust
+//   经 env `CREATOROS_MACHINE_SEED` 注入;文件路径经 env `CREATOROS_MASTER_KEY_FILE` 注入。
+const MASTER_KEY_FILE_SALT = Buffer.from("creatoros-master-key-file-v2");
+
+function masterKeyKeystreamXor(
+  data: Buffer,
+  machineSeed: string,
+  nonce: Buffer,
+): void {
+  const seedBuf = Buffer.from(machineSeed, "utf8");
+  let counter = 0;
+  let i = 0;
+  while (i < data.length) {
+    const ctr = Buffer.alloc(4);
+    ctr.writeUInt32LE(counter, 0);
+    const block = createHash("sha256")
+      .update(MASTER_KEY_FILE_SALT)
+      .update(seedBuf)
+      .update(nonce)
+      .update(ctr)
+      .digest();
+    for (let j = 0; j < block.length && i < data.length; j++, i++) {
+      data[i] = data[i]! ^ block[j]!;
+    }
+    counter += 1;
+  }
+}
+
+/** @internal 反混淆 `.master-key` 内容 → 明文 base64 key 串(与 Rust 同算法)。抽出供单测。 */
+export function deobfuscateMasterKeyFile(
+  stored: string,
+  machineSeed: string,
+): string | null {
+  const s = stored.trim();
+  if (!s.startsWith("v2:")) {
+    // 存量明文(无前缀,老版本直接写 base64 key)→ 原样返回,调用方 toKeyResult 再校验 32B。
+    return s || null;
+  }
+  let packed: Buffer;
+  try {
+    packed = Buffer.from(s.slice(3), "base64");
+  } catch {
+    return null;
+  }
+  if (packed.length < 16) return null;
+  const nonce = packed.subarray(0, 16);
+  const body = Buffer.from(packed.subarray(16));
+  masterKeyKeystreamXor(body, machineSeed, nonce);
+  const out = body.toString("utf8").trim();
+  return out || null;
+}
+
+// 从 Rust 注入的 `.master-key` 反混淆读 master key(base64 串)。env 任一缺 / 文件读不到 /
+//   反混淆失败 → 返回空串(上层继续降级)。machineSeed 允许空串(headless;与 Rust
+//   `machine_uid::get().unwrap_or_default()` 一致),故只判 undefined 不判空。
+function readMasterKeyFromFile(
+  env: Record<string, string | undefined>,
+): string {
+  const filePath = env.CREATOROS_MASTER_KEY_FILE?.trim();
+  const seed = env.CREATOROS_MACHINE_SEED;
+  if (!filePath || seed === undefined) return "";
+  let raw: string;
+  try {
+    raw = readFileSync(filePath, "utf8");
+  } catch {
+    return "";
+  }
+  return deobfuscateMasterKeyFile(raw, seed) ?? "";
+}
+
 function toKeyResult(
   raw: string | undefined,
   source: Exclude<MasterKeySource, "dev-fallback">,
@@ -224,10 +306,20 @@ export function resolveMasterKey(
   );
   if (envRes) return envRes;
 
+  // ②.5 [T-425] `.master-key` 文件兜底(桌面端根修):fd 竞态/挂起拿不到 key 时,与 Rust 同源
+  //   反混淆同一份 `.master-key` 拿真 key —— fd 注入从此不再是单点,授权/模型密钥/登录态/激活码
+  //   不会因偶发 fd 失败而集体解不开。dev / web 无 Rust 注入这两个 env → 兜底自然休眠(零影响)。
+  const fileRes = toKeyResult(
+    readMasterKeyFromFile(env),
+    "file",
+    ".master-key 文件兜底",
+  );
+  if (fileRes) return fileRes;
+
   // ③ 降级(dev 或无 keychain 的 web)。不抛,保证 app 不崩。
   console.warn(
-    "[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY 均缺失或非法)—— " +
-      "使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 注入随机 key;此降级安全性弱于 keychain。",
+    "[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均" +
+      "缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。",
   );
   return { key: DEV_FALLBACK_KEY, source: "dev-fallback", degraded: true };
 }
