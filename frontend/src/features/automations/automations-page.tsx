@@ -71,6 +71,9 @@ export async function AutomationsPage({
   // [T-332 S4·§6.3] 解析当前号 handle(user 级读,不需要当前号)→ badge。读失败/
   // 未选号 → null(island 显「未选择账号」提示,不猜)。
   let currentAccount: CurrentAccountBadge | null = null;
+  // [T-433 S3] 多账号(≥2 active)→ 页面提示「每日采集已自动错峰跨账号」(引导用户,消除
+  //   「多号是否要手动错开时间」的疑虑;系统已按账号确定性打散,无需手动)。
+  let multiAccount = false;
   if (currentAccountId) {
     try {
       const accounts = (await client.listAccounts({
@@ -82,6 +85,8 @@ export async function AutomationsPage({
         accountHandle: string;
         status: "active" | "archived";
       }>;
+      multiAccount =
+        (accounts ?? []).filter((a) => a.status === "active").length >= 2;
       const hit = (accounts ?? []).find(
         (a) => a.id === currentAccountId && a.status === "active",
       );
@@ -112,6 +117,14 @@ export async function AutomationsPage({
         >
           周期性抓取「自己作品指标 / 评论」的调度作业 —— 到点自动跑,数据落库供 Dashboard 与选题消费。
         </p>
+        {multiAccount ? (
+          <p
+            data-slot="automations-stagger-hint"
+            className="text-xs text-muted-foreground"
+          >
+            检测到多个账号 —— 每日采集时间已自动错峰(按账号打散到早间不同时刻),避免多号同时抓取。无需手动调整;如需自定义可在各作业里改时间。
+          </p>
+        ) : null}
       </header>
 
       <AutomationsIsland jobs={rows} currentAccount={currentAccount} />

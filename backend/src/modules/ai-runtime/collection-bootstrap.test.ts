@@ -3,6 +3,9 @@ import {
   bootstrapDouyinCollectionJobs,
   ensureCollectionJobs,
   DAILY_COLLECTION_JOB_DEFAULTS,
+  staggeredSchedule,
+  deterministicAccountOffsetMinutes,
+  STAGGER_SPREAD_MINUTES,
   type CollectionBootstrapDeps,
 } from "./collection-bootstrap";
 import type { RequestContext } from "@creatoros/contract";
@@ -107,22 +110,30 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     ]);
 
     // sourceKind 正确 + 每天定时 cron(5 段,分/时确定、日/月/周为 *)。
+    // [T-433 S3] 建 job 时基准叠加 per-account 偏移(ctx=acct-1)→ 实际 cron = staggeredSchedule(基准, "acct-1")。
     const bySource = new Map(
       deps.createdJobs.map((j) => [j.sourceKind, j.schedule]),
     );
-    expect(bySource.get("self.metrics")).toBe("0 9 * * *");
-    expect(bySource.get("self.detail")).toBe("10 9 * * *");
-    expect(bySource.get("comments")).toBe("20 9 * * *");
-    expect(bySource.get("benchmark")).toBe("30 9 * * *");
-    // [T-235a] 每日出题错峰 9:40(benchmark 9:30 后,当天新拆解可入引用)。
-    expect(bySource.get("topic.daily")).toBe("40 9 * * *");
-    // [T-235c] 指定收藏夹错峰 9:50(topic.daily 9:40 后,采集类互不同时到点)。
-    expect(bySource.get("favorites")).toBe("50 9 * * *");
+    expect(bySource.get("self.metrics")).toBe(staggeredSchedule("0 9 * * *", "acct-1"));
+    expect(bySource.get("self.detail")).toBe(staggeredSchedule("10 9 * * *", "acct-1"));
+    expect(bySource.get("comments")).toBe(staggeredSchedule("20 9 * * *", "acct-1"));
+    expect(bySource.get("benchmark")).toBe(staggeredSchedule("30 9 * * *", "acct-1"));
+    expect(bySource.get("topic.daily")).toBe(staggeredSchedule("40 9 * * *", "acct-1"));
+    expect(bySource.get("favorites")).toBe(staggeredSchedule("50 9 * * *", "acct-1"));
     // 每条都是"每天"(dom/month/dow 全 *):
     for (const [, cron] of bySource) {
       const [, , dom, mon, dow] = cron.split(/\s+/);
       expect([dom, mon, dow]).toEqual(["*", "*", "*"]);
     }
+    // [T-433 S3] 账号内 6 源相对错开(0/10/20/30/40/50)在偏移后原样保留(整块同偏移)。
+    const minuteOfDay = (cron: string) => {
+      const [m, h] = cron.split(/\s+/);
+      return Number(h) * 60 + Number(m);
+    };
+    const base = minuteOfDay(bySource.get("self.metrics")!);
+    expect(minuteOfDay(bySource.get("self.detail")!) - base).toBe(10);
+    expect(minuteOfDay(bySource.get("comments")!) - base).toBe(20);
+    expect(minuteOfDay(bySource.get("favorites")!) - base).toBe(50);
   });
 
   it("② 已有同 sourceKind job → 不重建(幂等)", async () => {
@@ -323,5 +334,66 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "topic.daily",
       "favorites",
     ]);
+  });
+});
+
+describe("[T-433 S3] 跨账号错峰(staggeredSchedule / deterministicAccountOffsetMinutes)", () => {
+  it("确定性:同号每次同偏移(幂等,重启/重绑不漂)", () => {
+    expect(deterministicAccountOffsetMinutes("acct-1")).toBe(
+      deterministicAccountOffsetMinutes("acct-1"),
+    );
+    expect(staggeredSchedule("0 9 * * *", "acct-9")).toBe(
+      staggeredSchedule("0 9 * * *", "acct-9"),
+    );
+  });
+
+  it("偏移落 [0, STAGGER_SPREAD_MINUTES)", () => {
+    for (const id of ["acct-1", "acct-2", "u-xyz", "抖音号-88", "z".repeat(40)]) {
+      const off = deterministicAccountOffsetMinutes(id);
+      expect(off).toBeGreaterThanOrEqual(0);
+      expect(off).toBeLessThan(STAGGER_SPREAD_MINUTES);
+    }
+  });
+
+  it("无号 → 偏移 0,schedule 原样(退回基准,不错峰但不报错)", () => {
+    expect(deterministicAccountOffsetMinutes(null)).toBe(0);
+    expect(deterministicAccountOffsetMinutes(undefined)).toBe(0);
+    expect(deterministicAccountOffsetMinutes("")).toBe(0);
+    expect(staggeredSchedule("0 9 * * *", null)).toBe("0 9 * * *");
+    expect(staggeredSchedule("50 9 * * *", undefined)).toBe("50 9 * * *");
+  });
+
+  it("跨号打散:找得到两个号偏移不同(不是所有号都压同刻)", () => {
+    const offsets = ["acct-1", "acct-2", "acct-3", "acct-4", "acct-5"].map(
+      deterministicAccountOffsetMinutes,
+    );
+    expect(new Set(offsets).size).toBeGreaterThan(1);
+  });
+
+  it("整块同偏移:账号内 0/10/50 相对错开原样保留,不越天", () => {
+    const id = "acct-7";
+    const m0 = staggeredSchedule("0 9 * * *", id);
+    const m10 = staggeredSchedule("10 9 * * *", id);
+    const m50 = staggeredSchedule("50 9 * * *", id);
+    const mod = (c: string) => {
+      const [m, h] = c.split(/\s+/);
+      return Number(h) * 60 + Number(m);
+    };
+    expect(mod(m10) - mod(m0)).toBe(10);
+    expect(mod(m50) - mod(m0)).toBe(50);
+    // 基准 9:00–9:50 + 偏移 <180 → 落 9:00–12:49,分/时合法、不越天。
+    for (const c of [m0, m10, m50]) {
+      const [m, h] = c.split(/\s+/).map(Number);
+      expect(m).toBeGreaterThanOrEqual(0);
+      expect(m).toBeLessThan(60);
+      expect(h).toBeGreaterThanOrEqual(9);
+      expect(h).toBeLessThanOrEqual(12);
+    }
+  });
+
+  it("非法 cron / 非整数分时 → 原样返回(防御,不改坏)", () => {
+    expect(staggeredSchedule("*/5 * * * *", "acct-1")).toBe("*/5 * * * *");
+    expect(staggeredSchedule("0 9 * *", "acct-1")).toBe("0 9 * *"); // 段数不对
+    expect(staggeredSchedule("", "acct-1")).toBe("");
   });
 });

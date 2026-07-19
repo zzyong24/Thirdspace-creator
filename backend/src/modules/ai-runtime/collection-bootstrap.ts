@@ -35,9 +35,12 @@ export interface CollectionJobDefault {
 }
 
 // 每天定时的默认采集 job(顺序即初始化触发顺序:self.metrics → self.detail → comments → benchmark
-//   → topic.daily → favorites)。时间**错峰**(9:00 / 9:10 / 9:20 / 9:30 / 9:40 / 9:50):
+//   → topic.daily → favorites)。schedule 是**账号内基准**(9:00 / 9:10 / 9:20 / 9:30 / 9:40 / 9:50):
 //   ① 每天早上一次;② 让每日 self.detail 早于 comments(接 T-190
-//   隐藏判据在 self.detail 后可用);③ 三源不同时到点,减少并发抢占(采集本已 gate-F5 串行,错峰更稳)。
+//   隐藏判据在 self.detail 后可用);③ 账号内六源不同时到点,减少并发抢占(采集本已 gate-F5 串行,错峰更稳)。
+//   [T-433 S3] **跨账号错峰**:建 job 时对该基准叠加 per-account 确定性偏移(staggeredSchedule),
+//   同号 6 job 同偏移(保内部 10 分错开)、跨号打散到早间窗口,避免疯狂绑 N 号时所有号都压 9:00
+//   同刻爆发(=用户所指「灾难」)。基准即偏移 0 的账号时刻。
 //   名称/提示词与前端 COLLECTION_TEMPLATES 对齐(frontend/src/features/automations/intent.ts),
 //   便于用户在 /automations 里认出这三条自动建的 job。常量集中于此,便于调时间。
 export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
@@ -95,6 +98,51 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     enabledByDefault: false, // [T-359] 前置=信号源登记指定收藏夹
   },
 ];
+
+// [T-433 S3] 跨账号错峰窗口(分钟):per-account 偏移打散范围。基准 9:00–9:50 + 偏移 [0,180) →
+//   实际起跑落 9:00–12:49 早间窗口(不越天,不排夜里)。窗口越大跨号碰撞越少(生日界 √180≈13 号
+//   才可能同分钟);采集本已 gate-F5 串行 + gateway 限流兜底,偏移只为打散「同刻爆发」这一峰值。
+export const STAGGER_SPREAD_MINUTES = 180;
+
+/**
+ * [T-433 S3] 账号级确定性错峰偏移(分钟,[0, STAGGER_SPREAD_MINUTES))。
+ * FNV-1a 32-bit 哈希(纯函数、无随机):同号每次同偏移(幂等,重启/重绑 schedule 不漂),
+ * 跨号均匀打散。无号(不该发生)→ 偏移 0,退回基准时刻(不错峰但不报错)。
+ */
+export function deterministicAccountOffsetMinutes(
+  accountId: string | null | undefined,
+): number {
+  if (!accountId) return 0;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < accountId.length; i++) {
+    h ^= accountId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h % STAGGER_SPREAD_MINUTES;
+}
+
+/**
+ * [T-433 S3] 把「每天定时」基准 cron(`M H * * *`)按该账号确定性偏移后移,跨账号错峰。
+ * 同一 accountId 对所有模板叠加同一偏移 → 账号内 0/10/…/50 分的相对错开原样保留,整块一起后移。
+ * 非标准 cron / 非整数分时 → 原样返回(防御,不改坏 schedule)。分钟溢出进位到小时;小时 % 24 兜底
+ * (基准 9 + 偏移 <180 不会越天,取模仅防御)。
+ */
+export function staggeredSchedule(
+  baseSchedule: string,
+  accountId: string | null | undefined,
+): string {
+  const parts = baseSchedule.trim().split(/\s+/);
+  if (parts.length !== 5) return baseSchedule;
+  const baseMin = Number(parts[0]);
+  const baseHour = Number(parts[1]);
+  if (!Number.isInteger(baseMin) || !Number.isInteger(baseHour)) {
+    return baseSchedule;
+  }
+  const total = baseHour * 60 + baseMin + deterministicAccountOffsetMinutes(accountId);
+  const newHour = Math.floor(total / 60) % 24;
+  const newMin = total % 60;
+  return `${newMin} ${newHour} ${parts[2]} ${parts[3]} ${parts[4]}`;
+}
 
 export interface CollectionBootstrapDeps {
   /** 列该 sourceKind 现存 job(幂等判据:有则不重建)。host 绑 schedulingService.listJobs。
@@ -200,7 +248,8 @@ export async function ensureCollectionJobs(
         name: tpl.name,
         prompt: tpl.prompt,
         sourceKind: tpl.sourceKind,
-        schedule: tpl.schedule,
+        // [T-433 S3] 跨账号错峰:基准 cron 叠加该号确定性偏移(同号 6 job 同偏移,保内部错开)。
+        schedule: staggeredSchedule(tpl.schedule, ctx.accountId),
         target,
         // [T-359] 分层启用:默认关的建即 disabled(列表可见、开关旁提示前置,条件齐一键开)。
         enabled: tpl.enabledByDefault,
