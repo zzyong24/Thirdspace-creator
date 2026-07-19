@@ -14,6 +14,9 @@ use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
 mod license;
+// [T-399b] 蜜罐授权门:纯诱饵,零真实引用(真链一行不碰),仅 #[used] 强制进二进制过 DCE。
+//   故意重放明文命名的教科书假验签门,诱逆向 AR 的 nm/strings 撞它而非 obfstr 藏起的真门(见 decoy_gate.rs)。
+mod decoy_gate;
 // [T-259] 桌面日志系统:sidecar stdout/stderr tee 落盘 + 脱敏 + 轮转(见 logging.rs)。
 mod logging;
 // [T-372 W-core W3] Windows 进程树杀:Job Object(KILL_ON_JOB_CLOSE)——T-365 数据损坏
@@ -638,6 +641,9 @@ fn cleanup_stale_runtimes(runtime_root: &std::path::Path, keep_version: &str) ->
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
 pub fn run() {
+    // [T-399b] 强制蜜罐门符号+明文 bait 进最终二进制(Tauri rlib 结构下 #[used] 不够,见 decoy_gate.rs)。
+    //   只取诱饵函数地址做 XOR、不调用其逻辑 → 零执行/零功能影响;black_box 防优化掉。
+    std::hint::black_box(decoy_gate::decoy_gate_keepalive());
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         // [T-241] 外链转系统浏览器(webview 默认吞 target=_blank 新窗口请求)。
