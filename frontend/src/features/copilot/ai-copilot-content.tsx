@@ -63,7 +63,7 @@ import remarkGfm from "remark-gfm";
 import {
   DefaultChatTransport,
   isToolUIPart,
-  getToolName,
+  getToolName as sdkGetToolName,
   // [T-263] HITL 授权:工具调用挂起(approval-requested)时,用户「允许/拒绝」经 addToolApprovalResponse
   // 回执;sendAutomaticallyWhen 挂此判定 → 授权响应齐了就**同回合自动 resume 续跑**(无新 user 消息)。
   lastAssistantMessageIsCompleteWithApprovalResponses,
@@ -142,6 +142,22 @@ import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
 } from "@creatoros/contract";
+
+/**
+ * [T-439 配套] 工具名还原 —— **卡片能不能渲出来全靠它**。
+ *
+ * 后端在发给模型前把工具名的 `.` 换成 `_`(DeepSeek/OpenAI/Anthropic 对
+ * `tools[].function.name` 一律要求 `^[a-zA-Z0-9_-]+$`,点号会被 400 秒拒),于是 AI SDK 回传的
+ * ToolUIPart 类型变成 `tool-topic_enrich`,SDK 的 getToolName 取出来就是 `topic_enrich`。
+ * 而本文件下面有 **22 处**按原名比对(`name === "topic.enrich"` 等)—— 不还原就全部比不上,
+ * 表现为「工具明明调用成功了,卡片却渲不出来」(2026-07-20 用户真机反馈,是 T-439 的回归)。
+ *
+ * 安全性:工具名注册表里 **0 个**名字含下划线(后端有测锚钉住这条不变式),故 `_`→`.` 无歧义。
+ * 更彻底的做法是在 provider 中间件层做名字转换、让 SDK 上层始终看到原名(见 T-444)。
+ */
+function getToolName(part: Parameters<typeof sdkGetToolName>[0]): string {
+  return String(sdkGetToolName(part)).replace(/_/g, ".");
+}
 // [T-094] AI 链路错误 → 人话共享映射(与服务端同一张表;客户端兜底二次转译)。
 import {
   humanizeAiErrorMessage,

@@ -329,3 +329,17 @@ describe("[T-439] 工具名合规化(DeepSeek/OpenAI/Anthropic 只收 ^[a-zA-Z0-
     expect(Object.keys(approval ?? {})).toEqual(["local_read"]);
   });
 });
+
+// ── [T-439 配套] 前端 getToolName 靠 `_`→`.` 还原工具名,故注册表不得出现下划线 ──────────
+describe("[T-439 配套] 工具名不得含下划线(前端还原的前提)", () => {
+  it("全部注册工具名都不含 `_` —— 否则前端 `_`→`.` 还原出歧义,卡片会渲错/渲不出", () => {
+    const withUnderscore = ALL_CHAT_TOOL_NAMES.filter((n) => n.includes("_"));
+    expect(withUnderscore).toEqual([]);
+  });
+
+  it("sanitize 后再按 `_`→`.` 还原,必须精确回到原名(端到端往返)", () => {
+    for (const n of ALL_CHAT_TOOL_NAMES) {
+      expect(sanitizeToolName(n).replace(/_/g, ".")).toBe(n);
+    }
+  });
+});
