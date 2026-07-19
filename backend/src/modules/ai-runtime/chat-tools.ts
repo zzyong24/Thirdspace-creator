@@ -1994,7 +1994,7 @@ const KNOWLEDGE_DISTILL_PARAMS = jsonSchema<{ content: string }>({
   properties: {
     content: {
       type: "string",
-      maxLength: 12000,
+      maxLength: 200_000,
       description:
         "要蒸馏的原文全文(用户在对话里粘的笔记/逐字稿/网页摘录),逐字传入 —— 不要摘要、不要改写、不要截断。",
     },
@@ -2003,9 +2003,10 @@ const KNOWLEDGE_DISTILL_PARAMS = jsonSchema<{ content: string }>({
   additionalProperties: false,
 });
 
-// [T-094] 蒸馏原文清洗:trim + 截 12000 字(与 schema maxLength 同值;runner 送模再截 8000,
-// 这里的余量保住「原文存档」尽量全)。空/非串 → 空串(execute 按空原文诚实报错)。导出供单测。
-export const MAX_DISTILL_TOOL_CONTENT_CHARS = 12000;
+// [T-094/T-431] 蒸馏原文清洗:trim + 上限(与 schema maxLength 同值)。1M 上下文下提到 200k
+// (与 runner MAX_DISTILL_CONTENT_CHARS 同,不再两道台阶砍),整篇原文保真进蒸馏。空/非串 →
+// 空串(execute 按空原文诚实报错)。导出供单测。
+export const MAX_DISTILL_TOOL_CONTENT_CHARS = 200_000;
 export function clampDistillContent(raw: unknown): string {
   if (typeof raw !== "string") return "";
   const v = raw.trim();

@@ -35,7 +35,8 @@ export interface TrendSourceProjection {
 }
 
 /** 正文喂给 AI 抽取前的截断上限(控 token;热榜信号都在页面前部)。 */
-export const TREND_SOURCE_TEXT_LIMIT = 6000;
+// [T-431] 1M 上下文下整页信源可全喂,不再砍到 6k(避免漏尾部热榜信号);只挡病态输入。
+export const TREND_SOURCE_TEXT_LIMIT = 40_000;
 /** 每信源最多取几条信号(防单源灌爆 brief)。 */
 export const DEFAULT_SIGNALS_PER_SOURCE = 8;
 

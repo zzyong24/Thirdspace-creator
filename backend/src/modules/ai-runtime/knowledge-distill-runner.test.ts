@@ -56,7 +56,7 @@ describe("truncateForDistill(防爆截断 8000)", () => {
     const out = truncateForDistill(long);
     expect(out.length).toBeLessThan(long.length);
     expect(out).toContain("已截断");
-    expect(MAX_DISTILL_CONTENT_CHARS).toBe(8000);
+    expect(MAX_DISTILL_CONTENT_CHARS).toBe(200_000); // [T-431] 1M 上下文:只挡病态输入
   });
 });
 

@@ -84,7 +84,7 @@ describe("truncateForTriage(判库送模型截断 6000)", () => {
     const out = truncateForTriage(long);
     expect(out.length).toBeLessThan(long.length);
     expect(out).toContain("已截断");
-    expect(MAX_TRIAGE_TRANSCRIPT_CHARS).toBe(6000);
+    expect(MAX_TRIAGE_TRANSCRIPT_CHARS).toBe(40_000); // [T-431] 1M 上下文:放宽
   });
 });
 

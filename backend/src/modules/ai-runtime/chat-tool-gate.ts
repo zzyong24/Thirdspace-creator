@@ -27,7 +27,9 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** 结果 JSON 序列化默认字符预算(超出才截;per-tool 经 CHAT_TOOL_ERROR_ENVELOPES.budgetChars 覆盖)。 */
-export const CHAT_TOOL_RESULT_BUDGET_CHARS = 16000;
+// [T-431] 工具结果注入预算(护栏:截最长字符串值 + 诚实标记,模型知情)。1M 上下文下放宽,
+// 少让工具结果被裁;仍保留护栏防单个工具 dump 撑爆对话。
+export const CHAT_TOOL_RESULT_BUDGET_CHARS = 60000;
 /** 预算截断时单个字符串值至少保留的字符数(短字符串 = id/枚举/标题,绝不截)。 */
 export const BUDGET_MIN_KEEP_CHARS = 200;
 /** 截断标记(拼在截口,让模型/用户知道此处被截,不假装是全文)。 */

@@ -732,8 +732,9 @@ export async function assembleCreativeContext(
 // 80 字防爆(总长可控:3 段 × 5 条 × ≤80 字)。库全空 → 空串(下游 facet 按
 // 惯例整段省略,不注一个只有(暂无)的空壳)。
 // 纯函数导出,供单测直接断言分段头与战绩排序。
-const KNOWLEDGE_BRIEF_TOP_N = 5;
-const KNOWLEDGE_TITLE_MAX = 80;
+// [T-431] 1M 上下文下放宽知识库注入:每段取更多原子、标题不再砍主张(claim 型标题常是整句)。
+const KNOWLEDGE_BRIEF_TOP_N = 15;
+const KNOWLEDGE_TITLE_MAX = 200;
 
 // ── [T-186] L3 策展护栏:相关性检索 query 派生 + token 预算截断 ─────────────────────
 // 检索候选上限:交给 hybridSearch 的 top-k(阈值已截无关项),再由 formatKnowledgeBrief 取各段 top5。
@@ -742,7 +743,8 @@ export const KNOWLEDGE_RETRIEVE_LIMIT = 40;
 // knowledgeBrief 的 token 预算(近似,按字符计,不引 tokenizer 重依赖)。SPEC §3-L3 未给数值;
 // 取 ~1500 tokens 的保守中文估算(中文 1 token≈1~2 字)→ 1800 字符默认。可按需调。formatKnowledgeBrief
 // 输出通常远小于此(3 段×5 条×≤~90 字);预算是第二道护栏 + 观测点(超预算 log + brief 内诚实标注)。
-export const KNOWLEDGE_BRIEF_BUDGET_CHARS = 1800;
+// [T-431] 知识库 brief 预算(标题索引的第二道护栏)。1M 上下文下放宽。
+export const KNOWLEDGE_BRIEF_BUDGET_CHARS = 40_000;
 
 // [T-186] 由「当前选题 + 定位」派生知识检索 query(scope 感知:选题优先 → 项目态贴该选题;无选题 →
 // 退定位领域 → 全局态)。参照 topic-task-adapter.buildTrendQuery 的派生范式。空白归一;两者都空 → 空串
@@ -855,7 +857,9 @@ export function formatKnowledgeBrief(
 // 每份素材:优先用要点卡(keyPoints/facts/sellingPoints);无要点卡(未配摘要模型降级)→ 截断全文
 // 兜底(SPEC §3 全文截断注入)。解析失败(extractStatus=failed/unsupported)的素材**不进 brief**
 // (不冒充可读,SPEC §8.5 诚实降级)。全空 → 空串(下游整段省略,不注空壳)。纯函数,导出供单测。
-const USER_MATERIAL_TEXT_MAX = 1200; // 单份素材全文兜底注入的字符上限(防把上万字灌进 prompt)
+// [T-431] 用户第一手素材是最真数据底座——1M 上下文下不再砍到 1200 字。整篇注入,只挡病态输入
+// (用户 2026-07-19:「1M 上下文不要截断」)。
+const USER_MATERIAL_TEXT_MAX = 200_000;
 const USER_MATERIAL_MAX_DOCS = 8; // 单个 brief 最多列几份素材(防素材过多爆 context)
 
 // 一份素材是否有可读内容(有要点卡任一非空段 或 有非空全文),且抽取未失败。
@@ -957,7 +961,7 @@ export function materialQueryTerms(materials: ProjectMaterial[]): string[] {
 // 套用 formatUserMaterialBrief 的「必须遵守」范式:核心信息=钦定主张(不得自创矛盾论点)、内容目标含
 // 『避免X』作负向硬约束、内容形式定调、目标观众锁定。全字段空 → 空串(下游整段省略,不注空壳)。
 // 纯函数,导出供单测。仅**项目态**调用(assembleCreativeContext 内 deps.brief && projectId 时)。
-const BRIEF_FIELD_MAX = 400; // 单字段防爆(内容目标可能是长段自由文本)
+const BRIEF_FIELD_MAX = 4000; // [T-431] 立项决策字段(内容目标/成功标准可能是长段自由文本),1M 上下文下放宽
 export function renderProjectBriefHard(
   detail: {
     coreMessage?: string;
@@ -1006,7 +1010,7 @@ export function renderProjectBriefHard(
 // —— 让写文案/立论点/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」,而非搬运原文。全字段空 → 空串
 // (非复刻项目/账号态天然为空,下游整段省略,不污染普通创作)。纯函数,导出供单测。仅项目态调用
 // (assembleCreativeContext 内 deps.brief && projectId 时,从 brief reader 带出的 benchmarkRef 传入)。
-const BENCHMARK_REF_FIELD_MAX = 400; // 单字段防爆(拆解段可能较长)
+const BENCHMARK_REF_FIELD_MAX = 4000; // [T-431] 对标拆解段可能较长,1M 上下文下放宽
 export function renderBenchmarkRef(
   ref:
     | {

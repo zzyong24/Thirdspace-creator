@@ -94,7 +94,8 @@ interface ThesisNode {
 /** 匹配阈值:Dice 低于它视为「置信度低」,宁缺勿滥。 */
 export const AMMO_MATCH_THRESHOLD = 0.28;
 /** 每节点最多预挂条数(SPEC:1-2 条)。 */
-export const AMMO_MATCH_MAX_REFS = 2;
+// [T-431] 每要点匹配的知识弹药引用条数。放宽让论点带更多弹药(条数策展,非字符截断)。
+export const AMMO_MATCH_MAX_REFS = 4;
 
 /** 节点文本 vs 弹药标题的词面相似度(0~1,确定性纯函数)。 */
 export function scoreAmmoMatch(nodeText: string, ammoTitle: string): number {

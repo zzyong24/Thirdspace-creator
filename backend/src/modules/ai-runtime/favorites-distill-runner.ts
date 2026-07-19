@@ -102,7 +102,8 @@ export interface AiTriageDeps {
 
 // 判库送模型的逐字稿截断上限(字符)—— 判库只需读一遍判型,截断防 prompt 爆(存库仍全文,
 // 截断只影响送模型的 facet);比 knowledge.distill 的 8000 略窄(判型不必吃满全篇)。
-export const MAX_TRIAGE_TRANSCRIPT_CHARS = 6000;
+// [T-431] 判库主要看开头,但 1M 上下文下放宽逐字稿上限,只挡病态输入。
+export const MAX_TRIAGE_TRANSCRIPT_CHARS = 40_000;
 
 /** 截断送模型的逐字稿 facet(超限截断 + 标注,让模型知道后面还有)。 */
 export function truncateForTriage(raw: string): string {

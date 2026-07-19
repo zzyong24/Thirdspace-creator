@@ -32,7 +32,8 @@ export interface KnowledgeClassification {
 
 // 原文截断上限(字符)—— 倾倒场可能整篇逐字稿倒进来,截断防 prompt 爆(归类只需要开头
 // 就能判型;存库仍存全文,截断只影响送模型的 facet)。
-export const MAX_CLASSIFY_CONTENT_CHARS = 6000;
+// [T-431] 归类判型主要看开头,但吃全文能提升 summary 质量;1M 上下文下放宽,只挡病态输入。
+export const MAX_CLASSIFY_CONTENT_CHARS = 40_000;
 
 /** 截断送模型的原文 facet(超限截断 + 标注,让模型知道后面还有)。 */
 export function truncateForClassify(raw: string): string {

@@ -39,7 +39,10 @@ export interface KnowledgeDistillation {
 // 原文截断上限(字符)—— 倾倒场可能整篇逐字稿倒进来,截断防 prompt 爆。蒸馏要吃全文
 // (原子散布全篇,不像归类只看开头),故上限比 classify 的 6000 更宽;存库仍存全文,
 // 截断只影响送模型的 facet。
-export const MAX_DISTILL_CONTENT_CHARS = 8000;
+// [T-431] 现代模型(200K~1M 上下文)完整吃得下整篇逐字稿/笔记,不再激进截断到几千字。
+// 此上限只挡病态的百万字级粘贴,真实文档不触发(用户 2026-07-19:「1M 上下文不要截断」)。
+// 弱模型(小上下文)的稳健靠 T-430 chunk-and-merge,不靠这里砍。
+export const MAX_DISTILL_CONTENT_CHARS = 200_000;
 
 /** 截断送模型的原文 facet(超限截断 + 标注,让模型知道后面还有)。 */
 export function truncateForDistill(raw: string): string {

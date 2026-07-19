@@ -35,7 +35,8 @@ export interface RelateCandidate {
 }
 
 // 送模型的原子清单上限(条)—— 全库 <100 节点量级富余;超限截断防 prompt 爆。
-export const MAX_RELATE_ATOMS = 120;
+// [T-431] 关系发现的原子清单上限。1M 上下文下放宽,库长大后不再静默把原子排除出关系候选。
+export const MAX_RELATE_ATOMS = 600;
 
 /** 把原子清单拼成模板 facet(每行 `[id] (type) title — sourceNote`)。 */
 export function buildAtomsFacet(atoms: ReadonlyArray<RelateAtomInput>): string {

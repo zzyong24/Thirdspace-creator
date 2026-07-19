@@ -85,7 +85,9 @@ export interface MaterialExtractDeps {
 }
 
 // 默认 AI 摘要输入字符预算(OQ2:按模型上下文合理比例;单机默认取 ~24k 字符,长文档截断标注)。
-const DEFAULT_TOKEN_BUDGET_CHARS = 24_000;
+// [T-431] 上传文档送 AI 摘要的上限。1M 上下文不再砍到 24k,长研究文档整篇进要点卡(尾部
+// 内容不再静默丢);只挡病态百万字级输入(用户 2026-07-19:「1M 上下文不要截断」)。
+const DEFAULT_TOKEN_BUDGET_CHARS = 200_000;
 
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";

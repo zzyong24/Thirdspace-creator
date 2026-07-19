@@ -249,7 +249,7 @@ describe("creative-context T-079c — formatKnowledgeBrief 分段纯函数", () 
     const brief = formatKnowledgeBrief(claims);
     const claimSection = brief.split("【证据】")[0]!;
     const lines = claimSection.split("\n").filter((l) => l.startsWith("· "));
-    expect(lines).toHaveLength(5); // top5 截断
+    expect(lines).toHaveLength(8); // [T-431] top15:8 条全显(不再截 top5)
     expect(lines[0]).toContain("引用 1 次但已发布"); // 最硬战绩排最前
     expect(lines[1]).toContain("引用 9 次未发布");
   });
@@ -273,13 +273,13 @@ describe("creative-context T-079c — formatKnowledgeBrief 分段纯函数", () 
     expect(formatKnowledgeBrief([])).toBe("");
   });
 
-  it("title 超 80 字截断防爆", () => {
-    const long = "长".repeat(120);
+  it("title 超 200 字截断防爆", () => {
+    const long = "长".repeat(250);
     const brief = formatKnowledgeBrief([
       { title: long, knowledgeType: "claim" },
     ]);
-    expect(brief).toContain(`· ${"长".repeat(80)}…`);
-    expect(brief).not.toContain("长".repeat(81));
+    expect(brief).toContain(`· ${"长".repeat(200)}…`); // [T-431] 上限提到 200(claim 标题常是整句)
+    expect(brief).not.toContain("长".repeat(201));
   });
 
   it("assembleCreativeContext:knowledgeBrief 走分段组装(集成缝)", async () => {
@@ -345,17 +345,18 @@ describe("creative-context T-146 — formatUserMaterialBrief 纯函数", () => {
     expect(brief).not.toContain("最高优先 · 必须遵守");
   });
 
-  it("有全文无要点卡(未配摘要模型降级)→ 截断全文进 brief 兜底", () => {
+  it("有全文无要点卡(未配摘要模型降级)→ 全文进 brief 兜底(1M 上下文不截断)", () => {
     const noSummary: ProjectMaterial = {
       name: "长文.txt",
       priority: "high",
       extractStatus: "done",
-      extractedText: "这是一份很长的资料".repeat(500),
+      extractedText: "这是一份很长的资料".repeat(500), // 4500 字,远低于 20 万上限
     };
     const brief = formatUserMaterialBrief([noSummary], "high");
     expect(brief).toContain("这是一份很长的资料");
-    // 截断(不把上万字全灌进 prompt)
-    expect(brief.length).toBeLessThan(3000);
+    // [T-431] 第一手素材是真数据底座,4500 字整篇进 brief,不再砍到 1200(不含「已截断」标注)。
+    expect(brief).not.toContain("已截断");
+    expect(brief.length).toBeGreaterThan(4500);
   });
 
   it("解析失败/不支持的素材不进 brief(不冒充可读)", () => {
@@ -750,9 +751,10 @@ describe("creative-context T-186 — assembleCreativeContext 相关性检索接�
     expect(context.knowledgeBrief).toContain("无 search 端口 dump");
   });
 
-  it("超预算 → knowledgeBrief 被截断且带标注", async () => {
-    // formatKnowledgeBrief 每条截 80 字、每段 top5;要触发预算需喂满 3 段长内容(尤其 evidence
-    // 带 80 字出处 → 单行 ~170 字)。造 5 evidence(长标题+长出处)+ 5 claim + 5 quote → 输出超 1800。
+  it("大知识库 → 全量注入不再预算截断([T-431] TOP_N=15/TITLE_MAX=200 收窄后 brief 够不到预算)", async () => {
+    // [T-431] 旧 TOP_N=5/TITLE_MAX=80+预算1800 会触发截断;现 TOP_N=15/TITLE_MAX=200 下单 brief
+    // 上限 ~19000 字 < 40000 预算,正常知识库整段进不被裁。预算截断机制本身由
+    // truncateKnowledgeBriefToBudget 纯函数用例(硬编码预算)独立覆盖。造 5 evidence+5 claim+5 quote。
     const long = "长".repeat(80);
     const rows: KnowledgeRow[] = [];
     for (let i = 0; i < 5; i++) {
@@ -773,11 +775,14 @@ describe("creative-context T-186 — assembleCreativeContext 相关性检索接�
         search: async () => rows,
       }),
     );
-    // 前置 sanity:原始 brief 确实超预算(否则该用例失去意义)。
-    expect(formatKnowledgeBrief(rows).length).toBeGreaterThan(
+    // 放宽后原始 brief 在预算内 → 不触发预算截断。
+    expect(formatKnowledgeBrief(rows).length).toBeLessThan(
       KNOWLEDGE_BRIEF_BUDGET_CHARS,
     );
-    expect(context.knowledgeBrief).toContain("已按 token 预算截断");
+    expect(context.knowledgeBrief).not.toContain("已按 token 预算截断");
+    // 全量注入:三段的原子都在(不再 top5 截)。
+    expect(context.knowledgeBrief).toContain(`${long}claim0`);
+    expect(context.knowledgeBrief).toContain(`${long}quote4`);
   });
 });
 

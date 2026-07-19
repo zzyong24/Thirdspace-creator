@@ -166,9 +166,9 @@ describe("enforceChatToolResultBudget 结果字符预算", () => {
         kind: "context.artifact.text" as const,
         found: true,
         artifactType: "script",
-        text: "长".repeat(20000),
+        text: "长".repeat(70000), // [T-431] 撑到超新预算 60k,验护栏仍触发
         offset: 0,
-        totalChars: 20000,
+        totalChars: 70000,
         hasMore: false,
       }),
     });
