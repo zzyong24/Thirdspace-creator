@@ -114,6 +114,53 @@ function packSidecarTarball() {
   console.log(`[build-sidecar]   → ${tarball}`);
 }
 
+// [T-413 §4 安全] 脱敏构建绝对路径 —— 消除包内 `<REPO>`(本机 `/Users/zyongzhu/…`,CI `/Users/runner/work/…`)
+//   泄露的**开发者用户名 + 目录布局**。落点(实包盘点):frontend/server.js 的 outputFileTracingRoot /
+//   turbopack.root、.next/required-server-files.json 的同二字段 + appDir、以及 pnpm `.bin` shim 里烘死的
+//   NODE_PATH。这些绝对路径在**用户机上本就失效**(运行时全走相对/__dirname,已 boot+卡口实证替换后仍 200)
+//   → 换成中性占位 `/creatoros` 零运行时风险。跨平台纯 node 实现,跳 symlink/大文件/browsers 大目录。
+function sanitizeBuildPaths(root) {
+  const needle = REPO; // 构建机绝对根
+  const placeholder = "/creatoros";
+  let count = 0;
+  const sanitizeFile = (file) => {
+    let st;
+    try { st = lstatSync(file); } catch { return; }
+    if (!st.isFile() || st.size > 1024 * 1024) return; // 跳 symlink / 大文件(路径泄露只在小文本文件)
+    let text;
+    try { text = readFileSync(file, "utf8"); } catch { return; }
+    if (!text.includes(needle)) return;
+    writeFileSync(file, text.split(needle).join(placeholder));
+    count++;
+  };
+  // 1) 运行时配置文件(server.js + manifest)。
+  for (const rel of [
+    ["frontend", "server.js"],
+    ["frontend", ".next", "required-server-files.json"],
+  ]) {
+    const f = join(root, ...rel);
+    if (existsSync(f)) sanitizeFile(f);
+  }
+  // 2) 所有 `.bin` shim(pnpm 在 shebang/NODE_PATH 烘死构建绝对路径)。遍历只读目录元数据(廉价),
+  //    仅进 `.bin` 时读小文件;不跟 symlink(pnpm 大量相对链,e.isDirectory() 对 symlink 返 false)。
+  const walk = (dir) => {
+    let entries;
+    try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      const p = join(dir, e.name);
+      if (e.name === ".bin") {
+        for (const f of readdirSync(p)) sanitizeFile(join(p, f));
+      } else if (e.name !== "browsers") {
+        walk(p); // 跳 chromium 大目录(二进制,无文本路径泄露)
+      }
+    }
+  };
+  walk(join(root, "node_modules"));
+  walk(join(root, "frontend", "node_modules"));
+  console.log(`[build-sidecar] 🕶 脱敏构建绝对路径 ${count} 文件(${needle} → ${placeholder};消 server.js/manifest/.bin shim 的用户名+布局泄露)`);
+}
+
 // [T-170] 采集/扫码依赖 Playwright,但 Next output-tracing **漏掉** douyin-cdp/web-capture 里的
 //   动态 `import("@playwright/test")`(playwright-core 的 .pnpm 被拖进来了,但 frontend/node_modules/
 //   下没建解析链)→ 打包版一点扫码就 ERR_MODULE_NOT_FOUND → loginDouyin 抛错「扫码登录失败」。
@@ -1086,6 +1133,10 @@ function main() {
   // [T-326 RT-H09] 静态 ffmpeg 实拷(douyin 抽音 + whisper-local 解码的运行时解析链第②级)——
   //   放打 tarball 前,让 sidecar/frontend/bin/ffmpeg 进包。拉不到 → warn 跳过(回落用户自装)。
   bundleFfmpeg(triple);
+
+  // [T-413 §4 安全] 打 tarball 前脱敏构建绝对路径(server.js/manifest/.bin shim 里的用户名+布局)。
+  //   放最后:确保 playwright/xenova/ffmpeg 等后续步引入的 .bin shim 也一并脱敏。
+  sanitizeBuildPaths(SIDECAR_RUNTIME);
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。
