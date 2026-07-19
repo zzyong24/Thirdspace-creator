@@ -31,6 +31,14 @@ export function ExportMaterialsButton({
 }) {
   const [state, setState] = React.useState<State>("idle");
   const [error, setError] = React.useState<string | null>(null);
+  // 「已开始下载」自动复位定时器;卸载时清,避免对已卸载组件 setState。
+  const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  React.useEffect(
+    () => () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    },
+    [],
+  );
 
   const exportMaterials = React.useCallback(async () => {
     setState("busy");
@@ -65,6 +73,11 @@ export function ExportMaterialsButton({
       a.click();
       a.remove();
       setState("done");
+      // [bug·2026-07-19 真机] 原「done」是终态永不复位 → 4MB 素材包浏览器瞬时下完,按钮却一直
+      //   挂「已开始下载」,看起来像卡在下载中(其实早下完了)。下载是触发即忘的浏览器行为,这里
+      //   2.5s 后把按钮复位回「导出素材包」,消除"卡住/还在下"的错觉。error 态不复位(留着让用户重试)。
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = setTimeout(() => setState("idle"), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "素材包导出失败,请重试");
       setState("error");
