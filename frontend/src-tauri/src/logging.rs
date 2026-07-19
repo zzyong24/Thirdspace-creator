@@ -154,6 +154,9 @@ fn seal_frame(cipher: &Aes256Gcm, counter: u64, plaintext: &[u8]) -> Option<Vec<
 /// 生产落盘走 [`SidecarLogger`](流式,每 flush 一帧);此函数供 `creatoros-logdec` 的 `encrypt`
 /// 子命令与测试造夹具复用**同一封包逻辑**(经 [`build_header`]/[`seal_frame`],与流式路径零漂移)。
 /// 无有效公钥或任一 AEAD 步失败 → `None`。
+// [T-427] logtools(logdec bin)+ lib 单测用;正式 build(无 logtools,bin 不编)无消费者 →
+//   allow 消 dead-code 噪音,函数照编、加密往返测试照跑。
+#[cfg_attr(not(feature = "logtools"), allow(dead_code))]
 pub fn encrypt_lines(pubkeys: &[[u8; 32]], lines: &[&[u8]]) -> Option<Vec<u8>> {
     let recipients: Vec<Recipient> = pubkeys
         .iter()
@@ -338,6 +341,7 @@ pub fn init_sidecar_logger(logs_dir: &Path) -> Option<SidecarLogger> {
 
 /// 解密失败原因(结构化,供 CLI 区分退出码:这些都是「0 字节可读」的硬失败)。
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(not(feature = "logtools"), allow(dead_code))] // [T-427] 同 encrypt_lines:仅 logdec+单测用
 pub enum DecryptError {
     /// 魔数不匹配 / 文件过短:不是本格式的加密日志。
     BadMagic,
@@ -351,6 +355,7 @@ pub enum DecryptError {
 
 /// 解密结果:已成功解出的各帧明文(脱敏后原始字节)+ 是否因尾部截断/损坏提前停止。
 #[derive(Debug)]
+#[cfg_attr(not(feature = "logtools"), allow(dead_code))] // [T-427] 同 encrypt_lines:仅 logdec+单测用
 pub struct DecryptOutcome {
     /// 逐帧解出的明文(不含结尾 `\n`;CLI 输出时每行补 `\n`)。
     pub lines: Vec<Vec<u8>>,
@@ -362,6 +367,7 @@ pub struct DecryptOutcome {
 ///
 /// **部分可解密(SPEC §5 硬约束)**:遇半截帧(len 或 ct 不够)/ AEAD tag 失败 → 停在此处,返回已成功
 /// 解出的**全部**前序行且 `truncated=true`,**绝不 panic**。私钥不匹配/缺失 → `Err`(CLI 0 字节输出)。
+#[cfg_attr(not(feature = "logtools"), allow(dead_code))] // [T-427] 同 encrypt_lines:仅 logdec+单测用
 pub fn decrypt_log(data: &[u8], private_key: &[u8; 32]) -> Result<DecryptOutcome, DecryptError> {
     if data.len() < MAGIC.len() || &data[..MAGIC.len()] != MAGIC {
         return Err(DecryptError::BadMagic);

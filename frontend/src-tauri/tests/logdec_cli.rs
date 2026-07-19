@@ -4,6 +4,11 @@
 //! 再解密验往返;并验尾部截断退出码 0 输出前缀、私钥错退出码 1 零字节。
 //! `logging` 模块在 lib 里是私有 mod,集成测试(独立 crate)够不到,故必须走 CLI 黑盒。
 
+// [T-427] 与 Cargo.toml 的 creatoros-logdec [[bin]] 同门控:该 bin 仅在 logtools feature 下编译,
+//   而本测试用 env!(CARGO_BIN_EXE_creatoros-logdec) 引用它 → 本文件须同门控,否则默认 `cargo test`
+//   编译此文件时 CARGO_BIN_EXE 宏找不到 bin 而报错。跑法:`cargo test --features logtools`。
+#![cfg(feature = "logtools")]
+
 use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine;
 use std::process::Command;
