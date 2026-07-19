@@ -28,7 +28,7 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { platform, arch } from "node:process";
@@ -96,7 +96,143 @@ function run(cmd, args, opts = {}) {
 //   lib.rs 用系统 tar 解压到可写目录(原生保 symlink)。
 //   `-C <dir> .`:进 sidecar/ 后打其内容(不含 sidecar/ 前缀),解压到 dest 即 dest/frontend/server.js。
 //   tar 默认把 symlink 存为 symlink(不 -h 解引用)—— 正是所需。
+// [T-441] 打 tarball 前的**最后一道闸**:修掉所有「指向 sidecar 之外」的 symlink。
+//   病根(2026-07-20 盘点实测,mac/win 通用):包里有 22 个 symlink 指向**构建机绝对路径** ——
+//   ①`node_modules/.pnpm/hyperframes@…/node_modules/` 下 17 个依赖 → 构建机仓库 `.pnpm`;
+//   ②随包 Chromium 的 `Framework.framework/{Resources,Libraries,主二进制}` 5 个 → 构建机
+//     `~/Library/Caches/ms-playwright/…`。用户机上这些路径不存在 → hyperframes 视频渲染依赖缺失、
+//     **随包浏览器 Framework 主体缺失**(截图/渲染/抖音采集全靠它)。「至今没报错」只是因为 T-438 的
+//     截图失败停在 SSRF 守卫、压根没走到启动浏览器那步 —— 雷没排,只是没踩。
+//   两类分别处理(省几百 MB):
+//     · 目标**已在包内**(如 Chromium 的 Versions/<ver>/… 真身全在)→ 只把绝对链**改写成相对链**,
+//       零体积增长(macOS Framework 本来就是 Resources → Versions/Current/Resources 这套相对结构);
+//     · 目标**在包外**(如 hyperframes 那 17 个,包内 .pnpm 确实没有)→ 实拷真身;命中 .pnpm 结构的
+//       走 materializeNestedEntryTree(带传递依赖 + 防环,同 T-440),否则 cpSync 实拷。
+//   收尾**硬自检**:全树零「指向包外」的 symlink,失败即 build 炸 —— 以后再混进这类链,构建期就拦下,
+//   不必再靠人工 tar tvzf 盘点(T-437/T-440/T-441 都是这么被人肉发现的)。
+/** [T-441] 单个包外源超过此体积即视为「重依赖」,不物化(删链+告警),防包体积失控。 */
+const T441_HEAVY_SRC_MB = 30;
+/** [T-441] 本轮物化总预算(MB);超出后剩余包外链一律删链+告警。 */
+const T441_BUDGET_MB = 150;
+
+/** 目录/文件体积(MB,取整);du 失败退 0(视为轻量,宁可物化)。 */
+function dirSizeMB(p) {
+  const r = spawnSync("du", ["-sm", p], { encoding: "utf8" });
+  const n = Number.parseInt(`${r.stdout}`.trim().split(/\s+/)[0] ?? "", 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fixOutOfTreeSymlinks() {
+  const rootReal = realpathSync(SIDECAR_RUNTIME);
+  const inTree = (p) => p === rootReal || p.startsWith(rootReal + "/");
+  // 先收集(边遍历边改会把新拷进来的真目录再走一遍)。
+  const links = [];
+  const collect = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      const st = lstatSync(p);
+      if (st.isSymbolicLink()) links.push(p);
+      else if (st.isDirectory()) collect(p);
+    }
+  };
+  collect(SIDECAR_RUNTIME);
+
+  let rewired = 0;
+  let nested = 0;
+  let copied = 0;
+  let dangling = 0;
+  let spentMB = 0;
+  const skipped = [];
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  for (const p of links) {
+    const raw = readlinkSync(p);
+    let target = null;
+    try { target = realpathSync(p); } catch { target = null; } // 解析不了 = 已是死链
+    if (target && inTree(target)) {
+      // 目标在包内:绝对链改写成相对链(相对链本就自洽,不动)。
+      if (isAbsolute(raw)) {
+        const rel = relative(dirname(p), target);
+        rmSync(p, { force: true });
+        symlinkSync(rel, p);
+        rewired++;
+      }
+      continue;
+    }
+    // 目标在包外(或死链)→ 必须实拷,否则用户机必崩。
+    const src = target ?? (isAbsolute(raw) ? raw : resolve(dirname(p), raw));
+    if (!existsSync(src)) {
+      // [T-441] 断链(目标源不存在):绝大多数是 bundleXXX 按需**剪枝**掉的 lazy-only 子树
+      //   (如 bundlePiEngine 剪掉 pi 的 bedrock 等云 provider —— isCut 的既定行为)。这种链留在
+      //   包里本就是坏的、且无人 require → 删掉记账即可;**不能 throw**,否则正常剪枝会被当成故障
+      //   把整个 build 炸掉(实测 pi-ai 的 @aws-sdk/client-bedrock-runtime 即此类)。
+      rmSync(p, { force: true });
+      dangling++;
+      continue;
+    }
+    // [T-441] **体积保护**:重包不盲目物化。实测无脑全拷 hyperframes 那 16 个 deps(含
+    //   puppeteer-core/onnxruntime-node/sharp/esbuild)会沿多条路径重复展开 → **+1.2GB**。
+    //   而 hyperframes 我们只用 `dist/cli.js`(9.3MB **bundled** 单文件,纯 JS 依赖多已内联)。
+    //   故:单源超阈值或超总预算 → **删链 + 记账告警**(该链现状本就是死的,删掉行为不变、包不变大),
+    //   日志列出跳过项以便**针对性**补(而不是为几个可能用不到的依赖付一个 GB)。
+    const srcMB = dirSizeMB(src);
+    if (srcMB > T441_HEAVY_SRC_MB || spentMB + srcMB > T441_BUDGET_MB) {
+      rmSync(p, { recursive: true, force: true });
+      skipped.push(`${relative(SIDECAR_RUNTIME, p)} (${srcMB}MB)`);
+      continue;
+    }
+    const norm = src.replace(/\\/g, "/");
+    const idx = norm.indexOf("/.pnpm/");
+    rmSync(p, { recursive: true, force: true });
+    const entry = idx >= 0 ? norm.slice(idx + "/.pnpm/".length).split("/node_modules/")[0] : "";
+    if (entry && existsSync(join(srcPnpm, entry))) {
+      materializeNestedEntryTree(srcPnpm, entry, p, new Set([entry])); // 带传递依赖 + 防环
+      nested++;
+    } else {
+      cpSync(src, p, { recursive: true, dereference: true });
+      copied++;
+    }
+    spentMB += srcMB;
+  }
+
+  // 硬自检:**可解析却指向包外**的链 = 构建机能用、用户机必坏 → 一个都不许留(fail)。
+  //   断链另计:本就是坏的(多为剪枝残留),只告警不阻塞 —— 二者性质不同,别混为一谈。
+  const bad = [];
+  const dead = [];
+  const scan = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      const st = lstatSync(p);
+      if (st.isSymbolicLink()) {
+        let t = null;
+        try { t = realpathSync(p); } catch { t = null; }
+        if (!t) dead.push(`${p} → ${readlinkSync(p)}`);
+        else if (!inTree(t)) bad.push(`${p} → ${readlinkSync(p)}`);
+      } else if (st.isDirectory()) scan(p);
+    }
+  };
+  scan(SIDECAR_RUNTIME);
+  if (bad.length) {
+    throw new Error(
+      `[build-sidecar] [T-441] 自检失败:仍有 ${bad.length} 个 symlink 指向包外(构建机能用/用户机必死链)\n${bad.slice(0, 8).join("\n")}`,
+    );
+  }
+  console.log(
+    `[build-sidecar]   [T-441] 包外 symlink 修复:改相对链 ${rewired} + 嵌套物化 ${nested} + 实拷 ${copied} + 删断链 ${dangling} + 跳过重依赖 ${skipped.length}(物化 ${spentMB}MB),自检零包外链`,
+  );
+  if (dead.length) {
+    console.log(`[build-sidecar]   [T-441] ⚠ 残留断链 ${dead.length} 个(剪枝残留,不阻塞):${dead[0]}`);
+  }
+  if (skipped.length) {
+    // 显式列出「因体积跳过」的包 —— 它们原本就是死链(用户机上从来就不可用),删掉行为不变;
+    // 但若将来发现某功能确实需要,按这份清单**针对性**补,而不是把整棵依赖树塞进包里。
+    console.log(`[build-sidecar]   [T-441] ⚠ 因体积跳过物化 ${skipped.length} 个包外链(原本即死链,行为不变):`);
+    for (const s of skipped.slice(0, 20)) console.log(`[build-sidecar]        · ${s}`);
+  }
+}
+
 function packSidecarTarball() {
+  // [T-441] 打包前最后一道闸(两个调用点都覆盖):清掉指向构建机的 symlink。
+  fixOutOfTreeSymlinks();
   const tarball = join(SRC_TAURI, "sidecar.tar.gz");
   // [T-372 L2] 入口完整性链:本脚本(beforeBuildCommand)先产 tarball → 随后的 cargo 构建里
   //   src-tauri/build.rs 对它算 SHA-256 并经 rustc-env 内嵌进壳二进制 → 运行时 lib.rs 解压前
