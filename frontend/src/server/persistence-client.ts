@@ -5831,7 +5831,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       //    重建排队(隐藏经 isWorkHidden 跳)。整体从 self.metrics 尾挪到这里 —— 此刻 hidden_at /
       //    platform_status 已标,故重活天然只对可见作品跑(不撞隐藏作品空 item_list 分享页)。两步
       //    各自 best-effort(见 runDouyinHeavyBackfill),整批失败绝不拖垮明细采集主流程。
-      const heavy = await runDouyinHeavyBackfill(
+      // [T-433 S1] 绑号轻触发:target.__skipHeavyBackfill 时跳过尾部逐条重活(封面/逐字稿/重建),
+      //   避免多账号绑号把逐条重活堆进 gate-F5 超长串行队列;重活留次日 daily self.detail(不带此标)
+      //   到点幂等补,不漏。明细导出/落库主流程不受影响(coversFilled=0 仅供 return itemsUpdated)。
+      const heavy = (target as { __skipHeavyBackfill?: boolean })
+        .__skipHeavyBackfill
+        ? { coversFilled: 0 }
+        : await runDouyinHeavyBackfill(
         ctx,
         {
           // ── 封面回填 host ──────────────────────────────────────────────────
@@ -6644,8 +6650,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return { id: job.id };
       },
       // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。
-      trigger: async (c, job) => {
-        await triggerScheduledJob(c, job, triggerDeps);
+      //   [T-433 S1] 透传 options(绑号 self.detail 带 skipHeavyBackfill,重活延后次日)。
+      trigger: async (c, job, options) => {
+        await triggerScheduledJob(c, job, triggerDeps, options);
       },
       // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)接线已全链退役
       //   (SPEC §4.4):strict + NOT NULL 世界不存在无号存量,绑定 = 只建号绑定 job + 初始化

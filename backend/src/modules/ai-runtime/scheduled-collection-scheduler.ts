@@ -117,7 +117,7 @@ export async function triggerScheduledJob(
   // [T-332 S2 · GAP-08] options.scheduledFor:cron 到点触发传该 tick 的分钟 ISO(写入
   //   job_run.scheduled_for,让 (job_id, scheduled_for) 部分唯一约束真生效,根治「先查再建」
   //   竞态重复触发);「立即运行」(runJobNow)与绑定初始化触发不带锚(即时动作,无计划 tick)。
-  options?: { scheduledFor?: string },
+  options?: { scheduledFor?: string; skipHeavyBackfill?: boolean },
 ): Promise<TriggerResult> {
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
@@ -196,7 +196,12 @@ export async function triggerScheduledJob(
     inputData: {
       jobId: job.id,
       jobRunId: run.id,
-      target: job.target,
+      // [T-433 S1] 绑号轻触发:self.detail 从绑号初始化跑时带 __skipHeavyBackfill —— runner 尾
+      //   跳过逐条重活(封面/逐字稿/重建),避免多账号绑号把重活堆进 gate-F5 超长串行队列;
+      //   重活留次日 daily self.detail(不带此标)到点补(现有增量幂等,不漏)。
+      target: options?.skipHeavyBackfill
+        ? { ...job.target, __skipHeavyBackfill: true }
+        : job.target,
     },
   };
 

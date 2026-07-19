@@ -127,6 +127,8 @@ export interface CollectionBootstrapDeps {
       target: Record<string, unknown>;
       accountId?: string | null;
     },
+    // [T-433 S1] 绑号轻触发:self.detail 从绑号初始化跑时传 skipHeavyBackfill=true,跳过尾部逐条重活。
+    options?: { skipHeavyBackfill?: boolean },
   ) => Promise<void>;
   // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)已全链退役(SPEC §4.4):
   //   清库世界没有孤儿 —— 所有 per-account 写在 service 层强制 stamp ctx.accountId(ISO-03),
@@ -251,7 +253,16 @@ export async function bootstrapDouyinCollectionJobs(
   for (const job of jobsInOrder) {
     if (!job.enabledByDefault) continue;
     try {
-      await deps.trigger(ctx, job);
+      // [T-433 S1] 绑号轻触发:self.detail 初始化跑跳过尾部逐条重活(封面/逐字稿/重建),避免多账号
+      //   疯狂绑号把重活堆进 gate-F5 超长串行队列;明细(作品列表/标题/明细)照常当刻出,重活留
+      //   次日 daily self.detail(不带此标)到点补(现有增量幂等,不漏首次数据)。
+      await deps.trigger(
+        ctx,
+        job,
+        job.sourceKind === "self.detail"
+          ? { skipHeavyBackfill: true }
+          : undefined,
+      );
       triggered.push(job.sourceKind);
     } catch (err) {
       // 单源触发失败不阻断其余(下一次到点或手动「立即运行」仍可采;记错不静默)。

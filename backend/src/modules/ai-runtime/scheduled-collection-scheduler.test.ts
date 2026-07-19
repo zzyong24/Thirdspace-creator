@@ -78,6 +78,35 @@ describe("triggerScheduledJob(幂等双闸)", () => {
     expect(res).toMatchObject({ deduped: false, aiTaskId: "task1", jobRunId: "run1" });
   });
 
+  it("[T-433 S1] skipHeavyBackfill:true → dispatch 的 inputData.target 带 __skipHeavyBackfill(且保留原 target 字段)", async () => {
+    const deps = makeTriggerDeps([]);
+    const detailJob: SchedulableJob = {
+      id: "jobd",
+      sourceKind: "self.detail",
+      target: { externalSourceId: "src1" },
+    };
+    await triggerScheduledJob(ctx, detailJob, deps, { skipHeavyBackfill: true });
+
+    // runner 实收的是 dispatch 载荷:target 注入 __skipHeavyBackfill,原字段(externalSourceId)不丢。
+    const dispatched = deps._dispatch.mock.calls[0]![1].inputData.target;
+    expect(dispatched).toMatchObject({
+      externalSourceId: "src1",
+      __skipHeavyBackfill: true,
+    });
+  });
+
+  it("[T-433 S1] 默认(无 options)→ dispatch target 不带 __skipHeavyBackfill(定时任务照跑全量重活)", async () => {
+    const deps = makeTriggerDeps([]);
+    await triggerScheduledJob(ctx, job, deps);
+
+    const dispatched = deps._dispatch.mock.calls[0]![1].inputData.target as Record<
+      string,
+      unknown
+    >;
+    expect(dispatched).not.toHaveProperty("__skipHeavyBackfill");
+    expect(dispatched).toMatchObject({ externalSourceId: "src1" });
+  });
+
   it("**SPEC §10 幂等**:同 job 当天已有 in-flight run → 短路,不重复产 task/run/dispatch", async () => {
     const deps = makeTriggerDeps([
       { id: "run-existing", status: "running", startedAt: "2026-07-01T08:00:00.000Z", aiTaskId: "task-existing" },

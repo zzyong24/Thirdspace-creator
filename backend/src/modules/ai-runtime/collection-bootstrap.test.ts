@@ -29,11 +29,13 @@ function makeDeps(
   createdJobs: { sourceKind: string; schedule: string; name: string }[];
   triggeredSourceKinds: string[];
   triggeredAccountIds: (string | null | undefined)[];
+  triggeredOptions: ({ skipHeavyBackfill?: boolean } | undefined)[];
 } {
   let seq = 0;
   const createdJobs: { sourceKind: string; schedule: string; name: string }[] = [];
   const triggeredSourceKinds: string[] = [];
   const triggeredAccountIds: (string | null | undefined)[] = [];
+  const triggeredOptions: ({ skipHeavyBackfill?: boolean } | undefined)[] = [];
   const _listJobs = vi.fn(async (_c: RequestContext, sourceKind: string) => {
     return existingBySourceKind[sourceKind] ?? [];
   });
@@ -65,9 +67,11 @@ function makeDeps(
         target: Record<string, unknown>;
         accountId?: string | null;
       },
+      options?: { skipHeavyBackfill?: boolean },
     ) => {
       triggeredSourceKinds.push(job.sourceKind);
       triggeredAccountIds.push(job.accountId);
+      triggeredOptions.push(options);
     },
   );
   return {
@@ -81,6 +85,7 @@ function makeDeps(
     createdJobs,
     triggeredSourceKinds,
     triggeredAccountIds,
+    triggeredOptions,
   };
 }
 
@@ -166,6 +171,22 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps._trigger).toHaveBeenCalledTimes(2);
     expect(deps.triggeredSourceKinds).toEqual(["self.metrics", "self.detail"]);
     expect(res.triggered).toEqual(["self.metrics", "self.detail"]);
+  });
+
+  it("③ [T-433 S1] 绑号初始化触发:self.detail 带 skipHeavyBackfill(尾部重活跳过,留次日定时补),self.metrics 不带", async () => {
+    const deps = makeDeps();
+    await bootstrapDouyinCollectionJobs(ctx, deps);
+
+    // 触发顺序即 [self.metrics, self.detail](顺序铁律)。绑号是一次性重触发,
+    // 只跑轻量明细拿可见性;封面/逐字稿/复刻等尾部重活延到次日定时任务,
+    // 避免多账号同时绑号把重活挤成灾难。
+    expect(deps.triggeredSourceKinds).toEqual(["self.metrics", "self.detail"]);
+    const bySource = new Map(
+      deps.triggeredSourceKinds.map((k, i) => [k, deps.triggeredOptions[i]]),
+    );
+    expect(bySource.get("self.detail")).toEqual({ skipHeavyBackfill: true });
+    // self.metrics 无重活尾巴,不传 options(保持默认全量)。
+    expect(bySource.get("self.metrics")).toBeUndefined();
   });
 
   it("③ 触发用的是新建/复用的真实 job id(不是空串)", async () => {
