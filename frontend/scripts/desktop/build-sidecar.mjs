@@ -979,6 +979,11 @@ function main() {
       "SPEC.md", "AGENT-PROTOCOL.md", "IMPLEMENTATION-ARCHITECTURE.md",
       "TDD-PLAN.md", "TESTING.md", "README.md",
       "eslint.config.mjs", "playwright.config.ts", "vitest.config.ts",
+      // [T-417 隐私] `.auth/douyin` = 开发机抖音**登录 session**(cookie/storage),被 standalone
+      //   trace / cwd 相对写混进 sidecar(实包盘点 75 条目进 tar)。运行时 app 读的是 appDataDir 的
+      //   .auth(lib.rs 注入 CREATOROS_DOUYIN_AUTH_DIR),bundled 这份是死重 + **作者登录态泄露给用户**。
+      //   开发/CI 机的 .env* 同理(若存在)一并剥,防密钥进包。
+      ".auth", ".env", ".env.local", ".env.production", ".env.development",
     ];
     let pruned = 0;
     for (const name of leaks) {
