@@ -27,7 +27,7 @@
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -459,6 +459,8 @@ function materializeStandaloneWin() {
   console.log(
     `[build-sidecar]   [T-426 W] 扁平 hoist next 闭包 ${hoisted} 包(+${nested} 次版本嵌套;替坏 junction 为真身,零链)`,
   );
+  // [T-426 补] 再物化 .next/node_modules/ 下 Turbopack external 的 hash symlink（pglite-*/pg-* → 死链）。
+  derefNextNodeModulesSymlinks();
   // ③ 硬自检:sidecar 内真 require next + react/react-dom(server.js 启动关键路径)。失败即 build 炸,
   //    不出必白屏的包(教训同 playwright/xenova 自检②:只拷不验会假通过,装机才暴露)。
   const check = spawnSync(
@@ -834,6 +836,133 @@ function buildServerApp() {
   console.log(`[build-sidecar]   [T-172] 产出 sidecar/server.app（LSUIElement，Dock 隐身）→ ${innerBin}`);
 }
 
+// [T-437] mac：递归 co-ship node 二进制的**全部**非系统 dylib 依赖 → sidecar/lib/，并把二进制与
+//   库里的 /opt/homebrew|/usr/local 绝对引用改写成 @rpath（+ rpath 指向 sidecar/lib）→ **自包含**，
+//   不再要求用户机装 Homebrew，也不单靠 DYLD_LIBRARY_PATH（hardened runtime 会剥离 DYLD_*）。
+//   旧实现（被本函数替换）三处致命窄化:①filter 只留 `libnode`/`@rpath/` → 那 17 个 /opt/homebrew/opt/*
+//   （libuv/simdjson/simdutf/brotli(dec·enc)/c-ares/nghttp2·3/ngtcp2/sqlite/uvwasi/zstd/openssl@3
+//   (crypto·ssl)/icu4c@78(i18n·uc)）全被滤掉;②只从单一 nodeLibDir 找（libuv 其实在各自 formula 的
+//   lib/，根本不在那）;③无递归（libnode 自身那串依赖从未处理）;④existsSync 静默跳过（找不到不报错）。
+//   → 无 Homebrew 的用户机 dyld「Library not loaded: /opt/homebrew/opt/libuv/...」→ sidecar 崩 →
+//   白屏（2026-07-19 真机实证;开发机自带 Homebrew，dyld fallback 命中掩盖了此 bug 至今）。
+function bundleMacDylibs(libDir, binaries) {
+  const nodeLibDir = join(dirname(process.execPath), "..", "lib"); // 打包机 node/../lib（libnode 真身兜底）
+  const isSystem = (p) => p.startsWith("/usr/lib/") || p.startsWith("/System/");
+  const otoolDeps = (f) => {
+    const r = spawnSync("otool", ["-L", f], { encoding: "utf8" });
+    if (r.status !== 0) throw new Error(`[build-sidecar] [T-437] otool -L 失败: ${f}\n${r.stderr ?? ""}`);
+    // 首行是文件自身路径（LC_ID_DYLIB）；其余每行首 token 是依赖引用。
+    return r.stdout.split("\n").slice(1).map((l) => l.trim().split(" ")[0]).filter(Boolean);
+  };
+  const inTool = (args) => {
+    const r = spawnSync("install_name_tool", args, { encoding: "utf8" });
+    if (r.status !== 0) throw new Error(`[build-sidecar] [T-437] install_name_tool 失败: ${args.join(" ")}\n${r.stderr ?? ""}`);
+  };
+  // ① BFS 递归收集所有非系统依赖真身 → collected: base → 拷贝后路径。
+  const collected = new Map();
+  const seen = new Set();
+  const queue = binaries.map((b) => ({ file: b, ownerDir: dirname(b) }));
+  while (queue.length) {
+    const { file, ownerDir } = queue.shift();
+    if (seen.has(file)) continue;
+    seen.add(file);
+    for (const ref of otoolDeps(file)) {
+      if (isSystem(ref)) continue;
+      const base = ref.split("/").pop();
+      if (!base || collected.has(base)) continue;
+      // resolve 真身源：绝对路径（/opt/homebrew/...）直用；@rpath/@loader_path/裸名 → 在 nodeLibDir/ownerDir 找 basename。
+      let src = null;
+      if (ref.startsWith("/")) {
+        if (existsSync(ref)) src = ref;
+      } else {
+        for (const d of [nodeLibDir, ownerDir]) {
+          const c = join(d, base);
+          if (existsSync(c)) { src = c; break; }
+        }
+      }
+      if (!src) throw new Error(`[build-sidecar] [T-437] 依赖源未找到（拒绝静默漏库→白屏）: ref=${ref} owner=${file}`);
+      const dst = join(libDir, base);
+      rmSync(dst, { force: true }); // 覆盖只读旧文件（Homebrew dylib r--r--r--）避免 EACCES
+      copyFileSync(src, dst);
+      chmodSync(dst, 0o644);
+      collected.set(base, dst);
+      queue.push({ file: dst, ownerDir: dirname(src) }); // 递归：拷进来的库继续收集其依赖
+      console.log(`[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/${base}`);
+    }
+  }
+  if (collected.size === 0) throw new Error("[build-sidecar] [T-437] 未收集到任何 dylib（otool/execPath 异常?）");
+  // ② install_name 改写：非系统引用 → @rpath/<base>，让 dyld 走各自 rpath（指 sidecar/lib）解析。
+  const rewriteRefs = (f) => {
+    const args = [];
+    for (const ref of otoolDeps(f)) {
+      if (isSystem(ref)) continue;
+      const base = ref.split("/").pop();
+      if (base && collected.has(base)) args.push("-change", ref, `@rpath/${base}`);
+    }
+    if (args.length) inTool([...args, f]);
+  };
+  for (const [base, dst] of collected) {
+    inTool(["-id", `@rpath/${base}`, dst]);
+    rewriteRefs(dst);
+    spawnSync("install_name_tool", ["-add_rpath", "@loader_path", dst]); // 兄弟库同目录；已存在则 no-op（容忍失败）
+  }
+  for (const b of binaries) {
+    rewriteRefs(b);
+    // server.app/Contents/MacOS/creatoros-server → sidecar/lib = 上溯 3 层。
+    spawnSync("install_name_tool", ["-add_rpath", "@loader_path/../../../lib", b]);
+  }
+  // ③ 改了 load command → adhoc 重签（arm64 二进制/库必须有效签名才能加载）。
+  for (const f of [...collected.values(), ...binaries]) {
+    const cs = spawnSync("codesign", ["--force", "--sign", "-", f], { encoding: "utf8" });
+    if (cs.status !== 0) throw new Error(`[build-sidecar] [T-437] adhoc 重签失败: ${f}\n${cs.stderr ?? ""}`);
+  }
+  // ④ 硬自检：二进制/库的所有非系统依赖必须已改成 @rpath（无残留 /opt|/usr/local）+ 二进制签名有效。
+  //    否则干净机仍白屏 —— 失败即 build 炸，不出坏包（同 WIN-NEXT-OK 思路）。
+  for (const b of [...binaries, ...collected.values()]) {
+    const bad = otoolDeps(b).filter((p) => p.startsWith("/opt/") || p.startsWith("/usr/local/"));
+    if (bad.length) throw new Error(`[build-sidecar] [T-437] 自检失败：${b} 残留未改写外部依赖:\n${bad.join("\n")}`);
+  }
+  for (const b of binaries) {
+    const v = spawnSync("codesign", ["-v", "--strict", b], { encoding: "utf8" });
+    if (v.status !== 0) throw new Error(`[build-sidecar] [T-437] 自检失败：${b} 签名无效\n${v.stderr ?? ""}`);
+  }
+  console.log(`[build-sidecar]   [T-437] ✓ 自检：co-ship ${collected.size} 个 dylib + 全 @rpath 自包含 + adhoc 重签，二进制零 /opt 依赖`);
+}
+
+// [T-426 补/T-437] Windows：.next/node_modules/ 下 Turbopack 给 serverExternalPackages 生成的带 hash
+//   别名目录（如 pglite-<hash>/pg-<hash>）全是相对 symlink（→ ../../.pnpm/...）。主 standalone 走
+//   verbatim symlink 拷到用户机后成**死链** → server.js require 这些 external 包（@electric-sql/pglite、
+//   pg 等）MODULE_NOT_FOUND → sidecar 崩 → 白屏。materializeStandaloneWin 只物化了 frontend/node_modules
+//   的 next 闭包，漏了 .next/node_modules/。这里递归把该目录下所有 symlink deref 成真身（零死链）。
+function derefNextNodeModulesSymlinks() {
+  const nnm = join(SIDECAR_RUNTIME, "frontend", ".next", "node_modules");
+  if (!existsSync(nnm)) {
+    console.log("[build-sidecar]   [T-426 补] 无 .next/node_modules（无 external 别名）→ 跳过");
+    return;
+  }
+  let fixed = 0;
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      const st = lstatSync(p);
+      if (st.isSymbolicLink()) {
+        let real = null;
+        try { real = realpathSync(p); } catch { real = null; }
+        if (!real || !existsSync(real)) {
+          throw new Error(`[build-sidecar] [T-426 补] .next/node_modules symlink 源死链:${p} → ${real ?? "?"}（装依赖?）`);
+        }
+        rmSync(p, { recursive: true, force: true });
+        cpSync(real, p, { recursive: true, dereference: true });
+        fixed++;
+      } else if (st.isDirectory()) {
+        walk(p); // scope 目录（@electric-sql/… 等）继续下探
+      }
+    }
+  };
+  walk(nnm);
+  console.log(`[build-sidecar]   [T-426 补] .next/node_modules 物化 ${fixed} 个 Turbopack external symlink → 真身(零死链)`);
+}
+
 // [T-225b] sharp(旧版 0.32.x,@xenova/transformers 依赖)原生库 co-ship —— 同 onnxruntime 的
 //   tracing 盲区第二层:sidecar 里 sharp@0.32.x 只有 JS(build/Release/*.node + vendor/libvips 缺)
 //   → require('sharp') 崩 → @xenova/transformers 顶层 import 连坐 → whisper-local 全崩(真机 T-225
@@ -1207,37 +1336,13 @@ function main() {
   const libDir = join(SIDECAR_RUNTIME, "lib");
   mkdirSync(libDir, { recursive: true });
   if (platform === "darwin") {
-    const otool = spawnSync("otool", ["-L", sidecarPath], { encoding: "utf8" });
-    if (otool.status === 0) {
-      const libs = otool.stdout
-        .split("\n")
-        .map((l) => l.trim().split(" ")[0])
-        .filter((p) => p.includes("libnode") || p.includes("@rpath/"));
-      const nodeLibDir = join(dirname(process.execPath), "..", "lib");
-      for (const ref of libs) {
-        const base = ref.split("/").pop();
-        if (!base) continue;
-        const src = join(nodeLibDir, base);
-        if (existsSync(src)) {
-          const dst = join(libDir, base);
-          rmSync(dst, { force: true }); // 覆盖只读旧文件(Homebrew dylib r--r--r--)避免 EACCES
-          copyFileSync(src, dst);
-          chmodSync(dst, 0o644);
-          console.log(`[build-sidecar]   co-shipped dylib → sidecar/lib/${base}`);
-        }
-      }
-    }
-  }
-
-  // [T-172] macOS:把 node 二进制额外包进 sidecar 内的一个 mini `.app`,让它在 Dock 里隐身。
-  //   根因:裸 node 被 macOS LaunchServices 注册成 GUI app → 在 Dock 显通用图标(用户看到「两个图标」)。
-  //   实测(lsappinfo):把 node 放进带 `LSUIElement=true` + `LSBackgroundOnly=true` 的 Info.plist 的
-  //   `.app` 里、运行其内层二进制 → `lsappinfo info -only ApplicationType <pid>` 返回 NULL(=不进 Dock);
-  //   裸 node 则注册为 GUI app。故打包版 macOS 走 server.app,由 lib.rs 直接 spawn 其内层二进制(见 lib.rs
-  //   #[cfg(target_os = "macos")] 分支)。dylib 仍 co-ship 到 sidecar/lib/(lib.rs 注 DYLD 指过去,绝对路径)。
-  //   Win/Linux 不受影响:那边 Dock 图标不是问题,仍走 externalBin 的 binaries/creatoros-server(见下)。
-  if (platform === "darwin") {
+    // [T-172] 先产 server.app：把 node 包进带 LSUIElement/LSBackgroundOnly 的 mini .app（Dock 隐身，
+    //   否则裸 node 被 LaunchServices 注册成 GUI app 显通用图标）；lib.rs mac 分支 spawn 其内层二进制。
     buildServerApp();
+    // [T-437] 再对该内层二进制递归 co-ship **全部**非系统 dylib + 改 @rpath 自包含（替换旧「只拷 libnode」
+    //   漏 17 个 /opt/homebrew 库的实现 → 无 Homebrew 用户机白屏）。只处理实际 spawn 的 server.app 版；
+    //   binaries/ 版 mac 不 spawn（Win/Linux externalBin 才用）。
+    bundleMacDylibs(libDir, [join(SIDECAR_RUNTIME, "server.app", "Contents", "MacOS", "creatoros-server")]);
   }
 
   // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。

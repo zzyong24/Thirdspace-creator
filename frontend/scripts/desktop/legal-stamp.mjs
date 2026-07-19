@@ -77,6 +77,9 @@ function main() {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// [T-437] 健壮 is-main 守卫:旧写法 `import.meta.url === \`file://${argv[1]}\`` 在 Windows(反斜杠/盘符)
+//   或含空格/中文路径下判 false → main() 静默不跑 → 法律标记 0 盖章却 exit 0(package.mjs 只看 exit code)。
+//   改用同目录其它脚本一致的 resolve/fileURLToPath 比对(规范化两侧,跨平台稳)。
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
 
 export { NOTICE, MARKER, stampDir };
