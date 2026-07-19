@@ -116,4 +116,23 @@ describe("resolveLlmConfig — tier 3 + error", () => {
       resolveLlmConfig(ctx, "copy.generate", { getModelConfig: noRow, env: {} }),
     ).rejects.toBeInstanceOf(LlmCredentialError);
   });
+  it("[T-432] 有配置行但 key 不可用(解密失败)→ 诚实提示重填密钥,非误导改 .env.local", async () => {
+    // decRow 在 master key 不符时把 secretValue 静默置 null → 有配置行但无可用 token。
+    const rowNoKey = async () => ({
+      provider: "deepseek",
+      modelName: "deepseek-v4-flash",
+      baseUrl: "https://api.deepseek.com/anthropic",
+      apiFormat: "anthropic" as const,
+      secretReference: "",
+      secretValue: null,
+      settings: {},
+    });
+    await expect(
+      resolveLlmConfig(ctx, "default", { getModelConfig: rowNoKey, env: {} }),
+    ).rejects.toThrow(/重新填写 API 密钥/);
+    // 无配置行时仍是配置/env 提示,不误报「重填」。
+    await expect(
+      resolveLlmConfig(ctx, "default", { getModelConfig: noRow, env: {} }),
+    ).rejects.toThrow(/无可用 LLM 凭据/);
+  });
 });

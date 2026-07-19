@@ -81,15 +81,20 @@ export async function resolveLlmConfig(
 
   // Tier 1 — the user-configured DB row. Prefer the per-capability row, then the
   // global "default" row. A stored secretValue wins; else the env-ref resolves.
-  const fromCap = tryDbRow(await deps.getModelConfig(ctx, capability), env);
+  // [T-432] 记住是否存在配置行(哪怕其 key 解不开)—— decRow 在 master key 不符时把
+  //   secretValue 静默置 null(settings.repository:200-212),使「已配但密钥解密失败」与
+  //   「从未配置」在这里都表现为 null token。用「行是否存在」区分,给诚实文案:前者叫用户
+  //   去设置**重填密钥**(而非误导去改 .env.local),后者才提示配置/env。
+  const capRow = await deps.getModelConfig(ctx, capability);
+  const fromCap = tryDbRow(capRow, env);
   if (fromCap) return fromCap;
+  let defaultRow: ModelConfigInternal | null = null;
   if (capability !== DEFAULT_CAPABILITY) {
-    const fromDefault = tryDbRow(
-      await deps.getModelConfig(ctx, DEFAULT_CAPABILITY),
-      env,
-    );
+    defaultRow = await deps.getModelConfig(ctx, DEFAULT_CAPABILITY);
+    const fromDefault = tryDbRow(defaultRow, env);
     if (fromDefault) return fromDefault;
   }
+  const hasConfiguredRow = Boolean(capRow) || Boolean(defaultRow);
 
   // Tier 2 — the .env.local default provider.
   const envToken = resolveSecret(env.CREATOROS_LLM_SECRET_REF, env);
@@ -127,6 +132,8 @@ export async function resolveLlmConfig(
   }
 
   throw new LlmCredentialError(
-    `capability "${capability}" 无可用 LLM 凭据:请在 .env.local 设置 CREATOROS_LLM_SECRET_REF 指向的变量(如 MINIMAX_AUTH_TOKEN)或 ANTHROPIC_API_KEY`,
+    hasConfiguredRow
+      ? `已配置模型但密钥不可用:很可能是密钥解密失败(换机 / 重置工作区 / master key 变化，或密钥未填)。请到「设置 → 模型配置」重新填写 API 密钥并保存。`
+      : `capability "${capability}" 无可用 LLM 凭据:请到「设置 → 模型配置」配置模型与密钥;或(开发 / 自托管)在 .env.local 设置 CREATOROS_LLM_SECRET_REF 指向的变量(如 MINIMAX_AUTH_TOKEN)或 ANTHROPIC_API_KEY。`,
   );
 }
