@@ -1,106 +1,22 @@
 import "server-only";
 import { NextResponse } from "next/server";
 
-// [RT-H01·部分] Loopback API 防护:有副作用的路由只接受来自本机应用自身的请求(Host + Origin 双校验)。
+// [RT-H01 / T-372 L2] Loopback API 防护(route handler 侧):判定逻辑已提纯到 `loopback-core.ts`
+//   (与全局 proxy.ts 共用同一份,防 per-route 覆盖漂移,见 core 头注)。此文件只留:
+//     · `server-only` 屏障(route/server 专用,防误入 client bundle);
+//     · `loopbackForbidden()` 统一 403 响应(依赖 NextResponse)。
 //
-// 装机版拓扑(见 src-tauri/src/lib.rs):Tauri WebView 从 `http://127.0.0.1:<port>/` 加载页面,
-//   前端 fetch 全走**相对路径**(`/api/v1/dispatch`、`/api/chat`、`/api/web-session`)= 同源请求,
-//   Host 与 Origin 皆为 `127.0.0.1:<port>`(port 每次启动动态分配,不可硬编码)。据此:
-//
-//   · Host 白名单(必须 loopback)—— 挡 **DNS rebinding**:攻击页把自己域名重绑到 127.0.0.1 时,
-//     浏览器仍按原域名发 `Host: evil.com`,不在白名单 → 拒。
-//   · Origin 存在时必须 loopback —— 挡**跨站 CSRF**:浏览器对跨源 POST 强制附真实 Origin
-//     (`https://evil.com`),攻击者伪造不了 → 拒。
-//   · Origin 缺失 → 放行:同源 webview 的部分请求、curl/脚本、非浏览器调用不带 Origin;而浏览器
-//     **无法**在跨源 POST 上省略 Origin,故「无 Origin」可靠地代表「非跨站浏览器请求」。
-//
-// 只挂在**有副作用**的路由(dispatch/chat/web-session);纯读路由不强制(避免误伤 & 保持宽松)。
-// [T-372 L2] 启动级 nonce 握手 token 已落地(原 follow-up):Rust 壳每次启动随机生成 token,
-//   注入 sidecar env `CREATOROS_SIDECAR_HANDSHAKE_TOKEN` + WebView 初始化脚本全局
-//   `__CREATOROS_HANDSHAKE_TOKEN__`;前端有副作用请求带 `x-creatoros-handshake` 头,
-//   `hasValidHandshake` 比对。dev/web 无该 env → 检查不启用,行为与 P5 完全一致(不变式)。
+// [T-415 P0-B] 主强制点已上移到全局 `proxy.ts`(default-deny 全 /api + server action);route handler
+//   内保留的 `isTrustedLocalRequest` 检查转为**纵深防御**(第二道),不是唯一防线。
 
-// 集合用无括号形式(`::1` 而非 `[::1]`)——hostnameOf 统一剥方括号后再查表。`localhost` 兼容 dev 与
-//   vitest(`new Request("http://localhost/...")`)。
-const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);
+export {
+  HANDSHAKE_HEADER,
+  isLoopbackRequest,
+  hasValidHandshake,
+  isTrustedLocalRequest,
+} from "./loopback-core";
 
-// 从「授权串」(Host 头 `host:port` 或 Origin `scheme://host:port`)解析出纯 hostname(小写)。
-// 无 scheme 时补 `http://` 让 URL 解析器统一剥端口;**Node 的 URL.hostname 对 IPv6 保留方括号**
-//   (`new URL("http://[::1]:5000").hostname === "[::1]"`,实测),故此处显式剥 `[...]` 归一成
-//   `::1` 再交白名单查表。解析失败 → null(视为不可信)。
-function hostnameOf(value: string | null): string | null {
-  if (!value) return null;
-  try {
-    const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(value);
-    const u = new URL(hasScheme ? value : `http://${value}`);
-    const h = u.hostname.toLowerCase();
-    return h.startsWith("[") && h.endsWith("]") ? h.slice(1, -1) : h;
-  } catch {
-    return null;
-  }
-}
-
-function urlHost(url: string): string | null {
-  try {
-    return new URL(url).host;
-  } catch {
-    return null;
-  }
-}
-
-/** 请求是否来自本机应用自身(loopback Host + 非跨站 Origin)。true=放行,false=拒。 */
-export function isLoopbackRequest(req: Request): boolean {
-  // Host:优先请求头(Next 由 Host 头构造请求),缺省回退 URL host(vitest 用 new Request(url) 无 Host 头)。
-  const host = hostnameOf(req.headers.get("host") ?? urlHost(req.url));
-  if (!host || !LOOPBACK_HOSTS.has(host)) return false;
-
-  // Origin:存在则必须 loopback(`Origin: null` 等 opaque 源 hostname 解析为 "null",不在白名单 → 拒);
-  //   缺省放行(见上方说明)。
-  const origin = req.headers.get("origin");
-  if (origin) {
-    const oHost = hostnameOf(origin);
-    if (!oHost || !LOOPBACK_HOSTS.has(oHost)) return false;
-  }
-  return true;
-}
-
-/** [T-372 L2] 握手 token 请求头名(Rust sync_mirror_to_sidecar / 前端 handshake-client 共用)。 */
-export const HANDSHAKE_HEADER = "x-creatoros-handshake";
-
-/**
- * [T-372 L2] 启动级 nonce 握手校验:桌面态(env 有 token)要求请求头逐字节一致;
- * dev/web(无 token env)→ 恒 true(检查不启用,P5 行为不变)。
- */
-export function hasValidHandshake(
-  req: Request,
-  env: Record<string, string | undefined> = process.env,
-): boolean {
-  const token = env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN?.trim();
-  if (token) return req.headers.get(HANDSHAKE_HEADER) === token;
-  // [T-415 P0-B] 缺 token 的处置:
-  //   · 桌面**打包产物**:next.config 对 isDesktopBuild 把 `process.env.CREATOROS_HANDSHAKE_REQUIRED`
-  //     烘焙成字面量 "1"(裸 node 省不掉)→ **fail-CLOSED**。真机永远有 Rust 注入的 token,走不到这里;
-  //     只有「解压 sidecar + 裸 node server.js」白嫖才缺 token → 403(堵攻击链 2)。
-  //   · web/dev/单测:未烘焙 → undefined → **fail-open**(P5 行为不变,pnpm dev 无 Rust 注入 token 仍跑)。
-  //   env 参数分支供单测注入;`process.env.CREATOROS_HANDSHAKE_REQUIRED` 字面量是打包烘焙的真门(勿改成变量,否则不被 Next 内联)。
-  const required =
-    (env.CREATOROS_HANDSHAKE_REQUIRED ??
-      process.env.CREATOROS_HANDSHAKE_REQUIRED) === "1";
-  return !required;
-}
-
-/**
- * [T-372 L2] 有副作用路由的统一判据 = loopback(Host/Origin)+ 握手 token。
- * dispatch/chat/web-session 用它替换裸 isLoopbackRequest。
- */
-export function isTrustedLocalRequest(
-  req: Request,
-  env: Record<string, string | undefined> = process.env,
-): boolean {
-  return isLoopbackRequest(req) && hasValidHandshake(req, env);
-}
-
-/** 统一的 403 拒答(跨站/异常 Origin/非 loopback Host)。 */
+/** 统一的 403 拒答(跨站/异常 Origin/非 loopback Host/缺握手)。 */
 export function loopbackForbidden(): NextResponse {
   return NextResponse.json(
     { error: "forbidden: request must originate from the local application" },
