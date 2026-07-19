@@ -1584,14 +1584,16 @@ describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制
     expect(prep({ stepNumber: 4 })).toEqual({});
   });
 
-  it("[T-443] forcedTool **不再**走 API 层 toolChoice 强制(思考模型对它直接 400);末步照旧禁工具", () => {
+  it("[T-117/T-443] forcedTool 第 0 步**仍下发强制**(快路径:点按钮秒出卡);末步照旧禁工具", () => {
     const prep = buildChatPrepareStep({
       forcedTool: "topic_enrich",
       maxSteps: 6,
     });
-    // 第 0 步不再下发 `toolChoice:{type:'tool'}` —— DeepSeek thinking 等推理模型会
-    // 「Thinking mode does not support this tool_choice」400 拒,整轮打不开(2026-07-20 真机)。
-    expect(prep({ stepNumber: 0 })).toEqual({});
+    // 保留 API 层强制 = 模型第 0 步直接执行,不必自己纠结要不要调工具(用户实测 MiniMax「一下就出来」)。
+    // 思考模型对它 400 的兼容问题,由 recovering-model 中间件「被拒才降级」兜底,而不是让所有模型变慢。
+    expect(prep({ stepNumber: 0 })).toEqual({
+      toolChoice: { type: "tool", toolName: "topic_enrich" },
+    });
     expect(prep({ stepNumber: 1 })).toEqual({});
     // 末步禁工具收尾(T-239f)不受影响。
     expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });

@@ -50,24 +50,72 @@ export function createRecoveringModel(
   return wrapLanguageModel({
     model: opts.model,
     middleware: {
-      wrapStream: ({ doStream, params }) =>
-        startWithRecovery({
-          start: doStream,
-          startFallback: fallback ? () => fallback.doStream(params) : null,
-          maxRetries: opts.maxRetries,
-          sleep: opts.sleep,
-          random: opts.random,
-          onEvent: opts.onEvent,
-        }),
-      wrapGenerate: ({ doGenerate, params }) =>
-        startWithRecovery({
-          start: doGenerate,
-          startFallback: fallback ? () => fallback.doGenerate(params) : null,
-          maxRetries: opts.maxRetries,
-          sleep: opts.sleep,
-          random: opts.random,
-          onEvent: opts.onEvent,
-        }),
+      wrapStream: async ({ doStream, params, model }) => {
+        const run = (start: () => ReturnType<typeof doStream>) =>
+          startWithRecovery({
+            start,
+            startFallback: fallback ? () => fallback.doStream(params) : null,
+            maxRetries: opts.maxRetries,
+            sleep: opts.sleep,
+            random: opts.random,
+            onEvent: opts.onEvent,
+          });
+        try {
+          return await run(doStream);
+        } catch (err) {
+          if (!shouldDowngradeToolChoice(params, err)) throw err;
+          opts.onEvent?.({ type: "retry", reason: TOOL_CHOICE_DOWNGRADE_REASON });
+          return await run(() =>
+            model.doStream({ ...params, toolChoice: { type: "auto" } }),
+          );
+        }
+      },
+      wrapGenerate: async ({ doGenerate, params, model }) => {
+        const run = (start: () => ReturnType<typeof doGenerate>) =>
+          startWithRecovery({
+            start,
+            startFallback: fallback ? () => fallback.doGenerate(params) : null,
+            maxRetries: opts.maxRetries,
+            sleep: opts.sleep,
+            random: opts.random,
+            onEvent: opts.onEvent,
+          });
+        try {
+          return await run(doGenerate);
+        } catch (err) {
+          if (!shouldDowngradeToolChoice(params, err)) throw err;
+          opts.onEvent?.({ type: "retry", reason: TOOL_CHOICE_DOWNGRADE_REASON });
+          return await run(() =>
+            model.doGenerate({ ...params, toolChoice: { type: "auto" } }),
+          );
+        }
+      },
     },
   });
+}
+
+/** [T-443] 降级打点原因(chat-runner 消费 → console 可观测「这轮为什么变慢了」)。 */
+export const TOOL_CHOICE_DOWNGRADE_REASON = "tool_choice_unsupported_downgrade";
+
+/**
+ * [T-443] 是否该把「强制指定工具」降级成 auto 重试一次。
+ *
+ * 背景:点界面按钮/深链时会下发 `toolChoice:{type:'tool'}` 让模型**第一步直接执行**该工具 ——
+ * 这正是「MiniMax 一下就出卡」的原因(省掉模型自己决定要不要调工具的思考)。但推理/思考模型
+ * (DeepSeek thinking「deepseek-v4-pro」、OpenAI o 系列)对它直接 400
+ * 「Thinking mode does not support this tool_choice」。
+ *
+ * 这类错误**不可重试**(重试多少次都一样)但**可降级**:去掉强制退回 auto 即可跑通,强制意图由
+ * system 强指令兜底(buildForcedToolInstruction)。故:**默认仍带强制**(支持的模型保持秒出),
+ * 只有真被拒时才多花一次往返降级 —— 而不是一刀切改成 prompt 指令让**所有**模型都变慢
+ * (2026-07-20 用户实测反馈:一刀切后 MiniMax 也从"一下就出来"变卡)。
+ */
+function shouldDowngradeToolChoice(
+  params: { toolChoice?: { type?: string } | undefined },
+  err: unknown,
+): boolean {
+  if (params.toolChoice?.type !== "tool") return false; // 本来就没强制,无可降级
+  const e = err as { message?: unknown; responseBody?: unknown };
+  const msg = `${e?.message ?? ""} ${e?.responseBody ?? ""}`.toLowerCase();
+  return msg.includes("tool_choice") || msg.includes("tool choice");
 }

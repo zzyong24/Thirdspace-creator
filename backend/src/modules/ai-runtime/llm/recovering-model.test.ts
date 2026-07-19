@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { streamText, simulateReadableStream } from "ai";
+import { streamText, simulateReadableStream, jsonSchema } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { createRecoveringModel } from "./recovering-model";
 import type { RecoveryEvent } from "./retry-policy";
@@ -220,5 +220,71 @@ describe("[T-239b] createRecoveringModel", () => {
     expect(() =>
       createRecoveringModel({ model: "some-global-id", maxRetries: 3 }),
     ).toThrow(/LanguageModel 实例/);
+  });
+});
+
+// ── [T-443] 强制工具被拒 → 自动降级成 auto 重试(而非让所有模型都放弃强制)────────────
+describe("[T-443] toolChoice 强制被拒时降级重试", () => {
+  it("模型报 tool_choice 不支持 → 去掉强制(auto)重试一次并成功;打点 reason 可观测", async () => {
+    const seen: Array<{ type?: string }> = [];
+    const events: RecoveryEvent[] = [];
+    const model = createRecoveringModel({
+      model: new MockLanguageModelV4({
+        doStream: async (opts: { toolChoice?: { type?: string } }) => {
+          seen.push({ type: opts.toolChoice?.type });
+          if (opts.toolChoice?.type === "tool") {
+            throw new Error("Thinking mode does not support this tool_choice");
+          }
+          return okStream("降级后跑通");
+        },
+      }),
+      maxRetries: 2,
+      sleep: noSleep,
+      onEvent: (e) => events.push(e),
+    });
+    const r = streamText({
+      model,
+      prompt: "hi",
+      maxRetries: 0,
+      tools: { t: { description: "d", inputSchema: jsonSchema({ type: "object", properties: {} }) } as never },
+      toolChoice: { type: "tool", toolName: "t" },
+    });
+    let text = "";
+    for await (const d of r.textStream) text += d;
+    expect(text).toBe("降级后跑通");
+    // 第一次带强制被拒、第二次降级成 auto。
+    expect(seen.map((s) => s.type)).toEqual(["tool", "auto"]);
+    expect(events.some((e) => e.reason === "tool_choice_unsupported_downgrade")).toBe(true);
+  });
+
+  it("非 tool_choice 类错误 → 不降级(原样走既有重试/抛出,不掩盖真问题)", async () => {
+    const seen: Array<{ type?: string }> = [];
+    const model = createRecoveringModel({
+      model: new MockLanguageModelV4({
+        doStream: async (opts: { toolChoice?: { type?: string } }) => {
+          seen.push({ type: opts.toolChoice?.type });
+          throw new Error("some unrelated 400 bad request");
+        },
+      }),
+      maxRetries: 0,
+      sleep: noSleep,
+    });
+    const r = streamText({
+      model,
+      prompt: "hi",
+      maxRetries: 0,
+      tools: { t: { description: "d", inputSchema: jsonSchema({ type: "object", properties: {} }) } as never },
+      toolChoice: { type: "tool", toolName: "t" },
+    });
+    // 错误未必经 textStream 抛(streamText 另有 onError 路径),本用例只关心**有没有降级重试**。
+    try {
+      for await (const _ of r.textStream) {
+        /* drain */
+      }
+    } catch {
+      /* 预期失败,忽略 */
+    }
+    // 只试过带强制那一次,没有降级重试。
+    expect(seen.map((s) => s.type)).toEqual(["tool"]);
   });
 });

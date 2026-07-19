@@ -1715,13 +1715,17 @@ export function buildChatPrepareStep(opts: {
   toolChoice?: "none" | { type: "tool"; toolName: string };
 } {
   return ({ stepNumber }) => {
-    // [T-443] forcedTool **不再走 API 层 `toolChoice:{type:'tool'}` 强制**:推理/思考模型
-    //   (DeepSeek thinking「deepseek-v4-pro」、OpenAI o 系列同类)对它直接 400
-    //   「Thinking mode does not support this tool_choice」→ **整轮打不开**(2026-07-20 真机日志)。
-    //   改走 system 层强指令(buildForcedToolInstruction,由 runChatStream 拼进 system)。
-    //   失败模式对比:API 强制失败 = 硬 400、功能完全不可用;prompt 强指令失败 = 个别弱模型可能
-    //   不调工具(T-117 原本要防的场景)—— 后者可接受得多,且对「模型用户可配」定位天然兼容
-    //   (不必枚举哪些模型支持强制)。opts.forcedTool 保留在签名里:调用方据它决定是否拼指令。
+    // [T-117] 第 0 步强制调 forcedTool —— 这是「点按钮/深链后卡片秒出」的关键:模型**直接执行**,
+    //   省掉它自己纠结要不要调工具(用户实测:MiniMax 带强制时"一下就出来")。
+    // [T-443] 曾因 DeepSeek thinking 对此 400 而一刀切改成 prompt 指令 —— 那让**所有**模型都变慢
+    //   (模型得先理解指令再决定调不调,思考模型还要先推理一大段),是明显的性能回归。
+    //   现在改为:**默认仍带强制(快)**,被拒时由 recovering-model 中间件自动降级成 auto 重试一次
+    //   (见 shouldDowngradeToolChoice),强制意图由 system 强指令兜底 —— 快与兼容两头都要。
+    if (opts.forcedTool && stepNumber === 0) {
+      return {
+        toolChoice: { type: "tool" as const, toolName: opts.forcedTool },
+      };
+    }
     if (stepNumber >= opts.maxSteps - 1) {
       return { toolChoice: "none" as const };
     }
