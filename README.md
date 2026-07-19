@@ -36,6 +36,14 @@
   </p>
 </div>
 
+<!-- COMMIT ACTIVITY(私有仓第三方嵌入取不到数据,CI 每日自动重生成:.github/workflows/commit-activity.yml) -->
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/commit-activity-dark.svg">
+    <img alt="提交活动:每日提交热力图 + 近 30 天每日提交柱状图" src="docs/assets/commit-activity.svg" width="900">
+  </picture>
+</div>
+
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>目录</summary>

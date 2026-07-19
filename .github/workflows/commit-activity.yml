@@ -1,0 +1,44 @@
+# [T-421] 每日重生成 README 提交活动图(docs/assets/commit-activity{,-dark}.svg)。
+# 私有仓 Repobeats/shields 动态徽章全取不到数据 → 自托管:脚本零依赖,不装 pnpm 直接 node 跑。
+# 只在图有变化时提交;消息带 [skip ci] 不触发 verify.yml;脚本统计时排除本 bot 的提交,不污染数据。
+name: Commit Activity
+
+on:
+  schedule:
+    - cron: "30 8 * * *" # 每日一次(UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: commit-activity
+  cancel-in-progress: true
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 全历史,统计需要
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: 生成提交活动图
+        run: node .github/scripts/commit-activity.mjs
+
+      - name: 有变化则提交
+        run: |
+          if git diff --quiet -- docs/assets/commit-activity.svg docs/assets/commit-activity-dark.svg; then
+            echo "图无变化,跳过提交"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/commit-activity.svg docs/assets/commit-activity-dark.svg
+          git commit -m "chore(readme): 更新提交活动图 [skip ci]"
+          git push
