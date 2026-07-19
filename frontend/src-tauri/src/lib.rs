@@ -465,20 +465,12 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
     false
 }
 
-/// [T-436] 内置启动 splash 的 data: URL(自包含,免打包资源;中文经 percent-encode 进 URL)。
-/// 点图标即用它建窗(秒出窗口+转圈),sidecar ready 后再 navigate 到真页面 —— 消除原实现
-/// 「解压+冷启动全程无窗口」的「卡很久才弹窗」观感。
-fn splash_data_url() -> String {
-    const HTML: &str = "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"color-scheme\" content=\"dark light\"><style>html,body{margin:0;height:100vh;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px}.s{width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:r .8s linear infinite}@keyframes r{to{transform:rotate(360deg)}}.t{font-size:14px;color:#8b8b93;letter-spacing:.3px}</style></head><body><div class=\"s\"></div><div class=\"t\">正在启动 CreatorOS…</div></body></html>";
-    let mut enc = String::with_capacity(HTML.len() * 2);
-    for &b in HTML.as_bytes() {
-        match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => enc.push(b as char),
-            _ => enc.push_str(&format!("%{b:02X}")),
-        }
-    }
-    format!("data:text/html;charset=utf-8,{enc}")
-}
+/// [T-436] splash loading 注入脚本(经 initialization_script 在 about:blank 上注入 DOM)。
+/// ⚠️ 不用 data: URL:WKWebView **禁止 data: 主 frame 导航**(安全限制),macOS 15.1 实测直接
+/// SIGABRT(2026-07-20 真机 crash·didFinishLaunching→observer→abort),新 OS 静默容忍才没暴露。
+/// about:blank 是标准允许的空白页,原理对症。脚本内判 `location.protocol==='about:'` 才注入 →
+/// navigate 到真 http 页面时该 init 脚本重跑也直接 return,不污染真页面。纯 DOM API,无 HTML 转义。
+const SPLASH_JS: &str = "window.addEventListener('DOMContentLoaded',function(){if(location.protocol!=='about:')return;var d=document;d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:14px;color:#8b8b93;letter-spacing:.3px';d.body.appendChild(t);});";
 
 /// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
 /// SHA-256(build.rs 经 rustc-env 注入)。不匹配 → Err(人话)→ 拒绝 spawn。
@@ -1151,18 +1143,21 @@ pub fn run() {
                 "window.__CREATOROS_HANDSHAKE_TOKEN__=\"{handshake_token}\";"
             );
             let sidecar_url = format!("http://127.0.0.1:{port}/");
-            // [T-436] 立即建主窗口载**内置 splash**(点图标秒出窗口+转圈),不再等 sidecar ready 才建窗
-            //   (原实现:解压+冷启动全程无窗口 → 用户「卡很久才弹窗」的观感来源)。setup 闭包在主线程,
-            //   可直接建窗;sidecar ready 后在后台线程 navigate 到真页面,就绪探测不阻塞 setup。
+            // [T-436] 立即建主窗口(about:blank)+ initialization_script 注入 loading splash(点图标秒
+            //   出窗口+转圈),不再等 sidecar ready 才建窗(原实现全程无窗口=「卡很久才弹窗」)。setup 闭包
+            //   在主线程,可直接建窗;sidecar ready 后后台线程 navigate 到真页面,就绪探测不阻塞 setup。
+            //   token + SPLASH_JS 一起注入:navigate 后 init 脚本重跑 → token 常在,SPLASH_JS 自判非
+            //   about: 页面即 return 不污染。**不用 data: URL**(WKWebView 禁 data: 主导航,15.1 会 abort)。
+            let splash_init = format!("{webview_token_script}\n{SPLASH_JS}");
             let win = WebviewWindowBuilder::new(
                 &handle,
                 "main",
-                WebviewUrl::External(splash_data_url().parse().expect("splash url 解析失败")),
+                WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败")),
             )
             .title("CreatorOS")
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
-            .initialization_script(&webview_token_script)
+            .initialization_script(&splash_init)
             .build()
             .expect("建主窗口失败");
             std::thread::spawn(move || {
