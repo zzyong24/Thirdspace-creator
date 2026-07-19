@@ -67,6 +67,16 @@ function parseDottedIpv4(s: string): number[] | null {
   return out;
 }
 
+/**
+ * [T-438] RFC2544 基准测试段(198.18.0.0/15)的阻断原因 —— 单独抽常量,因为它在两种场景下判定不同:
+ *   · **直接 IP 字面量**(`http://198.18.2.1`)→ 仍阻断(没有正当理由直接访问该段 = 可疑探测);
+ *   · **域名 DNS 解析结果**命中它 → **例外放行**(见 assertPublicUrl)。原因:Clash/Surge 等代理的
+ *     **fake-ip 模式默认池正是 198.18.0.0/16**,开代理时所有公网域名(kimi.com/wikipedia.org…)
+ *     都解析到这里,一刀切会让**网页截图对所有代理用户全废**(2026-07-20 真机 4 连失败);且 fake-ip
+ *     下这个地址根本不代表真实连接目标 —— 实际连接由代理发起,本机不会真连内网,该层检查已失去意义。
+ */
+export const FAKE_IP_BENCH_REASON = "198.18.0.0/15 基准测试保留地址";
+
 /** IPv4 阻断段判定:命中返回原因(人话),否则 null。 */
 function blockedIpv4Reason(bytes: number[]): string | null {
   const [a, b] = bytes;
@@ -78,7 +88,7 @@ function blockedIpv4Reason(bytes: number[]): string | null {
   if (a === 169 && b === 254) return "169.254.0.0/16 链路本地/云元数据地址"; // 含 169.254.169.254
   if (a === 172 && b >= 16 && b <= 31) return "172.16.0.0/12 私网地址";
   if (a === 192 && b === 168) return "192.168.0.0/16 私网地址";
-  if (a === 198 && (b === 18 || b === 19)) return "198.18.0.0/15 基准测试保留地址";
+  if (a === 198 && (b === 18 || b === 19)) return FAKE_IP_BENCH_REASON;
   if (a >= 240) return "240.0.0.0/4 保留/广播地址";
   return null;
 }
@@ -239,6 +249,11 @@ export async function assertUrlAllowed(
   }
   for (const a of addrs) {
     const reason = blockedIpReason(a.address);
+    // [T-438] fake-ip 例外:域名解析到 198.18.0.0/15 时放行 —— 那几乎必然是 Clash/Surge 的 fake-ip
+    //   假地址(其默认池就是 198.18.0.0/16),不是真的内网目标;实际连接由代理发起。不放行则所有开
+    //   代理的用户网页截图全废。**其余保留段(回环/私网/链路本地/云元数据)一律照拦**,上面两层
+    //   (IP 字面量、hostname)也全部保留 —— 那才是防内网探测的真防线。
+    if (reason === FAKE_IP_BENCH_REASON) continue;
     if (reason) {
       throw new UrlBlockedError(
         `「${host}」解析到「${a.address}」(${reason})——为防内网探测(SSRF)已阻止访问,只支持公网网页。`,

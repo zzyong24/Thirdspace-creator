@@ -341,6 +341,47 @@ export function getChatToolApprovalDecider(
  * 'not-applicable'。判定器抛错 → 保守回 'not-applicable'(让 execute 自己按既有四态诚实处理,
  * 不因判定器抖动误挂授权门)。
  */
+/**
+ * [T-439] 工具名合规化 —— 主流模型 API(DeepSeek/OpenAI/Anthropic)对 `tools[].function.name`
+ * 一律要求 `^[a-zA-Z0-9_-]+$`,而本项目工具名用点号分段(`context.projects`、
+ * `context.positioning.detail`),原样发出会被 **HTTP 400 invalid_request_error 秒拒** →
+ * copilot 整个不可用(2026-07-20 真机:DeepSeek 13 轮全拒 68~183ms;同一份工具名在宽松 provider
+ * 下 5 个带点工具全跑通 → 纯命名合规问题,工具实现无辜)。故装配时把非法字符换成下划线。
+ *
+ * 为何**只换 key 就够**:Vercel AI SDK 用 `tools` 的 key 既作发出的 function.name、又作模型回传
+ * tool_call 的匹配键 —— 全程闭环,故**工具 execute 实现零改动**;且 `buildChatToolApproval` 是从
+ * sanitize 后的 tools 生成的,HITL 授权门的键**自动对齐**(不会出现「该拦的工具因改名而放行」)。
+ */
+export function sanitizeToolName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+/**
+ * [T-439] 批量合规化「按工具名索引的 Record」的 key —— 泛型是刻意的:`tools`(ToolSet)与
+ * `toolApproval`(Record<string, 判定器>)**必须用同一套换名**,否则 SDK 回传 tool_call 时授权门
+ * 的键对不上 = HITL 形同虚设。故两者都走本函数。
+ *
+ * 调用时机:**只在发给模型的那一刻**(streamText 入参)换,装配层一律保持原名 —— 原名是内部真值
+ * (错误信封登记 CHAT_TOOL_ERROR_ENVELOPES、白名单 toolWhitelist、深链 functionKey、审计日志
+ * `[chat-tool] name=` 全按原名),在装配层换会连带打穿这些(实测打红 36 个既有用例)。
+ *
+ * 撞名 **fail-fast 抛错**——静默覆盖会让某个工具凭空消失(模型再也调不到它,且毫无征兆),比直接
+ * 报错危险得多。当前 50 个带点工具名 sanitize 后无冲突,有测锚钉住。
+ */
+export function sanitizeToolNames<T>(rec: Record<string, T>): Record<string, T> {
+  const out: Record<string, T> = {};
+  for (const [name, t] of Object.entries(rec)) {
+    const safe = sanitizeToolName(name);
+    if (safe in out) {
+      throw new Error(
+        `[chat-tool-gate][T-439] 工具名合规化撞名:「${name}」→「${safe}」已被占用 —— 请改工具命名避免冲突(禁止静默覆盖)`,
+      );
+    }
+    out[safe] = t;
+  }
+  return out;
+}
+
 export function buildChatToolApproval(
   tools: ToolSet,
 ): Record<string, (input: unknown) => Promise<ToolApprovalStatus>> | undefined {

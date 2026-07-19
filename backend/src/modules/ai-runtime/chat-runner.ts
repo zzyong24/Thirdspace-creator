@@ -7,7 +7,7 @@ import {
   type ToolApprovalStatus,
 } from "ai";
 // [T-263] HITL 授权门:从已挂工具装配 streamText 的 toolApproval 配置(单一真值在 chat-tool-gate)。
-import { buildChatToolApproval } from "./chat-tool-gate";
+import { buildChatToolApproval, sanitizeToolName, sanitizeToolNames } from "./chat-tool-gate";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec } from "@creatoros/ai-worker";
 import {
@@ -1670,6 +1670,8 @@ export async function buildChatAssembly(
       return deps.contextReaders.getPredictions(ctx, { limit });
     },
   };
+  // [T-439] 装配层一律用**原名**(内部真值:错误信封登记 / 白名单 / 深链 functionKey / 审计日志
+  //   都按原名)。合规化只在发给模型那一刻做,见下方 streamText 入参。
   const tools = buildChatTools(toolWhitelist, toolDeps);
 
   // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
@@ -1877,18 +1879,27 @@ export async function runChatStream(
     abortSignal: input.abortSignal,
     system: assembly.system,
     messages: modelMessages,
-    tools: assembly.tools,
+    // [T-439] 发给模型前合规化工具名(点 → 下划线):DeepSeek/OpenAI/Anthropic 对
+    //   `tools[].function.name` 一律要求 `^[a-zA-Z0-9_-]+$`,原样发出 → 400 秒拒 → copilot 全废
+    //   (2026-07-20 真机)。SDK 用同一 key 发出 + 匹配模型回传的 tool_call → **execute 零改动**;
+    //   下面 toolApproval 必须走同一函数换名,否则回传时授权门键对不上 = HITL 形同虚设。
+    tools: sanitizeToolNames(assembly.tools),
     // [T-117 确定性修] functionKey 命中真工具时,第 0 步 toolChoice 强制调它 → 必产 tool-result
     // → 前端渲真卡(弱 tool-calling 模型不再把卡当文本吐 + 谎称已渲卡);之后步恢复 auto,让模型
     // 据工具结果把话说完。[T-239f] 最后一步 toolChoice:'none' 禁工具,模型必须文字总结收尾。
+    // [T-439] toolChoice 里的 function.name 走同一套校验,故 forcedTool 同样要合规化。
     prepareStep: buildChatPrepareStep({
-      forcedTool: assembly.forcedTool,
+      forcedTool: assembly.forcedTool ? sanitizeToolName(assembly.forcedTool) : undefined,
       maxSteps,
     }),
     // [T-263] 原生工具授权(HITL):local.read 未授权 → SDK 挂起该工具调用、以 approval-requested
     // 态 surface 前端确认卡(execute 暂不跑),用户「允许」写 grant + addToolApprovalResponse →
     // sendAutomaticallyWhen 同回合 resume 续跑 execute 读到内容。无需授权门时 undefined(行为不变)。
-    ...(assembly.toolApproval ? { toolApproval: assembly.toolApproval } : {}),
+    // [T-439] 与上面 tools 走**同一套换名**——键必须一致,否则 SDK 用合规名回传 tool_call 时
+    //   在授权门里查不到判定器 → 该弹确认的工具被直接放行。
+    ...(assembly.toolApproval
+      ? { toolApproval: sanitizeToolNames(assembly.toolApproval) }
+      : {}),
     // 工具调用后让模型据工具结果继续把话说完(候选已在 tool-result part 里流回前端渲卡)。
     stopWhen: stepCountIs(maxSteps),
     // [T-239b] typed 终止原因:成功轮按恢复层事件归纳;错误轮区分「可重试耗尽」与其它;

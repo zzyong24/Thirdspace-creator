@@ -207,3 +207,37 @@ describe("collectRedirectChainUrls — Playwright 重定向链鸭子类型收集
     expect(collectRedirectChainUrls(broken)).toEqual([]);
   });
 });
+
+// ── [T-438] fake-ip 代理例外:域名解析到 198.18.0.0/15 放行,其余保留段一律不变 ─────────
+describe("[T-438] fake-ip 代理例外(Clash/Surge 默认池 198.18.0.0/16)", () => {
+  it("域名解析到 198.18.x.x → 放行(否则开代理的用户网页截图全废)", async () => {
+    await expect(
+      assertUrlAllowed("https://www.kimi.com/", { lookup: fakeLookup(["198.18.2.233"]) }),
+    ).resolves.toBeUndefined();
+    await expect(
+      assertUrlAllowed("https://en.wikipedia.org/", { lookup: fakeLookup(["198.18.2.236"]) }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("直接写 198.18.x.x IP 字面量 → 仍阻断(可疑探测,不属 fake-ip 场景)", async () => {
+    await expectBlocked("http://198.18.2.1/", "198.18.0.0/15");
+  });
+
+  it("其余保留段经 DNS 解析照样阻断(例外只针对 fake-ip 段)", async () => {
+    await expectBlocked("https://a.example.com/", "127.0.0.0/8", fakeLookup(["127.0.0.1"]));
+    await expectBlocked("https://b.example.com/", "192.168.0.0/16", fakeLookup(["192.168.1.1"]));
+    await expectBlocked(
+      "https://c.example.com/",
+      "169.254.0.0/16",
+      fakeLookup(["169.254.169.254"]),
+    );
+  });
+
+  it("多解析结果中混有真私网 → 仍阻断(fake-ip 例外不掩护真内网)", async () => {
+    await expectBlocked(
+      "https://mixed.example.com/",
+      "10.0.0.0/8",
+      fakeLookup(["198.18.2.5", "10.0.0.7"]),
+    );
+  });
+});

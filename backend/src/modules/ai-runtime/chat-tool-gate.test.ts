@@ -9,6 +9,8 @@ import {
   defineChatTool,
   enforceChatToolResultBudget,
   getChatToolApprovalDecider,
+  sanitizeToolName,
+  sanitizeToolNames,
 } from "./chat-tool-gate";
 import type { ToolSet } from "ai";
 import { ALL_CHAT_TOOL_NAMES } from "./chat-tools";
@@ -272,5 +274,58 @@ describe("defineChatTool needsApproval + buildChatToolApproval(HITL 通用门)",
     await expect(approval!["local.read"]!({ path: "x" })).resolves.toBe(
       "not-applicable",
     );
+  });
+});
+
+// ── [T-439] 工具名合规化:模型 API 只收 ^[a-zA-Z0-9_-]+$,点号名会被 400 秒拒 ───────────────
+describe("[T-439] 工具名合规化(DeepSeek/OpenAI/Anthropic 只收 ^[a-zA-Z0-9_-]+$)", () => {
+  it("点号 → 下划线;已合规的名字原样不动", () => {
+    expect(sanitizeToolName("context.positioning.detail")).toBe("context_positioning_detail");
+    expect(sanitizeToolName("local.read")).toBe("local_read");
+    expect(sanitizeToolName("already_safe-1")).toBe("already_safe-1");
+  });
+
+  it("全部注册工具名 sanitize 后都符合模型 API 规则(且长度 ≤64)", () => {
+    for (const n of ALL_CHAT_TOOL_NAMES) {
+      expect(sanitizeToolName(n)).toMatch(/^[a-zA-Z0-9_-]{1,64}$/);
+    }
+  });
+
+  it("全部注册工具名 sanitize 后互不撞名(撞名=工具被静默覆盖,模型永远调不到它)", () => {
+    const seen = new Set<string>();
+    for (const n of ALL_CHAT_TOOL_NAMES) seen.add(sanitizeToolName(n));
+    expect(seen.size).toBe(ALL_CHAT_TOOL_NAMES.length);
+  });
+
+  it("sanitizeToolNames 只换 key、不动 tool 实例;撞名 fail-fast 抛错(拒绝静默覆盖)", () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    // 用**真实已登记信封**的工具名(defineChatTool 会对未登记名直接抛错,见上文信封 guard)。
+    const a = defineChatTool("context.projects", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => ({ kind: "context.projects" }),
+    });
+    const out = sanitizeToolNames({ "context.projects": a } as unknown as ToolSet);
+    expect(Object.keys(out)).toEqual(["context_projects"]);
+    expect(out["context_projects"]).toBe(a); // 同一实例 → execute 零改动
+    expect(() =>
+      sanitizeToolNames({ "context.projects": a, context_projects: a } as unknown as ToolSet),
+    ).toThrow(/撞名/);
+  });
+
+  it("HITL 授权门的键跟随 sanitize 后的 key —— 改名不会让该拦的工具漏拦", () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const decide = vi.fn(async () => ({ status: "user-approval" }) as const);
+    const t = defineChatTool("local.read", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => ({ kind: "local.read" }),
+      needsApproval: decide,
+    });
+    const approval = buildChatToolApproval(
+      sanitizeToolNames({ "local.read": t } as unknown as ToolSet),
+    );
+    // 键必须与真正发给模型的 function.name 一致,否则 SDK 回传时匹配不上 = 授权门形同虚设
+    expect(Object.keys(approval ?? {})).toEqual(["local_read"]);
   });
 });
