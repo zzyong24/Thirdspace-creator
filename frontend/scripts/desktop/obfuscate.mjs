@@ -119,11 +119,19 @@ export function isSymlinkEscape(absPath, fsdep = { lstatSync, realpathSync }) {
  */
 export function pickPreset(code, relPath = "") {
   const parts = relPath.split(/[\\/]/).filter(Boolean);
-  // ① turbopack chunk 树(chunks/ 或 chunks/ssr/ 下)→ rename-only。
-  if (parts.includes("chunks")) return "rename-only";
-  // ② 显式动态 require/import 字面量 → rename-only。
   const dynLiteral = /(?:require|import)\s*\(\s*["'`]/;
-  return dynLiteral.test(code) ? "rename-only" : "full";
+  const hasDynLiteral = dynLiteral.test(code);
+  // ① turbopack chunk 树(chunks/ 或 chunks/ssr/ 下):
+  //    · 含字面 require/import → rename-only(编码模块名字面量会 ChunkLoadError)。
+  //    · 否则 → [T-417 L1] chunk-stringarray:rc4 加密**业务字符串**(prompt/端点),reservedStrings
+  //      排除 turbopack glue(指令前缀 / chunks 路径 / __next / node: / .js 后缀);模块 ID 与引用是
+  //      **数字**(`e.i(958148)`),stringArray 天然不碰 → 互链不断。突破旧「chunks 必整体 rename-only」
+  //      结论(那是把整棵树一刀切;实测业务 chunk 无 chunk 路径互链字符串,可精确加密)。**冒烟护栏兜底**。
+  if (parts.includes("chunks")) {
+    return hasDynLiteral ? "rename-only" : "chunk-stringarray";
+  }
+  // ② 非 chunks 但含字面 require/import → rename-only;否则 full。
+  return hasDynLiteral ? "rename-only" : "full";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,6 +156,43 @@ export const FULL_OPTIONS = Object.freeze({
   reservedStrings: ["^next", "^@creatoros", "^\\./", "^\\.\\./", "^node:"],
 });
 
+/**
+ * [T-417 L1] chunk-stringarray 档 = 业务 chunk 字符串 rc4 加密(挡 grep prompt/端点),但**严格
+ * 排除 turbopack glue 字符串**(否则 ChunkLoadError)。用于 chunks/ 里**不含字面 require/import**的
+ * 业务 chunk。诚实边界:javascript-obfuscator 不编码模板字面量静态段 + 对象属性键 → 部分残留;
+ * 只加密常规字符串字面量 = 部分加密,抬 grep 门槛非城墙(完全加密须 L3 字节码)。controlFlow 关
+ * (降 turbopack 互链风险)。threshold 0.75(1.0 会把更多 turbopack 关键串卷进 stringArray,抬崩险)。
+ * 诚实边界:`"use strict"` 指令前缀可能被编码(reservedStrings 对 Directive 节点不总生效)——编译
+ * 产物 sloppy mode 亦可运行(smoke + 11 路由 + stderr 无 ChunkLoadError 实证);真机四主链为最终验收。
+ */
+export const CHUNK_STRINGARRAY_OPTIONS = Object.freeze({
+  compact: true,
+  renameGlobals: false,
+  identifierNamesGenerator: "hexadecimal",
+  stringArray: true,
+  stringArrayEncoding: ["rc4"],
+  stringArrayThreshold: 0.75,
+  controlFlowFlattening: false,
+  deadCodeInjection: false,
+  selfDefending: false,
+  debugProtection: false,
+  disableConsoleOutput: false,
+  // reservedStrings:turbopack/Next 互链与指令前缀,绝不进 stringArray(编码即崩)。
+  reservedStrings: [
+    "^use strict$",
+    "^use client$",
+    "^use server$",
+    "chunks/",
+    "^__next",
+    "^__NEXT",
+    "^__turbopack",
+    "^node:",
+    "\\.js$",
+    "\\.node$",
+    "\\.wasm$",
+  ],
+});
+
 /** rename-only 档 = 只 identifier rename,不碰字符串/控制流(§3.1 gate ③ 降级)。 */
 export const RENAME_ONLY_OPTIONS = Object.freeze({
   compact: true,
@@ -167,7 +212,12 @@ export const RENAME_ONLY_OPTIONS = Object.freeze({
  * @param {"rename-only"|"full"} preset
  */
 export function obfuscateCode(code, preset) {
-  const opts = preset === "rename-only" ? RENAME_ONLY_OPTIONS : FULL_OPTIONS;
+  const opts =
+    preset === "rename-only"
+      ? RENAME_ONLY_OPTIONS
+      : preset === "chunk-stringarray"
+        ? CHUNK_STRINGARRAY_OPTIONS
+        : FULL_OPTIONS;
   return JavaScriptObfuscator.obfuscate(code, opts).getObfuscatedCode();
 }
 

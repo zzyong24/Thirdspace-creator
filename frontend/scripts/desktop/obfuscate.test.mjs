@@ -108,10 +108,15 @@ describe("pickPreset(§3.1 gate ③ 动态 require 降级 + turbopack chunk 路�
     expect(pickPreset(`export function add(a,b){ return a+b; }`, "app/api/x/route.js")).toBe("full");
   });
 
-  it("[T-164 真机踩点] turbopack chunks/ 树一律 rename-only(不管有无字面 require)", () => {
-    // chunk 靠 chunk 路径字符串 + 数字模块 ID 互链 loadChunkAsync,stringArray 编码 → ChunkLoadError。
-    expect(pickPreset(`export const x = 1;`, "chunks/abcd.js")).toBe("rename-only");
-    expect(pickPreset(`const y = 2;`, "chunks/ssr/some-chunk._.js")).toBe("rename-only");
+  it("[T-417 L1] chunks/ 无字面 require → chunk-stringarray(rc4 加密业务串);有字面 require → rename-only", () => {
+    // 突破旧「chunks 一律 rename-only」结论:业务 chunk 模块 ID/引用是**数字**(e.i(958148)),
+    // 无 chunk 路径互链字符串,rc4 stringArray + reservedStrings 排除 turbopack glue 后运行时不崩
+    // (smoke + 11 路由 + stderr 无 ChunkLoadError 实证)。含字面 require/import 的 chunk 仍降 rename-only。
+    expect(pickPreset(`export const x = 1;`, "chunks/abcd.js")).toBe("chunk-stringarray");
+    expect(pickPreset(`const y = 2;`, "chunks/ssr/some-chunk._.js")).toBe("chunk-stringarray");
+    // 含字面 require/import 的 chunk → 仍 rename-only(编码模块名字面量会崩)。
+    expect(pickPreset(`await import("./chunk-123.js");`, "chunks/x.js")).toBe("rename-only");
+    expect(pickPreset(`const fs=require("node:fs");`, "chunks/ssr/y._.js")).toBe("rename-only");
   });
 
   it("relPath 缺省时退回字面量正则(向后兼容)", () => {
