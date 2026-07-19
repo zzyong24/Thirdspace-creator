@@ -116,7 +116,13 @@ step("sidecar 二进制化", process.execPath, [join("scripts", "desktop", "buil
 //    注入)。混淆放在 build-sidecar(步1)之后、tauri build(步3)之前,tauri build 不再重建即保住混淆。
 step("sidecar JS 混淆(§3.1)", process.execPath, [join("scripts", "desktop", "obfuscate.mjs")]);
 
-// 2.5) [T-164] 混淆后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
+// 2.2) [T-419 L3] V8 字节码化(**混淆之后**:先 L1 rc4 加密字符串,再编字节码隐藏逻辑/解码器)。
+//    把 chunk-stringarray 业务 chunk 编成 .jsc + .js 换 stub + 实拷 bytenode 进 sidecar node_modules。
+//    版本铁律:用本机 node 编(= build-sidecar copyFileSync 打进 sidecar 的同一 node)→ 字节码版本匹配。
+//    失败 fail-fast。下面的冒烟(步2.5)因此测的是**字节码版**(turbopack require stub → 加载 .jsc)。
+step("sidecar V8 字节码化(§5,L1→L3)", process.execPath, [join("scripts", "desktop", "bytecode.mjs")]);
+
+// 2.5) [T-164] 混淆+字节码后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
 //    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
 //    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
 //    真机/CI 必跑;本地若嫌重可 CREATOROS_SKIP_SMOKE=1 跳过(默认跑)。
