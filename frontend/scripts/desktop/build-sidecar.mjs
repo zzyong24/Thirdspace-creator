@@ -90,6 +90,31 @@ function run(cmd, args, opts = {}) {
   }
 }
 
+// [T-426 W4] Windows 上上次中断留下的断裂 junction 可能让 fs.rm 报 ENOTEMPTY/EPERM。
+// 先走可重试的标准删除；只对经过精确路径校验的 sidecar 目录使用 cmd 原生 rd 兜底，且删后复查。
+function removeSidecarRuntime() {
+  try {
+    rmSync(SIDECAR_RUNTIME, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    return;
+  } catch (e) {
+    const retryable = new Set(["ENOTEMPTY", "EBUSY", "EPERM"]);
+    if (platform !== "win32" || !retryable.has(e?.code)) throw e;
+    const target = resolve(SIDECAR_RUNTIME);
+    const expected = resolve(SRC_TAURI, "sidecar");
+    if (target !== expected) {
+      throw new Error(`[build-sidecar] 拒绝清理未通过路径校验的目录:${target}`);
+    }
+    console.log(`[build-sidecar]   rmSync 失败(${e.code}),用 Windows rd 清理断裂 junction…`);
+    const winTarget = target.replace(/\//g, "\\");
+    const r = spawnSync("cmd.exe", ["/d", "/s", "/c", `rd /s /q "${winTarget}"`], { stdio: "inherit" });
+    if (r.status !== 0 || existsSync(target)) {
+      throw new Error(
+        `[build-sidecar] Windows rd 清理 sidecar 失败(status=${r.status ?? "null"},残留=${existsSync(target)}):${target}`,
+      );
+    }
+  }
+}
+
 // [T-169] 把组装好的 sidecar/ 打成单文件 tarball `src-tauri/sidecar.tar.gz`,供 Tauri 当 resource 带上。
 //   为何 tarball 而非整目录:Tauri 的 resource 拷贝器**丢 symlink**(实测源 180 → bundle 0),
 //   sidecar 靠 pnpm 相对 symlink 解析 node_modules → 丢了必崩。tarball 把 symlink 原样存档,首启由
@@ -455,13 +480,60 @@ function pnpmDepsOfEntry(srcPnpm, entryName) {
   return out;
 }
 
-// .pnpm entry 名 → 包名(@scope+name@ver → @scope/name;name@ver → name)。
-function pkgNameOfEntry(entry) {
-  if (entry.startsWith("@")) {
-    const at2 = entry.indexOf("@", 1);
-    return entry.slice(0, at2).replace("+", "/");
+// [T-426 W4] .pnpm entry 的目录名**不能**当包名解析:
+//   pnpm 10 在 Windows 把 virtual-store-dir-max-length 默认压到 60,长 entry 会变成
+//   `@csstools+css-parser-algori_<32hex>`（版本号和完整包名都已被截掉）。旧逻辑靠第二个 `@`
+//   切包名,会得到错误路径,导致 Next/Turbopack/Xenova/Pi 的嵌套物化随机漏依赖。
+// 真身目录是 entry/node_modules 下唯一一个「非 symlink 且带 package.json」的包；依赖都是
+// symlink/junction。直接读真身 package.json.name,同时校验目录相对路径,不再猜 pnpm 内部编码。
+const entryPackageCache = new Map();
+
+export function resolveEntryPackage(srcPnpm, entryName) {
+  const cacheKey = join(resolve(srcPnpm), entryName);
+  const cached = entryPackageCache.get(cacheKey);
+  if (cached) return cached;
+
+  const nmDir = join(srcPnpm, entryName, "node_modules");
+  if (!existsSync(nmDir)) {
+    throw new Error(`[build-sidecar] .pnpm entry 无 node_modules:${nmDir}`);
   }
-  return entry.slice(0, entry.indexOf("@"));
+  const candidates = [];
+  const inspect = (pkgDir) => {
+    let st;
+    try { st = lstatSync(pkgDir); } catch { return; }
+    if (!st.isDirectory() || st.isSymbolicLink()) return;
+    const manifestPath = join(pkgDir, "package.json");
+    if (!existsSync(manifestPath)) return;
+    let manifest;
+    try { manifest = JSON.parse(readFileSync(manifestPath, "utf8")); } catch (e) {
+      throw new Error(`[build-sidecar] .pnpm entry 真身 package.json 损坏:${manifestPath}\n${e.message}`);
+    }
+    const name = typeof manifest.name === "string" ? manifest.name : "";
+    const dirName = relative(nmDir, pkgDir).replace(/\\/g, "/");
+    if (!name || name !== dirName) {
+      throw new Error(
+        `[build-sidecar] .pnpm entry 真身名称不一致:${manifestPath} name=${name || "<空>"} dir=${dirName}`,
+      );
+    }
+    candidates.push({ name, dir: pkgDir });
+  };
+
+  for (const entry of readdirSync(nmDir, { withFileTypes: true })) {
+    const p = join(nmDir, entry.name);
+    if (entry.name.startsWith("@") && entry.isDirectory()) {
+      for (const child of readdirSync(p, { withFileTypes: true })) inspect(join(p, child.name));
+    } else {
+      inspect(p);
+    }
+  }
+  if (candidates.length !== 1) {
+    throw new Error(
+      `[build-sidecar] .pnpm entry 真身应唯一但找到 ${candidates.length} 个:${join(srcPnpm, entryName)}` +
+        (candidates.length ? `\n${candidates.map((x) => `  - ${x.name}: ${x.dir}`).join("\n")}` : ""),
+    );
+  }
+  entryPackageCache.set(cacheKey, candidates[0]);
+  return candidates[0];
 }
 
 // [T-372 W] npm 经典嵌套物化:把 .pnpm entry 的包真身 + 其依赖**递归嵌套**拷到 destPkgDir
@@ -472,18 +544,14 @@ function pkgNameOfEntry(entry) {
 //   嵌套布局是 Node 解析的原生语义,tar/用户机无 symlink 权限需求,天然可搬。
 //   防环:seenChain 记当前链上 entry,再遇即跳(walk-up 自然命中祖先层,npm 同语义)。
 //   体积:树内共享依赖重复拷(浅树可接受);mac 保持 .pnpm+相对链方案不走此路。
-function materializeNestedEntryTree(srcPnpm, entryName, destPkgDir, seenChain, isCut = () => false) {
-  const pkgName = pkgNameOfEntry(entryName);
-  const srcPkgDir = join(srcPnpm, entryName, "node_modules", ...pkgName.split("/"));
-  if (!existsSync(srcPkgDir)) {
-    throw new Error(`[build-sidecar] 嵌套物化:entry 真身缺失 ${srcPkgDir}`);
-  }
-  cpSync(srcPkgDir, destPkgDir, { recursive: true, dereference: true });
+export function materializeNestedEntryTree(srcPnpm, entryName, destPkgDir, seenChain, isCut = () => false) {
+  const srcPkg = resolveEntryPackage(srcPnpm, entryName);
+  cpSync(srcPkg.dir, destPkgDir, { recursive: true, dereference: true });
   for (const depEntry of pnpmDepsOfEntry(srcPnpm, entryName)) {
     if (isCut(depEntry)) continue; // [T-426] 剪枝子树(pi 的 lazy-only provider);默认不剪(xenova 调用)
-    const depName = pkgNameOfEntry(depEntry);
-    if (depName === pkgName) continue; // pnpm 的 self-link,跳过
+    if (depEntry === entryName) continue; // pnpm 的 self-link,跳过
     if (seenChain.has(depEntry)) continue; // 环:祖先层已有,walk-up 可命中
+    const depName = resolveEntryPackage(srcPnpm, depEntry).name;
     const depDest = join(destPkgDir, "node_modules", ...depName.split("/"));
     seenChain.add(depEntry);
     materializeNestedEntryTree(srcPnpm, depEntry, depDest, seenChain, isCut);
@@ -556,14 +624,13 @@ function materializeStandaloneWin() {
   // 按包名分组(同名多 entry = 多版本)。
   const byName = new Map();
   for (const e of closure) {
-    const name = pkgNameOfEntry(e);
+    const name = resolveEntryPackage(srcPnpm, e).name;
     if (!byName.has(name)) byName.set(name, []);
     byName.get(name).push(e);
   }
   // 取 entry 的包真身目录(entry/node_modules/<pkgName>;不含它对兄弟 dep 的链,dep 从 hoist 顶层解析)。
   const copyBody = (entry, destPkgDir) => {
-    const src = join(srcPnpm, entry, "node_modules", ...pkgNameOfEntry(entry).split("/"));
-    if (!existsSync(src)) throw new Error(`[build-sidecar] [T-426 W] 真身缺:${src}`);
+    const src = resolveEntryPackage(srcPnpm, entry).dir;
     rmSync(destPkgDir, { recursive: true, force: true });
     mkdirSync(dirname(destPkgDir), { recursive: true });
     cpSync(src, destPkgDir, { recursive: true, dereference: true });
@@ -586,7 +653,7 @@ function materializeStandaloneWin() {
     for (const e of entries) {
       if (e === mainEntry.get(name)) continue;
       for (const dep of dependedBy.get(e) ?? []) {
-        const depName = pkgNameOfEntry(dep);
+        const depName = resolveEntryPackage(srcPnpm, dep).name;
         copyBody(e, join(feNm, ...depName.split("/"), "node_modules", ...name.split("/")));
         nested++;
       }
@@ -643,7 +710,7 @@ function bundlePiEngine() {
   const PI_PNPM = PI_PKG.replace("/", "+"); // scope "/"→"+"(pnpm 目录名编码)
   // lazy-only 且 CreatorOS 永不用的 provider 顶包 —— 剪掉不进闭包(连带其独占传递依赖)。
   const CUT_PKG = ["@aws-sdk/client-bedrock-runtime", "@google/genai", "@mistralai/mistralai"];
-  const isCut = (entry) => CUT_PKG.includes(pkgNameOfEntry(entry)); // pkgNameOfEntry 已提模块级
+  const isCut = (entry) => CUT_PKG.includes(resolveEntryPackage(srcPnpm, entry).name);
 
   // 定位 pi-coding-agent 根 entry;缺 → pi 没装(feature 层可退兜底)→ 警告跳过,不硬阻塞打包。
   const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
@@ -1408,7 +1475,7 @@ function main() {
   //    (frontend/ 的兄弟)。若只拷 frontend/ 会断了这条 `../backend` 相对链 → 运行时 500
   //    (原型踩坑「Can't find meta/_journal.json」)。故整棵 standalone 树原样拷。
   console.log("[build-sidecar] 2/3 组装 standalone 运行目录(保留 frontend/+backend/ 布局)…");
-  rmSync(SIDECAR_RUNTIME, { recursive: true, force: true });
+  removeSidecarRuntime();
   mkdirSync(SIDECAR_RUNTIME, { recursive: true });
   // verbatimSymlinks:true —— **原样保留 symlink 字面目标**(不解引用)。这是唯一正确的 pnpm
   //   standalone 拷贝方式:
@@ -1577,4 +1644,13 @@ function main() {
   );
 }
 
-main();
+function isDirectExecution() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectExecution()) main();
