@@ -917,7 +917,18 @@ pub fn run() {
                     use std::os::unix::process::CommandExt;
                     cmd.process_group(0);
                 }
-                cmd.arg(&server_js_str)
+                // [T-445] `--use-bundled-ca` 必须在脚本参数**之前**(node [options] script.js)。
+                //   病根:T-437 把 Homebrew 的 openssl(libcrypto/libssl)co-ship 进包解决 dylib 缺失,
+                //   但**该 openssl 的默认 CA 路径编译死在 `/opt/homebrew/etc/openssl@3/cert.pem`**;
+                //   我们的 node 又是 shared-openssl(`process.config.variables.node_shared_openssl=true`),
+                //   于是用户机(没装 Homebrew → 没那个证书文件)上**所有出站 HTTPS 证书验证全失败** →
+                //   模型测试"连接失败"、对话"出错了"、检查更新"响应校验未通过"、remote-prompt-bundle
+                //   `fetch failed` —— 三位真实用户 2026-07-20 同时报障,而开发机因恰好装了 Homebrew 全绿。
+                //   改用 node 内置的 144 个根证书(不依赖任何外部文件)。隔离实证:移走 cert.pem 后
+                //   默认 fetch = `unable to get local issuer certificate`,加本标志 = HTTP 200。
+                //   (企业自签 CA 场景仍可用 NODE_EXTRA_CA_CERTS 追加,不受影响。)
+                cmd.arg("--use-bundled-ca")
+                    .arg(&server_js_str)
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
                     .env("CREATOROS_DB_DIR", &db_dir_str)
@@ -1017,7 +1028,10 @@ pub fn run() {
                     .shell()
                     .sidecar("creatoros-server")
                     .expect("sidecar `creatoros-server` 未在 tauri.conf.json externalBin 注册")
-                    .args([server_js_str])
+                    // [T-445] 同 macOS 分支:用 node 内置根证书,不依赖构建机的 openssl cert.pem
+                    //   (Windows 官方 node 多为静态 openssl 自带 CA,加上无害且防同类差异)。
+                    //   注意顺序:node [options] script.js —— 标志必须在脚本之前。
+                    .args(["--use-bundled-ca", server_js_str])
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
                     .env("CREATOROS_DB_DIR", &db_dir_str)
