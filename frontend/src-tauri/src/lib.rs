@@ -1031,7 +1031,7 @@ pub fn run() {
                     // [T-445] 同 macOS 分支:用 node 内置根证书,不依赖构建机的 openssl cert.pem
                     //   (Windows 官方 node 多为静态 openssl 自带 CA,加上无害且防同类差异)。
                     //   注意顺序:node [options] script.js —— 标志必须在脚本之前。
-                    .args(["--use-bundled-ca", server_js_str])
+                    .args(["--use-bundled-ca", &server_js_str])
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
                     .env("CREATOROS_DB_DIR", &db_dir_str)
