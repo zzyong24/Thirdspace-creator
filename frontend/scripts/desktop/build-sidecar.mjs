@@ -1058,11 +1058,11 @@ function bundleMacDylibs(libDir, binaries) {
     const bad = otoolDeps(b).filter((p) => p.startsWith("/opt/") || p.startsWith("/usr/local/"));
     if (bad.length) throw new Error(`[build-sidecar] [T-437] 自检失败：${b} 残留未改写外部依赖:\n${bad.join("\n")}`);
   }
-  for (const b of binaries) {
+  for (const b of [...binaries, ...collected.values()]) {
     const v = spawnSync("codesign", ["-v", "--strict", b], { encoding: "utf8" });
     if (v.status !== 0) throw new Error(`[build-sidecar] [T-437] 自检失败：${b} 签名无效\n${v.stderr ?? ""}`);
   }
-  console.log(`[build-sidecar]   [T-437] ✓ 自检：co-ship ${collected.size} 个 dylib + 全 @rpath 自包含 + adhoc 重签，二进制零 /opt 依赖`);
+  console.log(`[build-sidecar]   [T-437] ✓ 自检：co-ship ${collected.size} 个 dylib + 全 @rpath 自包含 + 全库 adhoc 重签，二进制零 /opt 依赖`);
 }
 
 // [T-440] Windows：.next/node_modules/ 下 Turbopack 给 serverExternalPackages 生成的带 hash 别名

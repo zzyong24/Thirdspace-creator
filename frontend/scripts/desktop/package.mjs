@@ -13,7 +13,7 @@
 //   - 仅产本机 target。跨平台(win/mac-x64)需在对应平台跑本脚本。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
@@ -47,6 +47,112 @@ function step(name, cmd, args, extraEnv = {}) {
     console.error(`[desktop:package] ✗ 步骤失败:${name}(exit ${r.status})`);
     process.exit(r.status ?? 1);
   }
+}
+
+// [T-445] 最终产物闸：只看 build-sidecar 的工作目录不够，用户安装的是 Tauri 产出的 .app。
+// 这次真实事故发生在用户仍使用旧安装包；以后每次构建都直接检查最终 .app，避免误发残缺产物：
+//   ① 当前 Node 若是 shared-openssl，内嵌 tar 必须真含 libssl + libcrypto；
+//   ② 壳二进制必须真编进 `--use-bundled-ca`，否则用户机仍会去找构建机 Homebrew cert.pem。
+// Homebrew 本身不应随 App 分发，cert.pem 也不复制；运行库 co-ship，根证书用 Node 内置集合。
+function verifyPackagedTlsRuntime() {
+  if (platform !== "darwin") return;
+
+  const app = join(FRONTEND, "src-tauri", "target", "release", "bundle", "macos", "CreatorOS.app");
+  const tarball = join(app, "Contents", "Resources", "sidecar.tar.gz");
+  const sourceTarball = join(FRONTEND, "src-tauri", "sidecar.tar.gz");
+  const shellBin = join(app, "Contents", "MacOS", "CreatorOS");
+  const bundledNode = join(
+    FRONTEND,
+    "src-tauri",
+    "sidecar",
+    "server.app",
+    "Contents",
+    "MacOS",
+    "creatoros-server",
+  );
+  for (const file of [tarball, sourceTarball, shellBin, bundledNode]) {
+    if (!existsSync(file)) {
+      throw new Error(`[desktop:package] [T-445] 最终产物自检失败：缺 ${file}`);
+    }
+  }
+
+  // Tauri 必须装入本轮刚生成的 tar，不能误带上一次构建的旧 resource。
+  const sameTar = spawnSync("cmp", ["-s", sourceTarball, tarball]);
+  if (sameTar.status !== 0) {
+    throw new Error(
+      "[desktop:package] [T-445] 最终产物自检失败：.app 内 sidecar.tar.gz 与本轮构建产物不一致（疑似误带旧包）",
+    );
+  }
+
+  const usesSharedOpenSsl =
+    process.config?.variables?.node_shared_openssl === true ||
+    process.config?.variables?.node_shared_openssl === "true";
+  if (usesSharedOpenSsl) {
+    // sidecar 含 Chromium/依赖树，目录清单可超过 spawnSync 默认 1MB maxBuffer；显式放大，
+    // 否则会被 ENOBUFS 杀掉并被误报成「无法读取 tar」。
+    const listed = spawnSync("tar", ["-tzf", tarball], {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    if (listed.status !== 0) {
+      throw new Error(
+        `[desktop:package] [T-445] 最终产物自检失败：无法读取 sidecar.tar.gz\n${listed.error?.code ?? ""}\n${listed.stderr ?? ""}`,
+      );
+    }
+    const entries = listed.stdout.split("\n");
+    for (const lib of ["libssl", "libcrypto"]) {
+      if (!entries.some((entry) => entry.startsWith(`./lib/${lib}.`) || entry.startsWith(`lib/${lib}.`))) {
+        throw new Error(
+          `[desktop:package] [T-445] 最终产物自检失败：shared-openssl Node 但 .app 内嵌 sidecar 缺 ${lib}，用户机将无法启动/联网`,
+        );
+      }
+    }
+  }
+
+  if (!readFileSync(shellBin).includes(Buffer.from("--use-bundled-ca"))) {
+    throw new Error(
+      "[desktop:package] [T-445] 最终产物自检失败：壳二进制未包含 --use-bundled-ca，用户机仍会依赖构建机 cert.pem",
+    );
+  }
+
+  // 隔离 HTTPS 冒烟：明确把 OpenSSL 外部证书路径指向不存在位置，逼它只能走 Node 内置 CA。
+  // 不只数证书条目，真做 TLS 握手；T-445 原故障正是 `fetch` 才暴露。
+  const missingCert = join(FRONTEND, "src-tauri", "__t445_missing_cert__.pem");
+  const missingCertDir = join(FRONTEND, "src-tauri", "__t445_missing_certs__");
+  if (existsSync(missingCert) || existsSync(missingCertDir)) {
+    throw new Error("[desktop:package] [T-445] 隔离探针占位路径意外存在，请删除后重试");
+  }
+  const httpsProbe = spawnSync(
+    bundledNode,
+    [
+      "--use-bundled-ca",
+      "-e",
+      "fetch('https://example.com/').then(r=>{console.log('TLS_OK='+r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(e.cause?.code||e);process.exit(2)})",
+    ],
+    {
+      encoding: "utf8",
+      timeout: 30_000,
+      env: {
+        ...process.env,
+        SSL_CERT_FILE: missingCert,
+        SSL_CERT_DIR: missingCertDir,
+      },
+    },
+  );
+  if (httpsProbe.status !== 0 || !httpsProbe.stdout.includes("TLS_OK=200")) {
+    throw new Error(
+      `[desktop:package] [T-445] 最终产物自检失败：随包 Node 在无外部 cert.pem 时 HTTPS 不通\n${httpsProbe.stdout}${httpsProbe.stderr}`,
+    );
+  }
+  console.log(
+    `[desktop:package] ✓ [T-445] 最终 .app TLS 自包含：${usesSharedOpenSsl ? "libssl + libcrypto 已入内嵌 tar；" : "Node 非 shared-openssl；"}--use-bundled-ca 已入壳；无外部 cert.pem 的 HTTPS=200`,
+  );
+}
+
+// 允许 CI/本地在已有 Tauri 产物上单独重跑最终闸，不重复整条 Next/混淆流水线。
+if (process.argv.includes("--verify-tls-only")) {
+  verifyPackagedTlsRuntime();
+  process.exit(0);
 }
 
 const cargo = resolveCargo();
@@ -150,6 +256,8 @@ step("tauri build(含 updater 签名/占位)", process.execPath, [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
 ], { ...pathEnv, CREATOROS_SKIP_SIDECAR_REBUILD: "1" });
+
+verifyPackagedTlsRuntime();
 
 // 4) [T-164 P6] 代码签名占位(未配 env → skip 退 0 + 标 signed:false)。
 step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
