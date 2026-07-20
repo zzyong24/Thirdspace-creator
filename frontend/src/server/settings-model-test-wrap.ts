@@ -110,13 +110,14 @@ function errMsg(err: unknown): string {
  * prod 静默(与 lib/ai-error-humanize 的 describeUserError 同一纪律)。
  */
 function logProbeFailure(where: string, ...detail: unknown[]): void {
-  if (
-    typeof process !== "undefined" &&
-    process.env?.NODE_ENV !== "production"
-  ) {
-    // eslint-disable-next-line no-console
-    console.error(`[settings.models.test] ${where}`, ...detail);
-  }
+  // [T-444] **刻意不按 NODE_ENV 门控** —— 打包版恒 `production`,原来那道判断让「测试连接失败」的
+  //   HTTP status 与服务端响应片段在**用户机上永远不打印**:用户只看到「密钥或接口地址可能不对」,
+  //   而日志里一片空白 → 谁也定位不了(2026-07-20 两位用户同时报"连不上",全靠猜配置)。
+  //   诊断信息恰恰在**用户机**最需要,不该只给开发机看。
+  //   泄露评估:只打 where + status + 响应体前 200 字(**服务端返回的错误文本**,不含我方密钥/token),
+  //   且 sidecar 日志本身是加密落盘(T-391)。
+  // eslint-disable-next-line no-console
+  console.error(`[settings.models.test] ${where}`, ...detail);
 }
 
 async function bodyHead(res: Response): Promise<string> {
