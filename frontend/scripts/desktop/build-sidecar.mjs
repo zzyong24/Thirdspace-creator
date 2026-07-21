@@ -1166,7 +1166,16 @@ function bundleMacDylibs(libDir, binaries) {
       console.log(`[build-sidecar]   [T-437] co-shipped dylib → sidecar/lib/${base}`);
     }
   }
-  if (collected.size === 0) throw new Error("[build-sidecar] [T-437] 未收集到任何 dylib（otool/execPath 异常?）");
+  if (collected.size === 0) {
+    // [T-458] 打包机 node 自包含（官方预编译版，如 CI 的 actions/setup-node）：otool -L 只返回
+    //   /usr/lib|/System 系统库，无 /opt/homebrew 外部 dylib 可 co-ship —— 这是**合法**状态
+    //   （自包含 node 本就不依赖任何随包库，dyld 从 OS 解析系统库即可），非异常。
+    //   T-437 旧守卫假定打包机 node 一定 Homebrew 链接（19 库），把 0 误判为 execPath 异常
+    //   → mac CI 打包必炸。此处 otool 已成功执行（otoolDeps 内部 status!=0 会先抛），
+    //   到达此分支即证明是自包含 node → 无库可拷、无引用可改写、无需 rpath/重签/自检，直接返回。
+    console.log("[build-sidecar]   [T-437/T-458] node 自包含（otool 仅系统库，0 外部 dylib）→ 跳过 co-ship（CI/官方 node 正常路径）");
+    return;
+  }
   // ② install_name 改写：非系统引用 → @rpath/<base>，让 dyld 走各自 rpath（指 sidecar/lib）解析。
   const rewriteRefs = (f) => {
     const args = [];
