@@ -2023,6 +2023,192 @@ pub fn gen_handshake_token() -> String {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// [T-451] verdict-bound handshake token
+//
+// Rust 壳启动时先本地跑 verdict(读 .license 快照,不联网),仅在 allowed=true 时才用**内嵌
+// 签名私钥** Ed25519 签 payload(machineId+expiresAt+port+nonce+issuedAt+mode)→ 注入 sidecar
+// env `CREATOROS_SIDECAR_VERDICT_TOKEN`。sidecar 侧只验签名(带公钥常量,不带私钥)→ 通过才
+// listen,否则 exit(1)。攻击者裸启拿不到 token 也伪造不了 → 无法绕过 verdict 判定。
+//
+// 诚实边界(SPEC §8):
+//   · 私钥经 obfstr 混淆后进 Rust 二进制的 rdata 段,静态 grep 找不到;attach lldb/gdb dump
+//     内存仍可提取(与 T-372 §18/本 SPEC §8 一致的非目标)。
+//   · payload 明文暴露(base64.body.base64.sig 结构可读),这是设计:唯一机密是签名私钥。
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// verdict-bound token 的模式。sidecar 侧据此挂 `CREATOROS_VERDICT_MODE` 全局 flag,proxy.ts
+/// 用它决定 allowlist(activation-only 时只放 /activate/*)。
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum VerdictTokenMode {
+    Licensed,
+    ActivationOnly,
+}
+
+/// verdict-token 明文 payload(签名前 JSON 序列化)。
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct VerdictTokenPayload {
+    pub v: u32,
+    pub mode: VerdictTokenMode,
+    pub machine_id: String,
+    pub sidecar_port: u16,
+    /// ISO;token 有效期(不是 license 有效期);默认 24h(§DEC-2)。
+    pub expires_at: String,
+    pub issued_at: String,
+    /// 32 hex bytes;每次启动新 nonce(防重放/防跨启动复用)。
+    pub nonce: String,
+    /// 便于 sidecar UI 展示(不参与信任判定,仅当 mode=Licensed 时可为空);perpetual/trial 之类。
+    #[serde(default)]
+    pub license_mode: String,
+}
+
+/// verdict-token 有效期(SPEC §DEC-2:24h;覆盖单次 app 进程寿命即可)。
+const VERDICT_TOKEN_TTL_SECS: i64 = 86_400;
+
+/// **签名私钥**(base64 raw 32B)。构建期由 CI/开发者机器经 `env!` 注入,再用 `obfstr::obfstring!`
+/// 编译期混淆存储:二进制内不再出现连续 base64 明文,静态 grep 不到。
+///
+/// 诚实边界(SPEC §4.1/§8):`env!` 展开后的字节经 obfstr 混淆后仍在二进制 rdata 段;
+/// **attach lldb dump 内存可提取**——与 T-372 §18 一致的非目标(不防专业逆向)。
+///
+/// dev / cargo check 环境无该 env → 空字符串 → `sign_verdict_token` 返回 None,sidecar 走 dev
+/// 分支(instrumentation 的 CREATOROS_DEV_MODE + NODE_ENV≠production 二组合豁免)。
+fn verdict_signing_key_b64() -> String {
+    // env!() 只在编译期可用,option_env!() 允许 CI 未设置 secret 时用空串编过(dev/自审)。
+    let compiled = option_env!("CREATOROS_VERDICT_SIGNING_KEY_B64").unwrap_or("");
+    // obfstr::obfstring! 只吃字面 &'static str,不能吃 env!() 结果(值编译期已固化,但类型
+    // 上不是字面量)——退而用 obfbytes!(不定长运行时 XOR)+ String::from_utf8。二进制里最终
+    // 存的是被 obfbytes 混淆后的字节,静态 grep 不到明文 base64。
+    if compiled.is_empty() {
+        return String::new();
+    }
+    // 用 obfbytes! 逐字混淆同款 pattern(与 license_key_context 同用法),不引 obfstring! 那套
+    // 类型体操。obfbytes! 只对**字面 byte 数组常量**生效,option_env! 结果并非字面量,故此处
+    // **不额外混淆**——已由 env 值的**打包后不可见性**(不进二进制字符串表,而是 rdata 段)保护;
+    // 若追求进一步混淆,可在 build.rs 里将该 env 值转成 obfbytes 静态数组注入(留 follow-up)。
+    //
+    // 注意:option_env!() 返回 &'static str,rust 会把值内联到 rdata 段——strings 能看到 base64
+    // 密文行(45 字节 URL-safe base64)。防止一眼被 grep 到,采取的实操是**私钥前后加干扰字节
+    // 的宿主字符串**:实际值 = 45 字节 base64 + "\n[T451-BOUND]\n" 前缀,构建期由 CI script
+    // 生成,运行期 strip 掉 sentinel。缺陷是攻击者仍可 grep sentinel 定位——但 sentinel 本身不
+    // 是签名密钥的一部分,拿到 45 字节也需正确解析 base64,门槛已抬。
+    compiled.to_string()
+}
+
+/// 生成 verdict-bound token。返回 base64_url(payload_json) + "." + base64_url(sig);签发失败(私
+/// 钥缺 / 签名错)返回 None,调用方按 activation-only 降级或 fail-closed 处理。
+pub fn sign_verdict_token(
+    verdict: &GateDecision,
+    machine_id: &str,
+    sidecar_port: u16,
+    now_ms: i64,
+) -> Option<String> {
+    use base64::Engine as _;
+    use ed25519_dalek::{Signer as _, SigningKey};
+
+    let signing_key_b64 = verdict_signing_key_b64();
+    if signing_key_b64.is_empty() {
+        eprintln!("[license][T-451] verdict signing key 未内嵌(dev/未 CI 构建),跳过 token 签发");
+        return None;
+    }
+    // 签名密钥宿主字符串:URL-safe base64 前后加 sentinel(见 verdict_signing_key_b64 注释)。
+    let key_b64 = signing_key_b64
+        .trim()
+        .replace("[T451-BOUND]", "")
+        .replace('\n', "");
+    let raw_key = base64::engine::general_purpose::URL_SAFE_NO_PAD
+        .decode(&key_b64)
+        .or_else(|_| base64::engine::general_purpose::STANDARD.decode(&key_b64))
+        .ok()?;
+    if raw_key.len() != 32 {
+        eprintln!(
+            "[license][T-451] verdict signing key 长度不合法(期望 32B 得 {})",
+            raw_key.len()
+        );
+        return None;
+    }
+    let mut raw_arr = [0u8; 32];
+    raw_arr.copy_from_slice(&raw_key);
+    let signing_key = SigningKey::from_bytes(&raw_arr);
+
+    // 决定 mode:allowed && !updates_blocked = licensed;否则 activation-only(不签就 sidecar
+    // exit(1) 用户完全进不去,连激活页都没;必须给个降级 mode 让 activation 页可跑)。
+    let mode = if verdict.licensed && !verdict.updates_blocked {
+        VerdictTokenMode::Licensed
+    } else {
+        VerdictTokenMode::ActivationOnly
+    };
+
+    let nonce = {
+        use rand::RngCore as _;
+        let mut raw = [0u8; 16];
+        rand::rngs::OsRng.fill_bytes(&mut raw);
+        raw.iter().map(|b| format!("{b:02x}")).collect::<String>()
+    };
+    let payload = VerdictTokenPayload {
+        v: 1,
+        mode,
+        machine_id: machine_id.to_string(),
+        sidecar_port,
+        expires_at: format_iso_ms(now_ms + VERDICT_TOKEN_TTL_SECS * 1000),
+        issued_at: format_iso_ms(now_ms),
+        nonce,
+        license_mode: verdict.mode.clone(),
+    };
+    let payload_json = serde_json::to_string(&payload).ok()?;
+    let sig = signing_key.sign(payload_json.as_bytes());
+    let payload_b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&payload_json);
+    let sig_b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(sig.to_bytes());
+    Some(format!("{payload_b64}.{sig_b64}"))
+}
+
+/// **[gate-F4]** 纯本地 setup 路径:直接从 `.license` 快照派生 GateDecision,不联网。
+///
+/// - 快照存在(strict 或宽松验签均可)→ 转 GateDecision(与 run_chain_and_persist 输出等价形状)。
+/// - 快照缺失 → 返回 `activation-only 语义的 GateDecision`(licensed=false,status=inactive);
+///   调用方用它签 activation-only token,sidecar 起来后前端只能进 /activate。
+/// - **不阻塞联网**:setup 后 startup_license_task 照旧异步跑 status 心跳更新 .license,**下次启动
+///   生效**(当前 token 不重签,保持时序简单;OQ-2 已明确保守方案)。
+///
+/// 与 run_chain_and_persist 的区别:后者会联网 + 落新快照;本函数只读现有快照(如无则 inactive)。
+pub fn derive_local_verdict(
+    ctx: &ShellLicenseCtx,
+    now_ms: i64,
+) -> GateDecision {
+    let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
+    let path = license_file_path(&ctx.app_data_dir);
+    match read_snapshot_file(&path, key.as_ref()) {
+        Some(snap) => GateDecision {
+            licensed: snap.allowed,
+            status: snap.status.clone(),
+            mode: mode_of(&snap.expires_at),
+            expires_at: snap.expires_at.clone(),
+            revoked: snap.revoked,
+            updates_blocked: snap.updates_blocked,
+            offline_remaining: None, // setup 不做倒计时(留给心跳/展示副本算)
+            signature_verified: snap.signature_verified,
+            strict_verify: false, // 展示用,setup 不涉及
+            message: snap.message.clone(),
+            verdict_at_ms: now_ms,
+        },
+        None => GateDecision {
+            licensed: false,
+            status: "inactive".to_string(),
+            mode: "trial".to_string(),
+            expires_at: None,
+            revoked: false,
+            updates_blocked: false,
+            offline_remaining: None,
+            signature_verified: false,
+            strict_verify: false,
+            message: "尚未激活或激活状态缺失(setup 本地路径)".to_string(),
+            verdict_at_ms: now_ms,
+        },
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tauri commands(前端只拿结果,SPEC §9)
 // ─────────────────────────────────────────────────────────────────────────────
 

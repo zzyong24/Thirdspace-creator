@@ -23,11 +23,30 @@ import { isTrustedLocalRequest } from "@/lib/loopback-core";
 //     bootstrap 期(token 全局尚未注入)激活页/登录页白屏(BACKLOG 明确「防又一个 /activate 白屏」)。
 const PUBLIC_API_PREFIXES = ["/api/v1/blob/", "/api/v1/activate", "/api/v1/auth/"];
 
+// [T-451 gate-F1] activation-only 模式下的**页面路径**允许 GET 访问的 allowlist。
+//   sidecar 起来但 verdict-token 是 activation-only(licensed=false)时,只放行:
+//     · /activate/*      —— 激活页本体
+//     · /_next/static/*  —— 已由 config.matcher 排除,但显式再列一条防漂移
+//     · /favicon.ico     —— 浏览器默认请求
+//     · /robots.txt      —— 无害
+//   其他页面路由一律 302 到 /activate,前端就是回不到主应用直到激活成功。/api 面照 T-415
+//   loopback-core 判定(激活流本身的 IPC 是走 Tauri command 而非 /api,不受此影响)。
+const ACTIVATION_ONLY_PAGE_ALLOWLIST = ["/activate", "/favicon.ico", "/robots.txt"];
+
 function forbidden(): NextResponse {
   return NextResponse.json(
     { error: "forbidden: request must originate from the local application" },
     { status: 403 },
   );
+}
+
+function isActivationOnlyMode(): boolean {
+  // instrumentation.ts verify verdict-token 通过后写 CREATOROS_VERDICT_MODE:
+  //   · "licensed" → 完整放行
+  //   · "activation-only" → 只放激活页
+  //   · undefined → 该 sidecar 走 dev 分支(NODE_ENV≠production + CREATOROS_DEV_MODE=1),此处
+  //     不启用 activation-only 收紧(等价于 licensed;dev 本就没 verdict-token)。
+  return process.env.CREATOROS_VERDICT_MODE === "activation-only";
 }
 
 export function proxy(req: NextRequest): NextResponse {
@@ -36,6 +55,23 @@ export function proxy(req: NextRequest): NextResponse {
   // server action:JS 态(桌面 webview 恒 JS)经 fetch 带 `Next-Action` 头 POST 到页面路由 ——
   //   与 /api 并列的另一条 prompt 调用面 + 白嫖面,必须一并强制。
   const isServerAction = req.method === "POST" && req.headers.has("next-action");
+
+  // [T-451] activation-only 模式:页面路由只放激活页 + 静态无害路径,其余强 302 到 /activate。
+  //   放在 T-415 判定**之前**(先判 mode,再判 handshake)—— 未激活时用户根本进不了主应用,
+  //   连尝试白嫖 handshake 都无路径可走。/api 面仍走下面的 T-415 default-deny(licensed 路径与
+  //   本判定正交:handshake 头有就放,没就 403;不叠加"未激活也放行 /api")。
+  //
+  //   本判定只覆盖**页面 GET**(server-side render + 客户端 hydration 都从这里进),不动 /api/
+  //   —— /api 已由 loopback-core 严守,attacker 拿不到 handshake token 就 403,不需要这层。
+  if (isActivationOnlyMode() && !isApi && !isServerAction) {
+    const allowed = ACTIVATION_ONLY_PAGE_ALLOWLIST.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`),
+    );
+    if (!allowed) {
+      const redirect = new URL("/activate", req.url);
+      return NextResponse.redirect(redirect, 302);
+    }
+  }
 
   // [T-415] 只有桌面打包态(烘焙 REQUIRED="1",裸 node 关不掉)或已注入 token 时才强制;
   //   dev/web(未烘焙、无 token)→ 强制整体不启用,行为与改动前完全一致。

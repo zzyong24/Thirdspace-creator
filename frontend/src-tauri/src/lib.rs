@@ -558,6 +558,192 @@ fn verify_direct_sidecar_dir_with_hash(
     verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-450] 完整性清单抽样校验:build.rs 生成 XOR-masked manifest blob(sidecar 下关键文件
+// SHA-256 清单),运行时按 machine_id + hour_bucket 派生 seed → 抽 N=12 项校验。任一命中
+// 篡改 → Err → resolve_sidecar_dir Err → 拒 spawn。
+//
+// 诚实边界(SPEC ladder §9):
+//   · 攻击者 patch 本文件的验证逻辑本身(sha2/rand/parse)可绕——已知非目标。
+//   · N=12 是概率保护:patch 1 文件当次逃脱 ~98%;patch 10 文件当次逃脱 ~65%;patch 50 ~10%。
+//     加 hour_bucket 让攻击者每小时得重算样本索引→不可持续。
+//   · 秘密种子上下文 obfstr 藏,attacker 逆 obfstr 常量拿到后可精准算样本→但那时他已经能改
+//     任何 obfstr 常量了;抽样不再是防线,防线在其他 obfstr 藏起的钥匙。
+// ─────────────────────────────────────────────────────────────────────────────
+
+// build.rs 侧 XOR-mask 用的密钥(magic 4B 后 XOR 循环密钥)。build.rs 里是明文数组,这里用
+// obfstr::obfbytes! 藏——lib.rs 二进制里不再出现连续 16B 明文,静态 grep 不到。
+//
+// 注意:两侧 16B 常量必须**逐字节相等**。若改动这里,build.rs 里 XOR_KEY 也必须同步改。
+fn integrity_xor_key() -> [u8; 16] {
+    *obfstr::obfbytes!(&[
+        0x3a, 0x9f, 0x21, 0x7c, 0x55, 0xe0, 0x0b, 0x8d, 0x46, 0x12, 0xa8, 0xd3, 0x67, 0xbe, 0x1e,
+        0x94,
+    ])
+}
+
+/// 秘密上下文(seed 派生用)。obfstr 藏 → attacker 拿不到明文就派生不出目标机器的样本索引。
+fn integrity_sample_context() -> &'static [u8] {
+    obfstr::obfbytes!(b"creatoros-sample-v1")
+}
+
+/// 每次启动抽 N 项(§调研 §3.3:12 是覆盖 vs 冷启开销的平衡点)。
+const INTEGRITY_SAMPLE_N: usize = 12;
+
+/// hour_bucket 粒度:seed 每 3600s 轮换一次(§3.3),让攻击者精修一次样本 → 1h 后失效。
+const INTEGRITY_HOUR_BUCKET_SECS: u64 = 3600;
+
+/// 编译期内嵌的完整性 manifest(build.rs 生成)。dev / cargo check 时是空 manifest(仅 magic
+/// + count=0),运行时 parse 后诚实 Err。
+const INTEGRITY_MANIFEST_BLOB: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/integrity-manifest.bin"));
+
+/// XOR-unmask 并 parse manifest。返回 Vec<(相对路径 posix, 32B hash)>。
+///
+/// 格式(与 build.rs 一致):
+///   [magic:4B = "CIm1"] [record_count:u32 LE] { [path_len:u16 LE][utf8 path][hash:32B] }*
+///   除 magic 外整个 blob 用 integrity_xor_key() 循环 XOR。
+fn parse_integrity_manifest(blob: &[u8]) -> Result<Vec<(String, [u8; 32])>, String> {
+    if blob.len() < 8 || &blob[0..4] != b"CIm1" {
+        return Err("integrity manifest magic 不匹配(构建期漏写?)".to_string());
+    }
+    // Unmask (除 magic 4B):count(4) + records。
+    let key = integrity_xor_key();
+    let mut plain = Vec::with_capacity(blob.len());
+    plain.extend_from_slice(&blob[0..4]);
+    for (i, &b) in blob[4..].iter().enumerate() {
+        plain.push(b ^ key[i % 16]);
+    }
+    let count = u32::from_le_bytes(plain[4..8].try_into().unwrap()) as usize;
+    let mut out = Vec::with_capacity(count);
+    let mut cur = 8usize;
+    for _ in 0..count {
+        if cur + 2 > plain.len() {
+            return Err("integrity manifest 截断(path_len 前)".to_string());
+        }
+        let path_len =
+            u16::from_le_bytes(plain[cur..cur + 2].try_into().unwrap()) as usize;
+        cur += 2;
+        if cur + path_len + 32 > plain.len() {
+            return Err("integrity manifest 截断(path/hash)".to_string());
+        }
+        let path = std::str::from_utf8(&plain[cur..cur + path_len])
+            .map_err(|e| format!("integrity manifest 路径非 utf8: {e}"))?
+            .to_string();
+        cur += path_len;
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&plain[cur..cur + 32]);
+        cur += 32;
+        out.push((path, hash));
+    }
+    Ok(out)
+}
+
+/// 从 machine_id + hour_bucket + 秘密上下文派生 SmallRng 种子。
+///
+/// 性质:
+///   · 每机器不同(machine_id 稳定短指纹)→ attacker 在自己机器逆出的样本 ≠ 目标样本;
+///   · 每小时轮换(hour_bucket)→ 攻击窗口 ≤ 1 小时;
+///   · 秘密上下文 obfstr 藏 → attacker 拿不到 SAMPLE_CTX 就构造不出对应 machine_id 的样本;
+///   · 测试环境固定 machine_id + mock 时钟 → 可复现。
+fn derive_integrity_sample_seed(machine_id: &str, wall_secs: u64) -> u64 {
+    use sha2::{Digest, Sha256};
+    let hour_bucket = wall_secs / INTEGRITY_HOUR_BUCKET_SECS;
+    let mut hasher = Sha256::new();
+    hasher.update(integrity_sample_context());
+    hasher.update(machine_id.as_bytes());
+    hasher.update(hour_bucket.to_le_bytes());
+    let digest = hasher.finalize();
+    u64::from_le_bytes(digest[..8].try_into().unwrap())
+}
+
+/// 从 [0, total) 里不放回抽 N 个索引(简单 Fisher-Yates 前 N 段)。StdRng seed 决定序列。
+fn sample_without_replacement(
+    seed: u64,
+    total: usize,
+    n: usize,
+) -> Vec<usize> {
+    use rand::rngs::StdRng;
+    use rand::{RngCore as _, SeedableRng as _};
+    let n = n.min(total);
+    let mut arr: Vec<usize> = (0..total).collect();
+    let mut rng = StdRng::seed_from_u64(seed);
+    for i in 0..n {
+        // rand 0.8 无 gen_range without more surface;直接 next_u64 % 也够(轻微偏差可忽略,
+        // 抽样非加密敏感)。
+        let j = i + (rng.next_u64() as usize) % (total - i);
+        arr.swap(i, j);
+    }
+    arr.truncate(n);
+    arr
+}
+
+/// 抽样验证 sidecar_root 下的完整性(build.rs 生成的 manifest 里的相对路径 + hash)。
+///
+/// 失败即 Err(拒 spawn)。dev / cargo check 场景 manifest 为空 → Err(诚实降级,不静默通过)。
+/// 校验的时钟源:SystemTime::now(墙钟)——用于 hour_bucket,不用于安全敏感判定,墙钟被改
+/// 只影响样本 rotation 节奏,不影响单次校验正确性(某次校验发生时,build 期 hash 与磁盘文件
+/// hash 要么相等要么不等,与时钟无关)。
+fn integrity_sample_verify(
+    sidecar_root: &std::path::Path,
+    machine_id: &str,
+) -> Result<(), String> {
+    let records = parse_integrity_manifest(INTEGRITY_MANIFEST_BLOB)?;
+    if records.is_empty() {
+        return Err(
+            "构建期未内嵌完整性清单(可能是 dev / cargo check),拒绝无法验证的运行时".to_string(),
+        );
+    }
+    let wall_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let seed = derive_integrity_sample_seed(machine_id, wall_secs);
+    let picks = sample_without_replacement(seed, records.len(), INTEGRITY_SAMPLE_N);
+    for i in picks {
+        let (rel, expected) = &records[i];
+        // manifest 里存 posix `/`;运行时按平台还原为 join。
+        let mut path = sidecar_root.to_path_buf();
+        for seg in rel.split('/') {
+            path = path.join(seg);
+        }
+        verify_file_sha256_bytes(&path, expected, rel)?;
+    }
+    Ok(())
+}
+
+/// verify_file_sha256 的二进制版本(hash 直接对比 32B,不经 hex 字符串)。同款 IO/hash 逻辑。
+fn verify_file_sha256_bytes(
+    path: &std::path::Path,
+    expected: &[u8; 32],
+    label: &str,
+) -> Result<(), String> {
+    use sha2::{Digest, Sha256};
+    use std::io::Read as _;
+    let mut file = std::fs::File::open(path)
+        .map_err(|e| format!("[T-450] 读{label}失败 {}: {e}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buf = [0_u8; 1024 * 1024];
+    loop {
+        let n = file
+            .read(&mut buf)
+            .map_err(|e| format!("[T-450] 读{label}失败 {}: {e}", path.display()))?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    let actual: [u8; 32] = hasher.finalize().into();
+    if actual != *expected {
+        return Err(format!(
+            "[T-450] {label} 完整性抽样校验失败(路径 {})。应用文件可能被篡改或安装损坏,请重新安装 CreatorOS。",
+            path.display()
+        ));
+    }
+    Ok(())
+}
+
+
 /// tar 兜底平台的原子解压：先在同盘临时目录完成并校验，再 rename 切换；失败绝不留下半成品。
 fn extract_sidecar_tarball(
     tarball: &std::path::Path,
@@ -670,6 +856,11 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             .resolve("sidecar", tauri::path::BaseDirectory::Resource)
             .map_err(|e| format!("无法定位 Windows 安装目录中的 sidecar: {e}"))?;
         verify_direct_sidecar_dir(&direct)?;
+        // [T-450] 入口哈希只查 server.js → 攻击者改任意 .jsc 不拦。抽样再校验 N=12 项(每小时
+        //   rotate 秘密样本索引)。machine_id 拿不到 → 退化用空串(seed 仍确定但退化,可复现测),
+        //   不阻塞启动(dev 早退了,这条只在真打包分支跑)。
+        let machine_id = resolve_machine_id(app).unwrap_or_default();
+        integrity_sample_verify(&direct, &machine_id)?;
         if let Ok(data_dir) = app.path().app_data_dir() {
             std::thread::spawn(move || {
                 if cleanup_legacy_runtime_root(&data_dir) {
@@ -711,6 +902,13 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
             eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
         }
+
+        // [T-450] tar 整体 hash 只在**解压前**校验一次(verify_sidecar_tarball);之后
+        //   .tarball-stamp 复用机制让攻击者可直接 patch 已解压的 .jsc,下次启动 stamp 命中
+        //   跳过重解压 → hash 完全绕过。补 mac/linux 侧同款抽样(每次启动都跑),把「解压
+        //   后的运行时目录」也纳入完整性防线。开销 §调研 §5:冷 66-360ms,热 12-18ms。
+        let machine_id = resolve_machine_id(app).unwrap_or_default();
+        integrity_sample_verify(&dest, &machine_id)?;
 
         let runtime_root = data_dir.join("runtime");
         let keep = version.clone();
@@ -950,7 +1148,6 @@ pub fn run() {
                 .join(".license")
                 .to_string_lossy()
                 .to_string();
-            // [T-425] master key **文件兜底通道** —— 消除「master key 只经 fd(ChildStdin)注入」
             //   的单点:fd 竞态/挂起失败时 sidecar 会退随机 dev key,导致授权/模型密钥/登录态/激活码
             //   **一起解不开**(静默失效)。给 sidecar 注入 `.master-key` 路径 + 反混淆种子,让它在
             //   fd/env 都拿不到时自反混淆同一份 `.master-key` 拿真 key(算法与本壳
@@ -989,6 +1186,39 @@ pub fn run() {
             app.manage(license::LicenseState(license_ctx.clone()));
             // 启动必查一次 + [T-372 L3] 心跳循环(周期按码型:内测 60min / 买断 30 天)。
             license::startup_license_task(license_ctx.clone());
+
+            // [T-451] verdict-bound handshake token 签发([gate-F4] 纯本地路径,不联网):
+            //   startup_license_task 联网 status 心跳是**异步**的,setup 阶段绝不阻塞 UI/spawn。
+            //   这里同步跑 derive_local_verdict(只读 .license 快照)→ sign_verdict_token 拿 token
+            //   payload(machineId+expiresAt+port+nonce+mode)Ed25519 签名 → 注入 sidecar env。
+            //   sidecar 侧 instrumentation 校验签名 + 有效期 + machineId + port,不通过 exit(1)。
+            //   离线首启 + 有快照 → licensed token(R-DESKTOP 永久离线可用);无快照 → activation-only
+            //   token(sidecar 起来,前端 proxy 只放 /activate/*)。心跳跑通后更新 .license,下次
+            //   启动生效(当前 token 不重签,保持时序简单)。**私钥缺失 → None → 不注入 env**
+            //   (dev/未 CI 构建路径,与 sidecar 走 dev-mode marker 分支互补;打包版签名 key 必存,
+            //   None 就是构建配置错,靠 ac-9 grep 自审兜底)。
+            let now_ms = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis() as i64)
+                .unwrap_or(0);
+            let verdict_setup = license::derive_local_verdict(license_ctx.as_ref(), now_ms);
+            let verdict_token = license::sign_verdict_token(
+                &verdict_setup,
+                &machine_id.clone().unwrap_or_default(),
+                port,
+                now_ms,
+            );
+            if let Some(l) = &logger {
+                l.log(
+                    "shell",
+                    &format!(
+                        "[T-451] verdict-token 签发 licensed={} status={} token_present={}",
+                        verdict_setup.licensed,
+                        verdict_setup.status,
+                        verdict_token.is_some()
+                    ),
+                );
+            }
 
             // [T-205] 抖音登录态(.auth/douyin/<accountId>)目录 —— 注入 sidecar env
             //   `CREATOROS_DOUYIN_AUTH_DIR`,落**稳定**的 `<appDataDir>/.auth/douyin`,而非默认的
@@ -1098,6 +1328,11 @@ pub fn run() {
                 // [T-425] master key 文件兜底通道(非机密:路径 + 反混淆种子)。
                 cmd.env("CREATOROS_MASTER_KEY_FILE", &master_key_file_str)
                     .env("CREATOROS_MACHINE_SEED", &master_key_seed);
+                // [T-451] verdict-bound token:仅当签发成功才注入(dev/未 CI 构建时私钥缺失即
+                //   None,sidecar 走 dev-mode marker 分支)。
+                if let Some(t) = &verdict_token {
+                    cmd.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t);
+                }
 
                 // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
                 let mut child = match cmd.spawn() {
@@ -1202,6 +1437,11 @@ pub fn run() {
                 let sidecar = sidecar
                     .env("CREATOROS_MASTER_KEY_FILE", &master_key_file_str)
                     .env("CREATOROS_MACHINE_SEED", &master_key_seed);
+                // [T-451] verdict-bound token(win/linux 分支;签发失败即 None,不注入)。
+                let sidecar = match &verdict_token {
+                    Some(t) => sidecar.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t),
+                    None => sidecar,
+                };
 
                 // [T-259] spawn 失败也落日志再 panic(打包态排障)。
                 let (mut rx, mut child) = match sidecar.spawn() {

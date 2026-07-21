@@ -66,9 +66,28 @@ export function ActivateForm(): React.JSX.Element {
           setError(decision.message || GENERIC_ERROR);
           return;
         }
-        // 激活成功 → 回首页,刷新服务端树(gate 读 .license 放行)。
-        router.replace("/");
-        router.refresh();
+        // [T-451 gate-F3] 激活成功 → **整包 relaunch**(简化版 graceful restart)。
+        //   原因:当前 sidecar 进程持有的 verdict-token mode=activation-only,proxy.ts 只放
+        //   /activate 路径;router.replace('/') 也会被 proxy 强 302 回 /activate。让 Rust 壳
+        //   在下一轮启动时**重新跑 verdict**(此时 .license 已被 license_activate 更新),重新
+        //   签 verdict-bound token mode=licensed。激活页无用户未保存数据,relaunch 无损。
+        //   SPEC §4.4 gate-F3 已明确允许方案 b(优雅重启),不做运行时 sidecar kill+respawn
+        //   (工程复杂且引入新信任边界模糊点)。
+        setError(null); // 清错,进入 loading 语义
+        try {
+          const { relaunch } = await import("@tauri-apps/plugin-process");
+          await relaunch();
+          // relaunch 会立即杀本进程,后续代码不会执行;兜底 UX 语义靠 finally 的 submitting=false
+          //   (relaunch 前 submitting 仍是 true,按钮显示"激活中…",等价于 loading)。
+          return;
+        } catch (relaunchErr) {
+          // 极端兜底:relaunch 拿不到(dev/无 plugin-process)→ 退回旧路径(router.replace)。
+          //   dev 分支本来就走 CREATOROS_DEV_MODE=1 豁免,activation-gate 不看 verdict-token,
+          //   router.replace('/') 能正常放行(激活成功后 .license 已更新,gate 逻辑放行)。
+          console.warn("[T-451] relaunch 失败,回退 router.replace:", relaunchErr);
+          router.replace("/");
+          router.refresh();
+        }
         return;
       }
       // web/dev:legacy 路由(web 无激活门,route 直接放行语义)。

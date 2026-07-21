@@ -343,6 +343,49 @@ function sanitizeBuildPaths(root) {
   console.log(`[build-sidecar] 🕶 脱敏构建绝对路径 ${count} 文件(${needle} → ${placeholder};消 server.js/manifest/.bin shim 的用户名+布局泄露)`);
 }
 
+// [T-451] 烘焙 verdict-token 校验公钥。CI 从 secret CREATOROS_VERDICT_PUBKEY_B64 注入(64 字符
+//   base64 → raw 32B Ed25519 公钥);写 sidecar/frontend/.next/server/verdict-verify-key.json。
+//   sidecar 侧 instrumentation.ts 启动最早期读它 verify Rust 壳签发的 verdict-bound token。
+//   边界处理:
+//     · env 缺失(dev / 本地打包 / 未配 CI secret)→ **不写文件** + 警告日志(sidecar 起来会因文件
+//       缺失 exit(1),这是设计:dev 应走 CREATOROS_DEV_MODE=1 分支,不该到 verify 路径)。
+//     · env 存在但 base64 长度非 32B → throw(打包配置错,硬失败,别产不合规产物)。
+//     · 目标目录 `.next/server/` 不存在 → 意味着 obfuscate/bytecode 步没跑完,硬失败。
+export function bakeVerdictPublicKey() {
+  const b64 = (process.env.CREATOROS_VERDICT_PUBKEY_B64 ?? "").trim();
+  if (!b64) {
+    console.warn(
+      "[build-sidecar] ⚠ [T-451] CREATOROS_VERDICT_PUBKEY_B64 未设 —— **本次产物无 verdict 公钥文件**。" +
+        "\n    · dev / 本地测试:sidecar 靠 CREATOROS_DEV_MODE=1 豁免,不影响。" +
+        "\n    · 正式打包(CI):必须设 secret,否则装机用户 sidecar 起不来(instrumentation exit(1))。" +
+        "\n    · 忘设的话,`gh secret set CREATOROS_VERDICT_PUBKEY_B64` 一次即可。",
+    );
+    return;
+  }
+  const raw = Buffer.from(b64, "base64");
+  if (raw.length !== 32) {
+    throw new Error(
+      `[build-sidecar] [T-451] CREATOROS_VERDICT_PUBKEY_B64 长度非法:期望 base64 → raw 32B,得 ${raw.length}B。` +
+        " 检查 secret 是否是 verdict-keygen.mjs 输出的原样(不加多余空格/换行)。",
+    );
+  }
+  const targetDir = join(SIDECAR_RUNTIME, "frontend", ".next", "server");
+  if (!existsSync(targetDir)) {
+    throw new Error(
+      `[build-sidecar] [T-451] 目标目录不存在,烘焙 verdict 公钥失败:${targetDir}\n` +
+        "  期望顺序:build-sidecar → obfuscate → bytecode → …(此处).next/server 应已存在)。",
+    );
+  }
+  const payload = {
+    publicKeyB64: b64,
+    algorithm: "ed25519",
+    bakedBy: "build-sidecar.mjs T-451",
+  };
+  const dest = join(targetDir, "verdict-verify-key.json");
+  writeFileSync(dest, JSON.stringify(payload, null, 2), "utf8");
+  console.log(`[build-sidecar]   ✓ [T-451] verdict 公钥已烘焙 → ${dest}`);
+}
+
 // [T-170] 采集/扫码依赖 Playwright,但 Next output-tracing **漏掉** douyin-cdp/web-capture 里的
 //   动态 `import("@playwright/test")`(playwright-core 的 .pnpm 被拖进来了,但 frontend/node_modules/
 //   下没建解析链)→ 打包版一点扫码就 ERR_MODULE_NOT_FOUND → loginDouyin 抛错「扫码登录失败」。
@@ -1647,6 +1690,13 @@ function main() {
   // [T-413 §4 安全] 打 tarball 前脱敏构建绝对路径(server.js/manifest/.bin shim 里的用户名+布局)。
   //   放最后:确保 playwright/xenova/ffmpeg 等后续步引入的 .bin shim 也一并脱敏。
   sanitizeBuildPaths(SIDECAR_RUNTIME);
+
+  // [T-451] verdict-token 公钥烘焙 —— 从 CI secret 读 CREATOROS_VERDICT_PUBKEY_B64,写入
+  //   sidecar/frontend/.next/server/verdict-verify-key.json。sidecar 侧 instrumentation.ts 读它
+  //   校验 Rust 壳签发的 verdict-bound token(Ed25519)。
+  //   位置选择:sanitizeBuildPaths 之后(避免脱敏误伤 JSON 里的 base64 串)、packSidecarTarball
+  //   之前(公钥要进 tarball / Windows 直装目录)。
+  bakeVerdictPublicKey();
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。
