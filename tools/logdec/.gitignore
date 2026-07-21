@@ -1,0 +1,4 @@
+# [T-455] logdec 二进制不进 git —— 每台开发机自己从 target/ 拷。
+#   RUST 工具链版本差 → 二进制不通用;进 git 又占仓库空间 (300KB × N 版本)。
+#   README.md 里写了怎么本地生成/放置。
+creatoros-logdec.exe

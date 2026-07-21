@@ -153,3 +153,52 @@
 **坑**:0049 手写迁移一个文件里放 3 条 `ALTER TABLE`,不加分隔标记 → PGlite 报 `cannot insert multiple commands into a prepared statement`,所有走真库的 vitest 全红。drizzle migrator 只按 `--> statement-breakpoint` 切句,分号不算。
 
 **正解**:手写 `.sql` 迁移每条语句之间插一行 `--> statement-breakpoint`(先例:0000/0009/0047);单语句迁移(0045 式)不用。写完新迁移先跑一个真 pglite 的 repository 测试验证迁移能 apply,再跑全量。
+
+## master key 静默降级 → 用户报"配置消失"(T-453,2026-07-21)
+
+**坑**:mac ad-hoc 签名(`codesign -s -`)每次 rebuild CDHash 都变,keychain access 绑签名 identity → **读不回旧 master key**;而 `.master-key` 文件走 keychain-first 逻辑,即便存在也可能被跳过。新 master key 与 DB 里旧密文不匹 → `decRow`(settings.repository:200-212)**静默把 secretValue 置 null** → `resolveLlmConfig` 报"capability xxx 无可用 LLM 凭据" → **用户前端看到"没配"**,以为要重配,配到山寨中转/错模型名 → provider 403/429 → "对话没反应"。整条链每一步都"符合预期",但用户体验是"配了保存下次又空"。
+
+**信号识别**:sidecar.log 里出现 `LlmCredentialError capability "xxx" 无可用 LLM 凭据`,而用户明确说配过;或 sidecar 启动横幅 `签名自校验: 已签名 valid=false team_id=<none>`(ad-hoc 签名典型输出);或换新版包/rebuild 后突然"配置消失"。
+
+**正解**(T-453):①`decRow` 从"静默返 null"改为"写入 sentinel `dec-fail:v1`"——保住"曾配过"信号;②`putModel` 加密后立即 round-trip 解密断言(失败即拒绝入库,保存路径永不给用户"看似成功、下次读空");③`resolveLlmConfig` 认 sentinel 后抛新文案「已配但密钥无法解密,请重填」(区别于"从未配");④contract + service 加 `secretDecryptFailed` 位透给 UI。**未做**:master key 逻辑反转(文件-first / keychain-cache)——短期是 UI 层的诚实交代兜底,长期治本要改 master key 持久化。
+
+## T-451 verdict-token fail-closed 把打包冒烟测试拦了(T-454,2026-07-21)
+
+**坑**:T-451 verdict-token 校验在 `verdict-token-gate.ts::verifyVerdictTokenOrExit` 里 fail-closed —— 缺 token 就 `process.exit(1)`;但 `desktop:package` 有一步"混淆后运行时冒烟"(`obfuscate.mjs --smoke-only`)**直接 spawn `node server.js`**,不经 Rust 壳、没 token,冒烟 100% 拒 spawn。dev 分支只放行 `NODE_ENV!=production && CREATOROS_DEV_MODE=1`,而 smoke 时 `NODE_ENV=production`(打包版环境)→ 走不进 dev 豁免 → 打包总在 smoke 步跪。
+
+**信号识别**:打包 log 里冒烟前一切绿,冒烟输出 `[T-451] verdict-token 缺失(未由 CreatorOS Rust 壳启动) → 拒绝 spawn` + `[obfuscate] ✗ 冒烟失败:read ECONNRESET`。
+
+**正解**:①`verdict-token-gate.ts` 加 build-only bypass 分支——**双条件 opt-in** `CREATOROS_SMOKE_BYPASS_VERDICT===1 && CREATOROS_DESKTOP===1`;②`obfuscate.mjs` smoke spawn 时**只在这里**注入 `CREATOROS_SMOKE_BYPASS_VERDICT=1`。Rust 壳 spawn packaged app 时永不设该 env,攻击者拿到 packaged exe 从二进制里也翻不出该分支的触发路径(在源码明文,但 Rust 壳链断了透传),故不降低安全性。**教训**:安全 fail-closed 加固时必须一并审视**打包内部的自我调用路径**(smoke test / self-test),它们和用户机不是同一条路径,同一套 gate 会误伤。
+
+## Tauri CLI 不认 `--profile`,cargo 参数要在 `--` 后透传(T-452,2026-07-21)
+
+**坑**:`tauri build --profile release-fast` 报 `error: unexpected argument '--profile' found ... tip: to pass '--profile' as a value, use '-- --profile'`。tauri CLI 只透传 `--` 后的参数给底层 cargo。
+
+**正解**:`tauri build -- --profile release-fast`(Node argv 数组里 `["build", "--", "--profile", "release-fast"]`)。同时**若走非默认 profile,产物路径变**(`target/release-fast/bundle/` 而非 `target/release/bundle/`)—— 后续所有产物收集/校验脚本要一起改路径,否则 upload-artifact 空手。CI 场景下更简单的方案是**强制走正式 `release` profile**(`CREATOROS_RELEASE=1`),既是发布档、又不用改后续脚本;`release-fast` 留给本地内测快通道。
+
+## Windows 本地打包 fixOutOfTreeSymlinks 卡死大目录(2026-07-21)
+
+**坑**:`build-sidecar.mjs::fixOutOfTreeSymlinks()` 在打 tarball / Windows direct resource 前扫**整个 sidecar 目录**(815k+ 文件条目)找悬空 symlink,Windows NTFS + 大目录 + 干扰因素(杀软/索引服务/pnpm .pnpm store 深链)会**卡死单线程 stat 递归 15+ 分钟不出信号**(HandleCount / WorkingSetSize 不变 = 单纯 IO wait / 内核卡)。**GHA runner VM 是干净盘、无干扰,同样代码 30 秒内跑完**。
+
+**信号识别**:build-sidecar 打完 `verdict 公钥已烘焙` 后**无新输出 15+ 分钟**,主 node 进程还活但 HandleCount 8-60 秒观察不变,`sidecar/node_modules/.pnpm/` 目录已存在且巨大。
+
+**正解**:①短期 = **本地 Windows 打包不可靠,改走 GHA**(runner 干净盘 + Swatinem/rust-cache 加速);②长期 = 拆 fixOutOfTreeSymlinks 为**分批扫**(每处理 N 个 log 一次),或改为**只扫 pnpm 链的可疑白名单目录**(不必全 sidecar 递归);③避免 dereference 全展开导致 815k 文件条目(但代价是要重新验证 pnpm junction / Tauri resource / hyperframes 三个历史陷阱都不复现,不能盲改)。
+
+## GHA secrets 与 build.rs `env!()` 编译期依赖(T-451/T-454,2026-07-21)
+
+**坑**:`build.rs` 用 `env!("CREATOROS_VERDICT_SIGNING_KEY_B64")` 读私钥 —— 这是**编译期**读环境,workflow 若没在 build 步骤显式引用 `${{ secrets.XXX }}` 到 env,cargo build 直接 `env-var not set` 编译失败。CI 上默认不会自动透传 secrets 到 subprocess。
+
+**正解**:workflow 的"打包"步骤显式写 `env: { CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }} }`,同时**仓库 secrets 必须提前配好**(缺任一 → env 值为空串 → cargo 编译报错或运行时公钥载入失败)。用 `gh secret set NAME`(stdin 传值,不落磁盘/日志)配置。
+
+## sccache 装了但 rustc-wrapper 路径要绝对(T-454,2026-07-21)
+
+**坑**:`~/.cargo/config.toml` 的 `[build] rustc-wrapper = "sccache"` **只在 PATH 有 sccache 时**能用。winget 装的 sccache 落 `%LOCALAPPDATA%\Microsoft\WinGet\Links\sccache.exe`,但**新装当前 shell 的 PATH 是旧的**,cargo 找不到就报 `unable to spawn rustc-wrapper`,build 直接崩。
+
+**正解**:`rustc-wrapper` 写**绝对路径**(如 `C:\\Users\\zyongzhu\\AppData\\Local\\Microsoft\\WinGet\\Links\\sccache.exe`),或**重启终端让 PATH 生效**再改回相对名。首次 build 无命中(纯 miss 写缓存),第二次同 hash 依赖 build 才吃到 20-60% 命中率——不要期望首装立刻加速。
+
+## 日志加密文件解密工具工程化(T-455,2026-07-21)
+
+**坑**:sidecar.log.enc 是 X25519 + HKDF-SHA256 加密(T-391),每次要用户报问题时排障都要「装 Rust 工具链 → cargo build logdec → 手工传 --key 参数」——用户机不可能装 Rust,只能开发机跑;开发机每次删 sidecar 重打包又要重建 logdec(build.rs 依赖 tauri_build 走 sidecar 目录)。
+
+**正解**:①产出 `creatoros-logdec.exe` 后**单独拷一份到 `tools/`** 目录,cargo clean 不带走;②做个 shell/PowerShell wrapper `decrypt-log.sh` 自动找密钥文件+批量解密+按目录聚合输出;③把 wrapper 加进 `docs/RELEASING.md` 或 `docs/support-toolkit.md`,新排障时"从这里起步"。
+
