@@ -265,7 +265,10 @@ const tauriBuildArgs = [
   "build",
 ];
 if (!isFullRelease) {
-  tauriBuildArgs.push("--profile", "release-fast");
+  // [T-452 后修] tauri CLI 本身不认 `--profile`;放在 `--` 后作为 cargo 参数透传。
+  //   实测 CI 报 `error: unexpected argument '--profile' found ... tip: to pass '--profile'
+  //   as a value, use '-- --profile'`。
+  tauriBuildArgs.push("--", "--profile", "release-fast");
   console.log(
     "[desktop:package] [T-452] cargo profile = release-fast(lto=thin;内测/日常快打)。发正式包设 CREATOROS_RELEASE=1 走 fat lto。",
   );

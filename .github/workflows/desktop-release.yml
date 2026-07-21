@@ -102,6 +102,10 @@ jobs:
           #   生成:pnpm -C frontend node scripts/desktop/verdict-keygen.mjs。
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          # [T-452 后修] CI 打的是正式发布包,走 fat lto `release` profile(而非本地内测的
+          #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
+          #   本地日常打包不设此 env,走 release-fast 快通道。
+          CREATOROS_RELEASE: "1"
         run: node scripts/desktop/release.mjs
 
       - name: 校验 Windows 安装包直接携带 sidecar(T-446·禁止首启解压到 C 盘)
