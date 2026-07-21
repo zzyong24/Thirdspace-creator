@@ -202,3 +202,12 @@
 
 **正解**:①产出 `creatoros-logdec.exe` 后**单独拷一份到 `tools/`** 目录,cargo clean 不带走;②做个 shell/PowerShell wrapper `decrypt-log.sh` 自动找密钥文件+批量解密+按目录聚合输出;③把 wrapper 加进 `docs/RELEASING.md` 或 `docs/support-toolkit.md`,新排障时"从这里起步"。
 
+## Tauri Windows 同时打 nsis+msi + LZMA 极致压缩 = GHA 90min timeout(T-454,2026-07-21)
+
+**坑**:`tauri.windows.conf.json` targets `["nsis", "msi"]` **打两份 installer**,每份都要独立压缩整个 `sidecar/` 目录(1.5GB, Chromium/Playwright/Xenova 全部 co-ship)——**等于压两遍大文件树**。默认 NSIS 用 **LZMA 极致压缩**,大目录 30-60 分钟起,单次 stdout 静默,GHA log 就卡在 `Info Target: x64` 之后不再输出。GHA runner 90min timeout 打完 cargo(28min)后 34min 内没进后置步骤 → 直接被 `##[error]The operation was canceled`。
+
+**信号识别**:GHA log 末尾 `Info Target: x64` 后长时间无新行;GHA billable duration 仍在增长(runner 未死);job step "打包(release.mjs 全链)"卡 in_progress。**用户看着以为死了,实际是 NSIS 单线程 LZMA 在啃**。
+
+**正解**:①`targets` 内测收窄成 `["nsis"]`(msi 只在企业分发要;内测/日常不需要);②`bundle.windows.nsis.compression = "zlib"`(默认 LZMA → zlib,速度快 3-10×,包大 30% 但内测可接受;LZMA 只在真正要"极致压缩下载体积"时用);③`installMode: "currentUser"` 显式化(承接 T-449:装到 `%LOCALAPPDATA%\Programs\`,ACL 天然只该用户可读)。④GHA `timeout-minutes` 从 90 → 180 兜底(即使 NSIS 有意外也不再被 90min 顶死;正常 45-60min 内应完成)。
+
+
