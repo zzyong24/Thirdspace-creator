@@ -478,6 +478,43 @@ const SPLASH_JS: &str = "window.addEventListener('DOMContentLoaded',function(){i
 /// 诚实边界(SPEC §9 gate-F4):此校验只防 **JS 层篡改**(改 tarball 里的 server.js 等);
 /// ① patch 本 Rust 二进制可绕;② 已解压的 runtime 缓存目录(appDataDir/runtime/…)被直接
 /// 改写不在每次启动的校验范围内(tarball 尺寸指纹变了才重解压)——不假装形成全链路防篡改。
+fn verify_file_sha256(
+    path: &std::path::Path,
+    expected: &str,
+    label: &str,
+) -> Result<(), String> {
+    use sha2::{Digest, Sha256};
+    use std::io::Read as _;
+
+    if expected.is_empty() {
+        return Err(format!("构建期未内嵌{label}哈希，拒绝运行无法验证的正式资源"));
+    }
+    let mut file = std::fs::File::open(path)
+        .map_err(|e| format!("读{label}失败 {}: {e}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buf = [0_u8; 1024 * 1024];
+    loop {
+        let n = file
+            .read(&mut buf)
+            .map_err(|e| format!("读{label}失败 {}: {e}", path.display()))?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    let actual = hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+    if actual != expected {
+        return Err(format!(
+            "{label}完整性校验失败(期望 {expected} 实际 {actual})。应用文件可能被篡改或安装损坏，请重新安装 CreatorOS。"
+        ));
+    }
+    Ok(())
+}
+
 fn verify_sidecar_tarball(tarball: &std::path::Path) -> Result<(), String> {
     // build.rs 恒注入该 env:打包构建 = tarball 真哈希;dev(无 tarball)= 空串。
     let expected = env!("CREATOROS_SIDECAR_SHA256");
@@ -486,32 +523,121 @@ fn verify_sidecar_tarball(tarball: &std::path::Path) -> Result<(), String> {
         eprintln!("[shell] 构建期未内嵌 sidecar 哈希(dev 构建),跳过入口完整性校验");
         return Ok(());
     }
-    let bytes = std::fs::read(tarball)
-        .map_err(|e| format!("读 sidecar.tar.gz 失败,无法校验完整性: {e}"))?;
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(&bytes);
-    let actual = hasher
-        .finalize()
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>();
-    if actual != expected {
+    verify_file_sha256(tarball, expected, "sidecar.tar.gz")
+}
+
+/// [T-446] Windows 安装包直接携带的展开目录硬校验。Windows 构建期已把 pnpm junction 全部
+/// 物化成真文件；运行时无需可写，不应再复制或解压到 `%APPDATA%`。
+#[cfg(windows)]
+fn verify_direct_sidecar_dir(dir: &std::path::Path) -> Result<(), String> {
+    verify_direct_sidecar_dir_with_hash(dir, env!("CREATOROS_SIDECAR_ENTRY_SHA256"))
+}
+
+#[cfg(any(windows, test))]
+fn verify_direct_sidecar_dir_with_hash(
+    dir: &std::path::Path,
+    expected_entry_hash: &str,
+) -> Result<(), String> {
+    let entry = dir.join("frontend").join("server.js");
+    for required in [
+        entry.clone(),
+        dir.join("frontend").join(".next"),
+        dir.join("frontend").join("node_modules"),
+        dir.join("backend")
+            .join("drizzle")
+            .join("meta")
+            .join("_journal.json"),
+    ] {
+        if !required.exists() {
+            return Err(format!(
+                "Windows 安装目录中的 sidecar 不完整，缺 {}。请重新安装 CreatorOS。",
+                required.display()
+            ));
+        }
+    }
+    verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
+}
+
+/// tar 兜底平台的原子解压：先在同盘临时目录完成并校验，再 rename 切换；失败绝不留下半成品。
+fn extract_sidecar_tarball(
+    tarball: &std::path::Path,
+    dest: &std::path::Path,
+    stamp_value: &str,
+) -> Result<bool, String> {
+    if !tarball.is_file() {
+        return Err(format!("sidecar.tar.gz 不存在: {}", tarball.display()));
+    }
+    let marker = dest.join("frontend").join("server.js");
+    let stamp = dest.join(".tarball-stamp");
+    let stamped = std::fs::read_to_string(&stamp).ok();
+    if marker.is_file() && stamped.as_deref() == Some(stamp_value) {
+        return Ok(false);
+    }
+
+    let parent = dest
+        .parent()
+        .ok_or_else(|| format!("sidecar 解压目标无父目录: {}", dest.display()))?;
+    std::fs::create_dir_all(parent)
+        .map_err(|e| format!("建 sidecar runtime 父目录失败 {}: {e}", parent.display()))?;
+    let name = dest.file_name().and_then(|s| s.to_str()).unwrap_or("sidecar");
+    let temp = parent.join(format!("{name}.extracting-{}", std::process::id()));
+    let backup = parent.join(format!("{name}.previous-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&temp);
+    let _ = std::fs::remove_dir_all(&backup);
+    std::fs::create_dir_all(&temp)
+        .map_err(|e| format!("建 sidecar 临时解压目录失败 {}: {e}", temp.display()))?;
+
+    let mut tar_cmd = std::process::Command::new("tar");
+    tar_cmd.arg("-xzf").arg(tarball).arg("-C").arg(&temp);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt as _;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        tar_cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let status = tar_cmd.status();
+    if !matches!(status, Ok(s) if s.success()) {
+        let _ = std::fs::remove_dir_all(&temp);
         return Err(format!(
-            "sidecar 入口文件完整性校验失败(期望 {expected} 实际 {actual})。\
-             应用文件可能被篡改或安装损坏,请重新安装 CreatorOS。"
+            "sidecar 解压失败({status:?})，已清理临时目录；tarball={}",
+            tarball.display()
         ));
     }
-    Ok(())
+    if !temp.join("frontend").join("server.js").is_file() {
+        let _ = std::fs::remove_dir_all(&temp);
+        return Err("sidecar 解压结果缺 frontend/server.js，已清理临时目录".to_string());
+    }
+    if let Err(e) = std::fs::write(temp.join(".tarball-stamp"), stamp_value) {
+        let _ = std::fs::remove_dir_all(&temp);
+        return Err(format!("写 sidecar 完成标记失败，已清理临时目录: {e}"));
+    }
+
+    if dest.exists() {
+        if let Err(e) = std::fs::rename(dest, &backup) {
+            let _ = std::fs::remove_dir_all(&temp);
+            return Err(format!(
+                "暂存旧 sidecar runtime 失败 {}，已清理临时目录: {e}",
+                dest.display()
+            ));
+        }
+    }
+    if let Err(e) = std::fs::rename(&temp, dest) {
+        if backup.exists() {
+            let _ = std::fs::rename(&backup, dest);
+        }
+        let _ = std::fs::remove_dir_all(&temp);
+        return Err(format!("原子切换 sidecar runtime 失败 {}: {e}", dest.display()));
+    }
+    let _ = std::fs::remove_dir_all(&backup);
+    Ok(true)
 }
 
 /// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
-/// sidecar 保留 pnpm 相对 symlink 结构,而 **Tauri resource 拷贝会丢 symlink**(T-169 实测:源 180 个
-/// → bundle 0 个 → node 解析 next 断 → sidecar 起不来)。故 bundle 里带的是**单文件 tarball**
-/// `sidecar.tar.gz`(symlink 存档内原样保留),首启解压到可写目录(系统 tar 原生保 symlink)。
+/// macOS/Linux sidecar 保留 pnpm 相对 symlink，bundle 带单文件 tarball 并原子解压；Windows
+/// 构建期已物化成零 symlink 真目录，bundle 直接携带 `sidecar/`，从安装目录只读运行。
 ///   ① CREATOROS_SIDECAR_DIR env 覆盖(打包/测试可指定);
 ///   ② dev:CARGO_MANIFEST_DIR/sidecar(编译期常量,指向源目录,symlink 完好);
-///   ③ bundle:资源里的 sidecar.tar.gz → 首启解压到 appDataDir/runtime/<version>/sidecar(复用)。
+///   ③ Windows bundle:安装目录 sidecar/；mac/Linux:tar → appDataDir/runtime/<version>/sidecar。
 /// [T-372 L2] 返回 Err = 入口完整性校验失败 → 上层**拒绝 spawn**(不再静默把被篡改的
 /// sidecar 跑起来)。其余路径语义不变。
 fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -535,84 +661,84 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             return Ok(dev_dir);
         }
     }
-    // ③ bundle:资源里是 sidecar.tar.gz(单文件,规避 Tauri resource 丢 symlink)。
-    let tarball = match app
-        .path()
-        .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
+    // [T-446] Windows 构建期已把 pnpm junction 全物化为真文件；Tauri/NSIS 把展开目录装到
+    // 用户选择的安装盘，直接只读运行。这里不再创建 `%APPDATA%/runtime`、不再调用 tar.exe。
+    #[cfg(windows)]
     {
-        Ok(p) if p.exists() => p,
-        // 资源缺 tarball = 打包不完整;诚实报错拒 spawn,不乱指编译机路径。
-        _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
-    };
-    // [T-372 L2] spawn 前的入口哈希校验:tarball 与构建期内嵌哈希不符 → 拒绝 spawn。
-    verify_sidecar_tarball(&tarball)?;
-    // 解压目标按版本隔离:appDataDir/runtime/<version>/sidecar。升级(新版本)→ 新目录 → 自动重解压。
-    let version = app.package_info().version.to_string();
-    let dest = match app.path().app_data_dir() {
-        Ok(d) => d.join("runtime").join(&version).join("sidecar"),
-        Err(e) => return Err(format!("appDataDir 不可用,无法解压 sidecar runtime: {e}")),
-    };
-    // 首启(或版本升级后首启)才解压;server.js 在位即认为已解压过,直接复用(避免每启动重解 598M)。
-    let marker = dest.join("frontend").join("server.js");
-    let stamp = dest.join(".tarball-stamp");
-    // [T-169b] 陈旧缓存修复:版本恒 0.1.0(dev 反复重打 / 同版本 patch)时,仅凭 server.js 存在就跳过
-    //   解压 → **新 tarball 永不生效**(跑的还是首次解压的旧 runtime,我的修复全不到达运行的 app)。
-    //   改用 tarball 字节大小当指纹:与上次解压记录(.tarball-stamp)不符(或 marker 缺失)→ 清目录
-    //   重解压。任何 rebuild/更新 tarball 尺寸都会变 → 新 runtime 必生效。bsdtar 解压快(秒级)。
-    let tarball_size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
-    let stamped = std::fs::read_to_string(&stamp)
-        .ok()
-        .and_then(|s| s.trim().parse::<u64>().ok());
-    let need_extract = !marker.exists() || stamped != Some(tarball_size);
-    if need_extract {
-        // 清掉可能的陈旧解压(旧 runtime)再全新解压 —— 否则残留旧文件混入。
-        let _ = std::fs::remove_dir_all(&dest);
-        if let Err(e) = std::fs::create_dir_all(&dest) {
-            eprintln!("[shell] 建 sidecar 解压目录失败 {}: {e}", dest.display());
+        let direct = app
+            .path()
+            .resolve("sidecar", tauri::path::BaseDirectory::Resource)
+            .map_err(|e| format!("无法定位 Windows 安装目录中的 sidecar: {e}"))?;
+        verify_direct_sidecar_dir(&direct)?;
+        if let Ok(data_dir) = app.path().app_data_dir() {
+            std::thread::spawn(move || {
+                if cleanup_legacy_runtime_root(&data_dir) {
+                    eprintln!("[shell] [T-446] 已清理旧版 C 盘 sidecar runtime 缓存");
+                }
+            });
         }
-        // 系统 tar 解压(-x 解 / -z gzip / -f 文件 / -C 目标)。macOS bsdtar、Win10+ tar.exe、Linux
-        //   GNU tar 均原生按 symlink 还原 —— 这是选 tar 而非 Rust 解压库的关键(免依赖 + 保 symlink)。
-        //   (Win10+ tar.exe 对 symlink/junction 的**保真度**是 §11.2 spike 1 的验证对象,归 W-spike。)
-        let mut tar_cmd = std::process::Command::new("tar");
-        tar_cmd.arg("-xzf").arg(&tarball).arg("-C").arg(&dest);
-        // [T-372 W5] Windows:tar.exe 是 console 子系统程序,GUI 壳(windows_subsystem="windows")
-        //   spawn 它会闪一个黑色 console 窗 → CREATE_NO_WINDOW 抑制。mac/Linux 无此概念,不编译。
-        #[cfg(windows)]
-        {
-            use std::os::windows::process::CommandExt as _;
-            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-            tar_cmd.creation_flags(CREATE_NO_WINDOW);
-        }
-        let status = tar_cmd.status();
-        match status {
-            Ok(s) if s.success() => {
-                let _ = std::fs::write(&stamp, tarball_size.to_string());
-                eprintln!(
-                    "[shell] sidecar 解压完成(size={tarball_size})→ {}",
-                    dest.display()
-                );
-            }
-            other => {
-                eprintln!(
-                    "[shell] sidecar 解压失败({other:?}),tarball={} → dest={}",
-                    tarball.display(),
-                    dest.display()
-                );
-            }
-        }
+        eprintln!(
+            "[shell] [T-446] Windows 直接使用安装目录 sidecar（无首启解压）→ {}",
+            direct.display()
+        );
+        return Ok(direct);
     }
-    // [T-364] 升级后旧版本 runtime 目录清理:appDataDir/runtime/<version>/ 每版 ~400MB,
-    // 旧版本目录永不删 → 多次升级沉默堆积数 GB。当前版本目录已就绪(解压完成/复用)后,
-    // 后台 best-effort 删非当前版本目录。回滚无代价:旧壳二进制自带自己的 tarball 资源,
-    // 回装后首启会重新解压出自己的 runtime。
-    if let Ok(data_dir) = app.path().app_data_dir() {
+
+    // macOS/Linux 仍用 tar 保留 pnpm symlink，但以临时目录完整解压后原子切换。
+    #[cfg(not(windows))]
+    {
+        let tarball = match app
+            .path()
+            .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
+        {
+            Ok(p) if p.exists() => p,
+            _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
+        };
+        verify_sidecar_tarball(&tarball)?;
+        let version = app.package_info().version.to_string();
+        let data_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|e| format!("appDataDir 不可用,无法解压 sidecar runtime: {e}"))?;
+        let dest = data_dir.join("runtime").join(&version).join("sidecar");
+        let expected = env!("CREATOROS_SIDECAR_SHA256");
+        let stamp_value = if expected.is_empty() {
+            let size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
+            format!("size:{size}")
+        } else {
+            format!("sha256:{expected}")
+        };
+        if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
+            eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
+        }
+
         let runtime_root = data_dir.join("runtime");
         let keep = version.clone();
         std::thread::spawn(move || {
             cleanup_stale_runtimes(&runtime_root, &keep);
         });
+        Ok(dest)
     }
-    Ok(dest)
+}
+
+/// [T-446] Windows 新包不再使用 `%APPDATA%/runtime`。只删这个明确的可再生缓存子目录，
+/// 绝不触碰同级 db/.auth/.master-key/logs。失败留给下次启动重试。
+#[cfg(any(windows, test))]
+fn cleanup_legacy_runtime_root(app_data_dir: &std::path::Path) -> bool {
+    let runtime_root = app_data_dir.join("runtime");
+    if !runtime_root.exists() {
+        return false;
+    }
+    match std::fs::remove_dir_all(&runtime_root) {
+        Ok(()) => true,
+        Err(e) => {
+            eprintln!(
+                "[shell] [T-446] 清理旧 runtime 缓存失败 {}: {e}",
+                runtime_root.display()
+            );
+            false
+        }
+    }
 }
 
 /// [T-364] 删 `runtime/` 下**非当前版本**的旧解压目录。best-effort:单目录删失败只记日志
@@ -652,6 +778,15 @@ pub fn run() {
     //   只取诱饵函数地址做 XOR、不调用其逻辑 → 零执行/零功能影响;black_box 防优化掉。
     std::hint::black_box(decoy_gate::decoy_gate_keepalive());
     tauri::Builder::default()
+        // [T-446] 官方要求 single-instance 必须第一个注册。用户重复点击时第二进程立即退出，
+        // 已有窗口存在则恢复并聚焦；即使首实例仍在 setup，也不会再跑第二份启动链。
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_shell::init())
         // [T-241] 外链转系统浏览器(webview 默认吞 target=_blank 新窗口请求)。
         .plugin(tauri_plugin_opener::init())
@@ -1274,6 +1409,113 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(root.join("0.3.0")).unwrap();
         assert_eq!(super::cleanup_stale_runtimes(&root, "0.3.0"), 0);
         assert!(root.join("0.3.0").exists());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn windows_旧缓存清理只删_runtime_不碰_db_和_auth() {
+        let app_data = temp_runtime_root("legacy-root");
+        std::fs::create_dir_all(app_data.join("runtime").join("0.1.0").join("sidecar"))
+            .unwrap();
+        std::fs::create_dir_all(app_data.join("db")).unwrap();
+        std::fs::create_dir_all(app_data.join(".auth")).unwrap();
+        std::fs::write(app_data.join("db").join("data"), "keep").unwrap();
+        std::fs::write(app_data.join(".master-key"), "keep").unwrap();
+
+        assert!(super::cleanup_legacy_runtime_root(&app_data));
+        assert!(!app_data.join("runtime").exists());
+        assert!(app_data.join("db").join("data").exists());
+        assert!(app_data.join(".auth").exists());
+        assert!(app_data.join(".master-key").exists());
+        let _ = std::fs::remove_dir_all(&app_data);
+    }
+
+    #[test]
+    fn sidecar_入口哈希匹配通过_篡改后拒绝() {
+        let root = temp_runtime_root("entry-hash");
+        let entry = root.join("server.js");
+        std::fs::write(&entry, "hello").unwrap();
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        assert!(super::verify_file_sha256(&entry, hello_sha, "sidecar 入口").is_ok());
+        std::fs::write(&entry, "tampered").unwrap();
+        assert!(super::verify_file_sha256(&entry, hello_sha, "sidecar 入口").is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn windows_安装目录展开资源关键结构与入口哈希都必须通过() {
+        let root = temp_runtime_root("direct-runtime");
+        std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
+        std::fs::create_dir_all(root.join("frontend").join("node_modules")).unwrap();
+        std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
+        std::fs::write(root.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            root.join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+            "{}",
+        )
+        .unwrap();
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_ok());
+        std::fs::remove_file(
+            root.join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+        )
+        .unwrap();
+        assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn 原子解压失败不留下最终目录或完成标记() {
+        let root = temp_runtime_root("extract-failure");
+        let missing_tar = root.join("missing.tar.gz");
+        let dest = root.join("0.1.0").join("sidecar");
+        let result = super::extract_sidecar_tarball(&missing_tar, &dest, "sha256:missing");
+        assert!(result.is_err());
+        assert!(!dest.exists());
+        assert!(!dest.join(".tarball-stamp").exists());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn 原子解压成功后写完成标记_同一版本二次直接复用() {
+        let root = temp_runtime_root("extract-success");
+        let source = root.join("source");
+        std::fs::create_dir_all(source.join("frontend")).unwrap();
+        std::fs::write(source.join("frontend").join("server.js"), "ready").unwrap();
+        let tarball = root.join("sidecar.tar.gz");
+        let status = std::process::Command::new("tar")
+            .arg("-czf")
+            .arg(&tarball)
+            .arg("-C")
+            .arg(&source)
+            .arg(".")
+            .status()
+            .unwrap();
+        assert!(status.success());
+
+        let dest = root.join("runtime").join("0.1.0").join("sidecar");
+        assert_eq!(
+            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test").unwrap(),
+            true
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend").join("server.js")).unwrap(),
+            "ready"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:test"
+        );
+        assert_eq!(
+            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test").unwrap(),
+            false
+        );
         let _ = std::fs::remove_dir_all(&root);
     }
 }

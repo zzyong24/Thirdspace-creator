@@ -19,8 +19,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
-# [T-372 L2] 构建期算 sidecar.tar.gz 的 SHA-256,经 cargo:rustc-env 注入
-# `CREATOROS_SIDECAR_SHA256`,运行时校验入口完整性(改 JS 必须先动 Rust)。
+# [T-372/T-446] mac/Linux 构建期算 sidecar.tar.gz SHA-256；Windows 直接资源算
+# sidecar/frontend/server.js SHA-256，经 cargo:rustc-env 注入壳层做入口完整性校验。
 sha2 = "0.10"
 
 [dependencies]
@@ -38,6 +38,9 @@ tauri-plugin-opener = "2"
 tauri-plugin-updater = "2"
 # [T-180] process 插件:更新装好后 relaunch() 重启 app(前端 @tauri-apps/plugin-process 的 Rust 侧)。
 tauri-plugin-process = "2"
+# [T-446] 必须作为 Builder 第一个插件注册：重复点击安装包图标时，第二实例立即退出并
+# 聚焦已有窗口，杜绝多个 CreatorOS/tar 同时写一个 runtime 目录。
+tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # T-147 P2 本地加密 —— master key 存 OS keychain(macOS Keychain / Windows Credential

@@ -97,6 +97,26 @@ jobs:
           CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
         run: node scripts/desktop/release.mjs
 
+      - name: 校验 Windows 安装包直接携带 sidecar(T-446·禁止首启解压到 C 盘)
+        if: runner.os == 'Windows'
+        run: |
+          setup=$(find frontend/src-tauri/target/release/bundle/nsis -type f -iname '*-setup.exe' -print -quit)
+          if [ -z "$setup" ]; then
+            echo "[T-446] 未找到 NSIS setup.exe" >&2
+            exit 1
+          fi
+          listing="$RUNNER_TEMP/creatoros-nsis-files.txt"
+          7z l "$setup" > "$listing"
+          if ! grep -Fq 'sidecar\frontend\server.js' "$listing" && ! grep -Fq 'sidecar/frontend/server.js' "$listing"; then
+            echo "[T-446] setup.exe 未包含展开的 sidecar/frontend/server.js" >&2
+            exit 1
+          fi
+          if grep -Fq 'sidecar.tar.gz' "$listing"; then
+            echo "[T-446] setup.exe 仍误带 sidecar.tar.gz，会恢复首启解压问题" >&2
+            exit 1
+          fi
+          echo "[T-446] ✓ setup.exe 含展开 sidecar/ 且不含 sidecar.tar.gz"
+
       - name: 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
         run: |
           ls -d frontend/src-tauri/sidecar/frontend/browsers/chromium-* \

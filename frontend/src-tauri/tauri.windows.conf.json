@@ -4,6 +4,9 @@
     "targets": [
       "nsis",
       "msi"
+    ],
+    "resources": [
+      "sidecar/"
     ]
   }
 }

@@ -255,10 +255,31 @@ function fixOutOfTreeSymlinks() {
   }
 }
 
+// [T-446] Windows 的 sidecar 已在构建期物化成零 symlink 真目录，交给 Tauri/NSIS 在**安装时**
+// 解包到用户选择的安装目录即可。再造 935MB tar 会造成三重浪费：CI 重复压缩、安装包携带 tar、
+// 首启再解到 %APPDATA%(通常是 C 盘)。macOS 仍依赖 tar 保 pnpm symlink，Linux 同样保留旧路。
+export function shouldPackSidecarTarball(targetPlatform = platform) {
+  return targetPlatform !== "win32";
+}
+
 function packSidecarTarball() {
   // [T-441] 打包前最后一道闸(两个调用点都覆盖):清掉指向构建机的 symlink。
   fixOutOfTreeSymlinks();
   const tarball = join(SRC_TAURI, "sidecar.tar.gz");
+  if (!shouldPackSidecarTarball()) {
+    const leftoverLinks = countSymlinks(SIDECAR_RUNTIME);
+    if (leftoverLinks !== 0) {
+      throw new Error(
+        `[build-sidecar] [T-446] Windows direct resource 必须零 symlink/junction，当前残留 ${leftoverLinks} 个`,
+      );
+    }
+    // 防同一工作区先打 mac、再打 win 时误把旧 tar 混进 Windows bundle/build.rs。
+    rmSync(tarball, { force: true });
+    console.log(
+      "[build-sidecar] [T-446] Windows 跳过 sidecar.tar.gz：Tauri 直接携带已展开 sidecar/ 到安装目录。",
+    );
+    return;
+  }
   // [T-372 L2] 入口完整性链:本脚本(beforeBuildCommand)先产 tarball → 随后的 cargo 构建里
   //   src-tauri/build.rs 对它算 SHA-256 并经 rustc-env 内嵌进壳二进制 → 运行时 lib.rs 解压前
   //   比对,不匹配拒绝 spawn(改 JS 必先动 Rust)。哈希不在此处算 —— 单一实现在 build.rs。
@@ -1440,7 +1461,7 @@ function main() {
       console.log(
         "[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。",
       );
-      // [T-169] 即便跳过重建,也从当前(已混淆的)sidecar/ 重打 tarball —— tauri build 要 bundle 它。
+      // mac/Linux 从当前(已混淆的)sidecar/ 重打 tarball；Windows 直接 bundle 展开目录。
       packSidecarTarball();
       return;
     }
@@ -1638,10 +1659,15 @@ function main() {
   }
   console.log(`    standalone 运行目录         : ${SIDECAR_RUNTIME}`);
   console.log(`    server.js                  : ${join(SIDECAR_RUNTIME, "frontend", "server.js")}`);
-  console.log(`    bundle tarball             : ${join(SRC_TAURI, "sidecar.tar.gz")}`);
-  console.log(
-    "    Tauri bundle 会把 src-tauri/sidecar.tar.gz 作 resource 带上;Rust 侧首启解压到 appDataDir/runtime/<version>/sidecar(保 symlink)后跑其 frontend/server.js。",
-  );
+  if (shouldPackSidecarTarball()) {
+    console.log(`    bundle tarball             : ${join(SRC_TAURI, "sidecar.tar.gz")}`);
+    console.log(
+      "    Tauri bundle 会把 src-tauri/sidecar.tar.gz 作 resource 带上；Rust 侧原子解压后运行。",
+    );
+  } else {
+    console.log(`    Windows direct resource    : ${SIDECAR_RUNTIME}`);
+    console.log("    Tauri/NSIS 安装时展开到安装目录；首启不再调用 tar、不再写 C 盘 runtime 缓存。");
+  }
 }
 
 function isDirectExecution() {
