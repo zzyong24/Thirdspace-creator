@@ -446,7 +446,13 @@ function bundlePlaywright() {
   }
   console.log(`[build-sidecar]   覆盖 .pnpm 残缺版 ${pnpmOverwrote} 处`);
   // [T-284] 顺带把 Chromium 浏览器二进制打进 sidecar(见 bundleChromiumBrowser 注释)。
-  bundleChromiumBrowser();
+  // [T-452] CREATOROS_SKIP_CHROMIUM=1 跳,省 2-5 分钟 + 340MB 体积;视频渲染/网页截图/抖音采集
+  //   会回落到运行时下载(用户机首次会等下载)。
+  if (process.env.CREATOROS_SKIP_CHROMIUM === "1") {
+    console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_CHROMIUM=1 → 跳 bundleChromiumBrowser(用户机运行时下载 Chromium)");
+  } else {
+    bundleChromiumBrowser();
+  }
   // 自检①:sidecar node 从 frontend/ 能否解析 @playwright/test。
   const check = spawnSync(
     process.execPath,
@@ -1664,19 +1670,40 @@ function main() {
 
   // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。
   //   放在打 tarball 之前,让 playwright 包进 tarball。
-  bundlePlaywright();
+  // [T-452] 按需跳过:内测/快打场景可 CREATOROS_SKIP_PLAYWRIGHT=1 省 1-3 分钟(扫码/网页截图会
+  //   在真机上回落到"需要安装 Playwright"提示)。**发布分发包时不要跳**。
+  if (process.env.CREATOROS_SKIP_PLAYWRIGHT === "1") {
+    console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_PLAYWRIGHT=1 → 跳 bundlePlaywright(扫码/网页截图将失效)");
+  } else {
+    bundlePlaywright();
+  }
 
   // [T-289] 实拷 gsap/hyperframes 完整包(补 Next tracing 漏的 dist/cli.js/gsap.min.js)——
   //   视频渲染「生成合成模板」步的依赖,不补齐必崩(见 bundleRenderDeps 注释)。放打 tarball 前。
-  bundleRenderDeps();
+  // [T-452] CREATOROS_SKIP_RENDER=1 跳,省 30-60 秒;视频渲染功能会失效。
+  if (process.env.CREATOROS_SKIP_RENDER === "1") {
+    console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_RENDER=1 → 跳 bundleRenderDeps(视频渲染将失效)");
+  } else {
+    bundleRenderDeps();
+  }
 
   // [T-313] 实拷 Pi 引擎依赖闭包(补 Next tracing 漏的整棵 @earendil-works/pi-coding-agent 树)——
   //   pi-engine.ts 运行时深导入 dist/core/sdk.js;不实拷则打包版 Pi 引擎永退兜底(见 bundlePiEngine 注释)。放打 tarball 前。
-  bundlePiEngine();
+  // [T-452] CREATOROS_SKIP_PI=1 跳,省 1-2 分钟;Pi 引擎会退确定性兜底。
+  if (process.env.CREATOROS_SKIP_PI === "1") {
+    console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_PI=1 → 跳 bundlePiEngine(Pi 引擎退兜底)");
+  } else {
+    bundlePiEngine();
+  }
 
   // [T-383] 实拷 @xenova/transformers 完整闭包(修 T-356 worker 化后打包版 whisper-local
   //   「Cannot find module '@xenova/transformers'」)—— 放 T-225/T-225b 安全网之前、打 tarball 前。
-  bundleXenovaTransformers();
+  // [T-452] CREATOROS_SKIP_XENOVA=1 跳,省 1-3 分钟;whisper-local ASR 会失效(云端 ASR 不受影响)。
+  if (process.env.CREATOROS_SKIP_XENOVA === "1") {
+    console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_XENOVA=1 → 跳 bundleXenovaTransformers(whisper-local 失效)");
+  } else {
+    bundleXenovaTransformers();
+  }
 
   // [T-225] onnxruntime 原生库补拷(修 whisper-local 逐字稿转录 dlopen 崩)—— 在打 tarball 前，让 dylib 进包。
   ensureOnnxRuntimeDylib();

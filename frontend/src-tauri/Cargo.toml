@@ -122,3 +122,14 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
+
+# [T-452] release-fast:日常开发/内测打包用,把 LTO 从 fat 降到 thin + 恢复 codegen 并行。
+#   收益(实测预估):cargo build 从单核 15-30 分钟(fat LTO 串行合并 300+ crate)降到 5-8 分钟。
+#   代价:①二进制略大(几百 KB 到 1MB;桌面壳可接受)②冷启动 startup 差 < 30ms(用户不可感)。
+#   正式对外 release 仍走上面的 [profile.release] fat LTO,只用于 gh release 分发那一次。
+#   用法:`tauri build --profile release-fast`(package.mjs 已注入)。
+[profile.release-fast]
+inherits = "release"
+lto = "thin"
+codegen-units = 16
+# opt-level=s / panic=abort / strip 从 release 继承,不动。

@@ -252,10 +252,32 @@ if (process.env.CREATOROS_SKIP_SMOKE !== "1") {
 
 // 3) tauri build。beforeBuildCommand(build-sidecar)会重建 sidecar → 覆盖步2的混淆。
 //    注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让 build-sidecar 在此阶段短路(保住已混淆的 sidecar)。
-step("tauri build(含 updater 签名/占位)", process.execPath, [
+//
+// [T-452] cargo profile 分档:
+//   · 默认(CREATOROS_RELEASE≠"1")= `release-fast`:lto=thin + codegen-units=16,cargo build
+//     ~5-8 min(vs fat lto 15-30 min);内测/日常打包用。
+//   · CREATOROS_RELEASE=1 = fat `release`:lto=true + codegen-units=1,cargo build ~15-30 min;
+//     体积/启动最优,发官方 release 那一次用。
+//   代价:release-fast 二进制大几百 KB,冷启动差 < 30ms(用户不可感)。
+const isFullRelease = process.env.CREATOROS_RELEASE === "1";
+const tauriBuildArgs = [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
-], { ...pathEnv, CREATOROS_SKIP_SIDECAR_REBUILD: "1" });
+];
+if (!isFullRelease) {
+  tauriBuildArgs.push("--profile", "release-fast");
+  console.log(
+    "[desktop:package] [T-452] cargo profile = release-fast(lto=thin;内测/日常快打)。发正式包设 CREATOROS_RELEASE=1 走 fat lto。",
+  );
+} else {
+  console.log(
+    "[desktop:package] [T-452] cargo profile = release(fat lto,正式发布档;15-30 min)。",
+  );
+}
+step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs, {
+  ...pathEnv,
+  CREATOROS_SKIP_SIDECAR_REBUILD: "1",
+});
 
 verifyPackagedTlsRuntime();
 

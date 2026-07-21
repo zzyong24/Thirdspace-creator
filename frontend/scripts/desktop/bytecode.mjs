@@ -86,13 +86,19 @@ function bundleBytenode() {
   console.log(`[bytecode]   ✂ bytenode 实拷 → ${dest}`);
 }
 
-/** 主流程(副作用):字节码化 SERVER_DIR 的 chunk-stringarray chunk。返回统计。 */
-export function runBytecode(root = SERVER_DIR) {
+/** 主流程(副作用):字节码化 SERVER_DIR 的 chunk-stringarray chunk。返回统计。
+ *
+ * [T-452] worker_threads 并行:每 worker 独立 V8 isolate,bytenode.compileFile 天然可并行。
+ *   CREATOROS_BYTECODE_WORKERS 覆盖 worker 数(默认 min(6, cpu-2)),CREATOROS_BYTECODE_SERIAL=1
+ *   强制串行(排障)。
+ */
+export async function runBytecode(root = SERVER_DIR) {
   const { toObfuscate } = walkTargets(root);
-  let compiled = 0;
+  // 主线程一次读+判 shouldBytecode,得到 worker 任务队列(worker 不读文件,直接 compileFile
+  //   以路径为参数;bytenode 内部会自己 read)。
+  const tasks = [];
   let skipped = 0;
   const failures = [];
-
   for (const { abs, rel } of toObfuscate) {
     let code;
     try {
@@ -102,30 +108,81 @@ export function runBytecode(root = SERVER_DIR) {
       continue;
     }
     if (code.startsWith(STUB_MARK)) {
-      skipped++; // 已 stub(幂等)
+      skipped++;
       continue;
     }
     if (!shouldBytecode(code, rel)) continue;
-
     const jscAbs = abs.replace(/\.(js|cjs)$/, ".jsc");
-    const jscBase = basename(jscAbs);
-    try {
-      // bytenode.compileFile 用**当前 node**(= sidecar node)编译 → 版本匹配。
-      bytenode.compileFile({ filename: abs, output: jscAbs });
-      // .js 换成 stub(turbopack require .js → stub → require .jsc)。
-      writeFileSync(abs, makeStub(jscBase), "utf8");
-      compiled++;
-    } catch (e) {
-      // 单 chunk 编译失败不整体崩:保原 .js(仍受 L1 保护),记录。
-      if (existsSync(jscAbs)) {
-        try {
-          rmSync(jscAbs);
-        } catch {
-          /* noop */
+    tasks.push({ abs, rel, jscAbs, jscBase: basename(jscAbs) });
+  }
+
+  const shouldSerial = process.env.CREATOROS_BYTECODE_SERIAL === "1";
+  let compiled = 0;
+  if (shouldSerial) {
+    for (const t of tasks) {
+      try {
+        bytenode.compileFile({ filename: t.abs, output: t.jscAbs });
+        writeFileSync(t.abs, makeStub(t.jscBase), "utf8");
+        compiled++;
+      } catch (e) {
+        if (existsSync(t.jscAbs)) {
+          try {
+            rmSync(t.jscAbs);
+          } catch {
+            /* noop */
+          }
         }
+        failures.push({ rel: t.rel, error: e instanceof Error ? e.message : String(e) });
       }
-      failures.push({ rel, error: e instanceof Error ? e.message : String(e) });
     }
+  } else {
+    const os = await import("node:os");
+    const envWorkers = Number.parseInt(process.env.CREATOROS_BYTECODE_WORKERS ?? "", 10);
+    const workerCount = Number.isFinite(envWorkers) && envWorkers > 0
+      ? envWorkers
+      : Math.max(1, Math.min(6, os.cpus().length - 2));
+    console.log(`[bytecode] worker pool: ${workerCount} 个 worker × ${tasks.length} 任务`);
+
+    const shards = Array.from({ length: workerCount }, () => []);
+    tasks.forEach((t, i) => shards[i % workerCount].push(t));
+
+    const workerScript = new URL("./bytecode.worker.mjs", import.meta.url);
+    await Promise.all(
+      shards.map(async (shard) => {
+        if (shard.length === 0) return;
+        const { Worker } = await import("node:worker_threads");
+        const worker = new Worker(workerScript);
+        try {
+          for (const task of shard) {
+            await new Promise((resolve, reject) => {
+              const onMsg = (msg) => {
+                if (msg.status === "ok") compiled++;
+                else failures.push({ rel: task.rel, error: msg.error });
+                worker.off("message", onMsg);
+                worker.off("error", onErr);
+                resolve();
+              };
+              const onErr = (err) => {
+                worker.off("message", onMsg);
+                worker.off("error", onErr);
+                failures.push({ rel: task.rel, error: err.message ?? String(err) });
+                resolve();
+              };
+              worker.on("message", onMsg);
+              worker.on("error", onErr);
+              worker.postMessage({
+                abs: task.abs,
+                jscAbs: task.jscAbs,
+                jscBase: task.jscBase,
+                stubMark: STUB_MARK,
+              });
+            });
+          }
+        } finally {
+          await worker.terminate();
+        }
+      }),
+    );
   }
 
   if (compiled > 0) bundleBytenode();
@@ -145,7 +202,8 @@ if (isMain()) {
   console.log(`[bytecode]   靶目录: ${SERVER_DIR}`);
   console.log(`[bytecode]   编译 node: ${process.execPath}(${process.version}, modules=${process.versions.modules})`);
 
-  const stat = runBytecode();
+  // [T-452] runBytecode 现在是 async(内部 worker pool);ESM 顶层 await。
+  const stat = await runBytecode();
 
   console.log(
     `[bytecode] ✅ 字节码化 ${stat.compiled} 个 chunk → .jsc + stub` +
