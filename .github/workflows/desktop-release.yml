@@ -108,25 +108,26 @@ jobs:
           CREATOROS_RELEASE: "1"
         run: node scripts/desktop/release.mjs
 
-      - name: 校验 Windows 安装包直接携带 sidecar(T-446·禁止首启解压到 C 盘)
+      - name: 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
         if: runner.os == 'Windows'
         run: |
           setup=$(find frontend/src-tauri/target/release/bundle/nsis -type f -iname '*-setup.exe' -print -quit)
           if [ -z "$setup" ]; then
-            echo "[T-446] 未找到 NSIS setup.exe" >&2
+            echo "[T-454] 未找到 NSIS setup.exe" >&2
             exit 1
           fi
           listing="$RUNNER_TEMP/creatoros-nsis-files.txt"
           7z l "$setup" > "$listing"
-          if ! grep -Fq 'sidecar\frontend\server.js' "$listing" && ! grep -Fq 'sidecar/frontend/server.js' "$listing"; then
-            echo "[T-446] setup.exe 未包含展开的 sidecar/frontend/server.js" >&2
+          # [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)
+          if ! grep -Fq 'sidecar.tar.gz' "$listing"; then
+            echo "[T-454] setup.exe 未包含 sidecar.tar.gz(NSIS 打包又会退化成 20 万小文件)" >&2
             exit 1
           fi
-          if grep -Fq 'sidecar.tar.gz' "$listing"; then
-            echo "[T-446] setup.exe 仍误带 sidecar.tar.gz，会恢复首启解压问题" >&2
+          if grep -Fq 'sidecar\frontend\server.js' "$listing" || grep -Fq 'sidecar/frontend/server.js' "$listing"; then
+            echo "[T-454] setup.exe 仍误带展开 sidecar/,会让 NSIS 处理 20 万文件卡死" >&2
             exit 1
           fi
-          echo "[T-446] ✓ setup.exe 含展开 sidecar/ 且不含 sidecar.tar.gz"
+          echo "[T-454] ✓ setup.exe 携带 sidecar.tar.gz,不含展开目录"
 
       - name: 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
         run: |

@@ -255,11 +255,14 @@ function fixOutOfTreeSymlinks() {
   }
 }
 
-// [T-446] Windows 的 sidecar 已在构建期物化成零 symlink 真目录，交给 Tauri/NSIS 在**安装时**
-// 解包到用户选择的安装目录即可。再造 935MB tar 会造成三重浪费：CI 重复压缩、安装包携带 tar、
-// 首启再解到 %APPDATA%(通常是 C 盘)。macOS 仍依赖 tar 保 pnpm symlink，Linux 同样保留旧路。
-export function shouldPackSidecarTarball(targetPlatform = platform) {
-  return targetPlatform !== "win32";
+// [T-454 后修] 全平台走 tarball(**含 Windows,反转 T-446**)—— T-446 当初 Windows 改直装
+//   是因为首启解压到 C:\Program Files\... 会 ACL 失败;现在 tauri v2 默认 installMode=
+//   currentUser 装到 %LOCALAPPDATA%\Programs\ 用户可写,首启解压到 %APPDATA%\...\runtime\<v>\
+//   sidecar 零权限问题。**根治 NSIS 打包 20 万小文件卡死**:直装模式 NSIS 要递归压 15 万+
+//   小文件(20-60 分钟且静默无进度);tar 单文件模式 NSIS 只面对 1 个大文件,zlib 单文件顺序流
+//   30-60 秒完成。macOS 仍依赖 tar 保 pnpm symlink,Linux 同样保留旧路径。
+export function shouldPackSidecarTarball(_targetPlatform = platform) {
+  return true;
 }
 
 function packSidecarTarball() {

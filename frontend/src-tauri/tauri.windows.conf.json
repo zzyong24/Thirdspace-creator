@@ -5,7 +5,7 @@
       "nsis"
     ],
     "resources": [
-      "sidecar/"
+      "sidecar.tar.gz"
     ],
     "windows": {
       "nsis": {

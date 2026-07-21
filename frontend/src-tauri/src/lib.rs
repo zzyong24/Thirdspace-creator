@@ -852,76 +852,50 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             return Ok(dev_dir);
         }
     }
-    // [T-446] Windows 构建期已把 pnpm junction 全物化为真文件；Tauri/NSIS 把展开目录装到
-    // 用户选择的安装盘，直接只读运行。这里不再创建 `%APPDATA%/runtime`、不再调用 tar.exe。
-    #[cfg(windows)]
+    // [T-454 后修] 全平台走 tarball 解压(反转 T-446 的 Windows 直装分支)—— T-446 当初 Windows
+    //   改直装是因为首启解压到 C:\Program Files\ 会 ACL 失败;现在 tauri v2 默认 installMode=
+    //   currentUser 装到 %LOCALAPPDATA%\Programs\,应用首启解压到 %APPDATA%\...\runtime\<v>\sidecar
+    //   零权限问题。**根治 NSIS 打包 20 万小文件卡死**:NSIS 只面对 1 个大 tarball 单文件流。
+    //   tar 用系统 System32\tar.exe(bsdtar,原生保 symlink,与 build-sidecar 打包端同源);ACL 由
+    //   安装模式决定,数据目录跟 mac/linux 同一处 (app_data_dir/runtime/<version>/sidecar)。
+    let tarball = match app
+        .path()
+        .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
     {
-        let direct = app
-            .path()
-            .resolve("sidecar", tauri::path::BaseDirectory::Resource)
-            .map_err(|e| format!("无法定位 Windows 安装目录中的 sidecar: {e}"))?;
-        verify_direct_sidecar_dir(&direct)?;
-        // [T-450] 入口哈希只查 server.js → 攻击者改任意 .jsc 不拦。抽样再校验 N=12 项(每小时
-        //   rotate 秘密样本索引)。machine_id 拿不到 → 退化用空串(seed 仍确定但退化,可复现测),
-        //   不阻塞启动(dev 早退了,这条只在真打包分支跑)。
-        let machine_id = resolve_machine_id(app).unwrap_or_default();
-        integrity_sample_verify(&direct, &machine_id)?;
-        if let Ok(data_dir) = app.path().app_data_dir() {
-            std::thread::spawn(move || {
-                if cleanup_legacy_runtime_root(&data_dir) {
-                    eprintln!("[shell] [T-446] 已清理旧版 C 盘 sidecar runtime 缓存");
-                }
-            });
-        }
-        eprintln!(
-            "[shell] [T-446] Windows 直接使用安装目录 sidecar（无首启解压）→ {}",
-            direct.display()
-        );
-        return Ok(direct);
+        Ok(p) if p.exists() => p,
+        _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
+    };
+    verify_sidecar_tarball(&tarball)?;
+    let version = app.package_info().version.to_string();
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("appDataDir 不可用,无法解压 sidecar runtime: {e}"))?;
+    let dest = data_dir.join("runtime").join(&version).join("sidecar");
+    let expected = env!("CREATOROS_SIDECAR_SHA256");
+    let stamp_value = if expected.is_empty() {
+        let size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
+        format!("size:{size}")
+    } else {
+        format!("sha256:{expected}")
+    };
+    if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
+        eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
     }
 
-    // macOS/Linux 仍用 tar 保留 pnpm symlink，但以临时目录完整解压后原子切换。
-    #[cfg(not(windows))]
-    {
-        let tarball = match app
-            .path()
-            .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
-        {
-            Ok(p) if p.exists() => p,
-            _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
-        };
-        verify_sidecar_tarball(&tarball)?;
-        let version = app.package_info().version.to_string();
-        let data_dir = app
-            .path()
-            .app_data_dir()
-            .map_err(|e| format!("appDataDir 不可用,无法解压 sidecar runtime: {e}"))?;
-        let dest = data_dir.join("runtime").join(&version).join("sidecar");
-        let expected = env!("CREATOROS_SIDECAR_SHA256");
-        let stamp_value = if expected.is_empty() {
-            let size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
-            format!("size:{size}")
-        } else {
-            format!("sha256:{expected}")
-        };
-        if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
-            eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
-        }
+    // [T-450] tar 整体 hash 只在**解压前**校验一次(verify_sidecar_tarball);之后
+    //   .tarball-stamp 复用机制让攻击者可直接 patch 已解压的 .jsc,下次启动 stamp 命中
+    //   跳过重解压 → hash 完全绕过。补抽样(每次启动都跑),把「解压后的运行时目录」也纳入
+    //   完整性防线。开销 §调研 §5:冷 66-360ms,热 12-18ms。
+    let machine_id = resolve_machine_id(app).unwrap_or_default();
+    integrity_sample_verify(&dest, &machine_id)?;
 
-        // [T-450] tar 整体 hash 只在**解压前**校验一次(verify_sidecar_tarball);之后
-        //   .tarball-stamp 复用机制让攻击者可直接 patch 已解压的 .jsc,下次启动 stamp 命中
-        //   跳过重解压 → hash 完全绕过。补 mac/linux 侧同款抽样(每次启动都跑),把「解压
-        //   后的运行时目录」也纳入完整性防线。开销 §调研 §5:冷 66-360ms,热 12-18ms。
-        let machine_id = resolve_machine_id(app).unwrap_or_default();
-        integrity_sample_verify(&dest, &machine_id)?;
-
-        let runtime_root = data_dir.join("runtime");
-        let keep = version.clone();
-        std::thread::spawn(move || {
-            cleanup_stale_runtimes(&runtime_root, &keep);
-        });
-        Ok(dest)
-    }
+    let runtime_root = data_dir.join("runtime");
+    let keep = version.clone();
+    std::thread::spawn(move || {
+        cleanup_stale_runtimes(&runtime_root, &keep);
+    });
+    Ok(dest)
 }
 
 /// [T-446] Windows 新包不再使用 `%APPDATA%/runtime`。只删这个明确的可再生缓存子目录，
