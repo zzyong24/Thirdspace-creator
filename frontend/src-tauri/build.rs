@@ -14,7 +14,10 @@ fn main() {
             Err(_) => return String::new(),
         };
         let mut hasher = Sha256::new();
-        let mut buf = [0_u8; 1024 * 1024];
+        // [T-446] 关键:Windows 默认线程栈只有 1MB(Linux/mac 是 8MB)。栈上分配 [0u8; 1024*1024]
+        //   会**直接吃光整个栈**,build.rs 进程 STATUS_STACK_OVERFLOW(0xc00000fd)。改用 vec!
+        //   在堆上分配。CI 与本机 Windows 均命中此坑。
+        let mut buf = vec![0_u8; 1024 * 1024];
         loop {
             match file.read(&mut buf) {
                 Ok(0) => break,
@@ -156,7 +159,8 @@ fn generate_integrity_manifest(sidecar_root: &std::path::Path, target_os: &str) 
     fn sha256_bytes(path: &std::path::Path) -> Option<[u8; 32]> {
         let mut file = std::fs::File::open(path).ok()?;
         let mut hasher = Sha256::new();
-        let mut buf = [0_u8; 1024 * 1024];
+        // [T-446] 同 sha256_file:堆分配,防 Windows 1MB 线程栈爆栈。
+        let mut buf = vec![0_u8; 1024 * 1024];
         loop {
             let n = file.read(&mut buf).ok()?;
             if n == 0 {

@@ -492,7 +492,9 @@ fn verify_file_sha256(
     let mut file = std::fs::File::open(path)
         .map_err(|e| format!("读{label}失败 {}: {e}", path.display()))?;
     let mut hasher = Sha256::new();
-    let mut buf = [0_u8; 1024 * 1024];
+    // [T-446] 堆分配 1MB 缓冲(避免 Windows 线程栈 1MB 场景下的栈溢出;运行时主线程栈通常更大
+    //   但 Tauri 生命周期钩子里的辅助线程默认仍 1MB,统一堆分配更稳)。
+    let mut buf = vec![0_u8; 1024 * 1024];
     loop {
         let n = file
             .read(&mut buf)
@@ -723,7 +725,8 @@ fn verify_file_sha256_bytes(
     let mut file = std::fs::File::open(path)
         .map_err(|e| format!("[T-450] 读{label}失败 {}: {e}", path.display()))?;
     let mut hasher = Sha256::new();
-    let mut buf = [0_u8; 1024 * 1024];
+    // [T-446] 堆分配 1MB 缓冲(避免 Windows 线程栈 1MB 场景栈溢出)。
+    let mut buf = vec![0_u8; 1024 * 1024];
     loop {
         let n = file
             .read(&mut buf)
