@@ -95,6 +95,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
+          # [T-451] verdict-token 签名密钥对(build.rs 编译期需要私钥;build-sidecar 期需要公钥
+          #   烘焙进 sidecar/frontend/.next/server/verdict-verify-key.json)。两个 secret 需在
+          #   仓库 Settings → Secrets and variables → Actions 配置(名字逐字对齐);缺任一 → 编译报
+          #   env-var not set / build-sidecar 打 warn 且 verdict 门永远拒 sidecar spawn。
+          #   生成:pnpm -C frontend node scripts/desktop/verdict-keygen.mjs。
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
         run: node scripts/desktop/release.mjs
 
       - name: 校验 Windows 安装包直接携带 sidecar(T-446·禁止首启解压到 C 盘)

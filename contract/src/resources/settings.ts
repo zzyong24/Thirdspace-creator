@@ -46,6 +46,10 @@ export const modelConfigurationResource = z.object({
   // Masked indicator: a usable secret is configured (stored value OR env-ref).
   // The raw secret is NEVER serialized to the client — only this boolean.
   hasSecret: z.boolean(),
+  // [T-453] "曾配但密钥不可用" —— decRow 在 master key 变化时把 secret_value 标记为
+  //   sentinel(`dec-fail:v1`)。true = 用户下次读时应看到「密钥失效,请重填」提示,而非
+  //   与"从未配"混淆。可选:老快照 / 未启用加密路径 未设,默认 false。
+  secretDecryptFailed: z.boolean().optional(),
 });
 export type ModelConfigurationResource = z.infer<
   typeof modelConfigurationResource

@@ -1,5 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
+import { SECRET_DECRYPT_FAIL_SENTINEL } from "@creatoros/backend/modules/settings";
 import {
   LlmCredentialError,
   type ApiFormat,
@@ -40,11 +41,14 @@ const DEFAULT_CAPABILITY = "default";
 // Build a ResolvedLlmConfig from a user-configured DB row, or null when no usable
 // token. A stored secretValue (the local-db key) takes precedence over an
 // env-ref secretReference (cc-switch first_non_empty).
+// [T-453] secretValue === SECRET_DECRYPT_FAIL_SENTINEL 时视为「无 token」但**上层要
+//   区分**——用 __decryptFailed 附加位透出去,让 resolveLlmConfig 抛清楚错文案。
 function tryDbRow(
   row: ModelConfigInternal | null,
   env: Record<string, string | undefined>,
-): ResolvedLlmConfig | null {
+): (ResolvedLlmConfig & { __decryptFailed?: never }) | null {
   if (!row) return null;
+  if (row.secretValue === SECRET_DECRYPT_FAIL_SENTINEL) return null; // 上层单独判
   const token =
     row.secretValue?.trim() || resolveSecret(row.secretReference, env);
   if (!token) return null;
@@ -57,6 +61,12 @@ function tryDbRow(
     token,
     settings: row.settings ?? {},
   };
+}
+
+// [T-453] 判定"曾配但密钥不可用"——secretValue 是解密失败 sentinel。resolve 主路径靠
+//   这个决定给用户的诚实文案(而非通用「未配」)。
+function rowIsDecryptFailed(row: ModelConfigInternal | null): boolean {
+  return !!row && row.secretValue === SECRET_DECRYPT_FAIL_SENTINEL;
 }
 
 /**
@@ -95,6 +105,10 @@ export async function resolveLlmConfig(
     if (fromDefault) return fromDefault;
   }
   const hasConfiguredRow = Boolean(capRow) || Boolean(defaultRow);
+  // [T-453] 具体到"曾配但密钥不可用"——decRow 把解密失败写成 sentinel,这里认它就能给
+  //   诚实文案(区别于"从未配过"),避免用户以为要重配一堆中转来试(→ 被引流到山寨中转)。
+  const hasDecryptFailedRow =
+    rowIsDecryptFailed(capRow) || rowIsDecryptFailed(defaultRow);
 
   // Tier 2 — the .env.local default provider.
   const envToken = resolveSecret(env.CREATOROS_LLM_SECRET_REF, env);
@@ -132,7 +146,9 @@ export async function resolveLlmConfig(
   }
 
   throw new LlmCredentialError(
-    hasConfiguredRow
+    hasDecryptFailedRow
+      ? `已配置模型但密钥无法解密(master key 与保存时不符——本机重置 / 应用签名变化 / .master-key 文件丢失)。请到「设置 → 模型配置」重新填写 API 密钥并保存,即刻恢复。`
+      : hasConfiguredRow
       ? `已配置模型但密钥不可用:很可能是密钥解密失败(换机 / 重置工作区 / master key 变化，或密钥未填)。请到「设置 → 模型配置」重新填写 API 密钥并保存。`
       : `capability "${capability}" 无可用 LLM 凭据:请到「设置 → 模型配置」配置模型与密钥;或(开发 / 自托管)在 .env.local 设置 CREATOROS_LLM_SECRET_REF 指向的变量(如 MINIMAX_AUTH_TOKEN)或 ANTHROPIC_API_KEY。`,
   );

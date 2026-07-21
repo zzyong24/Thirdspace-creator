@@ -2174,7 +2174,7 @@ pub fn sign_verdict_token(
 /// 与 run_chain_and_persist 的区别:后者会联网 + 落新快照;本函数只读现有快照(如无则 inactive)。
 pub fn derive_local_verdict(
     ctx: &ShellLicenseCtx,
-    now_ms: i64,
+    _now_ms: i64,
 ) -> GateDecision {
     let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
     let path = license_file_path(&ctx.app_data_dir);
@@ -2190,7 +2190,6 @@ pub fn derive_local_verdict(
             signature_verified: snap.signature_verified,
             strict_verify: false, // 展示用,setup 不涉及
             message: snap.message.clone(),
-            verdict_at_ms: now_ms,
         },
         None => GateDecision {
             licensed: false,
@@ -2203,7 +2202,6 @@ pub fn derive_local_verdict(
             signature_verified: false,
             strict_verify: false,
             message: "尚未激活或激活状态缺失(setup 本地路径)".to_string(),
-            verdict_at_ms: now_ms,
         },
     }
 }

@@ -40,6 +40,10 @@ export {
   type AgentCreateInput,
   type StorageConfigPatch,
   type SkillConfigOverridePutBody,
+  // [T-453] 解密失败 sentinel + 判定 helper —— resolve.ts / UI 层认这个值就能给
+  //   「已配但密钥不可用,请重填」明确提示,而非"消失、当没配"迷惑用户。
+  SECRET_DECRYPT_FAIL_SENTINEL,
+  isDecryptFailSentinel,
 } from "./settings.repository";
 
 export {

@@ -499,6 +499,10 @@ export async function smokeBootAfterObfuscation(opts = {}) {
       HOSTNAME: "127.0.0.1",
       NODE_ENV: "production",
       CREATOROS_DESKTOP: "1",
+      // [T-451 后修] 冒烟绕过 verdict-token 校验 —— 打包期直起 sidecar 没经 Rust 壳,
+      //   无 token。Rust 壳 spawn 时永不设这个 env,攻击者也无从设。见
+      //   verdict-token-gate.ts::verifyVerdictTokenOrExit 的 isSmokeBypass 分支。
+      CREATOROS_SMOKE_BYPASS_VERDICT: "1",
       DATABASE_URL: "",
       PGLITE_DATA_DIR: join(smokeDataRoot, "db"),
       CREATOROS_DB_DIR: join(smokeDataRoot, "db"),

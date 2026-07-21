@@ -585,8 +585,10 @@ fn integrity_xor_key() -> [u8; 16] {
 }
 
 /// 秘密上下文(seed 派生用)。obfstr 藏 → attacker 拿不到明文就派生不出目标机器的样本索引。
-fn integrity_sample_context() -> &'static [u8] {
-    obfstr::obfbytes!(b"creatoros-sample-v1")
+/// 返回 owned 数组(非 `&'static`):obfbytes! 展开的是 stack-local 数组,函数返回后无效——
+/// 与 integrity_xor_key() 同 pattern,解引用得到值拷贝。
+fn integrity_sample_context() -> [u8; 19] {
+    *obfstr::obfbytes!(b"creatoros-sample-v1")
 }
 
 /// 每次启动抽 N 项(§调研 §3.3:12 是覆盖 vs 冷启开销的平衡点)。

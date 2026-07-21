@@ -14,6 +14,9 @@ import type {
   StorageConfigPatch,
   SkillConfigOverridePutBody,
 } from "./settings.repository";
+// [T-453] 认识 decRow 的解密失败 sentinel(值,不是 type),用于 toModelResource 打
+//   `secretDecryptFailed` 标记 —— 让 UI 能区分「未配」vs「曾配但失效需重填」。
+import { SECRET_DECRYPT_FAIL_SENTINEL } from "./settings.repository";
 import type {
   UserResource,
   UserPreferenceResource,
@@ -283,6 +286,8 @@ function toPreferenceResource(
 function toModelResource(
   row: ModelConfigurationRow,
 ): ModelConfigurationResource {
+  // [T-453] decRow 把解密失败的 secret_value 标记为 sentinel;这里透给 UI。
+  const decryptFailed = row.secretValue === SECRET_DECRYPT_FAIL_SENTINEL;
   return {
     id: row.id,
     userId: row.userId,
@@ -296,9 +301,13 @@ function toModelResource(
     isDefault: row.isDefault,
     // Masked: a usable secret is configured (stored value OR env-ref). The raw
     // secret value is NEVER serialized — only this boolean.
-    hasSecret:
-      Boolean(row.secretValue && row.secretValue.length > 0) ||
-      Boolean(row.secretReference && row.secretReference.length > 0),
+    // [T-453] sentinel 视为「没有可用 secret」——保住 hasSecret 语义(能不能真用),
+    //   `secretDecryptFailed` 单独透出以让 UI 区分「未配」vs「曾配但失效」。
+    hasSecret: decryptFailed
+      ? Boolean(row.secretReference && row.secretReference.length > 0)
+      : Boolean(row.secretValue && row.secretValue.length > 0) ||
+        Boolean(row.secretReference && row.secretReference.length > 0),
+    secretDecryptFailed: decryptFailed ? true : undefined,
   };
 }
 

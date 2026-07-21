@@ -186,6 +186,18 @@ function definedOnly(patch: PreferencePatch): Partial<PreferencePatch> {
   return out as Partial<PreferencePatch>;
 }
 
+// [T-453] Master key 换了/丢了(ad-hoc 签名 rebuild / keychain 不持久 / .master-key 丢)时,
+// decRow 曾静默返 secretValue=null → 前端"配置消失"、用户以为要重填(**这是用户 07-21 报的
+// "配置不上模型"根因**——旧签名的 CDHash 换了 → keychain 读不回 → 走 .master-key 文件 →
+// 若文件也没了/machine_uid 变了 → 生成新 key → 旧密文全解不开)。改为写入 sentinel
+// 值(SECRET_DECRYPT_FAIL_SENTINEL),resolve.ts 认这个 → 抛「密钥失效需重填」明确错;
+// UI 也据此区分「未配」vs「曾配但失效」两态。
+export const SECRET_DECRYPT_FAIL_SENTINEL = "dec-fail:v1";
+
+export function isDecryptFailSentinel(v: string | null | undefined): boolean {
+  return v === SECRET_DECRYPT_FAIL_SENTINEL;
+}
+
 export function createSettingsRepository(
   db: Db,
   deps: RepoDeps,
@@ -198,18 +210,21 @@ export function createSettingsRepository(
     key ? encryptSecret(plain, key) : plain;
   const decRow = (row: ModelConfigurationRow): ModelConfigurationRow => {
     if (!key || row.secretValue == null) return row;
+    // [T-453] 已被上一次 decRow 标记为解密失败 → 透传 sentinel(避免二次解密尝试)。
+    if (row.secretValue === SECRET_DECRYPT_FAIL_SENTINEL) return row;
     try {
       return { ...row, secretValue: decryptSecret(row.secretValue, key) };
     } catch (e) {
-      // [T-171] master key 换了/丢了(keychain 重置 / 未签名 app 换签名)→ 密文解不开
-      //   (AES-256-GCM auth tag 校验失败)。**绝不硬崩**——否则 getModel/listModels 抛错 →
-      //   任何读模型配置的 SSR 页 500。降级:secretValue=null(视为未配 key),用户重填即恢复
-      //   (重填用当前 master key 重新加密)。诚实:解不开的 key = 等于没配。
+      // [T-171 / T-453] master key 换了/丢了(keychain 重置 / 未签名 app 换签名 / .master-key
+      //   丢)→ 密文解不开(AES-256-GCM auth tag 校验失败)。**绝不硬崩**——否则 getModel/
+      //   listModels 抛错 → 任何读模型配置的 SSR 页 500。
+      // [T-453] 从「静默 null(视为未配)」改为「sentinel `dec-fail:v1`」:保住"曾配"信号,
+      //   让 resolve 抛清楚错("已配但密钥不可用,请重填")、UI 也能提示。
       console.warn(
-        `[settings] model secret 解密失败(master key 不符?)capability=${row.capability} → 视为未配置`,
+        `[settings] model secret 解密失败(master key 不符?)capability=${row.capability} → 标记 sentinel,提示用户重填`,
         e instanceof Error ? e.message : e,
       );
-      return { ...row, secretValue: null };
+      return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
     }
   };
   return {
@@ -283,7 +298,32 @@ export function createSettingsRepository(
         typeof body.secret === "string" && body.secret.length > 0;
       // T-147 P2 — 写库前加密(masterKey 缺省 = 明文,向后兼容)。存量明文列不受影响
       // (只有 provided 的新 secret 才加密写入)。
-      const secretToStore = secretProvided ? encSecret(body.secret!) : null;
+      // [T-453] Round-trip 校验:加密后立即用同一 masterKey 解密回明文,断言一致。捕获
+      //   两类 bug:①masterKey 生成/持久化路径异常(rare);②encryptSecret/decryptSecret
+      //   实现回归。**失败即抛**——比让用户以为保存成功、下次读回来空空如也强得多。
+      let secretToStore: string | null = null;
+      if (secretProvided) {
+        secretToStore = encSecret(body.secret!);
+        if (key && secretToStore !== body.secret) {
+          // 仅当 key 存在(真加密路径)且加密结果 !== 原文(即真加密了)时校验。
+          try {
+            const roundTripped = decryptSecret(secretToStore, key);
+            if (roundTripped !== body.secret) {
+              throw new Error(
+                `[T-453] secret round-trip 校验失败:加密→解密后 ${
+                  roundTripped.length
+                }B ≠ 原文 ${body.secret!.length}B(不落库,让上层报错以免"看似保存成功、下次读回空"迷惑用户)`,
+              );
+            }
+          } catch (e) {
+            throw new Error(
+              `[T-453] secret 保存前 round-trip 校验失败 capability=${capability}:${
+                e instanceof Error ? e.message : String(e)
+              }`,
+            );
+          }
+        }
+      }
       const updateSet: Record<string, unknown> = {
         provider: body.provider,
         modelName: body.modelName,
