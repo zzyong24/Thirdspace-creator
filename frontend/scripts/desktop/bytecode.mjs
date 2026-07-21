@@ -35,7 +35,11 @@ import {
 } from "node:fs";
 import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { walkTargets, pickPreset } from "./obfuscate.mjs";
+import {
+  walkTargets,
+  pickPreset,
+  requiresSerializableFunctionSource,
+} from "./obfuscate.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SIDECAR = join(FRONTEND, "src-tauri", "sidecar");
@@ -64,6 +68,9 @@ export function makeStub(jscBase) {
  * app/** route(非 chunks/,full 预设)首波不动——加载路径与 chunks/ 不同,收益/风险后评。冒烟护栏兜底。
  */
 export function shouldBytecode(code, rel) {
+  // [T-459] Playwright 会读取 callback.toString()；Bytenode 函数没有可解析源码。
+  // 这类 chunk 宁可保留 rename-only JS，也不能进 .jsc 后让采集链运行时必崩。
+  if (requiresSerializableFunctionSource(code)) return false;
   const parts = rel.split(/[\\/]/).filter(Boolean);
   const preset = pickPreset(code, rel);
   return (

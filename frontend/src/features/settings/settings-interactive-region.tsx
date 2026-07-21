@@ -90,12 +90,13 @@ import {
   FolderOpen,
   type LucideIcon,
 } from "lucide-react";
-// [T-180 → T-396c] 桌面软件更新的前端薄封装(client-only,web/SSR 安全降级)。
-// 更新检查已渠道化:checkLatestVersion 走 Rust IPC(验签 + 版本比较),不再内置下载安装。
+// [T-180 → T-396c → T-459] 桌面软件更新薄封装(client-only,web/SSR 安全降级)。
+// T-459 后只读官网公开 manifest,与激活/白标渠道完全解耦。
 import {
   checkLatestVersion,
   getAppVersion,
   isDesktopRuntimeClient,
+  OFFICIAL_DOWNLOAD_URL,
   type LatestVersionInfo,
 } from "@/lib/desktop-updater";
 // [T-372 L3] Rust 壳授权判定薄封装:内测离线宽限倒计时的实时数据源(零网络,读缓存+订阅事件)。
@@ -397,15 +398,8 @@ export function SettingsDialog({
                   activation={activation}
                   purchaseUrl={channelLinks?.purchaseUrl ?? null}
                 />
-                {/* [T-180 → T-396c] 软件更新卡:桌面端「检查更新」→ 版本检查 + 「去下载」跳
-                    渠道 downloadUrl(不再内置下载安装);web → 桌面端专属空态。
-                    [T-372 L3] 买断撤销(revoked 且永久码)→ 更新入口旁提示停更新,不锁功能。 */}
-                <CheckUpdateCard
-                  updatesBlocked={
-                    activation?.revoked === true && activation?.expiresAt === null
-                  }
-                  supportUrl={channelLinks?.supportUrl ?? null}
-                />
+                {/* [T-459] 软件更新只读官网公开版本源,不再绑定授权状态/白标渠道。 */}
+                <CheckUpdateCard />
                 {/* [T-259] 诊断日志卡:桌面端一键在 Finder 打开日志目录发给开发者;web → 桌面端专属空态。 */}
                 <DiagnosticLogsCard />
               </div>
@@ -1283,39 +1277,20 @@ function ActivationStatusCard({
 }
 
 // ---------------------------------------------------------------------------
-// CheckUpdateCard — 软件更新 (T-180 → T-396c 渠道化)
+// CheckUpdateCard — 软件更新 (T-180 → T-396c → T-459 官网公开源)
 // ---------------------------------------------------------------------------
 //
-// [T-396c] 更新流 = 「版本检查 + 跳渠道下载页」(SPEC §6):点「检查更新」走 Rust IPC
-// `license_latest_version`(latest-version 端点 + Ed25519 验签 + 语义版本比较全在 Rust):
-//   - 有新版 + 渠道 downloadUrl → 「发现新版本 vX.Y」+ releaseNotes + 「去下载」外开渠道页
-//     (飞书/网盘),用户自行下载重装(放弃一键更新已拍板,SPEC §10;签名产物链保留可逆);
-//   - 有新版 + downloadUrl=null → 「请联系你的授权方获取新版」:本地缓存有 supportUrl 时
-//     该文案可点跳转,无则纯文案(SPEC §6/§7 中性降级,**绝不回退官方链接**);
-//   - 无新版 → 「已是最新版」;失败 → 人话文案(并入 T-412:技术报错只进日志),不崩。
+// [T-459] 更新流 = 「GET 官网静态 latest.json + 跳产品官网」:
+//   - 不调用授权域名,不发送激活码/机器/项目/nonce,不受授权状态影响;
+//   - 有新版 → 显版本/说明 + 固定官网「去下载」;远端 JSON 的 URL 一律不采纳;
+//   - 无新版 → 「已是最新版」;失败 → 人话文案(技术报错不出 UI)。
 //
 // **只桌面态有意义**:挂载后经 `isDesktopRuntimeClient()` 探测;web/SSR → 显「桌面端专属」诚实
 // 空态(无检查入口),绝不假装能更新。SSR 首帧走空态(desktop=false),挂载后翻真(避免水合漂移)。
 
 type UpdatePhase = "idle" | "checking" | "available" | "uptodate" | "error";
 
-function CheckUpdateCard({
-  updatesBlocked = false,
-  supportUrl = null,
-}: {
-  /**
-   * [T-372 L3] 买断码签名撤销的软降级(SPEC §8):true = 更新入口旁显式提示
-   * 「授权已被撤销:更新已停用,核心功能不受影响」并停用检查更新按钮。
-   * 由 SettingsDialog 从激活展示副本推导(revoked && expiresAt===null,即买断撤销态);
-   * 内测撤销走整体跳激活页,永不置此(码型语义在 Rust,此处只消费)。
-   */
-  updatesBlocked?: boolean;
-  /**
-   * [T-396c] 渠道联系链接(缓存渲染):有新版但 downloadUrl=null 时,「联系授权方」
-   * 文案是否可点。null → 纯文案(不渲染链接,不回退官方链接)。
-   */
-  supportUrl?: string | null;
-}) {
+function CheckUpdateCard() {
   // SSR 首帧 desktop=false → 渲空态;挂载后 isDesktopRuntimeClient() 翻真(无水合漂移)。
   const [isDesktop, setIsDesktop] = React.useState(false);
   const [version, setVersion] = React.useState<string | null>(null);
@@ -1406,7 +1381,7 @@ function CheckUpdateCard({
   return (
     <SectionCard
       title="软件更新"
-      description="检查新版,前往渠道下载页获取"
+      description="检查新版,前往 CreatorOS 官网获取"
       action={
         <Badge
           data-slot="check-update-badge"
@@ -1421,30 +1396,8 @@ function CheckUpdateCard({
       <div
         data-slot="check-update-card"
         data-desktop="true"
-        data-updates-blocked={updatesBlocked ? "true" : "false"}
         className="flex flex-col gap-3"
       >
-        {/* [T-372 L3] 买断撤销软降级提示(SPEC §8:提示挂「更新」入口旁,不锁核心功能)。 */}
-        {updatesBlocked ? (
-          <div
-            data-slot="check-update-revoked-alert"
-            role="alert"
-            className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning-soft p-3"
-          >
-            <AlertCircle
-              aria-hidden="true"
-              className="mt-0.5 size-4 shrink-0 text-warning"
-            />
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-sm font-medium text-foreground">
-                更新服务已暂停,不影响你正常使用。如需恢复接收新版本,请联系作者。
-              </span>
-              <span className="text-xs text-muted-foreground">
-                本机可继续正常使用,但不再接收新版本。如有疑问请联系作者恢复授权。
-              </span>
-            </div>
-          </div>
-        ) : null}
         <div className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3">
           <div
             aria-hidden="true"
@@ -1468,8 +1421,7 @@ function CheckUpdateCard({
             size="sm"
             variant="outline"
             data-slot="check-update-action"
-            // [T-372 L3] 撤销停更新:检查入口一并停用(不只提示,真的不再拉更新)。
-            disabled={busy || updatesBlocked}
+            disabled={busy}
             onClick={check}
           >
             {phase === "checking" ? (
@@ -1481,8 +1433,7 @@ function CheckUpdateCard({
           </Button>
         </div>
 
-        {/* [T-396c] 有新版:显版本号 + releaseNotes;渠道 downloadUrl 有 → 「去下载」外开
-            渠道页;null → 「联系授权方」(缓存有 supportUrl 可点,无则纯文案,不回退官方链接)。 */}
+        {/* [T-459] 有新版:显版本号 + releaseNotes；下载入口永远固定产品官网。 */}
         {phase === "available" && available ? (
           <div
             data-slot="check-update-available"
@@ -1499,39 +1450,19 @@ function CheckUpdateCard({
                 {available.releaseNotes}
               </p>
             ) : null}
-            {available.downloadUrl ? (
-              <div className="flex justify-end">
-                <Button asChild size="sm" disabled={updatesBlocked}>
-                  <a
-                    href={available.downloadUrl}
-                    data-slot="check-update-download"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Download aria-hidden="true" className="size-4 shrink-0" />
-                    去下载
-                  </a>
-                </Button>
-              </div>
-            ) : (
-              <p
-                data-slot="check-update-contact"
-                className="text-xs text-muted-foreground"
-              >
-                {supportUrl ? (
-                  <a
-                    href={supportUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline underline-offset-2 hover:opacity-80"
-                  >
-                    请联系你的授权方获取新版
-                  </a>
-                ) : (
-                  "请联系你的授权方获取新版。"
-                )}
-              </p>
-            )}
+            <div className="flex justify-end">
+              <Button asChild size="sm">
+                <a
+                  href={OFFICIAL_DOWNLOAD_URL}
+                  data-slot="check-update-download"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Download aria-hidden="true" className="size-4 shrink-0" />
+                  去官网下载
+                </a>
+              </Button>
+            </div>
           </div>
         ) : null}
 

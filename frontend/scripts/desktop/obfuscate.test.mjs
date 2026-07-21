@@ -12,6 +12,7 @@ import { describe, it, expect } from "vitest";
 import {
   shouldExclude,
   isSymlinkEscape,
+  requiresSerializableFunctionSource,
   pickPreset,
   obfuscateCode,
   FULL_OPTIONS,
@@ -91,6 +92,27 @@ describe("isSymlinkEscape(§3.1 🔴 symlink 逃逸)", () => {
 });
 
 describe("pickPreset(§3.1 gate ③ 动态 require 降级 + turbopack chunk 路径降级)", () => {
+  it("[T-459] Playwright 页内回调必须保留可序列化源码 → rename-only", () => {
+    const serializerCalls = [
+      `page.evaluate(() => "ok")`,
+      `frame.evaluateHandle(() => document.body)`,
+      `locator.evaluateAll((nodes) => nodes.length)`,
+      `page.$eval("main", (node) => node.textContent)`,
+      `page.$$eval("li", (nodes) => nodes.length)`,
+      `page.waitForFunction(() => window.ready)`,
+      `context.addInitScript(() => window.ready = true)`,
+    ];
+    for (const code of serializerCalls) {
+      expect(requiresSerializableFunctionSource(code), code).toBe(true);
+      expect(pickPreset(code, "chunks/playwright-flow.js"), code).toBe(
+        "rename-only",
+      );
+    }
+    expect(requiresSerializableFunctionSource(`Promise.resolve("ok")`)).toBe(
+      false,
+    );
+  });
+
   it("含 require(<字面量>) → rename-only", () => {
     expect(pickPreset(`const fs = require("node:fs");`)).toBe("rename-only");
     expect(pickPreset(`const s = require('@aws-sdk/client-s3-abc');`)).toBe("rename-only");
@@ -146,6 +168,24 @@ describe("obfuscateCode(preset 落到不同强度)", () => {
     // 且未被 stringArray 拆成 _0x...(idx) 形式。
     expect(out).not.toMatch(/require\(_0x[0-9a-f]+\(/);
     expect(() => new Function(out)).not.toThrow();
+  });
+
+  it("[T-459] Playwright callback 经 rename-only 后仍是独立可解析函数", () => {
+    const src = `function run(page){ return page.evaluate(async (url) => { const response = await fetch(url, { credentials: "include" }); return response.json(); }, "https://example.com/data"); }`;
+    const out = obfuscateCode(src, "rename-only");
+    let captured;
+    const run = new Function(
+      "page",
+      `${out}; return run(page);`,
+    );
+    run({
+      evaluate(fn) {
+        captured = fn;
+      },
+    });
+    const callbackSource = Function.prototype.toString.call(captured);
+    expect(() => new Function(`(${callbackSource})`)).not.toThrow();
+    expect(callbackSource).toContain("include");
   });
 
   it("preset 常量档位正确(防误配)", () => {

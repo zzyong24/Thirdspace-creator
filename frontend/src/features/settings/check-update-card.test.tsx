@@ -1,10 +1,9 @@
 /**
- * [T-180 → T-396c] CheckUpdateCard(软件更新卡)组件测试 —— 经 SettingsDialog 渲染。
+ * [T-180 → T-396c → T-459] CheckUpdateCard(软件更新卡)组件测试 —— 经 SettingsDialog 渲染。
  *
- * 覆盖:①桌面态 → 显当前版本 + 「检查更新」按钮;②有新版 + 渠道 downloadUrl → 「去下载」
- * 外开渠道页;③有新版 + downloadUrl=null → 「联系授权方」(有 supportUrl 可点 / 无则纯文案,
- * **不回退官方链接**红线);④已最新;⑤失败 → 人话错误态不崩;⑥买断撤销停更新(T-372 L3);
- * ⑦web 态 → 桌面端专属空态。`@/lib/desktop-updater` 全 mock(不真跑 Tauri IPC)。
+ * 覆盖:①桌面态 → 显当前版本 + 「检查更新」按钮;②有新版 → 固定官网「去下载」;
+ * ③远端结果里的任意 downloadUrl 不进入 DOM;④已最新;⑤失败 → 人话错误态不崩;
+ * ⑥授权撤销不再影响公开更新入口;⑦web 态 → 桌面端专属空态。
  */
 
 import * as React from "react";
@@ -33,6 +32,7 @@ const mockIsDesktop = vi.fn<() => boolean>();
 const mockCheck = vi.fn();
 const mockGetVersion = vi.fn();
 vi.mock("@/lib/desktop-updater", () => ({
+  OFFICIAL_DOWNLOAD_URL: "https://creatoros.aitongban.cloud/",
   isDesktopRuntimeClient: () => mockIsDesktop(),
   getAppVersion: () => mockGetVersion(),
   checkLatestVersion: () => mockCheck(),
@@ -85,7 +85,7 @@ const VM: SettingsViewModel = {
   douyinAccount: { loggedIn: false },
 };
 
-/** IPC 归一化结果构造(desktop-updater CheckLatestResult 的 available 分支)。 */
+/** 官网 manifest 归一化结果构造(desktop-updater available 分支)。 */
 function availableResult(over: Record<string, unknown> = {}) {
   return {
     kind: "available" as const,
@@ -93,7 +93,7 @@ function availableResult(over: Record<string, unknown> = {}) {
       currentVersion: "0.1.0",
       latestVersion: "0.2.0",
       releaseNotes: "修复若干问题",
-      downloadUrl: "https://agent.example.com/dl",
+      downloadUrl: "https://creatoros.aitongban.cloud/",
       updateAvailable: true,
       ...over,
     },
@@ -140,7 +140,7 @@ describe("CheckUpdateCard — 桌面态", () => {
     expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull();
   });
 
-  it("[T-396c] 有新版 + 渠道 downloadUrl → 「去下载」外开渠道页(无内置下载安装)", async () => {
+  it("[T-459] 有新版 → 「去官网下载」固定产品官网", async () => {
     mockIsDesktop.mockReturnValue(true);
     mockCheck.mockResolvedValue(availableResult());
     const doc = renderDialog();
@@ -155,49 +155,28 @@ describe("CheckUpdateCard — 桌面态", () => {
       '[data-slot="check-update-download"]',
     ) as HTMLAnchorElement;
     expect(dl).not.toBeNull();
-    expect(dl.getAttribute("href")).toBe("https://agent.example.com/dl");
+    expect(dl.getAttribute("href")).toBe("https://creatoros.aitongban.cloud/");
     expect(dl.getAttribute("target")).toBe("_blank");
+    expect(dl.textContent).toContain("官网下载");
     // 旧「下载并安装」入口已退役。
     expect(doc.querySelector('[data-slot="check-update-install"]')).toBeNull();
   });
 
-  it("[T-396c 红线] downloadUrl=null + 无 supportUrl → 纯文案「联系授权方」,零链接", async () => {
+  it("[T-459] mock 结果夹带任意 downloadUrl 也不形成开放跳转", async () => {
     mockIsDesktop.mockReturnValue(true);
-    mockCheck.mockResolvedValue(availableResult({ downloadUrl: null }));
+    mockCheck.mockResolvedValue(
+      availableResult({ downloadUrl: "https://evil.example.com/payload" }),
+    );
     const doc = renderDialog();
     await clickCheck(doc);
     await waitFor(() =>
-      expect(doc.querySelector('[data-slot="check-update-contact"]')).not.toBeNull(),
+      expect(doc.querySelector('[data-slot="check-update-download"]')).not.toBeNull(),
     );
-    const contact = doc.querySelector('[data-slot="check-update-contact"]');
-    expect(contact?.textContent).toContain("请联系你的授权方获取新版");
-    expect(contact?.querySelector("a")).toBeNull();
-    expect(doc.querySelector('[data-slot="check-update-download"]')).toBeNull();
-    // 绝不回退官方链接。
-    expect(
-      doc.querySelector('[data-slot="check-update-available"]')?.innerHTML ?? "",
-    ).not.toContain("aitongban");
-  });
-
-  it("[T-396c] downloadUrl=null + 缓存有 supportUrl → 联系文案可点跳渠道", async () => {
-    mockIsDesktop.mockReturnValue(true);
-    mockCheck.mockResolvedValue(availableResult({ downloadUrl: null }));
-    const doc = renderDialog({
-      channelLinks: {
-        purchaseUrl: null,
-        supportUrl: "https://agent.example.com/contact",
-        downloadUrl: null,
-      },
-    });
-    await clickCheck(doc);
-    await waitFor(() =>
-      expect(doc.querySelector('[data-slot="check-update-contact"]')).not.toBeNull(),
-    );
-    const link = doc
-      .querySelector('[data-slot="check-update-contact"]')
-      ?.querySelector("a");
-    expect(link).not.toBeNull();
-    expect(link?.getAttribute("href")).toBe("https://agent.example.com/contact");
+    const dl = doc.querySelector(
+      '[data-slot="check-update-download"]',
+    ) as HTMLAnchorElement;
+    expect(dl.getAttribute("href")).toBe("https://creatoros.aitongban.cloud/");
+    expect(dl.getAttribute("href")).not.toContain("evil.example.com");
   });
 
   it("点检查 → 已最新 → 「已是最新版」", async () => {
@@ -228,10 +207,8 @@ describe("CheckUpdateCard — 桌面态", () => {
   });
 });
 
-// [T-372 L3] 买断撤销软降级(SPEC §8):revoked + expiresAt=null(买断)→ 更新入口旁
-// 显式提示「更新服务已暂停,不影响你正常使用」+ 检查更新按钮停用;
-// 内测(expiresAt 非 null)revoked 不走此路(内测吊销 = 整体跳激活页,由 Rust 门负责)。
-describe("CheckUpdateCard — 买断撤销停更新 (T-372 L3)", () => {
+// [T-459] 更新源公开且不携带授权信息，因此设置页更新入口不再消费授权状态。
+describe("CheckUpdateCard — 与授权状态解耦", () => {
   const baseActivation = {
     status: "active" as const,
     machineId: "M-perp",
@@ -242,41 +219,12 @@ describe("CheckUpdateCard — 买断撤销停更新 (T-372 L3)", () => {
     graceSeconds: 2_592_000,
   };
 
-  it("买断 + revoked → 更新入口旁提示 + 检查按钮停用(核心功能不受影响)", async () => {
+  it("买断码 revoked 也不禁用公开官网更新检查", async () => {
     mockIsDesktop.mockReturnValue(true);
     render(
       <SettingsDialog
         viewModel={VM}
         activation={{ ...baseActivation, expiresAt: null, revoked: true }}
-      />,
-    );
-    await waitFor(() => {
-      const card = document.querySelector('[data-slot="check-update-card"]');
-      expect(card?.getAttribute("data-desktop")).toBe("true");
-      expect(card?.getAttribute("data-updates-blocked")).toBe("true");
-    });
-    const alert = document.querySelector(
-      '[data-slot="check-update-revoked-alert"]',
-    );
-    expect(alert).not.toBeNull();
-    expect(alert?.textContent).toContain("更新服务已暂停");
-    expect(alert?.textContent).toContain("不影响你正常使用");
-    const action = document.querySelector(
-      '[data-slot="check-update-action"]',
-    ) as HTMLButtonElement;
-    expect(action.disabled).toBe(true);
-  });
-
-  it("内测(expiresAt 非 null)revoked → 不显停更新提示(码型不共用分支)", async () => {
-    mockIsDesktop.mockReturnValue(true);
-    render(
-      <SettingsDialog
-        viewModel={VM}
-        activation={{
-          ...baseActivation,
-          expiresAt: "2026-07-20T00:00:00.000Z",
-          revoked: true,
-        }}
       />,
     );
     await waitFor(() => {
@@ -290,23 +238,6 @@ describe("CheckUpdateCard — 买断撤销停更新 (T-372 L3)", () => {
       '[data-slot="check-update-action"]',
     ) as HTMLButtonElement;
     expect(action.disabled).toBe(false);
-  });
-
-  it("买断未撤销 → 无提示,按钮可用", async () => {
-    mockIsDesktop.mockReturnValue(true);
-    render(
-      <SettingsDialog
-        viewModel={VM}
-        activation={{ ...baseActivation, expiresAt: null, revoked: false }}
-      />,
-    );
-    await waitFor(() => {
-      const card = document.querySelector('[data-slot="check-update-card"]');
-      expect(card?.getAttribute("data-updates-blocked")).toBe("false");
-    });
-    expect(
-      document.querySelector('[data-slot="check-update-revoked-alert"]'),
-    ).toBeNull();
   });
 });
 

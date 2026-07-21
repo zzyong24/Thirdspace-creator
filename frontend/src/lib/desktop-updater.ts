@@ -1,10 +1,10 @@
 /**
- * `desktop-updater.ts` — [T-180 → T-396c] 桌面软件更新的前端薄封装(client-only)。
+ * `desktop-updater.ts` — [T-180 → T-396c → T-459] 桌面软件更新的前端薄封装(client-only)。
  *
- * [T-396c] 更新流已渠道化:检查走 Rust IPC `license_latest_version`(latest-version 端点 +
- * Ed25519 验签在 Rust,SPEC §4/§6),有新版跳渠道 downloadUrl 用户自行下载 —— 不再走
- * `tauri-plugin-updater` 的 check()/downloadAndInstall()(endpoint 已从 tauri.conf.json
- * 摘除;插件 + 签名产物链保留 = 可逆开关)。`relaunchApp` 仍供重置工作区等场景复用。
+ * [T-459 用户裁决] 更新检查与激活/白标完全拆开:只 GET 产品官网公开静态
+ * `https://creatoros.aitongban.cloud/updates/latest.json`，不发送激活码、machineId、projectKey、
+ * nonce，也不调用 Rust `license_latest_version`。只信 version/notes；下载入口写死官网，绝不
+ * 采纳远端 JSON 里的任意 URL。`relaunchApp` 仍供重置工作区等场景复用。
  *
  * web / SSR(无 `__TAURI_INTERNALS__`)一律安全降级,绝不 throw、绝不假装有更新
  * (诚实铁律:非桌面态返回 `unavailable`,不误导用户)。
@@ -24,15 +24,25 @@ export function isDesktopRuntimeClient(): boolean {
   return "__TAURI_INTERNALS__" in w || "isTauri" in w;
 }
 
-/** [T-396c] Rust `license_latest_version` 的结果形状(license.rs LatestVersionInfo,serde camelCase)。 */
+/** 与授权系统无关的公开更新源；只承载版本公告。 */
+export const OFFICIAL_UPDATE_MANIFEST_URL =
+  "https://creatoros.aitongban.cloud/updates/latest.json";
+/** 有新版时统一跳产品官网，避免远端 JSON 形成开放重定向。 */
+export const OFFICIAL_DOWNLOAD_URL = "https://creatoros.aitongban.cloud/";
+
+interface OfficialUpdateManifest {
+  version?: unknown;
+  notes?: unknown;
+}
+
+/** 前端归一化后的版本检查结果。 */
 export interface LatestVersionInfo {
   currentVersion: string;
-  /** null = 服务端未公告版本 / 授权失效不提示更新。 */
+  /** null 仅用于兼容旧调用形状；公开 manifest 格式异常时会直接返回 error。 */
   latestVersion: string | null;
   releaseNotes: string | null;
   /**
-   * 该码渠道的下载链接;null = 未激活/渠道未配 → UI 显「联系授权方」,
-   * **绝不回退官方链接**(SPEC §5/§7 红线)。
+   * T-459 后有新版时固定为产品官网；保留 null 类型兼容既有 UI。
    */
   downloadUrl: string | null;
   updateAvailable: boolean;
@@ -46,22 +56,78 @@ export type CheckLatestResult =
   | { kind: "error"; message: string };
 
 /**
- * [T-396c] 检查更新(渠道化):非桌面态直接 `unavailable`;桌面态经 IPC
- * `license_latest_version` → Rust 调 latest-version 端点 + 验签 + 语义比较版本。
- * Rust 侧 Err 即人话文案(并入 T-412),直接展示;IPC 本身异常 → 通用友好文案,绝不崩。
+ * [T-459] 检查更新:非桌面态直接 `unavailable`;桌面态读壳版本 + GET 官网公开 manifest。
+ * 不调用授权 IPC，不携带任何用户/授权字段。远端只提供 version/notes，下载地址固定官网。
  */
 export async function checkLatestVersion(): Promise<CheckLatestResult> {
   if (!isDesktopRuntimeClient()) return { kind: "unavailable" };
   try {
-    const { invoke } = await import("@tauri-apps/api/core");
-    const info = await invoke<LatestVersionInfo>("license_latest_version");
+    const currentVersion = await getAppVersion();
+    if (!currentVersion) {
+      return {
+        kind: "error",
+        message: "暂时无法读取当前版本,请重启软件后重试。",
+      };
+    }
+    const response = await fetch(OFFICIAL_UPDATE_MANIFEST_URL, {
+      method: "GET",
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      return {
+        kind: "error",
+        message: "官网更新服务暂时不可用,请稍后重试。",
+      };
+    }
+    const manifest = (await response.json()) as OfficialUpdateManifest;
+    const latestVersion =
+      typeof manifest.version === "string" ? manifest.version.trim() : "";
+    if (!latestVersion || versionParts(latestVersion).length === 0) {
+      return {
+        kind: "error",
+        message: "官网更新服务响应格式有误,请稍后重试。",
+      };
+    }
+    const info: LatestVersionInfo = {
+      currentVersion,
+      latestVersion,
+      releaseNotes:
+        typeof manifest.notes === "string" && manifest.notes.trim()
+          ? manifest.notes.trim()
+          : null,
+      downloadUrl: OFFICIAL_DOWNLOAD_URL,
+      updateAvailable: versionNewer(latestVersion, currentVersion),
+    };
     if (info.updateAvailable) {
       return { kind: "available", info };
     }
-    return { kind: "uptodate", currentVersion: info.currentVersion };
+    return { kind: "uptodate", currentVersion };
   } catch (err) {
     return { kind: "error", message: readableError(err) };
   }
+}
+
+function versionParts(version: string): number[] {
+  return version
+    .trim()
+    .replace(/^[vV]/, "")
+    .split(/[^0-9]+/)
+    .filter(Boolean)
+    .map((part) => Number.parseInt(part, 10));
+}
+
+/** latest 是否比 current 新；数字段比较，`v` 前缀与缺位均兼容。 */
+export function versionNewer(latest: string, current: string): boolean {
+  const latestParts = versionParts(latest);
+  const currentParts = versionParts(current);
+  if (latestParts.length === 0) return false;
+  const length = Math.max(latestParts.length, currentParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const a = latestParts[index] ?? 0;
+    const b = currentParts[index] ?? 0;
+    if (a !== b) return a > b;
+  }
+  return false;
 }
 
 /**
@@ -93,8 +159,8 @@ export async function getAppVersion(): Promise<string | null> {
 }
 
 /**
- * 把异常收敛成一句可读中文文案。[T-396c] Rust command 的 Err 已是人话(含中文),原样透传;
- * 其余(IPC 桥异常/英文技术串)收敛为友好提示,不把 `error sending request…` 甩给用户(T-412)。
+ * 把异常收敛成一句可读中文文案。已有中文人话原样透传；其余网络/英文技术串
+ * 收敛为友好提示，不把 `fetch failed` 一类底层报错甩给用户(T-412)。
  */
 function readableError(err: unknown): string {
   const raw =
@@ -103,7 +169,7 @@ function readableError(err: unknown): string {
       : typeof err === "string"
         ? err
         : "";
-  // 含 CJK 字符 = Rust 侧人话文案,直接展示。
+  // 含 CJK 字符 = 上游已给人话文案，直接展示。
   if (/[一-鿿]/.test(raw)) {
     return raw;
   }

@@ -116,6 +116,20 @@ export function isSymlinkEscape(absPath, fsdep = { lstatSync, realpathSync }) {
 }
 
 /**
+ * [T-459] Playwright 等浏览器自动化 API 会把传入函数 `toString()` 后发送到页面上下文。
+ * stringArray 会把 callback 内字面量改写成对 chunk 外部 decoder 的闭包引用；即使语法仍合法，
+ * 到浏览器里也会因 decoder 不存在而崩。Bytenode 还会让函数 `toString()` 只剩占位字符。
+ * 命中这些「必须保留函数源码」的 API 时，混淆只能走 rename-only，且 bytecode.mjs 会硬排除。
+ */
+export function requiresSerializableFunctionSource(code) {
+  return (
+    /\.(?:evaluate|evaluateAll|evaluateHandle|waitForFunction|addInitScript)\s*\(/.test(
+      code,
+    ) || /\.\$\$?eval\s*\(/.test(code)
+  );
+}
+
+/**
  * 决定文件用哪档混淆。rename-only(不碰字符串/控制流)当以下任一命中:
  *   ① 路径在 turbopack `chunks/**` 下 —— [T-164 真机踩点] turbopack chunk 靠 chunk 路径字符串 +
  *      数字模块 ID 互相 loadChunkAsync 加载(不走显式 require);stringArray base64 编码这些
@@ -132,6 +146,8 @@ export function pickPreset(code, relPath = "") {
   const parts = relPath.split(/[\\/]/).filter(Boolean);
   const dynLiteral = /(?:require|import)\s*\(\s*["'`]/;
   const hasDynLiteral = dynLiteral.test(code);
+  // [T-459] 必须在 chunks/stringArray 判定之前拦截，保住 pageFunction 的独立源码。
+  if (requiresSerializableFunctionSource(code)) return "rename-only";
   // ① turbopack chunk 树(chunks/ 或 chunks/ssr/ 下):
   //    · 含字面 require/import → rename-only(编码模块名字面量会 ChunkLoadError)。
   //    · 否则 → [T-417 L1] chunk-stringarray:rc4 加密**业务字符串**(prompt/端点),reservedStrings
