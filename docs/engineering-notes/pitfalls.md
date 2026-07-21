@@ -11,6 +11,7 @@
 - **混淆 turbopack chunk 会崩** → chunks 目录 rename-only;混淆后必跑运行时冒烟。
 - **打包版必须隔离验证**:dev 跑通/单测过 ≠ 分发包能跑(ESM/路径/资源差异)。
 - **ffmpeg/Whisper 硬编码 `/opt/homebrew/bin/ffmpeg`,sidecar 打包脚本不打 ffmpeg**(T-326 RT-H09:douyin-cdp.ts + multimodal-whisper-local.ts):Intel Mac/Windows/无 Homebrew 用户转录稳定失败。正解:外部二进制随包分发,或启动硬预检 + 缺失时 UI 诚实禁用;禁止硬编码本机路径。
+- **Windows 线程栈默认 1MB 定时炸弹(T-446)**:Rust `build.rs` 或桌面运行时里的 `let mut buf = [0u8; 1024 * 1024];` **栈上分配 1MB 缓冲**——mac/Linux 默认 8MB 静默容忍,Windows 1MB 一次调用就吃光 → `STATUS_STACK_OVERFLOW (0xc00000fd)`。sha2/blake3 官方示例默认这种写法,是 Linux 视角。正解:改 `vec![0_u8; 1024 * 1024]` 堆分配,或 `Box::new([0u8; N])`。build script 里尤其致命(cargo 起的 build-script-build 进程无法调栈大小)。识别信号:CI Windows job 报 `exit code: 0xc00000fd` + `thread 'main' has overflowed its stack`,且 stdout 卡在某个 `println!` 之后再也没输出。
 
 ## 验证纪律(最重要的一册)
 
