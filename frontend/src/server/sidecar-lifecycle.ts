@@ -19,10 +19,11 @@
  *     停机哨兵行**(SHUTDOWN_SENTINEL,两侧单测各自钉住契约),本模块读到即优雅退出;
  *     SIGINT/SIGBREAK handler 照挂(有 console 的场景可用,CREATE_NO_WINDOW 下通常不会来)。
  *   · 孤儿自检:Windows **没有「父死被 init(pid 1)收养」语义**——父进程死后 ppid 只是个
- *     悬空旧值,`ppid === 1` 永假 → 换双机制:主检测 = **stdin 管道断开**(壳进程退出/崩溃,
- *     OS 关闭管道另一端 → 'end'/'error' 事件);兜底 = 轮询 `kill(ppid, 0)` 探活(抛错 = 父
- *     进程已不存在)。语义差异如实注:探活有 PID 复用误判窗口,但误判方向是「以为父还活着
- *     → 不退出」,由 stdin 断开检测兜住;不存在误杀方向。
+ *     悬空旧值,`ppid === 1` 永假 → **唯一可靠机制** = **stdin 管道断开**(壳进程退出/崩溃,
+ *     OS 关闭管道另一端 → 'end'/'error' 事件)。[T-457] 曾试图用 `kill(ppid, 0)` 探活兜底,
+ *     但 Node@25 Windows 上不同 UAC/进程隔离场景下 kill 会抛 EPERM(见 2026-07-21 真机白屏
+ *     事故:sidecar 起来 2s 内被误杀 → shell 60s 后仍导航死端口 → 白屏)—— 已移除该兜底,
+ *     只保留 stdin 检测(误报率 > 命中率的兜底不如没有)。
  *   · 组内广播:Windows 无 POSIX 进程组,`kill(-pid)` 非法 → 不广播;Chrome/ffmpeg 子进程
  *     的兜底清理由壳侧 Job Object(JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,lib.rs W3)承担——
  *     壳句柄一关整棵树内核级必死,比 POSIX 侧还强。
@@ -139,14 +140,13 @@ export function installSidecarLifecycle(
   }
   const timer = setInterval(() => {
     if (win) {
-      // [W4] Windows 无「孤儿被 init 收养」语义(ppid 只是悬空旧值)→ kill(ppid, 0) 探活:
-      //   抛错 = 父进程句柄已不存在 → 自杀兜底。PID 复用窗口下的误判方向是「误以为还活着」
-      //   (不退出),由上面 stdin 断开检测兜住;不存在误杀。
-      try {
-        proc.kill(proc.ppid, 0);
-      } catch {
-        void beginGracefulExit(proc, "父进程已死(Win ppid 探活)", log);
-      }
+      // [T-457 后修] **移除 kill(ppid, 0) 探活** —— 2026-07-21 真机白屏事故实证:
+      //   Node@25 Windows 上,sidecar 起来 2s 内 kill(process.ppid, 0) 会抛 EPERM
+      //   (安装模式/UAC 隔离导致 OpenProcess 权限拒;不同用户机行为不一致,难以本地
+      //    复现)→ 误判"父进程已死" → sidecar 自杀 → shell 端 60s 后仍导航死端口 → 白屏。
+      //   Windows 上**唯一可靠的**孤儿信号是 stdin 管道断开(OS 关另一端 = 父死 = 事件),
+      //   已在上面 `stdin.on("end"/"error")` 覆盖。轮询探活本就是"兜底",实测误报率 >
+      //   命中率,直接砍。POSIX 分支 `ppid === 1` 检测保留(那是 init 收养,语义可靠)。
     } else if (proc.ppid === 1) {
       // POSIX:父进程死亡 → 被 init(pid 1)收养。壳崩溃/强退时 Rust 清理不执行,靠这条自杀兜底。
       void beginGracefulExit(proc, "父进程已死(孤儿自检)", log);

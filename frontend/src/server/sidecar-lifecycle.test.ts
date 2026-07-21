@@ -178,19 +178,18 @@ describe("Windows 分支(platform=win32)", () => {
     stop();
   });
 
-  it("ppid 探活:kill(ppid,0) 抛错 → 自杀;父活着不退出;不依赖 POSIX ppid===1", async () => {
+  it("[T-457] 移除 kill(ppid,0) 探活:父死也不自杀(靠 stdin 断开兜);避免 EPERM 误报", async () => {
     vi.useFakeTimers();
     const proc = makeProc(100, { platform: "win32", parentAlive: true });
     const stop = installSidecarLifecycle(proc, () => {});
-    // 父活着:轮询探活通过,不退出(即便 ppid 恰为 1 —— Win 无 init 收养语义)。
-    proc.setPpid(1);
-    proc.setPpid(100);
-    await vi.advanceTimersByTimeAsync(5_000);
-    expect(proc.exited).toEqual([]);
-    // 父死:探活抛 ESRCH → 下一轮触发优雅退出。
+    // 父活/死状态都不再影响 sidecar 自杀 —— 探活已移除。避免 Node@25 Win 上 EPERM 误判
+    //   (2026-07-21 白屏事故:kill(ppid, 0) 抛权限错 → 误杀 → shell 60s 后仍导航死端口)。
     proc.setParentAlive(false);
-    await vi.advanceTimersByTimeAsync(2_100);
-    expect(proc.exited).toEqual([0]);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(proc.exited).toEqual([]); // 就是不退!
+    // 唯一可靠的 Win 父死信号 = stdin 管道断开(OS 关另一端)。这里模拟:
+    proc.stdinHandlers.get("end")!();
+    await vi.waitFor(() => expect(proc.exited).toEqual([0]));
     stop();
   });
 

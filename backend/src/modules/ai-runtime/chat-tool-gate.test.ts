@@ -9,6 +9,7 @@ import {
   defineChatTool,
   enforceChatToolResultBudget,
   getChatToolApprovalDecider,
+  sanitizeSystemToolReferences,
   sanitizeToolName,
   sanitizeToolNames,
 } from "./chat-tool-gate";
@@ -341,5 +342,60 @@ describe("[T-439 配套] 工具名不得含下划线(前端还原的前提)", ()
     for (const n of ALL_CHAT_TOOL_NAMES) {
       expect(sanitizeToolName(n).replace(/_/g, ".")).toBe(n);
     }
+  });
+});
+
+describe("[T-456] sanitizeSystemToolReferences —— system prompt 里带点工具名字面量换名", () => {
+  const tools = {
+    "context.projects": { execute: () => "x" },
+    "context.metrics": { execute: () => "x" },
+    "context.artifact.text": { execute: () => "x" },
+    "context.positioning.detail": { execute: () => "x" },
+    positioning_generate: { execute: () => "x" }, // 已合规,不动
+  } as unknown as ToolSet;
+
+  it("单出现:整词替换,不动周围文本", () => {
+    const s = "要拿作品列表,请调 context.projects,然后...";
+    expect(sanitizeSystemToolReferences(s, tools)).toBe(
+      "要拿作品列表,请调 context_projects,然后...",
+    );
+  });
+
+  it("多出现同一工具名:全替", () => {
+    const s = "先 context.projects 拿 id 列表;再 context.projects 里选一条。";
+    expect(sanitizeSystemToolReferences(s, tools)).toBe(
+      "先 context_projects 拿 id 列表;再 context_projects 里选一条。",
+    );
+  });
+
+  it("长短名并存:长名先替(避免 context.projects 里的 'context' 被短前缀吃)", () => {
+    // context.artifact.text 是最长的,先替 → 不会被 context.projects/context.metrics 破
+    const s = "读稿调 context.artifact.text,列表调 context.projects,指标调 context.metrics";
+    expect(sanitizeSystemToolReferences(s, tools)).toBe(
+      "读稿调 context_artifact_text,列表调 context_projects,指标调 context_metrics",
+    );
+  });
+
+  it("已合规名 / 未列入 tools 的名字不动", () => {
+    const s = "positioning_generate 已合规不动;random.other.name 也不动(不在 tools)";
+    expect(sanitizeSystemToolReferences(s, tools)).toBe(s);
+  });
+
+  it("原始名是另一个原始名的前缀:精确边界不误伤", () => {
+    // "context.projects" 若被错误替换成 "context_projects",不能污染 "context.projects.detail"
+    // ——但注意:这里我们的 tools 定义里 "context.projects" 和 "context.positioning.detail" 都在,
+    //   不涉及前缀嵌套。如果真有嵌套(context.projects vs context.projects.something),lookaround
+    //   保证 "context.projects.something" 里的 "context.projects" 不被替
+    const s = "调 context.projects.something 而非 context.projects";
+    const result = sanitizeSystemToolReferences(s, tools);
+    // "context.projects.something" 不在 tools 里 → 整体不动;"context.projects"(单独)才替。
+    expect(result).toBe("调 context.projects.something 而非 context_projects");
+  });
+
+  it("tools 空 / 全合规 → 原文返回", () => {
+    expect(sanitizeSystemToolReferences("hello", {} as ToolSet)).toBe("hello");
+    expect(sanitizeSystemToolReferences("hello", { positioning_generate: {} } as unknown as ToolSet)).toBe(
+      "hello",
+    );
   });
 });

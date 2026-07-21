@@ -7,7 +7,12 @@ import {
   type ToolApprovalStatus,
 } from "ai";
 // [T-263] HITL 授权门:从已挂工具装配 streamText 的 toolApproval 配置(单一真值在 chat-tool-gate)。
-import { buildChatToolApproval, sanitizeToolName, sanitizeToolNames } from "./chat-tool-gate";
+import {
+  buildChatToolApproval,
+  sanitizeSystemToolReferences,
+  sanitizeToolName,
+  sanitizeToolNames,
+} from "./chat-tool-gate";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec } from "@creatoros/ai-worker";
 import {
@@ -1898,9 +1903,15 @@ export async function runChatStream(
     abortSignal: input.abortSignal,
     // [T-443] forcedTool 改走 **system 层**强指令(API 层 toolChoice 强制会被思考模型 400 拒)。
     //   指令里必须用**合规名**(与下面 tools 的 key 一致),否则模型按名找不到该工具。
-    system: assembly.forcedTool
-      ? `${assembly.system}\n\n${buildForcedToolInstruction(sanitizeToolName(assembly.forcedTool))}`
-      : assembly.system,
+    // [T-456] system prompt 里散落的 `context.xxx.yyy` 带点字面引用统一替换成合规名——
+    //   模型按 prompt 字面吐 tool_call,tools 侧 sanitize 后只认下划线名,不 sanitize prompt
+    //   会 AI_NoSuchToolError → chat aborted(2026-07-21 用户 log(4) 真机)。
+    system: sanitizeSystemToolReferences(
+      assembly.forcedTool
+        ? `${assembly.system}\n\n${buildForcedToolInstruction(sanitizeToolName(assembly.forcedTool))}`
+        : assembly.system,
+      assembly.tools,
+    ),
     messages: modelMessages,
     // [T-439] 发给模型前合规化工具名(点 → 下划线):DeepSeek/OpenAI/Anthropic 对
     //   `tools[].function.name` 一律要求 `^[a-zA-Z0-9_-]+$`,原样发出 → 400 秒拒 → copilot 全废

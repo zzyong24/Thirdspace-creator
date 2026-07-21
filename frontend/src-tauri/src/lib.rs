@@ -988,6 +988,32 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
 
+            // [T-457] **头部立即建主窗口 + splash + 注入 handshake token** —— 移到 setup 头部,
+            //   先于所有慢操作(sidecar tarball 首启解压 5-15min / master key 生成 / DB 迁移 /
+            //   cargo 加载 dylib …)。此前实现:先跑完 resolve_sidecar_dir(含解压)才建窗 →
+            //   首启用户"看着像死机"(2026-07-21 真机反馈)。
+            //   handshake_token 也提前生成 —— 注入 initialization_script,后续每次 navigate
+            //   都会重跑该脚本,token 常驻 window 全局。
+            // [T-436] 用 about:blank 而非 data:  WKWebView 禁 data: 主 frame,15.1 SIGABRT。
+            //   SPLASH_JS 自判 `location.protocol==='about:'`,navigate 到真页面时 return 不污染。
+            let handshake_token = license::gen_handshake_token();
+            let init_script = format!(
+                "window.__CREATOROS_HANDSHAKE_TOKEN__={:?};\n{}",
+                handshake_token, SPLASH_JS
+            );
+            let _splash_win = WebviewWindowBuilder::new(
+                &handle,
+                "main",
+                WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败")),
+            )
+            .title("CreatorOS")
+            .inner_size(1440.0, 900.0)
+            .min_inner_size(1024.0, 680.0)
+            .initialization_script(&init_script)
+            .build()
+            .expect("建主窗口失败");
+            drop(_splash_win); // 建完就释放引用,下面 line ~1530 从 handle.get_webview_window("main") 拿回 navigate。
+
             // 1) DB 落盘目录:桌面单机默认 <appDataDir>/db。resolveDbDriver 会认
             //    CREATOROS_DB_DIR(见 backend/src/db.ts §3b),我们注入它 → PGlite 落这里。
             let db_dir = app
@@ -1120,7 +1146,10 @@ pub fn run() {
             // [T-372 L2] 启动级 nonce 握手 token(loopback-guard.server.ts:18 的 follow-up 落地):
             //   Rust 每次启动随机生成 → 注入 sidecar env(guard 校验基准)+ WebView 初始化脚本
             //   (前端请求携带)。dev/web 无此 env → guard 不启用该检查,行为不变(P5 不变式)。
-            let handshake_token = license::gen_handshake_token();
+            // [T-457] handshake_token 已在 setup 头部先生成并注入到 splash 窗口 init_script,
+            //   这里**复用同一 token**(不再 gen 二次;二次生成会覆盖 window 全局 → 前端读到旧
+            //   值但 sidecar env 是新值 → 请求头对不上 guard 返 403 白屏)。
+            // (handshake_token 已在头部作用域可见,直接用)
             // [T-372 L2] `.license` 放行权威文件路径,显式注入给 sidecar(激活门只读它判放行,
             //   不再读 activation_state 表;见 frontend/src/server/activation/license-file.server.ts)。
             let license_file_str = app_data_dir
@@ -1504,30 +1533,19 @@ pub fn run() {
             // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
             // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
             let ready_logger = logger.clone();
-            // [T-372 L2] 握手 token 经 WebView 初始化脚本下发(token 为 hex,无注入面);前端
-            //   handshake-client.ts 读该全局并附到有副作用请求的 x-creatoros-handshake 头。navigate
-            //   (splash→真页面)会重跑该初始化脚本 → token 始终在。
-            let webview_token_script = format!(
-                "window.__CREATOROS_HANDSHAKE_TOKEN__=\"{handshake_token}\";"
-            );
+            // [T-372 L2 / T-457] 握手 token 经 window.eval() 注入(不再用 initialization_script
+            //   因为窗口在 setup 头部就建好了);token 为 hex,无注入面;前端 handshake-client.ts
+            //   读该全局并附到有副作用请求的 x-creatoros-handshake 头。
             let sidecar_url = format!("http://127.0.0.1:{port}/");
-            // [T-436] 立即建主窗口(about:blank)+ initialization_script 注入 loading splash(点图标秒
-            //   出窗口+转圈),不再等 sidecar ready 才建窗(原实现全程无窗口=「卡很久才弹窗」)。setup 闭包
-            //   在主线程,可直接建窗;sidecar ready 后后台线程 navigate 到真页面,就绪探测不阻塞 setup。
-            //   token + SPLASH_JS 一起注入:navigate 后 init 脚本重跑 → token 常在,SPLASH_JS 自判非
-            //   about: 页面即 return 不污染。**不用 data: URL**(WKWebView 禁 data: 主导航,15.1 会 abort)。
-            let splash_init = format!("{webview_token_script}\n{SPLASH_JS}");
-            let win = WebviewWindowBuilder::new(
-                &handle,
-                "main",
-                WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败")),
-            )
-            .title("CreatorOS")
-            .inner_size(1440.0, 900.0)
-            .min_inner_size(1024.0, 680.0)
-            .initialization_script(&splash_init)
-            .build()
-            .expect("建主窗口失败");
+            // [T-457] **不再建新窗** —— setup 头部已建 splash 窗口(about:blank + 转圈),
+            //   这里从 handle 里拿回来,先在 window 上 eval 注入最新 handshake token,
+            //   再 navigate 到真 sidecar 页(navigate 会触发 init 脚本重跑,SPLASH_JS 判
+            //   非 about: 页面即 return 不污染)。原实现在这里才建窗 → 首启解压期间无窗口。
+            // [T-457] handshake token 已在 setup 头部一并注入 initialization_script,navigate
+            //   到 sidecar 页时 init_script 会重跑 → token 常驻 window。这里无需再 eval 注入。
+            let main_win = handle
+                .get_webview_window("main")
+                .expect("[T-457] main window 缺失 —— setup 头部已建过怎会失踪?");
             std::thread::spawn(move || {
                 let ready = wait_until_ready(port, Duration::from_secs(60));
                 if !ready {
@@ -1539,8 +1557,8 @@ pub fn run() {
                 }
                 match sidecar_url.parse::<tauri::Url>() {
                     Ok(u) => {
-                        let win2 = win.clone();
-                        let _ = win.run_on_main_thread(move || {
+                        let win2 = main_win.clone();
+                        let _ = main_win.run_on_main_thread(move || {
                             if let Err(e) = win2.navigate(u) {
                                 eprintln!("[shell] navigate 到 sidecar 失败: {e}");
                             }
