@@ -2,11 +2,16 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "targets": [
-      "nsis",
-      "msi"
+      "nsis"
     ],
     "resources": [
       "sidecar/"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "compression": "zlib",
+        "installMode": "currentUser"
+      }
+    }
   }
 }
