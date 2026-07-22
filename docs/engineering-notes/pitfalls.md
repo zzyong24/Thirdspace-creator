@@ -210,4 +210,68 @@
 
 **正解**:①`targets` 内测收窄成 `["nsis"]`(msi 只在企业分发要;内测/日常不需要);②`bundle.windows.nsis.compression = "zlib"`(默认 LZMA → zlib,速度快 3-10×,包大 30% 但内测可接受;LZMA 只在真正要"极致压缩下载体积"时用);③`installMode: "currentUser"` 显式化(承接 T-449:装到 `%LOCALAPPDATA%\Programs\`,ACL 天然只该用户可读)。④GHA `timeout-minutes` 从 90 → 180 兜底(即使 NSIS 有意外也不再被 90min 顶死;正常 45-60min 内应完成)。
 
+## Windows tauri-plugin-shell 的 fd 0 不是真管道,readSync 阻塞 60s+(T-460,2026-07-22)
+
+**坑**:CreatorOS Windows 首启白屏 6-10 分钟。日志显示 sidecar `10:37:32 Ready` → `10:43:46 [scheduler] 起`,中间 **6 分钟没日志**。定位到 `backend/src/secret-crypto.ts::readMasterKeyFromFd`:主线程在 `while (Date.now() < deadline_3s) { readSync(fd, ...) }` 循环里读 master key。**mac 上 fd 0 是真 pipe(壳 write 完 close → EOF)**,读 32B 立即返回;**Windows 上 tauri-plugin-shell 是 IPC channel 抽象**,fd 0 语义不同,`readSync(fd, 1)` **单次调用阻塞 60 秒+才返回**——`while` 的 3 秒超时**根本检测不到**,一次 read 就把整个 deadline 吃光;然后循环还继续,直到 20+ 分钟意外恢复。期间 Next.js 端口 LISTEN 但整个 sidecar 主线程 pinned → webview 拿到 `http://127.0.0.1:<port>` 但服务器不处理任何请求 → **纯白屏**。
+
+**信号识别**:Windows 日志「`Ready in 0ms` 到 `[scheduler] 起` 之间几分钟没输出」+ 用户报"打开是白屏,等半天才能用",mac 完全没此问题。
+
+**正解**(T-460):`readMasterKeyFromFd` 头部 `if (process.platform === "win32") return "";` **直接短路 fd 通道**,让上层走 `CREATOROS_MASTER_KEY_FILE` 文件兜底(T-425 已在)。启动直接快 3-5 分钟。这是**平台差异**必须显式分支处理,别指望"跨平台 API 语义一致"。类似坑:Node@25 Windows 上 `process.kill(ppid, 0)` 会抛 EPERM(UAC/进程隔离)——见 T-457。
+
+## Tauri setup 内 splash 窗建了但内容不渲染(T-461/T-467,2026-07-22)
+
+**坑**:T-457 已在 setup 头部 `WebviewWindowBuilder::new(handle, "main", WebviewUrl::External("about:blank"))` + `initialization_script(SPLASH_JS)` 建 splash 窗,期望 sidecar 首启解压 tarball 的 3-5 分钟里,用户能看到「正在校验/正在展开首启资源…」进度文案。**真机验证:纯白屏,一个字都没**。
+
+首次误判(T-461):以为 setup 阻塞主线程 → webview event loop 冻结 → splash 不渲染。改成 `std::thread::spawn` 把整片 setup 逻辑丢后台线程,让 event loop 立即跑。**没生效**——CreatorOS.exe 存活但 sidecar 永不起,主页永白屏。后台线程内多个 `.expect(...)` 静默 panic(打包态 stderr 拿不到),整片搬后台涉及 20+ Tauri API 调用,时序敏感面太大。**回退**。
+
+真正根因(T-467):`SPLASH_JS` 用 `window.addEventListener('DOMContentLoaded', function(){...})` 注册建 DOM。**Windows WebView2 上 `about:blank` 加载极快**,initialization_script 注入时 `DOMContentLoaded` **可能已经触发过一次** → 监听器**永远不跑** → splash 空白。mac WKWebView 加载稍慢/事件时序不同,恰好没踩。
+
+**信号识别**:setup 有建 splash 窗代码,`get_webview_window("main")` 能拿到,但 webview 内容永远白屏,DevTools 里 body 是空的、`window.__creatorosSplashStatus` 不存在。跨平台差异:mac 好,Windows 挂。
+
+**正解**(T-467):改用 IIFE 立即执行 + `document.readyState` / body 就绪短轮询兜底:`(function(){function build(){if(!document.body){setTimeout(build,16);return;}/*建DOM*/}build();})();`。跨 WebView2/WKWebView 都稳。**教训**:webview 里 `addEventListener('DOMContentLoaded')` 是**赌事件时序**,在 initialization_script(navigation 前注入)场景**必输**——脚本执行时 body 可能已在;正确姿势是"检查+等",不是"注册监听"。
+
+## 直觉误诊:sidecar setup 阻塞不冻 WebView UI 线程(T-461 回退教训,2026-07-22)
+
+**坑**:凭直觉断言"Tauri setup 阻塞主线程 → webview event loop 冻结 → splash 不渲染",大动干戈把 setup 挪后台线程,回退时才想清楚:**Windows 上 WebView2 由独立 GUI thread 跑消息泵**,setup 阻塞的是 Rust 主线程(setup 回调运行在 Tauri 主 event loop 线程,但 webview 渲染在 WebView2 自己的 UI thread),两者不同线程。setup 里 `tar.status()` 阻塞 3-5 分钟期间,WebView2 可以正常渲染 about:blank 并跑注入的 initialization_script——**只要 SPLASH_JS 自己不出问题**(见 T-467)。
+
+**信号识别**:大改架构(整片搬后台/整体重构线程模型)修完真机还挂,说明**根因不在架构**,在具体 API 使用姿势(事件时序/参数/平台差异)。
+
+**正解**:排障顺序应该是**先在 Rust stderr / webview DevTools 里精确定位报错**(用 dev build 或加临时 log)→ 再动结构。**不是**"我觉得应该是这个原因,直接大改"。整片搬后台线程涉及 20+ API 调用(state/manage/handle/plugin extensions)全都要考虑 Send/Sync/'static,风险面 >> 收益。**教训**:改架构前先用最小可能的 diff 排除单点问题(SPLASH_JS 一行 JS 改动即验)。
+
+## 字节码化护栏漏 Playwright 大 chunk,采集收藏夹 well-serializable 崩(T-462,2026-07-22)
+
+**坑**:用户「采集收藏夹失败:`page.evaluate: Passed function is not well-serializable!`」。栈指向 `_17k3mqw._.jsc:1:1776374` —— **1.1MB 大合并 chunk 被 bytenode 化了**。Playwright `page.evaluate(fn)` 要求 fn 有可 `.toString()` 的源码字符串;bytenode 编译后的函数 `.toString()` 返回 `[bytecode]` 占位 → Playwright 拒绝序列化 → 挂。
+
+T-459 已加护栏 `requiresSerializableFunctionSource(code)`(regex 检测 `.evaluate(/.evaluateAll(/.evaluateHandle(/.waitForFunction(/.addInitScript(/.$$?eval(`),命中即 return "rename-only" 不走字节码。**但 GHA build 环境下这个 chunk 仍被字节码化了**——原因待精查(chunk 内容漂移?打包合并规则不同?),但**结论**:单层护栏(bytecode.mjs `if (requiresSerializableFunctionSource(code)) return false;`)不够,还得**第二层**。
+
+**信号识别**:打包版跑抖音采集报 `Passed function is not well-serializable`,栈里 `.jsc` 扩展名的文件即字节码化 chunk。查 sidecar 目录 `frontend/.next/server/chunks/ssr/*.js`(stub `require('bytenode');require('./x.jsc')` 十来行)对应 `*.jsc` 存在 → 字节码化了。
+
+**正解**(T-462):`bytecode.mjs::shouldBytecode` 加双护栏,`if (preset === "rename-only") return false;` —— **任何** rename-only chunk 都不字节码化。因为 rename-only 分档条件本身 =「requiresSerializable / chunks 含字面 require」,两者都不适合字节码。防第一层护栏被绕(未来触发条件变化)。**另加打印**:`runBytecode` 主流程末尾输出被跳过的 chunk 列表,下次崩能立即诊断"是不是没跳到"。**教训**:JS 打包混淆链有多个转换阶段(next build → obfuscate → bytecode → decoy → legal-stamp),中间任一阶段的护栏漏了都会到运行时崩,冗余护栏比"依赖精准单点判定"稳。
+
+## chat-turn completed 但 text 为空 → UI 一字不显(T-464,2026-07-22)
+
+**坑**:用户「AI 助手发消息没回答」。日志显示 `[chat-turn] outcome=completed durationMs=1578`(1.5s),`[chat-context] est=2981→2981 tokens cleared=0`(上下文未变),**没有任何 `[chat-tool]` 调用**。往前翻:`[api/chat] stream errored: Error [AI_APICallError]: Unauthorized` + `url: 'https://codex.hiyo.top/v1/messages'` + `responseBody: '{"code":"INVALID_API_KEY","message":"Invalid API key"}'`。
+
+第三方 Anthropic 代理(`codex.hiyo.top`)对新消息**返 200 + 空 SSE 流**(SDK `onFinish` 视作成功触发 `completed`),但 `responseMessage.text=""` 且 `parts=[]`。route 层 `hasRenderable = text.length > 0 || parts.some(tool)` 为 false → `if (!hasRenderable) return;` **不落库、不给前端反馈** → UI 空白气泡都不生成 → 用户看到"AI 一字没回"。
+
+**信号识别**:多次 `chat-turn completed` 但 durationMs < 2000ms 且 `chat-context tokens 恒等未增`,说明**模型端返 200 空内容**(vs 真短回复也会走 tool 调用/写入上下文)。对照 API 密钥 provider 的 URL 或代理服务日志。
+
+**正解**(T-464):`onFinish` 里 `if (!hasRenderable && !isAborted && conversationId)` → **落一条信封 assistant 消息**「AI 未返回任何内容(可能:①代理返空流 ②模型名无效 ③密钥被限流。建议:换模型/换 key)」。用户刷新即看到,自诊断快;非中断轮才落(中断=用户主动停,本就该空)。**教训**:"静默丢弃空 completed 保持 UI 干净"是错的——**空回复本身就是异常信号**,应该让用户知道。**空数据 ≠ 无异常**:HTTP 200/onFinish 触发都可能配合空内容欺骗上层"成功"逻辑。所有"成功但空"的分支都要有可见落地。
+
+## 抖音数据中心「投稿列表」子 tab 偶发不渲染 —— 不是版式变化,是慢(T-463,2026-07-22)
+
+**坑**:Windows 真机日志报 `fetchDouyinWorkListExport: 切到「投稿作品」tab 后未见「投稿列表」子tab —— 无法进入出 xlsx 的视图`。第一反应"抖音改版了"。写诊断脚本 `tools/diag-douyin-page.mjs`(headed Chromium 复用登录态)扫页面,**用户截图+扫描双证**:子 tab 存在(在 `douyin-creator-pc-radio` 组件里,不是 `douyin-creator-pc-tabs-tab`),charCodes 完全对得上 `SUBTAB_LIST_CODES = [25237, 31295, 21015, 34920]`。**不是版式变化,是时序偶发**——Garfish 微前端在弱网/低配机上首次渲染可能 30s+,代码原 `6s × 3 = 18s` 等待窗口不够。
+
+**误诊警戒**:AI 看到"XX tab 找不到"极容易脑补"抖音改版"直接改代码删逻辑。**必须先真机看页面**——诊断脚本花 5 分钟,能直接给出 charCodes/class/位置的客观事实,避免拆真逻辑。**我第一次改动就是把「投稿列表」子 tab 步骤删掉、直接找「导出数据」按钮**,用户截图打脸才回退。
+
+**正解**(T-463):①等窗口 `6s × 3 = 18s` → `15s × 3 = 45s`;②`markAndClick` 第 3 轮 attempt 改成非 silent,暴露真实点击错误;③错误消息带 `[点击错误] xxx` / `[点击无报错但子 tab 未渲染]` 二选一,下次挂能直接看是**点不上**还是**点上了但页面不动**。**没改** codes / 主流程结构 / 点击器(先加窗口再看,不瞎改)。**教训**:抖音元素错定位报错 = 客观事实(能定位到就是能定位),没定位到 = 结构变了或渲染没就绪或点击没生效——三选一,用诊断脚本给出客观证据再动手,不猜。
+
+## Windows Tauri v2 安装器强制 currentUser 装 %LOCALAPPDATA% + 不给选路径 = 非业界标准(T-466,2026-07-22)
+
+**坑**:`tauri.windows.conf.json` 里 `installMode: "currentUser"`,Tauri v2 NSIS 该模式下 **强制装到 `%LOCALAPPDATA%\Programs\<name>\`,不弹路径选择页也不弹"仅当前用户/所有用户"选择页**。用户报"装抖音这种大型软件都能选路径,你们凭啥不给选"。
+
+**信号识别**:安装向导简化到只有"欢迎/开始装/完成"三页,没 InstallDirPage,没 UAC 提升选项。业界标准(Discord/VSCode/大多数 NSIS 常规安装器)都有:欢迎/协议/组件/**路径**/**用户范围**/开始菜单/桌面快捷方式,多页向导。
+
+**正解**(T-466):改 `installMode: "both"`。Tauri v2 NSIS 双模式下**自动**:①弹"仅当前用户 / 所有用户"选择页(选后者需 UAC 提升,装 `C:\Program Files\`);②弹 InstallDirPage 让用户选路径。**教训**:Tauri v2 提供的选项级功能(installMode)不是"技术选择"是"用户体验选择",技术团队顺手写的 `currentUser` 隐含限制了终端用户的自主权——**默认选保守值(both)不选最简(currentUser)**,除非有明确理由。
+
 

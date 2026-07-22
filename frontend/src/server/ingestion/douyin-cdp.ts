@@ -2401,18 +2401,37 @@ async function runExportOnce(
     // 3) 切到「投稿作品」tab(真机默认落在**直播场次** tab,其导出无数据 → 永不下载,是旧超时真因)。
     //    点后**轮询等**「投稿列表」子tab 渲染出来(而非固定 sleep;真机 tab 切换 + 子视图渲染有延迟)。
     //    tab 点击可能需要重试(modal 刚关 / 渲染未稳)—— 最多试 3 轮,每轮点投稿作品 + 等子tab 出现。
+    //    [T-463] 2026-07-22 真机偶发挂:窗口从 3×6s=18s 加大到 3×15s=45s(Garfish 微前端在弱网/
+    //    低配机上首次渲染可能 30s+;子 tab 用 douyin-creator-pc-radio 组件而非 douyin-creator-pc-
+    //    tabs-tab,渲染时序与主 tab 无关)。诊断脚本 tools/diag-douyin-page.mjs 确认 charCodes
+    //    完全对得上,不是版式变化,是**慢**。
     let listVisible = false;
+    let lastClickErr: string | null = null;
     for (let attempt = 0; attempt < 3 && !listVisible; attempt++) {
-      await markAndClick(page, TAB_POSTS_CODES, { silent: true });
+      // [T-463] 2026-07-22 补:silent 点击失败会返 false 无声吞掉。第 3 轮改非 silent 抛出,
+      //   把点击的真实错误暴露给上层日志(而非泛泛 "未见投稿列表子tab" 空描述)。
+      const isLast = attempt === 2;
+      try {
+        const ok = await markAndClick(page, TAB_POSTS_CODES, {
+          silent: !isLast,
+          timeout: 8_000,
+        });
+        if (!ok && isLast) {
+          lastClickErr = "markAndClick 返回 false(未标记到「投稿作品」元素或点不上)";
+        }
+      } catch (err) {
+        lastClickErr = err instanceof Error ? err.message : String(err);
+      }
       listVisible = await waitForVisibleByCharCodes(page, SUBTAB_LIST_CODES, {
-        tries: 6,
+        tries: 15,
         intervalMs: 1_000,
       });
     }
     if (!listVisible) {
       await debugShot(page, "02-posts-tab-failed.png");
+      const detail = lastClickErr ? `[点击错误] ${lastClickErr}` : "[点击无报错但子 tab 未渲染]";
       throw new DouyinExportError(
-        "fetchDouyinWorkListExport: 切到「投稿作品」tab 后未见「投稿列表」子tab(页面未加载完 / 登录态过期 / 版式变化)—— 无法进入出 xlsx 的视图",
+        `fetchDouyinWorkListExport: 切到「投稿作品」tab 后未见「投稿列表」子tab(页面未加载完 / 登录态过期 / 版式变化)—— 无法进入出 xlsx 的视图 ${detail}`,
       );
     }
 
