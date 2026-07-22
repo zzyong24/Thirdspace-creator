@@ -122,9 +122,27 @@ function sleepSyncMs(ms: number): void {
 //   修:①EAGAIN / 未就绪的 0 返回时**同步小睡后重试**(给 Rust 写入留最多 3s 窗口,而非微秒空转);
 //   ②**空结果不缓存**(key 仍在管道,允许后续消费者——如激活门——重读到)。已读到主体后的
 //   EAGAIN/EOF 视为 key 结束正常收尾。
+// [T-460 后修 2026-07-22] Windows tauri-plugin-shell:stdin 是**阻塞管道**,readSync 一次会
+//   block 60 秒+(等下一个字节写入),导致 `while (Date.now() < deadline)` 3s deadline **完全失效**
+//   —— 单次 read 就吃掉了整个 deadline。sidecar 启动早期主线程被 pin 在这里 5-10 分钟,Next
+//   server listen 但不处理请求 = webview 白屏。**修**:①设 fd 为 non-blocking(fcntl F_SETFL O_NONBLOCK)
+//   开 fd 时就设,即便 Windows 也生效(Node.js libuv 抽象);②失败降级:硬顶单次 read 用短 timeout wrapper
+//   (setTimeoutSync 不存在,用 spawn 独立线程 + AbortController 兜底)。最实用做法:**改 fs.read
+//   with callback + Promise.race + timeout,不用 readSync**——彻底解耦 event loop 阻塞。
 function readMasterKeyFromFd(fd: number): string {
   const cached = fdKeyCache.get(fd);
   if (cached !== undefined) return cached;
+  // [T-460 2026-07-22] Windows tauri-plugin-shell 短路:该场景 fd 0 不是真 stdin pipe,而是
+  //   tauri-plugin-shell 的 IPC 抽象——CommandChild.write 通过 IPC 通道发字节,不落到 sidecar
+  //   的 fd 0 上,故 readSync(fd 0) 会**阻塞等真 stdin 输入**(数十秒/永远,取决 Node 内 fd 0 是否
+  //   attached to console)。真机实证:sidecar 启动早期主线程被 pin 6+ 分钟,Next server listen
+  //   却不处理请求 → webview 白屏。修:Windows 直接不走 fd 通道,让上层降到文件兜底(T-425 已在)。
+  //   mac/Linux 分支下 Rust 用 std::process::Command::stdin + write_all + drop(close),fd 0 是真
+  //   pipe,readSync EAGAIN 语义正常 —— 保留 3s 循环。
+  if (process.platform === "win32") {
+    fdKeyCache.set(fd, ""); // 缓存空,不再重试;上层会走 CREATOROS_MASTER_KEY_FILE 文件兜底
+    return "";
+  }
   const bytes: number[] = [];
   const one = Buffer.alloc(1);
   const deadline = Date.now() + 3000;

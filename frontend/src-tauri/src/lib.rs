@@ -465,12 +465,16 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
     false
 }
 
-/// [T-436] splash loading 注入脚本(经 initialization_script 在 about:blank 上注入 DOM)。
+/// [T-436 / T-460] splash loading 注入脚本(经 initialization_script 在 about:blank 上注入 DOM)。
 /// ⚠️ 不用 data: URL:WKWebView **禁止 data: 主 frame 导航**(安全限制),macOS 15.1 实测直接
 /// SIGABRT(2026-07-20 真机 crash·didFinishLaunching→observer→abort),新 OS 静默容忍才没暴露。
 /// about:blank 是标准允许的空白页,原理对症。脚本内判 `location.protocol==='about:'` 才注入 →
 /// navigate 到真 http 页面时该 init 脚本重跑也直接 return,不污染真页面。纯 DOM API,无 HTML 转义。
-const SPLASH_JS: &str = "window.addEventListener('DOMContentLoaded',function(){if(location.protocol!=='about:')return;var d=document;d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:14px;color:#8b8b93;letter-spacing:.3px';d.body.appendChild(t);});";
+///
+/// [T-460 状态文案]:除转圈 + "正在启动 CreatorOS…" 之外,暴露 `window.__creatorosSplashStatus(msg)`
+///   接口(Rust 侧经 window.eval() 调用),让首启解压 tarball / 冒烟等长阶段能实时更新状态
+///   ("正在展开首启资源…"/"正在校验完整性…"),避免用户看着一直转圈以为死机。
+const SPLASH_JS: &str = "window.addEventListener('DOMContentLoaded',function(){if(location.protocol!=='about:')return;var d=document;d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.id='creatoros-splash-status';t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:14px;color:#8b8b93;letter-spacing:.3px;text-align:center;max-width:80vw';d.body.appendChild(t);window.__creatorosSplashStatus=function(m){var el=d.getElementById('creatoros-splash-status');if(el&&typeof m==='string')el.textContent=m;};});";
 
 /// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
 /// SHA-256(build.rs 经 rustc-env 注入)。不匹配 → Err(人话)→ 拒绝 spawn。
@@ -823,6 +827,21 @@ fn extract_sidecar_tarball(
     Ok(true)
 }
 
+/// [T-460] 更新 splash 页面状态文案(main window,about:blank 上跑 SPLASH_JS)。
+/// Rust 侧调用 `window.__creatorosSplashStatus("正在展开首启资源…")` 即时反馈长阶段进度,
+/// 避免用户看着一直转圈误以为死机。若 window 尚未建 / 已 navigate 到 sidecar 真页面 → JS 层
+/// 会走异步无副作用(main window 可能没 __creatorosSplashStatus 或已被替换)。**best-effort,
+/// 失败不影响主启动流**。文本已 JSON 转义避免注入。
+fn splash_status(app: &AppHandle, msg: &str) {
+    let escaped = serde_json::to_string(msg).unwrap_or_else(|_| "\"\"".to_string());
+    let js = format!(
+        "if(window.__creatorosSplashStatus)window.__creatorosSplashStatus({escaped});"
+    );
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.eval(&js);
+    }
+}
+
 /// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
 /// macOS/Linux sidecar 保留 pnpm 相对 symlink，bundle 带单文件 tarball 并原子解压；Windows
 /// 构建期已物化成零 symlink 真目录，bundle 直接携带 `sidecar/`，从安装目录只读运行。
@@ -865,6 +884,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         Ok(p) if p.exists() => p,
         _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
     };
+    splash_status(app, "正在校验安装包完整性…");
     verify_sidecar_tarball(&tarball)?;
     let version = app.package_info().version.to_string();
     let data_dir = app
@@ -879,9 +899,14 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     } else {
         format!("sha256:{expected}")
     };
+    splash_status(
+        app,
+        "正在展开首启资源(约 1GB,5-10 分钟,仅首次启动)…",
+    );
     if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
         eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
     }
+    splash_status(app, "资源展开完成,正在启动服务…");
 
     // [T-450] tar 整体 hash 只在**解压前**校验一次(verify_sidecar_tarball);之后
     //   .tarball-stamp 复用机制让攻击者可直接 patch 已解压的 .jsc,下次启动 stamp 命中
