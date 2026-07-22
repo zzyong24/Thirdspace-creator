@@ -10,7 +10,7 @@
     "windows": {
       "nsis": {
         "compression": "zlib",
-        "installMode": "currentUser"
+        "installMode": "both"
       }
     }
   }
