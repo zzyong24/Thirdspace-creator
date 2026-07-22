@@ -86,6 +86,7 @@ import {
   ChevronRightIcon,
   Download,
   RefreshCw,
+  ExternalLink,
   FileText,
   FolderOpen,
   type LucideIcon,
@@ -1432,6 +1433,20 @@ function CheckUpdateCard() {
             检查更新
           </Button>
         </div>
+
+        {/* [T-465] 永久展示"访问官网"入口 —— 无论有没有新版,用户点击可跳产品官网看最新说明/
+              下载最新版。**永远指向 OFFICIAL_DOWNLOAD_URL 常量**(与 check-update-download
+              同源;后续官网维护更新链接,常量改一处即可)。 */}
+        <a
+          href={OFFICIAL_DOWNLOAD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-slot="check-update-official-link"
+          className="inline-flex items-center gap-1.5 self-start text-xs text-brand underline-offset-4 hover:underline"
+        >
+          <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
+          访问 CreatorOS 官网(查看最新版本与更新说明)
+        </a>
 
         {/* [T-459] 有新版:显版本号 + releaseNotes；下载入口永远固定产品官网。 */}
         {phase === "available" && available ? (

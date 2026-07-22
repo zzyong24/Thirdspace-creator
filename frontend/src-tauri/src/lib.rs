@@ -1039,6 +1039,19 @@ pub fn run() {
             .expect("建主窗口失败");
             drop(_splash_win); // 建完就释放引用,下面 line ~1530 从 handle.get_webview_window("main") 拿回 navigate。
 
+            // [T-461] **从这里起把剩余重活丢后台线程** —— 2026-07-22 真机白屏根治:
+            //   setup() 是主线程同步阻塞的,resolve_sidecar_dir 里 1GB tarball 首启解压 3-5 min,
+            //   期间 webview event loop 从未 tick → splash HTML/JS 只建了窗但完全没渲染出来(用户
+            //   看到纯白 about:blank,转圈动画都没出来)。之前 splash_status() eval JS 也因主线程
+            //   被占永远进不了事件队列。改用后台线程后:setup() 立即 Ok(()) → event loop 开跑 →
+            //   splash 立即渲染;后台线程里 splash_status 通过 run_on_main_thread 派发到主线程,
+            //   能实时更新三段文案。所有原 setup 逻辑(路径/spawn/env)照旧,只是外壳套一层 spawn。
+            let bg_app = app.handle().clone();
+            let bg_handshake_token = handshake_token.clone();
+            std::thread::spawn(move || {
+                let app = bg_app;
+                let handshake_token = bg_handshake_token;
+
             // 1) DB 落盘目录:桌面单机默认 <appDataDir>/db。resolveDbDriver 会认
             //    CREATOROS_DB_DIR(见 backend/src/db.ts §3b),我们注入它 → PGlite 落这里。
             let db_dir = app
@@ -1089,7 +1102,7 @@ pub fn run() {
             //       ③resource 目录(bundle 兜底)。
             // [T-372 L2] 入口完整性不过 → 拒绝 spawn(eprintln 人话后 panic;此刻 logger 尚未
             // 初始化,dev/终端可见;打包态 crash 报告可见 panic message。不把被篡改的 JS 跑起来)。
-            let sidecar_dir = match resolve_sidecar_dir(&app.handle()) {
+            let sidecar_dir = match resolve_sidecar_dir(&app) {
                 Ok(d) => d,
                 Err(e) => {
                     eprintln!("[shell] {e}");
@@ -1166,7 +1179,7 @@ pub fn run() {
             // T-147 P5 —— 机器指纹(multi-factor)。注入 sidecar env `CREATOROS_MACHINE_ID`,
             // node 侧 resolveMachineId 优先用它(桌面最稳);下面还注入 `CREATOROS_DESKTOP=1`
             // 作为**运行时**桌面标记(激活门只桌面拦 / web 跳的唯一判据)。
-            let machine_id = resolve_machine_id(&app.handle());
+            let machine_id = resolve_machine_id(&app);
 
             // [T-372 L2] 启动级 nonce 握手 token(loopback-guard.server.ts:18 的 follow-up 落地):
             //   Rust 每次启动随机生成 → 注入 sidecar env(guard 校验基准)+ WebView 初始化脚本
@@ -1214,7 +1227,7 @@ pub fn run() {
                 // [T-372 L3] 最近判定缓存 + 事件句柄:决策链每轮跑完广播
                 //   `creatoros://license-decision`,前端桥据此即时跳激活页/显宽限倒计时。
                 last_decision: Mutex::new(None),
-                app_handle: Some(app.handle().clone()),
+                app_handle: Some(app.clone()),
             });
             app.manage(license::LicenseState(license_ctx.clone()));
             // 启动必查一次 + [T-372 L3] 心跳循环(周期按码型:内测 60min / 买断 30 天)。
@@ -1568,7 +1581,7 @@ pub fn run() {
             //   非 about: 页面即 return 不污染)。原实现在这里才建窗 → 首启解压期间无窗口。
             // [T-457] handshake token 已在 setup 头部一并注入 initialization_script,navigate
             //   到 sidecar 页时 init_script 会重跑 → token 常驻 window。这里无需再 eval 注入。
-            let main_win = handle
+            let main_win = app
                 .get_webview_window("main")
                 .expect("[T-457] main window 缺失 —— setup 头部已建过怎会失踪?");
             std::thread::spawn(move || {
@@ -1591,6 +1604,8 @@ pub fn run() {
                     }
                     Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
                 }
+            });
+            // [T-461] 闭合后台线程(setup 头部 std::thread::spawn 的 |move|{ ... })
             });
 
             Ok(())

@@ -31,4 +31,18 @@ describe("shouldBytecode — Playwright serializable callbacks", () => {
       ),
     ).toBe(true);
   });
+
+  // [T-462] 兜底护栏:rename-only 触发一切条件 → 都不字节码。
+  //   ① 字面 require/import(rename-only 分档条件之二)。
+  //   ② requiresSerializable(第一层已挡,但这里再验兜底逻辑本身)。
+  //   防未来第一层护栏被绕(如打包后 chunk 内容漂移)时,第二层仍能兜住。
+  it("含字面 require 的 rename-only chunk 也不进 .jsc(双护栏)", () => {
+    // 含字面 require(动态 require)会被 pickPreset 判 rename-only;此时不上字节码。
+    expect(
+      shouldBytecode(
+        `require('node:fs'); export function foo(){ return 1; }`,
+        "chunks/dyn-require.js",
+      ),
+    ).toBe(false);
+  });
 });

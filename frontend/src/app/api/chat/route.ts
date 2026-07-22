@@ -390,7 +390,29 @@ export async function POST(req: Request): Promise<Response> {
               typeof (p as { type?: unknown }).type === "string" &&
               (p as { type: string }).type.startsWith("tool-"),
           );
-        if (!hasRenderable) return;
+        if (!hasRenderable) {
+          // [T-464] 空回复兜底 —— 2026-07-22 codex.hiyo.top 代理返回 200 + 空 SSE 流实证:
+          //   AI SDK onFinish 正常触发(视作"成功"),但 responseMessage 无 text 也无 tool part。
+          //   原行为:直接 return 不落库 → 用户看到"发了消息 → UI 完全无反应"(空白),分不清是
+          //   卡了/挂了/代理坏了 → 疑惑无解。改为落一条**信封提示** assistant 消息,让用户明确
+          //   "AI 未返回内容" + 建议(换模型/换 key),自诊断快。非中断轮才落(中断=用户主动停,
+          //   本就该空;只在真实"完成但空"时提示)。best-effort,不影响响应流。
+          if (!isAborted && conversationId) {
+            const hint =
+              "AI 未返回任何内容。可能的原因:①API 代理返回空流(如自建/第三方 endpoint 异常)②模型名无效(代理转发失败)③密钥被限流。建议:设置 → 模型配置 → 换一个模型或换 API 密钥,再重试。";
+            try {
+              await runtime.ai.appendAssistantMessage(
+                ctx,
+                conversationId,
+                hint,
+                [],
+              );
+            } catch (err) {
+              console.error("[api/chat] persist empty-reply hint failed:", err);
+            }
+          }
+          return;
+        }
         try {
           // [T-239e] usage 随 assistant 消息落库(有才带,没拿到 → 不带 = 列 NULL,诚实缺省);
           // 中断轮(aborted)已完成步的用量照带。opts 全空时保持 4 参调用(既有语义/测试锚定)。

@@ -258,7 +258,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
   });
 
-  it("[T-128] 纯空轮(无文本、无 tool-result 部件)→ 不落库空气泡", async () => {
+  it("[T-128/T-464] 纯空轮 → 落一条兜底提示 assistant 消息(而非静默空气泡)", async () => {
     await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
     await capturedStreamInit!.onFinish!({
       responseMessage: {
@@ -266,6 +266,24 @@ describe("POST /api/chat — 装配 + 持久化", () => {
         role: "assistant",
         parts: [{ type: "step-start" }],
       },
+    });
+    // T-464 修:非中断空轮不再 silent return,而是落一条含"AI 未返回任何内容"的信封,
+    //   让用户能看到出了啥事(codex.hiyo.top 类代理返 200 空流场景的自诊断)。
+    expect(appendAssistantMessage).toHaveBeenCalledTimes(1);
+    const args = appendAssistantMessage.mock.calls[0];
+    expect(args[2]).toContain("AI 未返回任何内容");
+    expect(args[3]).toEqual([]);
+  });
+
+  it("[T-464] 中断轮空 → 仍不落库(用户主动停,本就该空)", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    await capturedStreamInit!.onFinish!({
+      responseMessage: {
+        id: "m-x",
+        role: "assistant",
+        parts: [{ type: "step-start" }],
+      },
+      isAborted: true,
     });
     expect(appendAssistantMessage).not.toHaveBeenCalled();
   });

@@ -73,6 +73,18 @@ export function shouldBytecode(code, rel) {
   if (requiresSerializableFunctionSource(code)) return false;
   const parts = rel.split(/[\\/]/).filter(Boolean);
   const preset = pickPreset(code, rel);
+  // [T-462] 双护栏:任何 rename-only chunk 都不字节码化。**原因**:
+  //   ① rename-only 触发条件本身 = 「requiresSerializable / chunks 里含字面 require」——两者
+  //     都不适合再上字节码(前者 toString 崩,后者 require 字面量需保留字符串);
+  //   ② requiresSerializableFunctionSource 上面已 return false,理论已挡;但 2026-07-22
+  //     真机实证:GHA 打包出的 `_17k3mqw._.jsc`(1.1MB 大合并 chunk)含 .evaluate,却仍进
+  //     字节码 → 「采集收藏夹失败: Passed function is not well-serializable」。原因待精查
+  //     (chunk 内容漂移/合并?),但**兜底逻辑**很简单:preset==="rename-only" 已是 pickPreset
+  //     统一裁决"这 chunk 需保源码",直接对齐即可。防未来新的 rename-only 触发条件出现时
+  //     忘记同步更新第一层护栏(单层护栏 → 一处漏则整链崩,双层护栏 → 需两处同时漏)。
+  //   代价:极小(rename-only chunk 本就少;字节码只是 L3 反逆向加固,少几个 chunk 不影响
+  //   安全底线,大头 stringArray/rc4 加密仍在)。
+  if (preset === "rename-only") return false;
   return (
     parts.includes("chunks") &&
     (preset === "chunk-stringarray" || preset === "rename-only")
@@ -106,6 +118,9 @@ export async function runBytecode(root = SERVER_DIR) {
   const tasks = [];
   let skipped = 0;
   const failures = [];
+  // [T-462] 记录被跳过的 chunk(preset + 大小)—— 打包 log 里能一眼看到哪些 chunk 因含
+  //   可序列化 callback 而保留 JS,防"下次 evaluate 崩了不知道是不是护栏漏"。
+  const preservedForCallback = [];
   for (const { abs, rel } of toObfuscate) {
     let code;
     try {
@@ -118,9 +133,24 @@ export async function runBytecode(root = SERVER_DIR) {
       skipped++;
       continue;
     }
-    if (!shouldBytecode(code, rel)) continue;
+    if (!shouldBytecode(code, rel)) {
+      // 只对"看起来该字节码但护栏挡了"的 chunk 记录(chunks/ 下 + 有 .evaluate)。
+      const parts = rel.split(/[\\/]/).filter(Boolean);
+      if (parts.includes("chunks") && requiresSerializableFunctionSource(code)) {
+        preservedForCallback.push({ rel, size: code.length });
+      }
+      continue;
+    }
     const jscAbs = abs.replace(/\.(js|cjs)$/, ".jsc");
     tasks.push({ abs, rel, jscAbs, jscBase: basename(jscAbs) });
+  }
+  if (preservedForCallback.length > 0) {
+    console.log(
+      `[bytecode] [T-459/T-462] 保留 ${preservedForCallback.length} 个 chunk 不字节码化(含 Playwright evaluate 等可序列化 callback):`,
+    );
+    for (const { rel, size } of preservedForCallback) {
+      console.log(`[bytecode]   · ${rel} (${size} B)`);
+    }
   }
 
   const shouldSerial = process.env.CREATOROS_BYTECODE_SERIAL === "1";
