@@ -439,3 +439,40 @@ surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源
 ## DEC-018 (2026-06-24) — 真PG集成测试覆盖表选择
 
 **决策**(B 级,微调 spec):真 PG 集成抽样覆盖 `users`(identity)+`ai_tasks`+`ai_task_results`,做跨表 ownership join,而非 spec 原写的 `projects`。**理由**:projects 表 NOT-NULL 列多、构造脆;ai_tasks→ai_task_results 父子关系的 ownership 链更干净地验证"跨表所有权 + node-postgres 驱动 + 连接池"。`TEST_DATABASE_URL` gate,未设则 skip。**Status**:active。
+
+## DEC-019 (2026-07-23) — 正式支持 Responses，并保留 T-471 历史 Gate 缺口
+
+**来源与确认**：用户明确要求 CreatorOS 支持 OpenAI Responses，并以仓库同级的本地
+`Thirdspace-api`（New API fork）协议兼容为目标；2026-07-23 再次确认应按
+`product-to-code-orchestrator` 补全流程。
+
+**决策**：
+
+1. `apiFormat` 正式包含 `openai_responses`；`openai_chat` 与 Responses 显式分流，任何一侧
+   失败都不得自动降级成另一协议。
+2. 使用 Vercel AI SDK 与 Pi 已有 Responses 实现，不自研第二套工具循环。
+3. T-471 的代码提交 `94cc40bc` 保留；追溯性 SPEC 只恢复“需求→契约→实现→测试”关系，
+   不声称它在代码之前存在。
+4. 没有留下当场输出的 TDD 红测判定为 **历史 Gate FAIL（保留）**，不得补拍成 PASS。
+5. 真实 New API token + 实际模型调用会产生费用，未经用户单独授权不执行；发布前真端到端
+   保持 `RISK-011`。
+
+**影响**：FR-069、FLOW-023、API-008/009、TEST-001..008；见 CI-013 与
+`GATE-T471-RETROSPECTIVE.md`。
+**Status**：active；历史 TDD fail retained，外部付费 E2E pending。
+
+## DEC-020 (2026-07-23) — Codex/Claude 共用 product-to-code-orchestrator 入口
+
+**来源与确认**：用户指出 CreatorOS 既有交付模式由 `product-to-code-orchestrator` 管理，
+更换 Agent 宿主不应改变流程，并要求补充 `AGENTS.md`。
+
+**决策**：
+
+- `AGENTS.md` 对 Codex、Claude Code 和其他 Agent 一视同仁：先读 BACKLOG/SPEC，再加载技能、
+  校验版本、执行 stage-router，最后才可改代码。
+- BACKLOG 状态只经 `taskctl` 转换；`pmem` 仅同步项目记忆。
+- SPEC + BACKLOG 是计划，不再用 writing-plans 文档替代。
+- 历史证据不得伪造；缺失只能记 fail、pending 或用户确认的 accepted-risk。
+
+**影响**：Agent 会话入口与流程治理，不改变产品行为、数据归属或物理架构。
+**Status**：active。

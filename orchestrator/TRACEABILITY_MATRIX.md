@@ -58,6 +58,12 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 - Every release-critical journey has test or browser-validation evidence.
 - Any unimplemented confirmed requirement is listed as a gap, deferred work, or accepted risk.
 
+## T-471 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| FR-069 | FLOW-023 | PAGE-017 | API-008、API-009 | TEST-001..008 | RISK-011：代码与回归已落地；历史 TDD 红证据缺失，付费真端到端待授权 |
+
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链
@@ -85,4 +91,5 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | NONE | FLOW-017 | ENT-058, ENT-057 | PAGE-015 | NONE | NONE | PLANNED |
 | NONE | FLOW-018 | ENT-046, ENT-047, ENT-048 | PAGE-016 | NONE | NONE | PLANNED |
 | NONE | FLOW-021 | ENT-001, ENT-002, ENT-051, ENT-052, ENT-023 | PAGE-017 | NONE | NONE | PLANNED |
+| FR-069, DEC-019, RISK-011 | FLOW-023 | NONE | PAGE-017 | API-008, API-009 | TEST-001, TEST-002, TEST-003, TEST-004, TEST-005, TEST-006, TEST-007, TEST-008 | RISK |
 ```

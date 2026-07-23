@@ -62,6 +62,23 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **Residual risk**: HIGH until contract v0.3 lands and the base-module plans + fixtures are re-derived. Track
   each as it completes.
 
+## CI-013 — 模型协议枚举增加 Responses（DEC-019，2026-07-23）
+
+- **变更**：`apiFormat` 从 `anthropic | openai_chat` 扩展为
+  `anthropic | openai_chat | openai_responses`，并把 Chat/Responses 的 SDK 与 Pi 路径显式分开。
+- **上游变更**：FR-069、FLOW-023、API-008、API-009；设置模型配置 contract 与协议路由。
+- **下游失效与处置**：
+  - contract resource/operation → **已重派生并重验**（TEST-001）。
+  - settings 持久化、导入导出、解析 → **已重派生并重验**（TEST-002）。
+  - Vercel AI SDK provider factory → **已重派生并重验**（TEST-003）。
+  - Pi Agent 协议映射 → **已重派生并重验**（TEST-004）。
+  - 设置页连接测试与协议选择 → **已重派生并重验**（TEST-005/006）。
+  - desktop sidecar Pi lazy modules → **已重派生并重验**（TEST-007）。
+  - 旧研究结论“Responses 用不上” → **已标记被 T-471 SPEC 取代**。
+- **未关闭风险**：
+  - T-471 实现前红测没有可审计输出，Gate FAIL 历史保留。
+  - 真实 New API token + 实际模型 Agent 循环会产生费用，未经授权未运行（RISK-011）。
+
 ---
 
 ### How to use this file going forward

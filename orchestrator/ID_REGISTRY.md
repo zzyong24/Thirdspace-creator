@@ -203,6 +203,19 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 - IDs are stable after user confirmation; do not renumber because ordering changes.
 - Deprecated IDs remain with status `deprecated` and a replacement when applicable.
 
+## T-471 增量登记（2026-07-23）
+
+| ID | 名称 | 定义位置 |
+|---|---|---|
+| DEC-019 | Responses 协议与历史证据诚实补正 | `DECISION_LOG.md` |
+| DEC-020 | Codex/Claude 统一执行 product-to-code-orchestrator | `DECISION_LOG.md` |
+| FR-069 | 模型配置显式支持 OpenAI Responses | `docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md` |
+| FLOW-023 | 设置保存→连接测试→Agent 执行同协议 | 同上 |
+| API-008 | `settings.models.put` 保存 `openai_responses` | `contract/src/operations/settings.ts` |
+| API-009 | `settings.models.test` 探测 `/responses` | `contract/src/operations/settings.ts` |
+| TEST-001..008 | contract/持久化/SDK/Pi/连接/UI/sidecar/New API 验证 | T-471 SPEC §8 |
+| RISK-011 | 历史红测不可追溯、付费真端到端待授权 | `orchestrator/GATE-T471-RETROSPECTIVE.md` |
+
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。Source IDs 目前只挂了 PAGE→FLOW
@@ -458,4 +471,19 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | COMP-040 | component | frontend/specs/shared-components.md | NONE |
 | COMP-041 | component | frontend/specs/shared-components.md | NONE |
 | COMP-042 | component | frontend/specs/shared-components.md | NONE |
+| DEC-019 | decision | orchestrator/DECISION_LOG.md | NONE |
+| DEC-020 | decision | orchestrator/DECISION_LOG.md | NONE |
+| FR-069 | requirement | docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md | DEC-019 |
+| FLOW-023 | flow | docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md | FR-069 |
+| API-008 | api | contract/src/operations/settings.ts | FR-069 |
+| API-009 | api | contract/src/operations/settings.ts | FR-069 |
+| TEST-001 | test | contract/tests/modules/settings.test.ts | FR-069, API-008 |
+| TEST-002 | test | backend/src/modules/settings/model-config-transfer.test.ts | FR-069, API-008 |
+| TEST-003 | test | ai-worker/src/runtime/provider-factory.test.ts | FR-069 |
+| TEST-004 | test | backend/src/modules/execution/agentic/pi-engine.test.ts | FR-069 |
+| TEST-005 | test | frontend/src/server/settings-model-test-wrap.test.ts | FR-069, API-009 |
+| TEST-006 | test | frontend/src/features/settings/settings-interactive-region.test.tsx | FR-069 |
+| TEST-007 | test | frontend/scripts/desktop/build-sidecar.test.mjs | FR-069 |
+| TEST-008 | test | orchestrator/GATE-T471-RETROSPECTIVE.md | FR-069 |
+| RISK-011 | risk | orchestrator/GATE-T471-RETROSPECTIVE.md | DEC-019 |
 ```

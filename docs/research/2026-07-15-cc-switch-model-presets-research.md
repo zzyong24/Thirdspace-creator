@@ -1,5 +1,10 @@
 # 模型配置参考 CC Switch —— provider 预设目录调研(T-325)
 
+> **2026-07-23 更新**：本文关于“Responses 仅 Codex/OpenAI 专用、CreatorOS 用不上”的判断已被
+> T-471 的真实需求与实现推翻。当前真值见
+> [OpenAI Responses 协议支持 SPEC](../superpowers/specs/2026-07-23-openai-responses-protocol-design.md)；
+> `apiFormat` 现为三种，本文其余供应商预设调研仍可参考。
+>
 > 2026-07-15 · 用户要求「模型配置参考 CC Switch,适配更多模型」。核查 CC Switch 做法 + 定我们落点。
 > 结论拍板:用户(2026-07-15)。纯功能增强,不改数据归属/定位,**无需 gate**。
 

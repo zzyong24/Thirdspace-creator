@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "16-backend-tdd"        # 2026-07-05(T-145): 更新至真实 frontier;stage 分段机制已被 BACKLOG+SPEC gate 取代(见 CLAUDE.md/BACKLOG.md)
   frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
-  updated_at: "2026-07-05"
+  updated_at: "2026-07-23"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -194,6 +194,8 @@ stages:
       - existing: "contract/ package @creatoros/contract @0.4.0 on feat/service-contract"
       - existing: "docs/superpowers/specs/2026-06-21-service-contract-design.md (design)"
       - existing: "docs/superpowers/plans/2026-06-21-service-contract-15a.md (plan)"
+      - existing: "docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md (T-471 additive protocol contract)"
+      - existing: "orchestrator/GATE-T471-RETROSPECTIVE.md (retrospective gate; historical TDD fail retained)"
     notes: >
       15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):
       Zod envelope (SPEC §14) + primitives + 15 module resource DTOs + 4 page DTOs + endpoint registry
@@ -213,6 +215,7 @@ stages:
       - existing: "backend/src/ — 30 .ts files; 8 pglite-backed tests green (typecheck 0)"
       - existing: "@creatoros/ai-worker (AI execution layer, 27 tests) — DEC-009"
       - existing: "backend/TDD-PLAN.md (plan)"
+      - existing: "T-471 Responses slice commit 94cc40bc + TEST-001..008; historical red evidence unavailable"
     notes: >
       PARTIALLY DONE (DEC-011), not not-started. A real-persistence Projects slice exists and is proven:
       pglite (pure-WASM Postgres, chosen over the TDD-PLAN's Testcontainers — no Docker), Drizzle schema
@@ -396,3 +399,14 @@ open_items:
     owner: "user"
     revisit_trigger: "If the work branch merges to main, ensure orchestrator/ travels with it."
     status: "resolved"
+  - id: "OPEN-006"
+    stage: "15-service-contract / 16-backend-tdd / 17-integration-release"
+    type: "validation-finding"
+    description: >
+      T-471 OpenAI Responses code and regression coverage exist, but implementation preceded its formal SPEC:
+      no auditable pre-implementation red test output exists (retained TDD gate fail). A real New API token +
+      paid model end-to-end was not run without explicit spending authorization. See DEC-019, RISK-011 and
+      GATE-T471-RETROSPECTIVE.md.
+    owner: "user+agent"
+    revisit_trigger: "Before release: user authorizes a real New API model call, or explicitly accepts the external E2E risk."
+    status: "open"
