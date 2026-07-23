@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t471-responses-protocol @ 94cc40bc
+LAST_SYNCED: codex/t471-responses-protocol @ 706bd621
 
 ## 这是什么(定位)
 
