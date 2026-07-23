@@ -75,6 +75,10 @@ hkdf = "0.12"
 #   zeroize 注入 sidecar 后立即抹临时明文 buffer。
 secrecy = "0.8"
 zeroize = "1"
+# [T-485] sidecar.tar.gz 用 Rust 库直接解压，不再依赖用户电脑 PATH 上是否存在 `tar`。
+# 两个 crate 已在 Tauri 依赖树/Cargo.lock 中，改为直接依赖只为运行时调用。
+flate2 = "1"
+tar = "0.4"
 # [T-391 H-native] native 校验硬化:secmem-proc 反调试(harden_process 返回 Result 不 abort,静默降级);
 #   obfstr 编译期字符串/字节常量混淆(灭静态 grep 靶点)。
 secmem-proc = "0.3.8"

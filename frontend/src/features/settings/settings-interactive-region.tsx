@@ -1513,10 +1513,10 @@ function CheckUpdateCard() {
 // DiagnosticLogsCard — 诊断日志 (T-259)
 // ---------------------------------------------------------------------------
 //
-// Rust 壳把 sidecar 的 stdout/stderr 每行 tee 到 <appDataDir>/logs/sidecar.log(脱敏 + 轮转,
+// Rust 壳把 sidecar 的 stdout/stderr 每行 tee 到 <appDataDir>/logs/sidecar.log.enc(加密、脱敏 + 轮转,
 // 见 src-tauri/src/logging.rs)。本卡是**前端入口**:桌面端点「在 Finder 打开日志文件夹」→
 // fetch /api/v1/local/reveal-logs → sidecar 跑平台 `open` 命令在文件管理器打开 logs 目录,
-// 用户把 sidecar.log / sidecar.prev.log 发给开发者即可排障(真实用户撞 bug 的头号打磨)。
+// 用户把 sidecar.log.enc / sidecar.prev.log.enc 发给开发者即可排障(真实用户撞 bug 的头号打磨)。
 //
 // **只桌面态有意义**:挂载后经 isDesktopRuntimeClient() 探测;web/SSR → 显「桌面端专属」诚实
 // 空态(无入口),绝不假装能打开本机目录。SSR 首帧走空态(desktop=false),挂载后翻真(免水合漂移)。
@@ -1590,7 +1590,7 @@ function DiagnosticLogsCard() {
   }
 
   return (
-    <SectionCard title="诊断日志" description="导出运行日志用于排障">
+    <SectionCard title="诊断日志" description="打开运行日志目录用于排障">
       <div
         data-slot="diagnostic-logs-card"
         data-desktop="true"
@@ -1608,7 +1608,7 @@ function DiagnosticLogsCard() {
               运行日志
             </span>
             <span className="text-xs text-muted-foreground">
-              撞到问题时点此打开日志文件夹,把 sidecar.log 发给开发者即可定位。日志已自动脱敏。
+              撞到问题时点此打开日志文件夹,把 sidecar.log.enc 发给开发者即可定位。日志已加密并自动脱敏。
             </span>
           </div>
           <Button
@@ -1618,14 +1618,14 @@ function DiagnosticLogsCard() {
             data-slot="diagnostic-logs-action"
             disabled={state === "opening"}
             onClick={reveal}
-            title="在 Finder 打开诊断日志文件夹(sidecar.log / sidecar.prev.log)"
+            title="打开诊断日志文件夹(sidecar.log.enc / sidecar.prev.log.enc)"
           >
             {state === "opening" ? (
               <Loader2 aria-hidden="true" className="size-4 shrink-0 animate-spin" />
             ) : (
               <FolderOpen aria-hidden="true" className="size-4 shrink-0" />
             )}
-            {state === "error" ? "打开失败,重试" : "导出诊断日志"}
+            {state === "error" ? "打开失败,重试" : "打开日志目录"}
           </Button>
         </div>
       </div>

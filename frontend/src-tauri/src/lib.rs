@@ -787,20 +787,22 @@ fn extract_sidecar_tarball(
     std::fs::create_dir_all(&temp)
         .map_err(|e| format!("建 sidecar 临时解压目录失败 {}: {e}", temp.display()))?;
 
-    let mut tar_cmd = std::process::Command::new("tar");
-    tar_cmd.arg("-xzf").arg(tarball).arg("-C").arg(&temp);
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt as _;
-        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-        tar_cmd.creation_flags(CREATE_NO_WINDOW);
-    }
-    let status = tar_cmd.status();
-    if !matches!(status, Ok(s) if s.success()) {
+    // [T-485] 不调用系统 `tar`：用户机可能没有、GUI PATH 也可能找不到。Rust tar::Archive
+    // 自带路径穿越防护(unpack 内部拒绝 `..`/绝对路径)，同样保留 pnpm 相对 symlink。
+    let unpack_result = (|| -> Result<(), String> {
+        let file = std::fs::File::open(tarball)
+            .map_err(|e| format!("打开 sidecar.tar.gz 失败 {}: {e}", tarball.display()))?;
+        let decoder = flate2::read::GzDecoder::new(file);
+        let mut archive = tar::Archive::new(decoder);
+        archive
+            .unpack(&temp)
+            .map_err(|e| format!("展开 sidecar.tar.gz 失败: {e}"))
+    })();
+    if let Err(e) = unpack_result {
         let _ = std::fs::remove_dir_all(&temp);
         return Err(format!(
-            "sidecar 解压失败({status:?})，已清理临时目录；tarball={}",
-            tarball.display()
+            "sidecar 解压失败({e})，已清理临时目录；tarball={}",
+            tarball.display(),
         ));
     }
     if !temp.join("frontend").join("server.js").is_file() {
@@ -1067,6 +1069,7 @@ pub fn run() {
                 .parent()
                 .map(|p| p.to_path_buf())
                 .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
+            let app_data_dir_str = app_data_dir.to_string_lossy().to_string();
 
             // [T-332 S5] 「重置工作区」归档 —— **必须在 spawn sidecar 之前、建 db 目录之前**:
             //   此刻 PGlite 库无任何进程持有,rename 整目录才安全(设置页 route 只落标记,
@@ -1115,6 +1118,18 @@ pub fn run() {
             let server_js_str = sidecar_dir
                 .join("frontend")
                 .join("server.js")
+                .to_string_lossy()
+                .to_string();
+            // [T-485] 随包资源目录由壳层以绝对路径注入，Node 侧不再猜 process.cwd()。
+            // Finder / Windows 快捷方式启动时 cwd/PATH 都不可靠；壳层掌握真实 runtime 位置，
+            // 所以它是 bin/ 与 browsers/ 的唯一 canonical 来源。
+            let sidecar_frontend_dir = sidecar_dir.join("frontend");
+            let bundled_bin_dir_str = sidecar_frontend_dir
+                .join("bin")
+                .to_string_lossy()
+                .to_string();
+            let bundled_browsers_dir_str = sidecar_frontend_dir
+                .join("browsers")
                 .to_string_lossy()
                 .to_string();
 
@@ -1345,7 +1360,10 @@ pub fn run() {
                     .arg(&server_js_str)
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
+                    .env("CREATOROS_APP_DATA_DIR", &app_data_dir_str)
                     .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
+                    .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
                     .env("CREATOROS_DESKTOP", "1")
                     // [T-181] Skill 远程下发端点 + 验签公钥。
@@ -1453,7 +1471,10 @@ pub fn run() {
                     .args(["--use-bundled-ca", &server_js_str])
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
+                    .env("CREATOROS_APP_DATA_DIR", &app_data_dir_str)
                     .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
+                    .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
                     .env("CREATOROS_DESKTOP", "1")
                     // [T-181] Skill 远程下发端点 + 验签公钥(Win/Linux 同 macOS)。
@@ -1767,15 +1788,12 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(source.join("frontend")).unwrap();
         std::fs::write(source.join("frontend").join("server.js"), "ready").unwrap();
         let tarball = root.join("sidecar.tar.gz");
-        let status = std::process::Command::new("tar")
-            .arg("-czf")
-            .arg(&tarball)
-            .arg("-C")
-            .arg(&source)
-            .arg(".")
-            .status()
-            .unwrap();
-        assert!(status.success());
+        let file = std::fs::File::create(&tarball).unwrap();
+        let encoder =
+            flate2::write::GzEncoder::new(file, flate2::Compression::default());
+        let mut builder = tar::Builder::new(encoder);
+        builder.append_dir_all(".", &source).unwrap();
+        builder.into_inner().unwrap().finish().unwrap();
 
         let dest = root.join("runtime").join("0.1.0").join("sidecar");
         assert_eq!(

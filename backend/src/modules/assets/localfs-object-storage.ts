@@ -17,6 +17,7 @@ import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { resolveFfprobePath } from "@creatoros/ai-worker";
 import type {
   ObjectStoragePort,
   HeadObjectResult,
@@ -61,19 +62,18 @@ interface ProbedMedia {
 }
 const EMPTY_PROBE: ProbedMedia = { durationMs: null, width: null, height: null };
 
-function locateFfprobe(): Promise<string | null> {
-  return new Promise((resolve) => {
-    const cmd = process.platform === "win32" ? "where" : "which";
-    // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn console 程序会闪黑窗。
-    execFile(cmd, ["ffprobe"], { windowsHide: true }, (err, stdout) => {
-      if (err) return resolve(null);
-      const first = stdout
-        .split(/\r?\n/)
-        .map((s) => s.trim())
-        .find(Boolean);
-      resolve(first || null);
-    });
-  });
+async function locateFfprobe(): Promise<string | null> {
+  try {
+    return resolveFfprobePath();
+  } catch (err) {
+    // 元信息探针是可选增强：缺失时维持 null，但把随包损坏/显式配置错误留在诊断日志。
+    console.warn(
+      `[assets] ffprobe 不可用，媒体时长/尺寸将保持空值: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+    return null;
+  }
 }
 
 function probeMedia(ffprobe: string, absKey: string): Promise<ProbedMedia> {

@@ -45,9 +45,11 @@ export async function register(): Promise<void> {
   try {
     const path = await import("node:path");
     const fs = await import("node:fs");
-    // 打包版 server.js 从 sidecar/frontend 跑,故 process.cwd()=…/sidecar/frontend;
-    //   Chromium 实拷在其下 browsers/。dev 没有这个目录 → 跳过(留默认路径)。
-    const bundled = path.join(process.cwd(), "browsers");
+    // 正式桌面包优先用 Rust 壳注入的绝对资源目录；开发态/旧壳才回落 cwd/browsers。
+    // 目录不存在时不设置，让 Playwright 使用默认缓存或后续下载逻辑。
+    const bundled =
+      process.env.CREATOROS_BROWSERS_DIR?.trim() ||
+      path.join(process.cwd(), "browsers");
     if (fs.existsSync(bundled)) {
       process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
       // eslint-disable-next-line no-console

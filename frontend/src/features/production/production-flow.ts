@@ -72,10 +72,10 @@ export function humanizeRenderError(message: string | null): string | null {
   if (!message) return null;
   const lower = message.toLowerCase();
   if (lower.includes("ffmpeg") || lower.includes("ffprobe")) {
-    return "渲染依赖系统 ffmpeg,本机还没有安装。在终端执行 `brew install ffmpeg` 安装后,点「重试」即可继续渲染。";
+    return "CreatorOS 的随包渲染组件 ffmpeg/ffprobe 缺失或不可用。请重新安装最新版 CreatorOS 后重试；开发环境可自行安装 ffmpeg，或配置 CREATOROS_FFMPEG_PATH / CREATOROS_FFPROBE_PATH。";
   }
   if (lower.includes("chromium") || lower.includes("playwright")) {
-    return "渲染用的 Chromium 浏览器还没就绪。先到「抖音号」页触发一次扫码采集(会自动下载浏览器),或在终端执行 `npx playwright install chromium`,再点「重试」。";
+    return "CreatorOS 随包的 Chromium 浏览器缺失或不可用。请重新安装最新版 CreatorOS 后重试；开发环境可执行 `npx playwright install chromium`。";
   }
   return null;
 }

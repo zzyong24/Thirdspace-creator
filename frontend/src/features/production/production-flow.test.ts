@@ -82,10 +82,13 @@ describe("buildRenderInputs(mountAs=assetId 闭环约定)", () => {
 });
 
 describe("humanizeRenderError(环境错误人话化)", () => {
-  it("ffmpeg 缺失 → brew 安装引导", () => {
+  it("ffmpeg/ffprobe 缺失 → 桌面用户先重装随包组件", () => {
     expect(
       humanizeRenderError("渲染依赖系统 ffmpeg:未检测到,请先安装"),
-    ).toContain("brew install ffmpeg");
+    ).toContain("重新安装最新版 CreatorOS");
+    expect(
+      humanizeRenderError("渲染依赖系统 ffprobe:未检测到,请先安装"),
+    ).toContain("CREATOROS_FFPROBE_PATH");
   });
 
   it("Chromium 未就绪 → 浏览器下载引导", () => {
@@ -93,7 +96,7 @@ describe("humanizeRenderError(环境错误人话化)", () => {
       humanizeRenderError(
         "渲染用 Chromium 未就绪:请先在「采集/扫码」功能触发一次浏览器下载",
       ),
-    ).toContain("playwright install chromium");
+    ).toContain("重新安装最新版 CreatorOS");
   });
 
   it("其他错误 → null(不编造解释,保留原始错误)", () => {

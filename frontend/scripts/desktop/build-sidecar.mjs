@@ -33,8 +33,8 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { platform, arch } from "node:process";
 import { homedir } from "node:os";
-// [T-326 RT-H09] 静态 ffmpeg 拉取(缓存 + GitHub release 下载 + 冒烟),供 bundleFfmpeg 实拷进 sidecar。
-import { ensureFfmpegStatic } from "./fetch-ffmpeg.mjs";
+// [T-326/T-485] 静态 ffmpeg+ffprobe 拉取(缓存 + GitHub release 下载 + 冒烟)并实拷进 sidecar。
+import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 // [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
 import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
 
@@ -1467,52 +1467,53 @@ function ensureOnnxRuntimeDylib() {
 // [T-326 RT-H09] 把**静态** ffmpeg 实拷进 sidecar → `sidecar/frontend/bin/ffmpeg[.exe]`。
 //   为什么:douyin 抽音(douyin-cdp streamAudioFromVideo)与本地转录(whisper-local PCM 解码)
 //   此前默认硬编码 /opt/homebrew/bin/ffmpeg —— Intel Mac / Windows / 无 Homebrew 用户稳定失败。
-//   运行时已改 resolveFfmpegPath 四级解析链(ai-worker/src/runtime/ffmpeg-path.ts),其第②级
-//   约定随包位置 = `<cwd>/bin/ffmpeg`(打包版 server.js 的 cwd = sidecar/frontend,与 T-284
-//   PLAYWRIGHT_BROWSERS_PATH=<cwd>/browsers 同款约定)。本函数把它放到位。
+//   运行时统一走 executable-path 解析链；正式包由 Rust 注入 CREATOROS_BIN_DIR 的绝对路径，
+//   开发态才回落 `<cwd>/bin`。本函数把 ffmpeg/ffprobe 两个工具一起放到位。
 //   二进制源:eugeneware/ffmpeg-static release 的静态构建(fetch-ffmpeg.mjs 拉取+缓存+冒烟;
 //   **不能**拷 Homebrew ffmpeg —— 那是动态链接,无 Homebrew 的用户机 dyld 必崩,同 libnode 坑)。
-//   失败姿态(与 bundleChromiumBrowser 一致):拉不到 → warn + 跳过,不阻塞打包 —— 打包版
-//   回落解析链③(PATH/常见目录)= 依赖用户自装 ffmpeg;全 miss 时运行时诚实报错引导安装。
+//   失败姿态:任一拉不到即停止打包。视频渲染是正式功能，不能把“构建机网络失败”变成
+//   “用户机器必须碰巧装过依赖”的残缺安装包；离线构建可用两个 BUNDLE_SRC 显式逃生门。
 //   ⚠️ 许可:ffmpeg-static 是 GPL 构建,随包分发需在第三方许可声明里带 ffmpeg(GPL)条目。
-function bundleFfmpeg(triple) {
+function bundleMediaTools(triple) {
   const isWinTarget = triple.includes("windows");
   const destDir = join(SIDECAR_RUNTIME, "frontend", "bin");
-  const dest = join(destDir, isWinTarget ? "ffmpeg.exe" : "ffmpeg");
-  let src;
-  try {
-    src = ensureFfmpegStatic(triple);
-  } catch (e) {
-    console.warn(
-      `[build-sidecar] ⚠ [RT-H09] 静态 ffmpeg 未就绪(${e.message})—— 跳过随包。打包版将回落` +
-        ` resolveFfmpegPath 解析链(PATH/常见目录/env),无 ffmpeg 的用户机上转录/抽音会诚实报错引导安装。`,
-    );
-    return;
-  }
   mkdirSync(destDir, { recursive: true });
-  rmSync(dest, { force: true });
-  copyFileSync(src, dest);
-  if (!isWinTarget) chmodSync(dest, 0o755);
-  // 硬自检:实拷后必须存在;host 可跑的 target 再跑一次 -version(不容半截二进制进包 ——
-  //   教训同 playwright 自检②:只拷不验会假通过)。交叉 target 跑不动,诚实标注留待目标机验证。
-  if (!existsSync(dest)) {
-    throw new Error(`[build-sidecar] 自检失败[RT-H09]:ffmpeg 实拷后不存在(${dest})`);
-  }
   const hostTriple = targetTriple();
-  if (triple === hostTriple) {
-    const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
-    if (r.status !== 0 || !`${r.stdout}`.startsWith("ffmpeg version")) {
+  for (const [tool, ensureStatic] of [
+    ["ffmpeg", ensureFfmpegStatic],
+    ["ffprobe", ensureFfprobeStatic],
+  ]) {
+    const dest = join(destDir, isWinTarget ? `${tool}.exe` : tool);
+    let src;
+    try {
+      src = ensureStatic(triple);
+    } catch (e) {
       throw new Error(
-        `[build-sidecar] 自检失败[RT-H09]:sidecar 内 ffmpeg -version 未通过(status=${r.status})→ 不出必崩的包`,
+        `[build-sidecar] [T-485] 静态 ${tool} 未就绪，拒绝产出依赖用户环境的残缺包:` +
+          `${e.message}。离线构建请设置 CREATOROS_${tool.toUpperCase()}_BUNDLE_SRC。`,
       );
     }
-    console.log(
-      `[build-sidecar]   ✓ [RT-H09] 静态 ffmpeg 随包就绪 → sidecar/frontend/bin/(${`${r.stdout}`.split("\n")[0]})`,
-    );
-  } else {
-    console.log(
-      `[build-sidecar]   ✓ [RT-H09] 静态 ffmpeg 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证 —— 诚实标注)`,
-    );
+    rmSync(dest, { force: true });
+    copyFileSync(src, dest);
+    if (!isWinTarget) chmodSync(dest, 0o755);
+    if (!existsSync(dest)) {
+      throw new Error(`[build-sidecar] 自检失败[T-485]:${tool} 实拷后不存在(${dest})`);
+    }
+    if (triple === hostTriple) {
+      const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
+      if (r.status !== 0 || !`${r.stdout}`.startsWith(`${tool} version`)) {
+        throw new Error(
+          `[build-sidecar] 自检失败[T-485]:sidecar 内 ${tool} -version 未通过(status=${r.status})→ 不出必崩的包`,
+        );
+      }
+      console.log(
+        `[build-sidecar]   ✓ [T-485] 静态 ${tool} 随包就绪 → sidecar/frontend/bin/(${`${r.stdout}`.split("\n")[0]})`,
+      );
+    } else {
+      console.log(
+        `[build-sidecar]   ✓ [T-485] 静态 ${tool} 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证)`,
+      );
+    }
   }
 }
 
@@ -1742,7 +1743,7 @@ function main() {
 
   // [T-326 RT-H09] 静态 ffmpeg 实拷(douyin 抽音 + whisper-local 解码的运行时解析链第②级)——
   //   放打 tarball 前,让 sidecar/frontend/bin/ffmpeg 进包。拉不到 → warn 跳过(回落用户自装)。
-  bundleFfmpeg(triple);
+  bundleMediaTools(triple);
 
   // [T-413 §4 安全] 打 tarball 前脱敏构建绝对路径(server.js/manifest/.bin shim 里的用户名+布局)。
   //   放最后:确保 playwright/xenova/ffmpeg 等后续步引入的 .bin shim 也一并脱敏。

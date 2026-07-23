@@ -90,9 +90,15 @@ export {
 // douyin-cdp 抽音共用这一把(经此 index 出口跨包复用),根治硬编码 /opt/homebrew/bin/ffmpeg。
 export {
   resolveFfmpegPath,
+  resolveFfprobePath,
   FfmpegNotFoundError,
   type ResolveFfmpegPathOptions,
 } from "./runtime/ffmpeg-path";
+export {
+  resolveExecutablePath,
+  ExecutablePathConfigurationError,
+  type ResolveExecutablePathOptions,
+} from "./runtime/executable-path";
 // Fake 多模态适配器(测试支持,零成本)—— 与 createFakeAgentRunner 同类的测试用假件,经 index
 // 公开出口给消费方单测用(frontend asset.generate runner 测装配 + 异步轮询)。含 fake 异步
 // video provider(先 taskId、N 次轮询后返 bytes),坐实 [gate-F1]/[gate-F2] 的异步链路覆盖。

@@ -3,7 +3,7 @@
 //! 背景:打包 app 的 sidecar 日志此前只 `eprintln!` 给 app stderr,`open -a` 打包态
 //! 全丢 —— 真实用户撞 bug(如 favorites ZodError)开发者拿不到日志没法排障。sidecar 的
 //! stderr 管道能抓到 Next.js 未捕获错误,故在 Rust 读取循环处**同时** tee 到
-//! `appDataDir/logs/sidecar.log` 是最全的捕获点。
+//! `appDataDir/logs/sidecar.log.enc` 是最全的捕获点。
 //!
 //! 本模块提供四件事,均为可单测的纯逻辑 + 薄封装:
 //!   ① [`redact_log_line`] —— 落盘前对每行过一遍脱敏(遮机密,master key / cookie /

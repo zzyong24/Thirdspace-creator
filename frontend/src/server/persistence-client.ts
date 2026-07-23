@@ -463,6 +463,7 @@ import {
   transcribeAudio as transcribeAudioFn,
   // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
   generateImage as generateImageFn,
+  resolveExecutablePath,
   type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
@@ -9729,7 +9730,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     // [T-256a] local.tools 端口 —— 探测系统已装工具。安全铁律:工具名一律来自 local-env-probe 白名单
     // 常量(resolveToolsToProbe 已把非法/非白名单请求过滤进 rejected),用**固定 arg 数组** execFile
-    // spawn `which <name>` / `<name> --version`,绝不拼 shell 字符串。只读探测、不执行任意命令。
+    // 统一解析绝对路径后执行 `<absolute> --version`，绝不拼 shell 字符串。只读探测、不执行任意命令。
     detectTools: async (
       _ctx: RequestContext,
       input: { tools?: string[] },
@@ -9744,17 +9745,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           let installed = false;
           let path: string | null = null;
           let version: string | null = null;
-          // ① which <name>(argv,无 shell):拿到可执行路径 = 已装。
-          // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn console 程序会闪黑窗。
+          // ① 统一路径解析：显式路径 → 随包 bin → PATH → 平台常见目录。
+          // Finder/桌面快捷方式启动时 PATH 不含 Homebrew；Windows 也没有 `which`，不能再
+          // 用 shell 命令当“是否安装”的真值。
           try {
-            const { stdout } = await run("which", [spec.name], {
-              timeout: PROBE_TIMEOUT_MS,
-              windowsHide: true,
+            const found = resolveExecutablePath(spec.name, {
+              explicitEnvVar:
+                spec.name === "ffmpeg"
+                  ? "CREATOROS_FFMPEG_PATH"
+                  : spec.name === "ffprobe"
+                    ? "CREATOROS_FFPROBE_PATH"
+                    : undefined,
+              bundled: spec.name === "ffmpeg" || spec.name === "ffprobe",
+              preferredPaths:
+                spec.name === "node" ? [process.execPath] : undefined,
             });
-            const first = stdout.trim().split("\n")[0]?.trim() ?? "";
-            if (first) {
+            if (found) {
               installed = true;
-              path = first;
+              path = found;
             }
           } catch {
             installed = false;
@@ -9762,7 +9770,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // ② 已装则读版本(<name> --version,argv;name 是白名单常量,安全)。拿不到版本仍算已装。
           if (installed) {
             try {
-              const { stdout, stderr } = await run(spec.name, [...spec.versionArgs], {
+              const { stdout, stderr } = await run(path!, [...spec.versionArgs], {
                 timeout: PROBE_TIMEOUT_MS,
                 windowsHide: true,
               });

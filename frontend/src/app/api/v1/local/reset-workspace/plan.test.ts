@@ -13,6 +13,15 @@ import {
 // [T-332 S5] 「重置工作区」纯逻辑:目录解析 / 确认词 / loopback 判定。
 
 describe("resolveAppDataDir", () => {
+  it("优先使用壳层直接注入的 canonical appDataDir", () => {
+    expect(
+      resolveAppDataDir({
+        CREATOROS_APP_DATA_DIR: "/canonical/app",
+        CREATOROS_DB_DIR: "/wrong/db",
+      }),
+    ).toBe("/canonical/app");
+  });
+
   it("CREATOROS_DB_DIR 的父级 = appDataDir", () => {
     expect(resolveAppDataDir({ CREATOROS_DB_DIR: "/data/app/db" })).toBe(
       path.join("/data", "app"),

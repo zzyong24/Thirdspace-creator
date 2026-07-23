@@ -160,13 +160,15 @@ describe("createVideoRenderExecutor", () => {
     expect(steps.some((s) => s.includes("交付转码"))).toBe(true);
   });
 
-  it("ffmpeg 缺失 → 诚实报错引导 brew install ffmpeg(不静默降级)", async () => {
+  it("随包 ffmpeg/ffprobe 缺失 → 先提示重装 CreatorOS，开发态保留安装引导", async () => {
     const executor = createVideoRenderExecutor(
       fakeEngine({ ffmpegArgs: [], probed: [], rendered: [] }, { findBinary: async () => null }),
     );
     await expect(
       executor.run(sandbox, { props: props() }, runOpts([])),
-    ).rejects.toThrow(/未检测到系统 ffmpeg.*(brew install ffmpeg|apt install ffmpeg|ffmpeg\.org)/);
+    ).rejects.toThrow(
+      /随包渲染组件 ffmpeg\/ffprobe 缺失.*重新安装最新版 CreatorOS.*(brew install ffmpeg|apt install ffmpeg|ffmpeg\.org)/,
+    );
   });
 
   it("Chromium 未就绪 → 诚实报错(不偷偷下载)", async () => {

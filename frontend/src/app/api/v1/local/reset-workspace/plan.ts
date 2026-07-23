@@ -28,6 +28,9 @@ export const RESET_PENDING_MARKER = "reset-pending.json";
 export function resolveAppDataDir(
   env: Record<string, string | undefined>,
 ): string | null {
+  const appDataDir = env.CREATOROS_APP_DATA_DIR?.trim();
+  if (appDataDir) return appDataDir;
+  // 旧壳兼容：新壳直接注入 APP_DATA_DIR，不再要求各消费方从 DB 路径反推。
   const dbDir = env.CREATOROS_DB_DIR?.trim();
   if (!dbDir) return null;
   return path.dirname(dbDir);
