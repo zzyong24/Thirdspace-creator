@@ -38,7 +38,7 @@ function normalizeBasis(raw: unknown): Basis {
 }
 
 export interface ModelSpec {
-  apiFormat: "anthropic" | "openai_chat";
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   baseUrl: string | null;
   model: string;
   token: string;

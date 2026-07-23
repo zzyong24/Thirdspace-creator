@@ -1,7 +1,10 @@
 import type { RequestContext } from "@creatoros/contract";
 import { createAnthropicProvider } from "./anthropic-adapter";
 
-export type ApiFormat = "anthropic" | "openai_chat";
+export type ApiFormat =
+  | "anthropic"
+  | "openai_chat"
+  | "openai_responses";
 
 // The resolved, ready-to-call provider config (token already pulled from env).
 export interface ResolvedLlmConfig {
@@ -69,6 +72,9 @@ const DEFAULT_FACTORY: ProviderFactory = {
     // Stub: registered so the seam exists; implement when an OpenAI-compatible
     // endpoint is actually wired (cc-switch §4.2 逃生舱).
     throw new LlmNotImplementedError("openai_chat 适配器尚未实现");
+  },
+  openai_responses: () => {
+    throw new LlmNotImplementedError("openai_responses 适配器尚未实现");
   },
 };
 

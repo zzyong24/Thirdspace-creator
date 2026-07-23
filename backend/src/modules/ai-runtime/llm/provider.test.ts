@@ -28,6 +28,11 @@ describe("getLlmProvider", () => {
       getLlmProvider({ ...anthropicCfg, apiFormat: "openai_chat" }),
     ).toThrow(LlmNotImplementedError);
   });
+  it("throws LlmNotImplementedError for openai_responses (legacy seam stub)", () => {
+    expect(() =>
+      getLlmProvider({ ...anthropicCfg, apiFormat: "openai_responses" }),
+    ).toThrow(LlmNotImplementedError);
+  });
 });
 
 describe("createLlmCompleter", () => {

@@ -56,7 +56,9 @@ export const settingsOperations = {
       modelName: z.string().min(1),
       secretReference: z.string().optional(),
       baseUrl: z.string().optional(),
-      apiFormat: z.enum(["anthropic", "openai_chat"]).optional(),
+      apiFormat: z
+        .enum(["anthropic", "openai_chat", "openai_responses"])
+        .optional(),
       settings: z.record(z.string(), z.unknown()).optional(),
       isDefault: z.boolean().optional(),
       // Inline secret value — stored directly in the (local) DB. Absent or empty

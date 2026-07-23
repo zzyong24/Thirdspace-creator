@@ -317,6 +317,24 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(modelDatalistValues(doc)).toEqual([]);
   });
 
+  it("[T-471] 接口格式下拉提供 OpenAI Responses", async () => {
+    const user = userEvent.setup();
+    const doc = renderDialog();
+    const trigger = doc.querySelector(
+      '[data-slot="model-api-format-trigger"]',
+    ) as HTMLElement;
+    await user.click(trigger);
+    expect(
+      await waitFor(() => {
+        const option = Array.from(
+          document.querySelectorAll('[role="option"]'),
+        ).find((item) => item.textContent?.includes("OpenAI Responses"));
+        if (!option) throw new Error("OpenAI Responses option not mounted");
+        return option;
+      }),
+    ).not.toBeNull();
+  });
+
   it("[T-325] 已保存配置按 baseUrl/apiFormat 回显匹配预设(DeepSeek),匹配不到显示自定义", () => {
     const deepseekDoc = renderDialog({
       ...VM,

@@ -173,7 +173,7 @@ export default async function SettingsRoutePage() {
           modelName: found?.modelName ?? "",
           baseUrl: found?.baseUrl ?? "",
           hasSecret: found?.hasSecret ?? false,
-          // [T-239b] 备用对话模型卡消费(anthropic / openai_chat 分派);其它卡忽略。
+          // [T-239b/T-471] 备用对话模型卡消费三种文本协议;其它卡忽略。
           apiFormat: found?.apiFormat,
         };
       };

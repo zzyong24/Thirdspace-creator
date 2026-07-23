@@ -1174,7 +1174,7 @@ export interface ChatRuntime {
     ctx: RequestContext,
     capability: string,
   ) => Promise<{
-    apiFormat: "anthropic" | "openai_chat";
+    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
     baseUrl: string | null;
     model: string;
     token: string;
@@ -1183,7 +1183,7 @@ export interface ChatRuntime {
   // 不回退 default/env,否则「备用」会解析成主模型自己);未配/无 key → null(现状报错,诚实降级)。
   // chat-runner 在主模型流开始前可重试错误耗尽时用它接管一次。
   resolveFallbackModelSpec: (ctx: RequestContext) => Promise<{
-    apiFormat: "anthropic" | "openai_chat";
+    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
     baseUrl: string | null;
     model: string;
     token: string;
@@ -7880,7 +7880,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const resolveEmbedSpec = async (
     ctx: RequestContext,
   ): Promise<{
-    apiFormat: "anthropic" | "openai_chat";
+    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
     baseUrl: string | null;
     model: string;
     token: string;

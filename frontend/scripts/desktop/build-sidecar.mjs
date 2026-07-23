@@ -768,9 +768,10 @@ function materializeStandaloneWin() {
 //     且**共享依赖只存一份**(实测 ~90MB;若 dereference 会因逐 entry 展平既撑大体积又断传递解析链)。
 //   L3 剪枝(控体积):pi-ai 的 provider api 是 `*.lazy.js` → 运行时才动态 import 具体 provider `.js`
 //     (静态图**不**引 @aws-sdk/@google/@mistralai;装 0.80.7 现场核实)。CreatorOS 的 piApiForFormat
-//     只产 "anthropic-messages" / "openai-completions" 两种 api → bedrock/google/mistral 三个 provider
+//     只产 "anthropic-messages" / "openai-completions" / "openai-responses" 三种 api →
+//     bedrock/google/mistral 三个 provider
 //     **永不被 import**。故剪掉这三个 provider 顶包(连带其独占传递依赖 @smithy/@protobufjs/google-auth
-//     等,省 ~91MB);**openai + @anthropic-ai/sdk 必留**(两种格式各需其一,均在闭包内)。剪枝安全网 =
+//     等,省 ~91MB);**openai + @anthropic-ai/sdk 必留**(三种格式共用这两项,均在闭包内)。剪枝安全网 =
 //     下面 HARD 自检真深导入 sdk.js:若剪多了导致 import 崩,build 直接失败(不假通过)。
 function bundlePiEngine() {
   console.log("[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…");
@@ -837,19 +838,36 @@ function bundlePiEngine() {
     console.log("[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位");
   }
 
-  // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟(与 pi-engine locatePiCoreDir 同路径),
-  //   断言 createAgentSession 是函数 + ModelRegistry/AuthStorage/SessionManager 均在。这条同时验证:
+  // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟 + CreatorOS 会用的三种 wire API,
+  //   断言 createAgentSession / provider factory 都是函数。这条同时验证:
   //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
   //   假通过零容忍(教训同 playwright 自检②):import 崩则 throw,宁 build 失败也不出「点亮却失活」的包。
   const coreDir = join(destPnpm, rootEntry, "node_modules", PI_PKG, "dist", "core");
   const selfCheck = `
+    import { existsSync } from 'node:fs';
     import { pathToFileURL } from 'node:url';
     import path from 'node:path';
     const base = ${JSON.stringify(coreDir)};
     const imp = (f) => import(pathToFileURL(path.join(base, f)).href);
     const [sdk, mr, as, sm] = await Promise.all([imp('sdk.js'), imp('model-registry.js'), imp('auth-storage.js'), imp('session-manager.js')]);
-    const ok = typeof sdk.createAgentSession === 'function' && !!mr.ModelRegistry && !!as.AuthStorage && !!sm.SessionManager;
-    console.log('PI createAgentSession=' + typeof sdk.createAgentSession + ' ModelRegistry=' + !!mr.ModelRegistry + ' AuthStorage=' + !!as.AuthStorage + ' SessionManager=' + !!sm.SessionManager);
+    const packageRoot = path.dirname(path.dirname(base));
+    const apiDir = [
+      path.join(packageRoot, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'api'),
+      path.join(base, '..', '..', '..', '..', '@earendil-works', 'pi-ai', 'dist', 'api'),
+    ].find(existsSync);
+    if (!apiDir) { console.error('PI-API-DIR-MISSING'); process.exit(1); }
+    const apiImp = (f) => import(pathToFileURL(path.join(apiDir, f)).href);
+    const [responses, completions, anthropic] = await Promise.all([
+      apiImp('openai-responses.lazy.js'),
+      apiImp('openai-completions.lazy.js'),
+      apiImp('anthropic-messages.lazy.js'),
+    ]);
+    const apiOk =
+      typeof responses.openAIResponsesApi === 'function' &&
+      typeof completions.openAICompletionsApi === 'function' &&
+      typeof anthropic.anthropicMessagesApi === 'function';
+    const ok = typeof sdk.createAgentSession === 'function' && !!mr.ModelRegistry && !!as.AuthStorage && !!sm.SessionManager && apiOk;
+    console.log('PI createAgentSession=' + typeof sdk.createAgentSession + ' ModelRegistry=' + !!mr.ModelRegistry + ' AuthStorage=' + !!as.AuthStorage + ' SessionManager=' + !!sm.SessionManager + ' APIs=' + apiOk);
     if (!ok) { console.error('PI-SELFCHECK-FAIL'); process.exit(1); }
     console.log('PI-SELFCHECK-OK');
   `;

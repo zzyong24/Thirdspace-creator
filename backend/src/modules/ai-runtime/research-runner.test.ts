@@ -39,7 +39,7 @@ const EMPTY_CATEGORIES = { hooks: [], cases: [], dataPoints: [], quotes: [] };
 
 function makeDeps(
   items: MaterialItemLike[],
-  apiFormat: "anthropic" | "openai_chat" = "anthropic",
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses" = "anthropic",
 ) {
   runResearchNode.mockResolvedValue({
     items,

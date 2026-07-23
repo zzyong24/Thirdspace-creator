@@ -88,7 +88,7 @@ export interface EngineLlmResult {
  * 确定性引擎 / 测试忽略此字段(它们走 `llm` 文本端口)。
  */
 export interface RawLlmConfig {
-  apiFormat: "anthropic" | "openai_chat";
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   baseUrl: string | null;
   model: string;
   authStyle: "bearer" | "x-api-key";

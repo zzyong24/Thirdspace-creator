@@ -265,7 +265,7 @@ export interface ModelState {
   /** Custom baseUrl (relay / MiniMax); "" = official default. */
   readonly baseUrl: string;
   /** Wire/auth format. */
-  readonly apiFormat: "anthropic" | "openai_chat";
+  readonly apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   /** Masked: a secret is configured (raw value never sent to the client). */
   readonly hasSecret: boolean;
   readonly temperature: number;
@@ -308,7 +308,7 @@ export interface MultimodalModelState {
    * resolveModelSpec 按 apiFormat 分派 anthropic / OpenAI 兼容适配器;其它多模态卡的
    * 解析器按 provider 分派、忽略此字段,故可选)。
    */
-  readonly apiFormat?: "anthropic" | "openai_chat";
+  readonly apiFormat?: "anthropic" | "openai_chat" | "openai_responses";
 }
 
 export interface MultimodalModelsState {

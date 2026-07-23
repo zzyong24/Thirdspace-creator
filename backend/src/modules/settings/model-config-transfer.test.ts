@@ -59,11 +59,11 @@ describe("model config export/import (T-363)", () => {
 
   it("round-trip:导出密文不解密 → 清空后导入 → 配置与密钥完整还原", async () => {
     await service.setModelConfiguration(ctx, "default", {
-      provider: "minimax",
-      modelName: "MiniMax-M2",
+      provider: "new-api",
+      modelName: "gpt-5",
       secret: "sk-live-123",
-      baseUrl: "https://api.minimax.io/anthropic",
-      apiFormat: "anthropic",
+      baseUrl: "https://new-api.example.com/v1",
+      apiFormat: "openai_responses",
       settings: { temperature: 0.7 },
       isDefault: true,
     });
@@ -95,8 +95,9 @@ describe("model config export/import (T-363)", () => {
 
     // 配置还原;密钥经解包→重加密,内部读能拿回明文。
     const restored = await service.getModelConfig(ctx, "default");
-    expect(restored?.provider).toBe("minimax");
-    expect(restored?.baseUrl).toBe("https://api.minimax.io/anthropic");
+    expect(restored?.provider).toBe("new-api");
+    expect(restored?.baseUrl).toBe("https://new-api.example.com/v1");
+    expect(restored?.apiFormat).toBe("openai_responses");
     expect(restored?.secretValue).toBe("sk-live-123");
     const image = await service.getModelConfig(ctx, "image.generate");
     expect(image?.secretValue).toBe("sk-image-456");

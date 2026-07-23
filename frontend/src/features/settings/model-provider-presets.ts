@@ -9,13 +9,15 @@
  * —— 供应商随时可能改端点 / 上下线模型。UI 明示所有字段仍可自由编辑,预设只做
  * 「一次性填充」的起点;真正生效仍以用户粘的 key + 可改字段为准。
  *
- * apiFormat 仅两值(anthropic | openai_chat),与后端 model-config 契约一致 ——
- * 国内主流(DeepSeek / GLM / Kimi / MiniMax / 通义 / 阶跃 / 硅基流动 / 魔搭 /
- * OpenRouter / 火山)都提供其一的兼容端点;`responses` 是 Codex 专用,本产品用不
- * 上,故后端 apiFormat 枚举与 resolve.ts / provider.ts 一律不动。
+ * apiFormat 是 wire protocol,与后端 model-config 契约一致:anthropic /
+ * openai_chat / openai_responses。Responses 不再被视为 Codex 私有协议;OpenAI
+ * 官方和 New API 等中转站可直接使用 `/responses`。
  */
 
-export type PresetApiFormat = "anthropic" | "openai_chat";
+export type PresetApiFormat =
+  | "anthropic"
+  | "openai_chat"
+  | "openai_responses";
 
 export interface ModelProviderPreset {
   /** 稳定的机器 id;选中时也用作「提供商」输入框的默认填充值。 */
@@ -137,7 +139,7 @@ export const MODEL_PROVIDER_PRESETS: readonly ModelProviderPreset[] = [
   {
     id: "openai",
     label: "OpenAI 官方",
-    apiFormat: "openai_chat",
+    apiFormat: "openai_responses",
     baseUrl: "https://api.openai.com/v1",
     models: [],
   },

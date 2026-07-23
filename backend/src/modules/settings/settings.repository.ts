@@ -75,7 +75,7 @@ export interface ModelPutBody {
   // the existing stored key (a partial update never wipes it).
   secret?: string;
   baseUrl?: string;
-  apiFormat?: "anthropic" | "openai_chat";
+  apiFormat?: "anthropic" | "openai_chat" | "openai_responses";
   settings?: Record<string, unknown>;
   isDefault?: boolean;
 }

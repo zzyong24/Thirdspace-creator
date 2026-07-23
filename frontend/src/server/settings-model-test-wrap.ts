@@ -9,7 +9,8 @@ import type { RequestContext } from "@creatoros/contract";
  *
  * 探测策略(按 capability,走**现有解析链**解析已保存配置,再发最便宜的真实调用):
  *   - default / script.review(文本 LLM):resolveLlmConfig → 1 token chat 补全
- *     (anthropic → POST /v1/messages;openai_chat → POST /chat/completions)。
+ *     (anthropic → POST /v1/messages;openai_chat → POST /chat/completions;
+ *      openai_responses → POST /responses)。
  *   - chat.fallback:resolveDedicatedLlm(只认专配行,不回退主模型)→ 同上 1 token 补全。
  *   - asset.classify(视觉,OpenAI 兼容 chat):resolveMultimodal → 纯文本 1 token 补全
  *     (校验鉴权 + 模型可达;不传图,足以判连通)。
@@ -29,7 +30,7 @@ import type { RequestContext } from "@creatoros/contract";
  */
 
 export interface LlmSpecLite {
-  apiFormat: "anthropic" | "openai_chat";
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   baseUrl: string | null;
   model: string;
   authStyle: "bearer" | "x-api-key";
@@ -129,7 +130,7 @@ async function bodyHead(res: Response): Promise<string> {
   }
 }
 
-// ── 文本类 1 token 补全探测(anthropic / openai_chat 两形状)───────────────────────
+// ── 文本类 1 token 补全探测(Anthropic / Chat Completions / Responses)────────────
 async function chatProbe(
   spec: LlmSpecLite,
   fetchImpl: typeof fetch,
@@ -157,6 +158,33 @@ async function chatProbe(
       return {
         ok: false,
         detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
+      };
+    }
+    if (spec.apiFormat === "openai_responses") {
+      const url = `${trimBase(spec.baseUrl ?? OPENAI_DEFAULT)}/responses`;
+      const res = await fetchImpl(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${spec.token}`,
+        },
+        body: JSON.stringify({
+          model: spec.model,
+          input: "ping",
+          max_output_tokens: 1,
+        }),
+      });
+      if (res.ok) {
+        return { ok: true, detail: "已发 1 token Responses 真实补全,连通。" };
+      }
+      logProbeFailure(
+        "chatProbe/openai-responses",
+        res.status,
+        await bodyHead(res),
+      );
+      return {
+        ok: false,
+        detail: "连接失败:密钥、接口地址或 Responses 兼容性可能不对,请核对后重试。",
       };
     }
     const url = `${trimBase(spec.baseUrl ?? OPENAI_DEFAULT)}/chat/completions`;

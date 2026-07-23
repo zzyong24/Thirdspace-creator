@@ -57,7 +57,8 @@ export interface PiAgenticEngineDeps {
   fallback: AgenticEngine;
   /**
    * [测试用] 注入 faux streamSimple(pi-ai providers/faux)—— 不打真网络,验循环机制。
-   * production 不传:走 pi 内建 api(anthropic-messages / openai-completions,真烧用户 provider)。
+   * production 不传:走 pi 内建 api(anthropic-messages / openai-completions /
+   * openai-responses,真烧用户 provider)。
    */
   buildStreamSimple?: (llmConfig: RawLlmConfig) => unknown;
 }
@@ -80,7 +81,9 @@ export const EXCLUDED_BUILTIN_TOOLS = [
 
 /** apiFormat → pi-ai api 名。 */
 export function piApiForFormat(apiFormat: RawLlmConfig["apiFormat"]): string {
-  return apiFormat === "anthropic" ? "anthropic-messages" : "openai-completions";
+  if (apiFormat === "anthropic") return "anthropic-messages";
+  if (apiFormat === "openai_responses") return "openai-responses";
+  return "openai-completions";
 }
 
 /** 从用户 model-config 的 settings 读正数配置(缺/非法 → 兜底)。模型描述符不再硬编。 */

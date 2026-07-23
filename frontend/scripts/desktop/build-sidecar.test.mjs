@@ -5,6 +5,18 @@ import { describe, expect, it } from "vitest";
 
 import { materializeNestedEntryTree, resolveEntryPackage } from "./build-sidecar.mjs";
 
+describe("Pi 打包协议自检", () => {
+  it("覆盖 CreatorOS 会使用的 Chat / Responses / Anthropic 三种 wire API", () => {
+    const source = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "build-sidecar.mjs"),
+      "utf8",
+    );
+    expect(source).toContain("openai-responses.lazy.js");
+    expect(source).toContain("openai-completions.lazy.js");
+    expect(source).toContain("anthropic-messages.lazy.js");
+  });
+});
+
 function makeStore() {
   const root = mkdtempSync(join(tmpdir(), "creatoros-pnpm-entry-"));
   return { root, pnpm: join(root, "node_modules", ".pnpm") };

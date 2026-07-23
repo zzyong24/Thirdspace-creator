@@ -73,6 +73,28 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     expect(url).toBe("https://api.example.com/v1/chat/completions");
   });
 
+  it("openai_responses → POST /responses + Responses 请求体", async () => {
+    const deps = makeDeps({
+      resolveLlm: vi.fn(async () => ({
+        ...llmSpec,
+        apiFormat: "openai_responses" as const,
+      })),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(true);
+    expect(r.provider).toBe("openai_responses");
+
+    const [url, init] = (
+      deps.fetchImpl as ReturnType<typeof vi.fn>
+    ).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://api.example.com/v1/responses");
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      model: "test-model",
+      input: "ping",
+      max_output_tokens: 1,
+    });
+  });
+
   it("HTTP 401 → ✗ 人话提示(不泄 HTTP 码/响应体,也不说「未配置」)", async () => {
     const deps = makeDeps({
       fetchImpl: vi.fn(async () =>

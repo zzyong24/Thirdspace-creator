@@ -2028,11 +2028,12 @@ function StorageUsageCard({
 // ModelConfigurationCard
 // ---------------------------------------------------------------------------
 
-type ApiFormat = "anthropic" | "openai_chat";
+type ApiFormat = "anthropic" | "openai_chat" | "openai_responses";
 
 const API_FORMAT_OPTIONS: ReadonlyArray<{ value: ApiFormat; label: string }> = [
   { value: "anthropic", label: "Anthropic 兼容" },
   { value: "openai_chat", label: "OpenAI Chat 兼容" },
+  { value: "openai_responses", label: "OpenAI Responses" },
 ];
 
 // Free-form provider suggestions — the input is NOT restricted to these (bind any
@@ -2041,6 +2042,7 @@ const PROVIDER_SUGGESTIONS: ReadonlyArray<string> = [
   "anthropic",
   "minimax",
   "openai",
+  "new-api",
   "google",
   "deepseek",
 ];

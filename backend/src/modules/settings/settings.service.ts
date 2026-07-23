@@ -98,7 +98,7 @@ export interface ModelConfigInternal {
   provider: string;
   modelName: string;
   baseUrl: string | null;
-  apiFormat: "anthropic" | "openai_chat";
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   secretReference: string;
   secretValue: string | null;
   settings: Record<string, unknown>;
@@ -296,7 +296,11 @@ function toModelResource(
     modelName: row.modelName,
     secretReference: row.secretReference,
     baseUrl: row.baseUrl ?? null,
-    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
+    apiFormat:
+      (row.apiFormat as
+        | "anthropic"
+        | "openai_chat"
+        | "openai_responses") ?? "anthropic",
     settings: (row.settings as Record<string, unknown>) ?? {},
     isDefault: row.isDefault,
     // Masked: a usable secret is configured (stored value OR env-ref). The raw
@@ -317,7 +321,11 @@ function toModelInternal(row: ModelConfigurationRow): ModelConfigInternal {
     provider: row.provider,
     modelName: row.modelName,
     baseUrl: row.baseUrl ?? null,
-    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
+    apiFormat:
+      (row.apiFormat as
+        | "anthropic"
+        | "openai_chat"
+        | "openai_responses") ?? "anthropic",
     secretReference: row.secretReference,
     secretValue: row.secretValue ?? null,
     settings: (row.settings as Record<string, unknown>) ?? {},
@@ -535,7 +543,10 @@ export function createSettingsService(
             secret, // undefined = 保留库中已存密钥(putModel 既有语义)
             baseUrl: m.baseUrl ?? undefined,
             apiFormat:
-              m.apiFormat === "openai_chat" ? "openai_chat" : "anthropic",
+              m.apiFormat === "openai_chat" ||
+              m.apiFormat === "openai_responses"
+                ? m.apiFormat
+                : "anthropic",
             settings: m.settings,
             isDefault: m.isDefault,
           });
