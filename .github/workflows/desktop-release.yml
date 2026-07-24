@@ -174,7 +174,7 @@ jobs:
         run: |
           node --input-type=module -e '
             import { readFileSync, writeFileSync, readdirSync } from "node:fs";
-            import { mergeLatestJson } from "./frontend/scripts/desktop/release.mjs";
+            import { mergeLatestJson, validateLatestJson } from "./frontend/scripts/desktop/release.mjs";
             const files = readdirSync("artifacts").filter(f => /^latest-.*\.json$/.test(f));
             if (files.length === 0) { console.error("无 latest-*.json"); process.exit(1); }
             let merged = null;
@@ -182,6 +182,8 @@ jobs:
               const one = JSON.parse(readFileSync(`artifacts/${f}`, "utf8"));
               merged = merged ? mergeLatestJson(merged, one) : one;
             }
+            const validation = validateLatestJson(merged);
+            if (!validation.ok) { console.error(validation.error); process.exit(1); }
             writeFileSync("artifacts/latest.json", JSON.stringify(merged, null, 2));
             console.log("合并平台:", Object.keys(merged.platforms).join(", "));
           '

@@ -3,7 +3,13 @@
 // (buildLatestJson 纯函数一并覆盖,保 latest.json 结构与 Tauri updater 约定一致。)
 
 import { describe, it, expect } from "vitest";
-import { resolveUpdateBaseUrl, buildLatestJson, mergeLatestJson } from "./release.mjs";
+import {
+  resolveUpdateBaseUrl,
+  buildLatestJson,
+  mergeLatestJson,
+  updaterArtifactFileName,
+  validateLatestJson,
+} from "./release.mjs";
 
 describe("resolveUpdateBaseUrl(ENG-H03:占位/缺失硬失败)", () => {
   it("未设 CREATOROS_UPDATE_BASE_URL → 失败(不再默认占位成功)", () => {
@@ -114,6 +120,57 @@ describe("buildLatestJson(latest.json 结构)", () => {
         "darwin-aarch64": { signature: "sig==", url: "https://cdn.example.com/app.tar.gz" },
       },
     });
+  });
+});
+
+describe("updaterArtifactFileName(跨平台 updater 文件名)", () => {
+  it("从 Windows runner 绝对路径提取纯文件名", () => {
+    expect(
+      updaterArtifactFileName(
+        "D:\\a\\Thirdspace-creator\\Thirdspace-creator\\frontend\\src-tauri\\target\\release\\bundle\\nsis\\CreatorOS_0.1.0_x64-setup.exe",
+      ),
+    ).toBe("CreatorOS_0.1.0_x64-setup.exe");
+  });
+
+  it("从 POSIX 绝对路径提取纯文件名", () => {
+    expect(
+      updaterArtifactFileName(
+        "/Users/runner/work/Thirdspace-creator/frontend/src-tauri/target/release/bundle/macos/CreatorOS.app.tar.gz",
+      ),
+    ).toBe("CreatorOS.app.tar.gz");
+  });
+});
+
+describe("validateLatestJson(updater 下载地址门禁)", () => {
+  it("拒绝混入 Windows runner 绝对路径的 URL", () => {
+    const latest = buildLatestJson({
+      version: "0.1.0",
+      signature: "sig",
+      url: "https://github.com/acme/app/releases/download/v0.1.0/D:\\a\\repo\\CreatorOS-setup.exe",
+      target: "windows-x86_64",
+    });
+    expect(validateLatestJson(latest)).toEqual({
+      ok: false,
+      error: expect.stringMatching(/windows-x86_64.*反斜杠/),
+    });
+  });
+
+  it("接受双平台 HTTPS 纯文件名 URL", () => {
+    const latest = mergeLatestJson(
+      buildLatestJson({
+        version: "0.1.0",
+        signature: "mac-sig",
+        url: "https://github.com/acme/app/releases/download/v0.1.0/CreatorOS.app.tar.gz",
+        target: "darwin-aarch64",
+      }),
+      buildLatestJson({
+        version: "0.1.0",
+        signature: "win-sig",
+        url: "https://github.com/acme/app/releases/download/v0.1.0/CreatorOS_0.1.0_x64-setup.exe",
+        target: "windows-x86_64",
+      }),
+    );
+    expect(validateLatestJson(latest)).toEqual({ ok: true });
   });
 });
 

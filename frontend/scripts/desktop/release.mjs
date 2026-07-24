@@ -67,6 +67,21 @@ export function findUpdaterArtifact(bundleDir = BUNDLE_DIR) {
   return null;
 }
 
+/**
+ * 从 updater 产物路径提取文件名。
+ * 不能依赖当前进程的平台分隔符：CI 产物路径可能来自 Windows，也可能在其它平台被二次合并。
+ */
+export function updaterArtifactFileName(artifactPath) {
+  const fileName = String(artifactPath)
+    .split(/[\\/]/)
+    .filter(Boolean)
+    .pop();
+  if (!fileName) {
+    throw new Error(`updater 产物路径缺少文件名:${artifactPath}`);
+  }
+  return fileName;
+}
+
 /** 构造 latest.json 内容(纯函数,便于测)。 */
 export function buildLatestJson({ version, signature, url, notes = "", pubDate = new Date().toISOString(), target }) {
   return {
@@ -98,6 +113,47 @@ export function mergeLatestJson(existing, next) {
     ...next,
     platforms: { ...(existing.platforms ?? {}), ...next.platforms },
   };
+}
+
+/**
+ * 校验 updater 清单中的平台下载地址，防止 CI runner 绝对路径被当作文件名拼进 URL。
+ *
+ * @param {{platforms?:Record<string,{signature?:string,url?:string}>}} latest
+ * @returns {{ok:true}|{ok:false,error:string}}
+ */
+export function validateLatestJson(latest) {
+  if (!latest || typeof latest !== "object" || !latest.platforms || typeof latest.platforms !== "object") {
+    return { ok: false, error: "latest.json 缺少 platforms" };
+  }
+  const entries = Object.entries(latest.platforms);
+  if (entries.length === 0) {
+    return { ok: false, error: "latest.json platforms 为空" };
+  }
+  for (const [target, entry] of entries) {
+    const url = entry?.url;
+    if (typeof url !== "string" || !url.trim()) {
+      return { ok: false, error: `${target} 缺少 updater URL` };
+    }
+    if (/\\|%5c/i.test(url)) {
+      return { ok: false, error: `${target} updater URL 含反斜杠，疑似混入 runner 绝对路径:${url}` };
+    }
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return { ok: false, error: `${target} updater URL 非法:${url}` };
+    }
+    if (parsed.protocol !== "https:") {
+      return { ok: false, error: `${target} updater URL 必须使用 https:${url}` };
+    }
+    if (!parsed.pathname.split("/").filter(Boolean).pop()) {
+      return { ok: false, error: `${target} updater URL 缺少产物文件名:${url}` };
+    }
+    if (typeof entry?.signature !== "string" || !entry.signature.trim()) {
+      return { ok: false, error: `${target} 缺少 updater 签名` };
+    }
+  }
+  return { ok: true };
 }
 
 // ── [T-326 ENG-H03] updater base URL 解析 + 校验(纯函数,便于单测)─────────────
@@ -202,7 +258,7 @@ function main() {
     process.exit(1);
   }
   const signature = readFileSync(found.sig, "utf8").trim();
-  const artifactName = found.artifact.split("/").pop();
+  const artifactName = updaterArtifactFileName(found.artifact);
   const url = `${resolved.baseUrl}/${artifactName}`;
 
   // 3) 生成/更新 latest.json。[T-372 §11.2-5] 同版本已有文件(另一平台先打)→ platforms 合并,
@@ -217,6 +273,11 @@ function main() {
     }
   }
   const latest = mergeLatestJson(existing, buildLatestJson({ version, signature, url, target }));
+  const latestValidation = validateLatestJson(latest);
+  if (!latestValidation.ok) {
+    console.error(`[release] ✗ ${latestValidation.error}`);
+    process.exit(1);
+  }
   writeFileSync(latestPath, JSON.stringify(latest, null, 2) + "\n", "utf8");
   console.log(`\n[release] ✅ latest.json 已生成: ${latestPath}`);
   console.log(`[release]   version=${version} · target=${target}`);
