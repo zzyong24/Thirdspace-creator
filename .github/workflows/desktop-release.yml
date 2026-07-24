@@ -9,10 +9,11 @@
 # 偏离 SPEC §12 已论证:mac x86_64 不出——GitHub 托管 Intel runner 已退役,交叉编译
 # 会产出错架构原生依赖(better-sqlite3 等);Intel Mac 内测覆盖列遗留。
 #
-# [T-396c] 分发模型已渠道化(SPEC 2026-07-18 channel-links §6):客户端 updater endpoint
-# 已摘除,更新 = 「版本检查(activation-manager latest-version 端点)+ 跳渠道 downloadUrl
-# (飞书/网盘)」。本 workflow 产物**只供内部取用**(artifact / draft release),latest.json
-# 仅内部记录不再被客户端拉取;minisign/createUpdaterArtifacts 签名链保留 = 可逆开关。
+# [T-396c/T-492] 分发模型已渠道化(SPEC 2026-07-18 channel-links §6):客户端 updater
+# endpoint 已摘除,更新 = 「版本检查(activation-manager latest-version 端点)+ 跳渠道
+# downloadUrl(飞书/网盘)」。release.mjs 仍在构建链内部生成并校验 updater 产物,但用户下载
+# artifact / draft release 只上传可双击安装的 DMG 或 setup.exe,不再重复上传 updater 包、
+# minisign 签名或 latest.json。
 # **发布动作 = 手动传安装包到各渠道飞书/网盘 + activation-manager 后台更新
 # latestVersion/releaseNotes 与各渠道 downloadUrl**(全流程见 docs/RELEASING.md)。
 name: desktop-release
@@ -141,15 +142,12 @@ jobs:
           echo "$found"
           test -n "$found" || { echo "::error::未找到 updater 产物/.sig"; exit 1; }
 
-      - name: 收集产物
+      - name: 收集用户安装包(T-492)
         run: |
-          mkdir -p dist-upload
-          find frontend/src-tauri/target/release/bundle \
-            \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.msi" -o -name "*-setup.exe" \
-               -o -name "*.msi.zip" -o -name "*.nsis.zip" -o -name "*.sig" -o -name "latest.json" \) \
-            -exec cp {} dist-upload/ \;
-          # latest.json 按端改名,merge job 汇总时不互相覆盖
-          mv dist-upload/latest.json "dist-upload/latest-${{ matrix.updater_target }}.json"
+          node frontend/scripts/desktop/collect-user-installers.mjs \
+            "${{ matrix.updater_target }}" \
+            frontend/src-tauri/target/release/bundle \
+            dist-upload
           ls -la dist-upload/
 
       - uses: actions/upload-artifact@v4
@@ -158,46 +156,26 @@ jobs:
           path: dist-upload/
           if-no-files-found: error
 
-  merge-latest:
+  draft-release:
     needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
-      - name: 合并双端 latest.json(复用 release.mjs mergeLatestJson)
-        run: |
-          node --input-type=module -e '
-            import { readFileSync, writeFileSync, readdirSync } from "node:fs";
-            import { mergeLatestJson, validateLatestJson } from "./frontend/scripts/desktop/release.mjs";
-            const files = readdirSync("artifacts").filter(f => /^latest-.*\.json$/.test(f));
-            if (files.length === 0) { console.error("无 latest-*.json"); process.exit(1); }
-            let merged = null;
-            for (const f of files) {
-              const one = JSON.parse(readFileSync(`artifacts/${f}`, "utf8"));
-              merged = merged ? mergeLatestJson(merged, one) : one;
-            }
-            const validation = validateLatestJson(merged);
-            if (!validation.ok) { console.error(validation.error); process.exit(1); }
-            writeFileSync("artifacts/latest.json", JSON.stringify(merged, null, 2));
-            console.log("合并平台:", Object.keys(merged.platforms).join(", "));
-          '
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: latest-json-merged
-          path: artifacts/latest.json
-
       - name: 建 draft Release 挂产物(仅 tag 触发;draft 等人工检查后 publish)
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          unexpected=$(find artifacts -type f ! -name '*.dmg' ! -name '*-setup.exe' -print)
+          if [ -n "$unexpected" ]; then
+            echo "::error::用户 Release 混入非安装包:$unexpected"
+            exit 1
+          fi
           tag="${GITHUB_REF#refs/tags/}"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "内测构建(未 OS 签名,signed:false;updater 已 minisign 签名)"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
           gh release upload "$tag" artifacts/* --clobber
