@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
-| T-489 | Windows updater `latest.json` 下载 URL 混入 runner 绝对路径【bug·桌面发布·CI 2026-07-23】 | 🔨 待办 | [详情](docs/tasks/T484.md#t-489) | 发布实物审计发现 `D:\a\...setup.exe` 被直接拼入 GitHub Release URL；须跨平台提取纯文件名并用 Windows 路径红测锁定。 |
+| T-489 | Windows updater `latest.json` 下载 URL 混入 runner 绝对路径【bug·桌面发布·CI 2026-07-23】 | ✅ 待办 | [详情](docs/tasks/T484.md#t-489) | 发布实物审计发现 `D:\a\...setup.exe` 被直接拼入 GitHub Release URL；须跨平台提取纯文件名并用 Windows 路径红测锁定。 |
 | T-488 | 抖音已在“网站登录保管库”登录，Copilot 读取视频仍返回 `needLogin`【bug·网页登录态·用户 2026-07-23】 | ✅ 待办（用户已恢复） | [详情](docs/tasks/T484.md#t-488) | 用户已确认内容雷达 UI，要求恢复排查与修复。 |
 | T-487 | 合并 T-454 等桌面打包欠债：借鉴 skills-manager/Tauri 官方实践，统一跨… | ⏸️ 阻塞/搁置 | [详情](docs/tasks/T484.md#t-487) | 满足恢复条件后继续。 |
 | T-482 | 将现有「信号源」重构为定位→内容雷达(对标监控)→选题的内容情报工作区【产品方向·用户 2026-… | ✅ 进行中 | [详情](docs/tasks/T484.md#t-482) | 验收须覆盖：分享链接单条建档（零自动转写）→手动转写→结构拆解→选题→Project 证据透传。 |
