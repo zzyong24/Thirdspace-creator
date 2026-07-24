@@ -1541,7 +1541,7 @@ function main() {
       console.log(
         "[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。",
       );
-      // mac/Linux 从当前(已混淆的)sidecar/ 重打 tarball；Windows 直接 bundle 展开目录。
+      // 从当前（已混淆的）sidecar/ 重打全平台共用 tarball。
       packSidecarTarball();
       return;
     }

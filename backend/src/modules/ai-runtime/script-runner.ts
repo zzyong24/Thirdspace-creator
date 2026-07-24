@@ -5,6 +5,10 @@ import {
   assembleCreativeContext,
   type ContextDeps,
 } from "./creative-context";
+import {
+  formatErrorDiagnostic,
+  safeErrorMessage,
+} from "./error-diagnostics";
 
 export type { ScriptShot };
 
@@ -113,6 +117,10 @@ export async function runScriptDraft(
     // Vercel AI SDK 路径:解析 model(按 capability) + 跑 ai-worker 写文案节点(外置 script.draft 模板),
     // 步骤事件落 ai_task_steps(窗口步骤日志)。弃旧 LlmCompleter。
     const spec = await deps.resolveModelSpec(ctx, "script.draft");
+    console.info(
+      `[script-runner] task=${task.id} capability=script.draft apiFormat=${spec.apiFormat} ` +
+        `model=${spec.model} endpoint=${spec.baseUrl ? "custom" : "official"}`,
+    );
     const { modelFor, runScriptNode } = await import("@creatoros/ai-worker");
     const { shots } = await runScriptNode({
       model: modelFor(spec),
@@ -181,12 +189,15 @@ export async function runScriptDraft(
       },
     });
   } catch (err) {
+    const failureMessage = safeErrorMessage(err);
     try {
-      await deps.ai.cancelTask(ctx, task.id);
+      await deps.ai.cancelTask(ctx, task.id, failureMessage);
     } catch {
       /* already terminal */
     }
     // eslint-disable-next-line no-console
-    console.error(`[script-runner] draft failed for task ${task.id}:`, err);
+    console.error(
+      `[script-runner] draft failed task=${task.id} ${formatErrorDiagnostic(err)}`,
+    );
   }
 }

@@ -13,8 +13,33 @@ import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
  * 数组→抛「未产出可解析选题」→任务 cancelled)。**顶层是对象**(topics 数组包一层,generateObject 要
  * 顶层对象、不能裸数组);字段各 .default 让缺字段也过校验;runner 侧 normalizeTopics 再滤空/兜底。
  */
+export const TOPIC_TITLE_MAX_CHARS = 120;
+
+const STRUCTURED_FIELD_IN_TITLE =
+  /(?:^|[{"',;])\s*\\?["']?(?:angle|contentRole|source|predictedScore|reason|sourceComments)\\?["']?\s*:/i;
+
+/**
+ * [T-472] 生成标题语义守卫。MiniMax 偶发把后续 JSON 字段吞进 title 字符串，形状仍是
+ * string，旧 schema 会误放行。这里拒绝已知结构字段泄漏、代码块和超长正文，让
+ * runStructuredNode 走既有 schema 重试；不截断，因为截断会把污染结果伪装成正常标题。
+ */
+export function isValidGeneratedTopicTitle(title: string): boolean {
+  const value = title.trim();
+  if (!value) return true; // 缺标题仍由 normalizeTopics/空结果门统一处理。
+  return (
+    value.length <= TOPIC_TITLE_MAX_CHARS &&
+    !value.includes("```") &&
+    !STRUCTURED_FIELD_IN_TITLE.test(value)
+  );
+}
+
 export const topicItemSchema = z.object({
-  title: z.string().default(""),
+  title: z
+    .string()
+    .default("")
+    .refine(isValidGeneratedTopicTitle, {
+      message: `标题不得混入 JSON 字段或超过 ${TOPIC_TITLE_MAX_CHARS} 字`,
+    }),
   angle: z.string().default(""),
   contentRole: z.string().default(""),
   source: z.string().default("trend"),

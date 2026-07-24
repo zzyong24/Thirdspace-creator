@@ -195,6 +195,7 @@ stages:
       - existing: "docs/superpowers/specs/2026-06-21-service-contract-design.md (design)"
       - existing: "docs/superpowers/plans/2026-06-21-service-contract-15a.md (plan)"
       - existing: "docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md (T-471 additive protocol contract)"
+      - existing: "docs/superpowers/specs/2026-07-23-content-radar-service-contract.md (T-482 content intelligence contract; confirmed 2026-07-23)"
       - existing: "orchestrator/GATE-T471-RETROSPECTIVE.md (retrospective gate; historical TDD fail retained)"
     notes: >
       15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):

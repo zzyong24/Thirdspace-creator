@@ -10,18 +10,20 @@
 //   mid   :digg ≥ 500 且 fans ≤ 3w —— 中等信号。
 // 时间窗:发布距 now ≤ windowHours(默认 48h)才算(跟拍时效的硬边界);createTime 缺失(0/负)
 //   → 视为窗口外(诚实:不知道多新就不当黑马,不编)。
-// 排序:赞粉比降序优先(信号最强),同赞粉比按点赞降序;取 top perKeywordLimit(默认 5)。
+// 排序:档位 strong→niche→mid、非空赞粉比降序、点赞降序、发布时间降序、item id
+//   升序;取 top perKeywordLimit(默认 5)。
 //
 // 纯函数、无 IO、无 Date(now 由调用方传入)—— 与 detectViral 同款铁律:黑马判定是确定性
-//   统计,绝不调 LLM。fans=0 时赞粉比分母兜 1(同 darkhorse.py 的 max(fans,1))。
+//   统计,绝不调 LLM。fans=null 是未知并排除；fans=0 是已知零粉，赞粉比为 null，只能走
+//   strong/mid 的绝对点赞+粉丝上限分支，不能制造无穷赞粉比。
 
 export interface DarkhorseInputVideo {
   awemeId: string;
   diggCount: number;
-  /** 作者粉丝数(赞粉比分母;缺失按 0 兜 1 处理)。 */
-  authorFollowerCount: number;
-  /** 作品发布时间(unix 秒,抖音原值)。0/负 = 未知 → 视为窗口外。 */
-  createTime: number;
+  /** 作者粉丝数(赞粉比分母);null = 未知，0 = 平台明确返回零粉。 */
+  authorFollowerCount: number | null;
+  /** 作品发布时间(unix 秒,抖音原值)。null/0/负 = 未知 → 视为窗口外。 */
+  createTime: number | null;
 }
 
 /** 命中档位:strong 强信号 / niche 垂类 / mid 中等(darkhorse.py 三档)。 */
@@ -30,8 +32,8 @@ export type DarkhorseTier = "strong" | "niche" | "mid";
 export interface DarkhorseVerdict {
   awemeId: string;
   tier: DarkhorseTier;
-  /** 赞粉比 = digg / max(fans, 1)(黑马核心信号;落库进 viral_multiple)。 */
-  likeFollowerRatio: number;
+  /** 赞粉比；粉丝数为 0 时为 null，绝不伪造无限或以 1 为分母。 */
+  likeFollowerRatio: number | null;
   /** 发布距 now 的小时数(诊断/展示「N 小时前发」)。 */
   ageHours: number;
 }
@@ -79,19 +81,27 @@ export function detectDarkhorse(
   const out: DarkhorseVerdict[] = [];
   for (const v of videos) {
     // 时间窗:createTime 缺失(≤0)→ 不知道多新 → 诚实排除(黑马的价值就在「新」)。
-    if (v.createTime <= 0) continue;
+    if (v.createTime === null || v.createTime <= 0) continue;
+    if (v.authorFollowerCount === null) continue;
     const ageHours = (nowSec - v.createTime) / 3600;
     if (ageHours < 0 || ageHours > o.windowHours) continue;
 
     const digg = v.diggCount;
     const fans = v.authorFollowerCount;
-    const ratio = digg / Math.max(fans, 1); // fans=0 兜 1(同 darkhorse.py)
+    const ratio = fans > 0 ? digg / fans : null;
 
     // 三档判据(strong 优先归档 —— 命中多档取信号最强的档)。
     let tier: DarkhorseTier | null = null;
-    if (digg >= o.strongMinDigg && (fans <= o.strongMaxFans || ratio >= 1)) {
+    if (
+      digg >= o.strongMinDigg &&
+      (fans <= o.strongMaxFans || (ratio !== null && ratio >= 1))
+    ) {
       tier = "strong";
-    } else if (digg >= o.nicheMinDigg && ratio >= o.nicheMinRatio) {
+    } else if (
+      digg >= o.nicheMinDigg &&
+      ratio !== null &&
+      ratio >= o.nicheMinRatio
+    ) {
       tier = "niche";
     } else if (digg >= o.midMinDigg && fans <= o.midMaxFans) {
       tier = "mid";
@@ -101,16 +111,30 @@ export function detectDarkhorse(
     out.push({
       awemeId: v.awemeId,
       tier,
-      likeFollowerRatio: Math.round(ratio * 10) / 10, // 一位小数(同 darkhorse.py round(...,1))
+      likeFollowerRatio:
+        ratio === null ? null : Math.round(ratio * 10) / 10,
       ageHours: Math.round(ageHours * 10) / 10,
     });
   }
-  // 赞粉比优先(信号最强),同比看点赞(需回查原 digg —— 用 map 保确定性)。
-  const diggById = new Map(videos.map((v) => [v.awemeId, v.diggCount]));
+  const byId = new Map(videos.map((video) => [video.awemeId, video]));
+  const tierRank: Record<DarkhorseTier, number> = {
+    strong: 0,
+    niche: 1,
+    mid: 2,
+  };
   out.sort(
-    (a, b) =>
-      b.likeFollowerRatio - a.likeFollowerRatio ||
-      (diggById.get(b.awemeId) ?? 0) - (diggById.get(a.awemeId) ?? 0),
+    (a, b) => {
+      const aVideo = byId.get(a.awemeId);
+      const bVideo = byId.get(b.awemeId);
+      return (
+        tierRank[a.tier] - tierRank[b.tier] ||
+        (b.likeFollowerRatio ?? Number.NEGATIVE_INFINITY) -
+          (a.likeFollowerRatio ?? Number.NEGATIVE_INFINITY) ||
+        (bVideo?.diggCount ?? 0) - (aVideo?.diggCount ?? 0) ||
+        (bVideo?.createTime ?? 0) - (aVideo?.createTime ?? 0) ||
+        a.awemeId.localeCompare(b.awemeId)
+      );
+    },
   );
   return out.slice(0, o.perKeywordLimit);
 }

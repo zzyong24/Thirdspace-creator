@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
-import type { RequestContext } from "@creatoros/contract";
+import { ErrorCode, type RequestContext } from "@creatoros/contract";
 import {
   createCandidateService,
   type CandidateService,
@@ -97,6 +97,27 @@ describe("candidate service", () => {
     expect(ports.positioning.evaluateFit).toHaveBeenCalledOnce();
   });
 
+  it("[T-472] 落库域拒绝吞入 JSON 字段或超长正文的污染标题", async () => {
+    await expect(
+      svc.createCandidate(ctx, {
+        title:
+          'AI 选题";"contentRole":"trust","source":"demand","predictedScore":88',
+      }),
+    ).rejects.toMatchObject({ code: ErrorCode.ValidationError });
+    await expect(
+      svc.createFromAIResult(ctx, {
+        aiTaskId: "ait-polluted",
+        resultType: "candidate",
+        resultData: {
+          title: "大段正文".repeat(40),
+          source: "trend",
+        },
+      }),
+    ).rejects.toMatchObject({ code: ErrorCode.ValidationError });
+    const list = await svc.listCandidates(ctx, { limit: 100, offset: 0 });
+    expect(list.rows).toHaveLength(0);
+  });
+
   it("createCandidate(idea) has null positioningFit when the gate port is absent (soft dep)", async () => {
     const noGate = makeService(db, ports, { withPositioning: false });
     const c = await noGate.createCandidate(ctx, { title: "无门禁选题", angle: "" });
@@ -126,6 +147,29 @@ describe("candidate service", () => {
     expect(c.card.contentStructure).toEqual([]);
     expect(c.card.audiencePainScore).toBeNull();
     expect(c.card.productionDifficulty).toBeNull();
+  });
+
+  it("[T-482] intelligence 候选持久化原视频来源，后续补全整卡不得抹掉", async () => {
+    const sourceReference = {
+      kind: "original_video" as const,
+      platform: "douyin",
+      label: "原视频",
+      url: "https://www.douyin.com/video/7350000000000000000",
+      intelligenceItemId: "item-1",
+    };
+    const c = await svc.createCandidate(ctx, {
+      title: "来自内容雷达的选题",
+      angle: "换成本账号视角",
+      source: "benchmark",
+      sourceReferences: [sourceReference],
+    });
+    expect(c.card.sourceReferences).toEqual([sourceReference]);
+
+    const enriched = await svc.enrichCard(ctx, c.id, {
+      oneLiner: "补全后的一句话选题",
+      contentStructure: ["钩子", "论证", "结尾"],
+    });
+    expect(enriched.card.sourceReferences).toEqual([sourceReference]);
   });
 
   it("enrichCard cleans + replaces the stored card (topic.enrich confirm seam)", async () => {
@@ -424,10 +468,10 @@ describe("candidate service", () => {
     expect(f.enriching).toBe(1); // 待补充 — pool, enriched card
     expect(f.promoted).toBe(1); // 已立项 — one promotion
     expect(f.dropped).toBe(1); // 已丢弃 — one dropped
-    // 来源: comment count is real; 手动灵感 counts idea candidates (all created here).
+    // 来源:comment count is real；「手动灵感」是当前选题投影，只数仍在 pool 的 idea。
     const s = Object.fromEntries(ov.sources.map((x) => [x.key, x.count]));
     expect(s.comment).toBe(1);
-    expect(s.idea).toBeGreaterThanOrEqual(3);
+    expect(s.idea).toBe(2);
     expect(ov.sources).toHaveLength(7);
     // SOFT cross-module deps are unwired here → honest 0/"".
     expect(ov.basis.knowledgeCards).toBe(0);

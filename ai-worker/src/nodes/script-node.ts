@@ -144,10 +144,12 @@ export function parseShots(text: string): ScriptShot[] {
 export async function runScriptNode(
   input: RunScriptNodeInput,
 ): Promise<RunScriptNodeResult> {
-  const { object } = await runStructuredNode<{ shots: ScriptShot[] }>({
-    model: input.model,
-    template: SCRIPT_DRAFT_TEMPLATE,
-    facets: {
+  let object: { shots: ScriptShot[] };
+  try {
+    ({ object } = await runStructuredNode<{ shots: ScriptShot[] }>({
+      model: input.model,
+      template: SCRIPT_DRAFT_TEMPLATE,
+      facets: {
       positioning:
         input.positioningBrief ||
         "（创作者尚未设置定位——按通用爆款逻辑写脚本）",
@@ -205,9 +207,21 @@ export async function runScriptNode(
       assetsLibrary: input.assetsBrief
         ? `\n【项目素材库（visual.assetRefs 可点名的真实素材清单，每行: assetId | 名称 (类型)）】\n${input.assetsBrief}`
         : "",
-    },
-    maxRetries: input.maxRetries,
-  });
+      },
+      maxRetries: input.maxRetries,
+    }));
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.startsWith("结构化节点:")
+    ) {
+      throw new Error(
+        "script-node: agent 未产出可解析分镜（结构校验与重试均失败）",
+        { cause: err },
+      );
+    }
+    throw err;
+  }
   // schema 让缺字段落成空串,故这里 trim + 滤掉三主字段全空的空镜(不摆空格子)。
   // [T-387b] visual 归一:trim、滤空串;三段全空 → 不带字段(与「模型没产」同义,诚实缺省)。
   const shots: ScriptShot[] = (object.shots ?? [])

@@ -14,7 +14,8 @@ import { AUDIENCE_MINDSET_CLAUSE } from "../grounding-facets";
  * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
  * 让用户默认的 MiniMax 也稳定吐可解析多平台草稿(旧 runTemplatedNode 自由文本路径 MiniMax 下常吐
  * 不出→parsePlatformDrafts 返回空→任务 cancelled)。**顶层是对象**(drafts 数组包一层)——
- * generateObject 要顶层对象、裸数组在部分 provider 不可靠。字段各给默认值让缺字段也过校验。
+ * generateObject 要顶层对象、裸数组在部分 provider 不可靠。发布简介 body 是成功物料的必填
+ * 字段，缺失/空串必须触发结构化重试或失败，不能把“只有标题/标签”当成成功候选。
  *
  * L6 对齐 cheat-package(SPEC §3.6):把 cheat-package「内容发布审核清单 SOP」移植成 **prompt 指导 +
  * schema 承载**(不 shell 出 cheat-package skill——它是 CLI/Claude skill,这里是产品内 AI 节点)。
@@ -29,7 +30,7 @@ import { AUDIENCE_MINDSET_CLAUSE } from "../grounding-facets";
 export const platformDraftSchema = z.object({
   platform: z.string().default(""),
   title: z.string().default(""),
-  body: z.string().default(""),
+  body: z.string().trim().min(1, "发布物料必须包含简介 body"),
   tags: z.array(z.string()).default([]),
   coverIdea: z.string().default(""),
   // L6 对齐 cheat-package「发布审核 SOP」:每条草稿逐条过审核清单后,记录**命中了什么 + 怎么改的**。

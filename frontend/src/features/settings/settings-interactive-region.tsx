@@ -58,6 +58,7 @@ import { WebSessionVaultCard } from "./web-session-vault-card";
 import { ResetWorkspaceCard } from "./reset-workspace-card";
 // [T-363] 模型配置导出/导入兜底卡(模型页签底部;文件含密钥,卡内常驻警示)。
 import { ModelConfigTransferCard } from "./model-config-transfer-card";
+import { ModelConfigurationManual } from "./model-configuration-manual";
 import { TagChip } from "@/components/content/tag-chip";
 import {
   MODEL_PROVIDER_PRESETS,
@@ -415,11 +416,14 @@ export function SettingsDialog({
               <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
                 {/* ① 必配块:文本模型是 AI 写字 / 对话的地基,配这一个就能用。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-foreground">必配</span>
-                    <span className="text-xs text-muted-foreground">
-                      AI 写字 / 对话的地基,配这一个就能用;不配时有官方兜底。
-                    </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold text-foreground">必配</span>
+                      <span className="text-xs text-muted-foreground">
+                        AI 写字 / 对话的地基,配这一个就能用;不配时有官方兜底。
+                      </span>
+                    </div>
+                    <ModelConfigurationManual />
                   </div>
                   <ModelConfigurationCard model={viewModel.model} />
                 </div>
@@ -438,6 +442,10 @@ export function SettingsDialog({
                     "web-search",
                   ]}
                 >
+                  <MultimodalModelCard
+                    kind="audio"
+                    state={viewModel.multimodalModels.audio}
+                  />
                   {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
                   <MultimodalModelCard
                     kind="review"
@@ -450,10 +458,6 @@ export function SettingsDialog({
                   <MultimodalModelCard
                     kind="video"
                     state={viewModel.multimodalModels.video}
-                  />
-                  <MultimodalModelCard
-                    kind="audio"
-                    state={viewModel.multimodalModels.audio}
                   />
                   {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
                   <MultimodalModelCard
@@ -1525,6 +1529,7 @@ function DiagnosticLogsCard() {
   // SSR 首帧 desktop=false → 渲空态;挂载后 isDesktopRuntimeClient() 翻真(无水合漂移)。
   const [isDesktop, setIsDesktop] = React.useState(false);
   const [state, setState] = React.useState<"idle" | "opening" | "error">("idle");
+  const [fallbackDir, setFallbackDir] = React.useState("");
 
   React.useEffect(() => {
     setIsDesktop(isDesktopRuntimeClient());
@@ -1533,6 +1538,7 @@ function DiagnosticLogsCard() {
   const reveal = React.useCallback(() => {
     if (state === "opening") return;
     setState("opening");
+    setFallbackDir("");
     void (async () => {
       try {
         const res = await fetch("/api/v1/local/reveal-logs", {
@@ -1540,8 +1546,16 @@ function DiagnosticLogsCard() {
           headers: { "Content-Type": "application/json" },
           body: "{}",
         });
-        const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
-        setState(res.ok && data.ok ? "idle" : "error");
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          dir?: string;
+        };
+        if (res.ok && data.ok) {
+          setState("idle");
+        } else {
+          setFallbackDir(data.dir?.trim() ?? "");
+          setState("error");
+        }
       } catch {
         setState("error");
       }
@@ -1628,6 +1642,17 @@ function DiagnosticLogsCard() {
             {state === "error" ? "打开失败,重试" : "打开日志目录"}
           </Button>
         </div>
+        {state === "error" && fallbackDir ? (
+          <div
+            data-slot="diagnostic-logs-fallback"
+            className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-muted-foreground"
+          >
+            文件管理器未能自动打开。请手动前往：
+            <code className="ml-1 select-all break-all text-foreground">
+              {fallbackDir}
+            </code>
+          </div>
+        ) : null}
       </div>
     </SectionCard>
   );
@@ -2598,12 +2623,13 @@ const MULTIMODAL_META = {
     description:
       "把视频里的话转成文字稿(复盘 / 二创的底稿)。选配:不配则用本地 Whisper(免 key,首次自动下模型,默认 small 级);配了云端 ASR 则更快更准。",
     providerSuggestions: ["siliconflow", "openai", "groq"] as ReadonlyArray<string>,
-    providerPlaceholder: "siliconflow",
+    providerPlaceholder: "示例:siliconflow",
     providerHelp:
       "OpenAI 兼容 ASR 厂商,可自定义(SiliconFlow / OpenAI / Groq 同形状)。留空则用本地 Whisper。",
     modelHelp: "ASR 模型 id,如 FunAudioLLM/SenseVoiceSmall(SiliconFlow)。",
-    modelPlaceholder: "FunAudioLLM/SenseVoiceSmall",
-    baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
+    modelPlaceholder: "示例:FunAudioLLM/SenseVoiceSmall",
+    baseUrlPlaceholder:
+      "示例:https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 用本地 Whisper 转写(免 key,首次下载模型)。",
   },
   // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI

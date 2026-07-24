@@ -1688,13 +1688,13 @@ describe("[T-256a] 环境感知能力认知 — honesty 第 13 条", () => {
 
 // [T-245] 编导热点能力认知接线 —— honesty 第 11 条 + 对话 trend 出题真接信源信号(与选题页同源)。
 describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源", () => {
-  it("system 注入第 11 条:有真实热点能力(信源/黑马雷达/web 搜索)+ 引导登记信号源,绝不自称没能力", async () => {
+  it("system 注入第 11 条:有真实热点能力(内容雷达/web 搜索)+ 引导登记来源,绝不自称没能力", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(a.system).toContain("你有真实热点能力");
-    expect(a.system).toContain("黑马雷达");
+    expect(a.system).toContain("热点宝/黑马发现");
     expect(a.system).toContain("basis=trend");
-    expect(a.system).toContain("去选题页『信号源』登记热榜站点");
+    expect(a.system).toContain("去『内容雷达』登记网页/RSS、博主或分享链接");
     expect(a.system).toContain("绝不自称「没有实时热点/热搜拉取能力」");
   });
 
@@ -1754,7 +1754,7 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     expect(res.trendNote).toContain("已登记 2 个信源");
   });
 
-  it("basis=trend 未登记任何信源(count=0)→ trendNote 引导去『信号源』登记热榜站点", async () => {
+  it("basis=trend 未登记任何来源(count=0)→ trendNote 引导去『内容雷达』登记", async () => {
     const { deps } = makeDeps({
       trendSourceSignals: async () => [],
       countEnabledTrendSources: async () => 0,
@@ -1764,8 +1764,8 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     const res = (await runToolExecute(tool, { basis: "trend" })) as {
       trendNote?: string | null;
     };
-    expect(res.trendNote).toContain("还没有登记任何网页信源");
-    expect(res.trendNote).toContain("『信号源』");
+    expect(res.trendNote).toContain("还没有登记任何网页/RSS 来源");
+    expect(res.trendNote).toContain("『内容雷达』");
     // 没配 searchWeb → 连搜索路都没有,注记明说别声称基于实时热榜。
     expect(res.trendNote).toContain("不要声称基于实时热榜");
   });

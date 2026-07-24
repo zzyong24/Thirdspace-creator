@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseWorkList,
   parseSelfIdentity,
+  parseCreatorProfileIdentity,
   parseDetail,
   toMetricRecords,
   deriveWorkTitle,
@@ -10,8 +11,13 @@ import {
   fetchDouyinComments,
   fetchDouyinCommentsForWorks,
   fetchDouyinMetrics,
+  fetchDouyinIdentity,
+  locatePlaywrightCli,
   DouyinNotLoggedInError,
   parseDouyinVideoUrl,
+  extractDouyinShareUrl,
+  resolveDouyinShareTarget,
+  parseDouyinSharedItem,
   streamAudioFromVideo,
   DouyinAudioFetchError,
   fetchDouyinWorkListExport,
@@ -54,6 +60,110 @@ const WORK_LIST = {
   ],
   has_more: false,
 };
+
+describe("[T-482] 抖音分享文本单条建档解析", () => {
+  it("从任意分享话术中抽 URL，并安全跟随短链得到 aweme id", async () => {
+    expect(
+      extractDouyinShareUrl(
+        "3.14 复制打开抖音，看看【某博主】 https://v.douyin.com/iFooBar/  测试",
+      ),
+    ).toBe("https://v.douyin.com/iFooBar/");
+
+    const target = await resolveDouyinShareTarget(
+      "复制此链接 https://v.douyin.com/iFooBar/ 打开抖音",
+      {
+        fetch: async () =>
+          new Response(null, {
+            status: 302,
+            headers: {
+              location:
+                "https://www.douyin.com/video/7350000000000000000?previous_page=app_code_link",
+            },
+          }),
+      },
+    );
+    expect(target).toEqual({
+      shareUrl: "https://v.douyin.com/iFooBar/",
+      resolvedUrl:
+        "https://www.douyin.com/video/7350000000000000000?previous_page=app_code_link",
+      awemeId: "7350000000000000000",
+      canonicalUrl:
+        "https://www.douyin.com/video/7350000000000000000",
+    });
+  });
+
+  it("拒绝非抖音域跳转，不把分享链接变成任意 URL 请求器", async () => {
+    await expect(
+      resolveDouyinShareTarget("https://v.douyin.com/iUnsafe/", {
+        fetch: async () =>
+          new Response(null, {
+            status: 302,
+            headers: { location: "http://127.0.0.1:3000/admin" },
+          }),
+      }),
+    ).rejects.toThrow(/非抖音域名/);
+  });
+
+  it("detail JSON 解析真实作品、作者和公开指标，缺失计数保持 null", () => {
+    const parsed = parseDouyinSharedItem(
+      {
+        aweme_detail: {
+          aweme_id: "7350000000000000000",
+          desc: "这是完整作品文案",
+          create_time: 1_720_000_000,
+          author: {
+            sec_uid: "MS4wLjABAAAA-real",
+            nickname: "真实博主",
+          },
+          video: {
+            duration: 42_000,
+            cover: { url_list: ["https://p.example/cover.jpg"] },
+          },
+          statistics: {
+            digg_count: 1288,
+            comment_count: 36,
+            collect_count: 208,
+          },
+        },
+      },
+      "https://www.douyin.com/video/7350000000000000000",
+      "2026-07-23T18:00:00.000Z",
+    );
+    expect(parsed.item.authorName).toBe("真实博主");
+    expect(parsed.item.externalId).toBe("7350000000000000000");
+    expect(parsed.item.metrics?.commentCount).toBe(36);
+    expect(parsed.item.metrics?.shareCount).toBeNull();
+    expect(parsed.item.snapshot?.finalUrl).toBe(
+      "https://www.douyin.com/video/7350000000000000000",
+    );
+  });
+});
+
+describe("[T-469] Playwright CLI 确定性定位", () => {
+  it("从 cwd 父级的 pnpm 隔离目录找到 cli.js，不依赖 require.resolve", async () => {
+    const existing = new Set([
+      "/app/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/cli.js",
+    ]);
+    await expect(
+      locatePlaywrightCli("/app/frontend", {
+        isFile: async (candidate) => existing.has(candidate),
+        readDir: async (dir) =>
+          dir === "/app/node_modules/.pnpm" ? ["playwright@1.60.0"] : [],
+      }),
+    ).resolves.toBe(
+      "/app/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/cli.js",
+    );
+  });
+
+  it("直连与 pnpm 路径都不存在时返回 null，交给调用方报可诊断错误", async () => {
+    await expect(
+      locatePlaywrightCli("/app/frontend", {
+        isFile: async () => false,
+        readDir: async () => [],
+      }),
+    ).resolves.toBeNull();
+  });
+});
 
 describe("douyin-cdp 纯函数", () => {
   it("parseWorkList 抽取作品 + 字段兜底 + 丢弃无 id", () => {
@@ -146,6 +256,26 @@ describe("douyin-cdp 纯函数", () => {
     expect(
       parseSelfIdentity({ aweme_list: [{ author: { sec_uid: "s", nickname: "" } }] }),
     ).toBeNull();
+  });
+
+  it("[T-490] parseCreatorProfileIdentity 可从账号资料响应识别零作品账号", () => {
+    expect(
+      parseCreatorProfileIdentity({
+        data: {
+          user_info: {
+            nickname: "刚注册的空号",
+            sec_uid: "MS4wLjABempty",
+            unique_id: "empty_creator",
+            follower_count: 0,
+          },
+        },
+      }),
+    ).toEqual({
+      nickname: "刚注册的空号",
+      secUid: "MS4wLjABempty",
+      douyinId: "empty_creator",
+      followerCount: 0,
+    });
   });
 
   it("parseDetail 抽完播/转粉 + 缺字段记 null", () => {
@@ -1142,6 +1272,75 @@ function makeFakeMetricsContext(
   };
   return { calls, openContext };
 }
+
+describe("[T-490] 零作品账号身份读取", () => {
+  it("优先从创作者主页账号资料响应取身份，不依赖作品列表", async () => {
+    const calls = { close: 0, goto: [] as string[] };
+    type IdentityResp = { url(): string; json(): Promise<unknown> };
+    const handlers: Array<(resp: IdentityResp) => void> = [];
+    const page = {
+      on(_event: "response", cb: (resp: IdentityResp) => void) {
+        handlers.push(cb);
+      },
+      async goto(url: string) {
+        calls.goto.push(url);
+        const resp: IdentityResp = {
+          url: () =>
+            "https://creator.douyin.com/aweme/v1/creator/user/info/",
+          json: () =>
+            Promise.resolve({
+              data: {
+                user_info: {
+                  nickname: "零作品账号",
+                  sec_uid: "MS4wLjABzero",
+                  unique_id: "zero_creator",
+                  follower_count: 0,
+                },
+              },
+            }),
+        };
+        for (const handler of handlers) handler(resp);
+      },
+      async waitForTimeout() {
+        return undefined;
+      },
+    };
+    const ctx = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return [{ name: "sessionid" }];
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type IdentityOpenContext = NonNullable<
+      Parameters<typeof fetchDouyinIdentity>[1]
+    >["openContext"];
+    type IdentityContext = Awaited<
+      ReturnType<NonNullable<IdentityOpenContext>>
+    >;
+    const openContext: NonNullable<IdentityOpenContext> = async () =>
+      ctx as unknown as IdentityContext;
+
+    await expect(
+      fetchDouyinIdentity(
+        { authDir: "/fake/.auth" },
+        { openContext },
+      ),
+    ).resolves.toEqual({
+      nickname: "零作品账号",
+      secUid: "MS4wLjABzero",
+      douyinId: "zero_creator",
+      followerCount: 0,
+    });
+    expect(calls.goto[0]).toContain("creator-micro/home");
+    expect(calls.close).toBe(1);
+  });
+});
 
 describe("[T-177] 作品列表 knownAwemeIds 翻页 early-stop", () => {
   it("③首屏作品全已知 → 0 轮滚动即停(即便 has_more=true)", async () => {

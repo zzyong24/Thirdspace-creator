@@ -152,6 +152,38 @@ export function BlindPredictRow({
     })();
   }, [prediction, phase, router]);
 
+  // 盲预测建议只触发「修订稿候选」：先保存当前稿，再让 script.draft 按诊断重写；
+  // 真正写回仍由对话里的「采纳写入稿面」确认门完成，AI 不直接覆盖原稿。
+  const reviseFromSuggestions = React.useCallback(
+    async (guidance: string) => {
+      await flushSave();
+      if (cancelledRef.current) return;
+      let subjectId = outputId;
+      if (!subjectId) {
+        const created = (await client.createOutput({
+          params: { projectId },
+          query: undefined,
+          body: { title: projectTitle || "主内容" },
+        })) as { id: string };
+        subjectId = created.id;
+      }
+      if (cancelledRef.current) return;
+      openChat({
+        functionKey: "script.draft",
+        prefill:
+          `请基于当前原稿生成一版修订稿候选，逐条落实下面的盲预测建议；保留事实、核心观点和可溯源素材，不要编造。` +
+          `\n\n${guidance}`,
+        autoSend: true,
+        selection: {
+          kind: "content_output",
+          id: subjectId,
+          title: projectTitle,
+        },
+      });
+    },
+    [flushSave, openChat, outputId, projectId, projectTitle],
+  );
+
   return (
     <div
       data-slot="blind-predict-row"
@@ -226,6 +258,7 @@ export function BlindPredictRow({
               predictedScore={prediction.predictedScore}
               status={prediction.status}
               lockedAt={prediction.lockedAt}
+              onApplySuggestions={reviseFromSuggestions}
             />
           </span>
         </div>
@@ -242,7 +275,7 @@ export function BlindPredictRow({
 
 interface PredictionDimensionView {
   readonly key: string;
-  readonly score: number;
+  readonly score: number | null;
   readonly reason: string;
   readonly suggestion: string;
 }
@@ -267,7 +300,10 @@ function parsePredictionDetail(raw: {
         const o = d as { key: string; score?: unknown; reason?: unknown; suggestion?: unknown };
         dims.push({
           key: o.key,
-          score: typeof o.score === "number" ? o.score : 0,
+          score:
+            typeof o.score === "number" && Number.isFinite(o.score)
+              ? o.score
+              : null,
           reason: typeof o.reason === "string" ? o.reason : "",
           suggestion: typeof o.suggestion === "string" ? o.suggestion : "",
         });
@@ -299,15 +335,19 @@ function PredictionResultDialog({
   predictedScore,
   status,
   lockedAt,
+  onApplySuggestions,
 }: {
   readonly predictionId: string;
   readonly predictedScore: number;
   readonly status: "draft" | "locked";
   readonly lockedAt: string | null;
+  readonly onApplySuggestions: (guidance: string) => Promise<void>;
 }) {
   const [open, setOpen] = React.useState(false);
   const [detail, setDetail] = React.useState<PredictionDetailView | null>(null);
   const [failed, setFailed] = React.useState(false);
+  const [applying, setApplying] = React.useState(false);
+  const [applyFailed, setApplyFailed] = React.useState(false);
 
   // 打开时拉详情(只拉一次;失败可重开重试)。
   React.useEffect(() => {
@@ -332,6 +372,31 @@ function PredictionResultDialog({
       cancelled = true;
     };
   }, [open, detail, predictionId]);
+
+  const applySuggestions = React.useCallback(() => {
+    if (!detail || applying) return;
+    const suggestions = detail.dimensions
+      .map((d) => d.suggestion.trim())
+      .filter((s) => s.length > 0);
+    const guidance = [
+      detail.priorityFixes.length > 0
+        ? `优先修改：${detail.priorityFixes.join("；")}`
+        : "",
+      detail.mainIssues.length > 0
+        ? `主要问题：${detail.mainIssues.join("；")}`
+        : "",
+      suggestions.length > 0 ? `逐维建议：${suggestions.join("；")}` : "",
+    ]
+      .filter((s) => s.length > 0)
+      .join("\n");
+    if (!guidance) return;
+    setApplying(true);
+    setApplyFailed(false);
+    void onApplySuggestions(guidance)
+      .then(() => setOpen(false))
+      .catch(() => setApplyFailed(true))
+      .finally(() => setApplying(false));
+  }, [applying, detail, onApplySuggestions]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -407,8 +472,11 @@ function PredictionResultDialog({
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{d.key}</span>
-                        <span className="tabular-nums text-muted-foreground">
-                          {d.score}/5
+                        <span
+                          data-testid={`blind-predict-dimension-score-${d.key}`}
+                          className="tabular-nums text-muted-foreground"
+                        >
+                          {d.score === null ? "—" : d.score}/5
                         </span>
                       </div>
                       {d.reason ? (
@@ -443,6 +511,28 @@ function PredictionResultDialog({
                       <li key={i}>{s}</li>
                     ))}
                   </ul>
+                </div>
+              ) : null}
+              {detail.priorityFixes.length > 0 ||
+              detail.dimensions.some((d) => d.suggestion.trim().length > 0) ? (
+                <div className="flex flex-col items-end gap-1 border-t border-border/60 pt-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    data-testid="blind-predict-apply-suggestions"
+                    disabled={applying}
+                    onClick={applySuggestions}
+                  >
+                    {applying ? "正在生成修订稿…" : "按建议修改原稿"}
+                  </Button>
+                  <span className="text-[10px] text-text-subtle">
+                    先生成修订稿候选，预览后点「采纳写入稿面」才会保存为新版本。
+                  </span>
+                  {applyFailed ? (
+                    <span className="text-[10px] text-destructive">
+                      没能发起修订，请重试。
+                    </span>
+                  ) : null}
                 </div>
               ) : null}
               {detail.dimensions.length === 0 &&

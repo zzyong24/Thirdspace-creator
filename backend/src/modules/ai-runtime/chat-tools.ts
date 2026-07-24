@@ -54,7 +54,7 @@ export interface ChatToolDeps {
     | Array<TopicGenerateItemShape>
     // [T-245] 新形状(additive,旧裸数组仍兼容):trend 出题带信源信号降级注记 ——
     // 未拉到已登记信源信号时 trendNote 诚实注明(「本次未拉到信源信号(已登记 N 个)」),
-    // 随 tool-result 流回,让编导如实转述、引导用户去选题页『信号源』登记,而非猜/编。
+    // 随 tool-result 流回,让编导如实转述、引导用户去『内容雷达』登记来源,而非猜/编。
     | { items: Array<TopicGenerateItemShape>; trendNote?: string | null }
   >;
   /**
@@ -807,7 +807,7 @@ export interface TopicGenerateToolResult {
   /**
    * [T-245] trend 出题的信源信号降级注记(additive,仅 basis=trend 且未拉到已登记信源信号时有值)。
    * 随 tool-result 流回模型:编导要如实转述(「本次未拉到信源信号(已登记 N 个)」)并引导用户去
-   * 选题页『信号源』登记/检查热榜站点;前端候选卡忽略此字段(不渲)。
+   * 『内容雷达』登记/检查网页与 RSS 来源;前端候选卡忽略此字段(不渲)。
    */
   trendNote?: string | null;
 }
@@ -2328,12 +2328,15 @@ export function knowledgeRelevanceScore(haystack: string, query: string): number
  * 断言每个 kind 在前端 CONTEXT_CARD_REGISTRY 有渲染卡 —— 新增 context 工具不配卡 = 测试红。
  */
 export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
+  // [T-473] allChatTools 每个 chat request 只构造一次，因此此 Map 的生命周期恰好是一回合。
+  // 同一回合里弱模型若用同参重复调 topic.enrich，复用第一次 Promise/结果，不重复跑昂贵 runner。
+  const topicEnrichRuns = new Map<string, Promise<TopicEnrichToolResult>>();
   return {
     "topic.generate": defineChatTool("topic.generate", {
       // [T-245] 热点能力认知:明说 basis=trend 会自动拉真实热点信号(T-235b 信源系统 + web 搜索),
       // 治编导自称「没有实时热点拉取能力」的认知错位(prompt 没告诉它,能力其实在)。
       description:
-        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。[T-382] 出题依据(定位/评论信号/知识库)由系统按 basis 自动注入——**不需要先问用户「你的定位是什么/受众是谁」这类系统已知的信息**,直接按用户意图选 basis 调用即可。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①已登记网页信源的实时信号(标题/热度/链接,信源在选题页『信号源』登记,如 36氪热榜等热榜站点)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
+        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。[T-382] 出题依据(定位/评论信号/知识库)由系统按 basis 自动注入——**不需要先问用户「你的定位是什么/受众是谁」这类系统已知的信息**,直接按用户意图选 basis 调用即可。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①内容雷达已登记网页/RSS 来源的实时条目(标题/热度/原链接)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
       inputSchema: TOPIC_GENERATE_PARAMS,
       execute: async ({ basis, extraBrief }): Promise<TopicGenerateToolResult> => {
         const res = await deps.generateTopics({
@@ -2360,15 +2363,29 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         angle,
         verifiedBrief,
       }): Promise<TopicEnrichToolResult> => {
-        // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的
-        // 已有候选(selection.kind==="candidate"),随结果持久化,前端据它 patch/新建二选一。
-        const { card, candidateId } = await deps.enrichTopic({
-          title,
-          angle: angle ?? "",
-          // [T-371] 联网核实事实透传(照 extraBrief 清洗范式:trim + 截 2000,空→undefined)。
-          verifiedBrief: clampExtraBrief(verifiedBrief),
-        });
-        return { kind: "topic.card", card, candidateId };
+        const normalizedAngle = angle ?? "";
+        const normalizedBrief = clampExtraBrief(verifiedBrief);
+        const dedupeKey = JSON.stringify([
+          title.trim(),
+          normalizedAngle.trim(),
+          normalizedBrief ?? "",
+        ]);
+        const existing = topicEnrichRuns.get(dedupeKey);
+        if (existing) return existing;
+
+        const run = (async (): Promise<TopicEnrichToolResult> => {
+          // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的
+          // 已有候选(selection.kind==="candidate"),随结果持久化,前端据它 patch/新建二选一。
+          const { card, candidateId } = await deps.enrichTopic({
+            title,
+            angle: normalizedAngle,
+            // [T-371] 联网核实事实透传(照 extraBrief 清洗范式:trim + 截 2000,空→undefined)。
+            verifiedBrief: normalizedBrief,
+          });
+          return { kind: "topic.card", card, candidateId };
+        })();
+        topicEnrichRuns.set(dedupeKey, run);
+        return run;
       },
     }, deps.humanizeError),
     "script.hooks": defineChatTool("script.hooks", {
@@ -2479,7 +2496,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
       // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
       description: deps.searchConfigured
-        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉选题页『信号源』已登记热榜站点的真实信号。"
+        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉『内容雷达』已登记网页/RSS 来源的真实信号。"
         : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {

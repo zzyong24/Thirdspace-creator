@@ -10,6 +10,7 @@ import {
   buildLocalStorageInitScript,
   injectStorageState,
   storageStateHasData,
+  webSessionLookupDomains,
   type WebSessionCapableContext,
   type WebSessionCapablePage,
 } from "./web-session";
@@ -25,6 +26,23 @@ describe("webDomainFromUrl", () => {
   it("非 http(s) / 非法 URL 抛错", () => {
     expect(() => webDomainFromUrl("ftp://x.com")).toThrow();
     expect(() => webDomainFromUrl("not a url")).toThrow();
+  });
+  it("[T-488] 抖音短链、主站与分享域复用同一份登录态", () => {
+    expect(webDomainFromUrl("https://v.douyin.com/abc/")).toBe("douyin.com");
+    expect(
+      webDomainFromUrl(
+        "https://www.douyin.com/video/7300000000000000000",
+      ),
+    ).toBe("douyin.com");
+    expect(webDomainFromUrl("https://www.iesdouyin.com/share/video/1")).toBe(
+      "douyin.com",
+    );
+    expect(webSessionLookupDomains("douyin.com")).toEqual([
+      "douyin.com",
+      "v.douyin.com",
+      "iesdouyin.com",
+      "www.iesdouyin.com",
+    ]);
   });
 });
 

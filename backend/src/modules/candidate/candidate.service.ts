@@ -18,6 +18,7 @@ import {
   type TopicsOverviewResource,
 } from "./candidate.schema";
 import {
+  CandidateTitleError,
   PromoteStateError,
   DanglingRunError,
   requireAccountId,
@@ -33,6 +34,28 @@ import {
   type ScoredCandidate,
 } from "./topic-preference-guardrail";
 import type { TopicPreferenceRow } from "./candidate.repository";
+
+const CANDIDATE_TITLE_MAX_CHARS = 120;
+const STRUCTURED_FIELD_IN_CANDIDATE_TITLE =
+  /(?:^|[{"',;])\s*\\?["']?(?:angle|contentRole|source|predictedScore|reason|sourceComments)\\?["']?\s*:/i;
+
+/**
+ * [T-472] 落库域最后一道 invariant。上游模型 schema 会拒绝并重试，但手动确认门、
+ * 定时采集或旧客户端都可能绕过它；领域服务因此再次拒绝污染值，绝不靠前端隐藏/截断。
+ */
+function assertCandidateTitle(title: string): void {
+  const value = title.trim();
+  if (
+    !value ||
+    value.length > CANDIDATE_TITLE_MAX_CHARS ||
+    value.includes("```") ||
+    STRUCTURED_FIELD_IN_CANDIDATE_TITLE.test(value)
+  ) {
+    throw new CandidateTitleError(
+      `选题标题无效：不能为空、不能混入结构化字段，且不能超过 ${CANDIDATE_TITLE_MAX_CHARS} 字`,
+    );
+  }
+}
 
 // Candidate service (foundation §5.3) — every public method takes
 // `(ctx: RequestContext, …)` and builds a repository bound to `ctx.userId`
@@ -152,6 +175,9 @@ export interface CreateCandidateInput {
   // [T-303] 预测分(0–100)。每日出题器已算出 adjustedScore,经此落库(原来被丢弃 → 热度死列)。
   //   缺省 null(手动新建无预测,诚实空 → 读端兜底 positioningFit)。
   predictedScore?: number | null;
+  // [T-482] intelligence 确认选题时透传的原视频/原页面来源。内部 service seam，
+  // 公共手动 candidates.create 不开放任意来源注入。
+  sourceReferences?: CandidateResource["card"]["sourceReferences"];
 }
 
 export interface PatchCandidateInput {
@@ -433,6 +459,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async createCandidate(ctx, input) {
+      assertCandidateTitle(input.title);
       const repo = repoFor(ctx, "candidate.createCandidate");
       const angle = input.angle ?? "";
       const positioningFit = await fitFor(ctx, {
@@ -453,6 +480,10 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         // [T-303] 落库预测分(每日出题器传 adjustedScore;手动新建缺省 null)。
         predictedScore: input.predictedScore ?? null,
         aiTaskId: null,
+        card:
+          input.sourceReferences && input.sourceReferences.length > 0
+            ? { sourceReferences: input.sourceReferences }
+            : undefined,
       });
       return toCandidateDto(row);
     },
@@ -462,6 +493,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async patchCandidate(ctx, candidateId, patch) {
+      if (patch.title !== undefined) assertCandidateTitle(patch.title);
       // Sanitize a partial 选题卡 patch (drop unknown keys / clamp metrics) before it
       // reaches the repo's shallow-merge; everything else (含 [T-212d] dropReason) passes
       // through unchanged.
@@ -546,6 +578,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async createFromAIResult(ctx, result) {
+      assertCandidateTitle(result.resultData.title);
       const repo = repoFor(ctx, "candidate.createFromAIResult");
       // Idempotent on aiTaskId — confirmResult may retry; never duplicate.
       const existing = await repo.findCandidateByAiTaskId(result.aiTaskId);
@@ -575,8 +608,16 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // Clean the AI-filled card into the FULL contract shape (every detail field + the
       // 3 metrics, defaults applied), then REPLACE the stored card. getCandidate inside
       // enrichCard gates ownership (cross-user / unknown → OwnershipError → 404).
-      const cleaned = toCardDto(card) as unknown as Record<string, unknown>;
-      const row = await repoFor(ctx, "candidate.enrichCard").enrichCard(candidateId, cleaned);
+      const repo = repoFor(ctx, "candidate.enrichCard");
+      const current = toCandidateDto(await repo.getCandidate(candidateId));
+      const cleaned = toCardDto({
+        ...card,
+        // AI 补全整卡不拥有来源证据；未显式带回时沿用领域中已经确认的真实来源。
+        sourceReferences:
+          (card as { sourceReferences?: unknown }).sourceReferences ??
+          current.card.sourceReferences,
+      }) as unknown as Record<string, unknown>;
+      const row = await repo.enrichCard(candidateId, cleaned);
       return toCandidateDto(row);
     },
 
@@ -641,6 +682,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // data source reports 0 (never fabricated).
       const bySrc = counts.signalsBySource;
       const ideaRows = await repoFor(ctx, "candidate.getTopicsOverview").listCandidates({
+        status: "pool",
         source: "idea",
         limit: 1000,
         offset: 0,

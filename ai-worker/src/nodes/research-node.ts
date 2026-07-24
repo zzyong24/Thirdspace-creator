@@ -266,10 +266,12 @@ export async function runResearchNode(
   const searchResults = input.searchResults ?? [];
   const grounding: MaterialGrounding =
     searchResults.length > 0 ? "web" : "model_memory";
-  const { object } = await runStructuredNode<ResearchCategories>({
-    model: input.model,
-    template: RESEARCH_GATHER_TEMPLATE,
-    facets: {
+  let object: ResearchCategories;
+  try {
+    ({ object } = await runStructuredNode<ResearchCategories>({
+      model: input.model,
+      template: RESEARCH_GATHER_TEMPLATE,
+      facets: {
       positioning:
         input.positioningBrief ||
         "（创作者尚未设置定位——按选题本身的价值判断相关性即可）",
@@ -282,9 +284,21 @@ export async function runResearchNode(
       // [T-228] 降级模式硬约束块(只在无检索结果时注入;有检索 → 整段省略)。
       groundingNote:
         grounding === "model_memory" ? MODEL_MEMORY_GROUNDING_NOTE : "",
-    },
-    maxRetries: input.maxRetries,
-  });
+      },
+      maxRetries: input.maxRetries,
+    }));
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.startsWith("结构化节点:")
+    ) {
+      throw new Error(
+        "research-node: agent 未产出可解析素材（结构校验与重试均失败）",
+        { cause: err },
+      );
+    }
+    throw err;
+  }
   // [T-228] model_memory 后处理清洗:剔伪引用条目 + 强制清 sourceUrl / 归一 source。
   // prompt 硬约束是第一道,这里兜住不听话的模型(实录:MiniMax 记忆编 arXiv/85.9% 标需核实)。
   let categories = object;

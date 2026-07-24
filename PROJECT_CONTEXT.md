@@ -10,6 +10,7 @@
 - 状态转换：`orchestrator/process/taskctl.mjs`，事件写入 `orchestrator/events.ndjson`。
 - 项目记忆同步：`orchestrator/process/pmem.mjs sync`；`pmem` 不负责 BACKLOG 状态。
 - 物理架构：`orchestrator/SYSTEM_ARCHITECTURE.md` 与 `boundary-scan.mjs`。
+- 代码检索：当前环境无 `codegraph`，按技能规则降级为 `rg` / TypeScript 引用检索，禁止自动安装。
 
 ## 会话路由
 

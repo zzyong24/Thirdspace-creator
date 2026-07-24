@@ -200,6 +200,10 @@ export {
   scriptShotVisualSchema,
   type ScriptDraftOutput,
 } from "./prompt/templates/script-draft";
+export {
+  SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
+  scriptSourceSimilaritySchema,
+} from "./prompt/templates/script-source-similarity";
 // 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
 // T-025:planning 三节点加 outputSchema 走结构化(跨模型健壮),schema/type 一并导出。
 export {
@@ -371,6 +375,11 @@ export {
   benchmarkTopicSchema,
   type BenchmarkTeardownOutput,
 } from "./prompt/templates/benchmark-teardown";
+export {
+  INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+  intelligenceTopicDecomposeSchema,
+  type IntelligenceTopicDecomposeOutput,
+} from "./prompt/templates/intelligence-topic-decompose";
 // [T-235b] 热点信源信号抽取(trend.extract)外置模板 + 输出 schema —— 信源页正文 → 结构化信号
 // (无热度不编)。schema 定义在本包(有 zod);backend 采集器引类型,无需直引 zod。
 export {

@@ -64,8 +64,8 @@ import { Switch } from "@/components/ui/switch";
 // [T-359] 新绑号分层启用:默认关的任务开关旁写明**启用前置**(条件齐了一键开)。
 // 与 collection-bootstrap 的 enabledByDefault 分层对齐;仅 job 禁用时显示,不啰嗦。
 const ENABLEMENT_HINTS: Record<string, string> = {
-  favorites: "先去 选题 → 信号源 登记指定收藏夹",
-  benchmark: "先去 选题 → 信号源 登记对标博主",
+  favorites: "先去 内容雷达 → 我的收藏 绑定收藏夹",
+  benchmark: "先去 内容雷达 登记对标博主",
   "topic.daily": "先去 设置 配好文本模型",
   comments: "有导入作品后再开(评论抓自己作品)",
 };
@@ -1144,7 +1144,7 @@ export function CreateJobDialog({
                   作品明细(完播/封面点击/留存)
                 </SelectItem>
                 {/* [T-258] 登记源驱动的采集源(手动补建入口,与模板卡一致):无 per-job target,
-                    信号靠各自「信号源」登记页配置。 */}
+                    来源统一在「内容雷达」配置。 */}
                 <SelectItem value="benchmark">
                   对标爆款(需登记对标源)
                 </SelectItem>

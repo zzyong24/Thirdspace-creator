@@ -38,7 +38,34 @@ export function webDomainFromUrl(url: string): string {
       `无法从链接解析域名(只支持 http/https):「${trimmed.slice(0, 80)}」`,
     );
   }
-  return host.toLowerCase().replace(/^www\./, "");
+  const normalized = host.toLowerCase().replace(/^www\./, "");
+  // T-488：抖音分享短链会从 v.douyin.com / iesdouyin.com 跳到主站。如果按输入
+  // hostname 分库存储，用户在短链登录后，长链读取会查不到同一份 state。这里只合并
+  // 已知属于同一抖音产品身份边界的域；其他站点仍严格按域隔离。
+  if (
+    normalized === "douyin.com" ||
+    normalized.endsWith(".douyin.com") ||
+    normalized === "iesdouyin.com" ||
+    normalized.endsWith(".iesdouyin.com")
+  ) {
+    return "douyin.com";
+  }
+  return normalized;
+}
+
+/**
+ * 查登录态时允许读取的历史域键。第一项永远是当前 canonical key；后续项只用于把
+ * T-488 修复前可能写入的抖音短链 state 惰性搬到主键，不扩大其他站点的会话边界。
+ */
+export function webSessionLookupDomains(domain: string): string[] {
+  const canonical = webDomainFromUrl(`https://${domain}`);
+  if (canonical !== "douyin.com") return [canonical];
+  return [
+    canonical,
+    "v.douyin.com",
+    "iesdouyin.com",
+    "www.iesdouyin.com",
+  ];
 }
 
 // ── 会话 cookie 启发式 ──────────────────────────────────────────────────────

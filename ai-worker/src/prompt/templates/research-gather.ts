@@ -35,42 +35,54 @@ import type { PromptTemplate } from "../template";
 // [T-084a] sourceUrl 选填字段:有联网检索结果时,cases/dataPoints 引用了检索结果的,把该结果的
 // 真实 URL 填进 sourceUrl(带编号回链的真信源);检索结果之外的内容留空,前端渲「需核实」徽标。
 // hooks/quotes 不加 sourceUrl(钩子/金句是创作句式,非事实断言,不强制信源)。
-export const researchMaterialSchema = z.object({
-  hooks: z
-    .array(
-      z.object({
-        text: z.string(),
-        why: z.string(),
-      }),
-    )
-    .default([]),
-  cases: z
-    .array(
-      z.object({
-        title: z.string(),
-        source: z.string().default(""),
-        opening: z.string().default(""),
-        sourceUrl: z.string().default(""),
-      }),
-    )
-    .default([]),
-  dataPoints: z
-    .array(
-      z.object({
-        stat: z.string(),
-        source: z.string().default(""),
-        sourceUrl: z.string().default(""),
-      }),
-    )
-    .default([]),
-  quotes: z
-    .array(
-      z.object({
-        line: z.string(),
-      }),
-    )
-    .default([]),
-});
+export const researchMaterialSchema = z
+  .object({
+    hooks: z
+      .array(
+        z.object({
+          text: z.string(),
+          why: z.string(),
+        }),
+      )
+      .default([]),
+    cases: z
+      .array(
+        z.object({
+          title: z.string(),
+          source: z.string().default(""),
+          opening: z.string().default(""),
+          sourceUrl: z.string().default(""),
+        }),
+      )
+      .default([]),
+    dataPoints: z
+      .array(
+        z.object({
+          stat: z.string(),
+          source: z.string().default(""),
+          sourceUrl: z.string().default(""),
+        }),
+      )
+      .default([]),
+    quotes: z
+      .array(
+        z.object({
+          line: z.string(),
+        }),
+      )
+      .default([]),
+  })
+  // [T-486] 四类全空不是可采纳素材。约束下沉到 schema 后，结构化调用会按既有
+  // maxRetries 自动重试；不会把“形状合法但内容为空”误判成一次成功调用。
+  .refine(
+    (value) =>
+      value.hooks.length +
+        value.cases.length +
+        value.dataPoints.length +
+        value.quotes.length >
+      0,
+    { message: "钩子、案例、数据点、金句不能同时为空" },
+  );
 export type ResearchMaterialOutput = z.infer<typeof researchMaterialSchema>;
 
 export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {

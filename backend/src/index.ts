@@ -15,6 +15,22 @@ export {
   type DbDriverKind,
 } from "./db";
 export {
+  executionTasks,
+  intelligenceCollections,
+  intelligenceItems,
+  intelligenceMigrationLedgers,
+  intelligenceSources,
+  intelligenceSourceCollectionMemberships,
+  intelligenceSyncRunEvents,
+  intelligenceSyncRuns,
+  intelligenceTransforms,
+  itemMetricSnapshots,
+  itemSourceObservations,
+  itemTranscripts,
+  projectIntelligenceReferences,
+  sourceSnapshots,
+} from "./schema/intelligence";
+export {
   createProjectRepository,
   type ProjectRepository,
   type RepoDeps,

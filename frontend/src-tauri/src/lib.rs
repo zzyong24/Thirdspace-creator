@@ -850,11 +850,10 @@ fn splash_status(app: &AppHandle, msg: &str) {
 }
 
 /// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
-/// macOS/Linux sidecar 保留 pnpm 相对 symlink，bundle 带单文件 tarball 并原子解压；Windows
-/// 构建期已物化成零 symlink 真目录，bundle 直接携带 `sidecar/`，从安装目录只读运行。
+/// 当前全平台 bundle 都带单文件 tarball，并在 appDataDir 原子解压。
 ///   ① CREATOROS_SIDECAR_DIR env 覆盖(打包/测试可指定);
 ///   ② dev:CARGO_MANIFEST_DIR/sidecar(编译期常量,指向源目录,symlink 完好);
-///   ③ Windows bundle:安装目录 sidecar/；mac/Linux:tar → appDataDir/runtime/<version>/sidecar。
+///   ③ bundle:tar → appDataDir/runtime/<version>/sidecar。
 /// [T-372 L2] 返回 Err = 入口完整性校验失败 → 上层**拒绝 spawn**(不再静默把被篡改的
 /// sidecar 跑起来)。其余路径语义不变。
 fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {

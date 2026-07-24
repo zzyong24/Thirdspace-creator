@@ -177,6 +177,95 @@ describe("PositioningDraftDrawer", () => {
     expect(screen.getByLabelText("一句话定位")).toBeTruthy();
   });
 
+  it("规则入口打开时直达定位规则，而不是让用户再猜第三个 tab", () => {
+    render(
+      <PositioningDraftDrawer
+        profile={PROFILE}
+        triggerLabel="编辑定位规则"
+        title="编辑定位规则"
+        description="修改后续 AI 必须遵守的规则。"
+        initialTab="rules"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "编辑定位规则" }));
+    expect(screen.getByRole("tab", { name: /定位规则/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByLabelText("选题规则")).toBeVisible();
+  });
+
+  it("先后保存画像与规则时，不用隐藏表单的旧快照覆盖刚保存的数据", async () => {
+    render(
+      <PositioningDraftDrawer
+        profile={PROFILE}
+        triggerLabel="编辑定位"
+        title="编辑定位"
+        description="修改画像或规则。"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "编辑定位" }));
+    fireEvent.change(screen.getByLabelText("人设"), {
+      target: { value: "刚保存的新画像" },
+    });
+    fireEvent.click(screen.getByTestId("positioning-draft-save"));
+    await waitFor(() => expect(mockClient.upsertProfile).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(screen.queryByTestId("positioning-draft-dialog")).toBeNull(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "编辑定位" }));
+    const rulesTab = screen.getByRole("tab", { name: /定位规则/ });
+    fireEvent.mouseDown(rulesTab);
+    fireEvent.click(rulesTab);
+    await waitFor(() =>
+      expect(screen.getByTestId("positioning-draft-save")).toHaveAttribute(
+        "form",
+        "positioning-form-rules",
+      ),
+    );
+    fireEvent.change(screen.getByLabelText("选题规则"), {
+      target: { value: "刚保存的新规则" },
+    });
+    expect(
+      (screen.getByLabelText("选题规则") as HTMLTextAreaElement).value,
+    ).toBe("刚保存的新规则");
+    fireEvent.click(screen.getByTestId("positioning-draft-save"));
+    await waitFor(() => expect(mockClient.upsertProfile).toHaveBeenCalledTimes(2));
+
+    const secondBody = (
+      mockClient.upsertProfile.mock.calls[1]![0] as {
+        body: {
+          persona: string;
+          downstreamRules: { topicRule: string };
+        };
+      }
+    ).body;
+    expect(secondBody.persona).toBe("刚保存的新画像");
+    expect(secondBody.downstreamRules.topicRule).toBe("刚保存的新规则");
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("positioning-draft-dialog")).toBeNull(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "编辑定位" }));
+    fireEvent.change(screen.getByLabelText("领域"), {
+      target: { value: "刚保存的新领域" },
+    });
+    fireEvent.click(screen.getByTestId("positioning-draft-save"));
+    await waitFor(() => expect(mockClient.upsertProfile).toHaveBeenCalledTimes(3));
+    const thirdBody = (
+      mockClient.upsertProfile.mock.calls[2]![0] as {
+        body: {
+          field: string;
+          downstreamRules: { topicRule: string };
+        };
+      }
+    ).body;
+    expect(thirdBody.field).toBe("刚保存的新领域");
+    expect(thirdBody.downstreamRules.topicRule).toBe("刚保存的新规则");
+  });
+
   it("seeds the dialog's statement form when given a 复制为草稿 seed", () => {
     render(
       <PositioningDraftDrawer

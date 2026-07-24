@@ -64,24 +64,73 @@ describe("detectDarkhorse 三档判定", () => {
     expect(out[0]!.ageHours).toBeCloseTo(47, 0);
   });
 
-  it("赞粉比优先排序(同比按赞降序)+ 每关键词 top N 截断", () => {
+  it("按档位、赞粉比、点赞、发布时间和 item id 稳定排序，并截断 top N", () => {
     const vids = [
-      video({ awemeId: "r2", diggCount: 1000, authorFollowerCount: 500 }), // ratio 2
+      video({ awemeId: "r2", diggCount: 1000, authorFollowerCount: 500, createTime: h(2) }), // strong
       video({ awemeId: "r10", diggCount: 5000, authorFollowerCount: 500 }), // ratio 10
       video({ awemeId: "r2b", diggCount: 2000, authorFollowerCount: 1000 }), // ratio 2,digg 更高
       video({ awemeId: "r5", diggCount: 2500, authorFollowerCount: 500 }), // ratio 5
+      video({ awemeId: "niche", diggCount: 250, authorFollowerCount: 400 }), // niche 必须排在全部 strong 后
     ];
     const top2 = detectDarkhorse(vids, NOW, { perKeywordLimit: 2 });
     expect(top2.map((v) => v.awemeId)).toEqual(["r10", "r5"]);
     const all = detectDarkhorse(vids, NOW);
-    // 同 ratio(2)时 digg 高的(r2b 2000)排前。
-    expect(all.map((v) => v.awemeId)).toEqual(["r10", "r5", "r2b", "r2"]);
+    expect(all.map((v) => v.awemeId)).toEqual([
+      "r10",
+      "r5",
+      "r2b",
+      "r2",
+      "niche",
+    ]);
   });
 
-  it("fans=0 分母兜 1(赞粉比=digg 本身),不除零", () => {
+  it("fans=0 是已知零粉，赞粉比为 null，只能走绝对阈值分支", () => {
     const v = video({ awemeId: "z", diggCount: 1200, authorFollowerCount: 0 });
     const out = detectDarkhorse([v], NOW);
-    expect(out[0]!.likeFollowerRatio).toBe(1200);
+    expect(out[0]).toMatchObject({
+      awemeId: "z",
+      tier: "strong",
+      likeFollowerRatio: null,
+    });
+    expect(
+      detectDarkhorse(
+        [video({ awemeId: "ratio-only", diggCount: 250, authorFollowerCount: 0 })],
+        NOW,
+      ),
+    ).toEqual([]);
+  });
+
+  it("粉丝数或发布时间缺失时排除，不能把未知值伪造成 0", () => {
+    expect(
+      detectDarkhorse(
+        [
+          video({
+            awemeId: "unknown-fans",
+            diggCount: 5000,
+            authorFollowerCount: null,
+          }),
+          video({
+            awemeId: "unknown-time",
+            diggCount: 5000,
+            authorFollowerCount: 100,
+            createTime: null,
+          }),
+        ],
+        NOW,
+      ),
+    ).toEqual([]);
+  });
+
+  it("完全同档同指标时按发布时间降序，再按 item id 升序", () => {
+    const out = detectDarkhorse(
+      [
+        video({ awemeId: "b", diggCount: 1200, authorFollowerCount: 600, createTime: h(2) }),
+        video({ awemeId: "a", diggCount: 1200, authorFollowerCount: 600, createTime: h(2) }),
+        video({ awemeId: "older", diggCount: 1200, authorFollowerCount: 600, createTime: h(3) }),
+      ],
+      NOW,
+    );
+    expect(out.map((row) => row.awemeId)).toEqual(["a", "b", "older"]);
   });
 
   it("阈值配置化:收紧 strongMinDigg 后原命中项落选;空输入 → []", () => {

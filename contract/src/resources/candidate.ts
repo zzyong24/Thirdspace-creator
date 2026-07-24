@@ -23,6 +23,19 @@ export const benchmarkTeardownRef = z.object({
 });
 export type BenchmarkTeardownRef = z.infer<typeof benchmarkTeardownRef>;
 
+// [T-482] 内容雷达 → 选题的来源证据。链接属于选题卡结构化 provenance，不拼进标题/
+// angle；这样候选池、详情和后续 Project 都能安全读取并渲染真实外链。
+export const candidateSourceReference = z.object({
+  kind: z.enum(["original_video", "source_page"]),
+  platform: z.string().min(1),
+  label: z.string().min(1),
+  url: z.string().url(),
+  intelligenceItemId: id.optional(),
+});
+export type CandidateSourceReference = z.infer<
+  typeof candidateSourceReference
+>;
+
 // 选题卡 (topic.enrich, 选题中心大改) — the AI-filled 详情 (一句话/观众/痛点/冲突/Hook/
 // 结构/形式/素材/风险/建议) + 指标 (受众痛感/素材充足/制作难度) a candidate carries once a
 // topic.enrich task formalizes it. EVERY field is optional/default so a bare `{}` is a
@@ -52,6 +65,9 @@ export const candidateCard = z.object({
   //   creative-context 装配成「对标参照·复刻用」段回流写稿(诚实门:仅结构参照,禁照搬原文案)。
   //   非 benchmark 候选缺省。零新表(复用 candidate.card jsonb)。
   teardown: benchmarkTeardownRef.optional(),
+  // [T-482] 原视频/原页面的可点击来源。普通手动选题可无；内容雷达确认的选题必须至少带
+  // 一条 original_video。max(10) 防止 card 被无界外链灌大。
+  sourceReferences: z.array(candidateSourceReference).max(10).optional(),
 });
 export type CandidateCard = z.infer<typeof candidateCard>;
 

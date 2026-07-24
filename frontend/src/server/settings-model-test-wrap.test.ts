@@ -4,7 +4,7 @@
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
  *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → ✗ 人话提示(不泄原始报错)。
  *   - video.generate:鉴权探测 —— 401 → ✗ 密钥无效或无权限;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
- *   - transcribe.audio:whisper-local 回退 → ✓ 免测试。
+ *   - transcribe.audio:whisper-local 回退 → 中性说明（不冒充云端已连通）。
  *   - web.search:browser 免 key → ✓;付费 provider 最小检索成功 → ✓。
  *   - wrap 透传:非 test op 原样进 settings transport。
  */
@@ -228,10 +228,12 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
 });
 
 describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路径", () => {
-  it("whisper-local 回退 → ✓ 免网络测试", async () => {
+  it("[T-470] whisper-local 回退只说明当前走本地，不把未配置云端渲成连通成功", async () => {
     const r = await runModelConnectionTest(ctx, "transcribe.audio", makeDeps());
     expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
     expect(r.detail).toContain("本地 Whisper");
+    expect(r.detail).toContain("未配置云端");
   });
 
   // [T-384] 云端 ASR 三态探测:200 → ✓;404/405(厂商无 /v1/models 端点)→ ⚠ 诚实中间态

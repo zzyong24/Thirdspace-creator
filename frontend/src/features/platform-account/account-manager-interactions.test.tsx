@@ -84,12 +84,14 @@ describe("account-manager 极简版 island wiring", () => {
   // 不吞成笼统文案;且不 refresh(没有假成功)。
   it("扫码绑定失败时透传后端明确错误文案且不 refresh", async () => {
     mockClient.loginDouyin.mockRejectedValueOnce(
-      new Error("扫码成功但读不回账号身份(该号可能暂无作品),已放弃本次绑定,请重试"),
+      new Error(
+        "扫码成功但账号资料与作品列表均未返回可验证身份,已放弃本次绑定,请重试",
+      ),
     );
     render(<CreateAccountForm />);
     fireEvent.click(screen.getByTestId("bind-douyin-scan"));
     await waitFor(() =>
-      expect(screen.getByText(/读不回账号身份/)).toBeTruthy(),
+      expect(screen.getByText(/未返回可验证身份/)).toBeTruthy(),
     );
     expect(mockRouter.refresh).not.toHaveBeenCalled();
   });

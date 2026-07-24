@@ -351,6 +351,27 @@
       "when": 1784310000000,
       "tag": "0049_activation_security_mirror",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784820000000,
+      "tag": "0050_content_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1784823600000,
+      "tag": "0051_content_intelligence_project_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1784827200000,
+      "tag": "0052_intelligence_source_memberships",
+      "breakpoints": true
     }
   ]
 }

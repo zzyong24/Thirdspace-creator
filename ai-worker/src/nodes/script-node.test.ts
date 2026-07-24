@@ -163,6 +163,22 @@ describe("runScriptNode", () => {
     ).rejects.toThrow(/未产出可解析分镜/);
   });
 
+  it("[T-486] 首次返回空 shots 时由输出契约触发重试，第二次有效结果可恢复", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return finalText(calls === 1 ? JSON.stringify({ shots: [] }) : SHOTS_OBJECT_JSON);
+      },
+    });
+    const result = await runScriptNode({
+      model,
+      positioningBrief: "AI 工程科普,面向开发者",
+    });
+    expect(calls).toBe(2);
+    expect(result.shots).toHaveLength(3);
+  });
+
   it("parseShots 容忍 ``` 包裹(纯工具,仍导出)", () => {
     const s = parseShots("```json\n" + SHOTS_ARRAY_JSON + "\n```");
     expect(s).toHaveLength(3);

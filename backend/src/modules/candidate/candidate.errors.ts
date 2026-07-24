@@ -68,3 +68,11 @@ export class SignalSchemaError extends Error {
     this.name = "SignalSchemaError";
   }
 }
+
+export class CandidateTitleError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  constructor(message: string) {
+    super(message);
+    this.name = "CandidateTitleError";
+  }
+}

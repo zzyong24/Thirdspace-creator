@@ -14,3 +14,11 @@ export class DouyinNotLoggedInError extends Error {
     this.name = "DouyinNotLoggedInError";
   }
 }
+
+/** 页面命中验证码/人机校验。新内容雷达严格路径必须把它标为 blocked，不能折叠成合法空数组。 */
+export class DouyinCaptchaError extends Error {
+  constructor() {
+    super("DouyinCaptchaError: 抖音页面要求完成验证码或人机校验");
+    this.name = "DouyinCaptchaError";
+  }
+}

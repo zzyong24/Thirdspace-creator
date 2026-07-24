@@ -188,14 +188,17 @@ if (existsSync(BOUNDARY_SCAN)) {
 }
 
 // backlog-health.mjs (sibling executable). BACKLOG hygiene guard (size / line-length / completed-row
-// bloat). WARN-biased like asset-check: an oversized ledger is hygiene debt, not correctness drift, so
-// it surfaces every reconcile without blocking an otherwise-clean tree.
+// bloat). Two-tier wire: exit 1 (over hard limit) stays WARN-biased like asset-check — hygiene debt,
+// doesn't block unrelated work. exit 2 (RUNAWAY: >2× hard limit) is an ERROR — a ledger that big taxes
+// EVERY session's context and edits, so "unrelated work" no longer exists; and the mechanical fix is one
+// command (backlog-compact.mjs), so blocking is cheap to satisfy.
 const BACKLOG_HEALTH = resolve(HERE, 'backlog-health.mjs');
 if (existsSync(BACKLOG_HEALTH)) {
   const r = spawnSync('node', [BACKLOG_HEALTH, '--quiet'], { cwd: REPO, stdio: 'ignore' });
   if (r.error) warn(`backlog-health.mjs could not be spawned (${r.error.message}).`);
   else if (r.status === 0) ok('backlog-health.mjs: BACKLOG within size/line limits.');
-  else warn('backlog-health.mjs reported BACKLOG bloat (exit 1). Run `node orchestrator/process/backlog-health.mjs` for the oversized lines — compact per rules/task-ledger-rules.md. (WARN-biased: does not block reconcile.)');
+  else if (r.status === 2) err('backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.');
+  else warn('backlog-health.mjs reported BACKLOG bloat (exit 1). Run `node orchestrator/process/backlog-health.mjs` for the oversized lines — compact per rules/task-ledger-rules.md (`backlog-compact.mjs` handles ✅ rows). (WARN-biased: does not block reconcile.)');
 }
 
 // Knowledge-layer guards (sibling executables). All three self-skip (exit 0) when the project has no

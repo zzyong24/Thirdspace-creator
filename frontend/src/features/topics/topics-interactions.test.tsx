@@ -70,9 +70,6 @@ import {
   CandidateSortControl,
   TopicsWorkspace,
 } from "./topics-interactive-region";
-// [T-235e] 对标源面板迁入统一「信号源」弹窗(对标博主 tab);T-222 立即采集行为不变,入口换了。
-import { SignalSourcesButton } from "./topics-supply-region";
-import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 import { TopicGenerateBand } from "./topic-generate-island";
 import { TopicsView, TopicsPage, type TopicsReadClient } from "./topics-page";
 import type {
@@ -193,6 +190,12 @@ describe("topics view (pure render, deterministic)", () => {
     // [T-242] 漏斗已移除:即便 VM 带 funnel 数据也不渲染(候选池 C 位,反向断言)。
     expect(screen.queryByTestId("topics-funnel")).not.toBeInTheDocument();
     expect(screen.queryAllByTestId("funnel-stage")).toHaveLength(0);
+    // T-482：旧「信号源」弹窗从选题中心退役，统一进入内容雷达。
+    expect(screen.queryByTestId("signal-sources-trigger")).not.toBeInTheDocument();
+    expect(screen.getByTestId("content-radar-link")).toHaveAttribute(
+      "href",
+      "/intelligence",
+    );
   });
 
   it("hides dropped candidates from the pool board", () => {
@@ -230,6 +233,54 @@ describe("topics view (pure render, deterministic)", () => {
     expect(within(card).getByText("制作难度")).toBeInTheDocument();
     // null 指标 → 「—」 (3 of them: 受众痛感/素材充足/制作难度)
     expect(within(card).getAllByText("—")).toHaveLength(3);
+  });
+
+  it("[T-482] 内容雷达候选卡和详情都提供可点击的原视频链接", () => {
+    render(
+      <TopicsView
+        viewModel={{
+          candidates: [
+            candidate({
+              source: "benchmark",
+              card: {
+                ...filledCard(),
+                sourceReferences: [
+                  {
+                    kind: "original_video",
+                    platform: "douyin",
+                    label: "原视频",
+                    url: "https://www.douyin.com/video/7350000000000000000",
+                    intelligenceItemId: "item-1",
+                  },
+                ],
+              },
+            }),
+          ],
+          overview: overview(),
+          sort: "predictedScore",
+          pendingReview: null,
+        }}
+      />,
+    );
+
+    const cardLink = within(screen.getByTestId("candidate-card")).getByRole(
+      "link",
+      { name: /原视频/ },
+    );
+    expect(cardLink).toHaveAttribute(
+      "href",
+      "https://www.douyin.com/video/7350000000000000000",
+    );
+    expect(cardLink).toHaveAttribute("target", "_blank");
+
+    const detailLink = within(screen.getByTestId("topics-detail")).getByRole(
+      "link",
+      { name: /原视频/ },
+    );
+    expect(detailLink).toHaveAttribute(
+      "href",
+      "https://www.douyin.com/video/7350000000000000000",
+    );
   });
 
   it("shows the empty-card CTA in the detail panel when the selected candidate has no card", () => {
@@ -565,10 +616,11 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     render(await TopicsPage({ sort: "predictedScore", source: "idea", client }));
     expect(listCandidates).toHaveBeenCalledTimes(2);
     const second = listCandidates.mock.calls[1]![0] as {
-      query: { source?: string; sort?: string };
+      query: { source?: string; sort?: string; status?: string };
     };
     expect(second.query.source).toBe("idea");
     expect(second.query.sort).toBe("predictedScore");
+    expect(second.query.status).toBe("pool");
     // 候选池只剩 idea 来源那条;trend 候选被服务端过滤掉。
     expect(screen.getAllByTestId("candidate-card")).toHaveLength(1);
     expect(screen.getByTestId("pool-source-filter-hint")).toBeInTheDocument();
@@ -585,96 +637,11 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     );
     expect(listCandidates).toHaveBeenCalledTimes(1);
     const only = listCandidates.mock.calls[0]![0] as {
-      query: { source?: string };
+      query: { source?: string; status?: string };
     };
     expect(only.query.source).toBeUndefined();
+    expect(only.query.status).toBe("pool");
     expect(screen.queryByTestId("pool-source-filter-hint")).toBeNull();
     expect(screen.getAllByTestId("candidate-card")).toHaveLength(2);
-  });
-});
-
-describe("[T-222] 对标源立即采集", () => {
-  function benchSource(
-    over: Partial<BenchmarkSourceResource> = {},
-  ): BenchmarkSourceResource {
-    return {
-      id: "src-1",
-      userId: "user-a",
-      accountId: null,
-      platform: "douyin",
-      externalAccountId: "sec-uid-1",
-      nickname: "对标博主",
-      homeUrl: null,
-      note: null,
-      enabled: true,
-      createdAt: ISO,
-      updatedAt: ISO,
-      ...over,
-    };
-  }
-
-  it("有启用对标源 → 点「立即采集」找 benchmark 作业 runNow + 成功提示 + refresh", async () => {
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[benchSource()]}
-        defaultTab="benchmark"
-      />,
-    );
-    fireEvent.click(screen.getByTestId("signal-sources-trigger")); // 开对话框
-    const btn = screen.getByTestId("benchmark-collect-now");
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    await waitFor(() =>
-      expect(mockClient.listScheduledJobs).toHaveBeenCalledTimes(1),
-    );
-    // 只找 benchmark sourceKind 的作业
-    const listArg = mockClient.listScheduledJobs.mock.calls[0]![0] as {
-      query: { sourceKind: string };
-    };
-    expect(listArg.query.sourceKind).toBe("benchmark");
-    await waitFor(() =>
-      expect(mockClient.runScheduledJobNow).toHaveBeenCalledTimes(1),
-    );
-    const runArg = mockClient.runScheduledJobNow.mock.calls[0]![0] as {
-      params: { jobId: string };
-    };
-    expect(runArg.params.jobId).toBe("job-bench");
-    await waitFor(() =>
-      expect(screen.getByTestId("benchmark-collect-message")).toHaveAttribute(
-        "data-tone",
-        "ok",
-      ),
-    );
-    expect(mockRouter.refresh).toHaveBeenCalled();
-  });
-
-  it("无启用对标源 → 「立即采集」禁用(空跑无意义)", () => {
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[benchSource({ enabled: false })]}
-        defaultTab="benchmark"
-      />,
-    );
-    fireEvent.click(screen.getByTestId("signal-sources-trigger"));
-    expect(screen.getByTestId("benchmark-collect-now")).toBeDisabled();
-  });
-
-  it("无 benchmark 作业(未绑抖音)→ 诚实提示,不假装采集", async () => {
-    mockClient.listScheduledJobs.mockResolvedValueOnce([]);
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[benchSource()]}
-        defaultTab="benchmark"
-      />,
-    );
-    fireEvent.click(screen.getByTestId("signal-sources-trigger"));
-    fireEvent.click(screen.getByTestId("benchmark-collect-now"));
-    await waitFor(() =>
-      expect(screen.getByTestId("benchmark-collect-message")).toHaveAttribute(
-        "data-tone",
-        "warn",
-      ),
-    );
-    expect(mockClient.runScheduledJobNow).not.toHaveBeenCalled();
   });
 });

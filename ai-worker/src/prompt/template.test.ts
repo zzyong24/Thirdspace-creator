@@ -326,8 +326,10 @@ describe("[T-245] chatbox.topic system — 热点能力认知", () => {
   it("system 含 basis=trend 信源机制 + 禁自称没热点能力", async () => {
     const { CHATBOX_TOPIC_TEMPLATE } = await import("./templates/chatbox-turn");
     expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("basis=trend");
-    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("已登记网页信源");
-    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("『信号源』");
+    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain(
+      "『内容雷达』已登记网页/RSS 来源",
+    );
+    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("『内容雷达』");
     expect(CHATBOX_TOPIC_TEMPLATE.system).toContain(
       "绝不自称「没有实时热点拉取能力」",
     );

@@ -5,6 +5,7 @@ import {
   type ToolApprovalStatus,
   type ToolSet,
 } from "ai";
+import { formatErrorDiagnostic } from "./error-diagnostics";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // [T-239a] 统一工具门 defineChatTool —— 治「30 工具遇错体验抽奖」(T-229 审计实锤)。
@@ -485,7 +486,9 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       console.log(`[chat-tool] name=${name} ok durationMs=${Date.now() - startedAt}`);
       return bounded;
     } catch (err) {
-      console.log(`[chat-tool] name=${name} error durationMs=${Date.now() - startedAt}`);
+      console.log(
+        `[chat-tool] name=${name} error durationMs=${Date.now() - startedAt} ${formatErrorDiagnostic(err)}`,
+      );
       const human = humanizeError?.(err) ?? null;
       return {
         ...(envelope.extras ?? {}),

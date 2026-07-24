@@ -458,9 +458,10 @@ pub fn decrypt_log(data: &[u8], private_key: &[u8; 32]) -> Result<DecryptOutcome
 
 /// 机密关键词命中后紧随其后的「值」用 `***REDACTED***` 遮盖。分两档:
 ///   · **tier1(always)**:高信号关键词(authorization / cookie / sessionid / password /
-///     master_key / bearer / api_key / access_token …)→ 值无论长短一律遮(cookie/JWT 都不长也危险)。
-///   · **tier2(仅长串)**:泛化关键词(token / secret / key / credential)→ 仅当值是 ≥32 位
-///     的 hex/base64 串时才遮 —— 避免误遮 `"tokens": 1523`(LLM token 计数)这类正常日志。
+///     master_key / bearer / api_key / access_token / token / secret / credential …)→ 值无论长短
+///     一律遮(cookie/JWT/短 token 都危险)。
+///   · **tier2(仅长串)**:泛化关键词 key → 仅当值是 ≥32 位的 hex/base64 串时才遮，避免
+///     误遮普通 `map key=name`。`"tokens": 1523` 因词边界不会命中单数 token。
 ///
 /// 关键词按「长度降序」匹配以优先命中更具体的(`access_token` 优先于 `token`)。要求关键词
 /// 前后都是**词边界**(非 `[A-Za-z0-9]`),避免 `mytoken` / `tokens` 这类子串误命中。
@@ -492,12 +493,17 @@ const TIER1_KEYWORDS: &[&str] = &[
     "masterkey",
     "secret_key",
     "secret-key",
+    "secret",
+    "credential",
+    "token",
     "private_key",
     "private-key",
     "bearer",
 ];
 
-const TIER2_KEYWORDS: &[&str] = &["credential", "secret", "token", "key"];
+// `key` 单独出现也可能只是普通 map key，只有长得像密钥的长值才遮；token/secret/
+// credential 则是明确敏感键，无论值长短都必须遮。
+const TIER2_KEYWORDS: &[&str] = &["key"];
 
 /// 认证方案前缀:`Authorization: Bearer <jwt>` 里,值以 `Bearer ` 打头,真正的机密在其后。
 /// 命中关键词后跳过这些前缀词(连同其后的分隔符),再对真正的值遮盖,避免只遮了 `Bearer`
@@ -597,7 +603,10 @@ fn skip_scheme_prefix(bytes: &[u8], mut j: usize, out: &mut Vec<u8>) -> usize {
         let sb = scheme.as_bytes();
         let end = j + sb.len();
         if end <= bytes.len()
-            && bytes[j..end].iter().zip(sb).all(|(a, b)| a.eq_ignore_ascii_case(b))
+            && bytes[j..end]
+                .iter()
+                .zip(sb)
+                .all(|(a, b)| a.eq_ignore_ascii_case(b))
             && (end == bytes.len() || !is_word_byte(bytes[end]))
         {
             out.extend_from_slice(&bytes[j..end]);
@@ -935,9 +944,54 @@ mod tests {
         let bytes = fs::read(&path).unwrap();
         let out = decrypt_log(&bytes, &priv_b).unwrap();
         let line = String::from_utf8_lossy(&out.lines[0]);
-        assert!(line.contains("***REDACTED***"), "解密后应含遮盖标记: {line}");
+        assert!(
+            line.contains("***REDACTED***"),
+            "解密后应含遮盖标记: {line}"
+        );
         assert!(!line.contains("eyJhbGciOi"), "JWT 泄进密文: {line}");
         assert!(line.contains("[sidecar]"), "应保留通道前缀: {line}");
+        let _ = fs::remove_file(&path);
+    }
+
+    #[test]
+    fn t486_model_error_survives_stderr_capture_and_encryption() {
+        // AI runner 的 console.error 经 sidecar stderr 读取线程进入本 logger。解密后必须保留
+        // capability/model/状态码/真实错误正文，同时机密仍不得进入日志文件。
+        let (priv_b, _pub_b, r) = test_keypair();
+        let path = unique_temp_path("model-error.enc");
+        {
+            let file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(&path)
+                .unwrap();
+            let st = open_encrypted_writer(file, &[r]).unwrap();
+            let logger = SidecarLogger {
+                inner: Arc::new(Mutex::new(st)),
+            };
+            logger.log(
+                "sidecar:err",
+                "[script-runner] capability=script.draft apiFormat=openai_chat model=MiniMax-M2.5 \
+                 class=APICallError reason=server status=503 code=service_unavailable \
+                 message=\"上游模型服务暂时不可用\" token=secret-value",
+            );
+        }
+        let bytes = fs::read(&path).unwrap();
+        let out = decrypt_log(&bytes, &priv_b).unwrap();
+        let line = String::from_utf8_lossy(&out.lines[0]);
+        assert!(line.contains("[sidecar:err]"), "应保留 stderr 通道: {line}");
+        assert!(
+            line.contains("capability=script.draft"),
+            "应保留能力: {line}"
+        );
+        assert!(line.contains("model=MiniMax-M2.5"), "应保留模型: {line}");
+        assert!(line.contains("status=503"), "应保留状态码: {line}");
+        assert!(
+            line.contains("上游模型服务暂时不可用"),
+            "应保留真实错误正文: {line}"
+        );
+        assert!(!line.contains("secret-value"), "机密不得落盘: {line}");
         let _ = fs::remove_file(&path);
     }
 

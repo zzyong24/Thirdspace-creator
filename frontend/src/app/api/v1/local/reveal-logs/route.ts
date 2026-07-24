@@ -40,6 +40,9 @@ export async function POST(): Promise<Response> {
     return NextResponse.json({ ok: true, dir });
   } catch (err) {
     console.error("[local/reveal-logs] failed:", err);
-    return NextResponse.json({ error: "reveal failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "reveal failed", dir },
+      { status: 500 },
+    );
   }
 }

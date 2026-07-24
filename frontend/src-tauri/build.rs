@@ -1,5 +1,6 @@
 fn main() {
-    // [T-372 L2] sidecar 入口完整性:构建期对 src-tauri/sidecar.tar.gz 算 SHA-256,
+    // [T-372 L2 / T-487 RAT-PKG-05] sidecar 入口完整性:全平台构建期都对
+    // src-tauri/sidecar.tar.gz 算 SHA-256,
     // 经 rustc-env 编进二进制(lib.rs 解压前比对,不匹配拒绝 spawn)。
     //   · beforeBuildCommand(build-sidecar.mjs)先产 tarball,再进 cargo 构建 → 此处必能读到;
     //   · dev(cargo check / 无 tarball)→ 注入空串,运行时对 dev 源目录诚实跳过校验(有日志)。
@@ -34,14 +35,10 @@ fn main() {
 
     let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let tarball = manifest_dir.join("sidecar.tar.gz");
-    // [T-446] Windows 平台配置直接 bundle 展开 sidecar/，构建脚本会主动删旧 tar；别把同一
-    // 工作区残留的 mac tar 哈希误烘进 Windows 壳。mac/Linux 保持全 tar 完整性链。
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-    let hash = if target_os == "windows" {
-        String::new()
-    } else {
-        sha256_file(&tarball)
-    };
+    // 当前生产配置与 build-sidecar 均为全平台 tar。Windows 不能再注入空哈希，否则安装包
+    // 虽携带 tar，运行时却会把正式构建误判成 dev 并跳过完整性校验。
+    let hash = sha256_file(&tarball);
     println!("cargo:rustc-env=CREATOROS_SIDECAR_SHA256={hash}");
     println!("cargo:rerun-if-changed=sidecar.tar.gz");
 

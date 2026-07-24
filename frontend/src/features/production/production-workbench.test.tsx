@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({
   prodStatus: "drafting",
   lastUploadAssetType: "",
+  copiedText: "",
 }));
 
 const mockClient = vi.hoisted(() => ({
@@ -161,6 +162,15 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.prodStatus = "drafting";
   state.lastUploadAssetType = "";
+  state.copiedText = "";
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: {
+      writeText: vi.fn(async (text: string) => {
+        state.copiedText = text;
+      }),
+    },
+  });
   // [FE-H01 测试] clearAllMocks 只清调用记录、不复位实现:本文件部分用例用 mockResolvedValue
   // 持久覆盖轮询类 mock,这里显式复位默认实现,防跨用例泄漏。
   mockClient.getTask.mockResolvedValue({ id: "ai-task-1", status: "running" });
@@ -213,6 +223,46 @@ describe("ProductionWorkbench", () => {
       <ProductionWorkbench {...makeProps({ scriptText: null })} />,
     );
     expect(container.textContent).toContain("本项目还没有口播稿");
+  });
+
+  it("[T-475/T-479] 只读提词框与复制均使用纯口播，Ctrl+A 不会选中整页", async () => {
+    const structured = [
+      "1. 开场（0–3s）",
+      "口播：真正决定效果的是内容。",
+      "画面：正面镜头，中近景。",
+      "字幕：内容比参数重要。",
+      "",
+      "2. 展开（3–12s）",
+      "口播: 先把问题讲清楚，再给方法。",
+      "画面: 切换屏幕录制。",
+    ].join("\n");
+    const { container } = render(
+      <ProductionWorkbench {...makeProps({ scriptText: structured })} />,
+    );
+    const preview = container.querySelector(
+      '[data-slot="voiceover-preview"]',
+    ) as HTMLTextAreaElement;
+    expect(preview).toBeTruthy();
+    expect(preview.readOnly).toBe(true);
+    expect(preview.value).toBe(
+      "真正决定效果的是内容。\n\n先把问题讲清楚，再给方法。",
+    );
+    expect(preview.value).not.toContain("画面");
+    expect(preview.value).not.toContain("字幕");
+    expect(preview.value).not.toContain("0–3s");
+
+    fireEvent.click(
+      container.querySelector('[data-slot="copy-voiceover"]') as HTMLButtonElement,
+    );
+
+    await waitFor(() =>
+      expect(state.copiedText).toBe(
+        "真正决定效果的是内容。\n\n先把问题讲清楚，再给方法。",
+      ),
+    );
+    expect(container.textContent).toContain("已复制纯口播稿");
+    expect(state.copiedText).not.toContain("画面");
+    expect(state.copiedText).not.toContain("字幕");
   });
 
   it("错 SRT 真挡:时长差 + 相似度低都给具体原因,按钮禁用;明确覆盖后放行", async () => {

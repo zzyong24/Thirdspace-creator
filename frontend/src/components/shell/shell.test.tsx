@@ -114,6 +114,7 @@ describe("AppShell", () => {
     expect(labels).toEqual([
       "首页",
       "定位中心",
+      "内容雷达",
       "选题",
       "项目",
       "知识库",

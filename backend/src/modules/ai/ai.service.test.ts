@@ -700,8 +700,9 @@ describe("ai service", () => {
       taskType: "script.rewrite",
       inputData: { artifactId: "a", idempotencyKey: "k1" },
     });
-    const c1 = await service.cancelTask(ctx, t1.id);
+    const c1 = await service.cancelTask(ctx, t1.id, "模型返回空结果");
     expect(c1.status).toBe("cancelled");
+    expect(c1.errorMessage).toBe("模型返回空结果");
     // cancelled (terminal) → cancel again rejects
     await expect(service.cancelTask(ctx, t1.id)).rejects.toBeInstanceOf(
       ConflictError,

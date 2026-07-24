@@ -64,6 +64,44 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CreatorProfileResource } from "@creatoros/backend/modules/positioning";
 
+type PositioningProfileDraft = Pick<
+  CreatorProfileResource,
+  | "persona"
+  | "field"
+  | "audience"
+  | "differentiation"
+  | "capabilities"
+  | "facets"
+  | "downstreamRules"
+>;
+
+function toProfileDraft(
+  profile: PositioningProfileDraft | null,
+): PositioningProfileDraft {
+  return {
+    persona: profile?.persona ?? "",
+    field: profile?.field ?? "",
+    audience: profile?.audience ?? "",
+    differentiation: profile?.differentiation ?? "",
+    capabilities: profile?.capabilities ?? [],
+    facets: {
+      contentScope: profile?.facets.contentScope ?? "",
+      avoid: profile?.facets.avoid ?? "",
+      corePain: profile?.facets.corePain ?? "",
+      coreValue: profile?.facets.coreValue ?? "",
+      tone: profile?.facets.tone ?? "",
+      statusNote: profile?.facets.statusNote ?? "",
+    },
+    downstreamRules: {
+      topicRule: profile?.downstreamRules.topicRule ?? "",
+      scriptRule: profile?.downstreamRules.scriptRule ?? "",
+      projectRule: profile?.downstreamRules.projectRule ?? "",
+      forbidRule: profile?.downstreamRules.forbidRule ?? "",
+      expressionRule: profile?.downstreamRules.expressionRule ?? "",
+    },
+  };
+}
+
 // Shared island mutation seam: a `pending` guard blocks concurrent writes; on
 // success it calls router.refresh() so the server re-reads the persisted rows,
 // then an optional onSuccess (e.g. close the draft dialog).
@@ -155,18 +193,19 @@ function SubsectionHeader({
 
 // ── 账号画像 + 定位规则 form (upsertProfile) ───────────────────────────────
 export interface PositioningProfileFormProps {
-  readonly profile: CreatorProfileResource | null;
+  readonly profile: PositioningProfileDraft | null;
   readonly ctaLabel: string;
   /** Optional — called after a successful save (e.g. close the draft dialog). */
   readonly onSuccess?: () => void;
+  /** Keep the dialog's last persisted draft current until router.refresh() returns. */
+  readonly onSaved?: (profile: PositioningProfileDraft) => void;
   /** Render the inline submit button (default true; the Dialog hides it and
    *  drives submission from its sticky footer via `form=…`). */
   readonly showSubmit?: boolean;
   /** Stable form id so an external footer button can submit it (`<button form>`). */
   readonly formId?: string;
-  /** Which group of fields to render. Both forms write the SAME profile body —
-   *  the Dialog mounts one instance per tab but shares no state; on submit each
-   *  posts the full controlled body (so switching tabs never drops a field). */
+  /** Which group of fields to render. The active section supplies only its own
+   *  controlled values; the other section is preserved from the last saved draft. */
   readonly section?: "profile" | "rules";
   /** Disambiguate the htmlFor ids when two instances mount (one per tab). */
   readonly idPrefix?: string;
@@ -176,6 +215,7 @@ export function PositioningProfileForm({
   profile,
   ctaLabel,
   onSuccess,
+  onSaved,
   showSubmit = true,
   formId,
   section = "profile",
@@ -210,12 +250,21 @@ export function PositioningProfileForm({
   );
 
   function submit() {
-    run(
-      () =>
-        client.upsertProfile({
-          params: undefined,
-          query: undefined,
-          body: {
+    const previous = toProfileDraft(profile);
+    const nextProfile: PositioningProfileDraft =
+      section === "rules"
+        ? {
+            ...previous,
+            downstreamRules: {
+              topicRule,
+              scriptRule,
+              projectRule,
+              forbidRule,
+              expressionRule,
+            },
+          }
+        : {
+            ...previous,
             persona,
             field,
             audience,
@@ -232,16 +281,18 @@ export function PositioningProfileForm({
               tone,
               statusNote,
             },
-            downstreamRules: {
-              topicRule,
-              scriptRule,
-              projectRule,
-              forbidRule,
-              expressionRule,
-            },
-          },
+          };
+    run(
+      () =>
+        client.upsertProfile({
+          params: undefined,
+          query: undefined,
+          body: nextProfile,
         }),
-      onSuccess,
+      () => {
+        onSaved?.(nextProfile);
+        onSuccess?.();
+      },
     );
   }
 
@@ -687,6 +738,8 @@ export interface PositioningDraftDialogProps {
   readonly description: string;
   /** Pre-fill the statement form (复制为草稿 from a history row). */
   readonly statementSeed?: PositioningStatementSeed;
+  /** 入口对应的默认页签。规则卡入口直达 rules，避免用户还要猜页签。 */
+  readonly initialTab?: DraftTab;
 }
 
 type DraftTab = "profile" | "rules" | "statement";
@@ -709,11 +762,22 @@ export function PositioningDraftDialog({
   title,
   description,
   statementSeed,
+  initialTab = "profile",
 }: PositioningDraftDialogProps) {
   const [open, setOpen] = React.useState(false);
-  const [tab, setTab] = React.useState<DraftTab>("profile");
+  const [tab, setTab] = React.useState<DraftTab>(initialTab);
+  const [savedProfile, setSavedProfile] =
+    React.useState<PositioningProfileDraft | null>(profile);
   const close = React.useCallback(() => setOpen(false), []);
   const Icon = triggerIcon === "pencil" ? PencilLine : Plus;
+  React.useEffect(() => setSavedProfile(profile), [profile]);
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen) setTab(initialTab);
+      setOpen(nextOpen);
+    },
+    [initialTab],
+  );
 
   // Stable form ids so the sticky footer button can submit the active tab's form.
   const profileFormId = "positioning-form-profile";
@@ -728,12 +792,12 @@ export function PositioningDraftDialog({
   const saveLabel =
     tab === "statement"
       ? "保存新版本"
-      : profile
+      : savedProfile
         ? "保存"
         : "创建定位";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant={triggerVariant}
@@ -791,9 +855,10 @@ export function PositioningDraftDialog({
                   我是谁 / 领域 / 目标人群 / 差异化 / 能力——下游 AI 会以此为约束源。
                 </p>
                 <PositioningProfileForm
-                  profile={profile}
-                  ctaLabel={profile ? "保存" : "创建定位"}
+                  profile={savedProfile}
+                  ctaLabel={savedProfile ? "保存" : "创建定位"}
                   onSuccess={close}
+                  onSaved={setSavedProfile}
                   showSubmit={false}
                   formId={profileFormId}
                   section="profile"
@@ -807,9 +872,10 @@ export function PositioningDraftDialog({
                 className="mt-0 data-[state=inactive]:hidden"
               >
                 <PositioningProfileForm
-                  profile={profile}
-                  ctaLabel={profile ? "保存" : "创建定位"}
+                  profile={savedProfile}
+                  ctaLabel={savedProfile ? "保存" : "创建定位"}
                   onSuccess={close}
+                  onSaved={setSavedProfile}
                   showSubmit={false}
                   formId={rulesFormId}
                   section="rules"

@@ -5,6 +5,11 @@ import {
   executionTaskSpec,
   executionTaskResource,
 } from "../resources/execution";
+import {
+  executionTaskKindV2,
+  executionTaskResourceV2,
+  executionTaskStatusV2,
+} from "../resources/intelligence";
 
 const taskParams = z.object({ taskId: id });
 
@@ -28,10 +33,31 @@ export const executionOperations = {
     id: "execution.tasks.list",
     method: "GET",
     path: "/execution/tasks",
-    query: paginationQuery.extend({ projectId: id.optional() }),
-    response: executionTaskResource,
+    query: paginationQuery.extend({
+      projectId: id.optional(),
+      accountId: id.optional(),
+      kind: executionTaskKindV2.optional(),
+      ownerId: id.optional(),
+      status: executionTaskStatusV2.optional(),
+      cursor: z.string().optional(),
+    }),
+    response: z.union([executionTaskResource, executionTaskResourceV2]),
     isList: true,
     fr: ["FR-EXECUTION-TASKS"],
+  }),
+  commandExecutionTasks: defineEndpoint({
+    id: "execution.tasks.command",
+    method: "POST",
+    path: "/execution/tasks/command",
+    body: z
+      .object({
+        taskIds: z.array(id).min(1),
+        command: z.enum(["pause", "resume", "cancel", "retry"]),
+        idempotencyKey: z.string().min(1),
+      })
+      .strict(),
+    response: z.object({ tasks: z.array(executionTaskResourceV2) }).strict(),
+    fr: ["FR-CR-020"],
   }),
   getExecutionTask: defineEndpoint({
     id: "execution.tasks.get",

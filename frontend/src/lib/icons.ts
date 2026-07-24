@@ -15,6 +15,7 @@ import {
   ListTodo,
   Pencil,
   Plus,
+  Radar,
   Search,
   Send,
   Settings,
@@ -27,6 +28,7 @@ import {
 export type CreatorIconKey =
   | "dashboard"
   | "positioning"
+  | "radar"
   | "topics"
   | "projects"
   | "knowledge"
@@ -51,6 +53,7 @@ export type CreatorIconKey =
 export const creatorIcons = Object.freeze({
   dashboard: LayoutDashboard,
   positioning: Crosshair,
+  radar: Radar,
   topics: ListTodo,
   projects: FolderKanban,
   knowledge: BookOpen,

@@ -38,10 +38,15 @@ export const scriptShotSchema = z.object({
   时长: z.string().default(""),
   // [T-387b] 可选结构化视觉意图(弱模型不产也过;画面文本列保留,向后兼容)。
   visual: scriptShotVisualSchema.optional(),
-});
+}).refine(
+  (shot) => Boolean(shot.口播.trim() || shot.画面.trim() || shot.字幕.trim()),
+  { message: "分镜的口播、画面、字幕不能同时为空" },
+);
 // 顶层输出契约:一个 shots 数组(顶层对象,非裸数组)。
 export const scriptDraftSchema = z.object({
-  shots: z.array(scriptShotSchema).default([]),
+  // [T-486] 空数组不是成功结果：把非空要求放进输出契约，generateObject 才会自动重试，
+  // 而不是让空数组穿过 schema 后在 runner 末端直接失败。
+  shots: z.array(scriptShotSchema).min(1),
 });
 export type ScriptDraftOutput = z.infer<typeof scriptDraftSchema>;
 

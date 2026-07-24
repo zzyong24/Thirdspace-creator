@@ -181,6 +181,7 @@ import {
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 import {
   createExecutionService,
+  createPersistentTaskService,
   createExecutionTransport,
   createExecutorRegistry,
   registerBuiltinExecutors,
@@ -202,6 +203,27 @@ import {
   type CollectionPorts,
   type MaterialPorts,
 } from "@creatoros/backend/modules/execution";
+import {
+  createIntelligenceService,
+  createIntelligenceTransport,
+  createProjectIntelligenceReferenceService,
+  createProjectScriptCandidateService,
+  runProjectScriptCandidateTask,
+  drainProjectScriptCandidateQueue,
+  type ProjectScriptCandidateGeneratorPort,
+  runIntelligenceSourceTask,
+  drainIntelligenceSourceQueue,
+  runIntelligenceTranscriptTask,
+  drainIntelligenceTranscriptQueue,
+  type IntelligenceTranscriptRunnerDeps,
+  runIntelligenceTopicPreviewTask,
+  INTELLIGENCE_OP_IDS,
+} from "@creatoros/backend/modules/intelligence";
+import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
+import {
+  drainDouyinShareImportQueue,
+  runDouyinShareImportTask,
+} from "@/server/intelligence/share-import-runner";
 import type {
   ContextDeps as ChatContextDeps,
   ReviewSubjectReader,
@@ -256,6 +278,19 @@ function loadDouyinCdp(): Promise<DouyinCdpModule> {
   }
   return douyinCdpModulePromise;
 }
+type DouhotCdpModule = typeof import("@/server/ingestion/douhot-cdp");
+let douhotCdpModulePromise: Promise<DouhotCdpModule> | null = null;
+function loadDouhotCdp(): Promise<DouhotCdpModule> {
+  if (!douhotCdpModulePromise) {
+    douhotCdpModulePromise = import("@/server/ingestion/douhot-cdp").catch(
+      (error) => {
+        douhotCdpModulePromise = null;
+        throw error;
+      },
+    );
+  }
+  return douhotCdpModulePromise;
+}
 // [T-232] 评论批量采集预算规划(纯逻辑):未采优先 + 爆款优先排序 + 全量/截断诚实 message。
 import {
   orderCommentCollection,
@@ -303,6 +338,7 @@ import {
   openWebLoginWindow,
   checkWebSessionStatus,
   webDomainFromUrl,
+  webSessionLookupDomains,
   importLegacyProfileState,
   type WebLoginHandle,
 } from "@/server/ingestion/web-session";
@@ -330,6 +366,7 @@ import {
   readUrl as readWebUrlSidecar,
   WebReaderLoginRequiredError,
 } from "@/server/ingestion/web-reader";
+import { assertUrlAllowed } from "@/server/ingestion/url-guard";
 // [T-253] local.read 安全硬门(denylist/路径归一/二进制探测,backend 纯函数)+ 授权表
 // (会话级一次授权 + 持久化「总是允许该目录」,本文件旁的 server 模块)。
 import {
@@ -627,6 +664,8 @@ const PERSISTED_OPS = new Set<string>([
   // [T-255a] Execution(执行层,脑手分离)— execution.tasks create/list/get/confirm/
   // discard。存储复用 ai_tasks(taskType `exec.*`);沙箱产物过确认门才入资产库(铁律②)。
   ...EXECUTION_OP_IDS,
+  // T-482 内容雷达：当前已落地的分类、来源、运行、作品与手动转写主链。
+  ...INTELLIGENCE_OP_IDS,
   // Query services (module Q, Wave 4) — the 3 page-composition reads
   // (pages.dashboard.get / pages.projectOverview.get / pages.search.get). Composes
   // public upstream services only (SPEC §19); pages.search.get is TAKEN OVER from
@@ -760,6 +799,7 @@ const AI_OPS = new Set<string>(AI_OP_IDS);
 
 // [T-255a] The set of op ids owned by the execution module's transport.
 const EXECUTION_OPS = new Set<string>(EXECUTION_OP_IDS);
+const INTELLIGENCE_OPS = new Set<string>(INTELLIGENCE_OP_IDS);
 
 // The set of op ids owned by the positioning module's transport (module 17).
 const POSITIONING_OPS = new Set<string>(POSITIONING_OP_IDS);
@@ -778,8 +818,16 @@ const PLATFORM_ACCOUNT_OPS = new Set<string>(PLATFORM_ACCOUNT_OP_IDS);
 // 占位不冒新号;②updateAccountHandle 把所有占位合并为一行真实号。
 //   「我的抖音」= loginDouyin ensureAccount 建;「待完善」= migration 0025 默认号 seed。
 const DOUYIN_PLACEHOLDER_HANDLES = new Set<string>(["我的抖音", "待完善"]);
+const DOUYIN_PENDING_HANDLE =
+  /^抖音账号（待识别·[A-Za-z0-9_-]{1,16}）$/;
+function isPendingIdentityHandle(handle: string): boolean {
+  return DOUYIN_PENDING_HANDLE.test(handle.trim());
+}
 function isPlaceholderHandle(handle: string): boolean {
-  return DOUYIN_PLACEHOLDER_HANDLES.has(handle.trim());
+  return (
+    DOUYIN_PLACEHOLDER_HANDLES.has(handle.trim()) ||
+    isPendingIdentityHandle(handle)
+  );
 }
 
 // [T-136§D-bind⑤] 合并占位号 = archive(status→archived,可逆/诚实,不硬删)。best-effort:
@@ -844,7 +892,10 @@ export async function ensureDouyinAccountUpsert(
   }
   const existing = rows.find((r) => r.accountHandle === input.handle);
   if (existing) return { id: existing.id };
-  if (isPlaceholderHandle(input.handle)) {
+  if (
+    isPlaceholderHandle(input.handle) &&
+    !isPendingIdentityHandle(input.handle)
+  ) {
     // [T-201a] 绑定用占位 handle → 复用**任一既有 active 号**(单号现实),不再仅匹配「handle 仍是
     //   占位」的号:一旦 updateAccountHandle 把昵称改成真实值(如「月明水清深」),再绑仍用占位
     //   handle 调本函数,旧写法(只找占位 handle 的 active 号)找不到→冒**第二个号**=锚点漂移根因
@@ -903,6 +954,17 @@ export async function mergeDouyinPlaceholders(
   });
   const active = rows.filter((r) => r.status === "active");
   const placeholders = active.filter((r) => isPlaceholderHandle(r.accountHandle));
+  // [T-469] forceNew 身份暂不可读时会创建一个**独立且唯一**的待识别账号。后续该账号首次
+  // 采集读到身份，只能回填 ctx.accountId 指向的这一行；绝不能沿旧单账号合并逻辑误改/归档
+  // 其它仍待识别的新号。
+  const currentPending =
+    ctx.accountId == null
+      ? undefined
+      : placeholders.find(
+          (r) =>
+            r.id === ctx.accountId &&
+            isPendingIdentityHandle(r.accountHandle),
+        );
   // [T-201b] 身份键回填:仅当该号 external_account_id 当前为空(NULL/空串)才写入采集到的 sec_uid;
   //   **永不覆盖已有身份键 / id**。是身份锚的一次性落地,不参与后续显示逻辑。
   async function backfillExternalId(accountId: string, current: string | null): Promise<void> {
@@ -932,6 +994,31 @@ export async function mergeDouyinPlaceholders(
     }
   }
   const realExisting = active.find((r) => r.accountHandle === real);
+
+  if (currentPending) {
+    if (realExisting && realExisting.id !== currentPending.id) {
+      await backfillExternalId(realExisting.id, realExisting.externalAccountId);
+      await backfillFollower(realExisting.id);
+      await archivePlaceholderBestEffort(service, ctx, currentPending.id);
+      return;
+    }
+    await backfillExternalId(
+      currentPending.id,
+      currentPending.externalAccountId,
+    );
+    await backfillFollower(currentPending.id);
+    try {
+      await service.updateAccount(ctx, currentPending.id, {
+        accountHandle: real,
+      });
+    } catch (err) {
+      console.error(
+        "[persistence] mergeDouyinPlaceholders: 待识别账号回填真实昵称失败:",
+        err,
+      );
+    }
+    return;
+  }
 
   if (realExisting) {
     await backfillExternalId(realExisting.id, realExisting.externalAccountId);
@@ -1071,6 +1158,8 @@ interface PersistenceBundle {
   ai: Transport;
   // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
   execution: Transport;
+  // T-482 内容雷达领域 transport。
+  intelligence: Transport;
   positioning: Transport;
   candidate: Transport;
   calibration: Transport;
@@ -1508,6 +1597,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // gate F-3:service 内 master-key 不可用/加密失败 → 抛人话错拒存,绝不明文落库。
   const browserSessionsService: BrowserSessionsService =
     createBrowserSessionsService({ db, now: deps.now, nextId: deps.nextId, masterKey });
+  const getWebSessionState = async (
+    ctx: RequestContext,
+    domain: string,
+  ): Promise<string | null> => {
+    const lookup = webSessionLookupDomains(domain);
+    for (const key of lookup) {
+      const state = await browserSessionsService.getState(ctx, key);
+      if (!state) continue;
+      if (key !== lookup[0]) {
+        // T-488 存量惰性迁移：旧版可能把短链 state 存到 v.douyin.com。
+        // 先成功读密文再复制到 canonical key；旧记录保留，避免破坏性清理。
+        await browserSessionsService
+          .saveState(ctx, lookup[0]!, state)
+          .catch(() => {});
+      }
+      return state;
+    }
+    return null;
+  };
 
   // ── T-038b 抖音采集限流网关(单例接线,SPEC §4.1/§4.4)────────────────────────────
   // 一个 module 单例 DouyinRequestGateway(per-channel 串行 + 最小间隔 + jitter + 指数退避 +
@@ -1873,7 +1981,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       //   迁移 0048 删存量,这里兜底防旧库/慢迁移把归档名再列给设置页 → 再触发探针增殖)。
       for (const r of dbRows) {
         if (!isSafeWebDomain(r.domain)) continue;
-        byDomain.set(r.domain, r.updatedAt);
+        const canonical = webSessionLookupDomains(r.domain)[0]!;
+        const previous = byDomain.get(canonical);
+        if (!previous || r.updatedAt > previous) {
+          byDomain.set(canonical, r.updatedAt);
+        }
       }
       let entries: string[] = [];
       try {
@@ -1946,7 +2058,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     confirmSession: async (
       domain: string,
     ): Promise<{ domain: string; loggedIn: boolean }> => {
-      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const raw = domain.trim().toLowerCase().replace(/^www\./, "");
+      const d = isSafeWebDomain(raw)
+        ? webSessionLookupDomains(raw)[0]!
+        : raw;
       const handle = disposePendingLogin(d);
       if (!handle) return { domain: d, loggedIn: false };
       const { loggedIn } = await handle.confirm();
@@ -1956,7 +2071,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     cancelSession: async (
       domain: string,
     ): Promise<{ domain: string; cancelled: boolean }> => {
-      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const raw = domain.trim().toLowerCase().replace(/^www\./, "");
+      const d = isSafeWebDomain(raw)
+        ? webSessionLookupDomains(raw)[0]!
+        : raw;
       const handle = disposePendingLogin(d);
       if (handle) await handle.cancel().catch(() => {});
       return { domain: d, cancelled: true };
@@ -1965,11 +2083,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       domain: string,
     ): Promise<{ domain: string; loggedIn: boolean }> => {
-      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const raw = domain.trim().toLowerCase().replace(/^www\./, "");
       // [T-378] 归档目录名(`x.migrated-<ts>`)被当域名探针 → 直接返未登录,绝不起浏览器/
       //   触发迁移(增殖链的探针侧闸门;route 入口 400 兜一层,这里防别的调用方绕过 route)。
       //   其余非法域名(路径穿越等)仍走下方 webAuthDirFor 白名单硬拒抛 WebDomainError(B-01)。
-      if (isArchivedWebProfileName(d)) return { domain: d, loggedIn: false };
+      if (isArchivedWebProfileName(raw)) {
+        return { domain: raw, loggedIn: false };
+      }
+      webAuthDirFor(raw); // 保留 B-01 的 WebDomainError 分类与路径穿越闸门。
+      const d = webSessionLookupDomains(raw)[0]!;
       // [T-370a] DB state 注入回灌探针(§2.5)+ 存量惰性迁移(旧目录导入 DB 后归档)。
       const { loggedIn } = await checkWebSessionStatus(
         {
@@ -1977,7 +2099,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           domain: d,
         },
         {
-          getState: (dom) => browserSessionsService.getState(ctx, dom),
+          getState: (dom) => getWebSessionState(ctx, dom),
           saveState: (dom, stateJson) =>
             browserSessionsService.saveState(ctx, dom, stateJson),
         },
@@ -1988,10 +2110,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       domain: string,
     ): Promise<{ removed: boolean }> => {
-      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const raw = domain.trim().toLowerCase().replace(/^www\./, "");
       // 防御①②:非法/越界 domain → webAuthDirFor 抛,绝不触碰文件系统。
+      let d: string;
       let target: string;
       try {
+        webAuthDirFor(raw);
+        d = webSessionLookupDomains(raw)[0]!;
         target = webAuthDirFor(d);
       } catch (err) {
         console.warn(
@@ -2085,7 +2210,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     close: () => Promise<void>;
   }> => {
     const session = {
-      getState: (d: string) => browserSessionsService.getState(ctx, d),
+      getState: (d: string) => getWebSessionState(ctx, d),
       saveState: (d: string, stateJson: string) =>
         browserSessionsService.saveState(ctx, d, stateJson),
     };
@@ -4940,7 +5065,636 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 丢弃在跑任务 → 中止其 executor(abort signal 贯通,T-239c 模式)。
     abortRun: abortExecutionTask,
   });
-  const executionBase = createExecutionTransport(() => executionService);
+  const persistentTaskService = createPersistentTaskService(db, {
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+  // T-482 startup recovery：上次进程退出时仍持有租约的任务，按 checkpoint / attempt
+  // 预算回到队列或诚实失败；控制请求则收敛到 paused / cancelled。
+  await persistentTaskService.recoverExpiredLeases();
+  const executionBase = createExecutionTransport(
+    () => executionService,
+    () => persistentTaskService,
+  );
+  let createTopicFromIntelligence: (
+    ctx: RequestContext,
+    input: {
+      title: string;
+      angle: string;
+      sourceReferences?: Array<{
+        kind: "original_video" | "source_page";
+        platform: string;
+        label: string;
+        url: string;
+        intelligenceItemId?: string;
+      }>;
+    },
+  ) => Promise<{ id: string }> = async () => {
+    throw new Error("CandidateServiceNotReady");
+  };
+  const intelligenceService = createIntelligenceService(db, {
+    now: deps.now,
+    nextId: deps.nextId,
+    tasks: persistentTaskService,
+    positioning: {
+      getVersion: async (ctx, positioningVersionId) => {
+        const statement = await positioningService.getStatement(
+          ctx,
+          positioningVersionId,
+        );
+        return {
+          id: statement.id,
+          oneLiner: statement.oneLiner,
+          keywords: statement.keywords,
+        };
+      },
+    },
+    topics: {
+      create: (ctx, input) => createTopicFromIntelligence(ctx, input),
+    },
+  });
+  const projectIntelligenceReferences =
+    createProjectIntelligenceReferenceService(db, {
+      now: deps.now,
+      nextId: deps.nextId,
+      projects: {
+        assertExists: async (ctx, projectId) => {
+          await projectsBaseTransport.request(
+            ENDPOINTS.getProject,
+            {
+              params: { projectId },
+              query: undefined,
+              body: undefined,
+            },
+            ctx,
+          );
+        },
+      },
+    });
+  const projectScriptCandidates = createProjectScriptCandidateService({
+    tasks: persistentTaskService,
+    references: projectIntelligenceReferences,
+    artifacts: {
+      listProjectArtifacts: (ctx, projectId) =>
+        artifactsService.listProjectArtifacts(ctx, projectId),
+      createArtifact: (ctx, input) =>
+        artifactsService.createArtifact(ctx, input),
+      listVersions: (ctx, artifactId) =>
+        artifactsService.listVersions(ctx, artifactId),
+      createVersion: (ctx, artifactId, input) =>
+        artifactsService.createVersion(ctx, artifactId, input),
+    },
+    similarity: {
+      evaluate: async (ctx, input) => {
+        const {
+          SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
+          scriptSourceSimilaritySchema,
+          modelFor,
+          runStructuredNode,
+        } = await import("@creatoros/ai-worker");
+        const spec = await resolveModelSpec(ctx, "script.review");
+        const result = await runStructuredNode({
+          model: modelFor(spec),
+          template: SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
+          facets: {
+            candidate: input.candidateText,
+            sources: input.sourceTexts
+              .map((text, index) => `【来源 ${index + 1}】\n${text}`)
+              .join("\n\n"),
+          },
+        });
+        return scriptSourceSimilaritySchema.parse(result.object).score;
+      },
+    },
+  });
+  const projectScriptGenerator: ProjectScriptCandidateGeneratorPort = {
+    generate: async (c, target) => {
+        const { modelFor, runScriptNode } = await import(
+          "@creatoros/ai-worker"
+        );
+        const spec = await resolveModelSpec(c, "script.draft");
+        const sourceBrief = target.sources
+          .map(
+            (source, index) =>
+              `【来源 ${index + 1}·只作事实与结构参照，禁照搬原句】\n` +
+              `链接：${source.item.canonicalUrl}\n` +
+              `已确认拆写：${JSON.stringify(source.transform.outputSnapshot)}\n` +
+              `逐字稿：${source.transcript.text}`,
+          )
+          .join("\n\n");
+        const generated = await runScriptNode({
+          model: modelFor(spec),
+          positioningBrief:
+            "必须按当前 Project 已确认的选题与创作者定位表达，不冒充来源作者。",
+          ...(target.sources[0]?.item.title
+            ? { topicTitle: target.sources[0].item.title }
+            : {}),
+          extraBrief: `${target.strategy}\n\n${sourceBrief}`,
+        });
+        return {
+          text: generated.shots
+            .map((shot) => shot.口播.trim())
+            .filter(Boolean)
+            .join("\n"),
+        };
+    },
+  };
+  const projectScriptRunnerDeps = {
+    tasks: persistentTaskService,
+    references: projectIntelligenceReferences,
+    generator: projectScriptGenerator,
+  };
+  const intelligenceBase = createIntelligenceTransport(
+    () => intelligenceService,
+    () => projectIntelligenceReferences,
+    () => projectScriptCandidates,
+  );
+  const fetchIntelligenceFeed = async (url: string) => {
+    let current = url;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    try {
+      for (let redirect = 0; redirect <= 5; redirect += 1) {
+        await assertUrlAllowed(current);
+        const response = await fetch(current, {
+          signal: controller.signal,
+          redirect: "manual",
+          headers: {
+            accept:
+              "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9",
+          },
+        });
+        if (response.status >= 300 && response.status < 400) {
+          const location = response.headers.get("location");
+          if (!location || redirect === 5) {
+            throw Object.assign(new Error("RSS 重定向无效或次数过多"), {
+              name: "RssHttpError",
+            });
+          }
+          current = new URL(location, current).toString();
+          continue;
+        }
+        if (!response.ok) {
+          throw Object.assign(new Error(`RSS HTTP ${response.status}`), {
+            name: "RssHttpError",
+          });
+        }
+        const announced = Number(response.headers.get("content-length"));
+        if (Number.isFinite(announced) && announced > 5 * 1024 * 1024) {
+          throw Object.assign(new Error("RSS 响应超过 5MB"), {
+            name: "RssResponseTooLargeError",
+          });
+        }
+        const xml = await response.text();
+        if (new TextEncoder().encode(xml).byteLength > 5 * 1024 * 1024) {
+          throw Object.assign(new Error("RSS 响应超过 5MB"), {
+            name: "RssResponseTooLargeError",
+          });
+        }
+        return { xml, finalUrl: current };
+      }
+      throw Object.assign(new Error("RSS 重定向次数过多"), {
+        name: "RssHttpError",
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  const intelligenceSourceAdapter = createIntelligenceSourceAdapter({
+    now: deps.now,
+    fetchProfileWorks: async ({ ctx, externalAccountId }) => {
+      const rows = await (await loadDouyinCdp()).fetchDouyinUserPosts({
+        authDir: douyinAuthDirFor(ctx.accountId),
+        secUid: externalAccountId,
+        maxPages: 100,
+        strictEvidence: true,
+        gateway: douyinGateway,
+      });
+      return rows;
+    },
+    fetchFavoriteWorks: async ({ ctx, folderId }) =>
+      (await loadDouyinCdp()).fetchDouyinCollectsVideos({
+        authDir: douyinAuthDirFor(ctx.accountId),
+        collectsId: folderId,
+        maxItems: 1_000,
+        strictEvidence: true,
+        gateway: douyinGateway,
+      }),
+    readWeb: async ({ ctx, url }) => {
+      const domain = webDomainFromUrl(url);
+      return readWebUrlSidecar(
+        url,
+        { authDir: webAuthDirFor(domain) },
+        {
+          openContext: () =>
+            openPooledReaderContext(ctx, domain) as never,
+        },
+      );
+    },
+    fetchFeed: ({ url }) => fetchIntelligenceFeed(url),
+    parseFeed,
+    fetchDouhot: async ({ ctx, keyword, board }) =>
+      (await loadDouhotCdp()).fetchDouhotLowFollowerBreakout({
+        authDir: douyinAuthDirFor(ctx.accountId),
+        keyword,
+        board,
+      }),
+  });
+  const sourceRunnerDeps = {
+    tasks: persistentTaskService,
+    intelligence: intelligenceService,
+    adapter: intelligenceSourceAdapter,
+    now: deps.now,
+  };
+  const shareImportRunnerDeps = {
+    tasks: persistentTaskService,
+    intelligence: intelligenceService,
+    now: deps.now,
+    fetcher: {
+      fetch: async (
+        ctx: RequestContext,
+        input: { shareText: string; capturedAt: string },
+      ) => {
+        const cdp = await loadDouyinCdp();
+        const target = await cdp.resolveDouyinShareTarget(input.shareText);
+        const parsed = await cdp.fetchDouyinSharedItem({
+          awemeId: target.awemeId,
+          canonicalUrl: target.canonicalUrl,
+          authDir: douyinAuthDirFor(ctx.accountId),
+          capturedAt: input.capturedAt,
+          gateway: douyinGateway,
+        });
+        return {
+          shareUrl: target.shareUrl,
+          resolvedUrl: target.resolvedUrl,
+          item: parsed.item,
+          browserSessionRef: `douyin-profile:${ctx.accountId}`,
+        };
+      },
+    },
+  };
+  let intelligenceTranscriptRunnerDeps:
+    | IntelligenceTranscriptRunnerDeps
+    | null = null;
+  const dispatchIntelligenceRun = (
+    ctx: RequestContext,
+    result: unknown,
+  ): void => {
+    const data = (result as {
+      data?: {
+        source?: { id?: unknown };
+        run?: { id?: unknown; sourceId?: unknown };
+        task?: { id?: unknown; status?: unknown };
+      };
+    }).data;
+    const sourceId =
+      typeof data?.source?.id === "string"
+        ? data.source.id
+        : typeof data?.run?.sourceId === "string"
+          ? data.run.sourceId
+          : null;
+    if (
+      sourceId &&
+      typeof data?.run?.id === "string" &&
+      typeof data?.task?.id === "string" &&
+      data.task.status === "queued"
+    ) {
+      void runIntelligenceSourceTask(
+        ctx,
+        {
+          sourceId,
+          runId: data.run.id,
+          taskId: data.task.id,
+        },
+        sourceRunnerDeps,
+      ).catch((error) => {
+        console.error(
+          "[intelligence] 来源任务启动失败:",
+          error instanceof Error ? error.name : "UnknownError",
+        );
+      });
+    }
+  };
+  const intelligence: Transport = {
+    async request(endpoint, input, ctx) {
+      if (ctx && endpoint.id === "intelligence.sources.previewProfile") {
+        const body = (input as {
+          body?: { accountId?: string; url?: string };
+        })?.body;
+        const accountId = requireAccountId(
+          ctx.accountId,
+          endpoint.id,
+        );
+        if (body?.accountId !== accountId) {
+          throw new Error("Intelligence source not found");
+        }
+        const url = new URL(body.url ?? "");
+        if (
+          !/(^|\.)douyin\.com$/i.test(url.hostname) ||
+          !url.pathname.match(/\/user\/([^/?#]+)/)
+        ) {
+          throw new Error("请输入完整的抖音博主主页链接");
+        }
+        const externalAccountId = decodeURIComponent(
+          url.pathname.match(/\/user\/([^/?#]+)/)?.[1] ?? "",
+        );
+        const preview = await (
+          await loadDouyinCdp()
+        ).previewDouyinUserProfile({
+          authDir: douyinAuthDirFor(accountId),
+          secUid: externalAccountId,
+          canonicalUrl: url.toString(),
+          maxPages: 1,
+          strictEvidence: true,
+          gateway: douyinGateway,
+        });
+        return {
+          data: {
+            platform: "douyin",
+            ...preview,
+            browserSessionRef: `douyin-profile:${accountId}`,
+          },
+          meta: { requestId: ctx.requestId },
+        };
+      }
+      if (ctx && endpoint.id === "intelligence.sources.previewWeb") {
+        const body = (input as {
+          body?: {
+            accountId?: string;
+            url?: string;
+            instruction?: string;
+            browserSessionRef?: string;
+          };
+        })?.body;
+        const accountId = requireAccountId(ctx.accountId, endpoint.id);
+        if (body?.accountId !== accountId) {
+          throw new Error("Intelligence source not found");
+        }
+        const requestedUrl = new URL(body.url ?? "").toString();
+        try {
+          const feed = await fetchIntelligenceFeed(requestedUrl);
+          if (/<(?:rss|feed)\b/i.test(feed.xml)) {
+            const rows = parseFeed(
+              feed.xml,
+              new URL(feed.finalUrl).hostname,
+            );
+            return {
+              data: {
+                type: "rss",
+                title: new URL(feed.finalUrl).hostname,
+                finalUrl: feed.finalUrl,
+                samples: rows.slice(0, 3).map((row) => ({
+                  title: row.title,
+                  url: row.url,
+                  summary: row.snippet || null,
+                })),
+                loginRequired: false,
+                parser: "rss-or-atom-feed",
+                browserSessionRef: body.browserSessionRef ?? null,
+              },
+              meta: { requestId: ctx.requestId },
+            };
+          }
+        } catch {
+          // 不是公开 feed 时继续尝试受控浏览器正文预览；最终错误由该真实读取路径返回。
+        }
+        const domain = webDomainFromUrl(requestedUrl);
+        try {
+          const read = await readWebUrlSidecar(
+            requestedUrl,
+            { authDir: webAuthDirFor(domain) },
+            {
+              openContext: () =>
+                openPooledReaderContext(ctx, domain) as never,
+            },
+          );
+          return {
+            data: {
+              type: "web",
+              title: read.title || null,
+              finalUrl: read.finalUrl,
+              samples: [
+                {
+                  title: read.title,
+                  url: read.finalUrl,
+                  summary: read.text.trim().slice(0, 320) || null,
+                },
+              ],
+              loginRequired: false,
+              parser: `readable:${read.extractor}`,
+              browserSessionRef: body.browserSessionRef ?? null,
+            },
+            meta: { requestId: ctx.requestId },
+          };
+        } catch (error) {
+          if (error instanceof WebReaderLoginRequiredError) {
+            return {
+              data: {
+                type: "web",
+                title: null,
+                finalUrl: requestedUrl,
+                samples: [],
+                loginRequired: true,
+                parser: "login-required",
+                browserSessionRef: body.browserSessionRef ?? null,
+              },
+              meta: { requestId: ctx.requestId },
+            };
+          }
+          throw error;
+        }
+      }
+      if (
+        ctx &&
+        endpoint.id === "intelligence.sources.listFavoriteFolders"
+      ) {
+        const query = (input as {
+          query?: { accountId?: string; browserSessionRef?: string };
+        })?.query;
+        const accountId = requireAccountId(ctx.accountId, endpoint.id);
+        if (
+          query?.accountId !== accountId ||
+          query.browserSessionRef !== `douyin-profile:${accountId}`
+        ) {
+          throw new Error("Intelligence source not found");
+        }
+        const folders = await (
+          await loadDouyinCdp()
+        ).fetchDouyinCollectsFolders({
+          authDir: douyinAuthDirFor(accountId),
+          strictEvidence: true,
+          gateway: douyinGateway,
+        });
+        return {
+          data: folders.map((folder) => ({
+            id: folder.collectsId,
+            name: folder.name,
+            itemCount: folder.totalCount,
+          })),
+          meta: {
+            requestId: ctx.requestId,
+            page: 1,
+            pageSize: folders.length || 1,
+            total: folders.length,
+          },
+        };
+      }
+      const result = await intelligenceBase.request(endpoint, input, ctx);
+      if (
+        ctx &&
+        endpoint.id === "intelligence.items.importDouyinShare"
+      ) {
+        const task = (
+          result as { data?: { task?: { id?: unknown; status?: unknown } } }
+        ).data?.task;
+        if (
+          typeof task?.id === "string" &&
+          task.status === "queued"
+        ) {
+          void runDouyinShareImportTask(
+            ctx,
+            { taskId: task.id },
+            shareImportRunnerDeps,
+          ).catch((error) => {
+            console.error(
+              "[intelligence] 单条分享导入任务启动失败:",
+              error instanceof Error ? error.name : "UnknownError",
+            );
+          });
+        }
+      }
+      if (
+        ctx &&
+        (endpoint.id === "intelligence.sources.create" ||
+          endpoint.id === "intelligence.runs.start")
+      ) {
+        dispatchIntelligenceRun(ctx, result);
+      }
+      if (
+        ctx &&
+        endpoint.id === "intelligence.transcripts.enqueue" &&
+        intelligenceTranscriptRunnerDeps
+      ) {
+        const tasks = (
+          result as { data?: { tasks?: Array<{ id?: unknown }> } }
+        ).data?.tasks;
+        for (const task of tasks ?? []) {
+          if (typeof task.id !== "string") continue;
+          void runIntelligenceTranscriptTask(
+            ctx,
+            { taskId: task.id },
+            intelligenceTranscriptRunnerDeps,
+          ).catch((error) => {
+            console.error(
+              "[intelligence] 逐字稿任务启动失败:",
+              error instanceof Error ? error.name : "UnknownError",
+            );
+          });
+        }
+      }
+      if (
+        ctx &&
+        endpoint.id === "intelligence.transforms.previewTopic"
+      ) {
+        const task = (
+          result as { data?: { task?: { id?: unknown; status?: unknown } } }
+        ).data?.task;
+        if (
+          typeof task?.id === "string" &&
+          task.status === "queued"
+        ) {
+          void runIntelligenceTopicPreviewTask(
+            ctx,
+            { taskId: task.id },
+            {
+              tasks: persistentTaskService,
+              intelligence: intelligenceService,
+              generator: {
+                generate: async (c, target) => {
+                  const {
+                    INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                    intelligenceTopicDecomposeSchema,
+                    modelFor,
+                    runStructuredNode,
+                  } = await import("@creatoros/ai-worker");
+                  const spec = await resolveModelSpec(c, "topic.generate");
+                  const result = await runStructuredNode({
+                    model: modelFor(spec),
+                    template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                    facets: {
+                      positioning: [
+                        target.positioning.oneLiner,
+                        target.positioning.keywords.length > 0
+                          ? `关键词：${target.positioning.keywords.join("、")}`
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join("\n"),
+                      sourceTitle: target.item.title,
+                      sourceAuthor:
+                        target.item.authorName ?? target.item.platform,
+                      sourceUrl: target.item.canonicalUrl,
+                      // 这里必须使用手动转写完成的逐字稿，不能退化成标题/摘要猜结构。
+                      transcript: target.transcript.text,
+                    },
+                  });
+                  return intelligenceTopicDecomposeSchema.parse(
+                    result.object,
+                  );
+                },
+              },
+            },
+          ).catch((error) => {
+            console.error(
+              "[intelligence] 选题候选任务启动失败:",
+              error instanceof Error ? error.name : "UnknownError",
+            );
+          });
+        }
+      }
+      if (
+        ctx &&
+        endpoint.id === "projects.scripts.generateCandidate"
+      ) {
+        const task = (result as { data?: { id?: unknown; status?: unknown } })
+          .data;
+        if (typeof task?.id === "string" && task.status === "queued") {
+          void runProjectScriptCandidateTask(
+            ctx,
+            { taskId: task.id },
+            projectScriptRunnerDeps,
+          ).catch((error) => {
+            console.error(
+              "[intelligence] Project 稿件候选任务启动失败:",
+              error instanceof Error ? error.name : "UnknownError",
+            );
+          });
+        }
+      }
+      return result;
+    },
+  };
+  // 恢复租约后继续真正排队的来源同步；只打印异常类型，绝不把 Cookie/签名写进日志。
+  void drainIntelligenceSourceQueue(sourceRunnerDeps).catch((error) => {
+    console.error(
+      "[intelligence] 启动恢复失败:",
+      error instanceof Error ? error.name : "UnknownError",
+    );
+  });
+  void drainProjectScriptCandidateQueue(projectScriptRunnerDeps).catch(
+    (error) => {
+      console.error(
+        "[intelligence] Project 稿件候选启动恢复失败:",
+        error instanceof Error ? error.name : "UnknownError",
+      );
+    },
+  );
+  void drainDouyinShareImportQueue(shareImportRunnerDeps).catch((error) => {
+    console.error(
+      "[intelligence] 单条分享导入启动恢复失败:",
+      error instanceof Error ? error.name : "UnknownError",
+    );
+  });
   // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
   const execution: Transport = {
@@ -5076,7 +5830,41 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
     },
   });
-  const candidate = createCandidateTransport(() => candidateService);
+  createTopicFromIntelligence = async (ctx, input) => {
+    const candidate = await candidateService.createCandidate(ctx, {
+      title: input.title,
+      angle: input.angle,
+      source: "benchmark",
+      sourceReferences: input.sourceReferences,
+    });
+    return { id: candidate.id };
+  };
+  const candidateBase = createCandidateTransport(() => candidateService);
+  // 内容雷达候选沿用现有 Candidate→Project 主链；promote 成功后，同步把
+  // item/snapshot/transform/transcript hash 固定为 Project 来源。普通候选没有
+  // intelligence transform，attachFromPromotion 诚实返回 null，不制造伪来源。
+  const candidate: Transport = {
+    async request(endpoint, input, ctx) {
+      const result = await candidateBase.request(endpoint, input, ctx);
+      if (ctx && endpoint.id === "candidates.promote") {
+        const promotion = (
+          result as {
+            data?: { candidateId?: unknown; projectId?: unknown };
+          }
+        ).data;
+        if (
+          typeof promotion?.candidateId === "string" &&
+          typeof promotion.projectId === "string"
+        ) {
+          await projectIntelligenceReferences.attachFromPromotion(ctx, {
+            topicId: promotion.candidateId,
+            projectId: promotion.projectId,
+          });
+        }
+      }
+      return result;
+    },
+  };
 
   // Calibration (module 20, Wave 5–7): the service builds a per-ctx user-scoped repo
   // over the shared db (the repo bakes userId in; the service mints one per request).
@@ -5299,6 +6087,59 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       asrRegistry,
     );
     return text && text.trim() ? text : null;
+  };
+  intelligenceTranscriptRunnerDeps = {
+    tasks: persistentTaskService,
+    intelligence: intelligenceService,
+    transcript: {
+      transcribe: async (c, input) => {
+        const awemeId =
+          input.externalId ??
+          input.canonicalUrl.match(/\/video\/([^/?#]+)/)?.[1] ??
+          null;
+        if (!awemeId) {
+          return {
+            text: null,
+            provider: null,
+            model: null,
+            language: "zh",
+            skippedReason: "NO_AUDIO_SOURCE",
+          };
+        }
+        const cdp = await loadDouyinCdp();
+        const source = await cdp.fetchDouyinVideoSource({
+          awemeId,
+          authDir: douyinAuthDirFor(c.accountId),
+          gateway: douyinGateway,
+        });
+        if (source.kind === "image-album") {
+          return {
+            text: null,
+            provider: null,
+            model: null,
+            language: "zh",
+            skippedReason: "IMAGE_ALBUM",
+          };
+        }
+        const audioBytes = await cdp.streamAudioFromVideo(source.playUrl);
+        const spec = await resolveTranscribeSpecFn(c, {
+          getModelConfig: (cc, capability) =>
+            settingsService.getModelConfig(cc, capability),
+          env: process.env,
+        });
+        const result = await transcribeAudioFn(
+          spec,
+          { audioBytes, language: "zh" },
+          asrRegistry,
+        );
+        return {
+          text: result.text,
+          provider: spec.provider,
+          model: spec.model,
+          language: "zh",
+        };
+      },
+    },
   };
 
   const scheduledCollectors: Record<string, ScheduledCollector> = {
@@ -6124,6 +6965,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   (拆解状态=待拆,供 T-212c)。降频(源间 sleep ≥1.5s)、单源失败跳过、限流网关已接(gateway
     //   在 fetchDouyinUserPosts 内每页 acquire)。空源 → 诚实 0 跑(非失败)。
     benchmark: async (ctx, _target, report) => {
+      if (await intelligenceService.isLegacySignalSourceWriteFenced(ctx)) {
+        report({
+          stage: "retired",
+          processed: 0,
+          total: 0,
+          message: "旧对标采集已退役；请在内容雷达同步博主与作品。",
+        });
+        return {
+          itemsNew: 0,
+          itemsUpdated: 0,
+          message: "旧对标采集已退役；来源、作品与转选题统一由内容雷达处理。",
+        };
+      }
       const result = await collectBenchmark(ctx, {
         listEnabledSources: (c) => benchmarkService.listEnabledSources(c),
         fetchSourcePosts: async (c, source) => {
@@ -6356,7 +7210,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         report,
       });
     },
-    // [T-235c] 指定收藏夹采集(favorites):读该号登记的指定收藏夹(信号源→收藏夹)→ 拉本人
+    // [T-235c] 旧指定收藏夹采集兼容链：只供迁移前存量任务读取；新来源统一在内容雷达登记。
     //   收藏夹列表按 name 精确匹配(回填 collectsId + lastSyncedAt)→ 逐匹配夹拉夹内视频
     //   (≤50/夹)→ favorites_items 幂等台账((user, aweme_id) 去重只插新)→ **≤3/run 限量进池**
     //   (照 benchmark-teardown maxPromotePerRun 语义,防灌库)→ createCandidate(source=favorites)
@@ -6365,6 +7219,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   验证码 → fetch 函数内返空跳过。未登录 → DouyinNotLoggedInError 直接上抛(runner
     //   isNotLoggedInError → needs_reconnect,与 self.metrics/comments 同款路径)。
     favorites: async (ctx, _target, report) => {
+      if (await intelligenceService.isLegacySignalSourceWriteFenced(ctx)) {
+        report({
+          stage: "retired",
+          processed: 0,
+          total: 0,
+          message: "旧收藏夹采集已退役；请在内容雷达使用“我的收藏”。",
+        });
+        return {
+          itemsNew: 0,
+          itemsUpdated: 0,
+          message: "旧收藏夹采集已退役；收藏作品统一由内容雷达建档。",
+        };
+      }
       report({ stage: "favorites", processed: 0, total: null, message: "读取登记的收藏夹" });
       const folders = await favoritesService.listEnabledFolders(ctx);
       if (folders.length === 0) {
@@ -6373,7 +7240,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           itemsNew: 0,
           itemsUpdated: 0,
           message:
-            "未指定收藏夹:在选题中心「信号源→收藏夹」登记要采集的抖音收藏夹(建议在抖音建专门收藏夹如「选题库」)",
+            "未指定收藏夹：请在内容雷达添加“我的收藏”来源；旧收藏夹自动化已进入迁移兼容期。",
         };
       }
 
@@ -7266,6 +8133,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getTrendingTopics: async (ctx) => {
         try {
           const { rows } = await candidateService.listCandidates(ctx, {
+            status: "pool",
             sort: "predictedScore",
             limit: 5,
             offset: 0,
@@ -8054,6 +8922,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     groq: openaiAsrAdapter,
     "whisper-local": whisperLocalAdapter,
   };
+  const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
+  if (transcriptStartupDeps) {
+    void drainIntelligenceTranscriptQueue(transcriptStartupDeps).catch(
+      (error) => {
+        console.error(
+          "[intelligence] 逐字稿启动恢复失败:",
+          error instanceof Error ? error.name : "UnknownError",
+        );
+      },
+    );
+  }
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
   // resolveSearchSpec:与多模态层同一套 getModelConfig(settings 拥有 model_configurations)+ env,
@@ -9288,8 +10167,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }
         })();
         const hasSession = domain
-          ? await browserSessionsService
-              .getState(ctx, domain)
+          ? await getWebSessionState(ctx, domain)
               .then((s) => s !== null)
               .catch(() => false)
           : false;
@@ -9439,8 +10317,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             input.url,
             searchers,
           ).catch(() => []);
-          const hasSession = await browserSessionsService
-            .getState(ctx, domain)
+          const hasSession = await getWebSessionState(ctx, domain)
             .then((s) => s !== null)
             .catch(() => false);
           return {
@@ -10145,6 +11022,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     learnings,
     ai,
     execution,
+    intelligence,
     positioning,
     candidate,
     calibration,
@@ -10274,6 +11152,10 @@ async function getAi(): Promise<Transport> {
 // [T-255a] 执行层 transport 取用(execution.tasks.*)。
 async function getExecution(): Promise<Transport> {
   return (await getBundle()).execution;
+}
+
+async function getIntelligence(): Promise<Transport> {
+  return (await getBundle()).intelligence;
 }
 
 async function getPositioning(): Promise<Transport> {
@@ -10585,6 +11467,12 @@ export const compositeTransport: Transport = {
     if (EXECUTION_OPS.has(endpoint.id)) {
       const execution = await getExecution();
       return execution.request(endpoint, input, ctx);
+    }
+    // T-482 内容雷达：分类/来源/运行/作品/手动转写均走真实 DB；不回退 mock，
+    // 防止界面显示“成功”但实际没有入库。
+    if (INTELLIGENCE_OPS.has(endpoint.id)) {
+      const intelligence = await getIntelligence();
+      return intelligence.request(endpoint, input, ctx);
     }
     // Positioning ops (module 17, Wave 5) — profile get/upsert + statements
     // list/create/get + gate.evaluate + pages.positioning.get served by the module's

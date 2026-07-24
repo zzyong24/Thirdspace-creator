@@ -158,6 +158,39 @@ describe("douyin 扫码 upsert 去重 + 占位号合并", () => {
     expect(await activeHandles(svc)).toEqual(["@已经是真实号"]);
   });
 
+  it("[T-469] 两个身份待识别新号保持独立，只回填当前 accountId 对应账号", async () => {
+    const first = await ensureDouyinAccountUpsert(svc, ctx, {
+      platform: "douyin",
+      handle: "抖音账号（待识别·11111111）",
+      externalAccountId: null,
+    });
+    const second = await ensureDouyinAccountUpsert(svc, ctx, {
+      platform: "douyin",
+      handle: "抖音账号（待识别·22222222）",
+      externalAccountId: null,
+    });
+    expect(first.id).not.toBe(second.id);
+    expect(await activeHandles(svc)).toEqual(
+      ["抖音账号（待识别·11111111）", "抖音账号（待识别·22222222）"].sort(),
+    );
+
+    await mergeDouyinPlaceholders(
+      svc,
+      { ...ctx, accountId: second.id },
+      {
+        platform: "douyin",
+        handle: "@第二个真实号",
+        externalAccountId: "sec-uid-second",
+      },
+    );
+    expect(await activeHandles(svc)).toEqual(
+      ["抖音账号（待识别·11111111）", "@第二个真实号"].sort(),
+    );
+    expect((await findAccount(svc, second.id)).externalAccountId).toBe(
+      "sec-uid-second",
+    );
+  });
+
   // ───────────────────────────────────────────────────────────────────────────
   // [T-201b] 身份键解耦(external_account_id / sec_uid):昵称漂移不再冒重号。
   // ───────────────────────────────────────────────────────────────────────────

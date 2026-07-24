@@ -37,6 +37,7 @@
  */
 
 import * as React from "react";
+import { Check, Copy } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 // [T-285] mount 恢复已上传素材:取 SRT 资产签名下载 URL 回读文本。
@@ -149,6 +150,85 @@ async function readFileText(file: File): Promise<string> {
   });
 }
 
+/**
+ * 结构化分镜稿 → 纯口播稿。
+ *
+ * 命中「口播:」标记时，只保留该段及其续行；画面/字幕/时长等制作说明全部剔除。
+ * 没有任何结构标记时，说明稿件本来就是纯文本，原样复制，避免把用户自由稿误删空。
+ */
+export function extractVoiceoverText(script: string): string {
+  const normalized = script.replace(/\r\n?/g, "\n").trim();
+  if (!normalized) return "";
+
+  const voiceoverBlocks: string[] = [];
+  let current: string[] = [];
+  let collecting = false;
+  let foundVoiceoverLabel = false;
+
+  const flush = () => {
+    const block = current.join("\n").trim();
+    if (block) voiceoverBlocks.push(block);
+    current = [];
+  };
+
+  for (const rawLine of normalized.split("\n")) {
+    const line = rawLine.trim();
+    const voiceover = line.match(/^口播\s*[：:]\s*(.*)$/i);
+    if (voiceover) {
+      flush();
+      collecting = true;
+      foundVoiceoverLabel = true;
+      if (voiceover[1]?.trim()) current.push(voiceover[1].trim());
+      continue;
+    }
+
+    if (
+      /^(画面|字幕|时长|镜头|景别|动作|素材|音效|配乐|BGM)\s*[：:]/i.test(
+        line,
+      )
+    ) {
+      flush();
+      collecting = false;
+      continue;
+    }
+
+    if (!collecting) continue;
+    if (!line) {
+      flush();
+      collecting = false;
+      continue;
+    }
+    if (/^(?:#{1,6}\s*)?\d+[.、]\s+/.test(line)) {
+      flush();
+      collecting = false;
+      continue;
+    }
+    current.push(line);
+  }
+  flush();
+
+  return foundVoiceoverLabel
+    ? voiceoverBlocks.join("\n\n").trim()
+    : normalized;
+}
+
+async function writeClipboardText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const input = document.createElement("textarea");
+  input.value = text;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.appendChild(input);
+  input.select();
+  const copied = document.execCommand("copy");
+  input.remove();
+  if (!copied) throw new Error("copy_failed");
+}
+
 // ── 两阶段上传链(同 upload-to-project 先例;stage="production" 挂用料链)────────
 
 async function uploadProductionAsset(
@@ -252,6 +332,22 @@ export function ProductionWorkbench({
   const [outputId, setOutputId] = React.useState(initialOutputId);
   const [status, setStatus] = React.useState<string | null>(initialStatus);
   const [segmentCount, setSegmentCount] = React.useState(initialSegmentCount);
+  const [copyVoiceoverStatus, setCopyVoiceoverStatus] = React.useState<
+    "idle" | "copied" | "error"
+  >("idle");
+  const voiceoverText = React.useMemo(
+    () => extractVoiceoverText(scriptText ?? ""),
+    [scriptText],
+  );
+  const copyVoiceover = React.useCallback(async () => {
+    if (!voiceoverText) return;
+    try {
+      await writeClipboardText(voiceoverText);
+      setCopyVoiceoverStatus("copied");
+    } catch {
+      setCopyVoiceoverStatus("error");
+    }
+  }, [voiceoverText]);
 
   const [video, setVideo] = React.useState<VideoState | null>(null);
   const [srt, setSrt] = React.useState<SrtState | null>(null);
@@ -400,14 +496,14 @@ export function ProductionWorkbench({
     return checkSrtDurationMatch(srt.lines, video.durationSec);
   }, [srt, video]);
   const scriptCheck: SrtScriptCheck | null = React.useMemo(() => {
-    if (!srt || !scriptText?.trim()) return null;
-    return checkSrtScriptMatch(srt.lines, scriptText);
-  }, [srt, scriptText]);
+    if (!srt || !voiceoverText) return null;
+    return checkSrtScriptMatch(srt.lines, voiceoverText);
+  }, [srt, voiceoverText]);
   const checksBlocked =
     (durationCheck !== null && !durationCheck.ok) ||
     (scriptCheck !== null && !scriptCheck.ok);
 
-  const materialsReady = Boolean(video && srt && scriptText?.trim());
+  const materialsReady = Boolean(video && srt && voiceoverText);
   const canDispatchDecisions =
     materialsReady && (!checksBlocked || override) && !decisionsTaskId && !decisionsBusy;
 
@@ -893,7 +989,7 @@ export function ProductionWorkbench({
 
   // ── ② AI 分场决策 dispatch + 轮询 ───────────────────────────────────────────
   const dispatchDecisions = React.useCallback(async () => {
-    if (!srt || !scriptText?.trim()) return;
+    if (!srt || !voiceoverText) return;
     setDecisionsBusy(true);
     setDecisionsError(null);
     try {
@@ -905,7 +1001,7 @@ export function ProductionWorkbench({
           inputData: {
             projectId,
             srtText: srt.text,
-            script: scriptText,
+            script: voiceoverText,
             // [T-387c] 备料③人剔除的自动聚合项 → 决策可选集里滤掉(不动用料链)。
             excludedAssetIds: Array.from(excludedAuto),
           },
@@ -919,7 +1015,7 @@ export function ProductionWorkbench({
     } finally {
       setDecisionsBusy(false);
     }
-  }, [projectId, srt, scriptText, excludedAuto]);
+  }, [projectId, srt, voiceoverText, excludedAuto]);
 
   const loadDecisionResult = React.useCallback(
     async (taskId: string): Promise<boolean> => {
@@ -1278,12 +1374,37 @@ export function ProductionWorkbench({
         data-slot="production-script"
         className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
       >
-        <h3 className="text-sm font-medium">① 口播稿(提词用)</h3>
-        {scriptText?.trim() ? (
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-medium">① 口播稿(提词用)</h3>
+          {voiceoverText ? (
+            <button
+              type="button"
+              data-slot="copy-voiceover"
+              onClick={() => void copyVoiceover()}
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              {copyVoiceoverStatus === "copied" ? (
+                <Check className="size-3.5 text-success" aria-hidden="true" />
+              ) : (
+                <Copy className="size-3.5" aria-hidden="true" />
+              )}
+              {copyVoiceoverStatus === "copied"
+                ? "已复制纯口播稿"
+                : copyVoiceoverStatus === "error"
+                  ? "复制失败，请重试"
+                  : "复制纯口播稿"}
+            </button>
+          ) : null}
+        </div>
+        {voiceoverText ? (
           <>
-            <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-control bg-muted/40 p-3 text-sm leading-relaxed">
-              {scriptText}
-            </pre>
+            <textarea
+              data-slot="voiceover-preview"
+              aria-label="纯口播稿（提词器用）"
+              readOnly
+              value={voiceoverText}
+              className="min-h-48 max-h-64 w-full resize-y overflow-y-auto whitespace-pre-wrap rounded-control border-0 bg-muted/40 p-3 text-sm leading-relaxed text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            />
             <p className="text-xs text-muted-foreground">
               录制指引:手机/相机横屏 1080p+,对着上面的稿子念完整条(口误就重来一句,
               后期按 SRT 剪);录完在剪辑软件里粗剪掉口误段,<b>导出粗剪视频 + SRT 字幕</b>

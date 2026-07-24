@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // The view embeds client islands: the draft-drawer forms (PositioningProfileForm/
@@ -177,6 +177,9 @@ describe("PositioningCenterView", () => {
     expect(fields.textContent).toContain("只做能产出可运行代码的选题");
     expect(fields.textContent).toContain("禁止事项");
     expect(screen.getAllByTestId("positioning-rule-card").length).toBe(5);
+    expect(
+      within(panel).getByRole("button", { name: "编辑定位规则" }),
+    ).toBeInTheDocument();
   });
 
   it("drops empty rule cards rather than inventing them", () => {

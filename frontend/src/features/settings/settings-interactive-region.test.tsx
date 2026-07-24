@@ -8,7 +8,7 @@
  */
 
 import * as React from "react";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -36,7 +36,13 @@ const mockClient = {
   ),
   // [T-377] 测试连接(settings.models.test):默认 ✓ 连通;失败态各测试自行覆盖。
   testModelConnection: vi.fn(
-    (_input: unknown): Promise<{ ok: boolean; detail: string }> =>
+    (
+      _input: unknown,
+    ): Promise<{
+      ok: boolean;
+      detail: string;
+      status?: "ok" | "warn" | "fail";
+    }> =>
       Promise.resolve({ ok: true, detail: "已发 1 token 真实补全,连通。" }),
   ),
 };
@@ -173,7 +179,13 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  delete (
+    window as unknown as Record<string, unknown>
+  ).__TAURI_INTERNALS__;
+  vi.restoreAllMocks();
+});
 
 // SettingsDialog renders through a Radix Portal (mounted on document.body), so
 // queries go through `document` rather than the render container. The dialog is
@@ -640,12 +652,54 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   // --- Transcribe (ASR) model config (SPEC 2026-07-01 §5.1, T-030-D1) --------
 
+  it("[T-489] ASR 是更多能力第一项，必配标题旁提供可读的模型配置手册", async () => {
+    const user = userEvent.setup();
+    const doc = renderDialog();
+    const moreBody = doc.querySelector('[data-slot="models-more-body"]');
+    expect(
+      moreBody?.firstElementChild
+        ?.querySelector("[data-capability]")
+        ?.getAttribute("data-capability"),
+    ).toBe("transcribe.audio");
+
+    await user.click(screen.getByRole("tab", { name: "模型配置" }));
+    await user.click(screen.getByRole("button", { name: "打开模型配置手册" }));
+    const manual = await screen.findByRole("dialog", { name: "模型配置手册" });
+    expect(manual.textContent).toContain("先选供应商");
+    expect(manual.textContent).toContain("接口地址");
+    expect(manual.textContent).toContain("接口格式");
+    expect(manual.textContent).toContain("API 密钥");
+    expect(manual.textContent).toContain("语音转文字");
+    expect(
+      manual.querySelector('[data-slot="model-manual-figure-default"]'),
+    ).not.toBeNull();
+    expect(
+      manual.querySelector('[data-slot="model-manual-figure-asr"]'),
+    ).not.toBeNull();
+  });
+
   it("renders the 逐字稿(audio) card without regressing the image/video cards", async () => {
     const doc = renderDialog();
     // 逐字稿(audio)卡渲出,capability=transcribe.audio。
     const audioCard = doc.querySelector('[data-slot="multimodal-audio-card"]');
     expect(audioCard).not.toBeNull();
     expect(audioCard!.getAttribute("data-capability")).toBe("transcribe.audio");
+    const provider = doc.querySelector(
+      '[data-slot="multimodal-audio-provider-input"]',
+    ) as HTMLInputElement;
+    const model = doc.querySelector(
+      '[data-slot="multimodal-audio-model-input"]',
+    ) as HTMLInputElement;
+    const baseUrl = doc.querySelector(
+      '[data-slot="multimodal-audio-base-url-input"]',
+    ) as HTMLInputElement;
+    // [T-470] 空 DB 行必须保持真实空值；提示值明确写“示例”，不能看起来像已保存配置。
+    expect(provider.value).toBe("");
+    expect(model.value).toBe("");
+    expect(baseUrl.value).toBe("");
+    expect(provider.placeholder).toContain("示例");
+    expect(model.placeholder).toContain("示例");
+    expect(baseUrl.placeholder).toContain("示例");
     expect(
       doc.querySelector('[data-slot="multimodal-audio-provider-input"]'),
     ).not.toBeNull();
@@ -1027,6 +1081,50 @@ describe("Settings 诊断日志卡 (T-259)", () => {
       doc.querySelector('[data-slot="diagnostic-logs-action"]'),
     ).toBeNull();
   });
+
+  it("[T-476] Windows 打开失败时展示真实日志目录，用户仍可手动前往", async () => {
+    (
+      window as unknown as Record<string, unknown>
+    ).__TAURI_INTERNALS__ = {};
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (input) =>
+        String(input).includes("/api/v1/local/reveal-logs")
+          ? new Response(
+              JSON.stringify({
+                error: "reveal failed",
+                dir: "C:\\Users\\Alice\\AppData\\Roaming\\CreatorOS\\logs",
+              }),
+              { status: 500, headers: { "Content-Type": "application/json" } },
+            )
+          : new Response(JSON.stringify({}), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+      );
+    const doc = renderDialog();
+    const action = await waitFor(() => {
+      const button = doc.querySelector(
+        '[data-slot="diagnostic-logs-action"]',
+      ) as HTMLButtonElement | null;
+      if (!button) throw new Error("desktop action not ready");
+      return button;
+    });
+    fireEvent.click(action);
+    await waitFor(() => {
+      expect(
+        doc.querySelector('[data-slot="diagnostic-logs-fallback"]')
+          ?.textContent,
+      ).toContain("C:\\Users\\Alice\\AppData\\Roaming\\CreatorOS\\logs");
+    });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "/api/v1/local/reveal-logs",
+      expect.objectContaining({ method: "POST" }),
+    );
+    delete (
+      window as unknown as Record<string, unknown>
+    ).__TAURI_INTERNALS__;
+  });
 });
 
 // [T-377] 「测试连接」:每个 capability 卡旁,点击 → settings.models.test(测已保存配置)
@@ -1078,5 +1176,29 @@ describe("Settings 测试连接 (T-377)", () => {
     expect(result.getAttribute("data-ok")).toBe("false");
     expect(result.textContent ?? "").toContain("✗ 失败");
     expect(result.textContent ?? "").toContain("invalid api key");
+  });
+
+  it("[T-470] 未配云端 ASR 时显示中性本地回退说明，不出现绿色连通勾", async () => {
+    mockClient.testModelConnection.mockResolvedValueOnce({
+      ok: true,
+      status: "warn",
+      detail: "未配置云端 ASR，当前使用本地 Whisper。",
+    });
+    const doc = renderDialog();
+    fireEvent.click(
+      doc.querySelector(
+        '[data-slot="multimodal-audio-test-connection"]',
+      ) as HTMLButtonElement,
+    );
+    const result = await waitFor(() => {
+      const el = doc.querySelector(
+        '[data-slot="multimodal-audio-test-result"]',
+      );
+      if (!el) throw new Error("result not rendered yet");
+      return el;
+    });
+    expect(result.getAttribute("data-status")).toBe("warn");
+    expect(result.textContent ?? "").toContain("当前使用本地 Whisper");
+    expect(result.textContent ?? "").not.toContain("✓ 连通");
   });
 });

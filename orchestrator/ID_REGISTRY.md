@@ -486,4 +486,125 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | TEST-007 | test | frontend/scripts/desktop/build-sidecar.test.mjs | FR-069 |
 | TEST-008 | test | orchestrator/GATE-T471-RETROSPECTIVE.md | FR-069 |
 | RISK-011 | risk | orchestrator/GATE-T471-RETROSPECTIVE.md | DEC-019 |
+| DEC-CR-001 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-002 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-003 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-004 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-005 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-006 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-007 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-008 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-009 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-010 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| DEC-CR-011 | decision | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | PAT-004 |
+| DEC-CR-012 | decision | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | PAT-002, MOD-006 |
+| DEC-CR-013 | decision | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | DEC-CR-010 |
+| DEC-CR-014 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-002, DEC-CR-006, DEC-CR-007 |
+| DEC-CR-015 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-007 |
+| FR-CR-001 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-001 |
+| FR-CR-002 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-003 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-004 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004, DEC-CR-005 |
+| FR-CR-005 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004, DEC-CR-005, DEC-CR-008 |
+| FR-CR-006 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| FR-CR-007 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-007 |
+| FR-CR-008 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-009 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-004, DEC-CR-009 |
+| FR-CR-010 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-004, DEC-CR-010 |
+| FR-CR-011 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-012 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-002, DEC-CR-014 |
+| FR-CR-013 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-002, DEC-CR-006, DEC-CR-014 |
+| FR-CR-014 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| FR-CR-015 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| FR-CR-016 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-017 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-018 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| FR-CR-019 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-004 |
+| FR-CR-020 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| FR-CR-021 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-007, DEC-CR-015 |
+| NFR-CR-001 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| NFR-CR-002 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| NFR-CR-003 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| NFR-CR-004 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-005 |
+| NFR-CR-005 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| NFR-CR-006 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| NFR-CR-007 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| NFR-CR-008 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-002, DEC-CR-014 |
+| NFR-CR-009 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003 |
+| NFR-CR-010 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| NFR-CR-011 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
+| NFR-CR-012 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
+| NFR-CR-013 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-006 |
+| FLOW-CR-001 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-003, FR-CR-004 |
+| FLOW-CR-002 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-009 |
+| FLOW-CR-003 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-010 |
+| FLOW-CR-004 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-008 |
+| FLOW-CR-005 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-012 |
+| FLOW-CR-006 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-013 |
+| FLOW-CR-007 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-014, FR-CR-020 |
+| FLOW-CR-008 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-016 |
+| FLOW-CR-009 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-021 |
+| ENT-CR-001 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-002 |
+| ENT-CR-002 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-003, FR-CR-008, FR-CR-009, FR-CR-010 |
+| ENT-CR-003 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-004, FR-CR-005, FR-CR-019 |
+| ENT-CR-004 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-006 |
+| ENT-CR-005 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-007 |
+| ENT-CR-006 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-014, FR-CR-020 |
+| ENT-CR-007 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-014 |
+| ENT-CR-008 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-012, FR-CR-013 |
+| ENT-CR-009 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-019 |
+| ENT-CR-010 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-009, FR-CR-019 |
+| ENT-CR-011 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-013 |
+| ENT-CR-012 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-002, FR-CR-021 |
+| IA-CR-001 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-001 |
+| IA-CR-002 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-002, FR-CR-011 |
+| IA-CR-003 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-003, FR-CR-008, FR-CR-009, FR-CR-010 |
+| IA-CR-004 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-014, FR-CR-015, FR-CR-017 |
+| IA-CR-005 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-005, FR-CR-006, FR-CR-007, FR-CR-011 |
+| IA-CR-006 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-012, FR-CR-013 |
+| IA-CR-007 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-014, FR-CR-015 |
+| IA-CR-008 | ia | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-001, FR-CR-012 |
+| API-CR-001 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-001, FR-CR-002, FR-CR-014 |
+| API-CR-002 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-002 |
+| API-CR-003 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-002 |
+| API-CR-004 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-002, FR-CR-017 |
+| API-CR-005 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-003 |
+| API-CR-006 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-009 |
+| API-CR-007 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-008 |
+| API-CR-008 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-003, FR-CR-008, FR-CR-009, FR-CR-010, FR-CR-015 |
+| API-CR-009 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-002, FR-CR-014 |
+| API-CR-010 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-002, FR-CR-015, FR-CR-017 |
+| API-CR-011 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-017 |
+| API-CR-012 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-004, FR-CR-014, FR-CR-020 |
+| API-CR-013 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-014 |
+| API-CR-014 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-014 |
+| API-CR-015 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-005, FR-CR-011, FR-CR-019 |
+| API-CR-016 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-005, FR-CR-006, FR-CR-011, FR-CR-019 |
+| API-CR-017 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-007, FR-CR-020 |
+| API-CR-018 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-020 |
+| API-CR-019 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-020 |
+| API-CR-020 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-012 |
+| API-CR-021 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-012 |
+| API-CR-022 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-013 |
+| API-CR-023 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-013, FR-CR-020 |
+| API-CR-024 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-013 |
+| API-CR-025 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-016 |
+| API-CR-026 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-016 |
+| API-CR-027 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-016 |
+| API-CR-028 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-016 |
+| API-CR-029 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-003, FR-CR-009, FR-CR-010 |
+| API-CR-030 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-017 |
+| API-CR-031 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-021 |
+| RAT-CR-001 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-003 |
+| RAT-CR-002 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-004 |
+| RAT-CR-003 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-010 |
+| RAT-CR-004 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-008 |
+| RAT-CR-005 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-008 |
+| RAT-CR-006 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-009 |
+| RAT-CR-007 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-009 |
+| DEC-PKG-01 | decision | orchestrator/DECISION_LOG.md | NONE |
+| DEC-PKG-02 | decision | orchestrator/DECISION_LOG.md | NONE |
+| DEC-PKG-03 | decision | orchestrator/DECISION_LOG.md | NONE |
+| DEC-PKG-04 | decision | orchestrator/DECISION_LOG.md | NONE |
+| DEC-PKG-05 | decision | orchestrator/DECISION_LOG.md | NONE |
 ```

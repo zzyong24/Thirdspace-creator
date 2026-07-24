@@ -32,6 +32,7 @@ const FIXTURE_TITLE = "AI 产出差不是工具的锅";
 
 interface DashboardDto {
   recentPublications: Array<{ id: string; title: string; views: number }>;
+  trendingTopics: Array<{ id: string; title: string; heat: number }>;
 }
 
 async function getDashboard(): Promise<DashboardDto> {
@@ -66,6 +67,40 @@ beforeEach(() => {
 });
 
 describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底", () => {
+  it("首页热门选题只读当前 pool，已丢弃选题不再进入榜单", async () => {
+    const kept = (await compositeTransport.request(
+      ep("candidates.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: { title: "保留选题", angle: "", source: "idea" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    const dropped = (await compositeTransport.request(
+      ep("candidates.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: { title: "丢弃选题", angle: "", source: "idea" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    await compositeTransport.request(
+      ep("candidates.patch"),
+      {
+        params: { candidateId: dropped.data.id },
+        query: undefined,
+        body: { status: "dropped" },
+      } as never,
+      owner,
+    );
+
+    const dash = await getDashboard();
+    expect(dash.trendingTopics.map((t) => t.id)).toContain(kept.data.id);
+    expect(dash.trendingTopics.map((t) => t.id)).not.toContain(dropped.data.id);
+  });
+
   it("诚实空:无真数据时,最近发布 + 复盘待校准为空(fixture 演示种子已退役,T-050)", async () => {
     // [T-050 用户裁决] douyin/canonical 演示发布不再 seed:没有真数据就是空态,
     // 绝不再用 fixture 演示作品凑数(「过渡期不破」的过渡期结束)。

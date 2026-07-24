@@ -39,12 +39,14 @@ export {
 export {
   candidateResource,
   candidateCard,
+  candidateSourceReference,
   benchmarkTeardownRef,
   audienceSignalResource,
   topicPromotionResource,
   topicsOverviewResource,
   type CandidateResource,
   type CandidateCard,
+  type CandidateSourceReference,
   type BenchmarkTeardownRef,
   type AudienceSignalResource,
   type TopicPromotionResource,
@@ -175,6 +177,9 @@ export {
   type ExecutionManifest,
   type ExecutionTaskResource,
 } from "./resources/execution";
+
+// T-482 内容雷达领域与持久任务契约。
+export * from "./resources/intelligence";
 
 // [T-254a] video.render 决策 props 契约(渲染器无关)—— T-254b 决策 runner(写侧)与
 // backend execution video.render executor(读侧)共用单一真值(additive re-export)。

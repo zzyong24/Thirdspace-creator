@@ -299,7 +299,11 @@ export interface AiService {
   ): Promise<{ id: string; taskType: string; startedAt: string | null }[]>;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
-  cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  cancelTask(
+    ctx: RequestContext,
+    taskId: string,
+    errorMessage?: string,
+  ): Promise<AITaskResource>;
   // [DATA-H07] runner 失败清理 seam:asset.generate / cover.generate 在「asset 已建、
   // recordCandidate 失败」的窗口里调用它,把仍 pending 的生成资产软删进回收站(不留隐身孤儿)。
   // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
@@ -1135,7 +1139,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toTaskDto(updated);
     },
 
-    async cancelTask(ctx, taskId) {
+    async cancelTask(ctx, taskId, errorMessage) {
       const repo = repoFor(ctx, "ai.cancelTask");
       const task = await repo.requireTask(taskId);
       if (!canTransition(task.status, "cancelled")) {
@@ -1162,6 +1166,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const updated = await repo.updateTaskStatus(taskId, {
         status: "cancelled",
         completedAt: deps.now(),
+        errorMessage: errorMessage ?? null,
       });
       return toTaskDto(updated);
     },

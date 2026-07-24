@@ -22,6 +22,18 @@ export {
 } from "./execution.transport";
 
 export {
+  createPersistentTaskService,
+  type PersistentTaskService,
+  type PersistentTaskServiceDeps,
+  type PersistentTaskClaim,
+  type PersistentTaskKind,
+  type PersistentTaskOwnerType,
+  type PersistentTaskStatus,
+  type PersistentTaskCommand,
+  type EnqueuePersistentTaskInput,
+} from "./persistent-task.service";
+
+export {
   runExecutionTask,
   abortExecutionTask,
   type RunExecutionTaskDeps,

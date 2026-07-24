@@ -62,6 +62,7 @@ export interface CreateCandidateInput {
   positioningFit: number | null;
   predictedScore: number | null;
   aiTaskId: string | null;
+  card?: Record<string, unknown>;
 }
 
 // A free curation patch — NO promoted, NO demandCount (derived-field guard).
@@ -257,6 +258,7 @@ export function createCandidateRepository(
           demandCount: 0,
           status: "pool",
           aiTaskId: input.aiTaskId,
+          card: input.card ?? {},
           createdAt: deps.now(),
           updatedAt: deps.now(),
         })

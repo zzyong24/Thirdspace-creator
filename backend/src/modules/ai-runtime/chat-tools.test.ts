@@ -642,6 +642,20 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     });
   });
 
+  it("[T-473] 同一回合内相同选题补全调用幂等，只执行一次 runner", async () => {
+    const { deps, enrichTopic } = makeDeps();
+    const tools = buildChatTools(TOPIC_WHITELIST, deps);
+    const input = {
+      title: "MiniMax M2.5 实测",
+      angle: "开发者视角",
+      verifiedBrief: "已核实来源",
+    };
+    const first = await runExecute(tools["topic.enrich"]!, input);
+    const second = await runExecute(tools["topic.enrich"]!, input);
+    expect(second).toEqual(first);
+    expect(enrichTopic).toHaveBeenCalledTimes(1);
+  });
+
   it("[T-266] topic.enrich 锚定某候选(selection)→ result.candidateId 透传回(前端刷新后仍能 patch)", async () => {
     const { deps } = makeDeps({
       enrichTopic: vi.fn(async () => ({
@@ -2516,14 +2530,13 @@ describe("[T-240③] getSurfaceToolScope — 场景工具白名单", () => {
 
 // [T-245] 编导热点能力认知接线 —— 工具描述明说 trend 能力 + trendNote 诚实注记透传。
 describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () => {
-  it("topic.generate 描述明说 basis=trend 自动拉已登记信源信号 + web 搜索(信号源登记指路)", () => {
+  it("topic.generate 描述明说 basis=trend 自动拉内容雷达来源 + web 搜索", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
     const desc = (tools["topic.generate"]! as { description?: string })
       .description!;
     expect(desc).toContain("basis=trend");
-    expect(desc).toContain("已登记网页信源");
-    expect(desc).toContain("信号源");
+    expect(desc).toContain("内容雷达已登记网页/RSS 来源");
     expect(desc).toContain("绝不要说你没有实时热点能力");
   });
 
@@ -2536,7 +2549,7 @@ describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () =>
     const desc = (tools["material.gather"]! as { description?: string })
       .description!;
     expect(desc).toContain("topic.generate(basis=trend)");
-    expect(desc).toContain("信号源");
+    expect(desc).toContain("『内容雷达』");
   });
 
   it("generateTopics 返回新形状 { items, trendNote } → 工具结果带 trendNote(编导可如实转述)", async () => {
