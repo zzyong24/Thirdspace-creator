@@ -61,6 +61,9 @@ const mockClient = {
     Promise.resolve([
       {
         resultData: {
+          validationStatus: "valid",
+          validationErrors: [],
+          canAdopt: true,
           contentData: {
             sections: [
               {

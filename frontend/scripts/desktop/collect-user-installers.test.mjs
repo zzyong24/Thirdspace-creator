@@ -1,8 +1,9 @@
+// @vitest-environment node
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import test from "node:test";
+import { test } from "vitest";
 
 import { collectUserInstaller } from "./collect-user-installers.mjs";
 
