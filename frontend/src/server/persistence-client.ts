@@ -9046,6 +9046,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       );
       return results.length;
     },
+    // 与正式聊天完全复用同一 modelFor + streamText；必须消费出非空文本，
+    // 不能再把 HTML 200 / 2xx 空流误报成“连通”。
+    probeTextModel: async (spec) => {
+      const { streamText } = await import("ai");
+      const result = streamText({
+        model: modelFor(spec),
+        prompt: "连接测试。请只回复 OK。",
+        maxOutputTokens: 8,
+        maxRetries: 0,
+        abortSignal: AbortSignal.timeout(30_000),
+      });
+      let text = "";
+      for await (const delta of result.textStream) {
+        text += delta;
+        if (text.trim().length > 0) break;
+      }
+      return { text };
+    },
     fetchImpl: fetch,
   });
   // [T-235b] 已登记信源信号端口(热点多源证据主路)—— trend 出题(topic.generate trend basis /

@@ -133,17 +133,16 @@ function useSettingsMutation() {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const run = React.useCallback(
-    (mutate: () => Promise<unknown>) => {
-      if (pending) return;
+    async (mutate: () => Promise<unknown>): Promise<boolean> => {
+      if (pending) return false;
       setPending(true);
-      void (async () => {
-        try {
-          await mutate();
-          router.refresh();
-        } finally {
-          setPending(false);
-        }
-      })();
+      try {
+        await mutate();
+        router.refresh();
+        return true;
+      } finally {
+        setPending(false);
+      }
     },
     [pending, router],
   );
@@ -425,7 +424,17 @@ export function SettingsDialog({
                     </div>
                     <ModelConfigurationManual />
                   </div>
-                  <ModelConfigurationCard model={viewModel.model} />
+                  <ModelConfigurationCard
+                    key={[
+                      viewModel.model.provider,
+                      viewModel.model.modelName,
+                      viewModel.model.baseUrl,
+                      viewModel.model.apiFormat,
+                      viewModel.model.hasSecret,
+                      viewModel.model.temperature,
+                    ].join(":")}
+                    model={viewModel.model}
+                  />
                 </div>
 
                 {/* ② 折叠块「更多能力」:7 张按需卡,默认收起(不配也能用,各自诚实降级)。
@@ -2143,12 +2152,19 @@ function TestConnectionButton({
   capability,
   slotPrefix,
   quotaHint,
+  beforeTest,
+  label = "测试连接",
+  disabled = false,
 }: {
   capability: string;
   /** data-slot 前缀,如 "model" | "multimodal-image"。 */
   slotPrefix: string;
   /** 额度提示(如生图/付费搜索会真实调用消耗少量额度);null = 不提示。 */
   quotaHint?: string | null;
+  /** 主模型可先保存当前草稿，再测试刚保存的同一份配置。 */
+  beforeTest?: () => Promise<boolean | void>;
+  label?: string;
+  disabled?: boolean;
 }) {
   const [testing, setTesting] = React.useState(false);
   // [T-384] 三态:"warn" = 无法探测但也无法证伪配置(如 ASR 厂商无 /v1/models 端点)——
@@ -2162,6 +2178,13 @@ function TestConnectionButton({
     setTesting(true);
     setResult(null);
     try {
+      if (beforeTest) {
+        const ready = await beforeTest();
+        if (ready === false) {
+          setResult({ status: "fail", detail: "当前配置未保存，请检查必填项。" });
+          return;
+        }
+      }
       const res = (await client.testModelConnection({
         params: { capability },
         query: undefined,
@@ -2176,13 +2199,15 @@ function TestConnectionButton({
     } finally {
       setTesting(false);
     }
-  }, [capability]);
+  }, [beforeTest, capability]);
 
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground">
-          测试的是已保存的配置(改动请先保存)
+          {beforeTest
+            ? "会先保存当前填写，再按正式调用方式测试"
+            : "测试的是已保存的配置(改动请先保存)"}
           {quotaHint ? `;${quotaHint}` : ""}
         </span>
         <Button
@@ -2190,10 +2215,10 @@ function TestConnectionButton({
           data-slot={`${slotPrefix}-test-connection`}
           variant="outline"
           size="sm"
-          disabled={testing}
+          disabled={testing || disabled}
           onClick={() => void runTest()}
         >
-          {testing ? "测试中…" : "测试连接"}
+          {testing ? "测试中…" : label}
         </Button>
       </div>
       {result ? (
@@ -2243,29 +2268,23 @@ function ModelConfigurationCard({
   );
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
+  // 常用主路径只留「预设 / 模型 / 密钥」。只有自定义中转或排错时才展开协议等字段。
+  const [showAdvanced, setShowAdvanced] = React.useState(
+    () => matchPresetByConfig(model.baseUrl, model.apiFormat) === undefined,
+  );
   const [temperature, setTemperature] = React.useState<number>(
     model.temperature,
   );
   const { pending, run } = useSettingsMutation();
 
-  // Re-sync drafts when a server refresh changes the stored config.
-  React.useEffect(() => {
-    setProvider(model.provider);
-    setModelName(model.modelName);
-    setBaseUrl(model.baseUrl);
-    setApiFormat(model.apiFormat);
-    setPresetId(
-      matchPresetByConfig(model.baseUrl, model.apiFormat)?.id ?? CUSTOM_PRESET_ID,
-    );
-    setTemperature(model.temperature);
-    setSecret("");
-  }, [model]);
-
   // [T-325] 选中预设:一次性填 provider/baseUrl/接口格式(custom 不填,回全自由填)。
   // 模型不强制覆盖(预设是起点不锁死),只把候选切成该家 —— 见下方 datalist。
   const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {
     setPresetId(preset.id);
-    if (preset.id === CUSTOM_PRESET_ID) return;
+    if (preset.id === CUSTOM_PRESET_ID) {
+      setShowAdvanced(true);
+      return;
+    }
     setProvider(preset.id);
     setBaseUrl(preset.baseUrl);
     setApiFormat(preset.apiFormat);
@@ -2276,9 +2295,8 @@ function ModelConfigurationCard({
 
   // One PUT upserts the whole "default" config; an empty secret is omitted so a
   // re-save without re-typing the key preserves the stored one.
-  const save = React.useCallback(() => {
-    if (!canSave) return;
-    run(() =>
+  const persistDraft = React.useCallback(
+    () =>
       client
         .putModel({
           params: { capability: MODEL_CAPABILITY },
@@ -2293,13 +2311,23 @@ function ModelConfigurationCard({
           },
         })
         .then(() => setSecret("")),
-    );
-  }, [canSave, run, provider, modelName, baseUrl, apiFormat, secret, temperature]);
+    [provider, modelName, baseUrl, apiFormat, secret, temperature],
+  );
+
+  const save = React.useCallback(() => {
+    if (!canSave) return;
+    void run(persistDraft);
+  }, [canSave, persistDraft, run]);
+
+  const saveBeforeTest = React.useCallback(
+    () => (canSave ? run(persistDraft) : Promise.resolve(false)),
+    [canSave, persistDraft, run],
+  );
 
   return (
     <SectionCard
       title="模型配置"
-      description="自定义绑定厂商 / 模型 / 接口地址 / 密钥;修改后点保存生效"
+      description="选供应商、填模型和密钥即可；中转站与特殊协议放在高级设置"
     >
       <div
         data-slot="model-configuration-card"
@@ -2312,26 +2340,6 @@ function ModelConfigurationCard({
           disabled={pending}
           onSelectPreset={handleSelectPreset}
         />
-        <SettingsFormRow
-          label="提供商"
-          controlId="model-provider"
-          help="任意厂商名,可自定义。"
-        >
-          <Input
-            id="model-provider"
-            data-slot="model-provider-input"
-            list="model-provider-suggestions"
-            value={provider}
-            disabled={pending}
-            onChange={(event) => setProvider(event.target.value)}
-            aria-label="模型提供商"
-          />
-          <datalist id="model-provider-suggestions">
-            {PROVIDER_SUGGESTIONS.map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
-        </SettingsFormRow>
         <SettingsFormRow
           label="模型"
           controlId="model-name"
@@ -2352,62 +2360,6 @@ function ModelConfigurationCard({
               <option key={m} value={m} />
             ))}
           </datalist>
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="接口地址"
-          controlId="model-base-url"
-          help="自定义 baseUrl(中转 / 你的服务商);留空走官方默认。"
-        >
-          <Input
-            id="model-base-url"
-            data-slot="model-base-url-input"
-            value={baseUrl}
-            disabled={pending}
-            placeholder="https://api.anthropic.com(留空=默认)"
-            onChange={(event) => {
-              const next = event.target.value;
-              setBaseUrl(next);
-              // [T-325] 手改地址 → 按新 (baseUrl, apiFormat) 重算预设高亮(匹配不到 = 自定义)。
-              setPresetId(
-                matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
-              );
-            }}
-            aria-label="接口地址"
-          />
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="接口格式"
-          controlId="model-api-format"
-          help="鉴权与请求体格式。"
-        >
-          <Select
-            value={apiFormat}
-            onValueChange={(value) => {
-              const next = value as ApiFormat;
-              setApiFormat(next);
-              // [T-325] 改格式 → 重算预设高亮(匹配不到 = 自定义)。
-              setPresetId(
-                matchPresetByConfig(baseUrl, next)?.id ?? CUSTOM_PRESET_ID,
-              );
-            }}
-          >
-            <SelectTrigger
-              id="model-api-format"
-              data-slot="model-api-format-trigger"
-              size="sm"
-              className="w-44"
-              disabled={pending}
-            >
-              <SelectValue placeholder="选择格式" />
-            </SelectTrigger>
-            <SelectContent data-slot="model-api-format-content">
-              {API_FORMAT_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </SettingsFormRow>
         <SettingsFormRow
           label="密钥"
@@ -2440,31 +2392,120 @@ function ModelConfigurationCard({
             ) : null}
           </div>
         </SettingsFormRow>
-        <SettingsFormRow
-          label="温度"
-          controlId="model-temperature"
-          help="较高的温度会让回答更发散。"
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            data-slot="model-advanced-toggle"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvanced((value) => !value)}
+          >
+            {showAdvanced ? "收起高级设置" : "高级设置（中转站 / 协议）"}
+          </Button>
+        </div>
+        <div
+          data-slot="model-advanced-settings"
+          hidden={!showAdvanced}
+          className="flex flex-col gap-3 rounded-lg border border-border bg-surface-subtle p-3"
         >
-          <Input
-            id="model-temperature"
-            type="number"
-            min={0}
-            max={1}
-            step={0.1}
-            data-slot="model-temperature-input"
-            className="w-24"
-            value={temperature}
-            disabled={pending}
-            onChange={(event) => {
-              const next = Number(event.target.value);
-              if (!Number.isNaN(next)) setTemperature(next);
-            }}
-            aria-label="模型温度"
-          />
-        </SettingsFormRow>
+          <SettingsFormRow
+            label="提供商标识"
+            controlId="model-provider"
+            help="仅用于识别配置；选择预设时已自动填写。"
+          >
+            <Input
+              id="model-provider"
+              data-slot="model-provider-input"
+              list="model-provider-suggestions"
+              value={provider}
+              disabled={pending}
+              onChange={(event) => setProvider(event.target.value)}
+              aria-label="模型提供商"
+            />
+            <datalist id="model-provider-suggestions">
+              {PROVIDER_SUGGESTIONS.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
+          </SettingsFormRow>
+          <SettingsFormRow
+            label="接口地址"
+            controlId="model-base-url"
+            help="中转站填写其 Base URL；通常应包含 /v1，具体以服务商文档为准。"
+          >
+            <Input
+              id="model-base-url"
+              data-slot="model-base-url-input"
+              value={baseUrl}
+              disabled={pending}
+              placeholder="https://example.com/v1"
+              onChange={(event) => {
+                const next = event.target.value;
+                setBaseUrl(next);
+                setPresetId(
+                  matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
+                );
+              }}
+              aria-label="接口地址"
+            />
+          </SettingsFormRow>
+          <SettingsFormRow
+            label="接口格式"
+            controlId="model-api-format"
+            help="必须与服务商实际支持的协议一致；New API 可按渠道选择 Chat 或 Responses。"
+          >
+            <Select
+              value={apiFormat}
+              onValueChange={(value) => {
+                const next = value as ApiFormat;
+                setApiFormat(next);
+                setPresetId(
+                  matchPresetByConfig(baseUrl, next)?.id ?? CUSTOM_PRESET_ID,
+                );
+              }}
+            >
+              <SelectTrigger
+                id="model-api-format"
+                data-slot="model-api-format-trigger"
+                size="sm"
+                className="w-52"
+                disabled={pending}
+              >
+                <SelectValue placeholder="选择格式" />
+              </SelectTrigger>
+              <SelectContent data-slot="model-api-format-content">
+                {API_FORMAT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingsFormRow>
+          <SettingsFormRow
+            label="温度"
+            controlId="model-temperature"
+            help="一般保持默认即可；较高会让回答更发散。"
+          >
+            <Input
+              id="model-temperature"
+              type="number"
+              min={0}
+              max={1}
+              step={0.1}
+              data-slot="model-temperature-input"
+              className="w-24"
+              value={temperature}
+              disabled={pending}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                if (!Number.isNaN(next)) setTemperature(next);
+              }}
+              aria-label="模型温度"
+            />
+          </SettingsFormRow>
+        </div>
         <div className="flex items-start justify-between gap-3">
-          {/* [T-377] 测试连接:1 token 真实补全验已保存的主模型配置。 */}
-          <TestConnectionButton capability={MODEL_CAPABILITY} slotPrefix="model" />
           <Button
             type="button"
             data-slot="model-save"
@@ -2473,8 +2514,15 @@ function ModelConfigurationCard({
             disabled={!canSave}
             onClick={save}
           >
-            保存模型配置
+            仅保存
           </Button>
+          <TestConnectionButton
+            capability={MODEL_CAPABILITY}
+            slotPrefix="model"
+            beforeTest={saveBeforeTest}
+            label="保存并测试"
+            disabled={!canSave}
+          />
         </div>
       </div>
     </SectionCard>

@@ -56,24 +56,24 @@ function makeDeps(
     })),
     generateImageMinimal: vi.fn(async () => ({ byteLength: 12 })),
     searchMinimal: vi.fn(async () => 1),
+    probeTextModel: vi.fn(async () => ({ text: "OK" })),
     fetchImpl: vi.fn(async () => jsonResponse(200, {})) as unknown as typeof fetch,
     ...overrides,
   };
 }
 
 describe("runModelConnectionTest — 文本模型(default)", () => {
-  it("1 token 补全 200 → ✓ 连通", async () => {
+  it("复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通", async () => {
     const deps = makeDeps();
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(true);
     expect(r.model).toBe("test-model");
-    expect(r.detail).toContain("1 token");
-    // 探测打的是 chat/completions(openai_chat 形状)。
-    const url = (deps.fetchImpl as ReturnType<typeof vi.fn>).mock.calls[0]![0] as string;
-    expect(url).toBe("https://api.example.com/v1/chat/completions");
+    expect(r.detail).toContain("流式");
+    expect(deps.probeTextModel).toHaveBeenCalledWith(llmSpec);
+    expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("openai_responses → POST /responses + Responses 请求体", async () => {
+  it("openai_responses 同样交给正式模型工厂，不在测试层手拼 /responses", async () => {
     const deps = makeDeps({
       resolveLlm: vi.fn(async () => ({
         ...llmSpec,
@@ -83,23 +83,17 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(true);
     expect(r.provider).toBe("openai_responses");
-
-    const [url, init] = (
-      deps.fetchImpl as ReturnType<typeof vi.fn>
-    ).mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("https://api.example.com/v1/responses");
-    expect(JSON.parse(String(init.body))).toMatchObject({
-      model: "test-model",
-      input: "ping",
-      max_output_tokens: 1,
-    });
+    expect(deps.probeTextModel).toHaveBeenCalledWith(
+      expect.objectContaining({ apiFormat: "openai_responses" }),
+    );
+    expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("HTTP 401 → ✗ 人话提示(不泄 HTTP 码/响应体,也不说「未配置」)", async () => {
+  it("正式流式调用抛错 → ✗ 人话提示(不泄上游响应体,也不说「未配置」)", async () => {
     const deps = makeDeps({
-      fetchImpl: vi.fn(async () =>
-        new Response("invalid api key", { status: 401 }),
-      ) as unknown as typeof fetch,
+      probeTextModel: vi.fn(async () => {
+        throw new Error("401 invalid api key");
+      }),
     });
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
@@ -107,6 +101,15 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     expect(r.detail).not.toContain("401");
     expect(r.detail).not.toContain("invalid api key");
     expect(r.detail).not.toContain("未配置");
+  });
+
+  it("正式流式调用返回 2xx 空流 → ✗，不能把空内容误判成连通", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => ({ text: "   " })),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(false);
+    expect(r.detail).toContain("没有返回有效文本");
   });
 
   it("解析抛 LlmCredentialError → 「未配置」", async () => {

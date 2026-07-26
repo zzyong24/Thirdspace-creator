@@ -95,8 +95,8 @@ export function ModelConfigurationManual() {
             <DialogTitle className="text-lg">模型配置手册</DialogTitle>
           </div>
           <DialogDescription>
-            按“供应商 → 模型 → 地址 → 格式 → 密钥”的顺序填写。示例只用于说明字段，
-            不代表已经替你完成配置。
+            通常只需选供应商、填写模型 ID 和密钥。只有使用 New API / 自建中转站时，
+            才需要展开高级设置填写地址和协议。
           </DialogDescription>
         </DialogHeader>
 
@@ -105,7 +105,7 @@ export function ModelConfigurationManual() {
             {[
               ["1", "先选供应商", "优先使用表单里的供应商预设，地址和接口格式会自动带出。"],
               ["2", "再填模型和密钥", "模型 ID 以供应商控制台为准；密钥只保存在本机。"],
-              ["3", "保存后测试连接", "测试读取的是已保存配置，所以改完字段必须先保存。"],
+              ["3", "保存并测试", "一次点击先保存当前填写，再按正式聊天的流式通路验证。"],
             ].map(([step, title, detail]) => (
               <div
                 key={step}
@@ -128,8 +128,8 @@ export function ModelConfigurationManual() {
                 文字与对话模型（必配）
               </h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                MiniMax、Kimi、DeepSeek 等供应商的请求格式不同。选预设后仍要核对模型 ID；
-                自建中转站则选择“自定义”，按服务商文档填写。
+                MiniMax、Kimi、DeepSeek 等直接选对应预设，地址和协议会自动填好。
+                你只需要从服务商控制台复制准确的模型 ID 和密钥。
               </p>
             </div>
             <ManualFigure
@@ -144,7 +144,34 @@ export function ModelConfigurationManual() {
               <Field label="API 密钥" value="" tone="secret" />
               <div className="flex items-center gap-2 rounded-md bg-success-soft px-3 py-2 text-xs text-success">
                 <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
-                保存后再点“测试连接”
+                点击“保存并测试”
+              </div>
+            </ManualFigure>
+          </section>
+
+          <section className="flex flex-col gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                New API / 自建中转站
+              </h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                供应商选“自定义”后展开高级设置。Base URL 必须是 API 地址，很多中转站需要以
+                /v1 结尾；接口格式按渠道实际支持选择 OpenAI Chat 或 OpenAI Responses，
+                不能只凭模型名称猜。
+              </p>
+            </div>
+            <ManualFigure
+              slot="model-manual-figure-relay"
+              eyebrow="截图 02"
+              title="New API / 中转站填写示例"
+            >
+              <Field label="供应商预设" value="自定义" />
+              <Field label="模型" value="控制台显示的精确模型 ID" />
+              <Field label="Base URL" value="https://your-relay.example/v1" />
+              <Field label="接口格式" value="按渠道选择 Chat 或 Responses" />
+              <Field label="API 密钥" value="" tone="secret" />
+              <div className="rounded-md bg-brand-soft px-3 py-2 text-xs leading-relaxed text-brand">
+                测试必须收到真实流式文本；网页 200 或空流不会再显示“连通”。
               </div>
             </ManualFigure>
           </section>
@@ -166,7 +193,7 @@ export function ModelConfigurationManual() {
             </div>
             <ManualFigure
               slot="model-manual-figure-asr"
-              eyebrow="截图 02"
+              eyebrow="截图 03"
               title="硅基流动 SenseVoice ASR 填写示例"
             >
               <Field label="提供商" value="siliconflow" />
@@ -186,7 +213,7 @@ export function ModelConfigurationManual() {
                 <ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-muted-foreground">
                   <li>把官网地址当成 API 地址；请使用供应商文档里的 Base URL。</li>
                   <li>模型显示名不等于模型 ID；必须复制控制台提供的真实 ID。</li>
-                  <li>修改后直接测试；测试只读取已保存配置，必须先点保存。</li>
+                  <li>Kimi 开放平台与 Kimi Code 的地址和密钥不能混用。</li>
                 </ul>
               </div>
             </div>

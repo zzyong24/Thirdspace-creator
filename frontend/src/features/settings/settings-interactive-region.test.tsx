@@ -27,23 +27,27 @@ const mockClient = {
   putStorage: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   // AccountBindingCard (T-032a): status pull on mount + loginDouyin on click.
   statusDouyin: vi.fn(
-    (_input: unknown): Promise<{ loggedIn: boolean; sourceReady?: boolean }> =>
-      Promise.resolve({ loggedIn: false }),
+    (input: unknown): Promise<{ loggedIn: boolean; sourceReady?: boolean }> => {
+      void input;
+      return Promise.resolve({ loggedIn: false });
+    },
   ),
   loginDouyin: vi.fn(
-    (_input: unknown): Promise<{ loggedIn: boolean }> =>
-      Promise.resolve({ loggedIn: true }),
+    (input: unknown): Promise<{ loggedIn: boolean }> => {
+      void input;
+      return Promise.resolve({ loggedIn: true });
+    },
   ),
   // [T-377] 测试连接(settings.models.test):默认 ✓ 连通;失败态各测试自行覆盖。
   testModelConnection: vi.fn(
-    (
-      _input: unknown,
-    ): Promise<{
+    (input: unknown): Promise<{
       ok: boolean;
       detail: string;
       status?: "ok" | "warn" | "fail";
-    }> =>
-      Promise.resolve({ ok: true, detail: "已发 1 token 真实补全,连通。" }),
+    }> => {
+      void input;
+      return Promise.resolve({ ok: true, detail: "已发 1 token 真实补全,连通。" });
+    },
   ),
 };
 vi.mock("@/lib/contract-client", () => ({
@@ -304,6 +308,18 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("[T-501] 默认收起不常用字段，主路径只要求预设、模型与密钥", () => {
+    const doc = renderDialog();
+    const advanced = doc.querySelector(
+      '[data-slot="model-advanced-settings"]',
+    ) as HTMLElement | null;
+    expect(advanced).not.toBeNull();
+    expect(advanced?.hidden).toBe(true);
+    expect(
+      doc.querySelector('[data-slot="model-advanced-toggle"]')?.textContent,
+    ).toContain("高级设置");
   });
 
   // --- [T-325] 供应商预设目录(cc-switch 风格)-------------------------------
@@ -669,6 +685,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(manual.textContent).toContain("接口地址");
     expect(manual.textContent).toContain("接口格式");
     expect(manual.textContent).toContain("API 密钥");
+    expect(manual.textContent).toContain("New API / 自建中转站");
+    expect(manual.textContent).toContain("保存并测试");
     expect(manual.textContent).toContain("语音转文字");
     expect(
       manual.querySelector('[data-slot="model-manual-figure-default"]'),
@@ -1130,16 +1148,21 @@ describe("Settings 诊断日志卡 (T-259)", () => {
 // [T-377] 「测试连接」:每个 capability 卡旁,点击 → settings.models.test(测已保存配置)
 // → 诚实渲「✓ 连通」/「✗ 失败:<真实原因>」。
 describe("Settings 测试连接 (T-377)", () => {
-  it("主模型卡点「测试连接」→ testModelConnection({capability:'default'}),成功渲 ✓ 连通", async () => {
+  it("[T-501] 主模型卡点「保存并测试」→ 先保存当前表单，再测试同一份配置", async () => {
     const doc = renderDialog();
     const btn = doc.querySelector(
       '[data-slot="model-test-connection"]',
     ) as HTMLButtonElement;
     expect(btn).not.toBeNull();
+    expect(btn.textContent).toContain("保存并测试");
     fireEvent.click(btn);
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
     await waitFor(() =>
       expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1),
     );
+    expect(
+      mockClient.putModel.mock.invocationCallOrder[0],
+    ).toBeLessThan(mockClient.testModelConnection.mock.invocationCallOrder[0]!);
     expect(mockClient.testModelConnection).toHaveBeenCalledWith(
       expect.objectContaining({ params: { capability: "default" } }),
     );

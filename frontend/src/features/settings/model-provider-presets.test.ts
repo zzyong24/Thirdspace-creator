@@ -15,8 +15,8 @@ import {
 } from "./model-provider-presets";
 
 describe("MODEL_PROVIDER_PRESETS 目录形状", () => {
-  it("含 custom 在内共 13 条,id 唯一,apiFormat 为三种正式协议", () => {
-    expect(MODEL_PROVIDER_PRESETS).toHaveLength(13);
+  it("含 custom 在内共 14 条,id 唯一,apiFormat 为三种正式协议", () => {
+    expect(MODEL_PROVIDER_PRESETS).toHaveLength(14);
     const ids = MODEL_PROVIDER_PRESETS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const p of MODEL_PROVIDER_PRESETS) {
@@ -40,6 +40,21 @@ describe("MODEL_PROVIDER_PRESETS 目录形状", () => {
     expect(
       matchPresetByConfig("https://api.openai.com/v1", "openai_responses")?.id,
     ).toBe("openai");
+  });
+
+  it("Kimi 开放平台与 Kimi Code 分开，默认都使用 OpenAI Chat", () => {
+    const openPlatform = MODEL_PROVIDER_PRESETS.find((p) => p.id === "kimi");
+    expect(openPlatform).toMatchObject({
+      label: "Kimi 开放平台",
+      apiFormat: "openai_chat",
+      baseUrl: "https://api.moonshot.cn/v1",
+    });
+    const code = MODEL_PROVIDER_PRESETS.find((p) => p.id === "kimi-code");
+    expect(code).toMatchObject({
+      label: "Kimi Code",
+      apiFormat: "openai_chat",
+      baseUrl: "https://api.kimi.com/coding/v1",
+    });
   });
 
   it("非 custom 预设 baseUrl 互不重复(保证回显匹配唯一)", () => {

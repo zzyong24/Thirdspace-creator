@@ -8,9 +8,9 @@ import type { RequestContext } from "@creatoros/contract";
  * 其余 op 透传。
  *
  * 探测策略(按 capability,走**现有解析链**解析已保存配置,再发最便宜的真实调用):
- *   - default / script.review(文本 LLM):resolveLlmConfig → 1 token chat 补全
- *     (anthropic → POST /v1/messages;openai_chat → POST /chat/completions;
- *      openai_responses → POST /responses)。
+ *   - default / script.review(文本 LLM):resolveLlmConfig → 与正式聊天相同的
+ *     modelFor + streamText 流式探针，且必须收到非空文本。测试层不再手拼 URL/请求体，
+ *     避免把 HTML 200 或 2xx 空流误判为连通。
  *   - chat.fallback:resolveDedicatedLlm(只认专配行,不回退主模型)→ 同上 1 token 补全。
  *   - asset.classify(视觉,OpenAI 兼容 chat):resolveMultimodal → 纯文本 1 token 补全
  *     (校验鉴权 + 模型可达;不传图,足以判连通)。
@@ -89,13 +89,16 @@ export interface SettingsModelTestDeps {
     ctx: RequestContext,
     spec: SearchSpecLite,
   ) => Promise<number>;
+  /**
+   * 文本模型正式通路探针：host 必须用与聊天一致的 modelFor + streamText 实现。
+   * 返回空文本视为失败，不能只凭 HTTP 2xx 判成功。
+   */
+  probeTextModel: (spec: LlmSpecLite) => Promise<{ text: string }>;
   fetchImpl: typeof fetch;
 }
 
 // ── 各家默认端点(与对应 adapter 内的 DEFAULT_BASE_URL 对齐;探测层本地镜像,不反向
 //    依赖 adapter 私有常量)──────────────────────────────────────────────────────
-const ANTHROPIC_DEFAULT = "https://api.anthropic.com";
-const OPENAI_DEFAULT = "https://api.openai.com/v1";
 const MINIMAX_DEFAULT = "https://api.minimax.io"; // multimodal-minimax DEFAULT_BASE_URL
 const SILICONFLOW_ASR_DEFAULT = "https://api.siliconflow.cn"; // multimodal-openai-asr
 const SILICONFLOW_V1_DEFAULT = "https://api.siliconflow.cn/v1"; // vision.ts baseURL 默认
@@ -117,7 +120,6 @@ function logProbeFailure(where: string, ...detail: unknown[]): void {
   //   诊断信息恰恰在**用户机**最需要,不该只给开发机看。
   //   泄露评估:只打 where + status + 响应体前 200 字(**服务端返回的错误文本**,不含我方密钥/token),
   //   且 sidecar 日志本身是加密落盘(T-391)。
-  // eslint-disable-next-line no-console
   console.error(`[settings.models.test] ${where}`, ...detail);
 }
 
@@ -130,87 +132,31 @@ async function bodyHead(res: Response): Promise<string> {
   }
 }
 
-// ── 文本类 1 token 补全探测(Anthropic / Chat Completions / Responses)────────────
-async function chatProbe(
+// ── 文本类正式流式探针(Anthropic / Chat Completions / Responses)───────────────
+async function textModelProbe(
   spec: LlmSpecLite,
-  fetchImpl: typeof fetch,
+  probe: SettingsModelTestDeps["probeTextModel"],
 ): Promise<{ ok: boolean; detail: string }> {
   try {
-    if (spec.apiFormat === "anthropic") {
-      const url = `${trimBase(spec.baseUrl ?? ANTHROPIC_DEFAULT)}/v1/messages`;
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-      };
-      if (spec.authStyle === "x-api-key") headers["x-api-key"] = spec.token;
-      else headers.Authorization = `Bearer ${spec.token}`;
-      const res = await fetchImpl(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: spec.model,
-          max_tokens: 1,
-          messages: [{ role: "user", content: "ping" }],
-        }),
-      });
-      if (res.ok) return { ok: true, detail: "已发 1 token 真实补全,连通。" };
-      logProbeFailure("chatProbe/anthropic", res.status, await bodyHead(res));
+    const { text } = await probe(spec);
+    if (text.trim().length > 0) {
       return {
-        ok: false,
-        detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
+        ok: true,
+        detail: "已按正式聊天通路完成流式回复,连通。",
       };
     }
-    if (spec.apiFormat === "openai_responses") {
-      const url = `${trimBase(spec.baseUrl ?? OPENAI_DEFAULT)}/responses`;
-      const res = await fetchImpl(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${spec.token}`,
-        },
-        body: JSON.stringify({
-          model: spec.model,
-          input: "ping",
-          max_output_tokens: 1,
-        }),
-      });
-      if (res.ok) {
-        return { ok: true, detail: "已发 1 token Responses 真实补全,连通。" };
-      }
-      logProbeFailure(
-        "chatProbe/openai-responses",
-        res.status,
-        await bodyHead(res),
-      );
-      return {
-        ok: false,
-        detail: "连接失败:密钥、接口地址或 Responses 兼容性可能不对,请核对后重试。",
-      };
-    }
-    const url = `${trimBase(spec.baseUrl ?? OPENAI_DEFAULT)}/chat/completions`;
-    const res = await fetchImpl(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${spec.token}`,
-      },
-      body: JSON.stringify({
-        model: spec.model,
-        max_tokens: 1,
-        messages: [{ role: "user", content: "ping" }],
-      }),
-    });
-    if (res.ok) return { ok: true, detail: "已发 1 token 真实补全,连通。" };
-    logProbeFailure("chatProbe/openai", res.status, await bodyHead(res));
+    logProbeFailure("textModelProbe/empty-stream", spec.apiFormat, spec.model);
     return {
       ok: false,
-      detail: "连接失败:密钥或接口地址可能不对,请核对后重试。",
+      detail:
+        "连接建立了，但模型没有返回有效文本。请核对 Base URL、协议和模型 ID。",
     };
   } catch (err) {
-    logProbeFailure("chatProbe", err);
+    logProbeFailure("textModelProbe", err);
     return {
       ok: false,
-      detail: "连接失败,请检查网络和接口地址后重试。",
+      detail:
+        "连接失败：请核对密钥、Base URL、接口格式和模型 ID 后重试。",
     };
   }
 }
@@ -371,7 +317,7 @@ export async function runModelConnectionTest(
       case "default":
       case "script.review": {
         const spec = await deps.resolveLlm(ctx, capability);
-        const r = await chatProbe(spec, fetchImpl);
+        const r = await textModelProbe(spec, deps.probeTextModel);
         return { ...r, provider: spec.apiFormat, model: spec.model };
       }
       case "chat.fallback": {
@@ -381,13 +327,13 @@ export async function runModelConnectionTest(
             "备用对话模型只认专配行(不回退主模型),请先保存配置。",
           );
         }
-        const r = await chatProbe(spec, fetchImpl);
+        const r = await textModelProbe(spec, deps.probeTextModel);
         return { ...r, provider: spec.apiFormat, model: spec.model };
       }
       case "asset.classify": {
         const spec = await deps.resolveMultimodal(ctx, capability);
         // 视觉卡走 OpenAI 兼容 chat:纯文本 1 token 补全足以校验鉴权 + 模型可达。
-        const r = await chatProbe(
+        const r = await textModelProbe(
           {
             apiFormat: "openai_chat",
             baseUrl: spec.baseUrl ?? SILICONFLOW_V1_DEFAULT,
@@ -395,7 +341,7 @@ export async function runModelConnectionTest(
             authStyle: "bearer",
             token: spec.token,
           },
-          fetchImpl,
+          deps.probeTextModel,
         );
         return { ...r, provider: spec.provider, model: spec.model };
       }
