@@ -22,22 +22,42 @@
 
 - [CreatorOS-产品评审与工作流重设计.md](CreatorOS-产品评审与工作流重设计.md)
 - [CreatorOS-七步整合设计.md](CreatorOS-七步整合设计.md)
+- [CreatorOS-module-and-workflow-map.md](CreatorOS-module-and-workflow-map.md) —— 功能模块与端到端链路地图。
 - [product-walkthrough-report.md](product-walkthrough-report.md) —— 产品走查报告。
+
+## 使用 / 配置指南
+
+- [model-configuration-guide.md](model-configuration-guide.md) —— 模型配置教程(用户向)。
+- [desktop-activation-guide.md](desktop-activation-guide.md) —— 桌面激活授权接入指南(T-147 P5)。
+- [all-skill-prompts.md](all-skill-prompts.md) —— 全部内置提示词(skill 模板)导出快照。
 
 ## 数据 / 存储 / 运行时(历史设计,以现行 SPEC + 代码为准)
 
+- [CreatorOS-data-model.md](CreatorOS-data-model.md) —— 数据地图:现状、全链路与修复后目标。
 - [CreatorOS-运行时协同设计.md](CreatorOS-运行时协同设计.md) —— 运行时协同设计(历史稿)。
 
 ## 桌面端 / 部署 / 变更
 
 - [desktop-architecture-rfc.md](desktop-architecture-rfc.md) —— 桌面端架构 RFC(另见 specs/2026-07-05-desktop-app-architecture-overview.md)。
 - [DEPLOYMENT.md](DEPLOYMENT.md) —— 部署说明。
+- [RELEASING.md](RELEASING.md) —— 桌面版发布手册(渠道化分发,T-396c)。
 - [PROTECTION.md](PROTECTION.md)、[SHARED-CHANGE-REQUEST.md](SHARED-CHANGE-REQUEST.md) —— 保护规则 / 共享变更请求约定。
 
 ## 进度 / 状态
 
 - [project-progress-overview.md](project-progress-overview.md)、[project-status-review.md](project-status-review.md) —— 进度总览 / 状态复盘(快照,以 BACKLOG 为准)。
-- [BACKLOG-archive.md](BACKLOG-archive.md) —— 已归档任务。
+- [../BACKLOG-archive.md](../BACKLOG-archive.md) —— 已归档的 ✅ 完成任务全文(单一份,repo 根;原 `docs/BACKLOG-archive.md` 已于 T-529 并入根版并删除)。
+
+## 工程笔记 / 调研 / 交接 / 安全 / 素材(子目录)
+
+- **[engineering-notes/](engineering-notes/)** —— 实施踩坑册([pitfalls.md](engineering-notes/pitfalls.md))+ 基建配置(CDN 等)。
+- **[research/](research/)** —— 调研归档(盘点/对比/核查/源码蒸馏,按 `YYYY-MM-DD-<topic>-research.md` 命名)。
+- **[tasks/](tasks/)** —— 任务详情长文(如 [T484.md](tasks/T484.md)、[T510.md](tasks/T510.md))+ 落地交接单。
+- **[handoffs/](handoffs/)** —— 跨会话/跨仓交接单。
+- **[security/](security/)** —— 安全审计(白盒桌面安全审计等)。
+- **[marketing/](marketing/)** —— 营销物料(产品介绍视频 brief / 口播稿)。
+- **[licenses/](licenses/)** —— 第三方依赖许可证留存(如 HyperFrames Apache-2.0)。
+- **[assets/](assets/)** —— 文档配图与可交互 HTML(orchestrator 地图/环图、贡献活跃度 SVG)。
 
 ---
 

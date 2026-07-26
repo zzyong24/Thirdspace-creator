@@ -476,7 +476,7 @@ flowchart LR
 | benchmark 拆解在 job 完成后 fire-and-forget | 已存在 bug | `frontend/src/server/persistence-client.ts:6210-6215` | 后处理成为持久步骤或独立 task |
 | favorites promotion 会自动创建候选，benchmark teardown 也会继续写候选 | 已存在 bug | `frontend/src/server/persistence-client.ts:6210-6215,6440-6460` | 迁移写 fence 必须显式关闭两条旧写者，AI 只能保留候选预览 |
 | 历史实机曾出现“无 enabled 对标源”和黑马三词全 0 | 已发生 | 本机 `sidecar.prev.log` 2026-07-17 16:30 的 `[benchmark]` / `[darkhorse]` 记录；`BACKLOG.md:T-300` | 证明当前状态不可作为已验证完成 |
-| 旧任务多处以“单测绿、真机待验”关账 | 已发生 | `docs/BACKLOG-archive.md:T-212a/T-212c/T-216/T-222`; `BACKLOG-archive.md:T-235b` | 新发布门必须包含真实 canary |
+| 旧任务多处以“单测绿、真机待验”关账 | 已发生 | `BACKLOG-archive.md:T-212a/T-212c/T-216/T-222/T-235b`(2026-07-26 T-529 已合并至 repo 根单份 archive) | 新发布门必须包含真实 canary |
 
 ## Assumptions
 
