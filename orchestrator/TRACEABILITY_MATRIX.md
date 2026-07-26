@@ -80,7 +80,7 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 
 | Requirement | Flow | Surface | Contract | Tests | 状态 |
 |---|---|---|---|---|---|
-| DEC-FDB-002；DEC-ODR-001 | 本地整理/复制 → 打开签名 `supportUrl`；独立打开加密日志目录 | 侧边栏反馈入口 | [新 PLAN](../docs/superpowers/specs/2026-07-26-bug-feedback-inbox.md)；旧 Growth 上传 CONTRACT invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；不显示假“已发送”；CONTRACT/确认②/BUILD 关闭 |
+| `FR-FDBR-01..06`；DEC-FDB-002；DEC-ODR-001 | 本地整理/复制 → 打开签名 `supportUrl`；独立打开加密日志目录 | `UI-FDBR-001` 侧边栏反馈入口 | [Replacement CONTRACT](../docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md)：`API-FDBR-001..003`、`PURE-FDBR-001`；旧 Growth 上传 CONTRACT invalidated | `TEST-FDBR-001..007`：T-518 定向 49 tests + contract 1 test | BUILD PASS（`705c7156`）；零上传、零反馈写 API、零假“已发送”状态；typecheck/boundary/orphan/reconcile 全绿 |
 
 ## T-519 聚焦追踪
 
@@ -127,4 +127,5 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | FR-CR-016, NFR-CR-009 | FLOW-CR-008 | ENT-CR-001, ENT-CR-002, ENT-CR-003, ENT-CR-005, ENT-CR-008, ENT-CR-009, ENT-CR-010 | NONE | API-CR-025, API-CR-026, API-CR-027, API-CR-028 | NONE | PLANNED |
 | FR-CR-017, FR-CR-018, FR-CR-019 | FLOW-CR-001, FLOW-CR-002, FLOW-CR-003, FLOW-CR-004, FLOW-CR-005, FLOW-CR-006, FLOW-CR-007, FLOW-CR-008 | ENT-CR-001, ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-007, ENT-CR-008, ENT-CR-009, ENT-CR-010, ENT-CR-011 | NONE | API-CR-001, API-CR-004, API-CR-009, API-CR-010, API-CR-011, API-CR-015, API-CR-016, API-CR-030 | NONE | PLANNED |
 | DEC-CR-003, DEC-CR-007, DEC-CR-012, DEC-CR-013, DEC-CR-015, FR-CR-021, NFR-CR-002, NFR-CR-007, NFR-CR-012 | FLOW-CR-009 | ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-009, ENT-CR-010, ENT-CR-012 | IA-CR-003, IA-CR-005, IA-CR-007 | API-CR-031 | NONE | PLANNED |
+| FR-FDBR-01, FR-FDBR-02, FR-FDBR-03, FR-FDBR-04, FR-FDBR-05, FR-FDBR-06 | NONE | UI-FDBR-001, PURE-FDBR-001 | NONE | API-FDBR-001, API-FDBR-002, API-FDBR-003 | TEST-FDBR-001, TEST-FDBR-002, TEST-FDBR-003, TEST-FDBR-004, TEST-FDBR-005, TEST-FDBR-006, TEST-FDBR-007 | OK |
 ```

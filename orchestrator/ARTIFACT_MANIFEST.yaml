@@ -259,6 +259,40 @@ stages:
       用户范围重置由 DEC-ODR-001 记录。旧 accepted-risk 工件保留历史，不再作为
       CONTRACT/BUILD 输入；新 CONTRACT/确认②之前生产代码不改。
 
+  "T-518-2-contract":
+    status: "passed"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: true
+    confirmation_status: "confirmed"
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md"
+      - existing: "docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-FDB-002"
+    notes: >
+      用户 2026-07-26 明确“开始执行吧”记录为同一 Replacement 范围的确认②。契约只新增
+      签名 supportUrl 的 typed 只读 platform shape 和本地 UI 状态；open-url/reveal-logs
+      全部复用，零反馈提交 API。第三轮独立复审真实 PASS，允许进入 BUILD。
+
+  "T-518-3-build":
+    status: "passed"
+    gate: "16-backend-tdd + 17-integration-release + boundary/orphan/reconcile"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "contract/src/local-platform.ts"
+      - existing: "frontend/src/app/api/v1/local/support-channel/route.ts"
+      - existing: "frontend/src/components/shell/issue-feedback-dialog.tsx"
+      - existing: "frontend/src/components/shell/issue-feedback.ts"
+      - existing: "frontend/src/components/shell/issue-feedback-dialog.test.tsx"
+      - existing: "frontend/src/components/shell/shell.test.tsx"
+      - existing: "commit 705c7156"
+    notes: >
+      侧边栏展开/折叠态均保留真实问题反馈入口；反馈内容只在本机脱敏、预览和复制，
+      supportUrl 只读且限 HTTPS，外部打开与加密日志目录复用既有本地能力。无上传、
+      无反馈写 API、无“已发送/已提交”假状态。T-518 定向 49 tests、contract 1 test、
+      contract/frontend typecheck、boundary、orphan 与 reconcile 均通过。
+
   "T-519-1-plan":
     status: "passed"
     gate: "01-product-gate + independent spec-review"
