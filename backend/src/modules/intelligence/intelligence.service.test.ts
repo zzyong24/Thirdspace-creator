@@ -25,14 +25,107 @@ const ctx: RequestContext = {
 function deps() {
   let serial = 0;
   const clock = { value: "2026-07-23T12:00:00.000Z" };
+  const accounts = new Map<
+    string,
+    {
+      accountId: string;
+      accountHandle: string;
+      platform: string;
+      status: "active" | "archived";
+    }
+  >([
+    [
+      "account-1",
+      {
+        accountId: "account-1",
+        accountHandle: "@创作号",
+        platform: "douyin",
+        status: "active" as const,
+      },
+    ],
+    [
+      "account-2",
+      {
+        accountId: "account-2",
+        accountHandle: "@观察号",
+        platform: "douyin",
+        status: "active" as const,
+      },
+    ],
+  ]);
   return {
     clock,
+    accounts,
     now: () => clock.value,
     nextId: (prefix: string) => `${prefix}-${++serial}`,
+    collectorAccounts: {
+      listCollectorAccounts: async () => [...accounts.values()],
+      getCollectorAccount: async (
+        _ctx: RequestContext,
+        accountId: string,
+      ) => accounts.get(accountId) ?? null,
+    },
   };
 }
 
 describe("T-482 内容雷达领域主链", () => {
+  it("[T-537] owner 与 collector 分离固化，换 collector 不碰撞且 claim 前重新验资格", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const first = await service.createSource(ctx, {
+        collectionId: null,
+        type: "creator_profile",
+        config: {
+          type: "creator_profile",
+          collectorAccountId: "account-2",
+          canonicalUrl: "https://www.douyin.com/user/sec-target",
+          externalAccountId: "sec-target",
+        },
+        monitorEnabled: true,
+        runInitial: false,
+        idempotencyKey: "source-account-2",
+      });
+      expect(first.source).toMatchObject({
+        accountId: "account-1",
+        externalKey: "profile:account-2:sec-target",
+        browserSessionRef: null,
+        collector: {
+          accountId: "account-2",
+          accountHandle: "@观察号",
+          availability: "active",
+        },
+      });
+
+      const ownerCollector = await service.createSource(ctx, {
+        collectionId: null,
+        type: "creator_profile",
+        config: {
+          type: "creator_profile",
+          collectorAccountId: "account-1",
+          canonicalUrl: "https://www.douyin.com/user/sec-target",
+          externalAccountId: "sec-target",
+        },
+        monitorEnabled: false,
+        runInitial: false,
+        idempotencyKey: "source-account-1",
+      });
+      expect(ownerCollector.source.id).not.toBe(first.source.id);
+
+      d.accounts.set("account-2", {
+        ...d.accounts.get("account-2")!,
+        status: "archived",
+      });
+      await expect(
+        service.getSourceExecutionInput(ctx, first.source.id),
+      ).rejects.toMatchObject({ name: "IntelligenceValidationError" });
+    } finally {
+      await client.close();
+    }
+  });
+
   it("首次打开内容雷达会幂等迁移旧信号源，并留下数量校验账本", async () => {
     const { db, client } = await createDb();
     const d = deps();
@@ -253,9 +346,9 @@ describe("T-482 内容雷达领域主链", () => {
         type: "creator_profile",
         config: {
           type: "creator_profile",
+          collectorAccountId: "account-1",
           canonicalUrl: "https://www.douyin.com/user/example",
           externalAccountId: "sec-example",
-          browserSessionRef: "douyin-profile:account-1",
         },
         displayName: "示例博主",
         monitorEnabled: true,
@@ -283,9 +376,9 @@ describe("T-482 内容雷达领域主链", () => {
       type: "creator_profile" as const,
       config: {
         type: "creator_profile" as const,
+        collectorAccountId: "account-1",
         canonicalUrl: "https://www.douyin.com/user/reused",
         externalAccountId: "sec-reused",
-        browserSessionRef: "douyin-profile:account-1",
       },
       monitorEnabled: true,
       runInitial: true,
@@ -319,9 +412,9 @@ describe("T-482 内容雷达领域主链", () => {
         type: "darkhorse_query",
         config: {
           type: "darkhorse_query",
+          collectorAccountId: "account-1",
           keyword: "AI 工具",
           board: "low_follower_breakout",
-          browserSessionRef: "douyin-profile:account-1",
         },
         monitorEnabled: true,
         runInitial: false,

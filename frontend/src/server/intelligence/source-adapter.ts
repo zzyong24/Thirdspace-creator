@@ -84,10 +84,12 @@ export interface IntelligenceSourceAdapterDeps {
   now?: () => string;
   fetchProfileWorks(input: {
     ctx: RequestContext;
+    collectorAccountId: string;
     externalAccountId: string;
   }): Promise<ProfileWork[]>;
   fetchFavoriteWorks(input: {
     ctx: RequestContext;
+    collectorAccountId: string;
     folderId: string;
   }): Promise<FavoriteWork[]>;
   readWeb(input: {
@@ -101,6 +103,7 @@ export interface IntelligenceSourceAdapterDeps {
   parseFeed(xml: string, siteName: string): FeedItem[];
   fetchDouhot?(input: {
     ctx: RequestContext;
+    collectorAccountId: string;
     keyword: string;
     board: "low_follower_breakout";
   }): Promise<DouhotBatch>;
@@ -328,6 +331,7 @@ export function createIntelligenceSourceAdapter(
         case "creator_profile": {
           const rows = await deps.fetchProfileWorks({
             ctx,
+            collectorAccountId: input.config.collectorAccountId,
             externalAccountId: input.config.externalAccountId,
           });
           return success(
@@ -342,6 +346,7 @@ export function createIntelligenceSourceAdapter(
         case "favorites_folder": {
           const rows = await deps.fetchFavoriteWorks({
             ctx,
+            collectorAccountId: input.config.collectorAccountId,
             folderId: input.config.folderId,
           });
           return success(
@@ -435,6 +440,7 @@ export function createIntelligenceSourceAdapter(
           }
           const batch = await deps.fetchDouhot({
             ctx,
+            collectorAccountId: input.config.collectorAccountId,
             keyword: input.config.keyword,
             board: input.config.board,
           });

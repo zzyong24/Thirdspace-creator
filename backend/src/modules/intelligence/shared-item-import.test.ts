@@ -19,6 +19,15 @@ describe("T-482 抖音分享链接单条建档", () => {
     const deps = {
       now: () => "2026-07-23T18:00:00.000Z",
       nextId: (prefix: string) => `${prefix}-${++serial}`,
+      collectorAccounts: {
+        listCollectorAccounts: async () => [],
+        getCollectorAccount: async () => ({
+          accountId: "account-share",
+          accountHandle: "@分享号",
+          platform: "douyin",
+          status: "active" as const,
+        }),
+      },
     };
     const tasks = createPersistentTaskService(db, deps);
     const intelligence = createIntelligenceService(db, { ...deps, tasks });

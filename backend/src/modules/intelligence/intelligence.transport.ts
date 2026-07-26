@@ -10,6 +10,7 @@ import type { ProjectScriptCandidateService } from "./project-script-candidate.s
 
 export const INTELLIGENCE_OP_IDS = [
   "intelligence.workspace.get",
+  "intelligence.collectors.list",
   "intelligence.collections.create",
   "intelligence.collections.update",
   "intelligence.collections.delete",
@@ -80,6 +81,20 @@ export function createIntelligenceTransport(
           return {
             data: await service.getWorkspace(ctx),
             meta: { requestId },
+          };
+        }
+        case "intelligence.collectors.list": {
+          const q = (query ?? {}) as { accountId?: string };
+          assertAccount(ctx, q.accountId);
+          const rows = await service.listCollectorAccounts(ctx);
+          return {
+            data: rows,
+            meta: {
+              requestId,
+              page: 1,
+              pageSize: Math.max(1, rows.length),
+              total: rows.length,
+            },
           };
         }
         case "intelligence.collections.create": {

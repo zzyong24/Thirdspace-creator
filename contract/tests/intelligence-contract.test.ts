@@ -13,6 +13,7 @@ const EXPECTED_OPERATION_IDS = [
   "intelligence.collections.create",
   "intelligence.collections.update",
   "intelligence.collections.delete",
+  "intelligence.collectors.list",
   "intelligence.sources.previewProfile",
   "intelligence.sources.previewWeb",
   "intelligence.sources.listFavoriteFolders",
@@ -43,9 +44,57 @@ const EXPECTED_OPERATION_IDS = [
 ] as const;
 
 describe("T-482 内容雷达 contract", () => {
-  it("注册完整的 31-operation scope envelope", () => {
+  it("注册完整的内容雷达 operation scope envelope", () => {
     const ids = new Set(Object.values(ENDPOINTS).map((endpoint) => endpoint.id));
     expect(EXPECTED_OPERATION_IDS.filter((id) => !ids.has(id))).toEqual([]);
+  });
+
+  it("[T-537] 三类登录来源只接受 collectorAccountId，客户端不能提交 browserSessionRef", () => {
+    const profile = ENDPOINTS.createIntelligenceSource.body.safeParse({
+      accountId: "account-owner",
+      collectionId: null,
+      type: "creator_profile",
+      config: {
+        type: "creator_profile",
+        collectorAccountId: "account-observer",
+        canonicalUrl: "https://www.douyin.com/user/sec-observer",
+        externalAccountId: "sec-observer",
+      },
+      monitorEnabled: true,
+      runInitial: true,
+      idempotencyKey: "t537-profile",
+    });
+    expect(profile.success).toBe(true);
+
+    const forged = ENDPOINTS.createIntelligenceSource.body.safeParse({
+      accountId: "account-owner",
+      collectionId: null,
+      type: "favorites_folder",
+      config: {
+        type: "favorites_folder",
+        collectorAccountId: "account-observer",
+        folderId: "folder-1",
+        browserSessionRef: "douyin-profile:forged",
+      },
+      monitorEnabled: true,
+      runInitial: true,
+      idempotencyKey: "t537-forged",
+    });
+    expect(forged.success).toBe(false);
+
+    expect(
+      ENDPOINTS.previewIntelligenceProfile.body.safeParse({
+        accountId: "account-owner",
+        collectorAccountId: "account-observer",
+        url: "https://www.douyin.com/user/sec-observer",
+      }).success,
+    ).toBe(true);
+    expect(
+      ENDPOINTS.listIntelligenceFavoriteFolders.query.safeParse({
+        accountId: "account-owner",
+        collectorAccountId: "account-observer",
+      }).success,
+    ).toBe(true);
   });
 
   it("指标缺失保持 null，不把评论数伪造成 0", () => {

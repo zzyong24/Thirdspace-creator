@@ -55,6 +55,12 @@ export interface RadarSource {
     | "darkhorse_query";
   displayName: string;
   canonicalUrl: string | null;
+  collector: {
+    accountId: string;
+    accountHandle: string | null;
+    platform: "douyin" | null;
+    availability: "active" | "archived" | "missing";
+  } | null;
   monitorEnabled: boolean;
   syncPolicy: Record<string, unknown>;
   status: "draft" | "active" | "paused" | "archived";
@@ -217,8 +223,16 @@ interface StartRunResult {
 }
 
 export interface RadarApi {
+  listCollectors(input: { accountId: string }): Promise<
+    Array<{
+      accountId: string;
+      accountHandle: string;
+      platform: "douyin";
+    }>
+  >;
   previewProfile(input: {
     accountId: string;
+    collectorAccountId: string;
     url: string;
   }): Promise<{
     externalAccountId: string;
@@ -226,7 +240,6 @@ export interface RadarApi {
     avatarUrl: string | null;
     canonicalUrl: string;
     visibleWorkCount: number | null;
-    browserSessionRef: string;
   }>;
   previewWeb(input: {
     accountId: string;
@@ -243,7 +256,7 @@ export interface RadarApi {
   }>;
   listFavoriteFolders(input: {
     accountId: string;
-    browserSessionRef: string;
+    collectorAccountId: string;
   }): Promise<Array<{ id: string; name: string; itemCount: number | null }>>;
   createCollection(input: {
     accountId: string;
@@ -302,6 +315,18 @@ export interface RadarApi {
 
 function defaultApi(): RadarApi {
   return {
+    listCollectors: (input) =>
+      client.listIntelligenceCollectors({
+        params: undefined,
+        query: input,
+        body: undefined,
+      }) as unknown as Promise<
+        Array<{
+          accountId: string;
+          accountHandle: string;
+          platform: "douyin";
+        }>
+      >,
     previewProfile: (input) =>
       client.previewIntelligenceProfile({
         params: undefined,
@@ -1256,6 +1281,14 @@ function SourceRow({
           {source.monitorEnabled ? "每日自动" : "仅手动"} ·{" "}
           {runStatusLabel(currentStatus)}
         </span>
+        {source.collector ? (
+          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+            用{" "}
+            {source.collector.accountHandle ??
+              source.collector.accountId}{" "}
+            采集 → 归当前工作区
+          </span>
+        ) : null}
       </button>
       <Button
         type="button"
@@ -1870,6 +1903,11 @@ function AddSourceDialog({
   const [instruction, setInstruction] = React.useState("");
   const [collectionId, setCollectionId] = React.useState("");
   const [monitor, setMonitor] = React.useState(true);
+  const [collectors, setCollectors] = React.useState<
+    Awaited<ReturnType<RadarApi["listCollectors"]>>
+  >([]);
+  const [collectorAccountId, setCollectorAccountId] =
+    React.useState("");
   const [profilePreview, setProfilePreview] = React.useState<Awaited<
     ReturnType<RadarApi["previewProfile"]>
   > | null>(null);
@@ -1884,6 +1922,10 @@ function AddSourceDialog({
   );
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  const loginSource =
+    type === "creator_profile" ||
+    type === "favorites_folder" ||
+    type === "darkhorse_query";
 
   const resetVerification = React.useCallback(() => {
     setProfilePreview(null);
@@ -1891,14 +1933,41 @@ function AddSourceDialog({
     setVerifiedMessage(null);
   }, []);
 
+  React.useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void api
+      .listCollectors({ accountId })
+      .then((rows) => {
+        if (cancelled) return;
+        setCollectors(rows);
+        setCollectorAccountId(
+          rows.find((row) => row.accountId === accountId)?.accountId ??
+            rows[0]?.accountId ??
+            "",
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCollectors([]);
+        setCollectorAccountId("");
+        setError("暂时无法读取可用的抖音采集账号。");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, api, open]);
+
   const verify = React.useCallback(() => {
     startTransition(async () => {
       setError(null);
       resetVerification();
       try {
         if (type === "creator_profile") {
+          if (!collectorAccountId) throw new Error("collector required");
           const preview = await api.previewProfile({
             accountId,
+            collectorAccountId,
             url: new URL(value).toString(),
           });
           setProfilePreview(preview);
@@ -1909,10 +1978,11 @@ function AddSourceDialog({
           return;
         }
         if (type === "favorites_folder") {
+          if (!collectorAccountId) throw new Error("collector required");
           setFolders([]);
           const rows = await api.listFavoriteFolders({
             accountId,
-            browserSessionRef: `douyin-profile:${accountId}`,
+            collectorAccountId,
           });
           setFolders(rows);
           if (rows.length === 0) {
@@ -1960,7 +2030,15 @@ function AddSourceDialog({
         );
       }
     });
-  }, [accountId, api, instruction, resetVerification, type, value]);
+  }, [
+    accountId,
+    api,
+    collectorAccountId,
+    instruction,
+    resetVerification,
+    type,
+    value,
+  ]);
 
   const create = React.useCallback(() => {
     startTransition(async () => {
@@ -1971,9 +2049,9 @@ function AddSourceDialog({
           if (!profilePreview) throw new Error("preview required");
           config = {
             type,
+            collectorAccountId,
             canonicalUrl: profilePreview.canonicalUrl,
             externalAccountId: profilePreview.externalAccountId,
-            browserSessionRef: profilePreview.browserSessionRef,
           };
         } else if (type === "favorites_folder") {
           if (!folders.some((folder) => folder.id === value)) {
@@ -1981,16 +2059,16 @@ function AddSourceDialog({
           }
           config = {
             type,
+            collectorAccountId,
             folderId: value,
-            browserSessionRef: `douyin-profile:${accountId}`,
           };
         } else if (type === "darkhorse_query") {
           if (!value.trim()) throw new Error("missing keyword");
           config = {
             type,
+            collectorAccountId,
             keyword: value.trim(),
             board: "low_follower_breakout",
-            browserSessionRef: `douyin-profile:${accountId}`,
           };
         } else {
           if (!webPreview || webPreview.type !== type) {
@@ -2036,6 +2114,7 @@ function AddSourceDialog({
     accountId,
     api,
     collectionId,
+    collectorAccountId,
     monitor,
     name,
     onDone,
@@ -2097,6 +2176,39 @@ function AddSourceDialog({
             </button>
           ))}
         </div>
+        {loginSource ? (
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            采集账号
+            <select
+              aria-label="采集账号"
+              value={collectorAccountId}
+              onChange={(event) => {
+                setCollectorAccountId(event.target.value);
+                setValue("");
+                setFolders([]);
+                setError(null);
+                resetVerification();
+              }}
+              className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground"
+            >
+              {collectors.length === 0 ? (
+                <option value="">暂无可用抖音账号</option>
+              ) : null}
+              {collectors.map((collector) => (
+                <option
+                  key={collector.accountId}
+                  value={collector.accountId}
+                >
+                  {collector.accountHandle}
+                  {collector.accountId === accountId ? "（当前工作区）" : ""}
+                </option>
+              ))}
+            </select>
+            <span>
+              用所选账号的登录态采集，内容仍归当前工作区。
+            </span>
+          </label>
+        ) : null}
         {type === "favorites_folder" && folders.length > 0 ? (
           <label className="grid gap-1 text-xs text-muted-foreground">
             选择收藏夹
@@ -2186,6 +2298,7 @@ function AddSourceDialog({
             variant="outline"
             disabled={
               pending ||
+              (loginSource && !collectorAccountId) ||
               (type !== "favorites_folder" && !value.trim())
             }
             onClick={verify}
@@ -2208,6 +2321,7 @@ function AddSourceDialog({
             type="button"
             disabled={
               pending ||
+              (loginSource && !collectorAccountId) ||
               !value.trim() ||
               (type === "creator_profile" && !profilePreview) ||
               ((type === "web" || type === "rss") && !webPreview) ||

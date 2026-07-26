@@ -30,6 +30,7 @@ const baseSource = {
   nextRunAt: null,
   createdAt: "2026-07-23T12:00:00.000Z",
   updatedAt: "2026-07-23T12:00:00.000Z",
+  collector: null,
 };
 
 function deps() {
@@ -107,10 +108,13 @@ describe("T-482 内容雷达来源适配器", () => {
     });
   });
 
-  it("热点宝候选仍按本地 48 小时三档规则过滤，未知粉丝不入库", async () => {
+  it("[T-537] 热点宝使用固化 collector，仍按 48 小时三档规则过滤", async () => {
+    let usedCollector: string | null = null;
     const adapter = createIntelligenceSourceAdapter({
       ...deps(),
-      fetchDouhot: async () => ({
+      fetchDouhot: async ({ collectorAccountId }) => {
+        usedCollector = collectorAccountId;
+        return {
         listValid: true,
         officialWindow: "2d",
         responseShape: "code/data/objs",
@@ -152,7 +156,8 @@ describe("T-482 内容雷达来源适配器", () => {
             officialScore: 98,
           },
         ],
-      }),
+        };
+      },
     });
     const result = await adapter.run(ctx, {
       source: {
@@ -163,15 +168,16 @@ describe("T-482 内容雷达来源适配器", () => {
       },
       config: {
         type: "darkhorse_query",
+        collectorAccountId: "account-observer",
         keyword: "AI 写作",
         board: "low_follower_breakout",
-        browserSessionRef: "douyin-profile:account-1",
       },
       extractionInstruction: null,
       checkpoint: null,
     });
 
     expect(result.items.map((item) => item.externalId)).toEqual(["hit"]);
+    expect(usedCollector).toBe("account-observer");
     expect(result.safeDiagnostics).toMatchObject({
       boardReturnedCount: 2,
       matchedCount: 1,

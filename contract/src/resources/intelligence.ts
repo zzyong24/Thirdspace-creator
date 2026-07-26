@@ -112,16 +112,16 @@ export const intelligenceSourceConfig = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("creator_profile"),
+      collectorAccountId: id,
       canonicalUrl: z.string().url(),
       externalAccountId: z.string().min(1),
-      browserSessionRef: z.string().min(1),
     })
     .strict(),
   z
     .object({
       type: z.literal("favorites_folder"),
+      collectorAccountId: id,
       folderId: z.string().min(1),
-      browserSessionRef: z.string().min(1),
     })
     .strict(),
   z
@@ -141,12 +141,21 @@ export const intelligenceSourceConfig = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("darkhorse_query"),
+      collectorAccountId: id,
       keyword: z.string().min(1),
       board: z.literal("low_follower_breakout"),
-      browserSessionRef: z.string().min(1),
     })
     .strict(),
 ]);
+
+export const intelligenceCollectorResource = z
+  .object({
+    accountId: id,
+    accountHandle: z.string().min(1).nullable(),
+    platform: z.literal("douyin").nullable(),
+    availability: z.enum(["active", "archived", "missing"]),
+  })
+  .strict();
 
 export const intelligenceSourceResource = z
   .object({
@@ -160,6 +169,7 @@ export const intelligenceSourceResource = z
     canonicalUrl: z.string().url().nullable(),
     externalKey: z.string().min(1),
     browserSessionRef: z.string().min(1).nullable(),
+    collector: intelligenceCollectorResource.nullable(),
     monitorEnabled: z.boolean(),
     syncPolicy: jsonObject,
     extractionInstruction: z.string().nullable(),

@@ -84,13 +84,24 @@ const detail: RadarItemDetail = {
 
 function api(): RadarApi {
   return {
+    listCollectors: vi.fn().mockResolvedValue([
+      {
+        accountId: "account-1",
+        accountHandle: "@创作号",
+        platform: "douyin",
+      },
+      {
+        accountId: "account-2",
+        accountHandle: "@观察号",
+        platform: "douyin",
+      },
+    ]),
     previewProfile: vi.fn().mockResolvedValue({
       externalAccountId: "sec-example",
       nickname: "示例博主",
       avatarUrl: null,
       canonicalUrl: "https://www.douyin.com/user/sec-example",
       visibleWorkCount: 12,
-      browserSessionRef: "douyin-profile:account-1",
     }),
     previewWeb: vi.fn().mockResolvedValue({
       type: "web",
@@ -162,6 +173,45 @@ afterEach(() => {
 });
 
 describe("T-482 内容雷达工作区", () => {
+  it("[T-537] 登录型来源默认 owner，切换 collector 清空旧验证并只提交 collectorAccountId", async () => {
+    const stub = api();
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    const collector = await screen.findByRole("combobox", {
+      name: "采集账号",
+    });
+    expect(collector).toHaveValue("account-1");
+    await userEvent.selectOptions(collector, "account-2");
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "来源地址或关键词" }),
+      "https://www.douyin.com/user/sec-example",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "测试来源" }));
+    expect(
+      await screen.findByText(/已识别「示例博主」/),
+    ).toBeInTheDocument();
+    expect(stub.previewProfile).toHaveBeenCalledWith({
+      accountId: "account-1",
+      collectorAccountId: "account-2",
+      url: "https://www.douyin.com/user/sec-example",
+    });
+
+    await userEvent.selectOptions(collector, "account-1");
+    expect(screen.queryByText(/已识别「示例博主」/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "保存并开始首次同步" }),
+    ).toBeDisabled();
+  });
+
   it("[T-520] 只用主题 token，窄桌面双栏、宽桌面三栏，关键同步操作始终可见", () => {
     render(
       <IntelligenceWorkbench
@@ -175,6 +225,7 @@ describe("T-482 内容雷达工作区", () => {
               type: "favorites_folder",
               displayName: "收藏选题库",
               canonicalUrl: null,
+              collector: null,
               monitorEnabled: true,
               syncPolicy: { mode: "scheduled", interval: "daily" },
               status: "active",
@@ -328,6 +379,7 @@ describe("T-482 内容雷达工作区", () => {
           type: "darkhorse_query",
           displayName: "AI 工具",
           canonicalUrl: null,
+          collector: null,
           monitorEnabled: true,
           syncPolicy: { mode: "scheduled", interval: "daily" },
           status: "active",
@@ -386,6 +438,7 @@ describe("T-482 内容雷达工作区", () => {
           type: "creator_profile",
           displayName: "示例博主",
           canonicalUrl: "https://www.douyin.com/user/sec-example",
+          collector: null,
           monitorEnabled: false,
           syncPolicy: { mode: "manual" },
           status: "active",

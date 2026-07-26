@@ -17,9 +17,10 @@ const ctx: RequestContext = {
 };
 
 describe("T-482 内容雷达 transport 契约", () => {
-  it("只声明当前已有真实实现的 27 个 operation", () => {
-    expect(INTELLIGENCE_OP_IDS).toHaveLength(27);
+  it("只声明当前已有真实实现的 28 个 operation", () => {
+    expect(INTELLIGENCE_OP_IDS).toHaveLength(28);
     expect(INTELLIGENCE_OP_IDS).toContain("intelligence.workspace.get");
+    expect(INTELLIGENCE_OP_IDS).toContain("intelligence.collectors.list");
     expect(INTELLIGENCE_OP_IDS).toContain(
       "intelligence.transcripts.enqueue",
     );

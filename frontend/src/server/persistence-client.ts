@@ -5106,6 +5106,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ) => Promise<{ id: string }> = async () => {
     throw new Error("CandidateServiceNotReady");
   };
+  let platformAccountServiceForCollectors: PlatformAccountService | null =
+    null;
+  const requirePlatformAccountServiceForCollectors = () => {
+    if (!platformAccountServiceForCollectors) {
+      throw new Error("PlatformAccountServiceNotReady");
+    }
+    return platformAccountServiceForCollectors;
+  };
   const intelligenceService = createIntelligenceService(db, {
     now: deps.now,
     nextId: deps.nextId,
@@ -5125,6 +5133,39 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     topics: {
       create: (ctx, input) => createTopicFromIntelligence(ctx, input),
+    },
+    collectorAccounts: {
+      listCollectorAccounts: async (ctx) => {
+        const { rows } =
+          await requirePlatformAccountServiceForCollectors().listAccounts(
+            ctx,
+            { platform: "douyin", limit: 1_000, offset: 0 },
+          );
+        return rows.map((row) => ({
+          accountId: row.id,
+          accountHandle: row.accountHandle,
+          platform: row.platform,
+          status: row.status,
+        }));
+      },
+      getCollectorAccount: async (ctx, accountId) => {
+        try {
+          const row =
+            await requirePlatformAccountServiceForCollectors().getAccount(
+              ctx,
+              accountId,
+            );
+          return {
+            accountId: row.id,
+            accountHandle: row.accountHandle,
+            platform: row.platform,
+            status: row.status,
+          };
+        } catch (error) {
+          if (error instanceof OwnershipError) return null;
+          throw error;
+        }
+      },
     },
   });
   const projectIntelligenceReferences =
@@ -5281,9 +5322,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
   const intelligenceSourceAdapter = createIntelligenceSourceAdapter({
     now: deps.now,
-    fetchProfileWorks: async ({ ctx, externalAccountId }) => {
+    fetchProfileWorks: async ({
+      collectorAccountId,
+      externalAccountId,
+    }) => {
       const rows = await (await loadDouyinCdp()).fetchDouyinUserPosts({
-        authDir: douyinAuthDirFor(ctx.accountId),
+        authDir: douyinAuthDirFor(collectorAccountId),
         secUid: externalAccountId,
         maxPages: 100,
         strictEvidence: true,
@@ -5291,16 +5335,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       return rows;
     },
-    fetchFavoriteWorks: async ({ ctx, folderId }) =>
+    fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId }) =>
       (await loadDouyinCdp()).fetchDouyinCollectsVideos({
-        authDir: douyinAuthDirFor(ctx.accountId),
+        authDir: douyinAuthDirFor(collectorAccountId),
         collectsId: folderId,
         maxItems: 1_000,
         strictEvidence: true,
         gateway: douyinGateway,
         diagnostics: {
           requestId: ctx.requestId,
-          accountId: ctx.accountId ?? undefined,
+          accountId: collectorAccountId,
         },
       }),
     readWeb: async ({ ctx, url }) => {
@@ -5316,9 +5360,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     fetchFeed: ({ url }) => fetchIntelligenceFeed(url),
     parseFeed,
-    fetchDouhot: async ({ ctx, keyword, board }) =>
+    fetchDouhot: async ({ collectorAccountId, keyword, board }) =>
       (await loadDouhotCdp()).fetchDouhotLowFollowerBreakout({
-        authDir: douyinAuthDirFor(ctx.accountId),
+        authDir: douyinAuthDirFor(collectorAccountId),
         keyword,
         board,
       }),
@@ -5421,7 +5465,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     async request(endpoint, input, ctx) {
       if (ctx && endpoint.id === "intelligence.sources.previewProfile") {
         const body = (input as {
-          body?: { accountId?: string; url?: string };
+          body?: {
+            accountId?: string;
+            collectorAccountId?: string;
+            url?: string;
+          };
         })?.body;
         const accountId = requireAccountId(
           ctx.accountId,
@@ -5429,6 +5477,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         );
         if (body?.accountId !== accountId) {
           throw new Error("Intelligence source not found");
+        }
+        const collectorAccountId = body.collectorAccountId ?? "";
+        const collector =
+          await requirePlatformAccountServiceForCollectors().getAccount(
+            ctx,
+            collectorAccountId,
+          );
+        if (
+          collector.status !== "active" ||
+          collector.platform !== "douyin"
+        ) {
+          throw new OwnershipError("采集账号不可用，请重新选择");
         }
         const url = new URL(body.url ?? "");
         if (
@@ -5443,7 +5503,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const preview = await (
           await loadDouyinCdp()
         ).previewDouyinUserProfile({
-          authDir: douyinAuthDirFor(accountId),
+          authDir: douyinAuthDirFor(collectorAccountId),
           secUid: externalAccountId,
           canonicalUrl: url.toString(),
           maxPages: 1,
@@ -5454,7 +5514,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           data: {
             platform: "douyin",
             ...preview,
-            browserSessionRef: `douyin-profile:${accountId}`,
           },
           meta: { requestId: ctx.requestId },
         };
@@ -5551,26 +5610,36 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         endpoint.id === "intelligence.sources.listFavoriteFolders"
       ) {
         const query = (input as {
-          query?: { accountId?: string; browserSessionRef?: string };
+          query?: {
+            accountId?: string;
+            collectorAccountId?: string;
+          };
         })?.query;
         const accountId = requireAccountId(ctx.accountId, endpoint.id);
-        if (
-          query?.accountId !== accountId ||
-          query.browserSessionRef !== `douyin-profile:${accountId}`
-        ) {
-          throw new OwnershipError(
-            "收藏登录档案与当前账号不匹配，请切回正确账号后重试",
+        if (query?.accountId !== accountId) {
+          throw new OwnershipError("Intelligence source not found");
+        }
+        const collectorAccountId = query.collectorAccountId ?? "";
+        const collector =
+          await requirePlatformAccountServiceForCollectors().getAccount(
+            ctx,
+            collectorAccountId,
           );
+        if (
+          collector.status !== "active" ||
+          collector.platform !== "douyin"
+        ) {
+          throw new OwnershipError("采集账号不可用，请重新选择");
         }
         const folders = await (
           await loadDouyinCdp()
         ).fetchDouyinCollectsFolders({
-          authDir: douyinAuthDirFor(accountId),
+          authDir: douyinAuthDirFor(collectorAccountId),
           strictEvidence: true,
           gateway: douyinGateway,
           diagnostics: {
             requestId: ctx.requestId,
-            accountId,
+            accountId: collectorAccountId,
           },
         });
         return {
@@ -6092,6 +6161,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
   });
+  platformAccountServiceForCollectors = platformAccountService;
   const platformAccount = createPlatformAccountTransport(
     () => platformAccountService,
   );

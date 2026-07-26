@@ -6,6 +6,7 @@ import {
   adapterErrorCode,
   executionTaskResourceV2,
   intelligenceCollectionResource,
+  intelligenceCollectorResource,
   intelligenceItemResource,
   intelligenceRunStatus,
   intelligenceSourceConfig,
@@ -146,11 +147,36 @@ export const intelligenceOperations = {
       .strict(),
     fr: ["FR-CR-002", "FR-CR-017"],
   }),
+  listIntelligenceCollectors: defineEndpoint({
+    id: "intelligence.collectors.list",
+    method: "GET",
+    path: "/intelligence/collectors",
+    query: accountQuery,
+    response: intelligenceCollectorResource
+      .pick({
+        accountId: true,
+        accountHandle: true,
+        platform: true,
+      })
+      .extend({
+        accountHandle: z.string().min(1),
+        platform: z.literal("douyin"),
+      })
+      .strict(),
+    isList: true,
+    fr: ["FR-537-01"],
+  }),
   previewIntelligenceProfile: defineEndpoint({
     id: "intelligence.sources.previewProfile",
     method: "POST",
     path: "/intelligence/sources/preview-profile",
-    body: z.object({ accountId: id, url: z.string().url() }).strict(),
+    body: z
+      .object({
+        accountId: id,
+        collectorAccountId: id,
+        url: z.string().url(),
+      })
+      .strict(),
     response: z
       .object({
         platform: z.literal("douyin"),
@@ -159,7 +185,6 @@ export const intelligenceOperations = {
         avatarUrl: z.string().url().nullable(),
         canonicalUrl: z.string().url(),
         visibleWorkCount: z.number().int().nonnegative().nullable(),
-        browserSessionRef: z.string().min(1),
       })
       .strict(),
     fr: ["FR-CR-003"],
@@ -200,7 +225,7 @@ export const intelligenceOperations = {
     method: "GET",
     path: "/intelligence/sources/favorite-folders",
     query: z
-      .object({ accountId: id, browserSessionRef: z.string().min(1) })
+      .object({ accountId: id, collectorAccountId: id })
       .strict(),
     response: favoriteFolderPreview,
     isList: true,

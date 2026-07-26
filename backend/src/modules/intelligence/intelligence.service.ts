@@ -76,14 +76,14 @@ type AdapterStatus =
 type SourceConfig =
   | {
       type: "creator_profile";
+      collectorAccountId: string;
       canonicalUrl: string;
       externalAccountId: string;
-      browserSessionRef: string;
     }
   | {
       type: "favorites_folder";
+      collectorAccountId: string;
       folderId: string;
-      browserSessionRef: string;
     }
   | {
       type: "web" | "rss";
@@ -92,10 +92,27 @@ type SourceConfig =
     }
   | {
       type: "darkhorse_query";
+      collectorAccountId: string;
       keyword: string;
       board: "low_follower_breakout";
-      browserSessionRef: string;
     };
+
+export interface CollectorAccountProjection {
+  accountId: string;
+  accountHandle: string;
+  platform: string;
+  status: "active" | "archived";
+}
+
+export interface CollectorAccountReadPort {
+  listCollectorAccounts(
+    ctx: RequestContext,
+  ): Promise<CollectorAccountProjection[]>;
+  getCollectorAccount(
+    ctx: RequestContext,
+    accountId: string,
+  ): Promise<CollectorAccountProjection | null>;
+}
 
 export interface IntelligenceAdapterItem {
   type: "video" | "article" | "trend_signal";
@@ -152,6 +169,7 @@ export interface IntelligenceAdapterEnvelope {
 
 export interface IntelligenceServiceDeps {
   tasks: PersistentTaskService;
+  collectorAccounts?: CollectorAccountReadPort;
   positioning?: {
     getVersion(
       ctx: RequestContext,
@@ -236,7 +254,29 @@ function toCollection(row: CollectionRow): IntelligenceCollectionResource {
   };
 }
 
-function toSource(row: SourceRow): IntelligenceSourceResource {
+function collectorAccountIdOf(row: SourceRow): string | null {
+  if (
+    row.type !== "creator_profile" &&
+    row.type !== "favorites_folder" &&
+    row.type !== "darkhorse_query"
+  ) {
+    return null;
+  }
+  const value = (row.adapterConfig as { collectorAccountId?: unknown } | null)
+    ?.collectorAccountId;
+  if (typeof value === "string" && value.length > 0) return value;
+  const legacyRef = row.browserSessionRef;
+  return legacyRef === `douyin-profile:${row.accountId}`
+    ? row.accountId
+    : null;
+}
+
+function toSource(
+  row: SourceRow,
+  collector?: CollectorAccountProjection | null,
+): IntelligenceSourceResource {
+  const collectorAccountId = collectorAccountIdOf(row);
+  const loginSource = collectorAccountId !== null;
   return {
     id: row.id,
     userId: row.userId,
@@ -247,7 +287,20 @@ function toSource(row: SourceRow): IntelligenceSourceResource {
     displayName: row.displayName,
     canonicalUrl: row.canonicalUrl,
     externalKey: row.externalKey,
-    browserSessionRef: row.browserSessionRef,
+    browserSessionRef: loginSource ? null : row.browserSessionRef,
+    collector: collectorAccountId
+      ? {
+          accountId: collectorAccountId,
+          accountHandle: collector?.accountHandle ?? null,
+          platform: collector?.platform === "douyin" ? "douyin" : null,
+          availability:
+            collector?.status === "active"
+              ? "active"
+              : collector?.status === "archived"
+                ? "archived"
+                : "missing",
+        }
+      : null,
     monitorEnabled: row.monitorEnabled,
     syncPolicy: (row.syncPolicy ?? {}) as Record<string, unknown>,
     extractionInstruction: row.extractionInstruction,
@@ -441,17 +494,17 @@ function sourceIdentity(config: SourceConfig): {
     case "creator_profile":
       return {
         platform: "douyin",
-        externalKey: config.externalAccountId,
+        externalKey: `profile:${config.collectorAccountId}:${config.externalAccountId}`,
         canonicalUrl: canonicalUrl(config.canonicalUrl),
-        browserSessionRef: config.browserSessionRef,
+        browserSessionRef: `douyin-profile:${config.collectorAccountId}`,
         defaultName: config.externalAccountId,
       };
     case "favorites_folder":
       return {
         platform: "douyin",
-        externalKey: config.folderId,
+        externalKey: `favorites:${config.collectorAccountId}:${config.folderId}`,
         canonicalUrl: null,
-        browserSessionRef: config.browserSessionRef,
+        browserSessionRef: `douyin-profile:${config.collectorAccountId}`,
         defaultName: "我的收藏",
       };
     case "web":
@@ -469,9 +522,9 @@ function sourceIdentity(config: SourceConfig): {
       const keyword = normalizedName(config.keyword);
       return {
         platform: "douyin",
-        externalKey: `${config.board}:${keyword}`,
+        externalKey: `darkhorse:${config.collectorAccountId}:${config.board}:${keyword}`,
         canonicalUrl: null,
-        browserSessionRef: config.browserSessionRef,
+        browserSessionRef: `douyin-profile:${config.collectorAccountId}`,
         defaultName: `黑马：${config.keyword.trim()}`,
       };
     }
@@ -520,6 +573,45 @@ export function createIntelligenceService(
 
   async function account(ctx: RequestContext, op: string): Promise<string> {
     return requireAccountId(ctx.accountId, op);
+  }
+
+  async function assertCollectorEligible(
+    ctx: RequestContext,
+    collectorAccountId: string,
+  ): Promise<CollectorAccountProjection> {
+    if (!deps.collectorAccounts) {
+      throw new IntelligenceValidationError("采集账号服务尚未接入");
+    }
+    const collector = await deps.collectorAccounts.getCollectorAccount(
+      ctx,
+      collectorAccountId,
+    );
+    if (!collector) {
+      throw new OwnershipError("Collector account not found");
+    }
+    if (collector.status !== "active") {
+      throw new IntelligenceValidationError("采集账号已归档，请重新选择");
+    }
+    if (collector.platform !== "douyin") {
+      throw new IntelligenceValidationError("采集账号必须是抖音账号");
+    }
+    return collector;
+  }
+
+  async function presentSource(
+    ctx: RequestContext,
+    row: SourceRow,
+    knownCollector?: CollectorAccountProjection | null,
+  ): Promise<IntelligenceSourceResource> {
+    const collectorAccountId = collectorAccountIdOf(row);
+    if (!collectorAccountId) return toSource(row);
+    if (knownCollector !== undefined) return toSource(row, knownCollector);
+    const collector = deps.collectorAccounts
+      ? await deps.collectorAccounts
+          .getCollectorAccount(ctx, collectorAccountId)
+          .catch(() => null)
+      : null;
+    return toSource(row, collector);
   }
 
   async function ensureSystemCollections(ctx: RequestContext) {
@@ -984,9 +1076,9 @@ export function createIntelligenceService(
         browserSessionRef: `douyin-profile:${accountId}`,
         adapterConfig: {
           type: "creator_profile",
+          collectorAccountId: accountId,
           canonicalUrl: homeUrl,
           externalAccountId: old.externalAccountId,
-          browserSessionRef: `douyin-profile:${accountId}`,
         },
         monitorEnabled: old.enabled,
         collectionId: historyCollection.id,
@@ -1033,8 +1125,8 @@ export function createIntelligenceService(
         browserSessionRef: `douyin-profile:${accountId}`,
         adapterConfig: {
           type: "favorites_folder",
+          collectorAccountId: accountId,
           folderId: folderKey,
-          browserSessionRef: `douyin-profile:${accountId}`,
         },
         monitorEnabled: old.enabled,
         collectionId: favoritesCollection.id,
@@ -1207,9 +1299,9 @@ export function createIntelligenceService(
           browserSessionRef: `douyin-profile:${accountId}`,
           adapterConfig: {
             type: "darkhorse_query",
+            collectorAccountId: accountId,
             keyword,
             board: "low_follower_breakout",
-            browserSessionRef: `douyin-profile:${accountId}`,
           },
           monitorEnabled: true,
           collectionId: darkhorseCollection.id,
@@ -1326,6 +1418,14 @@ export function createIntelligenceService(
     },
   ): Promise<{ run: ReturnType<typeof toRun>; task: ExecutionTaskResourceV2 }> {
     const source = await requireSource(ctx, sourceId);
+    const config = source.adapterConfig as SourceConfig;
+    if (
+      config.type === "creator_profile" ||
+      config.type === "favorites_folder" ||
+      config.type === "darkhorse_query"
+    ) {
+      await assertCollectorEligible(ctx, config.collectorAccountId);
+    }
     if (source.status !== "active") {
       throw new IntelligenceConflictError(
         `来源当前为 ${source.status}，不能开始同步`,
@@ -1400,6 +1500,31 @@ export function createIntelligenceService(
   }
 
   const service = {
+    async listCollectorAccounts(ctx: RequestContext) {
+      await account(ctx, "intelligence.collectors.list");
+      if (!deps.collectorAccounts) {
+        throw new IntelligenceValidationError("采集账号服务尚未接入");
+      }
+      const collectors =
+        await deps.collectorAccounts.listCollectorAccounts(ctx);
+      return collectors
+        .filter(
+          (collector) =>
+            collector.status === "active" &&
+            collector.platform === "douyin",
+        )
+        .sort(
+          (left, right) =>
+            left.accountHandle.localeCompare(right.accountHandle, "zh-CN") ||
+            left.accountId.localeCompare(right.accountId),
+        )
+        .map((collector) => ({
+          accountId: collector.accountId,
+          accountHandle: collector.accountHandle,
+          platform: "douyin" as const,
+        }));
+    },
+
     /**
      * 旧信号源写栅栏。迁移 ledger 进入 write_fenced 之后的任一终态，旧 benchmark /
      * favorites 定时采集器都必须短路，禁止继续写旧表或直接创建候选。
@@ -1688,9 +1813,12 @@ export function createIntelligenceService(
       for (const run of runs) {
         if (!latestBySource.has(run.sourceId)) latestBySource.set(run.sourceId, run);
       }
+      const presentedSources = await Promise.all(
+        sources.map((source) => presentSource(ctx, source)),
+      );
       return {
         collections: collections.map(toCollection),
-        sources: sources.map(toSource),
+        sources: presentedSources,
         memberships: memberships.map(toSourceMembership),
         health: sources.map((source) => {
           const latest = latestBySource.get(source.id);
@@ -1977,6 +2105,15 @@ export function createIntelligenceService(
         throw new IntelligenceValidationError("source type 与 config 不一致");
       }
       if (input.collectionId) await requireCollection(ctx, input.collectionId);
+      const collector =
+        input.config.type === "creator_profile" ||
+        input.config.type === "favorites_folder" ||
+        input.config.type === "darkhorse_query"
+          ? await assertCollectorEligible(
+              ctx,
+              input.config.collectorAccountId,
+            )
+          : null;
       const identity = sourceIdentity(input.config);
       const [existing] = await db
         .select()
@@ -2033,7 +2170,7 @@ export function createIntelligenceService(
           })
         : null;
       return {
-        source: toSource(source),
+        source: await presentSource(ctx, source, collector),
         run: started?.run ?? null,
         task: started?.task ?? null,
       };
@@ -2095,7 +2232,11 @@ export function createIntelligenceService(
       const offset = Math.max(0, query.offset ?? 0);
       const limit = Math.max(1, query.limit ?? 20);
       return {
-        rows: rows.slice(offset, offset + limit).map(toSource),
+        rows: await Promise.all(
+          rows
+            .slice(offset, offset + limit)
+            .map((source) => presentSource(ctx, source)),
+        ),
         total: rows.length,
       };
     },
@@ -2158,7 +2299,7 @@ export function createIntelligenceService(
       if (input.collectionId) {
         await ensureSourceMembership(ctx, updated, input.collectionId);
       }
-      return toSource(updated);
+      return presentSource(ctx, updated);
     },
 
     async deleteSource(
@@ -2273,9 +2414,17 @@ export function createIntelligenceService(
       extractionInstruction: string | null;
     }> {
       const source = await requireSource(ctx, sourceId);
+      const config = source.adapterConfig as SourceConfig;
+      if (
+        config.type === "creator_profile" ||
+        config.type === "favorites_folder" ||
+        config.type === "darkhorse_query"
+      ) {
+        await assertCollectorEligible(ctx, config.collectorAccountId);
+      }
       return {
-        source: toSource(source),
-        config: source.adapterConfig as SourceConfig,
+        source: await presentSource(ctx, source),
+        config,
         extractionInstruction: source.extractionInstruction,
       };
     },
@@ -2768,7 +2917,10 @@ export function createIntelligenceService(
             eq(intelligenceSources.userId, ctx.userId),
             eq(intelligenceSources.accountId, accountId),
             eq(intelligenceSources.type, "creator_profile"),
-            eq(intelligenceSources.externalKey, input.item.authorId),
+            eq(
+              intelligenceSources.externalKey,
+              `profile:${accountId}:${input.item.authorId}`,
+            ),
           ),
         )
         .limit(1);
@@ -2778,9 +2930,9 @@ export function createIntelligenceService(
         type: "creator_profile",
         config: {
           type: "creator_profile",
+          collectorAccountId: accountId,
           canonicalUrl: profileUrl,
           externalAccountId: input.item.authorId,
-          browserSessionRef: input.browserSessionRef,
         },
         displayName: input.item.authorName.trim(),
         // 分享导入只建档，不擅自把该作者升级成每日监控来源。
@@ -2915,7 +3067,7 @@ export function createIntelligenceService(
         throw new Error("share import evidence is incomplete");
       }
       const result = {
-        source: toSource(source),
+        source: await presentSource(ctx, source),
         item: toItem(item),
         snapshot: toSnapshot(snapshot),
         createdSource: !sourceBefore,

@@ -249,6 +249,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/intelligence/collections"],
   ["PATCH", "/intelligence/collections/:collectionId"],
   ["DELETE", "/intelligence/collections/:collectionId"],
+  ["GET", "/intelligence/collectors"],
   ["POST", "/intelligence/sources/preview-profile"],
   ["POST", "/intelligence/sources/preview-web"],
   ["GET", "/intelligence/sources/favorite-folders"],
