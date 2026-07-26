@@ -146,12 +146,12 @@
 | [2026-07-05-desktop-app-architecture-overview.md](2026-07-05-desktop-app-architecture-overview.md) | 桌面化(Tauri)+ 资产保护(prompt/key 防泄漏)架构总纲(T-147) | 架构总纲,拆 P1–P6 |
 | [2026-07-06-desktop-hardening-p6-design.md](2026-07-06-desktop-hardening-p6-design.md) | 把防篡改重打包+抬逆向门槛的加固沉淀成 desktop:package 流水线自动步骤(T-147 P6) | 📋 待过 gate |
 | [2026-07-10-immutable-account-anchor-design.md](2026-07-10-immutable-account-anchor-design.md) | 每个抖音账户有系统生成、永不可变的 account id 作租户隔离唯一锚,昵称降为显示名(T-201) | ✅ PASS 可开工 T-201a~d |
-| [2026-07-17-license-hardening-and-dual-platform-design.md](2026-07-17-license-hardening-and-dual-platform-design.md) | 激活码防破解加固+买断软校验+Mac/Windows 双端正式分发(T-372) | 📋 待过 gate |
+| [2026-07-17-license-hardening-and-dual-platform-design.md](2026-07-17-license-hardening-and-dual-platform-design.md) | 激活码防破解加固+买断软校验+Mac/Windows 双端正式分发(T-372) | ✅ macOS/Windows 双端正式分发与真机验收完成（用户 2026-07-26 确认） |
 | [2026-07-17-native-hardening-and-encrypted-logging-design.md](2026-07-17-native-hardening-and-encrypted-logging-design.md) | 发布前第二层:native 反调试/去单点化/自校验+日志信封加密只有我能解 | 📋 待过 gate |
 | [2026-07-18-anti-ai-deception-maze-design.md](2026-07-18-anti-ai-deception-maze-design.md) | 反 AI 破解:纯被动静态诱饵欺骗迷宫+上下文污染,零功能影响(T-399) | ⚠️ CONCERNS(已处置)可开工 T-399a→b→c |
 | [2026-07-18-channel-links-and-update-distribution-design.md](2026-07-18-channel-links-and-update-distribution-design.md) | 对外商业跳转按激活码渠道运行时下发+更新改版本检查跳渠道下载(T-396) | 📋 待过 gate |
 | [2026-07-21-license-verdict-native-verdict-design.md](2026-07-21-license-verdict-native-verdict-design.md) | 授权判定消费点迁 Rust,verdict-bound token 签发,sidecar 无 token 起不来(T-451) | ⚠️ CONCERNS(已处置)可开工 T-451 |
-| [2026-07-23-desktop-packaging-first-launch-design.md](2026-07-23-desktop-packaging-first-launch-design.md) | T-487 跨平台打包、运行时去重与零白屏首启候选架构 | 📋 待过 gate(正式构建须 Gate) |
+| [2026-07-23-desktop-packaging-first-launch-design.md](2026-07-23-desktop-packaging-first-launch-design.md) | T-487 跨平台打包、运行时去重与零白屏首启候选架构 | ✅ macOS/Windows 双端打包与真机首启验收完成（用户 2026-07-26 确认） |
 | [2026-07-24-account-scoped-skill-isolation-design.md](2026-07-24-account-scoped-skill-isolation-design.md) | T-513 账号级 Skill 隔离、并发安全解析与存量迁移 | ⛔ FAIL(三轮·回 PLAN 重做) |
 | [2026-07-24-account-skill-overlay-contract.md](2026-07-24-account-skill-overlay-contract.md) | T-513 账号增量 Skill 覆盖服务契约 | —(契约·Contract Gate PASS) |
 | [2026-07-24-account-skill-overlay-replacement.md](2026-07-24-account-skill-overlay-replacement.md) | T-513 账号相对基座的增量 Skill 覆盖与执行快照隔离 | ⚠️ CONCERNS(已处置)→进 CONTRACT |
