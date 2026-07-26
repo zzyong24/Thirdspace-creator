@@ -25,6 +25,19 @@
       "specifiers": [".repository", "/repository"],
       "ext": [".ts"],
       "allowSameModule": true
+    },
+    {
+      "id": "R4-no-web-direct-license-commerce",
+      "desc": "Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。",
+      "type": "forbidden-text",
+      "scopeDirs": ["frontend/src/features", "frontend/src/components"],
+      "patterns": [
+        "license.aitongban.cloud",
+        "/api/license/",
+        "purchase-entry-capabilities",
+        "renewal-entry-capabilities"
+      ],
+      "ext": [".ts", ".tsx"]
     }
   ]
 }

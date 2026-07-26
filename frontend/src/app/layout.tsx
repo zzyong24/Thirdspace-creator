@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 
@@ -29,6 +30,23 @@ const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('creatoros
 //   · 覆盖 string/URL/Request 三种 input:Request 走 `new Request(input,{headers})` 克隆保 method/body。
 const HANDSHAKE_FETCH_SCRIPT = `(function(){try{var t=window.__CREATOROS_HANDSHAKE_TOKEN__;if(typeof t!=='string'||!t||window.__CREATOROS_FETCH_PATCHED__)return;window.__CREATOROS_FETCH_PATCHED__=true;var H='x-creatoros-handshake',O=window.location.origin,of=window.fetch.bind(window);function same(u){try{return new URL(u,O).origin===O;}catch(e){return false;}}window.fetch=function(input,init){try{var url=typeof input==='string'?input:(input instanceof URL?input.href:(input&&input.url)?input.url:'');if(same(url)){if(typeof input==='string'||input instanceof URL){var h=new Headers((init&&init.headers)||undefined);if(!h.has(H)){h.set(H,t);init=Object.assign({},init,{headers:h});}}else if(input&&input.headers){var rh=new Headers(input.headers);if(!rh.has(H)){rh.set(H,t);input=new Request(input,{headers:rh});}}}}catch(e){}return of(input,init);};}catch(e){}})();`;
 
+export function PreHydrationScripts() {
+  return (
+    <>
+      <Script
+        id="creatoros-theme-init"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+      />
+      <Script
+        id="creatoros-handshake-fetch"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: HANDSHAKE_FETCH_SCRIPT }}
+      />
+    </>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,9 +63,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        {/* [T-415] 首帧前 patch fetch 附握手头(桌面壳才生效);配对 proxy.ts 的 default-deny。 */}
-        <script dangerouslySetInnerHTML={{ __html: HANDSHAKE_FETCH_SCRIPT }} />
+        <PreHydrationScripts />
         {/* [T-257] 全局挂外链处理:覆盖 /activate 等 (creator) 外的所有页面(桌面运行时才生效)。 */}
         <ExternalLinkOpener />
         {children}

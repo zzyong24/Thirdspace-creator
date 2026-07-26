@@ -25,6 +25,12 @@
   "_lineComments": "Line-comment lead-ins used to separate code from comments. '#' counts as a comment only at a token boundary (so JS private fields like this.#x are not treated as comments). SQL/Lua projects can add \"--\" (NOT a default — it collides with JS i--).",
   "lineComments": ["//", "#"],
 
+  "_testMigrations": "Optional exact-path audit records for tests retired by an architectural/IA migration. Each active group must name deleted source tests, existing replacement tests, and a reason. The gate requires replacement aggregate case/assertion counts >= deleted aggregate. Globs are forbidden.",
+  "testMigrations": [],
+
+  "_suppressionAllowances": "Optional exact-path, exact-directive audit records for necessary new suppressions. maxIncrease is a hard cap on the net added directives and reason is mandatory. Globs and reason-less allowances are not supported.",
+  "suppressionAllowances": [],
+
   "_coverageConfigPath": "Repo-relative path to the file that holds coverage thresholds. A LOWERED numeric threshold ⇒ ERROR; a deleted file ⇒ ERROR. Examples: \"vitest.config.ts\", \"jest.config.js\", \"pyproject.toml\" (tool.coverage fail_under), \".nycrc\", \".coveragerc\". Leave null to skip.",
   "coverageConfigPath": null,
 
