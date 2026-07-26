@@ -640,9 +640,23 @@ const DOUYIN_URL_RE =
 const TRANSCRIBE_INTENT_RE =
   /转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text/i;
 const TRANSCRIBE_NEGATION_RE =
-  /(?:不要|不用|无需|不必|不需要|别)(?:再|自动|帮我|给我|进行|做|跑)?\s*(?:转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text)/i;
+  /(?:(?:不要|不用|无需|不必|不需要|不想|别)(?:(?:再|自动|帮我|给我|进行|做|跑|生成)\s*){0,3}(?:转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text)|不(?:转写|转录|生成(?:逐字稿|字幕)|做(?:逐字稿|字幕)|跑\s*ASR|提取(?:视频)?(?:文字|文案)))/i;
 const REFERENCE_COVER_INTENT_RE =
   /(?:参考图|参考封面|照着.{0,12}(?:做|生成)|沿用.{0,12}(?:风格|样式)|复用.{0,12}封面)/i;
+const REFERENCE_COVER_NEGATION_RE =
+  /(?:(?:不要|不用|无需|不必|不需要|不想|别)(?:(?:再|自动|帮我|给我|使用|用)\s*){0,3}(?:参考图|参考封面|沿用|复用|照着)|不(?:使用|用|沿用|复用)(?:这张|该张|当前|之前|以前|原来)?(?:参考图|参考封面|图片|图|风格|样式)?)/i;
+
+function hasExplicitTranscribeAuthorization(text: string): boolean {
+  // 否定优先：同一最新用户轮里即便出现“字幕/转写”等关键词，也不能被升级为授权。
+  if (TRANSCRIBE_NEGATION_RE.test(text)) return false;
+  return TRANSCRIBE_INTENT_RE.test(text);
+}
+
+function hasReferenceCoverIntent(text: string): boolean {
+  // “不要参考图，直接生成封面”中的“参考图”是拒绝，不是 image-to-image 授权。
+  if (REFERENCE_COVER_NEGATION_RE.test(text)) return false;
+  return /封面/i.test(text) && REFERENCE_COVER_INTENT_RE.test(text);
+}
 
 function latestUserText(messages: UIMessage[]): string {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -672,12 +686,10 @@ export function detectCopilotMediaRoute(
     return {
       kind: "douyin.share",
       shareInput: text,
-      transcribe:
-        TRANSCRIBE_INTENT_RE.test(text) &&
-        !TRANSCRIBE_NEGATION_RE.test(text),
+      transcribe: hasExplicitTranscribeAuthorization(text),
     };
   }
-  if (/封面/i.test(text) && REFERENCE_COVER_INTENT_RE.test(text)) {
+  if (hasReferenceCoverIntent(text)) {
     return { kind: "cover.reference" };
   }
   return null;

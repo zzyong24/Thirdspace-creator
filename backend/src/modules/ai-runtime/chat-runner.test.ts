@@ -137,6 +137,60 @@ describe("[T-523] Copilot 媒体意图确定性路由", () => {
     });
   });
 
+  it.each([
+    "不要转写，只帮我建档 https://v.douyin.com/no-transcribe/",
+    "不用转录，收藏即可 https://v.douyin.com/no-transcript/",
+    "别生成字幕，只建档 https://v.douyin.com/no-subtitles/",
+  ])("否定转写意图优先，不因出现关键词而升级授权：%s", (text) => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-negated",
+          role: "user",
+          parts: [{ type: "text", text }],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: false,
+    });
+  });
+
+  it("最新轮明确要求转写时仍授权派生任务", () => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-positive",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "帮我转写并生成字幕 https://v.douyin.com/with-asr/",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: true,
+    });
+  });
+
+  it.each([
+    "不要参考图，直接生成封面",
+    "不用沿用这张图的风格，直接生成封面",
+  ])("封面参考图否定意图优先，不进入自动引用：%s", (text) => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-cover-negated",
+          role: "user",
+          parts: [{ type: "text", text }],
+        },
+      ] as never),
+    ).toBeNull();
+  });
+
   it("只有确认全库图片 total===1 才自动选择，不能把分页首屏的一张当唯一", () => {
     const firstPage = [
       { id: "a1", title: "第一页唯一可见", kind: "image" },
