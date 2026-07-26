@@ -12,7 +12,7 @@
 //!      算法);每行日志带 `[时间戳] [通道]` 前缀。
 //!   ③ [`SidecarLogger`] + [`init_sidecar_logger`] —— 共享**加密**写入器(`Arc<Mutex<EncState>>`,
 //!      两读取线程 clone 同一把,Mutex 串行化写,避免交错写坏行 + 保证 AEAD nonce counter 不复用)+
-//!      启动轮转(`sidecar.log.enc` → `sidecar.prev.log.enc`,只留当前 + 上一次会话两份)。
+//!      按 UTC 日期/会话落盘、启动清理 30 天前与超额文件、单会话 10 MiB 封顶。
 //!   ④ [`decrypt_log`] —— 开发者侧解密(供 `creatoros-logdec` bin 复用),按 key_id 匹配私钥、
 //!      解会话密钥、逐帧解;尾部截断/损坏时输出已解全部行且不 panic(部分可解密)。
 //!
@@ -64,6 +64,12 @@ const MAGIC: &[u8] = b"CRLOG\x01";
 const HKDF_INFO_PREFIX: &[u8] = b"creatoros-log-v1|";
 /// 单个 wrap_block 字节长度:key_id(4) + eph_pubkey(32) + wrap_nonce(12) + wrapped_key(48)。
 const WRAP_BLOCK_LEN: usize = 4 + 32 + 12 + 48;
+/// T-533：日志最多保留 30 天；恰好 30 天的文件仍保留，超过才删除。
+const LOG_RETENTION_DAYS: i64 = 30;
+/// T-533：除时间窗口外再设总文件数护栏，防同一天频繁重启无限堆积。
+const MAX_LOG_FILES: usize = 64;
+/// T-533：单次 app 会话文件上限，包含 HEADER 与所有密文帧。
+const MAX_LOG_FILE_BYTES: u64 = 10 * 1024 * 1024;
 
 /// **内嵌开发者 X25519 日志公钥**(standard-base64 编码的 32B raw 公钥)。
 ///
@@ -225,6 +231,9 @@ struct EncState {
     file: BufWriter<File>,
     cipher: Aes256Gcm,
     counter: u64,
+    bytes_written: u64,
+    max_file_bytes: u64,
+    capped: bool,
 }
 
 impl EncState {
@@ -232,9 +241,22 @@ impl EncState {
     /// **counter 仅在整帧成功写盘 + flush 后才 +1** —— 解密侧靠帧序号(0,1,2…)重建 counter,故写盘失败
     /// 时绝不推进(下一帧复用同一 counter,不产生序号空洞)。任一步失败吞掉丢该行(best-effort,绝不崩)。
     fn write_frame(&mut self, plaintext: &[u8]) -> Option<()> {
+        if self.capped {
+            return None;
+        }
+        // AES-GCM 密文固定比明文多 16B tag，帧另有 4B 长度；先算上限再加密，
+        // 避免超大单行在明知无法落盘时仍分配同等大小密文。
+        let frame_size = u64::try_from(plaintext.len()).ok()?.checked_add(20)?;
+        let next_size = self.bytes_written.checked_add(frame_size)?;
+        if next_size > self.max_file_bytes {
+            self.capped = true;
+            return None;
+        }
         let frame = seal_frame(&self.cipher, self.counter, plaintext)?;
+        debug_assert_eq!(u64::try_from(frame.len()).ok(), Some(frame_size));
         self.file.write_all(&frame).ok()?;
         self.file.flush().ok()?;
+        self.bytes_written = next_size;
         self.counter = self.counter.checked_add(1)?;
         Some(())
     }
@@ -268,10 +290,19 @@ impl SidecarLogger {
 
 /// 用给定收件人开一个加密写入器:生成随机 `session_key` → 写 HEADER → 建 `cipher`。
 /// 任一步失败 → `None`(上层全降级)。session_key 用后就地清零(best-effort)。
-fn open_encrypted_writer(mut file: File, recipients: &[Recipient]) -> Option<EncState> {
+fn open_encrypted_writer_with_limit(
+    mut file: File,
+    recipients: &[Recipient],
+    max_file_bytes: u64,
+) -> Option<EncState> {
     let mut session_key = [0u8; 32];
     OsRng.fill_bytes(&mut session_key);
     let header = build_header(&session_key, recipients)?;
+    let header_len = u64::try_from(header.len()).ok()?;
+    if header_len > max_file_bytes {
+        session_key.iter_mut().for_each(|b| *b = 0);
+        return None;
+    }
     // HEADER 直接写底层 File 并 flush,再交给 BufWriter 接管后续帧。
     file.write_all(&header).ok()?;
     file.flush().ok()?;
@@ -281,14 +312,131 @@ fn open_encrypted_writer(mut file: File, recipients: &[Recipient]) -> Option<Enc
         file: BufWriter::new(file),
         cipher,
         counter: 0,
+        bytes_written: header_len,
+        max_file_bytes,
+        capped: false,
     })
 }
 
-/// 初始化 sidecar **加密**日志:校验内嵌公钥 → 建 `logs/` → 轮转上次会话 → 开新 `sidecar.log.enc` +
-/// 写 HEADER。
+fn open_encrypted_writer(file: File, recipients: &[Recipient]) -> Option<EncState> {
+    open_encrypted_writer_with_limit(file, recipients, MAX_LOG_FILE_BYTES)
+}
+
+/// 将 UTC Unix 秒转换为 `YYYY-MM-DD`，用于日志文件名。
+fn utc_date(secs: u64) -> String {
+    let (year, month, day) = civil_from_days((secs / 86_400) as i64);
+    format!("{year:04}-{month:02}-{day:02}")
+}
+
+/// `YYYY-MM-DD` 转 Unix epoch day；非法日期返回 `None`。
+fn parse_utc_day(value: &str) -> Option<i64> {
+    let bytes = value.as_bytes();
+    if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' {
+        return None;
+    }
+    let year = std::str::from_utf8(&bytes[0..4])
+        .ok()?
+        .parse::<i64>()
+        .ok()?;
+    let month = std::str::from_utf8(&bytes[5..7])
+        .ok()?
+        .parse::<u32>()
+        .ok()?;
+    let day = std::str::from_utf8(&bytes[8..10])
+        .ok()?
+        .parse::<u32>()
+        .ok()?;
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    let adjusted_year = year - i64::from(month <= 2);
+    let era = if adjusted_year >= 0 {
+        adjusted_year
+    } else {
+        adjusted_year - 399
+    } / 400;
+    let year_of_era = adjusted_year - era * 400;
+    let shifted_month = i64::from(month) + if month > 2 { -3 } else { 9 };
+    let day_of_year = (153 * shifted_month + 2) / 5 + i64::from(day) - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    let epoch_day = era * 146_097 + day_of_era - 719_468;
+    (civil_from_days(epoch_day) == (year, month, day)).then_some(epoch_day)
+}
+
+/// 只识别本模块拥有的 `sidecar-YYYY-MM-DD[-N].log.enc`，返回 `(epoch_day, sequence)`。
+fn managed_log_key(path: &Path) -> Option<(i64, u32)> {
+    let name = path.file_name()?.to_str()?;
+    let middle = name.strip_prefix("sidecar-")?.strip_suffix(".log.enc")?;
+    let bytes = middle.as_bytes();
+    let date = std::str::from_utf8(bytes.get(..10)?).ok()?;
+    let suffix = std::str::from_utf8(bytes.get(10..)?).ok()?;
+    let epoch_day = parse_utc_day(date)?;
+    let sequence = match suffix {
+        "" => 0,
+        suffix => suffix.strip_prefix('-')?.parse::<u32>().ok()?,
+    };
+    Some((epoch_day, sequence))
+}
+
+/// 选择当天尚未占用的会话文件：第一份无序号，后续依次 `-1`、`-2`。
+fn next_daily_log_path(logs_dir: &Path, now_secs: u64) -> std::path::PathBuf {
+    let date = utc_date(now_secs);
+    for sequence in 0..=u32::MAX {
+        let name = if sequence == 0 {
+            format!("sidecar-{date}.log.enc")
+        } else {
+            format!("sidecar-{date}-{sequence}.log.enc")
+        };
+        let candidate = logs_dir.join(name);
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    logs_dir.join(format!("sidecar-{date}-overflow.log.enc"))
+}
+
+/// 删除超过保留天数的受管日志，再按日期/会话序号删除最旧文件直到满足数量上限。
+/// 非本模块命名的文件绝不触碰。
+fn cleanup_managed_logs(logs_dir: &Path, now_secs: u64, retention_days: i64, max_files: usize) {
+    let now_day = (now_secs / 86_400) as i64;
+    let Ok(entries) = fs::read_dir(logs_dir) else {
+        return;
+    };
+    let mut retained = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let Some((day, sequence)) = managed_log_key(&path) else {
+            continue;
+        };
+        if now_day.saturating_sub(day) > retention_days {
+            let _ = fs::remove_file(path);
+        } else {
+            retained.push((day, sequence, path));
+        }
+    }
+    retained.sort_by_key(|(day, sequence, _)| (*day, *sequence));
+    let excess = retained.len().saturating_sub(max_files);
+    for (_, _, path) in retained.into_iter().take(excess) {
+        let _ = fs::remove_file(path);
+    }
+}
+
+/// 首次升级时把旧 `current/prev` 加密日志纳入新命名，避免它们永远绕过保留策略。
+fn migrate_legacy_log_names(logs_dir: &Path, now_secs: u64) {
+    for legacy_name in ["sidecar.prev.log.enc", "sidecar.log.enc"] {
+        let legacy = logs_dir.join(legacy_name);
+        if legacy.is_file() {
+            let target = next_daily_log_path(logs_dir, now_secs);
+            let _ = fs::rename(legacy, target);
+        }
+    }
+}
+
+/// 初始化 sidecar **加密**日志：校验内嵌公钥 → 建 `logs/` → 迁移旧名 → 清理过期/超额 →
+/// 开新 `sidecar-YYYY-MM-DD[-N].log.enc` 并写 HEADER。
 ///
-/// 轮转策略(防无限增长,只留两份):每次 app 启动把上次的 `sidecar.log.enc` 改名
-/// `sidecar.prev.log.enc`(覆盖更旧的 prev),再全新开 `sidecar.log.enc`。
+/// T-533 保留策略：超过 30 天删除；最多 64 份；单次会话文件最多 10 MiB，达到上限后该
+/// 会话静默停止追加，绝不截断已写密文帧，也不回退明文。
 ///
 /// **全降级(诚实,SPEC §5)**:内嵌公钥为空/无效 → 返回 `None`(不写日志,绝不明文);建目录/开文件/
 /// 写 HEADER 失败 → 同样 `None`。调用方(`lib.rs`)对 `None` 降级为不落盘。
@@ -304,18 +452,21 @@ pub fn init_sidecar_logger(logs_dir: &Path) -> Option<SidecarLogger> {
         eprintln!("[shell] 建日志目录失败 {}: {e}", logs_dir.display());
         return None;
     }
-    let current = logs_dir.join("sidecar.log.enc");
-    let prev = logs_dir.join("sidecar.prev.log.enc");
-    // 轮转:上次会话的 sidecar.log.enc → sidecar.prev.log.enc(先删更旧的 prev 再改名)。
-    if current.exists() {
-        let _ = fs::remove_file(&prev);
-        let _ = fs::rename(&current, &prev);
-    }
-    // truncate:即便上面 rename 失败(current 仍在),也保证本次会话从空文件起(不追加旧密文)。
+    let now_secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    migrate_legacy_log_names(logs_dir, now_secs);
+    cleanup_managed_logs(
+        logs_dir,
+        now_secs,
+        LOG_RETENTION_DAYS,
+        MAX_LOG_FILES.saturating_sub(1),
+    );
+    let current = next_daily_log_path(logs_dir, now_secs);
     let file = match OpenOptions::new()
-        .create(true)
+        .create_new(true)
         .write(true)
-        .truncate(true)
         .open(&current)
     {
         Ok(f) => f,
@@ -329,6 +480,7 @@ pub fn init_sidecar_logger(logs_dir: &Path) -> Option<SidecarLogger> {
             inner: Arc::new(Mutex::new(st)),
         }),
         None => {
+            let _ = fs::remove_file(&current);
             eprintln!("[shell] 加密日志初始化失败(信封组装) —— 全降级不落盘");
             None
         }
@@ -818,6 +970,104 @@ mod tests {
             format_rfc3339_utc(1_614_602_096, 0),
             "2021-03-01T12:34:56.000Z"
         );
+    }
+
+    #[test]
+    fn t533_daily_log_name_keeps_each_session() {
+        let dir = unique_temp_path("daily-name");
+        fs::create_dir_all(&dir).unwrap();
+        assert_eq!(
+            next_daily_log_path(&dir, 1_721_606_400),
+            dir.join("sidecar-2024-07-22.log.enc")
+        );
+        fs::write(dir.join("sidecar-2024-07-22.log.enc"), b"old").unwrap();
+        assert_eq!(
+            next_daily_log_path(&dir, 1_721_606_400),
+            dir.join("sidecar-2024-07-22-1.log.enc")
+        );
+        fs::write(dir.join("sidecar-2024-07-22-1.log.enc"), b"old").unwrap();
+        assert_eq!(
+            next_daily_log_path(&dir, 1_721_606_400),
+            dir.join("sidecar-2024-07-22-2.log.enc")
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn t533_cleanup_removes_only_expired_and_excess_managed_logs() {
+        let dir = unique_temp_path("cleanup");
+        fs::create_dir_all(&dir).unwrap();
+        for name in [
+            "sidecar-2024-06-20.log.enc",
+            "sidecar-2024-07-01.log.enc",
+            "sidecar-2024-07-20.log.enc",
+            "sidecar-2024-07-21.log.enc",
+            "sidecar-2024-07-22.log.enc",
+            "other.log.enc",
+        ] {
+            fs::write(dir.join(name), name).unwrap();
+        }
+        cleanup_managed_logs(&dir, 1_721_606_400, 30, 3);
+        assert!(!dir.join("sidecar-2024-06-20.log.enc").exists());
+        assert!(!dir.join("sidecar-2024-07-01.log.enc").exists());
+        assert!(dir.join("sidecar-2024-07-20.log.enc").exists());
+        assert!(dir.join("sidecar-2024-07-21.log.enc").exists());
+        assert!(dir.join("sidecar-2024-07-22.log.enc").exists());
+        assert!(dir.join("other.log.enc").exists(), "不得删除非本模块文件");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn t533_cleanup_ignores_untrusted_unicode_file_names_without_panic() {
+        let dir = unique_temp_path("unicode-name");
+        fs::create_dir_all(&dir).unwrap();
+        let unrelated = dir.join("sidecar-测测测测-07-22.log.enc");
+        let boundary_trap = dir.join("sidecar-ab测cdefg.log.enc");
+        fs::write(&unrelated, b"keep").unwrap();
+        fs::write(&boundary_trap, b"keep").unwrap();
+        cleanup_managed_logs(&dir, 1_721_606_400, 30, 3);
+        assert!(unrelated.exists());
+        assert!(boundary_trap.exists());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn t533_legacy_current_and_prev_are_migrated_without_overwrite() {
+        let dir = unique_temp_path("legacy-migrate");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("sidecar.prev.log.enc"), b"prev").unwrap();
+        fs::write(dir.join("sidecar.log.enc"), b"current").unwrap();
+        migrate_legacy_log_names(&dir, 1_721_606_400);
+        assert!(!dir.join("sidecar.prev.log.enc").exists());
+        assert!(!dir.join("sidecar.log.enc").exists());
+        assert_eq!(
+            fs::read(dir.join("sidecar-2024-07-22.log.enc")).unwrap(),
+            b"prev"
+        );
+        assert_eq!(
+            fs::read(dir.join("sidecar-2024-07-22-1.log.enc")).unwrap(),
+            b"current"
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn t533_session_file_stops_before_size_limit() {
+        let (_priv_b, _pub_b, r) = test_keypair();
+        let path = unique_temp_path("size-cap.enc");
+        let file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(&path)
+            .unwrap();
+        let mut st = open_encrypted_writer_with_limit(file, &[r], 180).unwrap();
+        for _ in 0..100 {
+            let _ = st.write_frame(b"012345678901234567890123456789");
+        }
+        drop(st);
+        assert!(fs::metadata(&path).unwrap().len() <= 180);
+        let _ = fs::remove_file(&path);
     }
 
     // -----------------------------------------------------------------------
