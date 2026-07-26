@@ -78,7 +78,7 @@ export interface TriggerDeps {
       taskType: string;
       inputData: Record<string, unknown>;
     },
-  ) => void;
+  ) => void | Promise<void>;
   now: () => string;
   // [T-201d] 可选:查一个账号的 status（隐藏号定时任务停跑 gate）。返回该号 status；
   //   号不存在 / 越权 / 查失败 → null（组合根用 .catch(()=>null) 兜底）。**未绑此端口 → 不查、保持原行为跑**
@@ -99,6 +99,8 @@ export interface TriggerResult {
   /** [T-201d] 若因归属号非 active(隐藏/archived)而跳过不跑 → 填跳过原因(诚实标注);
    *  正常触发 / 幂等短路时缺省。跳过时 jobRunId/aiTaskId 为空串(不产 run,故无 id)。 */
   skippedReason?: string;
+  /** 新持久 driver 会 await 它后再结束 execution task；旧 runNow 可继续忽略并立即返回。 */
+  completion?: Promise<void>;
 }
 
 /** ISO8601 时间戳 → 自然日键(YYYY-MM-DD,UTC 切分,与 capturedAt 幂等锚同口径)。 */
@@ -207,9 +209,14 @@ export async function triggerScheduledJob(
 
   // 触发确定性采集 runner(fire-and-forget:即返,runner 后台跑并回填 job_run)。
   //   collectionCtx 带派生号 → runner → collectors → ingestion 落库全 stamp 正确 account_id。
-  deps.dispatch(collectionCtx, dispatchInput);
+  const completion = Promise.resolve(deps.dispatch(collectionCtx, dispatchInput));
 
-  return { jobRunId: run.id, aiTaskId: task.id, deduped: false };
+  return {
+    jobRunId: run.id,
+    aiTaskId: task.id,
+    deduped: false,
+    completion,
+  };
 }
 
 /** 「立即运行」(D5)需要的 job 读端口(host 绑 schedulingService.getJob;requireJob ownership gate)。 */

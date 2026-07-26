@@ -421,11 +421,12 @@ import {
 import {
   runJobNow,
   triggerScheduledJob,
-  startScheduler,
+  createAutomationHandlerRegistry,
+  startAutomationDriver,
   sweepStaleRuns,
   // [T-207] 启动 sweep 僵尸 ai_task(与 sweepStaleRuns 同族;running 超时标 failed)。
   sweepStaleAiTasks,
-  type CronJob as SchedulableCronJob,
+  type AutomationDriverJob,
   type TriggerDeps,
 } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
@@ -7597,9 +7598,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       updateRun: (c, runId, patch) =>
         schedulingService.updateRun(c, runId, patch),
     },
-    dispatch: (ctx, task) => {
-      void dispatchScheduledCollection?.(ctx, task);
-    },
+    dispatch: (ctx, task) => dispatchScheduledCollection(ctx, task),
     now: deps.now,
     // [T-201d] 隐藏号定时任务停跑 gate 的查号端口:复用 platformAccountService.getAccount
     //   (自带 ownership gate)取该号 status;号不存在/越权/查失败 → null(降级放行,不误停)。
@@ -7800,44 +7799,96 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     console.error("[execution] 启动清扫孤儿沙箱失败:", e),
   );
 
-  // node-cron 进程内调度:每分钟轮询 enabled 且"最近一次 run 非 needs_reconnect"的 job(§6:
-  // 登录态过期停跑),cron 到点 → triggerScheduledJob。测试/build 环境不启动(startScheduler
-  // 内环境守卫 + 单例守卫)。listRunnableJobs 经 listJobs + 每 job 查最近 run 过滤。
-  void startScheduler({
-    ...triggerDeps, // ai/runs/dispatch/now —— 与「立即运行」(D5)共用同一份触发端口
-    ctx: schedulerCtx,
-    listRunnableJobs: async (c) => {
-      // enabled job 全取,再逐个用最近一次 run 过滤掉"最近 needs_reconnect"的(§6 停跑)。
-      // [T-332 S2 · ISO-06] 调度器是系统 daemon:枚举走显式 listJobsSystem(跨号全见;用户面
-      //   listJobs 已 strict 按号,系统 ctx 无号会被断言拒绝)。逐 job 的 run 读用该 job 的
-      //   account_id 派生 ctx(读写恒同号,过 strict 门)。
-      const { rows } = await schedulingService.listJobsSystem(c, {
-        enabled: true,
-        limit: 200,
+  // [T-517] 单一持久自动化 driver：scheduled_job 只供 due producer 读取；
+  // execution_tasks/PersistentTaskService 才是 lease/attempt/recovery 唯一真值。
+  const listRunnableAutomationJobs = async (
+    c: RequestContext,
+  ): Promise<AutomationDriverJob[]> => {
+    // enabled job 全取,再逐个用最近一次 run 过滤掉"最近 needs_reconnect"的(§6 停跑)。
+    // [T-332 S2 · ISO-06] 调度器是系统 daemon:枚举走显式 listJobsSystem(跨号全见;用户面
+    //   listJobs 已 strict 按号,系统 ctx 无号会被断言拒绝)。逐 job 的 run 读用该 job 的
+    //   account_id 派生 ctx(读写恒同号,过 strict 门)。
+    const { rows } = await schedulingService.listJobsSystem(c, {
+      enabled: true,
+      limit: 200,
+      offset: 0,
+    });
+    const runnable: AutomationDriverJob[] = [];
+    for (const job of rows) {
+      if (!job.accountId) continue;
+      const jobCtx: RequestContext = { ...c, accountId: job.accountId };
+      const recent = await schedulingService.listRunsByJob(jobCtx, job.id, {
+        limit: 1,
         offset: 0,
       });
-      const runnable: SchedulableCronJob[] = [];
-      for (const job of rows) {
-        const jobCtx: RequestContext = { ...c, accountId: job.accountId ?? null };
-        const recent = await schedulingService.listRunsByJob(jobCtx, job.id, {
-          limit: 1,
-          offset: 0,
+      const last = recent.rows[0];
+      if (last && last.status === "needs_reconnect") continue;
+      runnable.push({
+        id: job.id,
+        sourceKind: job.sourceKind,
+        target: (job.target ?? {}) as Record<string, unknown>,
+        schedule: job.schedule,
+        enabled: job.enabled,
+        accountId: job.accountId,
+      });
+    }
+    return runnable;
+  };
+
+  const automationHandlers = createAutomationHandlerRegistry()
+    .register("scheduled_collection", async (c, input) => {
+      const result = await triggerScheduledJob(
+        c,
+        {
+          id: input.job.id,
+          sourceKind: input.job.sourceKind,
+          target: input.job.target,
+          accountId: input.job.accountId,
+        },
+        triggerDeps,
+        { scheduledFor: input.scheduledFor },
+      );
+      if (result.skippedReason) throw new Error(result.skippedReason);
+      if (result.deduped) {
+        if (input.attempt <= 1) {
+          throw new Error(
+            `同一自动化 job 已有运行中的 run ${result.jobRunId}，本次计划触发未重复执行`,
+          );
+        }
+        // 重启恢复时旧 job_run 仍 running：复用原 ai_task/run 继续真实 collector，
+        // 不创建第二 run，也不把 execution task 假装成功。
+        if (!result.aiTaskId || !result.jobRunId) {
+          throw new Error("已有自动化运行缺少 task/run 关联，无法恢复");
+        }
+        await dispatchScheduledCollection(c, {
+          id: result.aiTaskId,
+          taskType: `scheduled.${input.job.sourceKind}`,
+          inputData: {
+            jobId: input.job.id,
+            jobRunId: result.jobRunId,
+            target: input.job.target,
+          },
         });
-        const last = recent.rows[0];
-        if (last && last.status === "needs_reconnect") continue; // 登录态过期,停跑等重连
-        runnable.push({
-          id: job.id,
-          sourceKind: job.sourceKind,
-          target: (job.target ?? {}) as Record<string, unknown>,
-          schedule: job.schedule,
-          enabled: job.enabled,
-          // [T-200] 带 job 属主号:cron 到点触发的采集 ctx.accountId 由此派生(串号根因修复)。
-          accountId: job.accountId ?? null,
-        });
+      } else {
+        await result.completion;
       }
-      return runnable;
-    },
-  }).catch((e) => console.error("[scheduler] 启动失败:", e));
+      const run = await schedulingService.getRun(c, result.jobRunId);
+      if (run.status !== "succeeded") {
+        throw new Error(run.error || `自动化运行结束状态为 ${run.status}`);
+      }
+    })
+    .seal();
+
+  void startAutomationDriver({
+    ctx: schedulerCtx,
+    tasks: persistentTaskService,
+    registry: automationHandlers,
+    listRunnableJobs: listRunnableAutomationJobs,
+    now: deps.now,
+    workerId: `automation-driver:${process.pid}`,
+    maxClaims: 8,
+    leaseSeconds: 120,
+  }).catch((e) => console.error("[automation-driver] 启动失败:", e));
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected

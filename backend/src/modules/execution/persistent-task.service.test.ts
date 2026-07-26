@@ -51,6 +51,35 @@ async function enqueue(
 }
 
 describe("T-482 持久执行任务状态机", () => {
+  it("T-517:同一个 scheduled_job 同时至多一个活跃 automation_sync", async () => {
+    const { db, client } = await createDb();
+    const f = fixture();
+    const service = createPersistentTaskService(db, {
+      now: () => f.clock.value,
+      nextId: f.nextId,
+    });
+    try {
+      await service.enqueue(ctxA, {
+        kind: "automation_sync",
+        ownerType: "scheduled_job",
+        ownerId: "job-one",
+        idempotencyKey: "job-one:tick-one",
+        payload: { handler: "scheduled_collection" },
+      });
+      await expect(
+        service.enqueue(ctxA, {
+          kind: "automation_sync",
+          ownerType: "scheduled_job",
+          ownerId: "job-one",
+          idempotencyKey: "job-one:tick-two",
+          payload: { handler: "scheduled_collection" },
+        }),
+      ).rejects.toMatchObject({ name: "ConflictError" });
+    } finally {
+      await client.close();
+    }
+  });
+
   it("同账号幂等创建复用任务，幂等键同名但请求不同会拒绝", async () => {
     const { db, client } = await createDb();
     const f = fixture();

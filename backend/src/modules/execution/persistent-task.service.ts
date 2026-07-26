@@ -27,6 +27,7 @@ export type PersistentTaskKind =
   | "transcribe"
   | "topic_preview"
   | "script_candidate"
+  | "automation_sync"
   | "migration";
 export type PersistentTaskOwnerType =
   | "source"
@@ -34,6 +35,7 @@ export type PersistentTaskOwnerType =
   | "item"
   | "transform"
   | "project"
+  | "scheduled_job"
   | "migration";
 export type PersistentTaskStatus = ExecutionTaskResourceV2["status"];
 export type PersistentTaskCommand = "pause" | "resume" | "cancel" | "retry";

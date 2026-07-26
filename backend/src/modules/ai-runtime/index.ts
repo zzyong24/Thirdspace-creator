@@ -77,6 +77,7 @@ export * from "./research-runner";
 export * from "./review-runner";
 export * from "./scheduled-collection-runner";
 export * from "./scheduled-collection-scheduler";
+export * from "./automation-driver";
 export * from "./script-review-runner";
 export * from "./script-runner";
 export * from "./skill-config-overrides";

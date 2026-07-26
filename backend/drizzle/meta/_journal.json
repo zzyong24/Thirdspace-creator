@@ -386,6 +386,13 @@
       "when": 1784917200000,
       "tag": "0054_ai_task_execution_ownership",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1785085200000,
+      "tag": "0055_automation_task_active_owner",
+      "breakpoints": true
     }
   ]
 }

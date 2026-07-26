@@ -79,6 +79,7 @@ export const executionTaskKindV2 = z.enum([
   "transcribe",
   "topic_preview",
   "script_candidate",
+  "automation_sync",
   "migration",
 ]);
 
@@ -354,6 +355,7 @@ export const executionTaskResourceV2 = z
       "item",
       "transform",
       "project",
+      "scheduled_job",
       "migration",
     ]),
     ownerId: id,
