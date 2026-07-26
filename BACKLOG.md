@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-535 | CreatorOS App 启动后白屏，结合现场日志根治壳→sidecar→页面启动链【bug·桌面启动·用户 2026-07-26】 | ✅ 待办 | 无 SPEC（既有桌面启动主链 bug） | 已定位：本地 package 在 verdict 签名私钥/验签公钥缺失时仍产包，壳无法注入 token，sidecar `Ready` 后被 instrumentation 拒绝并退出；需补双 key/match fail-fast、最终安装包启动冒烟与可见失败页，以真实 App 非白屏验收。 |
 | T-528 | 产出新用户视角 0→1 全功能标杆使用路线文档【调研+文档·用户 2026-07-26】 | ✅ 2026-07-26 | [标杆路线](docs/CreatorOS-新用户0到1标杆路线.md) · [调研归档](docs/research/2026-07-26-user-journey-feature-inventory-research.md) | 完成：8 章代码事实盘点整合为小白可执行的 0→1 教程和 14 功能域调研归档；明确自动发布、promotion 原子性、真机验证和经验回流边界（commit `8ae447fc`）。 |
 | T-529 | 整理全仓文档体系：消除双真值、补齐索引覆盖、收拢散落文件【文档治理·用户 2026-07-26】 | ✅ 2026-07-26 | [详情见本行] | 完成:①双份 BACKLOG-archive 合一(docs 版 253 早期行并入 repo 根单份·已删 docs 版·改 2 处入链);②specs INDEX 从 46→**104 份 design spec 全覆盖**(4 并行 subagent 盘点,含 3 个 ⛔FAIL/纠偏收窄链如实标注);③docs/INDEX 补 6 文件+8 子目录盲区;④根目录仅重复 archive 一处散件,已随①归位。活动中文档(T-528 产出)未动。 |
 | T-524 | 把自媒体方法知识做成 CreatorOS 随包内置知识库【产品+内容+发布·用户纠偏 2026-07-26】 | ⏸️ 待内容权利与 Windows 范围确认 | [详情](docs/tasks/T484.md#t-524) | 与 T-519 共用 PLAN/CONTRACT/验收；未确认改编和商业随包分发权前禁止改写、打包与 BUILD。 |

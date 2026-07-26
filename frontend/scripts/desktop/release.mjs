@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { platform, arch } from "node:process";
 import { readManifest, writeManifest } from "./release-manifest.mjs";
 import { createBuildTimingRecorder } from "./build-timing.mjs";
+import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SRC_TAURI = join(FRONTEND, "src-tauri");
@@ -242,6 +243,9 @@ function run(name, cmd, args, env = {}) {
 }
 
 function main() {
+  // [T-535] 在 updater / URL 等其它发布前置之前先挡住必白屏安装包。
+  assertVerdictKeyMaterial();
+
   // 私钥缺失 fail-fast(不产未签更新包)。
   if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
     console.error("[release] ✗ 未设 TAURI_SIGNING_PRIVATE_KEY —— 不产未签更新包(SPEC §3.2)。");

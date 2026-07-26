@@ -18,6 +18,7 @@ import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
 import { createBuildTimingRecorder } from "./build-timing.mjs";
+import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CARGO_PROFILE_DIR =
@@ -53,10 +54,17 @@ function resolveCargo() {
 function step(name, cmd, args, extraEnv = {}) {
   console.log(`\n[desktop:package] ▶ ${name}\n[desktop:package]   $ ${cmd} ${args.join(" ")}`);
   const timing = buildTiming.start(name);
+  const childEnv = { ...process.env, ...extraEnv };
+  // verdict 私钥只允许进入最终 Rust/Tauri 编译步骤。Next/混淆/字节码/诱饵等子进程
+  // 不需要它，默认剥离，避免第三方构建脚本或诊断输出扩大秘密暴露面。
+  if (extraEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY !== "1") {
+    delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+  }
+  delete childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY;
   const r = spawnSync(cmd, args, {
     stdio: "inherit",
     cwd: FRONTEND,
-    env: { ...process.env, ...extraEnv },
+    env: childEnv,
   });
   timing.finish({
     status: r.status === 0 ? "passed" : "failed",
@@ -123,6 +131,47 @@ function verifyPackagedTlsRuntime() {
       "[desktop:package] [T-445] 最终产物自检失败：.app 内 sidecar.tar.gz 与本轮构建产物不一致（疑似误带旧包）",
     );
   }
+
+  const verdictMaterial = assertVerdictKeyMaterial();
+  const listedForVerdict = spawnSync("tar", ["-tzf", tarball], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (listedForVerdict.status !== 0) {
+    throw new Error(
+      `[desktop:package] [T-535] 无法读取最终 .app 内 sidecar.tar.gz\n${listedForVerdict.stderr ?? ""}`,
+    );
+  }
+  const verdictEntry = listedForVerdict.stdout
+    .split("\n")
+    .find((entry) => entry.endsWith("frontend/.next/server/verdict-verify-key.json"));
+  if (!verdictEntry) {
+    throw new Error(
+      "[desktop:package] [T-535] 最终 .app 缺 verdict-verify-key.json，安装后 sidecar 必然退出。",
+    );
+  }
+  const extractedVerdict = spawnSync("tar", ["-xOzf", tarball, verdictEntry], {
+    encoding: "utf8",
+  });
+  let bakedPublicKey = "";
+  try {
+    bakedPublicKey = String(
+      JSON.parse(extractedVerdict.stdout).publicKeyB64 ?? "",
+    ).trim();
+  } catch {
+    throw new Error(
+      "[desktop:package] [T-535] 最终 .app 的 verdict-verify-key.json 无法解析。",
+    );
+  }
+  if (
+    extractedVerdict.status !== 0 ||
+    bakedPublicKey !== verdictMaterial.publicKeyB64
+  ) {
+    throw new Error(
+      "[desktop:package] [T-535] 最终 .app 烘焙的 verdict 公钥与本轮签名私钥不匹配。",
+    );
+  }
+  console.log("[desktop:package] ✓ [T-535] 最终 .app verdict 公钥已入包且与签名私钥匹配。");
 
   const usesSharedOpenSsl =
     process.config?.variables?.node_shared_openssl === true ||
@@ -195,6 +244,12 @@ if (process.argv.includes("--verify-tls-only")) {
   process.exit(0);
 }
 
+if (process.argv.includes("--verify-verdict-keys-only")) {
+  assertVerdictKeyMaterial();
+  console.log("[desktop:package] ✓ [T-535] verdict 签名私钥与验签公钥匹配。");
+  process.exit(0);
+}
+
 const cargo = resolveCargo();
 const cargoBinDir = cargo === "cargo" ? "" : dirname(cargo);
 const pathEnv = cargoBinDir ? { PATH: `${cargoBinDir}${delimiter}${process.env.PATH ?? ""}` } : {};
@@ -256,6 +311,11 @@ if (process.argv.includes("--preclean-only")) {
   console.log("[desktop:package] [T-226] --preclean-only:预清完成,退出。");
   process.exit(0);
 }
+
+// [T-535] 必须在任何构建重活前硬失败。本地 release-fast 与正式 release 使用同一闸，
+// 不再允许 build-sidecar 的 dev 警告一路漏成“能产包、安装后必白屏”的 .app。
+assertVerdictKeyMaterial();
+console.log("[desktop:package] ✓ [T-535] verdict 双密钥存在、格式合法且属于同一 Ed25519 密钥对。");
 
 // 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。这里只产/恢复展开后的
 // clean runtime；约 1GB tar 必须等混淆/字节码/诱饵/法律声明全部完成后，由 Tauri
@@ -333,6 +393,7 @@ if (!isFullRelease) {
 step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs, {
   ...pathEnv,
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
+  CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });
 
 measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);

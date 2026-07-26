@@ -368,7 +368,7 @@ fn resolve_machine_id(app: &AppHandle) -> Option<String> {
 enum SidecarChild {
     /// macOS：std 直接 spawn 的子进程(走 server.app 内层二进制,Dock 隐身)。
     #[cfg(target_os = "macos")]
-    Std(std::process::Child),
+    Std(std::sync::Arc<shared_child::SharedChild>),
     /// Win/Linux：tauri sidecar(externalBin)的子进程。
     /// [T-372 W3] Windows 额外持有 Job Object 守护(KILL_ON_JOB_CLOSE):壳退出/崩溃
     /// → Job 句柄被 OS 回收 → sidecar 整棵进程树(含 Chrome/ffmpeg)内核级必死。
@@ -384,7 +384,7 @@ impl SidecarChild {
     fn kill(self) {
         match self {
             #[cfg(target_os = "macos")]
-            SidecarChild::Std(mut c) => {
+            SidecarChild::Std(c) => {
                 // [T-365/T-362] 树杀 + 优雅窗口:此前 `Child::kill()` = SIGKILL 单个 node ——
                 //   ① Chrome/ffmpeg 子进程直接孤儿(真机实锤:孤儿 next-server 带 headless Chrome 树);
                 //   ② 正在写 PGlite 时硬杀 = WAL 半写库损坏(2026-07-16 数据事故根因)。
@@ -451,18 +451,78 @@ fn find_free_port() -> u16 {
         .unwrap_or(41730)
 }
 
-/// 阻塞轮询 `http://127.0.0.1:PORT/` 直到 sidecar 就绪(或超时)。返回是否就绪。
-/// 用裸 TCP connect 探活(不引 http client 依赖 —— 端口能连上即认为 server listen 成功)。
-fn wait_until_ready(port: u16, timeout: Duration) -> bool {
+/// 阻塞轮询 `http://127.0.0.1:PORT/`，同时消费 instrumentation 完成/子进程退出信号。
+/// 只有“完成哨兵 + 连续两次 TCP 可连”才返回 Ready；退出和超时都有独立结果。
+const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
+
+#[derive(Clone, Debug)]
+enum StartupSignal {
+    Verified,
+    Exited(String),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum StartupWaitOutcome {
+    Pending,
+    Ready,
+    Exited(String),
+    TimedOut,
+}
+
+fn classify_startup_probe(
+    tcp_ready: bool,
+    instrumentation_verified: bool,
+    exit_reason: Option<&str>,
+    timed_out: bool,
+) -> StartupWaitOutcome {
+    // 退出优先：sidecar 可能短暂 listen 后立即因 verdict 失败退出，本次白屏正是此竞态。
+    if let Some(reason) = exit_reason {
+        return StartupWaitOutcome::Exited(reason.to_string());
+    }
+    if tcp_ready && instrumentation_verified {
+        return StartupWaitOutcome::Ready;
+    }
+    if timed_out {
+        return StartupWaitOutcome::TimedOut;
+    }
+    StartupWaitOutcome::Pending
+}
+
+/// 同时等待 instrumentation 完成哨兵、稳定 TCP 与子进程存活。
+fn wait_until_ready(
+    port: u16,
+    timeout: Duration,
+    signals: std::sync::mpsc::Receiver<StartupSignal>,
+) -> StartupWaitOutcome {
     let deadline = std::time::Instant::now() + timeout;
     let addr = format!("127.0.0.1:{port}");
-    while std::time::Instant::now() < deadline {
-        if std::net::TcpStream::connect(&addr).is_ok() {
-            return true;
+    let mut instrumentation_verified = false;
+    let mut tcp_streak = 0_u8;
+    loop {
+        let mut exit_reason = None;
+        for signal in signals.try_iter() {
+            match signal {
+                StartupSignal::Verified => instrumentation_verified = true,
+                StartupSignal::Exited(reason) => exit_reason = Some(reason),
+            }
+        }
+        let tcp_ready = std::net::TcpStream::connect(&addr).is_ok();
+        tcp_streak = if tcp_ready {
+            tcp_streak.saturating_add(1)
+        } else {
+            0
+        };
+        let outcome = classify_startup_probe(
+            tcp_streak >= 2,
+            instrumentation_verified,
+            exit_reason.as_deref(),
+            std::time::Instant::now() >= deadline,
+        );
+        if outcome != StartupWaitOutcome::Pending {
+            return outcome;
         }
         std::thread::sleep(Duration::from_millis(150));
     }
-    false
 }
 
 /// [T-436 / T-460] splash loading 注入脚本(经 initialization_script 在 about:blank 上注入 DOM)。
@@ -479,7 +539,24 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
 ///   initialization_script 注入时就已触发过一次 → 监听器永远不跑 → splash 空白。
 ///   改为**即刻执行**(用 IIFE + `document.readyState` 兜底):body 已 ready 即建 DOM,
 ///   否则短轮询等 body 出现(不依赖事件)。跨 WebView2/WKWebView 都稳。
-const SPLASH_JS: &str = "(function(){function build(){if(location.protocol!=='about:')return;var d=document;if(!d.body){setTimeout(build,16);return;}d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.id='creatoros-splash-status';t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:14px;color:#8b8b93;letter-spacing:.3px;text-align:center;max-width:80vw';d.body.appendChild(t);window.__creatorosSplashStatus=function(m){var el=d.getElementById('creatoros-splash-status');if(el&&typeof m==='string')el.textContent=m;};}build();})();";
+const SPLASH_JS: &str = r#"(function(){function build(){if(location.protocol!=='about:')return;var d=document;if(!d.body){setTimeout(build,16);return;}d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.id='creatoros-splash-spinner';s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.id='creatoros-splash-status';t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:16px;font-weight:600;color:#e5e5ea;letter-spacing:.3px;text-align:center;max-width:80vw';d.body.appendChild(t);var detail=d.createElement('div');detail.id='creatoros-splash-detail';detail.style.cssText='display:none;font-size:13px;line-height:1.7;color:#9b9ba5;text-align:center;max-width:620px;white-space:pre-wrap';d.body.appendChild(detail);var btn=d.createElement('button');btn.id='creatoros-open-logs';btn.textContent='打开诊断日志目录';btn.style.cssText='display:none;margin-top:8px;padding:10px 16px;border:1px solid #353540;border-radius:9px;background:#202027;color:#f2f2f5;font-size:13px;cursor:pointer';d.body.appendChild(btn);window.__creatorosSplashStatus=function(m){var el=d.getElementById('creatoros-splash-status');if(el&&typeof m==='string')el.textContent=m;};window.__creatorosSplashFailure=function(title,message,logsDir){s.style.display='none';t.textContent=title;detail.style.display='block';detail.textContent=message+'\n\n诊断日志：'+logsDir;btn.style.display='block';btn.onclick=function(){var invoke=window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke;if(typeof invoke==='function'){invoke('plugin:opener|reveal_item_in_dir',{paths:[logsDir]}).catch(function(){detail.textContent=message+'\n\n请手动打开诊断日志：'+logsDir;});}else{detail.textContent=message+'\n\n请手动打开诊断日志：'+logsDir;}};};}build();})();"#;
+
+fn json_for_eval(value: &str) -> String {
+    serde_json::to_string(value)
+        .unwrap_or_else(|_| "\"\"".to_string())
+        .replace('<', "\\u003c")
+        .replace('\u{2028}', "\\u2028")
+        .replace('\u{2029}', "\\u2029")
+}
+
+fn startup_failure_script(title: &str, detail: &str, logs_dir: &str) -> String {
+    format!(
+        "if(window.__creatorosSplashFailure)window.__creatorosSplashFailure({},{},{});",
+        json_for_eval(title),
+        json_for_eval(detail),
+        json_for_eval(logs_dir),
+    )
+}
 
 /// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
 /// SHA-256(build.rs 经 rustc-env 注入)。不匹配 → Err(人话)→ 拒绝 spawn。
@@ -1565,6 +1642,8 @@ pub fn run() {
             //     spawn,其 Command 构造恒带 CREATE_NO_WINDOW(plugin 2.3.5 process/mod.rs:173,
             //     已核实源码);sidecar 再往下的 ffmpeg/子进程由 Node 侧 spawn windowsHide 抑制。
             let handle_state = app.state::<SidecarHandle>();
+            let (startup_tx, startup_rx) =
+                std::sync::mpsc::channel::<StartupSignal>();
 
             #[cfg(target_os = "macos")]
             {
@@ -1670,11 +1749,15 @@ pub fn run() {
                 // (打包态排障)。两线程各 clone 一份共享 logger(Arc,内部 Mutex 串行化写,不交错坏行)。
                 if let Some(out) = child.stdout.take() {
                     let logger = logger.clone();
+                    let startup_tx = startup_tx.clone();
                     std::thread::spawn(move || {
                         for line in BufReader::new(out).lines().map_while(Result::ok) {
                             eprintln!("[sidecar] {line}");
                             if let Some(l) = &logger {
                                 l.log("sidecar", &line);
+                            }
+                            if line.contains(SIDECAR_STARTUP_SENTINEL) {
+                                let _ = startup_tx.send(StartupSignal::Verified);
                             }
                         }
                     });
@@ -1691,12 +1774,26 @@ pub fn run() {
                     });
                 }
 
+                let shared_child = std::sync::Arc::new(
+                    shared_child::SharedChild::new(child)
+                        .expect("接管 creatoros-server sidecar 句柄失败"),
+                );
+                let watched_child = shared_child.clone();
+                let startup_tx_exit = startup_tx.clone();
+                std::thread::spawn(move || {
+                    let reason = match watched_child.wait() {
+                        Ok(status) => format!("sidecar 已退出({status})"),
+                        Err(error) => format!("sidecar 退出状态读取失败({error})"),
+                    };
+                    let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
+                });
+
                 // 存句柄供退出 kill(避免 orphan sidecar)。
                 handle_state
                     .0
                     .lock()
                     .unwrap()
-                    .replace(SidecarChild::Std(child));
+                    .replace(SidecarChild::Std(shared_child));
             }
 
             #[cfg(not(target_os = "macos"))]
@@ -1800,6 +1897,7 @@ pub fn run() {
                 // 把 sidecar 的 stdout/stderr 打到本壳日志:eprintln(dev 可见)+ tee 到 logs/sidecar.log
                 // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
                 let logger = logger.clone();
+                let startup_tx_events = startup_tx.clone();
                 tauri::async_runtime::spawn(async move {
                     while let Some(event) = rx.recv().await {
                         match event {
@@ -1809,6 +1907,9 @@ pub fn run() {
                                 eprintln!("[sidecar] {s}");
                                 if let Some(l) = &logger {
                                     l.log("sidecar", s);
+                                }
+                                if s.contains(SIDECAR_STARTUP_SENTINEL) {
+                                    let _ = startup_tx_events.send(StartupSignal::Verified);
                                 }
                             }
                             CommandEvent::Stderr(line) => {
@@ -1824,6 +1925,9 @@ pub fn run() {
                                 if let Some(l) = &logger {
                                     l.log("shell", &format!("sidecar terminated: {payload:?}"));
                                 }
+                                let _ = startup_tx_events.send(StartupSignal::Exited(format!(
+                                    "sidecar 已退出({payload:?})"
+                                )));
                                 break;
                             }
                             _ => {}
@@ -1832,13 +1936,15 @@ pub fn run() {
                 });
             }
 
-            // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
+            // 5) 另起线程等就绪：只有 Ready 才导航 sidecar；退出/超时保留 about:blank
+            //    并渲染可见失败页。就绪探测跑在后台,不阻塞 setup。
             // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
             let ready_logger = logger.clone();
             // [T-372 L2 / T-457] 握手 token 经 window.eval() 注入(不再用 initialization_script
             //   因为窗口在 setup 头部就建好了);token 为 hex,无注入面;前端 handshake-client.ts
             //   读该全局并附到有副作用请求的 x-creatoros-handshake 头。
             let sidecar_url = format!("http://127.0.0.1:{port}/");
+            let startup_logs_dir = log_dir_str.clone();
             // [T-457] **不再建新窗** —— setup 头部已建 splash 窗口(about:blank + 转圈),
             //   这里从 handle 里拿回来,先在 window 上 eval 注入最新 handshake token,
             //   再 navigate 到真 sidecar 页(navigate 会触发 init 脚本重跑,SPLASH_JS 判
@@ -1849,24 +1955,59 @@ pub fn run() {
                 .get_webview_window("main")
                 .expect("[T-457] main window 缺失 —— setup 头部已建过怎会失踪?");
             std::thread::spawn(move || {
-                let ready = wait_until_ready(port, Duration::from_secs(60));
-                if !ready {
-                    // 兜底:sidecar 60s 未起仍导航(显示连接失败页而非永久 splash,便于看到问题)。
-                    eprintln!("[shell] sidecar 60s 内未就绪,仍导航 {sidecar_url}");
-                    if let Some(l) = &ready_logger {
-                        l.log("shell", &format!("sidecar 60s 内未就绪,仍导航 {sidecar_url}"));
-                    }
-                }
-                match sidecar_url.parse::<tauri::Url>() {
-                    Ok(u) => {
+                let outcome =
+                    wait_until_ready(port, Duration::from_secs(60), startup_rx);
+                match outcome {
+                    StartupWaitOutcome::Ready => match sidecar_url.parse::<tauri::Url>() {
+                        Ok(u) => {
+                            let win2 = main_win.clone();
+                            let _ = main_win.run_on_main_thread(move || {
+                                if let Err(e) = win2.navigate(u) {
+                                    eprintln!("[shell] navigate 到 sidecar 失败: {e}");
+                                }
+                            });
+                        }
+                        Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
+                    },
+                    StartupWaitOutcome::Exited(reason) => {
+                        let detail = format!(
+                            "本地服务未能完成启动，应用已停止继续加载。\n数据没有丢失。\n\n技术信息：{reason}"
+                        );
+                        let script = startup_failure_script(
+                            "CreatorOS 启动失败",
+                            &detail,
+                            &startup_logs_dir,
+                        );
+                        if let Some(l) = &ready_logger {
+                            l.log("shell", &format!("sidecar 启动前退出: {reason}"));
+                        }
                         let win2 = main_win.clone();
                         let _ = main_win.run_on_main_thread(move || {
-                            if let Err(e) = win2.navigate(u) {
-                                eprintln!("[shell] navigate 到 sidecar 失败: {e}");
-                            }
+                            let _ = win2.eval(&script);
                         });
                     }
-                    Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
+                    StartupWaitOutcome::TimedOut => {
+                        let detail =
+                            "本地服务在 60 秒内没有完成启动，应用已停止继续加载。\n数据没有丢失。";
+                        let script = startup_failure_script(
+                            "CreatorOS 启动超时",
+                            detail,
+                            &startup_logs_dir,
+                        );
+                        if let Some(l) = &ready_logger {
+                            l.log(
+                                "shell",
+                                "sidecar 60s 内未就绪，保留启动失败页，不导航死端口",
+                            );
+                        }
+                        let win2 = main_win.clone();
+                        let _ = main_win.run_on_main_thread(move || {
+                            let _ = win2.eval(&script);
+                        });
+                    }
+                    StartupWaitOutcome::Pending => {
+                        unreachable!("wait_until_ready 不返回 Pending")
+                    }
                 }
             });
 
@@ -2153,6 +2294,52 @@ mod runtime_cleanup_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn startup_failure_script_escapes_dynamic_text_and_exposes_no_fake_action() {
+        let script = startup_failure_script(
+            "本地服务启动失败",
+            "原因: \"sidecar\" </script>",
+            "/Users/test/Library/Application Support/CreatorOS/logs",
+        );
+        assert!(script.contains("__creatorosSplashFailure"));
+        assert!(script.contains("\\\"sidecar\\\""));
+        assert!(!script.contains("</script>"));
+        assert!(!script.contains("location.href"));
+        assert!(!script.contains("location.reload"));
+        assert!(SPLASH_JS.contains("plugin:opener|reveal_item_in_dir"));
+        assert!(SPLASH_JS.contains("打开诊断日志目录"));
+        assert!(SIDECAR_STARTUP_SENTINEL.contains("SIDECAR_STARTUP_VERIFIED"));
+    }
+
+    #[test]
+    fn startup_wait_outcome_prioritizes_ready_then_exit_then_timeout() {
+        assert_eq!(
+            classify_startup_probe(true, true, Some("exit 1"), true),
+            StartupWaitOutcome::Exited("exit 1".to_string())
+        );
+        assert_eq!(
+            classify_startup_probe(false, false, Some("exit 1"), false),
+            StartupWaitOutcome::Exited("exit 1".to_string())
+        );
+        assert_eq!(
+            classify_startup_probe(true, false, None, false),
+            StartupWaitOutcome::Pending,
+            "只有 TCP 监听、尚未收到 instrumentation 哨兵时不能导航"
+        );
+        assert_eq!(
+            classify_startup_probe(true, true, None, false),
+            StartupWaitOutcome::Ready
+        );
+        assert_eq!(
+            classify_startup_probe(false, false, None, true),
+            StartupWaitOutcome::TimedOut
+        );
+        assert_eq!(
+            classify_startup_probe(false, false, None, false),
+            StartupWaitOutcome::Pending
+        );
+    }
 
     // 一个合法的 32B key 的 base64(测试用)。
     fn sample_key_b64() -> String {

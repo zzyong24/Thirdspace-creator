@@ -8,6 +8,32 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
+  it("所有可安装包在重活前校验 verdict 密钥对，私钥只进入 Tauri/Rust 编译", () => {
+    const packageSource = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "package.mjs"),
+      "utf8",
+    );
+    const releaseSource = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "release.mjs"),
+      "utf8",
+    );
+    const buildRs = readFileSync(
+      join(process.cwd(), "src-tauri", "build.rs"),
+      "utf8",
+    );
+    expect(packageSource).toContain("assertVerdictKeyMaterial()");
+    expect(packageSource).toContain(
+      'delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64',
+    );
+    expect(packageSource).toContain(
+      'CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1"',
+    );
+    expect(releaseSource).toContain("assertVerdictKeyMaterial()");
+    expect(buildRs).toContain(
+      "cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64",
+    );
+  });
+
   it("正式 runner 先精确恢复/构建并立即保存 clean runtime", () => {
     expect(workflow).toContain("actions/cache/restore@v4");
     expect(workflow).toContain("actions/cache/save@v4");

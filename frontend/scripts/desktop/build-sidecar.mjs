@@ -38,6 +38,7 @@ import { homedir } from "node:os";
 import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 // [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
 import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
+import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -461,6 +462,31 @@ export function bakeVerdictPublicKey() {
   const dest = join(targetDir, "verdict-verify-key.json");
   writeFileSync(dest, JSON.stringify(payload, null, 2), "utf8");
   console.log(`[build-sidecar]   ✓ [T-451] verdict 公钥已烘焙 → ${dest}`);
+}
+
+export function assertBakedVerdictPublicKey() {
+  const verified = assertVerdictKeyMaterial();
+  const dest = join(
+    SIDECAR_RUNTIME,
+    "frontend",
+    ".next",
+    "server",
+    "verdict-verify-key.json",
+  );
+  let baked = "";
+  try {
+    baked = String(JSON.parse(readFileSync(dest, "utf8")).publicKeyB64 ?? "").trim();
+  } catch {
+    throw new Error(
+      `[build-sidecar] [T-535] 缓存 runtime 缺少或无法读取 verdict 公钥文件:${dest}`,
+    );
+  }
+  if (baked !== verified.publicKeyB64) {
+    throw new Error(
+      "[build-sidecar] [T-535] 缓存 runtime 的 verdict 公钥与本轮密钥对不一致，拒绝复用；请重建 sidecar。",
+    );
+  }
+  console.log("[build-sidecar] ✓ [T-535] 缓存 runtime verdict 公钥与本轮密钥对一致。");
 }
 
 // [T-170] 采集/扫码依赖 Playwright,但 Next output-tracing **漏掉** douyin-cdp/web-capture 里的
@@ -1882,6 +1908,7 @@ function main() {
   if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1") {
     const existing = join(SIDECAR_RUNTIME, "frontend", "server.js");
     if (existsSync(existing)) {
+      assertBakedVerdictPublicKey();
       console.log(
         "[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。",
       );

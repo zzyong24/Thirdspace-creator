@@ -26,6 +26,9 @@ sha2 = "0.10"
 [dependencies]
 # [T-365] macOS 进程组树杀(killpg):app 退出必须带走 sidecar 全家(node+Chrome+ffmpeg)。
 libc = "0.2"
+# [T-535] macOS sidecar 句柄需要被退出 watcher 与 App 退出树杀同时持有。
+# shared_child 允许并发 wait/try_wait/kill，避免 Arc<Mutex<Child>> 在 wait 时锁死 kill。
+shared_child = "1.1.1"
 # tauri 核心:壳/窗口/生命周期。features 保持最小(默认已含 wry webview)。
 tauri = { version = "2", features = [] }
 # shell 插件:唯一用途 = spawn/kill Next standalone sidecar 二进制(externalBin)。

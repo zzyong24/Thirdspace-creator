@@ -41,23 +41,27 @@ export async function register(): Promise<void> {
       /* 装不上不阻塞启动(守护是兜底,主线在壳侧 killpg) */
     }
   }
-  if (process.env.PLAYWRIGHT_BROWSERS_PATH) return;
-  try {
-    const path = await import("node:path");
-    const fs = await import("node:fs");
-    // 正式桌面包优先用 Rust 壳注入的绝对资源目录；开发态/旧壳才回落 cwd/browsers。
-    // 目录不存在时不设置，让 Playwright 使用默认缓存或后续下载逻辑。
-    const bundled =
-      process.env.CREATOROS_BROWSERS_DIR?.trim() ||
-      path.join(process.cwd(), "browsers");
-    if (fs.existsSync(bundled)) {
-      process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
-      // eslint-disable-next-line no-console
-      console.log(
-        `[instrumentation] PLAYWRIGHT_BROWSERS_PATH → ${bundled}(随包 Chromium,视频渲染免下载)`,
-      );
+  if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
+    try {
+      const path = await import("node:path");
+      const fs = await import("node:fs");
+      // 正式桌面包优先用 Rust 壳注入的绝对资源目录；开发态/旧壳才回落 cwd/browsers。
+      // 目录不存在时不设置，让 Playwright 使用默认缓存或后续下载逻辑。
+      const bundled =
+        process.env.CREATOROS_BROWSERS_DIR?.trim() ||
+        path.join(process.cwd(), "browsers");
+      if (fs.existsSync(bundled)) {
+        process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
+        console.log(
+          `[instrumentation] PLAYWRIGHT_BROWSERS_PATH → ${bundled}(随包 Chromium,视频渲染免下载)`,
+        );
+      }
+    } catch {
+      // 设不上就用默认路径,不阻塞启动。
     }
-  } catch {
-    // 设不上就用默认路径,不阻塞启动。
   }
+
+  // [T-535] 壳不能再把 Next 短暂 TCP listen 当成“业务已可用”。只有 verdict 校验、
+  // 生命周期守护和其余 instrumentation 全跑完才发固定哨兵；Rust 同时等本哨兵 + TCP。
+  console.log("[CreatorOS] SIDECAR_STARTUP_VERIFIED");
 }
