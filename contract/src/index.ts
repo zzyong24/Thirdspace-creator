@@ -6,6 +6,7 @@ export * from "./endpoints";
 export * from "./request-context";
 export * from "./transport";
 export * from "./client";
+export * from "./local-platform";
 
 // Taxonomy resource DTOs (module-04). Resources are normally reached via
 // `ENDPOINTS.<op>.response`, but the taxonomy module's `<module>.schema.ts`
