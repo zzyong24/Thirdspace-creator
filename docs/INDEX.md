@@ -27,7 +27,7 @@
 
 ## 使用 / 配置指南
 
-- [CreatorOS-新用户0到1标杆路线.md](CreatorOS-新用户0到1标杆路线.md) —— 新用户从激活、绑号、定位到发布复盘的真实主线教程(T-528)。
+- [CreatorOS-新用户0到1标杆路线.md](CreatorOS-新用户0到1标杆路线.md) —— 新用户完整产品使用手册：讲清工作区逻辑、全功能入口、逐步操作、状态判断、异常恢复和 83 个配图位(T-528/T-540)。
 - [model-configuration-guide.md](model-configuration-guide.md) —— 模型配置教程(用户向)。
 - [desktop-activation-guide.md](desktop-activation-guide.md) —— 桌面激活授权接入指南(T-147 P5)。
 - [all-skill-prompts.md](all-skill-prompts.md) —— 全部内置提示词(skill 模板)导出快照。
