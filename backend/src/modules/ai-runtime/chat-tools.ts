@@ -442,6 +442,7 @@ export interface ChatToolDeps {
       title: string;
       stage: string;
       status: string;
+      source?: string;
       publishedAt?: string | null;
     }>;
     total: number;
@@ -1171,6 +1172,7 @@ export interface ContextProjectsToolResult {
     title: string;
     stage: string;
     status: string;
+    source?: string;
     publishedAt?: string | null;
   }>;
   // [T-058②] 分页真相:总量 + 本页范围 —— 模型据此如实告知「还有 N 条没看」。
@@ -3115,7 +3117,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    实时拉**真实数据**给模型读进上下文再用文字回答(纯读,不产候选、不写任何实体)。
     "context.projects": defineChatTool("context.projects", {
       description:
-        "只读:拉取创作者的项目/作品列表(id/标题/阶段/状态),带 total/hasMore 可翻页(offset)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
+        "只读:拉取创作者的项目/作品列表(id/标题/来源/人话阶段/状态/canonical 发布时间),带 total/hasMore 可翻页(offset)。review 只表示“复盘”，不得理解成待审核或未发布；是否发布只看 canonical 发布时间。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
       inputSchema: CONTEXT_PROJECTS_PARAMS,
       execute: async ({
         limit,

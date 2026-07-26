@@ -16,6 +16,7 @@ import { ENDPOINTS } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
+import { listRecentProjectsWithPublicationFacts } from "./recent-projects-context";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
@@ -3047,34 +3048,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return { title: row.title, brief: row.brief };
       },
     },
+    // T-521：清理事件进入 sidecar 结构化日志，只记内部归属 ID + 旧值 hash，
+    // 不记录 statusNote 原文。实际写库仍只发生在 Positioning service 内。
+    auditLegacyStatusNoteCleanup: (event) => {
+      process.stdout.write(`[positioning-audit] ${JSON.stringify(event)}\n`);
+    },
   });
   const positioning = createPositioningTransport(() => positioningService);
 
-  // [T-081②] 最近作品分页读(user-scoped)—— repo 全量拉(用户级列表,量级百条内)按
-  // updatedAt(缺则 createdAt)desc 排序后切片,带 total。**单一真值**:context.projects 只读
-  // 工具(contextReaders.listProjects)与 positioning.generate 后台 task 的 works 读端口共用,
-  // 两处不各自造排序口径。注:projects 上无真实 publishedAt(在 publication 上)→ 诚实留 null。
+  // [T-081②/T-521] 最近作品分页读：Project 提供 source/lifecycle，Publishing 窄读
+  // port 提供 canonical publishedAt。context.projects 与 positioning.generate 共用
+  // 同一投影；review 绝不作为发布状态判据。
   const listRecentProjects = async (
     c: RequestContext,
     opts: { limit: number; offset: number },
-  ) => {
-    const rows = await projectsRepo.list(c);
-    const sorted = [...rows].sort((a, b) =>
-      (b.updatedAt ?? b.createdAt ?? "").localeCompare(
-        a.updatedAt ?? a.createdAt ?? "",
-      ),
-    );
-    return {
-      total: sorted.length,
-      rows: sorted.slice(opts.offset, opts.offset + opts.limit).map((p) => ({
-        id: p.id,
-        title: p.title,
-        stage: p.currentStage,
-        status: p.status,
-        publishedAt: null,
-      })),
-    };
-  };
+  ) =>
+    listRecentProjectsWithPublicationFacts(c, opts, {
+      listProjects: (ctx) => projectsRepo.list(ctx),
+      listOutputRefsByProjects: (ctx, projectIds) =>
+        projectsService.listOutputRefsByProjects(ctx, projectIds),
+      listPublicationsByOutputIds: (ctx, outputIds) =>
+        publishingService.listPublicationsByOutputIds(ctx, outputIds),
+    });
 
   // 复盘对象 reader 工厂 (T-039a) —— 读「本次复盘的这一条作品」的真材料(标题/文案/数据/评论),
   // 供 review.analyze 路径(后端 task runner + ChatBox 对话复盘)注入 review.insights prompt,让复盘

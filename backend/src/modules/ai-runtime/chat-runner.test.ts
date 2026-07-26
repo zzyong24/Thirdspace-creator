@@ -1406,7 +1406,7 @@ describe("[T-081②] formatWorksBrief — 全部作品标题压缩列表", () =>
     const brief = formatWorksBrief(
       [
         row({ title: long, publishedAt: "2026-06-01" }),
-        row({ title: "短标题", status: "published" }),
+        row({ title: "短标题", status: "published", publishedAt: "2026-06-02" }),
         row({ title: "进行中的一条", stage: "scripting" }),
       ],
       3,
@@ -1416,10 +1416,10 @@ describe("[T-081②] formatWorksBrief — 全部作品标题压缩列表", () =>
     // 截 40 字 + …(「· 」前缀 + 40 字 + … + 状态括注)。
     expect(lines[0]).toContain(`${long.slice(0, 40)}…`);
     expect(lines[0]).not.toContain(long.slice(0, 60));
-    // 发布状态标记:publishedAt 或 status=published → 已发布;否则 stage。
+    // 发布状态标记只认 canonical publishedAt；否则展示人话 lifecycle。
     expect(lines[0]).toContain("（已发布）");
     expect(lines[1]).toContain("（已发布）");
-    expect(lines[2]).toContain("（scripting）");
+    expect(lines[2]).toContain("（脚本）");
   });
 
   it("上限 100 条;total 更大时如实标注剩余", () => {

@@ -164,6 +164,14 @@ export interface ProjectRepository {
     ctx: RequestContext,
     projectId: string,
   ): Promise<ContentOutputRow[]>;
+  /**
+   * 账号窄读的批量 project → output 引用。用于组合层把一页项目和发布事实关联，
+   * 避免逐项目查询造成 N+1；只返回当前 `(userId, accountId)` 可见的项目。
+   */
+  listOutputRefsByProjects(
+    ctx: RequestContext,
+    projectIds: ReadonlyArray<string>,
+  ): Promise<Array<{ projectId: string; outputId: string }>>;
   getOutput(ctx: RequestContext, outputId: string): Promise<ContentOutputRow>;
   updateOutputRow(
     ctx: RequestContext,
@@ -889,6 +897,24 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .from(contentOutputs)
         .where(eq(contentOutputs.projectId, projectId))
         .orderBy(asc(contentOutputs.createdAt));
+    },
+
+    async listOutputRefsByProjects(ctx, projectIds) {
+      if (projectIds.length === 0) return [];
+      return db
+        .select({
+          projectId: contentOutputs.projectId,
+          outputId: contentOutputs.id,
+        })
+        .from(contentOutputs)
+        .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
+        .where(
+          and(
+            inArray(projects.id, [...projectIds]),
+            eq(projects.userId, ctx.userId),
+            accountGate(ctx),
+          ),
+        );
     },
 
     getOutput,

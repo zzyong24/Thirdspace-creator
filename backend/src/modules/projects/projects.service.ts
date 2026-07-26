@@ -320,6 +320,13 @@ export interface ProjectsService {
     ctx: RequestContext,
     projectId: string,
   ): Promise<string[]>;
+  /**
+   * 组合层批量读取一页项目的 output 引用；所有行由 Projects 模块按联合归属收窄。
+   */
+  listOutputRefsByProjects(
+    ctx: RequestContext,
+    projectIds: ReadonlyArray<string>,
+  ): Promise<Array<{ projectId: string; outputId: string }>>;
 
   // 数据底座(SPEC §1.4)「优先读真」判据(单一、明确):该用户是否存在
   //   source='imported' 的真实采集项目。true → 读侧让演示 fixture 让位、只读真;
@@ -1309,6 +1316,11 @@ export function createProjectsService(
       // only the ids so downstream resolvers never see the full row.
       const outputs = await repo.listOutputs(ctx, projectId);
       return outputs.map((o) => o.id);
+    },
+
+    async listOutputRefsByProjects(ctx, projectIds) {
+      requireAccountId(ctx.accountId, "projects.listOutputRefsByProjects");
+      return repo.listOutputRefsByProjects(ctx, projectIds);
     },
 
     async hasImportedProjects(ctx) {

@@ -128,6 +128,14 @@ export interface PublishingService {
     ctx: RequestContext,
     pagination: { limit: number; offset: number; includeHidden?: boolean },
   ): Promise<PublicationRow[]>;
+  /**
+   * 组合层批量读取指定 outputs 的 canonical publication 事实；按联合归属收窄，
+   * 且不因 hidden/platformStatus 丢失历史已发布事实。
+   */
+  listPublicationsByOutputIds(
+    ctx: RequestContext,
+    outputIds: ReadonlyArray<string>,
+  ): Promise<PublicationRow[]>;
   createPublication(
     ctx: RequestContext,
     outputId: string,
@@ -351,6 +359,10 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
 
     async listPublicationsForUser(ctx, pagination) {
       return repoFor(ctx).listPublicationsForUser(pagination);
+    },
+
+    async listPublicationsByOutputIds(ctx, outputIds) {
+      return repoFor(ctx).listPublicationsByOutputs(outputIds);
     },
 
     async createPublication(ctx, outputId, body) {

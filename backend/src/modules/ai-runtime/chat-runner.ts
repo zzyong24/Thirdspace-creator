@@ -357,6 +357,7 @@ export interface ContextReaders {
       title: string;
       stage: string;
       status: string;
+      source?: string;
       publishedAt?: string | null;
     }>;
     total: number;

@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, sql, type Db } from "@creatoros/backend";
 import {
   creatorProfiles,
   positioningStatements,
@@ -90,6 +90,10 @@ export interface PositioningRepository {
   getProfile(): Promise<CreatorProfileRow | undefined>;
   insertProfile(input: InsertProfileInput): Promise<CreatorProfileRow>;
   updateProfileRow(input: UpdateProfileInput): Promise<CreatorProfileRow>;
+  clearStatusNoteIfMatches(
+    profileId: string,
+    expectedStatusNote: string,
+  ): Promise<boolean>;
 
   // Statement reads (immutable version chain).
   listStatements(page: {
@@ -182,6 +186,26 @@ export function createPositioningRepository(
         )
         .returning();
       return updated[0]!;
+    },
+
+    async clearStatusNoteIfMatches(profileId, expectedStatusNote) {
+      const updated = await db
+        .update(creatorProfiles)
+        .set({
+          facets: sql`jsonb_set(${creatorProfiles.facets}, '{statusNote}', '""'::jsonb, true)`,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(creatorProfiles.id, profileId),
+            eq(creatorProfiles.userId, deps.userId),
+            eq(creatorProfiles.accountId, deps.accountId),
+            // CAS：只清掉刚刚判定过的那一版；若用户并发修改，0 行更新，不覆盖新值。
+            sql`${creatorProfiles.facets} ->> 'statusNote' = ${expectedStatusNote}`,
+          ),
+        )
+        .returning({ id: creatorProfiles.id });
+      return updated.length === 1;
     },
 
     async listStatements({ limit, offset }) {

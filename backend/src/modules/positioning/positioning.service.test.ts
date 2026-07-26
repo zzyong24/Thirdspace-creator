@@ -74,6 +74,111 @@ describe("positioning service", () => {
     expect(center.profile!.id).toBe(first.id);
   });
 
+  it("[T-521] 旧动态 statusNote 清理按账号隔离、幂等，并只审计 hash 不泄露原文", async () => {
+    const audit = vi.fn(async () => undefined);
+    let seq = 0;
+    const service = createPositioningService({
+      db,
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-cleanup-${++seq}`,
+      projects: makeProjectsPort(),
+      auditLegacyStatusNoteCleanup: audit,
+    });
+    const ctxAcc1: RequestContext = { ...ctx, accountId: "acc-1" };
+    const ctxAcc2: RequestContext = { ...ctx, accountId: "acc-2" };
+    await service.upsertProfile(ctxAcc1, {
+      ...PROFILE_INPUT,
+      facets: { statusNote: "49 条稿子压在 review，一直未发布" },
+    });
+    await service.upsertProfile(ctxAcc2, {
+      ...PROFILE_INPUT,
+      facets: { statusNote: "稳定更新中" },
+    });
+
+    const first = await service.cleanupLegacyDynamicStatusNote(ctxAcc1);
+    const second = await service.cleanupLegacyDynamicStatusNote(ctxAcc1);
+
+    expect(first.outcome).toBe("cleared");
+    expect(first.previousValueHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(second).toEqual({
+      outcome: "already_clean",
+      previousValueHash: null,
+    });
+    expect((await service.getProfile(ctxAcc1))!.facets.statusNote).toBe("");
+    expect((await service.getProfile(ctxAcc2))!.facets.statusNote).toBe("稳定更新中");
+    expect(audit).toHaveBeenCalledTimes(1);
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: "positioning.legacy_status_note.cleaned",
+        userId: ctx.userId,
+        accountId: "acc-1",
+        previousValueHash: first.previousValueHash,
+      }),
+    );
+    expect(JSON.stringify(audit.mock.calls)).not.toContain("49 条稿子");
+  });
+
+  it("[T-521] 非动态状态说明不被自动改写成另一条静态计数", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      facets: { statusNote: "稳定更新中" },
+    });
+
+    await expect(service.cleanupLegacyDynamicStatusNote(ctx)).resolves.toEqual({
+      outcome: "not_dynamic",
+      previousValueHash: null,
+    });
+    expect((await service.getProfile(ctx))!.facets.statusNote).toBe("稳定更新中");
+
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      facets: { statusNote: "2026 年发布规划按周推进" },
+    });
+    await expect(service.cleanupLegacyDynamicStatusNote(ctx)).resolves.toEqual({
+      outcome: "not_dynamic",
+      previousValueHash: null,
+    });
+    expect((await service.getProfile(ctx))!.facets.statusNote).toBe(
+      "2026 年发布规划按周推进",
+    );
+
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      facets: { statusNote: "2026 年发布规划：每月发布 4 条视频" },
+    });
+    await expect(service.cleanupLegacyDynamicStatusNote(ctx)).resolves.toEqual({
+      outcome: "not_dynamic",
+      previousValueHash: null,
+    });
+    expect((await service.getProfile(ctx))!.facets.statusNote).toBe(
+      "2026 年发布规划：每月发布 4 条视频",
+    );
+  });
+
+  it("[T-521] AI 上下文共用的 getPositioningCenter 会自动执行一次旧动态计数清理", async () => {
+    const audit = vi.fn(async () => undefined);
+    let seq = 0;
+    const service = createPositioningService({
+      db,
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-center-cleanup-${++seq}`,
+      projects: makeProjectsPort(),
+      auditLegacyStatusNoteCleanup: audit,
+    });
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      facets: { statusNote: "49 条 review 稿件未发布" },
+    });
+
+    const center = await service.getPositioningCenter(ctx);
+
+    expect(center.profile!.facets.statusNote).toBe("");
+    expect(audit).toHaveBeenCalledTimes(1);
+    await service.getPositioningCenter(ctx);
+    expect(audit).toHaveBeenCalledTimes(1);
+  });
+
   it("createStatementVersion requires a profile first (ProfileRequiredError)", async () => {
     const service = makeService(db, makeProjectsPort());
     await expect(

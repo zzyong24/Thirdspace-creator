@@ -24,6 +24,7 @@ import {
   runPositioningGenerate,
   parseSuggestion,
   buildPositioningPrompt,
+  normalizeSuggestion,
   positioningFacets,
   type PositioningSuggestion,
   type WorksReader,
@@ -169,6 +170,17 @@ describe("parseSuggestion (tolerant JSON object parse — chat 文本兜底路�
     expect(
       parseSuggestion(JSON.stringify({ persona: "", oneLiner: "", keywords: [] })),
     ).toBeNull();
+  });
+
+  it("[T-521] 定位 AI 返回动态作品计数时不再把它写回 statusNote", () => {
+    const suggestion = normalizeSuggestion({
+      ...VALID_OBJECT,
+      facets: {
+        statusNote: "80 条作品里有 49 条待审核",
+      },
+    } as never);
+
+    expect(suggestion!.facets.statusNote).toBe("");
   });
 });
 
@@ -333,7 +345,7 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
     expect(facets.works).toContain("【我的真实作品（定位必须扎根于此）】");
     expect(facets.works).toContain(`${longTitle.slice(0, 40)}…`);
     expect(facets.works).toContain("（已发布）");
-    expect(facets.works).toContain("AI 编导流程（planning）");
+    expect(facets.works).toContain("AI 编导流程（策划）");
     expect(recordCandidate).toHaveBeenCalled();
   });
 

@@ -1092,6 +1092,7 @@ export const WORKS_BRIEF_MAX_ROWS = 100;
 export function formatWorksBrief(
   rows: Array<{
     title: string;
+    source?: string;
     stage: string;
     status: string;
     publishedAt?: string | null;
@@ -1102,8 +1103,27 @@ export function formatWorksBrief(
   const lines = listed.map((r) => {
     const t = r.title.trim();
     const short = t.length > 40 ? `${t.slice(0, 40)}…` : t;
-    const published = Boolean(r.publishedAt) || r.status === "published";
-    const mark = published ? "已发布" : r.stage || r.status || "进行中";
+    // 发布事实只认 Publishing canonical port 投影出的 publishedAt；project.status /
+    // lifecycle 不能替代发布凭据。
+    const published = Boolean(r.publishedAt);
+    const stageLabel =
+      (
+        {
+          ideation: "选题",
+          planning: "策划",
+          scripting: "脚本",
+          production: "制作",
+          publishing: "发布",
+          review: "复盘",
+        } as Record<string, string>
+      )[r.stage] ??
+      r.stage ??
+      "";
+    const mark = published
+      ? stageLabel === "复盘"
+        ? "已发布 · 复盘"
+        : "已发布"
+      : stageLabel || r.status || "进行中";
     return `· ${short}（${mark}）`;
   });
   const rest = total - listed.length;
@@ -1199,7 +1219,8 @@ function formatPositioning(center: {
       if (f.corePain) lines.push(`核心痛点：${f.corePain}`);
       if (f.coreValue) lines.push(`核心价值：${f.coreValue}`);
       if (f.tone) lines.push(`表达风格：${f.tone}`);
-      if (f.statusNote) lines.push(`当前状态：${f.statusNote}`);
+      // T-521：statusNote 是存量动态自由文本，不属于稳定定位事实。即使库中仍有旧值，
+      // 也必须在 prompt 装配边界隔离，不能让“49 条 review 未发”反复污染模型。
     }
     // 定位规则（供下游模块使用）— injected as explicit HARD constraints so the agent
     // treats them as rules, not background. This is the "定位规则约束下游" landing point.

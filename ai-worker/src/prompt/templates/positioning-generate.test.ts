@@ -85,3 +85,15 @@ describe("positioning.generate — downstreamRules 硬约束 (T-234)", () => {
     expect(prompt).toContain("绝不编造");
   });
 });
+
+describe("[T-521] positioning.generate 不再生产动态 statusNote", () => {
+  it("prompt 明确要求旧兼容字段为空，禁止写作品数/发布状态/项目阶段", () => {
+    const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
+      current: CURRENT,
+    });
+
+    expect(prompt).toContain('"statusNote":""');
+    expect(prompt).toContain("必须返回空字符串");
+    expect(prompt).toContain("动态事实不得写入定位");
+  });
+});

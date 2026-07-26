@@ -72,6 +72,7 @@ export interface WorksReader {
   ): Promise<{
     rows: Array<{
       title: string;
+      source?: string;
       stage: string;
       status: string;
       publishedAt?: string | null;
@@ -146,13 +147,14 @@ ${current}${accounts}${works}${extra}
   "corePain":"核心痛点（受众最痛的问题）",
   "coreValue":"核心价值（给受众的根本回报）",
   "tone":"表达风格（语气/调性）",
-  "statusNote":"当前状态（账号此刻所处阶段）"},
+  "statusNote":""},
  "downstreamRules":{"topicRule":"选题规则（什么选题该做/不该做，含题材边界）",
   "scriptRule":"写稿规则（结构/钩子/表达约束，含效果要求）",
   "projectRule":"项目规则（立项/节奏约束，含变现约束）",
   "forbidRule":"禁止事项（绝对红线/绝不做什么）",
   "expressionRule":"表达风格规则（统一语气的硬约束/表达红线）"}}
-keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。
+keywords 必须正好 3 个。capabilities 给 2-5 个。facets 的五项稳定定位要填；
+statusNote 是已停用的旧兼容字段，必须返回空字符串，作品数量、发布状态、项目阶段等动态事实不得写入定位。
 downstreamRules 是**下游硬约束**（选题/写稿/项目节点会把它当铁律执行）：只从创作者**明确聊到/材料里真实存在**的约束提炼（不做什么、表达红线、题材边界、效果要求、变现约束），没聊到的键**留空字符串**，绝不编造、绝不用泛泛套话凑数。`;
 }
 
@@ -203,7 +205,7 @@ function asStrings(raw: unknown): string[] {
 // 后拿的是已解析对象,容错逻辑原样保留 —— trim、clampKeywords 夹 3、asStrings 清 capabilities)。
 // Returns null when the suggestion is empty (no persona and no oneLiner) — the runner treats
 // null as "no usable candidate" and cancels.
-function normalizeSuggestion(
+export function normalizeSuggestion(
   o: PositioningSuggestionOutput,
 ): PositioningSuggestion | null {
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
@@ -221,7 +223,9 @@ function normalizeSuggestion(
       corePain: str(o.facets?.corePain),
       coreValue: str(o.facets?.coreValue),
       tone: str(o.facets?.tone),
-      statusNote: str(o.facets?.statusNote),
+      // T-521：动态作品数量/发布状态不得回写长期定位。保留字段仅为旧 wire 兼容，
+      // 候选一律归一为空，避免用新的静态计数覆盖旧静态计数。
+      statusNote: "",
     },
     // [T-234] 硬约束透传(缺则空串,诚实不编)。
     downstreamRules: {
