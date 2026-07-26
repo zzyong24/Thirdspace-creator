@@ -93,7 +93,15 @@ describe("AdoptCandidateCard", () => {
       await vi.advanceTimersByTimeAsync(4000);
     });
     expect(mockClient.createAITask).toHaveBeenCalledWith(
-      expect.objectContaining({ body: { taskType: "test.node", inputData: { projectId: "p-1" } } }),
+      expect.objectContaining({
+        body: {
+          taskType: "test.node",
+          attemptId: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+          ),
+          inputData: { projectId: "p-1" },
+        },
+      }),
     );
     // CollabField: 候选标题现渲成受控 input(canEdit) → 用 displayValue 断言其渲染。
     expect(queryByDisplayValue("甲")).not.toBeNull();
@@ -184,6 +192,24 @@ describe("AdoptCandidateCard", () => {
     });
     expect(container.querySelector('[data-slot="adopt-error"]')).not.toBeNull();
     expect(queryByText("甲")).toBeNull();
+  });
+
+  it("重试按钮是新用户动作 → 生成新的 attemptId", async () => {
+    mockClient.getTask.mockResolvedValueOnce({ status: "cancelled" });
+    const { container } = await renderCard();
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-start"]')!);
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-error"] button')!);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    const calls = mockClient.createAITask.mock.calls as Array<
+      [{ body: { attemptId: string } }]
+    >;
+    expect(calls).toHaveLength(2);
+    expect(calls[0]![0].body.attemptId).not.toBe(calls[1]![0].body.attemptId);
   });
 
   // P4 hydration (切页不丢): a fresh mount must reconcile against the server.

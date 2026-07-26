@@ -185,6 +185,7 @@ beforeEach(() => {
   mockClient.listArtifacts.mockResolvedValue([]);
   mockClient.getArtifact.mockResolvedValue({ currentVersionId: null });
   mockClient.listArtifactVersions.mockResolvedValue([]);
+  mockClient.createMaterialLink.mockResolvedValue({ id: "mlink-1" });
   mockClient.exportProductionMaterials.mockResolvedValue({
     assetId: "asset-zip-1",
     downloadUrl: "http://localhost/blob/zip?token=t",
@@ -312,6 +313,7 @@ describe("ProductionWorkbench", () => {
       expect.objectContaining({
         body: {
           taskType: "video.decisions",
+          attemptId: expect.any(String),
           inputData: {
             projectId: "p-1",
             srtText: GOOD_SRT,
@@ -523,6 +525,36 @@ describe("ProductionWorkbench", () => {
     expect(mockClient.createAITask).not.toHaveBeenCalled();
     // 进行中态可见(承诺「后台跑,可离开」)。
     expect(container.textContent).toContain("四决策进行中");
+  });
+
+  it("[T-308] 有历史成片时,当前 running 四决策仍优先恢复(旧 succeeded render 不得遮住新任务)", async () => {
+    // 项目已有一次成功成片,用户改稿后重新发起四决策并离页。回来应接当前任务,
+    // 不能因先扫到历史 succeeded render 就提前 return、让页面重新出现「生成」按钮。
+    mockClient.listExecutionTasks.mockResolvedValueOnce([
+      {
+        id: "exec-old-done",
+        execType: "video.render",
+        status: "succeeded",
+        adoptedAssetIds: ["asset-old-final"],
+        errorMessage: null,
+      },
+    ]);
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "dec-current-run", status: "running" },
+    ]);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    await waitFor(() =>
+      expect(mockClient.getTask).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { taskId: "dec-current-run" } }),
+      ),
+    );
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
+    expect(container.textContent).toContain("四决策进行中");
+    expect(
+      container.querySelector('[data-slot="dispatch-decisions"]'),
+    ).toBeNull();
   });
 
   // ── [T-366a] 制作方式二选一(上传成品直登成片) ────────────────────────────────
@@ -827,5 +859,85 @@ describe("ProductionWorkbench — T-387c B-roll 自动聚合", () => {
       expect(mockClient.listMaterialLinks).toHaveBeenCalled(),
     );
     expect(container.querySelector('[data-slot="broll-auto"]')).toBeNull();
+  });
+
+  it("[T-309] 已有决策后上传 B-roll → 旧候选作废并允许重新决策，上传边严格落 project role=broll", async () => {
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "decision-old", status: "awaiting_confirmation" },
+    ]);
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultType: "video_decisions",
+        resultData: {
+          decisions: {
+            scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "" }],
+            cards: [],
+            broll: [],
+            subtitles: [],
+            srtLines: [],
+          },
+          inventory: [],
+        },
+      },
+    ]);
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="video-decision-preview"]'),
+      ).not.toBeNull(),
+    );
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+
+    const picker = container.querySelector(
+      '[data-slot="broll-picker"] input[type="file"]',
+    ) as HTMLInputElement;
+    fireEvent.change(picker, {
+      target: {
+        files: [
+          new File(["image"], "发布成功截图.png", { type: "image/png" }),
+        ],
+      },
+    });
+
+    await waitFor(() =>
+      expect(mockClient.createMaterialLink).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            projectId: "p-1",
+            role: "broll",
+            stage: "production",
+          }),
+        }),
+      ),
+    );
+    await waitFor(() =>
+      expect(mockClient.cancelTask).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { taskId: "decision-old" } }),
+      ),
+    );
+    expect(
+      container.querySelector('[data-slot="video-decision-preview"]'),
+    ).toBeNull();
+    expect(dispatchButton(container).disabled).toBe(false);
+    expect(container.textContent).toContain("素材已更新");
+  });
+
+  it("[T-309] B-roll 上传后用料链登记失败必须可见，不得假报上传成功", async () => {
+    mockClient.createMaterialLink.mockRejectedValueOnce(
+      new Error("material link write failed"),
+    );
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    const picker = container.querySelector(
+      '[data-slot="broll-picker"] input[type="file"]',
+    ) as HTMLInputElement;
+    fireEvent.change(picker, {
+      target: {
+        files: [new File(["image"], "截图.png", { type: "image/png" })],
+      },
+    });
+    await waitFor(() =>
+      expect(container.textContent).toContain("material link write failed"),
+    );
   });
 });

@@ -14,6 +14,7 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
@@ -103,8 +104,6 @@ import {
   createKnowledgeService,
   createKnowledgeTransport,
   KNOWLEDGE_OP_IDS,
-  type KnowledgeItemRow,
-  type KnowledgeRevisionRow,
 } from "@creatoros/backend/modules/knowledge";
 import {
   createAssetRepository,
@@ -123,7 +122,6 @@ import {
   createArtifactsService,
   createArtifactsTransport,
   ARTIFACT_OP_IDS,
-  type ArtifactRelationRow,
 } from "@creatoros/backend/modules/artifacts";
 import {
   createProductionService,
@@ -449,13 +447,12 @@ import { runPlatformAdapt } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
-// [T-387c] dedupeBrollRefs(聚合去重纯函数,与制作页 UI 共用)+ StoryboardSectionRef
-// (凝固分镜投影,readStoryboard 端口回参)。
+// [T-309] collectProjectBrollInventory 把项目/账号边界收进唯一 B-roll 素材入口；
+// storyboardFromContentData 仍用于四决策 authored 分镜 facet。
 import {
+  collectProjectBrollInventory,
   runVideoDecisions,
-  dedupeBrollRefs,
   storyboardFromContentData,
-  type BrollAssetRef,
 } from "@creatoros/backend/modules/ai-runtime";
 import { runPositioningGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runCopilotAssist } from "@creatoros/backend/modules/ai-runtime";
@@ -472,11 +469,17 @@ import {
   MaterialSummaryModelNotConfiguredError,
 } from "@creatoros/backend/modules/ai-runtime";
 import { runReconstruct } from "@creatoros/backend/modules/ai-runtime";
-// T-040a 提示词/skill 服务端可配 —— 装配期读 skill_config_overrides 全表 → 套进常驻 REGISTRY。
 import {
-  applySkillConfigOverridesFromDb,
-  createPgliteSkillConfigOverrideReadPort,
-  fetchRemotePromptOverrides,
+  getOfficialSkillBase,
+  listOfficialSkillBases,
+  runWithEffectiveSkillSnapshot,
+  type EffectiveSkillSnapshotV1,
+} from "@creatoros/ai-worker";
+import {
+  createEffectiveSkillSnapshotResolver,
+  parseEffectiveSkillSnapshot,
+  requiredSkillIdsForTask,
+  type EffectiveSkillSnapshotResolver,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
 import {
@@ -495,6 +498,7 @@ import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/res
 // transcribeAudio = ASR 工厂(按 provider 取适配器 → { text })。
 import {
   createMinimaxAdapter,
+  modelFor,
   // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
   createOpenaiImagesAdapter,
   createOpenaiAsrAdapter,
@@ -534,6 +538,15 @@ import {
   // 已随 canonical positioning seed(Zyong Zhu 人设)退役移除——唯一调用点是被删的 seed。
   POSITIONING_OP_IDS,
 } from "@creatoros/backend/modules/positioning";
+
+// T-513 official-only 平台规则：它属于程序基座，不接受账号 overlay，也不从客户端输入。
+// 版本随规则正文变化而递增，和 effective Skill 一起内联到每个任务的 server-only snapshot。
+const PLATFORM_POLICY_VERSION = "creatoros-platform-policy-v1";
+const PLATFORM_POLICY_TEXT = [
+  "AI 只能产生候选；真实数据写入必须经过用户确认和后端服务端口。",
+  "不得编造指标、来源、执行结果或已保存状态；缺失数据必须如实标空。",
+  "工具只允许使用 effective Skill 白名单与当前账号授权范围的交集。",
+].join("\n");
 import {
   createCandidateService,
   createCandidateTransport,
@@ -1140,8 +1153,6 @@ function extractArtifactText(
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
-  /** T-040c:重读 skill_config_overrides + 重套进常驻 REGISTRY(prompts.put 热更用)。 */
-  reapplySkillOverrides: () => Promise<unknown>;
   projects: Transport;
   taxonomy: Transport;
   notifications: Transport;
@@ -1263,6 +1274,18 @@ interface PersistenceBundle {
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
   ai: AiService;
+  // [T-513] 每轮对话在服务端按当前 user/account 解析不可变 Effective Skill。
+  // route 只传受控的 official skill id，不接收客户端自带 prompt/policy。
+  resolveEffectiveSkillSnapshot: (
+    ctx: RequestContext,
+    requiredSkillIds: readonly string[],
+  ) => Promise<EffectiveSkillSnapshotV1>;
+  /** 同步非 ai_task 入口的唯一 account-scoped Skill 执行门。 */
+  runWithEffectiveSkills: <T>(
+    ctx: RequestContext,
+    requiredSkillIds: readonly string[],
+    execute: () => Promise<T>,
+  ) => Promise<T>;
   resolveModelSpec: (
     ctx: RequestContext,
     capability: string,
@@ -1663,7 +1686,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 并发=1 拦不住 job-A 抓 creator-center + job-B 抓 iesdouyin 两进程并存)。轻量:一条 promise
   // 链尾串行,无需 p-queue。fire-and-forget 的 dispatch 把 runScheduledCollection 挂到链尾。
   let collectionRunTail: Promise<void> = Promise.resolve();
-  const enqueueCollectionRun = (run: () => Promise<void>): void => {
+  const enqueueCollectionRun = (run: () => Promise<void>): Promise<void> => {
     // 串到链尾:上一个采集跑完(无论成败)才开始本次;链尾用 catch 吞错防一次失败堵死后续。
     collectionRunTail = collectionRunTail.then(
       () => run(),
@@ -1671,6 +1694,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     );
     // 兜底:链尾自身的 reject 不外溢(fire-and-forget;每个 run 内部已 try/catch 落终态)。
     collectionRunTail = collectionRunTail.catch(() => {});
+    return collectionRunTail;
   };
 
   // Projects (module 05): one user-scoped repository over the shared db (every
@@ -2495,10 +2519,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (foundation §4) used by dev/seeds — not on the dispatch path.
   const ingestionMockSource = createMockIngestionSource();
   void ingestionMockSource; // producer-side seam; reserved for dev/seed import flows
-  // [T-189a] 绑定抖音成功 → 建三个每天定时采集 job + 初始化跑一次。forward-declared(实体在
-  //   schedulingService / triggerDeps 装配后赋值,见下方);loginDouyin 运行时才调(闭包延迟执行),
-  //   故此处引用尚未赋值的 let 是安全的(与 dispatchScheduledCollection 同款前向声明范式)。
-  let bootstrapDouyinOnBind: ((ctx: RequestContext) => void) | undefined;
   const ingestionService = createIngestionService({
     deps,
     db,
@@ -2861,10 +2881,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Agent SDK lives only in @creatoros/ai-worker; this composition never imports it
   // (determinism boundary). Clock/ids share the deterministic `deps` (createSeq keeps
   // ai-conv/ai-task/ai-msg/ai-ref/ai-result ids collision-free across requests).
+  // Settings 在下方才完成装配；AI service 的依赖闭包只在 createTask 请求时执行，
+  // 因而可以先声明端口，再于 settingsRepo 可用后绑定真实 account-scoped resolver。
+  let resolveEffectiveSkillSnapshotForRuntime: EffectiveSkillSnapshotResolver | null =
+    null;
   const aiService = createAiService({
     db,
     now: deps.now,
     nextId: deps.nextId,
+    resolveTaskRuntimeData: async (ctx, taskType, inputData) => {
+      if (!resolveEffectiveSkillSnapshotForRuntime) {
+        throw new Error(
+          "[T-513] Effective Skill snapshot resolver 尚未完成装配",
+        );
+      }
+      const requiredSkillIds = requiredSkillIdsForTask(taskType, inputData);
+      return {
+        skillSnapshot: await resolveEffectiveSkillSnapshotForRuntime(
+          ctx,
+          requiredSkillIds,
+        ),
+      };
+    },
     artifacts: {
       createVersion: (ctx, artifactId, input) =>
         artifactsService.createVersion(ctx, artifactId, input),
@@ -2972,6 +3010,57 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ),
     },
   });
+  const runWithResolvedEffectiveSkills = async <T>(
+    ctx: RequestContext,
+    requiredSkillIds: readonly string[],
+    execute: () => Promise<T>,
+  ): Promise<T> => {
+    if (!resolveEffectiveSkillSnapshotForRuntime) {
+      throw new Error(
+        "[T-513] Effective Skill snapshot resolver 尚未完成装配",
+      );
+    }
+    const snapshot = await resolveEffectiveSkillSnapshotForRuntime(
+      ctx,
+      requiredSkillIds,
+    );
+    return runWithEffectiveSkillSnapshot(snapshot, execute);
+  };
+  const runTaskWithEffectiveSkillSnapshot = async (
+    ctx: RequestContext,
+    taskId: string,
+    execute: (signal: AbortSignal) => void | Promise<void>,
+  ): Promise<void> => {
+    const runtimeData = await aiService.getTaskRuntimeData(ctx, taskId);
+    const rawSkillSnapshot = runtimeData.skillSnapshot;
+    if (!rawSkillSnapshot) {
+      throw new Error(
+        `[T-513] AI task ${taskId} 缺少冻结的 Skill snapshot`,
+      );
+    }
+    const skillSnapshot = parseEffectiveSkillSnapshot(
+      JSON.stringify(rawSkillSnapshot),
+    );
+    if (
+      skillSnapshot.userId !== ctx.userId ||
+      skillSnapshot.accountId !== ctx.accountId
+    ) {
+      throw new Error(
+        `[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`,
+      );
+    }
+    await runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
+      const execution = await aiService.runClaimedTaskExecution(
+        ctx,
+        taskId,
+        async ({ signal }) => {
+          await execute(signal);
+        },
+      );
+      // 第二个同 attempt/同 task dispatch 竞争失败是正常幂等命中，不能再调用模型。
+      if (!execution.claimed) return;
+    });
+  };
   const aiBase = createAiTransport(() => aiService);
 
   // T-086 审核门 service + transport(reviewRules.* + scriptReviews.*)。scriptReviews.trigger
@@ -2993,7 +3082,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             projectId?: string | null;
             inputData?: Record<string, unknown> | null;
           };
-          dispatchScriptReview?.(ctx, {
+          void dispatchScriptReview?.(ctx, {
             id: String(t.id),
             projectId: typeof t.projectId === "string" ? t.projectId : null,
             inputData: (t.inputData ?? {}) as Record<string, unknown>,
@@ -3004,31 +3093,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const reviewGate = createReviewGateTransport(() => reviewGateService);
-
-  // 调度采集 dispatch 触发点(T-007 D3):forward-declared,实体在下方(candidateService/
-  // schedulingService 构造后)赋值。dispatch 分支(ai transport 内)与调度器 triggerScheduledJob
-  // 共用它触发 `void runScheduledCollection(...)` —— 触发点单一。运行时才调(闭包延迟执行),
-  // 赋值前的 dispatch(不会发生:transport 请求晚于 build)容错为 no-op。
-  let dispatchScheduledCollection:
-    | ((
-        ctx: RequestContext,
-        task: { id: string; taskType: string; inputData: Record<string, unknown> },
-      ) => void)
-    | undefined;
-  // T-086 文案审核 dispatch 触发点:forward-declared,实体在下方(resolveModelSpec/
-  // settingsService 构造后)赋值。reviewGateService.createTask 起 script.review ai_task 后
-  // 用它在后台跑 runScriptReview —— 审核门 op 不走 ai transport 的 ai.tasks.create 拦截(它
-  // 经注入 AI 端口直起任务),故触发点必须在此显式接入,否则任务只会 queued 不执行。
-  let dispatchScriptReview:
-    | ((
-        ctx: RequestContext,
-        task: {
-          id: string;
-          projectId: string | null;
-          inputData: Record<string, unknown>;
-        },
-      ) => void)
-    | undefined;
 
   // Positioning (module 17, Wave 5): the service builds a per-ctx user-scoped repo
   // over the shared db (the repo bakes userId in; the service mints one per request).
@@ -3346,6 +3410,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const res = await aiBase.request(endpoint, input, ctx);
       if (endpoint.id === "ai.tasks.create" && ctx) {
         const task = (res as { data?: Record<string, unknown> }).data;
+        if (
+          !task ||
+          (typeof task.id !== "string" && typeof task.id !== "number")
+        ) {
+          return res;
+        }
+        // [T-513] createTask 已把 official base + 当前账号增量覆盖冻结进 server-only
+        // runtimeData。执行端只消费该快照，绝不重新读“当前配置”，因此排队期间改配置、
+        // 多账号并发、重试都不会串 prompt。缺失/属主不符一律 fail closed。
+        const dispatchCreatedTask = async () => {
         const positioningReader = {
           getPositioningCenter: (c: RequestContext) =>
             positioningService.getPositioningCenter(c),
@@ -3627,7 +3701,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           task.taskType === "research.gather_material" &&
           task.status === "queued"
         ) {
-          void runGatherMaterial(
+          await runGatherMaterial(
             ctx,
             {
               id: String(task.id),
@@ -3653,7 +3727,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ) {
           // Phase 3 A 路径:跑在新 Agent Runtime 上(按 capability 配的 model + 步骤日志),
           // 替掉旧的 runClaudeAgent 订阅路径。没配 model key → 适配器 cancelTask(不假成功)。
-          void runTopicGenerateV2(
+          await runTopicGenerateV2(
             ctx,
             {
               id: String(task.id),
@@ -3686,7 +3760,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // enrichCard seam (wired on the AiCandidatePort above). The candidate reader is
           // bound to candidateService.getCandidate (ownership-gated, no cross-module repo
           // import).
-          void runTopicEnrich(
+          await runTopicEnrich(
             ctx,
             {
               id: String(task.id),
@@ -3724,7 +3798,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // above). The subject reader is bound to the projects/publishing services
           // (ownership-gated, no cross-module repo import); the rubric reader resolves the
           // creator's default rubric's current version.
-          void runCalibrationDiagnose(
+          await runCalibrationDiagnose(
             ctx,
             {
               id: String(task.id),
@@ -3802,7 +3876,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // edits/confirms and the EXISTING createResult path (采纳门) lands the calibration_result.
           // The runner NEVER writes calibration_result directly (铁律②). 每轮 schema 约束:
           // generateObject 绑 Zod(calibrationScoreSchema),校验失败 Vercel SDK 自动重试。
-          void runCalibrationScore(
+          await runCalibrationScore(
             ctx,
             {
               id: String(task.id),
@@ -3978,7 +4052,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // brief —— 与旧手列逐项一致,零行为变化)。根治「手列漏一个 reader = 该 facet 恒空」
           // (T-182 CLAIM-1 script.draft 漏 knowledge 的根因):现在漏接只可能来自漏声明,声明即真值。
           // ai / resolveModelSpec 是非 facet 基础设施,组合根 always-注入(不进声明/registry)。
-          void runScriptDraft(
+          await runScriptDraft(
             ctx,
             {
               id: String(task.id),
@@ -4013,7 +4087,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // .contextRequirements 从中央 registry 自动取 reader —— 补上此前手列漏掉的 brief(立项硬锚)
           // + projectMaterials(素材可溯弹药)+ artifactOrigin(F2 反推标注),不再只有 positioning/
           // learnings 两项悬空。positioning 显式 pin 满足 PlanningDeps 必需类型(值同 registry,零行为变化)。
-          void runPlanningThesis(
+          await runPlanningThesis(
             ctx,
             {
               id: String(task.id),
@@ -4075,7 +4149,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // `content_contract` artifact (reuses the existing artifact_version confirm path).
           // The 策划 workspace reads that version's contentData.cards back into the 内容合同
           // surface.
-          void runPlanningContract(
+          await runPlanningContract(
             ctx,
             {
               id: String(task.id),
@@ -4104,7 +4178,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // `artifact_version` candidate; 采纳 appends a new ArtifactVersion onto the
           // project's `content_outline` artifact (reuses the existing artifact_version
           // confirm path).
-          void runPlanningOutline(
+          await runPlanningOutline(
             ctx,
             {
               id: String(task.id),
@@ -4132,7 +4206,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           task.taskType === "review.analyze" &&
           task.status === "queued"
         ) {
-          void runReviewAnalyze(
+          await runReviewAnalyze(
             ctx,
             {
               id: String(task.id),
@@ -4159,7 +4233,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // T-086 文案审核门 —— 单一 dispatch 触发点(下方 resolveModelSpec 后赋值),
           // 与审核门 op 直起任务路径共用同一 runScriptReview 装配(读脚本当前版本 → L1 lint +
           // L2 语义审 → 落 script_review_reports)。此分支覆盖经 ai.tasks.create 起的审核任务。
-          dispatchScriptReview?.(ctx, {
+          await dispatchScriptReview?.(ctx, {
             id: String(task.id),
             projectId:
               typeof task.projectId === "string" ? task.projectId : null,
@@ -4174,7 +4248,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // (抖音/B站/小红书/公众号), records a `publication_drafts` candidate; 采纳
           // materializes each draft into a real Publication (+ revision) via the
           // publishing port wired above.
-          void runPlatformAdapt(
+          await runPlatformAdapt(
             ctx,
             {
               id: String(task.id),
@@ -4200,7 +4274,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // `material_link_list` candidate; 采纳 ties each match to the project as a
           // material-link (entityType:"asset", stage:"production") via the materialLinks
           // port wired above (素材库⇄制作 live edge).
-          void runMaterialMatch(
+          await runMaterialMatch(
             ctx,
             {
               id: String(task.id),
@@ -4227,9 +4301,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 粗剪 SRT + 口播稿 → ①语义分场 ②信息卡(可溯剔除)③B-roll(清单硬门)④双语字幕,
           // 四个 runStructuredNode 顺序编排,产 `video_decisions` 候选(awaiting_confirmation)→
           // 前端分场预览卡过目可改,确认才组 props 交渲染(T-254a video.render executor)。
-          // 素材清单投影:项目 material-links⋈assets 的 video/image(label+描述);项目没挂
-          // 素材时回退整库前 100 条(诚实投影,只给真实 assetId,B-roll 决策禁编造)。
-          void runVideoDecisions(
+          // 素材清单投影只读当前账号下的当前项目；缺项目/越权直接失败，绝不回退整库。
+          await runVideoDecisions(
             ctx,
             {
               id: String(task.id),
@@ -4240,110 +4313,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             {
               ai: aiService,
               resolveModelSpec,
-              // [T-387c] B-roll 备料自动聚合:数据源从「项目 material-links」扩为——
+              // [T-309/T-387c] B-roll 备料自动聚合:数据源从「项目 material-links」扩为——
               //   ① 脚本凝固分镜点名的素材(visual.assetRefs,source:"script")
               //   ② 论点树挂载的图/视频素材(thesis_tree nodes[].materialRefs,source:"thesis")
               //   ③ 项目弹药 image/video 资产(material-links;role=broll 手动上传标 "manual",
               //      其余标 "ammo";role=clip 口播原片仍排除)
-              // 统一 dedupeBrollRefs 去重(先到先得:script → thesis → links),来源徽标随
-              // source 字段进预览卡;项目全空 → 回退整库投影(旧行为,不带 source)。
-              listBrollInventory: async (c, projectId) => {
-                const rows: BrollAssetRef[] = [];
-                const pushAsset = (
-                  a: {
-                    id: string;
-                    name: string;
-                    assetType: string;
-                    description: string;
+              listBrollInventory: (c, projectId) =>
+                collectProjectBrollInventory(c, projectId, {
+                  assertProjectAccess: async (scopeCtx, scopeProjectId) => {
+                    await projectsService.listOutputIdsByProject(
+                      scopeCtx,
+                      scopeProjectId,
+                    );
                   },
-                  source?: BrollAssetRef["source"],
-                ) => {
-                  if (a.assetType !== "video" && a.assetType !== "image") return;
-                  rows.push({
-                    assetId: a.id,
-                    label: a.name,
-                    kind: a.assetType,
-                    description: a.description ?? "",
-                    ...(source ? { source } : {}),
-                  });
-                };
-                const tryPush = async (
-                  assetId: string,
-                  source: BrollAssetRef["source"],
-                ) => {
-                  try {
-                    pushAsset(await assetsService.getAsset(c, assetId), source);
-                  } catch {
-                    /* 单条越权/已删/非素材 id 跳过,不牵连整批 */
-                  }
-                };
-                if (projectId) {
-                  // ① 脚本凝固分镜点名素材(output_script 当前版本 sections[].visual.assetRefs)。
-                  try {
-                    const scriptData = await readArtifactContentData(
-                      c,
-                      projectId,
-                      "output_script",
-                    );
-                    for (const sec of storyboardFromContentData(scriptData)) {
-                      for (const ref of sec.assetRefs) await tryPush(ref, "script");
-                    }
-                  } catch {
-                    /* 无脚本/读失败 → 该来源为空 */
-                  }
-                  // ② 论点树挂载素材(thesis_tree nodes[].materialRefs;知识条目 getAsset 会
-                  //    失败 → 自然跳过,只留图/视频资产)。
-                  try {
-                    const thesisData = await readArtifactContentData(
-                      c,
-                      projectId,
-                      "thesis_tree",
-                    );
-                    const nodes = Array.isArray(thesisData?.nodes)
-                      ? (thesisData!.nodes as unknown[])
-                      : [];
-                    for (const raw of nodes) {
-                      const refs = (raw as { materialRefs?: unknown } | null)
-                        ?.materialRefs;
-                      if (!Array.isArray(refs)) continue;
-                      for (const r of refs) {
-                        const id = (r as { id?: unknown } | null)?.id;
-                        if (typeof id === "string" && id)
-                          await tryPush(id, "thesis");
-                      }
-                    }
-                  } catch {
-                    /* 无论点树/读失败 → 该来源为空 */
-                  }
-                  // ③ 项目弹药(material-links):手动上传 B-roll(role=broll)标 manual,
-                  //    其余非 clip 资产标 ammo。
-                  const { rows: links } = await materialLinksService.list(c, {
-                    projectId,
-                    page: 1,
-                    pageSize: 100,
-                  });
-                  for (const link of links) {
-                    if (link.entityType !== "asset") continue;
-                    // [T-294] 排除粗剪口播原片(role=clip):它是成片主体,不能被当空镜 B-roll 插回。
-                    if (link.role === "clip") continue;
-                    await tryPush(
-                      link.entityId,
-                      link.role === "broll" ? "manual" : "ammo",
-                    );
-                  }
-                }
-                const deduped = dedupeBrollRefs(rows);
-                if (deduped.length === 0) {
-                  // 项目没挂素材 → 回退整库投影(仍全是真实 assetId;旧行为,不带 source)。
-                  const all = await assetsService.listAssets(c, {
-                    limit: 100,
-                    cursor: null,
-                  });
-                  for (const a of all) pushAsset(a);
-                  return dedupeBrollRefs(rows);
-                }
-                return deduped;
-              },
+                  readArtifactContentData,
+                  listProjectMaterialLinks: async (
+                    scopeCtx,
+                    scopeProjectId,
+                  ) =>
+                    (
+                      await materialLinksService.list(scopeCtx, {
+                        projectId: scopeProjectId,
+                        page: 1,
+                        pageSize: 100,
+                      })
+                    ).rows,
+                  getAsset: (scopeCtx, assetId) =>
+                    assetsService.getAsset(scopeCtx, assetId),
+                }),
               // [T-387c] 凝固分镜 reader:output_script 当前版本 contentData → 分镜投影
               // (storyboardFromContentData 宽容解析;旧稿无 visual → 空数组 → facet 空 = 现状)。
               readStoryboard: async (c, projectId) => {
@@ -4370,7 +4367,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // candidate; 采纳 formalizes it into a CreatorProfile (upsertProfile) + a NEW
           // statement version (createdByType:"ai", aiTaskId) via the positioning port —
           // the OQ2 演进回流 source.
-          void runPositioningGenerate(
+          await runPositioningGenerate(
             ctx,
             {
               id: String(task.id),
@@ -4401,7 +4398,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // materialLinks port wired above. video 的异步轮询(submit→poll→retrieve + 超时)封在
           // M1 minimax 适配器内;超时/失败 → runner catch → cancelTask(UI 失败态,绝不卡 running)。
           // 未配 image.generate/video.generate model → MultimodalConfigError → cancelTask(诚实禁用)。
-          void runAssetGenerate(
+          await runAssetGenerate(
             ctx,
             {
               id: String(task.id),
@@ -4444,7 +4441,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 口播稿)+ projectMaterials(封面数字可溯来源)+ knowledge。文本层 resolveModelSpec(封面方案)
           // 与多模态 resolveMultimodalSpec/multimodalRegistry(生图)并列注入,是封面链「文案 + 图」两产物
           // 的两套模型解析。positioning 显式 pin 满足 CoverGenerateDeps 必需类型(值同 registry)。
-          void runCoverGenerate(
+          await runCoverGenerate(
             ctx,
             {
               id: String(task.id),
@@ -4492,7 +4489,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // [T-055h SPEC §6.2 第二层] 素材 AI 归类 —— 倾倒场上传完成后 fire-and-forget:
           // VLM(用户可配 asset.classify capability)看图打标签+一句话描述;未配置诚实跳过
           // (只跑确定性第一层),绝不阻塞上传主链。
-          void runAssetClassify(
+          await runAssetClassify(
             ctx,
             {
               id: String(task.id),
@@ -4560,7 +4557,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // ① 确定性抽全文(pdf-parse/mammoth/UTF-8,无 AI)② AI 摘要要点卡(复用现有文本模型
           // script.draft capability + runStructuredNode,不新增 capability)。三类诚实降级(抽取
           // 失败/未配摘要模型/超长截断),绝不阻塞上传主链。
-          void runMaterialExtract(
+          await runMaterialExtract(
             ctx,
             {
               id: String(task.id),
@@ -4632,7 +4629,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 绑 imported 作品的 script transcript artifact(幂等,已有则跳过 fetch/ASR 省流)。F7 失败
           // 分类:ASR 未配(TranscribeConfigError)→ 整任务停 markFailed + 引导;取音频失败 → 标该
           // aweme 失败其余继续。端口全注入真依赖(下方装配),runner 本身可确定性单测(见 test)。
-          void runTranscribe(
+          await runTranscribe(
             ctx,
             {
               id: String(task.id),
@@ -4815,7 +4812,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 产 { research, planning } → 物化 research(trend_analysis)+ planning(thesis_tree),
           // **均 origin='reconstructed'**(F1)。§5 守卫:runner 断言仅 imported,manual/topic 不触发。
           // 确定性终态 runner(不产候选、不过采纳门,§6.1 明确不走 candidate 确认路径)。端口全注入。
-          void runReconstruct(
+          await runReconstruct(
             ctx,
             {
               id: String(task.id),
@@ -4974,12 +4971,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // task failed + job_run failed(finally 兜底,绝不悬挂 running)。**不碰死链
           // drainQueue/runTask(见 SPEC 顶部🔧)。** 触发经 dispatchScheduledCollection(与调度器
           // triggerScheduledJob 共用的单一触发点,下方装配)。
-          dispatchScheduledCollection?.(ctx, {
+          await dispatchScheduledCollection?.(ctx, {
             id: String(task.id),
             taskType: task.taskType,
             inputData: (task.inputData ?? {}) as Record<string, unknown>,
           });
         }
+        };
+        // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
+        // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
+        void runTaskWithEffectiveSkillSnapshot(
+          ctx,
+          String(task.id),
+          dispatchCreatedTask,
+        ).catch(async (error) => {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          await aiService
+            .markFailed(ctx, String(task.id), message)
+            .catch(() => undefined);
+        });
       }
       // 全局 AI 助手 (copilot.assist) — a USER message create fires the positioning-aware
       // assistant runner in the BACKGROUND (fire-and-forget, mirrors the task triggers).
@@ -5184,15 +5195,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               `逐字稿：${source.transcript.text}`,
           )
           .join("\n\n");
-        const generated = await runScriptNode({
-          model: modelFor(spec),
-          positioningBrief:
-            "必须按当前 Project 已确认的选题与创作者定位表达，不冒充来源作者。",
-          ...(target.sources[0]?.item.title
-            ? { topicTitle: target.sources[0].item.title }
-            : {}),
-          extraBrief: `${target.strategy}\n\n${sourceBrief}`,
-        });
+        const generated = await runWithResolvedEffectiveSkills(
+          c,
+          ["script.draft"],
+          () =>
+            runScriptNode({
+              model: modelFor(spec),
+              positioningBrief:
+                "必须按当前 Project 已确认的选题与创作者定位表达，不冒充来源作者。",
+              ...(target.sources[0]?.item.title
+                ? { topicTitle: target.sources[0].item.title }
+                : {}),
+              extraBrief: `${target.strategy}\n\n${sourceBrief}`,
+            }),
+        );
         return {
           text: generated.shots
             .map((shot) => shot.口播.trim())
@@ -5645,26 +5661,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     runStructuredNode,
                   } = await import("@creatoros/ai-worker");
                   const spec = await resolveModelSpec(c, "topic.generate");
-                  const result = await runStructuredNode({
-                    model: modelFor(spec),
-                    template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
-                    facets: {
-                      positioning: [
-                        target.positioning.oneLiner,
-                        target.positioning.keywords.length > 0
-                          ? `关键词：${target.positioning.keywords.join("、")}`
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join("\n"),
-                      sourceTitle: target.item.title,
-                      sourceAuthor:
-                        target.item.authorName ?? target.item.platform,
-                      sourceUrl: target.item.canonicalUrl,
-                      // 这里必须使用手动转写完成的逐字稿，不能退化成标题/摘要猜结构。
-                      transcript: target.transcript.text,
-                    },
-                  });
+                  const result = await runWithResolvedEffectiveSkills(
+                    c,
+                    ["intelligence.topic-decompose"],
+                    () =>
+                      runStructuredNode({
+                        model: modelFor(spec),
+                        template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                        facets: {
+                          positioning: [
+                            target.positioning.oneLiner,
+                            target.positioning.keywords.length > 0
+                              ? `关键词：${target.positioning.keywords.join("、")}`
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join("\n"),
+                          sourceTitle: target.item.title,
+                          sourceAuthor:
+                            target.item.authorName ?? target.item.platform,
+                          sourceUrl: target.item.canonicalUrl,
+                          // 这里必须使用手动转写完成的逐字稿，不能退化成标题/摘要猜结构。
+                          transcript: target.transcript.text,
+                        },
+                      }),
+                  );
                   return intelligenceTopicDecomposeSchema.parse(
                     result.object,
                   );
@@ -5701,13 +5722,48 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return result;
     },
   };
-  // 恢复租约后继续真正排队的来源同步；只打印异常类型，绝不把 Cookie/签名写进日志。
-  void drainIntelligenceSourceQueue(sourceRunnerDeps).catch((error) => {
+  // 恢复租约后继续真正排队的来源同步，并补跑已错过 nextRunAt 的每日监控。
+  // APP 退出时没有伪装成云端常驻进程；下次启动会先扫 due source，再驱动真实 run。
+  let intelligenceScheduleRunning = false;
+  const runIntelligenceSchedule = async () => {
+    if (intelligenceScheduleRunning) return;
+    intelligenceScheduleRunning = true;
+    try {
+      await drainIntelligenceSourceQueue(sourceRunnerDeps);
+      const enqueued = await intelligenceService.enqueueDueSourceRuns();
+      if (enqueued > 0) {
+        await drainIntelligenceSourceQueue(sourceRunnerDeps);
+      }
+    } finally {
+      intelligenceScheduleRunning = false;
+    }
+  };
+  void runIntelligenceSchedule().catch((error) => {
     console.error(
-      "[intelligence] 启动恢复失败:",
+      "[intelligence] 启动恢复/定时补跑失败:",
       error instanceof Error ? error.name : "UnknownError",
     );
   });
+  if (
+    !(process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI)
+  ) {
+    const configured = Number(
+      process.env.CREATOROS_INTELLIGENCE_SCHEDULER_INTERVAL_MS,
+    );
+    const intervalMs =
+      Number.isFinite(configured) && configured >= 30_000
+        ? Math.floor(configured)
+        : 60_000;
+    const intelligenceTimer = setInterval(() => {
+      void runIntelligenceSchedule().catch((error) => {
+        console.error(
+          "[intelligence] 定时监控扫描失败:",
+          error instanceof Error ? error.name : "UnknownError",
+        );
+      });
+    }, intervalMs);
+    intelligenceTimer.unref?.();
+  }
   void drainProjectScriptCandidateQueue(projectScriptRunnerDeps).catch(
     (error) => {
       console.error(
@@ -5732,19 +5788,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           res as { data?: { id?: string; status?: string; spec?: unknown } }
         ).data;
         if (task && typeof task.id === "string" && task.status === "queued") {
-          void runExecutionTask(
-            ctx,
-            { id: task.id, inputData: { spec: task.spec } },
-            {
-              ai: aiService,
-              assets: {
-                getAssetBytes: (c, assetId) =>
-                  assetsService.getAssetBytes(c, assetId),
+          const executionTaskId = task.id;
+          void runTaskWithEffectiveSkillSnapshot(ctx, executionTaskId, () =>
+            runExecutionTask(
+              ctx,
+              { id: executionTaskId, inputData: { spec: task.spec } },
+              {
+                ai: aiService,
+                assets: {
+                  getAssetBytes: (c, assetId) =>
+                    assetsService.getAssetBytes(c, assetId),
+                },
+                registry: executorRegistry,
+                workspacesRoot: executionWorkspacesRoot,
               },
-              registry: executorRegistry,
-              workspacesRoot: executionWorkspacesRoot,
-            },
-          );
+            ),
+          ).catch(async (error) => {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            await aiService
+              .markFailed(ctx, executionTaskId, message)
+              .catch(() => undefined);
+          });
         }
       }
       return res;
@@ -5843,13 +5908,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   (护栏在 service 内强制:±10 封顶 / ≥3 例才升级 active)。fire-and-forget,不阻塞淘汰返回;
     //   失败只记日志。蒸馏端口/落库端口都绑 candidateService 自身的公开方法(同一 service,无跨模块 repo)。
     dispatchPreferenceDistill: (ctx) => {
-      void runTopicPreferenceDistill(ctx, {
-        listDropReasons: (c) => candidateService.listDropReasons(c),
-        distill: createTopicPreferenceDistillPort({ resolveModelSpec }),
-        upsertPreference: (c, input) =>
-          candidateService.upsertTopicPreference(c, input),
-      }).catch((err) => {
-        // eslint-disable-next-line no-console
+      void runWithResolvedEffectiveSkills(ctx, ["topic.preference"], () =>
+        runTopicPreferenceDistill(ctx, {
+          listDropReasons: (c) => candidateService.listDropReasons(c),
+          distill: createTopicPreferenceDistillPort({ resolveModelSpec }),
+          upsertPreference: (c, input) =>
+            candidateService.upsertTopicPreference(c, input),
+        }),
+      ).catch((err) => {
         console.error(
           "[topic-preference] 淘汰原因蒸馏触发失败(best-effort,不影响淘汰):",
           err,
@@ -6778,6 +6844,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 query: undefined,
                 body: {
                   taskType: "transcribe.douyin",
+                  attemptId: createAiTaskAttemptId(),
                   inputData: { awemeIds },
                 },
               },
@@ -6799,6 +6866,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 query: undefined,
                 body: {
                   taskType: "reconstruct.project",
+                  attemptId: createAiTaskAttemptId(),
                   inputData: { projectId },
                 },
               },
@@ -6818,14 +6886,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             }),
         },
       );
-      // 6) [T-235d] 明细落库后 **best-effort** 触发正向归因回流(fire-and-forget,不阻塞采集/
-      //    串行闸,同 benchmark 采集尾的 teardown 模式):对「有新指标 + 有真逐字稿 + 未归因」
+      // 6) [T-235d/T-513] 明细落库后 **best-effort** 触发正向归因回流；必须 await 到当前
+      //    scheduled task 的 snapshot/lease 内（失败仍 catch，不把采集主结果改成失败）：
+      //    对「有新指标 + 有真逐字稿 + 未归因」
       //    的已发布作品逐条 AI 归因(枚举化,相对本账号基线分层)→ 落 topic_attributions →
       //    next_experiments ≤3/run 进候选池(title 前缀「实验|」,card.attributionId 溯源)。
       //    幂等锚 publication_id;未配文本模型 / 无稿 / 无指标各态诚实跳过(runner 内计数)。
       //    本轮 enqueueTranscribe 排的新逐字稿要到下一轮 self.detail 才可归因(异步,诚实滞后)。
       //    [gate-F1] 与 learnings 零接触:由发布实绩触发,独立表,不互相触发。
-      void runTopicAttribution(ctx, {
+      await runTopicAttribution(ctx, {
         // 未配文本模型 → 整轮诚实跳过(resolveModelSpec 抛 = 未配;闭包引用,无 TDZ,同 topic.daily)。
         isModelConfigured: async (c) => {
           try {
@@ -6978,7 +7047,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           })(),
         },
       }).catch((err) => {
-        // eslint-disable-next-line no-console
         console.error(
           "[topic-attribution] 归因回流触发失败(best-effort,不影响明细采集):",
           err,
@@ -7089,11 +7157,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         itemsUpdated: result.itemsUpdated + darkhorseResult.itemsUpdated,
         message: darkhorseResult.message,
       };
-      // [T-212c] 采集落库后 **best-effort** 触发拆解转化(fire-and-forget,不阻塞采集/串行闸):
+      // [T-212c/T-513] 采集落库后 **best-effort** 触发拆解转化；await 保证模型调用不逃出
+      // 当前 scheduled task 的 snapshot/lease（失败仍 catch，不影响采集主结果）：
       //   读该号待拆爆款(is_viral+pending)→ AI 拆解(runStructuredNode,不抄袭换角度)→ 高适配
       //   ≤3 条 createCandidate(source=benchmark,参考链接+爆款倍数入 angle)→ 标 teardown_status=done。
       //   拆解走真 AI(慢),故不并进采集的 await;失败只记日志,绝不回退采集结果。
-      void runBenchmarkTeardown(ctx, {
+      await runBenchmarkTeardown(ctx, {
         listPendingViralWorks: (c, limit) =>
           benchmarkService.listPendingViralWorks(c, limit),
         getPositioningBrief: async (c) => {
@@ -7126,7 +7195,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         markTeardownDone: (c, workId) =>
           benchmarkService.markTeardownDone(c, workId),
       }).catch((err) => {
-        // eslint-disable-next-line no-console
         console.error(
           "[benchmark] 拆解转化触发失败(best-effort,不影响采集):",
           err,
@@ -7276,6 +7344,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const remoteFolders = await (await loadDouyinCdp()).fetchDouyinCollectsFolders({
         authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
         gateway: douyinGateway,
+        diagnostics: {
+          requestId: ctx.requestId,
+          accountId: ctx.accountId ?? undefined,
+        },
       });
       const remoteByName = new Map(remoteFolders.map((f) => [f.name, f]));
 
@@ -7296,9 +7368,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             collectsId: remote.collectsId,
             lastSyncedAt: deps.now(),
           });
-        } catch (err) {
+        } catch {
           // 回填失败只丢诊断字段(下轮重匹配即可),不阻断该夹采集。
-          console.error(`[favorites] 夹「${folder.name}」回填 collectsId 失败:`, err);
+          console.error(
+            "[favorites] request_failed",
+            JSON.stringify({
+              category: "folder_sync",
+              requestId: ctx.requestId,
+              traceId: null,
+              accountId: ctx.accountId,
+            }),
+          );
         }
       }
 
@@ -7318,6 +7398,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             collectsId: folder.collectsId,
             maxItems: 50,
             gateway: douyinGateway,
+            diagnostics: {
+              requestId: ctx.requestId,
+              accountId: ctx.accountId ?? undefined,
+            },
           });
           const { recordedNew: n } = await favoritesService.recordItems(
             ctx,
@@ -7334,7 +7418,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         } catch (err) {
           if (err instanceof DouyinNotLoggedInError) throw err; // 登录态断 → needs_reconnect
           // 单夹失败(验证码外的网络/解析)→ 跳过该夹,不崩整批(诚实记错,同 benchmark 单源纪律)。
-          console.error(`[favorites] 收藏夹「${folder.name}」采集失败,跳过该夹:`, err);
+          console.error(
+            "[favorites] folder_ingest_failed",
+            JSON.stringify({
+              category: "service",
+              requestId: ctx.requestId,
+              traceId: null,
+              accountId: ctx.accountId,
+            }),
+          );
           messages.push(`收藏夹「${folder.name}」本次采集失败,已跳过`);
         }
       }
@@ -7361,8 +7453,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           });
           await favoritesService.markItemPromoted(ctx, item.id, cand.id);
           promoted += 1;
-        } catch (err) {
-          console.error(`[favorites] 台账条目 ${item.id} 进池失败(下轮重试):`, err);
+        } catch {
+          console.error(
+            "[favorites] request_failed",
+            JSON.stringify({
+              category: "candidate_promotion",
+              requestId: ctx.requestId,
+              traceId: null,
+              accountId: ctx.accountId,
+            }),
+          );
         }
       }
 
@@ -7388,9 +7488,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           distillKnowledge: (c, content) =>
             runKnowledgeDistill(c, { content }, { resolveModelSpec }),
         });
-      } catch (err) {
+      } catch {
         // 蒸馏链整体失败(不该发生;runner 内已逐条 best-effort)→ 记日志,采集主流程照常返回。
-        console.error(`[favorites] 蒸馏链触发失败(不影响采集):`, err);
+        console.error(
+          "[favorites] request_failed",
+          JSON.stringify({
+            category: "distillation",
+            requestId: ctx.requestId,
+            traceId: null,
+            accountId: ctx.accountId,
+          }),
+        );
       }
 
       const distillNote =
@@ -7417,24 +7525,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 调度器共用。**串行闸让同时只跑一个采集 job**(防两个 Chromium 各打一 channel 并存),与
   // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
   // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
-  dispatchScheduledCollection = (ctx, task) => {
-    enqueueCollectionRun(() =>
-      runScheduledCollection(ctx, task, {
-        ai: {
-          markRunning: (c, id) => aiService.markRunning(c, id),
-          recordStep: (c, id, input) => aiService.recordStep(c, id, input),
-          markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-          markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-        },
-        runs: {
-          updateRun: (c, runId, patch) =>
-            schedulingService.updateRun(c, runId, patch),
-        },
-        collectors: scheduledCollectors,
-        // runner 不 import douyin-cdp:未登录判别经注入(→ needs_reconnect,§6)。
-        isNotLoggedInError: (err) => err instanceof DouyinNotLoggedInError,
-        now: deps.now,
-      }),
+  const dispatchScheduledCollection = (ctx: RequestContext, task: {
+    id: string;
+    taskType: string;
+    inputData: Record<string, unknown>;
+  }) => {
+    return runTaskWithEffectiveSkillSnapshot(ctx, task.id, () =>
+      enqueueCollectionRun(() =>
+        runScheduledCollection(ctx, task, {
+          ai: {
+            markRunning: (c, id) => aiService.markRunning(c, id),
+            recordStep: (c, id, input) => aiService.recordStep(c, id, input),
+            markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+            markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+          },
+          runs: {
+            updateRun: (c, runId, patch) =>
+              schedulingService.updateRun(c, runId, patch),
+          },
+          collectors: scheduledCollectors,
+          // runner 不 import douyin-cdp:未登录判别经注入(→ needs_reconnect,§6)。
+          isNotLoggedInError: (err) => err instanceof DouyinNotLoggedInError,
+          now: deps.now,
+        }),
+      ),
     );
   };
 
@@ -7479,7 +7593,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       updateRun: (c, runId, patch) =>
         schedulingService.updateRun(c, runId, patch),
     },
-    dispatch: (ctx, task) => dispatchScheduledCollection?.(ctx, task),
+    dispatch: (ctx, task) => {
+      void dispatchScheduledCollection?.(ctx, task);
+    },
     now: deps.now,
     // [T-201d] 隐藏号定时任务停跑 gate 的查号端口:复用 platformAccountService.getAccount
     //   (自带 ownership gate)取该号 status;号不存在/越权/查失败 → null(降级放行,不误停)。
@@ -7494,7 +7610,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   job(self.metrics / self.detail / comments)+ 按序初始化触发一次拉全量(triggerScheduledJob
   //   经 triggerDeps → dispatch 挂 gate-F5 串行链)。用**请求 ctx**(带当前号 accountId,init 采集
   //   走该号 authDir);整体经 void 包裹不阻塞绑定返回。schedulingService/triggerDeps 均已在上方装配。
-  bootstrapDouyinOnBind = (ctx) => {
+  const bootstrapDouyinOnBind = (ctx: RequestContext) => {
     // [T-201a2] 登录态锚点对齐:新绑号 scan 时 ctx.accountId=null(号是 scan 后 ensureAccount 才建)→
     //   loginDouyin 的 `login({accountId: null})` 把登录态落 `.auth/douyin/_default`;而账号是真 id →
     //   设置/自动化按号探针 statusDouyin(带 x-account-id)读 `.auth/douyin/<id>` 找不到登录 → 误报
@@ -7845,7 +7961,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   projects.transcribe(解析 platformRef 抖音锚 → ai transport 排 transcribe.douyin →
   //   live dispatch 后台跑;无锚 → ValidationError 400)。逻辑抽在 projects-transcribe-wrap.ts
   //   工厂(注入假 transports 可确定性单测,同文件头注释);此处只绑真 projects + ai。
-  const projectsWithTranscribe = createProjectsWithTranscribe({ projects, ai });
+  const projectsWithTranscribe = createProjectsWithTranscribe({
+    projects,
+    ai,
+    artifacts,
+  });
   // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
   const trendSources = createTrendSourcesTransport(() => trendSourcesService);
   // [T-235c] 指定收藏夹登记 CRUD transport(favoritesService 已在 collectors 装配前创建,复用同一实例)。
@@ -8205,13 +8325,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     assets: {
-      getProjectAssetStats: async (_ctx, _projectId) => ({
+      getProjectAssetStats: async () => ({
         assetStats: [],
         recentFiles: [],
       }),
     },
     publishing: {
-      getProjectPublishing: async (_ctx, _projectId) => [],
+      getProjectPublishing: async () => [],
     },
   });
 
@@ -8245,7 +8365,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     analytics: {
-      getPublishingMetrics: async (_ctx) => ({
+      getPublishingMetrics: async () => ({
         metrics: [],
         platformComparison: [],
         trend: [],
@@ -8529,8 +8649,45 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // updateProfile, the same boundary as the read above. Settings owns no
     // `users` repo (foundation §1: no cross-module repository import).
     (ctx, patch) => identity.updateProfile(ctx, patch),
+    {
+      get(skillId) {
+        const base = getOfficialSkillBase(skillId);
+        return base
+          ? {
+              ...base,
+              system: base.methodSystem,
+              supportsCompletionPolicySchema: () =>
+                base.completionPolicyAdapter !== null,
+            }
+          : null;
+      },
+      list() {
+        return listOfficialSkillBases().map((base) => ({
+          ...base,
+          system: base.methodSystem,
+          supportsCompletionPolicySchema: () =>
+            base.completionPolicyAdapter !== null,
+        }));
+      },
+    },
   );
   const settings = createSettingsTransport(() => settingsService);
+  resolveEffectiveSkillSnapshotForRuntime =
+    createEffectiveSkillSnapshotResolver({
+      officialSkills: {
+        get: getOfficialSkillBase,
+        list: listOfficialSkillBases,
+        platformPolicy: () => ({
+          version: PLATFORM_POLICY_VERSION,
+          text: PLATFORM_POLICY_TEXT,
+        }),
+      },
+      accountOverlays: {
+        listBySkillIds: (ctx, skillIds) =>
+          settingsRepo.listAccountSkillOverlays(ctx, skillIds),
+      },
+      now: deps.now,
+    });
 
   // T-147 P5 — 装配一机一码激活门 service(复用上面解析的 masterKey 加密激活码,同 db)。
   // web/dev 装了不触发(门控前置 isDesktopRuntime 判 false 直接放行);桌面态才真 check/activate。
@@ -8699,8 +8856,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // → 该 port 调用本函数)② ai.tasks.create 拦截分支(下方 ai transport)。后台跑
   // runScriptReview → L1 违禁词 lint(active 词表)+ L2 语义审(script.review capability,
   // 预设豆包,未配回退默认并标注非专用)→ 落 script_review_reports(绑 artifactVersion)。
-  dispatchScriptReview = (ctx, task) => {
-    void runScriptReview(ctx, task, {
+  const dispatchScriptReview = (
+    ctx: RequestContext,
+    task: {
+      id: string;
+      projectId: string | null;
+      inputData: Record<string, unknown>;
+    },
+  ) => {
+    return runTaskWithEffectiveSkillSnapshot(ctx, task.id, () =>
+      runScriptReview(ctx, task, {
       ai: aiService,
       positioning: {
         getPositioningCenter: (c: RequestContext) =>
@@ -8761,6 +8926,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       reportSink: {
         saveReport: (c, input) => reviewGateService.saveReport(c, input),
       },
+      }),
+    ).catch(async (error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      await aiService.markFailed(ctx, task.id, message).catch(() => undefined);
     });
   };
 
@@ -9309,6 +9478,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // these to assemble the system prompt; AI produces candidates (采纳 gate), never entities.
   const chatRuntime: ChatRuntime = {
     ai: aiService,
+    resolveEffectiveSkillSnapshot: async (ctx, requiredSkillIds) => {
+      if (!resolveEffectiveSkillSnapshotForRuntime) {
+        throw new Error(
+          "[T-513] Effective Skill snapshot resolver 尚未完成装配",
+        );
+      }
+      return resolveEffectiveSkillSnapshotForRuntime(ctx, requiredSkillIds);
+    },
+    runWithEffectiveSkills: runWithResolvedEffectiveSkills,
     resolveModelSpec,
     // [T-239b] 备用对话模型端口(只认 chat.fallback 专配行)。
     resolveFallbackModelSpec,
@@ -9926,6 +10104,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               url: p.externalUrl ?? null,
               publishedAt: p.publishedAt ?? null,
               projectTitle: p.title ?? "",
+              coverAssetId: p.coverAssetId ?? null,
               status: p.status,
             })),
             // total 下界:本页起点 + 本页条数 (+1 当还有更多)。工具 hasMore 精确,total 诚实近似。
@@ -10752,6 +10931,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query: undefined,
           body: {
             taskType: "asset.generate",
+            attemptId: createAiTaskAttemptId(),
             inputData: {
               kind: input.kind,
               prompt: input.prompt,
@@ -10851,6 +11031,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query: undefined,
           body: {
             taskType: "planning.thesis",
+            attemptId: createAiTaskAttemptId(),
             inputData: {
               artifactId,
               projectId: input.projectId,
@@ -10886,6 +11067,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query: undefined,
           body: {
             taskType: "cover.generate",
+            attemptId: createAiTaskAttemptId(),
             inputData: {
               projectId: input.projectId,
               ...(input.topic ? { topic: input.topic } : {}),
@@ -10978,6 +11160,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query: undefined,
           body: {
             taskType: "script.draft",
+            attemptId: createAiTaskAttemptId(),
             inputData: {
               artifactId,
               projectId: input.projectId,
@@ -11033,6 +11216,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query: undefined,
           body: {
             taskType: "publish.platform_adapt",
+            attemptId: createAiTaskAttemptId(),
             inputData: {
               outputId,
               scriptText: currentScript,
@@ -11063,7 +11247,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ) => {
       const res = await projectsWithTranscribe.request(
         ENDPOINTS.transcribeProjectWork,
-        { params: { projectId: input.projectId }, query: undefined, body: undefined },
+        {
+          params: { projectId: input.projectId },
+          query: undefined,
+          body: { attemptId: createAiTaskAttemptId() },
+        },
         ctx,
       );
       const data = (res as { data?: { taskId?: unknown } }).data;
@@ -11077,33 +11265,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
-  // ── T-040a 提示词/skill 服务端可配(装配接线,SPEC 2026-07-02 §4.2)──────────────
-  // db 句柄可用后调一次:读 skill_config_overrides 全表 → 归一空串→undefined → 调既有
-  // overrideTemplatesFromConfig 套进常驻 REGISTRY([gate-F1] 内部首行先 registerAllTemplates
-  // 保证 18 个 id 就位)。表空/未配 → 归一后逐字段 undefined → getTemplate 仍返内置(零风险回退)。
-  // 覆盖 chat 三面 skill(chat-runner 走 getTemplate,本片即可配);结构化 runner 走 import 常量,
-  // 待 T-040b 改 getTemplate 后才吃到覆盖(诚实标注,不越界)。fire-and-forget 内部逐条 try/catch,
-  // 坏 id 只记日志跳过、不阻塞装配。
-  // T-040c:把「重读表+重套覆盖」闭包在 db 可见处,启动装配调一次;prompts.put 后经 bundle
-  // 再调一次做热更(compositeTransport 那层没有 db,故经 bundle 暴露)。
-  // [T-166 / P3] 启动拉一次远程 prompt 包(验签 + 解析在 fetchRemotePromptOverrides 内;任何失败
-  // →[] 诚实降级、纯本地不崩)。缓存,后续 reapply(prompts.put/rollback 热更)复用,不每次打网络。
-  // 未配 PROMPT_BUNDLE_URL/PUBLIC_KEY → [] → 远程层关(零副作用,现有纯本地行为不变)。托管 endpoint
-  // 待产品方拍板;客户端只认「一个可配的 signed bundle URL」,与托管解耦。**skill 粒度锁守 D1**
-  // (用户本地定制永远赢)在 applySkillConfigOverridesFromDb 里。
-  const remotePromptOverrides = await fetchRemotePromptOverrides({
-    url: process.env.PROMPT_BUNDLE_URL,
-    publicKey: process.env.PROMPT_BUNDLE_PUBLIC_KEY,
-  });
-  const reapplySkillOverrides = () =>
-    applySkillConfigOverridesFromDb({
-      readPort: createPgliteSkillConfigOverrideReadPort(db),
-      remoteOverrides: remotePromptOverrides,
-    });
-  await reapplySkillOverrides();
-
   return {
-    reapplySkillOverrides,
     projects: projectsWithTranscribe, // wrap:透传 CRUD + 拦 projects.transcribe(T-374)
     taxonomy,
     notifications,
@@ -11198,10 +11360,6 @@ async function getNotifications(): Promise<Transport> {
 
 async function getSearch(): Promise<Transport> {
   return (await getBundle()).search;
-}
-
-async function getSettings(): Promise<Transport> {
-  return (await getBundle()).settings;
 }
 
 async function getKnowledge(): Promise<Transport> {
@@ -11451,19 +11609,7 @@ export const compositeTransport: Transport = {
     // §1 registry).
     if (SETTINGS_OPS.has(endpoint.id)) {
       const bundle = await getBundle();
-      const result = await bundle.settings.request(endpoint, input, ctx);
-      // T-040c 热更:提示词/skill 覆盖 put 成功后,**重读表 + 重套进常驻 REGISTRY**
-      // (overrideTemplatesFromConfig 是「套一次进内存」,非每次 getTemplate 查库)——
-      // 于是下一次 getTemplate/装配即读到新值,**不必重启**。fire-and-forget catch,
-      // 失败只吞、不影响 put 本身的返回。
-      // [T-165] rollback 同样改当前生效配置 → 一并触发热更(否则回滚后要重启才生效)。
-      if (
-        endpoint.id === "settings.prompts.put" ||
-        endpoint.id === "settings.prompts.rollback"
-      ) {
-        await bundle.reapplySkillOverrides().catch(() => {});
-      }
-      return result;
+      return bundle.settings.request(endpoint, input, ctx);
     }
     // Knowledge ops (module 06) — list/create/get + revisions.create +
     // relations.create served by the module's own user-scoped transport over the

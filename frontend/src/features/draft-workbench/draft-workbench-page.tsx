@@ -65,9 +65,12 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               真实导入作品
             </span>
           ) : null}
-          {/* [T-374] 有抖音锚(douyinExternalId)才渲染;位置用户拍板:「看复盘」左边。 */}
-          {project.douyinExternalId ? (
-            <TranscribeNowButton projectId={project.id} />
+          {/* [T-505] 只在有抖音锚且尚无真稿时渲染；queued/running 从持久任务恢复并置灰。 */}
+          {project.douyinExternalId && project.transcriptState !== "done" ? (
+            <TranscribeNowButton
+              projectId={project.id}
+              initialState={project.transcriptState}
+            />
           ) : null}
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction

@@ -9,6 +9,8 @@
  * 本卡。本卡据 taskId **轮询** task/candidate(与 ChatThesisCard 同款循环):
  *   running/queued → 进行中;
  *   awaiting_confirmation → 拉 candidate 渲整稿分镜候选 +「采纳写入稿面」
+ *     (T-512:只消费服务端 validationStatus/validationErrors/canAdopt；旧候选缺字段
+ *      fail-closed，前端不按段数或 CTA 自行判断)
  *     (client.confirmTask → artifact_version 分支 append 进项目 output_script 当前版本 →
  *      **发 SCRIPT_WRITE 局部刷新信号**把新整稿直接推给稿面编辑器 setContent,不整页 router.refresh);
  *   cancelled/failed → 失败(含未配 script.draft 模型)→ 卡内诚实「去设置 / 重试」。
@@ -24,11 +26,18 @@ import { client } from "@/lib/contract-client";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { emitScriptWrite } from "@/features/script/script-write-signal";
 import type { ScriptSectionView } from "@/types/view-models";
+import type {
+  AITaskResultDataResource,
+  AITaskResultResource,
+} from "@creatoros/contract";
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 整稿生成可达分钟级(弱模型更慢)
 
 type Phase = "running" | "review" | "done" | "error";
+
+const LEGACY_VALIDATION_ERROR =
+  "这个旧候选缺少完整性校验，已禁止采纳。请重新生成后再写入稿面。";
 
 export interface ChatScriptSection {
   heading: string;
@@ -54,6 +63,30 @@ function parseSections(resultData: Record<string, unknown>): ChatScriptSection[]
       return { heading, body };
     })
     .filter((s): s is ChatScriptSection => s !== null);
+}
+
+function readAdoptionGate(resultData: AITaskResultDataResource): {
+  canAdopt: boolean;
+  errors: string[];
+} {
+  const { validationStatus, validationErrors, canAdopt } = resultData;
+  if (
+    validationStatus === "valid" &&
+    canAdopt === true &&
+    Array.isArray(validationErrors) &&
+    validationErrors.length === 0
+  ) {
+    return { canAdopt: true, errors: [] };
+  }
+  if (
+    validationStatus === "invalid" &&
+    canAdopt === false &&
+    Array.isArray(validationErrors) &&
+    validationErrors.length > 0
+  ) {
+    return { canAdopt: false, errors: validationErrors };
+  }
+  return { canAdopt: false, errors: [LEGACY_VALIDATION_ERROR] };
 }
 
 // 采纳后局部刷新用:整稿分段 → 编辑器富文本 HTML(与稿面读侧 sectionsToHtml 同一桥,忠实往返)。
@@ -91,6 +124,8 @@ export function ChatScriptDraftCard({
   const [sections, setSections] = React.useState<ChatScriptSection[]>([]);
   const [expanded, setExpanded] = React.useState(false);
   const [confirming, setConfirming] = React.useState(false);
+  const [canAdopt, setCanAdopt] = React.useState(false);
+  const [validationErrors, setValidationErrors] = React.useState<string[]>([]);
 
   // 轮询 task/candidate(仿 ChatThesisCard,从已 dispatch 的 taskId 起)。取消只靠本效应闭包内
   // 的 abandoned(effect cleanup 置真)—— **不用 mount-unmount ref**:React StrictMode(dev 默认开)
@@ -116,20 +151,30 @@ export function ChatScriptDraftCard({
         }
         if (status === "awaiting_confirmation") {
           try {
+            // contract-client 的泛型目前没有把 isList 投影成数组，运行时端点返回的确是
+            // AITaskResultResource[]；在此保留显式边界收窄，元素 resultData 仍由 typed
+            // aiTaskResultDataResource 约束，不再手写三字段形状。
             const results = (await client.listTaskResults({
               params: { taskId },
               query: undefined,
               body: undefined,
-            })) as unknown as Array<{ resultData: Record<string, unknown> }>;
+            })) as unknown as AITaskResultResource[];
             const last = results[results.length - 1];
-            const got = last ? parseSections(last.resultData) : [];
+            const got = last
+              ? parseSections(last.resultData as Record<string, unknown>)
+              : [];
+            const gate = last
+              ? readAdoptionGate(last.resultData)
+              : { canAdopt: false, errors: [LEGACY_VALIDATION_ERROR] };
             if (abandoned) return;
-            if (got.length > 0) {
-              setSections(got);
-              setPhase("review");
-            } else {
-              setPhase("error");
-            }
+            setSections(got);
+            setCanAdopt(gate.canAdopt && got.length > 0);
+            setValidationErrors(
+              got.length > 0
+                ? gate.errors
+                : ["候选内容无法读取，已禁止采纳。请重新生成。"],
+            );
+            setPhase("review");
           } catch {
             if (!abandoned) setPhase("error");
           }
@@ -149,7 +194,7 @@ export function ChatScriptDraftCard({
   }, [taskId, error, pollIntervalMs]);
 
   const adopt = React.useCallback(async () => {
-    if (!taskId || sections.length === 0) return;
+    if (!taskId || !canAdopt || sections.length === 0) return;
     setConfirming(true);
     try {
       // confirmTask:artifact_version 分支 append 整稿新版本到项目 output_script(铁律②人点才落)。
@@ -172,7 +217,7 @@ export function ChatScriptDraftCard({
     } finally {
       setConfirming(false);
     }
-  }, [taskId, sections, router]);
+  }, [taskId, canAdopt, sections, router]);
 
   const shown = expanded ? sections : sections.slice(0, 3);
   return (
@@ -195,24 +240,41 @@ export function ChatScriptDraftCard({
         </div>
       ) : null}
 
-      {phase === "review" && sections.length > 0 ? (
+      {phase === "review" ? (
         <div data-slot="chat-script-review" className="flex flex-col gap-1.5">
-          <ol className="flex flex-col gap-1">
-            {shown.map((s, i) => (
-              <li
-                key={`${i}-${s.heading.slice(0, 8)}`}
-                data-slot="chat-script-section"
-                className="rounded-md border border-border/70 bg-surface-subtle/50 px-2.5 py-1.5"
-              >
-                <p className="text-[11px] font-semibold text-foreground">
-                  {s.heading}
+          {shown.length > 0 ? (
+            <ol className="flex flex-col gap-1">
+              {shown.map((s, i) => (
+                <li
+                  key={`${i}-${s.heading.slice(0, 8)}`}
+                  data-slot="chat-script-section"
+                  className="rounded-md border border-border/70 bg-surface-subtle/50 px-2.5 py-1.5"
+                >
+                  <p className="text-[11px] font-semibold text-foreground">
+                    {s.heading}
+                  </p>
+                  <p className="mt-0.5 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">
+                    {s.body}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+          {!canAdopt && validationErrors.length > 0 ? (
+            <div
+              data-slot="chat-script-validation-errors"
+              className="rounded-md border border-destructive/30 bg-destructive/5 px-2.5 py-2"
+            >
+              {validationErrors.map((message) => (
+                <p
+                  key={message}
+                  className="text-[12px] leading-relaxed text-destructive"
+                >
+                  {message}
                 </p>
-                <p className="mt-0.5 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">
-                  {s.body}
-                </p>
-              </li>
-            ))}
-          </ol>
+              ))}
+            </div>
+          ) : null}
           {sections.length > 3 ? (
             <button
               type="button"
@@ -230,15 +292,17 @@ export function ChatScriptDraftCard({
             ) : (
               <span />
             )}
-            <button
-              type="button"
-              data-slot="chat-script-write"
-              disabled={confirming}
-              onClick={() => void adopt()}
-              className="inline-flex h-7 items-center rounded-control bg-brand px-3 text-[11px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
-            >
-              {confirming ? "写入中…" : "采纳写入稿面"}
-            </button>
+            {canAdopt ? (
+              <button
+                type="button"
+                data-slot="chat-script-write"
+                disabled={confirming}
+                onClick={() => void adopt()}
+                className="inline-flex h-7 items-center rounded-control bg-brand px-3 text-[11px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+              >
+                {confirming ? "写入中…" : "采纳写入稿面"}
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}

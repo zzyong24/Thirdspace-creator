@@ -24,6 +24,13 @@ export interface AgentStepEvent {
   toolCalls: { toolName: string; input: unknown }[];
   /** 本步的终止原因(stop | tool-calls | length | …)。 */
   finishReason: string;
+  /** provider 可提供时记录真实 token 用量；缺失即不伪造。 */
+  usage?: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    cachedTokens: number | null;
+    totalTokens: number | null;
+  };
 }
 
 export interface RunAgentNodeOptions {

@@ -12,6 +12,7 @@ import {
   fetchDouyinCommentsForWorks,
   fetchDouyinMetrics,
   fetchDouyinIdentity,
+  fetchDouyinUserPosts,
   locatePlaywrightCli,
   DouyinNotLoggedInError,
   DouyinFavoritesBrowserLockedError,
@@ -19,6 +20,8 @@ import {
   DouyinFavoritesInvalidResponseError,
   DouyinFavoritesNetworkError,
   DouyinFavoritesSessionExpiredError,
+  DouyinNoValidResponseError,
+  DouyinResponseShapeChangedError,
   parseDouyinVideoUrl,
   extractDouyinShareUrl,
   resolveDouyinShareTarget,
@@ -1344,6 +1347,104 @@ describe("[T-490] 零作品账号身份读取", () => {
     });
     expect(calls.goto[0]).toContain("creator-micro/home");
     expect(calls.close).toBe(1);
+  });
+});
+
+describe("[T-514] 对标博主作品数的证据边界", () => {
+  function makeProfileContext(responsePayload?: unknown) {
+    type ProfileResp = { url(): string; json(): Promise<unknown> };
+    const handlers: Array<(response: ProfileResp) => void> = [];
+    const page = {
+      on(_event: "response", handler: (response: ProfileResp) => void) {
+        handlers.push(handler);
+      },
+      async goto() {
+        if (responsePayload !== undefined) {
+          const response: ProfileResp = {
+            url: () =>
+              "https://www.douyin.com/aweme/v1/web/aweme/post/?count=18",
+            json: () => Promise.resolve(responsePayload),
+          };
+          for (const handler of handlers) handler(response);
+        }
+      },
+      async waitForTimeout() {
+        await Promise.resolve();
+      },
+      async evaluate() {
+        return "";
+      },
+      keyboard: { async press() {} },
+      mouse: { async wheel() {} },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return [{ name: "sessionid" }];
+      },
+      async close() {},
+    };
+    type OpenContext = NonNullable<
+      Parameters<typeof fetchDouyinUserPosts>[1]
+    >["openContext"];
+    type Context = Awaited<ReturnType<NonNullable<OpenContext>>>;
+    const openContext: NonNullable<OpenContext> = async () =>
+      context as unknown as Context;
+    return { openContext };
+  }
+
+  it("没有捕获到作品列表响应时不得伪装成真实 0 条", async () => {
+    const { openContext } = makeProfileContext();
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-no-response",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNoValidResponseError);
+  });
+
+  it("命中作品接口但返回结构变化时不得伪装成真实 0 条", async () => {
+    const { openContext } = makeProfileContext({
+      status_code: 0,
+      unexpected_items: [],
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-shape-changed",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinResponseShapeChangedError);
+  });
+
+  it("只有结构有效且列表确实为空时才返回真实 0 条", async () => {
+    const { openContext } = makeProfileContext({
+      aweme_list: [],
+      has_more: false,
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-real-zero",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).resolves.toEqual([]);
   });
 });
 

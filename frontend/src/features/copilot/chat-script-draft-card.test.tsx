@@ -53,6 +53,9 @@ beforeEach(() => {
       resultData: {
         body: "# 分镜脚本",
         summary: "整稿草稿",
+        validationStatus: "valid",
+        validationErrors: [],
+        canAdopt: true,
         contentData: { sections: CANDIDATE_SECTIONS, hook: "H", cta: "C" },
       },
     },
@@ -97,6 +100,93 @@ describe("ChatScriptDraftCard(对话内整稿卡,T-268 异步)", () => {
       document.querySelector('[data-slot="chat-script-write"]'),
     ).toBeTruthy();
     expect(confirmTask).not.toHaveBeenCalled();
+  });
+
+  it("服务端判定单段候选可采纳时仍开放采纳，前端不硬编码段数或 CTA", async () => {
+    listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          validationStatus: "valid",
+          validationErrors: [],
+          canAdopt: true,
+          contentData: {
+            sections: [{ heading: "独白", body: "当前 Skill 允许的一段式独白" }],
+          },
+        },
+      },
+    ]);
+
+    render(
+      <ChatScriptDraftCard
+        taskId="task-one-segment"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+
+    expect(await screen.findByText("当前 Skill 允许的一段式独白")).toBeTruthy();
+    expect(screen.getByText("采纳写入稿面")).toBeTruthy();
+  });
+
+  it("invalid 候选显示服务端人话原因并隐藏采纳按钮", async () => {
+    listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          validationStatus: "invalid",
+          validationErrors: [
+            "当前写稿技能要求至少 6 段，本次只有 1 段，请重新生成。",
+          ],
+          canAdopt: false,
+          contentData: {
+            sections: [{ heading: "开场", body: "只有一段" }],
+          },
+        },
+      },
+    ]);
+
+    render(
+      <ChatScriptDraftCard
+        taskId="task-invalid"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+
+    expect(
+      await screen.findByText(
+        "当前写稿技能要求至少 6 段，本次只有 1 段，请重新生成。",
+      ),
+    ).toBeTruthy();
+    expect(
+      document.querySelector('[data-slot="chat-script-write"]'),
+    ).toBeNull();
+    expect(confirmTask).not.toHaveBeenCalled();
+  });
+
+  it("旧候选缺少完整性三字段时 fail-closed，提示重新生成且不可采纳", async () => {
+    listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          contentData: { sections: CANDIDATE_SECTIONS },
+        },
+      },
+    ]);
+
+    render(
+      <ChatScriptDraftCard
+        taskId="task-legacy"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+
+    expect(await screen.findByText(/旧候选缺少完整性校验/)).toBeTruthy();
+    expect(
+      document.querySelector('[data-slot="chat-script-write"]'),
+    ).toBeNull();
   });
 
   it("点「采纳写入稿面」→ confirmTask + 发 SCRIPT_WRITE 局部刷新信号(不整页 refresh)", async () => {

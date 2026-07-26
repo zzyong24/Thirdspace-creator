@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
-import { AuthenticationError } from "@creatoros/backend/modules/identity";
+import {
+  AuthenticationError,
+  OwnershipError,
+} from "@creatoros/backend/modules/identity";
 import { getChatRuntime } from "@/server/persistence-client";
 import { runKnowledgeClassify } from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../../v1/auth/_session";
@@ -40,20 +43,32 @@ export async function POST(req: Request): Promise<Response> {
   const rawToken = readSessionCookie(req);
   let ctx: RequestContext;
   try {
-    ctx = await resolveRequestContext(rawToken);
+    ctx = await resolveRequestContext(
+      rawToken,
+      req.headers.get("x-account-id"),
+      { rejectInvalidToken: true },
+    );
   } catch (err) {
     if (err instanceof AuthenticationError) {
       return NextResponse.json({ error: err.message }, { status: 401 });
+    }
+    if (err instanceof OwnershipError) {
+      return NextResponse.json({ error: err.message }, { status: 404 });
     }
     throw err;
   }
 
   const runtime = await getChatRuntime();
   try {
-    const classification = await runKnowledgeClassify(
+    const classification = await runtime.runWithEffectiveSkills(
       ctx,
-      { content },
-      { resolveModelSpec: runtime.resolveModelSpec },
+      ["knowledge.classify"],
+      () =>
+        runKnowledgeClassify(
+          ctx,
+          { content },
+          { resolveModelSpec: runtime.resolveModelSpec },
+        ),
     );
     return NextResponse.json({ classification });
   } catch (err) {

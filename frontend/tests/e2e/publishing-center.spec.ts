@@ -68,6 +68,9 @@ test.describe("Publishing Center page", () => {
     await expect(
       main.locator('[data-slot="batch-operation-bar"]'),
     ).toHaveCount(0);
+    await expect(
+      main.locator('[data-slot="publication-row-checkbox"]'),
+    ).toHaveCount(0);
 
     // PublicationTable with 7 approved columns in spec order.
     const table = main.locator('[data-slot="publication-table"]');

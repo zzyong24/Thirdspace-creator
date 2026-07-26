@@ -111,8 +111,8 @@ export interface SettingsPageProps {
    */
   readonly preferences?: PreferencesState;
   /**
-   * [T-077a] 技能清单(route 经 ai-worker `listTemplates()` + `settings.prompts.list`
-   * 投影成可序列化条目)。设置弹窗「技能」页签据此渲列表/详情;缺省(单测)→ 诚实空态。
+   * [T-513] 技能清单由 `settings.prompts.list` 返回 official + 当前账号增量的联合目录。
+   * 前端不再导入本地 registry 自行合并；缺省(单测)→ 诚实空态。
    */
   readonly skills?: readonly SkillItem[];
   /**

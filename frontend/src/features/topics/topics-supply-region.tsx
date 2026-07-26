@@ -5,8 +5,8 @@
  * 2026-07-11-daily-topic-autopilot §2.5,用户拍板三决策):
  *
  *  ① `TodayTopicsStrip` 今日新选题 —— 页顶**横向滚动卡片带**(不挤压下方候选池三栏)。
- *     数据 = candidates.list 前端按 createdAt≥今日零点过滤(契约 query 不支持日期过滤,页大小
- *     100 内前端过滤可接受);来源徽标 = source + title 前缀解析(「🔥跟拍|」=T-235b 黑马雷达、
+ *     数据 = candidates.list?sort=createdAt&createdAfter=今日零点，SQL 先按日期过滤，
+ *     前端再做防御性过滤；来源徽标 = source + title 前缀解析(「🔥跟拍|」=T-235b 黑马雷达、
  *     「实验|」=T-235d 归因回流);一句依据 = card.oneLiner / angle 截断。空态诚实
  *     「今晨采集无新信号」。
  *  ② `SupplyHealthStrip` 供给链健康条 —— 今日条带上方**灰色细条一行**(仿 dy-- 顶部流水线):

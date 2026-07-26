@@ -170,6 +170,11 @@ export {
 export {
   registerTemplate,
   registerAllTemplates,
+  getOfficialTemplate,
+  listOfficialTemplates,
+  exportOfficialSkillSchema,
+  getOfficialSkillBase,
+  listOfficialSkillBases,
   getTemplate,
   hasTemplate,
   listTemplates,
@@ -184,6 +189,35 @@ export {
   _resetRegistry,
   type SkillConfigOverride,
 } from "./prompt/registry";
+export {
+  EffectiveSkillRuntimeError,
+  runWithEffectiveSkillSnapshot,
+  getActiveEffectiveSkillSnapshot,
+  hasActiveEffectiveSkillSnapshot,
+  getEffectiveSkill,
+  getEffectiveTemplate,
+  getEffectiveTools,
+  getEffectiveContextRequirements,
+  resolveEffectiveOutputSchema,
+  type CompletionPolicyAdapterRef,
+  type CompletionPolicyV1,
+  type EditableSkillField,
+  type EffectiveSkill,
+  type EffectiveSkillSnapshotV1,
+  type OfficialSkillBase,
+} from "./prompt/effective-skill-runtime";
+export {
+  CompletionPolicyRuntimeError,
+  registerOfficialCompletionPolicyAdapter,
+  listOfficialCompletionPolicyAdapters,
+  validateCompletionPolicy,
+  evaluateCompletionPolicy,
+  enforceCompletionPolicy,
+  type CompletionPolicyAdapter,
+  type CompletionPolicyEvaluation,
+  type CompletionPolicyFailureEvidence,
+  type CompletionPolicyViolation,
+} from "./prompt/completion-policy";
 // Skill 输出契约 ⇄ JSON Schema 配置口子(SPEC §4.3):导出(zod→JSON Schema)+ 回灌(JSON Schema→ajv 校验器)。
 export {
   exportZodToJsonSchema,
@@ -194,6 +228,8 @@ export {
 export { TOPIC_GENERATE_TEMPLATE } from "./prompt/templates/topic-generate";
 export {
   SCRIPT_DRAFT_TEMPLATE,
+  SCRIPT_DRAFT_COMPLETION_POLICY,
+  SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER,
   scriptDraftSchema,
   scriptShotSchema,
   // [T-387b] 结构化视觉意图 schema(shots[].visual 可选:description/assetRefs/missing)。

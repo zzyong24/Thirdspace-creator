@@ -87,6 +87,7 @@ function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
       currentStage: "review",
       imported: false,
       douyinExternalId: null,
+      transcriptState: "idle",
     },
     scriptArtifactId: null,
     outputId: "out-1",
@@ -123,6 +124,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
             currentStage: "review",
             imported: true,
             douyinExternalId: null,
+            transcriptState: "idle",
           },
         })}
       />,
@@ -155,6 +157,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
             currentStage: "review",
             imported: true,
             douyinExternalId: null,
+            transcriptState: "idle",
           },
           script: { editorHtml: "<p>已有稿</p>", sections: [], versionCount: 1 },
         })}
@@ -192,6 +195,7 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
             currentStage: "review",
             imported: true,
             douyinExternalId: "aweme-1",
+            transcriptState: "idle",
           },
         })}
       />,
@@ -199,6 +203,24 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
     const btn = container.querySelector('[data-slot="mock-transcribe-now"]');
     expect(btn).not.toBeNull();
     expect(btn?.getAttribute("data-project-id")).toBe("p-1");
+  });
+
+  it("已有逐字稿 → 即使有抖音锚也不再渲染二次抓取入口", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          project: {
+            ...baseVm().project,
+            imported: true,
+            douyinExternalId: "aweme-1",
+            transcriptState: "done",
+          },
+        })}
+      />,
+    );
+    expect(
+      container.querySelector('[data-slot="mock-transcribe-now"]'),
+    ).toBeNull();
   });
 
   it("无 douyinExternalId(手动项目)→ 不渲染(诚实,无锚无法抓)", () => {

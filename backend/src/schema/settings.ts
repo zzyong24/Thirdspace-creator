@@ -1,5 +1,12 @@
 import type { InferSelectModel } from "drizzle-orm";
-import { pgTable, text, boolean, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  boolean,
+  integer,
+  jsonb,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // Settings tables (data-model USER_PREFERENCE / MODEL_CONFIGURATION /
 // AGENT_CONFIGURATION; SPEC §13 "系统" group). Canonical defs live in shared
@@ -125,6 +132,65 @@ export type SkillConfigOverrideVersionRow = InferSelectModel<
   typeof skillConfigOverrideVersions
 >;
 
+// T-513 — 账号增量 Skill 覆盖。旧 skill_config_overrides 只保留作离线人工取证，
+// 产品设置/API/运行时不得读取。当前行与历史都携带 user+account+skill 联合归属；
+// row_revision 是 CAS token，不是展示版本。
+export const accountSkillOverlays = pgTable(
+  "account_skill_overlays",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    accountId: text("account_id").notNull(),
+    skillId: text("skill_id").notNull(),
+    rowRevision: integer("row_revision").notNull(),
+    observedBaseVersion: text("observed_base_version").notNull(),
+    overlayVersion: text("overlay_version"),
+    overlay: jsonb("overlay").notNull(),
+    updatedBy: text("updated_by").notNull(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("ux_account_skill_overlays_owner_skill").on(
+      table.userId,
+      table.accountId,
+      table.skillId,
+    ),
+  ],
+);
+
+export const accountSkillOverlayVersions = pgTable(
+  "account_skill_overlay_versions",
+  {
+    id: text("id").primaryKey(),
+    overlayId: text("overlay_id").notNull(),
+    userId: text("user_id").notNull(),
+    accountId: text("account_id").notNull(),
+    skillId: text("skill_id").notNull(),
+    rowRevision: integer("row_revision").notNull(),
+    observedBaseVersion: text("observed_base_version").notNull(),
+    overlayVersion: text("overlay_version"),
+    overlay: jsonb("overlay").notNull(),
+    updatedBy: text("updated_by").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("ux_account_skill_overlay_versions_revision").on(
+      table.userId,
+      table.accountId,
+      table.skillId,
+      table.rowRevision,
+    ),
+  ],
+);
+
+export type AccountSkillOverlayRow = InferSelectModel<
+  typeof accountSkillOverlays
+>;
+export type AccountSkillOverlayVersionRow = InferSelectModel<
+  typeof accountSkillOverlayVersions
+>;
+
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - model_config_user_capability: the (user_id, capability) unique upsert key
 //     putModel's ON CONFLICT DO UPDATE targets.
@@ -181,5 +247,33 @@ CREATE TABLE IF NOT EXISTS skill_config_overrides (
   output_schema JSONB,
   updated_by TEXT,
   updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS account_skill_overlays (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  skill_id TEXT NOT NULL,
+  row_revision INTEGER NOT NULL CHECK (row_revision >= 1),
+  observed_base_version TEXT NOT NULL,
+  overlay_version TEXT,
+  overlay JSONB NOT NULL,
+  updated_by TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (user_id, account_id, skill_id)
+);
+CREATE TABLE IF NOT EXISTS account_skill_overlay_versions (
+  id TEXT PRIMARY KEY,
+  overlay_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  skill_id TEXT NOT NULL,
+  row_revision INTEGER NOT NULL CHECK (row_revision >= 1),
+  observed_base_version TEXT NOT NULL,
+  overlay_version TEXT,
+  overlay JSONB NOT NULL,
+  updated_by TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  UNIQUE (user_id, account_id, skill_id, row_revision)
 );
 `;

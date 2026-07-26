@@ -43,6 +43,7 @@ const workspace: RadarWorkspace = {
   ],
   sources: [],
   memberships: [],
+  health: [],
   pendingCount: 0,
   blockedCount: 0,
 };
@@ -107,7 +108,47 @@ function api(): RadarApi {
       item: detail.item,
       created: true,
     }),
-    startRun: vi.fn().mockResolvedValue({}),
+    startRun: vi.fn().mockResolvedValue({
+      run: {
+        id: "run-1",
+        sourceId: "source-1",
+        trigger: "manual",
+        status: "queued",
+        startedAt: null,
+        finishedAt: null,
+        scannedCount: 0,
+        newCount: 0,
+        updatedCount: 0,
+        skippedCount: 0,
+        failedCount: 0,
+        errorCode: null,
+        errorSummary: null,
+        nextAction: "none",
+        createdAt: "2026-07-24T00:00:00.000Z",
+      },
+      task: { id: "task-1", status: "queued" },
+    }),
+    listRuns: vi.fn().mockResolvedValue([]),
+    getRun: vi.fn().mockResolvedValue({
+      run: {
+        id: "run-1",
+        sourceId: "source-1",
+        trigger: "manual",
+        status: "succeeded_no_change",
+        startedAt: "2026-07-24T00:00:00.000Z",
+        finishedAt: "2026-07-24T00:00:01.000Z",
+        scannedCount: 13,
+        newCount: 0,
+        updatedCount: 13,
+        skippedCount: 0,
+        failedCount: 0,
+        errorCode: null,
+        errorSummary: null,
+        nextAction: "none",
+        createdAt: "2026-07-24T00:00:00.000Z",
+      },
+      events: [],
+    }),
     getItem: vi.fn().mockResolvedValue(detail),
     enqueueTranscript: vi.fn().mockResolvedValue({}),
     previewTopic: vi.fn().mockResolvedValue({}),
@@ -135,8 +176,11 @@ describe("T-482 内容雷达工作区", () => {
               displayName: "收藏选题库",
               canonicalUrl: null,
               monitorEnabled: true,
+              syncPolicy: { mode: "scheduled", interval: "daily" },
               status: "active",
               lastRunAt: null,
+              nextRunAt: "2026-07-25T09:00:00.000Z",
+              version: 1,
             },
           ],
         }}
@@ -263,6 +307,106 @@ describe("T-482 内容雷达工作区", () => {
     expect(pane).toHaveStyle({ width: "392px" });
     fireEvent.keyDown(separator, { key: "ArrowLeft" });
     expect(pane).toHaveStyle({ width: "416px" });
+  });
+
+  it("[T-514] 来源始终显示文字同步按钮、监控口径和真实运行记录入口", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "AI 工具",
+          canonicalUrl: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: "2026-07-25T09:00:00.000Z",
+          version: 1,
+        },
+      ],
+      health: [
+        {
+          sourceId: "source-1",
+          lastRunId: null,
+          lastRunStatus: null,
+          blockedCount: 0,
+          lastErrorCode: null,
+          scannedCount: 0,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 0,
+        },
+      ],
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    const sync = screen.getByRole("button", { name: "同步 AI 工具" });
+    expect(sync).toHaveTextContent("同步");
+    expect(sync).not.toHaveClass("opacity-0");
+    expect(screen.getByText(/每日自动 · 尚未同步/)).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "查看 AI 工具 的运行记录" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "AI 工具 · 运行记录" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/APP 运行时执行/)).toBeInTheDocument();
+    expect(stub.listRuns).toHaveBeenCalledWith("source-1");
+  });
+
+  it("[T-514] 手动同步完成后自动刷新页面，不要求用户再点一次", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: null,
+          type: "creator_profile",
+          displayName: "示例博主",
+          canonicalUrl: "https://www.douyin.com/user/sec-example",
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [],
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "同步 示例博主" }),
+    );
+    expect(stub.startRun).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceId: "source-1" }),
+    );
+    expect(
+      await screen.findByText(/同步完成：扫描 13 条/),
+    ).toBeInTheDocument();
+    expect(refresh).toHaveBeenCalled();
   });
 
   it("逐字稿只有点击“手动转写”后才进入队列", async () => {

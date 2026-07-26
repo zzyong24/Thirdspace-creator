@@ -104,5 +104,6 @@ describe("Dashboard derived metrics", () => {
     // 由 (creator)/layout 的 Sidebar 单独挂载,故此处应查无。
     const card = container.querySelector('[data-slot="sidebar-assistant-card"]');
     expect(card).toBeNull();
+    expect(container.textContent ?? "").not.toContain("AI 助手");
   });
 });

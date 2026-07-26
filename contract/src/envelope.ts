@@ -38,6 +38,11 @@ export enum ErrorCode {
   DouyinFavoritesNetwork = "DOUYIN_FAVORITES_NETWORK",
   DouyinFavoritesUpstream = "DOUYIN_FAVORITES_UPSTREAM",
   DouyinFavoritesInvalidResponse = "DOUYIN_FAVORITES_INVALID_RESPONSE",
+  AttemptIdInvalid = "ATTEMPT_ID_INVALID",
+  ReservedInputField = "RESERVED_INPUT_FIELD",
+  AttemptPayloadMismatch = "ATTEMPT_PAYLOAD_MISMATCH",
+  RetrySourceNotTerminal = "RETRY_SOURCE_NOT_TERMINAL",
+  ExecutionClaimInvalid = "EXECUTION_CLAIM_INVALID",
 }
 
 export const ERROR_HTTP: Record<ErrorCode, number> = {
@@ -55,6 +60,11 @@ export const ERROR_HTTP: Record<ErrorCode, number> = {
   [ErrorCode.DouyinFavoritesNetwork]: 502,
   [ErrorCode.DouyinFavoritesUpstream]: 502,
   [ErrorCode.DouyinFavoritesInvalidResponse]: 502,
+  [ErrorCode.AttemptIdInvalid]: 400,
+  [ErrorCode.ReservedInputField]: 400,
+  [ErrorCode.AttemptPayloadMismatch]: 409,
+  [ErrorCode.RetrySourceNotTerminal]: 409,
+  [ErrorCode.ExecutionClaimInvalid]: 400,
 };
 
 // `code` is a free string (domain codes like PROJECT_NOT_FOUND) but every

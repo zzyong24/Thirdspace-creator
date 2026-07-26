@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
-import { AuthenticationError } from "@creatoros/backend/modules/identity";
+import {
+  AuthenticationError,
+  OwnershipError,
+} from "@creatoros/backend/modules/identity";
 import { getChatRuntime } from "@/server/persistence-client";
 import {
   runCommentQaSift,
@@ -43,10 +46,17 @@ export async function POST(req: Request): Promise<Response> {
   const rawToken = readSessionCookie(req);
   let ctx: RequestContext;
   try {
-    ctx = await resolveRequestContext(rawToken);
+    ctx = await resolveRequestContext(
+      rawToken,
+      req.headers.get("x-account-id"),
+      { rejectInvalidToken: true },
+    );
   } catch (err) {
     if (err instanceof AuthenticationError) {
       return NextResponse.json({ error: err.message }, { status: 401 });
+    }
+    if (err instanceof OwnershipError) {
+      return NextResponse.json({ error: err.message }, { status: 404 });
     }
     throw err;
   }
@@ -111,10 +121,15 @@ export async function POST(req: Request): Promise<Response> {
       rawText: s.rawText,
       likeCount: s.likeCount,
     }));
-    const { candidates } = await runCommentQaSift(
+    const { candidates } = await runtime.runWithEffectiveSkills(
       ctx,
-      { comments: siftInput },
-      { resolveModelSpec: runtime.resolveModelSpec },
+      ["comment.qa-sift"],
+      () =>
+        runCommentQaSift(
+          ctx,
+          { comments: siftInput },
+          { resolveModelSpec: runtime.resolveModelSpec },
+        ),
     );
 
     // 候选带回支撑评论详情 + 幂等锚(externalIds),供 ③确认门展示与采纳落

@@ -44,6 +44,10 @@ describe("ingestion contract", () => {
     expect(ingestionOperations.createRun.method).toBe("POST");
     expect(ingestionOperations.createRun.path).toBe("/ingestion/runs");
     expect(ingestionOperations.createRun.fr.length).toBeGreaterThan(0);
+    expect("pushMetrics" in ingestionOperations).toBe(false);
+    expect("pushKnowledge" in ingestionOperations).toBe(false);
+    expect("pushAssets" in ingestionOperations).toBe(false);
+    expect("pushArtifacts" in ingestionOperations).toBe(false);
   });
 
   // T-038c 采集限流可观测:只读 GET op + channel 快照 resource。

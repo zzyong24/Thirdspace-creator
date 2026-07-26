@@ -11,7 +11,10 @@
  * 单测:skills-data.test.ts / skills-section.test.tsx。
  */
 
-import type { SkillConfigOverrideResource } from "@creatoros/contract";
+import type {
+  AccountSkillOverlayResource,
+  CompletionPolicyV1Resource,
+} from "@creatoros/contract";
 
 // ---------------------------------------------------------------------------
 // 类型
@@ -19,10 +22,14 @@ import type { SkillConfigOverrideResource } from "@creatoros/contract";
 
 /** 一条技能列表条目(route server 侧投影,全部可序列化,客户端只读渲染 + 编辑草稿)。 */
 export interface SkillItem {
+  /** 当前联合目录归属账号；用于切号时强制丢弃旧编辑态。 */
+  readonly accountId: string;
   /** skill id(REGISTRY 注册 id,如 "script.draft")。 */
   readonly id: string;
   /** 当前版本标记(内置 version 或覆盖行 version)。 */
   readonly version: string;
+  /** 当前账号增量行的 CAS revision；null 表示尚未定制。 */
+  readonly rowRevision: number | null;
   /** 当前生效 system(override ?? 内置;空串归一后回退内置 —— T-040 语义)。 */
   readonly system: string;
   /** 当前生效 user template(同上)。 */
@@ -33,6 +40,14 @@ export interface SkillItem {
   readonly tools: readonly string[];
   /** 输出契约 JSON Schema 的 pretty JSON(无 outputSchema → null;本期只读展示)。 */
   readonly outputSchemaJson: string | null;
+  /** 当前节点是否有 official completion-policy adapter，可安全编辑完整性策略。 */
+  readonly completionPolicySupported: boolean;
+  /** 服务端按当前账号增量合并后的完整性策略；前端只展示/编辑，不解释业务角色。 */
+  readonly completionPolicy: CompletionPolicyV1Resource | null;
+  /** 官方基座策略，用于向用户说明恢复后的真值。 */
+  readonly officialCompletionPolicy: CompletionPolicyV1Resource | null;
+  /** 当前账号是否单独覆盖了完整性策略。 */
+  readonly completionPolicyCustomized: boolean;
   /** 「已定制」徽章:settings.prompts.list 有该 id 的**有效**(归一后非空)override 字段。 */
   readonly customized: boolean;
 }
@@ -347,73 +362,44 @@ export function groupSkills(items: readonly SkillItem[]): SkillGroup[] {
 }
 
 // ---------------------------------------------------------------------------
-// 「已定制」判定 + 生效值投影(T-040 空串归一 undefined 语义)
+// 「已定制」判定 + 服务端联合目录投影
 // ---------------------------------------------------------------------------
 
-/** 文本字段归一:空串/纯空白 → undefined(与 server 侧 skill-config-overrides 同语义)。 */
-function normText(value: string | null | undefined): string | undefined {
-  return value?.trim() ? value : undefined;
-}
-
-/** string[] 字段归一:null/空数组 → undefined。 */
-function normArray(
-  value: readonly string[] | null | undefined,
-): readonly string[] | undefined {
-  return value && value.length > 0 ? value : undefined;
-}
-
 /**
- * 某条 override 行是否「有效定制」:归一后任一字段非空。
- * 恢复默认(put 空串)后行仍在但全字段归一为空 → 徽章诚实熄灭。
+ * 当前账号是否保存了至少一个增量字段。服务端已负责 null=删除字段的 merge 语义，
+ * 客户端不再猜测空串或数组是否代表默认值。
  */
-export function isOverrideCustomized(
-  row: Pick<
-    SkillConfigOverrideResource,
-    "system" | "template" | "tools" | "requiredFacets" | "outputSchema"
-  >,
+export function isOverlayCustomized(
+  row: Pick<AccountSkillOverlayResource, "overlay">,
 ): boolean {
-  return Boolean(
-    normText(row.system) ??
-      normText(row.template) ??
-      normArray(row.tools) ??
-      (row.outputSchema && Object.keys(row.outputSchema).length > 0
-        ? row.outputSchema
-        : undefined) ??
-      normArray(row.requiredFacets),
-  );
-}
-
-/** 内置模板的可序列化形状(route 从 ai-worker listTemplates 投影而来,不带 Zod)。 */
-export interface BuiltinSkillShape {
-  readonly id: string;
-  readonly version: string;
-  readonly system: string;
-  readonly template: string;
-  readonly requiredFacets: readonly string[];
-  readonly tools: readonly string[];
-  readonly outputSchemaJson: string | null;
+  return row.overlay !== null && Object.keys(row.overlay).length > 0;
 }
 
 /**
- * 内置模板 × override 行 → SkillItem 列表(当前生效值 = override(归一后)?? 内置)。
- * 纯函数,route(server)与单测共用;override 行找不到对应内置 id 时忽略(坏行不显)。
+ * 服务端 official/effective 联合目录 → SkillItem。目录已经按请求账号合并并完成兼容校验，
+ * 客户端只投影，不再导入本地 registry 或自行合并旧 global override。
  */
 export function buildSkillItems(
-  builtins: readonly BuiltinSkillShape[],
-  overrides: readonly SkillConfigOverrideResource[],
+  catalog: readonly AccountSkillOverlayResource[],
 ): SkillItem[] {
-  const byId = new Map(overrides.map((o) => [o.id, o]));
-  return builtins.map((tpl) => {
-    const ov = byId.get(tpl.id);
-    return {
-      id: tpl.id,
-      version: normText(ov?.version) ?? tpl.version,
-      system: normText(ov?.system) ?? tpl.system,
-      template: normText(ov?.template) ?? tpl.template,
-      requiredFacets: normArray(ov?.requiredFacets) ?? tpl.requiredFacets,
-      tools: normArray(ov?.tools) ?? tpl.tools,
-      outputSchemaJson: tpl.outputSchemaJson,
-      customized: ov ? isOverrideCustomized(ov) : false,
-    };
-  });
+  return catalog.map((row) => ({
+    accountId: row.accountId,
+    id: row.skillId,
+    version: row.overlayVersion ?? row.baseVersion,
+    rowRevision: row.rowRevision,
+    system: row.effective.system,
+    template: row.effective.template,
+    requiredFacets: row.effective.requiredFacets,
+    tools: row.effective.tools,
+    outputSchemaJson: row.effective.outputSchema
+      ? JSON.stringify(row.effective.outputSchema, null, 2)
+      : null,
+    completionPolicySupported: row.completionPolicySupported,
+    completionPolicy: row.effective.completionPolicy,
+    officialCompletionPolicy: row.official.completionPolicy,
+    completionPolicyCustomized:
+      row.overlay?.completionPolicy !== undefined &&
+      row.overlay.completionPolicy !== null,
+    customized: isOverlayCustomized(row),
+  }));
 }

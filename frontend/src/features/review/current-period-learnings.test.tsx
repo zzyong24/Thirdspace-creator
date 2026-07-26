@@ -85,6 +85,12 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     // 「AI 要点 · 本期复盘摘要」卡与本期经验区同源(一次 review.analyze 产要点+候选),
     // 两块并存=概念重复(用户真机反馈分不清)→ 卡整块下架。
     expect(container.querySelector('[data-slot="ai-analysis-card"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-item"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-empty"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-cta"]')).toBeNull();
+    expect(container.textContent ?? "").not.toContain(
+      "来源:帮我复盘生成的要点",
+    );
   });
 
   it("本期经验区标题/副标题 = 可裁决语义 + 采纳去处", () => {

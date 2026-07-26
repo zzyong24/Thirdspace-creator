@@ -273,6 +273,83 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
+  it("[T-514] 重复添加同一来源时复用正在运行的首次同步，不排第二条重复任务", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    const input = {
+      collectionId: null,
+      type: "creator_profile" as const,
+      config: {
+        type: "creator_profile" as const,
+        canonicalUrl: "https://www.douyin.com/user/reused",
+        externalAccountId: "sec-reused",
+        browserSessionRef: "douyin-profile:account-1",
+      },
+      monitorEnabled: true,
+      runInitial: true,
+    };
+    try {
+      const first = await service.createSource(ctx, {
+        ...input,
+        idempotencyKey: "source-reused-1",
+      });
+      const second = await service.createSource(ctx, {
+        ...input,
+        idempotencyKey: "source-reused-2",
+      });
+      expect(second.source.id).toBe(first.source.id);
+      expect(second.run?.id).toBe(first.run?.id);
+      const runs = await service.listRuns(ctx, first.source.id);
+      expect(runs.rows).toHaveLength(1);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-514] 每日监控写入真实下次时间，到期后会排队 schedule run", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const created = await service.createSource(ctx, {
+        collectionId: null,
+        type: "darkhorse_query",
+        config: {
+          type: "darkhorse_query",
+          keyword: "AI 工具",
+          board: "low_follower_breakout",
+          browserSessionRef: "douyin-profile:account-1",
+        },
+        monitorEnabled: true,
+        runInitial: false,
+        idempotencyKey: "source-daily",
+      });
+      expect(created.source.nextRunAt).toBe("2026-07-24T12:00:00.000Z");
+
+      d.clock.value = "2026-07-24T12:00:01.000Z";
+      await expect(service.enqueueDueSourceRuns()).resolves.toBe(1);
+      const runs = await service.listRuns(ctx, created.source.id);
+      expect(runs.rows).toHaveLength(1);
+      expect(runs.rows[0]).toMatchObject({
+        trigger: "schedule",
+        status: "queued",
+      });
+
+      const refreshed = await service.listSources(ctx, {
+        limit: 10,
+        offset: 0,
+      });
+      expect(refreshed.rows[0]?.nextRunAt).toBe(
+        "2026-07-25T12:00:01.000Z",
+      );
+    } finally {
+      await client.close();
+    }
+  });
+
   it("adapter 批次幂等入库作品/指标/来源证据，评论缺失保持 null", async () => {
     const { db, client } = await createDb();
     const d = deps();

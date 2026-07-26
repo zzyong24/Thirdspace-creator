@@ -116,11 +116,14 @@ describe("ai service", () => {
     const { service } = makeService(db);
     const a = await service.createTask(ctx, {
       taskType: "topic.generate",
+      attemptId: "018f8d8a-90ab-7def-8123-aaaaaaaaaaaa",
       inputData: { basis: "positioning" },
     });
     await service.cancelTask(ctx, a.id); // queued→cancelled (terminal)
     const b = await service.createTask(ctx, {
       taskType: "topic.generate",
+      attemptId: "018f8d8a-90ab-7def-8123-bbbbbbbbbbbb",
+      retryOfTaskId: a.id,
       inputData: { basis: "positioning" },
     });
     // The whole point of 选题会 is to regenerate — a click after the prior run finished

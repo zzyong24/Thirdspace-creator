@@ -19,7 +19,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockClient = {
   transcribeProjectWork: vi.fn(
-    (_i: unknown): Promise<unknown> => Promise.resolve({ taskId: "task-1" }),
+    (input: unknown): Promise<unknown> => {
+      void input;
+      return Promise.resolve({ taskId: "task-1" });
+    },
   ),
 };
 vi.mock("@/lib/contract-client", () => ({
@@ -36,6 +39,22 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("TranscribeNowButton (T-374)", () => {
+  it("刷新后由服务端恢复 queued 状态 → 仍置灰且不会自动重复提交", () => {
+    const { unmount } = render(
+      <TranscribeNowButton projectId="p-42" initialState="queued" />,
+    );
+    expect(screen.getByRole("button").textContent).toContain("已排队");
+    expect((screen.getByRole("button") as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect(mockClient.transcribeProjectWork).not.toHaveBeenCalled();
+    unmount();
+
+    render(<TranscribeNowButton projectId="p-42" initialState="queued" />);
+    expect(screen.getByRole("button").textContent).toContain("已排队");
+    expect(mockClient.transcribeProjectWork).not.toHaveBeenCalled();
+  });
+
   it("点击 → transcribeProjectWork 带 projectId;成功 → 已排队文案 + 置灰", async () => {
     render(<TranscribeNowButton projectId="p-42" />);
     const btn = screen.getByRole("button", { name: /立即抓取逐字稿/ });
@@ -49,7 +68,11 @@ describe("TranscribeNowButton (T-374)", () => {
     expect(mockClient.transcribeProjectWork).toHaveBeenCalledWith({
       params: { projectId: "p-42" },
       query: undefined,
-      body: undefined,
+      body: {
+        attemptId: expect.stringMatching(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+        ),
+      },
     });
     // 已排队 → 置灰(任务在后台跑,重复排幂等任务无意义)。
     expect((screen.getByRole("button") as HTMLButtonElement).disabled).toBe(
@@ -98,5 +121,9 @@ describe("TranscribeNowButton (T-374)", () => {
       expect(screen.getByRole("button").textContent).toContain("已排队"),
     );
     expect(mockClient.transcribeProjectWork).toHaveBeenCalledTimes(2);
+    const calls = mockClient.transcribeProjectWork.mock.calls as Array<
+      [{ body: { attemptId: string } }]
+    >;
+    expect(calls[0]![0].body.attemptId).not.toBe(calls[1]![0].body.attemptId);
   });
 });

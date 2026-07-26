@@ -1,4 +1,5 @@
 import { pgTable, text, jsonb, real, integer } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // AI tables (Module 15; data-model §7 ER "AI、搜索和系统"; contract/src/resources/ai.ts;
 // SPEC §12 AI Task state machine / §18 candidate-confirm). The canonical defs live in
@@ -77,14 +78,29 @@ export const aiTasks = pgTable("ai_tasks", {
   taskType: text("task_type").notNull(),
   status: text("status").notNull().default("queued"),
   inputData: jsonb("input_data").notNull().default({}),
+  // [T-513] 运行快照只存在 server-only runtime_data；DTO mapper 永不投影该列。
+  runtimeData: jsonb("runtime_data").notNull().default({}),
   modelKey: text("model_key").notNull().default(""),
   idempotencyKey: text("idempotency_key").notNull(),
+  // DB defaults only protect legacy/internal direct inserts during rollout. The public
+  // service always supplies the contract attempt/fingerprint explicitly.
+  attemptId: text("attempt_id")
+    .notNull()
+    .default(sql`gen_random_uuid()::text`),
+  requestFingerprint: text("request_fingerprint")
+    .notNull()
+    .default(sql`'sha256:' || repeat('0', 64)`),
+  retryOfTaskId: text("retry_of_task_id"),
   requestedAt: text("requested_at").notNull(),
   startedAt: text("started_at"), // nullable until claimed/running
   completedAt: text("completed_at"), // nullable until terminal
   errorMessage: text("error_message"), // nullable
   sessionId: text("session_id"), // nullable — Agent SDK resume (ports.ts AiTaskRecord)
   costUsd: real("cost_usd"), // nullable — recorded run cost
+  leaseOwner: text("lease_owner"),
+  leaseToken: text("lease_token"),
+  leaseExpiresAt: text("lease_expires_at"),
+  modelCallStartedAt: text("model_call_started_at"),
 });
 
 export const aiTaskReferences = pgTable("ai_task_references", {
@@ -159,16 +175,25 @@ CREATE TABLE IF NOT EXISTS ai_tasks (
   task_type TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'queued',
   input_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  runtime_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   model_key TEXT NOT NULL DEFAULT '',
   idempotency_key TEXT NOT NULL,
+  attempt_id TEXT NOT NULL DEFAULT gen_random_uuid()::text,
+  request_fingerprint TEXT NOT NULL DEFAULT ('sha256:' || repeat('0', 64)),
+  retry_of_task_id TEXT,
   requested_at TEXT NOT NULL,
   started_at TEXT,
   completed_at TEXT,
   error_message TEXT,
   session_id TEXT,
-  cost_usd REAL
+  cost_usd REAL,
+  lease_owner TEXT,
+  lease_token TEXT,
+  lease_expires_at TEXT,
+  model_call_started_at TEXT
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ai_tasks_user_idempotency ON ai_tasks (user_id, idempotency_key);
+CREATE UNIQUE INDEX IF NOT EXISTS ai_tasks_attempt_identity
+  ON ai_tasks (user_id, account_id, task_type, attempt_id);
 CREATE INDEX IF NOT EXISTS idx_ai_tasks_status ON ai_tasks (status);
 CREATE TABLE IF NOT EXISTS ai_task_references (
   id TEXT PRIMARY KEY,
@@ -198,10 +223,20 @@ CREATE TABLE IF NOT EXISTS ai_task_steps (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ai_task_steps_task ON ai_task_steps (ai_task_id, step_no);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_ai_task_model_call_started
+  ON ai_task_steps (ai_task_id) WHERE kind = 'model_call_started';
 -- [T-136 多账号 · OQ2] ai_conversations/ai_tasks 按号隔离列(additive、幂等)。存量行 NULL,
 -- 迁移 0025 backfill 默认号。切号 = 换对话桶(§B 启用 chat-scope 的 account:<id> 维度,后续切片)。
 ALTER TABLE ai_conversations ADD COLUMN IF NOT EXISTS account_id TEXT;
 ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS runtime_data JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS attempt_id TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS request_fingerprint TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS retry_of_task_id TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS lease_owner TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS lease_token TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS lease_expires_at TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS model_call_started_at TEXT;
 CREATE INDEX IF NOT EXISTS idx_ai_conversations_user_account ON ai_conversations (user_id, account_id, updated_at);
 CREATE INDEX IF NOT EXISTS idx_ai_tasks_user_account ON ai_tasks (user_id, account_id);
 `;

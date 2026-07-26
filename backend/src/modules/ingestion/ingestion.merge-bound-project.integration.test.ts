@@ -201,7 +201,7 @@ describe("[T-321] 日拉命中已绑定已发布项目 → merge 更新不新建
       awemeId: "7500",
     });
 
-    const { ingestionService } = wire(db, [
+    const { ingestionService, publishingService } = wire(db, [
       work("7500", "CreatorOs 系统实录", 12000, {
         desc: "抖音端真实文案全文",
         shareUrl: "https://v.douyin.com/abc/",
@@ -233,6 +233,14 @@ describe("[T-321] 日拉命中已绑定已发布项目 → merge 更新不新建
     expect(merged.progressPct).toBe(100);
     // 不在 imported 作品列表(reconstruct/transcribe auto-fill 只遍历 source='imported')。
     expect(await repo.listImported(ctx)).toHaveLength(0);
+    // [T-400] 命中既有绑定也要走 publication 的幂等补空：历史 null 链接被真实链接补齐。
+    const reconciledPublication = await publishingService.resolvePublication(ctx, {
+      platform: "douyin",
+      externalId: "7500",
+    });
+    expect(reconciledPublication?.externalUrl).toBe(
+      "https://v.douyin.com/abc/",
+    );
   });
 
   it("绝不覆盖用户手写内容:record 无 desc/title 未变时,brief 与 title 原样保留", async () => {

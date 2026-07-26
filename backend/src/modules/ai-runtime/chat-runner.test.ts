@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { registerAllTemplates, ANTI_FABRICATION_CLAUSE } from "@creatoros/ai-worker";
+import {
+  registerAllTemplates,
+  runWithEffectiveSkillSnapshot,
+  ANTI_FABRICATION_CLAUSE,
+} from "@creatoros/ai-worker";
 import {
   buildChatAssembly,
   buildHooksPrompt,
@@ -14,7 +18,10 @@ import {
   resolveUniqueCoverReference,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
-import { SKILLS_BRIEF_MAX_LINES } from "@creatoros/contract";
+import {
+  SKILLS_BRIEF_MAX_LINES,
+  type RequestContext,
+} from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
 
 // [T-084a] 保留 ai-worker 全部真实导出(registerAllTemplates/getTemplate/modelFor 等装配用),
@@ -510,6 +517,7 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
             url: "https://v.douyin.com/x",
             publishedAt: "2026-07-01T00:00:00.000Z",
             projectTitle: "上下文工程",
+            coverAssetId: null,
             status: "published",
           },
         ],
@@ -601,6 +609,41 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const chatContext: ChatContext = { surface: "topics" };
     const a = await buildChatAssembly(ctx, chatContext, deps);
     expect(a.skillId).toBe("chatbox.topic");
+  });
+
+  it("[T-513] active 账号快照覆盖 chat method 与工具，不读取全局 registry 定制", async () => {
+    const { deps } = makeDeps();
+    const a = await runWithEffectiveSkillSnapshot(
+      {
+        snapshotVersion: 1,
+        userId: "u-1",
+        accountId: "account-a",
+        resolvedAt: "2026-07-24T00:00:00.000Z",
+        platformPolicyVersion: "policy-v1",
+        platformPolicy: "平台规则",
+        skills: [
+          {
+            skillId: "chatbox.topic",
+            baseVersion: "v1",
+            overlayRevision: 2,
+            overlayVersion: "2",
+            effective: {
+              methodSystem: "账号 A 的专属选题方法",
+              template: "{{positioning}}",
+              tools: ["topic.generate"],
+              requiredFacets: ["positioning"],
+              contextRequirements: [],
+              outputSchema: null,
+              completionPolicy: null,
+              completionPolicyAdapter: null,
+            },
+          },
+        ],
+      },
+      () => buildChatAssembly(ctx, { surface: "topics" }, deps),
+    );
+    expect(a.system).toContain("账号 A 的专属选题方法");
+    expect(Object.keys(a.tools)).toContain("topic.generate");
   });
 
   it("未知 surface → 回落 chatbox.topic(路由不崩)", async () => {
@@ -2022,6 +2065,31 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     // 有信源信号 → 不产降级注记(结果无 trendNote 字段,不喂空噪声)。
     expect(res.kind).toBe("topic.candidates");
     expect(res.trendNote ?? null).toBeNull();
+  });
+
+  it("[T-513] trend 子调用与 topic.generate 分别进入当前账号独立快照", async () => {
+    const snapshotCalls: Array<readonly string[]> = [];
+    const runWithSkillSnapshot: NonNullable<
+      AssembleChatDeps["runWithSkillSnapshot"]
+    > = async <T>(
+      _ctx: RequestContext,
+      skillIds: readonly string[],
+      execute: () => Promise<T>,
+    ) => {
+      snapshotCalls.push(skillIds);
+      return execute();
+    };
+    const { deps } = makeDeps({
+      runWithSkillSnapshot,
+      trendSourceSignals: async () => [],
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    await runToolExecute(a.tools["topic.generate"]!, { basis: "trend" });
+
+    expect(snapshotCalls).toEqual([
+      ["trend.extract"],
+      ["topic.generate"],
+    ]);
   });
 
   it("basis=trend 信源信号为空 → trendNote 诚实注明「已登记 N 个」并指路信号源登记", async () => {

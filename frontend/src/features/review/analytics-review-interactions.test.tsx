@@ -363,5 +363,21 @@ describe("AnalyticsReviewPage([T-356③] AI 要点卡下架)", () => {
       <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
     );
     expect(container.querySelector('[data-slot="ai-analysis-card"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-item"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-empty"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-cta"]')).toBeNull();
+    expect(
+      container.querySelectorAll('[data-slot="ai-analysis-item"]'),
+    ).toHaveLength(0);
+    expect(container.textContent ?? "").not.toContain(
+      "AI 要点 · 本期复盘摘要",
+    );
+    expect(container.textContent ?? "").not.toContain(
+      "来源:帮我复盘生成的要点",
+    );
+    expect(container.textContent ?? "").not.toContain(
+      "本条视频还没生成 AI 复盘要点",
+    );
+    expect(container.textContent ?? "").not.toContain("前 3 秒抛冲突");
   });
 });

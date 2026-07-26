@@ -14,7 +14,11 @@ import {
   sanitizeToolNames,
 } from "./chat-tool-gate";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type {
+  ModelSpec,
+  PositioningSuggestionOutput,
+  TopicCardOutput,
+} from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   formatWorksBrief,
@@ -62,7 +66,10 @@ import {
   resolveContextWindowTokens,
   dropAbandonedApprovalParts,
 } from "./chat-history-window";
-import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
+import {
+  enrichFacets,
+  normalizeCard,
+} from "./topic-enrich-runner";
 // [T-245] trend 出题多源装配(T-235b 信源信号 + web 搜索并行,与选题页出题同一装配器)——
 // 对话编导 topic.generate(basis=trend)复用,不再空 brief 出「假热点题」。
 import {
@@ -79,7 +86,10 @@ import {
 } from "./signal-quality";
 import { createRecoveringModel } from "./llm/recovering-model";
 import { resolveLlmMaxRetries } from "./llm/retry-policy";
-import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
+import {
+  normalizeSuggestion,
+  positioningFacets,
+} from "./positioning-runner";
 import { parseLearnings, reviewFacets } from "./review-runner";
 import { parseDiagnosis } from "./calibration-diagnose-runner";
 
@@ -102,6 +112,16 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  /**
+   * [T-513] 对话工具在一个 chatbox Skill 内同步调用另一个 Skill 时，用当前 owner tuple
+   * 解析该子调用自己的不可变快照并临时进入 ALS。可选仅为兼容纯单测/旧宿主；生产 composition
+   * 必须装配。active snapshot 下若漏装，子节点会因 snapshot 缺少对应 id 而 fail closed。
+   */
+  runWithSkillSnapshot?: <T>(
+    ctx: RequestContext,
+    requiredSkillIds: readonly string[],
+    execute: () => Promise<T>,
+  ) => Promise<T>;
   /**
    * [T-239b S1] 备用对话模型端口(可选)—— **只认 `chat.fallback` 专配行**(不回退 default/env,
    * 否则「备用」会解析成主模型自己);未配返 null。主模型流开始前可重试错误耗尽时,chat-runner
@@ -739,18 +759,33 @@ export async function buildChatAssembly(
   deps: AssembleChatDeps,
   mediaRoute: CopilotMediaRoute | null = null,
 ): Promise<ChatAssembly> {
+  const runWithSkillSnapshot = <T>(
+    requiredSkillIds: readonly string[],
+    execute: () => Promise<T>,
+  ): Promise<T> =>
+    deps.runWithSkillSnapshot
+      ? deps.runWithSkillSnapshot(ctx, requiredSkillIds, execute)
+      : execute();
+
   // 1) 页面层:surface → 基础 skill。
   const skillId = resolveSkillForSurface(chatContext.surface);
 
   // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
   const {
+    getEffectiveTemplate,
+    getEffectiveTools,
     getTemplate,
     getTools,
+    hasActiveEffectiveSkillSnapshot,
     modelFor,
     runTopicNode,
+    runStructuredNode,
     runTemplatedNode,
   } = await import("@creatoros/ai-worker");
-  const skill = getTemplate(skillId);
+  const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
+  const skill = hasEffectiveScope
+    ? getEffectiveTemplate(skillId)
+    : getTemplate(skillId);
 
   // [T-240①] 阶段判据(动态层):项目对话读该项目的 stage + 发布状态(getProjectDetail 读端口
   // 已在 composition root 绑好,不新造)。best-effort:读不到/端口未装配 → null(不注阶段块、
@@ -828,7 +863,7 @@ export async function buildChatAssembly(
     allowedNames = [...allowedNames, routedTool];
   }
   const preferredTools = applyFunctionKey(
-    getTools(skillId),
+    hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId),
     effectiveFunctionKey,
   ).filter((n) => allowedNames.includes(n));
   const toolWhitelist = [
@@ -1037,15 +1072,17 @@ export async function buildChatAssembly(
       // 产 trendNote 诚实注记(随 tool-result 回编导,如实转述 + 引导去『信号源』登记),不猜不编。
       let trendNote: string | null = null;
       if (basis === "trend") {
-        const detail = await assembleTrendBriefDetailed(
-          ctx,
-          context.positioningBrief,
-          {
-            trendSourceSignals: deps.trendSourceSignals,
-            // web 搜索路复用 material.gather 的联网检索端口(SearchResult ⊇ TrendHit,
-            // 未配/失败 → 该段空,assembleTrendBriefDetailed 内 allSettled 诚实降级)。
-            trendSearch: deps.searchWeb,
-          },
+        const detail = await runWithSkillSnapshot(["trend.extract"], () =>
+          assembleTrendBriefDetailed(
+            ctx,
+            context.positioningBrief,
+            {
+              trendSourceSignals: deps.trendSourceSignals,
+              // web 搜索路复用 material.gather 的联网检索端口(SearchResult ⊇ TrendHit,
+              // 未配/失败 → 该段空,assembleTrendBriefDetailed 内 allSettled 诚实降级)。
+              trendSearch: deps.searchWeb,
+            },
+          ),
         );
         basisSource = detail.brief;
         trendQuality = trendQualityFromDetail(detail);
@@ -1082,26 +1119,30 @@ export async function buildChatAssembly(
       ]
         .filter(Boolean)
         .join("\n");
-      const { topics } = await runTopicNode({
-        model,
-        positioningBrief: context.positioningBrief,
-        basisBrief,
-        // [T-062b gate-F3] KNOW-X 修真:对话出题同样吃知识库参考 + 已验证经验约束
-        // (basis=knowledge 时知识已进 basisBrief,置空防重复)。
-        knowledgeBrief:
-          basis === "knowledge" ? undefined : context.knowledgeBrief || undefined,
-        learningsBrief: context.learningsBrief || undefined,
-        // [T-238] 依据质量画像段(模板 v3 据它动态定权、reason 注明主要依据+权重理由)。
-        signalQualityBrief: renderSignalQualityBrief(
-          buildSignalQualityProfile({
-            signals: qualityInputs.signals,
-            positioning: qualityInputs.positioning,
-            knowledge: qualityInputs.knowledge,
-            trend: trendQuality,
-          }),
-        ),
-        basis,
-      });
+      const { topics } = await runWithSkillSnapshot(["topic.generate"], () =>
+        runTopicNode({
+          model,
+          positioningBrief: context.positioningBrief,
+          basisBrief,
+          // [T-062b gate-F3] KNOW-X 修真:对话出题同样吃知识库参考 + 已验证经验约束
+          // (basis=knowledge 时知识已进 basisBrief,置空防重复)。
+          knowledgeBrief:
+            basis === "knowledge"
+              ? undefined
+              : context.knowledgeBrief || undefined,
+          learningsBrief: context.learningsBrief || undefined,
+          // [T-238] 依据质量画像段(模板 v3 据它动态定权、reason 注明主要依据+权重理由)。
+          signalQualityBrief: renderSignalQualityBrief(
+            buildSignalQualityProfile({
+              signals: qualityInputs.signals,
+              positioning: qualityInputs.positioning,
+              knowledge: qualityInputs.knowledge,
+              trend: trendQuality,
+            }),
+          ),
+          basis,
+        }),
+      );
       const items = topics.map((t) => ({
         title: t.title,
         angle: t.angle,
@@ -1128,27 +1169,35 @@ export async function buildChatAssembly(
         title?.trim() ||
         selectionTitle ||
         "";
-      // 复用 topic-enrich-runner 的 enrich prompt + parseCard —— 产选题卡候选(非实体)。
-      // [T-269] 反编造:对话 enrich 走自由文本(非模板),把可溯硬约束段注进 prompt + system(单一
-      // 真值 grounding-facets)——治「materialBasis 凭空称能依托某资料」的编造敞口。enrich 是账号态
-      // (projectId=null),不注 brief 硬锚(不项目化,守审计边界),只上 anti-fabrication。
-      const { runAgentNode, ANTI_FABRICATION_CLAUSE } = await import("@creatoros/ai-worker");
-      // [T-371] 先搜后卡:对话里联网核实到的事实经 verifiedBrief 进 enrich prompt(素材依据段
-      // 据实引用来源);缺省走「未联网核实」诚实门,禁「待联网拉取」占位承诺。
-      const prompt = buildEnrichPrompt(
-        context,
-        { title: effTitle, angle },
+      // [T-513] 对话补卡与后台 task 共用 topic.enrich 模板/schema；active scope 下真正
+      // method/template/requiredFacets 来自当前账号 snapshot，不再走绕过 overlay 的自由文本支路。
+      const {
         ANTI_FABRICATION_CLAUSE,
-        verifiedBrief,
-      );
-      const res = await runAgentNode({
-        model,
-        system:
-          "你是这位创作者的选题策划 agent,把一条选题补全成完整选题卡。只输出 JSON,不要多余文字。\n\n" +
-          ANTI_FABRICATION_CLAUSE,
-        prompt,
-        maxSteps: 2,
+        getTemplate,
+        modelFor,
+        runStructuredNode,
+      } = await import("@creatoros/ai-worker");
+      const spec = await deps.resolveModelSpec(ctx, "topic.enrich");
+      const facets = enrichFacets(context, {
+        title: effTitle,
+        angle: angle ?? "",
       });
+      facets.knowledge = [
+        facets.knowledge,
+        verifiedBrief
+          ? `【本轮联网核实素材(据实引用)】\n${verifiedBrief}`
+          : "【素材诚实门】本轮未联网核实；没有真实素材时必须明确写未核实，禁止写待拉取占位承诺。",
+        ANTI_FABRICATION_CLAUSE,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+      const { object } = await runWithSkillSnapshot(["topic.enrich"], () =>
+        runStructuredNode<TopicCardOutput>({
+          model: modelFor(spec),
+          template: getTemplate("topic.enrich"),
+          facets,
+        }),
+      );
       // [T-266] 随卡回补全**当时**锚定的已有候选 id(selection.kind==="candidate" → 就地补全
       // 这条);账号态/未选中某条候选 → null。持久化随 tool-result 走,刷新后前端仍据它 patch
       // (而非依赖易失的当前 selection),null 则采纳走 createCandidate 新建(治死胡同)。
@@ -1156,7 +1205,7 @@ export async function buildChatAssembly(
         chatContext.selection?.kind === "candidate"
           ? (chatContext.selection.ids[0] ?? null)
           : null;
-      return { card: parseCard(res.text), candidateId };
+      return { card: normalizeCard(object), candidateId };
     },
     generateHooks: async ({ topic, direction, extraBrief }) => {
       // [T-055c] 复用 runAgentNode 一次调用产 hook 候选组(非实体)。主题兜底:模型没传
@@ -1365,15 +1414,19 @@ export async function buildChatAssembly(
       const { runResearchNode, formatUserMaterialFacet } = await import(
         "@creatoros/ai-worker"
       );
-      const { items, grounding } = await runResearchNode({
-        model: modelFor(spec),
-        positioningBrief: context.positioningBrief,
-        topicTitle: baseQuery,
-        searchResults,
-        userMaterialFacet: context.userMaterialHardBrief
-          ? formatUserMaterialFacet(context.userMaterialHardBrief)
-          : undefined,
-      });
+      const { items, grounding } = await runWithSkillSnapshot(
+        ["research.gather"],
+        () =>
+          runResearchNode({
+            model: modelFor(spec),
+            positioningBrief: context.positioningBrief,
+            topicTitle: baseQuery,
+            searchResults,
+            userMaterialFacet: context.userMaterialHardBrief
+              ? formatUserMaterialFacet(context.userMaterialHardBrief)
+              : undefined,
+          }),
+      );
       return {
         grounding,
         items: items.map((it) => ({
@@ -1680,29 +1733,33 @@ export async function buildChatAssembly(
       const rubricBlock = GENERIC_RUBRIC_DIMENSIONS.map(
         (d, i) => `${i + 1}. ${d.label}（key=${d.key}） —— ${d.description}`,
       ).join("\n");
-      const { text } = await runTemplatedNode({
-        model: modelFor(spec),
-        // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
-        template: getTemplate("calibration.diagnose"),
-        facets: {
-          positioning: context.positioningBrief
-            ? context.positioningBrief
-            : "（创作者尚未设置定位——按通用爆款逻辑判断）",
-          learnings: context.learningsBrief
-            ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-            : "",
-          // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
-          extraBrief: extraBrief
-            ? `\n${EXTRA_BRIEF_HEADING}\n${extraBrief}`
-            : "",
-          rubricBlock,
-          title: effTitle || "（未提供标题）",
-          script:
-            script && script.trim()
-              ? script
-              : "（暂无文稿——请基于标题与定位做尽力诊断,拿不准的指标给 null）",
-        },
-      });
+      const { text } = await runWithSkillSnapshot(
+        ["calibration.diagnose"],
+        () =>
+          runTemplatedNode({
+            model: modelFor(spec),
+            // 调用方对象只提供受控 id；active scope 下实际模板取账号 snapshot。
+            template: getTemplate("calibration.diagnose"),
+            facets: {
+              positioning: context.positioningBrief
+                ? context.positioningBrief
+                : "（创作者尚未设置定位——按通用爆款逻辑判断）",
+              learnings: context.learningsBrief
+                ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+                : "",
+              // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
+              extraBrief: extraBrief
+                ? `\n${EXTRA_BRIEF_HEADING}\n${extraBrief}`
+                : "",
+              rubricBlock,
+              title: effTitle || "（未提供标题）",
+              script:
+                script && script.trim()
+                  ? script
+                  : "（暂无文稿——请基于标题与定位做尽力诊断,拿不准的指标给 null）",
+            },
+          }),
+      );
       const parsed = parseDiagnosis(
         text,
         new Set(GENERIC_RUBRIC_DIMENSIONS.map((d) => d.key)),
@@ -1758,13 +1815,15 @@ export async function buildChatAssembly(
         ? subject
         : reviewContext.reviewTitle?.trim() || selectionTitle;
       const spec = await deps.resolveModelSpec(ctx, "review.insights");
-      const { text } = await runTemplatedNode({
-        model: modelFor(spec),
-        // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
-        template: getTemplate("review.insights"),
-        // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位(空则整段省略)。
-        facets: reviewFacets(reviewContext, effSubject, extraBrief),
-      });
+      const { text } = await runWithSkillSnapshot(["review.insights"], () =>
+        runTemplatedNode({
+          model: modelFor(spec),
+          // 调用方对象只提供受控 id；active scope 下实际模板取账号 snapshot。
+          template: getTemplate("review.insights"),
+          // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位(空则整段省略)。
+          facets: reviewFacets(reviewContext, effSubject, extraBrief),
+        }),
+      );
       return { items: parseLearnings(text), error: null };
     },
     generatePositioning: async ({ extraBrief }) => {
@@ -1784,15 +1843,26 @@ export async function buildChatAssembly(
           worksBrief = ""; // 作品画像 best-effort,读失败不阻断定位生成
         }
       }
-      const { runAgentNode } = await import("@creatoros/ai-worker");
       const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
-      const res = await runAgentNode({
-        model: modelFor(spec),
-        system: "你是这位创作者的定位策略 agent。只输出 JSON,不要多余文字。",
-        prompt: buildPositioningPrompt(context, { extraBrief, worksBrief }),
-        maxSteps: 2,
-      });
-      return parseSuggestion(res.text);
+      const facets = positioningFacets(context, worksBrief);
+      if (extraBrief?.trim()) {
+        facets.current = [
+          facets.current,
+          `${EXTRA_BRIEF_HEADING}\n${extraBrief.trim()}`,
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+      }
+      const { object } = await runWithSkillSnapshot(
+        ["positioning.generate"],
+        () =>
+          runStructuredNode<PositioningSuggestionOutput>({
+            model: modelFor(spec),
+            template: getTemplate("positioning.generate"),
+            facets,
+          }),
+      );
+      return normalizeSuggestion(object);
     },
     // [T-094] 对话蒸馏:复用倾倒场同一引擎 runKnowledgeDistill(knowledge.distill 模板 +
     // capability 走 model-config,多模态可配铁律)。失败抛错由工具 execute 接住转人话渲卡。
@@ -1800,10 +1870,12 @@ export async function buildChatAssembly(
       const { runKnowledgeDistill } = await import(
         "./knowledge-distill-runner"
       );
-      return runKnowledgeDistill(
-        ctx,
-        { content },
-        { resolveModelSpec: deps.resolveModelSpec },
+      return runWithSkillSnapshot(["knowledge.distill"], () =>
+        runKnowledgeDistill(
+          ctx,
+          { content },
+          { resolveModelSpec: deps.resolveModelSpec },
+        ),
       );
     },
     // [T-077b] brief.fill 的现状读:当前项目对话(chatContext.projectId,project surface 的

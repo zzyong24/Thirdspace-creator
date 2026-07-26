@@ -4,6 +4,7 @@ import {
   asSchema,
   NoObjectGeneratedError,
   type LanguageModel,
+  type LanguageModelUsage,
   type FlexibleSchema,
 } from "ai";
 import { bindPrompt, type PromptTemplate } from "../prompt/template";
@@ -12,6 +13,20 @@ import {
   registerAllTemplates,
   resolveOutputSchema,
 } from "../prompt/registry";
+import {
+  getActiveEffectiveSkillSnapshot,
+  getEffectiveSkill,
+  getEffectiveTemplate,
+  hasActiveEffectiveSkillSnapshot,
+  resolveEffectiveOutputSchema,
+} from "../prompt/effective-skill-runtime";
+import {
+  CompletionPolicyRuntimeError,
+  enforceCompletionPolicy,
+  evaluateCompletionPolicy,
+  type CompletionPolicyViolation,
+} from "../prompt/completion-policy";
+import type { CompletionPolicyV1 } from "../prompt/effective-skill-types";
 
 // 结构化模板节点(每轮 schema 约束脊梁,SPEC §4.2)—— 任何「装配上下文 → 跑一次模型 →
 // 拿一个被 schema 卡死的结构化对象」的节点共用一条路。与 templated-node(generateText 拿自由
@@ -51,6 +66,34 @@ export interface RunStructuredNodeInput<T> {
 export interface RunStructuredNodeResult<T> {
   /** 已被 outputSchema 校验通过的结构化对象。 */
   object: T;
+  generation: {
+    finishReason: string;
+    usage: StructuredNodeUsage;
+    attempts: Array<{
+      finishReason: string;
+      usage: StructuredNodeUsage;
+      kind: "initial" | "repair";
+    }>;
+  };
+  validation?: {
+    status: "valid";
+    errors: [];
+    policySnapshot: {
+      policy: CompletionPolicyV1;
+      adapter: { id: string; version: string };
+    };
+    originalSegmentCount: number;
+    finalSegmentCount: number;
+    repairAttemptsUsed: number;
+    repairReasons: CompletionPolicyViolation[];
+  };
+}
+
+export interface StructuredNodeUsage {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  cachedTokens: number | null;
+  totalTokens: number | null;
 }
 
 /**
@@ -73,6 +116,37 @@ export function extractJsonObject(text: string): unknown {
 }
 
 /**
+ * 部分 provider 在结构化响应被截断时抛 AI_JSONParseError / Invalid JSON response，而不是
+ * NoObjectGeneratedError。只识别明确的 JSON 解析类信号，鉴权、网络、超时仍原样抛出。
+ */
+export function isStructuredResponseParseError(error: unknown): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  for (let depth = 0; depth < 6 && current != null; depth += 1) {
+    if (seen.has(current)) break;
+    seen.add(current);
+    if (typeof current === "object") {
+      const record = current as Record<string, unknown>;
+      const name = typeof record.name === "string" ? record.name : "";
+      const message =
+        typeof record.message === "string" ? record.message : "";
+      if (
+        /(?:AI_)?JSONParseError/i.test(name) ||
+        /invalid\s+json\s+(?:response|output)|json\s+parse\s+error/i.test(
+          message,
+        )
+      ) {
+        return true;
+      }
+      current = record.cause;
+      continue;
+    }
+    break;
+  }
+  return false;
+}
+
+/**
  * 跑一次结构化模板节点 —— 解析 outputSchema(registry 收口,或显式覆盖)→ bindPrompt(模板,facets)
  * → generateObject(绑 outputSchema)。模型吐的 JSON 不合 schema 时 Vercel SDK 自动重试。
  *
@@ -87,60 +161,260 @@ export function extractJsonObject(text: string): unknown {
 // + markSucceeded)。任何有限超时都能抓住挂起;90s 给正常慢模型足够余量,又不至于让用户无限等。
 const MODEL_CALL_TIMEOUT_MS = 90_000;
 
+function normalizeUsage(usage: LanguageModelUsage | undefined): StructuredNodeUsage {
+  const inputTokens =
+    typeof usage?.inputTokens === "number" ? usage.inputTokens : null;
+  const outputTokens =
+    typeof usage?.outputTokens === "number" ? usage.outputTokens : null;
+  const cachedTokens =
+    typeof usage?.inputTokenDetails?.cacheReadTokens === "number"
+      ? usage.inputTokenDetails.cacheReadTokens
+      : null;
+  return {
+    inputTokens,
+    outputTokens,
+    cachedTokens,
+    totalTokens:
+      inputTokens === null && outputTokens === null
+        ? null
+        : (inputTokens ?? 0) + (outputTokens ?? 0),
+  };
+}
+
+function addUsage(
+  left: StructuredNodeUsage,
+  right: StructuredNodeUsage,
+): StructuredNodeUsage {
+  const add = (a: number | null, b: number | null) =>
+    a === null && b === null ? null : (a ?? 0) + (b ?? 0);
+  return {
+    inputTokens: add(left.inputTokens, right.inputTokens),
+    outputTokens: add(left.outputTokens, right.outputTokens),
+    cachedTokens: add(left.cachedTokens, right.cachedTokens),
+    totalTokens: add(left.totalTokens, right.totalTokens),
+  };
+}
+
+const EMPTY_USAGE: StructuredNodeUsage = {
+  inputTokens: null,
+  outputTokens: null,
+  cachedTokens: null,
+  totalTokens: null,
+};
+
+function repairPrompt(
+  basePrompt: string,
+  violations: readonly CompletionPolicyViolation[],
+  previousOutput: unknown,
+): string {
+  const reasons = violations
+    .map((violation, index) => `${index + 1}. ${violation.message}`)
+    .join("\n");
+  return `${basePrompt}
+
+【上次输出未通过当前 Skill 的完整性策略，请修复后重新输出】
+${reasons}
+只修复以上声明式完整性问题，并继续严格遵守原 outputSchema。不要解释，不要省略结构字段。
+上次结构化输出：
+${JSON.stringify(previousOutput)}`;
+}
+
 export async function runStructuredNode<T>(
   input: RunStructuredNodeInput<T>,
 ): Promise<RunStructuredNodeResult<T>> {
-  // 默认从 registry 取 outputSchema(统一防发散入口 + 吃 JSON Schema 配置覆盖)。registry 未被
-  // 宿主显式 bootstrap 时,惰性全量注册一次(幂等),保证 frontend 直接调本节点也能收口到 registry。
-  if (!hasTemplate(input.template.id)) registerAllTemplates();
+  const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
+  // T-513:只要声明了 completionPolicy/adapter，就不允许从无 snapshot 的 legacy 路径
+  // 启动模型调用；普通旧 Skill 在宿主逐入口迁移期间仍走 official registry。
+  if (
+    !hasEffectiveScope &&
+    (input.template.completionPolicy ||
+      input.template.completionPolicyAdapter)
+  ) {
+    getActiveEffectiveSkillSnapshot(); // typed SKILL_SNAPSHOT_MISSING
+  }
+  // active scope 下 method/template/required facets 必须全部来自 immutable snapshot，
+  // 不信任调用方传入的同 id 伪造对象。无 scope 的无策略旧入口维持现状，等待宿主迁移。
+  const template = hasEffectiveScope
+    ? getEffectiveTemplate(input.template.id)
+    : input.template;
+  // 默认从 effective snapshot / legacy registry 取 outputSchema。显式 schema 仍可做动态
+  // refine 逃生口，但返回前 completionPolicy 永远执行，不能借显式 schema 绕过策略。
+  if (!hasEffectiveScope && !hasTemplate(template.id)) registerAllTemplates();
   const schema: FlexibleSchema<T> =
     input.outputSchema ??
-    (resolveOutputSchema(input.template.id) as FlexibleSchema<T>);
+    ((hasEffectiveScope
+      ? resolveEffectiveOutputSchema(template.id)
+      : resolveOutputSchema(template.id)) as FlexibleSchema<T>);
 
-  const { system, prompt } = bindPrompt(input.template, input.facets);
+  const { system, prompt } = bindPrompt(template, input.facets);
   const maxRetries = input.maxRetries ?? 2;
+  const policy = hasEffectiveScope
+    ? getEffectiveSkill(template.id).effective.completionPolicy
+    : null;
+  const repairBudget = policy?.repairAttempts ?? 0;
+  const attempts: RunStructuredNodeResult<T>["generation"]["attempts"] = [];
+  let totalUsage = EMPTY_USAGE;
+  let firstSegmentCount: number | null = null;
+  let finalSegmentCount: number | null = null;
+  const repairReasons: CompletionPolicyViolation[] = [];
 
-  try {
-    const { object } = await generateObject({
-      model: input.model,
-      system,
-      prompt,
-      schema,
-      maxRetries,
-      // [T-122] 防端点挂起把任务永远卡 running(见 MODEL_CALL_TIMEOUT_MS 注释)。
-      abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
-    });
-    return { object: object as T };
-  } catch (err) {
-    // 只对「模型没产出结构化对象」降级(端点 tool-mode flaky);其它错误(鉴权/网络)照常抛。
-    if (!NoObjectGeneratedError.isInstance(err)) throw err;
-
-    // 文本兜底:把模型当成「只输出 JSON」用,宽容抽 JSON,再用同一 schema 校验。
-    const validator = asSchema(schema);
-    const validate = validator.validate?.bind(validator);
-    if (!validate) throw err; // schema 无 validate(理论不至于)→ 维持原失败
-    let lastError: unknown = err;
-    const textAttempts = Math.max(maxRetries, 1) + 1;
-    for (let i = 0; i < textAttempts; i++) {
-      const { text } = await generateText({
+  const generateOnce = async (
+    currentPrompt: string,
+  ): Promise<{
+    object: T;
+    finishReason: string;
+    usage: StructuredNodeUsage;
+  }> => {
+    try {
+      const result = await generateObject({
         model: input.model,
         system,
-        prompt,
-        maxRetries: 0,
-        // [T-122] 文本兜底路径同样加超时(每次尝试独立计时)。
+        prompt: currentPrompt,
+        schema,
+        maxRetries,
+        // [T-122] 防端点挂起把任务永远卡 running(见 MODEL_CALL_TIMEOUT_MS 注释)。
         abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
       });
-      const raw = extractJsonObject(text);
-      if (raw !== null) {
-        const result = await validate(raw);
-        if (result.success) return { object: result.value as T };
-        lastError = result.error;
+      return {
+        object: result.object as T,
+        finishReason: String(result.finishReason),
+        usage: normalizeUsage(result.usage),
+      };
+    } catch (err) {
+      // 只对「模型没产出结构化对象」降级(端点 tool-mode flaky);其它错误(鉴权/网络)照常抛。
+      if (
+        !NoObjectGeneratedError.isInstance(err) &&
+        !isStructuredResponseParseError(err)
+      ) {
+        throw err;
+      }
+
+      // 文本兜底:把模型当成「只输出 JSON」用,宽容抽 JSON,再用同一 schema 校验。
+      const validator = asSchema(schema);
+      const validate = validator.validate?.bind(validator);
+      if (!validate) throw err;
+      let lastError: unknown = err;
+      const textAttempts = Math.max(maxRetries, 1) + 1;
+      let fallbackUsage = normalizeUsage(
+        (err as { usage?: LanguageModelUsage }).usage,
+      );
+      for (let i = 0; i < textAttempts; i++) {
+        const result = await generateText({
+          model: input.model,
+          system,
+          prompt: currentPrompt,
+          maxRetries: 0,
+          abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
+        });
+        fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
+        const raw = extractJsonObject(result.text);
+        if (raw !== null) {
+          const validated = await validate(raw);
+          if (validated.success) {
+            return {
+              object: validated.value as T,
+              finishReason: String(result.finishReason),
+              usage: fallbackUsage,
+            };
+          }
+          lastError = validated.error;
+        }
+      }
+      throw new Error(
+        "结构化节点:generateObject 落空,文本兜底仍未得到合 schema 的对象" +
+          (lastError instanceof Error ? ` (${lastError.message})` : ""),
+        { cause: lastError },
+      );
+    }
+  };
+
+  let currentPrompt = prompt;
+  for (let repairAttempt = 0; repairAttempt <= repairBudget; repairAttempt += 1) {
+    const generated = await generateOnce(currentPrompt);
+    attempts.push({
+      finishReason: generated.finishReason,
+      usage: generated.usage,
+      kind: repairAttempt === 0 ? "initial" : "repair",
+    });
+    totalUsage = addUsage(totalUsage, generated.usage);
+
+    let violations: CompletionPolicyViolation[] = [];
+    let evaluation = null;
+    if (hasEffectiveScope) {
+      evaluation = evaluateCompletionPolicy(template.id, generated.object);
+      if (evaluation) {
+        firstSegmentCount ??= evaluation.segmentCount;
+        finalSegmentCount = evaluation.segmentCount;
+        violations = [...evaluation.errors];
       }
     }
-    throw new Error(
-      "结构化节点:generateObject 落空,文本兜底仍未得到合 schema 的对象" +
-        (lastError instanceof Error ? ` (${lastError.message})` : ""),
-      { cause: lastError },
-    );
+    if (
+      generated.finishReason === "length" ||
+      generated.finishReason === "content-filter" ||
+      generated.finishReason === "error"
+    ) {
+      violations.push({
+        code: "OUTPUT_INCOMPLETE",
+        path: "finishReason",
+        message: `模型终止原因 ${generated.finishReason} 表明输出可能未完成`,
+      });
+    }
+
+    if (violations.length === 0) {
+      const enforced = hasEffectiveScope
+        ? enforceCompletionPolicy(template.id, generated.object)
+        : null;
+      return {
+        object: generated.object,
+        generation: {
+          finishReason: generated.finishReason,
+          usage: totalUsage,
+          attempts,
+        },
+        ...(enforced
+          ? {
+              validation: {
+                status: "valid" as const,
+                errors: [] as [],
+                policySnapshot: {
+                  policy: structuredClone(enforced.policy),
+                  adapter: structuredClone(enforced.adapter),
+                },
+                originalSegmentCount:
+                  firstSegmentCount ?? enforced.segmentCount,
+                finalSegmentCount:
+                  finalSegmentCount ?? enforced.segmentCount,
+                repairAttemptsUsed: repairAttempt,
+                repairReasons,
+              },
+            }
+          : {}),
+      };
+    }
+
+    repairReasons.push(...violations);
+    if (repairAttempt >= repairBudget) {
+      if (evaluation) {
+        throw new CompletionPolicyRuntimeError(
+          "COMPLETION_POLICY_REPAIR_EXHAUSTED",
+          `skill "${template.id}" 输出未满足完整性策略，自动修复 ${repairBudget} 次后仍失败；请重试生成`,
+          violations,
+          firstSegmentCount,
+          finalSegmentCount,
+          undefined,
+          {
+            finishReason: generated.finishReason,
+            usage: totalUsage,
+            attempts,
+          },
+        );
+      }
+      throw new Error(
+        `结构化节点:模型输出未完整结束(${generated.finishReason})`,
+      );
+    }
+    currentPrompt = repairPrompt(prompt, violations, generated.object);
   }
+
+  throw new Error("结构化节点:不可达的 repair 状态");
 }

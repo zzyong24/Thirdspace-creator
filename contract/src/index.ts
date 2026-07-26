@@ -84,6 +84,12 @@ export {
 // op 删除后无法再经 ENDPOINTS.createAgent.response 派生,故按 taxonomy 同款约定
 // 从 barrel 直接 re-export 单一真值。
 export {
+  aiTaskResultDataResource,
+  aiTaskResultResource,
+  type AITaskResultDataResource,
+  type AITaskResultResource,
+} from "./resources/ai";
+export {
   agentConfigurationResource,
   type AgentConfigurationResource,
 } from "./resources/settings";
@@ -219,6 +225,16 @@ export {
   type SkillConfigOverrideResource,
   skillConfigOverrideVersionResource,
   type SkillConfigOverrideVersionResource,
+  completionPolicyV1Resource,
+  type CompletionPolicyV1Resource,
+  accountSkillOverlayPatchResource,
+  type AccountSkillOverlayPatchResource,
+  editableSkillValuesResource,
+  accountSkillOverlayCompatibilityErrorResource,
+  accountSkillOverlayResource,
+  type AccountSkillOverlayResource,
+  accountSkillOverlayVersionResource,
+  type AccountSkillOverlayVersionResource,
 } from "./resources/settings";
 
 // [T-163 Batch 3] Copilot 对话工具中文词表 —— chat-runner(backend,下沉后)与

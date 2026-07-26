@@ -220,14 +220,17 @@ export const projectsOperations = {
   // [T-374] 自己作品单条立抓逐字稿(项目页顶条「立即抓取逐字稿」)。composition-only op
   //   (module transport 不认它,由 persistence-client 的 projectsWithTranscribe 拦截 ——
   //   触发要 ai transport 的 transcribe.douyin 排队 + live dispatch,在 composition 层才可见,
-  //   同 benchmark.works.transcribe / scheduledJobs.runNow 约定)。落点与每日自动链同源:
-  //   runTranscribe → ensureTranscriptArtifact(imported artifact 链),幂等已有稿跳过。
-  //   项目无 platformRef.externalId → ValidationError 400(诚实,无锚无法抓)。
+  //   同 benchmark.works.transcribe / scheduledJobs.runNow 约定)。composition 写前检查当前
+  //   output_script：已有该 aweme 真稿 → ConflictError（不 enqueue）；无锚 → ValidationError。
+  //   T-513 后由动作发起方携带 attemptId：同一网络请求重发收敛，新动作显式换新 attempt。
   transcribeProjectWork: defineEndpoint({
     id: "projects.transcribe",
     method: "POST",
     path: "/projects/:projectId/transcribe",
     params: projectParams,
+    // T-513：由真正的动作发起方生成。浏览器/工具层重发同一请求时复用，wrapper
+    // 原样透传给 ai.tasks.create，不能在服务端收到每次 POST 后重新生成。
+    body: z.object({ attemptId: z.string().min(16).max(128) }),
     response: z.object({ taskId: z.string() }),
     fr: ["FR-PROJECT-TRANSCRIBE"],
   }),

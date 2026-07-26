@@ -32,11 +32,8 @@ export interface ScriptTask {
   inputData: Record<string, unknown>;
 }
 
-// The parsed storyboard: a 前3秒 hook, the shot beats, and a CTA.
 interface Storyboard {
-  hook: string;
   sections: ScriptShot[];
-  cta: string;
 }
 
 // Serialize the parsed storyboard into a readable Markdown table (the ArtifactVersion's
@@ -44,15 +41,16 @@ interface Storyboard {
 // renders after 采纳.
 function renderBody(board: Storyboard): string {
   const lines: string[] = ["# 分镜脚本", ""];
-  if (board.hook) lines.push(`**前3秒钩子**：${board.hook}`, "");
-  lines.push("| # | 口播 | 画面 | 字幕 | 时长 |", "| --- | --- | --- | --- | --- |");
+  lines.push(
+    "| # | 结构角色 | 口播 | 画面 | 字幕 | 时长 |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
   board.sections.forEach((shot, i) => {
     const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/\n/g, " ");
     lines.push(
-      `| ${i + 1} | ${cell(shot.口播)} | ${cell(shot.画面)} | ${cell(shot.字幕)} | ${cell(shot.时长)} |`,
+      `| ${i + 1} | ${cell(shot.role)} | ${cell(shot.口播)} | ${cell(shot.画面)} | ${cell(shot.字幕)} | ${cell(shot.时长)} |`,
     );
   });
-  if (board.cta) lines.push("", `**CTA**：${board.cta}`);
   return lines.join("\n");
 }
 
@@ -71,7 +69,10 @@ function renderSections(
 }> {
   return board.sections.map((shot, i) => {
     const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
-    const heading = shot.时长 ? `${i + 1}. ${label}（${shot.时长}）` : `${i + 1}. ${label}`;
+    const role = shot.role ? ` · ${shot.role}` : "";
+    const heading = shot.时长
+      ? `${i + 1}. ${label}${role}（${shot.时长}）`
+      : `${i + 1}. ${label}${role}`;
     const bodyLines = [
       shot.口播 && `口播：${shot.口播}`,
       shot.画面 && `画面：${shot.画面}`,
@@ -86,9 +87,7 @@ function renderSections(
 }
 
 function renderSummary(board: Storyboard): string {
-  const n = board.sections.length;
-  const hook = board.hook ? `钩子「${board.hook}」` : "AI 分镜脚本";
-  return `${hook} · ${n} 镜（钩子→痛点→价值→卡点→CTA）`;
+  return `AI 分镜脚本 · ${board.sections.length} 镜`;
 }
 
 export async function runScriptDraft(
@@ -121,8 +120,15 @@ export async function runScriptDraft(
       `[script-runner] task=${task.id} capability=script.draft apiFormat=${spec.apiFormat} ` +
         `model=${spec.model} endpoint=${spec.baseUrl ? "custom" : "official"}`,
     );
-    const { modelFor, runScriptNode } = await import("@creatoros/ai-worker");
-    const { shots } = await runScriptNode({
+    const {
+      modelFor,
+      runScriptNode,
+      getActiveEffectiveSkillSnapshot,
+      getEffectiveSkill,
+    } = await import("@creatoros/ai-worker");
+    const activeSnapshot = getActiveEffectiveSkillSnapshot();
+    const effectiveSkill = getEffectiveSkill("script.draft");
+    const result = await runScriptNode({
       model: modelFor(spec),
       positioningBrief: context.positioningBrief,
       learningsBrief: context.learningsBrief,
@@ -138,6 +144,11 @@ export async function runScriptDraft(
       benchmarkRefBrief: context.benchmarkRefBrief || undefined,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
+      extraBrief:
+        typeof task.inputData.extraBrief === "string" &&
+        task.inputData.extraBrief.trim()
+          ? task.inputData.extraBrief.trim()
+          : undefined,
       orientation: context.orientationHint || undefined,
       // SEAM-01:把策划产物(论点树/内容合同/结构方案)注入写文案上下文,和 positioning+learnings 并列。
       // 经 reader 端口装配(creative-context),非跨模块直连 repo;脚本据此铺策划的结构与论点。
@@ -152,18 +163,32 @@ export async function runScriptDraft(
       // 点名真实 assetId 的唯一可选集;库空/未装配 → undefined(模板整段省略,missing 承接诚实缺)。
       assetsBrief: context.assetsBrief || undefined,
       onStep: async (e) => {
+        const terminal = JSON.stringify({
+          taskId: task.id,
+          accountId: activeSnapshot.accountId,
+          skillId: effectiveSkill.skillId,
+          baseVersion: effectiveSkill.baseVersion,
+          overlayVersion: effectiveSkill.overlayVersion,
+          completionPolicy: effectiveSkill.effective.completionPolicy,
+          finishReason: e.finishReason,
+          ...(e.usage ? { usage: e.usage } : {}),
+        });
         await deps.ai.recordStep(ctx, task.id, {
           stepNo: e.stepNo,
           kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
+          text: `${e.text}\n${terminal}`,
           toolCalls: e.toolCalls,
         });
       },
     });
+    const { shots, generation, validation } = result;
+    if (!validation || validation.status !== "valid") {
+      throw new Error(
+        "script-runner: 整稿缺少有效的 completionPolicy 校验结果，禁止记录候选",
+      );
+    }
     const board: Storyboard = {
-      hook: shots[0]?.字幕 || shots[0]?.口播 || "",
       sections: shots,
-      cta: shots[shots.length - 1]?.口播 || shots[shots.length - 1]?.字幕 || "",
     };
     if (board.sections.length === 0) {
       throw new Error("script-runner: agent returned no parseable shots");
@@ -177,19 +202,87 @@ export async function runScriptDraft(
         // Raw shots — kept so the 采纳 card preview (ScriptDraftIsland.parseShots)
         // still renders 口播/画面/字幕/时长.
         sections: board.sections,
-        hook: board.hook,
-        cta: board.cta,
         // Structured editable payload forwarded by the AI confirm branch to
         // createVersion as `contentData` (round-trips into the 脚本 editor).
         contentData: {
           sections: renderSections(board),
-          hook: board.hook,
-          cta: board.cta,
         },
+        validationStatus: "valid",
+        validationErrors: [],
+        canAdopt: true,
+        accountId: activeSnapshot.accountId,
+        skillSnapshot: {
+          skillId: effectiveSkill.skillId,
+          baseVersion: effectiveSkill.baseVersion,
+          overlayRevision: effectiveSkill.overlayRevision,
+          overlayVersion: effectiveSkill.overlayVersion,
+          completionPolicy: structuredClone(
+            validation.policySnapshot.policy,
+          ),
+          completionPolicyAdapter: structuredClone(
+            validation.policySnapshot.adapter,
+          ),
+        },
+        originalSegmentCount: validation.originalSegmentCount,
+        finalSegmentCount: validation.finalSegmentCount,
+        repairAttemptsUsed: validation.repairAttemptsUsed,
+        repairReasons: validation.repairReasons.map(
+          (violation) => violation.message,
+        ),
+        finishReason: generation.finishReason,
+        usage: generation.usage,
+        generationAttempts: generation.attempts,
       },
     });
   } catch (err) {
     const failureMessage = safeErrorMessage(err);
+    const failure = err as {
+      code?: unknown;
+      violations?: Array<{ message?: unknown }>;
+      originalSegmentCount?: unknown;
+      finalSegmentCount?: unknown;
+      evidence?: unknown;
+    };
+    // repair exhaustion 没有成功 step 回调，单独落一条真实终态验证日志；任何日志写失败
+    // 都不能掩盖原错误，任务仍由 cancelTask 收尾且不产生 candidate。
+    if (failure.code === "COMPLETION_POLICY_REPAIR_EXHAUSTED") {
+      try {
+        const { getActiveEffectiveSkillSnapshot, getEffectiveSkill } =
+          await import("@creatoros/ai-worker");
+        const activeSnapshot = getActiveEffectiveSkillSnapshot();
+        const effectiveSkill = getEffectiveSkill("script.draft");
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: 1,
+          kind: "validation",
+          text: JSON.stringify({
+            taskId: task.id,
+            accountId: activeSnapshot.accountId,
+            skillId: effectiveSkill.skillId,
+            baseVersion: effectiveSkill.baseVersion,
+            overlayVersion: effectiveSkill.overlayVersion,
+            completionPolicy:
+              effectiveSkill.effective.completionPolicy,
+            validationStatus: "invalid",
+            validationErrors: Array.isArray(failure.violations)
+              ? failure.violations
+                  .map((violation) =>
+                    typeof violation.message === "string"
+                      ? violation.message
+                      : "",
+                  )
+                  .filter(Boolean)
+              : [],
+            canAdopt: false,
+            originalSegmentCount: failure.originalSegmentCount ?? null,
+            finalSegmentCount: failure.finalSegmentCount ?? null,
+            generation: failure.evidence ?? null,
+          }),
+          toolCalls: [],
+        });
+      } catch {
+        /* best-effort failure telemetry */
+      }
+    }
     try {
       await deps.ai.cancelTask(ctx, task.id, failureMessage);
     } catch {

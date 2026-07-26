@@ -372,6 +372,20 @@
       "when": 1784827200000,
       "tag": "0052_intelligence_source_memberships",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1784913600000,
+      "tag": "0053_account_skill_overlays",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1784917200000,
+      "tag": "0054_ai_task_execution_ownership",
+      "breakpoints": true
     }
   ]
 }

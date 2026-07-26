@@ -593,11 +593,21 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
 
   function readClient(candidates: CandidateResource[]) {
     const listCandidates = vi.fn(
-      (i: { query?: { source?: string } }): Promise<unknown> => {
+      (i: {
+        query?: {
+          source?: string;
+          sort?: string;
+          createdAfter?: string;
+        };
+      }): Promise<unknown> => {
         const src = i.query?.source;
-        return Promise.resolve(
-          src ? candidates.filter((c) => c.source === src) : candidates,
-        );
+        let rows = src
+          ? candidates.filter((c) => c.source === src)
+          : candidates;
+        if (i.query?.createdAfter) {
+          rows = rows.filter((c) => c.createdAt >= i.query!.createdAfter!);
+        }
+        return Promise.resolve(rows);
       },
     );
     const client = {
@@ -614,13 +624,19 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
   it("合法 ?source= → 服务端读侧多发一次带 source 的 candidates.list,池子只渲染该来源", async () => {
     const { client, listCandidates } = readClient(pool());
     render(await TopicsPage({ sort: "predictedScore", source: "idea", client }));
-    expect(listCandidates).toHaveBeenCalledTimes(2);
-    const second = listCandidates.mock.calls[1]![0] as {
+    expect(listCandidates).toHaveBeenCalledTimes(3);
+    const todayRead = listCandidates.mock.calls[1]![0] as {
+      query: { sort?: string; createdAfter?: string; status?: string };
+    };
+    expect(todayRead.query.sort).toBe("createdAt");
+    expect(todayRead.query.createdAfter).toMatch(/T\d{2}:00:00\.000Z$/);
+    expect(todayRead.query.status).toBe("pool");
+    const sourceRead = listCandidates.mock.calls[2]![0] as {
       query: { source?: string; sort?: string; status?: string };
     };
-    expect(second.query.source).toBe("idea");
-    expect(second.query.sort).toBe("predictedScore");
-    expect(second.query.status).toBe("pool");
+    expect(sourceRead.query.source).toBe("idea");
+    expect(sourceRead.query.sort).toBe("predictedScore");
+    expect(sourceRead.query.status).toBe("pool");
     // 候选池只剩 idea 来源那条;trend 候选被服务端过滤掉。
     expect(screen.getAllByTestId("candidate-card")).toHaveLength(1);
     expect(screen.getByTestId("pool-source-filter-hint")).toBeInTheDocument();
@@ -635,7 +651,7 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
         client,
       }),
     );
-    expect(listCandidates).toHaveBeenCalledTimes(1);
+    expect(listCandidates).toHaveBeenCalledTimes(2);
     const only = listCandidates.mock.calls[0]![0] as {
       query: { source?: string; status?: string };
     };

@@ -4,9 +4,11 @@ import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
 import { getChatRuntime } from "@/server/persistence-client";
 import {
+  resolveSkillForSurface,
   runChatStream,
   type ChatContext,
 } from "@creatoros/backend/modules/ai-runtime";
+import { runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
 import { readSessionCookie } from "../v1/auth/_session";
 import {
   resolveRequestContext,
@@ -259,20 +261,26 @@ export async function POST(req: Request): Promise<Response> {
   } | null = null;
 
   try {
-    const result = await runChatStream(
-      ctx,
-      // [T-239c] req.signal 贯通:用户点「停止」/关页 → streamText abort(服务端 1s 内停,
-      // 不再空跑后续工具烧钱);signal 同时经工具 execute 第二参透传给长工具提前退出。
-      {
-        messages,
-        chatContext,
-        abortSignal: req.signal,
-        // [T-239e] 用量回报口:持最新累计值(闭包变量,onFinish 落库时读)。
-        onUsage: (u) => {
-          turnUsage = u;
+    // [T-513] 对话同样走 account-scoped immutable snapshot。surface → official skill
+    // 的映射由服务端控制，客户端不能注入 prompt / policy；ALS 隔离并发账号。
+    const skillSnapshot = await runtime.resolveEffectiveSkillSnapshot(ctx, [
+      resolveSkillForSurface(chatContext.surface),
+    ]);
+    const result = await runWithEffectiveSkillSnapshot(skillSnapshot, () =>
+      runChatStream(
+        ctx,
+        // [T-239c] req.signal 贯通:用户点「停止」/关页 → streamText abort(服务端 1s 内停,
+        // 不再空跑后续工具烧钱);signal 同时经工具 execute 第二参透传给长工具提前退出。
+        {
+          messages,
+          chatContext,
+          abortSignal: req.signal,
+          // [T-239e] 用量回报口:持最新累计值(闭包变量,onFinish 落库时读)。
+          onUsage: (u) => {
+            turnUsage = u;
+          },
         },
-      },
-      {
+        {
         // 展开 runtime.context 里所有已绑定的 CreativeContext reader(positioning / learnings /
         // signals / knowledge / accounts / reviewSubject …)。原来手列 4 个,漏了 reviewSubject
         // (T-039a 复盘对象)与 accounts(T-039b 账号画像)—— 装配点 assembleCreativeContext 拿不到
@@ -282,6 +290,16 @@ export async function POST(req: Request): Promise<Response> {
         // (它含 ArtifactType 依赖),改由这里(前端边界)把 humanizeAiError 注入。
         humanizeError: humanizeAiError,
         resolveModelSpec: runtime.resolveModelSpec,
+        // [T-513] chatbox 工具同步调用 topic/research/review 等子 Skill 时，为子调用
+        // 按同一 user/account 解析独立 snapshot；AsyncLocalStorage 嵌套作用域结束后会
+        // 自动恢复外层 chatbox snapshot，账号之间不会共享可变 registry。
+        runWithSkillSnapshot: async (runCtx, requiredSkillIds, execute) => {
+          return runtime.runWithEffectiveSkills(
+            runCtx,
+            requiredSkillIds,
+            execute,
+          );
+        },
         // [T-239b] 备用对话模型端口 —— 主模型流开始前可重试错误耗尽时,恢复层用它接管一次
         // (只认 chat.fallback 专配行,用户没配 = 现状报错)。
         resolveFallbackModelSpec: runtime.resolveFallbackModelSpec,
@@ -309,7 +327,7 @@ export async function POST(req: Request): Promise<Response> {
         dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
         // [T-271] cover.generate 端口 —— dispatch 制作封面链(结构化封面方案 + 文案诚实门 + 生图)。
         dispatchGenerateCoverPort: runtime.dispatchGenerateCover,
-        // 抖音分享走 intelligence 持久建档/可选转写专路，禁止误落 web.read。
+        // [T-523] 抖音分享走 intelligence 持久建档/可选转写专路，禁止误落 web.read。
         dispatchDouyinSharePort: runtime.dispatchDouyinShare,
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
         dispatchScriptReviewPort: runtime.dispatchScriptReview,
@@ -321,7 +339,8 @@ export async function POST(req: Request): Promise<Response> {
         dispatchPublishPackagePort: runtime.dispatchPublishPackage,
         // [T-385] project.transcribe 端口 —— 复用 T-374 projects.transcribe 链,对话内一键抓单条逐字稿。
         dispatchProjectTranscribePort: runtime.dispatchProjectTranscribe,
-      },
+        },
+      ),
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。
     // [T-094] onError:流中错误(如 MiniMax 内容安全审核拦截整轮输入 new_sensitive/1026)

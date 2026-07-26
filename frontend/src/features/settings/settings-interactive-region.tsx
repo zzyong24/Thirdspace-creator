@@ -29,6 +29,7 @@
  */
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -81,8 +82,6 @@ import {
   Sparkles,
   ShieldCheck,
   KeyRound,
-  Trash2,
-  Plus,
   ChevronDownIcon,
   ChevronRightIcon,
   Download,
@@ -290,7 +289,11 @@ export function SettingsDialog({
   const searchParams = useSearchParams();
   const highlight = searchParams?.get("highlight") ?? null;
   const [open, setOpen] = React.useState(true);
-  const [tab, setTab] = React.useState<string>(SETTINGS_DIALOG_TABS[0]!.id);
+  const [tab, setTab] = React.useState<string>(
+    () =>
+      (highlight ? HIGHLIGHT_TAB[highlight] : undefined) ??
+      SETTINGS_DIALOG_TABS[0]!.id,
+  );
 
   // 关闭弹窗:回上一页(回到打开设置之前的位置),没有历史时兜底回首页。
   const handleOpenChange = React.useCallback(
@@ -314,9 +317,10 @@ export function SettingsDialog({
     if (!highlight) return;
     const targetTab = HIGHLIGHT_TAB[highlight];
     if (!targetTab) return; // 未知 stepKey → 不切页签、不报错。
-    setTab(targetTab);
-    // 切页签后延一帧,让目标 panel 由 hidden 转可见再滚动 + 高亮。
-    const raf = requestAnimationFrame(() => {
+    // URL → React state 的同步延到浏览器帧，避免 effect 内同步 setState 触发级联渲染。
+    const tabRaf = requestAnimationFrame(() => {
+      setTab(targetTab);
+      // 所有 panel 都 forceMount,同一帧即可定位;React 随后提交 tab 可见态。
       if (typeof document === "undefined") return;
       const el = document.querySelector(
         `[data-highlight="${CSS.escape(highlight)}"]`,
@@ -331,9 +335,7 @@ export function SettingsDialog({
       // 保存 timer 到 dataset 以便卸载时清(避免组件卸载后 setTimeout 触发 DOM 访问)。
       el.dataset.highlightTimer = String(timer);
     });
-    return () => {
-      cancelAnimationFrame(raf);
-    };
+    return () => cancelAnimationFrame(tabRaf);
   }, [highlight]);
 
   return (
@@ -390,8 +392,14 @@ export function SettingsDialog({
           >
             <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
-                <AccountInformationCard viewModel={viewModel} />
-                <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
+                <AccountInformationCard
+                  key={viewModel.account.displayName}
+                  viewModel={viewModel}
+                />
+                <AccountBindingCard
+                  key={`${viewModel.douyinAccount.loggedIn}:${viewModel.douyinAccount.sourceReady ?? false}`}
+                  douyinAccount={viewModel.douyinAccount}
+                />
                 {/* [T-217a] 网站登录保管库:登录一次网站 → 编导带登录态读正文(web.read)。 */}
                 <WebSessionVaultCard />
                 {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
@@ -452,24 +460,29 @@ export function SettingsDialog({
                   ]}
                 >
                   <MultimodalModelCard
+                    key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
                     kind="audio"
                     state={viewModel.multimodalModels.audio}
                   />
                   {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
                   <MultimodalModelCard
+                    key={`review:${JSON.stringify(viewModel.multimodalModels.review)}`}
                     kind="review"
                     state={viewModel.multimodalModels.review}
                   />
                   <MultimodalModelCard
+                    key={`image:${JSON.stringify(viewModel.multimodalModels.image)}`}
                     kind="image"
                     state={viewModel.multimodalModels.image}
                   />
                   <MultimodalModelCard
+                    key={`video:${JSON.stringify(viewModel.multimodalModels.video)}`}
                     kind="video"
                     state={viewModel.multimodalModels.video}
                   />
                   {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
                   <MultimodalModelCard
+                    key={`embed:${JSON.stringify(viewModel.multimodalModels.embed)}`}
                     kind="embed"
                     state={viewModel.multimodalModels.embed}
                   />
@@ -477,16 +490,19 @@ export function SettingsDialog({
                       state 早已备好(MULTIMODAL_META.vision/search + viewModel 两档),
                       此前一直没挂进面板 → 用户想配联网搜索(T-228)/视觉理解无入口。 */}
                   <MultimodalModelCard
+                    key={`vision:${JSON.stringify(viewModel.multimodalModels.vision)}`}
                     kind="vision"
                     state={viewModel.multimodalModels.vision}
                   />
                   <MultimodalModelCard
+                    key={`search:${JSON.stringify(viewModel.multimodalModels.search)}`}
                     kind="search"
                     state={viewModel.multimodalModels.search}
                   />
                   {/* [T-239b] 备用对话模型(chat.fallback):主模型可重试错误耗尽时接管一次;
                       未配 → 现状报错(诚实降级,不静默换模型)。 */}
                   <MultimodalModelCard
+                    key={`fallback:${JSON.stringify(viewModel.multimodalModels.fallback)}`}
                     kind="fallback"
                     state={viewModel.multimodalModels.fallback}
                   />
@@ -497,11 +513,19 @@ export function SettingsDialog({
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
-              <SkillsSection skills={skills} />
+              <SkillsSection
+                // [T-513] 切号必须销毁展开行、草稿、pending/error 等本地状态；不能让旧账号
+                // textarea 在新账号目录上复用。服务端读写仍以 RequestContext 做最终归属门。
+                key={skills[0]?.accountId ?? "__no-account-skill-catalog__"}
+                skills={skills}
+              />
             </SettingsPanel>
             <SettingsPanel tabId="storage" active={tab}>
               <div className="flex flex-col gap-card-gap">
-                <StorageUsageCard storage={viewModel.storage} />
+                <StorageUsageCard
+                  key={viewModel.storage.rootPath}
+                  storage={viewModel.storage}
+                />
                 {/* [T-332 S5] 危险区:重置工作区(二次确认 + 落 reset-pending 标记,重启归档生效)。 */}
                 <ResetWorkspaceCard />
               </div>
@@ -555,11 +579,6 @@ function AccountInformationCard({
   const initialName = viewModel.account.displayName;
   const [draftName, setDraftName] = React.useState<string>(initialName);
   const { pending, run } = useSettingsMutation();
-
-  // Re-sync the draft when the server read changes the identity (post-refresh).
-  React.useEffect(() => {
-    setDraftName(initialName);
-  }, [initialName]);
 
   const trimmed = draftName.trim();
   const dirty = trimmed.length > 0 && trimmed !== initialName;
@@ -716,12 +735,6 @@ function AccountBindingCard({
   // 灰「未连接」翻译成「未绑定账号」绑定引导(SPEC §4.2:引导,不是报错/不是误导的连接态)。
   const [accountRequired, setAccountRequired] = React.useState(false);
 
-  // SSR 值变化(切账号 / 首次水合)时同步徽标。
-  React.useEffect(() => {
-    setLoggedIn(douyinAccount.loggedIn);
-    setSourceReady(douyinAccount.sourceReady ?? false);
-  }, [douyinAccount.loggedIn, douyinAccount.sourceReady]);
-
   // 挂载后拉一次真 status(不弹窗,headless 探针),把 SSR 兜底徽标翻真。探针失败(无
   // 浏览器 / transport race)静默保持 SSR 值(未连接),不误显已连接。
   React.useEffect(() => {
@@ -871,10 +884,12 @@ function AccountBindingCard({
           className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3"
         >
           {/* T-174:抖音官方 logo(替原 Link2 通用链接图标),圆角方形贴合抖音 app 图标观感。 */}
-          <img
+          <Image
             src="/douyin-icon.png"
             alt="抖音"
             aria-hidden="true"
+            width={40}
+            height={40}
             className="size-10 shrink-0 rounded-[9px]"
           />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -1084,9 +1099,8 @@ function ActivationStatusCard({
     remaining: number;
     anchoredAt: number;
   } | null>(null);
-  const [, setCountdownTick] = React.useState(0);
-
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载后立刻取本机时钟,同帧渲出「X 天前」(T-167 契约;setTimeout 会让首屏只剩绝对日期)
     setNowMs(Date.now());
     let disposed = false;
     let unlisten: (() => void) | null = null;
@@ -1115,7 +1129,7 @@ function ActivationStatusCard({
   // 倒计时每秒重渲(仅宽限态才起 interval;非宽限零开销)。
   React.useEffect(() => {
     if (!graceInfo) return;
-    const timer = window.setInterval(() => setCountdownTick((v) => v + 1), 1000);
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [graceInfo]);
 
@@ -1258,7 +1272,8 @@ function ActivationStatusCard({
                 ? (() => {
                     const remaining =
                       graceInfo.remaining -
-                      (Date.now() - graceInfo.anchoredAt) / 1000;
+                      ((nowMs ?? graceInfo.anchoredAt) - graceInfo.anchoredAt) /
+                        1000;
                     return remaining > 0
                       ? formatCountdown(remaining)
                       : "已用尽,请联网重新校验授权";
@@ -1313,11 +1328,14 @@ function CheckUpdateCard() {
   const [message, setMessage] = React.useState<string>("");
 
   React.useEffect(() => {
-    const desktop = isDesktopRuntimeClient();
-    setIsDesktop(desktop);
-    if (desktop) {
-      void getAppVersion().then((v) => setVersion(v));
-    }
+    const timer = window.setTimeout(() => {
+      const desktop = isDesktopRuntimeClient();
+      setIsDesktop(desktop);
+      if (desktop) {
+        void getAppVersion().then((v) => setVersion(v));
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const busy = phase === "checking";
@@ -1541,7 +1559,11 @@ function DiagnosticLogsCard() {
   const [fallbackDir, setFallbackDir] = React.useState("");
 
   React.useEffect(() => {
-    setIsDesktop(isDesktopRuntimeClient());
+    const timer = window.setTimeout(
+      () => setIsDesktop(isDesktopRuntimeClient()),
+      0,
+    );
+    return () => window.clearTimeout(timer);
   }, []);
 
   const reveal = React.useCallback(() => {
@@ -1822,20 +1844,20 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   );
 
   React.useEffect(() => {
-    const storedTheme = readStored(THEME_STORAGE_KEY, THEME_VALUES, "system");
-    const storedDensity = readStored(
-      DENSITY_STORAGE_KEY,
-      DENSITY_VALUES,
-      viewModel.system.density,
-    );
-    setTheme(storedTheme);
-    setDensity(storedDensity);
-    applyTheme(storedTheme);
-    applyDensity(storedDensity);
-    // Run once on mount; the fixture defaults are stable so deps are intentionally
-    // limited to the initial identity-derived values.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const timer = window.setTimeout(() => {
+      const storedTheme = readStored(THEME_STORAGE_KEY, THEME_VALUES, "system");
+      const storedDensity = readStored(
+        DENSITY_STORAGE_KEY,
+        DENSITY_VALUES,
+        viewModel.system.density,
+      );
+      setTheme(storedTheme);
+      setDensity(storedDensity);
+      applyTheme(storedTheme);
+      applyDensity(storedDensity);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [viewModel.system.density]);
 
   const onThemeChange = React.useCallback((next: Theme) => {
     setTheme(next);
@@ -1947,11 +1969,6 @@ function StorageUsageCard({
 }) {
   const [rootPath, setRootPath] = React.useState<string>(storage.rootPath);
   const { pending, run } = useSettingsMutation();
-
-  // Re-sync the draft path when a server refresh changes the stored config.
-  React.useEffect(() => {
-    setRootPath(storage.rootPath);
-  }, [storage.rootPath]);
 
   const canSave = rootPath.trim().length > 0 && rootPath !== storage.rootPath && !pending;
 
@@ -2836,21 +2853,6 @@ function MultimodalModelCard({
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
   const { pending, run } = useSettingsMutation();
-
-  // Re-sync drafts when a server refresh changes the stored config.
-  React.useEffect(() => {
-    setProvider(state.provider);
-    setModelName(state.modelName);
-    setBaseUrl(state.baseUrl);
-    setApiFormat(state.apiFormat ?? "anthropic");
-    if (isFallback) {
-      setPresetId(
-        matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??
-          CUSTOM_PRESET_ID,
-      );
-    }
-    setSecret("");
-  }, [state, isFallback]);
 
   // [T-325] 备用对话卡选中预设:填 provider/baseUrl/接口格式(custom 不填)。
   const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {

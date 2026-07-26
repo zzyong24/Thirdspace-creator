@@ -238,6 +238,12 @@ export interface ChatToolDeps {
       sourceNote: string;
     }>;
     suggestedTags: string[];
+    coverage?: {
+      inputChars: number;
+      processedChars: number;
+      truncatedChars: number;
+      chunkCount: number;
+    };
   }>;
   /**
    * [T-084b] material.screenshot 核心 —— 真开无头浏览器给公开 URL 截图,落 **pending** asset
@@ -542,7 +548,7 @@ export interface ChatToolDeps {
   getKnowledgeText?: (input: { id: string }) => Promise<KnowledgeTextRaw | null>;
   /**
    * [T-099 切片四] context.publications 只读端口 —— 该用户的发布记录清单(平台/链接/发布时间/
-   * 关联作品标题),分页。composition root 复用 publishing 公开读源(getRecentPublicationsWithTitle,
+   * 关联作品标题/封面资产),分页。composition root 复用 publishing 公开读源(getRecentPublicationsWithTitle,
    * user-scoped)。读不到 → 空数组(诚实空态)。**纯读上下文**。
    */
   listPublications?: (input: {
@@ -597,6 +603,8 @@ export interface PublicationsListRaw {
     publishedAt: string | null;
     /** 关联作品标题(revision 标题;拿不到 → 空串,不编)。 */
     projectTitle: string;
+    /** 当前 revision 的封面资产；可作为 cover.generate.referenceAssetId。 */
+    coverAssetId: string | null;
     status: string;
   }>;
   total: number;
@@ -1182,6 +1190,12 @@ export interface KnowledgeDistillToolResult {
   suggestedTags: string[];
   /** 送蒸的原文(clamp 后)—— 卡上「原文同时存档」reference 条目的数据源。 */
   originalText: string;
+  /** [T-430] 工具入口覆盖真相：超硬上限时让 Copilot 明说截了多少，禁止假装处理全文。 */
+  coverage: {
+    inputChars: number;
+    submittedChars: number;
+    truncatedChars: number;
+  };
   /** 失败时的人话错误(成功为 null);未命中人话规则时回落原始 message(诚实,不装懂)。 */
   error: string | null;
   /** true = 错误属「换模型可解」类(卡附「去设置」深链)。 */
@@ -1534,6 +1548,8 @@ export interface ContextPublicationsToolResult {
     url: string | null;
     publishedAt: string | null;
     projectTitle: string;
+    /** 当前 revision 的封面资产；无封面时为 null。 */
+    coverAssetId: string | null;
     status: string;
   }>;
   total: number;
@@ -2054,7 +2070,7 @@ const KNOWLEDGE_DISTILL_PARAMS = jsonSchema<{ content: string }>({
   properties: {
     content: {
       type: "string",
-      maxLength: 200_000,
+      maxLength: 1_000_000,
       description:
         "要蒸馏的原文全文(用户在对话里粘的笔记/逐字稿/网页摘录),逐字传入 —— 不要摘要、不要改写、不要截断。",
     },
@@ -3210,13 +3226,20 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         "把用户粘贴的原始材料(笔记/口播逐字稿/网页摘录/评论讨论)蒸馏成一批可独立引用的知识原子候选(观点/证据/金句/观众问题)。用户在对话里倒入要存进知识库的原文时调用,content 必须是原文逐字全文(不要摘要改写)。结果是候选,渲成确认门卡由用户勾选采纳后才入知识库——不直接写库。",
       inputSchema: KNOWLEDGE_DISTILL_PARAMS,
       execute: async ({ content }): Promise<KnowledgeDistillToolResult> => {
+        const inputChars = typeof content === "string" ? content.trim().length : 0;
         const text = clampDistillContent(content);
+        const coverage = {
+          inputChars,
+          submittedChars: text.length,
+          truncatedChars: Math.max(0, inputChars - text.length),
+        };
         if (!text) {
           return {
             kind: "knowledge.distill",
             atoms: [],
             suggestedTags: [],
             originalText: "",
+            coverage,
             error: "没有收到要蒸馏的原文 —— 请把材料整段粘进对话再试。",
             suggestSwitchModel: false,
           };
@@ -3230,6 +3253,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             atoms,
             suggestedTags,
             originalText: text,
+            coverage,
             error: null,
             suggestSwitchModel: false,
           };
@@ -3240,6 +3264,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             atoms: [],
             suggestedTags: [],
             originalText: text,
+            coverage,
             error:
               human?.message ??
               (err instanceof Error ? err.message : String(err)),
@@ -3568,7 +3593,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    默认 20/封顶 50(clampContextLimit),带 total/offset/hasMore 真相字段。
     "context.publications": defineChatTool("context.publications", {
       description:
-        "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答。纯读取上下文,不产候选、不写库。",
+        "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题/当前封面 coverAssetId),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答；要参考历史作品封面风格生成新封面时，先从这里取 coverAssetId，再原样传给 cover.generate.referenceAssetId。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PUBLICATIONS_PARAMS,
       execute: async ({
         limit,
@@ -3790,6 +3815,7 @@ const MATERIAL_TOOL_NAMES: readonly string[] = [
   "material.gather",
   "material.screenshot",
   "web.read",
+  "intelligence.douyin.share",
   // [T-253] 本机文件读取与 web.read 同性质(把外部真材料带进对话),全场景保留。
   "local.read",
   // [T-256a] 环境感知(工具探测 + 工作区目录)同性质:任何场景都可能要判断「能不能落地/素材在哪」。

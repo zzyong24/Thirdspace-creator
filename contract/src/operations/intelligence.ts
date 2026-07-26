@@ -4,7 +4,6 @@ import { defineEndpoint } from "../endpoints";
 import { id, paginationQuery } from "../primitives";
 import {
   adapterErrorCode,
-  adapterStatus,
   executionTaskResourceV2,
   intelligenceCollectionResource,
   intelligenceItemResource,
@@ -45,9 +44,14 @@ const favoriteFolderPreview = z
 const sourceHealth = z
   .object({
     sourceId: id,
-    lastRunStatus: adapterStatus.nullable(),
+    lastRunId: id.nullable(),
+    lastRunStatus: intelligenceRunStatus.nullable(),
     blockedCount: z.number().int().nonnegative(),
     lastErrorCode: adapterErrorCode.nullable(),
+    scannedCount: z.number().int().nonnegative(),
+    newCount: z.number().int().nonnegative(),
+    updatedCount: z.number().int().nonnegative(),
+    failedCount: z.number().int().nonnegative(),
   })
   .strict();
 

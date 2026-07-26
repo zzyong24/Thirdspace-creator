@@ -139,7 +139,7 @@ ${materialRule}
 
 // 把 CreativeContext + subject 映射成 topic.enrich 模板的 facets(占位化原 buildEnrichPrompt 的
 // 上下文块）。positioning/title/angle 是必需 facet,angle 沿用原 prompt 的兜底文案。
-function enrichFacets(
+export function enrichFacets(
   context: CreativeContext,
   subject: { title: string; angle: string },
 ): Record<string, string | undefined> {
@@ -181,7 +181,7 @@ function difficulty(v: unknown): "low" | "mid" | "high" | null {
 // Normalize the schema-validated card object into a TopicCard (T-025:结构化后拿的是已解析对象,
 // 容错逻辑原样保留 —— trim、score 夹 0-100、difficulty 枚举归一)。Returns null when the card is
 // empty (no oneLiner and no audiencePain) — the runner treats null as "no usable card" and cancels.
-function normalizeCard(o: TopicCardOutput): TopicCard | null {
+export function normalizeCard(o: TopicCardOutput): TopicCard | null {
   const card: TopicCard = {
     oneLiner: str(o.oneLiner),
     targetAudience: str(o.targetAudience),

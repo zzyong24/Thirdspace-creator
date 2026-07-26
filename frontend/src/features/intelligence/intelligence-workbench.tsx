@@ -56,8 +56,52 @@ export interface RadarSource {
   displayName: string;
   canonicalUrl: string | null;
   monitorEnabled: boolean;
+  syncPolicy: Record<string, unknown>;
   status: "draft" | "active" | "paused" | "archived";
   lastRunAt: string | null;
+  nextRunAt: string | null;
+  version: number;
+}
+
+export type RadarRunStatus =
+  | "queued"
+  | "running"
+  | "succeeded_with_items"
+  | "succeeded_no_change"
+  | "partial"
+  | "blocked"
+  | "failed";
+
+export interface RadarRun {
+  id: string;
+  sourceId: string;
+  trigger: "manual" | "schedule" | "initial" | "retry";
+  status: RadarRunStatus;
+  startedAt: string | null;
+  finishedAt: string | null;
+  scannedCount: number;
+  newCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  errorCode: string | null;
+  errorSummary: string | null;
+  nextAction: "login" | "configure_model" | "retry" | "edit" | "none";
+  createdAt: string;
+}
+
+export interface RadarRunEvent {
+  id: string;
+  runId: string;
+  step: string;
+  status:
+    | "succeeded_with_items"
+    | "succeeded_no_change"
+    | "partial"
+    | "blocked"
+    | "failed";
+  occurredAt: string;
+  message: string;
 }
 
 export interface RadarMetric {
@@ -146,8 +190,30 @@ export interface RadarWorkspace {
     collectionId: string;
     createdAt: string;
   }>;
+  health: Array<{
+    sourceId: string;
+    lastRunId: string | null;
+    lastRunStatus: RadarRunStatus | null;
+    blockedCount: number;
+    lastErrorCode: string | null;
+    scannedCount: number;
+    newCount: number;
+    updatedCount: number;
+    failedCount: number;
+  }>;
   pendingCount: number;
   blockedCount: number;
+}
+
+interface CreateSourceResult {
+  source: RadarSource;
+  run: RadarRun | null;
+  task: { id: string; status: string } | null;
+}
+
+interface StartRunResult {
+  run: RadarRun;
+  task: { id: string; status: string };
 }
 
 export interface RadarApi {
@@ -195,7 +261,7 @@ export interface RadarApi {
     monitorEnabled: boolean;
     runInitial: boolean;
     idempotencyKey: string;
-  }): Promise<unknown>;
+  }): Promise<CreateSourceResult>;
   importDouyinShare(input: {
     accountId: string;
     collectionId: string | null;
@@ -205,7 +271,12 @@ export interface RadarApi {
   startRun(input: {
     sourceId: string;
     idempotencyKey: string;
-  }): Promise<unknown>;
+  }): Promise<StartRunResult>;
+  listRuns(sourceId: string): Promise<RadarRun[]>;
+  getRun(runId: string): Promise<{
+    run: RadarRun;
+    events: RadarRunEvent[];
+  }>;
   getItem(itemId: string): Promise<RadarItemDetail>;
   enqueueTranscript(input: {
     itemId: string;
@@ -278,6 +349,18 @@ function defaultApi(): RadarApi {
           idempotencyKey: input.idempotencyKey,
         },
       }),
+    listRuns: (sourceId) =>
+      client.listIntelligenceRuns({
+        params: { sourceId },
+        query: { page: 1, pageSize: 20 },
+        body: undefined,
+      }) as unknown as Promise<RadarRun[]>,
+    getRun: (runId) =>
+      client.getIntelligenceRun({
+        params: { runId },
+        query: undefined,
+        body: undefined,
+      }) as Promise<{ run: RadarRun; events: RadarRunEvent[] }>,
     getItem: (itemId) =>
       client.getIntelligenceItem({
         params: { itemId },
@@ -379,6 +462,54 @@ function sourceTypeLabel(type: RadarSource["type"]): string {
   }[type];
 }
 
+function runStatusLabel(status: RadarRunStatus | null): string {
+  if (!status) return "尚未同步";
+  return {
+    queued: "排队中",
+    running: "同步中",
+    succeeded_with_items: "同步完成",
+    succeeded_no_change: "无新增",
+    partial: "部分完成",
+    blocked: "需要处理",
+    failed: "同步失败",
+  }[status];
+}
+
+function runResultMessage(run: RadarRun): string {
+  if (run.status === "succeeded_with_items") {
+    return `同步完成：扫描 ${run.scannedCount} 条，新增 ${run.newCount} 条，更新 ${run.updatedCount} 条。`;
+  }
+  if (run.status === "succeeded_no_change") {
+    return `同步完成：扫描 ${run.scannedCount} 条，本次没有新增或变化。`;
+  }
+  if (run.status === "blocked") {
+    if (run.errorCode === "LOGIN_REQUIRED") {
+      return "同步暂停：登录状态已失效，请重新登录该来源后重试。";
+    }
+    if (run.errorCode === "CAPTCHA") {
+      return "同步暂停：页面要求完成验证码，请在登录保管库处理后重试。";
+    }
+    return `同步暂停：${run.errorCode ?? "来源需要处理"}。`;
+  }
+  if (run.status === "failed") {
+    if (run.errorCode === "NO_VALID_RESPONSE") {
+      return "同步失败：本次没有取得有效作品列表，未把它误记成 0 条。请稍后重试。";
+    }
+    if (run.errorCode === "RESPONSE_SHAPE_CHANGED") {
+      return "同步失败：来源页面结构发生变化，未把它误记成 0 条。";
+    }
+    return `同步失败：${run.errorCode ?? "未知错误"}。`;
+  }
+  if (run.status === "partial") {
+    return `同步部分完成：新增 ${run.newCount} 条，失败 ${run.failedCount} 条。`;
+  }
+  return `${runStatusLabel(run.status)}。`;
+}
+
+function isRunActive(status: RadarRunStatus | null | undefined): boolean {
+  return status === "queued" || status === "running";
+}
+
 function transcriptLabel(status: RadarItemDetail["transcript"]["status"]) {
   return {
     not_requested: "尚未转写",
@@ -421,6 +552,17 @@ export function IntelligenceWorkbench({
   const [detailWidth, setDetailWidth] = React.useState(392);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const [runningSourceIds, setRunningSourceIds] = React.useState<Set<string>>(
+    () =>
+      new Set(
+        workspace.health
+          .filter((health) => isRunActive(health.lastRunStatus))
+          .map((health) => health.sourceId),
+      ),
+  );
+  const [historySource, setHistorySource] = React.useState<RadarSource | null>(
+    null,
+  );
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -439,6 +581,12 @@ export function IntelligenceWorkbench({
       if (timer !== null) window.clearTimeout(timer);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (!workspace.sources.some((source) => source.monitorEnabled)) return;
+    const timer = window.setInterval(() => router.refresh(), 60_000);
+    return () => window.clearInterval(timer);
+  }, [router, workspace.sources]);
 
   const persistWidth = React.useCallback((width: number) => {
     const next = clampDetailWidth(width);
@@ -515,24 +663,63 @@ export function IntelligenceWorkbench({
     [detailWidth, persistWidth],
   );
 
+  const watchRun = React.useCallback(
+    async (sourceId: string, runId: string) => {
+      setRunningSourceIds((current) => new Set(current).add(sourceId));
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        try {
+          const result = await api.getRun(runId);
+          if (!isRunActive(result.run.status)) {
+            setRunningSourceIds((current) => {
+              const next = new Set(current);
+              next.delete(sourceId);
+              return next;
+            });
+            setNotice(runResultMessage(result.run));
+            router.refresh();
+            return;
+          }
+        } catch {
+          // 短暂读取失败不把仍在后台执行的任务误判为失败。
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1_000));
+      }
+      setNotice("同步仍在后台运行，可打开该来源的“运行记录”查看最新进度。");
+      router.refresh();
+    },
+    [api, router],
+  );
+
   const runSource = React.useCallback(
     async (sourceId: string) => {
-      setBusy(true);
-      setNotice(null);
+      if (runningSourceIds.has(sourceId)) {
+        setNotice("该来源正在同步，无需重复点击。");
+        return;
+      }
+      setRunningSourceIds((current) => new Set(current).add(sourceId));
+      setNotice("正在创建同步任务…");
       try {
-        await api.startRun({
+        const result = await api.startRun({
           sourceId,
           idempotencyKey: operationKey("manual-sync"),
         });
-        setNotice("同步任务已进入队列，可在来源运行记录中查看进度。");
-        router.refresh();
-      } catch {
-        setNotice("暂时无法开始同步：可能已有任务在运行，或来源需要重新登录。");
-      } finally {
-        setBusy(false);
+        setNotice("已开始同步，完成后作品会自动出现在列表中。");
+        void watchRun(sourceId, result.run.id);
+      } catch (error) {
+        setRunningSourceIds((current) => {
+          const next = new Set(current);
+          next.delete(sourceId);
+          return next;
+        });
+        const status = (error as { status?: unknown })?.status;
+        setNotice(
+          status === 409
+            ? "该来源已经在排队或同步中，无需重复操作。"
+            : "同步任务创建失败；登录或解析问题会在运行记录中给出明确原因。",
+        );
       }
     },
-    [api, router],
+    [api, runningSourceIds, watchRun],
   );
 
   const enqueueTranscript = React.useCallback(async () => {
@@ -669,10 +856,27 @@ export function IntelligenceWorkbench({
             accountId={accountId}
             collections={workspace.collections}
             api={api}
-            onDone={() => router.refresh()}
+            onDone={(result) => {
+              router.refresh();
+              if (result.run) {
+                setNotice(
+                  "来源已保存，首次同步正在后台执行；完成后作品会自动出现。",
+                );
+                void watchRun(result.source.id, result.run.id);
+              } else {
+                setNotice("来源已保存；当前设置为不立即同步。");
+              }
+            }}
           />
         </div>
       </div>
+
+      <SourceRunHistoryDialog
+        key={historySource?.id ?? "no-source-history"}
+        source={historySource}
+        api={api}
+        onClose={() => setHistorySource(null)}
+      />
 
       {notice ? (
         <div
@@ -757,13 +961,17 @@ export function IntelligenceWorkbench({
                     <SourceRow
                       key={source.id}
                       source={source}
+                      health={workspace.health.find(
+                        (health) => health.sourceId === source.id,
+                      )}
                       active={selectedSourceId === source.id}
-                      disabled={busy}
+                      syncing={runningSourceIds.has(source.id)}
                       onSelect={() => {
                         setSelectedCollectionId(collection.id);
                         setSelectedSourceId(source.id);
                       }}
                       onRun={() => runSource(source.id)}
+                      onShowRuns={() => setHistorySource(source)}
                     />
                   ))}
                 </div>
@@ -781,13 +989,17 @@ export function IntelligenceWorkbench({
                 <SourceRow
                   key={source.id}
                   source={source}
+                  health={workspace.health.find(
+                    (health) => health.sourceId === source.id,
+                  )}
                   active={selectedSourceId === source.id}
-                  disabled={busy}
+                  syncing={runningSourceIds.has(source.id)}
                   onSelect={() => {
                     setSelectedCollectionId(null);
                     setSelectedSourceId(source.id);
                   }}
                   onRun={() => runSource(source.id)}
+                  onShowRuns={() => setHistorySource(source)}
                 />
               ))}
           </div>
@@ -883,23 +1095,121 @@ export function IntelligenceWorkbench({
   );
 }
 
+function SourceRunHistoryDialog({
+  source,
+  api,
+  onClose,
+}: {
+  source: RadarSource | null;
+  api: RadarApi;
+  onClose: () => void;
+}) {
+  const [runs, setRuns] = React.useState<RadarRun[]>([]);
+  const [loading, setLoading] = React.useState(Boolean(source));
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!source) return;
+    let cancelled = false;
+    void api
+      .listRuns(source.id)
+      .then((rows) => {
+        if (!cancelled) setRuns(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setError("运行记录读取失败，请稍后重试。");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, source]);
+
+  return (
+    <Dialog
+      open={Boolean(source)}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{source?.displayName ?? "来源"} · 运行记录</DialogTitle>
+          <DialogDescription>
+            {source?.monitorEnabled
+              ? `每日自动同步；APP 运行时执行，错过后下次打开补跑。下次计划：${dateLabel(source.nextRunAt ?? null)}`
+              : "当前仅手动同步，不会定时运行。"}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[420px] space-y-2 overflow-y-auto">
+          {loading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              正在读取运行记录…
+            </p>
+          ) : error ? (
+            <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          ) : runs.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              还没有同步记录。
+            </p>
+          ) : (
+            runs.map((run) => (
+              <div
+                key={run.id}
+                className="rounded-xl border border-border/80 px-3 py-2.5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium">
+                    {runStatusLabel(run.status)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {dateLabel(run.startedAt ?? run.createdAt)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  扫描 {run.scannedCount} · 新增 {run.newCount} · 更新{" "}
+                  {run.updatedCount} · 失败 {run.failedCount}
+                </p>
+                {run.errorCode ? (
+                  <p className="mt-1 text-xs text-destructive">
+                    {runResultMessage(run)}
+                  </p>
+                ) : null}
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function SourceRow({
   source,
+  health,
   active,
-  disabled,
+  syncing,
   onSelect,
   onRun,
+  onShowRuns,
 }: {
   source: RadarSource;
+  health?: RadarWorkspace["health"][number];
   active: boolean;
-  disabled: boolean;
+  syncing: boolean;
   onSelect: () => void;
   onRun: () => void;
+  onShowRuns: () => void;
 }) {
+  const currentStatus = syncing ? "running" : (health?.lastRunStatus ?? null);
   return (
     <div
       className={cn(
-        "ml-4 mt-1 flex items-stretch gap-1 rounded-lg",
+        "ml-4 mt-1 flex items-stretch gap-1 rounded-lg pr-1",
         active ? "bg-surface shadow-sm" : "hover:bg-muted/70",
       )}
     >
@@ -913,19 +1223,32 @@ function SourceRow({
         </span>
         <span className="mt-0.5 block text-[11px] text-muted-foreground">
           {sourceTypeLabel(source.type)} ·{" "}
-          {source.status === "active" ? "正常" : source.status}
+          {source.monitorEnabled ? "每日自动" : "仅手动"} ·{" "}
+          {runStatusLabel(currentStatus)}
         </span>
       </button>
-      <button
+      <Button
         type="button"
-        aria-label={`同步 ${source.displayName}`}
-        disabled={disabled || source.status !== "active"}
-        onClick={onRun}
-        className="my-1 mr-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted-foreground transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label={`查看 ${source.displayName} 的运行记录`}
+        variant="ghost"
+        size="sm"
+        onClick={onShowRuns}
+        className="my-1 h-7 px-2 text-[11px] text-muted-foreground"
       >
-        <RefreshCw className="size-3.5" />
-        同步
-      </button>
+        记录
+      </Button>
+      <Button
+        type="button"
+        aria-label={`${syncing ? "正在同步" : "同步"} ${source.displayName}`}
+        variant="outline"
+        size="sm"
+        disabled={syncing || source.status !== "active"}
+        onClick={onRun}
+        className="my-1 h-7 shrink-0 gap-1 border-border bg-surface px-2 text-[11px] text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+      >
+        <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
+        {syncing ? "同步中" : "同步"}
+      </Button>
     </div>
   );
 }
@@ -1506,7 +1829,7 @@ function AddSourceDialog({
   accountId: string;
   collections: RadarCollection[];
   api: RadarApi;
-  onDone: () => void;
+  onDone: (result: CreateSourceResult) => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const [type, setType] = React.useState<RadarSource["type"]>(
@@ -1588,9 +1911,19 @@ function AddSourceDialog({
           );
         }
       } catch (caught) {
+        const message =
+          caught instanceof Error ? `${caught.name}:${caught.message}` : "";
         setError(
           type === "creator_profile"
-            ? "主页验证失败：请确认已登录抖音，并输入完整的 /user/… 主页链接。"
+            ? /DouyinNoValidResponseError/i.test(message)
+              ? "本次没有读到有效作品列表，不能把它判断成 0 条。请稍后再测试一次。"
+              : /DouyinResponseShapeChangedError/i.test(message)
+                ? "已打开主页，但作品列表结构发生变化，当前不能给出可信作品数。"
+                : /Captcha|验证码|验证/i.test(message)
+                  ? "抖音要求完成验证码，请处理后再测试；不会把它显示成 0 条。"
+                  : /NotLoggedIn|登录/i.test(message)
+                    ? "当前抖音登录状态不可用，请重新登录后再测试。"
+                    : "主页验证失败：请确认已登录抖音，并输入完整的 /user/… 主页链接。"
             : type === "favorites_folder"
               ? favoriteFoldersErrorMessage(caught)
               : "来源验证失败：请检查网址、登录状态或页面是否允许读取。",
@@ -1641,7 +1974,7 @@ function AddSourceDialog({
               : {}),
           };
         }
-        await api.createSource({
+        const result = await api.createSource({
           accountId,
           collectionId: collectionId || null,
           type,
@@ -1660,7 +1993,7 @@ function AddSourceDialog({
         setFolders([]);
         resetVerification();
         setOpen(false);
-        onDone();
+        onDone(result);
       } catch {
         setError(
           type === "darkhorse_query"
@@ -1806,8 +2139,13 @@ function AddSourceDialog({
             checked={monitor}
             onChange={(event) => setMonitor(event.target.checked)}
           />
-          持续监控（无需再去自动化页开启）
+          每日自动同步
         </label>
+        <p className="-mt-2 text-xs leading-5 text-muted-foreground">
+          {monitor
+            ? "保存后立即同步一次；此后 APP 运行时每天同步，错过会在下次打开后补跑。"
+            : "保存后仍会立即同步一次；此后只在你点击“同步”时更新。"}
+        </p>
         {type === "darkhorse_query" ? (
           <p className="rounded-xl bg-warning-soft px-3 py-2 text-xs leading-5 text-warning">
             保存后由热点宝“低粉爆款”首轮任务验证登录、48 小时榜单和数据结构；不会回退到旧抖音搜索。

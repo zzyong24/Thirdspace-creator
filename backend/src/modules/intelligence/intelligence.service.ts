@@ -22,6 +22,8 @@ import {
   itemSourceObservations,
   itemTranscripts,
   isNull,
+  lte,
+  or,
   sourceSnapshots,
   trendSources,
   type Db,
@@ -498,6 +500,14 @@ function nextActionFor(errorCode: string | null) {
   }
   if (errorCode === "MODEL_NOT_CONFIGURED") return "configure_model";
   return errorCode ? "retry" : "none";
+}
+
+const DAILY_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1_000;
+
+function nextDailyRunAt(value: string): string {
+  const parsed = Date.parse(value);
+  const base = Number.isFinite(parsed) ? parsed : Date.now();
+  return new Date(base + DAILY_SYNC_INTERVAL_MS).toISOString();
 }
 
 export function createIntelligenceService(
@@ -1331,7 +1341,13 @@ export function createIntelligenceService(
         ),
       )
       .limit(1);
-    if (active[0] && input.trigger !== "initial") {
+    if (active[0]) {
+      if (input.trigger === "initial") {
+        return {
+          run: toRun(active[0]),
+          task: await deps.tasks.get(ctx, active[0].executionTaskId),
+        };
+      }
       throw new IntelligenceConflictError("该来源已有排队或运行中的同步");
     }
     const task = await deps.tasks.enqueue(ctx, {
@@ -1680,15 +1696,17 @@ export function createIntelligenceService(
           const latest = latestBySource.get(source.id);
           return {
             sourceId: source.id,
+            lastRunId: latest?.id ?? null,
             lastRunStatus:
-              latest &&
-              !["queued", "running"].includes(latest.status)
-                ? (latest.status as AdapterStatus)
-                : null,
+              (latest?.status as "queued" | "running" | AdapterStatus) ?? null,
             blockedCount: runs.filter(
               (run) => run.sourceId === source.id && run.status === "blocked",
             ).length,
             lastErrorCode: (latest?.errorCode ?? null) as never,
+            scannedCount: latest?.scannedCount ?? 0,
+            newCount: latest?.newCount ?? 0,
+            updatedCount: latest?.updatedCount ?? 0,
+            failedCount: latest?.failedCount ?? 0,
           };
         }),
         pendingCount: taskRows.rows.filter((task) =>
@@ -2000,7 +2018,7 @@ export function createIntelligenceService(
             status: "active",
             version: 1,
             lastRunAt: null,
-            nextRunAt: null,
+            nextRunAt: input.monitorEnabled ? nextDailyRunAt(stamp) : null,
             createdAt: stamp,
             updatedAt: stamp,
           })
@@ -2099,6 +2117,18 @@ export function createIntelligenceService(
         throw new IntelligenceConflictError("来源已被其他操作修改，请刷新后重试");
       }
       if (input.collectionId) await requireCollection(ctx, input.collectionId);
+      const monitorEnabled =
+        input.monitorEnabled ?? current.monitorEnabled;
+      const syncPolicy =
+        input.syncPolicy ??
+        (monitorEnabled
+          ? current.monitorEnabled
+            ? current.syncPolicy
+            : { mode: "scheduled", interval: "daily" }
+          : { mode: "manual" });
+      const nextRunAt = monitorEnabled
+        ? current.nextRunAt ?? nextDailyRunAt(now())
+        : null;
       const [updated] = await db
         .update(intelligenceSources)
         .set({
@@ -2107,8 +2137,9 @@ export function createIntelligenceService(
               ? current.collectionId
               : input.collectionId,
           displayName: input.displayName?.trim() || current.displayName,
-          monitorEnabled: input.monitorEnabled ?? current.monitorEnabled,
-          syncPolicy: input.syncPolicy ?? current.syncPolicy,
+          monitorEnabled,
+          syncPolicy,
+          nextRunAt,
           extractionInstruction:
             input.instruction === undefined
               ? current.extractionInstruction
@@ -2158,6 +2189,7 @@ export function createIntelligenceService(
         .set({
           status,
           monitorEnabled: false,
+          nextRunAt: null,
           version: current.version + 1,
           updatedAt: now(),
         })
@@ -2170,6 +2202,66 @@ export function createIntelligenceService(
     },
 
     startRun,
+
+    /**
+     * APP 内部调度器入口：跨账号扫描到期来源，并用各来源自己的 user/account 上下文
+     * 排队 schedule run。只在 APP 进程存活时执行；错过的 nextRunAt 会在下次启动时补跑。
+     */
+    async enqueueDueSourceRuns(limit = 50): Promise<number> {
+      const stamp = now();
+      const due = await db
+        .select()
+        .from(intelligenceSources)
+        .where(
+          and(
+            eq(intelligenceSources.status, "active"),
+            eq(intelligenceSources.monitorEnabled, true),
+            or(
+              isNull(intelligenceSources.nextRunAt),
+              lte(intelligenceSources.nextRunAt, stamp),
+            ),
+          ),
+        )
+        .orderBy(asc(intelligenceSources.nextRunAt))
+        .limit(Math.max(1, limit));
+      let enqueued = 0;
+      for (const source of due) {
+        const [latest] = await db
+          .select({ status: intelligenceSyncRuns.status })
+          .from(intelligenceSyncRuns)
+          .where(eq(intelligenceSyncRuns.sourceId, source.id))
+          .orderBy(desc(intelligenceSyncRuns.createdAt))
+          .limit(1);
+        // 登录/验证码受阻后停跑，避免每分钟重新撞站点；用户处理后手动“同步”
+        // 一次即可恢复，并由成功 run 重算下次每日计划。
+        if (latest?.status === "blocked") continue;
+        const sourceCtx: RequestContext = {
+          userId: source.userId,
+          accountId: source.accountId,
+          requestId: `intelligence-scheduler:${source.id}:${stamp}`,
+          source: "ingestion",
+        };
+        try {
+          await startRun(sourceCtx, source.id, {
+            trigger: "schedule",
+            idempotencyKey: `scheduled:${source.id}:${source.nextRunAt ?? stamp.slice(0, 10)}`,
+          });
+          await db
+            .update(intelligenceSources)
+            .set({
+              nextRunAt: nextDailyRunAt(stamp),
+              updatedAt: stamp,
+            })
+            .where(eq(intelligenceSources.id, source.id));
+          enqueued += 1;
+        } catch (error) {
+          // 手动/首次同步已在运行时，让现有 run 完成后重算下次时间，不重复排队。
+          if (error instanceof IntelligenceConflictError) continue;
+          throw error;
+        }
+      }
+      return enqueued;
+    },
 
     /** Worker internal read port: returns adapter config only after account-scoped source ownership. */
     async getSourceExecutionInput(
@@ -3184,6 +3276,7 @@ export function createIntelligenceService(
     ) {
       assertSafeDiagnostics(input.envelope.safeDiagnostics);
       const run = await requireRun(ctx, input.runId);
+      const sourceForSchedule = await requireSource(ctx, run.sourceId);
       if (
         !["queued", "running"].includes(run.status) &&
         input.terminal
@@ -3446,6 +3539,12 @@ export function createIntelligenceService(
           .update(intelligenceSources)
           .set({
             lastRunAt: input.terminal ? now() : run.startedAt ?? now(),
+            nextRunAt: input.terminal
+              ? sourceForSchedule.monitorEnabled &&
+                input.envelope.adapterStatus !== "blocked"
+                ? nextDailyRunAt(now())
+                : null
+              : sourceForSchedule.nextRunAt,
             updatedAt: now(),
           })
           .where(eq(intelligenceSources.id, run.sourceId));

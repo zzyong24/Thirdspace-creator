@@ -201,6 +201,77 @@ describe("ingestion.refreshDouyin — 抖音真抓落库 (线 B)", () => {
     expect(fetchAccountId).toBe("acct-1"); // fetch 端口拿到当前号
     expect(snapshotAccountId).toBe("acct-1"); // downstreamCtx 透传到 appendSnapshot(采集 stamp)
   });
+
+  it("[T-400] 空 title/shareUrl 导入时使用可追溯兜底，并传给 publication", async () => {
+    const { db } = await createDb();
+    await seedSource(db, "src-douyin-fallback", "douyin");
+    let publicationExists = false;
+    let projectInput: Record<string, unknown> | null = null;
+    let publicationInput: Record<string, unknown> | null = null;
+    let seq = 0;
+    const svc = createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch: {
+        fetch: async () => [
+          {
+            recordKey: "douyin:7400:NOW",
+            platform: "douyin",
+            externalId: "7400",
+            capturedAt: NOW,
+            metrics: { views: 100 },
+            title: "   ",
+            shareUrl: "   ",
+          },
+        ],
+        login: async () => true,
+        status: async () => true,
+      },
+      ports: {
+        publishing: {
+          resolvePublication: () =>
+            Promise.resolve(
+              publicationExists ? { id: "pub-7400" } : null,
+            ),
+          createImportedPublication: async (_c, _outputId, input) => {
+            publicationExists = true;
+            publicationInput = input as Record<string, unknown>;
+            return { id: "pub-7400" };
+          },
+        },
+        projects: {
+          ensureImportedProject: async (_c, input) => {
+            projectInput = input as unknown as Record<string, unknown>;
+            return {
+              projectId: "proj-7400",
+              outputId: "out-7400",
+              created: true,
+            };
+          },
+        },
+        analytics: {
+          appendSnapshot: () => Promise.resolve({ created: true }),
+        },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+
+    await svc.refreshDouyin(ctx, {
+      externalSourceId: "src-douyin-fallback",
+    });
+    expect(projectInput).toMatchObject({
+      title: "抖音作品 7400",
+      shareUrl: "https://www.douyin.com/video/7400",
+    });
+    expect(publicationInput).toMatchObject({
+      title: "抖音作品 7400",
+      externalUrl: "https://www.douyin.com/video/7400",
+    });
+  });
 });
 
 // [T-136 §D] 绑定流程:采集时抓登录用户自己的真实身份(昵称+抖音号),回填当前号占位

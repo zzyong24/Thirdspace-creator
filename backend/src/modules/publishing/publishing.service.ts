@@ -181,7 +181,15 @@ export interface PublishingService {
   getRecentPublicationsWithTitle(
     ctx: RequestContext,
     opts: { limit: number; offset?: number; includeHidden?: boolean },
-  ): Promise<Array<PublicationRow & { title: string }>>;
+  ): Promise<
+    Array<
+      PublicationRow & {
+        title: string;
+        /** 当前 revision 的真实封面资产；无封面时为 null。 */
+        coverAssetId: string | null;
+      }
+    >
+  >;
   // Declared for the Ingestion wave (SPEC §11) — signature only this wave.
   resolvePublication(
     ctx: RequestContext,
@@ -563,6 +571,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return Promise.all(
         rows.map(async (r) => {
           let title = "";
+          let coverAssetId: string | null = null;
           try {
             const revisions = await repo.listRevisions(r.id, {
               limit: 20,
@@ -575,11 +584,13 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
                   .slice()
                   .sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
               title = current?.title?.trim() ?? "";
+              coverAssetId = current?.coverAssetId ?? null;
             }
           } catch {
             title = "";
+            coverAssetId = null;
           }
-          return { ...r, title };
+          return { ...r, title, coverAssetId };
         }),
       );
     },
@@ -606,14 +617,45 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         input.platform,
         input.externalId,
       );
-      if (existing) return existing;
+      if (existing) {
+        // T-400:重复采集是修复历史空元数据的机会。只补空值，绝不覆盖用户已经
+        // 修改过的标题/链接；revision 仍保持 append-only。
+        let reconciled = existing;
+        const incomingUrl = input.externalUrl?.trim() ?? "";
+        if (!(existing.externalUrl?.trim() ?? "") && incomingUrl) {
+          reconciled = await repo.updatePublicationStatus(existing.id, {
+            status: existing.status,
+            externalUrl: incomingUrl,
+          });
+        }
+        const incomingTitle = input.title?.trim() ?? "";
+        if (incomingTitle) {
+          const current = await repo.getCurrentRevision(existing.id);
+          if (!(current?.title?.trim() ?? "")) {
+            const revision = await repo.createRevision(existing.id, {
+              title: incomingTitle,
+              description: current?.description ?? "",
+              coverAssetId: current?.coverAssetId ?? null,
+              category: current?.category ?? "",
+              series: current?.series ?? "",
+              platformTags: (current?.platformTags ?? []) as string[],
+              platformSettings: (current?.platformSettings ?? {}) as Record<
+                string,
+                unknown
+              >,
+            });
+            reconciled = await repo.setCurrentRevision(existing.id, revision.id);
+          }
+        }
+        return reconciled;
+      }
       return repo.createImportedPublication(outputId, {
         platform: input.platform,
         accountReference: input.accountReference ?? `${input.platform} 导入`,
         externalId: input.externalId,
-        externalUrl: input.externalUrl ?? null,
+        externalUrl: input.externalUrl?.trim() || null,
         publishedAt: input.publishedAt ?? null,
-        title: input.title,
+        title: input.title?.trim(),
       });
     },
 

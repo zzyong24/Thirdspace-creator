@@ -18,7 +18,10 @@ import {
   storyboardFacet,
   storyboardFromContentData,
   dedupeBrollRefs,
+  collectProjectBrollInventory,
+  libraryFacet,
   type StructuredCall,
+  type StructuredCallInput,
   type VideoScene,
   type BrollAssetRef,
   type VideoDecisionsDeps,
@@ -241,6 +244,80 @@ describe("decideBroll(清单硬门)", () => {
     expect(broll).toEqual([]);
     expect(call).not.toHaveBeenCalled();
   });
+
+  it("手动上传来源与语义描述必须进入可观测 prompt，模型能识别用户明确意图", () => {
+    const facet = libraryFacet([
+      {
+        assetId: "asset-manual",
+        label: "产品后台录屏.mp4",
+        kind: "video",
+        description: "展示发布按钮和成功提示",
+        source: "manual",
+      },
+    ]);
+    expect(facet).toContain("用户手动上传");
+    expect(facet).toContain("产品后台录屏.mp4");
+    expect(facet).toContain("展示发布按钮和成功提示");
+  });
+});
+
+describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", () => {
+  it("先校验当前账号的项目所有权，只读取该项目 links，并过滤越权/非视觉素材", async () => {
+    const order: string[] = [];
+    const assertProjectAccess = vi.fn(async (_ctx, projectId: string) => {
+      order.push(`project:${projectId}`);
+    });
+    const listProjectMaterialLinks = vi.fn(async (_ctx, projectId: string) => {
+      order.push(`links:${projectId}`);
+      return [
+        { entityType: "asset", entityId: "manual", role: "broll" },
+        { entityType: "asset", entityId: "clip", role: "clip" },
+        { entityType: "asset", entityId: "foreign", role: "reference" },
+        { entityType: "asset", entityId: "doc", role: "reference" },
+      ];
+    });
+    const getAsset = vi.fn(async (_ctx, assetId: string) => {
+      if (assetId === "foreign") throw new Error("cross-account hidden");
+      if (assetId === "doc") {
+        return { id: assetId, name: "资料.pdf", assetType: "document", description: "" };
+      }
+      return {
+        id: assetId,
+        name: "制作页手动上传录屏",
+        assetType: "video",
+        description: "展示产品操作",
+      };
+    });
+    const result = await collectProjectBrollInventory(ctx, "proj-1", {
+      assertProjectAccess,
+      listProjectMaterialLinks,
+      getAsset,
+      readArtifactContentData: async () => null,
+    });
+    expect(order.slice(0, 2)).toEqual(["project:proj-1", "links:proj-1"]);
+    expect(listProjectMaterialLinks).toHaveBeenCalledWith(ctx, "proj-1");
+    expect(getAsset).not.toHaveBeenCalledWith(ctx, "clip");
+    expect(result).toEqual([
+      {
+        assetId: "manual",
+        label: "制作页手动上传录屏",
+        kind: "video",
+        description: "展示产品操作",
+        source: "manual",
+      },
+    ]);
+  });
+
+  it("缺 projectId 直接失败，不得回退当前账号整库冒充项目素材", async () => {
+    await expect(
+      collectProjectBrollInventory(ctx, null, {
+        assertProjectAccess: vi.fn(),
+        listProjectMaterialLinks: vi.fn(),
+        getAsset: vi.fn(),
+        readArtifactContentData: vi.fn(),
+      }),
+    ).rejects.toThrow(/缺少项目范围/);
+  });
 });
 
 describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
@@ -283,6 +360,77 @@ describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
     // 口播稿进了 skill 的 script facet(否则=SRT 自我纠错,纠不了「对口播稿的认错字」)。
     expect(capturedFacets?.script).toBe(SCRIPT);
     expect(typeof capturedFacets?.srt).toBe("string");
+  });
+
+  it("长视频按固定行数分批，每批 schema 只绑定本批，最终按原 index 顺序归并", async () => {
+    const longLines = Array.from({ length: 85 }, (_, i) => ({
+      index: i + 1,
+      startSec: i,
+      endSec: i + 1,
+      text: `第 ${i + 1} 行字幕`,
+    }));
+    const batchSizes: number[] = [];
+    const progress = vi.fn();
+    const call: StructuredCall = async <T>(
+      { facets, outputSchema }: StructuredCallInput<T>,
+    ) => {
+      const indexes = (facets.srt ?? "")
+        .split("\n")
+        .map((line) => Number(line.split("|")[0]?.trim()))
+        .filter(Number.isFinite);
+      batchSizes.push(indexes.length);
+      const output = {
+        lines: [...indexes]
+          .reverse()
+          .map((index) => ({ index, zh: `第 ${index} 行字幕`, en: `line ${index}` })),
+      };
+      expect(outputSchema.safeParse(output).success).toBe(true);
+      return output as T;
+    };
+    const result = await decideSubtitles(
+      { srtLines: longLines, script: "全稿校正基准", onChunkProgress: progress },
+      call,
+    );
+    expect(batchSizes).toEqual([36, 36, 13]);
+    expect(result.map((line) => line.index)).toEqual(longLines.map((line) => line.index));
+    expect(result[84]?.en).toBe("line 85");
+    expect(progress).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "completed", completed: 3, total: 3 }),
+    );
+  });
+
+  it("单批失败仅该批退回原 zh/空 en，其余批继续，进度明确标记 fallback", async () => {
+    const longLines = Array.from({ length: 75 }, (_, i) => ({
+      index: i + 1,
+      startSec: i,
+      endSec: i + 1,
+      text: `原文 ${i + 1}`,
+    }));
+    let batch = 0;
+    const progress = vi.fn();
+    const call: StructuredCall = async <T>(
+      { facets }: StructuredCallInput<T>,
+    ) => {
+      batch += 1;
+      if (batch === 2) throw new Error("Invalid JSON response");
+      const lines = (facets.srt ?? "").split("\n").map((line) => {
+        const index = Number(line.split("|")[0]?.trim());
+        return { index, zh: `原文 ${index}`, en: `translated ${index}` };
+      });
+      return { lines } as T;
+    };
+    const result = await decideSubtitles(
+      { srtLines: longLines, script: "全文", onChunkProgress: progress },
+      call,
+    );
+    expect(result).toHaveLength(75);
+    expect(result[35]?.en).toBe("translated 36");
+    expect(result[36]).toMatchObject({ index: 37, zh: "原文 37", en: "" });
+    expect(result[71]).toMatchObject({ index: 72, zh: "原文 72", en: "" });
+    expect(result[72]?.en).toBe("translated 73");
+    expect(
+      progress.mock.calls.some(([event]) => event.status === "fallback" && event.index === 1),
+    ).toBe(true);
   });
 });
 
@@ -352,6 +500,19 @@ describe("runVideoDecisions(编排)", () => {
     expect(decisions.subtitles).toHaveLength(4);
     expect(decisions.srtLines).toHaveLength(4);
     expect(result.resultData.inventory).toEqual(INVENTORY);
+    const brollStep = (calls.recordStep.mock.calls as unknown as Array<
+      [unknown, string, { stepNo: number; toolCalls: unknown[] }]
+    >)
+      .map((call) => call[2])
+      .find((step) => step.stepNo === 3);
+    expect(brollStep?.toolCalls).toEqual([
+      expect.objectContaining({
+        toolName: "video.broll",
+        scope: { accountId: "acc-1", projectId: "proj-1" },
+        input: { inventory: INVENTORY },
+        output: { broll: expect.any(Array) },
+      }),
+    ]);
   });
 
   it("第②步失败 → 诚实报「②信息卡」+ cancelTask,不落候选", async () => {
@@ -369,6 +530,24 @@ describe("runVideoDecisions(编排)", () => {
       .find((s) => s.kind === "failed");
     expect(failStep?.text).toContain(VIDEO_DECISION_STEPS[1]);
     expect(failStep?.text).toContain("模型端点 500");
+  });
+
+  it("缺项目范围 → 备料失败，不读取账号整库 B-roll", async () => {
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
+    const listSpy = vi.fn(async () => INVENTORY);
+    deps.listBrollInventory = listSpy;
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runVideoDecisions(ctx, { ...TASK, projectId: null }, deps);
+    spy.mockRestore();
+    expect(listSpy).not.toHaveBeenCalled();
+    expect(calls.recordCandidate).not.toHaveBeenCalled();
+    expect(calls.cancelTask).toHaveBeenCalledWith(ctx, "task-1");
+    const failed = (calls.recordStep.mock.calls as unknown as Array<
+      [unknown, string, { kind: string; text: string }]
+    >)
+      .map((call) => call[2])
+      .find((step) => step.kind === "failed");
+    expect(failed?.text).toContain("缺少项目范围");
   });
 
   // ── [T-387c] storyboard facet(四决策=对齐器)────────────────────────────────

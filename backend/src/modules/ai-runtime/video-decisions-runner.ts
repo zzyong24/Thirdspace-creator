@@ -23,6 +23,11 @@ import {
   tokenizeForOverlap,
   type SrtLine,
 } from "./srt";
+import {
+  chunkOrderedItems,
+  runOrderedChunks,
+  type ChunkProgressListener,
+} from "./chunk-and-merge";
 
 // [T-254b] 制作视频「四决策」runner —— 执行层 video.render 管线的「脑」侧
 // (SPEC 2026-07-11 §3.1 步骤 2-3):粗剪 SRT + 口播稿(+ 项目素材清单投影)→
@@ -97,7 +102,7 @@ export interface BrollAssetRef {
 
 /** [T-387c] 聚合去重(纯函数,server 端 listBrollInventory 与制作页 UI 共用同一逻辑):
  *  按 assetId 去重,保留**先出现**的条目(调用方按来源优先级排序传入:script → thesis →
- *  manual/ammo → 整库回退)。 */
+ *  manual/ammo)。 */
 export function dedupeBrollRefs(
   items: ReadonlyArray<BrollAssetRef>,
 ): BrollAssetRef[] {
@@ -234,12 +239,18 @@ export function scenesFacet(scenes: readonly VideoScene[]): string {
 }
 
 export function libraryFacet(inventory: readonly BrollAssetRef[]): string {
+  const sourceLabel: Record<BrollSource, string> = {
+    script: "脚本分镜点名",
+    thesis: "论点树挂载",
+    ammo: "项目弹药",
+    manual: "用户手动上传",
+  };
   return inventory
     .map(
       (a) =>
         `· ${a.assetId} | ${a.label}${a.kind ? ` (${a.kind})` : ""}${
           a.description ? ` | ${a.description}` : ""
-        }`,
+        }${a.source ? ` | 来源:${sourceLabel[a.source]}` : ""}`,
     )
     .join("\n");
 }
@@ -328,6 +339,112 @@ ${lines.join("\n")}
 - 信息卡不得与该段 authored 画面意图冲突(该段已计划满屏素材/实拍时,不再叠大卡抢焦点)。
 - 分镜「（未写）」的段:按你的专业判断自主决策(仅空白处自主)。
 `;
+}
+
+export interface ProjectBrollInventoryDeps {
+  /** 必须先校验 project 属于 ctx.userId + ctx.accountId，失败即整次拒绝。 */
+  assertProjectAccess(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<unknown>;
+  readArtifactContentData(
+    ctx: RequestContext,
+    projectId: string,
+    artifactType: "output_script" | "thesis_tree",
+  ): Promise<Record<string, unknown> | null>;
+  listProjectMaterialLinks(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<
+    Array<{ entityType: string; entityId: string; role: string | null }>
+  >;
+  getAsset(
+    ctx: RequestContext,
+    assetId: string,
+  ): Promise<{
+    id: string;
+    name: string;
+    assetType: string;
+    description: string | null;
+  }>;
+}
+
+/**
+ * [T-309] B-roll 决策唯一素材入口。先锁定当前账号下的项目，再聚合该项目的
+ * authored refs + material-links；单条资产仍经账号域 getAsset 校验。禁止缺少项目时回退
+ * 到账号整库，避免把别的项目素材送进模型。
+ */
+export async function collectProjectBrollInventory(
+  ctx: RequestContext,
+  projectId: string | null,
+  deps: ProjectBrollInventoryDeps,
+): Promise<BrollAssetRef[]> {
+  if (!projectId) {
+    throw new Error("video-decisions: 缺少项目范围，不能读取 B-roll 素材");
+  }
+  await deps.assertProjectAccess(ctx, projectId);
+
+  const rows: BrollAssetRef[] = [];
+  const tryPush = async (assetId: string, source: BrollSource) => {
+    try {
+      const asset = await deps.getAsset(ctx, assetId);
+      if (asset.assetType !== "video" && asset.assetType !== "image") return;
+      rows.push({
+        assetId: asset.id,
+        label: asset.name,
+        kind: asset.assetType,
+        description: asset.description ?? "",
+        source,
+      });
+    } catch {
+      // 越权、已删、知识条目或非当前账号资产都不进入模型输入。
+    }
+  };
+
+  try {
+    const scriptData = await deps.readArtifactContentData(
+      ctx,
+      projectId,
+      "output_script",
+    );
+    for (const section of storyboardFromContentData(scriptData)) {
+      for (const assetId of section.assetRefs) {
+        await tryPush(assetId, "script");
+      }
+    }
+  } catch {
+    // authored 来源缺失不阻断项目 material-links 主链。
+  }
+
+  try {
+    const thesisData = await deps.readArtifactContentData(
+      ctx,
+      projectId,
+      "thesis_tree",
+    );
+    const nodes = Array.isArray(thesisData?.nodes)
+      ? (thesisData.nodes as unknown[])
+      : [];
+    for (const raw of nodes) {
+      const refs = (raw as { materialRefs?: unknown } | null)?.materialRefs;
+      if (!Array.isArray(refs)) continue;
+      for (const ref of refs) {
+        const assetId = (ref as { id?: unknown } | null)?.id;
+        if (typeof assetId === "string" && assetId) {
+          await tryPush(assetId, "thesis");
+        }
+      }
+    }
+  } catch {
+    // 论点树来源缺失不阻断项目 material-links 主链。
+  }
+
+  const links = await deps.listProjectMaterialLinks(ctx, projectId);
+  for (const link of links) {
+    if (link.entityType !== "asset" || link.role === "clip") continue;
+    await tryPush(link.entityId, link.role === "broll" ? "manual" : "ammo");
+  }
+  return dedupeBrollRefs(rows);
 }
 
 // ── 结构化调用抽象(默认走 runStructuredNode;测试注入 fake)────────────────────
@@ -477,6 +594,8 @@ export async function decideBroll(
 
 /** zh 校正「改动最小」守门阈值:与原行 token 相似度低于它 → 视为重写,退回原文。 */
 export const SUBTITLE_REWRITE_GUARD = 0.6;
+/** [T-429] 单次结构化字幕输出上限：控制在约 30~40 行。 */
+export const SUBTITLE_CHUNK_LINES = 36;
 
 // 两段文本的 token 集 Dice 相似度(与 srt.ts 相似度同款 token 化)。
 function lineSimilarity(a: string, b: string): number {
@@ -493,15 +612,37 @@ function lineSimilarity(a: string, b: string): number {
  *  [T-320] 文本校正接口口播稿:script 作校正基准喂进 skill —— ASR 认错字(同音/近音/专名)按
  *  口播稿改回,对不上口播稿的一律不动(改动最小 + SUBTITLE_REWRITE_GUARD 双保险)。时间不动(§2 铁律)。 */
 export async function decideSubtitles(
-  input: { srtLines: readonly SrtLine[]; script: string },
+  input: {
+    srtLines: readonly SrtLine[];
+    script: string;
+    onChunkProgress?: ChunkProgressListener;
+  },
   call: StructuredCall,
 ): Promise<BilingualSubtitleLine[]> {
-  const out = await call<VideoSubtitlesOutput>({
-    skillId: "video.subtitles",
-    facets: { srt: srtFacet(input.srtLines), script: input.script },
-    outputSchema: buildSubtitlesDecisionSchema(input.srtLines),
+  const chunks = chunkOrderedItems(input.srtLines, SUBTITLE_CHUNK_LINES);
+  const translatedChunks = await runOrderedChunks({
+    chunks,
+    onProgress: input.onChunkProgress,
+    process: async (chunk) => {
+      const batch = chunk.items;
+      const out = await call<VideoSubtitlesOutput>({
+        skillId: "video.subtitles",
+        facets: { srt: srtFacet(batch), script: input.script },
+        outputSchema: buildSubtitlesDecisionSchema(batch),
+      });
+      return out.lines;
+    },
+    // 字幕允许局部优雅降级：失败批次保留 zh 原文、en 留空，且继续后续批次。
+    onChunkError: (_error, chunk) =>
+      chunk.items.map((line) => ({
+        index: line.index,
+        zh: line.text,
+        en: "",
+      })),
   });
-  const byIndex = new Map(out.lines.map((l) => [l.index, l]));
+  const byIndex = new Map(
+    translatedChunks.flat().map((line) => [line.index, line]),
+  );
   return input.srtLines.map((orig) => {
     const got = byIndex.get(orig.index);
     let zh = (got?.zh ?? "").trim() || orig.text;
@@ -617,14 +758,17 @@ export async function runVideoDecisions(
     if (!script.trim()) {
       throw new Error("缺少口播稿(备料:script 为空,信息卡可溯校验无从谈起)");
     }
+    if (!task.projectId) {
+      throw new Error("缺少项目范围(备料:B-roll 只允许读取当前项目素材)");
+    }
     const call = deps.callStructured ?? makeDefaultCall(ctx, deps);
 
-    const step = async (i: number, text: string) => {
+    const step = async (i: number, text: string, toolCalls: unknown[] = []) => {
       await deps.ai.recordStep(ctx, task.id, {
         stepNo: i + 1,
         kind: "decision",
         text,
-        toolCalls: [],
+        toolCalls,
       });
     };
 
@@ -672,13 +816,39 @@ export async function runVideoDecisions(
       inventory.length === 0
         ? `${VIDEO_DECISION_STEPS[2]}:素材清单为空,诚实跳过`
         : `${VIDEO_DECISION_STEPS[2]}:${broll.length} 条(清单 ${inventory.length} 项)`,
+      [
+        {
+          toolName: "video.broll",
+          scope: { accountId: ctx.accountId ?? null, projectId: task.projectId },
+          input: { inventory },
+          output: { broll },
+        },
+      ],
     );
 
     stepIdx = 3;
     // [T-320] 字幕文本校正接口口播稿:script 作校正基准(与 decideScenes/decideCards 同源),
     //   让 ASR 认错字按口播稿改回(改动最小,时间不动)。
-    const subtitles = await decideSubtitles({ srtLines, script }, call);
-    await step(3, `${VIDEO_DECISION_STEPS[3]}:${subtitles.length} 行`);
+    let subtitleFallbackBatches = 0;
+    let subtitleBatchCount = 0;
+    const subtitles = await decideSubtitles(
+      {
+        srtLines,
+        script,
+        onChunkProgress: (progress) => {
+          subtitleBatchCount = progress.total;
+          if (progress.status === "fallback") subtitleFallbackBatches += 1;
+        },
+      },
+      call,
+    );
+    await step(
+      3,
+      `${VIDEO_DECISION_STEPS[3]}:${subtitles.length} 行/${subtitleBatchCount} 批` +
+        (subtitleFallbackBatches > 0
+          ? `；${subtitleFallbackBatches} 批翻译失败已保留原文`
+          : ""),
+    );
 
     const decisions: VideoDecisions = { scenes, cards, broll, subtitles, srtLines };
     await deps.ai.recordCandidate(ctx, task.id, {

@@ -20,6 +20,10 @@ import {
   type JsonSchema,
   type SchemaValidator,
 } from "./schema-bridge";
+import type {
+  EditableSkillField,
+  OfficialSkillBase,
+} from "./effective-skill-types";
 
 // 内置 skill(三位一体的模板本体)。registerAllTemplates 全量注册它们。
 import { TOPIC_GENERATE_TEMPLATE } from "./templates/topic-generate";
@@ -72,6 +76,18 @@ import {
 } from "./templates/chatbox-surfaces";
 
 const REGISTRY = new Map<string, PromptTemplate>();
+// T-513 official management truth: account/runtime overrides never mutate this map.
+const OFFICIAL_REGISTRY = new Map<string, PromptTemplate>();
+const DEFAULT_EDITABLE_FIELDS: readonly EditableSkillField[] = [
+  "system",
+  "template",
+  "tools",
+  "requiredFacets",
+  "outputSchema",
+  "completionPolicy",
+];
+const FACET_NAME = /^[a-z][A-Za-z0-9_]{0,63}$/;
+const PLACEHOLDER = /\{\{\s*([\w.]+)\s*\}\}/g;
 
 /**
  * JSON Schema 形式下发的输出契约覆盖(配置口子的运行时态)。key=skill id。
@@ -137,11 +153,110 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
 /** 注册(或覆盖)一个 skill(含 tools/outputSchema 随对象入表)。后注册的同 id 覆盖先前的。 */
 export function registerTemplate(tpl: PromptTemplate): void {
   REGISTRY.set(tpl.id, tpl);
+  OFFICIAL_REGISTRY.set(tpl.id, tpl);
 }
 
 /** 全量注册内置 skill(启动调一次)。 */
 export function registerAllTemplates(): void {
-  for (const tpl of BUILTIN_TEMPLATES) REGISTRY.set(tpl.id, tpl);
+  for (const tpl of BUILTIN_TEMPLATES) {
+    REGISTRY.set(tpl.id, tpl);
+    OFFICIAL_REGISTRY.set(tpl.id, tpl);
+  }
+}
+
+function ensureOfficialRegistry(): void {
+  if (OFFICIAL_REGISTRY.size === 0) registerAllTemplates();
+}
+
+function freezeOfficialTemplate(tpl: PromptTemplate): PromptTemplate {
+  return Object.freeze({
+    ...tpl,
+    requiredFacets: Object.freeze([...tpl.requiredFacets]),
+    contextRequirements: tpl.contextRequirements
+      ? Object.freeze([...tpl.contextRequirements])
+      : undefined,
+    tools: tpl.tools ? Object.freeze([...tpl.tools]) : undefined,
+    availableFacets: tpl.availableFacets
+      ? Object.freeze([...tpl.availableFacets])
+      : undefined,
+    editableFields: tpl.editableFields
+      ? Object.freeze([...tpl.editableFields])
+      : undefined,
+  });
+}
+
+/** T-513 管理面 official-only API：不读 active snapshot，也不含账号覆盖。 */
+export function getOfficialTemplate(id: string): PromptTemplate {
+  ensureOfficialRegistry();
+  const tpl = OFFICIAL_REGISTRY.get(id);
+  if (!tpl) throw new Error(`official prompt template 未注册: ${id}`);
+  return freezeOfficialTemplate(tpl);
+}
+
+export function listOfficialTemplates(): PromptTemplate[] {
+  ensureOfficialRegistry();
+  return [...OFFICIAL_REGISTRY.values()]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map(freezeOfficialTemplate);
+}
+
+export function exportOfficialSkillSchema(id: string): JsonSchema | null {
+  const tpl = getOfficialTemplate(id);
+  return tpl.outputSchema ? exportZodToJsonSchema(tpl.outputSchema) : null;
+}
+
+function officialAvailableFacets(tpl: PromptTemplate): string[] {
+  if (tpl.availableFacets) return [...new Set(tpl.availableFacets)].sort();
+  const facets = new Set(tpl.requiredFacets);
+  for (const match of tpl.template.matchAll(PLACEHOLDER)) {
+    const facet = match[1];
+    if (facet && FACET_NAME.test(facet)) facets.add(facet);
+  }
+  return [...facets].sort();
+}
+
+function deepFreezeOfficial<T>(value: T, seen = new Set<object>()): T {
+  if (typeof value !== "object" || value === null || seen.has(value)) {
+    return value;
+  }
+  seen.add(value);
+  for (const child of Object.values(value)) {
+    deepFreezeOfficial(child, seen);
+  }
+  return Object.freeze(value);
+}
+
+export function getOfficialSkillBase(id: string): OfficialSkillBase | null {
+  ensureOfficialRegistry();
+  const tpl = OFFICIAL_REGISTRY.get(id);
+  if (!tpl) return null;
+  const base: OfficialSkillBase = {
+    skillId: tpl.id,
+    baseVersion: tpl.version,
+    methodSystem: tpl.system,
+    template: tpl.template,
+    tools: [...(tpl.tools ?? [])],
+    requiredFacets: [...tpl.requiredFacets],
+    contextRequirements: [...(tpl.contextRequirements ?? [])],
+    availableFacets: officialAvailableFacets(tpl),
+    editableFields: [...(tpl.editableFields ?? DEFAULT_EDITABLE_FIELDS)],
+    outputSchema: tpl.outputSchema
+      ? exportZodToJsonSchema(tpl.outputSchema)
+      : null,
+    completionPolicy: tpl.completionPolicy
+      ? structuredClone(tpl.completionPolicy)
+      : null,
+    completionPolicyAdapter: tpl.completionPolicyAdapter
+      ? { ...tpl.completionPolicyAdapter }
+      : null,
+  };
+  return deepFreezeOfficial(base);
+}
+
+export function listOfficialSkillBases(): OfficialSkillBase[] {
+  return listOfficialTemplates()
+    .map((tpl) => getOfficialSkillBase(tpl.id))
+    .filter((base): base is OfficialSkillBase => base !== null);
 }
 
 /** 按 id 取 skill;未注册即抛错(调用方应保证能力已注册)。 */
@@ -325,5 +440,6 @@ export function clearAllSchemaOverrides(): void {
 /** 测试/重置用:清空注册表 + schema 覆盖。 */
 export function _resetRegistry(): void {
   REGISTRY.clear();
+  OFFICIAL_REGISTRY.clear();
   SCHEMA_OVERRIDES.clear();
 }

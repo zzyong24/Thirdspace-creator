@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { aiConversationResource } from "../../src/resources/ai";
+import {
+  aiConversationResource,
+  aiTaskResultResource,
+} from "../../src/resources/ai";
 import { aiOperations } from "../../src/operations/ai";
 
 describe("ai contract", () => {
@@ -58,5 +61,74 @@ describe("ai contract", () => {
     // Distinct from the param'd single-task read.
     expect(aiOperations.getTask.path).toBe("/ai/tasks/:taskId");
     expect(aiOperations.listAITasks.fr.length).toBeGreaterThan(0);
+  });
+
+  it("T-512 候选结果携带服务端完整性判定，且保留其它 resultData 字段", () => {
+    const result = aiTaskResultResource.parse({
+      id: "result-script-1",
+      aiTaskId: "task-script-1",
+      resultType: "artifact_version",
+      artifactId: null,
+      knowledgeItemId: null,
+      assetId: null,
+      resultData: {
+        validationStatus: "invalid",
+        validationErrors: ["当前写稿技能要求至少 6 段，本次只有 1 段。"],
+        canAdopt: false,
+        sections: [{ heading: "开场", body: "只有一段" }],
+      },
+    });
+
+    expect(result.resultData.validationStatus).toBe("invalid");
+    expect(result.resultData.validationErrors).toEqual([
+      "当前写稿技能要求至少 6 段，本次只有 1 段。",
+    ]);
+    expect(result.resultData.canAdopt).toBe(false);
+    expect(result.resultData.sections).toEqual([
+      { heading: "开场", body: "只有一段" },
+    ]);
+  });
+
+  it("T-512 完整性字段若出现必须是完整三元组，禁止矛盾状态", () => {
+    const base = {
+      id: "result-script-2",
+      aiTaskId: "task-script-2",
+      resultType: "artifact_version",
+      artifactId: null,
+      knowledgeItemId: null,
+      assetId: null,
+    };
+
+    expect(() =>
+      aiTaskResultResource.parse({
+        ...base,
+        resultData: { validationStatus: "valid", canAdopt: true },
+      }),
+    ).toThrow();
+    expect(() =>
+      aiTaskResultResource.parse({
+        ...base,
+        resultData: {
+          validationStatus: "invalid",
+          validationErrors: [],
+          canAdopt: true,
+        },
+      }),
+    ).toThrow();
+  });
+
+  it("非 script.draft 的旧结果无需伪造完整性字段，原有载荷仍透传", () => {
+    const result = aiTaskResultResource.parse({
+      id: "result-topic-1",
+      aiTaskId: "task-topic-1",
+      resultType: "topic_candidates",
+      artifactId: null,
+      knowledgeItemId: null,
+      assetId: null,
+      resultData: { items: [{ title: "选题 A" }] },
+    });
+
+    expect(result.resultData.items).toEqual([{ title: "选题 A" }]);
+    expect(result.resultData.validationStatus).toBeUndefined();
   });
 });

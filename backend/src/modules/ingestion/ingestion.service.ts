@@ -62,6 +62,7 @@ export interface IngestionPublishingPort {
       externalId: string;
       externalUrl?: string | null;
       publishedAt?: string | null;
+      title?: string;
     },
   ): Promise<{ id: string }>;
 }
@@ -682,6 +683,17 @@ export function createIngestionService(args: {
       requireAccountId(ctx.accountId, "ingestion.ensureImportedProject"); // [T-332 S2]
       // 数据底座(SPEC §1.3)。projects 端口未注入(旧最小组合)→ 返回 null,调用方回退。
       if (!ports.projects) return null;
+      // T-400:上游 schema 对可选字段的空串不负责兜底；在跨模块写入前统一规范化，
+      // 避免项目和 publication 各自留下空标题/空链接。抖音 aweme_id 可组成稳定作品页。
+      const title =
+        input.title.trim() ||
+        `${input.platform === "douyin" ? "抖音作品" : `${input.platform} 作品`} ${input.externalId}`;
+      const rawShareUrl = input.shareUrl?.trim() ?? "";
+      const shareUrl =
+        rawShareUrl ||
+        (input.platform === "douyin"
+          ? `https://www.douyin.com/video/${encodeURIComponent(input.externalId)}`
+          : undefined);
       // [T-321] 主去重键 = publications.externalId(不是 projects.platform_ref)。先按
       //   (platform, externalId) 查既有 publication:命中即该作品已绑定到某属主项目
       //   (用户手建 manual 项目「登记已发布」把 aweme_id 落这里,或上一轮日拉建的 imported
@@ -704,13 +716,27 @@ export function createIngestionService(args: {
           // 命中已绑定属主项目 → 合并更新(补真实发布数据 + 显已发布,不覆盖用户手写内容,
           //   保持原 source)。**不 create 新项目**。幂等:重复日拉稳定落同一项目。
           await ports.projects.mergePublishedWork(ctx, ownerProjectId, {
-            title: input.title,
+            title,
             brief: input.brief,
             platform: input.platform,
             externalId: input.externalId,
-            shareUrl: input.shareUrl,
+            shareUrl,
             publishedAt: input.publishedAt,
           });
+          // 重复采集也走 publishing 的幂等入口，让它仅补齐历史空 title/url。
+          if (ports.publishing.createImportedPublication) {
+            await ports.publishing.createImportedPublication(
+              ctx,
+              boundPub.contentOutputId,
+              {
+                platform: input.platform,
+                externalId: input.externalId,
+                externalUrl: shareUrl ?? null,
+                publishedAt: input.publishedAt ?? null,
+                title,
+              },
+            );
+          }
           return {
             projectId: ownerProjectId,
             outputId: boundPub.contentOutputId,
@@ -720,11 +746,11 @@ export function createIngestionService(args: {
       }
       // 未命中既有 publication(真·纯导入新作品)→ 原「create imported + 建 publication」路径不变。
       const ensured = await ports.projects.ensureImportedProject(ctx, {
-        title: input.title,
+        title,
         brief: input.brief, // [T-089] 文案全文透传(新建项目落 brief)
         platform: input.platform,
         externalId: input.externalId,
-        shareUrl: input.shareUrl,
+        shareUrl,
         publishedAt: input.publishedAt,
       });
       // 确保对应 publication 存在(external_id=externalId),metrics 才能命中。既有查询
@@ -743,7 +769,9 @@ export function createIngestionService(args: {
           {
             platform: input.platform,
             externalId: input.externalId,
+            externalUrl: shareUrl ?? null,
             publishedAt: input.publishedAt ?? null,
+            title,
           },
         );
         publicationId = pub.id;
@@ -899,7 +927,7 @@ export function createIngestionService(args: {
             await service.ensureImportedProject(ctx, {
               // [T-089] title 已是短标题语义(官方 title / desc 首行截 40,见
               // douyin-cdp deriveWorkTitle);兜底占位名不变。desc 全文 → brief。
-              title: r.title ?? `抖音作品 ${r.externalId}`,
+              title: r.title?.trim() || `抖音作品 ${r.externalId}`,
               brief: r.desc,
               platform: r.platform,
               externalId: r.externalId,

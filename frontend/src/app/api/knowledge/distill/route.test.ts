@@ -16,6 +16,11 @@ vi.mock("@/server/persistence-client", () => ({
   }),
   getChatRuntime: async () => ({
     resolveModelSpec,
+    runWithEffectiveSkills: async (
+      _ctx: unknown,
+      _skillIds: readonly string[],
+      execute: () => Promise<unknown>,
+    ) => execute(),
   }),
 }));
 

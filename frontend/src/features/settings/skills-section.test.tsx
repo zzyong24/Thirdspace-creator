@@ -3,8 +3,9 @@
  *   - 列表按组渲染(对话技能 / 创作节点 / 采集分类)+ 中文名 + 「已定制」徽章;
  *   - 行内展开详情:system/template textarea 初值 = 当前生效值 + facets 说明卡([gate-F2])
  *     + tools/outputSchema 只读;
- *   - 「保存」→ client.putPrompt body = 两个草稿;
- *   - 「恢复默认」(每个技能都有,未定制禁用)→ client.putPrompt body = 空串字段(T-040 归一语义);
+ *   - 「保存」→ client.putPrompt 只提交被编辑的账号增量;
+ *   - completionPolicy 可编辑、基础校验、服务端不兼容原因可见、null 恢复官方策略;
+ *   - 「恢复默认」(每个技能都有,未定制禁用)→ null 删除账号提示词增量;
  *   - 空清单 → 诚实空态。
  */
 
@@ -29,33 +30,63 @@ import type { SkillItem } from "./skills-data";
 
 const SKILLS: readonly SkillItem[] = [
   {
+    accountId: "account-a",
     id: "chatbox.topic",
     version: "v1",
+    rowRevision: null,
     system: "你是选题编导。",
     template: "{{positioning}}\n【本轮上下文】{{turnContext}}",
     requiredFacets: ["positioning"],
     tools: ["topic.generate", "context.projects"],
     outputSchemaJson: '{\n  "type": "object"\n}',
+    completionPolicySupported: false,
+    completionPolicy: null,
+    officialCompletionPolicy: null,
+    completionPolicyCustomized: false,
     customized: false,
   },
   {
+    accountId: "account-a",
     id: "script.draft",
     version: "2",
+    rowRevision: 2,
     system: "你是文案写手。",
     template: "我的结构:{{positioning}}{{outline}}",
     requiredFacets: ["positioning"],
     tools: [],
     outputSchemaJson: null,
+    completionPolicySupported: true,
+    completionPolicy: {
+      schemaVersion: 1,
+      minSegments: 6,
+      maxSegments: 10,
+      requiredSequence: ["hook", "body", "cta"],
+      repairAttempts: 2,
+    },
+    officialCompletionPolicy: {
+      schemaVersion: 1,
+      minSegments: 6,
+      maxSegments: 10,
+      requiredSequence: ["hook", "body", "cta"],
+      repairAttempts: 2,
+    },
+    completionPolicyCustomized: false,
     customized: true, // 有有效 override → 徽章亮
   },
   {
+    accountId: "account-a",
     id: "knowledge.classify",
     version: "v1",
+    rowRevision: null,
     system: "你是知识归类员。",
     template: "{{content}}",
     requiredFacets: ["content"],
     tools: [],
     outputSchemaJson: null,
+    completionPolicySupported: false,
+    completionPolicy: null,
+    officialCompletionPolicy: null,
+    completionPolicyCustomized: false,
     customized: false,
   },
 ];
@@ -147,7 +178,7 @@ describe("SkillsSection 详情(行内展开)", () => {
     expect(restoreBtn!.disabled).toBe(true);
   });
 
-  it("改 template 点保存 → putPrompt body = 两个草稿(settings.prompts.put)+ refresh", async () => {
+  it("只改 template 时不制造冗余策略覆盖(settings.prompts.put)+ refresh", async () => {
     const { container } = render(<SkillsSection skills={SKILLS} />);
     expand(container, "script.draft");
     const detail = container.querySelector('[data-slot="skill-detail"]')!;
@@ -169,14 +200,136 @@ describe("SkillsSection 详情(行内展开)", () => {
       params: { id: "script.draft" },
       query: undefined,
       body: {
-        system: "你是文案写手。",
-        template: "新结构:{{positioning}},禁用营销腔",
+        expectedRevision: 2,
+        patch: {
+          system: "你是文案写手。",
+          template: "新结构:{{positioning}},禁用营销腔",
+        },
       },
     });
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
 
-  it("已定制行显「恢复默认」→ putPrompt body = 空串字段(T-040 空串归一 undefined)", async () => {
+  it("可编辑并保存当前账号的完整性策略，不把 hook/CTA 写死在前端", async () => {
+    const { container } = render(<SkillsSection skills={SKILLS} />);
+    expand(container, "script.draft");
+
+    const detail = container.querySelector('[data-slot="skill-detail"]')!;
+    expect(
+      detail.querySelector('[data-slot="skill-completion-policy"]'),
+    ).not.toBeNull();
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-min-segments"]')!,
+      { target: { value: "1" } },
+    );
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-max-segments"]')!,
+      { target: { value: "1" } },
+    );
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-required-sequence"]')!,
+      { target: { value: "monologue" } },
+    );
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-repair-attempts"]')!,
+      { target: { value: "1" } },
+    );
+    fireEvent.click(detail.querySelector('[data-slot="skill-save"]')!);
+
+    await waitFor(() => expect(mockClient.putPrompt).toHaveBeenCalledTimes(1));
+    expect(mockClient.putPrompt).toHaveBeenCalledWith({
+      params: { id: "script.draft" },
+      query: undefined,
+      body: {
+        expectedRevision: 2,
+        patch: {
+          system: "你是文案写手。",
+          template: "我的结构:{{positioning}}{{outline}}",
+          completionPolicy: {
+            schemaVersion: 1,
+            minSegments: 1,
+            maxSegments: 1,
+            requiredSequence: ["monologue"],
+            repairAttempts: 1,
+          },
+        },
+      },
+    });
+  });
+
+  it("不合法的完整性策略在前端阻止发送并显示原因", async () => {
+    const { container, getByText } = render(
+      <SkillsSection skills={SKILLS} />,
+    );
+    expand(container, "script.draft");
+    const detail = container.querySelector('[data-slot="skill-detail"]')!;
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-min-segments"]')!,
+      { target: { value: "9" } },
+    );
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-max-segments"]')!,
+      { target: { value: "2" } },
+    );
+    fireEvent.click(detail.querySelector('[data-slot="skill-save"]')!);
+
+    expect(getByText("最多段数不能小于最少段数。")).toBeTruthy();
+    expect(mockClient.putPrompt).not.toHaveBeenCalled();
+  });
+
+  it("服务端判定策略与 outputSchema 不兼容时原样显示原因", async () => {
+    mockClient.putPrompt.mockRejectedValueOnce(
+      new Error(
+        "HttpTransport: completionPolicy 与 outputSchema 不兼容：缺少 role 字段",
+      ),
+    );
+    const { container, getByText } = render(
+      <SkillsSection skills={SKILLS} />,
+    );
+    expand(container, "script.draft");
+    const detail = container.querySelector('[data-slot="skill-detail"]')!;
+    fireEvent.change(
+      detail.querySelector('[data-slot="skill-policy-min-segments"]')!,
+      { target: { value: "7" } },
+    );
+    fireEvent.click(detail.querySelector('[data-slot="skill-save"]')!);
+
+    expect(
+      await waitFor(() =>
+        getByText(/completionPolicy 与 outputSchema 不兼容/),
+      ),
+    ).toBeTruthy();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+
+  it("完整性策略可单独恢复官方默认，使用 null 删除账号增量", async () => {
+    const policyCustomizedSkills: readonly SkillItem[] = [
+      {
+        ...SKILLS[1]!,
+        completionPolicyCustomized: true,
+      },
+    ];
+    const { container } = render(
+      <SkillsSection skills={policyCustomizedSkills} />,
+    );
+    expand(container, "script.draft");
+
+    fireEvent.click(
+      container.querySelector('[data-slot="skill-policy-restore-default"]')!,
+    );
+
+    await waitFor(() => expect(mockClient.putPrompt).toHaveBeenCalledTimes(1));
+    expect(mockClient.putPrompt).toHaveBeenCalledWith({
+      params: { id: "script.draft" },
+      query: undefined,
+      body: {
+        expectedRevision: 2,
+        patch: { completionPolicy: null },
+      },
+    });
+  });
+
+  it("已定制行显「恢复默认」→ null 删除账号增量字段", async () => {
     const { container } = render(<SkillsSection skills={SKILLS} />);
     expand(container, "script.draft");
     const restore = container.querySelector<HTMLButtonElement>(
@@ -188,7 +341,10 @@ describe("SkillsSection 详情(行内展开)", () => {
     expect(mockClient.putPrompt).toHaveBeenCalledWith({
       params: { id: "script.draft" },
       query: undefined,
-      body: { system: "", template: "" },
+      body: {
+        expectedRevision: 2,
+        patch: { system: null, template: null },
+      },
     });
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
@@ -206,6 +362,52 @@ describe("SkillsSection 详情(行内展开)", () => {
     await waitFor(() =>
       expect(
         container.querySelector('[data-slot="skill-save-error"]'),
+      ).not.toBeNull(),
+    );
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+
+  it("账号 revision 冲突 → 明示刷新，禁止把旧草稿冒充保存成功", async () => {
+    mockClient.putPrompt.mockRejectedValueOnce({
+      code: "ConflictError",
+      details: { domainCode: "SKILL_OVERLAY_REVISION_CONFLICT" },
+      message: "Skill 覆盖已被其他请求修改",
+    });
+    const { container, getByText } = render(
+      <SkillsSection skills={SKILLS} />,
+    );
+    expand(container, "script.draft");
+    fireEvent.change(
+      container.querySelector('[data-slot="skill-system-input"]')!,
+      { target: { value: "并发修改" } },
+    );
+    fireEvent.click(container.querySelector('[data-slot="skill-save"]')!);
+    await waitFor(() =>
+      expect(
+        getByText("该账号的技能配置已在别处更新，请刷新后再编辑。"),
+      ).not.toBeNull(),
+    );
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+
+  it("官方基座升级后增量不兼容 → 展示真实原因，不建议盲重试", async () => {
+    mockClient.putPrompt.mockRejectedValueOnce(
+      new Error(
+        "HttpTransport: 400 for settings.prompts.put: Skill 增量与当前官方基座不兼容: 上下文字段 oldFacet 没有官方 reader",
+      ),
+    );
+    const { container, getByText } = render(
+      <SkillsSection skills={SKILLS} />,
+    );
+    expand(container, "script.draft");
+    fireEvent.change(
+      container.querySelector('[data-slot="skill-template-input"]')!,
+      { target: { value: "{{oldFacet}}" } },
+    );
+    fireEvent.click(container.querySelector('[data-slot="skill-save"]')!);
+    await waitFor(() =>
+      expect(
+        getByText(/Skill 增量与当前官方基座不兼容/),
       ).not.toBeNull(),
     );
     expect(mockRouter.refresh).not.toHaveBeenCalled();

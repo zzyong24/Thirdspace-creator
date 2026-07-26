@@ -75,6 +75,7 @@ describe("knowledge ops registered in the composite transport", () => {
       ctx(canonicalDataset.user.id),
     )) as { data: Array<{ id: string; userId: string }> };
     expect(res.data.length).toBe(0);
+    expect(res.data).toEqual([]);
   });
 
   it("knowledge.create round-trips: the new item is then listable", async () => {

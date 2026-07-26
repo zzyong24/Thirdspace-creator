@@ -387,6 +387,10 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
   "planning.thesis": { label: "核心论点", sub: "提炼论点树" },
   "cover.generate": { label: "生成封面", sub: "结构化封面方案 + 生图" },
+  "intelligence.douyin.share": {
+    label: "抖音分享建档",
+    sub: "持久归档，可选明确授权的转写",
+  },
   "review.analyze": { label: "复盘分析", sub: "提炼可复用爆款要素" },
   "script.review": { label: "文案审核", sub: "违禁词 lint + 语义审" },
   "positioning.generate": { label: "定位策略", sub: "生成结构化定位提案" },

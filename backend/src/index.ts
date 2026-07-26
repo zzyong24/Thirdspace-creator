@@ -67,11 +67,15 @@ export {
   storageConfigs,
   skillConfigOverrides,
   skillConfigOverrideVersions,
+  accountSkillOverlays,
+  accountSkillOverlayVersions,
   SETTINGS_DDL,
 } from "./schema/settings";
 export type {
   SkillConfigOverrideRow,
   SkillConfigOverrideVersionRow,
+  AccountSkillOverlayRow,
+  AccountSkillOverlayVersionRow,
 } from "./schema/settings";
 export {
   knowledgeItems,

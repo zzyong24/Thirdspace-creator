@@ -82,6 +82,10 @@ describe("ingestion contract conformance", () => {
         "ingestion.runs.get",
       ].sort(),
     );
+    expect(INGESTION_OP_IDS).not.toContain("ingestion.runs.metrics");
+    expect(INGESTION_OP_IDS).not.toContain("ingestion.runs.knowledge");
+    expect(INGESTION_OP_IDS).not.toContain("ingestion.runs.assets");
+    expect(INGESTION_OP_IDS).not.toContain("ingestion.runs.artifacts");
   });
 
   it("ingestion.runs.create → ingestionRunResource", async () => {

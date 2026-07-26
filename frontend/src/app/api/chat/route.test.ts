@@ -16,6 +16,7 @@ const getConversation = vi.fn();
 const listMessages = vi.fn();
 const runChatStream = vi.fn();
 const dispatchDouyinShare = vi.fn();
+const resolveEffectiveSkillSnapshot = vi.fn();
 
 // [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
 // 触发 onFinish 断言 assistant 回复(text + parts)落库。[T-239c] onFinish 现带 isAborted。
@@ -43,6 +44,7 @@ vi.mock("@/server/persistence-client", () => ({
       getConversation,
       listMessages,
     },
+    resolveEffectiveSkillSnapshot,
     resolveModelSpec: vi.fn(),
     dispatchDouyinShare,
     context: {
@@ -55,7 +57,16 @@ vi.mock("@/server/persistence-client", () => ({
 }));
 
 vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
+  resolveSkillForSurface: (surface: string) =>
+    surface === "review" ? "chatbox.review" : "chatbox.topic",
   runChatStream: (...args: unknown[]) => runChatStream(...args),
+}));
+
+vi.mock("@creatoros/ai-worker", () => ({
+  runWithEffectiveSkillSnapshot: async (
+    _snapshot: unknown,
+    execute: () => Promise<unknown>,
+  ) => execute(),
 }));
 
 // readSessionCookie reads the cookie header; keep the real impl (it's pure).
@@ -92,6 +103,13 @@ beforeEach(() => {
   listMessages.mockResolvedValue([]);
   appendAssistantMessage.mockReset();
   appendAssistantMessage.mockResolvedValue({ id: "m-2" });
+  resolveEffectiveSkillSnapshot.mockReset();
+  resolveEffectiveSkillSnapshot.mockResolvedValue({
+    snapshotVersion: 1,
+    userId: "u-1",
+    accountId: "acct-1",
+    skills: [],
+  });
   runChatStream.mockReset();
   dispatchDouyinShare.mockReset();
   capturedStreamInit = null;
@@ -194,6 +212,10 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
 
     // 委派装配:runChatStream 收到 messages + chatContext(surface)。
+    expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      ["chatbox.topic"],
+    );
     expect(runChatStream).toHaveBeenCalledTimes(1);
     const [, input] = runChatStream.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");

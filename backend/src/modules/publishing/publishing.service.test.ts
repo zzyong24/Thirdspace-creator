@@ -363,6 +363,64 @@ describe("getRecentPublications", () => {
     const recent = await service.getRecentPublications(ctx, { limit: 10 });
     expect(recent.length).toBe(2);
   });
+
+  it("[T-400] recent-with-title 同时暴露当前 revision 的 coverAssetId", async () => {
+    const pub = await service.createImportedPublication(ctx, "output-cover", {
+      platform: "douyin",
+      externalId: "aweme-cover",
+      title: "带封面的最新作品",
+    });
+    await service.setCover(ctx, pub.id, "asset-cover-latest");
+
+    const recent = await service.getRecentPublicationsWithTitle(ctx, {
+      limit: 1,
+    });
+    expect(recent[0]?.title).toBe("带封面的最新作品");
+    expect(recent[0]?.coverAssetId).toBe("asset-cover-latest");
+  });
+
+  it("[T-400] 重复导入会补齐已有 publication 的空 title/url，不新建第二条", async () => {
+    const first = await service.createImportedPublication(ctx, "output-heal", {
+      platform: "douyin",
+      externalId: "aweme-heal",
+      title: "",
+      externalUrl: null,
+    });
+    const healed = await service.createImportedPublication(ctx, "output-heal", {
+      platform: "douyin",
+      externalId: "aweme-heal",
+      title: "补齐后的作品标题",
+      externalUrl: "https://www.douyin.com/video/aweme-heal",
+    });
+
+    expect(healed.id).toBe(first.id);
+    expect(healed.externalUrl).toBe(
+      "https://www.douyin.com/video/aweme-heal",
+    );
+    const recent = await service.getRecentPublicationsWithTitle(ctx, {
+      limit: 10,
+    });
+    expect(recent).toHaveLength(1);
+    expect(recent[0]?.title).toBe("补齐后的作品标题");
+
+    const preserved = await service.createImportedPublication(
+      ctx,
+      "output-heal",
+      {
+        platform: "douyin",
+        externalId: "aweme-heal",
+        title: "后续采集标题不应覆盖",
+        externalUrl: "https://www.douyin.com/video/other",
+      },
+    );
+    expect(preserved.externalUrl).toBe(
+      "https://www.douyin.com/video/aweme-heal",
+    );
+    const afterRepeat = await service.getRecentPublicationsWithTitle(ctx, {
+      limit: 10,
+    });
+    expect(afterRepeat[0]?.title).toBe("补齐后的作品标题");
+  });
 });
 
 // [T-073] 平台侧可见性同步:抖音端「仅自己可见/已隐藏」→ hidden_at 非空(不碰 status)。

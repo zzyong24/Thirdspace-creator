@@ -28,3 +28,57 @@ export class ConflictError extends Error {
     this.name = "ConflictError";
   }
 }
+
+export class AttemptIdInvalidError extends Error {
+  readonly code = ErrorCode.AttemptIdInvalid;
+  constructor() {
+    super("attemptId must contain 16..128 characters");
+    this.name = "AttemptIdInvalidError";
+  }
+}
+
+export class ReservedInputFieldError extends Error {
+  readonly code = ErrorCode.ReservedInputField;
+  readonly details: { fields: string[] };
+  constructor(fields: string[]) {
+    super(`Reserved AI task input fields are server-only: ${fields.join(", ")}`);
+    this.name = "ReservedInputFieldError";
+    this.details = { fields };
+  }
+}
+
+export class AttemptPayloadMismatchError extends Error {
+  readonly code = ErrorCode.AttemptPayloadMismatch;
+  readonly details: { existingTaskId: string };
+  constructor(existingTaskId: string) {
+    super("The same attemptId was reused with a different request payload");
+    this.name = "AttemptPayloadMismatchError";
+    this.details = { existingTaskId };
+  }
+}
+
+export class RetrySourceNotTerminalError extends Error {
+  readonly code = ErrorCode.RetrySourceNotTerminal;
+  readonly details: { taskId: string };
+  constructor(taskId: string) {
+    super("retryOfTaskId must refer to a terminal task of the same taskType");
+    this.name = "RetrySourceNotTerminalError";
+    this.details = { taskId };
+  }
+}
+
+export class ExecutionClaimInvalidError extends Error {
+  readonly code = ErrorCode.ExecutionClaimInvalid;
+  constructor(message: string) {
+    super(message);
+    this.name = "ExecutionClaimInvalidError";
+  }
+}
+
+/** Server-only signal that a live runner no longer owns its execution lease. */
+export class ExecutionLeaseLostError extends Error {
+  constructor(taskId: string) {
+    super(`AI task execution lease was lost: ${taskId}`);
+    this.name = "ExecutionLeaseLostError";
+  }
+}

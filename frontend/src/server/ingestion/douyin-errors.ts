@@ -23,6 +23,22 @@ export class DouyinCaptchaError extends Error {
   }
 }
 
+/** 主页已打开，但没有取得任何可解析的作品列表响应；这是未知结果，绝不等同真实 0 条。 */
+export class DouyinNoValidResponseError extends Error {
+  constructor() {
+    super("DouyinNoValidResponseError: 未取得有效的抖音作品列表响应");
+    this.name = "DouyinNoValidResponseError";
+  }
+}
+
+/** 命中作品接口但返回体已不符合已知列表结构，需要更新解析器，绝不等同真实 0 条。 */
+export class DouyinResponseShapeChangedError extends Error {
+  constructor() {
+    super("DouyinResponseShapeChangedError: 抖音作品列表响应结构已变化");
+    this.name = "DouyinResponseShapeChangedError";
+  }
+}
+
 abstract class DouyinFavoritesError extends Error {
   abstract readonly code: string;
   readonly details: Record<string, unknown>;

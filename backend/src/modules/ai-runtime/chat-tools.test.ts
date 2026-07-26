@@ -239,6 +239,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
         url: "https://v.douyin.com/x",
         publishedAt: "2026-07-01T00:00:00.000Z",
         projectTitle: "上下文工程",
+        coverAssetId: "asset-cover-pub-1",
         status: "published",
       },
     ],
@@ -1962,7 +1963,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     const tools = buildChatTools([...LIST_WHITELIST], deps);
     const result = (await runExecute(tools["context.publications"]!, {})) as {
       kind: string;
-      items: Array<{ platform: string }>;
+      items: Array<{ platform: string; coverAssetId: string | null }>;
       total: number;
       offset: number;
       hasMore: boolean;
@@ -1971,10 +1972,35 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     expect(listPublications).toHaveBeenCalledWith({ limit: 20, offset: 0 });
     expect(result.kind).toBe("context.publications");
     expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.coverAssetId).toBe("asset-cover-pub-1");
     expect(result.total).toBe(3);
     expect(result.offset).toBe(0);
     // total=3 > offset+items(0+1) → hasMore。
     expect(result.hasMore).toBe(true);
+  });
+
+  it("[T-400] 最新发布作品的 coverAssetId 可原样作为 cover.generate.referenceAssetId", async () => {
+    const { deps, dispatchGenerateCover } = makeDeps();
+    const tools = buildChatTools(
+      ["context.publications", "cover.generate"],
+      deps,
+    );
+    const publications = (await runExecute(
+      tools["context.publications"]!,
+      { limit: 1 },
+    )) as { items: Array<{ coverAssetId: string | null }> };
+    const referenceAssetId = publications.items[0]?.coverAssetId;
+    expect(referenceAssetId).toBe("asset-cover-pub-1");
+
+    await runExecute(tools["cover.generate"]!, {
+      projectId: "proj-current",
+      referenceAssetId,
+    });
+    expect(dispatchGenerateCover).toHaveBeenCalledWith({
+      projectId: "proj-current",
+      topic: undefined,
+      referenceAssetId: "asset-cover-pub-1",
+    });
   });
 
   it("[切片四] context.publications limit 封顶 50、offset 兜 0", async () => {
@@ -2465,6 +2491,11 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
       suggestSwitchModel: false,
       suggestedTags: ["上下文工程"],
       originalText: "上下文工程是新的护城河。模型不缺聪明,缺的是你的上下文。",
+      coverage: {
+        inputChars: 28,
+        submittedChars: 28,
+        truncatedChars: 0,
+      },
       atoms: [
         expect.objectContaining({ type: "claim" }),
         expect.objectContaining({ type: "quote", sourceNote: "作者原话" }),
@@ -2526,6 +2557,29 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     expect(clampDistillContent(42)).toBe("");
     const long = "长".repeat(MAX_DISTILL_TOOL_CONTENT_CHARS + 10);
     expect(clampDistillContent(long).length).toBe(MAX_DISTILL_TOOL_CONTENT_CHARS);
+  });
+
+  it("超硬上限时工具结果如实报告截断字符数，不让 Copilot 假装处理全文", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const content = "长".repeat(MAX_DISTILL_TOOL_CONTENT_CHARS + 23);
+    const result = (await runExecute(tools["knowledge.distill"]!, {
+      content,
+    })) as {
+      originalText: string;
+      coverage: {
+        inputChars: number;
+        submittedChars: number;
+        truncatedChars: number;
+      };
+    };
+    // 通用工具输出预算可能再缩短回显原文；覆盖真相字段必须仍保留真实提交量。
+    expect(result.originalText.length).toBeGreaterThan(0);
+    expect(result.coverage).toEqual({
+      inputChars: MAX_DISTILL_TOOL_CONTENT_CHARS + 23,
+      submittedChars: MAX_DISTILL_TOOL_CONTENT_CHARS,
+      truncatedChars: 23,
+    });
   });
 });
 

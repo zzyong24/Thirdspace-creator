@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
 import { z } from "zod";
-import { runStructuredNode, extractJsonObject } from "./structured-node";
+import {
+  runStructuredNode,
+  extractJsonObject,
+  isStructuredResponseParseError,
+} from "./structured-node";
 import type { PromptTemplate } from "../prompt/template";
 
 // 一个最小四类 schema(模仿 research.gather 形状)+ 模板,验结构化节点的跨模型健壮性。
@@ -80,5 +84,18 @@ describe("extractJsonObject", () => {
   it("无 JSON → null", () => {
     expect(extractJsonObject("纯文字没有对象")).toBeNull();
     expect(extractJsonObject("")).toBeNull();
+  });
+});
+
+describe("isStructuredResponseParseError", () => {
+  it("识别 provider JSON 解析类错误及 cause 链，不把鉴权/网络错误误降级", () => {
+    expect(isStructuredResponseParseError(new Error("Invalid JSON response"))).toBe(true);
+    expect(
+      isStructuredResponseParseError(
+        new Error("provider failed", { cause: { name: "AI_JSONParseError" } }),
+      ),
+    ).toBe(true);
+    expect(isStructuredResponseParseError(new Error("401 unauthorized"))).toBe(false);
+    expect(isStructuredResponseParseError(new Error("ECONNRESET"))).toBe(false);
   });
 });

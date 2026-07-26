@@ -11,6 +11,11 @@ import {
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
 import type { ScriptSectionView } from "@/types/view-models";
 import type { ScriptReviewReportResource } from "@creatoros/contract";
+import {
+  hasCurrentTranscriptForAweme,
+  type TranscriptArtifactSummary,
+  type TranscriptArtifactVersion,
+} from "@/server/project-transcript-artifact";
 
 /**
  * 稿面工作台读侧装配(T-055a,SPEC §3/§4)。
@@ -173,11 +178,28 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // [T-505] 刷新恢复逐字稿任务状态。optional 兼容旧测试桩；生产 client 恒有此 op。
+  listAITasks?(input: {
+    params: undefined;
+    query: {
+      page: number;
+      pageSize: number;
+      taskType?: string;
+    };
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 // ---------------------------------------------------------------------------
 // 稿面 VM
 // ---------------------------------------------------------------------------
+
+export type ProjectTranscriptState =
+  | "idle"
+  | "queued"
+  | "running"
+  | "done"
+  | "failed";
 
 export interface DraftWorkbenchVm {
   readonly project: {
@@ -192,6 +214,11 @@ export interface DraftWorkbenchVm {
      * 时才有);null = 无抖音锚 → 顶条不渲「立即抓取逐字稿」按钮(诚实,无锚无法抓)。
      */
     readonly douyinExternalId: string | null;
+    /**
+     * [T-505] 持久逐字稿状态。done 时顶条不再提供二次抓取；queued/running
+     * 从 ai_tasks 恢复，刷新不会重置为可提交。
+     */
+    readonly transcriptState: ProjectTranscriptState;
   };
   /** 脚本区:DB 解析的 artifactId(null=还没有,首存/AI 起草时 ensure)。 */
   readonly scriptArtifactId: string | null;
@@ -448,6 +475,11 @@ export async function buildDraftWorkbenchVm(
     query: undefined,
     body: undefined,
   })) as ProjectDto;
+  const douyinExternalId =
+    project.platformRef?.platform === "douyin" &&
+    (project.platformRef.externalId ?? "").trim()
+      ? project.platformRef.externalId!.trim()
+      : null;
 
   const scriptArtifactId = await resolveScriptArtifactIdFromDb(
     project.id,
@@ -455,11 +487,13 @@ export async function buildDraftWorkbenchVm(
   );
   const scriptData = await loadScriptEditorData(scriptArtifactId, client);
 
-  const [{ outputId, publishPack }, ammo, thesis] = await Promise.all([
+  const [{ outputId, publishPack }, ammo, thesis, transcriptState] =
+    await Promise.all([
     readPublishPack(client, project.id),
     readAmmo(client, project.id),
     // [T-127] 读已采纳论点骨架(无 → null,面板显诚实空态)。与 script/ammo 并行。
     loadThesisSkeleton(project.id, client),
+    readProjectTranscriptState(client, project.id, douyinExternalId),
   ]);
 
   // [T-063e] 盲预测读依赖 outputId,故在发布包读之后串行。
@@ -477,11 +511,8 @@ export async function buildDraftWorkbenchVm(
       imported: project.source === "imported",
       briefDetail: project.briefDetail ?? null,
       // [T-374] 抖音锚:douyin + 非空 externalId 才算(手动项目为空形状 → null)。
-      douyinExternalId:
-        project.platformRef?.platform === "douyin" &&
-        (project.platformRef.externalId ?? "").trim()
-          ? project.platformRef.externalId!.trim()
-          : null,
+      douyinExternalId,
+      transcriptState,
     },
     scriptArtifactId,
     outputId,
@@ -497,6 +528,94 @@ export async function buildDraftWorkbenchVm(
     scriptReview,
     thesis,
   };
+}
+
+interface TranscriptTaskDto {
+  readonly projectId?: string | null;
+  readonly status?: string;
+  readonly inputData?: Record<string, unknown>;
+}
+
+/**
+ * [T-505] 首屏恢复项目逐字稿状态。
+ *
+ * 先按 runner 的真实落点判 done；否则从持久 ai_tasks 找同项目/同 aweme 最近任务。
+ * 查询不强制 projectId，是为了恢复修复前创建的旧任务（旧行 project_id 为 null，
+ * 但 inputData.awemeIds 仍有稳定作品锚）。任一读失败诚实降级 idle，不在读路径写任务。
+ */
+export async function readProjectTranscriptState(
+  client: DraftWorkbenchClient,
+  projectId: string,
+  awemeId: string | null,
+): Promise<ProjectTranscriptState> {
+  if (!awemeId) return "idle";
+
+  let hasTranscript = false;
+  if (client.listArtifacts) {
+    try {
+      hasTranscript = await hasCurrentTranscriptForAweme(
+        {
+          async listProjectArtifacts(id) {
+            const listed = await client.listArtifacts!({
+              params: { projectId: id },
+              query: { page: 1, pageSize: 200 },
+              body: undefined,
+            });
+            return (Array.isArray(listed) ? listed : []) as TranscriptArtifactSummary[];
+          },
+          async listArtifactVersions(artifactId) {
+            const listed = await client.listArtifactVersions({
+              params: { artifactId },
+              query: { page: 1, pageSize: 200 },
+              body: undefined,
+            });
+            return (Array.isArray(listed) ? listed : []) as TranscriptArtifactVersion[];
+          },
+        },
+        projectId,
+        awemeId,
+      );
+    } catch {
+      hasTranscript = false;
+    }
+  }
+  if (hasTranscript) return "done";
+  if (!client.listAITasks) return "idle";
+
+  try {
+    const listed = await client.listAITasks({
+      params: undefined,
+      query: {
+        page: 1,
+        pageSize: 100,
+        taskType: "transcribe.douyin",
+      },
+      body: undefined,
+    });
+    const tasks = (Array.isArray(listed) ? listed : []) as TranscriptTaskDto[];
+    const latest = tasks.find((task) => {
+      const awemeIds = task.inputData?.awemeIds;
+      return (
+        task.projectId === projectId ||
+        (Array.isArray(awemeIds) && awemeIds.includes(awemeId))
+      );
+    });
+    if (!latest) return "idle";
+    if (latest.status === "queued") return "queued";
+    if (
+      latest.status === "running" ||
+      latest.status === "awaiting_confirmation"
+    ) {
+      return "running";
+    }
+    if (latest.status === "succeeded") return "done";
+    if (latest.status === "failed" || latest.status === "cancelled") {
+      return "failed";
+    }
+    return "idle";
+  } catch {
+    return "idle";
+  }
 }
 
 // [T-086] 读本项目最新审核报告。404(未审)/ 桩不带 op / 读失败 → null(诚实显未审)。

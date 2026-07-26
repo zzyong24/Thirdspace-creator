@@ -5,8 +5,9 @@ import {
   userPreferenceResource,
   modelConfigurationResource,
   storageConfigResource,
-  skillConfigOverrideResource,
-  skillConfigOverrideVersionResource,
+  accountSkillOverlayPatchResource,
+  accountSkillOverlayResource,
+  accountSkillOverlayVersionResource,
 } from "../resources/settings";
 
 // SPEC §13 "设置" group. `GET /settings` is the singleton settings view for the
@@ -131,7 +132,7 @@ export const settingsOperations = {
     id: "settings.prompts.list",
     method: "GET",
     path: "/settings/prompts",
-    response: z.array(skillConfigOverrideResource),
+    response: z.array(accountSkillOverlayResource),
     fr: ["FR-SETTINGS-PROMPT-LIST"],
   }),
   getPrompt: defineEndpoint({
@@ -139,7 +140,7 @@ export const settingsOperations = {
     method: "GET",
     path: "/settings/prompts/:id",
     params: z.object({ id: z.string().min(1) }),
-    response: skillConfigOverrideResource,
+    response: accountSkillOverlayResource,
     fr: ["FR-SETTINGS-PROMPT-GET"],
   }),
   putPrompt: defineEndpoint({
@@ -148,18 +149,13 @@ export const settingsOperations = {
     path: "/settings/prompts/:id",
     params: z.object({ id: z.string().min(1) }),
     body: z.object({
-      // Every override field optional — absent = leave that column as-is (partial
-      // put never clobbers untouched columns). Text fields override system/template
-      // 正文; tools/requiredFacets are string whitelists; outputSchema is a JSON
-      // Schema object (转回 ajv 校验器 at assembly).
-      system: z.string().optional(),
-      template: z.string().optional(),
-      tools: z.array(z.string()).optional(),
-      requiredFacets: z.array(z.string()).optional(),
-      outputSchema: z.record(z.string(), z.unknown()).optional(),
-      version: z.string().optional(),
+      expectedRevision: z.number().int().min(1).nullable(),
+      patch: accountSkillOverlayPatchResource.refine(
+        (patch) => Object.keys(patch).length > 0,
+        "patch 至少包含一个字段",
+      ),
     }),
-    response: skillConfigOverrideResource,
+    response: accountSkillOverlayResource,
     fr: ["FR-SETTINGS-PROMPT-UPSERT"],
   }),
   // [T-165] 版本历史 + 一键回滚。list = 某 skill 的历史版本快照(最新在前);rollback =
@@ -170,7 +166,7 @@ export const settingsOperations = {
     method: "GET",
     path: "/settings/prompts/:id/versions",
     params: z.object({ id: z.string().min(1) }),
-    response: z.array(skillConfigOverrideVersionResource),
+    response: z.array(accountSkillOverlayVersionResource),
     fr: ["FR-SETTINGS-PROMPT-VERSIONS-LIST"],
   }),
   rollbackPrompt: defineEndpoint({
@@ -178,8 +174,11 @@ export const settingsOperations = {
     method: "POST",
     path: "/settings/prompts/:id/rollback",
     params: z.object({ id: z.string().min(1) }),
-    body: z.object({ versionId: z.string().min(1) }),
-    response: skillConfigOverrideResource,
+    body: z.object({
+      versionId: z.string().min(1),
+      expectedRevision: z.number().int().min(1),
+    }),
+    response: accountSkillOverlayResource,
     fr: ["FR-SETTINGS-PROMPT-ROLLBACK"],
   }),
 } as const;

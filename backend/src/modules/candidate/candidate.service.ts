@@ -218,6 +218,7 @@ export interface ListCandidatesQuery {
   status?: string;
   source?: string;
   sort?: CandidateSort;
+  createdAfter?: string;
   limit: number;
   offset: number;
 }

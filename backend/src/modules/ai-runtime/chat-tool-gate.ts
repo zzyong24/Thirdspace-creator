@@ -145,6 +145,7 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
       atoms: [],
       suggestedTags: [],
       originalText: "",
+      coverage: { inputChars: 0, submittedChars: 0, truncatedChars: 0 },
       suggestSwitchModel: false,
     },
   },

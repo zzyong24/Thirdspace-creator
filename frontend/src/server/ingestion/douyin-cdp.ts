@@ -13,7 +13,9 @@ import {
   DouyinFavoritesNetworkError,
   DouyinFavoritesSessionExpiredError,
   DouyinFavoritesUpstreamError,
+  DouyinNoValidResponseError,
   DouyinNotLoggedInError,
+  DouyinResponseShapeChangedError,
 } from "./douyin-errors";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
 // gateway 走**可注入窄端口**(DouyinChannelGate),默认 instantNoopGateway(不真等)——
@@ -155,11 +157,12 @@ export interface DouyinDetail {
 /** 解析创作者中心 work_list XHR(`aweme_list` 或 `item_list`),字段兜底取 0。 */
 export function parseWorkList(json: unknown): DouyinWork[] {
   const root = (json ?? {}) as Record<string, unknown>;
+  const data = (root.data ?? {}) as Record<string, unknown>;
   const list =
     (Array.isArray(root.aweme_list) && root.aweme_list) ||
     (Array.isArray(root.item_list) && root.item_list) ||
-    (Array.isArray((root.data as Record<string, unknown>)?.aweme_list) &&
-      ((root.data as Record<string, unknown>).aweme_list as unknown[])) ||
+    (Array.isArray(data.aweme_list) && data.aweme_list) ||
+    (Array.isArray(data.item_list) && data.item_list) ||
     [];
   return (list as unknown[])
     .map((raw): DouyinWork | null => {
@@ -788,7 +791,9 @@ export {
   DouyinFavoritesNetworkError,
   DouyinFavoritesSessionExpiredError,
   DouyinFavoritesUpstreamError,
+  DouyinNoValidResponseError,
   DouyinNotLoggedInError,
+  DouyinResponseShapeChangedError,
 } from "./douyin-errors";
 
 const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
@@ -1363,6 +1368,8 @@ export async function fetchDouyinUserPosts(
     const page = ctx.pages()[0] ?? (await ctx.newPage());
 
     const workJsons: unknown[] = [];
+    let decodedListResponseCount = 0;
+    let validListResponseCount = 0;
     const seenIds = new Set<string>();
     let hasMore = true;
     const readHasMore = (j: unknown): boolean | undefined => {
@@ -1376,7 +1383,18 @@ export async function fetchDouyinUserPosts(
       if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
       try {
         const j = await resp.json();
+        decodedListResponseCount += 1;
         workJsons.push(j);
+        const root = (j ?? {}) as Record<string, unknown>;
+        const data = (root.data ?? {}) as Record<string, unknown>;
+        if (
+          Array.isArray(root.aweme_list) ||
+          Array.isArray(root.item_list) ||
+          Array.isArray(data.aweme_list) ||
+          Array.isArray(data.item_list)
+        ) {
+          validListResponseCount += 1;
+        }
         for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
         const hm = readHasMore(j);
         if (hm !== undefined) hasMore = hm;
@@ -1413,6 +1431,13 @@ export async function fetchDouyinUserPosts(
       });
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // 无新作品兜底,防死循环
+    }
+
+    if (opts.strictEvidence && decodedListResponseCount === 0) {
+      throw new DouyinNoValidResponseError();
+    }
+    if (opts.strictEvidence && validListResponseCount === 0) {
+      throw new DouyinResponseShapeChangedError();
     }
 
     // 去重(同 aweme_id 保留最后一次)+ 映射到对标作品形状。

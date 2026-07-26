@@ -1,4 +1,5 @@
 import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
+import { ErrorCode } from "@creatoros/contract";
 import { assets, assetFiles } from "@creatoros/backend";
 import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
 import {
@@ -8,6 +9,8 @@ import {
   storageConfigs,
   skillConfigOverrides,
   skillConfigOverrideVersions,
+  accountSkillOverlays,
+  accountSkillOverlayVersions,
 } from "./settings.db-schema";
 
 // Settings repository (foundation §5.2) — user-scoped queries ONLY. Every method
@@ -42,6 +45,50 @@ export type StorageConfigRow = typeof storageConfigs.$inferSelect;
 export type SkillConfigOverrideRow = typeof skillConfigOverrides.$inferSelect;
 export type SkillConfigOverrideVersionRow =
   typeof skillConfigOverrideVersions.$inferSelect;
+export type AccountSkillOverlayRow = typeof accountSkillOverlays.$inferSelect;
+export type AccountSkillOverlayVersionRow =
+  typeof accountSkillOverlayVersions.$inferSelect;
+
+export type AccountSkillOverlay = Record<string, unknown>;
+
+export interface AccountSkillOverlayPutBody {
+  skillId: string;
+  expectedRevision: number | null;
+  observedBaseVersion: string;
+  overlayVersion?: string | null;
+  overlay: AccountSkillOverlay;
+  updatedBy?: string;
+}
+
+export class SkillOverlayRevisionConflictError extends Error {
+  readonly code = ErrorCode.ConflictError;
+  readonly details: {
+    domainCode: "SKILL_OVERLAY_REVISION_CONFLICT";
+    latestRevision: number | null;
+    latestUpdatedAt: string | null;
+  };
+  constructor(
+    readonly latestRevision: number | null,
+    readonly latestUpdatedAt: string | null,
+  ) {
+    super("Skill 覆盖已被其他请求修改，请刷新后重试");
+    this.name = "SkillOverlayRevisionConflictError";
+    this.details = {
+      domainCode: "SKILL_OVERLAY_REVISION_CONFLICT",
+      latestRevision,
+      latestUpdatedAt,
+    };
+  }
+}
+
+export class SkillOverlayVersionNotFoundError extends Error {
+  readonly code = ErrorCode.OwnershipError;
+  readonly details = { domainCode: "SKILL_VERSION_NOT_FOUND" } as const;
+  constructor() {
+    super("Skill 覆盖历史版本不存在");
+    this.name = "SkillOverlayVersionNotFoundError";
+  }
+}
 
 // item B — the editable storage-config fields (every key optional; only provided
 // keys are written on the user_id-PK upsert).
@@ -160,6 +207,32 @@ export interface SettingsRepository {
     id: string,
     versionId: string,
   ): Promise<SkillConfigOverrideRow>;
+  listAccountSkillOverlays(
+    ctx: RequestContext,
+    skillIds?: readonly string[],
+  ): Promise<AccountSkillOverlayRow[]>;
+  getAccountSkillOverlay(
+    ctx: RequestContext,
+    skillId: string,
+  ): Promise<AccountSkillOverlayRow | null>;
+  putAccountSkillOverlay(
+    ctx: RequestContext,
+    body: AccountSkillOverlayPutBody,
+  ): Promise<AccountSkillOverlayRow>;
+  listAccountSkillOverlayVersions(
+    ctx: RequestContext,
+    skillId: string,
+  ): Promise<AccountSkillOverlayVersionRow[]>;
+  rollbackAccountSkillOverlay(
+    ctx: RequestContext,
+    body: {
+      skillId: string;
+      versionId: string;
+      expectedRevision: number;
+      observedBaseVersion: string;
+      updatedBy?: string;
+    },
+  ): Promise<AccountSkillOverlayRow>;
   seedPreferences(rows: UserPreferenceRow[]): Promise<void>;
   seedModels(rows: ModelConfigurationRow[]): Promise<void>;
   seedAgents(rows: AgentConfigurationRow[]): Promise<void>;
@@ -202,6 +275,29 @@ export function createSettingsRepository(
   db: Db,
   deps: RepoDeps,
 ): SettingsRepository {
+  const requireAccount = (ctx: RequestContext): string => {
+    const accountId = ctx.accountId?.trim();
+    if (!accountId) throw new Error("ACCOUNT_REQUIRED");
+    return accountId;
+  };
+  const latestAccountSkillOverlay = async (
+    ctx: RequestContext,
+    skillId: string,
+  ): Promise<AccountSkillOverlayRow | null> => {
+    const accountId = requireAccount(ctx);
+    const rows = await db
+      .select()
+      .from(accountSkillOverlays)
+      .where(
+        and(
+          eq(accountSkillOverlays.userId, ctx.userId),
+          eq(accountSkillOverlays.accountId, accountId),
+          eq(accountSkillOverlays.skillId, skillId),
+        ),
+      )
+      .limit(1);
+    return rows[0] ?? null;
+  };
   // T-147 P2 — 透明加解密收口。masterKey 缺省 = 无操作(明文路径,向后兼容)。
   //   encSecret: 写库前加密一个非空明文 secret;null/空 → 原样(不加密 NULL/空列)。
   //   decRow: 读出一行后就地解密其 secretValue(密文→明文;存量明文无前缀→透传)。
@@ -603,6 +699,167 @@ export function createSettingsRepository(
           target.outputSchema && typeof target.outputSchema === "object"
             ? (target.outputSchema as Record<string, unknown>)
             : undefined,
+      });
+    },
+
+    async listAccountSkillOverlays(ctx, skillIds) {
+      const accountId = requireAccount(ctx);
+      const rows = await db
+        .select()
+        .from(accountSkillOverlays)
+        .where(
+          and(
+            eq(accountSkillOverlays.userId, ctx.userId),
+            eq(accountSkillOverlays.accountId, accountId),
+          ),
+        );
+      const wanted = skillIds ? new Set(skillIds) : null;
+      return rows
+        .filter((row) => !wanted || wanted.has(row.skillId))
+        .sort((a, b) => a.skillId.localeCompare(b.skillId));
+    },
+
+    async getAccountSkillOverlay(ctx, skillId) {
+      return latestAccountSkillOverlay(ctx, skillId);
+    },
+
+    async putAccountSkillOverlay(ctx, body) {
+      const accountId = requireAccount(ctx);
+      const now = deps.now();
+      const updatedBy = body.updatedBy ?? ctx.userId;
+
+      try {
+        return await db.transaction(async (tx) => {
+          let row: AccountSkillOverlayRow | undefined;
+          if (body.expectedRevision === null) {
+            const inserted = await tx
+              .insert(accountSkillOverlays)
+              .values({
+                id: deps.nextId("skoverlay"),
+                userId: ctx.userId,
+                accountId,
+                skillId: body.skillId,
+                rowRevision: 1,
+                observedBaseVersion: body.observedBaseVersion,
+                overlayVersion: body.overlayVersion ?? null,
+                overlay: body.overlay,
+                updatedBy,
+                createdAt: now,
+                updatedAt: now,
+              })
+              .onConflictDoNothing({
+                target: [
+                  accountSkillOverlays.userId,
+                  accountSkillOverlays.accountId,
+                  accountSkillOverlays.skillId,
+                ],
+              })
+              .returning();
+            row = inserted[0];
+          } else {
+            const updated = await tx
+              .update(accountSkillOverlays)
+              .set({
+                rowRevision: body.expectedRevision + 1,
+                observedBaseVersion: body.observedBaseVersion,
+                overlayVersion: body.overlayVersion ?? null,
+                overlay: body.overlay,
+                updatedBy,
+                updatedAt: now,
+              })
+              .where(
+                and(
+                  eq(accountSkillOverlays.userId, ctx.userId),
+                  eq(accountSkillOverlays.accountId, accountId),
+                  eq(accountSkillOverlays.skillId, body.skillId),
+                  eq(
+                    accountSkillOverlays.rowRevision,
+                    body.expectedRevision,
+                  ),
+                ),
+              )
+              .returning();
+            row = updated[0];
+          }
+          if (!row) {
+            const latest = await tx
+              .select({
+                rowRevision: accountSkillOverlays.rowRevision,
+                updatedAt: accountSkillOverlays.updatedAt,
+              })
+              .from(accountSkillOverlays)
+              .where(
+                and(
+                  eq(accountSkillOverlays.userId, ctx.userId),
+                  eq(accountSkillOverlays.accountId, accountId),
+                  eq(accountSkillOverlays.skillId, body.skillId),
+                ),
+              )
+              .limit(1);
+            throw new SkillOverlayRevisionConflictError(
+              latest[0]?.rowRevision ?? null,
+              latest[0]?.updatedAt ?? null,
+            );
+          }
+          await tx.insert(accountSkillOverlayVersions).values({
+            id: deps.nextId("skoverlayv"),
+            overlayId: row.id,
+            userId: row.userId,
+            accountId: row.accountId,
+            skillId: row.skillId,
+            rowRevision: row.rowRevision,
+            observedBaseVersion: row.observedBaseVersion,
+            overlayVersion: row.overlayVersion,
+            overlay: row.overlay,
+            updatedBy: row.updatedBy,
+            createdAt: row.updatedAt,
+          });
+          return row;
+        });
+      } catch (error) {
+        if (error instanceof SkillOverlayRevisionConflictError) throw error;
+        throw error;
+      }
+    },
+
+    async listAccountSkillOverlayVersions(ctx, skillId) {
+      const accountId = requireAccount(ctx);
+      const rows = await db
+        .select()
+        .from(accountSkillOverlayVersions)
+        .where(
+          and(
+            eq(accountSkillOverlayVersions.userId, ctx.userId),
+            eq(accountSkillOverlayVersions.accountId, accountId),
+            eq(accountSkillOverlayVersions.skillId, skillId),
+          ),
+        );
+      return rows.sort((a, b) => b.rowRevision - a.rowRevision);
+    },
+
+    async rollbackAccountSkillOverlay(ctx, body) {
+      const accountId = requireAccount(ctx);
+      const rows = await db
+        .select()
+        .from(accountSkillOverlayVersions)
+        .where(
+          and(
+            eq(accountSkillOverlayVersions.id, body.versionId),
+            eq(accountSkillOverlayVersions.userId, ctx.userId),
+            eq(accountSkillOverlayVersions.accountId, accountId),
+            eq(accountSkillOverlayVersions.skillId, body.skillId),
+          ),
+        )
+        .limit(1);
+      const target = rows[0];
+      if (!target) throw new SkillOverlayVersionNotFoundError();
+      return this.putAccountSkillOverlay(ctx, {
+        skillId: body.skillId,
+        expectedRevision: body.expectedRevision,
+        observedBaseVersion: body.observedBaseVersion,
+        overlayVersion: target.overlayVersion,
+        overlay: target.overlay as AccountSkillOverlay,
+        updatedBy: body.updatedBy,
       });
     },
 

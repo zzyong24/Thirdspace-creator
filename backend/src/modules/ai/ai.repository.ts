@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, like, type Db } from "@creatoros/backend";
+import { and, asc, desc, eq, like, sql, type Db } from "@creatoros/backend";
 // [DATA-H07] 跨模块表(assets)—— canonical 定义在共享基座 @creatoros/backend(与 T-102
 // projects.repository 级联删除同一先例):AI 生成资产的「采纳翻 active / 拒绝清理」是 AI 采纳门
 // 的生命周期职责,但组合根(persistence-client)本波冻结、无法新增 assets 端口 —— 故按 T-102
@@ -82,8 +82,12 @@ export interface CreateTaskInput {
   contentOutputId: string | null;
   taskType: string;
   inputData: Record<string, unknown>;
+  runtimeData?: Record<string, unknown>;
   modelKey: string;
   idempotencyKey: string;
+  attemptId?: string;
+  requestFingerprint?: string;
+  retryOfTaskId?: string | null;
   requestedAt: string;
 }
 
@@ -119,6 +123,18 @@ export interface TaskStatusPatch {
   costUsd?: number | null;
 }
 
+export interface TaskExecutionClaim {
+  task: TaskRow;
+  leaseToken: string;
+  leaseExpiresAt: string;
+}
+
+export interface CompleteTaskExecutionInput {
+  status: "succeeded" | "failed" | "cancelled" | "awaiting_confirmation";
+  completedAt?: string | null;
+  errorMessage?: string | null;
+}
+
 export interface AiRepository {
   // Fixture/seed hydration (onConflictDoNothing parity).
   seedAgentConfigs(rows: AgentConfigRow[]): Promise<void>;
@@ -148,6 +164,7 @@ export interface AiRepository {
     taskTypePrefix?: string;
   }): Promise<{ rows: TaskRow[]; total: number }>;
   findTaskByIdempotencyKey(idempotencyKey: string): Promise<TaskRow | null>;
+  findTaskByAttempt(taskType: string, attemptId: string): Promise<TaskRow | null>;
   /** [T-332 S2 修补] 系统级 sweep 专用:跨账号列该 user 所有 status='running' 的 ai_task
    *  最小投影(启动扫僵尸 sweepStaleAiTasks 用)。**不叠账号门** —— 扫僵尸是系统 daemon
    *  路径(schedulerCtx 无选中号),与 scheduling.listRunsByStatus 同族;用户面 listTasks
@@ -162,7 +179,32 @@ export interface AiRepository {
     }[]
   >;
   createTask(input: CreateTaskInput): Promise<TaskRow>;
+  createTaskIfAbsent(input: CreateTaskInput): Promise<TaskRow | null>;
   requireTask(taskId: string): Promise<TaskRow>;
+  claimAiTaskExecution(
+    taskId: string,
+    input: { workerId: string; leaseToken: string; leaseSeconds: number },
+  ): Promise<TaskExecutionClaim | null>;
+  beginModelCall(taskId: string, leaseToken: string): Promise<boolean>;
+  renewAiTaskExecution(
+    taskId: string,
+    leaseToken: string,
+    extendSeconds: number,
+  ): Promise<{ leaseExpiresAt: string } | null>;
+  completeAiTaskExecution(
+    taskId: string,
+    leaseToken: string,
+    input: CompleteTaskExecutionInput,
+  ): Promise<boolean>;
+  recordCandidateWithLease(
+    taskId: string,
+    leaseToken: string,
+    input: Omit<InsertResultInput, "aiTaskId">,
+  ): Promise<TaskRow | null>;
+  reconcileExpiredAiTaskExecution(
+    taskId: string,
+    leaseToken: string,
+  ): Promise<"requeued" | "reconciliation_required" | null>;
   addReferences(taskId: string, refs: ReferenceInput[]): Promise<void>;
   listReferences(taskId: string): Promise<ReferenceRow[]>;
   updateTaskStatus(taskId: string, patch: TaskStatusPatch): Promise<TaskRow>;
@@ -193,6 +235,9 @@ export interface AiRepository {
 }
 
 export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
+  const addSeconds = (iso: string, seconds: number): string =>
+    new Date(Date.parse(iso) + seconds * 1_000).toISOString();
+
   // Private ownership gates: the scoped select for a parent. Empty ⇒ OwnershipError
   // (→ 404; cross-user / unknown id never reveals existence).
   async function getConversation(conversationId: string): Promise<ConversationRow> {
@@ -399,6 +444,21 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       return rows[0] ?? null;
     },
 
+    async findTaskByAttempt(taskType, attemptId) {
+      const rows = await db
+        .select()
+        .from(aiTasks)
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.taskType, taskType),
+            eq(aiTasks.attemptId, attemptId),
+          ),
+        );
+      return rows[0] ?? null;
+    },
+
     async createTask(input) {
       const inserted = await db
         .insert(aiTasks)
@@ -412,21 +472,266 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           taskType: input.taskType,
           status: "queued",
           inputData: input.inputData,
+          runtimeData: input.runtimeData ?? {},
           modelKey: input.modelKey,
           idempotencyKey: input.idempotencyKey,
+          attemptId: input.attemptId ?? `legacy-attempt:${input.idempotencyKey}`,
+          requestFingerprint:
+            input.requestFingerprint ?? `sha256:${"0".repeat(64)}`,
+          retryOfTaskId: input.retryOfTaskId ?? null,
           requestedAt: input.requestedAt,
           startedAt: null,
           completedAt: null,
           errorMessage: null,
           sessionId: null,
           costUsd: null,
+          leaseOwner: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+          modelCallStartedAt: null,
         })
         .returning();
       return inserted[0]!;
     },
 
+    async createTaskIfAbsent(input) {
+      const inserted = await db
+        .insert(aiTasks)
+        .values({
+          id: deps.nextId("ai-task"),
+          userId: deps.userId,
+          accountId: deps.accountId,
+          projectId: input.projectId ?? null,
+          contentOutputId: input.contentOutputId ?? null,
+          taskType: input.taskType,
+          status: "queued",
+          inputData: input.inputData,
+          runtimeData: input.runtimeData ?? {},
+          modelKey: input.modelKey,
+          idempotencyKey: input.idempotencyKey,
+          attemptId: input.attemptId ?? `legacy-attempt:${input.idempotencyKey}`,
+          requestFingerprint:
+            input.requestFingerprint ?? `sha256:${"0".repeat(64)}`,
+          retryOfTaskId: input.retryOfTaskId ?? null,
+          requestedAt: input.requestedAt,
+          startedAt: null,
+          completedAt: null,
+          errorMessage: null,
+          sessionId: null,
+          costUsd: null,
+          leaseOwner: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+          modelCallStartedAt: null,
+        })
+        .onConflictDoNothing({
+          target: [
+            aiTasks.userId,
+            aiTasks.accountId,
+            aiTasks.taskType,
+            aiTasks.attemptId,
+          ],
+        })
+        .returning();
+      return inserted[0] ?? null;
+    },
+
     async requireTask(taskId) {
       return getTask(taskId);
+    },
+
+    async claimAiTaskExecution(taskId, input) {
+      const now = deps.now();
+      const leaseExpiresAt = addSeconds(now, input.leaseSeconds);
+      const rows = await db
+        .update(aiTasks)
+        .set({
+          status: "running",
+          startedAt: now,
+          leaseOwner: input.workerId,
+          leaseToken: input.leaseToken,
+          leaseExpiresAt,
+        })
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.id, taskId),
+            eq(aiTasks.status, "queued"),
+          ),
+        )
+        .returning();
+      const task = rows[0];
+      return task ? { task, leaseToken: input.leaseToken, leaseExpiresAt } : null;
+    },
+
+    async beginModelCall(taskId, leaseToken) {
+      const now = deps.now();
+      try {
+        return await db.transaction(async (tx) => {
+          const rows = await tx
+            .update(aiTasks)
+            .set({ modelCallStartedAt: now })
+            .where(
+              and(
+                eq(aiTasks.userId, deps.userId),
+                eq(aiTasks.accountId, deps.accountId),
+                eq(aiTasks.id, taskId),
+                eq(aiTasks.status, "running"),
+                eq(aiTasks.leaseToken, leaseToken),
+                sql`${aiTasks.leaseExpiresAt} > ${now}`,
+                sql`${aiTasks.modelCallStartedAt} IS NULL`,
+              ),
+            )
+            .returning({ id: aiTasks.id });
+          if (!rows[0]) return false;
+          await tx.insert(aiTaskSteps).values({
+            id: deps.nextId("ai-step"),
+            aiTaskId: taskId,
+            stepNo: 0,
+            kind: "model_call_started",
+            text: "model_call_started",
+            toolCalls: [],
+            createdAt: now,
+          });
+          return true;
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/unique|duplicate/i.test(message)) return false;
+        throw error;
+      }
+    },
+
+    async renewAiTaskExecution(taskId, leaseToken, extendSeconds) {
+      const now = deps.now();
+      const leaseExpiresAt = addSeconds(now, extendSeconds);
+      const rows = await db
+        .update(aiTasks)
+        .set({ leaseExpiresAt })
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.id, taskId),
+            eq(aiTasks.status, "running"),
+            eq(aiTasks.leaseToken, leaseToken),
+            sql`${aiTasks.leaseExpiresAt} > ${now}`,
+          ),
+        )
+        .returning({ leaseExpiresAt: aiTasks.leaseExpiresAt });
+      return rows[0] ? { leaseExpiresAt } : null;
+    },
+
+    async completeAiTaskExecution(taskId, leaseToken, input) {
+      const now = deps.now();
+      const rows = await db
+        .update(aiTasks)
+        .set({
+          status: input.status,
+          completedAt:
+            input.completedAt !== undefined
+              ? input.completedAt
+              : input.status === "awaiting_confirmation"
+                ? null
+                : now,
+          errorMessage: input.errorMessage ?? null,
+        })
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.id, taskId),
+            eq(aiTasks.status, "running"),
+            eq(aiTasks.leaseToken, leaseToken),
+            sql`${aiTasks.leaseExpiresAt} > ${now}`,
+          ),
+        )
+        .returning({ id: aiTasks.id });
+      return Boolean(rows[0]);
+    },
+
+    async recordCandidateWithLease(taskId, leaseToken, input) {
+      const now = deps.now();
+      return db.transaction(async (tx) => {
+        const rows = await tx
+          .update(aiTasks)
+          .set({
+            status: "awaiting_confirmation",
+            completedAt: null,
+            errorMessage: null,
+          })
+          .where(
+            and(
+              eq(aiTasks.userId, deps.userId),
+              eq(aiTasks.accountId, deps.accountId),
+              eq(aiTasks.id, taskId),
+              eq(aiTasks.status, "running"),
+              eq(aiTasks.leaseToken, leaseToken),
+              sql`${aiTasks.leaseExpiresAt} > ${now}`,
+            ),
+          )
+          .returning();
+        const task = rows[0];
+        if (!task) return null;
+        await tx.insert(aiTaskResults).values({
+          id: deps.nextId("ai-result"),
+          aiTaskId: taskId,
+          resultType: input.resultType,
+          artifactId: input.artifactId,
+          knowledgeItemId: input.knowledgeItemId,
+          assetId: input.assetId,
+          resultData: input.resultData,
+        });
+        return task;
+      });
+    },
+
+    async reconcileExpiredAiTaskExecution(taskId, leaseToken) {
+      const now = deps.now();
+      const requeued = await db
+        .update(aiTasks)
+        .set({
+          status: "queued",
+          startedAt: null,
+          leaseOwner: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+        })
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.id, taskId),
+            eq(aiTasks.status, "running"),
+            eq(aiTasks.leaseToken, leaseToken),
+            sql`${aiTasks.leaseExpiresAt} <= ${now}`,
+            sql`${aiTasks.modelCallStartedAt} IS NULL`,
+          ),
+        )
+        .returning({ id: aiTasks.id });
+      if (requeued[0]) return "requeued";
+
+      const reconciliationRequired = await db
+        .update(aiTasks)
+        .set({
+          status: "failed",
+          completedAt: now,
+          errorMessage: "SKILL_SNAPSHOT_RECONCILIATION_REQUIRED",
+        })
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.id, taskId),
+            eq(aiTasks.status, "running"),
+            eq(aiTasks.leaseToken, leaseToken),
+            sql`${aiTasks.leaseExpiresAt} <= ${now}`,
+            sql`${aiTasks.modelCallStartedAt} IS NOT NULL`,
+          ),
+        )
+        .returning({ id: aiTasks.id });
+      return reconciliationRequired[0] ? "reconciliation_required" : null;
     },
 
     async addReferences(taskId, refs) {

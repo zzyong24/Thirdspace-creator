@@ -89,6 +89,22 @@ describe("PublishingCenterPage interactions", () => {
     ).toBeNull();
   });
 
+  it("does not leave batch selection counters or select-all controls behind", () => {
+    const { container } = render(<PublishingCenterPage />);
+    expect(
+      container.querySelector('[data-slot="batch-selected-count"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="batch-select-all"]'),
+    ).toBeNull();
+    expect(
+      container.querySelectorAll('[data-slot="publication-row-checkbox"]'),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll('[data-slot="batch-operation-bar"]'),
+    ).toHaveLength(0);
+  });
+
   it("changes the page via pagination", () => {
     const { container } = render(<PublishingCenterPage />);
     const pages = container.querySelectorAll<HTMLButtonElement>(

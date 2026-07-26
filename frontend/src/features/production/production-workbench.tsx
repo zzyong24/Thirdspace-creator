@@ -40,6 +40,7 @@ import * as React from "react";
 import { Check, Copy } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 // [T-285] mount 恢复已上传素材:取 SRT 资产签名下载 URL 回读文本。
 import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url";
 import { ExecutionTaskCard } from "@/features/copilot/execution-task-card";
@@ -270,20 +271,18 @@ async function uploadProductionAsset(
     body: { name: file.name },
   })) as unknown as WireAsset;
   if (!asset?.id) throw new Error("上传完成但没有返回 asset id");
-  // 用料链登记(制作阶段;best-effort,失败不阻断主链)。
-  await client
-    .createMaterialLink({
-      params: undefined,
-      query: undefined,
-      body: {
-        projectId,
-        entityType: "asset",
-        entityId: asset.id,
-        role: role ?? (assetType === "video" ? "clip" : "reference"),
-        stage: "production",
-      },
-    })
-    .catch(() => undefined);
+  // 用料链是制作页后续读取的真入口；登记失败必须让用户看到，不能假报“已上传可用”。
+  await client.createMaterialLink({
+    params: undefined,
+    query: undefined,
+    body: {
+      projectId,
+      entityType: "asset",
+      entityId: asset.id,
+      role: role ?? (assetType === "video" ? "clip" : "reference"),
+      stage: "production",
+    },
+  });
   return asset.id;
 }
 
@@ -368,6 +367,9 @@ export function ProductionWorkbench({
   const [decisions, setDecisions] = React.useState<VideoDecisions | null>(null);
   const [inventory, setInventory] = React.useState<readonly BrollAssetRef[]>([]);
   const [recoveredDecisions, setRecoveredDecisions] = React.useState(false);
+  const [brollRevisionNotice, setBrollRevisionNotice] = React.useState<
+    string | null
+  >(null);
   // [T-294] 制作页 B-roll 素材(role=broll):列/补传/剔除;决策读它们做 B-roll 匹配。
   const [brollItems, setBrollItems] = React.useState<
     ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
@@ -737,6 +739,21 @@ export function ProductionWorkbench({
     void loadBroll();
   }, [loadBroll]);
 
+  const invalidateDecisionsForBrollChange = React.useCallback(async () => {
+    if (decisionsTaskId) {
+      await client.cancelTask({
+        params: { taskId: decisionsTaskId },
+        query: undefined,
+        body: undefined,
+      });
+    }
+    setDecisions(null);
+    setDecisionsTaskId(null);
+    setInventory([]);
+    setRecoveredDecisions(false);
+    setBrollRevisionNotice("素材已更新，请重新运行 AI 分场决策。");
+  }, [decisionsTaskId]);
+
   const onBrollFiles = React.useCallback(
     async (files: FileList | null) => {
       if (!files || files.length === 0) return;
@@ -748,6 +765,9 @@ export function ProductionWorkbench({
           await uploadProductionAsset(projectId, file, kind, "broll");
         }
         await loadBroll();
+        if (decisions || decisionsTaskId) {
+          await invalidateDecisionsForBrollChange();
+        }
       } catch (err) {
         setUploadError(
           err instanceof Error ? err.message : "B-roll 素材上传失败,请重试",
@@ -756,7 +776,13 @@ export function ProductionWorkbench({
         setBrollBusy(false);
       }
     },
-    [projectId, loadBroll],
+    [
+      projectId,
+      loadBroll,
+      decisions,
+      decisionsTaskId,
+      invalidateDecisionsForBrollChange,
+    ],
   );
 
   const onRemoveBroll = React.useCallback(
@@ -769,13 +795,21 @@ export function ProductionWorkbench({
           body: undefined,
         });
         await loadBroll();
+        if (decisions || decisionsTaskId) {
+          await invalidateDecisionsForBrollChange();
+        }
       } catch {
         /* 删除失败静默(下次可再试) */
       } finally {
         setBrollBusy(false);
       }
     },
-    [loadBroll],
+    [
+      loadBroll,
+      decisions,
+      decisionsTaskId,
+      invalidateDecisionsForBrollChange,
+    ],
   );
 
   // ── [T-366a] 直接上传成品视频(跳过四决策/渲染直登成片)──────────────────────
@@ -992,12 +1026,14 @@ export function ProductionWorkbench({
     if (!srt || !voiceoverText) return;
     setDecisionsBusy(true);
     setDecisionsError(null);
+    setBrollRevisionNotice(null);
     try {
       const task = (await client.createAITask({
         params: undefined,
         query: undefined,
         body: {
           taskType: "video.decisions",
+          attemptId: createAiTaskAttemptId(),
           inputData: {
             projectId,
             srtText: srt.text,
@@ -1238,9 +1274,10 @@ export function ProductionWorkbench({
 
   // ── 刷新恢复(best-effort):未收口的决策候选 / 在跑 / 已失败的任务接回跟踪 ────────
   //   [FE-H01] 目标:进度不丢、不重复发起付费任务、失败可见可恢复。按「当前最该看的」优先级恢复:
-  //   ① 渲染在途 → 接回跟踪;② 渲染已成功 → 恢复成片预览;③ 决策候选待确认 → 重挂预览卡;
-  //   ④ 决策任务仍在后台跑(queued/running)→ 重挂轮询(**绝不 re-createAITask**,否则重复付费/重复分场);
-  //   ⑤ 渲染失败 → 接回跟踪(ExecutionTaskCard 显失败原因 + 重试,失败可见可恢复)。
+  //   ① 渲染在途 → 接回跟踪;② 最新活跃决策(queued/running/awaiting_confirmation)→
+  //   重挂轮询/预览卡(**绝不 re-createAITask**,否则重复付费/重复分场);③ 渲染已成功 →
+  //   恢复成片预览;
+  //   ④ 渲染失败 → 接回跟踪(ExecutionTaskCard 显失败原因 + 重试,失败可见可恢复)。
   React.useEffect(() => {
     let abandoned = false;
     void (async () => {
@@ -1261,7 +1298,46 @@ export function ProductionWorkbench({
           setRenderTaskId((prev) => prev ?? live.id);
           return; // 渲染在途优先;决策候选不再恢复(已消费)
         }
-        // [T-292] 已成功的渲染:恢复成片预览(回到本页仍能看/播成片)。
+        // [T-308] 当前活跃决策必须压过历史成功成片:用户可在已有成片后重新生成四决策,
+        // 离页回来若先命中旧 succeeded render 就 return,会把仍在跑的新任务遮住并重新显示
+        // 「AI 分场决策」按钮。listAITasks 按新到旧返回,取第一个活跃任务保持真实时序。
+        let tasks: WireAITask[] = [];
+        try {
+          tasks = (await client.listAITasks({
+            params: undefined,
+            query: {
+              page: 1,
+              pageSize: 10,
+              projectId,
+              taskType: "video.decisions",
+            },
+            body: undefined,
+          })) as unknown as WireAITask[];
+        } catch {
+          // 单次 AI 任务列表读取失败不应连带遮住可恢复的历史成片/失败渲染。
+        }
+        const activeDecision = tasks.find(
+          (t) =>
+            t.status === "queued" ||
+            t.status === "running" ||
+            t.status === "awaiting_confirmation",
+        );
+        if (activeDecision && !abandoned) {
+          if (activeDecision.status === "awaiting_confirmation") {
+            const loaded = await loadDecisionResult(activeDecision.id);
+            if (!abandoned) {
+              // 重挂轮询(loaded → decisions 已就位,轮询早退;未 loaded → 轮询会补读)。
+              setDecisionsTaskId(activeDecision.id);
+              if (loaded) setRecoveredDecisions(true);
+            }
+          } else {
+            // queued/running → 重挂轮询,决不重新发起(付费/分场任务不能重复)。
+            setDecisionsTaskId((prev) => prev ?? activeDecision.id);
+          }
+          return;
+        }
+
+        // [T-292] 没有活跃决策时才恢复历史成功渲染(回到本页仍能看/播成片)。
         const doneRender = execs.find(
           (t) => t.execType === "video.render" && t.status === "succeeded",
         );
@@ -1270,36 +1346,8 @@ export function ProductionWorkbench({
           if (aid) {
             setFinalVideoAssetId((prev) => prev ?? aid);
             setRenderTaskId((prev) => prev ?? doneRender.id);
-            return; // 已出片,不再恢复决策候选
+            return;
           }
-        }
-        const tasks = (await client.listAITasks({
-          params: undefined,
-          query: {
-            page: 1,
-            pageSize: 10,
-            projectId,
-            taskType: "video.decisions",
-          },
-          body: undefined,
-        })) as unknown as WireAITask[];
-        const pending = tasks.find((t) => t.status === "awaiting_confirmation");
-        if (pending && !abandoned) {
-          const loaded = await loadDecisionResult(pending.id);
-          if (!abandoned) {
-            // 重挂轮询(loaded → decisions 已就位,轮询早退;未 loaded → 轮询会补读)。
-            setDecisionsTaskId(pending.id);
-            if (loaded) setRecoveredDecisions(true);
-          }
-          return;
-        }
-        // [FE-H01] 决策任务仍在后台跑 → 重挂轮询,决不重新发起(付费/分场任务不能重复)。
-        const runningDecision = tasks.find(
-          (t) => t.status === "queued" || t.status === "running",
-        );
-        if (runningDecision && !abandoned) {
-          setDecisionsTaskId((prev) => prev ?? runningDecision.id);
-          return;
         }
         // [FE-H01] 渲染失败 → 接回跟踪(失败可见可恢复):放在决策恢复之后,让「重新决策」优先。
         const failedRender = execs.find(
@@ -1814,12 +1862,12 @@ export function ProductionWorkbench({
             </ul>
           </div>
         ) : null}
-        {decisions && brollItems.length > 0 ? (
+        {brollRevisionNotice ? (
           <p
-            data-slot="broll-restale-hint"
+            data-slot="broll-revision-notice"
             className="text-xs text-amber-600 dark:text-amber-400"
           >
-            已生成分场决策 —— 刚改了素材?到下方决策卡「丢弃」后重新「AI 分场决策」,新素材才会进片。
+            {brollRevisionNotice}
           </p>
         ) : null}
       </section>

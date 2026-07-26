@@ -1,0 +1,436 @@
+import type { RequestContext } from "@creatoros/contract";
+import { describe, expect, it, vi } from "vitest";
+import {
+  listOfficialSkillBases,
+  type OfficialSkillBase,
+} from "@creatoros/ai-worker";
+import {
+  EffectiveSkillSnapshotError,
+  REGISTERED_SKILL_TASK_TYPES,
+  createEffectiveSkillSnapshotResolver,
+  parseEffectiveSkillSnapshot,
+  requiredSkillIdsForTask,
+  serializeEffectiveSkillSnapshot,
+  type AccountSkillOverlayReader,
+  type AccountSkillOverlayRuntimeRow,
+  type OfficialSkillProvider,
+} from "./effective-skill-snapshot";
+
+const ctx: RequestContext = {
+  userId: "user-1",
+  accountId: "acct-a",
+  requestId: "req-1",
+  source: "user",
+};
+
+function official(
+  skillId: string,
+  overrides: Partial<OfficialSkillBase> = {},
+): OfficialSkillBase {
+  return {
+    skillId,
+    baseVersion: "v5",
+    methodSystem: `官方方法:${skillId}`,
+    template: "{{positioning}}",
+    tools: ["search.web", "asset.read"],
+    requiredFacets: ["positioning"],
+    contextRequirements: ["project.positioning"],
+    availableFacets: ["positioning", "topic"],
+    editableFields: [
+      "system",
+      "template",
+      "tools",
+      "requiredFacets",
+      "outputSchema",
+      "completionPolicy",
+    ],
+    outputSchema: {
+      type: "object",
+      properties: { text: { type: "string" } },
+      required: ["text"],
+    },
+    completionPolicy: null,
+    completionPolicyAdapter: {
+      id: "official.segments",
+      version: "1",
+    },
+    ...overrides,
+  };
+}
+
+function row(
+  skillId: string,
+  overlay: Record<string, unknown>,
+  overrides: Partial<AccountSkillOverlayRuntimeRow> = {},
+): AccountSkillOverlayRuntimeRow {
+  return {
+    userId: "user-1",
+    accountId: "acct-a",
+    skillId,
+    rowRevision: 7,
+    observedBaseVersion: "v5",
+    overlayVersion: "7",
+    overlay,
+    ...overrides,
+  };
+}
+
+function deps(
+  bases: readonly OfficialSkillBase[],
+  rows: readonly AccountSkillOverlayRuntimeRow[] = [],
+) {
+  const byId = new Map(bases.map((base) => [base.skillId, base]));
+  const officialSkills: OfficialSkillProvider = {
+    get: vi.fn((id) => byId.get(id) ?? null),
+    list: vi.fn(() => [...bases]),
+    platformPolicy: vi.fn(() => ({
+      version: "policy-v9",
+      text: "CreatorOS server policy",
+    })),
+  };
+  const accountOverlays: AccountSkillOverlayReader = {
+    listBySkillIds: vi.fn(async () => [...rows]),
+  };
+  return {
+    officialSkills,
+    accountOverlays,
+    now: () => "2026-07-24T12:00:00.000Z",
+  };
+}
+
+describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
+  it("同名、别名、video/chat 受控输入与非 Skill task 映射固定", () => {
+    expect(requiredSkillIdsForTask("script.draft", {})).toEqual([
+      "script.draft",
+    ]);
+    expect(requiredSkillIdsForTask("review.analyze", {})).toEqual([
+      "review.insights",
+    ]);
+    expect(requiredSkillIdsForTask("cover.generate", {})).toEqual([
+      "cover.brief",
+    ]);
+    expect(requiredSkillIdsForTask("publish.platform_adapt", {})).toEqual([
+      "platform.adapt",
+    ]);
+    expect(
+      requiredSkillIdsForTask("video.decisions", { kind: "subtitles" }),
+    ).toEqual(["video.subtitles"]);
+    expect(requiredSkillIdsForTask("video.decisions", {})).toEqual([
+      "video.broll",
+      "video.cards",
+      "video.scenes",
+      "video.subtitles",
+    ]);
+    expect(requiredSkillIdsForTask("chat.sync", { surface: "review" })).toEqual([
+      "chatbox.review",
+    ]);
+    expect(requiredSkillIdsForTask("chat.sync", { surface: "topics" })).toEqual([
+      "chatbox.topic",
+    ]);
+    expect(requiredSkillIdsForTask("chat.sync", { surface: "project" })).toEqual([
+      "chatbox.topic",
+    ]);
+    expect(
+      requiredSkillIdsForTask("chat.sync", { surface: "knowledge-distill" }),
+    ).toEqual(["chatbox.distill"]);
+    expect(requiredSkillIdsForTask("asset.generate", {})).toEqual([]);
+    expect(requiredSkillIdsForTask("scheduled.self.detail", {})).toEqual([
+      "topic.attribution",
+    ]);
+    expect(requiredSkillIdsForTask("scheduled.benchmark", {})).toEqual([
+      "benchmark.teardown",
+    ]);
+    expect(requiredSkillIdsForTask("scheduled.topic.daily", {})).toEqual([
+      "topic.generate",
+      "trend.extract",
+    ]);
+    expect(requiredSkillIdsForTask("scheduled.favorites", {})).toEqual([
+      "favorites.triage",
+      "knowledge.distill",
+    ]);
+    for (const taskType of [
+      "exec.echo.manifest",
+      "exec.video.render",
+      "exec.agentic.research",
+      "exec.agentic.collect",
+      "exec.agentic.material",
+    ]) {
+      expect(requiredSkillIdsForTask(taskType, {})).toEqual([]);
+    }
+  });
+
+  it("客户端任意 skillId 不影响受控映射；未知 taskType fail closed", () => {
+    expect(
+      requiredSkillIdsForTask("video.decisions", {
+        kind: "cards",
+        skillId: "evil.skill",
+      }),
+    ).toEqual(["video.cards"]);
+    expect(() =>
+      requiredSkillIdsForTask("chat.sync", { surface: "unknown" }),
+    ).toThrowError(
+      expect.objectContaining<Partial<EffectiveSkillSnapshotError>>({
+        code: "SKILL_TASK_MAPPING_MISSING",
+      }),
+    );
+    expect(() => requiredSkillIdsForTask("unknown.task", {})).toThrowError(
+      expect.objectContaining<Partial<EffectiveSkillSnapshotError>>({
+        code: "SKILL_TASK_MAPPING_MISSING",
+        status: 422,
+      }),
+    );
+    expect(() =>
+      requiredSkillIdsForTask("exec.unknown", {}),
+    ).toThrowError(
+      expect.objectContaining<Partial<EffectiveSkillSnapshotError>>({
+        code: "SKILL_TASK_MAPPING_MISSING",
+      }),
+    );
+  });
+
+  it("同名映射集合与 ai-worker official registry 完全等价", () => {
+    expect([...REGISTERED_SKILL_TASK_TYPES].sort()).toEqual(
+      listOfficialSkillBases()
+        .map((base) => base.skillId)
+        .sort(),
+    );
+  });
+});
+
+describe("[T-513] resolveEffectiveSkillSnapshot", () => {
+  it("排序去重 required ids，合并账号增量，server 注入 policy，官方字段不可覆盖", async () => {
+    const draft = official("script.draft");
+    const review = official("review.insights", {
+      contextRequirements: ["publication.transcript"],
+    });
+    const injected = deps(
+      [draft, review],
+      [
+        row("script.draft", {
+          system: "账号方法",
+          template: "{{topic}}",
+          tools: ["asset.read"],
+          requiredFacets: ["topic"],
+          outputSchema: {
+            type: "object",
+            properties: { accountText: { type: "string" } },
+          },
+          completionPolicy: {
+            schemaVersion: 1,
+            minSegments: 2,
+            maxSegments: 4,
+            requiredSequence: ["intro", "end"],
+            repairAttempts: 1,
+          },
+        }),
+      ],
+    );
+    const resolve = createEffectiveSkillSnapshotResolver(injected);
+
+    const snapshot = await resolve(ctx, [
+      "script.draft",
+      "review.insights",
+      "script.draft",
+    ]);
+
+    expect(injected.accountOverlays.listBySkillIds).toHaveBeenCalledWith(ctx, [
+      "review.insights",
+      "script.draft",
+    ]);
+    expect(snapshot).toMatchObject({
+      snapshotVersion: 1,
+      userId: "user-1",
+      accountId: "acct-a",
+      resolvedAt: "2026-07-24T12:00:00.000Z",
+      platformPolicyVersion: "policy-v9",
+      platformPolicy: "CreatorOS server policy",
+    });
+    expect(snapshot.skills.map((skill) => skill.skillId)).toEqual([
+      "review.insights",
+      "script.draft",
+    ]);
+    expect(snapshot.skills[0]!.effective.contextRequirements).toEqual([
+      "publication.transcript",
+    ]);
+    expect(snapshot.skills[1]).toEqual({
+      skillId: "script.draft",
+      baseVersion: "v5",
+      overlayRevision: 7,
+      overlayVersion: "7",
+      effective: {
+        methodSystem: "账号方法",
+        template: "{{topic}}",
+        tools: ["asset.read"],
+        requiredFacets: ["topic"],
+        contextRequirements: ["project.positioning"],
+        outputSchema: {
+          type: "object",
+          properties: { accountText: { type: "string" } },
+        },
+        completionPolicy: {
+          schemaVersion: 1,
+          minSegments: 2,
+          maxSegments: 4,
+          requiredSequence: ["intro", "end"],
+          repairAttempts: 1,
+        },
+        completionPolicyAdapter: {
+          id: "official.segments",
+          version: "1",
+        },
+      },
+    });
+  });
+
+  it("无 overlay 时仍产完整 inline official snapshot", async () => {
+    const base = official("script.draft");
+    const resolve = createEffectiveSkillSnapshotResolver(deps([base]));
+    const snapshot = await resolve(ctx, ["script.draft"]);
+
+    expect(snapshot.skills[0]).toEqual({
+      skillId: "script.draft",
+      baseVersion: "v5",
+      overlayRevision: null,
+      overlayVersion: null,
+      effective: {
+        methodSystem: base.methodSystem,
+        template: base.template,
+        tools: base.tools,
+        requiredFacets: base.requiredFacets,
+        contextRequirements: base.contextRequirements,
+        outputSchema: base.outputSchema,
+        completionPolicy: base.completionPolicy,
+        completionPolicyAdapter: base.completionPolicyAdapter,
+      },
+    });
+  });
+
+  it("base 升级后针对当前 official 重验；仍兼容则使用新 base 且保留 overlay revision", async () => {
+    const upgraded = official("script.draft", {
+      baseVersion: "v6",
+      methodSystem: "v6 官方方法",
+    });
+    const snapshot = await createEffectiveSkillSnapshotResolver(
+      deps(
+        [upgraded],
+        [
+          row(
+            "script.draft",
+            { system: "账号方法仍兼容" },
+            { observedBaseVersion: "v5", rowRevision: 9 },
+          ),
+        ],
+      ),
+    )(ctx, ["script.draft"]);
+
+    expect(snapshot.skills[0]).toMatchObject({
+      skillId: "script.draft",
+      baseVersion: "v6",
+      overlayRevision: 9,
+      effective: { methodSystem: "账号方法仍兼容" },
+    });
+  });
+
+  it("缺 official、overlay 跨属主与真实不兼容字段均 fail closed", async () => {
+    const base = official("script.draft");
+    await expect(
+      createEffectiveSkillSnapshotResolver(deps([]))(ctx, ["script.draft"]),
+    ).rejects.toMatchObject({
+      code: "SKILL_SNAPSHOT_INCOMPLETE",
+      status: 422,
+    });
+
+    await expect(
+      createEffectiveSkillSnapshotResolver(
+        deps(
+          [base],
+          [row("script.draft", {}, { accountId: "acct-b" })],
+        ),
+      )(ctx, ["script.draft"]),
+    ).rejects.toMatchObject({
+      code: "SKILL_SNAPSHOT_ACCOUNT_MISMATCH",
+      status: 403,
+    });
+
+    for (const incompatible of [
+      row("script.draft", { tools: ["admin.shell"] }),
+      row("script.draft", { requiredFacets: ["missing_reader"] }),
+      row("script.draft", { contextRequirements: ["evil.reader"] }),
+      row("script.draft", {
+        completionPolicy: {
+          schemaVersion: 1,
+          minSegments: 1,
+          maxSegments: null,
+          requiredSequence: [],
+          repairAttempts: 0,
+        },
+      }),
+    ]) {
+      await expect(
+        createEffectiveSkillSnapshotResolver(
+          deps(
+            [
+              incompatible.overlay &&
+              typeof incompatible.overlay === "object" &&
+              "completionPolicy" in incompatible.overlay
+                ? official("script.draft", {
+                    completionPolicyAdapter: null,
+                  })
+                : base,
+            ],
+            [incompatible],
+          ),
+        )(ctx, ["script.draft"]),
+      ).rejects.toMatchObject({
+        code: "SKILL_OVERLAY_INCOMPATIBLE",
+        status: 422,
+      });
+    }
+  });
+});
+
+describe("[T-513] snapshot serialization", () => {
+  it("serialize/parse round trip，parse 重新校验 owner/排序/完整字段", async () => {
+    const snapshot = await createEffectiveSkillSnapshotResolver(
+      deps([official("script.draft")]),
+    )(ctx, ["script.draft"]);
+    const serialized = serializeEffectiveSkillSnapshot(snapshot);
+
+    expect(Buffer.byteLength(serialized, "utf8")).toBeLessThanOrEqual(262_144);
+    expect(parseEffectiveSkillSnapshot(serialized)).toEqual(snapshot);
+    expect(() =>
+      parseEffectiveSkillSnapshot(
+        JSON.stringify({ ...snapshot, accountId: "" }),
+      ),
+    ).toThrowError(
+      expect.objectContaining<Partial<EffectiveSkillSnapshotError>>({
+        code: "SKILL_SNAPSHOT_INCOMPLETE",
+      }),
+    );
+  });
+
+  it("UTF-8 超过 256 KiB 时 resolve/serialize 都返回 413", async () => {
+    const huge = official("script.draft", {
+      methodSystem: "中".repeat(100_000),
+    });
+    await expect(
+      createEffectiveSkillSnapshotResolver(deps([huge]))(ctx, [
+        "script.draft",
+      ]),
+    ).rejects.toMatchObject({
+      code: "SKILL_SNAPSHOT_TOO_LARGE",
+      status: 413,
+    });
+
+    const snapshot = await createEffectiveSkillSnapshotResolver(
+      deps([official("script.draft")]),
+    )(ctx, ["script.draft"]);
+    snapshot.platformPolicy = "中".repeat(100_000);
+    expect(() => serializeEffectiveSkillSnapshot(snapshot)).toThrowError(
+      expect.objectContaining<Partial<EffectiveSkillSnapshotError>>({
+        code: "SKILL_SNAPSHOT_TOO_LARGE",
+        status: 413,
+      }),
+    );
+  });
+});

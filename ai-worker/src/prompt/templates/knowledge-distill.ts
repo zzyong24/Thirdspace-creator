@@ -7,8 +7,8 @@ import type { PromptTemplate } from "../template";
  * **蒸馏成一批可独立引用的知识原子**,前端渲成**蒸馏批量确认门**(每条可勾选/改 type/改 title),
  * 人点「采纳选中 N 条」才逐条 knowledge.create 物化(铁律:AI 只产候选,人采纳才落库)。
  *
- * facets:content(必需)= 用户倒入的原文(调用方 runner 截断 8000 字符防爆,见
- * knowledge-distill-runner)。
+ * facets:content(必需)= 用户倒入原文的一个确定性窗口(调用方 runner 约 7000 字/块并在
+ * 块间顺序归并去重；硬上限覆盖真相随结果返回,见 knowledge-distill-runner)。
  *
  * outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底再同 schema 校验):
  *   - atoms[]:知识原子数组,每条:
