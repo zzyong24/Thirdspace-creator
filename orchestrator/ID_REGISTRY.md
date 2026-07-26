@@ -34,6 +34,7 @@ Stable IDs so downstream artifacts trace to upstream intent and changes invalida
 | `DEC-003` | Frontend green on static checks only | DECISION_LOG.md | active |
 | `DEC-004` | Ratification pass (assign IDs, run gates) | DECISION_LOG.md | active |
 | `DEC-005` | Consistency gate fails on missing backend chains | DECISION_LOG.md | active |
+| `DEC-ODR-001` | 四个过度设计任务统一退回最小现有能力路线 | DECISION_LOG.md | resolved |
 
 ## FR — Functional Requirements (source: docs/CreatorOS-implementation-plan.md) — status: to-confirm
 

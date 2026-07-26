@@ -11,6 +11,26 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-ODR-001 — 四个过度设计任务统一范围重置（DEC-ODR-001，2026-07-26）
+
+- **变更**：T-516/T-517/T-518/T-519 统一退回已有能力上的最小完整闭环；框架优化明确不在
+  T-527 内。本次只纠正上游真相，不修改生产代码。
+- **失效/待重推导**：
+  - T-517 新 `automation_job/run`、八表 grant/effect 平台和第二执行状态机 → **关闭**；
+  - T-516 独立 report/issue/candidate/event/confirm/undo Saga → **关闭**；
+  - T-518 Growth 上传、对象存储、客服收件箱 → **关闭**；
+  - T-519 第二套上传/搜索/图谱平台 → **关闭**；
+  - 四项 2026-07-24/25 旧 CONTRACT → **只保留审计历史，不再授权 BUILD**。
+- **重新派生**：
+  - T-517 复用 `scheduled_job/job_run` 与 `PersistentTaskService`，补 sealed kind、typed
+    handler registry、单一 driver 与旧 timer cutover；
+  - T-516 自动扫描只做确定性报告，AI 修改必须由用户主动触发并复用定位编辑/版本链；
+  - T-518 只做本地整理/复制、打开已配置 `supportUrl` 和加密日志目录；
+  - T-519 先修 Assets ownership/stable assetId/complete 幂等，再补文件夹与多视图。
+- **当前 Gate**：四份 Replacement 经同一 cross-model reviewer 三轮复核，最终 PASS
+  （0 blocker/0 major/0 minor）；DEC-ODR-001 已记录用户范围重置。PLAN Gate 通过，
+  CONTRACT/确认②/BUILD 仍关闭。
+
 ## CI-006 — Full spec alignment (from DEC-006, 2026-06-20)
 
 - **Change**: Implementation changed to match specs (UI stack @base-ui → shadcn/Radix; +13 entities; enum/field

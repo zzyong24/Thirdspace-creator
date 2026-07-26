@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "16-backend-tdd"        # 2026-07-05(T-145): 更新至真实 frontier;stage 分段机制已被 BACKLOG+SPEC gate 取代(见 CLAUDE.md/BACKLOG.md)
   frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
-  updated_at: "2026-07-23"
+  updated_at: "2026-07-26"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -240,6 +240,82 @@ stages:
       stage 17" promise is realized as "swap the transport behind /api/v1/dispatch". REMAINING: fan out the
       remaining verticals over this seam; cross-restart durability (dataDir); full release review. Still
       gated by stage-12 visual re-validation (OPEN-002) and the open consistency chain for a true release.
+
+  "T-518-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-bug-feedback-inbox.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "frontend/src-tauri/src/logging.rs"
+      - existing: "frontend/src/app/api/v1/local/reveal-logs/route.ts"
+      - existing: "frontend/src/server/activation/channel-links.server.ts"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-FDB-002"
+    notes: >
+      DEC-FDB-002/DEC-ODR-001 已撤销 Growth 上传、对象存储和工单平台，改为本地整理/复制、
+      打开签名 supportUrl 和日志目录。2026-07-26 Replacement 独立复审 Round 3 最终 PASS；
+      用户范围重置由 DEC-ODR-001 记录。旧 accepted-risk 工件保留历史，不再作为
+      CONTRACT/BUILD 输入；新 CONTRACT/确认②之前生产代码不改。
+
+  "T-519-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-knowledge-workspace-lean.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "frontend/src/features/knowledge/knowledge-interactive-region.tsx"
+      - existing: "backend/src/modules/ai-runtime/material-extract-runner.ts"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ODR-001"
+    notes: >
+      新 PLAN 先修 asset_upload ownership/stable assetId/complete 幂等，再补持久文件夹，
+      保留默认文件夹、多级层级、虚拟节点、URL/文本导入、local-only、四视图和采纳门。
+      Round 1 指出的静默缩水已修，Round 3 最终 PASS；用户范围重置由 DEC-ODR-001 记录。
+      旧 41-operation CONTRACT 与第一次瘦身均关闭，新 CONTRACT/确认②之前生产代码不改。
+
+  "T-516-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-copilot-context-health-minimal.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ODR-001"
+    notes: >
+      保留设置入口、默认每周、调频/关闭/立即检查和 AI 起草修改供用户确认；自动扫描只做
+      确定性规则，AI 草稿复用现有定位编辑/保存/版本链，不新建候选/撤销 Saga。Round 1
+      指出的用户结果缩水和 T-521 mutating classifier 风险已修，Round 3 最终 PASS；
+      用户范围重置由 DEC-ODR-001 记录。T-517 新 CONTRACT 仍是 BUILD 前置。
+
+  "T-517-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-creatoros-automation-kernel-minimal.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ODR-001"
+    notes: >
+      新 PLAN 复用 scheduled_job/job_run 与 PersistentTaskService，但诚实补入 sealed kind 扩展、
+      typed handler registry、单一 driver、aiTaskId 兼容退出和旧 timer cutover。Round 1 指出的
+      “只有薄映射”事实错误已修，Round 3 最终 PASS；用户范围重置由 DEC-ODR-001 记录。
+      旧 Kernel PLAN/CONTRACT 只留历史；必须另建最小 CONTRACT 并取得确认②后才可 BUILD。
+
+  "T-517-2-contract":
+    status: "invalidated"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate"
+    gate_status: "fail"
+    confirmation_required: true
+    artifacts: []
+    notes: >
+      旧 CONTRACT 的三轮 FAIL 全部保留；DEC-ODR-001 已替换其物理方向，因此该工件 invalidated，
+      不再继续补 delegated grant/effect platform。新 PLAN 通过后另建最小 CONTRACT；确认②与
+      BUILD 均关闭。
 
 stage_defaults:
   valid_statuses:

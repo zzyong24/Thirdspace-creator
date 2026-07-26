@@ -64,6 +64,30 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 |---|---|---|---|---|---|
 | FR-069 | FLOW-023 | PAGE-017 | API-008、API-009 | TEST-001..008 | RISK-011：代码与回归已落地；历史 TDD 红证据缺失，付费真端到端待授权 |
 
+## T-516 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-ODR-001；T-516 Replacement | 设置账户区；每周默认/可调/关闭/立即检查；用户主动 AI 起草 | 现有定位编辑、保存和版本历史 | [新 PLAN](../docs/superpowers/specs/2026-07-26-copilot-context-health-minimal.md)；旧 API-CTX-001..014 invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；CONTRACT/确认②/BUILD 关闭，生产代码未改 |
+
+## T-517 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-ODR-001；T-517 Replacement | `scheduled_job/job_run` 调度展示 → `PersistentTaskService` durable task → typed handler | 现有自动化页与业务入口 | [新 PLAN](../docs/superpowers/specs/2026-07-26-creatoros-automation-kernel-minimal.md)；旧 API-AUTO-001..027 invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；旧 CONTRACT 三轮 FAIL 保留；新 CONTRACT/确认②/BUILD 关闭 |
+
+## T-518 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-FDB-002；DEC-ODR-001 | 本地整理/复制 → 打开签名 `supportUrl`；独立打开加密日志目录 | 侧边栏反馈入口 | [新 PLAN](../docs/superpowers/specs/2026-07-26-bug-feedback-inbox.md)；旧 Growth 上传 CONTRACT invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；不显示假“已发送”；CONTRACT/确认②/BUILD 关闭 |
+
+## T-519 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-ODR-001；T-519 Replacement | Assets ownership/idempotency → 默认多级文件夹 → 文件/URL/文本导入 → 四视图 | 现有 Knowledge 页面增量 | [新 PLAN](../docs/superpowers/specs/2026-07-26-knowledge-workspace-lean.md)；旧 41-operation CONTRACT invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；旧 ID/图/导入保留；CONTRACT/确认②/BUILD 关闭 |
+
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链

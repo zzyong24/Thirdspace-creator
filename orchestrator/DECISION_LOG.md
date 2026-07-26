@@ -527,3 +527,169 @@ surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源
 **影响**：Windows 安装路径、权限提示、离线口径、更新/回滚与发布标准；未确认前
 T-487 保持 PLAN，不能进入 BUILD。
 **Status**：needs-user-confirmation。
+
+```text
+ID: DEC-AUTO-001
+Date: 2026-07-24
+Stage: 1-plan / T-517
+Type: user-confirmed-architecture-direction
+Decision: CreatorOS 自动化必须成为内置系统底座，而不是继续扩展采集专用 sourceKind。采用
+          “轻量 Automation Kernel + typed handler 积木”方向：数据库持久 job/run、唯一 ticker、
+          timezone/misfire/overlap/retry、持久 claim/recovery、(userId,accountId) 归属；旧六类
+          采集、内容雷达与持久后台任务迁为 handler；上下文健康先保留 typed conformance seam，
+          待 T-516 领域契约通过后再注册生产 handler/job/UI。仓内已有 execution_tasks 的 lease/heartbeat/
+          recovery 能力上收并演进为唯一 automation_run，不永久保留第二个通用执行状态机。
+          AutomationGrant 只授权已声明副作用，不替代 P-01 人工确认门：无人值守只可写运行账、
+          用户已委托来源返回且可验证的采集 evidence，以及 pending/imported 预设投影；它们不是
+          active 业务闭环。用户创建或启用来源/采集计划即构成该已声明范围的持续确认，不要求每条
+          指标/评论逐次授权。`source=imported` 历史作品壳属于 evidence projection，可幂等创建，
+          但转 manual/active、形成正式稿件/经验或驱动后续闭环仍须用户确认。AI/规则形成的创作、
+          语义归纳、偏好和修复一律只产 candidate/decision/manifest。handler 以
+          domainWriteClass + operation allowlist 获得最小 service port；旧 enabled job 只有能证明
+          用户曾创建/启用相同范围的来源/计划时才可迁移该采集授权，其他高风险 effect 不伪造 grant。
+          参考 pg-boss、Graphile Worker、BullMQ、
+          Temporal/DBOS 的成熟语义，但不直接引入 Redis、Mongo、外部 orchestration service、
+          通用 DAG 或任意用户脚本。
+Rationale: 仓内事实证明旧 scheduling 的 schema/wire/trigger/run 全部绑定采集与 ai_task，
+           继续增加枚举会把兼容成本扩散给每个新业务。用户明确要求“属于系统底座，其他能力
+           往底座上堆积木”；轻量自研可复用现有 PGlite/Drizzle 和本地运行语义，同时保留
+           pg-boss/Graphile 的 durable queue、handler registry、稳定幂等键等正确模式。
+Pattern-Ref: PAT-002, PAT-003, PAT-004
+Source: 用户会话确认（含 2026-07-24 对 P-01/R-INGEST 的产品裁决：自动化数据是预设/证据，
+        真正进入系统闭环才需要人确认）+
+        docs/research/2026-07-24-creatoros-automation-kernel-oss-research.md，2026-07-24。
+Affected Artifacts: T-517 replacement PRODUCT SPEC；SYSTEM_ARCHITECTURE；scheduling/automation
+                    contract、backend Kernel、自动化页；T-514/T-516 的定时执行依赖。
+Invalidates: 直接给旧 scheduled_job/sourceKind 增 `intelligence.sync` 或 `context.health`；
+             每个业务自建 setInterval/cron/run history；automation_run 与 execution_tasks
+             永久双写；T-516 DEC-CTX-005 中“原表直接泛化 jobKind”的未确认方案。
+Owner: user
+Revisit Trigger: replacement SPEC 独立评审证明 PGlite 上的原子 claim/恢复不可行，或真实产品
+                 出现必须跨机器持续运行的已确认需求。
+Status: superseded-in-part by DEC-ODR-001（“生产预设积木、唯一 ticker、人工确认业务闭环”的
+        用户方向继续有效；`automation_run/AutomationGrant/effect` 物理路线不再是当前输入）
+```
+
+```text
+ID: DEC-AUTO-002
+Date: 2026-07-24
+Stage: 2-contract / T-517
+Type: architecture-data-contract
+Decision: Automation Kernel 物理上采用八张归属表：automation_jobs、automation_runs、
+          automation_run_events、automation_grants、automation_compatibility_mappings、
+          automation_effects、automation_command_receipts、automation_cutover_state。
+          automation_run 同时是 durable queue 与用户历史；attempt 用 run 计数 +
+          严格 typed append-only event 表达，不另造第二执行状态表。command receipt 为 job/grant/
+          migration mutation 提供跨重启幂等重放；effect ledger 逐网络/模型/领域副作用保存
+          reservation/receipt；cutover control row 是 writer/ticker generation 的崩溃恢复真相。
+          所有状态 CAS、lease/attempt 更新和 event/receipt 同事务。用户 RPC、runtime port、handler
+          capability port 共用一套 typed contract；
+          handler 只获得 manifest + grant + domainWriteClass 三重交集后的 operation allowlist。
+          旧 scheduledJobs/jobRuns 只走单写 compatibility adapter。用户创建/启用同范围只读采集
+          可以迁窄 grant；高风险/扩范围任务待重新授权。
+Rationale: 单一 run 消除 execution_tasks/job_runs 的双真相；append-only event 保留取消、重试和
+           reconciliation 证据；最小 capability port 同时满足账号 ownership、P-01 确认门和
+           SYSTEM_ARCHITECTURE 模块边界。PGlite RAT 已证明最小 transaction/CAS/lease 原语可行。
+Pattern-Ref: PAT-002, PAT-003, PAT-004
+Source: T-517 confirmed PRODUCT SPEC；用户确认①（2026-07-24）；
+        docs/research/2026-07-24-automation-kernel-pglite-rat.md。
+Affected Artifacts: API-AUTO-001..027；automation contract/resources/schema/runtime；
+                    scheduling compatibility；intelligence execution task migration。
+Invalidates: automation_run + execution_tasks 永久双写；frontend 业务 ticker；
+             handler 直拿 repository/通用写库；每条采集 evidence 逐次弹窗确认。
+Owner: user+agent
+Revisit Trigger: Contract review 证明 PGlite 无法支持同事务 event/CAS，或产品新增跨机器 worker。
+Status: superseded by DEC-ODR-001（历史 Round 3 FAIL 保留；本决定从未激活，不再进入确认队列）
+```
+
+```text
+ID: DEC-CTX-005
+Date: 2026-07-24
+Stage: 2-contract / T-516
+Type: architecture-data-contract
+Decision: T-516 拟采用四项物理裁决，待确认②统一签核：
+          ① ContextFact 每轮重建，不复制业务真值；report/issue/candidate/event/manifest 写入
+          canonical Drizzle DB。② 复用 scheduled_job/job_run 与唯一 tick 历史，但把现有采集
+          专用 dispatch 泛化为 jobKind，context.health 是零 LLM 的独立 executor，不伪装成
+          收藏/采集源，也不新增 timer。③ Publishing 暴露 canonical publication 窄读 port，
+          Context 不跨 repository 拼表。④ creator_profiles 增加 revision；repair confirm/undo
+          用 SQL CAS，AI/worker 只产候选，确认后由 backend positioning/context service 原子落库。
+Rationale: 结果需要隔天确认和撤销，命中 PAT-002 RF-001/002/004；扫描需导航后继续且有终态，
+           命中 PAT-003 AF-002/003；设置、backend、Publishing、Positioning、AI runtime 是
+           多边界多消费者，命中 PAT-004 CF-001/002/003/004。复用真调度历史同时泛化执行器，
+           比新增 timer 或把治理任务塞进采集语义更一致。
+Pattern-Ref: PAT-002, PAT-003, PAT-004
+Source: T-516 SERVICE CONTRACT 仓内可行性核查，2026-07-24。
+Affected Artifacts: T-516 SERVICE CONTRACT；contract/context operations；backend context、
+                    scheduling、publishing、positioning；settings/Copilot consumers。
+Invalidates: 第二套调度/run 表；前端/localStorage 持有结果真值；Context 直读他模块 repository；
+             无 revision 的先读后写伪 CAS。
+Owner: user（确认②后 active）
+Revisit Trigger: 独立契约评审发现 blocker，或用户不接受任一物理裁决。
+Status: superseded by DEC-ODR-001（未获确认、从未激活；旧 report/issue/candidate/event 与独立
+        confirm/undo 物理方案不再进入决策队列）
+```
+
+## DEC-FDB-001 (2026-07-26) — 问题反馈是用户确认的窄化出网，不建设客服平台
+
+**来源**：用户要求“有个能反馈 bug 的渠道，且直接反馈给我”，并指出此前把它扩成客服工单、
+多角色、复杂保留与删除编排已经跑偏。
+
+**决策**：
+
+1. 入口放在 CreatorOS 设置中；用户先预览描述、最多 3 张截图和是否附加加密日志，再明确点击
+   “发送问题反馈”。未点击发送时反馈网络请求必须为 0。
+2. Web 只调用 Tauri typed RPC；Tauri 固定本地附件快照、取得新鲜签名授权并上传，Web 不获得
+   绝对路径、激活码或日志明文。
+3. Thirdspace Growth 只提供一个私有开发者收件箱，复用现有管理员认证、私有对象存储、事务
+   outbox 和 worker runtime；不建设客服角色、状态流转、用户在线回查或 legal hold。
+4. 接收内容固定 90 天后删除；日志始终是开发者公钥加密的 `.enc`，只有开发者离线工具可解密。
+5. 该窄化出网同步写入产品宪法 P-04 与 NFR-PRIVACY；以后如要客服协作必须另立需求并重新确认。
+
+**用户确认（2026-07-26）**：用户明确要求直接反馈给开发者，并认可先纠正过度设计、后续再讨论
+流程框架优化。
+
+**Status**：superseded by DEC-FDB-002（历史产品裁决保留；Growth 上传/收件箱不再是 BUILD 输入）。
+
+## DEC-FDB-002 (2026-07-26) — 撤销应用内上传，问题反馈复用已配置 supportUrl
+
+**来源**：对 DEC-FDB-001 的最终可实现性审计发现，仓库没有可直接用于生产的 Growth 私有反馈
+对象存储、通知 adapter 和所需 license proof；继续补齐会再次把“直接反馈给开发者”扩成新平台。
+同时 CreatorOS 已经通过签名 channel config 下发、缓存并净化 `supportUrl`。
+
+**决策**：
+
+1. DEC-FDB-001 中关于 Tauri 上传、Growth 私有收件箱、截图/日志服务端保存和 90 天清理的决定，
+   在进入 BUILD 前全部撤销；该决定保留为历史，不再作为实现输入。
+2. CreatorOS 提供本地反馈弹窗：整理并复制描述与最小诊断摘要，打开已配置的 `supportUrl`，
+   并可打开本机加密日志目录。
+3. 真正提交发生在开发者已经配置的外部反馈渠道。应用不自动上传截图或日志，也不能把“外部页面
+   已打开”显示成“反馈已发送”。
+4. 未配置 `supportUrl` 时必须诚实提示，同时保留复制内容和打开日志目录的能力；禁止假按钮。
+5. 后续若确实需要应用内上传、回执或工单协作，必须作为新需求证明现有渠道不足后重新确认。
+
+**Status**：resolved（取代 DEC-FDB-001 的 BUILD 方向；T-518 回到 S 级直达入口）。
+
+## DEC-ODR-001 (2026-07-26) — 四个过度设计任务统一退回最小现有能力路线
+
+**来源**：用户明确表示近期方案“完全跑偏”，要求先统一解决具体问题，编排框架优化后议。独立审计
+进一步证明旧方案重复建设执行器、反馈上传基础设施和文件平台；第一次瘦身又遗漏了部分已确认结果。
+
+**决策**：
+
+1. T-517 保留“生产预设积木”的用户方向，但撤销新 `automation_job/run`、八表 effect 平台和第二
+   执行状态机。`scheduled_job/job_run` 继续管调度/展示；现有 `PersistentTaskService` 提供 durable
+   task 原语，并补一套 typed handler registry 与单一轻量 driver。DEC-AUTO-001 中“必须新建
+   automation_run/迁移为 Kernel”及 DEC-AUTO-002 的物理设计均被本决定取代。
+2. T-516 保留设置入口、默认每周、可调/关闭/立即检查，以及“AI 起草修改、用户确认或调整后保存”。
+   自动扫描只做确定性规则；AI 起草由用户主动触发，复用现有定位编辑、保存和版本历史，不新建
+   candidate/event/confirmation/undo Saga。DEC-CTX-001/002 的用户结果继续有效，DEC-CTX-003/005
+   中要求独立候选/撤销基础设施的实现解释由本决定收窄。
+3. T-518 以 DEC-FDB-002 为准：复用 `supportUrl`，不建设 Growth 上传/工单。
+4. T-519 保留默认文件夹、多级真实文件夹、“全部/最近/未归档”虚拟节点、多文件及既有 URL/文本
+   导入、关系图/观点地图/全部、本地原文件与用户采纳门。实现先修 Assets upload ownership 和
+   complete 幂等，不建设第二套上传/搜索/图谱。
+5. 四份 2026-07-26 Replacement 是新的 PLAN 真相；旧 CONTRACT 全部保留为审计历史并关闭 BUILD。
+   后续实现仍需新 CONTRACT、独立评审和确认②。
+
+**Status**：resolved（用户范围重置；不授权修改 orchestrator engine，也不把四项功能伪报为完成）。

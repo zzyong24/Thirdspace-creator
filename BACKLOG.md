@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-527 | 统一纠正 T-516/T-517/T-518/T-519 的过度设计，恢复最小完整用户闭环【产品范围重置·用户 2026-07-26】 | ✅ 完成 | [范围重置](docs/superpowers/specs/2026-07-26-overdesign-scope-reset.md) · [独立审计](docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md) | 旧 FAIL 工件保留但关闭 BUILD：自动化复用现有调度与 PersistentTaskService，健康检查只做确定性报告，问题反馈复用 supportUrl，知识库先修 Assets 归属/幂等再补文件夹；框架优化不混入本任务。 |
 | T-489 | Windows updater `latest.json` 下载 URL 混入 runner 绝对路径【bug·桌面发布·CI 2026-07-23】 | ✅ 待办 | [详情](docs/tasks/T484.md#t-489) | 发布实物审计发现 `D:\a\...setup.exe` 被直接拼入 GitHub Release URL；须跨平台提取纯文件名并用 Windows 路径红测锁定。 |
 | T-488 | 抖音已在“网站登录保管库”登录，Copilot 读取视频仍返回 `needLogin`【bug·网页登录态·用户 2026-07-23】 | ✅ 待办（用户已恢复） | [详情](docs/tasks/T484.md#t-488) | 用户已确认内容雷达 UI，要求恢复排查与修复。 |
 | T-487 | 合并 T-454 等桌面打包欠债：借鉴 skills-manager/Tauri 官方实践，统一跨… | ⏸️ 阻塞/搁置 | [详情](docs/tasks/T484.md#t-487) | 满足恢复条件后继续。 |
