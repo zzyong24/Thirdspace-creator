@@ -608,4 +608,22 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | DEC-PKG-03 | decision | orchestrator/DECISION_LOG.md | NONE |
 | DEC-PKG-04 | decision | orchestrator/DECISION_LOG.md | NONE |
 | DEC-PKG-05 | decision | orchestrator/DECISION_LOG.md | NONE |
+| FR-FDBR-01 | requirement | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | UI-FDBR-001, TEST-FDBR-005 |
+| FR-FDBR-02 | requirement | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | PURE-FDBR-001, TEST-FDBR-002, TEST-FDBR-003 |
+| FR-FDBR-03 | requirement | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | API-FDBR-001, API-FDBR-002, TEST-FDBR-001, TEST-FDBR-004 |
+| FR-FDBR-04 | requirement | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | API-FDBR-003, TEST-FDBR-004 |
+| FR-FDBR-05 | requirement | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | TEST-FDBR-003, TEST-FDBR-006 |
+| FR-FDBR-06 | requirement | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | PURE-FDBR-001, TEST-FDBR-002, TEST-FDBR-006 |
+| API-FDBR-001 | api | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-03, TEST-FDBR-001 |
+| API-FDBR-002 | api | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-03, TEST-FDBR-004 |
+| API-FDBR-003 | api | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-04, TEST-FDBR-004 |
+| UI-FDBR-001 | component | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-01, TEST-FDBR-005 |
+| PURE-FDBR-001 | operation | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-02, FR-FDBR-06, TEST-FDBR-002 |
+| TEST-FDBR-001 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | API-FDBR-001 |
+| TEST-FDBR-002 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | PURE-FDBR-001 |
+| TEST-FDBR-003 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-02, FR-FDBR-05 |
+| TEST-FDBR-004 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | API-FDBR-002, API-FDBR-003 |
+| TEST-FDBR-005 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | UI-FDBR-001 |
+| TEST-FDBR-006 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-05, FR-FDBR-06 |
+| TEST-FDBR-007 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-03, FR-FDBR-05 |
 ```
