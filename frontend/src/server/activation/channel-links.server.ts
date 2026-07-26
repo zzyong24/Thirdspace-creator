@@ -20,6 +20,12 @@ export interface ChannelLinks {
   readonly purchaseUrl: string | null;
   readonly supportUrl: string | null;
   readonly downloadUrl: string | null;
+  /**
+   * [T-530] 渠道品牌显示名(轻贴牌):纯文本,≤30 个 Unicode 字符;null = 未配置。
+   * 注意与三链接红线的差异:品牌名 null 时 UI **回官方名「CreatorOS」**(显示名
+   * 不涉密,回退无害);链接 null 仍绝不回退官方链接(红线原样保留)。
+   */
+  readonly brandName: string | null;
 }
 
 export type ChannelLinkKind = "purchase" | "support" | "download";
@@ -44,6 +50,19 @@ function sanitizeUrl(v: unknown): string | null {
   if (typeof v !== "string") return null;
   const s = v.trim();
   return s.startsWith("https://") ? s : null;
+}
+
+/**
+ * [T-530] 品牌名清洗(与 Rust 写端 sanitize_brand_name 同规则,读端防线纵深):
+ * 去控制字符(Unicode Cc)→ trim → 非空且 ≤30 个 Unicode 字符才有效;
+ * 无效/缺失/非字符串 一律 null(= 未配置)。纯文本,不渲染 HTML、不做 URL 语义。
+ */
+function sanitizeBrandName(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.replace(/\p{Cc}/gu, "").trim();
+  if (s.length === 0) return null;
+  if ([...s].length > 30) return null;
+  return s;
 }
 
 /**
@@ -81,6 +100,7 @@ export async function readChannelLinks(
     purchaseUrl: sanitizeUrl(ch.purchaseUrl),
     supportUrl: sanitizeUrl(ch.supportUrl),
     downloadUrl: sanitizeUrl(ch.downloadUrl),
+    brandName: sanitizeBrandName(ch.brandName),
   };
 }
 
@@ -102,4 +122,16 @@ export async function getChannelLink(
     case "download":
       return links.downloadUrl;
   }
+}
+
+/**
+ * [T-530] 品牌显示名取用口:null = 未配置/未激活/官方码/无效值,调用方(Sidebar)
+ * 回官方名「CreatorOS」。**回退发生在 UI 层**,本读端保持诚实 null,不在此处兜默认值
+ * (与链接取用口同构,读端语义统一「无效=未配置」)。
+ */
+export async function getChannelBrandName(
+  env: Record<string, string | undefined> = process.env,
+): Promise<string | null> {
+  const links = await readChannelLinks(env);
+  return links?.brandName ?? null;
 }

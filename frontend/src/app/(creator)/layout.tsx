@@ -32,6 +32,9 @@ import { redirect } from "next/navigation";
 import { ShellRouter, type ShellUser } from "./shell-router";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
 import { LicenseHeartbeatBridge } from "@/components/shell/license-heartbeat-bridge";
+// [T-530] 渠道品牌名(轻贴牌):服务端读 .channel-links 缓存 → Provider 注入 Sidebar。
+import { SidebarBrandNameProvider } from "@/components/shell/sidebar";
+import { getChannelBrandName } from "@/server/activation/channel-links.server";
 import {
   ZeroAccountGuidance,
   isZeroAccountAllowedPath,
@@ -150,6 +153,17 @@ export default async function CreatorLayout({
     notifications = { items: [], unreadCount: 0 };
   }
 
+  // [T-530] 渠道品牌名:服务端读 `.channel-links`(Rust 写端已按签名响应落盘)。
+  // 读失败/未激活/官方码/未配置 → null,Sidebar 回官方名「CreatorOS」(品牌名回退
+  // 不涉密;与渠道链接「null 不回退」红线不同)。读端设计上不 throw,这里仍兜一层
+  // —— 品牌字样绝不能拖垮整个登录后布局。
+  let brandName: string | null = null;
+  try {
+    brandName = await getChannelBrandName();
+  } catch {
+    brandName = null;
+  }
+
   return (
     <>
       {/* [T-051 2c] ⌘K 全局热键 → /search(让 TopHeader 的 kbd 提示言行一致)。 */}
@@ -158,11 +172,15 @@ export default async function CreatorLayout({
           立即跳激活页(内测到期/超宽限/吊销即时生效);web 下零副作用(封装内短路)。 */}
       <LicenseHeartbeatBridge />
       {/* [T-257] 外链处理已上移到根 layout(app/layout.tsx),覆盖 (creator) 外的页面;此处不再重复挂,避免双监听外链开两次。 */}
-      <ShellRouter user={user} notifications={notifications}>
-        {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页
-            读 per-account op 撞 AccountRequiredError 的裸错;白名单页照常)。 */}
-        {zeroAccountGuarded ? <ZeroAccountGuidance /> : children}
-      </ShellRouter>
+      {/* [T-530] 品牌名经 Provider 注入(server → client 只读;props 链被 ShellRouter
+          隔断,沿 CurrentProjectProvider 同款上下文注入模式)。 */}
+      <SidebarBrandNameProvider brandName={brandName}>
+        <ShellRouter user={user} notifications={notifications}>
+          {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页
+              读 per-account op 撞 AccountRequiredError 的裸错;白名单页照常)。 */}
+          {zeroAccountGuarded ? <ZeroAccountGuidance /> : children}
+        </ShellRouter>
+      </SidebarBrandNameProvider>
       {/* The @modal parallel slot renders intercepting-route overlays
           (currently `/projects/new`). It is rendered above the AppShell
           so the dialog appears above the page chrome. */}

@@ -48,6 +48,44 @@ import { IssueFeedbackDialog } from "./issue-feedback-dialog";
 const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
 
 // ---------------------------------------------------------------------------
+// [T-530] 渠道品牌名(轻贴牌):左上角品牌字样
+// ---------------------------------------------------------------------------
+//
+// 数据通路:(creator)/layout.tsx(RSC)服务端读 getChannelBrandName() → 经下方
+// Provider 注入(server → client 单向只读,非全局 store;同款先例 =
+// current-project-context 的 CurrentProjectProvider)。Sidebar 在 client 侧消费。
+// 显示规则:brandName 有效 → 左上角显示品牌名;null/缺失/未激活/官方码 → 官方名
+// 「CreatorOS」。**品牌名回退官方名不涉密**(显示名而已),与渠道链接「null 绝不
+// 回退官方链接」的白标红线不同 —— 链接红线原样保留,别混淆。
+
+const OFFICIAL_BRAND_NAME = "CreatorOS";
+
+const SidebarBrandNameContext = React.createContext<string | null>(null);
+
+/** [T-530] 品牌名注入口(由 (creator)/layout.tsx 服务端包裹;缺 Provider = 官方名)。 */
+export function SidebarBrandNameProvider({
+  brandName,
+  children,
+}: {
+  readonly brandName: string | null;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <SidebarBrandNameContext.Provider value={brandName}>
+      {children}
+    </SidebarBrandNameContext.Provider>
+  );
+}
+
+/** 有效(非空非纯空白)才用品牌名,否则官方名。读端已按契约清洗,这里薄防线兜底。 */
+function resolveBrandDisplayName(brandName: string | null): string {
+  if (typeof brandName === "string" && brandName.trim().length > 0) {
+    return brandName;
+  }
+  return OFFICIAL_BRAND_NAME;
+}
+
+// ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
 
@@ -235,6 +273,11 @@ function SidebarHeader({
   // The brand is a visual anchor, not a focusable link — the home route
   // is reachable through the primary nav. Keeping the brand out of the
   // focus order ensures the first Tab lands inside the TopHeader.
+  //
+  // [T-530] 品牌字样:渠道配置了 brandName → 显示品牌名;否则官方名「CreatorOS」。
+  // 只换这一处左上角文字;activate 页/设置页/窗口标题一律不动。
+  const brandName = React.useContext(SidebarBrandNameContext);
+  const brandDisplayName = resolveBrandDisplayName(brandName);
   return (
     <div
       data-slot="sidebar-header"
@@ -249,14 +292,15 @@ function SidebarHeader({
         data-slot="sidebar-brand"
         aria-hidden="true"
         className={cn(
-          "flex items-center text-[15px] font-semibold text-foreground",
+          // min-w-0 让长品牌名可被 truncate 裁剪(否则 flex 子项按内容宽撑爆窄栏)。
+          "flex min-w-0 items-center text-[15px] font-semibold text-foreground",
           collapsed ? "" : "gap-2 px-2 py-1",
         )}
       >
         <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-primary-foreground">
           <Sparkles className="size-4" />
         </span>
-        {!collapsed ? <span>CreatorOS</span> : null}
+        {!collapsed ? <span className="truncate">{brandDisplayName}</span> : null}
       </div>
       <SidebarCollapseToggle collapsed={collapsed} onToggle={onToggle} />
     </div>

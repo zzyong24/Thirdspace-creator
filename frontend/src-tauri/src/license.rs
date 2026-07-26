@@ -905,12 +905,17 @@ pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8
 pub const CHANNEL_LINKS_SCHEMA_VERSION: u32 = 1;
 
 /// 渠道链接三键(serde camelCase 与服务端契约/前端读端一致)。三键皆可空。
+/// [T-530] 另有 `brand_name` 品牌显示名:纯文本,None = 未配置(客户端回官方名
+/// 「CreatorOS」—— 品牌名回退官方名不涉密,与链接「null 不回退」红线不同)。
+/// brandName 在 channelConfig 对象内 → 自动被 Ed25519 签名 digest 覆盖。
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelConfig {
     pub purchase_url: Option<String>,
     pub support_url: Option<String>,
     pub download_url: Option<String>,
+    #[serde(alias = "brand_name")]
+    pub brand_name: Option<String>,
 }
 
 /// 协议头白名单:只收 `https://`(SPEC §3/§7;服务端已强校验,这里防线纵深再滤一次)。
@@ -918,6 +923,19 @@ fn sanitize_channel_url(v: Option<&serde_json::Value>) -> Option<String> {
     v.and_then(|x| x.as_str())
         .map(|s| s.trim().to_string())
         .filter(|s| s.starts_with("https://"))
+}
+
+/// [T-530] 品牌显示名清洗(统一契约,三仓一致):去控制字符 → trim → 非空且
+/// ≤30 个 Unicode 字符才有效;无效/缺失/null/非字符串 一律 None(= 未配置)。
+/// 纯文本显示名,不做 URL 语义、不渲染 HTML(React 渲染侧默认转义)。
+fn sanitize_brand_name(v: Option<&serde_json::Value>) -> Option<String> {
+    let raw = v.and_then(|x| x.as_str())?;
+    let cleaned: String = raw.chars().filter(|c| !c.is_control()).collect();
+    let trimmed = cleaned.trim();
+    if trimmed.is_empty() || trimmed.chars().count() > 30 {
+        return None;
+    }
+    Some(trimmed.to_string())
 }
 
 /// 从响应 body 的 `channelConfig` 值解析(camel/snake 双取,与 WireBody 同宽容策略)。
@@ -928,6 +946,8 @@ fn parse_channel_config(v: &serde_json::Value) -> ChannelConfig {
         purchase_url: pick("purchaseUrl", "purchase_url"),
         support_url: pick("supportUrl", "support_url"),
         download_url: pick("downloadUrl", "download_url"),
+        // [T-530] 品牌名与三链接同源同签名域(channelConfig 内),同一宽容策略。
+        brand_name: sanitize_brand_name(v.get("brandName").or_else(|| v.get("brand_name"))),
     }
 }
 
@@ -3613,11 +3633,12 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = channel_links_file_path(&dir);
 
-        // 具体配置往返。
+        // 具体配置往返([T-530] 含品牌名)。
         let cfg = ChannelConfig {
             purchase_url: Some("https://agent.example.com/buy".to_string()),
             support_url: None,
             download_url: Some("https://agent.example.com/dl".to_string()),
+            brand_name: Some("星辰传媒".to_string()),
         };
         write_channel_links_file(&path, &Some(cfg.clone()));
         assert_eq!(read_channel_links_file(&path), Some(cfg));
@@ -3634,6 +3655,107 @@ mod tests {
         // 坏 JSON → 丢弃(不 panic)。
         std::fs::write(&path, "not-json").unwrap();
         assert_eq!(read_channel_links_file(&path), None);
+
+        // [T-530] 老文件(version=1,无 brandName 键)→ 照常读回,brand_name=None。
+        // schema 版本保持 1 不升:加字段向后兼容,老缓存不触发丢弃。
+        std::fs::write(
+            &path,
+            r#"{"version":1,"channel":{"purchaseUrl":"https://old.example.com/buy","supportUrl":null,"downloadUrl":null}}"#,
+        )
+        .unwrap();
+        let old = read_channel_links_file(&path).expect("老 schema-1 文件必须仍可读");
+        assert_eq!(old.purchase_url.as_deref(), Some("https://old.example.com/buy"));
+        assert_eq!(old.brand_name, None, "无 brandName 键 = 未配置");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // [T-530] 渠道品牌名(轻贴牌)测锚
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // 合法签名响应携带 brandName → 随 channelConfig 一起采纳(签名域内,同源同信)。
+    #[test]
+    fn brand_name_adopted_on_valid_signed_response() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["channelConfig"] = serde_json::json!({
+            "purchaseUrl": "https://agent.example.com/buy",
+            "brandName": "星辰传媒",
+        });
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert!(out.decision.licensed);
+        let ch = out.channel_config.expect("有字段").expect("有对象");
+        assert_eq!(ch.brand_name.as_deref(), Some("星辰传媒"));
+        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
+    }
+
+    // snake_case `brand_name` 双取兼容(沿 parse_channel_config 既有宽容策略)。
+    #[test]
+    fn brand_name_snake_case_key_accepted() {
+        let ch = parse_channel_config(&serde_json::json!({ "brand_name": "渠道A" }));
+        assert_eq!(ch.brand_name.as_deref(), Some("渠道A"));
+    }
+
+    // 清洗规则:trim + 去控制字符;空白/空串/非字符串/显式 null → None(= 未配置)。
+    #[test]
+    fn brand_name_sanitized_or_dropped() {
+        // trim + 控制字符剔除。
+        let ch = parse_channel_config(
+            &serde_json::json!({ "brandName": "  星辰\u{0007}传媒\u{001b} " }),
+        );
+        assert_eq!(ch.brand_name.as_deref(), Some("星辰传媒"));
+        // 纯空白 → None。
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": "   " }));
+        assert_eq!(ch.brand_name, None);
+        // 显式 null → None。
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": null }));
+        assert_eq!(ch.brand_name, None);
+        // 非字符串脏值 → None(不臆造)。
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": 42 }));
+        assert_eq!(ch.brand_name, None);
+        // 键缺失 → None。
+        let ch = parse_channel_config(&serde_json::json!({}));
+        assert_eq!(ch.brand_name, None);
+    }
+
+    // 长度上限 30 个 Unicode 字符:31 字符整体弃用置 None(不截断);30 字符收下。
+    #[test]
+    fn brand_name_over_30_chars_dropped_entirely() {
+        let thirty: String = "星".repeat(30);
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": thirty.clone() }));
+        assert_eq!(ch.brand_name.as_deref(), Some(thirty.as_str()), "30 字符恰好合法");
+        let thirty_one: String = "星".repeat(31);
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": thirty_one }));
+        assert_eq!(ch.brand_name, None, "超 30 字符整体弃用,不截断");
+    }
+
+    // channelConfig 显式 null → 覆写中性态,品牌名随之清空(落盘读回 None)。
+    #[test]
+    fn brand_name_cleared_on_explicit_null_channel() {
+        let dir = std::env::temp_dir().join(format!(
+            "creatoros-brand-name-test-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = channel_links_file_path(&dir);
+        write_channel_links_file(
+            &path,
+            &Some(ChannelConfig {
+                brand_name: Some("星辰传媒".to_string()),
+                ..ChannelConfig::default()
+            }),
+        );
+        assert_eq!(
+            read_channel_links_file(&path).and_then(|c| c.brand_name).as_deref(),
+            Some("星辰传媒")
+        );
+        // 服务端显式 null(Some(None) 覆写指令)→ 品牌名不残留。
+        write_channel_links_file(&path, &None);
+        assert_eq!(read_channel_links_file(&path), None, "显式清空后品牌名不得残留");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
