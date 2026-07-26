@@ -7,6 +7,12 @@ import { resolveFfmpegPath } from "@creatoros/ai-worker";
 // [T-326 B-04] 错误类抽到零依赖叶子模块(见下方 re-export 注释);本文件内部 throw/instanceof 用它。
 import {
   DouyinCaptchaError,
+  DouyinFavoritesBrowserLockedError,
+  DouyinFavoritesCaptchaError,
+  DouyinFavoritesInvalidResponseError,
+  DouyinFavoritesNetworkError,
+  DouyinFavoritesSessionExpiredError,
+  DouyinFavoritesUpstreamError,
   DouyinNotLoggedInError,
 } from "./douyin-errors";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
@@ -56,6 +62,8 @@ export interface GotoWithRetryOptions {
   waitUntil?: "domcontentloaded" | "load" | "networkidle" | "commit";
   /** 日志用短标签(默认取 url);标识是哪一步导航失败/自愈。 */
   label?: string;
+  /** 敏感会话路径可关闭通用原错日志，由调用方记录脱敏分类。 */
+  logRetries?: boolean;
 }
 
 /**
@@ -74,11 +82,12 @@ export async function gotoWithRetry(
   const backoff = opts.backoffMs ?? [2_000, 5_000, 10_000];
   const waitUntil = opts.waitUntil ?? "domcontentloaded";
   const label = opts.label ?? url;
+  const logRetries = opts.logRetries ?? true;
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       await page.goto(url, { waitUntil, timeout: timeoutMs });
-      if (attempt > 0) {
+      if (attempt > 0 && logRetries) {
         console.log(
           `[douyin-goto] ${label} 第 ${attempt + 1} 次尝试成功(前 ${attempt} 次瞬时失败已自愈)`,
         );
@@ -88,11 +97,13 @@ export async function gotoWithRetry(
       lastErr = err;
       if (attempt >= retries) break; // 用尽重试 → 跳出抛原错
       const waitMs = backoff[Math.min(attempt, backoff.length - 1)] ?? 2_000;
-      console.warn(
-        `[douyin-goto] ${label} 第 ${attempt + 1} 次导航失败(${String(
-          (err as { message?: unknown })?.message ?? err,
-        ).slice(0, 160)}),${waitMs}ms 后重试`,
-      );
+      if (logRetries) {
+        console.warn(
+          `[douyin-goto] ${label} 第 ${attempt + 1} 次导航失败(${String(
+            (err as { message?: unknown })?.message ?? err,
+          ).slice(0, 160)}),${waitMs}ms 后重试`,
+        );
+      }
       await page.waitForTimeout(waitMs);
     }
   }
@@ -771,6 +782,12 @@ export interface LoginDouyinOptions {
 // 保持既有 `from "./douyin-cdp"` 的 import 路径与错误类身份(同一 class 实例)全部兼容。
 export {
   DouyinCaptchaError,
+  DouyinFavoritesBrowserLockedError,
+  DouyinFavoritesCaptchaError,
+  DouyinFavoritesInvalidResponseError,
+  DouyinFavoritesNetworkError,
+  DouyinFavoritesSessionExpiredError,
+  DouyinFavoritesUpstreamError,
   DouyinNotLoggedInError,
 } from "./douyin-errors";
 
@@ -3344,6 +3361,7 @@ export interface FetchCollectsFoldersOptions {
   authDir: string;
   strictEvidence?: boolean;
   gateway?: DouyinChannelGate;
+  diagnostics?: FavoritesDiagnostics;
 }
 
 export interface FetchCollectsVideosOptions {
@@ -3354,6 +3372,14 @@ export interface FetchCollectsVideosOptions {
   maxItems?: number;
   strictEvidence?: boolean;
   gateway?: DouyinChannelGate;
+  diagnostics?: FavoritesDiagnostics;
+}
+
+/** 收藏诊断仅允许内部关联字段；禁止放 Cookie、token、URL 或上游响应正文。 */
+export interface FavoritesDiagnostics {
+  requestId?: string;
+  traceId?: string;
+  accountId?: string;
 }
 
 /** fetchDouyinCollects* 的可注入依赖(默认真 openContext(.auth/, headless);单测注 fake)。 */
@@ -3388,6 +3414,7 @@ async function openCollectsPage(
   await gotoWithRetry(page as unknown as GotoCapablePage, COLLECTS_TAB_URL, {
     timeoutMs: 60_000,
     label,
+    logRetries: false,
   });
   await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)
 
@@ -3396,7 +3423,6 @@ async function openCollectsPage(
     .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
     .catch(() => "");
   if (bodyHead.includes("验证")) {
-    console.warn(`[favorites] ${label}命中验证码,跳过(返回空)`);
     return null;
   }
   return page;
@@ -3411,10 +3437,118 @@ function fetchCollectsJson(
     try {
       const r = await fetch(u, { credentials: "include" });
       return (await r.json()) as unknown;
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : String(e) };
+    } catch {
+      // 原始浏览器错误可能含请求细节；跨边界只传固定哨兵。
+      return { __creatorosFavoritesError: "network" };
     }
   }, url);
+}
+
+type CollectsResponseKind = "folders" | "videos";
+
+function assertCollectsResponse(
+  json: unknown,
+  kind: CollectsResponseKind,
+): asserts json is Record<string, unknown> {
+  if (!json || typeof json !== "object" || Array.isArray(json)) {
+    throw new DouyinFavoritesInvalidResponseError(kind);
+  }
+  const root = json as Record<string, unknown>;
+  if (root.__creatorosFavoritesError === "network") {
+    throw new DouyinFavoritesNetworkError();
+  }
+  // status_code 必须由上游显式给出 number；缺失、字符串 "0"、NaN 都是未知证据。
+  if (
+    typeof root.status_code !== "number" ||
+    !Number.isInteger(root.status_code)
+  ) {
+    throw new DouyinFavoritesInvalidResponseError("status_code");
+  }
+  if (root.status_code !== 0) {
+    const statusMessage =
+      typeof root.status_msg === "string" ? root.status_msg : "";
+    if (
+      root.status_code === 8 ||
+      /未登录|登录.*失效|session.*expired/i.test(statusMessage)
+    ) {
+      throw new DouyinFavoritesSessionExpiredError(root.status_code);
+    }
+    if (/验证|验证码|captcha/i.test(statusMessage)) {
+      throw new DouyinFavoritesCaptchaError();
+    }
+    throw new DouyinFavoritesUpstreamError(root.status_code);
+  }
+  const listKey = kind === "folders" ? "collects_list" : "aweme_list";
+  if (!Array.isArray(root[listKey])) {
+    throw new DouyinFavoritesInvalidResponseError(kind);
+  }
+}
+
+function isFavoritesBrowserLocked(error: unknown): boolean {
+  const code = (error as { code?: unknown })?.code;
+  if (code === "EBUSY" || code === "EACCES") return true;
+  const message =
+    error instanceof Error ? `${error.name}:${error.message}` : "";
+  return /SingletonLock|profile.*(?:in use|locked)|browser.*lock|正在被占用/i.test(
+    message,
+  );
+}
+
+function isFavoritesNetworkFailure(error: unknown): boolean {
+  const code = (error as { code?: unknown })?.code;
+  if (
+    typeof code === "string" &&
+    ["ECONNRESET", "ECONNREFUSED", "ENETUNREACH", "ETIMEDOUT"].includes(code)
+  ) {
+    return true;
+  }
+  const message =
+    error instanceof Error ? `${error.name}:${error.message}` : "";
+  return /TimeoutError|fetch failed|network|ERR_(?:CONNECTION|NETWORK)/i.test(
+    message,
+  );
+}
+
+function normalizeFavoritesError(error: unknown): Error {
+  if (
+    error instanceof DouyinFavoritesSessionExpiredError ||
+    error instanceof DouyinFavoritesBrowserLockedError ||
+    error instanceof DouyinFavoritesCaptchaError ||
+    error instanceof DouyinFavoritesNetworkError ||
+    error instanceof DouyinFavoritesUpstreamError ||
+    error instanceof DouyinFavoritesInvalidResponseError
+  ) {
+    return error;
+  }
+  if (error instanceof DouyinNotLoggedInError) {
+    return new DouyinFavoritesSessionExpiredError();
+  }
+  if (error instanceof DouyinCaptchaError) {
+    return new DouyinFavoritesCaptchaError();
+  }
+  if (isFavoritesBrowserLocked(error)) {
+    return new DouyinFavoritesBrowserLockedError();
+  }
+  if (isFavoritesNetworkFailure(error)) {
+    return new DouyinFavoritesNetworkError();
+  }
+  // 未识别异常仍保留既有错误，让 dispatch 走通用错误；已知收藏错因绝不降级。
+  return error instanceof Error ? error : new Error("Favorites service failed");
+}
+
+function logFavoritesFailure(
+  diagnostics: FavoritesDiagnostics | undefined,
+  error: Error,
+): void {
+  console.warn(
+    "[favorites] request_failed",
+    JSON.stringify({
+      code: (error as { code?: unknown }).code ?? "UnexpectedError",
+      requestId: diagnostics?.requestId ?? null,
+      traceId: diagnostics?.traceId ?? null,
+      accountId: diagnostics?.accountId ?? null,
+    }),
+  );
 }
 
 /** collects 接口 has_more 读取(number/boolean 双形状兜底;缺失当 false 防死循环)。 */
@@ -3446,11 +3580,12 @@ export async function fetchDouyinCollectsFolders(
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
+  let ctx: SearchCapableContext | null = null;
   try {
+    ctx = await openCtx(opts.authDir, true);
     const page = await openCollectsPage(ctx, "收藏夹列表");
     if (!page) {
-      if (opts.strictEvidence) throw new DouyinCaptchaError();
+      if (opts.strictEvidence) throw new DouyinFavoritesCaptchaError();
       return [];
     }
 
@@ -3464,17 +3599,28 @@ export async function fetchDouyinCollectsFolders(
           COLLECTS_LIST_API.replace("{cursor}", String(cursor)),
         ),
       );
-      for (const f of parseCollectsList(json)) byId.set(f.collectsId, f);
+      assertCollectsResponse(json, "folders");
+      const parsedFolders = parseCollectsList(json);
+      if (
+        (json.collects_list as unknown[]).length > 0 &&
+        parsedFolders.length === 0
+      ) {
+        throw new DouyinFavoritesInvalidResponseError("folders");
+      }
+      for (const f of parsedFolders) byId.set(f.collectsId, f);
       if (!collectsHasMore(json)) break;
       const next = collectsNextCursor(json);
       if (next < 0 || next === cursor) break; // cursor 不前进兜底,防死循环
       cursor = next;
     }
     const folders = [...byId.values()];
-    console.log(`[favorites] fetchDouyinCollectsFolders → ${folders.length} 个收藏夹`);
     return folders;
+  } catch (error) {
+    const normalized = normalizeFavoritesError(error);
+    logFavoritesFailure(opts.diagnostics, normalized);
+    throw normalized;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await ctx?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }
 
@@ -3494,11 +3640,12 @@ export async function fetchDouyinCollectsVideos(
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
+  let ctx: SearchCapableContext | null = null;
   try {
+    ctx = await openCtx(opts.authDir, true);
     const page = await openCollectsPage(ctx, `收藏夹视频(${opts.collectsId})`);
     if (!page) {
-      if (opts.strictEvidence) throw new DouyinCaptchaError();
+      if (opts.strictEvidence) throw new DouyinFavoritesCaptchaError();
       return [];
     }
 
@@ -3517,7 +3664,15 @@ export async function fetchDouyinCollectsVideos(
           ).replace("{cursor}", String(cursor)),
         ),
       );
-      for (const v of parseCollectsVideoList(json)) {
+      assertCollectsResponse(json, "videos");
+      const parsedVideos = parseCollectsVideoList(json);
+      if (
+        (json.aweme_list as unknown[]).length > 0 &&
+        parsedVideos.length === 0
+      ) {
+        throw new DouyinFavoritesInvalidResponseError("videos");
+      }
+      for (const v of parsedVideos) {
         if (byId.size >= maxItems) break; // maxItems 截断(防灌库)
         byId.set(v.awemeId, v);
       }
@@ -3527,11 +3682,12 @@ export async function fetchDouyinCollectsVideos(
       cursor = next;
     }
     const videos = [...byId.values()];
-    console.log(
-      `[favorites] fetchDouyinCollectsVideos 夹 ${opts.collectsId} → ${videos.length} 条(上限 ${maxItems})`,
-    );
     return videos;
+  } catch (error) {
+    const normalized = normalizeFavoritesError(error);
+    logFavoritesFailure(opts.diagnostics, normalized);
+    throw normalized;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await ctx?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }

@@ -22,3 +22,86 @@ export class DouyinCaptchaError extends Error {
     this.name = "DouyinCaptchaError";
   }
 }
+
+abstract class DouyinFavoritesError extends Error {
+  abstract readonly code: string;
+  readonly details: Record<string, unknown>;
+
+  protected constructor(message: string, details: Record<string, unknown> = {}) {
+    super(message);
+    this.details = details;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+/** 收藏读取使用的登录态不存在或已被上游判失效。 */
+export class DouyinFavoritesSessionExpiredError extends DouyinNotLoggedInError {
+  readonly code = "DOUYIN_FAVORITES_SESSION_EXPIRED";
+  readonly details: Record<string, unknown>;
+
+  constructor(upstreamStatusCode: number | null = null) {
+    super();
+    this.name = "DouyinFavoritesSessionExpiredError";
+    this.message = "DouyinFavoritesSessionExpiredError: 抖音收藏登录会话已失效";
+    this.details =
+      upstreamStatusCode === null ? {} : { upstreamStatusCode };
+    Object.setPrototypeOf(
+      this,
+      DouyinFavoritesSessionExpiredError.prototype,
+    );
+  }
+}
+
+/** Playwright 持久档案已被另一个浏览器进程占用。 */
+export class DouyinFavoritesBrowserLockedError extends DouyinFavoritesError {
+  readonly code = "DOUYIN_FAVORITES_BROWSER_LOCKED";
+
+  constructor() {
+    super("DouyinFavoritesBrowserLockedError: 抖音登录浏览器档案正在被占用");
+    this.name = "DouyinFavoritesBrowserLockedError";
+  }
+}
+
+/** 收藏页触发验证码或人机校验。 */
+export class DouyinFavoritesCaptchaError extends DouyinFavoritesError {
+  readonly code = "DOUYIN_FAVORITES_CAPTCHA";
+
+  constructor() {
+    super("DouyinFavoritesCaptchaError: 抖音收藏页要求完成验证码");
+    this.name = "DouyinFavoritesCaptchaError";
+  }
+}
+
+/** 页内 fetch、导航或连接层未取得响应；不保存上游原始错误文本。 */
+export class DouyinFavoritesNetworkError extends DouyinFavoritesError {
+  readonly code = "DOUYIN_FAVORITES_NETWORK";
+
+  constructor() {
+    super("DouyinFavoritesNetworkError: 抖音收藏网络请求失败");
+    this.name = "DouyinFavoritesNetworkError";
+  }
+}
+
+/** 抖音接口返回非零且不属于登录/验证码的业务码。 */
+export class DouyinFavoritesUpstreamError extends DouyinFavoritesError {
+  readonly code = "DOUYIN_FAVORITES_UPSTREAM";
+
+  constructor(upstreamStatusCode: number) {
+    super("DouyinFavoritesUpstreamError: 抖音收藏接口拒绝请求", {
+      upstreamStatusCode,
+    });
+    this.name = "DouyinFavoritesUpstreamError";
+  }
+}
+
+/** 业务码或列表结构缺失/非法；这是未知结果，不能折叠成真实 0。 */
+export class DouyinFavoritesInvalidResponseError extends DouyinFavoritesError {
+  readonly code = "DOUYIN_FAVORITES_INVALID_RESPONSE";
+
+  constructor(reason: "status_code" | "folders" | "videos") {
+    super("DouyinFavoritesInvalidResponseError: 抖音收藏响应结构无效", {
+      reason,
+    });
+    this.name = "DouyinFavoritesInvalidResponseError";
+  }
+}

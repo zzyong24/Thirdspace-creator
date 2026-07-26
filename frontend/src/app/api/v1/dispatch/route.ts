@@ -46,6 +46,34 @@ function errorEnvelope(
   );
 }
 
+export function dispatchErrorResponse(err: unknown): Response {
+  // SPEC §14 status mapping for thrown domain errors.
+  if (err instanceof AuthenticationError) {
+    return errorEnvelope(ErrorCode.AuthenticationError, err.message);
+  }
+  if (err instanceof OwnershipError) {
+    return errorEnvelope(ErrorCode.OwnershipError, err.message);
+  }
+  // Module/CDP errors carry a contract ErrorCode in `.code`. Keeping the
+  // structured envelope here is what lets HttpTransport and UI act on the code.
+  const code = (err as { code?: unknown }).code;
+  if (typeof code === "string" && code in ERROR_HTTP) {
+    const rawDetails = (err as { details?: unknown }).details;
+    const details =
+      rawDetails && typeof rawDetails === "object"
+        ? (rawDetails as Record<string, unknown>)
+        : {};
+    return errorEnvelope(
+      code as ErrorCode,
+      err instanceof Error ? err.message : String(err),
+      details,
+    );
+  }
+  const message = err instanceof Error ? err.message : String(err);
+  const status = /not implemented/i.test(message) ? 501 : 400;
+  return NextResponse.json({ error: message }, { status });
+}
+
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 有副作用的 RPC 入口:先挡非本机/跨站请求(DNS rebinding + CSRF)。
   if (!isTrustedLocalRequest(req)) return loopbackForbidden();
@@ -111,38 +139,6 @@ export async function POST(req: Request): Promise<Response> {
     );
     return NextResponse.json(envelope);
   } catch (err) {
-    // SPEC §14 status mapping for thrown domain errors.
-    if (err instanceof AuthenticationError) {
-      return errorEnvelope(ErrorCode.AuthenticationError, err.message);
-    }
-    if (err instanceof OwnershipError) {
-      return errorEnvelope(ErrorCode.OwnershipError, err.message);
-    }
-    // Module domain errors carry a contract `ErrorCode` in `.code` (e.g.
-    // taxonomy's DuplicateTagError → ConflictError/409, InvalidEntityRefError →
-    // ValidationError/400, TagNotFoundError → OwnershipError/404). Map by that
-    // code so each module's errors surface with the SPEC §14 status without the
-    // route importing every module's error classes.
-    const code = (err as { code?: unknown }).code;
-    if (typeof code === "string" && code in ERROR_HTTP) {
-      // Domain errors may carry a structured `details` payload (e.g. Projects'
-      // StageGateError → { stage, missing } so the stepper can render「为什么进不
-      // 去」). Pass it through to the error envelope's details when present.
-      const rawDetails = (err as { details?: unknown }).details;
-      const details =
-        rawDetails && typeof rawDetails === "object"
-          ? (rawDetails as Record<string, unknown>)
-          : {};
-      return errorEnvelope(
-        code as ErrorCode,
-        err instanceof Error ? err.message : String(err),
-        details,
-      );
-    }
-    const message = err instanceof Error ? err.message : String(err);
-    // Unimplemented operations surface as 501 so the client throws clearly;
-    // everything else is a 400 (matches the pre-Task-9 split).
-    const status = /not implemented/i.test(message) ? 501 : 400;
-    return NextResponse.json({ error: message }, { status });
+    return dispatchErrorResponse(err);
   }
 }

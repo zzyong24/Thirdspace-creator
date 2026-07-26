@@ -18,6 +18,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ErrorCode } from "@creatoros/contract";
 
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
@@ -314,6 +315,32 @@ function operationKey(prefix: string): string {
   return `${prefix}:${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
 }
 
+export function favoriteFoldersErrorMessage(error: unknown): string {
+  const code =
+    error && typeof error === "object"
+      ? (error as { code?: unknown }).code
+      : null;
+  switch (code) {
+    case ErrorCode.DouyinFavoritesSessionExpired:
+      return "抖音收藏登录已失效，请重新登录当前账号后再读取。";
+    case ErrorCode.OwnershipError:
+    case ErrorCode.AccountRequiredError:
+      return "当前页面账号与收藏登录档案不一致，请切回正确账号后重试。";
+    case ErrorCode.DouyinFavoritesBrowserLocked:
+      return "当前账号的登录浏览器档案正在被占用，请关闭相关浏览器窗口后重试。";
+    case ErrorCode.DouyinFavoritesCaptcha:
+      return "抖音要求完成验证码，请先完成验证后再读取收藏夹。";
+    case ErrorCode.DouyinFavoritesNetwork:
+      return "读取收藏夹时网络连接失败，请检查网络后重试。";
+    case ErrorCode.DouyinFavoritesInvalidResponse:
+      return "抖音收藏接口返回了不完整数据，本次未按 0 个处理，请稍后重试。";
+    case ErrorCode.DouyinFavoritesUpstream:
+      return "抖音收藏接口暂时拒绝请求，请稍后重试。";
+    default:
+      return "收藏夹服务暂时不可用，请稍后重试；本次不会被记成 0 个。";
+  }
+}
+
 const DETAIL_WIDTH_KEY = "creatoros:intelligence:detail-width";
 const MIN_DETAIL_WIDTH = 320;
 const MAX_DETAIL_WIDTH = 640;
@@ -396,14 +423,21 @@ export function IntelligenceWorkbench({
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
+    let timer: number | null = null;
     try {
       const saved = Number(window.localStorage.getItem(DETAIL_WIDTH_KEY));
       if (Number.isFinite(saved) && saved > 0) {
-        setDetailWidth(clampDetailWidth(saved));
+        timer = window.setTimeout(
+          () => setDetailWidth(clampDetailWidth(saved)),
+          0,
+        );
       }
     } catch {
       // localStorage 不可用时使用默认宽度。
     }
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+    };
   }, []);
 
   const persistWidth = React.useCallback((width: number) => {
@@ -592,9 +626,9 @@ export function IntelligenceWorkbench({
   return (
     <section
       data-testid="intelligence-workbench"
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-[22px] border border-border/80 bg-surface shadow-[0_18px_55px_-42px_rgba(39,25,78,0.65)]"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-[22px] border border-border/80 bg-surface shadow-lg"
     >
-      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border/70 bg-[linear-gradient(110deg,rgba(120,91,255,0.08),rgba(255,255,255,0)_45%)] px-5 py-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-gradient-to-r from-brand-soft/60 via-surface to-surface px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Activity className="size-4" />
@@ -608,11 +642,11 @@ export function IntelligenceWorkbench({
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs">
-          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-full bg-warning-soft px-2.5 py-1 text-warning">
             待处理 {workspace.pendingCount}
           </span>
-          <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700">
+          <span className="rounded-full bg-danger-soft px-2.5 py-1 text-danger">
             受阻 {workspace.blockedCount}
           </span>
           <AddCollectionDialog
@@ -649,10 +683,14 @@ export function IntelligenceWorkbench({
         </div>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 grid-cols-[260px_minmax(360px,1fr)_auto]">
+      <div
+        data-testid="intelligence-responsive-layout"
+        className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto] 2xl:overflow-hidden"
+      >
         <aside
+          data-testid="intelligence-sidebar"
           aria-label="内容雷达分类和来源"
-          className="flex min-h-0 flex-col border-r border-border/70 bg-[#fbfafc]"
+          className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
         >
           <div className="shrink-0 px-4 pb-2 pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -789,7 +827,7 @@ export function IntelligenceWorkbench({
           </div>
         </main>
 
-        <div className="relative flex min-h-0">
+        <div className="relative flex min-h-[320px] xl:col-span-2 2xl:col-span-1 2xl:min-h-0">
           <div
             role="separator"
             aria-label="调整作品详情宽度"
@@ -803,15 +841,20 @@ export function IntelligenceWorkbench({
                 persistWidth(detailWidth - 24);
               }
             }}
-            className="group z-10 w-1 cursor-col-resize bg-border/60 outline-none transition hover:bg-primary/50 focus:bg-primary"
+            className="group z-10 hidden w-1 cursor-col-resize bg-border/60 outline-none transition hover:bg-primary/50 focus:bg-primary 2xl:block"
           >
             <span className="absolute left-1/2 top-1/2 h-14 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent group-hover:bg-primary/20" />
           </div>
           <aside
             data-testid="intelligence-detail"
             aria-label="作品详情"
-            style={{ width: detailWidth }}
-            className="min-h-0 shrink-0 overflow-y-auto bg-surface"
+            style={
+              {
+                width: detailWidth,
+                "--detail-width": `${detailWidth}px`,
+              } as React.CSSProperties
+            }
+            className="min-h-0 !w-full overflow-y-auto bg-surface 2xl:!w-[var(--detail-width)] 2xl:shrink-0"
           >
             {detail ? (
               <ItemDetail
@@ -856,7 +899,7 @@ function SourceRow({
   return (
     <div
       className={cn(
-        "group ml-4 mt-1 flex items-center rounded-lg",
+        "ml-4 mt-1 flex items-stretch gap-1 rounded-lg",
         active ? "bg-surface shadow-sm" : "hover:bg-muted/70",
       )}
     >
@@ -878,9 +921,10 @@ function SourceRow({
         aria-label={`同步 ${source.displayName}`}
         disabled={disabled || source.status !== "active"}
         onClick={onRun}
-        className="mr-1 rounded-md p-1.5 text-muted-foreground opacity-0 transition hover:bg-primary/10 hover:text-primary group-hover:opacity-100 focus:opacity-100 disabled:hidden"
+        className="my-1 mr-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted-foreground transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
       >
         <RefreshCw className="size-3.5" />
+        同步
       </button>
     </div>
   );
@@ -902,11 +946,11 @@ function ItemCard({
       className={cn(
         "group flex min-h-36 w-full overflow-hidden rounded-2xl border bg-surface text-left transition",
         active
-          ? "border-primary/60 shadow-[0_12px_32px_-24px_rgba(87,56,196,0.9)] ring-1 ring-primary/20"
+          ? "border-primary/60 shadow-card ring-1 ring-primary/20"
           : "border-border/80 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm",
       )}
     >
-      <div className="relative w-28 shrink-0 overflow-hidden bg-[radial-gradient(circle_at_25%_20%,rgba(130,96,255,.3),transparent_45%),linear-gradient(145deg,#f0ecff,#e7eef8)]">
+      <div className="relative w-28 shrink-0 overflow-hidden bg-gradient-to-br from-brand-soft via-surface-subtle to-surface">
         {row.item.coverUrl ? (
           <Image
             src={row.item.coverUrl}
@@ -971,7 +1015,7 @@ function ItemDetail({
   return (
     <div className="flex min-h-full flex-col">
       <div className="border-b border-border/70 p-5">
-        <div className="relative aspect-video overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_20%_10%,rgba(127,92,255,.32),transparent_40%),linear-gradient(150deg,#ede8ff,#e5eef5)]">
+        <div className="relative aspect-video overflow-hidden rounded-2xl bg-gradient-to-br from-brand-soft via-surface-subtle to-surface">
           {detail.item.coverUrl ? (
             <Image
               src={detail.item.coverUrl}
@@ -1025,13 +1069,14 @@ function ItemDetail({
               转为我的选题
             </h4>
             {latestTransform?.status === "confirmed" ? (
-              <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">
+              <span className="rounded-full bg-success-soft px-2 py-1 text-[11px] text-success">
                 已进入选题池
               </span>
             ) : null}
           </div>
           {latestTransform && topicCandidate ? (
             <TopicCandidateEditor
+              key={latestTransform.id}
               transform={{
                 ...latestTransform,
                 outputSnapshot: topicCandidate,
@@ -1061,15 +1106,15 @@ function ItemDetail({
                 生成选题候选
               </Button>
               {!positioningReady ? (
-                <p className="mt-2 text-[11px] text-amber-700">
+                <p className="mt-2 text-[11px] text-warning">
                   请先在定位中心保存一版定位。
                 </p>
               ) : detail.snapshots.length === 0 ? (
-                <p className="mt-2 text-[11px] text-amber-700">
+                <p className="mt-2 text-[11px] text-warning">
                   需要先完成一次真实同步，取得来源快照。
                 </p>
               ) : detail.transcript.status !== "done" ? (
-                <p className="mt-2 text-[11px] text-amber-700">
+                <p className="mt-2 text-[11px] text-warning">
                   请先在下方手动转写。只有完整逐字稿拆解完成后，才能生成有结构依据的选题。
                 </p>
               ) : null}
@@ -1086,7 +1131,7 @@ function ItemDetail({
               className={cn(
                 "rounded-full px-2 py-1 text-[11px]",
                 detail.transcript.status === "done"
-                  ? "bg-emerald-50 text-emerald-700"
+                  ? "bg-success-soft text-success"
                   : "bg-muted text-muted-foreground",
               )}
             >
@@ -1175,9 +1220,6 @@ function TopicCandidateEditor({
   ) => void;
 }) {
   const [candidate, setCandidate] = React.useState(transform.outputSnapshot);
-  React.useEffect(() => {
-    setCandidate(transform.outputSnapshot);
-  }, [transform.id, transform.outputSnapshot]);
   const confirmed = transform.status === "confirmed";
   return (
     <div className="mt-3 space-y-2 rounded-xl border border-primary/20 bg-primary/[0.035] p-3">
@@ -1212,7 +1254,7 @@ function TopicCandidateEditor({
           {candidate.reusablePattern ?? "—"}
         </p>
         {(candidate.factRisks?.length ?? 0) > 0 ? (
-          <p className="text-xs leading-5 text-amber-700">
+          <p className="text-xs leading-5 text-warning">
             待核验：{candidate.factRisks?.join("；")}
           </p>
         ) : null}
@@ -1514,13 +1556,14 @@ function AddSourceDialog({
           return;
         }
         if (type === "favorites_folder") {
+          setFolders([]);
           const rows = await api.listFavoriteFolders({
             accountId,
             browserSessionRef: `douyin-profile:${accountId}`,
           });
           setFolders(rows);
           if (rows.length === 0) {
-            setError("当前账号没有可读取的收藏夹，或登录状态需要刷新。");
+            setVerifiedMessage("已确认当前账号目前有 0 个收藏夹。");
             return;
           }
           setValue((current) => current || rows[0]!.id);
@@ -1544,12 +1587,12 @@ function AddSourceDialog({
             `验证成功：识别为 ${preview.type === "rss" ? "RSS/Atom" : "网页正文"}，取得 ${preview.samples.length} 条样例`,
           );
         }
-      } catch {
+      } catch (caught) {
         setError(
           type === "creator_profile"
             ? "主页验证失败：请确认已登录抖音，并输入完整的 /user/… 主页链接。"
             : type === "favorites_folder"
-              ? "收藏夹读取失败：请先绑定并登录当前抖音号。"
+              ? favoriteFoldersErrorMessage(caught)
               : "来源验证失败：请检查网址、登录状态或页面是否允许读取。",
         );
       }
@@ -1650,14 +1693,17 @@ function AddSourceDialog({
           添加来源
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[min(90vh,760px)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>添加真实来源</DialogTitle>
           <DialogDescription>
             主页、网页和收藏夹先真实验证再保存。逐字稿不会自动生成。
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-5 gap-2">
+        <div
+          data-testid="source-type-choices"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-5"
+        >
           {(
             [
               ["creator_profile", "博主主页"],
@@ -1678,7 +1724,7 @@ function AddSourceDialog({
                 resetVerification();
               }}
               className={cn(
-                "rounded-xl border px-2 py-2 text-xs transition",
+                "min-w-0 whitespace-normal break-words rounded-xl border px-2 py-2 text-xs transition",
                 type === id
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border hover:bg-muted",
@@ -1763,7 +1809,7 @@ function AddSourceDialog({
           持续监控（无需再去自动化页开启）
         </label>
         {type === "darkhorse_query" ? (
-          <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+          <p className="rounded-xl bg-warning-soft px-3 py-2 text-xs leading-5 text-warning">
             保存后由热点宝“低粉爆款”首轮任务验证登录、48 小时榜单和数据结构；不会回退到旧抖音搜索。
           </p>
         ) : (
@@ -1784,7 +1830,7 @@ function AddSourceDialog({
           </Button>
         )}
         {verifiedMessage ? (
-          <p className="text-xs leading-5 text-emerald-700">
+          <p className="text-xs leading-5 text-success">
             {verifiedMessage}
           </p>
         ) : null}

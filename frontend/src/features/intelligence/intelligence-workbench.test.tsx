@@ -1,10 +1,17 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   IntelligenceWorkbench,
   clampDetailWidth,
+  favoriteFoldersErrorMessage,
   type RadarApi,
   type RadarItemDetail,
   type RadarWorkspace,
@@ -114,6 +121,105 @@ afterEach(() => {
 });
 
 describe("T-482 内容雷达工作区", () => {
+  it("[T-520] 只用主题 token，窄桌面双栏、宽桌面三栏，关键同步操作始终可见", () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={{
+          ...workspace,
+          sources: [
+            {
+              id: "source-favorites",
+              collectionId: "collection-favorites",
+              type: "favorites_folder",
+              displayName: "收藏选题库",
+              canonicalUrl: null,
+              monitorEnabled: true,
+              status: "active",
+              lastRunAt: null,
+            },
+          ],
+        }}
+        items={[]}
+        initialDetail={null}
+        api={api()}
+      />,
+    );
+
+    const layout = screen.getByTestId("intelligence-responsive-layout");
+    expect(layout.className).toContain("xl:grid-cols");
+    expect(layout.className).toContain("2xl:grid-cols");
+    const sidebar = screen.getByTestId("intelligence-sidebar");
+    expect(sidebar.className).toContain("bg-surface-subtle");
+    expect(sidebar.className).not.toMatch(/bg-\[#|bg-white/);
+
+    const sync = screen.getByRole("button", { name: "同步 收藏选题库" });
+    expect(sync).toBeVisible();
+    expect(sync).toHaveTextContent("同步");
+    expect(sync.className).not.toContain("opacity-0");
+  });
+
+  it("[T-520] 收藏错误只按端到端结构化 code 给出不同处理建议", () => {
+    expect(
+      favoriteFoldersErrorMessage({
+        code: "DOUYIN_FAVORITES_SESSION_EXPIRED",
+      }),
+    ).toContain("登录已失效");
+    expect(
+      favoriteFoldersErrorMessage({ code: "OwnershipError" }),
+    ).toContain("账号");
+    expect(
+      favoriteFoldersErrorMessage({ code: "DOUYIN_FAVORITES_BROWSER_LOCKED" }),
+    ).toContain("占用");
+    expect(
+      favoriteFoldersErrorMessage({ code: "DOUYIN_FAVORITES_CAPTCHA" }),
+    ).toContain("验证码");
+    expect(
+      favoriteFoldersErrorMessage({ code: "DOUYIN_FAVORITES_NETWORK" }),
+    ).toContain("网络");
+    expect(
+      favoriteFoldersErrorMessage({ code: "DOUYIN_FAVORITES_UPSTREAM" }),
+    ).toContain("接口");
+    expect(
+      favoriteFoldersErrorMessage({
+        name: "DouyinFavoritesSessionExpiredError",
+        message: "看起来像登录失效，但没有 code",
+      }),
+    ).toContain("服务");
+  });
+
+  it("[T-520] 业务确认真 0 时显示真实空态，来源弹窗可滚动且选项可换行", async () => {
+    const stub = api();
+    stub.listFavoriteFolders = vi.fn().mockResolvedValue([]);
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.className).toContain("overflow-y-auto");
+    expect(dialog.className).toContain("max-h-");
+    const typeChoices = screen.getByTestId("source-type-choices");
+    expect(typeChoices.className).toContain("grid-cols-2");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "我的收藏" }),
+    );
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "读取我的收藏夹" }),
+    );
+
+    expect(
+      await screen.findByText("已确认当前账号目前有 0 个收藏夹。"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/登录已失效/)).not.toBeInTheDocument();
+  });
+
   it("按定位→雷达→选题边界显示系统分类，评论未知不伪装 0", () => {
     render(
       <IntelligenceWorkbench

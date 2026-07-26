@@ -29,6 +29,7 @@ import {
   CANONICAL_USER_ID,
   createIdentityRepository,
   createIdentityService,
+  OwnershipError,
   seedCanonicalUser,
   type IdentityService,
 } from "@creatoros/backend/modules/identity";
@@ -5511,7 +5512,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query?.accountId !== accountId ||
           query.browserSessionRef !== `douyin-profile:${accountId}`
         ) {
-          throw new Error("Intelligence source not found");
+          throw new OwnershipError(
+            "收藏登录档案与当前账号不匹配，请切回正确账号后重试",
+          );
         }
         const folders = await (
           await loadDouyinCdp()
@@ -5519,6 +5522,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           authDir: douyinAuthDirFor(accountId),
           strictEvidence: true,
           gateway: douyinGateway,
+          diagnostics: {
+            requestId: ctx.requestId,
+            accountId,
+          },
         });
         return {
           data: folders.map((folder) => ({

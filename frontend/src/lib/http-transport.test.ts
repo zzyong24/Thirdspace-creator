@@ -204,4 +204,32 @@ describe("createHttpTransport", () => {
     expect(err.code).toBeNull();
     expect(err.message).toContain("HttpTransport: 400 for projects.list: boom");
   });
+
+  it("[T-520] 收藏结构化错误经过 HttpTransport 后保留 code/details", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              error: {
+                code: "DOUYIN_FAVORITES_UPSTREAM",
+                message: "抖音收藏接口拒绝请求",
+                details: { upstreamStatusCode: 2190008 },
+              },
+              meta: { requestId: "request-520" },
+            }),
+            { status: 502 },
+          ),
+      ),
+    );
+    const err = (await createHttpTransport()
+      .request(endpoint, {} as never)
+      .then(
+        () => null,
+        (error: unknown) => error,
+      )) as HttpTransportError;
+    expect(err.code).toBe("DOUYIN_FAVORITES_UPSTREAM");
+    expect(err.details).toEqual({ upstreamStatusCode: 2190008 });
+  });
 });

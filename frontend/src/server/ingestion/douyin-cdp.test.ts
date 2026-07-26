@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   parseWorkList,
   parseSelfIdentity,
@@ -14,6 +14,11 @@ import {
   fetchDouyinIdentity,
   locatePlaywrightCli,
   DouyinNotLoggedInError,
+  DouyinFavoritesBrowserLockedError,
+  DouyinFavoritesCaptchaError,
+  DouyinFavoritesInvalidResponseError,
+  DouyinFavoritesNetworkError,
+  DouyinFavoritesSessionExpiredError,
   parseDouyinVideoUrl,
   extractDouyinShareUrl,
   resolveDouyinShareTarget,
@@ -2282,6 +2287,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
   it("cursor 分页聚合:has_more=1 翻页,同夹去重,has_more=0 停", async () => {
     const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
     const page1 = {
+      status_code: 0,
       collects_list: [
         { collects_id_str: "f-1", collects_name: "选题库", total_number: 12 },
       ],
@@ -2289,6 +2295,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
       has_more: 1,
     };
     const page2 = {
+      status_code: 0,
       collects_list: [
         { collects_id_str: "f-1", collects_name: "选题库", total_number: 12 }, // 重复 → 去重
         { collects_id_str: "f-2", collects_name: "灵感夹", total_number: 5 },
@@ -2310,7 +2317,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
     expect(calls.urls.some((u) => u.includes("cursor=20"))).toBe(true);
   });
 
-  it("未登录 → DouyinNotLoggedInError(context 仍关闭)", async () => {
+  it("[T-520] 未登录 → 结构化 session-expired code(context 仍关闭)", async () => {
     const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
     const { ctx, calls } = makeCollectsContext({ loggedIn: false });
     await expect(
@@ -2318,7 +2325,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
         { authDir: "/fake/.auth" },
         { openContext: async () => ctx },
       ),
-    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    ).rejects.toBeInstanceOf(DouyinFavoritesSessionExpiredError);
     expect(calls.close).toBe(1);
   });
 
@@ -2335,12 +2342,150 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
     expect(out).toEqual([]);
     expect(calls.fetch).toBe(0); // 验证码即停,不再打接口
   });
+
+  it("[T-520] 严格读取命中验证码时抛结构化验证码错误", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      bodyText: "请完成安全验证后继续访问",
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesCaptchaError);
+  });
+
+  it.each([
+    ["缺 status_code", { collects_list: [] }],
+    ["非数字 status_code", { status_code: "0", collects_list: [] }],
+    ["非法列表结构", { status_code: 0, collects_list: null }],
+    [
+      "非空列表全部是无 id 脏条目",
+      { status_code: 0, collects_list: [{ collects_name: "脏条目" }] },
+    ],
+  ])("[T-520] %s 必须失败，不能伪装真 0", async (_label, payload) => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [payload],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesInvalidResponseError);
+  });
+
+  it("[T-520] 只有 status_code=0 + 合法空列表才是真 0", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        { status_code: 0, collects_list: [], cursor: 0, has_more: 0 },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => ctx },
+      ),
+    ).resolves.toEqual([]);
+  });
+
+  it("[T-520] HTTP 200 内的登录业务码和其他非零业务码分别结构化", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const expired = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        { status_code: 8, status_msg: "用户未登录", collects_list: [] },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => expired.ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesSessionExpiredError);
+
+    const upstream = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        {
+          status_code: 2190008,
+          status_msg: "service rejected",
+          collects_list: [],
+        },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => upstream.ctx },
+      ),
+    ).rejects.toMatchObject({
+      code: "DOUYIN_FAVORITES_UPSTREAM",
+      details: { upstreamStatusCode: 2190008 },
+    });
+  });
+
+  it("[T-520] 页内网络失败与浏览器档案锁分别结构化，日志不带原始错误", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const network = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        {
+          __creatorosFavoritesError: "network",
+          raw: "cookie=sessionid-secret token=do-not-log",
+        },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        {
+          authDir: "/fake/.auth",
+          strictEvidence: true,
+          diagnostics: { requestId: "request-520", accountId: "account-1" },
+        },
+        { openContext: async () => network.ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesNetworkError);
+
+    await expect(
+      fetchDouyinCollectsFolders(
+        {
+          authDir: "/fake/.auth",
+          strictEvidence: true,
+          diagnostics: { requestId: "request-521", accountId: "account-1" },
+        },
+        {
+          openContext: async () => {
+            throw new Error(
+              "browserType.launchPersistentContext: SingletonLock profile in use secret-cookie",
+            );
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesBrowserLockedError);
+
+    const log = warn.mock.calls.flat().join(" ");
+    expect(log).toContain("request-520");
+    expect(log).toContain("request-521");
+    expect(log).not.toContain("sessionid-secret");
+    expect(log).not.toContain("do-not-log");
+    expect(log).not.toContain("secret-cookie");
+    warn.mockRestore();
+  });
 });
 
 describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {
   // 造一页 n 条视频(awemeId 前缀区分页)。
   function videoPage(prefix: string, n: number, over: Record<string, unknown> = {}) {
     return {
+      status_code: 0,
       aweme_list: Array.from({ length: n }, (_, i) => ({
         aweme_id: `${prefix}-${i}`,
         desc: `视频 ${prefix}-${i}`,
@@ -2351,6 +2496,27 @@ describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {
       ...over,
     };
   }
+
+  it("[T-520] 视频列表同样要求数字 status_code 与合法 aweme_list", async () => {
+    const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [{ status_code: 0, aweme_list: null, has_more: 0 }],
+    });
+    await expect(
+      fetchDouyinCollectsVideos(
+        {
+          authDir: "/fake/.auth",
+          collectsId: "folder-1",
+          strictEvidence: true,
+        },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toMatchObject({
+      code: "DOUYIN_FAVORITES_INVALID_RESPONSE",
+      details: { reason: "videos" },
+    });
+  });
 
   it("分页聚合直到 has_more 假;请求 URL 带 collects_id", async () => {
     const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");
