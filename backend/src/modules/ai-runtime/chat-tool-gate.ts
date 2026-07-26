@@ -483,7 +483,20 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       const result = await config.execute(input, callOptions);
       const bounded = enforceChatToolResultBudget(result, budget);
       // 【T-239e 挂点】usage 归因扩展字段(tokens/费用)加在这行日志上,别另起打点层。
-      console.log(`[chat-tool] name=${name} ok durationMs=${Date.now() - startedAt}`);
+      const resultRecord =
+        result && typeof result === "object"
+          ? (result as unknown as Record<string, unknown>)
+          : null;
+      const rawTaskId =
+        resultRecord && typeof resultRecord.taskId === "string"
+          ? resultRecord.taskId.trim()
+          : "";
+      const taskId = rawTaskId
+        ? ` taskId=${rawTaskId.replace(/[^\w.:-]/g, "_").slice(0, 160)}`
+        : "";
+      console.log(
+        `[chat-tool] name=${name} ok durationMs=${Date.now() - startedAt}${taskId}`,
+      );
       return bounded;
     } catch (err) {
       console.log(

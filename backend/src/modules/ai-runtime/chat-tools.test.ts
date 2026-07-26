@@ -2588,6 +2588,36 @@ describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () =>
   });
 });
 
+describe("[T-522] 同回合昂贵只读工具同参去重", () => {
+  it("material.gather 同一工具实例、规范化后同参复用一次 Promise；异参仍执行", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["material.gather"], deps);
+    const gather = tools["material.gather"]!;
+
+    await Promise.all([
+      runExecute(gather, { query: "  RAG   落地  " }),
+      runExecute(gather, { query: "RAG 落地" }),
+    ]);
+    expect(deps.gatherMaterials).toHaveBeenCalledTimes(1);
+
+    await runExecute(gather, { query: "Agent 评测" });
+    expect(deps.gatherMaterials).toHaveBeenCalledTimes(2);
+  });
+
+  it("新的 allChatTools 实例不复用上一回合缓存", async () => {
+    const { deps } = makeDeps();
+    await runExecute(
+      buildChatTools(["material.gather"], deps)["material.gather"]!,
+      { query: "RAG 落地" },
+    );
+    await runExecute(
+      buildChatTools(["material.gather"], deps)["material.gather"]!,
+      { query: "RAG 落地" },
+    );
+    expect(deps.gatherMaterials).toHaveBeenCalledTimes(2);
+  });
+});
+
 // ── [T-251] web.read 全文分窗读取 —— 端口回全文 → execute 按窗返回(默认/封顶 12000);
 //    旧端口无 fullText → 退回 excerpt(window=null 诚实无窗口真相);fromCache 透传。
 describe("[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段)", () => {

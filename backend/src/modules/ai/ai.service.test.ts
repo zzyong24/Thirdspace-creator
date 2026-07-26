@@ -160,6 +160,76 @@ describe("ai service", () => {
     expect((await service.getTask(ctx, task.id)).status).toBe("running");
   });
 
+  it("[T-522] runner 失败只在 failed 真正落库后记录终态日志", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const { service } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "scheduled.self.metrics",
+      inputData: {},
+    });
+    await service.markRunning(ctx, task.id);
+    await service.markFailed(ctx, task.id, "collector failed");
+
+    const stored = await service.getTask(ctx, task.id);
+    expect(stored.status).toBe("failed");
+    expect(stored.completedAt).toBe(NOW);
+    expect(log).toHaveBeenCalledWith(
+      `[ai-task-runner] taskId=${task.id} taskType=scheduled.self.metrics status=failed finishReason=null usage=null candidateCount=0`,
+    );
+  });
+
+  it("[T-522] awaiting 日志的 candidateCount 只数候选 resultType，不把 audit/aux 行算进去", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const { service } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "script.draft",
+      inputData: {},
+    });
+    await service.recordAuxResult(ctx, task.id, {
+      resultType: "execution_adopted_item",
+      resultData: { path: "out/a.md", assetId: "asset-1" },
+    });
+    await service.recordAuxResult(ctx, task.id, {
+      resultType: "task_audit",
+      resultData: { event: "runner_started" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "artifact_version",
+      resultData: {
+        body: "完整脚本",
+        finishReason: "stop",
+        usage: { inputTokens: 120, outputTokens: 80, totalTokens: 200 },
+      },
+    });
+
+    expect((await service.getTask(ctx, task.id)).status).toBe(
+      "awaiting_confirmation",
+    );
+    expect(log).toHaveBeenCalledWith(
+      `[ai-task-runner] taskId=${task.id} taskType=script.draft status=awaiting_confirmation finishReason=stop usage={"inputTokens":120,"outputTokens":80,"totalTokens":200} candidateCount=1`,
+    );
+  });
+
+  it("[T-522] runner 成功日志同样在 succeeded 落库后记录，纯 aux 结果不算候选", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const { service } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "scheduled.competitor.collect",
+      inputData: {},
+    });
+    await service.markRunning(ctx, task.id);
+    await service.recordAuxResult(ctx, task.id, {
+      resultType: "execution_adopted",
+      resultData: { adoptedAssetIds: ["asset-1"] },
+    });
+    await service.markSucceeded(ctx, task.id);
+
+    expect((await service.getTask(ctx, task.id)).status).toBe("succeeded");
+    expect(log).toHaveBeenCalledWith(
+      `[ai-task-runner] taskId=${task.id} taskType=scheduled.competitor.collect status=succeeded finishReason=null usage=null candidateCount=0`,
+    );
+  });
+
   it("confirmTask on a candidate_list materializes each topic via candidate.createFromAIResult and flips succeeded", async () => {
     const { service, candidate } = makeService(db);
     const task = await service.createTask(ctx, {
@@ -1240,6 +1310,16 @@ describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", ()
     expect(running.every((r) => typeof r.startedAt === "string")).toBe(true);
     // [T-389] 投影带 taskType:sweep 类型感知(进程内 runner 重启即死立即判死)靠它分流。
     expect(running.every((r) => r.taskType === "topic.generate")).toBe(true);
+    expect(
+      running
+        .map((r) => ({ id: r.id, accountId: r.accountId }))
+        .sort((a, b) => a.id.localeCompare(b.id)),
+    ).toEqual(
+      [
+        { id: t1.id, accountId: ctxAcct1.accountId },
+        { id: t2.id, accountId: ctxAcct2.accountId },
+      ].sort((a, b) => a.id.localeCompare(b.id)),
+    );
   });
 
   it("§4.6 确认门:跨号 confirmTask 被拒(strict requireTask → 404),同号可确认", async () => {

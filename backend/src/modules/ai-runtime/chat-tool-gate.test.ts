@@ -210,6 +210,24 @@ describe("defineChatTool 审计打点", () => {
     );
   });
 
+  it("[T-522] 异步 dispatch 成功日志带脱敏 taskId，可与 runner 终态日志关联", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const dispatched = defineChatTool("script.draft", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => ({
+        kind: "script.draft" as const,
+        taskId: "task 1\nsecret",
+      }),
+    });
+    await executeOf(dispatched)({}, {});
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^\[chat-tool\] name=script\.draft ok durationMs=\d+ taskId=task_1_secret$/,
+      ),
+    );
+  });
+
   it("[T-486] 失败日志包含错误分类与脱敏原因，不泄露 token", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     const bad = defineChatTool("context.materials", {

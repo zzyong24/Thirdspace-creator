@@ -79,9 +79,13 @@ describe("[T-239d] env 解析器", () => {
 });
 
 describe("[T-239d] tool-result 清体(近 N 轮之外)", () => {
-  it("N 轮之前的 tool 输出替换为指针占位;近 N 轮原样", () => {
-    const messages = turns(6); // 6 轮,keepToolResultTurns=4 → 前 2 轮清体
-    const p = projectChatHistory(messages, baseOpts);
+  it("上下文逼近预算时,N 轮之前的 tool 输出替换为指针占位;近 N 轮原样", () => {
+    const messages = turns(6, 3000); // 超 1000×80% 阈值,keepToolResultTurns=4 → 前 2 轮清体
+    const p = projectChatHistory(messages, {
+      ...baseOpts,
+      keepTurns: 100,
+      contextWindowTokens: 1000,
+    });
     expect(p.cleared).toBe(2);
     // 前 2 轮 assistant 的 tool part 输出已清
     for (const i of [0, 1]) {
@@ -96,11 +100,20 @@ describe("[T-239d] tool-result 清体(近 N 轮之外)", () => {
     for (const i of [2, 3, 4, 5]) {
       const a = p.messages[i * 2 + 1] as { parts: Array<Record<string, unknown>> };
       const tool = a.parts.find((x) => x.type === "tool-context.projects")!;
-      expect(tool.output).toEqual({ rows: "x".repeat(10) });
+      expect(tool.output).toEqual({ rows: "x".repeat(3000) });
     }
     // 文本 part 不动
     const first = p.messages[1] as { parts: Array<Record<string, unknown>> };
     expect(first.parts[0]).toEqual({ type: "text", text: "回复 a-0" });
+  });
+
+  it("[T-522] 预算充足时不因轮龄机械删除工具证据", () => {
+    const messages = turns(20, 10);
+    const p = projectChatHistory(messages, baseOpts);
+    expect(p.estBefore).toBeLessThan(baseOpts.contextWindowTokens * 0.8);
+    expect(p.cleared).toBe(0);
+    expect(p.truncated).toBe(0);
+    expect(p.messages).toEqual(messages);
   });
 
   it("轮数 ≤ N → 不清体、不截窗、消息原样", () => {

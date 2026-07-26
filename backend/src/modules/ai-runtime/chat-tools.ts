@@ -2333,6 +2333,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
   // [T-473] allChatTools 每个 chat request 只构造一次，因此此 Map 的生命周期恰好是一回合。
   // 同一回合里弱模型若用同参重复调 topic.enrich，复用第一次 Promise/结果，不重复跑昂贵 runner。
   const topicEnrichRuns = new Map<string, Promise<TopicEnrichToolResult>>();
+  // [T-522] 只缓存纯读的 material.gather；Map 随 allChatTools 实例销毁，因此不会跨
+  // 回合、账号或过期窗口复用，也不触碰 screenshot/generate 等有副作用工具。
+  const materialGatherRuns = new Map<
+    string,
+    Promise<MaterialGatherToolResult>
+  >();
   return {
     "topic.generate": defineChatTool("topic.generate", {
       // [T-245] 热点能力认知:明说 basis=trend 会自动拉真实热点信号(T-235b 信源系统 + web 搜索),
@@ -2502,8 +2508,17 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {
-        const { items, grounding } = await deps.gatherMaterials({ query });
-        return { kind: "material.gather", grounding, items };
+        const normalizedQuery = (query ?? "").trim().replace(/\s+/g, " ");
+        const existing = materialGatherRuns.get(normalizedQuery);
+        if (existing) return existing;
+        const run = (async (): Promise<MaterialGatherToolResult> => {
+          const { items, grounding } = await deps.gatherMaterials({
+            query: normalizedQuery,
+          });
+          return { kind: "material.gather", grounding, items };
+        })();
+        materialGatherRuns.set(normalizedQuery, run);
+        return run;
       },
     }, deps.humanizeError),
     // [T-084b] 自动化截图:给公开 URL,服务端真开无头浏览器截图 → 落素材中心(带 sourceUrl

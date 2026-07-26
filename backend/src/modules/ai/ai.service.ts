@@ -291,12 +291,19 @@ export interface AiService {
     },
   ): Promise<{ rows: AITaskResource[]; total: number }>;
   /** [T-332 S2 修补] 系统级扫僵尸(启动 sweepStaleAiTasks 用):跨账号列该 user 所有
-   *  running ai_task 的 {id, taskType, startedAt} 投影。**不经 requireAccountId** —— 调用方是
+   *  running ai_task 的 {id, accountId, taskType, startedAt} 投影。**不经 requireAccountId** —— 调用方是
    *  系统 daemon(schedulerCtx 无选中号)。用户面 listTasks 仍 strict 按号。
    *  [T-389] 投影带 taskType:sweep 类型感知(进程内 runner 重启即死,立即判死不看年龄)。 */
   listRunningTasksSystem(
     ctx: RequestContext,
-  ): Promise<{ id: string; taskType: string; startedAt: string | null }[]>;
+  ): Promise<
+    {
+      id: string;
+      accountId: string;
+      taskType: string;
+      startedAt: string | null;
+    }[]
+  >;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   cancelTask(
@@ -462,6 +469,49 @@ function stableHash(parts: string[]): string {
   return (h >>> 0).toString(16).padStart(8, "0");
 }
 
+// Only rows written through recordCandidate represent an AI candidate. The same result
+// table also carries adoption/audit rows written through recordAuxResult; counting every
+// row makes terminal telemetry lie as soon as an execution task emits its audit journal.
+const CANDIDATE_RESULT_TYPES = new Set([
+  "artifact_version",
+  "calibration_diagnosis",
+  "calibration_score",
+  "candidate",
+  "candidate_list",
+  "execution_manifest",
+  "generated_asset",
+  "learning_list",
+  "material_link_list",
+  "material_list",
+  "positioning_profile",
+  "publication_drafts",
+  "topic_card",
+  "video_decisions",
+]);
+
+function sanitizeRunnerLogValue(value: string): string {
+  return value.replace(/[^\w.:-]/g, "_").slice(0, 160);
+}
+
+function runnerUsageForLog(value: unknown): Record<string, number> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  const usage: Record<string, number> = {};
+  for (const key of [
+    "inputTokens",
+    "outputTokens",
+    "cachedTokens",
+    "totalTokens",
+    "promptTokens",
+    "completionTokens",
+  ]) {
+    if (typeof source[key] === "number" && Number.isFinite(source[key])) {
+      usage[key] = source[key];
+    }
+  }
+  return Object.keys(usage).length > 0 ? usage : null;
+}
+
 export function createAiService(deps: ServiceDeps): AiService {
   // [T-332 S2 · SPEC §4.2/C-07] 每个经 ctx 的入口都经此建 repo:未选号(0 号 / 引导态)
   // → AccountRequiredError(前端译成「绑定抖音号后开始」,禁建会话/任务、禁读历史)。
@@ -474,6 +524,58 @@ export function createAiService(deps: ServiceDeps): AiService {
       userId: ctx.userId,
       accountId: requireAccountId(ctx.accountId, op),
     });
+  }
+
+  async function logRunnerState(
+    repo: AiRepository,
+    taskId: string,
+  ): Promise<void> {
+    try {
+      // Re-read after the lifecycle write. This deliberately prevents a "running" log
+      // from racing ahead of the persisted awaiting/succeeded/failed state.
+      const task = await repo.requireTask(taskId);
+      const results = await repo.listResults(taskId);
+      const candidates = results.filter((result) =>
+        CANDIDATE_RESULT_TYPES.has(result.resultType),
+      );
+      let finishReason: string | null = null;
+      let usage: Record<string, number> | null = null;
+      for (let i = candidates.length - 1; i >= 0; i -= 1) {
+        const resultData = candidates[i]?.resultData;
+        if (
+          !resultData ||
+          typeof resultData !== "object" ||
+          Array.isArray(resultData)
+        ) {
+          continue;
+        }
+        const record = resultData as Record<string, unknown>;
+        if (
+          finishReason === null &&
+          typeof record.finishReason === "string"
+        ) {
+          const normalized = record.finishReason.trim();
+          finishReason = normalized
+            ? sanitizeRunnerLogValue(normalized)
+            : null;
+        }
+        if (usage === null) usage = runnerUsageForLog(record.usage);
+        if (finishReason !== null && usage !== null) break;
+      }
+      console.log(
+        `[ai-task-runner] taskId=${sanitizeRunnerLogValue(task.id)} ` +
+          `taskType=${sanitizeRunnerLogValue(task.taskType)} status=${task.status} ` +
+          `finishReason=${finishReason ?? "null"} ` +
+          `usage=${usage ? JSON.stringify(usage) : "null"} ` +
+          `candidateCount=${candidates.length}`,
+      );
+    } catch (error) {
+      // Telemetry must never overwrite the runner's real outcome.
+      console.error(
+        `[ai-task-runner] taskId=${sanitizeRunnerLogValue(taskId)} log_error`,
+        error,
+      );
+    }
   }
 
   return {
@@ -1168,6 +1270,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         completedAt: deps.now(),
         errorMessage: errorMessage ?? null,
       });
+      await logRunnerState(repo, taskId);
       return toTaskDto(updated);
     },
 
@@ -1194,6 +1297,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const rows = await repo.listRunningTasksSystem();
       return rows.map((r) => ({
         id: r.id,
+        accountId: r.accountId,
         taskType: r.taskType, // [T-389] 透传给 sweep 做类型感知判死
         startedAt: r.startedAt ?? r.requestedAt,
       }));
@@ -1225,6 +1329,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         status: "succeeded",
         completedAt: deps.now(),
       });
+      await logRunnerState(repo, taskId);
     },
 
     async markFailed(ctx, taskId, errorMessage) {
@@ -1238,6 +1343,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         completedAt: deps.now(),
         errorMessage: errorMessage ?? null,
       });
+      await logRunnerState(repo, taskId);
     },
 
     async listResults(ctx, taskId) {
@@ -1329,6 +1435,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const updated = await repo.updateTaskStatus(taskId, {
         status: "awaiting_confirmation",
       });
+      await logRunnerState(repo, taskId);
       return toTaskDto(updated);
     },
   };

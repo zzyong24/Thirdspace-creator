@@ -480,7 +480,14 @@ export interface SweepStaleAiTasksDeps {
    *  startedAt 缺失时 host 用 requestedAt 兜底填入;[T-389] 带 taskType 做类型感知)。 */
   listRunningTasks: (
     ctx: RequestContext,
-  ) => Promise<{ id: string; taskType: string; startedAt: string | null }[]>;
+  ) => Promise<
+    {
+      id: string;
+      accountId: string;
+      taskType: string;
+      startedAt: string | null;
+    }[]
+  >;
   /** 标 failed(host 绑 aiService.markFailed;no-op-safe,已终态吞冲突)。 */
   markFailed: (
     ctx: RequestContext,
@@ -543,7 +550,8 @@ export async function sweepStaleAiTasks(
         "启动扫超时(stale-on-boot):进程重启前该任务仍悬挂在 running,标记为 failed";
     }
     try {
-      await deps.markFailed(deps.ctx, t.id, reason);
+      // 系统读可以跨账号，但终态写必须重新收窄到每条任务的真实属主号。
+      await deps.markFailed({ ...deps.ctx, accountId: t.accountId }, t.id, reason);
       swept += 1;
     } catch (e) {
       // 单条 markFailed 失败不阻断其余(fire-and-forget 兜底语义)。

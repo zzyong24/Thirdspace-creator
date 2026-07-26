@@ -155,6 +155,7 @@ export interface AiRepository {
   listRunningTasksSystem(): Promise<
     {
       id: string;
+      accountId: string;
       taskType: string;
       startedAt: string | null;
       requestedAt: string;
@@ -369,6 +370,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       const rows = await db
         .select({
           id: aiTasks.id,
+          accountId: aiTasks.accountId,
           taskType: aiTasks.taskType, // [T-389] sweep 类型感知:进程内 runner 重启即死,判死不看年龄
           startedAt: aiTasks.startedAt,
           requestedAt: aiTasks.requestedAt,
