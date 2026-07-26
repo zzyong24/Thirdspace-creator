@@ -88,6 +88,16 @@ interface KnowledgeListDto {
   readonly sourceNote?: string | null;
   readonly usedCount?: number;
   readonly usedInPublished?: boolean;
+  readonly folderId?: string | null;
+  readonly assetId?: string | null;
+}
+
+interface KnowledgeFolderDto {
+  readonly id: string;
+  readonly parentId: string | null;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 // `knowledge.relations.list` returns KnowledgeRelationResource rows for ONE
@@ -203,6 +213,11 @@ export interface KnowledgeDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  listKnowledgeFolders?(input: {
+    params: undefined;
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -298,6 +313,7 @@ export async function buildKnowledgeDashboardViewModel(
   // every per-item read threw) means "no relations signal" → those blocks read
   // EMPTY (honest), never seed fixtures.
   const relations = await collectRelations(client, items);
+  const workspaceFolders = await fetchWorkspaceFolders(client);
 
   // REAL tag rows via taxonomy.tags.list — read once, serve both 热门标签 and
   // the KNOW-13 tag filter (name → tagId resolution). Independently guarded:
@@ -355,7 +371,34 @@ export async function buildKnowledgeDashboardViewModel(
     activeTag,
     atlas,
     graph,
+    workspace: {
+      folders: workspaceFolders,
+      items: items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        folderId: item.folderId ?? null,
+        assetId: item.assetId ?? null,
+        knowledgeType: item.knowledgeType,
+        status: item.status,
+        updatedAt: item.updatedAt,
+      })),
+    },
   };
+}
+
+async function fetchWorkspaceFolders(
+  client: KnowledgeDataClient,
+): Promise<ReadonlyArray<KnowledgeFolderDto>> {
+  if (!client.listKnowledgeFolders) return [];
+  try {
+    return (await client.listKnowledgeFolders({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    })) as ReadonlyArray<KnowledgeFolderDto>;
+  } catch {
+    return [];
+  }
 }
 
 // [T-118b/T-119] 「最近更新」混排每页条数。

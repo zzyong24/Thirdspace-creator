@@ -11,7 +11,6 @@ import type { RepoDeps } from "./assets.repository";
 import {
   OwnershipError,
   InvalidTransitionError,
-  ConflictError,
   UploadValidationError,
   requireAccountId,
 } from "./assets.errors";
@@ -54,6 +53,7 @@ const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
 
 export interface AssetUploadDto {
   uploadId: string;
+  assetId: string;
   storageKey: string;
   uploadUrl: string;
   expiresAt: string;
@@ -402,6 +402,7 @@ export function createAssetsService(
     },
 
     async createUpload(ctx, input) {
+      const accountId = requireAccountId(ctx.accountId, "assets.createUpload");
       // SPEC §20 input validation (phase 1).
       if (!ASSET_TYPES.has(input.assetType)) {
         throw new UploadValidationError(`Invalid assetType: ${input.assetType}`);
@@ -436,12 +437,15 @@ export function createAssetsService(
         mimeType: input.mimeType,
         fileSize: input.fileSize,
         // [T-157] 存储 key 按当前抖音号分区(未选号 → _default);向后兼容。
-        accountId: ctx.accountId ?? null,
+        accountId,
         folder: folder ?? undefined,
         fileName: input.fileName,
       });
       const expiresAt = deps.now();
+      const assetId = deps.nextId("asset");
       const session = await repo.createUploadSession(ctx.userId, {
+        accountId,
+        assetId,
         assetType: input.assetType,
         mimeType: input.mimeType,
         fileSize: input.fileSize,
@@ -450,6 +454,7 @@ export function createAssetsService(
       });
       return {
         uploadId: session.id,
+        assetId: session.assetId,
         storageKey: session.storageKey,
         uploadUrl,
         expiresAt: session.expiresAt,
@@ -457,55 +462,37 @@ export function createAssetsService(
     },
 
     async completeUpload(ctx, uploadId, input) {
-      // [T-332 S2 · C-08] 确认落 assets 的入口:上传会话本身 user 级,但物化 asset
-      // 必须归号 —— 未选号 → AccountRequiredError(不 stamp null)。
       const accountId = requireAccountId(ctx.accountId, "assets.completeUpload");
-      // Load the session scoped to the ctx user (foreign/unknown → 404).
-      const session = await repo.getUploadSession(ctx.userId, uploadId);
+      // 上传会话从创建起就绑定账号；换号后与不存在同貌，不能把 A 号上传完成到 B 号。
+      const session = await repo.getUploadSession(
+        ctx.userId,
+        uploadId,
+        accountId,
+      );
       if (!session) throw new OwnershipError("Upload session not found");
-      // Idempotency guard: a session is single-use (created → completed).
-      if (session.status !== "created") {
-        throw new ConflictError("Upload session already completed");
+      if (session.status === "completed") {
+        const existing = await repo.getAsset(
+          ctx.userId,
+          session.assetId,
+          accountId,
+        );
+        if (!existing) throw new OwnershipError("Completed asset not found");
+        return existing;
       }
       // SPEC §20: validate the stored object's MIME/size/checksum via headObject.
       const storage = await objectStorageForCtx(ctx);
       const head = await storage.headObject(session.storageKey);
-      // Materialize: create the asset (active), then the first file (v1), then
-      // re-point currentFileId. The repo stamps userId + status='active'.
-      const asset = await repo.insertAsset(
+      const asset = await repo.completeUploadSession(
         ctx.userId,
+        uploadId,
+        accountId,
         {
-          assetType: session.assetType,
           name: input.name,
-          currentFileId: null,
+          head,
         },
-        accountId,
       );
-      const file = await repo.insertAssetFile(
-        ctx.userId,
-        {
-          assetId: asset.id,
-          storageKey: session.storageKey,
-          mimeType: head.mimeType || session.mimeType,
-          fileSize: head.fileSize || session.fileSize,
-          checksum: head.checksum,
-          width: head.width,
-          height: head.height,
-          durationMs: head.durationMs,
-          mediaMetadata: head.mediaMetadata,
-        },
-        accountId,
-      );
-      const updated = await repo.updateAssetStatus(
-        ctx.userId,
-        asset.id,
-        {
-          currentFileId: file.id,
-        },
-        accountId,
-      );
-      await repo.markUploadCompleted(ctx.userId, uploadId);
-      return updated ?? asset;
+      if (!asset) throw new OwnershipError("Upload session not found");
+      return asset;
     },
 
     async createGeneratedAsset(ctx, input) {

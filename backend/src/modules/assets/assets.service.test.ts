@@ -75,6 +75,7 @@ describe("assets.service — createUpload (C3)", () => {
       fileSize: 100,
     });
     expect(session.uploadId).toBeTruthy();
+    expect(session.assetId).toBeTruthy();
     expect(session.storageKey).toBeTruthy();
     expect(session.uploadUrl).toContain(session.storageKey);
     expect(session.expiresAt).toBe(NOW);
@@ -115,16 +116,16 @@ describe("assets.service — completeUpload (C4)", () => {
     expect(got.name).toBe("新素材");
   });
 
-  it("second complete on the same session → ConflictError (idempotency)", async () => {
+  it("second complete on the same session replays the same asset", async () => {
     const session = await service.createUpload(ctxA, {
       assetType: "image",
       mimeType: "image/png",
       fileSize: 1,
     });
-    await service.completeUpload(ctxA, session.uploadId, { name: "x" });
-    await expect(
-      service.completeUpload(ctxA, session.uploadId, { name: "x" }),
-    ).rejects.toBeInstanceOf(ConflictError);
+    const first = await service.completeUpload(ctxA, session.uploadId, { name: "x" });
+    const replay = await service.completeUpload(ctxA, session.uploadId, { name: "x" });
+    expect(replay.id).toBe(first.id);
+    expect(replay.currentFileId).toBe(first.currentFileId);
   });
 
   it("session for the wrong user → OwnershipError", async () => {
@@ -348,7 +349,7 @@ describe("assets.service — §12 archive (C8)", () => {
 
 // [T-332 S2] service 入口账号断言 + 双账号隔离(未选号=引导态;by-id 跨号 404)。
 describe("assets.service — per-account strict (T-332 S2)", () => {
-  it("未选号(ctx.accountId 缺失)读写 → AccountRequiredError;createUpload 例外(C-08 user 级)", async () => {
+  it("未选号(ctx.accountId 缺失)读写与 createUpload 都拒绝", async () => {
     const noAcct: RequestContext = {
       userId: "user-a",
       requestId: "req-na",
@@ -361,17 +362,27 @@ describe("assets.service — per-account strict (T-332 S2)", () => {
     await expect(service.getAsset(noAcct, "asset-x")).rejects.toMatchObject({
       name: "AccountRequiredError",
     });
-    // C-08:上传会话是 user 级,未选号也能开(账号断言在 completeUpload)。
-    const session = await service.createUpload(noAcct, {
+    await expect(
+      service.createUpload(noAcct, {
+        assetType: "image",
+        mimeType: "image/png",
+        fileSize: 10,
+      }),
+    ).rejects.toMatchObject({ name: "AccountRequiredError" });
+  });
+
+  it("upload intent 固定账号，切号 complete 与不存在同貌", async () => {
+    const session = await service.createUpload(ctxA, {
       assetType: "image",
       mimeType: "image/png",
       fileSize: 10,
     });
-    expect(session.uploadId).toBeTruthy();
-    // 确认落 assets 的入口必须有号。
+    const switched: RequestContext = { ...ctxA, accountId: "acct-other" };
     await expect(
-      service.completeUpload(noAcct, session.uploadId, { name: "x" }),
-    ).rejects.toMatchObject({ name: "AccountRequiredError" });
+      service.completeUpload(switched, session.uploadId, { name: "x" }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    await expect(service.completeUpload(ctxA, session.uploadId, { name: "x" }))
+      .resolves.toMatchObject({ id: session.assetId });
   });
 
   it("双账号 asset 隔离 + by-id 跨号 404(同 user 两个号)", async () => {

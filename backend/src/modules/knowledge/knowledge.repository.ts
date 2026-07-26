@@ -20,6 +20,7 @@ import {
   knowledgeItems,
   knowledgeRevisions,
   knowledgeRelations,
+  knowledgeFolders,
 } from "./knowledge.db-schema";
 import { OwnershipError, ConflictError } from "./knowledge.errors";
 
@@ -48,6 +49,7 @@ export type KnowledgeItemWithStats = KnowledgeItemRow & {
   usedInPublished: boolean;
 };
 export type KnowledgeRevisionRow = typeof knowledgeRevisions.$inferSelect;
+export type KnowledgeFolderRow = typeof knowledgeFolders.$inferSelect;
 type KnowledgeRelationDbRow = typeof knowledgeRelations.$inferSelect;
 
 // `strength` is stored as a decimal string; the repo parses it to Number so the
@@ -72,6 +74,18 @@ export interface KnowledgeRepository {
   seedKnowledge(rows: KnowledgeItemRow[]): Promise<void>;
   seedRevisions(rows: KnowledgeRevisionRow[]): Promise<void>;
   seedRelations(rows: KnowledgeRelationDbRow[]): Promise<void>;
+  listFolders(userId: string, accountId: AccountScope): Promise<KnowledgeFolderRow[]>;
+  createFolder(
+    userId: string,
+    accountId: AccountScope,
+    input: { name: string; parentId?: string | null },
+  ): Promise<KnowledgeFolderRow>;
+  moveToFolder(
+    userId: string,
+    accountId: AccountScope,
+    knowledgeId: string,
+    folderId: string | null,
+  ): Promise<KnowledgeItemWithStats>;
   // [T-079a] list/get 返回带战绩投影的行(usedCount/usedInPublished);写路径的
   // 内部所有权门仍走轻量行读,不为门查询付统计成本。
   // [T-332 S2] 每个方法 userId 后紧跟 accountId(strict:eq 收窄,无 null 退化)。
@@ -120,6 +134,8 @@ export interface KnowledgeRepository {
       // [T-092] 评论回流:来源枚举(缺省 manual)+ 溯源/幂等锚 metadata(缺省 {})。
       sourceType?: string;
       sourceMetadata?: Record<string, unknown>;
+      folderId?: string | null;
+      assetId?: string | null;
     },
   ): Promise<KnowledgeItemWithStats>;
   createRevision(
@@ -282,6 +298,83 @@ export function createKnowledgeRepository(
       await db.insert(knowledgeRelations).values(rows).onConflictDoNothing();
     },
 
+    async listFolders(userId, accountId) {
+      return db
+        .select()
+        .from(knowledgeFolders)
+        .where(
+          and(
+            eq(knowledgeFolders.userId, userId),
+            eq(knowledgeFolders.accountId, accountId),
+            eq(knowledgeFolders.status, "active"),
+          ),
+        )
+        .orderBy(asc(knowledgeFolders.createdAt));
+    },
+
+    async createFolder(userId, accountId, input) {
+      if (input.parentId) {
+        const parents = await db
+          .select()
+          .from(knowledgeFolders)
+          .where(
+            and(
+              eq(knowledgeFolders.id, input.parentId),
+              eq(knowledgeFolders.userId, userId),
+              eq(knowledgeFolders.accountId, accountId),
+              eq(knowledgeFolders.status, "active"),
+            ),
+          );
+        if (!parents[0]) throw new OwnershipError("Parent folder not found");
+      }
+      const id = deps.nextId("kfolder");
+      const now = deps.now();
+      await db.insert(knowledgeFolders).values({
+        id,
+        userId,
+        accountId,
+        parentId: input.parentId ?? null,
+        name: input.name,
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+      });
+      const rows = await db
+        .select()
+        .from(knowledgeFolders)
+        .where(eq(knowledgeFolders.id, id));
+      return rows[0]!;
+    },
+
+    async moveToFolder(userId, accountId, knowledgeId, folderId) {
+      await getRow(userId, accountId, knowledgeId);
+      if (folderId) {
+        const folders = await db
+          .select()
+          .from(knowledgeFolders)
+          .where(
+            and(
+              eq(knowledgeFolders.id, folderId),
+              eq(knowledgeFolders.userId, userId),
+              eq(knowledgeFolders.accountId, accountId),
+              eq(knowledgeFolders.status, "active"),
+            ),
+          );
+        if (!folders[0]) throw new OwnershipError("Folder not found");
+      }
+      await db
+        .update(knowledgeItems)
+        .set({ folderId, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+            eq(knowledgeItems.accountId, accountId),
+          ),
+        );
+      return get(userId, accountId, knowledgeId);
+    },
+
     async list(userId, accountId) {
       const rows = await db
         .select()
@@ -394,6 +487,8 @@ export function createKnowledgeRepository(
         // [T-332 S2] 号维度盖章(service 已断言非空;列 NOT NULL,ISO-01/03)。
         accountId,
         currentRevisionId: revId,
+        folderId: input.folderId ?? null,
+        assetId: input.assetId ?? null,
         knowledgeType: input.knowledgeType ?? "note",
         title: input.title,
         // [T-092] 评论回流可声明 sourceType='import' + 溯源/幂等锚 metadata;

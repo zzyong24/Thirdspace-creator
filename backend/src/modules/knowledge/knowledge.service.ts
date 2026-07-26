@@ -5,6 +5,7 @@ import type {
   KnowledgeItemWithStats,
   KnowledgeRevisionRow,
   KnowledgeRelationRow,
+  KnowledgeFolderRow,
 } from "./knowledge.repository";
 import { InvalidTransitionError, ConflictError } from "./knowledge.errors";
 
@@ -50,6 +51,16 @@ export interface KnowledgeService {
   ): Promise<KnowledgeRelationRow[]>;
   // [T-091] 图谱全量语义边(user-scoped 单查询,画全图不 N+1)。
   listAllRelations(ctx: RequestContext): Promise<KnowledgeRelationRow[]>;
+  listFolders(ctx: RequestContext): Promise<KnowledgeFolderRow[]>;
+  createFolder(
+    ctx: RequestContext,
+    input: { name: string; parentId?: string | null },
+  ): Promise<KnowledgeFolderRow>;
+  moveKnowledge(
+    ctx: RequestContext,
+    knowledgeId: string,
+    input: { folderId: string | null },
+  ): Promise<KnowledgeItemWithStats>;
   createKnowledge(
     ctx: RequestContext,
     input: {
@@ -61,6 +72,8 @@ export interface KnowledgeService {
       // [T-092] 评论回流来源声明 + 溯源/幂等锚。
       sourceType?: string;
       sourceMetadata?: Record<string, unknown>;
+      folderId?: string | null;
+      assetId?: string | null;
     },
   ): Promise<KnowledgeItemWithStats>;
   createRevision(
@@ -124,6 +137,26 @@ export function createKnowledgeService(
       // [T-091] 全量边读:所有权由 repo 的 source 端 join 收窄。
       const accountId = requireAccountId(ctx.accountId, "knowledge.listAllRelations");
       return repo.listAllRelations(ctx.userId, accountId);
+    },
+
+    async listFolders(ctx) {
+      const accountId = requireAccountId(ctx.accountId, "knowledge.folders.list");
+      return repo.listFolders(ctx.userId, accountId);
+    },
+
+    async createFolder(ctx, input) {
+      const accountId = requireAccountId(ctx.accountId, "knowledge.folders.create");
+      return repo.createFolder(ctx.userId, accountId, input);
+    },
+
+    async moveKnowledge(ctx, knowledgeId, input) {
+      const accountId = requireAccountId(ctx.accountId, "knowledge.move");
+      return repo.moveToFolder(
+        ctx.userId,
+        accountId,
+        knowledgeId,
+        input.folderId,
+      );
     },
 
     async createKnowledge(ctx, input) {

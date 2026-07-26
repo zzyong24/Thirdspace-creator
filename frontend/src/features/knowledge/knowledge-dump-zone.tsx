@@ -18,7 +18,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Inbox, Sparkles } from "lucide-react";
+import { FileUp, Inbox, Sparkles } from "lucide-react";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
@@ -90,13 +90,14 @@ export function KnowledgeDumpZone() {
   const router = useRouter();
   const [content, setContent] = React.useState("");
   const [dragActive, setDragActive] = React.useState(false);
-  const [busy, setBusy] = React.useState<"idle" | "saving">("idle");
+  const [busy, setBusy] = React.useState<"idle" | "saving" | "uploading">("idle");
   // 内联错误(手动补录/读文件失败落这;非 toast 即逝,原始输入保留 [gate-F2])。
   const [error, setError] = React.useState<string | null>(null);
   // 手动补录降级入口(最小字段 title + 正文;正文复用倾倒场输入框)。
   const [manualOpen, setManualOpen] = React.useState(false);
   const [manualTitle, setManualTitle] = React.useState("");
   const [manualType, setManualType] = React.useState<ManualType>("claim");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const reset = React.useCallback(() => {
     setContent("");
@@ -164,6 +165,69 @@ export function KnowledgeDumpZone() {
     [manualTitle, manualType, busy, content, reset, router],
   );
 
+  const handleDocumentFiles = React.useCallback(
+    async (files: ReadonlyArray<File>) => {
+      if (files.length === 0 || busy !== "idle") return;
+      setBusy("uploading");
+      setError(null);
+      try {
+        for (const file of files) {
+          if (file.size > 20 * 1024 * 1024) {
+            throw new Error(`「${file.name}」超过 20MB 上限，请拆分后再传。`);
+          }
+          const mimeType = file.type || "application/octet-stream";
+          const upload = (await client.createUpload({
+            params: undefined,
+            query: undefined,
+            body: {
+              assetType: "document",
+              mimeType,
+              fileSize: Math.max(1, file.size),
+              fileName: file.name,
+            },
+          })) as unknown as {
+            uploadId: string;
+            assetId: string;
+            uploadUrl: string;
+          };
+          if (!upload.uploadUrl.startsWith("mock://")) {
+            const put = await fetch(upload.uploadUrl, {
+              method: "PUT",
+              headers: { "content-type": mimeType },
+              body: file,
+            });
+            if (!put.ok) throw new Error(`上传「${file.name}」失败(${put.status})。`);
+          }
+          const asset = (await client.completeUpload({
+            params: { uploadId: upload.uploadId },
+            query: undefined,
+            body: { name: file.name },
+          })) as unknown as { id: string };
+          await client.createKnowledge({
+            params: undefined,
+            query: undefined,
+            body: {
+              title: file.name,
+              knowledgeType: "reference",
+              content: "",
+              sourceType: "import",
+              sourceMetadata: { fileName: file.name, mimeType },
+              assetId: asset.id || upload.assetId,
+              folderId: null,
+            },
+          });
+        }
+        router.refresh();
+      } catch (reason) {
+        setError(describeUserError(reason, "导入文件失败，请重试。"));
+      } finally {
+        setBusy("idle");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [busy, router],
+  );
+
   return (
     <section
       data-slot="knowledge-dump-zone"
@@ -209,6 +273,30 @@ export function KnowledgeDumpZone() {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.docx,.md,.markdown,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,text/plain"
+          className="sr-only"
+          aria-label="导入 PDF、DOCX 或 Markdown"
+          onChange={(event) =>
+            void handleDocumentFiles(Array.from(event.target.files ?? []))
+          }
+        />
+        <button
+          type="button"
+          data-slot="knowledge-file-import"
+          disabled={busy !== "idle"}
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            buttonCls,
+            "gap-1.5 border border-border bg-surface text-foreground hover:bg-surface-subtle",
+          )}
+        >
+          <FileUp className="size-3.5" aria-hidden="true" />
+          {busy === "uploading" ? "正在导入…" : "导入 PDF / DOCX / Markdown"}
+        </button>
         <button
           type="button"
           data-slot="knowledge-distill"

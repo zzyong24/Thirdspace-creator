@@ -23,6 +23,8 @@ export const knowledgeItems = pgTable("knowledge_items", {
   // 属主,不加 account_id(同 user_id 范式)。
   accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042;C-01=A 案独立)
   currentRevisionId: text("current_revision_id").notNull(),
+  folderId: text("folder_id"),
+  assetId: text("asset_id"),
   knowledgeType: text("knowledge_type").notNull().default("note"),
   title: text("title").notNull(),
   sourceType: text("source_type").notNull().default("manual"),
@@ -32,6 +34,17 @@ export const knowledgeItems = pgTable("knowledge_items", {
   archivedAt: text("archived_at"), // nullable → contract iso8601|null
   // [T-079a] 出处与可信度(迁移 0018)。nullable → contract string|null。
   sourceNote: text("source_note"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const knowledgeFolders = pgTable("knowledge_folders", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  accountId: text("account_id").notNull(),
+  parentId: text("parent_id"),
+  name: text("name").notNull(),
+  status: text("status").notNull().default("active"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -83,6 +96,20 @@ CREATE INDEX IF NOT EXISTS knowledge_items_user_created_ix ON knowledge_items(us
 -- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
 ALTER TABLE knowledge_items ADD COLUMN IF NOT EXISTS account_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_knowledge_items_user_account ON knowledge_items (user_id, account_id);
+ALTER TABLE knowledge_items ADD COLUMN IF NOT EXISTS folder_id TEXT;
+ALTER TABLE knowledge_items ADD COLUMN IF NOT EXISTS asset_id TEXT;
+CREATE TABLE IF NOT EXISTS knowledge_folders (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  parent_id TEXT,
+  name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS knowledge_folders_owner_ix
+  ON knowledge_folders(user_id, account_id, parent_id);
 CREATE TABLE IF NOT EXISTS knowledge_revisions (
   id TEXT PRIMARY KEY,
   knowledge_item_id TEXT NOT NULL,

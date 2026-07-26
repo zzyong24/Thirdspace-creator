@@ -2,6 +2,7 @@ import { and, asc, eq, desc, inArray, type Db } from "@creatoros/backend";
 import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
 import { OwnershipError } from "./assets.errors";
+import type { HeadObjectResult } from "./object-storage";
 
 // Inverse-usage read row (用料反查): the 用料链 edges that reference an asset.
 // We import the materialLinks TABLE (not the material-links module/repo — no
@@ -185,6 +186,8 @@ export interface AssetRepository {
   createUploadSession(
     userId: string,
     input: {
+      accountId: string;
+      assetId: string;
       assetType: string;
       mimeType: string;
       fileSize: number;
@@ -195,8 +198,18 @@ export interface AssetRepository {
   getUploadSession(
     userId: string,
     uploadId: string,
+    accountId: string,
   ): Promise<AssetUploadRow | null>;
-  markUploadCompleted(userId: string, uploadId: string): Promise<void>;
+  /**
+   * 把上传凭证、首个文件版本与稳定 assetId 在同一事务内物化。重复调用返回同一
+   * asset；任一步失败都会回滚，不留下半成品。
+   */
+  completeUploadSession(
+    userId: string,
+    uploadId: string,
+    accountId: string,
+    input: { name: string; head: HeadObjectResult },
+  ): Promise<AssetRow | null>;
 }
 
 function parseFile(row: AssetFileDbRow): AssetFileRow {
@@ -559,6 +572,8 @@ export function createAssetRepository(
       await db.insert(assetUploads).values({
         id,
         userId,
+        accountId: input.accountId,
+        assetId: input.assetId,
         assetType: input.assetType,
         mimeType: input.mimeType,
         fileSize: input.fileSize,
@@ -574,23 +589,94 @@ export function createAssetRepository(
       return rows[0]!;
     },
 
-    async getUploadSession(userId, uploadId) {
+    async getUploadSession(userId, uploadId, accountId) {
       const rows = await db
         .select()
         .from(assetUploads)
         .where(
-          and(eq(assetUploads.id, uploadId), eq(assetUploads.userId, userId)),
+          and(
+            eq(assetUploads.id, uploadId),
+            eq(assetUploads.userId, userId),
+            eq(assetUploads.accountId, accountId),
+          ),
         );
       return rows[0] ?? null;
     },
 
-    async markUploadCompleted(userId, uploadId) {
-      await db
-        .update(assetUploads)
-        .set({ status: "completed" })
-        .where(
-          and(eq(assetUploads.id, uploadId), eq(assetUploads.userId, userId)),
-        );
+    async completeUploadSession(userId, uploadId, accountId, input) {
+      return db.transaction(async (tx) => {
+        const sessionRows = await tx
+          .select()
+          .from(assetUploads)
+          .where(
+            and(
+              eq(assetUploads.id, uploadId),
+              eq(assetUploads.userId, userId),
+              eq(assetUploads.accountId, accountId),
+            ),
+          );
+        const session = sessionRows[0];
+        if (!session) return null;
+
+        if (session.status === "completed") {
+          const existing = await tx
+            .select()
+            .from(assets)
+            .where(
+              and(
+                eq(assets.id, session.assetId),
+                eq(assets.userId, userId),
+                eq(assets.accountId, accountId),
+              ),
+            );
+          return existing[0] ?? null;
+        }
+        if (session.status !== "created") return null;
+
+        const fileId = deps.nextId("afile");
+        const now = deps.now();
+        await tx.insert(assets).values({
+          id: session.assetId,
+          userId,
+          accountId,
+          currentFileId: fileId,
+          assetType: session.assetType,
+          name: input.name,
+          status: "active",
+          createdAt: now,
+          updatedAt: now,
+        });
+        await tx.insert(assetFiles).values({
+          id: fileId,
+          assetId: session.assetId,
+          versionNumber: 1,
+          storageKey: session.storageKey,
+          mimeType: input.head.mimeType || session.mimeType,
+          fileSize: input.head.fileSize || session.fileSize,
+          checksum: input.head.checksum,
+          width: input.head.width,
+          height: input.head.height,
+          durationMs: input.head.durationMs,
+          mediaMetadata: input.head.mediaMetadata,
+          createdAt: now,
+        });
+        await tx
+          .update(assetUploads)
+          .set({ status: "completed", completedAssetFileId: fileId })
+          .where(
+            and(
+              eq(assetUploads.id, uploadId),
+              eq(assetUploads.userId, userId),
+              eq(assetUploads.accountId, accountId),
+              eq(assetUploads.status, "created"),
+            ),
+          );
+        const rows = await tx
+          .select()
+          .from(assets)
+          .where(eq(assets.id, session.assetId));
+        return rows[0] ?? null;
+      });
     },
   };
 }

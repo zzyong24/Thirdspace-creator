@@ -71,11 +71,14 @@ export const assetFiles = pgTable("asset_files", {
 export const assetUploads = pgTable("asset_uploads", {
   id: text("id").primaryKey(), // == uploadId
   userId: text("user_id").notNull(),
+  accountId: text("account_id").notNull(),
+  assetId: text("asset_id").notNull(),
   assetType: text("asset_type").notNull(),
   mimeType: text("mime_type").notNull(),
   fileSize: integer("file_size").notNull(),
   storageKey: text("storage_key").notNull(),
   status: text("status").notNull().default("created"), // created → completed
+  completedAssetFileId: text("completed_asset_file_id"),
   expiresAt: text("expires_at").notNull(),
   createdAt: text("created_at").notNull(),
 });
@@ -123,12 +126,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS asset_files_asset_version_ux ON asset_files(as
 CREATE TABLE IF NOT EXISTS asset_uploads (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  asset_id TEXT NOT NULL,
   asset_type TEXT NOT NULL,
   mime_type TEXT NOT NULL,
   file_size INTEGER NOT NULL,
   storage_key TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'created',
+  completed_asset_file_id TEXT,
   expires_at TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+ALTER TABLE asset_uploads ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE asset_uploads ADD COLUMN IF NOT EXISTS asset_id TEXT;
+ALTER TABLE asset_uploads ADD COLUMN IF NOT EXISTS completed_asset_file_id TEXT;
+CREATE INDEX IF NOT EXISTS asset_uploads_owner_ix ON asset_uploads(user_id, account_id);
 `;

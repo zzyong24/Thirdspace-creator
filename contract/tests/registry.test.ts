@@ -45,6 +45,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/knowledge/:knowledgeId/relations/remove"],
   // [T-091] 图谱全量语义边读(user-scoped,additive)。
   ["GET", "/knowledge-relations"],
+  // [T-519] 知识文件工作区：逻辑文件夹 + 条目归档移动。
+  ["GET", "/knowledge-folders"],
+  ["POST", "/knowledge-folders"],
+  ["POST", "/knowledge/:knowledgeId/move"],
   // 知识与素材 — Taxonomy (Tag / EntityTag) sub-group (v0.2)
   ["GET", "/tags"],
   ["POST", "/tags"],

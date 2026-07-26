@@ -9,5 +9,6 @@ export {
   knowledgeItems,
   knowledgeRevisions,
   knowledgeRelations,
+  knowledgeFolders,
   KNOWLEDGE_DDL,
 } from "@creatoros/backend";

@@ -81,6 +81,7 @@ export {
   knowledgeItems,
   knowledgeRevisions,
   knowledgeRelations,
+  knowledgeFolders,
   KNOWLEDGE_DDL,
 } from "./schema/knowledge";
 export {

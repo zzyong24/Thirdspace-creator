@@ -19,6 +19,7 @@ export {
   type KnowledgeItemWithStats,
   type KnowledgeRevisionRow,
   type KnowledgeRelationRow,
+  type KnowledgeFolderRow,
 } from "./knowledge.repository";
 
 export {
@@ -38,7 +39,9 @@ export {
   knowledgeItemResource,
   knowledgeRevisionResource,
   knowledgeRelationResource,
+  knowledgeFolderResource,
   type KnowledgeItemResource,
   type KnowledgeRevisionResource,
   type KnowledgeRelationResource,
+  type KnowledgeFolderResource,
 } from "./knowledge.schema";

@@ -8,6 +8,11 @@ export * from "./transport";
 export * from "./client";
 export * from "./local-platform";
 
+export {
+  knowledgeFolderResource,
+  type KnowledgeFolderResource,
+} from "./resources/knowledge";
+
 // Taxonomy resource DTOs (module-04). Resources are normally reached via
 // `ENDPOINTS.<op>.response`, but the taxonomy module's `<module>.schema.ts`
 // re-exports these named Zod schemas + types directly (foundation §5 / Step 0c:

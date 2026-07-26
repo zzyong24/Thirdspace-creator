@@ -19,6 +19,7 @@ import {
   knowledgeItemResource,
   knowledgeRevisionResource,
   knowledgeRelationResource,
+  knowledgeFolderResource,
 } from "./knowledge.schema";
 
 // E1 — drive each of the 7 ops through the transport against a seeded pglite db
@@ -260,5 +261,40 @@ describe("knowledge.transport — T-091/T-092 additive surface", () => {
       .filter((e) => e.id.startsWith("knowledge."))
       .map((e) => e.id);
     expect(ids).toContain("knowledge.relations.listAll");
+  });
+});
+
+describe("knowledge.transport — file workspace", () => {
+  it("creates nested folders and moves an imported knowledge document", async () => {
+    const root = await call("knowledge.folders.create", {
+      body: { name: "课程资料", parentId: null },
+    });
+    const parsedRoot = successEnvelope(knowledgeFolderResource).parse(root);
+    const child = await call("knowledge.folders.create", {
+      body: { name: "第一章", parentId: parsedRoot.data.id },
+    });
+    const parsedChild = successEnvelope(knowledgeFolderResource).parse(child);
+    expect(parsedChild.data.parentId).toBe(parsedRoot.data.id);
+
+    const folders = await call("knowledge.folders.list", {}, true);
+    expect(listEnvelope(knowledgeFolderResource).parse(folders).data).toHaveLength(2);
+
+    const created = await call("knowledge.create", {
+      body: {
+        title: "讲义.pdf",
+        knowledgeType: "reference",
+        sourceType: "import",
+        assetId: "asset-stable-1",
+        folderId: null,
+      },
+    });
+    const knowledgeId = (created as { data: { id: string } }).data.id;
+    const moved = await call("knowledge.move", {
+      params: { knowledgeId },
+      body: { folderId: parsedChild.data.id },
+    });
+    const parsedMoved = successEnvelope(knowledgeItemResource).parse(moved);
+    expect(parsedMoved.data.folderId).toBe(parsedChild.data.id);
+    expect(parsedMoved.data.assetId).toBe("asset-stable-1");
   });
 });

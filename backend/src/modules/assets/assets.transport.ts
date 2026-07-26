@@ -186,6 +186,8 @@ export function createAssetsTransport(
             assetType: string;
             mimeType: string;
             fileSize: number;
+            projectId?: string;
+            fileName?: string;
           };
           const dto: AssetUpload = await service.createUpload(ctx, b);
           return { data: dto, meta: { requestId: ctx.requestId } };
