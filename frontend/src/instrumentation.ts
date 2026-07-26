@@ -36,7 +36,9 @@ export async function register(): Promise<void> {
     try {
       const { installSidecarLifecycle } = await import("@/server/sidecar-lifecycle");
       installSidecarLifecycle(process as never);
-      console.log("[instrumentation] sidecar 生命周期守护已装(SIGTERM 优雅退出 + 孤儿自检)");
+      console.log(
+        "[instrumentation] sidecar lifecycle guard installed (SIGTERM drain + orphan check)",
+      );
     } catch {
       /* 装不上不阻塞启动(守护是兜底,主线在壳侧 killpg) */
     }
@@ -52,9 +54,7 @@ export async function register(): Promise<void> {
         path.join(process.cwd(), "browsers");
       if (fs.existsSync(bundled)) {
         process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
-        console.log(
-          `[instrumentation] PLAYWRIGHT_BROWSERS_PATH → ${bundled}(随包 Chromium,视频渲染免下载)`,
-        );
+        console.log("[instrumentation] bundled Chromium path configured");
       }
     } catch {
       // 设不上就用默认路径,不阻塞启动。
