@@ -160,6 +160,23 @@ export interface AssetRepository {
     patch: { extractedText?: string | null; extractStatus?: string },
     accountId: string,
   ): Promise<void>;
+  /**
+   * [T-298] 条件回填旧 local-fs 视频占位元信息。repository 再做一次父资产
+   * user+account 归属校验、currentFile 校验和精确旧签名 CAS，避免后台探针在
+   * 列表返回后发生竞态时覆盖新文件或人工修正过的数据。
+   */
+  backfillLegacyMediaMetadata(
+    userId: string,
+    assetId: string,
+    fileId: string,
+    patch: {
+      durationMs: number;
+      width: number;
+      height: number;
+      backfilledAt: string;
+    },
+    accountId: string,
+  ): Promise<boolean>;
   insertAssetFile(
     userId: string,
     input: InsertAssetFileInput,
@@ -454,6 +471,56 @@ export function createAssetRepository(
       if (patch.extractStatus !== undefined) set.extractStatus = patch.extractStatus;
       if (Object.keys(set).length === 0) return;
       await db.update(assetFiles).set(set).where(eq(assetFiles.id, current.id));
+    },
+
+    async backfillLegacyMediaMetadata(
+      userId,
+      assetId,
+      fileId,
+      patch,
+      accountId,
+    ) {
+      const asset = await requireOwnedAsset(userId, assetId, accountId);
+      // 只允许改当前版本；离页/上传新版本后后台旧探针不能回写过期 file。
+      if (asset.currentFileId !== fileId) return false;
+      const [current] = await db
+        .select()
+        .from(assetFiles)
+        .where(and(eq(assetFiles.id, fileId), eq(assetFiles.assetId, assetId)));
+      if (!current) return false;
+      const metadata =
+        (current.mediaMetadata as Record<string, unknown> | null) ?? {};
+      // 精确旧签名 + 持久标记双门：非旧数据不碰；真实恰好也是 1s/1920 的视频
+      // 回填后靠 marker 保持幂等，不会每次打开素材库都重复 ffprobe。
+      if (
+        current.durationMs !== 1000 ||
+        current.width !== 1920 ||
+        metadata["legacyMediaProbeBackfilledAt"] !== undefined
+      ) {
+        return false;
+      }
+      const updated = await db
+        .update(assetFiles)
+        .set({
+          durationMs: patch.durationMs,
+          width: patch.width,
+          height: patch.height,
+          mediaMetadata: {
+            ...metadata,
+            legacyMediaProbeBackfilledAt: patch.backfilledAt,
+            legacyMediaProbeSource: "local-fs-headObject",
+          },
+        })
+        .where(
+          and(
+            eq(assetFiles.id, fileId),
+            eq(assetFiles.assetId, assetId),
+            eq(assetFiles.durationMs, 1000),
+            eq(assetFiles.width, 1920),
+          ),
+        )
+        .returning({ id: assetFiles.id });
+      return updated.length === 1;
     },
 
     async insertAssetFile(userId, input, accountId) {

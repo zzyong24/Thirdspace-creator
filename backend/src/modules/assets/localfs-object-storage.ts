@@ -134,6 +134,7 @@ export function createLocalFsObjectStorage(
   }
 
   return {
+    kind: "local-fs",
     async createPresignedUpload({
       assetType,
       mimeType,

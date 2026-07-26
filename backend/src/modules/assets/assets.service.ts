@@ -42,6 +42,11 @@ const ASSET_TYPES = new Set([
   "subtitle",
 ]);
 
+// [T-298] 素材库 list 的懒回填每批最多探 5 条，串行执行，避免一次打开页面
+// 拉起大量 ffprobe。进程内集合只做并发去重；真正的幂等由 repository 的旧签名
+// 条件更新 + 持久 marker 保证。
+const LEGACY_MEDIA_BACKFILL_BATCH_SIZE = 5;
+
 // [T-146 切片 a · gate 处置·大文件兜底] 文档上传大小上限(20MB)。文档要走文本抽取 + AI 摘要,
 // 超大文档抽取会 OOM/超 context;后端在 createUpload 硬拒(前端 accept 只是提示,不可信)。仅
 // 卡 document 类型(图/视/音走各自媒体链,不受此限)。
@@ -174,6 +179,8 @@ export function createAssetsService(
     ) => Promise<string | null>;
   },
 ): AssetsService {
+  const legacyMediaBackfillInFlight = new Set<string>();
+
   // Load an owned asset or raise OwnershipError (404, no existence leak).
   // [T-332 S2] by-id 读叠「号一致性门」(SPEC §4.5):未选号 → AccountRequiredError
   // (引导态);跨号 asset → 与不存在同貌 404(strict 世界里别号内容就该不存在)。
@@ -185,6 +192,115 @@ export function createAssetsService(
     const row = await repo.getAsset(ctx.userId, assetId, accountId);
     if (!row) throw new OwnershipError("Asset not found");
     return row;
+  }
+
+  async function backfillLegacyMediaMetadata(
+    ctx: RequestContext,
+    ownedAssets: AssetRow[],
+    accountId: string,
+  ): Promise<void> {
+    const currentFileIds = ownedAssets
+      .map((asset) => asset.currentFileId)
+      .filter((id): id is string => typeof id === "string");
+    if (currentFileIds.length === 0) return;
+    const files = await repo.listFilesByIds(currentFileIds);
+    const fileById = new Map(files.map((file) => [file.id, file]));
+    const candidates = ownedAssets
+      .filter((asset) => asset.assetType === "video")
+      .flatMap((asset) => {
+        const file = asset.currentFileId
+          ? fileById.get(asset.currentFileId)
+          : undefined;
+        if (!file) return [];
+        const metadata =
+          (file.mediaMetadata as Record<string, unknown> | null) ?? {};
+        if (
+          file.mimeType.startsWith("video/") &&
+          file.durationMs === 1000 &&
+          file.width === 1920 &&
+          metadata["legacyMediaProbeBackfilledAt"] === undefined
+        ) {
+          return [{ asset, file }];
+        }
+        return [];
+      })
+      .filter(
+        ({ file }) =>
+          !legacyMediaBackfillInFlight.has(
+            `${ctx.userId}:${accountId}:${file.id}`,
+          ),
+      )
+      .slice(0, LEGACY_MEDIA_BACKFILL_BATCH_SIZE);
+    if (candidates.length === 0) return;
+    // 在任何下一次 await 之前先预占，两个并发 list 请求就不会同时选中同一文件。
+    for (const { file } of candidates) {
+      legacyMediaBackfillInFlight.add(
+        `${ctx.userId}:${accountId}:${file.id}`,
+      );
+    }
+
+    // objectStorageForCtx 是唯一合法的存储装配口；kind 明确限制为 local-fs，
+    // 不猜 key 形状、不对 S3/mock 发昂贵或无意义的媒体探针。
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    try {
+      const storage = await objectStorageForCtx(ctx);
+      if (storage.kind !== "local-fs") return;
+      for (const { asset, file } of candidates) {
+        try {
+          const head = await storage.headObject(file.storageKey);
+          // 探针失败时 local-fs headObject 诚实返回 null。保留旧签名让后续 list
+          // 有机会重试，不用 null 把一次瞬时失败固化成永不自愈。
+          if (
+            !Number.isFinite(head.durationMs) ||
+            (head.durationMs ?? 0) <= 0 ||
+            !Number.isFinite(head.width) ||
+            (head.width ?? 0) <= 0 ||
+            !Number.isFinite(head.height) ||
+            (head.height ?? 0) <= 0
+          ) {
+            failed += 1;
+            continue;
+          }
+          const didUpdate = await repo.backfillLegacyMediaMetadata(
+            ctx.userId,
+            asset.id,
+            file.id,
+            {
+              durationMs: head.durationMs!,
+              width: head.width!,
+              height: head.height!,
+              backfilledAt: deps.now(),
+            },
+            accountId,
+          );
+          if (didUpdate) updated += 1;
+          else skipped += 1;
+        } catch (error) {
+          failed += 1;
+          console.warn("[assets][T-298] legacy-media-backfill-item-failed", {
+            accountId,
+            assetId: asset.id,
+            fileId: file.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      console.info("[assets][T-298] legacy-media-backfill", {
+        accountId,
+        eligible: candidates.length,
+        updated,
+        skipped,
+        failed,
+      });
+    } finally {
+      for (const { file } of candidates) {
+        legacyMediaBackfillInFlight.delete(
+          `${ctx.userId}:${accountId}:${file.id}`,
+        );
+      }
+    }
   }
 
   return {
@@ -201,11 +317,21 @@ export function createAssetsService(
     },
 
     async listAssets(ctx, query) {
-      return repo.listAssets(
+      const accountId = requireAccountId(ctx.accountId, "assets.listAssets");
+      const rows = await repo.listAssets(
         ctx.userId,
         query,
-        requireAccountId(ctx.accountId, "assets.listAssets"),
+        accountId,
       );
+      // 不阻塞素材库响应/应用启动。所有错误在这里收口成可观测日志；
+      // 后台方法内部仍只经 account-scoped repository + per-ctx storage port。
+      void backfillLegacyMediaMetadata(ctx, rows, accountId).catch((error) => {
+        console.warn("[assets][T-298] legacy-media-backfill-failed", {
+          accountId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+      return rows;
     },
 
     async listFilesByIds(ctx, fileIds) {

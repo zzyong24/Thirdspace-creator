@@ -51,6 +51,7 @@ export function createS3ObjectStorage(
   const s3 = makeClient(cfg);
   const expiresIn = cfg.expiresInSeconds ?? 900;
   return {
+    kind: "s3",
     async createPresignedUpload({ assetType, mimeType, accountId }) {
       // [T-157] 账号分区:key = <accountId ?? _default>/<assetType>/<nextKey>。
       const storageKey = `${accountKeyPrefix(accountId)}${assetType}/${deps.nextKey()}`;
