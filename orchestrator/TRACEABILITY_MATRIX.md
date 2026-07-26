@@ -64,6 +64,12 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 |---|---|---|---|---|---|
 | FR-069 | FLOW-023 | PAGE-017 | API-008、API-009 | TEST-001..008 | RISK-011：代码与回归已落地；历史 TDD 红证据缺失，付费真端到端待授权 |
 
+## T-501 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-MC-002（旧 DEC-MC-001/FR-MC/API-MC 扩展范围失效） | 保存当前表单 → 正式 `modelFor + streamText` → 非空文本才连通 | 现有 Settings 模型配置卡与应用内手册 | 复用既有 `settings.models.put/test`，不新增公开 operation | T-501 定向 67 tests + frontend typecheck + 目标 lint | BUILD PASS（`f91b08cb`）；未调用真实 provider/付费能力，复杂工具调用保留真机边界 |
+
 ## T-516 聚焦追踪
 
 | Requirement | Flow | Surface | Contract | Tests | 状态 |

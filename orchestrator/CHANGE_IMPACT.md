@@ -11,6 +11,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-MC-002 — 模型配置改为现有 Settings 轻量优化（DEC-MC-002，2026-07-26）
+
+- **范围重置**：旧八槽总览、配置向导、能力平台、费用和付费 effect 不进入 BUILD；继续复用
+  `settings.models.put/test`，不新增页面、公开 operation 或数据模型。
+- **落地影响**：模型卡普通路径只显示预设、模型 ID、API Key；高级字段默认折叠；主模型改为
+  “保存并测试”，先保存再走正式 `modelFor + streamText`，非空文本才判连通。
+- **兼容性**：Kimi 开放平台与 Kimi Code 拆成两套 OpenAI Chat 预设；New API、Responses
+  与中转站通过高级设置和教程说明，不把基础文本探针冒充复杂工具调用认证。
+- **证据**：`f91b08cb`；T-501 定向 67 tests、前端 typecheck、目标 lint、boundary、
+  orphan、reconcile 通过；未发真实 provider 或付费调用。
+
 ## CI-ODR-001 — 四个过度设计任务统一范围重置（DEC-ODR-001，2026-07-26）
 
 - **变更**：T-516/T-517/T-518/T-519 统一退回已有能力上的最小完整闭环；框架优化明确不在

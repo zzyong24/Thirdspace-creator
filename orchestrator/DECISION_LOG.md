@@ -5,6 +5,29 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-MC-002
+Date: 2026-07-26
+Stage: T-501 4-build
+Type: user-confirmed-scope-reduction
+Decision: T-501 只做现有模型设置页的轻量优化：减少普通用户配置项；“保存并测试”复用正式
+          modelFor + streamText 并验证非空文本；补官方预设、New API/中转站、Responses、
+          Kimi 开放平台与 Kimi Code 教程。
+Rationale: 用户明确指出模型配置需求没有原方案复杂。当前 Settings、T-471 Responses 和
+           settings.models.put/test 已经存在，继续建设八槽总览、向导、能力平台和付费探测
+           会扩大范围、增加配置负担并偏离真实问题。
+Source: 用户会话“优化一下就行了……减轻用户配置负担，优化配置测试通路，补充教程文档即可”，
+        2026-07-26。
+Affected Artifacts: T-501 BACKLOG/任务详情、替代范围、应用内手册、模型预设、连接测试组合层。
+Invalidates: 旧 T-501 PRODUCT SPEC/CONTRACT/PAGE SPEC 中的八槽总览、配置向导、能力平台、
+             费用与付费 effect 均不进入 BUILD；旧文档只作为历史审计材料。
+Explicit Limits: 不新增页面/公开 operation/数据模型；不依赖 T-517；不触发图片或视频付费调用；
+                 轻量测试只承诺基础流式文本，不冒充复杂工具调用全兼容认证。
+Owner: user+agent
+Revisit Trigger: 用户明确要求新增模型管理页面、能力平台、计费或付费 provider 验证。
+Status: active
+```
+
+```text
 ID: DEC-001
 Date: 2026-06-20
 Stage: 00-intake (orchestrator initialization)

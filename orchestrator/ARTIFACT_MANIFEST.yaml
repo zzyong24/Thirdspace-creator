@@ -325,6 +325,98 @@ stages:
       指出的用户结果缩水和 T-521 mutating classifier 风险已修，Round 3 最终 PASS；
       用户范围重置由 DEC-ODR-001 记录。T-517 新 CONTRACT 仍是 BUILD 前置。
 
+  "T-501-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-model-configuration-lightweight-optimization.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-MC-002"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.review.md"
+      - existing: "docs/research/2026-07-24-model-configuration-full-audit.md"
+      - existing: "docs/research/2026-07-24-model-configuration-wizard-usability-rat.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-BATCH-20260725-001"
+    notes: >
+      2026-07-26 用户通过 DEC-MC-002 将实施范围收缩为现有 Settings 的轻量优化；旧全量
+      重构 SPEC/评审只保留历史，不再驱动 BUILD。当前替代范围不新增页面、数据模型或付费能力。
+      三轮 cross-family PLAN 评审 findings 已逐条处理；用户于 2026-07-25 通过
+      DEC-BATCH-20260725-001 确认五项产品口径，允许进入 CONTRACT。FR-MC-14 只作为
+      “有 adapter/协议证据才显示”的 truthfulness 约束，不扩大成新增厂商/adapter 承诺。
+
+  "T-501-2-contract":
+    status: "passed"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.contract.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.contract.review.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.md"
+      - existing: "orchestrator/ID_REGISTRY.md"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md"
+      - existing: "orchestrator/CHANGE_IMPACT.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-BATCH-20260725-003"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-BATCH-20260725-004"
+    notes: >
+      DEC-MC-002 后的 BUILD 不改变公开契约：继续复用 settings.models.put/test。旧 17-operation
+      CONTRACT 只保留历史，不再要求实现其总览、历史、付费 effect 等扩展 operation。
+      Round 1..3 FAIL 与修订前 Round 4 PASS 均保留为历史。PAGE SPEC Round 1 暴露 additive
+      wire 缺口，作者新增 ENT-MC-08、API-MC-014..017，并扩展 010/012；旧 Round 4 PASS、
+      Gate 12/15b 和确认②不再覆盖当前版本。Additive Round 1、Round 2 均为 FAIL；最终
+      Round 3 为 PASS（0 blocker/0 major/0 minor），Gate 12/15b 已内部通过。用户于
+      2026-07-25 通过 DEC-BATCH-20260725-004 重新授予修订版确认②，允许进入 PAGE SPEC
+      独立复审。PAGE SPEC Round 2 又发现诊断字段与费用披露顺序两项契约错位；作者只在
+      已确认范围内补齐 run/history DTO 和 005→披露→确认→006 顺序，未新增产品能力，
+      定向独立复验为 PASS（0 blocker/0 major/1 whitespace minor），17/17 transport mapping、
+      诊断 DTO 与付费确认顺序均闭合，因此 Gate 12/15b 恢复 pass。用户随后以
+      DEC-BATCH-20260725-005 纠偏为现有产品增量路线；T-517 runtime HARD 继续独立 fail closed。
+
+  "T-501-3-design":
+    status: "passed"
+    gate: "05-ui-gate + 06-page-spec-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-model-configuration-lightweight-optimization.md"
+      - existing: "docs/model-configuration-guide.md"
+      - existing: "docs/superpowers/specs/2026-07-25-model-configuration-experience-redesign.page-spec.md"
+      - existing: "docs/superpowers/specs/2026-07-25-model-configuration-experience-redesign.page-spec.review.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.contract.md"
+    notes: >
+      DEC-MC-002 明确沿用当前 Settings 外壳：只收起高级字段、增加保存并测试、更新教程；
+      不生成新 overview、向导或模型平台。
+      PAGE SPEC Round 1 FAIL（2 blocker/3 major/2 minor）已完成作者修订；本地 Whisper、
+      八槽总览、免费历史、同步取消、house-style DEC 和人工证据表单均已补齐。因上游 CONTRACT
+      additive CONTRACT 最终 Round 3 已内部 PASS，且修订版确认②已由
+      DEC-BATCH-20260725-004 重新取得。PAGE SPEC Round 2 为 FAIL（2 blocker/0 major/0 minor）：
+      历史诊断 DTO 缺 provider/protocol/model，且页面在 005 返回权威 costDisclosure 前展示
+      确认。两项已由作者按既有范围修订；Round 3 定向复评现已 PASS
+      （0 blocker/0 major/0 minor），Gate 06 通过。用户通过 DEC-BATCH-20260725-005 明确：
+      CreatorOS/Settings 已成型，T-501 只做现有界面的功能增量和体验优化；误生成的 overview
+      不采用、不入工件，不再等待 overview/逐屏/Stitch。Gate 05 以现有生产 UI/tokens 为已确认
+      基线，BUILD 期改用真实 before/after、visual regression、a11y 和 E2E 收证。
+
+  "T-501-4-build":
+    status: "passed"
+    gate: "16-backend-tdd + frontend typecheck + boundary/orphan/reconcile"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "frontend/src/features/settings/settings-interactive-region.tsx"
+      - existing: "frontend/src/features/settings/model-provider-presets.ts"
+      - existing: "frontend/src/server/settings-model-test-wrap.ts"
+      - existing: "frontend/src/server/persistence-client.ts"
+      - existing: "docs/model-configuration-guide.md"
+      - existing: "commit f91b08cb"
+    notes: >
+      按 DEC-MC-002 的轻量范围完成：主路径只留预设、模型 ID、API Key，高级字段默认折叠；
+      “保存并测试”先落当前配置，再复用正式 modelFor + streamText 并要求非空文本；
+      Kimi 开放平台与 Kimi Code 分开，补 New API/中转站教程。定向 67 tests、前端
+      typecheck、目标 lint、boundary、orphan 与 reconcile 通过；未调用真实 provider 或付费能力。
+
   "T-517-1-plan":
     status: "passed"
     gate: "01-product-gate + independent spec-review"
