@@ -89,6 +89,14 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
       hasMore: false,
     },
   },
+  "intelligence.douyin.share": {
+    kind: "intelligence.douyin.share",
+    extras: {
+      taskId: null,
+      ownerId: null,
+      action: "archive",
+    },
+  },
   // [T-253] local.read:execute 内已有定制 catch(四态诚实),门只兜非 Error 抛出等极端漏网。
   // [T-262] 结构占位加 foundByName/candidates(按名搜索兜底两态),错误态卡不因缺字段崩。
   "local.read": {

@@ -402,7 +402,25 @@ export interface ChatToolDeps {
      * 行为完全不变。
      */
     referenceAssetId?: string;
-  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  }) => Promise<{
+    taskId: string | null;
+    projectId: string | null;
+    error: string | null;
+    reference?: CoverReferenceSelection;
+  }>;
+  /**
+   * [T-523] 抖音分享链接的持久编排端口。普通分享只建档；只有用户本轮明确要求转写/
+   * ASR/逐字稿/字幕/提取文字时 transcribe=true。端口只排 intelligence 持久任务。
+   */
+  dispatchDouyinShare?: (input: {
+    shareInput: string;
+    transcribe: boolean;
+  }) => Promise<{
+    taskId: string | null;
+    ownerId: string | null;
+    transcribe: boolean;
+    error: string | null;
+  }>;
   /**
    * [T-103b] review.script 核心 —— **不直接审**(script.review 后台跑 L1 违禁词 lint + L2 豆包
    * 语义审、分钟内不能阻塞对话回合):dispatch 既有 script.review ai_task(复用 T-086 审核链路,
@@ -1037,6 +1055,25 @@ export interface CoverGenerateToolResult {
   /** 目标项目 id(卡兜底 + 刷新定位;无项目上下文为 null)。 */
   projectId: string | null;
   /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
+  error: string | null;
+  /** 这里只记录选择结果；最终是否送进 adapter 以候选 resultData.referenceImage 为准。 */
+  reference?: CoverReferenceSelection;
+}
+
+export type CoverReferenceSelection =
+  | { status: "selected"; assetId: string; title: string }
+  | {
+      status: "needs_clarification";
+      reason: "no_image" | "multiple_images" | "incomplete_catalog";
+      total: number | null;
+      candidates: Array<{ id: string; title: string }>;
+    };
+
+export interface DouyinShareToolResult {
+  kind: "intelligence.douyin.share";
+  taskId: string | null;
+  ownerId: string | null;
+  action: "archive" | "archive_and_transcribe";
   error: string | null;
 }
 
@@ -1843,6 +1880,27 @@ const COVER_GENERATE_PARAMS = jsonSchema<{
         "[以图生图]风格参考图的素材 id(可选)。用户给了参考封面、或要「延续历史封面风格/照着这张做」时:先用 context.materials 在素材库找到那张参考图,把它的 asset id 传进来——生图会以它为风格参考(image-to-image)。不传 = 纯文生图。",
     },
   },
+  additionalProperties: false,
+});
+
+const DOUYIN_SHARE_PARAMS = jsonSchema<{
+  shareInput: string;
+  action: "archive" | "archive_and_transcribe";
+}>({
+  type: "object",
+  properties: {
+    shareInput: {
+      type: "string",
+      description: "用户粘贴的完整抖音分享文本或链接。",
+    },
+    action: {
+      type: "string",
+      enum: ["archive", "archive_and_transcribe"],
+      description:
+        "普通分享必须选 archive；只有用户明确说转写、ASR、逐字稿、字幕或提取文字时才选 archive_and_transcribe。",
+    },
+  },
+  required: ["shareInput", "action"],
   additionalProperties: false,
 });
 
@@ -2911,7 +2969,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         referenceAssetId,
       }): Promise<CoverGenerateToolResult> => {
         try {
-          const { taskId, projectId: pid, error } = await deps.dispatchGenerateCover({
+          const {
+            taskId,
+            projectId: pid,
+            error,
+            reference,
+          } = await deps.dispatchGenerateCover({
             projectId:
               typeof projectId === "string" && projectId.trim()
                 ? projectId.trim()
@@ -2924,7 +2987,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                 ? referenceAssetId.trim()
                 : undefined,
           });
-          return { kind: "cover.generate", taskId, projectId: pid, error };
+          return {
+            kind: "cover.generate",
+            taskId,
+            projectId: pid,
+            error,
+            ...(reference ? { reference } : {}),
+          };
         } catch (err) {
           return {
             kind: "cover.generate",
@@ -2935,6 +3004,57 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         }
       },
     }, deps.humanizeError),
+    "intelligence.douyin.share": defineChatTool(
+      "intelligence.douyin.share",
+      {
+        description:
+          "持久归档一条抖音分享链接。普通分享只建档；只有用户本轮明确要求转写/ASR/逐字稿/字幕/提取文字时才在建档完成后幂等排转写。抖音分享链接禁止交给 web.read。",
+        inputSchema: DOUYIN_SHARE_PARAMS,
+        execute: async ({
+          shareInput,
+          action,
+        }): Promise<DouyinShareToolResult> => {
+          const normalized =
+            typeof shareInput === "string" ? shareInput.trim() : "";
+          const transcribe = action === "archive_and_transcribe";
+          const empty = {
+            kind: "intelligence.douyin.share" as const,
+            taskId: null,
+            ownerId: null,
+            action: transcribe
+              ? ("archive_and_transcribe" as const)
+              : ("archive" as const),
+          };
+          if (!normalized) {
+            return { ...empty, error: "请粘贴抖音分享链接。" };
+          }
+          if (!deps.dispatchDouyinShare) {
+            return { ...empty, error: "抖音分享建档能力当前未接入。" };
+          }
+          try {
+            const result = await deps.dispatchDouyinShare({
+              shareInput: normalized,
+              transcribe,
+            });
+            return {
+              kind: "intelligence.douyin.share",
+              taskId: result.taskId,
+              ownerId: result.ownerId,
+              action: result.transcribe
+                ? "archive_and_transcribe"
+                : "archive",
+              error: result.error,
+            };
+          } catch (error) {
+            return {
+              ...empty,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        },
+      },
+      deps.humanizeError,
+    ),
     "calibration.diagnose": defineChatTool("calibration.diagnose", {
       description:
         "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。[T-382] 诊断的是**系统里已有稿子的项目/作品**时,先用 context.artifact.text(传 projectId,projectId 从 context.projects/context.metrics 拿)把真实文稿读出来经 script 传入,**不要只拿标题评、更不要让用户手动贴系统里已有的稿子**。结果是诊断候选,需人采纳后才落预测——不直接写库。**只有标题、系统里也没有文稿时,如实按「仅标题可评」的口径评并明说局限;上游内容还没就绪就先诚实告知,不许假装读过全文、不许输出「待补文稿后再评」这类占位结论。**",
@@ -3599,6 +3719,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "material.gather",
   "material.screenshot",
   "web.read",
+  // [T-523] 抖音分享持久建档/明确授权转写专路；确定性路由会同时物理排除 web.read。
+  "intelligence.douyin.share",
   // [T-253] 本机文件读取(任意路径 + 运行时确认卡 + 敏感 denylist 硬门)。
   "local.read",
   // [T-256a] 环境感知扩展:工具探测(白名单 which/--version)+ 工作区目录感知(复用 T-253 授权表)。

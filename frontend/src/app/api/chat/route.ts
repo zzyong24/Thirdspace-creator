@@ -309,6 +309,8 @@ export async function POST(req: Request): Promise<Response> {
         dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
         // [T-271] cover.generate 端口 —— dispatch 制作封面链(结构化封面方案 + 文案诚实门 + 生图)。
         dispatchGenerateCoverPort: runtime.dispatchGenerateCover,
+        // 抖音分享走 intelligence 持久建档/可选转写专路，禁止误落 web.read。
+        dispatchDouyinSharePort: runtime.dispatchDouyinShare,
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
         dispatchScriptReviewPort: runtime.dispatchScriptReview,
         // [T-265] planning.thesis 端口 —— ensure thesis_tree artifact + dispatch 论点树生成(采纳落面板)。

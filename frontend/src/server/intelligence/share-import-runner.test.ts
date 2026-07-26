@@ -14,7 +14,9 @@ const ctx: RequestContext = {
   source: "user",
 };
 
-function claim(): PersistentTaskClaim {
+function claim(
+  payload: Record<string, unknown> = {},
+): PersistentTaskClaim {
   return {
     task: {
       id: "task-1",
@@ -32,6 +34,8 @@ function claim(): PersistentTaskClaim {
       heartbeatAt: "2026-07-23T18:00:00.000Z",
       attempt: 1,
       maxAttempts: 3,
+      errorCode: null,
+      errorMessage: null,
       costEstimate: null,
       createdAt: "2026-07-23T18:00:00.000Z",
       updatedAt: "2026-07-23T18:00:00.000Z",
@@ -40,6 +44,7 @@ function claim(): PersistentTaskClaim {
       collectionId: "collection-1",
       shareInput: "https://v.douyin.com/abc/",
       requestedBy: "user",
+      ...payload,
     },
     lease: { workerId: "worker-1", attempt: 1 },
   };
@@ -132,6 +137,125 @@ describe("[T-482] 单条分享导入持久任务", () => {
         status: "blocked",
         errorCode: "LOGIN_REQUIRED",
       }),
+    );
+  });
+
+  it("验证码进入 blocked/CAPTCHA，保留可恢复状态", async () => {
+    const finish = vi.fn().mockResolvedValue({});
+    await runDouyinShareImportTask(
+      ctx,
+      { taskId: "task-1", existingClaim: claim() },
+      {
+        tasks: { finish } as unknown as PersistentTaskService,
+        fetcher: {
+          fetch: vi.fn().mockRejectedValue(new Error("CaptchaError: 人机校验")),
+        },
+        intelligence: {} as never,
+      },
+    );
+    expect(finish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "blocked",
+        errorCode: "CAPTCHA",
+      }),
+    );
+  });
+
+  it("仅持久 payload 明确授权时续接转写，live 唤醒失败不反转父任务", async () => {
+    const finish = vi.fn().mockResolvedValue({});
+    const importDouyinSharedItem = vi.fn().mockResolvedValue({
+      item: { id: "item-1" },
+      transcriptStatus: "queued",
+      transcriptQueued: true,
+      transcriptTaskIds: ["transcript-task-1"],
+    });
+    const onTranscriptTasksQueued = vi
+      .fn()
+      .mockRejectedValue(new Error("worker unavailable"));
+    await runDouyinShareImportTask(
+      ctx,
+      {
+        taskId: "task-1",
+        existingClaim: claim({ transcribeAfterImport: true }),
+      },
+      {
+        tasks: { finish } as unknown as PersistentTaskService,
+        fetcher: {
+          fetch: vi.fn().mockResolvedValue({
+            shareUrl: "https://v.douyin.com/abc/",
+            resolvedUrl:
+              "https://www.douyin.com/video/7350000000000000000",
+            browserSessionRef: "douyin-profile:account-1",
+            item: {
+              type: "video",
+              platform: "douyin",
+              externalId: "7350000000000000000",
+              canonicalUrl:
+                "https://www.douyin.com/video/7350000000000000000",
+              authorId: "author-1",
+              authorName: "真实博主",
+              title: "真实作品",
+              summary: null,
+              coverUrl: null,
+              publishedAt: null,
+              durationMs: null,
+            },
+          }),
+        },
+        intelligence: { importDouyinSharedItem } as never,
+        onTranscriptTasksQueued,
+      },
+    );
+    expect(importDouyinSharedItem).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ transcribeAfterImport: true }),
+    );
+    expect(onTranscriptTasksQueued).toHaveBeenCalledWith(ctx, [
+      "transcript-task-1",
+    ]);
+    expect(finish).not.toHaveBeenCalled();
+  });
+
+  it("普通分享明确向领域层传 false，不能被 host 自动升级为转写", async () => {
+    const importDouyinSharedItem = vi.fn().mockResolvedValue({
+      item: { id: "item-1" },
+      transcriptStatus: "not_requested",
+      transcriptQueued: false,
+      transcriptTaskIds: [],
+    });
+    await runDouyinShareImportTask(
+      ctx,
+      { taskId: "task-1", existingClaim: claim() },
+      {
+        tasks: {} as PersistentTaskService,
+        fetcher: {
+          fetch: vi.fn().mockResolvedValue({
+            shareUrl: "https://v.douyin.com/abc/",
+            resolvedUrl:
+              "https://www.douyin.com/video/7350000000000000000",
+            browserSessionRef: "douyin-profile:account-1",
+            item: {
+              type: "video",
+              platform: "douyin",
+              externalId: "7350000000000000000",
+              canonicalUrl:
+                "https://www.douyin.com/video/7350000000000000000",
+              authorId: "author-1",
+              authorName: "真实博主",
+              title: "真实作品",
+              summary: null,
+              coverUrl: null,
+              publishedAt: null,
+              durationMs: null,
+            },
+          }),
+        },
+        intelligence: { importDouyinSharedItem } as never,
+      },
+    );
+    expect(importDouyinSharedItem).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ transcribeAfterImport: false }),
     );
   });
 });

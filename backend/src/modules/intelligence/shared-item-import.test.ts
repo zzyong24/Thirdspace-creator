@@ -182,6 +182,73 @@ describe("T-482 抖音分享链接单条建档", () => {
           })
         ).rows,
       ).toHaveLength(2);
+
+      const queuedForTranscript =
+        await intelligence.enqueueDouyinShareImport(ctx, {
+          collectionId: collection.id,
+          idempotencyKey: "share-import-with-transcript",
+          shareInput: "https://www.douyin.com/video/7350000000000000003",
+          transcribeAfterImport: true,
+        });
+      const queuedForTranscriptAgain =
+        await intelligence.enqueueDouyinShareImport(ctx, {
+          collectionId: collection.id,
+          idempotencyKey: "share-import-with-transcript",
+          shareInput: "https://www.douyin.com/video/7350000000000000003",
+          transcribeAfterImport: true,
+        });
+      expect(queuedForTranscriptAgain.task.id).toBe(
+        queuedForTranscript.task.id,
+      );
+      const transcriptClaim = await tasks.claimTask({
+        taskId: queuedForTranscript.task.id,
+        workerId: "share-worker-transcript",
+      });
+      if (!transcriptClaim) throw new Error("expected transcript share claim");
+      const importedForTranscript =
+        await intelligence.importDouyinSharedItem(ctx, {
+          taskId: queuedForTranscript.task.id,
+          lease: transcriptClaim.lease,
+          collectionId: collection.id,
+          browserSessionRef: "douyin-profile:account-share",
+          transcribeAfterImport: true,
+          item: {
+            ...item,
+            externalId: "7350000000000000003",
+            canonicalUrl:
+              "https://www.douyin.com/video/7350000000000000003",
+            title: "明确要求转写的作品",
+          },
+        });
+      expect(importedForTranscript).toMatchObject({
+        transcriptStatus: "queued",
+        transcriptQueued: true,
+        transcriptTaskIds: [expect.any(String)],
+      });
+      expect(
+        await intelligence.getItem(ctx, importedForTranscript.item.id),
+      ).toMatchObject({
+        transcript: {
+          status: "queued",
+          executionTaskId: importedForTranscript.transcriptTaskIds[0],
+        },
+      });
+
+      // 父任务和子任务都只在当前账号可读，不复制一份“智能状态”绕开 ownership。
+      const otherAccountCtx: RequestContext = {
+        ...ctx,
+        accountId: "account-other",
+        requestId: "request-other-account",
+      };
+      await expect(
+        tasks.get(otherAccountCtx, queuedForTranscript.task.id),
+      ).rejects.toThrow();
+      await expect(
+        tasks.get(
+          otherAccountCtx,
+          importedForTranscript.transcriptTaskIds[0]!,
+        ),
+      ).rejects.toThrow();
     } finally {
       await client.close();
     }

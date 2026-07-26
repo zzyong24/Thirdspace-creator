@@ -10,6 +10,8 @@ import {
   resolveChatMaxSteps,
   buildChatPrepareStep,
   buildForcedToolInstruction,
+  detectCopilotMediaRoute,
+  resolveUniqueCoverReference,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import { SKILLS_BRIEF_MAX_LINES } from "@creatoros/contract";
@@ -72,6 +74,234 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
 // 只是 provider 句柄),故装配可单测;真正的 streamText(流式)需 dev server + key,本环境不跑。
 
 const ctx = { userId: "u-1", correlationId: "c-1" } as never;
+
+describe("[T-523] Copilot 媒体意图确定性路由", () => {
+  it("只用最新一轮原文授权转写；历史轮次的转写要求不能污染普通分享", () => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "old",
+          role: "user",
+          parts: [{ type: "text", text: "以后抖音链接都帮我转写" }],
+        },
+        {
+          id: "latest",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "3.21 复制打开抖音 https://v.douyin.com/abc/",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: false,
+    });
+
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "把这个抖音提取文字并转写：https://www.douyin.com/video/123",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: true,
+    });
+
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-negated",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "不用转写，只帮我收藏 https://v.douyin.com/no-asr/",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: false,
+    });
+  });
+
+  it("只有确认全库图片 total===1 才自动选择，不能把分页首屏的一张当唯一", () => {
+    const firstPage = [
+      { id: "a1", title: "第一页唯一可见", kind: "image" },
+    ];
+    expect(resolveUniqueCoverReference(firstPage, 2)).toMatchObject({
+      status: "needs_clarification",
+      reason: "multiple_images",
+      total: 2,
+    });
+    expect(resolveUniqueCoverReference(firstPage, 1)).toEqual({
+      status: "selected",
+      assetId: "a1",
+      title: "第一页唯一可见",
+    });
+    expect(resolveUniqueCoverReference([], 0)).toMatchObject({
+      status: "needs_clarification",
+      reason: "no_image",
+    });
+  });
+
+  it("抖音专路由强制持久建档工具，并从本轮工具集中物理移除 web.read", async () => {
+    const dispatchDouyinSharePort = vi.fn(async () => ({
+      taskId: "share-task-1",
+      ownerId: "share-import-owner-1",
+    }));
+    const { deps } = makeDeps({ dispatchDouyinSharePort });
+    const route = detectCopilotMediaRoute([
+      {
+        id: "m4",
+        role: "user",
+        parts: [{ type: "text", text: "看看这个 https://v.douyin.com/abc/" }],
+      },
+    ] as never);
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "topics", functionKey: "web.read" },
+      deps,
+      route,
+    );
+    expect(assembly.forcedTool).toBe("intelligence.douyin.share");
+    expect(Object.keys(assembly.tools)).toContain("intelligence.douyin.share");
+    expect(Object.keys(assembly.tools)).not.toContain("web.read");
+
+    const execute = assembly.tools["intelligence.douyin.share"]!
+      .execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    await execute(
+      {
+        shareInput: "模型擅自换掉的链接",
+        action: "archive_and_transcribe",
+      },
+      { toolCallId: "tc", messages: [], context: {} },
+    );
+    expect(dispatchDouyinSharePort).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        shareInput: "看看这个 https://v.douyin.com/abc/",
+        transcribe: false,
+      }),
+    );
+  });
+
+  it("没有最新轮媒体路由授权时，即使模型调用专工具也不能升级成转写", async () => {
+    const dispatchDouyinSharePort = vi.fn(async () => ({
+      taskId: "share-task-deep-link",
+      ownerId: "share-import-owner-deep-link",
+    }));
+    const { deps } = makeDeps({ dispatchDouyinSharePort });
+    const assembly = await buildChatAssembly(
+      ctx,
+      {
+        surface: "topics",
+        functionKey: "intelligence.douyin.share",
+      },
+      deps,
+      null,
+    );
+    const execute = assembly.tools["intelligence.douyin.share"]!
+      .execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    await execute(
+      {
+        shareInput: "https://v.douyin.com/deep-link/",
+        action: "archive_and_transcribe",
+      },
+      { toolCallId: "tc", messages: [], context: {} },
+    );
+    expect(dispatchDouyinSharePort).toHaveBeenCalledWith(ctx, {
+      shareInput: "https://v.douyin.com/deep-link/",
+      transcribe: false,
+    });
+  });
+
+  it("参考图路由从全库精确计数中选唯一图片并把 asset id 传给真实封面任务", async () => {
+    const dispatchGenerateCoverPort = vi.fn(async () => ({
+      taskId: "cover-task-1",
+    }));
+    const { deps } = makeDeps({ dispatchGenerateCoverPort });
+    deps.contextReaders!.listCoverReferenceImages = async () => ({
+      rows: [{ id: "asset-only", title: "唯一参考封面", kind: "image" }],
+      total: 1,
+    });
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "project-1" },
+      deps,
+      { kind: "cover.reference" },
+    );
+    expect(assembly.forcedTool).toBe("cover.generate");
+    const execute = assembly.tools["cover.generate"]!.execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    const result = (await execute(
+      {},
+      { toolCallId: "tc", messages: [], context: {} },
+    )) as { reference?: { status: string; assetId?: string } };
+    expect(dispatchGenerateCoverPort).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ referenceAssetId: "asset-only" }),
+    );
+    expect(result.reference).toMatchObject({
+      status: "selected",
+      assetId: "asset-only",
+    });
+  });
+
+  it("素材读端口只回一条候选但精确 total=2 时拒绝自动引用，并按 total 提示", async () => {
+    const dispatchGenerateCoverPort = vi.fn(async () => ({
+      taskId: "must-not-run",
+    }));
+    const { deps } = makeDeps({ dispatchGenerateCoverPort });
+    deps.contextReaders!.listCoverReferenceImages = async () => ({
+      rows: [{ id: "asset-first", title: "首条参考封面", kind: "image" }],
+      total: 2,
+    });
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "project-1" },
+      deps,
+      { kind: "cover.reference" },
+    );
+    const execute = assembly.tools["cover.generate"]!.execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    const result = (await execute(
+      {},
+      { toolCallId: "tc", messages: [], context: {} },
+    )) as {
+      reference?: { status: string; total?: number };
+      error?: string | null;
+    };
+    expect(dispatchGenerateCoverPort).not.toHaveBeenCalled();
+    expect(result.reference).toMatchObject({
+      status: "needs_clarification",
+      total: 2,
+    });
+    expect(result.error).toContain("2 张");
+  });
+});
 
 const FAKE_SPEC = {
   apiFormat: "anthropic" as const,

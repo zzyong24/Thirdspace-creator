@@ -2575,7 +2575,8 @@ export function createIntelligenceService(
 
     /**
      * 分享文本先落持久任务，HTTP 立即返回。真正的短链解析和 CDP 读取由 host worker
-     * 完成；payload 只保存用户输入和目标分类，不会触发逐字稿。
+     * 完成；普通分享只保存用户输入和目标分类。仅 Copilot 明确取得转写授权时，
+     * payload 才带 transcribeAfterImport，由本 service 在建档完成后幂等续接逐字稿任务。
      */
     async enqueueDouyinShareImport(
       ctx: RequestContext,
@@ -2583,6 +2584,8 @@ export function createIntelligenceService(
         collectionId: string | null;
         shareInput: string;
         idempotencyKey: string;
+        /** Copilot 内部授权位；普通分享不传，恒不触发逐字稿。 */
+        transcribeAfterImport?: boolean;
       },
     ) {
       if (input.collectionId) await requireCollection(ctx, input.collectionId);
@@ -2599,6 +2602,9 @@ export function createIntelligenceService(
           collectionId: input.collectionId,
           shareInput,
           requestedBy: "user",
+          ...(input.transcribeAfterImport
+            ? { transcribeAfterImport: true }
+            : {}),
         },
         priority: 20,
       });
@@ -2608,7 +2614,8 @@ export function createIntelligenceService(
     /**
      * 单条抖音分享链接建档。host 只负责在登录态中解析真实作品元数据；所有领域写入
      * 仍经本 service：按作者复用/创建博主来源，再复用标准 adapter batch 做作品、
-     * 指标、observation 与来源快照的幂等落库。此路径绝不创建逐字稿任务。
+     * 指标、observation 与来源快照的幂等落库。普通分享不创建逐字稿任务；只有调用方
+     * 显式传入 transcribeAfterImport=true 时，才在导入任务终态前续接逐字稿任务。
      */
     async importDouyinSharedItem(
       ctx: RequestContext,
@@ -2618,6 +2625,8 @@ export function createIntelligenceService(
         collectionId: string | null;
         item: IntelligenceAdapterItem;
         browserSessionRef: string;
+        /** 仅当用户本轮明确要求转写时为 true；普通分享建档不得升级。 */
+        transcribeAfterImport?: boolean;
       },
     ) {
       const accountId = await account(
@@ -2784,6 +2793,14 @@ export function createIntelligenceService(
           "该分享链接正在由另一个任务建档，请稍后刷新",
         );
       }
+      // 明确转写授权在 share_import 任务终态前，经领域 service 幂等排入持久
+      // transcribe 任务。即使 host 随后退出，启动恢复仍能从持久队列续跑。
+      const transcriptDispatch = input.transcribeAfterImport
+        ? await service.enqueueTranscripts(ctx, {
+            itemIds: [item.id],
+            idempotencyKey: `${input.taskId}:transcript`,
+          })
+        : { tasks: [], skipped: [] };
       const [[snapshot], [transcript]] = await Promise.all([
         db
           .select()
@@ -2813,7 +2830,8 @@ export function createIntelligenceService(
         createdItem: !before,
         deduplicated: Boolean(before),
         transcriptStatus: transcript.status,
-        transcriptQueued: false as const,
+        transcriptQueued: transcriptDispatch.tasks.length > 0,
+        transcriptTaskIds: transcriptDispatch.tasks.map((task) => task.id),
       };
       await service.applyAdapterBatch(ctx, {
         runId: run.id,

@@ -1280,6 +1280,69 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
   });
 });
 
+describe("[T-523] intelligence.douyin.share 工具 — 持久建档与显式转写", () => {
+  const WHITELIST = ["intelligence.douyin.share"] as const;
+
+  it("archive_and_transcribe 只转成显式 transcribe=true，并返回父任务定位字段", async () => {
+    const dispatchDouyinShare = vi.fn(async () => ({
+      taskId: "share-task-1",
+      ownerId: "share-owner-1",
+      transcribe: true,
+      error: null,
+    }));
+    const { deps } = makeDeps({ dispatchDouyinShare });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(
+      tools["intelligence.douyin.share"]!,
+      {
+        shareInput: "  https://v.douyin.com/example/  ",
+        action: "archive_and_transcribe",
+      },
+    )) as {
+      taskId: string | null;
+      ownerId: string | null;
+      action: string;
+      error: string | null;
+    };
+    expect(dispatchDouyinShare).toHaveBeenCalledWith({
+      shareInput: "https://v.douyin.com/example/",
+      transcribe: true,
+    });
+    expect(result).toMatchObject({
+      taskId: "share-task-1",
+      ownerId: "share-owner-1",
+      action: "archive_and_transcribe",
+      error: null,
+    });
+  });
+
+  it("普通 archive 恒传 transcribe=false；空分享不创建任务", async () => {
+    const dispatchDouyinShare = vi.fn(async () => ({
+      taskId: "share-task-2",
+      ownerId: "share-owner-2",
+      transcribe: false,
+      error: null,
+    }));
+    const { deps } = makeDeps({ dispatchDouyinShare });
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["intelligence.douyin.share"]!, {
+      shareInput: "https://v.douyin.com/example/",
+      action: "archive",
+    });
+    expect(dispatchDouyinShare).toHaveBeenCalledWith({
+      shareInput: "https://v.douyin.com/example/",
+      transcribe: false,
+    });
+    const empty = (await runExecute(
+      tools["intelligence.douyin.share"]!,
+      { shareInput: "  ", action: "archive" },
+    )) as { taskId: string | null; error: string | null };
+    expect(empty.taskId).toBeNull();
+    expect(empty.error).toContain("粘贴抖音分享链接");
+    expect(dispatchDouyinShare).toHaveBeenCalledTimes(1);
+  });
+});
+
 // [T-268] 整稿改异步 dispatch —— execute 不再 inline 同步跑 runScriptNode(整稿分钟级必超时→退回
 // hooks),而是 dispatch 既有异步 runner runScriptDraft,返回 { taskId, projectId, error }。
 describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑)", () => {

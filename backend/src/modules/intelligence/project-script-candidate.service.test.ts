@@ -35,6 +35,8 @@ function task(checkpoint: unknown): ExecutionTaskResourceV2 {
     heartbeatAt: null,
     attempt: 1,
     maxAttempts: 3,
+    errorCode: null,
+    errorMessage: null,
     costEstimate: null,
     createdAt: "2026-07-23T18:00:00.000Z",
     updatedAt: "2026-07-23T18:01:00.000Z",

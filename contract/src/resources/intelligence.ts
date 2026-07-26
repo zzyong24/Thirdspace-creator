@@ -366,6 +366,10 @@ export const executionTaskResourceV2 = z
     heartbeatAt: iso8601.nullable(),
     attempt: z.number().int().nonnegative(),
     maxAttempts: z.number().int().positive(),
+    // 直接投影 execution_tasks 已有错误列；状态卡据此区分登录、验证码、模型配置等
+    // 可恢复原因，不在 intelligence 复制第二份状态。
+    errorCode: z.string().nullable(),
+    errorMessage: z.string().nullable(),
     costEstimate: z
       .object({
         unit: z.string().min(1),

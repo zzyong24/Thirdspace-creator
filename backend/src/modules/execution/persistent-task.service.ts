@@ -164,6 +164,8 @@ function toResource(row: TaskRow): ExecutionTaskResourceV2 {
     heartbeatAt: row.heartbeatAt,
     attempt: row.attempt,
     maxAttempts: row.maxAttempts,
+    errorCode: row.lastErrorCode,
+    errorMessage: row.lastErrorMessage,
     costEstimate:
       (row.costEstimate as ExecutionTaskResourceV2["costEstimate"]) ?? null,
     createdAt: row.createdAt,

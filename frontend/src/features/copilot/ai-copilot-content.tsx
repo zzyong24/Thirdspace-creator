@@ -95,6 +95,7 @@ import {
   type LocalReadCandidates,
 } from "./chat-local-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
+import { ChatDouyinShareCard } from "./chat-douyin-share-card";
 import {
   ChatLearningCard,
   type ChatLearningSuggestion,
@@ -397,6 +398,9 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "research.gather": { label: "找素材", sub: "收集研究素材" },
   "research.analyze": { label: "研究分析", sub: "分析研究结论" },
   "copilot.assist": { label: "AI 助手", sub: "对话式创作建议" },
+  // 持久任务 kind（不是 chat tool 名）；通知/任务状态按 execution 真值显示。
+  share_import: { label: "抖音内容建档", sub: "读取并归档分享作品" },
+  transcribe: { label: "语音转写", sub: "提取逐字稿" },
   // [T-255a] 执行层任务(exec.* 命名空间,脑手分离)。
   "exec.echo.manifest": { label: "执行自检", sub: "沙箱执行框架演示" },
   "exec.video.render": { label: "渲染成片", sub: "模板确定性渲染视频" },
@@ -2077,6 +2081,29 @@ export function AICopilotContent({
                           kindOf={o.kindOf ?? "image"}
                           error={o.error ?? null}
                         />
+                      );
+                    }
+                    // 抖音分享专路：只渲 execution 持久父/子任务真值，模型文本不能代替状态。
+                    if (
+                      name === "intelligence.douyin.share" &&
+                      out.kind === "intelligence.douyin.share"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        ownerId?: string | null;
+                        action?: "archive" | "archive_and_transcribe";
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatDouyinShareCard
+                            taskId={o.taskId ?? null}
+                            ownerId={o.ownerId ?? null}
+                            action={o.action ?? "archive"}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
                       );
                     }
                     // [T-062a] 手录经验(learning.capture)→ 候选卡「存为经验」(createLearning

@@ -211,10 +211,15 @@ describe("T-482 持久执行任务状态机", () => {
       if (!failedClaim || failedClaim.task.id !== failedTask.id) {
         throw new Error("expected failed task claim");
       }
-      await service.finish({
+      const failed = await service.finish({
         taskId: failedTask.id,
         workerId: "worker-a",
         attempt: failedClaim.task.attempt,
+        status: "failed",
+        errorCode: "UPSTREAM_TIMEOUT",
+        errorMessage: "上游超时",
+      });
+      expect(failed).toMatchObject({
         status: "failed",
         errorCode: "UPSTREAM_TIMEOUT",
         errorMessage: "上游超时",

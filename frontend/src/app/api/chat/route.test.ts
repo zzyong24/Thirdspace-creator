@@ -15,6 +15,7 @@ const getConversation = vi.fn();
 // [T-239f] user 去重的历史读(兜底路径:无 trigger 的老客户端按「最后一条=同内容 user 行」判)。
 const listMessages = vi.fn();
 const runChatStream = vi.fn();
+const dispatchDouyinShare = vi.fn();
 
 // [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
 // 触发 onFinish 断言 assistant 回复(text + parts)落库。[T-239c] onFinish 现带 isAborted。
@@ -43,6 +44,7 @@ vi.mock("@/server/persistence-client", () => ({
       listMessages,
     },
     resolveModelSpec: vi.fn(),
+    dispatchDouyinShare,
     context: {
       positioning: {},
       learnings: {},
@@ -91,6 +93,7 @@ beforeEach(() => {
   appendAssistantMessage.mockReset();
   appendAssistantMessage.mockResolvedValue({ id: "m-2" });
   runChatStream.mockReset();
+  dispatchDouyinShare.mockReset();
   capturedStreamInit = null;
   // Default: a stream result whose toUIMessageStreamResponse captures its init(headers +
   // [T-128] onFinish 持久化回调)并返回普通 Response。
@@ -195,6 +198,8 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     const [, input] = runChatStream.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");
     expect(input.messages).toHaveLength(1);
+    const [, , deps] = runChatStream.mock.calls[0];
+    expect(deps.dispatchDouyinSharePort).toBe(dispatchDouyinShare);
   });
 
   it("[T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文", async () => {

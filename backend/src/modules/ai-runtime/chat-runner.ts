@@ -48,6 +48,7 @@ import {
   type LearningsListRaw,
   type CandidatesListRaw,
   type PredictionsRaw,
+  type CoverReferenceSelection,
 } from "./chat-tools";
 // [T-256a] 工具探测结果类型(端口契约共用)。
 import type { DetectToolsResult } from "./local-env-probe";
@@ -309,6 +310,14 @@ export interface AssembleChatDeps extends ContextDeps {
     input: { projectId: string; topic?: string; referenceAssetId?: string },
   ) => Promise<{ taskId: string }>;
   /**
+   * [T-523] Copilot 抖音分享编排端口：只经 intelligence service 创建持久任务。
+   * transcribe=true 只允许来自最新一轮用户原文的明确授权。
+   */
+  dispatchDouyinSharePort?: (
+    ctx: RequestContext,
+    input: { shareInput: string; transcribe: boolean },
+  ) => Promise<{ taskId: string; ownerId: string }>;
+  /**
    * [T-268] script.draft 端口 —— dispatch 既有异步 runner runScriptDraft(script-runner.ts,复活
    * 孤儿;整稿分钟级不能 inline 阻塞对话回合)。绑定层先 ensure 项目的 output_script artifact 并把
    * artifactId 写进 task.inputData(采纳时 append 新版本 → 稿面编辑器读回),再 createTask。由
@@ -402,6 +411,16 @@ export interface ContextReaders {
     ctx: RequestContext,
     opts: { query: string; limit: number },
   ) => Promise<Array<{ id: string; title: string; kind: string }>>;
+  /**
+   * [T-523] 封面参考图的全库精确读端口。实现必须完整读取并返回图片总数；只有
+   * total===1 才能确定性自动选择，不能把第一页的一张误判为全库唯一。
+   */
+  listCoverReferenceImages?: (
+    ctx: RequestContext,
+  ) => Promise<{
+    rows: Array<{ id: string; title: string; kind: string }>;
+    total: number;
+  }>;
   /**
    * [T-099b] context.project.detail —— 某项目全档(brief/阶段/发布/产物索引/最新指标)。
    * composition root 复用既有公开读源(projects getProject/briefDetail + artifacts
@@ -612,6 +631,89 @@ export interface ChatAssembly {
   toolApproval?: Record<string, (input: unknown) => Promise<ToolApprovalStatus>>;
 }
 
+export type CopilotMediaRoute =
+  | { kind: "douyin.share"; shareInput: string; transcribe: boolean }
+  | { kind: "cover.reference" };
+
+const DOUYIN_URL_RE =
+  /https?:\/\/(?:(?:www|v)\.)?douyin\.com\/\S+|https?:\/\/(?:www\.)?iesdouyin\.com\/\S+/i;
+const TRANSCRIBE_INTENT_RE =
+  /转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text/i;
+const TRANSCRIBE_NEGATION_RE =
+  /(?:不要|不用|无需|不必|不需要|别)(?:再|自动|帮我|给我|进行|做|跑)?\s*(?:转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text)/i;
+const REFERENCE_COVER_INTENT_RE =
+  /(?:参考图|参考封面|照着.{0,12}(?:做|生成)|沿用.{0,12}(?:风格|样式)|复用.{0,12}封面)/i;
+
+function latestUserText(messages: UIMessage[]): string {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message?.role !== "user") continue;
+    return (message.parts ?? [])
+      .map((part) =>
+        part.type === "text" && typeof part.text === "string" ? part.text : "",
+      )
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  }
+  return "";
+}
+
+/**
+ * [T-523] Host 侧确定性媒体路由。只读最新一轮用户原文，模型不能把普通分享升级成
+ * 转写授权；抖音链接一旦命中就走持久内容雷达链，不再落到通用 web.read。
+ */
+export function detectCopilotMediaRoute(
+  messages: UIMessage[],
+): CopilotMediaRoute | null {
+  const text = latestUserText(messages);
+  if (!text) return null;
+  if (DOUYIN_URL_RE.test(text)) {
+    return {
+      kind: "douyin.share",
+      shareInput: text,
+      transcribe:
+        TRANSCRIBE_INTENT_RE.test(text) &&
+        !TRANSCRIBE_NEGATION_RE.test(text),
+    };
+  }
+  if (/封面/i.test(text) && REFERENCE_COVER_INTENT_RE.test(text)) {
+    return { kind: "cover.reference" };
+  }
+  return null;
+}
+
+/** 只有全库图片精确总数为 1 时才自动选择；分页未读全也必须要求用户明确选择。 */
+export function resolveUniqueCoverReference(
+  images: Array<{ id: string; title: string; kind: string }>,
+  total: number,
+): CoverReferenceSelection {
+  const candidates = images
+    .filter((material) => material.kind.trim().toLowerCase() === "image")
+    .map(({ id, title }) => ({ id, title }));
+  if (total === 1 && candidates.length === 1) {
+    return {
+      status: "selected",
+      assetId: candidates[0]!.id,
+      title: candidates[0]!.title,
+    };
+  }
+  return {
+    status: "needs_clarification",
+    reason:
+      total === 0
+        ? "no_image"
+        : Number.isFinite(total) && total > 1
+          ? "multiple_images"
+          : "incomplete_catalog",
+    total:
+      Number.isInteger(total) && total >= 0
+        ? total
+        : null,
+    candidates,
+  };
+}
+
 /**
  * 纯装配(不调模型)—— resolve skill(surface 层)→ 装配 CreativeContext facets(数据层)→
  * 拼 system → 按 skill 白名单挂工具(工具白名单层)。单测直接断言它的产物。
@@ -623,6 +725,7 @@ export async function buildChatAssembly(
   ctx: RequestContext,
   chatContext: ChatContext,
   deps: AssembleChatDeps,
+  mediaRoute: CopilotMediaRoute | null = null,
 ): Promise<ChatAssembly> {
   // 1) 页面层:surface → 基础 skill。
   const skillId = resolveSkillForSurface(chatContext.surface);
@@ -683,16 +786,38 @@ export async function buildChatAssembly(
   const scopedNames = getSurfaceToolScope(chatContext.surface, {
     projectPublished: projectStage ? projectStage.published : null,
   });
-  const baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
-  const allowedNames =
-    chatContext.functionKey &&
-    ALL_CHAT_TOOL_NAMES.includes(chatContext.functionKey) &&
-    !baseAllowed.includes(chatContext.functionKey)
-      ? [...baseAllowed, chatContext.functionKey]
+  let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+  if (mediaRoute?.kind === "douyin.share") {
+    baseAllowed = baseAllowed.filter((name) => name !== "web.read");
+  } else {
+    // 只在本轮明确出现抖音分享或显式深链时暴露，避免普通对话让模型自行“升级”为建档。
+    baseAllowed = baseAllowed.filter(
+      (name) => name !== "intelligence.douyin.share",
+    );
+  }
+  const routedTool =
+    mediaRoute?.kind === "douyin.share"
+      ? "intelligence.douyin.share"
+      : mediaRoute?.kind === "cover.reference"
+        ? "cover.generate"
+        : null;
+  const effectiveFunctionKey =
+    mediaRoute?.kind === "douyin.share" &&
+    chatContext.functionKey === "web.read"
+      ? undefined
+      : chatContext.functionKey;
+  let allowedNames =
+    effectiveFunctionKey &&
+    ALL_CHAT_TOOL_NAMES.includes(effectiveFunctionKey) &&
+    !baseAllowed.includes(effectiveFunctionKey)
+      ? [...baseAllowed, effectiveFunctionKey]
       : baseAllowed;
+  if (routedTool && !allowedNames.includes(routedTool)) {
+    allowedNames = [...allowedNames, routedTool];
+  }
   const preferredTools = applyFunctionKey(
     getTools(skillId),
-    chatContext.functionKey,
+    effectiveFunctionKey,
   ).filter((n) => allowedNames.includes(n));
   const toolWhitelist = [
     ...preferredTools,
@@ -1428,18 +1553,109 @@ export async function buildChatAssembly(
         selectionTitle ||
         "";
       try {
+        let resolvedReferenceAssetId =
+          typeof referenceAssetId === "string" && referenceAssetId.trim()
+            ? referenceAssetId.trim()
+            : undefined;
+        let reference: CoverReferenceSelection | undefined =
+          resolvedReferenceAssetId
+            ? {
+                status: "selected",
+                assetId: resolvedReferenceAssetId,
+                title: "用户指定参考图",
+              }
+            : undefined;
+        if (
+          mediaRoute?.kind === "cover.reference" &&
+          !resolvedReferenceAssetId
+        ) {
+          if (!deps.contextReaders?.listCoverReferenceImages) {
+            reference = {
+              status: "needs_clarification",
+              reason: "incomplete_catalog",
+              total: null,
+              candidates: [],
+            };
+          } else {
+            const catalog =
+              await deps.contextReaders.listCoverReferenceImages(ctx);
+            reference = resolveUniqueCoverReference(
+              catalog.rows,
+              catalog.total,
+            );
+          }
+          if (reference.status !== "selected") {
+            return {
+              taskId: null,
+              projectId: pid,
+              reference,
+              error:
+                reference.reason === "no_image"
+                  ? "素材库里没有可用图片。请先上传或明确指定一张参考图。"
+                  : reference.reason === "multiple_images"
+                    ? `素材库里有 ${reference.total ?? "多"} 张可用图片，请明确选择一张参考图后再生成封面。`
+                    : "无法确认素材库中参考图的完整数量，请明确指定一张参考图后再生成封面。",
+            };
+          }
+          resolvedReferenceAssetId = reference.assetId;
+        }
         const { taskId } = await deps.dispatchGenerateCoverPort(ctx, {
           projectId: pid,
           ...(effTopic ? { topic: effTopic } : {}),
           // [T-380] 以图生图风格参考透传(可选;素材库 asset id)。
-          ...(referenceAssetId ? { referenceAssetId } : {}),
+          ...(resolvedReferenceAssetId
+            ? { referenceAssetId: resolvedReferenceAssetId }
+            : {}),
         });
-        return { taskId, projectId: pid, error: null };
+        return {
+          taskId,
+          projectId: pid,
+          error: null,
+          ...(reference ? { reference } : {}),
+        };
       } catch (err) {
         return {
           taskId: null,
           projectId: pid,
           error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    dispatchDouyinShare: async ({ shareInput }) => {
+      const effective =
+        mediaRoute?.kind === "douyin.share"
+          ? {
+              shareInput: mediaRoute.shareInput,
+              transcribe: mediaRoute.transcribe,
+            }
+          : {
+              shareInput,
+              // 转写是高成本派生任务；没有最新轮确定性路由的明确授权时，模型不能自行升级。
+              transcribe: false,
+            };
+      if (!deps.dispatchDouyinSharePort) {
+        return {
+          taskId: null,
+          ownerId: null,
+          transcribe: effective.transcribe,
+          error: "抖音分享建档能力当前未接入。",
+        };
+      }
+      try {
+        const { taskId, ownerId } =
+          await deps.dispatchDouyinSharePort(ctx, effective);
+        return {
+          taskId,
+          ownerId,
+          transcribe: effective.transcribe,
+          error: null,
+        };
+      } catch (error) {
+        return {
+          taskId: null,
+          ownerId: null,
+          transcribe: effective.transcribe,
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     },
@@ -1687,9 +1903,11 @@ export async function buildChatAssembly(
   // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
   // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
   const forcedTool =
-    chatContext.functionKey && toolWhitelist.includes(chatContext.functionKey)
-      ? chatContext.functionKey
-      : undefined;
+    routedTool && toolWhitelist.includes(routedTool)
+      ? routedTool
+      : effectiveFunctionKey && toolWhitelist.includes(effectiveFunctionKey)
+        ? effectiveFunctionKey
+        : undefined;
 
   // [T-263] HITL 授权门:从本轮已挂工具收录登记了授权判定器的工具(当前仅 local.read),装配
   // streamText 的 toolApproval 配置。工具不在白名单 / decideLocalRead 端口未装配 → 自然缺席。
@@ -1782,7 +2000,12 @@ export async function runChatStream(
   deps: AssembleChatDeps,
   onFinish?: (finalText: string) => void | Promise<void>,
 ) {
-  const assembly = await buildChatAssembly(ctx, input.chatContext, deps);
+  const assembly = await buildChatAssembly(
+    ctx,
+    input.chatContext,
+    deps,
+    detectCopilotMediaRoute(input.messages),
+  );
   const { modelFor } = await import("@creatoros/ai-worker");
   // [T-239d] 喂模型前投影(chat-history-window 纯函数;**只改喂模型的副本,ai_messages 存储
   // 原样** —— 刷新恢复/卡重渲不受影响):① 近 N 轮之外的 tool-result 换指针占位(数据卡已渲

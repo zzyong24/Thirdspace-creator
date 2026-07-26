@@ -100,11 +100,14 @@ describe("T-482 内容雷达 contract", () => {
       heartbeatAt: null,
       attempt: 0,
       maxAttempts: 3,
+      errorCode: null,
+      errorMessage: null,
       costEstimate: null,
       createdAt: "2026-07-23T00:00:00.000Z",
       updatedAt: "2026-07-23T00:00:00.000Z",
     });
     expect(task.status).toBe("queued");
     expect(task.maxAttempts).toBe(3);
+    expect(task.errorCode).toBeNull();
   });
 });

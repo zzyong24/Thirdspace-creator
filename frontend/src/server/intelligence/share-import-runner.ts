@@ -24,6 +24,14 @@ export interface RunDouyinShareImportDeps {
   tasks: PersistentTaskService;
   intelligence: Pick<IntelligenceService, "importDouyinSharedItem">;
   fetcher: DouyinShareImportFetcher;
+  /**
+   * 领域层已把子任务持久化后，host 可立即唤醒转写 worker；失败只影响实时启动，
+   * 持久队列仍会在启动恢复/下一轮 drain 中续跑，不能反转已成功的父任务。
+   */
+  onTranscriptTasksQueued?: (
+    ctx: RequestContext,
+    taskIds: string[],
+  ) => Promise<void> | void;
   now?: () => string;
   workerId?: () => string;
 }
@@ -78,20 +86,34 @@ export async function runDouyinShareImportTask(
         ? claim.payload.shareInput.trim()
         : typeof claim.payload.shareText === "string"
           ? claim.payload.shareText.trim()
-        : "";
+          : "";
     if (!shareText) throw new Error("分享文本不能为空");
 
     const fetched = await deps.fetcher.fetch(ctx, {
       shareText,
       capturedAt: deps.now?.() ?? new Date().toISOString(),
     });
-    await deps.intelligence.importDouyinSharedItem(ctx, {
+    const result = await deps.intelligence.importDouyinSharedItem(ctx, {
       taskId: input.taskId,
       lease,
       collectionId,
       item: fetched.item,
       browserSessionRef: fetched.browserSessionRef,
+      transcribeAfterImport: claim.payload.transcribeAfterImport === true,
     });
+    const transcriptTaskIds = Array.isArray(result.transcriptTaskIds)
+      ? result.transcriptTaskIds.filter(
+          (taskId): taskId is string =>
+            typeof taskId === "string" && taskId.length > 0,
+        )
+      : [];
+    if (transcriptTaskIds.length > 0 && deps.onTranscriptTasksQueued) {
+      try {
+        await deps.onTranscriptTasksQueued(ctx, transcriptTaskIds);
+      } catch {
+        // 已持久化的子任务是真值；live dispatch 失败留给启动恢复/队列 drain。
+      }
+    }
   } catch (error) {
     const failure = taskFailure(error);
     await deps.tasks.finish({

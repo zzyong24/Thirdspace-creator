@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import {
   createConfiguredDb,
   UnsupportedOperationError,
@@ -1454,8 +1455,13 @@ export interface ChatRuntime {
   // → awaiting_confirmation 渲封面方案 + 封面图候选 → 采纳 confirmTask(既有 asset 采纳门绑进项目)。
   dispatchGenerateCover: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string },
+    input: { projectId: string; topic?: string; referenceAssetId?: string },
   ) => Promise<{ taskId: string }>;
+  // 抖音分享走 intelligence 持久父任务；普通建档与明确转写使用不同幂等指纹。
+  dispatchDouyinShare: (
+    ctx: RequestContext,
+    input: { shareInput: string; transcribe: boolean },
+  ) => Promise<{ taskId: string; ownerId: string }>;
   // [T-268] script.draft 端口 —— ensure 项目 output_script artifact + dispatch 既有异步 runner
   // runScriptDraft(复活孤儿:整稿分钟级不能 inline 阻塞对话回合),立即返回 taskId。对话整稿工具
   // (script.draft)据此触发,前端 ChatScriptDraftCard 轮询 getTask → awaiting_confirmation 渲整稿
@@ -5302,10 +5308,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     adapter: intelligenceSourceAdapter,
     now: deps.now,
   };
+  let intelligenceTranscriptRunnerDeps:
+    | IntelligenceTranscriptRunnerDeps
+    | null = null;
   const shareImportRunnerDeps = {
     tasks: persistentTaskService,
     intelligence: intelligenceService,
     now: deps.now,
+    onTranscriptTasksQueued: (
+      ctx: RequestContext,
+      taskIds: string[],
+    ): void => {
+      const transcriptDeps = intelligenceTranscriptRunnerDeps;
+      if (!transcriptDeps) return;
+      for (const taskId of taskIds) {
+        void runIntelligenceTranscriptTask(
+          ctx,
+          { taskId },
+          transcriptDeps,
+        ).catch((error) => {
+          console.error(
+            "[intelligence] 分享建档后的逐字稿任务启动失败:",
+            error instanceof Error ? error.name : "UnknownError",
+          );
+        });
+      }
+    },
     fetcher: {
       fetch: async (
         ctx: RequestContext,
@@ -5329,9 +5357,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
   };
-  let intelligenceTranscriptRunnerDeps:
-    | IntelligenceTranscriptRunnerDeps
-    | null = null;
   const dispatchIntelligenceRun = (
     ctx: RequestContext,
     result: unknown,
@@ -9468,6 +9493,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           kind: a.assetType,
         }));
       },
+      // 参考封面自动选择必须建立在“全库图片精确只有 1 张”上，不能把首 100 条误当全库。
+      // assets service 是内部端口，repo 本身已取完账号内 active 行再 slice，因此用无限上限
+      // 一次得到完整集合；仅回传少量候选供澄清，但 total 是精确图片总数。
+      listCoverReferenceImages: async (c: RequestContext) => {
+        const all = await assetsService.listAssets(c, {
+          limit: Number.MAX_SAFE_INTEGER,
+          cursor: null,
+        });
+        const images = all.filter((asset) => asset.assetType === "image");
+        return {
+          rows: images.slice(0, 20).map((asset) => ({
+            id: asset.id,
+            title: asset.name,
+            kind: asset.assetType,
+          })),
+          total: images.length,
+        };
+      },
       // [T-099b] context.project.detail —— 某项目全档。复用既有公开读源(不新造 repo 方法):
       //   · 项目行(标题/阶段/状态/brief)→ projectsRepo.get(user-scoped,顺带 ownership 门)
       //   · 产物索引(type/版本数/updatedAt/字数)→ artifactsService.listProjectArtifacts +
@@ -10842,6 +10885,42 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         throw new Error("dispatchGenerateCover: 起 cover.generate task 失败(无 taskId)");
       }
       return { taskId };
+    },
+    dispatchDouyinShare: async (
+      ctx: RequestContext,
+      input: { shareInput: string; transcribe: boolean },
+    ) => {
+      const shareInput = input.shareInput.trim();
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "chat.douyin.share",
+      );
+      const fingerprint = createHash("sha256")
+        .update(
+          `${ctx.userId}\n${accountId}\n${
+            input.transcribe ? "archive_and_transcribe" : "archive"
+          }\n${shareInput}`,
+        )
+        .digest("hex");
+      const { task } = await intelligenceService.enqueueDouyinShareImport(ctx, {
+        collectionId: null,
+        shareInput,
+        idempotencyKey: `chat-douyin-share:${fingerprint}`,
+        transcribeAfterImport: input.transcribe,
+      });
+      if (task.status === "queued") {
+        void runDouyinShareImportTask(
+          ctx,
+          { taskId: task.id },
+          shareImportRunnerDeps,
+        ).catch((error) => {
+          console.error(
+            "[intelligence] Copilot 抖音分享任务启动失败:",
+            error instanceof Error ? error.name : "UnknownError",
+          );
+        });
+      }
+      return { taskId: task.id, ownerId: task.ownerId };
     },
     // [T-268] script.draft 端口 —— 复活孤儿 runScriptDraft 的创建端(此前全仓无任何
     // createTask({taskType:'script.draft'}),runner 是死链;对话整稿 inline 同步跑必超时)。整稿
