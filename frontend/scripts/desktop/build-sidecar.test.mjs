@@ -21,7 +21,9 @@ import {
   materializeHoistedEntryClosure,
   materializeNestedEntryTree,
   pruneOnnxRuntimeWebWasm,
+  pruneStandaloneLeaks,
   resolveEntryPackage,
+  assertNoPackagedBuildArtifacts,
 } from "./build-sidecar.mjs";
 
 describe("Pi 打包协议自检", () => {
@@ -33,6 +35,40 @@ describe("Pi 打包协议自检", () => {
     expect(source).toContain("openai-responses.lazy.js");
     expect(source).toContain("openai-completions.lazy.js");
     expect(source).toContain("anthropic-messages.lazy.js");
+  });
+});
+
+describe("sidecar 构建产物递归污染哨兵", () => {
+  it("主动剥离 Next trace 混入的 src-tauri 构建树", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-prune-"));
+    try {
+      const frontend = join(root, "frontend");
+      mkdirSync(join(frontend, "src-tauri", "target", "release"), { recursive: true });
+      writeFileSync(join(frontend, "src-tauri", "target", "release", "CreatorOS"), "binary");
+      mkdirSync(join(frontend, ".next"), { recursive: true });
+      mkdirSync(join(frontend, "node_modules"), { recursive: true });
+      mkdirSync(join(frontend, "public"), { recursive: true });
+      writeFileSync(join(frontend, "server.js"), "server");
+      writeFileSync(join(frontend, "package.json"), "{}");
+
+      expect(pruneStandaloneLeaks(root)).toBeGreaterThan(0);
+      expect(existsSync(join(frontend, "src-tauri"))).toBe(false);
+      expect(() => assertNoPackagedBuildArtifacts(root)).not.toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("打 tar 前拒绝任何嵌套安装包或 sidecar tarball", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-sentinel-"));
+    try {
+      mkdirSync(join(root, "frontend", "cache"), { recursive: true });
+      writeFileSync(join(root, "frontend", "cache", "CreatorOS.app.tar.gz"), "nested-package");
+
+      expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/CreatorOS\.app\.tar\.gz/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 

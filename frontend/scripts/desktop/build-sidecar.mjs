@@ -63,6 +63,69 @@ const BINARIES = join(SRC_TAURI, "binaries");
 const STANDALONE_SRC = join(FRONTEND, ".next", "standalone");
 const SIDECAR_RUNTIME = join(SRC_TAURI, "sidecar"); // 组装好的 standalone 运行目录(bundle resource)
 
+const STANDALONE_FRONTEND_LEAKS = [
+  "src", "src-tauri", "docs", "specs", "tests", "scripts", "playwright-report", "test-results",
+  "SPEC.md", "AGENT-PROTOCOL.md", "IMPLEMENTATION-ARCHITECTURE.md",
+  "TDD-PLAN.md", "TESTING.md", "README.md",
+  "eslint.config.mjs", "playwright.config.ts", "vitest.config.ts",
+  // [T-417 隐私] `.auth/douyin` = 开发机登录 session；.env* 同理不得进入安装包。
+  ".auth", ".env", ".env.local", ".env.production", ".env.development",
+];
+
+/**
+ * [T-487] 剥离 Next output tracing 误带入的工作区文件。
+ * 尤其禁止 frontend/src-tauri：它包含 target、旧 sidecar 和旧安装包，复制后会递归膨胀。
+ */
+export function pruneStandaloneLeaks(runtimeRoot) {
+  const frontendRoot = join(runtimeRoot, "frontend");
+  let pruned = 0;
+  for (const name of STANDALONE_FRONTEND_LEAKS) {
+    const path = join(frontendRoot, name);
+    if (!existsSync(path)) continue;
+    rmSync(path, { recursive: true, force: true });
+    pruned++;
+  }
+  return pruned;
+}
+
+/**
+ * [T-487] tar 前的 fail-closed 哨兵。只要 runtime 里仍有壳构建树或安装包，就拒绝打包。
+ */
+export function assertNoPackagedBuildArtifacts(runtimeRoot) {
+  const forbidden = [];
+  const visit = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      const rel = relative(runtimeRoot, path).replaceAll("\\", "/");
+      const st = lstatSync(path);
+      if (st.isSymbolicLink()) continue;
+      if (st.isDirectory()) {
+        if (rel === "frontend/src-tauri" || rel.startsWith("frontend/src-tauri/")) {
+          forbidden.push(rel);
+          continue;
+        }
+        visit(path);
+        continue;
+      }
+      if (
+        name === "sidecar.tar.gz"
+        || name.endsWith(".app.tar.gz")
+        || name.endsWith(".dmg")
+        || name.endsWith(".msi")
+        || name.endsWith("-setup.exe")
+      ) {
+        forbidden.push(rel);
+      }
+    }
+  };
+  visit(runtimeRoot);
+  if (forbidden.length > 0) {
+    throw new Error(
+      `[build-sidecar] [T-487] 拒绝递归打包壳构建产物：${forbidden.slice(0, 8).join(", ")}`,
+    );
+  }
+}
+
 // Rust target triple(externalBin 命名要求)。P1 只覆盖本机;其余留位。
 function targetTriple() {
   const map = {
@@ -265,6 +328,7 @@ export function shouldPackSidecarTarball(_targetPlatform = platform) {
 }
 
 function packSidecarTarball() {
+  assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
   // [T-441] 打包前最后一道闸(两个调用点都覆盖):清掉指向构建机的 symlink。
   fixOutOfTreeSymlinks();
   const tarball = join(SRC_TAURI, "sidecar.tar.gz");
@@ -1873,6 +1937,13 @@ function main() {
   //       产物、bundle 后必坏(踩点:@electric-sql/pglite-<hash> ERR_MODULE_NOT_FOUND)。
   //   唯一需善后的是 .pnpm/node_modules/ 冗余 hoist 层(见下 prune)——它含会让 tauri-build 校验失败
   //   的相对链且 runtime 不需要。
+  // [T-487] 必须在 cpSync 前先剪生成树；否则即使复制后再删，也会先把 10GB+ 的 Rust target /
+  // 旧 sidecar / 旧安装包完整复制一遍，造成磁盘和打包时间灾难。
+  const tracedLeaksPruned = pruneStandaloneLeaks(STANDALONE_SRC);
+  assertNoPackagedBuildArtifacts(STANDALONE_SRC);
+  if (tracedLeaksPruned > 0) {
+    console.log(`[build-sidecar] ✂ 复制前剥离 standalone 工作区泄露 ${tracedLeaksPruned} 项(T-487)`);
+  }
   cpSync(STANDALONE_SRC, SIDECAR_RUNTIME, { recursive: true, verbatimSymlinks: true });
   // standalone 不自带 .next/static 和 public,补进 frontend/ 下(server.js 从那里读)。
   cpSync(join(FRONTEND, ".next", "static"), join(SIDECAR_RUNTIME, "frontend", ".next", "static"), {
@@ -1920,22 +1991,7 @@ function main() {
   //   0 命中,仅 nextjs.org/docs URL 假命中);删后有混淆步的运行时冒烟兜底,删坏必炸不出包。
   {
     const fe = join(SIDECAR_RUNTIME, "frontend");
-    const leaks = [
-      "src", "docs", "specs", "tests", "scripts", "playwright-report", "test-results",
-      "SPEC.md", "AGENT-PROTOCOL.md", "IMPLEMENTATION-ARCHITECTURE.md",
-      "TDD-PLAN.md", "TESTING.md", "README.md",
-      "eslint.config.mjs", "playwright.config.ts", "vitest.config.ts",
-      // [T-417 隐私] `.auth/douyin` = 开发机抖音**登录 session**(cookie/storage),被 standalone
-      //   trace / cwd 相对写混进 sidecar(实包盘点 75 条目进 tar)。运行时 app 读的是 appDataDir 的
-      //   .auth(lib.rs 注入 CREATOROS_DOUYIN_AUTH_DIR),bundled 这份是死重 + **作者登录态泄露给用户**。
-      //   开发/CI 机的 .env* 同理(若存在)一并剥,防密钥进包。
-      ".auth", ".env", ".env.local", ".env.production", ".env.development",
-    ];
-    let pruned = 0;
-    for (const name of leaks) {
-      const p = join(fe, name);
-      if (existsSync(p)) { rmSync(p, { recursive: true, force: true }); pruned++; }
-    }
+    const pruned = pruneStandaloneLeaks(SIDECAR_RUNTIME);
     // 剥离自检:运行必需物必须还在(防手滑加错清单)。
     for (const must of ["server.js", ".next", "package.json", "node_modules", "public"]) {
       if (!existsSync(join(fe, must))) {

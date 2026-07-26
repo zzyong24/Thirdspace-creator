@@ -20,6 +20,8 @@ import { platform } from "node:process";
 import { createBuildTimingRecorder } from "./build-timing.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const CARGO_PROFILE_DIR =
+  process.env.CREATOROS_RELEASE === "1" ? "release" : "release-fast";
 const BUILD_TIMING_REPORT = join(
   FRONTEND,
   "src-tauri",
@@ -87,7 +89,15 @@ function measured(name, fn) {
 function verifyPackagedTlsRuntime() {
   if (platform !== "darwin") return;
 
-  const app = join(FRONTEND, "src-tauri", "target", "release", "bundle", "macos", "CreatorOS.app");
+  const app = join(
+    FRONTEND,
+    "src-tauri",
+    "target",
+    CARGO_PROFILE_DIR,
+    "bundle",
+    "macos",
+    "CreatorOS.app",
+  );
   const tarball = join(app, "Contents", "Resources", "sidecar.tar.gz");
   const sourceTarball = join(FRONTEND, "src-tauri", "sidecar.tar.gz");
   const shellBin = join(app, "Contents", "MacOS", "CreatorOS");
@@ -202,7 +212,13 @@ function precleanDmgLeftovers() {
   // spawn hdiutil 只会 ENOENT 噪音(status 非 0 本就跳过,但守卫掉更干净,也免 Win 上找不到
   // 命令的告警干扰打包日志)。
   if (platform !== "darwin") return;
-  const bundleDir = join(FRONTEND, "src-tauri", "target", "release", "bundle");
+  const bundleDir = join(
+    FRONTEND,
+    "src-tauri",
+    "target",
+    CARGO_PROFILE_DIR,
+    "bundle",
+  );
   const info = spawnSync("hdiutil", ["info"], { encoding: "utf8" });
   if (info.status === 0 && info.stdout) {
     // hdiutil info 按 image 分段:image-path 行 + 其下 /dev/diskN 行。
@@ -296,7 +312,7 @@ if (process.env.CREATOROS_SKIP_SMOKE !== "1") {
 //   · CREATOROS_RELEASE=1 = fat `release`:lto=true + codegen-units=1,cargo build ~15-30 min;
 //     体积/启动最优,发官方 release 那一次用。
 //   代价:release-fast 二进制大几百 KB,冷启动差 < 30ms(用户不可感)。
-const isFullRelease = process.env.CREATOROS_RELEASE === "1";
+const isFullRelease = CARGO_PROFILE_DIR === "release";
 const tauriBuildArgs = [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
@@ -328,7 +344,7 @@ step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "code
 step("公证(占位)", process.execPath, [join("scripts", "desktop", "notarize.mjs")]);
 
 console.log(
-  "\n[desktop:package] ✅ 完成。产物在 src-tauri/target/release/bundle/(macos/*.app + dmg/*.dmg)。",
+  `\n[desktop:package] ✅ 完成。产物在 src-tauri/target/${CARGO_PROFILE_DIR}/bundle/(macos/*.app + dmg/*.dmg)。`,
 );
 console.log("[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。");
 console.log(`[desktop:package] 阶段耗时报告:${BUILD_TIMING_REPORT}`);

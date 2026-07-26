@@ -73,6 +73,22 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(buildSource).toContain('process.env.CREATOROS_SKIP_TARBALL !== "1"');
   });
 
+  it("本地 release-fast 与正式 release 的最终产物自检读取各自 profile", () => {
+    const packageSource = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "package.mjs"),
+      "utf8",
+    );
+    expect(packageSource).toContain(
+      'process.env.CREATOROS_RELEASE === "1" ? "release" : "release-fast"',
+    );
+    expect(packageSource).toMatch(
+      /const app = join\([\s\S]*CARGO_PROFILE_DIR,[\s\S]*"bundle",[\s\S]*"macos"/,
+    );
+    expect(packageSource).not.toContain(
+      'join(FRONTEND, "src-tauri", "target", "release", "bundle", "macos", "CreatorOS.app")',
+    );
+  });
+
   it("Windows 上传产物前真执行 NSIS 安装期 runtime 冒烟", () => {
     expect(workflow).toContain("Windows 安装期 runtime 原生冒烟(T-487)");
     expect(workflow).toContain('Start-Process -FilePath $setup.FullName');
