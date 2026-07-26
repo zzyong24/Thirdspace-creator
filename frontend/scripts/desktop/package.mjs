@@ -17,8 +17,20 @@ import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
+import { createBuildTimingRecorder } from "./build-timing.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const BUILD_TIMING_REPORT = join(
+  FRONTEND,
+  "src-tauri",
+  "target",
+  "runtime-reports",
+  "build-timings.package.json",
+);
+const buildTiming = createBuildTimingRecorder({
+  pipeline: "desktop:package",
+  reportPath: BUILD_TIMING_REPORT,
+});
 
 // cargo 解析(skills-manager 模式):PATH 上有就用;否则 rustup which rustc 推 cargo。
 function canRun(cmd, args = ["--version"]) {
@@ -38,14 +50,32 @@ function resolveCargo() {
 
 function step(name, cmd, args, extraEnv = {}) {
   console.log(`\n[desktop:package] ▶ ${name}\n[desktop:package]   $ ${cmd} ${args.join(" ")}`);
+  const timing = buildTiming.start(name);
   const r = spawnSync(cmd, args, {
     stdio: "inherit",
     cwd: FRONTEND,
     env: { ...process.env, ...extraEnv },
   });
+  timing.finish({
+    status: r.status === 0 ? "passed" : "failed",
+    exitCode: r.status,
+  });
   if (r.status !== 0) {
     console.error(`[desktop:package] ✗ 步骤失败:${name}(exit ${r.status})`);
+    console.error(`[desktop:package]   阶段耗时报告:${BUILD_TIMING_REPORT}`);
     process.exit(r.status ?? 1);
+  }
+}
+
+function measured(name, fn) {
+  const timing = buildTiming.start(name);
+  try {
+    const value = fn();
+    timing.finish({ status: "passed", exitCode: 0 });
+    return value;
+  } catch (error) {
+    timing.finish({ status: "failed", exitCode: 1 });
+    throw error;
   }
 }
 
@@ -211,8 +241,15 @@ if (process.argv.includes("--preclean-only")) {
   process.exit(0);
 }
 
-// 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。
-step("sidecar 二进制化", process.execPath, [join("scripts", "desktop", "build-sidecar.mjs")]);
+// 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。这里只产/恢复展开后的
+// clean runtime；约 1GB tar 必须等混淆/字节码/诱饵/法律声明全部完成后，由 Tauri
+// beforeBuild 唯一压一次。否则 cache miss 与 cache hit 都会多做一次无效压缩。
+step(
+  "sidecar 二进制化",
+  process.execPath,
+  [join("scripts", "desktop", "build-sidecar.mjs")],
+  { CREATOROS_SKIP_TARBALL: "1" },
+);
 
 // 2) [T-164 P6] sidecar bundle JS 混淆(build-sidecar 之后、tauri build 之前)。
 //    幂等 + 硬排除 + symlink 逃逸防护;失败 fail-fast(见 obfuscate.mjs)。
@@ -282,7 +319,7 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
 });
 
-verifyPackagedTlsRuntime();
+measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);
 
 // 4) [T-164 P6] 代码签名占位(未配 env → skip 退 0 + 标 signed:false)。
 step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
@@ -294,3 +331,4 @@ console.log(
   "\n[desktop:package] ✅ 完成。产物在 src-tauri/target/release/bundle/(macos/*.app + dmg/*.dmg)。",
 );
 console.log("[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。");
+console.log(`[desktop:package] 阶段耗时报告:${BUILD_TIMING_REPORT}`);

@@ -18,11 +18,22 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform, arch } from "node:process";
 import { readManifest, writeManifest } from "./release-manifest.mjs";
+import { createBuildTimingRecorder } from "./build-timing.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SRC_TAURI = join(FRONTEND, "src-tauri");
 const BUNDLE_DIR = join(SRC_TAURI, "target", "release", "bundle");
 const TAURI_CONF = join(SRC_TAURI, "tauri.conf.json");
+const RELEASE_TIMING_REPORT = join(
+  SRC_TAURI,
+  "target",
+  "runtime-reports",
+  "build-timings.release.json",
+);
+const releaseTiming = createBuildTimingRecorder({
+  pipeline: "desktop:release",
+  reportPath: RELEASE_TIMING_REPORT,
+});
 
 // Tauri updater target key(与 latest.json platforms 键一致)。
 function updaterTarget() {
@@ -217,9 +228,15 @@ export function resolveUpdateBaseUrl(env, version) {
 
 function run(name, cmd, args, env = {}) {
   console.log(`\n[release] ▶ ${name}\n[release]   $ ${cmd} ${args.join(" ")}`);
+  const timing = releaseTiming.start(name);
   const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, env: { ...process.env, ...env } });
+  timing.finish({
+    status: r.status === 0 ? "passed" : "failed",
+    exitCode: r.status,
+  });
   if (r.status !== 0) {
     console.error(`[release] ✗ 失败:${name}(exit ${r.status})`);
+    console.error(`[release]   阶段耗时报告:${RELEASE_TIMING_REPORT}`);
     process.exit(r.status ?? 1);
   }
 }

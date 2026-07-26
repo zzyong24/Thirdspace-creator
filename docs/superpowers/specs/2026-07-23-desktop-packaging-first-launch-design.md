@@ -1,11 +1,26 @@
 # CreatorOS 跨平台打包、运行时去重与零白屏首启候选架构 + RAT 授权 SPEC（T-487）
 
-> 状态：PLAN / 前两轮独立审核 FAIL 后回退为“探索性 RAT 授权”；第三轮 `CONCERNS` 的 3 项均已接受并修订，待用户裁决；不申请最终架构签核，未进入产品实现。
+> 状态：PLAN / 用户已于 2026-07-24 确认“Runtime 分层缓存 + Windows 安装期物化到
+> `$INSTDIR` + 首启零解压”的核心方向，并授权免费 RAT 与本地工程实现；正式付费构建、
+> Windows 对外支持和删除首启兜底仍需后续 Gate。
 > 日期：2026-07-23
 > 任务：T-487；合并 T-454 的剩余范围。
 > 前置证据：[T-487 调研](../../research/2026-07-23-desktop-packaging-skills-manager-reference.md)。
 > 宪法：`docs/产品定位.md:27-37,296-302,328-336,370-383`。
 > 硬边界：本 SPEC 只请求执行不收费的本地/fixture RAT；不授权触发 CreatorOS 正式打包或付费 GitHub Actions。RAT 结果回填、独立复审和用户第二次确认前，本文 Runtime Image/平台安装策略都只是候选，不是已批准架构。
+
+> 2026-07-24 进展：RAT-PKG-01 的本地 production closure 已把文件数从 44,082 降至
+> 26,427（-40.05%），可识别重复字节从 183,232,981 降至 21,140,787（-88.46%），两项
+> cheap gate 均通过；HyperFrames/Playwright/Xenova+ONNX 局部真加载通过。RAT-PKG-04 已接入
+> exact Runtime Image cache workflow，但首次正式 cache-hit 时长仍待以后单次付费构建验证。
+> RAT-PKG-02 继续 `BLOCKED(platform)`，所以 Windows 首启零解压尚未宣称完成。证据见
+> `docs/research/2026-07-24-t487-runtime-dedup-and-cache-evidence.md`。
+>
+> 2026-07-24 独立实现复审补记：stock NSIS `POSTINSTALL` 失败无法回滚此前已写入的
+> exe/注册表/快捷方式；当前壳的哈希/manifest 也不能验证上一版本 runtime。因此当前实现
+> 采用“安装期失败保留 tar、首启兼容修复”的 fail-forward，并只保留 `current`，没有伪造
+> `previous/lastGood`。本文 ENT-PKG-04 的签名 last-good 目标不变，仍是 T-487 未关闭 Gate；
+> 须通过每 runtime 签名 manifest 或 custom updater RAT 后才能宣称跨版本回退。
 
 ## 1. Problem
 

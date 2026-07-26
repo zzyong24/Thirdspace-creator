@@ -83,8 +83,131 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 安装 Playwright Chromium(T-284 打进包,永不运行时下载)
+      - name: 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+        id: runtime-inputs
+        env:
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: |
+          node <<'NODE'
+          const { createHash } = require("node:crypto");
+          const { appendFileSync } = require("node:fs");
+          const publicKey = (process.env.CREATOROS_VERDICT_PUBKEY_B64 || "").trim();
+          const raw = Buffer.from(publicKey, "base64");
+          if (!publicKey || raw.length !== 32) {
+            throw new Error("[T-487] CREATOROS_VERDICT_PUBKEY_B64 缺失或不是 32B Ed25519 公钥");
+          }
+          const runtime = [
+            process.version,
+            process.versions.v8,
+            process.versions.modules,
+          ].join("-");
+          const fingerprint = runtime.replace(/[^A-Za-z0-9._-]/g, "_");
+          const publicKeyDigest = createHash("sha256")
+            .update(publicKey)
+            .digest("hex")
+            .slice(0, 20);
+          appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `fingerprint=${fingerprint}\npubkey=${publicKeyDigest}\n`,
+          );
+          NODE
+
+      # [T-487] Runtime Image 精确缓存。只允许 exact key 命中，不设 restore-keys：
+      # 平台/架构/Node ABI/锁文件/源码任一变化都必须重建，不能拿相近旧包冒险。
+      # 保存动作紧跟 clean build，早于混淆/字节码，避免 job 结束时把已变异 sidecar 写回缓存。
+      - name: 恢复 clean Runtime Image(T-487)
+        id: runtime-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            frontend/src-tauri/sidecar
+            frontend/src-tauri/binaries
+          key: creatoros-runtime-v2-${{ steps.runtime-inputs.outputs.fingerprint }}-${{ runner.os }}-${{ runner.arch }}-verdict-${{ steps.runtime-inputs.outputs.pubkey }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'frontend/package.json', 'frontend/src/**', 'frontend/public/**', 'ai-worker/**', 'backend/**', 'contract/**', 'frontend/next.config.ts', 'frontend/scripts/desktop/build-sidecar.mjs', 'frontend/scripts/desktop/fetch-ffmpeg.mjs', 'frontend/scripts/desktop/platform-paths.mjs') }}
+
+      - name: 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+        id: runtime-abi
+        env:
+          CACHE_HIT: ${{ steps.runtime-cache.outputs.cache-hit }}
+          EXPECTED_RUNTIME_FINGERPRINT: ${{ steps.runtime-inputs.outputs.fingerprint }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: |
+          node <<'NODE'
+          const { appendFileSync, existsSync, readFileSync, readdirSync, rmSync } = require("node:fs");
+          const { join } = require("node:path");
+          const { spawnSync } = require("node:child_process");
+          const output = (valid) =>
+            appendFileSync(process.env.GITHUB_OUTPUT, `valid=${valid}\n`);
+          if (process.env.CACHE_HIT !== "true") {
+            output("false");
+            process.exit(0);
+          }
+          const binaries = join("frontend", "src-tauri", "binaries");
+          const sidecar = join("frontend", "src-tauri", "sidecar");
+          const runtimeBinary = existsSync(binaries)
+            ? readdirSync(binaries)
+                .filter((name) => name.startsWith("creatoros-server-"))
+                .map((name) => join(binaries, name))[0]
+            : undefined;
+          const bakedKeyPath = join(
+            sidecar,
+            "frontend",
+            ".next",
+            "server",
+            "verdict-verify-key.json",
+          );
+          let actualFingerprint = "";
+          let bakedKey = "";
+          if (runtimeBinary) {
+            const probe = spawnSync(
+              runtimeBinary,
+              [
+                "-p",
+                "[process.version,process.versions.v8,process.versions.modules].join('-').replace(/[^A-Za-z0-9._-]/g,'_')",
+              ],
+              { encoding: "utf8" },
+            );
+            if (probe.status === 0) actualFingerprint = probe.stdout.trim();
+          }
+          if (existsSync(bakedKeyPath)) {
+            try {
+              bakedKey = JSON.parse(readFileSync(bakedKeyPath, "utf8")).publicKeyB64 || "";
+            } catch {}
+          }
+          const valid =
+            actualFingerprint === process.env.EXPECTED_RUNTIME_FINGERPRINT &&
+            bakedKey === (process.env.CREATOROS_VERDICT_PUBKEY_B64 || "").trim();
+          if (!valid) {
+            console.warn(
+              `[T-487] 缓存指纹失配，强制重建(runtime=${actualFingerprint || "missing"})`,
+            );
+            rmSync(sidecar, { recursive: true, force: true });
+            rmSync(binaries, { recursive: true, force: true });
+          }
+          output(String(valid));
+          NODE
+
+      - name: 安装 Playwright Chromium(T-284,仅 cache miss)
+        if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
         run: pnpm -C frontend exec playwright install chromium
+
+      - name: 构建 clean Runtime Image(T-487,仅 cache miss)
+        if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
+        env:
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          # 缓存只保存展开后的 clean runtime；最终变换完成后再唯一压一次 tar。
+          CREATOROS_SKIP_TARBALL: "1"
+        run: node frontend/scripts/desktop/build-sidecar.mjs
+
+      - name: 保存 clean Runtime Image(T-487)
+        # GitHub cache 不可覆盖：若命中内容损坏，本轮会重建后继续，但不假装能覆盖同 key。
+        # 正常 exact miss 才保存；异常命中需从 Actions cache 管理页删除后由下一轮重建。
+        if: steps.runtime-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            frontend/src-tauri/sidecar
+            frontend/src-tauri/binaries
+          key: ${{ steps.runtime-cache.outputs.cache-primary-key }}
 
       - name: 读版本号
         id: version
@@ -107,6 +230,9 @@ jobs:
           #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
           #   本地日常打包不设此 env,走 release-fast 快通道。
           CREATOROS_RELEASE: "1"
+          # 上面已精确恢复或构建 clean runtime；package 只做混淆/字节码/Tauri，
+          # 不再重复跑 Next build + 生产依赖闭包组装。
+          CREATOROS_SKIP_SIDECAR_REBUILD: "1"
         run: node scripts/desktop/release.mjs
 
       - name: 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
@@ -134,6 +260,62 @@ jobs:
         run: |
           ls -d frontend/src-tauri/sidecar/frontend/browsers/chromium-* \
             || { echo "::error::Chromium 未打进 sidecar——bundleChromiumBrowser 被静默跳过"; exit 1; }
+
+      # [T-487 RAT-PKG-02] 真执行本轮 setup.exe，不拿 7z 清单冒充安装验收。
+      # 安装到 RUNNER_TEMP（通常是 D:）证明：目录选择生效、POSTINSTALL hook 真执行、
+      # current 指针/关键入口存在、成功后 tar 已删除。失败时在上传产物前截断。
+      - name: Windows 安装期 runtime 原生冒烟(T-487)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $setup = Get-ChildItem "frontend/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" |
+            Select-Object -First 1
+          if (-not $setup) { throw "[T-487] 未找到 NSIS setup.exe" }
+
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          Remove-Item -Recurse -Force $installDir -ErrorAction SilentlyContinue
+          $process = Start-Process -FilePath $setup.FullName -Wait -PassThru `
+            -ArgumentList @("/S", "/D=$installDir")
+          if ($process.ExitCode -ne 0) {
+            throw "[T-487] NSIS 静默安装失败(exit=$($process.ExitCode))"
+          }
+
+          $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
+          if (-not (Test-Path $pointer -PathType Leaf)) {
+            throw "[T-487] 安装完成但缺 runtime-current.txt"
+          }
+          $runtimeId = (Get-Content $pointer -Raw).Trim()
+          if ($runtimeId -notmatch '^[A-Za-z0-9._-]+$') {
+            throw "[T-487] runtime-current.txt 非法:$runtimeId"
+          }
+          $server = Join-Path $installDir "runtime-images/$runtimeId/sidecar/frontend/server.js"
+          if (-not (Test-Path $server -PathType Leaf)) {
+            throw "[T-487] 安装期 runtime 缺 frontend/server.js"
+          }
+          if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
+            throw "[T-487] 安装成功后仍残留 sidecar.tar.gz"
+          }
+          Write-Host "[T-487] ✓ 原生安装期物化通过: $server"
+
+          $uninstaller = Join-Path $installDir "uninstall.exe"
+          if (-not (Test-Path $uninstaller -PathType Leaf)) {
+            throw "[T-487] 安装完成但缺官方 uninstall.exe"
+          }
+          $uninstall = Start-Process -FilePath $uninstaller -Wait -PassThru -ArgumentList @("/S")
+          if ($uninstall.ExitCode -ne 0) {
+            throw "[T-487] NSIS 静默卸载失败(exit=$($uninstall.ExitCode))"
+          }
+          for ($i = 0; $i -lt 50 -and (Test-Path $installDir); $i++) {
+            Start-Sleep -Milliseconds 200
+          }
+          if (Test-Path (Join-Path $installDir "runtime-images")) {
+            throw "[T-487] 主动卸载后仍残留 runtime-images"
+          }
+          if (Test-Path $installDir) {
+            throw "[T-487] 主动卸载后仍残留安装目录:$installDir"
+          }
+          Write-Host "[T-487] ✓ 官方卸载器已清理 runtime 与安装目录"
 
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
         run: |

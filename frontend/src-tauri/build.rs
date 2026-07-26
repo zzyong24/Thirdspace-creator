@@ -42,8 +42,8 @@ fn main() {
     println!("cargo:rustc-env=CREATOROS_SIDECAR_SHA256={hash}");
     println!("cargo:rerun-if-changed=sidecar.tar.gz");
 
-    // Windows 直接资源的快速入口校验。只读 server.js，不再每次启动读 935MB tar；诚实边界：
-    // 这是入口防篡改，不是假装对 2 万多个运行时文件逐一验签。
+    // Windows 安装期物化目录的快速入口校验。只读 server.js，不再每次启动读大 tar；
+    // 这是入口硬校验，另有完整性清单抽样，不假装逐一验签全部运行时文件。
     let entry = manifest_dir.join("sidecar").join("frontend").join("server.js");
     let entry_hash = sha256_file(&entry);
     println!("cargo:rustc-env=CREATOROS_SIDECAR_ENTRY_SHA256={entry_hash}");

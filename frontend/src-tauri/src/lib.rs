@@ -569,6 +569,167 @@ fn verify_direct_sidecar_dir_with_hash(
     verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
 }
 
+/// [T-487] 读取 Windows 安装期写入的 runtime 指针。指针只允许构建生成的安全 ID，
+/// 禁止路径分隔符和 `..`，避免安装目录中的文本文件把运行路径引到目录外。
+#[cfg(any(windows, test))]
+fn resolve_installed_runtime_with_hash(
+    install_dir: &std::path::Path,
+    expected_entry_hash: &str,
+) -> Result<Option<PathBuf>, String> {
+    let runtime_root = install_dir.join("runtime-images");
+    let resolve_pointer = |name: &str| -> Result<Option<PathBuf>, String> {
+        let pointer = runtime_root.join(name);
+        if !pointer.is_file() {
+            return Ok(None);
+        }
+        let runtime_id = std::fs::read_to_string(&pointer)
+            .map_err(|e| format!("读取 Windows runtime 指针失败 {}: {e}", pointer.display()))?;
+        let runtime_id = runtime_id.trim();
+        if runtime_id.is_empty()
+            || runtime_id == "."
+            || runtime_id == ".."
+            || !runtime_id
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+        {
+            return Err(format!(
+                "Windows runtime 指针非法（仅允许字母、数字、点、下划线和短横线）: {runtime_id:?}"
+            ));
+        }
+        let sidecar = runtime_root.join(runtime_id).join("sidecar");
+        verify_direct_sidecar_dir_with_hash(&sidecar, expected_entry_hash)?;
+        Ok(Some(sidecar))
+    };
+
+    resolve_pointer("runtime-current.txt")
+}
+
+/// [T-487] NSIS 安装期事务：校验 bundle tar → 同盘 staging 解压 → 校验入口与关键结构
+/// → 原子切换版本目录和 current 指针。任何一步失败都只清理 staging，旧 current 保持可用。
+#[cfg(any(windows, test))]
+#[cfg_attr(test, allow(dead_code))]
+fn materialize_windows_runtime(install_dir: &std::path::Path) -> Result<PathBuf, String> {
+    let tarball = install_dir.join("sidecar.tar.gz");
+    verify_sidecar_tarball(&tarball)?;
+
+    let tar_hash = env!("CREATOROS_SIDECAR_SHA256");
+    let runtime_suffix = if tar_hash.len() >= 12 {
+        &tar_hash[..12]
+    } else {
+        "development"
+    };
+    let runtime_id = format!("{}-{runtime_suffix}", env!("CARGO_PKG_VERSION"));
+    let runtime_root = install_dir.join("runtime-images");
+    let staging_parent = runtime_root.join(".staging").join(&runtime_id);
+    let staged_sidecar = staging_parent.join("sidecar");
+    let final_runtime = runtime_root.join(&runtime_id);
+    let final_sidecar = final_runtime.join("sidecar");
+
+    std::fs::create_dir_all(runtime_root.join(".staging"))
+        .map_err(|e| format!("创建 Windows runtime 暂存根失败: {e}"))?;
+    let _ = std::fs::remove_dir_all(&staging_parent);
+
+    let result = (|| -> Result<PathBuf, String> {
+        let stamp = if tar_hash.is_empty() {
+            let size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
+            format!("size:{size}")
+        } else {
+            format!("sha256:{tar_hash}")
+        };
+        extract_sidecar_tarball(&tarball, &staged_sidecar, &stamp)?;
+        verify_direct_sidecar_dir_with_hash(
+            &staged_sidecar,
+            env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+        )?;
+        // 构建清单在安装器子进程里同样可用；固定 seed 只用于额外抽样，不替代入口硬校验。
+        integrity_sample_verify(&staged_sidecar, "windows-installer")?;
+
+        if final_runtime.exists() {
+            std::fs::remove_dir_all(&final_runtime)
+                .map_err(|e| format!("清理同 ID 的损坏 Windows runtime 失败: {e}"))?;
+        }
+        std::fs::rename(&staging_parent, &final_runtime)
+            .map_err(|e| format!("原子切换 Windows runtime 目录失败: {e}"))?;
+        write_windows_runtime_pointer(&runtime_root, &runtime_id)?;
+        cleanup_windows_runtime_versions(&runtime_root);
+        Ok(final_sidecar)
+    })();
+
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(&staging_parent);
+    }
+    result
+}
+
+#[cfg(any(windows, test))]
+fn write_windows_runtime_pointer(
+    runtime_root: &std::path::Path,
+    runtime_id: &str,
+) -> Result<(), String> {
+    let current = runtime_root.join("runtime-current.txt");
+    let temp = runtime_root.join(format!(
+        ".runtime-current-{}.tmp",
+        std::process::id()
+    ));
+    let backup = runtime_root.join(format!(
+        ".runtime-current-{}.previous",
+        std::process::id()
+    ));
+    std::fs::write(&temp, format!("{runtime_id}\n"))
+        .map_err(|e| format!("写 Windows runtime 临时指针失败: {e}"))?;
+    let _ = std::fs::remove_file(&backup);
+    if current.exists() {
+        std::fs::rename(&current, &backup)
+            .map_err(|e| format!("暂存 Windows current runtime 指针失败: {e}"))?;
+    }
+    if let Err(e) = std::fs::rename(&temp, &current) {
+        if backup.exists() {
+            let _ = std::fs::rename(&backup, &current);
+        }
+        let _ = std::fs::remove_file(&temp);
+        return Err(format!("原子切换 Windows current runtime 指针失败: {e}"));
+    }
+    let _ = std::fs::remove_file(&backup);
+    Ok(())
+}
+
+/// 只保留 current，避免每次升级在安装盘永久多占约 1GB。跨版本 previous 不能拿当前
+/// 壳内嵌的新哈希/manifest 诚实验证，因此不伪造 last-good；安装期失败改由保留的 tar
+/// 在首启走兼容解压（fail-forward）。
+/// 清理是成功切换后的 best-effort；失败仅记日志，不反向破坏已经可用的新 runtime。
+#[cfg(any(windows, test))]
+fn cleanup_windows_runtime_versions(runtime_root: &std::path::Path) -> usize {
+    let mut keep = std::collections::HashSet::new();
+    for pointer in ["runtime-current.txt"] {
+        if let Ok(id) = std::fs::read_to_string(runtime_root.join(pointer)) {
+            let id = id.trim();
+            if !id.is_empty() {
+                keep.insert(id.to_string());
+            }
+        }
+    }
+    let Ok(entries) = std::fs::read_dir(runtime_root) else {
+        return 0;
+    };
+    let mut removed = 0;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if !path.is_dir() || name == ".staging" || keep.contains(&name) {
+            continue;
+        }
+        match std::fs::remove_dir_all(&path) {
+            Ok(()) => removed += 1,
+            Err(e) => eprintln!(
+                "[installer] 清理旧 Windows runtime 失败 {}: {e}",
+                path.display()
+            ),
+        }
+    }
+    let _ = std::fs::remove_dir(runtime_root.join(".staging"));
+    removed
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // [T-450] 完整性清单抽样校验:build.rs 生成 XOR-masked manifest blob(sidecar 下关键文件
 // SHA-256 清单),运行时按 machine_id + hour_bucket 派生 seed → 抽 N=12 项校验。任一命中
@@ -794,9 +955,35 @@ fn extract_sidecar_tarball(
             .map_err(|e| format!("打开 sidecar.tar.gz 失败 {}: {e}", tarball.display()))?;
         let decoder = flate2::read::GzDecoder::new(file);
         let mut archive = tar::Archive::new(decoder);
-        archive
-            .unpack(&temp)
-            .map_err(|e| format!("展开 sidecar.tar.gz 失败: {e}"))
+        let entries = archive
+            .entries()
+            .map_err(|e| format!("读取 sidecar.tar.gz 条目失败: {e}"))?;
+        let mut files = 0_u64;
+        let mut bytes = 0_u64;
+        for entry in entries {
+            let mut entry = entry.map_err(|e| format!("读取 sidecar tar 条目失败: {e}"))?;
+            bytes = bytes.saturating_add(entry.header().size().unwrap_or(0));
+            let unpacked = entry
+                .unpack_in(&temp)
+                .map_err(|e| format!("展开 sidecar tar 条目失败: {e}"))?;
+            if !unpacked {
+                return Err("sidecar tar 含越界路径，已拒绝展开".to_string());
+            }
+            files += 1;
+            // NSIS nsExec::ExecToLog 会把这些行显示在安装详情中；用户不再面对一个
+            // 数分钟毫无变化的窗口。每 1000 项打印一次，避免 2 万行日志本身拖慢安装。
+            if files % 1000 == 0 {
+                eprintln!(
+                    "[runtime] 已展开 {files} 项（约 {} MiB）…",
+                    bytes / 1024 / 1024
+                );
+            }
+        }
+        eprintln!(
+            "[runtime] 展开完成：{files} 项，约 {} MiB",
+            bytes / 1024 / 1024
+        );
+        Ok(())
     })();
     if let Err(e) = unpack_result {
         let _ = std::fs::remove_dir_all(&temp);
@@ -850,10 +1037,12 @@ fn splash_status(app: &AppHandle, msg: &str) {
 }
 
 /// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
-/// 当前全平台 bundle 都带单文件 tarball，并在 appDataDir 原子解压。
+/// 全平台 bundle 都带单文件 tarball；Windows 安装期物化到 `$INSTDIR/runtime-images`，
+/// macOS/Linux 以及旧 Windows 包仍可在 appDataDir 原子解压。
 ///   ① CREATOROS_SIDECAR_DIR env 覆盖(打包/测试可指定);
 ///   ② dev:CARGO_MANIFEST_DIR/sidecar(编译期常量,指向源目录,symlink 完好);
-///   ③ bundle:tar → appDataDir/runtime/<version>/sidecar。
+///   ③ Windows 新包:安装期 current 指针直读；
+///   ④ 兼容路径:tar → appDataDir/runtime/<version>/sidecar。
 /// [T-372 L2] 返回 Err = 入口完整性校验失败 → 上层**拒绝 spawn**(不再静默把被篡改的
 /// sidecar 跑起来)。其余路径语义不变。
 fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -877,12 +1066,42 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             return Ok(dev_dir);
         }
     }
-    // [T-454 后修] 全平台走 tarball 解压(反转 T-446 的 Windows 直装分支)—— T-446 当初 Windows
-    //   改直装是因为首启解压到 C:\Program Files\ 会 ACL 失败;现在 tauri v2 默认 installMode=
-    //   currentUser 装到 %LOCALAPPDATA%\Programs\,应用首启解压到 %APPDATA%\...\runtime\<v>\sidecar
-    //   零权限问题。**根治 NSIS 打包 20 万小文件卡死**:NSIS 只面对 1 个大 tarball 单文件流。
-    //   tar 用系统 System32\tar.exe(bsdtar,原生保 symlink,与 build-sidecar 打包端同源);ACL 由
-    //   安装模式决定,数据目录跟 mac/linux 同一处 (app_data_dir/runtime/<version>/sidecar)。
+    // [T-487] Windows 正式安装优先直读 NSIS 安装期已物化并校验的 runtime。路径跟随
+    // 用户在安装器目录页选择的 $INSTDIR（可为 D/E 盘），首次启动不再复制/解压到 AppData。
+    // 当前仍保留下方 tar → appData 的兼容兜底；只有原生 Windows 安装验收通过后才删除。
+    #[cfg(windows)]
+    {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(install_dir) = exe.parent() {
+                match resolve_installed_runtime_with_hash(
+                    install_dir,
+                    env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+                ) {
+                    Ok(Some(dest)) => {
+                        let machine_id = resolve_machine_id(app).unwrap_or_default();
+                        integrity_sample_verify(&dest, &machine_id)?;
+                        if let Ok(data_dir) = app.path().app_data_dir() {
+                            let _ = cleanup_legacy_runtime_root(&data_dir);
+                        }
+                        eprintln!(
+                            "[shell] Windows 使用安装期 runtime（首次启动零解压）→ {}",
+                            dest.display()
+                        );
+                        return Ok(dest);
+                    }
+                    Ok(None) => {
+                        eprintln!("[shell] Windows 安装期 runtime 指针不存在，进入兼容解压路径");
+                    }
+                    Err(e) => {
+                        eprintln!("[shell] Windows 安装期 runtime 不可用，进入兼容解压路径: {e}");
+                    }
+                }
+            }
+        }
+    }
+    // [T-454/T-487] 兼容路径：新 Windows 安装应在上方命中安装期 runtime；旧安装包、
+    // macOS 与 Linux 仍可从单文件 tar 在 appData 原子解压。解压使用 Rust flate2/tar，
+    // 不依赖用户电脑 PATH 或额外安装 tar/7-Zip。
     let tarball = match app
         .path()
         .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
@@ -982,6 +1201,28 @@ fn cleanup_stale_runtimes(runtime_root: &std::path::Path, keep_version: &str) ->
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
 pub fn run() {
+    // [T-487] NSIS POSTINSTALL 专用窄入口。必须早于 Tauri/single-instance 初始化，
+    // 安装器只做离线 runtime 事务，不创建窗口、不读取用户数据库、不启动 sidecar。
+    #[cfg(windows)]
+    if std::env::args().any(|arg| arg == "--creatoros-install-runtime") {
+        let install_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+        let result = install_dir
+            .ok_or_else(|| "无法定位 CreatorOS 安装目录".to_string())
+            .and_then(|dir| materialize_windows_runtime(&dir));
+        match result {
+            Ok(path) => {
+                eprintln!("[installer] runtime ready: {}", path.display());
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("[installer] runtime materialize failed: {e}");
+                std::process::exit(41);
+            }
+        }
+    }
+
     // [T-399b] 强制蜜罐门符号+明文 bait 进最终二进制(Tauri rlib 结构下 #[used] 不够,见 decoy_gate.rs)。
     //   只取诱饵函数地址做 XOR、不调用其逻辑 → 零执行/零功能影响;black_box 防优化掉。
     std::hint::black_box(decoy_gate::decoy_gate_keepalive());
@@ -1766,6 +2007,97 @@ mod runtime_cleanup_tests {
         .unwrap();
         assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_err());
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn windows_安装期指针只解析安装目录内已校验_runtime() {
+        let install_dir = temp_runtime_root("installed-runtime-pointer");
+        let sidecar = install_dir
+            .join("runtime-images")
+            .join("0.1.0-abc123")
+            .join("sidecar");
+        std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
+        std::fs::create_dir_all(sidecar.join("frontend").join("node_modules")).unwrap();
+        std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
+        std::fs::write(sidecar.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            sidecar
+                .join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+            "{}",
+        )
+        .unwrap();
+        std::fs::write(
+            install_dir
+                .join("runtime-images")
+                .join("runtime-current.txt"),
+            "0.1.0-abc123\n",
+        )
+        .unwrap();
+
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        assert_eq!(
+            super::resolve_installed_runtime_with_hash(&install_dir, hello_sha).unwrap(),
+            Some(sidecar)
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_runtime_指针拒绝目录穿越() {
+        let install_dir = temp_runtime_root("installed-runtime-traversal");
+        std::fs::create_dir_all(install_dir.join("runtime-images")).unwrap();
+        std::fs::write(
+            install_dir
+                .join("runtime-images")
+                .join("runtime-current.txt"),
+            "../outside\n",
+        )
+        .unwrap();
+
+        assert!(
+            super::resolve_installed_runtime_with_hash(&install_dir, "unused").is_err()
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_runtime_原子更新_current_不伪造跨版本_previous() {
+        let install_dir = temp_runtime_root("installed-runtime-switch");
+        let runtime_root = install_dir.join("runtime-images");
+        std::fs::create_dir_all(&runtime_root).unwrap();
+        std::fs::write(runtime_root.join("runtime-current.txt"), "old-runtime\n").unwrap();
+
+        super::write_windows_runtime_pointer(&runtime_root, "new-runtime").unwrap();
+
+        assert_eq!(
+            std::fs::read_to_string(runtime_root.join("runtime-current.txt")).unwrap(),
+            "new-runtime\n"
+        );
+        assert!(!runtime_root.join("runtime-previous.txt").exists());
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_runtime_升级清理只保留_current() {
+        let install_dir = temp_runtime_root("installed-runtime-cleanup");
+        let runtime_root = install_dir.join("runtime-images");
+        for id in ["current", "previous", "stale-a", "stale-b"] {
+            std::fs::create_dir_all(runtime_root.join(id).join("sidecar")).unwrap();
+        }
+        std::fs::create_dir_all(runtime_root.join(".staging")).unwrap();
+        std::fs::write(runtime_root.join("runtime-current.txt"), "current\n").unwrap();
+        std::fs::write(runtime_root.join("runtime-previous.txt"), "previous\n").unwrap();
+
+        assert_eq!(super::cleanup_windows_runtime_versions(&runtime_root), 3);
+        assert!(runtime_root.join("current").exists());
+        assert!(!runtime_root.join("previous").exists());
+        assert!(!runtime_root.join("stale-a").exists());
+        assert!(!runtime_root.join("stale-b").exists());
+        assert!(!runtime_root.join(".staging").exists());
+        let _ = std::fs::remove_dir_all(&install_dir);
     }
 
     #[test]
