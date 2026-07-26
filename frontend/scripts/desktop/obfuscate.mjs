@@ -131,24 +131,30 @@ export function requiresSerializableFunctionSource(code) {
 
 /**
  * 决定文件用哪档混淆。rename-only(不碰字符串/控制流)当以下任一命中:
- *   ① 路径在 turbopack `chunks/**` 下 —— [T-164 真机踩点] turbopack chunk 靠 chunk 路径字符串 +
- *      数字模块 ID 互相 loadChunkAsync 加载(不走显式 require);stringArray base64 编码这些
- *      路径/ID → 运行时 ChunkLoadError。故整个 chunks/ 树降 rename-only(局部标识符 rename 不
- *      触碰 chunk 互链字符串,安全)。SPEC §3.1 gate ③ + §4「Next runtime chunk 保守」授权。
+ *   ① 浏览器端 `static/chunks/**` —— [T-544 macOS 真机] RC4 stringArray 会让 WKWebView
+ *      的 JavaScriptCore 持续高负载，React hydration 永久停在骨架屏。客户端 chunk 必须走
+ *      rename-only；服务端 `server/chunks/**` 仍可保留 chunk-stringarray。
  *   ② 含 require(<字面量>) / import(<字面量>) —— 动态 require 的模块名字面量若被编码 → 崩。
  * 其余(app/** 等 first-party route handler,无 turbopack chunk 互链 + 无字面 require)→ full。
  *
  * @param {string} code 文件内容
  * @param {string} [relPath] 相对靶目录路径(判 chunks/)
+ * @param {"server"|"client"} [targetKind] 当前遍历靶目录；真实 client 根是 `.next/static`，
+ *   所以相对路径只有 `chunks/**`，不能靠 relPath 猜测运行环境。
  * @returns {"rename-only"|"full"}
  */
-export function pickPreset(code, relPath = "") {
+export function pickPreset(code, relPath = "", targetKind = "server") {
   const parts = relPath.split(/[\\/]/).filter(Boolean);
   const dynLiteral = /(?:require|import)\s*\(\s*["'`]/;
   const hasDynLiteral = dynLiteral.test(code);
   // [T-459] 必须在 chunks/stringArray 判定之前拦截，保住 pageFunction 的独立源码。
   if (requiresSerializableFunctionSource(code)) return "rename-only";
-  // ① turbopack chunk 树(chunks/ 或 chunks/ssr/ 下):
+  // [T-544] 浏览器端 chunks 在 WKWebView 下不得执行 RC4 stringArray。
+  // targetKind 由遍历根显式传入；真实相对路径是 `chunks/**`，与 server chunk 同形。
+  if (targetKind === "client" && parts[0] === "chunks") {
+    return "rename-only";
+  }
+  // turbopack server chunk 树(chunks/ 或 chunks/ssr/ 下):
   //    · 含字面 require/import → rename-only(编码模块名字面量会 ChunkLoadError)。
   //    · 否则 → [T-417 L1] chunk-stringarray:rc4 加密**业务字符串**(prompt/端点),reservedStrings
   //      排除 turbopack glue(指令前缀 / chunks 路径 / __next / node: / .js 后缀);模块 ID 与引用是
@@ -325,13 +331,16 @@ export function walkTargets(root) {
  *   环境变量 CREATOROS_OBFUSCATE_WORKERS 可覆盖 worker 数(默认 = min(8, cpu-2))。
  *   CREATOROS_OBFUSCATE_SERIAL=1 强制走旧串行路径(排障)。
  */
-export async function runObfuscation(root = SERVER_DIR) {
+export async function runObfuscation(
+  root = SERVER_DIR,
+  targetKind = root === CLIENT_DIR ? "client" : "server",
+) {
   const { toObfuscate, excluded } = walkTargets(root);
 
   const shouldSerial = process.env.CREATOROS_OBFUSCATE_SERIAL === "1";
   const stat = shouldSerial
-    ? runObfuscationSerial(toObfuscate)
-    : await runObfuscationParallel(toObfuscate);
+    ? runObfuscationSerial(toObfuscate, targetKind)
+    : await runObfuscationParallel(toObfuscate, targetKind);
 
   // 逐类原因汇总。
   const reasonCounts = {};
@@ -343,7 +352,7 @@ export async function runObfuscation(root = SERVER_DIR) {
 }
 
 /** 旧串行路径(保留作 fallback / CREATOROS_OBFUSCATE_SERIAL=1 排障)。 */
-function runObfuscationSerial(toObfuscate) {
+function runObfuscationSerial(toObfuscate, targetKind) {
   let obfuscated = 0;
   let skippedIdempotent = 0;
   let renameOnly = 0;
@@ -362,7 +371,7 @@ function runObfuscationSerial(toObfuscate) {
       skippedIdempotent++;
       continue;
     }
-    const preset = pickPreset(code, rel);
+    const preset = pickPreset(code, rel, targetKind);
     try {
       const out = obfuscateCode(code, preset);
       writeFileSync(abs, `${IDEMPOTENT_MARK}\n${out}`, "utf8");
@@ -378,7 +387,7 @@ function runObfuscationSerial(toObfuscate) {
 }
 
 /** [T-452] worker_threads pool 并行版。 */
-async function runObfuscationParallel(toObfuscate) {
+async function runObfuscationParallel(toObfuscate, targetKind) {
   const { Worker } = await import("node:worker_threads");
   const os = await import("node:os");
   const workerScript = new URL("./obfuscate.worker.mjs", import.meta.url);
@@ -402,7 +411,7 @@ async function runObfuscationParallel(toObfuscate) {
       tasks.push({ abs, rel, __readError: String(e) });
       continue;
     }
-    const preset = pickPreset(code, rel);
+    const preset = pickPreset(code, rel, targetKind);
     tasks.push({ abs, rel, preset });
   }
 
@@ -677,7 +686,7 @@ if (isMain()) {
   for (const [label, dir] of [["server", SERVER_DIR], ["client", CLIENT_DIR]]) {
     console.log(`[obfuscate]   靶目录[${label}]: ${dir}`);
     // [T-452] runObfuscation 现在是 async(内部走 worker pool);ESM 顶层允许 await。
-    const stat = await runObfuscation(dir);
+    const stat = await runObfuscation(dir, label);
     console.log(
       `[obfuscate] ✅ [${label}] 混淆 ${stat.obfuscated} 个 .js(full=${stat.full} / rename-only=${stat.renameOnly})` +
         (stat.skippedIdempotent ? ` · 幂等跳过 ${stat.skippedIdempotent}` : ""),
