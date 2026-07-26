@@ -5297,6 +5297,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         maxItems: 1_000,
         strictEvidence: true,
         gateway: douyinGateway,
+        diagnostics: {
+          requestId: ctx.requestId,
+          accountId: ctx.accountId ?? undefined,
+        },
       }),
     readWeb: async ({ ctx, url }) => {
       const domain = webDomainFromUrl(url);

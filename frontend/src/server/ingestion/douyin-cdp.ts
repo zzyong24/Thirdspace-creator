@@ -16,6 +16,7 @@ import {
   DouyinNoValidResponseError,
   DouyinNotLoggedInError,
   DouyinResponseShapeChangedError,
+  rehydrateDouyinFavoritesError,
 } from "./douyin-errors";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
 // gateway 走**可注入窄端口**(DouyinChannelGate),默认 instantNoopGateway(不真等)——
@@ -3535,22 +3536,8 @@ function isFavoritesNetworkFailure(error: unknown): boolean {
 }
 
 function normalizeFavoritesError(error: unknown): Error {
-  if (
-    error instanceof DouyinFavoritesSessionExpiredError ||
-    error instanceof DouyinFavoritesBrowserLockedError ||
-    error instanceof DouyinFavoritesCaptchaError ||
-    error instanceof DouyinFavoritesNetworkError ||
-    error instanceof DouyinFavoritesUpstreamError ||
-    error instanceof DouyinFavoritesInvalidResponseError
-  ) {
-    return error;
-  }
-  if (error instanceof DouyinNotLoggedInError) {
-    return new DouyinFavoritesSessionExpiredError();
-  }
-  if (error instanceof DouyinCaptchaError) {
-    return new DouyinFavoritesCaptchaError();
-  }
+  const canonical = rehydrateDouyinFavoritesError(error);
+  if (canonical) return canonical;
   if (isFavoritesBrowserLocked(error)) {
     return new DouyinFavoritesBrowserLockedError();
   }
@@ -3565,10 +3552,21 @@ function logFavoritesFailure(
   diagnostics: FavoritesDiagnostics | undefined,
   error: Error,
 ): void {
+  const safeName = new Set([
+    "DouyinFavoritesSessionExpiredError",
+    "DouyinFavoritesBrowserLockedError",
+    "DouyinFavoritesCaptchaError",
+    "DouyinFavoritesNetworkError",
+    "DouyinFavoritesUpstreamError",
+    "DouyinFavoritesInvalidResponseError",
+  ]).has(error.name)
+    ? error.name
+    : "Error";
   console.warn(
     "[favorites] request_failed",
     JSON.stringify({
       code: (error as { code?: unknown }).code ?? "UnexpectedError",
+      name: safeName,
       requestId: diagnostics?.requestId ?? null,
       traceId: diagnostics?.traceId ?? null,
       accountId: diagnostics?.accountId ?? null,

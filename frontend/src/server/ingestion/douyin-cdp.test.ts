@@ -2509,7 +2509,11 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
         { authDir: "/fake/.auth", strictEvidence: true },
         { openContext: async () => expired.ctx },
       ),
-    ).rejects.toBeInstanceOf(DouyinFavoritesSessionExpiredError);
+    ).rejects.toMatchObject({
+      name: "DouyinFavoritesSessionExpiredError",
+      code: "DOUYIN_FAVORITES_SESSION_EXPIRED",
+      details: { upstreamStatusCode: 8 },
+    });
 
     const upstream = makeCollectsContext({
       loggedIn: true,
@@ -2580,6 +2584,95 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
     expect(log).not.toContain("secret-cookie");
     warn.mockRestore();
   });
+
+  it.each([
+    [
+      "登录失效",
+      {
+        name: "DouyinFavoritesSessionExpiredError",
+        code: "DOUYIN_FAVORITES_SESSION_EXPIRED",
+        details: { upstreamStatusCode: 8 },
+      },
+      "DOUYIN_FAVORITES_SESSION_EXPIRED",
+    ],
+    [
+      "浏览器锁",
+      {
+        name: "BrowserLaunchError",
+        code: "CHROMIUM_PROFILE_LOCKED",
+      },
+      "DOUYIN_FAVORITES_BROWSER_LOCKED",
+    ],
+    [
+      "验证码",
+      {
+        name: "DouyinFavoritesCaptchaError",
+        code: "DOUYIN_FAVORITES_CAPTCHA",
+      },
+      "DOUYIN_FAVORITES_CAPTCHA",
+    ],
+    [
+      "网络",
+      {
+        name: "DouyinFavoritesNetworkError",
+        code: "DOUYIN_FAVORITES_NETWORK",
+      },
+      "DOUYIN_FAVORITES_NETWORK",
+    ],
+    [
+      "上游拒绝",
+      {
+        name: "DouyinFavoritesUpstreamError",
+        code: "DOUYIN_FAVORITES_UPSTREAM",
+        details: { upstreamStatusCode: 2190008 },
+      },
+      "DOUYIN_FAVORITES_UPSTREAM",
+    ],
+    [
+      "响应非法",
+      {
+        name: "DouyinFavoritesInvalidResponseError",
+        code: "DOUYIN_FAVORITES_INVALID_RESPONSE",
+        details: { reason: "folders" },
+      },
+      "DOUYIN_FAVORITES_INVALID_RESPONSE",
+    ],
+  ])(
+    "[T-536] 跨 chunk/序列化的%s错误按稳定 code 恢复，不降级 UnexpectedError",
+    async (_label, serialized, expectedCode) => {
+      const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const wrapped = Object.assign(new Error("外层包装，不包含可猜测文案"), {
+        cause: serialized,
+      });
+      const error = await fetchDouyinCollectsFolders(
+        {
+          authDir: "/fake/.auth",
+          strictEvidence: true,
+          diagnostics: {
+            requestId: "request-536",
+            traceId: "trace-536",
+            accountId: "account-536",
+          },
+        },
+        {
+          openContext: async () => {
+            throw wrapped;
+          },
+        },
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toMatchObject({ code: expectedCode });
+      const log = warn.mock.calls.flat().join(" ");
+      expect(log).toContain(`"code":"${expectedCode}"`);
+      expect(log).toContain(`"name":"${(error as Error).name}"`);
+      expect(log).toContain(`"requestId":"request-536"`);
+      expect(log).toContain(`"traceId":"trace-536"`);
+      expect(log).toContain(`"accountId":"account-536"`);
+      expect(log).not.toContain("外层包装");
+      warn.mockRestore();
+    },
+  );
 });
 
 describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {

@@ -22,11 +22,17 @@ import "server-only";
 
 /** 浏览器启动失败(人话 message,直接可渲给用户)。 */
 export class BrowserLaunchError extends Error {
-  constructor(message: string) {
+  readonly code?: string;
+
+  constructor(message: string, code?: string) {
     super(message);
     this.name = "BrowserLaunchError";
+    this.code = code;
   }
 }
+
+/** 持久 profile 锁的稳定内部码；收藏链会映射为用户可操作的 contract code。 */
+export const CHROMIUM_PROFILE_LOCKED_CODE = "CHROMIUM_PROFILE_LOCKED";
 
 /** 默认 launch 超时(毫秒)。 */
 export const DEFAULT_LAUNCH_TIMEOUT_MS = 15_000;
@@ -151,6 +157,28 @@ export interface GuardedLaunchOptions {
   label?: string;
 }
 
+function isChromiumProfileLockedFailure(error: unknown): boolean {
+  const record =
+    error !== null && typeof error === "object"
+      ? (error as { code?: unknown; name?: unknown; message?: unknown })
+      : null;
+  if (
+    record?.code === CHROMIUM_PROFILE_LOCKED_CODE ||
+    record?.code === "EBUSY" ||
+    record?.code === "EACCES"
+  ) {
+    return true;
+  }
+  const name = typeof record?.name === "string" ? record.name : "";
+  const message = typeof record?.message === "string" ? record.message : "";
+  return (
+    name === "BrowserProfileLockedError" ||
+    /Singleton(?:Lock|Cookie|Socket)|profile.*(?:in use|locked)|browser.*lock|正在被占用/i.test(
+      message,
+    )
+  );
+}
+
 /**
  * [T-369] 守卫式 launch:预检(杀残留+清锁,仅当该 profile 无活 context)→ 同 profile 串行
  * → 超时 + 人话报错。`profileDir=null` 表示无持久 profile(web-capture 干净无头),只做
@@ -165,8 +193,8 @@ export async function guardedLaunch<T extends Closable>(
   const timeoutMs = opts.timeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS;
   const label = opts.label ?? "浏览器";
 
-  const attempt = async (): Promise<T> => {
-    if (profileDir && liveContextCount(profileDir) === 0) {
+  const attempt = async (runPreflight = true): Promise<T> => {
+    if (runPreflight && profileDir && liveContextCount(profileDir) === 0) {
       await ensureChromiumLaunchable(profileDir, deps);
     }
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -191,6 +219,12 @@ export async function guardedLaunch<T extends Closable>(
       // 超时后底层 launch 若迟到成功 → 顺手关掉,别泄漏进程。
       launching.then((ctx) => void ctx.close().catch(() => {})).catch(() => {});
       if (err instanceof BrowserLaunchError) throw err;
+      if (isChromiumProfileLockedFailure(err)) {
+        throw new BrowserLaunchError(
+          `${label}的登录档案仍被占用。已自动清理并重试一次；请关闭相关登录窗口后再试。`,
+          CHROMIUM_PROFILE_LOCKED_CODE,
+        );
+      }
       const msg = err instanceof Error ? err.message : String(err);
       throw new BrowserLaunchError(
         `${label}没能启动:${msg.split("\n")[0]}。已自动清理残留进程与锁,请重试;若反复失败请重启应用。`,
@@ -201,7 +235,25 @@ export async function guardedLaunch<T extends Closable>(
   };
 
   const runGuarded = async (): Promise<T> => {
-    const ctx = await attempt();
+    let ctx: T;
+    try {
+      ctx = await attempt();
+    } catch (error) {
+      // profile 锁只允许在进程内确认无活 context 后恢复一次。预检仍按 profile
+      // 精确匹配残留 Chromium，绝不碰用户自己的 Chrome；第二次失败直接上抛。
+      if (
+        !profileDir ||
+        liveContextCount(profileDir) !== 0 ||
+        !isChromiumProfileLockedFailure(error)
+      ) {
+        throw error;
+      }
+      console.warn(
+        "[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次",
+      );
+      await ensureChromiumLaunchable(profileDir, deps);
+      ctx = await attempt(false);
+    }
     if (profileDir) {
       liveContexts.set(profileDir, liveContextCount(profileDir) + 1);
       let released = false;

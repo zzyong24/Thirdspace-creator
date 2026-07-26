@@ -399,10 +399,40 @@ function operationKey(prefix: string): string {
 }
 
 export function favoriteFoldersErrorMessage(error: unknown): string {
-  const code =
-    error && typeof error === "object"
-      ? (error as { code?: unknown }).code
-      : null;
+  let code: unknown = null;
+  let name: unknown = null;
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+  for (let depth = 0; current && depth < 6 && !seen.has(current); depth += 1) {
+    seen.add(current);
+    if (typeof current !== "object") break;
+    const record = current as {
+      code?: unknown;
+      name?: unknown;
+      cause?: unknown;
+      error?: unknown;
+    };
+    code = typeof record.code === "string" ? record.code : code;
+    name = typeof record.name === "string" ? record.name : name;
+    if (code) break;
+    current = record.cause ?? record.error;
+  }
+  if (!code) {
+    const byName: Record<string, ErrorCode> = {
+      DouyinFavoritesSessionExpiredError:
+        ErrorCode.DouyinFavoritesSessionExpired,
+      DouyinNotLoggedInError: ErrorCode.DouyinFavoritesSessionExpired,
+      DouyinFavoritesBrowserLockedError:
+        ErrorCode.DouyinFavoritesBrowserLocked,
+      BrowserProfileLockedError: ErrorCode.DouyinFavoritesBrowserLocked,
+      DouyinFavoritesCaptchaError: ErrorCode.DouyinFavoritesCaptcha,
+      DouyinFavoritesNetworkError: ErrorCode.DouyinFavoritesNetwork,
+      DouyinFavoritesUpstreamError: ErrorCode.DouyinFavoritesUpstream,
+      DouyinFavoritesInvalidResponseError:
+        ErrorCode.DouyinFavoritesInvalidResponse,
+    };
+    code = typeof name === "string" ? byName[name] : null;
+  }
   switch (code) {
     case ErrorCode.DouyinFavoritesSessionExpired:
       return "抖音收藏登录已失效，请重新登录当前账号后再读取。";

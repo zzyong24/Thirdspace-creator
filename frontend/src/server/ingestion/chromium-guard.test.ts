@@ -134,6 +134,84 @@ describe("guardedLaunch 并发串行", () => {
 });
 
 describe("guardedLaunch 超时/失败诚实", () => {
+  it("[T-536] profile 锁失败且无活 context 时清理并只自动重试一次", async () => {
+    const profile = "/tmp/guard-lock-recovery";
+    const fake = makeFakeDeps([]);
+    let launches = 0;
+    const ctx = await guardedLaunch(
+      profile,
+      async () => {
+        launches += 1;
+        if (launches === 1) {
+          throw Object.assign(new Error("SingletonLock profile in use secret-cookie"), {
+            code: "EBUSY",
+          });
+        }
+        return makeFakeCtx();
+      },
+      {},
+      fake.deps,
+    );
+
+    expect(launches).toBe(2);
+    expect(fake.listCalls).toBe(2);
+    expect(fake.removed).toHaveLength(SINGLETON_LOCK_FILES.length * 2);
+    await ctx.close();
+  });
+
+  it("[T-536] 清锁后仍失败时停止，不无限重试且不泄露底层原始错误", async () => {
+    const profile = "/tmp/guard-lock-retry-once";
+    const fake = makeFakeDeps([]);
+    let launches = 0;
+    const error = await guardedLaunch(
+      profile,
+      async () => {
+        launches += 1;
+        throw Object.assign(new Error("SingletonLock secret-cookie"), {
+          code: "EBUSY",
+        });
+      },
+      {},
+      fake.deps,
+    ).catch((caught: unknown) => caught);
+
+    expect(launches).toBe(2);
+    expect(error).toMatchObject({
+      name: "BrowserLaunchError",
+      code: "CHROMIUM_PROFILE_LOCKED",
+    });
+    expect((error as Error).message).not.toContain("secret-cookie");
+  });
+
+  it("[T-536] profile 仍有活 context 时不清锁、不重试", async () => {
+    const profile = "/tmp/guard-lock-live-context";
+    const fake = makeFakeDeps([]);
+    const live = await guardedLaunch(
+      profile,
+      async () => makeFakeCtx(),
+      {},
+      fake.deps,
+    );
+    const cleanupCallsBeforeFailure = fake.listCalls;
+    let launches = 0;
+    const error = await guardedLaunch(
+      profile,
+      async () => {
+        launches += 1;
+        throw Object.assign(new Error("SingletonLock profile in use"), {
+          code: "EBUSY",
+        });
+      },
+      {},
+      fake.deps,
+    ).catch((caught: unknown) => caught);
+
+    expect(launches).toBe(1);
+    expect(fake.listCalls).toBe(cleanupCallsBeforeFailure);
+    expect(error).toMatchObject({ code: "CHROMIUM_PROFILE_LOCKED" });
+    await live.close();
+  });
+
   it("launch 超时 → BrowserLaunchError 人话报错,迟到的 context 被顺手关掉", async () => {
     const profile = "/tmp/guard-timeout";
     const fake = makeFakeDeps();

@@ -229,7 +229,15 @@ describe("T-482 内容雷达工作区", () => {
         name: "DouyinFavoritesSessionExpiredError",
         message: "看起来像登录失效，但没有 code",
       }),
-    ).toContain("服务");
+    ).toContain("登录已失效");
+    expect(
+      favoriteFoldersErrorMessage({
+        cause: {
+          name: "DouyinFavoritesBrowserLockedError",
+          code: "DOUYIN_FAVORITES_BROWSER_LOCKED",
+        },
+      }),
+    ).toContain("占用");
   });
 
   it("[T-520] 业务确认真 0 时显示真实空态，来源弹窗可滚动且选项可换行", async () => {
