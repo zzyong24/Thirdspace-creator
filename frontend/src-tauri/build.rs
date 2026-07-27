@@ -2,6 +2,14 @@ fn main() {
     // [T-535] verdict 签名 seed 由 option_env! 编进 Rust 壳。显式声明环境依赖，避免
     // Cargo 增量复用“上一次没配 key”的壳二进制，制造公钥已烘焙但壳签不出 token 的白屏包。
     println!("cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64");
+    // [T-545] projectKey 是产品级 identity（不是渠道 identity）。正式 package 已在重活前
+    // 校验其显式存在；这里把它固化进 Rust 壳，保证 Finder 启动不依赖终端环境变量。
+    println!("cargo:rerun-if-env-changed=CREATOROS_LICENSE_PROJECT_KEY");
+    let project_key = std::env::var("CREATOROS_LICENSE_PROJECT_KEY")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY={project_key}");
 
     // [T-372 L2 / T-487 RAT-PKG-05] sidecar 入口完整性:全平台构建期都对
     // src-tauri/sidecar.tar.gz 算 SHA-256,

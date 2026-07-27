@@ -8,6 +8,31 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
+  it("T-545 将产品级 projectKey 固化进统一安装包，Finder 启动不依赖终端环境", () => {
+    const packageSource = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "package.mjs"),
+      "utf8",
+    );
+    const buildRs = readFileSync(
+      join(process.cwd(), "src-tauri", "build.rs"),
+      "utf8",
+    );
+    const licenseRs = readFileSync(
+      join(process.cwd(), "src-tauri", "src", "license.rs"),
+      "utf8",
+    );
+    expect(packageSource).toContain("assertLicenseProjectKey()");
+    expect(buildRs).toContain(
+      "cargo:rerun-if-env-changed=CREATOROS_LICENSE_PROJECT_KEY",
+    );
+    expect(buildRs).toContain(
+      "cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY",
+    );
+    expect(licenseRs).toContain(
+      'option_env!("CREATOROS_BUILTIN_LICENSE_PROJECT_KEY")',
+    );
+  });
+
   it("所有可安装包在重活前校验 verdict 密钥对，私钥只进入 Tauri/Rust 编译", () => {
     const packageSource = readFileSync(
       join(process.cwd(), "scripts", "desktop", "package.mjs"),

@@ -18,6 +18,7 @@ import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
 import { createBuildTimingRecorder } from "./build-timing.mjs";
+import { assertLicenseProjectKey } from "./license-project-key.mjs";
 import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -250,6 +251,12 @@ if (process.argv.includes("--verify-verdict-keys-only")) {
   process.exit(0);
 }
 
+if (process.argv.includes("--verify-license-project-key-only")) {
+  const projectKey = assertLicenseProjectKey();
+  console.log(`[desktop:package] ✓ [T-545] 产品级 projectKey=${projectKey} 可固化进统一安装包。`);
+  process.exit(0);
+}
+
 const cargo = resolveCargo();
 const cargoBinDir = cargo === "cargo" ? "" : dirname(cargo);
 const pathEnv = cargoBinDir ? { PATH: `${cargoBinDir}${delimiter}${process.env.PATH ?? ""}` } : {};
@@ -314,6 +321,10 @@ if (process.argv.includes("--preclean-only")) {
 
 // [T-535] 必须在任何构建重活前硬失败。本地 release-fast 与正式 release 使用同一闸，
 // 不再允许 build-sidecar 的 dev 警告一路漏成“能产包、安装后必白屏”的 .app。
+const licenseProjectKey = assertLicenseProjectKey();
+console.log(
+  `[desktop:package] ✓ [T-545] 产品级 projectKey=${licenseProjectKey}；渠道身份继续由激活码的签名 channelRef 决定。`,
+);
 assertVerdictKeyMaterial();
 console.log("[desktop:package] ✓ [T-535] verdict 双密钥存在、格式合法且属于同一 Ed25519 密钥对。");
 
