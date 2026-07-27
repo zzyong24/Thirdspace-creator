@@ -1406,7 +1406,7 @@ pub fn run() {
             let handshake_token = license::gen_handshake_token();
             let init_script =
                 format!("window.__CREATOROS_HANDSHAKE_TOKEN__={:?};", handshake_token);
-            let _splash_win = WebviewWindowBuilder::new(
+            let main_window_builder = WebviewWindowBuilder::new(
                 &handle,
                 "main",
                 WebviewUrl::App("index.html".into()),
@@ -1414,19 +1414,34 @@ pub fn run() {
             .title("CreatorOS")
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
-            .initialization_script(&init_script)
-            .on_page_load(|_window, payload| {
-                if payload.event() == PageLoadEvent::Finished
-                    && matches!(payload.url().host_str(), Some("127.0.0.1" | "localhost"))
-                {
-                    eprintln!(
-                        "[CreatorOS] MAIN_PAGE_LOAD_FINISHED {}",
-                        payload.url()
-                    );
-                }
-            })
-            .build()
-            .expect("建主窗口失败");
+            .initialization_script(&init_script);
+            // Wry 会通过 CoreWebView2EnvironmentOptions 显式写入自己的默认参数，Windows
+            // WebView2 的同名环境变量因此不会自动生效。显式合并官方变量，供真包 RAT 打开
+            // 本机调试端口读取实际 DOM；普通用户没有该变量，仍走 Wry 默认参数。
+            #[cfg(windows)]
+            let main_window_builder = if let Ok(extra_browser_args) =
+                std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+            {
+                let browser_args = format!(
+                    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection {extra_browser_args}"
+                );
+                main_window_builder.additional_browser_args(&browser_args)
+            } else {
+                main_window_builder
+            };
+            let _splash_win = main_window_builder
+                .on_page_load(|_window, payload| {
+                    if payload.event() == PageLoadEvent::Finished
+                        && matches!(payload.url().host_str(), Some("127.0.0.1" | "localhost"))
+                    {
+                        eprintln!(
+                            "[CreatorOS] MAIN_PAGE_LOAD_FINISHED {}",
+                            payload.url()
+                        );
+                    }
+                })
+                .build()
+                .expect("建主窗口失败");
             drop(_splash_win); // 建完就释放引用,下面 line ~1530 从 handle.get_webview_window("main") 拿回 navigate。
 
             // [T-461 回退 → T-468] 曾把整个 setup 逻辑丢 std::thread::spawn,想让 event loop

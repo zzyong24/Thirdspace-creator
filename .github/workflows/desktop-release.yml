@@ -626,7 +626,13 @@ jobs:
             throw "[T-565] 安装后缺 CreatorOS.exe"
           }
           $firewallRules = @()
-          $devtoolsPort = 9335
+          $portProbe = [Net.Sockets.TcpListener]::new(
+            [Net.IPAddress]::Loopback,
+            0
+          )
+          $portProbe.Start()
+          $devtoolsPort = ([Net.IPEndPoint]$portProbe.LocalEndpoint).Port
+          $portProbe.Stop()
           $stdout = Join-Path $env:RUNNER_TEMP "creatoros-t565.stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "creatoros-t565.stderr.log"
           $domReport = Join-Path $env:RUNNER_TEMP "creatoros-t565-webview.json"
@@ -680,26 +686,6 @@ jobs:
               "launchMs=$($launchWatch.ElapsedMilliseconds) " +
               "runtimeFiles=$($runtimeFiles.Count) runtimeBytes=$runtimeBytes"
             )
-            $partialEvidence = [ordered]@{
-              schemaVersion = 1
-              setupBytes = $setup.Length
-              installMilliseconds = $installWatch.ElapsedMilliseconds
-              firstLaunchMilliseconds = $launchWatch.ElapsedMilliseconds
-              runtimeFiles = $runtimeFiles.Count
-              runtimeBytes = $runtimeBytes
-              nodeModulesDirectories = $nodeModules.Count
-              offlineFirewallPrograms = $uniquePrograms.Count
-              mainPageLoadFinished = $true
-              webviewDomVerified = $false
-            }
-            $partialEvidence | ConvertTo-Json | Out-File `
-              "tools/windows-closure-rat/out/package-rat-results.json" -Encoding utf8
-            node tools/windows-closure-rat/inspect-installed-webview.mjs `
-              $devtoolsPort $domReport
-            if ($LASTEXITCODE -ne 0) {
-              throw "[T-565] WebView2 DOM 非白屏验证失败"
-            }
-
             $changedRuntimeFiles = @(
               Get-ChildItem $runtime -Recurse -File |
                 Where-Object LastWriteTimeUtc -gt $launchStarted
@@ -713,6 +699,34 @@ jobs:
             ) {
               throw "[T-565] 首启修改了安装 runtime（疑似仍在解压/自修复）"
             }
+            $debugArgumentProcesses = @(
+              Get-CimInstance Win32_Process -Filter "Name = 'msedgewebview2.exe'" |
+                Where-Object CommandLine -Match "--remote-debugging-port=$devtoolsPort"
+            )
+            $partialEvidence = [ordered]@{
+              schemaVersion = 1
+              setupBytes = $setup.Length
+              installMilliseconds = $installWatch.ElapsedMilliseconds
+              firstLaunchMilliseconds = $launchWatch.ElapsedMilliseconds
+              runtimeFiles = $runtimeFiles.Count
+              runtimeBytes = $runtimeBytes
+              nodeModulesDirectories = $nodeModules.Count
+              runtimeFilesChangedOnFirstLaunch = $changedRuntimeFiles.Count
+              offlineFirewallPrograms = $uniquePrograms.Count
+              mainPageLoadFinished = $true
+              webviewDebugArgumentProcesses = $debugArgumentProcesses.Count
+              webviewDomVerified = $false
+            }
+            $partialEvidence | ConvertTo-Json | Out-File `
+              "tools/windows-closure-rat/out/package-rat-results.json" -Encoding utf8
+            if ($debugArgumentProcesses.Count -eq 0) {
+              throw "[T-565] WebView2 子进程未收到 remote-debugging-port"
+            }
+            node tools/windows-closure-rat/inspect-installed-webview.mjs `
+              $devtoolsPort $domReport
+            if ($LASTEXITCODE -ne 0) {
+              throw "[T-565] WebView2 DOM 非白屏验证失败"
+            }
 
             $evidence = [ordered]@{
               schemaVersion = 1
@@ -725,6 +739,7 @@ jobs:
               runtimeFilesChangedOnFirstLaunch = $changedRuntimeFiles.Count
               offlineFirewallPrograms = $uniquePrograms.Count
               mainPageLoadFinished = $true
+              webviewDebugArgumentProcesses = $debugArgumentProcesses.Count
               webviewDomVerified = $true
             }
             $evidence | ConvertTo-Json | Out-File `

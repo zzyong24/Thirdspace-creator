@@ -182,6 +182,10 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
   });
 
   it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，且不上传 setup", () => {
+    const shellSource = readFileSync(
+      join(process.cwd(), "src-tauri", "src", "lib.rs"),
+      "utf8",
+    );
     const packageRat = workflow.slice(
       workflow.indexOf("windows-closure-rat:"),
       workflow.indexOf("draft-release:"),
@@ -193,7 +197,16 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(packageRat).toContain("MAIN_PAGE_LOAD_FINISHED");
     expect(packageRat).toContain("inspect-installed-webview.mjs");
     expect(packageRat).toContain("runtimeFilesChangedOnFirstLaunch");
+    expect(packageRat).toContain("[Net.Sockets.TcpListener]::new");
+    expect(packageRat).toContain("webviewDebugArgumentProcesses");
+    expect(packageRat).toContain(
+      "WebView2 子进程未收到 remote-debugging-port",
+    );
     expect(packageRat).toContain('"node_modules"');
+    expect(shellSource).toContain(
+      'std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")',
+    );
+    expect(shellSource).toContain(".additional_browser_args(&browser_args)");
     expect(packageRat).not.toContain("dist-upload");
     expect(packageRat).not.toMatch(
       /path:\s*\|[\s\S]*?target\/release-fast\/bundle\/nsis/,
