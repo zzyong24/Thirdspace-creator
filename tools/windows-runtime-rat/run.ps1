@@ -109,6 +109,15 @@ $($payloadXml -join "`n")
 "@ | Set-Content $Path -Encoding utf8
 }
 
+function Remove-ExternalPayloadCopies {
+  foreach ($payloadName in $payloadNames) {
+    $externalCopy = Join-Path $work $payloadName
+    if (Test-Path $externalCopy -PathType Leaf) {
+      Remove-Item $externalCopy -Force
+    }
+  }
+}
+
 $offlineResult = Join-Path $work "offline-result.json"
 $offlineWxs = Join-Path $work "offline.wxs"
 $offlineBundle = Join-Path $work "CreatorOS-RAT-offline.exe"
@@ -134,6 +143,7 @@ try {
   $webBundle = Join-Path $work "CreatorOS-RAT-web.exe"
   New-BundleSource $webWxs "CreatorOS T565 Web RAT" "2.0.0.0" "no" "http://127.0.0.1:$port" $webResult "web" "creatoros-t565-web"
   Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $webWxs, "-o", $webBundle)
+  Remove-ExternalPayloadCopies
   $webLog = Join-Path $output "burn-web.log"
 
   # The first transfer is intentionally severed. Burn must either resume/retry in
@@ -159,6 +169,7 @@ try {
   $cacheBundle = Join-Path $work "CreatorOS-RAT-web-cache.exe"
   New-BundleSource $cacheWxs "CreatorOS T565 Web Cache RAT" "2.0.0.1" "no" "http://127.0.0.1:$port" $cacheResult "web-cache" "creatoros-t565-web"
   Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $cacheWxs, "-o", $cacheBundle)
+  Remove-ExternalPayloadCopies
   $cacheLog = Join-Path $output "burn-web-cache.log"
   Invoke-Checked $cacheBundle @("-quiet", "-norestart", "-log", $cacheLog)
   Wait-File $cacheResult
@@ -176,6 +187,7 @@ try {
   $tamperBundle = Join-Path $work "CreatorOS-RAT-tamper.exe"
   New-BundleSource $tamperWxs "CreatorOS T565 Tamper RAT" "3.0.0.0" "no" "http://127.0.0.1:$port" $tamperResult "tamper" "creatoros-t565-tamper"
   Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $tamperWxs, "-o", $tamperBundle)
+  Remove-ExternalPayloadCopies
   [IO.File]::AppendAllText((Join-Path $served "core.zip"), "tampered")
   $tamperLog = Join-Path $output "burn-tamper.log"
   & $tamperBundle "-quiet" "-norestart" "-log" $tamperLog
