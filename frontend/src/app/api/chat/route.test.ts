@@ -17,6 +17,11 @@ const listMessages = vi.fn();
 const runChatStream = vi.fn();
 const dispatchDouyinShare = vi.fn();
 const resolveEffectiveSkillSnapshot = vi.fn();
+const runWithEffectiveSkillSnapshot = vi.hoisted(() =>
+  vi.fn(
+    async (_snapshot: unknown, execute: () => Promise<unknown>) => execute(),
+  ),
+);
 
 // [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
 // 触发 onFinish 断言 assistant 回复(text + parts)落库。[T-239c] onFinish 现带 isAborted。
@@ -63,14 +68,15 @@ vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
 }));
 
 vi.mock("@creatoros/ai-worker", () => ({
-  runWithEffectiveSkillSnapshot: async (
-    _snapshot: unknown,
-    execute: () => Promise<unknown>,
-  ) => execute(),
+  runWithEffectiveSkillSnapshot,
 }));
 
 // readSessionCookie reads the cookie header; keep the real impl (it's pure).
-import { POST, deriveConversationTitle } from "./route";
+import {
+  POST,
+  deriveConversationTitle,
+  runWithChatChildSkillSnapshot,
+} from "./route";
 
 function chatReq(body: unknown, cookie?: string): Request {
   return new Request("http://localhost/api/chat", {
@@ -110,6 +116,7 @@ beforeEach(() => {
     accountId: "acct-1",
     skills: [],
   });
+  runWithEffectiveSkillSnapshot.mockClear();
   runChatStream.mockReset();
   dispatchDouyinShare.mockReset();
   capturedStreamInit = null;
@@ -128,6 +135,40 @@ beforeEach(() => {
       return new Response("stream", { status: 200, headers: init?.headers });
     },
   });
+});
+
+it("[T-546/T-513] 对话子 Skill 用路由同一快照作用域，不委托另一份 runtime ALS", async () => {
+  const childSnapshot = {
+    snapshotVersion: 1,
+    userId: "u-1",
+    accountId: "acct-1",
+    skills: [{ skillId: "topic.generate" }],
+  };
+  resolveEffectiveSkillSnapshot.mockResolvedValueOnce(childSnapshot);
+  const execute = vi.fn(async () => "topic-ok");
+  const childContext = {
+    userId: "u-1",
+    accountId: "acct-1",
+    requestId: "req-t546-skill",
+    source: "user" as const,
+  };
+
+  await expect(
+    runWithChatChildSkillSnapshot(
+      { resolveEffectiveSkillSnapshot },
+      childContext,
+      ["topic.generate"],
+      execute,
+    ),
+  ).resolves.toBe("topic-ok");
+  expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
+    childContext,
+    ["topic.generate"],
+  );
+  expect(runWithEffectiveSkillSnapshot).toHaveBeenCalledWith(
+    childSnapshot,
+    execute,
+  );
 });
 
 // ── [T-267②] 会话标题净化:斜杠命令 / 裸路径不当标题 ──────────────────────────────

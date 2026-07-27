@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { consumeStream, type UIMessage } from "ai";
 import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
-import { getChatRuntime } from "@/server/persistence-client";
+import {
+  getChatRuntime,
+  type ChatRuntime,
+} from "@/server/persistence-client";
 import {
   resolveSkillForSurface,
   runChatStream,
@@ -104,6 +107,24 @@ function textOf(message: UIMessage | undefined): string {
     .map((p) => p.text as string)
     .join("")
     .trim();
+}
+
+/**
+ * 对话主 surface 与工具子 Skill 必须落在同一份 ai-worker AsyncLocalStorage 实例。
+ * 若委托 persistence runtime 自己进入作用域，Next production bundle 可能把 ai-worker
+ * 拆成另一份模块实例：子调用仍看到外层 chatbox 快照，随后稳定报 required skill 缺失。
+ */
+export async function runWithChatChildSkillSnapshot<T>(
+  runtime: Pick<ChatRuntime, "resolveEffectiveSkillSnapshot">,
+  ctx: RequestContext,
+  requiredSkillIds: readonly string[],
+  execute: () => Promise<T>,
+): Promise<T> {
+  const snapshot = await runtime.resolveEffectiveSkillSnapshot(
+    ctx,
+    requiredSkillIds,
+  );
+  return runWithEffectiveSkillSnapshot(snapshot, execute);
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -294,7 +315,8 @@ export async function POST(req: Request): Promise<Response> {
         // 按同一 user/account 解析独立 snapshot；AsyncLocalStorage 嵌套作用域结束后会
         // 自动恢复外层 chatbox snapshot，账号之间不会共享可变 registry。
         runWithSkillSnapshot: async (runCtx, requiredSkillIds, execute) => {
-          return runtime.runWithEffectiveSkills(
+          return runWithChatChildSkillSnapshot(
+            runtime,
             runCtx,
             requiredSkillIds,
             execute,
