@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { getAppVersion } from "@/lib/desktop-updater";
 import { handshakeHeaders } from "@/lib/handshake-client";
+import { getRuntimeSystemLabel } from "@/lib/runtime-system-info";
 import { cn } from "@/lib/utils";
 import {
   buildIssueFeedbackText,
@@ -58,11 +59,6 @@ function newIdempotencyKey(): string {
   return globalThis.crypto.randomUUID().toLowerCase();
 }
 
-function runtimeOs(): string {
-  if (typeof navigator === "undefined") return "未知";
-  return navigator.platform || navigator.userAgent || "未知";
-}
-
 export function IssueFeedbackDialog({
   pathname,
   collapsed,
@@ -83,6 +79,7 @@ export function IssueFeedbackDialog({
   const [description, setDescription] = React.useState("");
   const [occurredAt, setOccurredAt] = React.useState(() => new Date());
   const [appVersion, setAppVersion] = React.useState<string | null>(null);
+  const [systemLabel, setSystemLabel] = React.useState("系统信息读取中");
   const [bugFeedbackUrl, setBugFeedbackUrl] = React.useState<string | null>(
     cachedBugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
   );
@@ -107,18 +104,27 @@ export function IssueFeedbackDialog({
         summary,
         description,
         appVersion,
-        os: runtimeOs(),
+        os: systemLabel,
         route: pathname,
         occurredAt,
         correlationId,
       }),
-    [appVersion, correlationId, description, occurredAt, pathname, summary],
+    [
+      appVersion,
+      correlationId,
+      description,
+      occurredAt,
+      pathname,
+      summary,
+      systemLabel,
+    ],
   );
 
   const handleOpenChange = React.useCallback((next: boolean) => {
     setOpen(next);
     if (next) {
       setOccurredAt(new Date());
+      setSystemLabel("系统信息读取中");
       setCopyState("editing");
       setBugFeedbackUrl(
         cachedBugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
@@ -140,6 +146,9 @@ export function IssueFeedbackDialog({
     let active = true;
     void getAppVersion().then((value) => {
       if (active) setAppVersion(value);
+    });
+    void getRuntimeSystemLabel().then((value) => {
+      if (active) setSystemLabel(value);
     });
     return () => {
       active = false;
@@ -238,7 +247,7 @@ export function IssueFeedbackDialog({
           ),
           reproductionSteps: "",
           appVersion: appVersion?.trim() || "未知",
-          osName: runtimeOs(),
+          osName: systemLabel,
           locale: navigator.language || "zh-CN",
         }),
       });

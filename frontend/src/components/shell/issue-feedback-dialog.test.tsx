@@ -55,6 +55,23 @@ describe("IssueFeedbackDialog", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("[T-568] 不再把 navigator.platform 的 MacIntel 当作芯片型号", async () => {
+    vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        bugFeedbackUrl={null}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "问题反馈" }));
+    const preview = screen.getByLabelText(
+      "反馈内容预览",
+    ) as HTMLTextAreaElement;
+    await waitFor(() => expect(preview.value).toContain("系统：Web 浏览器"));
+    expect(preview.value).not.toContain("MacIntel");
+  });
+
   it("copies exactly the visible preview without sending feedback", async () => {
     const writeText = vi.fn(async () => undefined);
     const fetchMock = vi

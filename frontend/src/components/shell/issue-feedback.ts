@@ -65,6 +65,22 @@ export function redactSensitiveText(value: string): string {
     .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[已隐藏]");
 }
 
+function twoDigits(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+export function formatFeedbackOccurredAt(value: Date): string {
+  if (!Number.isFinite(value.getTime())) return "未知";
+  const offsetMinutes = -value.getTimezoneOffset();
+  const offsetSign = offsetMinutes >= 0 ? "+" : "-";
+  const offsetAbs = Math.abs(offsetMinutes);
+  const offset = `${offsetSign}${twoDigits(Math.floor(offsetAbs / 60))}:${twoDigits(offsetAbs % 60)}`;
+  const localTime =
+    `${value.getFullYear()}-${twoDigits(value.getMonth() + 1)}-${twoDigits(value.getDate())} ` +
+    `${twoDigits(value.getHours())}:${twoDigits(value.getMinutes())}:${twoDigits(value.getSeconds())}`;
+  return `${localTime}（UTC${offset}，本机时间）`;
+}
+
 export function buildIssueFeedbackText(input: IssueFeedbackInput): string {
   const version = input.appVersion?.trim() || "未知";
   const build = input.buildId?.trim() ? ` · build ${input.buildId.trim()}` : "";
@@ -76,7 +92,7 @@ export function buildIssueFeedbackText(input: IssueFeedbackInput): string {
     `应用版本：${version}${build}`,
     `系统：${input.os || "未知"}`,
     `页面：${sanitizeFeedbackRoute(input.route)}`,
-    `时间：${input.occurredAt.toISOString()}`,
+    `时间：${formatFeedbackOccurredAt(input.occurredAt)}`,
   ];
   if (input.correlationId?.trim()) {
     lines.push(`关联编号：${input.correlationId.trim()}`);

@@ -62,6 +62,47 @@ const PROMPT_BUNDLE_PUBLIC_KEY: &str =
 /// 两侧单测各自钉住字面值(改任一侧必挂测)。macOS 构建也保留此常量(单测在 mac 跑)。
 pub const SIDECAR_SHUTDOWN_SENTINEL: &str = "__CREATOROS_SHUTDOWN__";
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RuntimeSystemInfo {
+    os: &'static str,
+    arch: String,
+}
+
+#[cfg(target_os = "macos")]
+fn runtime_host_arch() -> String {
+    // Rosetta 下编译目标/进程架构可能是 x86_64，但实体机器仍是 Apple Silicon。
+    // `hw.optional.arm64=1` 是 macOS 原生硬件能力，不依赖浏览器兼容字段或当前进程模式。
+    let mut arm64_supported: libc::c_int = 0;
+    let mut value_size = std::mem::size_of::<libc::c_int>();
+    let result = unsafe {
+        libc::sysctlbyname(
+            b"hw.optional.arm64\0".as_ptr().cast(),
+            (&mut arm64_supported as *mut libc::c_int).cast(),
+            &mut value_size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if result == 0 && arm64_supported == 1 {
+        return "arm64".to_owned();
+    }
+    std::env::consts::ARCH.to_owned()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn runtime_host_arch() -> String {
+    std::env::consts::ARCH.to_owned()
+}
+
+#[tauri::command]
+fn runtime_system_info() -> RuntimeSystemInfo {
+    RuntimeSystemInfo {
+        os: std::env::consts::OS,
+        arch: runtime_host_arch(),
+    }
+}
+
 /// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
 /// 不可少(否则每启动重生成 key → 激活码/model key 全解不开、每次重激活),但**不许明文落盘**。
 ///
@@ -1385,7 +1426,10 @@ pub fn run() {
             // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
             license::license_last_decision,
             // [T-396c] 版本检查(latest-version 端点 + 渠道 downloadUrl,替代 updater check)。
-            license::license_latest_version
+            license::license_latest_version,
+            // [T-568] 反馈诊断必须来自原生层，禁止 navigator.platform 把 Apple Silicon
+            // 兼容性标识 `MacIntel` 当作实体芯片。
+            runtime_system_info
         ])
         .manage(SidecarHandle::default())
         .setup(|app| {
