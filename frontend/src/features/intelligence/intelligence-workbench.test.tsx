@@ -765,6 +765,67 @@ describe("T-482 内容雷达工作区", () => {
     expect(await screen.findByText(/同步完成：扫描 13 条/)).toBeInTheDocument();
   });
 
+  it("[T-570] 黑马恢复任务处于 queued 时显示排队中，进入页面不会新建一次同步", () => {
+    const stub = api();
+    stub.getRun = vi.fn(
+      () =>
+        new Promise<Awaited<ReturnType<RadarApi["getRun"]>>>(() => {}),
+    );
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-darkhorse",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "黑马：AI 工具",
+          canonicalUrl: null,
+          collector: {
+            accountId: "account-1",
+            accountHandle: "@创作号",
+            platform: "douyin",
+            availability: "active",
+          },
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [
+        {
+          sourceId: "source-darkhorse",
+          lastRunId: "run-darkhorse",
+          lastRunStatus: "queued",
+          blockedCount: 0,
+          lastErrorCode: null,
+          scannedCount: 0,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 0,
+        },
+      ],
+    };
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "等待同步 黑马：AI 工具" }),
+    ).toBeDisabled();
+    expect(screen.getAllByText("排队中")).toHaveLength(2);
+    expect(stub.startRun).not.toHaveBeenCalled();
+  });
+
   it("[T-546] 登录失效时原地确认并复用采集账号扫码，成功后自动重试来源", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {

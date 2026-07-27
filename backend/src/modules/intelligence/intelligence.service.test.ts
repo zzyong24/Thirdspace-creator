@@ -8,6 +8,7 @@ import {
   favoritesFolders,
   favoritesItems,
   intelligenceSources,
+  intelligenceSyncRuns,
   intelligenceMigrationLedgers,
   trendSources,
   eq,
@@ -166,6 +167,53 @@ describe("T-482 内容雷达领域主链", () => {
       expect(resumed.task.status).toBe("queued");
       const runs = await service.listRuns(ctx, created.source.id);
       expect(runs.rows).toHaveLength(1);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-570] 打开工作台会对账过期租约，不把历史黑马 run 永久显示为同步中", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const created = await service.createSource(ctx, {
+        collectionId: null,
+        type: "darkhorse_query",
+        config: {
+          type: "darkhorse_query",
+          collectorAccountId: "account-1",
+          keyword: "AI 工具",
+          board: "low_follower_breakout",
+        },
+        monitorEnabled: false,
+        runInitial: true,
+        idempotencyKey: "workspace-stale-darkhorse",
+      });
+      if (!created.run || !created.task) throw new Error("expected initial run");
+      const claim = await tasks.claimTask({
+        taskId: created.task.id,
+        workerId: "worker-before-close",
+        leaseSeconds: 30,
+      });
+      expect(claim?.task.status).toBe("running");
+      await db
+        .update(intelligenceSyncRuns)
+        .set({ status: "running", startedAt: d.clock.value })
+        .where(eq(intelligenceSyncRuns.id, created.run.id));
+
+      d.clock.value = "2026-07-23T12:01:00.000Z";
+      const workspace = await service.getWorkspace(ctx);
+
+      expect(
+        workspace.health.find(
+          (health) => health.sourceId === created.source.id,
+        )?.lastRunStatus,
+      ).toBe("queued");
+      await expect(service.getRun(ctx, created.run.id)).resolves.toMatchObject({
+        run: { status: "queued" },
+      });
     } finally {
       await client.close();
     }

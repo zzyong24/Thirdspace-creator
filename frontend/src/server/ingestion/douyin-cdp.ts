@@ -801,6 +801,10 @@ export {
   DouyinResponseShapeChangedError,
 } from "./douyin-errors";
 
+// 收藏夹、博主主页与普通抖音会话都消费 www.douyin.com 登录态。登录入口必须打开
+// 普通抖音，而不是创作者中心；后者会让用户误以为要登录另一个产品，并且不能代表
+// 收藏接口会话已经可用。
+const DOUYIN_LOGIN_HOME = "https://www.douyin.com/";
 const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
 const CREATOR_CONTENT = "https://creator.douyin.com/creator-micro/content/manage";
 // 作品列表 XHR —— cheat-on-content 验证过的真端点 + 旧 work_list 兜底(match 任一)。
@@ -1022,8 +1026,15 @@ async function openContext(authDir: string, headless: boolean) {
 async function isLoggedIn(
   ctx: import("@playwright/test").BrowserContext,
 ): Promise<boolean> {
-  const cookies = await ctx.cookies("https://creator.douyin.com");
+  const cookies = await ctx.cookies(DOUYIN_LOGIN_HOME);
   return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");
+}
+
+function isPlaywrightTargetClosed(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Target page, context or browser has been closed|TargetClosedError|Browser has been closed/i.test(
+    message,
+  );
 }
 
 /**
@@ -1058,28 +1069,34 @@ export async function loginDouyin(
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
-      .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+      .goto(DOUYIN_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
     let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
-      if (await isLoggedIn(ctx)) {
-        const acceptance = await probeDouyinSessionFromContext(ctx);
-        if (acceptance === "active") return true;
-        if (acceptance === "expired" && !rejectedSessionCleared) {
-          // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
-          // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
-          await ctx
-            .clearCookies({
-              name: /^(?:sessionid(?:_ss)?|sid_guard|sid_tt|sid_ucp_v1|ssid_ucp_v1|uid_tt(?:_ss)?|passport_csrf_token(?:_default)?|odin_tt)$/,
-            })
-            .catch(() => {});
-          rejectedSessionCleared = true;
-          await page
-            .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
-            .catch(() => {});
+      try {
+        if (await isLoggedIn(ctx)) {
+          const acceptance = await probeDouyinSessionFromContext(ctx);
+          if (acceptance === "active") return true;
+          if (acceptance === "expired" && !rejectedSessionCleared) {
+            // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
+            // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
+            await ctx
+              .clearCookies({
+                name: /^(?:sessionid(?:_ss)?|sid_guard|sid_tt|sid_ucp_v1|ssid_ucp_v1|uid_tt(?:_ss)?|passport_csrf_token(?:_default)?|odin_tt)$/,
+              })
+              .catch(() => {});
+            rejectedSessionCleared = true;
+            await page
+              .goto(DOUYIN_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+              .catch(() => {});
+          }
         }
+        await page.waitForTimeout(1000);
+      } catch (error) {
+        // 用户主动关掉扫码窗口是一次正常取消，不应冒泡成 transport 400。
+        if (isPlaywrightTargetClosed(error)) return false;
+        throw error;
       }
-      await page.waitForTimeout(1000);
     }
     return false;
   } finally {

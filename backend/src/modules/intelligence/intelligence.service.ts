@@ -1441,6 +1441,96 @@ export function createIntelligenceService(
     return updated;
   }
 
+  async function reconcileActiveRunWithTask(
+    run: RunRow,
+    task: ExecutionTaskResourceV2,
+  ): Promise<{ run: RunRow; active: boolean }> {
+    if (task.status === "queued" && run.status === "running") {
+      const [updated] = await db
+        .update(intelligenceSyncRuns)
+        .set({
+          status: "queued",
+          updatedAt: now(),
+        })
+        .where(
+          and(
+            eq(intelligenceSyncRuns.id, run.id),
+            eq(intelligenceSyncRuns.status, "running"),
+          ),
+        )
+        .returning();
+      return {
+        run: updated ?? { ...run, status: "queued", updatedAt: now() },
+        active: true,
+      };
+    }
+
+    const terminal =
+      task.status === "failed" ||
+      task.status === "cancelled" ||
+      task.status === "paused" ||
+      task.status === "blocked" ||
+      task.status === "succeeded";
+    if (!terminal) return { run, active: true };
+
+    const runStatus =
+      task.status === "blocked"
+        ? "blocked"
+        : task.status === "succeeded"
+          ? "succeeded_no_change"
+          : "failed";
+    const errorCode =
+      task.status === "blocked" &&
+      (task.errorCode === "LOGIN_REQUIRED" || task.errorCode === "CAPTCHA")
+        ? task.errorCode
+        : null;
+    const errorSummary =
+      task.status === "cancelled"
+        ? "execution task cancelled"
+        : task.status === "paused"
+          ? "execution task paused"
+          : task.status === "failed"
+            ? "execution task failed"
+            : task.status === "blocked"
+              ? "execution task blocked"
+              : null;
+    const stamp = now();
+    const [updated] = await db
+      .update(intelligenceSyncRuns)
+      .set({
+        status: runStatus,
+        finishedAt: stamp,
+        failedCount:
+          runStatus === "failed"
+            ? Math.max(1, run.failedCount)
+            : run.failedCount,
+        errorCode,
+        errorSummary,
+        nextAction:
+          runStatus === "failed" ? "retry" : nextActionFor(errorCode),
+        updatedAt: stamp,
+      })
+      .where(
+        and(
+          eq(intelligenceSyncRuns.id, run.id),
+          inArray(intelligenceSyncRuns.status, ["queued", "running"]),
+        ),
+      )
+      .returning();
+    return {
+      run:
+        updated ?? {
+          ...run,
+          status: runStatus,
+          finishedAt: stamp,
+          errorCode,
+          errorSummary,
+          updatedAt: stamp,
+        },
+      active: false,
+    };
+  }
+
   async function startRun(
     ctx: RequestContext,
     sourceId: string,
@@ -1478,56 +1568,8 @@ export function createIntelligenceService(
       .limit(1);
     if (active[0]) {
       const task = await deps.tasks.get(ctx, active[0].executionTaskId);
-      if (
-        task.status === "failed" ||
-        task.status === "cancelled" ||
-        task.status === "blocked" ||
-        task.status === "succeeded"
-      ) {
-        const runStatus =
-          task.status === "blocked"
-            ? "blocked"
-            : task.status === "succeeded"
-              ? "succeeded_no_change"
-              : "failed";
-        const errorCode =
-          task.status === "blocked" &&
-          (task.errorCode === "LOGIN_REQUIRED" ||
-            task.errorCode === "CAPTCHA")
-            ? task.errorCode
-            : null;
-        await db
-          .update(intelligenceSyncRuns)
-          .set({
-            status: runStatus,
-            finishedAt: now(),
-            failedCount:
-              runStatus === "failed"
-                ? Math.max(1, active[0].failedCount)
-                : active[0].failedCount,
-            errorCode,
-            errorSummary:
-              task.status === "cancelled"
-                ? "execution task cancelled"
-                : task.status === "failed"
-                  ? "execution task failed"
-                  : task.status === "blocked"
-                    ? "execution task blocked"
-                    : null,
-            nextAction:
-              runStatus === "failed"
-                ? "retry"
-                : nextActionFor(errorCode),
-            updatedAt: now(),
-          })
-          .where(
-            and(
-              eq(intelligenceSyncRuns.id, active[0].id),
-              inArray(intelligenceSyncRuns.status, ["queued", "running"]),
-            ),
-          );
-        active = [];
-      }
+      const reconciled = await reconcileActiveRunWithTask(active[0], task);
+      active = reconciled.active ? [reconciled.run] : [];
     }
     if (active[0]) {
       const task = await deps.tasks.get(ctx, active[0].executionTaskId);
@@ -1865,7 +1907,10 @@ export function createIntelligenceService(
       await ensureSystemCollections(ctx);
       await migrateLegacySignalSourcesOnce(ctx);
       const accountId = await account(ctx, "intelligence.workspace.get");
-      const [collections, sources, memberships, taskRows, runs] =
+      // 工作台读取也要做恢复对账；否则 APP 退出时遗留的 running run 会在每次进页面时
+      // 被前端当成新同步恢复 spinner，即使它对应的任务租约早已过期。
+      await deps.tasks.recoverExpiredLeases();
+      const [collections, sources, memberships, taskRows, rawRuns] =
         await Promise.all([
         db
           .select()
@@ -1912,6 +1957,13 @@ export function createIntelligenceService(
           )
           .orderBy(desc(intelligenceSyncRuns.createdAt)),
       ]);
+      const runs = await Promise.all(
+        rawRuns.map(async (run) => {
+          if (run.status !== "queued" && run.status !== "running") return run;
+          const task = await deps.tasks.get(ctx, run.executionTaskId);
+          return (await reconcileActiveRunWithTask(run, task)).run;
+        }),
+      );
       const latestBySource = new Map<string, RunRow>();
       for (const run of runs) {
         if (!latestBySource.has(run.sourceId)) latestBySource.set(run.sourceId, run);
@@ -2657,7 +2709,12 @@ export function createIntelligenceService(
     },
 
     async getRun(ctx: RequestContext, runId: string) {
-      const run = await requireRun(ctx, runId);
+      let run = await requireRun(ctx, runId);
+      if (run.status === "queued" || run.status === "running") {
+        await deps.tasks.recoverExpiredLeases();
+        const task = await deps.tasks.get(ctx, run.executionTaskId);
+        run = (await reconcileActiveRunWithTask(run, task)).run;
+      }
       const events = await db
         .select()
         .from(intelligenceSyncRunEvents)
