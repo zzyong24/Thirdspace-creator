@@ -342,3 +342,5 @@
 {"ts":"2026-07-27T09:53:06.601Z","actor":"taskctl","action":"start","task":"T-562","sha_before":"1b982d3f44fd","sha_after":"88ab36945062"}
 {"ts":"2026-07-27T14:17:47.577Z","actor":"taskctl","action":"start","task":"T-570","sha_before":"b632ea236956","sha_after":"05a92b6719d1"}
 {"ts":"2026-07-27T14:34:02.943Z","actor":"taskctl","action":"complete","task":"T-570","evidence":"commit 27aaffa3；前端定向 137 tests PASS；后端定向 40 tests PASS；frontend/backend tsc PASS；eslint 0 errors；boundary 无新增违规；reconcile 0 error/0 warning；真机日志 2026-07-27T14:13:56 ingestion.douyin.login 已定位 TargetClosedError","sha_before":"05a92b6719d1","sha_after":"44ddcc7ad8c1"}
+{"ts":"2026-07-27T15:31:25.602Z","actor":"taskctl","action":"start","task":"T-571","sha_before":"aa5f7260935c","sha_after":"dbbda741ec48"}
+{"ts":"2026-07-27T15:39:50.869Z","actor":"taskctl","action":"complete","task":"T-571","evidence":"commit 092e0320；真实账号 profile 克隆验证页面内收藏接口 HTTP 200/status_code=0/有收藏夹数组，页面外探针 status_code 缺失；前端定向 134 tests PASS；frontend typecheck PASS；eslint 0 errors；boundary 无新增违规；reconcile 0 error/0 warning","sha_before":"dbbda741ec48","sha_after":"caf46e305674"}

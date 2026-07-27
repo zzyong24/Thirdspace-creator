@@ -1075,7 +1075,10 @@ export async function loginDouyin(
     for (let i = 0; i < timeoutSec; i++) {
       try {
         if (await isLoggedIn(ctx)) {
-          const acceptance = await probeDouyinSessionFromContext(ctx);
+          // 登录页已经改为普通抖音，与收藏接口同源。必须在这个真实页面环境里发探针：
+          // BrowserContext.request 虽共享 Cookie，却不带页面运行时建立的反爬上下文，页面
+          // 明明已登录时也可能只得到不可判定响应，最终被误报为“未检测到登录成功”。
+          const acceptance = await probeDouyinSessionAcceptance(page);
           if (acceptance === "active") return true;
           if (acceptance === "expired" && !rejectedSessionCleared) {
             // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
@@ -1186,29 +1189,6 @@ async function probeDouyinSessionAcceptance(
         return null;
       }
     }, probeUrl)
-    .catch(() => null);
-  return classifyDouyinSessionProbe(result);
-}
-
-/**
- * 登录页位于 creator.douyin.com，收藏接口位于 www.douyin.com；页面内 fetch 可能被
- * CORS 拦截。BrowserContext.request 与浏览器共享 Cookie 且不受页面跨域限制，适合作为
- * 登录窗口是否可以关闭的服务端证据。
- */
-async function probeDouyinSessionFromContext(
-  ctx: import("@playwright/test").BrowserContext,
-): Promise<DouyinSessionProbeResult> {
-  const result = await ctx.request
-    .get(COLLECTS_LIST_API.replace("{cursor}", "0"), { timeout: 10_000 })
-    .then(async (response) => {
-      const json = (await response.json()) as Record<string, unknown>;
-      return {
-        statusCode:
-          typeof json.status_code === "number" ? json.status_code : null,
-        statusMessage:
-          typeof json.status_msg === "string" ? json.status_msg : "",
-      };
-    })
     .catch(() => null);
   return classifyDouyinSessionProbe(result);
 }
