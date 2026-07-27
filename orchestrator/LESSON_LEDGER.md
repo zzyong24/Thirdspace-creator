@@ -48,3 +48,17 @@
 - **GuardCheck**: `pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs`（已登记进 `reconcile.config.json` lessons[]）
 - **Outcome(T+N)**: 待 Windows 新包流水线与用户真机复验后回填。
 - **Ref**: T-562；用户真机 2026-07-27；`docs/research/2026-07-24-windows-first-launch-white-screen.md`
+
+## LED-007 — 模型连通探针只读正文流，思考流与流内错误都会被误报为空响应
+- **Date**: 2026-07-27 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: DeepSeek V4 默认先产 reasoning，8-token 探针没有最终正文时被判失败；AI SDK
+  `textStream` 又没有把 provider 的流内 401 交给探针 catch，明确的密钥无效也被二次标成
+  `empty-stream`，用户无法区分配置错误与误报。
+- **RootCause**: 连通性判据只检查最终正文，没有消费 `fullStream` 的
+  `reasoning-delta`/`error` 两类信号；测试预算还沿用非思考模型的极小上限。
+- **GuardRule**: 文本模型连通测试必须消费完整事件流：正文或非空思考内容任一出现即证明真实
+  连通，`error` part 必须显式抛出并安全归类；正文与思考均为空才允许报空响应。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts`
+  （已登记进 `reconcile.config.json` lessons[]）。
+- **Outcome(T+N)**: 待包含本修复的新安装包完成 DeepSeek V4 真机配置测试后回填。
+- **Ref**: T-563/T-564；本机加密日志 2026-07-27T10:58:16Z~11:00:33Z。

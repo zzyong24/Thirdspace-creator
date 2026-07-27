@@ -512,7 +512,10 @@ import {
   type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
-import { createSettingsWithModelTest } from "./settings-model-test-wrap";
+import {
+  consumeTextProbeStream,
+  createSettingsWithModelTest,
+} from "./settings-model-test-wrap";
 // [T-084a] 联网检索工厂 + 三家 provider 适配器 —— host 注册进 registry(keyed by provider),
 // gatherMaterials 前置检索用。与多模态 registry 并列;加 provider = 在此注册一个适配器。
 import {
@@ -9414,16 +9417,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const result = streamText({
         model: modelFor(spec),
         prompt: "连接测试。请只回复 OK。",
-        maxOutputTokens: 8,
+        // DeepSeek V4 默认先输出思考流；8 tokens 会在最终正文前耗尽。探针收到首个正文或
+        // reasoning delta 即结束，因此 128 只是兼容缓冲，不会无谓消费完整额度。
+        maxOutputTokens: 128,
         maxRetries: 0,
         abortSignal: AbortSignal.timeout(30_000),
       });
-      let text = "";
-      for await (const delta of result.textStream) {
-        text += delta;
-        if (text.trim().length > 0) break;
-      }
-      return { text };
+      return consumeTextProbeStream(result.fullStream);
     },
     fetchImpl: fetch,
   });

@@ -11,7 +11,7 @@ import type { RequestContext } from "@creatoros/contract";
  *   - default / script.review(文本 LLM):resolveLlmConfig → 与正式聊天相同的
  *     modelFor + streamText 流式探针，且必须收到非空文本。测试层不再手拼 URL/请求体，
  *     避免把 HTML 200 或 2xx 空流误判为连通。
- *   - chat.fallback:resolveDedicatedLlm(只认专配行,不回退主模型)→ 同上 1 token 补全。
+ *   - chat.fallback:resolveDedicatedLlm(只认专配行,不回退主模型)→ 同上最小流式探测。
  *   - asset.classify(视觉,OpenAI 兼容 chat):resolveMultimodal → 纯文本 1 token 补全
  *     (校验鉴权 + 模型可达;不传图,足以判连通)。
  *   - knowledge.search.embed:resolveEmbed → POST /embeddings 单短串(本就是最小调用)。
@@ -91,9 +91,12 @@ export interface SettingsModelTestDeps {
   ) => Promise<number>;
   /**
    * 文本模型正式通路探针：host 必须用与聊天一致的 modelFor + streamText 实现。
-   * 返回空文本视为失败，不能只凭 HTTP 2xx 判成功。
+   * 正文或思考流任一有内容均证明鉴权、端点与模型真实可达；二者全空才算失败。
+   * 流内 error 必须抛出，不能被折叠成空响应。
    */
-  probeTextModel: (spec: LlmSpecLite) => Promise<{ text: string }>;
+  probeTextModel: (
+    spec: LlmSpecLite,
+  ) => Promise<{ text: string; reasoningText?: string }>;
   fetchImpl: typeof fetch;
 }
 
@@ -107,6 +110,17 @@ const trimBase = (url: string): string => url.replace(/\/+$/, "");
 
 function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
+}
+
+function isAuthenticationFailure(err: unknown): boolean {
+  const message = errMsg(err).toLowerCase();
+  return (
+    /\b(?:401|403)\b/.test(message) ||
+    /authentication(?:\s+fails?|\s+error)?/.test(message) ||
+    /invalid[\s_-]*(?:api[\s_-]*)?key/.test(message) ||
+    /(?:api[\s_-]*)?key[^.;,\n]{0,40}invalid/.test(message) ||
+    /\bunauthorized\b|\bforbidden\b/.test(message)
+  );
 }
 
 /**
@@ -132,17 +146,56 @@ async function bodyHead(res: Response): Promise<string> {
   }
 }
 
+export interface TextProbeStreamPart {
+  type: string;
+  text?: string;
+  error?: unknown;
+}
+
+/**
+ * AI SDK 的 `textStream` 不会把所有 provider 的流内错误重新抛给调用方；401 等错误可能只
+ * 出现在 `fullStream` 的 error part，随后 textStream 以空文本结束。探针必须直接消费
+ * fullStream，显式抛出 error，同时把 DeepSeek V4 等模型的 reasoning-delta 作为真实连通证据。
+ */
+export async function consumeTextProbeStream(
+  stream: AsyncIterable<TextProbeStreamPart>,
+): Promise<{ text: string; reasoningText: string }> {
+  let text = "";
+  let reasoningText = "";
+  for await (const part of stream) {
+    if (part.type === "error") {
+      throw part.error;
+    }
+    if (part.type === "text-delta") {
+      text += part.text ?? "";
+    } else if (part.type === "reasoning-delta") {
+      reasoningText += part.text ?? "";
+    }
+    // 测试的是连通性，不是回答质量；收到任一真实内容后立即结束，避免思考模型产生无谓费用。
+    if (text.trim().length > 0 || reasoningText.trim().length > 0) {
+      break;
+    }
+  }
+  return { text, reasoningText };
+}
+
 // ── 文本类正式流式探针(Anthropic / Chat Completions / Responses)───────────────
 async function textModelProbe(
   spec: LlmSpecLite,
   probe: SettingsModelTestDeps["probeTextModel"],
 ): Promise<{ ok: boolean; detail: string }> {
   try {
-    const { text } = await probe(spec);
+    const { text, reasoningText = "" } = await probe(spec);
     if (text.trim().length > 0) {
       return {
         ok: true,
         detail: "已按正式聊天通路完成流式回复,连通。",
+      };
+    }
+    if (reasoningText.trim().length > 0) {
+      return {
+        ok: true,
+        detail: "已收到模型思考流，鉴权、端点和模型均已连通。",
       };
     }
     logProbeFailure("textModelProbe/empty-stream", spec.apiFormat, spec.model);
@@ -153,6 +206,12 @@ async function textModelProbe(
     };
   } catch (err) {
     logProbeFailure("textModelProbe", err);
+    if (isAuthenticationFailure(err)) {
+      return {
+        ok: false,
+        detail: "密钥无效或无权限，请检查 API 密钥后重试。",
+      };
+    }
     return {
       ok: false,
       detail:

@@ -1,6 +1,7 @@
 /**
  * [T-377] settings.models.test「测试连接」通道单测(fake 解析器 / fetch / adapter,零网络):
- *   - 文本(default):1 token 补全探测,200 → ✓;401 → ✗ 人话提示(不泄 HTTP 码/响应体);未配 → 「未配置」。
+ *   - 文本(default):最小流式探测,正文或思考流 → ✓;401 → ✗ 密钥提示(不泄 HTTP 码/响应体);
+ *     正文与思考均为空 → ✗;未配 → 「未配置」。
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
  *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → ✗ 人话提示(不泄原始报错)。
  *   - video.generate:鉴权探测 —— 401 → ✗ 密钥无效或无权限;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
@@ -13,12 +14,19 @@ import { describe, it, expect, vi } from "vitest";
 import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
 
 import {
+  consumeTextProbeStream,
   createSettingsWithModelTest,
   runModelConnectionTest,
   type SettingsModelTestDeps,
 } from "./settings-model-test-wrap";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
+
+async function* probeParts(
+  parts: Array<{ type: string; text?: string; error?: unknown }>,
+) {
+  yield* parts;
+}
 
 const llmSpec = {
   apiFormat: "openai_chat" as const,
@@ -62,6 +70,26 @@ function makeDeps(
   };
 }
 
+describe("consumeTextProbeStream", () => {
+  it("读取首个 reasoning delta 作为真实连通证据", async () => {
+    await expect(
+      consumeTextProbeStream(
+        probeParts([
+          { type: "reasoning-start" },
+          { type: "reasoning-delta", text: "正在检查" },
+        ]),
+      ),
+    ).resolves.toEqual({ text: "", reasoningText: "正在检查" });
+  });
+
+  it("显式抛出 fullStream 的 error part，不得静默变成空流", async () => {
+    const error = new Error("401 Authentication Fails");
+    await expect(
+      consumeTextProbeStream(probeParts([{ type: "error", error }])),
+    ).rejects.toBe(error);
+  });
+});
+
 describe("runModelConnectionTest — 文本模型(default)", () => {
   it("复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通", async () => {
     const deps = makeDeps();
@@ -89,17 +117,17 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("正式流式调用抛错 → ✗ 人话提示(不泄上游响应体,也不说「未配置」)", async () => {
+  it("正式流式调用发生非鉴权异常 → ✗ 通用人话提示(不泄原始错误,也不说「未配置」)", async () => {
     const deps = makeDeps({
       probeTextModel: vi.fn(async () => {
-        throw new Error("401 invalid api key");
+        throw new Error("socket hang up at upstream.internal");
       }),
     });
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
     expect(r.detail).toContain("连接失败");
-    expect(r.detail).not.toContain("401");
-    expect(r.detail).not.toContain("invalid api key");
+    expect(r.detail).not.toContain("socket hang up");
+    expect(r.detail).not.toContain("upstream.internal");
     expect(r.detail).not.toContain("未配置");
   });
 
@@ -110,6 +138,31 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
     expect(r.detail).toContain("没有返回有效文本");
+  });
+
+  it("DeepSeek V4 只返回思考流 → ✓，不能因最终正文为空误报连接失败", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => ({
+        text: "",
+        reasoningText: "正在验证连接",
+      })),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(true);
+    expect(r.detail).toContain("思考流");
+  });
+
+  it("正式流式调用在流内返回 401 → ✗ 密钥错误，不得误报为空响应", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => {
+        throw new Error("AI_APICallError: 401 Authentication Fails, api key is invalid");
+      }),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(false);
+    expect(r.detail).toContain("密钥无效或无权限");
+    expect(r.detail).not.toContain("401");
+    expect(r.detail).not.toContain("api key");
   });
 
   it("解析抛 LlmCredentialError → 「未配置」", async () => {
