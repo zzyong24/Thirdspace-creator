@@ -10,7 +10,7 @@
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
 | T-558 | 制作 CreatorOS 0.2.0 商务介绍 PPT【商务物料·用户 2026-07-27】 | 🔨 免审 | [使用手册](docs/CreatorOS-新用户0到1标杆路线.md) · [更新说明](docs/CreatorOS-2026-07-20以来更新说明.md) | 面向潜在内测用户与商务合作对象制作易懂、可转发的简洁演示稿，聚焦内容经营痛点、CreatorOS 价值闭环、少量代表性能力、适用人群及最后一轮公开内测行动信息，不做全功能说明书。 |
-| T-557 | 修复 0.2.0 双端发布流水线漏传产品级 license projectKey【CI 发布阻断·用户 2026-07-27】 | 🔨 免审 | [失败流水线](https://github.com/zzyong24/Thirdspace-creator/actions/runs/30244515110) · [发布手册](docs/RELEASING.md) | macOS 已在 `release.mjs` 的 fail-fast 门卫因缺少 `CREATOROS_LICENSE_PROJECT_KEY` 失败，Windows 到同一步也会失败；双端共用打包步骤必须显式注入既定产品级 key `test`，补回归验证后提交推送并重跑。 |
+| T-557 | 修复 0.2.0 双端发布流水线漏传产品级 license projectKey【CI 发布阻断·用户 2026-07-27】 | ✅ 免审 | [失败流水线](https://github.com/zzyong24/Thirdspace-creator/actions/runs/30244515110) · [发布手册](docs/RELEASING.md) | macOS 已在 `release.mjs` 的 fail-fast 门卫因缺少 `CREATOROS_LICENSE_PROJECT_KEY` 失败，Windows 到同一步也会失败；双端共用打包步骤必须显式注入既定产品级 key `test`，补回归验证后提交推送并重跑。 |
 | T-556 | 把 CreatorOS 桌面安装包版本统一升级为 0.2.0 并发布当前全部代码【双端打包·用户 2026-07-26】 | ✅ 免审 | [发布手册](docs/RELEASING.md) | 官网公告已是 0.2.0；同步 frontend package、Tauri 配置、Rust crate 与 lockfile 的应用版本，确保 `getVersion()`、macOS DMG 和 Windows setup.exe 都显示 0.2.0；提交并推送当前工作区全部改动后触发双端流水线。 |
 | T-555 | 更新 CreatorOS 飞书下载与使用页为 0.2.0 最后一轮公开内测口径【飞书文档·用户 2026-07-26】 | ✅ 免审 | [飞书 Wiki](https://my.feishu.cn/wiki/SJyPwU8ghi5ksRkHJRRcqm3mn3g) | 只更新页面文案为 CreatorOS 0.2.0、macOS/Windows 双端完整验收、最后一轮公开内测、1000 人上限、2026-08-10 截止和共用激活码；保留现有两个 0.1.0 安装包附件，待用户跑完流水线后自行替换。 |
 | T-554 | 把 CreatorOS 完整使用教程导出为带“月明水清深”水印的可分发 PDF【教程交付·用户 2026-07-26】 | ✅ 免审 | [完整手册](docs/CreatorOS-新用户0到1标杆路线.md) | 生成排版清晰、中文与图片完整的 PDF，每页加入低对比度“月明水清深”背景水印，不遮挡正文和产品截图；完成页数、文本、图片与逐页渲染检查后交付。 |
