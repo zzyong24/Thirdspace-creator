@@ -465,6 +465,11 @@ internal static class Program
             context.Response.ContentLength64 = input.Length - start;
             context.Response.AddHeader("Accept-Ranges", "bytes");
             if (start > 0) context.Response.AddHeader("Content-Range", $"bytes {start}-{input.Length - 1}/{input.Length}");
+            if (string.Equals(context.Request.HttpMethod, "HEAD", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Close();
+                continue;
+            }
             if (!interrupted && string.Equals(name, interruptOnce, StringComparison.OrdinalIgnoreCase) && start == 0)
             {
                 interrupted = true;
