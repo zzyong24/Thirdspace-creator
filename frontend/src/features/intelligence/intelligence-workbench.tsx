@@ -310,6 +310,11 @@ export interface RadarApi {
     run: RadarRun;
     events: RadarRunEvent[];
   }>;
+  listItems(input: {
+    accountId: string;
+    collectionId?: string;
+    sourceId?: string;
+  }): Promise<RadarItemRow[]>;
   getItem(itemId: string): Promise<RadarItemDetail>;
   enqueueTranscript(input: {
     itemId: string;
@@ -428,6 +433,21 @@ function defaultApi(): RadarApi {
         query: undefined,
         body: undefined,
       }) as Promise<{ run: RadarRun; events: RadarRunEvent[] }>,
+    listItems: (input) =>
+      client.listIntelligenceItems({
+        params: undefined,
+        query: {
+          accountId: input.accountId,
+          page: 1,
+          pageSize: 100,
+          sort: "newest",
+          ...(input.collectionId
+            ? { collectionId: input.collectionId }
+            : {}),
+          ...(input.sourceId ? { sourceId: input.sourceId } : {}),
+        },
+        body: undefined,
+      }) as unknown as Promise<RadarItemRow[]>,
     getItem: (itemId) =>
       client.getIntelligenceItem({
         params: { itemId },
@@ -719,6 +739,9 @@ export function IntelligenceWorkbench({
   );
   const [sourceQuery, setSourceQuery] = React.useState("");
   const [query, setQuery] = React.useState("");
+  const [scopedItems, setScopedItems] =
+    React.useState<RadarItemRow[]>(items);
+  const [itemsLoading, setItemsLoading] = React.useState(false);
   const [detail, setDetail] = React.useState<RadarItemDetail | null>(
     initialDetail,
   );
@@ -747,6 +770,7 @@ export function IntelligenceWorkbench({
   );
   const watchedRunIds = React.useRef<Set<string>>(new Set());
   const topicGenerationInFlight = React.useRef(false);
+  const itemScopeRequestId = React.useRef(0);
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -782,9 +806,12 @@ export function IntelligenceWorkbench({
     }
   }, []);
 
+  const visibleItems =
+    selectedCollectionId || selectedSourceId ? scopedItems : items;
+
   const filteredItems = React.useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("zh-CN");
-    return items.filter(({ item }) => {
+    return visibleItems.filter(({ item }) => {
       if (
         needle &&
         ![item.title, item.summary, item.authorName]
@@ -795,12 +822,57 @@ export function IntelligenceWorkbench({
       ) {
         return false;
       }
-      if (!selectedSourceId && !selectedCollectionId) return true;
-      // 精确来源/分类的服务器查询会在刷新 URL 筛选版接入；当前不伪造本地归属关系，
-      // 选择左栏只聚焦来源信息，作品列表仍展示账号内真实全集。
       return true;
     });
-  }, [items, query, selectedCollectionId, selectedSourceId]);
+  }, [query, visibleItems]);
+
+  const selectItemScope = React.useCallback(
+    async (collectionId: string | null, sourceId: string | null) => {
+      const requestId = itemScopeRequestId.current + 1;
+      itemScopeRequestId.current = requestId;
+      const previous = {
+        collectionId: selectedCollectionId,
+        sourceId: selectedSourceId,
+        items: visibleItems,
+        detail,
+      };
+
+      setSelectedCollectionId(collectionId);
+      setSelectedSourceId(sourceId);
+      setItemsLoading(true);
+      setDetail(null);
+      setNotice(null);
+
+      try {
+        const nextItems = await api.listItems({
+          accountId,
+          ...(collectionId ? { collectionId } : {}),
+          ...(sourceId ? { sourceId } : {}),
+        });
+        if (itemScopeRequestId.current !== requestId) return;
+        setScopedItems(nextItems);
+      } catch {
+        if (itemScopeRequestId.current !== requestId) return;
+        setSelectedCollectionId(previous.collectionId);
+        setSelectedSourceId(previous.sourceId);
+        setScopedItems(previous.items);
+        setDetail(previous.detail);
+        setNotice("内容筛选失败，已保留切换前的结果，请稍后重试。");
+      } finally {
+        if (itemScopeRequestId.current === requestId) {
+          setItemsLoading(false);
+        }
+      }
+    },
+    [
+      accountId,
+      api,
+      detail,
+      selectedCollectionId,
+      selectedSourceId,
+      visibleItems,
+    ],
+  );
 
   const visibleSourceIds = React.useMemo(() => {
     const needle = sourceQuery.trim().toLocaleLowerCase("zh-CN");
@@ -1359,10 +1431,7 @@ export function IntelligenceWorkbench({
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
             <button
               type="button"
-              onClick={() => {
-                setSelectedCollectionId(null);
-                setSelectedSourceId(null);
-              }}
+              onClick={() => void selectItemScope(null, null)}
               className={cn(
                 "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition",
                 !selectedCollectionId && !selectedSourceId
@@ -1394,10 +1463,7 @@ export function IntelligenceWorkbench({
                 <div key={collection.id} className="mt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedCollectionId(collection.id);
-                      setSelectedSourceId(null);
-                    }}
+                    onClick={() => void selectItemScope(collection.id, null)}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition",
                       selectedCollectionId === collection.id
@@ -1427,10 +1493,9 @@ export function IntelligenceWorkbench({
                       active={selectedSourceId === source.id}
                       syncing={runningSourceIds.has(source.id)}
                       monitorUpdating={updatingMonitorSourceIds.has(source.id)}
-                      onSelect={() => {
-                        setSelectedCollectionId(collection.id);
-                        setSelectedSourceId(source.id);
-                      }}
+                      onSelect={() =>
+                        void selectItemScope(collection.id, source.id)
+                      }
                       onRun={() => runSource(source.id)}
                       onToggleMonitor={() => void toggleSourceMonitor(source)}
                       onReconnect={() => {
@@ -1462,10 +1527,7 @@ export function IntelligenceWorkbench({
                   active={selectedSourceId === source.id}
                   syncing={runningSourceIds.has(source.id)}
                   monitorUpdating={updatingMonitorSourceIds.has(source.id)}
-                  onSelect={() => {
-                    setSelectedCollectionId(null);
-                    setSelectedSourceId(source.id);
-                  }}
+                  onSelect={() => void selectItemScope(null, source.id)}
                   onRun={() => runSource(source.id)}
                   onToggleMonitor={() => void toggleSourceMonitor(source)}
                   onReconnect={() => {
@@ -1483,7 +1545,10 @@ export function IntelligenceWorkbench({
           </div>
         </aside>
 
-        <main className="flex min-h-0 min-w-0 flex-col bg-canvas/55">
+        <main
+          aria-busy={itemsLoading}
+          className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
+        >
           <div className="flex shrink-0 items-center gap-3 border-b border-border/70 px-4 py-3">
             <label className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -1496,11 +1561,20 @@ export function IntelligenceWorkbench({
               />
             </label>
             <span className="shrink-0 text-xs text-muted-foreground">
-              {filteredItems.length} 条真实内容
+              {itemsLoading
+                ? "正在切换…"
+                : `${filteredItems.length} 条真实内容`}
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {filteredItems.length === 0 ? (
+            {itemsLoading ? (
+              <div
+                role="status"
+                className="rounded-xl border border-dashed border-border/80 px-4 py-10 text-center text-sm text-muted-foreground"
+              >
+                正在读取该分类的真实内容…
+              </div>
+            ) : filteredItems.length === 0 ? (
               <RadarEmptyState hasSources={workspace.sources.length > 0} />
             ) : (
               <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">

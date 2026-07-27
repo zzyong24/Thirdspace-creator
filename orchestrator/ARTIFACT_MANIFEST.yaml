@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "16-backend-tdd"        # 2026-07-05(T-145): 更新至真实 frontier;stage 分段机制已被 BACKLOG+SPEC gate 取代(见 CLAUDE.md/BACKLOG.md)
   frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
-  updated_at: "2026-07-26"
+  updated_at: "2026-07-27"               # DEC-PKG565-002 只更新 T-565 外部 RAT 授权，不改变全局阶段状态
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
