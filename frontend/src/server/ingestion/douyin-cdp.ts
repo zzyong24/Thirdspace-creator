@@ -781,6 +781,10 @@ export interface LoginDouyinOptions {
   timeoutSec?: number;
 }
 
+export interface LoginDouyinDeps {
+  openContext?: typeof openContext;
+}
+
 // 未登录抖音创作者中心 —— 类本体已抽到零依赖叶子模块 douyin-errors.ts([T-326 B-04]:
 // persistence-client 的同步 instanceof 判别点不必加载本重模块);顶部 import + 此处 re-export
 // 保持既有 `from "./douyin-cdp"` 的 import 路径与错误类身份(同一 class 实例)全部兼容。
@@ -1040,19 +1044,41 @@ export async function checkDouyinStatus(opts: {
 }
 
 /**
- * 登录:headed 弹 Chromium 窗口让用户扫码;轮询 sessionid cookie,检测到即成功(落 .auth/)。
+ * 登录:headed 弹 Chromium 窗口让用户扫码。成功条件必须是抖音服务端接受该会话，不能只看
+ * 本地 sessionid 是否存在——失效 Cookie 仍会留在 profile，旧实现会第一轮就误判成功并关窗。
  * 仅在用户机器上跑(server 弹窗)。返回是否登录成功。
  */
-export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
+export async function loginDouyin(
+  opts: LoginDouyinOptions,
+  deps: LoginDouyinDeps = {},
+): Promise<boolean> {
   const timeoutSec = opts.timeoutSec ?? 240;
-  const ctx = await openContext(opts.authDir, false);
+  const openCtx = deps.openContext ?? openContext;
+  const ctx = await openCtx(opts.authDir, false);
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
       .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
+    let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
-      if (await isLoggedIn(ctx)) return true;
+      if (await isLoggedIn(ctx)) {
+        const acceptance = await probeDouyinSessionAcceptance(page);
+        if (acceptance === "active") return true;
+        if (acceptance === "expired" && !rejectedSessionCleared) {
+          // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
+          // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
+          await ctx
+            .clearCookies({
+              name: /^(?:sessionid(?:_ss)?|sid_guard|sid_tt|sid_ucp_v1|ssid_ucp_v1|uid_tt(?:_ss)?|passport_csrf_token(?:_default)?|odin_tt)$/,
+            })
+            .catch(() => {});
+          rejectedSessionCleared = true;
+          await page
+            .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+            .catch(() => {});
+        }
+      }
       await page.waitForTimeout(1000);
     }
     return false;

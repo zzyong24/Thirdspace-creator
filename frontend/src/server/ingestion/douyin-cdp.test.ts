@@ -13,6 +13,7 @@ import {
   fetchDouyinMetrics,
   fetchDouyinIdentity,
   fetchDouyinUserPosts,
+  loginDouyin,
   locatePlaywrightCli,
   DouyinNotLoggedInError,
   DouyinFavoritesBrowserLockedError,
@@ -43,6 +44,84 @@ import {
 } from "./douyin-request-gateway";
 
 // 真实 work_list XHR 形状的 fixture(对齐 cheat-on-content 抓到的字段)。
+
+describe("[T-567] 抖音重新登录以服务端会话为准", () => {
+  function makeLoginContext(probes: Array<"active" | "expired" | "unknown">) {
+    const calls = { goto: 0, evaluate: 0, clearCookies: 0, close: 0 };
+    let hasCookie = true;
+    let scannedAfterClear = false;
+    const page = {
+      async goto() {
+        calls.goto += 1;
+      },
+      async waitForTimeout() {
+        if (!hasCookie && calls.clearCookies > 0 && !scannedAfterClear) {
+          // 模拟用户在二维码出现后完成扫码，浏览器写入新 sessionid。
+          hasCookie = true;
+          scannedAfterClear = true;
+        }
+      },
+      async evaluate() {
+        const result = probes[calls.evaluate] ?? probes.at(-1) ?? "unknown";
+        calls.evaluate += 1;
+        return result === "active"
+          ? { statusCode: 0, statusMessage: "" }
+          : result === "expired"
+            ? { statusCode: 8, statusMessage: "登录已失效" }
+            : null;
+      },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return hasCookie ? [{ name: "sessionid" }] : [];
+      },
+      async clearCookies() {
+        calls.clearCookies += 1;
+        hasCookie = false;
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type OpenContext = NonNullable<
+      NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
+    >;
+    const openContext: OpenContext = async () =>
+      context as unknown as Awaited<ReturnType<OpenContext>>;
+    return { calls, openContext };
+  }
+
+  it("已有 Cookie 但服务端拒绝时清掉旧会话，扫码后的新会话被接受才关窗", async () => {
+    const { calls, openContext } = makeLoginContext(["expired", "active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 3 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.clearCookies).toBe(1);
+    expect(calls.goto).toBe(2);
+    expect(calls.evaluate).toBe(2);
+    expect(calls.close).toBe(1);
+  });
+
+  it("已有 Cookie 且服务端确认有效时可直接成功，不破坏会话", async () => {
+    const { calls, openContext } = makeLoginContext(["active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 1 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.clearCookies).toBe(0);
+    expect(calls.goto).toBe(1);
+    expect(calls.close).toBe(1);
+  });
+});
 const WORK_LIST = {
   aweme_list: [
     {
