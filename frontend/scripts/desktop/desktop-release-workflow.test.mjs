@@ -229,4 +229,16 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       packageRat.indexOf("上传已通过真安装验证的 Windows 候选包"),
     );
   });
+
+  it("T-565 Windows 候选包与 macOS 正式 build 可在同一提交并行验证", () => {
+    expect(workflow).toContain(
+      "正式 build 只跑某端(留空=双端；RAT job 不受此项影响)",
+    );
+    const combinedRunCondition =
+      "(inputs.windows_package_rat == true && inputs.only == 'macos')";
+    expect(workflow.split(combinedRunCondition)).toHaveLength(3);
+    expect(workflow).toContain(
+      'select(.os|contains(\\"$ONLY\\"))',
+    );
+  });
 });

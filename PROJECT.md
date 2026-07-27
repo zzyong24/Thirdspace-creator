@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t571-favorites-login-detection @ 092e0320
+LAST_SYNCED: codex/t572-blackhorse-filter-compact @ 280ebb1d
 
 ## 这是什么(定位)
 

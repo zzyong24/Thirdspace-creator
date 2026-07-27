@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "只跑某端(留空=双端;迭代单端问题时省另一端陪跑)"
+        description: "正式 build 只跑某端(留空=双端；RAT job 不受此项影响)"
         required: false
         type: choice
         options: ["", "macos", "windows"]
@@ -52,7 +52,7 @@ concurrency:
 jobs:
   # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
   plan:
-    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -70,7 +70,7 @@ jobs:
           fi
 
   build:
-    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos') }}
     needs: plan
     strategy:
       fail-fast: false

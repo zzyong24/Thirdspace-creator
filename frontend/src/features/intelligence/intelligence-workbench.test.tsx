@@ -300,6 +300,119 @@ describe("T-482 内容雷达工作区", () => {
     expect(detailRegion).toHaveClass("xl:min-h-0");
   });
 
+  it("[T-572] 左栏可按来源名称、类型和同步状态快速筛选", async () => {
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-favorites",
+          collectionId: "collection-favorites",
+          type: "favorites_folder",
+          displayName: "日常收藏夹",
+          canonicalUrl: null,
+          collector: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+        {
+          id: "source-darkhorse",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "AI 工具观察",
+          canonicalUrl: null,
+          collector: null,
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [
+        {
+          sourceId: "source-favorites",
+          lastRunId: null,
+          lastRunStatus: "succeeded_no_change",
+          blockedCount: 0,
+          lastErrorCode: null,
+          scannedCount: 2,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 0,
+        },
+        {
+          sourceId: "source-darkhorse",
+          lastRunId: "run-failed",
+          lastRunStatus: "failed",
+          blockedCount: 0,
+          lastErrorCode: "RESPONSE_SHAPE_CHANGED",
+          scannedCount: 0,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 1,
+        },
+      ],
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={api()}
+      />,
+    );
+
+    const filter = screen.getByRole("searchbox", { name: "筛选来源" });
+    await userEvent.type(filter, "黑马");
+    expect(
+      screen.getByTestId("radar-source-row-source-darkhorse"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("radar-source-row-source-favorites"),
+    ).not.toBeInTheDocument();
+
+    await userEvent.clear(filter);
+    await userEvent.type(filter, "同步失败");
+    expect(
+      screen.getByTestId("radar-source-row-source-darkhorse"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("radar-source-row-source-favorites"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("[T-572] 即使数据里残留封面地址，列表和详情也不再渲染大图占位", () => {
+    const itemWithLegacyCover = {
+      ...detail.item,
+      coverUrl: "https://example.com/legacy-cover.jpg",
+    };
+    const { container } = render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[
+          {
+            item: itemWithLegacyCover,
+            latestMetric: detail.metrics[0]!,
+            sourceCount: 1,
+          },
+        ]}
+        initialDetail={{ ...detail, item: itemWithLegacyCover }}
+        api={api()}
+      />,
+    );
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getAllByText("真实作品")).toHaveLength(2);
+    expect(screen.getAllByText(/赞/).length).toBeGreaterThan(0);
+  });
+
   it("[T-520] 收藏错误只按端到端结构化 code 给出不同处理建议", () => {
     expect(
       favoriteFoldersErrorMessage({
