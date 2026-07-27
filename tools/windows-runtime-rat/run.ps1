@@ -175,7 +175,7 @@ try {
   # A related bundle using the same package CacheId must execute entirely from
   # verified cache. The server stays available only so any accidental request can
   # be counted and fail this assertion deterministically.
-  $requestCountBeforeCache = (Get-Content $serverLog | Where-Object { $_ -match "`t.*\.zip`tRange=" }).Count
+  $requestCountBeforeCache = (Get-Content $serverLog | Where-Object { $_ -match "`tORIGIN`t.*\.zip`t(?:HEAD|GET)`tRange=" }).Count
   $cacheResult = Join-Path $work "web-cache-result.json"
   $cacheWxs = Join-Path $work "web-cache.wxs"
   $cacheBundle = Join-Path $work "CreatorOS-RAT-web-cache.exe"
@@ -186,11 +186,64 @@ try {
   Invoke-Checked $cacheBundle @("-quiet", "-norestart", "-log", $cacheLog)
   Wait-File $cacheResult
   Copy-Item $cacheResult (Join-Path $output "burn-web-cache-result.json")
-  $requestCountAfterCache = (Get-Content $serverLog | Where-Object { $_ -match "`t.*\.zip`tRange=" }).Count
+  $requestCountAfterCache = (Get-Content $serverLog | Where-Object { $_ -match "`tORIGIN`t.*\.zip`t(?:HEAD|GET)`tRange=" }).Count
   if ($requestCountAfterCache -ne $requestCountBeforeCache) {
     throw "unchanged payload cache reuse made HTTP requests: before=$requestCountBeforeCache after=$requestCountAfterCache"
   }
   Add-Content $serverLog "CACHE_REUSE_NO_HTTP requests=$requestCountAfterCache"
+
+  # System-proxy proof: the origin host deliberately has no DNS entry. The only
+  # route to the payloads is the loopback proxy configured through Windows
+  # Internet Settings + WinHTTP. The proxy serves the fixture and records every
+  # request so environment-variable-only routing cannot masquerade as a pass.
+  $proxyPort = 45656
+  $proxyLog = Join-Path $output "http-system-proxy.log"
+  $proxyStdout = Join-Path $output "http-proxy.stdout.log"
+  $proxyStderr = Join-Path $output "http-proxy.stderr.log"
+  $proxyProcess = Start-Process -FilePath $ratExe -ArgumentList @(
+    "proxy", "--root", $served, "--port", "$proxyPort", "--log", $proxyLog
+  ) -RedirectStandardOutput $proxyStdout -RedirectStandardError $proxyStderr -PassThru
+  $proxyWxs = Join-Path $work "proxy.wxs"
+  $proxyBundle = Join-Path $work "CreatorOS-RAT-proxy.exe"
+  $proxyResult = Join-Path $work "proxy-result.json"
+  New-BundleSource $proxyWxs "CreatorOS T565 Proxy RAT" "2.1.0.0" "no" "http://creatoros-rat.test:$port" $proxyResult "proxy" "creatoros-t565-proxy"
+  Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $proxyWxs, "-o", $proxyBundle)
+  Remove-ExternalPayloadCopies
+  $internetSettings = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+  $oldInternet = Get-ItemProperty -Path $internetSettings
+  $oldProxyEnable = if ($null -ne $oldInternet.PSObject.Properties["ProxyEnable"]) { [int]$oldInternet.PSObject.Properties["ProxyEnable"].Value } else { 0 }
+  $oldProxyServer = if ($null -ne $oldInternet.PSObject.Properties["ProxyServer"]) { [string]$oldInternet.PSObject.Properties["ProxyServer"].Value } else { $null }
+  $oldProxyOverride = if ($null -ne $oldInternet.PSObject.Properties["ProxyOverride"]) { [string]$oldInternet.PSObject.Properties["ProxyOverride"].Value } else { $null }
+  try {
+    Start-Sleep -Seconds 1
+    if ($proxyProcess.HasExited) { throw "proxy exited early: $(Get-Content $proxyStderr -Raw)" }
+    Set-ItemProperty -Path $internetSettings -Name ProxyEnable -Type DWord -Value 1
+    Set-ItemProperty -Path $internetSettings -Name ProxyServer -Type String -Value "http=127.0.0.1:$proxyPort"
+    Set-ItemProperty -Path $internetSettings -Name ProxyOverride -Type String -Value ""
+    & netsh winhttp set proxy "127.0.0.1:$proxyPort"
+    if ($LASTEXITCODE -ne 0) { throw "netsh winhttp set proxy failed: $LASTEXITCODE" }
+    $proxyBurnLog = Join-Path $output "burn-system-proxy.log"
+    & $proxyBundle "-quiet" "-norestart" "-log" $proxyBurnLog
+    Wait-File $proxyResult 30
+    Copy-Item $proxyResult (Join-Path $output "burn-system-proxy-result.json")
+    if (-not (Select-String -Path $proxyLog -Pattern "`tPROXY`t.*\.zip`tGET`t" -Quiet)) {
+      throw "Burn did not acquire payloads through the configured system proxy"
+    }
+  } finally {
+    & netsh winhttp reset proxy | Out-Null
+    Set-ItemProperty -Path $internetSettings -Name ProxyEnable -Type DWord -Value $oldProxyEnable
+    if ($null -ne $oldProxyServer) {
+      Set-ItemProperty -Path $internetSettings -Name ProxyServer -Type String -Value $oldProxyServer
+    } else {
+      Remove-ItemProperty -Path $internetSettings -Name ProxyServer -ErrorAction SilentlyContinue
+    }
+    if ($null -ne $oldProxyOverride) {
+      Set-ItemProperty -Path $internetSettings -Name ProxyOverride -Type String -Value $oldProxyOverride
+    } else {
+      Remove-ItemProperty -Path $internetSettings -Name ProxyOverride -ErrorAction SilentlyContinue
+    }
+    if (-not $proxyProcess.HasExited) { Stop-Process -Id $proxyProcess.Id -Force }
+  }
 
   # Build against the original digests, then corrupt the served bytes. Burn must
   # reject before the package process creates its result marker.
@@ -231,6 +284,7 @@ $summary = [ordered]@{
   webRemotePayloads = $payloadNames.Count
   interruptionExercised = $true
   unchangedCacheReuseWithoutHttp = $true
+  systemProxyExercised = $true
   tamperRejected = $true
   stateRecoveryBoundaries = @("materialized", "smoke-passed", "current-written", "entry-written")
   pathAttacksRejected = @("traversal", "absolute", "ADS", "reserved", "case-collision", "symlink", "junction", "hardlink")

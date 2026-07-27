@@ -29,7 +29,14 @@ internal static class Program
                     Required(options, "root"),
                     int.Parse(Required(options, "port")),
                     Required(options, "log"),
-                    options.GetValueOrDefault("interrupt-once")),
+                    options.GetValueOrDefault("interrupt-once"),
+                    "ORIGIN"),
+                "proxy" => RunServer(
+                    Required(options, "root"),
+                    int.Parse(Required(options, "port")),
+                    Required(options, "log"),
+                    null,
+                    "PROXY"),
                 _ => throw new ArgumentException($"unknown command: {args[0]}")
             };
         }
@@ -433,13 +440,13 @@ internal static class Program
         if (process.ExitCode != 0) throw new InvalidOperationException($"cmd.exe exit {process.ExitCode}: {arguments}");
     }
 
-    private static int RunServer(string root, int port, string logPath, string? interruptOnce)
+    private static int RunServer(string root, int port, string logPath, string? interruptOnce, string label)
     {
         root = Path.GetFullPath(root);
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
         var interrupted = false;
         using var listener = new HttpListener();
-        listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+        listener.Prefixes.Add(label == "PROXY" ? $"http://*:{port}/" : $"http://127.0.0.1:{port}/");
         listener.Start();
         Console.WriteLine($"SERVER_READY port={port}");
         while (true)
@@ -454,7 +461,7 @@ internal static class Program
                 continue;
             }
             var rangeHeader = context.Request.Headers["Range"] ?? "";
-            File.AppendAllText(logPath, $"{DateTimeOffset.UtcNow:O}\t{name}\tRange={rangeHeader}\n");
+            File.AppendAllText(logPath, $"{DateTimeOffset.UtcNow:O}\t{label}\t{name}\t{context.Request.HttpMethod}\tRange={rangeHeader}\n");
             var start = 0L;
             if (rangeHeader.StartsWith("bytes=", StringComparison.OrdinalIgnoreCase)
                 && long.TryParse(rangeHeader[6..].TrimEnd('-'), out var parsed))
@@ -483,7 +490,7 @@ internal static class Program
                     remaining -= read;
                 }
                 context.Response.Abort();
-                File.AppendAllText(logPath, $"{DateTimeOffset.UtcNow:O}\t{name}\tINTERRUPTED\n");
+                File.AppendAllText(logPath, $"{DateTimeOffset.UtcNow:O}\t{label}\t{name}\tINTERRUPTED\n");
                 continue;
             }
             input.CopyTo(context.Response.OutputStream);
