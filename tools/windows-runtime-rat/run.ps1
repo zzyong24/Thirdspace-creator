@@ -76,7 +76,8 @@ function New-BundleSource {
     [ValidateSet("yes", "no")][string]$Compressed,
     [string]$DownloadBase,
     [string]$ResultPath,
-    [string]$Mode
+    [string]$Mode,
+    [string]$CacheId
   )
   $payloadXml = foreach ($payloadName in $payloadNames) {
     $download = if ($DownloadBase) { " DownloadUrl=`"$DownloadBase/$payloadName`"" } else { "" }
@@ -97,6 +98,7 @@ function New-BundleSource {
                   Permanent="yes"
                   Vital="yes"
                   Cache="keep"
+                  CacheId="$CacheId"
                   DetectCondition="0"
                   InstallArguments="package --mode $Mode --result &quot;$ResultPath&quot;">
 $($payloadXml -join "`n")
@@ -110,7 +112,7 @@ $($payloadXml -join "`n")
 $offlineResult = Join-Path $work "offline-result.json"
 $offlineWxs = Join-Path $work "offline.wxs"
 $offlineBundle = Join-Path $work "CreatorOS-RAT-offline.exe"
-New-BundleSource $offlineWxs "CreatorOS T565 Offline RAT" "1.0.0.0" "yes" "" $offlineResult "offline"
+New-BundleSource $offlineWxs "CreatorOS T565 Offline RAT" "1.0.0.0" "yes" "" $offlineResult "offline" "creatoros-t565-offline"
 Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $offlineWxs, "-o", $offlineBundle)
 $offlineLog = Join-Path $output "burn-offline.log"
 Invoke-Checked $offlineBundle @("-quiet", "-norestart", "-log", $offlineLog)
@@ -130,7 +132,7 @@ try {
   $webResult = Join-Path $work "web-result.json"
   $webWxs = Join-Path $work "web.wxs"
   $webBundle = Join-Path $work "CreatorOS-RAT-web.exe"
-  New-BundleSource $webWxs "CreatorOS T565 Web RAT" "2.0.0.0" "no" "http://127.0.0.1:$port" $webResult "web"
+  New-BundleSource $webWxs "CreatorOS T565 Web RAT" "2.0.0.0" "no" "http://127.0.0.1:$port" $webResult "web" "creatoros-t565-web"
   Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $webWxs, "-o", $webBundle)
   $webLog = Join-Path $output "burn-web.log"
 
@@ -148,12 +150,31 @@ try {
     throw "interruption path was not exercised"
   }
 
+  # A related bundle using the same package CacheId must execute entirely from
+  # verified cache. The server stays available only so any accidental request can
+  # be counted and fail this assertion deterministically.
+  $requestCountBeforeCache = (Get-Content $serverLog | Where-Object { $_ -match "`t.*\.zip`tRange=" }).Count
+  $cacheResult = Join-Path $work "web-cache-result.json"
+  $cacheWxs = Join-Path $work "web-cache.wxs"
+  $cacheBundle = Join-Path $work "CreatorOS-RAT-web-cache.exe"
+  New-BundleSource $cacheWxs "CreatorOS T565 Web Cache RAT" "2.0.0.1" "no" "http://127.0.0.1:$port" $cacheResult "web-cache" "creatoros-t565-web"
+  Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $cacheWxs, "-o", $cacheBundle)
+  $cacheLog = Join-Path $output "burn-web-cache.log"
+  Invoke-Checked $cacheBundle @("-quiet", "-norestart", "-log", $cacheLog)
+  Wait-File $cacheResult
+  Copy-Item $cacheResult (Join-Path $output "burn-web-cache-result.json")
+  $requestCountAfterCache = (Get-Content $serverLog | Where-Object { $_ -match "`t.*\.zip`tRange=" }).Count
+  if ($requestCountAfterCache -ne $requestCountBeforeCache) {
+    throw "unchanged payload cache reuse made HTTP requests: before=$requestCountBeforeCache after=$requestCountAfterCache"
+  }
+  Add-Content $serverLog "CACHE_REUSE_NO_HTTP requests=$requestCountAfterCache"
+
   # Build against the original digests, then corrupt the served bytes. Burn must
   # reject before the package process creates its result marker.
   $tamperResult = Join-Path $work "tamper-result.json"
   $tamperWxs = Join-Path $work "tamper.wxs"
   $tamperBundle = Join-Path $work "CreatorOS-RAT-tamper.exe"
-  New-BundleSource $tamperWxs "CreatorOS T565 Tamper RAT" "3.0.0.0" "no" "http://127.0.0.1:$port" $tamperResult "tamper"
+  New-BundleSource $tamperWxs "CreatorOS T565 Tamper RAT" "3.0.0.0" "no" "http://127.0.0.1:$port" $tamperResult "tamper" "creatoros-t565-tamper"
   Invoke-Checked $wix @("build", "-arch", "x64", "-ext", "WixToolset.BootstrapperApplications.wixext", $tamperWxs, "-o", $tamperBundle)
   [IO.File]::AppendAllText((Join-Path $served "core.zip"), "tampered")
   $tamperLog = Join-Path $output "burn-tamper.log"
@@ -182,6 +203,7 @@ $summary = [ordered]@{
   offlineEmbeddedPayloads = $payloadNames.Count
   webRemotePayloads = $payloadNames.Count
   interruptionExercised = $true
+  unchangedCacheReuseWithoutHttp = $true
   tamperRejected = $true
   stateRecoveryBoundaries = @("materialized", "smoke-passed", "current-written", "entry-written")
   pathAttacksRejected = @("traversal", "absolute", "ADS", "reserved", "case-collision", "symlink", "junction", "hardlink")
