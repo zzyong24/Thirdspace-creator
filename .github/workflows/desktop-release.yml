@@ -494,6 +494,7 @@ jobs:
         if: ${{ inputs.windows_package_rat == true }}
         with:
           workspaces: frontend/src-tauri
+          cache-on-failure: true
 
       - name: 安装锁定依赖与 Chromium
         run: |
@@ -629,6 +630,9 @@ jobs:
           $stdout = Join-Path $env:RUNNER_TEMP "creatoros-t565.stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "creatoros-t565.stderr.log"
           $domReport = Join-Path $env:RUNNER_TEMP "creatoros-t565-webview.json"
+          $webviewData = Join-Path $env:RUNNER_TEMP "creatoros-t565-webview-data"
+          Remove-Item -Recurse -Force $webviewData -ErrorAction SilentlyContinue
+          $webviewPolicy = "HKCU:\Software\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments"
           $launchStarted = [DateTime]::UtcNow
           $app = $null
           try {
@@ -645,6 +649,10 @@ jobs:
             }
 
             $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$devtoolsPort"
+            $env:WEBVIEW2_USER_DATA_FOLDER = $webviewData
+            New-Item -Path $webviewPolicy -Force | Out-Null
+            New-ItemProperty -Path $webviewPolicy -Name "*" -PropertyType String `
+              -Value "--remote-debugging-port=$devtoolsPort" -Force | Out-Null
             $launchWatch = [Diagnostics.Stopwatch]::StartNew()
             $app = Start-Process -FilePath $appExe -PassThru `
               -RedirectStandardOutput $stdout -RedirectStandardError $stderr
@@ -666,6 +674,26 @@ jobs:
               if (Test-Path $stderr) { Get-Content $stderr }
               throw "[T-565] 断网首启 120 秒内未进入本地主页面"
             }
+            Write-Host (
+              "[T-565] setupBytes=$($setup.Length) " +
+              "installMs=$($installWatch.ElapsedMilliseconds) " +
+              "launchMs=$($launchWatch.ElapsedMilliseconds) " +
+              "runtimeFiles=$($runtimeFiles.Count) runtimeBytes=$runtimeBytes"
+            )
+            $partialEvidence = [ordered]@{
+              schemaVersion = 1
+              setupBytes = $setup.Length
+              installMilliseconds = $installWatch.ElapsedMilliseconds
+              firstLaunchMilliseconds = $launchWatch.ElapsedMilliseconds
+              runtimeFiles = $runtimeFiles.Count
+              runtimeBytes = $runtimeBytes
+              nodeModulesDirectories = $nodeModules.Count
+              offlineFirewallPrograms = $uniquePrograms.Count
+              mainPageLoadFinished = $true
+              webviewDomVerified = $false
+            }
+            $partialEvidence | ConvertTo-Json | Out-File `
+              "tools/windows-closure-rat/out/package-rat-results.json" -Encoding utf8
             node tools/windows-closure-rat/inspect-installed-webview.mjs `
               $devtoolsPort $domReport
             if ($LASTEXITCODE -ne 0) {
@@ -705,6 +733,8 @@ jobs:
             $evidence | ConvertTo-Json
           } finally {
             Remove-Item Env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS -ErrorAction SilentlyContinue
+            Remove-Item Env:WEBVIEW2_USER_DATA_FOLDER -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $webviewPolicy -Name "*" -ErrorAction SilentlyContinue
             foreach ($ruleName in $firewallRules) {
               Remove-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
             }

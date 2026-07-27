@@ -11,15 +11,24 @@ if (!Number.isInteger(port) || port < 1 || port > 65535 || !outputArg) {
 
 const deadline = Date.now() + 30_000;
 let targets = [];
+let lastDiscoveryError = "";
 while (Date.now() < deadline) {
-  try {
-    targets = await fetch(`http://127.0.0.1:${port}/json/list`).then((response) =>
-      response.json(),
-    );
-    if (targets.length > 0) break;
-  } catch {
-    // WebView2 DevTools endpoint is not ready yet.
+  for (const host of ["127.0.0.1", "localhost", "[::1]"]) {
+    try {
+      targets = await fetch(`http://${host}:${port}/json/list`).then(
+        (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.json();
+        },
+      );
+      if (targets.length > 0) break;
+    } catch (error) {
+      lastDiscoveryError = `${host}:${error instanceof Error ? error.message : String(error)}`;
+    }
   }
+  if (targets.length > 0) break;
   await new Promise((done) => setTimeout(done, 200));
 }
 
@@ -30,7 +39,7 @@ const target = targets.find(
 );
 if (!target?.webSocketDebuggerUrl) {
   throw new Error(
-    `[T-565] 未发现已导航到本地 CreatorOS 页面的 WebView2 target:${JSON.stringify(
+    `[T-565] 未发现已导航到本地 CreatorOS 页面的 WebView2 target(last=${lastDiscoveryError}):${JSON.stringify(
       targets.map(({ type, title, url }) => ({ type, title, url })),
     )}`,
   );
