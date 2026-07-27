@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-562 | 根治 CreatorOS 0.2.0 Windows 安装后持续白屏【发布阻断·用户真机 2026-07-27】 | 🔨 免审 | [首启 SPEC](docs/superpowers/specs/2026-07-23-desktop-packaging-first-launch-design.md) · [白屏复盘](docs/research/2026-07-24-windows-first-launch-white-screen.md) | 用户真机确认最新 Windows 0.2.0 包安装后仍持续白屏；必须抓真实启动链证据，修复 sidecar/WebView 导航根因，并把 Windows 打包 Gate 从“文件存在”升级为“安装后真启动、health ready、主页面非白屏可交互”，新包经真机确认前不得宣称 Windows 可用。 |
 | T-558 | 制作 CreatorOS 0.2.0 商务介绍 PPT【商务物料·用户 2026-07-27】 | 🔨 免审 | [使用手册](docs/CreatorOS-新用户0到1标杆路线.md) · [更新说明](docs/CreatorOS-2026-07-20以来更新说明.md) | 面向潜在内测用户与商务合作对象制作易懂、可转发的简洁演示稿，聚焦内容经营痛点、CreatorOS 价值闭环、少量代表性能力、适用人群及最后一轮公开内测行动信息，不做全功能说明书。 |
 | T-557 | 修复 0.2.0 双端发布流水线漏传产品级 license projectKey【CI 发布阻断·用户 2026-07-27】 | ✅ 免审 | [失败流水线](https://github.com/zzyong24/Thirdspace-creator/actions/runs/30244515110) · [发布手册](docs/RELEASING.md) | macOS 已在 `release.mjs` 的 fail-fast 门卫因缺少 `CREATOROS_LICENSE_PROJECT_KEY` 失败，Windows 到同一步也会失败；双端共用打包步骤必须显式注入既定产品级 key `test`，补回归验证后提交推送并重跑。 |
 | T-556 | 把 CreatorOS 桌面安装包版本统一升级为 0.2.0 并发布当前全部代码【双端打包·用户 2026-07-26】 | ✅ 免审 | [发布手册](docs/RELEASING.md) | 官网公告已是 0.2.0；同步 frontend package、Tauri 配置、Rust crate 与 lockfile 的应用版本，确保 `getVersion()`、macOS DMG 和 Windows setup.exe 都显示 0.2.0；提交并推送当前工作区全部改动后触发双端流水线。 |

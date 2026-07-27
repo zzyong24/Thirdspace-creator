@@ -347,6 +347,61 @@ jobs:
           path: dist-upload/
           if-no-files-found: error
 
+      # [T-562] 之前只执行 setup.exe 的安装期特殊入口，完全没有运行用户真正点击的
+      # CreatorOS.exe，因此 sidecar cwd/verdict 公钥/WebView 导航回归都能带病上传。
+      # 产物先上传以便失败时保留诊断；随后真启动已安装 GUI，等 Rust 在 WebView 完成加载
+      # 127.0.0.1 主页面后输出固定 marker。这里不重编译，直接复用本 job 已安装的产物。
+      - name: Windows 安装后真启动与主页面加载冒烟(T-562)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $appExe = Join-Path $installDir "CreatorOS.exe"
+          if (-not (Test-Path $appExe -PathType Leaf)) {
+            throw "[T-562] 安装完成但缺 CreatorOS.exe"
+          }
+
+          $stdout = Join-Path $env:RUNNER_TEMP "creatoros-startup.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "creatoros-startup.stderr.log"
+          Remove-Item $stdout,$stderr -Force -ErrorAction SilentlyContinue
+          $app = Start-Process -FilePath $appExe -PassThru `
+            -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $ready = $false
+          try {
+            for ($i = 0; $i -lt 600; $i++) {
+              if (Test-Path $stderr) {
+                $content = Get-Content $stderr -Raw -ErrorAction SilentlyContinue
+                if ($content -match '\[CreatorOS\] MAIN_PAGE_LOAD_FINISHED http://127\.0\.0\.1:') {
+                  $ready = $true
+                  break
+                }
+              }
+              if ($app.HasExited) {
+                break
+              }
+              Start-Sleep -Milliseconds 200
+            }
+            if (-not $ready) {
+              Write-Host "===== CreatorOS stdout ====="
+              if (Test-Path $stdout) { Get-Content $stdout }
+              Write-Host "===== CreatorOS stderr ====="
+              if (Test-Path $stderr) { Get-Content $stderr }
+              if ($app.HasExited) {
+                throw "[T-562] CreatorOS 在主页面加载前退出(exit=$($app.ExitCode))"
+              }
+              throw "[T-562] CreatorOS 120 秒内未完成 sidecar 启动与 WebView 主页面加载"
+            }
+            Write-Host "[T-562] ✓ 已安装 CreatorOS 真启动并完成主页面加载"
+          } finally {
+            if (-not $app.HasExited) {
+              $null = $app.CloseMainWindow()
+              if (-not $app.WaitForExit(10000)) {
+                Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
+              }
+            }
+          }
+
       # [T-557] 上传后再验主动卸载：安装 Gate 已经通过，因此即使卸载回归失败，
       # 本轮已生成的安装包也必须留作诊断，不能随托管 runner 一起丢失。
       - name: Windows 主动卸载清理冒烟(T-557)

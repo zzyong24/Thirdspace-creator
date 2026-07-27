@@ -10,6 +10,10 @@ const rustShell = readFileSync(
   join(process.cwd(), "src-tauri", "src", "lib.rs"),
   "utf8",
 );
+const splashHtml = readFileSync(
+  join(process.cwd(), "src-tauri", "placeholder-dist", "index.html"),
+  "utf8",
+);
 
 describe("T-535 desktop startup safety contract", () => {
   it("keeps instrumentation runtime logs ASCII-safe for Turbopack code frames", () => {
@@ -63,5 +67,33 @@ describe("T-535 desktop startup safety contract", () => {
     );
     expect(rustShell).toContain("StartupWaitOutcome::Exited(reason)");
     expect(rustShell).toContain("startup_failure_script(");
+  });
+
+  it("uses a packaged splash document instead of racing JavaScript against about:blank", () => {
+    expect(rustShell).toContain('WebviewUrl::App("index.html".into())');
+    expect(rustShell).not.toContain(
+      'WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败"))',
+    );
+    expect(splashHtml).toContain('id="creatoros-splash-status"');
+    expect(splashHtml).toContain("window.__creatorosSplashFailure");
+    expect(splashHtml).toContain("CreatorOS 启动失败");
+  });
+
+  it("starts the packaged Next sidecar from its frontend directory on every platform", () => {
+    expect(rustShell).toContain("cmd.current_dir(&sidecar_frontend_dir)");
+    expect(rustShell).toContain(".current_dir(&sidecar_frontend_dir)");
+  });
+
+  it("turns runtime resolution failures into a visible diagnostic page instead of panicking", () => {
+    expect(rustShell).toContain("show_startup_failure(");
+    expect(rustShell).not.toMatch(
+      /let sidecar_dir = match resolve_sidecar_dir[\s\S]{0,300}panic!\("\{e\}"\)/,
+    );
+  });
+
+  it("emits a machine-readable marker only after the sidecar page finishes loading", () => {
+    expect(rustShell).toContain(".on_page_load(|_window, payload|");
+    expect(rustShell).toContain("PageLoadEvent::Finished");
+    expect(rustShell).toContain("[CreatorOS] MAIN_PAGE_LOAD_FINISHED");
   });
 });

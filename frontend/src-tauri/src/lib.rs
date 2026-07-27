@@ -31,6 +31,7 @@ use base64::Engine as _;
 //   Zeroize 抹掉注入 sidecar 后的临时明文 buffer。
 use secrecy::{ExposeSecret, SecretString};
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri::webview::PageLoadEvent;
 use zeroize::Zeroize as _;
 // [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
 //   macOS 走 std::process 直接 spawn server.app(Dock 隐身),不引这些,故按平台条件 import,免 macOS
@@ -525,21 +526,11 @@ fn wait_until_ready(
     }
 }
 
-/// [T-436 / T-460] splash loading 注入脚本(经 initialization_script 在 about:blank 上注入 DOM)。
-/// ⚠️ 不用 data: URL:WKWebView **禁止 data: 主 frame 导航**(安全限制),macOS 15.1 实测直接
-/// SIGABRT(2026-07-20 真机 crash·didFinishLaunching→observer→abort),新 OS 静默容忍才没暴露。
-/// about:blank 是标准允许的空白页,原理对症。脚本内判 `location.protocol==='about:'` 才注入 →
-/// navigate 到真 http 页面时该 init 脚本重跑也直接 return,不污染真页面。纯 DOM API,无 HTML 转义。
-///
-/// [T-460 状态文案]:除转圈 + "正在启动 CreatorOS…" 之外,暴露 `window.__creatorosSplashStatus(msg)`
-///   接口(Rust 侧经 window.eval() 调用),让首启解压 tarball / 冒烟等长阶段能实时更新状态
-///   ("正在展开首启资源…"/"正在校验完整性…"),避免用户看着一直转圈以为死机。
-/// [T-461 后修] 2026-07-22 真机排查:原实现 `addEventListener('DOMContentLoaded', fn)` 在
-///   Windows WebView2 上不生效 —— about:blank 加载极快,DOMContentLoaded 可能在
-///   initialization_script 注入时就已触发过一次 → 监听器永远不跑 → splash 空白。
-///   改为**即刻执行**(用 IIFE + `document.readyState` 兜底):body 已 ready 即建 DOM,
-///   否则短轮询等 body 出现(不依赖事件)。跨 WebView2/WKWebView 都稳。
-const SPLASH_JS: &str = r#"(function(){function build(){if(location.protocol!=='about:')return;var d=document;if(!d.body){setTimeout(build,16);return;}d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.id='creatoros-splash-spinner';s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.id='creatoros-splash-status';t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:16px;font-weight:600;color:#e5e5ea;letter-spacing:.3px;text-align:center;max-width:80vw';d.body.appendChild(t);var detail=d.createElement('div');detail.id='creatoros-splash-detail';detail.style.cssText='display:none;font-size:13px;line-height:1.7;color:#9b9ba5;text-align:center;max-width:620px;white-space:pre-wrap';d.body.appendChild(detail);var btn=d.createElement('button');btn.id='creatoros-open-logs';btn.textContent='打开诊断日志目录';btn.style.cssText='display:none;margin-top:8px;padding:10px 16px;border:1px solid #353540;border-radius:9px;background:#202027;color:#f2f2f5;font-size:13px;cursor:pointer';d.body.appendChild(btn);window.__creatorosSplashStatus=function(m){var el=d.getElementById('creatoros-splash-status');if(el&&typeof m==='string')el.textContent=m;};window.__creatorosSplashFailure=function(title,message,logsDir){s.style.display='none';t.textContent=title;detail.style.display='block';detail.textContent=message+'\n\n诊断日志：'+logsDir;btn.style.display='block';btn.onclick=function(){var invoke=window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke;if(typeof invoke==='function'){invoke('plugin:opener|reveal_item_in_dir',{paths:[logsDir]}).catch(function(){detail.textContent=message+'\n\n请手动打开诊断日志：'+logsDir;});}else{detail.textContent=message+'\n\n请手动打开诊断日志：'+logsDir;}};};}build();})();"#;
+// [T-562] splash 改为随包 `placeholder-dist/index.html` 静态文档。此前在 about:blank
+// initialization_script 里动态造 DOM，Windows WebView2 多次出现脚本未执行、失败页也无处渲染，
+// 最终只剩纯白窗口。静态文档在 Rust 慢启动/sidecar 失败前就有真实 DOM，不再依赖该竞态。
+#[cfg(test)]
+const SPLASH_HTML: &str = include_str!("../placeholder-dist/index.html");
 
 fn json_for_eval(value: &str) -> String {
     serde_json::to_string(value)
@@ -556,6 +547,24 @@ fn startup_failure_script(title: &str, detail: &str, logs_dir: &str) -> String {
         json_for_eval(detail),
         json_for_eval(logs_dir),
     )
+}
+
+fn show_startup_failure(
+    win: tauri::WebviewWindow,
+    title: &str,
+    detail: &str,
+    logs_dir: &str,
+) {
+    let script = startup_failure_script(title, detail, logs_dir);
+    // setup 尚未返回时 WebView event loop 可能还没完成静态 splash 加载。把 eval 延后到
+    // event loop 已运行后；即便 eval 极端失败，静态 splash 也不会退化成纯白。
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(250));
+        let win2 = win.clone();
+        let _ = win.run_on_main_thread(move || {
+            let _ = win2.eval(&script);
+        });
+    });
 }
 
 /// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
@@ -1117,7 +1126,7 @@ fn extract_sidecar_tarball(
     Ok(true)
 }
 
-/// [T-460] 更新 splash 页面状态文案(main window,about:blank 上跑 SPLASH_JS)。
+/// [T-460/T-562] 更新静态 splash 页面状态文案。
 /// Rust 侧调用 `window.__creatorosSplashStatus("正在展开首启资源…")` 即时反馈长阶段进度,
 /// 避免用户看着一直转圈误以为死机。若 window 尚未建 / 已 navigate 到 sidecar 真页面 → JS 层
 /// 会走异步无副作用(main window 可能没 __creatorosSplashStatus 或已被替换)。**best-effort,
@@ -1166,6 +1175,8 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     // 用户在安装器目录页选择的 $INSTDIR（可为 D/E 盘），首次启动不再复制/解压到 AppData。
     // 当前仍保留下方 tar → appData 的兼容兜底；只有原生 Windows 安装验收通过后才删除。
     #[cfg(windows)]
+    let mut installed_runtime_error: Option<String> = None;
+    #[cfg(windows)]
     {
         if let Ok(exe) = std::env::current_exe() {
             if let Some(install_dir) = exe.parent() {
@@ -1190,6 +1201,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
                     }
                     Err(e) => {
                         eprintln!("[shell] Windows 安装期 runtime 不可用，进入兼容解压路径: {e}");
+                        installed_runtime_error = Some(e);
                     }
                 }
             }
@@ -1198,13 +1210,17 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     // [T-454/T-487] 兼容路径：新 Windows 安装应在上方命中安装期 runtime；旧安装包、
     // macOS 与 Linux 仍可从单文件 tar 在 appData 原子解压。解压使用 Rust flate2/tar，
     // 不依赖用户电脑 PATH 或额外安装 tar/7-Zip。
-    let tarball = match app
+    let tarball = app
         .path()
         .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
-    {
-        Ok(p) if p.exists() => p,
-        _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
-    };
+        .map_err(|e| format!("无法解析 bundle sidecar.tar.gz 路径: {e}"))?;
+    if !tarball.is_file() {
+        #[cfg(windows)]
+        if let Some(installed_error) = installed_runtime_error {
+            return Err(installed_error);
+        }
+        return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string());
+    }
     splash_status(app, "正在校验安装包完整性…");
     verify_sidecar_tarball(&tarball)?;
     let version = app.package_info().version.to_string();
@@ -1381,22 +1397,30 @@ pub fn run() {
             //   首启用户"看着像死机"(2026-07-21 真机反馈)。
             //   handshake_token 也提前生成 —— 注入 initialization_script,后续每次 navigate
             //   都会重跑该脚本,token 常驻 window 全局。
-            // [T-436] 用 about:blank 而非 data:  WKWebView 禁 data: 主 frame,15.1 SIGABRT。
-            //   SPLASH_JS 自判 `location.protocol==='about:'`,navigate 到真页面时 return 不污染。
+            // [T-562] 启动页使用随包静态 index.html。Windows WebView2 不再靠 about:blank
+            // initialization_script 动态造 DOM，避免脚本竞态留下永久白窗。
             let handshake_token = license::gen_handshake_token();
-            let init_script = format!(
-                "window.__CREATOROS_HANDSHAKE_TOKEN__={:?};\n{}",
-                handshake_token, SPLASH_JS
-            );
+            let init_script =
+                format!("window.__CREATOROS_HANDSHAKE_TOKEN__={:?};", handshake_token);
             let _splash_win = WebviewWindowBuilder::new(
                 &handle,
                 "main",
-                WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败")),
+                WebviewUrl::App("index.html".into()),
             )
             .title("CreatorOS")
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
             .initialization_script(&init_script)
+            .on_page_load(|_window, payload| {
+                if payload.event() == PageLoadEvent::Finished
+                    && matches!(payload.url().host_str(), Some("127.0.0.1" | "localhost"))
+                {
+                    eprintln!(
+                        "[CreatorOS] MAIN_PAGE_LOAD_FINISHED {}",
+                        payload.url()
+                    );
+                }
+            })
             .build()
             .expect("建主窗口失败");
             drop(_splash_win); // 建完就释放引用,下面 line ~1530 从 handle.get_webview_window("main") 拿回 navigate。
@@ -1410,7 +1434,7 @@ pub fn run() {
             //   改**只搬真正阻塞的 tar 解压**(resolve_sidecar_dir 里的 extract_sidecar_tarball,
             //   3-5 min 就是它占的),其余 setup 保持同步(路径解析/logger 起/spawn sidecar/wait
             //   ready/navigate)。T-468 单点手术,风险面 <10 行。
-            //   splash 显示由 T-467(SPLASH_JS DOMContentLoaded 竞态 → IIFE 修)兜住。
+            //   splash 显示由 T-562 静态文档兜住。
 
             // 1) DB 落盘目录:桌面单机默认 <appDataDir>/db。resolveDbDriver 会认
             //    CREATOROS_DB_DIR(见 backend/src/db.ts §3b),我们注入它 → PGlite 落这里。
@@ -1425,6 +1449,11 @@ pub fn run() {
                 .map(|p| p.to_path_buf())
                 .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
             let app_data_dir_str = app_data_dir.to_string_lossy().to_string();
+            // [T-562] logger 必须早于 runtime 解析。此前 runtime 指针/完整性失败会在 logger
+            // 初始化前 panic，用户只得到白窗且没有可交付证据。
+            let logs_dir = app_data_dir.join("logs");
+            let logger = logging::init_sidecar_logger(&logs_dir);
+            let log_dir_str = logs_dir.to_string_lossy().to_string();
 
             // [T-332 S5] 「重置工作区」归档 —— **必须在 spawn sidecar 之前、建 db 目录之前**:
             //   此刻 PGlite 库无任何进程持有,rename 整目录才安全(设置页 route 只落标记,
@@ -1467,7 +1496,21 @@ pub fn run() {
                 Ok(d) => d,
                 Err(e) => {
                     eprintln!("[shell] {e}");
-                    panic!("{e}");
+                    if let Some(l) = &logger {
+                        l.log("shell", &format!("runtime 解析失败: {e}"));
+                    }
+                    let detail = format!(
+                        "离线运行环境无法通过启动校验，应用已停止继续加载。\n数据没有丢失。\n\n技术信息：{e}"
+                    );
+                    if let Some(win) = handle.get_webview_window("main") {
+                        show_startup_failure(
+                            win,
+                            "CreatorOS 启动失败",
+                            &detail,
+                            &log_dir_str,
+                        );
+                    }
+                    return Ok(());
                 }
             };
             let server_js_str = sidecar_dir
@@ -1505,10 +1548,6 @@ pub fn run() {
             //   <appDataDir>/logs/sidecar.log —— 打包态 `open -a` 拿不到 stderr 时,靠这份文件排障。
             //   注入 env `CREATOROS_LOG_DIR` 给 sidecar,供设置页「导出诊断日志」route 定位目录。
             //   init 失败(建目录/开文件不了)→ None,降级为仅 eprintln(不落盘但不崩)。
-            let logs_dir = app_data_dir.join("logs");
-            let logger = logging::init_sidecar_logger(&logs_dir);
-            let log_dir_str = logs_dir.to_string_lossy().to_string();
-
             // [T-332 S5] 归档摘要 tee 进 sidecar.log(归档发生在 logger 起来之前,补记一行,
             //   打包态用户报「重置后数据没了/还在」时可凭日志核实到底归没归档)。
             if let (Some(s), Some(l)) = (&reset_summary, &logger) {
@@ -1712,6 +1751,7 @@ pub fn run() {
                     .join("creatoros-server");
 
                 let mut cmd = std::process::Command::new(&inner_bin);
+                cmd.current_dir(&sidecar_frontend_dir);
                 // [T-365] 新进程组(组长=sidecar 自身 pid):退出时 killpg 整组带走 node +
                 //   Playwright Chrome + ffmpeg 全家;sidecar 侧孤儿自杀也按组清子进程。
                 #[cfg(target_os = "macos")]
@@ -1864,6 +1904,9 @@ pub fn run() {
                     .shell()
                     .sidecar("creatoros-server")
                     .expect("sidecar `creatoros-server` 未在 tauri.conf.json externalBin 注册")
+                    // [T-562] verdict 公钥与 Next standalone 资源按 process.cwd() 解析。
+                    // 快捷方式启动时 cwd 不可靠，必须固定到随包 frontend 目录。
+                    .current_dir(&sidecar_frontend_dir)
                     // [T-445] 同 macOS 分支:用 node 内置根证书,不依赖构建机的 openssl cert.pem
                     //   (Windows 官方 node 多为静态 openssl 自带 CA,加上无害且防同类差异)。
                     //   注意顺序:node [options] script.js —— 标志必须在脚本之前。
@@ -2006,7 +2049,7 @@ pub fn run() {
                 });
             }
 
-            // 5) 另起线程等就绪：只有 Ready 才导航 sidecar；退出/超时保留 about:blank
+            // 5) 另起线程等就绪：只有 Ready 才导航 sidecar；退出/超时保留静态 splash
             //    并渲染可见失败页。就绪探测跑在后台,不阻塞 setup。
             // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
             let ready_logger = logger.clone();
@@ -2015,10 +2058,9 @@ pub fn run() {
             //   读该全局并附到有副作用请求的 x-creatoros-handshake 头。
             let sidecar_url = format!("http://127.0.0.1:{port}/");
             let startup_logs_dir = log_dir_str.clone();
-            // [T-457] **不再建新窗** —— setup 头部已建 splash 窗口(about:blank + 转圈),
+            // [T-457/T-562] **不再建新窗** —— setup 头部已建静态 splash 窗口,
             //   这里从 handle 里拿回来,先在 window 上 eval 注入最新 handshake token,
-            //   再 navigate 到真 sidecar 页(navigate 会触发 init 脚本重跑,SPLASH_JS 判
-            //   非 about: 页面即 return 不污染)。原实现在这里才建窗 → 首启解压期间无窗口。
+            //   再 navigate 到真 sidecar 页。原实现在这里才建窗 → 首启解压期间无窗口。
             // [T-457] handshake token 已在 setup 头部一并注入 initialization_script,navigate
             //   到 sidecar 页时 init_script 会重跑 → token 常驻 window。这里无需再 eval 注入。
             let main_win = handle
@@ -2399,8 +2441,8 @@ mod tests {
         assert!(!script.contains("</script>"));
         assert!(!script.contains("location.href"));
         assert!(!script.contains("location.reload"));
-        assert!(SPLASH_JS.contains("plugin:opener|reveal_item_in_dir"));
-        assert!(SPLASH_JS.contains("打开诊断日志目录"));
+        assert!(SPLASH_HTML.contains("plugin:opener|reveal_item_in_dir"));
+        assert!(SPLASH_HTML.contains("打开诊断日志目录"));
         assert!(SIDECAR_STARTUP_SENTINEL.contains("SIDECAR_STARTUP_VERIFIED"));
     }
 

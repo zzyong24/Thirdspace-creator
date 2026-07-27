@@ -169,4 +169,15 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       workflow.indexOf("Windows 主动卸载清理冒烟(T-557)"),
     );
   });
+
+  it("Windows 上传后真启动 GUI，并等待 WebView 主页面完成加载", () => {
+    expect(workflow).toContain("Windows 安装后真启动与主页面加载冒烟(T-562)");
+    expect(workflow).toContain('$appExe = Join-Path $installDir "CreatorOS.exe"');
+    expect(workflow).toContain("MAIN_PAGE_LOAD_FINISHED");
+    expect(workflow).toContain("-RedirectStandardError");
+    expect(workflow).toContain("CloseMainWindow()");
+    expect(workflow.indexOf("actions/upload-artifact@v4")).toBeLessThan(
+      workflow.indexOf("Windows 安装后真启动与主页面加载冒烟(T-562)"),
+    );
+  });
 });

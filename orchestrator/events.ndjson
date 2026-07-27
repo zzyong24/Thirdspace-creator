@@ -339,3 +339,4 @@
 {"ts":"2026-07-27T07:08:28.633Z","actor":"taskctl","action":"start","task":"T-558","sha_before":"dd50add8d7d0","sha_after":"6518b7014ca2"}
 {"ts":"2026-07-27T07:08:42.374Z","actor":"taskctl","action":"start","task":"T-557","sha_before":"6518b7014ca2","sha_after":"180640758e02"}
 {"ts":"2026-07-27T09:43:30.265Z","actor":"taskctl","action":"complete","task":"T-557","evidence":"commits a22460e6、113ab0ac；回归 15/15、Rust 卸载清理 1/1、typecheck、boundary、reconcile 通过；desktop-release run 30245576722 macOS 全绿并上传 artifact，run 30251165852 Windows-only 出包、安装期 runtime 物化、artifact 上传及主动卸载清理全绿","sha_before":"bd4fba8fde2e","sha_after":"742982e096c4"}
+{"ts":"2026-07-27T09:53:06.601Z","actor":"taskctl","action":"start","task":"T-562","sha_before":"1b982d3f44fd","sha_after":"88ab36945062"}

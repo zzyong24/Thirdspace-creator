@@ -77,4 +77,12 @@ describe("Windows sidecar runtime 打包契约", () => {
     expect(directRuntimeLookup).toBeGreaterThan(-1);
     expect(legacyTarLookup).toBeGreaterThan(directRuntimeLookup);
   });
+
+  it("安装期 runtime 损坏且 tar 已清理时直接暴露原始错误，不伪装成 bundle 缺失", () => {
+    const libRs = readFileSync(join(process.cwd(), "src-tauri", "src", "lib.rs"), "utf8");
+
+    expect(libRs).toContain("installed_runtime_error");
+    expect(libRs).toContain("if !tarball.is_file()");
+    expect(libRs).toContain("return Err(installed_error);");
+  });
 });
