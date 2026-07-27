@@ -63,7 +63,12 @@ internal static class Program
 
     private static int RunPackage(IReadOnlyDictionary<string, string> options)
     {
-        var payloadRoot = Path.GetFullPath(Required(options, "payload-root"));
+        // Burn executes the package from its verified package-cache directory and
+        // materializes child Payloads beside it. Deriving this directory avoids the
+        // Windows argv trailing-backslash trap in "...CacheFolder\".
+        var payloadRoot = options.TryGetValue("payload-root", out var configuredRoot)
+            ? Path.GetFullPath(configuredRoot)
+            : AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
         var resultPath = Path.GetFullPath(Required(options, "result"));
         var mode = options.GetValueOrDefault("mode", "unknown");
         var hashes = new SortedDictionary<string, object>(StringComparer.Ordinal);

@@ -98,7 +98,7 @@ function New-BundleSource {
                   Vital="yes"
                   Cache="keep"
                   DetectCondition="0"
-                  InstallArguments="package --mode $Mode --payload-root &quot;[WixBundleExecutePackageCacheFolder]&quot; --result &quot;$ResultPath&quot;">
+                  InstallArguments="package --mode $Mode --result &quot;$ResultPath&quot;">
 $($payloadXml -join "`n")
       </ExePackage>
     </Chain>
