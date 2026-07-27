@@ -8,6 +8,12 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
+  it("T-557 双端正式打包显式注入既定产品级 projectKey", () => {
+    expect(workflow).toMatch(
+      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"test"[\s\S]*?run:\s*node scripts\/desktop\/release\.mjs/,
+    );
+  });
+
   it("T-545 将产品级 projectKey 固化进统一安装包，Finder 启动不依赖终端环境", () => {
     const packageSource = readFileSync(
       join(process.cwd(), "scripts", "desktop", "package.mjs"),

@@ -242,6 +242,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
+          # [T-545/T-557] 双端统一打 CreatorOS test 产品包；渠道身份仍由激活码签名
+          # channelRef 决定。必须在 package fail-fast 前显式注入，不能依赖启动环境。
+          CREATOROS_LICENSE_PROJECT_KEY: "test"
           # [T-451] verdict-token 签名密钥对(build.rs 编译期需要私钥;build-sidecar 期需要公钥
           #   烘焙进 sidecar/frontend/.next/server/verdict-verify-key.json)。两个 secret 需在
           #   仓库 Settings → Secrets and variables → Actions 配置(名字逐字对齐);缺任一 → 编译报

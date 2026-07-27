@@ -336,3 +336,5 @@
 {"ts":"2026-07-27T06:40:28.460Z","actor":"taskctl","action":"complete","task":"T-555","evidence":"飞书文档 revision 378；正文已统一 CreatorOS 0.2.0、macOS/Windows 双端完整验收、第二轮暨最后一轮公开内测、1000 人上限、2026-08-10 截止及共用激活码 31667C837F5FF50C；旧激活码/200 席位/仅 Mac/Windows 白屏 20 分钟/xattr -cr/正文 0.1.0 均零命中；两个 0.1.0 安装包附件按用户要求未修改；reconcile 0 error 0 warning","sha_before":"aca18f369dcc","sha_after":"f4d023c59066"}
 {"ts":"2026-07-27T06:44:00.038Z","actor":"taskctl","action":"start","task":"T-556","sha_before":"47ed97c577f0","sha_after":"5fe1850a55b8"}
 {"ts":"2026-07-27T06:48:01.089Z","actor":"taskctl","action":"complete","task":"T-556","evidence":"package/tauri/Cargo/Cargo.lock 均为 0.2.0；cargo check --locked --offline、pnpm -r typecheck、boundary、reconcile、git diff --check 通过；GitHub 双端签名 secrets 与 CREATOROS_FEEDBACK_OFFICIAL_ORIGINS 已配置","sha_before":"5fe1850a55b8","sha_after":"e814b10124f4"}
+{"ts":"2026-07-27T07:08:28.633Z","actor":"taskctl","action":"start","task":"T-558","sha_before":"dd50add8d7d0","sha_after":"6518b7014ca2"}
+{"ts":"2026-07-27T07:08:42.374Z","actor":"taskctl","action":"start","task":"T-557","sha_before":"6518b7014ca2","sha_after":"180640758e02"}
