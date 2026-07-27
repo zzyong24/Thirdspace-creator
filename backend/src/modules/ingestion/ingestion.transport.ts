@@ -98,9 +98,13 @@ export function createIngestionTransport(
           // [T-136] 号取 ctx.accountId(见 refresh 注释);扫码落该号独立登录态目录。
           // [T-330] body.forceNew(「扫码绑定新抖音号」)→ staging 隔离扫码链;forceNew 只是
           //   行为开关(不指号),不经 ctx 属主校验路径,读 body 安全。
-          const b = (body ?? {}) as { forceNew?: boolean };
+          const b = (body ?? {}) as {
+            forceNew?: boolean;
+            site?: "douyin.com" | "douhot.douyin.com";
+          };
           const result = await service.loginDouyin(ctx, {
             forceNew: b.forceNew === true,
+            site: b.site,
           });
           return { data: result, meta };
         }

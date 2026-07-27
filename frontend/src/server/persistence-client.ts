@@ -533,6 +533,10 @@ import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
 import {
+  discoverSameOriginFeedUrl,
+  isSyndicationFeed,
+} from "@/server/intelligence/feed-discovery";
+import {
   createPositioningService,
   createPositioningTransport,
   // [T-135] createPositioningRepository / CreatorProfileRow / PositioningStatementRow
@@ -2607,6 +2611,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         (await loadDouyinCdp()).loginDouyin({
           authDir: douyinAuthDirFor(opts?.accountId),
         }),
+      // [T-546] 热点宝 OAuth 使用与该采集账号相同的持久 profile；只切换登录目标，
+      // 不复制 cookie、不新建另一套账号保管逻辑。
+      loginDouhot: async (opts) =>
+        (
+          await loadDouhotCdp()
+        ).loginDouhot({
+          authDir: douyinAuthDirFor(opts?.accountId),
+        }).then((result) => result.loggedIn),
       // [T-330] 绑新号 staging 四步端口(service loginDouyinForceNew 编排;根治「绑新号命中
       //   当前号/_default 旧 sessionid → 二维码不出现直接登进旧号」):
       //   loginNew 在全新 `_staging-<token>` 空目录扫码(必出二维码);fetchIdentity 同步读回
@@ -5095,6 +5107,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     input: {
       title: string;
       angle: string;
+      card?: {
+        oneLiner: string;
+        hook?: string;
+        contentStructure?: string[];
+        materialBasis?: string;
+        riskNote?: string;
+        proposal?: string;
+      };
       sourceReferences?: Array<{
         kind: "original_video" | "source_page";
         platform: string;
@@ -5271,10 +5291,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   const fetchIntelligenceFeed = async (url: string) => {
     let current = url;
+    let discoveredFeed = false;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15_000);
     try {
-      for (let redirect = 0; redirect <= 5; redirect += 1) {
+      for (let hop = 0; hop <= 6; hop += 1) {
         await assertUrlAllowed(current);
         const response = await fetch(current, {
           signal: controller.signal,
@@ -5286,7 +5307,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         });
         if (response.status >= 300 && response.status < 400) {
           const location = response.headers.get("location");
-          if (!location || redirect === 5) {
+          if (!location || hop === 6) {
             throw Object.assign(new Error("RSS 重定向无效或次数过多"), {
               name: "RssHttpError",
             });
@@ -5310,6 +5331,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           throw Object.assign(new Error("RSS 响应超过 5MB"), {
             name: "RssResponseTooLargeError",
           });
+        }
+        if (!isSyndicationFeed(xml) && !discoveredFeed) {
+          const discovered = discoverSameOriginFeedUrl(xml, current);
+          if (discovered) {
+            discoveredFeed = true;
+            current = discovered;
+            continue;
+          }
         }
         return { xml, finalUrl: current };
       }
@@ -5335,18 +5364,50 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       return rows;
     },
-    fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId }) =>
-      (await loadDouyinCdp()).fetchDouyinCollectsVideos({
-        authDir: douyinAuthDirFor(collectorAccountId),
-        collectsId: folderId,
+    fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId }) => {
+      const cdp = await loadDouyinCdp();
+      const authDir = douyinAuthDirFor(collectorAccountId);
+      const diagnostics = {
+        requestId: ctx.requestId,
+        accountId: collectorAccountId,
+      };
+      let collectsId = folderId;
+      // 旧收藏来源只保存了用户看到的收藏夹名称（例如“选题”），不是抖音
+      // collects_id。直接把名称传给 video/list 永远采不到数据。登录恢复后先
+      // 读取真实收藏夹列表并按“稳定 ID 优先、精确名称兼容”解析，再抓作品。
+      if (!/^\d{8,}$/.test(folderId)) {
+        const folders = await cdp.fetchDouyinCollectsFolders({
+          authDir,
+          strictEvidence: true,
+          gateway: douyinGateway,
+          diagnostics,
+        });
+        const normalized = folderId.trim();
+        const matched = folders.find(
+          (folder) =>
+            folder.collectsId === normalized ||
+            folder.name.trim() === normalized,
+        );
+        if (!matched) {
+          throw Object.assign(
+            new Error("已绑定收藏夹在当前抖音账号中不存在"),
+            {
+              name: "DouyinFavoritesFolderMissingError",
+              code: "FOLDER_MISSING",
+            },
+          );
+        }
+        collectsId = matched.collectsId;
+      }
+      return cdp.fetchDouyinCollectsVideos({
+        authDir,
+        collectsId,
         maxItems: 1_000,
         strictEvidence: true,
         gateway: douyinGateway,
-        diagnostics: {
-          requestId: ctx.requestId,
-          accountId: collectorAccountId,
-        },
-      }),
+        diagnostics,
+      });
+    },
     readWeb: async ({ ctx, url }) => {
       const domain = webDomainFromUrl(url);
       return readWebUrlSidecar(
@@ -5534,7 +5595,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const requestedUrl = new URL(body.url ?? "").toString();
         try {
           const feed = await fetchIntelligenceFeed(requestedUrl);
-          if (/<(?:rss|feed)\b/i.test(feed.xml)) {
+          if (isSyndicationFeed(feed.xml)) {
             const rows = parseFeed(
               feed.xml,
               new URL(feed.finalUrl).hostname,
@@ -5805,6 +5866,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (intelligenceScheduleRunning) return;
     intelligenceScheduleRunning = true;
     try {
+      // 先回收上次进程退出遗留的过期租约，再 drain；否则 task 仍是 running，
+      // drain 只认 queued，来源 run 会永久占着 active 状态。
+      await persistentTaskService.recoverExpiredLeases();
       await drainIntelligenceSourceQueue(sourceRunnerDeps);
       const enqueued = await intelligenceService.enqueueDueSourceRuns();
       if (enqueued > 0) {
@@ -6004,6 +6068,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       title: input.title,
       angle: input.angle,
       source: "benchmark",
+      card: input.card,
       sourceReferences: input.sourceReferences,
     });
     return { id: candidate.id };

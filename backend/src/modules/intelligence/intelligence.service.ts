@@ -186,6 +186,14 @@ export interface IntelligenceServiceDeps {
       input: {
         title: string;
         angle: string;
+        card?: {
+          oneLiner: string;
+          hook?: string;
+          contentStructure?: string[];
+          materialBasis?: string;
+          riskNote?: string;
+          proposal?: string;
+        };
         sourceReferences?: Array<{
           kind: "original_video" | "source_page";
           platform: string;
@@ -575,6 +583,7 @@ function nextActionFor(errorCode: string | null) {
     return "login";
   }
   if (errorCode === "MODEL_NOT_CONFIGURED") return "configure_model";
+  if (errorCode === "FOLDER_MISSING") return "edit";
   return errorCode ? "retry" : "none";
 }
 
@@ -1454,7 +1463,10 @@ export function createIntelligenceService(
         `来源当前为 ${source.status}，不能开始同步`,
       );
     }
-    const active = await db
+    // APP 退出时来源任务可能停在 running；租约过期后若不先恢复，run 表仍会
+    // 永久保持 active，页面只能一直转圈且所有后续点击都被冲突闸拦住。
+    await deps.tasks.recoverExpiredLeases();
+    let active = await db
       .select()
       .from(intelligenceSyncRuns)
       .where(
@@ -1465,11 +1477,70 @@ export function createIntelligenceService(
       )
       .limit(1);
     if (active[0]) {
-      if (input.trigger === "initial") {
+      const task = await deps.tasks.get(ctx, active[0].executionTaskId);
+      if (
+        task.status === "failed" ||
+        task.status === "cancelled" ||
+        task.status === "blocked" ||
+        task.status === "succeeded"
+      ) {
+        const runStatus =
+          task.status === "blocked"
+            ? "blocked"
+            : task.status === "succeeded"
+              ? "succeeded_no_change"
+              : "failed";
+        const errorCode =
+          task.status === "blocked" &&
+          (task.errorCode === "LOGIN_REQUIRED" ||
+            task.errorCode === "CAPTCHA")
+            ? task.errorCode
+            : null;
+        await db
+          .update(intelligenceSyncRuns)
+          .set({
+            status: runStatus,
+            finishedAt: now(),
+            failedCount:
+              runStatus === "failed"
+                ? Math.max(1, active[0].failedCount)
+                : active[0].failedCount,
+            errorCode,
+            errorSummary:
+              task.status === "cancelled"
+                ? "execution task cancelled"
+                : task.status === "failed"
+                  ? "execution task failed"
+                  : task.status === "blocked"
+                    ? "execution task blocked"
+                    : null,
+            nextAction:
+              runStatus === "failed"
+                ? "retry"
+                : nextActionFor(errorCode),
+            updatedAt: now(),
+          })
+          .where(
+            and(
+              eq(intelligenceSyncRuns.id, active[0].id),
+              inArray(intelligenceSyncRuns.status, ["queued", "running"]),
+            ),
+          );
+        active = [];
+      }
+    }
+    if (active[0]) {
+      const task = await deps.tasks.get(ctx, active[0].executionTaskId);
+      // queued 既可能是首次同步，也可能是本次刚恢复的过期租约。复用同一
+      // run/task 交给装配层立即重新驱动，避免制造第二条任务或返回永久 409。
+      if (task.status === "queued") {
         return {
           run: toRun(active[0]),
-          task: await deps.tasks.get(ctx, active[0].executionTaskId),
+          task,
         };
+      }
+      if (input.trigger === "initial" && task.status === "running") {
+        return { run: toRun(active[0]), task };
       }
       throw new IntelligenceConflictError("该来源已有排队或运行中的同步");
     }
@@ -1517,9 +1588,18 @@ export function createIntelligenceService(
         createdAt: stamp,
         updatedAt: stamp,
       })
+      // manual/schedule 并发可能都复用了 active-owner 栅栏返回的同一个 task；
+      // executionTaskId 唯一索引决定唯一赢家，失败方随后回读同一 run。
+      .onConflictDoNothing()
       .returning();
-    if (!run) throw new Error("failed to create intelligence run");
-    return { run: toRun(run), task };
+    if (run) return { run: toRun(run), task };
+    const [racedRun] = await db
+      .select()
+      .from(intelligenceSyncRuns)
+      .where(eq(intelligenceSyncRuns.executionTaskId, task.id))
+      .limit(1);
+    if (!racedRun) throw new Error("failed to create intelligence run");
+    return { run: toRun(racedRun), task };
   }
 
   const service = {
@@ -3397,9 +3477,40 @@ export function createIntelligenceService(
         }
       }
       const sourceItem = await requireItem(ctx, transform.itemId);
+      const preview = transform.outputSnapshot as {
+        hook?: unknown;
+        structureSteps?: unknown;
+        factRisks?: unknown;
+      };
+      const structureSteps = Array.isArray(preview.structureSteps)
+        ? preview.structureSteps.filter(
+            (step): step is string =>
+              typeof step === "string" && step.trim().length > 0,
+          )
+        : [];
+      const factRisks = Array.isArray(preview.factRisks)
+        ? preview.factRisks.filter(
+            (risk): risk is string =>
+              typeof risk === "string" && risk.trim().length > 0,
+          )
+        : [];
       const topic = await deps.topics.create(ctx, {
         title: candidate.title,
         angle: `${candidate.angle}\n差异化：${candidate.differentiation}\n来源：${candidate.sourceSummary}`,
+        card: {
+          oneLiner: candidate.title,
+          ...(typeof preview.hook === "string" && preview.hook.trim()
+            ? { hook: preview.hook }
+            : {}),
+          ...(structureSteps.length > 0
+            ? { contentStructure: structureSteps }
+            : {}),
+          materialBasis: candidate.sourceSummary,
+          ...(factRisks.length > 0
+            ? { riskNote: factRisks.join("；") }
+            : {}),
+          proposal: `差异化切法：${candidate.differentiation}`,
+        },
         sourceReferences: [
           {
             kind:

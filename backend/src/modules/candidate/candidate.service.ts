@@ -178,6 +178,9 @@ export interface CreateCandidateInput {
   // [T-482] intelligence 确认选题时透传的原视频/原页面来源。内部 service seam，
   // 公共手动 candidates.create 不开放任意来源注入。
   sourceReferences?: CandidateResource["card"]["sourceReferences"];
+  // [T-546] 内容雷达已经生成的结构化候选必须与 Candidate 同次落库，避免先建空卡、
+  // 再 patch 失败后在选题中心只剩标题和来源。公共 candidates.create 仍不开放此字段。
+  card?: Partial<CandidateResource["card"]>;
 }
 
 export interface PatchCandidateInput {
@@ -463,6 +466,12 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       assertCandidateTitle(input.title);
       const repo = repoFor(ctx, "candidate.createCandidate");
       const angle = input.angle ?? "";
+      const card = pickCardFields({
+        ...(input.card ?? {}),
+        ...(input.sourceReferences && input.sourceReferences.length > 0
+          ? { sourceReferences: input.sourceReferences }
+          : {}),
+      });
       const positioningFit = await fitFor(ctx, {
         title: input.title,
         angle,
@@ -481,10 +490,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         // [T-303] 落库预测分(每日出题器传 adjustedScore;手动新建缺省 null)。
         predictedScore: input.predictedScore ?? null,
         aiTaskId: null,
-        card:
-          input.sourceReferences && input.sourceReferences.length > 0
-            ? { sourceReferences: input.sourceReferences }
-            : undefined,
+        card: Object.keys(card).length > 0 ? card : undefined,
       });
       return toCandidateDto(row);
     },

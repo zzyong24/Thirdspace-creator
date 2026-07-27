@@ -163,9 +163,26 @@ describe("createVideoRenderExecutor", () => {
   it("[T-546] 图片 B-roll 按已物化 MIME 直拷，不交给 ffprobe 当视频探测", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const executor = createVideoRenderExecutor(fakeEngine(calls));
+    const screenshotAssetId = "asset-screenshot-without-extension";
+    await fs.writeFile(
+      path.join(sandbox.inputDir, screenshotAssetId),
+      "fake-png",
+    );
+    sandbox = {
+      ...sandbox,
+      inputs: [
+        ...sandbox.inputs,
+        {
+          assetId: screenshotAssetId,
+          mountAs: screenshotAssetId,
+          size: 10,
+          mimeType: "image/png",
+        },
+      ],
+    };
     const imageBrollProps = videoRenderProps.parse({
       ...props(),
-      broll: [{ at: 4, file: "shot.png", label: "官网截图" }],
+      broll: [{ at: 4, file: screenshotAssetId, label: "官网截图" }],
       scenes: props().scenes.map((scene) => ({ ...scene, cards: [] })),
     });
 
@@ -180,7 +197,15 @@ describe("createVideoRenderExecutor", () => {
       path.join(sandbox.dir, "work", "index.html"),
       "utf8",
     );
-    expect(html).toContain('src="media/shot.png"');
+    expect(html).toContain(
+      `src="media/${screenshotAssetId}.png"`,
+    );
+    expect(html).toMatch(
+      new RegExp(`<img[^>]+src="media/${screenshotAssetId}\\.png"`),
+    );
+    expect(html).not.toMatch(
+      new RegExp(`<video[^>]+src="media/${screenshotAssetId}\\.png"`),
+    );
   });
 
   it("随包 ffmpeg/ffprobe 缺失 → 先提示重装 CreatorOS，开发态保留安装引导", async () => {

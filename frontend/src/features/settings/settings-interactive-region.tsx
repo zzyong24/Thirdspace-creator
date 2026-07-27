@@ -406,6 +406,9 @@ export function SettingsDialog({
                 <ActivationStatusCard
                   activation={activation}
                   purchaseUrl={channelLinks?.purchaseUrl ?? null}
+                  renewalUrl={channelLinks?.renewalUrl ?? null}
+                  channelSupportUrl={channelLinks?.channelSupportUrl ?? null}
+                  downloadUrl={channelLinks?.downloadUrl ?? null}
                 />
                 {/* [T-459] 软件更新只读官网公开版本源,不再绑定授权状态/白标渠道。 */}
                 <CheckUpdateCard />
@@ -1085,10 +1088,16 @@ function truncateMachineId(machineId: string): string {
 function ActivationStatusCard({
   activation,
   purchaseUrl = null,
+  renewalUrl = null,
+  channelSupportUrl = null,
+  downloadUrl = null,
 }: {
   activation?: ActivationState;
-  /** [T-396b] 渠道购买/续期链接;null = 未激活/渠道未配 → 购买入口整个隐藏(非 disabled)。 */
+  /** T-534：四类商业/交付入口严格分工；null 只表示当前未提供。 */
   purchaseUrl?: string | null;
+  renewalUrl?: string | null;
+  channelSupportUrl?: string | null;
+  downloadUrl?: string | null;
 }) {
   // [T-372 L3] 相对时间基准:挂载后取本机时钟(SSR 首帧 null → 只显绝对日期,无水合漂移)。
   const [nowMs, setNowMs] = React.useState<number | null>(null);
@@ -1282,24 +1291,68 @@ function ActivationStatusCard({
             </span>
           </SettingsFormRow>
         ) : null}
-        {/* [T-396b] 购买 / 续期激活码 → 渠道 purchaseUrl(跟激活码走,Rust 验签落缓存)。
-            null → 整个隐藏(SPEC §7 中性降级操作定义;绝不回退官方链接防泄定价)。
-            用 <a> 而非 client 动作:纯外链跳转,无需 router;激活/续期真流程走 /activate 页(P5)。 */}
-        {purchaseUrl ? (
-          <div className="flex justify-end">
-            <Button asChild variant="outline" size="sm">
-              <a
-                href={purchaseUrl}
-                data-slot="activation-purchase-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <KeyRound aria-hidden="true" className="size-4 shrink-0" />
-                购买 / 续期激活码
-              </a>
-            </Button>
+        <div className="grid gap-2 rounded-md border border-border p-3">
+          <p className="text-xs font-medium text-foreground">渠道服务入口</p>
+          <div className="flex flex-wrap gap-2">
+            {purchaseUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={purchaseUrl}
+                  data-slot="activation-purchase-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <KeyRound aria-hidden="true" className="size-4 shrink-0" />
+                  购买激活码
+                </a>
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                购买：当前未提供
+              </span>
+            )}
+            {renewalUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={renewalUrl}
+                  data-slot="activation-renewal-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  续费
+                </a>
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                续费：当前未提供
+              </span>
+            )}
+            {channelSupportUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={channelSupportUrl}
+                  data-slot="activation-channel-support-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  商业售后
+                </a>
+              </Button>
+            ) : null}
+            {downloadUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={downloadUrl}
+                  data-slot="activation-download-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  渠道下载
+                </a>
+              </Button>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
     </SectionCard>
   );

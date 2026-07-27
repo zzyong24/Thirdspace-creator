@@ -737,6 +737,52 @@ describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账�
     });
   });
 
+  it("[T-546] 热点宝重连走独立 OAuth 端口，不误触普通抖音绑定流程", async () => {
+    const { db } = await createDb();
+    let douyinLoginCalls = 0;
+    let douhotLoginCalls = 0;
+    let ensuredAccounts = 0;
+    const svc = createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-1` },
+      db,
+      douyinFetch: {
+        fetch: async () => [],
+        login: async () => {
+          douyinLoginCalls += 1;
+          return true;
+        },
+        loginDouhot: async (opts) => {
+          douhotLoginCalls += 1;
+          expect(opts?.accountId).toBe(ctx.accountId);
+          return true;
+        },
+        status: async () => true,
+      },
+      platformAccount: {
+        ensureAccount: async () => {
+          ensuredAccounts += 1;
+          return { id: "acct-unexpected" };
+        },
+      },
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+
+    await expect(
+      svc.loginDouyin(ctx, { site: "douhot.douyin.com" }),
+    ).resolves.toEqual({ loggedIn: true });
+    expect(douhotLoginCalls).toBe(1);
+    expect(douyinLoginCalls).toBe(0);
+    expect(ensuredAccounts).toBe(0);
+  });
+
   it("platformAccount 端口未注入 → 仍建源(退化,不破旧组合根)", async () => {
     const { db } = await createDb();
     const svc = loginService(db, true, undefined);

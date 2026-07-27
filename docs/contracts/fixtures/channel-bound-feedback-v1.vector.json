@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "channel-bound-feedback-fixture-v1",
+  "contractVersion": "channel-bound-feedback-v1",
+  "algorithm": "Ed25519",
+  "publicKey": {
+    "kid": "am-license-2026-01",
+    "rawBase64": "11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="
+  },
+  "header": {
+    "alg": "EdDSA",
+    "kid": "am-license-2026-01",
+    "typ": "TS-FEEDBACK-CONTEXT"
+  },
+  "headerJcs": "{\"alg\":\"EdDSA\",\"kid\":\"am-license-2026-01\",\"typ\":\"TS-FEEDBACK-CONTEXT\"}",
+  "payload": {
+    "schemaVersion": "feedback-context-v1",
+    "issuer": "activation-manager",
+    "audience": "thirdspace-growth",
+    "projectKey": "creatoros",
+    "channelRef": "agent-42",
+    "authorizationRefHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorizationVersion": 7,
+    "assertionId": "01K0ABCDEFGHJKMNPQRSTVWXYZ",
+    "issuedAt": "2026-07-26T18:00:00.000Z",
+    "expiresAt": "2026-07-26T18:05:00.000Z"
+  },
+  "payloadJcs": "{\"assertionId\":\"01K0ABCDEFGHJKMNPQRSTVWXYZ\",\"audience\":\"thirdspace-growth\",\"authorizationRefHash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"authorizationVersion\":7,\"channelRef\":\"agent-42\",\"expiresAt\":\"2026-07-26T18:05:00.000Z\",\"issuedAt\":\"2026-07-26T18:00:00.000Z\",\"issuer\":\"activation-manager\",\"projectKey\":\"creatoros\",\"schemaVersion\":\"feedback-context-v1\"}",
+  "signingInput": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFtLWxpY2Vuc2UtMjAyNi0wMSIsInR5cCI6IlRTLUZFRURCQUNLLUNPTlRFWFQifQ.eyJhc3NlcnRpb25JZCI6IjAxSzBBQkNERUZHSEpLTU5QUVJTVFZXWFlaIiwiYXVkaWVuY2UiOiJ0aGlyZHNwYWNlLWdyb3d0aCIsImF1dGhvcml6YXRpb25SZWZIYXNoIjoic2hhMjU2OmFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCJhdXRob3JpemF0aW9uVmVyc2lvbiI6NywiY2hhbm5lbFJlZiI6ImFnZW50LTQyIiwiZXhwaXJlc0F0IjoiMjAyNi0wNy0yNlQxODowNTowMC4wMDBaIiwiaXNzdWVkQXQiOiIyMDI2LTA3LTI2VDE4OjAwOjAwLjAwMFoiLCJpc3N1ZXIiOiJhY3RpdmF0aW9uLW1hbmFnZXIiLCJwcm9qZWN0S2V5IjoiY3JlYXRvcm9zIiwic2NoZW1hVmVyc2lvbiI6ImZlZWRiYWNrLWNvbnRleHQtdjEifQ",
+  "signatureBase64Url": "C7XCYgeVMLXr_LCVGMoh7jzQNS-iVEsTzoTN8FbTbHbnGuv5_nsv9mHlSXfdxVaPNzDsqc59h8v92cV0mEByDQ",
+  "token": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFtLWxpY2Vuc2UtMjAyNi0wMSIsInR5cCI6IlRTLUZFRURCQUNLLUNPTlRFWFQifQ.eyJhc3NlcnRpb25JZCI6IjAxSzBBQkNERUZHSEpLTU5QUVJTVFZXWFlaIiwiYXVkaWVuY2UiOiJ0aGlyZHNwYWNlLWdyb3d0aCIsImF1dGhvcml6YXRpb25SZWZIYXNoIjoic2hhMjU2OmFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCJhdXRob3JpemF0aW9uVmVyc2lvbiI6NywiY2hhbm5lbFJlZiI6ImFnZW50LTQyIiwiZXhwaXJlc0F0IjoiMjAyNi0wNy0yNlQxODowNTowMC4wMDBaIiwiaXNzdWVkQXQiOiIyMDI2LTA3LTI2VDE4OjAwOjAwLjAwMFoiLCJpc3N1ZXIiOiJhY3RpdmF0aW9uLW1hbmFnZXIiLCJwcm9qZWN0S2V5IjoiY3JlYXRvcm9zIiwic2NoZW1hVmVyc2lvbiI6ImZlZWRiYWNrLWNvbnRleHQtdjEifQ.C7XCYgeVMLXr_LCVGMoh7jzQNS-iVEsTzoTN8FbTbHbnGuv5_nsv9mHlSXfdxVaPNzDsqc59h8v92cV0mEByDQ",
+  "tokenSha256": "sha256:9c3d6fa7a14877848cabbcbaba76e85309d027dcdf6a9d6c44b81aff23f94e68",
+  "negativeCases": [
+    {
+      "id": "tampered-channel-ref",
+      "mutation": "payload.channelRef=evil without resign",
+      "expectedCode": "FEEDBACK_CONTEXT_INVALID"
+    },
+    {
+      "id": "unknown-kid",
+      "mutation": "header.kid=unknown without resign",
+      "expectedCode": "FEEDBACK_CONTEXT_INVALID"
+    },
+    {
+      "id": "expired-at-boundary",
+      "clock": "2026-07-26T18:05:30.000Z",
+      "expectedCode": "FEEDBACK_CONTEXT_EXPIRED"
+    },
+    {
+      "id": "padded-segment",
+      "mutation": "append = padding to any compact segment",
+      "expectedCode": "FEEDBACK_CONTEXT_INVALID"
+    },
+    {
+      "id": "stale-authorization-version",
+      "introspectionAuthorizationVersion": 8,
+      "expectedCode": "FEEDBACK_CONTEXT_STALE"
+    }
+  ]
+}

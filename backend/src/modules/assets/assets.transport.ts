@@ -256,7 +256,9 @@ export function createAssetsTransport(
             meta: {
               requestId: ctx.requestId,
               page: 1,
-              pageSize: rows.length,
+              // listEnvelope 要求 pageSize > 0；空用料链的 total 可以为 0，但分页容量不能
+              // 跟结果条数一起变成 0，否则客户端在创建第一条项目关联之前就会校验失败。
+              pageSize: Math.max(rows.length, 1),
               total: rows.length,
             },
           };

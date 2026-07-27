@@ -250,8 +250,8 @@ const CATEGORY_LABEL: Record<string, string> = {
  *                     全量统计),并在 VM 上回传 `activeTag` 供页面渲染
  *                     「清除筛选」。
  * @param options.page [T-118b/T-119] `?page=` 的 1-based 页码(缺省 1)。「最近
- *                     更新」= 知识卡 + validated 经验条目混排,按 updatedAt 正序
- *                     ([T-211] 最早在前),10 条/页;`recent` 为该页切片,VM 回传
+ *                     更新」= 知识卡 + validated 经验条目混排,按写入时间倒序
+ *                     ([T-547] 最新在前),10 条/页;`recent` 为该页切片,VM 回传
  *                     recentPage / recentTotalPages / recentTotal。
  */
 export async function buildKnowledgeDashboardViewModel(
@@ -335,8 +335,8 @@ export async function buildKnowledgeDashboardViewModel(
   const experienceRows =
     activeTag === null ? await fetchValidatedLearnings(client) : [];
 
-  // [T-118b/T-119] 「最近更新」混排 + 分页:知识卡行 + 经验行按 updatedAt 正序
-  // ([T-211] 最早在前)合流,10 条/页;recent = 当前页切片。经验行只在默认视图混排,
+  // [T-118b/T-119] 「最近更新」混排 + 分页:知识卡按 createdAt、经验按
+  // updatedAt 倒序([T-547] 最新在前)合流,10 条/页;recent = 当前页切片。经验行只在默认视图混排,
   // 标签筛选视图仍是纯知识卡列表(不分页,保持 KNOW-13 语义)。
   const knowledgeRows = buildRecentRowsFromItems(recentItems);
   const mergedRecent =
@@ -380,6 +380,7 @@ export async function buildKnowledgeDashboardViewModel(
         assetId: item.assetId ?? null,
         knowledgeType: item.knowledgeType,
         status: item.status,
+        createdAt: item.createdAt,
         updatedAt: item.updatedAt,
       })),
     },
@@ -442,7 +443,7 @@ async function fetchValidatedLearnings(
 
 /**
  * [T-118b] 混排知识卡行 + 经验行:经验行映射成 KnowledgeRow(origin="experience",
- * type 固定「经验」chip,携只读 experienceDetail),与知识卡按 updatedAt 正序合流([T-211])。
+ * type 固定「经验」chip,携只读 experienceDetail),与知识卡按写入时间倒序合流([T-547])。
  * 经验行无 taxonomy 标签 → tags 空;status 固定 active(仅用于行样式,经验恒生效)。
  */
 function mergeRecentRows(
@@ -454,16 +455,21 @@ function mergeRecentRows(
     title: row.title,
     type: "经验",
     updatedAt: row.updatedAt.slice(0, 10),
+    sortTimestamp: row.updatedAt,
     status: "active",
     tags: [],
     origin: "experience",
     experienceDetail: { insight: row.insight, reviewId: row.reviewId },
   }));
-  // [T-211] 正序:知识库列表按时间升序(最早在前),预设课程/章节按自然序(第 1 节
-  // 在前)。原为倒序(b vs a,最新在前),用户要求改正序。
+  // [T-547] 知识库统一按写入时间倒序；预设课程章节顺序留给课程专属视图。
   return [...knowledgeRows, ...experienceAsRows]
     .slice()
-    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+    .sort(
+      (a, b) =>
+        (b.sortTimestamp ?? b.updatedAt).localeCompare(
+          a.sortTimestamp ?? a.updatedAt,
+        ) || b.id.localeCompare(a.id),
+    );
 }
 
 /**

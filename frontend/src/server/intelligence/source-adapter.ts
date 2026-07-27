@@ -177,7 +177,9 @@ function failure(
 ): AdapterEnvelope {
   return {
     adapterStatus:
-      errorCode === "LOGIN_REQUIRED" || errorCode === "CAPTCHA"
+      errorCode === "LOGIN_REQUIRED" ||
+      errorCode === "LOGIN_WALL" ||
+      errorCode === "CAPTCHA"
         ? "blocked"
         : "failed",
     upstreamEvidence: {
@@ -191,6 +193,42 @@ function failure(
     errorCode,
     safeDiagnostics: {},
   };
+}
+
+const WEB_FAILURE_CODES = new Set([
+  "LOGIN_REQUIRED",
+  "LOGIN_WALL",
+  "UNSAFE_URL",
+  "HTTP_ERROR",
+  "EMPTY_BODY",
+  "PARSE_FAILED",
+  "RESPONSE_TOO_LARGE",
+  "TIMEOUT",
+]);
+
+/** 浏览器层异常只投影稳定分类；message 可能含 URL/query，禁止进运行记录。 */
+function webFailureCode(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const record = error as {
+    name?: unknown;
+    code?: unknown;
+    status?: unknown;
+  };
+  if (
+    typeof record.code === "string" &&
+    WEB_FAILURE_CODES.has(record.code)
+  ) {
+    return record.code;
+  }
+  if (record.name === "WebReaderLoginRequiredError") return "LOGIN_WALL";
+  if (
+    record.name === "WebCaptureError" &&
+    typeof record.status === "number" &&
+    record.status >= 400
+  ) {
+    return "HTTP_ERROR";
+  }
+  return null;
 }
 
 function profileItems(source: SourceInput["source"], rows: ProfileWork[]) {
@@ -358,7 +396,21 @@ export function createIntelligenceSourceAdapter(
           );
         }
         case "web": {
-          const read = await deps.readWeb({ ctx, url: input.config.url });
+          let read: ReadWebResult;
+          try {
+            read = await deps.readWeb({ ctx, url: input.config.url });
+          } catch (error) {
+            const code = webFailureCode(error);
+            if (code) {
+              return failure(
+                "web",
+                capturedAt,
+                code,
+                `web-error:${code.toLowerCase()}`,
+              );
+            }
+            throw error;
+          }
           if (!read.text.trim()) {
             return failure("web", capturedAt, "EMPTY_BODY", "readable-empty");
           }
@@ -392,10 +444,20 @@ export function createIntelligenceSourceAdapter(
           if (!/<(?:rss|feed)\b/i.test(fetched.xml)) {
             return failure("rss", capturedAt, "INVALID_FEED", "xml-not-feed");
           }
-          const rows = deps.parseFeed(
-            fetched.xml,
-            new URL(fetched.finalUrl).hostname,
-          );
+          let rows: FeedItem[];
+          try {
+            rows = deps.parseFeed(
+              fetched.xml,
+              new URL(fetched.finalUrl).hostname,
+            );
+          } catch {
+            return failure(
+              "rss",
+              capturedAt,
+              "PARSE_FAILED",
+              "feed-parse-failed",
+            );
+          }
           const items = rows.map(
             (row): AdapterItem => {
               const title = safeTitle(row.title, row.url);

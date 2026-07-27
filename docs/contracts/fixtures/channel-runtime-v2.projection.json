@@ -1,0 +1,49 @@
+{
+  "channelConfig": {
+    "schemaVersion": "channel-runtime-v2",
+    "contractVersion": "growth-channel-runtime-v1",
+    "projectKey": "creatoros",
+    "channelRef": "agent-42",
+    "snapshotVersion": 17,
+    "sourceDigest": "sha256:338c1c657efd10e78ccfff88833ed60cd1d80ae85c080bb7854fbfb307827883",
+    "source": "thirdspace-growth",
+    "sourceUpdatedAt": "2026-07-26T14:00:00.000Z",
+    "syncedAt": "2026-07-26T14:00:02.000Z",
+    "stale": false,
+    "brandName": "星河工作室",
+    "purchaseUrl": "https://growth.example.com/buy?channel=agent-42#plans",
+    "renewalUrl": null,
+    "channelSupportUrl": "https://agent.example.com/support?product=creatoros#help",
+    "bugFeedbackUrl": "https://growth.example.com/creatoros/feedback?source=desktop#form",
+    "downloadUrl": "https://downloads.example.com/creatoros?platform=auto#latest",
+    "supportUrl": "https://agent.example.com/support?product=creatoros#help"
+  },
+  "closedKeysSorted": [
+    "brandName",
+    "bugFeedbackUrl",
+    "channelRef",
+    "channelSupportUrl",
+    "contractVersion",
+    "downloadUrl",
+    "projectKey",
+    "purchaseUrl",
+    "renewalUrl",
+    "schemaVersion",
+    "snapshotVersion",
+    "source",
+    "sourceDigest",
+    "sourceUpdatedAt",
+    "stale",
+    "supportUrl",
+    "syncedAt"
+  ],
+  "canonicalUtf8": "{\"brandName\":\"星河工作室\",\"bugFeedbackUrl\":\"https://growth.example.com/creatoros/feedback?source=desktop#form\",\"channelRef\":\"agent-42\",\"channelSupportUrl\":\"https://agent.example.com/support?product=creatoros#help\",\"contractVersion\":\"growth-channel-runtime-v1\",\"downloadUrl\":\"https://downloads.example.com/creatoros?platform=auto#latest\",\"projectKey\":\"creatoros\",\"purchaseUrl\":\"https://growth.example.com/buy?channel=agent-42#plans\",\"renewalUrl\":null,\"schemaVersion\":\"channel-runtime-v2\",\"snapshotVersion\":17,\"source\":\"thirdspace-growth\",\"sourceDigest\":\"sha256:338c1c657efd10e78ccfff88833ed60cd1d80ae85c080bb7854fbfb307827883\",\"sourceUpdatedAt\":\"2026-07-26T14:00:00.000Z\",\"stale\":false,\"supportUrl\":\"https://agent.example.com/support?product=creatoros#help\",\"syncedAt\":\"2026-07-26T14:00:02.000Z\"}",
+  "projectionDigest": "sha256:b9512d1984b7582521b18793563b223fa2020b6bec5c54597eaa0aade8776d6d",
+  "legacyV1": {
+    "brandName": "星河工作室",
+    "purchaseUrl": "https://growth.example.com/buy?channel=agent-42#plans",
+    "supportUrl": "https://agent.example.com/support?product=creatoros#help",
+    "downloadUrl": "https://downloads.example.com/creatoros?platform=auto#latest"
+  },
+  "tombstonePolicy": "growth-channel-runtime-v1 has no active or tombstone field; null means unavailable, not inactive"
+}

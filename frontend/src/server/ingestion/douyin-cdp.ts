@@ -1066,12 +1066,17 @@ export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
 type MetricsResponseHandler = (resp: {
   url(): string;
   json(): Promise<unknown>;
+  text?(): Promise<string>;
+  finished?(): Promise<Error | null>;
 }) => void;
 interface MetricsCapablePage {
   on(event: "response", cb: MetricsResponseHandler): void;
   goto(url: string, opts?: unknown): Promise<unknown>;
   waitForTimeout(ms: number): Promise<void>;
   evaluate<R>(fn: () => R): Promise<R>;
+  /** 真 Playwright Page 均提供；测试窄 fake 可省略，严格模式据可用能力检查。 */
+  url?: () => string;
+  title?: () => Promise<string>;
   keyboard: { press(key: string): Promise<void> };
   mouse: { wheel(deltaX: number, deltaY: number): Promise<void> };
 }
@@ -1371,6 +1376,13 @@ export async function fetchDouyinUserPosts(
     const workJsons: unknown[] = [];
     let decodedListResponseCount = 0;
     let validListResponseCount = 0;
+    let upstreamLoginRejected = false;
+    let matchedListResponseCount = 0;
+    let failedListResponseParseCount = 0;
+    let lastListResponseParseError = "none";
+    let lastListResponseBodyLength = 0;
+    let lastListResponseBodyPrefix = "none";
+    const pendingListResponseParses: Array<Promise<void>> = [];
     const seenIds = new Set<string>();
     let hasMore = true;
     const readHasMore = (j: unknown): boolean | undefined => {
@@ -1379,30 +1391,76 @@ export async function fetchDouyinUserPosts(
       const v = root.has_more ?? data.has_more;
       return typeof v === "boolean" ? v : v == null ? undefined : Boolean(v);
     };
-    page.on("response", async (resp) => {
+    page.on("response", (resp) => {
       const url = resp.url();
       if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
-      try {
-        const j = await resp.json();
-        decodedListResponseCount += 1;
-        workJsons.push(j);
-        const root = (j ?? {}) as Record<string, unknown>;
-        const data = (root.data ?? {}) as Record<string, unknown>;
-        if (
-          Array.isArray(root.aweme_list) ||
-          Array.isArray(root.item_list) ||
-          Array.isArray(data.aweme_list) ||
-          Array.isArray(data.item_list)
-        ) {
-          validListResponseCount += 1;
+      matchedListResponseCount += 1;
+      // 真机单页响应可超过 2MB。response 事件不会等待 async handler；若不显式
+      // 收集并 await，这里仍在下载/解析时主流程就会误判 NO_VALID_RESPONSE/0 条。
+      // 真机上 Playwright 的 response.json() 偶发在 2MB+ 抖音响应上提前
+      // JSON.parse 并抛 SyntaxError；同一 response.text() 能取得完整合法 body。
+      // 因此真 Page 优先完整读取 text 后再解析，窄测试 fake 保留 json 回退。
+      const payload = (async () => {
+        // response 事件在响应头到达时即触发；大 body 必须等 finished，否则部分
+        // Chromium/Playwright 组合会对 text/json 报 SyntaxError 或 body unavailable。
+        if (resp.finished) await resp.finished();
+        if (resp.text) {
+          const body = await resp.text();
+          lastListResponseBodyLength = body.length;
+          lastListResponseBodyPrefix = body
+            .slice(0, 48)
+            .replace(/[^\x20-\x7E]/g, "?");
+          return JSON.parse(body) as unknown;
         }
-        for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
-        const hm = readHasMore(j);
-        if (hm !== undefined) hasMore = hm;
-      } catch {
-        /* 非 JSON 响应,忽略 */
-      }
+        return await resp.json();
+      })();
+      const parse = payload
+        .then((j) => {
+          decodedListResponseCount += 1;
+          workJsons.push(j);
+          const root = (j ?? {}) as Record<string, unknown>;
+          const data = (root.data ?? {}) as Record<string, unknown>;
+          const statusMessage =
+            typeof root.status_msg === "string" ? root.status_msg : "";
+          if (
+            root.status_code === 8 ||
+            /(?:未登录|登录失效|请先登录)/.test(statusMessage)
+          ) {
+            // 本地 Cookie 文件存在不代表抖音服务端仍认可该会话。主页接口明确拒绝
+            // 登录时必须引导重登，不能继续折叠成 NO_VALID_RESPONSE。
+            upstreamLoginRejected = true;
+          }
+          if (
+            Array.isArray(root.aweme_list) ||
+            Array.isArray(root.item_list) ||
+            Array.isArray(data.aweme_list) ||
+            Array.isArray(data.item_list)
+          ) {
+            validListResponseCount += 1;
+          }
+          for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
+          const hm = readHasMore(j);
+          if (hm !== undefined) hasMore = hm;
+        })
+        .catch((error) => {
+          // 非 JSON 响应不是有效作品证据，保持计数为 0。
+          failedListResponseParseCount += 1;
+          lastListResponseParseError =
+            error instanceof Error ? error.name : "UnknownError";
+        });
+      pendingListResponseParses.push(parse);
     });
+    const waitForListResponseEvidence = async () => {
+      // 真机主页的首个 aweme/post 可能在 DOMContentLoaded 后约 8 秒才发出，
+      // 且单个 JSON 可超过 2MB。固定轮询同时覆盖“请求尚未出现”和“已出现但
+      // body 尚未下载/解析”两段，避免按旧 5.5 秒窗口抢先判失败。
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await Promise.allSettled([...pendingListResponseParses]);
+        if (decodedListResponseCount > 0 || upstreamLoginRejected) return;
+        await page.waitForTimeout(500);
+      }
+      await Promise.allSettled([...pendingListResponseParses]);
+    };
 
     const profileUrl = `https://www.douyin.com/user/${encodeURIComponent(opts.secUid)}`;
     await gotoWithRetry(page, profileUrl, {
@@ -1410,10 +1468,21 @@ export async function fetchDouyinUserPosts(
       label: `对标主页(${opts.secUid})`,
     });
     await page.waitForTimeout(3000); // 等首屏 aweme/post XHR
+    await Promise.allSettled([...pendingListResponseParses]);
     if (opts.strictEvidence) {
+      const finalUrl = page.url?.() ?? profileUrl;
+      const title = page.title ? await page.title().catch(() => "") : "";
       const bodyHead = await page
         .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
         .catch(() => "");
+      if (
+        upstreamLoginRejected ||
+        /(?:passport|login|oauth)/i.test(finalUrl) ||
+        /抖音授权|账号登录/.test(title) ||
+        /使用抖音账号登录|请扫码登录|登录后即可查看/.test(bodyHead)
+      ) {
+        throw new DouyinNotLoggedInError();
+      }
       if (bodyHead.includes("验证")) throw new DouyinCaptchaError();
     }
 
@@ -1433,8 +1502,54 @@ export async function fetchDouyinUserPosts(
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // 无新作品兜底,防死循环
     }
+    await waitForListResponseEvidence();
+
+    if (
+      opts.strictEvidence &&
+      decodedListResponseCount === 0 &&
+      matchedListResponseCount > 0 &&
+      failedListResponseParseCount > 0
+    ) {
+      // 抖音主页偶发先返回一个 200 + 空 body，并在页面显示“服务异常”。
+      // 这既不是 0 作品也不是稳定结构变化；同一会话强制重载一次，等待真实
+      // aweme/post body。仍失败才交给 NO_VALID_RESPONSE，避免无限重试。
+      await gotoWithRetry(
+        page,
+        `${profileUrl}?from_tab_name=main&creatoros_retry=1`,
+        {
+          timeoutMs: 60_000,
+          label: `对标主页重试(${opts.secUid})`,
+        },
+      );
+      await page.waitForTimeout(3_000);
+      await page.mouse.wheel(0, 3_000).catch(() => {});
+      await page.waitForTimeout(2_500);
+      await waitForListResponseEvidence();
+      const retryUrl = page.url?.() ?? profileUrl;
+      const retryTitle = page.title
+        ? await page.title().catch(() => "")
+        : "";
+      const retryBody = await page
+        .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+        .catch(() => "");
+      if (
+        upstreamLoginRejected ||
+        /(?:passport|login|oauth)/i.test(retryUrl) ||
+        /抖音授权|账号登录/.test(retryTitle) ||
+        /使用抖音账号登录|请扫码登录|登录后即可查看/.test(retryBody)
+      ) {
+        throw new DouyinNotLoggedInError();
+      }
+    }
 
     if (opts.strictEvidence && decodedListResponseCount === 0) {
+      const finalUrl = page.url?.() ?? profileUrl;
+      console.warn(
+        `[benchmark] no-valid-response matched=${matchedListResponseCount} ` +
+          `parseFailed=${failedListResponseParseCount} parseError=${lastListResponseParseError} ` +
+          `bodyLength=${lastListResponseBodyLength} bodyPrefix=${JSON.stringify(lastListResponseBodyPrefix)} ` +
+          `finalHost=${new URL(finalUrl).hostname}`,
+      );
       throw new DouyinNoValidResponseError();
     }
     if (opts.strictEvidence && validListResponseCount === 0) {

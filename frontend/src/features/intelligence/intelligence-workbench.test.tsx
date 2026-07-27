@@ -3,6 +3,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -12,14 +13,16 @@ import {
   IntelligenceWorkbench,
   clampDetailWidth,
   favoriteFoldersErrorMessage,
+  sourceVerificationErrorMessage,
   type RadarApi,
   type RadarItemDetail,
   type RadarWorkspace,
 } from "./intelligence-workbench";
 
 const refresh = vi.fn();
+const push = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh }),
+  useRouter: () => ({ refresh, push }),
 }));
 
 const workspace: RadarWorkspace = {
@@ -115,6 +118,25 @@ function api(): RadarApi {
     listFavoriteFolders: vi.fn().mockResolvedValue([]),
     createCollection: vi.fn().mockResolvedValue({}),
     createSource: vi.fn().mockResolvedValue({}),
+    updateSource: vi.fn().mockImplementation(async (input) => ({
+      id: input.sourceId,
+      collectionId: null,
+      type: "creator_profile",
+      displayName: "示例博主",
+      canonicalUrl: "https://www.douyin.com/user/sec-example",
+      collector: {
+        accountId: "account-1",
+        accountHandle: "@创作号",
+        platform: "douyin",
+        availability: "active",
+      },
+      monitorEnabled: input.monitorEnabled,
+      syncPolicy: input.syncPolicy,
+      status: "active",
+      lastRunAt: null,
+      nextRunAt: null,
+      version: 2,
+    })),
     importDouyinShare: vi.fn().mockResolvedValue({
       item: detail.item,
       created: true,
@@ -139,6 +161,7 @@ function api(): RadarApi {
       },
       task: { id: "task-1", status: "queued" },
     }),
+    reconnectCollector: vi.fn().mockResolvedValue({ loggedIn: true }),
     listRuns: vi.fn().mockResolvedValue([]),
     getRun: vi.fn().mockResolvedValue({
       run: {
@@ -170,6 +193,7 @@ function api(): RadarApi {
 afterEach(() => {
   cleanup();
   refresh.mockReset();
+  push.mockReset();
 });
 
 describe("T-482 内容雷达工作区", () => {
@@ -291,6 +315,26 @@ describe("T-482 内容雷达工作区", () => {
     ).toContain("占用");
   });
 
+  it("[T-546] 网页来源按安全错误类型给出可执行建议", () => {
+    expect(
+      sourceVerificationErrorMessage("web", { code: "LOGIN_WALL" }),
+    ).toContain("网站登录保管库");
+    expect(
+      sourceVerificationErrorMessage("web", { code: "PARSE_FAILED" }),
+    ).toContain("具体文章");
+    expect(
+      sourceVerificationErrorMessage("rss", { code: "PARSE_FAILED" }),
+    ).toContain("RSS/Atom");
+    expect(
+      sourceVerificationErrorMessage("web", {
+        cause: { code: "TIMEOUT" },
+      }),
+    ).toContain("连接超时");
+    expect(
+      sourceVerificationErrorMessage("web", { code: "UNSAFE_URL" }),
+    ).toContain("公网网页");
+  });
+
   it("[T-520] 业务确认真 0 时显示真实空态，来源弹窗可滚动且选项可换行", async () => {
     const stub = api();
     stub.listFavoriteFolders = vi.fn().mockResolvedValue([]);
@@ -314,13 +358,163 @@ describe("T-482 内容雷达工作区", () => {
       within(dialog).getByRole("button", { name: "我的收藏" }),
     );
     await userEvent.click(
-      within(dialog).getByRole("button", { name: "读取我的收藏夹" }),
+      within(dialog).getByRole("button", { name: "读取并选择收藏夹" }),
     );
 
     expect(
       await screen.findByText("已确认当前账号目前有 0 个收藏夹。"),
     ).toBeInTheDocument();
     expect(screen.queryByText(/登录已失效/)).not.toBeInTheDocument();
+  });
+
+  it("[T-546] 收藏夹列表读取失败时仍可按准确名称指定，失败不伪装成 0", async () => {
+    const stub = api();
+    stub.listFavoriteFolders = vi.fn().mockRejectedValue({
+      code: "DOUYIN_FAVORITES_NETWORK",
+    });
+    stub.createSource = vi.fn().mockResolvedValue({
+      source: {
+        id: "source-favorites",
+        collectionId: "collection-favorites",
+        type: "favorites_folder",
+        displayName: "选题库",
+        canonicalUrl: null,
+        collector: {
+          accountId: "account-1",
+          accountHandle: "@创作号",
+          platform: "douyin",
+          availability: "active",
+        },
+        monitorEnabled: true,
+        syncPolicy: { mode: "scheduled", interval: "daily" },
+        status: "active",
+        lastRunAt: null,
+        nextRunAt: null,
+        version: 1,
+      },
+      run: null,
+      task: null,
+    });
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "我的收藏" }),
+    );
+    const folderName = within(dialog).getByRole("textbox", {
+      name: "收藏夹名称",
+    });
+    await userEvent.type(folderName, "选题库");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "读取并选择收藏夹" }),
+    );
+
+    expect(await screen.findByText(/网络连接失败/)).toBeInTheDocument();
+    expect(folderName).toHaveValue("选题库");
+    expect(screen.queryByText(/有 0 个收藏夹/)).not.toBeInTheDocument();
+
+    await userEvent.click(
+      within(dialog).getByRole("button", {
+        name: "保存并开始首次同步",
+      }),
+    );
+    await waitFor(() =>
+      expect(stub.createSource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "favorites_folder",
+          displayName: "选题库",
+          config: {
+            type: "favorites_folder",
+            collectorAccountId: "account-1",
+            folderId: "选题库",
+          },
+        }),
+      ),
+    );
+  });
+
+  it("[T-546] 读取成功后可选择具体收藏夹并保存稳定 ID 和真实名称", async () => {
+    const stub = api();
+    stub.listFavoriteFolders = vi.fn().mockResolvedValue([
+      { id: "collects-1", name: "选题库", itemCount: 12 },
+      { id: "collects-2", name: "爆款参考", itemCount: 8 },
+    ]);
+    stub.createSource = vi.fn().mockResolvedValue({
+      source: {
+        id: "source-favorites",
+        collectionId: "collection-favorites",
+        type: "favorites_folder",
+        displayName: "爆款参考",
+        canonicalUrl: null,
+        collector: {
+          accountId: "account-1",
+          accountHandle: "@创作号",
+          platform: "douyin",
+          availability: "active",
+        },
+        monitorEnabled: true,
+        syncPolicy: { mode: "scheduled", interval: "daily" },
+        status: "active",
+        lastRunAt: null,
+        nextRunAt: null,
+        version: 1,
+      },
+      run: null,
+      task: null,
+    });
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "我的收藏" }),
+    );
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "读取并选择收藏夹" }),
+    );
+    await userEvent.selectOptions(
+      await within(dialog).findByRole("combobox", { name: "选择收藏夹" }),
+      "collects-2",
+    );
+    expect(
+      within(dialog).getByRole("textbox", { name: "收藏夹名称" }),
+    ).toHaveValue("爆款参考");
+
+    await userEvent.click(
+      within(dialog).getByRole("button", {
+        name: "保存并开始首次同步",
+      }),
+    );
+    await waitFor(() =>
+      expect(stub.createSource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "favorites_folder",
+          displayName: "爆款参考",
+          config: {
+            type: "favorites_folder",
+            collectorAccountId: "account-1",
+            folderId: "collects-2",
+          },
+        }),
+      ),
+    );
   });
 
   it("按定位→雷达→选题边界显示系统分类，评论未知不伪装 0", () => {
@@ -368,7 +562,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(pane).toHaveStyle({ width: "416px" });
   });
 
-  it("[T-514] 来源始终显示文字同步按钮、监控口径和真实运行记录入口", async () => {
+  it("[T-514/T-546] 窄栏来源使用两层紧凑结构，名称不逐字换行且操作完整", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,
@@ -415,7 +609,18 @@ describe("T-482 内容雷达工作区", () => {
     const sync = screen.getByRole("button", { name: "同步 AI 工具" });
     expect(sync).toHaveTextContent("同步");
     expect(sync).not.toHaveClass("opacity-0");
-    expect(screen.getByText(/每日自动 · 尚未同步/)).toBeInTheDocument();
+    const sourceRow = screen.getByTestId("radar-source-row-source-1");
+    expect(sourceRow).toHaveClass("overflow-hidden");
+    expect(within(sourceRow).getByText("AI 工具")).toHaveClass(
+      "truncate",
+      "whitespace-nowrap",
+    );
+    expect(within(sourceRow).getByText("尚未同步")).toHaveClass("truncate");
+    expect(
+      within(sourceRow).getByRole("button", {
+        name: "暂停 AI 工具 的每日自动同步",
+      }),
+    ).toHaveTextContent("自动");
 
     await userEvent.click(
       screen.getByRole("button", { name: "查看 AI 工具 的运行记录" }),
@@ -470,6 +675,253 @@ describe("T-482 内容雷达工作区", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it("[T-546] 页面恢复时重新监听已有 active run，终态后停止转圈并恢复同步按钮", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: "collection-favorites",
+          type: "favorites_folder",
+          displayName: "我的选题收藏",
+          canonicalUrl: null,
+          collector: {
+            accountId: "account-1",
+            accountHandle: "@创作号",
+            platform: "douyin",
+            availability: "active",
+          },
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: "2026-07-24T00:00:00.000Z",
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [
+        {
+          sourceId: "source-1",
+          lastRunId: "run-1",
+          lastRunStatus: "running",
+          blockedCount: 0,
+          lastErrorCode: null,
+          scannedCount: 0,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 0,
+        },
+      ],
+    };
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "正在同步 我的选题收藏" }),
+    ).toBeDisabled();
+    expect(stub.getRun).toHaveBeenCalledWith("run-1");
+    expect(
+      await screen.findByRole("button", { name: "同步 我的选题收藏" }),
+    ).toBeEnabled();
+    expect(await screen.findByText(/同步完成：扫描 13 条/)).toBeInTheDocument();
+  });
+
+  it("[T-546] 登录失效时原地确认并复用采集账号扫码，成功后自动重试来源", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "黑马：智能体",
+          canonicalUrl: null,
+          collector: {
+            accountId: "account-1",
+            accountHandle: "@创作号",
+            platform: "douyin",
+            availability: "active",
+          },
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: "2026-07-24T00:00:00.000Z",
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [
+        {
+          sourceId: "source-1",
+          lastRunId: "run-1",
+          lastRunStatus: "blocked",
+          blockedCount: 1,
+          lastErrorCode: "LOGIN_REQUIRED",
+          scannedCount: 0,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 0,
+        },
+      ],
+    };
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "重新登录 黑马：智能体 的采集账号",
+      }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "重新登录采集账号" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/复用 @创作号 已有的本机登录档案/)).toBeInTheDocument();
+    expect(stub.reconnectCollector).not.toHaveBeenCalled();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "打开热点宝授权" }),
+    );
+    await waitFor(() => {
+      expect(stub.reconnectCollector).toHaveBeenCalledWith({
+        collectorAccountId: "account-1",
+        sourceType: "darkhorse_query",
+      });
+      expect(stub.startRun).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceId: "source-1" }),
+      );
+    });
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("[T-546] 博主来源保存后可暂停每日同步，且保留手动同步", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-creator",
+          collectionId: null,
+          type: "creator_profile",
+          displayName: "示例博主",
+          canonicalUrl: "https://www.douyin.com/user/sec-example",
+          collector: {
+            accountId: "account-1",
+            accountHandle: "@创作号",
+            platform: "douyin",
+            availability: "active",
+          },
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: "2026-07-27T00:00:00.000Z",
+          version: 1,
+        },
+      ],
+    };
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "暂停 示例博主 的每日自动同步",
+      }),
+    );
+    await waitFor(() => {
+      expect(stub.updateSource).toHaveBeenCalledWith({
+        sourceId: "source-creator",
+        monitorEnabled: false,
+        syncPolicy: { mode: "manual" },
+        expectedVersion: 1,
+      });
+    });
+    expect(
+      screen.getByRole("button", { name: "同步 示例博主" }),
+    ).toBeEnabled();
+    expect(
+      await screen.findByText(/仍可手动同步/),
+    ).toBeInTheDocument();
+  });
+
+  it("[T-546] 新增收藏来源遇到登录失效时可复用所选账号原地重新登录", async () => {
+    const stub = api();
+    stub.listCollectors = vi.fn().mockResolvedValue([
+      {
+        accountId: "collector-1",
+        accountHandle: "@采集号",
+        platform: "douyin",
+        availability: "active",
+      },
+    ]);
+    stub.listFavoriteFolders = vi.fn().mockRejectedValue({
+      code: "DOUYIN_FAVORITES_SESSION_EXPIRED",
+      name: "DouyinFavoritesSessionExpiredError",
+    });
+    stub.reconnectCollector = vi.fn().mockResolvedValue({ loggedIn: true });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    await userEvent.click(screen.getByRole("button", { name: "我的收藏" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("采集账号")).toHaveValue("collector-1"),
+    );
+    await userEvent.type(screen.getByLabelText("收藏夹名称"), "选题库");
+    await userEvent.click(
+      screen.getByRole("button", { name: "读取并选择收藏夹" }),
+    );
+
+    expect(
+      await screen.findByText(/抖音收藏登录已失效/),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "重新登录所选采集账号" }),
+    );
+    await waitFor(() => {
+      expect(stub.reconnectCollector).toHaveBeenCalledWith({
+        collectorAccountId: "collector-1",
+        sourceType: "favorites_folder",
+      });
+    });
+    expect(
+      await screen.findByText("登录已恢复，请重新测试来源。"),
+    ).toBeInTheDocument();
+  });
+
   it("逐字稿只有点击“手动转写”后才进入队列", async () => {
     const stub = api();
     render(
@@ -489,6 +941,99 @@ describe("T-482 内容雷达工作区", () => {
       expect.objectContaining({ itemId: "item-1" }),
     );
     expect(await screen.findByText("排队中")).toBeInTheDocument();
+  });
+
+  it("[T-546] 生成选题候选立即显示局部进度并阻止重复创建，完成后回显编辑卡", async () => {
+    const stub = api();
+    const readyDetail: RadarItemDetail = {
+      ...detail,
+      snapshots: [
+        {
+          id: "snapshot-1",
+          title: "真实作品",
+          capturedAt: "2026-07-23T12:00:00.000Z",
+          finalUrl: detail.item.canonicalUrl,
+        },
+      ],
+      transcript: {
+        itemId: detail.item.id,
+        status: "done",
+        text: "完整逐字稿",
+        errorCode: null,
+      },
+    };
+    const pendingTransform: RadarItemDetail["transforms"][number] = {
+      id: "transform-1",
+      status: "candidate",
+      outputSnapshot: null,
+      targetTopicId: null,
+    };
+    const completedDetail: RadarItemDetail = {
+      ...readyDetail,
+      transforms: [
+        {
+          ...pendingTransform,
+          outputSnapshot: {
+            title: "完整候选标题",
+            angle: "真实切入角度",
+            differentiation: "本账号差异化",
+            sourceSummary: "来自逐字稿的真实摘要",
+            hook: "反差开场",
+            structureSteps: ["提出误区", "拆解原因", "给出行动"],
+          },
+        },
+      ],
+    };
+    let finishPreview!: (
+      value: Awaited<ReturnType<RadarApi["previewTopic"]>>,
+    ) => void;
+    stub.previewTopic = vi.fn(
+      () =>
+        new Promise<Awaited<ReturnType<RadarApi["previewTopic"]>>>((resolve) => {
+          finishPreview = resolve;
+        }),
+    );
+    stub.getItem = vi.fn().mockResolvedValue(completedDetail);
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={readyDetail}
+        positioningVersionId="positioning-v1"
+        api={stub}
+      />,
+    );
+
+    const generate = screen.getByRole("button", {
+      name: "生成选题候选",
+    });
+    fireEvent.click(generate);
+    fireEvent.click(generate);
+
+    expect(stub.previewTopic).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByRole("button", {
+        name: "正在生成选题候选",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(/正在结合当前定位和逐字稿生成/),
+    ).toBeInTheDocument();
+
+    finishPreview({
+      transform: {
+        ...pendingTransform,
+        outputSnapshot: null,
+      },
+      task: { id: "task-1", status: "queued" },
+    });
+
+    expect(
+      await screen.findByDisplayValue("完整候选标题"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("反差开场")).toBeInTheDocument();
   });
 
   it("博主主页必须真实预览成功后才能保存并首次同步", async () => {

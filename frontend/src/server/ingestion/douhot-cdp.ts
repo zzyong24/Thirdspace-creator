@@ -131,18 +131,22 @@ interface DouhotPage {
   close(): Promise<void>;
 }
 
-async function openDouhotPage(authDir: string): Promise<DouhotPage> {
+async function openDouhotPage(
+  authDir: string,
+  headless = true,
+): Promise<DouhotPage> {
   const { chromium } = await import("@playwright/test");
   const context = await guardedLaunch(
     authDir,
     () =>
       launchWithBrowser((selection) =>
         chromium.launchPersistentContext(authDir, {
-          headless: true,
+          headless,
           ...selection,
           ...chromiumSandboxOpts(),
           viewport: { width: 1440, height: 1000 },
           args: ["--disable-blink-features=AutomationControlled"],
+          ignoreDefaultArgs: ["--enable-automation"],
         }),
       ),
     { label: "抖音热点宝" },
@@ -164,13 +168,112 @@ export interface FetchDouhotDeps {
   openPage?: (authDir: string) => Promise<DouhotPage>;
 }
 
-async function clickFirstVisible(page: Page, labels: RegExp[]): Promise<void> {
+export interface LoginDouhotOptions {
+  authDir: string;
+  timeoutSec?: number;
+}
+
+export interface LoginDouhotDeps {
+  openPage?: (authDir: string) => Promise<DouhotPage>;
+}
+
+async function clickFirstVisible(
+  page: Page,
+  labels: RegExp[],
+): Promise<boolean> {
   for (const label of labels) {
     const target = page.getByText(label, { exact: false }).first();
     if (await target.isVisible().catch(() => false)) {
-      await target.click().catch(() => {});
-      return;
+      const clicked = await target
+        .click()
+        .then(() => true)
+        .catch(() => false);
+      if (clicked) return true;
     }
+  }
+  return false;
+}
+
+function isDouyinOAuthUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return (
+      url.hostname.toLowerCase() === "open.douyin.com" &&
+      /(?:^|\/)(?:platform\/)?oauth(?:\/|$)/i.test(url.pathname) &&
+      /(?:^|\/)auth(?:\/|$)/i.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function isDouyinAuthorizationPage(page: Page): Promise<boolean> {
+  const currentUrl = page.url();
+  if (
+    /login|passport|verify|captcha/i.test(currentUrl) ||
+    isDouyinOAuthUrl(currentUrl)
+  ) {
+    return true;
+  }
+
+  const title = await page.title().catch(() => "");
+  if (/抖音授权|授权登录|登录.*生活服务热点中心/i.test(title)) {
+    return true;
+  }
+
+  return page
+    .getByText(/使用抖音账号登录(?:\s*生活服务热点中心)?/i, {
+      exact: false,
+    })
+    .first()
+    .isVisible()
+    .catch(() => false);
+}
+
+function isDouhotHome(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return url.hostname.toLowerCase() === "douhot.douyin.com";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * [T-546] 为当前采集账号恢复热点宝 OAuth。
+ *
+ * 与普通抖音扫码共用同一个 account-scoped persistent profile，弹出的只是热点宝自己的
+ * 授权目标。授权完成并回跳 douhot.douyin.com 后才返回成功，调用方随后自动重试来源；
+ * 超时则诚实返回 false，不把已有 sessionid 误当成热点宝已授权。
+ */
+export async function loginDouhot(
+  options: LoginDouhotOptions,
+  deps: LoginDouhotDeps = {},
+): Promise<{ loggedIn: boolean }> {
+  const opened = await (deps.openPage ??
+    ((authDir) => openDouhotPage(authDir, false)))(options.authDir);
+  const { page } = opened;
+  const timeoutSec = options.timeoutSec ?? 300;
+  try {
+    await page
+      .goto(DOUHOT_HOME, {
+        waitUntil: "domcontentloaded",
+        timeout: 60_000,
+      })
+      .catch(() => {});
+
+    for (let elapsed = 0; elapsed < timeoutSec; elapsed += 1) {
+      if (
+        isDouhotHome(page.url()) &&
+        !(await isDouyinAuthorizationPage(page))
+      ) {
+        return { loggedIn: true };
+      }
+      await page.waitForTimeout(1_000);
+    }
+    return { loggedIn: false };
+  } finally {
+    await opened.close().catch(() => {});
   }
 }
 
@@ -228,12 +331,20 @@ export async function fetchDouhotLowFollowerBreakout(
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    if (/login|passport|verify|captcha/i.test(page.url())) {
+    if (await isDouyinAuthorizationPage(page)) {
       throw new DouyinNotLoggedInError();
     }
 
-    await clickFirstVisible(page, [/低粉爆款/, /低粉高赞/]);
-    await clickFirstVisible(page, [/近\s*2\s*天/, /48\s*小时/]);
+    if (!(await clickFirstVisible(page, [/低粉爆款/, /低粉高赞/]))) {
+      throw Object.assign(new Error("热点宝低粉爆款榜单入口不可用"), {
+        name: "DouhotResponseShapeChangedError",
+      });
+    }
+    if (!(await clickFirstVisible(page, [/近\s*2\s*天/, /48\s*小时/]))) {
+      throw Object.assign(new Error("热点宝 48 小时时间窗入口不可用"), {
+        name: "DouhotResponseShapeChangedError",
+      });
+    }
     await fillKeyword(page, options.keyword.trim());
     await page.waitForTimeout(6_000);
     page.off("response", onResponse);

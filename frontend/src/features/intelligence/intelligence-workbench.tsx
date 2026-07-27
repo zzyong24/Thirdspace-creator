@@ -10,6 +10,8 @@ import {
   FileAudio,
   FolderPlus,
   Link2,
+  Pause,
+  Play,
   Plus,
   RefreshCw,
   Search,
@@ -187,6 +189,16 @@ export interface RadarItemDetail {
   }>;
 }
 
+type RadarTopicPreviewStart = {
+  transform: {
+    id: string;
+    status: "candidate" | "confirmed" | "cancelled";
+    outputSnapshot: Record<string, unknown> | null;
+    targetTopicId: string | null;
+  };
+  task: { id: string; status: string };
+};
+
 export interface RadarWorkspace {
   collections: RadarCollection[];
   sources: RadarSource[];
@@ -275,6 +287,12 @@ export interface RadarApi {
     runInitial: boolean;
     idempotencyKey: string;
   }): Promise<CreateSourceResult>;
+  updateSource(input: {
+    sourceId: string;
+    monitorEnabled: boolean;
+    syncPolicy: Record<string, unknown>;
+    expectedVersion: number;
+  }): Promise<RadarSource>;
   importDouyinShare(input: {
     accountId: string;
     collectionId: string | null;
@@ -285,6 +303,10 @@ export interface RadarApi {
     sourceId: string;
     idempotencyKey: string;
   }): Promise<StartRunResult>;
+  reconnectCollector(input: {
+    collectorAccountId: string;
+    sourceType: RadarSource["type"];
+  }): Promise<{ loggedIn: boolean }>;
   listRuns(sourceId: string): Promise<RadarRun[]>;
   getRun(runId: string): Promise<{
     run: RadarRun;
@@ -300,7 +322,7 @@ export interface RadarApi {
     sourceSnapshotId: string;
     positioningVersionId: string;
     idempotencyKey: string;
-  }): Promise<unknown>;
+  }): Promise<RadarTopicPreviewStart>;
   confirmTopic(input: {
     transformId: string;
     editedCandidate: {
@@ -359,6 +381,16 @@ function defaultApi(): RadarApi {
         query: undefined,
         body: input as never,
       }),
+    updateSource: (input) =>
+      client.updateIntelligenceSource({
+        params: { sourceId: input.sourceId },
+        query: undefined,
+        body: {
+          monitorEnabled: input.monitorEnabled,
+          syncPolicy: input.syncPolicy,
+          expectedVersion: input.expectedVersion,
+        },
+      }) as Promise<RadarSource>,
     importDouyinShare: (input) =>
       client.importDouyinShareItem({
         params: undefined,
@@ -374,6 +406,18 @@ function defaultApi(): RadarApi {
           idempotencyKey: input.idempotencyKey,
         },
       }),
+    reconnectCollector: (input) =>
+      client.loginDouyin({
+        params: undefined,
+        query: undefined,
+        body: {
+          accountId: input.collectorAccountId,
+          site:
+            input.sourceType === "darkhorse_query"
+              ? "douhot.douyin.com"
+              : "douyin.com",
+        },
+      }) as Promise<{ loggedIn: boolean }>,
     listRuns: (sourceId) =>
       client.listIntelligenceRuns({
         params: { sourceId },
@@ -479,6 +523,74 @@ export function favoriteFoldersErrorMessage(error: unknown): string {
   }
 }
 
+function structuredErrorSignal(error: unknown): string {
+  const values: string[] = [];
+  const queue: unknown[] = [error];
+  const seen = new Set<unknown>();
+  for (let depth = 0; queue.length > 0 && depth < 8; depth += 1) {
+    const current = queue.shift();
+    if (!current || seen.has(current)) continue;
+    seen.add(current);
+    if (typeof current === "string") {
+      values.push(current);
+      continue;
+    }
+    if (typeof current !== "object") continue;
+    const record = current as Record<string, unknown>;
+    for (const key of ["code", "name", "message"]) {
+      if (typeof record[key] === "string") values.push(record[key]);
+    }
+    for (const key of ["cause", "error", "body", "response"]) {
+      if (record[key]) queue.push(record[key]);
+    }
+  }
+  return values.join(":");
+}
+
+export function sourceVerificationErrorMessage(
+  type: RadarSource["type"],
+  error: unknown,
+): string {
+  if (type === "favorites_folder") return favoriteFoldersErrorMessage(error);
+  const signal = structuredErrorSignal(error);
+  if (type === "creator_profile") {
+    if (/DouyinNoValidResponseError/i.test(signal)) {
+      return "本次没有读到有效作品列表，不能把它判断成 0 条。请重新测试一次。";
+    }
+    if (/DouyinResponseShapeChangedError/i.test(signal)) {
+      return "已打开主页，但作品列表结构发生变化，当前不能给出可信作品数。";
+    }
+    if (/Captcha|验证码|验证/i.test(signal)) {
+      return "抖音要求完成验证码，请处理后再测试；不会把它显示成 0 条。";
+    }
+    if (/NotLoggedIn|LOGIN_REQUIRED|登录/i.test(signal)) {
+      return "当前抖音登录状态不可用，请重新登录后再测试。";
+    }
+    return "主页验证失败：请确认已登录抖音，并输入完整的 /user/… 主页链接。";
+  }
+  if (type === "web" || type === "rss") {
+    if (/LOGIN_WALL|LoginRequired/i.test(signal)) {
+      return "网页要求登录。请先在“设置 → 网站登录保管库”登录该网站，再重新测试。";
+    }
+    if (/UNSAFE_URL|UrlBlocked/i.test(signal)) {
+      return "这个地址不是可安全访问的公网网页，请检查网址后重试。";
+    }
+    if (/TIMEOUT|Timeout/i.test(signal)) {
+      return "网页连接超时，请检查网络或稍后重新测试。";
+    }
+    if (/HTTP_ERROR|HTTP\s*[45]\d\d/i.test(signal)) {
+      return "网页服务器拒绝访问或暂时异常，请确认链接在浏览器中可以正常打开。";
+    }
+    if (/PARSE_FAILED|Parse/i.test(signal)) {
+      return type === "rss"
+        ? "已打开地址，但没有解析到有效 RSS/Atom 内容。"
+        : "已打开网页，但没有读到可监控的真实正文；请换成具体文章或内容页。";
+    }
+    return "来源验证失败：请检查网址、登录状态或页面是否允许读取。";
+  }
+  return "来源验证失败，请检查采集账号和来源配置。";
+}
+
 const DETAIL_WIDTH_KEY = "creatoros:intelligence:detail-width";
 const MIN_DETAIL_WIDTH = 320;
 const MAX_DETAIL_WIDTH = 640;
@@ -539,7 +651,7 @@ function runResultMessage(run: RadarRun): string {
   }
   if (run.status === "blocked") {
     if (run.errorCode === "LOGIN_REQUIRED") {
-      return "同步暂停：登录状态已失效，请重新登录该来源后重试。";
+      return "同步暂停：采集账号登录已失效。请点击「重新登录」扫码，成功后系统会自动重试。";
     }
     if (run.errorCode === "CAPTCHA") {
       return "同步暂停：页面要求完成验证码，请在登录保管库处理后重试。";
@@ -547,6 +659,9 @@ function runResultMessage(run: RadarRun): string {
     return `同步暂停：${run.errorCode ?? "来源需要处理"}。`;
   }
   if (run.status === "failed") {
+    if (run.errorCode === "FOLDER_MISSING") {
+      return "同步失败：当前采集账号中找不到已绑定的收藏夹。请重新添加该收藏来源。";
+    }
     if (run.errorCode === "NO_VALID_RESPONSE") {
       return "同步失败：本次没有取得有效作品列表，未把它误记成 0 条。请稍后重试。";
     }
@@ -607,6 +722,7 @@ export function IntelligenceWorkbench({
   const [detailWidth, setDetailWidth] = React.useState(392);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const [topicGenerating, setTopicGenerating] = React.useState(false);
   const [runningSourceIds, setRunningSourceIds] = React.useState<Set<string>>(
     () =>
       new Set(
@@ -615,9 +731,19 @@ export function IntelligenceWorkbench({
           .map((health) => health.sourceId),
       ),
   );
+  const [updatingMonitorSourceIds, setUpdatingMonitorSourceIds] =
+    React.useState<Set<string>>(() => new Set());
   const [historySource, setHistorySource] = React.useState<RadarSource | null>(
     null,
   );
+  const [reconnectSource, setReconnectSource] =
+    React.useState<RadarSource | null>(null);
+  const [reconnectBusy, setReconnectBusy] = React.useState(false);
+  const [reconnectError, setReconnectError] = React.useState<string | null>(
+    null,
+  );
+  const watchedRunIds = React.useRef<Set<string>>(new Set());
+  const topicGenerationInFlight = React.useRef(false);
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -676,6 +802,8 @@ export function IntelligenceWorkbench({
   const selectItem = React.useCallback(
     async (itemId: string) => {
       setBusy(true);
+      setTopicGenerating(false);
+      topicGenerationInFlight.current = false;
       setNotice(null);
       try {
         setDetail(await api.getItem(itemId));
@@ -739,11 +867,31 @@ export function IntelligenceWorkbench({
         }
         await new Promise((resolve) => setTimeout(resolve, 1_000));
       }
+      setRunningSourceIds((current) => {
+        const next = new Set(current);
+        next.delete(sourceId);
+        return next;
+      });
       setNotice("同步仍在后台运行，可打开该来源的“运行记录”查看最新进度。");
       router.refresh();
     },
     [api, router],
   );
+
+  React.useEffect(() => {
+    // 页面重开/刷新后，服务端 workspace 可能仍有 queued/running run。只恢复
+    // spinner 不恢复监听会让按钮永远转圈；这里按 lastRunId 重新挂 watcher。
+    for (const health of workspace.health) {
+      if (
+        health.lastRunId &&
+        isRunActive(health.lastRunStatus) &&
+        !watchedRunIds.current.has(health.lastRunId)
+      ) {
+        watchedRunIds.current.add(health.lastRunId);
+        void watchRun(health.sourceId, health.lastRunId);
+      }
+    }
+  }, [watchRun, workspace.health]);
 
   const runSource = React.useCallback(
     async (sourceId: string) => {
@@ -759,6 +907,7 @@ export function IntelligenceWorkbench({
           idempotencyKey: operationKey("manual-sync"),
         });
         setNotice("已开始同步，完成后作品会自动出现在列表中。");
+        watchedRunIds.current.add(result.run.id);
         void watchRun(sourceId, result.run.id);
       } catch (error) {
         setRunningSourceIds((current) => {
@@ -778,6 +927,77 @@ export function IntelligenceWorkbench({
       }
     },
     [api, runningSourceIds, watchRun, workspace.sources],
+  );
+
+  const reconnectAndRetry = React.useCallback(async () => {
+    const source = reconnectSource;
+    const collectorAccountId = source?.collector?.accountId;
+    if (!source || !collectorAccountId || reconnectBusy) return;
+
+    setReconnectBusy(true);
+    setReconnectError(null);
+    try {
+      const result = await api.reconnectCollector({
+        collectorAccountId,
+        sourceType: source.type,
+      });
+      if (!result.loggedIn) {
+        setReconnectError(
+          source.type === "darkhorse_query"
+            ? "没有检测到热点宝授权成功。请在弹出的 Chrome 窗口完成授权后再试。"
+            : "没有检测到登录成功。请在弹出的 Chrome 窗口完成扫码后再试。",
+        );
+        return;
+      }
+      setReconnectSource(null);
+      setNotice("登录已恢复，正在自动重试该来源…");
+      await runSource(source.id);
+    } catch (error) {
+      setReconnectError(
+        error instanceof Error && error.message
+          ? error.message
+          : "重新登录没有完成，请确认扫码窗口可用后再试。",
+      );
+    } finally {
+      setReconnectBusy(false);
+    }
+  }, [api, reconnectBusy, reconnectSource, runSource]);
+
+  const toggleSourceMonitor = React.useCallback(
+    async (source: RadarSource) => {
+      if (updatingMonitorSourceIds.has(source.id)) return;
+      const monitorEnabled = !source.monitorEnabled;
+      setUpdatingMonitorSourceIds((current) =>
+        new Set(current).add(source.id),
+      );
+      try {
+        await api.updateSource({
+          sourceId: source.id,
+          monitorEnabled,
+          syncPolicy: monitorEnabled
+            ? { mode: "scheduled", interval: "daily" }
+            : { mode: "manual" },
+          expectedVersion: source.version,
+        });
+        setNotice(
+          monitorEnabled
+            ? `已恢复「${source.displayName}」的每日自动同步。`
+            : `已暂停「${source.displayName}」的每日自动同步；仍可手动同步。`,
+        );
+        router.refresh();
+      } catch {
+        setNotice(
+          `未能${monitorEnabled ? "恢复" : "暂停"}「${source.displayName}」的自动同步，请刷新后重试。`,
+        );
+      } finally {
+        setUpdatingMonitorSourceIds((current) => {
+          const next = new Set(current);
+          next.delete(source.id);
+          return next;
+        });
+      }
+    },
+    [api, router, updatingMonitorSourceIds],
   );
 
   const enqueueTranscript = React.useCallback(async () => {
@@ -805,35 +1025,86 @@ export function IntelligenceWorkbench({
   const previewTopic = React.useCallback(async () => {
     const sourceSnapshotId = detail?.snapshots[0]?.id;
     if (!detail || !sourceSnapshotId || !positioningVersionId) return;
+    if (topicGenerationInFlight.current) {
+      setNotice("选题候选正在生成，无需重复点击。");
+      return;
+    }
+    topicGenerationInFlight.current = true;
     setBusy(true);
+    setTopicGenerating(true);
     setNotice(null);
     try {
-      await api.previewTopic({
+      const started = await api.previewTopic({
         itemId: detail.item.id,
         sourceSnapshotId,
         positioningVersionId,
         idempotencyKey: operationKey("topic-preview"),
       });
+      const pendingTransform: RadarItemDetail["transforms"][number] = {
+        id: started.transform.id,
+        status: started.transform.status,
+        outputSnapshot: null,
+        targetTopicId: started.transform.targetTopicId,
+      };
+      setDetail((current) =>
+        current?.item.id === detail.item.id
+          ? {
+              ...current,
+              transforms: [
+                pendingTransform,
+                ...current.transforms.filter(
+                  (transform) => transform.id !== pendingTransform.id,
+                ),
+              ],
+            }
+          : current,
+      );
       setNotice("选题候选正在结合当前定位生成，完成前不会写入选题池。");
-      for (let attempt = 0; attempt < 8; attempt += 1) {
+      let completed = false;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 400));
         const refreshed = await api.getItem(detail.item.id);
         setDetail(refreshed);
-        if (
-          refreshed.transforms.some(
-            (transform) => transform.outputSnapshot !== null,
-          )
-        ) {
+        const currentTransform = refreshed.transforms.find(
+          (transform) => transform.id === started.transform.id,
+        );
+        if (currentTransform?.outputSnapshot) {
+          completed = true;
           setNotice("选题候选已生成，请检查后确认写入选题池。");
           break;
         }
       }
+      if (!completed) {
+        setNotice(
+          "生成任务仍在后台执行。当前作品会保留“生成中”状态，可稍后刷新结果；无需再次生成。",
+        );
+      }
     } catch {
       setNotice("选题候选生成失败，请检查定位版本和来源快照后重试。");
     } finally {
+      topicGenerationInFlight.current = false;
+      setTopicGenerating(false);
       setBusy(false);
     }
   }, [api, detail, positioningVersionId]);
+
+  const refreshTopicResult = React.useCallback(async () => {
+    if (!detail || busy) return;
+    setBusy(true);
+    try {
+      const refreshed = await api.getItem(detail.item.id);
+      setDetail(refreshed);
+      setNotice(
+        refreshed.transforms[0]?.outputSnapshot
+          ? "选题候选已生成，请检查后确认写入选题池。"
+          : "候选仍在后台生成，请稍后再刷新；无需重新创建。",
+      );
+    } catch {
+      setNotice("暂时无法刷新候选状态，请稍后重试。");
+    } finally {
+      setBusy(false);
+    }
+  }, [api, busy, detail]);
 
   const confirmTopic = React.useCallback(
     async (
@@ -936,6 +1207,63 @@ export function IntelligenceWorkbench({
         onClose={() => setHistorySource(null)}
       />
 
+      <Dialog
+        open={reconnectSource !== null}
+        onOpenChange={(open) => {
+          if (!open && !reconnectBusy) {
+            setReconnectSource(null);
+            setReconnectError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>重新登录采集账号</DialogTitle>
+            <DialogDescription>
+              {`复用 ${reconnectSource?.collector?.accountHandle ?? "当前采集账号"} 已有的本机登录档案与 Cookie。系统会打开${
+                reconnectSource?.type === "darkhorse_query"
+                  ? "热点宝授权"
+                  : "扫码"
+              }窗口，不会新建重复账号；登录成功后会自动重试「${reconnectSource?.displayName ?? ""}」。`}
+            </DialogDescription>
+          </DialogHeader>
+          {reconnectError ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger"
+            >
+              {reconnectError}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={reconnectBusy}
+              onClick={() => {
+                setReconnectSource(null);
+                setReconnectError(null);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              disabled={reconnectBusy}
+              onClick={() => void reconnectAndRetry()}
+            >
+              {reconnectBusy
+                ? reconnectSource?.type === "darkhorse_query"
+                  ? "等待授权…"
+                  : "等待扫码…"
+                : reconnectSource?.type === "darkhorse_query"
+                  ? "打开热点宝授权"
+                  : "打开扫码窗口"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {notice ? (
         <div
           role="status"
@@ -1024,11 +1352,17 @@ export function IntelligenceWorkbench({
                       )}
                       active={selectedSourceId === source.id}
                       syncing={runningSourceIds.has(source.id)}
+                      monitorUpdating={updatingMonitorSourceIds.has(source.id)}
                       onSelect={() => {
                         setSelectedCollectionId(collection.id);
                         setSelectedSourceId(source.id);
                       }}
                       onRun={() => runSource(source.id)}
+                      onToggleMonitor={() => void toggleSourceMonitor(source)}
+                      onReconnect={() => {
+                        setReconnectError(null);
+                        setReconnectSource(source);
+                      }}
                       onShowRuns={() => setHistorySource(source)}
                     />
                   ))}
@@ -1052,11 +1386,17 @@ export function IntelligenceWorkbench({
                   )}
                   active={selectedSourceId === source.id}
                   syncing={runningSourceIds.has(source.id)}
+                  monitorUpdating={updatingMonitorSourceIds.has(source.id)}
                   onSelect={() => {
                     setSelectedCollectionId(null);
                     setSelectedSourceId(source.id);
                   }}
                   onRun={() => runSource(source.id)}
+                  onToggleMonitor={() => void toggleSourceMonitor(source)}
+                  onReconnect={() => {
+                    setReconnectError(null);
+                    setReconnectSource(source);
+                  }}
                   onShowRuns={() => setHistorySource(source)}
                 />
               ))}
@@ -1130,9 +1470,11 @@ export function IntelligenceWorkbench({
               <ItemDetail
                 detail={detail}
                 busy={busy}
+                topicGenerating={topicGenerating}
                 positioningReady={Boolean(positioningVersionId)}
                 onTranscribe={enqueueTranscript}
                 onPreviewTopic={previewTopic}
+                onRefreshTopic={refreshTopicResult}
                 onConfirmTopic={confirmTopic}
               />
             ) : (
@@ -1251,70 +1593,140 @@ function SourceRow({
   health,
   active,
   syncing,
+  monitorUpdating,
   onSelect,
   onRun,
+  onToggleMonitor,
+  onReconnect,
   onShowRuns,
 }: {
   source: RadarSource;
   health?: RadarWorkspace["health"][number];
   active: boolean;
   syncing: boolean;
+  monitorUpdating: boolean;
   onSelect: () => void;
   onRun: () => void;
+  onToggleMonitor: () => void;
+  onReconnect: () => void;
   onShowRuns: () => void;
 }) {
   const currentStatus = syncing ? "running" : (health?.lastRunStatus ?? null);
+  const loginExpired = health?.lastErrorCode === "LOGIN_REQUIRED";
+  const statusLabel = runStatusLabel(currentStatus);
+  const collectorLabel = source.collector
+    ? `用 ${source.collector.accountHandle ?? source.collector.accountId} 采集`
+    : "无需登录账号";
   return (
     <div
+      data-testid={`radar-source-row-${source.id}`}
       className={cn(
-        "ml-4 mt-1 flex items-stretch gap-1 rounded-lg pr-1",
-        active ? "bg-surface shadow-sm" : "hover:bg-muted/70",
+        "ml-3 mr-1 mt-1.5 min-w-0 overflow-hidden rounded-xl border transition",
+        active
+          ? "border-primary/30 bg-surface shadow-sm ring-1 ring-primary/10"
+          : "border-transparent bg-transparent hover:border-border/70 hover:bg-muted/55",
       )}
     >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="min-w-0 flex-1 px-3 py-2 text-left"
-      >
-        <span className="block truncate text-xs font-medium text-foreground">
-          {source.displayName}
-        </span>
-        <span className="mt-0.5 block text-[11px] text-muted-foreground">
-          {sourceTypeLabel(source.type)} ·{" "}
-          {source.monitorEnabled ? "每日自动" : "仅手动"} ·{" "}
-          {runStatusLabel(currentStatus)}
-        </span>
-        {source.collector ? (
-          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-            用{" "}
-            {source.collector.accountHandle ??
-              source.collector.accountId}{" "}
-            采集 → 归当前工作区
+      <div className="flex min-w-0 items-center gap-1.5 p-1.5">
+        <button
+          type="button"
+          onClick={onSelect}
+          className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-left outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          <span
+            className="block truncate whitespace-nowrap text-xs font-semibold text-foreground"
+            title={source.displayName}
+          >
+            {source.displayName}
           </span>
-        ) : null}
-      </button>
-      <Button
-        type="button"
-        aria-label={`查看 ${source.displayName} 的运行记录`}
-        variant="ghost"
-        size="sm"
-        onClick={onShowRuns}
-        className="my-1 h-7 px-2 text-[11px] text-muted-foreground"
-      >
-        记录
-      </Button>
-      <Button
-        type="button"
-        aria-label={`${syncing ? "正在同步" : "同步"} ${source.displayName}`}
-        variant="outline"
-        size="sm"
-        disabled={syncing || source.status !== "active"}
-        onClick={onRun}
-        className="my-1 h-7 shrink-0 gap-1 border-border bg-surface px-2 text-[11px] text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
-      >
-        <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
-        {syncing ? "同步中" : "同步"}
-      </Button>
+          <span className="mt-0.5 flex min-w-0 items-center gap-1 whitespace-nowrap text-[10px] leading-4 text-muted-foreground">
+            <span className="shrink-0">{sourceTypeLabel(source.type)}</span>
+            <span aria-hidden="true" className="opacity-50">
+              ·
+            </span>
+            <span
+              className={cn(
+                "min-w-0 truncate",
+                currentStatus === "failed" && "text-destructive",
+                currentStatus === "blocked" && "text-warning",
+                (currentStatus === "succeeded_with_items" ||
+                  currentStatus === "succeeded_no_change") &&
+                  "text-success",
+              )}
+            >
+              {statusLabel}
+            </span>
+          </span>
+        </button>
+        <Button
+          type="button"
+          aria-label={
+            loginExpired
+              ? `重新登录 ${source.displayName} 的采集账号`
+              : `${syncing ? "正在同步" : "同步"} ${source.displayName}`
+          }
+          variant="outline"
+          size="sm"
+          disabled={syncing || source.status !== "active"}
+          onClick={loginExpired ? onReconnect : onRun}
+          className={cn(
+            "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-[11px] text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
+            loginExpired && "border-warning/40 text-warning",
+          )}
+        >
+          {loginExpired ? (
+            <ShieldCheck className="size-3" />
+          ) : (
+            <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
+          )}
+          {loginExpired ? "登录" : syncing ? "同步中" : "同步"}
+        </Button>
+      </div>
+
+      <div className="flex min-w-0 items-center gap-1 border-t border-border/55 bg-muted/25 px-2 py-1.5">
+        <span
+          className="min-w-0 flex-1 truncate whitespace-nowrap text-[10px] text-muted-foreground"
+          title={`${collectorLabel} → 归当前工作区`}
+        >
+          {collectorLabel}
+        </span>
+        <Button
+          type="button"
+          aria-label={`${source.monitorEnabled ? "暂停" : "恢复"} ${source.displayName} 的每日自动同步`}
+          title={
+            source.monitorEnabled
+              ? "暂停每日自动同步（仍可手动同步）"
+              : "恢复每日自动同步"
+          }
+          variant="ghost"
+          size="sm"
+          disabled={monitorUpdating || source.status !== "active"}
+          onClick={onToggleMonitor}
+          className="h-6 shrink-0 gap-1 whitespace-nowrap px-1.5 text-[10px] text-muted-foreground hover:bg-surface hover:text-foreground"
+        >
+          {source.monitorEnabled ? (
+            <Pause className="size-3" />
+          ) : (
+            <Play className="size-3" />
+          )}
+          {monitorUpdating
+            ? "处理中"
+            : source.monitorEnabled
+              ? "自动"
+              : "手动"}
+        </Button>
+        <Button
+          type="button"
+          aria-label={`查看 ${source.displayName} 的运行记录`}
+          title="查看运行记录"
+          variant="ghost"
+          size="icon"
+          onClick={onShowRuns}
+          className="size-6 shrink-0 text-muted-foreground hover:bg-surface hover:text-foreground"
+        >
+          <Clock3 className="size-3" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -1375,16 +1787,20 @@ function ItemCard({
 function ItemDetail({
   detail,
   busy,
+  topicGenerating,
   positioningReady,
   onTranscribe,
   onPreviewTopic,
+  onRefreshTopic,
   onConfirmTopic,
 }: {
   detail: RadarItemDetail;
   busy: boolean;
+  topicGenerating: boolean;
   positioningReady: boolean;
   onTranscribe: () => void;
   onPreviewTopic: () => void;
+  onRefreshTopic: () => void;
   onConfirmTopic: (
     transformId: string,
     candidate: NonNullable<
@@ -1473,6 +1889,47 @@ function ItemDetail({
               busy={busy}
               onConfirm={onConfirmTopic}
             />
+          ) : topicGenerating ||
+            (latestTransform && latestTransform.outputSnapshot === null) ? (
+            <div
+              role="status"
+              className="mt-3 rounded-xl border border-primary/20 bg-primary/[0.045] p-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <RefreshCw
+                    className={cn(
+                      "size-4",
+                      topicGenerating && "animate-spin",
+                    )}
+                  />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground">
+                    {topicGenerating ? "正在生成候选" : "候选仍在后台生成"}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    正在结合当前定位和逐字稿生成。任务已经创建，请勿重复点击；生成完成后会在这里出现可编辑选题卡。
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={topicGenerating || busy}
+                onClick={onRefreshTopic}
+                className="mt-3 gap-1.5"
+              >
+                <RefreshCw
+                  className={cn(
+                    "size-3.5",
+                    topicGenerating && "animate-spin",
+                  )}
+                />
+                {topicGenerating ? "正在生成选题候选" : "刷新生成结果"}
+              </Button>
+            </div>
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
@@ -1917,6 +2374,7 @@ function AddSourceDialog({
   const [webPreview, setWebPreview] = React.useState<Awaited<
     ReturnType<RadarApi["previewWeb"]>
   > | null>(null);
+  const [favoriteFolderName, setFavoriteFolderName] = React.useState("");
   const [folders, setFolders] = React.useState<
     Awaited<ReturnType<RadarApi["listFavoriteFolders"]>>
   >([]);
@@ -1924,6 +2382,7 @@ function AddSourceDialog({
     null,
   );
   const [error, setError] = React.useState<string | null>(null);
+  const [reconnectNeeded, setReconnectNeeded] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
   const loginSource =
     type === "creator_profile" ||
@@ -1934,6 +2393,7 @@ function AddSourceDialog({
     setProfilePreview(null);
     setWebPreview(null);
     setVerifiedMessage(null);
+    setReconnectNeeded(false);
   }, []);
 
   React.useEffect(() => {
@@ -1983,6 +2443,7 @@ function AddSourceDialog({
         if (type === "favorites_folder") {
           if (!collectorAccountId) throw new Error("collector required");
           setFolders([]);
+          setValue("");
           const rows = await api.listFavoriteFolders({
             accountId,
             collectorAccountId,
@@ -1992,8 +2453,19 @@ function AddSourceDialog({
             setVerifiedMessage("已确认当前账号目前有 0 个收藏夹。");
             return;
           }
-          setValue((current) => current || rows[0]!.id);
-          setVerifiedMessage(`已读取 ${rows.length} 个收藏夹，请选择要监控的一个。`);
+          const requestedName = favoriteFolderName.trim();
+          const matched = requestedName
+            ? rows.find((folder) => folder.name.trim() === requestedName)
+            : rows[0];
+          if (matched) {
+            setValue(matched.id);
+            setFavoriteFolderName(matched.name);
+          }
+          setVerifiedMessage(
+            requestedName && !matched
+              ? `已读取 ${rows.length} 个收藏夹，但未找到「${requestedName}」。可检查名称或从列表选择。`
+              : `已读取 ${rows.length} 个收藏夹，请选择要监控的一个。`,
+          );
           return;
         }
         if (type === "web" || type === "rss") {
@@ -2014,40 +2486,57 @@ function AddSourceDialog({
           );
         }
       } catch (caught) {
-        const message =
-          caught instanceof Error ? `${caught.name}:${caught.message}` : "";
-        setError(
-          type === "creator_profile"
-            ? /DouyinNoValidResponseError/i.test(message)
-              ? "本次没有读到有效作品列表，不能把它判断成 0 条。请稍后再测试一次。"
-              : /DouyinResponseShapeChangedError/i.test(message)
-                ? "已打开主页，但作品列表结构发生变化，当前不能给出可信作品数。"
-                : /Captcha|验证码|验证/i.test(message)
-                  ? "抖音要求完成验证码，请处理后再测试；不会把它显示成 0 条。"
-                  : /NotLoggedIn|登录/i.test(message)
-                    ? "当前抖音登录状态不可用，请重新登录后再测试。"
-                    : "主页验证失败：请确认已登录抖音，并输入完整的 /user/… 主页链接。"
-            : type === "favorites_folder"
-              ? favoriteFoldersErrorMessage(caught)
-              : "来源验证失败：请检查网址、登录状态或页面是否允许读取。",
+        const signal = structuredErrorSignal(caught);
+        setReconnectNeeded(
+          loginSource &&
+            /DOUYIN_FAVORITES_SESSION_EXPIRED|DouyinNotLoggedIn|LOGIN_REQUIRED|LoginRequired/i.test(
+              signal,
+            ),
         );
+        setError(sourceVerificationErrorMessage(type, caught));
       }
     });
   }, [
     accountId,
     api,
     collectorAccountId,
+    favoriteFolderName,
     instruction,
+    loginSource,
     resetVerification,
     type,
     value,
   ]);
+
+  const reconnectCollectorForVerification = React.useCallback(() => {
+    if (!collectorAccountId || pending) return;
+    startTransition(async () => {
+      setError(null);
+      try {
+        const result = await api.reconnectCollector({
+          collectorAccountId,
+          sourceType: type,
+        });
+        if (!result.loggedIn) {
+          setReconnectNeeded(true);
+          setError("重新登录尚未完成，请在打开的窗口中扫码并确认登录。");
+          return;
+        }
+        setReconnectNeeded(false);
+        setVerifiedMessage("登录已恢复，请重新测试来源。");
+      } catch {
+        setReconnectNeeded(true);
+        setError("未能完成重新登录，请确认扫码窗口可用后重试。");
+      }
+    });
+  }, [api, collectorAccountId, pending, type]);
 
   const create = React.useCallback(() => {
     startTransition(async () => {
       setError(null);
       try {
         let config: Record<string, unknown>;
+        let inferredDisplayName = "";
         if (type === "creator_profile") {
           if (!profilePreview) throw new Error("preview required");
           config = {
@@ -2057,13 +2546,15 @@ function AddSourceDialog({
             externalAccountId: profilePreview.externalAccountId,
           };
         } else if (type === "favorites_folder") {
-          if (!folders.some((folder) => folder.id === value)) {
-            throw new Error("folder preview required");
-          }
+          const selectedFolder = folders.find((folder) => folder.id === value);
+          const folderKey = selectedFolder?.id ?? favoriteFolderName.trim();
+          if (!folderKey) throw new Error("folder required");
+          inferredDisplayName =
+            selectedFolder?.name ?? favoriteFolderName.trim();
           config = {
             type,
             collectorAccountId,
-            folderId: value,
+            folderId: folderKey,
           };
         } else if (type === "darkhorse_query") {
           if (!value.trim()) throw new Error("missing keyword");
@@ -2090,7 +2581,9 @@ function AddSourceDialog({
           collectionId: collectionId || null,
           type,
           config,
-          ...(name.trim() ? { displayName: name.trim() } : {}),
+          ...(name.trim() || inferredDisplayName
+            ? { displayName: name.trim() || inferredDisplayName }
+            : {}),
           ...(instruction.trim()
             ? { extractionInstruction: instruction.trim() }
             : {}),
@@ -2101,6 +2594,7 @@ function AddSourceDialog({
         setValue("");
         setName("");
         setInstruction("");
+        setFavoriteFolderName("");
         setFolders([]);
         resetVerification();
         setOpen(false);
@@ -2118,6 +2612,7 @@ function AddSourceDialog({
     api,
     collectionId,
     collectorAccountId,
+    favoriteFolderName,
     monitor,
     name,
     onDone,
@@ -2164,7 +2659,9 @@ function AddSourceDialog({
               onClick={() => {
                 setType(id);
                 setValue("");
+                setFavoriteFolderName("");
                 setError(null);
+                setReconnectNeeded(false);
                 setFolders([]);
                 resetVerification();
               }}
@@ -2188,8 +2685,10 @@ function AddSourceDialog({
               onChange={(event) => {
                 setCollectorAccountId(event.target.value);
                 setValue("");
+                setFavoriteFolderName("");
                 setFolders([]);
                 setError(null);
+                setReconnectNeeded(false);
                 resetVerification();
               }}
               className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground"
@@ -2212,15 +2711,54 @@ function AddSourceDialog({
             </span>
           </label>
         ) : null}
+        {type === "favorites_folder" ? (
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            收藏夹名称
+            <Input
+              aria-label="收藏夹名称"
+              value={favoriteFolderName}
+              onChange={(event) => {
+                const nextName = event.target.value;
+                const selectedFolder = folders.find(
+                  (folder) => folder.id === value,
+                );
+                setFavoriteFolderName(nextName);
+                if (
+                  !selectedFolder ||
+                  selectedFolder.name.trim() !== nextName.trim()
+                ) {
+                  setValue("");
+                }
+                setError(null);
+                setVerifiedMessage(null);
+              }}
+              placeholder="与抖音收藏夹同名，例如：选题库"
+            />
+            <span>
+              可直接输入准确名称；也可以读取所选账号后，从下方列表选择。
+            </span>
+          </label>
+        ) : null}
         {type === "favorites_folder" && folders.length > 0 ? (
           <label className="grid gap-1 text-xs text-muted-foreground">
             选择收藏夹
             <select
               aria-label="选择收藏夹"
               value={value}
-              onChange={(event) => setValue(event.target.value)}
+              onChange={(event) => {
+                const nextId = event.target.value;
+                const selectedFolder = folders.find(
+                  (folder) => folder.id === nextId,
+                );
+                setValue(nextId);
+                if (selectedFolder) {
+                  setFavoriteFolderName(selectedFolder.name);
+                }
+                setError(null);
+              }}
               className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground"
             >
+              <option value="">按上方名称精确匹配</option>
               {folders.map((folder) => (
                 <option key={folder.id} value={folder.id}>
                   {folder.name}
@@ -2261,7 +2799,11 @@ function AddSourceDialog({
           aria-label="来源显示名称"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="显示名称（可选）"
+          placeholder={
+            type === "favorites_folder"
+              ? "来源显示名称（可选，默认使用收藏夹名称）"
+              : "显示名称（可选）"
+          }
         />
         <label className="grid gap-1 text-xs text-muted-foreground">
           放入分类
@@ -2309,7 +2851,7 @@ function AddSourceDialog({
             {pending
               ? "正在验证…"
               : type === "favorites_folder"
-                ? "读取我的收藏夹"
+                ? "读取并选择收藏夹"
                 : "测试来源"}
           </Button>
         )}
@@ -2319,16 +2861,27 @@ function AddSourceDialog({
           </p>
         ) : null}
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        {reconnectNeeded ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending || !collectorAccountId}
+            onClick={reconnectCollectorForVerification}
+          >
+            {pending ? "等待扫码登录…" : "重新登录所选采集账号"}
+          </Button>
+        ) : null}
         <DialogFooter>
           <Button
             type="button"
             disabled={
               pending ||
               (loginSource && !collectorAccountId) ||
-              !value.trim() ||
+              (type === "favorites_folder"
+                ? !value.trim() && !favoriteFolderName.trim()
+                : !value.trim()) ||
               (type === "creator_profile" && !profilePreview) ||
-              ((type === "web" || type === "rss") && !webPreview) ||
-              (type === "favorites_folder" && folders.length === 0)
+              ((type === "web" || type === "rss") && !webPreview)
             }
             onClick={create}
           >

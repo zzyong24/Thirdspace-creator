@@ -1,6 +1,6 @@
 [package]
 name = "creatoros-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "CreatorOS 桌面壳(Tauri v2)—— T-147 P1 底座"
 authors = ["CreatorOS"]
 edition = "2021"
@@ -46,6 +46,11 @@ tauri-plugin-process = "2"
 tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# [T-534] Growth/AM sourceDigest 使用 RFC 8785 JCS；url 仅用于已签名 runtime 的
+# HTTPS/host/userinfo/port/IP/路径净化，query/fragment 原样保留。
+serde_json_canonicalizer = "0.3"
+url = "2"
+unicode-normalization = "0.1"
 # T-147 P2 本地加密 —— master key 存 OS keychain(macOS Keychain / Windows Credential
 # Manager / Linux Secret Service),首启随机生成 32B、后续取出,base64 后经 env
 # `CREATOROS_MASTER_KEY` 注入 sidecar(node 侧 AES-256-GCM 加解密 model key)。

@@ -108,6 +108,88 @@ describe("T-482 内容雷达来源适配器", () => {
     });
   });
 
+  it("[T-546] 网页 HTTP/解析异常落结构化失败，不得退化成 0 条成功或泛化异常", async () => {
+    for (const code of ["HTTP_ERROR", "PARSE_FAILED"] as const) {
+      const adapter = createIntelligenceSourceAdapter({
+        ...deps(),
+        readWeb: async () => {
+          throw Object.assign(new Error("不得持久化的上游细节"), {
+            name: "WebCaptureError",
+            code,
+          });
+        },
+      });
+      const result = await adapter.run(ctx, {
+        source: baseSource,
+        config: { type: "web", url: "https://example.com/article" },
+        extractionInstruction: null,
+        checkpoint: null,
+      });
+
+      expect(result).toMatchObject({
+        adapterStatus: "failed",
+        errorCode: code,
+        items: [],
+        upstreamEvidence: {
+          adapter: "web",
+          listValid: false,
+        },
+        safeDiagnostics: {},
+      });
+      expect(JSON.stringify(result)).not.toContain("上游细节");
+    }
+  });
+
+  it("[T-546] 网页登录墙落 blocked/LOGIN_WALL，不能提示普通稍后重试", async () => {
+    const adapter = createIntelligenceSourceAdapter({
+      ...deps(),
+      readWeb: async () => {
+        throw Object.assign(new Error("登录地址不得落库"), {
+          name: "WebReaderLoginRequiredError",
+          code: "LOGIN_WALL",
+        });
+      },
+    });
+    const result = await adapter.run(ctx, {
+      source: baseSource,
+      config: { type: "web", url: "https://example.com/private" },
+      extractionInstruction: null,
+      checkpoint: null,
+    });
+
+    expect(result).toMatchObject({
+      adapterStatus: "blocked",
+      errorCode: "LOGIN_WALL",
+      items: [],
+      upstreamEvidence: { listValid: false },
+    });
+  });
+
+  it("[T-546] RSS 结构合法但解析器抛错时落 PARSE_FAILED，不得冒充空 Feed", async () => {
+    const adapter = createIntelligenceSourceAdapter({
+      ...deps(),
+      parseFeed: () => {
+        throw new Error("malformed item detail");
+      },
+    });
+    const result = await adapter.run(ctx, {
+      source: { ...baseSource, type: "rss" },
+      config: { type: "rss", url: "https://example.com/feed.xml" },
+      extractionInstruction: null,
+      checkpoint: null,
+    });
+
+    expect(result).toMatchObject({
+      adapterStatus: "failed",
+      errorCode: "PARSE_FAILED",
+      items: [],
+      upstreamEvidence: {
+        adapter: "rss",
+        listValid: false,
+      },
+    });
+  });
+
   it("[T-537] 热点宝使用固化 collector，仍按 48 小时三档规则过滤", async () => {
     let usedCollector: string | null = null;
     const adapter = createIntelligenceSourceAdapter({

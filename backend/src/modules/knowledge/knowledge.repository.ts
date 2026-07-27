@@ -386,7 +386,9 @@ export function createKnowledgeRepository(
             accountVisibility(accountId),
           ),
         )
-        .orderBy(asc(knowledgeItems.createdAt));
+        // [T-547] 知识库是导入/写入型资源：默认最新写入在前；id 作为同毫秒
+        // 稳定次序，避免数据库返回顺序漂移。课程自然章节顺序不再绑架全局列表。
+        .orderBy(desc(knowledgeItems.createdAt), desc(knowledgeItems.id));
       // [T-079a] 列表带战绩投影(一次 grouped 查询,无 N+1)。
       return attachStats(userId, rows);
     },

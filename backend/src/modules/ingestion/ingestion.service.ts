@@ -221,6 +221,9 @@ export interface DouyinFetchPort {
     knownAwemeIds?: Set<string>;
   }): Promise<DouyinFetchResult>;
   login(opts?: { accountId?: string | null }): Promise<boolean>;
+  // [T-546] 热点宝 OAuth 与普通抖音扫码是同账号、同 profile 的不同授权目标。
+  // 可选保持旧组合根兼容；请求热点宝而端口未装配时必须诚实失败。
+  loginDouhot?(opts?: { accountId?: string | null }): Promise<boolean>;
   // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
   status(opts?: { accountId?: string | null }): Promise<boolean>;
   // [T-330] 「绑定新号」staging 四步端口(全部可选,additive;组合根未升级装配时 forceNew
@@ -323,7 +326,10 @@ export interface IngestionService {
   //   (诚实失败)。不传/false = 现行为(重连当前号复用既有 profile)。
   loginDouyin(
     ctx: RequestContext,
-    input?: { forceNew?: boolean },
+    input?: {
+      forceNew?: boolean;
+      site?: "douyin.com" | "douhot.douyin.com";
+    },
   ): Promise<{ loggedIn: boolean }>;
   // 抖音登录态被动探针(T-032a):headless 快查 sessionid cookie(不弹窗),返回是否有效登录。
   // 设置页「账号绑定」徽标读它;false 覆盖「未连接」与「登录态已过期」两态(cookie 失效即 false)。
@@ -990,6 +996,18 @@ export function createIngestionService(args: {
     async loginDouyin(ctx, input) {
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
+      }
+      // [T-546] 热点宝登录只恢复该站 OAuth。它复用当前采集账号的 profile，但不代表
+      // 新绑定账号，也不应触发普通抖音的 ensure account/source 与初始化采集副作用。
+      if (input?.site === "douhot.douyin.com") {
+        if (!douyinFetch.loginDouhot) {
+          throw new Error("热点宝登录端口未配置(douyinFetch.loginDouhot)");
+        }
+        return {
+          loggedIn: await douyinFetch.loginDouhot({
+            accountId: ctx.accountId ?? null,
+          }),
+        };
       }
       // [T-330] 「扫码绑定新抖音号」→ staging 隔离链(见 loginDouyinForceNew)。非 forceNew
       //   (重连当前号)保持现行为:复用 `.auth/douyin/<accountId>`/_default 既有 profile 合理。

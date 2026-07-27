@@ -56,6 +56,11 @@ interface WireExecutionTask {
   errorMessage: string | null;
 }
 
+export type ExecutionTaskUpdate = Pick<
+  WireExecutionTask,
+  "id" | "status" | "adoptedAssetIds"
+>;
+
 /** 字节数 → 人话(B/KB/MB;诚实保留一位小数)。 */
 export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -76,8 +81,17 @@ function kindLabel(mimeType: string | null): string {
 
 export function ExecutionTaskCard({
   taskId: initialTaskId,
+  projectId,
+  onTaskIdChange,
+  onTaskUpdate,
 }: {
   taskId: string;
+  /** 重试新建执行任务时继续保留项目归属，避免新任务脱离制作页恢复查询。 */
+  projectId?: string;
+  /** 卡片内部重试会换 taskId；通知外层一起改跟踪目标。 */
+  onTaskIdChange?: (taskId: string) => void;
+  /** 采纳/丢弃动作的终态回传；外层可立即收口关联，不必等下一轮轮询。 */
+  onTaskUpdate?: (task: ExecutionTaskUpdate) => void;
 }) {
   // 重试会重建任务 —— 卡内部切换跟踪新 taskId。
   const [taskId, setTaskId] = React.useState(initialTaskId);
@@ -152,6 +166,7 @@ export function ExecutionTaskCard({
         body: undefined,
       })) as unknown as WireExecutionTask;
       setTask(t);
+      onTaskUpdate?.(t);
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "采纳失败,请重试",
@@ -159,7 +174,7 @@ export function ExecutionTaskCard({
     } finally {
       setBusy("");
     }
-  }, [taskId]);
+  }, [taskId, onTaskUpdate]);
 
   const discard = React.useCallback(async () => {
     setBusy("discard");
@@ -202,6 +217,7 @@ export function ExecutionTaskCard({
               retryOf: taskId,
             },
           } as never,
+          ...(projectId ? { projectId } : {}),
         },
       })) as unknown as WireExecutionTask;
       setRetryOpen(false);
@@ -209,6 +225,7 @@ export function ExecutionTaskCard({
       setTask(created);
       setLastStep(null);
       setTaskId(created.id);
+      onTaskIdChange?.(created.id);
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "重试失败,请稍后再试",
@@ -216,7 +233,7 @@ export function ExecutionTaskCard({
     } finally {
       setBusy("");
     }
-  }, [task, taskId, retryFeedback]);
+  }, [task, taskId, retryFeedback, projectId, onTaskIdChange]);
 
   const status = task?.status ?? "queued";
   const artifacts = task?.manifest?.artifacts ?? [];

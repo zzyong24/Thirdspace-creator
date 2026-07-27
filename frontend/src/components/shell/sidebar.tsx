@@ -51,7 +51,7 @@ const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
 // [T-530] 渠道品牌名(轻贴牌):左上角品牌字样
 // ---------------------------------------------------------------------------
 //
-// 数据通路:(creator)/layout.tsx(RSC)服务端读 getChannelBrandName() → 经下方
+// 数据通路:(creator)/layout.tsx(RSC)服务端读已验证 channel runtime → 经下方
 // Provider 注入(server → client 单向只读,非全局 store;同款先例 =
 // current-project-context 的 CurrentProjectProvider)。Sidebar 在 client 侧消费。
 // 显示规则:brandName 有效 → 左上角显示品牌名;null/缺失/未激活/官方码 → 官方名
@@ -60,20 +60,34 @@ const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
 
 const OFFICIAL_BRAND_NAME = "CreatorOS";
 
-const SidebarBrandNameContext = React.createContext<string | null>(null);
+interface SidebarChannelRuntimeContextValue {
+  readonly brandName: string | null;
+  readonly bugFeedbackUrl: string | null | undefined;
+}
+
+const SidebarChannelRuntimeContext =
+  React.createContext<SidebarChannelRuntimeContextValue>({
+    brandName: null,
+    // undefined 只用于没有 Provider 的组件测试兼容；正式布局始终传入已验签投影。
+    bugFeedbackUrl: undefined,
+  });
 
 /** [T-530] 品牌名注入口(由 (creator)/layout.tsx 服务端包裹;缺 Provider = 官方名)。 */
 export function SidebarBrandNameProvider({
   brandName,
+  bugFeedbackUrl,
   children,
 }: {
   readonly brandName: string | null;
+  readonly bugFeedbackUrl?: string | null;
   readonly children: React.ReactNode;
 }) {
   return (
-    <SidebarBrandNameContext.Provider value={brandName}>
+    <SidebarChannelRuntimeContext.Provider
+      value={{ brandName, bugFeedbackUrl }}
+    >
       {children}
-    </SidebarBrandNameContext.Provider>
+    </SidebarChannelRuntimeContext.Provider>
   );
 }
 
@@ -186,6 +200,7 @@ export function Sidebar({
   user,
   className,
 }: SidebarProps) {
+  const channelRuntime = React.useContext(SidebarChannelRuntimeContext);
   const activeNavId = findActiveNav(pathname);
   const resolvedUser = resolveUser(user);
   // [T-129] 折叠态。默认展开(SSR/首帧一致,避免 hydration mismatch);挂载后读 localStorage,
@@ -242,7 +257,11 @@ export function Sidebar({
               userDisplayName={resolvedUser.displayName}
             />
           ) : null}
-          <IssueFeedbackDialog pathname={pathname} collapsed={collapsed} />
+          <IssueFeedbackDialog
+            pathname={pathname}
+            collapsed={collapsed}
+            bugFeedbackUrl={channelRuntime.bugFeedbackUrl}
+          />
           {/* [T-136 切片 a] 当前抖音号切换器(多号 = 多独立人设);紧挨用户区上方,
               展开/收拢态都渲染(收拢态只显图标 + tooltip)。 */}
           <AccountSwitcher collapsed={collapsed} />
@@ -276,7 +295,7 @@ function SidebarHeader({
   //
   // [T-530] 品牌字样:渠道配置了 brandName → 显示品牌名;否则官方名「CreatorOS」。
   // 只换这一处左上角文字;activate 页/设置页/窗口标题一律不动。
-  const brandName = React.useContext(SidebarBrandNameContext);
+  const { brandName } = React.useContext(SidebarChannelRuntimeContext);
   const brandDisplayName = resolveBrandDisplayName(brandName);
   return (
     <div

@@ -35,6 +35,7 @@ export class WebReaderLoginRequiredError extends WebCaptureError {
   constructor(domain: string) {
     super(
       `「${domain}」需要先登录才能读到正文。请去设置 → 网站登录保管库登录一次,登好我再读。`,
+      { code: "LOGIN_WALL" },
     );
     this.name = "WebReaderLoginRequiredError";
     this.domain = domain;
@@ -49,13 +50,13 @@ export interface ReadResult {
   /** 跟随重定向后的最终 URL。 */
   finalUrl: string;
   /** 命中的抽取器(chatgpt-share | readability),存证/可观测用。 */
-  extractor: "chatgpt-share" | "readability";
+  extractor: "chatgpt-share" | "readability" | "rendered-text";
   /**
    * [T-237] 抽取路径诊断透出:ssr = 从流式 SSR script JSON 抽全量(不依赖渲染,长对话可信);
    * dom = 渲染后 DOM 兜底(懒渲染场景可能不全);readability = 通用正文抽取。
    * 供上层拼「抽到 N 轮(SSR 全量)/(DOM,可能不全)」给编导如实转述,而非让它猜。
    */
-  extractPath: "ssr" | "dom" | "readability";
+  extractPath: "ssr" | "dom" | "readability" | "rendered-text";
   /** [T-237] ChatGPT 对话抽到的轮次数(user/assistant 各算一轮);非对话页为 null。 */
   turnCount: number | null;
 }
@@ -106,7 +107,9 @@ export interface ReadUrlDeps {
 
 /** UrlBlockedError → WebCaptureError(保持三墙错误分类通路;message 已是人话原样带过)。 */
 function toReaderError(err: unknown): Error {
-  if (err instanceof UrlBlockedError) return new WebCaptureError(err.message);
+  if (err instanceof UrlBlockedError) {
+    return new WebCaptureError(err.message, { code: "UNSAFE_URL" });
+  }
   return err instanceof Error ? err : new Error(String(err));
 }
 
@@ -501,6 +504,7 @@ export async function readUrl(
   if (!/^https?:\/\//i.test(target)) {
     throw new WebCaptureError(
       `页面打不开:只支持 http/https 链接(收到「${target.slice(0, 80)}」)`,
+      { code: "UNSAFE_URL" },
     );
   }
   // [T-326·RT-H04] SSRF 前置守卫:私网/回环/链路本地/云元数据地址在**起浏览器之前**就拒
@@ -535,16 +539,38 @@ export async function readUrl(
       if (signal?.aborted) throw makeAbortError("网页读取");
       throw new WebCaptureError(
         `页面打不开:${err instanceof Error ? err.message : String(err)}`,
+        {
+          code:
+            (err instanceof Error &&
+              (err.name === "TimeoutError" ||
+                /timed?\s*out|timeout|超时/i.test(err.message)))
+              ? "TIMEOUT"
+              : "HTTP_ERROR",
+        },
       );
     }
     if (signal?.aborted) throw makeAbortError("网页读取");
+    // Tencent EdgeOne 等站点会先返回非标准 567 bot challenge，页面脚本写入
+    // 一次性 Cookie 后要求重载。直接按 HTTP 错误退出会让正常公网热榜永远不可用。
+    // 只对 567 做最多两次有界重载；最终仍非 2xx 时继续诚实报 HTTP_ERROR。
+    for (
+      let challengeAttempt = 0;
+      resp?.status() === 567 && challengeAttempt < 2;
+      challengeAttempt += 1
+    ) {
+      await page.waitForTimeout(1_500);
+      resp = await page.goto(page.url() || target, {
+        waitUntil: "domcontentloaded",
+        timeout: NAV_TIMEOUT_MS,
+      });
+    }
     const status = resp ? resp.status() : 0;
     if (status >= 400) {
       // [T-390] 带结构化 status:上层(persistence-client readWebUrl 端口)据此触发多路回退
       // (搜索引擎找同内容替代来源),不解析 message 文本。
       throw new WebCaptureError(
         `页面返回 HTTP ${status}:该链接不可访问(可能已下架或需要权限)`,
-        { status },
+        { status, code: "HTTP_ERROR" },
       );
     }
     const finalUrl = (resp ? resp.url() : "") || page.url();
@@ -648,11 +674,36 @@ export async function readUrl(
         turnCount: null,
       };
     }
+    // [T-546] 热榜、榜单、SPA 首页常由卡片/列表组成，并不是“文章”，Mozilla
+    // Readability 会合法返回 null。页面已经通过 URL/重定向/HTTP/登录墙四层校验时，
+    // 再读取浏览器实际渲染的 body.innerText 作为通用动态页兜底；设最小长度避免把
+    // “加载中”/空壳/错误页伪装成有效来源。这里仍只返回真实可见文本，不由模型补写。
+    const renderedText = await page
+      .evaluate(() =>
+        (document.body?.innerText ?? "")
+          .replace(/\u00a0/g, " ")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .replace(/[ \t]{2,}/g, " ")
+          .trim(),
+      )
+      .catch(() => "");
+    if (typeof renderedText === "string" && renderedText.length >= 120) {
+      return {
+        text: renderedText,
+        title: title || finalUrl,
+        finalUrl,
+        extractor: "rendered-text",
+        extractPath: "rendered-text",
+        turnCount: null,
+      };
+    }
     // [T-239c] 中断关 context 会让上方 content()/evaluate 走 catch 兜底(html 空)最终落到这里
     // —— 如实抛 AbortError,不误报「抽不出正文」。
     if (signal?.aborted) throw makeAbortError("网页读取");
     throw new WebCaptureError(
       "读到页面但抽不出正文(可能是纯交互页/空页)——换一个有正文内容的链接,或用截图存网页样子。",
+      { code: "PARSE_FAILED" },
     );
   } finally {
     signal?.removeEventListener("abort", onAbort);

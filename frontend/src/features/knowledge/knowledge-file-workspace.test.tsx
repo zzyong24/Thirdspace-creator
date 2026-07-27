@@ -43,6 +43,17 @@ const workspace = {
       assetId: "asset-1",
       knowledgeType: "reference",
       status: "active" as const,
+      createdAt: "2026-07-26T10:00:00.000Z",
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "knowledge-older",
+      title: "旧讲义.pdf",
+      folderId: null,
+      assetId: "asset-older",
+      knowledgeType: "reference",
+      status: "active" as const,
+      createdAt: "2026-07-25T10:00:00.000Z",
       updatedAt: new Date().toISOString(),
     },
   ],
@@ -62,6 +73,15 @@ describe("KnowledgeFileWorkspace", () => {
     expect(screen.getByRole("button", { name: /未归档/ })).toBeInTheDocument();
     expect(screen.getByText("讲义.pdf")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "第一章" })).toBeInTheDocument();
+  });
+
+  it("[T-547] 全部文件按导入时间倒序，最新写入排在前面", () => {
+    const { container } = render(<KnowledgeFileWorkspace workspace={workspace} />);
+    const titles = Array.from(
+      container.querySelectorAll("li p:first-child"),
+      (node) => node.textContent,
+    );
+    expect(titles).toEqual(["讲义.pdf", "旧讲义.pdf"]);
   });
 
   it("creates a child folder under the selected folder", async () => {

@@ -5,7 +5,12 @@
 
 ## 发布一个新版本的完整动作
 
-1. **出包**:GitHub Actions `desktop-release` workflow(手动 dispatch 或 push `v*` tag)→ 双端安装包 + `.sig` + `latest.json`(仅内部记录)。产物在 workflow artifact / draft Release,**不对外公开**。
+1. **出包**:先在 GitHub Actions Variables 配置
+   `CREATOROS_FEEDBACK_OFFICIAL_ORIGINS`（逗号分隔的 Growth 正式 HTTPS origin，只写
+   `https://host`）；再运行 `desktop-release` workflow(手动 dispatch 或 push `v*` tag)→
+   双端安装包 + `.sig` + `latest.json`(仅内部记录)。缺少或写成带 path/query/hash 的地址时
+   workflow 必须失败，不能产出可误投反馈的正式包。产物在 workflow artifact / draft Release,
+   **不对外公开**。
 2. **传包到渠道**:把安装包(mac `.dmg` / win `.exe`)手动上传到各渠道自己的飞书云盘/网盘,拿到各渠道的下载页链接(`https://` 链接)。
    - 官方直销渠道(`official`)同样上传一份,拿官方下载链接。
 3. **后台配置**(activation-manager 后台,`https://license.aitongban.cloud`):
@@ -18,6 +23,10 @@
 - **无码/无效码请求 latest-version 只回版本号,downloadUrl=null**(不泄默认渠道);客户端 downloadUrl=null → 显「请联系你的授权方获取新版」,**绝不回退官方链接**。
 - **revoked/过期内测码不提示更新**(T-372 L3「停更新」语义;买断签名撤销 = updatesBlocked 停用检查入口)。
 - **包内官方链接零命中**:发布前跑字符串扫描(`#buy` / `creatoros.aitongban.cloud/#buy`,sidecar + 前端 bundle 双查,SPEC §8-1)。
+- 产品反馈只从已验签 `bugFeedbackUrl` 取 origin，再与包内
+  `CREATOROS_FEEDBACK_OFFICIAL_ORIGINS` 逐字匹配；提交 path 固定
+  `/api/v2/product-feedback`，不接受 redirect。公钥或 allowlist 缺失时反馈发送 fail-closed，
+  复制与本地文字保留仍可用。
 - 检查失败一律人话文案(并入 T-412),`error sending request…` 这类技术报错只进日志。
 
 ## 恢复一键自动更新(可逆开关,后续如需)

@@ -149,7 +149,7 @@ describe("candidate service", () => {
     expect(c.card.productionDifficulty).toBeNull();
   });
 
-  it("[T-482] intelligence 候选持久化原视频来源，后续补全整卡不得抹掉", async () => {
+  it("[T-482/T-546] intelligence 候选一次持久化生成内容与原视频来源，后续补全不得抹掉", async () => {
     const sourceReference = {
       kind: "original_video" as const,
       platform: "douyin",
@@ -161,7 +161,21 @@ describe("candidate service", () => {
       title: "来自内容雷达的选题",
       angle: "换成本账号视角",
       source: "benchmark",
+      card: {
+        oneLiner: "来自内容雷达的选题",
+        hook: "先用结果制造反差",
+        contentStructure: ["反差开场", "拆解原因", "给出行动"],
+        materialBasis: "来自真实视频逐字稿",
+        proposal: "差异化切法：改为本账号实操视角",
+      },
       sourceReferences: [sourceReference],
+    });
+    expect(c.card).toMatchObject({
+      oneLiner: "来自内容雷达的选题",
+      hook: "先用结果制造反差",
+      contentStructure: ["反差开场", "拆解原因", "给出行动"],
+      materialBasis: "来自真实视频逐字稿",
+      proposal: "差异化切法：改为本账号实操视角",
     });
     expect(c.card.sourceReferences).toEqual([sourceReference]);
 

@@ -196,6 +196,9 @@ stages:
       - existing: "docs/superpowers/plans/2026-06-21-service-contract-15a.md (plan)"
       - existing: "docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md (T-471 additive protocol contract)"
       - existing: "docs/superpowers/specs/2026-07-23-content-radar-service-contract.md (T-482 content intelligence contract; confirmed 2026-07-23)"
+      - existing: "docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md (T-534 Creator consumer contract; Round 3 CONCERNS handled)"
+      - existing: "orchestrator/GATE-T534-CONTRACT.md (scope/contract/fixture gates PASS)"
+      - existing: "orchestrator/GATE-T534-BUILD.md (TDD/BUILD/tests/runtime evidence; global next build blocker retained)"
       - existing: "orchestrator/GATE-T471-RETROSPECTIVE.md (retrospective gate; historical TDD fail retained)"
     notes: >
       15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):
@@ -205,6 +208,12 @@ stages:
       15b wired the FE via MockTransport with real Projects mutations. Confirmation still required (contract
       is a confirmation point). REMAINING GOVERNANCE GAP: the 76 routes were NOT assigned stable API-### IDs
       in ID_REGISTRY (DEC-012 chose pragmatic continuation) — tracked as OPEN-004, not silently dropped.
+      T-534 Creator contract completed three independent rounds: Round 1 FAIL fixed, Round 2/3 CONCERNS
+      handled; no blocker remains. Scope budget, contract completeness and Growth/AM fixture drift gates PASS
+      in GATE-T534-CONTRACT.md. Creator consumer BUILD, Rust/TS/contract tests and local HTTP runtime evidence
+      are recorded in GATE-T534-BUILD.md. Global next build remains red only because current HEAD contains
+      T-535's committed instrumentation.ts change and triggers a Turbopack Unicode code-frame panic;
+      T-534 does not claim that release-build gate green.
 
   "16-backend-tdd":
     status: "draft"   # CHANGED from not-started — contradicted by DEC-011 (real code + tests exist)
@@ -442,6 +451,39 @@ stages:
       旧 CONTRACT 的三轮 FAIL 全部保留；DEC-ODR-001 已替换其物理方向，因此该工件 invalidated，
       不再继续补 delegated grant/effect platform。新 PLAN 通过后另建最小 CONTRACT；确认②与
       BUILD 均关闭。
+
+  "T-537-1-plan":
+    status: "blocked"
+    gate: "01-product-gate + independent spec-review + RAT-537-01"
+    gate_status: "fail"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.md"
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-COL-001"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md#T-537-聚焦追踪"
+      - existing: "orchestrator/CHANGE_IMPACT.md#CI-COL-001"
+      - existing: "orchestrator/SCOPE_LEDGER.md"
+    notes: >
+      用户将范围固定为内容雷达 creator_profile、favorites_folder、darkhorse_query 三类来源。
+      owner 继续决定全部业务数据归属，collector 只决定登录态；经营数据、评论、web/rss、分享
+      链接与其他自动化均不新增 selector。Round 3 文档内部 PASS，但第二个有效抖音登录态尚未
+      完成 RAT-537-01，因此正式 PLAN Gate 与整个 BUILD fail closed。
+
+  "T-537-2-contract":
+    status: "blocked"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate + RAT-537-01"
+    gate_status: "fail"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md"
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.review.md"
+      - existing: "orchestrator/ID_REGISTRY.md"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md#T-537-聚焦追踪"
+    notes: >
+      API-537-01..05、迁移、owner/collector 双身份、错误映射、隐私负测与 TEST-537-01..13
+      已完成三轮内部复审。正式 Gate 仍依赖 RAT-537-01；未满足前不确认②、不生成 BUILD
+      manifest，也不实现假 selector。
 
 stage_defaults:
   valid_statuses:

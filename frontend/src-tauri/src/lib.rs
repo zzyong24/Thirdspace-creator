@@ -1547,6 +1547,22 @@ pub fn run() {
             //   外部显式设 env 时始终尊重外部值(排障可临时设 "0" 退弱验签)。
             let strict_verify_str = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
                 .unwrap_or_else(|_| "1".to_string());
+            // [T-538] sidecar 的产品反馈可信出网配置。公钥只用于验证 AM 签名响应，不是秘密；
+            // official origins 由发布环境烘焙，也允许开发/排障时用进程 env 显式覆盖。二者缺失时
+            // 本地 product-feedback service fail-closed，绝不退到任意 bugFeedbackUrl origin。
+            let license_public_key_b64 = license::embedded_pubkey_b64();
+            let feedback_official_origins = std::env::var(
+                "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+            )
+            .ok()
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+            .or_else(|| {
+                option_env!("CREATOROS_FEEDBACK_OFFICIAL_ORIGINS")
+                    .map(|value| value.trim().to_string())
+                    .filter(|value| !value.is_empty())
+            })
+            .unwrap_or_default();
 
             // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
             let license_ctx = std::sync::Arc::new(license::ShellLicenseCtx {
@@ -1698,6 +1714,14 @@ pub fn run() {
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
+                    .env(
+                        "CREATOROS_LICENSE_PUBLIC_KEY_B64",
+                        &license_public_key_b64,
+                    )
+                    .env(
+                        "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+                        &feedback_official_origins,
+                    )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     // [T-391 H-key] master key **不再走 env 明文**;改经 ChildStdin(fd 0)传。
@@ -1827,6 +1851,14 @@ pub fn run() {
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
+                    .env(
+                        "CREATOROS_LICENSE_PUBLIC_KEY_B64",
+                        &license_public_key_b64,
+                    )
+                    .env(
+                        "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+                        &feedback_official_origins,
+                    )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 

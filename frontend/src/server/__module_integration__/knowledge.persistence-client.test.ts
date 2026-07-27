@@ -21,10 +21,10 @@ afterAll(() => {
   else process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH = prevSeedEnv;
 });
 
-// D2 — the 9 knowledge ops are registered into the composite (PERSISTED_OPS) and
+// D2 — all knowledge ops are registered into the composite (PERSISTED_OPS) and
 // a knowledge.create round-trips through compositeTransport against the seeded
 // pglite store. Proves the module is wired into the same store server reads +
-// the /api/v1 route share (foundation §1 registry). The 9 include the two
+// the /api/v1 route share (foundation §1 registry). They include the two
 // GAP-RES-1 soft-delete ops (knowledge.archive, knowledge.relations.delete).
 
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
@@ -43,7 +43,7 @@ beforeEach(() => {
 });
 
 describe("knowledge ops registered in the composite transport", () => {
-  it("the 10 knowledge op ids are persistence-backed (not the mock)", async () => {
+  it("the 13 knowledge op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of KNOWLEDGE_OP_IDS) {
@@ -51,8 +51,8 @@ describe("knowledge ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    // [T-091] +1:knowledge.relations.listAll(图谱全量边读)。
-    expect(KNOWLEDGE_OP_IDS).toHaveLength(10);
+    // [T-519] 文件夹 list/create + move 进入同一真实 transport 后共 13 个。
+    expect(KNOWLEDGE_OP_IDS).toHaveLength(13);
     // The two GAP-RES-1 soft-delete ops are in the owned set.
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.archive");
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.delete");

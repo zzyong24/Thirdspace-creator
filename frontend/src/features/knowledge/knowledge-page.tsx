@@ -128,6 +128,8 @@ export interface KnowledgeRow {
   readonly title: string;
   readonly type: string;
   readonly updatedAt: string;
+  /** 排序使用完整写入时间；updatedAt 继续只承载用户可见日期。 */
+  readonly sortTimestamp?: string;
   readonly status: "active" | "archived" | "draft";
   readonly tags: ReadonlyArray<string>;
   /**

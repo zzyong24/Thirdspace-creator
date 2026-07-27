@@ -1,4 +1,5 @@
 export interface IssueFeedbackInput {
+  readonly summary?: string;
   readonly description: string;
   readonly appVersion: string | null;
   readonly buildId?: string | null;
@@ -7,6 +8,14 @@ export interface IssueFeedbackInput {
   readonly occurredAt: Date;
   readonly correlationId?: string;
 }
+
+/**
+ * T-546 发布前降级入口：Growth/AM 尚未下发 bugFeedbackUrl 时，仍允许用户
+ * 主动打开 CreatorOS 官方飞书反馈表并手动上传日志压缩包。
+ * 这里不上传任何数据，也不承担商业/渠道配置；签名地址存在时仍优先使用签名值。
+ */
+export const CREATOROS_FEISHU_FEEDBACK_URL =
+  "https://my.feishu.cn/share/base/form/shrcnJlbt9gDcaohA9iLmbPLQqh";
 
 const ENTITY_COLLECTIONS = new Set([
   "projects",
@@ -60,6 +69,9 @@ export function buildIssueFeedbackText(input: IssueFeedbackInput): string {
   const version = input.appVersion?.trim() || "未知";
   const build = input.buildId?.trim() ? ` · build ${input.buildId.trim()}` : "";
   const lines = [
+    ...(input.summary?.trim()
+      ? [`问题摘要：${redactSensitiveText(input.summary.trim())}`]
+      : []),
     `问题描述：${redactSensitiveText(input.description.trim())}`,
     `应用版本：${version}${build}`,
     `系统：${input.os || "未知"}`,

@@ -28,8 +28,12 @@ export interface LicenseVerdict {
   /** 放行权威布尔(门只认它)。 */
   allowed: boolean;
   status: string; // active | grace | expired | inactive | untrusted
+  /** 仅 server-only sidecar 可读；任何本地 HTTP 响应均不得返回。 */
+  code?: string;
   machineId?: string;
   licenseMode?: string;
+  projectKey?: string;
+  channelRef?: string | null;
   expiresAt?: string | null;
   activatedAt?: string;
   graceSeconds?: number;
@@ -38,6 +42,29 @@ export interface LicenseVerdict {
   signatureVerified?: boolean;
   verdictAtMs?: number;
   message?: string;
+  /**
+   * T-534：仅由 Rust 在完整验签、identity/sourceDigest/version 校验后写入的只读投影。
+   * sidecar 不验证上游签名，也不从旧明文 `.channel-links` 迁移。
+   */
+  channelRuntime?: {
+    schemaVersion: string;
+    contractVersion: string | null;
+    projectKey: string;
+    channelRef: string;
+    snapshotVersion: number | null;
+    sourceDigest: string | null;
+    source: string | null;
+    sourceUpdatedAt: string | null;
+    syncedAt: string | null;
+    stale: boolean | null;
+    brandName: string | null;
+    purchaseUrl: string | null;
+    renewalUrl: string | null;
+    channelSupportUrl: string | null;
+    bugFeedbackUrl: string | null;
+    downloadUrl: string | null;
+    supportUrl: string | null;
+  } | null;
 }
 
 /** 从 master key(32B)派生 .license 解密密钥(与 Rust derive_license_key 一致)。 */
@@ -100,23 +127,28 @@ export interface ReadLicenseVerdictOptions {
   masterKey?: Buffer | null;
 }
 
+export type LicenseVerdictReadResult =
+  | { readonly state: "ready"; readonly verdict: LicenseVerdict }
+  | { readonly state: "unavailable"; readonly verdict: null }
+  | { readonly state: "read_error"; readonly verdict: null };
+
 /**
- * 读放行判定。任何失败(无路径/文件不存在/解不开/坏内容)→ null(诚实降级,由调用方
- * 决定语义:激活门把 null 当「无有效放行」处理)。绝不 throw(门在 RSC 渲染路径上,崩 = 白屏)。
+ * T-534 细分读取结果：无路径/无文件是 unavailable；密文/JSON 损坏是 read_error。
+ * 两者都不包含路径、密文或异常正文。
  */
-export async function readLicenseVerdict(
+export async function readLicenseVerdictDetailed(
   options: ReadLicenseVerdictOptions = {},
-): Promise<LicenseVerdict | null> {
+): Promise<LicenseVerdictReadResult> {
   const env = options.env ?? process.env;
   const path = resolveLicenseFilePath(env);
-  if (!path) return null;
+  if (!path) return { state: "unavailable", verdict: null };
   let content: string;
   try {
     content = options.readFileImpl
       ? await options.readFileImpl(path)
       : await readFile(path, "utf8");
   } catch {
-    return null; // 文件不存在 = 尚无 Rust 放行判定
+    return { state: "unavailable", verdict: null };
   }
   let key: Buffer | null;
   if (options.masterKey !== undefined) {
@@ -131,12 +163,25 @@ export async function readLicenseVerdict(
     key = master.length === 32 ? deriveLicenseKey(master) : null;
   }
   try {
-    return decodeLicenseVerdict(content, key);
+    return {
+      state: "ready",
+      verdict: decodeLicenseVerdict(content, key),
+    };
   } catch (e) {
     console.warn(
       "[activation] .license 解析失败(master key 不符或文件损坏)→ 视为无有效放行判定。",
       e instanceof Error ? e.message : e,
     );
-    return null;
+    return { state: "read_error", verdict: null };
   }
+}
+
+/**
+ * 兼容激活门的旧调用形状：未配置与读取错误都收敛为 null，门仍 fail-closed；
+ * 需要诚实 UI 区分时使用 `readLicenseVerdictDetailed`。
+ */
+export async function readLicenseVerdict(
+  options: ReadLicenseVerdictOptions = {},
+): Promise<LicenseVerdict | null> {
+  return (await readLicenseVerdictDetailed(options)).verdict;
 }

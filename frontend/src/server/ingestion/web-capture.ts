@@ -51,10 +51,13 @@ export function makeAbortError(what: string): Error {
  *  (登录态重试 / 搜索引擎找替代来源),不再靠解析 message 文本;非 HTTP 类失败为 null。 */
 export class WebCaptureError extends Error {
   readonly status: number | null;
-  constructor(message: string, opts?: { status?: number }) {
+  /** 可安全写日志/落运行记录的稳定分类；绝不包含 URL、Cookie 或上游响应正文。 */
+  readonly code: string | null;
+  constructor(message: string, opts?: { status?: number; code?: string }) {
     super(message);
     this.name = "WebCaptureError";
     this.status = opts?.status ?? null;
+    this.code = opts?.code ?? null;
   }
 }
 

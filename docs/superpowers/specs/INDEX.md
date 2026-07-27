@@ -26,6 +26,7 @@
 | [2026-07-24-creatoros-automation-kernel.md](2026-07-24-creatoros-automation-kernel.md) | T-517 自动化内置底座:唯一 ticker + automation_job/run 收口 | ✅ PLAN passed(确认①)→进 CONTRACT |
 | [2026-07-24-content-radar-unified-automation-design.md](2026-07-24-content-radar-unified-automation-design.md) | T-517 内容雷达自动同步收口统一调度,不再起独立 timer | ⚠️ CONCERNS(待用户裁决 R2-01) |
 | [2026-07-26-creatoros-automation-kernel-minimal.md](2026-07-26-creatoros-automation-kernel-minimal.md) | 替代稿:不建第三套执行平台,复用 scheduled_job/job_run+PersistentTaskService+单一 driver(收窄 T-517) | 📋 待过 gate |
+| [2026-07-26-three-system-runtime-config-boundary.md](2026-07-26-three-system-runtime-config-boundary.md) | T-534：Creator 只消费 AM 签名的 Growth runtime，拆分官方 Bug 与渠道售后并锁定 lifecycle/LKG | ⚠️ Round 3 CONCERNS（已处理） |
 
 ## AI 编排与模型配置
 
@@ -63,6 +64,8 @@
 | [2026-07-23-content-radar-restructure-design.md](2026-07-23-content-radar-restructure-design.md) | T-482 内容雷达:定位与选题间加对标监控/信源,AI 只产选题候选 | ✅ passed(独立评审)可开工 T-482 |
 | [2026-07-23-content-radar-service-contract.md](2026-07-23-content-radar-service-contract.md) | T-482 内容雷达服务契约:intelligence.*/execution schema 单一真值 | —(契约·Contract Gate PASS) |
 | [2026-07-24-favorites-collector-account-selector-design.md](2026-07-24-favorites-collector-account-selector-design.md) | 大号工作区加"我的收藏"来源时可选本人小号做采集登录态,采到内容仍归大号(T-496) | ⛔ 独立评审 FAIL·退回 PLAN |
+| [2026-07-26-content-radar-collector-account.md](2026-07-26-content-radar-collector-account.md) | T-537 仅内容雷达主页/收藏夹/黑马来源可选采集账号，owner/collector 严格隔离 | ⏸️ 文档内部 PASS；真实双账号 RAT 前禁止 BUILD |
+| [2026-07-26-content-radar-collector-account.contract.md](2026-07-26-content-radar-collector-account.contract.md) | T-537 collector typed contract、迁移、错误与安全边界 | ⏸️ 文档内部 PASS；正式 Gate 等待 RAT |
 
 ## 生命周期与稿面
 

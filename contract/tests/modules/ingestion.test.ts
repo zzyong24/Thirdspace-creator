@@ -61,6 +61,26 @@ describe("ingestion contract", () => {
     expect(op.fr.length).toBeGreaterThan(0);
   });
 
+  it("[T-546] 抖音登录兼容旧空 body，并只接受受控的热点宝授权目标", () => {
+    const body = ingestionOperations.loginDouyin.body;
+    expect(body?.parse(undefined)).toBeUndefined();
+    expect(
+      body?.parse({
+        accountId: "account-1",
+        site: "douhot.douyin.com",
+      }),
+    ).toEqual({
+      accountId: "account-1",
+      site: "douhot.douyin.com",
+    });
+    expect(() =>
+      body?.parse({
+        accountId: "account-1",
+        site: "untrusted.example.com",
+      }),
+    ).toThrow();
+  });
+
   it("parses a douyin throttle-status snapshot (cooldown active)", () => {
     const snap = douyinThrottleStatusResource.parse({
       channels: [

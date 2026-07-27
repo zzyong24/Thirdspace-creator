@@ -54,6 +54,25 @@ describe("license-file 读端 —— 解密与判定", () => {
     expect(verdict.signatureVerified).toBe(true);
   });
 
+  it("[T-538] 反馈 sidecar 只在解密后取得 code/project/machine，明文封包之外不可读", () => {
+    const key = deriveLicenseKey(MASTER);
+    const packed = encryptLikeRust(
+      snapshotFixture({
+        code: "ACTIVATION-SECRET",
+        machineId: "machine-secret",
+        projectKey: "creatoros",
+      }),
+      key,
+    );
+    expect(packed).not.toContain("ACTIVATION-SECRET");
+    const verdict = decodeLicenseVerdict(packed, key);
+    expect(verdict).toMatchObject({
+      code: "ACTIVATION-SECRET",
+      machineId: "machine-secret",
+      projectKey: "creatoros",
+    });
+  });
+
   it("错 key → auth tag 校验失败 throw(readLicenseVerdict 收敛为 null)", async () => {
     const key = deriveLicenseKey(MASTER);
     const wrong = deriveLicenseKey(Buffer.alloc(32, 1));

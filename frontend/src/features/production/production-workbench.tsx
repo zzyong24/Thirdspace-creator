@@ -107,8 +107,57 @@ interface WireExecTask {
   id: string;
   execType: string;
   status: string;
+  spec?: {
+    params?: Record<string, unknown>;
+  };
   adoptedAssetIds: string[];
   errorMessage: string | null;
+}
+
+interface WireMaterialLink {
+  projectId: string;
+  contentOutputId: string | null;
+  entityType: string;
+  entityId: string;
+  role: string;
+  stage: string;
+}
+
+/**
+ * [T-548] 旧版卡内重试没有把 projectId 传给新任务，导致按项目 list 时只看得到旧失败
+ * 任务。retryOf 是服务端已持久化的稳定父指针；从当前项目任务集合出发闭包追后代，可把
+ * 这些历史孤儿重试安全归回原项目（不会靠标题/文件名猜归属）。
+ */
+export function includeExecutionRetryDescendants(
+  projectTasks: readonly WireExecTask[],
+  allTasks: readonly WireExecTask[],
+): WireExecTask[] {
+  const relatedIds = new Set(projectTasks.map((task) => task.id));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const task of allTasks) {
+      const retryOf = task.spec?.params?.retryOf;
+      if (
+        typeof retryOf === "string" &&
+        relatedIds.has(retryOf) &&
+        !relatedIds.has(task.id)
+      ) {
+        relatedIds.add(task.id);
+        changed = true;
+      }
+    }
+  }
+  // allTasks 服务端按新到旧；先保留它的顺序，项目列表独有行补在末尾。
+  return [
+    ...allTasks.filter((task) => relatedIds.has(task.id)),
+    ...projectTasks.filter(
+      (task) => !allTasks.some((candidate) => candidate.id === task.id),
+    ),
+  ].filter(
+    (task, index, rows) =>
+      rows.findIndex((candidate) => candidate.id === task.id) === index,
+  );
 }
 
 // ── 客户端读视频时长(<video> metadata,免 ffprobe 往返;失败诚实 null)────────
@@ -386,6 +435,10 @@ export function ProductionWorkbench({
 
   const [renderTaskId, setRenderTaskId] = React.useState<string | null>(null);
   const [renderEnvHint, setRenderEnvHint] = React.useState<string | null>(null);
+  const [renderFinalizeError, setRenderFinalizeError] = React.useState<
+    string | null
+  >(null);
+  const [renderFinalizeRetry, setRenderFinalizeRetry] = React.useState(0);
   const [exportId, setExportId] = React.useState<string | null>(null);
   // [T-292] 采纳后的成片 assetId → 产出区 <video> 预览。
   const [finalVideoAssetId, setFinalVideoAssetId] = React.useState<string | null>(
@@ -1225,7 +1278,7 @@ export function ProductionWorkbench({
     setRecoveredDecisions(false);
   }, [decisionsTaskId]);
 
-  // ── ④ 渲染任务跟踪:采纳 → completeExport + ready;环境错误人话化 ─────────────
+  // ── ④ 渲染任务跟踪:采纳 → 项目用料链 + completeExport + ready ─────────────
   React.useEffect(() => {
     if (!renderTaskId) return;
     let abandoned = false;
@@ -1242,17 +1295,77 @@ export function ProductionWorkbench({
           setRenderEnvHint(humanizeRenderError(task.errorMessage));
           if (task.status === "succeeded") {
             const resultAssetId = task.adoptedAssetIds[0];
-            if (resultAssetId) setFinalVideoAssetId(resultAssetId); // [T-292] 成片可预览
-            if (exportId && resultAssetId) {
-              void client
-                .completeExport({
+            if (!resultAssetId) {
+              setRenderFinalizeError(
+                "渲染任务已结束，但没有可用的成片资产。请在上方卡片重试。",
+              );
+              return;
+            }
+            try {
+              const finalOutputId = outputId ?? (await ensureOutputId());
+              // [T-548] execution.confirm 只把文件收进素材库，不会自动产生项目用料边。
+              // 先反查同一资产的真实 usage，缺边才创建；后续任一步失败再点“重试关联”
+              // 都会复用已有边，避免同一成片重复出现在项目使用记录里。
+              const usages = (await client.listAssetUsage({
+                params: { assetId: resultAssetId },
+                query: undefined,
+                body: undefined,
+              })) as unknown as WireMaterialLink[];
+              const alreadyLinked = usages.some(
+                (usage) =>
+                  usage.projectId === projectId &&
+                  usage.contentOutputId === finalOutputId &&
+                  usage.entityType === "asset" &&
+                  usage.entityId === resultAssetId &&
+                  usage.role === "final" &&
+                  usage.stage === "production",
+              );
+              if (!alreadyLinked) {
+                await client.createMaterialLink({
+                  params: undefined,
+                  query: undefined,
+                  body: {
+                    projectId,
+                    contentOutputId: finalOutputId,
+                    entityType: "asset",
+                    entityId: resultAssetId,
+                    role: "final",
+                    stage: "production",
+                  },
+                });
+              }
+              if (exportId) {
+                await client.completeExport({
                   params: { exportId },
                   query: undefined,
                   body: { resultAssetId },
-                })
-                .catch(() => undefined);
+                });
+              } else {
+                // 刷新恢复的历史 succeeded 任务拿不到旧 exportId；至少把 output 主成片
+                // 修复为真实资产，避免“素材库能播、项目仍无成片”。正常新任务仍走上面的
+                // exports.complete，exportRecord 与 output 一起收口。
+                await client.patchOutput({
+                  params: { outputId: finalOutputId },
+                  query: undefined,
+                  body: { primaryAssetId: resultAssetId },
+                });
+              }
+              const productionId = await advanceStatus("ready");
+              if (!productionId) {
+                throw new Error("项目成片状态更新失败");
+              }
+              if (abandoned) return;
+              setRenderFinalizeError(null);
+              setRenderEnvHint(null);
+              setFinalVideoAssetId(resultAssetId); // [T-292] 真实签名 URL 内联预览
+            } catch (error) {
+              if (abandoned) return;
+              setRenderFinalizeError(
+                error instanceof Error
+                  ? `成片已生成，但关联项目失败：${error.message}`
+                  : "成片已生成，但关联项目失败。请重试关联。",
+              );
             }
-            void advanceStatus("ready");
             return;
           }
           // [FE-H01] failed 是终态:必须停止轮询(否则对已失败任务永久查询、转圈不散)。
@@ -1270,7 +1383,15 @@ export function ProductionWorkbench({
     return () => {
       abandoned = true;
     };
-  }, [renderTaskId, exportId, advanceStatus]);
+  }, [
+    renderTaskId,
+    exportId,
+    advanceStatus,
+    ensureOutputId,
+    outputId,
+    projectId,
+    renderFinalizeRetry,
+  ]);
 
   // ── 刷新恢复(best-effort):未收口的决策候选 / 在跑 / 已失败的任务接回跟踪 ────────
   //   [FE-H01] 目标:进度不丢、不重复发起付费任务、失败可见可恢复。按「当前最该看的」优先级恢复:
@@ -1282,11 +1403,26 @@ export function ProductionWorkbench({
     let abandoned = false;
     void (async () => {
       try {
-        const execs = (await client.listExecutionTasks({
+        const projectExecs = (await client.listExecutionTasks({
           params: undefined,
-          query: { page: 1, pageSize: 20, projectId },
+          query: { page: 1, pageSize: 100, projectId },
           body: undefined,
         })) as unknown as WireExecTask[];
+        let execs = projectExecs;
+        // [T-548 存量恢复] 旧版 retry 新任务没 projectId；仅当当前项目确有历史执行任务
+        // 时读本账号最近任务，并按 retryOf 闭包归回。没有项目祖先就绝不吸附全局任务。
+        if (projectExecs.length > 0) {
+          try {
+            const allExecs = (await client.listExecutionTasks({
+              params: undefined,
+              query: { page: 1, pageSize: 100 },
+              body: undefined,
+            })) as unknown as WireExecTask[];
+            execs = includeExecutionRetryDescendants(projectExecs, allExecs);
+          } catch {
+            // 全局补读失败仍保留项目直查结果，不让增强恢复挡住主链。
+          }
+        }
         const live = execs.find(
           (t) =>
             t.execType === "video.render" &&
@@ -1953,7 +2089,43 @@ export function ProductionWorkbench({
               {renderEnvHint}
             </p>
           ) : null}
-          <ExecutionTaskCard taskId={renderTaskId} />
+          <ExecutionTaskCard
+            taskId={renderTaskId}
+            projectId={projectId}
+            onTaskIdChange={(nextTaskId) => {
+              setRenderEnvHint(null);
+              setRenderFinalizeError(null);
+              setRenderTaskId(nextTaskId);
+            }}
+            onTaskUpdate={(task) => {
+              if (
+                task.status === "succeeded" &&
+                task.adoptedAssetIds.length > 0
+              ) {
+                // 采纳动作已拿到真实 assetId，立即唤醒外层收口 usage/export/预览；
+                // 不等 4 秒轮询，也不要求用户再点一次“重试渲染”。
+                setRenderFinalizeRetry((value) => value + 1);
+              }
+            }}
+          />
+          {renderFinalizeError ? (
+            <div
+              data-slot="render-finalize-error"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-destructive/30 bg-destructive/5 p-2"
+            >
+              <p className="text-xs leading-relaxed text-destructive">
+                {renderFinalizeError}
+              </p>
+              <button
+                type="button"
+                data-slot="render-finalize-retry"
+                onClick={() => setRenderFinalizeRetry((value) => value + 1)}
+                className="inline-flex h-7 items-center rounded-control border border-destructive/30 px-3 text-[11px] font-medium text-destructive hover:bg-destructive/10"
+              >
+                重试关联项目
+              </button>
+            </div>
+          ) : null}
           {/* [T-292] 采纳后的成片在产出区内联预览(签名 URL,画幅决定播放器比例)。 */}
           {finalVideoAssetId ? (
             <div className="flex flex-col gap-1.5">

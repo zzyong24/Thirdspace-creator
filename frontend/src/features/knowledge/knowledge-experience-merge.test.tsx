@@ -3,7 +3,7 @@
  *
  * SPEC 2026-07-04-experience-relocation-design.md §B:
  *  - 左栏 CategoryPanel 加「经验」分类,count = validated learnings 数;
- *  - 中栏「最近更新」混排知识卡 + validated 经验条目,按 updatedAt 正序([T-211] 最早在前),每条带
+ *  - 中栏「最近更新」混排知识卡 + validated 经验条目,按写入时间倒序([T-547] 最新在前),每条带
  *    类型 chip(经验条目显「经验」),**经验条目只读**(无采纳/翻案/修订);
  *  - T-119 分页:混排 10 条/页,知识卡 + 经验共用同一分页上下文(`?page=` 承载);
  *  - 诚实数据:client 不支持 listLearnings / 读失败 → 经验并入静默空,不 fixture 兜底。
@@ -119,7 +119,7 @@ describe("[T-118b] 已验证经验并入知识库读层", () => {
     );
   });
 
-  it("[T-211] 混排按 updatedAt 正序(知识卡 + 经验合流,最早在前)", async () => {
+  it("[T-547] 混排按 updatedAt 倒序(知识卡 + 经验合流,最新在前)", async () => {
     const client = makeClient({
       listKnowledge: vi.fn(() =>
         Promise.resolve([
@@ -134,7 +134,7 @@ describe("[T-118b] 已验证经验并入知识库读层", () => {
       ),
     });
     const vm = await buildKnowledgeDashboardViewModel(client);
-    expect(vm.recent.map((r) => r.id)).toEqual(["k-old", "l-mid", "k-new"]);
+    expect(vm.recent.map((r) => r.id)).toEqual(["k-new", "l-mid", "k-old"]);
   });
 
   it("CategoryPanel 加「经验」分类,count = validated 数", async () => {
@@ -217,9 +217,8 @@ describe("[T-119] 最近更新混排分页(10 条/页)", () => {
     expect(vm.recentPage).toBe(1);
     expect(vm.recentTotal).toBe(15);
     expect(vm.recentTotalPages).toBe(2);
-    // [T-211] 正序:经验(最新的 3 条 2026-07)排到最后(第 2 页);第 1 页全是
-    // 较早的知识卡(2026-06)。
-    expect(vm.recent.slice(0, 3).every((r) => r.origin !== "experience")).toBe(
+    // [T-547] 倒序:最新的 3 条经验(2026-07)必须出现在第 1 页最前面。
+    expect(vm.recent.slice(0, 3).every((r) => r.origin === "experience")).toBe(
       true,
     );
   });

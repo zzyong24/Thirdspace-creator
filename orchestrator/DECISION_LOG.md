@@ -717,6 +717,80 @@ Status: superseded by DEC-ODR-001（未获确认、从未激活；旧 report/iss
 
 **Status**：resolved（用户范围重置；不授权修改 orchestrator engine，也不把四项功能伪报为完成）。
 
+## DEC-REL-001 (2026-07-26) — 明日发布按核心逻辑 accepted-risk 进入 BUILD
+
+**来源**：用户明确纠偏：不要因协议形式追求完美阻塞开发；UI、功能和核心逻辑没有大问题时
+先实现、先发布，评审剩余完整性问题后补。
+
+**决策**：
+
+1. T-517、T-519、T-537 不再等待合同字段、示例和 scope ledger 的形式完美，按当前 PLAN 与
+   replacement contract 直接进入隔离 BUILD。
+2. accepted-risk 只覆盖协议完整性和扩展性，不豁免三条发布底线：T-537 不串 owner/collector；
+   T-517 不重复/丢失运行且终态诚实；T-519 不产生跨账号或半写入文件。
+3. 实现只复用现有 scheduled job/PersistentTask、Assets/Knowledge/Search/图和内容雷达 source，
+   不新造第二状态机、上传平台、搜索平台、图谱平台或全局账号选择器。
+4. 真实双抖音账号 RAT、完整真机 E2E 与剩余合同补账必须在最终发布说明中诚实列为待验收，
+   不得把单测 fixture 冒充真实外部数据源证据。
+
+**Status**：accepted-risk（用户授权先 BUILD；不等同于发布验收 PASS）。
+
+## DEC-COL-001 (2026-07-26) — 内容雷达采用 owner/collector 双身份且不扩散到其他模块
+
+**来源**：用户明确要求只有内容雷达需要指定采集账号，并要求主页、收藏夹、黑马三类登录型
+来源均可选择；经营数据、评论、其他数据源与其他自动化任务不需要。
+
+**决策**：
+
+1. 当前工作区账号是所有 source/run/task/item/observation 的唯一 owner；采集账号只决定抖音
+   adapter 使用哪份已绑定、active、同用户的本机登录态。
+2. selector 只出现在 `creator_profile`、`favorites_folder`、`darkhorse_query` 的现有新增来源
+   对话框；不得做成全局账号选择器，也不得改变 `self.metrics`、`self.detail`、comments、
+   `web/rss`、分享链接或其他自动化任务。
+3. 客户端只提交 `collectorAccountId`；服务端验属主、平台和状态后派生 opaque session。
+   Cookie、profile 路径、签名及 `browserSessionRef` 不进入这三类公开契约、领域数据和普通日志。
+4. 手动、首次、定时同步都消费 source 固化的 collector；任何异常都不得回退 owner 或伪装成
+   成功 0 条。
+5. T-496 的“仅收藏夹”失败工件由 T-537 替代。T-537 文档已三轮内部评审通过，但在两个真实
+   active 抖音登录态完成 `RAT-537-01` 前，正式 PLAN/CONTRACT Gate 与全部 BUILD 保持 blocked。
+
+**Status**：blocked（产品边界已确认；外部数据源可行性硬门未满足）。
+
+## DEC-TSB-001 (2026-07-26) — 三系统权威边界、双入口与渠道生命周期
+
+**来源**：用户要求根治 Thirdspace-growth、activation-manager、CreatorOS 三仓分工，并在
+Growth DEC-050 新独立评审 PASS 后确认最终 lifecycle 与 AM exact contract。
+
+**决策**：
+
+1. Growth 是商业、渠道配置与官方产品 Bug 收件箱权威；AM 是 license/entitlement 与签名权威；
+   CreatorOS 只负责产品、本地内容/日志、脱敏诊断、反馈交互和签名 runtime 的只读消费。
+2. 产品 Bug 只读 `bugFeedbackUrl`；购买、续费、激活码交付售后只读
+   `channelSupportUrl`。legacy `supportUrl` 严格只是 `channelSupportUrl` alias。
+3. AM→Creator 唯一 runtime 是 signed `channelConfig` schema
+   `channel-runtime-v2` closed 17 keys。Creator 按 raw digest/Ed25519/date/nonce →
+   closed schema → `(projectKey,channelRef)` → RFC 8785 `sourceDigest` → version/digest 顺序验证。
+4. Growth lifecycle 固定 `active→sales_disabled→terminated`。sales_disabled 的更高 snapshot
+   令 purchase/renewal 为 null，保留 brand/support/download/official Bug；terminated 前必须由
+   AM 把全部 active/non-revoked 授权原子改绑到明确 ordinary active target，报告满足
+   `completed=affected,unresolved=0`。
+5. Creator 不接收 tombstone、不自动 fallback、不猜 target。只在 AM 签名响应中出现新
+   identity 后采纳。
+6. 本地可信 runtime 并入现有加密 `.license` 快照原子保存；旧明文 `.channel-links`
+   不自动信任或迁移。Creator 不自动上传日志、截图、用户内容或反馈正文。
+
+**Invalidates**：DEC-FDB-002/DEC-ODR-001 中“Bug 复用 `supportUrl`”的字段语义；
+T-396 的三键明文 cache 与单一 `supportUrl`；T-518 的 Bug 入口字段。T-531/T-532 与上传/
+附件相关范围继续冻结。
+
+**Evidence**：Growth canonical §5.1/§6/§7.3.1/§7.8..7.11 新周期 PASS；
+AM API-AM-007/011/012；projection digest `sha256:b9512d…76d6d`；
+reassignment fixture file SHA-256 `40a7bc44…2cc7`。
+
+**Status**：implemented；Creator CONTRACT 三轮独立评审已收口，TDD/BUILD 与 consumer contract
+tests 已完成。全局 `next build` 仍受当前 HEAD 中 T-535 已提交的 `instrumentation.ts`
+code-frame panic 阻断，不影响本决策落地结论，但发布前必须由 T-535 清零。
+
 ## DEC-PLAT-001 (2026-07-26) — macOS 与 Windows 均为已完整验收桌面目标
 
 **来源**：用户明确纠偏：Windows 版本已经完整验收，先前“不能完成验收”“仍待 Windows
@@ -734,3 +808,20 @@ Status: superseded by DEC-ODR-001（未获确认、从未激活；旧 report/iss
    是两件独立的事。
 
 **Status**：resolved（事实纠偏；不新增产品范围）。
+
+## DEC-FDB-003 (2026-07-26) — 发布前采用官方飞书表作为产品 Bug 降级入口
+
+**来源**：用户在 test 包真机确认 Growth/AM 尚未下发反馈地址，并明确要求先写入飞书多维表格
+入口，让用户手动提交和上传日志压缩包；应用内发送按钮禁用，暂不强制依赖 Growth。
+
+**决策**：
+
+1. `IssueFeedbackDialog` 仍优先使用签名 `bugFeedbackUrl`；字段为空或读取失败时，退到 CreatorOS
+   内置的官方飞书反馈表 URL。该常量只服务产品 Bug，不得复用于购买、续费、下载或渠道售后。
+2. 应用内“发送问题反馈”固定禁用，不调用产品反馈 POST；“打开反馈渠道”保持可用并通过可信
+   desktop opener 打开系统浏览器。
+3. UI 明确引导用户复制反馈内容、打开日志文件夹、压缩为 zip，再在飞书页面手动上传。
+   CreatorOS 不自动读取、打包或上传日志，也不宣称外部页面已经提交成功。
+4. 这是发布前 accepted-risk 降级；Growth/AM 的长期权威、签名 runtime 和三系统商业边界不变。
+
+**Status**：accepted-risk（用户确认的临时发布降级；T-546）。

@@ -31,6 +31,7 @@ const mockClient = vi.hoisted(() => ({
   })),
   createMaterialLink: vi.fn(async () => ({ id: "mlink-1" })),
   createOutput: vi.fn(async () => ({ id: "out-1" })),
+  patchOutput: vi.fn(async () => ({ id: "out-1" })),
   getOutputProduction: vi.fn(async () => ({
     id: "prod-1",
     status: state.prodStatus,
@@ -51,26 +52,68 @@ const mockClient = vi.hoisted(() => ({
   listTaskSteps: vi.fn(async (): Promise<unknown[]> => []),
   confirmTask: vi.fn(async () => ({ id: "ai-task-1", status: "succeeded" })),
   cancelTask: vi.fn(async () => ({ id: "ai-task-1", status: "cancelled" })),
-  createExecutionTask: vi.fn(async () => ({
+  createExecutionTask: vi.fn(async (_input?: unknown) => ({
     id: "exec-1",
     execType: "video.render",
     status: "queued",
+    spec: {
+      taskType: "video.render",
+      goal: "渲染成片",
+      inputs: [],
+      params: {},
+      constraints: {},
+    },
+    manifest: null as unknown,
     adoptedAssetIds: [],
     errorMessage: null,
   })),
-  getExecutionTask: vi.fn(async () => ({
+  getExecutionTask: vi.fn(async (_input?: unknown) => ({
     id: "exec-1",
     execType: "video.render",
     status: "queued" as string,
     spec: { taskType: "video.render", goal: "g", inputs: [], params: {}, constraints: {} },
-    manifest: null,
+    manifest: null as unknown,
     adoptedAssetIds: [] as string[],
     // string | null,允许失败态用例覆盖真实错误文案(默认 null)。
     errorMessage: null as string | null,
   })),
-  listExecutionTasks: vi.fn(async (): Promise<unknown[]> => []),
+  confirmExecutionTask: vi.fn(async (_input?: unknown) => ({
+    id: "exec-1",
+    execType: "video.render",
+    status: "succeeded",
+    spec: {
+      taskType: "video.render",
+      goal: "渲染成片",
+      inputs: [],
+      params: {},
+      constraints: {},
+    },
+    manifest: null,
+    adoptedAssetIds: ["asset-final-1"],
+    errorMessage: null,
+  })),
+  discardExecutionTask: vi.fn(async (_input?: unknown) => ({
+    id: "exec-1",
+    execType: "video.render",
+    status: "cancelled",
+    spec: {
+      taskType: "video.render",
+      goal: "渲染成片",
+      inputs: [],
+      params: {},
+      constraints: {},
+    },
+    manifest: null,
+    adoptedAssetIds: [],
+    errorMessage: null,
+  })),
+  listExecutionTasks: vi.fn(async (_input?: unknown): Promise<unknown[]> => []),
   // [T-366a/b] 上传成品二选一 + 素材包导出的读写点。
   listMaterialLinks: vi.fn(async (): Promise<unknown[]> => []),
+  listAssetUsage: vi.fn(async (): Promise<unknown[]> => []),
+  getDownloadUrl: vi.fn(async () => ({
+    url: "http://localhost/blob/final.mp4?token=test",
+  })),
   getAsset: vi.fn(async () => ({ fileSize: null as number | null })),
   listPublications: vi.fn(async (): Promise<unknown[]> => []),
   // [T-387c] B-roll 自动聚合读脚本/论点树 artifact(缺省空 → 无自动项,老用例零影响)。
@@ -179,6 +222,7 @@ beforeEach(() => {
   mockClient.listTaskSteps.mockResolvedValue([]);
   mockClient.listExecutionTasks.mockResolvedValue([]);
   mockClient.listMaterialLinks.mockResolvedValue([]);
+  mockClient.listAssetUsage.mockResolvedValue([]);
   mockClient.getAsset.mockResolvedValue({ fileSize: null });
   mockClient.listPublications.mockResolvedValue([]);
   // [T-387c] 自动聚合读 artifact 的三连:默认空(无脚本/论点树)。
@@ -201,6 +245,21 @@ beforeEach(() => {
     spec: { taskType: "video.render", goal: "g", inputs: [], params: {}, constraints: {} },
     manifest: null,
     adoptedAssetIds: [],
+    errorMessage: null,
+  });
+  mockClient.confirmExecutionTask.mockResolvedValue({
+    id: "exec-1",
+    execType: "video.render",
+    status: "succeeded",
+    spec: {
+      taskType: "video.render",
+      goal: "渲染成片",
+      inputs: [],
+      params: {},
+      constraints: {},
+    },
+    manifest: null,
+    adoptedAssetIds: ["asset-final-1"],
     errorMessage: null,
   });
 });
@@ -555,6 +614,288 @@ describe("ProductionWorkbench", () => {
     expect(
       container.querySelector('[data-slot="dispatch-decisions"]'),
     ).toBeNull();
+  });
+
+  it("[T-548] 失败任务卡内重试后跟踪新 taskId，成片幂等关联项目、完成 export 并恢复内联预览", async () => {
+    let retryAdopted = false;
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "ai-9", status: "awaiting_confirmation" },
+    ]);
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultType: "video_decisions",
+        resultData: {
+          decisions: {
+            scenes: [
+              { title: "开场", startSec: 0, endSec: 10, summary: "开场介绍" },
+            ],
+            cards: [],
+            broll: [],
+            subtitles: [],
+            srtLines: [],
+          },
+          inventory: [],
+        },
+      },
+    ]);
+    mockClient.createExecutionTask
+      .mockResolvedValueOnce({
+        id: "exec-old-failed",
+        execType: "video.render",
+        status: "queued",
+        spec: {
+          taskType: "video.render",
+          goal: "渲染成片",
+          inputs: [],
+          params: {},
+          constraints: {},
+        },
+        manifest: null,
+        adoptedAssetIds: [],
+        errorMessage: null,
+      })
+      .mockResolvedValueOnce({
+        id: "exec-retry-success",
+        execType: "video.render",
+        status: "queued",
+        spec: {
+          taskType: "video.render",
+          goal: "渲染成片",
+          inputs: [],
+          params: {},
+          constraints: {},
+        },
+        manifest: null,
+        adoptedAssetIds: [],
+        errorMessage: null,
+      });
+    mockClient.getExecutionTask.mockImplementation(
+      async (rawInput?: unknown) =>
+        (rawInput as { params: { taskId: string } }).params.taskId ===
+        "exec-retry-success"
+          ? retryAdopted
+            ? {
+              id: "exec-retry-success",
+              execType: "video.render",
+              status: "succeeded",
+              spec: {
+                taskType: "video.render",
+                goal: "渲染成片",
+                inputs: [],
+                params: {},
+                constraints: {},
+              },
+              manifest: null,
+              adoptedAssetIds: ["asset-final-retry"],
+              errorMessage: null,
+            }
+            : {
+                id: "exec-retry-success",
+                execType: "video.render",
+                status: "awaiting_confirmation",
+                spec: {
+                  taskType: "video.render",
+                  goal: "渲染成片",
+                  inputs: [],
+                  params: {},
+                  constraints: {},
+                },
+                manifest: {
+                  taskType: "video.render",
+                  artifacts: [
+                    {
+                      path: "out/final.mp4",
+                      fileName: "final.mp4",
+                      size: 11_900_000,
+                      mimeType: "video/mp4",
+                    },
+                  ],
+                  summary: "渲染完成，等待采纳",
+                },
+                adoptedAssetIds: [],
+                errorMessage: null,
+              }
+          : {
+              id: "exec-old-failed",
+              execType: "video.render",
+              status: "failed",
+              spec: {
+                taskType: "video.render",
+                goal: "渲染成片",
+                inputs: [],
+                params: {},
+                constraints: {},
+              },
+              manifest: null,
+              adoptedAssetIds: [],
+              errorMessage: "ffmpeg not found on PATH",
+            },
+    );
+    mockClient.confirmExecutionTask.mockImplementation(
+      async (rawInput?: unknown) => {
+        expect(
+          (rawInput as { params: { taskId: string } }).params.taskId,
+        ).toBe("exec-retry-success");
+        retryAdopted = true;
+        return {
+          id: "exec-retry-success",
+          execType: "video.render",
+          status: "succeeded",
+          spec: {
+            taskType: "video.render",
+            goal: "渲染成片",
+            inputs: [],
+            params: {},
+            constraints: {},
+          },
+          manifest: null,
+          adoptedAssetIds: ["asset-final-retry"],
+          errorMessage: null,
+        };
+      },
+    );
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() =>
+      expect(container.textContent).toContain("分场预览"),
+    );
+    await uploadVideo(container);
+    fireEvent.click(
+      Array.from(container.querySelectorAll("button")).find(
+        (button) => button.textContent === "确认决策,进入渲染",
+      )!,
+    );
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="execution-task-error"]'),
+      ).not.toBeNull(),
+    );
+    fireEvent.click(
+      container.querySelector('[data-slot="execution-task-retry"]')!,
+    );
+    fireEvent.click(
+      container.querySelector('[data-slot="execution-task-retry-submit"]')!,
+    );
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="execution-task-adopt"]'),
+      ).not.toBeNull(),
+    );
+    // 渲染产物只是候选；用户尚未采纳时不得提前写项目 usage / export。
+    expect(
+      (
+        mockClient.createMaterialLink.mock.calls as unknown as Array<
+          [{ body?: { entityId?: string } }]
+        >
+      ).some(
+        (call) =>
+          call[0]?.body?.entityId === "asset-final-retry",
+      ),
+    ).toBe(false);
+    expect(mockClient.completeExport).not.toHaveBeenCalled();
+    fireEvent.click(
+      container.querySelector('[data-slot="execution-task-adopt"]')!,
+    );
+
+    await waitFor(() =>
+      expect(mockClient.createMaterialLink).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: {
+            projectId: "p-1",
+            contentOutputId: "out-1",
+            entityType: "asset",
+            entityId: "asset-final-retry",
+            role: "final",
+            stage: "production",
+          },
+        }),
+      ),
+    );
+    await waitFor(() =>
+      expect(mockClient.completeExport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { exportId: "exp-1" },
+          body: { resultAssetId: "asset-final-retry" },
+        }),
+      ),
+    );
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="production-final-video"]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      container.querySelector('[data-slot="render-env-hint"]'),
+    ).toBeNull();
+  });
+
+  it("[T-548] 重启后按 retryOf 找回旧版脱离 project 的成功重试，并补项目主成片与 usage", async () => {
+    const oldFailed = {
+      id: "exec-project-old",
+      execType: "video.render",
+      status: "failed",
+      spec: { params: {} },
+      adoptedAssetIds: [],
+      errorMessage: "ffmpeg not found on PATH",
+    };
+    const orphanSucceeded = {
+      id: "exec-orphan-retry",
+      execType: "video.render",
+      status: "succeeded",
+      spec: {
+        taskType: "video.render",
+        goal: "渲染成片",
+        inputs: [],
+        params: { retryOf: "exec-project-old" },
+        constraints: {},
+      },
+      manifest: null,
+      adoptedAssetIds: ["asset-existing-final"],
+      errorMessage: null,
+    };
+    mockClient.listExecutionTasks.mockImplementation(
+      async (rawInput?: unknown) =>
+        (rawInput as { query: { projectId?: string } }).query.projectId
+          ? [oldFailed]
+          : [orphanSucceeded, oldFailed],
+    );
+    mockClient.getExecutionTask.mockResolvedValue(orphanSucceeded);
+    mockClient.listAssetUsage.mockResolvedValue([
+      {
+        projectId: "p-1",
+        contentOutputId: "out-1",
+        entityType: "asset",
+        entityId: "asset-existing-final",
+        role: "final",
+        stage: "production",
+      },
+    ]);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    await waitFor(() =>
+      expect(mockClient.listAssetUsage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { assetId: "asset-existing-final" },
+        }),
+      ),
+    );
+    expect(mockClient.createMaterialLink).not.toHaveBeenCalled();
+    // 历史页面态没有旧 exportId，使用既有 outputs.patch 修复项目主成片。
+    await waitFor(() =>
+      expect(mockClient.patchOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { outputId: "out-1" },
+          body: { primaryAssetId: "asset-existing-final" },
+        }),
+      ),
+    );
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="production-final-video"]'),
+      ).not.toBeNull(),
+    );
   });
 
   // ── [T-366a] 制作方式二选一(上传成品直登成片) ────────────────────────────────

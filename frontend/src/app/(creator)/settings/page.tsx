@@ -33,7 +33,7 @@ import {
   type ActivationState,
   type ChannelLinksState,
 } from "@/features/settings/settings-page";
-import { readChannelLinks } from "@/server/activation/channel-links.server";
+import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 import {
   buildSkillItems,
   type SkillItem,
@@ -295,11 +295,16 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  // [T-396b] 渠道链接(读 Rust 落的 `.channel-links` 缓存,零网络)。web/dev 解析不出
-  // 路径 → null;null → 购买入口隐藏 / 联系文案纯文案(中性降级,绝不回退官方链接)。
+  // [T-534] 渠道 runtime 只从 Rust 已验证并写入加密 `.license` 的投影读取。
   let channelLinks: ChannelLinksState | undefined;
   if (isDesktopRuntime()) {
-    channelLinks = (await readChannelLinks()) ?? undefined;
+    const runtime = await readChannelRuntime();
+    channelLinks = {
+      purchaseUrl: runtime.purchaseUrl,
+      renewalUrl: runtime.renewalUrl,
+      channelSupportUrl: runtime.channelSupportUrl,
+      downloadUrl: runtime.downloadUrl,
+    };
   }
 
   return (

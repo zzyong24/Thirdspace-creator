@@ -18,9 +18,17 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { FileUp, Inbox, Sparkles } from "lucide-react";
+import {
+  CircleCheck,
+  CircleX,
+  FileUp,
+  Inbox,
+  LoaderCircle,
+  Sparkles,
+} from "lucide-react";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -42,6 +50,22 @@ const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> =
 
 // 可读入的文本文件后缀(SPEC §4:拖入 .md/.txt)。
 const TEXT_FILE_RE = /\.(md|txt|markdown)$/i;
+const DOCUMENT_EXTRACT_POLL_MS = 500;
+const DOCUMENT_EXTRACT_MAX_POLLS = 120;
+
+interface ImportFailure {
+  readonly fileName: string;
+  readonly message: string;
+}
+
+interface ImportDialogState {
+  readonly files: ReadonlyArray<File>;
+  readonly phase: "confirm" | "running" | "done";
+  readonly completed: number;
+  readonly succeeded: number;
+  readonly failures: ReadonlyArray<ImportFailure>;
+  readonly currentFileName: string | null;
+}
 
 /** FileReader 读文本文件(Promise 包装;单测 jsdom 原生支持)。 */
 function readTextFile(file: File): Promise<string> {
@@ -51,6 +75,51 @@ function readTextFile(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error ?? new Error("读文件失败"));
     reader.readAsText(file);
   });
+}
+
+async function waitForExtractedText(
+  assetId: string,
+  taskId: string,
+): Promise<string> {
+  for (let attempt = 0; attempt < DOCUMENT_EXTRACT_MAX_POLLS; attempt += 1) {
+    const asset = (await client.getAsset({
+      params: { assetId },
+      query: undefined,
+      body: undefined,
+    })) as unknown as {
+      extractStatus?: string | null;
+      extractedText?: string | null;
+    };
+    const text = asset.extractedText?.trim() ?? "";
+    if (asset.extractStatus === "done" && text.length > 0) return text;
+    if (asset.extractStatus === "unsupported") {
+      throw new Error("暂不支持解析这个文件格式；原文件已保存在素材库，未加入知识库。");
+    }
+    if (asset.extractStatus === "failed") {
+      throw new Error(
+        "没有读到可用正文（可能是扫描件、加密或损坏文件）；原文件已保存在素材库，未加入知识库。",
+      );
+    }
+
+    const task = (await client.getTask({
+      params: { taskId },
+      query: undefined,
+      body: undefined,
+    })) as unknown as {
+      status?: string;
+      errorMessage?: string | null;
+    };
+    if (task.status === "failed" || task.status === "cancelled") {
+      throw new Error(
+        task.errorMessage?.trim() ||
+          "正文解析没有完成；原文件已保存在素材库，未加入知识库。",
+      );
+    }
+    await new Promise((resolve) =>
+      window.setTimeout(resolve, DOCUMENT_EXTRACT_POLL_MS),
+    );
+  }
+  throw new Error("正文解析超时；原文件已保存在素材库，未加入知识库，请稍后重试。");
 }
 
 // [T-094] 深链 prefill 能带的原文上限(URL 承载;超限改带引导话术,用户在对话里粘全文)。
@@ -97,6 +166,8 @@ export function KnowledgeDumpZone() {
   const [manualOpen, setManualOpen] = React.useState(false);
   const [manualTitle, setManualTitle] = React.useState("");
   const [manualType, setManualType] = React.useState<ManualType>("claim");
+  const [importDialog, setImportDialog] =
+    React.useState<ImportDialogState | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const reset = React.useCallback(() => {
@@ -170,8 +241,29 @@ export function KnowledgeDumpZone() {
       if (files.length === 0 || busy !== "idle") return;
       setBusy("uploading");
       setError(null);
-      try {
-        for (const file of files) {
+      let succeeded = 0;
+      const failures: ImportFailure[] = [];
+      setImportDialog({
+        files,
+        phase: "running",
+        completed: 0,
+        succeeded: 0,
+        failures: [],
+        currentFileName: files[0]?.name ?? null,
+      });
+      for (const [index, file] of files.entries()) {
+        setImportDialog((current) =>
+          current
+            ? {
+                ...current,
+                currentFileName: file.name,
+                completed: index,
+                succeeded,
+                failures: [...failures],
+              }
+            : current,
+        );
+        try {
           if (file.size > 20 * 1024 * 1024) {
             throw new Error(`「${file.name}」超过 20MB 上限，请拆分后再传。`);
           }
@@ -203,37 +295,90 @@ export function KnowledgeDumpZone() {
             query: undefined,
             body: { name: file.name },
           })) as unknown as { id: string };
+          const assetId = asset.id || upload.assetId;
+          let extractedContent: string;
+          if (TEXT_FILE_RE.test(file.name)) {
+            extractedContent = (await readTextFile(file)).trim();
+            if (!extractedContent) {
+              throw new Error(
+                `「${file.name}」没有可导入的正文；原文件已保存在素材库，未加入知识库。`,
+              );
+            }
+          } else {
+            const task = (await client.createAITask({
+              params: undefined,
+              query: undefined,
+              body: {
+                taskType: "material.extract",
+                attemptId: createAiTaskAttemptId(),
+                inputData: { assetId, fileName: file.name },
+              },
+            })) as unknown as { id: string };
+            extractedContent = await waitForExtractedText(assetId, task.id);
+          }
           await client.createKnowledge({
             params: undefined,
             query: undefined,
             body: {
               title: file.name,
               knowledgeType: "reference",
-              content: "",
+              content: extractedContent,
               sourceType: "import",
               sourceMetadata: { fileName: file.name, mimeType },
-              assetId: asset.id || upload.assetId,
+              assetId,
               folderId: null,
             },
           });
+          succeeded += 1;
+        } catch (reason) {
+          const safeImportMessage =
+            reason instanceof Error &&
+            (reason.message.includes("未加入知识库") ||
+              reason.message.includes("超过 20MB"))
+              ? reason.message
+              : describeUserError(reason, "导入失败，请重试。");
+          failures.push({
+            fileName: file.name,
+            message: safeImportMessage,
+          });
         }
-        router.refresh();
-      } catch (reason) {
-        setError(describeUserError(reason, "导入文件失败，请重试。"));
-      } finally {
-        setBusy("idle");
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        setImportDialog((current) =>
+          current
+            ? {
+                ...current,
+                completed: index + 1,
+                succeeded,
+                failures: [...failures],
+                currentFileName:
+                  index + 1 < files.length ? files[index + 1]!.name : null,
+              }
+            : current,
+        );
       }
+      if (succeeded > 0) {
+        router.refresh();
+      }
+      setImportDialog({
+        files,
+        phase: "done",
+        completed: files.length,
+        succeeded,
+        failures,
+        currentFileName: null,
+      });
+      setBusy("idle");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     },
     [busy, router],
   );
 
   return (
-    <section
-      data-slot="knowledge-dump-zone"
-      aria-label="知识倾倒场"
-      className="flex flex-col gap-2 rounded-card border border-dashed border-border bg-surface-subtle/50 p-3"
-    >
+    <>
+      <section
+        data-slot="knowledge-dump-zone"
+        aria-label="知识倾倒场"
+        className="flex flex-col gap-2 rounded-card border border-dashed border-border bg-surface-subtle/50 p-3"
+      >
       <div className="flex items-center gap-2 text-xs text-text-subtle">
         <Inbox className="size-4 shrink-0" aria-hidden="true" />
         把笔记、金句、逐字稿整段交给 AI 蒸馏成知识原子 —— 点「AI 蒸馏」在对话里粘原文,采纳后进知识库
@@ -277,12 +422,24 @@ export function KnowledgeDumpZone() {
           ref={fileInputRef}
           type="file"
           multiple
+          data-slot="knowledge-file-input"
           accept=".pdf,.docx,.md,.markdown,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,text/plain"
           className="sr-only"
           aria-label="导入 PDF、DOCX 或 Markdown"
-          onChange={(event) =>
-            void handleDocumentFiles(Array.from(event.target.files ?? []))
-          }
+          onChange={(event) => {
+            const files = Array.from(event.target.files ?? []);
+            event.target.value = "";
+            if (files.length === 0) return;
+            setError(null);
+            setImportDialog({
+              files,
+              phase: "confirm",
+              completed: 0,
+              succeeded: 0,
+              failures: [],
+              currentFileName: null,
+            });
+          }}
         />
         <button
           type="button"
@@ -367,6 +524,154 @@ export function KnowledgeDumpZone() {
           </button>
         </form>
       ) : null}
-    </section>
+      </section>
+      {importDialog ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/55 p-4 backdrop-blur-[2px]"
+          role="presentation"
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="knowledge-import-title"
+            data-slot={
+              importDialog.phase === "confirm"
+                ? "knowledge-import-confirm-dialog"
+                : importDialog.phase === "done"
+                  ? "knowledge-import-result-dialog"
+                  : "knowledge-import-progress-dialog"
+            }
+            className="w-full max-w-lg overflow-hidden rounded-xl border border-border bg-surface shadow-2xl"
+          >
+            <div className="border-b border-border px-5 py-4">
+              <h2
+                id="knowledge-import-title"
+                className="text-base font-semibold text-foreground"
+              >
+                {importDialog.phase === "confirm"
+                  ? `确认导入 ${importDialog.files.length} 个文件`
+                  : importDialog.phase === "running"
+                    ? "正在读取文件正文"
+                    : "知识库导入完成"}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-text-subtle">
+                {importDialog.phase === "confirm"
+                  ? "CreatorOS 会先保存原文件，再读取正文；只有正文读取成功的文件才会加入知识库。"
+                  : importDialog.phase === "running"
+                    ? `已处理 ${importDialog.completed}/${importDialog.files.length}，请保持 CreatorOS 打开。`
+                    : `成功 ${importDialog.succeeded} 个，失败 ${importDialog.failures.length} 个。`}
+              </p>
+            </div>
+            <div className="max-h-64 overflow-y-auto px-5 py-4">
+              {importDialog.phase === "confirm" ? (
+                <ul className="space-y-2">
+                  {importDialog.files.map((file) => (
+                    <li
+                      key={`${file.name}:${file.size}`}
+                      className="flex items-center justify-between gap-3 rounded-md bg-surface-subtle px-3 py-2 text-sm"
+                    >
+                      <span className="min-w-0 truncate text-foreground">
+                        {file.name}
+                      </span>
+                      <span className="shrink-0 text-xs text-text-subtle">
+                        {Math.max(1, Math.ceil(file.size / 1024))} KB
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : importDialog.phase === "running" ? (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="flex items-center gap-3 rounded-md bg-brand-soft/50 px-3 py-3 text-sm text-foreground"
+                >
+                  <LoaderCircle
+                    className="size-5 shrink-0 animate-spin text-brand"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">
+                    {importDialog.currentFileName
+                      ? `正在处理「${importDialog.currentFileName}」`
+                      : "正在收尾…"}
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-3" aria-live="polite">
+                  <div className="flex items-center gap-2 text-sm text-success">
+                    <CircleCheck className="size-4" aria-hidden="true" />
+                    成功 {importDialog.succeeded} 个
+                  </div>
+                  {importDialog.failures.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-destructive">
+                        <CircleX className="size-4" aria-hidden="true" />
+                        失败 {importDialog.failures.length} 个
+                      </div>
+                      <ul className="space-y-2">
+                        {importDialog.failures.map((failure) => (
+                          <li
+                            key={failure.fileName}
+                            className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2"
+                          >
+                            <p className="text-sm font-medium text-foreground">
+                              {failure.fileName}
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-destructive">
+                              {failure.message}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-subtle">失败 0 个。</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border bg-surface-subtle/40 px-5 py-3">
+              {importDialog.phase === "confirm" ? (
+                <>
+                  <button
+                    type="button"
+                    data-slot="knowledge-import-cancel"
+                    onClick={() => setImportDialog(null)}
+                    className={cn(
+                      buttonCls,
+                      "border border-border bg-surface text-foreground hover:bg-surface-subtle",
+                    )}
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    data-slot="knowledge-import-confirm"
+                    onClick={() => void handleDocumentFiles(importDialog.files)}
+                    className={cn(
+                      buttonCls,
+                      "bg-brand text-brand-foreground hover:bg-brand/90",
+                    )}
+                  >
+                    确认导入
+                  </button>
+                </>
+              ) : importDialog.phase === "done" ? (
+                <button
+                  type="button"
+                  data-slot="knowledge-import-close"
+                  onClick={() => setImportDialog(null)}
+                  className={cn(
+                    buttonCls,
+                    "bg-brand text-brand-foreground hover:bg-brand/90",
+                  )}
+                >
+                  知道了
+                </button>
+              ) : null}
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
   );
 }

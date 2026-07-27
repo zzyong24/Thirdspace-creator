@@ -58,6 +58,47 @@ const SCRIPT_REVIEW_PREFILL =
 
 type Phase = "idle" | "opening" | "error";
 
+const REVIEW_ATTENTION_MS = 1_600;
+const reviewAttentionTimers = new WeakMap<HTMLElement, number>();
+
+/** T-539：滚动只是位置变化；同屏时必须再给目标卡和真实动作一个可感知反馈。 */
+function directAttentionToReview(): void {
+  const gate = document.querySelector<HTMLElement>(
+    '[data-testid="script-review-gate"]',
+  );
+  const fallback = document.getElementById("script");
+  const scrollTarget = gate ?? fallback;
+  if (!scrollTarget) return;
+
+  const reduceMotion =
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  scrollTarget.scrollIntoView({
+    behavior: reduceMotion ? "auto" : "smooth",
+    block: "center",
+  });
+
+  if (!gate) return;
+  const trigger = gate.querySelector<HTMLElement>(
+    '[data-testid="script-review-trigger"]',
+  );
+  gate.dataset.attention = "true";
+  if (trigger) {
+    trigger.dataset.attention = "true";
+    trigger.focus({ preventScroll: true });
+  } else {
+    gate.focus({ preventScroll: true });
+  }
+
+  const previousTimer = reviewAttentionTimers.get(gate);
+  if (previousTimer !== undefined) window.clearTimeout(previousTimer);
+  const timer = window.setTimeout(() => {
+    delete gate.dataset.attention;
+    if (trigger) delete trigger.dataset.attention;
+    reviewAttentionTimers.delete(gate);
+  }, REVIEW_ATTENTION_MS);
+  reviewAttentionTimers.set(gate, timer);
+}
+
 /** verdict → 徽章样式 + 文案。 */
 const VERDICT_META: Record<
   ScriptReviewReportResource["verdict"],
@@ -187,7 +228,8 @@ export function ScriptReviewGate({
       data-slot="script-review-gate"
       data-testid="script-review-gate"
       data-verdict={report?.verdict ?? "none"}
-      className="mt-3 flex flex-col gap-2 rounded-card border border-border bg-surface px-3.5 py-3"
+      tabIndex={-1}
+      className="mt-3 flex flex-col gap-2 rounded-card border border-border bg-surface px-3.5 py-3 outline-none transition-[border-color,background-color,box-shadow] duration-300 motion-reduce:transition-none data-[attention=true]:border-brand/70 data-[attention=true]:bg-brand-soft data-[attention=true]:ring-4 data-[attention=true]:ring-brand/20"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-[13px] font-semibold text-foreground">
@@ -199,7 +241,7 @@ export function ScriptReviewGate({
           size="sm"
           variant="outline"
           data-testid="script-review-trigger"
-          className="h-7 gap-1 px-2.5 text-[11px]"
+          className="h-7 gap-1 px-2.5 text-[11px] data-[attention=true]:border-brand data-[attention=true]:bg-brand data-[attention=true]:text-brand-foreground data-[attention=true]:ring-4 data-[attention=true]:ring-brand/25"
           disabled={opening}
           onClick={openCopilot}
         >
@@ -629,13 +671,8 @@ export function ReviewSoftGateHint({
         variant="outline"
         data-testid="script-review-soft-gate-action"
         className="h-6 px-2 text-[10px]"
-        onClick={() =>
-          // [T-393] 滚到审核卡本体(原 #script 是脚本编辑框,用户点了落点不对)。
-          (
-            document.querySelector('[data-testid="script-review-gate"]') ??
-            document.getElementById("script")
-          )?.scrollIntoView({ behavior: "smooth", block: "center" })
-        }
+        // [T-393] 定位审核卡；[T-539] 同屏也高亮并把焦点交给审核按钮。
+        onClick={directAttentionToReview}
       >
         先去审核
       </Button>

@@ -23,6 +23,7 @@ export interface KnowledgeWorkspaceVm {
     readonly assetId: string | null;
     readonly knowledgeType: string;
     readonly status: "active" | "archived" | "draft";
+    readonly createdAt: string;
     readonly updatedAt: string;
   }>;
 }
@@ -59,23 +60,30 @@ export function KnowledgeFileWorkspace({
     () => new Map(workspace.folders.map((folder) => [folder.id, folder])),
     [workspace.folders],
   );
-  const now = Date.now();
-  const rows = workspace.items.filter((item) => {
-    if (item.status === "archived") return false;
-    if (
-      query.trim() &&
-      !item.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
-    ) {
-      return false;
-    }
-    if (node === "all") return true;
-    if (node === "unfiled") return item.folderId === null;
-    if (node === "recent") {
-      const updated = Date.parse(item.updatedAt);
-      return Number.isFinite(updated) && now - updated <= 7 * 24 * 60 * 60 * 1000;
-    }
-    return item.folderId === node;
-  });
+  // 组件挂载时冻结“最近”窗口基准，避免 render 内调用非纯 Date.now。
+  const [now] = React.useState(() => Date.now());
+  const rows = workspace.items
+    .filter((item) => {
+      if (item.status === "archived") return false;
+      if (
+        query.trim() &&
+        !item.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
+      ) {
+        return false;
+      }
+      if (node === "all") return true;
+      if (node === "unfiled") return item.folderId === null;
+      if (node === "recent") {
+        const updated = Date.parse(item.updatedAt);
+        return Number.isFinite(updated) && now - updated <= 7 * 24 * 60 * 60 * 1000;
+      }
+      return item.folderId === node;
+    })
+    // [T-547] 所有节点统一按导入/写入时间倒序，id 保证同毫秒稳定。
+    .sort(
+      (a, b) =>
+        b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id),
+    );
 
   async function createFolder(event: React.FormEvent) {
     event.preventDefault();

@@ -14,10 +14,45 @@ vi.mock("@/lib/desktop-updater", () => ({
   getAppVersion: vi.fn(async () => "0.1.0"),
 }));
 
+function runtimeResponse(bugFeedbackUrl: string | null) {
+  return {
+    runtimeState: bugFeedbackUrl ? "ready" : "unavailable",
+    brandName: null,
+    purchaseUrl: null,
+    renewalUrl: null,
+    channelSupportUrl: null,
+    bugFeedbackUrl,
+    downloadUrl: null,
+  };
+}
+
 describe("IssueFeedbackDialog", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+  });
+
+  it("[T-546] 正式侧边栏使用布局下传的已验签渠道缓存，重复打开不再读取 channel-runtime", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    const user = userEvent.setup();
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        bugFeedbackUrl="https://growth.example.com/official-bug-form"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "问题反馈" });
+    await user.click(trigger);
+    expect(
+      screen.getByRole("button", { name: "打开反馈渠道" }),
+    ).toBeEnabled();
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => expect(trigger).toHaveFocus());
+    await user.click(trigger);
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("copies exactly the visible preview without sending feedback", async () => {
@@ -25,7 +60,11 @@ describe("IssueFeedbackDialog", () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ supportUrl: "https://support.example.com/form" })),
+        new Response(
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
+        ),
       );
     const user = userEvent.setup();
     Object.defineProperty(navigator, "clipboard", {
@@ -47,23 +86,33 @@ describe("IssueFeedbackDialog", () => {
     expect(fetchMock.mock.calls[0]?.[1]?.method ?? "GET").toBe("GET");
   });
 
-  it("blocks invalid lengths and keeps unavailable channel honest", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ supportUrl: null })),
-    );
+  it("[T-546] Growth 未配置时仍使用飞书降级渠道，且引导压缩日志后手动上传", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(runtimeResponse(null))),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
     const user = userEvent.setup();
     render(<IssueFeedbackDialog pathname="/projects/123456789" collapsed={false} />);
     await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    expect(await screen.findByText(/压缩为 zip/)).toBeInTheDocument();
+    expect(screen.getByText(/手动上传/)).toBeInTheDocument();
+    const channel = screen.getByRole("button", { name: "打开反馈渠道" });
+    expect(channel).toBeEnabled();
+    expect(screen.getByRole("button", { name: "发送问题反馈" })).toBeDisabled();
+    await user.click(channel);
+    expect(fetchMock.mock.calls[1]?.[1]?.body).toContain(
+      "https://my.feishu.cn/share/base/form/",
+    );
     await user.type(screen.getByLabelText("问题描述"), "太短");
     await user.click(screen.getByRole("button", { name: "复制反馈内容" }));
     expect(screen.getByRole("alert")).toHaveTextContent("至少 10 个字符");
-    expect(await screen.findByText("当前没有可用的反馈渠道")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "打开反馈渠道" })).toBeDisabled();
   });
 
   it("blocks descriptions over 4000 Unicode characters", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ supportUrl: null })),
+      new Response(JSON.stringify(runtimeResponse(null))),
     );
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
     fireEvent.click(screen.getByRole("button", { name: "问题反馈" }));
@@ -76,7 +125,7 @@ describe("IssueFeedbackDialog", () => {
 
   it("keeps the preview selectable when Clipboard API rejects", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ supportUrl: null })),
+      new Response(JSON.stringify(runtimeResponse(null))),
     );
     const user = userEvent.setup();
     Object.defineProperty(navigator, "clipboard", {
@@ -98,7 +147,11 @@ describe("IssueFeedbackDialog", () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ supportUrl: "https://support.example.com/form" })),
+        new Response(
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
+        ),
       )
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })))
       .mockResolvedValueOnce(
@@ -115,7 +168,7 @@ describe("IssueFeedbackDialog", () => {
     await user.click(screen.getByRole("button", { name: "打开日志文件夹" }));
     expect(await screen.findByText(/未能打开日志文件夹/)).toBeInTheDocument();
     expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
-      JSON.stringify({ url: "https://support.example.com/form" }),
+      JSON.stringify({ url: "https://growth.example.com/official-bug-form" }),
     );
     expect(fetchMock.mock.calls[2]?.[1]?.body).toBeUndefined();
   });
@@ -125,9 +178,9 @@ describe("IssueFeedbackDialog", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         new Response(
-          JSON.stringify({
-            supportUrl: "https://support.example.com/form",
-          }),
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
         ),
       )
       .mockResolvedValueOnce(
@@ -163,9 +216,9 @@ describe("IssueFeedbackDialog", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         new Response(
-          JSON.stringify({
-            supportUrl: "https://support.example.com/form",
-          }),
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
         ),
       )
       .mockImplementationOnce(() => pendingOpen);
@@ -186,7 +239,7 @@ describe("IssueFeedbackDialog", () => {
 
   it("returns focus to the trigger after Escape", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ supportUrl: null })),
+      new Response(JSON.stringify(runtimeResponse(null))),
     );
     render(<IssueFeedbackDialog pathname="/" collapsed />);
     const trigger = screen.getByRole("button", { name: "问题反馈" });
@@ -194,5 +247,27 @@ describe("IssueFeedbackDialog", () => {
     expect(await screen.findByLabelText("问题描述")).toHaveFocus();
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it("[T-546] 自动发送明确禁用，不调用 product-feedback 假装已经提交", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify(
+          runtimeResponse("https://growth.example.com/official-bug-form"),
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
+    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    const submit = screen.getByRole("button", { name: "发送问题反馈" });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes("/api/v1/local/product-feedback"),
+      ),
+    ).toBe(false);
   });
 });

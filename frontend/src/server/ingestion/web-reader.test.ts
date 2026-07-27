@@ -276,9 +276,100 @@ describe("readUrl(三墙分类 + 抽取器选择)", () => {
     const ctx = makeCtx({
       goto: async () => ({ status: () => 403, url: () => "https://x.com/p" }),
     });
-    await expect(
-      readUrl("https://x.com/p", { authDir: "/tmp/x" }, { openContext: async () => ctx }),
-    ).rejects.toThrow(/HTTP 403/);
+    const error = await readUrl(
+      "https://x.com/p",
+      { authDir: "/tmp/x" },
+      { openContext: async () => ctx },
+    ).catch((caught) => caught);
+    expect(error).toMatchObject({
+      name: "WebCaptureError",
+      code: "HTTP_ERROR",
+      status: 403,
+    });
+  });
+
+  it("[T-546] EdgeOne 567 challenge 写入 Cookie 后有界重载并继续读取", async () => {
+    const goto = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: () => 567,
+        url: () => "https://aihot.example.com/",
+      })
+      .mockResolvedValueOnce({
+        status: () => 200,
+        url: () => "https://aihot.example.com/",
+      });
+    const article =
+      "今日 AI 热榜正文 " +
+      "这是经过 EdgeOne challenge 后加载到的真实公开内容。".repeat(12);
+    const ctx = makeCtx({
+      goto,
+      url: () => "https://aihot.example.com/",
+      content: async () =>
+        `<html><head><title>AI 热榜</title></head><body><article><p>${article}</p></article></body></html>`,
+    });
+
+    const result = await readUrl(
+      "https://aihot.example.com/",
+      { authDir: "/tmp/x" },
+      { openContext: async () => ctx },
+    );
+
+    expect(goto).toHaveBeenCalledTimes(2);
+    expect(result.text).toContain("EdgeOne challenge");
+  });
+
+  it("[T-546] 动态列表页 Readability 抽不到文章时，回退已渲染可见文本而不是直接报错", async () => {
+    const renderedText =
+      "今日热榜 " +
+      Array.from(
+        { length: 12 },
+        (_, index) => `第 ${index + 1} 条热点标题及其真实摘要内容`,
+      ).join(" ");
+    const evaluate = vi.fn(async (fn: unknown) =>
+      String(fn).includes("innerText") ? renderedText : undefined,
+    );
+    const ctx = makeCtx({
+      content: async () =>
+        "<html><head><title>今日热榜</title></head><body><div id='app'></div></body></html>",
+      evaluate: evaluate as ReaderCapablePage["evaluate"],
+    });
+
+    const result = await readUrl(
+      "https://example.com/hot",
+      { authDir: "/tmp/x" },
+      { openContext: async () => ctx },
+    );
+
+    expect(result).toMatchObject({
+      title: "标题",
+      finalUrl: "https://example.com/post",
+      extractor: "rendered-text",
+      extractPath: "rendered-text",
+      text: renderedText,
+    });
+  });
+
+  it("[T-546] 动态页只有很短的壳文本时仍诚实报 PARSE_FAILED，不伪装成有效网页", async () => {
+    const ctx = makeCtx({
+      content: async () =>
+        "<html><head><title>空壳</title></head><body><div id='app'></div></body></html>",
+      evaluate: (async (fn: unknown) =>
+        String(fn).includes("innerText")
+          ? "加载中，请稍候"
+          : undefined) as ReaderCapablePage["evaluate"],
+    });
+
+    const error = await readUrl(
+      "https://example.com/empty",
+      { authDir: "/tmp/x" },
+      { openContext: async () => ctx },
+    ).catch((caught) => caught);
+
+    expect(error).toMatchObject({
+      name: "WebCaptureError",
+      code: "PARSE_FAILED",
+    });
   });
 
   it("登录墙命中 → WebReaderLoginRequiredError(结构化降级,带 domain)", async () => {

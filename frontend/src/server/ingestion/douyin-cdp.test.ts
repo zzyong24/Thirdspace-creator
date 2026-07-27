@@ -1351,28 +1351,75 @@ describe("[T-490] 零作品账号身份读取", () => {
 });
 
 describe("[T-514] 对标博主作品数的证据边界", () => {
-  function makeProfileContext(responsePayload?: unknown) {
-    type ProfileResp = { url(): string; json(): Promise<unknown> };
+  function makeProfileContext(
+    responsePayload?: unknown,
+    pageState: {
+      url?: string;
+      title?: string;
+      body?: string;
+      responseDelayMs?: number;
+      responseEventDelayMs?: number;
+      responsePayloads?: unknown[];
+      responseRawBodies?: string[];
+    } = {},
+  ) {
+    type ProfileResp = {
+      url(): string;
+      json(): Promise<unknown>;
+      text?(): Promise<string>;
+    };
     const handlers: Array<(response: ProfileResp) => void> = [];
+    let profileVisit = 0;
     const page = {
       on(_event: "response", handler: (response: ProfileResp) => void) {
         handlers.push(handler);
       },
       async goto() {
-        if (responsePayload !== undefined) {
+        const visitIndex = profileVisit++;
+        const visitPayload =
+          pageState.responsePayloads?.[visitIndex] ?? responsePayload;
+        if (visitPayload !== undefined || pageState.responseRawBodies) {
+          const rawBody =
+            pageState.responseRawBodies?.[visitIndex] ??
+            JSON.stringify(visitPayload);
           const response: ProfileResp = {
             url: () =>
               "https://www.douyin.com/aweme/v1/web/aweme/post/?count=18",
-            json: () => Promise.resolve(responsePayload),
+            json: () =>
+              new Promise((resolve) =>
+                setTimeout(
+                  () => resolve(visitPayload),
+                  pageState.responseDelayMs ?? 0,
+                ),
+              ),
+            text: () =>
+              new Promise((resolve) =>
+                setTimeout(
+                  () => resolve(rawBody),
+                  pageState.responseDelayMs ?? 0,
+                ),
+              ),
           };
-          for (const handler of handlers) handler(response);
+          if (pageState.responseEventDelayMs) {
+            setTimeout(() => {
+              for (const handler of handlers) handler(response);
+            }, pageState.responseEventDelayMs);
+          } else {
+            for (const handler of handlers) handler(response);
+          }
         }
       },
       async waitForTimeout() {
-        await Promise.resolve();
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      },
+      url() {
+        return pageState.url ?? "https://www.douyin.com/user/sec-test";
+      },
+      async title() {
+        return pageState.title ?? "抖音博主主页";
       },
       async evaluate() {
-        return "";
+        return pageState.body ?? "";
       },
       keyboard: { async press() {} },
       mouse: { async wheel() {} },
@@ -1411,6 +1458,44 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
     ).rejects.toBeInstanceOf(DouyinNoValidResponseError);
   });
 
+  it("本地 Cookie 尚在但主页跳转到登录/授权页时明确要求重新登录", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      url: "https://open.douyin.com/platform/oauth/pc/auth?client_key=redacted",
+      title: "抖音授权",
+      body: "使用抖音账号登录",
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-expired-session",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
+  it("作品接口明确返回未登录时不再误报为响应结构变化", async () => {
+    const { openContext } = makeProfileContext({
+      status_code: 8,
+      status_msg: "用户未登录",
+      aweme_list: null,
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-upstream-rejected",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
   it("命中作品接口但返回结构变化时不得伪装成真实 0 条", async () => {
     const { openContext } = makeProfileContext({
       status_code: 0,
@@ -1445,6 +1530,73 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
         { openContext },
       ),
     ).resolves.toEqual([]);
+  });
+
+  it("大响应异步解析未完成时必须等待，不能抢先误判为 0 条", async () => {
+    const { openContext } = makeProfileContext(
+      {
+        status_code: 0,
+        aweme_list: [
+          {
+            aweme_id: "work-delayed",
+            desc: "延迟返回的真实作品",
+            statistics: { digg_count: 12 },
+          },
+        ],
+        has_more: false,
+      },
+      { responseEventDelayMs: 10, responseDelayMs: 10 },
+    );
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-delayed-response",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).resolves.toMatchObject([
+      {
+        awemeId: "work-delayed",
+        description: "延迟返回的真实作品",
+      },
+    ]);
+  });
+
+  it("首个作品响应为空时只重载一次，并以第二次真实列表为准", async () => {
+    const valid = {
+      status_code: 0,
+      aweme_list: [
+        {
+          aweme_id: "work-after-reload",
+          desc: "重载后取得的真实作品",
+          statistics: { digg_count: 18 },
+        },
+      ],
+      has_more: false,
+    };
+    const { openContext } = makeProfileContext(undefined, {
+      responsePayloads: [undefined, valid],
+      responseRawBodies: ["", JSON.stringify(valid)],
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-empty-then-valid",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).resolves.toMatchObject([
+      {
+        awemeId: "work-after-reload",
+        description: "重载后取得的真实作品",
+      },
+    ]);
   });
 });
 

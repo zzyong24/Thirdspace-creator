@@ -483,3 +483,37 @@ describe("collectMediaFiles", () => {
     expect(media.images).toEqual(["shots/page_01.png"]);
   });
 });
+
+describe("generateVideoRenderHtml · 图片 B-roll", () => {
+  it("[T-548] 图片必须使用 img 渲染，不能把截图文件塞进 video 后留下黑框", () => {
+    const imageBrollProps = videoRenderProps.parse({
+      ...fullProps(),
+      scenes: [
+        {
+          id: "s1",
+          label: "SCENE 1",
+          title: "价格与计费",
+          startSec: 0,
+          endSec: 8,
+          cards: [],
+        },
+      ],
+      broll: [
+        {
+          at: 1,
+          file: "shot.png",
+          label: "截图·Kimi K2.6 - Kimi API Platform",
+          durationSec: 4,
+        },
+      ],
+    });
+
+    const html = generateVideoRenderHtml(imageBrollProps, {
+      imageFiles: new Set(["shot.png"]),
+    });
+
+    expect(html).toContain('<img id="');
+    expect(html).toContain('src="media/shot.png"');
+    expect(html).not.toMatch(/<video[^>]+src="media\/shot\.png"/);
+  });
+});

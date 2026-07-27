@@ -94,6 +94,18 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 |---|---|---|---|---|---|
 | DEC-ODR-001；T-519 Replacement | Assets ownership/idempotency → 默认多级文件夹 → 文件/URL/文本导入 → 四视图 | 现有 Knowledge 页面增量 | [新 PLAN](../docs/superpowers/specs/2026-07-26-knowledge-workspace-lean.md)；旧 41-operation CONTRACT invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；旧 ID/图/导入保留；CONTRACT/确认②/BUILD 关闭 |
 
+## T-534 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-TSB-001；FR-TSB-001..003；NFR-TSB-001 | FLOW-TSB-001 | ENT-TSB-001；UI-TSB-001/002 | [Creator CONTRACT](../docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md)；API-TSB-001 | TEST-TSB-001..010 | Creator review 三轮收口；BUILD/consumer contract tests PASS；全局 next build 受当前 HEAD 的 T-535 instrumentation panic 阻断 |
+
+## T-537 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-COL-001；FR-537-01..09；NFR-537-01..05 | FLOW-537-01/02 | ENT-537-01..03；IA-537-01/02 | [PLAN](../docs/superpowers/specs/2026-07-26-content-radar-collector-account.md)；[CONTRACT](../docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md)；API-537-01..05 | TEST-537-01..13；RAT-537-01 | 三轮评审文档内部 PASS；正式 Gate 因第二个有效抖音账号的真实 RAT 未通过而 BLOCKED，生产代码未改 |
+
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链
@@ -134,4 +146,5 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | FR-CR-017, FR-CR-018, FR-CR-019 | FLOW-CR-001, FLOW-CR-002, FLOW-CR-003, FLOW-CR-004, FLOW-CR-005, FLOW-CR-006, FLOW-CR-007, FLOW-CR-008 | ENT-CR-001, ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-007, ENT-CR-008, ENT-CR-009, ENT-CR-010, ENT-CR-011 | NONE | API-CR-001, API-CR-004, API-CR-009, API-CR-010, API-CR-011, API-CR-015, API-CR-016, API-CR-030 | NONE | PLANNED |
 | DEC-CR-003, DEC-CR-007, DEC-CR-012, DEC-CR-013, DEC-CR-015, FR-CR-021, NFR-CR-002, NFR-CR-007, NFR-CR-012 | FLOW-CR-009 | ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-009, ENT-CR-010, ENT-CR-012 | IA-CR-003, IA-CR-005, IA-CR-007 | API-CR-031 | NONE | PLANNED |
 | FR-FDBR-01, FR-FDBR-02, FR-FDBR-03, FR-FDBR-04, FR-FDBR-05, FR-FDBR-06 | NONE | UI-FDBR-001, PURE-FDBR-001 | NONE | API-FDBR-001, API-FDBR-002, API-FDBR-003 | TEST-FDBR-001, TEST-FDBR-002, TEST-FDBR-003, TEST-FDBR-004, TEST-FDBR-005, TEST-FDBR-006, TEST-FDBR-007 | OK |
+| DEC-TSB-001, FR-TSB-001, FR-TSB-002, FR-TSB-003, NFR-TSB-001 | FLOW-TSB-001 | ENT-TSB-001 | UI-TSB-001, UI-TSB-002 | API-TSB-001 | TEST-TSB-001, TEST-TSB-002, TEST-TSB-003, TEST-TSB-004, TEST-TSB-005, TEST-TSB-006, TEST-TSB-007, TEST-TSB-008, TEST-TSB-009, TEST-TSB-010 | OK |
 ```

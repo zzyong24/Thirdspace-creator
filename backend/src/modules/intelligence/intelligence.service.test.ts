@@ -129,6 +129,173 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
+  it("[T-546] 进程重启后的过期来源租约会恢复并复用原 run，不再永久占用同步按钮", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const created = await service.createSource(ctx, {
+        collectionId: null,
+        type: "darkhorse_query",
+        config: {
+          type: "darkhorse_query",
+          collectorAccountId: "account-1",
+          keyword: "AI 工具",
+          board: "low_follower_breakout",
+        },
+        monitorEnabled: false,
+        runInitial: true,
+        idempotencyKey: "stale-darkhorse-source",
+      });
+      if (!created.run) throw new Error("expected initial run");
+      const claim = await tasks.claimNext({
+        workerId: "worker-before-restart",
+        kinds: ["source_sync"],
+        leaseSeconds: 30,
+      });
+      expect(claim?.task.status).toBe("running");
+
+      d.clock.value = "2026-07-23T12:01:00.000Z";
+      const resumed = await service.startRun(ctx, created.source.id, {
+        trigger: "manual",
+        idempotencyKey: "resume-stale-darkhorse",
+      });
+
+      expect(resumed.run.id).toBe(created.run.id);
+      expect(resumed.task.status).toBe("queued");
+      const runs = await service.listRuns(ctx, created.source.id);
+      expect(runs.rows).toHaveLength(1);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-546] active run 遇到 failed/cancelled/blocked 终态任务会先收敛，再允许新同步", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const cases = [
+        { taskStatus: "failed", runStatus: "failed" },
+        { taskStatus: "cancelled", runStatus: "failed" },
+        { taskStatus: "blocked", runStatus: "blocked" },
+      ] as const;
+      for (const [index, testCase] of cases.entries()) {
+        const created = await service.createSource(ctx, {
+          collectionId: null,
+          type: "rss",
+          config: {
+            type: "rss",
+            url: `https://example.com/terminal-${testCase.taskStatus}.xml`,
+          },
+          monitorEnabled: false,
+          runInitial: true,
+          idempotencyKey: `terminal-${testCase.taskStatus}`,
+        });
+        if (!created.run || !created.task) {
+          throw new Error("expected initial run");
+        }
+        if (testCase.taskStatus === "cancelled") {
+          await tasks.command(ctx, {
+            taskIds: [created.task.id],
+            command: "cancel",
+            idempotencyKey: `cancel-${index}`,
+          });
+        } else {
+          if (testCase.taskStatus === "failed") {
+            await db
+              .update(executionTasks)
+              .set({ maxAttempts: 1 })
+              .where(eq(executionTasks.id, created.task.id));
+          }
+          const claim = await tasks.claimTask({
+            taskId: created.task.id,
+            workerId: `terminal-worker-${index}`,
+            leaseSeconds: 30,
+          });
+          if (!claim) throw new Error("expected task claim");
+          if (testCase.taskStatus === "blocked") {
+            await tasks.finish({
+              taskId: created.task.id,
+              workerId: claim.lease.workerId,
+              attempt: claim.lease.attempt,
+              status: "blocked",
+              errorCode: "LOGIN_REQUIRED",
+              errorMessage: "LOGIN_REQUIRED",
+            });
+          } else {
+            d.clock.value = new Date(
+              Date.parse(d.clock.value) + 60_000,
+            ).toISOString();
+          }
+        }
+
+        const restarted = await service.startRun(ctx, created.source.id, {
+          trigger: "manual",
+          idempotencyKey: `restart-${testCase.taskStatus}`,
+        });
+        expect(restarted.run.id).not.toBe(created.run.id);
+        const runs = await service.listRuns(ctx, created.source.id);
+        expect(
+          runs.rows.find((row) => row.id === created.run!.id)?.status,
+        ).toBe(testCase.runStatus);
+        expect(
+          runs.rows.find((row) => row.id === restarted.run.id)?.status,
+        ).toBe("queued");
+      }
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-546] manual/schedule 并发同一来源只复用一个 active task/run", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const created = await service.createSource(ctx, {
+        collectionId: null,
+        type: "rss",
+        config: {
+          type: "rss",
+          url: "https://example.com/concurrent-source.xml",
+        },
+        monitorEnabled: false,
+        runInitial: false,
+        idempotencyKey: "concurrent-source",
+      });
+      const [manual, schedule] = await Promise.all([
+        service.startRun(ctx, created.source.id, {
+          trigger: "manual",
+          idempotencyKey: "concurrent-manual",
+        }),
+        service.startRun(ctx, created.source.id, {
+          trigger: "schedule",
+          idempotencyKey: "concurrent-schedule",
+        }),
+      ]);
+
+      expect(schedule.task.id).toBe(manual.task.id);
+      expect(schedule.run.id).toBe(manual.run.id);
+      expect(
+        (
+          await tasks.list(ctx, {
+            kind: "source_sync",
+            ownerId: created.source.id,
+          })
+        ).rows,
+      ).toHaveLength(1);
+      expect(await service.listRuns(ctx, created.source.id)).toMatchObject({
+        total: 1,
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
   it("[T-537] owner 与 collector 分离固化，换 collector 不碰撞且 claim 前重新验资格", async () => {
     const { db, client } = await createDb();
     const d = deps();

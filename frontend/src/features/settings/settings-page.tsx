@@ -157,7 +157,8 @@ export interface ActivationState {
  */
 export interface ChannelLinksState {
   readonly purchaseUrl: string | null;
-  readonly supportUrl: string | null;
+  readonly renewalUrl: string | null;
+  readonly channelSupportUrl: string | null;
   readonly downloadUrl: string | null;
 }
 

@@ -374,8 +374,21 @@ function proxyNameFor(mountAs: string): string {
   const base = path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
   return base.replace(/\.[^.]*$/, "") + ".mp4";
 }
-function imageNameFor(mountAs: string): string {
-  return path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
+function imageNameFor(mountAs: string, mimeType?: string | null): string {
+  const base = path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
+  if (path.extname(base)) return base;
+  const normalized = mimeType?.split(";", 1)[0]?.toLowerCase();
+  const extension =
+    normalized === "image/jpeg"
+      ? ".jpg"
+      : normalized === "image/webp"
+        ? ".webp"
+        : normalized === "image/gif"
+          ? ".gif"
+          : normalized === "image/avif"
+            ? ".avif"
+            : ".png";
+  return `${base}${extension}`;
 }
 
 export function createVideoRenderExecutor(
@@ -472,7 +485,7 @@ export function createVideoRenderExecutor(
         );
       }
       for (const f of media.images) {
-        const outName = imageNameFor(f);
+        const outName = imageNameFor(f, inputMimeTypes.get(f));
         nameMap.set(f, outName);
         await fs.copyFile(resolveInsideDir(sandbox.inputDir, f), path.join(mediaDir, outName));
       }
@@ -489,7 +502,10 @@ export function createVideoRenderExecutor(
           cards: s.cards.map((c) => (c.kind === "image" ? { ...c, file: rename(c.file) } : c)),
         })),
       };
-      const html = generateVideoRenderHtml(renamedProps, { mediaPrefix: "media/" });
+      const html = generateVideoRenderHtml(renamedProps, {
+        mediaPrefix: "media/",
+        imageFiles: new Set(media.images.map(rename)),
+      });
       await fs.writeFile(path.join(workDir, "index.html"), html, "utf8");
       await fs.copyFile(await engine.resolveGsapFile(), path.join(workDir, "gsap.min.js"));
 

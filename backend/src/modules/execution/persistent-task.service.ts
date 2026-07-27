@@ -325,6 +325,32 @@ export function createPersistentTaskService(
           ),
         )
         .limit(1);
+      if (!existing && input.kind === "source_sync") {
+        // source_sync 有 active-owner 部分唯一索引。手动点击与定时 tick 可能用
+        // 不同 idempotencyKey 同时排队；唯一冲突后复用赢家，而不是把正常并发
+        // 误报为 500。run 层随后也会按 executionTaskId 复用同一条运行记录。
+        const [activeOwnerTask] = await db
+          .select()
+          .from(executionTasks)
+          .where(
+            and(
+              eq(executionTasks.userId, ctx.userId),
+              eq(executionTasks.accountId, accountId),
+              eq(executionTasks.kind, input.kind),
+              eq(executionTasks.ownerType, input.ownerType),
+              eq(executionTasks.ownerId, input.ownerId),
+              inArray(executionTasks.status, [
+                "queued",
+                "running",
+                "pause_requested",
+                "paused",
+                "cancel_requested",
+              ]),
+            ),
+          )
+          .limit(1);
+        if (activeOwnerTask) return toResource(activeOwnerTask);
+      }
       if (
         !existing ||
         existing.ownerType !== input.ownerType ||

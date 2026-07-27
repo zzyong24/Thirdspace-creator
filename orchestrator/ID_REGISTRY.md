@@ -626,4 +626,65 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | TEST-FDBR-005 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | UI-FDBR-001 |
 | TEST-FDBR-006 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-05, FR-FDBR-06 |
 | TEST-FDBR-007 | test | docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md | FR-FDBR-03, FR-FDBR-05 |
+| DEC-TSB-001 | decision | orchestrator/DECISION_LOG.md | FR-TSB-001..003, NFR-TSB-001 |
+| FR-TSB-001 | requirement | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FLOW-TSB-001, ENT-TSB-001, API-TSB-001 |
+| FR-TSB-002 | requirement | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FLOW-TSB-001, ENT-TSB-001 |
+| FR-TSB-003 | requirement | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FLOW-TSB-001, UI-TSB-002 |
+| NFR-TSB-001 | requirement | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | ENT-TSB-001, TEST-TSB-009 |
+| FLOW-TSB-001 | flow | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001..003 |
+| ENT-TSB-001 | entity | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FLOW-TSB-001, API-TSB-001 |
+| API-TSB-001 | api | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001, UI-TSB-001, UI-TSB-002 |
+| UI-TSB-001 | component | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-002, API-TSB-001 |
+| UI-TSB-002 | component | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-003, API-TSB-001 |
+| TEST-TSB-001 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001 |
+| TEST-TSB-002 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001 |
+| TEST-TSB-003 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001 |
+| TEST-TSB-004 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001 |
+| TEST-TSB-005 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001 |
+| TEST-TSB-006 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-001 |
+| TEST-TSB-007 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-002 |
+| TEST-TSB-008 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | FR-TSB-003 |
+| TEST-TSB-009 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | NFR-TSB-001 |
+| TEST-TSB-010 | test | docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md | API-TSB-001, UI-TSB-001, UI-TSB-002 |
+| DEC-COL-001 | decision | orchestrator/DECISION_LOG.md | FR-537-01..09, NFR-537-01..05 |
+| FR-537-01 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | API-537-01, API-537-04, TEST-537-01, TEST-537-04 |
+| FR-537-02 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | IA-537-01, TEST-537-04 |
+| FR-537-03 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | API-537-02..04, TEST-537-01..03 |
+| FR-537-04 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FLOW-537-01, FLOW-537-02, TEST-537-07 |
+| FR-537-05 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | API-537-04, TEST-537-05, TEST-537-06 |
+| FR-537-06 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | API-537-05, FLOW-537-02, TEST-537-07, TEST-537-08 |
+| FR-537-07 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | API-537-02, API-537-03, API-537-05, TEST-537-09, RAT-537-01 |
+| FR-537-08 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | IA-537-02, TEST-537-13 |
+| FR-537-09 | requirement | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | TEST-537-10, TEST-537-11 |
+| NFR-537-01 | nfr | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | TEST-537-02, TEST-537-03 |
+| NFR-537-02 | nfr | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | TEST-537-12 |
+| NFR-537-03 | nfr | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | TEST-537-07 |
+| NFR-537-04 | nfr | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | TEST-537-07, TEST-537-13 |
+| NFR-537-05 | nfr | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | TEST-537-09, TEST-537-12 |
+| FLOW-537-01 | flow | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-01..05 |
+| FLOW-537-02 | flow | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-04, FR-537-06, FR-537-07 |
+| ENT-537-01 | entity | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-03..06, FR-537-09 |
+| ENT-537-02 | entity | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-01, FR-537-03, FR-537-04 |
+| ENT-537-03 | entity | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-04, FR-537-06, FR-537-07 |
+| IA-537-01 | ia | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-01..03 |
+| IA-537-02 | ia | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-07, FR-537-08 |
+| API-537-01 | api | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-01, NFR-537-01 |
+| API-537-02 | api | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-02, FR-537-03, FR-537-07 |
+| API-537-03 | api | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-02, FR-537-03, FR-537-07 |
+| API-537-04 | api | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-01, FR-537-03..05 |
+| API-537-05 | api | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-06, FR-537-07 |
+| TEST-537-01 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-03 |
+| TEST-537-02 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | NFR-537-01 |
+| TEST-537-03 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-03, NFR-537-01 |
+| TEST-537-04 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-01, FR-537-02 |
+| TEST-537-05 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-05 |
+| TEST-537-06 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-05 |
+| TEST-537-07 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-04, FR-537-06 |
+| TEST-537-08 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-06 |
+| TEST-537-09 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-07 |
+| TEST-537-10 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-09 |
+| TEST-537-11 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-09 |
+| TEST-537-12 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | NFR-537-02, NFR-537-05 |
+| TEST-537-13 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-08, NFR-537-04 |
+| RAT-537-01 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-01, FR-537-04, FR-537-06, FR-537-07 |
 ```

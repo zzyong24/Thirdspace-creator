@@ -169,6 +169,17 @@ describe("T-482 内容雷达转为我的选题", () => {
       expect(createTopic).toHaveBeenCalledWith(
         ctx,
         expect.objectContaining({
+          card: {
+            oneLiner: "参数不重要，工作流才是 AI 落地的分水岭",
+            hook: "先反驳参数决定论制造认知反差",
+            contentStructure: [
+              "指出常见误区",
+              "拆解业务输入与责任边界",
+              "回到模型选择",
+            ],
+            materialBasis: "来源用参数与工作流的反差解释 AI 落地",
+            proposal: "差异化切法：不做参数盘点，只拆业务中的责任边界",
+          },
           sourceReferences: [
             expect.objectContaining({
               kind: "source_page",
