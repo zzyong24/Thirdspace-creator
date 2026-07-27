@@ -18,28 +18,46 @@ function createFakePage(options: {
   userInfoCodes?: number[];
   billboardPayload?: unknown;
   billboardRequestBody?: unknown;
+  billboardResponses?: Array<{
+    payload: unknown;
+    requestBody?: unknown;
+  }>;
+  inputVisibleAfterChecks?: number;
 }) {
   const close = vi.fn(async () => {});
   const fill = vi.fn(async () => {});
   const waitForTimeout = vi.fn(async () => {});
   let responseHandler: ((response: unknown) => void) | null = null;
   let userInfoProbeCount = 0;
+  let inputVisibilityChecks = 0;
   const boardClick = vi.fn(async () => {
     if (options.boardClickFails) throw new Error("click failed");
   });
   const windowClick = vi.fn(async () => {});
   const press = vi.fn(async () => {
-    if (!responseHandler || !options.billboardPayload) return;
-    responseHandler({
-      url: () =>
-        "https://douhot.douyin.com/douhot/v1/material/video_billboard",
-      status: () => 200,
-      json: async () => options.billboardPayload,
-      request: () => ({
-        postDataJSON: () =>
-          options.billboardRequestBody ?? { date_window: "2d" },
-      }),
-    });
+    if (!responseHandler) return;
+    const responses =
+      options.billboardResponses ??
+      (options.billboardPayload
+        ? [
+            {
+              payload: options.billboardPayload,
+              requestBody:
+                options.billboardRequestBody ?? { date_window: "2d" },
+            },
+          ]
+        : []);
+    for (const response of responses) {
+      responseHandler({
+        url: () =>
+          "https://douhot.douyin.com/douhot/v1/material/video_billboard",
+        status: () => 200,
+        json: async () => response.payload,
+        request: () => ({
+          postDataJSON: () => response.requestBody,
+        }),
+      });
+    }
   });
 
   const page = {
@@ -80,7 +98,13 @@ function createFakePage(options: {
     locator: () => ({
       filter: () => ({
         first: () => ({
-          isVisible: async () => true,
+          isVisible: async () => {
+            inputVisibilityChecks += 1;
+            return (
+              inputVisibilityChecks >
+              (options.inputVisibleAfterChecks ?? 0)
+            );
+          },
           fill,
           press,
         }),
@@ -342,8 +366,8 @@ describe("T-572 热点宝登录态与页面漂移恢复", () => {
         },
       },
       billboardRequestBody: {
-        date_window: "2d",
-        sub_type: "low_follower_breakout",
+        date_window: 72,
+        sub_type: 1002,
         keyword: "AI",
       },
     });
@@ -368,5 +392,79 @@ describe("T-572 热点宝登录态与页面漂移恢复", () => {
     });
     expect(fake.fill).toHaveBeenCalledWith("AI");
     expect(fake.press).toHaveBeenCalled();
+  });
+});
+
+describe("T-573 热点宝新版低粉爆款路由", () => {
+  it("从默认分析页进入 72 小时低粉爆款详情，并只消费当前关键词的 sub_type=1002 响应", async () => {
+    const validPayload = {
+      code: 0,
+      data: {
+        objs: [
+          {
+            item_id: "item-low-follower",
+            item_title: "当前关键词的低粉爆款",
+            like_cnt: 3200,
+            fans_cnt: 800,
+            publish_time: 1_800_000_000,
+          },
+        ],
+      },
+    };
+    const fake = createFakePage({
+      url: "https://douhot.douyin.com/analysis",
+      userInfoCodes: [0],
+      inputVisibleAfterChecks: 4,
+      billboardResponses: [
+        {
+          payload: validPayload,
+          requestBody: {
+            sub_type: 1002,
+            date_window: 72,
+            keyword: "Agent",
+          },
+        },
+        {
+          payload: { code: 0, data: { objs: [] } },
+          requestBody: {
+            sub_type: 1004,
+            date_window: 72,
+            keyword: "Agent",
+          },
+        },
+        {
+          payload: { code: 0, data: { objs: [] } },
+          requestBody: {
+            sub_type: 1002,
+            date_window: 72,
+            keyword: "另一个词",
+          },
+        },
+      ],
+    });
+
+    await expect(
+      fetchDouhotLowFollowerBreakout(
+        {
+          authDir: "/tmp/fake-auth",
+          keyword: "Agent",
+          board: "low_follower_breakout",
+        },
+        { openPage: async () => fake },
+      ),
+    ).resolves.toMatchObject({
+      listValid: true,
+      officialWindow: "72",
+      candidates: [
+        expect.objectContaining({
+          itemId: "item-low-follower",
+          title: "当前关键词的低粉爆款",
+        }),
+      ],
+    });
+    expect(fake.page.goto).toHaveBeenCalledWith(
+      "https://douhot.douyin.com/square/hotspot?active_tab=hotspot_video&date_window=72&sub_type=1002",
+      expect.objectContaining({ waitUntil: "domcontentloaded" }),
+    );
   });
 });

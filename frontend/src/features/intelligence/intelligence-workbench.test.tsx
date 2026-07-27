@@ -183,6 +183,7 @@ function api(): RadarApi {
       },
       events: [],
     }),
+    listItems: vi.fn().mockResolvedValue([]),
     getItem: vi.fn().mockResolvedValue(detail),
     enqueueTranscript: vi.fn().mockResolvedValue({}),
     previewTopic: vi.fn().mockResolvedValue({}),
@@ -385,6 +386,108 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       screen.queryByTestId("radar-source-row-source-favorites"),
     ).not.toBeInTheDocument();
+  });
+
+  it("[T-574] 点击分类和来源会查询并切换真实作品，切回全部恢复全集", async () => {
+    const favoritesRow = {
+      item: detail.item,
+      latestMetric: detail.metrics[0]!,
+      sourceCount: 1,
+    };
+    const darkhorseRow = {
+      item: {
+        ...detail.item,
+        id: "item-darkhorse",
+        canonicalUrl: "https://www.douyin.com/video/darkhorse",
+        title: "黑马作品",
+      },
+      latestMetric: null,
+      sourceCount: 1,
+    };
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-favorites",
+          collectionId: "collection-favorites",
+          type: "favorites_folder",
+          displayName: "收藏夹",
+          canonicalUrl: null,
+          collector: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+        {
+          id: "source-darkhorse",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "黑马关键词",
+          canonicalUrl: null,
+          collector: null,
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+    };
+    const stub = api();
+    vi.mocked(stub.listItems).mockImplementation(async (input) => {
+      if (input.sourceId === "source-darkhorse") return [darkhorseRow];
+      if (input.collectionId === "collection-darkhorse") return [darkhorseRow];
+      return [favoritesRow, darkhorseRow];
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[favoritesRow, darkhorseRow]}
+        initialDetail={detail}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /^黑马发现/ }),
+    );
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenCalledWith({
+        accountId: "account-1",
+        collectionId: "collection-darkhorse",
+      }),
+    );
+    expect(await screen.findByText("黑马作品")).toBeInTheDocument();
+    expect(screen.queryByText("真实作品")).not.toBeInTheDocument();
+    expect(screen.getByText("1 条真实内容")).toBeInTheDocument();
+
+    await userEvent.click(
+      within(
+        screen.getByTestId("radar-source-row-source-darkhorse"),
+      ).getAllByRole("button")[0]!,
+    );
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenLastCalledWith({
+        accountId: "account-1",
+        collectionId: "collection-darkhorse",
+        sourceId: "source-darkhorse",
+      }),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /^全部内容/ }));
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenLastCalledWith({
+        accountId: "account-1",
+      }),
+    );
+    expect(await screen.findByText("真实作品")).toBeInTheDocument();
+    expect(screen.getByText("2 条真实内容")).toBeInTheDocument();
   });
 
   it("[T-572] 即使数据里残留封面地址，列表和详情也不再渲染大图占位", () => {

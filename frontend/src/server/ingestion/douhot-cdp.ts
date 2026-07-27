@@ -11,7 +11,11 @@ import { launchWithBrowser } from "./douyin-cdp";
 import { DouyinNotLoggedInError } from "./douyin-errors";
 
 const DOUHOT_HOME = "https://douhot.douyin.com/";
+const DOUHOT_LOW_FOLLOWER_BOARD =
+  "https://douhot.douyin.com/square/hotspot?active_tab=hotspot_video&date_window=72&sub_type=1002";
 const BILLBOARD_HINT = "/douhot/v1/material/video_billboard";
+const LOW_FOLLOWER_SUB_TYPE = 1002;
+const MIN_DARKHORSE_WINDOW_HOURS = 48;
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object"
@@ -219,23 +223,6 @@ export interface LoginDouhotDeps {
   openPage?: (authDir: string) => Promise<DouhotPage>;
 }
 
-async function clickFirstVisible(
-  page: Page,
-  labels: RegExp[],
-): Promise<boolean> {
-  for (const label of labels) {
-    const target = page.getByText(label, { exact: false }).first();
-    if (await target.isVisible().catch(() => false)) {
-      const clicked = await target
-        .click()
-        .then(() => true)
-        .catch(() => false);
-      if (clicked) return true;
-    }
-  }
-  return false;
-}
-
 function isDouyinOAuthUrl(rawUrl: string): boolean {
   try {
     const url = new URL(rawUrl);
@@ -323,17 +310,41 @@ async function fillKeyword(page: Page, keyword: string): Promise<void> {
     'input[type="search"]',
     'input[type="text"]',
   ];
-  for (const selector of selectors) {
-    const input = page.locator(selector).filter({ visible: true }).first();
-    if (await input.isVisible().catch(() => false)) {
-      await input.fill(keyword);
-      await input.press("Enter");
-      return;
+  // 热点宝是微前端：外壳 domcontentloaded 时榜单应用仍可能未挂载。旧代码只查一次，
+  // 在真机稳定抢跑成“关键词输入框不可用”。最多等 10 秒，只等 DOM，不吞登录/网络错误。
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    for (const selector of selectors) {
+      const input = page.locator(selector).filter({ visible: true }).first();
+      if (await input.isVisible().catch(() => false)) {
+        await input.fill(keyword);
+        await input.press("Enter");
+        return;
+      }
     }
+    await page.waitForTimeout(250);
   }
   throw Object.assign(new Error("热点宝关键词输入框不可用"), {
     name: "DouhotResponseShapeChangedError",
   });
+}
+
+function isRequestedLowFollowerResponse(
+  response: Response,
+  keyword: string,
+): boolean {
+  if (!response.url().includes(BILLBOARD_HINT)) return false;
+  try {
+    const requestBody = record(response.request().postDataJSON());
+    return (
+      nullableNumber(requestBody.sub_type) === LOW_FOLLOWER_SUB_TYPE &&
+      (parseWindowHours(requestBody.date_window) ?? 0) >=
+        MIN_DARKHORSE_WINDOW_HOURS &&
+      stringValue(requestBody.keyword).toLocaleLowerCase() ===
+        keyword.trim().toLocaleLowerCase()
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -363,7 +374,9 @@ export async function fetchDouhotLowFollowerBreakout(
 
     const responses: Response[] = [];
     const onResponse = (response: Response) => {
-      if (response.url().includes(BILLBOARD_HINT)) responses.push(response);
+      if (isRequestedLowFollowerResponse(response, options.keyword)) {
+        responses.push(response);
+      }
     };
     page.on("response", onResponse);
     await page.goto(DOUHOT_HOME, {
@@ -381,16 +394,13 @@ export async function fetchDouhotLowFollowerBreakout(
       throw new DouyinNotLoggedInError();
     }
 
-    // 页面文案属于易变展示层，只作为尽力而为的导航提示；是否真进了低粉 48h 榜单，
-    // 最终由关键词触发后的官方响应结构和 date_window 证明。
-    await clickFirstVisible(page, [
-      /低粉.*(?:爆款|高赞)/,
-      /(?:爆款|高赞).*低粉/,
-    ]);
-    await clickFirstVisible(page, [
-      /近\s*(?:2|两)\s*(?:天|日)/,
-      /48\s*小时/,
-    ]);
+    // [T-573] 热点宝登录后现默认落在 /analysis，“榜单聚合”改为独立路由；
+    // 直接固定到低粉爆款 sub_type=1002，并用官方现有 72h 窗口覆盖本地 48h 黑马判定。
+    // 不能再靠易变中文文案点击，也不能从五个并发 video_billboard 响应里取最后一个。
+    await page.goto(DOUHOT_LOW_FOLLOWER_BOARD, {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
     responses.length = 0;
     await fillKeyword(page, options.keyword.trim());
     await page.waitForTimeout(6_000);
@@ -411,7 +421,10 @@ export async function fetchDouhotLowFollowerBreakout(
         name: "DouhotResponseShapeChangedError",
       });
     }
-    if (parsed.windowHours === null || parsed.windowHours < 48) {
+    if (
+      parsed.windowHours === null ||
+      parsed.windowHours < MIN_DARKHORSE_WINDOW_HOURS
+    ) {
       throw Object.assign(new Error("热点宝榜单时间窗不足 48 小时"), {
         name: "DouhotResponseShapeChangedError",
       });
