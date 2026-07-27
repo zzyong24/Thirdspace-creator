@@ -38,7 +38,7 @@ import { homedir } from "node:os";
 import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 // [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
 import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
-import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
+import { assertVerdictPublicKey } from "./verdict-key-material.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -465,7 +465,7 @@ export function bakeVerdictPublicKey() {
 }
 
 export function assertBakedVerdictPublicKey() {
-  const verified = assertVerdictKeyMaterial();
+  const verified = assertVerdictPublicKey();
   const dest = join(
     SIDECAR_RUNTIME,
     "frontend",

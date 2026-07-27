@@ -2,7 +2,9 @@ import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import {
+  assertVerdictPublicKey,
   assertVerdictKeyMaterial,
+  validateVerdictPublicKey,
   validateVerdictKeyMaterial,
 } from "./verdict-key-material.mjs";
 
@@ -17,6 +19,33 @@ function makePair() {
 }
 
 describe("桌面 verdict 密钥材料门禁", () => {
+  it("sidecar 子步骤只持有规范公钥时通过，不要求暴露签名私钥", () => {
+    const env = makePair();
+    const publicOnly = {
+      CREATOROS_VERDICT_PUBKEY_B64: env.CREATOROS_VERDICT_PUBKEY_B64,
+    };
+    expect(validateVerdictPublicKey(publicOnly)).toEqual({
+      ok: true,
+      publicKeyB64: env.CREATOROS_VERDICT_PUBKEY_B64,
+    });
+    expect(() => assertVerdictPublicKey(publicOnly)).not.toThrow();
+  });
+
+  it("sidecar 公钥缺失或格式非法时仍硬失败", () => {
+    expect(validateVerdictPublicKey({})).toMatchObject({
+      ok: false,
+      code: "missing-public-key",
+    });
+    expect(
+      validateVerdictPublicKey({
+        CREATOROS_VERDICT_PUBKEY_B64: "not-a-32-byte-public-key",
+      }),
+    ).toMatchObject({
+      ok: false,
+      code: "invalid-public-key",
+    });
+  });
+
   it("签名私钥和验签公钥属于同一 Ed25519 密钥对时通过", () => {
     const env = makePair();
     expect(validateVerdictKeyMaterial(env)).toEqual({

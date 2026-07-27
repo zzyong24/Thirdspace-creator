@@ -34,18 +34,11 @@ function decodeCanonicalBase64(value, { urlSafe, allowSentinel = false }) {
 }
 
 /**
- * 校验桌面壳签名私钥与 sidecar 验签公钥。
- * 只返回状态和规范化公钥，不打印、不落盘、也不在错误里回显任何密钥材料。
+ * 校验 sidecar 构建/缓存复用所需的验签公钥。
+ * 该阶段不签发 verdict，不应接触签名私钥。
  */
-export function validateVerdictKeyMaterial(env = process.env) {
-  const signingText = String(env.CREATOROS_VERDICT_SIGNING_KEY_B64 ?? "").trim();
+export function validateVerdictPublicKey(env = process.env) {
   const publicText = String(env.CREATOROS_VERDICT_PUBKEY_B64 ?? "").trim();
-  if (!signingText) {
-    return fail(
-      "missing-signing-key",
-      "缺少 CREATOROS_VERDICT_SIGNING_KEY_B64，拒绝生成安装后必白屏的桌面包。",
-    );
-  }
   if (!publicText) {
     return fail(
       "missing-public-key",
@@ -53,6 +46,39 @@ export function validateVerdictKeyMaterial(env = process.env) {
     );
   }
 
+  const configuredPublic = decodeCanonicalBase64(publicText, { urlSafe: false });
+  if (!configuredPublic || configuredPublic.length !== 32) {
+    return fail(
+      "invalid-public-key",
+      "CREATOROS_VERDICT_PUBKEY_B64 必须是规范的 32B Ed25519 公钥（标准 base64）。",
+    );
+  }
+
+  return { ok: true, publicKeyB64: configuredPublic.toString("base64") };
+}
+
+export function assertVerdictPublicKey(env = process.env) {
+  const result = validateVerdictPublicKey(env);
+  if (!result.ok) {
+    const error = new Error(`[T-535] ${result.error}`);
+    error.code = result.code;
+    throw error;
+  }
+  return result;
+}
+
+/**
+ * 校验桌面壳签名私钥与 sidecar 验签公钥。
+ * 只返回状态和规范化公钥，不打印、不落盘、也不在错误里回显任何密钥材料。
+ */
+export function validateVerdictKeyMaterial(env = process.env) {
+  const signingText = String(env.CREATOROS_VERDICT_SIGNING_KEY_B64 ?? "").trim();
+  if (!signingText) {
+    return fail(
+      "missing-signing-key",
+      "缺少 CREATOROS_VERDICT_SIGNING_KEY_B64，拒绝生成安装后必白屏的桌面包。",
+    );
+  }
   const signingSeed = decodeCanonicalBase64(signingText, {
     urlSafe: true,
     allowSentinel: true,
@@ -63,13 +89,9 @@ export function validateVerdictKeyMaterial(env = process.env) {
       "CREATOROS_VERDICT_SIGNING_KEY_B64 必须是规范的 32B Ed25519 seed（base64url、无 padding）。",
     );
   }
-  const configuredPublic = decodeCanonicalBase64(publicText, { urlSafe: false });
-  if (!configuredPublic || configuredPublic.length !== 32) {
-    return fail(
-      "invalid-public-key",
-      "CREATOROS_VERDICT_PUBKEY_B64 必须是规范的 32B Ed25519 公钥（标准 base64）。",
-    );
-  }
+  const publicResult = validateVerdictPublicKey(env);
+  if (!publicResult.ok) return publicResult;
+  const configuredPublic = Buffer.from(publicResult.publicKeyB64, "base64");
 
   try {
     const privateKey = createPrivateKey({

@@ -52,6 +52,10 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "build.rs"),
       "utf8",
     );
+    const sidecarSource = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "build-sidecar.mjs"),
+      "utf8",
+    );
     expect(packageSource).toContain("assertVerdictKeyMaterial()");
     expect(packageSource).toContain(
       'delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64',
@@ -60,6 +64,8 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       'CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1"',
     );
     expect(releaseSource).toContain("assertVerdictKeyMaterial()");
+    expect(sidecarSource).toContain("assertVerdictPublicKey()");
+    expect(sidecarSource).not.toContain("assertVerdictKeyMaterial()");
     expect(buildRs).toContain(
       "cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64",
     );
