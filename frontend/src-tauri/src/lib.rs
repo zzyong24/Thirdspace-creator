@@ -639,11 +639,15 @@ fn verify_direct_sidecar_dir_with_hash(
     for required in [
         entry.clone(),
         dir.join("frontend").join(".next"),
-        dir.join("frontend").join("node_modules"),
+        dir.join("frontend").join("creatoros-module-resolver.cjs"),
         dir.join("backend")
             .join("drizzle")
             .join("meta")
             .join("_journal.json"),
+        dir.join("layers").join("core"),
+        dir.join("layers").join("browser").join("browsers"),
+        dir.join("layers").join("media").join("bin"),
+        dir.join("layers").join("local-ai").join("vendor"),
     ] {
         if !required.exists() {
             return Err(format!(
@@ -1522,12 +1526,29 @@ pub fn run() {
             // Finder / Windows 快捷方式启动时 cwd/PATH 都不可靠；壳层掌握真实 runtime 位置，
             // 所以它是 bin/ 与 browsers/ 的唯一 canonical 来源。
             let sidecar_frontend_dir = sidecar_dir.join("frontend");
-            let bundled_bin_dir_str = sidecar_frontend_dir
-                .join("bin")
+            let runtime_root_str = sidecar_dir
                 .to_string_lossy()
                 .to_string();
-            let bundled_browsers_dir_str = sidecar_frontend_dir
-                .join("browsers")
+            let layered_bin_dir = sidecar_dir
+                .join("layers")
+                .join("media")
+                .join("bin");
+            let bundled_bin_dir_str = if layered_bin_dir.is_dir() {
+                layered_bin_dir
+            } else {
+                sidecar_frontend_dir.join("bin")
+            }
+                .to_string_lossy()
+                .to_string();
+            let layered_browsers_dir = sidecar_dir
+                .join("layers")
+                .join("browser")
+                .join("browsers");
+            let bundled_browsers_dir_str = if layered_browsers_dir.is_dir() {
+                layered_browsers_dir
+            } else {
+                sidecar_frontend_dir.join("browsers")
+            }
                 .to_string_lossy()
                 .to_string();
 
@@ -1775,6 +1796,7 @@ pub fn run() {
                     .env("HOSTNAME", "127.0.0.1")
                     .env("CREATOROS_APP_DATA_DIR", &app_data_dir_str)
                     .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("CREATOROS_RUNTIME_ROOT", &runtime_root_str)
                     .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
                     .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
@@ -1915,6 +1937,7 @@ pub fn run() {
                     .env("HOSTNAME", "127.0.0.1")
                     .env("CREATOROS_APP_DATA_DIR", &app_data_dir_str)
                     .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("CREATOROS_RUNTIME_ROOT", &runtime_root_str)
                     .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
                     .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
@@ -2238,9 +2261,17 @@ mod runtime_cleanup_tests {
     fn windows_安装目录展开资源关键结构与入口哈希都必须通过() {
         let root = temp_runtime_root("direct-runtime");
         std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
-        std::fs::create_dir_all(root.join("frontend").join("node_modules")).unwrap();
+        std::fs::create_dir_all(root.join("layers").join("core")).unwrap();
+        std::fs::create_dir_all(root.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::create_dir_all(root.join("layers").join("media").join("bin")).unwrap();
+        std::fs::create_dir_all(root.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
         std::fs::write(root.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            root.join("frontend").join("creatoros-module-resolver.cjs"),
+            "module.exports={}",
+        )
+        .unwrap();
         std::fs::write(
             root.join("backend")
                 .join("drizzle")
@@ -2270,9 +2301,17 @@ mod runtime_cleanup_tests {
             .join("0.1.0-abc123")
             .join("sidecar");
         std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
-        std::fs::create_dir_all(sidecar.join("frontend").join("node_modules")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("media").join("bin")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
         std::fs::write(sidecar.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            sidecar.join("frontend").join("creatoros-module-resolver.cjs"),
+            "module.exports={}",
+        )
+        .unwrap();
         std::fs::write(
             sidecar
                 .join("backend")

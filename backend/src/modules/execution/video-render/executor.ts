@@ -209,6 +209,25 @@ async function locateNodeModuleFile(
   const roots = [
     path.join(process.cwd(), "node_modules"),
     path.resolve(process.cwd(), "..", "node_modules"), // sidecar/node_modules(frontend 的父)
+    // [T-565] Windows 少文件 runtime 不再携带 node_modules。渲染器是磁盘 CLI，
+    // 不能只靠 Node resolver；从壳注入的 runtime root 直接定位分层 vendor。
+    ...(process.env.CREATOROS_RUNTIME_ROOT
+      ? [
+          path.join(
+            process.env.CREATOROS_RUNTIME_ROOT,
+            "layers",
+            "core",
+            "render",
+            "vendor",
+          ),
+          path.join(
+            process.env.CREATOROS_RUNTIME_ROOT,
+            "frontend",
+            ".next",
+            "vendor",
+          ),
+        ]
+      : []),
   ];
   for (const root of roots) {
     const direct = path.join(root, pkg, sub);

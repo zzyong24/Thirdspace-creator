@@ -180,4 +180,23 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       workflow.indexOf("Windows 安装后真启动与主页面加载冒烟(T-562)"),
     );
   });
+
+  it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，且不上传 setup", () => {
+    const packageRat = workflow.slice(
+      workflow.indexOf("windows-closure-rat:"),
+      workflow.indexOf("draft-release:"),
+    );
+    expect(packageRat).toContain("windows_package_rat");
+    expect(packageRat).toContain("prepare-packaged-runtime.mjs");
+    expect(packageRat).toContain("构建真实 NSIS 候选包（不发布）");
+    expect(packageRat).toContain("New-NetFirewallRule");
+    expect(packageRat).toContain("MAIN_PAGE_LOAD_FINISHED");
+    expect(packageRat).toContain("inspect-installed-webview.mjs");
+    expect(packageRat).toContain("runtimeFilesChangedOnFirstLaunch");
+    expect(packageRat).toContain('"node_modules"');
+    expect(packageRat).not.toContain("dist-upload");
+    expect(packageRat).not.toMatch(
+      /path:\s*\|[\s\S]*?target\/release-fast\/bundle\/nsis/,
+    );
+  });
 });

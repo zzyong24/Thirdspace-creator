@@ -37,6 +37,11 @@ on:
         required: false
         type: boolean
         default: false
+      windows_package_rat:
+        description: "构建并真安装 T-565 Windows 少文件候选包（不上传、不发布安装包）"
+        required: false
+        type: boolean
+        default: false
   push:
     tags: ["v*"]
 
@@ -47,7 +52,7 @@ concurrency:
 jobs:
   # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
   plan:
-    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -65,7 +70,7 @@ jobs:
           fi
 
   build:
-    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true) }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) }}
     needs: plan
     strategy:
       fail-fast: false
@@ -466,7 +471,7 @@ jobs:
           retention-days: 14
 
   windows-closure-rat:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_closure_rat == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.windows_closure_rat == true || inputs.windows_package_rat == true) }}
     runs-on: windows-latest
     timeout-minutes: 180
     defaults:
@@ -481,6 +486,14 @@ jobs:
         with:
           node-version: "25"
           cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: ${{ inputs.windows_package_rat == true }}
+
+      - uses: Swatinem/rust-cache@v2
+        if: ${{ inputs.windows_package_rat == true }}
+        with:
+          workspaces: frontend/src-tauri
 
       - name: 安装锁定依赖与 Chromium
         run: |
@@ -534,6 +547,175 @@ jobs:
             throw "[T-565] Windows production closure smoke 失败(exit=$LASTEXITCODE)"
           }
 
+      - name: 接入 Tauri production sidecar
+        if: ${{ inputs.windows_package_rat == true }}
+        env:
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: |
+          node tools/windows-closure-rat/prepare-packaged-runtime.mjs \
+            tools/windows-closure-rat/out/closure
+
+      - name: 构建真实 NSIS 候选包（不发布）
+        if: ${{ inputs.windows_package_rat == true }}
+        working-directory: frontend
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+          CREATOROS_LICENSE_PROJECT_KEY: "test"
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${{ vars.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS }}
+          CREATOROS_SKIP_SIDECAR_REBUILD: "1"
+        run: |
+          node node_modules/@tauri-apps/cli/tauri.js build -- --profile release-fast
+
+      - name: 真安装、断网首启与 WebView 非白屏验证
+        if: ${{ inputs.windows_package_rat == true }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $setup = Get-ChildItem "frontend/src-tauri/target/release-fast/bundle/nsis" -Filter "*-setup.exe" |
+            Select-Object -First 1
+          if (-not $setup) { throw "[T-565] 未找到真实 NSIS setup.exe" }
+
+          $listing = Join-Path $env:RUNNER_TEMP "creatoros-package-listing.txt"
+          & 7z l $setup.FullName | Out-File -Encoding utf8 $listing
+          $listingText = Get-Content $listing -Raw
+          if ($listingText -notmatch 'sidecar\.tar\.gz') {
+            throw "[T-565] setup.exe 未携带 sidecar.tar.gz"
+          }
+          if ($listingText -match 'sidecar[\\/]frontend[\\/]server\.js') {
+            throw "[T-565] NSIS 又直接枚举展开 runtime 小文件"
+          }
+
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS T565 Package RAT"
+          Remove-Item -Recurse -Force $installDir -ErrorAction SilentlyContinue
+          $installWatch = [Diagnostics.Stopwatch]::StartNew()
+          $install = Start-Process -FilePath $setup.FullName -Wait -PassThru `
+            -ArgumentList @("/S", "/D=$installDir")
+          $installWatch.Stop()
+          if ($install.ExitCode -ne 0) {
+            throw "[T-565] NSIS 静默安装失败(exit=$($install.ExitCode))"
+          }
+          if ($installWatch.Elapsed.TotalMinutes -gt 5) {
+            throw "[T-565] 安装超过 5 分钟:$($installWatch.Elapsed)"
+          }
+
+          $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
+          if (-not (Test-Path $pointer -PathType Leaf)) {
+            throw "[T-565] 安装没有完成 runtime 事务"
+          }
+          $runtimeId = (Get-Content $pointer -Raw).Trim()
+          $runtime = Join-Path $installDir "runtime-images/$runtimeId/sidecar"
+          if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
+            throw "[T-565] setup 完成后仍残留待首启解压的 sidecar.tar.gz"
+          }
+          $runtimeFiles = @(Get-ChildItem $runtime -Recurse -File)
+          $nodeModules = @(Get-ChildItem $runtime -Recurse -Directory -Filter "node_modules")
+          if ($runtimeFiles.Count -gt 3500) {
+            throw "[T-565] 安装 runtime 超出 3,500 文件预算:$($runtimeFiles.Count)"
+          }
+          if ($nodeModules.Count -ne 0) {
+            throw "[T-565] 安装 runtime 仍含 node_modules:$($nodeModules.Count)"
+          }
+          $runtimeBytes = ($runtimeFiles | Measure-Object Length -Sum).Sum
+
+          $appExe = Join-Path $installDir "CreatorOS.exe"
+          if (-not (Test-Path $appExe -PathType Leaf)) {
+            throw "[T-565] 安装后缺 CreatorOS.exe"
+          }
+          $firewallRules = @()
+          $devtoolsPort = 9335
+          $stdout = Join-Path $env:RUNNER_TEMP "creatoros-t565.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "creatoros-t565.stderr.log"
+          $domReport = Join-Path $env:RUNNER_TEMP "creatoros-t565-webview.json"
+          $launchStarted = [DateTime]::UtcNow
+          $app = $null
+          try {
+            $programs = @($appExe) + @(
+              Get-ChildItem $installDir -Recurse -File -Filter "creatoros-server*.exe" |
+                ForEach-Object FullName
+            )
+            $uniquePrograms = @($programs | Select-Object -Unique)
+            foreach ($program in $uniquePrograms) {
+              $ruleName = "CreatorOS-T565-$([guid]::NewGuid())"
+              New-NetFirewallRule -DisplayName $ruleName -Direction Outbound `
+                -Program $program -Action Block | Out-Null
+              $firewallRules += $ruleName
+            }
+
+            $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$devtoolsPort"
+            $launchWatch = [Diagnostics.Stopwatch]::StartNew()
+            $app = Start-Process -FilePath $appExe -PassThru `
+              -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            $ready = $false
+            for ($i = 0; $i -lt 600; $i++) {
+              if (Test-Path $stderr) {
+                $content = Get-Content $stderr -Raw -ErrorAction SilentlyContinue
+                if ($content -match '\[CreatorOS\] MAIN_PAGE_LOAD_FINISHED http://127\.0\.0\.1:') {
+                  $ready = $true
+                  break
+                }
+              }
+              if ($app.HasExited) { break }
+              Start-Sleep -Milliseconds 200
+            }
+            $launchWatch.Stop()
+            if (-not $ready) {
+              if (Test-Path $stdout) { Get-Content $stdout }
+              if (Test-Path $stderr) { Get-Content $stderr }
+              throw "[T-565] 断网首启 120 秒内未进入本地主页面"
+            }
+            node tools/windows-closure-rat/inspect-installed-webview.mjs `
+              $devtoolsPort $domReport
+            if ($LASTEXITCODE -ne 0) {
+              throw "[T-565] WebView2 DOM 非白屏验证失败"
+            }
+
+            $changedRuntimeFiles = @(
+              Get-ChildItem $runtime -Recurse -File |
+                Where-Object LastWriteTimeUtc -gt $launchStarted
+            )
+            $afterFiles = @(Get-ChildItem $runtime -Recurse -File)
+            $afterBytes = ($afterFiles | Measure-Object Length -Sum).Sum
+            if (
+              $afterFiles.Count -ne $runtimeFiles.Count -or
+              $afterBytes -ne $runtimeBytes -or
+              $changedRuntimeFiles.Count -ne 0
+            ) {
+              throw "[T-565] 首启修改了安装 runtime（疑似仍在解压/自修复）"
+            }
+
+            $evidence = [ordered]@{
+              schemaVersion = 1
+              setupBytes = $setup.Length
+              installMilliseconds = $installWatch.ElapsedMilliseconds
+              firstLaunchMilliseconds = $launchWatch.ElapsedMilliseconds
+              runtimeFiles = $runtimeFiles.Count
+              runtimeBytes = $runtimeBytes
+              nodeModulesDirectories = $nodeModules.Count
+              runtimeFilesChangedOnFirstLaunch = $changedRuntimeFiles.Count
+              offlineFirewallPrograms = $uniquePrograms.Count
+              mainPageLoadFinished = $true
+              webviewDomVerified = $true
+            }
+            $evidence | ConvertTo-Json | Out-File `
+              "tools/windows-closure-rat/out/package-rat-results.json" -Encoding utf8
+            Write-Host "[T-565] ✓ 真包安装/断网首启/非白屏通过"
+            $evidence | ConvertTo-Json
+          } finally {
+            Remove-Item Env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS -ErrorAction SilentlyContinue
+            foreach ($ruleName in $firewallRules) {
+              Remove-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
+            }
+            if ($app -and -not $app.HasExited) {
+              $null = $app.CloseMainWindow()
+              if (-not $app.WaitForExit(10000)) {
+                Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
+              }
+            }
+          }
+
       - name: 上传 T-565 closure RAT 证据（非发布产物）
         if: always()
         uses: actions/upload-artifact@v4
@@ -543,6 +725,9 @@ jobs:
             tools/windows-closure-rat/out/closure/layer-summary.json
             tools/windows-closure-rat/out/closure/ncc-core-summary.json
             tools/windows-closure-rat/out/closure/runtime-smoke-results.json
+            tools/windows-closure-rat/out/packaged-runtime-summary.json
+            tools/windows-closure-rat/out/package-rat-results.json
+            ${{ runner.temp }}/creatoros-t565-webview.json
           if-no-files-found: warn
           retention-days: 14
 

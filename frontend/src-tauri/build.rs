@@ -153,14 +153,26 @@ fn generate_integrity_manifest(sidecar_root: &std::path::Path, target_os: &str) 
         walk_files(&lib_dir, sidecar_root, native_extensions, &mut records);
     }
 
-    // 3) .pnpm/**/onnxruntime*.{dylib|dll|so} + .pnpm/**/build/Release/*.node
-    //    (native binding 是攻击 hook 授权的隐蔽路径)
+    // 3) legacy .pnpm/** native binding；新 Windows 分层 runtime 则直接从
+    //    layers/local-ai/vendor 扫 `.node` / DLL。两种布局只会命中其一。
     let pnpm_root = sidecar_root
         .join("frontend")
         .join("node_modules")
         .join(".pnpm");
     if pnpm_root.is_dir() {
         walk_pnpm_natives(&pnpm_root, sidecar_root, native_extensions, &mut records);
+    }
+    let layered_native_root = sidecar_root
+        .join("layers")
+        .join("local-ai")
+        .join("vendor");
+    if layered_native_root.is_dir() {
+        walk_native_leaf(
+            &layered_native_root,
+            sidecar_root,
+            native_extensions,
+            &mut records,
+        );
     }
 
     // hash 计算辅助闭包:sha256 一个文件。跟 sha256_file 语义同,单独维护是因为这里返回原始
