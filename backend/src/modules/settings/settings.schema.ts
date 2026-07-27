@@ -47,3 +47,12 @@ export const skillConfigOverrideVersionResource =
   ENDPOINTS.listPromptVersions.response.element;
 export type SkillConfigOverrideVersionResource =
   (typeof skillConfigOverrideVersionResource)["_output"];
+
+export const accountSkillOverlayResource = ENDPOINTS.getPrompt.response;
+export type AccountSkillOverlayResource =
+  (typeof accountSkillOverlayResource)["_output"];
+
+export const accountSkillOverlayVersionResource =
+  ENDPOINTS.listPromptVersions.response.element;
+export type AccountSkillOverlayVersionResource =
+  (typeof accountSkillOverlayVersionResource)["_output"];

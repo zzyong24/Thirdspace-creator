@@ -38,16 +38,6 @@ vi.mock("./ammo-card-list", () => ({
 vi.mock("./draft-primary-action", () => ({
   DraftPrimaryAction: () => <div data-slot="mock-primary-action" />,
 }));
-// [T-375] 顶条「导出素材包」(替换原「在 Finder 打开」):mock 成可探测占位(真组件拉 contract-client)。
-vi.mock("./export-materials-button", () => ({
-  ExportMaterialsButton: ({ projectId, outputId }: { projectId: string; outputId: string | null }) => (
-    <div
-      data-slot="mock-export-materials"
-      data-project-id={projectId}
-      data-output-id={outputId ?? ""}
-    />
-  ),
-}));
 // [T-374] 顶条「立即抓取逐字稿」:mock 成可探测占位(真组件拉 contract-client)。
 vi.mock("./transcribe-now-button", () => ({
   TranscribeNowButton: ({ projectId }: { projectId: string }) => (
@@ -97,6 +87,7 @@ function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
       currentStage: "review",
       imported: false,
       douyinExternalId: null,
+      transcriptState: "idle",
     },
     scriptArtifactId: null,
     outputId: "out-1",
@@ -133,6 +124,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
             currentStage: "review",
             imported: true,
             douyinExternalId: null,
+            transcriptState: "idle",
           },
         })}
       />,
@@ -165,6 +157,7 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
             currentStage: "review",
             imported: true,
             douyinExternalId: null,
+            transcriptState: "idle",
           },
           script: { editorHtml: "<p>已有稿</p>", sections: [], versionCount: 1 },
         })}
@@ -177,27 +170,14 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
   });
 });
 
-// [T-375] 顶条「导出素材包」(替换原「在 Finder 打开」):恒渲染,带 projectId/outputId。
-describe("DraftWorkbenchPage — T-375 顶条导出素材包按钮", () => {
-  it("顶条渲染导出按钮(带 projectId + outputId),不再渲染 Finder 按钮", () => {
+// [T-488] 导出只保留在制作阶段，脚本阶段不再重复占用一整条顶栏。
+describe("DraftWorkbenchPage — T-488 移除脚本阶段导出素材包", () => {
+  it("顶条不再渲染导出按钮或 Finder 按钮", () => {
     const { container } = render(<DraftWorkbenchPage vm={baseVm()} />);
-    const btn = container.querySelector('[data-slot="mock-export-materials"]');
-    expect(btn).not.toBeNull();
-    expect(btn?.getAttribute("data-project-id")).toBe("p-1");
-    expect(btn?.getAttribute("data-output-id")).toBe("out-1");
-    // 原「在 Finder 打开」已移除(项目文件夹永远空,名不副实)。
+    expect(container.textContent).not.toContain("导出素材包");
     expect(
       container.querySelector('[data-slot="draft-reveal-project"]'),
     ).toBeNull();
-  });
-
-  it("无 outputId(没进过制作面)→ 仍渲染(按钮内自动 ensure)", () => {
-    const { container } = render(
-      <DraftWorkbenchPage vm={baseVm({ outputId: null })} />,
-    );
-    const btn = container.querySelector('[data-slot="mock-export-materials"]');
-    expect(btn).not.toBeNull();
-    expect(btn?.getAttribute("data-output-id")).toBe("");
   });
 });
 
@@ -215,6 +195,7 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
             currentStage: "review",
             imported: true,
             douyinExternalId: "aweme-1",
+            transcriptState: "idle",
           },
         })}
       />,
@@ -222,6 +203,24 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
     const btn = container.querySelector('[data-slot="mock-transcribe-now"]');
     expect(btn).not.toBeNull();
     expect(btn?.getAttribute("data-project-id")).toBe("p-1");
+  });
+
+  it("已有逐字稿 → 即使有抖音锚也不再渲染二次抓取入口", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          project: {
+            ...baseVm().project,
+            imported: true,
+            douyinExternalId: "aweme-1",
+            transcriptState: "done",
+          },
+        })}
+      />,
+    );
+    expect(
+      container.querySelector('[data-slot="mock-transcribe-now"]'),
+    ).toBeNull();
   });
 
   it("无 douyinExternalId(手动项目)→ 不渲染(诚实,无锚无法抓)", () => {

@@ -14,6 +14,8 @@
 //    路由报非桌面/失败 → 退回 window.open。站内同源导航一律放行。
 import * as React from "react";
 
+import { handshakeHeaders } from "@/lib/handshake-client";
+
 export function ExternalLinkOpener(): null {
   React.useEffect(() => {
     // 桌面标志由根 layout 服务端注入(<html data-desktop="1">,源自 CREATOROS_DESKTOP env)。
@@ -50,23 +52,21 @@ export function ExternalLinkOpener(): null {
       e.preventDefault();
       void fetch("/api/v1/local/open-url", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...handshakeHeaders(),
+        },
         body: JSON.stringify({ url: href }),
       })
         .then((r) => r.json().catch(() => ({ ok: false })))
-        .then((d: { ok?: boolean }) => {
-          if (!d?.ok) {
-            // 非桌面 / 打开失败 → 兜底(桌面态基本到不了这;web 态本就不接管)。
+        .then((d: { ok?: boolean; desktop?: boolean }) => {
+          if (!d?.ok && d?.desktop === false) {
+            // 只有 route 明确判定为 web/dev 时才允许浏览器兜底；桌面握手 403/启动
+            // 竞态不能绕过可信本地 adapter，留在原页供用户重试。
             window.open(href, "_blank", "noopener,noreferrer");
           }
         })
-        .catch(() => {
-          try {
-            window.open(href, "_blank", "noopener,noreferrer");
-          } catch {
-            /* 无能为力,静默不崩用户流程 */
-          }
-        });
+        .catch(() => undefined);
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);

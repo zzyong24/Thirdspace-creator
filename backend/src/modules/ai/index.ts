@@ -25,6 +25,8 @@ export {
   type AiAssetLibraryPort,
   type CreateTaskInput,
   type RecordCandidateInput,
+  type ClaimedTaskExecutionContext,
+  type ClaimedTaskExecutionResult,
 } from "./ai.service";
 
 // [T-387b] 分镜凝固 pass(纯函数,采纳定稿时刻的确定性凝固;单测锚)。
@@ -52,7 +54,11 @@ export { createAiTransport, AI_OP_IDS } from "./ai.transport";
 
 export { AI_DDL } from "./ai.db-schema";
 
-export { OwnershipError, ConflictError } from "./ai.errors";
+export {
+  OwnershipError,
+  ConflictError,
+  ExecutionLeaseLostError,
+} from "./ai.errors";
 
 export {
   aiConversationResource,

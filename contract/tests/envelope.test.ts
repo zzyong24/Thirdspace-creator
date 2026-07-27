@@ -51,4 +51,13 @@ describe("envelope", () => {
     });
     expect(parsed.error.code).toBe(ErrorCode.AccountRequiredError);
   });
+
+  it("[T-520] 收藏读取错误码都有稳定 HTTP 映射，dispatch 不会降级成裸字符串", () => {
+    expect(ERROR_HTTP[ErrorCode.DouyinFavoritesSessionExpired]).toBe(401);
+    expect(ERROR_HTTP[ErrorCode.DouyinFavoritesBrowserLocked]).toBe(409);
+    expect(ERROR_HTTP[ErrorCode.DouyinFavoritesCaptcha]).toBe(428);
+    expect(ERROR_HTTP[ErrorCode.DouyinFavoritesNetwork]).toBe(502);
+    expect(ERROR_HTTP[ErrorCode.DouyinFavoritesUpstream]).toBe(502);
+    expect(ERROR_HTTP[ErrorCode.DouyinFavoritesInvalidResponse]).toBe(502);
+  });
 });

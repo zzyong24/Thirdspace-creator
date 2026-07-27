@@ -19,6 +19,8 @@ export const knowledgeRevisionResource =
   ENDPOINTS.createKnowledgeRevision.response;
 export const knowledgeRelationResource =
   ENDPOINTS.createKnowledgeRelation.response;
+export const knowledgeFolderResource =
+  ENDPOINTS.createKnowledgeFolder.response;
 
 // Derive the inferred output types from each schema's phantom `_output` (zod 4's
 // `z.infer<T>` is `T["_output"]`). The frontend package does not declare `zod`
@@ -29,3 +31,5 @@ export type KnowledgeRevisionResource =
   (typeof knowledgeRevisionResource)["_output"];
 export type KnowledgeRelationResource =
   (typeof knowledgeRelationResource)["_output"];
+export type KnowledgeFolderResource =
+  (typeof knowledgeFolderResource)["_output"];

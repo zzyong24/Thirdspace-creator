@@ -58,6 +58,54 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 - Every release-critical journey has test or browser-validation evidence.
 - Any unimplemented confirmed requirement is listed as a gap, deferred work, or accepted risk.
 
+## T-471 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| FR-069 | FLOW-023 | PAGE-017 | API-008、API-009 | TEST-001..008 | RISK-011：代码与回归已落地；历史 TDD 红证据缺失，付费真端到端待授权 |
+
+## T-501 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-MC-002（旧 DEC-MC-001/FR-MC/API-MC 扩展范围失效） | 保存当前表单 → 正式 `modelFor + streamText` → 非空文本才连通 | 现有 Settings 模型配置卡与应用内手册 | 复用既有 `settings.models.put/test`，不新增公开 operation | T-501 定向 67 tests + frontend typecheck + 目标 lint | BUILD PASS（`f91b08cb`）；未调用真实 provider/付费能力，复杂工具调用保留真机边界 |
+
+## T-516 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-ODR-001；T-516 Replacement | 设置账户区；每周默认/可调/关闭/立即检查；用户主动 AI 起草 | 现有定位编辑、保存和版本历史 | [新 PLAN](../docs/superpowers/specs/2026-07-26-copilot-context-health-minimal.md)；旧 API-CTX-001..014 invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；CONTRACT/确认②/BUILD 关闭，生产代码未改 |
+
+## T-517 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-ODR-001；T-517 Replacement | `scheduled_job/job_run` 调度展示 → `PersistentTaskService` durable task → typed handler | 现有自动化页与业务入口 | [新 PLAN](../docs/superpowers/specs/2026-07-26-creatoros-automation-kernel-minimal.md)；旧 API-AUTO-001..027 invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；旧 CONTRACT 三轮 FAIL 保留；新 CONTRACT/确认②/BUILD 关闭 |
+
+## T-518 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| `FR-FDBR-01..06`；DEC-FDB-002；DEC-ODR-001 | 本地整理/复制 → 打开签名 `supportUrl`；独立打开加密日志目录 | `UI-FDBR-001` 侧边栏反馈入口 | [Replacement CONTRACT](../docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md)：`API-FDBR-001..003`、`PURE-FDBR-001`；旧 Growth 上传 CONTRACT invalidated | `TEST-FDBR-001..007`：T-518 定向 49 tests + contract 1 test | BUILD PASS（`705c7156`）；零上传、零反馈写 API、零假“已发送”状态；typecheck/boundary/orphan/reconcile 全绿 |
+
+## T-519 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-ODR-001；T-519 Replacement | Assets ownership/idempotency → 默认多级文件夹 → 文件/URL/文本导入 → 四视图 | 现有 Knowledge 页面增量 | [新 PLAN](../docs/superpowers/specs/2026-07-26-knowledge-workspace-lean.md)；旧 41-operation CONTRACT invalidated | 新 CONTRACT 后登记 | Replacement PLAN Round 3 PASS；旧 ID/图/导入保留；CONTRACT/确认②/BUILD 关闭 |
+
+## T-534 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-TSB-001；FR-TSB-001..003；NFR-TSB-001 | FLOW-TSB-001 | ENT-TSB-001；UI-TSB-001/002 | [Creator CONTRACT](../docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md)；API-TSB-001 | TEST-TSB-001..010 | Creator review 三轮收口；BUILD/consumer contract tests PASS；全局 next build 受当前 HEAD 的 T-535 instrumentation panic 阻断 |
+
+## T-537 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-COL-001；FR-537-01..09；NFR-537-01..05 | FLOW-537-01/02 | ENT-537-01..03；IA-537-01/02 | [PLAN](../docs/superpowers/specs/2026-07-26-content-radar-collector-account.md)；[CONTRACT](../docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md)；API-537-01..05 | TEST-537-01..13；RAT-537-01 | 三轮评审文档内部 PASS；正式 Gate 因第二个有效抖音账号的真实 RAT 未通过而 BLOCKED，生产代码未改 |
+
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链
@@ -85,4 +133,18 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | NONE | FLOW-017 | ENT-058, ENT-057 | PAGE-015 | NONE | NONE | PLANNED |
 | NONE | FLOW-018 | ENT-046, ENT-047, ENT-048 | PAGE-016 | NONE | NONE | PLANNED |
 | NONE | FLOW-021 | ENT-001, ENT-002, ENT-051, ENT-052, ENT-023 | PAGE-017 | NONE | NONE | PLANNED |
+| FR-069, DEC-019, RISK-011 | FLOW-023 | NONE | PAGE-017 | API-008, API-009 | TEST-001, TEST-002, TEST-003, TEST-004, TEST-005, TEST-006, TEST-007, TEST-008 | RISK |
+| DEC-CR-001, DEC-CR-011, FR-CR-001, FR-CR-002, NFR-CR-010 | FLOW-CR-001 | ENT-CR-001, ENT-CR-002 | NONE | API-CR-001, API-CR-002, API-CR-003, API-CR-004 | NONE | PLANNED |
+| DEC-CR-003, DEC-CR-005, DEC-CR-008, DEC-CR-012, FR-CR-003, FR-CR-004, FR-CR-005, FR-CR-006, FR-CR-015, NFR-CR-003, NFR-CR-004, NFR-CR-005, NFR-CR-007 | FLOW-CR-001 | ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-006, ENT-CR-009, ENT-CR-010 | NONE | API-CR-005, API-CR-008, API-CR-009, API-CR-010, API-CR-012, API-CR-013, API-CR-014, API-CR-015, API-CR-016, API-CR-029 | RAT-CR-001, RAT-CR-002 | PLANNED |
+| DEC-CR-007, DEC-CR-012, FR-CR-007, FR-CR-020, NFR-CR-002, NFR-CR-012 | FLOW-CR-001, FLOW-CR-006, FLOW-CR-007 | ENT-CR-005, ENT-CR-006, ENT-CR-007, ENT-CR-008 | NONE | API-CR-017, API-CR-018, API-CR-019, API-CR-023 | NONE | PLANNED |
+| DEC-CR-013, FR-CR-008 | FLOW-CR-004 | ENT-CR-001, ENT-CR-002, ENT-CR-003, ENT-CR-009 | NONE | API-CR-007, API-CR-008, API-CR-012, API-CR-015, API-CR-016 | RAT-CR-004, RAT-CR-005 | PLANNED |
+| DEC-CR-009, DEC-CR-013, FR-CR-009, NFR-CR-011 | FLOW-CR-002 | ENT-CR-002, ENT-CR-003, ENT-CR-006, ENT-CR-009, ENT-CR-010 | NONE | API-CR-006, API-CR-008, API-CR-012, API-CR-015, API-CR-016, API-CR-029, API-CR-030 | RAT-CR-006, RAT-CR-007 | PLANNED |
+| DEC-CR-010, DEC-CR-013, FR-CR-010 | FLOW-CR-003 | ENT-CR-002, ENT-CR-003, ENT-CR-006, ENT-CR-009 | NONE | API-CR-008, API-CR-012, API-CR-014, API-CR-015, API-CR-016, API-CR-029, API-CR-030 | RAT-CR-003 | PLANNED |
+| FR-CR-011, FR-CR-014, DEC-CR-004, NFR-CR-001, NFR-CR-006 | FLOW-CR-007 | ENT-CR-003, ENT-CR-006, ENT-CR-007, ENT-CR-009, ENT-CR-010 | NONE | API-CR-013, API-CR-014, API-CR-015, API-CR-016, API-CR-019 | RAT-CR-001, RAT-CR-003, RAT-CR-006 | PLANNED |
+| DEC-CR-002, DEC-CR-006, FR-CR-012, FR-CR-013, NFR-CR-008, NFR-CR-013 | FLOW-CR-005, FLOW-CR-006 | ENT-CR-003, ENT-CR-008, ENT-CR-010, ENT-CR-011 | NONE | API-CR-020, API-CR-021, API-CR-022, API-CR-023, API-CR-024 | NONE | PLANNED |
+| FR-CR-016, NFR-CR-009 | FLOW-CR-008 | ENT-CR-001, ENT-CR-002, ENT-CR-003, ENT-CR-005, ENT-CR-008, ENT-CR-009, ENT-CR-010 | NONE | API-CR-025, API-CR-026, API-CR-027, API-CR-028 | NONE | PLANNED |
+| FR-CR-017, FR-CR-018, FR-CR-019 | FLOW-CR-001, FLOW-CR-002, FLOW-CR-003, FLOW-CR-004, FLOW-CR-005, FLOW-CR-006, FLOW-CR-007, FLOW-CR-008 | ENT-CR-001, ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-007, ENT-CR-008, ENT-CR-009, ENT-CR-010, ENT-CR-011 | NONE | API-CR-001, API-CR-004, API-CR-009, API-CR-010, API-CR-011, API-CR-015, API-CR-016, API-CR-030 | NONE | PLANNED |
+| DEC-CR-003, DEC-CR-007, DEC-CR-012, DEC-CR-013, DEC-CR-015, FR-CR-021, NFR-CR-002, NFR-CR-007, NFR-CR-012 | FLOW-CR-009 | ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-009, ENT-CR-010, ENT-CR-012 | IA-CR-003, IA-CR-005, IA-CR-007 | API-CR-031 | NONE | PLANNED |
+| FR-FDBR-01, FR-FDBR-02, FR-FDBR-03, FR-FDBR-04, FR-FDBR-05, FR-FDBR-06 | NONE | UI-FDBR-001, PURE-FDBR-001 | NONE | API-FDBR-001, API-FDBR-002, API-FDBR-003 | TEST-FDBR-001, TEST-FDBR-002, TEST-FDBR-003, TEST-FDBR-004, TEST-FDBR-005, TEST-FDBR-006, TEST-FDBR-007 | OK |
+| DEC-TSB-001, FR-TSB-001, FR-TSB-002, FR-TSB-003, NFR-TSB-001 | FLOW-TSB-001 | ENT-TSB-001 | UI-TSB-001, UI-TSB-002 | API-TSB-001 | TEST-TSB-001, TEST-TSB-002, TEST-TSB-003, TEST-TSB-004, TEST-TSB-005, TEST-TSB-006, TEST-TSB-007, TEST-TSB-008, TEST-TSB-009, TEST-TSB-010 | OK |
 ```

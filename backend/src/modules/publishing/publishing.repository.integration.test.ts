@@ -256,6 +256,8 @@ describe("publishing.repository — strict account isolation (T-332 S2)", () => 
     expect(byOutput.map((r) => r.id)).not.toContain(p2.id);
     const ids = await repo1.listPublicationIdsByOutputs(["out-shared"]);
     expect(ids).toEqual([p1.id]);
+    const rows = await repo1.listPublicationsByOutputs(["out-shared"]);
+    expect(rows.map((r) => r.id)).toEqual([p1.id]);
   });
 
   it("by-id 读上号一致性门(SPEC §4.5):跨号 getPublication → OwnershipError 404", async () => {

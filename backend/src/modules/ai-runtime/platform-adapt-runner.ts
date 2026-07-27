@@ -6,6 +6,10 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
+import {
+  formatErrorDiagnostic,
+  safeErrorMessage,
+} from "./error-diagnostics";
 
 // 一稿多平台 runner (publish.platform_adapt node, 机制③④). Mirrors topic-runner but ADAPTS
 // one finished script into a per-platform draft (抖音竖屏短 / B站横屏中视频 / 小红书图文 /
@@ -86,6 +90,12 @@ function normalizePlatformDrafts(
       const platform = (o.platform ?? "").trim();
       const title = (o.title ?? "").trim();
       if (!platform || !title) return null;
+      const body = (o.body ?? "").trim();
+      if (!body) {
+        throw new Error(
+          `发布物料缺少简介(body)：${platform || "未知平台"}`,
+        );
+      }
       const tags = (o.tags ?? [])
         .map((t) => (typeof t === "string" ? t.trim() : ""))
         .filter((t): t is string => t.length > 0);
@@ -95,7 +105,7 @@ function normalizePlatformDrafts(
       return {
         platform,
         title,
-        body: o.body ?? "",
+        body,
         tags,
         coverIdea: o.coverIdea ?? "",
         auditFlags,
@@ -111,6 +121,12 @@ export async function runPlatformAdapt(
 ): Promise<void> {
   try {
     await deps.ai.markRunning(ctx, task.id);
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: "正在读取定位与整稿上下文",
+      toolCalls: [],
+    });
     const outputId =
       typeof task.inputData.outputId === "string" ? task.inputData.outputId : "";
     if (!outputId) {
@@ -145,6 +161,12 @@ export async function runPlatformAdapt(
     // 让 platform.adapt 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
     const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 2,
+      kind: "step",
+      text: "正在调用文本模型生成标题、简介、标签和封面文案",
+      toolCalls: [],
+    });
     const { object } = await runStructuredNode<PlatformAdaptOutput>({
       model: modelFor(spec),
       template: getTemplate("platform.adapt"),
@@ -158,7 +180,7 @@ export async function runPlatformAdapt(
     }
     // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
     await deps.ai.recordStep(ctx, task.id, {
-      stepNo: 1,
+      stepNo: 3,
       kind: "step",
       text: `已生成多平台草稿（${drafts.length} 个平台）`,
       toolCalls: [],
@@ -168,14 +190,24 @@ export async function runPlatformAdapt(
       resultData: { drafts, outputId },
     });
   } catch (err) {
+    const failureMessage = safeErrorMessage(err);
     try {
-      await deps.ai.cancelTask(ctx, task.id);
+      await deps.ai.recordStep(ctx, task.id, {
+        stepNo: 99,
+        kind: "error",
+        text: failureMessage,
+        toolCalls: [],
+      });
+    } catch {
+      /* 记录诊断失败不阻断终态 */
+    }
+    try {
+      await deps.ai.cancelTask(ctx, task.id, failureMessage);
     } catch {
       /* already terminal */
     }
     console.error(
-      `[platform-adapt-runner] adapt failed for task ${task.id}:`,
-      err,
+      `[platform-adapt-runner] adapt failed task=${task.id} ${formatErrorDiagnostic(err)}`,
     );
   }
 }

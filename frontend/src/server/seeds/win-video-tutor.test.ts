@@ -222,6 +222,31 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
     expect(items).toHaveLength(0);
   });
 
+  it("生产默认未配置课程包路径 → 返回 0 且不扫描开发者 home 或任何文件目录", async () => {
+    const previousPath = process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
+    delete process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
+    const readdir = vi
+      .spyOn(fs, "readdir")
+      .mockRejectedValue(new Error("不应读取默认目录"));
+    const { svc, items } = makeService();
+    try {
+      const count = await seedWinVideoTutor(svc as never, {
+        userId: "user-test",
+        accountId: null,
+      });
+      expect(count).toBe(0);
+      expect(items).toHaveLength(0);
+      expect(readdir).not.toHaveBeenCalled();
+    } finally {
+      readdir.mockRestore();
+      if (previousPath === undefined) {
+        delete process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
+      } else {
+        process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH = previousPath;
+      }
+    }
+  });
+
   // [T-218] 观点地图开箱即在:seed 时每节按 module 挂 tag。
   it("传 taxonomyService → seed 后每节挂上其 module tag(观点地图开箱非空)", async () => {
     const skillRoot = await writeFakeSkill();

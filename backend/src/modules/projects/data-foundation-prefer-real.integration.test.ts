@@ -249,11 +249,11 @@ describe("数据底座 §1.4 — 优先读 source:imported 真值,fixture 兜底
     expect(demoStillThere).toBeDefined(); // 全量里仍有(未删)
     expect(importedPubIds.includes(demoStillThere!.id)).toBe(false); // 但被让位排除
 
-    // imported publication 不带 revision(标题挂在 content_output)→ revision 维度标题为空;
-    //   真实标题经作品(content_output)解析恢复(dashboard facade 的 content_output 标题
-    //   回退就是这条链,治"未命名发布")。
+    // [T-400] imported publication 出生即铸 revision-1 并带真实标题(ingestion 把
+    //   title 透传给 createImportedPublication,治"未命名发布"于源头);content_output
+    //   标题回退链仍保留兜底作用,两个维度都能恢复真实标题。
     const importedPub = preferReal[0]!;
-    expect(importedPub.title).toBe(""); // revision 维度确实为空
+    expect(importedPub.title).toBe("AI 工作流四步法"); // revision 维度直接带真实标题
     const importedOutput = await createProjectRepository(db).getOutput(
       ctx,
       importedPub.contentOutputId,

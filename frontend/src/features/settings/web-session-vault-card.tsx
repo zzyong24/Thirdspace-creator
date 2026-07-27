@@ -9,10 +9,12 @@
  *
  * 全走 POST /api/web-session(action 分派 list/login/status/remove)—— 保管库无 DB 层,不走
  * dispatch 契约(同 /api/knowledge/* 逃生口)。登录/探针是 headed/headless 起浏览器的重操作,
- * 故 status 按需拉、login 阻塞至成功/超时(UI 显 loading)。
+ * 故 status 只在用户显式刷新时拉；最近结果/时间缓存在本机 localStorage，反复打开设置页
+ * 不再逐站启动 Chromium。缓存只表示“上次检查”，绝不冒充实时真值。
  */
 
 import * as React from "react";
+import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { handshakeHeaders } from "@/lib/handshake-client";
 
 import { SectionCard } from "@/components/project/section-card";
@@ -21,8 +23,19 @@ import { Badge } from "@/components/ui/badge";
 interface WebSession {
   domain: string;
   lastLoginAt: string | null;
-  loggedIn?: boolean; // 客户端按需探针填充(list 不带,避免逐站起浏览器)
+  loggedIn?: boolean;
+  checkedAt?: string;
 }
+
+interface CachedWebSessionStatus {
+  loggedIn: boolean;
+  checkedAt: string;
+}
+
+type WebSessionStatusCache = Record<string, CachedWebSessionStatus>;
+
+const STATUS_STORAGE_KEY = "creatoros.settings.web-session-status.v1";
+const LIST_BODY_ID = "web-session-vault-list";
 
 async function callWebSession(body: Record<string, unknown>): Promise<unknown> {
   const res = await fetch("/api/web-session", {
@@ -54,9 +67,55 @@ function formatWhen(iso: string | null): string {
   }
 }
 
+function readStatusCache(): WebSessionStatusCache {
+  if (typeof window === "undefined") return {};
+  try {
+    const parsed = JSON.parse(
+      window.localStorage.getItem(STATUS_STORAGE_KEY) ?? "{}",
+    ) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const clean: WebSessionStatusCache = {};
+    for (const [domain, value] of Object.entries(parsed)) {
+      if (
+        value &&
+        typeof value === "object" &&
+        typeof (value as CachedWebSessionStatus).loggedIn === "boolean" &&
+        typeof (value as CachedWebSessionStatus).checkedAt === "string"
+      ) {
+        clean[domain] = value as CachedWebSessionStatus;
+      }
+    }
+    return clean;
+  } catch {
+    return {};
+  }
+}
+
+function writeStatusCache(cache: WebSessionStatusCache): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // localStorage 被禁用/空间不足时仅失去跨挂载缓存，不影响真实探测。
+  }
+}
+
+function mergeCachedStatuses(rows: WebSession[]): WebSession[] {
+  const cache = readStatusCache();
+  return rows.map((session) => {
+    const cached = cache[session.domain];
+    return cached ? { ...session, ...cached } : session;
+  });
+}
+
 export function WebSessionVaultCard() {
   const [sessions, setSessions] = React.useState<WebSession[]>([]);
   const [loaded, setLoaded] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
+  const [refreshProgress, setRefreshProgress] = React.useState<{
+    done: number;
+    total: number;
+  } | null>(null);
   const [urlInput, setUrlInput] = React.useState("");
   const [busy, setBusy] = React.useState<"idle" | "loggingIn">("idle");
   const [feedback, setFeedback] = React.useState<string | null>(null);
@@ -72,7 +131,8 @@ export function WebSessionVaultCard() {
       const data = (await callWebSession({ action: "list" })) as {
         sessions?: WebSession[];
       };
-      setSessions(Array.isArray(data.sessions) ? data.sessions : []);
+      const rows = Array.isArray(data.sessions) ? data.sessions : [];
+      setSessions(mergeCachedStatuses(rows));
     } catch {
       // list 失败(无浏览器/transport race)→ 保持空列表,不误报。
     } finally {
@@ -81,38 +141,66 @@ export function WebSessionVaultCard() {
   }, []);
 
   React.useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  // 挂载后逐站拉一次被动探针(headless,不弹窗),把徽标翻真。逐站串行避免一次起 N 个浏览器。
-  React.useEffect(() => {
-    if (!loaded || sessions.length === 0) return;
     let alive = true;
-    void (async () => {
-      for (const s of sessions) {
-        if (typeof s.loggedIn === "boolean") continue;
-        try {
-          const st = (await callWebSession({
-            action: "status",
-            domain: s.domain,
-          })) as { loggedIn?: boolean };
-          if (!alive) return;
-          setSessions((prev) =>
-            prev.map((p) =>
-              p.domain === s.domain ? { ...p, loggedIn: st.loggedIn === true } : p,
-            ),
-          );
-        } catch {
-          /* 探针失败:徽标保持未知,不误报 */
-        }
-      }
-    })();
+    void callWebSession({ action: "list" })
+      .then((data) => {
+        if (!alive) return;
+        const rows = (data as { sessions?: WebSession[] }).sessions;
+        setSessions(mergeCachedStatuses(Array.isArray(rows) ? rows : []));
+      })
+      .catch(() => {
+        // list 失败(无浏览器/transport race)→ 保持空列表,不误报。
+      })
+      .finally(() => {
+        if (alive) setLoaded(true);
+      });
     return () => {
       alive = false;
     };
-    // 只在 domain 集合变化时重新探针(loaded 翻真 / 新增站点)。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, sessions.map((s) => s.domain).join(",")]);
+  }, []);
+
+  const rememberStatus = React.useCallback(
+    (domain: string, loggedIn: boolean, checkedAt = new Date().toISOString()) => {
+      const cache = readStatusCache();
+      cache[domain] = { loggedIn, checkedAt };
+      writeStatusCache(cache);
+      setSessions((prev) =>
+        prev.map((session) =>
+          session.domain === domain
+            ? { ...session, loggedIn, checkedAt }
+            : session,
+        ),
+      );
+    },
+    [],
+  );
+
+  const refreshAllStatuses = React.useCallback(async () => {
+    if (sessions.length === 0 || refreshProgress) return;
+    setFeedback(null);
+    setRefreshProgress({ done: 0, total: sessions.length });
+    let failed = 0;
+    for (let index = 0; index < sessions.length; index += 1) {
+      const session = sessions[index]!;
+      try {
+        const result = (await callWebSession({
+          action: "status",
+          domain: session.domain,
+        })) as { loggedIn?: boolean };
+        rememberStatus(session.domain, result.loggedIn === true);
+      } catch {
+        // 单站失败保留旧缓存，不把浏览器/网络故障冒充“需重登”。
+        failed += 1;
+      }
+      setRefreshProgress({ done: index + 1, total: sessions.length });
+    }
+    setRefreshProgress(null);
+    setFeedback(
+      failed === 0
+        ? `已检查 ${sessions.length} 个网站，结果已保存在本机。`
+        : `已检查 ${sessions.length} 个网站，其中 ${failed} 个检查失败，已保留它们上次的状态。`,
+    );
+  }, [refreshProgress, rememberStatus, sessions]);
 
   // [T-221] 开窗登录:开窗即返(独立浏览器保持打开),等用户在窗口里登好后点「我登好了」。
   //   不再赌 cookie 名自动关(治「浏览器秒关」)。
@@ -165,9 +253,11 @@ export function WebSessionVaultCard() {
         domain,
       })) as { loggedIn?: boolean };
       if (res.loggedIn) {
+        rememberStatus(domain, true);
         setFeedback(`已登录 ${domain}。`);
         setUrlInput("");
       } else {
+        rememberStatus(domain, false);
         setFeedback(`没能确认 ${domain} 的登录(窗口可能已关闭)——请重新打开登录窗口。`);
       }
       setPendingLogin(null);
@@ -176,7 +266,7 @@ export function WebSessionVaultCard() {
       setPendingLogin({ domain, confirming: false });
       setFeedback(err instanceof Error ? err.message : "确认登录失败,请重试。");
     }
-  }, [pendingLogin, refresh]);
+  }, [pendingLogin, refresh, rememberStatus]);
 
   // [T-221] 用户点「取消」:关登录窗,不留登录承诺。
   const cancelLogin = React.useCallback(async () => {
@@ -197,6 +287,9 @@ export function WebSessionVaultCard() {
       try {
         await callWebSession({ action: "remove", domain });
         setSessions((prev) => prev.filter((p) => p.domain !== domain));
+        const cache = readStatusCache();
+        delete cache[domain];
+        writeStatusCache(cache);
         setFeedback(`已移除 ${domain} 的登录态。`);
       } catch (err) {
         setFeedback(err instanceof Error ? err.message : "移除失败。");
@@ -206,6 +299,13 @@ export function WebSessionVaultCard() {
     },
     [],
   );
+
+  const connectedCount = sessions.filter((s) => s.loggedIn === true).length;
+  const reloginCount = sessions.filter((s) => s.loggedIn === false).length;
+  const uncheckedCount = sessions.length - connectedCount - reloginCount;
+  const toggleExpanded = React.useCallback(() => {
+    setExpanded((current) => !current);
+  }, []);
 
   return (
     <SectionCard
@@ -218,70 +318,140 @@ export function WebSessionVaultCard() {
             还没登录过任何网站。粘一个网站链接登录一次,之后编导读它的内容就能带上登录态。
           </p>
         ) : (
-          <ul className="flex flex-col gap-2" data-slot="web-session-list">
-            {sessions.map((s) => (
-              <li
-                key={s.domain}
-                data-slot="web-session-row"
-                data-domain={s.domain}
-                className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3"
+          <div
+            data-slot="web-session-list-shell"
+            className="overflow-hidden rounded-lg border border-border bg-surface-subtle/50"
+          >
+            <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={LIST_BODY_ID}
+                aria-label={expanded ? "收起网站列表" : "展开网站列表"}
+                data-slot="web-session-list-toggle"
+                onClick={toggleExpanded}
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-control text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {s.domain}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    上次登录 {formatWhen(s.lastLoginAt)}
-                  </span>
-                </div>
-                {s.loggedIn === true ? (
-                  <Badge
-                    variant="outline"
-                    data-slot="web-session-status"
-                    data-connected="true"
-                    className="border-success/40 bg-success-soft text-success"
-                  >
-                    已登录
-                  </Badge>
-                ) : s.loggedIn === false ? (
-                  <Badge
-                    variant="outline"
-                    data-slot="web-session-status"
-                    data-connected="false"
-                    className="border-warning/40 bg-warning/10 text-warning"
-                  >
-                    需重登
-                  </Badge>
+                {expanded ? (
+                  <ChevronDown
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
                 ) : (
-                  <Badge
-                    variant="outline"
-                    data-slot="web-session-status"
-                    className="border-border bg-surface text-muted-foreground"
-                  >
-                    检测中…
-                  </Badge>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
                 )}
-                <button
-                  type="button"
-                  data-slot="web-session-relogin"
-                  disabled={busy !== "idle" || pendingLogin !== null || rowBusy[s.domain]}
-                  onClick={() => void relogin(s.domain)}
-                  className="inline-flex h-7 shrink-0 items-center rounded-control border border-border px-2 text-xs font-medium text-foreground hover:bg-surface disabled:opacity-50"
-                >
-                  重新登录
-                </button>
-                <button
-                  type="button"
-                  data-slot="web-session-remove"
-                  disabled={rowBusy[s.domain]}
-                  onClick={() => void remove(s.domain)}
-                  className="inline-flex h-7 shrink-0 items-center rounded-control border border-destructive/40 px-2 text-xs font-medium text-destructive hover:bg-destructive/5 disabled:opacity-50"
-                >
-                  移除
-                </button>
-              </li>
-            ))}
-          </ul>
+                <span className="text-sm font-medium text-foreground">
+                  {sessions.length} 个网站
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  已登录 {connectedCount} · 需重登 {reloginCount} · 未检查{" "}
+                  {uncheckedCount}
+                </span>
+              </button>
+              <button
+                type="button"
+                aria-label="刷新全部网站状态"
+                data-slot="web-session-refresh-all"
+                disabled={sessions.length === 0 || refreshProgress !== null}
+                onClick={() => void refreshAllStatuses()}
+                className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                <RefreshCw
+                  aria-hidden="true"
+                  className={`size-3.5 ${refreshProgress ? "animate-spin" : ""}`}
+                />
+                {refreshProgress
+                  ? `检查中 ${refreshProgress.done}/${refreshProgress.total}`
+                  : "刷新状态"}
+              </button>
+            </div>
+            <p className="border-t border-border/70 px-3 py-2 text-xs text-muted-foreground">
+              显示的是上次检查结果；登录可能随网站过期，需要时再刷新。
+            </p>
+            <div
+              id={LIST_BODY_ID}
+              data-slot="web-session-list-body"
+              hidden={!expanded}
+              className="max-h-[26rem] overflow-y-auto border-t border-border p-2"
+            >
+              <ul className="flex flex-col gap-2" data-slot="web-session-list">
+                {sessions.map((s) => (
+                  <li
+                    key={s.domain}
+                    data-slot="web-session-row"
+                    data-domain={s.domain}
+                    className="flex flex-col gap-2 rounded-md border border-border bg-surface px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3"
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {s.domain}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        上次登录 {formatWhen(s.lastLoginAt)}
+                        {s.checkedAt
+                          ? ` · 状态检查 ${formatWhen(s.checkedAt)}`
+                          : " · 状态尚未检查"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      {s.loggedIn === true ? (
+                        <Badge
+                          variant="outline"
+                          data-slot="web-session-status"
+                          data-connected="true"
+                          className="border-success/40 bg-success-soft text-success"
+                        >
+                          已登录
+                        </Badge>
+                      ) : s.loggedIn === false ? (
+                        <Badge
+                          variant="outline"
+                          data-slot="web-session-status"
+                          data-connected="false"
+                          className="border-warning/40 bg-warning/10 text-warning"
+                        >
+                          需重登
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          data-slot="web-session-status"
+                          className="border-border bg-surface text-muted-foreground"
+                        >
+                          未检查
+                        </Badge>
+                      )}
+                      <button
+                        type="button"
+                        data-slot="web-session-relogin"
+                        disabled={
+                          busy !== "idle" ||
+                          pendingLogin !== null ||
+                          rowBusy[s.domain]
+                        }
+                        onClick={() => void relogin(s.domain)}
+                        className="inline-flex h-7 shrink-0 items-center rounded-control border border-border px-2 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                      >
+                        重新登录
+                      </button>
+                      <button
+                        type="button"
+                        data-slot="web-session-remove"
+                        disabled={rowBusy[s.domain]}
+                        onClick={() => void remove(s.domain)}
+                        className="inline-flex h-7 shrink-0 items-center rounded-control border border-destructive/40 px-2 text-xs font-medium text-destructive hover:bg-destructive/5 disabled:opacity-50"
+                      >
+                        移除
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         )}
 
         <div className="flex items-center gap-2">

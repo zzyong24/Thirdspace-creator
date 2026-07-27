@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
 import { runTopicNode, parseTopics } from "./topic-node";
+import { topicItemSchema } from "../prompt/templates/topic-generate";
 
 function finalText(text: string): LanguageModelV4GenerateResult {
   return {
@@ -38,6 +39,43 @@ const TOPICS_OBJECT_JSON = JSON.stringify({ topics: TOPICS });
 const TOPICS_ARRAY_JSON = JSON.stringify(TOPICS);
 
 describe("runTopicNode", () => {
+  it("[T-472] 标题吞入后续 JSON 字段时拒绝该次输出并重试", async () => {
+    let calls = 0;
+    const polluted = {
+      topics: [
+        {
+          ...TOPICS[0],
+          title:
+            'AI 选题";"contentRole":"trust","source":"demand","predictedScore":88',
+        },
+      ],
+    };
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return finalText(
+          calls === 1 ? JSON.stringify(polluted) : TOPICS_OBJECT_JSON,
+        );
+      },
+    });
+    const res = await runTopicNode({
+      model,
+      positioningBrief: "x",
+      basis: "trend",
+    });
+    expect(calls).toBe(2);
+    expect(res.topics[0]?.title).toContain("MLA");
+    expect(res.topics[0]?.title).not.toContain("contentRole");
+  });
+
+  it("[T-472] 选题标题有明确长度边界，不能把大段正文当标题", () => {
+    expect(() =>
+      topicItemSchema.parse({
+        title: "这不是标题".repeat(40),
+      }),
+    ).toThrow();
+  });
+
   it("在 Agent Runtime 上产出可解析选题 + 发步骤事件", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => finalText(TOPICS_OBJECT_JSON),

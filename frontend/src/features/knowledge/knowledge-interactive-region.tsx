@@ -232,18 +232,19 @@ export function KnowledgeInteractiveRegion({
   const [editing, setEditing] = React.useState(false);
   const [loadedBody, setLoadedBody] = React.useState("");
 
-  // 换选中项 → 复位编辑态/草稿/预填正文,防上一条的编辑残留串到新条目。
-  React.useEffect(() => {
-    setEditing(false);
-    setRevisionContent("");
-    setLoadedBody("");
-  }, [selectedId]);
-
   // [T-247] 归档入口(knowledge.archive,soft-delete):两步确认防误触 ——
   // 第一次点「归档」→ 翻确认态;再点「确认归档」→ 打 op → 关弹窗 + refresh
   // (读侧已滤 archived,列表/地图里该条随即消失)。失败 → 行内错误,不假装已归档。
   const [archiveConfirming, setArchiveConfirming] = React.useState(false);
   const [archiveError, setArchiveError] = React.useState<string | null>(null);
+  const handleSelectKnowledge = React.useCallback((id: string | null) => {
+    setSelectedId(id);
+    setEditing(false);
+    setRevisionContent("");
+    setLoadedBody("");
+    setArchiveConfirming(false);
+    setArchiveError(null);
+  }, []);
   const handleArchive = React.useCallback(() => {
     if (selectedId === null) return;
     if (!archiveConfirming) {
@@ -257,15 +258,13 @@ export function KnowledgeInteractiveRegion({
           query: undefined,
           body: undefined,
         });
-        setSelectedId(null);
-        setArchiveConfirming(false);
-        setArchiveError(null);
+        handleSelectKnowledge(null);
         router.refresh();
       } catch (err) {
         setArchiveError(describeUserError(err, "归档失败，请重试。"));
       }
     });
-  }, [selectedId, archiveConfirming, router]);
+  }, [selectedId, archiveConfirming, router, handleSelectKnowledge]);
 
   const handleRevisionSubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
@@ -342,7 +341,7 @@ export function KnowledgeInteractiveRegion({
       {aiSearch !== null ? (
         <KnowledgeAiSearchResults
           state={aiSearch}
-          onSelect={(id) => setSelectedId(id)}
+          onSelect={handleSelectKnowledge}
           onClose={() => setAiSearch(null)}
         />
       ) : null}
@@ -354,7 +353,10 @@ export function KnowledgeInteractiveRegion({
           data-slot="knowledge-graph-region"
           className="flex min-h-[560px] flex-col"
         >
-          <KnowledgeGraphView graph={graph} onSelectKnowledge={setSelectedId} />
+          <KnowledgeGraphView
+            graph={graph}
+            onSelectKnowledge={handleSelectKnowledge}
+          />
         </div>
       ) : null}
       {/* T-079c 观点地图(按 tag 主题聚类分组卡墙;未归类固定底部默认折叠 [gate-F3])。
@@ -363,7 +365,7 @@ export function KnowledgeInteractiveRegion({
         <KnowledgeAtlas
           atlas={atlas}
           selectedId={selectedId}
-          onSelectCard={setSelectedId}
+          onSelectCard={handleSelectKnowledge}
         />
       ) : null}
       {/* KNOW-13:`?tag=` 生效时(recent 已在服务端装配层按标签过滤)显示当前
@@ -397,7 +399,7 @@ export function KnowledgeInteractiveRegion({
           unsorted={viewModel.unsorted}
           snippets={viewModel.snippets}
           selectedId={selectedId}
-          onSelectRow={setSelectedId}
+          onSelectRow={handleSelectKnowledge}
           page={viewModel.recentPage ?? 1}
           totalPages={viewModel.recentTotalPages ?? 1}
           total={viewModel.recentTotal ?? filteredRecent.length}
@@ -425,14 +427,8 @@ export function KnowledgeInteractiveRegion({
         open={selectedId !== null}
         onOpenChange={(open) => {
           if (!open) {
-            setSelectedId(null);
-            setRevisionContent("");
-            // [T-260c] 关弹窗收起编辑态 + 清预填正文,防下次打开残留旧编辑。
-            setEditing(false);
-            setLoadedBody("");
-            // [T-247] 关弹窗清归档确认/错误态,防下次打开残留。
-            setArchiveConfirming(false);
-            setArchiveError(null);
+            // [T-260c/T-247] 关弹窗统一清选中、草稿、编辑和归档反馈。
+            handleSelectKnowledge(null);
           }
         }}
       >
@@ -1113,7 +1109,7 @@ function RecentKnowledgeTable({
 }) {
   return (
     <div data-slot="recent-knowledge-table-wrapper">
-      <SectionCard title="最近更新" description="按更新时间正序">
+      <SectionCard title="最近更新" description="最新写入在前">
         <table
           data-slot="recent-knowledge-table"
           className="w-full text-[13px]"
@@ -1124,7 +1120,7 @@ function RecentKnowledgeTable({
               <th className="py-1.5 text-left font-medium">标题</th>
               <th className="py-1.5 text-left font-medium">类型</th>
               <th className="py-1.5 text-left font-medium">标签</th>
-              <th className="py-1.5 text-right font-medium">更新</th>
+              <th className="py-1.5 text-right font-medium">时间</th>
             </tr>
           </thead>
           <tbody>

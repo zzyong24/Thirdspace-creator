@@ -62,6 +62,7 @@ export interface IngestionPublishingPort {
       externalId: string;
       externalUrl?: string | null;
       publishedAt?: string | null;
+      title?: string;
     },
   ): Promise<{ id: string }>;
 }
@@ -186,8 +187,8 @@ export interface IngestionPlatformAccountPort {
   ): Promise<void>;
 }
 
-// [T-136 §D] 登录用户自己的抖音身份(scraper 从作品列表 XHR 反解 —— 见 douyin-cdp
-// parseSelfIdentity)。service 用真实 nickname 替占位「我的抖音」、存 sourceIdentifier(抖音号)。
+// [T-136 §D/T-490] 登录用户自己的抖音身份(优先从创作者主页账号资料读取，作品列表 author
+// 仅作兼容兜底)。service 用真实 nickname 替占位「我的抖音」、存 sourceIdentifier(抖音号)。
 // 抓不到 → null(诚实降级,保留占位不覆盖)。字段与 douyin-cdp DouyinSelfIdentity 同形(此处独立
 // 声明,避免 backend→frontend 反向依赖;composition root 结构化透传)。
 export interface DouyinSelfIdentity {
@@ -220,13 +221,16 @@ export interface DouyinFetchPort {
     knownAwemeIds?: Set<string>;
   }): Promise<DouyinFetchResult>;
   login(opts?: { accountId?: string | null }): Promise<boolean>;
+  // [T-546] 热点宝 OAuth 与普通抖音扫码是同账号、同 profile 的不同授权目标。
+  // 可选保持旧组合根兼容；请求热点宝而端口未装配时必须诚实失败。
+  loginDouhot?(opts?: { accountId?: string | null }): Promise<boolean>;
   // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
   status(opts?: { accountId?: string | null }): Promise<boolean>;
   // [T-330] 「绑定新号」staging 四步端口(全部可选,additive;组合根未升级装配时 forceNew
   //   诚实报错,不假装支持)。stagingKey 是组合根发的**不透明句柄**(service 不碰文件路径):
   //   - loginNew:在全新 staging 临时目录弹扫码 —— 空 profile 必出二维码,绝不因目录里
   //     已有旧号 sessionid 而被 isLoggedIn 短路(T-330 「扫码绑新号直接登进旧号」的根因)。
-  //   - fetchIdentity:staging 登录态下**同步**读回登录用户身份(轻量:作品列表首屏反解);
+  //   - fetchIdentity:staging 登录态下**同步**读回登录用户身份(优先账号资料、作品 author 兜底);
   //     读不到 → null(调用方诚实失败,绝不猜身份)。
   //   - adoptStaging:身份确认后把 staging 登录态搬到该号正式目录 `.auth/douyin/<accountId>`
   //     (同号重扫 = 旧登录态被替换,即登录态更新)。
@@ -322,7 +326,10 @@ export interface IngestionService {
   //   (诚实失败)。不传/false = 现行为(重连当前号复用既有 profile)。
   loginDouyin(
     ctx: RequestContext,
-    input?: { forceNew?: boolean },
+    input?: {
+      forceNew?: boolean;
+      site?: "douyin.com" | "douhot.douyin.com";
+    },
   ): Promise<{ loggedIn: boolean }>;
   // 抖音登录态被动探针(T-032a):headless 快查 sessionid cookie(不弹窗),返回是否有效登录。
   // 设置页「账号绑定」徽标读它;false 覆盖「未连接」与「登录态已过期」两态(cookie 失效即 false)。
@@ -490,34 +497,32 @@ export function createIngestionService(args: {
       await discardStaging();
       return { loggedIn: false };
     }
-    // ② 同步读回身份(staging 登录态下轻量抓作品列表首屏反解;见组合根 fetchDouyinIdentity)。
+    // ② 同步读回身份(优先创作者主页账号资料，不依赖账号是否已有作品；见 fetchDouyinIdentity)。
+    // 身份接口可能因灰度/新号空数据暂时不给结果；扫码登录态本身已被 cookie 验证，不能因此丢弃。
     let identity: DouyinSelfIdentity | null = null;
     try {
       identity = await fetchPort.fetchIdentity({ stagingKey });
     } catch (err) {
-      await discardStaging();
-      throw new Error(
-        `扫码成功但读取账号身份失败,已放弃本次绑定(临时登录态已清理),请重试:${
+      console.warn(
+        `[ingestion] loginDouyin(forceNew): 身份暂不可读，先绑定为待识别账号:${
           err instanceof Error ? err.message : String(err)
         }`,
       );
     }
     const nickname = identity?.nickname?.trim();
-    if (!identity || !nickname) {
-      // 诚实失败:读不回身份就没法归属账号 —— 清 staging + 明确报错,绝不默默挂旧号。
-      await discardStaging();
-      throw new Error(
-        "扫码成功但读不回账号身份(该号可能暂无作品),已放弃本次绑定,请重试",
-      );
-    }
+    const pendingSuffix =
+      stagingKey.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 16) || "pending";
+    const accountHandle =
+      nickname || `抖音账号（待识别·${pendingSuffix}）`;
     // ③ 身份 → 账号行:ensureDouyinAccountUpsert 优先按 sec_uid 幂等命中既有行(同号重扫=
-    //   复用并更新,不冒第二行),无命中才建新号(真实昵称,不再是占位「我的抖音」)。
+    //   复用并更新,不冒第二行)。身份暂不可读时用 staging token 派生的唯一显示占位，
+    //   既不伪造平台身份，也不会把新号登录态覆盖进已有账号目录；后续采集识别后再回填。
     let ensured: { id: string };
     try {
       ensured = await platformAccount.ensureAccount(ctx, {
         platform: "douyin",
-        handle: nickname,
-        externalAccountId: identity.secUid || null,
+        handle: accountHandle,
+        externalAccountId: identity?.secUid || null,
       });
     } catch (err) {
       await discardStaging();
@@ -684,6 +689,17 @@ export function createIngestionService(args: {
       requireAccountId(ctx.accountId, "ingestion.ensureImportedProject"); // [T-332 S2]
       // 数据底座(SPEC §1.3)。projects 端口未注入(旧最小组合)→ 返回 null,调用方回退。
       if (!ports.projects) return null;
+      // T-400:上游 schema 对可选字段的空串不负责兜底；在跨模块写入前统一规范化，
+      // 避免项目和 publication 各自留下空标题/空链接。抖音 aweme_id 可组成稳定作品页。
+      const title =
+        input.title.trim() ||
+        `${input.platform === "douyin" ? "抖音作品" : `${input.platform} 作品`} ${input.externalId}`;
+      const rawShareUrl = input.shareUrl?.trim() ?? "";
+      const shareUrl =
+        rawShareUrl ||
+        (input.platform === "douyin"
+          ? `https://www.douyin.com/video/${encodeURIComponent(input.externalId)}`
+          : undefined);
       // [T-321] 主去重键 = publications.externalId(不是 projects.platform_ref)。先按
       //   (platform, externalId) 查既有 publication:命中即该作品已绑定到某属主项目
       //   (用户手建 manual 项目「登记已发布」把 aweme_id 落这里,或上一轮日拉建的 imported
@@ -706,13 +722,27 @@ export function createIngestionService(args: {
           // 命中已绑定属主项目 → 合并更新(补真实发布数据 + 显已发布,不覆盖用户手写内容,
           //   保持原 source)。**不 create 新项目**。幂等:重复日拉稳定落同一项目。
           await ports.projects.mergePublishedWork(ctx, ownerProjectId, {
-            title: input.title,
+            title,
             brief: input.brief,
             platform: input.platform,
             externalId: input.externalId,
-            shareUrl: input.shareUrl,
+            shareUrl,
             publishedAt: input.publishedAt,
           });
+          // 重复采集也走 publishing 的幂等入口，让它仅补齐历史空 title/url。
+          if (ports.publishing.createImportedPublication) {
+            await ports.publishing.createImportedPublication(
+              ctx,
+              boundPub.contentOutputId,
+              {
+                platform: input.platform,
+                externalId: input.externalId,
+                externalUrl: shareUrl ?? null,
+                publishedAt: input.publishedAt ?? null,
+                title,
+              },
+            );
+          }
           return {
             projectId: ownerProjectId,
             outputId: boundPub.contentOutputId,
@@ -722,11 +752,11 @@ export function createIngestionService(args: {
       }
       // 未命中既有 publication(真·纯导入新作品)→ 原「create imported + 建 publication」路径不变。
       const ensured = await ports.projects.ensureImportedProject(ctx, {
-        title: input.title,
+        title,
         brief: input.brief, // [T-089] 文案全文透传(新建项目落 brief)
         platform: input.platform,
         externalId: input.externalId,
-        shareUrl: input.shareUrl,
+        shareUrl,
         publishedAt: input.publishedAt,
       });
       // 确保对应 publication 存在(external_id=externalId),metrics 才能命中。既有查询
@@ -745,7 +775,9 @@ export function createIngestionService(args: {
           {
             platform: input.platform,
             externalId: input.externalId,
+            externalUrl: shareUrl ?? null,
             publishedAt: input.publishedAt ?? null,
+            title,
           },
         );
         publicationId = pub.id;
@@ -901,7 +933,7 @@ export function createIngestionService(args: {
             await service.ensureImportedProject(ctx, {
               // [T-089] title 已是短标题语义(官方 title / desc 首行截 40,见
               // douyin-cdp deriveWorkTitle);兜底占位名不变。desc 全文 → brief。
-              title: r.title ?? `抖音作品 ${r.externalId}`,
+              title: r.title?.trim() || `抖音作品 ${r.externalId}`,
               brief: r.desc,
               platform: r.platform,
               externalId: r.externalId,
@@ -964,6 +996,18 @@ export function createIngestionService(args: {
     async loginDouyin(ctx, input) {
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
+      }
+      // [T-546] 热点宝登录只恢复该站 OAuth。它复用当前采集账号的 profile，但不代表
+      // 新绑定账号，也不应触发普通抖音的 ensure account/source 与初始化采集副作用。
+      if (input?.site === "douhot.douyin.com") {
+        if (!douyinFetch.loginDouhot) {
+          throw new Error("热点宝登录端口未配置(douyinFetch.loginDouhot)");
+        }
+        return {
+          loggedIn: await douyinFetch.loginDouhot({
+            accountId: ctx.accountId ?? null,
+          }),
+        };
       }
       // [T-330] 「扫码绑定新抖音号」→ staging 隔离链(见 loginDouyinForceNew)。非 forceNew
       //   (重连当前号)保持现行为:复用 `.auth/douyin/<accountId>`/_default 既有 profile 合理。

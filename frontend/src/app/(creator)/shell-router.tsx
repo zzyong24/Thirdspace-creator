@@ -74,6 +74,7 @@ interface RouteResolution {
 const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
   "/topics",
   "/positioning",
+  "/intelligence",
 ]);
 
 /** 该路由是否走固定高度填满模式。工作台路由 + [T-055a] 稿面工作台(/projects/<id>,
@@ -208,6 +209,14 @@ export function resolveRoute(
       pageTitle: "选题候选池",
       // [T-052 裁决③] 「按变现潜力排序」随变现中心移除改为「按综合评分排序」。
       pageDescription: "AI / 受众信号 → 按综合评分排序的待选选题 · 一键晋升为 Project",
+      contextualCardVariant: "assistant",
+    };
+  }
+  if (pathname === "/intelligence") {
+    return {
+      headerMode: "global",
+      pageTitle: "内容雷达",
+      pageDescription: "监控对标与信源，保留真实数据，再转成自己的选题",
       contextualCardVariant: "assistant",
     };
   }

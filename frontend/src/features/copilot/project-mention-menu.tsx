@@ -41,7 +41,7 @@ export function ProjectMentionMenu({
       data-slot="project-mention-menu"
       role="listbox"
       aria-label="引用项目"
-      className="absolute bottom-full left-0 z-30 mb-1 max-h-56 w-72 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
+      className="absolute bottom-full left-0 z-50 mb-1 max-h-56 w-72 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
     >
       {loading ? (
         <p

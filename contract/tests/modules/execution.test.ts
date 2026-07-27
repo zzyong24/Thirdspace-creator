@@ -103,10 +103,11 @@ describe("executionManifest / executionTaskResource", () => {
 });
 
 describe("executionOperations", () => {
-  it("registers the 5 execution.tasks ops", () => {
+  it("registers the legacy execution ops plus the persistent queue command", () => {
     expect(Object.values(executionOperations).map((e) => e.id)).toEqual([
       "execution.tasks.create",
       "execution.tasks.list",
+      "execution.tasks.command",
       "execution.tasks.get",
       "execution.tasks.confirm",
       "execution.tasks.discard",

@@ -124,11 +124,10 @@ impl LicenseConfig {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "https://license.aitongban.cloud".to_string());
-        let project_key = std::env::var("CREATOROS_LICENSE_PROJECT_KEY")
-            .ok()
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| "test".to_string());
+        let project_key = resolve_license_project_key(
+            std::env::var("CREATOROS_LICENSE_PROJECT_KEY").ok(),
+            option_env!("CREATOROS_BUILTIN_LICENSE_PROJECT_KEY").unwrap_or(""),
+        );
         let strict_verify = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
             .map(|v| v.trim() != "0")
             .unwrap_or(true);
@@ -141,6 +140,17 @@ impl LicenseConfig {
             machine_id,
         }
     }
+}
+
+fn resolve_license_project_key(runtime_value: Option<String>, built_in_value: &str) -> String {
+    runtime_value
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .or_else(|| {
+            let built_in = built_in_value.trim();
+            (!built_in.is_empty()).then(|| built_in.to_string())
+        })
+        .unwrap_or_default()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -161,6 +171,13 @@ pub struct LicenseSnapshot {
     pub machine_id: String,
     pub license_mode: String,
     pub project_key: String,
+    /// AM 签名响应中的当前渠道 identity；与 runtime 分开保存，确保改绑后即使新配置
+    /// 暂不可读也不会跨 identity 沿用旧渠道入口。
+    #[serde(default)]
+    pub channel_ref: Option<String>,
+    /// 仅完整强验签并通过 closed schema/identity/digest/version/净化后写入。
+    #[serde(default)]
+    pub channel_runtime: Option<CachedChannelRuntime>,
     /// ISO;None = 永久(买断)。
     pub expires_at: Option<String>,
     pub activated_at: String,
@@ -284,7 +301,7 @@ pub fn build_signing_string(request_target: &str, host: &str, date: &str, digest
 /// 当前为**占位空钥**(L1s 服务端公钥待填)→ 两片皆空 → 返回空串;strict 下
 /// `resolve_public_key` 会诚实全拒(见 `placeholder_pubkey_fails_honestly_in_strict`)。
 /// 诚实边界(SPEC §8):灭靶点只对静态逆向有效,对 Frida 运行时无效(程序一跑内存还原)。
-fn embedded_pubkey_b64() -> String {
+pub(crate) fn embedded_pubkey_b64() -> String {
     // 真钥已填(2026-07-17,L1s activation-manager dfe7cfc 配对私钥;冷备 ~/.creatoros/license-signing-keypair.txt):
     // raw = frag_a^mask_a || frag_b^mask_b,fingerprint = sha256(raw)[..4]。
     let frag_a: &[u8] =
@@ -863,9 +880,13 @@ pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8
             }
         },
         None => {
-            // 无 master key(headless 极端环境)→ 明文降级落盘(与 repo 缺 key 透传语义一致,诚实弱安全)。
-            eprintln!("[license] 无 master key,.license 以明文降级落盘(弱安全)");
-            match serde_json::to_string(snap) {
+            // 无 master key 时保留既有授权快照兼容，但 runtime 必须 fail-closed：不得把已签
+            // 商业入口、渠道 identity/摘要降级写成明文。
+            eprintln!("[license] 无 master key,.license 明文兼容写入但丢弃渠道 runtime");
+            let mut degraded = snap.clone();
+            degraded.channel_ref = None;
+            degraded.channel_runtime = None;
+            match serde_json::to_string(&degraded) {
                 Ok(s) => s,
                 Err(_) => return,
             }
@@ -874,13 +895,491 @@ pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    if let Err(e) = std::fs::write(path, content) {
-        eprintln!("[license] 写 .license 失败({}): {e}", path.display());
-    }
-    #[cfg(unix)]
+    #[cfg(target_os = "macos")]
     {
-        use std::os::unix::fs::PermissionsExt as _;
-        let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600));
+        use std::io::Write as _;
+        use std::os::unix::fs::{OpenOptionsExt as _, PermissionsExt as _};
+        let tmp = path.with_extension(format!("license.tmp.{}", std::process::id()));
+        let write_result = (|| -> std::io::Result<()> {
+            let mut file = std::fs::OpenOptions::new()
+                .create(true)
+                .truncate(true)
+                .write(true)
+                .mode(0o600)
+                .open(&tmp)?;
+            file.write_all(content.as_bytes())?;
+            file.flush()?;
+            file.sync_all()?;
+            std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600))?;
+            std::fs::rename(&tmp, path)?;
+            if let Some(parent) = path.parent() {
+                std::fs::File::open(parent)?.sync_all()?;
+            }
+            Ok(())
+        })();
+        if let Err(e) = write_result {
+            let _ = std::fs::remove_file(&tmp);
+            eprintln!("[license] 原子写 .license 失败({}): {e}", path.display());
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        if let Err(e) = std::fs::write(path, content) {
+            eprintln!("[license] 写 .license 失败({}): {e}", path.display());
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt as _;
+            let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600));
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-534] Growth→AM→Creator 已签名渠道运行时
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// 加密写入 `.license` 的已验证 runtime。v2 保存完整防降级元数据；legacy v1 仅保存
+/// 四个旧字段的安全投影，绝不伪造 v2 摘要/版本。
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CachedChannelRuntime {
+    pub schema_version: String,
+    pub contract_version: Option<String>,
+    pub project_key: String,
+    pub channel_ref: String,
+    pub snapshot_version: Option<u64>,
+    pub source_digest: Option<String>,
+    pub source: Option<String>,
+    pub source_updated_at: Option<String>,
+    pub synced_at: Option<String>,
+    pub stale: Option<bool>,
+    pub brand_name: Option<String>,
+    pub purchase_url: Option<String>,
+    pub renewal_url: Option<String>,
+    pub channel_support_url: Option<String>,
+    pub bug_feedback_url: Option<String>,
+    pub download_url: Option<String>,
+    pub support_url: Option<String>,
+}
+
+const RUNTIME_V2_KEYS: [&str; 17] = [
+    "brandName",
+    "bugFeedbackUrl",
+    "channelRef",
+    "channelSupportUrl",
+    "contractVersion",
+    "downloadUrl",
+    "projectKey",
+    "purchaseUrl",
+    "renewalUrl",
+    "schemaVersion",
+    "snapshotVersion",
+    "source",
+    "sourceDigest",
+    "sourceUpdatedAt",
+    "stale",
+    "supportUrl",
+    "syncedAt",
+];
+const RUNTIME_LEGACY_KEYS: [&str; 4] =
+    ["brandName", "downloadUrl", "purchaseUrl", "supportUrl"];
+
+fn has_exact_keys(value: &serde_json::Value, expected: &[&str]) -> bool {
+    let Some(obj) = value.as_object() else {
+        return false;
+    };
+    if obj.len() != expected.len() {
+        return false;
+    }
+    obj.keys().all(|key| expected.contains(&key.as_str()))
+}
+
+fn nullable_string(
+    value: &serde_json::Value,
+    key: &str,
+) -> Result<Option<String>, &'static str> {
+    match value.get(key) {
+        Some(serde_json::Value::Null) => Ok(None),
+        Some(serde_json::Value::String(s)) => Ok(Some(s.clone())),
+        _ => Err("CHANNEL_RUNTIME_SCHEMA_INVALID"),
+    }
+}
+
+/// URL contract：NFC 后 literal lowercase HTTPS + DNS host；禁止 userinfo/port/IP/
+/// localhost/反斜杠/控制与空白/路径穿越/危险 percent 编码；query/fragment 保留。
+fn sanitize_runtime_url(raw: Option<String>) -> Result<Option<String>, &'static str> {
+    use unicode_normalization::UnicodeNormalization as _;
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let value: String = raw.trim().nfc().collect();
+    if value.chars().count() > 2048
+        || value.len() > 8192
+        || !value.starts_with("https://")
+        || value.chars().any(|c| {
+            c == '\\'
+                || c.is_whitespace()
+                || (c as u32) <= 0x1f
+                || (0x7f..=0x9f).contains(&(c as u32))
+        })
+    {
+        return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+    }
+    let after_scheme = &value["https://".len()..];
+    let raw_authority = after_scheme
+        .split(['/', '?', '#'])
+        .next()
+        .unwrap_or_default();
+    if raw_authority.is_empty()
+        || !raw_authority.is_ascii()
+        || raw_authority.contains('@')
+        || raw_authority.contains(':')
+    {
+        return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+    }
+    let parsed = url::Url::parse(&value).map_err(|_| "CHANNEL_RUNTIME_VALUE_INVALID")?;
+    if parsed.scheme() != "https"
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+        || parsed.port().is_some()
+    {
+        return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+    }
+    let host = parsed.host_str().ok_or("CHANNEL_RUNTIME_VALUE_INVALID")?;
+    if !host.is_ascii()
+        || host.eq_ignore_ascii_case("localhost")
+        || !host.contains('.')
+        || host.ends_with('.')
+        || host.parse::<std::net::IpAddr>().is_ok()
+        || host.len() > 253
+        || host.split('.').any(|label| {
+            label.is_empty()
+                || label.len() > 63
+                || label.starts_with('-')
+                || label.ends_with('-')
+                || !label
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'-')
+        })
+    {
+        return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+    }
+    let bytes = value.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            if i + 2 >= bytes.len()
+                || !bytes[i + 1].is_ascii_hexdigit()
+                || !bytes[i + 2].is_ascii_hexdigit()
+                || (bytes[i + 1].is_ascii_lowercase() && bytes[i + 1].is_ascii_alphabetic())
+                || (bytes[i + 2].is_ascii_lowercase() && bytes[i + 2].is_ascii_alphabetic())
+            {
+                return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+            }
+            let hex = std::str::from_utf8(&bytes[i + 1..i + 3])
+                .ok()
+                .and_then(|s| u8::from_str_radix(s, 16).ok())
+                .ok_or("CHANNEL_RUNTIME_VALUE_INVALID")?;
+            if matches!(hex, b'/' | b'\\' | b'?' | b'#') {
+                return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+            }
+            i += 3;
+        } else {
+            i += 1;
+        }
+    }
+    // 只检查 query/fragment 前的原始 path；`.`/`..` 及其 percent 形式均拒绝。
+    let after_authority = &value["https://".len()..];
+    let raw_path = after_authority
+        .find('/')
+        .map(|at| &after_authority[at..])
+        .unwrap_or("");
+    let raw_path = raw_path
+        .split(['?', '#'])
+        .next()
+        .unwrap_or(raw_path);
+    for segment in raw_path.split('/') {
+        let lower = segment.to_ascii_lowercase();
+        if segment == "."
+            || segment == ".."
+            || lower == "%2e"
+            || lower == "%2e%2e"
+            || lower == ".%2e"
+            || lower == "%2e."
+        {
+            return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+        }
+    }
+    Ok(Some(value))
+}
+
+fn runtime_brand(value: &serde_json::Value) -> Result<Option<String>, &'static str> {
+    let raw = nullable_string(value, "brandName")?;
+    let Some(raw) = raw else {
+        return Ok(None);
+    };
+    let cleaned: String = raw.chars().filter(|c| !c.is_control()).collect();
+    let trimmed = cleaned.trim();
+    if trimmed.is_empty() || trimmed.chars().count() > 30 {
+        return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+    }
+    Ok(Some(trimmed.to_string()))
+}
+
+fn parse_signed_channel_runtime(
+    value: &serde_json::Value,
+    expected_project_key: &str,
+    signed_channel_ref: Option<&str>,
+) -> Result<CachedChannelRuntime, &'static str> {
+    let Some(obj) = value.as_object() else {
+        return Err("CHANNEL_RUNTIME_SCHEMA_INVALID");
+    };
+    match obj.get("schemaVersion") {
+        None => {
+            if !has_exact_keys(value, &RUNTIME_LEGACY_KEYS) {
+                return Err("CHANNEL_RUNTIME_LEGACY_INVALID");
+            }
+            let channel_ref =
+                signed_channel_ref.ok_or("CHANNEL_RUNTIME_IDENTITY_MISMATCH")?;
+            let support_url =
+                sanitize_runtime_url(nullable_string(value, "supportUrl")?)?;
+            Ok(CachedChannelRuntime {
+                schema_version: "channel-runtime-legacy-v1".to_string(),
+                contract_version: None,
+                project_key: expected_project_key.to_string(),
+                channel_ref: channel_ref.to_string(),
+                snapshot_version: None,
+                source_digest: None,
+                source: None,
+                source_updated_at: None,
+                synced_at: None,
+                stale: None,
+                brand_name: runtime_brand(value)?,
+                purchase_url: sanitize_runtime_url(nullable_string(
+                    value,
+                    "purchaseUrl",
+                )?)?,
+                renewal_url: None,
+                channel_support_url: support_url.clone(),
+                bug_feedback_url: None,
+                download_url: sanitize_runtime_url(nullable_string(
+                    value,
+                    "downloadUrl",
+                )?)?,
+                support_url,
+            })
+        }
+        Some(serde_json::Value::String(schema)) if schema == "channel-runtime-v2" => {
+            if !has_exact_keys(value, &RUNTIME_V2_KEYS) {
+                return Err("CHANNEL_RUNTIME_SCHEMA_INVALID");
+            }
+            let string = |key: &str| {
+                value
+                    .get(key)
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty())
+                    .ok_or("CHANNEL_RUNTIME_SCHEMA_INVALID")
+            };
+            let project_key = string("projectKey")?;
+            let channel_ref = string("channelRef")?;
+            let valid_identity = |value: &str| {
+                !value.is_empty()
+                    && value.len() <= 64
+                    && value
+                        .bytes()
+                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+            };
+            if !valid_identity(project_key) || !valid_identity(channel_ref) {
+                return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+            }
+            if project_key != expected_project_key
+                || signed_channel_ref != Some(channel_ref)
+            {
+                return Err("CHANNEL_RUNTIME_IDENTITY_MISMATCH");
+            }
+            if string("contractVersion")? != "growth-channel-runtime-v1"
+                || string("source")? != "thirdspace-growth"
+            {
+                return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+            }
+            let snapshot_version = value
+                .get("snapshotVersion")
+                .and_then(|v| v.as_u64())
+                .filter(|v| *v > 0)
+                .ok_or("CHANNEL_RUNTIME_SCHEMA_INVALID")?;
+            let stale = value
+                .get("stale")
+                .and_then(|v| v.as_bool())
+                .ok_or("CHANNEL_RUNTIME_SCHEMA_INVALID")?;
+            let config = serde_json::json!({
+                "brandName": value["brandName"].clone(),
+                "purchaseUrl": value["purchaseUrl"].clone(),
+                "renewalUrl": value["renewalUrl"].clone(),
+                "channelSupportUrl": value["channelSupportUrl"].clone(),
+                "bugFeedbackUrl": value["bugFeedbackUrl"].clone(),
+                "downloadUrl": value["downloadUrl"].clone(),
+            });
+            let semantic = serde_json::json!({
+                "contractVersion": value["contractVersion"].clone(),
+                "sourceSystem": value["source"].clone(),
+                "projectKey": value["projectKey"].clone(),
+                "channelRef": value["channelRef"].clone(),
+                "snapshotVersion": value["snapshotVersion"].clone(),
+                "sourceUpdatedAt": value["sourceUpdatedAt"].clone(),
+                "config": config,
+            });
+            let canonical = serde_json_canonicalizer::to_string(&semantic)
+                .map_err(|_| "CHANNEL_RUNTIME_VALUE_INVALID")?;
+            let recomputed = format!("sha256:{:x}", Sha256::digest(canonical.as_bytes()));
+            let source_digest = string("sourceDigest")?;
+            if source_digest != recomputed {
+                return Err("CHANNEL_RUNTIME_DIGEST_MISMATCH");
+            }
+            let source_updated_at = string("sourceUpdatedAt")?;
+            let synced_at = string("syncedAt")?;
+            if parse_iso_ms(source_updated_at).is_none() || parse_iso_ms(synced_at).is_none() {
+                return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+            }
+            let channel_support_url =
+                sanitize_runtime_url(nullable_string(value, "channelSupportUrl")?)?;
+            let support_url =
+                sanitize_runtime_url(nullable_string(value, "supportUrl")?)?;
+            if support_url != channel_support_url {
+                return Err("CHANNEL_RUNTIME_VALUE_INVALID");
+            }
+            Ok(CachedChannelRuntime {
+                schema_version: "channel-runtime-v2".to_string(),
+                contract_version: Some("growth-channel-runtime-v1".to_string()),
+                project_key: project_key.to_string(),
+                channel_ref: channel_ref.to_string(),
+                snapshot_version: Some(snapshot_version),
+                source_digest: Some(source_digest.to_string()),
+                source: Some("thirdspace-growth".to_string()),
+                source_updated_at: Some(source_updated_at.to_string()),
+                synced_at: Some(synced_at.to_string()),
+                stale: Some(stale),
+                brand_name: runtime_brand(value)?,
+                purchase_url: sanitize_runtime_url(nullable_string(
+                    value,
+                    "purchaseUrl",
+                )?)?,
+                renewal_url: sanitize_runtime_url(nullable_string(
+                    value,
+                    "renewalUrl",
+                )?)?,
+                channel_support_url,
+                bug_feedback_url: sanitize_runtime_url(nullable_string(
+                    value,
+                    "bugFeedbackUrl",
+                )?)?,
+                download_url: sanitize_runtime_url(nullable_string(
+                    value,
+                    "downloadUrl",
+                )?)?,
+                support_url,
+            })
+        }
+        Some(_) => Err("CHANNEL_RUNTIME_SCHEMA_UNSUPPORTED"),
+    }
+}
+
+#[derive(Clone)]
+struct RuntimeResolution {
+    channel_ref: Option<String>,
+    runtime: Option<CachedChannelRuntime>,
+}
+
+fn resolve_channel_runtime(
+    existing: Option<&LicenseSnapshot>,
+    expected_project_key: &str,
+    signed_channel_ref: &Option<Option<String>>,
+    raw_channel_config: Option<&serde_json::Value>,
+    signature_verified: bool,
+) -> RuntimeResolution {
+    let old_ref = existing.and_then(|s| s.channel_ref.clone());
+    let old_runtime = existing.and_then(|s| s.channel_runtime.clone());
+    // T-534 runtime 不接受 gate-F2 弱验签。旧 AM 未下发 channelRef 时也不擅自改变 identity。
+    if !signature_verified || signed_channel_ref.is_none() {
+        return RuntimeResolution {
+            channel_ref: old_ref,
+            runtime: old_runtime,
+        };
+    }
+    let new_ref = signed_channel_ref.clone().flatten();
+    let same_identity = new_ref == old_ref;
+    let Some(ref channel_ref) = new_ref else {
+        return RuntimeResolution {
+            channel_ref: None,
+            runtime: None,
+        };
+    };
+    let parsed = match raw_channel_config {
+        Some(serde_json::Value::Object(_)) => parse_signed_channel_runtime(
+            raw_channel_config.expect("matched Some"),
+            expected_project_key,
+            Some(channel_ref.as_str()),
+        ),
+        Some(serde_json::Value::Null) | None => {
+            return RuntimeResolution {
+                channel_ref: new_ref,
+                runtime: if same_identity { old_runtime } else { None },
+            };
+        }
+        Some(_) => Err("CHANNEL_RUNTIME_SCHEMA_INVALID"),
+    };
+    let candidate = match parsed {
+        Ok(candidate) => candidate,
+        Err(code) => {
+            eprintln!("[license] {code}");
+            return RuntimeResolution {
+                channel_ref: new_ref,
+                runtime: if same_identity { old_runtime } else { None },
+            };
+        }
+    };
+    if !same_identity {
+        return RuntimeResolution {
+            channel_ref: new_ref,
+            runtime: Some(candidate),
+        };
+    }
+    let Some(old) = old_runtime else {
+        return RuntimeResolution {
+            channel_ref: new_ref,
+            runtime: Some(candidate),
+        };
+    };
+    // v2 绝不被 legacy/null/未知 schema 降级覆盖。
+    if old.schema_version == "channel-runtime-v2"
+        && candidate.schema_version != "channel-runtime-v2"
+    {
+        return RuntimeResolution {
+            channel_ref: new_ref,
+            runtime: Some(old),
+        };
+    }
+    match (old.snapshot_version, candidate.snapshot_version) {
+        (Some(old_version), Some(new_version)) if new_version < old_version => {
+            eprintln!("[license] CHANNEL_RUNTIME_VERSION_STALE");
+            RuntimeResolution {
+                channel_ref: new_ref,
+                runtime: Some(old),
+            }
+        }
+        (Some(old_version), Some(new_version)) if new_version == old_version => {
+            if old.source_digest != candidate.source_digest {
+                eprintln!("[license] CHANNEL_RUNTIME_VERSION_COLLISION");
+            }
+            RuntimeResolution {
+                channel_ref: new_ref,
+                runtime: Some(old),
+            }
+        }
+        _ => RuntimeResolution {
+            channel_ref: new_ref,
+            runtime: Some(candidate),
+        },
     }
 }
 
@@ -902,15 +1401,21 @@ pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8
 // 重置语义:workspace_reset 只归档 db/ 与 .auth/,appDataDir 根文件天然保留(测锚同 .license)。
 
 /// `.channel-links` 缓存 schema 版本(读端不匹配 → 丢弃重取)。
+#[cfg(test)]
 pub const CHANNEL_LINKS_SCHEMA_VERSION: u32 = 1;
 
 /// 渠道链接三键(serde camelCase 与服务端契约/前端读端一致)。三键皆可空。
+/// [T-530] 另有 `brand_name` 品牌显示名:纯文本,None = 未配置(客户端回官方名
+/// 「CreatorOS」—— 品牌名回退官方名不涉密,与链接「null 不回退」红线不同)。
+/// brandName 在 channelConfig 对象内 → 自动被 Ed25519 签名 digest 覆盖。
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelConfig {
     pub purchase_url: Option<String>,
     pub support_url: Option<String>,
     pub download_url: Option<String>,
+    #[serde(alias = "brand_name")]
+    pub brand_name: Option<String>,
 }
 
 /// 协议头白名单:只收 `https://`(SPEC §3/§7;服务端已强校验,这里防线纵深再滤一次)。
@@ -918,6 +1423,19 @@ fn sanitize_channel_url(v: Option<&serde_json::Value>) -> Option<String> {
     v.and_then(|x| x.as_str())
         .map(|s| s.trim().to_string())
         .filter(|s| s.starts_with("https://"))
+}
+
+/// [T-530] 品牌显示名清洗(统一契约,三仓一致):去控制字符 → trim → 非空且
+/// ≤30 个 Unicode 字符才有效;无效/缺失/null/非字符串 一律 None(= 未配置)。
+/// 纯文本显示名,不做 URL 语义、不渲染 HTML(React 渲染侧默认转义)。
+fn sanitize_brand_name(v: Option<&serde_json::Value>) -> Option<String> {
+    let raw = v.and_then(|x| x.as_str())?;
+    let cleaned: String = raw.chars().filter(|c| !c.is_control()).collect();
+    let trimmed = cleaned.trim();
+    if trimmed.is_empty() || trimmed.chars().count() > 30 {
+        return None;
+    }
+    Some(trimmed.to_string())
 }
 
 /// 从响应 body 的 `channelConfig` 值解析(camel/snake 双取,与 WireBody 同宽容策略)。
@@ -928,21 +1446,26 @@ fn parse_channel_config(v: &serde_json::Value) -> ChannelConfig {
         purchase_url: pick("purchaseUrl", "purchase_url"),
         support_url: pick("supportUrl", "support_url"),
         download_url: pick("downloadUrl", "download_url"),
+        // [T-530] 品牌名与三链接同源同签名域(channelConfig 内),同一宽容策略。
+        brand_name: sanitize_brand_name(v.get("brandName").or_else(|| v.get("brand_name"))),
     }
 }
 
+#[cfg(test)]
 pub fn channel_links_file_path(app_data_dir: &Path) -> PathBuf {
     app_data_dir.join(".channel-links")
 }
 
 /// 缓存文件形状:`{"version":1,"channel":{…}|null}`。
 #[derive(Serialize, Deserialize)]
+#[cfg(test)]
 struct ChannelLinksFile {
     version: u32,
     channel: Option<ChannelConfig>,
 }
 
 /// 落渠道链接缓存(明文 JSON;`update=None` = 服务端显式 null → 覆写为中性降级态)。
+#[cfg(test)]
 pub fn write_channel_links_file(path: &Path, update: &Option<ChannelConfig>) {
     let file = ChannelLinksFile {
         version: CHANNEL_LINKS_SCHEMA_VERSION,
@@ -965,6 +1488,7 @@ pub fn write_channel_links_file(path: &Path, update: &Option<ChannelConfig>) {
 
 /// 读渠道链接缓存(Rust 侧 latest-version 降级链用;主要读端在 sidecar channel-links 模块)。
 /// 文件缺失 / 坏 JSON / schema 版本不匹配 → None(中性降级,绝不回退任何默认链接)。
+#[cfg(test)]
 pub fn read_channel_links_file(path: &Path) -> Option<ChannelConfig> {
     let content = std::fs::read_to_string(path).ok()?;
     let file: ChannelLinksFile = serde_json::from_str(&content).ok()?;
@@ -999,6 +1523,7 @@ pub struct ChainOutcome {
     ///     (离线/验签失败/回拨)→ **不动现有缓存**;
     ///   · `Some(None)` = 服务端显式下发 null → 覆写为中性降级态;
     ///   · `Some(Some(cfg))` = 覆写为新渠道链接。
+    #[allow(dead_code)]
     pub channel_config: Option<Option<ChannelConfig>>,
 }
 
@@ -1076,6 +1601,10 @@ struct WireBody {
     revoked: Option<bool>,
     grace_seconds: Option<i64>,
     nonce: Option<String>,
+    /// 外层=字段是否出现；内层=null 或已签名 identity。
+    channel_ref: Option<Option<String>>,
+    /// 原始已签名对象留到验签完成后按 T-534 closed contract 解析。
+    raw_channel_config: Option<serde_json::Value>,
     /// [T-396b] 外层 Option = 字段是否出现;内层 Option = 显式 null 或对象(语义见 ChainOutcome)。
     channel_config: Option<Option<ChannelConfig>>,
 }
@@ -1115,6 +1644,15 @@ impl WireBody {
                 .or_else(|| v.get("grace_seconds"))
                 .and_then(|x| x.as_i64()),
             nonce: v.get("nonce").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            channel_ref: match v.get("channelRef") {
+                None => None,
+                Some(serde_json::Value::Null) => Some(None),
+                Some(serde_json::Value::String(s)) if !s.is_empty() => {
+                    Some(Some(s.clone()))
+                }
+                Some(_) => Some(None),
+            },
+            raw_channel_config: v.get("channelConfig").cloned(),
             // [T-396b] 三态解析:字段缺失 → None(不动缓存);显式 null → Some(None)(覆写
             // 中性降级);对象 → Some(Some(cfg))(https 白名单滤过)。
             channel_config: match v.get("channelConfig").or_else(|| v.get("channel_config")) {
@@ -1136,6 +1674,15 @@ pub fn run_license_chain(
     let strict = cfg.strict_verify;
     let wall = deps.clock.wall_ms();
     let seen_max = max_last_seen(deps.points, existing.map(|s| s.last_seen_ms));
+    if cfg.project_key.is_empty() {
+        return untrusted_outcome(
+            existing,
+            wall,
+            strict,
+            "CREATOROS_LICENSE_PROJECT_KEY 未显式配置",
+            "授权项目配置缺失,请安装正确渠道提供的软件包",
+        );
+    }
 
     // ① 回拨检测先行(SPEC §6:墙钟 < max(last_seen) − 1h ⇒ 视同过期,回激活页)。
     // [T-372 L3] 码型分支:回拨硬拦只对内测码 —— 回拨的唯一收益是给 expiresAt 延命,
@@ -1347,6 +1894,13 @@ pub fn run_license_chain(
     for p in deps.points {
         p.write(new_seen);
     }
+    let runtime_resolution = resolve_channel_runtime(
+        existing,
+        &cfg.project_key,
+        &body.channel_ref,
+        body.raw_channel_config.as_ref(),
+        signature_verified,
+    );
 
     if !valid {
         // 在线明确判无效(过期/被他机用/码不存在/HTTP 4xx)。
@@ -1367,6 +1921,8 @@ pub fn run_license_chain(
             signature_verified,
             verdict_at_ms: wall,
             message: msg.clone(),
+            channel_ref: runtime_resolution.channel_ref.clone(),
+            channel_runtime: runtime_resolution.runtime.clone(),
             ..s.clone()
         });
         return ChainOutcome {
@@ -1426,6 +1982,8 @@ pub fn run_license_chain(
                 machine_id: cfg.machine_id.clone(),
                 license_mode,
                 project_key: cfg.project_key.clone(),
+                channel_ref: runtime_resolution.channel_ref.clone(),
+                channel_runtime: runtime_resolution.runtime.clone(),
                 expires_at: expires_at.clone(),
                 activated_at,
                 last_online_check_ms: trusted_now,
@@ -1453,6 +2011,8 @@ pub fn run_license_chain(
                 machine_id: cfg.machine_id.clone(),
                 license_mode,
                 project_key: cfg.project_key.clone(),
+                channel_ref: runtime_resolution.channel_ref.clone(),
+                channel_runtime: runtime_resolution.runtime.clone(),
                 expires_at: expires_at.clone(),
                 activated_at,
                 last_online_check_ms: trusted_now,
@@ -1487,6 +2047,8 @@ pub fn run_license_chain(
             machine_id: cfg.machine_id.clone(),
             license_mode,
             project_key: cfg.project_key.clone(),
+            channel_ref: runtime_resolution.channel_ref.clone(),
+            channel_runtime: runtime_resolution.runtime.clone(),
             expires_at: expires_at.clone(),
             activated_at,
             last_online_check_ms: trusted_now,
@@ -1519,6 +2081,8 @@ pub fn run_license_chain(
         machine_id: cfg.machine_id.clone(),
         license_mode,
         project_key: cfg.project_key.clone(),
+        channel_ref: runtime_resolution.channel_ref,
+        channel_runtime: runtime_resolution.runtime,
         expires_at: expires_at.clone(),
         activated_at,
         last_online_check_ms: trusted_now,
@@ -1869,11 +2433,8 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
         write_snapshot_file(&path, snap, key.as_ref());
         sync_mirror_to_sidecar(ctx, snap);
     }
-    // [T-396b] 渠道链接缓存:仅在决策链接受的响应显式携带 channelConfig 字段时覆写
-    // (Some(None)=服务端显式 null → 中性降级;None=字段缺失/离线/验签失败 → 不动旧缓存)。
-    if let Some(update) = &outcome.channel_config {
-        write_channel_links_file(&channel_links_file_path(&ctx.app_data_dir), update);
-    }
+    // [T-534] 禁止再写明文 `.channel-links`。已验证 runtime 已和授权/identity 一起原子
+    // 写入加密 `.license`；旧文件只作为不可恢复的历史残留存在，任何新读端都不消费。
     // [T-391 H-native §7 去单点化·复算点①] 落盘/缓存/广播前跑一次运行期放行门:
     // 探到调试器 trace 或证据不自洽 → 静默降级(前端拿到 licensed=false 即跳激活页 = 功能坏)。
     let gated = apply_runtime_gate(outcome.decision, &SysDebugProbe);
@@ -2635,6 +3196,25 @@ mod tests {
         }
     }
 
+    #[test]
+    fn packaged_project_key_is_used_without_finder_environment_and_runtime_can_override() {
+        assert_eq!(
+            resolve_license_project_key(None, " test "),
+            "test",
+            "Finder 启动没有终端 env 时必须使用包内产品 key"
+        );
+        assert_eq!(
+            resolve_license_project_key(Some("creatoros-dev".to_string()), "test"),
+            "creatoros-dev",
+            "开发/诊断态仍允许显式运行时覆盖"
+        );
+        assert_eq!(
+            resolve_license_project_key(Some("  ".to_string()), ""),
+            "",
+            "直接 cargo dev 未配置时仍保持 fail-closed"
+        );
+    }
+
     fn snapshot_active() -> LicenseSnapshot {
         LicenseSnapshot {
             v: SNAPSHOT_VERSION,
@@ -2644,6 +3224,8 @@ mod tests {
             machine_id: "machine-1".to_string(),
             license_mode: "TIME".to_string(),
             project_key: "test".to_string(),
+            channel_ref: None,
+            channel_runtime: None,
             expires_at: Some("2026-07-20T12:00:00Z".to_string()),
             activated_at: "2026-07-17T00:00:00Z".to_string(),
             last_online_check_ms: NOW_MS - 3_600_000,
@@ -3487,6 +4069,301 @@ mod tests {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // [T-534] channel-runtime-v2 consumer contract
+    // ─────────────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn channel_runtime_v2_projection_fixture_is_closed_and_digest_bound() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
+        ))
+        .expect("projection fixture json");
+        let runtime = parse_signed_channel_runtime(
+            &fixture["channelConfig"],
+            "creatoros",
+            Some("agent-42"),
+        )
+        .expect("canonical v2 fixture must be accepted");
+        assert_eq!(runtime.schema_version, "channel-runtime-v2");
+        assert_eq!(runtime.snapshot_version, Some(17));
+        assert_eq!(
+            runtime.source_digest.as_deref(),
+            Some("sha256:338c1c657efd10e78ccfff88833ed60cd1d80ae85c080bb7854fbfb307827883")
+        );
+        assert_eq!(runtime.support_url, runtime.channel_support_url);
+        assert!(runtime
+            .bug_feedback_url
+            .as_deref()
+            .unwrap()
+            .contains("?source=desktop#form"));
+        let vector: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/growth-channel-runtime-v1.vector.json"
+        ))
+        .expect("source digest vector json");
+        let canonical =
+            serde_json_canonicalizer::to_string(&vector["semanticSnapshot"]).unwrap();
+        assert_eq!(canonical.as_bytes().len(), 567);
+        assert_eq!(canonical, vector["canonicalUtf8"].as_str().unwrap());
+        assert_eq!(
+            format!("sha256:{:x}", Sha256::digest(canonical.as_bytes())),
+            vector["sourceDigest"].as_str().unwrap()
+        );
+        let negative = vector["negativeVector"]["canonicalUtf8"]
+            .as_str()
+            .unwrap();
+        assert_eq!(negative.as_bytes().len(), 571);
+        assert_eq!(
+            format!("sha256:{:x}", Sha256::digest(negative.as_bytes())),
+            vector["negativeVector"]["recomputedDigest"]
+                .as_str()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn channel_runtime_v2_rejects_extra_keys_identity_mismatch_and_userinfo() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
+        ))
+        .expect("projection fixture json");
+        let mut extra = fixture["channelConfig"].clone();
+        extra["price"] = serde_json::json!(99);
+        assert_eq!(
+            parse_signed_channel_runtime(&extra, "creatoros", Some("agent-42"))
+                .unwrap_err(),
+            "CHANNEL_RUNTIME_SCHEMA_INVALID"
+        );
+        assert_eq!(
+            parse_signed_channel_runtime(
+                &fixture["channelConfig"],
+                "creatoros-pro",
+                Some("agent-42")
+            )
+            .unwrap_err(),
+            "CHANNEL_RUNTIME_IDENTITY_MISMATCH"
+        );
+        assert_eq!(
+            sanitize_runtime_url(Some(
+                "https://user:pass@growth.example.com/feedback".to_string()
+            ))
+            .unwrap_err(),
+            "CHANNEL_RUNTIME_VALUE_INVALID"
+        );
+    }
+
+    #[test]
+    fn channel_runtime_legacy_only_maps_support_to_channel_support() {
+        let legacy = serde_json::json!({
+            "brandName": "星河工作室",
+            "purchaseUrl": "https://growth.example.com/buy?q=1#plans",
+            "supportUrl": "https://agent.example.com/help?q=1#contact",
+            "downloadUrl": "https://downloads.example.com/latest?q=mac#download"
+        });
+        let runtime =
+            parse_signed_channel_runtime(&legacy, "creatoros", Some("agent-42"))
+                .expect("closed legacy v1");
+        assert_eq!(runtime.schema_version, "channel-runtime-legacy-v1");
+        assert_eq!(runtime.channel_support_url, runtime.support_url);
+        assert!(runtime.bug_feedback_url.is_none());
+        assert!(runtime.renewal_url.is_none());
+    }
+
+    fn valid_body_with_runtime_v2() -> serde_json::Value {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
+        ))
+        .expect("projection fixture json");
+        let mut body = valid_body();
+        body["channelRef"] = serde_json::json!("agent-42");
+        body["channelConfig"] = fixture["channelConfig"].clone();
+        body
+    }
+
+    #[test]
+    fn channel_runtime_v2_is_persisted_only_from_strict_verified_response() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, valid_body_with_runtime_v2());
+        let mut cfg = config(&pk, true);
+        cfg.project_key = "creatoros".to_string();
+        let p = MemPoint::new(None);
+        let mut existing = snapshot_active();
+        existing.project_key = "creatoros".to_string();
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&existing),
+        );
+        let snapshot = out.snapshot.expect("accepted response writes snapshot");
+        assert_eq!(snapshot.channel_ref.as_deref(), Some("agent-42"));
+        assert_eq!(
+            snapshot
+                .channel_runtime
+                .as_ref()
+                .and_then(|runtime| runtime.snapshot_version),
+            Some(17)
+        );
+
+        let (weak_sk, weak_pk) = test_keypair();
+        let weak_server = FakeServer::ok(weak_sk, valid_body_with_runtime_v2());
+        let mut weak_cfg = config(&weak_pk, false);
+        weak_cfg.project_key = "creatoros".to_string();
+        let weak = run(
+            &weak_cfg,
+            &weak_server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&existing),
+        );
+        assert!(
+            weak.snapshot
+                .expect("license may still update in compatibility mode")
+                .channel_runtime
+                .is_none(),
+            "弱验签永不生成可信 runtime 缓存"
+        );
+    }
+
+    #[test]
+    fn signed_identity_reassignment_never_carries_old_runtime_across_channel() {
+        let (sk, pk) = test_keypair();
+        let first_server = FakeServer::ok(sk.clone(), valid_body_with_runtime_v2());
+        let mut cfg = config(&pk, true);
+        cfg.project_key = "creatoros".to_string();
+        let p = MemPoint::new(None);
+        let mut existing = snapshot_active();
+        existing.project_key = "creatoros".to_string();
+        let adopted = run(
+            &cfg,
+            &first_server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&existing),
+        )
+        .snapshot
+        .expect("adopt old channel");
+        let mut reassigned_body = valid_body();
+        reassigned_body["channelRef"] = serde_json::json!("agent-99");
+        reassigned_body["channelConfig"] = serde_json::Value::Null;
+        let reassigned_server = FakeServer::ok(sk, reassigned_body);
+        let reassigned = run(
+            &cfg,
+            &reassigned_server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&adopted),
+        )
+        .snapshot
+        .expect("signed reassignment updates identity");
+        assert_eq!(reassigned.channel_ref.as_deref(), Some("agent-99"));
+        assert!(
+            reassigned.channel_runtime.is_none(),
+            "新 identity 配置无效时必须清空旧渠道 runtime，不能本地 fallback"
+        );
+    }
+
+    fn recompute_fixture_source_digest(runtime: &mut serde_json::Value) {
+        let semantic = serde_json::json!({
+            "contractVersion": runtime["contractVersion"].clone(),
+            "sourceSystem": runtime["source"].clone(),
+            "projectKey": runtime["projectKey"].clone(),
+            "channelRef": runtime["channelRef"].clone(),
+            "snapshotVersion": runtime["snapshotVersion"].clone(),
+            "sourceUpdatedAt": runtime["sourceUpdatedAt"].clone(),
+            "config": {
+                "brandName": runtime["brandName"].clone(),
+                "purchaseUrl": runtime["purchaseUrl"].clone(),
+                "renewalUrl": runtime["renewalUrl"].clone(),
+                "channelSupportUrl": runtime["channelSupportUrl"].clone(),
+                "bugFeedbackUrl": runtime["bugFeedbackUrl"].clone(),
+                "downloadUrl": runtime["downloadUrl"].clone(),
+            }
+        });
+        let canonical = serde_json_canonicalizer::to_string(&semantic).unwrap();
+        runtime["sourceDigest"] =
+            serde_json::json!(format!("sha256:{:x}", Sha256::digest(canonical.as_bytes())));
+    }
+
+    #[test]
+    fn channel_runtime_same_identity_rejects_stale_and_same_version_collision() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
+        ))
+        .unwrap();
+        let old = parse_signed_channel_runtime(
+            &fixture["channelConfig"],
+            "creatoros",
+            Some("agent-42"),
+        )
+        .unwrap();
+        let mut existing = snapshot_active();
+        existing.project_key = "creatoros".to_string();
+        existing.channel_ref = Some("agent-42".to_string());
+        existing.channel_runtime = Some(old.clone());
+
+        let mut stale = fixture["channelConfig"].clone();
+        stale["snapshotVersion"] = serde_json::json!(16);
+        recompute_fixture_source_digest(&mut stale);
+        let stale_result = resolve_channel_runtime(
+            Some(&existing),
+            "creatoros",
+            &Some(Some("agent-42".to_string())),
+            Some(&stale),
+            true,
+        );
+        assert_eq!(stale_result.runtime, Some(old.clone()));
+
+        let mut collision = fixture["channelConfig"].clone();
+        collision["brandName"] = serde_json::json!("另一品牌");
+        recompute_fixture_source_digest(&mut collision);
+        let collision_result = resolve_channel_runtime(
+            Some(&existing),
+            "creatoros",
+            &Some(Some("agent-42".to_string())),
+            Some(&collision),
+            true,
+        );
+        assert_eq!(collision_result.runtime, Some(old));
+    }
+
+    #[test]
+    fn no_master_key_never_writes_runtime_to_plaintext_license() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
+        ))
+        .unwrap();
+        let runtime = parse_signed_channel_runtime(
+            &fixture["channelConfig"],
+            "creatoros",
+            Some("agent-42"),
+        )
+        .unwrap();
+        let mut snapshot = snapshot_active();
+        snapshot.project_key = "creatoros".to_string();
+        snapshot.channel_ref = Some("agent-42".to_string());
+        snapshot.channel_runtime = Some(runtime);
+        let dir = std::env::temp_dir().join(format!(
+            "creatoros-runtime-plaintext-sentinel-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = license_file_path(&dir);
+        write_snapshot_file(&path, &snapshot, None);
+        let raw = std::fs::read_to_string(&path).unwrap();
+        assert!(!raw.contains("growth.example.com"));
+        let degraded = decrypt_snapshot(&raw, None).unwrap();
+        assert!(degraded.channel_ref.is_none());
+        assert!(degraded.channel_runtime.is_none());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // [T-396b] 渠道链接缓存(SPEC §5/§7/§8 测锚)
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -3613,11 +4490,12 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = channel_links_file_path(&dir);
 
-        // 具体配置往返。
+        // 具体配置往返([T-530] 含品牌名)。
         let cfg = ChannelConfig {
             purchase_url: Some("https://agent.example.com/buy".to_string()),
             support_url: None,
             download_url: Some("https://agent.example.com/dl".to_string()),
+            brand_name: Some("星辰传媒".to_string()),
         };
         write_channel_links_file(&path, &Some(cfg.clone()));
         assert_eq!(read_channel_links_file(&path), Some(cfg));
@@ -3634,6 +4512,107 @@ mod tests {
         // 坏 JSON → 丢弃(不 panic)。
         std::fs::write(&path, "not-json").unwrap();
         assert_eq!(read_channel_links_file(&path), None);
+
+        // [T-530] 老文件(version=1,无 brandName 键)→ 照常读回,brand_name=None。
+        // schema 版本保持 1 不升:加字段向后兼容,老缓存不触发丢弃。
+        std::fs::write(
+            &path,
+            r#"{"version":1,"channel":{"purchaseUrl":"https://old.example.com/buy","supportUrl":null,"downloadUrl":null}}"#,
+        )
+        .unwrap();
+        let old = read_channel_links_file(&path).expect("老 schema-1 文件必须仍可读");
+        assert_eq!(old.purchase_url.as_deref(), Some("https://old.example.com/buy"));
+        assert_eq!(old.brand_name, None, "无 brandName 键 = 未配置");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // [T-530] 渠道品牌名(轻贴牌)测锚
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // 合法签名响应携带 brandName → 随 channelConfig 一起采纳(签名域内,同源同信)。
+    #[test]
+    fn brand_name_adopted_on_valid_signed_response() {
+        let (sk, pk) = test_keypair();
+        let mut body = valid_body();
+        body["channelConfig"] = serde_json::json!({
+            "purchaseUrl": "https://agent.example.com/buy",
+            "brandName": "星辰传媒",
+        });
+        let server = FakeServer::ok(sk, body);
+        let cfg = config(&pk, true);
+        let p = MemPoint::new(None);
+        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        assert!(out.decision.licensed);
+        let ch = out.channel_config.expect("有字段").expect("有对象");
+        assert_eq!(ch.brand_name.as_deref(), Some("星辰传媒"));
+        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
+    }
+
+    // snake_case `brand_name` 双取兼容(沿 parse_channel_config 既有宽容策略)。
+    #[test]
+    fn brand_name_snake_case_key_accepted() {
+        let ch = parse_channel_config(&serde_json::json!({ "brand_name": "渠道A" }));
+        assert_eq!(ch.brand_name.as_deref(), Some("渠道A"));
+    }
+
+    // 清洗规则:trim + 去控制字符;空白/空串/非字符串/显式 null → None(= 未配置)。
+    #[test]
+    fn brand_name_sanitized_or_dropped() {
+        // trim + 控制字符剔除。
+        let ch = parse_channel_config(
+            &serde_json::json!({ "brandName": "  星辰\u{0007}传媒\u{001b} " }),
+        );
+        assert_eq!(ch.brand_name.as_deref(), Some("星辰传媒"));
+        // 纯空白 → None。
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": "   " }));
+        assert_eq!(ch.brand_name, None);
+        // 显式 null → None。
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": null }));
+        assert_eq!(ch.brand_name, None);
+        // 非字符串脏值 → None(不臆造)。
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": 42 }));
+        assert_eq!(ch.brand_name, None);
+        // 键缺失 → None。
+        let ch = parse_channel_config(&serde_json::json!({}));
+        assert_eq!(ch.brand_name, None);
+    }
+
+    // 长度上限 30 个 Unicode 字符:31 字符整体弃用置 None(不截断);30 字符收下。
+    #[test]
+    fn brand_name_over_30_chars_dropped_entirely() {
+        let thirty: String = "星".repeat(30);
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": thirty.clone() }));
+        assert_eq!(ch.brand_name.as_deref(), Some(thirty.as_str()), "30 字符恰好合法");
+        let thirty_one: String = "星".repeat(31);
+        let ch = parse_channel_config(&serde_json::json!({ "brandName": thirty_one }));
+        assert_eq!(ch.brand_name, None, "超 30 字符整体弃用,不截断");
+    }
+
+    // channelConfig 显式 null → 覆写中性态,品牌名随之清空(落盘读回 None)。
+    #[test]
+    fn brand_name_cleared_on_explicit_null_channel() {
+        let dir = std::env::temp_dir().join(format!(
+            "creatoros-brand-name-test-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = channel_links_file_path(&dir);
+        write_channel_links_file(
+            &path,
+            &Some(ChannelConfig {
+                brand_name: Some("星辰传媒".to_string()),
+                ..ChannelConfig::default()
+            }),
+        );
+        assert_eq!(
+            read_channel_links_file(&path).and_then(|c| c.brand_name).as_deref(),
+            Some("星辰传媒")
+        );
+        // 服务端显式 null(Some(None) 覆写指令)→ 品牌名不残留。
+        write_channel_links_file(&path, &None);
+        assert_eq!(read_channel_links_file(&path), None, "显式清空后品牌名不得残留");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

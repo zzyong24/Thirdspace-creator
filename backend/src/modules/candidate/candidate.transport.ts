@@ -61,7 +61,9 @@ export function createCandidateTransport(
               | "predictedScore"
               | "positioningFit"
               | "demandCount"
+              | "createdAt"
               | "guardrail";
+            createdAfter?: string;
           };
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 100;
@@ -69,6 +71,7 @@ export function createCandidateTransport(
             status: q.status,
             source: q.source,
             sort: q.sort,
+            createdAfter: q.createdAfter,
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });

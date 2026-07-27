@@ -1,22 +1,28 @@
-// [T-259] 「导出诊断日志」纯逻辑(与 route 分离,好单测):定位 logs 目录 + 选平台「打开目录」命令。
+// [T-259/T-485] 定位 canonical logs 目录 + 选平台「打开目录」命令。
 //
-// 照 T-257 open-url 的 route/plan 分离范式:route 只做 isDesktopRuntime 判定 + I/O(mkdir + execFile),
+// 照 T-257 open-url 的 route/plan 分离范式:route 只做 isDesktopRuntime 判定 + I/O(stat + launch),
 // 这里做无副作用的目录解析与命令选择,方便针对各平台 + 环境变量组合写单测。
 
 import * as path from "node:path";
 
+export interface RevealPlan {
+  cmd: string;
+  args: string[];
+  completion: "spawn" | "exit";
+}
+
 /**
- * 定位诊断日志目录。优先用 Rust 壳注入的 `CREATOROS_LOG_DIR`(lib.rs setup 里注入,
- * 指向 `<appDataDir>/logs`);缺省时从 `CREATOROS_DB_DIR`(= `<appDataDir>/db`)推导其
- * 同级 `logs`(兜底,避免 env 漂移时拿不到)。都没有 → null(非桌面 / 未注入)。
+ * 定位诊断日志目录。新壳只认 Rust 注入的 canonical `CREATOROS_APP_DATA_DIR` 并派生
+ * `<appDataDir>/logs`；`CREATOROS_LOG_DIR` 仅供旧壳兼容。绝不再从 DB 路径猜目录。
  */
 export function resolveLogsDir(
   env: Record<string, string | undefined>,
 ): string | null {
+  const appDataDir = env.CREATOROS_APP_DATA_DIR?.trim();
+  if (appDataDir) return path.join(appDataDir, "logs");
+  // 旧壳兼容：新壳始终注入 APP_DATA_DIR，只有旧版本 sidecar 才走这条。
   const explicit = env.CREATOROS_LOG_DIR?.trim();
   if (explicit) return explicit;
-  const dbDir = env.CREATOROS_DB_DIR?.trim();
-  if (dbDir) return path.join(path.dirname(dbDir), "logs");
   return null;
 }
 
@@ -24,9 +30,14 @@ export function resolveLogsDir(
 export function planRevealLogs(
   dir: string,
   platform: NodeJS.Platform,
-): { cmd: string; args: string[] } {
-  if (platform === "win32") return { cmd: "explorer", args: [dir] };
-  if (platform === "linux") return { cmd: "xdg-open", args: [dir] };
+): RevealPlan {
+  // Explorer 经常在目录已经打开后以非 0 退出；这里只把“进程成功创建”当完成。
+  if (platform === "win32") {
+    return { cmd: "explorer.exe", args: [dir], completion: "spawn" };
+  }
+  if (platform === "linux") {
+    return { cmd: "xdg-open", args: [dir], completion: "exit" };
+  }
   // macOS(darwin)及其它:`open <dir>` 在 Finder 打开目录。
-  return { cmd: "open", args: [dir] };
+  return { cmd: "open", args: [dir], completion: "exit" };
 }

@@ -95,6 +95,7 @@ import {
   type LocalReadCandidates,
 } from "./chat-local-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
+import { ChatDouyinShareCard } from "./chat-douyin-share-card";
 import {
   ChatLearningCard,
   type ChatLearningSuggestion,
@@ -386,6 +387,10 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
   "planning.thesis": { label: "核心论点", sub: "提炼论点树" },
   "cover.generate": { label: "生成封面", sub: "结构化封面方案 + 生图" },
+  "intelligence.douyin.share": {
+    label: "抖音分享建档",
+    sub: "持久归档，可选明确授权的转写",
+  },
   "review.analyze": { label: "复盘分析", sub: "提炼可复用爆款要素" },
   "script.review": { label: "文案审核", sub: "违禁词 lint + 语义审" },
   "positioning.generate": { label: "定位策略", sub: "生成结构化定位提案" },
@@ -397,6 +402,9 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "research.gather": { label: "找素材", sub: "收集研究素材" },
   "research.analyze": { label: "研究分析", sub: "分析研究结论" },
   "copilot.assist": { label: "AI 助手", sub: "对话式创作建议" },
+  // 持久任务 kind（不是 chat tool 名）；通知/任务状态按 execution 真值显示。
+  share_import: { label: "抖音内容建档", sub: "读取并归档分享作品" },
+  transcribe: { label: "语音转写", sub: "提取逐字稿" },
   // [T-255a] 执行层任务(exec.* 命名空间,脑手分离)。
   "exec.echo.manifest": { label: "执行自检", sub: "沙箱执行框架演示" },
   "exec.video.render": { label: "渲染成片", sub: "模板确定性渲染视频" },
@@ -602,6 +610,33 @@ function ChatMarkdown({ text }: { text: string }) {
   );
 }
 
+/**
+ * [T-473] 深链/稿面请求里的 functionKey 是一次性命令，不是会话永久上下文。
+ * 同一个 key 的普通重渲不重新武装；只有入口命令真的变化时，下一次请求才再消费一次。
+ */
+export function createOneShotFunctionKey(
+  initial?: string,
+  initialIdentity: string | undefined = initial,
+): {
+  sync: (next?: string, identity?: string) => void;
+  consume: () => string | null;
+} {
+  let currentIdentity = initialIdentity;
+  let pending: string | null = initial ?? null;
+  return {
+    sync(next, identity = next) {
+      if (identity === currentIdentity) return;
+      currentIdentity = identity;
+      pending = next ?? null;
+    },
+    consume() {
+      const value = pending;
+      pending = null;
+      return value;
+    },
+  };
+}
+
 export function AICopilotContent({
   viewModel,
   embed,
@@ -623,6 +658,22 @@ export function AICopilotContent({
   const activeRequest = embed?.request ?? null;
   const functionKey =
     activeRequest?.functionKey || searchParams?.get("fn") || undefined;
+  const functionKeyCommandIdentity = activeRequest
+    ? `request:${activeRequest.nonce}:${functionKey ?? ""}`
+    : functionKey
+      ? `url:${surface}:${functionKey}`
+      : undefined;
+  const entryFunctionKeyRef = React.useRef<
+    ReturnType<typeof createOneShotFunctionKey> | null
+  >(null);
+  if (!entryFunctionKeyRef.current) {
+    entryFunctionKeyRef.current = createOneShotFunctionKey(
+      functionKey,
+      functionKeyCommandIdentity,
+    );
+  } else {
+    entryFunctionKeyRef.current.sync(functionKey, functionKeyCommandIdentity);
+  }
   // T-027:选中态从 URL 读(一键岛带 ?selKind=&selId=&selTitle=),装进 ChatContext.selection →
   // 后端注入 system + 工具入参兜底,让 Copilot 知道用户"这条"指哪条,不再瞎答/反复索要标题。
   // [T-108] request.selection(稿面按钮带的 content_output)优先,其次 embed.selection(常驻项目),
@@ -699,11 +750,9 @@ export function AICopilotContent({
       // [T-096] 作用域声明(必带):服务端据它落 lazy 建会话的归属,并在续接时与库中会话
       // 的 scope 比对(不一致 4xx)—— 隔离锁在服务端。
       scope: string;
-      functionKey?: string;
       projectId?: string;
       selection?: { kind: string; ids: string[]; label?: string };
     } = { surface, scope };
-    if (functionKey) chatContext.functionKey = functionKey;
     // [T-108] 稿面常驻 rail:embed.selection 是项目(kind=project),始终把它的 id 当 projectId 注入,
     // 让后端项目 facet 恒能读到本项目材料 —— 即使本轮 selection 主题被 request 换成 content_output
     // (稿面按钮带的 subject),项目上下文也不丢(overlay 深链路径原来没带 projectId,这里更完整)。
@@ -736,7 +785,6 @@ export function AICopilotContent({
   }, [
     surface,
     scope,
-    functionKey,
     selKind,
     selId,
     selTitle,
@@ -769,12 +817,14 @@ export function AICopilotContent({
         // body 是 Resolvable(每次发请求求值):把当前 conversationId(ref 读最新)和 chatContext
         // 一起带上。首轮 conversationId 为 null → 不带,后端 lazy 建;拿到响应头后续轮带上续接。
         body: () => {
-          // [T-231⑨] 一次性 chip functionKey:本次请求置顶该工具后即清;chip 是比
-          // URL/embed 更晚的用户显式动作 → 本轮覆盖之,后续轮次回落原 functionKey。
+          // [T-231⑨/T-473] chip 与入口 command 都是 one-shot；chip 是更晚的用户显式动作，
+          // 本轮覆盖入口 command。二者读后即清，后续自由对话不再强制重复工具。
           const quickFn = quickFunctionKeyRef.current;
           quickFunctionKeyRef.current = null;
-          const chatContext = quickFn
-            ? { ...chatContextBody.chatContext, functionKey: quickFn }
+          const requestedFn =
+            quickFn ?? entryFunctionKeyRef.current?.consume() ?? null;
+          const chatContext = requestedFn
+            ? { ...chatContextBody.chatContext, functionKey: requestedFn }
             : chatContextBody.chatContext;
           return {
             chatContext,
@@ -2037,6 +2087,29 @@ export function AICopilotContent({
                         />
                       );
                     }
+                    // 抖音分享专路：只渲 execution 持久父/子任务真值，模型文本不能代替状态。
+                    if (
+                      name === "intelligence.douyin.share" &&
+                      out.kind === "intelligence.douyin.share"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        ownerId?: string | null;
+                        action?: "archive" | "archive_and_transcribe";
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatDouyinShareCard
+                            taskId={o.taskId ?? null}
+                            ownerId={o.ownerId ?? null}
+                            action={o.action ?? "archive"}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
+                      );
+                    }
                     // [T-062a] 手录经验(learning.capture)→ 候选卡「存为经验」(createLearning
                     // → candidate 进裁决队列;铁律②人点才物化)。
                     if (
@@ -2299,7 +2372,7 @@ export function AICopilotContent({
         {/* 输入框(pin 底部)—— bug #5:成为对话区的固定主控件,不被次区挤压。 */}
         <Card
           data-slot="prompt-composer"
-          className="shrink-0 border border-border bg-surface p-3"
+          className="relative z-20 shrink-0 overflow-visible border border-border bg-surface p-3"
         >
           <CardContent className="p-0">
           <form

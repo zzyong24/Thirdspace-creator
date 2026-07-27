@@ -3,6 +3,10 @@
 Generic methodology — adapt every concrete path/command to YOUR project's structure and stack.
 
 ## Principle: parallelize ACROSS independent units, serialize WITHIN a unit
+
+> Lane planning (HOW to compute the partition — write_set derivation from boundaries.config/codegraph,
+> connected-components grouping, shared-task hoisting to wave-0, merge order): see
+> `rules/parallel-collab-rules.md` §0. This file covers the runtime mechanics of executing a planned wave.
 Partition work into units (modules/features) whose files are disjoint. Different units run in parallel; steps
 within a unit that share files or have dependencies run serially. `progress.mjs batch N` returns N ready tasks
 from distinct units = a conflict-free parallel set.

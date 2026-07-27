@@ -20,6 +20,10 @@ import {
   type JsonSchema,
   type SchemaValidator,
 } from "./schema-bridge";
+import type {
+  EditableSkillField,
+  OfficialSkillBase,
+} from "./effective-skill-types";
 
 // 内置 skill(三位一体的模板本体)。registerAllTemplates 全量注册它们。
 import { TOPIC_GENERATE_TEMPLATE } from "./templates/topic-generate";
@@ -47,6 +51,7 @@ import { KNOWLEDGE_RELATE_TEMPLATE } from "./templates/knowledge-relate";
 import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
 // [T-212c] 对标爆款拆解 skill（benchmark.teardown）—— 爆款拆解 → 换角度转化选题（generateObject 绑结构化 schema）。
 import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
+import { INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE } from "./templates/intelligence-topic-decompose";
 // [T-212d] 防茧房校准 skill（topic.preference）—— 淘汰原因批 → 结构化偏好信号（≥3 硬门在 backend 护栏强制）。
 import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-distill";
 // [T-235b] 热点信源信号抽取 skill(trend.extract)—— 信源页正文 → 结构化信号(无热度不编,诚实门)。
@@ -71,6 +76,18 @@ import {
 } from "./templates/chatbox-surfaces";
 
 const REGISTRY = new Map<string, PromptTemplate>();
+// T-513 official management truth: account/runtime overrides never mutate this map.
+const OFFICIAL_REGISTRY = new Map<string, PromptTemplate>();
+const DEFAULT_EDITABLE_FIELDS: readonly EditableSkillField[] = [
+  "system",
+  "template",
+  "tools",
+  "requiredFacets",
+  "outputSchema",
+  "completionPolicy",
+];
+const FACET_NAME = /^[a-z][A-Za-z0-9_]{0,63}$/;
+const PLACEHOLDER = /\{\{\s*([\w.]+)\s*\}\}/g;
 
 /**
  * JSON Schema 形式下发的输出契约覆盖(配置口子的运行时态)。key=skill id。
@@ -110,6 +127,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   COMMENT_QA_SIFT_TEMPLATE,
   // [T-212c] 对标爆款拆解:一条爆款对标作品 + 本账号定位 → 六段拆解 + 换角度转化选题(high 才进池)。
   BENCHMARK_TEARDOWN_TEMPLATE,
+  // [T-482] 内容雷达：只有用户手动转写完成后，才按完整逐字稿拆结构并生成本账号选题候选。
+  INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
   // [T-212d] 防茧房校准:淘汰原因批 → 结构化偏好信号(avoid/prefer + keyword + supportingCount)。
   TOPIC_PREFERENCE_DISTILL_TEMPLATE,
   // [T-235b] 热点信源信号抽取:信源页正文 → 结构化信号列表(无热度/链接/时间一律 null 不编)。
@@ -134,11 +153,110 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
 /** 注册(或覆盖)一个 skill(含 tools/outputSchema 随对象入表)。后注册的同 id 覆盖先前的。 */
 export function registerTemplate(tpl: PromptTemplate): void {
   REGISTRY.set(tpl.id, tpl);
+  OFFICIAL_REGISTRY.set(tpl.id, tpl);
 }
 
 /** 全量注册内置 skill(启动调一次)。 */
 export function registerAllTemplates(): void {
-  for (const tpl of BUILTIN_TEMPLATES) REGISTRY.set(tpl.id, tpl);
+  for (const tpl of BUILTIN_TEMPLATES) {
+    REGISTRY.set(tpl.id, tpl);
+    OFFICIAL_REGISTRY.set(tpl.id, tpl);
+  }
+}
+
+function ensureOfficialRegistry(): void {
+  if (OFFICIAL_REGISTRY.size === 0) registerAllTemplates();
+}
+
+function freezeOfficialTemplate(tpl: PromptTemplate): PromptTemplate {
+  return Object.freeze({
+    ...tpl,
+    requiredFacets: Object.freeze([...tpl.requiredFacets]),
+    contextRequirements: tpl.contextRequirements
+      ? Object.freeze([...tpl.contextRequirements])
+      : undefined,
+    tools: tpl.tools ? Object.freeze([...tpl.tools]) : undefined,
+    availableFacets: tpl.availableFacets
+      ? Object.freeze([...tpl.availableFacets])
+      : undefined,
+    editableFields: tpl.editableFields
+      ? Object.freeze([...tpl.editableFields])
+      : undefined,
+  });
+}
+
+/** T-513 管理面 official-only API：不读 active snapshot，也不含账号覆盖。 */
+export function getOfficialTemplate(id: string): PromptTemplate {
+  ensureOfficialRegistry();
+  const tpl = OFFICIAL_REGISTRY.get(id);
+  if (!tpl) throw new Error(`official prompt template 未注册: ${id}`);
+  return freezeOfficialTemplate(tpl);
+}
+
+export function listOfficialTemplates(): PromptTemplate[] {
+  ensureOfficialRegistry();
+  return [...OFFICIAL_REGISTRY.values()]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map(freezeOfficialTemplate);
+}
+
+export function exportOfficialSkillSchema(id: string): JsonSchema | null {
+  const tpl = getOfficialTemplate(id);
+  return tpl.outputSchema ? exportZodToJsonSchema(tpl.outputSchema) : null;
+}
+
+function officialAvailableFacets(tpl: PromptTemplate): string[] {
+  if (tpl.availableFacets) return [...new Set(tpl.availableFacets)].sort();
+  const facets = new Set(tpl.requiredFacets);
+  for (const match of tpl.template.matchAll(PLACEHOLDER)) {
+    const facet = match[1];
+    if (facet && FACET_NAME.test(facet)) facets.add(facet);
+  }
+  return [...facets].sort();
+}
+
+function deepFreezeOfficial<T>(value: T, seen = new Set<object>()): T {
+  if (typeof value !== "object" || value === null || seen.has(value)) {
+    return value;
+  }
+  seen.add(value);
+  for (const child of Object.values(value)) {
+    deepFreezeOfficial(child, seen);
+  }
+  return Object.freeze(value);
+}
+
+export function getOfficialSkillBase(id: string): OfficialSkillBase | null {
+  ensureOfficialRegistry();
+  const tpl = OFFICIAL_REGISTRY.get(id);
+  if (!tpl) return null;
+  const base: OfficialSkillBase = {
+    skillId: tpl.id,
+    baseVersion: tpl.version,
+    methodSystem: tpl.system,
+    template: tpl.template,
+    tools: [...(tpl.tools ?? [])],
+    requiredFacets: [...tpl.requiredFacets],
+    contextRequirements: [...(tpl.contextRequirements ?? [])],
+    availableFacets: officialAvailableFacets(tpl),
+    editableFields: [...(tpl.editableFields ?? DEFAULT_EDITABLE_FIELDS)],
+    outputSchema: tpl.outputSchema
+      ? exportZodToJsonSchema(tpl.outputSchema)
+      : null,
+    completionPolicy: tpl.completionPolicy
+      ? structuredClone(tpl.completionPolicy)
+      : null,
+    completionPolicyAdapter: tpl.completionPolicyAdapter
+      ? { ...tpl.completionPolicyAdapter }
+      : null,
+  };
+  return deepFreezeOfficial(base);
+}
+
+export function listOfficialSkillBases(): OfficialSkillBase[] {
+  return listOfficialTemplates()
+    .map((tpl) => getOfficialSkillBase(tpl.id))
+    .filter((base): base is OfficialSkillBase => base !== null);
 }
 
 /** 按 id 取 skill;未注册即抛错(调用方应保证能力已注册)。 */
@@ -322,5 +440,6 @@ export function clearAllSchemaOverrides(): void {
 /** 测试/重置用:清空注册表 + schema 覆盖。 */
 export function _resetRegistry(): void {
   REGISTRY.clear();
+  OFFICIAL_REGISTRY.clear();
   SCHEMA_OVERRIDES.clear();
 }

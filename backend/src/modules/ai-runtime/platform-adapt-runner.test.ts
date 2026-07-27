@@ -148,4 +148,29 @@ describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
+
+  it("[T-477] MiniMax 返回标题/标签但简介为空时拒绝候选，并把真实原因写入任务", async () => {
+    const { deps, recordCandidate, cancelTask } = makeDeps({
+      drafts: [
+        {
+          platform: "douyin",
+          title: "只有标题",
+          body: "   ",
+          tags: ["创作"],
+          coverIdea: "封面",
+        },
+      ],
+    });
+    await runPlatformAdapt(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: { outputId: "o1" } },
+      deps,
+    );
+    expect(recordCandidate).not.toHaveBeenCalled();
+    expect(cancelTask).toHaveBeenCalledWith(
+      ctx,
+      "t1",
+      expect.stringContaining("简介"),
+    );
+  });
 });

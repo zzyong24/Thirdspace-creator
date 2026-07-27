@@ -276,6 +276,41 @@ describe("ProjectRepository — per-account strict isolation (T-332 S2)", () => 
     expect(rows2.map((p) => p.id)).toEqual(["P2"]);
   });
 
+  it("[T-521] 批量 project→output 窄读一次返回本号映射，不泄漏混入的别号项目", async () => {
+    await repo.insertOutput(ctxA1, {
+      id: "o_P1",
+      projectId: "P1",
+      title: "号1 output",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: null,
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await repo.insertOutput(ctxA2, {
+      id: "o_P2_batch",
+      projectId: "P2",
+      title: "号2 output",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "drafting",
+      contentRole: null,
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+
+    await expect(
+      repo.listOutputRefsByProjects(ctxA1, ["P1", "P2"]),
+    ).resolves.toEqual([{ projectId: "P1", outputId: "o_P1" }]);
+  });
+
   it("未选号(accountId null)→ 读写一律 AccountRequiredError(引导态,无全局视图)", async () => {
     await expect(repo.list(ctxNoAcct)).rejects.toMatchObject({
       name: "AccountRequiredError",

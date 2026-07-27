@@ -239,6 +239,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
         url: "https://v.douyin.com/x",
         publishedAt: "2026-07-01T00:00:00.000Z",
         projectTitle: "上下文工程",
+        coverAssetId: "asset-cover-pub-1",
         status: "published",
       },
     ],
@@ -640,6 +641,20 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
       // [T-266] candidateId 随结果回(此 fake 为账号态 null);持久化后前端据它 patch/新建。
       candidateId: null,
     });
+  });
+
+  it("[T-473] 同一回合内相同选题补全调用幂等，只执行一次 runner", async () => {
+    const { deps, enrichTopic } = makeDeps();
+    const tools = buildChatTools(TOPIC_WHITELIST, deps);
+    const input = {
+      title: "MiniMax M2.5 实测",
+      angle: "开发者视角",
+      verifiedBrief: "已核实来源",
+    };
+    const first = await runExecute(tools["topic.enrich"]!, input);
+    const second = await runExecute(tools["topic.enrich"]!, input);
+    expect(second).toEqual(first);
+    expect(enrichTopic).toHaveBeenCalledTimes(1);
   });
 
   it("[T-266] topic.enrich 锚定某候选(selection)→ result.candidateId 透传回(前端刷新后仍能 patch)", async () => {
@@ -1266,6 +1281,69 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
   });
 });
 
+describe("[T-523] intelligence.douyin.share 工具 — 持久建档与显式转写", () => {
+  const WHITELIST = ["intelligence.douyin.share"] as const;
+
+  it("archive_and_transcribe 只转成显式 transcribe=true，并返回父任务定位字段", async () => {
+    const dispatchDouyinShare = vi.fn(async () => ({
+      taskId: "share-task-1",
+      ownerId: "share-owner-1",
+      transcribe: true,
+      error: null,
+    }));
+    const { deps } = makeDeps({ dispatchDouyinShare });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(
+      tools["intelligence.douyin.share"]!,
+      {
+        shareInput: "  https://v.douyin.com/example/  ",
+        action: "archive_and_transcribe",
+      },
+    )) as {
+      taskId: string | null;
+      ownerId: string | null;
+      action: string;
+      error: string | null;
+    };
+    expect(dispatchDouyinShare).toHaveBeenCalledWith({
+      shareInput: "https://v.douyin.com/example/",
+      transcribe: true,
+    });
+    expect(result).toMatchObject({
+      taskId: "share-task-1",
+      ownerId: "share-owner-1",
+      action: "archive_and_transcribe",
+      error: null,
+    });
+  });
+
+  it("普通 archive 恒传 transcribe=false；空分享不创建任务", async () => {
+    const dispatchDouyinShare = vi.fn(async () => ({
+      taskId: "share-task-2",
+      ownerId: "share-owner-2",
+      transcribe: false,
+      error: null,
+    }));
+    const { deps } = makeDeps({ dispatchDouyinShare });
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["intelligence.douyin.share"]!, {
+      shareInput: "https://v.douyin.com/example/",
+      action: "archive",
+    });
+    expect(dispatchDouyinShare).toHaveBeenCalledWith({
+      shareInput: "https://v.douyin.com/example/",
+      transcribe: false,
+    });
+    const empty = (await runExecute(
+      tools["intelligence.douyin.share"]!,
+      { shareInput: "  ", action: "archive" },
+    )) as { taskId: string | null; error: string | null };
+    expect(empty.taskId).toBeNull();
+    expect(empty.error).toContain("粘贴抖音分享链接");
+    expect(dispatchDouyinShare).toHaveBeenCalledTimes(1);
+  });
+});
+
 // [T-268] 整稿改异步 dispatch —— execute 不再 inline 同步跑 runScriptNode(整稿分钟级必超时→退回
 // hooks),而是 dispatch 既有异步 runner runScriptDraft,返回 { taskId, projectId, error }。
 describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑)", () => {
@@ -1885,7 +1963,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     const tools = buildChatTools([...LIST_WHITELIST], deps);
     const result = (await runExecute(tools["context.publications"]!, {})) as {
       kind: string;
-      items: Array<{ platform: string }>;
+      items: Array<{ platform: string; coverAssetId: string | null }>;
       total: number;
       offset: number;
       hasMore: boolean;
@@ -1894,10 +1972,35 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     expect(listPublications).toHaveBeenCalledWith({ limit: 20, offset: 0 });
     expect(result.kind).toBe("context.publications");
     expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.coverAssetId).toBe("asset-cover-pub-1");
     expect(result.total).toBe(3);
     expect(result.offset).toBe(0);
     // total=3 > offset+items(0+1) → hasMore。
     expect(result.hasMore).toBe(true);
+  });
+
+  it("[T-400] 最新发布作品的 coverAssetId 可原样作为 cover.generate.referenceAssetId", async () => {
+    const { deps, dispatchGenerateCover } = makeDeps();
+    const tools = buildChatTools(
+      ["context.publications", "cover.generate"],
+      deps,
+    );
+    const publications = (await runExecute(
+      tools["context.publications"]!,
+      { limit: 1 },
+    )) as { items: Array<{ coverAssetId: string | null }> };
+    const referenceAssetId = publications.items[0]?.coverAssetId;
+    expect(referenceAssetId).toBe("asset-cover-pub-1");
+
+    await runExecute(tools["cover.generate"]!, {
+      projectId: "proj-current",
+      referenceAssetId,
+    });
+    expect(dispatchGenerateCover).toHaveBeenCalledWith({
+      projectId: "proj-current",
+      topic: undefined,
+      referenceAssetId: "asset-cover-pub-1",
+    });
   });
 
   it("[切片四] context.publications limit 封顶 50、offset 兜 0", async () => {
@@ -2388,6 +2491,11 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
       suggestSwitchModel: false,
       suggestedTags: ["上下文工程"],
       originalText: "上下文工程是新的护城河。模型不缺聪明,缺的是你的上下文。",
+      coverage: {
+        inputChars: 28,
+        submittedChars: 28,
+        truncatedChars: 0,
+      },
       atoms: [
         expect.objectContaining({ type: "claim" }),
         expect.objectContaining({ type: "quote", sourceNote: "作者原话" }),
@@ -2449,6 +2557,29 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     expect(clampDistillContent(42)).toBe("");
     const long = "长".repeat(MAX_DISTILL_TOOL_CONTENT_CHARS + 10);
     expect(clampDistillContent(long).length).toBe(MAX_DISTILL_TOOL_CONTENT_CHARS);
+  });
+
+  it("超硬上限时工具结果如实报告截断字符数，不让 Copilot 假装处理全文", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const content = "长".repeat(MAX_DISTILL_TOOL_CONTENT_CHARS + 23);
+    const result = (await runExecute(tools["knowledge.distill"]!, {
+      content,
+    })) as {
+      originalText: string;
+      coverage: {
+        inputChars: number;
+        submittedChars: number;
+        truncatedChars: number;
+      };
+    };
+    // 通用工具输出预算可能再缩短回显原文；覆盖真相字段必须仍保留真实提交量。
+    expect(result.originalText.length).toBeGreaterThan(0);
+    expect(result.coverage).toEqual({
+      inputChars: MAX_DISTILL_TOOL_CONTENT_CHARS + 23,
+      submittedChars: MAX_DISTILL_TOOL_CONTENT_CHARS,
+      truncatedChars: 23,
+    });
   });
 });
 
@@ -2516,14 +2647,13 @@ describe("[T-240③] getSurfaceToolScope — 场景工具白名单", () => {
 
 // [T-245] 编导热点能力认知接线 —— 工具描述明说 trend 能力 + trendNote 诚实注记透传。
 describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () => {
-  it("topic.generate 描述明说 basis=trend 自动拉已登记信源信号 + web 搜索(信号源登记指路)", () => {
+  it("topic.generate 描述明说 basis=trend 自动拉内容雷达来源 + web 搜索", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
     const desc = (tools["topic.generate"]! as { description?: string })
       .description!;
     expect(desc).toContain("basis=trend");
-    expect(desc).toContain("已登记网页信源");
-    expect(desc).toContain("信号源");
+    expect(desc).toContain("内容雷达已登记网页/RSS 来源");
     expect(desc).toContain("绝不要说你没有实时热点能力");
   });
 
@@ -2536,7 +2666,7 @@ describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () =>
     const desc = (tools["material.gather"]! as { description?: string })
       .description!;
     expect(desc).toContain("topic.generate(basis=trend)");
-    expect(desc).toContain("信号源");
+    expect(desc).toContain("『内容雷达』");
   });
 
   it("generateTopics 返回新形状 { items, trendNote } → 工具结果带 trendNote(编导可如实转述)", async () => {
@@ -2572,6 +2702,36 @@ describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () =>
     })) as Record<string, unknown>;
     expect(result.kind).toBe("topic.candidates");
     expect("trendNote" in result).toBe(false);
+  });
+});
+
+describe("[T-522] 同回合昂贵只读工具同参去重", () => {
+  it("material.gather 同一工具实例、规范化后同参复用一次 Promise；异参仍执行", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["material.gather"], deps);
+    const gather = tools["material.gather"]!;
+
+    await Promise.all([
+      runExecute(gather, { query: "  RAG   落地  " }),
+      runExecute(gather, { query: "RAG 落地" }),
+    ]);
+    expect(deps.gatherMaterials).toHaveBeenCalledTimes(1);
+
+    await runExecute(gather, { query: "Agent 评测" });
+    expect(deps.gatherMaterials).toHaveBeenCalledTimes(2);
+  });
+
+  it("新的 allChatTools 实例不复用上一回合缓存", async () => {
+    const { deps } = makeDeps();
+    await runExecute(
+      buildChatTools(["material.gather"], deps)["material.gather"]!,
+      { query: "RAG 落地" },
+    );
+    await runExecute(
+      buildChatTools(["material.gather"], deps)["material.gather"]!,
+      { query: "RAG 落地" },
+    );
+    expect(deps.gatherMaterials).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -30,7 +30,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, Loader2, ExternalLink, type LucideIcon } from "lucide-react";
+import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, ExternalLink, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -51,10 +51,6 @@ import type {
   CandidateResource,
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
-import type {
-  BenchmarkSourceResource,
-  BenchmarkWorkListItemResource,
-} from "@creatoros/backend/modules/benchmark";
 // [T-279] 今日新选题条带卡点击的跨 island 选中信号(条带在本 island 外发,这里订阅)。
 import { subscribeTopicFocus } from "./topic-focus-signal";
 
@@ -121,7 +117,6 @@ function topicsHref(
 // ── shared mutation seam ────────────────────────────────────────────────────────
 // A `pending` guard blocks concurrent writes; on success it runs `after` (defaults to
 // router.refresh) so the server re-reads persisted rows.
-// [T-235e] export:信号源弹窗(topics-supply-region)的 trend.sources.* mutation 复用同一 seam。
 export function useMutation() {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
@@ -179,6 +174,40 @@ const SOURCE_ICONS: Record<string, LucideIcon> = {
   review: RotateCcw,
   idea: Lightbulb,
 };
+
+function SourceReferenceLinks({
+  candidate,
+  compact = false,
+}: {
+  readonly candidate: CandidateResource;
+  readonly compact?: boolean;
+}) {
+  const references = candidate.card.sourceReferences ?? [];
+  if (references.length === 0) return null;
+  return (
+    <div
+      data-testid="candidate-source-links"
+      className={cn("flex flex-wrap items-center", compact ? "gap-1.5" : "gap-2")}
+    >
+      {references.map((reference) => (
+        <a
+          key={`${reference.kind}:${reference.url}`}
+          href={reference.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) => event.stopPropagation()}
+          className={cn(
+            "inline-flex items-center gap-1 text-brand hover:underline",
+            compact ? "text-[11px]" : "text-sm",
+          )}
+        >
+          {reference.label}
+          <ExternalLink className={compact ? "size-3" : "size-3.5"} />
+        </a>
+      ))}
+    </div>
+  );
+}
 
 // ── 选中态 context (中候选池 ⇄ 右详情共享) ──────────────────────────────────────
 interface SelectionContext {
@@ -328,6 +357,8 @@ export function CandidateCard({
           </React.Fragment>
         ))}
       </p>
+
+      <SourceReferenceLinks candidate={candidate} compact />
 
       {/* 4 评分 chip — null 显示「—」(不编). */}
       <div className="flex flex-wrap gap-1.5">
@@ -553,7 +584,6 @@ const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "high", label: "高" },
 ];
 
-// [T-235e] export:信号源弹窗(topics-supply-region)的网页信源表单复用同一行样式。
 export function FieldRow({
   label,
   required,
@@ -887,565 +917,6 @@ export function CandidateSortControl({
   );
 }
 
-// ── 对标源登记面板 (T-216 seam① · 选题/对标强化 §2.1) ──────────────────────────────
-// 登记要对标的抖音博主(sec_uid + 主页链接 + 备注)→ 定时采集抓其公开爆款 → 拆解后自动进
-// 选题池(source=benchmark)。契约:benchmark.sources.create/list/toggle/remove(客户端方法由
-// ENDPOINTS 自动生成,无需 persistence-client 封装)。服务端读源在 topics-page,mutation 后 refresh。
-function BenchmarkSourceForm() {
-  const { pending, run, router } = useMutation();
-  const [secUid, setSecUid] = React.useState("");
-  const [homeUrl, setHomeUrl] = React.useState("");
-  const [note, setNote] = React.useState("");
-  const valid = secUid.trim().length > 0;
-
-  function submit() {
-    if (!valid) return;
-    run(
-      () =>
-        client.createBenchmarkSource({
-          params: undefined,
-          query: undefined,
-          body: {
-            externalAccountId: secUid.trim(), // sec_uid(稳定身份键)必填
-            homeUrl: homeUrl.trim() || null,
-            note: note.trim() || null,
-          },
-        }),
-      () => {
-        setSecUid("");
-        setHomeUrl("");
-        setNote("");
-        router.refresh();
-      },
-    );
-  }
-
-  return (
-    <form
-      data-testid="benchmark-source-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        submit();
-      }}
-      className="flex flex-col gap-2.5 rounded-card border border-border bg-surface-subtle/40 p-3"
-    >
-      <FieldRow label="sec_uid" required>
-        <Input
-          aria-label="对标源 sec_uid"
-          placeholder="粘贴该博主的抖音主页链接"
-          value={secUid}
-          onChange={(e) => setSecUid(e.target.value)}
-        />
-      </FieldRow>
-      <FieldRow label="主页链接">
-        <Input
-          aria-label="对标源主页链接"
-          placeholder="https://www.douyin.com/user/…（可空）"
-          value={homeUrl}
-          onChange={(e) => setHomeUrl(e.target.value)}
-        />
-      </FieldRow>
-      <FieldRow label="备注">
-        <Input
-          aria-label="对标源备注"
-          placeholder="这个号为什么值得对标（可空）"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </FieldRow>
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          size="sm"
-          disabled={pending || !valid}
-          className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
-        >
-          <Plus className="size-3.5" />
-          {pending ? "登记中…" : "登记对标源"}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-function BenchmarkSourceRow({
-  source,
-}: {
-  readonly source: BenchmarkSourceResource;
-}) {
-  const { pending, run } = useMutation();
-
-  function toggle() {
-    run(() =>
-      client.toggleBenchmarkSource({
-        params: { sourceId: source.id },
-        query: undefined,
-        body: { enabled: !source.enabled },
-      }),
-    );
-  }
-
-  function remove() {
-    run(() =>
-      client.removeBenchmarkSource({
-        params: { sourceId: source.id },
-        query: undefined,
-        body: undefined,
-      }),
-    );
-  }
-
-  return (
-    <li
-      data-testid="benchmark-source-row"
-      data-source-id={source.id}
-      data-enabled={source.enabled ? "true" : "false"}
-      className="flex items-start justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
-    >
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-foreground">
-            {source.nickname ?? source.externalAccountId}
-          </span>
-          <Badge
-            variant={source.enabled ? "secondary" : "outline"}
-            className="shrink-0 text-[10px]"
-          >
-            {source.enabled ? "启用" : "停用"}
-          </Badge>
-        </span>
-        {source.nickname ? (
-          <span className="truncate text-[11px] text-text-subtle">
-            {source.externalAccountId}
-          </span>
-        ) : null}
-        {source.homeUrl ? (
-          <a
-            href={source.homeUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="truncate text-[11px] text-brand hover:underline"
-          >
-            {source.homeUrl}
-          </a>
-        ) : null}
-        {source.note ? (
-          <span className="text-[11px] text-muted-foreground">{source.note}</span>
-        ) : null}
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-xs"
-          disabled={pending}
-          onClick={toggle}
-        >
-          {source.enabled ? "停用" : "启用"}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-muted-foreground"
-          aria-label="删除对标源"
-          disabled={pending}
-          onClick={remove}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      </div>
-    </li>
-  );
-}
-
-// [T-222] 立即采集触发(best-effort):找一条启用中的 benchmark 定时采集作业 → runNow。复用
-//   register-published-form 同款链(listScheduledJobs{sourceKind} → runScheduledJobNow;幂等双闸
-//   在 backend）。benchmark collector 一次读全部启用对标源(collectBenchmark.listEnabledSources)
-//   → 故触发一次即采所有启用源(非逐源)。作业由绑定抖音时 bootstrapDouyinCollectionJobs 幂等建。
-//   采集是 fire-and-forget 后台 job(拆解转化更慢),故只诚实回「已开始」,采完由定时刷新/回选题池看。
-interface ScheduledJobDto {
-  readonly id: string;
-  readonly enabled: boolean;
-  readonly sourceKind: string;
-}
-async function triggerBenchmarkCollection(): Promise<
-  { ok: true; text: string } | { ok: false; text: string }
-> {
-  const jobsRaw = await client.listScheduledJobs({
-    params: undefined,
-    query: { page: 1, pageSize: 50, sourceKind: "benchmark" },
-    body: undefined,
-  });
-  const jobs = (Array.isArray(jobsRaw) ? jobsRaw : []) as ScheduledJobDto[];
-  const job = jobs.find((j) => j.enabled);
-  if (!job) {
-    // 无 benchmark 作业(通常是还没绑定抖音号——采集需登录态抓对标号主页)。诚实提示,不假装采了。
-    return {
-      ok: false,
-      text: "还没有对标采集作业 —— 先在账号管理绑定抖音号,系统会自动建每天的对标采集,再回来点立即采集。",
-    };
-  }
-  await client.runScheduledJobNow({
-    params: { jobId: job.id },
-    query: undefined,
-    body: {},
-  });
-  return {
-    ok: true,
-    text: "已开始采集所有启用的对标源 —— 抓到的爆款拆解后会自动进选题池,稍后回来看。",
-  };
-}
-
-function BenchmarkCollectNowButton({
-  disabled,
-}: {
-  readonly disabled: boolean;
-}) {
-  const { router } = useMutation();
-  const [state, setState] = React.useState<"idle" | "running">("idle");
-  const [message, setMessage] = React.useState<{
-    tone: "ok" | "warn";
-    text: string;
-  } | null>(null);
-
-  function collect() {
-    if (state === "running" || disabled) return;
-    setState("running");
-    setMessage(null);
-    void (async () => {
-      try {
-        const res = await triggerBenchmarkCollection();
-        setMessage({ tone: res.ok ? "ok" : "warn", text: res.text });
-        if (res.ok) router.refresh();
-      } catch {
-        setMessage({
-          tone: "warn",
-          text: "触发采集失败,请稍后重试(不影响已登记的对标源)。",
-        });
-      } finally {
-        setState("idle");
-      }
-    })();
-  }
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-testid="benchmark-collect-now"
-        disabled={disabled || state === "running"}
-        onClick={collect}
-        className="h-8 gap-1.5 px-3 text-xs"
-      >
-        <RotateCcw className="size-3.5" />
-        {state === "running" ? "采集中…" : "立即采集"}
-      </Button>
-      {message ? (
-        <p
-          data-testid="benchmark-collect-message"
-          data-tone={message.tone}
-          className={
-            message.tone === "ok"
-              ? "text-[11px] text-success"
-              : "text-[11px] text-warning"
-          }
-        >
-          {message.text}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function BenchmarkSourceList({
-  sources,
-}: {
-  readonly sources: BenchmarkSourceResource[];
-}) {
-  if (sources.length === 0) {
-    return (
-      <p
-        data-testid="benchmark-source-empty"
-        className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
-      >
-        贴一个想对标的博主主页链接,系统每天自动抓它的公开爆款,拆解后放进选题池。
-      </p>
-    );
-  }
-  return (
-    <ul
-      data-testid="benchmark-source-list"
-      className="flex flex-col gap-2"
-    >
-      {sources.map((s) => (
-        <BenchmarkSourceRow key={s.id} source={s} />
-      ))}
-    </ul>
-  );
-}
-
-// [T-235e] 对标博主面板 —— 原「对标源」独立弹窗退役,登记表单 + 立即采集(T-222)+ 列表
-// **整体迁入**统一「信号源」弹窗的「对标博主」tab(topics-supply-region SignalSourcesButton)。
-// 行为不变:登记 create、立即采集 listScheduledJobs(benchmark)→runNow、行内 toggle/remove。
-export function BenchmarkSourcesPanel({
-  sources,
-}: {
-  readonly sources: BenchmarkSourceResource[];
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        登记要对标的抖音博主(sec_uid)。定时采集会抓这些号的公开爆款，拆解后自动进选题池。
-      </p>
-      <BenchmarkSourceForm />
-      {/* [T-222] 立即采集:登记完不必等每天定时,一键触发抓所有启用对标源的公开爆款。
-          无启用源时禁用(空跑无意义)。 */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] text-muted-foreground">
-          每天定时自动采集;想马上抓就点右边。
-        </span>
-        <BenchmarkCollectNowButton disabled={!sources.some((s) => s.enabled)} />
-      </div>
-      <BenchmarkSourceList sources={sources} />
-    </div>
-  );
-}
-
-// ── 对标作品面板 (T-349b · 单条按需逐字稿) ──────────────────────────────────────────
-// 列采集到的对标作品(benchmark.works.list)+ 每条一个「抓逐字稿」按钮
-// (benchmark.works.transcribe，composition-only op → persistence-client 拦截)。抓取是分钟级
-// 后台 ASR:点击 → 按钮进 loading → 按返回 status 更新该行(done 存逐字稿 / skipped 图集无口播 /
-// failed 可重试 / reused 已有复用)。**非全局「全部抓」——每条独立按需**,诚实态不装成功。
-// 视觉镜像 BenchmarkSourceRow/List(不自创样式,用户要求照现风格)。
-type WorkRowState = {
-  readonly status: string | null;
-  readonly transcript: string | null;
-};
-
-/** 单条对标作品(标题 + 爆款数 + 爆款徽标 + 原视频链接 + 抓逐字稿/查看/重试/图集态)。 */
-function BenchmarkWorkRow({
-  work,
-}: {
-  readonly work: BenchmarkWorkListItemResource;
-}) {
-  // 逐字稿状态由本行局部 state 承接(seed 自 props),抓取成功按返回值就地更新——不 router.refresh
-  // 避免清掉展开态/loading;整页服务端读只在下次刷新时对齐。
-  const [state, setState] = React.useState<WorkRowState>({
-    status: work.transcriptStatus,
-    transcript: work.transcript,
-  });
-  const [running, setRunning] = React.useState(false);
-  const [expanded, setExpanded] = React.useState(false);
-  const [error, setError] = React.useState(false);
-
-  // 原视频链接(新窗口打开;抖音作品页,同拆解候选参考链接约定)。
-  const videoUrl = `https://www.douyin.com/video/${work.awemeId}`;
-  const hasTranscript =
-    !!state.transcript &&
-    (state.status === "done" || state.status === "reused");
-
-  function transcribe() {
-    if (running) return;
-    setRunning(true);
-    setError(false);
-    setState((s) => ({ ...s, status: "pending" }));
-    void (async () => {
-      try {
-        const res = (await client.transcribeBenchmarkWork({
-          params: { workId: work.id },
-          query: undefined,
-          body: undefined,
-        })) as { status: string; transcript: string | null };
-        setState({ status: res.status, transcript: res.transcript });
-        // 抓到正文(done/reused)→ 自动展开让用户看到结果。
-        if (res.transcript && (res.status === "done" || res.status === "reused")) {
-          setExpanded(true);
-        }
-      } catch {
-        // 抓取失败(拦截层 failed 已落库并重抛)→ 诚实标失败,可重试。
-        setError(true);
-        setState((s) => ({ ...s, status: "failed" }));
-      } finally {
-        setRunning(false);
-      }
-    })();
-  }
-
-  function renderAction() {
-    if (running || state.status === "pending") {
-      return (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled
-          className="h-7 gap-1.5 px-2 text-xs"
-        >
-          <Loader2 className="size-3.5 animate-spin" />
-          抓取中…
-        </Button>
-      );
-    }
-    if (hasTranscript) {
-      return (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          data-testid="benchmark-work-view-transcript"
-          className="h-7 gap-1.5 px-2 text-xs"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          <FileText className="size-3.5" />
-          {expanded ? "收起逐字稿" : "查看逐字稿"}
-        </Button>
-      );
-    }
-    if (state.status === "skipped") {
-      // 图集/无口播 → 诚实灰字,不给可点按钮(重抓也拿不到口播)。
-      return (
-        <span
-          data-testid="benchmark-work-skipped"
-          className="text-[11px] text-muted-foreground"
-        >
-          无口播/图集
-        </span>
-      );
-    }
-    if (state.status === "failed") {
-      return (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-testid="benchmark-work-retry"
-          className="h-7 gap-1.5 px-2 text-xs"
-          onClick={transcribe}
-        >
-          <RotateCcw className="size-3.5" />
-          重试
-        </Button>
-      );
-    }
-    // null / 未抓 → 抓逐字稿。
-    return (
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-testid="benchmark-work-transcribe"
-        className="h-7 gap-1.5 px-2 text-xs"
-        onClick={transcribe}
-      >
-        <FileText className="size-3.5" />
-        抓逐字稿
-      </Button>
-    );
-  }
-
-  return (
-    <li
-      data-testid="benchmark-work-row"
-      data-work-id={work.id}
-      data-status={state.status ?? "none"}
-      className="flex flex-col gap-2 rounded-control border border-border bg-surface px-3 py-2"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-col gap-1">
-          <span className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-medium text-foreground">
-              {work.description || work.awemeId}
-            </span>
-            {work.isViral ? (
-              <Badge
-                variant="outline"
-                className="shrink-0 border-warning/50 text-[10px] text-warning"
-              >
-                爆款
-              </Badge>
-            ) : null}
-          </span>
-          <span className="flex items-center gap-2 text-[11px] text-text-subtle">
-            <Badge variant="secondary" className="shrink-0 text-[10px] tabular-nums">
-              {work.diggCount} 赞
-            </Badge>
-            <a
-              href={videoUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-0.5 text-brand hover:underline"
-            >
-              原视频
-              <ExternalLink className="size-3" />
-            </a>
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">{renderAction()}</div>
-      </div>
-      {expanded && state.transcript ? (
-        <div
-          data-testid="benchmark-work-transcript"
-          className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-control bg-surface-subtle/60 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground"
-        >
-          {state.transcript}
-        </div>
-      ) : null}
-      {error ? (
-        <p
-          data-testid="benchmark-work-error"
-          className="text-[11px] text-warning"
-        >
-          抓取失败,请稍后重试(不影响其他作品)。
-        </p>
-      ) : null}
-    </li>
-  );
-}
-
-function BenchmarkWorksList({
-  works,
-}: {
-  readonly works: BenchmarkWorkListItemResource[];
-}) {
-  if (works.length === 0) {
-    return (
-      <p
-        data-testid="benchmark-works-empty"
-        className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
-      >
-        还没有对标作品。先在上方「对标博主」贴一个博主主页链接并采集,抓到的公开作品会逐条列在这里,可单独抓逐字稿。
-      </p>
-    );
-  }
-  return (
-    <ul data-testid="benchmark-works-list" className="flex flex-col gap-2">
-      {works.map((w) => (
-        <BenchmarkWorkRow key={w.id} work={w} />
-      ))}
-    </ul>
-  );
-}
-
-// [T-349b] 对标作品面板 —— 挂进「信号源」弹窗「对标博主」tab(BenchmarkSourcesPanel 下方)。
-export function BenchmarkWorksPanel({
-  works,
-}: {
-  readonly works: BenchmarkWorkListItemResource[];
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        采集到的对标作品。每条可单独抓口播逐字稿——图集/无口播会诚实标注，失败可重试。
-      </p>
-      <BenchmarkWorksList works={works} />
-    </div>
-  );
-}
-
 // ── 左栏：选题来源 ────────────────────────────────────────────────────────────────
 // [T-244] 能映射到真 candidates.source 枚举的行(SOURCE_ROW_FILTERS:行业热点/手动灵感)
 // 做成真过滤器:点击 → `?source=` URL 导航重发 candidates.list(与 `?sort=` 同款范式),
@@ -1603,6 +1074,7 @@ function CandidateDetailPanel({
             <p className="text-base font-medium text-foreground">
               {candidate.title}
             </p>
+            <SourceReferenceLinks candidate={candidate} />
             <p className="text-sm text-muted-foreground">
               这条还没有选题卡。让 AI 按你的定位 + 素材补全一句话选题、观众痛点、推荐结构等。
             </p>
@@ -1645,6 +1117,8 @@ function CandidateCardDetail({
       <p className="text-base font-semibold leading-snug text-foreground">
         {card.oneLiner}
       </p>
+
+      <SourceReferenceLinks candidate={candidate} />
 
       <DetailRow label="目标观众" value={card.targetAudience} />
       <DetailRow label="观众痛点" value={card.audiencePain} />
@@ -1917,12 +1391,12 @@ export function TopicsWorkspace({
   /** [T-244] 当前 `?source=` 过滤态;驱动来源行高亮 + 候选池提示。 */
   readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
-  const pool = candidates.filter((c) => c.status !== "dropped");
+  const pool = candidates.filter((c) => c.status === "pool");
   // [T-244] 可点来源行的禁用判据:全量在池候选按 source 计数(为什么不用 overview
   // count 见 SourcesColumn prop 注释)。
   const candidateCountsBySource: Partial<Record<CandidateSourceFilter, number>> = {};
   for (const c of allCandidates ?? candidates) {
-    if (c.status === "dropped") continue;
+    if (c.status !== "pool") continue;
     const key = c.source as CandidateSourceFilter;
     candidateCountsBySource[key] = (candidateCountsBySource[key] ?? 0) + 1;
   }

@@ -1,5 +1,18 @@
 fn main() {
-    // [T-372 L2] sidecar 入口完整性:构建期对 src-tauri/sidecar.tar.gz 算 SHA-256,
+    // [T-535] verdict 签名 seed 由 option_env! 编进 Rust 壳。显式声明环境依赖，避免
+    // Cargo 增量复用“上一次没配 key”的壳二进制，制造公钥已烘焙但壳签不出 token 的白屏包。
+    println!("cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64");
+    // [T-545] projectKey 是产品级 identity（不是渠道 identity）。正式 package 已在重活前
+    // 校验其显式存在；这里把它固化进 Rust 壳，保证 Finder 启动不依赖终端环境变量。
+    println!("cargo:rerun-if-env-changed=CREATOROS_LICENSE_PROJECT_KEY");
+    let project_key = std::env::var("CREATOROS_LICENSE_PROJECT_KEY")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY={project_key}");
+
+    // [T-372 L2 / T-487 RAT-PKG-05] sidecar 入口完整性:全平台构建期都对
+    // src-tauri/sidecar.tar.gz 算 SHA-256,
     // 经 rustc-env 编进二进制(lib.rs 解压前比对,不匹配拒绝 spawn)。
     //   · beforeBuildCommand(build-sidecar.mjs)先产 tarball,再进 cargo 构建 → 此处必能读到;
     //   · dev(cargo check / 无 tarball)→ 注入空串,运行时对 dev 源目录诚实跳过校验(有日志)。
@@ -34,19 +47,15 @@ fn main() {
 
     let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let tarball = manifest_dir.join("sidecar.tar.gz");
-    // [T-446] Windows 平台配置直接 bundle 展开 sidecar/，构建脚本会主动删旧 tar；别把同一
-    // 工作区残留的 mac tar 哈希误烘进 Windows 壳。mac/Linux 保持全 tar 完整性链。
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-    let hash = if target_os == "windows" {
-        String::new()
-    } else {
-        sha256_file(&tarball)
-    };
+    // 当前生产配置与 build-sidecar 均为全平台 tar。Windows 不能再注入空哈希，否则安装包
+    // 虽携带 tar，运行时却会把正式构建误判成 dev 并跳过完整性校验。
+    let hash = sha256_file(&tarball);
     println!("cargo:rustc-env=CREATOROS_SIDECAR_SHA256={hash}");
     println!("cargo:rerun-if-changed=sidecar.tar.gz");
 
-    // Windows 直接资源的快速入口校验。只读 server.js，不再每次启动读 935MB tar；诚实边界：
-    // 这是入口防篡改，不是假装对 2 万多个运行时文件逐一验签。
+    // Windows 安装期物化目录的快速入口校验。只读 server.js，不再每次启动读大 tar；
+    // 这是入口硬校验，另有完整性清单抽样，不假装逐一验签全部运行时文件。
     let entry = manifest_dir.join("sidecar").join("frontend").join("server.js");
     let entry_hash = sha256_file(&entry);
     println!("cargo:rustc-env=CREATOROS_SIDECAR_ENTRY_SHA256={entry_hash}");

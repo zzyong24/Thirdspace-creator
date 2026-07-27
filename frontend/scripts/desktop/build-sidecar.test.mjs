@@ -1,9 +1,76 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readlinkSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 
-import { materializeNestedEntryTree, resolveEntryPackage } from "./build-sidecar.mjs";
+import {
+  copyPnpmClosureVerbatim,
+  dedupeIdenticalOnnxAliases,
+  linkPackageAnchor,
+  materializeHoistedEntryClosure,
+  materializeNestedEntryTree,
+  pruneOnnxRuntimeWebWasm,
+  pruneStandaloneLeaks,
+  resolveEntryPackage,
+  assertNoPackagedBuildArtifacts,
+} from "./build-sidecar.mjs";
+
+describe("Pi 打包协议自检", () => {
+  it("覆盖 CreatorOS 会使用的 Chat / Responses / Anthropic 三种 wire API", () => {
+    const source = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "build-sidecar.mjs"),
+      "utf8",
+    );
+    expect(source).toContain("openai-responses.lazy.js");
+    expect(source).toContain("openai-completions.lazy.js");
+    expect(source).toContain("anthropic-messages.lazy.js");
+  });
+});
+
+describe("sidecar 构建产物递归污染哨兵", () => {
+  it("主动剥离 Next trace 混入的 src-tauri 构建树", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-prune-"));
+    try {
+      const frontend = join(root, "frontend");
+      mkdirSync(join(frontend, "src-tauri", "target", "release"), { recursive: true });
+      writeFileSync(join(frontend, "src-tauri", "target", "release", "CreatorOS"), "binary");
+      mkdirSync(join(frontend, ".next"), { recursive: true });
+      mkdirSync(join(frontend, "node_modules"), { recursive: true });
+      mkdirSync(join(frontend, "public"), { recursive: true });
+      writeFileSync(join(frontend, "server.js"), "server");
+      writeFileSync(join(frontend, "package.json"), "{}");
+
+      expect(pruneStandaloneLeaks(root)).toBeGreaterThan(0);
+      expect(existsSync(join(frontend, "src-tauri"))).toBe(false);
+      expect(() => assertNoPackagedBuildArtifacts(root)).not.toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("打 tar 前拒绝任何嵌套安装包或 sidecar tarball", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-sentinel-"));
+    try {
+      mkdirSync(join(root, "frontend", "cache"), { recursive: true });
+      writeFileSync(join(root, "frontend", "cache", "CreatorOS.app.tar.gz"), "nested-package");
+
+      expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/CreatorOS\.app\.tar\.gz/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
 
 function makeStore() {
   const root = mkdtempSync(join(tmpdir(), "creatoros-pnpm-entry-"));
@@ -67,5 +134,136 @@ it("嵌套物化把截断依赖放到完整包名目录", () => {
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+  });
+});
+
+describe("生产依赖闭包去重", () => {
+  it("macOS/Linux 按 pnpm entry 线性复制并保留内部相对链", () => {
+    const { root, pnpm } = makeStore();
+    try {
+      const rootEntry = "renderer@1.0.0";
+      const depEntry = "shared@1.0.0";
+      const rootDir = makeEntry(pnpm, rootEntry, "renderer");
+      const depDir = makeEntry(pnpm, depEntry, "shared");
+      const depLink = join(dirname(rootDir), "shared");
+      symlinkSync(relative(dirname(depLink), depDir), depLink, "dir");
+
+      const destPnpm = join(root, "dest", ".pnpm");
+      const copied = copyPnpmClosureVerbatim(pnpm, destPnpm, [rootEntry]);
+
+      expect(copied).toEqual(new Set([rootEntry, depEntry]));
+      const copiedLink = join(destPnpm, rootEntry, "node_modules", "shared");
+      expect(lstatSync(copiedLink).isSymbolicLink()).toBe(true);
+      expect(realpathSync(copiedLink)).toBe(
+        realpathSync(join(destPnpm, depEntry, "node_modules", "shared")),
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("Windows hoist 让共享依赖只保留一份真目录", () => {
+    const { root, pnpm } = makeStore();
+    try {
+      const rootEntry = "renderer@1.0.0";
+      const leftEntry = "left@1.0.0";
+      const rightEntry = "right@1.0.0";
+      const sharedEntry = "shared@1.0.0";
+      const rootDir = makeEntry(pnpm, rootEntry, "renderer");
+      const leftDir = makeEntry(pnpm, leftEntry, "left");
+      const rightDir = makeEntry(pnpm, rightEntry, "right");
+      const sharedDir = makeEntry(pnpm, sharedEntry, "shared");
+
+      const link = (fromPkgDir, packageName, targetDir) => {
+        const dest = join(dirname(fromPkgDir), packageName);
+        symlinkSync(relative(dirname(dest), targetDir), dest, "dir");
+      };
+      link(rootDir, "left", leftDir);
+      link(rootDir, "right", rightDir);
+      link(leftDir, "shared", sharedDir);
+      link(rightDir, "shared", sharedDir);
+
+      const destNodeModules = join(root, "hoisted", "node_modules");
+      const result = materializeHoistedEntryClosure(
+        pnpm,
+        [rootEntry],
+        destNodeModules,
+      );
+
+      expect(result.hoisted).toBe(4);
+      expect(existsSync(join(destNodeModules, "shared", "marker.txt"))).toBe(true);
+      expect(existsSync(join(destNodeModules, "left", "node_modules", "shared"))).toBe(false);
+      expect(existsSync(join(destNodeModules, "right", "node_modules", "shared"))).toBe(false);
+      expect(lstatSync(join(destNodeModules, "shared")).isSymbolicLink()).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("Node sidecar 删除永远不会加载的 onnxruntime-web WASM 副本", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-onnx-web-"));
+    try {
+      const dist = join(
+        root,
+        "onnxruntime-web@1.14.0",
+        "node_modules",
+        "onnxruntime-web",
+        "dist",
+      );
+      mkdirSync(dist, { recursive: true });
+      writeFileSync(join(dist, "ort-wasm.wasm"), "duplicate-wasm");
+      writeFileSync(join(dist, "ort-wasm-threaded.wasm"), "duplicate-wasm-threaded");
+      writeFileSync(join(dist, "ort-web.node.js"), "module.exports = {}");
+
+      expect(pruneOnnxRuntimeWebWasm(root)).toBe(2);
+      expect(existsSync(join(dist, "ort-wasm.wasm"))).toBe(false);
+      expect(existsSync(join(dist, "ort-wasm-threaded.wasm"))).toBe(false);
+      expect(existsSync(join(dist, "ort-web.node.js"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("macOS ONNX ABI 别名改成相对 symlink，避免同一 dylib 存两份", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-onnx-alias-"));
+    try {
+      const bin = join(
+        root,
+        "onnxruntime-node@1.27.0",
+        "node_modules",
+        "onnxruntime-node",
+        "bin",
+        "napi-v6",
+        "darwin",
+        "arm64",
+      );
+      mkdirSync(bin, { recursive: true });
+      writeFileSync(join(bin, "libonnxruntime.1.27.0.dylib"), "same-binary");
+      writeFileSync(join(bin, "libonnxruntime.1.dylib"), "same-binary");
+
+      expect(dedupeIdenticalOnnxAliases(root, "darwin", "arm64")).toBe(1);
+      const alias = join(bin, "libonnxruntime.1.dylib");
+      expect(lstatSync(alias).isSymbolicLink()).toBe(true);
+      expect(readlinkSync(alias)).toBe("libonnxruntime.1.27.0.dylib");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("Playwright 顶层解析锚复用 .pnpm 真身", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-package-anchor-"));
+    try {
+      const target = join(root, "node_modules", ".pnpm", "playwright@1", "node_modules", "playwright");
+      const anchor = join(root, "frontend", "node_modules", "playwright");
+      mkdirSync(target, { recursive: true });
+      writeFileSync(join(target, "package.json"), "{}");
+
+      linkPackageAnchor(target, anchor);
+
+      expect(lstatSync(anchor).isSymbolicLink()).toBe(true);
+      expect(realpathSync(anchor)).toBe(realpathSync(target));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

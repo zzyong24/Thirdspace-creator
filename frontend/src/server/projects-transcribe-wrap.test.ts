@@ -20,7 +20,11 @@ import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
 
 const ctx = { userId: "u1", requestId: "req-1" } as RequestContext;
 
-function fakeTransports(platformRef: unknown) {
+function fakeTransports(
+  platformRef: unknown,
+  artifactRows: unknown[] = [],
+  versionRows: unknown[] = [],
+) {
   const projectsRequest = vi.fn(
     async (endpoint: Endpoint): Promise<unknown> => {
       if (endpoint.id === "projects.get") {
@@ -29,28 +33,47 @@ function fakeTransports(platformRef: unknown) {
       return { data: { passthrough: endpoint.id }, meta: { requestId: "req-1" } };
     },
   );
-  const aiRequest = vi.fn(async (): Promise<unknown> => ({
+  const aiRequest = vi.fn(async (..._args: unknown[]): Promise<unknown> => ({
     data: { id: "task-99" },
     meta: { requestId: "req-1" },
   }));
+  const artifactsRequest = vi.fn(
+    async (endpoint: Endpoint): Promise<unknown> => {
+      if (endpoint.id === "artifacts.list") {
+        return { data: artifactRows, meta: { requestId: "req-1" } };
+      }
+      if (endpoint.id === "artifacts.versions.list") {
+        return { data: versionRows, meta: { requestId: "req-1" } };
+      }
+      return { data: null, meta: { requestId: "req-1" } };
+    },
+  );
   const projects = { request: projectsRequest } as unknown as Transport;
   const ai = { request: aiRequest } as unknown as Transport;
-  return { projects, ai, projectsRequest, aiRequest };
+  const artifacts = { request: artifactsRequest } as unknown as Transport;
+  return {
+    projects,
+    ai,
+    artifacts,
+    projectsRequest,
+    aiRequest,
+    artifactsRequest,
+  };
 }
 
 const input = {
   params: { projectId: "p-1" },
   query: undefined,
-  body: undefined,
+  body: { attemptId: "attempt-transcribe-0001" },
 } as never;
 
 describe("createProjectsWithTranscribe (T-374)", () => {
   it("有抖音锚 → 解析 externalId → 排 transcribe.douyin(awemeIds=[externalId])→ 回 taskId", async () => {
-    const { projects, ai, projectsRequest, aiRequest } = fakeTransports({
+    const { projects, ai, artifacts, projectsRequest, aiRequest } = fakeTransports({
       platform: "douyin",
       externalId: "  aweme-42  ", // 带空白:验证 trim
     });
-    const wrapped = createProjectsWithTranscribe({ projects, ai });
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
     const res = (await wrapped.request(
       ENDPOINTS.transcribeProjectWork,
       input,
@@ -64,19 +87,83 @@ describe("createProjectsWithTranscribe (T-374)", () => {
     expect(aiRequest).toHaveBeenCalledTimes(1);
     const [aiEndpoint, aiInput] = aiRequest.mock.calls[0] as unknown as [
       Endpoint,
-      { body: { taskType: string; inputData: { awemeIds: string[] } } },
+      {
+        body: {
+          taskType: string;
+          attemptId: string;
+          inputData: {
+            awemeIds: string[];
+            projectId: string;
+            idempotencyKey: string;
+          };
+        };
+      },
     ];
     expect(aiEndpoint).toBe(ENDPOINTS.createAITask);
     expect(aiInput.body.taskType).toBe("transcribe.douyin");
+    expect(aiInput.body.attemptId).toBe("attempt-transcribe-0001");
     expect(aiInput.body.inputData.awemeIds).toEqual(["aweme-42"]);
+    expect(aiInput.body.inputData.projectId).toBe("p-1");
+    expect(aiInput.body.inputData.idempotencyKey).toBe(
+      "project-transcribe:p-1:aweme-42",
+    );
+  });
+
+  it("同一 projects.transcribe 请求重发 → 原样复用调用方 attemptId", async () => {
+    const { projects, ai, artifacts, aiRequest } = fakeTransports({
+      platform: "douyin",
+      externalId: "aweme-42",
+    });
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
+
+    await wrapped.request(ENDPOINTS.transcribeProjectWork, input, ctx);
+    await wrapped.request(ENDPOINTS.transcribeProjectWork, input, ctx);
+
+    const attempts = aiRequest.mock.calls.map(
+      (call) =>
+        (
+          call[1] as {
+            body: { attemptId: string };
+          }
+        ).body.attemptId,
+    );
+    expect(attempts).toEqual([
+      "attempt-transcribe-0001",
+      "attempt-transcribe-0001",
+    ]);
+  });
+
+  it("已有该作品逐字稿 → 服务端拒绝二次抓取,不新建 AI 任务", async () => {
+    const { projects, ai, artifacts, aiRequest } = fakeTransports(
+      { platform: "douyin", externalId: "aweme-42" },
+      [
+        {
+          id: "artifact-transcript",
+          artifactType: "output_script",
+          currentVersionId: "version-current",
+        },
+      ],
+      [
+        {
+          id: "version-current",
+          contentData: { awemeId: "aweme-42", transcript: "已有真稿" },
+        },
+      ],
+    );
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
+
+    await expect(
+      wrapped.request(ENDPOINTS.transcribeProjectWork, input, ctx),
+    ).rejects.toMatchObject({ code: "ConflictError" });
+    expect(aiRequest).not.toHaveBeenCalled();
   });
 
   it("无锚(默认空形状)→ ValidationError 400,不排任务", async () => {
-    const { projects, ai, aiRequest } = fakeTransports({
+    const { projects, ai, artifacts, aiRequest } = fakeTransports({
       platform: "",
       externalId: "",
     });
-    const wrapped = createProjectsWithTranscribe({ projects, ai });
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
     await expect(
       wrapped.request(ENDPOINTS.transcribeProjectWork, input, ctx),
     ).rejects.toMatchObject({ code: "ValidationError" });
@@ -84,11 +171,11 @@ describe("createProjectsWithTranscribe (T-374)", () => {
   });
 
   it("非 douyin 平台锚 → 同样 ValidationError(只认抖音链)", async () => {
-    const { projects, ai, aiRequest } = fakeTransports({
+    const { projects, ai, artifacts, aiRequest } = fakeTransports({
       platform: "bilibili",
       externalId: "bv-1",
     });
-    const wrapped = createProjectsWithTranscribe({ projects, ai });
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
     await expect(
       wrapped.request(ENDPOINTS.transcribeProjectWork, input, ctx),
     ).rejects.toMatchObject({ code: "ValidationError" });
@@ -96,19 +183,20 @@ describe("createProjectsWithTranscribe (T-374)", () => {
   });
 
   it("无 ctx → AuthenticationError(写路径要求明确身份)", async () => {
-    const { projects, ai } = fakeTransports({
+    const { projects, ai, artifacts } = fakeTransports({
       platform: "douyin",
       externalId: "aweme-1",
     });
-    const wrapped = createProjectsWithTranscribe({ projects, ai });
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
     await expect(
       wrapped.request(ENDPOINTS.transcribeProjectWork, input, undefined),
     ).rejects.toThrow(/AuthenticationError/);
   });
 
   it("其余 op 透传底层 projects transport,不碰 ai", async () => {
-    const { projects, ai, projectsRequest, aiRequest } = fakeTransports(null);
-    const wrapped = createProjectsWithTranscribe({ projects, ai });
+    const { projects, ai, artifacts, projectsRequest, aiRequest } =
+      fakeTransports(null);
+    const wrapped = createProjectsWithTranscribe({ projects, ai, artifacts });
     const res = (await wrapped.request(
       ENDPOINTS.listProjects,
       { params: undefined, query: { page: 1, pageSize: 10 }, body: undefined } as never,

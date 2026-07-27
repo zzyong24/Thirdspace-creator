@@ -236,18 +236,23 @@ describe("assets.repository — ownership enforced (multi-tenant, B1–B5)", () 
 describe("assets.repository — upload sessions user-scoped (B6)", () => {
   it("getUploadSession(B, aUploadId) → null", async () => {
     const session = await repo.createUploadSession(A, {
+      accountId: "acct-a",
+      assetId: "asset-upload-a",
       assetType: "image",
       mimeType: "image/png",
       fileSize: 100,
       storageKey: "uploads/k1",
       expiresAt: NOW,
     });
-    expect(await repo.getUploadSession(B, session.id)).toBeNull();
-    expect(await repo.getUploadSession(A, session.id)).not.toBeNull();
+    expect(await repo.getUploadSession(B, session.id, "acct-a")).toBeNull();
+    expect(await repo.getUploadSession(A, session.id, "acct-b")).toBeNull();
+    expect(await repo.getUploadSession(A, session.id, "acct-a")).not.toBeNull();
   });
 
-  it("markUploadCompleted flips status (scoped)", async () => {
+  it("completeUploadSession atomically materializes and is idempotent", async () => {
     const session = await repo.createUploadSession(A, {
+      accountId: "acct-a",
+      assetId: "asset-upload-complete",
       assetType: "image",
       mimeType: "image/png",
       fileSize: 100,
@@ -255,8 +260,35 @@ describe("assets.repository — upload sessions user-scoped (B6)", () => {
       expiresAt: NOW,
     });
     expect(session.status).toBe("created");
-    await repo.markUploadCompleted(A, session.id);
-    expect((await repo.getUploadSession(A, session.id))?.status).toBe(
+    const input = {
+      name: "upload.png",
+      head: {
+        mimeType: "image/png",
+        fileSize: 100,
+        checksum: "checksum-upload",
+        width: 1920,
+        height: 1080,
+        durationMs: null,
+        mediaMetadata: {},
+      },
+    };
+    const first = await repo.completeUploadSession(
+      A,
+      session.id,
+      "acct-a",
+      input,
+    );
+    const replay = await repo.completeUploadSession(
+      A,
+      session.id,
+      "acct-a",
+      input,
+    );
+    expect(first?.id).toBe("asset-upload-complete");
+    expect(replay?.id).toBe(first?.id);
+    expect(
+      (await repo.getUploadSession(A, session.id, "acct-a"))?.status,
+    ).toBe(
       "completed",
     );
   });

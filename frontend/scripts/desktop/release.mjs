@@ -18,11 +18,23 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform, arch } from "node:process";
 import { readManifest, writeManifest } from "./release-manifest.mjs";
+import { createBuildTimingRecorder } from "./build-timing.mjs";
+import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SRC_TAURI = join(FRONTEND, "src-tauri");
 const BUNDLE_DIR = join(SRC_TAURI, "target", "release", "bundle");
 const TAURI_CONF = join(SRC_TAURI, "tauri.conf.json");
+const RELEASE_TIMING_REPORT = join(
+  SRC_TAURI,
+  "target",
+  "runtime-reports",
+  "build-timings.release.json",
+);
+const releaseTiming = createBuildTimingRecorder({
+  pipeline: "desktop:release",
+  reportPath: RELEASE_TIMING_REPORT,
+});
 
 // Tauri updater target key(与 latest.json platforms 键一致)。
 function updaterTarget() {
@@ -67,6 +79,21 @@ export function findUpdaterArtifact(bundleDir = BUNDLE_DIR) {
   return null;
 }
 
+/**
+ * 从 updater 产物路径提取文件名。
+ * 不能依赖当前进程的平台分隔符：CI 产物路径可能来自 Windows，也可能在其它平台被二次合并。
+ */
+export function updaterArtifactFileName(artifactPath) {
+  const fileName = String(artifactPath)
+    .split(/[\\/]/)
+    .filter(Boolean)
+    .pop();
+  if (!fileName) {
+    throw new Error(`updater 产物路径缺少文件名:${artifactPath}`);
+  }
+  return fileName;
+}
+
 /** 构造 latest.json 内容(纯函数,便于测)。 */
 export function buildLatestJson({ version, signature, url, notes = "", pubDate = new Date().toISOString(), target }) {
   return {
@@ -98,6 +125,47 @@ export function mergeLatestJson(existing, next) {
     ...next,
     platforms: { ...(existing.platforms ?? {}), ...next.platforms },
   };
+}
+
+/**
+ * 校验 updater 清单中的平台下载地址，防止 CI runner 绝对路径被当作文件名拼进 URL。
+ *
+ * @param {{platforms?:Record<string,{signature?:string,url?:string}>}} latest
+ * @returns {{ok:true}|{ok:false,error:string}}
+ */
+export function validateLatestJson(latest) {
+  if (!latest || typeof latest !== "object" || !latest.platforms || typeof latest.platforms !== "object") {
+    return { ok: false, error: "latest.json 缺少 platforms" };
+  }
+  const entries = Object.entries(latest.platforms);
+  if (entries.length === 0) {
+    return { ok: false, error: "latest.json platforms 为空" };
+  }
+  for (const [target, entry] of entries) {
+    const url = entry?.url;
+    if (typeof url !== "string" || !url.trim()) {
+      return { ok: false, error: `${target} 缺少 updater URL` };
+    }
+    if (/\\|%5c/i.test(url)) {
+      return { ok: false, error: `${target} updater URL 含反斜杠，疑似混入 runner 绝对路径:${url}` };
+    }
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return { ok: false, error: `${target} updater URL 非法:${url}` };
+    }
+    if (parsed.protocol !== "https:") {
+      return { ok: false, error: `${target} updater URL 必须使用 https:${url}` };
+    }
+    if (!parsed.pathname.split("/").filter(Boolean).pop()) {
+      return { ok: false, error: `${target} updater URL 缺少产物文件名:${url}` };
+    }
+    if (typeof entry?.signature !== "string" || !entry.signature.trim()) {
+      return { ok: false, error: `${target} 缺少 updater 签名` };
+    }
+  }
+  return { ok: true };
 }
 
 // ── [T-326 ENG-H03] updater base URL 解析 + 校验(纯函数,便于单测)─────────────
@@ -161,14 +229,23 @@ export function resolveUpdateBaseUrl(env, version) {
 
 function run(name, cmd, args, env = {}) {
   console.log(`\n[release] ▶ ${name}\n[release]   $ ${cmd} ${args.join(" ")}`);
+  const timing = releaseTiming.start(name);
   const r = spawnSync(cmd, args, { stdio: "inherit", cwd: FRONTEND, env: { ...process.env, ...env } });
+  timing.finish({
+    status: r.status === 0 ? "passed" : "failed",
+    exitCode: r.status,
+  });
   if (r.status !== 0) {
     console.error(`[release] ✗ 失败:${name}(exit ${r.status})`);
+    console.error(`[release]   阶段耗时报告:${RELEASE_TIMING_REPORT}`);
     process.exit(r.status ?? 1);
   }
 }
 
 function main() {
+  // [T-535] 在 updater / URL 等其它发布前置之前先挡住必白屏安装包。
+  assertVerdictKeyMaterial();
+
   // 私钥缺失 fail-fast(不产未签更新包)。
   if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
     console.error("[release] ✗ 未设 TAURI_SIGNING_PRIVATE_KEY —— 不产未签更新包(SPEC §3.2)。");
@@ -202,7 +279,7 @@ function main() {
     process.exit(1);
   }
   const signature = readFileSync(found.sig, "utf8").trim();
-  const artifactName = found.artifact.split("/").pop();
+  const artifactName = updaterArtifactFileName(found.artifact);
   const url = `${resolved.baseUrl}/${artifactName}`;
 
   // 3) 生成/更新 latest.json。[T-372 §11.2-5] 同版本已有文件(另一平台先打)→ platforms 合并,
@@ -217,6 +294,11 @@ function main() {
     }
   }
   const latest = mergeLatestJson(existing, buildLatestJson({ version, signature, url, target }));
+  const latestValidation = validateLatestJson(latest);
+  if (!latestValidation.ok) {
+    console.error(`[release] ✗ ${latestValidation.error}`);
+    process.exit(1);
+  }
   writeFileSync(latestPath, JSON.stringify(latest, null, 2) + "\n", "utf8");
   console.log(`\n[release] ✅ latest.json 已生成: ${latestPath}`);
   console.log(`[release]   version=${version} · target=${target}`);

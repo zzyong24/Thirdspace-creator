@@ -6,13 +6,13 @@ import type {
   ModelConfigurationRow,
   AgentConfigurationRow,
   StorageConfigRow,
-  SkillConfigOverrideRow,
-  SkillConfigOverrideVersionRow,
+  AccountSkillOverlayRow,
+  AccountSkillOverlayVersionRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
   StorageConfigPatch,
-  SkillConfigOverridePutBody,
+  AccountSkillOverlay,
 } from "./settings.repository";
 // [T-453] 认识 decRow 的解密失败 sentinel(值,不是 type),用于 toModelResource 打
 //   `secretDecryptFailed` 标记 —— 让 UI 能区分「未配」vs「曾配但失效需重填」。
@@ -23,8 +23,8 @@ import type {
   ModelConfigurationResource,
   AgentConfigurationResource,
   StorageConfigResource,
-  SkillConfigOverrideResource,
-  SkillConfigOverrideVersionResource,
+  AccountSkillOverlayResource,
+  AccountSkillOverlayVersionResource,
 } from "./settings.schema";
 import { resolveRootPath } from "@creatoros/backend/modules/assets";
 import { rootPathLegalityReason } from "@creatoros/backend/modules/assets";
@@ -85,6 +85,42 @@ export interface ResolvedModel {
   modelName: string;
 }
 
+type CompletionPolicyV1 = NonNullable<
+  AccountSkillOverlayResource["official"]["completionPolicy"]
+>;
+export type AccountSkillOverlayPatch = NonNullable<
+  AccountSkillOverlayResource["overlay"]
+>;
+type EditableField = AccountSkillOverlayResource["editableFields"][number];
+
+export interface OfficialSkillBase {
+  skillId: string;
+  baseVersion: string;
+  system: string;
+  template: string;
+  tools: string[];
+  requiredFacets: string[];
+  availableFacets: string[];
+  outputSchema: Record<string, unknown> | null;
+  completionPolicy: CompletionPolicyV1 | null;
+  completionPolicyAdapter: { id: string; version: string } | null;
+  editableFields: EditableField[];
+  supportsCompletionPolicySchema?: (
+    schema: Record<string, unknown> | null,
+  ) => boolean;
+}
+
+export interface OfficialSkillProvider {
+  get(skillId: string): OfficialSkillBase | null;
+  list(): OfficialSkillBase[];
+}
+
+export interface AccountSkillOverlayPutInput {
+  skillId: string;
+  expectedRevision: number | null;
+  patch: AccountSkillOverlayPatch;
+}
+
 const HARD_DEFAULT_MODEL: ResolvedModel = {
   provider: "anthropic",
   modelName: "claude-opus-4-8",
@@ -98,7 +134,7 @@ export interface ModelConfigInternal {
   provider: string;
   modelName: string;
   baseUrl: string | null;
-  apiFormat: "anthropic" | "openai_chat";
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   secretReference: string;
   secretValue: string | null;
   settings: Record<string, unknown>;
@@ -225,26 +261,27 @@ export interface SettingsService {
   // (put 成功后重套 override 进常驻 REGISTRY) 在 persistence-client 装配处做, 不在 service.
   listSkillConfigOverrides(
     ctx: RequestContext,
-  ): Promise<SkillConfigOverrideResource[]>;
+  ): Promise<AccountSkillOverlayResource[]>;
   getSkillConfigOverride(
     ctx: RequestContext,
     id: string,
-  ): Promise<SkillConfigOverrideResource>;
+  ): Promise<AccountSkillOverlayResource>;
   putSkillConfigOverride(
     ctx: RequestContext,
-    body: SkillConfigOverridePutBody,
-  ): Promise<SkillConfigOverrideResource>;
+    body: AccountSkillOverlayPutInput,
+  ): Promise<AccountSkillOverlayResource>;
   // [T-165] 版本历史 + 一键回滚。list = 某 skill 历史快照(最新在前);rollback = 取某历史
   // 版本重新生效(热更接线同 put,在 persistence-client 装配处)。
   listSkillConfigOverrideVersions(
     ctx: RequestContext,
     id: string,
-  ): Promise<SkillConfigOverrideVersionResource[]>;
+  ): Promise<AccountSkillOverlayVersionResource[]>;
   rollbackSkillConfigOverride(
     ctx: RequestContext,
     id: string,
     versionId: string,
-  ): Promise<SkillConfigOverrideResource>;
+    expectedRevision: number,
+  ): Promise<AccountSkillOverlayResource>;
   // item B — read the resolved storage config + real usage.
   getStorage(ctx: RequestContext): Promise<StorageConfigResource>;
   // item B — update the backend choice / media root (validated: an illegal /
@@ -296,7 +333,11 @@ function toModelResource(
     modelName: row.modelName,
     secretReference: row.secretReference,
     baseUrl: row.baseUrl ?? null,
-    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
+    apiFormat:
+      (row.apiFormat as
+        | "anthropic"
+        | "openai_chat"
+        | "openai_responses") ?? "anthropic",
     settings: (row.settings as Record<string, unknown>) ?? {},
     isDefault: row.isDefault,
     // Masked: a usable secret is configured (stored value OR env-ref). The raw
@@ -317,7 +358,11 @@ function toModelInternal(row: ModelConfigurationRow): ModelConfigInternal {
     provider: row.provider,
     modelName: row.modelName,
     baseUrl: row.baseUrl ?? null,
-    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
+    apiFormat:
+      (row.apiFormat as
+        | "anthropic"
+        | "openai_chat"
+        | "openai_responses") ?? "anthropic",
     secretReference: row.secretReference,
     secretValue: row.secretValue ?? null,
     settings: (row.settings as Record<string, unknown>) ?? {},
@@ -341,56 +386,122 @@ function toAgentResource(
   };
 }
 
-// T-040c — DB row → SkillConfigOverride DTO. jsonb columns come back as unknown;
-// narrow tools/requiredFacets to string[] (non-string items dropped) and
-// outputSchema to an object (else null). Every override field is nullable = 未配.
-function toSkillConfigOverrideResource(
-  row: SkillConfigOverrideRow,
-): SkillConfigOverrideResource {
-  const toStringArray = (v: unknown): string[] | null => {
-    if (!Array.isArray(v)) return null;
-    return v.filter((x): x is string => typeof x === "string");
-  };
-  const toObject = (v: unknown): Record<string, unknown> | null =>
-    v !== null && typeof v === "object" && !Array.isArray(v)
-      ? (v as Record<string, unknown>)
-      : null;
+function normalizeOverlay(value: unknown): AccountSkillOverlayPatch {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return { ...(value as AccountSkillOverlayPatch) };
+}
+
+function mergeOverlay(
+  current: AccountSkillOverlayPatch,
+  patch: AccountSkillOverlayPatch,
+): AccountSkillOverlayPatch {
+  const next: Record<string, unknown> = { ...current };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) delete next[key];
+    else if (value !== undefined) next[key] = value;
+  }
+  return next as AccountSkillOverlayPatch;
+}
+
+function placeholdersOf(template: string): string[] {
+  return [...template.matchAll(/\{\{\s*([A-Za-z][A-Za-z0-9_]*)\s*\}\}/g)].map(
+    (match) => match[1]!,
+  );
+}
+
+function compatibilityErrors(
+  base: OfficialSkillBase,
+  overlay: AccountSkillOverlayPatch,
+): AccountSkillOverlayResource["compatibilityErrors"] {
+  const errors: AccountSkillOverlayResource["compatibilityErrors"] = [];
+  const editable = new Set(base.editableFields);
+  for (const key of Object.keys(overlay) as EditableField[]) {
+    if (!editable.has(key)) {
+      errors.push({
+        code: "FIELD_NOT_EDITABLE",
+        path: key,
+        message: `当前官方 Skill 不允许覆盖 ${key}`,
+      });
+    }
+  }
+  if (overlay.tools) {
+    const officialTools = new Set(base.tools);
+    for (const tool of overlay.tools) {
+      if (!officialTools.has(tool)) {
+        errors.push({
+          code: "TOOL_REMOVED",
+          path: "tools",
+          message: `工具 ${tool} 不在官方白名单`,
+        });
+      }
+    }
+  }
+  const available = new Set(base.availableFacets);
+  const facets = [
+    ...(overlay.requiredFacets ?? []),
+    ...placeholdersOf(overlay.template ?? base.template),
+  ];
+  for (const facet of new Set(facets)) {
+    if (!available.has(facet)) {
+      errors.push({
+        code: "REQUIRED_FACET_INVALID",
+        path: "requiredFacets",
+        message: `上下文字段 ${facet} 没有官方 reader`,
+      });
+    }
+  }
+  const policy = overlay.completionPolicy ?? base.completionPolicy;
+  const schema = overlay.outputSchema ?? base.outputSchema;
+  if (
+    policy &&
+    (!base.completionPolicyAdapter ||
+      !base.supportsCompletionPolicySchema?.(schema))
+  ) {
+    errors.push({
+      code: "COMPLETION_POLICY_UNSUPPORTED",
+      path: "completionPolicy",
+      message: "当前 Skill/schema 无法提取完整性校验段落",
+    });
+  }
+  return errors;
+}
+
+function editableValues(
+  base: OfficialSkillBase,
+  overlay: AccountSkillOverlayPatch,
+): AccountSkillOverlayResource["effective"] {
   return {
-    id: row.id,
-    version: row.version ?? null,
-    system: row.system ?? null,
-    template: row.template ?? null,
-    tools: toStringArray(row.tools),
-    requiredFacets: toStringArray(row.requiredFacets),
-    outputSchema: toObject(row.outputSchema),
-    updatedBy: row.updatedBy ?? null,
-    updatedAt: row.updatedAt,
+    system: overlay.system ?? base.system,
+    template: overlay.template ?? base.template,
+    tools: overlay.tools ?? base.tools,
+    requiredFacets: overlay.requiredFacets ?? base.requiredFacets,
+    outputSchema: overlay.outputSchema ?? base.outputSchema,
+    completionPolicy: overlay.completionPolicy ?? base.completionPolicy,
   };
 }
 
-// [T-165] 版本快照行 → DTO(同款 jsonb 归一)。
-function toSkillConfigOverrideVersionResource(
-  row: SkillConfigOverrideVersionRow,
-): SkillConfigOverrideVersionResource {
-  const toStringArray = (v: unknown): string[] | null =>
-    Array.isArray(v)
-      ? v.filter((x): x is string => typeof x === "string")
-      : null;
-  const toObject = (v: unknown): Record<string, unknown> | null =>
-    v !== null && typeof v === "object" && !Array.isArray(v)
-      ? (v as Record<string, unknown>)
-      : null;
+function overlayView(
+  ctx: RequestContext,
+  base: OfficialSkillBase,
+  row: AccountSkillOverlayRow | null,
+): AccountSkillOverlayResource {
+  const overlay = row ? normalizeOverlay(row.overlay) : {};
+  const errors = compatibilityErrors(base, overlay);
   return {
-    id: row.id,
-    overrideId: row.overrideId,
-    version: row.version ?? null,
-    system: row.system ?? null,
-    template: row.template ?? null,
-    tools: toStringArray(row.tools),
-    requiredFacets: toStringArray(row.requiredFacets),
-    outputSchema: toObject(row.outputSchema),
-    updatedBy: row.updatedBy ?? null,
-    createdAt: row.createdAt,
+    skillId: base.skillId,
+    accountId: ctx.accountId!,
+    baseVersion: base.baseVersion,
+    editableFields: [...base.editableFields],
+    completionPolicySupported: Boolean(base.completionPolicyAdapter),
+    official: editableValues(base, {}),
+    effective: editableValues(base, overlay),
+    compatibility: errors.length === 0 ? "compatible" : "incompatible",
+    compatibilityErrors: errors,
+    rowRevision: row?.rowRevision ?? null,
+    validatedBaseVersion: row?.observedBaseVersion ?? null,
+    overlayVersion: row?.overlayVersion ?? null,
+    overlay: row ? overlay : null,
+    updatedAt: row?.updatedAt ?? null,
   };
 }
 
@@ -398,17 +509,44 @@ export function createSettingsService(
   repoForCtx: (ctx: RequestContext) => SettingsRepository,
   accountReader: AccountReader,
   accountWriter: AccountWriter,
-  // T-040c — skill id validator for putPrompt. The AUTHORITATIVE source is
-  // ai-worker's registry (hasTemplate), injected here at composition time so backend
-  // takes no dependency on ai-worker. When absent (unit/contract tests), fall back to
-  // the inline REGISTERED_SKILL_IDS set (kept in sync with BUILTIN_TEMPLATES).
-  isValidSkillId?: (id: string) => boolean,
+  officialSkillsOrValidator?: OfficialSkillProvider | ((id: string) => boolean),
   // [T-196] 存储目录迁移函数可注入(默认真实现)。单测传 no-op stub → 不碰真实文件系统
   //   (原来直接 import 的 migrateStorageRoot 在测试里会对真机 ~/CreatorOS/media 做 copy/delete,
   //   曾把用户真实封面从 media 搬去 custom+删 media,并是那条 flaky 测试的根源)。
   migrate: typeof migrateStorageRoot = migrateStorageRoot,
 ): SettingsService {
-  const skillIdValid = isValidSkillId ?? ((id: string) => REGISTERED_SKILL_IDS.has(id));
+  const fallbackBase = (id: string): OfficialSkillBase => ({
+    skillId: id,
+    baseVersion: "builtin",
+    system: "",
+    template: "",
+    tools: [],
+    requiredFacets: [],
+    availableFacets: [],
+    outputSchema: null,
+    completionPolicy: null,
+    completionPolicyAdapter: null,
+    editableFields: [
+      "system",
+      "template",
+      "tools",
+      "requiredFacets",
+      "outputSchema",
+      "completionPolicy",
+    ],
+  });
+  const legacyValidator =
+    typeof officialSkillsOrValidator === "function"
+      ? officialSkillsOrValidator
+      : (id: string) => REGISTERED_SKILL_IDS.has(id);
+  const officialSkills: OfficialSkillProvider =
+    typeof officialSkillsOrValidator === "object" && officialSkillsOrValidator
+      ? officialSkillsOrValidator
+      : {
+          get: (id) => (legacyValidator(id) ? fallbackBase(id) : null),
+          list: () =>
+            [...REGISTERED_SKILL_IDS].filter(legacyValidator).map(fallbackBase),
+        };
   // [T-363] 具名对象(而非直接 return 字面量):importModelConfigs 复用 service 自身的
   // setModelConfiguration 既有写路径(upsert on (user_id, capability))。
   const service: SettingsService = {
@@ -535,7 +673,10 @@ export function createSettingsService(
             secret, // undefined = 保留库中已存密钥(putModel 既有语义)
             baseUrl: m.baseUrl ?? undefined,
             apiFormat:
-              m.apiFormat === "openai_chat" ? "openai_chat" : "anthropic",
+              m.apiFormat === "openai_chat" ||
+              m.apiFormat === "openai_responses"
+                ? m.apiFormat
+                : "anthropic",
             settings: m.settings,
             isDefault: m.isDefault,
           });
@@ -573,54 +714,95 @@ export function createSettingsService(
     },
 
     async listSkillConfigOverrides(ctx) {
-      const rows = await repoForCtx(ctx).listSkillConfigOverrides();
-      return rows.map(toSkillConfigOverrideResource);
+      const rows = await repoForCtx(ctx).listAccountSkillOverlays(ctx);
+      const bySkill = new Map(rows.map((row) => [row.skillId, row]));
+      return officialSkills
+        .list()
+        .sort((a, b) => a.skillId.localeCompare(b.skillId))
+        .map((base) => overlayView(ctx, base, bySkill.get(base.skillId) ?? null));
     },
 
     async getSkillConfigOverride(ctx, id) {
-      const row = await repoForCtx(ctx).getSkillConfigOverride(id);
-      // Not-configured → 404 (OwnershipError maps to 404; there is no separate
-      // NotFound class here, and a missing override is honestly "no such row").
-      if (!row) {
-        throw new OwnershipError(`skill config override 未配置: ${id}`);
-      }
-      return toSkillConfigOverrideResource(row);
+      const base = officialSkills.get(id);
+      if (!base) throw new OwnershipError(`skill 未注册: ${id}`);
+      const row = await repoForCtx(ctx).getAccountSkillOverlay(ctx, id);
+      return overlayView(ctx, base, row);
     },
 
     async putSkillConfigOverride(ctx, body) {
-      // Validate the target id BEFORE writing: an id outside the 18 registered
-      // templates is a bad request (→400), NOT silently persisted (SPEC §4.4). The
-      // validator is the injected ai-worker registry (authoritative) or the inline
-      // fallback set.
-      if (!skillIdValid(body.id)) {
+      const base = officialSkills.get(body.skillId);
+      if (!base) throw new OwnershipError(`skill 未注册: ${body.skillId}`);
+      const repo = repoForCtx(ctx);
+      const current = await repo.getAccountSkillOverlay(ctx, body.skillId);
+      const next = mergeOverlay(
+        current ? normalizeOverlay(current.overlay) : {},
+        body.patch,
+      );
+      const errors = compatibilityErrors(base, next);
+      if (errors.length > 0) {
         throw new PromptValidationError(
-          `未知 skill id "${body.id}" — 只能覆盖已注册的 18 个模板之一`,
+          `Skill 增量与当前官方基座不兼容: ${errors.map((e) => e.message).join("；")}`,
         );
       }
-      const row = await repoForCtx(ctx).putSkillConfigOverride(ctx, body);
-      return toSkillConfigOverrideResource(row);
+      const nextRevision =
+        body.expectedRevision === null ? 1 : body.expectedRevision + 1;
+      const row = await repo.putAccountSkillOverlay(ctx, {
+        skillId: body.skillId,
+        expectedRevision: body.expectedRevision,
+        observedBaseVersion: base.baseVersion,
+        overlayVersion: String(nextRevision),
+        overlay: next as AccountSkillOverlay,
+      });
+      return overlayView(ctx, base, row);
     },
 
     async listSkillConfigOverrideVersions(ctx, id) {
-      const rows =
-        await repoForCtx(ctx).listSkillConfigOverrideVersions(id);
-      return rows.map(toSkillConfigOverrideVersionResource);
+      const base = officialSkills.get(id);
+      if (!base) throw new OwnershipError(`skill 未注册: ${id}`);
+      const rows = await repoForCtx(ctx).listAccountSkillOverlayVersions(ctx, id);
+      return rows.map(
+        (row): AccountSkillOverlayVersionResource => {
+          const overlay = normalizeOverlay(row.overlay);
+          const errors = compatibilityErrors(base, overlay);
+          return {
+            id: row.id,
+            skillId: row.skillId,
+            accountId: row.accountId,
+            rowRevision: row.rowRevision,
+            observedBaseVersion: row.observedBaseVersion,
+            overlayVersion: row.overlayVersion,
+            overlay,
+            savedCompatibility: "compatible",
+            currentCompatibility:
+              errors.length === 0 ? "compatible" : "incompatible",
+            currentCompatibilityErrors: errors,
+            updatedBy: row.updatedBy,
+            createdAt: row.createdAt,
+          };
+        },
+      );
     },
 
-    async rollbackSkillConfigOverride(ctx, id, versionId) {
-      // 同 put 的 id 合法性门(回滚只针对已注册 skill 的历史)。
-      if (!skillIdValid(id)) {
+    async rollbackSkillConfigOverride(ctx, id, versionId, expectedRevision) {
+      const base = officialSkills.get(id);
+      if (!base) throw new OwnershipError(`skill 未注册: ${id}`);
+      const repo = repoForCtx(ctx);
+      const versions = await repo.listAccountSkillOverlayVersions(ctx, id);
+      const target = versions.find((row) => row.id === versionId);
+      if (!target) throw new OwnershipError(`skill 历史版本不存在: ${versionId}`);
+      const errors = compatibilityErrors(base, normalizeOverlay(target.overlay));
+      if (errors.length > 0) {
         throw new PromptValidationError(
-          `未知 skill id "${id}" — 只能回滚已注册的 18 个模板之一`,
+          `历史增量与当前官方基座不兼容: ${errors.map((e) => e.message).join("；")}`,
         );
       }
-      // 错版 id / 不属于该 skill → repo 抛错;这里让它冒泡(400/500 由 dispatch 映射)。
-      const row = await repoForCtx(ctx).rollbackSkillConfigOverride(
-        ctx,
-        id,
+      const row = await repo.rollbackAccountSkillOverlay(ctx, {
+        skillId: id,
         versionId,
-      );
-      return toSkillConfigOverrideResource(row);
+        expectedRevision,
+        observedBaseVersion: base.baseVersion,
+      });
+      return overlayView(ctx, base, row);
     },
 
     async resolveStorageRoot(ctx) {

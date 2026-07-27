@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { POST } from "./route";
+import {
+  dispatchErrorResponse,
+  safeDispatchErrorDiagnostic,
+  POST,
+} from "./route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
 
@@ -174,6 +178,55 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     expect(res.status).toBe(404);
     const json = (await res.json()) as { error: { code: string } };
     expect(json.error.code).toBe("OwnershipError");
+  });
+
+  it("[T-520] 收藏 query 与当前账号不一致时返回结构化 OwnershipError，不启动浏览器", async () => {
+    const res = await dispatch("intelligence.sources.listFavoriteFolders", {
+      params: undefined,
+      query: {
+        accountId: "different-account",
+        browserSessionRef: `douyin-profile:${ACCOUNT_ID}`,
+      },
+      body: undefined,
+    });
+    expect(res.status).toBe(404);
+    const json = (await res.json()) as {
+      error: { code: string; message: string };
+    };
+    expect(json.error.code).toBe("OwnershipError");
+    expect(json.error.message).toContain("收藏");
+  });
+
+  it("[T-520] 收藏 CDP 错误经过 dispatch 仍保留 code/details", async () => {
+    const response = dispatchErrorResponse(
+      Object.assign(new Error("抖音收藏接口拒绝请求"), {
+        code: "DOUYIN_FAVORITES_UPSTREAM",
+        details: { upstreamStatusCode: 2190008 },
+      }),
+    );
+    expect(response.status).toBe(502);
+    const json = (await response.json()) as {
+      error: { code: string; details: { upstreamStatusCode: number } };
+    };
+    expect(json.error.code).toBe("DOUYIN_FAVORITES_UPSTREAM");
+    expect(json.error.details.upstreamStatusCode).toBe(2190008);
+  });
+
+  it("[T-546] dispatch 失败日志只保留操作与错误类型，不泄漏异常正文/details", () => {
+    const diagnostic = safeDispatchErrorDiagnostic(
+      "intelligence.runs.start",
+      Object.assign(new Error("cookie=secret&url=https://private.example/x"), {
+        code: "OwnershipError",
+        details: { authorization: "Bearer secret" },
+      }),
+    );
+    expect(diagnostic).toEqual({
+      operation: "intelligence.runs.start",
+      errorName: "Error",
+      errorCode: "OwnershipError",
+    });
+    expect(JSON.stringify(diagnostic)).not.toContain("secret");
+    expect(JSON.stringify(diagnostic)).not.toContain("private.example");
   });
 
   it("[S3] 已归档号当当前号 → 404 拒绝 + details.reason=account_archived(属主已验实,可诚实)", async () => {

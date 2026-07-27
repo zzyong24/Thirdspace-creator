@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { modelFor, normalizeAnthropicBaseUrl } from "./provider-factory";
 
-// 只验「按 apiFormat/baseUrl 能构造出一个 LanguageModel」—— 不走网络(假 key)。
-// 证明模型中立层把三种协议族 + 自定义端点都接住了。
+// 不走网络(假 key),但必须断言 provider identity:这能锁住真实 wire protocol,
+// 防止 @ai-sdk/openai 的默认 callable 行为升级后把 openai_chat 悄悄切到 Responses。
+function providerOf(model: ReturnType<typeof modelFor>): string {
+  if (typeof model === "string") {
+    throw new Error(`预期 provider 模型对象,实际得到 model id: ${model}`);
+  }
+  return model.provider;
+}
 
 describe("modelFor", () => {
   it("anthropic(官方)", () => {
@@ -23,6 +29,7 @@ describe("modelFor", () => {
       token: "sk-test",
     });
     expect(typeof m).toBe("object");
+    expect(providerOf(m)).toBe("creatoros-custom.chat");
   });
 
   it("openai_chat(官方 OpenAI)", () => {
@@ -33,6 +40,27 @@ describe("modelFor", () => {
       token: "sk-test",
     });
     expect(typeof m).toBe("object");
+    expect(providerOf(m)).toBe("openai.chat");
+  });
+
+  it("openai_responses + 自定义 baseURL(New API/relay)", () => {
+    const m = modelFor({
+      apiFormat: "openai_responses",
+      baseUrl: "https://new-api.example.com/v1",
+      model: "gpt-5",
+      token: "sk-test",
+    });
+    expect(providerOf(m)).toBe("creatoros-custom.responses");
+  });
+
+  it("openai_responses(官方 OpenAI)", () => {
+    const m = modelFor({
+      apiFormat: "openai_responses",
+      baseUrl: null,
+      model: "gpt-5",
+      token: "sk-test",
+    });
+    expect(providerOf(m)).toBe("openai.responses");
   });
 });
 

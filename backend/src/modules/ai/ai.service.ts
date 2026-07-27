@@ -1,3 +1,5 @@
+import { createHash, randomUUID } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
@@ -15,7 +17,15 @@ import {
   type AITaskResource,
   type AITaskResultResource,
 } from "./ai.schema";
-import { ConflictError } from "./ai.errors";
+import {
+  AttemptIdInvalidError,
+  AttemptPayloadMismatchError,
+  ConflictError,
+  ExecutionClaimInvalidError,
+  ExecutionLeaseLostError,
+  ReservedInputFieldError,
+  RetrySourceNotTerminalError,
+} from "./ai.errors";
 import {
   freezeStoryboardSections,
   hasStoryboardVisual,
@@ -209,10 +219,22 @@ export interface ServiceDeps {
   calibration: AiCalibrationPort;
   // [T-387b] 分镜凝固 pass 的素材库只读端口(optional,未绑则凝固跳过)。
   assetLibrary?: AiAssetLibraryPort;
+  // T-513 composition seam: skill resolver injects immutable, server-only task state.
+  // The public create body never accepts runtimeData.
+  resolveTaskRuntimeData?: (
+    ctx: RequestContext,
+    taskType: string,
+    inputData: Readonly<Record<string, unknown>>,
+  ) => Promise<Record<string, unknown>>;
 }
 
 export interface CreateTaskInput {
   taskType: string;
+  // Required on the public contract. Optional here only while existing internal callers
+  // migrate; the service derives a deterministic legacy attempt instead of weakening
+  // the wire schema.
+  attemptId?: string;
+  retryOfTaskId?: string;
   inputData?: Record<string, unknown>;
 }
 
@@ -223,6 +245,15 @@ export interface RecordCandidateInput {
   assetId?: string | null;
   resultData: Record<string, unknown>;
 }
+
+export interface ClaimedTaskExecutionContext {
+  task: AITaskResource;
+  signal: AbortSignal;
+}
+
+export type ClaimedTaskExecutionResult<T> =
+  | { claimed: false }
+  | { claimed: true; value: T };
 
 export interface AiService {
   // T-096:page.scope 传了只列该作用域(入口级历史隔离);不传全量(旧调用不破)。
@@ -291,20 +322,81 @@ export interface AiService {
     },
   ): Promise<{ rows: AITaskResource[]; total: number }>;
   /** [T-332 S2 修补] 系统级扫僵尸(启动 sweepStaleAiTasks 用):跨账号列该 user 所有
-   *  running ai_task 的 {id, taskType, startedAt} 投影。**不经 requireAccountId** —— 调用方是
+   *  running ai_task 的 {id, accountId, taskType, startedAt} 投影。**不经 requireAccountId** —— 调用方是
    *  系统 daemon(schedulerCtx 无选中号)。用户面 listTasks 仍 strict 按号。
    *  [T-389] 投影带 taskType:sweep 类型感知(进程内 runner 重启即死,立即判死不看年龄)。 */
   listRunningTasksSystem(
     ctx: RequestContext,
-  ): Promise<{ id: string; taskType: string; startedAt: string | null }[]>;
+  ): Promise<
+    {
+      id: string;
+      accountId: string;
+      taskType: string;
+      startedAt: string | null;
+    }[]
+  >;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
+  /**
+   * Server-only production runner bridge. It atomically claims the task, writes the
+   * model-call marker, maintains the lease, and binds legacy AiService writes to the
+   * winning lease for the duration of execute.
+   */
+  runClaimedTaskExecution<T>(
+    ctx: RequestContext,
+    taskId: string,
+    execute: (execution: ClaimedTaskExecutionContext) => Promise<T>,
+    options?: { workerId?: string; leaseSeconds?: number },
+  ): Promise<ClaimedTaskExecutionResult<T>>;
+  claimAiTaskExecution(
+    ctx: RequestContext,
+    taskId: string,
+    input: { workerId: string; leaseSeconds: number },
+  ): Promise<{
+    task: AITaskResource;
+    leaseToken: string;
+    leaseExpiresAt: string;
+  } | null>;
+  beginModelCall(
+    ctx: RequestContext,
+    taskId: string,
+    leaseToken: string,
+  ): Promise<boolean>;
+  renewAiTaskExecution(
+    ctx: RequestContext,
+    taskId: string,
+    leaseToken: string,
+    extendSeconds: number,
+  ): Promise<{ leaseExpiresAt: string } | null>;
+  completeAiTaskExecution(
+    ctx: RequestContext,
+    taskId: string,
+    leaseToken: string,
+    input: {
+      status: "succeeded" | "failed" | "cancelled" | "awaiting_confirmation";
+      errorMessage?: string | null;
+    },
+  ): Promise<boolean>;
+  reconcileExpiredAiTaskExecution(
+    ctx: RequestContext,
+    taskId: string,
+    leaseToken: string,
+  ): Promise<"requeued" | "reconciliation_required" | null>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
-  cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  cancelTask(
+    ctx: RequestContext,
+    taskId: string,
+    errorMessage?: string,
+  ): Promise<AITaskResource>;
   // [DATA-H07] runner 失败清理 seam:asset.generate / cover.generate 在「asset 已建、
   // recordCandidate 失败」的窗口里调用它,把仍 pending 的生成资产软删进回收站(不留隐身孤儿)。
   // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
   discardGeneratedAsset(ctx: RequestContext, assetId: string): Promise<void>;
   getTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  /** T-513 server-only worker seam. Never expose this value through DTO/transport/contract. */
+  getTaskRuntimeData(
+    ctx: RequestContext,
+    taskId: string,
+  ): Promise<Record<string, unknown>>;
   // The composition-layer runner flips queued→running when the agent STARTS (so the UI's
   // status is honest while the agent works), before recordCandidate flips it to
   // awaiting_confirmation. No-op if already past queued. (机制④ async exec.)
@@ -458,7 +550,88 @@ function stableHash(parts: string[]): string {
   return (h >>> 0).toString(16).padStart(8, "0");
 }
 
+// Only rows written through recordCandidate represent an AI candidate. The same result
+// table also carries adoption/audit rows written through recordAuxResult; counting every
+// row makes terminal telemetry lie as soon as an execution task emits its audit journal.
+const CANDIDATE_RESULT_TYPES = new Set([
+  "artifact_version",
+  "calibration_diagnosis",
+  "calibration_score",
+  "candidate",
+  "candidate_list",
+  "execution_manifest",
+  "generated_asset",
+  "learning_list",
+  "material_link_list",
+  "material_list",
+  "positioning_profile",
+  "publication_drafts",
+  "topic_card",
+  "video_decisions",
+]);
+
+function sanitizeRunnerLogValue(value: string): string {
+  return value.replace(/[^\w.:-]/g, "_").slice(0, 160);
+}
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+    .join(",")}}`;
+}
+
+function requestFingerprint(value: unknown): string {
+  return `sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
+}
+
+const TERMINAL_TASK_STATUSES = new Set(["succeeded", "failed", "cancelled"]);
+
+interface ExecutionLeaseScope {
+  serviceId: symbol;
+  userId: string;
+  accountId: string;
+  taskId: string;
+  task: AITaskResource;
+  leaseToken: string;
+  leaseSeconds: number;
+  controller: AbortController;
+  lost: boolean;
+  finished: boolean;
+  closed: boolean;
+}
+
+const executionLeaseStorage = new AsyncLocalStorage<ExecutionLeaseScope>();
+
+function runnerUsageForLog(value: unknown): Record<string, number> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  const usage: Record<string, number> = {};
+  for (const key of [
+    "inputTokens",
+    "outputTokens",
+    "cachedTokens",
+    "totalTokens",
+    "promptTokens",
+    "completionTokens",
+  ]) {
+    if (typeof source[key] === "number" && Number.isFinite(source[key])) {
+      usage[key] = source[key];
+    }
+  }
+  return Object.keys(usage).length > 0 ? usage : null;
+}
+
 export function createAiService(deps: ServiceDeps): AiService {
+  const serviceId = Symbol("AiServiceExecutionLease");
+
   // [T-332 S2 · SPEC §4.2/C-07] 每个经 ctx 的入口都经此建 repo:未选号(0 号 / 引导态)
   // → AccountRequiredError(前端译成「绑定抖音号后开始」,禁建会话/任务、禁读历史)。
   // 系统路径(runner / 调度链)不受影响:其 ctx.accountId 由 ai_tasks / scheduled_job 行
@@ -470,6 +643,88 @@ export function createAiService(deps: ServiceDeps): AiService {
       userId: ctx.userId,
       accountId: requireAccountId(ctx.accountId, op),
     });
+  }
+
+  async function logRunnerState(
+    repo: AiRepository,
+    taskId: string,
+  ): Promise<void> {
+    try {
+      // Re-read after the lifecycle write. This deliberately prevents a "running" log
+      // from racing ahead of the persisted awaiting/succeeded/failed state.
+      const task = await repo.requireTask(taskId);
+      const results = await repo.listResults(taskId);
+      const candidates = results.filter((result) =>
+        CANDIDATE_RESULT_TYPES.has(result.resultType),
+      );
+      let finishReason: string | null = null;
+      let usage: Record<string, number> | null = null;
+      for (let i = candidates.length - 1; i >= 0; i -= 1) {
+        const resultData = candidates[i]?.resultData;
+        if (
+          !resultData ||
+          typeof resultData !== "object" ||
+          Array.isArray(resultData)
+        ) {
+          continue;
+        }
+        const record = resultData as Record<string, unknown>;
+        if (
+          finishReason === null &&
+          typeof record.finishReason === "string"
+        ) {
+          const normalized = record.finishReason.trim();
+          finishReason = normalized
+            ? sanitizeRunnerLogValue(normalized)
+            : null;
+        }
+        if (usage === null) usage = runnerUsageForLog(record.usage);
+        if (finishReason !== null && usage !== null) break;
+      }
+      console.log(
+        `[ai-task-runner] taskId=${sanitizeRunnerLogValue(task.id)} ` +
+          `taskType=${sanitizeRunnerLogValue(task.taskType)} status=${task.status} ` +
+          `finishReason=${finishReason ?? "null"} ` +
+          `usage=${usage ? JSON.stringify(usage) : "null"} ` +
+          `candidateCount=${candidates.length}`,
+      );
+    } catch (error) {
+      // Telemetry must never overwrite the runner's real outcome.
+      console.error(
+        `[ai-task-runner] taskId=${sanitizeRunnerLogValue(taskId)} log_error`,
+        error,
+      );
+    }
+  }
+
+  function leaseScopeFor(
+    ctx: RequestContext,
+    taskId: string,
+  ): ExecutionLeaseScope | null {
+    const scope = executionLeaseStorage.getStore();
+    if (
+      !scope ||
+      scope.serviceId !== serviceId ||
+      scope.userId !== ctx.userId ||
+      scope.accountId !== ctx.accountId ||
+      scope.taskId !== taskId
+    ) {
+      return null;
+    }
+    return scope;
+  }
+
+  function loseLease(scope: ExecutionLeaseScope): ExecutionLeaseLostError {
+    scope.lost = true;
+    const error = new ExecutionLeaseLostError(scope.taskId);
+    if (!scope.controller.signal.aborted) scope.controller.abort(error);
+    return error;
+  }
+
+  function assertLease(scope: ExecutionLeaseScope): void {
+    if (scope.lost || scope.closed) {
+      throw new ExecutionLeaseLostError(scope.taskId);
+    }
   }
 
   return {
@@ -532,34 +787,52 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async createTask(ctx, body) {
-      // C-07:0 号禁建 AI 任务;调度/绑定链的派生 ctx 恒有号,此门不拦系统路径。
       const accountId = requireAccountId(ctx.accountId, "ai.createTask");
       const repo = repoFor(ctx, "ai.createTask");
       const inputData = body.inputData ?? {};
-      // [T-332 S2 · ISO-08] 幂等键按号命名空间化:UNIQUE(user_id, idempotency_key) 不含
-      // account_id(平台幂等锚保持 user 级),前缀当前号则双号提交同 key 互不相撞、
-      // findTaskByIdempotencyKey 也绝不跨号命中对方任务(拍板 ② 清库世界,无旧键兼容负担)。
-      const rawKey =
-        typeof inputData.idempotencyKey === "string" && inputData.idempotencyKey
-          ? inputData.idempotencyKey
-          : stableHash([ctx.userId, body.taskType, JSON.stringify(inputData)]);
-      let idempotencyKey = `${accountId}:${rawKey}`;
+      const reservedFields = ["skillSnapshot", "platformPolicy"].filter((key) =>
+        Object.prototype.hasOwnProperty.call(inputData, key),
+      );
+      if (reservedFields.length > 0) {
+        throw new ReservedInputFieldError(reservedFields);
+      }
 
-      // Idempotency (SPEC §17 / design-spec §7): dedup only IN-FLIGHT duplicates
-      // (queued/running) — that is the real double-submit / network-retry case. An
-      // EXPLICIT re-trigger after the prior run already reached a terminal-ish state
-      // (awaiting_confirmation/succeeded/failed/cancelled) must start a FRESH run: the
-      // deterministic key is stable per (user, taskType, inputData), so without this an
-      // action whose whole point is to regenerate (选题会 / AI 诊断 / 复盘 …) would forever
-      // hit its first task — the agent never re-runs and the FE polls a never-changing
-      // terminal status → 无限转圈. The unique index (user, idempotency_key) forbids a new
-      // row under the same key, so a terminal hit freshens the key for the new attempt.
-      const existing = await repo.findTaskByIdempotencyKey(idempotencyKey);
+      const legacySeed = stableHash([
+        ctx.userId,
+        accountId,
+        body.taskType,
+        canonicalJson(inputData),
+      ]);
+      const attemptId =
+        body.attemptId ?? `legacy-attempt-${legacySeed}-${legacySeed}`;
+      if (attemptId.length < 16 || attemptId.length > 128) {
+        throw new AttemptIdInvalidError();
+      }
+
+      const fingerprint = requestFingerprint({
+        userId: ctx.userId,
+        accountId,
+        taskType: body.taskType,
+        inputData,
+        retryOfTaskId: body.retryOfTaskId ?? null,
+      });
+      const idempotencyKey = `${accountId}:${body.taskType}:${attemptId}`;
+      const existing = await repo.findTaskByAttempt(body.taskType, attemptId);
       if (existing) {
-        if (existing.status === "queued" || existing.status === "running") {
-          return toTaskDto(existing);
+        if (existing.requestFingerprint !== fingerprint) {
+          throw new AttemptPayloadMismatchError(existing.id);
         }
-        idempotencyKey = `${idempotencyKey}:${deps.now()}`;
+        return toTaskDto(existing);
+      }
+
+      if (body.retryOfTaskId) {
+        const source = await repo.requireTask(body.retryOfTaskId);
+        if (
+          source.taskType !== body.taskType ||
+          !TERMINAL_TASK_STATUSES.has(source.status)
+        ) {
+          throw new RetrySourceNotTerminalError(source.id);
+        }
       }
 
       const modelKey =
@@ -575,20 +848,212 @@ export function createAiService(deps: ServiceDeps): AiService {
           ? inputData.contentOutputId
           : null;
 
-      const task = await repo.createTask({
+      const runtimeData =
+        (await deps.resolveTaskRuntimeData?.(
+          ctx,
+          body.taskType,
+          Object.freeze({ ...inputData }),
+        )) ?? {};
+
+      const task = await repo.createTaskIfAbsent({
         projectId,
         contentOutputId,
         taskType: body.taskType,
         inputData,
+        runtimeData,
         modelKey,
         idempotencyKey,
+        attemptId,
+        requestFingerprint: fingerprint,
+        retryOfTaskId: body.retryOfTaskId ?? null,
         requestedAt: deps.now(),
       });
+
+      if (!task) {
+        const winner = await repo.findTaskByAttempt(body.taskType, attemptId);
+        if (!winner) {
+          throw new ConflictError(
+            "AI task attempt lost its insert race but the winner could not be read",
+          );
+        }
+        if (winner.requestFingerprint !== fingerprint) {
+          throw new AttemptPayloadMismatchError(winner.id);
+        }
+        return toTaskDto(winner);
+      }
 
       const refs = deriveReferences(inputData);
       if (refs.length > 0) await repo.addReferences(task.id, refs);
 
       return toTaskDto(task);
+    },
+
+    async runClaimedTaskExecution(ctx, taskId, execute, options) {
+      const activeScope = leaseScopeFor(ctx, taskId);
+      if (activeScope) {
+        if (activeScope.finished) {
+          throw new ExecutionLeaseLostError(taskId);
+        }
+        assertLease(activeScope);
+        const value = await execute({
+          task: activeScope.task,
+          signal: activeScope.controller.signal,
+        });
+        assertLease(activeScope);
+        return { claimed: true, value };
+      }
+
+      const leaseSeconds = options?.leaseSeconds ?? 300;
+      const workerId =
+        options?.workerId ?? `creatoros:${process.pid}:${randomUUID()}`;
+      if (
+        workerId.trim().length === 0 ||
+        !Number.isInteger(leaseSeconds) ||
+        leaseSeconds < 60 ||
+        leaseSeconds > 1_800
+      ) {
+        throw new ExecutionClaimInvalidError(
+          "workerId is required and leaseSeconds must be an integer in 60..1800",
+        );
+      }
+      const repo = repoFor(ctx, "ai.runClaimedTaskExecution");
+      await repo.requireTask(taskId);
+      const leaseToken = randomUUID();
+      const claim = await repo.claimAiTaskExecution(taskId, {
+        workerId,
+        leaseToken,
+        leaseSeconds,
+      });
+      if (!claim) return { claimed: false };
+      if (!(await repo.beginModelCall(taskId, leaseToken))) {
+        return { claimed: false };
+      }
+
+      const scope: ExecutionLeaseScope = {
+        serviceId,
+        userId: ctx.userId,
+        accountId: requireAccountId(
+          ctx.accountId,
+          "ai.runClaimedTaskExecution",
+        ),
+        taskId,
+        task: toTaskDto(claim.task),
+        leaseToken,
+        leaseSeconds,
+        controller: new AbortController(),
+        lost: false,
+        finished: false,
+        closed: false,
+      };
+      const heartbeatMs = Math.min((leaseSeconds * 1_000) / 3, 30_000);
+      let renewing = false;
+      const heartbeat = setInterval(() => {
+        if (renewing || scope.lost || scope.finished) return;
+        renewing = true;
+        void repo
+          .renewAiTaskExecution(taskId, leaseToken, leaseSeconds)
+          .then((renewed) => {
+            if (!renewed && !scope.finished && !scope.closed) loseLease(scope);
+          })
+          .catch(() => {
+            // A failed heartbeat cannot prove continued ownership. Fail closed and let
+            // the runner's AbortSignal stop any cancellable provider/tool call.
+            if (!scope.finished && !scope.closed) loseLease(scope);
+          })
+          .finally(() => {
+            renewing = false;
+          });
+      }, heartbeatMs);
+      heartbeat.unref?.();
+
+      try {
+        const value = await executionLeaseStorage.run(scope, () =>
+          execute({ task: scope.task, signal: scope.controller.signal }),
+        );
+        assertLease(scope);
+        return { claimed: true, value };
+      } finally {
+        scope.closed = true;
+        clearInterval(heartbeat);
+      }
+    },
+
+    async claimAiTaskExecution(ctx, taskId, input) {
+      if (
+        input.workerId.trim().length === 0 ||
+        !Number.isInteger(input.leaseSeconds) ||
+        input.leaseSeconds < 60 ||
+        input.leaseSeconds > 1_800
+      ) {
+        throw new ExecutionClaimInvalidError(
+          "workerId is required and leaseSeconds must be an integer in 60..1800",
+        );
+      }
+      const repo = repoFor(ctx, "ai.claimAiTaskExecution");
+      await repo.requireTask(taskId);
+      const leaseToken = randomUUID();
+      const claim = await repo.claimAiTaskExecution(taskId, {
+        workerId: input.workerId,
+        leaseToken,
+        leaseSeconds: input.leaseSeconds,
+      });
+      return claim
+        ? {
+            task: toTaskDto(claim.task),
+            leaseToken: claim.leaseToken,
+            leaseExpiresAt: claim.leaseExpiresAt,
+          }
+        : null;
+    },
+
+    async beginModelCall(ctx, taskId, leaseToken) {
+      if (!leaseToken) return false;
+      return repoFor(ctx, "ai.beginModelCall").beginModelCall(taskId, leaseToken);
+    },
+
+    async renewAiTaskExecution(
+      ctx,
+      taskId,
+      leaseToken,
+      extendSeconds,
+    ) {
+      if (
+        !leaseToken ||
+        !Number.isInteger(extendSeconds) ||
+        extendSeconds < 60 ||
+        extendSeconds > 1_800
+      ) {
+        throw new ExecutionClaimInvalidError(
+          "leaseToken is required and extendSeconds must be an integer in 60..1800",
+        );
+      }
+      return repoFor(ctx, "ai.renewAiTaskExecution").renewAiTaskExecution(
+        taskId,
+        leaseToken,
+        extendSeconds,
+      );
+    },
+
+    async completeAiTaskExecution(ctx, taskId, leaseToken, input) {
+      if (!leaseToken) return false;
+      return repoFor(ctx, "ai.completeAiTaskExecution").completeAiTaskExecution(
+        taskId,
+        leaseToken,
+        {
+          status: input.status,
+          errorMessage: input.errorMessage ?? null,
+          completedAt:
+            input.status === "awaiting_confirmation" ? null : deps.now(),
+        },
+      );
+    },
+
+    async reconcileExpiredAiTaskExecution(ctx, taskId, leaseToken) {
+      if (!leaseToken) return null;
+      return repoFor(
+        ctx,
+        "ai.reconcileExpiredAiTaskExecution",
+      ).reconcileExpiredAiTaskExecution(taskId, leaseToken);
     },
 
     async confirmTask(ctx, taskId) {
@@ -1135,8 +1600,25 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toTaskDto(updated);
     },
 
-    async cancelTask(ctx, taskId) {
+    async cancelTask(ctx, taskId, errorMessage) {
       const repo = repoFor(ctx, "ai.cancelTask");
+      const scope = leaseScopeFor(ctx, taskId);
+      if (scope) {
+        assertLease(scope);
+        const completed = await repo.completeAiTaskExecution(
+          taskId,
+          scope.leaseToken,
+          {
+            status: "cancelled",
+            completedAt: deps.now(),
+            errorMessage: errorMessage ?? null,
+          },
+        );
+        if (!completed) throw loseLease(scope);
+        scope.finished = true;
+        await logRunnerState(repo, taskId);
+        return toTaskDto(await repo.requireTask(taskId));
+      }
       const task = await repo.requireTask(taskId);
       if (!canTransition(task.status, "cancelled")) {
         throw new ConflictError(
@@ -1162,7 +1644,9 @@ export function createAiService(deps: ServiceDeps): AiService {
       const updated = await repo.updateTaskStatus(taskId, {
         status: "cancelled",
         completedAt: deps.now(),
+        errorMessage: errorMessage ?? null,
       });
+      await logRunnerState(repo, taskId);
       return toTaskDto(updated);
     },
 
@@ -1189,6 +1673,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const rows = await repo.listRunningTasksSystem();
       return rows.map((r) => ({
         id: r.id,
+        accountId: r.accountId,
         taskType: r.taskType, // [T-389] 透传给 sweep 做类型感知判死
         startedAt: r.startedAt ?? r.requestedAt,
       }));
@@ -1199,7 +1684,20 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toTaskDto(task);
     },
 
+    async getTaskRuntimeData(ctx, taskId) {
+      const task = await repoFor(
+        ctx,
+        "ai.getTaskRuntimeData",
+      ).requireTask(taskId);
+      return (task.runtimeData ?? {}) as Record<string, unknown>;
+    },
+
     async markRunning(ctx, taskId) {
+      const scope = leaseScopeFor(ctx, taskId);
+      if (scope) {
+        assertLease(scope);
+        return;
+      }
       const repo = repoFor(ctx, "ai.markRunning");
       const task = await repo.requireTask(taskId);
       if (task.status === "queued") {
@@ -1211,6 +1709,23 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async markSucceeded(ctx, taskId) {
+      const scope = leaseScopeFor(ctx, taskId);
+      if (scope) {
+        assertLease(scope);
+        const repo = repoFor(ctx, "ai.markSucceeded");
+        const completed = await repo.completeAiTaskExecution(
+          taskId,
+          scope.leaseToken,
+          {
+            status: "succeeded",
+            completedAt: deps.now(),
+          },
+        );
+        if (!completed) throw loseLease(scope);
+        scope.finished = true;
+        await logRunnerState(repo, taskId);
+        return;
+      }
       // Deterministic runner (T-007 D3) terminal — running→succeeded, stamps completedAt.
       // best-effort: swallow if already terminal (finally 可能二次落态)。
       const repo = repoFor(ctx, "ai.markSucceeded");
@@ -1220,9 +1735,28 @@ export function createAiService(deps: ServiceDeps): AiService {
         status: "succeeded",
         completedAt: deps.now(),
       });
+      await logRunnerState(repo, taskId);
     },
 
     async markFailed(ctx, taskId, errorMessage) {
+      const scope = leaseScopeFor(ctx, taskId);
+      if (scope) {
+        assertLease(scope);
+        const repo = repoFor(ctx, "ai.markFailed");
+        const completed = await repo.completeAiTaskExecution(
+          taskId,
+          scope.leaseToken,
+          {
+            status: "failed",
+            completedAt: deps.now(),
+            errorMessage: errorMessage ?? null,
+          },
+        );
+        if (!completed) throw loseLease(scope);
+        scope.finished = true;
+        await logRunnerState(repo, taskId);
+        return;
+      }
       // Deterministic runner (T-007 D3) terminal — running→failed, stamps completedAt +
       // errorMessage. best-effort: swallow if already terminal。
       const repo = repoFor(ctx, "ai.markFailed");
@@ -1233,6 +1767,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         completedAt: deps.now(),
         errorMessage: errorMessage ?? null,
       });
+      await logRunnerState(repo, taskId);
     },
 
     async listResults(ctx, taskId) {
@@ -1296,6 +1831,25 @@ export function createAiService(deps: ServiceDeps): AiService {
 
     async recordCandidate(ctx, taskId, input) {
       const repo = repoFor(ctx, "ai.recordCandidate");
+      const scope = leaseScopeFor(ctx, taskId);
+      if (scope) {
+        assertLease(scope);
+        const updated = await repo.recordCandidateWithLease(
+          taskId,
+          scope.leaseToken,
+          {
+            resultType: input.resultType,
+            artifactId: input.artifactId ?? null,
+            knowledgeItemId: input.knowledgeItemId ?? null,
+            assetId: input.assetId ?? null,
+            resultData: input.resultData,
+          },
+        );
+        if (!updated) throw loseLease(scope);
+        scope.finished = true;
+        await logRunnerState(repo, taskId);
+        return toTaskDto(updated);
+      }
       const task = await repo.requireTask(taskId);
       // The worker claims the queued task (queued→running, stamping startedAt) then
       // records the candidate (running→awaiting_confirmation). Mirror that here so a
@@ -1324,6 +1878,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const updated = await repo.updateTaskStatus(taskId, {
         status: "awaiting_confirmation",
       });
+      await logRunnerState(repo, taskId);
       return toTaskDto(updated);
     },
   };

@@ -119,3 +119,87 @@ describe("ChatGenerateCard — T-376 失败态诚实呈现", () => {
     expect(link?.textContent ?? "").toContain("去设置配生图模型");
   });
 });
+
+describe("ChatGenerateCard — T-523 参考图使用真相", () => {
+  it("封面候选只声明参考图已送适配器，不冒充模型采纳", async () => {
+    mockClient.getTask.mockResolvedValueOnce({
+      status: "awaiting_confirmation",
+    });
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          assetId: "asset-cover",
+          assetType: "image",
+          name: "封面",
+          coverPlan: {
+            headline: "主标题",
+            subheadline: "",
+            keyPoints: [],
+            visualConcept: "",
+            composition: "",
+            palette: "",
+          },
+          referenceImage: {
+            requestedAssetId: "asset-reference",
+            status: "used",
+            used: true,
+          },
+        },
+      },
+    ]);
+    const { container } = render(
+      <ChatGenerateCard taskId="t-reference" kindOf="image" error={null} />,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4100);
+    });
+    const text =
+      container.querySelector('[data-slot="chat-cover-reference"]')
+        ?.textContent ?? "";
+    expect(text).toContain("已送给生图适配器");
+    expect(text).toContain("不代表模型一定采纳");
+    expect(text).toContain("asset-reference");
+  });
+
+  it("参考图读取失败时明确展示未送给适配器", async () => {
+    mockClient.getTask.mockResolvedValueOnce({
+      status: "awaiting_confirmation",
+    });
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          assetId: "asset-cover-fallback",
+          assetType: "image",
+          name: "降级封面",
+          coverPlan: {
+            headline: "主标题",
+            subheadline: "",
+            keyPoints: [],
+            visualConcept: "",
+            composition: "",
+            palette: "",
+          },
+          referenceImage: {
+            requestedAssetId: "asset-missing",
+            status: "not_used",
+            used: false,
+          },
+        },
+      },
+    ]);
+    const { container } = render(
+      <ChatGenerateCard
+        taskId="t-reference-missing"
+        kindOf="image"
+        error={null}
+      />,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4100);
+    });
+    expect(
+      container.querySelector('[data-slot="chat-cover-reference"]')
+        ?.textContent ?? "",
+    ).toContain("未送给生图适配器");
+  });
+});

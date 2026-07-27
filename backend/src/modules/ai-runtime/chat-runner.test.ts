@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { registerAllTemplates, ANTI_FABRICATION_CLAUSE } from "@creatoros/ai-worker";
+import {
+  registerAllTemplates,
+  runWithEffectiveSkillSnapshot,
+  ANTI_FABRICATION_CLAUSE,
+} from "@creatoros/ai-worker";
 import {
   buildChatAssembly,
   buildHooksPrompt,
@@ -10,9 +14,14 @@ import {
   resolveChatMaxSteps,
   buildChatPrepareStep,
   buildForcedToolInstruction,
+  detectCopilotMediaRoute,
+  resolveUniqueCoverReference,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
-import { SKILLS_BRIEF_MAX_LINES } from "@creatoros/contract";
+import {
+  SKILLS_BRIEF_MAX_LINES,
+  type RequestContext,
+} from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
 
 // [T-084a] 保留 ai-worker 全部真实导出(registerAllTemplates/getTemplate/modelFor 等装配用),
@@ -72,6 +81,288 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
 // 只是 provider 句柄),故装配可单测;真正的 streamText(流式)需 dev server + key,本环境不跑。
 
 const ctx = { userId: "u-1", correlationId: "c-1" } as never;
+
+describe("[T-523] Copilot 媒体意图确定性路由", () => {
+  it("只用最新一轮原文授权转写；历史轮次的转写要求不能污染普通分享", () => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "old",
+          role: "user",
+          parts: [{ type: "text", text: "以后抖音链接都帮我转写" }],
+        },
+        {
+          id: "latest",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "3.21 复制打开抖音 https://v.douyin.com/abc/",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: false,
+    });
+
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "把这个抖音提取文字并转写：https://www.douyin.com/video/123",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: true,
+    });
+
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-negated",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "不用转写，只帮我收藏 https://v.douyin.com/no-asr/",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: false,
+    });
+  });
+
+  it.each([
+    "不要转写，只帮我建档 https://v.douyin.com/no-transcribe/",
+    "不用转录，收藏即可 https://v.douyin.com/no-transcript/",
+    "别生成字幕，只建档 https://v.douyin.com/no-subtitles/",
+  ])("否定转写意图优先，不因出现关键词而升级授权：%s", (text) => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-negated",
+          role: "user",
+          parts: [{ type: "text", text }],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: false,
+    });
+  });
+
+  it("最新轮明确要求转写时仍授权派生任务", () => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-positive",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "帮我转写并生成字幕 https://v.douyin.com/with-asr/",
+            },
+          ],
+        },
+      ] as never),
+    ).toMatchObject({
+      kind: "douyin.share",
+      transcribe: true,
+    });
+  });
+
+  it.each([
+    "不要参考图，直接生成封面",
+    "不用沿用这张图的风格，直接生成封面",
+  ])("封面参考图否定意图优先，不进入自动引用：%s", (text) => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-cover-negated",
+          role: "user",
+          parts: [{ type: "text", text }],
+        },
+      ] as never),
+    ).toBeNull();
+  });
+
+  it("只有确认全库图片 total===1 才自动选择，不能把分页首屏的一张当唯一", () => {
+    const firstPage = [
+      { id: "a1", title: "第一页唯一可见", kind: "image" },
+    ];
+    expect(resolveUniqueCoverReference(firstPage, 2)).toMatchObject({
+      status: "needs_clarification",
+      reason: "multiple_images",
+      total: 2,
+    });
+    expect(resolveUniqueCoverReference(firstPage, 1)).toEqual({
+      status: "selected",
+      assetId: "a1",
+      title: "第一页唯一可见",
+    });
+    expect(resolveUniqueCoverReference([], 0)).toMatchObject({
+      status: "needs_clarification",
+      reason: "no_image",
+    });
+  });
+
+  it("抖音专路由强制持久建档工具，并从本轮工具集中物理移除 web.read", async () => {
+    const dispatchDouyinSharePort = vi.fn(async () => ({
+      taskId: "share-task-1",
+      ownerId: "share-import-owner-1",
+    }));
+    const { deps } = makeDeps({ dispatchDouyinSharePort });
+    const route = detectCopilotMediaRoute([
+      {
+        id: "m4",
+        role: "user",
+        parts: [{ type: "text", text: "看看这个 https://v.douyin.com/abc/" }],
+      },
+    ] as never);
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "topics", functionKey: "web.read" },
+      deps,
+      route,
+    );
+    expect(assembly.forcedTool).toBe("intelligence.douyin.share");
+    expect(Object.keys(assembly.tools)).toContain("intelligence.douyin.share");
+    expect(Object.keys(assembly.tools)).not.toContain("web.read");
+
+    const execute = assembly.tools["intelligence.douyin.share"]!
+      .execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    await execute(
+      {
+        shareInput: "模型擅自换掉的链接",
+        action: "archive_and_transcribe",
+      },
+      { toolCallId: "tc", messages: [], context: {} },
+    );
+    expect(dispatchDouyinSharePort).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        shareInput: "看看这个 https://v.douyin.com/abc/",
+        transcribe: false,
+      }),
+    );
+  });
+
+  it("没有最新轮媒体路由授权时，即使模型调用专工具也不能升级成转写", async () => {
+    const dispatchDouyinSharePort = vi.fn(async () => ({
+      taskId: "share-task-deep-link",
+      ownerId: "share-import-owner-deep-link",
+    }));
+    const { deps } = makeDeps({ dispatchDouyinSharePort });
+    const assembly = await buildChatAssembly(
+      ctx,
+      {
+        surface: "topics",
+        functionKey: "intelligence.douyin.share",
+      },
+      deps,
+      null,
+    );
+    const execute = assembly.tools["intelligence.douyin.share"]!
+      .execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    await execute(
+      {
+        shareInput: "https://v.douyin.com/deep-link/",
+        action: "archive_and_transcribe",
+      },
+      { toolCallId: "tc", messages: [], context: {} },
+    );
+    expect(dispatchDouyinSharePort).toHaveBeenCalledWith(ctx, {
+      shareInput: "https://v.douyin.com/deep-link/",
+      transcribe: false,
+    });
+  });
+
+  it("参考图路由从全库精确计数中选唯一图片并把 asset id 传给真实封面任务", async () => {
+    const dispatchGenerateCoverPort = vi.fn(async () => ({
+      taskId: "cover-task-1",
+    }));
+    const { deps } = makeDeps({ dispatchGenerateCoverPort });
+    deps.contextReaders!.listCoverReferenceImages = async () => ({
+      rows: [{ id: "asset-only", title: "唯一参考封面", kind: "image" }],
+      total: 1,
+    });
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "project-1" },
+      deps,
+      { kind: "cover.reference" },
+    );
+    expect(assembly.forcedTool).toBe("cover.generate");
+    const execute = assembly.tools["cover.generate"]!.execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    const result = (await execute(
+      {},
+      { toolCallId: "tc", messages: [], context: {} },
+    )) as { reference?: { status: string; assetId?: string } };
+    expect(dispatchGenerateCoverPort).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ referenceAssetId: "asset-only" }),
+    );
+    expect(result.reference).toMatchObject({
+      status: "selected",
+      assetId: "asset-only",
+    });
+  });
+
+  it("素材读端口只回一条候选但精确 total=2 时拒绝自动引用，并按 total 提示", async () => {
+    const dispatchGenerateCoverPort = vi.fn(async () => ({
+      taskId: "must-not-run",
+    }));
+    const { deps } = makeDeps({ dispatchGenerateCoverPort });
+    deps.contextReaders!.listCoverReferenceImages = async () => ({
+      rows: [{ id: "asset-first", title: "首条参考封面", kind: "image" }],
+      total: 2,
+    });
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "project-1" },
+      deps,
+      { kind: "cover.reference" },
+    );
+    const execute = assembly.tools["cover.generate"]!.execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    const result = (await execute(
+      {},
+      { toolCallId: "tc", messages: [], context: {} },
+    )) as {
+      reference?: { status: string; total?: number };
+      error?: string | null;
+    };
+    expect(dispatchGenerateCoverPort).not.toHaveBeenCalled();
+    expect(result.reference).toMatchObject({
+      status: "needs_clarification",
+      total: 2,
+    });
+    expect(result.error).toContain("2 张");
+  });
+});
 
 const FAKE_SPEC = {
   apiFormat: "anthropic" as const,
@@ -226,6 +517,7 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
             url: "https://v.douyin.com/x",
             publishedAt: "2026-07-01T00:00:00.000Z",
             projectTitle: "上下文工程",
+            coverAssetId: null,
             status: "published",
           },
         ],
@@ -317,6 +609,41 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const chatContext: ChatContext = { surface: "topics" };
     const a = await buildChatAssembly(ctx, chatContext, deps);
     expect(a.skillId).toBe("chatbox.topic");
+  });
+
+  it("[T-513] active 账号快照覆盖 chat method 与工具，不读取全局 registry 定制", async () => {
+    const { deps } = makeDeps();
+    const a = await runWithEffectiveSkillSnapshot(
+      {
+        snapshotVersion: 1,
+        userId: "u-1",
+        accountId: "account-a",
+        resolvedAt: "2026-07-24T00:00:00.000Z",
+        platformPolicyVersion: "policy-v1",
+        platformPolicy: "平台规则",
+        skills: [
+          {
+            skillId: "chatbox.topic",
+            baseVersion: "v1",
+            overlayRevision: 2,
+            overlayVersion: "2",
+            effective: {
+              methodSystem: "账号 A 的专属选题方法",
+              template: "{{positioning}}",
+              tools: ["topic.generate"],
+              requiredFacets: ["positioning"],
+              contextRequirements: [],
+              outputSchema: null,
+              completionPolicy: null,
+              completionPolicyAdapter: null,
+            },
+          },
+        ],
+      },
+      () => buildChatAssembly(ctx, { surface: "topics" }, deps),
+    );
+    expect(a.system).toContain("账号 A 的专属选题方法");
+    expect(Object.keys(a.tools)).toContain("topic.generate");
   });
 
   it("未知 surface → 回落 chatbox.topic(路由不崩)", async () => {
@@ -1406,7 +1733,7 @@ describe("[T-081②] formatWorksBrief — 全部作品标题压缩列表", () =>
     const brief = formatWorksBrief(
       [
         row({ title: long, publishedAt: "2026-06-01" }),
-        row({ title: "短标题", status: "published" }),
+        row({ title: "短标题", status: "published", publishedAt: "2026-06-02" }),
         row({ title: "进行中的一条", stage: "scripting" }),
       ],
       3,
@@ -1416,10 +1743,10 @@ describe("[T-081②] formatWorksBrief — 全部作品标题压缩列表", () =>
     // 截 40 字 + …(「· 」前缀 + 40 字 + … + 状态括注)。
     expect(lines[0]).toContain(`${long.slice(0, 40)}…`);
     expect(lines[0]).not.toContain(long.slice(0, 60));
-    // 发布状态标记:publishedAt 或 status=published → 已发布;否则 stage。
+    // 发布状态标记只认 canonical publishedAt；否则展示人话 lifecycle。
     expect(lines[0]).toContain("（已发布）");
     expect(lines[1]).toContain("（已发布）");
-    expect(lines[2]).toContain("（scripting）");
+    expect(lines[2]).toContain("（脚本）");
   });
 
   it("上限 100 条;total 更大时如实标注剩余", () => {
@@ -1688,13 +2015,13 @@ describe("[T-256a] 环境感知能力认知 — honesty 第 13 条", () => {
 
 // [T-245] 编导热点能力认知接线 —— honesty 第 11 条 + 对话 trend 出题真接信源信号(与选题页同源)。
 describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源", () => {
-  it("system 注入第 11 条:有真实热点能力(信源/黑马雷达/web 搜索)+ 引导登记信号源,绝不自称没能力", async () => {
+  it("system 注入第 11 条:有真实热点能力(内容雷达/web 搜索)+ 引导登记来源,绝不自称没能力", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(a.system).toContain("你有真实热点能力");
-    expect(a.system).toContain("黑马雷达");
+    expect(a.system).toContain("热点宝/黑马发现");
     expect(a.system).toContain("basis=trend");
-    expect(a.system).toContain("去选题页『信号源』登记热榜站点");
+    expect(a.system).toContain("去『内容雷达』登记网页/RSS、博主或分享链接");
     expect(a.system).toContain("绝不自称「没有实时热点/热搜拉取能力」");
   });
 
@@ -1740,6 +2067,31 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     expect(res.trendNote ?? null).toBeNull();
   });
 
+  it("[T-513] trend 子调用与 topic.generate 分别进入当前账号独立快照", async () => {
+    const snapshotCalls: Array<readonly string[]> = [];
+    const runWithSkillSnapshot: NonNullable<
+      AssembleChatDeps["runWithSkillSnapshot"]
+    > = async <T>(
+      _ctx: RequestContext,
+      skillIds: readonly string[],
+      execute: () => Promise<T>,
+    ) => {
+      snapshotCalls.push(skillIds);
+      return execute();
+    };
+    const { deps } = makeDeps({
+      runWithSkillSnapshot,
+      trendSourceSignals: async () => [],
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    await runToolExecute(a.tools["topic.generate"]!, { basis: "trend" });
+
+    expect(snapshotCalls).toEqual([
+      ["trend.extract"],
+      ["topic.generate"],
+    ]);
+  });
+
   it("basis=trend 信源信号为空 → trendNote 诚实注明「已登记 N 个」并指路信号源登记", async () => {
     const { deps } = makeDeps({
       trendSourceSignals: async () => [],
@@ -1754,7 +2106,7 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     expect(res.trendNote).toContain("已登记 2 个信源");
   });
 
-  it("basis=trend 未登记任何信源(count=0)→ trendNote 引导去『信号源』登记热榜站点", async () => {
+  it("basis=trend 未登记任何来源(count=0)→ trendNote 引导去『内容雷达』登记", async () => {
     const { deps } = makeDeps({
       trendSourceSignals: async () => [],
       countEnabledTrendSources: async () => 0,
@@ -1764,8 +2116,8 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
     const res = (await runToolExecute(tool, { basis: "trend" })) as {
       trendNote?: string | null;
     };
-    expect(res.trendNote).toContain("还没有登记任何网页信源");
-    expect(res.trendNote).toContain("『信号源』");
+    expect(res.trendNote).toContain("还没有登记任何网页/RSS 来源");
+    expect(res.trendNote).toContain("『内容雷达』");
     // 没配 searchWeb → 连搜索路都没有,注记明说别声称基于实时热榜。
     expect(res.trendNote).toContain("不要声称基于实时热榜");
   });

@@ -29,6 +29,7 @@
  */
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -58,6 +59,7 @@ import { WebSessionVaultCard } from "./web-session-vault-card";
 import { ResetWorkspaceCard } from "./reset-workspace-card";
 // [T-363] 模型配置导出/导入兜底卡(模型页签底部;文件含密钥,卡内常驻警示)。
 import { ModelConfigTransferCard } from "./model-config-transfer-card";
+import { ModelConfigurationManual } from "./model-configuration-manual";
 import { TagChip } from "@/components/content/tag-chip";
 import {
   MODEL_PROVIDER_PRESETS,
@@ -80,8 +82,6 @@ import {
   Sparkles,
   ShieldCheck,
   KeyRound,
-  Trash2,
-  Plus,
   ChevronDownIcon,
   ChevronRightIcon,
   Download,
@@ -132,17 +132,16 @@ function useSettingsMutation() {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const run = React.useCallback(
-    (mutate: () => Promise<unknown>) => {
-      if (pending) return;
+    async (mutate: () => Promise<unknown>): Promise<boolean> => {
+      if (pending) return false;
       setPending(true);
-      void (async () => {
-        try {
-          await mutate();
-          router.refresh();
-        } finally {
-          setPending(false);
-        }
-      })();
+      try {
+        await mutate();
+        router.refresh();
+        return true;
+      } finally {
+        setPending(false);
+      }
     },
     [pending, router],
   );
@@ -290,7 +289,11 @@ export function SettingsDialog({
   const searchParams = useSearchParams();
   const highlight = searchParams?.get("highlight") ?? null;
   const [open, setOpen] = React.useState(true);
-  const [tab, setTab] = React.useState<string>(SETTINGS_DIALOG_TABS[0]!.id);
+  const [tab, setTab] = React.useState<string>(
+    () =>
+      (highlight ? HIGHLIGHT_TAB[highlight] : undefined) ??
+      SETTINGS_DIALOG_TABS[0]!.id,
+  );
 
   // 关闭弹窗:回上一页(回到打开设置之前的位置),没有历史时兜底回首页。
   const handleOpenChange = React.useCallback(
@@ -314,9 +317,10 @@ export function SettingsDialog({
     if (!highlight) return;
     const targetTab = HIGHLIGHT_TAB[highlight];
     if (!targetTab) return; // 未知 stepKey → 不切页签、不报错。
-    setTab(targetTab);
-    // 切页签后延一帧,让目标 panel 由 hidden 转可见再滚动 + 高亮。
-    const raf = requestAnimationFrame(() => {
+    // URL → React state 的同步延到浏览器帧，避免 effect 内同步 setState 触发级联渲染。
+    const tabRaf = requestAnimationFrame(() => {
+      setTab(targetTab);
+      // 所有 panel 都 forceMount,同一帧即可定位;React 随后提交 tab 可见态。
       if (typeof document === "undefined") return;
       const el = document.querySelector(
         `[data-highlight="${CSS.escape(highlight)}"]`,
@@ -331,9 +335,7 @@ export function SettingsDialog({
       // 保存 timer 到 dataset 以便卸载时清(避免组件卸载后 setTimeout 触发 DOM 访问)。
       el.dataset.highlightTimer = String(timer);
     });
-    return () => {
-      cancelAnimationFrame(raf);
-    };
+    return () => cancelAnimationFrame(tabRaf);
   }, [highlight]);
 
   return (
@@ -390,14 +392,23 @@ export function SettingsDialog({
           >
             <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
-                <AccountInformationCard viewModel={viewModel} />
-                <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
+                <AccountInformationCard
+                  key={viewModel.account.displayName}
+                  viewModel={viewModel}
+                />
+                <AccountBindingCard
+                  key={`${viewModel.douyinAccount.loggedIn}:${viewModel.douyinAccount.sourceReady ?? false}`}
+                  douyinAccount={viewModel.douyinAccount}
+                />
                 {/* [T-217a] 网站登录保管库:登录一次网站 → 编导带登录态读正文(web.read)。 */}
                 <WebSessionVaultCard />
                 {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
                 <ActivationStatusCard
                   activation={activation}
                   purchaseUrl={channelLinks?.purchaseUrl ?? null}
+                  renewalUrl={channelLinks?.renewalUrl ?? null}
+                  channelSupportUrl={channelLinks?.channelSupportUrl ?? null}
+                  downloadUrl={channelLinks?.downloadUrl ?? null}
                 />
                 {/* [T-459] 软件更新只读官网公开版本源,不再绑定授权状态/白标渠道。 */}
                 <CheckUpdateCard />
@@ -415,13 +426,26 @@ export function SettingsDialog({
               <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
                 {/* ① 必配块:文本模型是 AI 写字 / 对话的地基,配这一个就能用。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-foreground">必配</span>
-                    <span className="text-xs text-muted-foreground">
-                      AI 写字 / 对话的地基,配这一个就能用;不配时有官方兜底。
-                    </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold text-foreground">必配</span>
+                      <span className="text-xs text-muted-foreground">
+                        AI 写字 / 对话的地基,配这一个就能用;不配时有官方兜底。
+                      </span>
+                    </div>
+                    <ModelConfigurationManual />
                   </div>
-                  <ModelConfigurationCard model={viewModel.model} />
+                  <ModelConfigurationCard
+                    key={[
+                      viewModel.model.provider,
+                      viewModel.model.modelName,
+                      viewModel.model.baseUrl,
+                      viewModel.model.apiFormat,
+                      viewModel.model.hasSecret,
+                      viewModel.model.temperature,
+                    ].join(":")}
+                    model={viewModel.model}
+                  />
                 </div>
 
                 {/* ② 折叠块「更多能力」:7 张按需卡,默认收起(不配也能用,各自诚实降级)。
@@ -438,25 +462,30 @@ export function SettingsDialog({
                     "web-search",
                   ]}
                 >
+                  <MultimodalModelCard
+                    key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
+                    kind="audio"
+                    state={viewModel.multimodalModels.audio}
+                  />
                   {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
                   <MultimodalModelCard
+                    key={`review:${JSON.stringify(viewModel.multimodalModels.review)}`}
                     kind="review"
                     state={viewModel.multimodalModels.review}
                   />
                   <MultimodalModelCard
+                    key={`image:${JSON.stringify(viewModel.multimodalModels.image)}`}
                     kind="image"
                     state={viewModel.multimodalModels.image}
                   />
                   <MultimodalModelCard
+                    key={`video:${JSON.stringify(viewModel.multimodalModels.video)}`}
                     kind="video"
                     state={viewModel.multimodalModels.video}
                   />
-                  <MultimodalModelCard
-                    kind="audio"
-                    state={viewModel.multimodalModels.audio}
-                  />
                   {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
                   <MultimodalModelCard
+                    key={`embed:${JSON.stringify(viewModel.multimodalModels.embed)}`}
                     kind="embed"
                     state={viewModel.multimodalModels.embed}
                   />
@@ -464,16 +493,19 @@ export function SettingsDialog({
                       state 早已备好(MULTIMODAL_META.vision/search + viewModel 两档),
                       此前一直没挂进面板 → 用户想配联网搜索(T-228)/视觉理解无入口。 */}
                   <MultimodalModelCard
+                    key={`vision:${JSON.stringify(viewModel.multimodalModels.vision)}`}
                     kind="vision"
                     state={viewModel.multimodalModels.vision}
                   />
                   <MultimodalModelCard
+                    key={`search:${JSON.stringify(viewModel.multimodalModels.search)}`}
                     kind="search"
                     state={viewModel.multimodalModels.search}
                   />
                   {/* [T-239b] 备用对话模型(chat.fallback):主模型可重试错误耗尽时接管一次;
                       未配 → 现状报错(诚实降级,不静默换模型)。 */}
                   <MultimodalModelCard
+                    key={`fallback:${JSON.stringify(viewModel.multimodalModels.fallback)}`}
                     kind="fallback"
                     state={viewModel.multimodalModels.fallback}
                   />
@@ -484,11 +516,19 @@ export function SettingsDialog({
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
-              <SkillsSection skills={skills} />
+              <SkillsSection
+                // [T-513] 切号必须销毁展开行、草稿、pending/error 等本地状态；不能让旧账号
+                // textarea 在新账号目录上复用。服务端读写仍以 RequestContext 做最终归属门。
+                key={skills[0]?.accountId ?? "__no-account-skill-catalog__"}
+                skills={skills}
+              />
             </SettingsPanel>
             <SettingsPanel tabId="storage" active={tab}>
               <div className="flex flex-col gap-card-gap">
-                <StorageUsageCard storage={viewModel.storage} />
+                <StorageUsageCard
+                  key={viewModel.storage.rootPath}
+                  storage={viewModel.storage}
+                />
                 {/* [T-332 S5] 危险区:重置工作区(二次确认 + 落 reset-pending 标记,重启归档生效)。 */}
                 <ResetWorkspaceCard />
               </div>
@@ -542,11 +582,6 @@ function AccountInformationCard({
   const initialName = viewModel.account.displayName;
   const [draftName, setDraftName] = React.useState<string>(initialName);
   const { pending, run } = useSettingsMutation();
-
-  // Re-sync the draft when the server read changes the identity (post-refresh).
-  React.useEffect(() => {
-    setDraftName(initialName);
-  }, [initialName]);
 
   const trimmed = draftName.trim();
   const dirty = trimmed.length > 0 && trimmed !== initialName;
@@ -703,12 +738,6 @@ function AccountBindingCard({
   // 灰「未连接」翻译成「未绑定账号」绑定引导(SPEC §4.2:引导,不是报错/不是误导的连接态)。
   const [accountRequired, setAccountRequired] = React.useState(false);
 
-  // SSR 值变化(切账号 / 首次水合)时同步徽标。
-  React.useEffect(() => {
-    setLoggedIn(douyinAccount.loggedIn);
-    setSourceReady(douyinAccount.sourceReady ?? false);
-  }, [douyinAccount.loggedIn, douyinAccount.sourceReady]);
-
   // 挂载后拉一次真 status(不弹窗,headless 探针),把 SSR 兜底徽标翻真。探针失败(无
   // 浏览器 / transport race)静默保持 SSR 值(未连接),不误显已连接。
   React.useEffect(() => {
@@ -858,10 +887,12 @@ function AccountBindingCard({
           className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3"
         >
           {/* T-174:抖音官方 logo(替原 Link2 通用链接图标),圆角方形贴合抖音 app 图标观感。 */}
-          <img
+          <Image
             src="/douyin-icon.png"
             alt="抖音"
             aria-hidden="true"
+            width={40}
+            height={40}
             className="size-10 shrink-0 rounded-[9px]"
           />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -1057,10 +1088,16 @@ function truncateMachineId(machineId: string): string {
 function ActivationStatusCard({
   activation,
   purchaseUrl = null,
+  renewalUrl = null,
+  channelSupportUrl = null,
+  downloadUrl = null,
 }: {
   activation?: ActivationState;
-  /** [T-396b] 渠道购买/续期链接;null = 未激活/渠道未配 → 购买入口整个隐藏(非 disabled)。 */
+  /** T-534：四类商业/交付入口严格分工；null 只表示当前未提供。 */
   purchaseUrl?: string | null;
+  renewalUrl?: string | null;
+  channelSupportUrl?: string | null;
+  downloadUrl?: string | null;
 }) {
   // [T-372 L3] 相对时间基准:挂载后取本机时钟(SSR 首帧 null → 只显绝对日期,无水合漂移)。
   const [nowMs, setNowMs] = React.useState<number | null>(null);
@@ -1071,9 +1108,8 @@ function ActivationStatusCard({
     remaining: number;
     anchoredAt: number;
   } | null>(null);
-  const [, setCountdownTick] = React.useState(0);
-
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载后立刻取本机时钟,同帧渲出「X 天前」(T-167 契约;setTimeout 会让首屏只剩绝对日期)
     setNowMs(Date.now());
     let disposed = false;
     let unlisten: (() => void) | null = null;
@@ -1102,7 +1138,7 @@ function ActivationStatusCard({
   // 倒计时每秒重渲(仅宽限态才起 interval;非宽限零开销)。
   React.useEffect(() => {
     if (!graceInfo) return;
-    const timer = window.setInterval(() => setCountdownTick((v) => v + 1), 1000);
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [graceInfo]);
 
@@ -1245,7 +1281,8 @@ function ActivationStatusCard({
                 ? (() => {
                     const remaining =
                       graceInfo.remaining -
-                      (Date.now() - graceInfo.anchoredAt) / 1000;
+                      ((nowMs ?? graceInfo.anchoredAt) - graceInfo.anchoredAt) /
+                        1000;
                     return remaining > 0
                       ? formatCountdown(remaining)
                       : "已用尽,请联网重新校验授权";
@@ -1254,24 +1291,68 @@ function ActivationStatusCard({
             </span>
           </SettingsFormRow>
         ) : null}
-        {/* [T-396b] 购买 / 续期激活码 → 渠道 purchaseUrl(跟激活码走,Rust 验签落缓存)。
-            null → 整个隐藏(SPEC §7 中性降级操作定义;绝不回退官方链接防泄定价)。
-            用 <a> 而非 client 动作:纯外链跳转,无需 router;激活/续期真流程走 /activate 页(P5)。 */}
-        {purchaseUrl ? (
-          <div className="flex justify-end">
-            <Button asChild variant="outline" size="sm">
-              <a
-                href={purchaseUrl}
-                data-slot="activation-purchase-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <KeyRound aria-hidden="true" className="size-4 shrink-0" />
-                购买 / 续期激活码
-              </a>
-            </Button>
+        <div className="grid gap-2 rounded-md border border-border p-3">
+          <p className="text-xs font-medium text-foreground">渠道服务入口</p>
+          <div className="flex flex-wrap gap-2">
+            {purchaseUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={purchaseUrl}
+                  data-slot="activation-purchase-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <KeyRound aria-hidden="true" className="size-4 shrink-0" />
+                  购买激活码
+                </a>
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                购买：当前未提供
+              </span>
+            )}
+            {renewalUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={renewalUrl}
+                  data-slot="activation-renewal-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  续费
+                </a>
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                续费：当前未提供
+              </span>
+            )}
+            {channelSupportUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={channelSupportUrl}
+                  data-slot="activation-channel-support-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  商业售后
+                </a>
+              </Button>
+            ) : null}
+            {downloadUrl ? (
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={downloadUrl}
+                  data-slot="activation-download-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  渠道下载
+                </a>
+              </Button>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
     </SectionCard>
   );
@@ -1300,11 +1381,14 @@ function CheckUpdateCard() {
   const [message, setMessage] = React.useState<string>("");
 
   React.useEffect(() => {
-    const desktop = isDesktopRuntimeClient();
-    setIsDesktop(desktop);
-    if (desktop) {
-      void getAppVersion().then((v) => setVersion(v));
-    }
+    const timer = window.setTimeout(() => {
+      const desktop = isDesktopRuntimeClient();
+      setIsDesktop(desktop);
+      if (desktop) {
+        void getAppVersion().then((v) => setVersion(v));
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const busy = phase === "checking";
@@ -1513,10 +1597,10 @@ function CheckUpdateCard() {
 // DiagnosticLogsCard — 诊断日志 (T-259)
 // ---------------------------------------------------------------------------
 //
-// Rust 壳把 sidecar 的 stdout/stderr 每行 tee 到 <appDataDir>/logs/sidecar.log(脱敏 + 轮转,
+// Rust 壳把 sidecar 的 stdout/stderr 每行 tee 到 <appDataDir>/logs/sidecar.log.enc(加密、脱敏 + 轮转,
 // 见 src-tauri/src/logging.rs)。本卡是**前端入口**:桌面端点「在 Finder 打开日志文件夹」→
 // fetch /api/v1/local/reveal-logs → sidecar 跑平台 `open` 命令在文件管理器打开 logs 目录,
-// 用户把 sidecar.log / sidecar.prev.log 发给开发者即可排障(真实用户撞 bug 的头号打磨)。
+// 用户把 sidecar.log.enc / sidecar.prev.log.enc 发给开发者即可排障(真实用户撞 bug 的头号打磨)。
 //
 // **只桌面态有意义**:挂载后经 isDesktopRuntimeClient() 探测;web/SSR → 显「桌面端专属」诚实
 // 空态(无入口),绝不假装能打开本机目录。SSR 首帧走空态(desktop=false),挂载后翻真(免水合漂移)。
@@ -1525,14 +1609,20 @@ function DiagnosticLogsCard() {
   // SSR 首帧 desktop=false → 渲空态;挂载后 isDesktopRuntimeClient() 翻真(无水合漂移)。
   const [isDesktop, setIsDesktop] = React.useState(false);
   const [state, setState] = React.useState<"idle" | "opening" | "error">("idle");
+  const [fallbackDir, setFallbackDir] = React.useState("");
 
   React.useEffect(() => {
-    setIsDesktop(isDesktopRuntimeClient());
+    const timer = window.setTimeout(
+      () => setIsDesktop(isDesktopRuntimeClient()),
+      0,
+    );
+    return () => window.clearTimeout(timer);
   }, []);
 
   const reveal = React.useCallback(() => {
     if (state === "opening") return;
     setState("opening");
+    setFallbackDir("");
     void (async () => {
       try {
         const res = await fetch("/api/v1/local/reveal-logs", {
@@ -1540,8 +1630,16 @@ function DiagnosticLogsCard() {
           headers: { "Content-Type": "application/json" },
           body: "{}",
         });
-        const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
-        setState(res.ok && data.ok ? "idle" : "error");
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          dir?: string;
+        };
+        if (res.ok && data.ok) {
+          setState("idle");
+        } else {
+          setFallbackDir(data.dir?.trim() ?? "");
+          setState("error");
+        }
       } catch {
         setState("error");
       }
@@ -1590,7 +1688,7 @@ function DiagnosticLogsCard() {
   }
 
   return (
-    <SectionCard title="诊断日志" description="导出运行日志用于排障">
+    <SectionCard title="诊断日志" description="打开运行日志目录用于排障">
       <div
         data-slot="diagnostic-logs-card"
         data-desktop="true"
@@ -1608,7 +1706,7 @@ function DiagnosticLogsCard() {
               运行日志
             </span>
             <span className="text-xs text-muted-foreground">
-              撞到问题时点此打开日志文件夹,把 sidecar.log 发给开发者即可定位。日志已自动脱敏。
+              撞到问题时点此打开日志文件夹,把 sidecar.log.enc 发给开发者即可定位。日志已加密并自动脱敏。
             </span>
           </div>
           <Button
@@ -1618,16 +1716,27 @@ function DiagnosticLogsCard() {
             data-slot="diagnostic-logs-action"
             disabled={state === "opening"}
             onClick={reveal}
-            title="在 Finder 打开诊断日志文件夹(sidecar.log / sidecar.prev.log)"
+            title="打开诊断日志文件夹(sidecar.log.enc / sidecar.prev.log.enc)"
           >
             {state === "opening" ? (
               <Loader2 aria-hidden="true" className="size-4 shrink-0 animate-spin" />
             ) : (
               <FolderOpen aria-hidden="true" className="size-4 shrink-0" />
             )}
-            {state === "error" ? "打开失败,重试" : "导出诊断日志"}
+            {state === "error" ? "打开失败,重试" : "打开日志目录"}
           </Button>
         </div>
+        {state === "error" && fallbackDir ? (
+          <div
+            data-slot="diagnostic-logs-fallback"
+            className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-muted-foreground"
+          >
+            文件管理器未能自动打开。请手动前往：
+            <code className="ml-1 select-all break-all text-foreground">
+              {fallbackDir}
+            </code>
+          </div>
+        ) : null}
       </div>
     </SectionCard>
   );
@@ -1788,20 +1897,20 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   );
 
   React.useEffect(() => {
-    const storedTheme = readStored(THEME_STORAGE_KEY, THEME_VALUES, "system");
-    const storedDensity = readStored(
-      DENSITY_STORAGE_KEY,
-      DENSITY_VALUES,
-      viewModel.system.density,
-    );
-    setTheme(storedTheme);
-    setDensity(storedDensity);
-    applyTheme(storedTheme);
-    applyDensity(storedDensity);
-    // Run once on mount; the fixture defaults are stable so deps are intentionally
-    // limited to the initial identity-derived values.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const timer = window.setTimeout(() => {
+      const storedTheme = readStored(THEME_STORAGE_KEY, THEME_VALUES, "system");
+      const storedDensity = readStored(
+        DENSITY_STORAGE_KEY,
+        DENSITY_VALUES,
+        viewModel.system.density,
+      );
+      setTheme(storedTheme);
+      setDensity(storedDensity);
+      applyTheme(storedTheme);
+      applyDensity(storedDensity);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [viewModel.system.density]);
 
   const onThemeChange = React.useCallback((next: Theme) => {
     setTheme(next);
@@ -1914,11 +2023,6 @@ function StorageUsageCard({
   const [rootPath, setRootPath] = React.useState<string>(storage.rootPath);
   const { pending, run } = useSettingsMutation();
 
-  // Re-sync the draft path when a server refresh changes the stored config.
-  React.useEffect(() => {
-    setRootPath(storage.rootPath);
-  }, [storage.rootPath]);
-
   const canSave = rootPath.trim().length > 0 && rootPath !== storage.rootPath && !pending;
 
   const save = React.useCallback(() => {
@@ -2028,11 +2132,12 @@ function StorageUsageCard({
 // ModelConfigurationCard
 // ---------------------------------------------------------------------------
 
-type ApiFormat = "anthropic" | "openai_chat";
+type ApiFormat = "anthropic" | "openai_chat" | "openai_responses";
 
 const API_FORMAT_OPTIONS: ReadonlyArray<{ value: ApiFormat; label: string }> = [
   { value: "anthropic", label: "Anthropic 兼容" },
   { value: "openai_chat", label: "OpenAI Chat 兼容" },
+  { value: "openai_responses", label: "OpenAI Responses" },
 ];
 
 // Free-form provider suggestions — the input is NOT restricted to these (bind any
@@ -2041,6 +2146,7 @@ const PROVIDER_SUGGESTIONS: ReadonlyArray<string> = [
   "anthropic",
   "minimax",
   "openai",
+  "new-api",
   "google",
   "deepseek",
 ];
@@ -2116,12 +2222,19 @@ function TestConnectionButton({
   capability,
   slotPrefix,
   quotaHint,
+  beforeTest,
+  label = "测试连接",
+  disabled = false,
 }: {
   capability: string;
   /** data-slot 前缀,如 "model" | "multimodal-image"。 */
   slotPrefix: string;
   /** 额度提示(如生图/付费搜索会真实调用消耗少量额度);null = 不提示。 */
   quotaHint?: string | null;
+  /** 主模型可先保存当前草稿，再测试刚保存的同一份配置。 */
+  beforeTest?: () => Promise<boolean | void>;
+  label?: string;
+  disabled?: boolean;
 }) {
   const [testing, setTesting] = React.useState(false);
   // [T-384] 三态:"warn" = 无法探测但也无法证伪配置(如 ASR 厂商无 /v1/models 端点)——
@@ -2135,6 +2248,13 @@ function TestConnectionButton({
     setTesting(true);
     setResult(null);
     try {
+      if (beforeTest) {
+        const ready = await beforeTest();
+        if (ready === false) {
+          setResult({ status: "fail", detail: "当前配置未保存，请检查必填项。" });
+          return;
+        }
+      }
       const res = (await client.testModelConnection({
         params: { capability },
         query: undefined,
@@ -2149,13 +2269,15 @@ function TestConnectionButton({
     } finally {
       setTesting(false);
     }
-  }, [capability]);
+  }, [beforeTest, capability]);
 
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground">
-          测试的是已保存的配置(改动请先保存)
+          {beforeTest
+            ? "会先保存当前填写，再按正式调用方式测试"
+            : "测试的是已保存的配置(改动请先保存)"}
           {quotaHint ? `;${quotaHint}` : ""}
         </span>
         <Button
@@ -2163,10 +2285,10 @@ function TestConnectionButton({
           data-slot={`${slotPrefix}-test-connection`}
           variant="outline"
           size="sm"
-          disabled={testing}
+          disabled={testing || disabled}
           onClick={() => void runTest()}
         >
-          {testing ? "测试中…" : "测试连接"}
+          {testing ? "测试中…" : label}
         </Button>
       </div>
       {result ? (
@@ -2216,29 +2338,23 @@ function ModelConfigurationCard({
   );
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
+  // 常用主路径只留「预设 / 模型 / 密钥」。只有自定义中转或排错时才展开协议等字段。
+  const [showAdvanced, setShowAdvanced] = React.useState(
+    () => matchPresetByConfig(model.baseUrl, model.apiFormat) === undefined,
+  );
   const [temperature, setTemperature] = React.useState<number>(
     model.temperature,
   );
   const { pending, run } = useSettingsMutation();
 
-  // Re-sync drafts when a server refresh changes the stored config.
-  React.useEffect(() => {
-    setProvider(model.provider);
-    setModelName(model.modelName);
-    setBaseUrl(model.baseUrl);
-    setApiFormat(model.apiFormat);
-    setPresetId(
-      matchPresetByConfig(model.baseUrl, model.apiFormat)?.id ?? CUSTOM_PRESET_ID,
-    );
-    setTemperature(model.temperature);
-    setSecret("");
-  }, [model]);
-
   // [T-325] 选中预设:一次性填 provider/baseUrl/接口格式(custom 不填,回全自由填)。
   // 模型不强制覆盖(预设是起点不锁死),只把候选切成该家 —— 见下方 datalist。
   const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {
     setPresetId(preset.id);
-    if (preset.id === CUSTOM_PRESET_ID) return;
+    if (preset.id === CUSTOM_PRESET_ID) {
+      setShowAdvanced(true);
+      return;
+    }
     setProvider(preset.id);
     setBaseUrl(preset.baseUrl);
     setApiFormat(preset.apiFormat);
@@ -2249,9 +2365,8 @@ function ModelConfigurationCard({
 
   // One PUT upserts the whole "default" config; an empty secret is omitted so a
   // re-save without re-typing the key preserves the stored one.
-  const save = React.useCallback(() => {
-    if (!canSave) return;
-    run(() =>
+  const persistDraft = React.useCallback(
+    () =>
       client
         .putModel({
           params: { capability: MODEL_CAPABILITY },
@@ -2266,13 +2381,23 @@ function ModelConfigurationCard({
           },
         })
         .then(() => setSecret("")),
-    );
-  }, [canSave, run, provider, modelName, baseUrl, apiFormat, secret, temperature]);
+    [provider, modelName, baseUrl, apiFormat, secret, temperature],
+  );
+
+  const save = React.useCallback(() => {
+    if (!canSave) return;
+    void run(persistDraft);
+  }, [canSave, persistDraft, run]);
+
+  const saveBeforeTest = React.useCallback(
+    () => (canSave ? run(persistDraft) : Promise.resolve(false)),
+    [canSave, persistDraft, run],
+  );
 
   return (
     <SectionCard
       title="模型配置"
-      description="自定义绑定厂商 / 模型 / 接口地址 / 密钥;修改后点保存生效"
+      description="选供应商、填模型和密钥即可；中转站与特殊协议放在高级设置"
     >
       <div
         data-slot="model-configuration-card"
@@ -2285,26 +2410,6 @@ function ModelConfigurationCard({
           disabled={pending}
           onSelectPreset={handleSelectPreset}
         />
-        <SettingsFormRow
-          label="提供商"
-          controlId="model-provider"
-          help="任意厂商名,可自定义。"
-        >
-          <Input
-            id="model-provider"
-            data-slot="model-provider-input"
-            list="model-provider-suggestions"
-            value={provider}
-            disabled={pending}
-            onChange={(event) => setProvider(event.target.value)}
-            aria-label="模型提供商"
-          />
-          <datalist id="model-provider-suggestions">
-            {PROVIDER_SUGGESTIONS.map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
-        </SettingsFormRow>
         <SettingsFormRow
           label="模型"
           controlId="model-name"
@@ -2325,62 +2430,6 @@ function ModelConfigurationCard({
               <option key={m} value={m} />
             ))}
           </datalist>
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="接口地址"
-          controlId="model-base-url"
-          help="自定义 baseUrl(中转 / 你的服务商);留空走官方默认。"
-        >
-          <Input
-            id="model-base-url"
-            data-slot="model-base-url-input"
-            value={baseUrl}
-            disabled={pending}
-            placeholder="https://api.anthropic.com(留空=默认)"
-            onChange={(event) => {
-              const next = event.target.value;
-              setBaseUrl(next);
-              // [T-325] 手改地址 → 按新 (baseUrl, apiFormat) 重算预设高亮(匹配不到 = 自定义)。
-              setPresetId(
-                matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
-              );
-            }}
-            aria-label="接口地址"
-          />
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="接口格式"
-          controlId="model-api-format"
-          help="鉴权与请求体格式。"
-        >
-          <Select
-            value={apiFormat}
-            onValueChange={(value) => {
-              const next = value as ApiFormat;
-              setApiFormat(next);
-              // [T-325] 改格式 → 重算预设高亮(匹配不到 = 自定义)。
-              setPresetId(
-                matchPresetByConfig(baseUrl, next)?.id ?? CUSTOM_PRESET_ID,
-              );
-            }}
-          >
-            <SelectTrigger
-              id="model-api-format"
-              data-slot="model-api-format-trigger"
-              size="sm"
-              className="w-44"
-              disabled={pending}
-            >
-              <SelectValue placeholder="选择格式" />
-            </SelectTrigger>
-            <SelectContent data-slot="model-api-format-content">
-              {API_FORMAT_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </SettingsFormRow>
         <SettingsFormRow
           label="密钥"
@@ -2413,31 +2462,120 @@ function ModelConfigurationCard({
             ) : null}
           </div>
         </SettingsFormRow>
-        <SettingsFormRow
-          label="温度"
-          controlId="model-temperature"
-          help="较高的温度会让回答更发散。"
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            data-slot="model-advanced-toggle"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvanced((value) => !value)}
+          >
+            {showAdvanced ? "收起高级设置" : "高级设置（中转站 / 协议）"}
+          </Button>
+        </div>
+        <div
+          data-slot="model-advanced-settings"
+          hidden={!showAdvanced}
+          className="flex flex-col gap-3 rounded-lg border border-border bg-surface-subtle p-3"
         >
-          <Input
-            id="model-temperature"
-            type="number"
-            min={0}
-            max={1}
-            step={0.1}
-            data-slot="model-temperature-input"
-            className="w-24"
-            value={temperature}
-            disabled={pending}
-            onChange={(event) => {
-              const next = Number(event.target.value);
-              if (!Number.isNaN(next)) setTemperature(next);
-            }}
-            aria-label="模型温度"
-          />
-        </SettingsFormRow>
+          <SettingsFormRow
+            label="提供商标识"
+            controlId="model-provider"
+            help="仅用于识别配置；选择预设时已自动填写。"
+          >
+            <Input
+              id="model-provider"
+              data-slot="model-provider-input"
+              list="model-provider-suggestions"
+              value={provider}
+              disabled={pending}
+              onChange={(event) => setProvider(event.target.value)}
+              aria-label="模型提供商"
+            />
+            <datalist id="model-provider-suggestions">
+              {PROVIDER_SUGGESTIONS.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
+          </SettingsFormRow>
+          <SettingsFormRow
+            label="接口地址"
+            controlId="model-base-url"
+            help="中转站填写其 Base URL；通常应包含 /v1，具体以服务商文档为准。"
+          >
+            <Input
+              id="model-base-url"
+              data-slot="model-base-url-input"
+              value={baseUrl}
+              disabled={pending}
+              placeholder="https://example.com/v1"
+              onChange={(event) => {
+                const next = event.target.value;
+                setBaseUrl(next);
+                setPresetId(
+                  matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
+                );
+              }}
+              aria-label="接口地址"
+            />
+          </SettingsFormRow>
+          <SettingsFormRow
+            label="接口格式"
+            controlId="model-api-format"
+            help="必须与服务商实际支持的协议一致；New API 可按渠道选择 Chat 或 Responses。"
+          >
+            <Select
+              value={apiFormat}
+              onValueChange={(value) => {
+                const next = value as ApiFormat;
+                setApiFormat(next);
+                setPresetId(
+                  matchPresetByConfig(baseUrl, next)?.id ?? CUSTOM_PRESET_ID,
+                );
+              }}
+            >
+              <SelectTrigger
+                id="model-api-format"
+                data-slot="model-api-format-trigger"
+                size="sm"
+                className="w-52"
+                disabled={pending}
+              >
+                <SelectValue placeholder="选择格式" />
+              </SelectTrigger>
+              <SelectContent data-slot="model-api-format-content">
+                {API_FORMAT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingsFormRow>
+          <SettingsFormRow
+            label="温度"
+            controlId="model-temperature"
+            help="一般保持默认即可；较高会让回答更发散。"
+          >
+            <Input
+              id="model-temperature"
+              type="number"
+              min={0}
+              max={1}
+              step={0.1}
+              data-slot="model-temperature-input"
+              className="w-24"
+              value={temperature}
+              disabled={pending}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                if (!Number.isNaN(next)) setTemperature(next);
+              }}
+              aria-label="模型温度"
+            />
+          </SettingsFormRow>
+        </div>
         <div className="flex items-start justify-between gap-3">
-          {/* [T-377] 测试连接:1 token 真实补全验已保存的主模型配置。 */}
-          <TestConnectionButton capability={MODEL_CAPABILITY} slotPrefix="model" />
           <Button
             type="button"
             data-slot="model-save"
@@ -2446,8 +2584,15 @@ function ModelConfigurationCard({
             disabled={!canSave}
             onClick={save}
           >
-            保存模型配置
+            仅保存
           </Button>
+          <TestConnectionButton
+            capability={MODEL_CAPABILITY}
+            slotPrefix="model"
+            beforeTest={saveBeforeTest}
+            label="保存并测试"
+            disabled={!canSave}
+          />
         </div>
       </div>
     </SectionCard>
@@ -2596,12 +2741,13 @@ const MULTIMODAL_META = {
     description:
       "把视频里的话转成文字稿(复盘 / 二创的底稿)。选配:不配则用本地 Whisper(免 key,首次自动下模型,默认 small 级);配了云端 ASR 则更快更准。",
     providerSuggestions: ["siliconflow", "openai", "groq"] as ReadonlyArray<string>,
-    providerPlaceholder: "siliconflow",
+    providerPlaceholder: "示例:siliconflow",
     providerHelp:
       "OpenAI 兼容 ASR 厂商,可自定义(SiliconFlow / OpenAI / Groq 同形状)。留空则用本地 Whisper。",
     modelHelp: "ASR 模型 id,如 FunAudioLLM/SenseVoiceSmall(SiliconFlow)。",
-    modelPlaceholder: "FunAudioLLM/SenseVoiceSmall",
-    baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
+    modelPlaceholder: "示例:FunAudioLLM/SenseVoiceSmall",
+    baseUrlPlaceholder:
+      "示例:https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 用本地 Whisper 转写(免 key,首次下载模型)。",
   },
   // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI
@@ -2760,21 +2906,6 @@ function MultimodalModelCard({
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
   const { pending, run } = useSettingsMutation();
-
-  // Re-sync drafts when a server refresh changes the stored config.
-  React.useEffect(() => {
-    setProvider(state.provider);
-    setModelName(state.modelName);
-    setBaseUrl(state.baseUrl);
-    setApiFormat(state.apiFormat ?? "anthropic");
-    if (isFallback) {
-      setPresetId(
-        matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??
-          CUSTOM_PRESET_ID,
-      );
-    }
-    setSecret("");
-  }, [state, isFallback]);
 
   // [T-325] 备用对话卡选中预设:填 provider/baseUrl/接口格式(custom 不填)。
   const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {

@@ -15,6 +15,22 @@ export {
   type DbDriverKind,
 } from "./db";
 export {
+  executionTasks,
+  intelligenceCollections,
+  intelligenceItems,
+  intelligenceMigrationLedgers,
+  intelligenceSources,
+  intelligenceSourceCollectionMemberships,
+  intelligenceSyncRunEvents,
+  intelligenceSyncRuns,
+  intelligenceTransforms,
+  itemMetricSnapshots,
+  itemSourceObservations,
+  itemTranscripts,
+  projectIntelligenceReferences,
+  sourceSnapshots,
+} from "./schema/intelligence";
+export {
   createProjectRepository,
   type ProjectRepository,
   type RepoDeps,
@@ -51,16 +67,21 @@ export {
   storageConfigs,
   skillConfigOverrides,
   skillConfigOverrideVersions,
+  accountSkillOverlays,
+  accountSkillOverlayVersions,
   SETTINGS_DDL,
 } from "./schema/settings";
 export type {
   SkillConfigOverrideRow,
   SkillConfigOverrideVersionRow,
+  AccountSkillOverlayRow,
+  AccountSkillOverlayVersionRow,
 } from "./schema/settings";
 export {
   knowledgeItems,
   knowledgeRevisions,
   knowledgeRelations,
+  knowledgeFolders,
   KNOWLEDGE_DDL,
 } from "./schema/knowledge";
 export {

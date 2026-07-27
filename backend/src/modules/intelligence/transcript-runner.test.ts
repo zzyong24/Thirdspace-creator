@@ -1,0 +1,117 @@
+import { describe, expect, it } from "vitest";
+
+import { createDb } from "@creatoros/backend";
+import type { RequestContext } from "@creatoros/contract";
+import { createPersistentTaskService } from "../execution";
+import { createIntelligenceService } from "./intelligence.service";
+import { runIntelligenceTranscriptTask } from "./transcript-runner";
+
+const ctx: RequestContext = {
+  userId: "user-1",
+  accountId: "account-1",
+  requestId: "request-1",
+  source: "user",
+};
+
+function deps() {
+  let serial = 0;
+  return {
+    now: () => "2026-07-23T12:00:00.000Z",
+    nextId: (prefix: string) => `${prefix}-${++serial}`,
+  };
+}
+
+describe("T-482 手动逐字稿持久队列", () => {
+  it("只有用户排队的 item 会调用 ASR，并把正文写回 item transcript", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const intelligence = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await intelligence.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/123",
+        externalId: "123",
+        title: "视频 123",
+      });
+      const queued = await intelligence.enqueueTranscripts(ctx, {
+        itemIds: [itemId],
+        idempotencyKey: "manual-1",
+      });
+      const task = queued.tasks[0]!;
+      await runIntelligenceTranscriptTask(
+        ctx,
+        { taskId: task.id },
+        {
+          tasks,
+          intelligence,
+          workerId: () => "transcript-worker",
+          transcript: {
+            transcribe: async () => ({
+              text: "这是用户手动请求后取得的逐字稿。",
+              provider: "openai",
+              model: "whisper-1",
+              language: "zh",
+            }),
+          },
+        },
+      );
+      const detail = await intelligence.getItem(ctx, itemId);
+      expect(detail.transcript).toMatchObject({
+        status: "done",
+        text: "这是用户手动请求后取得的逐字稿。",
+        source: "manual",
+        provider: "openai",
+      });
+      expect((await tasks.get(ctx, task.id)).status).toBe("succeeded");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("ASR 未配置时任务与逐字稿都进入 blocked，不伪装为成功空文本", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const intelligence = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await intelligence.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/456",
+        externalId: "456",
+        title: "视频 456",
+      });
+      const queued = await intelligence.enqueueTranscripts(ctx, {
+        itemIds: [itemId],
+        idempotencyKey: "manual-2",
+      });
+      const task = queued.tasks[0]!;
+      await runIntelligenceTranscriptTask(
+        ctx,
+        { taskId: task.id },
+        {
+          tasks,
+          intelligence,
+          workerId: () => "transcript-worker",
+          transcript: {
+            transcribe: async () => {
+              throw Object.assign(new Error("ASR 未配置"), {
+                name: "TranscribeConfigError",
+              });
+            },
+          },
+        },
+      );
+      expect((await intelligence.getItem(ctx, itemId)).transcript).toMatchObject(
+        {
+          status: "blocked",
+          text: null,
+          errorCode: "MODEL_NOT_CONFIGURED",
+        },
+      );
+      expect(await tasks.get(ctx, task.id)).toMatchObject({
+        status: "blocked",
+      });
+    } finally {
+      await client.close();
+    }
+  });
+});

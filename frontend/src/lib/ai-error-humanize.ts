@@ -15,8 +15,20 @@
 
 import type { ArtifactType } from "@/types/domain";
 
+/** 稳定错误分类：渲染层可依赖 code 决定动作，不必反向解析人话文案。 */
+export type AiErrorCode =
+  | "model_not_found"
+  | "provider_invalid"
+  | "provider_auth"
+  | "content_safety_input"
+  | "content_safety_output"
+  | "rate_limited"
+  | "quota_exhausted";
+
 /** 翻译结果:人话 message + 是否建议「去设置换模型」(渲染层据此挂设置深链)。 */
 export interface HumanAiError {
+  /** 机器稳定分类；message 可改文案，消费方不应据文案猜错误类型。 */
+  code: AiErrorCode;
   /** 给人看的错误说明(含建议动作)。 */
   message: string;
   /** true = 建议用户换模型(渲染层附「去设置」链接;不做自动切换 —— 确认门原则)。 */
@@ -35,9 +47,40 @@ interface AiErrorRule {
  */
 export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
   {
+    // DeepSeek/OpenAI 等模型名无效：必须先于通用 404/not-found 分类。
+    pattern:
+      /\bmodel_not_found\b|\binvalid_model\b|\bunknown_model\b|\b(?:invalid|unknown)[\s_-]+model\b|\bmodel(?:[\s_-]*name)?\b[\s\S]{0,100}?\b(?:not[\s_-]*(?:found|exist(?:s)?)|does[\s_-]+not[\s_-]+exist|invalid|unknown)\b/i,
+    human: {
+      code: "model_not_found",
+      message: "模型名无效或不存在,请在设置里检查模型名称。",
+      suggestSwitchModel: true,
+    },
+  },
+  {
+    // provider 配置不存在/不受支持；与具体 model 名错误分开，方便设置页定位。
+    pattern:
+      /\b(?:invalid|unknown|unsupported)[\s_-]+provider\b|\b(?:invalid|unknown|unsupported)_provider\b|\bprovider(?:[\s_-]*name)?\b[\s\S]{0,80}?\b(?:not[\s_-]*found|does[\s_-]+not[\s_-]+exist|unknown|unsupported|unavailable)\b/i,
+    human: {
+      code: "provider_invalid",
+      message: "模型服务商配置无效或不可用,请在设置里检查服务商和接口地址。",
+      suggestSwitchModel: true,
+    },
+  },
+  {
+    // 模型服务商鉴权失败；不匹配裸 401/403，避免把 CreatorOS 登录失效误报成 API Key。
+    pattern:
+      /\binvalid_api_key\b|\bauthentication_error\b|\bincorrect[\s_-]+api[\s_-]+key\b|\bapi[\s_-]+key\b[\s\S]{0,60}?\b(?:invalid|incorrect|expired|revoked)\b|\b(?:invalid|expired|revoked)\b[\s\S]{0,40}?\bapi[\s_-]+key\b/i,
+    human: {
+      code: "provider_auth",
+      message: "模型服务商的 API Key 无效、已过期或无权限,请在设置里检查密钥。",
+      suggestSwitchModel: true,
+    },
+  },
+  {
     // 输入被内容安全审核拦截(实录主案例):new_sensitive / 1026。
     pattern: /new_sensitive|input[\s_-]*sensitive|\(1026\)|\b1026\b/i,
     human: {
+      code: "content_safety_input",
       message:
         "内容触发了模型方(MiniMax)的内容安全审核,已重试仍被拦。建议:在设置里换一个模型再试,或删去疑似敏感段落后重试。",
       suggestSwitchModel: true,
@@ -47,15 +90,17 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     // 输出被内容安全审核拦截:1027 / output sensitive。
     pattern: /output[\s_-]*sensitive|\(1027\)|\b1027\b/i,
     human: {
+      code: "content_safety_output",
       message:
         "模型生成的内容触发了模型方(MiniMax)的内容安全审核,结果被拦截。建议:在设置里换一个模型再试,或调整措辞后重试。",
       suggestSwitchModel: true,
     },
   },
   {
-    // 限流:1002/1039 / rate limit。
-    pattern: /rate[\s_-]*limit|\(1002\)|\(1039\)|too many requests|\b429\b/i,
+    // 模型方限流:1002/1039 / rate_limit；裸 HTTP 429 交给通用规则，不能猜来源。
+    pattern: /rate[\s_-]*limit|\(1002\)|\(1039\)/i,
     human: {
+      code: "rate_limited",
       message: "模型方限流了(请求太频繁)。稍等几十秒再试;频繁出现可在设置里换一个模型。",
       suggestSwitchModel: false,
     },
@@ -64,6 +109,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     // 余额/配额不足:1008 / insufficient balance|quota。
     pattern: /insufficient[\s_-]*(balance|quota)|\(1008\)|\b1008\b/i,
     human: {
+      code: "quota_exhausted",
       message: "模型方账户余额/配额不足,请求被拒。去模型方平台充值,或在设置里换一个模型。",
       suggestSwitchModel: true,
     },
@@ -130,8 +176,10 @@ const STRUCTURED_ERROR_RULES: readonly {
     message: "登录状态已失效或没有权限,请重新登录后再试。",
   },
   {
-    // 资源不存在:404 / not found(并发下已被删等)。
-    pattern: /\b404\b|not[\s_-]*found/i,
+    // 资源不存在：保留明确 404 与领域资源 not-found，但排除 AI API/model/provider 上下文。
+    // 后者信息不足时宁可走调用方 fallback，也不能谎称“内容被删除”。
+    pattern:
+      /^(?![\s\S]*(?:AI_APICallError|api[\s_-]*(?:endpoint|route)|\/v\d+\/|\/chat\/completions|\bmodel\b|\bprovider\b))[\s\S]*(?:\b404\b|(?:resource|record|item|project|asset|artifact|content)[\s_-]*(?:was[\s_-]*)?not[\s_-]*found)/i,
     message: "要操作的内容已不存在,可能已被移除或删除。",
   },
   {
@@ -171,7 +219,6 @@ export function describeUserError(
     typeof process !== "undefined" &&
     process.env?.NODE_ENV !== "production"
   ) {
-    // eslint-disable-next-line no-console
     console.error("[describeUserError]", err);
   }
 

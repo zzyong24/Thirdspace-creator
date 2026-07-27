@@ -43,6 +43,11 @@ interface GeneratedCandidate {
   // [T-271] 封面链候选带结构化封面方案(通用 material.generate 无此字段 → null)。
   coverPlan: CoverPlan | null;
   ungroundedCount: number;
+  referenceImage: {
+    requestedAssetId: string | null;
+    status: "used" | "not_used" | "not_requested";
+    used: boolean;
+  } | null;
 }
 
 // [T-271] resultData.coverPlan → 收窄(封面链 recordCandidate 写的封面方案;非封面候选返回 null）。
@@ -77,7 +82,33 @@ function parseGenerated(
   const ungroundedCount = Array.isArray(resultData.ungroundedClaims)
     ? resultData.ungroundedClaims.length
     : 0;
-  return { assetId, assetType, name, coverPlan, ungroundedCount };
+  const rawReference =
+    resultData.referenceImage &&
+    typeof resultData.referenceImage === "object"
+      ? (resultData.referenceImage as Record<string, unknown>)
+      : null;
+  const referenceImage =
+    rawReference &&
+    ["used", "not_used", "not_requested"].includes(
+      String(rawReference.status),
+    )
+      ? {
+          requestedAssetId:
+            typeof rawReference.requestedAssetId === "string"
+              ? rawReference.requestedAssetId
+              : null,
+          status: rawReference.status as "used" | "not_used" | "not_requested",
+          used: rawReference.used === true,
+        }
+      : null;
+  return {
+    assetId,
+    assetType,
+    name,
+    coverPlan,
+    ungroundedCount,
+    referenceImage,
+  };
 }
 
 export function ChatGenerateCard({
@@ -260,6 +291,25 @@ export function ChatGenerateCard({
           {candidate.coverPlan.composition ? (
             <div className="text-[11px] text-text-subtle">
               构图：{candidate.coverPlan.composition}
+            </div>
+          ) : null}
+          {candidate.referenceImage?.status === "used" ? (
+            <div
+              data-slot="chat-cover-reference"
+              className="text-[11px] text-foreground/80"
+            >
+              参考图：已送给生图适配器
+              {candidate.referenceImage.requestedAssetId
+                ? `（${candidate.referenceImage.requestedAssetId}）`
+                : ""}
+              ，不代表模型一定采纳其风格
+            </div>
+          ) : candidate.referenceImage?.status === "not_used" ? (
+            <div
+              data-slot="chat-cover-reference"
+              className="text-[11px] text-warning"
+            >
+              参考图：读取失败或不可用，本次未送给生图适配器
             </div>
           ) : null}
           {candidate.ungroundedCount > 0 ? (

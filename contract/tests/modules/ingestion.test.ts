@@ -44,6 +44,10 @@ describe("ingestion contract", () => {
     expect(ingestionOperations.createRun.method).toBe("POST");
     expect(ingestionOperations.createRun.path).toBe("/ingestion/runs");
     expect(ingestionOperations.createRun.fr.length).toBeGreaterThan(0);
+    expect("pushMetrics" in ingestionOperations).toBe(false);
+    expect("pushKnowledge" in ingestionOperations).toBe(false);
+    expect("pushAssets" in ingestionOperations).toBe(false);
+    expect("pushArtifacts" in ingestionOperations).toBe(false);
   });
 
   // T-038c 采集限流可观测:只读 GET op + channel 快照 resource。
@@ -55,6 +59,26 @@ describe("ingestion contract", () => {
     // 只读探针:无请求 body(照 statusDouyin)。
     expect(op.body).toBeUndefined();
     expect(op.fr.length).toBeGreaterThan(0);
+  });
+
+  it("[T-546] 抖音登录兼容旧空 body，并只接受受控的热点宝授权目标", () => {
+    const body = ingestionOperations.loginDouyin.body;
+    expect(body?.parse(undefined)).toBeUndefined();
+    expect(
+      body?.parse({
+        accountId: "account-1",
+        site: "douhot.douyin.com",
+      }),
+    ).toEqual({
+      accountId: "account-1",
+      site: "douhot.douyin.com",
+    });
+    expect(() =>
+      body?.parse({
+        accountId: "account-1",
+        site: "untrusted.example.com",
+      }),
+    ).toThrow();
   });
 
   it("parses a douyin throttle-status snapshot (cooldown active)", () => {

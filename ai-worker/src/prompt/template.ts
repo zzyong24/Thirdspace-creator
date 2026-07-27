@@ -16,6 +16,11 @@
  */
 
 import type { z } from "zod";
+import type {
+  CompletionPolicyAdapterRef,
+  CompletionPolicyV1,
+  EditableSkillField,
+} from "./effective-skill-types";
 
 /**
  * 一个 AI 能力的提示词模板(= 一份可版本化的 skill,三位一体)。纯数据,可被外部源覆盖。
@@ -67,6 +72,14 @@ export interface PromptTemplate {
    * 配置口子:override 通道接受 JSON Schema 形式下发,运行时转回校验器套用(SPEC §4.3)。
    */
   outputSchema?: z.ZodType;
+  /** T-513 official base metadata：合法的 required/optional facet allowlist。 */
+  availableFacets?: readonly string[];
+  /** T-513：账号增量允许编辑的字段；未声明时 official provider 使用六字段默认集。 */
+  editableFields?: readonly EditableSkillField[];
+  /** T-513 策略载体；具体 script.draft 默认值由 T-512 提供。 */
+  completionPolicy?: CompletionPolicyV1 | null;
+  /** official-only append-only adapter 引用，账号 overlay 不得覆盖。 */
+  completionPolicyAdapter?: CompletionPolicyAdapterRef | null;
 }
 
 /** 绑定后的最终提示词。 */

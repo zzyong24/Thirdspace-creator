@@ -292,6 +292,12 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     );
     expect(stepTexts.some((t) => t.includes("参考封面"))).toBe(true);
     expect(made.recordCandidate).toHaveBeenCalledTimes(1);
+    const candidate = made.recordCandidate.mock.calls[0]![2];
+    expect(candidate.resultData.referenceImage).toEqual({
+      requestedAssetId: "asset-ref-1",
+      status: "used",
+      used: true,
+    });
   });
 
   it("referenceAssetId 读不到(null)→ 诚实降级纯文生图 + 步骤注记「未使用参考图」,不失败", async () => {
@@ -316,6 +322,12 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     // 降级不阻断:候选照记,任务不 cancel。
     expect(made.recordCandidate).toHaveBeenCalledTimes(1);
     expect(made.cancelTask).not.toHaveBeenCalled();
+    const candidate = made.recordCandidate.mock.calls[0]![2];
+    expect(candidate.resultData.referenceImage).toEqual({
+      requestedAssetId: "asset-gone",
+      status: "not_used",
+      used: false,
+    });
   });
 
   it("无 referenceAssetId → 不读端口、generateImage 不带 referenceImage(零回归)", async () => {

@@ -17,6 +17,7 @@
  */
 
 import { client } from "@/lib/contract-client";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { classifyFile } from "./classify-asset";
 import { assignTagsBestEffort } from "./ammo-dump-zone";
 
@@ -68,7 +69,11 @@ export async function uploadFileToProject(
     .createAITask({
       params: undefined,
       query: undefined,
-      body: { taskType: "asset.classify", inputData: { assetId: asset.id } },
+      body: {
+        taskType: "asset.classify",
+        attemptId: createAiTaskAttemptId(),
+        inputData: { assetId: asset.id },
+      },
     })
     .catch(() => undefined);
   // [T-146] document 上传完成 → fire-and-forget 文档抽取(抽全文 + AI 要点卡)。
@@ -80,6 +85,7 @@ export async function uploadFileToProject(
         query: undefined,
         body: {
           taskType: "material.extract",
+          attemptId: createAiTaskAttemptId(),
           inputData: { assetId: asset.id, fileName: file.name },
         },
       })

@@ -39,7 +39,7 @@ const EMPTY_CATEGORIES = { hooks: [], cases: [], dataPoints: [], quotes: [] };
 
 function makeDeps(
   items: MaterialItemLike[],
-  apiFormat: "anthropic" | "openai_chat" = "anthropic",
+  apiFormat: "anthropic" | "openai_chat" | "openai_responses" = "anthropic",
 ) {
   runResearchNode.mockResolvedValue({
     items,
@@ -142,6 +142,11 @@ describe("runGatherMaterial (Vercel SDK + 结构化四类候选)", () => {
     );
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledTimes(1);
+    expect(cancelTask).toHaveBeenCalledWith(
+      ctx,
+      "t3",
+      "research-runner: agent returned no parseable materials",
+    );
   });
 });
 

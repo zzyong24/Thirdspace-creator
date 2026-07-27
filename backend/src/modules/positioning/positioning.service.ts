@@ -1,5 +1,6 @@
-import type { RequestContext } from "@creatoros/contract";
+import { createHash } from "node:crypto";
 import { requireAccountId, type Db } from "@creatoros/backend";
+import type { RequestContext } from "@creatoros/contract";
 import {
   createPositioningRepository,
   type PositioningRepository,
@@ -52,6 +53,23 @@ export interface ServiceDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   projects: PositioningProjectsPort;
+  auditLegacyStatusNoteCleanup?: (
+    event: LegacyStatusNoteCleanupAudit,
+  ) => Promise<void> | void;
+}
+
+export interface LegacyStatusNoteCleanupAudit {
+  operation: "positioning.legacy_status_note.cleaned";
+  userId: string;
+  accountId: string;
+  profileId: string;
+  previousValueHash: string;
+  occurredAt: string;
+}
+
+export interface LegacyStatusNoteCleanupResult {
+  outcome: "cleared" | "already_clean" | "not_dynamic" | "changed_concurrently";
+  previousValueHash: string | null;
 }
 
 // Partial facets / rules accepted from callers (the transport passes the contract
@@ -131,6 +149,9 @@ export interface PositioningService {
   getProfile(
     ctx: RequestContext,
   ): Promise<CreatorProfileResource | null>;
+  cleanupLegacyDynamicStatusNote(
+    ctx: RequestContext,
+  ): Promise<LegacyStatusNoteCleanupResult>;
   // PositioningGate (value object) — advisory 0–100 fit, deterministic (C-5).
   evaluateGate(
     ctx: RequestContext,
@@ -146,6 +167,68 @@ export function createPositioningService(
   deps: ServiceDeps,
 ): PositioningService {
   const { db, now, nextId, projects } = deps;
+
+  function isLegacyDynamicStatusNote(value: string): boolean {
+    const normalized = value.trim();
+    if (!normalized) return false;
+    const hasCount =
+      /(?:\d+|[零〇一二三四五六七八九十百千万两]+)\s*(?:条|篇|个|则|份)/u.test(
+        normalized,
+      ) ||
+      /(?:\d+|[零〇一二三四五六七八九十百千万两]+)\s*(?:review|稿(?:子|件)?|作品|视频)/iu.test(
+        normalized,
+      );
+    // 这是一次会清空用户字段的存量修复，判据必须极窄：只有明确包含“待审核 /
+    // review / 未发布”等旧故障措辞才允许改写。不能仅凭“4 条视频 + 发布”清掉
+    // “每月发布 4 条视频”这类用户主动写下的规划。
+    const hasDynamicWorkState =
+      /(?:review|待审核|审核中|待发布|未发布|未发|没(?:有)?发|压在)/iu.test(
+        normalized,
+      );
+    return hasCount && hasDynamicWorkState;
+  }
+
+  async function cleanupLegacyDynamicStatusNote(
+    ctx: RequestContext,
+  ): Promise<LegacyStatusNoteCleanupResult> {
+    const accountId = requireAccountId(
+      ctx.accountId,
+      "positioning.cleanupLegacyDynamicStatusNote",
+    );
+    const repo = repoFor(ctx, "positioning.cleanupLegacyDynamicStatusNote");
+    const profile = await repo.getProfile();
+    if (!profile) {
+      return { outcome: "already_clean", previousValueHash: null };
+    }
+    const facets = profile.facets as Record<string, unknown> | undefined;
+    const statusNote =
+      typeof facets?.statusNote === "string"
+        ? facets.statusNote.trim()
+        : "";
+    if (!statusNote) {
+      return { outcome: "already_clean", previousValueHash: null };
+    }
+    if (!isLegacyDynamicStatusNote(statusNote)) {
+      return { outcome: "not_dynamic", previousValueHash: null };
+    }
+
+    const previousValueHash = createHash("sha256")
+      .update(statusNote)
+      .digest("hex");
+    const cleared = await repo.clearStatusNoteIfMatches(profile.id, statusNote);
+    if (!cleared) {
+      return { outcome: "changed_concurrently", previousValueHash };
+    }
+    await deps.auditLegacyStatusNoteCleanup?.({
+      operation: "positioning.legacy_status_note.cleaned",
+      userId: ctx.userId,
+      accountId,
+      profileId: profile.id,
+      previousValueHash,
+      occurredAt: now(),
+    });
+    return { outcome: "cleared", previousValueHash };
+  }
 
   // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
   // (引导态禁读写),有号则 strict 收窄到该号(每号一套定位母版)。getPositioningCenter /
@@ -313,6 +396,8 @@ export function createPositioningService(
       return row ? toCreatorProfileDto(row) : null;
     },
 
+    cleanupLegacyDynamicStatusNote,
+
     async evaluateGate(ctx, input) {
       const repo = repoFor(ctx, "positioning.evaluateGate");
 
@@ -366,6 +451,9 @@ export function createPositioningService(
     },
 
     async getPositioningCenter(ctx) {
+      // T-521：任何会进入 AI 上下文的定位中心读取前，先经账号隔离服务清理已证伪的
+      // 动态计数。清理是 CAS + 幂等；非动态说明不改写，也不会用新静态计数覆盖旧值。
+      await cleanupLegacyDynamicStatusNote(ctx);
       const repo = repoFor(ctx, "positioning.getPositioningCenter");
       const profileRow = await repo.getProfile();
       if (!profileRow) {

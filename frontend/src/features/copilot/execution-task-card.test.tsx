@@ -82,10 +82,16 @@ describe("ExecutionTaskCard", () => {
   });
 
   it("采纳 → confirmExecutionTask → 已采纳态", async () => {
+    const onTaskUpdate = vi.fn();
     confirmExecutionTask.mockResolvedValue(
       makeTask({ status: "succeeded", adoptedAssetIds: ["a1", "a2"] }),
     );
-    render(<ExecutionTaskCard taskId="task-1" />);
+    render(
+      <ExecutionTaskCard
+        taskId="task-1"
+        onTaskUpdate={onTaskUpdate}
+      />,
+    );
     await waitFor(() =>
       expect(screen.getByText("采纳进素材库")).toBeInTheDocument(),
     );
@@ -98,6 +104,13 @@ describe("ExecutionTaskCard", () => {
     expect(
       screen.getByText(/已把 2 个成果收进素材库/),
     ).toBeInTheDocument();
+    expect(onTaskUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "task-1",
+        status: "succeeded",
+        adoptedAssetIds: ["a1", "a2"],
+      }),
+    );
   });
 
   it("丢弃 → discardExecutionTask → 已丢弃态", async () => {
@@ -111,10 +124,17 @@ describe("ExecutionTaskCard", () => {
   });
 
   it("重试:带修改意见重建任务(retryFeedback + retryOf 进 params)", async () => {
+    const onTaskIdChange = vi.fn();
     createExecutionTask.mockResolvedValue(
       makeTask({ id: "task-2", status: "queued", manifest: null }),
     );
-    render(<ExecutionTaskCard taskId="task-1" />);
+    render(
+      <ExecutionTaskCard
+        taskId="task-1"
+        projectId="project-1"
+        onTaskIdChange={onTaskIdChange}
+      />,
+    );
     await waitFor(() => expect(screen.getByText("重试")).toBeInTheDocument());
     await userEvent.click(screen.getByText("重试"));
     await userEvent.type(
@@ -128,6 +148,8 @@ describe("ExecutionTaskCard", () => {
     };
     expect(body.body.spec.params.retryFeedback).toBe("字幕太小");
     expect(body.body.spec.params.retryOf).toBe("task-1");
+    expect(body.body).toMatchObject({ projectId: "project-1" });
+    expect(onTaskIdChange).toHaveBeenCalledWith("task-2");
   });
 
   it("失败态渲人话提示(不泄露原始 errorMessage)", async () => {

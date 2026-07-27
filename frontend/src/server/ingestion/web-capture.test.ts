@@ -197,6 +197,22 @@ describe("detectLoginWall — 启发式纯函数", () => {
       detectLoginWall("https://x.com/a", "<body>请完成验证码后继续</body>"),
     ).toBe(true);
   });
+  it("[T-488] 隐藏登录弹窗里的“扫码登录”不应覆盖已登录页的可见正文", () => {
+    const html = `
+      <html><body>
+        <main><h1>真实视频标题</h1><p>这是已登录后可见的作品正文。</p></main>
+        <div aria-hidden="true"><button>扫码登录</button></div>
+        <section hidden>请先登录</section>
+        <aside style="display: none">登录后查看</aside>
+      </body></html>
+    `;
+    expect(
+      detectLoginWall(
+        "https://www.douyin.com/video/7300000000000000000",
+        html,
+      ),
+    ).toBe(false);
+  });
 });
 
 // ── [T-239c S2] 长工具可中断:signal 提前退出(不空烧浏览器)────────────────────────

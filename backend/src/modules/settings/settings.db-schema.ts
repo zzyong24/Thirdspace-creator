@@ -12,9 +12,13 @@ export {
   storageConfigs,
   skillConfigOverrides,
   skillConfigOverrideVersions,
+  accountSkillOverlays,
+  accountSkillOverlayVersions,
   SETTINGS_DDL,
 } from "@creatoros/backend";
 export type {
   SkillConfigOverrideRow,
   SkillConfigOverrideVersionRow,
+  AccountSkillOverlayRow,
+  AccountSkillOverlayVersionRow,
 } from "@creatoros/backend";

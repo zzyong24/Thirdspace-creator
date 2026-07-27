@@ -1,6 +1,10 @@
 import type { LanguageModel } from "ai";
 import { runAgentNode, type AgentStepEvent } from "../runtime/agent-runtime";
 import { bindPrompt, type PromptTemplate } from "../prompt/template";
+import {
+  getEffectiveTemplate,
+  hasActiveEffectiveSkillSnapshot,
+} from "../prompt/effective-skill-runtime";
 
 // 通用模板节点(脊柱-1)—— 任何"装配上下文 → 跑一次 agent → 拿最终文本"的纯生成 runner 共用一条路。
 // 不内联任何 prompt:模板(skill)外置在 prompt/templates/,facets 由调用方(各 frontend runner)按
@@ -34,7 +38,13 @@ export interface RunTemplatedNodeResult {
 export async function runTemplatedNode(
   input: RunTemplatedNodeInput,
 ): Promise<RunTemplatedNodeResult> {
-  const { system, prompt } = bindPrompt(input.template, input.facets);
+  // T-513:active account snapshot 存在时，只信 snapshot 内同 id 的 method/template/
+  // requiredFacets；调用方传入的 registry 对象仅用于提供受控 skill id。这样纯文本节点与
+  // structured-node 具有相同的账号隔离语义，不会重新读进程级可变覆盖。
+  const template = hasActiveEffectiveSkillSnapshot()
+    ? getEffectiveTemplate(input.template.id)
+    : input.template;
+  const { system, prompt } = bindPrompt(template, input.facets);
   const res = await runAgentNode({
     model: input.model,
     system,

@@ -54,18 +54,18 @@ describe("settings.repository (schema slice — round-trips)", () => {
     expect(agent.status).toBe("active");
   });
 
-  it("putModel persists baseUrl + apiFormat and getModel reads them back", async () => {
+  it("putModel persists Responses baseUrl + apiFormat and getModel reads them back", async () => {
     const repo = createSettingsRepository(db, DEPS);
     await repo.putModel(ctxA, "planning.thesis", {
-      provider: "minimax",
-      modelName: "MiniMax-M3",
-      baseUrl: "https://api.minimaxi.com/anthropic",
-      apiFormat: "anthropic",
-      secretReference: "env:MINIMAX_AUTH_TOKEN",
+      provider: "new-api",
+      modelName: "gpt-5",
+      baseUrl: "https://new-api.example.com/v1",
+      apiFormat: "openai_responses",
+      secretReference: "env:NEW_API_TOKEN",
     });
     const row = await repo.getModel(ctxA, "planning.thesis");
-    expect(row?.baseUrl).toBe("https://api.minimaxi.com/anthropic");
-    expect(row?.apiFormat).toBe("anthropic");
+    expect(row?.baseUrl).toBe("https://new-api.example.com/v1");
+    expect(row?.apiFormat).toBe("openai_responses");
   });
 
   it("putModel defaults apiFormat to 'anthropic' and baseUrl to null when omitted", async () => {

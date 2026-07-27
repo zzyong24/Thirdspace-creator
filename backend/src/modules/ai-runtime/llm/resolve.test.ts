@@ -48,6 +48,27 @@ describe("resolveLlmConfig — tier 1 DB row", () => {
     expect(cfg.authStyle).toBe("bearer");
   });
 
+  it("preserves openai_responses from the saved New API model row", async () => {
+    const cfg = await resolveLlmConfig(ctx, "default", {
+      getModelConfig: async () => ({
+        provider: "new-api",
+        modelName: "gpt-5",
+        baseUrl: "https://new-api.example.com/v1",
+        apiFormat: "openai_responses",
+        secretReference: "",
+        secretValue: "sk-relay",
+        settings: {},
+      }),
+      env: {},
+    });
+    expect(cfg).toMatchObject({
+      apiFormat: "openai_responses",
+      baseUrl: "https://new-api.example.com/v1",
+      model: "gpt-5",
+      authStyle: "bearer",
+    });
+  });
+
   it("falls back to the 'default' capability row when the exact one is missing", async () => {
     const cfg = await resolveLlmConfig(ctx, "script.draft", {
       getModelConfig: async (_c, cap) =>

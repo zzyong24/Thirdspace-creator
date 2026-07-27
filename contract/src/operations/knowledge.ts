@@ -5,6 +5,7 @@ import {
   knowledgeItemResource,
   knowledgeRevisionResource,
   knowledgeRelationResource,
+  knowledgeFolderResource,
 } from "../resources/knowledge";
 
 const knowledgeParams = z.object({ knowledgeId: id });
@@ -50,7 +51,37 @@ export const knowledgeOperations = {
       // 均可选,缺省行为与旧契约完全一致(manual + {})——gate-F3 零删除。
       sourceType: z.enum(["manual", "web", "import", "ai"]).optional(),
       sourceMetadata: z.record(z.string(), z.unknown()).optional(),
+      folderId: id.nullable().optional(),
+      assetId: id.nullable().optional(),
     }),
+    response: knowledgeItemResource,
+    fr: ["FR-KNOWLEDGE-CREATE"],
+  }),
+  listKnowledgeFolders: defineEndpoint({
+    id: "knowledge.folders.list",
+    method: "GET",
+    path: "/knowledge-folders",
+    response: knowledgeFolderResource,
+    isList: true,
+    fr: ["FR-KNOWLEDGE-LIST"],
+  }),
+  createKnowledgeFolder: defineEndpoint({
+    id: "knowledge.folders.create",
+    method: "POST",
+    path: "/knowledge-folders",
+    body: z.object({
+      name: z.string().trim().min(1).max(120),
+      parentId: id.nullable().optional(),
+    }),
+    response: knowledgeFolderResource,
+    fr: ["FR-KNOWLEDGE-CREATE"],
+  }),
+  moveKnowledge: defineEndpoint({
+    id: "knowledge.move",
+    method: "POST",
+    path: "/knowledge/:knowledgeId/move",
+    params: knowledgeParams,
+    body: z.object({ folderId: id.nullable() }),
     response: knowledgeItemResource,
     fr: ["FR-KNOWLEDGE-CREATE"],
   }),

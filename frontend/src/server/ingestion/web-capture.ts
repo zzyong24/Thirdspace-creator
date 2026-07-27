@@ -51,10 +51,13 @@ export function makeAbortError(what: string): Error {
  *  (登录态重试 / 搜索引擎找替代来源),不再靠解析 message 文本;非 HTTP 类失败为 null。 */
 export class WebCaptureError extends Error {
   readonly status: number | null;
-  constructor(message: string, opts?: { status?: number }) {
+  /** 可安全写日志/落运行记录的稳定分类；绝不包含 URL、Cookie 或上游响应正文。 */
+  readonly code: string | null;
+  constructor(message: string, opts?: { status?: number; code?: string }) {
     super(message);
     this.name = "WebCaptureError";
     this.status = opts?.status ?? null;
+    this.code = opts?.code ?? null;
   }
 }
 
@@ -187,7 +190,13 @@ const WALL_CONTENT_HINTS = [
 //   写在内联脚本里,让 "captcha" 误命中 → 明明登录了却报"需要登录"(用户实测:ChatGPT 能读、GitHub 不行,
 //   正因 GitHub 页含 octocaptcha 而 ChatGPT 不含)。真验证码页的可见文案(验证码 / verify you are human)照样命中。
 function visibleText(html: string): string {
-  return html
+  // `page.content()` 会包含 CSS/HTML 隐藏的登录弹窗。先去掉常见显式隐藏容器，
+  // 否则已登录页面仍可能因 DOM 中残留“扫码登录”而被误判成登录墙（T-488）。
+  const withoutHiddenContainers = html.replace(
+    /<([a-z][\w:-]*)\b(?=[^>]*(?:\shidden(?:\s|=|>)|\saria-hidden\s*=\s*["']?true["']?|\sstyle\s*=\s*["'][^"']*(?:display\s*:\s*none|visibility\s*:\s*hidden)[^"']*["']))[^>]*>[\s\S]*?<\/\1\s*>/gi,
+    " ",
+  );
+  return withoutHiddenContainers
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
     .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")

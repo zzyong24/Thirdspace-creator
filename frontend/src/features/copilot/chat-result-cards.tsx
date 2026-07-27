@@ -17,6 +17,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
 type AdoptState = "idle" | "adopting" | "adopted" | "error";
 
@@ -101,6 +102,7 @@ export function ChatDiagnosisCard({
           query: undefined,
           body: {
             taskType: "calibration.diagnose",
+            attemptId: createAiTaskAttemptId(),
             inputData: { subjectType: "content_output", subjectId },
           },
         })) as { id: string };

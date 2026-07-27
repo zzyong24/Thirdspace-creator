@@ -9,10 +9,13 @@ import type { EmbeddingModel, LanguageModel } from "ai";
 //
 // 协议族(apiFormat)而非厂商名做开关:加一个 OpenAI 兼容端点 = 配 baseUrl,不改代码。
 //   - anthropic  → @ai-sdk/anthropic(官方端点或 relay baseURL)
-//   - openai_chat + baseUrl → @ai-sdk/openai-compatible(DeepSeek / MiniMax / 任意 OpenAI 兼容)
-//   - openai_chat 无 baseUrl → @ai-sdk/openai(官方 OpenAI)
+//   - openai_chat → 显式 Chat Completions(不依赖 provider 默认 callable,防 SDK 升级漂移)
+//   - openai_responses → @ai-sdk/openai Responses(官方或 New API/relay 自定义 baseURL)
 
-export type ApiFormat = "anthropic" | "openai_chat";
+export type ApiFormat =
+  | "anthropic"
+  | "openai_chat"
+  | "openai_responses";
 
 /** 一次运行需要的最小模型规格(由上层 resolveLlmConfig 按 capability 解析后投影)。 */
 export interface ModelSpec {
@@ -47,24 +50,33 @@ export function modelFor(spec: ModelSpec): LanguageModel {
     });
     return provider(spec.model);
   }
-  // openai_chat:自定义 baseURL → openai-compatible(覆盖 DeepSeek/MiniMax/relay);
-  // 无 baseURL → 官方 OpenAI。
+  if (spec.apiFormat === "openai_responses") {
+    const provider = createOpenAI({
+      apiKey: spec.token,
+      ...(spec.baseUrl
+        ? { baseURL: spec.baseUrl, name: "creatoros-custom" }
+        : {}),
+    });
+    return provider.responses(spec.model);
+  }
+  // openai_chat:两条路径都显式选 Chat,不能再用 createOpenAI()(model)——
+  // @ai-sdk/openai 4 的默认 callable 已是 Responses,会让同一配置因 baseUrl 有无而分叉。
   if (spec.baseUrl) {
     const provider = createOpenAICompatible({
       name: "creatoros-custom",
       apiKey: spec.token,
       baseURL: spec.baseUrl,
     });
-    return provider(spec.model);
+    return provider.chatModel(spec.model);
   }
   const provider = createOpenAI({ apiKey: spec.token });
-  return provider(spec.model);
+  return provider.chat(spec.model);
 }
 
 /**
  * [T-093] 把 ModelSpec 解析成一个 AI SDK EmbeddingModel(与文本 `modelFor` 并列,
  * 供 `embed`/`embedMany` 直用)。协议族开关同 modelFor:
- *   - openai_chat + baseUrl → openai-compatible 的 textEmbeddingModel(SiliconFlow/
+ *   - openai_chat/openai_responses + baseUrl → openai-compatible 的 textEmbeddingModel(SiliconFlow/
  *     DeepSeek/任意 OpenAI 兼容 embedding 端点);
  *   - openai_chat 无 baseUrl → 官方 OpenAI textEmbeddingModel;
  *   - anthropic → 诚实抛错(Anthropic Messages 协议不提供 embedding 端点;调用方

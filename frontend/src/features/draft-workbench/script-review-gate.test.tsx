@@ -93,7 +93,9 @@ const passReport: ScriptReviewReportResource = {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
 });
 
 // [T-108] 测试探针 + Provider 包装:捕获 rail 收到的对话请求,并注册 mock flushSave(编辑器 flush
@@ -105,8 +107,8 @@ const flushSaveMock = vi.fn(async () => {
 });
 function ChatRequestProbe() {
   const { request, registerFlush } = useDraftChatRequest();
-  capturedRequest = request;
   React.useEffect(() => {
+    capturedRequest = request;
     if (request) callOrder.push("openChat");
   }, [request]);
   React.useEffect(() => {
@@ -342,6 +344,88 @@ describe("ReviewSoftGateHint(软门提示,不阻断)", () => {
     expect(screen.getByTestId("script-review-soft-gate").textContent).toContain(
       "脚本已改动",
     );
+  });
+
+  it("[T-539] 目标已在同屏时仍高亮审核卡与审核按钮，并把焦点交给审核按钮", () => {
+    vi.useFakeTimers();
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    renderWithProvider(
+      <>
+        <ScriptReviewGate
+          projectId="p1"
+          projectTitle="标题"
+          outputId="co-1"
+          currentVersion={2}
+          initialReport={null}
+        />
+        <ReviewSoftGateHint report={null} currentVersion={2} projectId="p1" />
+      </>,
+    );
+
+    fireEvent.click(screen.getByTestId("script-review-soft-gate-action"));
+
+    const gate = screen.getByTestId("script-review-gate");
+    const trigger = screen.getByTestId("script-review-trigger");
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "center",
+    });
+    expect(gate.getAttribute("data-attention")).toBe("true");
+    expect(trigger.getAttribute("data-attention")).toBe("true");
+    expect(document.activeElement).toBe(trigger);
+    expect(gate.className).toContain(
+      "data-[attention=true]:ring-brand/20",
+    );
+    expect(trigger.className).toContain(
+      "data-[attention=true]:bg-brand",
+    );
+
+    // 重复点击重启反馈时长，不能被第一次点击的旧 timer 提前清掉。
+    vi.advanceTimersByTime(1_000);
+    fireEvent.click(screen.getByTestId("script-review-soft-gate-action"));
+    vi.advanceTimersByTime(1_000);
+    expect(gate.getAttribute("data-attention")).toBe("true");
+    vi.advanceTimersByTime(600);
+    expect(gate.hasAttribute("data-attention")).toBe(false);
+    expect(trigger.hasAttribute("data-attention")).toBe(false);
+  });
+
+  it("[T-539] 用户设置减少动态效果时即时定位，但仍保留高亮反馈", () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true })),
+    );
+    renderWithProvider(
+      <>
+        <ScriptReviewGate
+          projectId="p1"
+          projectTitle="标题"
+          outputId="co-1"
+          currentVersion={2}
+          initialReport={null}
+        />
+        <ReviewSoftGateHint report={null} currentVersion={2} projectId="p1" />
+      </>,
+    );
+
+    fireEvent.click(screen.getByTestId("script-review-soft-gate-action"));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "auto",
+      block: "center",
+    });
+    expect(
+      screen.getByTestId("script-review-gate").getAttribute("data-attention"),
+    ).toBe("true");
   });
 });
 

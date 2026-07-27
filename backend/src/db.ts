@@ -39,6 +39,8 @@ import * as topicAttributionSchema from "./schema/topic-attribution";
 import * as activationSchema from "./schema/activation";
 // [T-370a] 浏览器登录态系统化(web 域 storageState 加密单一真值;抖音红线不进)。
 import * as browserSessionsSchema from "./schema/browser-sessions";
+// T-482 内容情报唯一真值 + 通用持久任务租约。
+import * as intelligenceSchema from "./schema/intelligence";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -89,6 +91,7 @@ const schema = {
   ...topicAttributionSchema,
   ...activationSchema,
   ...browserSessionsSchema,
+  ...intelligenceSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;

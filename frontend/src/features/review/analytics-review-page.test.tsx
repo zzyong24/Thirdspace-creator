@@ -291,6 +291,17 @@ describe("AnalyticsReviewPage", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
+  it("does not leave an AI-analysis overlay, item, empty state, or CTA behind", async () => {
+    const { container } = await renderWorkspace();
+    expect(container.querySelector('[data-slot="ai-analysis-card"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-item"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-empty"]')).toBeNull();
+    expect(container.querySelector('[data-slot="ai-analysis-cta"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="ai-analysis-overlay"]'),
+    ).toBeNull();
+  });
+
   it("provides a sr-only textual summary for every chart (a11y)", async () => {
     const { container } = await renderWorkspace();
     // [T-116b] 观众/留存图已移除;仅剩的真数据图仍须带 sr-only 摘要。

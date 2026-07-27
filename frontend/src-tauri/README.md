@@ -71,14 +71,19 @@ pnpm -C frontend desktop:package    # = node scripts/desktop/package.mjs
   = 壳经 stdin 写停机哨兵(`SIDECAR_SHUTDOWN_SENTINEL`,与 sidecar-lifecycle.ts 两侧单测钉住)
   → 等 5s → TerminateJobObject,与 macOS「SIGTERM → 5s → SIGKILL」同构。
 - **验证态**:macOS 上经 `cargo check --target x86_64-pc-windows-msvc` 静态验证 cfg(windows)
-  分支可编译;**未在 Windows 实机跑过**——真机四主链回归 + 0 孤儿断言归 W-ci/W-spike
-  (tar.exe symlink/junction 保真是 W-spike 第一验证项)。
+  分支可编译；后续 Windows 安装包、首次启动、核心链路和退出恢复已在 Windows 实机完成完整
+  验收（用户 2026-07-26 明确确认）。本段早期静态验证记录不再代表当前发布状态。
 
 ## 诚实边界(P1 未做,留后续子项)
 
+> 本节记录 P1 当时的历史边界。Windows 桌面版当前已经完成完整验收；下列条目不得再被引用为
+> “Windows 尚未验收”的现状判断。
+
 - **未签名 / 未公证**:codesign/notarize(mac)+ Authenticode(win)需**用户的证书**,本 P1 出**未签名** .app → 首次打开需右键「打开」绕 Gatekeeper。属 P6。
 - **`tauri build` 打 .app 的 symlink 待验点**:sidecar 内含 180 个 pnpm 相对 symlink,dev/直跑从源目录读(完好)。`tauri build` 把 sidecar 打进 `.app` 时 Tauri resource 拷贝器**会丢 symlink**(已实测 dev 的 `target/debug/sidecar` 拷贝会丢)。故正式打包需换 **tar 打包 + 首次运行解压到 appDataDir**(tar 保 symlink),或让 Rust 优先读源/解压目录。**本 P1 不做该打包收尾**(dev 壳已完整验证);正式 `tauri build` 出成品是下一步。
-- **Windows target**:`bundle.windows` + externalBin triple 位已留(`x86_64-pc-windows-msvc`),但 sidecar(node.exe + dylib)需在 **Windows 环境**跑 `build-sidecar.mjs` 产出,本机(macOS)不产。
+- **Windows target（P1 历史记录）**:`bundle.windows` + externalBin triple 位已留
+  (`x86_64-pc-windows-msvc`)；Windows sidecar 需要在 Windows 环境产出。当前 Windows
+  桌面版已经完成完整验收。
 - **CSP / capability**:P1 用宽松 `csp:null` + 最小 shell 能力,先保证壳能加载 sidecar UI;P2 收紧 deny-all + 精确白名单(参照 skills-manager 的 CSP)。
 - **updater**:`plugin-updater` 未接(T-147 轻服务端更新走 P5);skills-manager 的 `bundle.createUpdaterArtifacts` + `plugins.updater{pubkey,endpoints}` 配法可直接借鉴。
 - **本地加密(P2)/ 激活(P5)/ 混淆·Rust 化(P6)**:均不在 P1,底座为其预留。

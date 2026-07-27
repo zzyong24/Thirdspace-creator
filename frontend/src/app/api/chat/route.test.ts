@@ -15,6 +15,13 @@ const getConversation = vi.fn();
 // [T-239f] user 去重的历史读(兜底路径:无 trigger 的老客户端按「最后一条=同内容 user 行」判)。
 const listMessages = vi.fn();
 const runChatStream = vi.fn();
+const dispatchDouyinShare = vi.fn();
+const resolveEffectiveSkillSnapshot = vi.fn();
+const runWithEffectiveSkillSnapshot = vi.hoisted(() =>
+  vi.fn(
+    async (_snapshot: unknown, execute: () => Promise<unknown>) => execute(),
+  ),
+);
 
 // [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
 // 触发 onFinish 断言 assistant 回复(text + parts)落库。[T-239c] onFinish 现带 isAborted。
@@ -42,7 +49,9 @@ vi.mock("@/server/persistence-client", () => ({
       getConversation,
       listMessages,
     },
+    resolveEffectiveSkillSnapshot,
     resolveModelSpec: vi.fn(),
+    dispatchDouyinShare,
     context: {
       positioning: {},
       learnings: {},
@@ -53,11 +62,21 @@ vi.mock("@/server/persistence-client", () => ({
 }));
 
 vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
+  resolveSkillForSurface: (surface: string) =>
+    surface === "review" ? "chatbox.review" : "chatbox.topic",
   runChatStream: (...args: unknown[]) => runChatStream(...args),
 }));
 
+vi.mock("@creatoros/ai-worker", () => ({
+  runWithEffectiveSkillSnapshot,
+}));
+
 // readSessionCookie reads the cookie header; keep the real impl (it's pure).
-import { POST, deriveConversationTitle } from "./route";
+import {
+  POST,
+  deriveConversationTitle,
+  runWithChatChildSkillSnapshot,
+} from "./route";
 
 function chatReq(body: unknown, cookie?: string): Request {
   return new Request("http://localhost/api/chat", {
@@ -90,7 +109,16 @@ beforeEach(() => {
   listMessages.mockResolvedValue([]);
   appendAssistantMessage.mockReset();
   appendAssistantMessage.mockResolvedValue({ id: "m-2" });
+  resolveEffectiveSkillSnapshot.mockReset();
+  resolveEffectiveSkillSnapshot.mockResolvedValue({
+    snapshotVersion: 1,
+    userId: "u-1",
+    accountId: "acct-1",
+    skills: [],
+  });
+  runWithEffectiveSkillSnapshot.mockClear();
   runChatStream.mockReset();
+  dispatchDouyinShare.mockReset();
   capturedStreamInit = null;
   // Default: a stream result whose toUIMessageStreamResponse captures its init(headers +
   // [T-128] onFinish 持久化回调)并返回普通 Response。
@@ -107,6 +135,40 @@ beforeEach(() => {
       return new Response("stream", { status: 200, headers: init?.headers });
     },
   });
+});
+
+it("[T-546/T-513] 对话子 Skill 用路由同一快照作用域，不委托另一份 runtime ALS", async () => {
+  const childSnapshot = {
+    snapshotVersion: 1,
+    userId: "u-1",
+    accountId: "acct-1",
+    skills: [{ skillId: "topic.generate" }],
+  };
+  resolveEffectiveSkillSnapshot.mockResolvedValueOnce(childSnapshot);
+  const execute = vi.fn(async () => "topic-ok");
+  const childContext = {
+    userId: "u-1",
+    accountId: "acct-1",
+    requestId: "req-t546-skill",
+    source: "user" as const,
+  };
+
+  await expect(
+    runWithChatChildSkillSnapshot(
+      { resolveEffectiveSkillSnapshot },
+      childContext,
+      ["topic.generate"],
+      execute,
+    ),
+  ).resolves.toBe("topic-ok");
+  expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
+    childContext,
+    ["topic.generate"],
+  );
+  expect(runWithEffectiveSkillSnapshot).toHaveBeenCalledWith(
+    childSnapshot,
+    execute,
+  );
 });
 
 // ── [T-267②] 会话标题净化:斜杠命令 / 裸路径不当标题 ──────────────────────────────
@@ -191,10 +253,16 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
 
     // 委派装配:runChatStream 收到 messages + chatContext(surface)。
+    expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      ["chatbox.topic"],
+    );
     expect(runChatStream).toHaveBeenCalledTimes(1);
     const [, input] = runChatStream.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");
     expect(input.messages).toHaveLength(1);
+    const [, , deps] = runChatStream.mock.calls[0];
+    expect(deps.dispatchDouyinSharePort).toBe(dispatchDouyinShare);
   });
 
   it("[T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文", async () => {

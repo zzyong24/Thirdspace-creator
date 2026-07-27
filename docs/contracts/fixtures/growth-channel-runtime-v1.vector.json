@@ -1,0 +1,28 @@
+{
+  "semanticSnapshot": {
+    "contractVersion": "growth-channel-runtime-v1",
+    "sourceSystem": "thirdspace-growth",
+    "projectKey": "creatoros",
+    "channelRef": "agent-42",
+    "snapshotVersion": 17,
+    "sourceUpdatedAt": "2026-07-26T14:00:00.000Z",
+    "config": {
+      "brandName": "星河工作室",
+      "purchaseUrl": "https://growth.example.com/buy?channel=agent-42#plans",
+      "renewalUrl": null,
+      "channelSupportUrl": "https://agent.example.com/support?product=creatoros#help",
+      "bugFeedbackUrl": "https://growth.example.com/creatoros/feedback?source=desktop#form",
+      "downloadUrl": "https://downloads.example.com/creatoros?platform=auto#latest"
+    }
+  },
+  "canonicalUtf8": "{\"channelRef\":\"agent-42\",\"config\":{\"brandName\":\"星河工作室\",\"bugFeedbackUrl\":\"https://growth.example.com/creatoros/feedback?source=desktop#form\",\"channelSupportUrl\":\"https://agent.example.com/support?product=creatoros#help\",\"downloadUrl\":\"https://downloads.example.com/creatoros?platform=auto#latest\",\"purchaseUrl\":\"https://growth.example.com/buy?channel=agent-42#plans\",\"renewalUrl\":null},\"contractVersion\":\"growth-channel-runtime-v1\",\"projectKey\":\"creatoros\",\"snapshotVersion\":17,\"sourceSystem\":\"thirdspace-growth\",\"sourceUpdatedAt\":\"2026-07-26T14:00:00.000Z\"}",
+  "sourceDigest": "sha256:338c1c657efd10e78ccfff88833ed60cd1d80ae85c080bb7854fbfb307827883",
+  "negativeVector": {
+    "mutation": "接收 path 的 projectKey 改为 creatoros-pro，wire body 与提供的 positive sourceDigest 保持不变",
+    "canonicalUtf8": "{\"channelRef\":\"agent-42\",\"config\":{\"brandName\":\"星河工作室\",\"bugFeedbackUrl\":\"https://growth.example.com/creatoros/feedback?source=desktop#form\",\"channelSupportUrl\":\"https://agent.example.com/support?product=creatoros#help\",\"downloadUrl\":\"https://downloads.example.com/creatoros?platform=auto#latest\",\"purchaseUrl\":\"https://growth.example.com/buy?channel=agent-42#plans\",\"renewalUrl\":null},\"contractVersion\":\"growth-channel-runtime-v1\",\"projectKey\":\"creatoros-pro\",\"snapshotVersion\":17,\"sourceSystem\":\"thirdspace-growth\",\"sourceUpdatedAt\":\"2026-07-26T14:00:00.000Z\"}",
+    "recomputedDigest": "sha256:e71c6490dc17e889351d66e3dcbc7c57f3ec865f5ed75ebacfa43f2f614ed46e",
+    "providedDigest": "sha256:338c1c657efd10e78ccfff88833ed60cd1d80ae85c080bb7854fbfb307827883",
+    "expectedHttpStatus": 422,
+    "expectedErrorCode": "SNAPSHOT_DIGEST_MISMATCH"
+  }
+}

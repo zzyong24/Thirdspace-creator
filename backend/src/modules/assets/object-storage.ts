@@ -37,6 +37,10 @@ export interface HeadObjectResult {
 }
 
 export interface ObjectStoragePort {
+  // Adapter identity is deliberately explicit: maintenance paths such as the
+  // T-298 legacy ffprobe backfill are local-fs-only and must never infer the
+  // backend from a storageKey (local-fs and S3 intentionally share key shapes).
+  readonly kind: "mock" | "local-fs" | "s3";
   // Phase 1: mint a deterministic key + upload URL for an about-to-be-uploaded
   // object. Records the declared metadata so headObject can echo it back.
   createPresignedUpload(input: {
@@ -93,6 +97,7 @@ export function createMockObjectStorage(
   const objects = new Map<string, HeadObjectResult>();
 
   return {
+    kind: "mock",
     async createPresignedUpload({ assetType, mimeType, fileSize, accountId }) {
       // [T-157] 账号分区:key 头段 = <accountId ?? _default>(mock 键也分区,让集成测试
       // 看到与真实后端一致的按号 key 形状)。

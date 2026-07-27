@@ -33,10 +33,9 @@ import {
   type ActivationState,
   type ChannelLinksState,
 } from "@/features/settings/settings-page";
-import { readChannelLinks } from "@/server/activation/channel-links.server";
+import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 import {
   buildSkillItems,
-  type BuiltinSkillShape,
   type SkillItem,
 } from "@/features/settings/skills-data";
 import { createServerClient } from "@/lib/contract-client.server";
@@ -45,13 +44,6 @@ import { resolveSession } from "@/lib/session.server";
 // 仅桌面态(isDesktopRuntime)有意义;web/未装配 → 传 undefined → 卡片显「桌面端专属」空态。
 import { getActivationService } from "@/server/persistence-client";
 import { isDesktopRuntime } from "@/server/activation";
-// T-077a 技能页签:server 侧读 ai-worker REGISTRY(listTemplates 惰性 bootstrap 内置 18+)
-// + exportSkillSchema(Zod → JSON Schema,只读展示)。仅只读,不在此写 REGISTRY。
-import {
-  listTemplates,
-  exportSkillSchema,
-} from "@creatoros/ai-worker";
-import type { SkillConfigOverrideResource } from "@creatoros/contract";
 
 // item B — localized labels + tones for the StorageUsageCard breakdown rows.
 const STORAGE_TYPE_LABELS: Record<
@@ -173,7 +165,7 @@ export default async function SettingsRoutePage() {
           modelName: found?.modelName ?? "",
           baseUrl: found?.baseUrl ?? "",
           hasSecret: found?.hasSecret ?? false,
-          // [T-239b] 备用对话模型卡消费(anthropic / openai_chat 分派);其它卡忽略。
+          // [T-239b/T-471] 备用对话模型卡消费三种文本协议;其它卡忽略。
           apiFormat: found?.apiFormat,
         };
       };
@@ -260,47 +252,21 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  // [T-077a] 技能清单:内置模板(listTemplates,不依赖 db)× override 行(settings.prompts.list)
-  // → 可序列化 SkillItem[](当前生效值 = override 归一后 ?? 内置;徽章 = 有效 override)。
-  // override 读失败 → 只显内置(诚实降级,列表仍可看);模板读失败 → undefined(页签渲空态)。
+  // [T-513] 技能清单只读服务端 official + 当前账号增量的联合目录。页面不得再 import
+  // ai-worker 本地 registry 自行拼接，否则 SSR 可能看到另一个账号或旧 global 覆盖。
   let skills: readonly SkillItem[] | undefined;
-  try {
-    const builtins: BuiltinSkillShape[] = listTemplates().map((tpl) => {
-      // outputSchema(Zod)→ pretty JSON Schema 字符串;导出失败给 null(只读展示,尽力)。
-      let outputSchemaJson: string | null = null;
-      try {
-        const schema = exportSkillSchema(tpl.id);
-        outputSchemaJson = schema ? JSON.stringify(schema, null, 2) : null;
-      } catch {
-        outputSchemaJson = null;
-      }
-      return {
-        id: tpl.id,
-        version: tpl.version,
-        system: tpl.system,
-        template: tpl.template,
-        requiredFacets: tpl.requiredFacets,
-        tools: tpl.tools ?? [],
-        outputSchemaJson,
-      };
-    });
-    let overrides: readonly SkillConfigOverrideResource[] = [];
-    if (session) {
-      try {
-        overrides = await createServerClient(session.ctx).listPrompts({
-          params: undefined,
-          query: undefined,
-          body: undefined,
-        });
-      } catch {
-        // override 表读失败 → 按纯内置显示(不假装有定制)。
-        overrides = [];
-      }
+  if (session) {
+    try {
+      const catalog = await createServerClient(session.ctx).listPrompts({
+        params: undefined,
+        query: undefined,
+        body: undefined,
+      });
+      skills = buildSkillItems(catalog);
+    } catch {
+      // 目录不可用时诚实显空态；不能回退本地 registry，因为那会丢失账号归属。
+      skills = undefined;
     }
-    skills = buildSkillItems(builtins, overrides);
-  } catch {
-    // REGISTRY 读取失败(极端装配态)→ 页签显诚实空态。
-    skills = undefined;
   }
 
   // [T-167] 桌面激活状态(账户页签的激活卡)。**只桌面态读**:isDesktopRuntime 判 false
@@ -329,11 +295,16 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  // [T-396b] 渠道链接(读 Rust 落的 `.channel-links` 缓存,零网络)。web/dev 解析不出
-  // 路径 → null;null → 购买入口隐藏 / 联系文案纯文案(中性降级,绝不回退官方链接)。
+  // [T-534] 渠道 runtime 只从 Rust 已验证并写入加密 `.license` 的投影读取。
   let channelLinks: ChannelLinksState | undefined;
   if (isDesktopRuntime()) {
-    channelLinks = (await readChannelLinks()) ?? undefined;
+    const runtime = await readChannelRuntime();
+    channelLinks = {
+      purchaseUrl: runtime.purchaseUrl,
+      renewalUrl: runtime.renewalUrl,
+      channelSupportUrl: runtime.channelSupportUrl,
+      downloadUrl: runtime.downloadUrl,
+    };
   }
 
   return (

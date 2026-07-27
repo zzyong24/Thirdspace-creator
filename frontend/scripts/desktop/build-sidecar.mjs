@@ -31,12 +31,14 @@ import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSy
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
 import { platform, arch } from "node:process";
 import { homedir } from "node:os";
-// [T-326 RT-H09] 静态 ffmpeg 拉取(缓存 + GitHub release 下载 + 冒烟),供 bundleFfmpeg 实拷进 sidecar。
-import { ensureFfmpegStatic } from "./fetch-ffmpeg.mjs";
+// [T-326/T-485] 静态 ffmpeg+ffprobe 拉取(缓存 + GitHub release 下载 + 冒烟)并实拷进 sidecar。
+import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 // [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
 import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
+import { assertVerdictPublicKey } from "./verdict-key-material.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -61,6 +63,69 @@ const SRC_TAURI = join(FRONTEND, "src-tauri");
 const BINARIES = join(SRC_TAURI, "binaries");
 const STANDALONE_SRC = join(FRONTEND, ".next", "standalone");
 const SIDECAR_RUNTIME = join(SRC_TAURI, "sidecar"); // 组装好的 standalone 运行目录(bundle resource)
+
+const STANDALONE_FRONTEND_LEAKS = [
+  "src", "src-tauri", "docs", "specs", "tests", "scripts", "playwright-report", "test-results",
+  "SPEC.md", "AGENT-PROTOCOL.md", "IMPLEMENTATION-ARCHITECTURE.md",
+  "TDD-PLAN.md", "TESTING.md", "README.md",
+  "eslint.config.mjs", "playwright.config.ts", "vitest.config.ts",
+  // [T-417 隐私] `.auth/douyin` = 开发机登录 session；.env* 同理不得进入安装包。
+  ".auth", ".env", ".env.local", ".env.production", ".env.development",
+];
+
+/**
+ * [T-487] 剥离 Next output tracing 误带入的工作区文件。
+ * 尤其禁止 frontend/src-tauri：它包含 target、旧 sidecar 和旧安装包，复制后会递归膨胀。
+ */
+export function pruneStandaloneLeaks(runtimeRoot) {
+  const frontendRoot = join(runtimeRoot, "frontend");
+  let pruned = 0;
+  for (const name of STANDALONE_FRONTEND_LEAKS) {
+    const path = join(frontendRoot, name);
+    if (!existsSync(path)) continue;
+    rmSync(path, { recursive: true, force: true });
+    pruned++;
+  }
+  return pruned;
+}
+
+/**
+ * [T-487] tar 前的 fail-closed 哨兵。只要 runtime 里仍有壳构建树或安装包，就拒绝打包。
+ */
+export function assertNoPackagedBuildArtifacts(runtimeRoot) {
+  const forbidden = [];
+  const visit = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      const rel = relative(runtimeRoot, path).replaceAll("\\", "/");
+      const st = lstatSync(path);
+      if (st.isSymbolicLink()) continue;
+      if (st.isDirectory()) {
+        if (rel === "frontend/src-tauri" || rel.startsWith("frontend/src-tauri/")) {
+          forbidden.push(rel);
+          continue;
+        }
+        visit(path);
+        continue;
+      }
+      if (
+        name === "sidecar.tar.gz"
+        || name.endsWith(".app.tar.gz")
+        || name.endsWith(".dmg")
+        || name.endsWith(".msi")
+        || name.endsWith("-setup.exe")
+      ) {
+        forbidden.push(rel);
+      }
+    }
+  };
+  visit(runtimeRoot);
+  if (forbidden.length > 0) {
+    throw new Error(
+      `[build-sidecar] [T-487] 拒绝递归打包壳构建产物：${forbidden.slice(0, 8).join(", ")}`,
+    );
+  }
+}
 
 // Rust target triple(externalBin 命名要求)。P1 只覆盖本机;其余留位。
 function targetTriple() {
@@ -255,20 +320,30 @@ function fixOutOfTreeSymlinks() {
   }
 }
 
-// [T-454 后修] 全平台走 tarball(**含 Windows,反转 T-446**)—— T-446 当初 Windows 改直装
-//   是因为首启解压到 C:\Program Files\... 会 ACL 失败;现在 tauri v2 默认 installMode=
-//   currentUser 装到 %LOCALAPPDATA%\Programs\ 用户可写,首启解压到 %APPDATA%\...\runtime\<v>\
-//   sidecar 零权限问题。**根治 NSIS 打包 20 万小文件卡死**:直装模式 NSIS 要递归压 15 万+
-//   小文件(20-60 分钟且静默无进度);tar 单文件模式 NSIS 只面对 1 个大文件,zlib 单文件顺序流
-//   30-60 秒完成。macOS 仍依赖 tar 保 pnpm symlink,Linux 同样保留旧路径。
+// [T-454/T-487] 全平台 bundle 都走单个 tarball。Windows 不再让 NSIS 递归处理 15 万+
+//   小文件（20-60 分钟且静默），而是在官方 POSTINSTALL hook 中调用应用内置 Rust 解压器，
+//   将 tar 物化到用户选择的 $INSTDIR/runtime-images，再删 tar；首次启动直接读取 current
+//   指针，零二次解压。macOS/Linux 暂保留 appData 原子解压兼容路径。
 export function shouldPackSidecarTarball(_targetPlatform = platform) {
   return true;
 }
 
 function packSidecarTarball() {
+  assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
   // [T-441] 打包前最后一道闸(两个调用点都覆盖):清掉指向构建机的 symlink。
   fixOutOfTreeSymlinks();
   const tarball = join(SRC_TAURI, "sidecar.tar.gz");
+  // Windows 普通用户默认无“创建符号链接”权限。安装期 Rust tar 即使能展开普通文件，
+  // 遇到 symlink 也可能失败；Windows 闭包本就应全部物化成真目录，因此这里硬拦而非把
+  // 一颗只会在用户机爆炸的包交给付费构建。
+  if (platform === "win32") {
+    const leftoverLinks = countSymlinks(SIDECAR_RUNTIME);
+    if (leftoverLinks !== 0) {
+      throw new Error(
+        `[build-sidecar] Windows tarball 必须零 symlink/junction，当前残留 ${leftoverLinks} 个`,
+      );
+    }
+  }
   if (!shouldPackSidecarTarball()) {
     const leftoverLinks = countSymlinks(SIDECAR_RUNTIME);
     if (leftoverLinks !== 0) {
@@ -284,9 +359,9 @@ function packSidecarTarball() {
     return;
   }
   // [T-372 L2] 入口完整性链:本脚本(beforeBuildCommand)先产 tarball → 随后的 cargo 构建里
-  //   src-tauri/build.rs 对它算 SHA-256 并经 rustc-env 内嵌进壳二进制 → 运行时 lib.rs 解压前
-  //   比对,不匹配拒绝 spawn(改 JS 必先动 Rust)。哈希不在此处算 —— 单一实现在 build.rs。
-  console.log(`[build-sidecar] 打 sidecar.tar.gz(保留 symlink,供 bundle resource;解压见 lib.rs)…`);
+  //   src-tauri/build.rs 对它算 SHA-256 并经 rustc-env 内嵌进壳二进制 → Windows 安装期 /
+  //   其他平台运行时在解压前比对，不匹配拒绝物化。哈希只在 build.rs 计算。
+  console.log(`[build-sidecar] 打 sidecar.tar.gz(供 bundle resource)…`);
   // win 上必须显式用系统 bsdtar(System32\tar.exe):CI 的 bash 环境里 Git 的 GNU tar 排 PATH
   // 前面,它把 `D:\...` 的盘符当远程主机名(实测「Cannot connect to D: resolve failed」)。
   // 系统 bsdtar 处理 win 路径正确,且与用户机 lib.rs 解压器同源(W-spike 方案本意)。
@@ -389,6 +464,31 @@ export function bakeVerdictPublicKey() {
   console.log(`[build-sidecar]   ✓ [T-451] verdict 公钥已烘焙 → ${dest}`);
 }
 
+export function assertBakedVerdictPublicKey() {
+  const verified = assertVerdictPublicKey();
+  const dest = join(
+    SIDECAR_RUNTIME,
+    "frontend",
+    ".next",
+    "server",
+    "verdict-verify-key.json",
+  );
+  let baked = "";
+  try {
+    baked = String(JSON.parse(readFileSync(dest, "utf8")).publicKeyB64 ?? "").trim();
+  } catch {
+    throw new Error(
+      `[build-sidecar] [T-535] 缓存 runtime 缺少或无法读取 verdict 公钥文件:${dest}`,
+    );
+  }
+  if (baked !== verified.publicKeyB64) {
+    throw new Error(
+      "[build-sidecar] [T-535] 缓存 runtime 的 verdict 公钥与本轮密钥对不一致，拒绝复用；请重建 sidecar。",
+    );
+  }
+  console.log("[build-sidecar] ✓ [T-535] 缓存 runtime verdict 公钥与本轮密钥对一致。");
+}
+
 // [T-170] 采集/扫码依赖 Playwright,但 Next output-tracing **漏掉** douyin-cdp/web-capture 里的
 //   动态 `import("@playwright/test")`(playwright-core 的 .pnpm 被拖进来了,但 frontend/node_modules/
 //   下没建解析链)→ 打包版一点扫码就 ERR_MODULE_NOT_FOUND → loginDouyin 抛错「扫码登录失败」。
@@ -397,7 +497,13 @@ export function bakeVerdictPublicKey() {
 //   (@playwright/test deps playwright;playwright deps playwright-core;playwright-core 自包含)。
 //   注:chromium **浏览器二进制**(rev 1223,344M)在 ~/Library/Caches/ms-playwright,**不**在此拷
 //   (bundle 体积决策留产品定;用户机有缓存即可用,分发到无缓存机器需另 bundle/首启下载,见 T-170②)。
-function bundlePlaywright() {
+export function linkPackageAnchor(targetDir, anchorDir) {
+  rmSync(anchorDir, { recursive: true, force: true });
+  mkdirSync(dirname(anchorDir), { recursive: true });
+  symlinkSync(relative(dirname(anchorDir), targetDir), anchorDir, "dir");
+}
+
+export function bundlePlaywright() {
   console.log("[build-sidecar] 实拷 Playwright 包(修 Next tracing 漏 @playwright/test → 打包扫码崩)…");
   const destNm = join(SIDECAR_RUNTIME, "frontend", "node_modules");
   // 解析包真实目录:从 fromPkgJson 的上下文 require.resolve,再 walk-up 到含 package.json 的目录。
@@ -425,27 +531,35 @@ function bundlePlaywright() {
     ["playwright", pwDir],
     ["playwright-core", coreDir],
   ]) {
-    // ① frontend/node_modules 直拷(直接 import 路径 / 自检走这)。
-    const destDir = join(destNm, pkg);
-    rmSync(destDir, { recursive: true, force: true });
-    mkdirSync(dirname(destDir), { recursive: true });
-    cpSync(srcDir, destDir, { recursive: true, dereference: true });
-    // ② **覆盖 Next-traced 的 .pnpm 残缺版**(关键):Next serverExternalPackages 运行时从
+    // ① 覆盖 Next-traced 的 .pnpm 残缺版(关键):Next serverExternalPackages 运行时从
     //   `.pnpm/<pkg>@ver/node_modules/<pkg>` 解析这些外置包,而 Next tracing 只带了 JS、**漏了
     //   browsers.json 等数据文件** → chromium.launch 报「Cannot find module …/browsers.json」→ 扫码崩。
     //   (T-170 首版只拷 frontend/node_modules,Next 不从那解析 → 真机仍崩;真 app dispatch 才暴露。)
     //   用完整仓库版整体覆盖 .pnpm 下每个匹配条目。
+    const destDir = join(destNm, pkg);
     const key = pkg.replace("/", "+"); // @playwright/test → @playwright+test
+    const pnpmTargets = [];
     if (existsSync(pnpmDir)) {
       for (const e of readdirSync(pnpmDir).filter((x) => x.startsWith(key + "@"))) {
         const d2 = join(pnpmDir, e, "node_modules", pkg);
         rmSync(d2, { recursive: true, force: true });
         mkdirSync(dirname(d2), { recursive: true });
         cpSync(srcDir, d2, { recursive: true, dereference: true });
+        pnpmTargets.push(d2);
         pnpmOverwrote++;
       }
     }
-    console.log(`[build-sidecar]   实拷 ${pkg} ← ${srcDir}`);
+    // ② frontend/node_modules 只做解析锚。macOS/Linux 的 tar 会保留相对 symlink，
+    //   直接复用上面的 .pnpm 真身；Windows 不依赖 symlink 权限，继续实拷。
+    if (platform !== "win32" && pnpmTargets.length > 0) {
+      linkPackageAnchor(pnpmTargets[0], destDir);
+      console.log(`[build-sidecar]   链接 ${pkg} → .pnpm 真身(不再双份实拷)`);
+    } else {
+      rmSync(destDir, { recursive: true, force: true });
+      mkdirSync(dirname(destDir), { recursive: true });
+      cpSync(srcDir, destDir, { recursive: true, dereference: true });
+      console.log(`[build-sidecar]   实拷 ${pkg} ← ${srcDir}`);
+    }
   }
   console.log(`[build-sidecar]   覆盖 .pnpm 残缺版 ${pnpmOverwrote} 处`);
   // [T-284] 顺带把 Chromium 浏览器二进制打进 sidecar(见 bundleChromiumBrowser 注释)。
@@ -482,32 +596,52 @@ function bundlePlaywright() {
   console.log("[build-sidecar]   ✓ 自检①:sidecar 内 @playwright/test 可解析");
 }
 
-// [T-289 真机逮到根因] 实拷 gsap + hyperframes 完整包(补 Next tracing 漏的 dist 文件)。
+// [T-289 真机逮到根因] 实拷 gsap + hyperframes 生产闭包(补 Next tracing 漏的 dist 文件)。
 //   病根:视频渲染的 gsap.min.js / hyperframes dist/cli.js 是 executor **运行时 require 的文件**,
 //   Next tracing 追不到 → 打包后 sidecar 的 .pnpm 里这俩包只剩 package.json、dist 全缺 → executor
 //   `resolveGsapMinJs/resolveHyperframesCli` 拿不到文件(且打包混淆 runtime 里 require.resolve 还
-//   返回数字模块 ID → path.dirname(number) 崩「path 收到 number 371609」)。**视频渲染在打包版
-//   从没成功过**。这里从源仓 .pnpm 整份实拷覆盖(dereference,把 hyperframes 的 dep 符号链接也拷成
-//   真目录),补齐 dist + deps。与 bundlePlaywright 同款手法。
-function bundleRenderDeps() {
-  console.log("[build-sidecar] 实拷 gsap/hyperframes(补 Next tracing 漏的 dist/cli.js,T-289)…");
+//   返回数字模块 ID → path.dirname(number) 崩「path 收到 number 371609」)。
+//   旧修法对整个 hyperframes entry 做 dereference，会把共享依赖沿每条路径重复展开：
+//   基线实测 sidecar 44,082 文件、1.21GB，其中可识别重复内容 183MB，绝大多数来自这棵嵌套树。
+//   新修法复用 pnpm 图计算：
+//     · macOS/Linux：闭包 entry 各一份 + 原样保留相对 symlink；
+//     · Windows：闭包 hoist 成真目录，避免构建机绝对 junction，同时共享依赖只复制一次。
+export function bundleRenderDeps() {
+  console.log("[build-sidecar] 实拷 gsap/hyperframes 去重生产闭包(T-289/T-487)…");
   const srcPnpm = join(REPO, "node_modules", ".pnpm");
   const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
   if (!existsSync(srcPnpm) || !existsSync(destPnpm)) {
     throw new Error(`[build-sidecar] .pnpm 目录缺(src=${existsSync(srcPnpm)} dest=${existsSync(destPnpm)})`);
   }
   const srcEntries = readdirSync(srcPnpm);
+  const roots = [];
   for (const pkg of ["gsap", "hyperframes"]) {
     const match = srcEntries.find((e) => e.startsWith(`${pkg}@`));
     if (!match) {
       throw new Error(`[build-sidecar] 源 .pnpm 无 ${pkg}@*(装依赖?)`);
     }
-    const src = join(srcPnpm, match);
-    const dest = join(destPnpm, match);
-    rmSync(dest, { recursive: true, force: true });
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(src, dest, { recursive: true, dereference: true });
-    console.log(`[build-sidecar]   实拷 ${match}`);
+    roots.push(match);
+  }
+  if (platform === "win32") {
+    for (const rootEntry of roots) {
+      const destEntry = join(destPnpm, rootEntry);
+      rmSync(destEntry, { recursive: true, force: true });
+      const result = materializeHoistedEntryClosure(
+        srcPnpm,
+        [rootEntry],
+        join(destEntry, "node_modules"),
+      );
+      console.log(
+        `[build-sidecar]   [Windows] ${rootEntry}:hoist ${result.hoisted} 包` +
+          `(+${result.nested} 次版本嵌套,零 junction)`,
+      );
+    }
+  } else {
+    const closure = copyPnpmClosureVerbatim(srcPnpm, destPnpm, roots);
+    console.log(
+      `[build-sidecar]   [${platform}] 线性实拷 ${closure.size} 个闭包 entry` +
+        "(共享依赖只存一份,保留相对链)",
+    );
   }
   // 自检(硬):关键 dist 文件必须到位(上一版渲染崩的教训 —— 只拷目录不查文件不够)。
   const destEntries = readdirSync(destPnpm);
@@ -518,7 +652,27 @@ function bundleRenderDeps() {
       throw new Error(`[build-sidecar] 自检失败:${pkg}/${sub} 实拷后仍缺 → 视频渲染必崩`);
     }
   }
-  console.log("[build-sidecar]   ✓ 自检:gsap.min.js + hyperframes cli.js 到位");
+  const hyperframesEntry = destEntries.find((e) => e.startsWith("hyperframes@"));
+  const hyperframesCli = join(
+    destPnpm,
+    hyperframesEntry,
+    "node_modules",
+    "hyperframes",
+    "dist",
+    "cli.js",
+  );
+  const cliCheck = spawnSync(process.execPath, [hyperframesCli, "--help"], {
+    cwd: join(SIDECAR_RUNTIME, "frontend"),
+    encoding: "utf8",
+    timeout: 20_000,
+  });
+  if (cliCheck.status !== 0) {
+    throw new Error(
+      `[build-sidecar] 自检失败:HyperFrames CLI 无法启动(exit=${cliCheck.status})` +
+        `\n${cliCheck.stdout}${cliCheck.stderr}`,
+    );
+  }
+  console.log("[build-sidecar]   ✓ 自检:gsap.min.js 到位 + HyperFrames CLI --help 通过");
 }
 
 // ── pnpm 依赖闭包工具(T-313 抽出;T-383 复用)────────────────────────────────
@@ -647,6 +801,187 @@ function collectPnpmClosure(srcPnpm, rootEntry, isCut = () => false) {
   return visited;
 }
 
+// macOS/Linux 的 pnpm 链是相对 symlink。把闭包 entry 各复制一次并保留链，可让共享依赖复用
+// 同一份真身；禁止对整个 entry dereference，否则一个共享依赖会沿每条依赖路径重复展开。
+export function copyPnpmClosureVerbatim(
+  srcPnpm,
+  destPnpm,
+  rootEntries,
+  isCut = () => false,
+) {
+  const closure = new Set();
+  for (const rootEntry of rootEntries) {
+    for (const entry of collectPnpmClosure(srcPnpm, rootEntry, isCut)) closure.add(entry);
+  }
+  for (const entry of closure) {
+    const src = join(srcPnpm, entry);
+    const dest = join(destPnpm, entry);
+    rmSync(dest, { recursive: true, force: true });
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
+  }
+  return closure;
+}
+
+// Windows 的 pnpm 依赖通常是指向构建机绝对路径的 junction，不能原样进安装包。把闭包按包名
+// hoist 成 Node 原生可解析的真目录：每个主版本一份，共享依赖不再沿依赖树重复复制；只有同名
+// 多版本时，才把次版本放到实际依赖者的 node_modules 下。
+export function materializeHoistedEntryClosure(
+  srcPnpm,
+  rootEntries,
+  destNodeModules,
+  isCut = () => false,
+) {
+  const closure = new Set();
+  for (const rootEntry of rootEntries) {
+    for (const entry of collectPnpmClosure(srcPnpm, rootEntry, isCut)) closure.add(entry);
+  }
+
+  const dependedBy = new Map();
+  for (const entry of closure) {
+    for (const depEntry of pnpmDepsOfEntry(srcPnpm, entry)) {
+      if (!closure.has(depEntry)) continue;
+      if (!dependedBy.has(depEntry)) dependedBy.set(depEntry, new Set());
+      dependedBy.get(depEntry).add(entry);
+    }
+  }
+
+  const byName = new Map();
+  for (const entry of closure) {
+    const name = resolveEntryPackage(srcPnpm, entry).name;
+    if (!byName.has(name)) byName.set(name, []);
+    byName.get(name).push(entry);
+  }
+
+  const copyBody = (entry, destPkgDir) => {
+    const src = resolveEntryPackage(srcPnpm, entry).dir;
+    rmSync(destPkgDir, { recursive: true, force: true });
+    mkdirSync(dirname(destPkgDir), { recursive: true });
+    cpSync(src, destPkgDir, { recursive: true, dereference: true });
+  };
+
+  mkdirSync(destNodeModules, { recursive: true });
+  const mainEntry = new Map();
+  let hoisted = 0;
+  for (const [name, entries] of byName) {
+    const main = entries
+      .slice()
+      .sort(
+        (a, b) =>
+          ((dependedBy.get(a)?.size ?? 0) - (dependedBy.get(b)?.size ?? 0)) ||
+          (a < b ? -1 : 1),
+      )
+      .pop();
+    mainEntry.set(name, main);
+    copyBody(main, join(destNodeModules, ...name.split("/")));
+    hoisted++;
+  }
+
+  let nested = 0;
+  for (const [name, entries] of byName) {
+    for (const entry of entries) {
+      if (entry === mainEntry.get(name)) continue;
+      for (const dependent of dependedBy.get(entry) ?? []) {
+        const dependentName = resolveEntryPackage(srcPnpm, dependent).name;
+        copyBody(
+          entry,
+          join(
+            destNodeModules,
+            ...dependentName.split("/"),
+            "node_modules",
+            ...name.split("/"),
+          ),
+        );
+        nested++;
+      }
+    }
+  }
+  return { closure, hoisted, nested };
+}
+
+// CreatorOS 的 transformers 运行在 Node sidecar，后端会固定选择 onnxruntime-node。
+// onnxruntime-web 仍是包级静态依赖，但其 *.wasm 仅浏览器后端按需加载；@xenova/transformers
+// 自己的 dist 里还保留一套浏览器资产。删掉依赖包中的第二套 WASM，并在后续 Node 真加载
+// 自检中兜底，避免四个 9-10MB 文件重复进入安装包。
+export function pruneOnnxRuntimeWebWasm(pnpmRoot) {
+  if (!existsSync(pnpmRoot)) return 0;
+  let pruned = 0;
+  for (const entry of readdirSync(pnpmRoot)) {
+    if (!entry.startsWith("onnxruntime-web@")) continue;
+    const dist = join(
+      pnpmRoot,
+      entry,
+      "node_modules",
+      "onnxruntime-web",
+      "dist",
+    );
+    if (!existsSync(dist)) continue;
+    for (const file of readdirSync(dist)) {
+      if (!/^ort-wasm.*\.wasm$/.test(file)) continue;
+      rmSync(join(dist, file), { force: true });
+      pruned++;
+    }
+  }
+  return pruned;
+}
+
+function sha256FileSync(file) {
+  return createHash("sha256").update(readFileSync(file)).digest("hex");
+}
+
+// onnxruntime-node 的 macOS/Linux 包会把同一动态库同时保存为“完整版本名”和“ABI 名”两个
+// 真文件。动态加载器确实需要两个名字，但不需要两份字节；确认内容完全相同后把 ABI 名改成
+// 相对 symlink。Windows DLL 没有这组别名，因此保持不动。
+export function dedupeIdenticalOnnxAliases(
+  pnpmRoot,
+  targetPlatform = platform,
+  targetArch = arch,
+) {
+  if (targetPlatform === "win32" || !existsSync(pnpmRoot)) return 0;
+  let deduped = 0;
+  for (const entry of readdirSync(pnpmRoot)) {
+    if (!entry.startsWith("onnxruntime-node@")) continue;
+    const binRoot = join(
+      pnpmRoot,
+      entry,
+      "node_modules",
+      "onnxruntime-node",
+      "bin",
+    );
+    if (!existsSync(binRoot)) continue;
+    for (const napi of readdirSync(binRoot)) {
+      const leaf = join(binRoot, napi, targetPlatform, targetArch);
+      if (!existsSync(leaf)) continue;
+      const files = readdirSync(leaf);
+      const full =
+        targetPlatform === "darwin"
+          ? files.find((file) => /^libonnxruntime\.\d+\.\d+\.\d+\.dylib$/.test(file))
+          : files.find((file) => /^libonnxruntime\.so\.\d+\.\d+\.\d+$/.test(file));
+      const alias =
+        targetPlatform === "darwin"
+          ? files.find((file) => /^libonnxruntime\.\d+\.dylib$/.test(file))
+          : files.find((file) => /^libonnxruntime\.so\.\d+$/.test(file));
+      if (!full || !alias) continue;
+      const fullPath = join(leaf, full);
+      const aliasPath = join(leaf, alias);
+      const fullStat = lstatSync(fullPath);
+      const aliasStat = lstatSync(aliasPath);
+      if (
+        !fullStat.isFile() ||
+        !aliasStat.isFile() ||
+        fullStat.size !== aliasStat.size ||
+        sha256FileSync(fullPath) !== sha256FileSync(aliasPath)
+      ) {
+        continue;
+      }
+      rmSync(aliasPath, { force: true });
+      symlinkSync(full, aliasPath);
+      deduped++;
+    }
+  }
+  return deduped;
+}
+
 // [T-426 W] Windows:把主 standalone 的 next 运行时闭包**扁平 hoist** 物化进 frontend/node_modules。
 //   病根(2026-07-19 阿里云无影真机实证):main() 的
 //   `cpSync(STANDALONE_SRC, SIDECAR_RUNTIME, {verbatimSymlinks:true})` 在 mac(pnpm 用**相对**
@@ -768,9 +1103,10 @@ function materializeStandaloneWin() {
 //     且**共享依赖只存一份**(实测 ~90MB;若 dereference 会因逐 entry 展平既撑大体积又断传递解析链)。
 //   L3 剪枝(控体积):pi-ai 的 provider api 是 `*.lazy.js` → 运行时才动态 import 具体 provider `.js`
 //     (静态图**不**引 @aws-sdk/@google/@mistralai;装 0.80.7 现场核实)。CreatorOS 的 piApiForFormat
-//     只产 "anthropic-messages" / "openai-completions" 两种 api → bedrock/google/mistral 三个 provider
+//     只产 "anthropic-messages" / "openai-completions" / "openai-responses" 三种 api →
+//     bedrock/google/mistral 三个 provider
 //     **永不被 import**。故剪掉这三个 provider 顶包(连带其独占传递依赖 @smithy/@protobufjs/google-auth
-//     等,省 ~91MB);**openai + @anthropic-ai/sdk 必留**(两种格式各需其一,均在闭包内)。剪枝安全网 =
+//     等,省 ~91MB);**openai + @anthropic-ai/sdk 必留**(三种格式共用这两项,均在闭包内)。剪枝安全网 =
 //     下面 HARD 自检真深导入 sdk.js:若剪多了导致 import 崩,build 直接失败(不假通过)。
 function bundlePiEngine() {
   console.log("[build-sidecar] 实拷 Pi 引擎依赖闭包(修 Next tracing 漏整棵 pi 树 → 打包版 Pi 引擎失活,T-313)…");
@@ -837,19 +1173,36 @@ function bundlePiEngine() {
     console.log("[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位");
   }
 
-  // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟(与 pi-engine locatePiCoreDir 同路径),
-  //   断言 createAgentSession 是函数 + ModelRegistry/AuthStorage/SessionManager 均在。这条同时验证:
+  // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟 + CreatorOS 会用的三种 wire API,
+  //   断言 createAgentSession / provider factory 都是函数。这条同时验证:
   //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
   //   假通过零容忍(教训同 playwright 自检②):import 崩则 throw,宁 build 失败也不出「点亮却失活」的包。
   const coreDir = join(destPnpm, rootEntry, "node_modules", PI_PKG, "dist", "core");
   const selfCheck = `
+    import { existsSync } from 'node:fs';
     import { pathToFileURL } from 'node:url';
     import path from 'node:path';
     const base = ${JSON.stringify(coreDir)};
     const imp = (f) => import(pathToFileURL(path.join(base, f)).href);
     const [sdk, mr, as, sm] = await Promise.all([imp('sdk.js'), imp('model-registry.js'), imp('auth-storage.js'), imp('session-manager.js')]);
-    const ok = typeof sdk.createAgentSession === 'function' && !!mr.ModelRegistry && !!as.AuthStorage && !!sm.SessionManager;
-    console.log('PI createAgentSession=' + typeof sdk.createAgentSession + ' ModelRegistry=' + !!mr.ModelRegistry + ' AuthStorage=' + !!as.AuthStorage + ' SessionManager=' + !!sm.SessionManager);
+    const packageRoot = path.dirname(path.dirname(base));
+    const apiDir = [
+      path.join(packageRoot, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'api'),
+      path.join(base, '..', '..', '..', '..', '@earendil-works', 'pi-ai', 'dist', 'api'),
+    ].find(existsSync);
+    if (!apiDir) { console.error('PI-API-DIR-MISSING'); process.exit(1); }
+    const apiImp = (f) => import(pathToFileURL(path.join(apiDir, f)).href);
+    const [responses, completions, anthropic] = await Promise.all([
+      apiImp('openai-responses.lazy.js'),
+      apiImp('openai-completions.lazy.js'),
+      apiImp('anthropic-messages.lazy.js'),
+    ]);
+    const apiOk =
+      typeof responses.openAIResponsesApi === 'function' &&
+      typeof completions.openAICompletionsApi === 'function' &&
+      typeof anthropic.anthropicMessagesApi === 'function';
+    const ok = typeof sdk.createAgentSession === 'function' && !!mr.ModelRegistry && !!as.AuthStorage && !!sm.SessionManager && apiOk;
+    console.log('PI createAgentSession=' + typeof sdk.createAgentSession + ' ModelRegistry=' + !!mr.ModelRegistry + ' AuthStorage=' + !!as.AuthStorage + ' SessionManager=' + !!sm.SessionManager + ' APIs=' + apiOk);
     if (!ok) { console.error('PI-SELFCHECK-FAIL'); process.exit(1); }
     console.log('PI-SELFCHECK-OK');
   `;
@@ -962,6 +1315,13 @@ function bundleXenovaTransformers() {
       }
     }
     if (pruned > 0) console.log(`[build-sidecar]   ✂ onnxruntime 异平台 bin 剪枝 ${pruned} 个目录(只留 ${platform}/${arch})`);
+  }
+  const prunedWebWasm = pruneOnnxRuntimeWebWasm(destPnpm);
+  if (prunedWebWasm > 0) {
+    console.log(
+      `[build-sidecar]   ✂ Node sidecar 剪除 onnxruntime-web 重复 WASM ${prunedWebWasm} 个` +
+        "(@xenova dist 浏览器资产仍保留)",
+    );
   }
   // ③ HARD 自检:worker 同路径真加载(见函数头注释③)。
   const selfCheck = `
@@ -1449,56 +1809,81 @@ function ensureOnnxRuntimeDylib() {
 // [T-326 RT-H09] 把**静态** ffmpeg 实拷进 sidecar → `sidecar/frontend/bin/ffmpeg[.exe]`。
 //   为什么:douyin 抽音(douyin-cdp streamAudioFromVideo)与本地转录(whisper-local PCM 解码)
 //   此前默认硬编码 /opt/homebrew/bin/ffmpeg —— Intel Mac / Windows / 无 Homebrew 用户稳定失败。
-//   运行时已改 resolveFfmpegPath 四级解析链(ai-worker/src/runtime/ffmpeg-path.ts),其第②级
-//   约定随包位置 = `<cwd>/bin/ffmpeg`(打包版 server.js 的 cwd = sidecar/frontend,与 T-284
-//   PLAYWRIGHT_BROWSERS_PATH=<cwd>/browsers 同款约定)。本函数把它放到位。
+//   运行时统一走 executable-path 解析链；正式包由 Rust 注入 CREATOROS_BIN_DIR 的绝对路径，
+//   开发态才回落 `<cwd>/bin`。本函数把 ffmpeg/ffprobe 两个工具一起放到位。
 //   二进制源:eugeneware/ffmpeg-static release 的静态构建(fetch-ffmpeg.mjs 拉取+缓存+冒烟;
 //   **不能**拷 Homebrew ffmpeg —— 那是动态链接,无 Homebrew 的用户机 dyld 必崩,同 libnode 坑)。
-//   失败姿态(与 bundleChromiumBrowser 一致):拉不到 → warn + 跳过,不阻塞打包 —— 打包版
-//   回落解析链③(PATH/常见目录)= 依赖用户自装 ffmpeg;全 miss 时运行时诚实报错引导安装。
+//   失败姿态:任一拉不到即停止打包。视频渲染是正式功能，不能把“构建机网络失败”变成
+//   “用户机器必须碰巧装过依赖”的残缺安装包；离线构建可用两个 BUNDLE_SRC 显式逃生门。
 //   ⚠️ 许可:ffmpeg-static 是 GPL 构建,随包分发需在第三方许可声明里带 ffmpeg(GPL)条目。
-function bundleFfmpeg(triple) {
+function bundleMediaTools(triple) {
   const isWinTarget = triple.includes("windows");
   const destDir = join(SIDECAR_RUNTIME, "frontend", "bin");
-  const dest = join(destDir, isWinTarget ? "ffmpeg.exe" : "ffmpeg");
-  let src;
-  try {
-    src = ensureFfmpegStatic(triple);
-  } catch (e) {
-    console.warn(
-      `[build-sidecar] ⚠ [RT-H09] 静态 ffmpeg 未就绪(${e.message})—— 跳过随包。打包版将回落` +
-        ` resolveFfmpegPath 解析链(PATH/常见目录/env),无 ffmpeg 的用户机上转录/抽音会诚实报错引导安装。`,
-    );
-    return;
-  }
   mkdirSync(destDir, { recursive: true });
-  rmSync(dest, { force: true });
-  copyFileSync(src, dest);
-  if (!isWinTarget) chmodSync(dest, 0o755);
-  // 硬自检:实拷后必须存在;host 可跑的 target 再跑一次 -version(不容半截二进制进包 ——
-  //   教训同 playwright 自检②:只拷不验会假通过)。交叉 target 跑不动,诚实标注留待目标机验证。
-  if (!existsSync(dest)) {
-    throw new Error(`[build-sidecar] 自检失败[RT-H09]:ffmpeg 实拷后不存在(${dest})`);
-  }
   const hostTriple = targetTriple();
-  if (triple === hostTriple) {
-    const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
-    if (r.status !== 0 || !`${r.stdout}`.startsWith("ffmpeg version")) {
+  for (const [tool, ensureStatic] of [
+    ["ffmpeg", ensureFfmpegStatic],
+    ["ffprobe", ensureFfprobeStatic],
+  ]) {
+    const dest = join(destDir, isWinTarget ? `${tool}.exe` : tool);
+    let src;
+    try {
+      src = ensureStatic(triple);
+    } catch (e) {
       throw new Error(
-        `[build-sidecar] 自检失败[RT-H09]:sidecar 内 ffmpeg -version 未通过(status=${r.status})→ 不出必崩的包`,
+        `[build-sidecar] [T-485] 静态 ${tool} 未就绪，拒绝产出依赖用户环境的残缺包:` +
+          `${e.message}。离线构建请设置 CREATOROS_${tool.toUpperCase()}_BUNDLE_SRC。`,
       );
     }
-    console.log(
-      `[build-sidecar]   ✓ [RT-H09] 静态 ffmpeg 随包就绪 → sidecar/frontend/bin/(${`${r.stdout}`.split("\n")[0]})`,
-    );
-  } else {
-    console.log(
-      `[build-sidecar]   ✓ [RT-H09] 静态 ffmpeg 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证 —— 诚实标注)`,
-    );
+    rmSync(dest, { force: true });
+    copyFileSync(src, dest);
+    if (!isWinTarget) chmodSync(dest, 0o755);
+    if (!existsSync(dest)) {
+      throw new Error(`[build-sidecar] 自检失败[T-485]:${tool} 实拷后不存在(${dest})`);
+    }
+    if (triple === hostTriple) {
+      const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
+      if (r.status !== 0 || !`${r.stdout}`.startsWith(`${tool} version`)) {
+        throw new Error(
+          `[build-sidecar] 自检失败[T-485]:sidecar 内 ${tool} -version 未通过(status=${r.status})→ 不出必崩的包`,
+        );
+      }
+      console.log(
+        `[build-sidecar]   ✓ [T-485] 静态 ${tool} 随包就绪 → sidecar/frontend/bin/(${`${r.stdout}`.split("\n")[0]})`,
+      );
+    } else {
+      console.log(
+        `[build-sidecar]   ✓ [T-485] 静态 ${tool} 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证)`,
+      );
+    }
   }
 }
 
 function main() {
+  // [T-487] 只重建 Playwright 解析锚，用于本地验证双份实拷已消除。
+  if (process.env.CREATOROS_SIDECAR_PLAYWRIGHT_ONLY === "1") {
+    if (!existsSync(join(SIDECAR_RUNTIME, "frontend", "server.js"))) {
+      throw new Error("[build-sidecar] CREATOROS_SIDECAR_PLAYWRIGHT_ONLY=1 需已存在组装好的 sidecar(先跑一次完整 build)");
+    }
+    bundlePlaywright();
+    console.log("[build-sidecar] ✅ PLAYWRIGHT_ONLY 段完成(未重打 tarball;出包请跑完整流程)。");
+    return;
+  }
+
+  // [T-487] 只重建渲染依赖闭包，用于本地复测去重效果；不跑 Next/Tauri，也不消耗 CI 额度。
+  if (process.env.CREATOROS_SIDECAR_RENDER_ONLY === "1") {
+    if (!existsSync(join(SIDECAR_RUNTIME, "frontend", "server.js"))) {
+      throw new Error("[build-sidecar] CREATOROS_SIDECAR_RENDER_ONLY=1 需已存在组装好的 sidecar(先跑一次完整 build)");
+    }
+    bundleRenderDeps();
+    ensureOnnxRuntimeDylib();
+    ensureSharpNative();
+    const aliases = dedupeIdenticalOnnxAliases(join(SIDECAR_RUNTIME, "node_modules", ".pnpm"));
+    if (aliases > 0) console.log(`[build-sidecar]   ✓ ONNX 动态库 ABI 别名去重 ${aliases} 处`);
+    console.log("[build-sidecar] ✅ RENDER_ONLY 段完成(未重打 tarball;出包请跑完整流程)。");
+    return;
+  }
+
   // [T-383] 开发验证开关:只跑 @xenova/transformers 拷贝段(against 已组装的 sidecar,不重建
   //   standalone / 不打 tarball)。全量 build 很慢;这个开关让「拷贝 + 自检」段可独立真跑验证。
   //   正式出包仍走完整流程(main 里 bundleXenovaTransformers 常规在链上)。
@@ -1507,6 +1892,10 @@ function main() {
       throw new Error("[build-sidecar] CREATOROS_SIDECAR_XENOVA_ONLY=1 需已存在组装好的 sidecar(先跑一次完整 build)");
     }
     bundleXenovaTransformers();
+    ensureOnnxRuntimeDylib();
+    ensureSharpNative();
+    const aliases = dedupeIdenticalOnnxAliases(join(SIDECAR_RUNTIME, "node_modules", ".pnpm"));
+    if (aliases > 0) console.log(`[build-sidecar]   ✓ ONNX 动态库 ABI 别名去重 ${aliases} 处`);
     console.log("[build-sidecar] ✅ XENOVA_ONLY 段完成(未重打 tarball;出包请跑完整流程)。");
     return;
   }
@@ -1519,11 +1908,17 @@ function main() {
   if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1") {
     const existing = join(SIDECAR_RUNTIME, "frontend", "server.js");
     if (existsSync(existing)) {
+      assertBakedVerdictPublicKey();
       console.log(
         "[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。",
       );
-      // mac/Linux 从当前(已混淆的)sidecar/ 重打 tarball；Windows 直接 bundle 展开目录。
-      packSidecarTarball();
+      // package.mjs 的步1只需要确认缓存已恢复，不应在混淆前白压一次约 1GB tar；
+      // Tauri beforeBuild 再调用本脚本时不带 SKIP_TARBALL，才从最终变换后的 sidecar 压一次。
+      if (process.env.CREATOROS_SKIP_TARBALL !== "1") {
+        packSidecarTarball();
+      } else {
+        console.log("[build-sidecar] ⏭ CREATOROS_SKIP_TARBALL=1 → 当前阶段不压 tarball");
+      }
       return;
     }
     console.warn(
@@ -1569,6 +1964,13 @@ function main() {
   //       产物、bundle 后必坏(踩点:@electric-sql/pglite-<hash> ERR_MODULE_NOT_FOUND)。
   //   唯一需善后的是 .pnpm/node_modules/ 冗余 hoist 层(见下 prune)——它含会让 tauri-build 校验失败
   //   的相对链且 runtime 不需要。
+  // [T-487] 必须在 cpSync 前先剪生成树；否则即使复制后再删，也会先把 10GB+ 的 Rust target /
+  // 旧 sidecar / 旧安装包完整复制一遍，造成磁盘和打包时间灾难。
+  const tracedLeaksPruned = pruneStandaloneLeaks(STANDALONE_SRC);
+  assertNoPackagedBuildArtifacts(STANDALONE_SRC);
+  if (tracedLeaksPruned > 0) {
+    console.log(`[build-sidecar] ✂ 复制前剥离 standalone 工作区泄露 ${tracedLeaksPruned} 项(T-487)`);
+  }
   cpSync(STANDALONE_SRC, SIDECAR_RUNTIME, { recursive: true, verbatimSymlinks: true });
   // standalone 不自带 .next/static 和 public,补进 frontend/ 下(server.js 从那里读)。
   cpSync(join(FRONTEND, ".next", "static"), join(SIDECAR_RUNTIME, "frontend", ".next", "static"), {
@@ -1616,22 +2018,7 @@ function main() {
   //   0 命中,仅 nextjs.org/docs URL 假命中);删后有混淆步的运行时冒烟兜底,删坏必炸不出包。
   {
     const fe = join(SIDECAR_RUNTIME, "frontend");
-    const leaks = [
-      "src", "docs", "specs", "tests", "scripts", "playwright-report", "test-results",
-      "SPEC.md", "AGENT-PROTOCOL.md", "IMPLEMENTATION-ARCHITECTURE.md",
-      "TDD-PLAN.md", "TESTING.md", "README.md",
-      "eslint.config.mjs", "playwright.config.ts", "vitest.config.ts",
-      // [T-417 隐私] `.auth/douyin` = 开发机抖音**登录 session**(cookie/storage),被 standalone
-      //   trace / cwd 相对写混进 sidecar(实包盘点 75 条目进 tar)。运行时 app 读的是 appDataDir 的
-      //   .auth(lib.rs 注入 CREATOROS_DOUYIN_AUTH_DIR),bundled 这份是死重 + **作者登录态泄露给用户**。
-      //   开发/CI 机的 .env* 同理(若存在)一并剥,防密钥进包。
-      ".auth", ".env", ".env.local", ".env.production", ".env.development",
-    ];
-    let pruned = 0;
-    for (const name of leaks) {
-      const p = join(fe, name);
-      if (existsSync(p)) { rmSync(p, { recursive: true, force: true }); pruned++; }
-    }
+    const pruned = pruneStandaloneLeaks(SIDECAR_RUNTIME);
     // 剥离自检:运行必需物必须还在(防手滑加错清单)。
     for (const must of ["server.js", ".next", "package.json", "node_modules", "public"]) {
       if (!existsSync(join(fe, must))) {
@@ -1721,10 +2108,16 @@ function main() {
   ensureOnnxRuntimeDylib();
   // [T-225b] sharp 0.32.x 原生补拷(修 @xenova/transformers 顶层 import 连坐崩,同上第二层)。
   ensureSharpNative();
+  const dedupedOnnxAliases = dedupeIdenticalOnnxAliases(
+    join(SIDECAR_RUNTIME, "node_modules", ".pnpm"),
+  );
+  if (dedupedOnnxAliases > 0) {
+    console.log(`[build-sidecar]   ✓ ONNX 动态库 ABI 别名去重 ${dedupedOnnxAliases} 处`);
+  }
 
   // [T-326 RT-H09] 静态 ffmpeg 实拷(douyin 抽音 + whisper-local 解码的运行时解析链第②级)——
   //   放打 tarball 前,让 sidecar/frontend/bin/ffmpeg 进包。拉不到 → warn 跳过(回落用户自装)。
-  bundleFfmpeg(triple);
+  bundleMediaTools(triple);
 
   // [T-413 §4 安全] 打 tarball 前脱敏构建绝对路径(server.js/manifest/.bin shim 里的用户名+布局)。
   //   放最后:确保 playwright/xenova/ffmpeg 等后续步引入的 .bin shim 也一并脱敏。
@@ -1739,7 +2132,13 @@ function main() {
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。
-  packSidecarTarball();
+  if (process.env.CREATOROS_SKIP_TARBALL !== "1") {
+    packSidecarTarball();
+  } else {
+    console.log(
+      "[build-sidecar] ⏭ CREATOROS_SKIP_TARBALL=1 → 只产 clean runtime，tar 留到最终变换后压一次。",
+    );
+  }
 
   console.log(`[build-sidecar] ✅ 完成。`);
   console.log(`    sidecar bin (=node runtime): ${sidecarPath}`);
@@ -1748,11 +2147,11 @@ function main() {
   }
   console.log(`    standalone 运行目录         : ${SIDECAR_RUNTIME}`);
   console.log(`    server.js                  : ${join(SIDECAR_RUNTIME, "frontend", "server.js")}`);
-  if (shouldPackSidecarTarball()) {
+  if (shouldPackSidecarTarball() && process.env.CREATOROS_SKIP_TARBALL !== "1") {
     console.log(`    bundle tarball             : ${join(SRC_TAURI, "sidecar.tar.gz")}`);
-    console.log(
-      "    Tauri bundle 会把 src-tauri/sidecar.tar.gz 作 resource 带上；Rust 侧原子解压后运行。",
-    );
+    console.log(platform === "win32"
+      ? "    Windows NSIS 安装期由应用内置 Rust 解压器物化到 $INSTDIR/runtime-images；首启零解压。"
+      : "    Tauri bundle 携带 tar resource；Rust 侧在 appData 原子解压后运行。");
   } else {
     console.log(`    Windows direct resource    : ${SIDECAR_RUNTIME}`);
     console.log("    Tauri/NSIS 安装时展开到安装目录；首启不再调用 tar、不再写 C 盘 runtime 缓存。");

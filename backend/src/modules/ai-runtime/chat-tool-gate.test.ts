@@ -204,8 +204,50 @@ describe("defineChatTool 审计打点", () => {
     });
     await executeOf(bad)({}, {});
     expect(spy).toHaveBeenCalledWith(
-      expect.stringMatching(/^\[chat-tool\] name=context\.materials error durationMs=\d+$/),
+      expect.stringMatching(
+        /^\[chat-tool\] name=context\.materials error durationMs=\d+ class=Error reason=unknown message="boom"$/,
+      ),
     );
+  });
+
+  it("[T-522] 异步 dispatch 成功日志带脱敏 taskId，可与 runner 终态日志关联", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const dispatched = defineChatTool("script.draft", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => ({
+        kind: "script.draft" as const,
+        taskId: "task 1\nsecret",
+      }),
+    });
+    await executeOf(dispatched)({}, {});
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^\[chat-tool\] name=script\.draft ok durationMs=\d+ taskId=task_1_secret$/,
+      ),
+    );
+  });
+
+  it("[T-486] 失败日志包含错误分类与脱敏原因，不泄露 token", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const bad = defineChatTool("context.materials", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => {
+        throw Object.assign(
+          new Error("Failed after 3 attempts: Bearer sk-secret-token"),
+          { statusCode: 503, code: "ECONNRESET" },
+        );
+      },
+    });
+    await executeOf(bad)({}, {});
+    const line = String(spy.mock.calls.at(-1)?.[0] ?? "");
+    expect(line).toContain("class=Error");
+    expect(line).toContain("reason=http_503");
+    expect(line).toContain("status=503");
+    expect(line).toContain("message=");
+    expect(line).not.toContain("sk-secret-token");
+    expect(line).toContain("[REDACTED]");
   });
 });
 

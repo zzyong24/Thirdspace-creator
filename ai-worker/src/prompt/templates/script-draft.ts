@@ -1,6 +1,11 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
 import { ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE } from "../grounding-facets";
+import {
+  registerOfficialCompletionPolicyAdapter,
+  type CompletionPolicyAdapter,
+} from "../completion-policy";
+import type { CompletionPolicyV1 } from "../effective-skill-types";
 
 /**
  * 写文案/分镜脚本 skill 模板(script.draft)—— 用户的旗舰例子:写文案 = 模板 ⊕ {定位,风格,knowledge,横竖屏,策划产物}。
@@ -32,26 +37,75 @@ export type ScriptShotVisual = z.infer<typeof scriptShotVisualSchema>;
 
 // 一个分镜 = 爆款公式的一拍。四字段独立(口播/画面/字幕/时长),配合 CollabField 逐字段可改。
 export const scriptShotSchema = z.object({
+  // T-512：结构角色是 skill 声明的业务语义载体。通用内核只读取 role 并按当前
+  // completionPolicy.requiredSequence 比较，不认识 hook/CTA 等业务词。
+  role: z.string().default(""),
   口播: z.string().default(""),
   画面: z.string().default(""),
   字幕: z.string().default(""),
   时长: z.string().default(""),
   // [T-387b] 可选结构化视觉意图(弱模型不产也过;画面文本列保留,向后兼容)。
   visual: scriptShotVisualSchema.optional(),
-});
+}).refine(
+  (shot) => Boolean(shot.口播.trim() || shot.画面.trim() || shot.字幕.trim()),
+  { message: "分镜的口播、画面、字幕不能同时为空" },
+);
 // 顶层输出契约:一个 shots 数组(顶层对象,非裸数组)。
 export const scriptDraftSchema = z.object({
-  shots: z.array(scriptShotSchema).default([]),
+  // [T-486] 空数组不是成功结果：把非空要求放进输出契约，generateObject 才会自动重试，
+  // 而不是让空数组穿过 schema 后在 runner 末端直接失败。
+  shots: z.array(scriptShotSchema).min(1),
 });
 export type ScriptDraftOutput = z.infer<typeof scriptDraftSchema>;
 
+export const SCRIPT_DRAFT_COMPLETION_POLICY: CompletionPolicyV1 = {
+  schemaVersion: 1,
+  minSegments: 6,
+  maxSegments: 10,
+  requiredSequence: ["hook", "body", "cta"],
+  repairAttempts: 2,
+};
+
+export const SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER: CompletionPolicyAdapter = {
+  id: "script.draft.shots",
+  version: "1",
+  supportsSchema(jsonSchema) {
+    const serialized = JSON.stringify(jsonSchema);
+    return (
+      serialized.includes('"shots"') &&
+      serialized.includes('"role"')
+    );
+  },
+  toSegments(value) {
+    if (
+      typeof value !== "object" ||
+      value === null ||
+      !Array.isArray((value as { shots?: unknown }).shots)
+    ) {
+      throw new Error("输出缺少 shots 数组");
+    }
+    return (value as { shots: Array<{ role?: string | null }> }).shots.map(
+      (shot) => ({ role: shot?.role }),
+    );
+  },
+};
+
+registerOfficialCompletionPolicyAdapter(
+  SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER,
+);
+
 export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   id: "script.draft",
-  // [T-387b] v5:画面列结构化(shots[].visual 可选:description/assetRefs/missing)+ 注入项目素材库清单。
-  version: "v5",
+  // T-512 v6：shot.role + skill 自有 completionPolicy/adapter，完整性不再靠提示词软约束。
+  version: "v6",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry 取它
   // 绑 generateObject,模型必须吐 { shots:[...] },校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: scriptDraftSchema,
+  completionPolicy: SCRIPT_DRAFT_COMPLETION_POLICY,
+  completionPolicyAdapter: {
+    id: SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER.id,
+    version: SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER.version,
+  },
   // 纯结构化生成,不挂工具。
   tools: [],
   system: "你是这位创作者的「分镜脚本 agent」,像专业短视频编导那样写可拍的分镜脚本。",
@@ -88,7 +142,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
 ${AUDIENCE_MINDSET_CLAUSE}
 ${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"shots": [...]},shots 是分镜数组,每一项:
-{"口播"(这一镜**要念出来的那句话本身**——只放念的话,一句一个意思,禁放批注/修改建议/替代方案/括号说明/镜头字幕提示),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s"),
+{"role"(本镜结构角色；默认方法只允许 hook/body/cta，第一镜 hook、中间镜 body、最后一镜 cta),"口播"(这一镜**要念出来的那句话本身**——只放念的话,一句一个意思,禁放批注/修改建议/替代方案/括号说明/镜头字幕提示),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s"),
  "visual"(可选,结构化视觉意图):{"description"(这一镜配什么画面,一句),"assetRefs"(点名素材的 assetId 数组),"missing"(需要但项目里没有的素材描述数组)}}。
 【visual 硬约束(诚实门)】若上方给了【项目素材库】清单:assetRefs **只能**填清单里出现过的真实 assetId(优先引用已有素材,让画面落到实拍/实图);清单里没有合适素材时,把需要的素材如实写进 missing(如「产品操作录屏」),**绝不虚构 assetId**。没给清单则 assetRefs 留空、需要的素材写 missing。
 第一镜必须是前3秒钩子,最后一镜必须落在 CTA。6-10 镜为宜。`,

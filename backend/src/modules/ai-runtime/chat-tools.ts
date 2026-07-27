@@ -54,7 +54,7 @@ export interface ChatToolDeps {
     | Array<TopicGenerateItemShape>
     // [T-245] 新形状(additive,旧裸数组仍兼容):trend 出题带信源信号降级注记 ——
     // 未拉到已登记信源信号时 trendNote 诚实注明(「本次未拉到信源信号(已登记 N 个)」),
-    // 随 tool-result 流回,让编导如实转述、引导用户去选题页『信号源』登记,而非猜/编。
+    // 随 tool-result 流回,让编导如实转述、引导用户去『内容雷达』登记来源,而非猜/编。
     | { items: Array<TopicGenerateItemShape>; trendNote?: string | null }
   >;
   /**
@@ -238,6 +238,12 @@ export interface ChatToolDeps {
       sourceNote: string;
     }>;
     suggestedTags: string[];
+    coverage?: {
+      inputChars: number;
+      processedChars: number;
+      truncatedChars: number;
+      chunkCount: number;
+    };
   }>;
   /**
    * [T-084b] material.screenshot 核心 —— 真开无头浏览器给公开 URL 截图,落 **pending** asset
@@ -402,7 +408,25 @@ export interface ChatToolDeps {
      * 行为完全不变。
      */
     referenceAssetId?: string;
-  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  }) => Promise<{
+    taskId: string | null;
+    projectId: string | null;
+    error: string | null;
+    reference?: CoverReferenceSelection;
+  }>;
+  /**
+   * [T-523] 抖音分享链接的持久编排端口。普通分享只建档；只有用户本轮明确要求转写/
+   * ASR/逐字稿/字幕/提取文字时 transcribe=true。端口只排 intelligence 持久任务。
+   */
+  dispatchDouyinShare?: (input: {
+    shareInput: string;
+    transcribe: boolean;
+  }) => Promise<{
+    taskId: string | null;
+    ownerId: string | null;
+    transcribe: boolean;
+    error: string | null;
+  }>;
   /**
    * [T-103b] review.script 核心 —— **不直接审**(script.review 后台跑 L1 违禁词 lint + L2 豆包
    * 语义审、分钟内不能阻塞对话回合):dispatch 既有 script.review ai_task(复用 T-086 审核链路,
@@ -442,6 +466,7 @@ export interface ChatToolDeps {
       title: string;
       stage: string;
       status: string;
+      source?: string;
       publishedAt?: string | null;
     }>;
     total: number;
@@ -523,7 +548,7 @@ export interface ChatToolDeps {
   getKnowledgeText?: (input: { id: string }) => Promise<KnowledgeTextRaw | null>;
   /**
    * [T-099 切片四] context.publications 只读端口 —— 该用户的发布记录清单(平台/链接/发布时间/
-   * 关联作品标题),分页。composition root 复用 publishing 公开读源(getRecentPublicationsWithTitle,
+   * 关联作品标题/封面资产),分页。composition root 复用 publishing 公开读源(getRecentPublicationsWithTitle,
    * user-scoped)。读不到 → 空数组(诚实空态)。**纯读上下文**。
    */
   listPublications?: (input: {
@@ -578,6 +603,8 @@ export interface PublicationsListRaw {
     publishedAt: string | null;
     /** 关联作品标题(revision 标题;拿不到 → 空串,不编)。 */
     projectTitle: string;
+    /** 当前 revision 的封面资产；可作为 cover.generate.referenceAssetId。 */
+    coverAssetId: string | null;
     status: string;
   }>;
   total: number;
@@ -807,7 +834,7 @@ export interface TopicGenerateToolResult {
   /**
    * [T-245] trend 出题的信源信号降级注记(additive,仅 basis=trend 且未拉到已登记信源信号时有值)。
    * 随 tool-result 流回模型:编导要如实转述(「本次未拉到信源信号(已登记 N 个)」)并引导用户去
-   * 选题页『信号源』登记/检查热榜站点;前端候选卡忽略此字段(不渲)。
+   * 『内容雷达』登记/检查网页与 RSS 来源;前端候选卡忽略此字段(不渲)。
    */
   trendNote?: string | null;
 }
@@ -1037,6 +1064,25 @@ export interface CoverGenerateToolResult {
   projectId: string | null;
   /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
   error: string | null;
+  /** 这里只记录选择结果；最终是否送进 adapter 以候选 resultData.referenceImage 为准。 */
+  reference?: CoverReferenceSelection;
+}
+
+export type CoverReferenceSelection =
+  | { status: "selected"; assetId: string; title: string }
+  | {
+      status: "needs_clarification";
+      reason: "no_image" | "multiple_images" | "incomplete_catalog";
+      total: number | null;
+      candidates: Array<{ id: string; title: string }>;
+    };
+
+export interface DouyinShareToolResult {
+  kind: "intelligence.douyin.share";
+  taskId: string | null;
+  ownerId: string | null;
+  action: "archive" | "archive_and_transcribe";
+  error: string | null;
 }
 
 export interface CalibrationDiagnoseToolResult {
@@ -1144,6 +1190,12 @@ export interface KnowledgeDistillToolResult {
   suggestedTags: string[];
   /** 送蒸的原文(clamp 后)—— 卡上「原文同时存档」reference 条目的数据源。 */
   originalText: string;
+  /** [T-430] 工具入口覆盖真相：超硬上限时让 Copilot 明说截了多少，禁止假装处理全文。 */
+  coverage: {
+    inputChars: number;
+    submittedChars: number;
+    truncatedChars: number;
+  };
   /** 失败时的人话错误(成功为 null);未命中人话规则时回落原始 message(诚实,不装懂)。 */
   error: string | null;
   /** true = 错误属「换模型可解」类(卡附「去设置」深链)。 */
@@ -1171,6 +1223,7 @@ export interface ContextProjectsToolResult {
     title: string;
     stage: string;
     status: string;
+    source?: string;
     publishedAt?: string | null;
   }>;
   // [T-058②] 分页真相:总量 + 本页范围 —— 模型据此如实告知「还有 N 条没看」。
@@ -1495,6 +1548,8 @@ export interface ContextPublicationsToolResult {
     url: string | null;
     publishedAt: string | null;
     projectTitle: string;
+    /** 当前 revision 的封面资产；无封面时为 null。 */
+    coverAssetId: string | null;
     status: string;
   }>;
   total: number;
@@ -1844,6 +1899,27 @@ const COVER_GENERATE_PARAMS = jsonSchema<{
   additionalProperties: false,
 });
 
+const DOUYIN_SHARE_PARAMS = jsonSchema<{
+  shareInput: string;
+  action: "archive" | "archive_and_transcribe";
+}>({
+  type: "object",
+  properties: {
+    shareInput: {
+      type: "string",
+      description: "用户粘贴的完整抖音分享文本或链接。",
+    },
+    action: {
+      type: "string",
+      enum: ["archive", "archive_and_transcribe"],
+      description:
+        "普通分享必须选 archive；只有用户明确说转写、ASR、逐字稿、字幕或提取文字时才选 archive_and_transcribe。",
+    },
+  },
+  required: ["shareInput", "action"],
+  additionalProperties: false,
+});
+
 const CALIBRATION_DIAGNOSE_PARAMS = jsonSchema<{
   title: string;
   script?: string;
@@ -1994,7 +2070,7 @@ const KNOWLEDGE_DISTILL_PARAMS = jsonSchema<{ content: string }>({
   properties: {
     content: {
       type: "string",
-      maxLength: 200_000,
+      maxLength: 1_000_000,
       description:
         "要蒸馏的原文全文(用户在对话里粘的笔记/逐字稿/网页摘录),逐字传入 —— 不要摘要、不要改写、不要截断。",
     },
@@ -2328,12 +2404,21 @@ export function knowledgeRelevanceScore(haystack: string, query: string): number
  * 断言每个 kind 在前端 CONTEXT_CARD_REGISTRY 有渲染卡 —— 新增 context 工具不配卡 = 测试红。
  */
 export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
+  // [T-473] allChatTools 每个 chat request 只构造一次，因此此 Map 的生命周期恰好是一回合。
+  // 同一回合里弱模型若用同参重复调 topic.enrich，复用第一次 Promise/结果，不重复跑昂贵 runner。
+  const topicEnrichRuns = new Map<string, Promise<TopicEnrichToolResult>>();
+  // [T-522] 只缓存纯读的 material.gather；Map 随 allChatTools 实例销毁，因此不会跨
+  // 回合、账号或过期窗口复用，也不触碰 screenshot/generate 等有副作用工具。
+  const materialGatherRuns = new Map<
+    string,
+    Promise<MaterialGatherToolResult>
+  >();
   return {
     "topic.generate": defineChatTool("topic.generate", {
       // [T-245] 热点能力认知:明说 basis=trend 会自动拉真实热点信号(T-235b 信源系统 + web 搜索),
       // 治编导自称「没有实时热点拉取能力」的认知错位(prompt 没告诉它,能力其实在)。
       description:
-        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。[T-382] 出题依据(定位/评论信号/知识库)由系统按 basis 自动注入——**不需要先问用户「你的定位是什么/受众是谁」这类系统已知的信息**,直接按用户意图选 basis 调用即可。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①已登记网页信源的实时信号(标题/热度/链接,信源在选题页『信号源』登记,如 36氪热榜等热榜站点)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
+        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。[T-382] 出题依据(定位/评论信号/知识库)由系统按 basis 自动注入——**不需要先问用户「你的定位是什么/受众是谁」这类系统已知的信息**,直接按用户意图选 basis 调用即可。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①内容雷达已登记网页/RSS 来源的实时条目(标题/热度/原链接)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
       inputSchema: TOPIC_GENERATE_PARAMS,
       execute: async ({ basis, extraBrief }): Promise<TopicGenerateToolResult> => {
         const res = await deps.generateTopics({
@@ -2360,15 +2445,29 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         angle,
         verifiedBrief,
       }): Promise<TopicEnrichToolResult> => {
-        // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的
-        // 已有候选(selection.kind==="candidate"),随结果持久化,前端据它 patch/新建二选一。
-        const { card, candidateId } = await deps.enrichTopic({
-          title,
-          angle: angle ?? "",
-          // [T-371] 联网核实事实透传(照 extraBrief 清洗范式:trim + 截 2000,空→undefined)。
-          verifiedBrief: clampExtraBrief(verifiedBrief),
-        });
-        return { kind: "topic.card", card, candidateId };
+        const normalizedAngle = angle ?? "";
+        const normalizedBrief = clampExtraBrief(verifiedBrief);
+        const dedupeKey = JSON.stringify([
+          title.trim(),
+          normalizedAngle.trim(),
+          normalizedBrief ?? "",
+        ]);
+        const existing = topicEnrichRuns.get(dedupeKey);
+        if (existing) return existing;
+
+        const run = (async (): Promise<TopicEnrichToolResult> => {
+          // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的
+          // 已有候选(selection.kind==="candidate"),随结果持久化,前端据它 patch/新建二选一。
+          const { card, candidateId } = await deps.enrichTopic({
+            title,
+            angle: normalizedAngle,
+            // [T-371] 联网核实事实透传(照 extraBrief 清洗范式:trim + 截 2000,空→undefined)。
+            verifiedBrief: normalizedBrief,
+          });
+          return { kind: "topic.card", card, candidateId };
+        })();
+        topicEnrichRuns.set(dedupeKey, run);
+        return run;
       },
     }, deps.humanizeError),
     "script.hooks": defineChatTool("script.hooks", {
@@ -2479,12 +2578,21 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
       // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
       description: deps.searchConfigured
-        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉选题页『信号源』已登记热榜站点的真实信号。"
+        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉『内容雷达』已登记网页/RSS 来源的真实信号。"
         : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {
-        const { items, grounding } = await deps.gatherMaterials({ query });
-        return { kind: "material.gather", grounding, items };
+        const normalizedQuery = (query ?? "").trim().replace(/\s+/g, " ");
+        const existing = materialGatherRuns.get(normalizedQuery);
+        if (existing) return existing;
+        const run = (async (): Promise<MaterialGatherToolResult> => {
+          const { items, grounding } = await deps.gatherMaterials({
+            query: normalizedQuery,
+          });
+          return { kind: "material.gather", grounding, items };
+        })();
+        materialGatherRuns.set(normalizedQuery, run);
+        return run;
       },
     }, deps.humanizeError),
     // [T-084b] 自动化截图:给公开 URL,服务端真开无头浏览器截图 → 落素材中心(带 sourceUrl
@@ -2877,7 +2985,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         referenceAssetId,
       }): Promise<CoverGenerateToolResult> => {
         try {
-          const { taskId, projectId: pid, error } = await deps.dispatchGenerateCover({
+          const {
+            taskId,
+            projectId: pid,
+            error,
+            reference,
+          } = await deps.dispatchGenerateCover({
             projectId:
               typeof projectId === "string" && projectId.trim()
                 ? projectId.trim()
@@ -2890,7 +3003,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                 ? referenceAssetId.trim()
                 : undefined,
           });
-          return { kind: "cover.generate", taskId, projectId: pid, error };
+          return {
+            kind: "cover.generate",
+            taskId,
+            projectId: pid,
+            error,
+            ...(reference ? { reference } : {}),
+          };
         } catch (err) {
           return {
             kind: "cover.generate",
@@ -2901,6 +3020,57 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         }
       },
     }, deps.humanizeError),
+    "intelligence.douyin.share": defineChatTool(
+      "intelligence.douyin.share",
+      {
+        description:
+          "持久归档一条抖音分享链接。普通分享只建档；只有用户本轮明确要求转写/ASR/逐字稿/字幕/提取文字时才在建档完成后幂等排转写。抖音分享链接禁止交给 web.read。",
+        inputSchema: DOUYIN_SHARE_PARAMS,
+        execute: async ({
+          shareInput,
+          action,
+        }): Promise<DouyinShareToolResult> => {
+          const normalized =
+            typeof shareInput === "string" ? shareInput.trim() : "";
+          const transcribe = action === "archive_and_transcribe";
+          const empty = {
+            kind: "intelligence.douyin.share" as const,
+            taskId: null,
+            ownerId: null,
+            action: transcribe
+              ? ("archive_and_transcribe" as const)
+              : ("archive" as const),
+          };
+          if (!normalized) {
+            return { ...empty, error: "请粘贴抖音分享链接。" };
+          }
+          if (!deps.dispatchDouyinShare) {
+            return { ...empty, error: "抖音分享建档能力当前未接入。" };
+          }
+          try {
+            const result = await deps.dispatchDouyinShare({
+              shareInput: normalized,
+              transcribe,
+            });
+            return {
+              kind: "intelligence.douyin.share",
+              taskId: result.taskId,
+              ownerId: result.ownerId,
+              action: result.transcribe
+                ? "archive_and_transcribe"
+                : "archive",
+              error: result.error,
+            };
+          } catch (error) {
+            return {
+              ...empty,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        },
+      },
+      deps.humanizeError,
+    ),
     "calibration.diagnose": defineChatTool("calibration.diagnose", {
       description:
         "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。[T-382] 诊断的是**系统里已有稿子的项目/作品**时,先用 context.artifact.text(传 projectId,projectId 从 context.projects/context.metrics 拿)把真实文稿读出来经 script 传入,**不要只拿标题评、更不要让用户手动贴系统里已有的稿子**。结果是诊断候选,需人采纳后才落预测——不直接写库。**只有标题、系统里也没有文稿时,如实按「仅标题可评」的口径评并明说局限;上游内容还没就绪就先诚实告知,不许假装读过全文、不许输出「待补文稿后再评」这类占位结论。**",
@@ -3056,13 +3226,20 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         "把用户粘贴的原始材料(笔记/口播逐字稿/网页摘录/评论讨论)蒸馏成一批可独立引用的知识原子候选(观点/证据/金句/观众问题)。用户在对话里倒入要存进知识库的原文时调用,content 必须是原文逐字全文(不要摘要改写)。结果是候选,渲成确认门卡由用户勾选采纳后才入知识库——不直接写库。",
       inputSchema: KNOWLEDGE_DISTILL_PARAMS,
       execute: async ({ content }): Promise<KnowledgeDistillToolResult> => {
+        const inputChars = typeof content === "string" ? content.trim().length : 0;
         const text = clampDistillContent(content);
+        const coverage = {
+          inputChars,
+          submittedChars: text.length,
+          truncatedChars: Math.max(0, inputChars - text.length),
+        };
         if (!text) {
           return {
             kind: "knowledge.distill",
             atoms: [],
             suggestedTags: [],
             originalText: "",
+            coverage,
             error: "没有收到要蒸馏的原文 —— 请把材料整段粘进对话再试。",
             suggestSwitchModel: false,
           };
@@ -3076,6 +3253,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             atoms,
             suggestedTags,
             originalText: text,
+            coverage,
             error: null,
             suggestSwitchModel: false,
           };
@@ -3086,6 +3264,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             atoms: [],
             suggestedTags: [],
             originalText: text,
+            coverage,
             error:
               human?.message ??
               (err instanceof Error ? err.message : String(err)),
@@ -3098,7 +3277,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    实时拉**真实数据**给模型读进上下文再用文字回答(纯读,不产候选、不写任何实体)。
     "context.projects": defineChatTool("context.projects", {
       description:
-        "只读:拉取创作者的项目/作品列表(id/标题/阶段/状态),带 total/hasMore 可翻页(offset)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
+        "只读:拉取创作者的项目/作品列表(id/标题/来源/人话阶段/状态/canonical 发布时间),带 total/hasMore 可翻页(offset)。review 只表示“复盘”，不得理解成待审核或未发布；是否发布只看 canonical 发布时间。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
       inputSchema: CONTEXT_PROJECTS_PARAMS,
       execute: async ({
         limit,
@@ -3414,7 +3593,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    默认 20/封顶 50(clampContextLimit),带 total/offset/hasMore 真相字段。
     "context.publications": defineChatTool("context.publications", {
       description:
-        "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答。纯读取上下文,不产候选、不写库。",
+        "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题/当前封面 coverAssetId),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答；要参考历史作品封面风格生成新封面时，先从这里取 coverAssetId，再原样传给 cover.generate.referenceAssetId。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PUBLICATIONS_PARAMS,
       execute: async ({
         limit,
@@ -3565,6 +3744,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "material.gather",
   "material.screenshot",
   "web.read",
+  // [T-523] 抖音分享持久建档/明确授权转写专路；确定性路由会同时物理排除 web.read。
+  "intelligence.douyin.share",
   // [T-253] 本机文件读取(任意路径 + 运行时确认卡 + 敏感 denylist 硬门)。
   "local.read",
   // [T-256a] 环境感知扩展:工具探测(白名单 which/--version)+ 工作区目录感知(复用 T-253 授权表)。
@@ -3634,6 +3815,7 @@ const MATERIAL_TOOL_NAMES: readonly string[] = [
   "material.gather",
   "material.screenshot",
   "web.read",
+  "intelligence.douyin.share",
   // [T-253] 本机文件读取与 web.read 同性质(把外部真材料带进对话),全场景保留。
   "local.read",
   // [T-256a] 环境感知(工具探测 + 工作区目录)同性质:任何场景都可能要判断「能不能落地/素材在哪」。

@@ -51,6 +51,21 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
     expect(aRows[0]!.userId).toBe(A);
   });
 
+  it("[T-547] list 按写入时间倒序返回，最新导入排在最前", async () => {
+    let tick = 0;
+    const deps = deterministicDeps();
+    const orderedRepo = createKnowledgeRepository(db, {
+      ...deps,
+      now: () =>
+        new Date(Date.UTC(2026, 6, 26, 0, 0, tick++)).toISOString(),
+    });
+    const older = await orderedRepo.create(A, ACC_A, { title: "先导入" });
+    const newer = await orderedRepo.create(A, ACC_A, { title: "后导入" });
+
+    const rows = await orderedRepo.list(A, ACC_A);
+    expect(rows.map((row) => row.id)).toEqual([newer.id, older.id]);
+  });
+
   it("get(B, aItemId) throws OwnershipError (no existence leak)", async () => {
     const a = await repo.create(A, ACC_A, { title: "A 的笔记" });
     await expect(repo.get(B, ACC_B, a.id)).rejects.toBeInstanceOf(OwnershipError);

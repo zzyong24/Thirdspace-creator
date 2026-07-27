@@ -35,6 +35,7 @@ import { topicAttributionOperations } from "./operations/topic-attribution";
 import { schedulingOperations } from "./operations/scheduling";
 import { pagesOperations } from "./operations/pages";
 import { authOperations } from "./operations/auth";
+import { intelligenceOperations } from "./operations/intelligence";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
@@ -102,6 +103,8 @@ export const ENDPOINTS = {
   ...aiOperations,
   // [T-255a] 执行层任务(create/list/get/confirm/discard)。
   ...executionOperations,
+  // T-482 内容雷达：分类/来源/内容/运行/转化/迁移与 Project 来源引用。
+  ...intelligenceOperations,
   ...searchOperations,
   ...notificationsOperations,
   ...settingsOperations,

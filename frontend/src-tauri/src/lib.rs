@@ -31,6 +31,7 @@ use base64::Engine as _;
 //   Zeroize 抹掉注入 sidecar 后的临时明文 buffer。
 use secrecy::{ExposeSecret, SecretString};
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri::webview::PageLoadEvent;
 use zeroize::Zeroize as _;
 // [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
 //   macOS 走 std::process 直接 spawn server.app(Dock 隐身),不引这些,故按平台条件 import,免 macOS
@@ -60,6 +61,47 @@ const PROMPT_BUNDLE_PUBLIC_KEY: &str =
 /// ⚠️ 与 frontend/src/server/sidecar-lifecycle.ts 的 `SHUTDOWN_SENTINEL` 必须一致,
 /// 两侧单测各自钉住字面值(改任一侧必挂测)。macOS 构建也保留此常量(单测在 mac 跑)。
 pub const SIDECAR_SHUTDOWN_SENTINEL: &str = "__CREATOROS_SHUTDOWN__";
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RuntimeSystemInfo {
+    os: &'static str,
+    arch: String,
+}
+
+#[cfg(target_os = "macos")]
+fn runtime_host_arch() -> String {
+    // Rosetta 下编译目标/进程架构可能是 x86_64，但实体机器仍是 Apple Silicon。
+    // `hw.optional.arm64=1` 是 macOS 原生硬件能力，不依赖浏览器兼容字段或当前进程模式。
+    let mut arm64_supported: libc::c_int = 0;
+    let mut value_size = std::mem::size_of::<libc::c_int>();
+    let result = unsafe {
+        libc::sysctlbyname(
+            b"hw.optional.arm64\0".as_ptr().cast(),
+            (&mut arm64_supported as *mut libc::c_int).cast(),
+            &mut value_size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if result == 0 && arm64_supported == 1 {
+        return "arm64".to_owned();
+    }
+    std::env::consts::ARCH.to_owned()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn runtime_host_arch() -> String {
+    std::env::consts::ARCH.to_owned()
+}
+
+#[tauri::command]
+fn runtime_system_info() -> RuntimeSystemInfo {
+    RuntimeSystemInfo {
+        os: std::env::consts::OS,
+        arch: runtime_host_arch(),
+    }
+}
 
 /// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
 /// 不可少(否则每启动重生成 key → 激活码/model key 全解不开、每次重激活),但**不许明文落盘**。
@@ -368,7 +410,7 @@ fn resolve_machine_id(app: &AppHandle) -> Option<String> {
 enum SidecarChild {
     /// macOS：std 直接 spawn 的子进程(走 server.app 内层二进制,Dock 隐身)。
     #[cfg(target_os = "macos")]
-    Std(std::process::Child),
+    Std(std::sync::Arc<shared_child::SharedChild>),
     /// Win/Linux：tauri sidecar(externalBin)的子进程。
     /// [T-372 W3] Windows 额外持有 Job Object 守护(KILL_ON_JOB_CLOSE):壳退出/崩溃
     /// → Job 句柄被 OS 回收 → sidecar 整棵进程树(含 Chrome/ffmpeg)内核级必死。
@@ -384,7 +426,7 @@ impl SidecarChild {
     fn kill(self) {
         match self {
             #[cfg(target_os = "macos")]
-            SidecarChild::Std(mut c) => {
+            SidecarChild::Std(c) => {
                 // [T-365/T-362] 树杀 + 优雅窗口:此前 `Child::kill()` = SIGKILL 单个 node ——
                 //   ① Chrome/ffmpeg 子进程直接孤儿(真机实锤:孤儿 next-server 带 headless Chrome 树);
                 //   ② 正在写 PGlite 时硬杀 = WAL 半写库损坏(2026-07-16 数据事故根因)。
@@ -451,35 +493,120 @@ fn find_free_port() -> u16 {
         .unwrap_or(41730)
 }
 
-/// 阻塞轮询 `http://127.0.0.1:PORT/` 直到 sidecar 就绪(或超时)。返回是否就绪。
-/// 用裸 TCP connect 探活(不引 http client 依赖 —— 端口能连上即认为 server listen 成功)。
-fn wait_until_ready(port: u16, timeout: Duration) -> bool {
+/// 阻塞轮询 `http://127.0.0.1:PORT/`，同时消费 instrumentation 完成/子进程退出信号。
+/// 只有“完成哨兵 + 连续两次 TCP 可连”才返回 Ready；退出和超时都有独立结果。
+const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
+
+#[derive(Clone, Debug)]
+enum StartupSignal {
+    Verified,
+    Exited(String),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum StartupWaitOutcome {
+    Pending,
+    Ready,
+    Exited(String),
+    TimedOut,
+}
+
+fn classify_startup_probe(
+    tcp_ready: bool,
+    instrumentation_verified: bool,
+    exit_reason: Option<&str>,
+    timed_out: bool,
+) -> StartupWaitOutcome {
+    // 退出优先：sidecar 可能短暂 listen 后立即因 verdict 失败退出，本次白屏正是此竞态。
+    if let Some(reason) = exit_reason {
+        return StartupWaitOutcome::Exited(reason.to_string());
+    }
+    if tcp_ready && instrumentation_verified {
+        return StartupWaitOutcome::Ready;
+    }
+    if timed_out {
+        return StartupWaitOutcome::TimedOut;
+    }
+    StartupWaitOutcome::Pending
+}
+
+/// 同时等待 instrumentation 完成哨兵、稳定 TCP 与子进程存活。
+fn wait_until_ready(
+    port: u16,
+    timeout: Duration,
+    signals: std::sync::mpsc::Receiver<StartupSignal>,
+) -> StartupWaitOutcome {
     let deadline = std::time::Instant::now() + timeout;
     let addr = format!("127.0.0.1:{port}");
-    while std::time::Instant::now() < deadline {
-        if std::net::TcpStream::connect(&addr).is_ok() {
-            return true;
+    let mut instrumentation_verified = false;
+    let mut tcp_streak = 0_u8;
+    loop {
+        let mut exit_reason = None;
+        for signal in signals.try_iter() {
+            match signal {
+                StartupSignal::Verified => instrumentation_verified = true,
+                StartupSignal::Exited(reason) => exit_reason = Some(reason),
+            }
+        }
+        let tcp_ready = std::net::TcpStream::connect(&addr).is_ok();
+        tcp_streak = if tcp_ready {
+            tcp_streak.saturating_add(1)
+        } else {
+            0
+        };
+        let outcome = classify_startup_probe(
+            tcp_streak >= 2,
+            instrumentation_verified,
+            exit_reason.as_deref(),
+            std::time::Instant::now() >= deadline,
+        );
+        if outcome != StartupWaitOutcome::Pending {
+            return outcome;
         }
         std::thread::sleep(Duration::from_millis(150));
     }
-    false
 }
 
-/// [T-436 / T-460] splash loading 注入脚本(经 initialization_script 在 about:blank 上注入 DOM)。
-/// ⚠️ 不用 data: URL:WKWebView **禁止 data: 主 frame 导航**(安全限制),macOS 15.1 实测直接
-/// SIGABRT(2026-07-20 真机 crash·didFinishLaunching→observer→abort),新 OS 静默容忍才没暴露。
-/// about:blank 是标准允许的空白页,原理对症。脚本内判 `location.protocol==='about:'` 才注入 →
-/// navigate 到真 http 页面时该 init 脚本重跑也直接 return,不污染真页面。纯 DOM API,无 HTML 转义。
-///
-/// [T-460 状态文案]:除转圈 + "正在启动 CreatorOS…" 之外,暴露 `window.__creatorosSplashStatus(msg)`
-///   接口(Rust 侧经 window.eval() 调用),让首启解压 tarball / 冒烟等长阶段能实时更新状态
-///   ("正在展开首启资源…"/"正在校验完整性…"),避免用户看着一直转圈以为死机。
-/// [T-461 后修] 2026-07-22 真机排查:原实现 `addEventListener('DOMContentLoaded', fn)` 在
-///   Windows WebView2 上不生效 —— about:blank 加载极快,DOMContentLoaded 可能在
-///   initialization_script 注入时就已触发过一次 → 监听器永远不跑 → splash 空白。
-///   改为**即刻执行**(用 IIFE + `document.readyState` 兜底):body 已 ready 即建 DOM,
-///   否则短轮询等 body 出现(不依赖事件)。跨 WebView2/WKWebView 都稳。
-const SPLASH_JS: &str = "(function(){function build(){if(location.protocol!=='about:')return;var d=document;if(!d.body){setTimeout(build,16);return;}d.title='CreatorOS';d.body.style.cssText='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#0b0b0f;color:#e5e5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif';var st=d.createElement('style');st.textContent='@keyframes cxspin{to{transform:rotate(360deg)}}';d.head.appendChild(st);var s=d.createElement('div');s.style.cssText='width:38px;height:38px;border:3px solid #24242c;border-top-color:#6b8afd;border-radius:50%;animation:cxspin .8s linear infinite';d.body.appendChild(s);var t=d.createElement('div');t.id='creatoros-splash-status';t.textContent='正在启动 CreatorOS…';t.style.cssText='font-size:14px;color:#8b8b93;letter-spacing:.3px;text-align:center;max-width:80vw';d.body.appendChild(t);window.__creatorosSplashStatus=function(m){var el=d.getElementById('creatoros-splash-status');if(el&&typeof m==='string')el.textContent=m;};}build();})();";
+// [T-562] splash 改为随包 `placeholder-dist/index.html` 静态文档。此前在 about:blank
+// initialization_script 里动态造 DOM，Windows WebView2 多次出现脚本未执行、失败页也无处渲染，
+// 最终只剩纯白窗口。静态文档在 Rust 慢启动/sidecar 失败前就有真实 DOM，不再依赖该竞态。
+#[cfg(test)]
+const SPLASH_HTML: &str = include_str!("../placeholder-dist/index.html");
+
+fn json_for_eval(value: &str) -> String {
+    serde_json::to_string(value)
+        .unwrap_or_else(|_| "\"\"".to_string())
+        .replace('<', "\\u003c")
+        .replace('\u{2028}', "\\u2028")
+        .replace('\u{2029}', "\\u2029")
+}
+
+fn startup_failure_script(title: &str, detail: &str, logs_dir: &str) -> String {
+    format!(
+        "if(window.__creatorosSplashFailure)window.__creatorosSplashFailure({},{},{});",
+        json_for_eval(title),
+        json_for_eval(detail),
+        json_for_eval(logs_dir),
+    )
+}
+
+fn show_startup_failure(
+    win: tauri::WebviewWindow,
+    title: &str,
+    detail: &str,
+    logs_dir: &str,
+) {
+    let script = startup_failure_script(title, detail, logs_dir);
+    // setup 尚未返回时 WebView event loop 可能还没完成静态 splash 加载。把 eval 延后到
+    // event loop 已运行后；即便 eval 极端失败，静态 splash 也不会退化成纯白。
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(250));
+        let win2 = win.clone();
+        let _ = win.run_on_main_thread(move || {
+            let _ = win2.eval(&script);
+        });
+    });
+}
 
 /// [T-372 L2] sidecar 入口完整性校验:对 bundle 里的 sidecar.tar.gz 比对构建期内嵌的
 /// SHA-256(build.rs 经 rustc-env 注入)。不匹配 → Err(人话)→ 拒绝 spawn。
@@ -567,6 +694,186 @@ fn verify_direct_sidecar_dir_with_hash(
         }
     }
     verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
+}
+
+/// [T-487] 读取 Windows 安装期写入的 runtime 指针。指针只允许构建生成的安全 ID，
+/// 禁止路径分隔符和 `..`，避免安装目录中的文本文件把运行路径引到目录外。
+#[cfg(any(windows, test))]
+fn resolve_installed_runtime_with_hash(
+    install_dir: &std::path::Path,
+    expected_entry_hash: &str,
+) -> Result<Option<PathBuf>, String> {
+    let runtime_root = install_dir.join("runtime-images");
+    let resolve_pointer = |name: &str| -> Result<Option<PathBuf>, String> {
+        let pointer = runtime_root.join(name);
+        if !pointer.is_file() {
+            return Ok(None);
+        }
+        let runtime_id = std::fs::read_to_string(&pointer)
+            .map_err(|e| format!("读取 Windows runtime 指针失败 {}: {e}", pointer.display()))?;
+        let runtime_id = runtime_id.trim();
+        if runtime_id.is_empty()
+            || runtime_id == "."
+            || runtime_id == ".."
+            || !runtime_id
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+        {
+            return Err(format!(
+                "Windows runtime 指针非法（仅允许字母、数字、点、下划线和短横线）: {runtime_id:?}"
+            ));
+        }
+        let sidecar = runtime_root.join(runtime_id).join("sidecar");
+        verify_direct_sidecar_dir_with_hash(&sidecar, expected_entry_hash)?;
+        Ok(Some(sidecar))
+    };
+
+    resolve_pointer("runtime-current.txt")
+}
+
+/// [T-487] NSIS 安装期事务：校验 bundle tar → 同盘 staging 解压 → 校验入口与关键结构
+/// → 原子切换版本目录和 current 指针。任何一步失败都只清理 staging，旧 current 保持可用。
+#[cfg(any(windows, test))]
+#[cfg_attr(test, allow(dead_code))]
+fn materialize_windows_runtime(install_dir: &std::path::Path) -> Result<PathBuf, String> {
+    let tarball = install_dir.join("sidecar.tar.gz");
+    verify_sidecar_tarball(&tarball)?;
+
+    let tar_hash = env!("CREATOROS_SIDECAR_SHA256");
+    let runtime_suffix = if tar_hash.len() >= 12 {
+        &tar_hash[..12]
+    } else {
+        "development"
+    };
+    let runtime_id = format!("{}-{runtime_suffix}", env!("CARGO_PKG_VERSION"));
+    let runtime_root = install_dir.join("runtime-images");
+    let staging_parent = runtime_root.join(".staging").join(&runtime_id);
+    let staged_sidecar = staging_parent.join("sidecar");
+    let final_runtime = runtime_root.join(&runtime_id);
+    let final_sidecar = final_runtime.join("sidecar");
+
+    std::fs::create_dir_all(runtime_root.join(".staging"))
+        .map_err(|e| format!("创建 Windows runtime 暂存根失败: {e}"))?;
+    let _ = std::fs::remove_dir_all(&staging_parent);
+
+    let result = (|| -> Result<PathBuf, String> {
+        let stamp = if tar_hash.is_empty() {
+            let size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
+            format!("size:{size}")
+        } else {
+            format!("sha256:{tar_hash}")
+        };
+        extract_sidecar_tarball(&tarball, &staged_sidecar, &stamp)?;
+        verify_direct_sidecar_dir_with_hash(
+            &staged_sidecar,
+            env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+        )?;
+        // 构建清单在安装器子进程里同样可用；固定 seed 只用于额外抽样，不替代入口硬校验。
+        integrity_sample_verify(&staged_sidecar, "windows-installer")?;
+
+        if final_runtime.exists() {
+            std::fs::remove_dir_all(&final_runtime)
+                .map_err(|e| format!("清理同 ID 的损坏 Windows runtime 失败: {e}"))?;
+        }
+        std::fs::rename(&staging_parent, &final_runtime)
+            .map_err(|e| format!("原子切换 Windows runtime 目录失败: {e}"))?;
+        write_windows_runtime_pointer(&runtime_root, &runtime_id)?;
+        cleanup_windows_runtime_versions(&runtime_root);
+        Ok(final_sidecar)
+    })();
+
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(&staging_parent);
+    }
+    result
+}
+
+/// [T-557] NSIS 自身的 RMDir /r 受 Windows 长路径限制，无法可靠删除 runtime
+/// 中的深层 node_modules。主动卸载时先复用仍存在的主程序，用 Rust 递归清理。
+#[cfg(any(windows, test))]
+fn remove_windows_installed_runtime(install_dir: &std::path::Path) -> Result<(), String> {
+    let runtime_root = install_dir.join("runtime-images");
+    if !runtime_root.exists() {
+        return Ok(());
+    }
+    std::fs::remove_dir_all(&runtime_root)
+        .map_err(|e| format!("清理 Windows runtime 失败 {}: {e}", runtime_root.display()))?;
+    if runtime_root.exists() {
+        return Err(format!(
+            "清理 Windows runtime 后目录仍存在: {}",
+            runtime_root.display()
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(any(windows, test))]
+fn write_windows_runtime_pointer(
+    runtime_root: &std::path::Path,
+    runtime_id: &str,
+) -> Result<(), String> {
+    let current = runtime_root.join("runtime-current.txt");
+    let temp = runtime_root.join(format!(
+        ".runtime-current-{}.tmp",
+        std::process::id()
+    ));
+    let backup = runtime_root.join(format!(
+        ".runtime-current-{}.previous",
+        std::process::id()
+    ));
+    std::fs::write(&temp, format!("{runtime_id}\n"))
+        .map_err(|e| format!("写 Windows runtime 临时指针失败: {e}"))?;
+    let _ = std::fs::remove_file(&backup);
+    if current.exists() {
+        std::fs::rename(&current, &backup)
+            .map_err(|e| format!("暂存 Windows current runtime 指针失败: {e}"))?;
+    }
+    if let Err(e) = std::fs::rename(&temp, &current) {
+        if backup.exists() {
+            let _ = std::fs::rename(&backup, &current);
+        }
+        let _ = std::fs::remove_file(&temp);
+        return Err(format!("原子切换 Windows current runtime 指针失败: {e}"));
+    }
+    let _ = std::fs::remove_file(&backup);
+    Ok(())
+}
+
+/// 只保留 current，避免每次升级在安装盘永久多占约 1GB。跨版本 previous 不能拿当前
+/// 壳内嵌的新哈希/manifest 诚实验证，因此不伪造 last-good；安装期失败改由保留的 tar
+/// 在首启走兼容解压（fail-forward）。
+/// 清理是成功切换后的 best-effort；失败仅记日志，不反向破坏已经可用的新 runtime。
+#[cfg(any(windows, test))]
+fn cleanup_windows_runtime_versions(runtime_root: &std::path::Path) -> usize {
+    let mut keep = std::collections::HashSet::new();
+    for pointer in ["runtime-current.txt"] {
+        if let Ok(id) = std::fs::read_to_string(runtime_root.join(pointer)) {
+            let id = id.trim();
+            if !id.is_empty() {
+                keep.insert(id.to_string());
+            }
+        }
+    }
+    let Ok(entries) = std::fs::read_dir(runtime_root) else {
+        return 0;
+    };
+    let mut removed = 0;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if !path.is_dir() || name == ".staging" || keep.contains(&name) {
+            continue;
+        }
+        match std::fs::remove_dir_all(&path) {
+            Ok(()) => removed += 1,
+            Err(e) => eprintln!(
+                "[installer] 清理旧 Windows runtime 失败 {}: {e}",
+                path.display()
+            ),
+        }
+    }
+    let _ = std::fs::remove_dir(runtime_root.join(".staging"));
+    removed
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -787,20 +1094,48 @@ fn extract_sidecar_tarball(
     std::fs::create_dir_all(&temp)
         .map_err(|e| format!("建 sidecar 临时解压目录失败 {}: {e}", temp.display()))?;
 
-    let mut tar_cmd = std::process::Command::new("tar");
-    tar_cmd.arg("-xzf").arg(tarball).arg("-C").arg(&temp);
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt as _;
-        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-        tar_cmd.creation_flags(CREATE_NO_WINDOW);
-    }
-    let status = tar_cmd.status();
-    if !matches!(status, Ok(s) if s.success()) {
+    // [T-485] 不调用系统 `tar`：用户机可能没有、GUI PATH 也可能找不到。Rust tar::Archive
+    // 自带路径穿越防护(unpack 内部拒绝 `..`/绝对路径)，同样保留 pnpm 相对 symlink。
+    let unpack_result = (|| -> Result<(), String> {
+        let file = std::fs::File::open(tarball)
+            .map_err(|e| format!("打开 sidecar.tar.gz 失败 {}: {e}", tarball.display()))?;
+        let decoder = flate2::read::GzDecoder::new(file);
+        let mut archive = tar::Archive::new(decoder);
+        let entries = archive
+            .entries()
+            .map_err(|e| format!("读取 sidecar.tar.gz 条目失败: {e}"))?;
+        let mut files = 0_u64;
+        let mut bytes = 0_u64;
+        for entry in entries {
+            let mut entry = entry.map_err(|e| format!("读取 sidecar tar 条目失败: {e}"))?;
+            bytes = bytes.saturating_add(entry.header().size().unwrap_or(0));
+            let unpacked = entry
+                .unpack_in(&temp)
+                .map_err(|e| format!("展开 sidecar tar 条目失败: {e}"))?;
+            if !unpacked {
+                return Err("sidecar tar 含越界路径，已拒绝展开".to_string());
+            }
+            files += 1;
+            // NSIS nsExec::ExecToLog 会把这些行显示在安装详情中；用户不再面对一个
+            // 数分钟毫无变化的窗口。每 1000 项打印一次，避免 2 万行日志本身拖慢安装。
+            if files % 1000 == 0 {
+                eprintln!(
+                    "[runtime] 已展开 {files} 项（约 {} MiB）…",
+                    bytes / 1024 / 1024
+                );
+            }
+        }
+        eprintln!(
+            "[runtime] 展开完成：{files} 项，约 {} MiB",
+            bytes / 1024 / 1024
+        );
+        Ok(())
+    })();
+    if let Err(e) = unpack_result {
         let _ = std::fs::remove_dir_all(&temp);
         return Err(format!(
-            "sidecar 解压失败({status:?})，已清理临时目录；tarball={}",
-            tarball.display()
+            "sidecar 解压失败({e})，已清理临时目录；tarball={}",
+            tarball.display(),
         ));
     }
     if !temp.join("frontend").join("server.js").is_file() {
@@ -832,7 +1167,7 @@ fn extract_sidecar_tarball(
     Ok(true)
 }
 
-/// [T-460] 更新 splash 页面状态文案(main window,about:blank 上跑 SPLASH_JS)。
+/// [T-460/T-562] 更新静态 splash 页面状态文案。
 /// Rust 侧调用 `window.__creatorosSplashStatus("正在展开首启资源…")` 即时反馈长阶段进度,
 /// 避免用户看着一直转圈误以为死机。若 window 尚未建 / 已 navigate 到 sidecar 真页面 → JS 层
 /// 会走异步无副作用(main window 可能没 __creatorosSplashStatus 或已被替换)。**best-effort,
@@ -848,11 +1183,12 @@ fn splash_status(app: &AppHandle, msg: &str) {
 }
 
 /// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
-/// macOS/Linux sidecar 保留 pnpm 相对 symlink，bundle 带单文件 tarball 并原子解压；Windows
-/// 构建期已物化成零 symlink 真目录，bundle 直接携带 `sidecar/`，从安装目录只读运行。
+/// 全平台 bundle 都带单文件 tarball；Windows 安装期物化到 `$INSTDIR/runtime-images`，
+/// macOS/Linux 以及旧 Windows 包仍可在 appDataDir 原子解压。
 ///   ① CREATOROS_SIDECAR_DIR env 覆盖(打包/测试可指定);
 ///   ② dev:CARGO_MANIFEST_DIR/sidecar(编译期常量,指向源目录,symlink 完好);
-///   ③ Windows bundle:安装目录 sidecar/；mac/Linux:tar → appDataDir/runtime/<version>/sidecar。
+///   ③ Windows 新包:安装期 current 指针直读；
+///   ④ 兼容路径:tar → appDataDir/runtime/<version>/sidecar。
 /// [T-372 L2] 返回 Err = 入口完整性校验失败 → 上层**拒绝 spawn**(不再静默把被篡改的
 /// sidecar 跑起来)。其余路径语义不变。
 fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -876,19 +1212,56 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
             return Ok(dev_dir);
         }
     }
-    // [T-454 后修] 全平台走 tarball 解压(反转 T-446 的 Windows 直装分支)—— T-446 当初 Windows
-    //   改直装是因为首启解压到 C:\Program Files\ 会 ACL 失败;现在 tauri v2 默认 installMode=
-    //   currentUser 装到 %LOCALAPPDATA%\Programs\,应用首启解压到 %APPDATA%\...\runtime\<v>\sidecar
-    //   零权限问题。**根治 NSIS 打包 20 万小文件卡死**:NSIS 只面对 1 个大 tarball 单文件流。
-    //   tar 用系统 System32\tar.exe(bsdtar,原生保 symlink,与 build-sidecar 打包端同源);ACL 由
-    //   安装模式决定,数据目录跟 mac/linux 同一处 (app_data_dir/runtime/<version>/sidecar)。
-    let tarball = match app
+    // [T-487] Windows 正式安装优先直读 NSIS 安装期已物化并校验的 runtime。路径跟随
+    // 用户在安装器目录页选择的 $INSTDIR（可为 D/E 盘），首次启动不再复制/解压到 AppData。
+    // 当前仍保留下方 tar → appData 的兼容兜底；只有原生 Windows 安装验收通过后才删除。
+    #[cfg(windows)]
+    let mut installed_runtime_error: Option<String> = None;
+    #[cfg(windows)]
+    {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(install_dir) = exe.parent() {
+                match resolve_installed_runtime_with_hash(
+                    install_dir,
+                    env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+                ) {
+                    Ok(Some(dest)) => {
+                        let machine_id = resolve_machine_id(app).unwrap_or_default();
+                        integrity_sample_verify(&dest, &machine_id)?;
+                        if let Ok(data_dir) = app.path().app_data_dir() {
+                            let _ = cleanup_legacy_runtime_root(&data_dir);
+                        }
+                        eprintln!(
+                            "[shell] Windows 使用安装期 runtime（首次启动零解压）→ {}",
+                            dest.display()
+                        );
+                        return Ok(dest);
+                    }
+                    Ok(None) => {
+                        eprintln!("[shell] Windows 安装期 runtime 指针不存在，进入兼容解压路径");
+                    }
+                    Err(e) => {
+                        eprintln!("[shell] Windows 安装期 runtime 不可用，进入兼容解压路径: {e}");
+                        installed_runtime_error = Some(e);
+                    }
+                }
+            }
+        }
+    }
+    // [T-454/T-487] 兼容路径：新 Windows 安装应在上方命中安装期 runtime；旧安装包、
+    // macOS 与 Linux 仍可从单文件 tar 在 appData 原子解压。解压使用 Rust flate2/tar，
+    // 不依赖用户电脑 PATH 或额外安装 tar/7-Zip。
+    let tarball = app
         .path()
         .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
-    {
-        Ok(p) if p.exists() => p,
-        _ => return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string()),
-    };
+        .map_err(|e| format!("无法解析 bundle sidecar.tar.gz 路径: {e}"))?;
+    if !tarball.is_file() {
+        #[cfg(windows)]
+        if let Some(installed_error) = installed_runtime_error {
+            return Err(installed_error);
+        }
+        return Err("bundle 资源缺 sidecar.tar.gz(打包不完整)".to_string());
+    }
     splash_status(app, "正在校验安装包完整性…");
     verify_sidecar_tarball(&tarball)?;
     let version = app.package_info().version.to_string();
@@ -981,6 +1354,47 @@ fn cleanup_stale_runtimes(runtime_root: &std::path::Path, keep_version: &str) ->
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
 pub fn run() {
+    // [T-557] PREUNINSTALL 时主程序尚未被 NSIS 删除，先由 Rust 清理长路径 runtime；
+    // updater 的 /UPDATE 路径不会调用该入口，只服务用户主动卸载。
+    #[cfg(windows)]
+    if std::env::args().any(|arg| arg == "--creatoros-uninstall-runtime") {
+        let install_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+        let result = install_dir
+            .ok_or_else(|| "无法定位 CreatorOS 安装目录".to_string())
+            .and_then(|dir| remove_windows_installed_runtime(&dir));
+        match result {
+            Ok(()) => std::process::exit(0),
+            Err(e) => {
+                eprintln!("[uninstaller] runtime cleanup failed: {e}");
+                std::process::exit(42);
+            }
+        }
+    }
+
+    // [T-487] NSIS POSTINSTALL 专用窄入口。必须早于 Tauri/single-instance 初始化，
+    // 安装器只做离线 runtime 事务，不创建窗口、不读取用户数据库、不启动 sidecar。
+    #[cfg(windows)]
+    if std::env::args().any(|arg| arg == "--creatoros-install-runtime") {
+        let install_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+        let result = install_dir
+            .ok_or_else(|| "无法定位 CreatorOS 安装目录".to_string())
+            .and_then(|dir| materialize_windows_runtime(&dir));
+        match result {
+            Ok(path) => {
+                eprintln!("[installer] runtime ready: {}", path.display());
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("[installer] runtime materialize failed: {e}");
+                std::process::exit(41);
+            }
+        }
+    }
+
     // [T-399b] 强制蜜罐门符号+明文 bait 进最终二进制(Tauri rlib 结构下 #[used] 不够,见 decoy_gate.rs)。
     //   只取诱饵函数地址做 XOR、不调用其逻辑 → 零执行/零功能影响;black_box 防优化掉。
     std::hint::black_box(decoy_gate::decoy_gate_keepalive());
@@ -1012,7 +1426,10 @@ pub fn run() {
             // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
             license::license_last_decision,
             // [T-396c] 版本检查(latest-version 端点 + 渠道 downloadUrl,替代 updater check)。
-            license::license_latest_version
+            license::license_latest_version,
+            // [T-568] 反馈诊断必须来自原生层，禁止 navigator.platform 把 Apple Silicon
+            // 兼容性标识 `MacIntel` 当作实体芯片。
+            runtime_system_info
         ])
         .manage(SidecarHandle::default())
         .setup(|app| {
@@ -1024,22 +1441,30 @@ pub fn run() {
             //   首启用户"看着像死机"(2026-07-21 真机反馈)。
             //   handshake_token 也提前生成 —— 注入 initialization_script,后续每次 navigate
             //   都会重跑该脚本,token 常驻 window 全局。
-            // [T-436] 用 about:blank 而非 data:  WKWebView 禁 data: 主 frame,15.1 SIGABRT。
-            //   SPLASH_JS 自判 `location.protocol==='about:'`,navigate 到真页面时 return 不污染。
+            // [T-562] 启动页使用随包静态 index.html。Windows WebView2 不再靠 about:blank
+            // initialization_script 动态造 DOM，避免脚本竞态留下永久白窗。
             let handshake_token = license::gen_handshake_token();
-            let init_script = format!(
-                "window.__CREATOROS_HANDSHAKE_TOKEN__={:?};\n{}",
-                handshake_token, SPLASH_JS
-            );
+            let init_script =
+                format!("window.__CREATOROS_HANDSHAKE_TOKEN__={:?};", handshake_token);
             let _splash_win = WebviewWindowBuilder::new(
                 &handle,
                 "main",
-                WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败")),
+                WebviewUrl::App("index.html".into()),
             )
             .title("CreatorOS")
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
             .initialization_script(&init_script)
+            .on_page_load(|_window, payload| {
+                if payload.event() == PageLoadEvent::Finished
+                    && matches!(payload.url().host_str(), Some("127.0.0.1" | "localhost"))
+                {
+                    eprintln!(
+                        "[CreatorOS] MAIN_PAGE_LOAD_FINISHED {}",
+                        payload.url()
+                    );
+                }
+            })
             .build()
             .expect("建主窗口失败");
             drop(_splash_win); // 建完就释放引用,下面 line ~1530 从 handle.get_webview_window("main") 拿回 navigate。
@@ -1053,7 +1478,7 @@ pub fn run() {
             //   改**只搬真正阻塞的 tar 解压**(resolve_sidecar_dir 里的 extract_sidecar_tarball,
             //   3-5 min 就是它占的),其余 setup 保持同步(路径解析/logger 起/spawn sidecar/wait
             //   ready/navigate)。T-468 单点手术,风险面 <10 行。
-            //   splash 显示由 T-467(SPLASH_JS DOMContentLoaded 竞态 → IIFE 修)兜住。
+            //   splash 显示由 T-562 静态文档兜住。
 
             // 1) DB 落盘目录:桌面单机默认 <appDataDir>/db。resolveDbDriver 会认
             //    CREATOROS_DB_DIR(见 backend/src/db.ts §3b),我们注入它 → PGlite 落这里。
@@ -1067,6 +1492,12 @@ pub fn run() {
                 .parent()
                 .map(|p| p.to_path_buf())
                 .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
+            let app_data_dir_str = app_data_dir.to_string_lossy().to_string();
+            // [T-562] logger 必须早于 runtime 解析。此前 runtime 指针/完整性失败会在 logger
+            // 初始化前 panic，用户只得到白窗且没有可交付证据。
+            let logs_dir = app_data_dir.join("logs");
+            let logger = logging::init_sidecar_logger(&logs_dir);
+            let log_dir_str = logs_dir.to_string_lossy().to_string();
 
             // [T-332 S5] 「重置工作区」归档 —— **必须在 spawn sidecar 之前、建 db 目录之前**:
             //   此刻 PGlite 库无任何进程持有,rename 整目录才安全(设置页 route 只落标记,
@@ -1109,12 +1540,38 @@ pub fn run() {
                 Ok(d) => d,
                 Err(e) => {
                     eprintln!("[shell] {e}");
-                    panic!("{e}");
+                    if let Some(l) = &logger {
+                        l.log("shell", &format!("runtime 解析失败: {e}"));
+                    }
+                    let detail = format!(
+                        "离线运行环境无法通过启动校验，应用已停止继续加载。\n数据没有丢失。\n\n技术信息：{e}"
+                    );
+                    if let Some(win) = handle.get_webview_window("main") {
+                        show_startup_failure(
+                            win,
+                            "CreatorOS 启动失败",
+                            &detail,
+                            &log_dir_str,
+                        );
+                    }
+                    return Ok(());
                 }
             };
             let server_js_str = sidecar_dir
                 .join("frontend")
                 .join("server.js")
+                .to_string_lossy()
+                .to_string();
+            // [T-485] 随包资源目录由壳层以绝对路径注入，Node 侧不再猜 process.cwd()。
+            // Finder / Windows 快捷方式启动时 cwd/PATH 都不可靠；壳层掌握真实 runtime 位置，
+            // 所以它是 bin/ 与 browsers/ 的唯一 canonical 来源。
+            let sidecar_frontend_dir = sidecar_dir.join("frontend");
+            let bundled_bin_dir_str = sidecar_frontend_dir
+                .join("bin")
+                .to_string_lossy()
+                .to_string();
+            let bundled_browsers_dir_str = sidecar_frontend_dir
+                .join("browsers")
                 .to_string_lossy()
                 .to_string();
 
@@ -1135,10 +1592,6 @@ pub fn run() {
             //   <appDataDir>/logs/sidecar.log —— 打包态 `open -a` 拿不到 stderr 时,靠这份文件排障。
             //   注入 env `CREATOROS_LOG_DIR` 给 sidecar,供设置页「导出诊断日志」route 定位目录。
             //   init 失败(建目录/开文件不了)→ None,降级为仅 eprintln(不落盘但不崩)。
-            let logs_dir = app_data_dir.join("logs");
-            let logger = logging::init_sidecar_logger(&logs_dir);
-            let log_dir_str = logs_dir.to_string_lossy().to_string();
-
             // [T-332 S5] 归档摘要 tee 进 sidecar.log(归档发生在 logger 起来之前,补记一行,
             //   打包态用户报「重置后数据没了/还在」时可凭日志核实到底归没归档)。
             if let (Some(s), Some(l)) = (&reset_summary, &logger) {
@@ -1215,6 +1668,22 @@ pub fn run() {
             //   外部显式设 env 时始终尊重外部值(排障可临时设 "0" 退弱验签)。
             let strict_verify_str = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
                 .unwrap_or_else(|_| "1".to_string());
+            // [T-538] sidecar 的产品反馈可信出网配置。公钥只用于验证 AM 签名响应，不是秘密；
+            // official origins 由发布环境烘焙，也允许开发/排障时用进程 env 显式覆盖。二者缺失时
+            // 本地 product-feedback service fail-closed，绝不退到任意 bugFeedbackUrl origin。
+            let license_public_key_b64 = license::embedded_pubkey_b64();
+            let feedback_official_origins = std::env::var(
+                "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+            )
+            .ok()
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+            .or_else(|| {
+                option_env!("CREATOROS_FEEDBACK_OFFICIAL_ORIGINS")
+                    .map(|value| value.trim().to_string())
+                    .filter(|value| !value.is_empty())
+            })
+            .unwrap_or_default();
 
             // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
             let license_ctx = std::sync::Arc::new(license::ShellLicenseCtx {
@@ -1310,6 +1779,8 @@ pub fn run() {
             //     spawn,其 Command 构造恒带 CREATE_NO_WINDOW(plugin 2.3.5 process/mod.rs:173,
             //     已核实源码);sidecar 再往下的 ffmpeg/子进程由 Node 侧 spawn windowsHide 抑制。
             let handle_state = app.state::<SidecarHandle>();
+            let (startup_tx, startup_rx) =
+                std::sync::mpsc::channel::<StartupSignal>();
 
             #[cfg(target_os = "macos")]
             {
@@ -1324,6 +1795,7 @@ pub fn run() {
                     .join("creatoros-server");
 
                 let mut cmd = std::process::Command::new(&inner_bin);
+                cmd.current_dir(&sidecar_frontend_dir);
                 // [T-365] 新进程组(组长=sidecar 自身 pid):退出时 killpg 整组带走 node +
                 //   Playwright Chrome + ffmpeg 全家;sidecar 侧孤儿自杀也按组清子进程。
                 #[cfg(target_os = "macos")]
@@ -1345,7 +1817,10 @@ pub fn run() {
                     .arg(&server_js_str)
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
+                    .env("CREATOROS_APP_DATA_DIR", &app_data_dir_str)
                     .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
+                    .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
                     .env("CREATOROS_DESKTOP", "1")
                     // [T-181] Skill 远程下发端点 + 验签公钥。
@@ -1361,6 +1836,14 @@ pub fn run() {
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
+                    .env(
+                        "CREATOROS_LICENSE_PUBLIC_KEY_B64",
+                        &license_public_key_b64,
+                    )
+                    .env(
+                        "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+                        &feedback_official_origins,
+                    )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     // [T-391 H-key] master key **不再走 env 明文**;改经 ChildStdin(fd 0)传。
@@ -1412,11 +1895,15 @@ pub fn run() {
                 // (打包态排障)。两线程各 clone 一份共享 logger(Arc,内部 Mutex 串行化写,不交错坏行)。
                 if let Some(out) = child.stdout.take() {
                     let logger = logger.clone();
+                    let startup_tx = startup_tx.clone();
                     std::thread::spawn(move || {
                         for line in BufReader::new(out).lines().map_while(Result::ok) {
                             eprintln!("[sidecar] {line}");
                             if let Some(l) = &logger {
                                 l.log("sidecar", &line);
+                            }
+                            if line.contains(SIDECAR_STARTUP_SENTINEL) {
+                                let _ = startup_tx.send(StartupSignal::Verified);
                             }
                         }
                     });
@@ -1433,12 +1920,26 @@ pub fn run() {
                     });
                 }
 
+                let shared_child = std::sync::Arc::new(
+                    shared_child::SharedChild::new(child)
+                        .expect("接管 creatoros-server sidecar 句柄失败"),
+                );
+                let watched_child = shared_child.clone();
+                let startup_tx_exit = startup_tx.clone();
+                std::thread::spawn(move || {
+                    let reason = match watched_child.wait() {
+                        Ok(status) => format!("sidecar 已退出({status})"),
+                        Err(error) => format!("sidecar 退出状态读取失败({error})"),
+                    };
+                    let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
+                });
+
                 // 存句柄供退出 kill(避免 orphan sidecar)。
                 handle_state
                     .0
                     .lock()
                     .unwrap()
-                    .replace(SidecarChild::Std(child));
+                    .replace(SidecarChild::Std(shared_child));
             }
 
             #[cfg(not(target_os = "macos"))]
@@ -1447,13 +1948,19 @@ pub fn run() {
                     .shell()
                     .sidecar("creatoros-server")
                     .expect("sidecar `creatoros-server` 未在 tauri.conf.json externalBin 注册")
+                    // [T-562] verdict 公钥与 Next standalone 资源按 process.cwd() 解析。
+                    // 快捷方式启动时 cwd 不可靠，必须固定到随包 frontend 目录。
+                    .current_dir(&sidecar_frontend_dir)
                     // [T-445] 同 macOS 分支:用 node 内置根证书,不依赖构建机的 openssl cert.pem
                     //   (Windows 官方 node 多为静态 openssl 自带 CA,加上无害且防同类差异)。
                     //   注意顺序:node [options] script.js —— 标志必须在脚本之前。
                     .args(["--use-bundled-ca", &server_js_str])
                     .env("PORT", &port_str)
                     .env("HOSTNAME", "127.0.0.1")
+                    .env("CREATOROS_APP_DATA_DIR", &app_data_dir_str)
                     .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("CREATOROS_BIN_DIR", &bundled_bin_dir_str)
+                    .env("CREATOROS_BROWSERS_DIR", &bundled_browsers_dir_str)
                     .env("NODE_ENV", "production")
                     .env("CREATOROS_DESKTOP", "1")
                     // [T-181] Skill 远程下发端点 + 验签公钥(Win/Linux 同 macOS)。
@@ -1469,6 +1976,14 @@ pub fn run() {
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
+                    .env(
+                        "CREATOROS_LICENSE_PUBLIC_KEY_B64",
+                        &license_public_key_b64,
+                    )
+                    .env(
+                        "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+                        &feedback_official_origins,
+                    )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 
@@ -1539,6 +2054,7 @@ pub fn run() {
                 // 把 sidecar 的 stdout/stderr 打到本壳日志:eprintln(dev 可见)+ tee 到 logs/sidecar.log
                 // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
                 let logger = logger.clone();
+                let startup_tx_events = startup_tx.clone();
                 tauri::async_runtime::spawn(async move {
                     while let Some(event) = rx.recv().await {
                         match event {
@@ -1548,6 +2064,9 @@ pub fn run() {
                                 eprintln!("[sidecar] {s}");
                                 if let Some(l) = &logger {
                                     l.log("sidecar", s);
+                                }
+                                if s.contains(SIDECAR_STARTUP_SENTINEL) {
+                                    let _ = startup_tx_events.send(StartupSignal::Verified);
                                 }
                             }
                             CommandEvent::Stderr(line) => {
@@ -1563,6 +2082,9 @@ pub fn run() {
                                 if let Some(l) = &logger {
                                     l.log("shell", &format!("sidecar terminated: {payload:?}"));
                                 }
+                                let _ = startup_tx_events.send(StartupSignal::Exited(format!(
+                                    "sidecar 已退出({payload:?})"
+                                )));
                                 break;
                             }
                             _ => {}
@@ -1571,41 +2093,77 @@ pub fn run() {
                 });
             }
 
-            // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
+            // 5) 另起线程等就绪：只有 Ready 才导航 sidecar；退出/超时保留静态 splash
+            //    并渲染可见失败页。就绪探测跑在后台,不阻塞 setup。
             // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
             let ready_logger = logger.clone();
             // [T-372 L2 / T-457] 握手 token 经 window.eval() 注入(不再用 initialization_script
             //   因为窗口在 setup 头部就建好了);token 为 hex,无注入面;前端 handshake-client.ts
             //   读该全局并附到有副作用请求的 x-creatoros-handshake 头。
             let sidecar_url = format!("http://127.0.0.1:{port}/");
-            // [T-457] **不再建新窗** —— setup 头部已建 splash 窗口(about:blank + 转圈),
+            let startup_logs_dir = log_dir_str.clone();
+            // [T-457/T-562] **不再建新窗** —— setup 头部已建静态 splash 窗口,
             //   这里从 handle 里拿回来,先在 window 上 eval 注入最新 handshake token,
-            //   再 navigate 到真 sidecar 页(navigate 会触发 init 脚本重跑,SPLASH_JS 判
-            //   非 about: 页面即 return 不污染)。原实现在这里才建窗 → 首启解压期间无窗口。
+            //   再 navigate 到真 sidecar 页。原实现在这里才建窗 → 首启解压期间无窗口。
             // [T-457] handshake token 已在 setup 头部一并注入 initialization_script,navigate
             //   到 sidecar 页时 init_script 会重跑 → token 常驻 window。这里无需再 eval 注入。
             let main_win = handle
                 .get_webview_window("main")
                 .expect("[T-457] main window 缺失 —— setup 头部已建过怎会失踪?");
             std::thread::spawn(move || {
-                let ready = wait_until_ready(port, Duration::from_secs(60));
-                if !ready {
-                    // 兜底:sidecar 60s 未起仍导航(显示连接失败页而非永久 splash,便于看到问题)。
-                    eprintln!("[shell] sidecar 60s 内未就绪,仍导航 {sidecar_url}");
-                    if let Some(l) = &ready_logger {
-                        l.log("shell", &format!("sidecar 60s 内未就绪,仍导航 {sidecar_url}"));
-                    }
-                }
-                match sidecar_url.parse::<tauri::Url>() {
-                    Ok(u) => {
+                let outcome =
+                    wait_until_ready(port, Duration::from_secs(60), startup_rx);
+                match outcome {
+                    StartupWaitOutcome::Ready => match sidecar_url.parse::<tauri::Url>() {
+                        Ok(u) => {
+                            let win2 = main_win.clone();
+                            let _ = main_win.run_on_main_thread(move || {
+                                if let Err(e) = win2.navigate(u) {
+                                    eprintln!("[shell] navigate 到 sidecar 失败: {e}");
+                                }
+                            });
+                        }
+                        Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
+                    },
+                    StartupWaitOutcome::Exited(reason) => {
+                        let detail = format!(
+                            "本地服务未能完成启动，应用已停止继续加载。\n数据没有丢失。\n\n技术信息：{reason}"
+                        );
+                        let script = startup_failure_script(
+                            "CreatorOS 启动失败",
+                            &detail,
+                            &startup_logs_dir,
+                        );
+                        if let Some(l) = &ready_logger {
+                            l.log("shell", &format!("sidecar 启动前退出: {reason}"));
+                        }
                         let win2 = main_win.clone();
                         let _ = main_win.run_on_main_thread(move || {
-                            if let Err(e) = win2.navigate(u) {
-                                eprintln!("[shell] navigate 到 sidecar 失败: {e}");
-                            }
+                            let _ = win2.eval(&script);
                         });
                     }
-                    Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
+                    StartupWaitOutcome::TimedOut => {
+                        let detail =
+                            "本地服务在 60 秒内没有完成启动，应用已停止继续加载。\n数据没有丢失。";
+                        let script = startup_failure_script(
+                            "CreatorOS 启动超时",
+                            detail,
+                            &startup_logs_dir,
+                        );
+                        if let Some(l) = &ready_logger {
+                            l.log(
+                                "shell",
+                                "sidecar 60s 内未就绪，保留启动失败页，不导航死端口",
+                            );
+                        }
+                        let win2 = main_win.clone();
+                        let _ = main_win.run_on_main_thread(move || {
+                            let _ = win2.eval(&script);
+                        });
+                    }
+                    StartupWaitOutcome::Pending => {
+                        unreachable!("wait_until_ready 不返回 Pending")
+                    }
                 }
             });
 
@@ -1749,6 +2307,119 @@ mod runtime_cleanup_tests {
     }
 
     #[test]
+    fn windows_安装期指针只解析安装目录内已校验_runtime() {
+        let install_dir = temp_runtime_root("installed-runtime-pointer");
+        let sidecar = install_dir
+            .join("runtime-images")
+            .join("0.1.0-abc123")
+            .join("sidecar");
+        std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
+        std::fs::create_dir_all(sidecar.join("frontend").join("node_modules")).unwrap();
+        std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
+        std::fs::write(sidecar.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            sidecar
+                .join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+            "{}",
+        )
+        .unwrap();
+        std::fs::write(
+            install_dir
+                .join("runtime-images")
+                .join("runtime-current.txt"),
+            "0.1.0-abc123\n",
+        )
+        .unwrap();
+
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        assert_eq!(
+            super::resolve_installed_runtime_with_hash(&install_dir, hello_sha).unwrap(),
+            Some(sidecar)
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_runtime_指针拒绝目录穿越() {
+        let install_dir = temp_runtime_root("installed-runtime-traversal");
+        std::fs::create_dir_all(install_dir.join("runtime-images")).unwrap();
+        std::fs::write(
+            install_dir
+                .join("runtime-images")
+                .join("runtime-current.txt"),
+            "../outside\n",
+        )
+        .unwrap();
+
+        assert!(
+            super::resolve_installed_runtime_with_hash(&install_dir, "unused").is_err()
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_runtime_原子更新_current_不伪造跨版本_previous() {
+        let install_dir = temp_runtime_root("installed-runtime-switch");
+        let runtime_root = install_dir.join("runtime-images");
+        std::fs::create_dir_all(&runtime_root).unwrap();
+        std::fs::write(runtime_root.join("runtime-current.txt"), "old-runtime\n").unwrap();
+
+        super::write_windows_runtime_pointer(&runtime_root, "new-runtime").unwrap();
+
+        assert_eq!(
+            std::fs::read_to_string(runtime_root.join("runtime-current.txt")).unwrap(),
+            "new-runtime\n"
+        );
+        assert!(!runtime_root.join("runtime-previous.txt").exists());
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_runtime_升级清理只保留_current() {
+        let install_dir = temp_runtime_root("installed-runtime-cleanup");
+        let runtime_root = install_dir.join("runtime-images");
+        for id in ["current", "previous", "stale-a", "stale-b"] {
+            std::fs::create_dir_all(runtime_root.join(id).join("sidecar")).unwrap();
+        }
+        std::fs::create_dir_all(runtime_root.join(".staging")).unwrap();
+        std::fs::write(runtime_root.join("runtime-current.txt"), "current\n").unwrap();
+        std::fs::write(runtime_root.join("runtime-previous.txt"), "previous\n").unwrap();
+
+        assert_eq!(super::cleanup_windows_runtime_versions(&runtime_root), 3);
+        assert!(runtime_root.join("current").exists());
+        assert!(!runtime_root.join("previous").exists());
+        assert!(!runtime_root.join("stale-a").exists());
+        assert!(!runtime_root.join("stale-b").exists());
+        assert!(!runtime_root.join(".staging").exists());
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_主动卸载使用_rust_清理深层_runtime() {
+        let install_dir = temp_runtime_root("installed-runtime-uninstall");
+        let deep_runtime = install_dir
+            .join("runtime-images")
+            .join("0.2.0-test")
+            .join("sidecar")
+            .join("frontend")
+            .join("node_modules")
+            .join(".pnpm")
+            .join("a".repeat(96))
+            .join("node_modules")
+            .join("b".repeat(96));
+        std::fs::create_dir_all(&deep_runtime).unwrap();
+        std::fs::write(deep_runtime.join("server.js"), "ready").unwrap();
+
+        super::remove_windows_installed_runtime(&install_dir).unwrap();
+
+        assert!(!install_dir.join("runtime-images").exists());
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
     fn 原子解压失败不留下最终目录或完成标记() {
         let root = temp_runtime_root("extract-failure");
         let missing_tar = root.join("missing.tar.gz");
@@ -1767,15 +2438,12 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(source.join("frontend")).unwrap();
         std::fs::write(source.join("frontend").join("server.js"), "ready").unwrap();
         let tarball = root.join("sidecar.tar.gz");
-        let status = std::process::Command::new("tar")
-            .arg("-czf")
-            .arg(&tarball)
-            .arg("-C")
-            .arg(&source)
-            .arg(".")
-            .status()
-            .unwrap();
-        assert!(status.success());
+        let file = std::fs::File::create(&tarball).unwrap();
+        let encoder =
+            flate2::write::GzEncoder::new(file, flate2::Compression::default());
+        let mut builder = tar::Builder::new(encoder);
+        builder.append_dir_all(".", &source).unwrap();
+        builder.into_inner().unwrap().finish().unwrap();
 
         let dest = root.join("runtime").join("0.1.0").join("sidecar");
         assert_eq!(
@@ -1804,6 +2472,52 @@ mod runtime_cleanup_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn startup_failure_script_escapes_dynamic_text_and_exposes_no_fake_action() {
+        let script = startup_failure_script(
+            "本地服务启动失败",
+            "原因: \"sidecar\" </script>",
+            "/Users/test/Library/Application Support/CreatorOS/logs",
+        );
+        assert!(script.contains("__creatorosSplashFailure"));
+        assert!(script.contains("\\\"sidecar\\\""));
+        assert!(!script.contains("</script>"));
+        assert!(!script.contains("location.href"));
+        assert!(!script.contains("location.reload"));
+        assert!(SPLASH_HTML.contains("plugin:opener|reveal_item_in_dir"));
+        assert!(SPLASH_HTML.contains("打开诊断日志目录"));
+        assert!(SIDECAR_STARTUP_SENTINEL.contains("SIDECAR_STARTUP_VERIFIED"));
+    }
+
+    #[test]
+    fn startup_wait_outcome_prioritizes_ready_then_exit_then_timeout() {
+        assert_eq!(
+            classify_startup_probe(true, true, Some("exit 1"), true),
+            StartupWaitOutcome::Exited("exit 1".to_string())
+        );
+        assert_eq!(
+            classify_startup_probe(false, false, Some("exit 1"), false),
+            StartupWaitOutcome::Exited("exit 1".to_string())
+        );
+        assert_eq!(
+            classify_startup_probe(true, false, None, false),
+            StartupWaitOutcome::Pending,
+            "只有 TCP 监听、尚未收到 instrumentation 哨兵时不能导航"
+        );
+        assert_eq!(
+            classify_startup_probe(true, true, None, false),
+            StartupWaitOutcome::Ready
+        );
+        assert_eq!(
+            classify_startup_probe(false, false, None, true),
+            StartupWaitOutcome::TimedOut
+        );
+        assert_eq!(
+            classify_startup_probe(false, false, None, false),
+            StartupWaitOutcome::Pending
+        );
+    }
 
     // 一个合法的 32B key 的 base64(测试用)。
     fn sample_key_b64() -> String {

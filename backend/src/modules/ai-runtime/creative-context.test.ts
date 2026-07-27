@@ -9,12 +9,61 @@ import {
   renderProjectBriefHard,
   renderBenchmarkRef,
   buildKnowledgeQuery,
+  formatWorksBrief,
   truncateKnowledgeBriefToBudget,
   KNOWLEDGE_BRIEF_BUDGET_CHARS,
   type ContextDeps,
   type KnowledgeRow,
   type ProjectMaterial,
 } from "./creative-context";
+
+describe("[T-521] 作品事实与旧动态状态隔离", () => {
+  it("80 条 imported 已发布作品的 review 只表达人话“复盘”，不出现审核/未发布语义", () => {
+    const rows = Array.from({ length: 80 }, (_, index) => ({
+      title: `已发布作品 ${index + 1}`,
+      source: "imported",
+      stage: "review",
+      status: "completed",
+      publishedAt: `2026-07-${String((index % 20) + 1).padStart(2, "0")}T00:00:00.000Z`,
+    }));
+
+    const brief = formatWorksBrief(rows, rows.length);
+
+    expect(brief.match(/（已发布 · 复盘）/g)).toHaveLength(80);
+    expect(brief).not.toMatch(/\breview\b/i);
+    expect(brief).not.toContain("待审核");
+    expect(brief).not.toContain("未发布");
+  });
+
+  it("定位母版即使仍存旧“49 条 review 未发”，也绝不进入任何 AI 上下文", async () => {
+    const context = await assembleCreativeContext(
+      { ...ctx, accountId: "account-a" },
+      { projectId: null, topic: "" },
+      {
+        positioning: {
+          getPositioningCenter: async () => ({
+            profile: {
+              persona: "AI 工程创作者",
+              field: "AI 工程",
+              audience: "开发者",
+              differentiation: "真实实测",
+              capabilities: ["实测"],
+              facets: {
+                statusNote: "49 条稿子压在 review，一直未发布",
+              },
+            },
+            currentStatement: null,
+          }),
+        },
+      },
+    );
+
+    expect(context.positioningBrief).toContain("AI 工程创作者");
+    expect(context.positioningBrief).not.toContain("49");
+    expect(context.positioningBrief).not.toMatch(/\breview\b/i);
+    expect(context.positioningBrief).not.toContain("未发布");
+  });
+});
 
 // F2 消费侧隔离单测(T-030-D4,SPEC §7 边界②)。creative-context 把项目的论点树/内容合同/
 // 结构方案 artifact 当「用户已确认前提」注入下游(planning.outline / planning.contract /

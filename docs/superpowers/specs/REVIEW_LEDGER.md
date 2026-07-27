@@ -32,6 +32,9 @@
 
 | [server-configurable-prompts](2026-07-02-server-configurable-prompts-design.md) | 2026-07-02 | ⚠️ v1 FAIL→v2 CONCERNS | **v1 FAIL(造轮子)→ v2 重写接线既有通道 → re-gate CONCERNS→已处置 [gate-F1..3]→可开工 T-040a/b/c** | 提示词/skill 服务端可配。**独立 reviewer 判 FAIL——极准的造轮子拦截:** SPEC v1 要新造 `prompt_configurations`+`resolveTemplate`,但 reviewer 坐实 `ai-worker/src/prompt/registry.ts:208` **已有 `overrideTemplatesFromConfig(SkillConfigOverride[])` 整套「服务端下发覆盖」通道**(覆盖 system/template/tools/requiredFacets/**outputSchema(JSON Schema)**、`?? base` 逐字段回退、已导出 index.ts:133、已测 template.test.ts,**只差接线**)——违 §9.5 不造轮子(blocker#1)。另 2 blocker:②「照 resolveModelSpec 逐字段回退」范本不存在(它是整行三层回退,blocker#2);③11 个结构化 runner 直接 `import _TEMPLATE 常量`绕过 registry(planning-runner.ts:183 等),只有 chat-runner:140 走 getTemplate → 「各 runner 改调」严重低估 + override 改 REGISTRY 但 runner 持 import 快照吃不到(blocker#3)。major:model_configurations 无 version/updated_at(范本应引 storage_configs)、空串 vs null(override 用 `?? undefined`、空串会覆盖非回退)、热更机制(override 套一次进内存非每次查库)。**重写 v2:接线 overrideTemplatesFromConfig(建表存 override 字段→装配读表+套用→put op 重套热更)+ 归一空串→undefined + 结构化 runner 改走 getTemplate 才可配(或显式圈定只 chat surface)+ 时间戳照 storage_configs。** 改架构 → 重写后 re-gate。 |
 
+| [three-system-runtime-config-boundary](2026-07-26-three-system-runtime-config-boundary.md) | 2026-07-26 | ⚠️ CONCERNS（已处理） | Round 3 0 blocker/2 major 已逐条处置；三轮上限终止，不洗成 PASS |
+| [content-radar-collector-account](2026-07-26-content-radar-collector-account.md) | 2026-07-26 | ⏸️ 文档内部 PASS / 正式 Gate FAIL | Round 3：PLAN 与 CONTRACT 均 0 blocker/0 major/0 minor；外部 blocker 为 `RAT-537-01` 未通过，BUILD 禁止开工 |
+
 ## 用法
 
 - **开工前**:查本台账 + SPEC 顶部裁决注。⛔ FAIL 的 SPEC 对应任务**不准开工**(看板标 ⛔);⚠️ CONCERNS 须确认 findings 已处置;⬜ 未审 + 改架构/数据归属 → 先送审。

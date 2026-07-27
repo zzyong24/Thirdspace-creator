@@ -101,6 +101,9 @@ describe("pickPreset(§3.1 gate ③ 动态 require 降级 + turbopack chunk 路�
       `page.$$eval("li", (nodes) => nodes.length)`,
       `page.waitForFunction(() => window.ready)`,
       `context.addInitScript(() => window.ready = true)`,
+      `page['evaluate'](() => document.body)`,
+      `frame["evaluateHandle"](() => document.body)`,
+      `locator['$$eval']("li", (nodes) => nodes.length)`,
     ];
     for (const code of serializerCalls) {
       expect(requiresSerializableFunctionSource(code), code).toBe(true);
@@ -199,7 +202,7 @@ describe("obfuscateCode(preset 落到不同强度)", () => {
   });
 });
 
-describe("[T-417 client] client static chunks 混淆扩展", () => {
+describe("[T-544 client] WKWebView 安全的 client static chunks 混淆", () => {
   it("client turbopack 运行时 turbopack-<hash>.js 被硬排除(碰坏 chunk 加载)", () => {
     expect(shouldExclude("chunks/turbopack-1yotr_13s-5mt.js")).toMatch(/client runtime/);
     expect(shouldExclude("static/chunks/turbopack-abc.js")).toMatch(/client runtime/);
@@ -207,14 +210,24 @@ describe("[T-417 client] client static chunks 混淆扩展", () => {
   it("client 业务 chunk(static/chunks/<hash>.js)不被排除", () => {
     expect(shouldExclude("static/chunks/1_g9h2qn8jscx.js")).toBeNull();
   });
-  it("client 业务 chunk 走 chunk-stringarray(rc4 加密,数字模块 ID 不受影响)", () => {
-    // turbopack client chunk:模块 ID 数字(e.i(302524)),无字面 require → chunk-stringarray。
+  it("client 业务 chunk 强制走 rename-only，不执行 RC4 stringArray", () => {
+    // macOS 真机证明：RC4 stringArray 会让 WKWebView 的 JavaScriptCore 长时间高负载，
+    // hydration 永远停在骨架屏。客户端 chunk 必须保留 Next/Turbopack 可直接执行形态。
     const clientChunk = '(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push([document.currentScript,695816,e=>{var t=e.i(302524);}]);';
-    expect(pickPreset(clientChunk, "static/chunks/1_g9h2qn8jscx.js")).toBe("chunk-stringarray");
+    // 真实打包以 `.next/static` 为遍历根，传给 pickPreset 的相对路径只有 `chunks/...`。
+    expect(pickPreset(clientChunk, "chunks/1_g9h2qn8jscx.js", "client")).toBe("rename-only");
   });
-  it("含 static/chunks/ 路径串的 client chunk 仍 chunk-stringarray(reservedStrings 护 chunks/ 加载串)", () => {
+  it("含 static/chunks/ 路径串的 client chunk 仍强制走 rename-only", () => {
     const withPath = 'e.push(["static/chunks/22r33t9q3kaf3.js"]);var x="license";';
-    // 无字面 require/import → chunk-stringarray;chunks/ 路径由 reservedStrings 保护不被 rc4。
-    expect(pickPreset(withPath, "static/chunks/213zzjvt-0azo.js")).toBe("chunk-stringarray");
+    expect(pickPreset(withPath, "chunks/213zzjvt-0azo.js", "client")).toBe("rename-only");
+  });
+  it("server chunks 继续保留 chunk-stringarray 防护", () => {
+    expect(
+      pickPreset(
+        "export const internalPrompt = 'server-only-secret';",
+        "chunks/ssr/213zzjvt-0azo.js",
+        "server",
+      ),
+    ).toBe("chunk-stringarray");
   });
 });

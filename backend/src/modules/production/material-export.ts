@@ -363,6 +363,64 @@ export function sanitizeZipName(name: string): string {
   return cleaned || "未命名文件";
 }
 
+/**
+ * 把 output_script 的结构稿确定性投影成拍摄/提词器用纯口播。
+ *
+ * 与制作页预览使用同一口径：命中「口播：」后只保留口播及续行，遇到画面、字幕、
+ * 时长等制作字段即停止；原稿本来就是纯文本时原样返回。导出层必须自己守住这个
+ * 边界，不能假设上游 artifact 永远已经是纯文本。
+ */
+export function extractVoiceoverText(script: string): string {
+  const normalized = script.replace(/\r\n?/g, "\n").trim();
+  if (!normalized) return "";
+
+  const blocks: string[] = [];
+  let current: string[] = [];
+  let collecting = false;
+  let foundVoiceoverLabel = false;
+  const flush = () => {
+    const block = current.join("\n").trim();
+    if (block) blocks.push(block);
+    current = [];
+  };
+
+  for (const rawLine of normalized.split("\n")) {
+    const line = rawLine.trim();
+    const voiceover = line.match(/^口播\s*[：:]\s*(.*)$/i);
+    if (voiceover) {
+      flush();
+      collecting = true;
+      foundVoiceoverLabel = true;
+      if (voiceover[1]?.trim()) current.push(voiceover[1].trim());
+      continue;
+    }
+    if (
+      /^(画面|字幕|时长|镜头|景别|动作|素材|音效|配乐|BGM)\s*[：:]/i.test(
+        line,
+      )
+    ) {
+      flush();
+      collecting = false;
+      continue;
+    }
+    if (!collecting) continue;
+    if (!line) {
+      flush();
+      collecting = false;
+      continue;
+    }
+    if (/^(?:#{1,6}\s*)?\d+[.、]\s+/.test(line)) {
+      flush();
+      collecting = false;
+      continue;
+    }
+    current.push(line);
+  }
+  flush();
+
+  return foundVoiceoverLabel ? blocks.join("\n\n").trim() : normalized;
+}
+
 export interface MaterialExportPorts {
   /** 项目关联素材(materialLinks entityType=asset 全量,不挑不减 VP-04)。 */
   listMaterialAssets(
@@ -448,13 +506,15 @@ export async function aggregateMaterialExport(
   }
 
   // 2. 口播稿(当前版本全文;无稿跳过,manifest 不冒充)。
-  const script = await ports.getScriptText(ctx, projectId);
+  const script = extractVoiceoverText(
+    await ports.getScriptText(ctx, projectId),
+  );
   if (script.trim()) {
     const name = uniqueName("口播稿.md");
     entries.push({ name, bytes: enc.encode(script) });
     included.push({
       fileName: name,
-      kind: "口播稿全文(当前版本)",
+      kind: "纯口播稿(当前版本)",
       source: "项目稿面 output_script",
     });
   }

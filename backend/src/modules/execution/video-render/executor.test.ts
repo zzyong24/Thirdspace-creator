@@ -160,13 +160,63 @@ describe("createVideoRenderExecutor", () => {
     expect(steps.some((s) => s.includes("交付转码"))).toBe(true);
   });
 
-  it("ffmpeg 缺失 → 诚实报错引导 brew install ffmpeg(不静默降级)", async () => {
+  it("[T-546] 图片 B-roll 按已物化 MIME 直拷，不交给 ffprobe 当视频探测", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(fakeEngine(calls));
+    const screenshotAssetId = "asset-screenshot-without-extension";
+    await fs.writeFile(
+      path.join(sandbox.inputDir, screenshotAssetId),
+      "fake-png",
+    );
+    sandbox = {
+      ...sandbox,
+      inputs: [
+        ...sandbox.inputs,
+        {
+          assetId: screenshotAssetId,
+          mountAs: screenshotAssetId,
+          size: 10,
+          mimeType: "image/png",
+        },
+      ],
+    };
+    const imageBrollProps = videoRenderProps.parse({
+      ...props(),
+      broll: [{ at: 4, file: screenshotAssetId, label: "官网截图" }],
+      scenes: props().scenes.map((scene) => ({ ...scene, cards: [] })),
+    });
+
+    await executor.run(
+      sandbox,
+      { goal: "渲染", props: imageBrollProps },
+      runOpts([]),
+    );
+
+    expect(calls.probed).toEqual(["th.mp4"]);
+    const html = await fs.readFile(
+      path.join(sandbox.dir, "work", "index.html"),
+      "utf8",
+    );
+    expect(html).toContain(
+      `src="media/${screenshotAssetId}.png"`,
+    );
+    expect(html).toMatch(
+      new RegExp(`<img[^>]+src="media/${screenshotAssetId}\\.png"`),
+    );
+    expect(html).not.toMatch(
+      new RegExp(`<video[^>]+src="media/${screenshotAssetId}\\.png"`),
+    );
+  });
+
+  it("随包 ffmpeg/ffprobe 缺失 → 先提示重装 CreatorOS，开发态保留安装引导", async () => {
     const executor = createVideoRenderExecutor(
       fakeEngine({ ffmpegArgs: [], probed: [], rendered: [] }, { findBinary: async () => null }),
     );
     await expect(
       executor.run(sandbox, { props: props() }, runOpts([])),
-    ).rejects.toThrow(/未检测到系统 ffmpeg.*(brew install ffmpeg|apt install ffmpeg|ffmpeg\.org)/);
+    ).rejects.toThrow(
+      /随包渲染组件 ffmpeg\/ffprobe 缺失.*重新安装最新版 CreatorOS.*(brew install ffmpeg|apt install ffmpeg|ffmpeg\.org)/,
+    );
   });
 
   it("Chromium 未就绪 → 诚实报错(不偷偷下载)", async () => {

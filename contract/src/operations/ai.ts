@@ -65,6 +65,8 @@ export const aiOperations = {
     path: "/ai/tasks",
     body: z.object({
       taskType: z.string().min(1),
+      attemptId: z.string().min(16).max(128),
+      retryOfTaskId: id.optional(),
       inputData: z.record(z.string(), z.unknown()).optional(),
     }),
     response: aiTaskResource,

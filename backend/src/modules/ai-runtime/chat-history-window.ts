@@ -168,11 +168,14 @@ export function projectChatHistory(
   const estBefore = estimateTokens(opts.systemText) + estimateTokens(messages);
   const turns = splitTurns(messages);
 
-  // ① tool-result 清体:近 keepToolResultTurns 轮之外的轮,tool 输出换指针占位。
+  const threshold = Math.floor(opts.contextWindowTokens * 0.8);
+
+  // ① tool-result 清体:只有原始上下文已逼近预算时，才把近 keepToolResultTurns 轮之外的
+  // tool 输出换成指针占位。轮龄不是删除证据的充分条件；预算充足时保留全部可核验结果。
   const clearBoundary = Math.max(0, turns.length - opts.keepToolResultTurns);
   let cleared = 0;
   let projected: UIMessage[][] = turns.map((turn, i) => {
-    if (i >= clearBoundary) return turn;
+    if (estBefore <= threshold || i >= clearBoundary) return turn;
     return turn.map((m) => {
       const [pm, n] = clearToolOutputs(m);
       cleared += n;
@@ -183,7 +186,6 @@ export function projectChatHistory(
   // ② token 估算截窗:清体后仍超「窗口 × 80%」→ 只保近 keepTurns 轮,更早整轮截掉 +
   //    首条保留消息注入省略提示。
   let truncated = 0;
-  const threshold = Math.floor(opts.contextWindowTokens * 0.8);
   const estAfterClear =
     estimateTokens(opts.systemText) + estimateTokens(projected.flat());
   if (estAfterClear > threshold && projected.length > opts.keepTurns) {

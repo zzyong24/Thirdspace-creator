@@ -23,12 +23,14 @@ vi.mock("next/navigation", () => ({
 
 const getTask = vi.fn();
 const listTaskResults = vi.fn();
+const listTaskSteps = vi.fn();
 const confirmTask = vi.fn();
 
 vi.mock("@/lib/contract-client", () => ({
   client: {
     getTask: (...a: unknown[]) => getTask(...a),
     listTaskResults: (...a: unknown[]) => listTaskResults(...a),
+    listTaskSteps: (...a: unknown[]) => listTaskSteps(...a),
     confirmTask: (...a: unknown[]) => confirmTask(...a),
   },
 }));
@@ -58,6 +60,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   getTask.mockResolvedValue({ status: "awaiting_confirmation" });
   listTaskResults.mockResolvedValue([CANDIDATE]);
+  listTaskSteps.mockResolvedValue([]);
   confirmTask.mockResolvedValue({ id: "task-pkg-1", status: "succeeded" });
 });
 
@@ -132,7 +135,10 @@ describe("ChatPublishPackageCard(对话内发布物料卡,T-350b 异步)", () =>
   });
 
   it("任务 cancelled/failed(如未配模型)→ 诚实错误态 +「去设置」", async () => {
-    getTask.mockResolvedValue({ status: "failed" });
+    getTask.mockResolvedValue({
+      status: "failed",
+      errorMessage: "MiniMax 返回的发布物料缺少简介",
+    });
     render(
       <ChatPublishPackageCard
         taskId="task-pkg-1"
@@ -149,6 +155,35 @@ describe("ChatPublishPackageCard(对话内发布物料卡,T-350b 异步)", () =>
     expect(
       document.querySelector('[data-slot="chat-publish-settings-link"]'),
     ).toBeTruthy();
+    expect(
+      document.querySelector('[data-slot="chat-publish-error"]')?.textContent,
+    ).toContain("缺少简介");
+  });
+
+  it("[T-477] running 时展示最新任务步骤，不再四分钟只显示同一句 spinner", async () => {
+    getTask
+      .mockResolvedValueOnce({ status: "running", errorMessage: null })
+      .mockResolvedValueOnce({
+        status: "failed",
+        errorMessage: "MiniMax 响应超时",
+      });
+    listTaskSteps.mockResolvedValue([
+      { stepNo: 1, kind: "step", text: "正在调用 MiniMax 生成标题和简介" },
+    ]);
+    render(
+      <ChatPublishPackageCard
+        taskId="task-pkg-1"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="chat-publish-progress"]')
+          ?.textContent,
+      ).toContain("正在调用 MiniMax");
+    });
   });
 
   it("候选无可解析 draft(drafts 空)→ 诚实错误态", async () => {

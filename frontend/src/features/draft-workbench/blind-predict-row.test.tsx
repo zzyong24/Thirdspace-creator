@@ -28,16 +28,73 @@ const mockClient = {
     (_i: unknown): Promise<unknown> => Promise.resolve({ id: "task-1" }),
   ),
   lockPrediction: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
+  getPrediction: vi.fn((_i: unknown): Promise<unknown> =>
+    Promise.resolve({
+      predictedConversion: {
+        dimensions: [
+          {
+            key: "hook",
+            reason: "开头太慢",
+            suggestion: "把结果提前到第一句",
+          },
+          {
+            key: "cta",
+            score: 4,
+            reason: "行动明确",
+            suggestion: "",
+          },
+        ],
+      },
+      predictedMetrics: {
+        diagnosis: {
+          verdict: "钩子需要前置",
+          mainIssues: ["开头进入正题太晚"],
+          priorityFixes: ["第一句先给结果"],
+        },
+      },
+    }),
+  ),
+  getTask: vi.fn((_i: unknown): Promise<unknown> =>
+    Promise.resolve({ status: "awaiting_confirmation" }),
+  ),
+  listTaskResults: vi.fn((_i: unknown): Promise<unknown> =>
+    Promise.resolve([
+      {
+        resultData: {
+          validationStatus: "valid",
+          validationErrors: [],
+          canAdopt: true,
+          contentData: {
+            sections: [
+              {
+                heading: "修订开场",
+                body: "先说结果，再解释为什么。",
+              },
+            ],
+          },
+        },
+      },
+    ]),
+  ),
+  confirmTask: vi.fn((_i: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "task-revision-1", status: "succeeded" }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createOutput: (i: unknown) => mockClient.createOutput(i),
     createAITask: (i: unknown) => mockClient.createAITask(i),
     lockPrediction: (i: unknown) => mockClient.lockPrediction(i),
+    getPrediction: (i: unknown) => mockClient.getPrediction(i),
+    getTask: (i: unknown) => mockClient.getTask(i),
+    listTaskResults: (i: unknown) => mockClient.listTaskResults(i),
+    confirmTask: (i: unknown) => mockClient.confirmTask(i),
   },
 }));
 
 import { BlindPredictRow } from "./blind-predict-row";
+import { ChatScriptDraftCard } from "../copilot/chat-script-draft-card";
+import { SCRIPT_WRITE_EVENT } from "@/features/script/script-write-signal";
 import {
   DraftChatRequestProvider,
   useDraftChatRequest,
@@ -58,9 +115,10 @@ const flushSaveMock = vi.fn(async () => {
 });
 function ChatRequestProbe() {
   const { request, registerFlush } = useDraftChatRequest();
-  capturedRequest = request;
-  // 记录「按钮触发的请求」在 flush 之后到达(链:flush → openChat)。
+  // 在 effect 里暴露请求，避免 render 期间改模块变量破坏组件纯度；同时记录
+  // 「按钮触发的请求」在 flush 之后到达(链:flush → openChat)。
   React.useEffect(() => {
+    capturedRequest = request;
     if (request) callOrder.push("openChat");
   }, [request]);
   // 注册 mock flush(替编辑器)——按钮 flushSave() 会调它。
@@ -68,7 +126,16 @@ function ChatRequestProbe() {
     registerFlush(flushSaveMock);
     return () => registerFlush(null);
   }, [registerFlush]);
-  return null;
+  // 模拟常驻 Copilot 收到 script.draft 请求后返回异步任务卡：这让本测试把
+  // 「建议入口 → 候选预览 → 用户采纳写回」作为一条真实交互链验证。
+  return request?.functionKey === "script.draft" ? (
+    <ChatScriptDraftCard
+      taskId="task-revision-1"
+      projectId="proj-1"
+      error={null}
+      pollIntervalMs={0}
+    />
+  ) : null;
 }
 function renderWithProvider(ui: React.ReactNode) {
   return render(
@@ -192,5 +259,64 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
     expect(
       screen.getByTestId("blind-predict-result-trigger").textContent,
     ).toContain("看盲预测结果");
+  });
+
+  it("详情缺失维度分不伪装 0，并可按建议生成修订稿候选再采纳写回", async () => {
+    const onScriptWrite = vi.fn();
+    window.addEventListener(SCRIPT_WRITE_EVENT, onScriptWrite);
+    renderWithProvider(
+      <BlindPredictRow
+        projectId="proj-1"
+        projectTitle="AI 原生浏览器实测"
+        outputId="out-1"
+        prediction={{
+          predictionId: "pred-1",
+          status: "locked",
+          predictedScore: 4,
+          lockedAt: "2026-07-02T00:00:00.000Z",
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("blind-predict-result-trigger"));
+    await waitFor(() => expect(mockClient.getPrediction).toHaveBeenCalled());
+    expect(
+      await screen.findByTestId("blind-predict-dimension-score-hook"),
+    ).toHaveTextContent("—/5");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "按建议修改原稿" }),
+    );
+    await waitFor(() => expect(flushSaveMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(capturedRequest).not.toBeNull());
+    expect(capturedRequest!.functionKey).toBe("script.draft");
+    expect(capturedRequest!.autoSend).toBe(true);
+    expect(capturedRequest!.selection).toEqual({
+      kind: "content_output",
+      id: "out-1",
+      title: "AI 原生浏览器实测",
+    });
+    expect(capturedRequest!.prefill).toContain("第一句先给结果");
+    expect(capturedRequest!.prefill).toContain("把结果提前到第一句");
+
+    // AI 只生成候选：预览出现前后都没有写回；必须由用户主动点采纳。
+    expect(await screen.findByText("先说结果，再解释为什么。")).toBeInTheDocument();
+    expect(mockClient.confirmTask).not.toHaveBeenCalled();
+    expect(onScriptWrite).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "采纳写入稿面" }));
+    await waitFor(() =>
+      expect(mockClient.confirmTask).toHaveBeenCalledWith({
+        params: { taskId: "task-revision-1" },
+        query: undefined,
+        body: undefined,
+      }),
+    );
+    await waitFor(() => expect(onScriptWrite).toHaveBeenCalledTimes(1));
+    expect(
+      (onScriptWrite.mock.calls[0]![0] as CustomEvent<{ html: string }>).detail
+        .html,
+    ).toContain("先说结果");
+    expect(mockClient.lockPrediction).not.toHaveBeenCalled();
+    window.removeEventListener(SCRIPT_WRITE_EVENT, onScriptWrite);
   });
 });

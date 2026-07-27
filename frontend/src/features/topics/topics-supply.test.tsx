@@ -7,15 +7,13 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // [T-235e] 选题中心「被服务感知」测试(SPEC daily-topic-autopilot §2.5,三决策):
 //   ① 今日新选题条带:createdAt≥dayStartIso 过滤、来源徽标(🔥跟拍|/实验|前缀 + source 枚举)、
 //     一句依据、空态诚实「今天早上暂时没找到新选题」。
 //   ② 供给链健康条:lastRun 缺失 → 「—」诚实降级;有实绩 → ✓HH:mm;计数派生纯函数。
-//   ③ 统一「信号源」弹窗三 tab 切换 + 网页信源登记 wiring(trend.sources.create → refresh)。
-//   ④ 候选卡「实验」徽标(card.attributionId)点开显示 angle 里的归因引用。
+//   ③ 候选卡「实验」徽标(card.attributionId)点开显示 angle 里的归因引用。
 // 全部固定 VM(deterministic:渲染无 Date.now —— dayStartIso 由测试显式传入)。
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
@@ -64,16 +62,12 @@ vi.mock("@/lib/contract-client", () => ({
 import {
   TodayTopicsStrip,
   SupplyHealthStrip,
-  SignalSourcesButton,
   parseSupplyBadge,
   filterTodayCandidates,
   deriveSupplySegments,
 } from "./topics-supply-region";
 import { CandidateCard } from "./topics-interactive-region";
 import type { CandidateResource } from "@creatoros/backend/modules/candidate";
-import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
-import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
-import type { BenchmarkWorkListItemResource } from "@creatoros/backend/modules/benchmark";
 
 // 固定「今天」:本地 2026-07-11 零点(dayStartIso 由服务端算好传入,测试显式构造)。
 const DAY_START = new Date(2026, 6, 11, 0, 0, 0, 0);
@@ -103,61 +97,6 @@ function candidate(over: Partial<CandidateResource> = {}): CandidateResource {
     },
     createdAt: TODAY_ISO,
     updatedAt: TODAY_ISO,
-    ...over,
-  };
-}
-
-// [T-235c] 指定收藏夹登记 fixture(信号源弹窗 tab4)。
-function favoritesFolder(
-  over: Partial<FavoritesFolderResource> = {},
-): FavoritesFolderResource {
-  return {
-    id: "ff-1",
-    userId: "user-a",
-    accountId: null,
-    name: "选题库",
-    collectsId: null,
-    note: null,
-    enabled: true,
-    lastSyncedAt: null,
-    createdAt: TODAY_ISO,
-    updatedAt: TODAY_ISO,
-    ...over,
-  };
-}
-
-function trendSource(
-  over: Partial<TrendSourceResource> = {},
-): TrendSourceResource {
-  return {
-    id: "ts-1",
-    userId: "user-a",
-    accountId: null,
-    name: "某垂类热榜",
-    url: "https://example.com/hot",
-    sourceType: "web",
-    domain: "example.com",
-    note: null,
-    enabled: true,
-    createdAt: TODAY_ISO,
-    updatedAt: TODAY_ISO,
-    ...over,
-  };
-}
-
-// [T-349b] 对标作品 fixture(信号源弹窗「对标作品」区)。
-function benchmarkWork(
-  over: Partial<BenchmarkWorkListItemResource> = {},
-): BenchmarkWorkListItemResource {
-  return {
-    id: "bmwork-1",
-    awemeId: "7300000000000000000",
-    platform: "douyin",
-    description: "对标作品标题",
-    diggCount: 12345,
-    isViral: true,
-    transcript: null,
-    transcriptStatus: null,
     ...over,
   };
 }
@@ -255,6 +194,19 @@ describe("[T-235e] 今日新选题条带", () => {
     expect(filterTodayCandidates([candidate()], "not-a-date")).toHaveLength(0);
   });
 
+  it("filterTodayCandidates 只投影仍在 pool 的今日选题，丢弃项不再回流条带", () => {
+    expect(
+      filterTodayCandidates(
+        [
+          candidate({ id: "pool", status: "pool" }),
+          candidate({ id: "dropped", status: "dropped" }),
+          candidate({ id: "promoted", status: "promoted" }),
+        ],
+        DAY_START_ISO,
+      ).map((c) => c.id),
+    ).toEqual(["pool"]);
+  });
+
   it("parseSupplyBadge:attributionId 无前缀也算实验;未知 source 原样透出", () => {
     expect(
       parseSupplyBadge(
@@ -327,293 +279,6 @@ describe("[T-235e] 供给链健康条", () => {
     expect(byKey("darkhorse").value).toBe("⚡1");
     expect(byKey("generate").value).toBe("✓09:40·3");
     expect(byKey("review").value).toBe("3"); // pool 态总数(promoted 不算待审)
-  });
-});
-
-// ── ③ 统一「信号源」弹窗三 tab ───────────────────────────────────────────────────────
-describe("[T-235e] 信号源弹窗", () => {
-  it("三 tab 切换:网页信源 → 对标博主 → 黑马关键词", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        trendSources={[trendSource()]}
-        darkhorseKeywords={["AI 工程", "副业"]}
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    // 默认 tab = 网页信源:表单 + 已登记行 + 需登录提示。
-    expect(screen.getByTestId("trend-source-form")).toBeInTheDocument();
-    expect(screen.getByTestId("trend-source-row")).toBeInTheDocument();
-    expect(screen.getByTestId("trend-source-login-hint")).toHaveTextContent(
-      "网站登录保管库",
-    );
-    // 切到对标博主 tab:登记表单 + 立即采集(T-222 行为整体迁入)。
-    await user.click(screen.getByTestId("signal-tab-benchmark"));
-    expect(screen.getByTestId("benchmark-source-form")).toBeInTheDocument();
-    expect(screen.getByTestId("benchmark-collect-now")).toBeInTheDocument();
-    // 切到黑马关键词 tab:定位 keywords chips + env 提示(展示型 v1,不可编辑)。
-    await user.click(screen.getByTestId("signal-tab-darkhorse"));
-    const chips = screen.getByTestId("darkhorse-keywords-chips");
-    expect(within(chips).getByText("AI 工程")).toBeInTheDocument();
-    expect(screen.getByText(/CREATOROS_DARKHORSE_KEYWORDS/)).toBeInTheDocument();
-  });
-
-  it("网页信源登记 → client.createTrendSource(url 必填,sourceType 交服务端派生)→ refresh", async () => {
-    const user = userEvent.setup();
-    render(<SignalSourcesButton benchmarkSources={[]} trendSources={[]} />);
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    fireEvent.change(screen.getByLabelText("信源 URL"), {
-      target: { value: "https://news.ycombinator.com/rss" },
-    });
-    fireEvent.submit(screen.getByTestId("trend-source-form"));
-    await waitFor(() =>
-      expect(mockClient.createTrendSource).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.createTrendSource.mock.calls[0]![0] as {
-      body: { url: string; sourceType?: string };
-    };
-    expect(arg.body.url).toBe("https://news.ycombinator.com/rss");
-    expect(arg.body.sourceType).toBeUndefined();
-    expect(mockRouter.refresh).toHaveBeenCalled();
-  });
-
-  // ── [T-235c] tab4:指定收藏夹 ──────────────────────────────────────────────────
-  it("收藏夹 tab:引导文案 + 登记行(collectsId 匹配态徽标)+ 空态诚实", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        trendSources={[]}
-        favoritesFolders={[
-          favoritesFolder({ id: "ff-1", name: "选题库" }), // 未匹配 → 待首采匹配
-          favoritesFolder({
-            id: "ff-2",
-            name: "对标爆款",
-            collectsId: "7372169017362909234", // 已按名匹配回填 → 已对上
-          }),
-        ]}
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    await user.click(screen.getByTestId("signal-tab-favorites"));
-    // 引导文案:只采登记的指定夹,不碰其他收藏(隐私红线登记页就说清)。
-    expect(screen.getByTestId("favorites-folder-guide")).toHaveTextContent(
-      "只采集这里登记的指定夹",
-    );
-    const rows = screen.getAllByTestId("favorites-folder-row");
-    expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveTextContent("待首采匹配");
-    expect(rows[1]).toHaveTextContent("已对上");
-  });
-
-  it("收藏夹登记 → client.createFavoritesFolder(夹名必填)→ refresh;空态提示", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        trendSources={[]}
-        favoritesFolders={[]}
-        defaultTab="favorites"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    expect(screen.getByTestId("favorites-folder-empty")).toHaveTextContent(
-      "还没有登记收藏夹",
-    );
-    fireEvent.change(screen.getByLabelText("收藏夹名"), {
-      target: { value: "选题库" },
-    });
-    fireEvent.submit(screen.getByTestId("favorites-folder-form"));
-    await waitFor(() =>
-      expect(mockClient.createFavoritesFolder).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.createFavoritesFolder.mock.calls[0]![0] as {
-      body: { name: string };
-    };
-    expect(arg.body.name).toBe("选题库");
-    expect(mockRouter.refresh).toHaveBeenCalled();
-  });
-
-  it("收藏夹行停用/删除 → toggle/remove op(enabled 取反,folderId 透传)", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        trendSources={[]}
-        favoritesFolders={[favoritesFolder({ id: "ff-1" })]}
-        defaultTab="favorites"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    await user.click(screen.getByRole("button", { name: "停用" }));
-    await waitFor(() =>
-      expect(mockClient.toggleFavoritesFolder).toHaveBeenCalledTimes(1),
-    );
-    const toggleArg = mockClient.toggleFavoritesFolder.mock.calls[0]![0] as {
-      params: { folderId: string };
-      body: { enabled: boolean };
-    };
-    expect(toggleArg.params.folderId).toBe("ff-1");
-    expect(toggleArg.body.enabled).toBe(false);
-    await user.click(screen.getByLabelText("删除收藏夹登记"));
-    await waitFor(() =>
-      expect(mockClient.removeFavoritesFolder).toHaveBeenCalledTimes(1),
-    );
-  });
-
-  it("黑马关键词空态:关键词跟随定位,指路定位中心(不编辑、不新建存储)", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        darkhorseKeywords={[]}
-        defaultTab="darkhorse"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    expect(screen.getByTestId("darkhorse-keywords-empty")).toHaveTextContent(
-      "关键词跟随定位",
-    );
-  });
-});
-
-// ── [T-349b] 对标作品面板 + 单条抓逐字稿 ──────────────────────────────────────────────
-describe("[T-349b] 对标作品面板", () => {
-  it("对标博主 tab 下方渲染对标作品列表 + 四态(none/done/failed/skipped)", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        benchmarkWorks={[
-          benchmarkWork({ id: "w-none", description: "未抓作品" }),
-          benchmarkWork({
-            id: "w-done",
-            description: "已抓作品",
-            transcript: "已有逐字稿",
-            transcriptStatus: "done",
-          }),
-          benchmarkWork({
-            id: "w-failed",
-            description: "失败作品",
-            transcriptStatus: "failed",
-          }),
-          benchmarkWork({
-            id: "w-skipped",
-            description: "图集作品",
-            isViral: false,
-            transcriptStatus: "skipped",
-          }),
-        ]}
-        defaultTab="benchmark"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    expect(screen.getByTestId("benchmark-works-heading")).toBeInTheDocument();
-    const rows = screen.getAllByTestId("benchmark-work-row");
-    expect(rows).toHaveLength(4);
-    // 未抓 → 抓逐字稿按钮;已抓 → 查看逐字稿;失败 → 重试;图集 → 无口播/图集灰字。
-    expect(screen.getByTestId("benchmark-work-transcribe")).toBeInTheDocument();
-    expect(
-      screen.getByTestId("benchmark-work-view-transcript"),
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("benchmark-work-retry")).toBeInTheDocument();
-    expect(screen.getByTestId("benchmark-work-skipped")).toHaveTextContent(
-      "无口播/图集",
-    );
-    // 原视频链接 → 抖音作品页新窗口。
-    const link = within(rows[0]!).getByText("原视频").closest("a");
-    expect(link).toHaveAttribute(
-      "href",
-      "https://www.douyin.com/video/7300000000000000000",
-    );
-    expect(link).toHaveAttribute("target", "_blank");
-  });
-
-  it("点抓逐字稿 → client.transcribeBenchmarkWork(params.workId)→ 按返回 done 展示逐字稿", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        benchmarkWorks={[benchmarkWork({ id: "w-1" })]}
-        defaultTab="benchmark"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    // 抓取前无逐字稿正文。
-    expect(screen.queryByTestId("benchmark-work-transcript")).toBeNull();
-    await user.click(screen.getByTestId("benchmark-work-transcribe"));
-    await waitFor(() =>
-      expect(mockClient.transcribeBenchmarkWork).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.transcribeBenchmarkWork.mock.calls[0]![0] as {
-      params: { workId: string };
-    };
-    expect(arg.params.workId).toBe("w-1");
-    // 返回 done + transcript → 该行就地更新为可查看,自动展开显示正文。
-    await waitFor(() =>
-      expect(screen.getByTestId("benchmark-work-transcript")).toHaveTextContent(
-        "抓到的逐字稿正文",
-      ),
-    );
-  });
-
-  it("skipped 返回(图集/无口播)→ 诚实标注,不装成功", async () => {
-    mockClient.transcribeBenchmarkWork.mockResolvedValueOnce({
-      status: "skipped",
-      transcript: null,
-    });
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        benchmarkWorks={[benchmarkWork({ id: "w-skip" })]}
-        defaultTab="benchmark"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    await user.click(screen.getByTestId("benchmark-work-transcribe"));
-    await waitFor(() =>
-      expect(screen.getByTestId("benchmark-work-skipped")).toHaveTextContent(
-        "无口播/图集",
-      ),
-    );
-    expect(screen.queryByTestId("benchmark-work-transcript")).toBeNull();
-  });
-
-  it("抓取抛错(failed)→ 诚实失败提示 + 重试可再抓", async () => {
-    mockClient.transcribeBenchmarkWork.mockRejectedValueOnce(
-      new Error("transcribe failed"),
-    );
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        benchmarkWorks={[benchmarkWork({ id: "w-fail" })]}
-        defaultTab="benchmark"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    await user.click(screen.getByTestId("benchmark-work-transcribe"));
-    await waitFor(() =>
-      expect(screen.getByTestId("benchmark-work-error")).toBeInTheDocument(),
-    );
-    expect(screen.getByTestId("benchmark-work-retry")).toBeInTheDocument();
-  });
-
-  it("空态诚实:无对标作品 → 引导去对标博主登记采集", async () => {
-    const user = userEvent.setup();
-    render(
-      <SignalSourcesButton
-        benchmarkSources={[]}
-        benchmarkWorks={[]}
-        defaultTab="benchmark"
-      />,
-    );
-    await user.click(screen.getByTestId("signal-sources-trigger"));
-    expect(screen.getByTestId("benchmark-works-empty")).toHaveTextContent(
-      "还没有对标作品",
-    );
   });
 });
 

@@ -444,16 +444,51 @@ describe("sweepStaleRuns(gate finding-3 启动扫超时)", () => {
 describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
   const NOW = "2026-07-11T12:00:00.000Z";
 
+  it("[T-522] system sweep 按每条任务的真实 accountId 写终态，不复用无号 daemon ctx", async () => {
+    const markFailed = vi.fn(async () => undefined);
+    await sweepStaleAiTasks({
+      listRunningTasks: async () => [
+        {
+          id: "acct-a-task",
+          accountId: "acct-a",
+          taskType: "script.draft",
+          startedAt: "2026-07-11T11:59:00.000Z",
+        },
+        {
+          id: "acct-b-task",
+          accountId: "acct-b",
+          taskType: "script.draft",
+          startedAt: "2026-07-11T11:59:00.000Z",
+        },
+      ],
+      markFailed,
+      ctx: { ...ctx, accountId: undefined },
+      now: () => NOW,
+    });
+    expect(markFailed).toHaveBeenNthCalledWith(
+      1,
+      { ...ctx, accountId: "acct-a" },
+      "acct-a-task",
+      expect.stringContaining("应用重启导致任务中断"),
+    );
+    expect(markFailed).toHaveBeenNthCalledWith(
+      2,
+      { ...ctx, accountId: "acct-b" },
+      "acct-b-task",
+      expect.stringContaining("应用重启导致任务中断"),
+    );
+  });
+
   it("非进程内类型(transcribe)running 超 2h → markFailed(stale-on-boot);未超时/无时间锚 → 留着", async () => {
     const markFailed = vi.fn(async () => undefined);
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
         // 3h 前(>2h)
-        { id: "zombie", taskType: "transcribe.douyin", startedAt: "2026-07-11T09:00:00.000Z" },
+        { id: "zombie", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: "2026-07-11T09:00:00.000Z" },
         // 30min 前 —— worker+冷却重试是合法长活,年龄门放过
-        { id: "fresh", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" },
+        { id: "fresh", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" },
         // 无时间锚 → 不乱标
-        { id: "no-anchor", taskType: "transcribe.douyin", startedAt: null },
+        { id: "no-anchor", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: null },
       ],
       markFailed,
       ctx,
@@ -462,7 +497,7 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     expect(swept).toBe(1);
     expect(markFailed).toHaveBeenCalledTimes(1);
     expect(markFailed).toHaveBeenCalledWith(
-      ctx,
+      { ...ctx, accountId: "acct-sweep" },
       "zombie",
       expect.stringContaining("stale-on-boot"),
     );
@@ -475,16 +510,16 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
         // 才 1 分钟前,但进程内 runner 重启即死 → 立即判死
-        { id: "thesis", taskType: "planning.thesis", startedAt: "2026-07-11T11:59:00.000Z" },
-        { id: "cover", taskType: "cover.generate", startedAt: "2026-07-11T11:59:00.000Z" },
+        { id: "thesis", accountId: "acct-sweep", taskType: "planning.thesis", startedAt: "2026-07-11T11:59:00.000Z" },
+        { id: "cover", accountId: "acct-sweep", taskType: "cover.generate", startedAt: "2026-07-11T11:59:00.000Z" },
         // scheduled.* 前缀整族也是进程内(dispatchScheduledCollection)
-        { id: "sched", taskType: "scheduled.self.metrics", startedAt: "2026-07-11T11:59:00.000Z" },
+        { id: "sched", accountId: "acct-sweep", taskType: "scheduled.self.metrics", startedAt: "2026-07-11T11:59:00.000Z" },
         // 进程内类型无时间锚也判死(启动扫语义:重启即死不需要锚)
-        { id: "thesis-no-anchor", taskType: "script.draft", startedAt: null },
+        { id: "thesis-no-anchor", accountId: "acct-sweep", taskType: "script.draft", startedAt: null },
         // 转录 30min 前(<2h)→ 合法长活,放过
-        { id: "transcribe-fresh", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" },
+        { id: "transcribe-fresh", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" },
         // agentic.* 走外部引擎 → 保留宽阈值,30min 前放过
-        { id: "agentic-fresh", taskType: "agentic.research", startedAt: "2026-07-11T11:30:00.000Z" },
+        { id: "agentic-fresh", accountId: "acct-sweep", taskType: "agentic.research", startedAt: "2026-07-11T11:30:00.000Z" },
       ],
       markFailed,
       ctx,
@@ -493,13 +528,13 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     expect(swept).toBe(4);
     for (const id of ["thesis", "cover", "sched", "thesis-no-anchor"]) {
       expect(markFailed).toHaveBeenCalledWith(
-        ctx,
+        { ...ctx, accountId: "acct-sweep" },
         id,
         expect.stringContaining("应用重启导致任务中断"),
       );
     }
-    expect(markFailed).not.toHaveBeenCalledWith(ctx, "transcribe-fresh", expect.anything());
-    expect(markFailed).not.toHaveBeenCalledWith(ctx, "agentic-fresh", expect.anything());
+    expect(markFailed).not.toHaveBeenCalledWith({ ...ctx, accountId: "acct-sweep" }, "transcribe-fresh", expect.anything());
+    expect(markFailed).not.toHaveBeenCalledWith({ ...ctx, accountId: "acct-sweep" }, "agentic-fresh", expect.anything());
   });
 
   // [T-389] 周期复扫(带 processStartedAt 锚):进程内类型只判上一进程遗留(startedAt 早于
@@ -509,9 +544,9 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
         // 上一进程遗留(startedAt 早于本进程启动 11:00)→ 判死
-        { id: "leftover", taskType: "planning.thesis", startedAt: "2026-07-11T10:00:00.000Z" },
+        { id: "leftover", accountId: "acct-sweep", taskType: "planning.thesis", startedAt: "2026-07-11T10:00:00.000Z" },
         // 本进程内 5 分钟前开跑的活任务 → 不误杀(年龄门 <2h 放过)
-        { id: "live", taskType: "cover.generate", startedAt: "2026-07-11T11:55:00.000Z" },
+        { id: "live", accountId: "acct-sweep", taskType: "cover.generate", startedAt: "2026-07-11T11:55:00.000Z" },
       ],
       markFailed,
       ctx,
@@ -521,7 +556,7 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     expect(swept).toBe(1);
     expect(markFailed).toHaveBeenCalledTimes(1);
     expect(markFailed).toHaveBeenCalledWith(
-      ctx,
+      { ...ctx, accountId: "acct-sweep" },
       "leftover",
       expect.stringContaining("应用重启导致任务中断"),
     );
@@ -531,7 +566,7 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     const markFailed = vi.fn(async () => undefined);
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
-        { id: "t1", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
+        { id: "t1", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
       ],
       markFailed,
       ctx,
@@ -549,8 +584,8 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
       .mockName("markFailed");
     const swept = await sweepStaleAiTasks({
       listRunningTasks: async () => [
-        { id: "boom", taskType: "transcribe.douyin", startedAt: "2026-07-11T08:00:00.000Z" },
-        { id: "zombie2", taskType: "transcribe.douyin", startedAt: "2026-07-11T08:00:00.000Z" },
+        { id: "boom", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: "2026-07-11T08:00:00.000Z" },
+        { id: "zombie2", accountId: "acct-sweep", taskType: "transcribe.douyin", startedAt: "2026-07-11T08:00:00.000Z" },
       ],
       markFailed,
       ctx,

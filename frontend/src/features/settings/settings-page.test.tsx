@@ -325,11 +325,42 @@ describe("SettingsPage", () => {
         document.querySelector('[data-slot="activation-last-check"]')
           ?.textContent,
       ).toContain("2026-07-06");
-      // [T-396b 红线] 未传渠道链接(未激活/渠道未配)→ 购买/续期入口整个隐藏,
-      // 绝不回退官方链接(防代理码用户看到官方定价)。
+      // [T-534] null 入口诚实显示“当前未提供”，不推断 lifecycle、不回退官网。
       expect(
         document.querySelector('[data-slot="activation-purchase-link"]'),
       ).toBeNull();
+      expect(screen.getByText("购买：当前未提供")).toBeInTheDocument();
+      expect(screen.getByText("续费：当前未提供")).toBeInTheDocument();
+    });
+
+    it("[T-534] 商业售后/下载与购买/续费分离展示", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "M-ch",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-07-06T00:00:00.000Z",
+        },
+        channelLinks: {
+          purchaseUrl: null,
+          renewalUrl: null,
+          channelSupportUrl: "https://agent.example.com/support?q=1#help",
+          downloadUrl: "https://downloads.example.com/latest?q=mac#download",
+        },
+      });
+      expect(
+        document
+          .querySelector('[data-slot="activation-channel-support-link"]')
+          ?.getAttribute("href"),
+      ).toBe("https://agent.example.com/support?q=1#help");
+      expect(
+        document
+          .querySelector('[data-slot="activation-download-link"]')
+          ?.getAttribute("href"),
+      ).toBe("https://downloads.example.com/latest?q=mac#download");
+      expect(screen.queryByText("打开反馈渠道")).not.toBeInTheDocument();
     });
 
     it("[T-396b] 渠道 purchaseUrl 下发 → 购买/续期入口跳渠道链接", async () => {
@@ -344,7 +375,8 @@ describe("SettingsPage", () => {
         },
         channelLinks: {
           purchaseUrl: "https://agent.example.com/buy",
-          supportUrl: null,
+          renewalUrl: null,
+          channelSupportUrl: null,
           downloadUrl: null,
         },
       });

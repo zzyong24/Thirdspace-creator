@@ -11,6 +11,49 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-COL-001 — 内容雷达采集账号与工作区 owner 解耦（DEC-COL-001，2026-07-26）
+
+- **范围**：只覆盖内容雷达 `creator_profile`、`favorites_folder`、`darkhorse_query`；经营数据、
+  评论、分享链接、`web/rss` 和其他自动化任务都不增加账号选择器。
+- **数据归属**：source/run/task/item/observation 继续以当前工作区账号为唯一 owner；collector
+  仅选择服务端验证后的本机抖音登录态，不成为领域写入上下文。
+- **契约影响**：新增 collector 安全列表 operation，变更三类来源的 preview/list/create/run
+  语义；客户端不可提交或读取 `browserSessionRef`，现有 `web/rss` 合同不变。
+- **旧工件**：T-496 的“只做收藏夹”失败方案仅留历史，由 T-537 完整替代。
+- **当前 Gate**：PLAN/CONTRACT 三轮评审内部 PASS；真实双 active 账号 `RAT-537-01`
+  未通过，正式 Gate 与全部 BUILD 保持 blocked。
+
+## CI-MC-002 — 模型配置改为现有 Settings 轻量优化（DEC-MC-002，2026-07-26）
+
+- **范围重置**：旧八槽总览、配置向导、能力平台、费用和付费 effect 不进入 BUILD；继续复用
+  `settings.models.put/test`，不新增页面、公开 operation 或数据模型。
+- **落地影响**：模型卡普通路径只显示预设、模型 ID、API Key；高级字段默认折叠；主模型改为
+  “保存并测试”，先保存再走正式 `modelFor + streamText`，非空文本才判连通。
+- **兼容性**：Kimi 开放平台与 Kimi Code 拆成两套 OpenAI Chat 预设；New API、Responses
+  与中转站通过高级设置和教程说明，不把基础文本探针冒充复杂工具调用认证。
+- **证据**：`f91b08cb`；T-501 定向 67 tests、前端 typecheck、目标 lint、boundary、
+  orphan、reconcile 通过；未发真实 provider 或付费调用。
+
+## CI-ODR-001 — 四个过度设计任务统一范围重置（DEC-ODR-001，2026-07-26）
+
+- **变更**：T-516/T-517/T-518/T-519 统一退回已有能力上的最小完整闭环；框架优化明确不在
+  T-527 内。本次只纠正上游真相，不修改生产代码。
+- **失效/待重推导**：
+  - T-517 新 `automation_job/run`、八表 grant/effect 平台和第二执行状态机 → **关闭**；
+  - T-516 独立 report/issue/candidate/event/confirm/undo Saga → **关闭**；
+  - T-518 Growth 上传、对象存储、客服收件箱 → **关闭**；
+  - T-519 第二套上传/搜索/图谱平台 → **关闭**；
+  - 四项 2026-07-24/25 旧 CONTRACT → **只保留审计历史，不再授权 BUILD**。
+- **重新派生**：
+  - T-517 复用 `scheduled_job/job_run` 与 `PersistentTaskService`，补 sealed kind、typed
+    handler registry、单一 driver 与旧 timer cutover；
+  - T-516 自动扫描只做确定性报告，AI 修改必须由用户主动触发并复用定位编辑/版本链；
+  - T-518 只做本地整理/复制、打开已配置 `supportUrl` 和加密日志目录；
+  - T-519 先修 Assets ownership/stable assetId/complete 幂等，再补文件夹与多视图。
+- **当前 Gate**：四份 Replacement 经同一 cross-model reviewer 三轮复核，最终 PASS
+  （0 blocker/0 major/0 minor）；DEC-ODR-001 已记录用户范围重置。PLAN Gate 通过，
+  CONTRACT/确认②/BUILD 仍关闭。
+
 ## CI-006 — Full spec alignment (from DEC-006, 2026-06-20)
 
 - **Change**: Implementation changed to match specs (UI stack @base-ui → shadcn/Radix; +13 entities; enum/field
@@ -61,6 +104,62 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   re-derivation is scheduled but incomplete.
 - **Residual risk**: HIGH until contract v0.3 lands and the base-module plans + fixtures are re-derived. Track
   each as it completes.
+
+## CI-013 — 模型协议枚举增加 Responses（DEC-019，2026-07-23）
+
+- **变更**：`apiFormat` 从 `anthropic | openai_chat` 扩展为
+  `anthropic | openai_chat | openai_responses`，并把 Chat/Responses 的 SDK 与 Pi 路径显式分开。
+- **上游变更**：FR-069、FLOW-023、API-008、API-009；设置模型配置 contract 与协议路由。
+- **下游失效与处置**：
+  - contract resource/operation → **已重派生并重验**（TEST-001）。
+  - settings 持久化、导入导出、解析 → **已重派生并重验**（TEST-002）。
+  - Vercel AI SDK provider factory → **已重派生并重验**（TEST-003）。
+  - Pi Agent 协议映射 → **已重派生并重验**（TEST-004）。
+  - 设置页连接测试与协议选择 → **已重派生并重验**（TEST-005/006）。
+  - desktop sidecar Pi lazy modules → **已重派生并重验**（TEST-007）。
+  - 旧研究结论“Responses 用不上” → **已标记被 T-471 SPEC 取代**。
+- **未关闭风险**：
+  - T-471 实现前红测没有可审计输出，Gate FAIL 历史保留。
+  - 真实 New API token + 实际模型 Agent 循环会产生费用，未经授权未运行（RISK-011）。
+
+## CI-TSB-001 — 三系统 runtime 权威、双入口与 lifecycle（DEC-TSB-001，2026-07-26）
+
+- **变更**：单一 `supportUrl` 拆成官方产品 Bug `bugFeedbackUrl` 与渠道商业售后
+  `channelSupportUrl`；Creator 只消费 AM signed `channel-runtime-v2`，并按复合 identity、
+  source digest 与版本防降级。
+- **上游**：Growth canonical/DEC-050 新周期 PASS；AM API-AM-007/011/012 与共同 projection、
+  reassignment fixtures。
+- **生命周期**：
+  - active：按签名字段展示；
+  - sales_disabled：purchase/renewal 必须 null，保留 brand/support/download/Bug；
+  - terminated：只采纳 AM 完成全量原子改绑后签名的新 target identity，不 fallback、不 tombstone。
+- **下游失效**：
+  - T-396 三键 `.channel-links` 明文 cache 与单 `supportUrl` → **invalidated，T-534 重派生**；
+  - T-518 `supportUrl` 作为 Bug 入口 → **invalidated，保留本地整理/复制/打开页面/零上传语义**；
+  - T-531/T-532 若包含自动上传、附件或回执 → **冻结，不是 T-534 BUILD 输入**；
+  - `contract/src/local-platform.ts`、IssueFeedbackDialog、激活页、设置购买与服务、Rust license parser/
+    cache、本地 runtime reader/API 及其测试 → **已重派生并重验**；
+  - 旧 TS channel-links reader 与 `/local/support-channel` → **已删除**；Rust 生产路径不再写
+    `.channel-links`，旧测试辅助函数仅在 `cfg(test)` 编译。
+- **安全影响**：明文 `.channel-links` 不能证明签名来源，改由现有加密 `.license` 一次保存
+  license identity + verified runtime；旧明文不自动迁移。日志/API 不输出 code、identity、
+  URL query/fragment、sourceDigest 或签名。
+- **当前 Gate**：Creator 独立评审三轮已收口，contract/scope/fixture 与 BUILD 定向、全量回归
+  PASS；`next build` 仍被当前 HEAD 中 T-535 已提交的 `instrumentation.ts` Turbopack
+  code-frame panic 阻断，不归入 T-534 代码范围，也不伪报发布构建全绿。证据见
+  `GATE-T534-BUILD.md`。
+
+## CI-FDB-003 — 产品 Bug 临时飞书降级（DEC-FDB-003，2026-07-26）
+
+- **变更**：签名 `bugFeedbackUrl` 缺失时，问题反馈弹窗打开内置官方飞书表；自动发送禁用，
+  日志仅由用户压缩后手动上传。
+- **不变边界**：商业入口仍只读签名 runtime；CreatorOS 不接收反馈数据、不自动上传日志，
+  Growth/AM 长期权威不变。
+- **下游重派生**：`IssueFeedbackDialog` 文案、按钮状态、fallback URL 与组件测试已重派生；
+  `open-url` 可信桌面适配器继续复用。
+- **外部入口验证**：已创建独立的飞书 Form View 并开启匿名链接，应用只打开
+  `https://my.feishu.cn/share/base/form/...`；用无登录态浏览器验证可填写，且不会暴露
+  Base 底表或其他用户的反馈记录。表单保留日志附件字段，内部“处理状态”不对填写者展示。
 
 ---
 

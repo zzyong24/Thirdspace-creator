@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { describeUserError } from "@/lib/ai-error-humanize";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import type { AssetType } from "@/types/domain";
 
 // Map a File's MIME type to the contract `assetType` enum
@@ -103,6 +104,7 @@ export function AssetUploadButton() {
                 query: undefined,
                 body: {
                   taskType: "material.extract",
+                  attemptId: createAiTaskAttemptId(),
                   inputData: { assetId: asset.id, fileName: file.name },
                 },
               })

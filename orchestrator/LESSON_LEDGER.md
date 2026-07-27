@@ -39,3 +39,26 @@
 - **GuardCheck**: `node orchestrator/process/boundary-scan.mjs --quiet`(ratchet:新违规 fail;已登记进 `reconcile.config.json` lessons[] LED-003,每次重跑)
 - **Outcome(T+N)**: —（待回填:Phase 2 把 308→0 后回看搬迁是否引入回归）
 - **Ref**: 设计 `docs/superpowers/specs/2026-06-29-creatoros-refactor-design.md`;房子图纸 `orchestrator/SYSTEM_ARCHITECTURE.md`;待 promote 进 skill(T-013)
+
+## LED-006 — 桌面流水线只验安装文件存在，真实应用可以带着永久白屏出包
+- **Date**: 2026-07-27 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: Windows 流水线执行了安装器特殊入口并确认 runtime 文件存在，却从未启动用户真正点击的 `CreatorOS.exe`；sidecar 工作目录依赖、verdict 公钥读取和 WebView 导航全部未被执行，最终流水线全绿但用户真机仍永久白屏。
+- **RootCause**: 把“安装期物化成功”误当成“应用启动成功”；同时以 `about:blank` 注入脚本动态生成 splash，启动失败时脚本若未执行就没有可见错误页；runtime 解析还在 logger 初始化前 panic，证据也没有落盘。
+- **GuardRule**: Windows 安装包上传后必须真启动已安装 GUI，只有 sidecar 完成启动门且 WebView 完成 `127.0.0.1` 主页面加载才算启动 Gate 通过；sidecar cwd 必须显式固定到随包 frontend；任何 runtime 失败必须保留静态可见页并先落日志。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs`（已登记进 `reconcile.config.json` lessons[]）
+- **Outcome(T+N)**: 待 Windows 新包流水线与用户真机复验后回填。
+- **Ref**: T-562；用户真机 2026-07-27；`docs/research/2026-07-24-windows-first-launch-white-screen.md`
+
+## LED-007 — 模型连通探针只读正文流，思考流与流内错误都会被误报为空响应
+- **Date**: 2026-07-27 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: DeepSeek V4 默认先产 reasoning，8-token 探针没有最终正文时被判失败；AI SDK
+  `textStream` 又没有把 provider 的流内 401 交给探针 catch，明确的密钥无效也被二次标成
+  `empty-stream`，用户无法区分配置错误与误报。
+- **RootCause**: 连通性判据只检查最终正文，没有消费 `fullStream` 的
+  `reasoning-delta`/`error` 两类信号；测试预算还沿用非思考模型的极小上限。
+- **GuardRule**: 文本模型连通测试必须消费完整事件流：正文或非空思考内容任一出现即证明真实
+  连通，`error` part 必须显式抛出并安全归类；正文与思考均为空才允许报空响应。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts`
+  （已登记进 `reconcile.config.json` lessons[]）。
+- **Outcome(T+N)**: 待包含本修复的新安装包完成 DeepSeek V4 真机配置测试后回填。
+- **Ref**: T-563/T-564；本机加密日志 2026-07-27T10:58:16Z~11:00:33Z。

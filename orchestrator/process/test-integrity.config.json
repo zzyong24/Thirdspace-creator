@@ -1,0 +1,227 @@
+{
+  "_meta": "T-507：只记录逐文件审计过的迁移与 suppression；不是基线。路径、指令和最大增量均为精确值，扩大范围会重新触发 gate。",
+  "testMigrations": [
+    {
+      "from": [
+        "ai-worker/src/agent-config-resolver.test.ts",
+        "ai-worker/src/candidate-schemas.test.ts",
+        "ai-worker/src/confirm.test.ts",
+        "ai-worker/src/context-tools.test.ts",
+        "ai-worker/src/fixtures/fixture-store.test.ts",
+        "ai-worker/src/orchestrator.test.ts",
+        "ai-worker/src/run-loop.test.ts",
+        "ai-worker/src/runner/agent-runner-factory.test.ts",
+        "ai-worker/src/runner/fake-agent-runner.test.ts",
+        "ai-worker/src/state-machine.test.ts"
+      ],
+      "to": [
+        "backend/src/modules/ai/ai.service.test.ts",
+        "backend/src/modules/ai/ai.repository.integration.test.ts",
+        "backend/src/modules/ai/ai.acceptance.test.ts",
+        "ai-worker/src/runtime/agent-runtime.test.ts",
+        "ai-worker/src/runtime/tool-registry.test.ts"
+      ],
+      "reason": "旧 ai-worker 内存队列/fixture/确认状态机已随物理架构收口退役；候选确认、状态迁移、持久化与 runtime/tool 边界由 backend AI 服务及新 runtime 测试接管。"
+    },
+    {
+      "from": [
+        "frontend/src/server/ai/chat-context.test.ts",
+        "frontend/src/server/ai/chat-tools.test.ts",
+        "frontend/src/server/ai/creative-context.test.ts",
+        "frontend/src/server/ai/planning-runner.test.ts",
+        "frontend/src/server/ai/scheduled-collection-scheduler.test.ts",
+        "frontend/src/server/ai/transcribe-runner.test.ts"
+      ],
+      "to": [
+        "backend/src/modules/ai-runtime/chat-context.test.ts",
+        "backend/src/modules/ai-runtime/chat-tools.test.ts",
+        "backend/src/modules/ai-runtime/creative-context.test.ts",
+        "backend/src/modules/ai-runtime/planning-runner.test.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-scheduler.test.ts",
+        "backend/src/modules/ai-runtime/transcribe-runner.test.ts"
+      ],
+      "reason": "R1/R2 物理架构迁移：AI runtime 从 frontend/src/server/ai 原路径搬到 backend/src/modules/ai-runtime，同名测试在新属主下保留并扩充。"
+    },
+    {
+      "from": [
+        "frontend/src/features/project-overview/project-actions.test.tsx",
+        "frontend/src/features/project-overview/project-overview-page.test.tsx"
+      ],
+      "to": [
+        "frontend/src/features/project-overview/brief-workbench.test.tsx",
+        "frontend/src/features/project-overview/project-overview-workspace-data.test.ts",
+        "frontend/src/features/projects/project-row-menu.test.tsx",
+        "frontend/src/features/projects/projects-page.test.tsx"
+      ],
+      "reason": "旧独立 ProjectOverview 页面已按两阶段 IA 退役；工作台数据装配、项目列表信息和归档动作分别迁入 brief-workbench/workspace-data/projects 测试。"
+    },
+    {
+      "from": [
+        "frontend/src/features/publishing-center/publishing-center-wiring.test.tsx"
+      ],
+      "to": [
+        "frontend/src/features/publishing-center/publishing-center-interactions.test.tsx",
+        "frontend/tests/e2e/publishing-center.spec.ts"
+      ],
+      "reason": "无真实 publisher 的批量发布/下架/改期控件已按 T-231 删除；替代测试锁定控件与选择框不再渲染，避免假按钮和伪写入。"
+    }
+  ],
+  "suppressionAllowances": [
+    {
+      "path": "ai-worker/src/nodes/research-node.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "研究节点新增的 console 仅用于工具级失败诊断；已有 require suppression 不计入本次增量。"
+    },
+    {
+      "path": "ai-worker/src/runtime/executable-path.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "可选桌面 runtime 只能在运行时探测 require，单行 no-require-imports suppression 被测试覆盖。"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 5,
+      "reason": "本地 Whisper/ffmpeg 可选依赖需延迟 require，五处均限定到下一行并由 multimodal-whisper-local 测试覆盖。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/benchmark-teardown-runner.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 3,
+      "reason": "runner 的三处 console 是异步任务失败/清理观测出口，均为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/cover-runner.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "封面 runner 的降级与失败日志是后台任务观测出口，均为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/creative-context.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "单个上下文读取失败采用 best-effort 并记录诊断，单行 no-console 例外避免吞错。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/favorites-distill-runner.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "收藏蒸馏后台任务需要记录条目级失败与顶层失败，均为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/scheduled-collection-scheduler.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "调度器使用 var 保存跨热重载单例，单行 no-var 例外防止重复 scheduler。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/script-review-runner.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "脚本复审 runner 本次新增两处步骤级/顶层失败诊断；文件内另两处为基线已有，均为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/topic-preference-distill-runner.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "偏好蒸馏条目级与任务级失败需可观测，均为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/topic-task-adapter.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "topic 任务 adapter 的后台失败诊断为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/video-decisions-runner.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "视频决策异步 runner 的失败诊断为单行 no-console 例外。"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "AI 服务清理 pending 资产失败时必须留下诊断且不覆盖主错误，单行 no-console 例外。"
+    },
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "两个 effect 分别同步 localStorage 偏好与外部请求 nonce，注释限定原因且仅抑制 set-state-in-effect。"
+    },
+    {
+      "path": "frontend/src/components/resources/asset-live-preview.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "资源 URL 切换时 effect 必须立即复位旧预览，单行 set-state-in-effect 例外避免闪旧图。"
+    },
+    {
+      "path": "frontend/src/components/resources/asset-thumbnail.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "缩略图 URL 切换时 effect 必须复位旧预览，单行 set-state-in-effect 例外避免闪旧图。"
+    },
+    {
+      "path": "frontend/src/components/resources/material-summary.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "外部素材 URL 不具备 Next Image 所需尺寸/loader 契约，单个 img 预览限定 no-img-element。"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-interactive-region.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "素材动作失败需给开发日志且 UI 已独立显示错误，单行 no-console 例外。"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "用户素材可为本地/blob/外部 URL，卡片单个 img 无法满足 Next Image loader 契约。"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-resizable-layout.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "挂载后从 localStorage 恢复布局是外部状态同步，单行 set-state-in-effect 例外已有组件测试。"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/thesis-skeleton-panel.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "自动保存 effect 只由稳定内容签名驱动，刻意排除 callback 身份以避免重复保存，单行 exhaustive-deps 例外。"
+    },
+    {
+      "path": "frontend/src/features/production/production-workbench.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 6,
+      "reason": "制作台六处分别限定状态复位、稳定签名 effect、外部媒体 img/video 预览；均为下一行局部例外并有 production-workbench 测试。"
+    },
+    {
+      "path": "frontend/src/instrumentation.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "Next instrumentation 顶层启动失败必须写进程诊断，单行 no-console 例外。"
+    },
+    {
+      "path": "frontend/src/lib/ai-error-humanize.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "未知 AI 错误保留开发诊断同时返回人话，单行 no-console 例外。"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 3,
+      "reason": "三个后台 best-effort 分支必须留诊断但不能让日志失败打断持久化主流程，均为单行 no-console 例外。"
+    },
+    {
+      "path": "frontend/src/server/settings-model-test-wrap.ts",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "模型连接测试异常需保留服务端诊断并返回稳定结果，单行 no-console 例外。"
+    }
+  ]
+}

@@ -1,8 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
-import { runScriptNode, parseShots, normalizeShotVisual } from "./script-node";
+import {
+  runScriptNode as runScriptNodeRaw,
+  parseShots,
+  normalizeShotVisual,
+} from "./script-node";
 import { scriptDraftSchema } from "../prompt/templates/script-draft";
+import {
+  getOfficialSkillBase,
+  runWithEffectiveSkillSnapshot,
+  type EffectiveSkillSnapshotV1,
+} from "../index";
 
 function finalText(text: string): LanguageModelV4GenerateResult {
   return {
@@ -17,13 +26,56 @@ function finalText(text: string): LanguageModelV4GenerateResult {
 }
 
 const SHOTS = [
-  { 口播: "你以为 KV cache 省不了?", 画面: "对比图", 字幕: "省显存", 时长: "0-3s" },
-  { 口播: "三步压到 1/10", 画面: "代码滚动", 字幕: "上代码", 时长: "3-30s" },
-  { 口播: "点赞收藏,下条讲量化", 画面: "口播", 字幕: "关注", 时长: "30-35s" },
+  { role: "hook", 口播: "你以为 KV cache 省不了?", 画面: "对比图", 字幕: "省显存", 时长: "0-3s" },
+  { role: "body", 口播: "三步压到 1/10", 画面: "代码滚动", 字幕: "上代码", 时长: "3-30s" },
+  { role: "cta", 口播: "点赞收藏,下条讲量化", 画面: "口播", 字幕: "关注", 时长: "30-35s" },
 ];
 // T-023:runScriptNode 改走 generateObject(顶层对象 { shots:[...] });裸数组仅供 parseShots 工具测试。
 const SHOTS_OBJECT_JSON = JSON.stringify({ shots: SHOTS });
 const SHOTS_ARRAY_JSON = JSON.stringify(SHOTS);
+
+// 这些是 script-node 的装配/归一回归测试，不重复测试 T-512 默认 6–10 段策略；
+// 仍通过真实冻结 snapshot 运行，只把账号策略覆盖成允许 ≥1 段，避免绕过 T-513 fail-closed。
+function runScriptNode(
+  input: Parameters<typeof runScriptNodeRaw>[0],
+): ReturnType<typeof runScriptNodeRaw> {
+  const base = getOfficialSkillBase("script.draft")!;
+  const snapshot: EffectiveSkillSnapshotV1 = {
+    snapshotVersion: 1,
+    userId: "test-user",
+    accountId: "test-account",
+    resolvedAt: "2026-07-24T00:00:00.000Z",
+    platformPolicyVersion: "test-policy-v1",
+    platformPolicy: "AI 只产候选",
+    skills: [
+      {
+        skillId: base.skillId,
+        baseVersion: base.baseVersion,
+        overlayRevision: 1,
+        overlayVersion: "test-single-segment",
+        effective: {
+          methodSystem: base.methodSystem,
+          template: base.template,
+          tools: base.tools,
+          requiredFacets: base.requiredFacets,
+          contextRequirements: base.contextRequirements,
+          outputSchema: base.outputSchema,
+          completionPolicy: {
+            schemaVersion: 1,
+            minSegments: 1,
+            maxSegments: null,
+            requiredSequence: [],
+            repairAttempts: 0,
+          },
+          completionPolicyAdapter: base.completionPolicyAdapter,
+        },
+      },
+    ],
+  };
+  return runWithEffectiveSkillSnapshot(snapshot, () =>
+    runScriptNodeRaw(input),
+  );
+}
 
 describe("runScriptNode", () => {
   it("在 Vercel AI SDK 上产出可解析分镜(4 字段独立)+ 步骤事件", async () => {
@@ -161,6 +213,22 @@ describe("runScriptNode", () => {
     await expect(
       runScriptNode({ model, positioningBrief: "x" }),
     ).rejects.toThrow(/未产出可解析分镜/);
+  });
+
+  it("[T-486] 首次返回空 shots 时由输出契约触发重试，第二次有效结果可恢复", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return finalText(calls === 1 ? JSON.stringify({ shots: [] }) : SHOTS_OBJECT_JSON);
+      },
+    });
+    const result = await runScriptNode({
+      model,
+      positioningBrief: "AI 工程科普,面向开发者",
+    });
+    expect(calls).toBe(2);
+    expect(result.shots).toHaveLength(3);
   });
 
   it("parseShots 容忍 ``` 包裹(纯工具,仍导出)", () => {

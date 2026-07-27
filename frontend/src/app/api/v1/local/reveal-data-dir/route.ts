@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 
 import { isDesktopRuntime } from "@/server/activation/is-desktop";
+import { launchRevealPlan } from "../reveal-logs/launcher";
 // 复用 T-259 reveal-logs 的平台「打开目录」命令选择(open / explorer / xdg-open)。
 import { planRevealLogs } from "../reveal-logs/plan";
 // 复用 T-332 reset-workspace 的 appData 目录解析(= CREATOROS_DB_DIR 的父级)。
@@ -15,8 +14,6 @@ import { resolveAppDataDir } from "../reset-workspace/plan";
 // 桌面专属:web 部署 isDesktopRuntime=false → {desktop:false}。无鉴权:打开的是本机
 // 数据目录,与 reveal-logs 同级敏感面(sidecar 只 listen 127.0.0.1)。
 export const dynamic = "force-dynamic";
-
-const execFileAsync = promisify(execFile);
 
 export async function POST(): Promise<Response> {
   if (!isDesktopRuntime(process.env)) {
@@ -34,8 +31,7 @@ export async function POST(): Promise<Response> {
 
   try {
     const plan = planRevealLogs(dir, process.platform);
-    // [T-372 W5] windowsHide:与其余本地命令一致抑制 Win console 黑窗(explorer 为 GUI,无操作)。
-    await execFileAsync(plan.cmd, plan.args, { windowsHide: true });
+    await launchRevealPlan(plan);
     return NextResponse.json({ ok: true, dir });
   } catch (err) {
     console.error("[local/reveal-data-dir] failed:", err);

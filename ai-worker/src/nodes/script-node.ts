@@ -1,6 +1,9 @@
 import type { LanguageModel } from "ai";
 import type { AgentStepEvent } from "../runtime/agent-runtime";
-import { runStructuredNode } from "./structured-node";
+import {
+  runStructuredNode,
+  type RunStructuredNodeResult,
+} from "./structured-node";
 import { SCRIPT_DRAFT_TEMPLATE } from "../prompt/templates/script-draft";
 
 // 分镜脚本节点(写文案,跑在 Vercel AI SDK 上,弃旧 LlmCompleter)。一个分镜 = 爆款公式的一拍。
@@ -22,6 +25,8 @@ export interface ScriptShotVisual {
 }
 
 export interface ScriptShot {
+  /** 当前 Skill 声明的结构角色；通用内核只比较字符串序列，不识别业务词。 */
+  role: string;
   口播: string;
   画面: string;
   字幕: string;
@@ -89,6 +94,12 @@ export interface RunScriptNodeInput {
 export interface RunScriptNodeResult {
   shots: ScriptShot[];
   steps: AgentStepEvent[];
+  generation: RunStructuredNodeResult<{
+    shots: ScriptShot[];
+  }>["generation"];
+  validation?: RunStructuredNodeResult<{
+    shots: ScriptShot[];
+  }>["validation"];
 }
 
 /** [T-387b] visual 归一(纯函数,导出供单测):trim、滤空串;三段全空 → null(不带字段)。 */
@@ -126,12 +137,13 @@ export function parseShots(text: string): ScriptShot[] {
   return parsed
     .map((raw): ScriptShot | null => {
       const o = (raw ?? {}) as Record<string, unknown>;
+      const role = typeof o.role === "string" ? o.role.trim() : "";
       const 口播 = typeof o.口播 === "string" ? o.口播.trim() : "";
       const 画面 = typeof o.画面 === "string" ? o.画面.trim() : "";
       const 字幕 = typeof o.字幕 === "string" ? o.字幕.trim() : "";
       const 时长 = typeof o.时长 === "string" ? o.时长.trim() : "";
       if (!口播 && !画面 && !字幕) return null;
-      return { 口播, 画面, 字幕, 时长 };
+      return { role, 口播, 画面, 字幕, 时长 };
     })
     .filter((s): s is ScriptShot => s !== null);
 }
@@ -144,10 +156,12 @@ export function parseShots(text: string): ScriptShot[] {
 export async function runScriptNode(
   input: RunScriptNodeInput,
 ): Promise<RunScriptNodeResult> {
-  const { object } = await runStructuredNode<{ shots: ScriptShot[] }>({
-    model: input.model,
-    template: SCRIPT_DRAFT_TEMPLATE,
-    facets: {
+  let structured: RunStructuredNodeResult<{ shots: ScriptShot[] }>;
+  try {
+    structured = await runStructuredNode<{ shots: ScriptShot[] }>({
+      model: input.model,
+      template: SCRIPT_DRAFT_TEMPLATE,
+      facets: {
       positioning:
         input.positioningBrief ||
         "（创作者尚未设置定位——按通用爆款逻辑写脚本）",
@@ -205,15 +219,29 @@ export async function runScriptNode(
       assetsLibrary: input.assetsBrief
         ? `\n【项目素材库（visual.assetRefs 可点名的真实素材清单，每行: assetId | 名称 (类型)）】\n${input.assetsBrief}`
         : "",
-    },
-    maxRetries: input.maxRetries,
-  });
+      },
+      maxRetries: input.maxRetries,
+    });
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.startsWith("结构化节点:")
+    ) {
+      throw new Error(
+        "script-node: agent 未产出可解析分镜（结构校验与重试均失败）",
+        { cause: err },
+      );
+    }
+    throw err;
+  }
+  const { object, generation, validation } = structured;
   // schema 让缺字段落成空串,故这里 trim + 滤掉三主字段全空的空镜(不摆空格子)。
   // [T-387b] visual 归一:trim、滤空串;三段全空 → 不带字段(与「模型没产」同义,诚实缺省)。
   const shots: ScriptShot[] = (object.shots ?? [])
     .map((s) => {
       const visual = normalizeShotVisual(s.visual);
       return {
+        role: (s.role ?? "").trim().toLowerCase(),
         口播: (s.口播 ?? "").trim(),
         画面: (s.画面 ?? "").trim(),
         字幕: (s.字幕 ?? "").trim(),
@@ -228,10 +256,20 @@ export async function runScriptNode(
   // 结构化路径是单发(无多步工具循环),合成一条完成步事件喂窗口步骤日志(诚实:就一步)。
   const step: AgentStepEvent = {
     stepNo: 1,
-    text: `已生成 ${shots.length} 个分镜`,
+    text:
+      `已生成 ${shots.length} 个分镜；finishReason=${generation.finishReason}` +
+      (generation.usage.totalTokens === null
+        ? ""
+        : `；usage=${JSON.stringify(generation.usage)}`),
     toolCalls: [],
-    finishReason: "stop",
+    finishReason: generation.finishReason,
+    usage: generation.usage,
   };
   await input.onStep?.(step);
-  return { shots, steps: [step] };
+  return {
+    shots,
+    steps: [step],
+    generation,
+    ...(validation ? { validation } : {}),
+  };
 }

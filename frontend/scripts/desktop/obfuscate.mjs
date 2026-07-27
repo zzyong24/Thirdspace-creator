@@ -35,6 +35,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,6 +50,11 @@ const SERVER_DIR = join(SIDECAR, "frontend", ".next", "server");
 //   此前只 minify 未混淆 = **前端源码可一键还原的裸奔缺口**。同款 chunk-stringarray(数字模块 ID 不受
 //   影响,reservedStrings 已含 `chunks/`/`\.js$` 护住加载串);client turbopack 运行时另行硬排除。
 const CLIENT_DIR = join(SIDECAR, "frontend", ".next", "static");
+
+// [T-566] 混淆前的安全决策必须跨工序保存。bytecode.mjs 只消费这份清单，
+// 不得再从 javascript-obfuscator 已经改写过的源码猜测 Playwright callback。
+export const TRANSFORM_POLICY_FILENAME = ".creatoros-transform-policy.json";
+export const TRANSFORM_POLICY_FORMAT_VERSION = 1;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 纯函数化的决策(单测直接测,不必端到端)。
@@ -122,33 +128,39 @@ export function isSymlinkEscape(absPath, fsdep = { lstatSync, realpathSync }) {
  * 命中这些「必须保留函数源码」的 API 时，混淆只能走 rename-only，且 bytecode.mjs 会硬排除。
  */
 export function requiresSerializableFunctionSource(code) {
-  return (
-    /\.(?:evaluate|evaluateAll|evaluateHandle|waitForFunction|addInitScript)\s*\(/.test(
-      code,
-    ) || /\.\$\$?eval\s*\(/.test(code)
-  );
+  const method =
+    String.raw`(?:evaluate|evaluateAll|evaluateHandle|waitForFunction|addInitScript|\$\$?eval)`;
+  return new RegExp(
+    String.raw`(?:\.${method}|\[\s*["']${method}["']\s*\])\s*\(`,
+  ).test(code);
 }
 
 /**
  * 决定文件用哪档混淆。rename-only(不碰字符串/控制流)当以下任一命中:
- *   ① 路径在 turbopack `chunks/**` 下 —— [T-164 真机踩点] turbopack chunk 靠 chunk 路径字符串 +
- *      数字模块 ID 互相 loadChunkAsync 加载(不走显式 require);stringArray base64 编码这些
- *      路径/ID → 运行时 ChunkLoadError。故整个 chunks/ 树降 rename-only(局部标识符 rename 不
- *      触碰 chunk 互链字符串,安全)。SPEC §3.1 gate ③ + §4「Next runtime chunk 保守」授权。
+ *   ① 浏览器端 `static/chunks/**` —— [T-544 macOS 真机] RC4 stringArray 会让 WKWebView
+ *      的 JavaScriptCore 持续高负载，React hydration 永久停在骨架屏。客户端 chunk 必须走
+ *      rename-only；服务端 `server/chunks/**` 仍可保留 chunk-stringarray。
  *   ② 含 require(<字面量>) / import(<字面量>) —— 动态 require 的模块名字面量若被编码 → 崩。
  * 其余(app/** 等 first-party route handler,无 turbopack chunk 互链 + 无字面 require)→ full。
  *
  * @param {string} code 文件内容
  * @param {string} [relPath] 相对靶目录路径(判 chunks/)
+ * @param {"server"|"client"} [targetKind] 当前遍历靶目录；真实 client 根是 `.next/static`，
+ *   所以相对路径只有 `chunks/**`，不能靠 relPath 猜测运行环境。
  * @returns {"rename-only"|"full"}
  */
-export function pickPreset(code, relPath = "") {
+export function pickPreset(code, relPath = "", targetKind = "server") {
   const parts = relPath.split(/[\\/]/).filter(Boolean);
   const dynLiteral = /(?:require|import)\s*\(\s*["'`]/;
   const hasDynLiteral = dynLiteral.test(code);
   // [T-459] 必须在 chunks/stringArray 判定之前拦截，保住 pageFunction 的独立源码。
   if (requiresSerializableFunctionSource(code)) return "rename-only";
-  // ① turbopack chunk 树(chunks/ 或 chunks/ssr/ 下):
+  // [T-544] 浏览器端 chunks 在 WKWebView 下不得执行 RC4 stringArray。
+  // targetKind 由遍历根显式传入；真实相对路径是 `chunks/**`，与 server chunk 同形。
+  if (targetKind === "client" && parts[0] === "chunks") {
+    return "rename-only";
+  }
+  // turbopack server chunk 树(chunks/ 或 chunks/ssr/ 下):
   //    · 含字面 require/import → rename-only(编码模块名字面量会 ChunkLoadError)。
   //    · 否则 → [T-417 L1] chunk-stringarray:rc4 加密**业务字符串**(prompt/端点),reservedStrings
   //      排除 turbopack glue(指令前缀 / chunks 路径 / __next / node: / .js 后缀);模块 ID 与引用是
@@ -159,6 +171,58 @@ export function pickPreset(code, relPath = "") {
   }
   // ② 非 chunks 但含字面 require/import → rename-only;否则 full。
   return hasDynLiteral ? "rename-only" : "full";
+}
+
+/** 将跨平台相对路径固定为 manifest 的 POSIX key。 */
+export function normalizeTransformPolicyPath(relPath) {
+  return relPath.replaceAll("\\", "/");
+}
+
+/** policy 与实际混淆产物绑定，防旧清单/错目录被静默复用。 */
+export function transformCodeSha256(code) {
+  return createHash("sha256").update(code).digest("hex");
+}
+
+/**
+ * 在源码仍未变形时一次性决定混淆档位与字节码资格。
+ * 后续工序只允许消费该结果，不得重新扫描已混淆文本。
+ */
+export function classifyTransform(code, relPath, targetKind = "server") {
+  const rel = normalizeTransformPolicyPath(relPath);
+  const preset = pickPreset(code, rel, targetKind);
+  const preserveFunctionSource = requiresSerializableFunctionSource(code);
+  const parts = rel.split("/").filter(Boolean);
+  return {
+    preset,
+    preserveFunctionSource,
+    bytecodeEligible:
+      targetKind === "server" &&
+      parts.includes("chunks") &&
+      preset === "chunk-stringarray" &&
+      !preserveFunctionSource,
+    sourceSha256: transformCodeSha256(code),
+  };
+}
+
+/** 读取并做最小结构校验；缺失/损坏返回 null，由消费方 fail-closed。 */
+export function readTransformPolicy(root) {
+  try {
+    const parsed = JSON.parse(
+      readFileSync(join(root, TRANSFORM_POLICY_FILENAME), "utf8"),
+    );
+    if (
+      parsed?.formatVersion !== TRANSFORM_POLICY_FORMAT_VERSION ||
+      (parsed.targetKind !== "server" && parsed.targetKind !== "client") ||
+      parsed.files === null ||
+      typeof parsed.files !== "object" ||
+      Array.isArray(parsed.files)
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,6 +379,74 @@ export function walkTargets(root) {
   return { toObfuscate, excluded };
 }
 
+/**
+ * [T-566] 在任何文件被混淆前生成本轮 transform policy。
+ *
+ * 幂等重跑只能复用“路径 + 当前产物 hash”都匹配的旧条目；若文件已经带混淆标记却
+ * 没有可信旧清单，说明已经失去混淆前证据，必须 fail-closed，不能凭变形文本补猜。
+ */
+function planTransformPolicy(root, toObfuscate, targetKind) {
+  const existing = readTransformPolicy(root);
+  const files = {};
+  const failures = [];
+  for (const { abs, rel } of toObfuscate) {
+    const key = normalizeTransformPolicyPath(rel);
+    let code;
+    try {
+      code = readFileSync(abs, "utf8");
+    } catch (error) {
+      failures.push({ rel, error: String(error) });
+      continue;
+    }
+    if (code.startsWith(IDEMPOTENT_MARK)) {
+      const prior = existing?.targetKind === targetKind
+        ? existing.files?.[key]
+        : null;
+      if (
+        !prior ||
+        prior.transformedSha256 !== transformCodeSha256(code)
+      ) {
+        failures.push({
+          rel,
+          error:
+            "文件已混淆但缺少匹配的混淆前 transform policy，拒绝从变形源码重建字节码资格",
+        });
+        continue;
+      }
+      files[key] = prior;
+      continue;
+    }
+    files[key] = classifyTransform(code, key, targetKind);
+  }
+  return {
+    policy: {
+      formatVersion: TRANSFORM_POLICY_FORMAT_VERSION,
+      targetKind,
+      files,
+    },
+    failures,
+  };
+}
+
+/** 将 policy 与实际混淆结果 hash 绑定后原子工序内落盘。 */
+function finalizeTransformPolicy(root, policy, toObfuscate) {
+  for (const { abs, rel } of toObfuscate) {
+    const key = normalizeTransformPolicyPath(rel);
+    const entry = policy.files[key];
+    if (!entry) continue;
+    const transformed = readFileSync(abs, "utf8");
+    entry.transformedSha256 = transformCodeSha256(transformed);
+  }
+  const orderedFiles = Object.fromEntries(
+    Object.entries(policy.files).sort(([a], [b]) => a.localeCompare(b)),
+  );
+  writeFileSync(
+    join(root, TRANSFORM_POLICY_FILENAME),
+    `${JSON.stringify({ ...policy, files: orderedFiles }, null, 2)}\n`,
+    "utf8",
+  );
+}
+
 /** 主流程(副作用):混淆 SERVER_DIR。返回统计。
  *
  * [T-452] Worker pool 并行化:javascript-obfuscator 是 CPU 密集(AST 变换 + rc4 编码),原串行
@@ -325,13 +457,36 @@ export function walkTargets(root) {
  *   环境变量 CREATOROS_OBFUSCATE_WORKERS 可覆盖 worker 数(默认 = min(8, cpu-2))。
  *   CREATOROS_OBFUSCATE_SERIAL=1 强制走旧串行路径(排障)。
  */
-export async function runObfuscation(root = SERVER_DIR) {
+export async function runObfuscation(
+  root = SERVER_DIR,
+  targetKind = root === CLIENT_DIR ? "client" : "server",
+) {
   const { toObfuscate, excluded } = walkTargets(root);
+  const { policy, failures: policyFailures } = planTransformPolicy(
+    root,
+    toObfuscate,
+    targetKind,
+  );
+  if (policyFailures.length > 0) {
+    return {
+      obfuscated: 0,
+      full: 0,
+      renameOnly: 0,
+      skippedIdempotent: 0,
+      failures: policyFailures,
+      excluded,
+      reasonCounts: {},
+    };
+  }
 
   const shouldSerial = process.env.CREATOROS_OBFUSCATE_SERIAL === "1";
   const stat = shouldSerial
-    ? runObfuscationSerial(toObfuscate)
-    : await runObfuscationParallel(toObfuscate);
+    ? runObfuscationSerial(toObfuscate, policy)
+    : await runObfuscationParallel(toObfuscate, policy);
+
+  if (stat.failures.length === 0) {
+    finalizeTransformPolicy(root, policy, toObfuscate);
+  }
 
   // 逐类原因汇总。
   const reasonCounts = {};
@@ -343,7 +498,7 @@ export async function runObfuscation(root = SERVER_DIR) {
 }
 
 /** 旧串行路径(保留作 fallback / CREATOROS_OBFUSCATE_SERIAL=1 排障)。 */
-function runObfuscationSerial(toObfuscate) {
+function runObfuscationSerial(toObfuscate, policy) {
   let obfuscated = 0;
   let skippedIdempotent = 0;
   let renameOnly = 0;
@@ -362,7 +517,12 @@ function runObfuscationSerial(toObfuscate) {
       skippedIdempotent++;
       continue;
     }
-    const preset = pickPreset(code, rel);
+    const preset =
+      policy.files[normalizeTransformPolicyPath(rel)]?.preset;
+    if (!preset) {
+      failures.push({ rel, error: "transform policy 缺少混淆档位" });
+      continue;
+    }
     try {
       const out = obfuscateCode(code, preset);
       writeFileSync(abs, `${IDEMPOTENT_MARK}\n${out}`, "utf8");
@@ -378,8 +538,7 @@ function runObfuscationSerial(toObfuscate) {
 }
 
 /** [T-452] worker_threads pool 并行版。 */
-async function runObfuscationParallel(toObfuscate) {
-  const { Worker } = await import("node:worker_threads");
+async function runObfuscationParallel(toObfuscate, policy) {
   const os = await import("node:os");
   const workerScript = new URL("./obfuscate.worker.mjs", import.meta.url);
 
@@ -389,20 +548,20 @@ async function runObfuscationParallel(toObfuscate) {
     ? envWorkers
     : Math.max(1, Math.min(8, cpuCount - 2));
 
-  // 每个 target 先在主线程判 pickPreset(需要 readFileSync 判 chunks 路径 + 字面 require;
-  //   放主线程一次读一次即可,避免 worker 里重复读文件)。preset 随任务派发给 worker。
-  //   worker 里再判幂等(读 IDEMPOTENT_MARK)—— 因为幂等判断需要 read,和真 obfuscate 是同一个
-  //   read,不必重复。
+  // preset 已由混淆前 policy 一次性决定，随任务派发给 worker。worker 只读取当前文件执行
+  // 变换与幂等检查，不再各自重算安全分类。
   const tasks = [];
   for (const { abs, rel } of toObfuscate) {
-    let code;
-    try {
-      code = readFileSync(abs, "utf8");
-    } catch (e) {
-      tasks.push({ abs, rel, __readError: String(e) });
+    const preset =
+      policy.files[normalizeTransformPolicyPath(rel)]?.preset;
+    if (!preset) {
+      tasks.push({
+        abs,
+        rel,
+        __readError: "transform policy 缺少混淆档位",
+      });
       continue;
     }
-    const preset = pickPreset(code, rel);
     tasks.push({ abs, rel, preset });
   }
 
@@ -677,7 +836,7 @@ if (isMain()) {
   for (const [label, dir] of [["server", SERVER_DIR], ["client", CLIENT_DIR]]) {
     console.log(`[obfuscate]   靶目录[${label}]: ${dir}`);
     // [T-452] runObfuscation 现在是 async(内部走 worker pool);ESM 顶层允许 await。
-    const stat = await runObfuscation(dir);
+    const stat = await runObfuscation(dir, label);
     console.log(
       `[obfuscate] ✅ [${label}] 混淆 ${stat.obfuscated} 个 .js(full=${stat.full} / rename-only=${stat.renameOnly})` +
         (stat.skippedIdempotent ? ` · 幂等跳过 ${stat.skippedIdempotent}` : ""),

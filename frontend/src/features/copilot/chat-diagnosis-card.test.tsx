@@ -112,9 +112,16 @@ describe("ChatDiagnosisCard(盲预测确认卡,T-103a)", () => {
     await waitFor(() => expect(createAITask).toHaveBeenCalledTimes(1));
     expect(createOutput).not.toHaveBeenCalled();
     const taskArg = createAITask.mock.calls[0]![0] as {
-      body: { taskType: string; inputData: { subjectType: string; subjectId: string } };
+      body: {
+        taskType: string;
+        attemptId: string;
+        inputData: { subjectType: string; subjectId: string };
+      };
     };
     expect(taskArg.body.taskType).toBe("calibration.diagnose");
+    expect(taskArg.body.attemptId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
     expect(taskArg.body.inputData).toEqual({
       subjectType: "content_output",
       subjectId: "out-1",
@@ -167,8 +174,11 @@ describe("ChatDiagnosisCard(盲预测确认卡,T-103a)", () => {
     );
     await waitFor(() => expect(createAITask).toHaveBeenCalledTimes(1));
     const taskArg = createAITask.mock.calls[0]![0] as {
-      body: { inputData: { subjectId: string } };
+      body: { attemptId: string; inputData: { subjectId: string } };
     };
+    expect(taskArg.body.attemptId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
     expect(taskArg.body.inputData.subjectId).toBe("out-new");
     await waitFor(() =>
       expect(lockPrediction).toHaveBeenCalledWith(

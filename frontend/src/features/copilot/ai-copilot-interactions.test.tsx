@@ -84,7 +84,10 @@ vi.mock("@ai-sdk/react", () => ({
   }),
 }));
 
-import { AICopilotContent } from "./ai-copilot-content";
+import {
+  AICopilotContent,
+  createOneShotFunctionKey,
+} from "./ai-copilot-content";
 import type { CopilotContentViewModel } from "./ai-copilot-content";
 
 afterEach(() => cleanup());
@@ -138,6 +141,20 @@ beforeEach(() => {
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
+  it("[T-473] 深链/嵌入 functionKey 只消费一次，新命令到来才重新武装", () => {
+    const command = createOneShotFunctionKey("topic.enrich");
+    expect(command.consume()).toBe("topic.enrich");
+    expect(command.consume()).toBeNull();
+    command.sync("topic.enrich");
+    expect(command.consume()).toBeNull();
+    // 稿面同一个动作再次点击时 key 相同，但 nonce/命令身份已变，必须允许新一轮执行。
+    command.sync("topic.enrich", "request:2");
+    expect(command.consume()).toBe("topic.enrich");
+    command.sync("review.script");
+    expect(command.consume()).toBe("review.script");
+    expect(command.consume()).toBeNull();
+  });
+
   it("renders a CopilotHeader (page-specs §16 component tree)", () => {
     render(<AICopilotContent viewModel={VM} />);
     expect(document.querySelector('[data-slot="copilot-header"]')).not.toBeNull();
@@ -643,6 +660,11 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       expect(menu).not.toBeNull();
       expect(screen.getByText("上下文工程")).not.toBeNull();
       expect(screen.getByText("RAG 检索优化")).not.toBeNull();
+      // [T-474] 下拉必须浮在 Copilot 输入卡之上。通用 Card 默认 overflow-hidden，
+      // 若 composer 不显式放开溢出，bottom-full 的候选即使 z-index 再高也会被裁掉。
+      const composer = document.querySelector('[data-slot="prompt-composer"]');
+      expect(composer?.className).toContain("overflow-visible");
+      expect(menu.className).toContain("z-50");
     });
 
     it("@ 后接查询串 → 按标题过滤候选", async () => {

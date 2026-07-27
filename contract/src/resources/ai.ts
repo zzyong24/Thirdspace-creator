@@ -58,6 +58,9 @@ export const aiTaskResource = z.object({
   inputData: z.record(z.string(), z.unknown()),
   modelKey: z.string(),
   idempotencyKey: z.string(),
+  attemptId: z.string().min(16).max(128),
+  requestFingerprint: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  retryOfTaskId: id.nullable(),
   requestedAt: iso8601,
   startedAt: iso8601.nullable(),
   completedAt: iso8601.nullable(),
@@ -75,6 +78,53 @@ export const aiTaskReferenceResource = z.object({
 });
 export type AITaskReferenceResource = z.infer<typeof aiTaskReferenceResource>;
 
+// T-512 — 候选完整性判定由执行当前 effective Skill 的服务端产生。三个字段必须成组出现；
+// 未携带三字段的其它 task result 仍保持兼容，但 script.draft 前端会对旧候选 fail-closed。
+export const aiTaskResultDataResource = z
+  .object({
+    validationStatus: z.enum(["valid", "invalid"]).optional(),
+    validationErrors: z.array(z.string().min(1)).optional(),
+    canAdopt: z.boolean().optional(),
+  })
+  .catchall(z.unknown())
+  .superRefine((value, ctx) => {
+    const presentCount = [
+      value.validationStatus,
+      value.validationErrors,
+      value.canAdopt,
+    ].filter((field) => field !== undefined).length;
+    if (presentCount === 0) return;
+    if (presentCount !== 3) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "validationStatus、validationErrors、canAdopt 必须成组出现",
+      });
+      return;
+    }
+    if (
+      value.validationStatus === "valid" &&
+      (value.canAdopt !== true || value.validationErrors?.length !== 0)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "valid 候选必须 canAdopt=true 且 validationErrors 为空",
+      });
+    }
+    if (
+      value.validationStatus === "invalid" &&
+      (value.canAdopt !== false || value.validationErrors?.length === 0)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "invalid 候选必须 canAdopt=false 且携带人话原因",
+      });
+    }
+  });
+export type AITaskResultDataResource = z.infer<
+  typeof aiTaskResultDataResource
+>;
+
 // AITaskResult extends BaseEntity only.
 export const aiTaskResultResource = z.object({
   id,
@@ -83,7 +133,7 @@ export const aiTaskResultResource = z.object({
   artifactId: id.nullable(),
   knowledgeItemId: id.nullable(),
   assetId: id.nullable(),
-  resultData: z.record(z.string(), z.unknown()),
+  resultData: aiTaskResultDataResource,
 });
 export type AITaskResultResource = z.infer<typeof aiTaskResultResource>;
 

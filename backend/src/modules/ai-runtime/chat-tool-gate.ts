@@ -5,6 +5,7 @@ import {
   type ToolApprovalStatus,
   type ToolSet,
 } from "ai";
+import { formatErrorDiagnostic } from "./error-diagnostics";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // [T-239a] 统一工具门 defineChatTool —— 治「30 工具遇错体验抽奖」(T-229 审计实锤)。
@@ -88,6 +89,14 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
       hasMore: false,
     },
   },
+  "intelligence.douyin.share": {
+    kind: "intelligence.douyin.share",
+    extras: {
+      taskId: null,
+      ownerId: null,
+      action: "archive",
+    },
+  },
   // [T-253] local.read:execute 内已有定制 catch(四态诚实),门只兜非 Error 抛出等极端漏网。
   // [T-262] 结构占位加 foundByName/candidates(按名搜索兜底两态),错误态卡不因缺字段崩。
   "local.read": {
@@ -136,6 +145,7 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
       atoms: [],
       suggestedTags: [],
       originalText: "",
+      coverage: { inputChars: 0, submittedChars: 0, truncatedChars: 0 },
       suggestSwitchModel: false,
     },
   },
@@ -482,10 +492,25 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       const result = await config.execute(input, callOptions);
       const bounded = enforceChatToolResultBudget(result, budget);
       // 【T-239e 挂点】usage 归因扩展字段(tokens/费用)加在这行日志上,别另起打点层。
-      console.log(`[chat-tool] name=${name} ok durationMs=${Date.now() - startedAt}`);
+      const resultRecord =
+        result && typeof result === "object"
+          ? (result as unknown as Record<string, unknown>)
+          : null;
+      const rawTaskId =
+        resultRecord && typeof resultRecord.taskId === "string"
+          ? resultRecord.taskId.trim()
+          : "";
+      const taskId = rawTaskId
+        ? ` taskId=${rawTaskId.replace(/[^\w.:-]/g, "_").slice(0, 160)}`
+        : "";
+      console.log(
+        `[chat-tool] name=${name} ok durationMs=${Date.now() - startedAt}${taskId}`,
+      );
       return bounded;
     } catch (err) {
-      console.log(`[chat-tool] name=${name} error durationMs=${Date.now() - startedAt}`);
+      console.log(
+        `[chat-tool] name=${name} error durationMs=${Date.now() - startedAt} ${formatErrorDiagnostic(err)}`,
+      );
       const human = humanizeError?.(err) ?? null;
       return {
         ...(envelope.extras ?? {}),

@@ -59,6 +59,32 @@ describe("settings contract", () => {
     expect(body.secret).toBe("sk-real-key");
   });
 
+  it("accepts openai_responses as a first-class model protocol", () => {
+    const body = settingsOperations.putModel.body.parse({
+      provider: "new-api",
+      modelName: "gpt-5",
+      baseUrl: "https://new-api.example.com/v1",
+      apiFormat: "openai_responses",
+      secret: "sk-relay",
+    });
+    expect(body.apiFormat).toBe("openai_responses");
+
+    const resource = modelConfigurationResource.parse({
+      id: "model-default",
+      userId: "user-zyongzhu",
+      capability: "default",
+      provider: "new-api",
+      modelName: "gpt-5",
+      secretReference: "",
+      baseUrl: "https://new-api.example.com/v1",
+      apiFormat: "openai_responses",
+      settings: {},
+      isDefault: true,
+      hasSecret: true,
+    });
+    expect(resource.apiFormat).toBe("openai_responses");
+  });
+
   it("registers settings.models.list (GET /settings/models) returning an array", () => {
     expect(settingsOperations.listModels.method).toBe("GET");
     expect(settingsOperations.listModels.path).toBe("/settings/models");

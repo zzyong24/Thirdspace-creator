@@ -16,6 +16,8 @@ import {
 } from "./workspace-restore";
 import { users, sessions } from "./schema/identity";
 import {
+  accountSkillOverlays,
+  accountSkillOverlayVersions,
   modelConfigurations,
   skillConfigOverrides,
   skillConfigOverrideVersions,
@@ -84,6 +86,32 @@ describe("workspace-restore(T-363 归档后 user 级资产迁回)", () => {
       template: "用户定制模板",
       createdAt: "2026-07-01T00:00:00.000Z",
     });
+    await db.insert(accountSkillOverlays).values({
+      id: "account-skill-1",
+      userId: "user-zyongzhu",
+      accountId: "account-a",
+      skillId: "script.draft",
+      rowRevision: 1,
+      observedBaseVersion: "v1",
+      overlayVersion: "1",
+      overlay: { template: "账号 A 增量模板" },
+      updatedBy: "user-zyongzhu",
+      createdAt: "2026-07-24T00:00:00.000Z",
+      updatedAt: "2026-07-24T00:00:00.000Z",
+    });
+    await db.insert(accountSkillOverlayVersions).values({
+      id: "account-skill-version-1",
+      overlayId: "account-skill-1",
+      userId: "user-zyongzhu",
+      accountId: "account-a",
+      skillId: "script.draft",
+      rowRevision: 1,
+      observedBaseVersion: "v1",
+      overlayVersion: "1",
+      overlay: { template: "账号 A 增量模板" },
+      updatedBy: "user-zyongzhu",
+      createdAt: "2026-07-24T00:00:00.000Z",
+    });
     await db.insert(activationState).values({
       id: "singleton",
       machineId: "machine-1",
@@ -143,11 +171,19 @@ describe("workspace-restore(T-363 归档后 user 级资产迁回)", () => {
       expect(models).toHaveLength(1);
       expect(models[0]!.provider).toBe("minimax");
       expect(models[0]!.secretValue).toBe("enc:v1:abc"); // 密文原样保留
-      const overrides = await db.select().from(skillConfigOverrides);
+      const overrides = await db.select().from(accountSkillOverlays);
       expect(overrides).toHaveLength(1);
-      expect(overrides[0]!.template).toBe("用户定制模板");
-      const versions = await db.select().from(skillConfigOverrideVersions);
+      expect(overrides[0]!.accountId).toBe("account-a");
+      expect(overrides[0]!.overlay).toEqual({
+        template: "账号 A 增量模板",
+      });
+      const versions = await db.select().from(accountSkillOverlayVersions);
       expect(versions).toHaveLength(1);
+      // [T-513] 旧全局覆盖即使存在于归档库也不得迁回新库。
+      expect(await db.select().from(skillConfigOverrides)).toHaveLength(0);
+      expect(await db.select().from(skillConfigOverrideVersions)).toHaveLength(
+        0,
+      );
       const act = await db.select().from(activationState);
       expect(act).toHaveLength(1);
       expect(act[0]!.machineId).toBe("machine-1");

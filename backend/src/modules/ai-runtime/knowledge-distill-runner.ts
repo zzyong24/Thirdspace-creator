@@ -1,5 +1,11 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec, KnowledgeDistillOutput } from "@creatoros/ai-worker";
+import {
+  ChunkProcessingError,
+  chunkTextDeterministically,
+  runOrderedChunks,
+  type ChunkProgressListener,
+} from "./chunk-and-merge";
 
 // 知识倾倒场蒸馏 runner(knowledge.distill,T-079b SPEC §2)—— 用户往 /knowledge 倒入原文,
 // 本 runner 同步跑一次结构化节点,产 `{ atoms[], suggestedTags[] }` 一批知识原子候选,
@@ -20,6 +26,8 @@ export interface KnowledgeDistillDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  /** [T-430] 分块旁路进度；回调失败不改变蒸馏结果。 */
+  onChunkProgress?: ChunkProgressListener;
 }
 
 /** 归一后的单个知识原子 —— 确认门每行卡的渲染形状(= knowledge.create 的预填)。 */
@@ -34,6 +42,15 @@ export interface DistilledAtom {
 export interface KnowledgeDistillation {
   atoms: DistilledAtom[];
   suggestedTags: string[];
+  /** [T-430] 全文覆盖真相；硬上限截断时调用方必须据此如实告知用户。 */
+  coverage?: KnowledgeDistillCoverage;
+}
+
+export interface KnowledgeDistillCoverage {
+  inputChars: number;
+  processedChars: number;
+  truncatedChars: number;
+  chunkCount: number;
 }
 
 // 原文截断上限(字符)—— 倾倒场可能整篇逐字稿倒进来,截断防 prompt 爆。蒸馏要吃全文
@@ -43,12 +60,68 @@ export interface KnowledgeDistillation {
 // 此上限只挡病态的百万字级粘贴,真实文档不触发(用户 2026-07-19:「1M 上下文不要截断」)。
 // 弱模型(小上下文)的稳健靠 T-430 chunk-and-merge,不靠这里砍。
 export const MAX_DISTILL_CONTENT_CHARS = 200_000;
+/** 单次模型调用的稳定窗口：既避免小上下文模型爆窗，也控制结构化输出规模。 */
+export const DISTILL_CHUNK_CHARS = 7_000;
 
 /** 截断送模型的原文 facet(超限截断 + 标注,让模型知道后面还有)。 */
 export function truncateForDistill(raw: string): string {
   const text = raw.trim();
   if (text.length <= MAX_DISTILL_CONTENT_CHARS) return text;
   return `${text.slice(0, MAX_DISTILL_CONTENT_CHARS)}\n…(原文过长已截断,以上为开头部分)`;
+}
+
+function normalizeForNearDuplicate(value: string): string {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(/[\p{P}\p{S}\s]+/gu, "");
+}
+
+function bigrams(value: string): string[] {
+  if (value.length < 2) return value ? [value] : [];
+  return Array.from({ length: value.length - 1 }, (_, i) =>
+    value.slice(i, i + 2),
+  );
+}
+
+function nearDuplicate(a: DistilledAtom, b: DistilledAtom): boolean {
+  const titleA = normalizeForNearDuplicate(a.title);
+  const titleB = normalizeForNearDuplicate(b.title);
+  if (titleA === titleB) return true;
+  const contentA = normalizeForNearDuplicate(`${a.title}${a.note}`);
+  const contentB = normalizeForNearDuplicate(`${b.title}${b.note}`);
+  if (Math.min(contentA.length, contentB.length) < 10) return false;
+  const left = bigrams(contentA);
+  const rightCounts = new Map<string, number>();
+  for (const gram of bigrams(contentB)) {
+    rightCounts.set(gram, (rightCounts.get(gram) ?? 0) + 1);
+  }
+  let intersection = 0;
+  for (const gram of left) {
+    const count = rightCounts.get(gram) ?? 0;
+    if (count <= 0) continue;
+    intersection += 1;
+    rightCounts.set(gram, count - 1);
+  }
+  const rightLength = Math.max(contentB.length - 1, 1);
+  return (2 * intersection) / (left.length + rightLength) >= 0.86;
+}
+
+/** 跨块稳定归并：保持原文块顺序，标题/标题+note 近重时保留最先出现项。 */
+export function mergeDistillations(
+  parts: readonly KnowledgeDistillation[],
+): KnowledgeDistillation {
+  const atoms: DistilledAtom[] = [];
+  const suggestedTags: string[] = [];
+  for (const part of parts) {
+    for (const atom of part.atoms) {
+      if (!atoms.some((kept) => nearDuplicate(kept, atom))) atoms.push(atom);
+    }
+    for (const tag of part.suggestedTags) {
+      if (!suggestedTags.includes(tag)) suggestedTags.push(tag);
+    }
+  }
+  return { atoms, suggestedTags: suggestedTags.slice(0, 3) };
 }
 
 /**
@@ -79,7 +152,7 @@ export function normalizeDistillation(
 }
 
 /**
- * 跑一次 knowledge.distill —— resolveModelSpec("knowledge.distill") + runStructuredNode
+ * 跑 knowledge.distill —— 确定性分块 + 每块 runStructuredNode + 顺序近重归并
  * (外置模板 + outputSchema,registry 运行时取,吃服务端覆盖)。任何失败(无凭据/模型不可用/
  * 产出不可用)直接抛错,由调用方内联展示。纯函数式端口注入,单测 fake resolveModelSpec + mock
  * ai-worker 即可。
@@ -93,21 +166,58 @@ export async function runKnowledgeDistill(
   if (!content) {
     throw new Error("knowledge-distill: 原文为空,无可蒸馏内容");
   }
+  const inputChars = content.length;
+  const modelContent = content.slice(0, MAX_DISTILL_CONTENT_CHARS);
+  const chunks = chunkTextDeterministically(modelContent, DISTILL_CHUNK_CHARS);
+  const coverage: KnowledgeDistillCoverage = {
+    inputChars,
+    processedChars: modelContent.length,
+    truncatedChars: Math.max(0, inputChars - modelContent.length),
+    chunkCount: chunks.length,
+  };
   const spec = await deps.resolveModelSpec(ctx, "knowledge.distill");
   // 运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(T-040b 同款),outputSchema 由
   // registry 收口(runStructuredNode 内 resolveOutputSchema)。
   const { modelFor, runStructuredNode, getTemplate } =
     await import("@creatoros/ai-worker");
-  const { object } = await runStructuredNode<KnowledgeDistillOutput>({
-    model: modelFor(spec),
-    template: getTemplate("knowledge.distill"),
-    facets: { content: truncateForDistill(content) },
-  });
-  const distillation = normalizeDistillation(object);
-  if (!distillation) {
+  const model = modelFor(spec);
+  const template = getTemplate("knowledge.distill");
+  let parts: KnowledgeDistillation[];
+  try {
+    parts = await runOrderedChunks({
+      chunks,
+      onProgress: deps.onChunkProgress,
+      process: async (chunk) => {
+        const { object } = await runStructuredNode<KnowledgeDistillOutput>({
+          model,
+          template,
+          facets: { content: chunk.text },
+        });
+        const distillation = normalizeDistillation(object);
+        if (!distillation) {
+          throw new Error(
+            "模型未蒸馏出可用知识原子,请重试或手动补录",
+          );
+        }
+        return distillation;
+      },
+    });
+  } catch (error) {
+    if (error instanceof ChunkProcessingError) {
+      const cause =
+        error.cause instanceof Error ? `：${error.cause.message}` : "";
+      throw new Error(
+        `knowledge-distill: 第 ${error.chunkIndex + 1}/${error.totalChunks} 块失败${cause}；未返回部分候选，原文仍保留可重试`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+  const merged = mergeDistillations(parts);
+  if (merged.atoms.length === 0) {
     throw new Error(
       "knowledge-distill: 模型未蒸馏出可用知识原子,请重试或手动补录",
     );
   }
-  return distillation;
+  return { ...merged, coverage };
 }

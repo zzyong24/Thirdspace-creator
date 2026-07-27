@@ -89,6 +89,32 @@ describe("runResearchNode（结构化四类候选)", () => {
     ).rejects.toThrow(/未产出可解析素材/);
   });
 
+  it("[T-486] 首次四类全空时由输出契约触发重试，第二次有效素材可恢复", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return finalText(
+          calls === 1
+            ? JSON.stringify({
+                hooks: [],
+                cases: [],
+                dataPoints: [],
+                quotes: [],
+              })
+            : FOUR_CATEGORIES,
+        );
+      },
+    });
+    const result = await runResearchNode({
+      model,
+      positioningBrief: "AI 工程科普,面向开发者",
+      topicTitle: "AI 工具帮普通人省时间",
+    });
+    expect(calls).toBe(2);
+    expect(result.items).toHaveLength(4);
+  });
+
   it("flattenCategories 丢弃空主字段项(无 text/title/stat/line)", () => {
     const cats: ResearchCategories = {
       hooks: [{ text: "", why: "w" }, { text: "有钩子", why: "" }],

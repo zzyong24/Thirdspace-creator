@@ -92,36 +92,40 @@ async function seedSource(
 }
 
 describe("ingestion.refreshDouyin — 抖音真抓落库 (线 B)", () => {
-  it("校验源→fetch→createRun→ingestMetrics→completeRun, 真写入快照", async () => {
-    const { db } = await createDb();
-    await seedSource(db, "src-douyin", "douyin");
-    const cap: Cap = { fetchCalls: 0, resolveCalls: 0, appendCalls: 0 };
-    const records: MetricRecord[] = [
-      {
-        recordKey: "douyin:7400:NOW",
-        platform: "douyin",
-        externalId: "7400",
-        capturedAt: NOW,
-        metrics: { views: 128000, likes: 5400 },
-      },
-      {
-        recordKey: "douyin:7401:NOW",
-        platform: "douyin",
-        externalId: "7401",
-        capturedAt: NOW,
-        metrics: { views: 86000 },
-      },
-    ];
-    const svc = makeService(db, records, cap);
-    const run = await svc.refreshDouyin(ctx, {
-      externalSourceId: "src-douyin",
-    });
-    expect(cap.fetchCalls).toBe(1);
-    expect(run.status).toBe("completed");
-    expect(run.recordsWritten).toBe(2);
-    expect(cap.resolveCalls).toBe(2); // 每条 resolvePublication
-    expect(cap.appendCalls).toBe(2); // 每条 appendSnapshot 落库
-  });
+  it(
+    "校验源→fetch→createRun→ingestMetrics→completeRun, 真写入快照",
+    async () => {
+      const { db } = await createDb();
+      await seedSource(db, "src-douyin", "douyin");
+      const cap: Cap = { fetchCalls: 0, resolveCalls: 0, appendCalls: 0 };
+      const records: MetricRecord[] = [
+        {
+          recordKey: "douyin:7400:NOW",
+          platform: "douyin",
+          externalId: "7400",
+          capturedAt: NOW,
+          metrics: { views: 128000, likes: 5400 },
+        },
+        {
+          recordKey: "douyin:7401:NOW",
+          platform: "douyin",
+          externalId: "7401",
+          capturedAt: NOW,
+          metrics: { views: 86000 },
+        },
+      ];
+      const svc = makeService(db, records, cap);
+      const run = await svc.refreshDouyin(ctx, {
+        externalSourceId: "src-douyin",
+      });
+      expect(cap.fetchCalls).toBe(1);
+      expect(run.status).toBe("completed");
+      expect(run.recordsWritten).toBe(2);
+      expect(cap.resolveCalls).toBe(2); // 每条 resolvePublication
+      expect(cap.appendCalls).toBe(2); // 每条 appendSnapshot 落库
+    },
+    15_000,
+  );
 
   it("不存在的来源 → 抛错(不建 run)", async () => {
     const { db } = await createDb();
@@ -196,6 +200,77 @@ describe("ingestion.refreshDouyin — 抖音真抓落库 (线 B)", () => {
     expect(run.status).toBe("completed");
     expect(fetchAccountId).toBe("acct-1"); // fetch 端口拿到当前号
     expect(snapshotAccountId).toBe("acct-1"); // downstreamCtx 透传到 appendSnapshot(采集 stamp)
+  });
+
+  it("[T-400] 空 title/shareUrl 导入时使用可追溯兜底，并传给 publication", async () => {
+    const { db } = await createDb();
+    await seedSource(db, "src-douyin-fallback", "douyin");
+    let publicationExists = false;
+    let projectInput: Record<string, unknown> | null = null;
+    let publicationInput: Record<string, unknown> | null = null;
+    let seq = 0;
+    const svc = createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch: {
+        fetch: async () => [
+          {
+            recordKey: "douyin:7400:NOW",
+            platform: "douyin",
+            externalId: "7400",
+            capturedAt: NOW,
+            metrics: { views: 100 },
+            title: "   ",
+            shareUrl: "   ",
+          },
+        ],
+        login: async () => true,
+        status: async () => true,
+      },
+      ports: {
+        publishing: {
+          resolvePublication: () =>
+            Promise.resolve(
+              publicationExists ? { id: "pub-7400" } : null,
+            ),
+          createImportedPublication: async (_c, _outputId, input) => {
+            publicationExists = true;
+            publicationInput = input as Record<string, unknown>;
+            return { id: "pub-7400" };
+          },
+        },
+        projects: {
+          ensureImportedProject: async (_c, input) => {
+            projectInput = input as unknown as Record<string, unknown>;
+            return {
+              projectId: "proj-7400",
+              outputId: "out-7400",
+              created: true,
+            };
+          },
+        },
+        analytics: {
+          appendSnapshot: () => Promise.resolve({ created: true }),
+        },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+
+    await svc.refreshDouyin(ctx, {
+      externalSourceId: "src-douyin-fallback",
+    });
+    expect(projectInput).toMatchObject({
+      title: "抖音作品 7400",
+      shareUrl: "https://www.douyin.com/video/7400",
+    });
+    expect(publicationInput).toMatchObject({
+      title: "抖音作品 7400",
+      externalUrl: "https://www.douyin.com/video/7400",
+    });
   });
 });
 
@@ -662,6 +737,52 @@ describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账�
     });
   });
 
+  it("[T-546] 热点宝重连走独立 OAuth 端口，不误触普通抖音绑定流程", async () => {
+    const { db } = await createDb();
+    let douyinLoginCalls = 0;
+    let douhotLoginCalls = 0;
+    let ensuredAccounts = 0;
+    const svc = createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-1` },
+      db,
+      douyinFetch: {
+        fetch: async () => [],
+        login: async () => {
+          douyinLoginCalls += 1;
+          return true;
+        },
+        loginDouhot: async (opts) => {
+          douhotLoginCalls += 1;
+          expect(opts?.accountId).toBe(ctx.accountId);
+          return true;
+        },
+        status: async () => true,
+      },
+      platformAccount: {
+        ensureAccount: async () => {
+          ensuredAccounts += 1;
+          return { id: "acct-unexpected" };
+        },
+      },
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+
+    await expect(
+      svc.loginDouyin(ctx, { site: "douhot.douyin.com" }),
+    ).resolves.toEqual({ loggedIn: true });
+    expect(douhotLoginCalls).toBe(1);
+    expect(douyinLoginCalls).toBe(0);
+    expect(ensuredAccounts).toBe(0);
+  });
+
   it("platformAccount 端口未注入 → 仍建源(退化,不破旧组合根)", async () => {
     const { db } = await createDb();
     const svc = loginService(db, true, undefined);
@@ -805,8 +926,8 @@ describe("ingestion.loginDouyin — 绑定成功触发 onDouyinBound (T-189a)", 
 
 // [T-330] 「扫码绑定新抖音号」forceNew 编排 —— 根治「绑新号命中旧号 sessionid → 二维码不出现
 //   直接登进旧号」:staging 隔离扫码 → 同步读回身份 → ensureAccount(真实 handle+sec_uid)→
-//   staging 搬该号正式目录 → 绑定编排带真号。诚实:身份读不回 → 清 staging + 明确错误,绝不
-//   默默挂 _default/旧号;非 forceNew 路径行为完全不变。全部注入 fake 端口(既有范式),不连真浏览器。
+//   staging 搬该号正式目录 → 绑定编排带真号。身份暂时读不回时仍建独立待识别账号，绝不
+//   默默挂 _default/旧号；后续采集拿到身份再回填。非 forceNew 路径行为完全不变。
 describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", () => {
   const IDENTITY: DouyinSelfIdentity = {
     nickname: "新号真实昵称",
@@ -970,42 +1091,65 @@ describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", 
     expect(staged.adopted).toEqual([]);
   });
 
-  it("身份读不回(identity=null)→ 清 staging + 明确错误;绝不 ensureAccount / 搬目录", async () => {
+  it("[T-469] 身份暂时读不回(identity=null)仍绑定到独立待识别账号，不丢已扫码登录态", async () => {
     const { db } = await createDb();
     const staged = stagedPort({ identity: null });
-    const ensured: unknown[] = [];
+    const ensured: Array<{
+      platform: string;
+      handle: string;
+      externalAccountId?: string | null;
+    }> = [];
+    const boundCtxs: RequestContext[] = [];
     const svc = forceNewService({
       db,
       port: staged.port,
       accountPort: {
         ensureAccount: async (_c, input) => {
           ensured.push(input);
-          return { id: "acct-x" };
+          return { id: "acct-pending" };
         },
       },
+      onDouyinBound: (c) => boundCtxs.push(c),
     });
-    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
-      /读不回账号身份/,
-    );
-    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "discardStaging"]);
-    expect(ensured).toEqual([]);
-    expect(staged.adopted).toEqual([]);
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).resolves.toEqual({
+      loggedIn: true,
+    });
+    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "adoptStaging"]);
+    expect(staged.discarded).toEqual([]);
+    expect(ensured).toEqual([
+      {
+        platform: "douyin",
+        handle: "抖音账号（待识别·0123456789abcdef）",
+        externalAccountId: null,
+      },
+    ]);
+    expect(staged.adopted).toEqual([
+      { stagingKey: "0123456789abcdef", accountId: "acct-pending" },
+    ]);
+    expect(boundCtxs[0]?.accountId).toBe("acct-pending");
   });
 
-  it("读身份抛错 → 清 staging + 明确错误(不吞成假成功)", async () => {
+  it("[T-469] 读身份临时抛错 → 仍保留扫码成果并绑定待识别账号", async () => {
     const { db } = await createDb();
     const staged = stagedPort({
-      fetchIdentityError: new Error("DouyinNotLoggedInError"),
+      fetchIdentityError: new Error("creator profile temporarily unavailable"),
     });
+    const ensured: Array<{ handle: string }> = [];
     const svc = forceNewService({
       db,
       port: staged.port,
-      accountPort: { ensureAccount: async () => ({ id: "acct-x" }) },
+      accountPort: {
+        ensureAccount: async (_c, input) => {
+          ensured.push(input);
+          return { id: "acct-pending" };
+        },
+      },
     });
-    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
-      /读取账号身份失败/,
-    );
-    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "discardStaging"]);
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).resolves.toEqual({
+      loggedIn: true,
+    });
+    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "adoptStaging"]);
+    expect(ensured[0]?.handle).toBe("抖音账号（待识别·0123456789abcdef）");
   });
 
   it("搬目录失败 → 清 staging + 明确错误(登录态不落无主目录)", async () => {

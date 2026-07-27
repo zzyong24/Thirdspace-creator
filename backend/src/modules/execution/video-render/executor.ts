@@ -18,6 +18,7 @@
 import { execFile, spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { resolveExecutablePath } from "@creatoros/ai-worker";
 import { videoRenderParams, type VideoRenderProps } from "@creatoros/contract";
 import { buildChildEnv } from "../child-env";
 import type { ExecutionExecutor, ExecutorRunOpts, ExecutorSandboxView } from "../executor-registry";
@@ -80,18 +81,16 @@ function execFileAsync(
   });
 }
 
-async function whichBinary(name: string): Promise<string | null> {
-  try {
-    const cmd = process.platform === "win32" ? "where" : "which";
-    const { stdout } = await execFileAsync(cmd, [name], new AbortController().signal);
-    const first = stdout
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .find(Boolean);
-    return first || null;
-  } catch {
-    return null;
-  }
+async function resolveMediaBinary(
+  name: "ffmpeg" | "ffprobe",
+): Promise<string | null> {
+  return resolveExecutablePath(name, {
+    explicitEnvVar:
+      name === "ffmpeg"
+        ? "CREATOROS_FFMPEG_PATH"
+        : "CREATOROS_FFPROBE_PATH",
+    bundled: true,
+  });
 }
 
 /**
@@ -314,7 +313,7 @@ export function createDefaultVideoRenderEngine(
   opts?: { downloadChromium?: ChromiumDownloader },
 ): VideoRenderEngine {
   return {
-    findBinary: whichBinary,
+    findBinary: resolveMediaBinary,
     async probeVideo(ffprobe, file, signal) {
       const { stdout } = await execFileAsync(
         ffprobe,
@@ -375,8 +374,21 @@ function proxyNameFor(mountAs: string): string {
   const base = path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
   return base.replace(/\.[^.]*$/, "") + ".mp4";
 }
-function imageNameFor(mountAs: string): string {
-  return path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
+function imageNameFor(mountAs: string, mimeType?: string | null): string {
+  const base = path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
+  if (path.extname(base)) return base;
+  const normalized = mimeType?.split(";", 1)[0]?.toLowerCase();
+  const extension =
+    normalized === "image/jpeg"
+      ? ".jpg"
+      : normalized === "image/webp"
+        ? ".webp"
+        : normalized === "image/gif"
+          ? ".gif"
+          : normalized === "image/avif"
+            ? ".avif"
+            : ".png";
+  return `${base}${extension}`;
 }
 
 export function createVideoRenderExecutor(
@@ -394,7 +406,7 @@ export function createVideoRenderExecutor(
       const { signal, reportStep } = opts;
       const props = (params as { props: VideoRenderProps }).props;
 
-      // 0) 工具链检测(缺 ffmpeg → 诚实报错引导安装,不打包 ffmpeg-static)
+      // 0) 工具链检测：正式桌面包优先使用随包 ffmpeg/ffprobe；开发态再回落系统安装。
       await reportStep("检测工具链(ffmpeg/ffprobe/Chromium)");
       const [ffmpeg, ffprobe] = await Promise.all([
         engine.findBinary("ffmpeg"),
@@ -402,7 +414,9 @@ export function createVideoRenderExecutor(
       ]);
       if (!ffmpeg || !ffprobe) {
         throw new Error(
-          `未检测到系统 ffmpeg/ffprobe(视频渲染必需)。请安装后重试:${FFMPEG_INSTALL_HINT}`,
+          "CreatorOS 随包渲染组件 ffmpeg/ffprobe 缺失或不可用。" +
+            "请先重新安装最新版 CreatorOS；开发环境可安装后重试:" +
+            FFMPEG_INSTALL_HINT,
         );
       }
       // [T-281] Chromium 未装 → 引擎自动下载(playwright install chromium),进度回步骤流
@@ -413,7 +427,10 @@ export function createVideoRenderExecutor(
       throwIfAborted(signal);
 
       // 1) 输入核对:props 引用的每个文件必须已物化在 input/(路径防护同沙箱)
-      const media = collectMediaFiles(props);
+      const inputMimeTypes = new Map(
+        sandbox.inputs.map((input) => [input.mountAs, input.mimeType] as const),
+      );
+      const media = collectMediaFiles(props, inputMimeTypes);
       const allFiles = [...media.videos, ...media.images];
       for (const f of allFiles) {
         const abs = resolveInsideDir(sandbox.inputDir, f);
@@ -468,7 +485,7 @@ export function createVideoRenderExecutor(
         );
       }
       for (const f of media.images) {
-        const outName = imageNameFor(f);
+        const outName = imageNameFor(f, inputMimeTypes.get(f));
         nameMap.set(f, outName);
         await fs.copyFile(resolveInsideDir(sandbox.inputDir, f), path.join(mediaDir, outName));
       }
@@ -485,7 +502,10 @@ export function createVideoRenderExecutor(
           cards: s.cards.map((c) => (c.kind === "image" ? { ...c, file: rename(c.file) } : c)),
         })),
       };
-      const html = generateVideoRenderHtml(renamedProps, { mediaPrefix: "media/" });
+      const html = generateVideoRenderHtml(renamedProps, {
+        mediaPrefix: "media/",
+        imageFiles: new Set(media.images.map(rename)),
+      });
       await fs.writeFile(path.join(workDir, "index.html"), html, "utf8");
       await fs.copyFile(await engine.resolveGsapFile(), path.join(workDir, "gsap.min.js"));
 

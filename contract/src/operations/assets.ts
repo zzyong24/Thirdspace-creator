@@ -10,6 +10,7 @@ const uploadParams = z.object({ uploadId: id });
 // Upload session DTO returned by POST /assets/uploads (presigned upload init).
 const assetUpload = z.object({
   uploadId: id,
+  assetId: id,
   storageKey: z.string(),
   uploadUrl: z.string(),
   expiresAt: iso8601,

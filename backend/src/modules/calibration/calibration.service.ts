@@ -307,20 +307,40 @@ function validateDimensions(dimensions: RubricDimension[]): void {
   }
 }
 
-// Deterministic 变现加权 weighted sum. For each dimension, read the metric value keyed by
-// the dimension `key` from predictedConversion first (变现优先), else predictedMetrics;
-// non-numeric / missing → 0. Pure; NO Math.random / Date.now.
+// Deterministic 变现加权 weighted sum. The current AI shape stores the authoritative
+// 1–5 score in predictedConversion.dimensions[{key,score}]; legacy flat
+// predictedConversion[key] / predictedMetrics[key] remain fallbacks. Rubric weights sum
+// to 1, so Σ(score × weight) intentionally stays on the 1–5 scale (no ×20 normalization
+// to 100). Non-numeric / missing → 0. Pure; NO Math.random / Date.now.
 function deriveScore(
   dimensions: RubricDimension[],
   predictedMetrics: Record<string, unknown>,
   predictedConversion: Record<string, unknown>,
 ): number {
+  const nestedScores = new Map<string, number>();
+  const nestedDimensions = (predictedConversion as {
+    dimensions?: Array<{ key?: unknown; score?: unknown }>;
+  }).dimensions;
+  if (Array.isArray(nestedDimensions)) {
+    for (const dimension of nestedDimensions) {
+      if (
+        dimension &&
+        typeof dimension.key === "string" &&
+        typeof dimension.score === "number" &&
+        Number.isFinite(dimension.score)
+      ) {
+        nestedScores.set(dimension.key, dimension.score);
+      }
+    }
+  }
   let score = 0;
   for (const d of dimensions) {
     const raw =
-      d.key in predictedConversion
-        ? predictedConversion[d.key]
-        : predictedMetrics[d.key];
+      nestedScores.has(d.key)
+        ? nestedScores.get(d.key)
+        : d.key in predictedConversion
+          ? predictedConversion[d.key]
+          : predictedMetrics[d.key];
     const value = typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
     score += value * d.weight;
   }

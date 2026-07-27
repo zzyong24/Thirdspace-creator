@@ -17,8 +17,24 @@ import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
+import { createBuildTimingRecorder } from "./build-timing.mjs";
+import { assertLicenseProjectKey } from "./license-project-key.mjs";
+import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const CARGO_PROFILE_DIR =
+  process.env.CREATOROS_RELEASE === "1" ? "release" : "release-fast";
+const BUILD_TIMING_REPORT = join(
+  FRONTEND,
+  "src-tauri",
+  "target",
+  "runtime-reports",
+  "build-timings.package.json",
+);
+const buildTiming = createBuildTimingRecorder({
+  pipeline: "desktop:package",
+  reportPath: BUILD_TIMING_REPORT,
+});
 
 // cargo 解析(skills-manager 模式):PATH 上有就用;否则 rustup which rustc 推 cargo。
 function canRun(cmd, args = ["--version"]) {
@@ -38,14 +54,39 @@ function resolveCargo() {
 
 function step(name, cmd, args, extraEnv = {}) {
   console.log(`\n[desktop:package] ▶ ${name}\n[desktop:package]   $ ${cmd} ${args.join(" ")}`);
+  const timing = buildTiming.start(name);
+  const childEnv = { ...process.env, ...extraEnv };
+  // verdict 私钥只允许进入最终 Rust/Tauri 编译步骤。Next/混淆/字节码/诱饵等子进程
+  // 不需要它，默认剥离，避免第三方构建脚本或诊断输出扩大秘密暴露面。
+  if (extraEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY !== "1") {
+    delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+  }
+  delete childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY;
   const r = spawnSync(cmd, args, {
     stdio: "inherit",
     cwd: FRONTEND,
-    env: { ...process.env, ...extraEnv },
+    env: childEnv,
+  });
+  timing.finish({
+    status: r.status === 0 ? "passed" : "failed",
+    exitCode: r.status,
   });
   if (r.status !== 0) {
     console.error(`[desktop:package] ✗ 步骤失败:${name}(exit ${r.status})`);
+    console.error(`[desktop:package]   阶段耗时报告:${BUILD_TIMING_REPORT}`);
     process.exit(r.status ?? 1);
+  }
+}
+
+function measured(name, fn) {
+  const timing = buildTiming.start(name);
+  try {
+    const value = fn();
+    timing.finish({ status: "passed", exitCode: 0 });
+    return value;
+  } catch (error) {
+    timing.finish({ status: "failed", exitCode: 1 });
+    throw error;
   }
 }
 
@@ -57,7 +98,15 @@ function step(name, cmd, args, extraEnv = {}) {
 function verifyPackagedTlsRuntime() {
   if (platform !== "darwin") return;
 
-  const app = join(FRONTEND, "src-tauri", "target", "release", "bundle", "macos", "CreatorOS.app");
+  const app = join(
+    FRONTEND,
+    "src-tauri",
+    "target",
+    CARGO_PROFILE_DIR,
+    "bundle",
+    "macos",
+    "CreatorOS.app",
+  );
   const tarball = join(app, "Contents", "Resources", "sidecar.tar.gz");
   const sourceTarball = join(FRONTEND, "src-tauri", "sidecar.tar.gz");
   const shellBin = join(app, "Contents", "MacOS", "CreatorOS");
@@ -83,6 +132,47 @@ function verifyPackagedTlsRuntime() {
       "[desktop:package] [T-445] 最终产物自检失败：.app 内 sidecar.tar.gz 与本轮构建产物不一致（疑似误带旧包）",
     );
   }
+
+  const verdictMaterial = assertVerdictKeyMaterial();
+  const listedForVerdict = spawnSync("tar", ["-tzf", tarball], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (listedForVerdict.status !== 0) {
+    throw new Error(
+      `[desktop:package] [T-535] 无法读取最终 .app 内 sidecar.tar.gz\n${listedForVerdict.stderr ?? ""}`,
+    );
+  }
+  const verdictEntry = listedForVerdict.stdout
+    .split("\n")
+    .find((entry) => entry.endsWith("frontend/.next/server/verdict-verify-key.json"));
+  if (!verdictEntry) {
+    throw new Error(
+      "[desktop:package] [T-535] 最终 .app 缺 verdict-verify-key.json，安装后 sidecar 必然退出。",
+    );
+  }
+  const extractedVerdict = spawnSync("tar", ["-xOzf", tarball, verdictEntry], {
+    encoding: "utf8",
+  });
+  let bakedPublicKey = "";
+  try {
+    bakedPublicKey = String(
+      JSON.parse(extractedVerdict.stdout).publicKeyB64 ?? "",
+    ).trim();
+  } catch {
+    throw new Error(
+      "[desktop:package] [T-535] 最终 .app 的 verdict-verify-key.json 无法解析。",
+    );
+  }
+  if (
+    extractedVerdict.status !== 0 ||
+    bakedPublicKey !== verdictMaterial.publicKeyB64
+  ) {
+    throw new Error(
+      "[desktop:package] [T-535] 最终 .app 烘焙的 verdict 公钥与本轮签名私钥不匹配。",
+    );
+  }
+  console.log("[desktop:package] ✓ [T-535] 最终 .app verdict 公钥已入包且与签名私钥匹配。");
 
   const usesSharedOpenSsl =
     process.config?.variables?.node_shared_openssl === true ||
@@ -155,6 +245,18 @@ if (process.argv.includes("--verify-tls-only")) {
   process.exit(0);
 }
 
+if (process.argv.includes("--verify-verdict-keys-only")) {
+  assertVerdictKeyMaterial();
+  console.log("[desktop:package] ✓ [T-535] verdict 签名私钥与验签公钥匹配。");
+  process.exit(0);
+}
+
+if (process.argv.includes("--verify-license-project-key-only")) {
+  const projectKey = assertLicenseProjectKey();
+  console.log(`[desktop:package] ✓ [T-545] 产品级 projectKey=${projectKey} 可固化进统一安装包。`);
+  process.exit(0);
+}
+
 const cargo = resolveCargo();
 const cargoBinDir = cargo === "cargo" ? "" : dirname(cargo);
 const pathEnv = cargoBinDir ? { PATH: `${cargoBinDir}${delimiter}${process.env.PATH ?? ""}` } : {};
@@ -172,7 +274,13 @@ function precleanDmgLeftovers() {
   // spawn hdiutil 只会 ENOENT 噪音(status 非 0 本就跳过,但守卫掉更干净,也免 Win 上找不到
   // 命令的告警干扰打包日志)。
   if (platform !== "darwin") return;
-  const bundleDir = join(FRONTEND, "src-tauri", "target", "release", "bundle");
+  const bundleDir = join(
+    FRONTEND,
+    "src-tauri",
+    "target",
+    CARGO_PROFILE_DIR,
+    "bundle",
+  );
   const info = spawnSync("hdiutil", ["info"], { encoding: "utf8" });
   if (info.status === 0 && info.stdout) {
     // hdiutil info 按 image 分段:image-path 行 + 其下 /dev/diskN 行。
@@ -211,8 +319,24 @@ if (process.argv.includes("--preclean-only")) {
   process.exit(0);
 }
 
-// 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。
-step("sidecar 二进制化", process.execPath, [join("scripts", "desktop", "build-sidecar.mjs")]);
+// [T-535] 必须在任何构建重活前硬失败。本地 release-fast 与正式 release 使用同一闸，
+// 不再允许 build-sidecar 的 dev 警告一路漏成“能产包、安装后必白屏”的 .app。
+const licenseProjectKey = assertLicenseProjectKey();
+console.log(
+  `[desktop:package] ✓ [T-545] 产品级 projectKey=${licenseProjectKey}；渠道身份继续由激活码的签名 channelRef 决定。`,
+);
+assertVerdictKeyMaterial();
+console.log("[desktop:package] ✓ [T-535] verdict 双密钥存在、格式合法且属于同一 Ed25519 密钥对。");
+
+// 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。这里只产/恢复展开后的
+// clean runtime；约 1GB tar 必须等混淆/字节码/诱饵/法律声明全部完成后，由 Tauri
+// beforeBuild 唯一压一次。否则 cache miss 与 cache hit 都会多做一次无效压缩。
+step(
+  "sidecar 二进制化",
+  process.execPath,
+  [join("scripts", "desktop", "build-sidecar.mjs")],
+  { CREATOROS_SKIP_TARBALL: "1" },
+);
 
 // 2) [T-164 P6] sidecar bundle JS 混淆(build-sidecar 之后、tauri build 之前)。
 //    幂等 + 硬排除 + symlink 逃逸防护;失败 fail-fast(见 obfuscate.mjs)。
@@ -259,7 +383,7 @@ if (process.env.CREATOROS_SKIP_SMOKE !== "1") {
 //   · CREATOROS_RELEASE=1 = fat `release`:lto=true + codegen-units=1,cargo build ~15-30 min;
 //     体积/启动最优,发官方 release 那一次用。
 //   代价:release-fast 二进制大几百 KB,冷启动差 < 30ms(用户不可感)。
-const isFullRelease = process.env.CREATOROS_RELEASE === "1";
+const isFullRelease = CARGO_PROFILE_DIR === "release";
 const tauriBuildArgs = [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
@@ -280,9 +404,10 @@ if (!isFullRelease) {
 step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs, {
   ...pathEnv,
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
+  CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });
 
-verifyPackagedTlsRuntime();
+measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);
 
 // 4) [T-164 P6] 代码签名占位(未配 env → skip 退 0 + 标 signed:false)。
 step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
@@ -291,6 +416,7 @@ step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "code
 step("公证(占位)", process.execPath, [join("scripts", "desktop", "notarize.mjs")]);
 
 console.log(
-  "\n[desktop:package] ✅ 完成。产物在 src-tauri/target/release/bundle/(macos/*.app + dmg/*.dmg)。",
+  `\n[desktop:package] ✅ 完成。产物在 src-tauri/target/${CARGO_PROFILE_DIR}/bundle/(macos/*.app + dmg/*.dmg)。`,
 );
 console.log("[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。");
+console.log(`[desktop:package] 阶段耗时报告:${BUILD_TIMING_REPORT}`);

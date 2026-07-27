@@ -22,8 +22,6 @@ import { DraftChatRequestProvider } from "./draft-chat-request";
 import { DraftResizableLayout } from "./draft-resizable-layout";
 import { CreationFlowCtas } from "./creation-flow-ctas";
 import { ThesisSkeletonPanel } from "./thesis-skeleton-panel";
-// [T-375] 顶条「导出素材包」(替换原「在 Finder 打开」—— 项目文件夹永远空,名不副实)。
-import { ExportMaterialsButton } from "./export-materials-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
 // [T-146] 弹药卡列表 + 双击预览抽为 client 组件(Modal 交互)。
@@ -59,12 +57,6 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
         className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
       >
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
-          {/* [T-375] 复用 T-366b 导出链;无 output/production 行时按钮内自动 ensure。 */}
-          <ExportMaterialsButton
-            projectId={project.id}
-            projectTitle={project.title}
-            outputId={outputId}
-          />
           {project.imported ? (
             <span
               data-slot="draft-imported-badge"
@@ -73,9 +65,12 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               真实导入作品
             </span>
           ) : null}
-          {/* [T-374] 有抖音锚(douyinExternalId)才渲染;位置用户拍板:「看复盘」左边。 */}
-          {project.douyinExternalId ? (
-            <TranscribeNowButton projectId={project.id} />
+          {/* [T-505] 只在有抖音锚且尚无真稿时渲染；queued/running 从持久任务恢复并置灰。 */}
+          {project.douyinExternalId && project.transcriptState !== "done" ? (
+            <TranscribeNowButton
+              projectId={project.id}
+              initialState={project.transcriptState}
+            />
           ) : null}
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction

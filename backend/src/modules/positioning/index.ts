@@ -24,6 +24,8 @@ export {
   type UpsertProfileInput,
   type CreateStatementInput,
   type EvaluateGateInput,
+  type LegacyStatusNoteCleanupAudit,
+  type LegacyStatusNoteCleanupResult,
 } from "./positioning.service";
 
 export {

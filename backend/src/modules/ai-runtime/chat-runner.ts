@@ -14,7 +14,11 @@ import {
   sanitizeToolNames,
 } from "./chat-tool-gate";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type {
+  ModelSpec,
+  PositioningSuggestionOutput,
+  TopicCardOutput,
+} from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   formatWorksBrief,
@@ -48,6 +52,7 @@ import {
   type LearningsListRaw,
   type CandidatesListRaw,
   type PredictionsRaw,
+  type CoverReferenceSelection,
 } from "./chat-tools";
 // [T-256a] 工具探测结果类型(端口契约共用)。
 import type { DetectToolsResult } from "./local-env-probe";
@@ -61,7 +66,10 @@ import {
   resolveContextWindowTokens,
   dropAbandonedApprovalParts,
 } from "./chat-history-window";
-import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
+import {
+  enrichFacets,
+  normalizeCard,
+} from "./topic-enrich-runner";
 // [T-245] trend 出题多源装配(T-235b 信源信号 + web 搜索并行,与选题页出题同一装配器)——
 // 对话编导 topic.generate(basis=trend)复用,不再空 brief 出「假热点题」。
 import {
@@ -78,7 +86,10 @@ import {
 } from "./signal-quality";
 import { createRecoveringModel } from "./llm/recovering-model";
 import { resolveLlmMaxRetries } from "./llm/retry-policy";
-import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
+import {
+  normalizeSuggestion,
+  positioningFacets,
+} from "./positioning-runner";
 import { parseLearnings, reviewFacets } from "./review-runner";
 import { parseDiagnosis } from "./calibration-diagnose-runner";
 
@@ -101,6 +112,16 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  /**
+   * [T-513] 对话工具在一个 chatbox Skill 内同步调用另一个 Skill 时，用当前 owner tuple
+   * 解析该子调用自己的不可变快照并临时进入 ALS。可选仅为兼容纯单测/旧宿主；生产 composition
+   * 必须装配。active snapshot 下若漏装，子节点会因 snapshot 缺少对应 id 而 fail closed。
+   */
+  runWithSkillSnapshot?: <T>(
+    ctx: RequestContext,
+    requiredSkillIds: readonly string[],
+    execute: () => Promise<T>,
+  ) => Promise<T>;
   /**
    * [T-239b S1] 备用对话模型端口(可选)—— **只认 `chat.fallback` 专配行**(不回退 default/env,
    * 否则「备用」会解析成主模型自己);未配返 null。主模型流开始前可重试错误耗尽时,chat-runner
@@ -309,6 +330,14 @@ export interface AssembleChatDeps extends ContextDeps {
     input: { projectId: string; topic?: string; referenceAssetId?: string },
   ) => Promise<{ taskId: string }>;
   /**
+   * [T-523] Copilot 抖音分享编排端口：只经 intelligence service 创建持久任务。
+   * transcribe=true 只允许来自最新一轮用户原文的明确授权。
+   */
+  dispatchDouyinSharePort?: (
+    ctx: RequestContext,
+    input: { shareInput: string; transcribe: boolean },
+  ) => Promise<{ taskId: string; ownerId: string }>;
+  /**
    * [T-268] script.draft 端口 —— dispatch 既有异步 runner runScriptDraft(script-runner.ts,复活
    * 孤儿;整稿分钟级不能 inline 阻塞对话回合)。绑定层先 ensure 项目的 output_script artifact 并把
    * artifactId 写进 task.inputData(采纳时 append 新版本 → 稿面编辑器读回),再 createTask。由
@@ -357,6 +386,7 @@ export interface ContextReaders {
       title: string;
       stage: string;
       status: string;
+      source?: string;
       publishedAt?: string | null;
     }>;
     total: number;
@@ -401,6 +431,16 @@ export interface ContextReaders {
     ctx: RequestContext,
     opts: { query: string; limit: number },
   ) => Promise<Array<{ id: string; title: string; kind: string }>>;
+  /**
+   * [T-523] 封面参考图的全库精确读端口。实现必须完整读取并返回图片总数；只有
+   * total===1 才能确定性自动选择，不能把第一页的一张误判为全库唯一。
+   */
+  listCoverReferenceImages?: (
+    ctx: RequestContext,
+  ) => Promise<{
+    rows: Array<{ id: string; title: string; kind: string }>;
+    total: number;
+  }>;
   /**
    * [T-099b] context.project.detail —— 某项目全档(brief/阶段/发布/产物索引/最新指标)。
    * composition root 复用既有公开读源(projects getProject/briefDetail + artifacts
@@ -611,6 +651,101 @@ export interface ChatAssembly {
   toolApproval?: Record<string, (input: unknown) => Promise<ToolApprovalStatus>>;
 }
 
+export type CopilotMediaRoute =
+  | { kind: "douyin.share"; shareInput: string; transcribe: boolean }
+  | { kind: "cover.reference" };
+
+const DOUYIN_URL_RE =
+  /https?:\/\/(?:(?:www|v)\.)?douyin\.com\/\S+|https?:\/\/(?:www\.)?iesdouyin\.com\/\S+/i;
+const TRANSCRIBE_INTENT_RE =
+  /转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text/i;
+const TRANSCRIBE_NEGATION_RE =
+  /(?:(?:不要|不用|无需|不必|不需要|不想|别)(?:(?:再|自动|帮我|给我|进行|做|跑|生成)\s*){0,3}(?:转写|转录|逐字稿|字幕|提取(?:视频)?(?:文字|文案)|\bASR\b|transcrib|speech[\s_-]*to[\s_-]*text)|不(?:转写|转录|生成(?:逐字稿|字幕)|做(?:逐字稿|字幕)|跑\s*ASR|提取(?:视频)?(?:文字|文案)))/i;
+const REFERENCE_COVER_INTENT_RE =
+  /(?:参考图|参考封面|照着.{0,12}(?:做|生成)|沿用.{0,12}(?:风格|样式)|复用.{0,12}封面)/i;
+const REFERENCE_COVER_NEGATION_RE =
+  /(?:(?:不要|不用|无需|不必|不需要|不想|别)(?:(?:再|自动|帮我|给我|使用|用)\s*){0,3}(?:参考图|参考封面|沿用|复用|照着)|不(?:使用|用|沿用|复用)(?:这张|该张|当前|之前|以前|原来)?(?:参考图|参考封面|图片|图|风格|样式)?)/i;
+
+function hasExplicitTranscribeAuthorization(text: string): boolean {
+  // 否定优先：同一最新用户轮里即便出现“字幕/转写”等关键词，也不能被升级为授权。
+  if (TRANSCRIBE_NEGATION_RE.test(text)) return false;
+  return TRANSCRIBE_INTENT_RE.test(text);
+}
+
+function hasReferenceCoverIntent(text: string): boolean {
+  // “不要参考图，直接生成封面”中的“参考图”是拒绝，不是 image-to-image 授权。
+  if (REFERENCE_COVER_NEGATION_RE.test(text)) return false;
+  return /封面/i.test(text) && REFERENCE_COVER_INTENT_RE.test(text);
+}
+
+function latestUserText(messages: UIMessage[]): string {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message?.role !== "user") continue;
+    return (message.parts ?? [])
+      .map((part) =>
+        part.type === "text" && typeof part.text === "string" ? part.text : "",
+      )
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  }
+  return "";
+}
+
+/**
+ * [T-523] Host 侧确定性媒体路由。只读最新一轮用户原文，模型不能把普通分享升级成
+ * 转写授权；抖音链接一旦命中就走持久内容雷达链，不再落到通用 web.read。
+ */
+export function detectCopilotMediaRoute(
+  messages: UIMessage[],
+): CopilotMediaRoute | null {
+  const text = latestUserText(messages);
+  if (!text) return null;
+  if (DOUYIN_URL_RE.test(text)) {
+    return {
+      kind: "douyin.share",
+      shareInput: text,
+      transcribe: hasExplicitTranscribeAuthorization(text),
+    };
+  }
+  if (hasReferenceCoverIntent(text)) {
+    return { kind: "cover.reference" };
+  }
+  return null;
+}
+
+/** 只有全库图片精确总数为 1 时才自动选择；分页未读全也必须要求用户明确选择。 */
+export function resolveUniqueCoverReference(
+  images: Array<{ id: string; title: string; kind: string }>,
+  total: number,
+): CoverReferenceSelection {
+  const candidates = images
+    .filter((material) => material.kind.trim().toLowerCase() === "image")
+    .map(({ id, title }) => ({ id, title }));
+  if (total === 1 && candidates.length === 1) {
+    return {
+      status: "selected",
+      assetId: candidates[0]!.id,
+      title: candidates[0]!.title,
+    };
+  }
+  return {
+    status: "needs_clarification",
+    reason:
+      total === 0
+        ? "no_image"
+        : Number.isFinite(total) && total > 1
+          ? "multiple_images"
+          : "incomplete_catalog",
+    total:
+      Number.isInteger(total) && total >= 0
+        ? total
+        : null,
+    candidates,
+  };
+}
+
 /**
  * 纯装配(不调模型)—— resolve skill(surface 层)→ 装配 CreativeContext facets(数据层)→
  * 拼 system → 按 skill 白名单挂工具(工具白名单层)。单测直接断言它的产物。
@@ -622,19 +757,35 @@ export async function buildChatAssembly(
   ctx: RequestContext,
   chatContext: ChatContext,
   deps: AssembleChatDeps,
+  mediaRoute: CopilotMediaRoute | null = null,
 ): Promise<ChatAssembly> {
+  const runWithSkillSnapshot = <T>(
+    requiredSkillIds: readonly string[],
+    execute: () => Promise<T>,
+  ): Promise<T> =>
+    deps.runWithSkillSnapshot
+      ? deps.runWithSkillSnapshot(ctx, requiredSkillIds, execute)
+      : execute();
+
   // 1) 页面层:surface → 基础 skill。
   const skillId = resolveSkillForSurface(chatContext.surface);
 
   // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
   const {
+    getEffectiveTemplate,
+    getEffectiveTools,
     getTemplate,
     getTools,
+    hasActiveEffectiveSkillSnapshot,
     modelFor,
     runTopicNode,
+    runStructuredNode,
     runTemplatedNode,
   } = await import("@creatoros/ai-worker");
-  const skill = getTemplate(skillId);
+  const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
+  const skill = hasEffectiveScope
+    ? getEffectiveTemplate(skillId)
+    : getTemplate(skillId);
 
   // [T-240①] 阶段判据(动态层):项目对话读该项目的 stage + 发布状态(getProjectDetail 读端口
   // 已在 composition root 绑好,不新造)。best-effort:读不到/端口未装配 → null(不注阶段块、
@@ -682,16 +833,38 @@ export async function buildChatAssembly(
   const scopedNames = getSurfaceToolScope(chatContext.surface, {
     projectPublished: projectStage ? projectStage.published : null,
   });
-  const baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
-  const allowedNames =
-    chatContext.functionKey &&
-    ALL_CHAT_TOOL_NAMES.includes(chatContext.functionKey) &&
-    !baseAllowed.includes(chatContext.functionKey)
-      ? [...baseAllowed, chatContext.functionKey]
+  let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+  if (mediaRoute?.kind === "douyin.share") {
+    baseAllowed = baseAllowed.filter((name) => name !== "web.read");
+  } else {
+    // 只在本轮明确出现抖音分享或显式深链时暴露，避免普通对话让模型自行“升级”为建档。
+    baseAllowed = baseAllowed.filter(
+      (name) => name !== "intelligence.douyin.share",
+    );
+  }
+  const routedTool =
+    mediaRoute?.kind === "douyin.share"
+      ? "intelligence.douyin.share"
+      : mediaRoute?.kind === "cover.reference"
+        ? "cover.generate"
+        : null;
+  const effectiveFunctionKey =
+    mediaRoute?.kind === "douyin.share" &&
+    chatContext.functionKey === "web.read"
+      ? undefined
+      : chatContext.functionKey;
+  let allowedNames =
+    effectiveFunctionKey &&
+    ALL_CHAT_TOOL_NAMES.includes(effectiveFunctionKey) &&
+    !baseAllowed.includes(effectiveFunctionKey)
+      ? [...baseAllowed, effectiveFunctionKey]
       : baseAllowed;
+  if (routedTool && !allowedNames.includes(routedTool)) {
+    allowedNames = [...allowedNames, routedTool];
+  }
   const preferredTools = applyFunctionKey(
-    getTools(skillId),
-    chatContext.functionKey,
+    hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId),
+    effectiveFunctionKey,
   ).filter((n) => allowedNames.includes(n));
   const toolWhitelist = [
     ...preferredTools,
@@ -754,8 +927,8 @@ export async function buildChatAssembly(
     // [T-084a SPEC §1.3] 素材搜集诚实降级第 6 条(动态,按 resolveSearchSpec 探测结果注入):
     // 未配联网检索时,素材来自训练记忆,模型必须主动告知非实时检索,绝不假装搜过网。
     searchConfigured
-      ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但转述结果时必须**分开报数**:多少条带真实 URL(查证过的真信源)、多少条来自模型记忆需核实。若工具结果 grounding=model_memory(说明本次联网检索失败降级),必须明说「本次联网检索失败,以下 N 条全部来自模型记忆」,不许再说「联网搜到」,并建议用户检查搜索配置(设置→模型→联网搜索)或去选题页『信号源』登记信源。"
-      : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「联网检索未配置,以下 N 条素材全部来自我的训练记忆、非实时联网搜索,来源需你自行核实」(N 用真实条数),绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网、**绝不给素材编造论文编号/精确百分比/榜单名等看似真实的引用**。想要真实联网素材,引导用户去『设置→模型→联网搜索』配置搜索,或去选题页『信号源』登记信源。",
+      ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但转述结果时必须**分开报数**:多少条带真实 URL(查证过的真信源)、多少条来自模型记忆需核实。若工具结果 grounding=model_memory(说明本次联网检索失败降级),必须明说「本次联网检索失败,以下 N 条全部来自模型记忆」,不许再说「联网搜到」,并建议用户检查搜索配置(设置→模型→联网搜索)或去『内容雷达』登记来源。"
+      : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「联网检索未配置,以下 N 条素材全部来自我的训练记忆、非实时联网搜索,来源需你自行核实」(N 用真实条数),绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网、**绝不给素材编造论文编号/精确百分比/榜单名等看似真实的引用**。想要真实联网素材,引导用户去『设置→模型→联网搜索』配置搜索,或去『内容雷达』登记来源。",
     // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
     // 真实浏览器能力(web.read),**禁止再自称办不到**。
     "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。[T-251] web.read 结果按窗返回(window/hasMore 是真相字段):**hasMore=true 时必须带 offset 重调同一 URL 把正文读完再归纳**(重读不会重新抓取,直接按窗读已存全文)——绝不只读第一窗就下结论;确实读不完就如实告知「读了 X 字、还剩 Y 字没读」。",
@@ -769,7 +942,7 @@ export async function buildChatAssembly(
     "10. **论点树铁律**:能挂进稿面「论点骨架」面板、写脚本时被引用的论点树,只能由**对话里的 planning.thesis 工具**产出、经用户采纳落成 thesis_tree 产物——**你在对话文本里写的论点树只是讨论稿,挂不进论点骨架面板、写脚本时不会被引用**。用户要立论点树时:**直接调 planning.thesis 工具**产出论点树候选卡(它会基于定位/选题/立项 brief/已搜素材构建),让 TA 点卡上「采纳」落进论点骨架面板;你可以在对话里先帮 TA 把核心论点/支撑/证据/反驳聊清楚(这有价值),但要落成成品必须走 planning.thesis 工具。**绝不用别的工具(如 topic.enrich 补全选题卡)冒充论点树,绝不谎称「论点树已立好/已写入骨架」**。",
     // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
     // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
-    "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①已登记网页信源:用户在选题页『信号源』登记的热榜站点(如 36氪热榜),trend 出题时系统自动带登录态读页面、抽真实信号(标题/热度/链接);②黑马雷达:按定位关键词扫抖音近 1 天高赞低粉爆款,产「🔥跟拍」窗口候选(随对标采集自动跑);③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**(它自动并行拉①+③当出题依据,候选自带信源证据);若结果注明未拉到信源信号或用户还没登记信源,**引导 TA 去选题页『信号源』登记热榜站点**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动粘热点、更不是自称没能力。",
+    "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①内容雷达中的网页/RSS 来源会保留真实条目、链接与抓取证据;②内容雷达的热点宝/黑马发现会保留官方榜单口径与原视频链接;③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**;若结果注明未拉到实时信号或用户还没登记来源,**引导 TA 去『内容雷达』登记网页/RSS、博主或分享链接**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动编造热点、更不是自称没能力。",
     // [T-253] 本机文件读取能力认知 + 授权协议 + 安全边界诚实(denylist 拒读时如实说明,绝不绕)。
     "12. **你能读用户本机的文件**(local.read,任意绝对路径,支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件」时直接调它,绝不自称「我碰不到你的本地文件」。授权协议:首次读某路径会弹**确认卡**(needApproval)——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」,TA 点允许后你**再调一次 local.read 传同一路径**;被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
     // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
@@ -899,15 +1072,17 @@ export async function buildChatAssembly(
       // 产 trendNote 诚实注记(随 tool-result 回编导,如实转述 + 引导去『信号源』登记),不猜不编。
       let trendNote: string | null = null;
       if (basis === "trend") {
-        const detail = await assembleTrendBriefDetailed(
-          ctx,
-          context.positioningBrief,
-          {
-            trendSourceSignals: deps.trendSourceSignals,
-            // web 搜索路复用 material.gather 的联网检索端口(SearchResult ⊇ TrendHit,
-            // 未配/失败 → 该段空,assembleTrendBriefDetailed 内 allSettled 诚实降级)。
-            trendSearch: deps.searchWeb,
-          },
+        const detail = await runWithSkillSnapshot(["trend.extract"], () =>
+          assembleTrendBriefDetailed(
+            ctx,
+            context.positioningBrief,
+            {
+              trendSourceSignals: deps.trendSourceSignals,
+              // web 搜索路复用 material.gather 的联网检索端口(SearchResult ⊇ TrendHit,
+              // 未配/失败 → 该段空,assembleTrendBriefDetailed 内 allSettled 诚实降级)。
+              trendSearch: deps.searchWeb,
+            },
+          ),
         );
         basisSource = detail.brief;
         trendQuality = trendQualityFromDetail(detail);
@@ -922,7 +1097,7 @@ export async function buildChatAssembly(
           }
           trendNote =
             registered === 0
-              ? "本次出题未拉到已登记信源的实时信号:当前还没有登记任何网页信源。请如实告知用户,并引导 TA 去选题页『信号源』登记热榜站点(需登录的站点先去『设置 → 网站登录保管库』登录)。" +
+              ? "本次出题未拉到已登记来源的实时信号:当前还没有登记任何网页/RSS 来源。请如实告知用户,并引导 TA 去『内容雷达』登记来源(需登录的站点先去『设置 → 网站登录保管库』登录)。" +
                 (detail.searchHitCount > 0
                   ? "本次热点依据仅来自 web 联网搜索。"
                   : "本次候选没有实时热点信号支撑,不要声称基于实时热榜。")
@@ -930,7 +1105,7 @@ export async function buildChatAssembly(
                   registered != null
                     ? `(已登记 ${registered} 个信源,可能抓取失败/登录失效)`
                     : "(可能抓取失败/登录失效)"
-                }。请如实告知用户,并建议去选题页『信号源』检查信源、或去『设置 → 网站登录保管库』重新登录。` +
+                }。请如实告知用户,并建议去『内容雷达』检查来源、或去『设置 → 网站登录保管库』重新登录。` +
                 (detail.searchHitCount > 0
                   ? "本次热点依据仅来自 web 联网搜索。"
                   : "本次候选没有实时热点信号支撑,不要声称基于实时热榜。");
@@ -944,26 +1119,30 @@ export async function buildChatAssembly(
       ]
         .filter(Boolean)
         .join("\n");
-      const { topics } = await runTopicNode({
-        model,
-        positioningBrief: context.positioningBrief,
-        basisBrief,
-        // [T-062b gate-F3] KNOW-X 修真:对话出题同样吃知识库参考 + 已验证经验约束
-        // (basis=knowledge 时知识已进 basisBrief,置空防重复)。
-        knowledgeBrief:
-          basis === "knowledge" ? undefined : context.knowledgeBrief || undefined,
-        learningsBrief: context.learningsBrief || undefined,
-        // [T-238] 依据质量画像段(模板 v3 据它动态定权、reason 注明主要依据+权重理由)。
-        signalQualityBrief: renderSignalQualityBrief(
-          buildSignalQualityProfile({
-            signals: qualityInputs.signals,
-            positioning: qualityInputs.positioning,
-            knowledge: qualityInputs.knowledge,
-            trend: trendQuality,
-          }),
-        ),
-        basis,
-      });
+      const { topics } = await runWithSkillSnapshot(["topic.generate"], () =>
+        runTopicNode({
+          model,
+          positioningBrief: context.positioningBrief,
+          basisBrief,
+          // [T-062b gate-F3] KNOW-X 修真:对话出题同样吃知识库参考 + 已验证经验约束
+          // (basis=knowledge 时知识已进 basisBrief,置空防重复)。
+          knowledgeBrief:
+            basis === "knowledge"
+              ? undefined
+              : context.knowledgeBrief || undefined,
+          learningsBrief: context.learningsBrief || undefined,
+          // [T-238] 依据质量画像段(模板 v3 据它动态定权、reason 注明主要依据+权重理由)。
+          signalQualityBrief: renderSignalQualityBrief(
+            buildSignalQualityProfile({
+              signals: qualityInputs.signals,
+              positioning: qualityInputs.positioning,
+              knowledge: qualityInputs.knowledge,
+              trend: trendQuality,
+            }),
+          ),
+          basis,
+        }),
+      );
       const items = topics.map((t) => ({
         title: t.title,
         angle: t.angle,
@@ -990,27 +1169,35 @@ export async function buildChatAssembly(
         title?.trim() ||
         selectionTitle ||
         "";
-      // 复用 topic-enrich-runner 的 enrich prompt + parseCard —— 产选题卡候选(非实体)。
-      // [T-269] 反编造:对话 enrich 走自由文本(非模板),把可溯硬约束段注进 prompt + system(单一
-      // 真值 grounding-facets)——治「materialBasis 凭空称能依托某资料」的编造敞口。enrich 是账号态
-      // (projectId=null),不注 brief 硬锚(不项目化,守审计边界),只上 anti-fabrication。
-      const { runAgentNode, ANTI_FABRICATION_CLAUSE } = await import("@creatoros/ai-worker");
-      // [T-371] 先搜后卡:对话里联网核实到的事实经 verifiedBrief 进 enrich prompt(素材依据段
-      // 据实引用来源);缺省走「未联网核实」诚实门,禁「待联网拉取」占位承诺。
-      const prompt = buildEnrichPrompt(
-        context,
-        { title: effTitle, angle },
+      // [T-513] 对话补卡与后台 task 共用 topic.enrich 模板/schema；active scope 下真正
+      // method/template/requiredFacets 来自当前账号 snapshot，不再走绕过 overlay 的自由文本支路。
+      const {
         ANTI_FABRICATION_CLAUSE,
-        verifiedBrief,
-      );
-      const res = await runAgentNode({
-        model,
-        system:
-          "你是这位创作者的选题策划 agent,把一条选题补全成完整选题卡。只输出 JSON,不要多余文字。\n\n" +
-          ANTI_FABRICATION_CLAUSE,
-        prompt,
-        maxSteps: 2,
+        getTemplate,
+        modelFor,
+        runStructuredNode,
+      } = await import("@creatoros/ai-worker");
+      const spec = await deps.resolveModelSpec(ctx, "topic.enrich");
+      const facets = enrichFacets(context, {
+        title: effTitle,
+        angle: angle ?? "",
       });
+      facets.knowledge = [
+        facets.knowledge,
+        verifiedBrief
+          ? `【本轮联网核实素材(据实引用)】\n${verifiedBrief}`
+          : "【素材诚实门】本轮未联网核实；没有真实素材时必须明确写未核实，禁止写待拉取占位承诺。",
+        ANTI_FABRICATION_CLAUSE,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+      const { object } = await runWithSkillSnapshot(["topic.enrich"], () =>
+        runStructuredNode<TopicCardOutput>({
+          model: modelFor(spec),
+          template: getTemplate("topic.enrich"),
+          facets,
+        }),
+      );
       // [T-266] 随卡回补全**当时**锚定的已有候选 id(selection.kind==="candidate" → 就地补全
       // 这条);账号态/未选中某条候选 → null。持久化随 tool-result 走,刷新后前端仍据它 patch
       // (而非依赖易失的当前 selection),null 则采纳走 createCandidate 新建(治死胡同)。
@@ -1018,7 +1205,7 @@ export async function buildChatAssembly(
         chatContext.selection?.kind === "candidate"
           ? (chatContext.selection.ids[0] ?? null)
           : null;
-      return { card: parseCard(res.text), candidateId };
+      return { card: normalizeCard(object), candidateId };
     },
     generateHooks: async ({ topic, direction, extraBrief }) => {
       // [T-055c] 复用 runAgentNode 一次调用产 hook 候选组(非实体)。主题兜底:模型没传
@@ -1220,18 +1407,26 @@ export async function buildChatAssembly(
       // [T-146d] 高优先用户素材要点作 facet 注入 → 综合「贴着资料产」(优先服务于它、补充它、佐证它,
       // 而非跑题)。topicTitle 保持原选题(不掺资料词,避免污染综合的相关性判断);资料主权走 facet。
       const spec = await deps.resolveModelSpec(ctx, "research.gather");
+      console.info(
+        `[chat-runner] tool=material.gather capability=research.gather apiFormat=${spec.apiFormat} ` +
+          `model=${spec.model} endpoint=${spec.baseUrl ? "custom" : "official"}`,
+      );
       const { runResearchNode, formatUserMaterialFacet } = await import(
         "@creatoros/ai-worker"
       );
-      const { items, grounding } = await runResearchNode({
-        model: modelFor(spec),
-        positioningBrief: context.positioningBrief,
-        topicTitle: baseQuery,
-        searchResults,
-        userMaterialFacet: context.userMaterialHardBrief
-          ? formatUserMaterialFacet(context.userMaterialHardBrief)
-          : undefined,
-      });
+      const { items, grounding } = await runWithSkillSnapshot(
+        ["research.gather"],
+        () =>
+          runResearchNode({
+            model: modelFor(spec),
+            positioningBrief: context.positioningBrief,
+            topicTitle: baseQuery,
+            searchResults,
+            userMaterialFacet: context.userMaterialHardBrief
+              ? formatUserMaterialFacet(context.userMaterialHardBrief)
+              : undefined,
+          }),
+      );
       return {
         grounding,
         items: items.map((it) => ({
@@ -1423,18 +1618,109 @@ export async function buildChatAssembly(
         selectionTitle ||
         "";
       try {
+        let resolvedReferenceAssetId =
+          typeof referenceAssetId === "string" && referenceAssetId.trim()
+            ? referenceAssetId.trim()
+            : undefined;
+        let reference: CoverReferenceSelection | undefined =
+          resolvedReferenceAssetId
+            ? {
+                status: "selected",
+                assetId: resolvedReferenceAssetId,
+                title: "用户指定参考图",
+              }
+            : undefined;
+        if (
+          mediaRoute?.kind === "cover.reference" &&
+          !resolvedReferenceAssetId
+        ) {
+          if (!deps.contextReaders?.listCoverReferenceImages) {
+            reference = {
+              status: "needs_clarification",
+              reason: "incomplete_catalog",
+              total: null,
+              candidates: [],
+            };
+          } else {
+            const catalog =
+              await deps.contextReaders.listCoverReferenceImages(ctx);
+            reference = resolveUniqueCoverReference(
+              catalog.rows,
+              catalog.total,
+            );
+          }
+          if (reference.status !== "selected") {
+            return {
+              taskId: null,
+              projectId: pid,
+              reference,
+              error:
+                reference.reason === "no_image"
+                  ? "素材库里没有可用图片。请先上传或明确指定一张参考图。"
+                  : reference.reason === "multiple_images"
+                    ? `素材库里有 ${reference.total ?? "多"} 张可用图片，请明确选择一张参考图后再生成封面。`
+                    : "无法确认素材库中参考图的完整数量，请明确指定一张参考图后再生成封面。",
+            };
+          }
+          resolvedReferenceAssetId = reference.assetId;
+        }
         const { taskId } = await deps.dispatchGenerateCoverPort(ctx, {
           projectId: pid,
           ...(effTopic ? { topic: effTopic } : {}),
           // [T-380] 以图生图风格参考透传(可选;素材库 asset id)。
-          ...(referenceAssetId ? { referenceAssetId } : {}),
+          ...(resolvedReferenceAssetId
+            ? { referenceAssetId: resolvedReferenceAssetId }
+            : {}),
         });
-        return { taskId, projectId: pid, error: null };
+        return {
+          taskId,
+          projectId: pid,
+          error: null,
+          ...(reference ? { reference } : {}),
+        };
       } catch (err) {
         return {
           taskId: null,
           projectId: pid,
           error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    dispatchDouyinShare: async ({ shareInput }) => {
+      const effective =
+        mediaRoute?.kind === "douyin.share"
+          ? {
+              shareInput: mediaRoute.shareInput,
+              transcribe: mediaRoute.transcribe,
+            }
+          : {
+              shareInput,
+              // 转写是高成本派生任务；没有最新轮确定性路由的明确授权时，模型不能自行升级。
+              transcribe: false,
+            };
+      if (!deps.dispatchDouyinSharePort) {
+        return {
+          taskId: null,
+          ownerId: null,
+          transcribe: effective.transcribe,
+          error: "抖音分享建档能力当前未接入。",
+        };
+      }
+      try {
+        const { taskId, ownerId } =
+          await deps.dispatchDouyinSharePort(ctx, effective);
+        return {
+          taskId,
+          ownerId,
+          transcribe: effective.transcribe,
+          error: null,
+        };
+      } catch (error) {
+        return {
+          taskId: null,
+          ownerId: null,
+          transcribe: effective.transcribe,
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     },
@@ -1447,29 +1733,33 @@ export async function buildChatAssembly(
       const rubricBlock = GENERIC_RUBRIC_DIMENSIONS.map(
         (d, i) => `${i + 1}. ${d.label}（key=${d.key}） —— ${d.description}`,
       ).join("\n");
-      const { text } = await runTemplatedNode({
-        model: modelFor(spec),
-        // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
-        template: getTemplate("calibration.diagnose"),
-        facets: {
-          positioning: context.positioningBrief
-            ? context.positioningBrief
-            : "（创作者尚未设置定位——按通用爆款逻辑判断）",
-          learnings: context.learningsBrief
-            ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-            : "",
-          // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
-          extraBrief: extraBrief
-            ? `\n${EXTRA_BRIEF_HEADING}\n${extraBrief}`
-            : "",
-          rubricBlock,
-          title: effTitle || "（未提供标题）",
-          script:
-            script && script.trim()
-              ? script
-              : "（暂无文稿——请基于标题与定位做尽力诊断,拿不准的指标给 null）",
-        },
-      });
+      const { text } = await runWithSkillSnapshot(
+        ["calibration.diagnose"],
+        () =>
+          runTemplatedNode({
+            model: modelFor(spec),
+            // 调用方对象只提供受控 id；active scope 下实际模板取账号 snapshot。
+            template: getTemplate("calibration.diagnose"),
+            facets: {
+              positioning: context.positioningBrief
+                ? context.positioningBrief
+                : "（创作者尚未设置定位——按通用爆款逻辑判断）",
+              learnings: context.learningsBrief
+                ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+                : "",
+              // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
+              extraBrief: extraBrief
+                ? `\n${EXTRA_BRIEF_HEADING}\n${extraBrief}`
+                : "",
+              rubricBlock,
+              title: effTitle || "（未提供标题）",
+              script:
+                script && script.trim()
+                  ? script
+                  : "（暂无文稿——请基于标题与定位做尽力诊断,拿不准的指标给 null）",
+            },
+          }),
+      );
       const parsed = parseDiagnosis(
         text,
         new Set(GENERIC_RUBRIC_DIMENSIONS.map((d) => d.key)),
@@ -1525,13 +1815,15 @@ export async function buildChatAssembly(
         ? subject
         : reviewContext.reviewTitle?.trim() || selectionTitle;
       const spec = await deps.resolveModelSpec(ctx, "review.insights");
-      const { text } = await runTemplatedNode({
-        model: modelFor(spec),
-        // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
-        template: getTemplate("review.insights"),
-        // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位(空则整段省略)。
-        facets: reviewFacets(reviewContext, effSubject, extraBrief),
-      });
+      const { text } = await runWithSkillSnapshot(["review.insights"], () =>
+        runTemplatedNode({
+          model: modelFor(spec),
+          // 调用方对象只提供受控 id；active scope 下实际模板取账号 snapshot。
+          template: getTemplate("review.insights"),
+          // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位(空则整段省略)。
+          facets: reviewFacets(reviewContext, effSubject, extraBrief),
+        }),
+      );
       return { items: parseLearnings(text), error: null };
     },
     generatePositioning: async ({ extraBrief }) => {
@@ -1551,15 +1843,26 @@ export async function buildChatAssembly(
           worksBrief = ""; // 作品画像 best-effort,读失败不阻断定位生成
         }
       }
-      const { runAgentNode } = await import("@creatoros/ai-worker");
       const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
-      const res = await runAgentNode({
-        model: modelFor(spec),
-        system: "你是这位创作者的定位策略 agent。只输出 JSON,不要多余文字。",
-        prompt: buildPositioningPrompt(context, { extraBrief, worksBrief }),
-        maxSteps: 2,
-      });
-      return parseSuggestion(res.text);
+      const facets = positioningFacets(context, worksBrief);
+      if (extraBrief?.trim()) {
+        facets.current = [
+          facets.current,
+          `${EXTRA_BRIEF_HEADING}\n${extraBrief.trim()}`,
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+      }
+      const { object } = await runWithSkillSnapshot(
+        ["positioning.generate"],
+        () =>
+          runStructuredNode<PositioningSuggestionOutput>({
+            model: modelFor(spec),
+            template: getTemplate("positioning.generate"),
+            facets,
+          }),
+      );
+      return normalizeSuggestion(object);
     },
     // [T-094] 对话蒸馏:复用倾倒场同一引擎 runKnowledgeDistill(knowledge.distill 模板 +
     // capability 走 model-config,多模态可配铁律)。失败抛错由工具 execute 接住转人话渲卡。
@@ -1567,10 +1870,12 @@ export async function buildChatAssembly(
       const { runKnowledgeDistill } = await import(
         "./knowledge-distill-runner"
       );
-      return runKnowledgeDistill(
-        ctx,
-        { content },
-        { resolveModelSpec: deps.resolveModelSpec },
+      return runWithSkillSnapshot(["knowledge.distill"], () =>
+        runKnowledgeDistill(
+          ctx,
+          { content },
+          { resolveModelSpec: deps.resolveModelSpec },
+        ),
       );
     },
     // [T-077b] brief.fill 的现状读:当前项目对话(chatContext.projectId,project surface 的
@@ -1682,9 +1987,11 @@ export async function buildChatAssembly(
   // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
   // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
   const forcedTool =
-    chatContext.functionKey && toolWhitelist.includes(chatContext.functionKey)
-      ? chatContext.functionKey
-      : undefined;
+    routedTool && toolWhitelist.includes(routedTool)
+      ? routedTool
+      : effectiveFunctionKey && toolWhitelist.includes(effectiveFunctionKey)
+        ? effectiveFunctionKey
+        : undefined;
 
   // [T-263] HITL 授权门:从本轮已挂工具收录登记了授权判定器的工具(当前仅 local.read),装配
   // streamText 的 toolApproval 配置。工具不在白名单 / decideLocalRead 端口未装配 → 自然缺席。
@@ -1777,7 +2084,12 @@ export async function runChatStream(
   deps: AssembleChatDeps,
   onFinish?: (finalText: string) => void | Promise<void>,
 ) {
-  const assembly = await buildChatAssembly(ctx, input.chatContext, deps);
+  const assembly = await buildChatAssembly(
+    ctx,
+    input.chatContext,
+    deps,
+    detectCopilotMediaRoute(input.messages),
+  );
   const { modelFor } = await import("@creatoros/ai-worker");
   // [T-239d] 喂模型前投影(chat-history-window 纯函数;**只改喂模型的副本,ai_messages 存储
   // 原样** —— 刷新恢复/卡重渲不受影响):① 近 N 轮之外的 tool-result 换指针占位(数据卡已渲

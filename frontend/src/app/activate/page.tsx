@@ -4,7 +4,7 @@ import { ActivateForm } from "./activate-form";
 import { getActivationService } from "@/server/persistence-client";
 import { isDesktopRuntime } from "@/server/activation";
 import { isActivationAllowed } from "@/lib/activation-gate.server";
-import { getChannelLink } from "@/server/activation/channel-links.server";
+import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 
 // T-147 P5 桌面激活授权 —— 激活界面(/activate)。
 //
@@ -13,8 +13,8 @@ import { getChannelLink } from "@/server/activation/channel-links.server";
 //
 // 已激活(check.allowed)时也回首页:避免手动敲 /activate 停在这。展示当前状态可读消息(到期/未激活)。
 //
-// [T-396b] 「联系授权方」按激活码所属渠道运行时下发(channel-links 读 Rust 落的缓存):
-//   · 有 supportUrl(到期/曾激活过,缓存在)→ 渲染链接;
+// [T-396b/T-534] 「联系授权方」只读 Rust 验签后写入加密 `.license` 的商业售后入口:
+//   · 有 channelSupportUrl(到期/曾激活过,缓存在)→ 渲染链接;
 //   · null(首次激活前本就不知渠道,或渠道未配)→ 纯文案中性降级,**不渲染任何链接**
 //     (SPEC §5/§7 红线:不回退官方链接,防代理码用户看到官方定价页)。
 
@@ -43,7 +43,7 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
   const check = await service.check();
 
   // [T-396b] 渠道「联系授权方」链接(读缓存,无网络;null → 中性降级纯文案)。
-  const supportUrl = await getChannelLink("support");
+  const { channelSupportUrl } = await readChannelRuntime();
 
   // 状态可读提示:到期 vs 从未激活,措辞不同。
   const heading =
@@ -64,11 +64,11 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <ActivateForm />
-        {supportUrl ? (
+        {channelSupportUrl ? (
           <p className="text-center text-xs text-muted-foreground">
             激活码由 CreatorOS 授权方提供,遇问题请
             <a
-              href={supportUrl}
+              href={channelSupportUrl}
               target="_blank"
               rel="noreferrer"
               className="text-primary underline underline-offset-2 hover:opacity-80"

@@ -8,11 +8,13 @@ import type {
   KnowledgeItemWithStats,
   KnowledgeRevisionRow,
   KnowledgeRelationRow,
+  KnowledgeFolderRow,
 } from "./knowledge.repository";
 import type {
   KnowledgeItemResource,
   KnowledgeRevisionResource,
   KnowledgeRelationResource,
+  KnowledgeFolderResource,
 } from "./knowledge.schema";
 
 // Knowledge transport (foundation §5.4) — the module's 5 contract ops served over
@@ -38,6 +40,9 @@ export const KNOWLEDGE_OP_IDS = [
   "knowledge.relations.delete",
   // [T-091] 图谱全量语义边读(additive)。
   "knowledge.relations.listAll",
+  "knowledge.folders.list",
+  "knowledge.folders.create",
+  "knowledge.move",
 ] as const;
 
 function toItemResource(row: KnowledgeItemWithStats): KnowledgeItemResource {
@@ -45,6 +50,8 @@ function toItemResource(row: KnowledgeItemWithStats): KnowledgeItemResource {
     id: row.id,
     userId: row.userId,
     currentRevisionId: row.currentRevisionId,
+    folderId: row.folderId ?? null,
+    assetId: row.assetId ?? null,
     knowledgeType: row.knowledgeType as KnowledgeItemResource["knowledgeType"],
     title: row.title,
     sourceType: row.sourceType as KnowledgeItemResource["sourceType"],
@@ -56,6 +63,19 @@ function toItemResource(row: KnowledgeItemWithStats): KnowledgeItemResource {
     sourceNote: row.sourceNote ?? null,
     usedCount: row.usedCount,
     usedInPublished: row.usedInPublished,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function toFolderResource(row: KnowledgeFolderRow): KnowledgeFolderResource {
+  return {
+    id: row.id,
+    userId: row.userId,
+    accountId: row.accountId,
+    parentId: row.parentId ?? null,
+    name: row.name,
+    status: row.status as KnowledgeFolderResource["status"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -123,8 +143,42 @@ export function createKnowledgeTransport(
             // [T-092] 评论回流:来源声明 + 溯源/幂等锚(可选,additive)。
             sourceType?: string;
             sourceMetadata?: Record<string, unknown>;
+            folderId?: string | null;
+            assetId?: string | null;
           };
           const row = await service.createKnowledge(ctx, b);
+          return {
+            data: toItemResource(row),
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        case "knowledge.folders.list": {
+          const rows = await service.listFolders(ctx);
+          return {
+            data: rows.map(toFolderResource),
+            meta: {
+              requestId: ctx.requestId,
+              page: 1,
+              pageSize: Math.max(rows.length, 1),
+              total: rows.length,
+            },
+          };
+        }
+        case "knowledge.folders.create": {
+          const b = (body ?? {}) as { name: string; parentId?: string | null };
+          const row = await service.createFolder(ctx, b);
+          return {
+            data: toFolderResource(row),
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        case "knowledge.move": {
+          const b = (body ?? {}) as { folderId: string | null };
+          const row = await service.moveKnowledge(
+            ctx,
+            p.knowledgeId ?? "",
+            b,
+          );
           return {
             data: toItemResource(row),
             meta: { requestId: ctx.requestId },

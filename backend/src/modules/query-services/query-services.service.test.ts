@@ -160,6 +160,9 @@ describe("DashboardQueryService.getDashboard", () => {
     expect(result.recentPublications).toEqual([]);
     // T-143 ③:无进行中项目 → continueCreating 为 null(诚实空态),前端渲染
     // 「还没有进行中的项目」+ 新建 CTA,不再回退 sentinel/演示假项目占位。
+    expect(
+      Object.prototype.hasOwnProperty.call(result, "continueCreating"),
+    ).toBe(true);
     expect(result.continueCreating).toBeNull();
   });
 

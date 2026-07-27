@@ -15,7 +15,8 @@
 //   node orchestrator/process/boundary-scan.mjs --quiet          # 只在失败时输出
 //   node orchestrator/process/boundary-scan.mjs --update-baseline# 把当前违规写成新基线(重构消减后调用)
 //
-// 零依赖(纯 node:fs)。规则模型 forbidden-paths / forbidden-import 借鉴 dependency-cruiser / Nx。
+// 零依赖(纯 node:fs)。规则模型 forbidden-paths / forbidden-import / forbidden-text
+// 借鉴 dependency-cruiser / Nx。
 
 import fs from "node:fs";
 import path from "node:path";
@@ -81,6 +82,14 @@ function importsOf(abs) {
   return specs;
 }
 
+function sourceOf(abs) {
+  try {
+    return fs.readFileSync(abs, "utf8");
+  } catch {
+    return "";
+  }
+}
+
 // 一个 modules 路径里的模块名:.../modules/<name>/...
 function moduleOf(p) {
   const m = /\/modules\/([^/]+)\//.exec("/" + p);
@@ -130,6 +139,18 @@ for (const rule of cfg.rules ?? []) {
           if (ownMod && targetMod && ownMod === targetMod) continue;
         }
         violations.push(`${rule.id}::${r}::${spec}`);
+      }
+    }
+  } else if (rule.type === "forbidden-text") {
+    const files = [];
+    for (const d of rule.scopeDirs ?? [])
+      walk(path.join(REPO, d), exts, files);
+    for (const f of files) {
+      const src = sourceOf(f);
+      for (const pattern of rule.patterns ?? []) {
+        if (src.includes(pattern)) {
+          violations.push(`${rule.id}::${rel(f)}::${pattern}`);
+        }
       }
     }
   }

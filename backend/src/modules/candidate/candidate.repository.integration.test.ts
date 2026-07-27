@@ -23,10 +23,11 @@ function repoFor(
   userId: string,
   accountId: string = "acct-main",
   tag = `${userId}-${accountId}`,
+  now = NOW,
 ): CandidateRepository {
   let seq = 0;
   return createCandidateRepository(db, {
-    now: () => NOW,
+    now: () => now,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
     accountId,
@@ -102,6 +103,53 @@ describe("candidate repository (integration)", () => {
     // owner still sees it.
     const aList = await repoA.listCandidates({});
     expect(aList.rows.map((r) => r.id)).toContain(cand.id);
+  });
+
+  it("[T-282] createdAfter 在 SQL 层过滤并按 createdAt 最新优先", async () => {
+    const oldRepo = repoFor(
+      db,
+      "user-a",
+      "acct-main",
+      "old",
+      "2026-06-20T23:59:59.000Z",
+    );
+    const newRepo = repoFor(
+      db,
+      "user-a",
+      "acct-main",
+      "new",
+      "2026-06-21T08:00:00.000Z",
+    );
+    await oldRepo.createCandidate({
+      title: "昨天有高分也不应进入今日窗口",
+      angle: "",
+      source: "idea",
+      contentRole: null,
+      productAnchorId: null,
+      positioningFit: 99,
+      predictedScore: 99,
+      aiTaskId: null,
+    });
+    const newest = await newRepo.createCandidate({
+      title: "今天新建且尚未评分",
+      angle: "",
+      source: "trend",
+      contentRole: null,
+      productAnchorId: null,
+      positioningFit: null,
+      predictedScore: null,
+      aiTaskId: null,
+    });
+
+    const result = await newRepo.listCandidates({
+      status: "pool",
+      sort: "createdAt",
+      createdAfter: "2026-06-21T00:00:00.000Z",
+      limit: 100,
+      offset: 0,
+    });
+    expect(result.rows.map((row) => row.id)).toEqual([newest.id]);
+    expect(result.total).toBe(1);
   });
 
   it("recomputeDemandCount matches the count of linked signals", async () => {

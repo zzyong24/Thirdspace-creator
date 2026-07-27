@@ -33,8 +33,8 @@ import {
   modelConfigurations,
   agentConfigurations,
   storageConfigs,
-  skillConfigOverrides,
-  skillConfigOverrideVersions,
+  accountSkillOverlays,
+  accountSkillOverlayVersions,
 } from "./schema/settings";
 import { activationState } from "./schema/activation";
 
@@ -50,8 +50,8 @@ const TABLE_BY_NAME: Record<string, PgTable> = {
   model_configurations: modelConfigurations,
   agent_configurations: agentConfigurations,
   storage_configs: storageConfigs,
-  skill_config_overrides: skillConfigOverrides,
-  skill_config_override_versions: skillConfigOverrideVersions,
+  account_skill_overlays: accountSkillOverlays,
+  account_skill_overlay_versions: accountSkillOverlayVersions,
   activation_state: activationState,
 };
 

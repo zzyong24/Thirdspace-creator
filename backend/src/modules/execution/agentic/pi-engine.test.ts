@@ -67,11 +67,19 @@ const OPENAI_CHAT: RawLlmConfig = {
   authStyle: "bearer",
   token: "ds-key",
 };
+const OPENAI_RESPONSES: RawLlmConfig = {
+  apiFormat: "openai_responses",
+  baseUrl: "https://new-api.example.com/v1",
+  model: "gpt-5",
+  authStyle: "bearer",
+  token: "relay-key",
+};
 
 describe("pi-engine §6.1 provider 映射(纯)", () => {
   it("apiFormat → pi api 名", () => {
     expect(piApiForFormat("anthropic")).toBe("anthropic-messages");
     expect(piApiForFormat("openai_chat")).toBe("openai-completions");
+    expect(piApiForFormat("openai_responses")).toBe("openai-responses");
   });
 
   it("anthropic bearer(relay/MiniMax)→ authHeader:true(Authorization Bearer)+ baseUrl 透传", () => {
@@ -96,6 +104,18 @@ describe("pi-engine §6.1 provider 映射(纯)", () => {
     expect(reg.config.api).toBe("openai-completions");
     expect(reg.config.authHeader).toBeUndefined();
     expect(reg.config.baseUrl).toBe("https://api.deepseek.com/v1");
+  });
+
+  it("openai_responses(New API)→ api openai-responses + baseUrl/key/model 原样透传", () => {
+    const reg = buildPiProviderRegistration(OPENAI_RESPONSES);
+    expect(reg.config.api).toBe("openai-responses");
+    expect(reg.config.baseUrl).toBe("https://new-api.example.com/v1");
+    expect(reg.config.apiKey).toBe("relay-key");
+    const models = reg.config.models as Array<{ id: string; api: string }>;
+    expect(models[0]).toMatchObject({
+      id: "gpt-5",
+      api: "openai-responses",
+    });
   });
 
   it("[可配] maxTokens/contextWindow/reasoning 读用户 model-config settings(缺则兜底,不硬编)", () => {

@@ -14,10 +14,10 @@ export const PRESERVE_TABLES: readonly string[] = [
   "model_configurations", // AI 模型 + key(免每次重配;key 密文列一并保留)
   "agent_configurations", // AI agent 路由配置
   "storage_configs", // 对象存储配置(blob 路由可用)
-  "skill_config_overrides", // 技能/prompt 覆盖配置(「skill 是用户的」)
-  // [T-363] 技能覆盖的版本历史(T-165 一键回滚链)。skill 定制资产的一部分:
-  // 只留当前值不留历史 = 回滚能力随清库蒸发,故一并保留。
-  "skill_config_override_versions",
+  // [T-513] 只迁回账号增量覆盖；旧全局 skill_config_overrides 明确不迁移、不回灌。
+  "account_skill_overlays",
+  // 账号增量历史同属用户资产；保留后仍由联合 owner tuple 隔离。
+  "account_skill_overlay_versions",
   "activation_state", // T-147 P5 一机一码激活态(清库不清激活,免每次重激活)
 ];
 

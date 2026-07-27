@@ -25,6 +25,7 @@ describe("platformDraftSchema（L6 发布审核 SOP 承载字段）", () => {
     const parsed = platformDraftSchema.parse({
       platform: "douyin",
       title: "标题",
+      body: "简介正文",
       auditFlags: ["标签去掉品牌词→泛称", "✅ 无命中,合规"],
     });
     expect(parsed.auditFlags).toEqual([
@@ -33,9 +34,25 @@ describe("platformDraftSchema（L6 发布审核 SOP 承载字段）", () => {
     ]);
   });
 
+  it("[T-477] 简介 body 是发布物料必填，MiniMax 漏字段/空串必须拒绝而非假成功", () => {
+    expect(() =>
+      platformDraftSchema.parse({
+        platform: "douyin",
+        title: "只有标题",
+        body: "   ",
+      }),
+    ).toThrow();
+    expect(() =>
+      platformDraftSchema.parse({
+        platform: "douyin",
+        title: "只有标题",
+      }),
+    ).toThrow();
+  });
+
   it("顶层 drafts 数组每项含 auditFlags(与既有 platform/title/body/tags/coverIdea 并存)", () => {
     const parsed = platformAdaptSchema.parse({
-      drafts: [{ platform: "douyin", title: "标题" }],
+      drafts: [{ platform: "douyin", title: "标题", body: "简介正文" }],
     });
     const d = parsed.drafts[0]!;
     // 既有字段不动

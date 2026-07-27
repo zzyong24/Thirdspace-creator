@@ -6,12 +6,12 @@ import {
 import type {
   SettingsService,
   AccountProfilePatch,
+  AccountSkillOverlayPutInput,
 } from "./settings.service";
 import type {
   PreferencePatch,
   ModelPutBody,
   StorageConfigPatch,
-  SkillConfigOverridePutBody,
 } from "./settings.repository";
 
 // Settings transport (foundation §5.4) — the module's four contract ops served
@@ -126,11 +126,9 @@ export function createSettingsTransport(
         }
         case "settings.prompts.put": {
           const p = (params ?? {}) as { id?: string };
-          const b = (body ?? {}) as Omit<SkillConfigOverridePutBody, "id">;
-          // id comes from the path param (the resource identity); the body carries
-          // only the override fields. Merge into the repo put body shape.
+          const b = (body ?? {}) as Omit<AccountSkillOverlayPutInput, "skillId">;
           const data = await service.putSkillConfigOverride(ctx, {
-            id: p.id ?? "",
+            skillId: p.id ?? "",
             ...b,
           });
           return { data, meta: { requestId: ctx.requestId } };
@@ -146,11 +144,15 @@ export function createSettingsTransport(
         }
         case "settings.prompts.rollback": {
           const p = (params ?? {}) as { id?: string };
-          const b = (body ?? {}) as { versionId?: string };
+          const b = (body ?? {}) as {
+            versionId?: string;
+            expectedRevision?: number;
+          };
           const data = await service.rollbackSkillConfigOverride(
             ctx,
             p.id ?? "",
             b.versionId ?? "",
+            b.expectedRevision ?? 0,
           );
           return { data, meta: { requestId: ctx.requestId } };
         }

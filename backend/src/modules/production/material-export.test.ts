@@ -244,6 +244,34 @@ describe("aggregateMaterialExport", () => {
     for (const n of names) expect(manifest).toContain(n);
   });
 
+  it("[T-475] 结构稿导出为纯口播，不把画面、字幕、时长写进口播稿.md", async () => {
+    const structured = [
+      "1. 开场（0–3s）",
+      "口播：真正决定效果的是内容。",
+      "画面：正面镜头，中近景。",
+      "字幕：内容比参数重要。",
+      "",
+      "2. 展开（3–12s）",
+      "口播: 先把问题讲清楚，再给方法。",
+      "画面: 切换屏幕录制。",
+    ].join("\n");
+    const bundle = await aggregateMaterialExport(
+      CTX,
+      { projectId: "p1", nowIso: NOW },
+      makePorts({ getScriptText: async () => structured }),
+    );
+    const files = parseStoreZip(bundle.zipBytes);
+    const voiceover = dec.decode(
+      files.find((file) => file.name === "口播稿.md")!.bytes,
+    );
+    expect(voiceover).toBe(
+      "真正决定效果的是内容。\n\n先把问题讲清楚，再给方法。",
+    );
+    expect(voiceover).not.toContain("画面");
+    expect(voiceover).not.toContain("字幕");
+    expect(voiceover).not.toContain("0–3s");
+  });
+
   it("没跑四决策 → hasDecisions=false,readme 空态诚实(§5.1②)", async () => {
     const bundle = await aggregateMaterialExport(
       CTX,

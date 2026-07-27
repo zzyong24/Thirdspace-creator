@@ -15,6 +15,7 @@ import type {
   AgentConfigurationRow,
   StorageConfigRow,
   SkillConfigOverrideRow,
+  AccountSkillOverlayRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
@@ -29,7 +30,12 @@ import type {
 // synthesized preference id, the upsert defaults, the resolveModelForCapability
 // fallback chain, and the agent stamping (status/empty json/createdAt==updatedAt).
 
-const ctx: RequestContext = { userId: "user-z", requestId: "req-z", source: "user" };
+const ctx: RequestContext = {
+  userId: "user-z",
+  accountId: "account-z",
+  requestId: "req-z",
+  source: "user",
+};
 const NOW = "2026-06-21T00:00:00.000Z";
 
 // [T-196] no-op 存储迁移 stub —— updateStorage 单测传它,避免真的对 ~/CreatorOS 做
@@ -53,6 +59,7 @@ function makeFakeRepo(
     _agents: [] as AgentConfigurationRow[],
     _storage: undefined as StorageConfigRow | undefined,
     _prompts: [] as SkillConfigOverrideRow[],
+    _accountPrompts: [] as AccountSkillOverlayRow[],
   };
   return {
     ...state,
@@ -197,6 +204,47 @@ function makeFakeRepo(
       throw new Error(
         `mock settings repo: rollbackSkillConfigOverride 未实现(${id}/${versionId})`,
       );
+    },
+    async listAccountSkillOverlays(_ctx, skillIds) {
+      const wanted = skillIds ? new Set(skillIds) : null;
+      return state._accountPrompts.filter(
+        (row) => !wanted || wanted.has(row.skillId),
+      );
+    },
+    async getAccountSkillOverlay(_ctx, skillId) {
+      return state._accountPrompts.find((row) => row.skillId === skillId) ?? null;
+    },
+    async putAccountSkillOverlay(_ctx, body) {
+      const previous = state._accountPrompts.find(
+        (row) => row.skillId === body.skillId,
+      );
+      const revision =
+        body.expectedRevision === null ? 1 : body.expectedRevision + 1;
+      const row: AccountSkillOverlayRow = {
+        id: previous?.id ?? `overlay-${body.skillId}`,
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        skillId: body.skillId,
+        rowRevision: revision,
+        observedBaseVersion: body.observedBaseVersion,
+        overlayVersion: body.overlayVersion ?? null,
+        overlay: body.overlay,
+        updatedBy: body.updatedBy ?? ctx.userId,
+        createdAt: previous?.createdAt ?? NOW,
+        updatedAt: NOW,
+      };
+      const index = state._accountPrompts.findIndex(
+        (item) => item.skillId === body.skillId,
+      );
+      if (index >= 0) state._accountPrompts[index] = row;
+      else state._accountPrompts.push(row);
+      return row;
+    },
+    async listAccountSkillOverlayVersions() {
+      return [];
+    },
+    async rollbackAccountSkillOverlay() {
+      throw new Error("fake rollbackAccountSkillOverlay 未实现");
     },
     async seedPreferences() {},
     async seedModels() {},
@@ -421,85 +469,47 @@ describe("settings.service", () => {
     expect(await svc.resolveStorageBackend(ctx)).toBe("local");
   });
 
-  // T-040c — 提示词/skill 服务端可配 (prompts.list/get/put).
-  it("putSkillConfigOverride upserts a registered id; version starts at '1'", async () => {
+  it("账号 Skill 增量按 revision 合并，official/effective 同时可见", async () => {
     const repo = makeFakeRepo();
     const svc = createSettingsService(() => repo, accountReader, accountWriter);
-    const dto = await svc.putSkillConfigOverride(ctx, {
-      id: "review.insights",
-      system: "覆盖后的 system",
-      tools: ["read", "write"],
+    const first = await svc.putSkillConfigOverride(ctx, {
+      skillId: "review.insights",
+      expectedRevision: null,
+      patch: { system: "账号方法" },
     });
-    expect(dto.id).toBe("review.insights");
-    expect(dto.version).toBe("1");
-    expect(dto.system).toBe("覆盖后的 system");
-    expect(dto.tools).toEqual(["read", "write"]);
-    // updatedBy defaults to ctx.userId.
-    expect(dto.updatedBy).toBe("user-z");
+    expect(first.skillId).toBe("review.insights");
+    expect(first.rowRevision).toBe(1);
+    expect(first.official.system).toBe("");
+    expect(first.effective.system).toBe("账号方法");
+
+    const second = await svc.putSkillConfigOverride(ctx, {
+      skillId: "review.insights",
+      expectedRevision: 1,
+      patch: { template: "账号模板" },
+    });
+    expect(second.rowRevision).toBe(2);
+    expect(second.effective.system).toBe("账号方法");
+    expect(second.effective.template).toBe("账号模板");
   });
 
-  it("putSkillConfigOverride is an upsert: a second put on the same id bumps version", async () => {
+  it("list 返回完整 official catalog，未定制项 overlay=null", async () => {
     const repo = makeFakeRepo();
     const svc = createSettingsService(() => repo, accountReader, accountWriter);
-    const v1 = await svc.putSkillConfigOverride(ctx, {
-      id: "chatbox.review",
-      system: "v1",
-    });
-    expect(v1.version).toBe("1");
-    const v2 = await svc.putSkillConfigOverride(ctx, {
-      id: "chatbox.review",
-      template: "改 template",
-    });
-    expect(v2.version).toBe("2");
-    // A partial put keeps the untouched column (system from v1).
-    expect(v2.system).toBe("v1");
-    expect(v2.template).toBe("改 template");
-    // list reflects the single upserted row (not two).
     const list = await svc.listSkillConfigOverrides(ctx);
-    expect(list).toHaveLength(1);
-    expect(list[0]!.id).toBe("chatbox.review");
+    expect(list.length).toBeGreaterThan(1);
+    expect(list.find((item) => item.skillId === "script.draft")?.overlay).toBeNull();
   });
 
-  it("putSkillConfigOverride rejects an unregistered skill id (→ PromptValidationError)", async () => {
+  it("未知 Skill 按 404，不写入旧 global override", async () => {
     const repo = makeFakeRepo();
     const svc = createSettingsService(() => repo, accountReader, accountWriter);
     await expect(
-      svc.putSkillConfigOverride(ctx, { id: "not.a.real.skill", system: "x" }),
-    ).rejects.toBeInstanceOf(PromptValidationError);
-    // Nothing was written.
-    expect(await svc.listSkillConfigOverrides(ctx)).toHaveLength(0);
-  });
-
-  it("putSkillConfigOverride honors an injected validator (ai-worker registry seam)", async () => {
-    const repo = makeFakeRepo();
-    // Injected validator accepts ONLY a custom id, rejects an otherwise-registered one.
-    const svc = createSettingsService(
-      () => repo,
-      accountReader,
-      accountWriter,
-      (id) => id === "custom.only",
-    );
-    await expect(
-      svc.putSkillConfigOverride(ctx, { id: "review.insights", system: "x" }),
-    ).rejects.toBeInstanceOf(PromptValidationError);
-    const ok = await svc.putSkillConfigOverride(ctx, {
-      id: "custom.only",
-      system: "ok",
-    });
-    expect(ok.id).toBe("custom.only");
-  });
-
-  it("getSkillConfigOverride returns the row; a missing id → OwnershipError (404)", async () => {
-    const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader, accountWriter);
-    await svc.putSkillConfigOverride(ctx, {
-      id: "topic.generate",
-      system: "s",
-    });
-    const got = await svc.getSkillConfigOverride(ctx, "topic.generate");
-    expect(got.system).toBe("s");
-    await expect(
-      svc.getSkillConfigOverride(ctx, "planning.thesis"),
+      svc.putSkillConfigOverride(ctx, {
+        skillId: "not.a.real.skill",
+        expectedRevision: null,
+        patch: { system: "x" },
+      }),
     ).rejects.toBeInstanceOf(OwnershipError);
+    expect(await repo.listAccountSkillOverlays(ctx)).toHaveLength(0);
   });
 });

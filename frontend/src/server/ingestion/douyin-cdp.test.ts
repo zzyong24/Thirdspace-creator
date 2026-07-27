@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   parseWorkList,
   parseSelfIdentity,
+  parseCreatorProfileIdentity,
   parseDetail,
   toMetricRecords,
   deriveWorkTitle,
@@ -10,8 +11,22 @@ import {
   fetchDouyinComments,
   fetchDouyinCommentsForWorks,
   fetchDouyinMetrics,
+  fetchDouyinIdentity,
+  fetchDouyinUserPosts,
+  loginDouyin,
+  locatePlaywrightCli,
   DouyinNotLoggedInError,
+  DouyinFavoritesBrowserLockedError,
+  DouyinFavoritesCaptchaError,
+  DouyinFavoritesInvalidResponseError,
+  DouyinFavoritesNetworkError,
+  DouyinFavoritesSessionExpiredError,
+  DouyinNoValidResponseError,
+  DouyinResponseShapeChangedError,
   parseDouyinVideoUrl,
+  extractDouyinShareUrl,
+  resolveDouyinShareTarget,
+  parseDouyinSharedItem,
   streamAudioFromVideo,
   DouyinAudioFetchError,
   fetchDouyinWorkListExport,
@@ -29,6 +44,90 @@ import {
 } from "./douyin-request-gateway";
 
 // 真实 work_list XHR 形状的 fixture(对齐 cheat-on-content 抓到的字段)。
+
+describe("[T-567] 抖音重新登录以服务端会话为准", () => {
+  function makeLoginContext(probes: Array<"active" | "expired" | "unknown">) {
+    const calls = { goto: 0, probe: 0, clearCookies: 0, close: 0 };
+    let hasCookie = true;
+    let scannedAfterClear = false;
+    const page = {
+      async goto() {
+        calls.goto += 1;
+      },
+      async waitForTimeout() {
+        if (!hasCookie && calls.clearCookies > 0 && !scannedAfterClear) {
+          // 模拟用户在二维码出现后完成扫码，浏览器写入新 sessionid。
+          hasCookie = true;
+          scannedAfterClear = true;
+        }
+      },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return hasCookie ? [{ name: "sessionid" }] : [];
+      },
+      async clearCookies() {
+        calls.clearCookies += 1;
+        hasCookie = false;
+      },
+      request: {
+        async get() {
+          const result = probes[calls.probe] ?? probes.at(-1) ?? "unknown";
+          calls.probe += 1;
+          return {
+            async json() {
+              return result === "active"
+                ? { status_code: 0, status_msg: "" }
+                : result === "expired"
+                  ? { status_code: 8, status_msg: "登录已失效" }
+                  : {};
+            },
+          };
+        },
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type OpenContext = NonNullable<
+      NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
+    >;
+    const openContext: OpenContext = async () =>
+      context as unknown as Awaited<ReturnType<OpenContext>>;
+    return { calls, openContext };
+  }
+
+  it("已有 Cookie 但服务端拒绝时清掉旧会话，扫码后的新会话被接受才关窗", async () => {
+    const { calls, openContext } = makeLoginContext(["expired", "active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 3 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.clearCookies).toBe(1);
+    expect(calls.goto).toBe(2);
+    expect(calls.probe).toBe(2);
+    expect(calls.close).toBe(1);
+  });
+
+  it("已有 Cookie 且服务端确认有效时可直接成功，不破坏会话", async () => {
+    const { calls, openContext } = makeLoginContext(["active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 1 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.clearCookies).toBe(0);
+    expect(calls.goto).toBe(1);
+    expect(calls.close).toBe(1);
+  });
+});
 const WORK_LIST = {
   aweme_list: [
     {
@@ -54,6 +153,110 @@ const WORK_LIST = {
   ],
   has_more: false,
 };
+
+describe("[T-482] 抖音分享文本单条建档解析", () => {
+  it("从任意分享话术中抽 URL，并安全跟随短链得到 aweme id", async () => {
+    expect(
+      extractDouyinShareUrl(
+        "3.14 复制打开抖音，看看【某博主】 https://v.douyin.com/iFooBar/  测试",
+      ),
+    ).toBe("https://v.douyin.com/iFooBar/");
+
+    const target = await resolveDouyinShareTarget(
+      "复制此链接 https://v.douyin.com/iFooBar/ 打开抖音",
+      {
+        fetch: async () =>
+          new Response(null, {
+            status: 302,
+            headers: {
+              location:
+                "https://www.douyin.com/video/7350000000000000000?previous_page=app_code_link",
+            },
+          }),
+      },
+    );
+    expect(target).toEqual({
+      shareUrl: "https://v.douyin.com/iFooBar/",
+      resolvedUrl:
+        "https://www.douyin.com/video/7350000000000000000?previous_page=app_code_link",
+      awemeId: "7350000000000000000",
+      canonicalUrl:
+        "https://www.douyin.com/video/7350000000000000000",
+    });
+  });
+
+  it("拒绝非抖音域跳转，不把分享链接变成任意 URL 请求器", async () => {
+    await expect(
+      resolveDouyinShareTarget("https://v.douyin.com/iUnsafe/", {
+        fetch: async () =>
+          new Response(null, {
+            status: 302,
+            headers: { location: "http://127.0.0.1:3000/admin" },
+          }),
+      }),
+    ).rejects.toThrow(/非抖音域名/);
+  });
+
+  it("detail JSON 解析真实作品、作者和公开指标，缺失计数保持 null", () => {
+    const parsed = parseDouyinSharedItem(
+      {
+        aweme_detail: {
+          aweme_id: "7350000000000000000",
+          desc: "这是完整作品文案",
+          create_time: 1_720_000_000,
+          author: {
+            sec_uid: "MS4wLjABAAAA-real",
+            nickname: "真实博主",
+          },
+          video: {
+            duration: 42_000,
+            cover: { url_list: ["https://p.example/cover.jpg"] },
+          },
+          statistics: {
+            digg_count: 1288,
+            comment_count: 36,
+            collect_count: 208,
+          },
+        },
+      },
+      "https://www.douyin.com/video/7350000000000000000",
+      "2026-07-23T18:00:00.000Z",
+    );
+    expect(parsed.item.authorName).toBe("真实博主");
+    expect(parsed.item.externalId).toBe("7350000000000000000");
+    expect(parsed.item.metrics?.commentCount).toBe(36);
+    expect(parsed.item.metrics?.shareCount).toBeNull();
+    expect(parsed.item.snapshot?.finalUrl).toBe(
+      "https://www.douyin.com/video/7350000000000000000",
+    );
+  });
+});
+
+describe("[T-469] Playwright CLI 确定性定位", () => {
+  it("从 cwd 父级的 pnpm 隔离目录找到 cli.js，不依赖 require.resolve", async () => {
+    const existing = new Set([
+      "/app/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/cli.js",
+    ]);
+    await expect(
+      locatePlaywrightCli("/app/frontend", {
+        isFile: async (candidate) => existing.has(candidate),
+        readDir: async (dir) =>
+          dir === "/app/node_modules/.pnpm" ? ["playwright@1.60.0"] : [],
+      }),
+    ).resolves.toBe(
+      "/app/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/cli.js",
+    );
+  });
+
+  it("直连与 pnpm 路径都不存在时返回 null，交给调用方报可诊断错误", async () => {
+    await expect(
+      locatePlaywrightCli("/app/frontend", {
+        isFile: async () => false,
+        readDir: async () => [],
+      }),
+    ).resolves.toBeNull();
+  });
+});
 
 describe("douyin-cdp 纯函数", () => {
   it("parseWorkList 抽取作品 + 字段兜底 + 丢弃无 id", () => {
@@ -146,6 +349,26 @@ describe("douyin-cdp 纯函数", () => {
     expect(
       parseSelfIdentity({ aweme_list: [{ author: { sec_uid: "s", nickname: "" } }] }),
     ).toBeNull();
+  });
+
+  it("[T-490] parseCreatorProfileIdentity 可从账号资料响应识别零作品账号", () => {
+    expect(
+      parseCreatorProfileIdentity({
+        data: {
+          user_info: {
+            nickname: "刚注册的空号",
+            sec_uid: "MS4wLjABempty",
+            unique_id: "empty_creator",
+            follower_count: 0,
+          },
+        },
+      }),
+    ).toEqual({
+      nickname: "刚注册的空号",
+      secUid: "MS4wLjABempty",
+      douyinId: "empty_creator",
+      followerCount: 0,
+    });
   });
 
   it("parseDetail 抽完播/转粉 + 缺字段记 null", () => {
@@ -1143,6 +1366,374 @@ function makeFakeMetricsContext(
   return { calls, openContext };
 }
 
+describe("[T-490] 零作品账号身份读取", () => {
+  it("优先从创作者主页账号资料响应取身份，不依赖作品列表", async () => {
+    const calls = { close: 0, goto: [] as string[] };
+    type IdentityResp = { url(): string; json(): Promise<unknown> };
+    const handlers: Array<(resp: IdentityResp) => void> = [];
+    const page = {
+      on(_event: "response", cb: (resp: IdentityResp) => void) {
+        handlers.push(cb);
+      },
+      async goto(url: string) {
+        calls.goto.push(url);
+        const resp: IdentityResp = {
+          url: () =>
+            "https://creator.douyin.com/aweme/v1/creator/user/info/",
+          json: () =>
+            Promise.resolve({
+              data: {
+                user_info: {
+                  nickname: "零作品账号",
+                  sec_uid: "MS4wLjABzero",
+                  unique_id: "zero_creator",
+                  follower_count: 0,
+                },
+              },
+            }),
+        };
+        for (const handler of handlers) handler(resp);
+      },
+      async waitForTimeout() {
+        return undefined;
+      },
+    };
+    const ctx = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return [{ name: "sessionid" }];
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type IdentityOpenContext = NonNullable<
+      Parameters<typeof fetchDouyinIdentity>[1]
+    >["openContext"];
+    type IdentityContext = Awaited<
+      ReturnType<NonNullable<IdentityOpenContext>>
+    >;
+    const openContext: NonNullable<IdentityOpenContext> = async () =>
+      ctx as unknown as IdentityContext;
+
+    await expect(
+      fetchDouyinIdentity(
+        { authDir: "/fake/.auth" },
+        { openContext },
+      ),
+    ).resolves.toEqual({
+      nickname: "零作品账号",
+      secUid: "MS4wLjABzero",
+      douyinId: "zero_creator",
+      followerCount: 0,
+    });
+    expect(calls.goto[0]).toContain("creator-micro/home");
+    expect(calls.close).toBe(1);
+  });
+});
+
+describe("[T-514] 对标博主作品数的证据边界", () => {
+  function makeProfileContext(
+    responsePayload?: unknown,
+    pageState: {
+      url?: string;
+      title?: string;
+      body?: string;
+      responseDelayMs?: number;
+      responseEventDelayMs?: number;
+      responsePayloads?: unknown[];
+      responseRawBodies?: string[];
+      sessionProbeResponse?: {
+        statusCode: number | null;
+        statusMessage: string;
+      } | null;
+    } = {},
+  ) {
+    type ProfileResp = {
+      url(): string;
+      json(): Promise<unknown>;
+      text?(): Promise<string>;
+    };
+    const handlers: Array<(response: ProfileResp) => void> = [];
+    let profileVisit = 0;
+    const page = {
+      on(_event: "response", handler: (response: ProfileResp) => void) {
+        handlers.push(handler);
+      },
+      async goto() {
+        const visitIndex = profileVisit++;
+        const visitPayload =
+          pageState.responsePayloads?.[visitIndex] ?? responsePayload;
+        if (visitPayload !== undefined || pageState.responseRawBodies) {
+          const rawBody =
+            pageState.responseRawBodies?.[visitIndex] ??
+            JSON.stringify(visitPayload);
+          const response: ProfileResp = {
+            url: () =>
+              "https://www.douyin.com/aweme/v1/web/aweme/post/?count=18",
+            json: () =>
+              new Promise((resolve) =>
+                setTimeout(
+                  () => resolve(visitPayload),
+                  pageState.responseDelayMs ?? 0,
+                ),
+              ),
+            text: () =>
+              new Promise((resolve) =>
+                setTimeout(
+                  () => resolve(rawBody),
+                  pageState.responseDelayMs ?? 0,
+                ),
+              ),
+          };
+          if (pageState.responseEventDelayMs) {
+            setTimeout(() => {
+              for (const handler of handlers) handler(response);
+            }, pageState.responseEventDelayMs);
+          } else {
+            for (const handler of handlers) handler(response);
+          }
+        }
+      },
+      async waitForTimeout() {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      },
+      url() {
+        return pageState.url ?? "https://www.douyin.com/user/sec-test";
+      },
+      async title() {
+        return pageState.title ?? "抖音博主主页";
+      },
+      async evaluate(_fn: unknown, arg?: unknown) {
+        if (typeof arg === "string") {
+          return pageState.sessionProbeResponse ?? null;
+        }
+        return pageState.body ?? "";
+      },
+      keyboard: { async press() {} },
+      mouse: { async wheel() {} },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return [{ name: "sessionid" }];
+      },
+      async close() {},
+    };
+    type OpenContext = NonNullable<
+      Parameters<typeof fetchDouyinUserPosts>[1]
+    >["openContext"];
+    type Context = Awaited<ReturnType<NonNullable<OpenContext>>>;
+    const openContext: NonNullable<OpenContext> = async () =>
+      context as unknown as Context;
+    return { openContext };
+  }
+
+  it("没有捕获到作品列表响应时不得伪装成真实 0 条", async () => {
+    const { openContext } = makeProfileContext();
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-no-response",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNoValidResponseError);
+  });
+
+  it("本地 Cookie 尚在但主页跳转到登录/授权页时明确要求重新登录", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      url: "https://open.douyin.com/platform/oauth/pc/auth?client_key=redacted",
+      title: "抖音授权",
+      body: "使用抖音账号登录",
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-expired-session",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
+  it("作品接口明确返回未登录时不再误报为响应结构变化", async () => {
+    const { openContext } = makeProfileContext({
+      status_code: 8,
+      status_msg: "用户未登录",
+      aweme_list: null,
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-upstream-rejected",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
+  it("命中作品接口但返回结构变化时不得伪装成真实 0 条", async () => {
+    const { openContext } = makeProfileContext({
+      status_code: 0,
+      unexpected_items: [],
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-shape-changed",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinResponseShapeChangedError);
+  });
+
+  it("只有结构有效且列表确实为空时才返回真实 0 条", async () => {
+    const { openContext } = makeProfileContext({
+      aweme_list: [],
+      has_more: false,
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-real-zero",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).resolves.toEqual([]);
+  });
+
+  it("大响应异步解析未完成时必须等待，不能抢先误判为 0 条", async () => {
+    const { openContext } = makeProfileContext(
+      {
+        status_code: 0,
+        aweme_list: [
+          {
+            aweme_id: "work-delayed",
+            desc: "延迟返回的真实作品",
+            statistics: { digg_count: 12 },
+          },
+        ],
+        has_more: false,
+      },
+      { responseEventDelayMs: 10, responseDelayMs: 10 },
+    );
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-delayed-response",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).resolves.toMatchObject([
+      {
+        awemeId: "work-delayed",
+        description: "延迟返回的真实作品",
+      },
+    ]);
+  });
+
+  it("首个作品响应为空时只重载一次，并以第二次真实列表为准", async () => {
+    const valid = {
+      status_code: 0,
+      aweme_list: [
+        {
+          aweme_id: "work-after-reload",
+          desc: "重载后取得的真实作品",
+          statistics: { digg_count: 18 },
+        },
+      ],
+      has_more: false,
+    };
+    const { openContext } = makeProfileContext(undefined, {
+      responsePayloads: [undefined, valid],
+      responseRawBodies: ["", JSON.stringify(valid)],
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-empty-then-valid",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).resolves.toMatchObject([
+      {
+        awemeId: "work-after-reload",
+        description: "重载后取得的真实作品",
+      },
+    ]);
+  });
+
+  it("[T-567] 两轮作品接口空响应且旁证接口明确拒绝会话时要求重新登录", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      responseRawBodies: ["", ""],
+      sessionProbeResponse: {
+        statusCode: 8,
+        statusMessage: "登录已失效",
+      },
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-stale-cookie",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
+  it("[T-567] 两轮作品接口空响应但旁证登录有效时仍诚实保留上游空响应错误", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      responseRawBodies: ["", ""],
+      sessionProbeResponse: {
+        statusCode: 0,
+        statusMessage: "",
+      },
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-transient-empty",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNoValidResponseError);
+  });
+});
+
 describe("[T-177] 作品列表 knownAwemeIds 翻页 early-stop", () => {
   it("③首屏作品全已知 → 0 轮滚动即停(即便 has_more=true)", async () => {
     const { calls, openContext } = makeFakeMetricsContext([
@@ -2083,6 +2674,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
   it("cursor 分页聚合:has_more=1 翻页,同夹去重,has_more=0 停", async () => {
     const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
     const page1 = {
+      status_code: 0,
       collects_list: [
         { collects_id_str: "f-1", collects_name: "选题库", total_number: 12 },
       ],
@@ -2090,6 +2682,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
       has_more: 1,
     };
     const page2 = {
+      status_code: 0,
       collects_list: [
         { collects_id_str: "f-1", collects_name: "选题库", total_number: 12 }, // 重复 → 去重
         { collects_id_str: "f-2", collects_name: "灵感夹", total_number: 5 },
@@ -2111,7 +2704,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
     expect(calls.urls.some((u) => u.includes("cursor=20"))).toBe(true);
   });
 
-  it("未登录 → DouyinNotLoggedInError(context 仍关闭)", async () => {
+  it("[T-520] 未登录 → 结构化 session-expired code(context 仍关闭)", async () => {
     const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
     const { ctx, calls } = makeCollectsContext({ loggedIn: false });
     await expect(
@@ -2119,7 +2712,7 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
         { authDir: "/fake/.auth" },
         { openContext: async () => ctx },
       ),
-    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    ).rejects.toBeInstanceOf(DouyinFavoritesSessionExpiredError);
     expect(calls.close).toBe(1);
   });
 
@@ -2136,12 +2729,243 @@ describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
     expect(out).toEqual([]);
     expect(calls.fetch).toBe(0); // 验证码即停,不再打接口
   });
+
+  it("[T-520] 严格读取命中验证码时抛结构化验证码错误", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      bodyText: "请完成安全验证后继续访问",
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesCaptchaError);
+  });
+
+  it.each([
+    ["缺 status_code", { collects_list: [] }],
+    ["非数字 status_code", { status_code: "0", collects_list: [] }],
+    ["非法列表结构", { status_code: 0, collects_list: null }],
+    [
+      "非空列表全部是无 id 脏条目",
+      { status_code: 0, collects_list: [{ collects_name: "脏条目" }] },
+    ],
+  ])("[T-520] %s 必须失败，不能伪装真 0", async (_label, payload) => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [payload],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesInvalidResponseError);
+  });
+
+  it("[T-520] 只有 status_code=0 + 合法空列表才是真 0", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        { status_code: 0, collects_list: [], cursor: 0, has_more: 0 },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => ctx },
+      ),
+    ).resolves.toEqual([]);
+  });
+
+  it("[T-520] HTTP 200 内的登录业务码和其他非零业务码分别结构化", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const expired = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        { status_code: 8, status_msg: "用户未登录", collects_list: [] },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => expired.ctx },
+      ),
+    ).rejects.toMatchObject({
+      name: "DouyinFavoritesSessionExpiredError",
+      code: "DOUYIN_FAVORITES_SESSION_EXPIRED",
+      details: { upstreamStatusCode: 8 },
+    });
+
+    const upstream = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        {
+          status_code: 2190008,
+          status_msg: "service rejected",
+          collects_list: [],
+        },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth", strictEvidence: true },
+        { openContext: async () => upstream.ctx },
+      ),
+    ).rejects.toMatchObject({
+      code: "DOUYIN_FAVORITES_UPSTREAM",
+      details: { upstreamStatusCode: 2190008 },
+    });
+  });
+
+  it("[T-520] 页内网络失败与浏览器档案锁分别结构化，日志不带原始错误", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const network = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        {
+          __creatorosFavoritesError: "network",
+          raw: "cookie=sessionid-secret token=do-not-log",
+        },
+      ],
+    });
+    await expect(
+      fetchDouyinCollectsFolders(
+        {
+          authDir: "/fake/.auth",
+          strictEvidence: true,
+          diagnostics: { requestId: "request-520", accountId: "account-1" },
+        },
+        { openContext: async () => network.ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesNetworkError);
+
+    await expect(
+      fetchDouyinCollectsFolders(
+        {
+          authDir: "/fake/.auth",
+          strictEvidence: true,
+          diagnostics: { requestId: "request-521", accountId: "account-1" },
+        },
+        {
+          openContext: async () => {
+            throw new Error(
+              "browserType.launchPersistentContext: SingletonLock profile in use secret-cookie",
+            );
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(DouyinFavoritesBrowserLockedError);
+
+    const log = warn.mock.calls.flat().join(" ");
+    expect(log).toContain("request-520");
+    expect(log).toContain("request-521");
+    expect(log).not.toContain("sessionid-secret");
+    expect(log).not.toContain("do-not-log");
+    expect(log).not.toContain("secret-cookie");
+    warn.mockRestore();
+  });
+
+  it.each([
+    [
+      "登录失效",
+      {
+        name: "DouyinFavoritesSessionExpiredError",
+        code: "DOUYIN_FAVORITES_SESSION_EXPIRED",
+        details: { upstreamStatusCode: 8 },
+      },
+      "DOUYIN_FAVORITES_SESSION_EXPIRED",
+    ],
+    [
+      "浏览器锁",
+      {
+        name: "BrowserLaunchError",
+        code: "CHROMIUM_PROFILE_LOCKED",
+      },
+      "DOUYIN_FAVORITES_BROWSER_LOCKED",
+    ],
+    [
+      "验证码",
+      {
+        name: "DouyinFavoritesCaptchaError",
+        code: "DOUYIN_FAVORITES_CAPTCHA",
+      },
+      "DOUYIN_FAVORITES_CAPTCHA",
+    ],
+    [
+      "网络",
+      {
+        name: "DouyinFavoritesNetworkError",
+        code: "DOUYIN_FAVORITES_NETWORK",
+      },
+      "DOUYIN_FAVORITES_NETWORK",
+    ],
+    [
+      "上游拒绝",
+      {
+        name: "DouyinFavoritesUpstreamError",
+        code: "DOUYIN_FAVORITES_UPSTREAM",
+        details: { upstreamStatusCode: 2190008 },
+      },
+      "DOUYIN_FAVORITES_UPSTREAM",
+    ],
+    [
+      "响应非法",
+      {
+        name: "DouyinFavoritesInvalidResponseError",
+        code: "DOUYIN_FAVORITES_INVALID_RESPONSE",
+        details: { reason: "folders" },
+      },
+      "DOUYIN_FAVORITES_INVALID_RESPONSE",
+    ],
+  ])(
+    "[T-536] 跨 chunk/序列化的%s错误按稳定 code 恢复，不降级 UnexpectedError",
+    async (_label, serialized, expectedCode) => {
+      const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const wrapped = Object.assign(new Error("外层包装，不包含可猜测文案"), {
+        cause: serialized,
+      });
+      const error = await fetchDouyinCollectsFolders(
+        {
+          authDir: "/fake/.auth",
+          strictEvidence: true,
+          diagnostics: {
+            requestId: "request-536",
+            traceId: "trace-536",
+            accountId: "account-536",
+          },
+        },
+        {
+          openContext: async () => {
+            throw wrapped;
+          },
+        },
+      ).catch((caught: unknown) => caught);
+
+      expect(error).toMatchObject({ code: expectedCode });
+      const log = warn.mock.calls.flat().join(" ");
+      expect(log).toContain(`"code":"${expectedCode}"`);
+      expect(log).toContain(`"name":"${(error as Error).name}"`);
+      expect(log).toContain(`"requestId":"request-536"`);
+      expect(log).toContain(`"traceId":"trace-536"`);
+      expect(log).toContain(`"accountId":"account-536"`);
+      expect(log).not.toContain("外层包装");
+      warn.mockRestore();
+    },
+  );
 });
 
 describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {
   // 造一页 n 条视频(awemeId 前缀区分页)。
   function videoPage(prefix: string, n: number, over: Record<string, unknown> = {}) {
     return {
+      status_code: 0,
       aweme_list: Array.from({ length: n }, (_, i) => ({
         aweme_id: `${prefix}-${i}`,
         desc: `视频 ${prefix}-${i}`,
@@ -2152,6 +2976,27 @@ describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {
       ...over,
     };
   }
+
+  it("[T-520] 视频列表同样要求数字 status_code 与合法 aweme_list", async () => {
+    const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [{ status_code: 0, aweme_list: null, has_more: 0 }],
+    });
+    await expect(
+      fetchDouyinCollectsVideos(
+        {
+          authDir: "/fake/.auth",
+          collectsId: "folder-1",
+          strictEvidence: true,
+        },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toMatchObject({
+      code: "DOUYIN_FAVORITES_INVALID_RESPONSE",
+      details: { reason: "videos" },
+    });
+  });
 
   it("分页聚合直到 has_more 假;请求 URL 带 collects_id", async () => {
     const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");

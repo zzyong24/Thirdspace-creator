@@ -476,9 +476,21 @@ function DownstreamRules({
       className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-card p-5"
     >
       <div className="flex shrink-0 flex-col gap-0.5">
-        <h2 className="text-[15px] font-semibold text-foreground">
-          定位规则（供下游模块使用）
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[15px] font-semibold text-foreground">
+            定位规则（供下游模块使用）
+          </h2>
+          <PositioningDraftDrawer
+            profile={profile}
+            triggerLabel="编辑定位规则"
+            triggerVariant="outline"
+            triggerSize="sm"
+            triggerIcon="pencil"
+            title="编辑定位规则"
+            description="修改选题 / 写稿 / 项目 / 禁止 / 表达规则；保存后下游 AI 会使用最新规则。"
+            initialTab="rules"
+          />
+        </div>
         <p className="text-xs text-muted-foreground">
           每次 AI 生成（选题 / 写稿 / 项目 / 评分 / Copilot）都会把下面这些规则作为硬约束注入。改规则即改下游所有 AI 的行为。
         </p>
@@ -547,6 +559,7 @@ function DownstreamRules({
             triggerIcon="pencil"
             title="编辑当前定位"
             description="填写选题 / 写稿 / 项目 / 禁止 / 表达规则,下游 AI 会以它们为硬约束。"
+            initialTab="rules"
           />
         </div>
       )}

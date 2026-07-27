@@ -28,6 +28,9 @@ export const knowledgeItemResource = z.object({
   id,
   userId: id,
   currentRevisionId: id,
+  // 文件工作区投影：普通知识可不挂文件/文件夹；导入文档同时绑定稳定 assetId。
+  folderId: id.nullable(),
+  assetId: id.nullable(),
   knowledgeType,
   title: z.string(),
   sourceType,
@@ -46,6 +49,17 @@ export const knowledgeItemResource = z.object({
   ...timestamps,
 });
 export type KnowledgeItemResource = z.infer<typeof knowledgeItemResource>;
+
+export const knowledgeFolderResource = z.object({
+  id,
+  userId: id,
+  accountId: id,
+  parentId: id.nullable(),
+  name: z.string(),
+  status: knowledgeStatus,
+  ...timestamps,
+});
+export type KnowledgeFolderResource = z.infer<typeof knowledgeFolderResource>;
 
 // KnowledgeRevision extends BaseEntity only (no Timestamped); has its own createdAt.
 export const knowledgeRevisionResource = z.object({

@@ -66,6 +66,12 @@ export interface TemplateOptions {
   gsapSrc?: string;
   /** 媒体文件前缀(executor 把预处理后的素材落到工程 media/)。 */
   mediaPrefix?: string;
+  /**
+   * 已按资产权威 MIME 判定为图片的 B-roll 文件名。
+   * B-roll 契约为兼容旧任务没有 kind 字段，不能靠 assetId/扩展名猜类型；
+   * executor 在物化输入处持有 MIME，重命名后把图片集合显式传进模板。
+   */
+  imageFiles?: ReadonlySet<string>;
 }
 
 /** 场景口播头形态(规则 + 显式覆盖;快照测试锚定)。 */
@@ -700,6 +706,7 @@ export function generateVideoRenderHtml(
 ): string {
   const gsapSrc = options.gsapSrc ?? "gsap.min.js";
   const mediaPrefix = options.mediaPrefix ?? "media/";
+  const imageFiles = options.imageFiles ?? new Set<string>();
   const DUR = f2(props.talkingHead.durationSec);
   const { width, height, fps } = props.delivery;
   void fps; // fps 由渲染命令行控制;合成本身以秒为时钟
@@ -842,8 +849,10 @@ export function generateVideoRenderHtml(
         // list 逐条进场已并入 motionTween 的 reveal 分支。
         motionTween(ctx, id, item.card, item.at, endAt);
       } else {
-        // B-roll:视频必须自身是 clip(帧捕获协议);框卡 + 视频两层
+        // B-roll:图片与视频必须按物化输入的权威 MIME 分流。旧实现无条件生成 <video>，
+        // PNG/JPEG 会解码失败，只剩黑框和标题却仍被记为渲染成功。
         const b = item.broll;
+        const isImage = imageFiles.has(b.file);
         const w = b.big ? 800 : 460;
         const vh = Math.round(((w - 20) * 9) / 16);
         const h = vh + 66;
@@ -858,15 +867,26 @@ export function generateVideoRenderHtml(
           b.at,
           brollDur,
           `left:${pos.x}px;top:${pos.y}px;${CARD_BASE}padding:10px;width:${w}px;`,
-          `<div style="height:${vh}px"></div><div style="color:${TK.fg2};font-size:20px;font-weight:600;margin-top:10px">▶ ${esc(b.label)}</div>`,
+          `<div style="height:${vh}px"></div><div style="color:${TK.fg2};font-size:20px;font-weight:600;margin-top:10px">${isImage ? "▣" : "▶"} ${esc(b.label)}</div>`,
         );
         appear(ctx, frameId, b.at, brollEnd);
-        const vidId = `${frameId}v`;
-        ctx.clips.push(
-          `<video id="${vidId}" class="clip" src="${esc(mediaPrefix + b.file)}" muted data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" ` +
-            `style="position:absolute;left:${pos.x + 10}px;top:${pos.y + 10}px;width:${w - 20}px;height:${vh}px;border-radius:8px;object-fit:contain;background:${TK.bg};border:1px solid ${TK.border};"></video>`,
-        );
-        appear(ctx, vidId, b.at, brollEnd);
+        const mediaId = `${frameId}${isImage ? "i" : "v"}`;
+        const mediaStyle =
+          `position:absolute;left:${pos.x + 10}px;top:${pos.y + 10}px;width:${w - 20}px;height:${vh}px;` +
+          `border-radius:8px;object-fit:contain;background:${TK.bg};border:1px solid ${TK.border};`;
+        if (isImage) {
+          ctx.clips.push(
+            `<img id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" alt="${esc(b.label)}" ` +
+              `data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${mediaStyle}">`,
+          );
+        } else {
+          // 保持既有 video 标记形状与属性顺序，避免无意义改动历史快照/HyperFrames 协议。
+          ctx.clips.push(
+            `<video id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" muted data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" ` +
+              `style="${mediaStyle}"></video>`,
+          );
+        }
+        appear(ctx, mediaId, b.at, brollEnd);
       }
     }
   });
@@ -933,14 +953,25 @@ window.__timelines["main"] = tl;
 }
 
 /** 模板引用的全部媒体文件(mountAs 相对路径,去重保序)—— executor 预处理清单。 */
-export function collectMediaFiles(props: VideoRenderProps): {
+export function collectMediaFiles(
+  props: VideoRenderProps,
+  inputMimeTypes: ReadonlyMap<string, string | null> = new Map(),
+): {
   videos: string[];
   images: string[];
 } {
   const videos: string[] = [props.talkingHead.file];
   const images: string[] = [];
   for (const b of props.broll) {
-    if (!videos.includes(b.file)) videos.push(b.file);
+    const mimeType = inputMimeTypes.get(b.file)?.split(";", 1)[0]?.toLowerCase();
+    // B-roll 契约历史上没有 media kind，且 mountAs 使用 assetId、没有扩展名，不能靠
+    // 文件名猜。执行沙箱已经带着资产库权威 MIME，把 image/* 直拷；其余保留既有视频
+    // 预处理语义。此前把官网截图一律交给 ffprobe，稳定报“未识别出视频流”。
+    if (mimeType?.startsWith("image/")) {
+      if (!images.includes(b.file)) images.push(b.file);
+    } else if (!videos.includes(b.file)) {
+      videos.push(b.file);
+    }
   }
   for (const scene of props.scenes) {
     for (const card of scene.cards) {

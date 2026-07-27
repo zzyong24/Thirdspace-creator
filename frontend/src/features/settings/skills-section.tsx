@@ -12,8 +12,10 @@
  *   - facets 说明小卡([gate-F2]):template 框下只读卡,逐行「{{占位符}}:中文含义」,
  *     来源 requiredFacets + FACET_LABELS 词表;
  *   - tools / outputSchema 只读展示(改坏即崩,编辑留待后续 —— SPEC §1.1);
+ *   - 有 official adapter 的 Skill 可编辑 completionPolicy；前端只校验基础格式，
+ *     outputSchema 兼容性仍由服务端单一真值判断;
  *   - 「保存」→ settings.prompts.put(T-040 热生效);
- *   - 「恢复默认」→ put 空串字段(T-040 空串归一 undefined = 回退内置),仅已定制时显示。
+ *   - 「恢复默认」→ patch null 删除当前账号增量并回到 official 基座。
  *
  * 诚实(铁律):textarea 显示的就是当前生效 prompt 文本;保存后 router.refresh() 重读
  * server 真值,徽章由 override 行的归一后非空字段判定,恢复默认后诚实熄灭。
@@ -23,11 +25,14 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
-import type { SkillConfigOverrideVersionResource } from "@creatoros/contract";
+import type {
+  AccountSkillOverlayPatchResource,
+  AccountSkillOverlayVersionResource,
+  CompletionPolicyV1Resource,
+} from "@creatoros/contract";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/project/section-card";
-import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
 
 import {
@@ -155,7 +160,12 @@ function SkillRow({
           ) : null}
         </span>
       </button>
-      {expanded ? <SkillDetail skill={skill} /> : null}
+      {expanded ? (
+        <SkillDetail
+          key={`${skill.accountId}:${skill.id}:${skill.rowRevision ?? "official"}:${skill.version}`}
+          skill={skill}
+        />
+      ) : null}
     </li>
   );
 }
@@ -164,25 +174,136 @@ function SkillRow({
 // SkillDetail — 行内展开的详情编辑面板
 // ---------------------------------------------------------------------------
 
+function parseCompletionPolicyDraft(input: {
+  minSegments: string;
+  maxSegments: string;
+  requiredSequence: string;
+  repairAttempts: string;
+}):
+  | { ok: true; value: CompletionPolicyV1Resource }
+  | { ok: false; error: string } {
+  const integer = (value: string): number | null =>
+    /^\d+$/.test(value.trim()) ? Number(value) : null;
+  const minSegments = integer(input.minSegments);
+  if (minSegments === null || minSegments < 1 || minSegments > 100) {
+    return { ok: false, error: "最少段数必须是 1–100 的整数。" };
+  }
+  const maxSegments =
+    input.maxSegments.trim() === "" ? null : integer(input.maxSegments);
+  if (
+    maxSegments !== null &&
+    (maxSegments < 1 || maxSegments > 100)
+  ) {
+    return { ok: false, error: "最多段数必须留空或填写 1–100 的整数。" };
+  }
+  if (maxSegments !== null && maxSegments < minSegments) {
+    return { ok: false, error: "最多段数不能小于最少段数。" };
+  }
+  const repairAttempts = integer(input.repairAttempts);
+  if (
+    repairAttempts === null ||
+    repairAttempts < 0 ||
+    repairAttempts > 3
+  ) {
+    return { ok: false, error: "自动修复次数必须是 0–3 的整数。" };
+  }
+  const requiredSequence = input.requiredSequence
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean);
+  if (requiredSequence.length > 20) {
+    return { ok: false, error: "角色顺序最多填写 20 项。" };
+  }
+  if (
+    requiredSequence.some(
+      (token) => !/^[a-z][a-z0-9_-]{0,31}$/.test(token),
+    )
+  ) {
+    return {
+      ok: false,
+      error: "角色名须为小写英文开头，可包含数字、下划线或短横线。",
+    };
+  }
+  return {
+    ok: true,
+    value: {
+      schemaVersion: 1,
+      minSegments,
+      maxSegments,
+      requiredSequence,
+      repairAttempts,
+    },
+  };
+}
+
+function PolicyNumberField({
+  label,
+  slot,
+  value,
+  min,
+  max,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  slot: string;
+  value: string;
+  min: number;
+  max: number;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs font-medium text-foreground">
+      {label}
+      <input
+        type="number"
+        data-slot={slot}
+        value={value}
+        min={min}
+        max={max}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-8 rounded-md border border-border bg-background px-2 font-mono text-xs font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+    </label>
+  );
+}
+
 function SkillDetail({ skill }: { skill: SkillItem }) {
   const router = useRouter();
   // 草稿初值 = 当前生效值(override ?? 内置,server 侧已归一投影)。
   const [system, setSystem] = React.useState<string>(skill.system);
   const [template, setTemplate] = React.useState<string>(skill.template);
+  const policySeed = skill.completionPolicy ?? {
+    schemaVersion: 1 as const,
+    minSegments: 1,
+    maxSegments: null,
+    requiredSequence: [],
+    repairAttempts: 0,
+  };
+  const [policyMinSegments, setPolicyMinSegments] = React.useState(
+    String(policySeed.minSegments),
+  );
+  const [policyMaxSegments, setPolicyMaxSegments] = React.useState(
+    policySeed.maxSegments === null ? "" : String(policySeed.maxSegments),
+  );
+  const [policyRequiredSequence, setPolicyRequiredSequence] = React.useState(
+    policySeed.requiredSequence.join(", "),
+  );
+  const [policyRepairAttempts, setPolicyRepairAttempts] = React.useState(
+    String(policySeed.repairAttempts),
+  );
+  const [policyTouched, setPolicyTouched] = React.useState(false);
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // server refresh 改了生效值(保存/恢复默认后)→ 重同步草稿。
-  React.useEffect(() => {
-    setSystem(skill.system);
-    setTemplate(skill.template);
-  }, [skill.system, skill.template]);
+  const dirty =
+    system !== skill.system || template !== skill.template || policyTouched;
 
-  const dirty = system !== skill.system || template !== skill.template;
-
-  // 互斥跑一个 put:保存(当前草稿)或恢复默认(空串字段,T-040 归一语义)。
+  // 互斥跑一个 put；expectedRevision 让并发窗口只能有一个写入者成功。
   const runPut = React.useCallback(
-    (body: { system: string; template: string }) => {
+    (patch: AccountSkillOverlayPatchResource) => {
       if (pending) return;
       setPending(true);
       setError(null);
@@ -191,28 +312,77 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           await client.putPrompt({
             params: { id: skill.id },
             query: undefined,
-            body,
+            body: {
+              expectedRevision: skill.rowRevision,
+              patch,
+            },
           });
           router.refresh();
-        } catch {
-          // 显式失败,不静默假装保存成功(铁律:诚实)。
-          setError("保存失败,请重试。");
+        } catch (cause) {
+          // [T-513] CAS 冲突 / 基座不兼容必须可见；不能统一吞成“请重试”，否则用户会
+          // 在旧 revision 上反复覆盖。HttpTransportError 的结构字段跨 bundle 也可稳定读取。
+          const transportError = cause as {
+            code?: unknown;
+            details?: Record<string, unknown>;
+            message?: unknown;
+          };
+          const domainCode = transportError.details?.domainCode;
+          if (domainCode === "SKILL_OVERLAY_REVISION_CONFLICT") {
+            setError("该账号的技能配置已在别处更新，请刷新后再编辑。");
+          } else if (
+            typeof transportError.message === "string" &&
+            transportError.message.includes("不兼容")
+          ) {
+            setError(transportError.message.replace(/^HttpTransport:\s*/, ""));
+          } else {
+            // 显式失败,不静默假装保存成功(铁律:诚实)。
+            setError("保存失败,请重试。");
+          }
         } finally {
           setPending(false);
         }
       })();
     },
-    [pending, router, skill.id],
+    [pending, router, skill.id, skill.rowRevision],
   );
 
   const save = React.useCallback(() => {
     if (!dirty) return;
-    runPut({ system, template });
-  }, [dirty, runPut, system, template]);
+    const patch: AccountSkillOverlayPatchResource = { system, template };
+    if (skill.completionPolicySupported && policyTouched) {
+      const parsed = parseCompletionPolicyDraft({
+        minSegments: policyMinSegments,
+        maxSegments: policyMaxSegments,
+        requiredSequence: policyRequiredSequence,
+        repairAttempts: policyRepairAttempts,
+      });
+      if (!parsed.ok) {
+        setError(parsed.error);
+        return;
+      }
+      patch.completionPolicy = parsed.value;
+    }
+    runPut(patch);
+  }, [
+    dirty,
+    policyMaxSegments,
+    policyMinSegments,
+    policyRepairAttempts,
+    policyRequiredSequence,
+    policyTouched,
+    runPut,
+    skill.completionPolicySupported,
+    system,
+    template,
+  ]);
 
-  // 恢复默认:put 空串字段 → server 存空串,装配归一成 undefined → 回退内置(T-040)。
+  // 恢复默认:null 表示删除这两个账号增量字段，服务端回退 official 基座。
   const restore = React.useCallback(() => {
-    runPut({ system: "", template: "" });
+    runPut({ system: null, template: null });
+  }, [runPut]);
+
+  const restoreCompletionPolicy = React.useCallback(() => {
+    runPut({ completionPolicy: null });
   }, [runPut]);
 
   const facetRows = buildFacetCardRows(skill.template, skill.requiredFacets);
@@ -324,10 +494,111 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
         </details>
       ) : null}
 
+      {skill.completionPolicySupported ? (
+        <div
+          data-slot="skill-completion-policy"
+          className="flex flex-col gap-2 rounded-md border border-border/70 bg-background p-2.5"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-foreground">
+                结果完整性策略
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                由当前 Skill 声明结构要求。系统只执行这些字段，不会自行认定
+                hook、正文或 CTA。
+              </p>
+            </div>
+            <Button
+              type="button"
+              data-slot="skill-policy-restore-default"
+              variant="ghost"
+              size="sm"
+              disabled={pending || !skill.completionPolicyCustomized}
+              onClick={restoreCompletionPolicy}
+              title={
+                skill.completionPolicyCustomized
+                  ? "删除当前账号的策略增量，恢复官方策略"
+                  : "当前账号未覆盖完整性策略"
+              }
+            >
+              <RotateCcw aria-hidden="true" className="size-3.5 shrink-0" />
+              恢复官方策略
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <PolicyNumberField
+              label="最少段数"
+              slot="skill-policy-min-segments"
+              value={policyMinSegments}
+              min={1}
+              max={100}
+              disabled={pending}
+              onChange={(value) => {
+                setPolicyMinSegments(value);
+                setPolicyTouched(true);
+                setError(null);
+              }}
+            />
+            <PolicyNumberField
+              label="最多段数（留空=不限）"
+              slot="skill-policy-max-segments"
+              value={policyMaxSegments}
+              min={1}
+              max={100}
+              disabled={pending}
+              onChange={(value) => {
+                setPolicyMaxSegments(value);
+                setPolicyTouched(true);
+                setError(null);
+              }}
+            />
+            <PolicyNumberField
+              label="自动修复次数"
+              slot="skill-policy-repair-attempts"
+              value={policyRepairAttempts}
+              min={0}
+              max={3}
+              disabled={pending}
+              onChange={(value) => {
+                setPolicyRepairAttempts(value);
+                setPolicyTouched(true);
+                setError(null);
+              }}
+            />
+          </div>
+          <label className="flex flex-col gap-1 text-xs font-medium text-foreground">
+            角色顺序（英文逗号分隔；留空=不要求）
+            <input
+              data-slot="skill-policy-required-sequence"
+              value={policyRequiredSequence}
+              disabled={pending}
+              onChange={(event) => {
+                setPolicyRequiredSequence(event.target.value);
+                setPolicyTouched(true);
+                setError(null);
+              }}
+              placeholder="hook, body, cta"
+              className="h-8 rounded-md border border-border bg-background px-2 font-mono text-xs font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </label>
+          {skill.officialCompletionPolicy ? (
+            <p className="text-[11px] text-text-subtle">
+              官方默认：{skill.officialCompletionPolicy.minSegments}–
+              {skill.officialCompletionPolicy.maxSegments ?? "不限"} 段；顺序{" "}
+              {skill.officialCompletionPolicy.requiredSequence.join(" → ") ||
+                "不限制"}
+              ；自动修复 {skill.officialCompletionPolicy.repairAttempts} 次。
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {/* [T-165] 版本历史 + 一键回滚 —— 展开拉该 skill 历史快照,可回滚到任一版本(回滚后
           server 热更即生效,router.refresh 重取生效值)。 */}
       <SkillVersionHistory
         skillId={skill.id}
+        currentRevision={skill.rowRevision}
         disabled={pending}
         onRolledBack={() => router.refresh()}
       />
@@ -381,15 +652,17 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
 
 function SkillVersionHistory({
   skillId,
+  currentRevision,
   disabled,
   onRolledBack,
 }: {
   skillId: string;
+  currentRevision: number | null;
   disabled: boolean;
   onRolledBack: () => void;
 }) {
   const [versions, setVersions] = React.useState<
-    SkillConfigOverrideVersionResource[] | null
+    AccountSkillOverlayVersionResource[] | null
   >(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -424,7 +697,10 @@ function SkillVersionHistory({
           await client.rollbackPrompt({
             params: { id: skillId },
             query: undefined,
-            body: { versionId },
+            body: {
+              versionId,
+              expectedRevision: currentRevision ?? 1,
+            },
           });
           onRolledBack(); // 父 router.refresh 重取生效值(热更已在服务端)。
           load(); // 回滚也进历史 → 重拉列表。
@@ -435,7 +711,7 @@ function SkillVersionHistory({
         }
       })();
     },
-    [rollingId, skillId, onRolledBack, load],
+    [rollingId, skillId, currentRevision, onRolledBack, load],
   );
 
   return (
@@ -466,8 +742,8 @@ function SkillVersionHistory({
               className="flex items-center justify-between gap-2 rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs"
             >
               <span className="text-muted-foreground">
-                v{v.version ?? "?"}
-                {i === 0 ? "(当前)" : ""} · {v.updatedBy ?? "system"} ·{" "}
+                r{v.rowRevision}
+                {i === 0 ? "(当前)" : ""} · {v.updatedBy} ·{" "}
                 {v.createdAt.slice(0, 19).replace("T", " ")}
               </span>
               {/* 首行=当前生效版本,回滚它无意义 → 禁用。 */}

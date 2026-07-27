@@ -34,6 +34,8 @@ export * from "./topic-preference-distill-runner";
 export * from "./chat-context";
 export * from "./chat-runner";
 export * from "./chat-tools";
+// [T-429/T-430] 长输入 AI 节点统一的确定性分块、串行执行与进度契约。
+export * from "./chunk-and-merge";
 // [T-253] local.read 安全硬门(denylist/路径归一/二进制探测,纯函数)—— composition root
 // (persistence-client readLocalFile 端口)与授权 route 共用。
 export * from "./local-read-security";
@@ -44,6 +46,9 @@ export * from "./local-name-search";
 export * from "./local-env-probe";
 export * from "./comment-qa-sift-runner";
 export * from "./embed";
+// [T-513] account-scoped immutable Effective Skill snapshot：task→skill 确定性映射、
+// official+overlay 合并、server platform policy 注入与 256 KiB 序列化门。
+export * from "./effective-skill-snapshot";
 export * from "./copilot-runner";
 export * from "./creative-context";
 export * from "./knowledge-classify-runner";
@@ -72,6 +77,7 @@ export * from "./research-runner";
 export * from "./review-runner";
 export * from "./scheduled-collection-runner";
 export * from "./scheduled-collection-scheduler";
+export * from "./automation-driver";
 export * from "./script-review-runner";
 export * from "./script-runner";
 export * from "./skill-config-overrides";

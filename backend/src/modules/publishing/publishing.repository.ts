@@ -91,6 +91,13 @@ export interface PublishingRepository {
     offset: number;
     includeHidden?: boolean;
   }): Promise<PublicationRow[]>;
+  /**
+   * 当前联合归属下，批量读取指定 output 的全部发布事实。该窄读用于组合层，
+   * 不应用 UI 可见性过滤，因为隐藏/下架作品仍可能有真实 publishedAt。
+   */
+  listPublicationsByOutputs(
+    outputIds: ReadonlyArray<string>,
+  ): Promise<PublicationRow[]>;
   // User-scoped publication ids for a set of ContentOutput ids (Analytics project
   // read resolves project→outputs→publications without an Analytics cross-module
   // join). Empty input → empty list.
@@ -331,6 +338,20 @@ export function createPublishingRepository(
         )
         .limit(page.limit)
         .offset(page.offset);
+    },
+
+    async listPublicationsByOutputs(outputIds) {
+      if (outputIds.length === 0) return [];
+      return db
+        .select()
+        .from(publications)
+        .where(
+          and(
+            eq(publications.userId, userId),
+            accountGate,
+            inArray(publications.contentOutputId, [...outputIds]),
+          ),
+        );
     },
 
     async listPublicationIdsByOutputs(outputIds) {

@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "16-backend-tdd"        # 2026-07-05(T-145): 更新至真实 frontier;stage 分段机制已被 BACKLOG+SPEC gate 取代(见 CLAUDE.md/BACKLOG.md)
   frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
-  updated_at: "2026-07-05"
+  updated_at: "2026-07-26"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -194,6 +194,12 @@ stages:
       - existing: "contract/ package @creatoros/contract @0.4.0 on feat/service-contract"
       - existing: "docs/superpowers/specs/2026-06-21-service-contract-design.md (design)"
       - existing: "docs/superpowers/plans/2026-06-21-service-contract-15a.md (plan)"
+      - existing: "docs/superpowers/specs/2026-07-23-openai-responses-protocol-design.md (T-471 additive protocol contract)"
+      - existing: "docs/superpowers/specs/2026-07-23-content-radar-service-contract.md (T-482 content intelligence contract; confirmed 2026-07-23)"
+      - existing: "docs/superpowers/specs/2026-07-26-three-system-runtime-config-boundary.md (T-534 Creator consumer contract; Round 3 CONCERNS handled)"
+      - existing: "orchestrator/GATE-T534-CONTRACT.md (scope/contract/fixture gates PASS)"
+      - existing: "orchestrator/GATE-T534-BUILD.md (TDD/BUILD/tests/runtime evidence; global next build blocker retained)"
+      - existing: "orchestrator/GATE-T471-RETROSPECTIVE.md (retrospective gate; historical TDD fail retained)"
     notes: >
       15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):
       Zod envelope (SPEC §14) + primitives + 15 module resource DTOs + 4 page DTOs + endpoint registry
@@ -202,6 +208,12 @@ stages:
       15b wired the FE via MockTransport with real Projects mutations. Confirmation still required (contract
       is a confirmation point). REMAINING GOVERNANCE GAP: the 76 routes were NOT assigned stable API-### IDs
       in ID_REGISTRY (DEC-012 chose pragmatic continuation) — tracked as OPEN-004, not silently dropped.
+      T-534 Creator contract completed three independent rounds: Round 1 FAIL fixed, Round 2/3 CONCERNS
+      handled; no blocker remains. Scope budget, contract completeness and Growth/AM fixture drift gates PASS
+      in GATE-T534-CONTRACT.md. Creator consumer BUILD, Rust/TS/contract tests and local HTTP runtime evidence
+      are recorded in GATE-T534-BUILD.md. Global next build remains red only because current HEAD contains
+      T-535's committed instrumentation.ts change and triggers a Turbopack Unicode code-frame panic;
+      T-534 does not claim that release-build gate green.
 
   "16-backend-tdd":
     status: "draft"   # CHANGED from not-started — contradicted by DEC-011 (real code + tests exist)
@@ -213,6 +225,7 @@ stages:
       - existing: "backend/src/ — 30 .ts files; 8 pglite-backed tests green (typecheck 0)"
       - existing: "@creatoros/ai-worker (AI execution layer, 27 tests) — DEC-009"
       - existing: "backend/TDD-PLAN.md (plan)"
+      - existing: "T-471 Responses slice commit 94cc40bc + TEST-001..008; historical red evidence unavailable"
     notes: >
       PARTIALLY DONE (DEC-011), not not-started. A real-persistence Projects slice exists and is proven:
       pglite (pure-WASM Postgres, chosen over the TDD-PLAN's Testcontainers — no Docker), Drizzle schema
@@ -236,6 +249,241 @@ stages:
       stage 17" promise is realized as "swap the transport behind /api/v1/dispatch". REMAINING: fan out the
       remaining verticals over this seam; cross-restart durability (dataDir); full release review. Still
       gated by stage-12 visual re-validation (OPEN-002) and the open consistency chain for a true release.
+
+  "T-518-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-bug-feedback-inbox.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "frontend/src-tauri/src/logging.rs"
+      - existing: "frontend/src/app/api/v1/local/reveal-logs/route.ts"
+      - existing: "frontend/src/server/activation/channel-links.server.ts"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-FDB-002"
+    notes: >
+      DEC-FDB-002/DEC-ODR-001 已撤销 Growth 上传、对象存储和工单平台，改为本地整理/复制、
+      打开签名 supportUrl 和日志目录。2026-07-26 Replacement 独立复审 Round 3 最终 PASS；
+      用户范围重置由 DEC-ODR-001 记录。旧 accepted-risk 工件保留历史，不再作为
+      CONTRACT/BUILD 输入；新 CONTRACT/确认②之前生产代码不改。
+
+  "T-518-2-contract":
+    status: "passed"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: true
+    confirmation_status: "confirmed"
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.md"
+      - existing: "docs/superpowers/specs/2026-07-26-bug-feedback-inbox.contract.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-FDB-002"
+    notes: >
+      用户 2026-07-26 明确“开始执行吧”记录为同一 Replacement 范围的确认②。契约只新增
+      签名 supportUrl 的 typed 只读 platform shape 和本地 UI 状态；open-url/reveal-logs
+      全部复用，零反馈提交 API。第三轮独立复审真实 PASS，允许进入 BUILD。
+
+  "T-518-3-build":
+    status: "passed"
+    gate: "16-backend-tdd + 17-integration-release + boundary/orphan/reconcile"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "contract/src/local-platform.ts"
+      - existing: "frontend/src/app/api/v1/local/support-channel/route.ts"
+      - existing: "frontend/src/components/shell/issue-feedback-dialog.tsx"
+      - existing: "frontend/src/components/shell/issue-feedback.ts"
+      - existing: "frontend/src/components/shell/issue-feedback-dialog.test.tsx"
+      - existing: "frontend/src/components/shell/shell.test.tsx"
+      - existing: "commit 705c7156"
+    notes: >
+      侧边栏展开/折叠态均保留真实问题反馈入口；反馈内容只在本机脱敏、预览和复制，
+      supportUrl 只读且限 HTTPS，外部打开与加密日志目录复用既有本地能力。无上传、
+      无反馈写 API、无“已发送/已提交”假状态。T-518 定向 49 tests、contract 1 test、
+      contract/frontend typecheck、boundary、orphan 与 reconcile 均通过。
+
+  "T-519-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-knowledge-workspace-lean.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "frontend/src/features/knowledge/knowledge-interactive-region.tsx"
+      - existing: "backend/src/modules/ai-runtime/material-extract-runner.ts"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ODR-001"
+    notes: >
+      新 PLAN 先修 asset_upload ownership/stable assetId/complete 幂等，再补持久文件夹，
+      保留默认文件夹、多级层级、虚拟节点、URL/文本导入、local-only、四视图和采纳门。
+      Round 1 指出的静默缩水已修，Round 3 最终 PASS；用户范围重置由 DEC-ODR-001 记录。
+      旧 41-operation CONTRACT 与第一次瘦身均关闭，新 CONTRACT/确认②之前生产代码不改。
+
+  "T-516-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-copilot-context-health-minimal.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ODR-001"
+    notes: >
+      保留设置入口、默认每周、调频/关闭/立即检查和 AI 起草修改供用户确认；自动扫描只做
+      确定性规则，AI 草稿复用现有定位编辑/保存/版本链，不新建候选/撤销 Saga。Round 1
+      指出的用户结果缩水和 T-521 mutating classifier 风险已修，Round 3 最终 PASS；
+      用户范围重置由 DEC-ODR-001 记录。T-517 新 CONTRACT 仍是 BUILD 前置。
+
+  "T-501-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-model-configuration-lightweight-optimization.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-MC-002"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.review.md"
+      - existing: "docs/research/2026-07-24-model-configuration-full-audit.md"
+      - existing: "docs/research/2026-07-24-model-configuration-wizard-usability-rat.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-BATCH-20260725-001"
+    notes: >
+      2026-07-26 用户通过 DEC-MC-002 将实施范围收缩为现有 Settings 的轻量优化；旧全量
+      重构 SPEC/评审只保留历史，不再驱动 BUILD。当前替代范围不新增页面、数据模型或付费能力。
+      三轮 cross-family PLAN 评审 findings 已逐条处理；用户于 2026-07-25 通过
+      DEC-BATCH-20260725-001 确认五项产品口径，允许进入 CONTRACT。FR-MC-14 只作为
+      “有 adapter/协议证据才显示”的 truthfulness 约束，不扩大成新增厂商/adapter 承诺。
+
+  "T-501-2-contract":
+    status: "passed"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.contract.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.contract.review.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.md"
+      - existing: "orchestrator/ID_REGISTRY.md"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md"
+      - existing: "orchestrator/CHANGE_IMPACT.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-BATCH-20260725-003"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-BATCH-20260725-004"
+    notes: >
+      DEC-MC-002 后的 BUILD 不改变公开契约：继续复用 settings.models.put/test。旧 17-operation
+      CONTRACT 只保留历史，不再要求实现其总览、历史、付费 effect 等扩展 operation。
+      Round 1..3 FAIL 与修订前 Round 4 PASS 均保留为历史。PAGE SPEC Round 1 暴露 additive
+      wire 缺口，作者新增 ENT-MC-08、API-MC-014..017，并扩展 010/012；旧 Round 4 PASS、
+      Gate 12/15b 和确认②不再覆盖当前版本。Additive Round 1、Round 2 均为 FAIL；最终
+      Round 3 为 PASS（0 blocker/0 major/0 minor），Gate 12/15b 已内部通过。用户于
+      2026-07-25 通过 DEC-BATCH-20260725-004 重新授予修订版确认②，允许进入 PAGE SPEC
+      独立复审。PAGE SPEC Round 2 又发现诊断字段与费用披露顺序两项契约错位；作者只在
+      已确认范围内补齐 run/history DTO 和 005→披露→确认→006 顺序，未新增产品能力，
+      定向独立复验为 PASS（0 blocker/0 major/1 whitespace minor），17/17 transport mapping、
+      诊断 DTO 与付费确认顺序均闭合，因此 Gate 12/15b 恢复 pass。用户随后以
+      DEC-BATCH-20260725-005 纠偏为现有产品增量路线；T-517 runtime HARD 继续独立 fail closed。
+
+  "T-501-3-design":
+    status: "passed"
+    gate: "05-ui-gate + 06-page-spec-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-model-configuration-lightweight-optimization.md"
+      - existing: "docs/model-configuration-guide.md"
+      - existing: "docs/superpowers/specs/2026-07-25-model-configuration-experience-redesign.page-spec.md"
+      - existing: "docs/superpowers/specs/2026-07-25-model-configuration-experience-redesign.page-spec.review.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.md"
+      - existing: "docs/superpowers/specs/2026-07-24-model-configuration-experience-redesign.contract.md"
+    notes: >
+      DEC-MC-002 明确沿用当前 Settings 外壳：只收起高级字段、增加保存并测试、更新教程；
+      不生成新 overview、向导或模型平台。
+      PAGE SPEC Round 1 FAIL（2 blocker/3 major/2 minor）已完成作者修订；本地 Whisper、
+      八槽总览、免费历史、同步取消、house-style DEC 和人工证据表单均已补齐。因上游 CONTRACT
+      additive CONTRACT 最终 Round 3 已内部 PASS，且修订版确认②已由
+      DEC-BATCH-20260725-004 重新取得。PAGE SPEC Round 2 为 FAIL（2 blocker/0 major/0 minor）：
+      历史诊断 DTO 缺 provider/protocol/model，且页面在 005 返回权威 costDisclosure 前展示
+      确认。两项已由作者按既有范围修订；Round 3 定向复评现已 PASS
+      （0 blocker/0 major/0 minor），Gate 06 通过。用户通过 DEC-BATCH-20260725-005 明确：
+      CreatorOS/Settings 已成型，T-501 只做现有界面的功能增量和体验优化；误生成的 overview
+      不采用、不入工件，不再等待 overview/逐屏/Stitch。Gate 05 以现有生产 UI/tokens 为已确认
+      基线，BUILD 期改用真实 before/after、visual regression、a11y 和 E2E 收证。
+
+  "T-501-4-build":
+    status: "passed"
+    gate: "16-backend-tdd + frontend typecheck + boundary/orphan/reconcile"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "frontend/src/features/settings/settings-interactive-region.tsx"
+      - existing: "frontend/src/features/settings/model-provider-presets.ts"
+      - existing: "frontend/src/server/settings-model-test-wrap.ts"
+      - existing: "frontend/src/server/persistence-client.ts"
+      - existing: "docs/model-configuration-guide.md"
+      - existing: "commit f91b08cb"
+    notes: >
+      按 DEC-MC-002 的轻量范围完成：主路径只留预设、模型 ID、API Key，高级字段默认折叠；
+      “保存并测试”先落当前配置，再复用正式 modelFor + streamText 并要求非空文本；
+      Kimi 开放平台与 Kimi Code 分开，补 New API/中转站教程。定向 67 tests、前端
+      typecheck、目标 lint、boundary、orphan 与 reconcile 通过；未调用真实 provider 或付费能力。
+
+  "T-517-1-plan":
+    status: "passed"
+    gate: "01-product-gate + independent spec-review"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-creatoros-automation-kernel-minimal.md"
+      - existing: "docs/superpowers/specs/2026-07-26-overdesign-scope-reset.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ODR-001"
+    notes: >
+      新 PLAN 复用 scheduled_job/job_run 与 PersistentTaskService，但诚实补入 sealed kind 扩展、
+      typed handler registry、单一 driver、aiTaskId 兼容退出和旧 timer cutover。Round 1 指出的
+      “只有薄映射”事实错误已修，Round 3 最终 PASS；用户范围重置由 DEC-ODR-001 记录。
+      旧 Kernel PLAN/CONTRACT 只留历史；必须另建最小 CONTRACT 并取得确认②后才可 BUILD。
+
+  "T-517-2-contract":
+    status: "invalidated"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate"
+    gate_status: "fail"
+    confirmation_required: true
+    artifacts: []
+    notes: >
+      旧 CONTRACT 的三轮 FAIL 全部保留；DEC-ODR-001 已替换其物理方向，因此该工件 invalidated，
+      不再继续补 delegated grant/effect platform。新 PLAN 通过后另建最小 CONTRACT；确认②与
+      BUILD 均关闭。
+
+  "T-537-1-plan":
+    status: "blocked"
+    gate: "01-product-gate + independent spec-review + RAT-537-01"
+    gate_status: "fail"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.md"
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.review.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-COL-001"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md#T-537-聚焦追踪"
+      - existing: "orchestrator/CHANGE_IMPACT.md#CI-COL-001"
+      - existing: "orchestrator/SCOPE_LEDGER.md"
+    notes: >
+      用户将范围固定为内容雷达 creator_profile、favorites_folder、darkhorse_query 三类来源。
+      owner 继续决定全部业务数据归属，collector 只决定登录态；经营数据、评论、web/rss、分享
+      链接与其他自动化均不新增 selector。Round 3 文档内部 PASS，但第二个有效抖音登录态尚未
+      完成 RAT-537-01，因此正式 PLAN Gate 与整个 BUILD fail closed。
+
+  "T-537-2-contract":
+    status: "blocked"
+    gate: "12-service-contract-gate + 15b-contract-completeness-gate + RAT-537-01"
+    gate_status: "fail"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md"
+      - existing: "docs/superpowers/specs/2026-07-26-content-radar-collector-account.review.md"
+      - existing: "orchestrator/ID_REGISTRY.md"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md#T-537-聚焦追踪"
+    notes: >
+      API-537-01..05、迁移、owner/collector 双身份、错误映射、隐私负测与 TEST-537-01..13
+      已完成三轮内部复审。正式 Gate 仍依赖 RAT-537-01；未满足前不确认②、不生成 BUILD
+      manifest，也不实现假 selector。
 
 stage_defaults:
   valid_statuses:
@@ -396,3 +644,14 @@ open_items:
     owner: "user"
     revisit_trigger: "If the work branch merges to main, ensure orchestrator/ travels with it."
     status: "resolved"
+  - id: "OPEN-006"
+    stage: "15-service-contract / 16-backend-tdd / 17-integration-release"
+    type: "validation-finding"
+    description: >
+      T-471 OpenAI Responses code and regression coverage exist, but implementation preceded its formal SPEC:
+      no auditable pre-implementation red test output exists (retained TDD gate fail). A real New API token +
+      paid model end-to-end was not run without explicit spending authorization. See DEC-019, RISK-011 and
+      GATE-T471-RETROSPECTIVE.md.
+    owner: "user+agent"
+    revisit_trigger: "Before release: user authorizes a real New API model call, or explicitly accepts the external E2E risk."
+    status: "open"

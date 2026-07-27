@@ -88,6 +88,9 @@ describe("AI Copilot dialog (Task 24)", () => {
     // [T-354] 次区(CopilotDashboard 三卡:推荐指令/最近任务/继续任务 + 快捷入口/智能推荐)
     // 已整体下架(用户真机反馈冗余)—— 对话 + 快捷 chip 已覆盖;任务进度走对话区顶部通知卡。
     expect(slot(dialog, "copilot-dashboard")).toBeNull();
+    expect(slot(dialog, "recommended-commands")).toBeNull();
+    expect(slot(dialog, "recent-tasks")).toBeNull();
+    expect(slot(dialog, "continuing-tasks")).toBeNull();
     expect(slot(dialog, "quick-entries")).toBeNull();
     expect(slot(dialog, "smart-recommendation")).toBeNull();
   });
@@ -112,7 +115,14 @@ describe("AI Copilot dialog (Task 24)", () => {
     // quick-entry/smart-recommendation 均不再渲染)。
     expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(5);
     expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(0);
+    expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(0);
+    expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(0);
+    expect(slot(dialog, "recent-tasks-loading")).toBeNull();
+    expect(slot(dialog, "continuing-tasks-loading")).toBeNull();
     expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(0);
+    expect(
+      dialog.querySelectorAll('[data-slot="smart-recommendation-item"]'),
+    ).toHaveLength(0);
   });
 
   it("renders the close button with data-overlay-close so the controller's delegated click handler closes the dialog", () => {

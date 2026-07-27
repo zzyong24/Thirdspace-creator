@@ -3,9 +3,14 @@
 //   1. 相对链接坏链(markdown 链接指向的本地文件不存在)
 //   2. canonical 文档引用 archive/ 路径(历史泄漏进当前真值——canonical 禁引 archive 当依据)
 //   3. 首行缺 truth 标记(<!-- truth: canonical|derived|evidence|archive -->)
+//   4. INDEX 账实核对(2026-07-15 实证入册:某 specs/INDEX.md 写"50 份"实存 84 个文件、缺十几条):
+//      INDEX.md 同目录的 .md 文件必须在 INDEX 里有链接条目(只查同目录一层,不查子树——
+//      收据/子目录文档不要求逐条列,防噪音)
+//   5. INDEX 活计数禁令:INDEX.md 里手写「N 份/N 篇」计数必过期——要么脚本生成要么不写数
 //
 // **不做** Diataxis 分类强制、不做 C4 图强制、不做 ADR 格式强制——那些是文档学理想,
 // 不是这个知识层要解的病;检查面越宽误报越多,门就会被人绕过。窄而准 > 宽而吵。
+// (4/5 仍是机械账实核对,不是文档学——清单的机械事实可从文件系统推导,手维护必漂移。)
 //
 // archive/ 子树整体跳过不查:历史文档合法地烂(链接指向已删文件很正常),查它只产噪音。
 //
@@ -115,12 +120,46 @@ for (const abs of files) {
   }
 }
 
+// 4/5) INDEX 账实核对 + 活计数禁令(只对名为 INDEX.md 的文件,面窄)
+const COUNT_RE = /\d+\s*\*{0,2}\s*(份|篇)/;
+for (const abs of files) {
+  if (path.basename(abs) !== "INDEX.md") continue;
+  const rel = path.relative(ROOT, abs).split(path.sep).join("/");
+  const src = fs.readFileSync(abs, "utf8");
+
+  // 5) 活计数:手写「N 份/N 篇」必过期
+  const cm = COUNT_RE.exec(src);
+  if (cm)
+    issues.push({ file: rel, kind: "活计数", detail: `含手写计数「${cm[0].trim()}」——必过期(实证:写 50 份实存 84);删数字或改脚本生成` });
+
+  // 4) 同目录账实核对:同层 .md(除 INDEX 自身)必须被 INDEX 链接到
+  const dir = path.dirname(abs);
+  const linked = new Set();
+  let lm;
+  LINK_RE.lastIndex = 0;
+  while ((lm = LINK_RE.exec(src))) {
+    let t = lm[1];
+    if (/^[a-z][a-z0-9+.-]*:/i.test(t) || t.startsWith("#")) continue;
+    t = t.split("#")[0];
+    if (!t) continue;
+    linked.add(path.resolve(dir, t));
+  }
+  let sibs;
+  try { sibs = fs.readdirSync(dir, { withFileTypes: true }); } catch { sibs = []; }
+  for (const s of sibs) {
+    if (!s.isFile() || !s.name.endsWith(".md") || s.name === "INDEX.md") continue;
+    const sAbs = path.join(dir, s.name);
+    if (!linked.has(sAbs))
+      issues.push({ file: rel, kind: "索引漏登", detail: `同目录 ${s.name} 不在索引里(账实不符;新文件落地当轮就该登记)` });
+  }
+}
+
 if (issues.length === 0) {
-  if (!QUIET) console.log(`✓ docs-health:${files.length} 个文档,无坏链、无 archive 泄漏、标记齐全。`);
+  if (!QUIET) console.log(`✓ docs-health:${files.length} 个文档,无坏链、无 archive 泄漏、标记齐全、INDEX 账实相符。`);
   process.exit(0);
 }
 
 console.log(`docs-health — ${files.length} 个文档,发现 ${issues.length} 处问题:`);
 for (const it of issues) console.log(`  ✗ [${it.kind}] ${it.file} — ${it.detail}`);
-console.log(`\n⚠ ${STRICT ? "--strict,exit 1" : "WARN-biased,不阻塞;SHIP/CI 用 --strict"}(检查范围故意窄:坏链/archive 泄漏/truth 标记,仅此三项)。`);
+console.log(`\n⚠ ${STRICT ? "--strict,exit 1" : "WARN-biased,不阻塞;SHIP/CI 用 --strict"}(检查范围故意窄:坏链/archive 泄漏/truth 标记/INDEX 账实/活计数,仅此五项)。`);
 process.exit(STRICT ? 1 : 0);

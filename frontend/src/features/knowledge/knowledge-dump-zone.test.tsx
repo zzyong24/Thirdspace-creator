@@ -18,9 +18,37 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 const createKnowledge = vi.fn((_input: unknown): Promise<unknown> =>
   Promise.resolve({ id: "k-1" }),
 );
+const createUpload = vi.fn((_input: unknown): Promise<unknown> =>
+  Promise.resolve({
+    uploadId: "upload-1",
+    assetId: "asset-1",
+    uploadUrl: "mock://upload-1",
+  }),
+);
+const completeUpload = vi.fn((_input: unknown): Promise<unknown> =>
+  Promise.resolve({ id: "asset-1" }),
+);
+const createAITask = vi.fn((_input: unknown): Promise<unknown> =>
+  Promise.resolve({ id: "task-1", status: "queued" }),
+);
+const getTask = vi.fn((_input: unknown): Promise<unknown> =>
+  Promise.resolve({ id: "task-1", status: "succeeded", errorMessage: null }),
+);
+const getAsset = vi.fn((_input: unknown): Promise<unknown> =>
+  Promise.resolve({
+    id: "asset-1",
+    extractStatus: "done",
+    extractedText: "解析出的文档正文",
+  }),
+);
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createKnowledge: (input: unknown) => createKnowledge(input as never),
+    createUpload: (input: unknown) => createUpload(input as never),
+    completeUpload: (input: unknown) => completeUpload(input as never),
+    createAITask: (input: unknown) => createAITask(input as never),
+    getTask: (input: unknown) => getTask(input as never),
+    getAsset: (input: unknown) => getAsset(input as never),
   },
 }));
 
@@ -38,6 +66,11 @@ beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockRouter.push.mockClear();
   createKnowledge.mockClear();
+  createUpload.mockClear();
+  completeUpload.mockClear();
+  createAITask.mockClear();
+  getTask.mockClear();
+  getAsset.mockClear();
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -189,5 +222,110 @@ describe("KnowledgeDumpZone — 拖入文本文件", () => {
       expect(q(container, "knowledge-dump-error")).not.toBeNull(),
     );
     expect(q(container, "knowledge-dump-error")!.textContent).toContain(".md / .txt");
+  });
+});
+
+describe("KnowledgeDumpZone — 文件导入闭环(T-547)", () => {
+  it("选择文件后先弹确认层；取消不会上传或写知识库", async () => {
+    const { container } = render(<KnowledgeDumpZone />);
+    const input = q<HTMLInputElement>(container, "knowledge-file-input")!;
+    const file = new File(["# 正文"], "note.md", { type: "text/markdown" });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(q(container, "knowledge-import-confirm-dialog")).not.toBeNull();
+    expect(q(container, "knowledge-import-confirm-dialog")!.textContent).toContain(
+      "note.md",
+    );
+    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-import-cancel")!);
+    expect(q(container, "knowledge-import-confirm-dialog")).toBeNull();
+    expect(createUpload).not.toHaveBeenCalled();
+    expect(createKnowledge).not.toHaveBeenCalled();
+  });
+
+  it("Markdown 导入把真实正文写入 revision，并明确回显逐批结果", async () => {
+    const { container } = render(<KnowledgeDumpZone />);
+    const input = q<HTMLInputElement>(container, "knowledge-file-input")!;
+    const file = new File(["# 标题\n\n真实正文"], "note.md", {
+      type: "text/markdown",
+    });
+
+    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-import-confirm")!);
+
+    await waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(1));
+    expect(createKnowledge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          title: "note.md",
+          content: "# 标题\n\n真实正文",
+          assetId: "asset-1",
+        }),
+      }),
+    );
+    expect(createAITask).not.toHaveBeenCalled();
+    await waitFor(() => {
+      const result = q(container, "knowledge-import-result-dialog");
+      expect(result).not.toBeNull();
+      expect(result!.textContent).toContain("成功 1 个");
+      expect(result!.textContent).toContain("失败 0 个");
+    });
+    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("PDF 先走确定性抽取，只有读到非空正文后才创建知识条目", async () => {
+    const { container } = render(<KnowledgeDumpZone />);
+    const input = q<HTMLInputElement>(container, "knowledge-file-input")!;
+    const file = new File([new Uint8Array([1, 2, 3])], "report.pdf", {
+      type: "application/pdf",
+    });
+
+    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-import-confirm")!);
+
+    await waitFor(() => expect(createAITask).toHaveBeenCalledTimes(1));
+    expect(createAITask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          taskType: "material.extract",
+          inputData: { assetId: "asset-1", fileName: "report.pdf" },
+        }),
+      }),
+    );
+    await waitFor(() =>
+      expect(createKnowledge).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            title: "report.pdf",
+            content: "解析出的文档正文",
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("正文解析失败时不创建空知识，只回显真实失败和素材保留事实", async () => {
+    getAsset.mockResolvedValueOnce({
+      id: "asset-1",
+      extractStatus: "failed",
+      extractedText: null,
+    });
+    const { container } = render(<KnowledgeDumpZone />);
+    const input = q<HTMLInputElement>(container, "knowledge-file-input")!;
+    const file = new File([new Uint8Array([1, 2, 3])], "scan.pdf", {
+      type: "application/pdf",
+    });
+
+    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(q<HTMLButtonElement>(container, "knowledge-import-confirm")!);
+
+    await waitFor(() => {
+      const result = q(container, "knowledge-import-result-dialog");
+      expect(result).not.toBeNull();
+      expect(result!.textContent).toContain("失败 1 个");
+      expect(result!.textContent).toContain("未加入知识库");
+    });
+    expect(createKnowledge).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 });

@@ -90,9 +90,15 @@ export {
 // douyin-cdp 抽音共用这一把(经此 index 出口跨包复用),根治硬编码 /opt/homebrew/bin/ffmpeg。
 export {
   resolveFfmpegPath,
+  resolveFfprobePath,
   FfmpegNotFoundError,
   type ResolveFfmpegPathOptions,
 } from "./runtime/ffmpeg-path";
+export {
+  resolveExecutablePath,
+  ExecutablePathConfigurationError,
+  type ResolveExecutablePathOptions,
+} from "./runtime/executable-path";
 // Fake 多模态适配器(测试支持,零成本)—— 与 createFakeAgentRunner 同类的测试用假件,经 index
 // 公开出口给消费方单测用(frontend asset.generate runner 测装配 + 异步轮询)。含 fake 异步
 // video provider(先 taskId、N 次轮询后返 bytes),坐实 [gate-F1]/[gate-F2] 的异步链路覆盖。
@@ -164,6 +170,11 @@ export {
 export {
   registerTemplate,
   registerAllTemplates,
+  getOfficialTemplate,
+  listOfficialTemplates,
+  exportOfficialSkillSchema,
+  getOfficialSkillBase,
+  listOfficialSkillBases,
   getTemplate,
   hasTemplate,
   listTemplates,
@@ -178,6 +189,35 @@ export {
   _resetRegistry,
   type SkillConfigOverride,
 } from "./prompt/registry";
+export {
+  EffectiveSkillRuntimeError,
+  runWithEffectiveSkillSnapshot,
+  getActiveEffectiveSkillSnapshot,
+  hasActiveEffectiveSkillSnapshot,
+  getEffectiveSkill,
+  getEffectiveTemplate,
+  getEffectiveTools,
+  getEffectiveContextRequirements,
+  resolveEffectiveOutputSchema,
+  type CompletionPolicyAdapterRef,
+  type CompletionPolicyV1,
+  type EditableSkillField,
+  type EffectiveSkill,
+  type EffectiveSkillSnapshotV1,
+  type OfficialSkillBase,
+} from "./prompt/effective-skill-runtime";
+export {
+  CompletionPolicyRuntimeError,
+  registerOfficialCompletionPolicyAdapter,
+  listOfficialCompletionPolicyAdapters,
+  validateCompletionPolicy,
+  evaluateCompletionPolicy,
+  enforceCompletionPolicy,
+  type CompletionPolicyAdapter,
+  type CompletionPolicyEvaluation,
+  type CompletionPolicyFailureEvidence,
+  type CompletionPolicyViolation,
+} from "./prompt/completion-policy";
 // Skill 输出契约 ⇄ JSON Schema 配置口子(SPEC §4.3):导出(zod→JSON Schema)+ 回灌(JSON Schema→ajv 校验器)。
 export {
   exportZodToJsonSchema,
@@ -188,12 +228,18 @@ export {
 export { TOPIC_GENERATE_TEMPLATE } from "./prompt/templates/topic-generate";
 export {
   SCRIPT_DRAFT_TEMPLATE,
+  SCRIPT_DRAFT_COMPLETION_POLICY,
+  SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER,
   scriptDraftSchema,
   scriptShotSchema,
   // [T-387b] 结构化视觉意图 schema(shots[].visual 可选:description/assetRefs/missing)。
   scriptShotVisualSchema,
   type ScriptDraftOutput,
 } from "./prompt/templates/script-draft";
+export {
+  SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
+  scriptSourceSimilaritySchema,
+} from "./prompt/templates/script-source-similarity";
 // 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
 // T-025:planning 三节点加 outputSchema 走结构化(跨模型健壮),schema/type 一并导出。
 export {
@@ -365,6 +411,11 @@ export {
   benchmarkTopicSchema,
   type BenchmarkTeardownOutput,
 } from "./prompt/templates/benchmark-teardown";
+export {
+  INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+  intelligenceTopicDecomposeSchema,
+  type IntelligenceTopicDecomposeOutput,
+} from "./prompt/templates/intelligence-topic-decompose";
 // [T-235b] 热点信源信号抽取(trend.extract)外置模板 + 输出 schema —— 信源页正文 → 结构化信号
 // (无热度不编)。schema 定义在本包(有 zod);backend 采集器引类型,无需直引 zod。
 export {

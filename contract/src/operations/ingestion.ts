@@ -52,7 +52,13 @@ export const ingestionOperations = {
     // 同步读回身份 → 按 sec_uid upsert 账号 → staging 搬到该号正式目录。不传/false = 现行为
     // (重连当前号复用既有 profile,合理)。
     body: z
-      .object({ accountId: id.optional(), forceNew: z.boolean().optional() })
+      .object({
+        accountId: id.optional(),
+        forceNew: z.boolean().optional(),
+        // [T-546] 内容雷达黑马来源需要的是热点宝 OAuth，不是普通抖音扫码。
+        // additive：旧客户端不传时仍走 douyin.com，其他绑定入口行为不变。
+        site: z.enum(["douyin.com", "douhot.douyin.com"]).optional(),
+      })
       .optional(),
     response: z.object({ loggedIn: z.boolean() }),
     fr: ["FR-INGESTION-DOUYIN"],

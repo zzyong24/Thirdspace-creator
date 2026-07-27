@@ -180,14 +180,21 @@ describe("calibration contract (each of 7 ops validates against its DTO)", () =>
   it("calibration.predictions.list → predictionResource[] (createdAt desc, per-dim score derived)", async () => {
     const t = makeTransport(db);
     const { versionId } = await seedRubric(t);
-    // Two predictions; per-dim scores ride predictedConversion → non-zero predictedScore.
+    // Two predictions; the first uses the current nested AI shape, the second keeps the
+    // legacy flat shape. Both must derive a non-zero score through the transport.
     await call(t, "calibration.predictions.create", {
       body: {
         subjectType: "content_output",
         subjectId: "output-1",
         rubricVersionId: versionId,
         predictedMetrics: {},
-        predictedConversion: { hook: 4, persona: 5, cta: 3 },
+        predictedConversion: {
+          dimensions: [
+            { key: "hook", score: 4 },
+            { key: "persona", score: 5 },
+            { key: "cta", score: 3 },
+          ],
+        },
         confidence: "high",
       },
     });
@@ -209,7 +216,7 @@ describe("calibration contract (each of 7 ops validates against its DTO)", () =>
     // createdAt desc — both share NOW, so assert membership rather than order strictly.
     const subjectIds = rows.map((p) => p.subjectId).sort();
     expect(subjectIds).toEqual(["output-1", "output-2"]);
-    // per-dim scores landed → predictedScore is the 变现加权 sum, NOT 0.
+    // Nested per-dim scores landed → predictedScore is the 1–5 weighted sum, NOT 0.
     const first = rows.find((p) => p.subjectId === "output-1")!;
     expect(first.predictedScore).toBeGreaterThan(0);
     // DIMENSIONS weights: hook .4*4 + persona .3*5 + cta .3*3 = 1.6+1.5+0.9 = 4.0

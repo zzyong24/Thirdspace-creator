@@ -104,6 +104,23 @@ describe("AppShell", () => {
     expect(headers).toHaveLength(1);
   });
 
+  it("[T-518] keeps a real issue-feedback entry available in expanded and collapsed sidebar", async () => {
+    await renderShell();
+    const feedback = screen.getByRole("button", { name: "问题反馈" });
+    expect(feedback).toBeVisible();
+    expect(feedback).toHaveTextContent("问题反馈");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "收起侧栏" }),
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "问题反馈" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "问题反馈" })).toHaveTextContent(
+        /^$/,
+      );
+    });
+  });
+
   it("renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)", async () => {
     await renderShell();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
@@ -114,6 +131,7 @@ describe("AppShell", () => {
     expect(labels).toEqual([
       "首页",
       "定位中心",
+      "内容雷达",
       "选题",
       "项目",
       "知识库",

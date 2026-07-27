@@ -5,6 +5,29 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-MC-002
+Date: 2026-07-26
+Stage: T-501 4-build
+Type: user-confirmed-scope-reduction
+Decision: T-501 只做现有模型设置页的轻量优化：减少普通用户配置项；“保存并测试”复用正式
+          modelFor + streamText 并验证非空文本；补官方预设、New API/中转站、Responses、
+          Kimi 开放平台与 Kimi Code 教程。
+Rationale: 用户明确指出模型配置需求没有原方案复杂。当前 Settings、T-471 Responses 和
+           settings.models.put/test 已经存在，继续建设八槽总览、向导、能力平台和付费探测
+           会扩大范围、增加配置负担并偏离真实问题。
+Source: 用户会话“优化一下就行了……减轻用户配置负担，优化配置测试通路，补充教程文档即可”，
+        2026-07-26。
+Affected Artifacts: T-501 BACKLOG/任务详情、替代范围、应用内手册、模型预设、连接测试组合层。
+Invalidates: 旧 T-501 PRODUCT SPEC/CONTRACT/PAGE SPEC 中的八槽总览、配置向导、能力平台、
+             费用与付费 effect 均不进入 BUILD；旧文档只作为历史审计材料。
+Explicit Limits: 不新增页面/公开 operation/数据模型；不依赖 T-517；不触发图片或视频付费调用；
+                 轻量测试只承诺基础流式文本，不冒充复杂工具调用全兼容认证。
+Owner: user+agent
+Revisit Trigger: 用户明确要求新增模型管理页面、能力平台、计费或付费 provider 验证。
+Status: active
+```
+
+```text
 ID: DEC-001
 Date: 2026-06-20
 Stage: 00-intake (orchestrator initialization)
@@ -439,3 +462,366 @@ surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源
 ## DEC-018 (2026-06-24) — 真PG集成测试覆盖表选择
 
 **决策**(B 级,微调 spec):真 PG 集成抽样覆盖 `users`(identity)+`ai_tasks`+`ai_task_results`,做跨表 ownership join,而非 spec 原写的 `projects`。**理由**:projects 表 NOT-NULL 列多、构造脆;ai_tasks→ai_task_results 父子关系的 ownership 链更干净地验证"跨表所有权 + node-postgres 驱动 + 连接池"。`TEST_DATABASE_URL` gate,未设则 skip。**Status**:active。
+
+## DEC-019 (2026-07-23) — 正式支持 Responses，并保留 T-471 历史 Gate 缺口
+
+**来源与确认**：用户明确要求 CreatorOS 支持 OpenAI Responses，并以仓库同级的本地
+`Thirdspace-api`（New API fork）协议兼容为目标；2026-07-23 再次确认应按
+`product-to-code-orchestrator` 补全流程。
+
+**决策**：
+
+1. `apiFormat` 正式包含 `openai_responses`；`openai_chat` 与 Responses 显式分流，任何一侧
+   失败都不得自动降级成另一协议。
+2. 使用 Vercel AI SDK 与 Pi 已有 Responses 实现，不自研第二套工具循环。
+3. T-471 的代码提交 `94cc40bc` 保留；追溯性 SPEC 只恢复“需求→契约→实现→测试”关系，
+   不声称它在代码之前存在。
+4. 没有留下当场输出的 TDD 红测判定为 **历史 Gate FAIL（保留）**，不得补拍成 PASS。
+5. 真实 New API token + 实际模型调用会产生费用，未经用户单独授权不执行；发布前真端到端
+   保持 `RISK-011`。
+
+**影响**：FR-069、FLOW-023、API-008/009、TEST-001..008；见 CI-013 与
+`GATE-T471-RETROSPECTIVE.md`。
+**Status**：active；历史 TDD fail retained，外部付费 E2E pending。
+
+## DEC-020 (2026-07-23) — Codex/Claude 共用 product-to-code-orchestrator 入口
+
+**来源与确认**：用户指出 CreatorOS 既有交付模式由 `product-to-code-orchestrator` 管理，
+更换 Agent 宿主不应改变流程，并要求补充 `AGENTS.md`。
+
+**决策**：
+
+- `AGENTS.md` 对 Codex、Claude Code 和其他 Agent 一视同仁：先读 BACKLOG/SPEC，再加载技能、
+  校验版本、执行 stage-router，最后才可改代码。
+- BACKLOG 状态只经 `taskctl` 转换；`pmem` 仅同步项目记忆。
+- SPEC + BACKLOG 是计划，不再用 writing-plans 文档替代。
+- 历史证据不得伪造；缺失只能记 fail、pending 或用户确认的 accepted-risk。
+
+**影响**：Agent 会话入口与流程治理，不改变产品行为、数据归属或物理架构。
+**Status**：active。
+
+## DEC-CR-001..010、014..015 (2026-07-23) — 内容雷达产品边界与用户确认
+
+**来源与确认**：用户提出把旧“信号源”整体重构为位于定位与选题之间的对标监控/内容情报工作区，并在 2026-07-23 明确确认评论、逐字稿、首批平台、登录和稿件阶段边界；同日明确认可采用抖音热点宝作为关键词黑马上游的最终方案。完整定义见
+`docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md`。
+
+**决策**：
+
+1. `DEC-CR-001/003`：一级导航为「内容雷达」；对标博主、我的收藏、网页/RSS、黑马关键词统一归入该域。
+2. `DEC-CR-002`：雷达只把外部情报转成自己的选题候选；用户确认后写选题池，不在雷达中创建 Project 或稿件。
+3. `DEC-CR-004/005`：运行以真实 run 为准，失败、受阻与真 0 条分开；“全部作品”只指平台当前公开且当前会话可访问的内容。
+4. `DEC-CR-006`：用户从已确认选题创建 Project 后，才可在 Project 脚本工作区生成/改写稿件；高相似候选不得采纳为正式稿件版本，必须修改或重新生成。
+5. `DEC-CR-007`：逐字稿只能由用户单条或批量手动发起，全部异步排队；来源同步不自动转写。
+6. `DEC-CR-008`：评论只取公开数量，不抓正文；数量获取困难时诚实降级为 `null/未知`，不填 0，不阻断作品基础元数据。
+7. `DEC-CR-009`：首批支持抖音、通用网页与 RSS；网页/RSS 需要登录时引导用户打开受控登录会话，登录后重新测试，不保存明文凭据。
+8. `DEC-CR-010`：关键词黑马采用抖音热点宝 `low_follower_breakout`“低粉爆款”官方策展榜单，弃用已证伪的抖音原始搜索路径。热点宝复用 canonical appData 下按账号隔离、可由用户清除的抖音 profile；情报/任务域只保存 `browserSessionRef`，不读取、复制或记录原始 Cookie/短时签名。通用网页登录态继续由既有 `browser-sessions` 专用服务加密管理，不与抖音 profile 混为一套。热点宝只提供候选，仓内 `detectDarkhorse` 的固定 48 小时三档规则负责最终命中；粉丝数缺失即排除，明确零粉只走绝对阈值分支且赞粉比为 `null`，官方 rank/score 只作证据；产品不把策展榜单宣称为全站穷举。
+9. `DEC-CR-014`：任何来自他人的对标、收藏、黑马/爆款等外部视频必须保留可点击原视频链接；仅有标题/摘要不得转为选题。用户必须先手动完成异步转写，系统锁定一个不可变逐字稿版本与哈希，先做结构拆解，再结合定位生成选题候选。选题与后续 Project 均引用同一 transform/逐字稿证据；具体稿件生成或改写只在 Project 创建后发生，原逐字稿不得直接变成 Project 稿件，高相似候选仍须编辑或重新生成。
+10. `DEC-CR-015`：增加“复制抖音分享链接单条建档”。用户粘贴分享链接并选择分类后，系统必须解析真实作品 ID、作者稳定身份和 canonical 视频 URL；已有作者复用同一博主节点并补齐所选分类 membership，未有则创建默认不监控的新节点。同一作品的短链/长链幂等去重。本操作只建档，明确不得自动发起逐字稿，用户仍需手动异步转写。
+
+**Gate 状态**：产品口径及热点宝方案均已获用户确认，`RAT-CR-003` 已通过；`DEC-CR-010` 独立 delta review 经两轮 CONCERNS 修订后于 2026-07-23 PASS。用户同日授权开启落地实现，并在 BUILD 中补充确认 `DEC-CR-014` 的链接、逐字稿拆解和跨阶段证据口径，以及 `DEC-CR-015` 的分享链接单条建档；两项均沿用既有抖音只读权限与手动转写边界。
+**Status**：resolved（PLAN gate PASS，进入 Contract）。
+
+## DEC-CR-011..013 (2026-07-23) — 内容雷达 Contract 技术边界（已确认）
+
+1. `DEC-CR-011`：内容雷达跨 frontend/backend/worker 且有多消费者，命中 `PAT-004 CF-001/002/003/004`，新增交换点全部先进入共享 Zod contract 与 operation registry；模块内私有纯函数才允许直写。
+2. `DEC-CR-012`：情报、来源、快照和任务为跨重启用户数据，命中 `PAT-002 RF-001/002/004`，使用现有真实数据库与 Drizzle 迁移。统一长任务在 `execution` 模块增加 DB-backed claim/lease/heartbeat/checkpoint；`MOD-006` 因不支持计划、重试、优先级和真实 backpressure 不采用，也不提前引入 Redis/BullMQ。
+3. `DEC-CR-013`：五类 adapter 只返回统一候选信封；`intelligence` service 负责幂等、合并、来源观察、快照和 run 聚合。热点宝 adapter 不拥有“三档黑马”业务规则，领域层复用修订后的 `detectDarkhorse`。
+
+**Status**：resolved。用户已于 2026-07-23 认可整体方案并明确要求开启落地实现；该 Contract
+形成 scope envelope，在不改变产品方向、数据归属、安全、服务契约和发布标准的前提下持续
+进入 Build。用户同日再次确认分享链接按“分类 → 博主 → 视频”建档，已有博主复用、没有则
+自动创建。
+
+## DEC-PKG-01..05 (2026-07-23) — 桌面打包候选方向（待用户确认）
+
+**来源边界**：用户要求把 CreatorOS 打包欠债合并调研，并补查 Tauri 官网的 Windows
+最佳实践。用户尚未授权 RAT、正式实现、付费构建或 Windows 正式发布；以下均为
+`needs-user-confirmation`，不是已生效决策。
+
+1. `DEC-PKG-01`：继续把 Windows x64 作为证据补齐目标；所有退出条件达成前不得宣称正式支持。
+2. `DEC-PKG-02`：优先验证 runtime 跟随 Tauri 标准 NSIS `$INSTDIR`；只有 RAT 证伪才采用独立 runtimeRoot 与第二套选盘 UI。
+3. `DEC-PKG-03`：比较消费版 `currentUser` 与现有 `both`；是否取消默认 UAC 待 fixture 证据和用户确认。
+4. `DEC-PKG-04`：明确 WebView2 缺失口径；在联网小包与约增加 127 MiB 的完全离线安装器之间待用户选择，不采用官方不推荐的 `skip`。
+5. `DEC-PKG-05`：Windows 对外发布前接入 Authenticode + timestamp；未接入时只允许明确标注的内部未签名包，updater minisign 不冒充 OS 签名。
+
+**证据**：`docs/research/2026-07-23-tauri-windows-packaging-official-practices.md`；
+`docs/superpowers/specs/2026-07-23-desktop-packaging-first-launch-design.md`。
+
+**影响**：Windows 安装路径、权限提示、离线口径、更新/回滚与发布标准；未确认前
+T-487 保持 PLAN，不能进入 BUILD。
+**Status**：needs-user-confirmation。
+
+```text
+ID: DEC-AUTO-001
+Date: 2026-07-24
+Stage: 1-plan / T-517
+Type: user-confirmed-architecture-direction
+Decision: CreatorOS 自动化必须成为内置系统底座，而不是继续扩展采集专用 sourceKind。采用
+          “轻量 Automation Kernel + typed handler 积木”方向：数据库持久 job/run、唯一 ticker、
+          timezone/misfire/overlap/retry、持久 claim/recovery、(userId,accountId) 归属；旧六类
+          采集、内容雷达与持久后台任务迁为 handler；上下文健康先保留 typed conformance seam，
+          待 T-516 领域契约通过后再注册生产 handler/job/UI。仓内已有 execution_tasks 的 lease/heartbeat/
+          recovery 能力上收并演进为唯一 automation_run，不永久保留第二个通用执行状态机。
+          AutomationGrant 只授权已声明副作用，不替代 P-01 人工确认门：无人值守只可写运行账、
+          用户已委托来源返回且可验证的采集 evidence，以及 pending/imported 预设投影；它们不是
+          active 业务闭环。用户创建或启用来源/采集计划即构成该已声明范围的持续确认，不要求每条
+          指标/评论逐次授权。`source=imported` 历史作品壳属于 evidence projection，可幂等创建，
+          但转 manual/active、形成正式稿件/经验或驱动后续闭环仍须用户确认。AI/规则形成的创作、
+          语义归纳、偏好和修复一律只产 candidate/decision/manifest。handler 以
+          domainWriteClass + operation allowlist 获得最小 service port；旧 enabled job 只有能证明
+          用户曾创建/启用相同范围的来源/计划时才可迁移该采集授权，其他高风险 effect 不伪造 grant。
+          参考 pg-boss、Graphile Worker、BullMQ、
+          Temporal/DBOS 的成熟语义，但不直接引入 Redis、Mongo、外部 orchestration service、
+          通用 DAG 或任意用户脚本。
+Rationale: 仓内事实证明旧 scheduling 的 schema/wire/trigger/run 全部绑定采集与 ai_task，
+           继续增加枚举会把兼容成本扩散给每个新业务。用户明确要求“属于系统底座，其他能力
+           往底座上堆积木”；轻量自研可复用现有 PGlite/Drizzle 和本地运行语义，同时保留
+           pg-boss/Graphile 的 durable queue、handler registry、稳定幂等键等正确模式。
+Pattern-Ref: PAT-002, PAT-003, PAT-004
+Source: 用户会话确认（含 2026-07-24 对 P-01/R-INGEST 的产品裁决：自动化数据是预设/证据，
+        真正进入系统闭环才需要人确认）+
+        docs/research/2026-07-24-creatoros-automation-kernel-oss-research.md，2026-07-24。
+Affected Artifacts: T-517 replacement PRODUCT SPEC；SYSTEM_ARCHITECTURE；scheduling/automation
+                    contract、backend Kernel、自动化页；T-514/T-516 的定时执行依赖。
+Invalidates: 直接给旧 scheduled_job/sourceKind 增 `intelligence.sync` 或 `context.health`；
+             每个业务自建 setInterval/cron/run history；automation_run 与 execution_tasks
+             永久双写；T-516 DEC-CTX-005 中“原表直接泛化 jobKind”的未确认方案。
+Owner: user
+Revisit Trigger: replacement SPEC 独立评审证明 PGlite 上的原子 claim/恢复不可行，或真实产品
+                 出现必须跨机器持续运行的已确认需求。
+Status: superseded-in-part by DEC-ODR-001（“生产预设积木、唯一 ticker、人工确认业务闭环”的
+        用户方向继续有效；`automation_run/AutomationGrant/effect` 物理路线不再是当前输入）
+```
+
+```text
+ID: DEC-AUTO-002
+Date: 2026-07-24
+Stage: 2-contract / T-517
+Type: architecture-data-contract
+Decision: Automation Kernel 物理上采用八张归属表：automation_jobs、automation_runs、
+          automation_run_events、automation_grants、automation_compatibility_mappings、
+          automation_effects、automation_command_receipts、automation_cutover_state。
+          automation_run 同时是 durable queue 与用户历史；attempt 用 run 计数 +
+          严格 typed append-only event 表达，不另造第二执行状态表。command receipt 为 job/grant/
+          migration mutation 提供跨重启幂等重放；effect ledger 逐网络/模型/领域副作用保存
+          reservation/receipt；cutover control row 是 writer/ticker generation 的崩溃恢复真相。
+          所有状态 CAS、lease/attempt 更新和 event/receipt 同事务。用户 RPC、runtime port、handler
+          capability port 共用一套 typed contract；
+          handler 只获得 manifest + grant + domainWriteClass 三重交集后的 operation allowlist。
+          旧 scheduledJobs/jobRuns 只走单写 compatibility adapter。用户创建/启用同范围只读采集
+          可以迁窄 grant；高风险/扩范围任务待重新授权。
+Rationale: 单一 run 消除 execution_tasks/job_runs 的双真相；append-only event 保留取消、重试和
+           reconciliation 证据；最小 capability port 同时满足账号 ownership、P-01 确认门和
+           SYSTEM_ARCHITECTURE 模块边界。PGlite RAT 已证明最小 transaction/CAS/lease 原语可行。
+Pattern-Ref: PAT-002, PAT-003, PAT-004
+Source: T-517 confirmed PRODUCT SPEC；用户确认①（2026-07-24）；
+        docs/research/2026-07-24-automation-kernel-pglite-rat.md。
+Affected Artifacts: API-AUTO-001..027；automation contract/resources/schema/runtime；
+                    scheduling compatibility；intelligence execution task migration。
+Invalidates: automation_run + execution_tasks 永久双写；frontend 业务 ticker；
+             handler 直拿 repository/通用写库；每条采集 evidence 逐次弹窗确认。
+Owner: user+agent
+Revisit Trigger: Contract review 证明 PGlite 无法支持同事务 event/CAS，或产品新增跨机器 worker。
+Status: superseded by DEC-ODR-001（历史 Round 3 FAIL 保留；本决定从未激活，不再进入确认队列）
+```
+
+```text
+ID: DEC-CTX-005
+Date: 2026-07-24
+Stage: 2-contract / T-516
+Type: architecture-data-contract
+Decision: T-516 拟采用四项物理裁决，待确认②统一签核：
+          ① ContextFact 每轮重建，不复制业务真值；report/issue/candidate/event/manifest 写入
+          canonical Drizzle DB。② 复用 scheduled_job/job_run 与唯一 tick 历史，但把现有采集
+          专用 dispatch 泛化为 jobKind，context.health 是零 LLM 的独立 executor，不伪装成
+          收藏/采集源，也不新增 timer。③ Publishing 暴露 canonical publication 窄读 port，
+          Context 不跨 repository 拼表。④ creator_profiles 增加 revision；repair confirm/undo
+          用 SQL CAS，AI/worker 只产候选，确认后由 backend positioning/context service 原子落库。
+Rationale: 结果需要隔天确认和撤销，命中 PAT-002 RF-001/002/004；扫描需导航后继续且有终态，
+           命中 PAT-003 AF-002/003；设置、backend、Publishing、Positioning、AI runtime 是
+           多边界多消费者，命中 PAT-004 CF-001/002/003/004。复用真调度历史同时泛化执行器，
+           比新增 timer 或把治理任务塞进采集语义更一致。
+Pattern-Ref: PAT-002, PAT-003, PAT-004
+Source: T-516 SERVICE CONTRACT 仓内可行性核查，2026-07-24。
+Affected Artifacts: T-516 SERVICE CONTRACT；contract/context operations；backend context、
+                    scheduling、publishing、positioning；settings/Copilot consumers。
+Invalidates: 第二套调度/run 表；前端/localStorage 持有结果真值；Context 直读他模块 repository；
+             无 revision 的先读后写伪 CAS。
+Owner: user（确认②后 active）
+Revisit Trigger: 独立契约评审发现 blocker，或用户不接受任一物理裁决。
+Status: superseded by DEC-ODR-001（未获确认、从未激活；旧 report/issue/candidate/event 与独立
+        confirm/undo 物理方案不再进入决策队列）
+```
+
+## DEC-FDB-001 (2026-07-26) — 问题反馈是用户确认的窄化出网，不建设客服平台
+
+**来源**：用户要求“有个能反馈 bug 的渠道，且直接反馈给我”，并指出此前把它扩成客服工单、
+多角色、复杂保留与删除编排已经跑偏。
+
+**决策**：
+
+1. 入口放在 CreatorOS 设置中；用户先预览描述、最多 3 张截图和是否附加加密日志，再明确点击
+   “发送问题反馈”。未点击发送时反馈网络请求必须为 0。
+2. Web 只调用 Tauri typed RPC；Tauri 固定本地附件快照、取得新鲜签名授权并上传，Web 不获得
+   绝对路径、激活码或日志明文。
+3. Thirdspace Growth 只提供一个私有开发者收件箱，复用现有管理员认证、私有对象存储、事务
+   outbox 和 worker runtime；不建设客服角色、状态流转、用户在线回查或 legal hold。
+4. 接收内容固定 90 天后删除；日志始终是开发者公钥加密的 `.enc`，只有开发者离线工具可解密。
+5. 该窄化出网同步写入产品宪法 P-04 与 NFR-PRIVACY；以后如要客服协作必须另立需求并重新确认。
+
+**用户确认（2026-07-26）**：用户明确要求直接反馈给开发者，并认可先纠正过度设计、后续再讨论
+流程框架优化。
+
+**Status**：superseded by DEC-FDB-002（历史产品裁决保留；Growth 上传/收件箱不再是 BUILD 输入）。
+
+## DEC-FDB-002 (2026-07-26) — 撤销应用内上传，问题反馈复用已配置 supportUrl
+
+**来源**：对 DEC-FDB-001 的最终可实现性审计发现，仓库没有可直接用于生产的 Growth 私有反馈
+对象存储、通知 adapter 和所需 license proof；继续补齐会再次把“直接反馈给开发者”扩成新平台。
+同时 CreatorOS 已经通过签名 channel config 下发、缓存并净化 `supportUrl`。
+
+**决策**：
+
+1. DEC-FDB-001 中关于 Tauri 上传、Growth 私有收件箱、截图/日志服务端保存和 90 天清理的决定，
+   在进入 BUILD 前全部撤销；该决定保留为历史，不再作为实现输入。
+2. CreatorOS 提供本地反馈弹窗：整理并复制描述与最小诊断摘要，打开已配置的 `supportUrl`，
+   并可打开本机加密日志目录。
+3. 真正提交发生在开发者已经配置的外部反馈渠道。应用不自动上传截图或日志，也不能把“外部页面
+   已打开”显示成“反馈已发送”。
+4. 未配置 `supportUrl` 时必须诚实提示，同时保留复制内容和打开日志目录的能力；禁止假按钮。
+5. 后续若确实需要应用内上传、回执或工单协作，必须作为新需求证明现有渠道不足后重新确认。
+
+**Status**：resolved（取代 DEC-FDB-001 的 BUILD 方向；T-518 回到 S 级直达入口）。
+
+## DEC-ODR-001 (2026-07-26) — 四个过度设计任务统一退回最小现有能力路线
+
+**来源**：用户明确表示近期方案“完全跑偏”，要求先统一解决具体问题，编排框架优化后议。独立审计
+进一步证明旧方案重复建设执行器、反馈上传基础设施和文件平台；第一次瘦身又遗漏了部分已确认结果。
+
+**决策**：
+
+1. T-517 保留“生产预设积木”的用户方向，但撤销新 `automation_job/run`、八表 effect 平台和第二
+   执行状态机。`scheduled_job/job_run` 继续管调度/展示；现有 `PersistentTaskService` 提供 durable
+   task 原语，并补一套 typed handler registry 与单一轻量 driver。DEC-AUTO-001 中“必须新建
+   automation_run/迁移为 Kernel”及 DEC-AUTO-002 的物理设计均被本决定取代。
+2. T-516 保留设置入口、默认每周、可调/关闭/立即检查，以及“AI 起草修改、用户确认或调整后保存”。
+   自动扫描只做确定性规则；AI 起草由用户主动触发，复用现有定位编辑、保存和版本历史，不新建
+   candidate/event/confirmation/undo Saga。DEC-CTX-001/002 的用户结果继续有效，DEC-CTX-003/005
+   中要求独立候选/撤销基础设施的实现解释由本决定收窄。
+3. T-518 以 DEC-FDB-002 为准：复用 `supportUrl`，不建设 Growth 上传/工单。
+4. T-519 保留默认文件夹、多级真实文件夹、“全部/最近/未归档”虚拟节点、多文件及既有 URL/文本
+   导入、关系图/观点地图/全部、本地原文件与用户采纳门。实现先修 Assets upload ownership 和
+   complete 幂等，不建设第二套上传/搜索/图谱。
+5. 四份 2026-07-26 Replacement 是新的 PLAN 真相；旧 CONTRACT 全部保留为审计历史并关闭 BUILD。
+   后续实现仍需新 CONTRACT、独立评审和确认②。
+
+**Status**：resolved（用户范围重置；不授权修改 orchestrator engine，也不把四项功能伪报为完成）。
+
+## DEC-REL-001 (2026-07-26) — 明日发布按核心逻辑 accepted-risk 进入 BUILD
+
+**来源**：用户明确纠偏：不要因协议形式追求完美阻塞开发；UI、功能和核心逻辑没有大问题时
+先实现、先发布，评审剩余完整性问题后补。
+
+**决策**：
+
+1. T-517、T-519、T-537 不再等待合同字段、示例和 scope ledger 的形式完美，按当前 PLAN 与
+   replacement contract 直接进入隔离 BUILD。
+2. accepted-risk 只覆盖协议完整性和扩展性，不豁免三条发布底线：T-537 不串 owner/collector；
+   T-517 不重复/丢失运行且终态诚实；T-519 不产生跨账号或半写入文件。
+3. 实现只复用现有 scheduled job/PersistentTask、Assets/Knowledge/Search/图和内容雷达 source，
+   不新造第二状态机、上传平台、搜索平台、图谱平台或全局账号选择器。
+4. 真实双抖音账号 RAT、完整真机 E2E 与剩余合同补账必须在最终发布说明中诚实列为待验收，
+   不得把单测 fixture 冒充真实外部数据源证据。
+
+**Status**：accepted-risk（用户授权先 BUILD；不等同于发布验收 PASS）。
+
+## DEC-COL-001 (2026-07-26) — 内容雷达采用 owner/collector 双身份且不扩散到其他模块
+
+**来源**：用户明确要求只有内容雷达需要指定采集账号，并要求主页、收藏夹、黑马三类登录型
+来源均可选择；经营数据、评论、其他数据源与其他自动化任务不需要。
+
+**决策**：
+
+1. 当前工作区账号是所有 source/run/task/item/observation 的唯一 owner；采集账号只决定抖音
+   adapter 使用哪份已绑定、active、同用户的本机登录态。
+2. selector 只出现在 `creator_profile`、`favorites_folder`、`darkhorse_query` 的现有新增来源
+   对话框；不得做成全局账号选择器，也不得改变 `self.metrics`、`self.detail`、comments、
+   `web/rss`、分享链接或其他自动化任务。
+3. 客户端只提交 `collectorAccountId`；服务端验属主、平台和状态后派生 opaque session。
+   Cookie、profile 路径、签名及 `browserSessionRef` 不进入这三类公开契约、领域数据和普通日志。
+4. 手动、首次、定时同步都消费 source 固化的 collector；任何异常都不得回退 owner 或伪装成
+   成功 0 条。
+5. T-496 的“仅收藏夹”失败工件由 T-537 替代。T-537 文档已三轮内部评审通过，但在两个真实
+   active 抖音登录态完成 `RAT-537-01` 前，正式 PLAN/CONTRACT Gate 与全部 BUILD 保持 blocked。
+
+**Status**：blocked（产品边界已确认；外部数据源可行性硬门未满足）。
+
+## DEC-TSB-001 (2026-07-26) — 三系统权威边界、双入口与渠道生命周期
+
+**来源**：用户要求根治 Thirdspace-growth、activation-manager、CreatorOS 三仓分工，并在
+Growth DEC-050 新独立评审 PASS 后确认最终 lifecycle 与 AM exact contract。
+
+**决策**：
+
+1. Growth 是商业、渠道配置与官方产品 Bug 收件箱权威；AM 是 license/entitlement 与签名权威；
+   CreatorOS 只负责产品、本地内容/日志、脱敏诊断、反馈交互和签名 runtime 的只读消费。
+2. 产品 Bug 只读 `bugFeedbackUrl`；购买、续费、激活码交付售后只读
+   `channelSupportUrl`。legacy `supportUrl` 严格只是 `channelSupportUrl` alias。
+3. AM→Creator 唯一 runtime 是 signed `channelConfig` schema
+   `channel-runtime-v2` closed 17 keys。Creator 按 raw digest/Ed25519/date/nonce →
+   closed schema → `(projectKey,channelRef)` → RFC 8785 `sourceDigest` → version/digest 顺序验证。
+4. Growth lifecycle 固定 `active→sales_disabled→terminated`。sales_disabled 的更高 snapshot
+   令 purchase/renewal 为 null，保留 brand/support/download/official Bug；terminated 前必须由
+   AM 把全部 active/non-revoked 授权原子改绑到明确 ordinary active target，报告满足
+   `completed=affected,unresolved=0`。
+5. Creator 不接收 tombstone、不自动 fallback、不猜 target。只在 AM 签名响应中出现新
+   identity 后采纳。
+6. 本地可信 runtime 并入现有加密 `.license` 快照原子保存；旧明文 `.channel-links`
+   不自动信任或迁移。Creator 不自动上传日志、截图、用户内容或反馈正文。
+
+**Invalidates**：DEC-FDB-002/DEC-ODR-001 中“Bug 复用 `supportUrl`”的字段语义；
+T-396 的三键明文 cache 与单一 `supportUrl`；T-518 的 Bug 入口字段。T-531/T-532 与上传/
+附件相关范围继续冻结。
+
+**Evidence**：Growth canonical §5.1/§6/§7.3.1/§7.8..7.11 新周期 PASS；
+AM API-AM-007/011/012；projection digest `sha256:b9512d…76d6d`；
+reassignment fixture file SHA-256 `40a7bc44…2cc7`。
+
+**Status**：implemented；Creator CONTRACT 三轮独立评审已收口，TDD/BUILD 与 consumer contract
+tests 已完成。全局 `next build` 仍受当前 HEAD 中 T-535 已提交的 `instrumentation.ts`
+code-frame panic 阻断，不影响本决策落地结论，但发布前必须由 T-535 清零。
+
+## DEC-PLAT-001 (2026-07-26) — macOS 与 Windows 均为已完整验收桌面目标
+
+**来源**：用户明确纠偏：Windows 版本已经完整验收，先前“不能完成验收”“仍待 Windows
+实机验证”的当前口径均为错误信息。
+
+**决策**：
+
+1. CreatorOS 当前正式桌面目标为 macOS 与 Windows；两端均按已完成完整验收处理。
+2. 当前生效的教程、产品定位、桌面 README、任务队列和规格索引不得再把 Windows 写成
+   “未支持”“未实机验证”“不能验收”或发布范围外。
+3. 旧 SPEC、旧评审与 README 中 P1 当时的验证范围可作为历史审计记录保留，但必须标明已被
+   本决策和 2026-07-26 用户验收结论取代，不得继续作为当前状态引用。
+4. 本决策记录的是当前发布验收结论，不反向补造未在当时发生的历史命令、测试日志或签名证据。
+5. “CreatorOS 不自动发布到抖音”等真实产品边界继续保留；它与 Windows 桌面版是否完成验收
+   是两件独立的事。
+
+**Status**：resolved（事实纠偏；不新增产品范围）。
+
+## DEC-FDB-003 (2026-07-26) — 发布前采用官方飞书表作为产品 Bug 降级入口
+
+**来源**：用户在 test 包真机确认 Growth/AM 尚未下发反馈地址，并明确要求先写入飞书多维表格
+入口，让用户手动提交和上传日志压缩包；应用内发送按钮禁用，暂不强制依赖 Growth。
+
+**决策**：
+
+1. `IssueFeedbackDialog` 仍优先使用签名 `bugFeedbackUrl`；字段为空或读取失败时，退到 CreatorOS
+   内置的官方飞书反馈表 URL。该常量只服务产品 Bug，不得复用于购买、续费、下载或渠道售后。
+2. 应用内“发送问题反馈”固定禁用，不调用产品反馈 POST；“打开反馈渠道”保持可用并通过可信
+   desktop opener 打开系统浏览器。
+3. UI 明确引导用户复制反馈内容、打开日志文件夹、压缩为 zip，再在飞书页面手动上传。
+   CreatorOS 不自动读取、打包或上传日志，也不宣称外部页面已经提交成功。
+4. 这是发布前 accepted-risk 降级；Growth/AM 的长期权威、签名 runtime 和三系统商业边界不变。
+
+**Status**：accepted-risk（用户确认的临时发布降级；T-546）。

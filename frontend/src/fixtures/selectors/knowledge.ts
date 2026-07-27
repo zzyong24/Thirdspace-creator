@@ -324,6 +324,7 @@ export interface KnowledgeListItem {
   readonly title: string;
   readonly knowledgeType: string;
   readonly status: KnowledgeRow["status"];
+  readonly createdAt?: string;
   readonly updatedAt: string;
 }
 
@@ -331,17 +332,21 @@ export function buildRecentRowsFromItems(
   items: ReadonlyArray<KnowledgeListItem>,
 ): ReadonlyArray<KnowledgeRow> {
   if (items.length === 0) return [];
-  // [T-211] 正序:知识库列表按 updatedAt 升序(最早在前)。原为倒序(最新在前),
-  // 用户要求改正序(预设课程/章节按自然序:第 1 节在前)。带标签筛选的列表路径
-  // (knowledge-data.ts mergeRecentRows 不介入)直接吃这里的顺序,故同步翻正序。
+  // [T-547] 全部知识按导入/写入时间倒序。预设课程若需要章节顺序，应在课程
+  // 自己的视图内排序，不能继续绑架整个知识库的默认时间顺序。
   return items
     .slice()
-    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+    .sort((a, b) => {
+      const aTime = a.createdAt ?? a.updatedAt;
+      const bTime = b.createdAt ?? b.updatedAt;
+      return bTime.localeCompare(aTime) || b.id.localeCompare(a.id);
+    })
     .map<KnowledgeRow>((item) => ({
       id: item.id,
       title: item.title,
       type: knowledgeTypeLabel(item.knowledgeType),
       updatedAt: item.updatedAt.slice(0, 10),
+      sortTimestamp: item.createdAt ?? item.updatedAt,
       status: item.status,
       tags: tagsForKnowledge(item.id),
     }));

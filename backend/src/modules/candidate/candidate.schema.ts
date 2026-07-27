@@ -49,6 +49,47 @@ function score(v: unknown): number | null {
   return Math.round(v);
 }
 
+function safeHttpUrl(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  try {
+    const url = new URL(v);
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseSourceReferences(
+  raw: unknown,
+): NonNullable<CandidateCard["sourceReferences"]> {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const references: NonNullable<CandidateCard["sourceReferences"]> = [];
+  for (const value of raw.slice(0, 10)) {
+    if (value == null || typeof value !== "object") continue;
+    const ref = value as Record<string, unknown>;
+    const kind =
+      ref.kind === "original_video" || ref.kind === "source_page"
+        ? ref.kind
+        : undefined;
+    const platform = str(ref.platform);
+    const label = str(ref.label);
+    const url = safeHttpUrl(ref.url);
+    if (!kind || !platform || !label || !url || seen.has(url)) continue;
+    seen.add(url);
+    references.push({
+      kind,
+      platform,
+      label,
+      url,
+      intelligenceItemId: str(ref.intelligenceItemId),
+    });
+  }
+  return references;
+}
+
 // [T-284a] 复刻补链 G1 —— 原爆款拆解要素(candidate.card.teardown)的解析。5 段可迁移要素
 // (钩子/结构/为什么爆/可借鉴点/适配本账号建议),benchmark-teardown-runner 建候选后 patch 挂上。
 // 全字段可空;整体无任一有效段 → undefined(候选 card 里不留空壳,读端 toCardDto 也就不带 teardown)。
@@ -106,6 +147,8 @@ export function toCardDto(raw: unknown): CandidateCard {
     // [T-284a] 复刻补链 G1(additive)—— benchmark 转化候选携带的原爆款拆解要素(5 段),
     //   立项时复制进 briefDetail.benchmarkRef 回流写稿。非 benchmark 候选无此字段。
     teardown: parseTeardownRef(c.teardown),
+    // [T-482] 只回显校验过的 HTTP(S) 来源；非法/重复链接在领域 DTO 边界丢弃。
+    sourceReferences: parseSourceReferences(c.sourceReferences),
   };
 }
 
@@ -154,6 +197,9 @@ export function pickCardFields(raw: unknown): Record<string, unknown> {
   if ("teardown" in c) {
     const parsed = parseTeardownRef(c.teardown);
     if (parsed) out.teardown = parsed;
+  }
+  if ("sourceReferences" in c) {
+    out.sourceReferences = parseSourceReferences(c.sourceReferences);
   }
   return out;
 }

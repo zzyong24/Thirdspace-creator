@@ -18,6 +18,24 @@
       "what": "物理架构边界回归(后端嵌前端 / AI SDK 泄漏 / 跨模块 repo)",
       "check": "node orchestrator/process/boundary-scan.mjs --quiet",
       "onFail": "门卫拦截:出现【新】边界违规(结构回归)。见 boundary-scan 输出与 orchestrator/SYSTEM_ARCHITECTURE.md。修掉新违规;若是有意消减,跑 boundary-scan.mjs --update-baseline 收紧基线。"
+    },
+    {
+      "led": "LED-005",
+      "what": "长输入 AI 节点退回单次调用或丢失分块失败/覆盖真相",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chunk-and-merge.test.ts src/modules/ai-runtime/knowledge-distill-runner.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "onFail": "长输入分块门失败：保持确定性切块、原序归并；字幕局部 fallback，知识蒸馏整次失败，并保留进度/截断覆盖真相。"
+    },
+    {
+      "led": "LED-006",
+      "what": "桌面流水线退回只验安装文件、不真启动 GUI 与 WebView 主页面",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs",
+      "onFail": "桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。"
+    },
+    {
+      "led": "LED-007",
+      "what": "文本模型连通探针退回只读正文流，思考流与流内错误被误报为空响应",
+      "check": "pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
+      "onFail": "模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。"
     }
   ]
 }

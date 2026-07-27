@@ -1,21 +1,19 @@
 import "server-only";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
-import * as os from "node:os";
 
 import { lessonPointsToMarkdown } from "@/features/knowledge/knowledge-lesson-content";
 
 // win-video-tutor 22 节课程 → CreatorOS 知识库 seed。
 //
-// 用户给了一份 22 节完整短视频课程(`win-video-tutor` skill)的 zip,装在
-// `~/.claude/skills/win-video-tutor/knowledge/{01..22}.md`。需求是:canonical user
-// 首次启动时把 22 节落到自家 knowledge_items 表里(每节 1 个 reference 类型的
+// 用户明确安装并配置 22 节完整短视频课程包路径后,首次启动把课程落到自家
+// knowledge_items 表里(每节 1 个 reference 类型的
 // knowledgeItem + 1 个 revision,content 存整篇 markdown)——
 // 知识库开箱就有真内容(不是空)且可被项目弹药、复盘、对话蒸馏消费。
 //
 // 实现要点:
-//   1. 运行时 fs.readFile 读源文件(用户本机 ~/.claude/skills/...)—— 文件缺失 → 安静
-//      返回(该 skill 没装到本机是合法状态,绝不能因此炸 buildPersistence)。
+//   1. 仅在调用方显式传 skillPath 或部署显式配置 env 时读源文件。生产缺省不猜测
+//      开发者 home 路径,安静返回 0(课程包未安装是合法状态)。
 //   2. 解析每个 .md 头几行 YAML-like 抽 module/lesson 标题(失败时 fallback 标题)。
 //   3. 幂等:每节写入前先看 source_metadata->>'origin'='win-video-tutor' AND
 //      source_metadata->>'lessonNumber'=<N> 是否已存在 → 存在则 skip(重装 / 重启安全)。
@@ -32,21 +30,6 @@ const SEED_ORIGIN = "win-video-tutor";
 // 品牌前缀(新 seed 用不带前缀的模板)。存量装机(seed 早于本改动)的 22 条仍带此
 // 前缀 → 由 persistence-client 的启动 fixup 按此常量幂等 strip(见 fixupWinVideoTutorTitles)。
 export const WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX = "Win 短视频私教 · ";
-function resolveDefaultSkillPath(): string {
-  // 测试可经 env 切到 tmp 目录(避免测试耦合用户真 home);env="0" 显禁用
-  // (生产不需要时也可关)。缺省走 ~/.claude/skills/win-video-tutor。
-  const envPath = process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
-  if (envPath === "0") {
-    return path.join(os.tmpdir(), "win-video-tutor-DISABLED");
-  }
-  if (envPath && envPath.length > 0) {
-    return envPath;
-  }
-  return path.join(os.homedir(), ".claude", "skills", "win-video-tutor");
-}
-function resolveDefaultKnowledgeDir(): string {
-  return path.join(resolveDefaultSkillPath(), "knowledge");
-}
 
 interface ParsedLesson {
   readonly lessonNumber: number; // 1..22
@@ -264,28 +247,26 @@ async function isAlreadySeeded(
 }
 
 /**
- * 启动时跑(seed 失败不阻塞 app:本机未装该 skill 是合法状态,console.warn + 返回 0)。
+ * 启动时跑(seed 失败不阻塞 app:课程包未配置/未安装是合法状态,返回 0)。
  *
  * @param knowledgeService 知识库 service
  * @param ctx canonical user ctx(userId + accountId)
- * @param opts.skillPath 默认 `~/.claude/skills/win-video-tutor`,测试可传 tmp 目录
+ * @param opts.skillPath 显式课程包路径；未传时仅接受显式 env 注入，不扫描用户 home
  * @param opts.taxonomyService [T-218] tag 写侧 service;传入则每节按 module 挂 tag
  *   (观点地图开箱即在)。不传则只建知识条目(向后兼容旧调用/测试)。
- * @returns 实际种入的知识条目数(0 = 已种过 / 文件缺失 / 失败)。
+ * @returns 实际种入的知识条目数(0 = 未配置 / 已种过 / 文件缺失 / 失败)。
  */
 export async function seedWinVideoTutor(
   knowledgeService: KnowledgeServiceLike,
   ctx: KnowledgeServiceCtx,
   opts: { skillPath?: string; taxonomyService?: TaxonomyTaggerLike } = {},
 ): Promise<number> {
-  // opts.skillPath 优先 > env 旁路 > 默认 ~/.claude/skills/win-video-tutor
-  const skillPath =
-    opts.skillPath ??
-    process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH ??
-    (process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH === "0"
-      ? path.join(os.tmpdir(), "win-video-tutor-DISABLED")
-      : undefined) ??
-    path.join(os.homedir(), ".claude", "skills", "win-video-tutor");
+  const configuredSkillPath =
+    opts.skillPath ?? process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
+  if (!configuredSkillPath || configuredSkillPath === "0") {
+    return 0;
+  }
+  const skillPath = configuredSkillPath;
   const knowledgeDir = path.join(skillPath, "knowledge");
 
   if (await isAlreadySeeded(knowledgeService, ctx)) {

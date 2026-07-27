@@ -12,6 +12,50 @@ import type { ArtifactType } from "@/types/domain";
 // 命中 → 人话 + suggestSwitchModel;不命中 → null(调用方回落原串,不装懂)。
 
 describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
+  it("DeepSeek model not found → 稳定模型分类 + 设置指引", () => {
+    const human = humanizeAiErrorMessage(
+      "AI_APICallError: 404 model not found: deepseek-v4-flash",
+    );
+    expect(human).not.toBeNull();
+    expect(human!.code).toBe("model_not_found");
+    expect(human!.message).toContain("模型名");
+    expect(human!.message).toContain("设置");
+    expect(human!.suggestSwitchModel).toBe(true);
+  });
+
+  it("OpenAI model_not_found / does not exist 风格也归入同一模型分类", () => {
+    for (const raw of [
+      '{"error":{"code":"model_not_found","message":"The model was not found"}}',
+      "The model 'gpt-4-retired' does not exist or you do not have access to it.",
+      "invalid_model: unknown model",
+    ]) {
+      const human = humanizeAiErrorMessage(raw);
+      expect(human?.code).toBe("model_not_found");
+      expect(human?.message).not.toContain("要操作的内容");
+    }
+  });
+
+  it("provider 名称无效与模型名无效分开分类", () => {
+    const human = humanizeAiErrorMessage(
+      "unsupported_provider: provider 'deepseek-v5' not found",
+    );
+    expect(human?.code).toBe("provider_invalid");
+    expect(human?.message).toContain("模型服务商");
+    expect(human?.suggestSwitchModel).toBe(true);
+  });
+
+  it("模型方 API Key 鉴权失败有独立分类", () => {
+    for (const raw of [
+      "AI_APICallError: invalid_api_key",
+      "authentication_error: Incorrect API key provided",
+    ]) {
+      const human = humanizeAiErrorMessage(raw);
+      expect(human?.code).toBe("provider_auth");
+      expect(human?.message).toContain("API Key");
+      expect(human?.suggestSwitchModel).toBe(true);
+    }
+  });
+
   it("实录主案例:MiniMax 输入敏感拦截(new_sensitive / 1026)→ 人话 + 建议换模型", () => {
     const raw =
       "Failed after 3 attempts. AI_APICallError: input new_sensitive (1026)";
@@ -31,6 +75,7 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
   it("限流(rate limit / 1002)→ 人话,不强推换模型", () => {
     const human = humanizeAiErrorMessage("Request failed: rate limit exceeded (1002)");
     expect(human).not.toBeNull();
+    expect(human!.code).toBe("rate_limited");
     expect(human!.message).toContain("限流");
     expect(human!.suggestSwitchModel).toBe(false);
   });
@@ -110,14 +155,29 @@ describe("describeUserError — 通用面向用户错误收口", () => {
   });
 
   it("结构化码 401/鉴权失败 → 映射人话", () => {
-    expect(describeUserError(new Error("HTTP 401 Unauthorized"))).toContain(
-      "登录",
-    );
+    const out = describeUserError(new Error("HTTP 401 Unauthorized"));
+    expect(out).toContain("登录");
+    expect(out).not.toContain("API Key");
   });
 
   it("结构化码 404 → 映射「已不存在」类人话", () => {
     const out = describeUserError(new Error("Request failed: 404 Not Found"));
     expect(out).toContain("不存在");
+  });
+
+  it("AI API endpoint 的 404 不冒充「内容已不存在」", () => {
+    const out = describeUserError(
+      new Error("AI_APICallError: 404 Not Found /v1/chat/completions"),
+      "模型请求失败,请检查配置。",
+    );
+    expect(out).toBe("模型请求失败,请检查配置。");
+    expect(out).not.toContain("要操作的内容");
+  });
+
+  it("通用 HTTP 429 不冒充模型方限流", () => {
+    const out = describeUserError(new Error("HTTP 429 Too Many Requests"));
+    expect(out).toBe("操作太频繁了,请稍等片刻再试。");
+    expect(out).not.toContain("模型方");
   });
 
   it("网络错(Failed to fetch / NetworkError)→ 映射网络人话", () => {

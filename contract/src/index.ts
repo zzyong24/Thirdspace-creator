@@ -6,6 +6,12 @@ export * from "./endpoints";
 export * from "./request-context";
 export * from "./transport";
 export * from "./client";
+export * from "./local-platform";
+
+export {
+  knowledgeFolderResource,
+  type KnowledgeFolderResource,
+} from "./resources/knowledge";
 
 // Taxonomy resource DTOs (module-04). Resources are normally reached via
 // `ENDPOINTS.<op>.response`, but the taxonomy module's `<module>.schema.ts`
@@ -39,12 +45,14 @@ export {
 export {
   candidateResource,
   candidateCard,
+  candidateSourceReference,
   benchmarkTeardownRef,
   audienceSignalResource,
   topicPromotionResource,
   topicsOverviewResource,
   type CandidateResource,
   type CandidateCard,
+  type CandidateSourceReference,
   type BenchmarkTeardownRef,
   type AudienceSignalResource,
   type TopicPromotionResource,
@@ -80,6 +88,12 @@ export {
 // service/repository 仍以该 resource 为 DTO 真值(agent_configurations 表保留)。
 // op 删除后无法再经 ENDPOINTS.createAgent.response 派生,故按 taxonomy 同款约定
 // 从 barrel 直接 re-export 单一真值。
+export {
+  aiTaskResultDataResource,
+  aiTaskResultResource,
+  type AITaskResultDataResource,
+  type AITaskResultResource,
+} from "./resources/ai";
 export {
   agentConfigurationResource,
   type AgentConfigurationResource,
@@ -176,6 +190,9 @@ export {
   type ExecutionTaskResource,
 } from "./resources/execution";
 
+// T-482 内容雷达领域与持久任务契约。
+export * from "./resources/intelligence";
+
 // [T-254a] video.render 决策 props 契约(渲染器无关)—— T-254b 决策 runner(写侧)与
 // backend execution video.render executor(读侧)共用单一真值(additive re-export)。
 export {
@@ -213,6 +230,16 @@ export {
   type SkillConfigOverrideResource,
   skillConfigOverrideVersionResource,
   type SkillConfigOverrideVersionResource,
+  completionPolicyV1Resource,
+  type CompletionPolicyV1Resource,
+  accountSkillOverlayPatchResource,
+  type AccountSkillOverlayPatchResource,
+  editableSkillValuesResource,
+  accountSkillOverlayCompatibilityErrorResource,
+  accountSkillOverlayResource,
+  type AccountSkillOverlayResource,
+  accountSkillOverlayVersionResource,
+  type AccountSkillOverlayVersionResource,
 } from "./resources/settings";
 
 // [T-163 Batch 3] Copilot 对话工具中文词表 —— chat-runner(backend,下沉后)与

@@ -45,6 +45,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/knowledge/:knowledgeId/relations/remove"],
   // [T-091] 图谱全量语义边读(user-scoped,additive)。
   ["GET", "/knowledge-relations"],
+  // [T-519] 知识文件工作区：逻辑文件夹 + 条目归档移动。
+  ["GET", "/knowledge-folders"],
+  ["POST", "/knowledge-folders"],
+  ["POST", "/knowledge/:knowledgeId/move"],
   // 知识与素材 — Taxonomy (Tag / EntityTag) sub-group (v0.2)
   ["GET", "/tags"],
   ["POST", "/tags"],
@@ -240,9 +244,41 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   // [T-255a] 执行层任务(脑手分离,SPEC 2026-07-11 execution-layer §2)
   ["POST", "/execution/tasks"],
   ["GET", "/execution/tasks"],
+  ["POST", "/execution/tasks/command"],
   ["GET", "/execution/tasks/:taskId"],
   ["POST", "/execution/tasks/:taskId/confirm"],
   ["POST", "/execution/tasks/:taskId/discard"],
+  // T-482 内容雷达（定位 → 内容雷达 → 选题）。
+  ["GET", "/intelligence/workspace"],
+  ["POST", "/intelligence/collections"],
+  ["PATCH", "/intelligence/collections/:collectionId"],
+  ["DELETE", "/intelligence/collections/:collectionId"],
+  ["GET", "/intelligence/collectors"],
+  ["POST", "/intelligence/sources/preview-profile"],
+  ["POST", "/intelligence/sources/preview-web"],
+  ["GET", "/intelligence/sources/favorite-folders"],
+  ["POST", "/intelligence/sources"],
+  ["GET", "/intelligence/sources"],
+  ["PATCH", "/intelligence/sources/:sourceId"],
+  ["DELETE", "/intelligence/sources/:sourceId"],
+  ["POST", "/intelligence/sources/:sourceId/runs"],
+  ["GET", "/intelligence/sources/:sourceId/runs"],
+  ["GET", "/intelligence/runs/:runId"],
+  ["GET", "/intelligence/items"],
+  ["GET", "/intelligence/items/:itemId"],
+  ["POST", "/intelligence/items/import-douyin-share"],
+  ["POST", "/intelligence/transcripts/enqueue"],
+  ["POST", "/intelligence/transforms/topic-preview"],
+  ["POST", "/intelligence/transforms/:transformId/confirm-topic"],
+  ["POST", "/projects/:projectId/intelligence"],
+  ["POST", "/projects/:projectId/scripts/candidates"],
+  ["POST", "/projects/:projectId/scripts/candidates/:taskId/accept"],
+  ["GET", "/intelligence/migrations/inventory"],
+  ["POST", "/intelligence/migrations"],
+  ["GET", "/intelligence/migrations/:migrationId"],
+  ["POST", "/intelligence/migrations/:migrationId/rollback"],
+  ["POST", "/browser-sessions/open-login"],
+  ["POST", "/browser-sessions/clear"],
 ];
 
 describe("endpoint registry", () => {

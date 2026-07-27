@@ -30,6 +30,19 @@ export enum ErrorCode {
   // 语义是引导态(前端翻译成「请先绑定/选择抖音号」),不是校验失败也不是越权,
   // 故独立成码;HTTP 用 428 Precondition Required(前置条件 = 已选中一个账号)。
   AccountRequiredError = "AccountRequiredError",
+  // [T-520] 收藏读取从 CDP → dispatch → HttpTransport 保留可操作错因。
+  // 不能回退成裸字符串，否则 UI 只能猜类名/文案并把失败误报成“请登录”或真 0。
+  DouyinFavoritesSessionExpired = "DOUYIN_FAVORITES_SESSION_EXPIRED",
+  DouyinFavoritesBrowserLocked = "DOUYIN_FAVORITES_BROWSER_LOCKED",
+  DouyinFavoritesCaptcha = "DOUYIN_FAVORITES_CAPTCHA",
+  DouyinFavoritesNetwork = "DOUYIN_FAVORITES_NETWORK",
+  DouyinFavoritesUpstream = "DOUYIN_FAVORITES_UPSTREAM",
+  DouyinFavoritesInvalidResponse = "DOUYIN_FAVORITES_INVALID_RESPONSE",
+  AttemptIdInvalid = "ATTEMPT_ID_INVALID",
+  ReservedInputField = "RESERVED_INPUT_FIELD",
+  AttemptPayloadMismatch = "ATTEMPT_PAYLOAD_MISMATCH",
+  RetrySourceNotTerminal = "RETRY_SOURCE_NOT_TERMINAL",
+  ExecutionClaimInvalid = "EXECUTION_CLAIM_INVALID",
 }
 
 export const ERROR_HTTP: Record<ErrorCode, number> = {
@@ -41,6 +54,17 @@ export const ERROR_HTTP: Record<ErrorCode, number> = {
   [ErrorCode.ExternalDependencyError]: 502,
   [ErrorCode.UnexpectedError]: 500,
   [ErrorCode.AccountRequiredError]: 428,
+  [ErrorCode.DouyinFavoritesSessionExpired]: 401,
+  [ErrorCode.DouyinFavoritesBrowserLocked]: 409,
+  [ErrorCode.DouyinFavoritesCaptcha]: 428,
+  [ErrorCode.DouyinFavoritesNetwork]: 502,
+  [ErrorCode.DouyinFavoritesUpstream]: 502,
+  [ErrorCode.DouyinFavoritesInvalidResponse]: 502,
+  [ErrorCode.AttemptIdInvalid]: 400,
+  [ErrorCode.ReservedInputField]: 400,
+  [ErrorCode.AttemptPayloadMismatch]: 409,
+  [ErrorCode.RetrySourceNotTerminal]: 409,
+  [ErrorCode.ExecutionClaimInvalid]: 400,
 };
 
 // `code` is a free string (domain codes like PROJECT_NOT_FOUND) but every

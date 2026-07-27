@@ -138,6 +138,32 @@ describe("calibration service", () => {
     expect(pred.lockedAt).toBeNull();
   });
 
+  it("createPrediction 从 predictedConversion.dimensions 读取逐维评分，不把存在的分数算成 0", async () => {
+    const ctx = ctxFor("user-a");
+    const rubric = await service.createRubric(ctx, {
+      name: "r",
+      dimensions: DIMENSIONS,
+    });
+    const pred = await service.createPrediction(ctx, {
+      subjectType: "content_output",
+      subjectId: "output-nested",
+      rubricVersionId: rubric.currentVersion.id,
+      predictedMetrics: {},
+      predictedConversion: {
+        // 嵌套维度是当前真值；即使兼容期同时残留旧扁平值，也不能让旧值覆盖它。
+        hook: 1,
+        dimensions: [
+          { key: "hook", score: 4, reason: "", suggestion: "" },
+          { key: "persona", score: 5, reason: "", suggestion: "" },
+          { key: "cta", score: 3, reason: "", suggestion: "" },
+        ],
+      },
+      confidence: "high",
+    });
+    // 4*0.4 + 5*0.3 + 3*0.3 = 4.0（1–5 量纲保持不变）。
+    expect(pred.predictedScore).toBe(4);
+  });
+
   it("createPrediction rejects a cross-user rubric version (OwnershipError)", async () => {
     const a = ctxFor("user-a");
     const b = ctxFor("user-b");

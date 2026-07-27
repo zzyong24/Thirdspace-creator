@@ -85,6 +85,10 @@ export function ChatPublishPackageCard({
   );
   const [draft, setDraft] = React.useState<PublishPackageDraft | null>(null);
   const [confirming, setConfirming] = React.useState(false);
+  const [progressText, setProgressText] = React.useState(
+    "正在准备发布物料生成任务",
+  );
+  const [failureDetail, setFailureDetail] = React.useState("");
 
   // 轮询 task/candidate(仿 ChatScriptDraftCard,从已 dispatch 的 taskId 起;abandoned 闭包取消,
   // 不用 mount-unmount ref —— StrictMode 双调会把 ref 置真卡死轮询)。
@@ -96,17 +100,28 @@ export function ChatPublishPackageCard({
         if (abandoned) return;
         await new Promise((r) => setTimeout(r, pollIntervalMs));
         if (abandoned) return;
-        let status: string;
         try {
-          const t = (await client.getTask({
+          const steps = (await client.listTaskSteps({
             params: { taskId },
             query: undefined,
             body: undefined,
-          })) as { status: string };
-          status = t.status;
+          })) as unknown as Array<{ kind: string; text: string }>;
+          const latest = steps[steps.length - 1];
+          if (!abandoned && latest?.text) setProgressText(latest.text);
+        } catch {
+          /* 步骤是辅助信息，拉取失败不影响任务主轮询 */
+        }
+        let task: { status: string; errorMessage?: string | null };
+        try {
+          task = (await client.getTask({
+            params: { taskId },
+            query: undefined,
+            body: undefined,
+          })) as { status: string; errorMessage?: string | null };
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        const status = task.status;
         if (status === "awaiting_confirmation") {
           try {
             const results = (await client.listTaskResults({
@@ -129,11 +144,18 @@ export function ChatPublishPackageCard({
           return;
         }
         if (status === "cancelled" || status === "failed") {
-          if (!abandoned) setPhase("error");
+          if (!abandoned) {
+            const detail = task.errorMessage?.trim();
+            if (detail) setFailureDetail(detail);
+            setPhase("error");
+          }
           return;
         }
       }
-      if (!abandoned) setPhase("error"); // 轮询预算耗尽
+      if (!abandoned) {
+        setFailureDetail("生成等待超时，请重试；任务已停止继续等待。");
+        setPhase("error");
+      }
     })();
     return () => {
       abandoned = true;
@@ -176,7 +198,7 @@ export function ChatPublishPackageCard({
           className="flex items-center gap-2 text-[12px] text-muted-foreground"
         >
           <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-          正在按定位/脚本生成标题+简介并过一遍发布审核…（后台跑，不占用这轮对话）
+          <span data-slot="chat-publish-progress">{progressText}</span>
         </div>
       ) : null}
 
@@ -271,7 +293,8 @@ export function ChatPublishPackageCard({
           <p className="text-[12px] leading-relaxed text-destructive">
             {error
               ? error
-              : "没能生成发布物料 —— 可能是还没配置文本生成模型，或本次生成失败。"}
+              : failureDetail ||
+                "没能生成发布物料 —— 可能是还没配置文本生成模型，或本次生成失败。"}
           </p>
           {error ? null : (
             <a

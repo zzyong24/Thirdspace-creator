@@ -371,6 +371,19 @@ export async function runCoverGenerate(
           palette: plan.palette,
         },
         ungroundedClaims: Array.from(new Set(ungrounded)),
+        // [T-523] 最终候选明确记录参考图是否真的进入 generateImage 入参；不能只凭用户
+        // 请求或 dispatch 时选中了 asset 就宣称“已使用”。
+        referenceImage: referenceAssetId
+          ? {
+              requestedAssetId: referenceAssetId,
+              status: referenceImage ? "used" : "not_used",
+              used: Boolean(referenceImage),
+            }
+          : {
+              requestedAssetId: null,
+              status: "not_requested",
+              used: false,
+            },
       },
     });
   } catch (err) {

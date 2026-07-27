@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { Endpoint, RequestContext } from "@creatoros/contract";
+import {
+  ENDPOINTS,
+  listEnvelope,
+  type Endpoint,
+  type RequestContext,
+} from "@creatoros/contract";
 import {
   compositeTransport,
   __resetPersistenceForTests,
@@ -223,5 +228,22 @@ describe("assets ops registered in the composite transport", () => {
       ctx("user-intruder"),
     ).catch(() => ({ data: [] }))) as { data: unknown[] };
     expect(bUsage.data).toHaveLength(0);
+  });
+
+  it("[T-548] assets.usage.list 空结果仍返回合法正数 pageSize，项目关联不能被响应校验拦住", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const assetId = await createAsset(owner, "尚未关联项目的成片");
+    const raw = await compositeTransport.request(
+      ENDPOINTS.listAssetUsage,
+      { params: { assetId }, query: undefined, body: undefined },
+      owner,
+    );
+
+    const parsed = listEnvelope(
+      ENDPOINTS.listAssetUsage.response,
+    ).parse(raw);
+    expect(parsed.data).toHaveLength(0);
+    expect(parsed.meta.pageSize).toBeGreaterThan(0);
+    expect(parsed.meta.total).toBe(0);
   });
 });

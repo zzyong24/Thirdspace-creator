@@ -42,9 +42,62 @@ import { cn } from "@/lib/utils";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { SidebarStorageCard } from "./sidebar-storage-card";
 import { AccountSwitcher } from "./account-switcher";
+import { IssueFeedbackDialog } from "./issue-feedback-dialog";
 
 // [T-129] 折叠态持久化键。收拢="1"、展开="0"/缺失。隐私模式/禁用 storage → try/catch 降级不持久。
 const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
+
+// ---------------------------------------------------------------------------
+// [T-530] 渠道品牌名(轻贴牌):左上角品牌字样
+// ---------------------------------------------------------------------------
+//
+// 数据通路:(creator)/layout.tsx(RSC)服务端读已验证 channel runtime → 经下方
+// Provider 注入(server → client 单向只读,非全局 store;同款先例 =
+// current-project-context 的 CurrentProjectProvider)。Sidebar 在 client 侧消费。
+// 显示规则:brandName 有效 → 左上角显示品牌名;null/缺失/未激活/官方码 → 官方名
+// 「CreatorOS」。**品牌名回退官方名不涉密**(显示名而已),与渠道链接「null 绝不
+// 回退官方链接」的白标红线不同 —— 链接红线原样保留,别混淆。
+
+const OFFICIAL_BRAND_NAME = "CreatorOS";
+
+interface SidebarChannelRuntimeContextValue {
+  readonly brandName: string | null;
+  readonly bugFeedbackUrl: string | null | undefined;
+}
+
+const SidebarChannelRuntimeContext =
+  React.createContext<SidebarChannelRuntimeContextValue>({
+    brandName: null,
+    // undefined 只用于没有 Provider 的组件测试兼容；正式布局始终传入已验签投影。
+    bugFeedbackUrl: undefined,
+  });
+
+/** [T-530] 品牌名注入口(由 (creator)/layout.tsx 服务端包裹;缺 Provider = 官方名)。 */
+export function SidebarBrandNameProvider({
+  brandName,
+  bugFeedbackUrl,
+  children,
+}: {
+  readonly brandName: string | null;
+  readonly bugFeedbackUrl?: string | null;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <SidebarChannelRuntimeContext.Provider
+      value={{ brandName, bugFeedbackUrl }}
+    >
+      {children}
+    </SidebarChannelRuntimeContext.Provider>
+  );
+}
+
+/** 有效(非空非纯空白)才用品牌名,否则官方名。读端已按契约清洗,这里薄防线兜底。 */
+function resolveBrandDisplayName(brandName: string | null): string {
+  if (typeof brandName === "string" && brandName.trim().length > 0) {
+    return brandName;
+  }
+  return OFFICIAL_BRAND_NAME;
+}
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -89,6 +142,8 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "dashboard", label: "首页", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
   // 定位中心 — the upstream constraint source (七步①②, SPEC §3.4): 排在「项目」前.
   { id: "positioning", label: "定位中心", href: "/positioning", icon: creatorIcons.positioning, match: matchExact("/positioning") },
+  // T-482 内容雷达：定位之后先观察真实信源，再由用户转为选题。
+  { id: "intelligence", label: "内容雷达", href: "/intelligence", icon: creatorIcons.radar, match: matchPrefix("/intelligence") },
   // 选题候选池 — 七步③, SPEC §5.5: AI/受众信号 → 按综合评分排序的待选选题. 紧跟定位中心
   // (定位→选题→项目 的上游顺序): 定位约束选题, 选题落地为项目. [T-052 裁决③] 排序措辞去变现化。
   { id: "topics", label: "选题", href: "/topics", icon: creatorIcons.topics, match: matchExact("/topics") },
@@ -145,6 +200,7 @@ export function Sidebar({
   user,
   className,
 }: SidebarProps) {
+  const channelRuntime = React.useContext(SidebarChannelRuntimeContext);
   const activeNavId = findActiveNav(pathname);
   const resolvedUser = resolveUser(user);
   // [T-129] 折叠态。默认展开(SSR/首帧一致,避免 hydration mismatch);挂载后读 localStorage,
@@ -201,6 +257,11 @@ export function Sidebar({
               userDisplayName={resolvedUser.displayName}
             />
           ) : null}
+          <IssueFeedbackDialog
+            pathname={pathname}
+            collapsed={collapsed}
+            bugFeedbackUrl={channelRuntime.bugFeedbackUrl}
+          />
           {/* [T-136 切片 a] 当前抖音号切换器(多号 = 多独立人设);紧挨用户区上方,
               展开/收拢态都渲染(收拢态只显图标 + tooltip)。 */}
           <AccountSwitcher collapsed={collapsed} />
@@ -231,6 +292,11 @@ function SidebarHeader({
   // The brand is a visual anchor, not a focusable link — the home route
   // is reachable through the primary nav. Keeping the brand out of the
   // focus order ensures the first Tab lands inside the TopHeader.
+  //
+  // [T-530] 品牌字样:渠道配置了 brandName → 显示品牌名;否则官方名「CreatorOS」。
+  // 只换这一处左上角文字;activate 页/设置页/窗口标题一律不动。
+  const { brandName } = React.useContext(SidebarChannelRuntimeContext);
+  const brandDisplayName = resolveBrandDisplayName(brandName);
   return (
     <div
       data-slot="sidebar-header"
@@ -245,14 +311,15 @@ function SidebarHeader({
         data-slot="sidebar-brand"
         aria-hidden="true"
         className={cn(
-          "flex items-center text-[15px] font-semibold text-foreground",
+          // min-w-0 让长品牌名可被 truncate 裁剪(否则 flex 子项按内容宽撑爆窄栏)。
+          "flex min-w-0 items-center text-[15px] font-semibold text-foreground",
           collapsed ? "" : "gap-2 px-2 py-1",
         )}
       >
         <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-primary-foreground">
           <Sparkles className="size-4" />
         </span>
-        {!collapsed ? <span>CreatorOS</span> : null}
+        {!collapsed ? <span className="truncate">{brandDisplayName}</span> : null}
       </div>
       <SidebarCollapseToggle collapsed={collapsed} onToggle={onToggle} />
     </div>

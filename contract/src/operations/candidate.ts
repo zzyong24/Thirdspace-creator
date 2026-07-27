@@ -2,6 +2,7 @@ import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import {
   id,
+  iso8601,
   paginationQuery,
   contentRole,
   candidateSource,
@@ -31,8 +32,17 @@ export const candidateOperations = {
       sort: z
         // [T-216] guardrail = 防茧房推荐排序:复用 list seam 路由到 rankTopicsWithGuardrails
         // (偏好注入后分 + 探索位),不新增独立 op。
-        .enum(["predictedScore", "positioningFit", "demandCount", "guardrail"])
+        .enum([
+          "predictedScore",
+          "positioningFit",
+          "demandCount",
+          "createdAt",
+          "guardrail",
+        ])
         .optional(),
+      // [T-282] “今日新选题”独立读侧：先在 SQL 层按时间窗过滤，不能从预测分前 100
+      // 再做前端过滤，否则 predictedScore=null 的新候选会被 NULLS LAST 挤掉。
+      createdAfter: iso8601.optional(),
     }),
     response: candidateResource,
     isList: true,

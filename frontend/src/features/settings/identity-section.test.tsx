@@ -6,7 +6,7 @@
  * the Settings module, Wave 1). This locks the Wave-0 identity
  * contract of the Settings page:
  *
- *  - timezone / locale / email / nickname render from the REAL
+ *  - timezone / locale / nickname render from the REAL
  *    identity (`userResource` shape — what `settings.get` will serve;
  *    in Wave 0 it comes from `identity.getCurrentUser`, the same DTO).
  *    The view is injected through the deterministic `viewModel?`
@@ -15,9 +15,8 @@
  *  - the 昵称 input is EDITABLE and真持久: saving fires the
  *    `identity.profile.patch` op (`PATCH /me`, body `{ displayName }`)
  *    which writes the identity-owned `users.displayName`, then
- *    refreshes the server read. The 邮箱 input stays READ-ONLY (it is
- *    the login identifier + `users_email_uk` unique key — out of the
- *    editable surface this wave).
+ *    refreshes the server read. 单机免登录产品不再暴露邮箱编辑行；
+ *    测试会锁定该旧身份控件确实下架。
  *  - the 已验证 badge and plan chip stay intentionally inert
  *    (decorative) — no verification/billing entity exists in Wave 0.
  *
@@ -204,6 +203,7 @@ describe("Settings identity section (Task 12)", () => {
     expect(
       document.querySelector('[data-slot="account-email-input"]'),
     ).toBeNull();
+    expect(document.querySelector('label[for="account-email"]')).toBeNull();
   });
 
   it("renders the nickname input editable(真持久 PATCH /me)", () => {
@@ -212,6 +212,9 @@ describe("Settings identity section (Task 12)", () => {
       '[data-slot="account-nickname-input"]',
     );
     expect(nickname!.readOnly).toBe(false);
+    expect(
+      document.querySelector('[data-slot="account-email-input"]'),
+    ).toBeNull();
   });
 
   it("saving an edited nickname calls patchProfile({ displayName }) then refresh", async () => {

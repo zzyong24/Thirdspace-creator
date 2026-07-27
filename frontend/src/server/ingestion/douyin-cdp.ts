@@ -5,7 +5,19 @@ import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
 // 与 ai-worker whisper-local PCM 解码共用同一把解析器,根治硬编码 /opt/homebrew/bin/ffmpeg。
 import { resolveFfmpegPath } from "@creatoros/ai-worker";
 // [T-326 B-04] 错误类抽到零依赖叶子模块(见下方 re-export 注释);本文件内部 throw/instanceof 用它。
-import { DouyinNotLoggedInError } from "./douyin-errors";
+import {
+  DouyinCaptchaError,
+  DouyinFavoritesBrowserLockedError,
+  DouyinFavoritesCaptchaError,
+  DouyinFavoritesInvalidResponseError,
+  DouyinFavoritesNetworkError,
+  DouyinFavoritesSessionExpiredError,
+  DouyinFavoritesUpstreamError,
+  DouyinNoValidResponseError,
+  DouyinNotLoggedInError,
+  DouyinResponseShapeChangedError,
+  rehydrateDouyinFavoritesError,
+} from "./douyin-errors";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
 // gateway 走**可注入窄端口**(DouyinChannelGate),默认 instantNoopGateway(不真等)——
 // 既有单测不传 gateway 即用它,零回归;runtime 由 persistence-client 注真单例。
@@ -53,6 +65,8 @@ export interface GotoWithRetryOptions {
   waitUntil?: "domcontentloaded" | "load" | "networkidle" | "commit";
   /** 日志用短标签(默认取 url);标识是哪一步导航失败/自愈。 */
   label?: string;
+  /** 敏感会话路径可关闭通用原错日志，由调用方记录脱敏分类。 */
+  logRetries?: boolean;
 }
 
 /**
@@ -71,11 +85,12 @@ export async function gotoWithRetry(
   const backoff = opts.backoffMs ?? [2_000, 5_000, 10_000];
   const waitUntil = opts.waitUntil ?? "domcontentloaded";
   const label = opts.label ?? url;
+  const logRetries = opts.logRetries ?? true;
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       await page.goto(url, { waitUntil, timeout: timeoutMs });
-      if (attempt > 0) {
+      if (attempt > 0 && logRetries) {
         console.log(
           `[douyin-goto] ${label} 第 ${attempt + 1} 次尝试成功(前 ${attempt} 次瞬时失败已自愈)`,
         );
@@ -85,11 +100,13 @@ export async function gotoWithRetry(
       lastErr = err;
       if (attempt >= retries) break; // 用尽重试 → 跳出抛原错
       const waitMs = backoff[Math.min(attempt, backoff.length - 1)] ?? 2_000;
-      console.warn(
-        `[douyin-goto] ${label} 第 ${attempt + 1} 次导航失败(${String(
-          (err as { message?: unknown })?.message ?? err,
-        ).slice(0, 160)}),${waitMs}ms 后重试`,
-      );
+      if (logRetries) {
+        console.warn(
+          `[douyin-goto] ${label} 第 ${attempt + 1} 次导航失败(${String(
+            (err as { message?: unknown })?.message ?? err,
+          ).slice(0, 160)}),${waitMs}ms 后重试`,
+        );
+      }
       await page.waitForTimeout(waitMs);
     }
   }
@@ -141,11 +158,12 @@ export interface DouyinDetail {
 /** 解析创作者中心 work_list XHR(`aweme_list` 或 `item_list`),字段兜底取 0。 */
 export function parseWorkList(json: unknown): DouyinWork[] {
   const root = (json ?? {}) as Record<string, unknown>;
+  const data = (root.data ?? {}) as Record<string, unknown>;
   const list =
     (Array.isArray(root.aweme_list) && root.aweme_list) ||
     (Array.isArray(root.item_list) && root.item_list) ||
-    (Array.isArray((root.data as Record<string, unknown>)?.aweme_list) &&
-      ((root.data as Record<string, unknown>).aweme_list as unknown[])) ||
+    (Array.isArray(data.aweme_list) && data.aweme_list) ||
+    (Array.isArray(data.item_list) && data.item_list) ||
     [];
   return (list as unknown[])
     .map((raw): DouyinWork | null => {
@@ -228,6 +246,51 @@ export function parseSelfIdentity(json: unknown): DouyinSelfIdentity | null {
       author.follower_count_str;
     const followerCount = followerRaw == null ? null : num(followerRaw);
     return { nickname, secUid, douyinId, followerCount };
+  }
+  return null;
+}
+
+/**
+ * [T-490] 从创作者主页的账号资料响应读取当前账号身份。
+ *
+ * 账号身份与作品数据解耦：零作品账号的 `aweme_list` 天然为空，但创作者主页仍会请求当前
+ * 登录账号的 `user_info` / `account_info`。这里只接受“昵称 + 稳定平台标识”同时存在的
+ * 资料对象，避免把页面里普通文案或推荐作者误认成当前账号；不会生成占位 ID。
+ */
+export function parseCreatorProfileIdentity(
+  json: unknown,
+): DouyinSelfIdentity | null {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const data = (root.data ?? {}) as Record<string, unknown>;
+  const result = (root.result ?? {}) as Record<string, unknown>;
+  const candidates = [
+    root.user_info,
+    root.user,
+    root.account_info,
+    root.account,
+    root.profile,
+    data.user_info,
+    data.user,
+    data.account_info,
+    data.account,
+    data.profile,
+    data,
+    result.user_info,
+    result.user,
+    result.account_info,
+    result.account,
+    result.profile,
+    result,
+  ];
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
+      continue;
+    }
+    const identity = parseSelfIdentity({
+      aweme_list: [{ author: candidate }],
+    });
+    // 主页资料必须带稳定平台标识；只有昵称仍不足以安全归属登录态。
+    if (identity && (identity.secUid || identity.douyinId)) return identity;
   }
   return null;
 }
@@ -718,10 +781,25 @@ export interface LoginDouyinOptions {
   timeoutSec?: number;
 }
 
+export interface LoginDouyinDeps {
+  openContext?: typeof openContext;
+}
+
 // 未登录抖音创作者中心 —— 类本体已抽到零依赖叶子模块 douyin-errors.ts([T-326 B-04]:
 // persistence-client 的同步 instanceof 判别点不必加载本重模块);顶部 import + 此处 re-export
 // 保持既有 `from "./douyin-cdp"` 的 import 路径与错误类身份(同一 class 实例)全部兼容。
-export { DouyinNotLoggedInError } from "./douyin-errors";
+export {
+  DouyinCaptchaError,
+  DouyinFavoritesBrowserLockedError,
+  DouyinFavoritesCaptchaError,
+  DouyinFavoritesInvalidResponseError,
+  DouyinFavoritesNetworkError,
+  DouyinFavoritesSessionExpiredError,
+  DouyinFavoritesUpstreamError,
+  DouyinNoValidResponseError,
+  DouyinNotLoggedInError,
+  DouyinResponseShapeChangedError,
+} from "./douyin-errors";
 
 const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
 const CREATOR_CONTENT = "https://creator.douyin.com/creator-micro/content/manage";
@@ -753,6 +831,63 @@ const CREATOR_DATA_CENTER_CONTENT =
 //   走 playwright CLI `install chromium`,平台差异由 Playwright 自己处理。装过即秒过(检查 executablePath
 //   实际存在)。用 bundled node(process.execPath)跑 CLI —— 桌面包里就是它。
 let chromiumEnsured = false;
+
+export interface LocatePlaywrightCliDeps {
+  isFile?: (candidate: string) => Promise<boolean>;
+  readDir?: (dir: string) => Promise<string[]>;
+}
+
+/**
+ * [T-469] 从真实磁盘目录确定性定位 Playwright CLI。
+ *
+ * 打包混淆 runtime 不能使用动态 `require.resolve`：Turbopack 会把运行时表达式改写成无法解析
+ * 的模块引用。这里从 cwd 向父级逐层扫描 hoist/直连和 pnpm 隔离目录，路径只由 fs 事实决定。
+ */
+export async function locatePlaywrightCli(
+  startDir = process.cwd(),
+  deps: LocatePlaywrightCliDeps = {},
+): Promise<string | null> {
+  const path = await import("node:path");
+  const fs = await import("node:fs/promises");
+  const isFile =
+    deps.isFile ??
+    ((candidate: string) =>
+      fs
+        .stat(candidate)
+        .then((s) => s.isFile())
+        .catch(() => false));
+  const readDir =
+    deps.readDir ??
+    ((dir: string) => fs.readdir(dir).catch(() => [] as string[]));
+
+  let current = path.resolve(startDir);
+  while (true) {
+    const nodeModules = path.join(current, "node_modules");
+    const direct = path.join(nodeModules, "playwright", "cli.js");
+    if (await isFile(direct)) return direct;
+
+    const pnpmDir = path.join(nodeModules, ".pnpm");
+    const entries = await readDir(pnpmDir);
+    for (const entry of entries
+      .filter((name) => name.startsWith("playwright@"))
+      .sort()) {
+      const candidate = path.join(
+        pnpmDir,
+        entry,
+        "node_modules",
+        "playwright",
+        "cli.js",
+      );
+      if (await isFile(candidate)) return candidate;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return null;
+}
+
 // [T-281] 导出复用:video.render executor 的 Chromium 下载走这份 frontend-context 实现
 //   (playwright CLI 定位只在 frontend 解析基准下可行;executor 在 backend chunk 里 resolve 会崩)。
 export async function ensureChromiumInstalled(): Promise<void> {
@@ -771,15 +906,12 @@ export async function ensureChromiumInstalled(): Promise<void> {
   // 未装 → playwright install chromium(首启一次性下载;之后共享缓存,app 更新也复用)。
   console.warn("[ingestion] 未检测到 Chromium,首次自动下载(playwright install chromium)…");
   const { spawn } = await import("node:child_process");
-  const { createRequire } = await import("node:module");
-  const { dirname, join } = await import("node:path");
-  const require = createRequire(import.meta.url);
-  // playwright bin=cli.js,但 exports 未列 ./cli.js(require.resolve 被 exports 挡)→ 解析已导出的
-  //   package.json 再 join 同级 cli.js。**包名拼接**避开 Next 构建期静态解析(否则 Next 把 playwright
-  //   trace 到 ESM 入口 → "require() resolves to a EcmaScript module" build error);运行时才真解析
-  //   (sidecar 内 bundlePlaywright 已实拷 playwright)。
-  const pwPkgJson = require.resolve(["play", "wright/package.json"].join(""));
-  const cli = join(dirname(pwPkgJson), "cli.js");
+  const cli = await locatePlaywrightCli();
+  if (!cli) {
+    throw new Error(
+      `Playwright CLI 未找到，无法自动安装 Chromium；已从 ${process.cwd()} 向父级扫描 node_modules`,
+    );
+  }
   await new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, [cli, "install", "chromium"], {
       stdio: "inherit", // 进度打到 sidecar 日志(UI 侧「扫码中…」覆盖等待;进度条 UI 列后续)
@@ -912,19 +1044,41 @@ export async function checkDouyinStatus(opts: {
 }
 
 /**
- * 登录:headed 弹 Chromium 窗口让用户扫码;轮询 sessionid cookie,检测到即成功(落 .auth/)。
+ * 登录:headed 弹 Chromium 窗口让用户扫码。成功条件必须是抖音服务端接受该会话，不能只看
+ * 本地 sessionid 是否存在——失效 Cookie 仍会留在 profile，旧实现会第一轮就误判成功并关窗。
  * 仅在用户机器上跑(server 弹窗)。返回是否登录成功。
  */
-export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
+export async function loginDouyin(
+  opts: LoginDouyinOptions,
+  deps: LoginDouyinDeps = {},
+): Promise<boolean> {
   const timeoutSec = opts.timeoutSec ?? 240;
-  const ctx = await openContext(opts.authDir, false);
+  const openCtx = deps.openContext ?? openContext;
+  const ctx = await openCtx(opts.authDir, false);
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
       .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
+    let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
-      if (await isLoggedIn(ctx)) return true;
+      if (await isLoggedIn(ctx)) {
+        const acceptance = await probeDouyinSessionFromContext(ctx);
+        if (acceptance === "active") return true;
+        if (acceptance === "expired" && !rejectedSessionCleared) {
+          // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
+          // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
+          await ctx
+            .clearCookies({
+              name: /^(?:sessionid(?:_ss)?|sid_guard|sid_tt|sid_ucp_v1|ssid_ucp_v1|uid_tt(?:_ss)?|passport_csrf_token(?:_default)?|odin_tt)$/,
+            })
+            .catch(() => {});
+          rejectedSessionCleared = true;
+          await page
+            .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+            .catch(() => {});
+        }
+      }
       await page.waitForTimeout(1000);
     }
     return false;
@@ -938,12 +1092,18 @@ export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
 type MetricsResponseHandler = (resp: {
   url(): string;
   json(): Promise<unknown>;
+  text?(): Promise<string>;
+  finished?(): Promise<Error | null>;
 }) => void;
 interface MetricsCapablePage {
   on(event: "response", cb: MetricsResponseHandler): void;
   goto(url: string, opts?: unknown): Promise<unknown>;
   waitForTimeout(ms: number): Promise<void>;
   evaluate<R>(fn: () => R): Promise<R>;
+  evaluate<R, A>(fn: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
+  /** 真 Playwright Page 均提供；测试窄 fake 可省略，严格模式据可用能力检查。 */
+  url?: () => string;
+  title?: () => Promise<string>;
   keyboard: { press(key: string): Promise<void> };
   mouse: { wheel(deltaX: number, deltaY: number): Promise<void> };
 }
@@ -965,6 +1125,76 @@ export interface FetchDouyinMetricsDeps {
 
 const realMetricsOpenContext = (authDir: string, headless: boolean) =>
   openContext(authDir, headless) as unknown as Promise<MetricsCapableContext>;
+
+type DouyinSessionProbeResult = "active" | "expired" | "unknown";
+
+function classifyDouyinSessionProbe(result: {
+  statusCode: number | null;
+  statusMessage: string;
+} | null): DouyinSessionProbeResult {
+  if (!result) return "unknown";
+  if (
+    result.statusCode === 8 ||
+    /未登录|登录.*失效|session.*expired/i.test(result.statusMessage)
+  ) {
+    return "expired";
+  }
+  return result.statusCode === 0 ? "active" : "unknown";
+}
+
+/**
+ * 本地仍有 sessionid 不等于抖音服务端仍认可它。主页作品接口在会话过期时偶发只返回
+ * 200 + 空 body，页面也不跳登录页；此时用同一页面只读请求收藏夹列表作为旁证。
+ * 只读取 status_code/status_msg，不返回或记录响应正文、Cookie、URL。
+ */
+async function probeDouyinSessionAcceptance(
+  page: MetricsCapablePage,
+): Promise<DouyinSessionProbeResult> {
+  const probeUrl = COLLECTS_LIST_API.replace("{cursor}", "0");
+  const result = await page
+    .evaluate<
+      { statusCode: number | null; statusMessage: string } | null,
+      string
+    >(async (url) => {
+      try {
+        const response = await fetch(url, { credentials: "include" });
+        const json = (await response.json()) as Record<string, unknown>;
+        return {
+          statusCode:
+            typeof json.status_code === "number" ? json.status_code : null,
+          statusMessage:
+            typeof json.status_msg === "string" ? json.status_msg : "",
+        };
+      } catch {
+        return null;
+      }
+    }, probeUrl)
+    .catch(() => null);
+  return classifyDouyinSessionProbe(result);
+}
+
+/**
+ * 登录页位于 creator.douyin.com，收藏接口位于 www.douyin.com；页面内 fetch 可能被
+ * CORS 拦截。BrowserContext.request 与浏览器共享 Cookie 且不受页面跨域限制，适合作为
+ * 登录窗口是否可以关闭的服务端证据。
+ */
+async function probeDouyinSessionFromContext(
+  ctx: import("@playwright/test").BrowserContext,
+): Promise<DouyinSessionProbeResult> {
+  const result = await ctx.request
+    .get(COLLECTS_LIST_API.replace("{cursor}", "0"), { timeout: 10_000 })
+    .then(async (response) => {
+      const json = (await response.json()) as Record<string, unknown>;
+      return {
+        statusCode:
+          typeof json.status_code === "number" ? json.status_code : null,
+        statusMessage:
+          typeof json.status_msg === "string" ? json.status_msg : "",
+      };
+    })
+    .catch(() => null);
+  return classifyDouyinSessionProbe(result);
+}
 
 /**
  * fetchDouyinMetrics 的返回:作品指标 records + 登录用户自己的身份 identity(T-136 §D)。
@@ -1117,22 +1347,65 @@ export async function fetchDouyinMetrics(
 }
 
 /**
- * [T-330] 轻量身份读回 —— 「扫码绑定新号」staging 登录态下同步读回登录用户是谁。
- * 实现选型:**复用 fetchDouyinMetrics 全套**(登录校验 + 作品列表 XHR 拦截 + parseSelfIdentity
- * 反解),只把 maxPages 压到 1(首屏 work_list 即含 author=本人,不深翻页)—— 不新写一条
- * XHR 拦截链(维护面最小,身份口径与 refresh 采集完全同源)。
- * 读不到(该号零作品/脏 JSON)→ null,由调用方诚实失败(绝不猜身份);staging 目录未登录
- * → 照抛 DouyinNotLoggedInError(调用方同样按失败清理)。records 顺带抓到也不落库(本函数
- * 只取 identity;正式全量采集由绑定成功后的初始化 refreshDouyin 负责)。
+ * [T-330/T-490] 轻量身份读回 —— staging 登录态下同步读回登录用户是谁。
+ *
+ * 身份优先来自创作者主页的当前账号资料响应，与作品数量无关；因此刚注册、零作品、零指标账号
+ * 也能完成绑定。主页资料没命中时才兼容回退到作品列表 author 反解。两条路径都必须拿到稳定
+ * 平台标识，不猜身份、不伪造 ID。正式作品采集仍由绑定后的 refreshDouyin 独立负责。
  */
 export async function fetchDouyinIdentity(opts: {
   authDir: string;
-}): Promise<DouyinSelfIdentity | null> {
+}, deps: FetchDouyinMetricsDeps = {}): Promise<DouyinSelfIdentity | null> {
+  const openCtx = deps.openContext ?? realMetricsOpenContext;
+  const ctx = await openCtx(opts.authDir, true);
+  let profileIdentity: DouyinSelfIdentity | null = null;
+  try {
+    const cookies = await ctx.cookies("https://creator.douyin.com");
+    const loggedIn = cookies.some(
+      (c) => c.name === "sessionid" || c.name === "sessionid_ss",
+    );
+    if (!loggedIn) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    const pending: Array<Promise<void>> = [];
+    page.on("response", (resp) => {
+      // 只解析 user/account/profile 结构，不读取作品 author；URL 不写死，兼容创作者中心
+      // 灰度接口改名。parseCreatorProfileIdentity 自身要求稳定平台标识，负责最后一道防误认。
+      const task = resp
+        .json()
+        .then((json) => {
+          if (profileIdentity) return;
+          const parsed = parseCreatorProfileIdentity(json);
+          if (!parsed) return;
+          profileIdentity = parsed;
+          console.log(
+            `[douyin-identity] 从创作者主页账号资料读取 nickname=${parsed.nickname} ` +
+              `secUid=${parsed.secUid || "(空)"} response=${resp.url()}`,
+          );
+        })
+        .catch(() => {
+          // HTML/图片/非 JSON 响应是正常噪声。
+        });
+      pending.push(task);
+    });
+    await gotoWithRetry(page, CREATOR_LOGIN_HOME, {
+      timeoutMs: 60_000,
+      label: "creator-home(账号资料)",
+    });
+    await page.waitForTimeout(3000);
+    await Promise.allSettled([...pending]);
+  } finally {
+    await ctx.close().catch(() => {});
+  }
+  if (profileIdentity) return profileIdentity;
+
+  console.warn(
+    "[douyin-identity] 创作者主页未返回稳定账号资料，回退作品列表 author 兼容路径",
+  );
   const { identity } = await fetchDouyinMetrics({
     authDir: opts.authDir,
     capturedAt: new Date().toISOString(),
     maxPages: 1,
-  });
+  }, deps);
   return identity;
 }
 
@@ -1170,6 +1443,8 @@ export interface FetchUserPostsOptions {
   secUid: string;
   /** 翻几页(默认 5;每页 ~18 条)。 */
   maxPages?: number;
+  /** 严格证据模式：验证码必须抛结构化错误，不得返回合法空结果。 */
+  strictEvidence?: boolean;
   gateway?: DouyinChannelGate;
 }
 
@@ -1196,6 +1471,15 @@ export async function fetchDouyinUserPosts(
     const page = ctx.pages()[0] ?? (await ctx.newPage());
 
     const workJsons: unknown[] = [];
+    let decodedListResponseCount = 0;
+    let validListResponseCount = 0;
+    let upstreamLoginRejected = false;
+    let matchedListResponseCount = 0;
+    let failedListResponseParseCount = 0;
+    let lastListResponseParseError = "none";
+    let lastListResponseBodyLength = 0;
+    let lastListResponseBodyPrefix = "none";
+    const pendingListResponseParses: Array<Promise<void>> = [];
     const seenIds = new Set<string>();
     let hasMore = true;
     const readHasMore = (j: unknown): boolean | undefined => {
@@ -1204,19 +1488,76 @@ export async function fetchDouyinUserPosts(
       const v = root.has_more ?? data.has_more;
       return typeof v === "boolean" ? v : v == null ? undefined : Boolean(v);
     };
-    page.on("response", async (resp) => {
+    page.on("response", (resp) => {
       const url = resp.url();
       if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
-      try {
-        const j = await resp.json();
-        workJsons.push(j);
-        for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
-        const hm = readHasMore(j);
-        if (hm !== undefined) hasMore = hm;
-      } catch {
-        /* 非 JSON 响应,忽略 */
-      }
+      matchedListResponseCount += 1;
+      // 真机单页响应可超过 2MB。response 事件不会等待 async handler；若不显式
+      // 收集并 await，这里仍在下载/解析时主流程就会误判 NO_VALID_RESPONSE/0 条。
+      // 真机上 Playwright 的 response.json() 偶发在 2MB+ 抖音响应上提前
+      // JSON.parse 并抛 SyntaxError；同一 response.text() 能取得完整合法 body。
+      // 因此真 Page 优先完整读取 text 后再解析，窄测试 fake 保留 json 回退。
+      const payload = (async () => {
+        // response 事件在响应头到达时即触发；大 body 必须等 finished，否则部分
+        // Chromium/Playwright 组合会对 text/json 报 SyntaxError 或 body unavailable。
+        if (resp.finished) await resp.finished();
+        if (resp.text) {
+          const body = await resp.text();
+          lastListResponseBodyLength = body.length;
+          lastListResponseBodyPrefix = body
+            .slice(0, 48)
+            .replace(/[^\x20-\x7E]/g, "?");
+          return JSON.parse(body) as unknown;
+        }
+        return await resp.json();
+      })();
+      const parse = payload
+        .then((j) => {
+          decodedListResponseCount += 1;
+          workJsons.push(j);
+          const root = (j ?? {}) as Record<string, unknown>;
+          const data = (root.data ?? {}) as Record<string, unknown>;
+          const statusMessage =
+            typeof root.status_msg === "string" ? root.status_msg : "";
+          if (
+            root.status_code === 8 ||
+            /(?:未登录|登录失效|请先登录)/.test(statusMessage)
+          ) {
+            // 本地 Cookie 文件存在不代表抖音服务端仍认可该会话。主页接口明确拒绝
+            // 登录时必须引导重登，不能继续折叠成 NO_VALID_RESPONSE。
+            upstreamLoginRejected = true;
+          }
+          if (
+            Array.isArray(root.aweme_list) ||
+            Array.isArray(root.item_list) ||
+            Array.isArray(data.aweme_list) ||
+            Array.isArray(data.item_list)
+          ) {
+            validListResponseCount += 1;
+          }
+          for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
+          const hm = readHasMore(j);
+          if (hm !== undefined) hasMore = hm;
+        })
+        .catch((error) => {
+          // 非 JSON 响应不是有效作品证据，保持计数为 0。
+          failedListResponseParseCount += 1;
+          lastListResponseParseError =
+            error instanceof Error ? error.name : "UnknownError";
+        });
+      pendingListResponseParses.push(parse);
     });
+    const waitForListResponseEvidence = async () => {
+      // 真机主页的首个 aweme/post 可能在 DOMContentLoaded 后约 8 秒才发出，
+      // 且单个 JSON 可超过 2MB。固定轮询同时覆盖“请求尚未出现”和“已出现但
+      // body 尚未下载/解析”两段，避免按旧 5.5 秒窗口抢先判失败。
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await Promise.allSettled([...pendingListResponseParses]);
+        if (decodedListResponseCount > 0 || upstreamLoginRejected) return;
+        await page.waitForTimeout(500);
+      }
+      await Promise.allSettled([...pendingListResponseParses]);
+    };
 
     const profileUrl = `https://www.douyin.com/user/${encodeURIComponent(opts.secUid)}`;
     await gotoWithRetry(page, profileUrl, {
@@ -1224,6 +1565,23 @@ export async function fetchDouyinUserPosts(
       label: `对标主页(${opts.secUid})`,
     });
     await page.waitForTimeout(3000); // 等首屏 aweme/post XHR
+    await Promise.allSettled([...pendingListResponseParses]);
+    if (opts.strictEvidence) {
+      const finalUrl = page.url?.() ?? profileUrl;
+      const title = page.title ? await page.title().catch(() => "") : "";
+      const bodyHead = await page
+        .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+        .catch(() => "");
+      if (
+        upstreamLoginRejected ||
+        /(?:passport|login|oauth)/i.test(finalUrl) ||
+        /抖音授权|账号登录/.test(title) ||
+        /使用抖音账号登录|请扫码登录|登录后即可查看/.test(bodyHead)
+      ) {
+        throw new DouyinNotLoggedInError();
+      }
+      if (bodyHead.includes("验证")) throw new DouyinCaptchaError();
+    }
 
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
@@ -1240,6 +1598,69 @@ export async function fetchDouyinUserPosts(
       });
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // 无新作品兜底,防死循环
+    }
+    await waitForListResponseEvidence();
+
+    if (
+      opts.strictEvidence &&
+      decodedListResponseCount === 0 &&
+      matchedListResponseCount > 0 &&
+      failedListResponseParseCount > 0
+    ) {
+      // 抖音主页偶发先返回一个 200 + 空 body，并在页面显示“服务异常”。
+      // 这既不是 0 作品也不是稳定结构变化；同一会话强制重载一次，等待真实
+      // aweme/post body。仍失败才交给 NO_VALID_RESPONSE，避免无限重试。
+      await gotoWithRetry(
+        page,
+        `${profileUrl}?from_tab_name=main&creatoros_retry=1`,
+        {
+          timeoutMs: 60_000,
+          label: `对标主页重试(${opts.secUid})`,
+        },
+      );
+      await page.waitForTimeout(3_000);
+      await page.mouse.wheel(0, 3_000).catch(() => {});
+      await page.waitForTimeout(2_500);
+      await waitForListResponseEvidence();
+      const retryUrl = page.url?.() ?? profileUrl;
+      const retryTitle = page.title
+        ? await page.title().catch(() => "")
+        : "";
+      const retryBody = await page
+        .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+        .catch(() => "");
+      if (
+        upstreamLoginRejected ||
+        /(?:passport|login|oauth)/i.test(retryUrl) ||
+        /抖音授权|账号登录/.test(retryTitle) ||
+        /使用抖音账号登录|请扫码登录|登录后即可查看/.test(retryBody)
+      ) {
+        throw new DouyinNotLoggedInError();
+      }
+    }
+
+    if (opts.strictEvidence && decodedListResponseCount === 0) {
+      // [T-567] 两轮作品接口都只有空 body 时，本地 Cookie/页面文案不足以证明登录有效。
+      // 收藏接口能明确给出 status_code=8；只有它明确拒绝会话才要求重登，网络失败或
+      // 未知状态仍保留 NO_VALID_RESPONSE，避免把所有上游抖动误报成登录失效。
+      if (
+        matchedListResponseCount > 0 &&
+        failedListResponseParseCount > 0 &&
+        (await probeDouyinSessionAcceptance(page)) === "expired"
+      ) {
+        throw new DouyinNotLoggedInError();
+      }
+      const finalUrl = page.url?.() ?? profileUrl;
+      console.warn(
+        `[benchmark] no-valid-response matched=${matchedListResponseCount} ` +
+          `parseFailed=${failedListResponseParseCount} parseError=${lastListResponseParseError} ` +
+          `bodyLength=${lastListResponseBodyLength} bodyPrefix=${JSON.stringify(lastListResponseBodyPrefix)} ` +
+          `finalHost=${new URL(finalUrl).hostname}`,
+      );
+      throw new DouyinNoValidResponseError();
+    }
+    if (opts.strictEvidence && validListResponseCount === 0) {
+      throw new DouyinResponseShapeChangedError();
     }
 
     // 去重(同 aweme_id 保留最后一次)+ 映射到对标作品形状。
@@ -1261,6 +1682,74 @@ export async function fetchDouyinUserPosts(
     return works;
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+  }
+}
+
+export interface DouyinProfilePreview {
+  externalAccountId: string;
+  nickname: string;
+  avatarUrl: string | null;
+  canonicalUrl: string;
+  visibleWorkCount: number;
+}
+
+/**
+ * 添加对标来源前的只读预览。稳定身份仍取 URL 中的 sec_uid；昵称/头像只从主页当前公开
+ * DOM 元数据读取，作品概况复用同一账号隔离 profile 的公开作品读取，不保存 Cookie。
+ */
+export async function previewDouyinUserProfile(
+  opts: FetchUserPostsOptions & { canonicalUrl?: string },
+  deps: FetchDouyinMetricsDeps = {},
+): Promise<DouyinProfilePreview> {
+  const canonicalUrl =
+    opts.canonicalUrl ??
+    `https://www.douyin.com/user/${encodeURIComponent(opts.secUid)}`;
+  const works = await fetchDouyinUserPosts(
+    { ...opts, maxPages: Math.min(opts.maxPages ?? 1, 1) },
+    deps,
+  );
+  const openCtx = deps.openContext ?? realMetricsOpenContext;
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    const cookies = await ctx.cookies("https://www.douyin.com");
+    if (
+      !cookies.some(
+        (cookie) =>
+          cookie.name === "sessionid" || cookie.name === "sessionid_ss",
+      )
+    ) {
+      throw new DouyinNotLoggedInError();
+    }
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    await gotoWithRetry(page, canonicalUrl, {
+      timeoutMs: 60_000,
+      label: `对标主页预览(${opts.secUid})`,
+    });
+    await page.waitForTimeout(2_000);
+    const meta = await page
+      .evaluate(() => {
+        const title = document.title ?? "";
+        const image =
+          document
+            .querySelector<HTMLMetaElement>('meta[property="og:image"]')
+            ?.content?.trim() ?? "";
+        return { title, image };
+      })
+      .catch(() => ({ title: "", image: "" }));
+    const nickname =
+      meta.title
+        .replace(/\s*[-|_]\s*抖音.*$/i, "")
+        .replace(/的抖音.*$/i, "")
+        .trim() || "抖音博主";
+    return {
+      externalAccountId: opts.secUid,
+      nickname,
+      avatarUrl: /^https?:\/\//i.test(meta.image) ? meta.image : null,
+      canonicalUrl,
+      visibleWorkCount: works.length,
+    };
+  } finally {
+    await ctx.close().catch(() => {});
   }
 }
 
@@ -1458,6 +1947,317 @@ const AWEME_DETAIL_API =
 
 // 抖音图集类 aweme_type(68 = 图文/图集)。images 非空是首要判据,这个是兜底。
 const AWEME_TYPE_IMAGE_ALBUM = 68;
+
+const DOUYIN_SHARE_HOSTS = ["douyin.com", "iesdouyin.com"] as const;
+
+function isDouyinShareHost(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.$/, "");
+  return DOUYIN_SHARE_HOSTS.some(
+    (host) => normalized === host || normalized.endsWith(`.${host}`),
+  );
+}
+
+export function extractDouyinShareUrl(shareText: string): string {
+  const matches = shareText.match(/https?:\/\/[^\s<>"']+/giu) ?? [];
+  for (const raw of matches) {
+    const candidate = raw.replace(/[，。！？；、)\]}>”’…]+$/gu, "");
+    try {
+      const url = new URL(candidate);
+      if (isDouyinShareHost(url.hostname)) return url.toString();
+    } catch {
+      // 继续检查下一段 URL。
+    }
+  }
+  throw new DouyinAudioFetchError("分享文本中没有可识别的抖音链接");
+}
+
+function awemeIdFromDouyinUrl(url: URL): string | null {
+  const pathMatch = url.pathname.match(
+    /\/(?:share\/)?video\/([A-Za-z0-9_-]+)/i,
+  );
+  return (
+    pathMatch?.[1] ??
+    url.searchParams.get("modal_id") ??
+    url.searchParams.get("aweme_id")
+  );
+}
+
+export interface DouyinShareTarget {
+  shareUrl: string;
+  resolvedUrl: string;
+  awemeId: string;
+  canonicalUrl: string;
+}
+
+export async function resolveDouyinShareTarget(
+  shareText: string,
+  deps: { fetch?: typeof globalThis.fetch } = {},
+): Promise<DouyinShareTarget> {
+  const shareUrl = extractDouyinShareUrl(shareText);
+  const request = deps.fetch ?? globalThis.fetch;
+  let current = new URL(shareUrl);
+  for (let hop = 0; hop <= 5; hop += 1) {
+    if (
+      !["http:", "https:"].includes(current.protocol) ||
+      !isDouyinShareHost(current.hostname)
+    ) {
+      throw new DouyinAudioFetchError("分享链接跳转到了非抖音域名，已停止读取");
+    }
+    const directId = awemeIdFromDouyinUrl(current);
+    if (directId) {
+      return {
+        shareUrl,
+        resolvedUrl: current.toString(),
+        awemeId: directId,
+        canonicalUrl: `https://www.douyin.com/video/${encodeURIComponent(directId)}`,
+      };
+    }
+    if (hop === 5) break;
+    const response = await request(current, {
+      method: "GET",
+      redirect: "manual",
+      signal: AbortSignal.timeout(10_000),
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
+      },
+    });
+    if (response.status < 300 || response.status >= 400) {
+      const finalUrl = response.url ? new URL(response.url) : current;
+      const id = awemeIdFromDouyinUrl(finalUrl);
+      if (id) {
+        return {
+          shareUrl,
+          resolvedUrl: finalUrl.toString(),
+          awemeId: id,
+          canonicalUrl: `https://www.douyin.com/video/${encodeURIComponent(id)}`,
+        };
+      }
+      break;
+    }
+    const location = response.headers.get("location");
+    if (!location) break;
+    current = new URL(location, current);
+  }
+  throw new DouyinAudioFetchError(
+    "抖音分享链接未解析出作品 ID，可能已失效或不是单条作品",
+  );
+}
+
+function nullableCount(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/[,\s]/g, ""));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+export interface ParsedDouyinSharedItem {
+  item: {
+    type: "video";
+    platform: "douyin";
+    externalId: string;
+    canonicalUrl: string;
+    authorId: string | null;
+    authorName: string | null;
+    title: string;
+    summary: string | null;
+    coverUrl: string | null;
+    publishedAt: string | null;
+    durationMs: number | null;
+    metrics: {
+      likeCount: number | null;
+      commentCount: number | null;
+      collectCount: number | null;
+      shareCount: number | null;
+      followerCount: number | null;
+      metricSource: "douyin_aweme_detail";
+      qualityFlags: string[];
+    };
+    snapshot: {
+      finalUrl: string;
+      title: string;
+      contentHash: string;
+      safeExtract: string | null;
+      storageRef: null;
+      retentionUntil: null;
+      privacyClass: "public";
+    };
+  };
+}
+
+export function parseDouyinSharedItem(
+  json: unknown,
+  canonicalUrl: string,
+  _capturedAt: string,
+): ParsedDouyinSharedItem {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const raw = root.aweme_detail;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new DouyinAudioFetchError(
+      "parseDouyinSharedItem: aweme_detail 为空(作品不存在/不可见/接口风控)",
+    );
+  }
+  const detail = raw as Record<string, unknown>;
+  const awemeId = str(detail.aweme_id);
+  if (!awemeId) {
+    throw new DouyinAudioFetchError(
+      "parseDouyinSharedItem: 作品缺少 aweme_id",
+    );
+  }
+  const desc = str(detail.desc).trim();
+  const title = deriveWorkTitle(str(detail.title), desc) || `抖音作品 ${awemeId}`;
+  const author = (detail.author ?? detail.user ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const statistics = (detail.statistics ?? detail.stats ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const video = (detail.video ?? {}) as Record<string, unknown>;
+  const cover = (video.cover ?? video.origin_cover ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const coverUrls = Array.isArray(cover.url_list) ? cover.url_list : [];
+  const createTime = nullableCount(detail.create_time);
+  const metrics = {
+    likeCount: nullableCount(statistics.digg_count ?? statistics.like_count),
+    commentCount: nullableCount(statistics.comment_count),
+    collectCount: nullableCount(
+      statistics.collect_count ?? statistics.favorite_count,
+    ),
+    shareCount: nullableCount(statistics.share_count),
+    followerCount: nullableCount(author.follower_count),
+    metricSource: "douyin_aweme_detail" as const,
+    qualityFlags: [] as string[],
+  };
+  for (const [field, value] of Object.entries(metrics)) {
+    if (field.endsWith("Count") && value === null) {
+      metrics.qualityFlags.push(`${field}_missing`);
+    }
+  }
+  const contentHash = createHash("sha256")
+    .update(
+      JSON.stringify({
+        awemeId,
+        title,
+        desc,
+      }),
+    )
+    .digest("hex");
+  return {
+    item: {
+      type: "video",
+      platform: "douyin",
+      externalId: awemeId,
+      canonicalUrl,
+      authorId:
+        str(author.sec_uid) || str(author.uid) || str(author.user_id) || null,
+      authorName: str(author.nickname) || str(author.name) || null,
+      title,
+      summary: desc || null,
+      coverUrl:
+        typeof coverUrls[0] === "string" ? coverUrls[0] : null,
+      publishedAt:
+        createTime === null
+          ? null
+          : new Date(createTime * 1_000).toISOString(),
+      durationMs: nullableCount(video.duration ?? detail.duration),
+      metrics,
+      snapshot: {
+        finalUrl: canonicalUrl,
+        title,
+        contentHash,
+        safeExtract: desc || null,
+        storageRef: null,
+        retentionUntil: null,
+        privacyClass: "public",
+      },
+    },
+  };
+}
+
+export interface FetchDouyinSharedItemOptions {
+  awemeId: string;
+  canonicalUrl: string;
+  authDir: string;
+  capturedAt: string;
+  gateway?: DouyinChannelGate;
+}
+
+export interface FetchDouyinSharedItemDeps {
+  openContext?: (
+    authDir: string,
+    headless: boolean,
+  ) => Promise<SearchCapableContext>;
+}
+
+/**
+ * 用当前账号隔离的抖音登录态读取单条作品 detail。这里只建档公开元数据与计数，不读取
+ * 评论正文，也不创建逐字稿任务。
+ */
+export async function fetchDouyinSharedItem(
+  opts: FetchDouyinSharedItemOptions,
+  deps: FetchDouyinSharedItemDeps = {},
+): Promise<ParsedDouyinSharedItem> {
+  const gateway = opts.gateway ?? instantNoopGateway;
+  const openCtx =
+    deps.openContext ??
+    ((authDir: string, headless: boolean) =>
+      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    const cookies = await ctx.cookies("https://www.douyin.com");
+    const loggedIn = cookies.some(
+      (cookie) =>
+        cookie.name === "sessionid" || cookie.name === "sessionid_ss",
+    );
+    if (!loggedIn) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    const id = encodeURIComponent(opts.awemeId);
+    return await withDouyinChannel(
+      gateway,
+      "creator-center",
+      async () => {
+        await gotoWithRetry(
+          page as unknown as GotoCapablePage,
+          opts.canonicalUrl,
+          { timeoutMs: 60_000, label: `单条作品导入(${opts.awemeId})` },
+        );
+        await page.waitForTimeout(2_000);
+        const bodyHead = await page
+          .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+          .catch(() => "");
+        if (bodyHead.includes("验证")) {
+          throw new DouyinCaptchaError();
+        }
+        const json = await page.evaluate<unknown, string>(async (url) => {
+          try {
+            const response = await fetch(url, { credentials: "include" });
+            return (await response.json()) as unknown;
+          } catch (error) {
+            return {
+              error:
+                error instanceof Error ? error.message : String(error),
+            };
+          }
+        }, AWEME_DETAIL_API.replace("{id}", id));
+        return parseDouyinSharedItem(
+          json,
+          opts.canonicalUrl,
+          opts.capturedAt,
+        );
+      },
+      mapDetailErr,
+    );
+  } finally {
+    await ctx.close().catch(() => {});
+  }
+}
 
 /**
  * 解析 detail 接口 JSON(纯函数,可喂 canned JSON 单测):
@@ -2807,7 +3607,9 @@ export function parseCollectsVideoList(json: unknown): DouyinFavoriteVideo[] {
 
 export interface FetchCollectsFoldersOptions {
   authDir: string;
+  strictEvidence?: boolean;
   gateway?: DouyinChannelGate;
+  diagnostics?: FavoritesDiagnostics;
 }
 
 export interface FetchCollectsVideosOptions {
@@ -2816,7 +3618,16 @@ export interface FetchCollectsVideosOptions {
   collectsId: string;
   /** 最多取几条(默认 50,防灌库)。 */
   maxItems?: number;
+  strictEvidence?: boolean;
   gateway?: DouyinChannelGate;
+  diagnostics?: FavoritesDiagnostics;
+}
+
+/** 收藏诊断仅允许内部关联字段；禁止放 Cookie、token、URL 或上游响应正文。 */
+export interface FavoritesDiagnostics {
+  requestId?: string;
+  traceId?: string;
+  accountId?: string;
 }
 
 /** fetchDouyinCollects* 的可注入依赖(默认真 openContext(.auth/, headless);单测注 fake)。 */
@@ -2851,6 +3662,7 @@ async function openCollectsPage(
   await gotoWithRetry(page as unknown as GotoCapablePage, COLLECTS_TAB_URL, {
     timeoutMs: 60_000,
     label,
+    logRetries: false,
   });
   await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)
 
@@ -2859,7 +3671,6 @@ async function openCollectsPage(
     .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
     .catch(() => "");
   if (bodyHead.includes("验证")) {
-    console.warn(`[favorites] ${label}命中验证码,跳过(返回空)`);
     return null;
   }
   return page;
@@ -2874,10 +3685,115 @@ function fetchCollectsJson(
     try {
       const r = await fetch(u, { credentials: "include" });
       return (await r.json()) as unknown;
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : String(e) };
+    } catch {
+      // 原始浏览器错误可能含请求细节；跨边界只传固定哨兵。
+      return { __creatorosFavoritesError: "network" };
     }
   }, url);
+}
+
+type CollectsResponseKind = "folders" | "videos";
+
+function assertCollectsResponse(
+  json: unknown,
+  kind: CollectsResponseKind,
+): asserts json is Record<string, unknown> {
+  if (!json || typeof json !== "object" || Array.isArray(json)) {
+    throw new DouyinFavoritesInvalidResponseError(kind);
+  }
+  const root = json as Record<string, unknown>;
+  if (root.__creatorosFavoritesError === "network") {
+    throw new DouyinFavoritesNetworkError();
+  }
+  // status_code 必须由上游显式给出 number；缺失、字符串 "0"、NaN 都是未知证据。
+  if (
+    typeof root.status_code !== "number" ||
+    !Number.isInteger(root.status_code)
+  ) {
+    throw new DouyinFavoritesInvalidResponseError("status_code");
+  }
+  if (root.status_code !== 0) {
+    const statusMessage =
+      typeof root.status_msg === "string" ? root.status_msg : "";
+    if (
+      root.status_code === 8 ||
+      /未登录|登录.*失效|session.*expired/i.test(statusMessage)
+    ) {
+      throw new DouyinFavoritesSessionExpiredError(root.status_code);
+    }
+    if (/验证|验证码|captcha/i.test(statusMessage)) {
+      throw new DouyinFavoritesCaptchaError();
+    }
+    throw new DouyinFavoritesUpstreamError(root.status_code);
+  }
+  const listKey = kind === "folders" ? "collects_list" : "aweme_list";
+  if (!Array.isArray(root[listKey])) {
+    throw new DouyinFavoritesInvalidResponseError(kind);
+  }
+}
+
+function isFavoritesBrowserLocked(error: unknown): boolean {
+  const code = (error as { code?: unknown })?.code;
+  if (code === "EBUSY" || code === "EACCES") return true;
+  const message =
+    error instanceof Error ? `${error.name}:${error.message}` : "";
+  return /SingletonLock|profile.*(?:in use|locked)|browser.*lock|正在被占用/i.test(
+    message,
+  );
+}
+
+function isFavoritesNetworkFailure(error: unknown): boolean {
+  const code = (error as { code?: unknown })?.code;
+  if (
+    typeof code === "string" &&
+    ["ECONNRESET", "ECONNREFUSED", "ENETUNREACH", "ETIMEDOUT"].includes(code)
+  ) {
+    return true;
+  }
+  const message =
+    error instanceof Error ? `${error.name}:${error.message}` : "";
+  return /TimeoutError|fetch failed|network|ERR_(?:CONNECTION|NETWORK)/i.test(
+    message,
+  );
+}
+
+function normalizeFavoritesError(error: unknown): Error {
+  const canonical = rehydrateDouyinFavoritesError(error);
+  if (canonical) return canonical;
+  if (isFavoritesBrowserLocked(error)) {
+    return new DouyinFavoritesBrowserLockedError();
+  }
+  if (isFavoritesNetworkFailure(error)) {
+    return new DouyinFavoritesNetworkError();
+  }
+  // 未识别异常仍保留既有错误，让 dispatch 走通用错误；已知收藏错因绝不降级。
+  return error instanceof Error ? error : new Error("Favorites service failed");
+}
+
+function logFavoritesFailure(
+  diagnostics: FavoritesDiagnostics | undefined,
+  error: Error,
+): void {
+  const safeName = new Set([
+    "DouyinFavoritesSessionExpiredError",
+    "DouyinFavoritesBrowserLockedError",
+    "DouyinFavoritesCaptchaError",
+    "DouyinFavoritesNetworkError",
+    "DouyinFavoritesUpstreamError",
+    "DouyinFavoritesInvalidResponseError",
+  ]).has(error.name)
+    ? error.name
+    : "Error";
+  console.warn(
+    "[favorites] request_failed",
+    JSON.stringify({
+      code: (error as { code?: unknown }).code ?? "UnexpectedError",
+      name: safeName,
+      requestId: diagnostics?.requestId ?? null,
+      traceId: diagnostics?.traceId ?? null,
+      accountId: diagnostics?.accountId ?? null,
+    }),
+  );
 }
 
 /** collects 接口 has_more 读取(number/boolean 双形状兜底;缺失当 false 防死循环)。 */
@@ -2909,10 +3825,14 @@ export async function fetchDouyinCollectsFolders(
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
+  let ctx: SearchCapableContext | null = null;
   try {
+    ctx = await openCtx(opts.authDir, true);
     const page = await openCollectsPage(ctx, "收藏夹列表");
-    if (!page) return []; // 验证码 → 诚实空,调用方跳过本次采集
+    if (!page) {
+      if (opts.strictEvidence) throw new DouyinFavoritesCaptchaError();
+      return [];
+    }
 
     const byId = new Map<string, DouyinCollectsFolder>();
     let cursor = 0;
@@ -2924,17 +3844,28 @@ export async function fetchDouyinCollectsFolders(
           COLLECTS_LIST_API.replace("{cursor}", String(cursor)),
         ),
       );
-      for (const f of parseCollectsList(json)) byId.set(f.collectsId, f);
+      assertCollectsResponse(json, "folders");
+      const parsedFolders = parseCollectsList(json);
+      if (
+        (json.collects_list as unknown[]).length > 0 &&
+        parsedFolders.length === 0
+      ) {
+        throw new DouyinFavoritesInvalidResponseError("folders");
+      }
+      for (const f of parsedFolders) byId.set(f.collectsId, f);
       if (!collectsHasMore(json)) break;
       const next = collectsNextCursor(json);
       if (next < 0 || next === cursor) break; // cursor 不前进兜底,防死循环
       cursor = next;
     }
     const folders = [...byId.values()];
-    console.log(`[favorites] fetchDouyinCollectsFolders → ${folders.length} 个收藏夹`);
     return folders;
+  } catch (error) {
+    const normalized = normalizeFavoritesError(error);
+    logFavoritesFailure(opts.diagnostics, normalized);
+    throw normalized;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await ctx?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }
 
@@ -2954,10 +3885,14 @@ export async function fetchDouyinCollectsVideos(
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
+  let ctx: SearchCapableContext | null = null;
   try {
+    ctx = await openCtx(opts.authDir, true);
     const page = await openCollectsPage(ctx, `收藏夹视频(${opts.collectsId})`);
-    if (!page) return []; // 验证码 → 诚实空,调用方跳过该夹
+    if (!page) {
+      if (opts.strictEvidence) throw new DouyinFavoritesCaptchaError();
+      return [];
+    }
 
     const byId = new Map<string, DouyinFavoriteVideo>();
     let cursor = 0;
@@ -2974,7 +3909,15 @@ export async function fetchDouyinCollectsVideos(
           ).replace("{cursor}", String(cursor)),
         ),
       );
-      for (const v of parseCollectsVideoList(json)) {
+      assertCollectsResponse(json, "videos");
+      const parsedVideos = parseCollectsVideoList(json);
+      if (
+        (json.aweme_list as unknown[]).length > 0 &&
+        parsedVideos.length === 0
+      ) {
+        throw new DouyinFavoritesInvalidResponseError("videos");
+      }
+      for (const v of parsedVideos) {
         if (byId.size >= maxItems) break; // maxItems 截断(防灌库)
         byId.set(v.awemeId, v);
       }
@@ -2984,11 +3927,12 @@ export async function fetchDouyinCollectsVideos(
       cursor = next;
     }
     const videos = [...byId.values()];
-    console.log(
-      `[favorites] fetchDouyinCollectsVideos 夹 ${opts.collectsId} → ${videos.length} 条(上限 ${maxItems})`,
-    );
     return videos;
+  } catch (error) {
+    const normalized = normalizeFavoritesError(error);
+    logFavoritesFailure(opts.diagnostics, normalized);
+    throw normalized;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await ctx?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }

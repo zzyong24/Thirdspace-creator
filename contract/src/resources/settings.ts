@@ -40,7 +40,7 @@ export const modelConfigurationResource = z.object({
   modelName: z.string(),
   secretReference: z.string(),
   baseUrl: z.string().nullable(),
-  apiFormat: z.enum(["anthropic", "openai_chat"]),
+  apiFormat: z.enum(["anthropic", "openai_chat", "openai_responses"]),
   settings: z.record(z.string(), z.unknown()),
   isDefault: z.boolean(),
   // Masked indicator: a usable secret is configured (stored value OR env-ref).
@@ -116,6 +116,112 @@ export const skillConfigOverrideVersionResource = z.object({
 });
 export type SkillConfigOverrideVersionResource = z.infer<
   typeof skillConfigOverrideVersionResource
+>;
+
+// T-513 — 账号增量 Skill 覆盖。旧 global SkillConfigOverride DTO 仅保留给离线取证代码；
+// settings.prompts.* 的公开 contract 改用以下联合归属资源。
+export const completionPolicyV1Resource = z
+  .object({
+    schemaVersion: z.literal(1),
+    minSegments: z.number().int().min(1).max(100),
+    maxSegments: z.number().int().min(1).max(100).nullable(),
+    requiredSequence: z
+      .array(z.string().regex(/^[a-z][a-z0-9_-]{0,31}$/))
+      .max(20),
+    repairAttempts: z.number().int().min(0).max(3),
+  })
+  .refine(
+    (value) =>
+      value.maxSegments === null || value.maxSegments >= value.minSegments,
+    { message: "maxSegments 必须不小于 minSegments", path: ["maxSegments"] },
+  );
+export type CompletionPolicyV1Resource = z.infer<
+  typeof completionPolicyV1Resource
+>;
+
+export const accountSkillOverlayPatchResource = z.object({
+  system: z.string().nullable().optional(),
+  template: z.string().nullable().optional(),
+  tools: z.array(z.string()).nullable().optional(),
+  requiredFacets: z.array(z.string()).nullable().optional(),
+  outputSchema: z.record(z.string(), z.unknown()).nullable().optional(),
+  completionPolicy: completionPolicyV1Resource.nullable().optional(),
+});
+export type AccountSkillOverlayPatchResource = z.infer<
+  typeof accountSkillOverlayPatchResource
+>;
+
+export const editableSkillValuesResource = z.object({
+  system: z.string(),
+  template: z.string(),
+  tools: z.array(z.string()),
+  requiredFacets: z.array(z.string()),
+  outputSchema: z.record(z.string(), z.unknown()).nullable(),
+  completionPolicy: completionPolicyV1Resource.nullable(),
+});
+
+export const accountSkillOverlayCompatibilityErrorResource = z.object({
+  code: z.enum([
+    "TOOL_REMOVED",
+    "OUTPUT_SCHEMA_INVALID",
+    "COMPLETION_POLICY_INVALID",
+    "COMPLETION_POLICY_UNSUPPORTED",
+    "REQUIRED_FACET_INVALID",
+    "FIELD_NOT_EDITABLE",
+  ]),
+  path: z.string(),
+  message: z.string(),
+});
+
+export const accountSkillOverlayResource = z.object({
+  skillId: z.string().min(1),
+  accountId: z.string().min(1),
+  baseVersion: z.string().min(1),
+  editableFields: z.array(
+    z.enum([
+      "system",
+      "template",
+      "tools",
+      "requiredFacets",
+      "outputSchema",
+      "completionPolicy",
+    ]),
+  ),
+  completionPolicySupported: z.boolean(),
+  official: editableSkillValuesResource,
+  effective: editableSkillValuesResource,
+  compatibility: z.enum(["compatible", "incompatible"]),
+  compatibilityErrors: z.array(
+    accountSkillOverlayCompatibilityErrorResource,
+  ),
+  rowRevision: z.number().int().min(1).nullable(),
+  validatedBaseVersion: z.string().nullable(),
+  overlayVersion: z.string().nullable(),
+  overlay: accountSkillOverlayPatchResource.nullable(),
+  updatedAt: iso8601.nullable(),
+});
+export type AccountSkillOverlayResource = z.infer<
+  typeof accountSkillOverlayResource
+>;
+
+export const accountSkillOverlayVersionResource = z.object({
+  id: z.string().min(1),
+  skillId: z.string().min(1),
+  accountId: z.string().min(1),
+  rowRevision: z.number().int().min(1),
+  observedBaseVersion: z.string().min(1),
+  overlayVersion: z.string().nullable(),
+  overlay: accountSkillOverlayPatchResource,
+  savedCompatibility: z.literal("compatible"),
+  currentCompatibility: z.enum(["compatible", "incompatible"]),
+  currentCompatibilityErrors: z.array(
+    accountSkillOverlayCompatibilityErrorResource,
+  ),
+  updatedBy: z.string().min(1),
+  createdAt: iso8601,
+});
+export type AccountSkillOverlayVersionResource = z.infer<
+  typeof accountSkillOverlayVersionResource
 >;
 
 // AgentConfiguration extends BaseEntity only; carries explicit createdAt/updatedAt.

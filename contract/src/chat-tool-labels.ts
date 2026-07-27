@@ -71,6 +71,10 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     purpose:
       "硬锚立项核心信息+口播稿产结构化封面方案(文案过诚实门、不编数字)并生图,采纳后绑进项目封面",
   },
+  "intelligence.douyin.share": {
+    name: "抖音分享建档",
+    purpose: "持久归档抖音分享；仅在用户本轮明确授权时续接转写",
+  },
   // [T-265] 论点树对话内真生成 —— 产 thesis_tree 候选,采纳后挂进稿面「论点骨架」面板。
   "planning.thesis": {
     name: "立论点树",

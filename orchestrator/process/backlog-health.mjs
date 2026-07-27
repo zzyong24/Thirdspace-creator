@@ -4,16 +4,22 @@
 // task-ledger-rules 早已声明"detail 一行、文件超 ~15KB 就压缩",但没人执行——实测有项目
 // BACKLOG 膨胀到 200KB+、单行 5900+ 字(任务行写成诊断叙事),SessionStart 注入直接爆上下文。
 // 本门卫把该规则变成可执行检查:
-//   • 文件体积:>15KB WARN,>30KB ERROR
+//   • 文件体积:>15KB WARN,>30KB ERROR,>60KB(2× 硬限)= 失控线 RUNAWAY → exit 2
+//     (reconcile 对 exit 1 记 WARN——卫生债不 block;对 exit 2 记 ERROR——债务失控伤害所有会话,必须先瘦身。
+//      机械部分一条命令:node orchestrator/process/backlog-compact.mjs)
 //   • 单行长度:>300 字 WARN,>600 字 ERROR(带行号 + 预览,直接指到要压缩的行)
 //   • 已完成区(首个 `## ✅` 之后):行应为"一句话 + commit/证据链接",>200 字 WARN 该压缩
+//   • 状态列一致性(铁律 2/4 可执行化):任务行的状态 cell(以 📋/🔨/✅/⏸️/⛔ 开头的 cell)超 60 字
+//     = 把过程叙事塞进了状态列 → WARN(过程进 commit message,状态列只放状态)
+//   • ID 新鲜度:执行看板内 ID 重复,或执行看板复用了归档 ID → ERROR。归档内部的历史撞号只 WARN,
+//     因为旧提交/代码注释已引用这些 ID,不能为追求表面整洁篡改历史。
 //
 // 用法(vendored 到 <project>/orchestrator/process/ 后):
 //   node orchestrator/process/backlog-health.mjs           # 默认读 <项目根>/BACKLOG.md
 //   node orchestrator/process/backlog-health.mjs <path>    # 显式指定文件(测试/其他布局)
 //   node orchestrator/process/backlog-health.mjs --quiet   # 干净时完全静默(reconcile 用)
 //
-// exit 0 = 干净或仅 WARN;exit 1 = 有 ERROR。找不到 BACKLOG.md → 友好提示 exit 0(不阻塞)。
+// exit 0 = 干净或仅 WARN;exit 1 = 有 ERROR;exit 2 = 体积失控(RUNAWAY)。找不到 BACKLOG.md → 友好提示 exit 0(不阻塞)。
 // 零依赖(纯 node:fs)。压缩规范见 rules/task-ledger-rules.md(长过程迁 docs/tasks/T-xxx.md 或 commit message)。
 
 import { readFileSync, existsSync } from "node:fs";
@@ -31,11 +37,14 @@ const BACKLOG = explicit ? path.resolve(process.cwd(), explicit) : path.resolve(
 // 阈值(task-ledger-rules 的可执行化)
 const SIZE_WARN = 15 * 1024;
 const SIZE_FAIL = 30 * 1024;
+const SIZE_RUNAWAY = 60 * 1024; // 失控线(2× 硬限):reconcile 升 ERROR,不再当卫生债
 const LINE_WARN = 300;
 const LINE_FAIL = 600;
 const DONE_WARN = 200;
+const STATUS_CELL_MAX = 60; // 状态 cell 超此长度 = 塞了过程叙事
 
 const findings = [];
+let runaway = false;
 const err = (m) => findings.push({ level: "ERROR", m });
 const warn = (m) => findings.push({ level: "WARN", m });
 const ok = (m) => findings.push({ level: "OK", m });
@@ -49,9 +58,9 @@ function die() {
     for (const f of findings) console.log(`${icon[f.level]} [${f.level}] ${f.m}`);
     console.log("───────────────────────────────────────────────────────");
     console.log(`${errs} error(s), ${warns} warning(s).`);
-    console.log(errs ? "✗ BACKLOG 台账超限——按 rules/task-ledger-rules.md 压缩(长过程迁 docs/tasks/ 或 commit message)。" : "✓ BACKLOG 台账在限内。");
+    console.log(errs ? "✗ BACKLOG 台账超限——按 rules/task-ledger-rules.md 压缩(✅ 归档一条命令:backlog-compact.mjs;长过程迁 docs/tasks/ 或 commit message)。" : "✓ BACKLOG 台账在限内。");
   }
-  process.exit(errs ? 1 : 0);
+  process.exit(runaway ? 2 : errs ? 1 : 0);
 }
 
 if (!existsSync(BACKLOG)) {
@@ -64,9 +73,12 @@ const src = readFileSync(BACKLOG, "utf8");
 // ① 文件体积
 const bytes = Buffer.byteLength(src, "utf8");
 const kb = (bytes / 1024).toFixed(1);
-if (bytes > SIZE_FAIL) err(`BACKLOG.md ${kb}KB 超硬上限 ${(SIZE_FAIL / 1024).toFixed(1)}KB — 必须压缩/归档(如迁 docs/BACKLOG-archive.md)。`);
+if (bytes > SIZE_RUNAWAY) {
+  runaway = true;
+  err(`BACKLOG.md ${kb}KB 超失控线 ${(SIZE_RUNAWAY / 1024).toFixed(0)}KB(2× 硬限)— RUNAWAY:每个会话都在被它拖累,先瘦身再开工。机械归档:node orchestrator/process/backlog-compact.mjs(✅ 行迁 BACKLOG-archive.md)。`);
+} else if (bytes > SIZE_FAIL) err(`BACKLOG.md ${kb}KB 超硬上限 ${(SIZE_FAIL / 1024).toFixed(1)}KB — 必须压缩/归档(backlog-compact.mjs 可机械迁走 ✅ 行)。`);
 else if (bytes > SIZE_WARN) warn(`BACKLOG.md ${kb}KB 超软上限 ${(SIZE_WARN / 1024).toFixed(1)}KB — 该压缩了。`);
-else ok(`体积 ${kb}KB 在限内(软限 ${(SIZE_WARN / 1024).toFixed(0)}KB / 硬限 ${(SIZE_FAIL / 1024).toFixed(0)}KB)。`);
+else ok(`体积 ${kb}KB 在限内(软限 ${(SIZE_WARN / 1024).toFixed(0)}KB / 硬限 ${(SIZE_FAIL / 1024).toFixed(0)}KB / 失控线 ${(SIZE_RUNAWAY / 1024).toFixed(0)}KB)。`);
 
 // ② 单行长度 + ③ 已完成区膨胀
 const lines = src.split("\n");
@@ -93,5 +105,56 @@ if (lineWarns > 15) warn(`…还有 ${lineWarns - 15} 条超软限行(共 ${line
 if (doneWarns > 10) warn(`…还有 ${doneWarns - 10} 条已完成区超长行(共 ${doneWarns})。`);
 if (!lineFails && !lineWarns) ok(`无超长行(软限 ${LINE_WARN} 字 / 硬限 ${LINE_FAIL} 字)。`);
 if (doneStart >= 0 && !doneWarns) ok(`已完成区(L${doneStart + 1} 起):无超长行。`);
+
+// ④ 状态列一致性(铁律 2/4):状态 cell 只放状态 emoji(+日期),塞过程叙事 = WARN
+const STATUS_RE = /^(📋|🔨|✅|⏸️|⛔)/;
+let statusWarns = 0;
+for (let i = 0; i < lines.length; i++) {
+  const L = lines[i];
+  if (!L.startsWith("|")) continue;
+  const cells = L.split("|").map((c) => c.trim());
+  const sc = cells.find((c) => STATUS_RE.test(c));
+  if (sc && sc.length > STATUS_CELL_MAX) {
+    statusWarns++;
+    if (statusWarns <= 10) warn(`L${i + 1} 状态 cell 长 ${sc.length} 字(>${STATUS_CELL_MAX})— 状态列塞了过程叙事:「${sc.slice(0, 30)}…」。过程进 commit message,状态列只放 emoji+日期+一句话。`);
+  }
+}
+if (statusWarns > 10) warn(`…还有 ${statusWarns - 10} 条状态列超长行(共 ${statusWarns})。`);
+if (!statusWarns) ok(`状态列干净(无塞叙事,上限 ${STATUS_CELL_MAX} 字)。`);
+
+// ⑤ ID 新鲜度:执行队列不能复用历史 ID。
+// Markdown 表格只认首列形如 T-* 的任务行,避免正文中的任务引用被误判。
+const taskIds = (text) => {
+  const out = [];
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (/^T-[A-Za-z0-9][A-Za-z0-9 -]*$/i.test(cells[0] ?? "")) out.push(cells[0].toUpperCase());
+  }
+  return out;
+};
+const duplicates = (ids) => {
+  const seen = new Set();
+  const dup = new Set();
+  for (const id of ids) {
+    if (seen.has(id)) dup.add(id);
+    seen.add(id);
+  }
+  return [...dup].sort();
+};
+const activeIds = taskIds(src);
+const activeDup = duplicates(activeIds);
+if (activeDup.length) err(`执行看板存在重复 ID:${activeDup.join(", ")}。同一 ID 不能指向两个任务。`);
+
+const archive = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
+if (existsSync(archive)) {
+  const archivedIds = taskIds(readFileSync(archive, "utf8"));
+  const archivedSet = new Set(archivedIds);
+  const reused = [...new Set(activeIds.filter((id) => archivedSet.has(id)))].sort();
+  if (reused.length) err(`执行看板复用了归档 ID:${reused.join(", ")}。请给新任务换唯一 ID,否则 Agent 会把历史实现当成当前任务。`);
+  const archiveDup = duplicates(archivedIds);
+  if (archiveDup.length) warn(`归档内部保留 ${archiveDup.length} 个历史撞号:${archiveDup.join(", ")}。它们不参与派发；勿据此恢复任务。`);
+  if (!activeDup.length && !reused.length) ok("执行任务 ID 唯一,且未复用归档 ID。");
+}
 
 die();

@@ -111,8 +111,8 @@ export interface SettingsPageProps {
    */
   readonly preferences?: PreferencesState;
   /**
-   * [T-077a] 技能清单(route 经 ai-worker `listTemplates()` + `settings.prompts.list`
-   * 投影成可序列化条目)。设置弹窗「技能」页签据此渲列表/详情;缺省(单测)→ 诚实空态。
+   * [T-513] 技能清单由 `settings.prompts.list` 返回 official + 当前账号增量的联合目录。
+   * 前端不再导入本地 registry 自行合并；缺省(单测)→ 诚实空态。
    */
   readonly skills?: readonly SkillItem[];
   /**
@@ -157,7 +157,8 @@ export interface ActivationState {
  */
 export interface ChannelLinksState {
   readonly purchaseUrl: string | null;
-  readonly supportUrl: string | null;
+  readonly renewalUrl: string | null;
+  readonly channelSupportUrl: string | null;
   readonly downloadUrl: string | null;
 }
 
@@ -265,7 +266,7 @@ export interface ModelState {
   /** Custom baseUrl (relay / MiniMax); "" = official default. */
   readonly baseUrl: string;
   /** Wire/auth format. */
-  readonly apiFormat: "anthropic" | "openai_chat";
+  readonly apiFormat: "anthropic" | "openai_chat" | "openai_responses";
   /** Masked: a secret is configured (raw value never sent to the client). */
   readonly hasSecret: boolean;
   readonly temperature: number;
@@ -308,7 +309,7 @@ export interface MultimodalModelState {
    * resolveModelSpec 按 apiFormat 分派 anthropic / OpenAI 兼容适配器;其它多模态卡的
    * 解析器按 provider 分派、忽略此字段,故可选)。
    */
-  readonly apiFormat?: "anthropic" | "openai_chat";
+  readonly apiFormat?: "anthropic" | "openai_chat" | "openai_responses";
 }
 
 export interface MultimodalModelsState {

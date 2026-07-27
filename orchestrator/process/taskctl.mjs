@@ -12,7 +12,7 @@
 //   node orchestrator/process/taskctl.mjs block    <task-id> --reason "<原因>"
 //
 // 转换规则(fail-closed,拒绝即 exit 1):
-//   start    📋→🔨   拒绝:审核列 = 待审 / FAIL / 裸 CONCERNS(未标「已处理」)——与
+//   start    📋/⏸️→🔨   拒绝:审核列 = 待审 / FAIL / 裸 CONCERNS(未标「已处理」)——与
 //                     templates/hooks/backlog-guard.sh 的阻断语义一致(cell 精确等于,CONCERNS 前缀判)。
 //   complete 🔨→✅   拒绝:--evidence 缺失或空(无证据不得完成)。
 //   block    任意→⏸️  拒绝:--reason 缺失或空。
@@ -152,7 +152,8 @@ const blockedCell = (c) => c === "待审" || c === "FAIL" || (c.startsWith("CONC
 
 let to;
 if (action === "start") {
-  if (from !== "📋") die(`start 只接受 📋→🔨:任务 ${taskId} 当前状态是 ${from}。`);
+  if (from !== "📋" && from !== "⏸️")
+    die(`start 只接受 📋/⏸️→🔨:任务 ${taskId} 当前状态是 ${from}。`);
   const reviewCells = reviewCol >= 0 ? [row.cells[reviewCol]] : row.cells; // 无审核表头时退化为全行判(guard 同款)
   const bad = reviewCells.find(blockedCell);
   if (bad !== undefined)

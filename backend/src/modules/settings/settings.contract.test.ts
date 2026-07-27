@@ -15,8 +15,8 @@ import {
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
-  skillConfigOverrideResource,
-  skillConfigOverrideVersionResource,
+  accountSkillOverlayResource,
+  accountSkillOverlayVersionResource,
 } from "./settings.schema";
 
 // Settings contract conformance (plan Step 4). Drive each of the 4 ops through an
@@ -28,7 +28,12 @@ import {
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-const ctx: RequestContext = { userId: "user-c", requestId: "req-c", source: "user" };
+const ctx: RequestContext = {
+  userId: "user-c",
+  accountId: "account-c",
+  requestId: "req-c",
+  source: "user",
+};
 
 const deps = {
   now: () => NOW,
@@ -179,33 +184,39 @@ describe("settings.transport (contract conformance)", () => {
   // [T-248 批C] settings.agents.create 契约用例已删(孤 op 移除);service/repository 层的
   // createAgentConfiguration 覆盖仍在 settings.service.test.ts / repository.integration.test.ts。
 
-  it("settings.prompts.put → skillConfigOverrideResource single envelope", async () => {
+  it("settings.prompts.put → accountSkillOverlayResource single envelope", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
     const put = await client.putPrompt({
       params: { id: "review.insights" },
       query: undefined,
-      body: { system: "覆盖 system", tools: ["read"] },
+      body: {
+        expectedRevision: null,
+        patch: { system: "覆盖 system" },
+      },
     });
-    expect(() => skillConfigOverrideResource.parse(put)).not.toThrow();
-    expect(put.id).toBe("review.insights");
-    expect(put.system).toBe("覆盖 system");
+    expect(() => accountSkillOverlayResource.parse(put)).not.toThrow();
+    expect(put.skillId).toBe("review.insights");
+    expect(put.effective.system).toBe("覆盖 system");
 
     const raw = await transport.request(
       ep("settings.prompts.put"),
-      { params: { id: "chatbox.review" }, body: { template: "改 template" } } as never,
+      {
+        params: { id: "chatbox.review" },
+        body: { expectedRevision: null, patch: { template: "改 template" } },
+      } as never,
       ctx,
     );
-    const parsed = successEnvelope(skillConfigOverrideResource).parse(raw);
-    expect(parsed.data.id).toBe("chatbox.review");
-    expect(parsed.data.version).toBe("1");
+    const parsed = successEnvelope(accountSkillOverlayResource).parse(raw);
+    expect(parsed.data.skillId).toBe("chatbox.review");
+    expect(parsed.data.rowRevision).toBe(1);
   });
 
-  it("settings.prompts.list → array of skillConfigOverrideResource", async () => {
+  it("settings.prompts.list → 全 official catalog + 当前账号 delta", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
     await client.putPrompt({
       params: { id: "topic.generate" },
       query: undefined,
-      body: { system: "s" },
+      body: { expectedRevision: null, patch: { system: "s" } },
     });
     const list = await client.listPrompts({
       params: undefined,
@@ -213,7 +224,8 @@ describe("settings.transport (contract conformance)", () => {
       body: undefined,
     });
     expect(Array.isArray(list)).toBe(true);
-    expect(list.find((p) => p.id === "topic.generate")).toBeTruthy();
+    expect(list.find((p) => p.skillId === "topic.generate")?.effective.system).toBe("s");
+    expect(list.find((p) => p.skillId === "script.draft")?.overlay).toBeNull();
   });
 
   it("[T-165] settings.prompts.versions.list + rollback → 契约合形 + 回滚生效", async () => {
@@ -222,12 +234,12 @@ describe("settings.transport (contract conformance)", () => {
     await client.putPrompt({
       params: { id: "review.insights" },
       query: undefined,
-      body: { system: "第一版" },
+      body: { expectedRevision: null, patch: { system: "第一版" } },
     });
     await client.putPrompt({
       params: { id: "review.insights" },
       query: undefined,
-      body: { system: "第二版" },
+      body: { expectedRevision: 1, patch: { system: "第二版" } },
     });
     // 版本历史列表(最新在前),逐条合契约。
     const versions = await client.listPromptVersions({
@@ -237,17 +249,16 @@ describe("settings.transport (contract conformance)", () => {
     });
     expect(versions.length).toBe(2);
     for (const v of versions)
-      expect(() => skillConfigOverrideVersionResource.parse(v)).not.toThrow();
-    expect(versions[0]!.system).toBe("第二版");
-    const firstVersion = versions.find((v) => v.system === "第一版")!;
-    // 回滚到第一版 → 当前配置回到「第一版」,响应合 skillConfigOverrideResource。
+      expect(() => accountSkillOverlayVersionResource.parse(v)).not.toThrow();
+    expect(versions[0]!.overlay.system).toBe("第二版");
+    const firstVersion = versions.find((v) => v.overlay.system === "第一版")!;
     const rolled = await client.rollbackPrompt({
       params: { id: "review.insights" },
       query: undefined,
-      body: { versionId: firstVersion.id },
+      body: { versionId: firstVersion.id, expectedRevision: 2 },
     });
-    expect(() => skillConfigOverrideResource.parse(rolled)).not.toThrow();
-    expect(rolled.system).toBe("第一版");
+    expect(() => accountSkillOverlayResource.parse(rolled)).not.toThrow();
+    expect(rolled.effective.system).toBe("第一版");
     // 回滚也进历史(第 3 版)。
     const after = await client.listPromptVersions({
       params: { id: "review.insights" },
@@ -257,20 +268,16 @@ describe("settings.transport (contract conformance)", () => {
     expect(after.length).toBe(3);
   });
 
-  it("settings.prompts.get → skillConfigOverrideResource single envelope", async () => {
+  it("settings.prompts.get → 未定制也返回 official/effective", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
-    await client.putPrompt({
-      params: { id: "planning.thesis" },
-      query: undefined,
-      body: { system: "s" },
-    });
     const got = await client.getPrompt({
       params: { id: "planning.thesis" },
       query: undefined,
       body: undefined,
     });
-    expect(() => skillConfigOverrideResource.parse(got)).not.toThrow();
-    expect(got.id).toBe("planning.thesis");
+    expect(() => accountSkillOverlayResource.parse(got)).not.toThrow();
+    expect(got.skillId).toBe("planning.thesis");
+    expect(got.overlay).toBeNull();
   });
 
   it("unknown op id → UnsupportedOperationError", async () => {

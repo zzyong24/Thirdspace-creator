@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
+import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
 type Phase = "idle" | "running" | "review" | "done" | "error";
 
@@ -195,10 +196,15 @@ export function AdoptCandidateCard<T>({
       // [T-049 B12] prepareInput 惰性补参:此刻(用户点了开始)才允许产生写副作用
       // (如 getOrCreate artifact),SSR 渲染路径保持纯读。
       const extra = prepareInput ? await prepareInput() : undefined;
+      const attemptId = createAiTaskAttemptId();
       const task = (await client.createAITask({
         params: undefined,
         query: undefined,
-        body: { taskType, inputData: extra ? { ...inputData, ...extra } : inputData },
+        body: {
+          taskType,
+          attemptId,
+          inputData: extra ? { ...inputData, ...extra } : inputData,
+        },
       })) as { id: string };
       setTaskId(task.id);
       await pollUntilDone(task.id);

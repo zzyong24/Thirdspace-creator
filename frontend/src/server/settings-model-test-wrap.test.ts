@@ -1,10 +1,11 @@
 /**
  * [T-377] settings.models.test「测试连接」通道单测(fake 解析器 / fetch / adapter,零网络):
- *   - 文本(default):1 token 补全探测,200 → ✓;401 → ✗ 人话提示(不泄 HTTP 码/响应体);未配 → 「未配置」。
+ *   - 文本(default):最小流式探测,正文或思考流 → ✓;401 → ✗ 密钥提示(不泄 HTTP 码/响应体);
+ *     正文与思考均为空 → ✗;未配 → 「未配置」。
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
  *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → ✗ 人话提示(不泄原始报错)。
  *   - video.generate:鉴权探测 —— 401 → ✗ 密钥无效或无权限;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
- *   - transcribe.audio:whisper-local 回退 → ✓ 免测试。
+ *   - transcribe.audio:whisper-local 回退 → 中性说明（不冒充云端已连通）。
  *   - web.search:browser 免 key → ✓;付费 provider 最小检索成功 → ✓。
  *   - wrap 透传:非 test op 原样进 settings transport。
  */
@@ -13,12 +14,19 @@ import { describe, it, expect, vi } from "vitest";
 import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
 
 import {
+  consumeTextProbeStream,
   createSettingsWithModelTest,
   runModelConnectionTest,
   type SettingsModelTestDeps,
 } from "./settings-model-test-wrap";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
+
+async function* probeParts(
+  parts: Array<{ type: string; text?: string; error?: unknown }>,
+) {
+  yield* parts;
+}
 
 const llmSpec = {
   apiFormat: "openai_chat" as const,
@@ -56,35 +64,105 @@ function makeDeps(
     })),
     generateImageMinimal: vi.fn(async () => ({ byteLength: 12 })),
     searchMinimal: vi.fn(async () => 1),
+    probeTextModel: vi.fn(async () => ({ text: "OK" })),
     fetchImpl: vi.fn(async () => jsonResponse(200, {})) as unknown as typeof fetch,
     ...overrides,
   };
 }
 
+describe("consumeTextProbeStream", () => {
+  it("读取首个 reasoning delta 作为真实连通证据", async () => {
+    await expect(
+      consumeTextProbeStream(
+        probeParts([
+          { type: "reasoning-start" },
+          { type: "reasoning-delta", text: "正在检查" },
+        ]),
+      ),
+    ).resolves.toEqual({ text: "", reasoningText: "正在检查" });
+  });
+
+  it("显式抛出 fullStream 的 error part，不得静默变成空流", async () => {
+    const error = new Error("401 Authentication Fails");
+    await expect(
+      consumeTextProbeStream(probeParts([{ type: "error", error }])),
+    ).rejects.toBe(error);
+  });
+});
+
 describe("runModelConnectionTest — 文本模型(default)", () => {
-  it("1 token 补全 200 → ✓ 连通", async () => {
+  it("复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通", async () => {
     const deps = makeDeps();
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(true);
     expect(r.model).toBe("test-model");
-    expect(r.detail).toContain("1 token");
-    // 探测打的是 chat/completions(openai_chat 形状)。
-    const url = (deps.fetchImpl as ReturnType<typeof vi.fn>).mock.calls[0]![0] as string;
-    expect(url).toBe("https://api.example.com/v1/chat/completions");
+    expect(r.detail).toContain("流式");
+    expect(deps.probeTextModel).toHaveBeenCalledWith(llmSpec);
+    expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("HTTP 401 → ✗ 人话提示(不泄 HTTP 码/响应体,也不说「未配置」)", async () => {
+  it("openai_responses 同样交给正式模型工厂，不在测试层手拼 /responses", async () => {
     const deps = makeDeps({
-      fetchImpl: vi.fn(async () =>
-        new Response("invalid api key", { status: 401 }),
-      ) as unknown as typeof fetch,
+      resolveLlm: vi.fn(async () => ({
+        ...llmSpec,
+        apiFormat: "openai_responses" as const,
+      })),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(true);
+    expect(r.provider).toBe("openai_responses");
+    expect(deps.probeTextModel).toHaveBeenCalledWith(
+      expect.objectContaining({ apiFormat: "openai_responses" }),
+    );
+    expect(deps.fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("正式流式调用发生非鉴权异常 → ✗ 通用人话提示(不泄原始错误,也不说「未配置」)", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => {
+        throw new Error("socket hang up at upstream.internal");
+      }),
     });
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
     expect(r.detail).toContain("连接失败");
-    expect(r.detail).not.toContain("401");
-    expect(r.detail).not.toContain("invalid api key");
+    expect(r.detail).not.toContain("socket hang up");
+    expect(r.detail).not.toContain("upstream.internal");
     expect(r.detail).not.toContain("未配置");
+  });
+
+  it("正式流式调用返回 2xx 空流 → ✗，不能把空内容误判成连通", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => ({ text: "   " })),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(false);
+    expect(r.detail).toContain("没有返回有效文本");
+  });
+
+  it("DeepSeek V4 只返回思考流 → ✓，不能因最终正文为空误报连接失败", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => ({
+        text: "",
+        reasoningText: "正在验证连接",
+      })),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(true);
+    expect(r.detail).toContain("思考流");
+  });
+
+  it("正式流式调用在流内返回 401 → ✗ 密钥错误，不得误报为空响应", async () => {
+    const deps = makeDeps({
+      probeTextModel: vi.fn(async () => {
+        throw new Error("AI_APICallError: 401 Authentication Fails, api key is invalid");
+      }),
+    });
+    const r = await runModelConnectionTest(ctx, "default", deps);
+    expect(r.ok).toBe(false);
+    expect(r.detail).toContain("密钥无效或无权限");
+    expect(r.detail).not.toContain("401");
+    expect(r.detail).not.toContain("api key");
   });
 
   it("解析抛 LlmCredentialError → 「未配置」", async () => {
@@ -206,10 +284,12 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
 });
 
 describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路径", () => {
-  it("whisper-local 回退 → ✓ 免网络测试", async () => {
+  it("[T-470] whisper-local 回退只说明当前走本地，不把未配置云端渲成连通成功", async () => {
     const r = await runModelConnectionTest(ctx, "transcribe.audio", makeDeps());
     expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
     expect(r.detail).toContain("本地 Whisper");
+    expect(r.detail).toContain("未配置云端");
   });
 
   // [T-384] 云端 ASR 三态探测:200 → ✓;404/405(厂商无 /v1/models 端点)→ ⚠ 诚实中间态

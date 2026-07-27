@@ -9,10 +9,11 @@
 # 偏离 SPEC §12 已论证:mac x86_64 不出——GitHub 托管 Intel runner 已退役,交叉编译
 # 会产出错架构原生依赖(better-sqlite3 等);Intel Mac 内测覆盖列遗留。
 #
-# [T-396c] 分发模型已渠道化(SPEC 2026-07-18 channel-links §6):客户端 updater endpoint
-# 已摘除,更新 = 「版本检查(activation-manager latest-version 端点)+ 跳渠道 downloadUrl
-# (飞书/网盘)」。本 workflow 产物**只供内部取用**(artifact / draft release),latest.json
-# 仅内部记录不再被客户端拉取;minisign/createUpdaterArtifacts 签名链保留 = 可逆开关。
+# [T-396c/T-492] 分发模型已渠道化(SPEC 2026-07-18 channel-links §6):客户端 updater
+# endpoint 已摘除,更新 = 「版本检查(activation-manager latest-version 端点)+ 跳渠道
+# downloadUrl(飞书/网盘)」。release.mjs 仍在构建链内部生成并校验 updater 产物,但用户下载
+# artifact / draft release 只上传可双击安装的 DMG 或 setup.exe,不再重复上传 updater 包、
+# minisign 签名或 latest.json。
 # **发布动作 = 手动传安装包到各渠道飞书/网盘 + activation-manager 后台更新
 # latestVersion/releaseNotes 与各渠道 downloadUrl**(全流程见 docs/RELEASING.md)。
 name: desktop-release
@@ -82,12 +83,158 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 安装 Playwright Chromium(T-284 打进包,永不运行时下载)
+      - name: 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+        id: runtime-inputs
+        env:
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: |
+          node <<'NODE'
+          const { createHash } = require("node:crypto");
+          const { appendFileSync } = require("node:fs");
+          const publicKey = (process.env.CREATOROS_VERDICT_PUBKEY_B64 || "").trim();
+          const raw = Buffer.from(publicKey, "base64");
+          if (!publicKey || raw.length !== 32) {
+            throw new Error("[T-487] CREATOROS_VERDICT_PUBKEY_B64 缺失或不是 32B Ed25519 公钥");
+          }
+          const runtime = [
+            process.version,
+            process.versions.v8,
+            process.versions.modules,
+          ].join("-");
+          const fingerprint = runtime.replace(/[^A-Za-z0-9._-]/g, "_");
+          const publicKeyDigest = createHash("sha256")
+            .update(publicKey)
+            .digest("hex")
+            .slice(0, 20);
+          appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `fingerprint=${fingerprint}\npubkey=${publicKeyDigest}\n`,
+          );
+          NODE
+
+      # [T-487] Runtime Image 精确缓存。只允许 exact key 命中，不设 restore-keys：
+      # 平台/架构/Node ABI/锁文件/源码任一变化都必须重建，不能拿相近旧包冒险。
+      # 保存动作紧跟 clean build，早于混淆/字节码，避免 job 结束时把已变异 sidecar 写回缓存。
+      - name: 恢复 clean Runtime Image(T-487)
+        id: runtime-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            frontend/src-tauri/sidecar
+            frontend/src-tauri/binaries
+          key: creatoros-runtime-v2-${{ steps.runtime-inputs.outputs.fingerprint }}-${{ runner.os }}-${{ runner.arch }}-verdict-${{ steps.runtime-inputs.outputs.pubkey }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'frontend/package.json', 'frontend/src/**', 'frontend/public/**', 'ai-worker/**', 'backend/**', 'contract/**', 'frontend/next.config.ts', 'frontend/scripts/desktop/build-sidecar.mjs', 'frontend/scripts/desktop/fetch-ffmpeg.mjs', 'frontend/scripts/desktop/platform-paths.mjs') }}
+
+      - name: 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+        id: runtime-abi
+        env:
+          CACHE_HIT: ${{ steps.runtime-cache.outputs.cache-hit }}
+          EXPECTED_RUNTIME_FINGERPRINT: ${{ steps.runtime-inputs.outputs.fingerprint }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: |
+          node <<'NODE'
+          const { appendFileSync, existsSync, readFileSync, readdirSync, rmSync } = require("node:fs");
+          const { join } = require("node:path");
+          const { spawnSync } = require("node:child_process");
+          const output = (valid) =>
+            appendFileSync(process.env.GITHUB_OUTPUT, `valid=${valid}\n`);
+          if (process.env.CACHE_HIT !== "true") {
+            output("false");
+            process.exit(0);
+          }
+          const binaries = join("frontend", "src-tauri", "binaries");
+          const sidecar = join("frontend", "src-tauri", "sidecar");
+          const runtimeBinary = existsSync(binaries)
+            ? readdirSync(binaries)
+                .filter((name) => name.startsWith("creatoros-server-"))
+                .map((name) => join(binaries, name))[0]
+            : undefined;
+          const bakedKeyPath = join(
+            sidecar,
+            "frontend",
+            ".next",
+            "server",
+            "verdict-verify-key.json",
+          );
+          let actualFingerprint = "";
+          let bakedKey = "";
+          if (runtimeBinary) {
+            const probe = spawnSync(
+              runtimeBinary,
+              [
+                "-p",
+                "[process.version,process.versions.v8,process.versions.modules].join('-').replace(/[^A-Za-z0-9._-]/g,'_')",
+              ],
+              { encoding: "utf8" },
+            );
+            if (probe.status === 0) actualFingerprint = probe.stdout.trim();
+          }
+          if (existsSync(bakedKeyPath)) {
+            try {
+              bakedKey = JSON.parse(readFileSync(bakedKeyPath, "utf8")).publicKeyB64 || "";
+            } catch {}
+          }
+          const valid =
+            actualFingerprint === process.env.EXPECTED_RUNTIME_FINGERPRINT &&
+            bakedKey === (process.env.CREATOROS_VERDICT_PUBKEY_B64 || "").trim();
+          if (!valid) {
+            console.warn(
+              `[T-487] 缓存指纹失配，强制重建(runtime=${actualFingerprint || "missing"})`,
+            );
+            rmSync(sidecar, { recursive: true, force: true });
+            rmSync(binaries, { recursive: true, force: true });
+          }
+          output(String(valid));
+          NODE
+
+      - name: 安装 Playwright Chromium(T-284,仅 cache miss)
+        if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
         run: pnpm -C frontend exec playwright install chromium
+
+      - name: 构建 clean Runtime Image(T-487,仅 cache miss)
+        if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
+        env:
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          # 缓存只保存展开后的 clean runtime；最终变换完成后再唯一压一次 tar。
+          CREATOROS_SKIP_TARBALL: "1"
+        run: node frontend/scripts/desktop/build-sidecar.mjs
+
+      - name: 保存 clean Runtime Image(T-487)
+        # GitHub cache 不可覆盖：若命中内容损坏，本轮会重建后继续，但不假装能覆盖同 key。
+        # 正常 exact miss 才保存；异常命中需从 Actions cache 管理页删除后由下一轮重建。
+        if: steps.runtime-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            frontend/src-tauri/sidecar
+            frontend/src-tauri/binaries
+          key: ${{ steps.runtime-cache.outputs.cache-primary-key }}
 
       - name: 读版本号
         id: version
         run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: 校验产品反馈官方 origin(T-538)
+        env:
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${{ vars.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS }}
+        run: |
+          node <<'NODE'
+          const raw = (process.env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS || "").trim();
+          if (!raw) throw new Error("[T-538] Actions variable CREATOROS_FEEDBACK_OFFICIAL_ORIGINS 未配置");
+          for (const value of raw.split(",").map((item) => item.trim())) {
+            const url = new URL(value);
+            if (
+              url.protocol !== "https:" ||
+              url.username ||
+              url.password ||
+              url.port ||
+              url.pathname !== "/" ||
+              url.search ||
+              url.hash
+            ) {
+              throw new Error(`[T-538] 非法 official origin: ${value}`);
+            }
+          }
+          NODE
 
       - name: 打包(release.mjs 全链)
         working-directory: frontend
@@ -95,6 +242,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
+          # [T-545/T-557] 双端统一打 CreatorOS test 产品包；渠道身份仍由激活码签名
+          # channelRef 决定。必须在 package fail-fast 前显式注入，不能依赖启动环境。
+          CREATOROS_LICENSE_PROJECT_KEY: "test"
           # [T-451] verdict-token 签名密钥对(build.rs 编译期需要私钥;build-sidecar 期需要公钥
           #   烘焙进 sidecar/frontend/.next/server/verdict-verify-key.json)。两个 secret 需在
           #   仓库 Settings → Secrets and variables → Actions 配置(名字逐字对齐);缺任一 → 编译报
@@ -102,10 +252,15 @@ jobs:
           #   生成:pnpm -C frontend node scripts/desktop/verdict-keygen.mjs。
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          # [T-538] Rust 编译期烘焙后只注入本机 sidecar；Web UI 不可读取。
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${{ vars.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS }}
           # [T-452 后修] CI 打的是正式发布包,走 fat lto `release` profile(而非本地内测的
           #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
           #   本地日常打包不设此 env,走 release-fast 快通道。
           CREATOROS_RELEASE: "1"
+          # 上面已精确恢复或构建 clean runtime；package 只做混淆/字节码/Tauri，
+          # 不再重复跑 Next build + 生产依赖闭包组装。
+          CREATOROS_SKIP_SIDECAR_REBUILD: "1"
         run: node scripts/desktop/release.mjs
 
       - name: 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
@@ -134,6 +289,43 @@ jobs:
           ls -d frontend/src-tauri/sidecar/frontend/browsers/chromium-* \
             || { echo "::error::Chromium 未打进 sidecar——bundleChromiumBrowser 被静默跳过"; exit 1; }
 
+      # [T-487 RAT-PKG-02] 真执行本轮 setup.exe，不拿 7z 清单冒充安装验收。
+      # 安装到 RUNNER_TEMP（通常是 D:）证明：目录选择生效、POSTINSTALL hook 真执行、
+      # current 指针/关键入口存在、成功后 tar 已删除。安装 Gate 仍在上传产物前截断。
+      - name: Windows 安装期 runtime 原生冒烟(T-487)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $setup = Get-ChildItem "frontend/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" |
+            Select-Object -First 1
+          if (-not $setup) { throw "[T-487] 未找到 NSIS setup.exe" }
+
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          Remove-Item -Recurse -Force $installDir -ErrorAction SilentlyContinue
+          $process = Start-Process -FilePath $setup.FullName -Wait -PassThru `
+            -ArgumentList @("/S", "/D=$installDir")
+          if ($process.ExitCode -ne 0) {
+            throw "[T-487] NSIS 静默安装失败(exit=$($process.ExitCode))"
+          }
+
+          $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
+          if (-not (Test-Path $pointer -PathType Leaf)) {
+            throw "[T-487] 安装完成但缺 runtime-current.txt"
+          }
+          $runtimeId = (Get-Content $pointer -Raw).Trim()
+          if ($runtimeId -notmatch '^[A-Za-z0-9._-]+$') {
+            throw "[T-487] runtime-current.txt 非法:$runtimeId"
+          }
+          $server = Join-Path $installDir "runtime-images/$runtimeId/sidecar/frontend/server.js"
+          if (-not (Test-Path $server -PathType Leaf)) {
+            throw "[T-487] 安装期 runtime 缺 frontend/server.js"
+          }
+          if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
+            throw "[T-487] 安装成功后仍残留 sidecar.tar.gz"
+          }
+          Write-Host "[T-487] ✓ 原生安装期物化通过: $server"
+
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
         run: |
           found=$(find frontend/src-tauri/target/release/bundle \
@@ -141,15 +333,12 @@ jobs:
           echo "$found"
           test -n "$found" || { echo "::error::未找到 updater 产物/.sig"; exit 1; }
 
-      - name: 收集产物
+      - name: 收集用户安装包(T-492)
         run: |
-          mkdir -p dist-upload
-          find frontend/src-tauri/target/release/bundle \
-            \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.msi" -o -name "*-setup.exe" \
-               -o -name "*.msi.zip" -o -name "*.nsis.zip" -o -name "*.sig" -o -name "latest.json" \) \
-            -exec cp {} dist-upload/ \;
-          # latest.json 按端改名,merge job 汇总时不互相覆盖
-          mv dist-upload/latest.json "dist-upload/latest-${{ matrix.updater_target }}.json"
+          node frontend/scripts/desktop/collect-user-installers.mjs \
+            "${{ matrix.updater_target }}" \
+            frontend/src-tauri/target/release/bundle \
+            dist-upload
           ls -la dist-upload/
 
       - uses: actions/upload-artifact@v4
@@ -158,44 +347,108 @@ jobs:
           path: dist-upload/
           if-no-files-found: error
 
-  merge-latest:
+      # [T-562] 之前只执行 setup.exe 的安装期特殊入口，完全没有运行用户真正点击的
+      # CreatorOS.exe，因此 sidecar cwd/verdict 公钥/WebView 导航回归都能带病上传。
+      # 产物先上传以便失败时保留诊断；随后真启动已安装 GUI，等 Rust 在 WebView 完成加载
+      # 127.0.0.1 主页面后输出固定 marker。这里不重编译，直接复用本 job 已安装的产物。
+      - name: Windows 安装后真启动与主页面加载冒烟(T-562)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $appExe = Join-Path $installDir "CreatorOS.exe"
+          if (-not (Test-Path $appExe -PathType Leaf)) {
+            throw "[T-562] 安装完成但缺 CreatorOS.exe"
+          }
+
+          $stdout = Join-Path $env:RUNNER_TEMP "creatoros-startup.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "creatoros-startup.stderr.log"
+          Remove-Item $stdout,$stderr -Force -ErrorAction SilentlyContinue
+          $app = Start-Process -FilePath $appExe -PassThru `
+            -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $ready = $false
+          try {
+            for ($i = 0; $i -lt 600; $i++) {
+              if (Test-Path $stderr) {
+                $content = Get-Content $stderr -Raw -ErrorAction SilentlyContinue
+                if ($content -match '\[CreatorOS\] MAIN_PAGE_LOAD_FINISHED http://127\.0\.0\.1:') {
+                  $ready = $true
+                  break
+                }
+              }
+              if ($app.HasExited) {
+                break
+              }
+              Start-Sleep -Milliseconds 200
+            }
+            if (-not $ready) {
+              Write-Host "===== CreatorOS stdout ====="
+              if (Test-Path $stdout) { Get-Content $stdout }
+              Write-Host "===== CreatorOS stderr ====="
+              if (Test-Path $stderr) { Get-Content $stderr }
+              if ($app.HasExited) {
+                throw "[T-562] CreatorOS 在主页面加载前退出(exit=$($app.ExitCode))"
+              }
+              throw "[T-562] CreatorOS 120 秒内未完成 sidecar 启动与 WebView 主页面加载"
+            }
+            Write-Host "[T-562] ✓ 已安装 CreatorOS 真启动并完成主页面加载"
+          } finally {
+            if (-not $app.HasExited) {
+              $null = $app.CloseMainWindow()
+              if (-not $app.WaitForExit(10000)) {
+                Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
+              }
+            }
+          }
+
+      # [T-557] 上传后再验主动卸载：安装 Gate 已经通过，因此即使卸载回归失败，
+      # 本轮已生成的安装包也必须留作诊断，不能随托管 runner 一起丢失。
+      - name: Windows 主动卸载清理冒烟(T-557)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $uninstaller = Join-Path $installDir "uninstall.exe"
+          if (-not (Test-Path $uninstaller -PathType Leaf)) {
+            throw "[T-557] 安装完成但缺官方 uninstall.exe"
+          }
+          $uninstall = Start-Process -FilePath $uninstaller -Wait -PassThru -ArgumentList @("/S")
+          if ($uninstall.ExitCode -ne 0) {
+            throw "[T-557] NSIS 静默卸载失败(exit=$($uninstall.ExitCode))"
+          }
+          for ($i = 0; $i -lt 50 -and (Test-Path $installDir); $i++) {
+            Start-Sleep -Milliseconds 200
+          }
+          if (Test-Path (Join-Path $installDir "runtime-images")) {
+            throw "[T-557] 主动卸载后仍残留 runtime-images"
+          }
+          if (Test-Path $installDir) {
+            throw "[T-557] 主动卸载后仍残留安装目录:$installDir"
+          }
+          Write-Host "[T-557] ✓ 官方卸载器已清理 runtime 与安装目录"
+
+  draft-release:
     needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
-      - name: 合并双端 latest.json(复用 release.mjs mergeLatestJson)
-        run: |
-          node --input-type=module -e '
-            import { readFileSync, writeFileSync, readdirSync } from "node:fs";
-            import { mergeLatestJson } from "./frontend/scripts/desktop/release.mjs";
-            const files = readdirSync("artifacts").filter(f => /^latest-.*\.json$/.test(f));
-            if (files.length === 0) { console.error("无 latest-*.json"); process.exit(1); }
-            let merged = null;
-            for (const f of files) {
-              const one = JSON.parse(readFileSync(`artifacts/${f}`, "utf8"));
-              merged = merged ? mergeLatestJson(merged, one) : one;
-            }
-            writeFileSync("artifacts/latest.json", JSON.stringify(merged, null, 2));
-            console.log("合并平台:", Object.keys(merged.platforms).join(", "));
-          '
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: latest-json-merged
-          path: artifacts/latest.json
-
       - name: 建 draft Release 挂产物(仅 tag 触发;draft 等人工检查后 publish)
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          unexpected=$(find artifacts -type f ! -name '*.dmg' ! -name '*-setup.exe' -print)
+          if [ -n "$unexpected" ]; then
+            echo "::error::用户 Release 混入非安装包:$unexpected"
+            exit 1
+          fi
           tag="${GITHUB_REF#refs/tags/}"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "内测构建(未 OS 签名,signed:false;updater 已 minisign 签名)"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
           gh release upload "$tag" artifacts/* --clobber

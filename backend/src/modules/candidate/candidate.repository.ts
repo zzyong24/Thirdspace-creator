@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, sql, type Db } from "@creatoros/backend";
+import { and, desc, eq, gte, lt, sql, type Db } from "@creatoros/backend";
 import {
   candidates,
   audienceSignals,
@@ -40,6 +40,7 @@ export type CandidateSort =
   | "predictedScore"
   | "positioningFit"
   | "demandCount"
+  | "createdAt"
   // [T-216] 防茧房推荐排序 —— 非 SQL 列;service.listCandidates 在到达 repo 前拦截,
   // 路由到 rankTopicsWithGuardrails(偏好注入后分 + 探索位)。repo 若意外收到则 sortColumn
   // 默认回退 predictedScore(无害兜底)。
@@ -49,6 +50,7 @@ export interface ListCandidatesQuery {
   status?: string;
   source?: string;
   sort?: CandidateSort;
+  createdAfter?: string;
   limit?: number;
   offset?: number;
 }
@@ -62,6 +64,7 @@ export interface CreateCandidateInput {
   positioningFit: number | null;
   predictedScore: number | null;
   aiTaskId: string | null;
+  card?: Record<string, unknown>;
 }
 
 // A free curation patch — NO promoted, NO demandCount (derived-field guard).
@@ -198,6 +201,8 @@ export function createCandidateRepository(
         return candidates.positioningFit;
       case "demandCount":
         return candidates.demandCount;
+      case "createdAt":
+        return candidates.createdAt;
       case "predictedScore":
       default:
         return candidates.predictedScore;
@@ -218,10 +223,18 @@ export function createCandidateRepository(
       await db.insert(candidates).values(rows).onConflictDoNothing();
     },
 
-    async listCandidates({ status, source, sort, limit = 100, offset = 0 }) {
+    async listCandidates({
+      status,
+      source,
+      sort,
+      createdAfter,
+      limit = 100,
+      offset = 0,
+    }) {
       const filters = [eq(candidates.userId, deps.userId), candAccountGate];
       if (status) filters.push(eq(candidates.status, status));
       if (source) filters.push(eq(candidates.source, source));
+      if (createdAfter) filters.push(gte(candidates.createdAt, createdAfter));
       const where = and(...filters);
       const rows = await db
         .select()
@@ -257,6 +270,7 @@ export function createCandidateRepository(
           demandCount: 0,
           status: "pool",
           aiTaskId: input.aiTaskId,
+          card: input.card ?? {},
           createdAt: deps.now(),
           updatedAt: deps.now(),
         })
