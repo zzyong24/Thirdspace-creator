@@ -5,6 +5,30 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-PKG565-002
+Date: 2026-07-27
+Stage: T-565 PLAN / RAT
+Type: user-confirmed-external-execution
+Decision: 授权 agent 创建、推送并操作 T-565 的原生 Windows RAT 工作流；GitHub Actions
+          费用不设上限，由 agent 根据验证需要持续运行和修复，直到 Product Gate 所需的
+          Burn payload/cache/代理/中断、Win32 current/journal kill recovery 与 reparse
+          containment 证据形成。
+Rationale: T-565 重写 SPEC 的 cross-family Round 1 唯一未闭环 blocker 是原生 Windows
+           可行性证据；本机没有 Windows/Wine/VM，私有仓 GitHub-hosted Windows runner
+           是当前可执行的真实 Win32/NTFS 环境。用户明确回复“授权运行windows rat
+           没有费用上限 你来操作”。
+Pattern-Ref: PAT-001
+Pattern Tier: T1（WiX Burn 直接采用 + CreatorOS 窄事务 worker；命中 BG-003 官方方案、
+              BG-005 覆盖 acquisition/trust，worker 只补产品事务缺口）
+Affected Artifacts: T-565 SPEC/review、Windows RAT workflow、RAT evidence、BACKLOG。
+Explicit Limits: 仅授权验证和为验证所需的 branch/workflow push；不创建或发布 GitHub
+                 Release，不对用户分发安装包，不将 RAT spike 冒充生产实现。
+Supersedes: DEC-PKG565-001 的“不得触发付费 Windows runner”限制；其他限制继续有效。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-MC-002
 Date: 2026-07-26
 Stage: T-501 4-build

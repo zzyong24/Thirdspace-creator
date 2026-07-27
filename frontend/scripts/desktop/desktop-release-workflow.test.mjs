@@ -180,4 +180,65 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       workflow.indexOf("Windows 安装后真启动与主页面加载冒烟(T-562)"),
     );
   });
+
+  it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，通过后才上传 setup", () => {
+    const shellSource = readFileSync(
+      join(process.cwd(), "src-tauri", "src", "lib.rs"),
+      "utf8",
+    );
+    const packageRat = workflow.slice(
+      workflow.indexOf("windows-closure-rat:"),
+      workflow.indexOf("draft-release:"),
+    );
+    expect(packageRat).toContain("windows_package_rat");
+    expect(packageRat).toContain("prepare-packaged-runtime.mjs");
+    expect(packageRat).toContain("构建真实 NSIS 候选包（不发布）");
+    expect(packageRat).toContain("New-NetFirewallRule");
+    expect(packageRat).toContain("MAIN_PAGE_LOAD_FINISHED");
+    expect(packageRat).toContain("inspect-installed-webview.mjs");
+    expect(packageRat).toContain("runtimeFilesChangedOnFirstLaunch");
+    expect(packageRat).toContain("runtimeFilesChangedSample");
+    expect(packageRat).toContain("[Net.Sockets.TcpListener]::new");
+    expect(packageRat).toContain("webviewDebugArgumentProcesses");
+    expect(packageRat).toContain(
+      "WebView2 子进程未收到 remote-debugging-port",
+    );
+    expect(packageRat).toContain('"node_modules"');
+    expect(shellSource).toContain(
+      'std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")',
+    );
+    expect(shellSource).toContain(".additional_browser_args(&browser_args)");
+    const nextConfigSource = readFileSync(
+      join(process.cwd(), "next.config.ts"),
+      "utf8",
+    );
+    expect(nextConfigSource).toContain("isrFlushToDisk: false");
+    expect(packageRat).not.toContain("dist-upload");
+    expect(packageRat).toContain(
+      "上传已通过真安装验证的 Windows 候选包",
+    );
+    expect(packageRat).toContain(
+      "if: ${{ success() && inputs.windows_package_rat == true }}",
+    );
+    expect(packageRat).toContain(
+      "path: frontend/src-tauri/target/release-fast/bundle/nsis/*-setup.exe",
+    );
+    expect(
+      packageRat.indexOf("真安装、断网首启与 WebView 非白屏验证"),
+    ).toBeLessThan(
+      packageRat.indexOf("上传已通过真安装验证的 Windows 候选包"),
+    );
+  });
+
+  it("T-565 Windows 候选包与 macOS 正式 build 可在同一提交并行验证", () => {
+    expect(workflow).toContain(
+      "正式 build 只跑某端(留空=双端；RAT job 不受此项影响)",
+    );
+    const combinedRunCondition =
+      "(inputs.windows_package_rat == true && inputs.only == 'macos')";
+    expect(workflow.split(combinedRunCondition)).toHaveLength(3);
+    expect(workflow).toContain(
+      'select(.os|contains(\\"$ONLY\\"))',
+    );
+  });
 });
