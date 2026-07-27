@@ -197,6 +197,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(packageRat).toContain("MAIN_PAGE_LOAD_FINISHED");
     expect(packageRat).toContain("inspect-installed-webview.mjs");
     expect(packageRat).toContain("runtimeFilesChangedOnFirstLaunch");
+    expect(packageRat).toContain("runtimeFilesChangedSample");
     expect(packageRat).toContain("[Net.Sockets.TcpListener]::new");
     expect(packageRat).toContain("webviewDebugArgumentProcesses");
     expect(packageRat).toContain(
@@ -207,6 +208,11 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       'std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")',
     );
     expect(shellSource).toContain(".additional_browser_args(&browser_args)");
+    const nextConfigSource = readFileSync(
+      join(process.cwd(), "next.config.ts"),
+      "utf8",
+    );
+    expect(nextConfigSource).toContain("isrFlushToDisk: false");
     expect(packageRat).not.toContain("dist-upload");
     expect(packageRat).not.toMatch(
       /path:\s*\|[\s\S]*?target\/release-fast\/bundle\/nsis/,

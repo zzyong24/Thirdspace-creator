@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
   // tracing 自动带入),`node server.js` 端到端 200 + PGlite 落盘通过。仅桌面构建开启,
   // 不影响现有 web build/dev。
   ...(isDesktopBuild ? { output: "standalone" as const } : {}),
+  // [T-565] 桌面安装目录是只读产品运行时，不是 Next 的数据目录。默认 ISR /
+  // Image Optimizer 会在 `.next/cache` 回写文件，既污染版本化 runtime，也会让首启
+  // 看起来仍在处理小文件。桌面包改用 Next 已有的内存缓存；web 部署保持原默认值。
+  ...(isDesktopBuild
+    ? { experimental: { isrFlushToDisk: false } }
+    : {}),
   // [T-147 P1] drizzle 迁移是 non-JS 数据文件(meta/_journal.json + *.sql),Next output
   // tracing 只 trace import 的 JS,不带这些 → standalone 里 db.ts 找不到迁移目录会 500。
   // 原型踩坑已定位并修复:显式 include backend/drizzle 全量。仅桌面构建注入,web build 留空无害。

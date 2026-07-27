@@ -692,13 +692,11 @@ jobs:
             )
             $afterFiles = @(Get-ChildItem $runtime -Recurse -File)
             $afterBytes = ($afterFiles | Measure-Object Length -Sum).Sum
-            if (
-              $afterFiles.Count -ne $runtimeFiles.Count -or
-              $afterBytes -ne $runtimeBytes -or
-              $changedRuntimeFiles.Count -ne 0
-            ) {
-              throw "[T-565] 首启修改了安装 runtime（疑似仍在解压/自修复）"
-            }
+            $changedRuntimeSample = @(
+              $changedRuntimeFiles |
+                Select-Object -First 20 |
+                ForEach-Object { [IO.Path]::GetRelativePath($runtime, $_.FullName) }
+            )
             $debugArgumentProcesses = @(
               Get-CimInstance Win32_Process -Filter "Name = 'msedgewebview2.exe'" |
                 Where-Object CommandLine -Match "--remote-debugging-port=$devtoolsPort"
@@ -710,8 +708,11 @@ jobs:
               firstLaunchMilliseconds = $launchWatch.ElapsedMilliseconds
               runtimeFiles = $runtimeFiles.Count
               runtimeBytes = $runtimeBytes
+              runtimeFilesAfterFirstLaunch = $afterFiles.Count
+              runtimeBytesAfterFirstLaunch = $afterBytes
               nodeModulesDirectories = $nodeModules.Count
               runtimeFilesChangedOnFirstLaunch = $changedRuntimeFiles.Count
+              runtimeFilesChangedSample = $changedRuntimeSample
               offlineFirewallPrograms = $uniquePrograms.Count
               mainPageLoadFinished = $true
               webviewDebugArgumentProcesses = $debugArgumentProcesses.Count
@@ -719,6 +720,13 @@ jobs:
             }
             $partialEvidence | ConvertTo-Json | Out-File `
               "tools/windows-closure-rat/out/package-rat-results.json" -Encoding utf8
+            if (
+              $afterFiles.Count -ne $runtimeFiles.Count -or
+              $afterBytes -ne $runtimeBytes -or
+              $changedRuntimeFiles.Count -ne 0
+            ) {
+              throw "[T-565] 首启修改了安装 runtime（疑似仍在解压/自修复）"
+            }
             if ($debugArgumentProcesses.Count -eq 0) {
               throw "[T-565] WebView2 子进程未收到 remote-debugging-port"
             }
@@ -735,8 +743,11 @@ jobs:
               firstLaunchMilliseconds = $launchWatch.ElapsedMilliseconds
               runtimeFiles = $runtimeFiles.Count
               runtimeBytes = $runtimeBytes
+              runtimeFilesAfterFirstLaunch = $afterFiles.Count
+              runtimeBytesAfterFirstLaunch = $afterBytes
               nodeModulesDirectories = $nodeModules.Count
               runtimeFilesChangedOnFirstLaunch = $changedRuntimeFiles.Count
+              runtimeFilesChangedSample = $changedRuntimeSample
               offlineFirewallPrograms = $uniquePrograms.Count
               mainPageLoadFinished = $true
               webviewDebugArgumentProcesses = $debugArgumentProcesses.Count
