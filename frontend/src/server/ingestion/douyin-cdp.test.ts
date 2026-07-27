@@ -45,7 +45,7 @@ import {
 
 // 真实 work_list XHR 形状的 fixture(对齐 cheat-on-content 抓到的字段)。
 
-describe("[T-567] 抖音重新登录以服务端会话为准", () => {
+describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", () => {
   function makeLoginContext(probes: Array<"active" | "expired" | "unknown">) {
     const calls = {
       goto: 0,
@@ -60,6 +60,15 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
       async goto(url: string) {
         calls.goto += 1;
         calls.gotoUrls.push(url);
+      },
+      async evaluate() {
+        const result = probes[calls.probe] ?? probes.at(-1) ?? "unknown";
+        calls.probe += 1;
+        return result === "active"
+          ? { statusCode: 0, statusMessage: "" }
+          : result === "expired"
+            ? { statusCode: 8, statusMessage: "登录已失效" }
+            : null;
       },
       async waitForTimeout() {
         if (!hasCookie && calls.clearCookies > 0 && !scannedAfterClear) {
@@ -83,15 +92,11 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
       },
       request: {
         async get() {
-          const result = probes[calls.probe] ?? probes.at(-1) ?? "unknown";
-          calls.probe += 1;
+          // 普通抖音登录页与收藏接口同源；登录成功判定必须消费页面内 fetch 的结果。
+          // BrowserContext.request 脱离页面反爬环境时可能只有未知响应，不能再作为唯一证据。
           return {
             async json() {
-              return result === "active"
-                ? { status_code: 0, status_msg: "" }
-                : result === "expired"
-                  ? { status_code: 8, status_msg: "登录已失效" }
-                  : {};
+              return {};
             },
           };
         },
@@ -137,6 +142,18 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
     expect(calls.clearCookies).toBe(0);
     expect(calls.goto).toBe(1);
     expect(calls.close).toBe(1);
+  });
+
+  it("普通抖音页面已登录时使用同源页面探针确认，不被脱离页面环境的未知响应误报未登录", async () => {
+    const { calls, openContext } = makeLoginContext(["active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 1 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.probe).toBe(1);
+    expect(calls.clearCookies).toBe(0);
   });
 
   it("用户主动关闭登录窗口时返回未登录，不把 Playwright TargetClosedError 包成 HTTP 400", async () => {
