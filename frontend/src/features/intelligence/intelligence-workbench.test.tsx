@@ -278,6 +278,28 @@ describe("T-482 内容雷达工作区", () => {
     expect(sync.className).not.toContain("opacity-0");
   });
 
+  it("[T-567] 中等桌面窗口保持来源、内容、详情三栏，详情不再整块下坠", () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={detail}
+        api={api()}
+      />,
+    );
+
+    const layout = screen.getByTestId("intelligence-responsive-layout");
+    expect(layout.className).toContain(
+      "xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)]",
+    );
+    const detailRegion = screen
+      .getByTestId("intelligence-detail")
+      .parentElement;
+    expect(detailRegion).not.toHaveClass("xl:col-span-2");
+    expect(detailRegion).toHaveClass("xl:min-h-0");
+  });
+
   it("[T-520] 收藏错误只按端到端结构化 code 给出不同处理建议", () => {
     expect(
       favoriteFoldersErrorMessage({
@@ -333,6 +355,14 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       sourceVerificationErrorMessage("web", { code: "UNSAFE_URL" }),
     ).toContain("公网网页");
+  });
+
+  it("[T-567] 创作者主页旁证发现收藏会话过期时明确提示重新登录", () => {
+    expect(
+      sourceVerificationErrorMessage("creator_profile", {
+        cause: { code: "DOUYIN_FAVORITES_SESSION_EXPIRED" },
+      }),
+    ).toContain("重新登录");
   });
 
   it("[T-520] 业务确认真 0 时显示真实空态，来源弹窗可滚动且选项可换行", async () => {

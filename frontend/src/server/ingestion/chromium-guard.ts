@@ -134,9 +134,11 @@ export async function ensureChromiumLaunchable(
 }
 
 // ── 并发防抖 + 活 context 追踪(进程内单例状态)────────────────────────────────
-// 同一 profile 同时只允许一个 launch 在飞;profile 上还有我们自己的活 context 时,预检
-// 跳过杀进程/清锁(别把跨请求保持打开的登录窗杀了)。
-const launchQueues = new Map<string, Promise<unknown>>();
+// [T-567] Chromium 的 user-data-dir 锁覆盖的是整个 BrowserContext 生命周期，不只是
+// launch 那一瞬间。旧实现只等前一个 launch Promise resolve，context 仍活着时第二个请求
+// 已经开始 launchPersistentContext，必然撞 SingletonLock。队列尾因此必须一直持有到
+// context close/close event，再放行同 profile 的后继请求。
+const launchQueues = new Map<string, Promise<void>>();
 const liveContexts = new Map<string, number>();
 
 /** 单测辅助:读某 profile 当前活 context 数。 */
@@ -281,12 +283,48 @@ export async function guardedLaunch<T extends Closable>(
   };
 
   if (!profileDir) return runGuarded();
-  // 同 profile 串行化:后来者排在前一个 launch(无论成败)之后。
-  const prev = launchQueues.get(profileDir) ?? Promise.resolve();
-  const run = prev.catch(() => {}).then(runGuarded);
-  launchQueues.set(
-    profileDir,
-    run.catch(() => {}),
-  );
-  return run;
+
+  // 同 profile 串行化到 context close：后来者不只等 launch 完成，还要等前一个 context
+  // 释放用户目录。失败路径立即释放；正常 close 与浏览器崩溃的 close event 都幂等释放。
+  const previousLease = launchQueues.get(profileDir) ?? Promise.resolve();
+  let resolveLease!: () => void;
+  const leaseOpen = new Promise<void>((resolve) => {
+    resolveLease = resolve;
+  });
+  const leaseTail = previousLease.catch(() => {}).then(() => leaseOpen);
+  launchQueues.set(profileDir, leaseTail);
+  void leaseTail.finally(() => {
+    if (launchQueues.get(profileDir) === leaseTail) {
+      launchQueues.delete(profileDir);
+    }
+  });
+
+  await previousLease.catch(() => {});
+  let leaseReleased = false;
+  const releaseLease = (): void => {
+    if (leaseReleased) return;
+    leaseReleased = true;
+    resolveLease();
+  };
+
+  try {
+    const ctx = await runGuarded();
+    const originalClose = ctx.close.bind(ctx);
+    ctx.close = async () => {
+      try {
+        await originalClose();
+      } finally {
+        releaseLease();
+      }
+    };
+    try {
+      ctx.on?.("close", releaseLease);
+    } catch {
+      // fake/收窄 context 无 on → close 包装已兜底
+    }
+    return ctx;
+  } catch (error) {
+    releaseLease();
+    throw error;
+  }
 }

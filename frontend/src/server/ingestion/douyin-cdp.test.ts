@@ -1361,6 +1361,10 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
       responseEventDelayMs?: number;
       responsePayloads?: unknown[];
       responseRawBodies?: string[];
+      sessionProbeResponse?: {
+        statusCode: number | null;
+        statusMessage: string;
+      } | null;
     } = {},
   ) {
     type ProfileResp = {
@@ -1418,7 +1422,10 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
       async title() {
         return pageState.title ?? "抖音博主主页";
       },
-      async evaluate() {
+      async evaluate(_fn: unknown, arg?: unknown) {
+        if (typeof arg === "string") {
+          return pageState.sessionProbeResponse ?? null;
+        }
         return pageState.body ?? "";
       },
       keyboard: { async press() {} },
@@ -1597,6 +1604,48 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
         description: "重载后取得的真实作品",
       },
     ]);
+  });
+
+  it("[T-567] 两轮作品接口空响应且旁证接口明确拒绝会话时要求重新登录", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      responseRawBodies: ["", ""],
+      sessionProbeResponse: {
+        statusCode: 8,
+        statusMessage: "登录已失效",
+      },
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-stale-cookie",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
+  it("[T-567] 两轮作品接口空响应但旁证登录有效时仍诚实保留上游空响应错误", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      responseRawBodies: ["", ""],
+      sessionProbeResponse: {
+        statusCode: 0,
+        statusMessage: "",
+      },
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-transient-empty",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNoValidResponseError);
   });
 });
 
