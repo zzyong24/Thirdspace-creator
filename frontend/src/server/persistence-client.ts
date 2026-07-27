@@ -5617,7 +5617,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         })?.query;
         const accountId = requireAccountId(ctx.accountId, endpoint.id);
         if (query?.accountId !== accountId) {
-          throw new OwnershipError("Intelligence source not found");
+          // 已知是当前页面账号与收藏归属不一致；仍使用 404-class OwnershipError，
+          // 但给本机用户可操作的收藏语义，避免 UI 只得到无关的 source not found。
+          throw new OwnershipError("收藏账号与当前页面账号不一致");
         }
         const collectorAccountId = query.collectorAccountId ?? "";
         const collector =

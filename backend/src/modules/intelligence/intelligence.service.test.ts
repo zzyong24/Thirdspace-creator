@@ -7,6 +7,7 @@ import {
   executionTasks,
   favoritesFolders,
   favoritesItems,
+  intelligenceSources,
   intelligenceMigrationLedgers,
   trendSources,
   eq,
@@ -69,6 +70,65 @@ function deps() {
 }
 
 describe("T-482 内容雷达领域主链", () => {
+  it("[T-546] 旧收藏来源缺 collectorAccountId 时从受控 browserSessionRef 恢复并可手动同步", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      await db.insert(intelligenceSources).values({
+        id: "legacy-favorites-without-collector",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        collectionId: null,
+        type: "favorites_folder",
+        platform: "douyin",
+        displayName: "选题",
+        canonicalUrl: null,
+        canonicalUrlHash: null,
+        externalKey: "选题",
+        browserSessionRef: `douyin-profile:${ctx.accountId}`,
+        adapterConfig: {
+          type: "favorites_folder",
+          folderId: "选题",
+        },
+        monitorEnabled: false,
+        syncPolicy: { mode: "manual" },
+        extractionInstruction: null,
+        status: "active",
+        version: 1,
+        lastRunAt: null,
+        nextRunAt: null,
+        createdAt: d.clock.value,
+        updatedAt: d.clock.value,
+      });
+
+      const started = await service.startRun(
+        ctx,
+        "legacy-favorites-without-collector",
+        {
+          trigger: "manual",
+          idempotencyKey: "legacy-favorites-manual",
+        },
+      );
+      expect(started.run.status).toBe("queued");
+      await expect(
+        service.getSourceExecutionInput(
+          ctx,
+          "legacy-favorites-without-collector",
+        ),
+      ).resolves.toMatchObject({
+        config: {
+          type: "favorites_folder",
+          collectorAccountId: "account-1",
+          folderId: "选题",
+        },
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
   it("[T-537] owner 与 collector 分离固化，换 collector 不碰撞且 claim 前重新验资格", async () => {
     const { db, client } = await createDb();
     const d = deps();

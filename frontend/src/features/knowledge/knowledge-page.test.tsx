@@ -130,6 +130,16 @@ describe("KnowledgePage", () => {
     expect(captureLink!.textContent).toContain("记一条经验");
   });
 
+  it("[T-546] 暂停展示文件工作区 UI，知识库其余能力保持可用", async () => {
+    const { container } = await renderKnowledge();
+    expect(
+      container.querySelector('[data-slot="knowledge-file-workspace"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="knowledge-dump-zone"]'),
+    ).not.toBeNull();
+  });
+
   it("renders exactly four KnowledgeMetric cards in a single row", async () => {
     const { container } = await renderKnowledge();
     const row = container.querySelector(

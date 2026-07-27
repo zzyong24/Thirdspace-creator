@@ -414,7 +414,10 @@ export function createVideoRenderExecutor(
       throwIfAborted(signal);
 
       // 1) 输入核对:props 引用的每个文件必须已物化在 input/(路径防护同沙箱)
-      const media = collectMediaFiles(props);
+      const inputMimeTypes = new Map(
+        sandbox.inputs.map((input) => [input.mountAs, input.mimeType] as const),
+      );
+      const media = collectMediaFiles(props, inputMimeTypes);
       const allFiles = [...media.videos, ...media.images];
       for (const f of allFiles) {
         const abs = resolveInsideDir(sandbox.inputDir, f);

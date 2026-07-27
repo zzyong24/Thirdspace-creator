@@ -71,7 +71,17 @@ export function buildRenderInputs(
 export function humanizeRenderError(message: string | null): string | null {
   if (!message) return null;
   const lower = message.toLowerCase();
-  if (lower.includes("ffmpeg") || lower.includes("ffprobe")) {
+  if (lower.includes("ffprobe 未识别出视频流")) {
+    return "有一项素材不是可识别的视频。请检查人物粗剪视频是否完整、格式是否正确；图片素材应作为 B-roll 图片使用，然后点「重试」。";
+  }
+  if (
+    (lower.includes("ffmpeg") || lower.includes("ffprobe")) &&
+    (lower.includes("未检测到") ||
+      lower.includes("未找到") ||
+      lower.includes("缺失") ||
+      lower.includes("not found") ||
+      lower.includes("enoent"))
+  ) {
     return "CreatorOS 的随包渲染组件 ffmpeg/ffprobe 缺失或不可用。请重新安装最新版 CreatorOS 后重试；开发环境可自行安装 ffmpeg，或配置 CREATOROS_FFMPEG_PATH / CREATOROS_FFPROBE_PATH。";
   }
   if (lower.includes("chromium") || lower.includes("playwright")) {

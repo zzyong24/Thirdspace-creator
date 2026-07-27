@@ -933,14 +933,25 @@ window.__timelines["main"] = tl;
 }
 
 /** 模板引用的全部媒体文件(mountAs 相对路径,去重保序)—— executor 预处理清单。 */
-export function collectMediaFiles(props: VideoRenderProps): {
+export function collectMediaFiles(
+  props: VideoRenderProps,
+  inputMimeTypes: ReadonlyMap<string, string | null> = new Map(),
+): {
   videos: string[];
   images: string[];
 } {
   const videos: string[] = [props.talkingHead.file];
   const images: string[] = [];
   for (const b of props.broll) {
-    if (!videos.includes(b.file)) videos.push(b.file);
+    const mimeType = inputMimeTypes.get(b.file)?.split(";", 1)[0]?.toLowerCase();
+    // B-roll 契约历史上没有 media kind，且 mountAs 使用 assetId、没有扩展名，不能靠
+    // 文件名猜。执行沙箱已经带着资产库权威 MIME，把 image/* 直拷；其余保留既有视频
+    // 预处理语义。此前把官网截图一律交给 ffprobe，稳定报“未识别出视频流”。
+    if (mimeType?.startsWith("image/")) {
+      if (!images.includes(b.file)) images.push(b.file);
+    } else if (!videos.includes(b.file)) {
+      videos.push(b.file);
+    }
   }
   for (const scene of props.scenes) {
     for (const card of scene.cards) {

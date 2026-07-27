@@ -767,14 +767,17 @@ export function IntelligenceWorkbench({
           return next;
         });
         const status = (error as { status?: unknown })?.status;
+        const source = workspace.sources.find((item) => item.id === sourceId);
         setNotice(
           status === 409
             ? "该来源已经在排队或同步中，无需重复操作。"
-            : "同步任务创建失败；登录或解析问题会在运行记录中给出明确原因。",
+            : source?.type === "favorites_folder"
+              ? favoriteFoldersErrorMessage(error)
+              : "同步任务没有创建成功，请检查来源配置后重试；错误类型已写入本地诊断日志。",
         );
       }
     },
-    [api, runningSourceIds, watchRun],
+    [api, runningSourceIds, watchRun, workspace.sources],
   );
 
   const enqueueTranscript = React.useCallback(async () => {

@@ -271,6 +271,29 @@ function collectorAccountIdOf(row: SourceRow): string | null {
     : null;
 }
 
+/**
+ * 旧版内容雷达把“采集账号=来源 owner”只编码在受控的 browserSessionRef 里，
+ * adapterConfig 尚无 collectorAccountId。展示层一直能识别该兼容形态，但执行层此前
+ * 直接强转 adapterConfig，导致同一来源“看起来已绑定、点击同步却报账号不存在”。
+ *
+ * 这里只接受与 row.accountId 完全一致的历史引用，绝不从任意字符串猜账号；新来源仍
+ * 以显式 collectorAccountId 为真值。
+ */
+function sourceConfigForExecution(row: SourceRow): SourceConfig {
+  const config = row.adapterConfig as SourceConfig;
+  if (
+    config.type !== "creator_profile" &&
+    config.type !== "favorites_folder" &&
+    config.type !== "darkhorse_query"
+  ) {
+    return config;
+  }
+  const collectorAccountId = collectorAccountIdOf(row);
+  return collectorAccountId && !config.collectorAccountId
+    ? ({ ...config, collectorAccountId } as SourceConfig)
+    : config;
+}
+
 function toSource(
   row: SourceRow,
   collector?: CollectorAccountProjection | null,
@@ -1418,7 +1441,7 @@ export function createIntelligenceService(
     },
   ): Promise<{ run: ReturnType<typeof toRun>; task: ExecutionTaskResourceV2 }> {
     const source = await requireSource(ctx, sourceId);
-    const config = source.adapterConfig as SourceConfig;
+    const config = sourceConfigForExecution(source);
     if (
       config.type === "creator_profile" ||
       config.type === "favorites_folder" ||
@@ -2414,7 +2437,7 @@ export function createIntelligenceService(
       extractionInstruction: string | null;
     }> {
       const source = await requireSource(ctx, sourceId);
-      const config = source.adapterConfig as SourceConfig;
+      const config = sourceConfigForExecution(source);
       if (
         config.type === "creator_profile" ||
         config.type === "favorites_folder" ||

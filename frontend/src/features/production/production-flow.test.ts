@@ -99,6 +99,15 @@ describe("humanizeRenderError(环境错误人话化)", () => {
     ).toContain("重新安装最新版 CreatorOS");
   });
 
+  it("[T-546] 素材不是视频流时给素材提示，不误报随包 ffprobe 缺失", () => {
+    const message = humanizeRenderError(
+      "ffprobe 未识别出视频流: asset-bc671a6f-155",
+    );
+    expect(message).toContain("素材");
+    expect(message).toContain("不是可识别的视频");
+    expect(message).not.toContain("重新安装");
+  });
+
   it("其他错误 → null(不编造解释,保留原始错误)", () => {
     expect(humanizeRenderError("模板生成失败:props.scenes 为空")).toBeNull();
     expect(humanizeRenderError(null)).toBeNull();

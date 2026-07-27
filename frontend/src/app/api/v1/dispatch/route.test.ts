@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { dispatchErrorResponse, POST } from "./route";
+import {
+  dispatchErrorResponse,
+  safeDispatchErrorDiagnostic,
+  POST,
+} from "./route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
 
@@ -206,6 +210,23 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     };
     expect(json.error.code).toBe("DOUYIN_FAVORITES_UPSTREAM");
     expect(json.error.details.upstreamStatusCode).toBe(2190008);
+  });
+
+  it("[T-546] dispatch 失败日志只保留操作与错误类型，不泄漏异常正文/details", () => {
+    const diagnostic = safeDispatchErrorDiagnostic(
+      "intelligence.runs.start",
+      Object.assign(new Error("cookie=secret&url=https://private.example/x"), {
+        code: "OwnershipError",
+        details: { authorization: "Bearer secret" },
+      }),
+    );
+    expect(diagnostic).toEqual({
+      operation: "intelligence.runs.start",
+      errorName: "Error",
+      errorCode: "OwnershipError",
+    });
+    expect(JSON.stringify(diagnostic)).not.toContain("secret");
+    expect(JSON.stringify(diagnostic)).not.toContain("private.example");
   });
 
   it("[S3] 已归档号当当前号 → 404 拒绝 + details.reason=account_archived(属主已验实,可诚实)", async () => {

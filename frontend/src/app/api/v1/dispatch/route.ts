@@ -74,6 +74,28 @@ export function dispatchErrorResponse(err: unknown): Response {
   return NextResponse.json({ error: message }, { status });
 }
 
+export function safeDispatchErrorDiagnostic(
+  operation: string,
+  err: unknown,
+): {
+  readonly operation: string;
+  readonly errorName: string;
+  readonly errorCode: string | null;
+} {
+  const errorName =
+    err instanceof Error
+      ? err.name
+      : typeof (err as { name?: unknown } | null)?.name === "string"
+        ? String((err as { name: string }).name)
+        : "UnknownError";
+  const rawCode = (err as { code?: unknown } | null)?.code;
+  return {
+    operation,
+    errorName,
+    errorCode: typeof rawCode === "string" ? rawCode : null,
+  };
+}
+
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 有副作用的 RPC 入口:先挡非本机/跨站请求(DNS rebinding + CSRF)。
   if (!isTrustedLocalRequest(req)) return loopbackForbidden();
@@ -139,6 +161,12 @@ export async function POST(req: Request): Promise<Response> {
     );
     return NextResponse.json(envelope);
   } catch (err) {
+    // [T-546] UI 不能再出现“报错但日志无证据”。只记操作 ID、异常类型与契约码，
+    // 不记 message/details/input，避免 URL query、Cookie、Authorization 或用户正文落日志。
+    console.error(
+      "[CreatorOS] DISPATCH_FAILED",
+      JSON.stringify(safeDispatchErrorDiagnostic(id, err)),
+    );
     return dispatchErrorResponse(err);
   }
 }

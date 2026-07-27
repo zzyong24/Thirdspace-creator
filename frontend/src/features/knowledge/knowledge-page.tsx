@@ -51,6 +51,10 @@ import {
   KnowledgeFileWorkspace,
   type KnowledgeWorkspaceVm,
 } from "./knowledge-file-workspace";
+
+// [T-546] 文件工作区能力与数据模型先完整保留，只暂停页面入口；后续 UI 迭代时
+// 直接恢复此开关，不删除组件、不改知识库数据。
+const SHOW_KNOWLEDGE_FILE_WORKSPACE = false;
 // [T-118b gate-F4]「记一条经验」入口并入知识库(与已验证经验库同处)。复用经验
 // 模块的 Copilot 深链入口组件(client,走 ?copilot=open&surface=experience 就地
 // 开浮层,与页面路径解耦)—— 手录一条经验走同一 learning.capture 链路。
@@ -214,7 +218,9 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
           空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
       {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}
-      {(state === "default" || state === "empty") && vm.workspace ? (
+      {SHOW_KNOWLEDGE_FILE_WORKSPACE &&
+      (state === "default" || state === "empty") &&
+      vm.workspace ? (
         <KnowledgeFileWorkspace workspace={vm.workspace} />
       ) : null}
       {/* T-092 评论回流:倾倒场旁常驻入口(三级去噪门;signals 0 行诚实空态引导采集)。 */}

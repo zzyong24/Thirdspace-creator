@@ -160,6 +160,29 @@ describe("createVideoRenderExecutor", () => {
     expect(steps.some((s) => s.includes("交付转码"))).toBe(true);
   });
 
+  it("[T-546] 图片 B-roll 按已物化 MIME 直拷，不交给 ffprobe 当视频探测", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(fakeEngine(calls));
+    const imageBrollProps = videoRenderProps.parse({
+      ...props(),
+      broll: [{ at: 4, file: "shot.png", label: "官网截图" }],
+      scenes: props().scenes.map((scene) => ({ ...scene, cards: [] })),
+    });
+
+    await executor.run(
+      sandbox,
+      { goal: "渲染", props: imageBrollProps },
+      runOpts([]),
+    );
+
+    expect(calls.probed).toEqual(["th.mp4"]);
+    const html = await fs.readFile(
+      path.join(sandbox.dir, "work", "index.html"),
+      "utf8",
+    );
+    expect(html).toContain('src="media/shot.png"');
+  });
+
   it("随包 ffmpeg/ffprobe 缺失 → 先提示重装 CreatorOS，开发态保留安装引导", async () => {
     const executor = createVideoRenderExecutor(
       fakeEngine({ ffmpegArgs: [], probed: [], rendered: [] }, { findBinary: async () => null }),
