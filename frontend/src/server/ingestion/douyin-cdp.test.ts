@@ -47,12 +47,19 @@ import {
 
 describe("[T-567] 抖音重新登录以服务端会话为准", () => {
   function makeLoginContext(probes: Array<"active" | "expired" | "unknown">) {
-    const calls = { goto: 0, probe: 0, clearCookies: 0, close: 0 };
+    const calls = {
+      goto: 0,
+      gotoUrls: [] as string[],
+      probe: 0,
+      clearCookies: 0,
+      close: 0,
+    };
     let hasCookie = true;
     let scannedAfterClear = false;
     const page = {
-      async goto() {
+      async goto(url: string) {
         calls.goto += 1;
+        calls.gotoUrls.push(url);
       },
       async waitForTimeout() {
         if (!hasCookie && calls.clearCookies > 0 && !scannedAfterClear) {
@@ -111,6 +118,10 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
     ).resolves.toBe(true);
     expect(calls.clearCookies).toBe(1);
     expect(calls.goto).toBe(2);
+    expect(calls.gotoUrls).toEqual([
+      "https://www.douyin.com/",
+      "https://www.douyin.com/",
+    ]);
     expect(calls.probe).toBe(2);
     expect(calls.close).toBe(1);
   });
@@ -125,6 +136,48 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
     ).resolves.toBe(true);
     expect(calls.clearCookies).toBe(0);
     expect(calls.goto).toBe(1);
+    expect(calls.close).toBe(1);
+  });
+
+  it("用户主动关闭登录窗口时返回未登录，不把 Playwright TargetClosedError 包成 HTTP 400", async () => {
+    const calls = { close: 0 };
+    const page = {
+      async goto() {},
+      async waitForTimeout() {
+        throw new Error(
+          "page.waitForTimeout: Target page, context or browser has been closed",
+        );
+      },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return [];
+      },
+      request: {
+        async get() {
+          throw new Error("session probe should not run without cookies");
+        },
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type OpenContext = NonNullable<
+      NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
+    >;
+    const openContext: OpenContext = async () =>
+      context as unknown as Awaited<ReturnType<OpenContext>>;
+
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 2 },
+        { openContext },
+      ),
+    ).resolves.toBe(false);
     expect(calls.close).toBe(1);
   });
 });

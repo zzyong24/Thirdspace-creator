@@ -109,7 +109,9 @@ export function ChatReviewReportCard({
           if (status.status === "failed" || status.status === "cancelled") {
             if (!cancelledRef.current) {
               setPhase("error");
-              setError("审核失败(可能没配审核模型)—— L1 违禁词 lint 仍会跑,请去设置配置审核模型后重试。");
+              setError(
+                "审核失败——系统会优先使用专用审核模型，未配置时自动回退普通默认模型。请检查这两项中至少一项可用后重试。",
+              );
             }
             return;
           }
@@ -161,7 +163,7 @@ export function ChatReviewReportCard({
             data-slot="chat-review-settings-link"
             className="self-start text-[11px] font-medium text-brand underline underline-offset-2"
           >
-            去设置配置审核模型 →
+            去设置检查模型配置 →
           </a>
         </div>
       ) : null}

@@ -1615,7 +1615,12 @@ function SourceRow({
   onReconnect: () => void;
   onShowRuns: () => void;
 }) {
-  const currentStatus = syncing ? "running" : (health?.lastRunStatus ?? null);
+  const queued = syncing && health?.lastRunStatus === "queued";
+  const currentStatus = queued
+    ? "queued"
+    : syncing
+      ? "running"
+      : (health?.lastRunStatus ?? null);
   const loginExpired = health?.lastErrorCode === "LOGIN_REQUIRED";
   const statusLabel = runStatusLabel(currentStatus);
   const collectorLabel = source.collector
@@ -1667,7 +1672,7 @@ function SourceRow({
           aria-label={
             loginExpired
               ? `重新登录 ${source.displayName} 的采集账号`
-              : `${syncing ? "正在同步" : "同步"} ${source.displayName}`
+              : `${queued ? "等待同步" : syncing ? "正在同步" : "同步"} ${source.displayName}`
           }
           variant="outline"
           size="sm"
@@ -1683,7 +1688,7 @@ function SourceRow({
           ) : (
             <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
           )}
-          {loginExpired ? "登录" : syncing ? "同步中" : "同步"}
+          {loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
         </Button>
       </div>
 
