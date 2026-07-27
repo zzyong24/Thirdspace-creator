@@ -28,6 +28,15 @@ describe("launchRevealPlan", () => {
       ),
     ).resolves.toBeUndefined();
     expect(child.unref).toHaveBeenCalled();
+    expect(spawnFake).toHaveBeenCalledWith(
+      "explorer.exe",
+      ["C:\\Users\\Alice\\AppData\\Roaming\\CreatorOS\\logs"],
+      {
+        detached: true,
+        stdio: "ignore",
+        windowsHide: false,
+      },
+    );
   });
 
   it("spawn 本身失败仍诚实 reject", async () => {

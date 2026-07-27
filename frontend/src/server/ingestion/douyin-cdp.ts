@@ -781,6 +781,10 @@ export interface LoginDouyinOptions {
   timeoutSec?: number;
 }
 
+export interface LoginDouyinDeps {
+  openContext?: typeof openContext;
+}
+
 // 未登录抖音创作者中心 —— 类本体已抽到零依赖叶子模块 douyin-errors.ts([T-326 B-04]:
 // persistence-client 的同步 instanceof 判别点不必加载本重模块);顶部 import + 此处 re-export
 // 保持既有 `from "./douyin-cdp"` 的 import 路径与错误类身份(同一 class 实例)全部兼容。
@@ -797,6 +801,10 @@ export {
   DouyinResponseShapeChangedError,
 } from "./douyin-errors";
 
+// 收藏夹、博主主页与普通抖音会话都消费 www.douyin.com 登录态。登录入口必须打开
+// 普通抖音，而不是创作者中心；后者会让用户误以为要登录另一个产品，并且不能代表
+// 收藏接口会话已经可用。
+const DOUYIN_LOGIN_HOME = "https://www.douyin.com/";
 const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
 const CREATOR_CONTENT = "https://creator.douyin.com/creator-micro/content/manage";
 // 作品列表 XHR —— cheat-on-content 验证过的真端点 + 旧 work_list 兜底(match 任一)。
@@ -1018,8 +1026,15 @@ async function openContext(authDir: string, headless: boolean) {
 async function isLoggedIn(
   ctx: import("@playwright/test").BrowserContext,
 ): Promise<boolean> {
-  const cookies = await ctx.cookies("https://creator.douyin.com");
+  const cookies = await ctx.cookies(DOUYIN_LOGIN_HOME);
   return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");
+}
+
+function isPlaywrightTargetClosed(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Target page, context or browser has been closed|TargetClosedError|Browser has been closed/i.test(
+    message,
+  );
 }
 
 /**
@@ -1040,20 +1055,51 @@ export async function checkDouyinStatus(opts: {
 }
 
 /**
- * 登录:headed 弹 Chromium 窗口让用户扫码;轮询 sessionid cookie,检测到即成功(落 .auth/)。
+ * 登录:headed 弹 Chromium 窗口让用户扫码。成功条件必须是抖音服务端接受该会话，不能只看
+ * 本地 sessionid 是否存在——失效 Cookie 仍会留在 profile，旧实现会第一轮就误判成功并关窗。
  * 仅在用户机器上跑(server 弹窗)。返回是否登录成功。
  */
-export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
+export async function loginDouyin(
+  opts: LoginDouyinOptions,
+  deps: LoginDouyinDeps = {},
+): Promise<boolean> {
   const timeoutSec = opts.timeoutSec ?? 240;
-  const ctx = await openContext(opts.authDir, false);
+  const openCtx = deps.openContext ?? openContext;
+  const ctx = await openCtx(opts.authDir, false);
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
-      .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+      .goto(DOUYIN_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
+    let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
-      if (await isLoggedIn(ctx)) return true;
-      await page.waitForTimeout(1000);
+      try {
+        if (await isLoggedIn(ctx)) {
+          // 登录页已经改为普通抖音，与收藏接口同源。必须在这个真实页面环境里发探针：
+          // BrowserContext.request 虽共享 Cookie，却不带页面运行时建立的反爬上下文，页面
+          // 明明已登录时也可能只得到不可判定响应，最终被误报为“未检测到登录成功”。
+          const acceptance = await probeDouyinSessionAcceptance(page);
+          if (acceptance === "active") return true;
+          if (acceptance === "expired" && !rejectedSessionCleared) {
+            // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
+            // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
+            await ctx
+              .clearCookies({
+                name: /^(?:sessionid(?:_ss)?|sid_guard|sid_tt|sid_ucp_v1|ssid_ucp_v1|uid_tt(?:_ss)?|passport_csrf_token(?:_default)?|odin_tt)$/,
+              })
+              .catch(() => {});
+            rejectedSessionCleared = true;
+            await page
+              .goto(DOUYIN_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+              .catch(() => {});
+          }
+        }
+        await page.waitForTimeout(1000);
+      } catch (error) {
+        // 用户主动关掉扫码窗口是一次正常取消，不应冒泡成 transport 400。
+        if (isPlaywrightTargetClosed(error)) return false;
+        throw error;
+      }
     }
     return false;
   } finally {
@@ -1074,6 +1120,7 @@ interface MetricsCapablePage {
   goto(url: string, opts?: unknown): Promise<unknown>;
   waitForTimeout(ms: number): Promise<void>;
   evaluate<R>(fn: () => R): Promise<R>;
+  evaluate<R, A>(fn: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
   /** 真 Playwright Page 均提供；测试窄 fake 可省略，严格模式据可用能力检查。 */
   url?: () => string;
   title?: () => Promise<string>;
@@ -1098,6 +1145,53 @@ export interface FetchDouyinMetricsDeps {
 
 const realMetricsOpenContext = (authDir: string, headless: boolean) =>
   openContext(authDir, headless) as unknown as Promise<MetricsCapableContext>;
+
+type DouyinSessionProbeResult = "active" | "expired" | "unknown";
+
+function classifyDouyinSessionProbe(result: {
+  statusCode: number | null;
+  statusMessage: string;
+} | null): DouyinSessionProbeResult {
+  if (!result) return "unknown";
+  if (
+    result.statusCode === 8 ||
+    /未登录|登录.*失效|session.*expired/i.test(result.statusMessage)
+  ) {
+    return "expired";
+  }
+  return result.statusCode === 0 ? "active" : "unknown";
+}
+
+/**
+ * 本地仍有 sessionid 不等于抖音服务端仍认可它。主页作品接口在会话过期时偶发只返回
+ * 200 + 空 body，页面也不跳登录页；此时用同一页面只读请求收藏夹列表作为旁证。
+ * 只读取 status_code/status_msg，不返回或记录响应正文、Cookie、URL。
+ */
+async function probeDouyinSessionAcceptance(
+  page: MetricsCapablePage,
+): Promise<DouyinSessionProbeResult> {
+  const probeUrl = COLLECTS_LIST_API.replace("{cursor}", "0");
+  const result = await page
+    .evaluate<
+      { statusCode: number | null; statusMessage: string } | null,
+      string
+    >(async (url) => {
+      try {
+        const response = await fetch(url, { credentials: "include" });
+        const json = (await response.json()) as Record<string, unknown>;
+        return {
+          statusCode:
+            typeof json.status_code === "number" ? json.status_code : null,
+          statusMessage:
+            typeof json.status_msg === "string" ? json.status_msg : "",
+        };
+      } catch {
+        return null;
+      }
+    }, probeUrl)
+    .catch(() => null);
+  return classifyDouyinSessionProbe(result);
+}
 
 /**
  * fetchDouyinMetrics 的返回:作品指标 records + 登录用户自己的身份 identity(T-136 §D)。
@@ -1543,6 +1637,16 @@ export async function fetchDouyinUserPosts(
     }
 
     if (opts.strictEvidence && decodedListResponseCount === 0) {
+      // [T-567] 两轮作品接口都只有空 body 时，本地 Cookie/页面文案不足以证明登录有效。
+      // 收藏接口能明确给出 status_code=8；只有它明确拒绝会话才要求重登，网络失败或
+      // 未知状态仍保留 NO_VALID_RESPONSE，避免把所有上游抖动误报成登录失效。
+      if (
+        matchedListResponseCount > 0 &&
+        failedListResponseParseCount > 0 &&
+        (await probeDouyinSessionAcceptance(page)) === "expired"
+      ) {
+        throw new DouyinNotLoggedInError();
+      }
       const finalUrl = page.url?.() ?? profileUrl;
       console.warn(
         `[benchmark] no-valid-response matched=${matchedListResponseCount} ` +

@@ -177,7 +177,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     });
   });
 
-  it("轮询 failed → 诚实提示(L1 lint 仍跑)+「去设置」", async () => {
+  it("轮询 failed → 提示检查审核模型或普通默认模型，不误导为必须配置专用审核模型", async () => {
     getTask.mockResolvedValue({ status: "failed" });
     render(
       <ChatReviewReportCard
@@ -190,8 +190,12 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     await waitFor(() => {
       expect(
         document.querySelector('[data-slot="chat-review-error"]')?.textContent,
-      ).toContain("L1 违禁词 lint 仍会跑");
+      ).toContain("普通默认模型");
     });
+    expect(
+      document.querySelector('[data-slot="chat-review-settings-link"]')
+        ?.textContent,
+    ).toContain("检查模型配置");
     expect(getLatestScriptReview).not.toHaveBeenCalled();
   });
 });

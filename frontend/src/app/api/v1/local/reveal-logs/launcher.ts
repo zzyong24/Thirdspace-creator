@@ -22,7 +22,10 @@ export function launchRevealPlan(
       const child = spawnImpl(plan.cmd, plan.args, {
         detached: true,
         stdio: "ignore",
-        windowsHide: true,
+        // [T-569] 此分支就是 Windows Explorer。`windowsHide:true` 会让创建成功的
+        // GUI 进程继承隐藏显示状态：route 已返回 ok，但用户看不到任何文件夹窗口。
+        // Explorer 不需要控制台，明确允许它显示；路径仍作为独立 argv 传入，不经 shell。
+        windowsHide: false,
       });
       child.once("error", reject);
       child.once("spawn", () => {

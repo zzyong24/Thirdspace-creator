@@ -9067,9 +9067,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           positioningService.getPositioningCenter(c),
       },
       resolveModelSpec,
-      // 专用审核模型探测:script.review 有独立配置行 → true(诚实标注非专用模型)。
+      // 只有专用审核行本身具备可用凭据才标“专用”。空 key / 解密失败时实际由
+      // resolveModelSpec 回退普通默认模型，标签也必须如实显示为非专用。
       hasDedicatedReviewModel: async (c) =>
-        Boolean(await settingsService.getModelConfig(c, "script.review")),
+        Boolean(
+          await resolveDedicatedLlmConfig(c, "script.review", {
+            getModelConfig: (ctx, capability) =>
+              settingsService.getModelConfig(ctx, capability),
+            env: process.env,
+          }),
+        ),
       // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
       // 文本 + 版本号(与 script-editor-data 同口径)。
       scriptSource: {

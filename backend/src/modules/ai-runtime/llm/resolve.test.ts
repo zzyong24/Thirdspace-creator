@@ -88,6 +88,43 @@ describe("resolveLlmConfig — tier 1 DB row", () => {
     expect(cfg.token).toBe("sk-default");
     expect(cfg.model).toBe("claude-opus-4-8");
   });
+
+  it("文案审核优先专用审核模型，未配置时回退普通默认模型", async () => {
+    const rows = {
+      "script.review": {
+        provider: "doubao",
+        modelName: "doubao-review",
+        baseUrl: "https://ark.example.com/v1",
+        apiFormat: "openai_chat" as const,
+        secretReference: "",
+        secretValue: "sk-review",
+        settings: {},
+      },
+      default: {
+        provider: "deepseek",
+        modelName: "deepseek-chat",
+        baseUrl: "https://api.deepseek.com",
+        apiFormat: "openai_chat" as const,
+        secretReference: "",
+        secretValue: "sk-default",
+        settings: {},
+      },
+    };
+    const dedicated = await resolveLlmConfig(ctx, "script.review", {
+      getModelConfig: async (_c, capability) =>
+        rows[capability as keyof typeof rows] ?? null,
+      env: {},
+    });
+    expect(dedicated.model).toBe("doubao-review");
+
+    const fallback = await resolveLlmConfig(ctx, "script.review", {
+      getModelConfig: async (_c, capability) =>
+        capability === "default" ? rows.default : null,
+      env: {},
+    });
+    expect(fallback.model).toBe("deepseek-chat");
+    expect(fallback.token).toBe("sk-default");
+  });
 });
 
 describe("resolveLlmConfig — tier 2 env default", () => {

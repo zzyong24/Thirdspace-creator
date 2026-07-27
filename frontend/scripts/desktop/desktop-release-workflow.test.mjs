@@ -181,7 +181,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
-  it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，且不上传 setup", () => {
+  it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，通过后才上传 setup", () => {
     const shellSource = readFileSync(
       join(process.cwd(), "src-tauri", "src", "lib.rs"),
       "utf8",
@@ -214,8 +214,19 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
     expect(nextConfigSource).toContain("isrFlushToDisk: false");
     expect(packageRat).not.toContain("dist-upload");
-    expect(packageRat).not.toMatch(
-      /path:\s*\|[\s\S]*?target\/release-fast\/bundle\/nsis/,
+    expect(packageRat).toContain(
+      "上传已通过真安装验证的 Windows 候选包",
+    );
+    expect(packageRat).toContain(
+      "if: ${{ success() && inputs.windows_package_rat == true }}",
+    );
+    expect(packageRat).toContain(
+      "path: frontend/src-tauri/target/release-fast/bundle/nsis/*-setup.exe",
+    );
+    expect(
+      packageRat.indexOf("真安装、断网首启与 WebView 非白屏验证"),
+    ).toBeLessThan(
+      packageRat.indexOf("上传已通过真安装验证的 Windows 候选包"),
     );
   });
 });

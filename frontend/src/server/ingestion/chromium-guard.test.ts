@@ -69,20 +69,14 @@ describe("ensureChromiumLaunchable", () => {
 });
 
 describe("guardedLaunch 并发串行", () => {
-  it("同 profile 两个 launch 串行:第二个等第一个 launch 完成才起飞", async () => {
+  it("[T-567] 同 profile 覆盖 context 全生命周期串行：第一个关闭后第二个才起飞", async () => {
     const profile = "/tmp/guard-serial";
     const fake = makeFakeDeps();
     const order: string[] = [];
-    let releaseFirst!: () => void;
-    const firstGate = new Promise<void>((r) => {
-      releaseFirst = r;
-    });
     const p1 = guardedLaunch(
       profile,
       async () => {
         order.push("launch1-start");
-        await firstGate;
-        order.push("launch1-done");
         return makeFakeCtx();
       },
       {},
@@ -98,28 +92,42 @@ describe("guardedLaunch 并发串行", () => {
       fake.deps,
     );
     await new Promise((r) => setTimeout(r, 10));
-    expect(order).toEqual(["launch1-start"]); // 第二个还没起飞
-    releaseFirst();
-    const [c1, c2] = await Promise.all([p1, p2]);
-    expect(order).toEqual(["launch1-start", "launch1-done", "launch2-start"]);
+    const c1 = await p1;
+    expect(order).toEqual(["launch1-start"]); // 活 context 未关，第二个不得碰同一用户目录
     await c1.close();
+    const c2 = await p2;
+    expect(order).toEqual(["launch1-start", "launch2-start"]);
     await c2.close();
     expect(liveContextCount(profile)).toBe(0);
   });
 
-  it("profile 有活 context 时跳过预检(不杀进程/不清活窗的锁);close 后恢复预检", async () => {
+  it("profile 有活 context 时后继请求排队；close 后重新预检再启动", async () => {
     const profile = "/tmp/guard-live";
     const fake = makeFakeDeps([999]);
     const c1 = await guardedLaunch(profile, async () => makeFakeCtx(), {}, fake.deps);
     expect(fake.listCalls).toBe(1); // 首个 launch 走了预检
     expect(liveContextCount(profile)).toBe(1);
-    const c2 = await guardedLaunch(profile, async () => makeFakeCtx(), {}, fake.deps);
-    expect(fake.listCalls).toBe(1); // 活 context 在 → 第二次跳过预检
+    let secondLaunched = false;
+    const c2Pending = guardedLaunch(
+      profile,
+      async () => {
+        secondLaunched = true;
+        return makeFakeCtx();
+      },
+      {},
+      fake.deps,
+    );
+    await new Promise((r) => setTimeout(r, 10));
+    expect(secondLaunched).toBe(false);
+    expect(fake.listCalls).toBe(1);
     await c1.close();
+    const c2 = await c2Pending;
+    expect(secondLaunched).toBe(true);
+    expect(fake.listCalls).toBe(2);
     await c2.close();
     expect(liveContextCount(profile)).toBe(0);
     const c3 = await guardedLaunch(profile, async () => makeFakeCtx(), {}, fake.deps);
-    expect(fake.listCalls).toBe(2); // 全关了 → 预检恢复
+    expect(fake.listCalls).toBe(3); // 全关了 → 预检恢复
     await c3.close();
   });
 
@@ -183,7 +191,7 @@ describe("guardedLaunch 超时/失败诚实", () => {
     expect((error as Error).message).not.toContain("secret-cookie");
   });
 
-  it("[T-536] profile 仍有活 context 时不清锁、不重试", async () => {
+  it("[T-567] profile 仍有活 context 时不启动竞争者，关闭后再正常启动", async () => {
     const profile = "/tmp/guard-lock-live-context";
     const fake = makeFakeDeps([]);
     const live = await guardedLaunch(
@@ -194,22 +202,23 @@ describe("guardedLaunch 超时/失败诚实", () => {
     );
     const cleanupCallsBeforeFailure = fake.listCalls;
     let launches = 0;
-    const error = await guardedLaunch(
+    const nextPending = guardedLaunch(
       profile,
       async () => {
         launches += 1;
-        throw Object.assign(new Error("SingletonLock profile in use"), {
-          code: "EBUSY",
-        });
+        return makeFakeCtx();
       },
       {},
       fake.deps,
-    ).catch((caught: unknown) => caught);
+    );
 
-    expect(launches).toBe(1);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(launches).toBe(0);
     expect(fake.listCalls).toBe(cleanupCallsBeforeFailure);
-    expect(error).toMatchObject({ code: "CHROMIUM_PROFILE_LOCKED" });
     await live.close();
+    const next = await nextPending;
+    expect(launches).toBe(1);
+    await next.close();
   });
 
   it("launch 超时 → BrowserLaunchError 人话报错,迟到的 context 被顺手关掉", async () => {

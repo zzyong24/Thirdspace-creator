@@ -787,6 +787,16 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: 上传已通过真安装验证的 Windows 候选包
+        if: ${{ success() && inputs.windows_package_rat == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatoros-windows-0.2.0-${{ github.sha }}
+          path: frontend/src-tauri/target/release-fast/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
   draft-release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')

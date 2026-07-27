@@ -563,7 +563,11 @@ export function sourceVerificationErrorMessage(
     if (/Captcha|验证码|验证/i.test(signal)) {
       return "抖音要求完成验证码，请处理后再测试；不会把它显示成 0 条。";
     }
-    if (/NotLoggedIn|LOGIN_REQUIRED|登录/i.test(signal)) {
+    if (
+      /NotLoggedIn|LOGIN_REQUIRED|DOUYIN_FAVORITES_SESSION_EXPIRED|SessionExpired|登录/i.test(
+        signal,
+      )
+    ) {
       return "当前抖音登录状态不可用，请重新登录后再测试。";
     }
     return "主页验证失败：请确认已登录抖音，并输入完整的 /user/… 主页链接。";
@@ -1275,7 +1279,7 @@ export function IntelligenceWorkbench({
 
       <div
         data-testid="intelligence-responsive-layout"
-        className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto] 2xl:overflow-hidden"
+        className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto xl:grid-cols-[minmax(220px,260px)_minmax(320px,1fr)_minmax(320px,392px)] xl:overflow-hidden 2xl:grid-cols-[minmax(220px,260px)_minmax(360px,1fr)_auto]"
       >
         <aside
           data-testid="intelligence-sidebar"
@@ -1437,7 +1441,7 @@ export function IntelligenceWorkbench({
           </div>
         </main>
 
-        <div className="relative flex min-h-[320px] xl:col-span-2 2xl:col-span-1 2xl:min-h-0">
+        <div className="relative flex min-h-[320px] xl:min-h-0">
           <div
             role="separator"
             aria-label="调整作品详情宽度"
@@ -1611,7 +1615,12 @@ function SourceRow({
   onReconnect: () => void;
   onShowRuns: () => void;
 }) {
-  const currentStatus = syncing ? "running" : (health?.lastRunStatus ?? null);
+  const queued = syncing && health?.lastRunStatus === "queued";
+  const currentStatus = queued
+    ? "queued"
+    : syncing
+      ? "running"
+      : (health?.lastRunStatus ?? null);
   const loginExpired = health?.lastErrorCode === "LOGIN_REQUIRED";
   const statusLabel = runStatusLabel(currentStatus);
   const collectorLabel = source.collector
@@ -1663,7 +1672,7 @@ function SourceRow({
           aria-label={
             loginExpired
               ? `重新登录 ${source.displayName} 的采集账号`
-              : `${syncing ? "正在同步" : "同步"} ${source.displayName}`
+              : `${queued ? "等待同步" : syncing ? "正在同步" : "同步"} ${source.displayName}`
           }
           variant="outline"
           size="sm"
@@ -1679,7 +1688,7 @@ function SourceRow({
           ) : (
             <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
           )}
-          {loginExpired ? "登录" : syncing ? "同步中" : "同步"}
+          {loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
         </Button>
       </div>
 

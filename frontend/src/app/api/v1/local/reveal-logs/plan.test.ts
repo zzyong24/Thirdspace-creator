@@ -43,9 +43,16 @@ describe("planRevealLogs", () => {
   });
 
   it("win32 → explorer.exe <dir>，只等成功 spawn（Explorer 非 0 退出不等于打开失败）", () => {
-    expect(planRevealLogs("C:/x/logs", "win32")).toEqual({
+    expect(
+      planRevealLogs(
+        "C:\\Users\\Alice Example\\AppData\\Roaming\\CreatorOS\\logs",
+        "win32",
+      ),
+    ).toEqual({
       cmd: "explorer.exe",
-      args: ["C:/x/logs"],
+      args: [
+        "C:\\Users\\Alice Example\\AppData\\Roaming\\CreatorOS\\logs",
+      ],
       completion: "spawn",
     });
   });

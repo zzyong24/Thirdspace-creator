@@ -13,6 +13,7 @@ import {
   fetchDouyinMetrics,
   fetchDouyinIdentity,
   fetchDouyinUserPosts,
+  loginDouyin,
   locatePlaywrightCli,
   DouyinNotLoggedInError,
   DouyinFavoritesBrowserLockedError,
@@ -43,6 +44,160 @@ import {
 } from "./douyin-request-gateway";
 
 // 真实 work_list XHR 形状的 fixture(对齐 cheat-on-content 抓到的字段)。
+
+describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", () => {
+  function makeLoginContext(probes: Array<"active" | "expired" | "unknown">) {
+    const calls = {
+      goto: 0,
+      gotoUrls: [] as string[],
+      probe: 0,
+      clearCookies: 0,
+      close: 0,
+    };
+    let hasCookie = true;
+    let scannedAfterClear = false;
+    const page = {
+      async goto(url: string) {
+        calls.goto += 1;
+        calls.gotoUrls.push(url);
+      },
+      async evaluate() {
+        const result = probes[calls.probe] ?? probes.at(-1) ?? "unknown";
+        calls.probe += 1;
+        return result === "active"
+          ? { statusCode: 0, statusMessage: "" }
+          : result === "expired"
+            ? { statusCode: 8, statusMessage: "登录已失效" }
+            : null;
+      },
+      async waitForTimeout() {
+        if (!hasCookie && calls.clearCookies > 0 && !scannedAfterClear) {
+          // 模拟用户在二维码出现后完成扫码，浏览器写入新 sessionid。
+          hasCookie = true;
+          scannedAfterClear = true;
+        }
+      },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return hasCookie ? [{ name: "sessionid" }] : [];
+      },
+      async clearCookies() {
+        calls.clearCookies += 1;
+        hasCookie = false;
+      },
+      request: {
+        async get() {
+          // 普通抖音登录页与收藏接口同源；登录成功判定必须消费页面内 fetch 的结果。
+          // BrowserContext.request 脱离页面反爬环境时可能只有未知响应，不能再作为唯一证据。
+          return {
+            async json() {
+              return {};
+            },
+          };
+        },
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type OpenContext = NonNullable<
+      NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
+    >;
+    const openContext: OpenContext = async () =>
+      context as unknown as Awaited<ReturnType<OpenContext>>;
+    return { calls, openContext };
+  }
+
+  it("已有 Cookie 但服务端拒绝时清掉旧会话，扫码后的新会话被接受才关窗", async () => {
+    const { calls, openContext } = makeLoginContext(["expired", "active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 3 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.clearCookies).toBe(1);
+    expect(calls.goto).toBe(2);
+    expect(calls.gotoUrls).toEqual([
+      "https://www.douyin.com/",
+      "https://www.douyin.com/",
+    ]);
+    expect(calls.probe).toBe(2);
+    expect(calls.close).toBe(1);
+  });
+
+  it("已有 Cookie 且服务端确认有效时可直接成功，不破坏会话", async () => {
+    const { calls, openContext } = makeLoginContext(["active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 1 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.clearCookies).toBe(0);
+    expect(calls.goto).toBe(1);
+    expect(calls.close).toBe(1);
+  });
+
+  it("普通抖音页面已登录时使用同源页面探针确认，不被脱离页面环境的未知响应误报未登录", async () => {
+    const { calls, openContext } = makeLoginContext(["active"]);
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 1 },
+        { openContext },
+      ),
+    ).resolves.toBe(true);
+    expect(calls.probe).toBe(1);
+    expect(calls.clearCookies).toBe(0);
+  });
+
+  it("用户主动关闭登录窗口时返回未登录，不把 Playwright TargetClosedError 包成 HTTP 400", async () => {
+    const calls = { close: 0 };
+    const page = {
+      async goto() {},
+      async waitForTimeout() {
+        throw new Error(
+          "page.waitForTimeout: Target page, context or browser has been closed",
+        );
+      },
+    };
+    const context = {
+      pages: () => [page],
+      async newPage() {
+        return page;
+      },
+      async cookies() {
+        return [];
+      },
+      request: {
+        async get() {
+          throw new Error("session probe should not run without cookies");
+        },
+      },
+      async close() {
+        calls.close += 1;
+      },
+    };
+    type OpenContext = NonNullable<
+      NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
+    >;
+    const openContext: OpenContext = async () =>
+      context as unknown as Awaited<ReturnType<OpenContext>>;
+
+    await expect(
+      loginDouyin(
+        { authDir: "/fake/.auth", timeoutSec: 2 },
+        { openContext },
+      ),
+    ).resolves.toBe(false);
+    expect(calls.close).toBe(1);
+  });
+});
 const WORK_LIST = {
   aweme_list: [
     {
@@ -1361,6 +1516,10 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
       responseEventDelayMs?: number;
       responsePayloads?: unknown[];
       responseRawBodies?: string[];
+      sessionProbeResponse?: {
+        statusCode: number | null;
+        statusMessage: string;
+      } | null;
     } = {},
   ) {
     type ProfileResp = {
@@ -1418,7 +1577,10 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
       async title() {
         return pageState.title ?? "抖音博主主页";
       },
-      async evaluate() {
+      async evaluate(_fn: unknown, arg?: unknown) {
+        if (typeof arg === "string") {
+          return pageState.sessionProbeResponse ?? null;
+        }
         return pageState.body ?? "";
       },
       keyboard: { async press() {} },
@@ -1597,6 +1759,48 @@ describe("[T-514] 对标博主作品数的证据边界", () => {
         description: "重载后取得的真实作品",
       },
     ]);
+  });
+
+  it("[T-567] 两轮作品接口空响应且旁证接口明确拒绝会话时要求重新登录", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      responseRawBodies: ["", ""],
+      sessionProbeResponse: {
+        statusCode: 8,
+        statusMessage: "登录已失效",
+      },
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-stale-cookie",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+  });
+
+  it("[T-567] 两轮作品接口空响应但旁证登录有效时仍诚实保留上游空响应错误", async () => {
+    const { openContext } = makeProfileContext(undefined, {
+      responseRawBodies: ["", ""],
+      sessionProbeResponse: {
+        statusCode: 0,
+        statusMessage: "",
+      },
+    });
+    await expect(
+      fetchDouyinUserPosts(
+        {
+          authDir: "/fake/.auth",
+          secUid: "sec-transient-empty",
+          maxPages: 1,
+          strictEvidence: true,
+        },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNoValidResponseError);
   });
 });
 
