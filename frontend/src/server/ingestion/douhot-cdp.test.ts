@@ -15,24 +15,50 @@ function createFakePage(options: {
   boardVisible?: boolean;
   boardClickFails?: boolean;
   windowVisible?: boolean;
+  userInfoCodes?: number[];
+  billboardPayload?: unknown;
+  billboardRequestBody?: unknown;
 }) {
   const close = vi.fn(async () => {});
   const fill = vi.fn(async () => {});
   const waitForTimeout = vi.fn(async () => {});
+  let responseHandler: ((response: unknown) => void) | null = null;
+  let userInfoProbeCount = 0;
   const boardClick = vi.fn(async () => {
     if (options.boardClickFails) throw new Error("click failed");
   });
   const windowClick = vi.fn(async () => {});
+  const press = vi.fn(async () => {
+    if (!responseHandler || !options.billboardPayload) return;
+    responseHandler({
+      url: () =>
+        "https://douhot.douyin.com/douhot/v1/material/video_billboard",
+      status: () => 200,
+      json: async () => options.billboardPayload,
+      request: () => ({
+        postDataJSON: () =>
+          options.billboardRequestBody ?? { date_window: "2d" },
+      }),
+    });
+  });
 
   const page = {
     context: () => ({
       cookies: async () => [{ name: "sessionid", value: "sensitive" }],
     }),
-    on: vi.fn(),
+    on: vi.fn((event: string, handler: (response: unknown) => void) => {
+      if (event === "response") responseHandler = handler;
+    }),
     off: vi.fn(),
     goto: vi.fn(async () => null),
     url: () => options.url ?? "https://douhot.douyin.com/",
     title: async () => options.title ?? "生活服务热点中心",
+    evaluate: vi.fn(async () => {
+      const codes = options.userInfoCodes ?? [0];
+      const code = codes[Math.min(userInfoProbeCount, codes.length - 1)];
+      userInfoProbeCount += 1;
+      return { httpStatus: 200, code };
+    }),
     getByText: (label: RegExp) => {
       const isOauthBody = label.test(
         "使用抖音账号登录 生活服务热点中心",
@@ -56,14 +82,22 @@ function createFakePage(options: {
         first: () => ({
           isVisible: async () => true,
           fill,
-          press: vi.fn(async () => {}),
+          press,
         }),
       }),
     }),
     waitForTimeout,
   } as unknown as Page;
 
-  return { page, close, fill, waitForTimeout, boardClick, windowClick };
+  return {
+    page,
+    close,
+    fill,
+    waitForTimeout,
+    boardClick,
+    windowClick,
+    press,
+  };
 }
 
 describe("T-482 热点宝低粉爆款响应解析", () => {
@@ -142,6 +176,7 @@ describe("T-546 热点宝真实登录与榜单交互", () => {
       goto: vi.fn(async () => null),
       url: () => currentUrl,
       title: async () => (currentUrl.includes("open.douyin.com") ? "抖音授权" : "生活服务热点中心"),
+      evaluate: vi.fn(async () => ({ httpStatus: 200, code: 0 })),
       getByText: () => ({
         first: () => ({ isVisible: async () => false }),
       }),
@@ -203,7 +238,7 @@ describe("T-546 热点宝真实登录与榜单交互", () => {
     expect(fake.fill).not.toHaveBeenCalled();
   });
 
-  it("低粉榜单入口不存在或点击失败时立即显式报结构变化", async () => {
+  it("旧低粉榜单入口不存在或点击失败时不抢跑报结构变化，继续以官方响应为准", async () => {
     for (const fake of [
       createFakePage({ boardVisible: false }),
       createFakePage({ boardVisible: true, boardClickFails: true }),
@@ -218,15 +253,15 @@ describe("T-546 热点宝真实登录与榜单交互", () => {
           { openPage: async () => fake },
         ),
       ).rejects.toMatchObject({
-        name: "DouhotResponseShapeChangedError",
-        message: "热点宝低粉爆款榜单入口不可用",
+        name: "DouhotNoValidResponseError",
+        message: "热点宝榜单未返回有效响应",
       });
-      expect(fake.fill).not.toHaveBeenCalled();
-      expect(fake.waitForTimeout).not.toHaveBeenCalled();
+      expect(fake.fill).toHaveBeenCalledWith("AI");
+      expect(fake.waitForTimeout).toHaveBeenCalled();
     }
   });
 
-  it("48 小时时间窗入口不存在时立即显式报结构变化", async () => {
+  it("旧 48 小时时间窗入口不存在时不抢跑报结构变化，继续以响应中的真实窗口为准", async () => {
     const fake = createFakePage({
       boardVisible: true,
       windowVisible: false,
@@ -242,10 +277,96 @@ describe("T-546 热点宝真实登录与榜单交互", () => {
         { openPage: async () => fake },
       ),
     ).rejects.toMatchObject({
-      name: "DouhotResponseShapeChangedError",
-      message: "热点宝 48 小时时间窗入口不可用",
+      name: "DouhotNoValidResponseError",
+      message: "热点宝榜单未返回有效响应",
     });
+    expect(fake.fill).toHaveBeenCalledWith("AI");
+    expect(fake.waitForTimeout).toHaveBeenCalled();
+  });
+});
+
+describe("T-572 热点宝登录态与页面漂移恢复", () => {
+  it("页面尚停在热点宝域名但 user_info 已明确 code=8 时，不抢跑报告登录成功", async () => {
+    const fake = createFakePage({
+      url: "https://douhot.douyin.com/",
+      userInfoCodes: [8],
+    });
+
+    await expect(
+      loginDouhot(
+        { authDir: "/tmp/fake-auth", timeoutSec: 1 },
+        { openPage: async () => fake },
+      ),
+    ).resolves.toEqual({ loggedIn: false });
+    expect(fake.waitForTimeout).toHaveBeenCalled();
+  });
+
+  it("同步页异步跳 OAuth 前先由 user_info code=8 识别未授权，不误报页面结构变化", async () => {
+    const fake = createFakePage({
+      url: "https://douhot.douyin.com/",
+      userInfoCodes: [8],
+      boardVisible: false,
+      windowVisible: false,
+    });
+
+    await expect(
+      fetchDouhotLowFollowerBreakout(
+        {
+          authDir: "/tmp/fake-auth",
+          keyword: "AI",
+          board: "low_follower_breakout",
+        },
+        { openPage: async () => fake },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
     expect(fake.fill).not.toHaveBeenCalled();
-    expect(fake.waitForTimeout).not.toHaveBeenCalled();
+  });
+
+  it("旧榜单与时间窗文案消失时，以关键词触发的有效官方响应为准", async () => {
+    const fake = createFakePage({
+      userInfoCodes: [0],
+      boardVisible: false,
+      windowVisible: false,
+      billboardPayload: {
+        code: 0,
+        data: {
+          objs: [
+            {
+              item_id: "item-new-ui",
+              item_title: "新页面仍返回的真实作品",
+              like_cnt: 1800,
+              fans_cnt: 300,
+              publish_time: 1_800_000_000,
+            },
+          ],
+        },
+      },
+      billboardRequestBody: {
+        date_window: "2d",
+        sub_type: "low_follower_breakout",
+        keyword: "AI",
+      },
+    });
+
+    await expect(
+      fetchDouhotLowFollowerBreakout(
+        {
+          authDir: "/tmp/fake-auth",
+          keyword: "AI",
+          board: "low_follower_breakout",
+        },
+        { openPage: async () => fake },
+      ),
+    ).resolves.toMatchObject({
+      listValid: true,
+      candidates: [
+        expect.objectContaining({
+          itemId: "item-new-ui",
+          title: "新页面仍返回的真实作品",
+        }),
+      ],
+    });
+    expect(fake.fill).toHaveBeenCalledWith("AI");
+    expect(fake.press).toHaveBeenCalled();
   });
 });
