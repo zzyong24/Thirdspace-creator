@@ -27,6 +27,11 @@ on:
         type: choice
         options: ["", "macos", "windows"]
         default: ""
+      windows_runtime_rat:
+        description: "仅运行 T-565 Windows Runtime/Burn 原生 RAT（不构建、不发布正式安装包）"
+        required: false
+        type: boolean
+        default: false
   push:
     tags: ["v*"]
 
@@ -37,6 +42,7 @@ concurrency:
 jobs:
   # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
   plan:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.windows_runtime_rat != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -54,6 +60,7 @@ jobs:
           fi
 
   build:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.windows_runtime_rat != true }}
     needs: plan
     strategy:
       fail-fast: false
@@ -428,6 +435,30 @@ jobs:
             throw "[T-557] 主动卸载后仍残留安装目录:$installDir"
           }
           Write-Host "[T-557] ✓ 官方卸载器已清理 runtime 与安装目录"
+
+  windows-runtime-rat:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_runtime_rat == true }}
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: T-565 原生 Windows Runtime/Burn RAT
+        shell: pwsh
+        run: ./tools/windows-runtime-rat/run.ps1
+
+      - name: 上传 T-565 RAT 证据（非发布产物）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t565-windows-runtime-rat-${{ github.run_attempt }}
+          path: output/windows-runtime-rat/**
+          if-no-files-found: warn
+          retention-days: 14
 
   draft-release:
     needs: build
