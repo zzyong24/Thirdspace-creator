@@ -47,7 +47,7 @@ import {
 
 describe("[T-567] 抖音重新登录以服务端会话为准", () => {
   function makeLoginContext(probes: Array<"active" | "expired" | "unknown">) {
-    const calls = { goto: 0, evaluate: 0, clearCookies: 0, close: 0 };
+    const calls = { goto: 0, probe: 0, clearCookies: 0, close: 0 };
     let hasCookie = true;
     let scannedAfterClear = false;
     const page = {
@@ -61,15 +61,6 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
           scannedAfterClear = true;
         }
       },
-      async evaluate() {
-        const result = probes[calls.evaluate] ?? probes.at(-1) ?? "unknown";
-        calls.evaluate += 1;
-        return result === "active"
-          ? { statusCode: 0, statusMessage: "" }
-          : result === "expired"
-            ? { statusCode: 8, statusMessage: "登录已失效" }
-            : null;
-      },
     };
     const context = {
       pages: () => [page],
@@ -82,6 +73,21 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
       async clearCookies() {
         calls.clearCookies += 1;
         hasCookie = false;
+      },
+      request: {
+        async get() {
+          const result = probes[calls.probe] ?? probes.at(-1) ?? "unknown";
+          calls.probe += 1;
+          return {
+            async json() {
+              return result === "active"
+                ? { status_code: 0, status_msg: "" }
+                : result === "expired"
+                  ? { status_code: 8, status_msg: "登录已失效" }
+                  : {};
+            },
+          };
+        },
       },
       async close() {
         calls.close += 1;
@@ -105,7 +111,7 @@ describe("[T-567] 抖音重新登录以服务端会话为准", () => {
     ).resolves.toBe(true);
     expect(calls.clearCookies).toBe(1);
     expect(calls.goto).toBe(2);
-    expect(calls.evaluate).toBe(2);
+    expect(calls.probe).toBe(2);
     expect(calls.close).toBe(1);
   });
 

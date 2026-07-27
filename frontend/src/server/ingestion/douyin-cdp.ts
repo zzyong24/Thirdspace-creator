@@ -1063,7 +1063,7 @@ export async function loginDouyin(
     let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
       if (await isLoggedIn(ctx)) {
-        const acceptance = await probeDouyinSessionAcceptance(page);
+        const acceptance = await probeDouyinSessionFromContext(ctx);
         if (acceptance === "active") return true;
         if (acceptance === "expired" && !rejectedSessionCleared) {
           // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
@@ -1128,6 +1128,20 @@ const realMetricsOpenContext = (authDir: string, headless: boolean) =>
 
 type DouyinSessionProbeResult = "active" | "expired" | "unknown";
 
+function classifyDouyinSessionProbe(result: {
+  statusCode: number | null;
+  statusMessage: string;
+} | null): DouyinSessionProbeResult {
+  if (!result) return "unknown";
+  if (
+    result.statusCode === 8 ||
+    /未登录|登录.*失效|session.*expired/i.test(result.statusMessage)
+  ) {
+    return "expired";
+  }
+  return result.statusCode === 0 ? "active" : "unknown";
+}
+
 /**
  * 本地仍有 sessionid 不等于抖音服务端仍认可它。主页作品接口在会话过期时偶发只返回
  * 200 + 空 body，页面也不跳登录页；此时用同一页面只读请求收藏夹列表作为旁证。
@@ -1156,14 +1170,30 @@ async function probeDouyinSessionAcceptance(
       }
     }, probeUrl)
     .catch(() => null);
-  if (!result) return "unknown";
-  if (
-    result.statusCode === 8 ||
-    /未登录|登录.*失效|session.*expired/i.test(result.statusMessage)
-  ) {
-    return "expired";
-  }
-  return result.statusCode === 0 ? "active" : "unknown";
+  return classifyDouyinSessionProbe(result);
+}
+
+/**
+ * 登录页位于 creator.douyin.com，收藏接口位于 www.douyin.com；页面内 fetch 可能被
+ * CORS 拦截。BrowserContext.request 与浏览器共享 Cookie 且不受页面跨域限制，适合作为
+ * 登录窗口是否可以关闭的服务端证据。
+ */
+async function probeDouyinSessionFromContext(
+  ctx: import("@playwright/test").BrowserContext,
+): Promise<DouyinSessionProbeResult> {
+  const result = await ctx.request
+    .get(COLLECTS_LIST_API.replace("{cursor}", "0"), { timeout: 10_000 })
+    .then(async (response) => {
+      const json = (await response.json()) as Record<string, unknown>;
+      return {
+        statusCode:
+          typeof json.status_code === "number" ? json.status_code : null,
+        statusMessage:
+          typeof json.status_msg === "string" ? json.status_msg : "",
+      };
+    })
+    .catch(() => null);
+  return classifyDouyinSessionProbe(result);
 }
 
 /**
