@@ -131,6 +131,48 @@ interface DouhotPage {
   close(): Promise<void>;
 }
 
+type DouhotSessionState = "active" | "expired" | "unknown";
+
+/**
+ * 热点宝首页会先短暂停在 douhot.douyin.com，再异步跳转 OAuth。只看当前 URL 会把这段
+ * 过渡态误判成已授权；官方 user_info 的 code=0/8 才是同页会话是否被服务端接受的证据。
+ */
+async function probeDouhotSession(page: Page): Promise<DouhotSessionState> {
+  if (await isDouyinAuthorizationPage(page)) return "expired";
+  if (!isDouhotHome(page.url())) return "unknown";
+
+  const result = await page
+    .evaluate<
+      { httpStatus: number; code: number | null } | null,
+      undefined
+    >(async () => {
+      try {
+        const response = await fetch("/douhot/v1/user/user_info", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const json = (await response.json()) as Record<string, unknown>;
+        return {
+          httpStatus: response.status,
+          code: typeof json.code === "number" ? json.code : null,
+        };
+      } catch {
+        return null;
+      }
+    }, undefined)
+    .catch(() => null);
+
+  if (!result) return "unknown";
+  if (
+    result.code === 8 ||
+    result.httpStatus === 401 ||
+    result.httpStatus === 403
+  ) {
+    return "expired";
+  }
+  return result.code === 0 ? "active" : "unknown";
+}
+
 async function openDouhotPage(
   authDir: string,
   headless = true,
@@ -263,10 +305,7 @@ export async function loginDouhot(
       .catch(() => {});
 
     for (let elapsed = 0; elapsed < timeoutSec; elapsed += 1) {
-      if (
-        isDouhotHome(page.url()) &&
-        !(await isDouyinAuthorizationPage(page))
-      ) {
+      if ((await probeDouhotSession(page)) === "active") {
         return { loggedIn: true };
       }
       await page.waitForTimeout(1_000);
@@ -331,20 +370,28 @@ export async function fetchDouhotLowFollowerBreakout(
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    if (await isDouyinAuthorizationPage(page)) {
+    let sessionState = await probeDouhotSession(page);
+    if (sessionState === "unknown") {
+      // 给首页的异步 OAuth 重定向一个很短的落定窗口；未知仍不伪装成过期，后续交互会
+      // 继续用官方榜单响应作最终判据。
+      await page.waitForTimeout(1_000);
+      sessionState = await probeDouhotSession(page);
+    }
+    if (sessionState === "expired") {
       throw new DouyinNotLoggedInError();
     }
 
-    if (!(await clickFirstVisible(page, [/低粉爆款/, /低粉高赞/]))) {
-      throw Object.assign(new Error("热点宝低粉爆款榜单入口不可用"), {
-        name: "DouhotResponseShapeChangedError",
-      });
-    }
-    if (!(await clickFirstVisible(page, [/近\s*2\s*天/, /48\s*小时/]))) {
-      throw Object.assign(new Error("热点宝 48 小时时间窗入口不可用"), {
-        name: "DouhotResponseShapeChangedError",
-      });
-    }
+    // 页面文案属于易变展示层，只作为尽力而为的导航提示；是否真进了低粉 48h 榜单，
+    // 最终由关键词触发后的官方响应结构和 date_window 证明。
+    await clickFirstVisible(page, [
+      /低粉.*(?:爆款|高赞)/,
+      /(?:爆款|高赞).*低粉/,
+    ]);
+    await clickFirstVisible(page, [
+      /近\s*(?:2|两)\s*(?:天|日)/,
+      /48\s*小时/,
+    ]);
+    responses.length = 0;
     await fillKeyword(page, options.keyword.trim());
     await page.waitForTimeout(6_000);
     page.off("response", onResponse);

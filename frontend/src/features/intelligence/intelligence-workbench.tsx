@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import {
   Activity,
   Archive,
@@ -17,7 +16,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ErrorCode } from "@creatoros/contract";
@@ -719,6 +717,7 @@ export function IntelligenceWorkbench({
   const [selectedSourceId, setSelectedSourceId] = React.useState<string | null>(
     null,
   );
+  const [sourceQuery, setSourceQuery] = React.useState("");
   const [query, setQuery] = React.useState("");
   const [detail, setDetail] = React.useState<RadarItemDetail | null>(
     initialDetail,
@@ -802,6 +801,61 @@ export function IntelligenceWorkbench({
       return true;
     });
   }, [items, query, selectedCollectionId, selectedSourceId]);
+
+  const visibleSourceIds = React.useMemo(() => {
+    const needle = sourceQuery.trim().toLocaleLowerCase("zh-CN");
+    if (!needle) return new Set(workspace.sources.map((source) => source.id));
+
+    const matchingCollectionIds = new Set(
+      workspace.collections
+        .filter((collection) =>
+          collection.name.toLocaleLowerCase("zh-CN").includes(needle),
+        )
+        .map((collection) => collection.id),
+    );
+    return new Set(
+      workspace.sources
+        .filter((source) => {
+          if (
+            source.collectionId &&
+            matchingCollectionIds.has(source.collectionId)
+          ) {
+            return true;
+          }
+          if (
+            workspace.memberships.some(
+              (membership) =>
+                membership.sourceId === source.id &&
+                matchingCollectionIds.has(membership.collectionId),
+            )
+          ) {
+            return true;
+          }
+          const health = workspace.health.find(
+            (entry) => entry.sourceId === source.id,
+          );
+          const searchText = [
+            source.displayName,
+            sourceTypeLabel(source.type),
+            runStatusLabel(health?.lastRunStatus ?? null),
+            source.collector?.accountHandle,
+            source.monitorEnabled ? "自动同步" : "手动同步",
+            health?.lastErrorCode,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLocaleLowerCase("zh-CN");
+          return searchText.includes(needle);
+        })
+        .map((source) => source.id),
+    );
+  }, [
+    sourceQuery,
+    workspace.collections,
+    workspace.health,
+    workspace.memberships,
+    workspace.sources,
+  ]);
 
   const selectItem = React.useCallback(
     async (itemId: string) => {
@@ -1286,10 +1340,21 @@ export function IntelligenceWorkbench({
           aria-label="内容雷达分类和来源"
           className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
         >
-          <div className="shrink-0 px-4 pb-2 pt-4">
+          <div className="shrink-0 space-y-2 px-3 pb-2 pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               分类与来源
             </p>
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                aria-label="筛选来源"
+                value={sourceQuery}
+                onChange={(event) => setSourceQuery(event.target.value)}
+                placeholder="筛选名称、类型或状态"
+                className="h-8 rounded-lg border-border/75 bg-surface pl-8 pr-2 text-xs"
+              />
+            </label>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
             <button
@@ -1311,15 +1376,20 @@ export function IntelligenceWorkbench({
               </span>
             </button>
             {workspace.collections.map((collection) => {
-              const collectionSources = workspace.sources.filter(
-                (source) =>
-                  source.collectionId === collection.id ||
-                  workspace.memberships.some(
-                    (membership) =>
-                      membership.collectionId === collection.id &&
-                      membership.sourceId === source.id,
-                  ),
-              );
+              const collectionSources = workspace.sources
+                .filter(
+                  (source) =>
+                    source.collectionId === collection.id ||
+                    workspace.memberships.some(
+                      (membership) =>
+                        membership.collectionId === collection.id &&
+                        membership.sourceId === source.id,
+                    ),
+                )
+                .filter((source) => visibleSourceIds.has(source.id));
+              if (sourceQuery.trim() && collectionSources.length === 0) {
+                return null;
+              }
               return (
                 <div key={collection.id} className="mt-2">
                   <button
@@ -1376,6 +1446,7 @@ export function IntelligenceWorkbench({
             {workspace.sources
               .filter(
                 (source) =>
+                  visibleSourceIds.has(source.id) &&
                   source.collectionId === null &&
                   !workspace.memberships.some(
                     (membership) => membership.sourceId === source.id,
@@ -1404,6 +1475,11 @@ export function IntelligenceWorkbench({
                   onShowRuns={() => setHistorySource(source)}
                 />
               ))}
+            {sourceQuery.trim() && visibleSourceIds.size === 0 ? (
+              <div className="mx-2 mt-3 rounded-xl border border-dashed border-border/80 px-3 py-4 text-center text-xs leading-5 text-muted-foreground">
+                没有匹配的来源
+              </div>
+            ) : null}
           </div>
         </aside>
 
@@ -1754,26 +1830,13 @@ function ItemCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group flex min-h-36 w-full overflow-hidden rounded-2xl border bg-surface text-left transition",
+        "group flex min-h-28 w-full overflow-hidden rounded-2xl border bg-surface text-left transition",
         active
           ? "border-primary/60 shadow-card ring-1 ring-primary/20"
           : "border-border/80 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm",
       )}
     >
-      <div className="relative w-28 shrink-0 overflow-hidden bg-gradient-to-br from-brand-soft via-surface-subtle to-surface">
-        {row.item.coverUrl ? (
-          <Image
-            src={row.item.coverUrl}
-            alt=""
-            fill
-            unoptimized
-            className="object-cover transition duration-300 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <Sparkles className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-primary/55" />
-        )}
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col p-3">
+      <div className="flex min-w-0 flex-1 flex-col p-3.5">
         <span className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
           {row.item.title || "未命名内容"}
         </span>
@@ -1829,24 +1892,18 @@ function ItemDetail({
   return (
     <div className="flex min-h-full flex-col">
       <div className="border-b border-border/70 p-5">
-        <div className="relative aspect-video overflow-hidden rounded-2xl bg-gradient-to-br from-brand-soft via-surface-subtle to-surface">
-          {detail.item.coverUrl ? (
-            <Image
-              src={detail.item.coverUrl}
-              alt=""
-              fill
-              unoptimized
-              className="object-cover"
-            />
-          ) : (
-            <TrendingUp className="absolute left-1/2 top-1/2 size-8 -translate-x-1/2 -translate-y-1/2 text-primary/60" />
-          )}
-        </div>
-        <h3 className="mt-4 text-base font-semibold leading-6 text-foreground">
-          {detail.item.title || "未命名内容"}
-        </h3>
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>{detail.item.authorName ?? detail.item.platform}</span>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold leading-6 text-foreground">
+              {detail.item.title || "未命名内容"}
+            </h3>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {detail.item.authorName ?? detail.item.platform} ·{" "}
+              {dateLabel(
+                detail.item.publishedAt ?? detail.item.capturedAt,
+              )}
+            </p>
+          </div>
           <a
             href={detail.item.canonicalUrl}
             target="_blank"
