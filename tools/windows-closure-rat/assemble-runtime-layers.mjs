@@ -131,6 +131,7 @@ for (const packageName of [...localAiPackages].sort()) {
 // sharp 0.32 的 vendor/include 是编译头文件，运行时只加载 build/Release + vendor/lib。
 // 仅删除明确的 include 子树，并由后续真 import 证明没有误剪运行资产。
 let removedSharpHeaders = 0;
+let copiedSharpDlls = 0;
 const sharpRoot = packagePath(localAiVendor, "sharp");
 if (existsSync(sharpRoot)) {
   const pending = [sharpRoot];
@@ -145,6 +146,57 @@ if (existsSync(sharpRoot)) {
       } else {
         pending.push(entryPath);
       }
+    }
+  }
+
+  // sharp 0.32 的 Windows 安装脚本会把 vendor/lib 下的 libvips DLL 复制到
+  // build/Release，Windows loader 才能在加载 sharp-*.node 时找到它们。
+  // NFT 只能看到 `.node` 的 JS 引用，看不到 PE 文件的 DLL imports，因此这里
+  // 显式重放这一步；否则闭包“文件数合格”但原生模块一定在用户机器上启动失败。
+  if (process.platform === "win32") {
+    const sharpManifest = JSON.parse(
+      readFileSync(resolve(sharpRoot, "package.json"), "utf8"),
+    );
+    const sourcePnpmRoot = resolve(repoRoot, "node_modules", ".pnpm");
+    const sharpEntry = readdirSync(sourcePnpmRoot).find((entry) =>
+      entry.startsWith(`sharp@${sharpManifest.version}`),
+    );
+    if (!sharpEntry) {
+      throw new Error(
+        `[closure-rat] sharp ${sharpManifest.version} 源包缺失，无法补齐 Windows DLL`,
+      );
+    }
+    const sourceSharpRoot = resolve(
+      sourcePnpmRoot,
+      sharpEntry,
+      "node_modules",
+      "sharp",
+    );
+    const buildReleaseRoot = resolve(sharpRoot, "build", "Release");
+    mkdirSync(buildReleaseRoot, { recursive: true });
+
+    const dllPending = [
+      resolve(sourceSharpRoot, "vendor"),
+      resolve(sourceSharpRoot, "build", "Release"),
+    ].filter((candidate) => existsSync(candidate));
+    const copiedDllNames = new Set();
+    while (dllPending.length > 0) {
+      const current = dllPending.pop();
+      for (const entry of readdirSync(current, { withFileTypes: true })) {
+        const entryPath = resolve(current, entry.name);
+        if (entry.isDirectory()) {
+          dllPending.push(entryPath);
+        } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".dll")) {
+          copyFileSync(entryPath, resolve(buildReleaseRoot, entry.name));
+          copiedDllNames.add(entry.name.toLowerCase());
+        }
+      }
+    }
+    copiedSharpDlls = copiedDllNames.size;
+    if (copiedSharpDlls === 0) {
+      throw new Error(
+        `[closure-rat] sharp ${sharpManifest.version} Windows vendor 未发现 DLL`,
+      );
     }
   }
 }
@@ -478,6 +530,7 @@ const summary = {
   chromiumRevisions,
   movedPackages: movedPackages.length,
   removedSharpHeaders,
+  copiedSharpDlls,
   removedUnusedPgliteFiles,
   core: {
     files: frontendStats.files + backendStats.files + coreLayerStats.files,
