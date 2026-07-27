@@ -32,6 +32,11 @@ on:
         required: false
         type: boolean
         default: false
+      windows_closure_rat:
+        description: "仅运行 T-565 Windows 少文件 production closure RAT（不发布安装包）"
+        required: false
+        type: boolean
+        default: false
   push:
     tags: ["v*"]
 
@@ -42,7 +47,7 @@ concurrency:
 jobs:
   # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
   plan:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.windows_runtime_rat != true }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -60,7 +65,7 @@ jobs:
           fi
 
   build:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.windows_runtime_rat != true }}
+    if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true) }}
     needs: plan
     strategy:
       fail-fast: false
@@ -457,6 +462,85 @@ jobs:
         with:
           name: t565-windows-runtime-rat-${{ github.run_attempt }}
           path: output/windows-runtime-rat/**
+          if-no-files-found: warn
+          retention-days: 14
+
+  windows-closure-rat:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_closure_rat == true }}
+    runs-on: windows-latest
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+          cache: pnpm
+
+      - name: 安装锁定依赖与 Chromium
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -C frontend exec playwright install chromium
+
+      - name: 构建 Next adapter production closure
+        env:
+          CREATOROS_DESKTOP: "1"
+          NEXT_ADAPTER_PATH: ${{ github.workspace }}/tools/windows-closure-rat/next-output-adapter.mjs
+          CREATOROS_NEXT_OUTPUT_REPORT: ${{ github.workspace }}/tools/windows-closure-rat/out/next-adapter-outputs.json
+        run: pnpm -C frontend build
+
+      - name: 收束 Next bootstrap 与 Pi 引擎
+        run: |
+          pnpm dlx @vercel/ncc@0.38.4 build \
+            frontend/.next/standalone/frontend/server.js \
+            -m \
+            -o tools/windows-closure-rat/out/ncc-core
+          node tools/windows-closure-rat/build-pi-bundle.mjs
+
+      - name: 物化五层少文件 runtime
+        env:
+          CREATOROS_TARGET_PLATFORM: win32
+          CREATOROS_TARGET_ARCH: x64
+        run: |
+          node tools/windows-closure-rat/materialize-next-closure.mjs \
+            tools/windows-closure-rat/out/next-adapter-outputs.json \
+            tools/windows-closure-rat/out/closure
+          node tools/windows-closure-rat/finalize-ncc-core.mjs \
+            tools/windows-closure-rat/out/closure \
+            tools/windows-closure-rat/out/ncc-core
+          node tools/windows-closure-rat/assemble-runtime-layers.mjs \
+            tools/windows-closure-rat/out/closure \
+            tools/windows-closure-rat/out/pi-bundle.mjs
+
+      - name: Windows 全消费链与文件预算冒烟
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $runtime = (Resolve-Path "tools/windows-closure-rat/out/closure").Path
+          $node = Join-Path $runtime "layers/core/bin/creatoros-server.exe"
+          $resolver = Join-Path $runtime "frontend/creatoros-module-resolver.cjs"
+          $env:CREATOROS_RUNTIME_ROOT = $runtime
+          & $node --require $resolver `
+            tools/windows-closure-rat/runtime-smoke.mjs `
+            tools/windows-closure-rat/out/closure
+          if ($LASTEXITCODE -ne 0) {
+            throw "[T-565] Windows production closure smoke 失败(exit=$LASTEXITCODE)"
+          }
+
+      - name: 上传 T-565 closure RAT 证据（非发布产物）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t565-windows-closure-rat-${{ github.run_attempt }}
+          path: |
+            tools/windows-closure-rat/out/closure/layer-summary.json
+            tools/windows-closure-rat/out/closure/ncc-core-summary.json
+            tools/windows-closure-rat/out/closure/runtime-smoke-results.json
           if-no-files-found: warn
           retention-days: 14
 

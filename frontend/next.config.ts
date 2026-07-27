@@ -24,7 +24,19 @@ const nextConfig: NextConfig = {
   // src-tauri/(含 Rust target/ 数百 MB + 上一次 sidecar 组装)自引用式塞进来,导致体积爆炸
   // + resources 拷贝踩 target 权限。显式排除 src-tauri。仅桌面构建。
   outputFileTracingExcludes: isDesktopBuild
-    ? { "/**": ["src-tauri/**/*"] }
+    ? {
+        "/**": [
+          "src-tauri/**/*",
+          // T-565 closure RAT:运行代码中的 cwd/data-dir fallback 会让 NFT 保守地追踪整个
+          // frontend 工作区；这些目录已经编译进 .next，且现有 build-sidecar 随后也会
+          // 删除它们。提前从 trace 排除，避免把源码、测试、文档和构建脚本带进发布闭包。
+          "src/**/*",
+          "tests/**/*",
+          "docs/**/*",
+          "specs/**/*",
+          "scripts/**/*",
+        ],
+      }
     : {},
   // [T-415 P0-B] handshake fail-closed 烘焙开关:桌面**打包产物**把 `CREATOROS_HANDSHAKE_REQUIRED`
   //   内联成字面量 "1"(Next env 在 build 时替换 `process.env.CREATOROS_HANDSHAKE_REQUIRED`,

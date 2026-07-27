@@ -45,14 +45,11 @@ export async function register(): Promise<void> {
   }
   if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
     try {
-      const path = await import("node:path");
-      const fs = await import("node:fs");
-      // 正式桌面包优先用 Rust 壳注入的绝对资源目录；开发态/旧壳才回落 cwd/browsers。
-      // 目录不存在时不设置，让 Playwright 使用默认缓存或后续下载逻辑。
-      const bundled =
-        process.env.CREATOROS_BROWSERS_DIR?.trim() ||
-        path.join(process.cwd(), "browsers");
-      if (fs.existsSync(bundled)) {
+      // 正式桌面包只接受 Rust 壳注入的绝对资源目录。开发态未设置时继续使用
+      // Playwright 默认缓存；不要用 process.cwd() 回退，否则 Next output tracing 会把
+      // 整个工作区误判为运行时资源，连源码、测试和 src-tauri 一起带入发布闭包。
+      const bundled = process.env.CREATOROS_BROWSERS_DIR?.trim();
+      if (bundled) {
         process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
         console.log("[instrumentation] bundled Chromium path configured");
       }
