@@ -496,6 +496,8 @@ jobs:
 
       - name: 收束 Next bootstrap 与 Pi 引擎
         run: |
+          node tools/windows-closure-rat/prepare-next-bootstrap.mjs \
+            frontend/.next/standalone
           pnpm dlx @vercel/ncc@0.38.4 build \
             frontend/.next/standalone/frontend/server.js \
             -m \

@@ -47,17 +47,17 @@ const nccIndexPath = resolve(nccRoot, "index.js");
 let nccIndex = readFileSync(nccIndexPath, "utf8");
 let nativeDynamicRequirePatches = 0;
 nccIndex = nccIndex.replace(
-  /function webpackEmptyContext\(re\)\{var se=new Error\("Cannot find module '"\+re\+"'"\);se\.code="MODULE_NOT_FOUND";throw se\}/g,
-  () => {
+  /function webpackEmptyContext\(([$\w]+)\)\{var ([$\w]+)=new Error\("Cannot find module '"\+\1\+"'"\);\2\.code="MODULE_NOT_FOUND";throw \2\}/g,
+  (_match, requestName) => {
     nativeDynamicRequirePatches += 1;
-    return "function webpackEmptyContext(re){return require(re)}";
+    return `function webpackEmptyContext(${requestName}){return require(${requestName})}`;
   },
 );
 nccIndex = nccIndex.replace(
-  /function webpackEmptyAsyncContext\(re\)\{return Promise\.resolve\(\)\.then\(\(\)=>\{var se=new Error\("Cannot find module '"\+re\+"'"\);se\.code="MODULE_NOT_FOUND";throw se\}\)\}/g,
-  () => {
+  /function webpackEmptyAsyncContext\(([$\w]+)\)\{return Promise\.resolve\(\)\.then\(\(\)=>\{var ([$\w]+)=new Error\("Cannot find module '"\+\1\+"'"\);\2\.code="MODULE_NOT_FOUND";throw \2\}\)\}/g,
+  (_match, requestName) => {
     nativeDynamicRequirePatches += 1;
-    return "function webpackEmptyAsyncContext(re){return Promise.resolve().then(()=>require(re))}";
+    return `function webpackEmptyAsyncContext(${requestName}){return Promise.resolve().then(()=>require(${requestName}))}`;
   },
 );
 if (nativeDynamicRequirePatches === 0) {
