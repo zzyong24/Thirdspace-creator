@@ -101,6 +101,9 @@ describe("pickPreset(§3.1 gate ③ 动态 require 降级 + turbopack chunk 路�
       `page.$$eval("li", (nodes) => nodes.length)`,
       `page.waitForFunction(() => window.ready)`,
       `context.addInitScript(() => window.ready = true)`,
+      `page['evaluate'](() => document.body)`,
+      `frame["evaluateHandle"](() => document.body)`,
+      `locator['$$eval']("li", (nodes) => nodes.length)`,
     ];
     for (const code of serializerCalls) {
       expect(requiresSerializableFunctionSource(code), code).toBe(true);

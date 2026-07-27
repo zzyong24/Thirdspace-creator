@@ -27,7 +27,6 @@ import bytenode from "bytenode";
 import {
   readFileSync,
   writeFileSync,
-  copyFileSync,
   rmSync,
   existsSync,
   cpSync,
@@ -37,8 +36,10 @@ import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   walkTargets,
-  pickPreset,
-  requiresSerializableFunctionSource,
+  classifyTransform,
+  normalizeTransformPolicyPath,
+  readTransformPolicy,
+  transformCodeSha256,
 } from "./obfuscate.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -60,35 +61,53 @@ export function makeStub(jscBase) {
 }
 
 /**
- * 判该 target 是否该字节码化 = **chunks/ 里的全部业务 chunk**(chunk-stringarray + rename-only)。
- * [turbopack]_runtime / node_modules / wasm / .node 已被 walkTargets 的 shouldExclude 挡在 toObfuscate
- * 外,不会到这里。为何连 rename-only(含字面 require)也编:V8 字节码**保留 require**(不像 stringArray
- * 会编码模块名字面量崩)——字节码里的 `require("node:fs")` 运行时照常执行;且字节码本身藏源码 + 中文
- * 串按 UTF-16 存进常量池(UTF-8 grep 不到,spike 实证),把 rename-only chunk 里漏的 prompt 也盖掉。
- * app/** route(非 chunks/,full 预设)首波不动——加载路径与 chunks/ 不同,收益/风险后评。冒烟护栏兜底。
+ * 纯函数兼容入口：在原始源码上计算字节码资格，或直接消费混淆前 policy entry。
+ * 生产 runBytecode 只走后者，并同时校验混淆产物 hash；禁止扫描变形源码补猜。
  */
-export function shouldBytecode(code, rel) {
-  // [T-459] Playwright 会读取 callback.toString()；Bytenode 函数没有可解析源码。
-  // 这类 chunk 宁可保留 rename-only JS，也不能进 .jsc 后让采集链运行时必崩。
-  if (requiresSerializableFunctionSource(code)) return false;
-  const parts = rel.split(/[\\/]/).filter(Boolean);
-  const preset = pickPreset(code, rel);
-  // [T-462] 双护栏:任何 rename-only chunk 都不字节码化。**原因**:
-  //   ① rename-only 触发条件本身 = 「requiresSerializable / chunks 里含字面 require」——两者
-  //     都不适合再上字节码(前者 toString 崩,后者 require 字面量需保留字符串);
-  //   ② requiresSerializableFunctionSource 上面已 return false,理论已挡;但 2026-07-22
-  //     真机实证:GHA 打包出的 `_17k3mqw._.jsc`(1.1MB 大合并 chunk)含 .evaluate,却仍进
-  //     字节码 → 「采集收藏夹失败: Passed function is not well-serializable」。原因待精查
-  //     (chunk 内容漂移/合并?),但**兜底逻辑**很简单:preset==="rename-only" 已是 pickPreset
-  //     统一裁决"这 chunk 需保源码",直接对齐即可。防未来新的 rename-only 触发条件出现时
-  //     忘记同步更新第一层护栏(单层护栏 → 一处漏则整链崩,双层护栏 → 需两处同时漏)。
-  //   代价:极小(rename-only chunk 本就少;字节码只是 L3 反逆向加固,少几个 chunk 不影响
-  //   安全底线,大头 stringArray/rc4 加密仍在)。
-  if (preset === "rename-only") return false;
-  return (
-    parts.includes("chunks") &&
-    (preset === "chunk-stringarray" || preset === "rename-only")
-  );
+export function shouldBytecode(code, rel, policyEntry) {
+  // 纯函数兼容入口只用于“仍是原始源码”的单测/规划；生产 runBytecode 必须传并验证
+  // obfuscate 阶段落盘的 policy，不会调用这条源码重判分支。
+  if (policyEntry) return policyEntry.bytecodeEligible === true;
+  return classifyTransform(code, rel, "server").bytecodeEligible;
+}
+
+/**
+ * [T-566] 最终 sidecar 产物自检：policy 说可字节码的必须是 stub+.jsc；
+ * 所有需保留源码/rename-only/app route 则必须仍是 JS 且没有同名 .jsc。
+ */
+export function verifyBytecodePolicyArtifacts(root, policy = readTransformPolicy(root)) {
+  if (!policy || policy.targetKind !== "server") {
+    return [
+      {
+        rel: "<transform-policy>",
+        error: "无法校验字节码产物：server transform policy 缺失或损坏",
+      },
+    ];
+  }
+  const failures = [];
+  for (const [rel, entry] of Object.entries(policy.files)) {
+    const abs = join(root, ...rel.split("/"));
+    const jscAbs = abs.replace(/\.(js|cjs)$/, ".jsc");
+    const jsExists = existsSync(abs);
+    const code = jsExists ? readFileSync(abs, "utf8") : "";
+    const isStub = code.includes(STUB_MARK);
+    const jscExists = existsSync(jscAbs);
+    if (entry.bytecodeEligible === true) {
+      if (!jsExists || !isStub || !jscExists) {
+        failures.push({
+          rel,
+          error: "policy 要求字节码化，但最终产物不是 stub + .jsc",
+        });
+      }
+    } else if (!jsExists || isStub || jscExists) {
+      failures.push({
+        rel,
+        error:
+          "policy 要求保留 JavaScript 源码，但最终产物出现 bytecode stub 或 .jsc",
+      });
+    }
+  }
+  return failures;
 }
 
 /** 把 bytenode 整包实拷进 sidecar frontend/node_modules(stub 运行时 require 它)。 */
@@ -113,8 +132,21 @@ function bundleBytenode() {
  */
 export async function runBytecode(root = SERVER_DIR) {
   const { toObfuscate } = walkTargets(root);
-  // 主线程一次读+判 shouldBytecode,得到 worker 任务队列(worker 不读文件,直接 compileFile
-  //   以路径为参数;bytenode 内部会自己 read)。
+  const policy = readTransformPolicy(root);
+  if (!policy || policy.targetKind !== "server") {
+    return {
+      compiled: 0,
+      skipped: 0,
+      failures: [
+        {
+          rel: "<transform-policy>",
+          error:
+            "缺少有效的 server transform policy；拒绝从已混淆源码重新猜测字节码资格",
+        },
+      ],
+    };
+  }
+  // 主线程读取并按 policy + 产物 hash 组装 worker 任务队列；worker 直接 compileFile。
   const tasks = [];
   let skipped = 0;
   const failures = [];
@@ -133,10 +165,29 @@ export async function runBytecode(root = SERVER_DIR) {
       skipped++;
       continue;
     }
-    if (!shouldBytecode(code, rel)) {
-      // 只对"看起来该字节码但护栏挡了"的 chunk 记录(chunks/ 下 + 有 .evaluate)。
-      const parts = rel.split(/[\\/]/).filter(Boolean);
-      if (parts.includes("chunks") && requiresSerializableFunctionSource(code)) {
+    const key = normalizeTransformPolicyPath(rel);
+    const policyEntry = policy.files[key];
+    if (!policyEntry) {
+      failures.push({
+        rel,
+        error: "transform policy 缺少当前文件，拒绝字节码化",
+      });
+      continue;
+    }
+    if (
+      typeof policyEntry.transformedSha256 !== "string" ||
+      policyEntry.transformedSha256 !== transformCodeSha256(code)
+    ) {
+      failures.push({
+        rel,
+        error: "transform policy 与当前混淆产物 hash 不匹配，拒绝字节码化",
+      });
+      continue;
+    }
+    if (!shouldBytecode(code, rel, policyEntry)) {
+      const staleJsc = abs.replace(/\.(js|cjs)$/, ".jsc");
+      if (existsSync(staleJsc)) rmSync(staleJsc);
+      if (policyEntry.preserveFunctionSource === true) {
         preservedForCallback.push({ rel, size: code.length });
       }
       continue;
@@ -191,7 +242,7 @@ export async function runBytecode(root = SERVER_DIR) {
         const worker = new Worker(workerScript);
         try {
           for (const task of shard) {
-            await new Promise((resolve, reject) => {
+            await new Promise((resolve) => {
               const onMsg = (msg) => {
                 if (msg.status === "ok") compiled++;
                 else failures.push({ rel: task.rel, error: msg.error });
@@ -223,6 +274,10 @@ export async function runBytecode(root = SERVER_DIR) {
   }
 
   if (compiled > 0) bundleBytenode();
+
+  if (failures.length === 0) {
+    failures.push(...verifyBytecodePolicyArtifacts(root, policy));
+  }
 
   return { compiled, skipped, failures };
 }
