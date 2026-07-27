@@ -152,14 +152,21 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
-  it("Windows 上传产物前真执行 NSIS 安装期 runtime 冒烟", () => {
+  it("Windows 上传产物前执行安装冒烟，上传后执行卸载冒烟", () => {
     expect(workflow).toContain("Windows 安装期 runtime 原生冒烟(T-487)");
     expect(workflow).toContain('Start-Process -FilePath $setup.FullName');
     expect(workflow).toContain("runtime-current.txt");
     expect(workflow).toContain("runtime-images/$runtimeId/sidecar/frontend/server.js");
     expect(workflow).toContain('Test-Path (Join-Path $installDir "sidecar.tar.gz")');
     expect(workflow).toContain("CreatorOS RAT02 Space");
+    expect(workflow).toContain("Windows 主动卸载清理冒烟(T-557)");
     expect(workflow).toContain('$uninstaller = Join-Path $installDir "uninstall.exe"');
     expect(workflow).toContain("主动卸载后仍残留 runtime-images");
+    expect(workflow.indexOf("Windows 安装期 runtime 原生冒烟(T-487)")).toBeLessThan(
+      workflow.indexOf("actions/upload-artifact@v4"),
+    );
+    expect(workflow.indexOf("actions/upload-artifact@v4")).toBeLessThan(
+      workflow.indexOf("Windows 主动卸载清理冒烟(T-557)"),
+    );
   });
 });

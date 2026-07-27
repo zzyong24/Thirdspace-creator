@@ -291,7 +291,7 @@ jobs:
 
       # [T-487 RAT-PKG-02] 真执行本轮 setup.exe，不拿 7z 清单冒充安装验收。
       # 安装到 RUNNER_TEMP（通常是 D:）证明：目录选择生效、POSTINSTALL hook 真执行、
-      # current 指针/关键入口存在、成功后 tar 已删除。失败时在上传产物前截断。
+      # current 指针/关键入口存在、成功后 tar 已删除。安装 Gate 仍在上传产物前截断。
       - name: Windows 安装期 runtime 原生冒烟(T-487)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -326,25 +326,6 @@ jobs:
           }
           Write-Host "[T-487] ✓ 原生安装期物化通过: $server"
 
-          $uninstaller = Join-Path $installDir "uninstall.exe"
-          if (-not (Test-Path $uninstaller -PathType Leaf)) {
-            throw "[T-487] 安装完成但缺官方 uninstall.exe"
-          }
-          $uninstall = Start-Process -FilePath $uninstaller -Wait -PassThru -ArgumentList @("/S")
-          if ($uninstall.ExitCode -ne 0) {
-            throw "[T-487] NSIS 静默卸载失败(exit=$($uninstall.ExitCode))"
-          }
-          for ($i = 0; $i -lt 50 -and (Test-Path $installDir); $i++) {
-            Start-Sleep -Milliseconds 200
-          }
-          if (Test-Path (Join-Path $installDir "runtime-images")) {
-            throw "[T-487] 主动卸载后仍残留 runtime-images"
-          }
-          if (Test-Path $installDir) {
-            throw "[T-487] 主动卸载后仍残留安装目录:$installDir"
-          }
-          Write-Host "[T-487] ✓ 官方卸载器已清理 runtime 与安装目录"
-
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
         run: |
           found=$(find frontend/src-tauri/target/release/bundle \
@@ -365,6 +346,33 @@ jobs:
           name: desktop-${{ matrix.updater_target }}
           path: dist-upload/
           if-no-files-found: error
+
+      # [T-557] 上传后再验主动卸载：安装 Gate 已经通过，因此即使卸载回归失败，
+      # 本轮已生成的安装包也必须留作诊断，不能随托管 runner 一起丢失。
+      - name: Windows 主动卸载清理冒烟(T-557)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $uninstaller = Join-Path $installDir "uninstall.exe"
+          if (-not (Test-Path $uninstaller -PathType Leaf)) {
+            throw "[T-557] 安装完成但缺官方 uninstall.exe"
+          }
+          $uninstall = Start-Process -FilePath $uninstaller -Wait -PassThru -ArgumentList @("/S")
+          if ($uninstall.ExitCode -ne 0) {
+            throw "[T-557] NSIS 静默卸载失败(exit=$($uninstall.ExitCode))"
+          }
+          for ($i = 0; $i -lt 50 -and (Test-Path $installDir); $i++) {
+            Start-Sleep -Milliseconds 200
+          }
+          if (Test-Path (Join-Path $installDir "runtime-images")) {
+            throw "[T-557] 主动卸载后仍残留 runtime-images"
+          }
+          if (Test-Path $installDir) {
+            throw "[T-557] 主动卸载后仍残留安装目录:$installDir"
+          }
+          Write-Host "[T-557] ✓ 官方卸载器已清理 runtime 与安装目录"
 
   draft-release:
     needs: build

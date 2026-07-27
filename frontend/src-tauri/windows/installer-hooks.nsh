@@ -27,6 +27,20 @@
   ${EndIf}
 !macroend
 
+!macro NSIS_HOOK_PREUNINSTALL
+  ; [T-557] runtime 内含深层 node_modules，NSIS RMDir /r 会受 MAX_PATH 限制而残留。
+  ; 主动卸载时趁主程序仍存在，先由 Rust 的长路径文件 API 递归清理。
+  ; updater 的 /UPDATE 必须保留 current runtime，供新版本安装期原子替换。
+  ${If} $UpdateMode <> 1
+    DetailPrint "正在清理 CreatorOS 离线运行环境…"
+    nsExec::ExecToLog '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-uninstall-runtime'
+    Pop $0
+    ${If} $0 != 0
+      DetailPrint "离线运行环境清理失败（错误码 $0），将继续执行卸载器兜底清理。"
+    ${EndIf}
+  ${EndIf}
+!macroend
+
 !macro NSIS_HOOK_POSTUNINSTALL
   ; runtime-images 是安装包可再生资源，不包含数据库、授权、模型密钥或用户日志。
   ; 用户数据仍位于 Tauri appDataDir，由官方卸载器的“删除应用数据”选项单独控制。

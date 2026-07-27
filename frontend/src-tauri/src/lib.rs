@@ -738,6 +738,25 @@ fn materialize_windows_runtime(install_dir: &std::path::Path) -> Result<PathBuf,
     result
 }
 
+/// [T-557] NSIS 自身的 RMDir /r 受 Windows 长路径限制，无法可靠删除 runtime
+/// 中的深层 node_modules。主动卸载时先复用仍存在的主程序，用 Rust 递归清理。
+#[cfg(any(windows, test))]
+fn remove_windows_installed_runtime(install_dir: &std::path::Path) -> Result<(), String> {
+    let runtime_root = install_dir.join("runtime-images");
+    if !runtime_root.exists() {
+        return Ok(());
+    }
+    std::fs::remove_dir_all(&runtime_root)
+        .map_err(|e| format!("清理 Windows runtime 失败 {}: {e}", runtime_root.display()))?;
+    if runtime_root.exists() {
+        return Err(format!(
+            "清理 Windows runtime 后目录仍存在: {}",
+            runtime_root.display()
+        ));
+    }
+    Ok(())
+}
+
 #[cfg(any(windows, test))]
 fn write_windows_runtime_pointer(
     runtime_root: &std::path::Path,
@@ -1278,6 +1297,25 @@ fn cleanup_stale_runtimes(runtime_root: &std::path::Path, keep_version: &str) ->
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
 pub fn run() {
+    // [T-557] PREUNINSTALL 时主程序尚未被 NSIS 删除，先由 Rust 清理长路径 runtime；
+    // updater 的 /UPDATE 路径不会调用该入口，只服务用户主动卸载。
+    #[cfg(windows)]
+    if std::env::args().any(|arg| arg == "--creatoros-uninstall-runtime") {
+        let install_dir = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+        let result = install_dir
+            .ok_or_else(|| "无法定位 CreatorOS 安装目录".to_string())
+            .and_then(|dir| remove_windows_installed_runtime(&dir));
+        match result {
+            Ok(()) => std::process::exit(0),
+            Err(e) => {
+                eprintln!("[uninstaller] runtime cleanup failed: {e}");
+                std::process::exit(42);
+            }
+        }
+    }
+
     // [T-487] NSIS POSTINSTALL 专用窄入口。必须早于 Tauri/single-instance 初始化，
     // 安装器只做离线 runtime 事务，不创建窗口、不读取用户数据库、不启动 sidecar。
     #[cfg(windows)]
@@ -2270,6 +2308,28 @@ mod runtime_cleanup_tests {
         assert!(!runtime_root.join("stale-a").exists());
         assert!(!runtime_root.join("stale-b").exists());
         assert!(!runtime_root.join(".staging").exists());
+        let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_主动卸载使用_rust_清理深层_runtime() {
+        let install_dir = temp_runtime_root("installed-runtime-uninstall");
+        let deep_runtime = install_dir
+            .join("runtime-images")
+            .join("0.2.0-test")
+            .join("sidecar")
+            .join("frontend")
+            .join("node_modules")
+            .join(".pnpm")
+            .join("a".repeat(96))
+            .join("node_modules")
+            .join("b".repeat(96));
+        std::fs::create_dir_all(&deep_runtime).unwrap();
+        std::fs::write(deep_runtime.join("server.js"), "ready").unwrap();
+
+        super::remove_windows_installed_runtime(&install_dir).unwrap();
+
+        assert!(!install_dir.join("runtime-images").exists());
         let _ = std::fs::remove_dir_all(&install_dir);
     }
 
