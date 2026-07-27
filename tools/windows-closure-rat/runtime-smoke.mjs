@@ -300,7 +300,9 @@ const sidecar = spawn(smokeNode, [resolve(runtimeRoot, "frontend", "server.js")]
     PORT: String(port),
     NODE_ENV: "production",
   },
-  stdio: ["ignore", "pipe", "pipe"],
+  // Windows 生产壳会持有 sidecar stdin，并以管道断开作为父进程死亡信号。
+  // RAT 必须复现同一契约；`ignore` 会立即产生 EOF，让正确的孤儿防护主动退出。
+  stdio: ["pipe", "pipe", "pipe"],
 });
 sidecar.stdout.on("data", (chunk) => serverLogs.push(`${chunk}`));
 sidecar.stderr.on("data", (chunk) => serverLogs.push(`${chunk}`));
@@ -327,15 +329,36 @@ try {
   }
   record("next-main-page", `${mainHtml.length} bytes`);
 } finally {
+  let requestedWindowsShutdown = false;
+  let gracefulShutdownCompleted = true;
   if (sidecar.exitCode === null) {
-    sidecar.kill("SIGTERM");
-    await Promise.race([
-      new Promise((resolveExit) => sidecar.once("exit", resolveExit)),
-      new Promise((resolveWait) => setTimeout(resolveWait, 10_000)),
+    const exitPromise = new Promise((resolveExit) =>
+      sidecar.once("exit", () => resolveExit(true)),
+    );
+    if (process.platform === "win32" && sidecar.stdin?.writable) {
+      requestedWindowsShutdown = true;
+      sidecar.stdin.write("__CREATOROS_SHUTDOWN__\n");
+      sidecar.stdin.end();
+    } else {
+      sidecar.kill("SIGTERM");
+    }
+    gracefulShutdownCompleted = await Promise.race([
+      exitPromise,
+      new Promise((resolveWait) =>
+        setTimeout(() => resolveWait(false), 10_000),
+      ),
     ]);
   }
   if (sidecar.exitCode === null) sidecar.kill("SIGKILL");
   rmSync(tempRoot, { recursive: true, force: true });
+  if (requestedWindowsShutdown && !gracefulShutdownCompleted) {
+    throw new Error(
+      "[closure-rat] Windows sidecar 未在停机哨兵后 10 秒内优雅退出",
+    );
+  }
+  if (requestedWindowsShutdown) {
+    record("windows-stdin-shutdown", "sentinel");
+  }
 }
 
 const layerSummary = JSON.parse(
