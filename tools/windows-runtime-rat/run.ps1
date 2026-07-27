@@ -29,6 +29,18 @@ function Wait-File {
   throw "timed out waiting for $Path"
 }
 
+function Wait-LogPattern {
+  param([string]$Path, [string]$Pattern, [int]$Seconds = 60)
+  $deadline = (Get-Date).AddSeconds($Seconds)
+  while ((Get-Date) -lt $deadline) {
+    if ((Test-Path $Path -PathType Leaf) -and (Select-String -Path $Path -Pattern $Pattern -Quiet)) {
+      return
+    }
+    Start-Sleep -Milliseconds 250
+  }
+  throw "timed out waiting for pattern '$Pattern' in $Path"
+}
+
 Invoke-Checked dotnet @(
   "publish", $project, "-c", "Release", "-r", "win-x64",
   "--self-contained", "true", "-p:PublishSingleFile=true",
@@ -191,11 +203,14 @@ try {
   [IO.File]::AppendAllText((Join-Path $served "core.zip"), "tampered")
   $tamperLog = Join-Path $output "burn-tamper.log"
   & $tamperBundle "-quiet" "-norestart" "-log" $tamperLog
-  $tamperExit = $LASTEXITCODE
-  if ($tamperExit -eq 0 -or (Test-Path $tamperResult)) {
-    throw "Burn accepted a tampered remote payload (exit=$tamperExit)"
+  # Burn can return from its unelevated stub before the elevated engine finishes.
+  # The engine's terminal log line, not the stub process code, is authoritative.
+  Wait-LogPattern $tamperLog "\]i007: Exit code:" 60
+  $tamperTerminal = (Select-String -Path $tamperLog -Pattern "\]i007: Exit code:" | Select-Object -Last 1).Line
+  if ($tamperTerminal -match "Exit code: 0x0(?:,|$)" -or (Test-Path $tamperResult)) {
+    throw "Burn accepted a tampered remote payload ($tamperTerminal)"
   }
-  Add-Content $serverLog "TAMPER_REJECTED exit=$tamperExit"
+  Add-Content $serverLog "TAMPER_REJECTED $tamperTerminal"
 } finally {
   if (-not $server.HasExited) { Stop-Process -Id $server.Id -Force }
 }
