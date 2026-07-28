@@ -28,6 +28,12 @@ Tauri Rust core ──spawn──► sidecar (随包 node) ──跑──► ne
 
 **为何 node runtime 当 sidecar,而非 pkg/SEA 单 blob**:next standalone 依赖真实文件树(`server.js` + traced `node_modules` + PGlite 相对自身 `fs.readFile` 读 WASM),单 blob 快照放不进这套相对资产。Rust 侧把 `frontend/server.js` 绝对路径作 arg 传给该 node。
 
+**macOS 最低版本**:当前发布链锁定 Node 25，实测其 Mach-O `minos=13.5`，因此安装包明确要求
+macOS 13.5 或更高。`scripts/desktop/macos-runtime-compat.mjs` 在 sidecar 构建最前面同时检查
+根 `engines.node`、Tauri `minimumSystemVersion` 与实际 `process.execPath` 的 `otool -l` 结果；
+任一漂移都会在出包前用人话报错。旧系统由 macOS 根据应用声明在启动壳前拦截，不再安装后才
+以 sidecar dyld `SIGABRT` 失败。
+
 **踩过的坑(按顺序,都已修 + 落进脚本)**:
 | 坑 | 现象 | 修法 |
 |---|---|---|
@@ -43,6 +49,9 @@ Tauri Rust core ──spawn──► sidecar (随包 node) ──跑──► ne
 ```bash
 # 只组装 sidecar(standalone build + 运行目录 + node runtime + dylib)
 pnpm -C frontend desktop:build-sidecar
+
+# 只跑 macOS 安装声明 ↔ 随包 Node runtime 静态兼容门
+node frontend/scripts/desktop/macos-runtime-compat.mjs
 
 # dev:组装 sidecar 再起 Tauri 壳(读源目录 sidecar,symlink 完好;热调 Rust)
 pnpm -C frontend desktop:dev        # = build-sidecar.mjs && tauri dev --config src-tauri/tauri.dev.conf.json

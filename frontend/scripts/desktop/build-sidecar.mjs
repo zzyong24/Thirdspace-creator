@@ -39,6 +39,7 @@ import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 // [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
 import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
 import { assertVerdictPublicKey } from "./verdict-key-material.mjs";
+import { assertMacosRuntimeCompatibility } from "./macos-runtime-compat.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -1860,6 +1861,10 @@ function bundleMediaTools(triple) {
 }
 
 function main() {
+  // [T-586] 必须早于所有局部构建/缓存短路：即使复用 clean runtime，也不能让安装声明与
+  // 实际会随包复制的 Node Mach-O 要求漂移。
+  assertMacosRuntimeCompatibility();
+
   // [T-487] 只重建 Playwright 解析锚，用于本地验证双份实拷已消除。
   if (process.env.CREATOROS_SIDECAR_PLAYWRIGHT_ONLY === "1") {
     if (!existsSync(join(SIDECAR_RUNTIME, "frontend", "server.js"))) {
