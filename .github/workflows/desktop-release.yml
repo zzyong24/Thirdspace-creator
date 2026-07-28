@@ -488,5 +488,6 @@ jobs:
             exit 1
           fi
           tag="${GITHUB_REF#refs/tags/}"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
-          gh release upload "$tag" artifacts/* --clobber
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
+          gh release upload "$tag" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber

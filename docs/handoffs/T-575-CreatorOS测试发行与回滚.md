@@ -1,12 +1,12 @@
 # T-575 CreatorOS 测试发行、安装与回滚
 
-> 适用版本：`0.2.1-beta.1`
+> 适用版本：`0.2.1-beta.2`
 > 发布性质：三系统在线联调测试版，不是公开正式版
 > 固定 Growth origin：`https://growth.aitongban.cloud`
 
 ## 1. 发行边界
 
-- 只通过 GitHub `v0.2.1-beta.1` tag 触发 `desktop-release`，产物进入 **draft Release**。
+- 只通过 GitHub `v0.2.1-beta.2` tag 触发 `desktop-release`，产物进入 **draft Release**。
 - 这次只生成 macOS DMG 与 Windows setup.exe；不修改、不上传、不覆盖公开
   `sites/creatoros/updates/latest.json`，现有 `0.2.0` 用户不会收到该测试版。
 - 包内显式开启权益领取与纯文字问题反馈，两个能力都只允许访问
@@ -23,13 +23,13 @@
 2. 打开 DMG，将 CreatorOS 拖到 Applications。
 3. 若 Gatekeeper 因测试版未做 Developer ID 签名而阻止首次打开，只在确认下载来源和
    SHA-256 后，进入“系统设置 → 隐私与安全性”，对本次 CreatorOS 选择“仍要打开”。
-4. 启动后确认版本显示 `0.2.1-beta.1`，再进入 `/activate` 做领取联调。
+4. 启动后确认版本显示 `0.2.1-beta.2`，再进入 `/activate` 做领取联调。
 
 ### Windows
 
 1. 从 draft Release 下载 `*-setup.exe`，记录并核对本手册后续回填的 SHA-256。
 2. 若 SmartScreen 显示未知发布者，只在确认下载来源和 SHA-256 后选择“更多信息 → 仍要运行”。
-3. 完成安装并启动，确认版本显示 `0.2.1-beta.1`，再进入激活页做领取联调。
+3. 完成安装并启动，确认版本显示 `0.2.1-beta.2`，再进入激活页做领取联调。
 
 ## 3. 三系统 HTTPS E2E
 
@@ -64,7 +64,7 @@ claimToken、activation code、手机号、机器标识、Cookie、私钥或反�
    旧激活状态和本地反馈草稿保持不变。
 2. 不发布 draft Release，不修改公开 `latest.json`，不把测试版链接写入正式渠道
    `downloadUrl`。
-3. 需要退回客户端时卸载 `0.2.1-beta.1`，从现有正式渠道重新安装 `0.2.0`。卸载前按产品已有
+3. 需要退回客户端时卸载 `0.2.1-beta.2`，从现有正式渠道重新安装 `0.2.0`。卸载前按产品已有
    备份流程保存用户工作区；回滚不得主动删除现有 `.license` 或用户内容。
 4. Git 回滚以 `pre-t076-live-20260727` 为代码基线；测试 tag 只新增，不移动、不覆盖。
 

@@ -19,10 +19,22 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "Cargo.toml"),
       "utf8",
     );
-    expect(frontendPackage.version).toBe("0.2.1-beta.1");
-    expect(tauriConfig.version).toBe("0.2.1-beta.1");
-    expect(cargoToml).toContain('version = "0.2.1-beta.1"');
+    expect(frontendPackage.version).toBe("0.2.1-beta.2");
+    expect(tauriConfig.version).toBe("0.2.1-beta.2");
+    expect(cargoToml).toContain('version = "0.2.1-beta.2"');
     expect(workflow).not.toContain("sites/creatoros/updates/latest.json");
+  });
+
+  it("草稿 Release 在无需 checkout 的 job 中显式绑定当前仓库", () => {
+    expect(workflow).toContain(
+      'gh release view "$tag" --repo "$GITHUB_REPOSITORY"',
+    );
+    expect(workflow).toContain(
+      'gh release create "$tag" --repo "$GITHUB_REPOSITORY"',
+    );
+    expect(workflow).toContain(
+      'gh release upload "$tag" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber',
+    );
   });
 
   it("T-575 remote sidecar ACL 放行领取命令，并与 invoke handler 同名", () => {
