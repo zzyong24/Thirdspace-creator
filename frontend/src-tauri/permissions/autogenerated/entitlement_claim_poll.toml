@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-entitlement-claim-poll"
+description = "Enables the entitlement_claim_poll command without any pre-configured scope."
+commands.allow = ["entitlement_claim_poll"]
+
+[[permission]]
+identifier = "deny-entitlement-claim-poll"
+description = "Denies the entitlement_claim_poll command without any pre-configured scope."
+commands.deny = ["entitlement_claim_poll"]

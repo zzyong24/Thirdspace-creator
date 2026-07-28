@@ -1,0 +1,430 @@
+{
+  "fixtureVersion": "growth-entitlement-delivery-v1-fixture-1",
+  "warning": "TEST VECTORS ONLY - NEVER USE THESE KEYS IN PRODUCTION",
+  "contractVersion": "growth-entitlement-delivery-v1",
+  "testKeys": {
+    "claimTokenKeyId": "claim-test-2026-07",
+    "claimTokenKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "claimIdentityKeyHex": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+    "claimReceiptKeyId": "receipt-test-2026-07",
+    "claimReceiptKeyHex": "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f",
+    "growthHmacSecretHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "licenseSigningPrivateKeyEnvBase64": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUlCS0M3SnFiZG1tRFdKWnRFMHFLaWUvUzMxT2Q1QnltSUpiQ3JlY1h0Q04KLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=",
+    "licenseSigningPublicKeyRawBase64": "G6N24t6T5dy71lf+wlAMX/JxxUaRc2U4IoLzQcqUAf4="
+  },
+  "intendedRecipient": {
+    "value": {
+      "kind": "growth-user",
+      "ref": "usr_01K0A0B1C4"
+    },
+    "canonicalUtf8": "{\"kind\":\"growth-user\",\"ref\":\"usr_01K0A0B1C4\"}",
+    "bytes": 45,
+    "sha256": "sha256:7686ee367c1648ecacc29aea805be76ad7e1ff11cd24392b4f782e328576cc73",
+    "digest": "hmac-sha256:v1:39b52f685b405d3eb4ae97df920468afbfe10161775e21c0bde92af740ba1791"
+  },
+  "provision": {
+    "path": "/api/integrations/growth/v1/entitlement-deliveries/provision",
+    "action": "entitlement:provision",
+    "publisherRequestId": "out_01K0A0B1C8",
+    "idempotencyKeyInputUtf8": "thirdspace-growth\nord_01K0A0B1C2\nent_01K0A0B1C3\ncreatoros\nannual\nout_01K0A0B1C8",
+    "idempotencyKeyInputBytes": 79,
+    "idempotencyKey": "entitlement-provision:v1:06e528aae63012491570559485e5293d2b1b53cc0a7a0ef7798283786e6bfb1d",
+    "request": {
+      "contractVersion": "growth-entitlement-delivery-v1",
+      "sourceSystem": "thirdspace-growth",
+      "externalOrderId": "ord_01K0A0B1C2",
+      "entitlementId": "ent_01K0A0B1C3",
+      "projectKey": "creatoros",
+      "planRef": "annual",
+      "channelRef": "agent-42",
+      "intendedRecipient": {
+        "kind": "growth-user",
+        "ref": "usr_01K0A0B1C4"
+      },
+      "deliveryMode": "activation_claim",
+      "license": {
+        "mode": "TIME",
+        "validDays": 365
+      }
+    },
+    "canonicalUtf8": "{\"channelRef\":\"agent-42\",\"contractVersion\":\"growth-entitlement-delivery-v1\",\"deliveryMode\":\"activation_claim\",\"entitlementId\":\"ent_01K0A0B1C3\",\"externalOrderId\":\"ord_01K0A0B1C2\",\"intendedRecipient\":{\"kind\":\"growth-user\",\"ref\":\"usr_01K0A0B1C4\"},\"license\":{\"mode\":\"TIME\",\"validDays\":365},\"planRef\":\"annual\",\"projectKey\":\"creatoros\",\"sourceSystem\":\"thirdspace-growth\"}",
+    "bytes": 365,
+    "operationDigest": "sha256:6b223db3970b1d1f840b392ad646c8744953ceb68b59bff3816d0a5584ff11c1"
+  },
+  "claimToken": {
+    "providerClaimRef": "clm_01K0A0B1C7",
+    "claimVersion": 1,
+    "entitlementId": "ent_01K0A0B1C3",
+    "claimExpiresAt": "2026-07-27T12:15:00.000Z",
+    "derivationInputUtf8": "growth-entitlement-delivery-v1\nclm_01K0A0B1C7\n1\nent_01K0A0B1C3\nhmac-sha256:v1:39b52f685b405d3eb4ae97df920468afbfe10161775e21c0bde92af740ba1791\n2026-07-27T12:15:00.000Z",
+    "derivationInputBytes": 167,
+    "secretBase64Url": "ZlKM4dWAwz_YbGNmcBDsl9ZSvsaVxjPIt8-Py24KbV0",
+    "token": "ec1.clm_01K0A0B1C7.1.ZlKM4dWAwz_YbGNmcBDsl9ZSvsaVxjPIt8-Py24KbV0"
+  },
+  "provisionSuccess": {
+    "success": true,
+    "contractVersion": "growth-entitlement-delivery-v1",
+    "correlationId": "corr_01K0A0B1C5",
+    "idempotent": false,
+    "receipt": {
+      "grantId": "grant_01K0A0B1C6",
+      "providerClaimRef": "clm_01K0A0B1C7",
+      "grantStatus": "active",
+      "grantVersion": 1,
+      "deliveryMode": "activation_claim",
+      "claimVersion": 1,
+      "claimStatus": "ready",
+      "claimExpiresAt": "2026-07-27T12:15:00.000Z",
+      "claimedAt": null,
+      "licenseExpiresAt": null
+    },
+    "launch": {
+      "claimToken": "ec1.clm_01K0A0B1C7.1.ZlKM4dWAwz_YbGNmcBDsl9ZSvsaVxjPIt8-Py24KbV0",
+      "consumePath": "/api/license/entitlement-claims/consume",
+      "expiresAt": "2026-07-27T12:15:00.000Z"
+    }
+  },
+  "encryptedLaunchReceipt": {
+    "schemaVersion": "claim-launch-receipt-v1",
+    "algorithm": "AES-256-GCM",
+    "receiptKeyId": "receipt-test-2026-07",
+    "nonceBase64Url": "AAECAwQFBgcICQoL",
+    "aadUtf8": "thirdspace-growth\nentitlement-provision:v1:06e528aae63012491570559485e5293d2b1b53cc0a7a0ef7798283786e6bfb1d\nsha256:6b223db3970b1d1f840b392ad646c8744953ceb68b59bff3816d0a5584ff11c1\nclm_01K0A0B1C7\n1",
+    "aadBytes": 196,
+    "plaintextUtf8": "{\"claimToken\":\"ec1.clm_01K0A0B1C7.1.ZlKM4dWAwz_YbGNmcBDsl9ZSvsaVxjPIt8-Py24KbV0\",\"consumePath\":\"/api/license/entitlement-claims/consume\",\"expiresAt\":\"2026-07-27T12:15:00.000Z\"}",
+    "plaintextBytes": 176,
+    "ciphertextBase64Url": "QScPFBblKfSteeWsmtfu3uD1A2oAIfJj32vY13HzWB13XvUv4S5AMoR8L9420YipS1hEULUGX1dfut3mJxYvsL4ZquWClRqfqwHs-X1AukTV84mdK95wWo12nGNmXgB0oOOVhiyUEA16wsmoKFojMNT-NmHMj-L4R35d4xgMk2AWcTpgTeiZ1MwXthaqamB2Ss29KbFATVRvQ34p5EWOy7qUr9ygR_-EEd1uFhYb3w4",
+    "tagBase64Url": "9ANM62j_jAKl17Beol_rfA"
+  },
+  "reissue": {
+    "path": "/api/integrations/growth/v1/entitlement-deliveries/clm_01K0A0B1C7/reissue",
+    "action": "entitlement:claim-reissue",
+    "publisherRequestId": "out_01K0A0B1C9",
+    "idempotencyKeyInputUtf8": "thirdspace-growth\nclm_01K0A0B1C7\nent_01K0A0B1C3\n1\nout_01K0A0B1C9",
+    "idempotencyKeyInputBytes": 64,
+    "idempotencyKey": "entitlement-claim-reissue:v1:42b774c54042f2521528bda2eb4864c7a82cc35872f44da003a893cf76c9c8d7",
+    "request": {
+      "contractVersion": "growth-entitlement-delivery-v1",
+      "sourceSystem": "thirdspace-growth",
+      "entitlementId": "ent_01K0A0B1C3",
+      "expectedClaimVersion": 1,
+      "reason": "owner_requested"
+    },
+    "operationSemantic": {
+      "method": "POST",
+      "path": "/api/integrations/growth/v1/entitlement-deliveries/clm_01K0A0B1C7/reissue",
+      "body": {
+        "contractVersion": "growth-entitlement-delivery-v1",
+        "sourceSystem": "thirdspace-growth",
+        "entitlementId": "ent_01K0A0B1C3",
+        "expectedClaimVersion": 1,
+        "reason": "owner_requested"
+      }
+    },
+    "canonicalUtf8": "{\"body\":{\"contractVersion\":\"growth-entitlement-delivery-v1\",\"entitlementId\":\"ent_01K0A0B1C3\",\"expectedClaimVersion\":1,\"reason\":\"owner_requested\",\"sourceSystem\":\"thirdspace-growth\"},\"method\":\"POST\",\"path\":\"/api/integrations/growth/v1/entitlement-deliveries/clm_01K0A0B1C7/reissue\"}",
+    "bytes": 280,
+    "operationDigest": "sha256:315dc385af25d2890853099450571716deeb22c6fdd480f7b0c2c8c93dfada74",
+    "resultClaimToken": {
+      "claimVersion": 2,
+      "claimExpiresAt": "2026-07-27T12:30:00.000Z",
+      "derivationInputUtf8": "growth-entitlement-delivery-v1\nclm_01K0A0B1C7\n2\nent_01K0A0B1C3\nhmac-sha256:v1:39b52f685b405d3eb4ae97df920468afbfe10161775e21c0bde92af740ba1791\n2026-07-27T12:30:00.000Z",
+      "derivationInputBytes": 167,
+      "secretBase64Url": "oVXAhLtc-JDywSaWiq9sKiEiuqmAZe5GO365ZxknlWo",
+      "token": "ec1.clm_01K0A0B1C7.2.oVXAhLtc-JDywSaWiq9sKiEiuqmAZe5GO365ZxknlWo"
+    },
+    "success": {
+      "success": true,
+      "contractVersion": "growth-entitlement-delivery-v1",
+      "correlationId": "corr_01K0A0B1C9",
+      "idempotent": false,
+      "receipt": {
+        "grantId": "grant_01K0A0B1C6",
+        "providerClaimRef": "clm_01K0A0B1C7",
+        "grantStatus": "active",
+        "grantVersion": 1,
+        "deliveryMode": "activation_claim",
+        "claimVersion": 2,
+        "claimStatus": "ready",
+        "claimExpiresAt": "2026-07-27T12:30:00.000Z",
+        "claimedAt": null,
+        "licenseExpiresAt": null
+      },
+      "launch": {
+        "claimToken": "ec1.clm_01K0A0B1C7.2.oVXAhLtc-JDywSaWiq9sKiEiuqmAZe5GO365ZxknlWo",
+        "consumePath": "/api/license/entitlement-claims/consume",
+        "expiresAt": "2026-07-27T12:30:00.000Z"
+      }
+    }
+  },
+  "lookup": {
+    "path": "/api/integrations/growth/v1/entitlement-deliveries/by-entitlement/ent_01K0A0B1C3",
+    "action": "entitlement:lookup",
+    "publisherRequestId": "out_01K0A0B1D0",
+    "idempotencyKeyInputUtf8": "thirdspace-growth\nent_01K0A0B1C3\nout_01K0A0B1D0",
+    "idempotencyKeyInputBytes": 47,
+    "idempotencyKey": "entitlement-lookup:v1:75508a4dbf04bbdcabb55cd0632de6862107989ac69efcbe82ea1f113dddda79",
+    "operationSemantic": {
+      "method": "GET",
+      "path": "/api/integrations/growth/v1/entitlement-deliveries/by-entitlement/ent_01K0A0B1C3"
+    },
+    "canonicalUtf8": "{\"method\":\"GET\",\"path\":\"/api/integrations/growth/v1/entitlement-deliveries/by-entitlement/ent_01K0A0B1C3\"}",
+    "bytes": 106,
+    "operationDigest": "sha256:6c695865df975dcb74b9c0095150b83088a1819e64c4a40b50b3a867b1f9e55e",
+    "hmac": {
+      "profile": "am-hmac-v1",
+      "method": "GET",
+      "canonicalQuery": "",
+      "timestamp": "1785163500",
+      "nonce": "nonce-20260727-lookup-0001",
+      "rawBody": "",
+      "bodyDigestHex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "canonicalString": "am-hmac-v1\nGET\n/api/integrations/growth/v1/entitlement-deliveries/by-entitlement/ent_01K0A0B1C3\n\n1785163500\nnonce-20260727-lookup-0001\nentitlement-lookup:v1:75508a4dbf04bbdcabb55cd0632de6862107989ac69efcbe82ea1f113dddda79\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "canonicalBytes": 286,
+      "signature": "v1=kfbxV/87sT0lxKJzIAvvxPS4k+LDWszmATI70lCkYo0="
+    },
+    "success": {
+      "success": true,
+      "contractVersion": "growth-entitlement-delivery-v1",
+      "correlationId": "corr_01K0A0B1D1",
+      "idempotent": false,
+      "data": {
+        "grantId": "grant_01K0A0B1C6",
+        "providerClaimRef": "clm_01K0A0B1C7",
+        "grantStatus": "active",
+        "grantVersion": 1,
+        "deliveryMode": "activation_claim",
+        "claimVersion": 1,
+        "claimStatus": "ready",
+        "claimExpiresAt": "2026-07-27T12:15:00.000Z",
+        "claimedAt": null,
+        "licenseExpiresAt": null
+      }
+    },
+    "claimedData": {
+      "grantId": "grant_01K0A0B1C6",
+      "providerClaimRef": "clm_01K0A0B1C7",
+      "grantStatus": "active",
+      "grantVersion": 1,
+      "deliveryMode": "activation_claim",
+      "claimVersion": 1,
+      "claimStatus": "claimed",
+      "claimExpiresAt": "2026-07-27T12:15:00.000Z",
+      "claimedAt": "2026-07-27T12:06:00.000Z",
+      "licenseExpiresAt": "2027-07-27T12:06:00.000Z"
+    }
+  },
+  "consume": {
+    "path": "/api/license/entitlement-claims/consume",
+    "request": {
+      "contractVersion": "growth-entitlement-delivery-v1",
+      "claimToken": "ec1.clm_01K0A0B1C7.1.ZlKM4dWAwz_YbGNmcBDsl9ZSvsaVxjPIt8-Py24KbV0",
+      "projectKey": "creatoros",
+      "machineId": "device-opaque-id",
+      "requestId": "018f0f7e-7b3b-7d75-8c4a-0123456789ab",
+      "nonce": "nonce-creator-00000001"
+    },
+    "canonicalUtf8": "{\"claimToken\":\"ec1.clm_01K0A0B1C7.1.ZlKM4dWAwz_YbGNmcBDsl9ZSvsaVxjPIt8-Py24KbV0\",\"contractVersion\":\"growth-entitlement-delivery-v1\",\"machineId\":\"device-opaque-id\",\"nonce\":\"nonce-creator-00000001\",\"projectKey\":\"creatoros\",\"requestId\":\"018f0f7e-7b3b-7d75-8c4a-0123456789ab\"}",
+    "bytes": 272,
+    "wireRequestDigest": "sha256:b7356ccf17940dc4db45f81558fa1e77ea0d707590101772ff8248d325759fc9",
+    "machineIdDigestInputUtf8": "machine-v1\ncreatoros\ndevice-opaque-id",
+    "machineIdDigestInputBytes": 37,
+    "machineIdDigest": "hmac-sha256:v1:e0a331aa71242f5cb641beb0927ad7b706e63ddb05d072d006832091a515dee7",
+    "consumeSemantic": {
+      "contractVersion": "growth-entitlement-delivery-v1",
+      "providerClaimRef": "clm_01K0A0B1C7",
+      "claimVersion": 1,
+      "projectKey": "creatoros",
+      "machineIdDigest": "hmac-sha256:v1:e0a331aa71242f5cb641beb0927ad7b706e63ddb05d072d006832091a515dee7",
+      "requestId": "018f0f7e-7b3b-7d75-8c4a-0123456789ab"
+    },
+    "consumeCanonicalUtf8": "{\"claimVersion\":1,\"contractVersion\":\"growth-entitlement-delivery-v1\",\"machineIdDigest\":\"hmac-sha256:v1:e0a331aa71242f5cb641beb0927ad7b706e63ddb05d072d006832091a515dee7\",\"projectKey\":\"creatoros\",\"providerClaimRef\":\"clm_01K0A0B1C7\",\"requestId\":\"018f0f7e-7b3b-7d75-8c4a-0123456789ab\"}",
+    "consumeBytes": 281,
+    "consumeDigest": "sha256:82e71f73f3b97d7b7f06d77cd8c41fee7a0d6e58bce608135bc42b7587e4e085",
+    "signedSuccess": {
+      "body": {
+        "success": true,
+        "contractVersion": "growth-entitlement-delivery-v1",
+        "requestId": "018f0f7e-7b3b-7d75-8c4a-0123456789ab",
+        "nonce": "nonce-creator-00000001",
+        "idempotent": false,
+        "serverTime": "2026-07-27T12:06:00.000Z",
+        "data": {
+          "grantId": "grant_01K0A0B1C6",
+          "entitlementId": "ent_01K0A0B1C3",
+          "projectKey": "creatoros",
+          "grantVersion": 1,
+          "deliveryMode": "activation_claim",
+          "claimStatus": "claimed",
+          "claimedAt": "2026-07-27T12:06:00.000Z",
+          "activationCode": "TEST-ONLY-NOT-A-LICENSE",
+          "license": {
+            "mode": "TIME",
+            "valid": true,
+            "expiresAt": "2027-07-27T12:06:00.000Z",
+            "revoked": false,
+            "graceSeconds": 2592000
+          },
+          "channelConfig": null
+        }
+      },
+      "rawBody": "{\"success\":true,\"contractVersion\":\"growth-entitlement-delivery-v1\",\"requestId\":\"018f0f7e-7b3b-7d75-8c4a-0123456789ab\",\"nonce\":\"nonce-creator-00000001\",\"idempotent\":false,\"serverTime\":\"2026-07-27T12:06:00.000Z\",\"data\":{\"grantId\":\"grant_01K0A0B1C6\",\"entitlementId\":\"ent_01K0A0B1C3\",\"projectKey\":\"creatoros\",\"grantVersion\":1,\"deliveryMode\":\"activation_claim\",\"claimStatus\":\"claimed\",\"claimedAt\":\"2026-07-27T12:06:00.000Z\",\"activationCode\":\"TEST-ONLY-NOT-A-LICENSE\",\"license\":{\"mode\":\"TIME\",\"valid\":true,\"expiresAt\":\"2027-07-27T12:06:00.000Z\",\"revoked\":false,\"graceSeconds\":2592000},\"channelConfig\":null}}",
+      "rawBodyBytes": 601,
+      "host": "license.example.com",
+      "date": "Mon, 27 Jul 2026 12:06:00 GMT",
+      "digest": "SHA-256=bFpDs3REb6X40ca/HpoTNPHsp/uzm5HtDGsLAeAcmvc=",
+      "signatureString": "post /api/license/entitlement-claims/consume\nlicense.example.com\nMon, 27 Jul 2026 12:06:00 GMT\nSHA-256=bFpDs3REb6X40ca/HpoTNPHsp/uzm5HtDGsLAeAcmvc=",
+      "signatureStringBytes": 147,
+      "signature": "XjnY66UNflL7QzX0f616bog/tLkYWh2o4TgzAKy5yMwU5H8Ry8gJzStkWDmOvccBctchhrK5YUjnHy84RndJDw==",
+      "headers": {
+        "X-License-Signature": "XjnY66UNflL7QzX0f616bog/tLkYWh2o4TgzAKy5yMwU5H8Ry8gJzStkWDmOvccBctchhrK5YUjnHy84RndJDw==",
+        "X-License-Date": "Mon, 27 Jul 2026 12:06:00 GMT",
+        "X-License-Digest": "SHA-256=bFpDs3REb6X40ca/HpoTNPHsp/uzm5HtDGsLAeAcmvc="
+      }
+    },
+    "signedDomainError": {
+      "body": {
+        "success": false,
+        "contractVersion": "growth-entitlement-delivery-v1",
+        "requestId": "018f0f7e-7b3b-7d75-8c4a-0123456789ab",
+        "nonce": "nonce-creator-00000001",
+        "serverTime": "2026-07-27T12:05:30.000Z",
+        "error": {
+          "code": "CLAIM_INVALID",
+          "message": "领取凭据无效"
+        }
+      },
+      "rawBody": "{\"success\":false,\"contractVersion\":\"growth-entitlement-delivery-v1\",\"requestId\":\"018f0f7e-7b3b-7d75-8c4a-0123456789ab\",\"nonce\":\"nonce-creator-00000001\",\"serverTime\":\"2026-07-27T12:05:30.000Z\",\"error\":{\"code\":\"CLAIM_INVALID\",\"message\":\"领取凭据无效\"}}",
+      "rawBodyBytes": 256,
+      "host": "license.example.com",
+      "date": "Mon, 27 Jul 2026 12:05:30 GMT",
+      "digest": "SHA-256=v8Lz1kJL2QN215uFjwqiY5Js66YDJjIBzzSJIVI0Y/4=",
+      "signatureString": "post /api/license/entitlement-claims/consume\nlicense.example.com\nMon, 27 Jul 2026 12:05:30 GMT\nSHA-256=v8Lz1kJL2QN215uFjwqiY5Js66YDJjIBzzSJIVI0Y/4=",
+      "signatureStringBytes": 147,
+      "signature": "I9rS8zvV8bc/+rGYMMZ106+Vpj0twSGlo9hGZAuwJbuaXA6KJ30jB4ZkoL9m8Ue54kvA79qq/xFHSwdH0M+kCA==",
+      "headers": {
+        "X-License-Signature": "I9rS8zvV8bc/+rGYMMZ106+Vpj0twSGlo9hGZAuwJbuaXA6KJ30jB4ZkoL9m8Ue54kvA79qq/xFHSwdH0M+kCA==",
+        "X-License-Date": "Mon, 27 Jul 2026 12:05:30 GMT",
+        "X-License-Digest": "SHA-256=v8Lz1kJL2QN215uFjwqiY5Js66YDJjIBzzSJIVI0Y/4="
+      }
+    },
+    "signedPreParseErrors": [
+      {
+        "case": "malformed-json",
+        "body": {
+          "success": false,
+          "contractVersion": "growth-entitlement-delivery-v1",
+          "requestId": null,
+          "nonce": null,
+          "serverTime": "2026-07-27T12:05:00.000Z",
+          "error": {
+            "code": "INVALID_REQUEST",
+            "message": "请求格式非法"
+          }
+        },
+        "rawBody": "{\"success\":false,\"contractVersion\":\"growth-entitlement-delivery-v1\",\"requestId\":null,\"nonce\":null,\"serverTime\":\"2026-07-27T12:05:00.000Z\",\"error\":{\"code\":\"INVALID_REQUEST\",\"message\":\"请求格式非法\"}}",
+        "rawBodyBytes": 204,
+        "host": "license.example.com",
+        "date": "Mon, 27 Jul 2026 12:05:00 GMT",
+        "digest": "SHA-256=FtCCWWktcnACJ5etfIKiZ4o4dkiBVd/2i8T1un9Szu0=",
+        "signatureString": "post /api/license/entitlement-claims/consume\nlicense.example.com\nMon, 27 Jul 2026 12:05:00 GMT\nSHA-256=FtCCWWktcnACJ5etfIKiZ4o4dkiBVd/2i8T1un9Szu0=",
+        "signature": "+vXtg6w+K+SbanFzbiengHfgqJcZvZWhAw9fuJ5V7MEErC3lx2cr33jJXYbF4Cq8oA9nD2Rpddb/T7Eld4C1CQ=="
+      },
+      {
+        "case": "missing-request-id",
+        "body": {
+          "success": false,
+          "contractVersion": "growth-entitlement-delivery-v1",
+          "requestId": null,
+          "nonce": "nonce-creator-00000001",
+          "serverTime": "2026-07-27T12:05:01.000Z",
+          "error": {
+            "code": "INVALID_REQUEST",
+            "message": "请求格式非法"
+          }
+        },
+        "rawBody": "{\"success\":false,\"contractVersion\":\"growth-entitlement-delivery-v1\",\"requestId\":null,\"nonce\":\"nonce-creator-00000001\",\"serverTime\":\"2026-07-27T12:05:01.000Z\",\"error\":{\"code\":\"INVALID_REQUEST\",\"message\":\"请求格式非法\"}}",
+        "rawBodyBytes": 224,
+        "host": "license.example.com",
+        "date": "Mon, 27 Jul 2026 12:05:01 GMT",
+        "digest": "SHA-256=uhvGD5+Au/fk5cap2+h2zaAfMdfr0l7M3R0TbB2VrB0=",
+        "signatureString": "post /api/license/entitlement-claims/consume\nlicense.example.com\nMon, 27 Jul 2026 12:05:01 GMT\nSHA-256=uhvGD5+Au/fk5cap2+h2zaAfMdfr0l7M3R0TbB2VrB0=",
+        "signature": "BA/cg7gpWoyNhwzhSzGwXFVqwM43CwDwlBpztaDbX27EuolGKcbiErmHQOYhdpbxhkhrs2jc/GvjT7FpyeFTAg=="
+      },
+      {
+        "case": "missing-nonce",
+        "body": {
+          "success": false,
+          "contractVersion": "growth-entitlement-delivery-v1",
+          "requestId": "018f0f7e-7b3b-7d75-8c4a-0123456789ab",
+          "nonce": null,
+          "serverTime": "2026-07-27T12:05:02.000Z",
+          "error": {
+            "code": "INVALID_REQUEST",
+            "message": "请求格式非法"
+          }
+        },
+        "rawBody": "{\"success\":false,\"contractVersion\":\"growth-entitlement-delivery-v1\",\"requestId\":\"018f0f7e-7b3b-7d75-8c4a-0123456789ab\",\"nonce\":null,\"serverTime\":\"2026-07-27T12:05:02.000Z\",\"error\":{\"code\":\"INVALID_REQUEST\",\"message\":\"请求格式非法\"}}",
+        "rawBodyBytes": 238,
+        "host": "license.example.com",
+        "date": "Mon, 27 Jul 2026 12:05:02 GMT",
+        "digest": "SHA-256=KsCQablDawumD5CVuUCIpqiJaTvzISFX6toKXlLNK5M=",
+        "signatureString": "post /api/license/entitlement-claims/consume\nlicense.example.com\nMon, 27 Jul 2026 12:05:02 GMT\nSHA-256=KsCQablDawumD5CVuUCIpqiJaTvzISFX6toKXlLNK5M=",
+        "signature": "qZOyk+YD8gtlBowyuBWCKs2b6Owrs33SJOKrncq+5dQJERVZOFZcK8KsUrRxH7QP6tD2q1QxLiKxJv4p2/HPBQ=="
+      }
+    ]
+  },
+  "negative": [
+    {
+      "mutation": "provision 同 entitlementId 但 intendedRecipient.ref 改变",
+      "expectedHttp": 409,
+      "expectedCode": "ENTITLEMENT_BUSINESS_KEY_CONFLICT",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "reissue expectedClaimVersion=0 或不是 current",
+      "expectedHttp": 409,
+      "expectedCode": "CLAIM_VERSION_CONFLICT",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "consume token claimVersion 旧于 current",
+      "expectedHttp": 404,
+      "expectedCode": "CLAIM_INVALID",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "consume now 等于 claimExpiresAt",
+      "expectedHttp": 410,
+      "expectedCode": "CLAIM_EXPIRED",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "两个 requestId 并发消费同 token",
+      "expected": "只有一个 200；另一个 409 CLAIM_ALREADY_CONSUMED；grant/code/claim 各一份",
+      "sideEffects": 1
+    },
+    {
+      "mutation": "同 requestId 更换 machineId",
+      "expectedHttp": 409,
+      "expectedCode": "CLAIM_IDEMPOTENCY_MISMATCH",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "claim 已成功消费且自然 TTL 已过，同 requestId+同 digest 重试",
+      "expected": "200 idempotent=true；自然 TTL 不覆盖已完成 consume receipt",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "grant/code 已撤权后消费",
+      "expectedHttp": 410,
+      "expectedCode": "CLAIM_REVOKED",
+      "sideEffects": 0
+    },
+    {
+      "mutation": "current claimVersion=9007199254740991 时 reissue",
+      "expectedHttp": 409,
+      "expectedCode": "CLAIM_VERSION_EXHAUSTED",
+      "sideEffects": 0
+    }
+  ]
+}

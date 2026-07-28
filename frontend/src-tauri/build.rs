@@ -1,4 +1,55 @@
 fn main() {
+    // [T-575] 领取授权与应用内反馈均为包级能力。正式壳只读取构建期固化值，普通
+    // build 缺省为关闭；debug 仍可由本机 env 指向 mock，不能把任意启动 env 变成
+    // 生产后门。
+    for name in [
+        "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+        "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+        "GROWTH_ENTITLEMENT_API_ORIGIN",
+        "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+    ] {
+        println!("cargo:rerun-if-env-changed={name}");
+    }
+    let build_flag = |name: &str| {
+        if std::env::var(name)
+            .ok()
+            .map(|value| value.trim() == "1")
+            .unwrap_or(false)
+        {
+            "1"
+        } else {
+            "0"
+        }
+    };
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED={}",
+        build_flag("CREATOROS_ENTITLEMENT_CLAIM_ENABLED")
+    );
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED={}",
+        build_flag("CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED")
+    );
+    let growth_origin = std::env::var("GROWTH_ENTITLEMENT_API_ORIGIN")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if !growth_origin.is_empty() && growth_origin != "https://growth.aitongban.cloud" {
+        panic!("GROWTH_ENTITLEMENT_API_ORIGIN 只允许空值或 https://growth.aitongban.cloud");
+    }
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_ENTITLEMENT_API_ORIGIN={growth_origin}");
+    let feedback_official_origins = std::env::var("CREATOROS_FEEDBACK_OFFICIAL_ORIGINS")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if !feedback_official_origins.is_empty()
+        && feedback_official_origins != "https://growth.aitongban.cloud"
+    {
+        panic!("CREATOROS_FEEDBACK_OFFICIAL_ORIGINS 只允许空值或 https://growth.aitongban.cloud");
+    }
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_FEEDBACK_OFFICIAL_ORIGINS={feedback_official_origins}"
+    );
+
     // [T-535] verdict 签名 seed 由 option_env! 编进 Rust 壳。显式声明环境依赖，避免
     // Cargo 增量复用“上一次没配 key”的壳二进制，制造公钥已烘焙但壳签不出 token 的白屏包。
     println!("cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64");
@@ -56,7 +107,10 @@ fn main() {
 
     // Windows 安装期物化目录的快速入口校验。只读 server.js，不再每次启动读大 tar；
     // 这是入口硬校验，另有完整性清单抽样，不假装逐一验签全部运行时文件。
-    let entry = manifest_dir.join("sidecar").join("frontend").join("server.js");
+    let entry = manifest_dir
+        .join("sidecar")
+        .join("frontend")
+        .join("server.js");
     let entry_hash = sha256_file(&entry);
     println!("cargo:rustc-env=CREATOROS_SIDECAR_ENTRY_SHA256={entry_hash}");
     println!("cargo:rerun-if-changed=sidecar/frontend/server.js");
@@ -86,6 +140,9 @@ fn main() {
         tauri_build::AppManifest::new().commands(&[
             "license_activate",
             "license_check",
+            "entitlement_claim_start",
+            "entitlement_claim_poll",
+            "entitlement_claim_resume",
             "license_last_decision",
             // [T-396c] 版本检查(渠道化更新流:检查 + 跳渠道链接,替代 updater 插件 check)。
             "license_latest_version",

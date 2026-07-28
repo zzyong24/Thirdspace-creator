@@ -93,6 +93,7 @@ function dependenciesWithGrowthResponse(response: Response) {
     env: {
       CREATOROS_LICENSE_BASE_URL: "https://license.example.com",
       CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.example.com",
+      CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
     },
     nonce: () => "fixed-nonce",
     verifyAmResponse: async (amResponse: Response) =>
@@ -101,6 +102,23 @@ function dependenciesWithGrowthResponse(response: Response) {
 }
 
 describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
+  it("feature flag 默认关闭，关闭时不读取授权也不出网", async () => {
+    const fetchImpl = vi.fn();
+    const readVerdict = vi.fn();
+    await expect(
+      submitProductFeedback(
+        request,
+        "11111111-1111-4111-8111-111111111111",
+        { fetchImpl, readVerdict, env: {} },
+      ),
+    ).rejects.toMatchObject({
+      code: "FEEDBACK_SUBMISSION_DISABLED",
+      status: 503,
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(readVerdict).not.toHaveBeenCalled();
+  });
+
   it("逐字验证 AM body digest/Ed25519/nonce，篡改即拒绝", async () => {
     const { privateKey, publicKey } = generateKeyPairSync("ed25519");
     const signed = signedResponse(privateKey, publicKey, "nonce-1");
@@ -171,6 +189,7 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
       env: {
         CREATOROS_LICENSE_BASE_URL: "https://license.example.com",
         CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.example.com",
+        CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
       },
       nonce: () => "fixed-nonce",
       verifyAmResponse: async (response) => response.json() as never,
@@ -233,6 +252,7 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
       env: {
         CREATOROS_LICENSE_BASE_URL: "https://license.example.com",
         CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.example.com",
+        CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
       },
       nonce: () => "fixed-nonce",
     };

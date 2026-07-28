@@ -8,6 +8,72 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
+  it("T-575 使用唯一测试版号，不覆盖 0.2.0 公共更新清单", () => {
+    const frontendPackage = JSON.parse(
+      readFileSync(join(process.cwd(), "package.json"), "utf8"),
+    );
+    const tauriConfig = JSON.parse(
+      readFileSync(join(process.cwd(), "src-tauri", "tauri.conf.json"), "utf8"),
+    );
+    const cargoToml = readFileSync(
+      join(process.cwd(), "src-tauri", "Cargo.toml"),
+      "utf8",
+    );
+    expect(frontendPackage.version).toBe("0.2.1-beta.1");
+    expect(tauriConfig.version).toBe("0.2.1-beta.1");
+    expect(cargoToml).toContain('version = "0.2.1-beta.1"');
+    expect(workflow).not.toContain("sites/creatoros/updates/latest.json");
+  });
+
+  it("T-575 remote sidecar ACL 放行领取命令，并与 invoke handler 同名", () => {
+    const buildRs = readFileSync(
+      join(process.cwd(), "src-tauri", "build.rs"),
+      "utf8",
+    );
+    const capability = JSON.parse(
+      readFileSync(
+        join(
+          process.cwd(),
+          "src-tauri",
+          "capabilities",
+          "remote-sidecar.json",
+        ),
+        "utf8",
+      ),
+    );
+    for (const command of [
+      "entitlement_claim_start",
+      "entitlement_claim_poll",
+      "entitlement_claim_resume",
+    ]) {
+      expect(buildRs).toContain(`"${command}"`);
+      expect(capability.permissions).toContain(
+        `allow-${command.replaceAll("_", "-")}`,
+      );
+    }
+  });
+
+  it("T-575 测试发布显式开启领取/反馈，普通 build 仍由 Next 配置归零", () => {
+    const nextConfig = readFileSync(
+      join(process.cwd(), "next.config.ts"),
+      "utf8",
+    );
+    expect(workflow).toMatch(
+      /name:\s*构建 clean Runtime Image[\s\S]*?GROWTH_ENTITLEMENT_API_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_ENTITLEMENT_CLAIM_ENABLED:\s*"1"[\s\S]*?CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:\s*"1"/,
+    );
+    expect(workflow).toMatch(
+      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?GROWTH_ENTITLEMENT_API_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_ENTITLEMENT_CLAIM_ENABLED:\s*"1"[\s\S]*?CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:\s*"1"/,
+    );
+    expect(workflow).toContain("steps.runtime-inputs.outputs.config");
+    expect(nextConfig).toContain(
+      'return value?.trim() === "1" ? "1" : "0"',
+    );
+    expect(nextConfig).toContain(
+      "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:",
+    );
+    expect(nextConfig).toContain("desktopFeedbackSubmitEnabled");
+  });
+
   it("T-557 双端正式打包显式注入既定产品级 projectKey", () => {
     expect(workflow).toMatch(
       /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"test"[\s\S]*?run:\s*node scripts\/desktop\/release\.mjs/,

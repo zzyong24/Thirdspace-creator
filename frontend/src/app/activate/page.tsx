@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { ActivateForm } from "./activate-form";
+import { EntitlementClaimPanel } from "./entitlement-claim-panel";
 import { getActivationService } from "@/server/persistence-client";
 import { isDesktopRuntime } from "@/server/activation";
 import { isActivationAllowed } from "@/lib/activation-gate.server";
@@ -52,6 +53,8 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
     check.status === "expired"
       ? "你的授权已到期或失效,请输入有效激活码以继续使用。"
       : "首次使用请输入激活码。激活将绑定本机(一机一码),年卡到期前可离线使用。";
+  const entitlementClaimEnabled =
+    process.env.CREATOROS_ENTITLEMENT_CLAIM_ENABLED === "1";
 
   return (
     <main
@@ -63,7 +66,15 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
           <h1 className="text-xl font-semibold">{heading}</h1>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <ActivateForm />
+        <EntitlementClaimPanel enabled={entitlementClaimEnabled} />
+        <div className="grid gap-2">
+          {entitlementClaimEnabled ? (
+            <p className="text-center text-xs text-muted-foreground">
+              或使用已有激活码
+            </p>
+          ) : null}
+          <ActivateForm />
+        </div>
         {channelSupportUrl ? (
           <p className="text-center text-xs text-muted-foreground">
             激活码由 CreatorOS 授权方提供,遇问题请

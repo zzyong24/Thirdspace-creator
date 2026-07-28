@@ -1,0 +1,442 @@
+{
+  "contractVersion": "growth-entitlement-delivery-v1",
+  "wireOwner": "activation-manager",
+  "sourceSystem": "thirdspace-growth",
+  "deliveryModes": [
+    "activation_claim"
+  ],
+  "growthAuthProfile": "am-hmac-v1",
+  "creatorResponseAuthProfile": "license-ed25519-v1",
+  "claimTtlSeconds": {
+    "minimum": 300,
+    "maximum": 1800,
+    "fixture": 900
+  },
+  "endpoints": {
+    "capabilities": {
+      "method": "GET",
+      "path": "/api/integrations/growth/v1/capabilities",
+      "action": "capabilities:read",
+      "topLevelSuccessKeys": [
+        "success",
+        "contractVersion",
+        "correlationId",
+        "idempotent",
+        "data"
+      ],
+      "dataKeys": [
+        "providerKey",
+        "providerContractVersion",
+        "runtimeSnapshotContractVersion",
+        "signedRuntimePayloadVersion",
+        "capabilities",
+        "licenseModes",
+        "authProfile",
+        "maxTimestampSkewSeconds",
+        "channelConfigAuthorityMode",
+        "legacyChannelWritesEnabled",
+        "entitlementDeliveryContractVersion",
+        "entitlementDeliveryModes",
+        "claimConsumePath",
+        "claimTtlSeconds"
+      ],
+      "additiveDataKeys": [
+        "entitlementDeliveryContractVersion",
+        "entitlementDeliveryModes",
+        "claimConsumePath",
+        "claimTtlSeconds"
+      ],
+      "capability": "order_bound_entitlement_claim_v1"
+    },
+    "provision": {
+      "method": "POST",
+      "path": "/api/integrations/growth/v1/entitlement-deliveries/provision",
+      "action": "entitlement:provision",
+      "requestKeys": [
+        "contractVersion",
+        "sourceSystem",
+        "externalOrderId",
+        "entitlementId",
+        "projectKey",
+        "planRef",
+        "channelRef",
+        "intendedRecipient",
+        "deliveryMode",
+        "license"
+      ],
+      "successKeys": [
+        "success",
+        "contractVersion",
+        "correlationId",
+        "idempotent",
+        "receipt",
+        "launch"
+      ]
+    },
+    "reissue": {
+      "method": "POST",
+      "pathTemplate": "/api/integrations/growth/v1/entitlement-deliveries/{providerClaimRef}/reissue",
+      "action": "entitlement:claim-reissue",
+      "requestKeys": [
+        "contractVersion",
+        "sourceSystem",
+        "entitlementId",
+        "expectedClaimVersion",
+        "reason"
+      ],
+      "successShape": "provision"
+    },
+    "lookup": {
+      "method": "GET",
+      "pathTemplate": "/api/integrations/growth/v1/entitlement-deliveries/by-entitlement/{entitlementId}",
+      "action": "entitlement:lookup",
+      "requestBody": null,
+      "idempotencyKey": "entitlement-lookup:v1:<sha256(thirdspace-growth\\nentitlementId\\npublisherRequestId)>",
+      "operationSemantic": {
+        "method": "GET",
+        "path": "canonicalPath"
+      },
+      "successKeys": [
+        "success",
+        "contractVersion",
+        "correlationId",
+        "idempotent",
+        "data"
+      ]
+    },
+    "consume": {
+      "method": "POST",
+      "path": "/api/license/entitlement-claims/consume",
+      "auth": "claim-bearer-in-json-body",
+      "requestKeys": [
+        "contractVersion",
+        "claimToken",
+        "projectKey",
+        "machineId",
+        "requestId",
+        "nonce"
+      ],
+      "consumeSemanticKeys": [
+        "contractVersion",
+        "providerClaimRef",
+        "claimVersion",
+        "projectKey",
+        "machineIdDigest",
+        "requestId"
+      ],
+      "consumeDigest": "sha256(RFC8785-JCS(consumeSemantic)-UTF8)",
+      "successKeys": [
+        "success",
+        "contractVersion",
+        "requestId",
+        "nonce",
+        "idempotent",
+        "serverTime",
+        "data"
+      ]
+    },
+    "renew": {
+      "method": "POST",
+      "path": "/api/integrations/growth/v1/grants/renew",
+      "contractVersion": "growth-license-grant-v1",
+      "compatibility": "unchanged"
+    },
+    "revoke": {
+      "method": "POST",
+      "path": "/api/integrations/growth/v1/grants/revoke",
+      "contractVersion": "growth-license-grant-v1",
+      "compatibility": "unchanged"
+    }
+  },
+  "receiptKeys": [
+    "grantId",
+    "providerClaimRef",
+    "grantStatus",
+    "grantVersion",
+    "deliveryMode",
+    "claimVersion",
+    "claimStatus",
+    "claimExpiresAt",
+    "claimedAt",
+    "licenseExpiresAt"
+  ],
+  "schemas": {
+    "intendedRecipient": {
+      "closed": true,
+      "fields": {
+        "kind": {
+          "type": "string",
+          "const": "growth-user"
+        },
+        "ref": {
+          "type": "stable-id",
+          "pii": false
+        }
+      }
+    },
+    "licenseRequest": {
+      "closed": true,
+      "fields": {
+        "mode": {
+          "type": "string",
+          "const": "TIME"
+        },
+        "validDays": {
+          "type": "safe-integer",
+          "minimum": 1,
+          "maximum": 3650
+        }
+      }
+    },
+    "receipt": {
+      "closed": true,
+      "fields": {
+        "grantId": "stable-id",
+        "providerClaimRef": "^clm_[A-Za-z0-9_-]{10,60}$",
+        "grantStatus": "active|revoked|expired",
+        "grantVersion": "safe-integer>=1",
+        "deliveryMode": "activation_claim",
+        "claimVersion": "safe-integer 1..9007199254740991",
+        "claimStatus": "ready|claimed|expired|revoked",
+        "claimExpiresAt": "rfc3339-utc-milliseconds",
+        "claimedAt": "rfc3339-utc-milliseconds|null",
+        "licenseExpiresAt": "rfc3339-utc-milliseconds|null"
+      },
+      "secretFields": []
+    },
+    "launch": {
+      "closed": true,
+      "nullable": true,
+      "fields": {
+        "claimToken": "claim-token",
+        "consumePath": "/api/license/entitlement-claims/consume",
+        "expiresAt": "rfc3339-utc-milliseconds"
+      },
+      "growthPersistence": "forbidden",
+      "activationManagerPersistence": "plaintext forbidden; authenticated AES-256-GCM claim-launch-receipt-v1 ciphertext is the only exception"
+    },
+    "consumeLicense": {
+      "closed": true,
+      "fields": {
+        "mode": "TIME",
+        "valid": true,
+        "expiresAt": "rfc3339-utc-milliseconds",
+        "revoked": false,
+        "graceSeconds": "safe-integer>=0"
+      }
+    },
+    "consumeData": {
+      "closed": true,
+      "fields": {
+        "grantId": "stable-id",
+        "entitlementId": "stable-id",
+        "projectKey": "project-key",
+        "grantVersion": "safe-integer>=1",
+        "deliveryMode": "activation_claim",
+        "claimStatus": "claimed",
+        "claimedAt": "rfc3339-utc-milliseconds",
+        "activationCode": "existing-long-lived-code",
+        "license": "consumeLicense",
+        "channelConfig": "channel-runtime-v2|null"
+      }
+    },
+    "growthError": {
+      "closed": true,
+      "topLevelKeys": [
+        "success",
+        "error"
+      ],
+      "errorKeys": [
+        "code",
+        "message",
+        "correlationId"
+      ]
+    },
+    "consumeError": {
+      "closed": true,
+      "topLevelKeys": [
+        "success",
+        "contractVersion",
+        "requestId",
+        "nonce",
+        "serverTime",
+        "error"
+      ],
+      "errorKeys": [
+        "code",
+        "message"
+      ],
+      "fieldTypes": {
+        "requestId": "uuid|null",
+        "nonce": "license-nonce|null"
+      },
+      "preParseRule": "echo only individually valid fields from a parsed JSON object; malformed, missing or invalid values are null"
+    }
+  },
+  "launchKeys": [
+    "claimToken",
+    "consumePath",
+    "expiresAt"
+  ],
+  "claimToken": {
+    "format": "ec1.<providerClaimRef>.<decimalClaimVersion>.<43-char-no-padding-base64url>",
+    "providerClaimRefPattern": "^clm_[A-Za-z0-9_-]{10,60}$",
+    "segments": 4,
+    "claimVersion": "canonical decimal safe integer 1..9007199254740991 without leading zero",
+    "maximumLength": 180,
+    "storedPlaintext": false,
+    "transport": "response-body-only",
+    "growthPersistence": "forbidden"
+  },
+  "businessIdentity": [
+    "sourceSystem",
+    "entitlementId"
+  ],
+  "provisionBusinessLocator": [
+    "externalOrderId",
+    "entitlementId",
+    "projectKey",
+    "planRef"
+  ],
+  "provisionSemanticIdentity": [
+    "contractVersion",
+    "sourceSystem",
+    "externalOrderId",
+    "entitlementId",
+    "projectKey",
+    "planRef",
+    "channelRef",
+    "intendedRecipient",
+    "deliveryMode",
+    "license"
+  ],
+  "claimStatusPrecedence": [
+    "revoked",
+    "claimed",
+    "expired",
+    "ready"
+  ],
+  "idempotency": {
+    "transportReplay": "same key and operation digest returns first exact body",
+    "transportMismatch": "409 IDEMPOTENCY_PAYLOAD_MISMATCH",
+    "businessIdentity": "thirdspace-growth+entitlementId",
+    "businessReplay": "same provision semantic returns the same grant and current claim; no second grant or code",
+    "reissueCas": "expectedClaimVersion must equal current; one winner",
+    "consumeReplay": "after token authentication and revocation check, consumed same requestId and digest returns same business result with idempotent=true even after natural claim TTL"
+  },
+  "deliveryRecovery": {
+    "initialProvisionLaunch": "may be discarded by asynchronous Growth outbox worker; persistent success is receipt-only",
+    "ownerPreconditions": [
+      "authenticated Growth user",
+      "entitlement ownership",
+      "reauth"
+    ],
+    "operation": "reissue with reason owner_requested or delivery_recovery and expected current claimVersion",
+    "retry": "same owner command reuses publisherRequestId, Idempotency-Key, body and operationDigest and receives first exact launch",
+    "invariant": "reissue changes only claim version/key/expiry; no second grant or activation code"
+  },
+  "timeEntitlement": {
+    "startsAt": "first successful claim consume and device bind (ActivationCode.usedAt)",
+    "expiresAt": "usedAt + validDays * 24 hours",
+    "receiptFields": [
+      "claimedAt",
+      "licenseExpiresAt"
+    ],
+    "growthRule": "persist AM timestamps from lookup; never derive from payment time, planRef, 365 days or 12 calendar months",
+    "convergence": "new-key lookup after consume hint plus durable 2s,10s,30s,5min reconciliation until claimed, expired or revoked"
+  },
+  "threatModel": {
+    "consumeAuthentication": "short-lived one-time bearer claim token",
+    "recipientAuthority": "Growth owner-scoped launch delivery; AM stores intendedRecipientDigest but does not validate a Growth session at consume",
+    "stolenBearer": "a complete valid token grants consume capability until expiry, supersession, revocation or first successful consume",
+    "mitigations": [
+      "TLS",
+      "body-only",
+      "no-store/no-log",
+      "short TTL",
+      "one-time CAS",
+      "reissue supersession",
+      "grant revocation"
+    ]
+  },
+  "persistence": {
+    "claimEntity": {
+      "name": "EntitlementDeliveryClaim",
+      "unique": [
+        "providerClaimRef",
+        "grantDbId",
+        "consumedRequestId when non-null"
+      ],
+      "fields": [
+        "providerClaimRef",
+        "grantDbId",
+        "deliveryMode",
+        "claimVersion",
+        "intendedRecipientDigest",
+        "tokenKeyId",
+        "claimExpiresAt",
+        "consumedAt",
+        "consumedRequestId",
+        "consumeDigest",
+        "consumedMachineDigest",
+        "createdAt",
+        "updatedAt"
+      ],
+      "consumeNullableGroup": "consumedAt,consumedRequestId,consumeDigest,consumedMachineDigest are all-null or all-non-null"
+    },
+    "launchReceiptEnvelope": {
+      "entity": "EntitlementClaimLaunchReceipt",
+      "schemaVersion": "claim-launch-receipt-v1",
+      "algorithm": "AES-256-GCM",
+      "fields": [
+        "integrationRequestId",
+        "providerClaimRef",
+        "claimVersion",
+        "receiptKeyId",
+        "nonceBase64Url",
+        "ciphertextBase64Url",
+        "tagBase64Url"
+      ],
+      "unique": [
+        "integrationRequestId",
+        "receiptKeyId+nonceBase64Url"
+      ],
+      "integrationRequestResponseJson": "exact non-secret success body with launch=null",
+      "aad": "sourceSystem\\nidempotencyKey\\noperationDigest\\nproviderClaimRef\\nclaimVersion"
+    },
+    "cas": {
+      "reissue": "id+claimVersion+consumedAt IS NULL",
+      "consume": "id+claimVersion+consumedAt IS NULL"
+    }
+  },
+  "secretHandling": {
+    "growthPersistentProjection": "receipt-only",
+    "launchTransport": "Growth memory-only-no-store-no-log",
+    "claimTokenStoredPlaintext": false,
+    "launchPersistence": "Growth forbidden; AM may persist only authenticated AES-256-GCM claim-launch-receipt-v1 ciphertext for exact replay",
+    "launchReceiptAtRest": "aes-256-gcm claim-launch-receipt-v1 envelope with authenticated AAD and mandatory key rewrap before rotation removal",
+    "activationCodeGrowthVisible": "false for growth-entitlement-delivery-v1; legacy growth-license-grant-v1 grant:issue remains a separately scoped compatibility exception",
+    "productionKeyIsolation": "an enabled key must not have both entitlement:provision and grant:issue",
+    "activationCodeCreatorVisible": "signed consume success only",
+    "auditSecrets": false
+  },
+  "primaryErrors": {
+    "ENTITLEMENT_BUSINESS_KEY_CONFLICT": 409,
+    "CLAIM_VERSION_CONFLICT": 409,
+    "CLAIM_ALREADY_CONSUMED": 409,
+    "CLAIM_IDEMPOTENCY_MISMATCH": 409,
+    "CLAIM_INVALID": 404,
+    "CLAIM_REVOKED": 410,
+    "CLAIM_EXPIRED": 410,
+    "CLAIM_VERSION_EXHAUSTED": 409,
+    "IDEMPOTENCY_PAYLOAD_MISMATCH": 409,
+    "CLAIM_RECEIPT_UNAVAILABLE": 503,
+    "CONCURRENT_UPDATE_RETRYABLE": 503
+  },
+  "channelConfig": {
+    "schemaVersion": "channel-runtime-v2",
+    "singleRuntimeField": "channelConfig",
+    "compatibility": "unchanged"
+  },
+  "sharedFixture": "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json"
+}

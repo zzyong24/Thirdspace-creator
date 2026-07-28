@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-entitlement-claim-resume"
+description = "Enables the entitlement_claim_resume command without any pre-configured scope."
+commands.allow = ["entitlement_claim_resume"]
+
+[[permission]]
+identifier = "deny-entitlement-claim-resume"
+description = "Denies the entitlement_claim_resume command without any pre-configured scope."
+commands.deny = ["entitlement_claim_resume"]

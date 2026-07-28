@@ -64,6 +64,8 @@ export function IssueFeedbackDialog({
   collapsed,
   correlationId,
   bugFeedbackUrl: cachedBugFeedbackUrl,
+  submissionEnabled = process.env
+    .NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED === "1",
 }: {
   readonly pathname: string;
   readonly collapsed: boolean;
@@ -73,6 +75,8 @@ export function IssueFeedbackDialog({
    * 独立组件/旧嵌入方的兼容读取；正式侧边栏不会在每次开弹窗时重复读渠道运行时。
    */
   readonly bugFeedbackUrl?: string | null;
+  /** 包能力默认关闭；服务端还有独立 fail-closed 门，二者都开启才会真实提交。 */
+  readonly submissionEnabled?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const [summary, setSummary] = React.useState("");
@@ -335,7 +339,7 @@ export function IssueFeedbackDialog({
         <DialogHeader>
           <DialogTitle>问题反馈</DialogTitle>
           <DialogDescription>
-            先复制反馈内容，再打开日志文件夹并将整个文件夹压缩为 zip；最后打开反馈渠道，在飞书多维表格中粘贴内容并手动上传压缩包。CreatorOS 不会自动发送或上传日志。
+            请先预览并确认文字。发送只包含下方文字与基本版本信息，不会自动上传日志、附件、截图、激活码或其他用户内容；服务不可用时仍可复制文字并打开官方反馈页。
           </DialogDescription>
         </DialogHeader>
 
@@ -487,11 +491,20 @@ export function IssueFeedbackDialog({
           <Button
             type="button"
             variant="outline"
-            disabled
-            title="当前版本请使用“打开反馈渠道”手动提交"
+            disabled={
+              !submissionEnabled || submitState.state === "submitting"
+            }
+            title={
+              submissionEnabled
+                ? undefined
+                : "当前安装包尚未开放应用内发送，请使用官方反馈页"
+            }
             onClick={() => void submitFeedback()}
           >
-            发送问题反馈
+            {submitState.state === "submitting" ? (
+              <Loader2 className="animate-spin" />
+            ) : null}
+            {submitState.state === "submitting" ? "发送中…" : "发送问题反馈"}
           </Button>
         </DialogFooter>
       </DialogContent>
