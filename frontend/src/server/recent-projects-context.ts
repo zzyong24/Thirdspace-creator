@@ -37,6 +37,28 @@ export interface RecentProjectsContextPorts {
   >;
 }
 
+export interface PositioningWorksContextPorts {
+  listProjects(ctx: RequestContext): Promise<RecentProjectSourceRow[]>;
+  listOutputRefsByProjects(
+    ctx: RequestContext,
+    projectIds: ReadonlyArray<string>,
+  ): Promise<Array<{ projectId: string; outputId: string }>>;
+  /**
+   * 必须由 Publishing service 以 visibility='visible' 实现；本投影不在组合层重写
+   * hiddenAt/platformStatus 规则。
+   */
+  listVisiblePublicationsByOutputIds(
+    ctx: RequestContext,
+    outputIds: ReadonlyArray<string>,
+  ): Promise<
+    Array<{
+      contentOutputId: string;
+      status: string;
+      publishedAt?: string | null;
+    }>
+  >;
+}
+
 /**
  * Copilot 的近期作品投影。Project 提供 source/lifecycle，Publishing 的账号窄读端口
  * 提供 canonical publishedAt；两类事实并存，互不推断。
@@ -104,4 +126,75 @@ export async function listRecentProjectsWithPublicationFacts(
     };
   });
   return { rows, total: sorted.length };
+}
+
+/**
+ * 定位生成专用的真实作品投影。只接 Publishing canonical 可见窄读返回的已发布事实，
+ * 再按 publication.publishedAt 从新到旧排序后分页。没有 publishedAt 的旧行不从
+ * Project lifecycle/updatedAt 猜测；发布事实不可读时诚实返回空。
+ */
+export async function listPositioningWorksWithPublicationFacts(
+  ctx: RequestContext,
+  opts: { limit: number; offset: number },
+  ports: PositioningWorksContextPorts,
+): Promise<{ rows: RecentProjectContextRow[]; total: number }> {
+  const projects = await ports.listProjects(ctx);
+  if (projects.length === 0) return { rows: [], total: 0 };
+
+  let outputRefs: Array<{ projectId: string; outputId: string }>;
+  let publications: Array<{
+    contentOutputId: string;
+    status: string;
+    publishedAt?: string | null;
+  }>;
+  try {
+    outputRefs = await ports.listOutputRefsByProjects(
+      ctx,
+      projects.map((project) => project.id),
+    );
+    publications = await ports.listVisiblePublicationsByOutputIds(
+      ctx,
+      outputRefs.map((ref) => ref.outputId),
+    );
+  } catch {
+    return { rows: [], total: 0 };
+  }
+
+  const projectIdByOutputId = new Map(
+    outputRefs.map((ref) => [ref.outputId, ref.projectId] as const),
+  );
+  const latestPublishedAtByProjectId = new Map<string, string>();
+  for (const publication of publications) {
+    if (publication.status !== "published" || !publication.publishedAt) {
+      continue;
+    }
+    const projectId = projectIdByOutputId.get(publication.contentOutputId);
+    if (!projectId) continue;
+    const current = latestPublishedAtByProjectId.get(projectId);
+    if (!current || publication.publishedAt.localeCompare(current) > 0) {
+      latestPublishedAtByProjectId.set(projectId, publication.publishedAt);
+    }
+  }
+
+  const sorted = projects
+    .flatMap((project): RecentProjectContextRow[] => {
+      const publishedAt = latestPublishedAtByProjectId.get(project.id);
+      if (!publishedAt) return [];
+      return [
+        {
+          id: project.id,
+          title: project.title,
+          stage: project.currentStage,
+          status: project.status,
+          source: project.source,
+          publishedAt,
+        },
+      ];
+    })
+    .sort((a, b) => b.publishedAt!.localeCompare(a.publishedAt!));
+
+  return {
+    rows: sorted.slice(opts.offset, opts.offset + opts.limit),
+    total: sorted.length,
+  };
 }

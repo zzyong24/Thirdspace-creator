@@ -93,10 +93,12 @@ export interface PublishingRepository {
   }): Promise<PublicationRow[]>;
   /**
    * 当前联合归属下，批量读取指定 output 的全部发布事实。该窄读用于组合层，
-   * 不应用 UI 可见性过滤，因为隐藏/下架作品仍可能有真实 publishedAt。
+   * 默认不应用可见性过滤，因为隐藏/下架作品仍可能有真实 publishedAt；调用方显式传
+   * visibility='visible' 时复用列表同一 canonical 可见性条件。
    */
   listPublicationsByOutputs(
     outputIds: ReadonlyArray<string>,
+    opts?: { visibility?: "all" | "visible" },
   ): Promise<PublicationRow[]>;
   // User-scoped publication ids for a set of ContentOutput ids (Analytics project
   // read resolves project→outputs→publications without an Analytics cross-module
@@ -161,6 +163,14 @@ export function createPublishingRepository(
   deps: RepoDeps,
 ): PublishingRepository {
   const userId = deps.userId;
+  const canonicalVisibility = () =>
+    and(
+      isNull(publications.hiddenAt),
+      or(
+        isNull(publications.platformStatus),
+        eq(publications.platformStatus, "已通过"),
+      ),
+    );
 
   // [T-332 S2] 按号隔离条件门(strict,SPEC §4.1)。语义 = eq(account_id, 当前号):
   //   切号 = 切工作区,另一个号的行在本 ctx 下一律不可见 —— 旧 lenient
@@ -288,13 +298,7 @@ export function createPublishingRepository(
       //   includeHidden=true → 不加可见性过滤(私密/未通过都显)。
       const visibility = page.includeHidden
         ? sql`1 = 1`
-        : and(
-            isNull(publications.hiddenAt),
-            or(
-              isNull(publications.platformStatus),
-              eq(publications.platformStatus, "已通过"),
-            ),
-          );
+        : canonicalVisibility();
       return db
         .select()
         .from(publications)
@@ -316,13 +320,7 @@ export function createPublishingRepository(
       //   includeHidden=true 时全显)。时间倒序已通过 COALESCE(published_at, created_at) 实现。
       const visibility = page.includeHidden
         ? sql`1 = 1`
-        : and(
-            isNull(publications.hiddenAt),
-            or(
-              isNull(publications.platformStatus),
-              eq(publications.platformStatus, "已通过"),
-            ),
-          );
+        : canonicalVisibility();
       return db
         .select()
         .from(publications)
@@ -340,7 +338,7 @@ export function createPublishingRepository(
         .offset(page.offset);
     },
 
-    async listPublicationsByOutputs(outputIds) {
+    async listPublicationsByOutputs(outputIds, opts) {
       if (outputIds.length === 0) return [];
       return db
         .select()
@@ -350,6 +348,9 @@ export function createPublishingRepository(
             eq(publications.userId, userId),
             accountGate,
             inArray(publications.contentOutputId, [...outputIds]),
+            opts?.visibility === "visible"
+              ? canonicalVisibility()
+              : undefined,
           ),
         );
     },

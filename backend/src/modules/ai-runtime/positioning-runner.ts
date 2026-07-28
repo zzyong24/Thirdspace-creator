@@ -3,9 +3,10 @@ import type { AiService } from "@creatoros/backend/modules/ai";
 import type { ModelSpec, PositioningSuggestionOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
-  formatWorksBrief,
+  loadPositioningWorksBrief,
   type ContextDeps,
   type CreativeContext,
+  type PositioningWorksReader,
 } from "./creative-context";
 import { parseJsonLoose } from "./llm/parse";
 
@@ -62,24 +63,10 @@ export interface PositioningSuggestion {
   };
 }
 
-// [T-081②] 真实作品读端口(选填):后台 task 路径据此把全部作品标题压缩列表注入模板 {{works}}
-// facet,与对话工具路径(chat-runner 经 contextReaders.listProjects)同一份 formatWorksBrief 口径。
-// user-scoped(组合根绑 projectsRepo 按 ctx.userId 收窄);未装配/读失败 → 该 facet 空(诚实降级)。
-export interface WorksReader {
-  listProjects(
-    ctx: RequestContext,
-    opts: { limit: number; offset: number },
-  ): Promise<{
-    rows: Array<{
-      title: string;
-      source?: string;
-      stage: string;
-      status: string;
-      publishedAt?: string | null;
-    }>;
-    total: number;
-  }>;
-}
+// [T-081②/T-578] 真实作品读端口(选填):后台 task 路径据此把当前账号可见已发布作品
+// 压缩列表注入模板 {{works}} facet，与对话工具路径共用同一 reader + formatWorksBrief。
+// 组合根按 ctx.userId/accountId 收窄；未装配/读失败 → 该 facet 空(诚实降级)。
+export type WorksReader = PositioningWorksReader;
 
 export interface PositioningDeps extends ContextDeps {
   ai: AiService;
@@ -88,8 +75,6 @@ export interface PositioningDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
-  /** [T-081②] 真实作品读端口(选填)—— 注入定位模板的 {{works}} facet。 */
-  works?: WorksReader;
 }
 
 export interface PositioningTask {
@@ -269,21 +254,13 @@ export async function runPositioningGenerate(
       { projectId: null, topic: "" },
       deps,
     );
-    // [T-081②] 真实作品画像 —— 与对话工具路径同一份 formatWorksBrief 口径(截 40 字/上限
-    // 100 条/发布状态标记),注入模板 {{works}} facet。best-effort:读端口未装配/读失败 →
-    // 空串(facet 整段省略),绝不阻断定位生成。
-    let worksBrief = "";
-    if (deps.works) {
-      try {
-        const { rows, total } = await deps.works.listProjects(ctx, {
-          limit: 100,
-          offset: 0,
-        });
-        worksBrief = formatWorksBrief(rows, total);
-      } catch {
-        worksBrief = "";
-      }
-    }
+    // [T-081②/T-578] 真实作品画像 —— 与对话工具路径同一 reader + brief 装配器
+    // (当前账号可见、publishedAt 新→旧、截 40 字/上限 100 条),注入模板 {{works}} facet。
+    // best-effort:读端口未装配/读失败 → 空串(facet 整段省略),绝不阻断定位生成。
+    const worksBrief = await loadPositioningWorksBrief(
+      ctx,
+      deps.positioningWorks,
+    );
     // Vercel AI SDK 路径:按 "positioning.generate" capability 解析 model + 跑 ai-worker 结构化节点
     // (外置 positioning.generate 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,
     // 落空→文本兜底,让用户默认的 MiniMax 也稳定吐可解析定位提案。顶层是对象,取 object 再 normalize。

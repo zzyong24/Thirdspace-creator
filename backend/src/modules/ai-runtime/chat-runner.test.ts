@@ -24,6 +24,13 @@ import {
 } from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
 
+const { positioningStructuredCalls } = vi.hoisted(() => ({
+  positioningStructuredCalls: [] as Array<{
+    template?: { id?: string };
+    facets?: Record<string, string | undefined>;
+  }>,
+}));
+
 // [T-084a] 保留 ai-worker 全部真实导出(registerAllTemplates/getTemplate/modelFor 等装配用),
 // 仅把 runResearchNode 换成不打网络的探针:grounding 由入参 searchResults 是否非空驱动(与真
 // 节点同逻辑),让 gatherMaterials 绑定的「前置检索→注入→透传 grounding/sourceUrl」可零成本单测。
@@ -70,6 +77,26 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
         };
       },
     ),
+    runStructuredNode: vi.fn(async (input: {
+      template?: { id?: string };
+      facets?: Record<string, string | undefined>;
+    }) => {
+      if (input.template?.id === "positioning.generate") {
+        positioningStructuredCalls.push(input);
+        return {
+          object: {
+            persona: "真实作品定位",
+            field: "AI",
+            audience: "创作者",
+            differentiation: "按真实作品归纳",
+            capabilities: ["复盘"],
+            oneLiner: "只基于当前账号可见作品",
+            keywords: ["真实", "可见", "最新"],
+          },
+        };
+      }
+      return actual.runStructuredNode(input as never);
+    }),
   };
 });
 
@@ -80,7 +107,11 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
 // buildChatAssembly 内部经 ai-worker.modelFor(spec) 造一个 LanguageModel 对象(不发请求,
 // 只是 provider 句柄),故装配可单测;真正的 streamText(流式)需 dev server + key,本环境不跑。
 
-const ctx = { userId: "u-1", correlationId: "c-1" } as never;
+const ctx = {
+  userId: "u-1",
+  accountId: "acct-current",
+  correlationId: "c-1",
+} as never;
 
 describe("[T-523] Copilot 媒体意图确定性路由", () => {
   it("只用最新一轮原文授权转写；历史轮次的转写要求不能污染普通分享", () => {
@@ -895,6 +926,66 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("review.analyze");
     expect(names.length).toBe(24);
+  });
+
+  it("[T-578] 对话 positioning.generate 只读专用可见作品端口，并保留 publishedAt 新→旧顺序", async () => {
+    const { deps } = makeDeps();
+    deps.contextReaders!.listProjects = async () => ({
+      total: 1,
+      rows: [
+        {
+          id: "project-hidden",
+          title: "已隐藏旧作品",
+          stage: "review",
+          status: "completed",
+          publishedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ],
+    });
+    const listProjects = vi.fn(async (receivedCtx: RequestContext) => {
+      expect(receivedCtx.accountId).toBe("acct-current");
+      return {
+        total: 2,
+        rows: [
+          {
+            id: "project-new",
+            title: "最新可见作品",
+            stage: "review",
+            status: "completed",
+            publishedAt: "2026-07-20T00:00:00.000Z",
+          },
+          {
+            id: "project-old",
+            title: "较早可见作品",
+            stage: "review",
+            status: "completed",
+            publishedAt: "2026-07-01T00:00:00.000Z",
+          },
+        ],
+      };
+    });
+    (
+      deps as AssembleChatDeps & {
+        positioningWorks: { listProjects: typeof listProjects };
+      }
+    ).positioningWorks = { listProjects };
+    positioningStructuredCalls.length = 0;
+
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "positioning" },
+      deps,
+    );
+    await runToolExecute(assembly.tools["positioning.generate"]!, {});
+
+    const works = positioningStructuredCalls.at(-1)?.facets?.works ?? "";
+    expect(listProjects).toHaveBeenCalledWith(ctx, { limit: 100, offset: 0 });
+    expect(works).toContain("最新可见作品");
+    expect(works).toContain("较早可见作品");
+    expect(works).not.toContain("已隐藏旧作品");
+    expect(works.indexOf("最新可见作品")).toBeLessThan(
+      works.indexOf("较早可见作品"),
+    );
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {

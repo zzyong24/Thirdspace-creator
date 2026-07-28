@@ -100,6 +100,80 @@ describe("service — 未选号 ctx → AccountRequiredError (T-332 S2)", () => 
   });
 });
 
+describe("[T-578] 定位作品批量窄读复用 canonical 可见性口径", () => {
+  it("visible 模式过滤 hiddenAt/仅自己可见，并继续按 accountId 隔离", async () => {
+    const visible = await service.createImportedPublication(ctx, "output-visible", {
+      platform: "douyin",
+      externalId: "aweme-visible",
+      publishedAt: "2026-07-20T00:00:00.000Z",
+    });
+    const hidden = await service.createImportedPublication(ctx, "output-hidden", {
+      platform: "douyin",
+      externalId: "aweme-hidden",
+      publishedAt: "2026-07-01T00:00:00.000Z",
+    });
+    const privateWork = await service.createImportedPublication(
+      ctx,
+      "output-private",
+      {
+        platform: "douyin",
+        externalId: "aweme-private",
+        publishedAt: "2026-06-01T00:00:00.000Z",
+      },
+    );
+    const legacyUnknown = await service.createImportedPublication(
+      ctx,
+      "output-legacy-unknown",
+      {
+        platform: "douyin",
+        externalId: "aweme-legacy-unknown",
+        publishedAt: "2026-05-01T00:00:00.000Z",
+      },
+    );
+    await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: hidden.externalId!,
+      hidden: true,
+    });
+    await service.setPlatformStatusByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: privateWork.externalId!,
+      platformStatus: "仅自己可见",
+    });
+
+    const otherAccountCtx: RequestContext = {
+      ...ctx,
+      accountId: "acct-2",
+      requestId: "r-account-2",
+    };
+    const otherAccount = await service.createImportedPublication(
+      otherAccountCtx,
+      "output-other-account",
+      {
+        platform: "douyin",
+        externalId: "aweme-other-account",
+        publishedAt: "2026-07-28T00:00:00.000Z",
+      },
+    );
+
+    const rows = await service.listPublicationsByOutputIds(
+      ctx,
+      [
+        visible.contentOutputId,
+        hidden.contentOutputId,
+        privateWork.contentOutputId,
+        legacyUnknown.contentOutputId,
+        otherAccount.contentOutputId,
+      ],
+      { visibility: "visible" },
+    );
+
+    expect(rows.map((row) => row.externalId).sort()).toEqual(
+      ["aweme-legacy-unknown", "aweme-visible"].sort(),
+    );
+  });
+});
+
 // [DATA-H03] create 前校验 outputId 归属:复用已注入的 resolveOutputOwner 端口(越权/不存在
 // → null → OwnershipError,不建悬空/跨属主 publication)。端口未注入(单测退化态)→ 放行。
 describe("createPublication — [DATA-H03] output 归属校验", () => {

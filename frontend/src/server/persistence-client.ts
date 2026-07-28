@@ -18,7 +18,10 @@ import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
-import { listRecentProjectsWithPublicationFacts } from "./recent-projects-context";
+import {
+  listPositioningWorksWithPublicationFacts,
+  listRecentProjectsWithPublicationFacts,
+} from "./recent-projects-context";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
@@ -3143,9 +3146,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const positioning = createPositioningTransport(() => positioningService);
 
-  // [T-081②/T-521] 最近作品分页读：Project 提供 source/lifecycle，Publishing 窄读
-  // port 提供 canonical publishedAt。context.projects 与 positioning.generate 共用
-  // 同一投影；review 绝不作为发布状态判据。
+  // [T-081②/T-521] 通用最近项目分页读：Project 提供 source/lifecycle，Publishing 窄读
+  // port 提供 canonical publishedAt；review 绝不作为发布状态判据。
   const listRecentProjects = async (
     c: RequestContext,
     opts: { limit: number; offset: number },
@@ -3157,6 +3159,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       listPublicationsByOutputIds: (ctx, outputIds) =>
         publishingService.listPublicationsByOutputIds(ctx, outputIds),
     });
+  // [T-578] 定位生成专用作品投影：Publishing service 负责 canonical 可见性
+  // (hiddenAt/platformStatus)，投影只保留有真实 publishedAt 的 published 行并按其新→旧。
+  // 后台 runner 与对话 runner 绑定下面同一个 reader 对象，避免再次分叉。
+  const listPositioningWorks = async (
+    c: RequestContext,
+    opts: { limit: number; offset: number },
+  ) =>
+    listPositioningWorksWithPublicationFacts(c, opts, {
+      listProjects: (ctx) => projectsRepo.list(ctx),
+      listOutputRefsByProjects: (ctx, projectIds) =>
+        projectsService.listOutputRefsByProjects(ctx, projectIds),
+      listVisiblePublicationsByOutputIds: (ctx, outputIds) =>
+        publishingService.listPublicationsByOutputIds(ctx, outputIds, {
+          visibility: "visible",
+        }),
+    });
+  const positioningWorksReader = { listProjects: listPositioningWorks };
 
   // 复盘对象 reader 工厂 (T-039a) —— 读「本次复盘的这一条作品」的真材料(标题/文案/数据/评论),
   // 供 review.analyze 路径(后端 task runner + ChatBox 对话复盘)注入 review.insights prompt,让复盘
@@ -4393,10 +4412,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               accounts: accountsReader,
-              // [T-081②] 真实作品读端口 —— 与 ChatBox 的 context.projects 同一份读法
-              // (listRecentProjects),注入定位模板 {{works}} facet,让定位中心一键生成
-              // 与对话定位生成两条路径都扎根真实作品画像。
-              works: { listProjects: listRecentProjects },
+              // [T-578] 与 ChatBox positioning.generate 共用同一定位作品 reader：
+              // 当前账号 canonical 可见 + 真实 publishedAt 新→旧。
+              positioningWorks: positioningWorksReader,
               // Vercel AI SDK 路径:定位生成跑在 ai-worker 结构化节点(外置 positioning.generate
               // 模板 + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
               resolveModelSpec,
@@ -9768,6 +9786,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // [T-245] enabled 信源计数 —— 只用于 trend 出题降级注记「已登记 N 个」的诚实措辞。
       countEnabledTrendSources: async (c: RequestContext) =>
         (await trendSourcesService.listEnabledSources(c)).length,
+      // [T-578] 由 route 的 ...runtime.context 自动透传给 chat-runner，和后台 runner
+      // 绑定同一个 reader；无需在控制层手枚举新增字段。
+      positioningWorks: positioningWorksReader,
     },
     // 只读 context 工具的真数据读端口 —— 全部 user-scoped(经各自 service/repo 用 ctx.userId 收窄),
     // 只读、不写实体。找不到现成的「带 query 搜」读方法时,在此对现成 list 端口做内存过滤(优先复用
@@ -9775,8 +9796,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
     contextReaders: {
       // context.projects —— 复用 projectsRepo.list(user-scoped: WHERE user_id = ctx.userId)。
-      // [T-058②] 分页 + 总数;[T-081②] 排序/切片口径收口到 listRecentProjects(与
-      // positioning.generate task 的 works 读端口同一份读法,不造影子)。
+      // [T-058②] 分页 + 总数仍走通用 listRecentProjects；定位生成另走上方
+      // positioningWorks，避免隐藏作品混入画像又不误伤项目检索。
       listProjects: listRecentProjects,
       // [T-077b] brief.fill 的现状读 —— 复用 projectsRepo.get(user-scoped)取当前项目的
       // brief_detail jsonb 原样返回(契约 projectBriefDetail 形状)。读不到(项目不存在/越权)

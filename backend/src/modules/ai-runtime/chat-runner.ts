@@ -21,8 +21,8 @@ import type {
 } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
-  formatWorksBrief,
   formatProjectStageBlock,
+  loadPositioningWorksBrief,
   type ContextDeps,
 } from "./creative-context";
 import {
@@ -1828,21 +1828,13 @@ export async function buildChatAssembly(
     },
     generatePositioning: async ({ extraBrief }) => {
       // 复用 positioning-runner 的 prompt + parseSuggestion —— 产定位提案候选(非实体)。
-      // [T-081②] 真实作品画像:读全部作品标题(压缩列表,截 40 字/上限 100 条/带发布状态)注入
-      // prompt,让「结合我的内容生成定位」不依赖模型翻页;读端口未装配/读失败 → 空(诚实降级,
-      // 不阻断生成)。[T-081①] extraBrief:对话洞察经新 facet 段进 prompt(优先级高于既有档案)。
-      let worksBrief = "";
-      if (deps.contextReaders) {
-        try {
-          const { rows, total } = await deps.contextReaders.listProjects(ctx, {
-            limit: 100,
-            offset: 0,
-          });
-          worksBrief = formatWorksBrief(rows, total);
-        } catch {
-          worksBrief = ""; // 作品画像 best-effort,读失败不阻断定位生成
-        }
-      }
+      // [T-081②/T-578] 真实作品画像:与后台任务共用当前账号可见、publishedAt 新→旧的
+      // 专用 reader + brief 装配器；读失败 → 空(诚实降级,不阻断生成)。
+      // [T-081①] extraBrief:对话洞察经新 facet 段进 prompt(优先级高于既有档案)。
+      const worksBrief = await loadPositioningWorksBrief(
+        ctx,
+        deps.positioningWorks,
+      );
       const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
       const facets = positioningFacets(context, worksBrief);
       if (extraBrief?.trim()) {

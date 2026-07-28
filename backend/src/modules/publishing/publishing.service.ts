@@ -135,6 +135,7 @@ export interface PublishingService {
   listPublicationsByOutputIds(
     ctx: RequestContext,
     outputIds: ReadonlyArray<string>,
+    opts?: { visibility?: "all" | "visible" },
   ): Promise<PublicationRow[]>;
   createPublication(
     ctx: RequestContext,
@@ -369,8 +370,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repoFor(ctx).listPublicationsForUser(pagination);
     },
 
-    async listPublicationsByOutputIds(ctx, outputIds) {
-      return repoFor(ctx).listPublicationsByOutputs(outputIds);
+    async listPublicationsByOutputIds(ctx, outputIds, opts) {
+      return repoFor(ctx).listPublicationsByOutputs(outputIds, opts);
     },
 
     async createPublication(ctx, outputId, body) {

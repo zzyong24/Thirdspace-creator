@@ -31,7 +31,12 @@ import {
 } from "./positioning-runner";
 import type { CreativeContext } from "./creative-context";
 
-const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
+const ctx: RequestContext = {
+  userId: "u1",
+  accountId: "acct-current",
+  requestId: "r1",
+  source: "user",
+};
 
 // A complete, valid suggestion (as a structured object). Mirrors the shape the runner
 // records: {persona, field, audience, differentiation, capabilities[], oneLiner, keywords[3]}.
@@ -97,7 +102,7 @@ function makeDeps(object: Record<string, unknown>, works?: WorksReader) {
         ],
       } as never,
       // [T-081②] 真实作品读端口(选填)—— 传入才注入 {{works}} facet。
-      works,
+      positioningWorks: works,
       resolveModelSpec,
     },
     markRunning,
@@ -311,7 +316,8 @@ describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", ()
   });
 });
 
-// [T-081②] 后台 task 路径的真实作品画像注入 —— runPositioningGenerate 经 deps.works 读作品,
+// [T-081②/T-578] 后台 task 路径的真实作品画像注入 —— runPositioningGenerate 经两条路径
+// 共用的 deps.positioningWorks 读作品,
 // formatWorksBrief 压缩后进模板 {{works}} facet(与对话链路同一口径);未装配/读失败 → 空 facet
 // (诚实降级,不阻断生成)。runStructuredNode 已 mock,直接断言它收到的 facets。
 describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
@@ -322,34 +328,49 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
       }
     ).facets;
 
-  it("deps.works 装配 → facets.works 带【我的真实作品】段(截 40 字 + 发布状态标记)", async () => {
+  it("[T-578] positioningWorks 按当前 account 读取已排序可见作品并原序注入", async () => {
     const longTitle =
       "这条标题其实是整篇口播文案,长到远超四十个字的展示上限,必须被截断后才能进定位提示词不然会爆";
+    const listProjects = vi.fn(
+      async (receivedCtx: RequestContext, opts: { limit: number; offset: number }) => {
+        expect(receivedCtx.accountId).toBe("acct-current");
+        expect(opts).toEqual({ limit: 100, offset: 0 });
+        return {
+          total: 2,
+          rows: [
+            {
+              title: "最新可见作品",
+              stage: "review",
+              status: "completed",
+              publishedAt: "2026-07-20T00:00:00.000Z",
+            },
+            {
+              title: longTitle,
+              stage: "review",
+              status: "completed",
+              publishedAt: "2026-06-01T00:00:00.000Z",
+            },
+          ],
+        };
+      },
+    );
     const works: WorksReader = {
-      listProjects: async () => ({
-        total: 2,
-        rows: [
-          {
-            title: longTitle,
-            stage: "publishing",
-            status: "published",
-            publishedAt: "2026-06-01",
-          },
-          { title: "AI 编导流程", stage: "planning", status: "active", publishedAt: null },
-        ],
-      }),
+      listProjects,
     };
     const { deps, recordCandidate } = makeDeps(VALID_OBJECT, works);
     await runPositioningGenerate(ctx, { id: "tw1", inputData: {} }, deps);
     const facets = lastFacets();
+    const rendered = facets.works ?? "";
     expect(facets.works).toContain("【我的真实作品（定位必须扎根于此）】");
     expect(facets.works).toContain(`${longTitle.slice(0, 40)}…`);
-    expect(facets.works).toContain("（已发布）");
-    expect(facets.works).toContain("AI 编导流程（策划）");
+    expect(facets.works).toContain("已发布");
+    expect(rendered.indexOf("最新可见作品")).toBeLessThan(
+      rendered.indexOf(longTitle.slice(0, 40)),
+    );
     expect(recordCandidate).toHaveBeenCalled();
   });
 
-  it("deps.works 未装配 → facets.works 空串(facet 整段省略,老路径行为不变)", async () => {
+  it("positioningWorks 未装配 → facets.works 空串(facet 整段省略,老路径行为不变)", async () => {
     const { deps } = makeDeps(VALID_OBJECT);
     await runPositioningGenerate(ctx, { id: "tw2", inputData: {} }, deps);
     expect(lastFacets().works).toBe("");
@@ -366,6 +387,15 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
     expect(lastFacets().works).toBe("");
     expect(recordCandidate).toHaveBeenCalled();
     expect(cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("works 端口返回空数据 → facets.works 诚实空串", async () => {
+    const works: WorksReader = {
+      listProjects: async () => ({ rows: [], total: 0 }),
+    };
+    const { deps } = makeDeps(VALID_OBJECT, works);
+    await runPositioningGenerate(ctx, { id: "tw4", inputData: {} }, deps);
+    expect(lastFacets().works).toBe("");
   });
 });
 

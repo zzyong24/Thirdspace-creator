@@ -360,6 +360,11 @@ export interface ArtifactOriginReader {
 
 export interface ContextDeps {
   positioning: PositioningReader;
+  /**
+   * [T-578] 定位生成专用作品端口。生产装配与后台 positioning-runner 共用同一
+   * canonical 可见/按 publishedAt 排序投影；不复用通用 context.projects。
+   */
+  positioningWorks?: PositioningWorksReader;
   learnings?: LearningsReader;
   assets?: AssetsReader;
   // [T-146 切片 c/d] 项目素材 reader(用户上传第一手资料,per-project priority)。只有写文案 /
@@ -1083,12 +1088,29 @@ export function formatProjectStageBlock(input: {
   ].join("\n");
 }
 
-// ── [T-081②] 真实作品画像 brief —— 全部作品标题压缩列表(每条截 40 字、上限 100 条、带发布
-// 状态标记),喂 positioning.generate(对话工具 + 后台 task 两条路径共用,单一真值)。title 可能
+// ── [T-081②/T-578] 真实作品画像 brief —— 当前账号可见已发布作品标题压缩列表
+// (每条截 40 字、上限 100 条、带发布状态标记),喂 positioning.generate(对话工具 + 后台
+// task 两条路径共用,单一真值)。title 可能
 // 是整篇文案(数百字)故必须截断;total > 已列条数时如实标注剩余。纯函数,导出供单测。
 // 落在本模块:与 formatKnowledgeBrief 同类(brief 组装纯函数),且 chat-runner / positioning-runner
 // 都已依赖本模块,不造循环依赖。
 export const WORKS_BRIEF_MAX_ROWS = 100;
+export interface PositioningWorksReader {
+  listProjects(
+    ctx: RequestContext,
+    opts: { limit: number; offset: number },
+  ): Promise<{
+    rows: Array<{
+      title: string;
+      source?: string;
+      stage: string;
+      status: string;
+      publishedAt?: string | null;
+    }>;
+    total: number;
+  }>;
+}
+
 export function formatWorksBrief(
   rows: Array<{
     title: string;
@@ -1129,6 +1151,27 @@ export function formatWorksBrief(
   const rest = total - listed.length;
   if (rest > 0) lines.push(`（另有 ${rest} 条未列出）`);
   return lines.join("\n");
+}
+
+/**
+ * 后台任务与对话工具共用的定位作品读取/brief 装配。reader 的生产实现负责返回
+ * 当前 accountId 下、canonical 可见且按 publishedAt 新→旧的真实作品；本层只做
+ * 限量格式化与 best-effort 空降级。
+ */
+export async function loadPositioningWorksBrief(
+  ctx: RequestContext,
+  reader?: PositioningWorksReader,
+): Promise<string> {
+  if (!reader) return "";
+  try {
+    const { rows, total } = await reader.listProjects(ctx, {
+      limit: WORKS_BRIEF_MAX_ROWS,
+      offset: 0,
+    });
+    return formatWorksBrief(rows, total);
+  } catch {
+    return "";
+  }
 }
 
 // Render the adopted 结构方案 into a compact brief script.draft reasons against (SEAM-01).
