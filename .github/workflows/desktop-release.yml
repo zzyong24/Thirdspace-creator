@@ -22,11 +22,11 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "只跑某端(留空=双端;迭代单端问题时省另一端陪跑)"
+        description: "测试发行平台（默认 macOS；Windows/双端必须手动显式选择）"
         required: false
         type: choice
-        options: ["", "macos", "windows"]
-        default: ""
+        options: ["macos", "windows", "all"]
+        default: "macos"
   push:
     tags: ["v*"]
 
@@ -47,10 +47,13 @@ jobs:
           ONLY: ${{ github.event.inputs.only }}
         run: |
           all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
-          if [ -n "$ONLY" ]; then
+          if [ "$ONLY" = "all" ]; then
+            echo "matrix=$all" >> "$GITHUB_OUTPUT"
+          elif [ "$ONLY" = "windows" ]; then
             echo "matrix=$(echo "$all" | jq -c "[.[]|select(.os|contains(\"$ONLY\"))]")" >> "$GITHUB_OUTPUT"
           else
-            echo "matrix=$all" >> "$GITHUB_OUTPUT"
+            # tag push 没有 workflow_dispatch input，也必须默认只发 macOS。
+            echo "matrix=$(echo "$all" | jq -c '[.[]|select(.os|contains("macos"))]')" >> "$GITHUB_OUTPUT"
           fi
 
   build:

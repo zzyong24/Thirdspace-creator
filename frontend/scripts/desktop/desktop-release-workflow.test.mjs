@@ -37,6 +37,16 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
+  it("tag 测试发行默认只构建 macOS，Windows 必须手动显式选择", () => {
+    expect(workflow).toContain('options: ["macos", "windows", "all"]');
+    expect(workflow).toContain('default: "macos"');
+    expect(workflow).toContain('if [ "$ONLY" = "all" ]');
+    expect(workflow).toContain('elif [ "$ONLY" = "windows" ]');
+    expect(workflow).toContain(
+      `jq -c '[.[]|select(.os|contains("macos"))]'`,
+    );
+  });
+
   it("T-575 remote sidecar ACL 放行领取命令，并与 invoke handler 同名", () => {
     const buildRs = readFileSync(
       join(process.cwd(), "src-tauri", "build.rs"),

@@ -7,7 +7,8 @@
 ## 1. 发行边界
 
 - 只通过 GitHub `v0.2.1-beta.2` tag 触发 `desktop-release`，产物进入 **draft Release**。
-- 这次只生成 macOS DMG 与 Windows setup.exe；不修改、不上传、不覆盖公开
+- 这次只生成 macOS DMG；Windows 测试包不生成，未来仅允许通过手动工作流显式选择
+  `windows` 或 `all`。不修改、不上传、不覆盖公开
   `sites/creatoros/updates/latest.json`，现有 `0.2.0` 用户不会收到该测试版。
 - 包内显式开启权益领取与纯文字问题反馈，两个能力都只允许访问
   `https://growth.aitongban.cloud`；跨 origin redirect、用户输入地址和渠道 URL 均不能替代。
@@ -24,12 +25,6 @@
 3. 若 Gatekeeper 因测试版未做 Developer ID 签名而阻止首次打开，只在确认下载来源和
    SHA-256 后，进入“系统设置 → 隐私与安全性”，对本次 CreatorOS 选择“仍要打开”。
 4. 启动后确认版本显示 `0.2.1-beta.2`，再进入 `/activate` 做领取联调。
-
-### Windows
-
-1. 从 draft Release 下载 `*-setup.exe`，记录并核对本手册后续回填的 SHA-256。
-2. 若 SmartScreen 显示未知发布者，只在确认下载来源和 SHA-256 后选择“更多信息 → 仍要运行”。
-3. 完成安装并启动，确认版本显示 `0.2.1-beta.2`，再进入激活页做领取联调。
 
 ## 3. 三系统 HTTPS E2E
 
@@ -55,7 +50,7 @@
    必须保留，不能把“已打开网页”或历史成功冒充本次提交成功。
 
 E2E 证据至少记录：测试时间、CreatorOS commit/tag、GitHub Actions run、Growth/AM 部署
-commit、脱敏 entitlement/claim/反馈 publicRef、最终状态、双端安装物 SHA-256。不得记录
+commit、脱敏 entitlement/claim/反馈 publicRef、最终状态、macOS DMG SHA-256。不得记录
 claimToken、activation code、手机号、机器标识、Cookie、私钥或反馈正文。
 
 ## 4. 回滚
@@ -74,4 +69,16 @@ claimToken、activation code、手机号、机器标识、Cookie、私钥或反�
 - Rust entitlement claim 定向测试：7/7 PASS。
 - TypeScript、Next production build、Rust release `cargo check --locked`：PASS。
 - `reconcile.mjs`：0 error；`boundary-scan.mjs`：0 新增违规。
-- GitHub Actions run、draft Release 地址和双端 SHA-256：等待 tag 构建完成后回填。
+- CreatorOS commit：`5539eba662cc096a5f2295e0b51971a26d080755`；tag：
+  `v0.2.1-beta.2`。
+- GitHub Actions run：
+  `https://github.com/zzyong24/Thirdspace-creator/actions/runs/30343144793`。macOS build
+  `success`；用户确认本轮不生成 Windows 后，Windows lane 与 run 被主动取消，不视为 macOS
+  包失败。
+- draft Release：
+  `https://github.com/zzyong24/Thirdspace-creator/releases/tag/untagged-2c0808c7d0f55eefe02e`，
+  状态为 `draft`，只含 `CreatorOS_0.2.1-beta.2_aarch64.dmg`。
+- DMG 大小：`448258846` bytes；SHA-256：
+  `dac146f12c5e1e692ad2b2ae745bb211f0610033b30a7f234b83154bf97caeac`。GitHub Release
+  asset digest 与本地独立计算逐字一致。
+- 公开 `https://creatoros.aitongban.cloud/updates/latest.json` 仍为 `0.2.0`，未被测试版覆盖。
