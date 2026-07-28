@@ -137,6 +137,11 @@ function api(): RadarApi {
       nextRunAt: null,
       version: 2,
     })),
+    deleteSource: vi.fn().mockResolvedValue({
+      affectedItems: 3,
+      preservedSnapshots: 5,
+      status: "archived",
+    }),
     importDouyinShare: vi.fn().mockResolvedValue({
       item: detail.item,
       created: true,
@@ -876,6 +881,226 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/APP 运行时执行/)).toBeInTheDocument();
     expect(stub.listRuns).toHaveBeenCalledWith("source-1");
+  });
+
+  it("[T-588] 移除入口先打开系统 Dialog，取消时不调用归档接口", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "AI 工具",
+          canonicalUrl: null,
+          collector: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: "2026-07-25T09:00:00.000Z",
+          version: 1,
+        },
+      ],
+      health: [],
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "移除 AI 工具" }),
+    );
+
+    expect(stub.deleteSource).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("heading", { name: "移除「AI 工具」？" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("移除后会停止后续同步，但保留已采集内容和快照。"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "取消" }));
+
+    expect(stub.deleteSource).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("heading", { name: "移除「AI 工具」？" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("[T-588] 确认后精确 archive，清理选择、关闭确认框、刷新并提示成功", async () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: "collection-darkhorse",
+          type: "darkhorse_query",
+          displayName: "AI 工具",
+          canonicalUrl: null,
+          collector: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: "2026-07-25T09:00:00.000Z",
+          version: 1,
+        },
+      ],
+      health: [],
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByText("AI 工具"));
+    expect(screen.getByTestId("radar-source-row-source-1")).toHaveClass(
+      "ring-1",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "移除 AI 工具" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "确认移除" }),
+    );
+
+    await waitFor(() =>
+      expect(stub.deleteSource).toHaveBeenCalledWith({
+        sourceId: "source-1",
+        mode: "archive",
+      }),
+    );
+    expect(stub.deleteSource).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole("heading", { name: "移除「AI 工具」？" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("radar-source-row-source-1")).not.toHaveClass(
+      "ring-1",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "已移除「AI 工具」；后续同步已停止，已采集内容和快照仍会保留。",
+    );
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("[T-588] 归档失败时来源与确认框不消失，并显示可行动错误", async () => {
+    const stub = api();
+    stub.deleteSource = vi.fn().mockRejectedValue(new Error("network"));
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: null,
+          type: "web",
+          displayName: "行业观察",
+          canonicalUrl: "https://example.com",
+          collector: null,
+          monitorEnabled: false,
+          syncPolicy: { mode: "manual" },
+          status: "active",
+          lastRunAt: null,
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [],
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "移除 行业观察" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "确认移除" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "未能移除「行业观察」。请确认来源未在同步并刷新后重试。",
+    );
+    expect(
+      screen.getByRole("heading", { name: "移除「行业观察」？" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("radar-source-row-source-1")).toBeInTheDocument();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("[T-588] 同步中的来源明确禁用移除，不能误调用归档接口", () => {
+    const stub = api();
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [
+        {
+          id: "source-1",
+          collectionId: null,
+          type: "web",
+          displayName: "行业观察",
+          canonicalUrl: "https://example.com",
+          collector: null,
+          monitorEnabled: true,
+          syncPolicy: { mode: "scheduled", interval: "daily" },
+          status: "active",
+          lastRunAt: "2026-07-24T00:00:00.000Z",
+          nextRunAt: null,
+          version: 1,
+        },
+      ],
+      health: [
+        {
+          sourceId: "source-1",
+          lastRunId: "run-1",
+          lastRunStatus: "running",
+          blockedCount: 0,
+          lastErrorCode: null,
+          scannedCount: 0,
+          newCount: 0,
+          updatedCount: 0,
+          failedCount: 0,
+        },
+      ],
+    };
+    stub.getRun = vi.fn().mockImplementation(() => new Promise(() => {}));
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={sourceWorkspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    const remove = screen.getByRole("button", {
+      name: "同步中，暂时不能移除 行业观察",
+    });
+    expect(remove).toBeDisabled();
+    expect(remove).toHaveAttribute(
+      "title",
+      "同步进行中，完成后才能移除来源",
+    );
+    expect(stub.deleteSource).not.toHaveBeenCalled();
   });
 
   it("[T-514] 手动同步完成后自动刷新页面，不要求用户再点一次", async () => {

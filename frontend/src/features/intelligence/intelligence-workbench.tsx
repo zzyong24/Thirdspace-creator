@@ -16,6 +16,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ErrorCode } from "@creatoros/contract";
@@ -291,6 +292,14 @@ export interface RadarApi {
     syncPolicy: Record<string, unknown>;
     expectedVersion: number;
   }): Promise<RadarSource>;
+  deleteSource(input: {
+    sourceId: string;
+    mode: "archive";
+  }): Promise<{
+    affectedItems: number;
+    preservedSnapshots: number;
+    status: RadarSource["status"];
+  }>;
   importDouyinShare(input: {
     accountId: string;
     collectionId: string | null;
@@ -394,6 +403,12 @@ function defaultApi(): RadarApi {
           expectedVersion: input.expectedVersion,
         },
       }) as Promise<RadarSource>,
+    deleteSource: (input) =>
+      client.deleteIntelligenceSource({
+        params: { sourceId: input.sourceId },
+        query: undefined,
+        body: { mode: input.mode },
+      }),
     importDouyinShare: (input) =>
       client.importDouyinShareItem({
         params: undefined,
@@ -768,6 +783,10 @@ export function IntelligenceWorkbench({
   const [reconnectError, setReconnectError] = React.useState<string | null>(
     null,
   );
+  const [removalSource, setRemovalSource] =
+    React.useState<RadarSource | null>(null);
+  const [removalBusy, setRemovalBusy] = React.useState(false);
+  const [removalError, setRemovalError] = React.useState<string | null>(null);
   const watchedRunIds = React.useRef<Set<string>>(new Set());
   const topicGenerationInFlight = React.useRef(false);
   const itemScopeRequestId = React.useRef(0);
@@ -1130,6 +1149,45 @@ export function IntelligenceWorkbench({
     [api, router, updatingMonitorSourceIds],
   );
 
+  const archiveSource = React.useCallback(async () => {
+    const source = removalSource;
+    if (!source || removalBusy) return;
+    if (runningSourceIds.has(source.id)) {
+      setRemovalError("该来源仍在同步中，请等待同步完成后再移除。");
+      return;
+    }
+
+    setRemovalBusy(true);
+    setRemovalError(null);
+    try {
+      await api.deleteSource({
+        sourceId: source.id,
+        mode: "archive",
+      });
+      setSelectedSourceId((current) =>
+        current === source.id ? null : current,
+      );
+      setHistorySource((current) =>
+        current?.id === source.id ? null : current,
+      );
+      setReconnectSource((current) =>
+        current?.id === source.id ? null : current,
+      );
+      setReconnectError(null);
+      setRemovalSource(null);
+      setNotice(
+        `已移除「${source.displayName}」；后续同步已停止，已采集内容和快照仍会保留。`,
+      );
+      router.refresh();
+    } catch {
+      const message = `未能移除「${source.displayName}」。请确认来源未在同步并刷新后重试。`;
+      setRemovalError(message);
+      setNotice(message);
+    } finally {
+      setRemovalBusy(false);
+    }
+  }, [api, removalBusy, removalSource, router, runningSourceIds]);
+
   const enqueueTranscript = React.useCallback(async () => {
     if (!detail) return;
     setBusy(true);
@@ -1394,6 +1452,56 @@ export function IntelligenceWorkbench({
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={removalSource !== null}
+        onOpenChange={(open) => {
+          if (!open && !removalBusy) {
+            setRemovalSource(null);
+            setRemovalError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {`移除「${removalSource?.displayName ?? "该来源"}」？`}
+            </DialogTitle>
+            <DialogDescription>
+              移除后会停止后续同步，但保留已采集内容和快照。
+            </DialogDescription>
+          </DialogHeader>
+          {removalError ? (
+            <div
+              role="alert"
+              className="rounded-xl border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
+              {removalError}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={removalBusy}
+              onClick={() => {
+                setRemovalSource(null);
+                setRemovalError(null);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={removalBusy}
+              onClick={() => void archiveSource()}
+            >
+              {removalBusy ? "正在移除…" : "确认移除"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {notice ? (
         <div
           role="status"
@@ -1502,6 +1610,10 @@ export function IntelligenceWorkbench({
                         setReconnectError(null);
                         setReconnectSource(source);
                       }}
+                      onRemove={() => {
+                        setRemovalError(null);
+                        setRemovalSource(source);
+                      }}
                       onShowRuns={() => setHistorySource(source)}
                     />
                   ))}
@@ -1533,6 +1645,10 @@ export function IntelligenceWorkbench({
                   onReconnect={() => {
                     setReconnectError(null);
                     setReconnectSource(source);
+                  }}
+                  onRemove={() => {
+                    setRemovalError(null);
+                    setRemovalSource(source);
                   }}
                   onShowRuns={() => setHistorySource(source)}
                 />
@@ -1752,6 +1868,7 @@ function SourceRow({
   onRun,
   onToggleMonitor,
   onReconnect,
+  onRemove,
   onShowRuns,
 }: {
   source: RadarSource;
@@ -1763,6 +1880,7 @@ function SourceRow({
   onRun: () => void;
   onToggleMonitor: () => void;
   onReconnect: () => void;
+  onRemove: () => void;
   onShowRuns: () => void;
 }) {
   const queued = syncing && health?.lastRunStatus === "queued";
@@ -1873,6 +1991,25 @@ function SourceRow({
             : source.monitorEnabled
               ? "自动"
               : "手动"}
+        </Button>
+        <Button
+          type="button"
+          aria-label={
+            syncing
+              ? `同步中，暂时不能移除 ${source.displayName}`
+              : `移除 ${source.displayName}`
+          }
+          title={
+            syncing ? "同步进行中，完成后才能移除来源" : "移除来源"
+          }
+          variant="ghost"
+          size="sm"
+          disabled={syncing}
+          onClick={onRemove}
+          className="h-6 shrink-0 gap-1 whitespace-nowrap px-1.5 text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="size-3" />
+          移除
         </Button>
         <Button
           type="button"
