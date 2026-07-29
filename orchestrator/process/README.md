@@ -10,7 +10,8 @@ project-specific files per project** — never commit one project's config into 
   PASS receipts to the current SPEC/constitution. `audit` is wired into reconcile.
 - `frontend-validation.mjs` — validates PAGE journey contracts and compact real-browser/desktop reports:
   separate logic/surface/journey/experience levels, post-action coherence, non-fixture witnesses, adverse
-  conditions, and normal/minimum viewports. On strict projects `taskctl complete` executes the
+  conditions, normal/minimum viewports, and v2 browser-visible text artifacts (rejects leaked control IDs
+  such as `T106`/`API-203`). On strict projects `taskctl complete` executes the
   allowlisted `frontend_verify_commands[verify_key]` at the report's exact HEAD, requires clean declared
   `watched_paths`, records command/output hashes, and writes a report receipt; reconcile invalidates it
   after watched-code, contract, report, event, or config drift.

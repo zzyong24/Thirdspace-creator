@@ -162,6 +162,44 @@ function passingChecks() {
   }));
 }
 
+function enableVisibleCopyGuard(root) {
+  const page = path.join(root, "PAGE.md");
+  const contract = JSON.parse(
+    fs.readFileSync(page, "utf8").match(/```frontend-journey-contract\n([\s\S]*?)\n```/)[1],
+  );
+  contract.schema = "frontend-journey-contract/v2";
+  contract.copy_guard = { forbid_internal_ids: true };
+  writeBlock(page, "frontend-journey-contract", contract);
+}
+
+function writeVisibleCopyArtifact(root, texts) {
+  const artifact = {
+    schema: "frontend-visible-copy/v1",
+    task_id: "T-RADAR",
+    commit_sha: "abcdef123456",
+    captures: [
+      {
+        checkpoint: "settled-normal",
+        check_ids: ["AC-RADAR-LIST", "AC-RADAR-SELECTION", "AC-RADAR-DETAIL", "AC-RADAR-NEXT"],
+        viewport: { width: 1440, height: 900 },
+        text: texts.join("\n"),
+      },
+      {
+        checkpoint: "settled-minimum",
+        check_ids: ["AC-RADAR-LIST", "AC-RADAR-SELECTION", "AC-RADAR-DETAIL", "AC-RADAR-NEXT"],
+        viewport: { width: 1024, height: 700 },
+        text: texts.join("\n"),
+      },
+    ],
+  };
+  const file = path.join(root, "visible-copy.json");
+  fs.writeFileSync(file, `${JSON.stringify(artifact, null, 2)}\n`);
+  return {
+    artifact_path: "visible-copy.json",
+    artifact_sha256: fileSha(file),
+  };
+}
+
 function strictReport(root, overrides = {}) {
   return baseReport({
     contract_sha: fileSha(path.join(root, "PAGE.md")).slice(0, 12),
@@ -235,6 +273,60 @@ test("真实浏览器、互斥 witness、两档窗口与全部后置条件齐全
   );
   assert.equal(r.status, 0, r.stderr || r.stdout);
   assert.match(r.stdout, /frontend journey evidence PASS/i);
+});
+
+test("可见文案证据出现 T106 / API-203 时，即使旅程全绿也必须 FAIL", () => {
+  const root = setup();
+  enableVisibleCopyGuard(root);
+  const visibleCopy = writeVisibleCopyArtifact(root, [
+    "内容雷达",
+    "生成个啥 T106",
+    "调用 API-203",
+  ]);
+  writeBlock(
+    path.join(root, "FRONTEND_VALIDATION_REPORT.md"),
+    "frontend-validation",
+    baseReport({ checks: passingChecks(), visible_copy: visibleCopy }),
+  );
+  const r = run(
+    VALIDATOR,
+    ["validate", "--report", "FRONTEND_VALIDATION_REPORT.md", "--task", "T-RADAR"],
+    root,
+  );
+  assert.equal(r.status, 1, "内部追踪 ID 不得成为用户文案");
+  assert.match(r.stderr + r.stdout, /T106/);
+  assert.match(r.stderr + r.stdout, /API-203/);
+});
+
+test("声明可见文案 guard 后，缺浏览器文本证据不能 PASS；正常文案可以 PASS", () => {
+  const root = setup();
+  enableVisibleCopyGuard(root);
+  const reportFile = path.join(root, "FRONTEND_VALIDATION_REPORT.md");
+  writeBlock(
+    reportFile,
+    "frontend-validation",
+    baseReport({ checks: passingChecks() }),
+  );
+  let r = run(
+    VALIDATOR,
+    ["validate", "--report", "FRONTEND_VALIDATION_REPORT.md", "--task", "T-RADAR"],
+    root,
+  );
+  assert.equal(r.status, 1, "有 copy guard 就必须提交可机械扫描的真实可见文本");
+  assert.match(r.stderr + r.stdout, /visible_copy|可见文案/i);
+
+  const visibleCopy = writeVisibleCopyArtifact(root, ["内容雷达", "生成内容", "查看详情"]);
+  writeBlock(
+    reportFile,
+    "frontend-validation",
+    baseReport({ checks: passingChecks(), visible_copy: visibleCopy }),
+  );
+  r = run(
+    VALIDATOR,
+    ["validate", "--report", "FRONTEND_VALIDATION_REPORT.md", "--task", "T-RADAR"],
+    root,
+  );
+  assert.equal(r.status, 0, r.stderr || r.stdout);
 });
 
 test("taskctl 对待验 UI 任务拒绝任意绿色文字，只接受可验证报告并写 receipt", () => {

@@ -26,6 +26,12 @@ const MASTER_DETAIL_KEYS = [
   "detail_matches_selection_or_empty",
   "next_action_when_empty",
 ];
+const JOURNEY_SCHEMAS = new Set([
+  "frontend-journey-contract/v1",
+  "frontend-journey-contract/v2",
+]);
+const INTERNAL_ID_PATTERN =
+  /(?:^|[^A-Za-z0-9])((?:T\d{2,}|T-(?:\d{2,}|[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)|(?:ASM|DEC|FR|NFR|FLOW|ENT|IA|PAGE|COMP|MOCK|API|TEST|TC|INT|BR|PG|HARD|PKG|RISK|REV|FEAT|DFLOW|AC)-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*))(?=$|[^A-Za-z0-9])/g;
 
 function clean(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -189,11 +195,115 @@ function sameViewport(a, b) {
   return Number(a?.width) === Number(b?.width) && Number(a?.height) === Number(b?.height);
 }
 
+function findInternalIds(text) {
+  return [...String(text).matchAll(INTERNAL_ID_PATTERN)].map((match) => match[1]);
+}
+
+function validateVisibleCopyEvidence(root, report, contract, taskId) {
+  const errors = [];
+  const required =
+    contract?.schema === "frontend-journey-contract/v2" ||
+    contract?.copy_guard?.forbid_internal_ids === true;
+  const evidence = report?.visible_copy;
+  if (!required && evidence == null) return { errors, artifactSha: null, captureCount: 0 };
+  if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) {
+    errors.push("visible_copy 必须提供真实 browser/desktop 可见文案 artifact");
+    return { errors, artifactSha: null, captureCount: 0 };
+  }
+  if (!clean(evidence.artifact_path)) {
+    errors.push("visible_copy.artifact_path 不能为空");
+    return { errors, artifactSha: null, captureCount: 0 };
+  }
+  if (!/^[a-f0-9]{64}$/i.test(clean(evidence.artifact_sha256))) {
+    errors.push("visible_copy.artifact_sha256 必须是完整 64 位 SHA-256");
+  }
+
+  let artifactFile;
+  let source;
+  let artifact;
+  try {
+    artifactFile = resolveInside(root, evidence.artifact_path, "visible copy artifact");
+    if (!existsSync(artifactFile)) throw new Error(`${evidence.artifact_path} 不存在`);
+    source = readFileSync(artifactFile, "utf8");
+    artifact = JSON.parse(source);
+  } catch (error) {
+    errors.push(`visible_copy artifact 无法读取: ${error.message}`);
+    return { errors, artifactSha: null, captureCount: 0 };
+  }
+
+  const artifactSha = sha(source);
+  if (
+    /^[a-f0-9]{64}$/i.test(clean(evidence.artifact_sha256)) &&
+    clean(evidence.artifact_sha256).toLowerCase() !== artifactSha
+  ) {
+    errors.push("visible_copy artifact_sha256 与当前 artifact 不一致");
+  }
+  if (artifact?.schema !== "frontend-visible-copy/v1") {
+    errors.push("visible_copy artifact schema 必须为 frontend-visible-copy/v1");
+  }
+  if (artifact?.task_id !== taskId) {
+    errors.push(`visible_copy task_id=${artifact?.task_id}，期望 ${taskId}`);
+  }
+  if (clean(artifact?.commit_sha) !== clean(report?.commit_sha)) {
+    errors.push("visible_copy commit_sha 必须与 report.commit_sha 一致");
+  }
+  if (!Array.isArray(artifact?.captures) || !artifact.captures.length) {
+    errors.push("visible_copy captures 必须是非空数组");
+    return { errors, artifactSha, captureCount: 0 };
+  }
+
+  const coveredChecks = new Set();
+  const coveredViewports = [];
+  const leaked = new Set();
+  for (const [index, capture] of artifact.captures.entries()) {
+    const label = clean(capture?.checkpoint) || `capture[${index}]`;
+    if (!clean(capture?.checkpoint)) errors.push(`visible_copy ${label} 缺 checkpoint`);
+    if (!Array.isArray(capture?.check_ids) || !capture.check_ids.length) {
+      errors.push(`visible_copy ${label} 缺 check_ids`);
+    } else {
+      for (const id of capture.check_ids) coveredChecks.add(id);
+    }
+    if (!(Number(capture?.viewport?.width) > 0 && Number(capture?.viewport?.height) > 0)) {
+      errors.push(`visible_copy ${label} 缺有效 viewport`);
+    } else {
+      coveredViewports.push(capture.viewport);
+    }
+    if (!clean(capture?.text)) {
+      errors.push(`visible_copy ${label} 的 text 为空，不能证明扫描了页面可见文案`);
+    } else {
+      for (const id of findInternalIds(capture.text)) leaked.add(id);
+    }
+  }
+
+  for (const requiredCheck of contract.required_checks ?? []) {
+    if (!coveredChecks.has(requiredCheck.id)) {
+      errors.push(`visible_copy 未覆盖 required_check ${requiredCheck.id}`);
+    }
+  }
+  for (const viewport of contract.viewports ?? []) {
+    if (!coveredViewports.some((observed) => sameViewport(observed, viewport))) {
+      errors.push(`visible_copy 未覆盖 viewport ${viewport.width}x${viewport.height}`);
+    }
+  }
+  if (leaked.size) {
+    errors.push(
+      `用户可见文案泄漏内部追踪 ID: ${[...leaked].join(", ")}；内部编号只能留在代码、测试或诊断元数据`,
+    );
+  }
+  return { errors, artifactSha, captureCount: artifact.captures.length };
+}
+
 function validateContract(contract, taskId, watchedPathErrors = []) {
   const errors = [...watchedPathErrors];
-  if (contract?.schema !== "frontend-journey-contract/v1") {
-    errors.push("contract schema 必须为 frontend-journey-contract/v1");
+  if (!JOURNEY_SCHEMAS.has(contract?.schema)) {
+    errors.push("contract schema 必须为 frontend-journey-contract/v1 或 v2");
     return errors;
+  }
+  if (
+    contract.schema === "frontend-journey-contract/v2" &&
+    contract.copy_guard?.forbid_internal_ids !== true
+  ) {
+    errors.push("v2 contract.copy_guard.forbid_internal_ids 必须为 true");
   }
   if (contract.task_id !== taskId) errors.push(`contract task_id=${contract.task_id}，期望 ${taskId}`);
   if (!Array.isArray(contract.required_checks) || !contract.required_checks.length) {
@@ -401,13 +511,16 @@ export function validateFrontendReport({ root, reportPath, taskId }) {
   });
   const contractErrors = validateContract(contract, taskId, watched.errors);
   const reportErrors =
-    contract?.schema === "frontend-journey-contract/v1"
+    JOURNEY_SCHEMAS.has(contract?.schema)
       ? validateReportAgainstContract(report, contract, taskId, {
           contractSha,
           requireCodeBinding,
         })
       : [];
-  const errors = [...contractErrors, ...reportErrors];
+  const visibleCopy = JOURNEY_SCHEMAS.has(contract?.schema)
+    ? validateVisibleCopyEvidence(root, report, contract, taskId)
+    : { errors: [], artifactSha: null, captureCount: 0 };
+  const errors = [...contractErrors, ...reportErrors, ...visibleCopy.errors];
   if (errors.length) throw new Error(errors.join("\n"));
   return {
     report,
@@ -418,6 +531,8 @@ export function validateFrontendReport({ root, reportPath, taskId }) {
     contractSha,
     watchedPaths: watched.watchedPaths,
     checkIds: contract.required_checks.map((check) => check.id),
+    visibleCopySha: visibleCopy.artifactSha,
+    visibleCopyCaptureCount: visibleCopy.captureCount,
   };
 }
 
@@ -542,6 +657,15 @@ export function executeFrontendVerification({ root, verified }) {
   if (result.error) throw new Error(`旅程命令无法启动: ${result.error.message}`);
   if (result.status !== 0) {
     throw new Error(`旅程命令实际退出 ${result.status}:\n${output.slice(-2000)}`);
+  }
+  const visibleCopy = validateVisibleCopyEvidence(
+    root,
+    verified.report,
+    verified.contract,
+    verified.report.task_id,
+  );
+  if (visibleCopy.errors.length) {
+    throw new Error(`旅程命令后的可见文案证据失效:\n${visibleCopy.errors.join("\n")}`);
   }
   const headAfter = resolveGitCommit(root, "HEAD", "旅程命令后无法解析当前 HEAD");
   if (headAfter !== head) {

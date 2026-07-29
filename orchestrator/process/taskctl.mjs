@@ -286,6 +286,10 @@ if (frontendEvidence) {
   ev.report = path.relative(PROJ_ROOT, frontendEvidence.reportFile).split(path.sep).join("/");
   ev.report_sha = frontendEvidence.reportSha;
   ev.acceptance_checks = frontendEvidence.checkIds;
+  if (frontendEvidence.visibleCopySha) {
+    ev.visible_copy_sha = frontendEvidence.visibleCopySha;
+    ev.visible_copy_captures = frontendEvidence.visibleCopyCaptureCount;
+  }
   ev.commit_sha = frontendEvidence.report.commit_sha;
   ev.verification_executed = frontendExecution.executed;
   if (frontendExecution.executed) {
