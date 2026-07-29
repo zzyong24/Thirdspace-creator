@@ -129,6 +129,45 @@ describe("analytics service", () => {
     expect(res.total).toBe(1);
   });
 
+  it("[T-599] batches latest snapshots for a publication set", async () => {
+    const publishing: AnalyticsPublishingPort = {
+      resolvePublication: () => Promise.resolve(),
+      listPublicationIdsByProject: () => Promise.resolve([]),
+    };
+    const service = makeService(db, publishing);
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-1",
+      capturedAt: "2026-07-28T10:00:00.000Z",
+      source: "platform_api",
+      rawMetrics: { views: 10 },
+      values: [],
+    });
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-1",
+      capturedAt: "2026-07-29T10:00:00.000Z",
+      source: "platform_api",
+      rawMetrics: { views: 20 },
+      values: [],
+    });
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-other",
+      capturedAt: "2026-07-29T10:00:00.000Z",
+      source: "platform_api",
+      rawMetrics: { views: 999 },
+      values: [],
+    });
+
+    const rows = await service.listLatestSnapshotsByPublicationIds(ctxA, [
+      "pub-1",
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      publicationId: "pub-1",
+      capturedAt: "2026-07-29T10:00:00.000Z",
+      rawMetrics: { views: 20 },
+    });
+  });
+
   it("getDashboardRollup rolls up the user's latest-per-publication snapshots (no Publishing seam)", async () => {
     // Publishing port must NOT be touched by the rollup path — wire it to throw.
     const publishing: AnalyticsPublishingPort = {

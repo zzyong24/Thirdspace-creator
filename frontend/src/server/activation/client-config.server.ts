@@ -56,7 +56,8 @@ type JsonValue =
 export type CreatorModelPolicy = {
   readonly serviceMode:
     | "managed_default_user_override_allowed"
-    | "byok_required";
+    | "byok_required"
+    | "managed_locked";
   readonly profileKey: "balanced" | "quality";
   readonly capabilityRoutes: Readonly<Record<string, string>>;
 };
@@ -122,6 +123,21 @@ export type ClientConfigProjection = {
   readonly modelPolicy: CreatorModelPolicy;
   readonly action: string;
 };
+
+export type ModelAuthoritySnapshot =
+  | { authority: "local"; state: "ready"; action: string }
+  | {
+      authority: "managed_locked";
+      state: "ready" | "offline";
+      action: string;
+      profileKey: "balanced" | "quality";
+      capabilityRoutes: Readonly<Record<string, string>>;
+    }
+  | {
+      authority: "managed_locked";
+      state: "unavailable";
+      action: string;
+    };
 
 type ActiveVerdict = Pick<
   LicenseVerdict,
@@ -730,7 +746,8 @@ function parseModelPolicy(bundle: SignedClientConfigBundle): CreatorModelPolicy 
   }
   if (
     payload.serviceMode !== "managed_default_user_override_allowed" &&
-    payload.serviceMode !== "byok_required"
+    payload.serviceMode !== "byok_required" &&
+    payload.serviceMode !== "managed_locked"
   ) {
     fail(
       "CLIENT_CONFIG_PRODUCT_INVALID",
@@ -1006,6 +1023,75 @@ function defaultStore(
     join(dirname(licensePath), ".client-config-lkg"),
     key,
   );
+}
+
+/**
+ * T-604 模型配置权威只读投影。
+ *
+ * 正式桌面包由 Rust 将 build.rs 固化的值覆盖注入 sidecar；这里不接受 header、DB 或
+ * 远程 policy 把 managed 构建切回 local。Web/debug 未注入时保持既有 BYOK 行为。
+ */
+export function readBuiltInModelConfigurationAuthority(
+  env: Record<string, string | undefined> = process.env,
+): "local" | "managed_locked" {
+  return env.CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY ===
+    "managed_locked"
+    ? "managed_locked"
+    : "local";
+}
+
+/**
+ * 只读取已验签并加密落盘的 LKG，不发网络请求。托管构建缺配置、过期、撤权或旧
+ * serviceMode 时保持 managed_locked + unavailable，绝不回退本地 model_configurations。
+ */
+export async function readModelAuthoritySnapshot(
+  dependencies: Dependencies = {},
+): Promise<ModelAuthoritySnapshot> {
+  const env = dependencies.env ?? process.env;
+  if (readBuiltInModelConfigurationAuthority(env) === "local") {
+    return {
+      authority: "local",
+      state: "ready",
+      action: "使用本地模型配置",
+    };
+  }
+
+  try {
+    const now = (dependencies.now ?? (() => new Date()))();
+    const readVerdict =
+      dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());
+    const verdict = activeVerdict(await readVerdict());
+    const store = dependencies.store ?? defaultStore(env);
+    const bundle = lkgWithinTolerance(await store.load(), verdict, now);
+    if (!bundle) {
+      return {
+        authority: "managed_locked",
+        state: "unavailable",
+        action: "渠道模型配置不可用，请联网后重试",
+      };
+    }
+    const policy = parseModelPolicy(bundle);
+    if (policy.serviceMode !== "managed_locked") {
+      return {
+        authority: "managed_locked",
+        state: "unavailable",
+        action: "当前渠道尚未启用托管模型服务",
+      };
+    }
+    return {
+      authority: "managed_locked",
+      state: "offline",
+      action: "正在使用最近一次已验证配置",
+      profileKey: policy.profileKey,
+      capabilityRoutes: policy.capabilityRoutes,
+    };
+  } catch {
+    return {
+      authority: "managed_locked",
+      state: "unavailable",
+      action: "渠道模型配置不可用，请联网后重试",
+    };
+  }
 }
 
 /**

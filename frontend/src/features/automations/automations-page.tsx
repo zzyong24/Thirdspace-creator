@@ -122,7 +122,7 @@ export async function AutomationsPage({
           data-slot="automations-subtitle"
           className="text-sm text-muted-foreground"
         >
-          统一管理账号数据采集、每日选题与内容雷达同步；来源级频率和采集账号仍在内容雷达设置。
+          让作品数据、评论和每日选题按计划自动更新。
         </p>
         {multiAccount ? (
           <p

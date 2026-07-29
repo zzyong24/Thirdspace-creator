@@ -5,6 +5,7 @@ import {
   CURRENT_ACCOUNT_COOKIE,
   HttpTransportError,
   isAccountRequiredError,
+  fetchCreatorApi,
 } from "./http-transport";
 import type { Endpoint } from "@creatoros/contract";
 
@@ -231,5 +232,42 @@ describe("createHttpTransport", () => {
       )) as HttpTransportError;
     expect(err.code).toBe("DOUYIN_FAVORITES_UPSTREAM");
     expect(err.details).toEqual({ upstreamStatusCode: 2190008 });
+  });
+});
+
+describe("fetchCreatorApi — 直连 API 统一账号上下文", () => {
+  it("给 escape-hatch API 自动带当前账号、同源凭据，并保留调用方 headers", async () => {
+    stubLocalStorage({ [CURRENT_ACCOUNT_KEY]: "acct-current" });
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchCreatorApi("/api/knowledge/relate", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-feature": "relate" },
+    });
+
+    const [, init] = fetchMock.mock.calls[0]!;
+    const headers = new Headers(init?.headers);
+    expect(headers.get("x-account-id")).toBe("acct-current");
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get("x-feature")).toBe("relate");
+    expect(init?.credentials).toBe("same-origin");
+  });
+
+  it("未选号时不伪造账号，但请求仍正常发出", async () => {
+    stubLocalStorage({});
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchCreatorApi("/api/knowledge/search", { method: "POST" });
+
+    const [, init] = fetchMock.mock.calls[0]!;
+    expect(new Headers(init?.headers).has("x-account-id")).toBe(false);
   });
 });

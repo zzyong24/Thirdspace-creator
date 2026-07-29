@@ -60,18 +60,38 @@ describe("learnings contract (each op validates against its DTO)", () => {
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
       const parsed = ENDPOINTS.listLearnings.response.parse(item);
-      expect(parsed.validationStatus).toBe("candidate");
+      expect(parsed.validationStatus).toBe("validated");
     }
   });
 
-  it("learnings.create → learningResource (candidate)", async () => {
+  it("learnings.create → 人工采纳后直接返回知识库 validated experience", async () => {
     const transport = makeTransport(db);
     const env = await call(transport, "learnings.create", {
       body: { title: "脚本结构", insight: "三段式" },
     }, ctx);
     const parsed = ENDPOINTS.createLearning.response.parse(env.data);
-    expect(parsed.validationStatus).toBe("candidate");
-    expect(parsed.confidenceScore).toBe(0);
+    expect(parsed.validationStatus).toBe("validated");
+    expect(parsed.confidenceScore).toBe(40);
+  });
+
+  it("learnings.create 相同内容重复采纳 → 返回同一 Learning，活动列表只有一条", async () => {
+    const transport = makeTransport(db);
+    const first = await call(transport, "learnings.create", {
+      body: { title: "  前 3 秒给结果  ", insight: " 完播更高 " },
+    }, ctx);
+    const second = await call(transport, "learnings.create", {
+      body: { title: "前 3 秒给结果", insight: "完播更高" },
+    }, ctx);
+    expect((second.data as { id: string }).id).toBe(
+      (first.data as { id: string }).id,
+    );
+    const listed = await call(
+      transport,
+      "learnings.list",
+      { query: { validationStatus: "validated", page: 1, pageSize: 20 } },
+      ctx,
+    );
+    expect(listed.data).toHaveLength(1);
   });
 
   it("learnings.applications.create → learningApplicationResource (evaluatedAt null)", async () => {
@@ -89,7 +109,7 @@ describe("learnings contract (each op validates against its DTO)", () => {
     expect(parsed.outcome).toEqual({});
   });
 
-  it("learnings.evaluate → learningResource (validated, confidence int)", async () => {
+  it("learnings.evaluate → 已采纳经验仍可显式 discarded", async () => {
     const transport = makeTransport(db);
     const created = await call(transport, "learnings.create", {
       body: { title: "L", insight: "" },
@@ -97,10 +117,10 @@ describe("learnings contract (each op validates against its DTO)", () => {
     const id = (created.data as { id: string }).id;
     const env = await call(transport, "learnings.evaluate", {
       params: { learningId: id },
-      body: { validationStatus: "validated" },
+      body: { validationStatus: "discarded" },
     }, ctx);
     const parsed = ENDPOINTS.evaluateLearning.response.parse(env.data);
-    expect(parsed.validationStatus).toBe("validated");
+    expect(parsed.validationStatus).toBe("discarded");
     expect(Number.isInteger(parsed.confidenceScore)).toBe(true);
   });
 

@@ -436,7 +436,7 @@ export function JobRow({
       data-enabled={job.enabled}
       data-needs-reconnect={needsReconnect}
       className={cn(
-        "grid grid-cols-[minmax(0,1.4fr)_120px_140px_140px_140px_96px_auto] items-center gap-4 px-5 py-5",
+        "grid grid-cols-1 items-center gap-4 px-5 py-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_auto]",
         needsReconnect && "bg-amber-50/60",
       )}
     >
@@ -515,52 +515,58 @@ export function JobRow({
         </div>
       </div>
 
-      {/* source_kind chip */}
-      <span
-        data-slot="automation-source"
-        className="inline-flex w-fit items-center rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground"
-      >
-        {sourceLabel(job.sourceKind)}
-      </span>
+      {/* 执行计划:把频率、上次和下次运行收进一个信息组,减少横向空列。 */}
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <span
+          data-slot="automation-schedule"
+          className="inline-flex w-fit items-center gap-1.5 rounded-full bg-surface-subtle px-2.5 py-1 text-xs font-medium text-foreground"
+          title={job.schedule}
+        >
+          <Clock className="size-3.5 text-muted-foreground" />
+          {formatScheduleFriendly(job.schedule)}
+        </span>
+        <span
+          data-slot="automation-last-run"
+          className="text-[11px] text-muted-foreground tabular-nums"
+        >
+          上次：{job.lastRunAt ? formatDateTime(job.lastRunAt) : "尚未运行"}
+        </span>
+        <span
+          data-slot="automation-next-run"
+          className="text-[11px] text-muted-foreground tabular-nums"
+        >
+          下次：
+          {job.nextRunAt
+            ? formatDateTime(job.nextRunAt)
+            : job.enabled
+              ? "等待调度"
+              : "等待启用"}
+        </span>
+      </div>
 
-      {/* schedule(友好频率,不露 cron;title 保留原 cron 供 hover 调试) */}
-      <span
-        data-slot="automation-schedule"
-        className="truncate rounded bg-surface-subtle px-2 py-1 text-[11px] text-foreground"
-        title={job.schedule}
-      >
-        {formatScheduleFriendly(job.schedule)}
-      </span>
-
-      {/* last_run_at */}
-      <span
-        data-slot="automation-last-run"
-        className="text-xs text-muted-foreground tabular-nums"
-      >
-        {formatDateTime(job.lastRunAt)}
-      </span>
-
-      {/* next_run_at */}
-      <span
-        data-slot="automation-next-run"
-        className="text-xs text-muted-foreground tabular-nums"
-      >
-        {formatDateTime(job.nextRunAt)}
-      </span>
-
-      {/* enabled 开关 + [T-359] 禁用态的启用前置提示 */}
-      <div className="flex flex-col items-start gap-1">
-        <Switch
-          aria-label={`${job.name} 启用开关`}
-          data-slot="automation-enabled-switch"
-          checked={job.enabled}
-          disabled={pendingToggle}
-          onCheckedChange={(v) => onToggle(v)}
-        />
+      {/* 状态:开关、文字状态和启用前置条件合并,避免只剩一个孤立开关。 */}
+      <div className="flex flex-col items-start gap-1.5">
+        <div className="flex items-center gap-2">
+          <Switch
+            aria-label={`${job.name} 启用开关`}
+            data-slot="automation-enabled-switch"
+            checked={job.enabled}
+            disabled={pendingToggle}
+            onCheckedChange={(v) => onToggle(v)}
+          />
+          <span
+            className={cn(
+              "text-xs font-medium",
+              job.enabled ? "text-emerald-600" : "text-muted-foreground",
+            )}
+          >
+            {pendingToggle ? "更新中…" : job.enabled ? "已启用" : "未启用"}
+          </span>
+        </div>
         {!job.enabled && ENABLEMENT_HINTS[job.sourceKind] ? (
           <span
             data-slot="automation-enablement-hint"
-            className="max-w-[160px] text-[10px] leading-snug text-text-subtle"
+            className="max-w-[190px] text-[11px] leading-snug text-text-subtle"
           >
             {ENABLEMENT_HINTS[job.sourceKind]}
           </span>
@@ -568,7 +574,7 @@ export function JobRow({
       </div>
 
       {/* 操作:编辑(T-248)+ needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
         {job.sourceKind !== "intelligence.sync" ? (
           <button
             type="button"
@@ -1529,16 +1535,16 @@ export function TemplateCards({
     <section
       data-slot="automation-templates"
       aria-label="从模板入手"
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
     >
       <div className="flex items-center gap-2">
         <Sparkles className="size-4 text-brand" />
-        <h2 className="text-sm font-semibold text-foreground">从模板入手</h2>
+        <h2 className="text-sm font-semibold text-foreground">快速创建</h2>
         <span className="text-xs text-muted-foreground">
-          选一个常用采集任务,一键预填
+          从常用任务开始
         </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 lg:grid-cols-3">
         {COLLECTION_TEMPLATES.map((tpl) => {
           const Icon =
             SOURCE_META[tpl.sourceKind]?.icon ??
@@ -1556,38 +1562,41 @@ export function TemplateCards({
               onClick={() =>
                 existing ? onEnableExisting?.(existing) : onPick(tpl)
               }
-              className="flex flex-col items-start gap-2 rounded-card border border-border bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-soft/40"
+              className="group grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 rounded-control border border-border bg-surface-subtle/40 p-3 text-left transition-colors hover:border-brand hover:bg-brand-soft/40"
             >
-              <span className="flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className="flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand"
-                >
-                  <Icon className="size-4" />
-                </span>
+              <span
+                aria-hidden="true"
+                className="row-span-2 flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand"
+              >
+                <Icon className="size-4" />
+              </span>
+              <span className="min-w-0">
                 <span className="text-sm font-semibold text-foreground">
                   {tpl.title}
                 </span>
               </span>
-              <span className="text-xs leading-snug text-muted-foreground">
-                {tpl.description}
-              </span>
               {existing ? (
                 <span
                   data-slot="automation-template-existing"
-                  className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground"
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    existing.enabled
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-amber-50 text-amber-700",
+                  )}
                 >
                   <CheckCircle2 className="size-3" />
-                  {existing.enabled
-                    ? "已有此任务 → 去查看/编辑"
-                    : "已有此任务 → 去启用/编辑"}
+                  {existing.enabled ? "已启用" : "待启用"}
                 </span>
               ) : (
-                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand">
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand">
                   <Plus className="size-3" />
-                  用此模板新建
+                  新建
                 </span>
               )}
+              <span className="col-start-2 col-end-4 truncate text-[11px] text-muted-foreground">
+                {tpl.description}
+              </span>
             </button>
           );
         })}
@@ -1897,7 +1906,7 @@ export function AutomationsIsland({
   );
 
   return (
-    <section data-testid="automations-region" className="flex flex-col gap-6">
+    <section data-testid="automations-region" className="flex flex-col gap-4">
       {/* 从模板入手(WorkBuddy 式)。[T-367] 透传现存 jobs 查重:已存在 kind 的卡显
           「已存在」态,点它启用/定位既有 job,不再建第二条。 */}
       <TemplateCards
@@ -1906,34 +1915,54 @@ export function AutomationsIsland({
         onEnableExisting={enableExisting}
       />
 
-      {/* 顶部操作条 */}
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>共 {jobs.length} 个任务</span>
-          {/* [T-332 S4·§6.3] 当前号 badge:明示「列表只显当前号的任务」(切号 = 切工作区)。 */}
-          {currentAccount ? (
-            <span
-              data-testid="automations-current-account"
-              data-account-id={currentAccount.id}
-              className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand"
-            >
-              <AtSign className="size-3" aria-hidden="true" />
-              仅当前号 {currentAccount.handle}
+      {/* 任务概览与主操作合并,让数量、状态、账号和新建入口属于同一信息层。 */}
+      <div
+        data-slot="automations-overview"
+        className="flex flex-col gap-3 rounded-card border border-border bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-base font-semibold text-foreground">
+              我的自动化
+            </h2>
+            <span className="rounded-full bg-surface-subtle px-2.5 py-1 text-xs text-muted-foreground">
+              共 {jobs.length} 个任务
             </span>
-          ) : (
-            <span
-              data-testid="automations-no-account"
-              className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-            >
-              未选择账号 —— 在左下角切换器选号后查看该号任务
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+              {jobs.filter((job) => job.enabled).length} 个已启用
             </span>
-          )}
-        </span>
+            {jobs.some((job) => !job.enabled) ? (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                {jobs.filter((job) => !job.enabled).length} 个待启用
+              </span>
+            ) : null}
+          </div>
+          <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            {/* [T-332 S4·§6.3] 当前号 badge:明示「列表只显当前号的任务」(切号 = 切工作区)。 */}
+            {currentAccount ? (
+              <span
+                data-testid="automations-current-account"
+                data-account-id={currentAccount.id}
+                className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand"
+              >
+                <AtSign className="size-3" aria-hidden="true" />
+                仅当前号 {currentAccount.handle}
+              </span>
+            ) : (
+              <span
+                data-testid="automations-no-account"
+                className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+              >
+                未选择账号 —— 在左下角切换器选号后查看该号任务
+              </span>
+            )}
+          </span>
+        </div>
         <button
           type="button"
           data-slot="automation-new"
           onClick={openBlank}
-          className="inline-flex h-9 items-center gap-1.5 rounded-control bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-control bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
         >
           <Plus className="size-4" />
           新建任务
@@ -1976,13 +2005,10 @@ export function AutomationsIsland({
           aria-label="调度作业列表"
           className="overflow-hidden rounded-card border border-border bg-surface"
         >
-          <div className="grid grid-cols-[minmax(0,1.4fr)_120px_140px_140px_140px_96px_auto] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground">
-            <span>作业</span>
-            <span>数据源</span>
-            <span>调度</span>
-            <span>上次运行</span>
-            <span>下次运行</span>
-            <span>启用</span>
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_auto] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground xl:grid">
+            <span>任务</span>
+            <span>执行计划</span>
+            <span>状态</span>
             <span className="text-right">操作</span>
           </div>
           <ul className="divide-y divide-border" role="list">

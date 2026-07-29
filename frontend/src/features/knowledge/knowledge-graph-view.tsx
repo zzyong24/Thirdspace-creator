@@ -31,6 +31,7 @@ import type { EChartsOption } from "echarts";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import { fetchCreatorApi } from "@/lib/http-transport";
 import { cn } from "@/lib/utils";
 import { EChart, useChartTokens } from "@/components/analytics/echarts-base";
 import type { KnowledgeGraphVm, GraphEdgeVm } from "./knowledge-graph-vm";
@@ -327,7 +328,9 @@ export function KnowledgeGraphView({
     setBusy("proposing");
     setError(null);
     try {
-      const res = await fetch("/api/knowledge/relate", { method: "POST" });
+      const res = await fetchCreatorApi("/api/knowledge/relate", {
+        method: "POST",
+      });
       const json = (await res.json().catch(() => null)) as
         | { candidates?: RelateCandidateDto[]; error?: string }
         | null;

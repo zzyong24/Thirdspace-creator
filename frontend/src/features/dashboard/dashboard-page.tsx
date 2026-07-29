@@ -164,7 +164,10 @@ function DashboardGrid({ vm }: { vm: DashboardViewModel }) {
             : []
         }
       />
-      <TodoCard todos={vm.todos} />
+      <TodoCard
+        todos={vm.todos}
+        scheduleReminderReadState={vm.scheduleReminderReadState}
+      />
       <TrendingTopicsCard topics={vm.trendingTopics} />
       <RecentPublicationsCard publications={vm.recentPublications} />
       <DataOverviewCard vm={vm} />

@@ -18,6 +18,7 @@ import { ProjectsPage } from "@/features/projects/projects-page";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
+import { getContentCalendarService } from "@/server/persistence-client";
 
 export default async function Page({
   searchParams,
@@ -59,12 +60,41 @@ export default async function Page({
   if (!session.ctx.accountId) {
     return <ZeroAccountGuidance />;
   }
+  const calendar = await getContentCalendarService();
+  const [calendarContext, activeSchedules] = await Promise.all([
+    calendar.getCalendarRequestContext(session.ctx),
+    calendar.listActiveProjectSchedules(
+      session.ctx,
+      session.ctx.accountId,
+    ),
+  ]);
   return (
     <ProjectsPage
       page={page}
       status={status}
       sort={sort}
       client={createServerClient(session.ctx)}
+      scheduleContext={{
+        accountId: session.ctx.accountId,
+        referenceDateKey: calendarContext.today,
+        entries: activeSchedules
+          .filter(
+            (
+              entry,
+            ): entry is typeof entry & {
+              projectId: string;
+              status: "planned" | "missed";
+            } =>
+              entry.projectId !== null &&
+              (entry.status === "planned" || entry.status === "missed"),
+          )
+          .map((entry) => ({
+            id: entry.id,
+            projectId: entry.projectId,
+            plannedDate: entry.plannedDate,
+            status: entry.status,
+          })),
+      }}
     />
   );
 }

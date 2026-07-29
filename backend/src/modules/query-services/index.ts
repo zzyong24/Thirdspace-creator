@@ -34,6 +34,12 @@ export {
 } from "./query-services.transport";
 
 export { OwnershipError } from "./query-services.errors";
+export {
+  composeDashboardTodos,
+  type ActiveProjectSchedule,
+  type ScheduleProjectFact,
+  type DashboardScheduleInput,
+} from "./dashboard-schedule-reminders";
 
 export {
   dashboardPage,

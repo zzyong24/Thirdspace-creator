@@ -108,6 +108,11 @@ export interface AnalyticsRepository {
     page: number,
     pageSize: number,
   ): Promise<Page<MetricSnapshotRow>>;
+  listLatestSnapshotsByPublicationIds(
+    userId: string,
+    accountId: string,
+    publicationIds: ReadonlyArray<string>,
+  ): Promise<MetricSnapshotRow[]>;
   listValuesBySnapshot(
     userId: string,
     accountId: string,
@@ -284,6 +289,29 @@ export function createAnalyticsRepository(
         .from(metricSnapshots)
         .where(where);
       return { rows, total: Number(totalRows[0]?.value ?? 0) };
+    },
+
+    async listLatestSnapshotsByPublicationIds(
+      userId,
+      accountId,
+      publicationIds,
+    ) {
+      if (publicationIds.length === 0) return [];
+      return db
+        .selectDistinctOn([metricSnapshots.publicationId])
+        .from(metricSnapshots)
+        .where(
+          and(
+            eq(metricSnapshots.userId, userId),
+            eq(metricSnapshots.accountId, accountId),
+            inArray(metricSnapshots.publicationId, [...publicationIds]),
+          ),
+        )
+        .orderBy(
+          asc(metricSnapshots.publicationId),
+          desc(metricSnapshots.capturedAt),
+          desc(metricSnapshots.id),
+        );
     },
 
     async listValuesBySnapshot(userId, accountId, metricSnapshotId) {

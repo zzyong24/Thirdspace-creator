@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/backend";
 import { createSettingsService } from "./settings.service";
 import {
@@ -511,5 +511,43 @@ describe("settings.service", () => {
       }),
     ).rejects.toBeInstanceOf(OwnershipError);
     expect(await repo.listAccountSkillOverlays(ctx)).toHaveLength(0);
+  });
+
+  it("渠道托管时服务端拒绝写入/导入并让 list/export 零泄露", async () => {
+    const repo = makeFakeRepo();
+    const managedError = Object.assign(new Error("managed"), {
+      code: "MODEL_CONFIGURATION_MANAGED",
+    });
+    const guard = {
+      isManaged: vi.fn().mockResolvedValue(true),
+      assertLocalConfigurationAllowed: vi.fn().mockRejectedValue(managedError),
+    };
+    const svc = createSettingsService(
+      () => repo,
+      accountReader,
+      accountWriter,
+      undefined,
+      noopMigrate,
+      guard,
+    );
+
+    await expect(svc.listModelConfigs(ctx)).resolves.toEqual([]);
+    await expect(svc.exportModelConfigs(ctx)).resolves.toMatchObject({
+      secretForm: "none",
+      models: [],
+    });
+    await expect(
+      svc.setModelConfiguration(ctx, "default", {
+        provider: "anthropic",
+        modelName: "should-not-write",
+        secretReference: "env:ANTHROPIC_API_KEY",
+        settings: {},
+        isDefault: true,
+      }),
+    ).rejects.toMatchObject({ code: "MODEL_CONFIGURATION_MANAGED" });
+    await expect(svc.importModelConfigs(ctx, {})).rejects.toMatchObject({
+      code: "MODEL_CONFIGURATION_MANAGED",
+    });
+    expect(repo._models).toHaveLength(0);
   });
 });

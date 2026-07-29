@@ -219,6 +219,132 @@ describe("ProjectsPage", () => {
     );
   });
 
+  it("项目行单列展示真实排期状态，并保持“排期列 → 打开 → 更多”的稳定顺序", async () => {
+    const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+    const base = buildProjectsViewModel();
+    const eligible = base.rows[0]!;
+    const imported = base.rows[1]!;
+    const completed = base.rows[2]!;
+    const published = base.rows[3]!;
+    const vm = {
+      ...base,
+      rows: [
+        {
+          ...eligible,
+          source: "manual" as const,
+          status: "active" as const,
+          outputs: eligible.outputs.map((output) => ({
+            ...output,
+            status: "drafting" as const,
+          })),
+        },
+        {
+          ...imported,
+          source: "imported" as const,
+        },
+        {
+          ...completed,
+          source: "manual" as const,
+          status: "completed" as const,
+          outputs: completed.outputs.map((output) => ({
+            ...output,
+            status: "ready" as const,
+          })),
+        },
+        {
+          ...published,
+          source: "manual" as const,
+          status: "active" as const,
+          outputs: published.outputs.map((output) => ({
+            ...output,
+            status: "published" as const,
+          })),
+        },
+      ],
+    };
+    const { container } = await renderProjects({
+      viewModel: vm,
+      scheduleContext: {
+        accountId: "account-1",
+        referenceDateKey: "2026-07-29",
+        entries: [
+          {
+            id: "cal-1",
+            projectId: eligible.id,
+            plannedDate: "2026-08-03",
+            status: "planned",
+          },
+        ],
+      },
+    });
+
+    const eligibleRow = container.querySelector(
+      `[data-project-id="${eligible.id}"]`,
+    ) as HTMLElement;
+    const scheduleArea = eligibleRow.querySelector(
+      '[data-slot="project-schedule-cell"]',
+    ) as HTMLElement;
+    const actionArea = eligibleRow.querySelector(
+      '[data-slot="project-actions"]',
+    ) as HTMLElement;
+    expect(scheduleArea.children[0]).toHaveAttribute(
+      "data-slot",
+      "project-schedule-trigger",
+    );
+    expect(scheduleArea.textContent).toContain("改期 · 8月3日");
+    expect(actionArea.children[0]).toHaveAttribute(
+      "data-slot",
+      "project-open-action",
+    );
+    expect(actionArea.children[1]).toHaveAttribute(
+      "data-slot",
+      "project-row-action",
+    );
+    expect(
+      within(eligibleRow).getByRole("button", {
+        name: /修改.*排期，当前 8月3日/,
+      }),
+    ).toBeTruthy();
+
+    for (const hiddenRow of [imported, completed, published]) {
+      const row = container.querySelector(
+        `[data-project-id="${hiddenRow.id}"]`,
+      ) as HTMLElement;
+      expect(
+        row.querySelector('[data-slot="project-schedule-trigger"]'),
+      ).toBeNull();
+      expect(
+        row.querySelector('[data-slot="project-schedule-static"]'),
+      ).not.toBeNull();
+    }
+    cleanup();
+
+    const archivedVm = {
+      ...base,
+      rows: [
+        {
+          ...eligible,
+          source: "manual" as const,
+          status: "archived" as const,
+        },
+      ],
+    };
+    const archivedRender = await renderProjects({
+      viewModel: archivedVm,
+      status: "archived",
+      scheduleContext: {
+        accountId: "account-1",
+        referenceDateKey: "2026-07-29",
+        entries: [],
+      },
+    });
+    expect(
+      archivedRender.container.querySelector(
+        '[data-slot="project-schedule-trigger"]',
+      ),
+    ).toBeNull();
+  });
+
   it("renders a pagination control with previous/next and multiple pages", async () => {
     const { container } = await renderProjects();
     const pagination = container.querySelector('[data-slot="pagination"]');

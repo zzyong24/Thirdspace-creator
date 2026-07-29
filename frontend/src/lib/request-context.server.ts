@@ -41,6 +41,28 @@ export interface ResolveContextOptions {
   rejectInvalidToken?: boolean;
 }
 
+/**
+ * 自定义 route 的当前账号单一解析入口：header 优先，current-account cookie 兜底。
+ *
+ * contract dispatch/chat 会显式发送 `x-account-id`；浏览器原生导航或遗留 escape-hatch
+ * 可能只有 cookie。两者都只是“用户意图”，随后仍由 verifyAccountSelection 做属主与 active
+ * 校验，cookie 兜底不会放松安全边界。
+ */
+export function readRequestAccountId(req: Request): string | null {
+  const fromHeader = req.headers.get("x-account-id")?.trim();
+  if (fromHeader) return fromHeader;
+
+  const match = /(?:^|;\s*)creatoros_current_account=([^;]+)/.exec(
+    req.headers.get("cookie") ?? "",
+  );
+  if (!match?.[1]) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
 // [T-046 单机免登录] route 层的统一 ctx 解析:有 session token 照旧验 token;无 token 或
 // token 失效 → 以本机主用户(最早创建)直通。单机产品打开即用,登录页已下线;session 机制
 // 保留为内部实现(脚本/curl 仍可 login 拿 cookie,行为不变)。

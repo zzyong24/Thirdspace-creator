@@ -5,11 +5,16 @@
 -- 历史 job/run 保留用于审计，不物理删除。
 UPDATE scheduled_job
 SET enabled = FALSE,
-    updated_at = CURRENT_TIMESTAMP::TEXT
+    updated_at = TO_CHAR(
+      CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+      'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+    )
 WHERE source_kind IN ('benchmark', 'favorites')
   AND enabled = TRUE;
+--> statement-breakpoint
 
 DROP INDEX IF EXISTS ux_scheduled_job_user_account_source;
+--> statement-breakpoint
 CREATE UNIQUE INDEX ux_scheduled_job_user_account_source
   ON scheduled_job (user_id, account_id, source_kind)
   WHERE source_kind IN (

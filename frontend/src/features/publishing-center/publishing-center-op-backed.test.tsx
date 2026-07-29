@@ -75,14 +75,19 @@ const dto = publishingCenterPage.parse({
 });
 
 describe("PublishingCenter op-backed render (DTO → VM adapter)", () => {
-  it("renders the op-supplied rows (not the fixture selector)", () => {
+  it("renders the op-supplied performance rail without restoring the duplicate table", () => {
     const viewModel = publishingCenterPageToViewModel(dto);
-    render(<PublishingCenterPage viewModel={viewModel} />);
+    const { container } = render(
+      <PublishingCenterPage
+        viewModel={viewModel}
+        calendar={<div data-testid="op-calendar">月历</div>}
+      />,
+    );
 
-    // The composed titles are present — proves the page rendered the op rows.
-    expect(screen.getByText("组合返回的作品一")).toBeInTheDocument();
-    expect(screen.getByText("组合返回的作品二")).toBeInTheDocument();
-    // The "全部" tab count reflects the 2 op rows.
+    expect(screen.getAllByText("热门内容")).toHaveLength(2);
+    expect(screen.getByText("1.2 万")).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="analytics-rail"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="publication-table"]')).toBeNull();
     expect(viewModel.contentTypeTabs.find((t) => t.id === "all")?.count).toBe(2);
   });
 });

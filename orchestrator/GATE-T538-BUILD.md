@@ -34,6 +34,8 @@
   - 固定调用 Growth `/api/v2/product-feedback`；AM/Growth 请求均使用
     `redirect: "manual"`、HTTPS、超时和响应大小上限。
   - `feedbackContextToken` 仅驻留服务端内存。
+  - 签名 `bugFeedbackUrl` 缺失、非 HTTPS、带 userinfo/port 或 origin 不在发布 allowlist
+    时，在调用 AM/Growth 前 fail-closed；确定性回归断言 `fetch=0`。
 - `frontend/src/app/api/v1/local/product-feedback/route.ts`
   - 复用现有 loopback/handshake/CSRF 信任边界。
   - 对浏览器只返回 `publicRef/status/binding` 或稳定错误码、消息与 `retryable`。
@@ -88,6 +90,7 @@ focused Vitest 覆盖：
 - UI `202/publicRef`、失败保留输入、幂等重试；
 - `.license` 服务端解密绑定且不向外泄露；
 - Growth/Creator 共享 fixture digest。
+- 签名 `bugFeedbackUrl` 的 null、HTTP、userinfo、port 和非 allowlist 负向矩阵，全部零出网。
 
 ## 上线阻断项
 

@@ -98,6 +98,7 @@ describe("T-517 automation driver", () => {
       finish,
     } as unknown as PersistentTaskService;
     const handler = vi.fn(async () => undefined);
+    const sweepStaleJobRuns = vi.fn(async () => 2);
     const registry = createAutomationHandlerRegistry()
       .register("scheduled_collection", handler)
       .seal();
@@ -112,8 +113,10 @@ describe("T-517 automation driver", () => {
       cron: { validate: () => true },
       maxClaims: 4,
       leaseSeconds: 60,
+      sweepStaleJobRuns,
     });
 
+    expect(sweepStaleJobRuns).toHaveBeenCalledTimes(1);
     expect(recoverExpiredLeases).toHaveBeenCalledTimes(1);
     expect(enqueue).toHaveBeenCalledWith(
       expect.objectContaining({ accountId: "account-1" }),
@@ -135,7 +138,12 @@ describe("T-517 automation driver", () => {
     expect(finish).toHaveBeenCalledWith(
       expect.objectContaining({ status: "succeeded" }),
     );
-    expect(report).toMatchObject({ enqueued: 1, succeeded: 1, failed: 0 });
+    expect(report).toMatchObject({
+      sweptJobRuns: 2,
+      enqueued: 1,
+      succeeded: 1,
+      failed: 0,
+    });
   });
 
   it("handler 抛错时 task 落 failed + 可读原因，tick 不吞成成功", async () => {

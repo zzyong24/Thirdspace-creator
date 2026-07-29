@@ -41,6 +41,7 @@ describe("envelope", () => {
   it("carries AccountRequiredError (未选号引导态) and maps it to 428", () => {
     expect(ErrorCode.AccountRequiredError).toBe("AccountRequiredError");
     expect(ERROR_HTTP[ErrorCode.AccountRequiredError]).toBe(428);
+    expect(ERROR_HTTP[ErrorCode.ModelConfigurationManaged]).toBe(409);
     const parsed = errorEnvelope.parse({
       error: {
         code: ErrorCode.AccountRequiredError,

@@ -44,6 +44,8 @@ export function toContentCalendarEntryDto(
     id: row.id,
     userId: row.userId,
     accountId: row.accountId,
+    projectId: row.projectId ?? null,
+    plannedDate: row.plannedDate ?? row.plannedAt.slice(0, 10),
     plannedAt: row.plannedAt,
     contentOutputId: row.contentOutputId ?? null,
     candidateId: row.candidateId ?? null,

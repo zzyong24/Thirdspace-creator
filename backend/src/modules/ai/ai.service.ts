@@ -226,6 +226,12 @@ export interface ServiceDeps {
     taskType: string,
     inputData: Readonly<Record<string, unknown>>,
   ) => Promise<Record<string, unknown>>;
+  // T-604 模型路由权威由组合根注入。托管态只返回渠道 alias，不允许 AI repo
+  // 直接读取 model_configurations；未注入时保留既有本地行为供测试/自托管构建。
+  resolveModelKey?: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<string>;
 }
 
 export interface CreateTaskInput {
@@ -835,11 +841,9 @@ export function createAiService(deps: ServiceDeps): AiService {
         }
       }
 
-      const modelKey =
-        (await repo.getModelConfig(body.taskType))?.modelName ??
-        (await repo.getDefaultModelConfig())?.modelName ??
-        DEFAULT_MODEL_FOR_CAPABILITY[body.taskType] ??
-        "claude-opus-4-8";
+      const modelKey = deps.resolveModelKey
+        ? await deps.resolveModelKey(ctx, body.taskType)
+        : (DEFAULT_MODEL_FOR_CAPABILITY[body.taskType] ?? "claude-opus-4-8");
 
       const projectId =
         typeof inputData.projectId === "string" ? inputData.projectId : null;

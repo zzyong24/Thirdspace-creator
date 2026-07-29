@@ -7,7 +7,7 @@
  *   - 维度评分类(calibration.diagnosis)→ 维度评分表(读 calibration 中栏评分表范式),**只读展示**
  *     (对话里的诊断不直接铸预测;真·按用户 rubric 的盲预测走工作台「开始预测」那条任务链)。
  *   - 候选类(review.learnings / positioning.suggestion)→ 复用「逐条/整条采纳」交互,走现有直采门:
- *       · 经验 → client.createLearning(沉淀回喂选题,机制⑤飞轮);
+ *       · 经验 → client.createLearning(去重后直接进入知识库,机制⑤飞轮);
  *       · 定位 → client.upsertProfile + createStatement(写入定位母版 + 追加 AI 版本)。
  *     与 ChatCandidateCard 同理:候选已在工具结果里,无需再起 AI 任务 —— 直接渲 + 采纳走确认门。
  *
@@ -265,7 +265,7 @@ export function ChatDiagnosisCard({
   );
 }
 
-// ── 经验卡(review.learnings)—— 逐条采纳 → createLearning ──────────────────────────────
+// ── 经验卡(review.learnings)—— 逐条采纳 → 去重后直接进知识库 ─────────────────────────
 export interface ChatLearningItem {
   title: string;
   insight: string;
@@ -329,7 +329,7 @@ export function ChatLearningsCard({
       className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        AI 复盘经验 · 逐条沉淀(回喂选题)
+        AI 复盘经验 · 逐条采纳进知识库
       </span>
       <ul className="flex flex-col gap-1.5" aria-label="复盘经验候选">
         {items.map((l, i) => {
@@ -352,7 +352,7 @@ export function ChatLearningsCard({
                     data-slot="chat-learning-adopted"
                     className="text-[10px] font-medium text-success"
                   >
-                    ✓ 已沉淀
+                    ✓ 已进入知识库
                   </span>
                 ) : (
                   <button

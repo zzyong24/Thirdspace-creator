@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 // [FE-H04] 「今天」= 真实系统 now,经 ContentCalendarPage 的可注入 `now` clock 派生。
 // 本测注入固定 Date,证明「参考日 / 缺省月」从 now 派生(不再写死 2026-07-03):
-// 过去日 = 空窗淡色(data-gap)、今天/未来格可点(button)。
+// 过去日 = 空窗淡色(data-gap)；今天/未来空格保持只读，不再承载自由排期入口。
 //
 // 只验时钟派生 → mock 掉 server 数据装配(publishing 装配链 + server client),
 // 避免拉真 SQL;账号读返回一个 active 号让月历格真渲染。
@@ -11,6 +11,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/contract-client.server", () => ({ client: {} }));
 vi.mock("@/features/publishing-center/publishing-center-data", () => ({
   buildPublishingCenterViewModelReal: vi.fn(async () => ({ publications: [] })),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    prefetch: vi.fn(),
+  }),
 }));
 
 import { ContentCalendarPage } from "./content-calendar-page";
@@ -28,7 +34,7 @@ const mockClient = {
 };
 
 describe("content-calendar 今天=真实 now (FE-H04, 可注入 clock)", () => {
-  it("注入固定 now → 缺省月/参考日从 now 派生;过去日=空窗,今天/未来可点", async () => {
+  it("注入固定 now → 缺省月/参考日从 now 派生；空日期保持只读", async () => {
     // 用本地构造器固定「今天」= 本地 2026-07-15,localDateKey 与测试机时区无关。
     const now = new Date(2026, 6, 15, 10, 0, 0);
     // [T-332 S4] 页面不再自选首号:显式传 ctx 当前号(本测关注时钟派生,不关注选号)。
@@ -49,16 +55,16 @@ describe("content-calendar 今天=真实 now (FE-H04, 可注入 clock)", () => {
     expect(past.getAttribute("data-gap")).toBe("true");
     expect(past.getAttribute("data-openable")).toBeNull();
 
-    // 今天 07-15:不是 gap,且可点(原生 button)。
+    // 今天 07-15:不是 gap，但空日期不再可点。
     const today = screen.getByTestId("calendar-day-2026-07-15");
     expect(today.getAttribute("data-gap")).toBeNull();
-    expect(today.getAttribute("data-openable")).toBe("true");
-    expect(today.tagName).toBe("BUTTON");
+    expect(today.getAttribute("data-openable")).toBeNull();
+    expect(today.tagName).toBe("DIV");
 
-    // 未来 07-20:可点、非 gap。
+    // 未来 07-20:非 gap，仍是只读空格。
     const future = screen.getByTestId("calendar-day-2026-07-20");
     expect(future.getAttribute("data-gap")).toBeNull();
-    expect(future.getAttribute("data-openable")).toBe("true");
+    expect(future.getAttribute("data-openable")).toBeNull();
   });
 
   it("显式 ?month 覆盖缺省(clock 只定缺省月/今天,不夺显式路由)", async () => {

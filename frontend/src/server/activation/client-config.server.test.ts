@@ -13,6 +13,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   ClientConfigPullError,
+  readBuiltInModelConfigurationAuthority,
+  readModelAuthoritySnapshot,
   refreshClientConfig,
   type ClientConfigCacheRecord,
   type ClientConfigStore,
@@ -264,6 +266,51 @@ describe("T-575 config.pull Creator consumer", () => {
     });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(store.record?.state).toBe("ready");
+  });
+
+  it("managed_locked 私有向量可解析，托管构建只读 LKG 且不回退 local", async () => {
+    const bundle = signedBundle(growthKeys.privateKey, {
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v1",
+          revision: 4,
+          payload: {
+            serviceMode: "managed_locked",
+            profileKey: "quality",
+            capabilityRoutes: {
+              "script.rewrite": "creator.text.primary",
+            },
+          },
+        },
+      ],
+    });
+    await store.save({
+      state: "ready",
+      checkedAt: "2026-07-28T12:05:00.000Z",
+      bundle,
+    });
+
+    const result = await readModelAuthoritySnapshot({
+      env: {
+        ...env(),
+        CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY: "managed_locked",
+      },
+      now: () => NOW,
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+      fetchImpl: vi.fn(),
+    });
+    expect(result).toEqual({
+      authority: "managed_locked",
+      state: "offline",
+      action: "正在使用最近一次已验证配置",
+      profileKey: "quality",
+      capabilityRoutes: {
+        "script.rewrite": "creator.text.primary",
+      },
+    });
+    expect(readBuiltInModelConfigurationAuthority({})).toBe("local");
   });
 
   it("逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest", async () => {

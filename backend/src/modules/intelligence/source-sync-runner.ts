@@ -95,7 +95,7 @@ function failureEnvelope(
     errorCode = "FOLDER_MISSING";
   } else if (
     matches(
-      /^(DOUYIN_FAVORITES_INVALID_RESPONSE|DouhotResponseShapeChangedError)$/i,
+      /^(DOUYIN_FAVORITES_INVALID_RESPONSE|DouhotResponseShapeChangedError|DouhotSearchInputUnavailableError)$/i,
     ) ||
     matches(/responseshapechanged/i)
   ) {

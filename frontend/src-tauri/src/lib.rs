@@ -1751,6 +1751,11 @@ pub fn run() {
                 "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                 option_env!("CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED").unwrap_or("0"),
             );
+            let model_configuration_authority = packaged_text(
+                "CREATOROS_MODEL_CONFIGURATION_AUTHORITY",
+                option_env!("CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY")
+                    .unwrap_or("managed_locked"),
+            );
             let growth_client_config_origin = packaged_text(
                 "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
                 option_env!("CREATOROS_BUILTIN_GROWTH_CLIENT_CONFIG_ORIGIN").unwrap_or(""),
@@ -1941,6 +1946,10 @@ pub fn run() {
                         &client_config_pull_enabled,
                     )
                     .env(
+                        "CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY",
+                        &model_configuration_authority,
+                    )
+                    .env(
                         "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
                         &growth_client_config_origin,
                     )
@@ -2108,6 +2117,10 @@ pub fn run() {
                     .env(
                         "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
                         &client_config_pull_enabled,
+                    )
+                    .env(
+                        "CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY",
+                        &model_configuration_authority,
                     )
                     .env(
                         "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",

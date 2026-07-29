@@ -45,6 +45,38 @@ export function syncCurrentAccountCookie(accountId: string | null): void {
 }
 
 /**
+ * 直连 CreatorOS API 的统一客户端入口。
+ *
+ * contract client 已经会带当前账号，但知识 AI、本地文件等 escape-hatch route 仍需直接
+ * fetch。此前这些调用点各自拼 header，最容易漏掉 `x-account-id`，造成页面明明已选号、
+ * route 却在进入 AI/业务前直接报 AccountRequiredError。统一在这里附加：
+ *   - 当前账号（localStorage 单一真值，并同步 cookie 供 RSC/服务端兜底）；
+ *   - 桌面启动握手；
+ *   - same-origin 凭据。
+ */
+export function creatorApiHeaders(
+  input?: HeadersInit,
+): Record<string, string> {
+  const headers = Object.fromEntries(new Headers(input).entries());
+  const currentAccountId = readCurrentAccountId();
+  syncCurrentAccountCookie(currentAccountId);
+  Object.assign(headers, handshakeHeaders());
+  if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  return headers;
+}
+
+export function fetchCreatorApi(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+): Promise<Response> {
+  return fetch(input, {
+    ...init,
+    headers: creatorApiHeaders(init.headers),
+    credentials: init.credentials ?? "same-origin",
+  });
+}
+
+/**
  * [T-332 S3] dispatch 结构化错误的类型化载体。之前只抛裸 Error(message 拼串),调用方
  * 无法可靠分支;现在保留同款 message(既有 catch 按文案匹配的行为不回归),额外带上
  * status / code / details,供上层按码翻译。S4 用 `isAccountRequiredError` 把 428 翻译成
@@ -93,22 +125,9 @@ export function isAccountRequiredError(err: unknown): boolean {
 export function createHttpTransport(baseUrl = "/api/v1"): Transport {
   return {
     async request(endpoint: Endpoint, input) {
-      // [T-136 切片 a] 每次请求注入当前选中号 → server 据此(验属主后)按号过滤。集中在此一处,
-      // 不散落到各 island。未选号 / storage 不可用 → 不带 header(server 走引导态语义)。
-      const currentAccountId = readCurrentAccountId();
-      // [T-332 S3·关 GAP-01] 顺手把当前号镜像进服务端可读 cookie,让下一次 RSC 渲染
-      // (router.refresh() / 导航)与本次 RPC 用同一个号。幂等且极廉价(document.cookie
-      // 同值重写无副作用),放请求路径上保证 cookie 永不长期漂移于 localStorage 真值。
-      syncCurrentAccountCookie(currentAccountId);
-      const headers: Record<string, string> = {
-        "content-type": "application/json",
-        // [T-372 L2] 桌面壳启动级握手 token(loopback-guard 校验;web/dev 为空不带)。
-        ...handshakeHeaders(),
-      };
-      if (currentAccountId) headers["x-account-id"] = currentAccountId;
-      const res = await fetch(`${baseUrl}/dispatch`, {
+      const res = await fetchCreatorApi(`${baseUrl}/dispatch`, {
         method: "POST",
-        headers,
+        headers: { "content-type": "application/json" },
         // Send the httpOnly session cookie so the route can derive the
         // RequestContext (multi-tenant). Same-origin defaults to sending it,
         // but make it explicit so a future base-url change can't silently drop

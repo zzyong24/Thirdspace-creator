@@ -10,7 +10,10 @@ import {
   type RelateAtomInput,
 } from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../../v1/auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 import { createServerClient } from "@/lib/contract-client.server";
 
 // 图谱 AI 建边入口(T-091 SPEC §1.3)—— 同步轻路由(/api/knowledge/distill 同款 escape
@@ -38,7 +41,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(
       rawToken,
-      req.headers.get("x-account-id"),
+      readRequestAccountId(req),
       { rejectInvalidToken: true },
     );
   } catch (err) {

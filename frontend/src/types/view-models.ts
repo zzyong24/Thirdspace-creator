@@ -111,8 +111,16 @@ export interface TodoRow {
   readonly status: TaskStatus;
   // [T-302] 派生待办(读时按状态算出,如「成片待采纳」):href=显式跳转目标(缺省按 stage 推);
   //   completable=false → 该行不给「完成」勾选(派生项状态变了自动消失,不经 tasks.patch)。
-  readonly href?: string;
-  readonly completable?: boolean;
+  readonly origin: "task" | "system_derived";
+  readonly reason:
+    | "overdue"
+    | "today"
+    | "upcoming_not_ready"
+    | "video_render"
+    | null;
+  readonly plannedDate: string | null;
+  readonly href: string | null;
+  readonly completable: boolean;
 }
 
 export interface TopicRow {
@@ -150,6 +158,15 @@ export interface DashboardViewModel extends BasePageViewModel {
   // T-143 ③:无进行中项目时为 null → 首页「继续创作」渲染诚实空态,不回退演示假项目。
   readonly continueCreating: ContinueCreating | null;
   readonly todos: ReadonlyArray<TodoRow>;
+  readonly scheduleReminderReadState:
+    | { readonly state: "ready"; readonly error: null }
+    | {
+        readonly state: "error";
+        readonly error: {
+          readonly code: "schedule_reminders_unavailable";
+          readonly message: string;
+        };
+      };
   readonly trendingTopics: ReadonlyArray<TopicRow>;
   readonly recentPublications: ReadonlyArray<PublicationCompactRow>;
   readonly dataOverview: DataOverview;

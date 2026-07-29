@@ -1,39 +1,10 @@
-/**
- * Contract tests for the Publishing Center page (Task 21 / page-specs §13).
- *
- * Locks the structural invariants the page must satisfy before any
- * pixel tuning:
- *  - The TopHeader renders in `global` mode with the canonical
- *    page title "发布中心" and description "已发布内容、表现与排期"
- *    (configured by `(creator)/shell-router.tsx`).
- *  - The sidebar marks "发布中心" as the active nav item.
- *  - The contextual card variant is `assistant` (D-003, NOT `storage`).
- *  - ContentTypeTabs render in the approved order from the screenshot.
- *  - PublishingToolbar (search + filter affordances) is present.
- *  - PublicationTable renders the 7 approved columns in this exact
- *    order: 内容 / 项目 / 平台 / 发布时间 / 状态 / 表现 / 操作.
- *  - PublicationTable contains PublicationPerformanceRow entries and
- *    each row renders a platform icon.
- *  - AnalyticsRail order is exactly:
- *      PublishingMetrics → PlatformComparisonChart → TrendChart →
- *      TopContentList.
- *  - Pagination is present at the bottom of the layout.
- *  - The page is wrapped in the shared AppShell with exactly one
- *    Sidebar and one TopHeader — no second Shell is created.
- *
- * The component is a Server Component. The test renders it inside the
- * shared AppShell the same way `(creator)/layout.tsx` does so the
- * header-mode / sidebar-active / single-shell assertions run against
- * the same DOM a real route render would produce.
- */
-
 import * as React from "react";
+import type { ReactNode } from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ReactNode } from "react";
 
-// Stub `next/link` so we can assert href values without the Next.js
-// runtime mounting a router.
+import { buildPublishingCenterViewModel } from "@/fixtures/selectors";
+
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -49,7 +20,6 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Stub next/navigation for the client island (jsdom has no app router).
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     refresh: vi.fn(),
@@ -63,17 +33,11 @@ type PublishingCenterPageProps = React.ComponentProps<
   typeof import("./publishing-center-page").PublishingCenterPage
 >;
 
-// The (creator)/layout already mounts the shared AppShell. For the
-// unit test we replicate that wrapper so the "Publishing active in
-// sidebar" / single-shell checks run against the same DOM shape a
-// real page render would produce.
 async function renderPublishingCenter(
   overrides: Partial<PublishingCenterPageProps> = {},
 ) {
   const { AppShell } = await import("@/components/shell/app-shell");
-  const { PublishingCenterPage } = await import(
-    "./publishing-center-page"
-  );
+  const { PublishingCenterPage } = await import("./publishing-center-page");
   return render(
     <AppShell
       pathname="/publishing"
@@ -81,167 +45,108 @@ async function renderPublishingCenter(
       pageTitle="发布中心"
       pageDescription="已发布内容、表现与排期"
     >
-      <PublishingCenterPage {...overrides} />
+      <PublishingCenterPage
+        viewModel={buildPublishingCenterViewModel()}
+        calendar={<div data-testid="composed-calendar">真实月历</div>}
+        {...overrides}
+      />
     </AppShell>,
   );
 }
 
 describe("PublishingCenterPage", () => {
-  afterEach(() => {
-    cleanup();
-  });
+  afterEach(cleanup);
 
-  it("mounts the TopHeader in global mode with the publishing center title", async () => {
+  it("沿用全局 Header 与单一 AppShell", async () => {
     const { container } = await renderPublishingCenter();
     const header = container.querySelector('[data-slot="app-top-header"]');
-    expect(header).not.toBeNull();
-    expect(header!.getAttribute("data-mode")).toBe("global");
-    const heading = container.querySelector(
-      '[data-slot="header-page-heading"]',
-    );
-    expect(heading).not.toBeNull();
-    expect(heading!.textContent ?? "").toContain("发布中心");
-    expect(heading!.textContent ?? "").toContain("已发布内容、表现与排期");
+    expect(header).toHaveAttribute("data-mode", "global");
+    expect(
+      container.querySelector('[data-slot="header-page-heading"]')?.textContent,
+    ).toContain("发布中心");
+    expect(container.querySelectorAll('[data-slot="app-shell"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-slot="app-sidebar"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-slot="app-top-header"]')).toHaveLength(1);
   });
 
-  it("marks the Publishing nav item as the active page in the sidebar", async () => {
-    await renderPublishingCenter();
+  it("保持发布中心导航激活和 assistant 上下文卡", async () => {
+    const { container } = await renderPublishingCenter();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
-    const active = within(nav).getByRole("link", { current: "page" });
-    expect(active).toHaveAttribute("href", "/publishing");
-    expect(active.textContent?.trim()).toBe("发布中心");
-  });
-
-  it("uses the assistant contextual-card variant (NOT storage)", async () => {
-    const { container } = await renderPublishingCenter();
-    const assistant = container.querySelector(
-      '[data-slot="sidebar-contextual-card"][data-variant="assistant"]',
+    expect(within(nav).getByRole("link", { current: "page" })).toHaveAttribute(
+      "href",
+      "/publishing",
     );
-    const storage = container.querySelector(
-      '[data-slot="sidebar-contextual-card"][data-variant="storage"]',
-    );
-    expect(assistant).not.toBeNull();
-    expect(storage).toBeNull();
+    expect(
+      container.querySelector(
+        '[data-slot="sidebar-contextual-card"][data-variant="assistant"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-slot="sidebar-contextual-card"][data-variant="storage"]',
+      ),
+    ).toBeNull();
   });
 
-  it("renders ContentTypeTabs in the approved order from the screenshot", async () => {
+  it("月历是左侧主区域，真实表现是右侧辅助区域", async () => {
     const { container } = await renderPublishingCenter();
-    const tabs = container.querySelector(
-      '[data-slot="content-type-tabs"]',
-    ) as HTMLElement;
-    expect(tabs).not.toBeNull();
-    // The tab text combines the label and the count badge (e.g.
-    // "全部28"). Compare on the leading label so the test stays
-    // tolerant of the count decoration.
-    const labels = Array.from(
-      tabs.querySelectorAll('[role="tab"]'),
-    ).map((node) => node.textContent?.trim() ?? "");
-    const primaryLabels = labels.map((value) =>
-      value.replace(/[\d,.\s]+$/u, "").trim(),
-    );
-    // The order is locked by page-specs §13. We expect at least
-    // 4 entries: 全部 / 视频 / 图文 / 音频.
-    expect(primaryLabels.length).toBeGreaterThanOrEqual(4);
-    expect(primaryLabels[0]).toBe("全部");
-    expect(primaryLabels).toContain("视频");
-    expect(primaryLabels).toContain("图文");
-    expect(primaryLabels).toContain("音频");
+    expect(container.querySelector('[data-testid="composed-calendar"]')).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-slot="publishing-calendar-region"] [data-testid="composed-calendar"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-slot="publishing-performance-region"] [data-slot="analytics-rail"]',
+      ),
+    ).not.toBeNull();
   });
 
-  it("renders the PublishingToolbar with search + filter affordances", async () => {
+  it("右侧只保留紧凑指标，热门内容下沉到月历后的全宽区域", async () => {
     const { container } = await renderPublishingCenter();
-    const toolbar = container.querySelector(
-      '[data-slot="publishing-toolbar"]',
-    ) as HTMLElement;
-    expect(toolbar).not.toBeNull();
-    const search = toolbar.querySelector(
-      'input[type="search"]',
-    ) as HTMLInputElement | null;
-    expect(search).not.toBeNull();
-  });
-
-  it("renders the PublicationTable with the 7 approved columns in spec order", async () => {
-    const { container } = await renderPublishingCenter();
-    const table = container.querySelector(
-      '[data-slot="publication-table"]',
-    ) as HTMLElement;
-    expect(table).not.toBeNull();
-    const headers = Array.from(
-      table.querySelectorAll("thead th"),
-    ).map((th) => th.textContent?.trim() ?? "");
-    expect(headers).toEqual([
-      "内容",
-      "项目",
-      "平台",
-      "发布时间",
-      "状态",
-      "表现",
-      "操作",
-    ]);
-  });
-
-  it("renders at least one PublicationPerformanceRow with a platform icon", async () => {
-    const { container } = await renderPublishingCenter();
-    const rows = container.querySelectorAll(
-      '[data-slot="publication-performance-row"]',
-    );
-    expect(rows.length).toBeGreaterThanOrEqual(1);
-    const firstRow = rows[0] as HTMLElement;
-    const icon = firstRow.querySelector(
-      '[data-slot="platform-icon"]',
-    );
-    expect(icon).not.toBeNull();
-  });
-
-  it("renders the AnalyticsRail in the locked spec order (metrics → platform-comparison → trend → top-content)", async () => {
-    const { container } = await renderPublishingCenter();
-    const rail = container.querySelector(
-      '[data-slot="analytics-rail"]',
-    ) as HTMLElement;
-    expect(rail).not.toBeNull();
-    const expectedSlots = [
+    const rail = container.querySelector('[data-slot="analytics-rail"]')!;
+    const slots = [
       "publishing-metrics",
       "platform-comparison-chart",
       "trend-chart",
-      "top-content-list",
     ];
-    const orderedNodes = expectedSlots.map((slot) =>
+    const nodes = slots.map((slot) =>
       rail.querySelector(`[data-slot="${slot}"]`),
     );
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      const relation = previous.compareDocumentPosition(node);
-      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(nodes.every(Boolean)).toBe(true);
+    for (let index = 1; index < nodes.length; index += 1) {
+      expect(
+        (nodes[index - 1] as Element).compareDocumentPosition(
+          nodes[index] as Element,
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
     }
+    expect(rail.querySelector('[data-slot="top-content-list"]')).toBeNull();
+
+    const primary = container.querySelector(
+      '[data-slot="publishing-center-primary-row"]',
+    )!;
+    const details = container.querySelector(
+      '[data-slot="publishing-center-details"]',
+    )!;
+    expect(details.querySelector('[data-slot="top-content-list"]')).not.toBeNull();
+    expect(
+      primary.compareDocumentPosition(details) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
-  it("renders the PublishingMetrics row with metric cards", async () => {
+  it("不再渲染历史库存交互", async () => {
     const { container } = await renderPublishingCenter();
-    const metrics = container.querySelector(
-      '[data-slot="publishing-metrics"]',
-    ) as HTMLElement;
-    expect(metrics).not.toBeNull();
-    const cards = metrics.querySelectorAll('[data-slot="metric-card"]');
-    expect(cards.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("renders Pagination at the bottom of the publishing layout", async () => {
-    const { container } = await renderPublishingCenter();
-    const pagination = container.querySelector(
-      '[data-slot="pagination"]',
-    ) as HTMLElement;
-    expect(pagination).not.toBeNull();
-  });
-
-  it("keeps the page inside the single AppShell — no second Sidebar/TopHeader", async () => {
-    const { container } = await renderPublishingCenter();
-    const sidebars = container.querySelectorAll('[data-slot="app-sidebar"]');
-    const headers = container.querySelectorAll('[data-slot="app-top-header"]');
-    expect(sidebars).toHaveLength(1);
-    expect(headers).toHaveLength(1);
-    const shells = container.querySelectorAll('[data-slot="app-shell"]');
-    expect(shells).toHaveLength(1);
+    for (const slot of [
+      "publishing-center-calendar-entry",
+      "content-type-tabs",
+      "publishing-toolbar",
+      "publication-table",
+      "pagination",
+    ]) {
+      expect(container.querySelector(`[data-slot="${slot}"]`)).toBeNull();
+    }
   });
 });

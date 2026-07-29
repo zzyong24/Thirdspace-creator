@@ -1,4 +1,11 @@
-import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  integer,
+  jsonb,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Learnings tables (data-model §"分析、复盘和经验" LEARNING / LEARNING_APPLICATION,
 // lines 386-409; contract/src/resources/learnings.ts; SPEC §13 "复盘与学习"). The
@@ -27,30 +34,43 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 // learningType enum is the source of truth; additive — existing values still parse),
 // so a validated conversion learning is a first-class, reusable monetization signal.
 
-export const learnings = pgTable("learnings", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(经验/复盘归到号);nullable 稳定终态
-  reviewId: text("review_id"), // nullable — a Learning can exist without a Review (SPEC §22 reuse)
-  // [T-118a gate-F3] 复盘产经验的来源作品(project-scoped 读的锚)。nullable —— 手录/非复盘
-  // 来源的经验没有归属作品。review.analyze 的 learning_list 采纳时带上 task.projectId(见
-  // ai.service learning_list confirm 分支),让复盘页能读「本作品的 candidate learnings」。
-  // additive:旧行 project_id 为 NULL,行为不变(全站库读不过滤时照旧全出)。
-  projectId: text("project_id"),
-  learningType: text("learning_type").notNull().default("strategy"),
-  title: text("title").notNull(),
-  insight: text("insight").notNull().default(""),
-  recommendation: text("recommendation").notNull().default(""),
-  validationStatus: text("validation_status").notNull().default("candidate"),
-  confidenceScore: integer("confidence_score").notNull().default(0),
-  // [T-284c G3-A] 真实证据强度派生列:'grounded' = 该经验扎在真实发布数据上(review.insights
-  // 来自已发布+有 metric_snapshots 的作品复盘;attribution 来自逐字稿依据 + ≥N 条真实指标),
-  // capture 时算好并据此自动 validated;NULL = 无真实数据背书(纯 AI 推断)→ 留 candidate 人工裁决。
-  // 守宪法②:只放行「客观真实数据背书」的经验自动流,凭空推断仍卡第二道人工门。
-  evidenceStrength: text("evidence_strength"),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-});
+export const learnings = pgTable(
+  "learnings",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(经验/复盘归到号);nullable 稳定终态
+    reviewId: text("review_id"), // nullable — a Learning can exist without a Review (SPEC §22 reuse)
+    // [T-118a gate-F3] 复盘产经验的来源作品(project-scoped 读的锚)。nullable —— 手录/非复盘
+    // 来源的经验没有归属作品。review.analyze 的 learning_list 采纳时带上 task.projectId(见
+    // ai.service learning_list confirm 分支),让复盘页能读「本作品的 candidate learnings」。
+    // additive:旧行 project_id 为 NULL,行为不变(全站库读不过滤时照旧全出)。
+    projectId: text("project_id"),
+    learningType: text("learning_type").notNull().default("strategy"),
+    title: text("title").notNull(),
+    insight: text("insight").notNull().default(""),
+    recommendation: text("recommendation").notNull().default(""),
+    validationStatus: text("validation_status").notNull().default("candidate"),
+    confidenceScore: integer("confidence_score").notNull().default(0),
+    // [T-284c G3-A] 真实证据强度派生列:'grounded' = 该经验扎在真实发布数据上(review.insights
+    // 来自已发布+有 metric_snapshots 的作品复盘;attribution 来自逐字稿依据 + ≥N 条真实指标),
+    // capture 时算好并据此自动 validated;NULL = 无真实数据背书(纯 AI 推断)→ 留 candidate 人工裁决。
+    // 守宪法②:只放行「客观真实数据背书」的经验自动流,凭空推断仍卡第二道人工门。
+    evidenceStrength: text("evidence_strength"),
+    // [T-610] 人工采纳的稳定内容键。仅活动经验占键；同内容历史重复行会被标 discarded
+    // 并清空键，既保留审计与引用，又保证知识库只出现一个活动事实。
+    contentFingerprint: text("content_fingerprint"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("ux_learnings_active_content_fingerprint")
+      .on(table.userId, table.accountId, table.contentFingerprint)
+      .where(
+        sql`${table.validationStatus} <> 'discarded' AND ${table.contentFingerprint} IS NOT NULL`,
+      ),
+  ],
+);
 
 export const learningApplications = pgTable("learning_applications", {
   id: text("id").primaryKey(),
@@ -92,6 +112,7 @@ CREATE INDEX IF NOT EXISTS idx_learnings_project ON learnings (user_id, project_
 -- [T-284c G3-A] additive:真实证据强度派生列('grounded' | NULL)。ADD COLUMN IF NOT EXISTS 幂等,
 -- 不动存量行(旧行 NULL,行为不变:候选仍走人工裁决门)。同款范式见上方 project_id / positioning.ts。
 ALTER TABLE learnings ADD COLUMN IF NOT EXISTS evidence_strength TEXT;
+ALTER TABLE learnings ADD COLUMN IF NOT EXISTS content_fingerprint TEXT;
 CREATE TABLE IF NOT EXISTS learning_applications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

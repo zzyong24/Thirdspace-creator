@@ -462,6 +462,28 @@ export class DouyinAudioFetchError extends Error {
 }
 
 /**
+ * 抖音详情偶尔把完整 CDN URL 错装进 `aweme/v1/play?video_id=`。若原样交给
+ * ffmpeg，源站会把整个 URL 当视频 id 并返回不可解媒体。这里在进入抽音链前统一解包；
+ * 普通播放地址保持原值，只继续既有 playwm → play 兼容。
+ */
+export function normalizeDouyinPlaybackUrl(rawUrl: string): string {
+  let candidate = rawUrl.trim();
+  try {
+    const parsed = new URL(candidate);
+    if (
+      parsed.hostname === "aweme.snssdk.com" &&
+      parsed.pathname.includes("/aweme/v1/play")
+    ) {
+      const nested = parsed.searchParams.get("video_id")?.trim() ?? "";
+      if (/^https?:\/\//i.test(nested)) candidate = nested;
+    }
+  } catch {
+    // 既有解析器会在上游保证非空；无法构造 URL 时保留原串，让 ffmpeg 的真实错误继续回显。
+  }
+  return candidate.replace("playwm", "play");
+}
+
+/**
  * 从 iesdouyin 分享页 HTML 抽无水印播放直链(纯函数,可喂 canned HTML 单测)。
  * 逻辑忠实移植 skill `fetch_metadata`:
  *   正则抽 `window._ROUTER_DATA = {...}</script>` → JSON.parse →
@@ -521,8 +543,8 @@ export function parseDouyinVideoUrl(html: string): DouyinVideoUrl {
       "parseDouyinVideoUrl: 未找到视频播放地址(play_addr/download_addr 皆空)",
     );
   }
-  // 去水印:playwm → play(skill 同款一次替换)。
-  const playUrl = rawUrl.replace("playwm", "play");
+  // 去水印 + 兼容错误嵌套的完整 CDN URL。
+  const playUrl = normalizeDouyinPlaybackUrl(rawUrl);
 
   const cover = (video.cover ?? {}) as Record<string, unknown>;
   const coverList = Array.isArray(cover.url_list) ? cover.url_list : [];
@@ -2294,7 +2316,7 @@ export function parseAwemeDetail(json: unknown): DouyinVideoSource {
       "parseAwemeDetail: 未找到视频播放地址(play_addr/download_addr 皆空)",
     );
   }
-  const playUrl = rawUrl.replace("playwm", "play");
+  const playUrl = normalizeDouyinPlaybackUrl(rawUrl);
   const cover = (video.cover ?? {}) as Record<string, unknown>;
   const coverList = Array.isArray(cover.url_list) ? cover.url_list : [];
   const coverUrl = typeof coverList[0] === "string" ? coverList[0] : undefined;
@@ -2511,6 +2533,11 @@ export interface FetchDouyinCommentsDeps {
   //   本作品 watermark 无法覆盖它们 → 该页非"全已知" → early-break 不触发,安全退化为全量滚动。
   //   故真增量收益(每作品少翻很多页)要等 item_id 真机验证/收窄后才**完全**兑现;当前实现无回归。
   commentWatermark?: (awemeId: string) => Promise<Set<string>>;
+  /** 多作品抓取每完成一个作品立即回调；调用方可同步落库并上报真实 M/N 进度。 */
+  onWorkComplete?: (
+    work: FetchCommentsForWorksResult,
+    progress: { processed: number; total: number },
+  ) => void | Promise<void>;
 }
 
 const DEFAULT_COMMENT_MAX_PAGES = 40;
@@ -2730,7 +2757,12 @@ export async function fetchDouyinCommentsForWorks(
           // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
           scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark),
         );
-        out.push({ awemeId, records });
+        const work = { awemeId, records };
+        out.push(work);
+        await deps.onWorkComplete?.(work, {
+          processed: out.length,
+          total: awemeIds.length,
+        });
       } catch (e) {
         // [T-232] 额度耗尽(通道冷却剩余超 acquire 上限)→ 立即停剩余作品,带回部分结果。
         if (e instanceof DouyinCooldownActiveError) {

@@ -310,7 +310,15 @@ describe("ProjectRepository — per-account strict isolation (T-332 S2)", () => 
 
     await expect(
       repo.listOutputRefsByProjects(ctxA1, ["P1", "P2"]),
-    ).resolves.toEqual([{ projectId: "P1", outputId: "o_P1" }]);
+    ).resolves.toEqual([
+      {
+        projectId: "P1",
+        outputId: "o_P1",
+        title: "号1 output",
+        contentType: "video",
+        status: "drafting",
+      },
+    ]);
   });
 
   it("未选号(accountId null)→ 读写一律 AccountRequiredError(引导态,无全局视图)", async () => {
@@ -536,6 +544,7 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
       userId: "user-a",
       accountId: "acct-a",
       plannedAt: NOW,
+      plannedDate: NOW.slice(0, 10),
       contentOutputId: oId,
       createdAt: NOW,
       updatedAt: NOW,

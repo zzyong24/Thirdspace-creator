@@ -44,7 +44,7 @@ X-CreatorOS-Handshake: <启动级本地握手>
 {
   "state": "ready",
   "modelPolicy": {
-    "serviceMode": "managed_default_user_override_allowed",
+    "serviceMode": "managed_locked",
     "profileKey": "balanced",
     "capabilityRoutes": {
       "script.draft": "text-quality"
@@ -123,7 +123,10 @@ If-None-Match: "<last bundleDigest>"
 
 ```ts
 type CreatorModelPolicy = {
-  serviceMode: "managed_default_user_override_allowed" | "byok_required";
+  serviceMode:
+    | "managed_default_user_override_allowed"
+    | "byok_required"
+    | "managed_locked";
   profileKey: "balanced" | "quality";
   capabilityRoutes: Record<string, string>;
 };
@@ -136,6 +139,10 @@ type CreatorModelPolicy = {
   签名。
 - 该 policy 只能收窄/选择 CreatorOS 已支持的模型能力，不能扩大 entitlement 或绕过本地
   BYOK/secret 边界。长期模型 secret 永不从 Growth 下发。
+- `managed_locked` 是 T-604 增量：正式渠道构建只有该 mode 可执行模型能力；旧两种 mode
+  继续兼容解析，但在托管构建中只形成“策略不匹配”的不可用状态，不能恢复本地配置。Growth
+  canonical fixture 仍固定旧 mode 以保护 T-575 byte pin；T-604 用 Creator 私有 parser
+  vector 覆盖新枚举，不伪造 Growth 已发布新 revision。
 
 ## 6. LKG、撤权与离线
 

@@ -137,6 +137,12 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     expect(requiredSkillIdsForTask("scheduled.self.detail", {})).toEqual([
       "topic.attribution",
     ]);
+    expect(requiredSkillIdsForTask("scheduled.self.metrics", {})).toEqual([
+      "topic.attribution",
+    ]);
+    expect(requiredSkillIdsForTask("scheduled.intelligence.sync", {})).toEqual(
+      [],
+    );
     expect(requiredSkillIdsForTask("scheduled.benchmark", {})).toEqual([
       "benchmark.teardown",
     ]);

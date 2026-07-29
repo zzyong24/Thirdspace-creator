@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
-import { AuthenticationError } from "@creatoros/backend/modules/identity";
+import {
+  AuthenticationError,
+  OwnershipError,
+} from "@creatoros/backend/modules/identity";
 import { getKnowledgeSearchRuntime } from "@/server/persistence-client";
 import { readSessionCookie } from "../../v1/auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 
 // 知识库 AI 搜索入口(T-093 SPEC §3)—— 同步轻路由(distill 同款 escape hatch,
 // hybrid 检索要经可配 embedding capability,不走 RPC envelope):
@@ -37,10 +43,15 @@ export async function POST(req: Request): Promise<Response> {
   const rawToken = readSessionCookie(req);
   let ctx: RequestContext;
   try {
-    ctx = await resolveRequestContext(rawToken);
+    ctx = await resolveRequestContext(rawToken, readRequestAccountId(req), {
+      rejectInvalidToken: true,
+    });
   } catch (err) {
     if (err instanceof AuthenticationError) {
       return NextResponse.json({ error: err.message }, { status: 401 });
+    }
+    if (err instanceof OwnershipError) {
+      return NextResponse.json({ error: err.message }, { status: 404 });
     }
     throw err;
   }

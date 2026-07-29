@@ -17,12 +17,15 @@ const ctx: RequestContext = {
 };
 
 describe("T-482 内容雷达 transport 契约", () => {
-  it("只声明当前已有真实实现的 28 个 operation", () => {
-    expect(INTELLIGENCE_OP_IDS).toHaveLength(28);
+  it("只声明当前已有真实实现的 29 个 operation", () => {
+    expect(INTELLIGENCE_OP_IDS).toHaveLength(29);
     expect(INTELLIGENCE_OP_IDS).toContain("intelligence.workspace.get");
     expect(INTELLIGENCE_OP_IDS).toContain("intelligence.collectors.list");
     expect(INTELLIGENCE_OP_IDS).toContain(
       "intelligence.transcripts.enqueue",
+    );
+    expect(INTELLIGENCE_OP_IDS).toContain(
+      "intelligence.transcripts.uploadManual",
     );
     expect(INTELLIGENCE_OP_IDS).toContain(
       "intelligence.items.importDouyinShare",
@@ -95,6 +98,36 @@ describe("T-482 内容雷达 transport 契约", () => {
         );
       expect(parsedShareImport.task.kind).toBe("share_import");
       expect(parsedShareImport.task.status).toBe("queued");
+
+      const itemId = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/manual-contract",
+        externalId: "manual-contract",
+        title: "人工稿契约",
+      });
+      const uploaded = (await transport.request(
+        ENDPOINTS.uploadManualIntelligenceTranscript,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            itemId,
+            format: "txt",
+            fileName: "人工稿.txt",
+            text: "人工上传的逐字稿正文",
+          },
+        },
+        ctx,
+      )) as { data: unknown };
+      expect(
+        ENDPOINTS.uploadManualIntelligenceTranscript.response.parse(
+          uploaded.data,
+        ).transcript,
+      ).toMatchObject({
+        itemId,
+        status: "done",
+        source: "manual",
+        text: "人工上传的逐字稿正文",
+      });
 
       const created = (await transport.request(
         ENDPOINTS.createIntelligenceSource,

@@ -20,7 +20,7 @@ import { TagChip } from "@/components/content/tag-chip";
 import { STAGE_LABELS as CANONICAL_STAGE_LABELS } from "@/lib/stage-labels";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
-import type { TodoRow } from "@/types/view-models";
+import type { DashboardViewModel, TodoRow } from "@/types/view-models";
 import type { ProjectStageName } from "@/types/domain";
 
 // ---------------------------------------------------------------------------
@@ -74,7 +74,13 @@ function todoHref(todo: TodoRow): string {
 // TodoCard
 // ---------------------------------------------------------------------------
 
-export function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
+export function TodoCard({
+  todos,
+  scheduleReminderReadState = { state: "ready", error: null },
+}: {
+  todos: ReadonlyArray<TodoRow>;
+  scheduleReminderReadState?: DashboardViewModel["scheduleReminderReadState"];
+}) {
   const router = useRouter();
   // 乐观完成集合(点勾后立即划线;refresh 回流后行由服务端读侧移除)。
   const [doneIds, setDoneIds] = React.useState<ReadonlySet<string>>(new Set());
@@ -116,8 +122,24 @@ export function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
   return (
     <div data-slot="todo-card">
       <SectionCard title="待办事项" description={`${todos.length} 项待处理任务`}>
+        {scheduleReminderReadState.state === "error" ? (
+          <div
+            data-slot="schedule-reminder-error"
+            role="alert"
+            className="mb-2 flex items-center justify-between gap-3 rounded-card border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground"
+          >
+            <span>{scheduleReminderReadState.error.message}</span>
+            <button
+              type="button"
+              onClick={() => router.refresh()}
+              className="shrink-0 font-medium text-brand hover:underline"
+            >
+              重试
+            </button>
+          </div>
+        ) : null}
         {/* [T-054] 空态引导:0 待办时把人送去下一步(选题池)。 */}
-        {todos.length === 0 ? (
+        {todos.length === 0 && scheduleReminderReadState.state === "ready" ? (
           <div
             data-slot="todo-empty"
             className="flex flex-col items-start gap-2 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-4"
@@ -138,7 +160,7 @@ export function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
           className="flex flex-col gap-2"
           aria-label="待办任务"
         >
-          {todos.slice(0, 4).map((todo) => {
+          {todos.slice(0, 5).map((todo) => {
             const done = doneIds.has(todo.id);
             return (
               <li
@@ -209,6 +231,17 @@ export function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
                       <span className="truncate">{todo.projectTitle}</span>
                       <span>{stageLabel(todo.stage)}</span>
                     </div>
+                    {todo.plannedDate ? (
+                      <div
+                        data-slot="todo-planned-date"
+                        className="flex items-center gap-1.5 text-xs text-brand"
+                      >
+                        <span>排期</span>
+                        <time dateTime={todo.plannedDate}>
+                          {todo.plannedDate}
+                        </time>
+                      </div>
+                    ) : null}
                   </Link>
                 </div>
                 {errorId === todo.id ? (

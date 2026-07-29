@@ -69,7 +69,7 @@ export interface CalendarPublicationItem {
   readonly coverAssetId: string | null;
 }
 
-/** 排期表单的项目下拉最小投影(id + 标题;可选绑到某项目/产出)。 */
+/** 日历只读项目排期需要的标题投影(id + 标题)，不承担排期写入。 */
 export interface CalendarProjectOption {
   readonly id: string;
   readonly title: string;
@@ -86,7 +86,7 @@ export interface ContentCalendarViewModel {
   readonly publications: CalendarPublicationItem[];
   /** 本月排期 entries(content_calendar_entries;现 0 行 → 诚实空)。 */
   readonly entries: ContentCalendarEntryResource[];
-  /** 用户的项目列表(排期表单「选项目」用;读失败 → 诚实空)。 */
+  /** 项目标题投影；读失败时项目排期显示通用标签，不猜标题。 */
   readonly projects: CalendarProjectOption[];
   readonly cadence: PublishingCadenceResource | null;
   readonly attainment: CadenceAttainmentResource | null;
@@ -202,8 +202,8 @@ async function loadViewModel(
     body: undefined,
   })) as unknown as ContentCalendarEntryResource[];
 
-  // 排期表单「选项目」的候选:读用户项目列表(id + 标题)。读失败 → 诚实空,
-  // 表单退化为「只填计划标题」,不阻断排期。
+  // 只读排期的项目标题投影。读失败 → 诚实空，日历显示“项目排期”通用标签；
+  // 不用 note/标题相似度猜项目，也不在日历提供自由排期写入口。
   let projects: CalendarProjectOption[] = [];
   try {
     const rows = (await client.listProjects({

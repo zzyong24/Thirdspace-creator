@@ -1,75 +1,40 @@
 /**
- * Publishing Center page (Task 21 / page-specs §13).
+ * 发布中心主视图（T-599）。
  *
- * The `/publishing` global resource-center landing page. Composes, in
- * the spec order:
+ * 项目列表拥有作品库存，发布中心只回答两个问题：
+ * 1. 过去发布和未来排期在时间上如何分布；
+ * 2. 已发布内容的真实表现如何。
  *
- *   PublishingCenterPage
- *   ├── ContentTypeTabs            (locked order: 全部 / 视频 / 图文 / 音频)
- *   ├── Two-column grid
- *   │   ├── Left stack
- *   │   │   ├── PublishingToolbar  (search + filter affordances)
- *   │   │   └── PublicationTable   (7 columns: 内容 / 项目 / 平台 /
- *   │   │                             发布时间 / 状态 / 表现 / 操作)
- *   │   │       └── PublicationPerformanceRow[] (each row keeps a platform
- *   │   │                                    icon and a content thumbnail)
- *   │   └── AnalyticsRail          (locked order: PublishingMetrics →
- *   │                                PlatformComparisonChart →
- *   │                                TrendChart → TopContentList)
- *   └── Pagination
- *
- * Layout invariants (page-specs §13, D-003):
- *  - The page is a global resource-center route — distinct from the
- *    per-project Publishing Workspace at `/projects/[id]/publishing`
- *    (page-specs §13 "禁止改变": "不与 Publishing Workspace 合并").
- *  - Header is in `global` mode with page title "发布中心" and
- *    description "已发布内容、表现与排期" (configured by
- *    `(creator)/shell-router.tsx`).
- *  - The shared Sidebar uses the approved `assistant` contextual-card
- *    variant (D-003). The page itself does NOT render the global
- *    Sidebar — that lives in `(creator)/layout.tsx`.
- *  - Publication table is a 7-column table — NOT a card waterfall
- *    (page-specs §13 "禁止改变": "不改成卡片瀑布流").
- *  - No content editor entry is added (page-specs §13 "禁止改变":
- *    "不新增内容编辑入口").
- *  - Platform icons and content thumbnails are preserved.
- *  - No new product structure, no fixture mutation, no Math.random /
- *    network access ([T-231④] 例外:近 N 天 chip 以挂载时的真实"今天"为基准)。
- *  - [T-231①] BatchOperationBar(全选 + 批量发布/下架/修改时间)已删:
- *    live publisher 是 mock,批量 transition 会铸假数据/毁真数据。
- *
- * The page is a Server Component. It does not own a Sidebar or a
- * TopHeader — those live in `(creator)/layout.tsx` and are mounted
- * once for the whole route group.
+ * 因此页面只保留“左月历 / 右表现”的主从布局。月历由 route 的 batch
+ * composition 作为真实 React 节点传入；本 feature 不重新取数，也不保留 fixture
+ * 回退。月历与表现各自处理 loading/error/empty，任何一侧失败都不会遮住另一侧。
  */
 
-import Link from "next/link";
 import * as React from "react";
 
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  resolvePageState,
-} from "@/components/state/page-state";
-import { buildPublishingCenterViewModel } from "@/fixtures/selectors";
+import { ErrorState, LoadingState } from "@/components/state/page-state";
 import type {
   BasePageViewModel,
   MetricCard as MetricCardVm,
+  ViewModelError,
 } from "@/types/view-models";
-import { PublishingCenterInteractiveRegion } from "./publishing-center-interactive-region";
+import {
+  PublishingCenterSummaryRail,
+  PublishingCenterTopContent,
+} from "./publishing-center-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
 export interface PublishingCenterPageProps {
-  /**
-   * Override hook for tests; defaults to the canonical dataset. The
-   * page does not consume network or runtime data — it pulls everything
-   * from the fixed fixtures (D-010) so SSR output is deterministic.
-   */
+  /** 真实表现投影；缺省只用于接线期间的诚实空投影，不读取 fixture。 */
   readonly viewModel?: PublishingCenterViewModel;
+  /**
+   * route 组合出的真实月历。它可以自行渲染 ready/error/empty；
+   * 未接线时显示明确错误，不用旧“打开日历”入口兜底。
+   */
+  readonly calendar?: React.ReactNode;
 }
 
 export interface PublishingCenterViewModel extends BasePageViewModel {
@@ -134,70 +99,91 @@ export interface TopContentRow {
   readonly engagement: string;
 }
 
-// ---------------------------------------------------------------------------
-// Page (Server Component shell)
-//
-// The page renders the shared page-state placeholders when the ViewModel
-// envelope signals loading / error / empty, and otherwise mounts the
-// Client island (`PublishingCenterInteractiveRegion`) which owns the
-// wired tabs / search / filters / pagination / row
-// actions. The default-state DOM is equivalent to the previous
-// server-only render so the visual baseline holds.
-// ---------------------------------------------------------------------------
+const EMPTY_VIEW_MODEL: PublishingCenterViewModel = {
+  scenario: "default",
+  kind: "publishing-center",
+  loading: false,
+  error: null,
+  contentTypeTabs: [],
+  publications: [],
+  metrics: [],
+  platformComparison: [],
+  trend: [],
+  topContent: [],
+  pagination: { currentPage: 1, totalPages: 1 },
+};
+
+const CALENDAR_NOT_COMPOSED: ViewModelError = {
+  code: "calendar_unavailable",
+  message: "内容日历暂时不可用，请稍后重试。",
+};
 
 export function PublishingCenterPage({
   viewModel,
+  calendar,
 }: PublishingCenterPageProps = {}) {
-  const vm = viewModel ?? buildPublishingCenterViewModel();
-  const isEmpty = vm.publications.length === 0;
-  const state = resolvePageState(vm, isEmpty);
+  const vm = viewModel ?? EMPTY_VIEW_MODEL;
+  const performanceState =
+    vm.loading || vm.scenario === "loading"
+      ? "loading"
+      : vm.error || vm.scenario === "error"
+        ? "error"
+        : "ready";
+
   return (
     <main
       data-app="creatoros"
       data-page="publishing-center"
       data-publishing-center-id="publishing-center-root"
-      data-page-state={state}
-      className="flex flex-col gap-card-gap"
+      data-page-state={performanceState}
+      className="min-w-0"
     >
-      {/* [T-052 裁决⑤] 内容日历并入发布中心:此前 /calendar 全站无入口(孤儿页,
-          只能手敲 URL)。发布节奏/排期属发布中心域,入口挂这里。 */}
       <div
-        data-slot="publishing-center-calendar-entry"
-        className="flex items-center justify-between rounded-card border border-border bg-surface-subtle px-3.5 py-2.5"
+        data-slot="publishing-center-layout"
+        data-layout="calendar-70-performance-30"
+        className="flex min-w-0 flex-col gap-card-gap"
       >
-        <span className="text-sm text-muted-foreground">
-          内容日历 · 发布节奏与达成率
-        </span>
-        <Link
-          href="/calendar"
-          className="text-sm font-medium text-brand hover:underline"
+        <div
+          data-slot="publishing-center-primary-row"
+          className="grid min-w-0 grid-cols-1 items-start gap-card-gap lg:grid-cols-[minmax(0,7fr)_minmax(17rem,3fr)]"
         >
-          打开日历 →
-        </Link>
+          <section
+            data-slot="publishing-calendar-region"
+            aria-label="内容日历"
+            className="min-w-0 rounded-card border border-border bg-surface p-4 shadow-sm"
+          >
+            {calendar ?? <ErrorState error={CALENDAR_NOT_COMPOSED} />}
+          </section>
+
+          <section
+            data-slot="publishing-performance-region"
+            aria-label="发布表现"
+            className="min-w-0"
+          >
+            {performanceState === "loading" ? (
+              <LoadingState label="正在加载发布表现…" rows={4} />
+            ) : performanceState === "error" ? (
+              <ErrorState error={vm.error} />
+            ) : (
+              <PublishingCenterSummaryRail viewModel={vm} />
+            )}
+          </section>
+        </div>
+
+        <section
+          data-slot="publishing-center-details"
+          aria-label="热门内容"
+          className="min-w-0"
+        >
+          {performanceState === "loading" ? (
+            <LoadingState label="正在加载热门内容…" rows={2} />
+          ) : performanceState === "error" ? (
+            null
+          ) : (
+            <PublishingCenterTopContent viewModel={vm} />
+          )}
+        </section>
       </div>
-      {state === "loading" ? (
-        <LoadingState label="正在加载发布中心…" rows={6} />
-      ) : state === "error" ? (
-        <ErrorState error={vm.error} />
-      ) : state === "empty" ? (
-        <EmptyState
-          title="这个账号还没有发布内容"
-          // [T-332 S4·§6.2] 新号引导:从项目稿面登记第一条作品;历史表现数据靠该号的
-          // 日常采集任务(绑号 bootstrap 自动建)拉回,诚实告知「等待日拉」而非装空白。
-          description="发布数据按抖音号隔离。到项目稿面登记第一条作品;已发布作品的表现数据会随这个号的日常采集任务自动拉回。"
-          action={
-            <Link
-              href="/projects"
-              data-slot="publishing-empty-projects-link"
-              className="text-sm font-medium text-brand underline-offset-4 hover:underline"
-            >
-              去项目登记第一条作品 →
-            </Link>
-          }
-        />
-      ) : (
-        <PublishingCenterInteractiveRegion viewModel={vm} />
-      )}
     </main>
   );
 }

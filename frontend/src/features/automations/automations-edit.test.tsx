@@ -268,12 +268,12 @@ describe("T-248 — 模板死分支删除(D8a 已翻真)", () => {
       expect(card.className).not.toContain("cursor-not-allowed");
     }
     expect(screen.queryByText(/规划中 · D8a 后开放/)).not.toBeInTheDocument();
-    // 每张卡都是可用的「用此模板新建」
-    expect(screen.getAllByText("用此模板新建")).toHaveLength(cards.length);
-    // 点明细模板卡 → onPick 正常回调(不再灰置)
+    // 每张卡都是可用的紧凑「新建」入口
+    expect(screen.getAllByText("新建")).toHaveLength(cards.length);
+    // 点仍在产品范围内的评论同步模板卡 → onPick 正常回调。
     fireEvent.click(
       document.querySelector(
-        '[data-template-id="daily-detail"]',
+        '[data-template-id="daily-comments"]',
       ) as HTMLButtonElement,
     );
     expect(onPick).toHaveBeenCalledTimes(1);

@@ -3,6 +3,7 @@ import { defineEndpoint } from "../endpoints";
 import {
   id,
   iso8601,
+  calendarDate,
   paginationQuery,
   calendarEntryStatus,
   cadenceFrequency,
@@ -21,6 +22,47 @@ const preferredSlots = z.array(
   z.object({ weekday: z.number().int(), time: z.string() }),
 );
 
+const createEntryBody = z
+  .object({
+    projectId: id.optional(),
+    plannedDate: calendarDate.optional(),
+    plannedAt: iso8601.optional(),
+    contentOutputId: id.optional(),
+    candidateId: id.optional(),
+    note: z.string().optional(),
+  })
+  .superRefine((body, ctx) => {
+    const projectBranch =
+      body.projectId !== undefined || body.plannedDate !== undefined;
+    if (projectBranch) {
+      if (body.projectId === undefined || body.plannedDate === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: "projectId and plannedDate must be provided together",
+        });
+      }
+      if (
+        body.plannedAt !== undefined ||
+        body.contentOutputId !== undefined ||
+        body.candidateId !== undefined
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "a project schedule cannot include plannedAt, contentOutputId, or candidateId",
+        });
+      }
+      return;
+    }
+    if (body.plannedAt === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["plannedAt"],
+        message: "plannedAt is required for a legacy calendar entry",
+      });
+    }
+  });
+
 // SPEC §13 "内容日历 (content-calendar)" group (七步 §7.2, contract v0.4).
 export const contentCalendarOperations = {
   listCalendar: defineEndpoint({
@@ -38,12 +80,7 @@ export const contentCalendarOperations = {
     method: "POST",
     path: "/accounts/:accountId/calendar/entries",
     params: accountParams,
-    body: z.object({
-      plannedAt: iso8601,
-      contentOutputId: id.optional(),
-      candidateId: id.optional(),
-      note: z.string().optional(),
-    }),
+    body: createEntryBody,
     response: contentCalendarEntryResource,
     fr: ["FR-CAL-ENTRY-CREATE"],
   }),
@@ -54,6 +91,7 @@ export const contentCalendarOperations = {
     params: entryParams,
     body: z.object({
       plannedAt: iso8601.optional(),
+      plannedDate: calendarDate.optional(),
       contentOutputId: id.optional(),
       candidateId: id.optional(),
       note: z.string().optional(),

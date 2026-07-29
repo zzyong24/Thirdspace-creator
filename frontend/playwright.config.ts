@@ -152,6 +152,9 @@ export default defineConfig({
       CREATOROS_DOUYIN_AUTH_DIR: join(PLAYWRIGHT_DATA_ROOT, "auth-douyin"),
       CREATOROS_WEB_AUTH_DIR: join(PLAYWRIGHT_DATA_ROOT, "auth-web"),
       CREATOROS_DISABLE_SCHEDULER: "1",
+      // next dev 的自动化 webServer 不经 Rust 壳启动；显式走 verdict gate 的
+      // 开发态豁免，避免继承本机桌面环境后被误判为裸启 sidecar。
+      CREATOROS_DEV_MODE: "1",
     },
     reuseExistingServer: false,
     // [T-326 B-04] 首个请求要付「根路由整图冷编译 + fresh PGlite 迁移/seed」的成本,

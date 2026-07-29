@@ -7,7 +7,10 @@ import {
 import { getChatRuntime } from "@/server/persistence-client";
 import { runKnowledgeClassify } from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../../v1/auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 
 // 知识倾倒场归类入口(T-062c SPEC §4)—— 同步轻路由(/api/chat 同款 escape hatch:AI 交互
 // 不走 RPC envelope):倾倒场 POST { content } → 鉴权(session cookie → RequestContext,
@@ -45,7 +48,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(
       rawToken,
-      req.headers.get("x-account-id"),
+      readRequestAccountId(req),
       { rejectInvalidToken: true },
     );
   } catch (err) {

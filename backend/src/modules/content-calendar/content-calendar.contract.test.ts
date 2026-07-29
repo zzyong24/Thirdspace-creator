@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, projects, type Db } from "@creatoros/backend";
 import {
   ENDPOINTS,
   type Endpoint,
@@ -8,7 +8,10 @@ import {
 } from "@creatoros/contract";
 import { createContentCalendarService } from "./content-calendar.service";
 import { createContentCalendarTransport } from "./content-calendar.transport";
-import { UnsupportedOperationError } from "./content-calendar.errors";
+import {
+  ConflictError,
+  UnsupportedOperationError,
+} from "./content-calendar.errors";
 
 // ContentCalendar contract test (Step 4) — for EACH of the 8 op ids, drive the
 // transport with a seeded ctx + valid input and assert the op's contract response DTO
@@ -49,6 +52,21 @@ function makeTransport(db: Db): Transport {
     publishing: { isOutputPublished: async () => false },
     candidates: { exists: async () => true },
     notifications: { notify: async () => {} },
+    identity: { getEffectiveTimezone: async () => "UTC" },
+    projects: {
+      getScheduleProject: async (_ctx, projectId) => ({
+        id: projectId,
+        title: "排期项目",
+        status: "active",
+        source: "manual",
+        currentStage: "script",
+        updatedAt: NOW,
+        outputs: [],
+      }),
+    },
+    schedulePublishing: {
+      getProjectPublicationFact: async () => null,
+    },
   });
   return createContentCalendarTransport(() => service);
 }
@@ -68,6 +86,18 @@ describe("content-calendar contract", () => {
   let transport: Transport;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await db.insert(projects).values({
+      id: "project-1",
+      userId: ctx.userId,
+      accountId: ACC,
+      title: "排期项目",
+      creationMode: "guided",
+      status: "active",
+      currentStage: "script",
+      startedAt: "2026-07-01T00:00:00.000Z",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      updatedAt: "2026-07-01T00:00:00.000Z",
+    });
     transport = makeTransport(db);
   });
 
@@ -83,6 +113,33 @@ describe("content-calendar contract", () => {
       note: "draft",
     });
     expect(res.meta?.requestId).toBe("r1");
+  });
+
+  it("creates and updates a project schedule through the existing operations", async () => {
+    const created = await call(
+      transport,
+      "accounts.calendar.entries.create",
+      {
+        params: { accountId: ACC },
+        body: { projectId: "project-1", plannedDate: "2026-07-20" },
+      },
+    );
+    const first = ENDPOINTS.createEntry.response.parse(created.data);
+    expect(first).toMatchObject({
+      projectId: "project-1",
+      plannedDate: "2026-07-20",
+      plannedAt: "2026-07-20T12:00:00.000Z",
+    });
+
+    const updated = await call(transport, "calendar.entries.update", {
+      params: { entryId: first.id },
+      body: { plannedDate: "2026-07-22" },
+    });
+    expect(ENDPOINTS.updateEntry.response.parse(updated.data)).toMatchObject({
+      projectId: "project-1",
+      plannedDate: "2026-07-22",
+      plannedAt: "2026-07-22T12:00:00.000Z",
+    });
   });
 
   it("accounts.calendar.list → contentCalendarEntryResource[] (per item)", async () => {
@@ -106,15 +163,14 @@ describe("content-calendar contract", () => {
     expect(parsed.note).toBe("revised");
   });
 
-  it("calendar.entries.transition → contentCalendarEntryResource (published)", async () => {
+  it("calendar.entries.transition rejects public published state", async () => {
     const id = await seedEntry(transport);
-    const res = await call(transport, "calendar.entries.transition", {
-      params: { entryId: id },
-      body: { status: "published" },
-    });
-    const parsed = ENDPOINTS.transitionEntry.response.parse(res.data);
-    expect(parsed.status).toBe("published");
-    expect(parsed.publishedAt).toBe(NOW);
+    await expect(
+      call(transport, "calendar.entries.transition", {
+        params: { entryId: id },
+        body: { status: "published" },
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 
   it("calendar.entries.delete → { id, deleted: true }", async () => {
@@ -162,11 +218,7 @@ describe("content-calendar contract", () => {
       params: { accountId: ACC },
       body: { frequency: "weekly", preferredSlots: [] },
     });
-    const id = await seedEntry(transport);
-    await call(transport, "calendar.entries.transition", {
-      params: { entryId: id },
-      body: { status: "published" },
-    });
+    await seedEntry(transport);
     const res = await call(transport, "accounts.cadence.attainment", {
       params: { accountId: ACC },
       query: WINDOW,
@@ -175,7 +227,7 @@ describe("content-calendar contract", () => {
     expect(parsed.accountId).toBe(ACC);
     expect(parsed.attainmentRatio).toBeGreaterThanOrEqual(0);
     expect(parsed.attainmentRatio).toBeLessThanOrEqual(1);
-    expect(parsed.publishedCount).toBe(1);
+    expect(parsed.publishedCount).toBe(0);
   });
 
   it("unknown op id throws UnsupportedOperationError", async () => {

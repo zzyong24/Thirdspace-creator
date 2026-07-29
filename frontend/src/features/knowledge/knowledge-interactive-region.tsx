@@ -31,6 +31,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
+import { fetchCreatorApi } from "@/lib/http-transport";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import {
@@ -178,7 +179,7 @@ export function KnowledgeInteractiveRegion({
       error: null,
     });
     try {
-      const res = await fetch("/api/knowledge/search", {
+      const res = await fetchCreatorApi("/api/knowledge/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ q: trimmed }),

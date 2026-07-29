@@ -1,4 +1,4 @@
-import type { RequestContext } from "@creatoros/contract";
+import { calendarDate, type RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
   createContentCalendarRepository,
@@ -35,11 +35,11 @@ import {
 // Determinism (C-5): all "today / overdue / window" math comes from the injected
 // `clock.now()` or the request's `from`/`to` — NEVER Date.now / Math.random / fetch.
 
-// §7.2 entry transition table (planned → published|missed; missed → published|planned;
-// published terminal). Same-status is an idempotent no-op (handled before the guard).
+// Public transition is legacy compatibility only. A real publication is never
+// writable through this state-machine endpoint.
 const ALLOWED: Record<string, ReadonlyArray<string>> = {
-  planned: ["published", "missed"],
-  missed: ["published", "planned"],
+  planned: ["missed"],
+  missed: ["planned"],
   published: [],
 };
 
@@ -120,6 +120,41 @@ export interface PublishingPort {
     contentOutputId: string,
   ): Promise<boolean>;
 }
+export interface IdentityTimezonePort {
+  getEffectiveTimezone(ctx: RequestContext): Promise<string | null>;
+}
+export interface ScheduleProject {
+  id: string;
+  title: string;
+  status: string;
+  source: "manual" | "topic" | "imported";
+  currentStage: string;
+  updatedAt: string;
+  outputs: Array<{ id: string; status: string }>;
+}
+export interface ProjectsSchedulePort {
+  // The adapter must resolve by the same ctx user/account and throw the shared
+  // OwnershipError for a missing or foreign project.
+  getScheduleProject(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<ScheduleProject>;
+}
+export interface ProjectPublicationFact {
+  publicationId: string;
+  publishedAt: string;
+}
+export interface CalendarRequestContext {
+  referenceInstant: string;
+  effectiveTimezone: string;
+  today: string;
+}
+export interface PublishingSchedulePort {
+  getProjectPublicationFact(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<ProjectPublicationFact | null>;
+}
 export interface CandidatePort {
   // C-3 FK validation: the Candidate must already be formalized (we never create one).
   exists(ctx: RequestContext, candidateId: string): Promise<boolean>;
@@ -142,16 +177,22 @@ export interface ServiceDeps {
   publishing: PublishingPort;
   candidates: CandidatePort;
   notifications: NotificationsPort;
+  identity: IdentityTimezonePort;
+  projects: ProjectsSchedulePort;
+  schedulePublishing: PublishingSchedulePort;
 }
 
 export interface CreateEntryInput {
-  plannedAt: string;
+  plannedAt?: string;
+  plannedDate?: string;
+  projectId?: string;
   contentOutputId?: string | null;
   candidateId?: string | null;
   note?: string;
 }
 export interface UpdateEntryInput {
   plannedAt?: string;
+  plannedDate?: string;
   contentOutputId?: string | null;
   candidateId?: string | null;
   note?: string;
@@ -224,6 +265,17 @@ export interface ContentCalendarService {
     accountIds: string[],
     window: WindowQuery,
   ): Promise<LaggingAccount[]>;
+  listActiveProjectSchedules(
+    ctx: RequestContext,
+    accountId: string,
+  ): Promise<ContentCalendarEntryResource[]>;
+  reconcileProjectSchedule(
+    ctx: RequestContext,
+    entryId: string,
+  ): Promise<ContentCalendarEntryResource>;
+  getCalendarRequestContext(
+    ctx: RequestContext,
+  ): Promise<CalendarRequestContext>;
 }
 
 export function createContentCalendarService(
@@ -259,6 +311,79 @@ export function createContentCalendarService(
         `OwnershipError: account not found: ${paramAccountId}`,
       );
     }
+  }
+
+  function normalizeTimezone(value: string | null): string {
+    if (value) {
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: value });
+        return value;
+      } catch {
+        // fall through to the one contract-defined fallback
+      }
+    }
+    console.warn(
+      "[content-calendar] identity timezone missing or invalid; falling back to UTC",
+    );
+    return "UTC";
+  }
+
+  function dateInTimezone(instant: string, timeZone: string): string {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date(instant));
+    const value = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((part) => part.type === type)?.value ?? "";
+    return `${value("year")}-${value("month")}-${value("day")}`;
+  }
+
+  async function calendarContext(
+    ctx: RequestContext,
+  ): Promise<CalendarRequestContext> {
+    const referenceInstant = clock.now();
+    const effectiveTimezone = normalizeTimezone(
+      await deps.identity.getEffectiveTimezone(ctx),
+    );
+    return {
+      referenceInstant,
+      effectiveTimezone,
+      today: dateInTimezone(referenceInstant, effectiveTimezone),
+    };
+  }
+
+  function assertCalendarDate(value: string): void {
+    if (!calendarDate.safeParse(value).success) {
+      throw new ValidationError(
+        `ValidationError: invalid plannedDate '${value}'`,
+      );
+    }
+  }
+
+  async function assertProjectSchedulable(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<ScheduleProject> {
+    const project = await deps.projects.getScheduleProject(ctx, projectId);
+    if (
+      project.source === "imported" ||
+      project.status === "completed" ||
+      project.status === "archived"
+    ) {
+      throw new ConflictError(
+        `ConflictError: project ${projectId} cannot be scheduled`,
+      );
+    }
+    if (
+      await deps.schedulePublishing.getProjectPublicationFact(ctx, projectId)
+    ) {
+      throw new ConflictError(
+        `ConflictError: project ${projectId} is already published`,
+      );
+    }
+    return project;
   }
 
   // Cross-module FK validation (C-3) — never create a Candidate, only validate it.
@@ -298,8 +423,33 @@ export function createContentCalendarService(
     const entries = await repo.entriesForAttainment(accountId, window);
     const nowMs = Date.parse(clock.now());
     const grace = graceForFrequency(cadence?.frequency ?? "weekly");
+    let projectToday: string | undefined;
     for (const entry of entries) {
       if (entry.status !== "planned") continue;
+      if (entry.projectId) {
+        const fact =
+          await deps.schedulePublishing.getProjectPublicationFact(
+            ctx,
+            entry.projectId,
+          );
+        if (fact) {
+          await repo.setEntryStatus(entry.id, {
+            status: "published",
+            publishedAt: fact.publishedAt,
+          });
+          continue;
+        }
+        if (projectToday === undefined) {
+          projectToday = (await calendarContext(ctx)).today;
+        }
+        if (entry.plannedDate < projectToday) {
+          await repo.setEntryStatus(entry.id, {
+            status: "missed",
+            publishedAt: null,
+          });
+        }
+        continue;
+      }
       if (entry.contentOutputId) {
         const published = await deps.publishing.isOutputPublished(
           ctx,
@@ -400,9 +550,73 @@ export function createContentCalendarService(
       const acc = requireAccountId(ctx.accountId, "contentCalendar.createEntry");
       assertCurrentAccount(acc, accountId); // 写路径 stamp 必须来自 ctx 当前号(§4.6)
       await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
+      if (body.projectId !== undefined || body.plannedDate !== undefined) {
+        if (!body.projectId || !body.plannedDate) {
+          throw new ValidationError(
+            "ValidationError: projectId and plannedDate must be provided together",
+          );
+        }
+        if (
+          body.plannedAt !== undefined ||
+          body.contentOutputId != null ||
+          body.candidateId != null
+        ) {
+          throw new ValidationError(
+            "ValidationError: a project schedule cannot bind a legacy calendar target",
+          );
+        }
+        assertCalendarDate(body.plannedDate);
+        const { today } = await calendarContext(ctx);
+        if (body.plannedDate < today) {
+          throw new ValidationError(
+            "ValidationError: plannedDate cannot be before today",
+          );
+        }
+        await assertProjectSchedulable(ctx, body.projectId);
+        const repo = repoFor(ctx, acc);
+        const existing = await repo.findActiveProjectSchedule(body.projectId);
+        if (existing) {
+          if (existing.plannedDate === body.plannedDate) {
+            return toContentCalendarEntryDto(existing);
+          }
+          throw new ConflictError(
+            `ConflictError: project ${body.projectId} already has an active schedule`,
+          );
+        }
+        try {
+          const row = await repo.createEntry(accountId, {
+            projectId: body.projectId,
+            plannedDate: body.plannedDate,
+            plannedAt: `${body.plannedDate}T12:00:00.000Z`,
+            contentOutputId: null,
+            candidateId: null,
+            note: body.note,
+          });
+          return toContentCalendarEntryDto(row);
+        } catch (error) {
+          // The partial unique index closes the race between the pre-read and
+          // insert. Re-read to preserve same-day idempotency under concurrency.
+          const raced = await repo.findActiveProjectSchedule(body.projectId);
+          if (raced) {
+            if (raced.plannedDate === body.plannedDate) {
+              return toContentCalendarEntryDto(raced);
+            }
+            throw new ConflictError(
+              `ConflictError: project ${body.projectId} already has an active schedule`,
+            );
+          }
+          throw error;
+        }
+      }
+      if (!body.plannedAt) {
+        throw new ValidationError(
+          "ValidationError: plannedAt is required for a legacy calendar entry",
+        );
+      }
       await validateBindings(ctx, body.contentOutputId, body.candidateId);
       const row = await repoFor(ctx, acc).createEntry(accountId, {
         plannedAt: body.plannedAt,
+        plannedDate: body.plannedAt.slice(0, 10),
         contentOutputId: body.contentOutputId ?? null,
         candidateId: body.candidateId ?? null,
         note: body.note,
@@ -414,6 +628,54 @@ export function createContentCalendarService(
       const acc = requireAccountId(ctx.accountId, "contentCalendar.updateEntry");
       const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId); // ownership gate
+      if (existing.status === "published") {
+        throw new ConflictError(
+          `ConflictError: published calendar entry ${entryId} cannot be updated`,
+        );
+      }
+      if (existing.projectId) {
+        if (
+          patch.plannedAt !== undefined ||
+          patch.contentOutputId !== undefined ||
+          patch.candidateId !== undefined
+        ) {
+          throw new ValidationError(
+            "ValidationError: a project schedule cannot bind a legacy calendar target",
+          );
+        }
+        if (patch.plannedDate === undefined) {
+          if (patch.note === undefined) {
+            return toContentCalendarEntryDto(existing);
+          }
+          return toContentCalendarEntryDto(
+            await repo.updateEntry(entryId, { note: patch.note }),
+          );
+        }
+        assertCalendarDate(patch.plannedDate);
+        const { today } = await calendarContext(ctx);
+        if (patch.plannedDate < today) {
+          throw new ValidationError(
+            "ValidationError: plannedDate cannot be before today",
+          );
+        }
+        await assertProjectSchedulable(ctx, existing.projectId);
+        if (patch.plannedDate === existing.plannedDate) {
+          return toContentCalendarEntryDto(existing);
+        }
+        const row = await repo.updateEntry(entryId, {
+          plannedDate: patch.plannedDate,
+          plannedAt: `${patch.plannedDate}T12:00:00.000Z`,
+          note: patch.note,
+          status: existing.status === "missed" ? "planned" : undefined,
+          publishedAt: existing.status === "missed" ? null : undefined,
+        });
+        return toContentCalendarEntryDto(row);
+      }
+      if (patch.plannedDate !== undefined) {
+        throw new ValidationError(
+          "ValidationError: plannedDate requires a project schedule",
+        );
+      }
       await validateBindings(ctx, patch.contentOutputId, patch.candidateId);
       // missed → planned implicit reschedule when plannedAt moves into the future.
       let statusReset: string | undefined;
@@ -426,6 +688,7 @@ export function createContentCalendarService(
       }
       const row = await repo.updateEntry(entryId, {
         plannedAt: patch.plannedAt,
+        plannedDate: patch.plannedAt?.slice(0, 10),
         contentOutputId: patch.contentOutputId,
         candidateId: patch.candidateId,
         note: patch.note,
@@ -444,6 +707,16 @@ export function createContentCalendarService(
       const acc = requireAccountId(ctx.accountId, "contentCalendar.transition");
       const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId); // ownership gate
+      if (next === "published") {
+        throw new ConflictError(
+          "ConflictError: publication status is reconciled from publishing facts",
+        );
+      }
+      if (existing.projectId) {
+        throw new ConflictError(
+          "ConflictError: project schedule status is system-derived",
+        );
+      }
       const current = existing.status;
       // Idempotency: same-status transition is a no-op (returns existing DTO).
       if (next === current) {
@@ -454,17 +727,22 @@ export function createContentCalendarService(
           `ConflictError: calendar entry ${entryId} cannot transition ${current} → ${next}`,
         );
       }
-      const publishedAt = next === "published" ? clock.now() : undefined;
       const row = await repo.setEntryStatus(entryId, {
         status: next,
-        publishedAt,
       });
       return toContentCalendarEntryDto(row);
     },
 
     async deleteEntry(ctx, entryId) {
       const acc = requireAccountId(ctx.accountId, "contentCalendar.deleteEntry");
-      return repoFor(ctx, acc).deleteEntry(entryId); // getEntry inside gates ownership
+      const repo = repoFor(ctx, acc);
+      const existing = await repo.getEntry(entryId);
+      if (existing.status === "published") {
+        throw new ConflictError(
+          `ConflictError: published calendar entry ${entryId} cannot be deleted`,
+        );
+      }
+      return repo.deleteEntry(entryId);
     },
 
     async getCadence(ctx, accountId) {
@@ -533,6 +811,65 @@ export function createContentCalendarService(
         }
       }
       return lagging;
+    },
+
+    async listActiveProjectSchedules(ctx, accountId) {
+      const acc = requireAccountId(
+        ctx.accountId,
+        "contentCalendar.listActiveProjectSchedules",
+      );
+      assertCurrentAccount(acc, accountId);
+      await deps.platformAccounts.getAccount(ctx, accountId);
+      const rows = await repoFor(ctx, acc).listActiveProjectSchedules(accountId);
+      return rows.map(toContentCalendarEntryDto);
+    },
+
+    async reconcileProjectSchedule(ctx, entryId) {
+      const acc = requireAccountId(
+        ctx.accountId,
+        "contentCalendar.reconcileProjectSchedule",
+      );
+      const repo = repoFor(ctx, acc);
+      const existing = await repo.getEntry(entryId);
+      if (!existing.projectId) {
+        throw new ValidationError(
+          `ValidationError: calendar entry ${entryId} is not a project schedule`,
+        );
+      }
+      if (existing.status === "published") {
+        return toContentCalendarEntryDto(existing);
+      }
+      const fact =
+        await deps.schedulePublishing.getProjectPublicationFact(
+          ctx,
+          existing.projectId,
+        );
+      if (fact) {
+        return toContentCalendarEntryDto(
+          await repo.setEntryStatus(entryId, {
+            status: "published",
+            publishedAt: fact.publishedAt,
+          }),
+        );
+      }
+      const { today } = await calendarContext(ctx);
+      if (existing.status === "planned" && existing.plannedDate < today) {
+        return toContentCalendarEntryDto(
+          await repo.setEntryStatus(entryId, {
+            status: "missed",
+            publishedAt: null,
+          }),
+        );
+      }
+      return toContentCalendarEntryDto(existing);
+    },
+
+    async getCalendarRequestContext(ctx) {
+      requireAccountId(
+        ctx.accountId,
+        "contentCalendar.getCalendarRequestContext",
+      );
+      return calendarContext(ctx);
     },
   };
 }

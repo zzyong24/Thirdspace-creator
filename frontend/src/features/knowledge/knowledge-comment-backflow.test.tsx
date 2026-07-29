@@ -25,6 +25,7 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { KnowledgeCommentBackflow } from "./knowledge-comment-backflow";
+import { CURRENT_ACCOUNT_KEY } from "@/lib/http-transport";
 
 const fetchMock = vi.fn();
 
@@ -34,6 +35,7 @@ beforeEach(() => {
   createKnowledge.mockResolvedValue({ id: "k-new" });
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
+  window.localStorage.clear();
 });
 
 afterEach(() => {
@@ -73,6 +75,7 @@ const CANDIDATES = [
 
 describe("KnowledgeCommentBackflow", () => {
   it("signals 0 行 → 诚实空态 + 复盘采集引导(无假候选)", async () => {
+    window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "acct-comments");
     fetchMock.mockResolvedValue(
       siftResponse({
         signalsTotal: 0,
@@ -89,6 +92,10 @@ describe("KnowledgeCommentBackflow", () => {
         container.querySelector('[data-slot="knowledge-comment-backflow-empty"]'),
       ).not.toBeNull();
     });
+    const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(request.headers).get("x-account-id")).toBe(
+      "acct-comments",
+    );
     expect(getByText("还没有采集到评论")).toBeTruthy();
     expect(
       container.querySelector('[data-slot="knowledge-qa-candidate"]'),

@@ -9,6 +9,14 @@ export interface IssueFeedbackInput {
   readonly correlationId?: string;
 }
 
+export interface ProductFeedbackPreviewInput {
+  readonly summary: string;
+  readonly description: string;
+  readonly appVersion: string | null;
+  readonly os: string;
+  readonly locale: string;
+}
+
 /**
  * T-546 发布前降级入口：Growth/AM 尚未下发 bugFeedbackUrl 时，仍允许用户
  * 主动打开 CreatorOS 官方飞书反馈表并手动上传日志压缩包。
@@ -63,6 +71,25 @@ export function redactSensitiveText(value: string): string {
       "$1=[已隐藏]",
     )
     .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[已隐藏]");
+}
+
+/**
+ * 应用内提交的逐字预览。
+ *
+ * 这里只展示 API-CREATOR-001 实际允许发送的字段；页面路径、时间、日志与关联编号不混进
+ * “发送预览”，避免用户看到的内容和真正提交的内容不一致。
+ */
+export function buildProductFeedbackPreview(
+  input: ProductFeedbackPreviewInput,
+): string {
+  return [
+    `问题摘要：${redactSensitiveText(input.summary.replace(/\r\n?/g, "\n").trim())}`,
+    `问题描述：${redactSensitiveText(input.description.replace(/\r\n?/g, "\n").trim())}`,
+    "复现步骤：未单独填写",
+    `应用版本：${input.appVersion?.trim() || "未知"}`,
+    `系统：${input.os || "未知"}`,
+    `语言：${input.locale || "zh-CN"}`,
+  ].join("\n");
 }
 
 function twoDigits(value: number): string {

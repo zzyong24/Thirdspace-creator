@@ -163,6 +163,33 @@ describe("AutomationsIsland — 列表渲染", () => {
     expect(screen.queryByText("0 9 * * *")).not.toBeInTheDocument();
   });
 
+  it("[T-605] 首屏用紧凑概览和四列任务结构呈现,不再摊成七列空表", () => {
+    render(
+      <AutomationsIsland
+        jobs={[
+          makeJob({ id: "job-on", enabled: true }),
+          makeJob({
+            id: "job-off",
+            name: "每日选题",
+            sourceKind: "topic.daily",
+            enabled: false,
+            lastRunAt: null,
+            nextRunAt: null,
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("我的自动化")).toBeInTheDocument();
+    expect(screen.getByText("1 个已启用")).toBeInTheDocument();
+    expect(screen.getByText("1 个待启用")).toBeInTheDocument();
+    expect(screen.getByText("执行计划")).toBeInTheDocument();
+    expect(screen.getByText("状态")).toBeInTheDocument();
+    expect(screen.queryByText("数据源")).not.toBeInTheDocument();
+    expect(screen.getByText(/上次：尚未运行/)).toBeInTheDocument();
+    expect(screen.getByText(/下次：.*等待启用/)).toBeInTheDocument();
+  });
+
   it("D5:「立即运行」enabled(作业启用时)", () => {
     render(<AutomationsIsland jobs={[makeJob({ enabled: true })]} />);
     const runNow = screen
@@ -463,7 +490,7 @@ describe("TemplateCards — 从模板入手", () => {
   it("渲染模板卡;点非灰置模板 → onPick 带该模板", () => {
     const onPick = vi.fn();
     render(<TemplateCards onPick={onPick} />);
-    expect(screen.getByText("从模板入手")).toBeInTheDocument();
+    expect(screen.getByText("快速创建")).toBeInTheDocument();
     expect(screen.getByText("我的作品数据同步")).toBeInTheDocument();
     expect(screen.getByText("我的作品评论同步")).toBeInTheDocument();
     // 点“我的作品评论同步”模板卡
@@ -498,23 +525,23 @@ describe("TemplateCards — 从模板入手", () => {
     const card = document.querySelector(
       '[data-template-id="daily-topic"]',
     ) as HTMLButtonElement;
-    // 「已存在」态:disabled 既有 job → 文案引导去启用,不再是「用此模板新建」。
+    // 「已存在」态:disabled 既有 job → 紧凑状态提示待启用,不再是「新建」。
     expect(card).toHaveAttribute("data-existing", "true");
-    expect(card.textContent).toContain("已有此任务 → 去启用/编辑");
-    expect(card.textContent).not.toContain("用此模板新建");
+    expect(card.textContent).toContain("待启用");
+    expect(card.textContent).not.toContain("新建");
     fireEvent.click(card);
     expect(onPick).not.toHaveBeenCalled();
     expect(onEnableExisting).toHaveBeenCalledTimes(1);
     expect(onEnableExisting.mock.calls[0]![0]).toBe(existingJob);
-    // 不存在的 kind 保持「用此模板新建」现状。
+    // 不存在的 kind 保持「新建」入口。
     const commentsCard = document.querySelector(
       '[data-template-id="daily-comments"]',
     ) as HTMLButtonElement;
     expect(commentsCard).not.toHaveAttribute("data-existing");
-    expect(commentsCard.textContent).toContain("用此模板新建");
+    expect(commentsCard.textContent).toContain("新建");
   });
 
-  it("[T-367] 已存在且已启用的 kind → 文案「去查看/编辑」", () => {
+  it("[T-367] 已存在且已启用的 kind → 紧凑文案「已启用」", () => {
     render(
       <TemplateCards
         onPick={vi.fn()}
@@ -525,7 +552,7 @@ describe("TemplateCards — 从模板入手", () => {
     const card = document.querySelector(
       '[data-template-id="daily-self-metrics"]',
     ) as HTMLButtonElement;
-    expect(card.textContent).toContain("已有此任务 → 去查看/编辑");
+    expect(card.textContent).toContain("已启用");
   });
 
   it("[T-600] 不再渲染作品明细兼容模板", () => {

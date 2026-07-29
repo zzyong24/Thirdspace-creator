@@ -28,6 +28,7 @@ export const INTELLIGENCE_OP_IDS = [
   "intelligence.items.get",
   "intelligence.items.importDouyinShare",
   "intelligence.transcripts.enqueue",
+  "intelligence.transcripts.uploadManual",
   "intelligence.transforms.previewTopic",
   "intelligence.transforms.confirmTopic",
   "intelligence.migrations.inventory",
@@ -332,6 +333,25 @@ export function createIntelligenceTransport(
               itemIds: b.itemIds ?? [],
               idempotencyKey: b.idempotencyKey ?? "",
             }),
+            meta: { requestId },
+          };
+        }
+        case "intelligence.transcripts.uploadManual": {
+          const b = (body ?? {}) as {
+            itemId?: string;
+            format?: "txt" | "md" | "srt" | "vtt";
+            fileName?: string;
+            text?: string;
+          };
+          return {
+            data: {
+              transcript: await service.uploadManualTranscript(ctx, {
+                itemId: b.itemId ?? "",
+                format: b.format ?? "txt",
+                fileName: b.fileName ?? "",
+                text: b.text ?? "",
+              }),
+            },
             meta: { requestId },
           };
         }

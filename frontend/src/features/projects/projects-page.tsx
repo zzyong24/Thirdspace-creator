@@ -33,6 +33,10 @@ import { type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
 import { ProjectsToolbar } from "@/features/projects/projects-toolbar";
 import { projectWorkspaceHref } from "@/features/projects/project-href";
 import { ProjectRowMenu } from "@/features/projects/project-row-menu";
+import {
+  ProjectScheduleControl,
+  type ProjectScheduleSummary,
+} from "@/features/projects/project-schedule-control";
 import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
 import { client as defaultClient } from "@/lib/contract-client.server";
@@ -79,6 +83,15 @@ export interface ProjectsPageProps {
    * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
   readonly client?: ProjectsReadClient;
+  /**
+   * T-599：由 route/server composition 一次性读取当前账号的有效项目排期后传入。
+   * 缺省不渲染控件，避免未登录/未选号或旧调用方制造无归属写请求。
+   */
+  readonly scheduleContext?: {
+    readonly accountId: string;
+    readonly referenceDateKey: string;
+    readonly entries: ReadonlyArray<ProjectScheduleSummary>;
+  };
 }
 
 // Demo/seed projects from the canonical baseline dataset. They stay seeded (the
@@ -111,6 +124,7 @@ export async function ProjectsPage({
   status = "all",
   sort = "updated",
   client = defaultClient,
+  scheduleContext,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
   // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
@@ -222,7 +236,7 @@ export async function ProjectsPage({
         sort={sort}
       />
 
-      <ProjectList rows={rows} />
+      <ProjectList rows={rows} scheduleContext={scheduleContext} />
 
       <Pagination
         currentPage={currentPage}
@@ -239,7 +253,13 @@ export async function ProjectsPage({
 // Project list — table-like rows with column header
 // ---------------------------------------------------------------------------
 
-function ProjectList({ rows }: { rows: ReadonlyArray<ProjectListRow> }) {
+function ProjectList({
+  rows,
+  scheduleContext,
+}: {
+  rows: ReadonlyArray<ProjectListRow>;
+  scheduleContext?: ProjectsPageProps["scheduleContext"];
+}) {
   // [T-332 S4·§6.2] 新号零项目:诚实空态 + 从零开始的两个入口(新建 / 从选题立项),
   // 不再渲染只有列头的空表格(看着像坏了)。
   if (rows.length === 0) {
@@ -276,19 +296,20 @@ function ProjectList({ rows }: { rows: ReadonlyArray<ProjectListRow> }) {
     >
       <div
         data-slot="project-list-header"
-        className="grid grid-cols-[minmax(0,1fr)_140px_140px_190px_120px_100px] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground"
+        className="grid grid-cols-[minmax(0,1fr)_140px_130px_170px_110px_150px_108px] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground"
       >
         <span>项目</span>
         <span>当前阶段</span>
         <span>进度</span>
         <span>目标平台</span>
         <span>最近更新</span>
+        <span>发布排期</span>
         <span className="text-right">操作</span>
       </div>
       <ul className="divide-y divide-border" role="list">
         {rows.map((row) => (
           <li key={row.id} className="list-none">
-            <ProjectListItem row={row} />
+            <ProjectListItem row={row} scheduleContext={scheduleContext} />
           </li>
         ))}
       </ul>
@@ -296,14 +317,40 @@ function ProjectList({ rows }: { rows: ReadonlyArray<ProjectListRow> }) {
   );
 }
 
-function ProjectListItem({ row }: { row: ProjectListRow }) {
+function ProjectListItem({
+  row,
+  scheduleContext,
+}: {
+  row: ProjectListRow;
+  scheduleContext?: ProjectsPageProps["scheduleContext"];
+}) {
+  const schedule =
+    scheduleContext?.entries.find((entry) => entry.projectId === row.id) ?? null;
+  const scheduleEligible =
+    scheduleContext !== undefined &&
+    row.source !== "imported" &&
+    row.status !== "completed" &&
+    row.status !== "archived" &&
+    !row.outputs.some((output) => output.status === "published");
+  const scheduleStaticLabel = row.outputs.some(
+    (output) => output.status === "published",
+  )
+    ? "已发布"
+    : row.source === "imported"
+      ? "历史作品"
+      : row.status === "completed"
+        ? "已完成"
+        : row.status === "archived"
+          ? "已归档"
+          : "不可排期";
+
   return (
     <article
       data-slot="project-row"
       data-project-id={row.id}
       data-project-status={row.status}
       data-project-stage={row.currentStage}
-      className="grid grid-cols-[minmax(0,1fr)_140px_140px_190px_120px_100px] items-center gap-4 px-5 py-6"
+      className="grid grid-cols-[minmax(0,1fr)_140px_130px_170px_110px_150px_108px] items-center gap-4 px-5 py-6"
     >
       <div className="flex min-w-0 items-center gap-4">
         {/* [T-078] 有真封面(采集回填的 revision.coverAssetId)渲真图;无则渐变占位。 */}
@@ -406,7 +453,30 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
         {formatCompactUpdatedAt(row.updatedAt)}
       </span>
 
-      <div className="flex justify-end gap-2">
+      <div data-slot="project-schedule-cell" className="flex min-w-0 items-center">
+        {scheduleContext && scheduleEligible ? (
+          <ProjectScheduleControl
+            accountId={scheduleContext.accountId}
+            projectId={row.id}
+            projectTitle={row.title}
+            referenceDateKey={scheduleContext.referenceDateKey}
+            schedule={schedule}
+            eligible={scheduleEligible}
+          />
+        ) : (
+          <span
+            data-slot="project-schedule-static"
+            className="text-xs text-muted-foreground"
+          >
+            {scheduleStaticLabel}
+          </span>
+        )}
+      </div>
+
+      <div
+        data-slot="project-actions"
+        className="flex items-center justify-end gap-2"
+      >
         <Link
           href={workspaceHrefForRow(row)}
           data-slot="project-open-action"

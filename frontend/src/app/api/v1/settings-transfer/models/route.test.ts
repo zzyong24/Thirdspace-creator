@@ -132,6 +132,28 @@ describe("POST /api/v1/settings-transfer/models(导入)", () => {
     expect(data.error).toContain("kind");
   });
 
+  it("渠道托管时导入返回 409 稳定错误码", async () => {
+    importModelConfigs.mockRejectedValue(
+      Object.assign(new Error("managed"), {
+        code: "MODEL_CONFIGURATION_MANAGED",
+      }),
+    );
+    const res = await POST(
+      makeReq({
+        method: "POST",
+        body: JSON.stringify({
+          kind: "creatoros.model-config-export",
+          version: 1,
+          models: [],
+        }),
+      }),
+    );
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "MODEL_CONFIGURATION_MANAGED",
+    });
+  });
+
   it("导入是写路径:present-but-invalid cookie(鉴权错)→ 401", async () => {
     const authErr = new Error("bad token");
     authErr.name = "AuthenticationError";

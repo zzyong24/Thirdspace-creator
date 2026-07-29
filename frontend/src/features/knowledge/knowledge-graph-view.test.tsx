@@ -35,6 +35,7 @@ vi.mock("@/lib/contract-client", () => ({
 
 import { KnowledgeGraphView } from "./knowledge-graph-view";
 import type { KnowledgeGraphVm } from "./knowledge-graph-vm";
+import { CURRENT_ACCOUNT_KEY } from "@/lib/http-transport";
 
 const fetchMock = vi.fn();
 
@@ -44,6 +45,7 @@ beforeEach(() => {
   removeKnowledgeRelation.mockClear();
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
+  window.localStorage.clear();
 });
 
 afterEach(() => {
@@ -188,6 +190,7 @@ describe("KnowledgeGraphView", () => {
   });
 
   it("AI 找关联 → 候选门(reason 展示;已存在边标灰)→ 采纳 → relations.create(createdByType='ai')", async () => {
+    window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "acct-graph");
     fetchMock.mockResolvedValue(
       relateResponse([
         { sourceId: "k-3", targetId: "k-1", relationType: "extends", reason: "金句在观点基础上延伸" },
@@ -204,6 +207,8 @@ describe("KnowledgeGraphView", () => {
         container.querySelectorAll('[data-slot="knowledge-relate-candidate"]'),
       ).toHaveLength(2);
     });
+    const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(request.headers).get("x-account-id")).toBe("acct-graph");
     expect(getByText("金句在观点基础上延伸")).toBeTruthy();
     expect(getByText("已存在")).toBeTruthy();
     // 已存在的那条不可勾 → 只有 1 条可采纳。

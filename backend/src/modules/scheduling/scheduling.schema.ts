@@ -43,6 +43,22 @@ function toArray(raw: unknown): unknown[] {
   return Array.isArray(raw) ? raw : [];
 }
 
+/**
+ * 存量迁移曾用 `CURRENT_TIMESTAMP::TEXT` 写出 PostgreSQL 文本时刻
+ * (`2026-07-29 08:55:14.702+00`)。它表示的仍是真实时刻，只是没有满足 wire
+ * contract 的 UTC ISO 形状。统一在 DTO 边界规范化；完全不可解析的脏值原样保留，
+ * 让契约继续显式报错，绝不编造时间。
+ */
+function toIsoInstant(value: string): string;
+function toIsoInstant(value: string | null): string | null;
+function toIsoInstant(value: string | null): string | null {
+  if (value === null) return null;
+  const milliseconds = Date.parse(value);
+  return Number.isFinite(milliseconds)
+    ? new Date(milliseconds).toISOString()
+    : value;
+}
+
 // Row → DTO mappers (SPEC §9: the API DTO is built by an explicit mapper, NEVER the
 // Drizzle row). The service + contract test share ONE mapping so a wire-shape change is
 // caught once.
@@ -60,10 +76,10 @@ export function toScheduledJobDto(row: ScheduledJobRow): ScheduledJobResource {
     toolGrants: toArray((row as { toolGrants?: unknown }).toolGrants),
     recipe: toNullableRecord((row as { recipe?: unknown }).recipe),
     enabled: row.enabled,
-    lastRunAt: row.lastRunAt ?? null,
-    nextRunAt: row.nextRunAt ?? null,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    lastRunAt: toIsoInstant(row.lastRunAt ?? null),
+    nextRunAt: toIsoInstant(row.nextRunAt ?? null),
+    createdAt: toIsoInstant(row.createdAt),
+    updatedAt: toIsoInstant(row.updatedAt),
   };
 }
 
@@ -80,7 +96,7 @@ export function toJobRunDto(row: JobRunRow): JobRunResource {
     // [T-152] 实时采集进度(jsonb → nullable record)。NULL / 非对象 → null(旧 run / 未上报
     // 进度向后兼容,前端读到 null 不崩)。zod jobRunProgress.nullish() 兜住形状。
     progress: toNullableRecord(row.progress) as JobRunResource["progress"],
-    startedAt: row.startedAt,
-    finishedAt: row.finishedAt ?? null,
+    startedAt: toIsoInstant(row.startedAt),
+    finishedAt: toIsoInstant(row.finishedAt ?? null),
   };
 }

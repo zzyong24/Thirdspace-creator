@@ -1,4 +1,13 @@
-import { and, asc, eq, gte, lte, type Db } from "@creatoros/backend";
+import type { Db } from "@creatoros/backend";
+import {
+  and,
+  asc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lte,
+} from "drizzle-orm";
 import {
   contentCalendarEntries,
   publishingCadences,
@@ -43,6 +52,8 @@ export interface RepoDeps {
 
 export interface CreateEntryInput {
   plannedAt: string;
+  plannedDate?: string;
+  projectId?: string | null;
   contentOutputId?: string | null;
   candidateId?: string | null;
   note?: string;
@@ -57,12 +68,14 @@ export interface ListEntriesQuery {
 
 export interface UpdateEntryInput {
   plannedAt?: string;
+  plannedDate?: string;
   contentOutputId?: string | null;
   candidateId?: string | null;
   note?: string;
   // Service-approved status reset (the missed→planned reschedule); the machine
   // guard lives in the service.
   status?: string;
+  publishedAt?: string | null;
 }
 
 export interface SetEntryStatusInput {
@@ -89,6 +102,12 @@ export interface ContentCalendarRepository {
     query: ListEntriesQuery,
   ): Promise<{ rows: ContentCalendarEntryRow[]; total: number }>;
   getEntry(entryId: string): Promise<ContentCalendarEntryRow>;
+  findActiveProjectSchedule(
+    projectId: string,
+  ): Promise<ContentCalendarEntryRow | null>;
+  listActiveProjectSchedules(
+    accountId: string,
+  ): Promise<ContentCalendarEntryRow[]>;
   updateEntry(
     entryId: string,
     patch: UpdateEntryInput,
@@ -175,6 +194,8 @@ export function createContentCalendarRepository(
           id: deps.nextId("cal"),
           userId: deps.userId,
           accountId,
+          projectId: input.projectId ?? null,
+          plannedDate: input.plannedDate ?? input.plannedAt.slice(0, 10),
           plannedAt: input.plannedAt,
           contentOutputId,
           candidateId,
@@ -192,14 +213,18 @@ export function createContentCalendarRepository(
       const where = and(
         eq(contentCalendarEntries.userId, deps.userId),
         eq(contentCalendarEntries.accountId, accountId),
-        gte(contentCalendarEntries.plannedAt, from),
-        lte(contentCalendarEntries.plannedAt, to),
+        gte(contentCalendarEntries.plannedDate, from.slice(0, 10)),
+        lte(contentCalendarEntries.plannedDate, to.slice(0, 10)),
       );
       const rows = await db
         .select()
         .from(contentCalendarEntries)
         .where(where)
-        .orderBy(asc(contentCalendarEntries.plannedAt))
+        .orderBy(
+          asc(contentCalendarEntries.plannedDate),
+          asc(contentCalendarEntries.createdAt),
+          asc(contentCalendarEntries.id),
+        )
         .limit(limit)
         .offset(offset);
       const all = await db
@@ -211,15 +236,57 @@ export function createContentCalendarRepository(
 
     getEntry: getEntryRowById,
 
+    async findActiveProjectSchedule(projectId) {
+      const rows = await db
+        .select()
+        .from(contentCalendarEntries)
+        .where(
+          and(
+            eq(contentCalendarEntries.userId, deps.userId),
+            eq(contentCalendarEntries.accountId, deps.accountId),
+            eq(contentCalendarEntries.projectId, projectId),
+            inArray(contentCalendarEntries.status, ["planned", "missed"]),
+          ),
+        )
+        .orderBy(
+          asc(contentCalendarEntries.plannedDate),
+          asc(contentCalendarEntries.createdAt),
+          asc(contentCalendarEntries.id),
+        )
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    async listActiveProjectSchedules(accountId) {
+      return db
+        .select()
+        .from(contentCalendarEntries)
+        .where(
+          and(
+            eq(contentCalendarEntries.userId, deps.userId),
+            eq(contentCalendarEntries.accountId, accountId),
+            isNotNull(contentCalendarEntries.projectId),
+            inArray(contentCalendarEntries.status, ["planned", "missed"]),
+          ),
+        )
+        .orderBy(
+          asc(contentCalendarEntries.plannedDate),
+          asc(contentCalendarEntries.createdAt),
+          asc(contentCalendarEntries.id),
+        );
+    },
+
     async updateEntry(entryId, patch) {
       const existing = await getEntryRowById(entryId); // ownership gate
       const set: Record<string, unknown> = { updatedAt: deps.now() };
       if (patch.plannedAt !== undefined) set.plannedAt = patch.plannedAt;
+      if (patch.plannedDate !== undefined) set.plannedDate = patch.plannedDate;
       if (patch.contentOutputId !== undefined)
         set.contentOutputId = patch.contentOutputId;
       if (patch.candidateId !== undefined) set.candidateId = patch.candidateId;
       if (patch.note !== undefined) set.note = patch.note;
       if (patch.status !== undefined) set.status = patch.status;
+      if (patch.publishedAt !== undefined) set.publishedAt = patch.publishedAt;
       // Re-validate the not-both-bound invariant on the RESULTING row (a patch that
       // only sets one side must not collide with the other already-stored side).
       const resultingOutputId =
@@ -291,11 +358,15 @@ export function createContentCalendarRepository(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
             eq(contentCalendarEntries.accountId, accountId),
-            gte(contentCalendarEntries.plannedAt, from),
-            lte(contentCalendarEntries.plannedAt, to),
+            gte(contentCalendarEntries.plannedDate, from.slice(0, 10)),
+            lte(contentCalendarEntries.plannedDate, to.slice(0, 10)),
           ),
         )
-        .orderBy(asc(contentCalendarEntries.plannedAt));
+        .orderBy(
+          asc(contentCalendarEntries.plannedDate),
+          asc(contentCalendarEntries.createdAt),
+          asc(contentCalendarEntries.id),
+        );
     },
 
     async upsertCadence(accountId, input) {

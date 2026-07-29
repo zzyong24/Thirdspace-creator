@@ -1,6 +1,6 @@
 # 内容雷达服务契约
 
-> Task: `T-482`
+> Task: `T-482`；人工上传逐字稿增量：`T-603`
 > 日期：2026-07-23
 > 上游：[内容雷达产品规格](2026-07-23-content-radar-restructure-design.md)
 > 本文是 Contract 真值；不是独立任务拆解或分期计划。
@@ -9,8 +9,8 @@
 
 - Stage: `2-contract`
 - Status: `confirmed`
-- Upstream IDs: `FR-CR-001..021`、`FLOW-CR-001..009`、`ENT-CR-001..012`
-- Decision IDs: `DEC-CR-001..015`
+- Upstream IDs: `FR-CR-001..022`、`FLOW-CR-001..010`、`ENT-CR-001..012`
+- Decision IDs: `DEC-CR-001..017`
 - Review: 上游 PLAN 与 `DEC-CR-010` delta review 已 PASS
 - Manifest status: Contract Gate 已 PASS；用户已于 2026-07-23 确认 scope envelope 并授权进入 Build
 
@@ -60,6 +60,17 @@
 ### `DEC-CR-015` 抖音分享链接单条建档
 
 单条分享链接通过专用 operation 创建持久 `share_import` 任务；任务完成时在一个领域事务内执行“解析真实作品/作者→复用或创建博主节点→关联所选分类→幂等建档”。作者源按稳定 author identity 全账号唯一，分类使用 membership 多对多关系，不因用户选择新分类而搬走已有节点；新作者源默认不监控。item 按真实 `awemeId` 去重，短链、长链和重复口令归一为同一 canonical URL。operation 明确不得 enqueue transcript。
+
+### `DEC-CR-017` 人工逐字稿复用既有 transcript 真相
+
+上传文件只是一种本地输入方式，不建立文件资产或第二套逐字稿表。浏览器端读取 UTF-8
+`.txt/.md/.srt/.vtt`，清理 BOM 与基础字幕时间轴后，把 `format + fileName + text` 交给
+`intelligence.transcripts.uploadManual`。backend 是最终校验与唯一写者：只允许
+`not_requested/failed/blocked/skipped` 原子转为 `done/source=manual`；`queued/running`
+和已有 `done` 拒绝不同正文，相同已完成正文按内容比较幂等返回。原文件、路径和二进制内容不
+落库、不入日志、不进对象存储。真实 `File.size` 的 2 MiB 门由客户端在读取前执行；backend
+不接收也不猜原始文件大小，而是对实际收到的规范化 `text` 重新计算 UTF-8 字节数并执行独立
+2 MiB 上限，同时执行 500,000 字符上限。
 
 ## 3. 公共类型
 
@@ -300,6 +311,7 @@ type Result<T> =
 | `API-CR-029` | `browserSessions.openLogin` | `{accountId,site,returnTo}` | `{browserSessionRef,status}` | `SESSION_LAUNCH_FAILED` | 外部副作用仅打开登录页 |
 | `API-CR-030` | `browserSessions.clear` | `{browserSessionRef,confirmToken}` | `{cleared,blockedSources}` | `CONFIRMATION_REQUIRED` | 清会话后来源 blocked |
 | `API-CR-031` | `intelligence.items.importDouyinShare` | `{accountId,collectionId,shareInput,idempotencyKey}` | `{task}`；任务成功结果为 `{item,creatorSource,membership,observation,sourceSnapshot,deduplicated,transcriptStatus}` | `SHARE_LINK_INVALID`、`VIDEO_UNAVAILABLE`、adapter login/captcha errors | `shareInput` 接受单 URL 或含 URL 的抖音分享文本；幂等创建持久 `share_import` task；完成时单事务复用/创建作者与 item；不得创建 transcript task；`FR-CR-021` |
+| `API-CR-032` | `intelligence.transcripts.uploadManual` | `{itemId,format:"txt"|"md"|"srt"|"vtt",fileName,text}`；`text` UTF-8 ≤2 MiB 且 ≤500,000 字符 | `{transcript}` | `TRANSCRIPT_FILE_UNSUPPORTED`、`TRANSCRIPT_FILE_EMPTY`、`TRANSCRIPT_FILE_TOO_LARGE`、`TRANSCRIPT_BUSY`、`TRANSCRIPT_EXISTS` | backend 按收到的正文重算 UTF-8 字节数，不验证原文件大小；只写当前账号作品的既有 transcript；相同 `done` 正文幂等返回，不同正文拒绝；不保存文件、不创建 task；`FR-CR-022` |
 
 ## 6. 适配器写入协议
 
@@ -428,6 +440,7 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 | `API-CR-029` | `{accountId:"acc_01",site:"douhot.douyin.com",returnTo:"/radar"}` → opened `browserSessionRef` |
 | `API-CR-030` | `{browserSessionRef:"douyin-profile:acc_01",confirmToken:"ct_2"}` → cleared + blocked source ids |
 | `API-CR-031` | `{accountId:"acc_01",collectionId:"col_ai",shareInput:"https://v.douyin.com/...",idempotencyKey:"share:acc01:..."}` → queued share_import task；成功结果为 canonical item + reused/created creator + membership；zero transcript tasks |
+| `API-CR-032` | `{itemId:"item_1",format:"srt",fileName:"访谈.srt",text:"第一句\\n第二句"}` → 同一 item 的 transcript=`done/manual`；再次提交相同正文返回既有资源，不创建 execution task |
 
 ## 10. 逐 FR 数据链路可行性
 
@@ -454,6 +467,7 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 | `FR-CR-019` | 系统内生 | 多来源 item/observation/snapshot 模型 | item/observation/snapshot | `API-CR-015/016` | 首次发现起 | HARD：跨源合并与冲突队列；`PKG-CR-PROVENANCE`，Build fixture 前 |
 | `FR-CR-020` | 系统内生 | execution task 状态机 | execution_tasks | `API-CR-018/019` + owner APIs | 任务创建起 | HARD：DB lease/heartbeat/recovery；`PKG-CR-TASKS`，任何长任务接入前 |
 | `FR-CR-021` | 用户录入/授权第三方 | 抖音分享链接 + 所选分类；现有单视频 reader | execution task + source membership + item + observation + snapshot | `API-CR-031` | 用户提交后持久排队，任务完成时单事务 | HARD：短链安全解析、author/item 双锚幂等且零自动转写；`PKG-CR-INGEST`，Build 单条导入测试前 |
+| `FR-CR-022` | 用户本地文件 | 浏览器 File API 读取 UTF-8 文本；无外部服务 | 既有 item transcript 行 | `API-CR-032` 写后返回 + `API-CR-016` 刷新读回 | 用户选择文件时即时 | feasible：客户端格式清理 + backend 原子状态守卫；不需要对象存储、迁移或异步任务 |
 
 没有 FR 判 `cut`，没有无合法来源的 HARD。所有 HARD 都有具体候选解、归属 PKG 和验证时点。
 
@@ -481,11 +495,13 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 
 ## 12. Contract Gate 自检
 
-- Happy path：31 个 operation 均有 request/response。
+- Happy path：32 个 operation 均有 request/response。
 - Error：公共错误 + 每个 operation 专属错误已列出。
 - Permission：统一 `RequestContext` 与整批归属校验。
 - State：source、task、run、transform、migration 状态迁移明确。
 - Idempotency：所有创建/入队/确认/采纳/迁移 operation 有 key。
-- FR coverage：`FR-CR-001..021` 无空行、无 cut。
+- FR coverage：`FR-CR-001..022` 无空行、无 cut。
 - Policy consumption：列出 URL、session、secret、rate limit 的 BUILD 消费者；未实现前不得关任务。
 - 原 Contract Gate 覆盖 `DEC-CR-011..013` 与 30 个 operation；用户在 BUILD 中追加确认的 `DEC-CR-014/015` 与 `API-CR-031` 作为收紧证据门和单条建档 delta 纳入同一 T-482 验收。
+- T-603 的 `DEC-CR-017/FR-CR-022/API-CR-032/AC-CR-025` 是同一 transcript 真相上的增量；
+  经独立增量评审和 contract tests 通过后才能进入 BUILD。

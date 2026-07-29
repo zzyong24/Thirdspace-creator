@@ -927,6 +927,31 @@ describe("parseDouyinVideoUrl 纯函数(iesdouyin 取直链,T-030-D2)", () => {
     expect(out.coverUrl).toBeUndefined();
   });
 
+  it("[T-610] 分享页把完整 CDN URL 装进 video_id 时先解包再交给 ffmpeg", () => {
+    const cdn =
+      "https://sf11-cdn-tos.douyinstatic.com/obj/tos-cn-ve-2774/audio-source";
+    const html = routerDataHtml({
+      loaderData: {
+        "video_(id)/page": {
+          videoInfoRes: {
+            item_list: [
+              {
+                video: {
+                  play_addr: {
+                    url_list: [
+                      `https://aweme.snssdk.com/aweme/v1/play/?video_id=${cdn}&ratio=720p&line=0`,
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    });
+    expect(parseDouyinVideoUrl(html).playUrl).toBe(cdn);
+  });
+
   it("无 _ROUTER_DATA / item_list 空 → 抛 DouyinAudioFetchError", () => {
     expect(() => parseDouyinVideoUrl("<html>no router data</html>")).toThrow(
       DouyinAudioFetchError,
@@ -1125,10 +1150,11 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
   it("openContext 开一次 → 循环 N 作品各 parse → close 一次", async () => {
     const { calls, gotoUrls, openContext } = makeFakeCommentContext(true);
     const awemeIds = ["7401", "7402", "7403"];
+    const onWorkComplete = vi.fn(async () => undefined);
     const batch = await fetchDouyinCommentsForWorks(
       awemeIds,
       { authDir: "/fake/.auth", maxPages: 1 },
-      { openContext },
+      { openContext, onWorkComplete },
     );
     // 核心断言:整批只开一次浏览器、只关一次(取代 N 作品 × 独立浏览器)。
     expect(calls.openContext).toBe(1);
@@ -1150,6 +1176,17 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
       expect(records[0].awemeId).toBe(awemeId);
       expect(records[0].text).toBe(`评论-${awemeId}`);
     }
+    expect(onWorkComplete).toHaveBeenCalledTimes(3);
+    expect(onWorkComplete).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ awemeId: "7401" }),
+      { processed: 1, total: 3 },
+    );
+    expect(onWorkComplete).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({ awemeId: "7403" }),
+      { processed: 3, total: 3 },
+    );
   });
 
   it("空作品列表 → 仍开一次做登录校验、关一次,返回空", async () => {
@@ -2408,6 +2445,26 @@ describe("[T-243] parseAwemeDetail 纯函数", () => {
       playUrl: "https://v.douyin.example/play/abc?sig=1",
       coverUrl: "https://p.douyin.example/cover.jpg",
     });
+  });
+
+  it("[T-610] detail API 的 video_id=<完整 CDN URL> 会解包为真实媒体地址", async () => {
+    const { parseAwemeDetail } = await import("./douyin-cdp");
+    const cdn =
+      "https://sf6-cdn-tos.douyinstatic.com/obj/tos-cn-ve-2774/audio-source";
+    expect(
+      parseAwemeDetail({
+        aweme_detail: {
+          aweme_type: 0,
+          video: {
+            play_addr: {
+              url_list: [
+                `https://aweme.snssdk.com/aweme/v1/play/?video_id=${cdn}&ratio=720p&line=0`,
+              ],
+            },
+          },
+        },
+      }),
+    ).toEqual({ kind: "video", playUrl: cdn });
   });
 
   it("图集作品(images 非空 / aweme_type=68)→ { kind:'image-album' }(结构化非视频,不抛)", async () => {

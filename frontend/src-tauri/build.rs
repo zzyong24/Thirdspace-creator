@@ -11,6 +11,7 @@ fn main() {
         "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
         "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
         "CREATOROS_GROWTH_CONFIG_KEY_ID",
+        "CREATOROS_MODEL_CONFIGURATION_AUTHORITY",
     ] {
         println!("cargo:rerun-if-env-changed={name}");
     }
@@ -36,6 +37,26 @@ fn main() {
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED={}",
         build_flag("CREATOROS_CLIENT_CONFIG_PULL_ENABLED")
+    );
+    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
+    let requested_authority = std::env::var("CREATOROS_MODEL_CONFIGURATION_AUTHORITY")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    let model_configuration_authority = if profile == "release" {
+        if !requested_authority.is_empty() && requested_authority != "managed_locked" {
+            panic!("正式构建 CREATOROS_MODEL_CONFIGURATION_AUTHORITY 只允许 managed_locked");
+        }
+        "managed_locked"
+    } else {
+        match requested_authority.as_str() {
+            "" | "local" => "local",
+            "managed_locked" => "managed_locked",
+            _ => panic!("CREATOROS_MODEL_CONFIGURATION_AUTHORITY 只允许 local 或 managed_locked"),
+        }
+    };
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY={model_configuration_authority}"
     );
     let growth_origin = std::env::var("GROWTH_ENTITLEMENT_API_ORIGIN")
         .unwrap_or_default()

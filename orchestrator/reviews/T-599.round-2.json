@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "Round 2 精确复核确认：相对上一轮，当前 PLAN 仅第 5 行流程状态说明发生变化，FR-SCHED-001..007、NFR-SCHED-001..004、AC-SCHED-001..008 及已确认范围均未改变，未引入新的 blocker 或 major。当前实现与自动化证据仍落在“项目唯一排期入口、发布中心日历主视图、首页派生提醒、不新增通知或自动发布”的确认边界内；自动化浏览器 2/2 不替代 AC-SCHED-008 要求的当前真实账号真机视觉与交互补证，现有 PLAN 也未将该证据误写为已完成。",
+  "findings": []
+}

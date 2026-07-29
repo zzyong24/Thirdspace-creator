@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ErrorCode } from "@creatoros/contract";
@@ -35,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { prepareTranscriptUpload } from "./intelligence-transcript-upload";
 
 export interface RadarCollection {
   id: string;
@@ -150,6 +152,7 @@ export interface RadarItemDetail {
   }>;
   snapshots: Array<{
     id: string;
+    sourceId?: string;
     title: string | null;
     capturedAt: string;
     finalUrl: string;
@@ -342,6 +345,12 @@ export interface RadarApi {
     itemId: string;
     idempotencyKey: string;
   }): Promise<unknown>;
+  uploadTranscript(input: {
+    itemId: string;
+    format: "txt" | "md" | "srt" | "vtt";
+    fileName: string;
+    text: string;
+  }): Promise<RadarItemDetail["transcript"]>;
   previewTopic(input: {
     itemId: string;
     sourceSnapshotId: string;
@@ -491,6 +500,14 @@ function defaultApi(): RadarApi {
           idempotencyKey: input.idempotencyKey,
         },
       }),
+    uploadTranscript: async (input) => {
+      const result = await client.uploadManualIntelligenceTranscript({
+        params: undefined,
+        query: undefined,
+        body: input,
+      });
+      return result.transcript;
+    },
     previewTopic: (input) =>
       client.previewIntelligenceTopic({
         params: undefined,
@@ -599,6 +616,18 @@ export function sourceVerificationErrorMessage(
 ): string {
   if (type === "favorites_folder") return favoriteFoldersErrorMessage(error);
   const signal = structuredErrorSignal(error);
+  if (type === "darkhorse_query") {
+    if (/NotLoggedIn|LOGIN_REQUIRED|SessionExpired|OAuth|授权|登录/i.test(signal)) {
+      return "热点宝尚未授权。请在弹出的 Chrome 窗口完成热点宝授权后重试。";
+    }
+    if (/NoValidResponse|NO_VALID_RESPONSE|TIMEOUT|Timeout/i.test(signal)) {
+      return "热点宝暂时没有返回有效结果，请检查网络后重新验证授权。";
+    }
+    if (/ResponseShapeChanged|RESPONSE_SHAPE_CHANGED/i.test(signal)) {
+      return "热点宝页面结构发生变化，当前无法确认授权状态；本次不会误记为同步成功。";
+    }
+    return "热点宝授权验证失败，请确认授权窗口可正常打开后重试。";
+  }
   if (type === "creator_profile") {
     if (/DouyinNoValidResponseError/i.test(signal)) {
       return "本次没有读到有效作品列表，不能把它判断成 0 条。请重新测试一次。";
@@ -698,7 +727,10 @@ function runStatusLabel(status: RadarRunStatus | null): string {
   }[status];
 }
 
-function runResultMessage(run: RadarRun): string {
+function runResultMessage(
+  run: RadarRun,
+  sourceType?: RadarSource["type"],
+): string {
   if (run.status === "succeeded_with_items") {
     return `同步完成：扫描 ${run.scannedCount} 条，新增 ${run.newCount} 条，更新 ${run.updatedCount} 条。`;
   }
@@ -707,6 +739,9 @@ function runResultMessage(run: RadarRun): string {
   }
   if (run.status === "blocked") {
     if (run.errorCode === "LOGIN_REQUIRED") {
+      if (sourceType === "darkhorse_query") {
+        return "同步暂停：热点宝授权已失效。请点击「热点宝授权」，授权成功后系统会自动重试。";
+      }
       return "同步暂停：采集账号登录已失效。请点击「重新登录」扫码，成功后系统会自动重试。";
     }
     if (run.errorCode === "CAPTCHA") {
@@ -746,6 +781,34 @@ function transcriptLabel(status: RadarItemDetail["transcript"]["status"]) {
     failed: "转写失败",
     blocked: "需要配置",
   }[status];
+}
+
+export function groupRadarSourceEvidence(
+  snapshots: RadarItemDetail["snapshots"],
+): Array<{
+  snapshot: RadarItemDetail["snapshots"][number];
+  captureCount: number;
+}> {
+  const grouped = new Map<
+    string,
+    {
+      snapshot: RadarItemDetail["snapshots"][number];
+      captureCount: number;
+    }
+  >();
+  for (const snapshot of [...snapshots].sort((left, right) =>
+    right.capturedAt.localeCompare(left.capturedAt),
+  )) {
+    // 正式 API 始终带 sourceId；finalUrl 只给旧测试/旧 payload 一个兼容键。
+    const key = snapshot.sourceId ?? snapshot.finalUrl;
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.captureCount += 1;
+    } else {
+      grouped.set(key, { snapshot, captureCount: 1 });
+    }
+  }
+  return [...grouped.values()];
 }
 
 export function IntelligenceWorkbench({
@@ -1033,7 +1096,10 @@ export function IntelligenceWorkbench({
               next.delete(sourceId);
               return next;
             });
-            setNotice(runResultMessage(result.run));
+            const sourceType = workspace.sources.find(
+              (source) => source.id === sourceId,
+            )?.type;
+            setNotice(runResultMessage(result.run, sourceType));
             router.refresh();
             return;
           }
@@ -1050,7 +1116,7 @@ export function IntelligenceWorkbench({
       setNotice("同步仍在后台运行，可打开该来源的“运行记录”查看最新进度。");
       router.refresh();
     },
-    [api, router],
+    [api, router, workspace.sources],
   );
 
   React.useEffect(() => {
@@ -1236,6 +1302,35 @@ export function IntelligenceWorkbench({
     }
   }, [api, detail, router]);
 
+  const uploadTranscript = React.useCallback(
+    async (file: File) => {
+      if (!detail) return;
+      setBusy(true);
+      setNotice(null);
+      try {
+        const prepared = await prepareTranscriptUpload(file);
+        const transcript = await api.uploadTranscript({
+          itemId: detail.item.id,
+          ...prepared,
+        });
+        setDetail((current) =>
+          current ? { ...current, transcript } : current,
+        );
+        setNotice("逐字稿已上传，可以继续生成选题候选。");
+        router.refresh();
+      } catch (error) {
+        setNotice(
+          error instanceof Error
+            ? error.message
+            : "逐字稿上传失败，请检查文件后重试。",
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [api, detail, router],
+  );
+
   const previewTopic = React.useCallback(async () => {
     const sourceSnapshotId = detail?.snapshots[0]?.id;
     if (!detail || !sourceSnapshotId || !positioningVersionId) return;
@@ -1419,7 +1514,7 @@ export function IntelligenceWorkbench({
               真实信源工作台
             </h2>
             <p className="truncate text-xs text-muted-foreground">
-              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿只手动排队
+              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿由你转写或上传
             </p>
           </div>
         </div>
@@ -1820,6 +1915,7 @@ export function IntelligenceWorkbench({
                 topicGenerating={topicGenerating}
                 positioningReady={Boolean(positioningVersionId)}
                 onTranscribe={enqueueTranscript}
+                onUploadTranscript={uploadTranscript}
                 onPreviewTopic={previewTopic}
                 onRefreshTopic={refreshTopicResult}
                 onConfirmTopic={confirmTopic}
@@ -2150,6 +2246,7 @@ function ItemDetail({
   topicGenerating,
   positioningReady,
   onTranscribe,
+  onUploadTranscript,
   onPreviewTopic,
   onRefreshTopic,
   onConfirmTopic,
@@ -2159,6 +2256,7 @@ function ItemDetail({
   topicGenerating: boolean;
   positioningReady: boolean;
   onTranscribe: () => void;
+  onUploadTranscript: (file: File) => void;
   onPreviewTopic: () => void;
   onRefreshTopic: () => void;
   onConfirmTopic: (
@@ -2186,6 +2284,7 @@ function ItemDetail({
     "blocked",
     "skipped",
   ].includes(detail.transcript.status);
+  const sourceEvidence = groupRadarSourceEvidence(detail.snapshots);
   return (
     <div className="flex min-h-full flex-col">
       <div className="border-b border-border/70 p-5">
@@ -2368,7 +2467,7 @@ function ItemDetail({
                 </p>
               ) : detail.transcript.status !== "done" ? (
                 <p className="mt-2 text-[11px] text-warning">
-                  请先在下方手动转写。只有完整逐字稿拆解完成后，才能生成有结构依据的选题。
+                  请先在下方手动转写或上传逐字稿。只有完整逐字稿拆解完成后，才能生成有结构依据的选题。
                 </p>
               ) : null}
             </div>
@@ -2398,20 +2497,43 @@ function ItemDetail({
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
-                不会自动转写。需要时由你手动发起，任务会排队并可暂停、恢复或重试。
+                不会自动转写。你可以发起转写，也可以上传已有的 TXT、Markdown、SRT 或 VTT 文件。
               </p>
               {transcriptCanStart ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={busy}
-                  onClick={onTranscribe}
-                  className="mt-3 gap-1.5"
-                >
-                  <FileAudio className="size-3.5" />
-                  手动转写
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={onTranscribe}
+                    className="gap-1.5"
+                  >
+                    <FileAudio className="size-3.5" />
+                    手动转写
+                  </Button>
+                  <label
+                    className={cn(
+                      "inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                      busy && "pointer-events-none opacity-50",
+                    )}
+                  >
+                    <Upload className="size-3.5" />
+                    上传逐字稿
+                    <input
+                      type="file"
+                      accept=".txt,.md,.srt,.vtt,text/plain,text/markdown,text/vtt,application/x-subrip"
+                      aria-label="上传逐字稿"
+                      className="sr-only"
+                      disabled={busy}
+                      onChange={(event) => {
+                        const file = event.currentTarget.files?.[0];
+                        if (file) onUploadTranscript(file);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
               ) : null}
             </div>
           )}
@@ -2422,10 +2544,10 @@ function ItemDetail({
             来源证据
           </h4>
           <div className="mt-3 space-y-2">
-            {detail.snapshots.length > 0 ? (
-              detail.snapshots.slice(0, 4).map((snapshot) => (
+            {sourceEvidence.length > 0 ? (
+              sourceEvidence.slice(0, 4).map(({ snapshot, captureCount }) => (
                 <a
-                  key={snapshot.id}
+                  key={snapshot.sourceId ?? snapshot.finalUrl}
                   href={snapshot.finalUrl}
                   target="_blank"
                   rel="noreferrer"
@@ -2437,7 +2559,10 @@ function ItemDetail({
                       {snapshot.title ?? "来源快照"}
                     </span>
                     <span className="block text-[10px] text-muted-foreground">
-                      {dateLabel(snapshot.capturedAt)}
+                      最近采集 {dateLabel(snapshot.capturedAt)}
+                      {captureCount > 1
+                        ? ` · 累计采集 ${captureCount} 次`
+                        : ""}
                     </span>
                   </span>
                 </a>
@@ -2788,6 +2913,7 @@ function AddSourceDialog({
   const [verifiedMessage, setVerifiedMessage] = React.useState<string | null>(
     null,
   );
+  const [darkhorseAuthorized, setDarkhorseAuthorized] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [reconnectNeeded, setReconnectNeeded] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
@@ -2800,6 +2926,7 @@ function AddSourceDialog({
     setProfilePreview(null);
     setWebPreview(null);
     setVerifiedMessage(null);
+    setDarkhorseAuthorized(false);
     setReconnectNeeded(false);
   }, []);
 
@@ -2875,6 +3002,25 @@ function AddSourceDialog({
           );
           return;
         }
+        if (type === "darkhorse_query") {
+          if (!collectorAccountId || !value.trim()) {
+            throw new Error("collector and keyword required");
+          }
+          const result = await api.reconnectCollector({
+            collectorAccountId,
+            sourceType: "darkhorse_query",
+          });
+          if (!result.loggedIn) {
+            setReconnectNeeded(true);
+            setError(
+              "没有检测到热点宝授权成功。请在弹出的 Chrome 窗口完成授权后再试。",
+            );
+            return;
+          }
+          setDarkhorseAuthorized(true);
+          setVerifiedMessage("热点宝授权已确认，可以保存并开始同步。");
+          return;
+        }
         if (type === "web" || type === "rss") {
           const preview = await api.previewWeb({
             accountId,
@@ -2895,10 +3041,11 @@ function AddSourceDialog({
       } catch (caught) {
         const signal = structuredErrorSignal(caught);
         setReconnectNeeded(
-          loginSource &&
-            /DOUYIN_FAVORITES_SESSION_EXPIRED|DouyinNotLoggedIn|LOGIN_REQUIRED|LoginRequired/i.test(
-              signal,
-            ),
+          type === "darkhorse_query" ||
+            (loginSource &&
+              /DOUYIN_FAVORITES_SESSION_EXPIRED|DouyinNotLoggedIn|LOGIN_REQUIRED|LoginRequired/i.test(
+                signal,
+              )),
         );
         setError(sourceVerificationErrorMessage(type, caught));
       }
@@ -2926,14 +3073,27 @@ function AddSourceDialog({
         });
         if (!result.loggedIn) {
           setReconnectNeeded(true);
-          setError("重新登录尚未完成，请在打开的窗口中扫码并确认登录。");
+          setError(
+            type === "darkhorse_query"
+              ? "热点宝授权尚未完成，请在打开的窗口中确认授权。"
+              : "重新登录尚未完成，请在打开的窗口中扫码并确认登录。",
+          );
           return;
         }
         setReconnectNeeded(false);
-        setVerifiedMessage("登录已恢复，请重新测试来源。");
+        if (type === "darkhorse_query") {
+          setDarkhorseAuthorized(true);
+          setVerifiedMessage("热点宝授权已确认，可以保存并开始同步。");
+        } else {
+          setVerifiedMessage("登录已恢复，请重新测试来源。");
+        }
       } catch {
         setReconnectNeeded(true);
-        setError("未能完成重新登录，请确认扫码窗口可用后重试。");
+        setError(
+          type === "darkhorse_query"
+            ? "未能完成热点宝授权，请确认授权窗口可用后重试。"
+            : "未能完成重新登录，请确认扫码窗口可用后重试。",
+        );
       }
     });
   }, [api, collectorAccountId, pending, type]);
@@ -2964,7 +3124,9 @@ function AddSourceDialog({
             folderId: folderKey,
           };
         } else if (type === "darkhorse_query") {
-          if (!value.trim()) throw new Error("missing keyword");
+          if (!value.trim() || !darkhorseAuthorized) {
+            throw new Error("keyword and douhot authorization required");
+          }
           config = {
             type,
             collectorAccountId,
@@ -3009,7 +3171,7 @@ function AddSourceDialog({
       } catch {
         setError(
           type === "darkhorse_query"
-            ? "请填写低粉爆款关键词，并确认当前抖音登录状态有效。"
+            ? "请填写低粉爆款关键词，并先验证热点宝授权。"
             : "请先完成来源验证，再保存并首次同步。",
         );
       }
@@ -3019,6 +3181,7 @@ function AddSourceDialog({
     api,
     collectionId,
     collectorAccountId,
+    darkhorseAuthorized,
     favoriteFolderName,
     monitor,
     name,
@@ -3242,26 +3405,29 @@ function AddSourceDialog({
         </p>
         {type === "darkhorse_query" ? (
           <p className="rounded-xl bg-warning-soft px-3 py-2 text-xs leading-5 text-warning">
-            保存后由热点宝“低粉爆款”首轮任务验证登录、48 小时榜单和数据结构；不会回退到旧抖音搜索。
+            黑马采集使用热点宝的独立授权，不等同于普通抖音登录。请先验证热点宝授权；不会回退到旧抖音搜索。
           </p>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              pending ||
-              (loginSource && !collectorAccountId) ||
-              (type !== "favorites_folder" && !value.trim())
-            }
-            onClick={verify}
-          >
-            {pending
-              ? "正在验证…"
-              : type === "favorites_folder"
-                ? "读取并选择收藏夹"
+        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          disabled={
+            pending ||
+            (loginSource && !collectorAccountId) ||
+            (type !== "favorites_folder" && !value.trim())
+          }
+          onClick={verify}
+        >
+          {pending
+            ? type === "darkhorse_query"
+              ? "等待热点宝授权…"
+              : "正在验证…"
+            : type === "favorites_folder"
+              ? "读取并选择收藏夹"
+              : type === "darkhorse_query"
+                ? "验证热点宝授权"
                 : "测试来源"}
-          </Button>
-        )}
+        </Button>
         {verifiedMessage ? (
           <p className="text-xs leading-5 text-success">
             {verifiedMessage}
@@ -3275,7 +3441,13 @@ function AddSourceDialog({
             disabled={pending || !collectorAccountId}
             onClick={reconnectCollectorForVerification}
           >
-            {pending ? "等待扫码登录…" : "重新登录所选采集账号"}
+            {pending
+              ? type === "darkhorse_query"
+                ? "等待热点宝授权…"
+                : "等待扫码登录…"
+              : type === "darkhorse_query"
+                ? "重新打开热点宝授权"
+                : "重新登录所选采集账号"}
           </Button>
         ) : null}
         <DialogFooter>
@@ -3288,6 +3460,7 @@ function AddSourceDialog({
                 ? !value.trim() && !favoriteFolderName.trim()
                 : !value.trim()) ||
               (type === "creator_profile" && !profilePreview) ||
+              (type === "darkhorse_query" && !darkhorseAuthorized) ||
               ((type === "web" || type === "rss") && !webPreview)
             }
             onClick={create}

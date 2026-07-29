@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { getSettingsService } from "@/server/persistence-client";
 import { readSessionCookie } from "../../auth/_session";
-import { resolveRequestContext, isAuthError } from "@/lib/request-context.server";
+import {
+  isAuthError,
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 import {
   isTrustedLocalRequest,
   loopbackForbidden,
@@ -26,9 +30,17 @@ import { ModelConfigImportError } from "@creatoros/backend/modules/settings";
 // (导入是写路径 → present-but-invalid cookie 拒绝;缺失 cookie 走单机免登录直通)。
 export const dynamic = "force-dynamic";
 
+function isManagedConfigurationError(error: unknown): boolean {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    (error as { code?: string }).code === "MODEL_CONFIGURATION_MANAGED"
+  );
+}
+
 async function resolveCtx(req: Request, isMutation: boolean) {
   const rawToken = readSessionCookie(req);
-  const accountId = req.headers.get("x-account-id");
+  const accountId = readRequestAccountId(req);
   return resolveRequestContext(rawToken, accountId, {
     rejectInvalidToken: isMutation,
   });
@@ -85,6 +97,15 @@ export async function POST(req: Request): Promise<Response> {
     const report = await service.importModelConfigs(ctx, body);
     return NextResponse.json({ ok: true, report });
   } catch (err) {
+    if (isManagedConfigurationError(err)) {
+      return NextResponse.json(
+        {
+          error: "模型服务由当前渠道统一管理，CreatorOS 不支持导入本地配置",
+          code: "MODEL_CONFIGURATION_MANAGED",
+        },
+        { status: 409 },
+      );
+    }
     // 结构校验失败(kind/version/必填字段)→ 400 + 可读文案;其余如实 500。
     if (
       err instanceof ModelConfigImportError ||

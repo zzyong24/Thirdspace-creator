@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, AccountRequiredError, type Db } from "@creatoros/backend";
+import {
+  createDb,
+  AccountRequiredError,
+  projects,
+  type Db,
+} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createContentCalendarService,
@@ -8,6 +13,9 @@ import {
   type PublishingPort,
   type CandidatePort,
   type NotificationsPort,
+  type IdentityTimezonePort,
+  type ProjectsSchedulePort,
+  type PublishingSchedulePort,
 } from "./content-calendar.service";
 import {
   OwnershipError,
@@ -53,6 +61,10 @@ function makeService(
     platformAccounts?: Partial<PlatformAccountPort>;
     publishing?: Partial<PublishingPort>;
     candidates?: Partial<CandidatePort>;
+    identity?: Partial<IdentityTimezonePort>;
+    projects?: Partial<ProjectsSchedulePort>;
+    schedulePublishing?: Partial<PublishingSchedulePort>;
+    referenceInstant?: string;
     notify?: NotificationsPort["notify"];
   } = {},
 ): { service: ContentCalendarService; notify: ReturnType<typeof vi.fn>; candidateCreateSpy: ReturnType<typeof vi.fn> } {
@@ -72,15 +84,40 @@ function makeService(
   const notifications: NotificationsPort = {
     notify: overrides.notify ?? notify,
   };
+  const identity: IdentityTimezonePort = {
+    getEffectiveTimezone:
+      overrides.identity?.getEffectiveTimezone ?? (async () => "UTC"),
+  };
+  const projects: ProjectsSchedulePort = {
+    getScheduleProject:
+      overrides.projects?.getScheduleProject ??
+      (async (_ctx, projectId) => ({
+        id: projectId,
+        title: "排期项目",
+        status: "active",
+        source: "manual",
+        currentStage: "script",
+        updatedAt: CLOCK,
+        outputs: [],
+      })),
+  };
+  const schedulePublishing: PublishingSchedulePort = {
+    getProjectPublicationFact:
+      overrides.schedulePublishing?.getProjectPublicationFact ??
+      (async () => null),
+  };
   const service = createContentCalendarService({
     db,
-    now: () => CLOCK,
+    now: () => overrides.referenceInstant ?? CLOCK,
     nextId: (p: string) => `${p}-${++seq}`,
-    clock: { now: () => CLOCK },
+    clock: { now: () => overrides.referenceInstant ?? CLOCK },
     platformAccounts,
     publishing,
     candidates,
     notifications,
+    identity,
+    projects,
+    schedulePublishing,
   });
   return { service, notify, candidateCreateSpy };
 }
@@ -89,6 +126,192 @@ describe("content-calendar service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await db.insert(projects).values({
+      id: "project-1",
+      userId: ctx.userId,
+      accountId: ACC,
+      title: "排期项目",
+      creationMode: "guided",
+      status: "active",
+      currentStage: "script",
+      startedAt: "2026-07-01T00:00:00.000Z",
+      createdAt: "2026-07-01T00:00:00.000Z",
+      updatedAt: "2026-07-01T00:00:00.000Z",
+    });
+  });
+
+  describe("T-599 project schedules", () => {
+    it("exposes one identity-owned calendar context and falls back invalid timezones to UTC", async () => {
+      const getEffectiveTimezone = vi.fn(async () => "Mars/Olympus");
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { service } = makeService(db, {
+        identity: { getEffectiveTimezone },
+      });
+
+      await expect(service.getCalendarRequestContext(ctx)).resolves.toEqual({
+        referenceInstant: CLOCK,
+        effectiveTimezone: "UTC",
+        today: "2026-07-20",
+      });
+      expect(getEffectiveTimezone).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledOnce();
+      warn.mockRestore();
+      await expect(
+        service.getCalendarRequestContext(ctxNoAccount),
+      ).rejects.toBeInstanceOf(AccountRequiredError);
+    });
+
+    it("creates date-only schedules, rejects past dates, and is idempotent on the same day", async () => {
+      const { service } = makeService(db);
+      const first = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-20",
+      });
+      const repeated = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-20",
+      });
+
+      expect(first).toMatchObject({
+        projectId: "project-1",
+        plannedDate: "2026-07-20",
+        plannedAt: "2026-07-20T12:00:00.000Z",
+      });
+      expect(repeated).toEqual(first);
+      await expect(
+        service.createEntry(ctx, ACC, {
+          projectId: "project-past",
+          plannedDate: "2026-07-19",
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("uses the identity timezone for today and rejects a different active date", async () => {
+      const { service } = makeService(db, {
+        identity: { getEffectiveTimezone: async () => "America/Los_Angeles" },
+      });
+      const first = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-19",
+      });
+      expect(first.plannedDate).toBe("2026-07-19");
+      await expect(
+        service.createEntry(ctx, ACC, {
+          projectId: "project-1",
+          plannedDate: "2026-07-20",
+        }),
+      ).rejects.toBeInstanceOf(ConflictError);
+    });
+
+    it("checks project ownership/state and real publication facts", async () => {
+      const { service } = makeService(db, {
+        projects: {
+          getScheduleProject: async () => {
+            throw new OwnershipError("OwnershipError: project not found");
+          },
+        },
+      });
+      await expect(
+        service.createEntry(ctx, ACC, {
+          projectId: "foreign-project",
+          plannedDate: "2026-07-21",
+        }),
+      ).rejects.toBeInstanceOf(OwnershipError);
+
+      const completed = makeService(db, {
+        projects: {
+          getScheduleProject: async (_ctx, id) => ({
+            id,
+            title: "已完成",
+            status: "completed",
+            source: "manual",
+            currentStage: "publishing",
+            updatedAt: CLOCK,
+            outputs: [],
+          }),
+        },
+      }).service;
+      await expect(
+        completed.createEntry(ctx, ACC, {
+          projectId: "completed-project",
+          plannedDate: "2026-07-21",
+        }),
+      ).rejects.toBeInstanceOf(ConflictError);
+
+      const published = makeService(db, {
+        schedulePublishing: {
+          getProjectPublicationFact: async () => ({
+            publicationId: "publication-1",
+            publishedAt: "2026-07-18T08:00:00.000Z",
+          }),
+        },
+      }).service;
+      await expect(
+        published.createEntry(ctx, ACC, {
+          projectId: "published-project",
+          plannedDate: "2026-07-21",
+        }),
+      ).rejects.toBeInstanceOf(ConflictError);
+    });
+
+    it("modifies and cancels active schedules, resetting missed to planned", async () => {
+      const { service } = makeService(db);
+      const created = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-20",
+      });
+      const later = makeService(db, {
+        referenceInstant: "2026-07-23T00:00:00.000Z",
+      }).service;
+      const missed = await later.reconcileProjectSchedule(ctx, created.id);
+      expect(missed.status).toBe("missed");
+
+      const moved = await later.updateEntry(ctx, created.id, {
+        plannedDate: "2026-07-24",
+      });
+      expect(moved).toMatchObject({
+        plannedDate: "2026-07-24",
+        status: "planned",
+        publishedAt: null,
+      });
+
+      expect(await later.deleteEntry(ctx, created.id)).toEqual({
+        id: created.id,
+        deleted: true,
+      });
+      expect(await later.listActiveProjectSchedules(ctx, ACC)).toEqual([]);
+    });
+
+    it("blocks public published transitions/deletes and reconciles only from a publication fact", async () => {
+      const fact = {
+        publicationId: "publication-1",
+        publishedAt: "2026-07-21T03:00:00.000Z",
+      };
+      let hasPublished = false;
+      const { service } = makeService(db, {
+        schedulePublishing: {
+          getProjectPublicationFact: async () =>
+            hasPublished ? fact : null,
+        },
+      });
+      const created = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-21",
+      });
+
+      await expect(
+        service.transition(ctx, created.id, { status: "published" }),
+      ).rejects.toBeInstanceOf(ConflictError);
+      hasPublished = true;
+      const reconciled = await service.reconcileProjectSchedule(ctx, created.id);
+      expect(reconciled).toMatchObject({
+        status: "published",
+        publishedAt: fact.publishedAt,
+      });
+      await expect(service.deleteEntry(ctx, created.id)).rejects.toBeInstanceOf(
+        ConflictError,
+      );
+    });
   });
 
   it("guards account ownership on listCalendar/createEntry", async () => {
@@ -112,36 +335,33 @@ describe("content-calendar service", () => {
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 
-  it("transitions planned → published (stamps publishedAt), planned → missed, missed → published", async () => {
+  it("keeps legacy planned ↔ missed transitions but blocks public published", async () => {
     const { service } = makeService(db);
     const e1 = await service.createEntry(ctx, ACC, {
       plannedAt: "2026-07-21T09:00:00.000Z",
     });
-    const pub = await service.transition(ctx, e1.id, { status: "published" });
-    expect(pub.status).toBe("published");
-    expect(pub.publishedAt).toBe(CLOCK);
+    await expect(
+      service.transition(ctx, e1.id, { status: "published" }),
+    ).rejects.toBeInstanceOf(ConflictError);
 
     const e2 = await service.createEntry(ctx, ACC, {
       plannedAt: "2026-07-22T09:00:00.000Z",
     });
     const missed = await service.transition(ctx, e2.id, { status: "missed" });
     expect(missed.status).toBe("missed");
-    // late recover.
     const recovered = await service.transition(ctx, e2.id, {
-      status: "published",
+      status: "planned",
     });
-    expect(recovered.status).toBe("published");
-    expect(recovered.publishedAt).toBe(CLOCK);
+    expect(recovered.status).toBe("planned");
   });
 
-  it("rejects an invalid transition (published → planned) and no-ops same-status", async () => {
+  it("rejects public published transitions and no-ops same-status", async () => {
     const { service } = makeService(db);
     const e = await service.createEntry(ctx, ACC, {
       plannedAt: "2026-07-21T09:00:00.000Z",
     });
-    await service.transition(ctx, e.id, { status: "published" });
     await expect(
-      service.transition(ctx, e.id, { status: "planned" }),
+      service.transition(ctx, e.id, { status: "published" }),
     ).rejects.toBeInstanceOf(ConflictError);
 
     // planned → planned idempotent no-op.
@@ -213,7 +433,14 @@ describe("content-calendar service", () => {
   });
 
   it("computes attainment math: weekly cadence, 4-week window, 3 published / 1 missed", async () => {
-    const { service } = makeService(db);
+    const { service } = makeService(db, {
+      publishing: {
+        isOutputPublished: async (_ctx, id) =>
+          id === "out-pub-1" ||
+          id === "out-pub-2" ||
+          id === "out-pub-3",
+      },
+    });
     await service.upsertCadence(ctx, ACC, {
       frequency: "weekly",
       preferredSlots: [],
@@ -223,22 +450,21 @@ describe("content-calendar service", () => {
       from: "2026-06-22T00:00:00.000Z",
       to: "2026-07-20T00:00:00.000Z",
     };
-    const e1 = await service.createEntry(ctx, ACC, {
+    await service.createEntry(ctx, ACC, {
       plannedAt: "2026-06-23T09:00:00.000Z",
+      contentOutputId: "out-pub-1",
     });
-    const e2 = await service.createEntry(ctx, ACC, {
+    await service.createEntry(ctx, ACC, {
       plannedAt: "2026-06-30T09:00:00.000Z",
+      contentOutputId: "out-pub-2",
     });
-    const e3 = await service.createEntry(ctx, ACC, {
+    await service.createEntry(ctx, ACC, {
       plannedAt: "2026-07-07T09:00:00.000Z",
+      contentOutputId: "out-pub-3",
     });
     await service.createEntry(ctx, ACC, {
       plannedAt: "2026-07-08T09:00:00.000Z", // overdue vs clock 07-20 → missed
     });
-    await service.transition(ctx, e1.id, { status: "published" });
-    await service.transition(ctx, e2.id, { status: "published" });
-    await service.transition(ctx, e3.id, { status: "published" });
-
     const a = await service.attainment(ctx, ACC, window);
     expect(a.expectedCount).toBe(4); // 28 days / 7 = 4 weeks
     expect(a.publishedCount).toBe(3);
@@ -286,6 +512,7 @@ describe("content-calendar service", () => {
     });
     expect(updated.status).toBe("planned");
     expect(updated.plannedAt).toBe("2026-07-28T09:00:00.000Z");
+    expect(updated.plannedDate).toBe("2026-07-28");
   });
 
   // ── [T-332 S2] 账号全域隔离:requireAccountId + 号一致性门(§4.2/§4.5/§4.6)──

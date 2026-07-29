@@ -414,6 +414,41 @@
       "when": 1785092400000,
       "tag": "0058_source_sync_active_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1785096000000,
+      "tag": "0059_unify_content_radar_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1785099600000,
+      "tag": "0060_retire_self_detail_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1785103200000,
+      "tag": "0061_project_schedule_calendar",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1785106800000,
+      "tag": "0062_normalize_scheduling_timestamps",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1785110400000,
+      "tag": "0063_learning_adoption_dedupe",
+      "breakpoints": true
     }
   ]
 }

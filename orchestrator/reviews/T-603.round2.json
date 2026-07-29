@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 已销账：规格已明确区分客户端真实文件大小门与后端规范化正文大小门，后端可独立、确定性地拒绝超限 operation 请求。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-CR-022",
+        "quote": "单文件不超过 2 MiB；backend 再校验格式、大小等价上限、正文和当前作品归属。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CR-025",
+        "quote": "超过 2 MiB…的请求均明确失败且旧状态不变。"
+      },
+      "where": "API-CR-032 的请求形状与服务端校验职责",
+      "failure_mode": "客户端可先拒绝大文件，但 API-CR-032 只传入清理后的 text、format 和 fileName；后端既没有原始字节也没有可验证的原始文件大小。调用方绕过客户端，或大于 2 MiB 的字幕文件在去除时间轴后变为较小正文时，后端无法判断其是否应按“超过 2 MiB”拒绝，可能写入 done/manual，违反验收的明确失败与零部分写入要求。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md:235; docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md:335-338; docs/superpowers/specs/2026-07-23-content-radar-service-contract.md:312",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确并使后端可确定性执行与“单文件 2 MiB”一致的大小判定：operation 必须提供可由服务端验证的暂存输入，或将已确认的限制明确改为后端可计算的规范化正文度量；无论选择何者，都需证明超限请求在写入前失败且不保留原文件。",
+      "resolution_evidence": "SPEC-LINE:71:53a5edcf19c06893; SPEC-LINE:72:ebe455a8bb01d4a3; SPEC-LINE:73:a8b205468eb4bae8; SPEC-LINE:314:e52ef42064c12d10",
+      "parent_id": ""
+    }
+  ]
+}

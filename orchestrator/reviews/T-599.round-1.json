@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "已独立审查 T-599 当前 SPEC 及 content-calendar、projects、publishing、dashboard 的既有 contract/服务/读侧实现；重点核对项目唯一排期入口、日期-only 时区、旧 entry 补链、publication 与计划竞态、项目归档/删除、首页提醒配额、发布中心日历与 /calendar 历史下钻。当前规格已以真实 projectId/同账号约束、外键链唯一迁移、publication 的项目 output 关系、固定准备度谓词、派生提醒与失败边界覆盖这些已确认结果，未发现会使其不成立的 blocker 或 major。",
+  "findings": []
+}

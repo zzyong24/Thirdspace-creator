@@ -176,7 +176,15 @@ export interface ProjectRepository {
   listOutputRefsByProjects(
     ctx: RequestContext,
     projectIds: ReadonlyArray<string>,
-  ): Promise<Array<{ projectId: string; outputId: string }>>;
+  ): Promise<
+    Array<{
+      projectId: string;
+      outputId: string;
+      title: string;
+      contentType: string;
+      status: string;
+    }>
+  >;
   getOutput(ctx: RequestContext, outputId: string): Promise<ContentOutputRow>;
   updateOutputRow(
     ctx: RequestContext,
@@ -1095,6 +1103,9 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .select({
           projectId: contentOutputs.projectId,
           outputId: contentOutputs.id,
+          title: contentOutputs.title,
+          contentType: contentOutputs.contentType,
+          status: contentOutputs.status,
         })
         .from(contentOutputs)
         .innerJoin(projects, eq(contentOutputs.projectId, projects.id))

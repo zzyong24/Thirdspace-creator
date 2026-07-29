@@ -268,6 +268,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/intelligence/items/:itemId"],
   ["POST", "/intelligence/items/import-douyin-share"],
   ["POST", "/intelligence/transcripts/enqueue"],
+  ["POST", "/intelligence/transcripts/upload-manual"],
   ["POST", "/intelligence/transforms/topic-preview"],
   ["POST", "/intelligence/transforms/:transformId/confirm-topic"],
   ["POST", "/projects/:projectId/intelligence"],

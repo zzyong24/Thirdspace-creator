@@ -126,7 +126,17 @@ export interface SettingsPageProps {
    * 缺省/null 键 → 对应入口中性降级(购买按钮隐藏/联系文案无链接),不回退官方链接。
    */
   readonly channelLinks?: ChannelLinksState;
+  /** T-604 正式渠道模型由 Growth 统一托管；managed 时模型页只展示状态，不渲染配置控件。 */
+  readonly modelAuthority?: ModelAuthorityState;
 }
+
+export type ModelAuthorityState =
+  | { authority: "local"; state: "ready"; action: string }
+  | {
+      authority: "managed_locked";
+      state: "ready" | "offline" | "unavailable";
+      action: string;
+    };
 
 /**
  * [T-167] 激活状态视图段。字段直接来自 `activation-service.getStatus()`(`ActivationStatusView`);
@@ -408,6 +418,7 @@ export function SettingsPage({
   skills,
   activation,
   channelLinks,
+  modelAuthority,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -438,6 +449,7 @@ export function SettingsPage({
         skills={skills}
         activation={activation}
         channelLinks={channelLinks}
+        modelAuthority={modelAuthority}
       />
     </main>
   );

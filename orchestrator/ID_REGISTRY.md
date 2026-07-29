@@ -35,6 +35,8 @@ Stable IDs so downstream artifacts trace to upstream intent and changes invalida
 | `DEC-004` | Ratification pass (assign IDs, run gates) | DECISION_LOG.md | active |
 | `DEC-005` | Consistency gate fails on missing backend chains | DECISION_LOG.md | active |
 | `DEC-ODR-001` | 四个过度设计任务统一退回最小现有能力路线 | DECISION_LOG.md | resolved |
+| `DEC-SCHED-001` | 项目唯一排期入口与发布中心日历主视图 | DECISION_LOG.md | confirmed |
+| `DEC-SCHED-002` | 排期复用共享契约与真实数据库 | DECISION_LOG.md | confirmed-scope |
 
 ## FR — Functional Requirements (source: docs/CreatorOS-implementation-plan.md) — status: to-confirm
 
@@ -523,6 +525,7 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | FR-CR-019 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-004 |
 | FR-CR-020 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
 | FR-CR-021 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-007, DEC-CR-015 |
+| FR-CR-022 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-007, DEC-CR-014, DEC-CR-017 |
 | NFR-CR-001 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
 | NFR-CR-002 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
 | NFR-CR-003 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
@@ -545,6 +548,7 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | FLOW-CR-007 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-014, FR-CR-020 |
 | FLOW-CR-008 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-016 |
 | FLOW-CR-009 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-021 |
+| FLOW-CR-010 | flow | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-022 |
 | ENT-CR-001 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-002 |
 | ENT-CR-002 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-003, FR-CR-008, FR-CR-009, FR-CR-010 |
 | ENT-CR-003 | entity | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | FR-CR-004, FR-CR-005, FR-CR-019 |
@@ -596,6 +600,9 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | API-CR-029 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-003, FR-CR-009, FR-CR-010 |
 | API-CR-030 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-017 |
 | API-CR-031 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-021 |
+| API-CR-032 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-022 |
+| TEST-CR-001 | test | backend/src/modules/intelligence/intelligence.service.test.ts | FR-CR-022, API-CR-032 |
+| TEST-CR-002 | test | frontend/src/features/intelligence/intelligence-workbench.test.tsx | FR-CR-022, FLOW-CR-010, AC-CR-025 |
 | RAT-CR-001 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-003 |
 | RAT-CR-002 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-004 |
 | RAT-CR-003 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-010 |
@@ -709,9 +716,65 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | HARD-575-001 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-04 |
 | HARD-575-002 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-04, TEST-575-02 |
 | HARD-575-003 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-06, TEST-575-03 |
-```
 | DEC-TSL-003 | decision | orchestrator/DECISION_LOG.md | FR-575-08 |
 | FR-575-08 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FLOW-575-03, API-575-002, TEST-575-06 |
 | FLOW-575-03 | flow | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-08 |
 | API-575-002 | api | docs/contracts/creator-client-config-consumer-v1.md | FR-575-08, TEST-575-06 |
 | TEST-575-06 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-08, API-575-002 |
+| DEC-MAUTH-001 | decision | orchestrator/DECISION_LOG.md | FR-MAUTH-001..006, NFR-MAUTH-001..002 |
+| FR-MAUTH-001 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FLOW-MAUTH-001, TEST-MAUTH-001 |
+| FR-MAUTH-002 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FLOW-MAUTH-001, TEST-MAUTH-001, TEST-MAUTH-006 |
+| FR-MAUTH-003 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FLOW-MAUTH-001, TEST-MAUTH-002, TEST-MAUTH-003 |
+| FR-MAUTH-004 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FLOW-MAUTH-002, TEST-MAUTH-004, TEST-MAUTH-005 |
+| FR-MAUTH-005 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | HARD-MAUTH-001, TEST-MAUTH-006 |
+| FR-MAUTH-006 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | TEST-MAUTH-007, TEST-MAUTH-008 |
+| NFR-MAUTH-001 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | TEST-MAUTH-003, TEST-MAUTH-005 |
+| NFR-MAUTH-002 | requirement | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | TEST-MAUTH-006 |
+| FLOW-MAUTH-001 | flow | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-001..003 |
+| FLOW-MAUTH-002 | flow | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-004..006 |
+| PORT-MAUTH-001 | operation | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-004 |
+| PORT-MAUTH-002 | operation | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-005, HARD-MAUTH-001 |
+| HARD-MAUTH-001 | risk | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-005 |
+| TEST-MAUTH-001 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-001, FR-MAUTH-002 |
+| TEST-MAUTH-002 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-003 |
+| TEST-MAUTH-003 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-003, NFR-MAUTH-001 |
+| TEST-MAUTH-004 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-004 |
+| TEST-MAUTH-005 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-004, NFR-MAUTH-001 |
+| TEST-MAUTH-006 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-002, FR-MAUTH-005, NFR-MAUTH-002 |
+| TEST-MAUTH-007 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-006 |
+| TEST-MAUTH-008 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-006 |
+| TEST-MAUTH-009 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-001, NFR-MAUTH-001 |
+| TEST-MAUTH-010 | test | docs/superpowers/specs/2026-07-29-creatoros-growth-managed-model-authority.md | FR-MAUTH-005, NFR-MAUTH-002 |
+| DEC-SCHED-001 | decision | orchestrator/DECISION_LOG.md | FR-SCHED-001..07, FLOW-SCHED-001..04 |
+| DEC-SCHED-002 | decision | orchestrator/DECISION_LOG.md | FR-SCHED-003, NFR-SCHED-001..03 |
+| FR-SCHED-001 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FLOW-SCHED-001, FLOW-SCHED-002, API-SCHED-002..04, TEST-SCHED-UI-001, TEST-SCHED-UI-002 |
+| FR-SCHED-002 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | API-SCHED-002, API-SCHED-003, TEST-SCHED-SVC-001 |
+| FR-SCHED-003 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | API-SCHED-001..03, TEST-SCHED-DB-001 |
+| FR-SCHED-004 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | API-SCHED-001..05, TEST-SCHED-SVC-002 |
+| FR-SCHED-005 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FLOW-SCHED-003, FLOW-SCHED-004, API-SCHED-001, TEST-SCHED-UI-003 |
+| FR-SCHED-006 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FLOW-SCHED-003, API-SCHED-005, TEST-SCHED-SVC-002 |
+| FR-SCHED-007 | requirement | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | API-SCHED-006, TEST-SCHED-DASH-001, TEST-SCHED-UI-004 |
+| NFR-SCHED-001 | nfr | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | TEST-SCHED-DB-001, TEST-SCHED-SVC-001 |
+| NFR-SCHED-002 | nfr | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | TEST-SCHED-SVC-001, TEST-SCHED-DASH-001 |
+| NFR-SCHED-003 | nfr | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | TEST-SCHED-SVC-002, TEST-SCHED-DASH-001 |
+| NFR-SCHED-004 | nfr | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | TEST-SCHED-UI-001..04 |
+| FLOW-SCHED-001 | flow | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FR-SCHED-001..03 |
+| FLOW-SCHED-002 | flow | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FR-SCHED-001, FR-SCHED-002, FR-SCHED-007 |
+| FLOW-SCHED-003 | flow | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FR-SCHED-005..07 |
+| FLOW-SCHED-004 | flow | docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md | FR-SCHED-005, FR-SCHED-006 |
+| API-SCHED-001 | api | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-003..05 |
+| API-SCHED-002 | api | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001..03 |
+| API-SCHED-003 | api | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001..04 |
+| API-SCHED-004 | api | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001, FR-SCHED-004 |
+| API-SCHED-005 | api | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-004, FR-SCHED-006 |
+| API-SCHED-006 | api | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-007 |
+| TEST-SCHED-CONTRACT-001 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001..07, API-SCHED-001..06 |
+| TEST-SCHED-DB-001 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-003, FR-SCHED-004, NFR-SCHED-001 |
+| TEST-SCHED-SVC-001 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001..03, NFR-SCHED-001, NFR-SCHED-002 |
+| TEST-SCHED-SVC-002 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-004, FR-SCHED-006, NFR-SCHED-003 |
+| TEST-SCHED-DASH-001 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-007, NFR-SCHED-002, NFR-SCHED-003 |
+| TEST-SCHED-UI-001 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001, NFR-SCHED-004 |
+| TEST-SCHED-UI-002 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001, FR-SCHED-002, NFR-SCHED-004 |
+| TEST-SCHED-UI-003 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-005, FR-SCHED-006, NFR-SCHED-004 |
+| TEST-SCHED-UI-004 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-007, NFR-SCHED-004 |
+```

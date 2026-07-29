@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   id,
   iso8601,
+  calendarDate,
   calendarEntryStatus,
   cadenceFrequency,
 } from "../primitives";
@@ -14,6 +15,8 @@ export const contentCalendarEntryResource = z.object({
   id,
   userId: id,
   accountId: id,
+  projectId: id.nullable(),
+  plannedDate: calendarDate,
   plannedAt: iso8601,
   contentOutputId: id.nullable(),
   candidateId: id.nullable(),

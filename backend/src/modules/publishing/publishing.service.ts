@@ -220,6 +220,25 @@ export interface PublishingService {
     ctx: RequestContext,
     projectId: string,
   ): Promise<string[]>;
+  /**
+   * 项目的真实发布事实。`publishedAt` 是唯一判据；即使作品后来下架，
+   * 历史发布事实仍保留。返回最早一条，供排期达成态判定。
+   */
+  getProjectPublicationFact(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{ publicationId: string; publishedAt: string } | null>;
+  listCurrentRevisionSummariesByPublicationIds(
+    ctx: RequestContext,
+    publicationIds: ReadonlyArray<string>,
+  ): Promise<
+    Array<{
+      publicationId: string;
+      revisionId: string;
+      title: string;
+      coverAssetId: string | null;
+    }>
+  >;
   // [T-073] 平台侧可见性同步:按 (platform, externalId) 找到 publication,把抖音端
   // 「仅自己可见/已隐藏」同步为 hidden_at 非空(hidden=true 置 now,false 清 null)。
   // 幂等(已是目标态不再写);找不到该作品(未导入)诚实返 null,不硬造。
@@ -370,6 +389,38 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
 
     async listPublicationsByOutputIds(ctx, outputIds) {
       return repoFor(ctx).listPublicationsByOutputs(outputIds);
+    },
+
+    async getProjectPublicationFact(ctx, projectId) {
+      const repo = repoFor(ctx);
+      if (!deps.listOutputIdsByProject) return null;
+      const outputIds = await deps.listOutputIdsByProject(ctx, projectId);
+      if (outputIds.length === 0) return null;
+      const publications = await repo.listPublicationsByOutputs(outputIds);
+      const earliest = publications
+        .filter(
+          (
+            publication,
+          ): publication is PublicationRow & { publishedAt: string } =>
+            Boolean(publication.publishedAt),
+        )
+        .sort(
+          (a, b) =>
+            a.publishedAt.localeCompare(b.publishedAt) ||
+            a.id.localeCompare(b.id),
+        )[0];
+      return earliest
+        ? {
+            publicationId: earliest.id,
+            publishedAt: earliest.publishedAt,
+          }
+        : null;
+    },
+
+    async listCurrentRevisionSummariesByPublicationIds(ctx, publicationIds) {
+      return repoFor(ctx).listCurrentRevisionSummariesByPublicationIds(
+        publicationIds,
+      );
     },
 
     async createPublication(ctx, outputId, body) {

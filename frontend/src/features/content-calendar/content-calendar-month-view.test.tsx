@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // T-083a 月历格样板测试:publications 真数据落格、单日多条「+N」折叠、
 // 过去空格淡色(data-gap)、月份静态跳转锚点、日详情抽屉(只读,跳稿面链接)。
@@ -20,7 +20,21 @@ import type {
   ContentCalendarViewModel,
 } from "./content-calendar-page";
 
-afterEach(() => cleanup());
+const routerPush = vi.fn();
+const routerPrefetch = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: routerPush,
+    prefetch: routerPrefetch,
+  }),
+}));
+
+afterEach(() => {
+  cleanup();
+  routerPush.mockReset();
+  routerPrefetch.mockReset();
+});
 
 function pub(
   id: string,
@@ -142,16 +156,42 @@ describe("content-calendar month grid (T-083a)", () => {
     ).toBeNull();
   });
 
-  it("month nav anchors point at prev/next month (static jump)", () => {
-    render(<ContentCalendarView viewModel={vm({})} />);
-    expect(
-      screen.getByTestId("calendar-prev-month").getAttribute("href"),
-    ).toBe("/calendar?month=2026-02");
-    expect(
-      screen.getByTestId("calendar-next-month").getAttribute("href"),
-    ).toBe("/calendar?month=2026-04");
-    expect(screen.getByTestId("calendar-month-title").textContent).toBe(
+  it("月份切换走客户端路由并保留当前页面，不触发 WebView 整页白屏", () => {
+    const { rerender } = render(<ContentCalendarView viewModel={vm({})} />);
+    const previous = screen.getByTestId("calendar-prev-month");
+    const next = screen.getByTestId("calendar-next-month");
+    expect(previous.tagName).toBe("BUTTON");
+    expect(next.tagName).toBe("BUTTON");
+
+    fireEvent.click(previous);
+    expect(routerPush).toHaveBeenLastCalledWith(
+      "/publishing?month=2026-02",
+      { scroll: false },
+    );
+    // 新月份 RSC 尚未读回时，旧月标题和格网仍留在页面上，不卸载成白屏。
+    expect(screen.getByTestId("calendar-month-title")).toHaveTextContent(
       "2026年3月",
+    );
+    expect(screen.getByTestId("calendar-month-grid")).toBeInTheDocument();
+
+    fireEvent.click(next);
+    expect(routerPush).toHaveBeenLastCalledWith(
+      "/publishing?month=2026-04",
+      { scroll: false },
+    );
+    rerender(
+      <ContentCalendarView
+        viewModel={vm({
+          month: "2026-04",
+          window: {
+            from: "2026-04-01T00:00:00.000Z",
+            to: "2026-05-01T00:00:00.000Z",
+          },
+        })}
+      />,
+    );
+    expect(screen.getByTestId("calendar-month-title")).toHaveTextContent(
+      "2026年4月",
     );
   });
 
@@ -189,7 +229,7 @@ describe("content-calendar month grid (T-083a)", () => {
 
   // [FE-M01] 无障碍:可点开的日历格是原生 <button>(键盘可聚焦 + Enter/Space 触发),
   // 过去空窗格不是 button(不可聚焦);抽屉是 role=dialog,Escape 可关。
-  it("openable day cells are real <button>s (keyboard-reachable); gap cells are not", () => {
+  it("有内容的日期格是键盘可达 button；空日期格不再承载自由排期入口", () => {
     render(
       <ContentCalendarView
         viewModel={vm({
@@ -203,10 +243,13 @@ describe("content-calendar month grid (T-083a)", () => {
         })}
       />,
     );
-    // 未来空格 07-15 可点 → <button>。
+    // 未来空格 07-15 只读 → <div>，排期入口统一在项目列表。
     const future = screen.getByTestId("calendar-day-2026-07-15");
-    expect(future.tagName).toBe("BUTTON");
-    expect(future).toHaveAttribute("type", "button");
+    expect(future.tagName).toBe("DIV");
+    // 有真实发布的 07-01 仍可点 → <button>。
+    const published = screen.getByTestId("calendar-day-2026-07-01");
+    expect(published.tagName).toBe("BUTTON");
+    expect(published).toHaveAttribute("type", "button");
     // 过去空窗 07-02 不可点 → <div>(非 button)。
     const gap = screen.getByTestId("calendar-day-2026-07-02");
     expect(gap.tagName).toBe("DIV");

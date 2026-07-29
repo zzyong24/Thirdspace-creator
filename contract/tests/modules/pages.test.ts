@@ -42,6 +42,7 @@ describe("pages contract", () => {
       kind: "dashboard",
       loading: false,
       error: null,
+      scheduleReminderReadState: { state: "ready", error: null },
       metrics: [
         {
           id: "m-active-projects",
@@ -70,6 +71,11 @@ describe("pages contract", () => {
           dueAt: null,
           priority: 1,
           status: "todo",
+          origin: "task",
+          reason: null,
+          plannedDate: null,
+          href: "/projects/project-ainativebrowser",
+          completable: true,
         },
       ],
       trendingTopics: [
@@ -113,6 +119,7 @@ describe("pages contract", () => {
       kind: "dashboard",
       loading: false,
       error: null,
+      scheduleReminderReadState: { state: "ready", error: null },
       metrics: [],
       continueCreating: null,
       todos: [],
@@ -132,6 +139,7 @@ describe("pages contract", () => {
         kind: "dashboard",
         loading: false,
         error: null,
+        scheduleReminderReadState: { state: "ready", error: null },
         metrics: [],
         continueCreating: {
           heading: "继续创作",

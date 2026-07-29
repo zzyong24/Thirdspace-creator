@@ -80,6 +80,42 @@ describe("learnings service (validationStatus machine + confidence + apply)", ()
     expect(b.validationStatus).toBe("candidate");
   });
 
+  it("[T-610] adoptLearning 直接 validated，并按 trim 后 title+insight 返回同一行", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const first = await service.adoptLearning(ctx, {
+      title: "  前 3 秒给结果 ",
+      insight: " 完播更高 ",
+      learningType: "hook",
+    });
+    const second = await service.adoptLearning(ctx, {
+      title: "前 3 秒给结果",
+      insight: "完播更高",
+      learningType: "hook",
+    });
+    expect(first.validationStatus).toBe("validated");
+    expect(first.confidenceScore).toBe(40);
+    expect(second.id).toBe(first.id);
+    const listed = await service.listLearnings(
+      ctx,
+      { limit: 20, offset: 0 },
+      { validationStatus: "validated" },
+    );
+    expect(listed.total).toBe(1);
+  });
+
+  it("[T-610] 相同经验只在当前账号内去重", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const first = await service.adoptLearning(ctx, {
+      title: "同一经验",
+      insight: "同一正文",
+    });
+    const otherAccount = await service.adoptLearning(
+      { ...ctx, accountId: "acct-b", requestId: "r2" },
+      { title: "同一经验", insight: "同一正文" },
+    );
+    expect(otherAccount.id).not.toBe(first.id);
+  });
+
   it("grounded 经验无需裁决即进 getSuggestions(下次生成 prompt 出现它)", async () => {
     const service = makeService(db, makeProjectsPort());
     // 无背书的候选不进 suggestions;grounded 的直接进(不调 evaluateLearning)。

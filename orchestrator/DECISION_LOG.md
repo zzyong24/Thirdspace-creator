@@ -5,6 +5,29 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-LEARNING-001
+Date: 2026-07-29
+Stage: T-610 BUILD
+Type: user-confirmed-product-semantics
+Decision: 对话/复盘里由用户点击“采纳”或“存为经验”的内容，按当前用户与账号内的
+          title+insight 稳定指纹去重，并直接成为 validated Learning，由知识库现有
+          validated 投影立即展示；不再进入第二次裁决队列。AI 未经用户确认产生的候选
+          仍保持 candidate。内容雷达保留跨轮次来源快照用于审计，但详情只按唯一 source
+          展示，并回显最近采集时间与累计次数。
+Rationale: 旧实现把已经经过用户确认的采纳再次降成 candidate，造成“已沉淀”但知识库
+           不可见；刷新后还可重复插入。雷达详情把一个来源的三次历史快照误画成三条来源，
+           与作品卡“1 个来源”的真实口径矛盾。
+Source: 用户 2026-07-29 明确要求“经验需要去重，然后直接进知识库即可”，并要求核对采集
+        是否去重。
+Affected Artifacts: learnings.create 既有 operation 语义、Learnings service/repository、
+                    learning migration、知识库 validated 投影、内容雷达详情来源证据。
+Explicit Limits: 不新建第二套知识库表；不物理删除历史重复经验或跨轮次来源快照；不同账号
+                 不互相去重；不同 source 发现同一作品时仍分别展示。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-PKG565-002
 Date: 2026-07-27
 Stage: T-565 PLAN / RAT
@@ -1066,6 +1089,31 @@ T-517 / T-598 推荐的方案 A。代码核查确认当前生产组合根同时�
 **Status**：resolved；解除 T-517 Delta SPEC `R2-01` 的用户裁决阻断，T-598 可进入 CONTRACT /
 BUILD Gate。
 
+## DEC-SCHED-001 (2026-07-29) — 项目是唯一排期入口，发布中心以日历承接节奏
+
+**来源**：用户提出“选题 → 项目 → 发布排期”节奏规划，并在查看项目列表与发布中心截图后，
+确认采用“项目行排期、发布中心删除重复列表并外移日历、首页待办提醒”的推荐方案。
+
+**决策**：
+
+1. 选题只负责形成内容候选，不直接排期；未发布、未归档项目是唯一排期入口，支持选今天或
+   未来日期、改期和取消。
+2. 排期真相归 `content-calendar`，必须建立真实 `projectId` 关系；项目不新增第二份发布日期，
+   `targetCompletedAt` 不得冒充发布日期，项目名也不得再写进 `note` 冒充关联。
+3. 发布中心移除与项目“已发布”重复的历史长表、搜索和筛选，以“过去真实 publication +
+   未来项目排期”的月历作为左侧主区域，右侧保留真实表现摘要；旧 `/calendar` 兼容跳转。
+4. 首页按排期、项目状态和真实发布事实派生逾期/今日/临近提醒；提醒不可手工完成，不重复写入
+   task 或 notification，第一版不进入铃铛。
+5. 第一版只选日期，不选时间；用户选定日期不得因时区漂移。排期只作规划与提醒，不自动向
+   平台发布。
+
+**User confirmation**：用户 2026-07-29 对完整推荐方向回复“认可”。
+
+**Risk disposition**：`avoid`（避免选题、项目、日历、首页各存一份日期，以及发布中心/项目
+双库存）；存量自由 entry 采取兼容展示和可审计补链，不猜测、不破坏性删除。
+
+**Status**：confirmed；T-599 进入独立 SPEC 评审，CONTRACT / BUILD 尚未授权。
+
 ## DEC-AUTO-002 (2026-07-29) — 自动化中心只保留四个不重复的产品任务
 
 **来源**：在 T-598 完成单一调度架构后，用户确认自动化任务语义继续收口，不向用户暴露
@@ -1084,3 +1132,74 @@ BUILD Gate。
 **User confirmation**：用户 2026-07-29 对四任务口径明确回复“认可”。
 
 **Status**：resolved；T-600 可直接按 T-598 既有 CONTRACT 做兼容任务退役。
+
+## DEC-SCHED-002 (2026-07-29) — 排期复用共享契约与真实数据库，不建立 UI 日期副本
+
+**来源**：T-599 从已确认 PLAN 进入 CONTRACT；项目、发布中心与首页需要共同读写项目排期。
+
+**决策**：
+
+1. 命中 `PAT-004` 的 CF-001/002/004：扩展现有 content-calendar Zod resource 与公开 operation，
+   不在三个前端表面各写日期类型，也不新增 project schedule endpoint。
+2. 命中 `PAT-002` 的 RF-001/002/004：排期是用户持久数据，依赖 active unique、ownership 与
+   正规 migration，继续使用现有 Postgres/PGlite 同构 Drizzle 路径，不用内存状态。
+3. 持久增量严格限制为 `project_id + planned_date`；旧 `planned_at` 只作兼容锚，产品显示与
+   提醒只认 date-only `plannedDate`。
+4. 真实发布仍归 publishing；公共 calendar transition 禁止手工写 `published`。
+
+**Pattern-Ref**：PAT-004、PAT-002。
+
+**User confirmation②**：用户于 2026-07-29 回复“确认”，授权按已评审 CONTRACT 进入 BUILD。
+
+**BUILD 编号协调**：共享工作树中的 T-600 已占用 migration `0060`，T-599 顺延使用
+`0061_project_schedule_calendar.sql`；只调整迁移文件序号，不改变 schema、数据归属或确认范围。
+
+**Status**：confirmed；CONTRACT 独立 Round 2 评审 PASS，BUILD 已授权。
+
+## DEC-CR-017 (2026-07-29) — 人工上传逐字稿复用当前作品的唯一逐字稿真相
+
+**来源**：用户在内容雷达作品详情截图中明确要求“这里的逐字稿支持人工上传”。
+
+**决策**：
+
+1. “上传逐字稿”与“手动转写”并列，首批支持 UTF-8 `.txt/.md/.srt/.vtt`；浏览器只读本地
+   文件并规范化正文，原文件不离开本机、不进入对象存储或第二套文件资产。
+2. backend `intelligence` service 继续是逐字稿唯一写者；上传正文写入当前作品既有
+   `ItemTranscript`，成功即为 `done/source=manual`，可直接进入现有拆解与选题生成。
+3. 禁止覆盖 `done` 或 `queued/running` 的逐字稿；相同已完成正文的重试只返回既有资源，
+   不同正文明确拒绝。由此避免改写已被选题或 Project 固定引用的来源证据。
+4. 客户端按真实 `File.size` 拒绝超过 2 MiB 的文件；backend 不接收原文件，按收到的规范化
+   正文重新计算 UTF-8 字节数并执行 2 MiB 上限，同时限制 500,000 字符。输入为空、乱码、
+   任一上限超限、格式不支持或跨账号时零写入并给出可行动错误。取消文件选择零写入。
+
+**Pattern-Ref**：PAT-004（跨 frontend/backend 的 typed contract）；持久化继续复用现有
+Postgres/PGlite transcript 行，不命中新增存储方案。`MOD-001` 不采用，因为原文件不需要远端
+保存。
+
+**User confirmation**：用户 2026-07-29 明确提出人工上传入口，授权该产品增量。
+
+**Status**：confirmed；T-603 须完成独立增量评审后才能 BUILD。
+
+## DEC-MAUTH-001 (2026-07-29) — 正式 CreatorOS 的模型配置由 Growth 渠道端完全托管
+
+**来源**：用户明确要求 CreatorOS 模型配置从远程拉取、不支持用户自行配置，并进一步授权
+CreatorOS 端实施。代码审计确认 T-575 仅完成签名配置拉取，现有设置与 AI runtime 仍读本地
+`model_configurations`。
+
+**决策**：
+
+1. 正式渠道构建固定 `managed_locked` 权威；Growth 只控制 profile 与 capability alias，
+   不能把正式客户端切回 BYOK。
+2. 托管态设置页只读，服务端同步拒绝保存、测试、导入和导出；存量本地配置保留但忽略。
+3. 全部模型能力通过 `EffectiveModelConfigPort` 求值，托管态禁止 DB、环境变量和内置云模型回退。
+4. 长期 provider Key 永不下发客户端；Creator 只接短期 gateway session 的 typed port。
+   上游 exact contract 缺失时默认 adapter 零出网并诚实不可用。
+5. 开发/自托管构建默认保持 local，作为明确的构建级回滚；Web、数据库、header 或 Growth
+   payload 无权切换正式客户端的权威。
+
+**Pattern-Ref**：PAT-004（CF-001/002/004，跨 Settings/AI runtime/组合根使用 typed port）；
+**Asset-Ref**：MOD-002（复用 provider-neutral resolver/adapter，不重写模型 SDK）。
+
+**User confirmation**：用户 2026-07-29 回复“creatoros端的你来实现吧”。
+
+**Status**：confirmed scope；T-604 SPEC/CONTRACT 独立评审通过后进入 BUILD。

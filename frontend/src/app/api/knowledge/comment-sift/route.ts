@@ -15,7 +15,10 @@ import {
   type PrefilterSignal,
 } from "@/server/knowledge/comment-prefilter";
 import { readSessionCookie } from "../../v1/auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 import { createServerClient } from "@/lib/contract-client.server";
 
 // 评论回流入口(T-092 SPEC §2)—— 三级去噪门的 ①+②(③确认门在前端):
@@ -48,7 +51,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(
       rawToken,
-      req.headers.get("x-account-id"),
+      readRequestAccountId(req),
       { rejectInvalidToken: true },
     );
   } catch (err) {

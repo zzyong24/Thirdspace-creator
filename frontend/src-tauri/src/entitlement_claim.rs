@@ -357,43 +357,92 @@ fn mark_journal_attempted(
     Ok(attempted)
 }
 
-struct KeyringJournal;
+/// OS 凭据后端的最小端口。生产实现仍由 keyring 选择 macOS Keychain /
+/// Windows Credential Manager；测试通过内存后端验证同一套序列化、读回和清理语义，
+/// 不需要在 CI 中伪造任一平台的系统凭据服务。
+trait CredentialBackend {
+    fn read_secret(&self) -> Result<Option<String>, String>;
+    fn write_secret(&self, value: &str) -> Result<(), String>;
+    fn delete_secret(&self) -> Result<(), String>;
+}
 
-impl KeyringJournal {
-    fn entry() -> Result<keyring::Entry, String> {
-        keyring::Entry::new(JOURNAL_SERVICE, JOURNAL_ACCOUNT)
+#[derive(Clone)]
+struct NativeCredentialBackend {
+    service: String,
+    account: String,
+}
+
+impl NativeCredentialBackend {
+    fn new(service: impl Into<String>, account: impl Into<String>) -> Self {
+        Self {
+            service: service.into(),
+            account: account.into(),
+        }
+    }
+
+    fn entry(&self) -> Result<keyring::Entry, String> {
+        keyring::Entry::new(&self.service, &self.account)
             .map_err(|_| "系统受保护凭据存储不可用".to_string())
     }
 }
 
-impl JournalStore for KeyringJournal {
-    fn load(&self) -> Result<Option<PendingConsumeJournal>, String> {
-        let entry = Self::entry()?;
+impl CredentialBackend for NativeCredentialBackend {
+    fn read_secret(&self) -> Result<Option<String>, String> {
+        let entry = self.entry()?;
         match entry.get_password() {
-            Ok(raw) => {
-                let raw = Zeroizing::new(raw);
-                serde_json::from_str(raw.as_str())
-                    .map(Some)
-                    .map_err(|_| "待恢复领取记录无法验证".to_string())
-            }
+            Ok(raw) => Ok(Some(raw)),
             Err(keyring::Error::NoEntry) => Ok(None),
             Err(_) => Err("无法读取系统受保护的待恢复领取记录".to_string()),
         }
+    }
+
+    fn write_secret(&self, value: &str) -> Result<(), String> {
+        let entry = self.entry()?;
+        entry
+            .set_password(value)
+            .map_err(|_| "无法写入系统受保护的待恢复领取记录".to_string())
+    }
+
+    fn delete_secret(&self) -> Result<(), String> {
+        let entry = self.entry()?;
+        match entry.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(_) => Err("正式授权已保存，但待恢复领取记录清理失败".to_string()),
+        }
+    }
+}
+
+struct ProtectedCredentialJournal<B> {
+    backend: B,
+}
+
+impl<B> ProtectedCredentialJournal<B> {
+    fn new(backend: B) -> Self {
+        Self { backend }
+    }
+}
+
+impl<B: CredentialBackend> JournalStore for ProtectedCredentialJournal<B> {
+    fn load(&self) -> Result<Option<PendingConsumeJournal>, String> {
+        let Some(raw) = self.backend.read_secret()? else {
+            return Ok(None);
+        };
+        let raw = Zeroizing::new(raw);
+        serde_json::from_str(raw.as_str())
+            .map(Some)
+            .map_err(|_| "待恢复领取记录无法验证".to_string())
     }
 
     fn save(&self, value: &PendingConsumeJournal) -> Result<(), String> {
         let raw = Zeroizing::new(
             serde_json::to_string(value).map_err(|_| "待恢复领取记录无法序列化".to_string())?,
         );
-        let entry = Self::entry()?;
-        entry
-            .set_password(raw.as_str())
-            .map_err(|_| "无法写入系统受保护的待恢复领取记录".to_string())?;
-        let readback = Zeroizing::new(
-            entry
-                .get_password()
-                .map_err(|_| "无法读回系统受保护的待恢复领取记录".to_string())?,
-        );
+        self.backend.write_secret(raw.as_str())?;
+        let readback = self
+            .backend
+            .read_secret()?
+            .map(Zeroizing::new)
+            .ok_or_else(|| "无法读回系统受保护的待恢复领取记录".to_string())?;
         if readback.as_str() != raw.as_str() {
             return Err("系统受保护的待恢复领取记录读后不一致".to_string());
         }
@@ -401,12 +450,15 @@ impl JournalStore for KeyringJournal {
     }
 
     fn delete(&self) -> Result<(), String> {
-        let entry = Self::entry()?;
-        match entry.delete_credential() {
-            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
-            Err(_) => Err("正式授权已保存，但待恢复领取记录清理失败".to_string()),
-        }
+        self.backend.delete_secret()
     }
+}
+
+fn native_journal() -> ProtectedCredentialJournal<NativeCredentialBackend> {
+    ProtectedCredentialJournal::new(NativeCredentialBackend::new(
+        JOURNAL_SERVICE,
+        JOURNAL_ACCOUNT,
+    ))
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -598,6 +650,29 @@ fn consume_http(base_url: &str, path: &str, body: &str) -> Result<LicenseHttpRes
     })
 }
 
+trait ConsumeTransport {
+    fn consume(
+        &self,
+        base_url: &str,
+        path: &str,
+        body: &str,
+    ) -> Result<LicenseHttpResponse, String>;
+}
+
+#[derive(Clone, Copy)]
+struct HttpsConsumeTransport;
+
+impl ConsumeTransport for HttpsConsumeTransport {
+    fn consume(
+        &self,
+        base_url: &str,
+        path: &str,
+        body: &str,
+    ) -> Result<LicenseHttpResponse, String> {
+        consume_http(base_url, path, body)
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ConsumeLicense {
@@ -774,10 +849,40 @@ fn current_ms() -> i64 {
         .as_millis() as i64
 }
 
-fn persist_success(
+trait LicenseSnapshotStore {
+    fn replace_and_verify(
+        &self,
+        path: &std::path::Path,
+        snapshot: &LicenseSnapshot,
+        key: &[u8; 32],
+    ) -> Result<(), String>;
+}
+
+#[derive(Clone, Copy)]
+struct AtomicLicenseSnapshotStore;
+
+impl LicenseSnapshotStore for AtomicLicenseSnapshotStore {
+    fn replace_and_verify(
+        &self,
+        path: &std::path::Path,
+        snapshot: &LicenseSnapshot,
+        key: &[u8; 32],
+    ) -> Result<(), String> {
+        write_snapshot_file_checked(path, snapshot, Some(key))?;
+        let readback = read_snapshot_file(path, Some(key))
+            .ok_or_else(|| "正式授权写入后无法读回".to_string())?;
+        if readback != *snapshot {
+            return Err("正式授权写入后验真不一致".to_string());
+        }
+        Ok(())
+    }
+}
+
+fn persist_success_with(
     state: &LicenseState,
     request: &ConsumeRequest,
     success: ConsumeSuccess,
+    snapshot_store: &dyn LicenseSnapshotStore,
 ) -> Result<(), String> {
     // true=AM exact replay，false=首次响应；两者授权事实完全等价，但必须读到该 closed 字段。
     let _is_exact_replay = success.idempotent;
@@ -849,12 +954,7 @@ fn persist_success(
         message: "权益已领取并激活".to_string(),
     };
     let path = license_file_path(&ctx.app_data_dir);
-    write_snapshot_file_checked(&path, &snapshot, Some(&key))?;
-    let readback = read_snapshot_file(&path, Some(&key))
-        .ok_or_else(|| "正式授权写入后无法读回".to_string())?;
-    if readback != snapshot {
-        return Err("正式授权写入后验真不一致".to_string());
-    }
+    snapshot_store.replace_and_verify(&path, &snapshot, &key)?;
     sync_mirror_to_sidecar(ctx, &snapshot);
     refresh_client_config_sidecar_async(state.0.clone());
     Ok(())
@@ -863,10 +963,11 @@ fn persist_success(
 fn consume_pending_with(
     state: &LicenseState,
     store: &dyn JournalStore,
-    response_override: Option<LicenseHttpResponse>,
+    transport: &dyn ConsumeTransport,
+    snapshot_store: &dyn LicenseSnapshotStore,
+    config: &LicenseConfig,
     now_ms: i64,
 ) -> Result<ClaimView, String> {
-    let config = LicenseConfig::from_env(state.0.machine_id.clone());
     let journal = store
         .load()?
         .ok_or_else(|| "没有待恢复的领取".to_string())?;
@@ -874,14 +975,11 @@ fn consume_pending_with(
     let attempted = mark_journal_attempted(store, journal)?;
     let exact_request = attempted.request(&config.project_key, &config.machine_id)?;
     let body = Zeroizing::new(exact_request.canonical_json()?);
-    let response = match response_override {
-        Some(response) => response,
-        None => consume_http(&config.base_url, &attempted.consume_path, body.as_str())?,
-    };
+    let response = transport.consume(&config.base_url, &attempted.consume_path, body.as_str())?;
     verify_signed_response(&response, &config, now_ms)?;
     if response.status == 200 {
         let success = parse_consume_success(&response.body)?;
-        persist_success(state, &exact_request, success)?;
+        persist_success_with(state, &exact_request, success, snapshot_store)?;
         store.delete()?;
         return Ok(safe_view(
             "activated",
@@ -940,7 +1038,7 @@ pub async fn entitlement_claim_start(
     }
     let state = state.inner().0.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        if KeyringJournal.load()?.is_some() {
+        if native_journal().load()?.is_some() {
             return Ok(safe_view(
                 "recovering",
                 None,
@@ -1011,9 +1109,17 @@ pub async fn entitlement_claim_poll(
     }
     let license_state = LicenseState(state.inner().0.clone());
     tauri::async_runtime::spawn_blocking(move || {
-        let store = KeyringJournal;
+        let store = native_journal();
         if store.load()?.is_some() {
-            return consume_pending_with(&license_state, &store, None, current_ms());
+            let config = LicenseConfig::from_env(license_state.0.machine_id.clone());
+            return consume_pending_with(
+                &license_state,
+                &store,
+                &HttpsConsumeTransport,
+                &AtomicLicenseSnapshotStore,
+                &config,
+                current_ms(),
+            );
         }
         let guard = session().lock().map_err(|_| "领取会话锁异常".to_string())?;
         let current = guard
@@ -1112,7 +1218,14 @@ pub async fn entitlement_claim_poll(
                 };
                 prepare_journal(&store, request, &launch.expires_at)?;
                 *session().lock().map_err(|_| "领取会话锁异常".to_string())? = None;
-                consume_pending_with(&license_state, &store, None, current_ms())
+                consume_pending_with(
+                    &license_state,
+                    &store,
+                    &HttpsConsumeTransport,
+                    &AtomicLicenseSnapshotStore,
+                    &config,
+                    current_ms(),
+                )
             }
         }
     })
@@ -1129,11 +1242,20 @@ pub async fn entitlement_claim_resume(
     }
     let license_state = LicenseState(state.inner().0.clone());
     tauri::async_runtime::spawn_blocking(move || {
-        let store = KeyringJournal;
+        let store = native_journal();
         if store.load()?.is_none() {
             return Ok(None);
         }
-        consume_pending_with(&license_state, &store, None, current_ms()).map(Some)
+        let config = LicenseConfig::from_env(license_state.0.machine_id.clone());
+        consume_pending_with(
+            &license_state,
+            &store,
+            &HttpsConsumeTransport,
+            &AtomicLicenseSnapshotStore,
+            &config,
+            current_ms(),
+        )
+        .map(Some)
     })
     .await
     .map_err(|_| "恢复领取任务执行失败".to_string())?
@@ -1143,6 +1265,7 @@ pub async fn entitlement_claim_resume(
 mod tests {
     use super::*;
     use crate::license::{SessionMonotonic, ShellLicenseCtx};
+    use std::collections::VecDeque;
     use std::sync::Arc;
 
     #[derive(Default)]
@@ -1187,6 +1310,127 @@ mod tests {
         fn delete(&self) -> Result<(), String> {
             Ok(())
         }
+    }
+
+    #[derive(Clone, Default)]
+    struct MemoryCredentialBackend {
+        raw: Arc<Mutex<Option<String>>>,
+        corrupt_readback: Arc<Mutex<bool>>,
+        deletes: Arc<Mutex<usize>>,
+    }
+
+    impl CredentialBackend for MemoryCredentialBackend {
+        fn read_secret(&self) -> Result<Option<String>, String> {
+            let mut value = self.raw.lock().unwrap().clone();
+            if *self.corrupt_readback.lock().unwrap() {
+                if let Some(raw) = value.as_mut() {
+                    raw.push(' ');
+                }
+            }
+            Ok(value)
+        }
+
+        fn write_secret(&self, value: &str) -> Result<(), String> {
+            *self.raw.lock().unwrap() = Some(value.to_string());
+            Ok(())
+        }
+
+        fn delete_secret(&self) -> Result<(), String> {
+            *self.raw.lock().unwrap() = None;
+            *self.deletes.lock().unwrap() += 1;
+            Ok(())
+        }
+    }
+
+    struct SequenceTransport {
+        results: Mutex<VecDeque<Result<LicenseHttpResponse, String>>>,
+        bodies: Mutex<Vec<String>>,
+    }
+
+    impl SequenceTransport {
+        fn new(results: Vec<Result<LicenseHttpResponse, String>>) -> Self {
+            Self {
+                results: Mutex::new(results.into()),
+                bodies: Mutex::new(Vec::new()),
+            }
+        }
+    }
+
+    impl ConsumeTransport for SequenceTransport {
+        fn consume(
+            &self,
+            _base_url: &str,
+            path: &str,
+            body: &str,
+        ) -> Result<LicenseHttpResponse, String> {
+            assert_eq!(path, CONSUME_PATH);
+            self.bodies.lock().unwrap().push(body.to_string());
+            self.results
+                .lock()
+                .unwrap()
+                .pop_front()
+                .expect("scripted transport exhausted")
+        }
+    }
+
+    struct RejectingSnapshotStore;
+
+    impl LicenseSnapshotStore for RejectingSnapshotStore {
+        fn replace_and_verify(
+            &self,
+            _path: &std::path::Path,
+            _snapshot: &LicenseSnapshot,
+            _key: &[u8; 32],
+        ) -> Result<(), String> {
+            Err("模拟 .license 原子替换后读回失败".to_string())
+        }
+    }
+
+    fn fixture_response() -> LicenseHttpResponse {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json"
+        ))
+        .expect("fixture json");
+        let signed = &fixture["consume"]["signedSuccess"];
+        LicenseHttpResponse {
+            status: 200,
+            signature: signed["signature"].as_str().map(str::to_string),
+            date: signed["date"].as_str().map(str::to_string),
+            digest: signed["digest"].as_str().map(str::to_string),
+            body: signed["rawBody"].as_str().unwrap().as_bytes().to_vec(),
+        }
+    }
+
+    fn fixture_config() -> LicenseConfig {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json"
+        ))
+        .expect("fixture json");
+        LicenseConfig {
+            base_url: "https://license.example.com".to_string(),
+            project_key: "creatoros".to_string(),
+            strict_verify: true,
+            public_key_b64: fixture["testKeys"]["licenseSigningPublicKeyRawBase64"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            machine_id: "device-opaque-id".to_string(),
+        }
+    }
+
+    fn test_license_state(temp_dir: std::path::PathBuf) -> LicenseState {
+        let master_key_b64 = base64::engine::general_purpose::STANDARD.encode([7_u8; 32]);
+        LicenseState(Arc::new(ShellLicenseCtx {
+            app_data_dir: temp_dir,
+            machine_id: "device-opaque-id".to_string(),
+            master_key_b64: Some(master_key_b64),
+            handshake_token: "test-handshake".to_string(),
+            sidecar_port: 0,
+            chain_lock: Mutex::new(()),
+            session: SessionMonotonic::new(),
+            last_decision: Mutex::new(None),
+            app_handle: None,
+        }))
     }
 
     #[test]
@@ -1263,6 +1507,275 @@ mod tests {
         )
         .expect_err("protected credential failure must fail closed");
         assert_eq!(error, "模拟系统凭据写入失败");
+    }
+
+    #[test]
+    fn keychain_and_credential_manager_backend_contract_is_readback_verified() {
+        let backend = MemoryCredentialBackend::default();
+        let first = ProtectedCredentialJournal::new(backend.clone());
+        let request = ConsumeRequest::fixture();
+        let prepared =
+            prepare_journal(&first, request.clone(), "2026-07-27T12:15:00.000Z").unwrap();
+        drop(first);
+
+        // 模拟桌面进程被强杀后重启：新 journal 实例从同一 OS 凭据后端恢复，
+        // 并继续使用完全相同的 requestId/nonce/token。
+        let restarted = ProtectedCredentialJournal::new(backend.clone());
+        let recovered = restarted.load().unwrap().expect("restart recovery");
+        assert_eq!(recovered.attempt_state, AttemptState::Prepared);
+        assert_eq!(
+            recovered
+                .request(&request.project_key, &request.machine_id)
+                .unwrap(),
+            request
+        );
+        let attempted = mark_journal_attempted(&restarted, recovered).unwrap();
+        assert_eq!(attempted.attempt_state, AttemptState::Attempted);
+        assert_eq!(
+            restarted.load().unwrap().unwrap().attempt_state,
+            AttemptState::Attempted
+        );
+        restarted.delete().unwrap();
+        assert!(restarted.load().unwrap().is_none());
+        assert_eq!(*backend.deletes.lock().unwrap(), 1);
+
+        // 系统后端声称写成功但读回字节不同，必须在任何 AM 出网前失败。
+        let corrupt = MemoryCredentialBackend::default();
+        *corrupt.corrupt_readback.lock().unwrap() = true;
+        let corrupt_journal = ProtectedCredentialJournal::new(corrupt);
+        let error = prepare_journal(
+            &corrupt_journal,
+            ConsumeRequest::fixture(),
+            "2026-07-27T12:15:00.000Z",
+        )
+        .expect_err("credential readback mismatch must fail closed");
+        assert_eq!(error, "系统受保护的待恢复领取记录读后不一致");
+        assert_eq!(prepared.attempt_state, AttemptState::Prepared);
+    }
+
+    #[test]
+    fn packet_loss_after_am_attempt_keeps_exact_journal_for_idempotent_replay() {
+        let temp_dir = std::env::temp_dir().join(format!(
+            "creatoros-t575-packet-loss-{}-{}",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        let state = test_license_state(temp_dir.clone());
+        let store = MemoryJournal::default();
+        let request = ConsumeRequest::fixture();
+        prepare_journal(&store, request.clone(), "2026-07-27T12:15:00.000Z").unwrap();
+        let dropped =
+            SequenceTransport::new(vec![Err("模拟 AM 已处理但响应在网络中丢失".to_string())]);
+
+        let error = consume_pending_with(
+            &state,
+            &store,
+            &dropped,
+            &AtomicLicenseSnapshotStore,
+            &fixture_config(),
+            parse_iso_ms("2026-07-27T12:06:05.000Z").unwrap(),
+        )
+        .expect_err("packet loss must remain recoverable");
+        assert!(error.contains("响应在网络中丢失"));
+        assert_eq!(
+            store.value.lock().unwrap().as_ref().unwrap().attempt_state,
+            AttemptState::Attempted
+        );
+        assert_eq!(
+            dropped.bodies.lock().unwrap().as_slice(),
+            &[request.canonical_json().unwrap()]
+        );
+
+        let replay = SequenceTransport::new(vec![Ok(fixture_response())]);
+        let view = consume_pending_with(
+            &state,
+            &store,
+            &replay,
+            &AtomicLicenseSnapshotStore,
+            &fixture_config(),
+            parse_iso_ms("2026-07-27T12:06:05.000Z").unwrap(),
+        )
+        .expect("same request replays to success");
+        assert_eq!(view.state, "activated");
+        assert!(store.value.lock().unwrap().is_none());
+        assert_eq!(
+            replay.bodies.lock().unwrap().as_slice(),
+            &[request.canonical_json().unwrap()]
+        );
+        assert!(license_file_path(&temp_dir).exists());
+        std::fs::remove_dir_all(&temp_dir).unwrap();
+    }
+
+    #[test]
+    fn license_atomic_replace_readback_failure_retains_attempted_journal() {
+        let temp_dir = std::env::temp_dir().join(format!(
+            "creatoros-t575-license-readback-{}-{}",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        let state = test_license_state(temp_dir.clone());
+        let store = MemoryJournal::default();
+        prepare_journal(
+            &store,
+            ConsumeRequest::fixture(),
+            "2026-07-27T12:15:00.000Z",
+        )
+        .unwrap();
+        let transport = SequenceTransport::new(vec![Ok(fixture_response())]);
+
+        let error = consume_pending_with(
+            &state,
+            &store,
+            &transport,
+            &RejectingSnapshotStore,
+            &fixture_config(),
+            parse_iso_ms("2026-07-27T12:06:05.000Z").unwrap(),
+        )
+        .expect_err("readback failure cannot clean the recovery journal");
+        assert_eq!(error, "模拟 .license 原子替换后读回失败");
+        assert_eq!(
+            store.value.lock().unwrap().as_ref().unwrap().attempt_state,
+            AttemptState::Attempted
+        );
+        assert_eq!(*store.deletes.lock().unwrap(), 0);
+        assert!(!license_file_path(&temp_dir).exists());
+        std::fs::remove_dir_all(&temp_dir).unwrap();
+    }
+
+    /// 非 fixture 的 Growth→AM live HTTPS 联调入口。
+    ///
+    /// 默认 ignored，不读取生产密钥，也不把 claimToken/deviceSecret 打到输出。执行者只需在
+    /// 自托管 macOS/Windows runner 配置真实 origin、公钥和一个可领取的测试 entitlement，
+    /// 然后按 stdout 的 userCode 在 Growth 登录页完成人工确认：
+    ///
+    /// `CREATOROS_T575_LIVE_E2E=1 GROWTH_ENTITLEMENT_API_ORIGIN=https://... \
+    ///  CREATOROS_LICENSE_BASE_URL=https://... CREATOROS_LICENSE_PUBLIC_KEY_B64=... \
+    ///  cargo test live_https_growth_to_am_non_fixture_harness -- --ignored --nocapture`
+    #[test]
+    #[ignore = "需要真实 Growth/AM HTTPS、测试 entitlement 与人工 owner 确认"]
+    fn live_https_growth_to_am_non_fixture_harness() {
+        assert_eq!(
+            std::env::var("CREATOROS_T575_LIVE_E2E").as_deref(),
+            Ok("1"),
+            "必须显式设置 CREATOROS_T575_LIVE_E2E=1"
+        );
+        let growth = growth_origin().expect("real Growth HTTPS origin");
+        assert!(
+            !growth
+                .host_str()
+                .unwrap_or_default()
+                .ends_with("example.com"),
+            "live harness 禁止 example.com/fixture origin"
+        );
+        let machine_id = std::env::var("CREATOROS_T575_LIVE_MACHINE_ID")
+            .unwrap_or_else(|_| format!("creatoros-live-harness-{}", random_uuid()));
+        let config = LicenseConfig::from_env(machine_id.clone());
+        assert!(
+            !config.base_url.contains("example.com"),
+            "live harness 禁止 example.com/fixture AM"
+        );
+        resolve_public_key(&config.public_key_b64).expect("real AM Ed25519 public key");
+
+        let verifier = random_base64url(32);
+        let challenge = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .encode(Sha256::digest(verifier.as_bytes()));
+        let create_body = serde_json_canonicalizer::to_string(&serde_json::json!({
+            "client": "creatoros",
+            "codeChallenge": challenge,
+            "codeChallengeMethod": "S256",
+        }))
+        .unwrap();
+        let created = post_json(&growth.join(CREATE_PATH).unwrap(), &create_body)
+            .expect("Growth API-210 live response");
+        assert_eq!(created.status, 201, "Growth API-210 must create a session");
+        let created = parse_create_response(&created.body).expect("closed API-210 response");
+        let verification = url::Url::parse(&created.verification_url).unwrap();
+        assert_eq!(verification.origin(), growth.origin());
+        println!(
+            "T-575 live：请在 {} 输入验证码 {}（仅 userCode 可展示）",
+            created.verification_url, created.user_code
+        );
+
+        let deadline = current_ms() + 10 * 60 * 1_000;
+        let launch = loop {
+            assert!(current_ms() < deadline, "十分钟内未完成 Growth owner 确认");
+            std::thread::sleep(Duration::from_secs(created.poll_interval_seconds));
+            let poll_body = Zeroizing::new(
+                serde_json_canonicalizer::to_string(&serde_json::json!({
+                    "deviceSecret": created.device_secret.as_str(),
+                    "codeVerifier": verifier.as_str(),
+                }))
+                .unwrap(),
+            );
+            let response = post_json(&growth.join(POLL_PATH).unwrap(), poll_body.as_str())
+                .expect("Growth API-212 live response");
+            if response.status == 429 {
+                std::thread::sleep(Duration::from_secs(
+                    response
+                        .retry_after_seconds
+                        .unwrap_or(created.poll_interval_seconds),
+                ));
+                continue;
+            }
+            match parse_poll_response(response.status, &response.body)
+                .expect("closed API-212 response")
+            {
+                PollResponse::Pending(_) => continue,
+                PollResponse::Approved(value) => break value,
+            }
+        };
+
+        let temp_dir = std::env::temp_dir().join(format!(
+            "creatoros-t575-live-{}-{}",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        let state = test_license_state(temp_dir.clone());
+        let account = format!("live-harness-{}", random_uuid());
+        let journal = ProtectedCredentialJournal::new(NativeCredentialBackend::new(
+            "com.creatoros.desktop.entitlement-consume.live-test",
+            account,
+        ));
+        let request = ConsumeRequest {
+            contract_version: CONTRACT_VERSION.to_string(),
+            claim_token: launch.claim_token,
+            project_key: config.project_key.clone(),
+            machine_id: config.machine_id.clone(),
+            request_id: random_uuid(),
+            nonce: random_base64url(24),
+        };
+        prepare_journal(&journal, request, &launch.expires_at)
+            .expect("OS protected journal write/readback");
+        let view = consume_pending_with(
+            &state,
+            &journal,
+            &HttpsConsumeTransport,
+            &AtomicLicenseSnapshotStore,
+            &config,
+            current_ms(),
+        )
+        .expect("live AM exact consume");
+        assert_eq!(view.state, "activated");
+        assert!(journal.load().unwrap().is_none());
+
+        let key = derive_license_key(
+            state
+                .0
+                .master_key_b64
+                .as_deref()
+                .expect("ephemeral harness master key"),
+        )
+        .unwrap();
+        let snapshot = read_snapshot_file(&license_file_path(&temp_dir), Some(&key))
+            .expect("live .license atomic replace/readback");
+        assert!(snapshot.allowed && snapshot.signature_verified);
+        assert_ne!(snapshot.code, "TEST-ONLY-NOT-A-LICENSE");
+        assert_eq!(snapshot.project_key, config.project_key);
+        assert_eq!(snapshot.machine_id, config.machine_id);
+        std::fs::remove_dir_all(&temp_dir).unwrap();
     }
 
     #[test]
@@ -1403,7 +1916,8 @@ mod tests {
             app_handle: None,
         }));
 
-        persist_success(&state, &request, success).expect("persist signed license");
+        persist_success_with(&state, &request, success, &AtomicLicenseSnapshotStore)
+            .expect("persist signed license");
         let key = derive_license_key(&master_key_b64).unwrap();
         let readback =
             read_snapshot_file(&license_file_path(&temp_dir), Some(&key)).expect("read license");

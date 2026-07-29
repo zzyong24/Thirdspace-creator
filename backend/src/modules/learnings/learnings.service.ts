@@ -1,5 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
+import { createHash } from "node:crypto";
 import {
   createLearningsRepository,
   type LearningsRepository,
@@ -162,6 +163,17 @@ export interface LearningsService {
       evidenceStrength?: "grounded" | null;
     },
   ): Promise<LearningResource>;
+  // [T-610] 用户显式点击“采纳/存为经验”的原子入口：按内容键复用或创建，
+  // 并直接成为知识库 validated 投影。AI 自动候选仍走 createLearning。
+  adoptLearning(
+    ctx: RequestContext,
+    body: {
+      title: string;
+      insight?: string;
+      learningType?: string;
+      projectId?: string | null;
+    },
+  ): Promise<LearningResource>;
   // The Reviews→Learnings bridge (roadmap §4 G13/G14). Called by ReviewsService via
   // this module's index.ts public interface only (no Reviews repo import here, no
   // Learnings repo import there).
@@ -283,6 +295,12 @@ const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
   discarded: new Set(),
 };
 
+function adoptedContentFingerprint(title: string, insight: string): string {
+  return createHash("md5")
+    .update(`${title.trim()}\u001f${insight.trim()}`, "utf8")
+    .digest("hex");
+}
+
 export function createLearningsService(deps: ServiceDeps): LearningsService {
   const { db, now, nextId, projects, calibration } = deps;
   // [T-183] 改稿 delta 摘要器:默认真实纯 diff,测试可注入抛错实现验证降级路径。
@@ -362,6 +380,22 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         confidenceScore: 0,
         validationStatus: grounded ? "validated" : "candidate",
         evidenceStrength: grounded ? "grounded" : null,
+      });
+      return toLearningDto(row);
+    },
+
+    async adoptLearning(ctx, body) {
+      const title = body.title.trim();
+      const insight = (body.insight ?? "").trim();
+      const row = await repoFor(
+        ctx,
+        "learnings.adoptLearning",
+      ).adoptLearning({
+        title,
+        insight,
+        learningType: body.learningType ?? "strategy",
+        projectId: body.projectId ?? null,
+        contentFingerprint: adoptedContentFingerprint(title, insight),
       });
       return toLearningDto(row);
     },

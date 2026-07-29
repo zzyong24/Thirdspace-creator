@@ -2,9 +2,9 @@
 
 - Task: T-595
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: ed76cabc5c2e
-- Review receipt: caefac7913c6
+- Round: 3/3 (recheck)
+- Spec receipt: 4a777c90fdaf
+- Review receipt: 1a8569fc6c5a
 
 ## 当前有效问题
 
@@ -16,20 +16,20 @@
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-595",
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "REV-001 与 REV-002 均已由修订规格以事务边界、失败验收和唯一匹配规则销账；所列修订行未引入新的 blocker 或 major。",
+  "summary": "Round 3 精确复核：reviewctl 计算的 changed_line_refs 为空，当前 raw SPEC hash 变化没有新增或修改语义行；PROJECT.md 仅 LAST_SYNCED 自动生成值更新。既有事务回滚边界与唯一匹配约束仍成立，REV-001/REV-002 保持销账，未发现由本次变化引入的新 blocker 或 major。",
   "spec_path": "docs/superpowers/specs/2026-07-28-visible-only-ingestion-boundary.md",
-  "spec_sha256": "ed76cabc5c2e74908b136a18b783156c2bf29a88d7873199a90fe09751c1738d",
+  "spec_sha256": "4a777c90fdafa0754703539d596070ad15091170caf443ccaecfac231bde77e0",
   "constitution_path": "PROJECT.md",
-  "constitution_sha256": "62b00dac1885fd8817e7bc2d80cef48d26b21aacc10c142a2675879d79773746",
+  "constitution_sha256": "019ea6de688fa1c4682d6a37b67ccb601df5b973ba59311d1b4e6fb8d254e78d",
   "review_path": "docs/superpowers/specs/2026-07-28-visible-only-ingestion-boundary.review.md",
   "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-terra",
+  "model": "gpt-5.6-sol",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "f6ca851faccf281229c6b444b500bf5bc7131c62d4d4a10926b4566e4eb849ed",
+  "latest_event_hash": "de7a91f50a1de5da35d3caa11be7df46f21ebe85ef945b48de41aaeba11ee4dd",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -41,6 +41,6 @@
       "resolution_evidence": "SPEC-LINE:92:a074951857de37b9 至 SPEC-LINE:94:5036a96ae9ef7f52 明确候选必须唯一，零个或多个候选一律为 unknown、零写入零清理并计入未知数；SPEC-LINE:223:9e98b3d4283c197b、SPEC-LINE:224:ba41c8a7b4674f78 要求同标题同发布时间多候选夹具断言 unknown、零写入、零清理。"
     }
   ],
-  "receipt": "caefac7913c6"
+  "receipt": "1a8569fc6c5a"
 }
 ```

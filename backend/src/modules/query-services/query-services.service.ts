@@ -38,6 +38,7 @@ const DASHBOARD_ASSISTANT_PROMPT =
 export interface DashboardSummary {
   continueCreating: DashboardPage["continueCreating"] | null;
   todos: DashboardPage["todos"];
+  scheduleReminderReadState?: DashboardPage["scheduleReminderReadState"];
 }
 export interface DashboardMetrics {
   metrics: ReadonlyArray<MetricCard>;
@@ -112,6 +113,11 @@ export function createDashboardQueryService(
           kind: "dashboard",
           loading: false,
           error: null,
+          scheduleReminderReadState:
+            summary.scheduleReminderReadState ?? {
+              state: "ready",
+              error: null,
+            },
           metrics: [...metrics],
           continueCreating,
           todos: [...todos],
@@ -131,6 +137,13 @@ export function createDashboardQueryService(
           error: {
             code: "dashboard_compose_failed",
             message: err instanceof Error ? err.message : "组合面板数据失败",
+          },
+          scheduleReminderReadState: {
+            state: "error",
+            error: {
+              code: "schedule_reminders_unavailable",
+              message: "排期提醒暂不可用，请稍后重试",
+            },
           },
           metrics: [],
           continueCreating: null,

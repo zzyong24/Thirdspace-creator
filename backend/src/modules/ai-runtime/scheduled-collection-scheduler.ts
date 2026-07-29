@@ -1,4 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
+import { createHash } from "node:crypto";
 
 // 调度器(T-007 D3,SPEC 2026-06-30 §5)——node-cron 进程内轮询 + triggerScheduledJob。
 //
@@ -20,7 +21,11 @@ import type { RequestContext } from "@creatoros/contract";
 export interface SchedulerAiPort {
   createTask(
     ctx: RequestContext,
-    body: { taskType: string; inputData?: Record<string, unknown> },
+    body: {
+      taskType: string;
+      attemptId?: string;
+      inputData?: Record<string, unknown>;
+    },
   ): Promise<{ id: string; status: string }>;
 }
 
@@ -103,9 +108,60 @@ export interface TriggerResult {
   completion?: Promise<void>;
 }
 
+export interface JobRunFailureGuardDeps {
+  getRun(
+    ctx: RequestContext,
+    runId: string,
+  ): Promise<{ status: string }>;
+  updateRun(
+    ctx: RequestContext,
+    runId: string,
+    patch: {
+      status: "failed";
+      finishedAt: string;
+      error: string;
+      progress: null;
+    },
+  ): Promise<unknown>;
+  now: () => string;
+}
+
+/** runner 尚未进入时的最后一道终态闸。已由 runner 收口的 failed/succeeded/needs_reconnect
+ * 保持原样，只有仍悬挂的 running 才补写 failed。 */
+export async function closeRunningJobRunOnError(
+  ctx: RequestContext,
+  runId: string,
+  error: unknown,
+  deps: JobRunFailureGuardDeps,
+): Promise<boolean> {
+  const run = await deps.getRun(ctx, runId);
+  if (run.status !== "running") return false;
+  const message =
+    error instanceof Error && error.message.trim()
+      ? error.message
+      : "自动化执行未完成";
+  await deps.updateRun(ctx, runId, {
+    status: "failed",
+    finishedAt: deps.now(),
+    error: `自动化执行未完成:${message}`,
+    progress: null,
+  });
+  return true;
+}
+
 /** ISO8601 时间戳 → 自然日键(YYYY-MM-DD,UTC 切分,与 capturedAt 幂等锚同口径)。 */
 export function dayKeyOf(iso: string): string {
   return iso.slice(0, 10);
+}
+
+/** 同一计划触发稳定去重、不同计划触发绝不复用终态 task。摘要把任意长度 job id
+ * 收敛到 ai.createTask 允许的 16..128 字符 attemptId。 */
+export function scheduledAttemptId(jobId: string, triggerAnchor: string): string {
+  const digest = createHash("sha256")
+    .update(`${jobId}\u0000${triggerAnchor}`)
+    .digest("hex")
+    .slice(0, 32);
+  return `scheduled-${digest}`;
 }
 
 /**
@@ -176,12 +232,23 @@ export async function triggerScheduledJob(
   //   (ai_tasks_user_idempotency,SPEC §5 复用既有幂等,不自造)。ctx 带派生号 → ai_task 落正确号。
   const task = await deps.ai.createTask(collectionCtx, {
     taskType,
+    // T-616：幂等身份属于“本次计划触发”，不能再只按自然日复用同一天已终态的 task。
+    // cron 用 scheduledFor 分钟锚；立即运行用本次 nowIso。相同计划重放仍命中同一 attempt。
+    attemptId: scheduledAttemptId(
+      job.id,
+      options?.scheduledFor ?? nowIso,
+    ),
     inputData: {
       idempotencyKey,
       jobId: job.id,
       target: job.target,
     },
   });
+  if (task.status !== "queued" && task.status !== "running") {
+    throw new Error(
+      `自动化任务 ${task.id} 已是终态 ${task.status}，拒绝创建新的 running 运行记录`,
+    );
+  }
 
   // 写 job_run(running, aiTaskId);再把 jobRunId 塞进 task.inputData 交 runner 回填。
   // [GAP-08] cron 到点触发带 scheduledFor 锚(部分唯一约束兜竞态);即时触发不带。
@@ -311,7 +378,24 @@ export interface SweepStaleDeps {
   /** 列出该用户所有 status='running' 的 job_run(host 绑 schedulingService;跨 job 扫)。 */
   listRunningRuns: (
     ctx: RequestContext,
-  ) => Promise<{ id: string; startedAt: string }[]>;
+  ) => Promise<
+    {
+      id: string;
+      startedAt: string;
+      jobId?: string;
+      aiTaskId?: string | null;
+    }[]
+  >;
+  /** 运行期清扫用：AI task 仍真实 running 时保护合法长任务。启动期可不传，沿用旧行为。 */
+  isRunActive?: (
+    ctx: RequestContext,
+    run: {
+      id: string;
+      startedAt: string;
+      jobId?: string;
+      aiTaskId?: string | null;
+    },
+  ) => Promise<boolean>;
   ctx: RequestContext;
   now: () => string;
   /** 超时阈值(毫秒;默认 30min)。started_at 早于 now-阈值 且仍 running → 标 failed。
@@ -320,11 +404,9 @@ export interface SweepStaleDeps {
 }
 
 /**
- * 启动扫超时(gate finding 3 / T-207):进程重启后,上一进程留下的仍 `running` 且 started_at
- * 超时(>staleMs,默认 30min)的 job_run → 标 failed(+ finished_at + error,reason=
- * stale-on-boot),兜"进程崩在 running"的残留 —— 僵尸 run 会撞 triggerScheduledJob 的当天
- * in-flight 幂等闸,把「立即运行/到点采集」全 dedup 挡住(真机 T-207 逮到)。
- * 导出供 host 初始化时调(fire-and-forget,不阻断启动)+ 测试驱动。
+ * 清扫超时运行(gate finding 3 / T-207 / T-616):仍 `running`、started_at 超阈值且没有
+ * 活跃 AI task 的 job_run → 标 failed(+ finished_at + error,reason=stale-run)，兜进程崩溃或
+ * runner 未进入留下的残留。由唯一 automation-driver 的分钟 tick 调用，不新增第二个 timer。
  */
 export async function sweepStaleRuns(deps: SweepStaleDeps): Promise<number> {
   const staleMs = deps.staleMs ?? 30 * 60 * 1000;
@@ -335,11 +417,12 @@ export async function sweepStaleRuns(deps: SweepStaleDeps): Promise<number> {
     const startedMs = new Date(run.startedAt).getTime();
     if (!Number.isFinite(startedMs)) continue;
     if (nowMs - startedMs < staleMs) continue;
+    if (deps.isRunActive && (await deps.isRunActive(deps.ctx, run))) continue;
     await deps.runs.updateRun(deps.ctx, run.id, {
       status: "failed",
       finishedAt: deps.now(),
       error:
-        "启动扫超时(stale-on-boot):进程重启前该 run 仍悬挂在 running,标记为 failed",
+        "自动化运行超时且无活跃执行(stale-run):该 run 仍悬挂在 running,标记为 failed",
     });
     swept += 1;
   }

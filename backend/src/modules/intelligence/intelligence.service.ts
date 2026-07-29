@@ -3047,6 +3047,109 @@ export function createIntelligenceService(
       };
     },
 
+    async uploadManualTranscript(
+      ctx: RequestContext,
+      input: {
+        itemId: string;
+        format: "txt" | "md" | "srt" | "vtt";
+        fileName: string;
+        text: string;
+      },
+    ) {
+      const supportedFormats = new Set(["txt", "md", "srt", "vtt"]);
+      if (!supportedFormats.has(input.format)) {
+        throw new IntelligenceValidationError(
+          "TRANSCRIPT_FILE_UNSUPPORTED_FORMAT",
+        );
+      }
+      const fileName = input.fileName.trim();
+      const extension = fileName.split(".").pop()?.toLowerCase();
+      if (!fileName || extension !== input.format) {
+        throw new IntelligenceValidationError(
+          "TRANSCRIPT_FILE_EXTENSION_MISMATCH",
+        );
+      }
+      const text = input.text
+        .replace(/^\ufeff/, "")
+        .replace(/\r\n?/g, "\n")
+        .trim();
+      if (!text) {
+        throw new IntelligenceValidationError("TRANSCRIPT_FILE_EMPTY");
+      }
+      if (text.includes("\ufffd")) {
+        throw new IntelligenceValidationError(
+          "TRANSCRIPT_FILE_INVALID_ENCODING",
+        );
+      }
+      if (
+        text.length > 500_000 ||
+        Buffer.byteLength(text, "utf8") > 2 * 1024 * 1024
+      ) {
+        throw new IntelligenceValidationError("TRANSCRIPT_FILE_TOO_LARGE");
+      }
+
+      const item = await requireItem(ctx, input.itemId);
+      const initial = (await service.getItem(ctx, item.id)).transcript;
+      if (initial.status === "done") {
+        if (initial.text === text) return initial;
+        throw new IntelligenceConflictError("TRANSCRIPT_EXISTS");
+      }
+      if (initial.status === "queued" || initial.status === "running") {
+        throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
+      }
+
+      const stamp = now();
+      const [updated] = await db
+        .update(itemTranscripts)
+        .set({
+          status: "done",
+          text,
+          source: "manual",
+          provider: null,
+          model: null,
+          language: null,
+          executionTaskId: null,
+          queuedAt: null,
+          completedAt: stamp,
+          errorCode: null,
+          updatedAt: stamp,
+        })
+        .where(
+          and(
+            eq(itemTranscripts.itemId, item.id),
+            eq(itemTranscripts.userId, ctx.userId),
+            eq(itemTranscripts.accountId, item.accountId),
+            inArray(itemTranscripts.status, [
+              "not_requested",
+              "failed",
+              "blocked",
+              "skipped",
+            ]),
+          ),
+        )
+        .returning();
+      if (updated) return toTranscript(updated);
+
+      const [current] = await db
+        .select()
+        .from(itemTranscripts)
+        .where(
+          and(
+            eq(itemTranscripts.itemId, item.id),
+            eq(itemTranscripts.userId, ctx.userId),
+            eq(itemTranscripts.accountId, item.accountId),
+          ),
+        )
+        .limit(1);
+      if (current?.status === "done" && current.text === text) {
+        return toTranscript(current);
+      }
+      if (current?.status === "queued" || current?.status === "running") {
+        throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
+      }
+      throw new IntelligenceConflictError("TRANSCRIPT_EXISTS");
+    },
+
     /**
      * 分享文本先落持久任务，HTTP 立即返回。真正的短链解析和 CDP 读取由 host worker
      * 完成；普通分享只保存用户输入和目标分类。仅 Copilot 明确取得转写授权时，

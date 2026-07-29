@@ -516,6 +516,10 @@ export function createSettingsService(
   //   (原来直接 import 的 migrateStorageRoot 在测试里会对真机 ~/CreatorOS/media 做 copy/delete,
   //   曾把用户真实封面从 media 搬去 custom+删 media,并是那条 flaky 测试的根源)。
   migrate: typeof migrateStorageRoot = migrateStorageRoot,
+  modelAuthority?: {
+    isManaged(): Promise<boolean>;
+    assertLocalConfigurationAllowed(): Promise<void>;
+  },
 ): SettingsService {
   const fallbackBase = (id: string): OfficialSkillBase => ({
     skillId: id,
@@ -585,11 +589,13 @@ export function createSettingsService(
     },
 
     async setModelConfiguration(ctx, capability, body) {
+      await modelAuthority?.assertLocalConfigurationAllowed();
       const row = await repoForCtx(ctx).putModel(ctx, capability, body);
       return toModelResource(row);
     },
 
     async resolveModelForCapability(ctx, capability) {
+      await modelAuthority?.assertLocalConfigurationAllowed();
       const repo = repoForCtx(ctx);
       // 1) exact capability match.
       const exact = await repo.getModel(ctx, capability);
@@ -605,17 +611,28 @@ export function createSettingsService(
     },
 
     async getModelConfig(ctx, capability) {
+      await modelAuthority?.assertLocalConfigurationAllowed();
       const row = await repoForCtx(ctx).getModel(ctx, capability);
       return row ? toModelInternal(row) : null;
     },
 
     async listModelConfigs(ctx) {
+      if (await modelAuthority?.isManaged()) return [];
       const rows = await repoForCtx(ctx).listModels(ctx);
       return rows.map(toModelResource);
     },
 
     // [T-363] 导出:原始读(不解密),密钥保持库中存储形态;secretForm 如实标注。
     async exportModelConfigs(ctx) {
+      if (await modelAuthority?.isManaged()) {
+        return {
+          kind: "creatoros.model-config-export",
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          secretForm: "none",
+          models: [],
+        };
+      }
       const rows = await repoForCtx(ctx).listModelsRaw(ctx);
       const models: ModelConfigExportRow[] = rows.map((row) => ({
         capability: row.capability,
@@ -652,6 +669,7 @@ export function createSettingsService(
     // [T-363] 导入:结构校验 → 逐行走 setModelConfiguration 既有写路径(capability 冲突
     // 即覆盖);密钥先解包,解不开 → 配置照导 + 该行诚实标 unrecoverable(提示重填)。
     async importModelConfigs(ctx, file) {
+      await modelAuthority?.assertLocalConfigurationAllowed();
       const parsed = parseModelConfigExportFile(file);
       const repo = repoForCtx(ctx);
       const rows: ModelConfigImportRowResult[] = [];

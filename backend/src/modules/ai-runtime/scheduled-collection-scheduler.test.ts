@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   triggerScheduledJob,
+  closeRunningJobRunOnError,
   runJobNow,
   dayKeyOf,
   cronMatchesMinute,
@@ -59,6 +60,7 @@ describe("triggerScheduledJob(幂等双闸)", () => {
       expect.objectContaining({ userId: "u1", requestId: "sched", accountId: null }),
       {
         taskType: "scheduled.self.metrics",
+        attemptId: expect.stringMatching(/^scheduled-[a-f0-9]{32}$/),
         inputData: expect.objectContaining({
           idempotencyKey: "job1:2026-07-01", // jobId:自然日
           jobId: "job1",
@@ -73,6 +75,37 @@ describe("triggerScheduledJob(幂等双闸)", () => {
       jobRunId: "run1",
     });
     expect(res).toMatchObject({ deduped: false, aiTaskId: "task1", jobRunId: "run1" });
+  });
+
+  it("[T-616] createTask 意外返回终态旧任务时拒绝新建 running job_run", async () => {
+    const deps = makeTriggerDeps([]);
+    deps._createTask.mockResolvedValueOnce({
+      id: "task-finished",
+      status: "succeeded",
+    });
+
+    await expect(triggerScheduledJob(ctx, job, deps)).rejects.toThrow(
+      /已是终态 succeeded/,
+    );
+    expect(deps._createRun).not.toHaveBeenCalled();
+    expect(deps._dispatch).not.toHaveBeenCalled();
+  });
+
+  it("[T-616] 同一计划分钟生成相同 attempt，不同计划分钟生成不同 attempt", async () => {
+    const first = makeTriggerDeps([]);
+    await triggerScheduledJob(ctx, job, first, {
+      scheduledFor: "2026-07-01T09:00:00.000Z",
+    });
+    const second = makeTriggerDeps([]);
+    await triggerScheduledJob(ctx, job, second, {
+      scheduledFor: "2026-07-01T09:01:00.000Z",
+    });
+
+    const firstAttempt = first._createTask.mock.calls[0]![1].attemptId;
+    const secondAttempt = second._createTask.mock.calls[0]![1].attemptId;
+    expect(firstAttempt).toMatch(/^scheduled-[a-f0-9]{32}$/);
+    expect(secondAttempt).toMatch(/^scheduled-[a-f0-9]{32}$/);
+    expect(secondAttempt).not.toBe(firstAttempt);
   });
 
   it("[T-433 S1] skipHeavyBackfill:true → dispatch 的 inputData.target 带 __skipHeavyBackfill(且保留原 target 字段)", async () => {
@@ -155,6 +188,46 @@ describe("triggerScheduledJob(幂等双闸)", () => {
     const res = await triggerScheduledJob(ctx, job, deps);
     expect(res.deduped).toBe(false);
     expect(deps._createTask).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("closeRunningJobRunOnError(T-616 handler 外层终态闸)", () => {
+  it("runner 未进入且 run 仍 running → 补写 failed；已有终态不覆盖", async () => {
+    const updateRun = vi.fn(async () => ({}));
+    const runningClosed = await closeRunningJobRunOnError(
+      ctx,
+      "run-running",
+      new Error("AI task 无法 claim"),
+      {
+        getRun: async () => ({ status: "running" }),
+        updateRun,
+        now: () => "2026-07-01T09:00:00.000Z",
+      },
+    );
+    expect(runningClosed).toBe(true);
+    expect(updateRun).toHaveBeenCalledWith(
+      ctx,
+      "run-running",
+      expect.objectContaining({
+        status: "failed",
+        progress: null,
+        error: expect.stringContaining("AI task 无法 claim"),
+      }),
+    );
+
+    updateRun.mockClear();
+    const terminalPreserved = await closeRunningJobRunOnError(
+      ctx,
+      "run-failed",
+      new Error("外层错误"),
+      {
+        getRun: async () => ({ status: "failed" }),
+        updateRun,
+        now: () => "2026-07-01T09:00:00.000Z",
+      },
+    );
+    expect(terminalPreserved).toBe(false);
+    expect(updateRun).not.toHaveBeenCalled();
   });
 });
 
@@ -282,6 +355,7 @@ describe("runJobNow(D5「立即运行」手动触发)", () => {
       expect.objectContaining({ userId: "u1", accountId: null }),
       {
         taskType: "scheduled.self.metrics",
+        attemptId: expect.stringMatching(/^scheduled-[a-f0-9]{32}$/),
         inputData: expect.objectContaining({ jobId: "job1" }),
       },
     );
@@ -408,9 +482,46 @@ describe("sweepStaleRuns(gate finding-3 启动扫超时)", () => {
       expect.objectContaining({
         status: "failed",
         finishedAt: "2026-07-01T09:00:00.000Z",
-        // [T-207] reason=stale-on-boot(启动 sweep 的诚实标注)。
-        error: expect.stringContaining("stale-on-boot"),
+        // [T-616] 启动与运行期共用同一清扫语义。
+        error: expect.stringContaining("stale-run"),
       }),
+    );
+  });
+
+  it("[T-616] 运行期清扫保护仍有 active AI task 的长任务，只清终态/失联任务", async () => {
+    const updateRun = vi.fn(async () => ({}));
+    const isRunActive = vi.fn(async (_ctx, run: { aiTaskId?: string | null }) =>
+      run.aiTaskId === "task-active"
+    );
+    const swept = await sweepStaleRuns({
+      runs: {
+        createRun: async () => ({ id: "" }),
+        listRunsByJob: async () => ({ rows: [], total: 0 }),
+        updateRun,
+      },
+      listRunningRuns: async () => [
+        {
+          id: "long-but-active",
+          startedAt: "2026-07-01T08:00:00.000Z",
+          aiTaskId: "task-active",
+        },
+        {
+          id: "orphaned",
+          startedAt: "2026-07-01T08:00:00.000Z",
+          aiTaskId: "task-terminal",
+        },
+      ],
+      isRunActive,
+      ctx,
+      now: () => "2026-07-01T09:00:00.000Z",
+    });
+
+    expect(swept).toBe(1);
+    expect(updateRun).toHaveBeenCalledTimes(1);
+    expect(updateRun).toHaveBeenCalledWith(
+      ctx,
+      "orphaned",
+      expect.objectContaining({ status: "failed" }),
     );
   });
 });

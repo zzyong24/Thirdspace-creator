@@ -7,7 +7,10 @@ import {
 import { getChatRuntime } from "@/server/persistence-client";
 import { runKnowledgeDistill } from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../../v1/auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 知识倾倒场蒸馏入口(T-079b SPEC §2)—— 同步轻路由(/api/knowledge/classify 同款 escape
@@ -47,7 +50,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(
       rawToken,
-      req.headers.get("x-account-id"),
+      readRequestAccountId(req),
       { rejectInvalidToken: true },
     );
   } catch (err) {

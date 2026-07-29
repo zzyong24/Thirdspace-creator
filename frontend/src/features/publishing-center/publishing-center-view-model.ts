@@ -3,10 +3,9 @@
  * the PublishingCenterPage renders (Task 5 server-read switch, module Q decision (a)).
  *
  * The composed DTO is the lean page projection (rows/metrics/platformComparison/
- * trend/topContent); the page VM is a presentation-specific shape (per-row labels,
- * content-type tabs with counts, pagination). This adapter denormalizes the labels
- * from fixed maps so SSR output stays stable — pure + deterministic, no `Date.now`,
- * `Math.random`, or network.
+ * trend/topContent). T-599 后发布中心页面只消费其中的表现 rail；rows/tabs/pagination
+ * 仍保留在兼容 ViewModel，供旧 DTO 与日历投影复用，但不再渲染成交互库存。
+ * Adapter 保持纯函数与确定性，不读取时间、随机数或网络。
  */
 
 import type { MetricCard as MetricCardVm } from "@/types/view-models";

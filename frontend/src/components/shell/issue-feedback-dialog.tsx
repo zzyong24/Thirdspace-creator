@@ -31,7 +31,7 @@ import { handshakeHeaders } from "@/lib/handshake-client";
 import { getRuntimeSystemLabel } from "@/lib/runtime-system-info";
 import { cn } from "@/lib/utils";
 import {
-  buildIssueFeedbackText,
+  buildProductFeedbackPreview,
   CREATOROS_FEISHU_FEEDBACK_URL,
   feedbackDescriptionLength,
   redactSensitiveText,
@@ -61,9 +61,7 @@ function newIdempotencyKey(): string {
 }
 
 export function IssueFeedbackDialog({
-  pathname,
   collapsed,
-  correlationId,
   bugFeedbackUrl: cachedBugFeedbackUrl,
   submissionEnabled = process.env
     .NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED === "1",
@@ -82,15 +80,25 @@ export function IssueFeedbackDialog({
   const [open, setOpen] = React.useState(false);
   const [summary, setSummary] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [occurredAt, setOccurredAt] = React.useState(() => new Date());
   const [appVersion, setAppVersion] = React.useState<string | null>(null);
   const [systemLabel, setSystemLabel] = React.useState("系统信息读取中");
   const [bugFeedbackUrl, setBugFeedbackUrl] = React.useState<string | null>(
     cachedBugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
   );
+  const [signedFeedbackAvailable, setSignedFeedbackAvailable] = React.useState<
+    boolean | null
+  >(
+    cachedBugFeedbackUrl === undefined
+      ? null
+      : cachedBugFeedbackUrl !== null,
+  );
   const [copyState, setCopyState] = React.useState<CopyState>("editing");
   const [channelState, setChannelState] = React.useState<ChannelState>(
-    cachedBugFeedbackUrl === undefined ? "loading" : "ready",
+    cachedBugFeedbackUrl === undefined
+      ? "loading"
+      : cachedBugFeedbackUrl
+        ? "ready"
+        : "channel_missing",
   );
   const [logsState, setLogsState] = React.useState<LogsState>("idle");
   const [submitState, setSubmitState] = React.useState<SubmitState>({
@@ -104,45 +112,50 @@ export function IssueFeedbackDialog({
   );
   const [submissionConfirmed, setSubmissionConfirmed] = React.useState(false);
 
+  const locale =
+    typeof navigator === "undefined" ? "zh-CN" : navigator.language || "zh-CN";
   const preview = React.useMemo(
     () =>
-      buildIssueFeedbackText({
+      buildProductFeedbackPreview({
         summary,
         description,
         appVersion,
         os: systemLabel,
-        route: pathname,
-        occurredAt,
-        correlationId,
+        locale,
       }),
     [
       appVersion,
-      correlationId,
       description,
-      occurredAt,
-      pathname,
+      locale,
       summary,
       systemLabel,
     ],
   );
+  const directSubmissionAvailable =
+    submissionEnabled && signedFeedbackAvailable === true;
 
   const handleOpenChange = React.useCallback((next: boolean) => {
     setOpen(next);
     if (next) {
-      setOccurredAt(new Date());
       setSystemLabel("系统信息读取中");
       setCopyState("editing");
       setBugFeedbackUrl(
         cachedBugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
       );
+      setSignedFeedbackAvailable(
+        cachedBugFeedbackUrl === undefined
+          ? null
+          : cachedBugFeedbackUrl !== null,
+      );
       setChannelState(
         cachedBugFeedbackUrl === undefined
           ? "loading"
-          : "ready",
+          : cachedBugFeedbackUrl
+            ? "ready"
+            : "channel_missing",
       );
       setLogsState("idle");
       setSubmitState({ state: "idle" });
-      setIdempotencyKey(newIdempotencyKey());
       setValidationError(null);
       setSubmissionConfirmed(false);
     }
@@ -184,12 +197,16 @@ export function IssueFeedbackDialog({
         setBugFeedbackUrl(
           result.bugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
         );
-        setChannelState("ready");
+        setSignedFeedbackAvailable(result.bugFeedbackUrl !== null);
+        setChannelState(
+          result.bugFeedbackUrl ? "ready" : "channel_missing",
+        );
       })
       .catch(() => {
         if (!active) return;
         setBugFeedbackUrl(CREATOROS_FEISHU_FEEDBACK_URL);
-        setChannelState("ready");
+        setSignedFeedbackAvailable(false);
+        setChannelState("channel_missing");
       });
     return () => {
       active = false;
@@ -211,8 +228,8 @@ export function IssueFeedbackDialog({
 
   function validateDescription(): boolean {
     const length = feedbackDescriptionLength(description);
-    if (length < 10) {
-      setValidationError("问题描述至少 10 个字符");
+    if (length < 1) {
+      setValidationError("请填写问题描述");
       return false;
     }
     if (length > 4000) {
@@ -330,7 +347,7 @@ export function IssueFeedbackDialog({
   const trigger = (
     <button
       type="button"
-      aria-label="问题反馈"
+      aria-label="帮助与反馈"
       data-slot="issue-feedback-trigger"
       className={cn(
         "flex h-9 items-center rounded-lg text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
@@ -338,7 +355,7 @@ export function IssueFeedbackDialog({
       )}
     >
       <Bug aria-hidden="true" className="size-4 shrink-0" />
-      {!collapsed ? <span>问题反馈</span> : null}
+      {!collapsed ? <span>帮助与反馈</span> : null}
     </button>
   );
 
@@ -347,9 +364,9 @@ export function IssueFeedbackDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>问题反馈</DialogTitle>
+          <DialogTitle>帮助与反馈</DialogTitle>
           <DialogDescription>
-            请先预览并确认文字。发送只包含下方文字与基本版本信息，不会自动上传日志、附件、截图、激活码或其他用户内容；服务不可用时仍可复制文字并打开官方反馈页。
+            这里处理 CreatorOS 使用问题；购买、续费或交付问题，请到设置里的“产品与服务”联系服务方。请先检查下方内容；不会发送日志、附件、截图、激活码或其他内容。
           </DialogDescription>
         </DialogHeader>
 
@@ -361,7 +378,7 @@ export function IssueFeedbackDialog({
             <Input
               id="issue-feedback-summary"
               value={summary}
-              maxLength={180}
+              maxLength={160}
               placeholder="一句话说明遇到的问题（5–160 字）"
               onChange={(event) => {
                 setSummary(event.target.value);
@@ -381,9 +398,9 @@ export function IssueFeedbackDialog({
               id="issue-feedback-description"
               autoFocus
               value={description}
-              maxLength={4200}
+              maxLength={4000}
               rows={4}
-              placeholder="请说明你做了什么、看到了什么，以及原本期待什么（10–4000 字）"
+              placeholder="请说明你做了什么、看到了什么，以及原本期待什么"
               aria-invalid={Boolean(validationError)}
               onChange={(event) => {
                 setDescription(event.target.value);
@@ -407,10 +424,12 @@ export function IssueFeedbackDialog({
           <div className="grid gap-1.5">
             <div className="flex items-end justify-between gap-4">
               <label htmlFor="issue-feedback-preview" className="font-medium">
-                反馈内容预览
+                发送内容预览
               </label>
               <span className="text-[11px] text-muted-foreground">
-                不含日志正文与本机路径
+                {directSubmissionAvailable
+                  ? "下面就是应用内实际发送的内容"
+                  : "可复制后粘贴到官方反馈页"}
               </span>
             </div>
             <div className="rounded-xl border border-border bg-muted/35 p-1">
@@ -425,7 +444,7 @@ export function IssueFeedbackDialog({
             </div>
           </div>
 
-          {submissionEnabled ? (
+          {directSubmissionAvailable ? (
             <label
               htmlFor="issue-feedback-confirmation"
               className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-muted/25 p-3 text-xs leading-5"
@@ -438,7 +457,7 @@ export function IssueFeedbackDialog({
                 }
               />
               <span>
-                我已检查并确认发送上方文字和基本版本信息
+                我已检查并确认发送上方内容
                 <span className="block text-muted-foreground">
                   不发送日志、附件、激活码、手机号或本机路径
                 </span>
@@ -451,20 +470,22 @@ export function IssueFeedbackDialog({
             className="grid min-h-5 gap-1 text-xs text-muted-foreground"
           >
             {copyState === "copied" ? (
-              <p>反馈内容已复制，请在反馈渠道中粘贴提交</p>
+              <p>反馈内容已复制，请在官方反馈页中粘贴提交</p>
             ) : copyState === "copy_failed" ? (
               <p className="text-destructive">复制失败，请手动选择上方内容复制</p>
             ) : null}
-            {channelState === "loading" ? <p>正在读取反馈渠道</p> : null}
+            {channelState === "loading" ? <p>正在准备官方反馈页</p> : null}
             {channelState === "channel_missing" ? (
-              <p>签名反馈渠道不可用，已切换到官方飞书反馈表</p>
+              <p>
+                此版本暂不能在应用内发送。你可以复制上方文字，再打开官方反馈页完成提交。
+              </p>
             ) : null}
             {channelState === "channel_opened" ? (
-              <p>已请求打开反馈渠道，请在外部页面中粘贴并提交</p>
+              <p>已请求打开官方反馈页，请在页面中粘贴并提交</p>
             ) : null}
             {channelState === "channel_open_failed" ? (
               <p className="text-destructive">
-                未能打开反馈渠道，请重试或手动复制内容
+                未能打开官方反馈页，请重试或手动复制内容
               </p>
             ) : null}
             {logsState === "logs_opened" ? <p>日志文件夹已打开</p> : null}
@@ -495,7 +516,7 @@ export function IssueFeedbackDialog({
             ) : (
               <FolderOpen />
             )}
-            打开日志文件夹
+            查看本机日志
           </Button>
           <Button
             type="button"
@@ -511,7 +532,7 @@ export function IssueFeedbackDialog({
             ) : (
               <ExternalLink />
             )}
-            打开反馈渠道
+            打开官方反馈页
           </Button>
           <Button
             type="button"
@@ -521,28 +542,31 @@ export function IssueFeedbackDialog({
             <Copy />
             复制反馈内容
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              !submissionEnabled ||
-              submitState.state === "submitting" ||
-              !submissionConfirmed
-            }
-            title={
-              !submissionEnabled
-                ? "当前安装包尚未开放应用内发送，请使用官方反馈页"
-                : !submissionConfirmed
+          {directSubmissionAvailable ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={
+                submitState.state === "submitting" ||
+                !submissionConfirmed
+              }
+              title={
+                !submissionConfirmed
                   ? "请先检查并确认发送内容"
                   : undefined
-            }
-            onClick={() => void submitFeedback()}
-          >
-            {submitState.state === "submitting" ? (
-              <Loader2 className="animate-spin" />
-            ) : null}
-            {submitState.state === "submitting" ? "发送中…" : "发送问题反馈"}
-          </Button>
+              }
+              onClick={() => void submitFeedback()}
+            >
+              {submitState.state === "submitting" ? (
+                <Loader2 className="animate-spin" />
+              ) : null}
+              {submitState.state === "submitting"
+                ? "发送中…"
+                : submitState.state === "failed"
+                  ? "重新发送"
+                  : "发送问题反馈"}
+            </Button>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

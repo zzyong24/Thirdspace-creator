@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, sql, type Db } from "@creatoros/backend";
 import {
   ENDPOINTS,
   type Endpoint,
@@ -85,6 +85,29 @@ describe("scheduling contract (transport round-trip)", () => {
     const rows = res.data as unknown[];
     expect(rows.length).toBe(1);
     for (const row of rows) ENDPOINTS.listScheduledJobs.response.parse(row);
+  });
+
+  it("scheduledJobs.list 把存量 PostgreSQL 文本时刻规范为契约 ISO，不让一条旧任务拖垮整页", async () => {
+    const created = await call(transport, "scheduledJobs.create", {
+      body: {
+        name: "legacy-time-job",
+        sourceKind: "comments",
+        schedule: "0 9 * * *",
+      },
+    });
+    const jobId = (created.data as { id: string }).id;
+    await db.execute(sql`
+      UPDATE scheduled_job
+      SET updated_at = '2026-07-29 08:55:14.702+00'
+      WHERE id = ${jobId}
+    `);
+
+    const res = await call(transport, "scheduledJobs.list", { query: {} });
+    const row = (res.data as Array<{ id: string; updatedAt: string }>).find(
+      (item) => item.id === jobId,
+    );
+    expect(row?.updatedAt).toBe("2026-07-29T08:55:14.702Z");
+    expect(() => ENDPOINTS.listScheduledJobs.response.parse(row)).not.toThrow();
   });
 
   it("scheduledJobs.get / update / setEnabled → scheduledJobResource", async () => {

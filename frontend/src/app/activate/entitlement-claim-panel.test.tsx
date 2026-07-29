@@ -33,17 +33,17 @@ describe("EntitlementClaimPanel", () => {
   it("[T-575] 默认关闭时不渲染假领取按钮", () => {
     render(<EntitlementClaimPanel enabled={false} />);
     expect(
-      screen.queryByRole("button", { name: "领取并激活" }),
+      screen.queryByRole("button", { name: "领取产品" }),
     ).not.toBeInTheDocument();
   });
 
   it("[T-575] 只展示短时 userCode，并用不带 query/fragment 的 verificationUrl 打开浏览器", async () => {
     const user = userEvent.setup();
     render(<EntitlementClaimPanel enabled />);
-    await user.click(screen.getByRole("button", { name: "领取并激活" }));
+    await user.click(screen.getByRole("button", { name: "领取产品" }));
 
     expect(await screen.findByText("ABCD-EFGH")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "打开领取页面" }));
+    await user.click(screen.getByRole("button", { name: "去官方页面确认" }));
     expect(openUrl).toHaveBeenCalledWith("https://growth.example.com/claim");
     expect(document.body.textContent).not.toMatch(/deviceSecret|claimToken|codeVerifier/);
   });
@@ -72,10 +72,10 @@ describe("EntitlementClaimPanel", () => {
     });
     const user = userEvent.setup();
     render(<EntitlementClaimPanel enabled />);
-    await user.click(screen.getByRole("button", { name: "领取并激活" }));
-    await user.click(screen.getByRole("button", { name: "检查确认结果" }));
+    await user.click(screen.getByRole("button", { name: "领取产品" }));
+    await user.click(screen.getByRole("button", { name: "我已确认，继续" }));
     expect(
-      await screen.findByRole("button", { name: "重新领取" }),
+      await screen.findByRole("button", { name: "重新领取产品" }),
     ).toBeInTheDocument();
   });
 
@@ -104,12 +104,33 @@ describe("EntitlementClaimPanel", () => {
     const user = userEvent.setup();
     render(<EntitlementClaimPanel enabled />);
 
-    await user.click(screen.getByRole("button", { name: "领取并激活" }));
-    await user.click(screen.getByRole("button", { name: "检查确认结果" }));
+    await user.click(screen.getByRole("button", { name: "领取产品" }));
+    await user.click(screen.getByRole("button", { name: "我已确认，继续" }));
 
-    expect(await screen.findByText("权益已领取并激活")).toBeInTheDocument();
+    expect(await screen.findByText("CreatorOS 已领取")).toBeInTheDocument();
     expect(relaunch).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "进入 CreatorOS" }));
     expect(relaunch).toHaveBeenCalledTimes(1);
+  });
+
+  it("[T-575] native 技术错误不进入普通页面，失败后仍可重试", async () => {
+    invoke.mockImplementation(async (command: string) => {
+      if (command === "entitlement_claim_resume") return null;
+      throw new Error(
+        "claimToken provider closed-contract signature requestId mismatch",
+      );
+    });
+    const user = userEvent.setup();
+    render(<EntitlementClaimPanel enabled />);
+
+    await user.click(screen.getByRole("button", { name: "领取产品" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "领取没有完成，请稍后重试",
+    );
+    expect(document.body.textContent).not.toMatch(
+      /claimToken|provider|closed-contract|requestId/,
+    );
+    expect(screen.getByRole("button", { name: "领取产品" })).toBeEnabled();
   });
 });

@@ -23,6 +23,7 @@ import { MessageSquareQuote } from "lucide-react";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import { fetchCreatorApi } from "@/lib/http-transport";
 import { cn } from "@/lib/utils";
 
 interface SupportingComment {
@@ -71,7 +72,7 @@ export function KnowledgeCommentBackflow() {
     setBusy("sifting");
     setError(null);
     try {
-      const res = await fetch("/api/knowledge/comment-sift", {
+      const res = await fetchCreatorApi("/api/knowledge/comment-sift", {
         method: "POST",
       });
       const json = (await res.json().catch(() => null)) as

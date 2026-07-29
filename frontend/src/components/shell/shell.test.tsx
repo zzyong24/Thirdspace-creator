@@ -106,16 +106,16 @@ describe("AppShell", () => {
 
   it("[T-518] keeps a real issue-feedback entry available in expanded and collapsed sidebar", async () => {
     await renderShell();
-    const feedback = screen.getByRole("button", { name: "问题反馈" });
+    const feedback = screen.getByRole("button", { name: "帮助与反馈" });
     expect(feedback).toBeVisible();
-    expect(feedback).toHaveTextContent("问题反馈");
+    expect(feedback).toHaveTextContent("帮助与反馈");
 
     fireEvent.click(
       screen.getByRole("button", { name: "收起侧栏" }),
     );
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "问题反馈" })).toBeVisible();
-      expect(screen.getByRole("button", { name: "问题反馈" })).toHaveTextContent(
+      expect(screen.getByRole("button", { name: "帮助与反馈" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "帮助与反馈" })).toHaveTextContent(
         /^$/,
       );
     });

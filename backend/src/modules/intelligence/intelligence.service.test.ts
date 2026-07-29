@@ -914,6 +914,136 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
+  it("[T-603] 人工逐字稿写入既有 item 真相且不创建转写任务", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/manual-upload",
+        externalId: "manual-upload",
+        title: "已有人工字幕的作品",
+      });
+
+      const transcript = await service.uploadManualTranscript(ctx, {
+        itemId,
+        format: "srt",
+        fileName: "访谈.srt",
+        text: "第一句\n第二句",
+      });
+
+      expect(transcript).toMatchObject({
+        itemId,
+        status: "done",
+        text: "第一句\n第二句",
+        source: "manual",
+        provider: null,
+        model: null,
+        executionTaskId: null,
+        errorCode: null,
+      });
+      expect((await service.getItem(ctx, itemId)).transcript).toEqual(
+        transcript,
+      );
+      expect(
+        await db
+          .select()
+          .from(executionTasks)
+          .where(eq(executionTasks.kind, "transcribe")),
+      ).toHaveLength(0);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-603] 人工逐字稿相同正文幂等，不同正文与活动转写均拒绝覆盖", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/manual-idempotent",
+        externalId: "manual-idempotent",
+        title: "幂等人工稿",
+      });
+      const input = {
+        itemId,
+        format: "txt" as const,
+        fileName: "逐字稿.txt",
+        text: "不会被重复写入的正文",
+      };
+      const first = await service.uploadManualTranscript(ctx, input);
+      expect(await service.uploadManualTranscript(ctx, input)).toEqual(first);
+      await expect(
+        service.uploadManualTranscript(ctx, {
+          ...input,
+          text: "另一份正文",
+        }),
+      ).rejects.toThrow("TRANSCRIPT_EXISTS");
+
+      const queuedItemId = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/manual-busy",
+        externalId: "manual-busy",
+        title: "正在转写",
+      });
+      await service.enqueueTranscripts(ctx, {
+        itemIds: [queuedItemId],
+        idempotencyKey: "manual-busy",
+      });
+      await expect(
+        service.uploadManualTranscript(ctx, {
+          itemId: queuedItemId,
+          format: "md",
+          fileName: "逐字稿.md",
+          text: "不能覆盖活动任务",
+        }),
+      ).rejects.toThrow("TRANSCRIPT_BUSY");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-603] backend 在写入前拒绝空白、乱码替代符与 UTF-8 超限正文", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/manual-invalid",
+        externalId: "manual-invalid",
+        title: "无效人工稿",
+      });
+      const base = {
+        itemId,
+        format: "txt" as const,
+        fileName: "逐字稿.txt",
+      };
+      await expect(
+        service.uploadManualTranscript(ctx, { ...base, text: " \n " }),
+      ).rejects.toThrow("TRANSCRIPT_FILE_EMPTY");
+      await expect(
+        service.uploadManualTranscript(ctx, {
+          ...base,
+          text: "损坏字符\ufffd",
+        }),
+      ).rejects.toThrow("TRANSCRIPT_FILE_INVALID_ENCODING");
+      await expect(
+        service.uploadManualTranscript(ctx, {
+          ...base,
+          text: "字".repeat(700_000),
+        }),
+      ).rejects.toThrow("TRANSCRIPT_FILE_TOO_LARGE");
+      expect(
+        (await service.getItem(ctx, itemId)).transcript.status,
+      ).toBe("not_requested");
+    } finally {
+      await client.close();
+    }
+  });
+
   it("安全诊断拒绝 Cookie、Authorization 与签名字段", async () => {
     const { db, client } = await createDb();
     const d = deps();

@@ -18,20 +18,20 @@
  * 零条真实发布 → 诚实空态(publications:[],页面渲 EmptyState)。
  */
 import { PublishingCenterPage } from "@/features/publishing-center/publishing-center-page";
-import type { PublishingCenterDataClient } from "@/features/publishing-center/publishing-center-data";
-import { buildPublishingCenterViewModelReal } from "@/features/publishing-center/publishing-center-data";
+import { ContentCalendarView } from "@/features/content-calendar/content-calendar-view";
+import { ErrorState } from "@/components/state/page-state";
 import { resolveSession } from "@/lib/session.server";
-import { createServerClient } from "@/lib/contract-client.server";
 import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
+import { getPublishingScheduleProjection } from "@/server/persistence-client";
 
 export default async function PublishingCenterRoutePage({
   searchParams,
 }: {
-  searchParams: Promise<{ hidden?: string }>;
+  searchParams: Promise<{ hidden?: string; month?: string }>;
 }) {
   const session = await resolveSession();
   // T-595：旧 hidden URL 参数只做兼容吞掉，不参与下游筛选。
-  await searchParams;
+  const params = await searchParams;
 
   if (!session) {
     // No session (the (creator) layout guard redirects on a real request).
@@ -45,13 +45,25 @@ export default async function PublishingCenterRoutePage({
     return <ZeroAccountGuidance />;
   }
 
-  // Bind the read assembly to the request's session ctx so the projects /
-  // outputs / publications reads stay user-scoped. [T-231⑤] Any read failure
-  // degrades inside the helper to an honest error VM (the page renders
-  // ErrorState; no fixture masking, and the page never throws).
-  const client = createServerClient(
+  const projection = await getPublishingScheduleProjection(
     session.ctx,
-  ) as unknown as PublishingCenterDataClient;
-  const viewModel = await buildPublishingCenterViewModelReal(client);
-  return <PublishingCenterPage viewModel={viewModel} />;
+    params.month,
+  );
+  const calendar =
+    projection.calendar.state === "ready" ? (
+      <ContentCalendarView viewModel={projection.calendar.viewModel} />
+    ) : (
+      <ErrorState
+        error={{
+          code: "calendar_unavailable",
+          message: "内容日历暂时不可用，请稍后重试。",
+        }}
+      />
+    );
+  return (
+    <PublishingCenterPage
+      viewModel={projection.performance}
+      calendar={calendar}
+    />
+  );
 }

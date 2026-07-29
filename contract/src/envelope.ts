@@ -43,6 +43,7 @@ export enum ErrorCode {
   AttemptPayloadMismatch = "ATTEMPT_PAYLOAD_MISMATCH",
   RetrySourceNotTerminal = "RETRY_SOURCE_NOT_TERMINAL",
   ExecutionClaimInvalid = "EXECUTION_CLAIM_INVALID",
+  ModelConfigurationManaged = "MODEL_CONFIGURATION_MANAGED",
 }
 
 export const ERROR_HTTP: Record<ErrorCode, number> = {
@@ -65,6 +66,7 @@ export const ERROR_HTTP: Record<ErrorCode, number> = {
   [ErrorCode.AttemptPayloadMismatch]: 409,
   [ErrorCode.RetrySourceNotTerminal]: 409,
   [ErrorCode.ExecutionClaimInvalid]: 400,
+  [ErrorCode.ModelConfigurationManaged]: 409,
 };
 
 // `code` is a free string (domain codes like PROJECT_NOT_FOUND) but every

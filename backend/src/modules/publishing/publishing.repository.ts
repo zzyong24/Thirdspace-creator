@@ -113,6 +113,16 @@ export interface PublishingRepository {
   getCurrentRevision(
     publicationId: string,
   ): Promise<PublicationRevisionRow | null>;
+  listCurrentRevisionSummariesByPublicationIds(
+    publicationIds: ReadonlyArray<string>,
+  ): Promise<
+    Array<{
+      publicationId: string;
+      revisionId: string;
+      title: string;
+      coverAssetId: string | null;
+    }>
+  >;
   listRevisions(
     publicationId: string,
     page: { limit: number; offset: number },
@@ -414,6 +424,29 @@ export function createPublishingRepository(
           ),
         );
       return rows[0] ?? null;
+    },
+
+    async listCurrentRevisionSummariesByPublicationIds(publicationIds) {
+      if (publicationIds.length === 0) return [];
+      return db
+        .select({
+          publicationId: publications.id,
+          revisionId: publicationRevisions.id,
+          title: publicationRevisions.title,
+          coverAssetId: publicationRevisions.coverAssetId,
+        })
+        .from(publications)
+        .innerJoin(
+          publicationRevisions,
+          eq(publications.currentRevisionId, publicationRevisions.id),
+        )
+        .where(
+          and(
+            eq(publications.userId, deps.userId),
+            eq(publications.accountId, deps.accountId),
+            inArray(publications.id, [...publicationIds]),
+          ),
+        );
     },
 
     async listRevisions(publicationId, page) {

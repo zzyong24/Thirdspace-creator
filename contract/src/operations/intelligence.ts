@@ -435,6 +435,21 @@ export const intelligenceOperations = {
       .strict(),
     fr: ["FR-CR-007", "FR-CR-020"],
   }),
+  uploadManualIntelligenceTranscript: defineEndpoint({
+    id: "intelligence.transcripts.uploadManual",
+    method: "POST",
+    path: "/intelligence/transcripts/upload-manual",
+    body: z
+      .object({
+        itemId: id,
+        format: z.enum(["txt", "md", "srt", "vtt"]),
+        fileName: z.string().trim().min(1).max(255),
+        text: z.string().min(1).max(500_000),
+      })
+      .strict(),
+    response: z.object({ transcript: itemTranscriptResource }).strict(),
+    fr: ["FR-CR-022"],
+  }),
   previewIntelligenceTopic: defineEndpoint({
     id: "intelligence.transforms.previewTopic",
     method: "POST",

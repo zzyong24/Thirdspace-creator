@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // [T-062a] 对话内手录经验候选卡:learning.capture 工具产候选 → 人点「存为经验」→
-// createLearning(candidate 进裁决队列)。铁律②:渲染即候选,不点不落库;失败显式报错。
+// createLearning(去重后直接进知识库)。铁律②:渲染即候选,不点不落库;失败显式报错。
 
 const createLearning = vi.fn();
 const routerRefresh = vi.fn();
@@ -43,7 +43,7 @@ describe("ChatLearningCard", () => {
     expect(createLearning).not.toHaveBeenCalled();
   });
 
-  it("点「存为经验」→ createLearning(title+insight+learningType)→ 显「已存入裁决队列」+ /experience 链接", async () => {
+  it("点「存为经验」→ createLearning(title+insight+learningType)→ 显「已存入知识库」", async () => {
     const user = userEvent.setup();
     render(<ChatLearningCard suggestion={SUGGESTION} />);
 
@@ -61,7 +61,7 @@ describe("ChatLearningCard", () => {
         },
       }),
     );
-    expect(await screen.findByText(/已存入裁决队列/)).toBeTruthy();
+    expect(await screen.findByText(/已存入知识库/)).toBeTruthy();
     // [T-118c] 经验模块退役,链接改指向 /knowledge(去掉旧 ?tab=experience)。
     const link = screen.getByText(/去知识库查看/) as HTMLAnchorElement;
     expect(link.getAttribute("href")).toBe("/knowledge");
@@ -84,7 +84,7 @@ describe("ChatLearningCard", () => {
 
     // 重试成功 → 转入已存状态。
     await user.click(screen.getByText("重试"));
-    expect(await screen.findByText(/已存入裁决队列/)).toBeTruthy();
+    expect(await screen.findByText(/已存入知识库/)).toBeTruthy();
     expect(createLearning).toHaveBeenCalledTimes(2);
   });
 

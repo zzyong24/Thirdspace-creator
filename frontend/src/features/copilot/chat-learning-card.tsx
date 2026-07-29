@@ -4,8 +4,8 @@
  * 对话内手录经验候选卡(T-062a,SPEC §2.4)。
  *
  * learning.capture 工具产的一条结构化经验候选({ title, insight, learningType })渲成卡,
- * 人点「存为经验」→ client.createLearning(status 默认 candidate,进复盘页裁决队列)
- * —— 铁律②确认门:AI 只产候选,人点才物化。失败显式报错(不静默);成功显「已存入裁决队列」
+ * 人点「存为经验」→ client.createLearning(按内容去重并直接进知识库)
+ * —— 铁律②确认门:AI 只产候选,人点才物化。失败显式报错(不静默);成功显「已存入知识库」
  * + 知识库链接([T-118c] 经验模块退役,`/experience`→`/knowledge`)。
  */
 
@@ -90,7 +90,7 @@ export function ChatLearningCard({
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        经验候选 · 确认后进裁决队列
+        经验候选 · 确认后进知识库
       </span>
       <div className="flex items-start gap-2">
         <span
@@ -114,7 +114,7 @@ export function ChatLearningCard({
             data-slot="chat-learning-saved"
             className="text-[10px] font-medium text-success"
           >
-            已存入裁决队列 ·{" "}
+            已存入知识库 ·{" "}
             <Link
               href="/knowledge"
               className="underline underline-offset-2"

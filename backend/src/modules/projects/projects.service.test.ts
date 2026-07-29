@@ -139,6 +139,42 @@ describe("createProject UoW", () => {
   });
 });
 
+describe("T-599 schedule project port", () => {
+  it("returns an ownership-scoped project with output readiness facts", async () => {
+    const project = await service.createProject(ctx, {
+      title: "八月发布计划",
+      source: "manual",
+    });
+    const output = await service.createOutput(ctx, project.id, {
+      title: "主成片",
+    });
+    await repo.updateOutputRow(ctx, output.id, { status: "ready" });
+
+    await expect(
+      service.getScheduleProject(ctx, project.id),
+    ).resolves.toMatchObject({
+      id: project.id,
+      title: "八月发布计划",
+      status: "active",
+      source: "manual",
+      outputs: [{ id: output.id, status: "ready" }],
+    });
+  });
+
+  it("does not expose a project from another account", async () => {
+    const project = await service.createProject(ctx, { title: "账号 A" });
+    const otherAccountCtx: RequestContext = {
+      ...ctx,
+      requestId: "req-other-account",
+      accountId: "acct-2",
+    };
+
+    await expect(
+      service.getScheduleProject(otherAccountCtx, project.id),
+    ).rejects.toMatchObject({ name: "OwnershipError" });
+  });
+});
+
 describe("deleteProject 级联物理删除 (T-102)", () => {
   it("cross-user/missing → OwnershipError(404,不泄露存在性)", async () => {
     const mine = await service.createProject(ctx, { title: "我的" });

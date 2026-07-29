@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "Round 3 精确复核：T-599 SPEC 与 Round 2 的 SHA-256 完全一致，变化只来自 PROJECT.md 的生成字段 LAST_SYNCED 从旧提交更新为当前 HEAD；产品定位、项目唯一排期入口、发布中心日历主视图、首页派生提醒以及不做通知/自动发布的边界均未变化，未引入新的 blocker 或 major。",
+  "findings": []
+}

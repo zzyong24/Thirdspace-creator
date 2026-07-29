@@ -360,6 +360,11 @@ export function buildDashboardViewModel(
         dueAt: task.dueAt,
         priority: task.priority,
         status: task.status,
+        origin: "task" as const,
+        reason: null,
+        plannedDate: null,
+        href: null,
+        completable: true,
       };
     });
 
@@ -397,6 +402,7 @@ export function buildDashboardViewModel(
     metrics,
     continueCreating,
     todos,
+    scheduleReminderReadState: { state: "ready", error: null },
     trendingTopics: [
       { id: "topic-1", title: "AI Native Browser 深度解析", heat: 92, trend: "up" },
       { id: "topic-2", title: "本地优先栈", heat: 78, trend: "up" },

@@ -62,6 +62,10 @@ export interface AnalyticsService {
     page: number,
     pageSize: number,
   ): Promise<Page<MetricSnapshotRow>>;
+  listLatestSnapshotsByPublicationIds(
+    ctx: RequestContext,
+    publicationIds: ReadonlyArray<string>,
+  ): Promise<MetricSnapshotRow[]>;
   // GAP-DASH-2 — user-scoped dashboard rollup. Reads Analytics' own
   // metric_snapshots only (no Publishing seam), takes each publication's latest
   // snapshot, sums the count metrics and averages ctr/finish. No snapshots →
@@ -141,6 +145,17 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       const ids = await publishing.listPublicationIdsByProject(ctx, projectId);
       if (ids.length === 0) return { rows: [], total: 0 };
       return repo.listSnapshotsByProject(ctx.userId, accountId, ids, page, pageSize);
+    },
+
+    async listLatestSnapshotsByPublicationIds(ctx, publicationIds) {
+      return repo.listLatestSnapshotsByPublicationIds(
+        ctx.userId,
+        requireAccountId(
+          ctx.accountId,
+          "analytics.listLatestSnapshotsByPublicationIds",
+        ),
+        publicationIds,
+      );
     },
 
     async getDailyPlayTrend(ctx, opts) {

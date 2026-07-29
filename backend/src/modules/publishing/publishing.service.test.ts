@@ -63,6 +63,8 @@ function build(db: Db) {
       calls.notify += 1;
       return Promise.resolve();
     },
+    listOutputIdsByProject: async (_ctx, projectId) =>
+      projectId === "project-1" ? ["output-1", "output-2"] : [],
   });
 }
 
@@ -97,6 +99,73 @@ describe("service — 未选号 ctx → AccountRequiredError (T-332 S2)", () => 
     await expect(
       service.getPublication(noAcctCtx, "pub-any"),
     ).rejects.toBeInstanceOf(AccountRequiredError);
+  });
+});
+
+describe("[T-599] 项目真实发布事实窄读", () => {
+  it("保留已下架作品的 publishedAt，并返回项目最早真实发布时间", async () => {
+    const earlier = await service.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-earlier",
+      publishedAt: "2026-07-18T10:00:00.000Z",
+    });
+    await service.createImportedPublication(ctx, "output-2", {
+      platform: "douyin",
+      externalId: "aweme-later",
+      publishedAt: "2026-07-20T10:00:00.000Z",
+    });
+    await service.transition(ctx, earlier.id, { status: "removed" });
+
+    await expect(
+      service.getProjectPublicationFact(ctx, "project-1"),
+    ).resolves.toEqual({
+      publicationId: earlier.id,
+      publishedAt: "2026-07-18T10:00:00.000Z",
+    });
+  });
+
+  it("只有草稿、没有 publishedAt 时诚实返回 null", async () => {
+    await service.createPublication(ctx, "output-1", {
+      platform: "douyin",
+      accountReference: "@creator",
+    });
+
+    await expect(
+      service.getProjectPublicationFact(ctx, "project-1"),
+    ).resolves.toBeNull();
+  });
+
+  it("一次批量返回 publication 当前标题与封面投影", async () => {
+    const first = await service.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-batch-1",
+      publishedAt: "2026-07-18T10:00:00.000Z",
+      title: "第一条",
+    });
+    const second = await service.createImportedPublication(ctx, "output-2", {
+      platform: "douyin",
+      externalId: "aweme-batch-2",
+      publishedAt: "2026-07-20T10:00:00.000Z",
+      title: "第二条",
+    });
+
+    await expect(
+      service.listCurrentRevisionSummariesByPublicationIds(ctx, [
+        second.id,
+        first.id,
+      ]),
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          publicationId: first.id,
+          title: "第一条",
+        }),
+        expect.objectContaining({
+          publicationId: second.id,
+          title: "第二条",
+        }),
+      ]),
+    );
   });
 });
 

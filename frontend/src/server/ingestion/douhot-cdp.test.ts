@@ -23,6 +23,7 @@ function createFakePage(options: {
     requestBody?: unknown;
   }>;
   inputVisibleAfterChecks?: number;
+  visibleInputSelector?: string;
 }) {
   const close = vi.fn(async () => {});
   const fill = vi.fn(async () => {});
@@ -30,6 +31,7 @@ function createFakePage(options: {
   let responseHandler: ((response: unknown) => void) | null = null;
   let userInfoProbeCount = 0;
   let inputVisibilityChecks = 0;
+  const inputSelectorCalls: string[] = [];
   const boardClick = vi.fn(async () => {
     if (options.boardClickFails) throw new Error("click failed");
   });
@@ -95,10 +97,14 @@ function createFakePage(options: {
         }),
       };
     },
-    locator: () => ({
+    locator: (selector: string) => ({
       filter: () => ({
         first: () => ({
           isVisible: async () => {
+            inputSelectorCalls.push(selector);
+            if (options.visibleInputSelector) {
+              return selector === options.visibleInputSelector;
+            }
             inputVisibilityChecks += 1;
             return (
               inputVisibilityChecks >
@@ -121,6 +127,7 @@ function createFakePage(options: {
     boardClick,
     windowClick,
     press,
+    inputSelectorCalls,
   };
 }
 
@@ -396,6 +403,50 @@ describe("T-572 热点宝登录态与页面漂移恢复", () => {
 });
 
 describe("T-573 热点宝新版低粉爆款路由", () => {
+  it("[T-613] 识别热点宝当前“大家都在搜”搜索框，授权后继续执行关键词采集", async () => {
+    const fake = createFakePage({
+      userInfoCodes: [0],
+      visibleInputSelector: 'input[placeholder*="搜"]',
+      billboardPayload: {
+        code: 0,
+        data: {
+          objs: [
+            {
+              item_id: "item-current-search",
+              item_title: "当前搜索框返回作品",
+              like_cnt: 1800,
+              fans_cnt: 300,
+              publish_time: 1_800_000_000,
+            },
+          ],
+        },
+      },
+      billboardRequestBody: {
+        date_window: 72,
+        sub_type: 1002,
+        keyword: "粤菜",
+      },
+    });
+
+    await expect(
+      fetchDouhotLowFollowerBreakout(
+        {
+          authDir: "/tmp/fake-auth",
+          keyword: "粤菜",
+          board: "low_follower_breakout",
+        },
+        { openPage: async () => fake },
+      ),
+    ).resolves.toMatchObject({
+      listValid: true,
+      candidates: [{ itemId: "item-current-search" }],
+    });
+    expect(fake.inputSelectorCalls).toContain(
+      'input[placeholder*="搜"]',
+    );
+    expect(fake.fill).toHaveBeenCalledWith("粤菜");
+  });
+
   it("从默认分析页进入 72 小时低粉爆款详情，并只消费当前关键词的 sub_type=1002 响应", async () => {
     const validPayload = {
       code: 0,

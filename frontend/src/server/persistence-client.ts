@@ -16,12 +16,17 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
+import {
+  buildPublishingScheduleProjection,
+  type PublishingScheduleProjection,
+} from "./publishing-schedule-projection";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
 import {
   listPositioningWorksWithPublicationFacts,
   listRecentProjectsWithPublicationFacts,
 } from "./recent-projects-context";
+import { composeDashboardTodos } from "@creatoros/backend/modules/query-services";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
@@ -86,6 +91,7 @@ import {
   createSettingsTransport,
   SETTINGS_OP_IDS,
   type SettingsService,
+  type ModelConfigInternal,
   // [T-135] ModelConfigurationRow / UserPreferenceRow / AgentConfigurationRow 已随
   // canonical settings seed(toModelRow/toPreferenceRow/toAgentRow)退役一并移除。
 } from "@creatoros/backend/modules/settings";
@@ -94,6 +100,13 @@ import {
   assembleActivationService,
   type ActivationService,
 } from "./activation";
+import { readModelAuthoritySnapshot } from "./activation/client-config.server";
+import {
+  createEffectiveModelConfigPort,
+  createModelAuthorityGuard,
+  createUnavailableManagedModelConfigPort,
+  type EffectiveModelConfigPort,
+} from "@creatoros/backend/modules/ai-runtime";
 import {
   createProjectRepository,
   createProjectsService,
@@ -425,6 +438,7 @@ import {
 import {
   runJobNow,
   triggerScheduledJob,
+  closeRunningJobRunOnError,
   createAutomationHandlerRegistry,
   startAutomationDriver,
   sweepStaleRuns,
@@ -1192,6 +1206,12 @@ interface PersistenceBundle {
   platformAccount: Transport;
   scheduling: Transport;
   contentCalendar: Transport;
+  /** T-599：无新增公开 operation 的服务端月历/首页组合端口。 */
+  contentCalendarService: ContentCalendarService;
+  publishingScheduleProjection: (
+    ctx: RequestContext,
+    month?: string,
+  ) => Promise<PublishingScheduleProjection>;
   materialLinks: Transport;
   // [T-212a] 对标源 CRUD transport(选题/对标强化)。
   benchmark: Transport;
@@ -1621,6 +1641,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: persistent ? () => new Date().toISOString() : () => FIXED_NOW_ISO,
     nextId: (prefix: string) => `${prefix}-${idBase}-${++createSeq}`,
   };
+  // Identity 是排期三个表面的唯一时区来源；组合根提前构造同一个 service，
+  // 后续 calendar/dashboard/settings 全部复用，避免各自猜浏览器或本机时区。
+  const identityRepo = createIdentityRepository(db, deps);
+  const identity = createIdentityService(identityRepo, deps);
 
   // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
   // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
@@ -2905,10 +2929,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 因而可以先声明端口，再于 settingsRepo 可用后绑定真实 account-scoped resolver。
   let resolveEffectiveSkillSnapshotForRuntime: EffectiveSkillSnapshotResolver | null =
     null;
+  let effectiveModelConfigPort: EffectiveModelConfigPort | null = null;
+  const getRuntimeModelConfig = async (
+    ctx: RequestContext,
+    capability: string,
+  ): Promise<ModelConfigInternal | null> => {
+    if (!effectiveModelConfigPort) {
+      throw new Error("EffectiveModelConfigPort 尚未完成装配");
+    }
+    const effective = await effectiveModelConfigPort.get(ctx, capability);
+    if (effective.source === "local") return effective.config;
+    // 安全投影只在 provider 调用前瞬时适配既有 resolver；短期 bearer 不写 DB/LKG/日志。
+    return {
+      provider: "openai",
+      modelName: effective.alias,
+      baseUrl: effective.gatewayOrigin,
+      apiFormat: effective.apiFormat,
+      secretReference: "",
+      secretValue: effective.credential.value,
+      settings: {},
+    };
+  };
   const aiService = createAiService({
     db,
     now: deps.now,
     nextId: deps.nextId,
+    resolveModelKey: async (ctx, capability) => {
+      if (!effectiveModelConfigPort) {
+        throw new Error("EffectiveModelConfigPort 尚未完成装配");
+      }
+      return (await effectiveModelConfigPort.describe(ctx, capability)).modelKey;
+    },
     resolveTaskRuntimeData: async (ctx, taskType, inputData) => {
       if (!resolveEffectiveSkillSnapshotForRuntime) {
         throw new Error(
@@ -4539,7 +4590,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               resolveVisionSpec: (c) =>
                 resolveMultimodalSpecFn(c, "asset.classify", {
                   getModelConfig: (cc: RequestContext, cap: string) =>
-                    settingsService.getModelConfig(cc, cap),
+                    getRuntimeModelConfig(cc, cap),
                   env: process.env,
                 }),
               assets: {
@@ -4695,7 +4746,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               resolveTranscribeSpec: (c) =>
                 resolveTranscribeSpecFn(c, {
                   getModelConfig: (cc, cap) =>
-                    settingsService.getModelConfig(cc, cap),
+                    getRuntimeModelConfig(cc, cap),
                   env: process.env,
                 }),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
@@ -6325,7 +6376,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (src.kind === "image-album") return null;
     const audioBytes = await cdp.streamAudioFromVideo(src.playUrl);
     const spec = await resolveTranscribeSpecFn(c, {
-      getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
+      getModelConfig: (cc, cap) => getRuntimeModelConfig(cc, cap),
       env: process.env,
     });
     const { text } = await transcribeAudioFn(
@@ -6371,7 +6422,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const audioBytes = await cdp.streamAudioFromVideo(source.playUrl);
         const spec = await resolveTranscribeSpecFn(c, {
           getModelConfig: (cc, capability) =>
-            settingsService.getModelConfig(cc, capability),
+            getRuntimeModelConfig(cc, capability),
           env: process.env,
         });
         const result = await transcribeAudioFn(
@@ -6642,6 +6693,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         total: awemeIds.length,
         message: `抓取 ${awemeIds.length} 个作品的评论(未采/爆款优先)`,
       });
+      let total = 0;
       // [T-232 额度断点] 抓取层撞 DouyinCooldownActiveError → 立即停剩余作品,带回部分结果
       //   (truncated=true);不再逐作品白撞冷却。
       const batch = await (await loadDouyinCdp()).fetchDouyinCommentsForWorks(
@@ -6655,21 +6707,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // [T-177] 每作品增量 early-break(预取缓存版;缺失键退化空集全量)。
           commentWatermark: async (aweme) =>
             watermarks.get(aweme) ?? new Set<string>(),
+          // T-616：抓完一个作品立即落库并上报，不再等 51 个作品整批返回后才从 0 跳到 N。
+          onWorkComplete: async ({ awemeId, records }, progress) => {
+            total += await ingestRecordsForWork(awemeId, records);
+            report({
+              stage: "comments",
+              processed: progress.processed,
+              total: progress.total,
+              message:
+                `已处理 ${progress.processed}/${progress.total} 个作品` +
+                ` · 累计 ${total} 条评论`,
+            });
+          },
         },
       );
-      let total = 0;
-      let doneWorks = 0;
-      for (const { awemeId, records } of batch.works) {
-        total += await ingestRecordsForWork(awemeId, records);
-        // [T-152] 逐作品上报进度(M/N;runner 节流写库)。processed=已落库作品数,累计评论数入 message。
-        doneWorks += 1;
-        report({
-          stage: "comments",
-          processed: doneWorks,
-          total: awemeIds.length,
-          message: `已处理 ${doneWorks}/${awemeIds.length} 个作品 · 累计 ${total} 条评论`,
-        });
-      }
       // [T-232 run 诚实] 全量完成 vs 额度截断,message 走 CollectResult.message(T-235a 既有
       //   机制,runner 拼进合成 step 文本供运行详情展示);itemsNew 照实,不假装全量。
       const coverageMessage = buildCommentCoverageMessage({
@@ -7934,25 +7985,42 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : fallback;
   };
 
-  // 启动扫超时(gate finding 3 / T-207):进程(重)启动时,扫上一进程留下仍 running 且
-  // started_at 超时(默认 >30min,CREATOROS_STALE_JOB_RUN_MS 可配)的 job_run → 标 failed
-  // (reason=stale-on-boot),兜"进程崩在 running"的残留——僵尸 run 会把当天幂等闸挡死。
-  // best-effort:失败不阻断 build。
-  void sweepStaleRuns({
-    runs: {
-      // sweep 只用 updateRun;createRun/listRunsByJob 此路径不触达,给 no-op 满足端口形状。
-      createRun: async () => ({ id: "" }),
-      listRunsByJob: async () => ({ rows: [], total: 0 }),
-      updateRun: (c, runId, patch) => schedulingService.updateRun(c, runId, patch),
-    },
-    listRunningRuns: async (c) => {
-      const rows = await schedulingService.listRunningRuns(c);
-      return rows.map((r) => ({ id: r.id, startedAt: r.startedAt }));
-    },
-    ctx: schedulerCtx,
-    now: deps.now,
-    staleMs: envMsOf("CREATOROS_STALE_JOB_RUN_MS", 30 * 60 * 1000),
-  }).catch((e) => console.error("[scheduler] 启动扫超时失败:", e));
+  // T-616：僵尸 job_run 清扫并入唯一 automation-driver 的分钟 tick，不再只在启动时扫。
+  // 先读取仍真实 running 的 AI task 作为保护集，合法长采集不会被 30 分钟阈值误杀；
+  // task 已终态/失联而 run 仍 running 才会收口。任一只读失败则 fail-closed 跳过本轮清扫。
+  const sweepStaleJobRuns = async (): Promise<number> => {
+    try {
+      const activeTaskIds = new Set(
+        (await aiService.listRunningTasksSystem(schedulerCtx)).map((task) => task.id),
+      );
+      return await sweepStaleRuns({
+        runs: {
+          // sweep 只用 updateRun；其余端口为窄接口占位。
+          createRun: async () => ({ id: "" }),
+          listRunsByJob: async () => ({ rows: [], total: 0 }),
+          updateRun: (c, runId, patch) =>
+            schedulingService.updateRun(c, runId, patch),
+        },
+        listRunningRuns: async (c) => {
+          const rows = await schedulingService.listRunningRuns(c);
+          return rows.map((r) => ({
+            id: r.id,
+            jobId: r.jobId,
+            aiTaskId: r.aiTaskId,
+            startedAt: r.startedAt,
+          }));
+        },
+        isRunActive: async (_c, run) =>
+          Boolean(run.aiTaskId && activeTaskIds.has(run.aiTaskId)),
+        ctx: schedulerCtx,
+        now: deps.now,
+        staleMs: envMsOf("CREATOROS_STALE_JOB_RUN_MS", 30 * 60 * 1000),
+      });
+    } catch (error) {
+      console.error("[scheduler] 运行期 job_run 清扫失败，本轮已安全跳过:", error);
+      return 0;
+    }
+  };
 
   // [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
   // transcribe 挂 running 2.5h+),撞 createTask 的 in-flight 幂等闸挡后续同键任务。
@@ -8038,44 +8106,64 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   const automationHandlers = createAutomationHandlerRegistry()
     .register("scheduled_collection", async (c, input) => {
-      const result = await triggerScheduledJob(
-        c,
-        {
-          id: input.job.id,
-          sourceKind: input.job.sourceKind,
-          target: input.job.target,
-          accountId: input.job.accountId,
-        },
-        triggerDeps,
-        { scheduledFor: input.scheduledFor },
-      );
-      if (result.skippedReason) throw new Error(result.skippedReason);
-      if (result.deduped) {
-        if (input.attempt <= 1) {
-          throw new Error(
-            `同一自动化 job 已有运行中的 run ${result.jobRunId}，本次计划触发未重复执行`,
-          );
-        }
-        // 重启恢复时旧 job_run 仍 running：复用原 ai_task/run 继续真实 collector，
-        // 不创建第二 run，也不把 execution task 假装成功。
-        if (!result.aiTaskId || !result.jobRunId) {
-          throw new Error("已有自动化运行缺少 task/run 关联，无法恢复");
-        }
-        await dispatchScheduledCollection(c, {
-          id: result.aiTaskId,
-          taskType: `scheduled.${input.job.sourceKind}`,
-          inputData: {
-            jobId: input.job.id,
-            jobRunId: result.jobRunId,
+      let result: Awaited<ReturnType<typeof triggerScheduledJob>> | null = null;
+      try {
+        result = await triggerScheduledJob(
+          c,
+          {
+            id: input.job.id,
+            sourceKind: input.job.sourceKind,
             target: input.job.target,
+            accountId: input.job.accountId,
           },
-        });
-      } else {
-        await result.completion;
-      }
-      const run = await schedulingService.getRun(c, result.jobRunId);
-      if (run.status !== "succeeded") {
-        throw new Error(run.error || `自动化运行结束状态为 ${run.status}`);
+          triggerDeps,
+          { scheduledFor: input.scheduledFor },
+        );
+        if (result.skippedReason) throw new Error(result.skippedReason);
+        if (result.deduped) {
+          if (input.attempt <= 1) {
+            // 已有真实运行是一次成功的“重叠跳过”，不是执行失败；原 run 继续负责终态。
+            return;
+          }
+          // 重启恢复时旧 job_run 仍 running：复用原 ai_task/run 继续真实 collector。
+          if (!result.aiTaskId || !result.jobRunId) {
+            throw new Error("已有自动化运行缺少 task/run 关联，无法恢复");
+          }
+          await dispatchScheduledCollection(c, {
+            id: result.aiTaskId,
+            taskType: `scheduled.${input.job.sourceKind}`,
+            inputData: {
+              jobId: input.job.id,
+              jobRunId: result.jobRunId,
+              target: input.job.target,
+            },
+          });
+        } else {
+          await result.completion;
+        }
+        const run = await schedulingService.getRun(c, result.jobRunId);
+        if (run.status !== "succeeded") {
+          throw new Error(run.error || `自动化运行结束状态为 ${run.status}`);
+        }
+      } catch (error) {
+        // runner 进入后会在 finally 自己收口；这里兜住“终态 task 无法 claim / snapshot
+        // 装配失败 / dispatch 外层异常”等 runner 尚未进入的路径，不能只让 execution_task 失败。
+        if (result?.jobRunId) {
+          try {
+            await closeRunningJobRunOnError(c, result.jobRunId, error, {
+              getRun: (ctx, runId) => schedulingService.getRun(ctx, runId),
+              updateRun: (ctx, runId, patch) =>
+                schedulingService.updateRun(ctx, runId, patch),
+              now: deps.now,
+            });
+          } catch (finalizeError) {
+            console.error(
+              `[automation-driver] job_run ${result.jobRunId} 失败终态回写失败:`,
+              finalizeError,
+            );
+          }
+        }
+        throw error;
       }
     })
     .seal();
@@ -8090,6 +8178,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       workerId: `automation-driver:${process.pid}`,
       maxClaims: 8,
       leaseSeconds: 120,
+      sweepStaleJobRuns,
     });
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
@@ -8137,6 +8226,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // Notifications/Todo concern wired via getLaggingAccounts on the Wave-4
         // Dashboard. Best-effort no-op seam keeps reconcile total + deterministic.
         notify: async () => {},
+      },
+      identity: {
+        getEffectiveTimezone: async (ctx) =>
+          (await identity.getCurrentUser(ctx)).timezone,
+      },
+      projects: {
+        getScheduleProject: (ctx, projectId) =>
+          projectsService.getScheduleProject(ctx, projectId),
+      },
+      schedulePublishing: {
+        getProjectPublicationFact: (ctx, projectId) =>
+          publishingService.getProjectPublicationFact(ctx, projectId),
       },
     });
   const contentCalendar = createContentCalendarTransport(
@@ -8279,6 +8380,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           status: TaskStatus;
           href: string;
           completable: boolean;
+          origin: "system_derived";
+          reason: "video_render";
+          plannedDate: null;
         }> = [];
         try {
           const { rows } = await executionService.list(ctx, {
@@ -8304,6 +8408,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               status: "todo" as TaskStatus,
               href: `/projects/${t.projectId}/production`,
               completable: false,
+              origin: "system_derived" as const,
+              reason: "video_render" as const,
+              plannedDate: null,
             }));
         } catch {
           // 派生待办读失败 → 只出 stored 待办(通常也空),不崩看板。
@@ -8317,9 +8424,102 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           dueAt: t.dueAt,
           priority: clampPriority(t.priority),
           status: t.status as TaskStatus,
-          href: undefined,
+          href: null,
           completable: true,
+          origin: "task" as const,
+          reason: null,
+          plannedDate: null,
         }));
+        let scheduleReminderReadState:
+          | { state: "ready"; error: null }
+          | {
+              state: "error";
+              error: {
+                code: "schedule_reminders_unavailable";
+                message: string;
+              };
+            } = { state: "ready", error: null };
+        let todos = composeDashboardTodos({
+          today: "1970-01-01",
+          schedules: [],
+          projects: [],
+          publishedProjectIds: new Set(),
+          videoTodos: derivedTodos,
+          storedTodos,
+        });
+        try {
+          const [calendarContext, schedules, projects] = await Promise.all([
+            contentCalendarService.getCalendarRequestContext(ctx),
+            contentCalendarService.listActiveProjectSchedules(
+              ctx,
+              requireAccountId(
+                ctx.accountId,
+                "dashboard.scheduleReminders",
+              ),
+            ),
+            projectsService.listProjectsForComposition(ctx),
+          ]);
+          const outputRefs = await projectsService.listOutputRefsByProjects(
+            ctx,
+            projects.map((project) => project.id),
+          );
+          const publications =
+            await publishingService.listPublicationsByOutputIds(
+              ctx,
+              outputRefs.map((output) => output.outputId),
+            );
+          const projectIdByOutput = new Map(
+            outputRefs.map((output) => [
+              output.outputId,
+              output.projectId,
+            ]),
+          );
+          const publishedProjectIds = new Set(
+            publications
+              .filter((publication) => publication.publishedAt !== null)
+              .map((publication) =>
+                projectIdByOutput.get(publication.contentOutputId),
+              )
+              .filter((projectId): projectId is string => Boolean(projectId)),
+          );
+          const outputsByProject = new Map<
+            string,
+            Array<{ id: string; status: string }>
+          >();
+          for (const output of outputRefs) {
+            const rows = outputsByProject.get(output.projectId) ?? [];
+            rows.push({ id: output.outputId, status: output.status });
+            outputsByProject.set(output.projectId, rows);
+          }
+          todos = composeDashboardTodos({
+            today: calendarContext.today,
+            schedules: schedules.map((entry) => ({
+              id: entry.id,
+              projectId: entry.projectId,
+              plannedDate: entry.plannedDate,
+            })),
+            projects: projects.map((project) => ({
+              id: project.id,
+              title: project.title,
+              status: project.status,
+              source: project.source,
+              currentStage: project.currentStage as ProjectStageName,
+              updatedAt: project.updatedAt,
+              outputs: outputsByProject.get(project.id) ?? [],
+            })),
+            publishedProjectIds,
+            videoTodos: derivedTodos,
+            storedTodos,
+          });
+        } catch {
+          scheduleReminderReadState = {
+            state: "error",
+            error: {
+              code: "schedule_reminders_unavailable",
+              message: "排期提醒暂不可用，请重试",
+            },
+          };
+        }
         return {
           continueCreating: s.continueCreating
             ? {
@@ -8331,8 +8531,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 updatedAt: s.continueCreating.updatedAt,
               }
             : null,
-          // 派生(actionable now)排前,再接 stored;总取前 5。
-          todos: [...derivedTodos, ...storedTodos].slice(0, 5),
+          todos,
+          scheduleReminderReadState,
         };
       },
     },
@@ -8645,7 +8845,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // fixture-backed page + the Projects seed keep resolving under a real ctx
   // (foundation §2). seedCanonicalUser is idempotent (onConflictDoNothing), so a
   // re-built singleton never double-seeds. IDENTITY_DDL was applied in createDb().
-  const identityRepo = createIdentityRepository(db, deps);
   // [T-050] canonical demo 项目图种子已退役(用户裁决 2026-07-02:4 个演示项目彻底
   // 删除,不再重种)。项目/产出/任务全部来自真实导入(T-030 管线)与用户运行时创建。
   await seedCanonicalUser(identityRepo, deps);
@@ -8894,8 +9093,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // The identity service shares the SAME db (and the same seeded canonical user)
   // as the persistence transport, so a ctx resolved from the session cookie owns
   // the rows the transport serves under it.
-  const identity = createIdentityService(identityRepo, deps);
-
   // Settings (module 03): one repository over the shared db; the service's
   // account read (`settings.get`) delegates to the Identity service's
   // getCurrentUser (injected as the accountReader — NO cross-module repo import,
@@ -8906,6 +9103,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 注入 settings repo 后 model_configurations.secret_value 静态加密(AES-256-GCM),
   // 读出透明解密。web 路径永不崩(降级 key)。
   const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
+  const modelAuthorityGuard = createModelAuthorityGuard(() =>
+    readModelAuthoritySnapshot(),
+  );
   const settingsService = createSettingsService(
     () => settingsRepo,
     (ctx) => identity.getCurrentUser(ctx),
@@ -8934,7 +9134,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         }));
       },
     },
+    undefined,
+    modelAuthorityGuard,
   );
+  effectiveModelConfigPort = createEffectiveModelConfigPort({
+    readSnapshot: modelAuthorityGuard.snapshot,
+    getLocalModelConfig: (ctx, capability) =>
+      settingsService.getModelConfig(ctx, capability),
+    // Growth exact gateway/session contract 尚未交付；Creator 端保持 typed fail-closed、零出网。
+    managed: createUnavailableManagedModelConfigPort(),
+  });
   const settings = createSettingsTransport(() => settingsService);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
@@ -8968,7 +9177,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 故按闭包引用捕获此 `const llmCompleter` 无 TDZ 问题。
   const llmCompleter = createLlmCompleter((ctx, capability) =>
     resolveLlmConfig(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
       env: process.env,
     }),
   );
@@ -9047,7 +9256,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const agenticEngine = createPiAgenticEngine({ fallback: deterministicEngine });
   const buildAgenticLlmConfig = (ctx: RequestContext, capability: string) =>
     resolveLlmConfig(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
       env: process.env,
     });
   const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
@@ -9087,7 +9296,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // LlmCredentialError(适配器接住 → cancelTask,不假成功)。
   const resolveModelSpec = async (ctx: RequestContext, capability: string) => {
     const cfg = await resolveLlmConfig(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
       env: process.env,
     });
     return {
@@ -9102,7 +9311,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 「备用」解析成主模型自己,fallback 失去意义)。未配/无 key → null(chat-runner 按现状报错)。
   const resolveFallbackModelSpec = async (ctx: RequestContext) => {
     const cfg = await resolveDedicatedLlmConfig(ctx, "chat.fallback", {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
       env: process.env,
     });
     if (!cfg) return null;
@@ -9142,7 +9351,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         Boolean(
           await resolveDedicatedLlmConfig(c, "script.review", {
             getModelConfig: (ctx, capability) =>
-              settingsService.getModelConfig(ctx, capability),
+              getRuntimeModelConfig(ctx, capability),
             env: process.env,
           }),
         ),
@@ -9221,7 +9430,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     model: string;
     token: string;
   } | null> => {
-    const row = await settingsService.getModelConfig(
+    const row = await getRuntimeModelConfig(
       ctx,
       "knowledge.search.embed",
     );
@@ -9359,7 +9568,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     capability: "image.generate" | "video.generate",
   ) =>
     resolveMultimodalSpecFn(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
       env: process.env,
     });
   // 多模态 provider 适配器注册表(keyed by provider)。真链路注册 MiniMax(M1 适配器,含 video
@@ -9407,7 +9616,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (gatherMaterials 接住 → grounding=model_memory 降级,不 crash)。search provider 用户可配。
   const resolveSearchSpec = (ctx: RequestContext) =>
     resolveSearchSpecFn(ctx, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
       env: process.env,
     });
   // 搜索 provider 注册表(keyed by provider)。三家首发适配器(纯自建 REST,不碰 Agent SDK);
@@ -9438,14 +9647,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //    组合根 → composition-only op(同 projects.transcribe 约定)。
   const settingsWithModelTest = createSettingsWithModelTest({
     settings,
+    assertLocalConfigurationAllowed: () =>
+      modelAuthorityGuard.assertLocalConfigurationAllowed(),
     resolveLlm: (ctx, capability) =>
       resolveLlmConfig(ctx, capability, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
         env: process.env,
       }),
     resolveDedicatedLlm: (ctx, capability) =>
       resolveDedicatedLlmConfig(ctx, capability, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
         env: process.env,
       }),
     resolveMultimodal: (ctx, capability) =>
@@ -9453,13 +9664,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ctx,
         capability as "image.generate" | "video.generate" | "asset.classify",
         {
-          getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+          getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
           env: process.env,
         },
       ),
     resolveTranscribe: (ctx) =>
       resolveTranscribeSpecFn(ctx, {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        getModelConfig: (c, cap) => getRuntimeModelConfig(c, cap),
         env: process.env,
       }),
     resolveEmbed: (ctx) =>
@@ -11561,6 +11772,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     platformAccount,
     scheduling: schedulingWithRunNow, // wrap:透传 CRUD + 拦 scheduledJobs.runNow(D5)
     contentCalendar,
+    contentCalendarService,
+    publishingScheduleProjection: (ctx, month) =>
+      buildPublishingScheduleProjection(
+        {
+          calendar: contentCalendarService,
+          projects: projectsService,
+          publishing: publishingService,
+          analytics: analyticsService,
+        },
+        ctx,
+        month,
+      ),
     materialLinks,
     benchmark: benchmarkWithTranscribe, // wrap:透传 CRUD + 拦 benchmark.works.transcribe(T-349)
     trendSources,
@@ -11746,6 +11969,18 @@ async function getQueryServices(): Promise<Transport> {
  */
 export async function getPublishingCenterService(): Promise<PublishingCenterQueryService> {
   return (await getBundle()).publishingCenter;
+}
+
+/** T-599 服务端页面组合使用；写侧仍只走公开 calendar operations。 */
+export async function getContentCalendarService(): Promise<ContentCalendarService> {
+  return (await getBundle()).contentCalendarService;
+}
+
+export async function getPublishingScheduleProjection(
+  ctx: RequestContext,
+  month?: string,
+): Promise<PublishingScheduleProjection> {
+  return (await getBundle()).publishingScheduleProjection(ctx, month);
 }
 
 /**

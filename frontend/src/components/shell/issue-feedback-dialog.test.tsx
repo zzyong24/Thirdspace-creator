@@ -43,10 +43,10 @@ describe("IssueFeedbackDialog", () => {
       />,
     );
 
-    const trigger = screen.getByRole("button", { name: "问题反馈" });
+    const trigger = screen.getByRole("button", { name: "帮助与反馈" });
     await user.click(trigger);
     expect(
-      screen.getByRole("button", { name: "打开反馈渠道" }),
+      screen.getByRole("button", { name: "打开官方反馈页" }),
     ).toBeEnabled();
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
@@ -64,7 +64,7 @@ describe("IssueFeedbackDialog", () => {
         bugFeedbackUrl={null}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "问题反馈" }));
+    fireEvent.click(screen.getByRole("button", { name: "帮助与反馈" }));
     const preview = screen.getByLabelText(
       "反馈内容预览",
     ) as HTMLTextAreaElement;
@@ -90,7 +90,7 @@ describe("IssueFeedbackDialog", () => {
     });
     render(<IssueFeedbackDialog pathname="/intelligence?secret=x" collapsed={false} />);
 
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     const description = screen.getByLabelText("问题描述");
     await user.type(description, "同步收藏夹后一直提示读取失败");
     await user.click(screen.getByRole("button", { name: "复制反馈内容" }));
@@ -112,19 +112,21 @@ describe("IssueFeedbackDialog", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
     const user = userEvent.setup();
     render(<IssueFeedbackDialog pathname="/projects/123456789" collapsed={false} />);
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
-    expect(await screen.findByText(/不会自动上传日志/)).toBeInTheDocument();
-    expect(screen.getByText(/服务不可用时仍可复制文字/)).toBeInTheDocument();
-    const channel = screen.getByRole("button", { name: "打开反馈渠道" });
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
+    expect(await screen.findByText(/不会发送日志/)).toBeInTheDocument();
+    expect(screen.getByText(/此版本暂不能在应用内发送/)).toBeInTheDocument();
+    const channel = screen.getByRole("button", { name: "打开官方反馈页" });
     expect(channel).toBeEnabled();
-    expect(screen.getByRole("button", { name: "发送问题反馈" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "发送问题反馈" }),
+    ).not.toBeInTheDocument();
     await user.click(channel);
     expect(fetchMock.mock.calls[1]?.[1]?.body).toContain(
       "https://my.feishu.cn/share/base/form/",
     );
     await user.type(screen.getByLabelText("问题描述"), "太短");
     await user.click(screen.getByRole("button", { name: "复制反馈内容" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("至少 10 个字符");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("blocks descriptions over 4000 Unicode characters", async () => {
@@ -132,7 +134,7 @@ describe("IssueFeedbackDialog", () => {
       new Response(JSON.stringify(runtimeResponse(null))),
     );
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
-    fireEvent.click(screen.getByRole("button", { name: "问题反馈" }));
+    fireEvent.click(screen.getByRole("button", { name: "帮助与反馈" }));
     fireEvent.change(screen.getByLabelText("问题描述"), {
       target: { value: "字".repeat(4001) },
     });
@@ -150,7 +152,7 @@ describe("IssueFeedbackDialog", () => {
       value: { writeText: vi.fn(async () => Promise.reject(new Error("denied"))) },
     });
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     await user.type(
       screen.getByLabelText("问题描述"),
       "点击同步收藏夹后一直提示读取失败",
@@ -176,13 +178,13 @@ describe("IssueFeedbackDialog", () => {
       );
     const user = userEvent.setup();
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "打开反馈渠道" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "打开官方反馈页" })).toBeEnabled(),
     );
-    await user.click(screen.getByRole("button", { name: "打开反馈渠道" }));
-    expect(await screen.findByText(/已请求打开反馈渠道/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "打开日志文件夹" }));
+    await user.click(screen.getByRole("button", { name: "打开官方反馈页" }));
+    expect(await screen.findByText(/已请求打开官方反馈页/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "查看本机日志" }));
     expect(await screen.findByText(/未能打开日志文件夹/)).toBeInTheDocument();
     expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
       JSON.stringify({ url: "https://growth.example.com/official-bug-form" }),
@@ -206,17 +208,17 @@ describe("IssueFeedbackDialog", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
     const user = userEvent.setup();
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     const channelButton = await screen.findByRole("button", {
-      name: "打开反馈渠道",
+      name: "打开官方反馈页",
     });
     await waitFor(() => expect(channelButton).toBeEnabled());
     await user.click(channelButton);
-    expect(await screen.findByText(/未能打开反馈渠道/)).toBeInTheDocument();
+    expect(await screen.findByText(/未能打开官方反馈页/)).toBeInTheDocument();
     expect(channelButton).toBeEnabled();
 
     const logsButton = screen.getByRole("button", {
-      name: "打开日志文件夹",
+      name: "查看本机日志",
     });
     await user.click(logsButton);
     expect(await screen.findByText("日志文件夹已打开")).toBeInTheDocument();
@@ -241,9 +243,9 @@ describe("IssueFeedbackDialog", () => {
       .mockImplementationOnce(() => pendingOpen);
     const user = userEvent.setup();
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     const channelButton = await screen.findByRole("button", {
-      name: "打开反馈渠道",
+      name: "打开官方反馈页",
     });
     await waitFor(() => expect(channelButton).toBeEnabled());
     await user.click(channelButton);
@@ -259,7 +261,7 @@ describe("IssueFeedbackDialog", () => {
       new Response(JSON.stringify(runtimeResponse(null))),
     );
     render(<IssueFeedbackDialog pathname="/" collapsed />);
-    const trigger = screen.getByRole("button", { name: "问题反馈" });
+    const trigger = screen.getByRole("button", { name: "帮助与反馈" });
     fireEvent.click(trigger);
     expect(await screen.findByLabelText("问题描述")).toHaveFocus();
     fireEvent.keyDown(document, { key: "Escape" });
@@ -295,7 +297,7 @@ describe("IssueFeedbackDialog", () => {
         submissionEnabled
       />,
     );
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     await user.type(
       screen.getByLabelText("问题摘要"),
       "导出按钮没有反应",
@@ -308,7 +310,7 @@ describe("IssueFeedbackDialog", () => {
     expect(submit).toBeDisabled();
     await user.click(
       screen.getByRole("checkbox", {
-        name: /我已检查并确认发送上方文字和基本版本信息/,
+        name: /我已检查并确认发送上方内容/,
       }),
     );
     expect(submit).toBeEnabled();
@@ -349,13 +351,13 @@ describe("IssueFeedbackDialog", () => {
         submissionEnabled
       />,
     );
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
     const description = screen.getByLabelText("问题描述");
     await user.type(description, "点击同步按钮后一直没有任何状态变化。");
     await user.click(
       screen.getByRole("checkbox", {
-        name: /我已检查并确认发送上方文字和基本版本信息/,
+        name: /我已检查并确认发送上方内容/,
       }),
     );
     await user.click(screen.getByRole("button", { name: "发送问题反馈" }));
@@ -363,8 +365,71 @@ describe("IssueFeedbackDialog", () => {
     expect(await screen.findByText(/反馈服务暂时不可用/)).toBeInTheDocument();
     expect(description).toHaveValue("点击同步按钮后一直没有任何状态变化。");
     expect(screen.getByRole("button", { name: "复制反馈内容" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "打开反馈渠道" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "打开官方反馈页" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "重新发送" })).toBeEnabled();
     expect(screen.queryByText(/反馈已收到/)).not.toBeInTheDocument();
+  });
+
+  it("[T-575] 失败后关闭再打开仍用同一请求标识重试，只有编辑文字才换新标识", async () => {
+    const failedResponse = () =>
+      new Response(
+        JSON.stringify({
+          ok: false,
+          code: "FEEDBACK_AUTHORITY_UNAVAILABLE",
+          message: "反馈服务暂时不可用，请稍后重试",
+          retryable: true,
+        }),
+        { status: 503 },
+      );
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(failedResponse())
+      .mockResolvedValueOnce(failedResponse());
+    const user = userEvent.setup();
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        bugFeedbackUrl="https://growth.example.com/official-bug-form"
+        submissionEnabled
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "帮助与反馈" });
+    await user.click(trigger);
+    await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
+    await user.type(
+      screen.getByLabelText("问题描述"),
+      "点击同步按钮后一直没有任何状态变化。",
+    );
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /我已检查并确认发送上方内容/,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "发送问题反馈" }));
+    expect(await screen.findByText(/反馈服务暂时不可用/)).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => expect(trigger).toHaveFocus());
+    await user.click(trigger);
+    expect(screen.getByLabelText("问题描述")).toHaveValue(
+      "点击同步按钮后一直没有任何状态变化。",
+    );
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /我已检查并确认发送上方内容/,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "发送问题反馈" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const firstKey = new Headers(fetchMock.mock.calls[0]?.[1]?.headers)
+      .get("Idempotency-Key");
+    const secondKey = new Headers(fetchMock.mock.calls[1]?.[1]?.headers)
+      .get("Idempotency-Key");
+    expect(firstKey).toMatch(/^[0-9a-f-]{36}$/);
+    expect(secondKey).toBe(firstKey);
   });
 
   it("[T-575] 编辑草稿会撤销本次确认，未重新确认时零提交", async () => {
@@ -385,14 +450,14 @@ describe("IssueFeedbackDialog", () => {
         submissionEnabled
       />,
     );
-    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
     await user.type(
       screen.getByLabelText("问题描述"),
       "点击同步按钮后一直没有任何状态变化。",
     );
     const consent = screen.getByRole("checkbox", {
-      name: /我已检查并确认发送上方文字和基本版本信息/,
+      name: /我已检查并确认发送上方内容/,
     });
     await user.click(consent);
     expect(consent).toBeChecked();

@@ -174,6 +174,21 @@ describe("SettingsPage", () => {
     ).not.toBeNull();
   });
 
+  it("渠道托管时只展示只读模型服务卡，不展示配置、测试或导入导出控件", async () => {
+    await renderSettings({
+      modelAuthority: {
+        authority: "managed_locked",
+        state: "unavailable",
+        action: "渠道模型配置不可用，请联网后重试",
+      },
+    });
+    expect(screen.getByText("渠道托管")).toBeTruthy();
+    expect(screen.getByText("无需填写 API Key")).toBeTruthy();
+    expect(screen.queryByText("测试连接")).toBeNull();
+    expect(screen.queryByText("导出配置")).toBeNull();
+    expect(screen.queryByText("导入配置")).toBeNull();
+  });
+
   it("mounts every settings card (account/preference/system/storage/model)", async () => {
     await renderSettings();
     // All panels are force-mounted so the full inventory is present regardless
@@ -329,8 +344,8 @@ describe("SettingsPage", () => {
       expect(
         document.querySelector('[data-slot="activation-purchase-link"]'),
       ).toBeNull();
-      expect(screen.getByText("购买：当前未提供")).toBeInTheDocument();
-      expect(screen.getByText("续费：当前未提供")).toBeInTheDocument();
+      expect(screen.getByText("购买：暂时不可用")).toBeInTheDocument();
+      expect(screen.getByText("续费：暂时不可用")).toBeInTheDocument();
     });
 
     it("[T-534] 商业售后/下载与购买/续费分离展示", async () => {

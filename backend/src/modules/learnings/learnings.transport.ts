@@ -90,8 +90,14 @@ export function createLearningsTransport(
           return { data: learning, meta: { requestId } };
         }
         case "learnings.create": {
-          const b = (body ?? {}) as { title: string; insight?: string };
-          const learning = await service.createLearning(ctx, b);
+          const b = (body ?? {}) as {
+            title: string;
+            insight?: string;
+            learningType?: string;
+          };
+          // [T-610] 这个 wire op 只由用户确认动作调用，因此语义是“采纳进知识库”，
+          // 不是 AI 自动产候选。候选内部写仍直接走 service.createLearning。
+          const learning = await service.adoptLearning(ctx, b);
           return { data: learning, meta: { requestId } };
         }
         case "learnings.applications.create": {

@@ -283,6 +283,7 @@ export async function loginDouhot(
     ((authDir) => openDouhotPage(authDir, false)))(options.authDir);
   const { page } = opened;
   const timeoutSec = options.timeoutSec ?? 300;
+  console.info(`[douhot-login] authorization-start timeoutSec=${timeoutSec}`);
   try {
     await page
       .goto(DOUHOT_HOME, {
@@ -293,10 +294,16 @@ export async function loginDouhot(
 
     for (let elapsed = 0; elapsed < timeoutSec; elapsed += 1) {
       if ((await probeDouhotSession(page)) === "active") {
+        console.info(
+          `[douhot-login] authorization-succeeded elapsedSec=${elapsed}`,
+        );
         return { loggedIn: true };
       }
       await page.waitForTimeout(1_000);
     }
+    console.warn(
+      `[douhot-login] authorization-timeout timeoutSec=${timeoutSec}`,
+    );
     return { loggedIn: false };
   } finally {
     await opened.close().catch(() => {});
@@ -305,8 +312,11 @@ export async function loginDouhot(
 
 async function fillKeyword(page: Page, keyword: string): Promise<void> {
   const selectors = [
+    'input[placeholder*="大家都在搜"]',
     'input[placeholder*="关键词"]',
     'input[placeholder*="搜索"]',
+    'input[placeholder*="搜"]',
+    ".arco-input-search input",
     'input[type="search"]',
     'input[type="text"]',
   ];
@@ -324,7 +334,7 @@ async function fillKeyword(page: Page, keyword: string): Promise<void> {
     await page.waitForTimeout(250);
   }
   throw Object.assign(new Error("热点宝关键词输入框不可用"), {
-    name: "DouhotResponseShapeChangedError",
+    name: "DouhotSearchInputUnavailableError",
   });
 }
 

@@ -41,6 +41,8 @@ export const learningsOperations = {
     id: "learnings.create",
     method: "POST",
     path: "/learnings",
+    // [T-610] 该 op 是用户显式“采纳/存为经验”的确认门：服务端按内容去重并直接
+    // 返回 validated Learning，知识库会立即读到。AI 自动候选不经此 wire op。
     body: z.object({
       title: z.string().min(1),
       insight: z.string().default(""),

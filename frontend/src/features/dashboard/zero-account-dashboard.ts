@@ -38,6 +38,7 @@ export function zeroAccountDashboardViewModel(): DashboardViewModel {
     metrics: ZERO_ACCOUNT_METRICS,
     continueCreating: null,
     todos: [],
+    scheduleReminderReadState: { state: "ready", error: null },
     trendingTopics: [],
     recentPublications: [],
     dataOverview: { metrics: [], trend: [] },

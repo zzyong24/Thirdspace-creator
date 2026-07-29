@@ -382,6 +382,14 @@ describe("T-482 来源同步 worker", () => {
       "failed",
     ],
     [
+      "热点宝搜索框漂移",
+      Object.assign(new Error("secret-selector-message"), {
+        name: "DouhotSearchInputUnavailableError",
+      }),
+      "RESPONSE_SHAPE_CHANGED",
+      "failed",
+    ],
+    [
       "Chromium 启动失败",
       Object.assign(new Error("secret-launch-path"), {
         name: "BrowserLaunchError",

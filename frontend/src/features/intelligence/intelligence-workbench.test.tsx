@@ -192,6 +192,7 @@ function api(): RadarApi {
     listItems: vi.fn().mockResolvedValue([]),
     getItem: vi.fn().mockResolvedValue(detail),
     enqueueTranscript: vi.fn().mockResolvedValue({}),
+    uploadTranscript: vi.fn().mockResolvedValue(detail.transcript),
     previewTopic: vi.fn().mockResolvedValue({}),
     confirmTopic: vi.fn().mockResolvedValue({}),
   };
@@ -242,6 +243,128 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       screen.getByRole("button", { name: "保存并开始首次同步" }),
     ).toBeDisabled();
+  });
+
+  it("[T-613] 黑马来源必须先验证热点宝授权，不能把普通抖音登录误当成可同步", async () => {
+    const stub = api();
+    stub.createSource = vi.fn().mockResolvedValue({
+      source: {
+        id: "source-darkhorse",
+        collectionId: null,
+        type: "darkhorse_query",
+        displayName: "黑马：AI 工具",
+        canonicalUrl: null,
+        collector: {
+          accountId: "account-1",
+          accountHandle: "@创作号",
+          platform: "douyin",
+          availability: "active",
+        },
+        monitorEnabled: true,
+        syncPolicy: { mode: "scheduled", interval: "daily" },
+        status: "active",
+        lastRunAt: null,
+        nextRunAt: null,
+        version: 1,
+      },
+      run: null,
+      task: null,
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "黑马关键词" }),
+    );
+    await userEvent.type(
+      within(dialog).getByRole("textbox", { name: "来源地址或关键词" }),
+      "AI 工具",
+    );
+    const save = within(dialog).getByRole("button", {
+      name: "保存并开始首次同步",
+    });
+    expect(save).toBeDisabled();
+
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "验证热点宝授权" }),
+    );
+    await waitFor(() => {
+      expect(stub.reconnectCollector).toHaveBeenCalledWith({
+        collectorAccountId: "account-1",
+        sourceType: "darkhorse_query",
+      });
+    });
+    expect(
+      await within(dialog).findByText(
+        "热点宝授权已确认，可以保存并开始同步。",
+      ),
+    ).toBeInTheDocument();
+    expect(save).toBeEnabled();
+
+    await userEvent.click(save);
+    await waitFor(() => {
+      expect(stub.createSource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "darkhorse_query",
+          config: {
+            type: "darkhorse_query",
+            collectorAccountId: "account-1",
+            keyword: "AI 工具",
+            board: "low_follower_breakout",
+          },
+        }),
+      );
+    });
+  });
+
+  it("[T-613] 热点宝未完成授权时保持禁用，不伪装成普通抖音登录失效", async () => {
+    const stub = api();
+    stub.reconnectCollector = vi.fn().mockResolvedValue({ loggedIn: false });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={null}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "添加来源" }));
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "黑马关键词" }),
+    );
+    await userEvent.type(
+      within(dialog).getByRole("textbox", { name: "来源地址或关键词" }),
+      "AI 工具",
+    );
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "验证热点宝授权" }),
+    );
+
+    expect(
+      await within(dialog).findByText(
+        "没有检测到热点宝授权成功。请在弹出的 Chrome 窗口完成授权后再试。",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", {
+        name: "保存并开始首次同步",
+      }),
+    ).toBeDisabled();
+    expect(stub.createSource).not.toHaveBeenCalled();
   });
 
   it("[T-520] 只用主题 token，窄桌面双栏、宽桌面三栏，关键同步操作始终可见", () => {
@@ -586,6 +709,19 @@ describe("T-482 内容雷达工作区", () => {
         cause: { code: "DOUYIN_FAVORITES_SESSION_EXPIRED" },
       }),
     ).toContain("重新登录");
+  });
+
+  it("[T-613] 黑马验证错误统一指向热点宝授权，不误导为普通抖音登录", () => {
+    expect(
+      sourceVerificationErrorMessage("darkhorse_query", {
+        cause: { name: "DouyinNotLoggedInError" },
+      }),
+    ).toContain("热点宝");
+    expect(
+      sourceVerificationErrorMessage("darkhorse_query", {
+        code: "RESPONSE_SHAPE_CHANGED",
+      }),
+    ).toContain("页面结构");
   });
 
   it("[T-520] 业务确认真 0 时显示真实空态，来源弹窗可滚动且选项可换行", async () => {
@@ -1475,6 +1611,112 @@ describe("T-482 内容雷达工作区", () => {
       expect.objectContaining({ itemId: "item-1" }),
     );
     expect(await screen.findByText("排队中")).toBeInTheDocument();
+  });
+
+  it("[T-610] 来源证据按 sourceId 去重，保留最近采集时间和累计次数", () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          snapshots: [
+            {
+              id: "snapshot-a3",
+              sourceId: "source-a",
+              title: "同一作品",
+              capturedAt: "2026-07-29T07:41:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+            {
+              id: "snapshot-a2",
+              sourceId: "source-a",
+              title: "同一作品",
+              capturedAt: "2026-07-28T07:40:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+            {
+              id: "snapshot-a1",
+              sourceId: "source-a",
+              title: "同一作品",
+              capturedAt: "2026-07-27T16:08:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+            {
+              id: "snapshot-b1",
+              sourceId: "source-b",
+              title: "另一个来源发现",
+              capturedAt: "2026-07-26T12:00:00.000Z",
+              finalUrl: "https://example.com/other-source",
+            },
+          ],
+        }}
+        api={api()}
+      />,
+    );
+
+    expect(screen.getAllByText("同一作品")).toHaveLength(1);
+    expect(screen.getByText(/累计采集 3 次/)).toBeInTheDocument();
+    expect(screen.getByText("另一个来源发现")).toBeInTheDocument();
+  });
+
+  it("[T-603] 上传逐字稿后立即读回正文并解锁生成选题", async () => {
+    const uploadedTranscript = {
+      ...detail.transcript,
+      status: "done" as const,
+      text: "第一句\n第二句",
+    };
+    const uploadTranscript = vi.fn().mockResolvedValue(uploadedTranscript);
+    const stub = Object.assign(api(), { uploadTranscript });
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          snapshots: [
+            {
+              id: "snapshot-1",
+              title: "真实作品",
+              capturedAt: "2026-07-23T12:00:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+          ],
+        }}
+        api={stub}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    const file = new File(
+      [
+        "1\n00:00:01,000 --> 00:00:03,000\n第一句\n\n2\n00:00:04,000 --> 00:00:06,000\n第二句",
+      ],
+      "访谈.srt",
+      { type: "application/x-subrip" },
+    );
+    await userEvent.upload(screen.getByLabelText("上传逐字稿"), file);
+
+    await waitFor(() =>
+      expect(uploadTranscript).toHaveBeenCalledWith({
+        itemId: "item-1",
+        format: "srt",
+        fileName: "访谈.srt",
+        text: "第一句\n第二句",
+      }),
+    );
+    expect(
+      await screen.findByText(
+        (_, node) =>
+          node?.tagName === "P" &&
+          node.textContent === "第一句\n第二句",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "生成选题候选" }),
+    ).toBeEnabled();
   });
 
   it("[T-546] 生成选题候选立即显示局部进度并阻止重复创建，完成后回显编辑卡", async () => {

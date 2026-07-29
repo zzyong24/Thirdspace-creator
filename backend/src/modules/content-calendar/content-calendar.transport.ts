@@ -62,12 +62,16 @@ export function createContentCalendarTransport(
         }
         case "accounts.calendar.entries.create": {
           const b = (body ?? {}) as {
-            plannedAt: string;
+            projectId?: string;
+            plannedDate?: string;
+            plannedAt?: string;
             contentOutputId?: string;
             candidateId?: string;
             note?: string;
           };
           const created = await service.createEntry(ctx, p.accountId ?? "", {
+            projectId: b.projectId,
+            plannedDate: b.plannedDate,
             plannedAt: b.plannedAt,
             contentOutputId: b.contentOutputId ?? null,
             candidateId: b.candidateId ?? null,
@@ -78,12 +82,14 @@ export function createContentCalendarTransport(
         case "calendar.entries.update": {
           const b = (body ?? {}) as {
             plannedAt?: string;
+            plannedDate?: string;
             contentOutputId?: string;
             candidateId?: string;
             note?: string;
           };
           const updated = await service.updateEntry(ctx, p.entryId ?? "", {
             plannedAt: b.plannedAt,
+            plannedDate: b.plannedDate,
             contentOutputId: b.contentOutputId,
             candidateId: b.candidateId,
             note: b.note,

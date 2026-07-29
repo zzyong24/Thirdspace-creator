@@ -691,6 +691,7 @@ export function verifyReviewReceipt({
   documentCell = "",
   requirePass = true,
   allowSpecChange = false,
+  allowConstitutionChange = false,
 }) {
   const value = cleanText(reviewCell);
   const policy = readReviewConfig(root).receipt_policy;
@@ -763,7 +764,7 @@ export function verifyReviewReceipt({
   const constitutionFile = resolveInside(root, state.constitution_path, "constitution");
   if (!existsSync(constitutionFile)) throw new Error(`constitution 不存在: ${state.constitution_path}`);
   const currentConstitutionSha = sha(readFileSync(constitutionFile, "utf8"));
-  if (state.constitution_sha256 !== currentConstitutionSha) {
+  if (!allowConstitutionChange && state.constitution_sha256 !== currentConstitutionSha) {
     throw new Error("review receipt 已过期：constitution hash 已变化");
   }
   if (requirePass && match[1] !== "PASS") {
@@ -834,6 +835,9 @@ function record(args) {
       documentCell: backlogTask[0].document,
       requirePass: false,
       allowSpecChange: true,
+      // record 本身就是把当前 SPEC/constitution 重新绑定进下一轮收据的唯一合法入口；
+      // audit/taskctl 仍保持默认 false，任何未经过复审的 constitution 变化继续 fail-closed。
+      allowConstitutionChange: true,
     });
     if (previousEvent.spec_path !== relativePortable(root, specFile)) {
       throw new Error(

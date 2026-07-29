@@ -337,7 +337,34 @@ export interface ProjectsService {
   listOutputRefsByProjects(
     ctx: RequestContext,
     projectIds: ReadonlyArray<string>,
-  ): Promise<Array<{ projectId: string; outputId: string }>>;
+  ): Promise<
+    Array<{
+      projectId: string;
+      outputId: string;
+      title: string;
+      contentType: string;
+      status: string;
+    }>
+  >;
+  /**
+   * T-599 project scheduling read port. The project ownership gate and output
+   * readiness facts stay inside Projects; calendar/dashboard never import this
+   * module's repository.
+   */
+  getScheduleProject(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{
+    id: string;
+    title: string;
+    status: string;
+    source: "manual" | "topic" | "imported";
+    currentStage: string;
+    updatedAt: string;
+    outputs: Array<{ id: string; status: string }>;
+  }>;
+  /** 组合层账号级项目窄读；与批量 output refs 配合，避免逐项目扇出。 */
+  listProjectsForComposition(ctx: RequestContext): Promise<ProjectRow[]>;
 
   // 数据底座(SPEC §1.4)「优先读真」判据(单一、明确):该用户是否存在
   //   source='imported' 的真实采集项目。true → 读侧让演示 fixture 让位、只读真;
@@ -1357,6 +1384,29 @@ export function createProjectsService(
     async listOutputRefsByProjects(ctx, projectIds) {
       requireAccountId(ctx.accountId, "projects.listOutputRefsByProjects");
       return repo.listOutputRefsByProjects(ctx, projectIds);
+    },
+
+    async getScheduleProject(ctx, projectId) {
+      requireAccountId(ctx.accountId, "projects.getScheduleProject");
+      const project = await repo.get(ctx, projectId);
+      const outputs = await repo.listOutputs(ctx, projectId);
+      return {
+        id: project.id,
+        title: project.title,
+        status: project.status,
+        source: project.source as "manual" | "topic" | "imported",
+        currentStage: project.currentStage,
+        updatedAt: project.updatedAt,
+        outputs: outputs.map((output) => ({
+          id: output.id,
+          status: output.status,
+        })),
+      };
+    },
+
+    async listProjectsForComposition(ctx) {
+      requireAccountId(ctx.accountId, "projects.listProjectsForComposition");
+      return repo.list(ctx);
     },
 
     async hasImportedProjects(ctx) {

@@ -1,4 +1,13 @@
-import { pgTable, text, jsonb } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  check,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import { projects } from "./projects";
 
 // ContentCalendarEntry / PublishingCadence tables (七步整合设计 §7.2 — 发布节奏 /
 // 内容日历; contract v0.4 resources/content-calendar.ts; SPEC §13 "内容日历
@@ -26,19 +35,42 @@ import { pgTable, text, jsonb } from "drizzle-orm/pg-core";
 // (user_id, account_id): one cadence per account per user (the upsert anchor). The
 // attainment / 断更 computation is DERIVED (cadenceAttainmentResource is not stored).
 
-export const contentCalendarEntries = pgTable("content_calendar_entries", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-  accountId: text("account_id").notNull(), // soft FK → platform_accounts.id
-  plannedAt: text("planned_at").notNull(), // ISO-8601 (the slot instant)
-  contentOutputId: text("content_output_id"), // nullable; never set with candidateId
-  candidateId: text("candidate_id"), // nullable; never set with contentOutputId
-  status: text("status").notNull().default("planned"), // planned|published|missed
-  note: text("note").notNull().default(""),
-  publishedAt: text("published_at"), // nullable; stamped on → published
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-});
+export const contentCalendarEntries = pgTable(
+  "content_calendar_entries",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
+    accountId: text("account_id").notNull(), // soft FK → platform_accounts.id
+    projectId: text("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    plannedDate: text("planned_date").notNull(),
+    plannedAt: text("planned_at").notNull(), // legacy compatibility anchor
+    contentOutputId: text("content_output_id"), // nullable; never set with candidateId
+    candidateId: text("candidate_id"), // nullable; never set with contentOutputId
+    status: text("status").notNull().default("planned"), // planned|published|missed
+    note: text("note").notNull().default(""),
+    publishedAt: text("published_at"), // nullable; real publication reconcile only
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    check(
+      "content_calendar_entries_planned_date_ck",
+      sql`${table.plannedDate} ~ '^\\d{4}-\\d{2}-\\d{2}$' AND to_char(to_date(${table.plannedDate}, 'YYYY-MM-DD'), 'YYYY-MM-DD') = ${table.plannedDate}`,
+    ),
+    uniqueIndex("content_calendar_entries_active_project_ux")
+      .on(table.userId, table.accountId, table.projectId)
+      .where(
+        sql`${table.projectId} IS NOT NULL AND ${table.status} IN ('planned', 'missed')`,
+      ),
+    index("content_calendar_entries_date_window_ix").on(
+      table.userId,
+      table.accountId,
+      table.plannedDate,
+    ),
+  ],
+);
 
 export const publishingCadences = pgTable("publishing_cadences", {
   id: text("id").primaryKey(),
@@ -61,6 +93,13 @@ CREATE TABLE IF NOT EXISTS content_calendar_entries (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   account_id TEXT NOT NULL,
+  project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
+  planned_date TEXT NOT NULL
+    CONSTRAINT content_calendar_entries_planned_date_ck
+    CHECK (
+      planned_date ~ '^\\d{4}-\\d{2}-\\d{2}$'
+      AND to_char(to_date(planned_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') = planned_date
+    ),
   planned_at TEXT NOT NULL,
   content_output_id TEXT,
   candidate_id TEXT,
@@ -79,6 +118,10 @@ CREATE TABLE IF NOT EXISTS publishing_cadences (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS content_calendar_entries_window_ix ON content_calendar_entries(user_id, account_id, planned_at);
+CREATE UNIQUE INDEX IF NOT EXISTS content_calendar_entries_active_project_ux
+  ON content_calendar_entries(user_id, account_id, project_id)
+  WHERE project_id IS NOT NULL AND status IN ('planned', 'missed');
+CREATE INDEX IF NOT EXISTS content_calendar_entries_date_window_ix
+  ON content_calendar_entries(user_id, account_id, planned_date);
 CREATE UNIQUE INDEX IF NOT EXISTS publishing_cadences_account_ux ON publishing_cadences(user_id, account_id);
 `;

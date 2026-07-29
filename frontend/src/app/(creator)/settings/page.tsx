@@ -32,8 +32,10 @@ import {
   type StorageState,
   type ActivationState,
   type ChannelLinksState,
+  type ModelAuthorityState,
 } from "@/features/settings/settings-page";
 import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
+import { readModelAuthoritySnapshot } from "@/server/activation/client-config.server";
 import {
   buildSkillItems,
   type SkillItem,
@@ -78,6 +80,15 @@ const EMPTY_STORAGE: StorageState = {
 };
 
 export default async function SettingsRoutePage() {
+  const authoritySnapshot = await readModelAuthoritySnapshot();
+  const modelAuthority: ModelAuthorityState =
+    authoritySnapshot.authority === "local"
+      ? authoritySnapshot
+      : {
+          authority: authoritySnapshot.authority,
+          state: authoritySnapshot.state,
+          action: authoritySnapshot.action,
+        };
   // Resolve the request's session → ctx (the (creator) layout already guarded
   // it). Read the account card from the real `settings.get` op under that ctx
   // (user-scoped). Fall back to the session user DTO, then to the fixture, so
@@ -127,7 +138,7 @@ export default async function SettingsRoutePage() {
   // 把不存在的模型当真)。
   let model: ModelState = UNCONFIGURED_MODEL;
   let multimodalModels: MultimodalModelsState | undefined;
-  if (session) {
+  if (session && modelAuthority.authority === "local") {
     try {
       const models = await createServerClient(session.ctx).listModels({
         params: undefined,
@@ -317,6 +328,7 @@ export default async function SettingsRoutePage() {
       skills={skills}
       activation={activation}
       channelLinks={channelLinks}
+      modelAuthority={modelAuthority}
     />
   );
 }

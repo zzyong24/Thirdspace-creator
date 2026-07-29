@@ -94,6 +94,9 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "scheduled.benchmark": ["benchmark.teardown"],
   "scheduled.favorites": ["favorites.triage", "knowledge.distill"],
   "scheduled.self.detail": ["topic.attribution"],
+  // T-600 后 self.metrics 委托 canonical self.detail collector，必须冻结同一归因 Skill；
+  // 否则采集主体成功、尾部 topic attribution 全部报 snapshot incomplete。
+  "scheduled.self.metrics": ["topic.attribution"],
   "scheduled.topic.daily": ["topic.generate", "trend.extract"],
 };
 const NON_SKILL_TASK_TYPES = new Set([
@@ -110,7 +113,8 @@ const NON_SKILL_TASK_TYPES = new Set([
   "exec.video.render",
   "material.extract",
   "scheduled.comments",
-  "scheduled.self.metrics",
+  // 内容雷达聚合作业只扫描到期来源并排 source_sync 持久子任务，本身不调用 Skill。
+  "scheduled.intelligence.sync",
   "transcribe.douyin",
   "video.render",
 ]);

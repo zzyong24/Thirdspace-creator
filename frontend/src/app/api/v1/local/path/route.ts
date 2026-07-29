@@ -5,7 +5,10 @@ import {
   getStorageRootForRequest,
 } from "@/server/persistence-client";
 import { readSessionCookie } from "../../auth/_session";
-import { resolveRequestContext } from "@/lib/request-context.server";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
 import {
   LocalPathViolation,
   realpathInsideRoot,
@@ -36,21 +39,7 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "assetId required" }, { status: 400 });
   }
   const rawToken = readSessionCookie(req);
-  // [T-360③] 当前选中号解析(header 优先、cookie 兜底)—— 与 ../reveal 同款:不解析则
-  // ctx.accountId 恒空 → assets.getAsset 撞 T-332 strict 门直接 500。
-  let accountId: string | null = req.headers.get("x-account-id");
-  if (!accountId) {
-    const m = /(?:^|;\s*)creatoros_current_account=([^;]+)/.exec(
-      req.headers.get("cookie") ?? "",
-    );
-    if (m?.[1]) {
-      try {
-        accountId = decodeURIComponent(m[1]);
-      } catch {
-        accountId = m[1];
-      }
-    }
-  }
+  const accountId = readRequestAccountId(req);
   let ctx;
   try {
     ctx = await resolveRequestContext(rawToken, accountId);

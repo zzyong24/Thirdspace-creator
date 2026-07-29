@@ -63,6 +63,8 @@ export interface ModelTestResult {
 
 export interface SettingsModelTestDeps {
   settings: Transport;
+  /** T-604 托管渠道在任何 resolver/secret/provider 调用前直接拒绝本地连接测试。 */
+  assertLocalConfigurationAllowed?: () => Promise<void>;
   /** 文本 LLM 解析(default / script.review;三层回退)。未配 → 抛 LlmCredentialError。 */
   resolveLlm: (ctx: RequestContext, capability: string) => Promise<LlmSpecLite>;
   /** 备用对话模型:只认专配行,未配 → null(不回退主模型)。 */
@@ -558,6 +560,7 @@ export function createSettingsWithModelTest(
         if (!ctx) {
           throw new Error("AuthenticationError: model test requires ctx");
         }
+        await deps.assertLocalConfigurationAllowed?.();
         const { params } = (input ?? {}) as {
           params?: { capability?: string };
         };

@@ -24,6 +24,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { fetchCreatorApi } from "@/lib/http-transport";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -184,7 +185,7 @@ export function AssetsInteractiveRegion({
     (assetId: string) => {
       startTransition(async () => {
         try {
-          const res = await fetch("/api/v1/local/path", {
+          const res = await fetchCreatorApi("/api/v1/local/path", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ assetId }),
@@ -218,7 +219,7 @@ export function AssetsInteractiveRegion({
     (assetId: string) => {
       startTransition(async () => {
         try {
-          const res = await fetch("/api/v1/local/reveal", {
+          const res = await fetchCreatorApi("/api/v1/local/reveal", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ assetId }),
@@ -825,4 +826,3 @@ function Pagination({
     </div>
   );
 }
-

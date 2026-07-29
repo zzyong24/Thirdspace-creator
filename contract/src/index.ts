@@ -155,8 +155,10 @@ export {
 export {
   dashboardPage,
   metricCard,
+  scheduleReminderReadState,
   type DashboardPage,
   type MetricCard,
+  type ScheduleReminderReadState,
 } from "./pages/dashboard";
 export {
   projectOverviewPage,

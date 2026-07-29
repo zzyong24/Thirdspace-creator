@@ -366,6 +366,28 @@ describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路�
 });
 
 describe("createSettingsWithModelTest — wrap 拦截与透传", () => {
+  it("渠道托管时在解析配置或调用 provider 前拒绝连接测试", async () => {
+    const resolveLlm = vi.fn(async () => llmSpec);
+    const managedError = Object.assign(new Error("managed"), {
+      code: "MODEL_CONFIGURATION_MANAGED",
+    });
+    const wrapped = createSettingsWithModelTest({
+      settings: { request: vi.fn() },
+      ...makeDeps({ resolveLlm }),
+      assertLocalConfigurationAllowed: vi
+        .fn()
+        .mockRejectedValue(managedError),
+    });
+    await expect(
+      wrapped.request(
+        ENDPOINTS.testModelConnection,
+        { params: { capability: "default" }, query: undefined, body: undefined },
+        ctx,
+      ),
+    ).rejects.toMatchObject({ code: "MODEL_CONFIGURATION_MANAGED" });
+    expect(resolveLlm).not.toHaveBeenCalled();
+  });
+
   it("settings.models.test → 拦截返回探测结果 envelope;其余 op 透传", async () => {
     const passthrough = vi.fn(async () => ({ data: [], meta: { requestId: "r1" } }));
     const wrapped = createSettingsWithModelTest({

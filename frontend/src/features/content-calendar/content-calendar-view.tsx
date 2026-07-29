@@ -6,7 +6,8 @@
  * 过去格渲 publications 真数据(chips:标题缩略 + 播放数),单日多条格内折叠
  * 「+N」;未来格渲 planned entries(现 0 行 → 诚实空);过去的空格淡色着色,
  * 断更空窗一眼可辨。点格开只读抽屉:当天发布列表(封面缩略 + 标题 + 表现 +
- * 跳稿面链接)。月份切换为静态跳转(`/calendar?month=YYYY-MM` 锚点)。
+ * 跳稿面链接)。项目排期只读，唯一写入口在项目列表；月份切换留在
+ * `/publishing?month=YYYY-MM`。
  *
  * [FE-M01] 无障碍:日历格是原生 `<button>`(键盘可聚焦、Enter/Space 触发),不再是
  * click-only `<div>`;日详情抽屉改用 Sheet(Radix Dialog 底座)——自带 focus trap、
@@ -18,6 +19,7 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/project/section-card";
 import { CoverThumb } from "@/components/resources/cover-thumb";
@@ -29,7 +31,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { buildMonthGrid, shiftMonth, type DayCell } from "./calendar-month";
-import { ScheduleEntryForm, DrawerEntryRow } from "./content-calendar-schedule";
 import type {
   CalendarPublicationItem,
   ContentCalendarViewModel,
@@ -54,8 +55,7 @@ const MAX_CHIPS_PER_CELL = 2;
 // entries 状态 → 中文短标(排期 chip 用)。
 const ENTRY_STATUS_LABELS: Record<string, string> = {
   planned: "计划",
-  published: "已发",
-  missed: "未发",
+  missed: "逾期",
 };
 
 // ---------------------------------------------------------------------------
@@ -69,7 +69,17 @@ export function ContentCalendarView({
 }) {
   const { accountId, month, referenceDateKey, publications, entries, projects } =
     viewModel;
+  const router = useRouter();
+  const [isMonthPending, startMonthTransition] = React.useTransition();
   const [selectedDay, setSelectedDay] = React.useState<string | null>(null);
+  const prevMonthHref = `/publishing?month=${shiftMonth(month, -1)}`;
+  const nextMonthHref = `/publishing?month=${shiftMonth(month, 1)}`;
+
+  React.useEffect(() => {
+    if (!accountId) return;
+    router.prefetch(prevMonthHref);
+    router.prefetch(nextMonthHref);
+  }, [accountId, nextMonthHref, prevMonthHref, router]);
 
   if (!accountId) {
     // [T-332 S4] 区分两种「没当前号」(SPEC §6.2/§4.2):
@@ -114,65 +124,89 @@ export function ContentCalendarView({
     list.push(pub);
     pubsByDay.set(pub.dateKey, list);
   }
+  // calendar `published` 不是发布事实，不能在过去月份冒充真实 publication。
+  // 项目排期与无法补链的旧计划都只读；日期只认 contract 的 plannedDate。
+  const visibleEntries = entries.filter(
+    (entry) => entry.status !== "published",
+  );
   const entriesByDay = new Map<string, ContentCalendarEntryResource[]>();
-  for (const entry of entries) {
-    const key = entry.plannedAt.slice(0, 10);
+  for (const entry of visibleEntries) {
+    const key = entry.plannedDate;
     const list = entriesByDay.get(key) ?? [];
     list.push(entry);
     entriesByDay.set(key, list);
   }
+  const projectTitleById = new Map(
+    projects.map((project) => [project.id, project.title] as const),
+  );
 
   const weeks = buildMonthGrid(month);
-  const prevMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
+
+  const navigateMonth = (href: string) => {
+    if (isMonthPending) return;
+    startMonthTransition(() => {
+      router.push(href, { scroll: false });
+    });
+  };
 
   const selectedPubs = selectedDay ? (pubsByDay.get(selectedDay) ?? []) : [];
   const selectedEntries = selectedDay
     ? (entriesByDay.get(selectedDay) ?? [])
     : [];
-  // 未来/今天的抽屉可排期(过去日只读复盘,不排期)。
-  const selectedCanSchedule =
-    selectedDay !== null && selectedDay >= referenceDateKey;
-
   return (
     <div
       data-slot="content-calendar"
       data-testid="content-calendar"
       data-account-id={accountId}
       data-month={month}
+      data-month-pending={isMonthPending ? "true" : undefined}
+      aria-busy={isMonthPending}
       className="flex flex-col gap-section-gap"
     >
-      {/* 月份头:上一月/下一月静态跳转 + 本月真实计数 */}
+      {/* 月份头：客户端路由保留当前月历直到新月份读回，避免 Tauri WebView 整页白屏。 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <a
-            href={`/calendar?month=${prevMonth}`}
+          <button
+            type="button"
             data-testid="calendar-prev-month"
             aria-label="上一月"
+            disabled={isMonthPending}
+            onClick={() => navigateMonth(prevMonthHref)}
             className="rounded-md border border-border px-2.5 py-1 text-sm text-muted-foreground hover:bg-surface-subtle hover:text-foreground"
           >
             ←
-          </a>
+          </button>
           <h2
             data-testid="calendar-month-title"
             className="min-w-28 text-center text-lg font-semibold"
           >
             {monthTitle(month)}
           </h2>
-          <a
-            href={`/calendar?month=${nextMonth}`}
+          <button
+            type="button"
             data-testid="calendar-next-month"
             aria-label="下一月"
+            disabled={isMonthPending}
+            onClick={() => navigateMonth(nextMonthHref)}
             className="rounded-md border border-border px-2.5 py-1 text-sm text-muted-foreground hover:bg-surface-subtle hover:text-foreground"
           >
             →
-          </a>
+          </button>
+          {isMonthPending ? (
+            <span
+              role="status"
+              data-testid="calendar-month-loading"
+              className="text-xs text-muted-foreground"
+            >
+              正在切换…
+            </span>
+          ) : null}
         </div>
         <p
           data-testid="calendar-month-summary"
           className="text-sm text-muted-foreground"
         >
-          本月发布 {publications.length} 条 · 排期 {entries.length} 条
+          本月发布 {publications.length} 条 · 排期 {visibleEntries.length} 条
         </p>
       </div>
 
@@ -201,6 +235,7 @@ export function ContentCalendarView({
                   referenceDateKey={referenceDateKey}
                   pubs={pubsByDay.get(cell.dateKey) ?? []}
                   entries={entriesByDay.get(cell.dateKey) ?? []}
+                  projectTitleById={projectTitleById}
                   onOpen={() => setSelectedDay(cell.dateKey)}
                 />
               ))}
@@ -247,9 +282,7 @@ export function ContentCalendarView({
 
           {selectedPubs.length === 0 && selectedEntries.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {selectedCanSchedule
-                ? "这一天还没有排期。点下方「+ 排期」规划一条。"
-                : "这一天没有发布记录，也没有排期。"}
+              这一天没有发布记录，也没有排期。
             </p>
           ) : null}
 
@@ -292,20 +325,17 @@ export function ContentCalendarView({
               </h4>
               <ul className="flex flex-col gap-1.5">
                 {selectedEntries.map((entry) => (
-                  <DrawerEntryRow key={entry.id} entry={entry} />
+                  <CalendarEntryReadonlyRow
+                    key={entry.id}
+                    entry={entry}
+                    projectTitle={
+                      entry.projectId
+                        ? (projectTitleById.get(entry.projectId) ?? null)
+                        : null
+                    }
+                  />
                 ))}
               </ul>
-            </div>
-          ) : null}
-
-          {/* 未来/今天:排期写路径入口(过去日不展示——只读复盘)。 */}
-          {selectedCanSchedule && selectedDay ? (
-            <div className="mt-1">
-              <ScheduleEntryForm
-                accountId={accountId}
-                dateKey={selectedDay}
-                projects={projects}
-              />
             </div>
           ) : null}
         </SheetContent>
@@ -319,22 +349,23 @@ function CalendarDayCell({
   referenceDateKey,
   pubs,
   entries,
+  projectTitleById,
   onOpen,
 }: {
   readonly cell: DayCell;
   readonly referenceDateKey: string;
   readonly pubs: CalendarPublicationItem[];
   readonly entries: ContentCalendarEntryResource[];
+  readonly projectTitleById: ReadonlyMap<string, string>;
   readonly onOpen: () => void;
 }) {
   const total = pubs.length + entries.length;
   const isPast = cell.dateKey < referenceDateKey;
   const isToday = cell.dateKey === referenceDateKey;
-  const isFutureOrToday = cell.dateKey >= referenceDateKey;
   // 断更空窗:过去的本月格且当天 0 条 → 淡色。
   const isGap = cell.inMonth && isPast && total === 0;
-  // 可点开抽屉:有内容的任意本月格,或未来/今天的本月格(空格也可点进去排期)。
-  const openable = cell.inMonth && (total > 0 || isFutureOrToday);
+  // 日历已收口为只读：只有存在发布或排期的本月格可打开。
+  const openable = cell.inMonth && total > 0;
   const visiblePubs = pubs.slice(0, MAX_CHIPS_PER_CELL);
   const visibleEntries =
     pubs.length >= MAX_CHIPS_PER_CELL
@@ -407,9 +438,17 @@ function CalendarDayCell({
               data-testid="calendar-entry-row"
               data-status={entry.status}
               className="truncate rounded-sm border border-dashed border-border px-1 py-0.5 text-[11px] leading-4 text-muted-foreground"
+              title={
+                entry.projectId
+                  ? (projectTitleById.get(entry.projectId) ?? "项目排期")
+                  : "待整理计划"
+              }
             >
               {ENTRY_STATUS_LABELS[entry.status] ?? entry.status}
-              {entry.note ? ` · ${entry.note}` : ""}
+              {" · "}
+              {entry.projectId
+                ? (projectTitleById.get(entry.projectId) ?? "项目排期")
+                : "待整理计划"}
             </div>
           ))}
           {hiddenCount > 0 ? (
@@ -444,5 +483,46 @@ function CalendarDayCell({
     <div {...dataProps} className={className}>
       {inner}
     </div>
+  );
+}
+
+function CalendarEntryReadonlyRow({
+  entry,
+  projectTitle,
+}: {
+  readonly entry: ContentCalendarEntryResource;
+  readonly projectTitle: string | null;
+}) {
+  const legacy = entry.projectId === null;
+  return (
+    <li
+      data-testid="calendar-drawer-entry"
+      data-entry-id={entry.id}
+      data-status={entry.status}
+      className="flex items-center justify-between gap-3 rounded-md border border-dashed border-border p-2.5 text-sm"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium text-foreground">
+          {legacy ? "待整理计划" : (projectTitle ?? "项目排期")}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">
+          {ENTRY_STATUS_LABELS[entry.status] ?? entry.status} ·{" "}
+          {dayTitle(entry.plannedDate)}
+          {legacy && entry.note ? ` · ${entry.note}` : ""}
+        </p>
+      </div>
+      {entry.projectId ? (
+        <a
+          href={`/projects/${entry.projectId}`}
+          className="shrink-0 text-xs font-medium text-primary underline-offset-2 hover:underline"
+        >
+          打开项目
+        </a>
+      ) : (
+        <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+          待补关联
+        </span>
+      )}
+    </li>
   );
 }

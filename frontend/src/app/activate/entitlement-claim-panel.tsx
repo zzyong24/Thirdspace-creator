@@ -19,6 +19,9 @@ type ClaimView = {
   readonly message: string;
 };
 
+const CLAIM_FAILED_MESSAGE =
+  "领取没有完成，请稍后重试。你原来已经可以使用的产品不会受影响。";
+
 async function invokeClaim(command: string): Promise<ClaimView> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<ClaimView>(command);
@@ -56,8 +59,9 @@ export function EntitlementClaimPanel({
     setError(null);
     try {
       setView(await invokeClaim("entitlement_claim_start"));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+    } catch {
+      // Native 失败可能包含协议、存储或服务细节；普通页面只显示可行动的人话。
+      setError(CLAIM_FAILED_MESSAGE);
     } finally {
       setBusy(false);
     }
@@ -70,8 +74,8 @@ export function EntitlementClaimPanel({
     try {
       const result = await invokeClaim("entitlement_claim_poll");
       setView(result);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+    } catch {
+      setError(CLAIM_FAILED_MESSAGE);
     } finally {
       setBusy(false);
     }
@@ -103,32 +107,38 @@ export function EntitlementClaimPanel({
       setError("领取页面地址未通过安全校验");
       return;
     }
-    const { openUrl } = await import("@tauri-apps/plugin-opener");
-    await openUrl(parsed.toString());
+    try {
+      const { openUrl } = await import("@tauri-apps/plugin-opener");
+      await openUrl(parsed.toString());
+    } catch {
+      setError("没有打开官方页面，请稍后再试。");
+    }
   }
 
   return (
     <section
-      aria-label="账号权益领取"
+      aria-label="领取产品"
       className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4"
     >
       <div className="grid gap-1">
-        <h2 className="text-sm font-semibold">已有账号权益？</h2>
+        <h2 className="text-sm font-semibold">已经购买 CreatorOS？</h2>
         <p className="text-xs text-muted-foreground">
-          在官方网页确认归属后直接激活，不需要复制长期激活码。
+          在官方页面确认后，就能把已购买的 CreatorOS 领到这台电脑。
         </p>
       </div>
 
       {!view ? (
         <Button type="button" disabled={busy} onClick={() => void start()}>
           {busy ? <Loader2 className="animate-spin" /> : null}
-          领取并激活
+          领取产品
         </Button>
       ) : view.state === "activated" ? (
         <div className="grid gap-2">
-          <p className="text-sm font-medium text-emerald-700">{view.message}</p>
+          <p className="text-sm font-medium text-emerald-700">
+            CreatorOS 已领取
+          </p>
           <p className="text-xs text-muted-foreground">
-            授权和渠道配置已经安全保存，重新进入后即可使用。
+            重新进入应用后就可以使用。
           </p>
           <Button
             type="button"
@@ -141,25 +151,33 @@ export function EntitlementClaimPanel({
         </div>
       ) : view.state === "restartRequired" ? (
         <div className="grid gap-2">
-          <p className="text-sm text-amber-700">{view.message}</p>
+          <p className="text-sm text-amber-700">
+            这次领取已失效，请重新领取产品。
+          </p>
           <Button type="button" disabled={busy} onClick={() => void start()}>
             {busy ? <Loader2 className="animate-spin" /> : null}
-            重新领取
+            重新领取产品
           </Button>
         </div>
       ) : view.state === "revoked" ? (
-        <p className="text-sm text-destructive">{view.message}</p>
+        <p className="text-sm text-destructive">
+          这个产品目前无法领取，请联系购买时的服务方。
+        </p>
       ) : (
         <div className="grid gap-3">
           {view.userCode ? (
             <div className="rounded-md bg-background p-3 text-center">
-              <p className="text-xs text-muted-foreground">短时验证码</p>
+              <p className="text-xs text-muted-foreground">验证码</p>
               <p className="mt-1 font-mono text-xl font-semibold tracking-widest">
                 {view.userCode}
               </p>
             </div>
           ) : null}
-          <p className="text-xs text-muted-foreground">{view.message}</p>
+          <p className="text-xs text-muted-foreground">
+            {view.state === "recovering"
+              ? "正在继续上次未完成的领取。"
+              : "完成官方页面确认后，回到这里继续。"}
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {view.verificationUrl ? (
               <Button
@@ -168,12 +186,14 @@ export function EntitlementClaimPanel({
                 onClick={() => void openVerificationPage()}
               >
                 <ExternalLink />
-                打开领取页面
+                去官方页面确认
               </Button>
             ) : null}
             <Button type="button" disabled={busy} onClick={() => void poll()}>
               {busy ? <Loader2 className="animate-spin" /> : null}
-              {view.state === "recovering" ? "继续恢复" : "检查确认结果"}
+              {view.state === "recovering"
+                ? "继续完成领取"
+                : "我已确认，继续"}
             </Button>
           </div>
         </div>

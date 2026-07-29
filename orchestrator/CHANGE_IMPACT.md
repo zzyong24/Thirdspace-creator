@@ -204,6 +204,23 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   API-210..212 PASS、最终 device-flow fixture 逐字一致、真实 provider/领取 UI、journal
   fault-injection 与跨系统联调未闭环时 capability 不得开启、T-575 不得完成。
 
+## CI-CR-017 — 内容雷达人工上传逐字稿增量（T-603，2026-07-29）
+
+- **变更**：在既有“手动转写”旁增加人工上传 `.txt/.md/.srt/.vtt`，上传成功后写入同一
+  `ItemTranscript` 并沿用现有逐字稿拆解、选题候选和 Project 来源证据链。
+- **数据归属不变**：`backend/src/modules/intelligence` 仍是唯一写者；不新增表、文件资产、
+  对象存储或 worker 任务，浏览器只把规范化文本交给 typed operation。
+- **不可变边界**：只允许尚未完成且无活动转写的作品写入；已有 `done` 或
+  `queued/running` 不被覆盖。相同已完成正文的重试只读回既有资源。
+- **受影响工件**：
+  - `FR-CR-022/FLOW-CR-010/AC-CR-025` → 新增并待独立增量评审；
+  - 内容雷达服务契约 → 新增 `API-CR-032`；
+  - `contract/src/operations/intelligence.ts`、intelligence transport/service、内容雷达详情页
+    与测试 → 待 BUILD 重派生；
+  - 既有 `FR-CR-007` ASR 持久队列、`FR-CR-012/013` 选题与 Project 证据门不失效，只需回归。
+- **发布影响**：不改数据库 schema，不迁移历史数据；当前版本不受影响。T-603 完成前不得显示
+  无接线的上传按钮。
+
 ---
 
 ### How to use this file going forward

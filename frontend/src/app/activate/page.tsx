@@ -48,11 +48,11 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
 
   // 状态可读提示:到期 vs 从未激活,措辞不同。
   const heading =
-    check.status === "expired" ? "授权已过期" : "激活 CreatorOS";
+    check.status === "expired" ? "CreatorOS 已到期" : "开始使用 CreatorOS";
   const subtitle =
     check.status === "expired"
-      ? "你的授权已到期或失效,请输入有效激活码以继续使用。"
-      : "首次使用请输入激活码。激活将绑定本机(一机一码),年卡到期前可离线使用。";
+      ? "续费后可以重新领取，也可以输入新的激活码。"
+      : "如果你已经购买，请直接领取产品；也可以输入已有激活码。";
   const entitlementClaimEnabled =
     process.env.CREATOROS_ENTITLEMENT_CLAIM_ENABLED === "1";
 
@@ -77,21 +77,21 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
         </div>
         {channelSupportUrl ? (
           <p className="text-center text-xs text-muted-foreground">
-            激活码由 CreatorOS 授权方提供,遇问题请
+            激活码由购买时的服务方提供，遇到问题请
             <a
               href={channelSupportUrl}
               target="_blank"
               rel="noreferrer"
               className="text-primary underline underline-offset-2 hover:opacity-80"
             >
-              联系授权方
+              联系服务方
             </a>
             。
           </p>
         ) : (
           // 中性降级(SPEC §7 操作定义):纯文案,无链接无按钮。
           <p className="text-center text-xs text-muted-foreground">
-            请联系你的授权方获取激活码。
+            没有激活码时，请联系购买时的服务方。
           </p>
         )}
       </div>

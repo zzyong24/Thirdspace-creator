@@ -29,6 +29,7 @@ import {
   resolveRequestContext,
   verifyAccountSelection,
   isOwnershipError,
+  readRequestAccountId,
 } from "./request-context.server";
 
 const LOCAL = { userId: "user-zyongzhu", requestId: "r", source: "user" as const };
@@ -283,5 +284,34 @@ describe("verifyAccountSelection — RSC 宽松档(unselected)vs RPC 拒绝档(r
     await expect(
       verifyAccountSelection(BASE, "acct-1", "unselected"),
     ).rejects.toThrow("db down");
+  });
+});
+
+describe("readRequestAccountId — 自定义 route 的账号入口", () => {
+  it("x-account-id header 优先于 cookie", () => {
+    const req = new Request("http://localhost/api/knowledge/relate", {
+      headers: {
+        "x-account-id": "acct-header",
+        cookie: "creatoros_current_account=acct-cookie",
+      },
+    });
+    expect(readRequestAccountId(req)).toBe("acct-header");
+  });
+
+  it("缺 header 时从 current-account cookie 兜底并解码", () => {
+    const req = new Request("http://localhost/api/knowledge/relate", {
+      headers: {
+        cookie: "other=1; creatoros_current_account=acct%2Fencoded; tail=2",
+      },
+    });
+    expect(readRequestAccountId(req)).toBe("acct/encoded");
+  });
+
+  it("header 和 cookie 都没有时诚实返回 null", () => {
+    expect(
+      readRequestAccountId(
+        new Request("http://localhost/api/knowledge/relate"),
+      ),
+    ).toBeNull();
   });
 });

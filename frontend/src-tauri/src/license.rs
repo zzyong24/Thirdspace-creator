@@ -5220,7 +5220,12 @@ mod tests {
             client_config_refresh_url(43127),
             "http://127.0.0.1:43127/api/v1/local/client-config"
         );
-        let source = include_str!("license.rs");
+        // 必须在测试运行时读取，不能用 include_str! 把整份 license.rs 原样嵌入测试二进制。
+        // 否则本模块的灭靶点自检会扫到源码中的 obfstr 参数，形成自指假阳性。
+        let source = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/license.rs"),
+        )
+        .expect("read license.rs");
         let startup = source
             .split("pub fn startup_license_task")
             .nth(1)

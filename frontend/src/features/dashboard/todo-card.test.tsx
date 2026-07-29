@@ -37,6 +37,11 @@ const TODOS: ReadonlyArray<TodoRow> = [
     dueAt: null,
     priority: 1,
     status: "todo",
+    origin: "task",
+    reason: null,
+    plannedDate: null,
+    href: null,
+    completable: true,
   },
   {
     id: "task-2",
@@ -47,6 +52,11 @@ const TODOS: ReadonlyArray<TodoRow> = [
     dueAt: null,
     priority: 3,
     status: "todo",
+    origin: "task",
+    reason: null,
+    plannedDate: null,
+    href: null,
+    completable: true,
   },
 ];
 
@@ -109,5 +119,58 @@ describe("TodoCard 完成勾选 (T-247)", () => {
   it("空待办 → 诚实空态 + 选题池引导(既有行为不回归)", () => {
     const { container } = render(<TodoCard todos={[]} />);
     expect(container.querySelector('[data-slot="todo-empty"]')).not.toBeNull();
+  });
+
+  it("[T-599] 排期提醒显示日期且不可手工完成，列表最多展示 5 条", () => {
+    const schedule: TodoRow = {
+      ...TODOS[0]!,
+      id: "schedule:cal-1:today",
+      title: "今天计划发布 · 7月29日",
+      origin: "system_derived",
+      reason: "today",
+      plannedDate: "2026-07-29",
+      href: "/projects/project-1",
+      completable: false,
+    };
+    const rows = [schedule, ...TODOS, ...TODOS.map((todo, index) => ({
+      ...todo,
+      id: `extra-${index}`,
+    }))];
+    const { container } = render(<TodoCard todos={rows} />);
+
+    expect(container.querySelectorAll('[data-slot="todo-row"]')).toHaveLength(5);
+    expect(
+      container.querySelector('[data-slot="todo-planned-date"]')?.textContent,
+    ).toContain("2026-07-29");
+    expect(
+      container
+        .querySelector('[data-slot="todo-row"]')
+        ?.querySelector('[data-slot="todo-complete"]'),
+    ).toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="todo-row"]')
+        ?.querySelector('[data-slot="todo-derived-dot"]'),
+    ).not.toBeNull();
+  });
+
+  it("[T-599] 排期子读失败显示局部重试，但保留普通待办", () => {
+    const { container } = render(
+      <TodoCard
+        todos={TODOS}
+        scheduleReminderReadState={{
+          state: "error",
+          error: {
+            code: "schedule_reminders_unavailable",
+            message: "排期提醒暂不可用，请重试",
+          },
+        }}
+      />,
+    );
+
+    expect(
+      container.querySelector('[data-slot="schedule-reminder-error"]'),
+    ).not.toBeNull();
+    expect(container.querySelectorAll('[data-slot="todo-row"]')).toHaveLength(2);
   });
 });

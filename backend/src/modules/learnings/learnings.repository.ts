@@ -1,4 +1,12 @@
-import { and, desc, eq, inArray, sql, type Db } from "@creatoros/backend";
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  or,
+  sql,
+  type Db,
+} from "@creatoros/backend";
 import { learnings, learningApplications } from "./learnings.db-schema";
 import { OwnershipError } from "./learnings.errors";
 
@@ -36,6 +44,15 @@ export interface CreateLearningInput {
   validationStatus?: string;
   // [T-284c G3-A] 真实证据强度('grounded' | null);派生列,service 算好传入。
   evidenceStrength?: string | null;
+  contentFingerprint?: string | null;
+}
+
+export interface AdoptLearningInput {
+  title: string;
+  insight: string;
+  learningType: string;
+  projectId?: string | null;
+  contentFingerprint: string;
 }
 
 // [T-118a] listLearnings 的 additive 读过滤。都可选;都不传 → 全量(经验库/裁决台全量读)。
@@ -68,6 +85,7 @@ export interface LearningsRepository {
     filter?: ListLearningsFilter,
   ): Promise<{ rows: LearningRow[]; total: number }>;
   createLearning(input: CreateLearningInput): Promise<LearningRow>;
+  adoptLearning(input: AdoptLearningInput): Promise<LearningRow>;
   getLearningRowById(learningId: string): Promise<LearningRow>;
   updateLearningStatus(
     learningId: string,
@@ -173,11 +191,131 @@ export function createLearningsRepository(
           confidenceScore: input.confidenceScore,
           // [T-284c G3-A] 真实证据强度派生列(service 算好;无背书 → null)。
           evidenceStrength: input.evidenceStrength ?? null,
+          contentFingerprint: input.contentFingerprint ?? null,
           createdAt: deps.now(),
           updatedAt: deps.now(),
         })
         .returning();
       return inserted[0]!;
+    },
+
+    async adoptLearning(input) {
+      try {
+        return await db.transaction(async (tx) => {
+          const matches = await tx
+            .select()
+            .from(learnings)
+            .where(
+              and(
+                eq(learnings.userId, deps.userId),
+                eq(learnings.accountId, deps.accountId),
+                sql`${learnings.validationStatus} <> 'discarded'`,
+                or(
+                  eq(learnings.contentFingerprint, input.contentFingerprint),
+                  and(
+                    eq(learnings.title, input.title),
+                    eq(learnings.insight, input.insight),
+                  ),
+                ),
+              ),
+            );
+          const [keeper, ...duplicates] = matches.sort((left, right) => {
+            const status =
+              Number(left.validationStatus !== "validated") -
+              Number(right.validationStatus !== "validated");
+            if (status !== 0) return status;
+            return (
+              left.createdAt.localeCompare(right.createdAt) ||
+              left.id.localeCompare(right.id)
+            );
+          });
+
+          // [T-610] 重复历史不物理删：标 discarded 并释放活动唯一键，避免打断
+          // learning_applications / calibration suggestions 等既有引用。
+          if (duplicates.length > 0) {
+            await tx
+              .update(learnings)
+              .set({
+                validationStatus: "discarded",
+                contentFingerprint: null,
+                updatedAt: deps.now(),
+              })
+              .where(
+                and(
+                  eq(learnings.userId, deps.userId),
+                  eq(learnings.accountId, deps.accountId),
+                  inArray(
+                    learnings.id,
+                    duplicates.map((row) => row.id),
+                  ),
+                ),
+              );
+          }
+
+          if (keeper) {
+            const [adopted] = await tx
+              .update(learnings)
+              .set({
+                title: input.title,
+                insight: input.insight,
+                learningType: input.learningType,
+                projectId: keeper.projectId ?? input.projectId ?? null,
+                validationStatus: "validated",
+                confidenceScore: Math.max(40, keeper.confidenceScore),
+                contentFingerprint: input.contentFingerprint,
+                updatedAt: deps.now(),
+              })
+              .where(
+                and(
+                  eq(learnings.userId, deps.userId),
+                  eq(learnings.accountId, deps.accountId),
+                  eq(learnings.id, keeper.id),
+                ),
+              )
+              .returning();
+            return adopted!;
+          }
+
+          const [created] = await tx
+            .insert(learnings)
+            .values({
+              id: deps.nextId("learning"),
+              userId: deps.userId,
+              accountId: deps.accountId,
+              reviewId: null,
+              projectId: input.projectId ?? null,
+              learningType: input.learningType,
+              title: input.title,
+              insight: input.insight,
+              recommendation: "",
+              validationStatus: "validated",
+              confidenceScore: 40,
+              evidenceStrength: null,
+              contentFingerprint: input.contentFingerprint,
+              createdAt: deps.now(),
+              updatedAt: deps.now(),
+            })
+            .returning();
+          return created!;
+        });
+      } catch (error) {
+        // 两个窗口同时采纳同一经验时，唯一索引只允许一个事务成功。败方在事务回滚后
+        // 读回赢家，保持“重复采纳返回同一事实”而不是向用户冒一个冲突错误。
+        const [winner] = await db
+          .select()
+          .from(learnings)
+          .where(
+            and(
+              eq(learnings.userId, deps.userId),
+              eq(learnings.accountId, deps.accountId),
+              eq(learnings.contentFingerprint, input.contentFingerprint),
+              eq(learnings.validationStatus, "validated"),
+            ),
+          )
+          .limit(1);
+        if (winner) return winner;
+        throw error;
+      }
     },
 
     async getLearningRowById(learningId) {

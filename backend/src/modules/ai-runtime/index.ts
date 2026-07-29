@@ -65,6 +65,7 @@ export * from "./llm/retry-policy";
 export * from "./material-extract-runner";
 export * from "./material-match-runner";
 export * from "./material-summary";
+export * from "./model-authority";
 export * from "./remote-prompt-bundle";
 export * from "./multimodal/resolve";
 export * from "./planning-contract-runner";

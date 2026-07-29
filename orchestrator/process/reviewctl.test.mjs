@@ -83,6 +83,27 @@ function writePacket(root, name, packet) {
   return p;
 }
 
+function recordArgs(input) {
+  return [
+    "record",
+    "T-101",
+    "--spec",
+    "SPEC.md",
+    "--constitution",
+    "CONSTITUTION.md",
+    "--input",
+    input,
+    "--review",
+    "SPEC.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "cross-family",
+    "--model",
+    "test-reviewer",
+  ];
+}
+
 test("复审既有 finding 只允许销账字段变化，证据、处置和建议等全部冻结", () => {
   const frozenMutations = [
     ["category", "consistency"],
@@ -852,6 +873,35 @@ test("taskctl start 使用 allowlist，严格项目还校验 review receipt 与 
   r = run(TASKCTL, ["start", "T-101", "--backlog", "BACKLOG.md"], strict);
   assert.equal(r.status, 1, "评审 receipt 绑定的 spec hash 过期时必须阻断");
   assert.match(r.stderr + r.stdout, /过期|hash|spec/i);
+});
+
+test("constitution 变化先让 audit 过期，但允许通过下一轮 recheck 重新绑定", () => {
+  const root = tempProject();
+  const round1 = writePacket(root, "constitution-round-1.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "initial",
+    summary: "初审通过。",
+    findings: [],
+  });
+  let r = run(REVIEWCTL, recordArgs(round1), root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+
+  fs.appendFileSync(path.join(root, "CONSTITUTION.md"), "\n自动同步元数据更新。\n");
+  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 1, "未复审的 constitution 变化必须继续阻断 audit");
+  assert.match(r.stderr + r.stdout, /constitution hash 已变化/);
+
+  const round2 = writePacket(root, "constitution-round-2.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "recheck",
+    summary: "复核 constitution 变化后继续通过。",
+    findings: [],
+  });
+  r = run(REVIEWCTL, recordArgs(round2), root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.match(r.stdout, /round 2\/3.*PASS/);
+  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
 });
 
 test("CONCERNS/FAIL receipt 是可审计结论，但都不是开工授权", () => {

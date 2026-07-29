@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { id, iso8601, platformId, projectStageName, publicationStatus } from "../primitives";
+import {
+  calendarDate,
+  id,
+  iso8601,
+  platformId,
+  projectStageName,
+  publicationStatus,
+} from "../primitives";
 
 // PAGE composition DTO for the Dashboard page. Modeled from
 // `DashboardViewModel` in frontend/src/types/view-models.ts. Page DTOs project
@@ -49,6 +56,13 @@ const todoRow = z.object({
   dueAt: iso8601.nullable(),
   priority: taskPriority,
   status: taskStatus,
+  origin: z.enum(["task", "system_derived"]),
+  reason: z
+    .enum(["overdue", "today", "upcoming_not_ready", "video_render"])
+    .nullable(),
+  plannedDate: calendarDate.nullable(),
+  href: z.string().nullable(),
+  completable: z.boolean(),
 });
 
 const topicRow = z.object({
@@ -81,12 +95,26 @@ const creationSuggestion = z.object({
 });
 
 const viewModelError = z.object({ code: z.string(), message: z.string() });
+export const scheduleReminderReadState = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("ready"), error: z.null() }),
+  z.object({
+    state: z.literal("error"),
+    error: z.object({
+      code: z.literal("schedule_reminders_unavailable"),
+      message: z.string(),
+    }),
+  }),
+]);
+export type ScheduleReminderReadState = z.infer<
+  typeof scheduleReminderReadState
+>;
 
 export const dashboardPage = z.object({
   scenario: z.enum(["default", "empty", "loading", "error", "selected"]),
   kind: z.literal("dashboard"),
   loading: z.boolean(),
   error: viewModelError.nullable(),
+  scheduleReminderReadState,
   metrics: z.array(metricCard),
   // 诚实空态(T-143 ③):无进行中项目时为 null,前端渲染「还没有进行中的项目」空态,
   // 不再回退演示假项目 / sentinel 占位。

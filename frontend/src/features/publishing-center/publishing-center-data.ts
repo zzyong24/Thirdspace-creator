@@ -1,7 +1,6 @@
 import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
-import { buildPublishingCenterViewModel } from "@/fixtures/selectors";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
 import type {
   PlatformShare,
@@ -33,16 +32,14 @@ import type {
  * snapshot contributes nothing to the rail and renders a neutral "暂无数据" 表现
  * cell rather than a fabricated number.
  *
- * Honest empty state (no more fixture masking):
+ * Honest empty state (no fixture masking):
  *   - per-output: a failed publications read for one output contributes no rows,
  *   - per-pub rail: a failed/empty snapshot read drops that pub from the rail
  *     aggregation but never throws,
- *   - wholesale: if the projects read throws, the WHOLE VM falls back to the
- *     fixture builder (the only remaining fallback — an outright read failure,
- *     not an empty result),
- *   - empty: zero real publications → an HONEST empty VM (publications:[] + an
- *     empty rail), so the page renders its 空态 instead of masking it with the
- *     fixture baseline.
+ *   - wholesale: if the projects read throws, the WHOLE VM becomes an explicit
+ *     error projection; it never falls back to fixture data,
+ *   - empty: zero real publications → an honest empty performance projection
+ *     (publications:[] + empty/zero rail); the separate calendar stays visible.
  *
  * The contract client is injected so this helper is unit-testable without the
  * real in-process backend.
@@ -134,6 +131,13 @@ const STATUS_LABELS: Record<PublicationRow["status"], string> = {
   draft: "草稿",
   removed: "已下架",
 };
+
+const CONTENT_TYPE_TABS = [
+  { id: "all", label: "全部" },
+  { id: "video", label: "视频" },
+  { id: "image", label: "图文" },
+  { id: "audio", label: "音频" },
+] as const;
 
 function platformLabel(platform: string): string {
   return PLATFORM_LABELS[platform] ?? platform;
@@ -483,7 +487,9 @@ function ratePct(interactions: number, plays: number): string {
  * An empty `railInputs` (or one with no snapshots) yields empty/`—` blocks so
  * the page renders honest 空态 instead of fabricating data.
  */
-function buildRailFromSnapshots(railInputs: ReadonlyArray<RailInput>): RailBlocks {
+function buildRailFromSnapshots(
+  railInputs: ReadonlyArray<RailInput>,
+): RailBlocks {
   const withSnapshot = railInputs.filter(
     (r): r is RailInput & { snapshot: LatestSnapshot } => r.snapshot !== null,
   );
@@ -590,25 +596,21 @@ function buildRailFromSnapshots(railInputs: ReadonlyArray<RailInput>): RailBlock
 /**
  * Build the REAL Publishing Center ViewModel.
  *
- * Wholesale fixture fallback survives ONLY for an outright projects-read
- * failure (`realRows === null`); a successful read with zero rows returns an
- * HONEST empty VM (publications:[] + an empty rail) so the page shows its 空态
- * rather than masking it.
+ * Projects-read failure (`realRows === null`) returns an explicit error VM；
+ * a successful read with zero rows returns an honest empty performance
+ * projection. Neither branch reads or renders fixture data.
  *
  * @param client  the contract client (server-bound). Injected for tests.
  */
 export async function buildPublishingCenterViewModelReal(
   client: PublishingCenterDataClient = defaultClient as unknown as PublishingCenterDataClient,
 ): Promise<PublishingCenterViewModel> {
-  // [T-050] fixture VM 只剩 tab 结构(锁定顺序/文案)来源;读失败不再整套回退
-  // demo 数据,改渲染诚实错误态(空表 + error 文案)。
-  const fixtureVm = buildPublishingCenterViewModel();
   const errorVm = (): PublishingCenterViewModel => ({
     scenario: "default",
     kind: "publishing-center",
     loading: false,
     error: { code: "read_failed", message: "发布数据读取失败,请刷新重试" },
-    contentTypeTabs: fixtureVm.contentTypeTabs.map((tab) => ({
+    contentTypeTabs: CONTENT_TYPE_TABS.map((tab) => ({
       id: tab.id,
       label: tab.label,
       count: 0,
@@ -638,9 +640,8 @@ export async function buildPublishingCenterViewModelReal(
   const realRows = assembled.rows;
   const rail = buildRailFromSnapshots(assembled.railInputs);
 
-  // The content-type tab LABELS come from the fixture (locked order/labels);
-  // the COUNTS reflect the real rows (zero when empty).
-  const contentTypeTabs = fixtureVm.contentTypeTabs.map((tab) => ({
+  // 兼容旧 ViewModel 字段；页面不再渲染这些 tabs。
+  const contentTypeTabs = CONTENT_TYPE_TABS.map((tab) => ({
     id: tab.id,
     label: tab.label,
     count:
@@ -649,9 +650,7 @@ export async function buildPublishingCenterViewModelReal(
         : realRows.filter((row) => row.contentType === tab.id).length,
   }));
 
-  // Zero real rows → an HONEST empty VM. publications:[] drives the page's
-  // existing 空态; the rail is the empty/`—` skeleton from buildRailFromSnapshots
-  // (no fixture masking). Non-zero → real rows + real aggregated rail.
+  // Zero real rows → an honest empty rail；页面仍会保留月历。
   return {
     scenario: "default",
     kind: "publishing-center",

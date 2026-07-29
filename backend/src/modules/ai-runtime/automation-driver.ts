@@ -77,10 +77,13 @@ export interface AutomationDriverTickDeps {
   leaseSeconds?: number;
   /** 启动恢复只对声明 missed-run=once 的系统聚合作业生效。 */
   startupRecovery?: boolean;
+  /** 复用唯一分钟 tick 清理无活跃执行的僵尸 job_run；不得另起第二个 timer。 */
+  sweepStaleJobRuns?: () => Promise<number>;
 }
 
 export interface AutomationDriverTickReport {
   recovered: Awaited<ReturnType<PersistentTaskService["recoverExpiredLeases"]>>;
+  sweptJobRuns: number;
   enqueued: number;
   overlapped: number;
   succeeded: number;
@@ -141,9 +144,11 @@ export async function runAutomationDriverTick(
   if (!deps.registry.isSealed()) {
     throw new Error("自动化 handler registry 必须先 seal");
   }
+  const sweptJobRuns = await deps.sweepStaleJobRuns?.() ?? 0;
   const recovered = await deps.tasks.recoverExpiredLeases();
   const report: AutomationDriverTickReport = {
     recovered,
+    sweptJobRuns,
     enqueued: 0,
     overlapped: 0,
     succeeded: 0,

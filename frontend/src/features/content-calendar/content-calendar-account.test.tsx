@@ -14,6 +14,13 @@ import {
   type ContentCalendarReadClient,
 } from "./content-calendar-page";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 afterEach(() => cleanup());
 
 const NOW = new Date("2026-07-15T10:00:00");
