@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
+| T-609 | 定位复盘经验采纳后未出现在知识库的原因【真机数据闭环诊断·用户 2026-07-29】 | ✅ 免审 | — | [诊断报告](docs/research/2026-07-29-review-learning-knowledge-root-cause.md) | 读取当前桌面包真实日志与本机数据库，逐段核对 `review.analyze` 经验候选、点击采纳后的持久化结果、知识库页面实际查询的数据源和筛选条件，判断是采纳失败、写入了错误领域还是知识库读面漏接；本轮先给根因与证据，不擅自修改领域数据。 |
 | T-608 | 复盘复盘页点击“帮我复盘”弹出第二个 Copilot 的原因【真机 UX 诊断·用户截图 2026-07-29】 | ✅ 免审 | — | [诊断报告](docs/research/2026-07-29-review-copilot-overlay-root-cause.md) | 只读追踪复盘 CTA、侧栏 AI 助手卡、全局 overlay 与项目会话 scope，核清截图中的弹窗是否是第二个 Copilot、为何没有复用页面已有入口，以及当前实现与“复盘页同一 rail”设计注释是否漂移；本轮先给根因与正确收口方向，不擅自修改交互。 |
 | T-600 | 将自动化中心收口为四个真实任务并退役作品明细兼容任务【产品语义·用户确认 2026-07-29】 | ✅ 免审 | — | [T-598 CONTRACT](docs/superpowers/specs/2026-07-29-content-radar-single-scheduler.contract.md) | 自动化中心只保留“我的作品数据同步、我的作品评论同步、内容雷达自动同步、每日自动生成选题”；`self.detail` 不再作为独立任务新建或展示，存量统一停用但保留运行历史，底层公开作品采集仍由 `self.metrics` 复用既有 canonical collector。 |
 | T-598 | 重新梳理并改造定时任务，使其完整承接内容雷达能力【产品+调度契约·用户 2026-07-29】 | ✅ | CONCERNS(已处理) | [统一调度 PLAN](docs/superpowers/specs/2026-07-24-content-radar-unified-automation-design.md) · [T-598 CONTRACT](docs/superpowers/specs/2026-07-29-content-radar-single-scheduler.contract.md) · [精简自动化底座](docs/superpowers/specs/2026-07-26-creatoros-automation-kernel-minimal.md) | 以当前内容雷达的来源类型、来源级启停/频率/采集账号、手动同步和运行历史为真实输入，审计自动化页、`scheduled_job/job_run`、持久任务与现存独立 timer 的错位；统一“来源在哪里配置、账号级任务在哪里开关、运行结果在哪里查看”，删除过时采集任务与重复调度，不新增第二套执行状态机。方案 A 与单一调度边界已由 DEC-AUTO-001 确认。 |
