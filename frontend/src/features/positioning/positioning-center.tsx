@@ -271,6 +271,7 @@ function PageHeader({
           triggerIcon="plus"
           title="新建定位版本"
           description="更新账号画像，或追加一条新的不可变定位陈述。"
+          confirmClearOnOpen
         />
       )}
     </header>

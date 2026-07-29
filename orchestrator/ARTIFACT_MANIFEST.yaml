@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "16-backend-tdd"        # 2026-07-05(T-145): 更新至真实 frontier;stage 分段机制已被 BACKLOG+SPEC gate 取代(见 CLAUDE.md/BACKLOG.md)
   frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
-  updated_at: "2026-07-26"
+  updated_at: "2026-07-27"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -484,6 +484,52 @@ stages:
       API-537-01..05、迁移、owner/collector 双身份、错误映射、隐私负测与 TEST-537-01..13
       已完成三轮内部复审。正式 Gate 仍依赖 RAT-537-01；未满足前不确认②、不生成 BUILD
       manifest，也不实现假 selector。
+
+  "T-575-1-plan-contract":
+    status: "accepted-risk"
+    gate: "01-product-gate + independent spec-review + 03-scope-budget-gate + 12-service-contract-gate + 15b-contract-completeness-gate"
+    gate_status: "accepted-risk"
+    confirmation_required: true
+    confirmation_status: "confirmed"
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md"
+      - existing: "docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.review.md"
+      - existing: "docs/contracts/creator-entitlement-claim-consumer-v1.md"
+      - existing: "docs/contracts/growth-entitlement-delivery-v1.descriptor.json"
+      - existing: "docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-TSL-001"
+      - existing: "orchestrator/CHANGE_IMPACT.md#CI-TSL-001"
+      - existing: "orchestrator/TRACEABILITY_MATRIX.md#T-575--T-076-CREATOR-聚焦追踪"
+    notes: >
+      Round 1/2 independent review FAIL 均保留。Round 2 的反馈降级入口与高级诊断确认边界已回写；
+      claim 上游从“无契约”变化为 AM final exact Round 2 PASS：Creator 已逐字复制 descriptor
+      与 fixture、完成 cmp/SHA pin 并重跑 AM verifier。终端安全交换采用 Growth API-210..212
+      device authorization + S256 PKCE；API-212 launch 后先写独立 OS protected pending-consume
+      journal，再调用 AM，同 requestId+同 consume digest exact replay，授权原子落盘并读后验真
+      才删 journal。Growth device-flow Round 2 与本地 API-210..212/0028/durable readiness BUILD 已 PASS；Creator consumer
+      Round 3 独立复审为 CONCERNS（0 blocker/2 major）：pending journal 删除状态表已回写。
+      用户以 DEC-TSL-002 三轮后裁决 avoid 独立 feedback readiness 平台，HARD-575-003 关闭；
+      真实 closed 202 publicRef 是本次事务唯一成功证明。Violation: 未采纳 reviewer 建议的新
+      readiness consumer wire。Why needed: 该建议超出已确认范围且既有 AM context + API-170
+      已能 fail-closed。Simpler alternative rejected because: 用 URL、telemetry 或历史成功猜
+      ready 无法证明本次提交。Growth device-flow Round 2 已 PASS，允许默认关闭 BUILD，
+      capability 启用/真实 E2E/任务完成继续受 HARD-575-001。
+
+  "T-575-4-build":
+    status: "blocked"
+    gate: "13-tdd-gate + 10-frontend-validation-gate + 14-integration-gate"
+    gate_status: "blocked"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md"
+    notes: >
+      DEC-TSL-002 已授权完整 BUILD，禁止 Round 4。AM final descriptor/fixture 已复制并 pin；
+      实现 device-flow、OS protected pending-consume journal、AM exact consumer 与 feedback
+      真实 receipt，同时保持两项 capability 默认关闭。定向/全量前端、Rust、typecheck、目标
+      lint、production build、boundary/orphan 已完成；确定性 journal fault tests 覆盖 exact
+      replay 与原子授权读回。全量 lint/test-integrity 保留共享脏树既有失败。Growth Round 2
+      与本地 BUILD 均已通过；live HTTPS 三仓 E2E、部署、正式密钥、真实 OS keychain
+      进程强杀矩阵与 release receipt 仍是 release/完成门，不得冒充上线。
 
 stage_defaults:
   valid_statuses:

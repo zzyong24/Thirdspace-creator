@@ -92,6 +92,12 @@ function sectionCards(): NodeListOf<Element> {
 describe("ScriptStructureToggle(默认视图)", () => {
   it("有 sections → 默认结构编辑视图(徽章/标题/正文/时间字数可见);切编辑回 TipTap children", () => {
     renderToggle(SECTIONS);
+    expect(
+      screen.getByRole("button", { name: "纯文本稿" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "分镜脚本" }),
+    ).toBeInTheDocument();
     // 默认即结构视图:编辑器 children 不渲,分段卡渲 3 张。
     expect(screen.queryByTestId("editor-stub")).toBeNull();
     expect(sectionCards()).toHaveLength(3);

@@ -740,6 +740,8 @@ export interface PositioningDraftDialogProps {
   readonly statementSeed?: PositioningStatementSeed;
   /** 入口对应的默认页签。规则卡入口直达 rules，避免用户还要猜页签。 */
   readonly initialTab?: DraftTab;
+  /** “重新定位”入口：先确认，再用空白草稿打开；不会删除已保存历史。 */
+  readonly confirmClearOnOpen?: boolean;
 }
 
 type DraftTab = "profile" | "rules" | "statement";
@@ -763,6 +765,7 @@ export function PositioningDraftDialog({
   description,
   statementSeed,
   initialTab = "profile",
+  confirmClearOnOpen = false,
 }: PositioningDraftDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [tab, setTab] = React.useState<DraftTab>(initialTab);
@@ -777,6 +780,27 @@ export function PositioningDraftDialog({
       setOpen(nextOpen);
     },
     [initialTab],
+  );
+  const openBlankDraft = React.useCallback(() => {
+    const accepted = window.confirm(
+      "新建定位版本会清空本次表单内容并重新开始；已保存的历史定位不会删除。是否继续？",
+    );
+    if (!accepted) return;
+    setSavedProfile(null);
+    setTab(initialTab);
+    setOpen(true);
+  }, [initialTab]);
+
+  const trigger = (
+    <Button
+      variant={triggerVariant}
+      size={triggerSize}
+      data-testid="positioning-draft-trigger"
+      onClick={confirmClearOnOpen ? openBlankDraft : undefined}
+    >
+      {triggerIcon !== "none" ? <Icon /> : null}
+      {triggerLabel}
+    </Button>
   );
 
   // Stable form ids so the sticky footer button can submit the active tab's form.
@@ -798,16 +822,7 @@ export function PositioningDraftDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant={triggerVariant}
-          size={triggerSize}
-          data-testid="positioning-draft-trigger"
-        >
-          {triggerIcon !== "none" ? <Icon /> : null}
-          {triggerLabel}
-        </Button>
-      </DialogTrigger>
+      {confirmClearOnOpen ? trigger : <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         showCloseButton
         className="flex max-h-[85vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 p-0 sm:max-w-3xl"

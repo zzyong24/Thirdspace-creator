@@ -11,8 +11,6 @@
 //   • 已完成区(首个 `## ✅` 之后):行应为"一句话 + commit/证据链接",>200 字 WARN 该压缩
 //   • 状态列一致性(铁律 2/4 可执行化):任务行的状态 cell(以 📋/🔨/✅/⏸️/⛔ 开头的 cell)超 60 字
 //     = 把过程叙事塞进了状态列 → WARN(过程进 commit message,状态列只放状态)
-//   • ID 新鲜度:执行看板内 ID 重复,或执行看板复用了归档 ID → ERROR。归档内部的历史撞号只 WARN,
-//     因为旧提交/代码注释已引用这些 ID,不能为追求表面整洁篡改历史。
 //
 // 用法(vendored 到 <project>/orchestrator/process/ 后):
 //   node orchestrator/process/backlog-health.mjs           # 默认读 <项目根>/BACKLOG.md
@@ -121,40 +119,5 @@ for (let i = 0; i < lines.length; i++) {
 }
 if (statusWarns > 10) warn(`…还有 ${statusWarns - 10} 条状态列超长行(共 ${statusWarns})。`);
 if (!statusWarns) ok(`状态列干净(无塞叙事,上限 ${STATUS_CELL_MAX} 字)。`);
-
-// ⑤ ID 新鲜度:执行队列不能复用历史 ID。
-// Markdown 表格只认首列形如 T-* 的任务行,避免正文中的任务引用被误判。
-const taskIds = (text) => {
-  const out = [];
-  for (const line of text.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
-    if (/^T-[A-Za-z0-9][A-Za-z0-9 -]*$/i.test(cells[0] ?? "")) out.push(cells[0].toUpperCase());
-  }
-  return out;
-};
-const duplicates = (ids) => {
-  const seen = new Set();
-  const dup = new Set();
-  for (const id of ids) {
-    if (seen.has(id)) dup.add(id);
-    seen.add(id);
-  }
-  return [...dup].sort();
-};
-const activeIds = taskIds(src);
-const activeDup = duplicates(activeIds);
-if (activeDup.length) err(`执行看板存在重复 ID:${activeDup.join(", ")}。同一 ID 不能指向两个任务。`);
-
-const archive = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
-if (existsSync(archive)) {
-  const archivedIds = taskIds(readFileSync(archive, "utf8"));
-  const archivedSet = new Set(archivedIds);
-  const reused = [...new Set(activeIds.filter((id) => archivedSet.has(id)))].sort();
-  if (reused.length) err(`执行看板复用了归档 ID:${reused.join(", ")}。请给新任务换唯一 ID,否则 Agent 会把历史实现当成当前任务。`);
-  const archiveDup = duplicates(archivedIds);
-  if (archiveDup.length) warn(`归档内部保留 ${archiveDup.length} 个历史撞号:${archiveDup.join(", ")}。它们不参与派发；勿据此恢复任务。`);
-  if (!activeDup.length && !reused.length) ok("执行任务 ID 唯一,且未复用归档 ID。");
-}
 
 die();

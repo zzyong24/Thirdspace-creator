@@ -5,6 +5,69 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-PKG565-002
+Date: 2026-07-27
+Stage: T-565 PLAN / RAT
+Type: user-confirmed-external-execution
+Decision: 授权 agent 创建、推送并操作 T-565 的原生 Windows RAT 工作流；GitHub Actions
+          费用不设上限，由 agent 根据验证需要持续运行和修复，直到 Product Gate 所需的
+          Burn payload/cache/代理/中断、Win32 current/journal kill recovery 与 reparse
+          containment 证据形成。
+Rationale: T-565 重写 SPEC 的 cross-family Round 1 唯一未闭环 blocker 是原生 Windows
+           可行性证据；本机没有 Windows/Wine/VM，私有仓 GitHub-hosted Windows runner
+           是当前可执行的真实 Win32/NTFS 环境。用户明确回复“授权运行windows rat
+           没有费用上限 你来操作”。
+Pattern-Ref: PAT-001
+Pattern Tier: T1（WiX Burn 直接采用 + CreatorOS 窄事务 worker；命中 BG-003 官方方案、
+              BG-005 覆盖 acquisition/trust，worker 只补产品事务缺口）
+Affected Artifacts: T-565 SPEC/review、Windows RAT workflow、RAT evidence、BACKLOG。
+Explicit Limits: 仅授权验证和为验证所需的 branch/workflow push；不创建或发布 GitHub
+                 Release，不对用户分发安装包，不将 RAT spike 冒充生产实现。
+Supersedes: DEC-PKG565-001 的“不得触发付费 Windows runner”限制；其他限制继续有效。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-PKG565-001
+Date: 2026-07-27
+Stage: T-565 PLAN
+Type: user-confirmed-architecture-direction
+Decision: 重选 CreatorOS Windows Runtime 交付架构。默认发布小型 Web Installer，同时保留
+          完整 Offline Installer；两者使用同一签名分层 Runtime Image 与安装事务。setup
+          必须完成全部必需 runtime 的下载/读取、校验、物化和 smoke；正式应用首启完整
+          runtime 解压次数恒为 0。必须实质减少 node_modules/JS 散文件，不能只把原 tar
+          改成联网下载。Windows 正式安装树不得保留通用 node_modules/源码项目结构；纯
+          JS/JSON 优先 bundle，只有 Chromium、媒体工具、WASM、native addon、migrations
+          等有真实路径要求的资产可进入签名 allowlist。安装失败不得显示成功或转移给首启修复。
+Rationale: Windows 0.2.0 真机在安装后白屏约 30 分钟，已确认是在处理大量小文件。现有
+           NSIS POSTINSTALL 失败后保留 tar、首启 AppData 兼容解压的 fail-forward 破坏
+           “安装完成即可使用”与诚实失败边界；当前 runtime 26,381 个文件中 24,756 个来自
+           node_modules，在线下载本身不能消除 NTFS/Defender 小文件成本。RAT-565-01 已证明
+           高置信 prune 可把普通文件减至 16,381（-37.91%）且真实能力 smoke 通过，但距离
+           ≤5,000 仍必须进行 production closure bundle；`pnpm deploy`/Next standalone/压缩
+           容器都不能单独成为最终解法。
+Architecture Refinement: 实际 Tauri 壳与四层 runtime 组成不可变、版本化 compatibility set；
+                         固定 shortcut 只启动稳定 launcher，installer 在 pending set 真 smoke
+                         后以单一 `current` 指针同时切换壳与 runtime。0.2.0 首迁移不信任旧 tar
+                         为新 layer，必须全量取得新签名 layers，并在提交前保留 legacy fallback。
+                         默认 Web 发布阈值：首装 ≤500 MiB、core-only 更新 ≤100 MiB、每成功
+                         安装 CDN 成本 ≤US$0.10；超限阻断或另开 DEC。
+Source: 用户 2026-07-27 明确要求“必须得 setup 阶段完成小文件的解压缩，并且必须合理的减少
+        小文件”；在收到“默认 Web Installer + 保留 Offline Installer”的推荐与确认请求后
+        回复“启动”。
+Affected Artifacts: T-565、Windows runtime packaging、installer、updater、release workflow、
+                    desktop startup resolver；替代 T-487 的 Windows 交付条款。
+Invalidates: T-487/T-493 中“NSIS hook 失败后首启兼容解压可作为发布兜底”以及 T-487 已完成的
+             Windows 零解压验收结论；macOS 交付条款不受影响。
+Explicit Limits: 不触发付费 Windows runner、不发布安装包、不改变领域数据存储、不把必需
+                 runtime 改成应用首启/功能首次使用时按需下载。
+Owner: user+agent
+Revisit Trigger: Windows 原生 RAT 证明 WiX Burn/少文件方案不可行，或用户改变在线/离线分发取舍。
+Status: active
+```
+
+```text
 ID: DEC-MC-002
 Date: 2026-07-26
 Stage: T-501 4-build

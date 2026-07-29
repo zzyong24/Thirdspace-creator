@@ -687,4 +687,26 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | TEST-537-12 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | NFR-537-02, NFR-537-05 |
 | TEST-537-13 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md | FR-537-08, NFR-537-04 |
 | RAT-537-01 | test | docs/superpowers/specs/2026-07-26-content-radar-collector-account.md | FR-537-01, FR-537-04, FR-537-06, FR-537-07 |
+| DEC-TSL-001 | decision | orchestrator/DECISION_LOG.md | FR-575-01..07 |
+| FR-575-01 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FLOW-575-01, TEST-575-01 |
+| FR-575-02 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FLOW-575-01, API-TSB-001, TEST-575-04 |
+| FR-575-03 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | PORT-575-001, UI-575-001, TEST-575-02 |
+| FR-575-04 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | HARD-575-001, HARD-575-002, PORT-575-001, UI-575-001, TEST-575-02, TEST-575-05 |
+| FR-575-05 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FLOW-575-02, API-575-001, TEST-575-03 |
+| FR-575-06 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | API-575-001, UI-575-002, HARD-575-003, TEST-575-03 |
+| FR-575-07 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | UI-575-002, TEST-575-03 |
+| FLOW-575-01 | flow | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-01..04 |
+| FLOW-575-02 | flow | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-05..07 |
+| PORT-575-001 | operation | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-03, FR-575-04 |
+| API-575-001 | api | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-05, FR-575-06 |
+| UI-575-001 | component | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-03, FR-575-04 |
+| UI-575-002 | component | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-05..07 |
+| TEST-575-01 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-01 |
+| TEST-575-02 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-03, FR-575-04 |
+| TEST-575-03 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-05..07 |
+| TEST-575-04 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-02 |
+| TEST-575-05 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-04, FR-575-06 |
+| HARD-575-001 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-04 |
+| HARD-575-002 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-04, TEST-575-02 |
+| HARD-575-003 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-06, TEST-575-03 |
 ```

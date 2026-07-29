@@ -19,5 +19,19 @@
     "firstRedAt": null,
     "registeredAt": "2026-07-26T16:07:30.855Z",
     "deterrence": false
+  },
+  "LED-006": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-07-27T10:00:39.028Z",
+    "deterrence": false
+  },
+  "LED-007": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-07-27T11:13:42.552Z",
+    "deterrence": false
   }
 }

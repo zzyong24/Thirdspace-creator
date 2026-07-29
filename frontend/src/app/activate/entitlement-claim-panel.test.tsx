@@ -6,14 +6,17 @@ import { EntitlementClaimPanel } from "./entitlement-claim-panel";
 
 const invoke = vi.fn();
 const openUrl = vi.fn();
+const relaunch = vi.fn();
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke }));
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl }));
+vi.mock("@tauri-apps/plugin-process", () => ({ relaunch }));
 
 describe("EntitlementClaimPanel", () => {
   beforeEach(() => {
     invoke.mockReset();
     openUrl.mockReset();
+    relaunch.mockReset();
     invoke.mockImplementation(async (command: string) => {
       if (command === "entitlement_claim_resume") return null;
       return {
@@ -70,9 +73,43 @@ describe("EntitlementClaimPanel", () => {
     const user = userEvent.setup();
     render(<EntitlementClaimPanel enabled />);
     await user.click(screen.getByRole("button", { name: "领取并激活" }));
-    await user.click(screen.getByRole("button", { name: "我已确认，继续" }));
+    await user.click(screen.getByRole("button", { name: "检查确认结果" }));
     expect(
       await screen.findByRole("button", { name: "重新领取" }),
     ).toBeInTheDocument();
+  });
+
+  it("[T-575] AM 授权原子保存后先显示激活成功，再由用户明确重新进入应用", async () => {
+    invoke.mockImplementation(async (command: string) => {
+      if (command === "entitlement_claim_resume") return null;
+      if (command === "entitlement_claim_start") {
+        return {
+          state: "awaitingApproval",
+          userCode: "ABCD-EFGH",
+          verificationUrl: "https://growth.example.com/claim",
+          expiresAt: "2026-07-27T12:15:00.000Z",
+          retryAfterSeconds: 5,
+          message: "请在网页确认领取",
+        };
+      }
+      return {
+        state: "activated",
+        userCode: null,
+        verificationUrl: null,
+        expiresAt: null,
+        retryAfterSeconds: null,
+        message: "权益已领取并激活",
+      };
+    });
+    const user = userEvent.setup();
+    render(<EntitlementClaimPanel enabled />);
+
+    await user.click(screen.getByRole("button", { name: "领取并激活" }));
+    await user.click(screen.getByRole("button", { name: "检查确认结果" }));
+
+    expect(await screen.findByText("权益已领取并激活")).toBeInTheDocument();
+    expect(relaunch).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "进入 CreatorOS" }));
+    expect(relaunch).toHaveBeenCalledTimes(1);
   });
 });

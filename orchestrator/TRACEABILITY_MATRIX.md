@@ -106,6 +106,14 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 |---|---|---|---|---|---|
 | DEC-COL-001；FR-537-01..09；NFR-537-01..05 | FLOW-537-01/02 | ENT-537-01..03；IA-537-01/02 | [PLAN](../docs/superpowers/specs/2026-07-26-content-radar-collector-account.md)；[CONTRACT](../docs/superpowers/specs/2026-07-26-content-radar-collector-account.contract.md)；API-537-01..05 | TEST-537-01..13；RAT-537-01 | 三轮评审文档内部 PASS；正式 Gate 因第二个有效抖音账号的真实 RAT 未通过而 BLOCKED，生产代码未改 |
 
+## T-575 / T-076-CREATOR 聚焦追踪
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-TSL-001；FR-575-01/02 | FLOW-575-01 | 既有激活页、设置授权卡与 T-534 runtime | T-534 `API-TSB-001` | TEST-575-01/04 | 已发布基线可复用；本任务只做不回归验证 |
+| FR-575-03/04；HARD-575-001/002 | FLOW-575-01 | UI-575-001 | [Creator consumer CONTRACT](../docs/contracts/creator-entitlement-claim-consumer-v1.md)；PORT-575-001；AM final descriptor/vector pinned；Growth API-210..212/0028/durable readiness local BUILD PASS | TEST-575-02/05 | 三仓 local BUILD verified with capability off；live HTTPS E2E、部署、正式密钥与 release receipt 仍为完成门 |
+| FR-575-05..07；HARD-575-003 | FLOW-575-02 | UI-575-002 | API-575-001 + Growth T-069 API-AM-013/API-170 | TEST-575-03/05 | DEC-TSL-002 closed HARD-575-003：不新增 readiness wire，真实 closed 202 receipt 才成功 |
+
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链
@@ -147,4 +155,7 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | DEC-CR-003, DEC-CR-007, DEC-CR-012, DEC-CR-013, DEC-CR-015, FR-CR-021, NFR-CR-002, NFR-CR-007, NFR-CR-012 | FLOW-CR-009 | ENT-CR-002, ENT-CR-003, ENT-CR-004, ENT-CR-005, ENT-CR-006, ENT-CR-009, ENT-CR-010, ENT-CR-012 | IA-CR-003, IA-CR-005, IA-CR-007 | API-CR-031 | NONE | PLANNED |
 | FR-FDBR-01, FR-FDBR-02, FR-FDBR-03, FR-FDBR-04, FR-FDBR-05, FR-FDBR-06 | NONE | UI-FDBR-001, PURE-FDBR-001 | NONE | API-FDBR-001, API-FDBR-002, API-FDBR-003 | TEST-FDBR-001, TEST-FDBR-002, TEST-FDBR-003, TEST-FDBR-004, TEST-FDBR-005, TEST-FDBR-006, TEST-FDBR-007 | OK |
 | DEC-TSB-001, FR-TSB-001, FR-TSB-002, FR-TSB-003, NFR-TSB-001 | FLOW-TSB-001 | ENT-TSB-001 | UI-TSB-001, UI-TSB-002 | API-TSB-001 | TEST-TSB-001, TEST-TSB-002, TEST-TSB-003, TEST-TSB-004, TEST-TSB-005, TEST-TSB-006, TEST-TSB-007, TEST-TSB-008, TEST-TSB-009, TEST-TSB-010 | OK |
+| DEC-TSL-001, FR-575-01, FR-575-02 | FLOW-575-01 | ENT-TSB-001 | UI-TSB-001, UI-TSB-002 | API-TSB-001 | TEST-575-01, TEST-575-04 | RISK |
+| FR-575-03, FR-575-04, HARD-575-001, HARD-575-002 | FLOW-575-01 | NONE | UI-575-001 | PORT-575-001 | TEST-575-02, TEST-575-05 | RISK |
+| DEC-TSL-001, FR-575-05, FR-575-06, FR-575-07, HARD-575-003 | FLOW-575-02 | NONE | UI-575-002 | API-575-001 | TEST-575-03, TEST-575-05 | RISK |
 ```

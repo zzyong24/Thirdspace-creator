@@ -1066,6 +1066,77 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("反差开场")).toBeInTheDocument();
   });
 
+  it("[T-579] 生成任务失败后停止假进度，显示真实错误并允许重新生成", async () => {
+    const stub = api();
+    const readyDetail: RadarItemDetail = {
+      ...detail,
+      snapshots: [
+        {
+          id: "snapshot-1",
+          title: "真实作品",
+          capturedAt: "2026-07-23T12:00:00.000Z",
+          finalUrl: detail.item.canonicalUrl,
+        },
+      ],
+      transcript: {
+        itemId: detail.item.id,
+        status: "done",
+        text: "完整逐字稿",
+        errorCode: null,
+      },
+    };
+    const failedDetail: RadarItemDetail = {
+      ...readyDetail,
+      transforms: [
+        {
+          id: "transform-failed",
+          status: "candidate",
+          taskStatus: "failed",
+          taskErrorCode: "MODEL_PROTOCOL_ERROR",
+          taskErrorMessage: "模型没有返回可解析的选题结构",
+          outputSnapshot: null,
+          targetTopicId: null,
+        },
+      ],
+    };
+    stub.previewTopic = vi.fn().mockResolvedValue({
+      transform: {
+        id: "transform-failed",
+        status: "candidate",
+        outputSnapshot: null,
+        targetTopicId: null,
+      },
+      task: { id: "task-failed", status: "queued" },
+    });
+    stub.getItem = vi.fn().mockResolvedValue(failedDetail);
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={readyDetail}
+        positioningVersionId="positioning-v1"
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "生成选题候选" }),
+    );
+
+    expect(
+      await screen.findByText("模型没有返回可解析的选题结构"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("错误代码：MODEL_PROTOCOL_ERROR")).toBeInTheDocument();
+    expect(
+      screen.queryByText("候选仍在后台生成"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "重新生成" }),
+    ).toBeEnabled();
+  });
+
   it("博主主页必须真实预览成功后才能保存并首次同步", async () => {
     const stub = api();
     render(

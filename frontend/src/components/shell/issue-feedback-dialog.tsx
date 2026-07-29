@@ -14,6 +14,7 @@ import {
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -101,6 +102,7 @@ export function IssueFeedbackDialog({
   const [validationError, setValidationError] = React.useState<string | null>(
     null,
   );
+  const [submissionConfirmed, setSubmissionConfirmed] = React.useState(false);
 
   const preview = React.useMemo(
     () =>
@@ -142,6 +144,7 @@ export function IssueFeedbackDialog({
       setSubmitState({ state: "idle" });
       setIdempotencyKey(newIdempotencyKey());
       setValidationError(null);
+      setSubmissionConfirmed(false);
     }
   }, [cachedBugFeedbackUrl]);
 
@@ -149,10 +152,16 @@ export function IssueFeedbackDialog({
     if (!open) return;
     let active = true;
     void getAppVersion().then((value) => {
-      if (active) setAppVersion(value);
+      if (active) {
+        setAppVersion(value);
+        setSubmissionConfirmed(false);
+      }
     });
     void getRuntimeSystemLabel().then((value) => {
-      if (active) setSystemLabel(value);
+      if (active) {
+        setSystemLabel(value);
+        setSubmissionConfirmed(false);
+      }
     });
     return () => {
       active = false;
@@ -228,6 +237,7 @@ export function IssueFeedbackDialog({
   async function submitFeedback() {
     if (
       submitState.state === "submitting" ||
+      !submissionConfirmed ||
       !validateSummary() ||
       !validateDescription()
     ) {
@@ -359,6 +369,7 @@ export function IssueFeedbackDialog({
                 setCopyState("editing");
                 setSubmitState({ state: "idle" });
                 setIdempotencyKey(newIdempotencyKey());
+                setSubmissionConfirmed(false);
               }}
             />
           </div>
@@ -380,6 +391,7 @@ export function IssueFeedbackDialog({
                 setCopyState("editing");
                 setSubmitState({ state: "idle" });
                 setIdempotencyKey(newIdempotencyKey());
+                setSubmissionConfirmed(false);
               }}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -412,6 +424,27 @@ export function IssueFeedbackDialog({
               />
             </div>
           </div>
+
+          {submissionEnabled ? (
+            <label
+              htmlFor="issue-feedback-confirmation"
+              className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-muted/25 p-3 text-xs leading-5"
+            >
+              <Checkbox
+                id="issue-feedback-confirmation"
+                checked={submissionConfirmed}
+                onCheckedChange={(checked) =>
+                  setSubmissionConfirmed(checked === true)
+                }
+              />
+              <span>
+                我已检查并确认发送上方文字和基本版本信息
+                <span className="block text-muted-foreground">
+                  不发送日志、附件、激活码、手机号或本机路径
+                </span>
+              </span>
+            </label>
+          ) : null}
 
           <div
             aria-live="polite"
@@ -492,12 +525,16 @@ export function IssueFeedbackDialog({
             type="button"
             variant="outline"
             disabled={
-              !submissionEnabled || submitState.state === "submitting"
+              !submissionEnabled ||
+              submitState.state === "submitting" ||
+              !submissionConfirmed
             }
             title={
-              submissionEnabled
-                ? undefined
-                : "当前安装包尚未开放应用内发送，请使用官方反馈页"
+              !submissionEnabled
+                ? "当前安装包尚未开放应用内发送，请使用官方反馈页"
+                : !submissionConfirmed
+                  ? "请先检查并确认发送内容"
+                  : undefined
             }
             onClick={() => void submitFeedback()}
           >

@@ -492,7 +492,10 @@ function toSnapshot(row: SnapshotRow) {
   };
 }
 
-function toTransform(row: TransformRow) {
+function toTransform(
+  row: TransformRow,
+  task: ExecutionTaskResourceV2 | null = null,
+) {
   return {
     id: row.id,
     userId: row.userId,
@@ -509,6 +512,9 @@ function toTransform(row: TransformRow) {
       unknown
     > | null,
     targetTopicId: row.targetTopicId,
+    taskStatus: task?.status ?? null,
+    taskErrorCode: task?.errorCode ?? null,
+    taskErrorMessage: task?.errorMessage ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -2907,13 +2913,27 @@ export function createIntelligenceService(
           .where(eq(intelligenceTransforms.itemId, itemId))
           .orderBy(desc(intelligenceTransforms.createdAt)),
       ]);
+      const transformTasks = await Promise.all(
+        transforms.map(async (transform) => {
+          if (!transform.aiTaskId) return null;
+          try {
+            return await deps.tasks.get(ctx, transform.aiTaskId);
+          } catch {
+            // 兼容极早期迁移残留：任务已不存在时不伪造成“运行中”，由 null 明确
+            // 告知客户端状态不可用并给重新生成入口。
+            return null;
+          }
+        }),
+      );
       return {
         item: toItem(item),
         metrics: metrics.map(toMetric),
         observations: observations.map(toObservation),
         snapshots: snapshots.map(toSnapshot),
         transcript: toTranscript(transcript),
-        transforms: transforms.map(toTransform),
+        transforms: transforms.map((transform, index) =>
+          toTransform(transform, transformTasks[index] ?? null),
+        ),
       };
     },
 

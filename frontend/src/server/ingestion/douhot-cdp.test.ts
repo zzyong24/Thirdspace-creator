@@ -15,6 +15,7 @@ function createFakePage(options: {
   boardVisible?: boolean;
   boardClickFails?: boolean;
   windowVisible?: boolean;
+  responses?: Response[];
 }) {
   const close = vi.fn(async () => {});
   const fill = vi.fn(async () => {});
@@ -28,7 +29,11 @@ function createFakePage(options: {
     context: () => ({
       cookies: async () => [{ name: "sessionid", value: "sensitive" }],
     }),
-    on: vi.fn(),
+    on: vi.fn((event: string, listener: (response: Response) => void) => {
+      if (event === "response") {
+        for (const response of options.responses ?? []) listener(response);
+      }
+    }),
     off: vi.fn(),
     goto: vi.fn(async () => null),
     url: () => options.url ?? "https://douhot.douyin.com/",
@@ -222,7 +227,7 @@ describe("T-546 热点宝真实登录与榜单交互", () => {
         message: "热点宝低粉爆款榜单入口不可用",
       });
       expect(fake.fill).not.toHaveBeenCalled();
-      expect(fake.waitForTimeout).not.toHaveBeenCalled();
+      expect(fake.waitForTimeout).toHaveBeenCalled();
     }
   });
 
@@ -246,6 +251,58 @@ describe("T-546 热点宝真实登录与榜单交互", () => {
       message: "热点宝 48 小时时间窗入口不可用",
     });
     expect(fake.fill).not.toHaveBeenCalled();
-    expect(fake.waitForTimeout).not.toHaveBeenCalled();
+    expect(fake.waitForTimeout).toHaveBeenCalled();
+  });
+
+  it("同轮多条榜单响应中，忽略最后的过渡空壳并采用真实 48 小时结果", async () => {
+    const response = (json: unknown, body: unknown) =>
+      ({
+        url: () =>
+          "https://douhot.douyin.com/douhot/v1/material/video_billboard",
+        status: () => 200,
+        json: async () => json,
+        request: () => ({
+          postDataJSON: () => body,
+          postData: () => JSON.stringify(body),
+        }),
+      }) as unknown as Response;
+    const fake = createFakePage({
+      boardVisible: true,
+      windowVisible: true,
+      responses: [
+        response(
+          {
+            code: 0,
+            data: {
+              objs: [
+                {
+                  item_id: "item-real",
+                  item_title: "真实低粉爆款",
+                  like_cnt: 2000,
+                  publish_time: 1_800_000_000,
+                },
+              ],
+            },
+          },
+          { date_window: "2d", keyword: "川菜" },
+        ),
+        response({ code: 0, data: {} }, { date_window: "2d" }),
+      ],
+    });
+
+    await expect(
+      fetchDouhotLowFollowerBreakout(
+        {
+          authDir: "/tmp/fake-auth",
+          keyword: "川菜",
+          board: "low_follower_breakout",
+        },
+        { openPage: async () => fake },
+      ),
+    ).resolves.toMatchObject({
+      listValid: true,
+      windowHours: 48,
+      candidates: [{ itemId: "item-real" }],
+    });
   });
 });

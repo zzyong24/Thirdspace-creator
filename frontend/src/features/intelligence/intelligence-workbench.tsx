@@ -171,6 +171,19 @@ export interface RadarItemDetail {
   transforms: Array<{
     id: string;
     status: "candidate" | "confirmed" | "cancelled";
+    taskStatus?:
+      | "queued"
+      | "running"
+      | "pause_requested"
+      | "paused"
+      | "cancel_requested"
+      | "cancelled"
+      | "succeeded"
+      | "failed"
+      | "blocked"
+      | null;
+    taskErrorCode?: string | null;
+    taskErrorMessage?: string | null;
     outputSnapshot: {
       hook?: string;
       structureSteps?: string[];
@@ -1047,6 +1060,18 @@ export function IntelligenceWorkbench({
       const pendingTransform: RadarItemDetail["transforms"][number] = {
         id: started.transform.id,
         status: started.transform.status,
+        taskStatus: started.task.status as
+          | "queued"
+          | "running"
+          | "pause_requested"
+          | "paused"
+          | "cancel_requested"
+          | "cancelled"
+          | "succeeded"
+          | "failed"
+          | "blocked",
+        taskErrorCode: null,
+        taskErrorMessage: null,
         outputSnapshot: null,
         targetTopicId: started.transform.targetTopicId,
       };
@@ -1077,6 +1102,20 @@ export function IntelligenceWorkbench({
           setNotice("选题候选已生成，请检查后确认写入选题池。");
           break;
         }
+        if (
+          currentTransform &&
+          ["failed", "blocked", "cancelled"].includes(
+            currentTransform.taskStatus ?? "",
+          )
+        ) {
+          completed = true;
+          setNotice(
+            currentTransform.taskStatus === "blocked"
+              ? "生成任务已受阻，请按候选卡提示处理后重试。"
+              : "生成任务已失败，可查看候选卡中的原因并重新生成。",
+          );
+          break;
+        }
       }
       if (!completed) {
         setNotice(
@@ -1098,9 +1137,19 @@ export function IntelligenceWorkbench({
     try {
       const refreshed = await api.getItem(detail.item.id);
       setDetail(refreshed);
+      const latest = refreshed.transforms[0];
+      const terminalFailure =
+        latest &&
+        ["failed", "blocked", "cancelled"].includes(
+          latest.taskStatus ?? "",
+        );
       setNotice(
-        refreshed.transforms[0]?.outputSnapshot
+        latest?.outputSnapshot
           ? "选题候选已生成，请检查后确认写入选题池。"
+          : terminalFailure
+            ? latest.taskStatus === "blocked"
+              ? "生成任务已受阻，请按候选卡提示处理后重试。"
+              : "生成任务已失败，可查看候选卡中的原因并重新生成。"
           : "候选仍在后台生成，请稍后再刷新；无需重新创建。",
       );
     } catch {
@@ -1815,6 +1864,15 @@ function ItemDetail({
   const latest = detail.metrics[0] ?? null;
   const latestTransform = detail.transforms[0] ?? null;
   const topicCandidate = latestTransform?.outputSnapshot ?? null;
+  const topicTaskTerminalFailure =
+    latestTransform !== null &&
+    ["failed", "blocked", "cancelled"].includes(
+      latestTransform.taskStatus ?? "",
+    );
+  const topicTaskUnavailable =
+    latestTransform !== null &&
+    latestTransform.outputSnapshot === null &&
+    latestTransform.taskStatus == null;
   const transcriptCanStart = [
     "not_requested",
     "failed",
@@ -1893,8 +1951,52 @@ function ItemDetail({
               busy={busy}
               onConfirm={onConfirmTopic}
             />
+          ) : topicTaskTerminalFailure || topicTaskUnavailable ? (
+            <div
+              role="alert"
+              className="mt-3 rounded-xl border border-destructive/25 bg-destructive/[0.045] p-4"
+            >
+              <p className="text-xs font-semibold text-foreground">
+                {latestTransform?.taskStatus === "blocked"
+                  ? "生成任务已受阻"
+                  : topicTaskUnavailable
+                    ? "生成状态不可用"
+                    : "生成任务失败"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {latestTransform?.taskErrorMessage?.trim() ||
+                  (topicTaskUnavailable
+                    ? "旧任务没有可读取的执行状态，可以直接重新生成。"
+                    : "任务已经结束，不会继续假装“生成中”。请检查定位与模型配置后重试。")}
+              </p>
+              {latestTransform?.taskErrorCode ? (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  错误代码：{latestTransform.taskErrorCode}
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={
+                  busy ||
+                  !positioningReady ||
+                  detail.snapshots.length === 0 ||
+                  detail.transcript.status !== "done"
+                }
+                onClick={onPreviewTopic}
+                className="mt-3 gap-1.5"
+              >
+                <RefreshCw className="size-3.5" />
+                重新生成
+              </Button>
+            </div>
           ) : topicGenerating ||
-            (latestTransform && latestTransform.outputSnapshot === null) ? (
+            (latestTransform &&
+              latestTransform.outputSnapshot === null &&
+              ["queued", "running", "pause_requested"].includes(
+                latestTransform.taskStatus ?? "",
+              )) ? (
             <div
               role="status"
               className="mt-3 rounded-xl border border-primary/20 bg-primary/[0.045] p-4"

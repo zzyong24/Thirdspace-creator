@@ -70,13 +70,22 @@ export function EntitlementClaimPanel({
     try {
       const result = await invokeClaim("entitlement_claim_poll");
       setView(result);
-      if (result.state === "activated") {
-        const { relaunch } = await import("@tauri-apps/plugin-process");
-        await relaunch();
-      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function enterCreatorOs() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      await relaunch();
+    } catch {
+      setError("授权已保存，但应用未能自动重新进入，请手动重启 CreatorOS");
       setBusy(false);
     }
   }
@@ -116,7 +125,20 @@ export function EntitlementClaimPanel({
           领取并激活
         </Button>
       ) : view.state === "activated" ? (
-        <p className="text-sm text-emerald-700">{view.message}</p>
+        <div className="grid gap-2">
+          <p className="text-sm font-medium text-emerald-700">{view.message}</p>
+          <p className="text-xs text-muted-foreground">
+            授权和渠道配置已经安全保存，重新进入后即可使用。
+          </p>
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => void enterCreatorOs()}
+          >
+            {busy ? <Loader2 className="animate-spin" /> : null}
+            进入 CreatorOS
+          </Button>
+        </div>
       ) : view.state === "restartRequired" ? (
         <div className="grid gap-2">
           <p className="text-sm text-amber-700">{view.message}</p>
@@ -151,7 +173,7 @@ export function EntitlementClaimPanel({
             ) : null}
             <Button type="button" disabled={busy} onClick={() => void poll()}>
               {busy ? <Loader2 className="animate-spin" /> : null}
-              {view.state === "recovering" ? "继续恢复" : "我已确认，继续"}
+              {view.state === "recovering" ? "继续恢复" : "检查确认结果"}
             </Button>
           </div>
         </div>

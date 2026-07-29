@@ -1172,6 +1172,22 @@ mod tests {
         }
     }
 
+    struct RejectingJournal;
+
+    impl JournalStore for RejectingJournal {
+        fn load(&self) -> Result<Option<PendingConsumeJournal>, String> {
+            Ok(None)
+        }
+
+        fn save(&self, _value: &PendingConsumeJournal) -> Result<(), String> {
+            Err("模拟系统凭据写入失败".to_string())
+        }
+
+        fn delete(&self) -> Result<(), String> {
+            Ok(())
+        }
+    }
+
     #[test]
     fn api_210_response_must_be_closed_and_clean() {
         let raw = br#"{"deviceSecret":"secret-secret-secret-secret-secret","userCode":"ABCD-EFGH","verificationUrl":"https://growth.example.com/claim","expiresAt":"2026-07-27T12:15:00.000Z","pollIntervalSeconds":5}"#;
@@ -1238,6 +1254,17 @@ mod tests {
     }
 
     #[test]
+    fn protected_journal_failure_stops_before_any_attempted_state() {
+        let error = prepare_journal(
+            &RejectingJournal,
+            ConsumeRequest::fixture(),
+            "2026-07-27T12:15:00.000Z",
+        )
+        .expect_err("protected credential failure must fail closed");
+        assert_eq!(error, "模拟系统凭据写入失败");
+    }
+
+    #[test]
     fn final_am_fixture_verifies_raw_digest_signature_and_closed_success() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!(
             "../../../docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json"
@@ -1270,6 +1297,79 @@ mod tests {
         let success = parse_consume_success(&response.body).expect("closed success");
         assert_eq!(success.request_id, ConsumeRequest::fixture().request_id);
         assert_eq!(success.data.project_key, "creatoros");
+    }
+
+    #[test]
+    fn final_am_domain_error_is_signed_closed_and_bound_to_exact_request() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/growth-entitlement-delivery-v1.vector.json"
+        ))
+        .expect("fixture json");
+        let signed = &fixture["consume"]["signedDomainError"];
+        let response = LicenseHttpResponse {
+            status: 422,
+            signature: signed["signature"].as_str().map(str::to_string),
+            date: signed["date"].as_str().map(str::to_string),
+            digest: signed["digest"].as_str().map(str::to_string),
+            body: signed["rawBody"].as_str().unwrap().as_bytes().to_vec(),
+        };
+        let config = LicenseConfig {
+            base_url: "https://license.example.com".to_string(),
+            project_key: "creatoros".to_string(),
+            strict_verify: true,
+            public_key_b64: fixture["testKeys"]["licenseSigningPublicKeyRawBase64"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+            machine_id: "device-opaque-id".to_string(),
+        };
+        verify_signed_response(
+            &response,
+            &config,
+            parse_iso_ms("2026-07-27T12:05:35.000Z").unwrap(),
+        )
+        .expect("fixture signature");
+        let error = parse_consume_error(&response.body).expect("closed domain error");
+        let request = ConsumeRequest::fixture();
+        assert!(!error.success);
+        assert_eq!(
+            error.request_id.as_deref(),
+            Some(request.request_id.as_str())
+        );
+        assert_eq!(error.nonce.as_deref(), Some(request.nonce.as_str()));
+        assert_eq!(error.error.code, "CLAIM_INVALID");
+        assert_eq!(
+            error_journal_action(&error.error.code),
+            ErrorJournalAction::DeleteRestart
+        );
+    }
+
+    #[test]
+    fn claim_view_serialization_never_exposes_native_secrets() {
+        let view = safe_view(
+            "awaitingApproval",
+            Some("ABCD-EFGH".to_string()),
+            Some("https://growth.example.com/claim".to_string()),
+            Some("2026-07-27T12:15:00.000Z".to_string()),
+            Some(5),
+            "请在网页确认领取",
+        );
+        let serialized = serde_json::to_string(&view).expect("serialize safe view");
+        assert!(serialized.contains("ABCD-EFGH"));
+        for forbidden in [
+            "claimToken",
+            "deviceSecret",
+            "codeVerifier",
+            "activationCode",
+            "machineId",
+            "requestId",
+            "nonce",
+        ] {
+            assert!(
+                !serialized.contains(forbidden),
+                "{forbidden} leaked into IPC"
+            );
+        }
     }
 
     #[test]

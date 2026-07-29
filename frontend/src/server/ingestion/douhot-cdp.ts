@@ -181,15 +181,20 @@ async function clickFirstVisible(
   page: Page,
   labels: RegExp[],
 ): Promise<boolean> {
-  for (const label of labels) {
-    const target = page.getByText(label, { exact: false }).first();
-    if (await target.isVisible().catch(() => false)) {
-      const clicked = await target
-        .click()
-        .then(() => true)
-        .catch(() => false);
-      if (clicked) return true;
+  // 热点宝首屏会分阶段挂载导航和筛选器。旧实现只探测一次，慢一拍就把同一
+  // 登录态随机记成“版式变化”；最多等 15 秒，仍找不到才诚实失败。
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    for (const label of labels) {
+      const target = page.getByText(label, { exact: false }).first();
+      if (await target.isVisible().catch(() => false)) {
+        const clicked = await target
+          .click()
+          .then(() => true)
+          .catch(() => false);
+        if (clicked) return true;
+      }
     }
+    await page.waitForTimeout(250);
   }
   return false;
 }
@@ -284,17 +289,34 @@ async function fillKeyword(page: Page, keyword: string): Promise<void> {
     'input[type="search"]',
     'input[type="text"]',
   ];
-  for (const selector of selectors) {
-    const input = page.locator(selector).filter({ visible: true }).first();
-    if (await input.isVisible().catch(() => false)) {
-      await input.fill(keyword);
-      await input.press("Enter");
-      return;
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    for (const selector of selectors) {
+      const input = page.locator(selector).filter({ visible: true }).first();
+      if (await input.isVisible().catch(() => false)) {
+        await input.fill(keyword);
+        await input.press("Enter");
+        return;
+      }
     }
+    await page.waitForTimeout(250);
   }
   throw Object.assign(new Error("热点宝关键词输入框不可用"), {
     name: "DouhotResponseShapeChangedError",
   });
+}
+
+function safeRequestBody(response: Response): unknown {
+  try {
+    return response.request().postDataJSON();
+  } catch {
+    const raw = response.request().postData();
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return Object.fromEntries(new URLSearchParams(raw));
+    }
+  }
 }
 
 /**
@@ -349,27 +371,55 @@ export async function fetchDouhotLowFollowerBreakout(
     await page.waitForTimeout(6_000);
     page.off("response", onResponse);
 
-    const response = responses.at(-1);
-    if (!response || response.status() !== 200) {
+    const successfulResponses = responses.filter(
+      (response) => response.status() === 200,
+    );
+    if (successfulResponses.length === 0) {
       throw Object.assign(new Error("热点宝榜单未返回有效响应"), {
         name: "DouhotNoValidResponseError",
       });
     }
-    const parsed = parseDouhotBillboard(
-      await response.json(),
-      response.request().postDataJSON(),
+
+    // 一次筛选会触发多条同端点响应（切榜、切 48h、输入关键词）。旧实现只取最后
+    // 一条，若最后恰好是空壳/过渡响应就把真实成功误报为结构变化。逐条从新到旧解析，
+    // 只接受“合法列表 + 至少 48 小时”的真实证据。
+    const parsedResponses: Array<
+      DouhotBatch & { windowHours: number | null }
+    > = [];
+    for (const response of successfulResponses.toReversed()) {
+      try {
+        parsedResponses.push(
+          parseDouhotBillboard(
+            await response.json(),
+            safeRequestBody(response),
+          ),
+        );
+      } catch {
+        // 继续检查同一轮的其他官方响应；全部不可解析时下面仍会诚实失败。
+      }
+    }
+    const parsed = parsedResponses.find(
+      (candidate) =>
+        candidate.listValid &&
+        candidate.windowHours !== null &&
+        candidate.windowHours >= 48,
     );
-    if (!parsed.listValid) {
+    if (parsed) return parsed;
+
+    const validList = parsedResponses.find((candidate) => candidate.listValid);
+    if (!validList) {
       throw Object.assign(new Error("热点宝榜单响应结构已变化"), {
         name: "DouhotResponseShapeChangedError",
       });
     }
-    if (parsed.windowHours === null || parsed.windowHours < 48) {
+    if (validList.windowHours === null || validList.windowHours < 48) {
       throw Object.assign(new Error("热点宝榜单时间窗不足 48 小时"), {
         name: "DouhotResponseShapeChangedError",
       });
     }
-    return parsed;
+    throw Object.assign(new Error("热点宝榜单未返回有效响应"), {
+      name: "DouhotNoValidResponseError",
+    });
   } finally {
     await opened.close().catch(() => {});
   }

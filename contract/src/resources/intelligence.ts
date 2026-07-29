@@ -335,6 +335,11 @@ export const intelligenceTransformResource = z
     status: z.enum(["candidate", "confirmed", "cancelled"]),
     outputSnapshot: jsonObject.nullable(),
     targetTopicId: id.nullable(),
+    // transform 只保存候选内容；真实执行终态仍来自 execution_tasks。
+    // 详情投影这三列后，客户端才能把失败/受阻与“仍在生成”区分开。
+    taskStatus: executionTaskStatusV2.nullable(),
+    taskErrorCode: z.string().nullable(),
+    taskErrorMessage: z.string().nullable(),
     createdAt: iso8601,
     updatedAt: iso8601,
   })

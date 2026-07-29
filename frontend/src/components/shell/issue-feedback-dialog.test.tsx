@@ -305,6 +305,12 @@ describe("IssueFeedbackDialog", () => {
       "点击导出后没有文件，也没有错误提示。",
     );
     const submit = screen.getByRole("button", { name: "发送问题反馈" });
+    expect(submit).toBeDisabled();
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /我已检查并确认发送上方文字和基本版本信息/,
+      }),
+    );
     expect(submit).toBeEnabled();
     await user.click(submit);
     expect(await screen.findByText(/反馈已收到，编号 FDB-01J7K0T2AB/)).toBeInTheDocument();
@@ -347,6 +353,11 @@ describe("IssueFeedbackDialog", () => {
     await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
     const description = screen.getByLabelText("问题描述");
     await user.type(description, "点击同步按钮后一直没有任何状态变化。");
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /我已检查并确认发送上方文字和基本版本信息/,
+      }),
+    );
     await user.click(screen.getByRole("button", { name: "发送问题反馈" }));
 
     expect(await screen.findByText(/反馈服务暂时不可用/)).toBeInTheDocument();
@@ -354,5 +365,48 @@ describe("IssueFeedbackDialog", () => {
     expect(screen.getByRole("button", { name: "复制反馈内容" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "打开反馈渠道" })).toBeEnabled();
     expect(screen.queryByText(/反馈已收到/)).not.toBeInTheDocument();
+  });
+
+  it("[T-575] 编辑草稿会撤销本次确认，未重新确认时零提交", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
+        ),
+      );
+    const user = userEvent.setup();
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        submissionEnabled
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
+    await user.type(
+      screen.getByLabelText("问题描述"),
+      "点击同步按钮后一直没有任何状态变化。",
+    );
+    const consent = screen.getByRole("checkbox", {
+      name: /我已检查并确认发送上方文字和基本版本信息/,
+    });
+    await user.click(consent);
+    expect(consent).toBeChecked();
+
+    await user.type(screen.getByLabelText("问题描述"), " 我补充了一段说明。");
+
+    expect(consent).not.toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "发送问题反馈" }),
+    ).toBeDisabled();
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes("/api/v1/local/product-feedback"),
+      ),
+    ).toBe(false);
   });
 });
