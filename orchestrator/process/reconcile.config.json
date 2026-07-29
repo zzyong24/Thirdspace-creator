@@ -1,5 +1,5 @@
 {
-  "work_branch": "refactor/agent-and-structure",
+  "work_branch": "main",
   "probes": [
     { "stage": "15-service-contract",    "path": "contract/package.json" },
     { "stage": "16-backend-tdd",         "path": "backend/src" },
