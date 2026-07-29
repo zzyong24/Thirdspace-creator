@@ -121,6 +121,7 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | Requirement | Flow | Surface | Contract | Tests | 状态 |
 |---|---|---|---|---|---|
 | DEC-MODEL-606；Growth FR-055/NFR-029 | 既有激活 locator → config.pull → configured/not_configured/unreachable/security_error → channel/local 唯一 authority | PAGE-017 设置页脱敏来源状态；本地配置始终可编辑 | [T-606 CreatorOS 绑定 SPEC](../docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md)；既有 API-575-002 | TC-T606-01..09；聚焦 backend 31 + frontend 86；Playwright 桌面/390px | BUILD 已验证：review PASS[REV:bc38a5b47eac]、Next build PASS；Growth/Activity live HTTPS、正式 Key 与发布许可仍未完成 |
+| DEC-BOUNDARY-002；Growth DEC-080；Activity DEC-018 | Activity current auth → Growth business interpretation → CreatorOS signed consume；无客户端 locator override | 无新增页面；所有渠道模型身份只显示 `channel-managed` | T-606 §1.1；T-617 | TC-T617-11..13；日志/异步任务/无效授权负例 | PASS-T617；完整生产链路测试增强见 T-618 |
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链

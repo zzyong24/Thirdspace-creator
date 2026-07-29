@@ -205,7 +205,7 @@ const ticketFixtureBytes = readFileSync(
     "docs",
     "contracts",
     "fixtures",
-    "config-access-ticket-v1.vector.json",
+    "config-access-ticket-v2.vector.json",
   ),
 );
 const growthFixtureBytes = readFileSync(
@@ -252,14 +252,14 @@ describe("T-575 config.pull Creator consumer", () => {
       const url = String(input);
       if (url === `${AM_ORIGIN}/api/license/client-config-tickets`) {
         expect(JSON.parse(String(init?.body))).toEqual({
-          contractVersion: "config-access-ticket-v1",
+          contractVersion: "config-access-ticket-v2",
           projectKey: active.projectKey,
           code: active.code,
           machineId: active.machineId,
           nonce: "nonce-client-config-0001",
         });
         return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v1",
+          contractVersion: "config-access-ticket-v2",
           configAccessTicket: "header.payload.signature",
           expiresAt: "2026-07-28T12:15:00.000Z",
           nonce: "nonce-client-config-0001",
@@ -313,7 +313,7 @@ describe("T-575 config.pull Creator consumer", () => {
 
   it("逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest", async () => {
     expect(createHash("sha256").update(ticketFixtureBytes).digest("hex")).toBe(
-      "a71d21773cb2f0b0033a0231c657ec09df24f2a1b07ae99f1c395e35a6fc8620",
+      "58218645dc8e90df44aaef2d63688ef4173e5300e50450c5a8d222debff8b538",
     );
     expect(createHash("sha256").update(growthFixtureBytes).digest("hex")).toBe(
       "5a2db6c963a16c06b47956579c7974dba02f73df7fef389d90a515b1ee8f3251",
@@ -404,7 +404,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const missingAmNoStore = successfulFetch();
     missingAmNoStore.mockImplementationOnce(async () => {
       const response = signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v1",
+        contractVersion: "config-access-ticket-v2",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -430,7 +430,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const missingGrowthCorrelation = successfulFetch();
     missingGrowthCorrelation.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v1",
+        contractVersion: "config-access-ticket-v2",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -529,7 +529,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v1",
+        contractVersion: "config-access-ticket-v2",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -583,7 +583,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v1",
+        contractVersion: "config-access-ticket-v2",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -899,7 +899,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const switchBack = vi.fn<typeof fetch>(async (input, init) => {
       if (String(input).startsWith(AM_ORIGIN)) {
         return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v1",
+          contractVersion: "config-access-ticket-v2",
           configAccessTicket: "header.payload.signature",
           expiresAt: "2026-07-28T12:15:00.000Z",
           nonce: "nonce-client-config-0001",
@@ -960,7 +960,7 @@ describe("T-575 config.pull Creator consumer", () => {
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
           signedAmResponse(amKeys.privateKey, {
-            contractVersion: "config-access-ticket-v1",
+            contractVersion: "config-access-ticket-v2",
             configAccessTicket: "header.payload.signature",
             expiresAt: "2026-07-28T12:15:00.000Z",
             nonce: "nonce-client-config-0001",
@@ -1062,29 +1062,19 @@ describe("T-575 config.pull Creator consumer", () => {
     }
 
     {
-    // 兼容旧 Activity ticket 的 clientId 字段但不信任，Creator 请求不再自报 clientId。
-    const bundle = signedBundle(growthKeys.privateKey);
+    // v2 response 是 closed schema：Activity 多发 clientId 也必须 fail-closed，且不得请求 Growth。
     const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
       if (String(input).startsWith(AM_ORIGIN)) {
         expect(JSON.parse(String(init?.body))).not.toHaveProperty("clientId");
         return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v1",
+          contractVersion: "config-access-ticket-v2",
           configAccessTicket: "header.payload.signature",
           expiresAt: "2026-07-28T12:15:00.000Z",
           nonce: "nonce-client-config-0001",
           clientId: "untrusted-legacy-value",
         });
       }
-      return Response.json(bundle, {
-        status: 200,
-        headers: {
-          etag: `"${bundle.bundleDigest}"`,
-          "cache-control": "private, no-store",
-          "x-config-bundle-version": "42",
-          "x-config-key-id": bundle.keyId,
-          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
-        },
-      });
+      throw new Error("额外 locator 被接受后才会错误触达 Growth");
     });
     await expect(
       refreshClientConfig({
@@ -1095,7 +1085,34 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+    ).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    }
+
+    {
+    // 旧 v1 response 即使字段看似完整也必须 fail-closed，不能静默兼容。
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).startsWith(AM_ORIGIN)) {
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v1",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+        });
+      }
+      throw new Error("旧 v1 被接受后才会错误触达 Growth");
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
     }
 
     {

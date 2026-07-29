@@ -1,6 +1,8 @@
 # T-606 CreatorOS 渠道模型配置权威绑定
 
-> 状态：T-610 架构纠偏后待独立复审。本文只绑定 CreatorOS 消费实现，不复制或改写 Growth 产品真相。
+> 状态：T-617 独立增量复核 `PASS`（blocker/major = 0）。本文只绑定 CreatorOS
+> 消费实现，不复制或改写 Growth 产品真相；跨仓 live HTTPS、SHIP 与整体 release 仍为
+> `NO-GO`。
 >
 > 最终上游契约：
 > `/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-086-creatoros-managed-model-service.md`
@@ -25,6 +27,23 @@
   `clientId=creatoros.desktop` 与协议，但不得把自报值或旧 ticket 字段视作授权 claim。
 - Growth 下发的 payload 只要求根节点是 JSON object。CreatorOS 在 pull 成功阶段不检查
   provider、URL、Key、模型名、参数或未知字段，也不做连通探测。
+
+### 1.1 三系统防跑偏边界
+
+| 系统 | CreatorOS 可以相信什么 | CreatorOS 不能让它决定什么 |
+| --- | --- | --- |
+| Activity | 激活码、设备、期限、撤权、防重放及签名 `projectKey/channelRef` opaque 范围当前有效 | 渠道/代理/客户关系、`clientId`、产品、套餐、模型 JSON 或商业权益解释 |
+| Growth | Activity 有效范围对应的渠道、应用目录、协议目录、产品权益与模型 JSON | Activity 的设备绑定、期限、撤权或激活有效性 |
+| CreatorOS | 本机用户内容、本地备用模型配置和已验签的安全缓存 | 自报 `projectKey/channelRef/clientId`、扩大权益或根据缓存覆盖服务端撤权 |
+
+因此 CreatorOS 必须按顺序执行：
+
+1. 向 Activity 取得当前授权的短期签名凭证；无效、过期、撤权、设备不匹配或重放立即失败。
+2. 把凭证交给 Growth；不额外提交 locator。Growth 在线内省后解释范围并从自己的目录选择应用。
+3. 只采纳 Growth 签名且 locator 与当前授权一致的配置；Activity ticket 中即使出现
+   `clientId`、模型或商业字段也不能成为输入，旧 v1 必须 fail-closed。
+4. Activity 保留 project/channel 字段是兼容运行细节，不是业务目录。CreatorOS 不显示
+   Activity 的 Project/Channel 管理概念，也不要求现有用户重激活。
 
 ## 2. 唯一裁决表
 
@@ -95,12 +114,21 @@ agentic raw config、图像/视频/视觉/ASR、embedding、联网搜索和“�
   authority 选择；channel 模型调用失败不触发 local resolver。
 - `TC-T606-08`：设置页桌面与 390px 视口可辨认四种状态，本地表单始终可编辑，页面、日志、
   错误和请求 URL 不含测试 Key 原文。
-- `TC-T606-09`：AM ticket 请求不含 `clientId`；旧响应字段只兼容忽略。Growth-signed
-  `clientId` 与 extension/protocol 继续强校验，客户端无法覆盖 Growth registry 结果。
+- `TC-T606-09`：AM ticket 请求不含 `clientId`，只接受
+  `config-access-ticket-v2` 当前 closed response；旧 v1 或额外 client/application locator
+  fail-closed。Growth-signed `clientId` 与 extension/protocol 继续强校验，客户端无法覆盖
+  Growth registry 结果。
 - `TC-T610-10`：cache 只有 `ENOENT` 表示无记录；prefix/tag/wrong key/schema/结构损坏均
   typed security error 并隔离 `.corrupt.*`。
+- `TC-T617-11`：Activity 无效授权时不读取 Growth revision/cache；存在 Growth 业务映射也
+  不能覆盖 expiry/revoke/device/binding/version 失败。
+- `TC-T617-12`：CreatorOS 请求、日志、任务元数据和 UI 不输出真实渠道 provider/model、
+  base URL、Key、raw error 或 locator；统一显示 `channel-managed` 与脱敏错误分类。
+- `TC-T617-13`：所有同步与异步 AI 调用的 model authority 都从同一
+  `readChannelModelAuthority()` 快照取得；异步任务 `modelKey` 不得回退为本地/default。
 
 ## 7. 发布边界
 
-本任务只提交并推送 CreatorOS 私有分支，供总控与 Growth/Activity 联调。没有生产 key、
-正式渠道配置、跨仓联调证据和用户发布许可时，不发布下载站，不宣称三端上线。
+本任务只形成 CreatorOS 私有分支候选，供总控与 Growth/Activity 联调。没有生产 key、
+正式渠道配置、跨仓联调证据和用户发布许可时，不发布下载站，不宣称三端上线；push/deploy
+继续作为独立发布确认点。

@@ -1,7 +1,13 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { EmbeddingModel, LanguageModel } from "ai";
+import type { EmbeddingModelV3, EmbeddingModelV4 } from "@ai-sdk/provider";
+import {
+  wrapEmbeddingModel,
+  wrapLanguageModel,
+  type EmbeddingModel,
+  type LanguageModel,
+} from "ai";
 
 // Provider 工厂(Phase 3)—— 把「一次运行解析出来的模型配置」变成一个 AI SDK LanguageModel。
 // 这是「模型中立层」的落点:换厂商 = 换 apiFormat/baseUrl/token,不动 AgentRuntime,也不绑
@@ -29,11 +35,105 @@ export interface ModelSpec {
   displayModelKey?: "channel-managed";
 }
 
+type ChannelEmbeddingInput = EmbeddingModelV3 | EmbeddingModelV4;
+
 export class ModelConfigurationError extends Error {
   constructor() {
     super("模型接口格式配置无效");
     this.name = "ModelConfigurationError";
   }
+}
+
+export class ChannelManagedProviderError extends Error {
+  constructor() {
+    super("渠道模型调用失败，请稍后重试或联系官方处理");
+    this.name = "ChannelManagedProviderError";
+  }
+}
+
+function channelError(): ChannelManagedProviderError {
+  return new ChannelManagedProviderError();
+}
+
+function sanitizeChannelStream<T>(stream: ReadableStream<T>): ReadableStream<T> {
+  const reader = stream.getReader();
+  return new ReadableStream<T>({
+    async pull(controller) {
+      try {
+        const item = await reader.read();
+        if (item.done) {
+          controller.close();
+          return;
+        }
+        const value = item.value;
+        if (
+          value &&
+          typeof value === "object" &&
+          (value as { type?: unknown }).type === "error"
+        ) {
+          controller.enqueue({
+            ...(value as Record<string, unknown>),
+            error: channelError(),
+          } as T);
+          return;
+        }
+        controller.enqueue(value);
+      } catch {
+        controller.error(channelError());
+      }
+    },
+    cancel(reason) {
+      return reader.cancel(reason);
+    },
+  });
+}
+
+export function protectChannelModel(model: LanguageModel): LanguageModel {
+  if (typeof model === "string") return model;
+  return wrapLanguageModel({
+    model,
+    modelId: "channel-managed",
+    providerId: "channel-managed",
+    middleware: {
+      wrapGenerate: async ({ doGenerate }) => {
+        try {
+          return await doGenerate();
+        } catch {
+          throw channelError();
+        }
+      },
+      wrapStream: async ({ doStream }) => {
+        try {
+          const result = await doStream();
+          return {
+            ...result,
+            stream: sanitizeChannelStream(result.stream),
+          };
+        } catch {
+          throw channelError();
+        }
+      },
+    },
+  });
+}
+
+export function protectChannelEmbeddingModel(
+  model: ChannelEmbeddingInput,
+): EmbeddingModelV4 {
+  return wrapEmbeddingModel({
+    model,
+    modelId: "channel-managed",
+    providerId: "channel-managed",
+    middleware: {
+      wrapEmbed: async ({ doEmbed }) => {
+        try {
+          return await doEmbed();
+        } catch {
+          throw channelError();
+        }
+      },
+    },
+  });
 }
 
 /**
@@ -49,6 +149,7 @@ export function normalizeAnthropicBaseUrl(baseUrl: string): string {
 
 /** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
+  let model: LanguageModel;
   switch (spec.apiFormat) {
     case "anthropic": {
       const provider = createAnthropic({
@@ -57,7 +158,8 @@ export function modelFor(spec: ModelSpec): LanguageModel {
           ? { baseURL: normalizeAnthropicBaseUrl(spec.baseUrl) }
           : {}),
       });
-      return provider(spec.model);
+      model = provider(spec.model);
+      break;
     }
     case "openai_responses": {
       const provider = createOpenAI({
@@ -66,7 +168,8 @@ export function modelFor(spec: ModelSpec): LanguageModel {
           ? { baseURL: spec.baseUrl, name: "creatoros-custom" }
           : {}),
       });
-      return provider.responses(spec.model);
+      model = provider.responses(spec.model);
+      break;
     }
     case "openai_chat": {
       // openai_chat 必须显式选 Chat，不能依赖 SDK 默认 callable。
@@ -76,14 +179,19 @@ export function modelFor(spec: ModelSpec): LanguageModel {
           apiKey: spec.token,
           baseURL: spec.baseUrl,
         });
-        return provider.chatModel(spec.model);
+        model = provider.chatModel(spec.model);
+        break;
       }
       const provider = createOpenAI({ apiKey: spec.token });
-      return provider.chat(spec.model);
+      model = provider.chat(spec.model);
+      break;
     }
     default:
       throw new ModelConfigurationError();
   }
+  return spec.displayModelKey === "channel-managed"
+    ? protectChannelModel(model)
+    : model;
 }
 
 /**
@@ -96,25 +204,38 @@ export function modelFor(spec: ModelSpec): LanguageModel {
  *     应引导用户为该 capability 配 OpenAI 兼容 embedding 模型,不静默降级成聊天模型)。
  */
 export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
-  switch (spec.apiFormat) {
-    case "anthropic":
-      throw new Error(
-        "anthropic 协议不提供 embedding 端点:请为该 capability 配置 openai_chat 协议的 embedding 模型(如 SiliconFlow BAAI/bge-m3)",
-      );
-    case "openai_chat":
-    case "openai_responses": {
-      if (spec.baseUrl) {
-        const provider = createOpenAICompatible({
-          name: "creatoros-custom-embedding",
-          apiKey: spec.token,
-          baseURL: spec.baseUrl,
-        });
-        return provider.textEmbeddingModel(spec.model);
+  try {
+    let model: ChannelEmbeddingInput;
+    switch (spec.apiFormat) {
+      case "anthropic":
+        throw new Error(
+          "anthropic 协议不提供 embedding 端点:请为该 capability 配置 openai_chat 协议的 embedding 模型(如 SiliconFlow BAAI/bge-m3)",
+        );
+      case "openai_chat":
+      case "openai_responses": {
+        if (spec.baseUrl) {
+          const provider = createOpenAICompatible({
+            name: "creatoros-custom-embedding",
+            apiKey: spec.token,
+            baseURL: spec.baseUrl,
+          });
+          model = provider.textEmbeddingModel(spec.model);
+          break;
+        }
+        const provider = createOpenAI({ apiKey: spec.token });
+        model = provider.textEmbeddingModel(spec.model);
+        break;
       }
-      const provider = createOpenAI({ apiKey: spec.token });
-      return provider.textEmbeddingModel(spec.model);
+      default:
+        throw new ModelConfigurationError();
     }
-    default:
-      throw new ModelConfigurationError();
+    return spec.displayModelKey === "channel-managed"
+      ? protectChannelEmbeddingModel(model)
+      : model;
+  } catch (error) {
+    if (spec.displayModelKey === "channel-managed") {
+      throw channelError();
+    }
+    throw error;
   }
 }

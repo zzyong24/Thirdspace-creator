@@ -66,6 +66,7 @@ vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
   resolveSkillForSurface: (surface: string) =>
     surface === "review" ? "chatbox.review" : "chatbox.topic",
   runChatStream: (...args: unknown[]) => runChatStream(...args),
+  formatErrorDiagnostic: () => "class=Error reason=unknown",
 }));
 
 vi.mock("@creatoros/ai-worker", () => ({
@@ -472,11 +473,20 @@ describe("POST /api/chat — 装配 + 持久化", () => {
   });
 
   it("装配抛错(如没配 key)→ 400(诚实,不假成功)", async () => {
-    runChatStream.mockRejectedValue(new Error("no LLM credential"));
+    runChatStream.mockRejectedValue(
+      new Error(
+        "https://channel-model.internal/v1 model=private-model apiKey=SECRET_CHANNEL_KEY",
+      ),
+    );
     const res = await POST(
       chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"),
     );
     expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("模型调用失败，请稍后重试或检查模型配置。");
+    expect(JSON.stringify(body)).not.toContain("SECRET_CHANNEL_KEY");
+    expect(JSON.stringify(body)).not.toContain("private-model");
+    expect(JSON.stringify(body)).not.toContain("channel-model.internal");
   });
 
   it("持久化失败不阻断流式(best-effort)—— 仍委派 runChatStream 并返回 200", async () => {

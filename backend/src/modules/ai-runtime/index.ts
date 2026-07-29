@@ -47,6 +47,7 @@ export * from "./local-name-search";
 export * from "./local-env-probe";
 export * from "./comment-qa-sift-runner";
 export * from "./embed";
+export * from "./error-diagnostics";
 // [T-513] account-scoped immutable Effective Skill snapshot：task→skill 确定性映射、
 // official+overlay 合并、server platform policy 注入与 256 KiB 序列化门。
 export * from "./effective-skill-snapshot";

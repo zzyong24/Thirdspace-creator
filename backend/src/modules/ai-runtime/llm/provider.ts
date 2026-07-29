@@ -1,5 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
 import { createAnthropicProvider } from "./anthropic-adapter";
+import { safeModelFailureMessage } from "../error-diagnostics";
 
 export type ApiFormat =
   | "anthropic"
@@ -100,6 +101,13 @@ export function createLlmCompleter(
 ): LlmCompleter {
   return async (ctx, capability, prompt, opts) => {
     const config = await resolve(ctx, capability);
-    return getLlmProvider(config, factory).complete(prompt, opts);
+    try {
+      return await getLlmProvider(config, factory).complete(prompt, opts);
+    } catch (error) {
+      if (config.displayModelKey === "channel-managed") {
+        throw new Error(safeModelFailureMessage(error, config));
+      }
+      throw error;
+    }
   };
 }

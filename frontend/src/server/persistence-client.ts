@@ -494,6 +494,11 @@ import {
   resolveDedicatedLlmConfig,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
+  matchesPinnedModelAuthority,
+  pinModelAuthority,
+  TaskModelAuthorityScope,
+} from "./task-model-authority";
+import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
   resolveTranscribeSpec as resolveTranscribeSpecFn,
 } from "@creatoros/backend/modules/ai-runtime";
@@ -1527,10 +1532,14 @@ const globalForPersistence = globalThis as unknown as {
   __creatorosPersistence?: Promise<PersistenceBundle>;
 };
 
+const taskModelAuthorityScope = new TaskModelAuthorityScope();
+
 async function buildPersistence(): Promise<PersistenceBundle> {
   // T-606：所有模型 resolver 共用这一条 server-only authority 读面。configured 时返回渠道
   // opaque JSON；其他三态返回 null，既有本地 DB/env 链才可继续。
   const getChannelModelConfig = async () => {
+    const pinnedPayload = taskModelAuthorityScope.currentPayload();
+    if (pinnedPayload !== undefined) return pinnedPayload;
     const authority = await readChannelModelAuthority();
     return authority.authority === "channel" ? authority.payload : null;
   };
@@ -2924,11 +2933,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         );
       }
       const requiredSkillIds = requiredSkillIdsForTask(taskType, inputData);
+      const modelAuthority = pinModelAuthority(
+        await readChannelModelAuthority(),
+      );
       return {
         skillSnapshot: await resolveEffectiveSkillSnapshotForRuntime(
           ctx,
           requiredSkillIds,
         ),
+        modelAuthority: modelAuthority.authority,
+        modelAuthorityDigest: modelAuthority.digest,
       };
     },
     artifacts: {
@@ -3077,7 +3091,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         `[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`,
       );
     }
-    await runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
+    const liveModelAuthority = pinModelAuthority(
+      await readChannelModelAuthority(),
+    );
+    if (
+      !matchesPinnedModelAuthority(runtimeData, liveModelAuthority)
+    ) {
+      await aiService.cancelTask(
+        ctx,
+        taskId,
+        "模型配置在排队期间发生变化，请重新发起任务",
+      );
+      return;
+    }
+    await taskModelAuthorityScope.run(liveModelAuthority, () =>
+      runWithEffectiveSkillSnapshot(skillSnapshot, async () => {
       const execution = await aiService.runClaimedTaskExecution(
         ctx,
         taskId,
@@ -3087,7 +3115,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       );
       // 第二个同 attempt/同 task dispatch 竞争失败是正常幂等命中，不能再调用模型。
       if (!execution.claimed) return;
-    });
+      }),
+    );
   };
   const aiBase = createAiTransport(() => aiService);
 

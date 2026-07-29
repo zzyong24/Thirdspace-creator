@@ -27,7 +27,7 @@ import {
   type LicenseVerdict,
 } from "./license-file.server";
 
-const TICKET_CONTRACT = "config-access-ticket-v1";
+const TICKET_CONTRACT = "config-access-ticket-v2";
 const BUNDLE_CONTRACT = "growth-client-config-bundle-v1";
 const CLIENT_ID = "creatoros.desktop";
 const EXTENSION_KEY = "creatoros.model-config";
@@ -532,22 +532,12 @@ function parseTicket(
   }
   const value = response.value;
   if (
-    !(
-      exactObject(value, [
-        "configAccessTicket",
-        "contractVersion",
-        "expiresAt",
-        "nonce",
-      ]) ||
-      (exactObject(value, [
-        "clientId",
-        "configAccessTicket",
-        "contractVersion",
-        "expiresAt",
-        "nonce",
-      ]) &&
-        typeof value.clientId === "string")
-    ) ||
+    !exactObject(value, [
+      "configAccessTicket",
+      "contractVersion",
+      "expiresAt",
+      "nonce",
+    ]) ||
     value.contractVersion !== TICKET_CONTRACT ||
     typeof value.configAccessTicket !== "string" ||
     value.configAccessTicket.length < 5 ||

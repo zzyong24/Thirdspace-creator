@@ -1,10 +1,16 @@
 import type { RequestContext } from "@creatoros/contract";
 import type {
-  MultimodalSpec,
   MultimodalProviderRegistry,
   GeneratedTranscript,
 } from "@creatoros/ai-worker";
-import { TranscribeConfigError } from "./multimodal/resolve";
+import {
+  TranscribeConfigError,
+  type MultimodalSpec,
+} from "./multimodal/resolve";
+import {
+  formatErrorDiagnostic,
+  safeModelFailureMessage,
+} from "./error-diagnostics";
 import type {
   EnsureTranscriptArtifactInput,
   EnsureTranscriptArtifactResult,
@@ -248,6 +254,7 @@ export async function runTranscribe(
     //   取流/抽音/ASR/绑作品/失败分类计数都只写一遍)。闭包直接读写外层计数器(stepNo/ok/
     //   albums/failures),重试成功即 ok+1、重试再失败即重新 push failures。
     const processOne = async (awemeId: string): Promise<void> => {
+      let resolvedSpec: MultimodalSpec | null = null;
       // 1) 幂等前置(只读探测):已有 transcript artifact 则 skip,**不重复 fetch/ASR**(省流)。
       //    用 hasTranscriptArtifact(只读)而非 ensureTranscriptArtifact —— 后者「不存在则建」,
       //    拿空 transcript 当探针会写脏空稿。真正的写入在下面 §3 用真 text 调 ensure(它自身也幂等)。
@@ -312,6 +319,7 @@ export async function runTranscribe(
         }
         // [T-160] resolveTranscribeSpec 永远不抛 TranscribeConfigError(Tier 3 whisper-local 兜底)。
         const spec = await deps.resolveTranscribeSpec(ctx);
+        resolvedSpec = spec;
         const { text } = await deps.transcribeAudio(
           spec,
           { audioBytes, language: deps.language ?? "zh" },
@@ -368,8 +376,7 @@ export async function runTranscribe(
         // [T-160] ASR 未配已兜底,无专门 catch 分支;取音频失败 / ASR 跑挂 / 空文本 → 单作品失败
         // 降级继续(整批不拖垮)。这里不再 instanceof TranscribeConfigError 抛(那条路已堵死)。
         // 其它(取音频 / 直链 / 去水印 / ASR provider HTTP / 空文本)→ 标该 aweme 失败,其余继续。
-        const reason =
-          err instanceof Error ? err.message : String(err ?? "unknown error");
+        const reason = safeModelFailureMessage(err, resolvedSpec);
         // [T-230] 冷却类优先用注入判别(instanceof,最可靠);缺省退化按消息分类。
         const category = deps.isCooldownError?.(err)
           ? "cooldown"
@@ -383,8 +390,13 @@ export async function runTranscribe(
           toolCalls: [],
         });
         console.error(
-          `[transcribe-runner] aweme ${awemeId} 失败(其余继续):`,
-          err,
+          `[transcribe-runner] aweme=${awemeId} 失败(其余继续) ${formatErrorDiagnostic(
+            err,
+            {
+              omitMessage:
+                resolvedSpec?.displayModelKey === "channel-managed",
+            },
+          )}`,
         );
       }
     };

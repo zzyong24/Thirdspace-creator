@@ -1,3 +1,5 @@
+import { ChannelManagedProviderError } from "./provider-factory";
+
 // 多模态 provider 工厂(SPEC 2026-07-01 多模态 model-config §2.2 / §8 M1)—— 把「一次运行
 // 解析出来的多模态模型规格(MultimodalSpec)」变成统一契约的生成调用。与文本 `modelFor`
 // (provider-factory.ts,产出 LanguageModel)并列的一层:文本走 Vercel AI SDK 的
@@ -37,6 +39,21 @@ export interface MultimodalSpec {
   /** 该档位是图/视频/音频 —— 决定走 generateImage / generateVideo / transcribeAudio,
    *  并校验适配器能力。audio(T-030-D1)= ASR 逐字稿转写。 */
   kind: "image" | "video" | "audio" | "vision";
+  displayModelKey?: "channel-managed";
+}
+
+async function protectChannelCall<T>(
+  spec: MultimodalSpec,
+  call: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    if (spec.displayModelKey === "channel-managed") {
+      throw new ChannelManagedProviderError();
+    }
+    throw error;
+  }
 }
 
 export interface GenerateImageOptions {
@@ -155,18 +172,20 @@ export async function generateImage(
   opts: GenerateImageOptions,
   registry: MultimodalProviderRegistry,
 ): Promise<GeneratedAsset> {
-  const adapter = registry[spec.provider];
-  if (!adapter) {
-    throw new MultimodalConfigError(
-      `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
-    );
-  }
-  if (!adapter.generateImage) {
-    throw new MultimodalConfigError(
-      `provider "${spec.provider}" 不支持文生图(image.generate)`,
-    );
-  }
-  return adapter.generateImage(spec, opts);
+  return protectChannelCall(spec, async () => {
+    const adapter = registry[spec.provider];
+    if (!adapter) {
+      throw new MultimodalConfigError(
+        `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
+      );
+    }
+    if (!adapter.generateImage) {
+      throw new MultimodalConfigError(
+        `provider "${spec.provider}" 不支持文生图(image.generate)`,
+      );
+    }
+    return adapter.generateImage(spec, opts);
+  });
 }
 
 /** 按 spec.provider 取适配器,调 video 生成 → 统一 `{ assetBytes }`(异步轮询在适配器内)。 */
@@ -175,18 +194,20 @@ export async function generateVideo(
   opts: GenerateVideoOptions,
   registry: MultimodalProviderRegistry,
 ): Promise<GeneratedAsset> {
-  const adapter = registry[spec.provider];
-  if (!adapter) {
-    throw new MultimodalConfigError(
-      `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
-    );
-  }
-  if (!adapter.generateVideo) {
-    throw new MultimodalConfigError(
-      `provider "${spec.provider}" 不支持文生视频(video.generate)`,
-    );
-  }
-  return adapter.generateVideo(spec, opts);
+  return protectChannelCall(spec, async () => {
+    const adapter = registry[spec.provider];
+    if (!adapter) {
+      throw new MultimodalConfigError(
+        `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
+      );
+    }
+    if (!adapter.generateVideo) {
+      throw new MultimodalConfigError(
+        `provider "${spec.provider}" 不支持文生视频(video.generate)`,
+      );
+    }
+    return adapter.generateVideo(spec, opts);
+  });
 }
 
 /** 按 spec.provider 取适配器,调 ASR 转写 → 统一 `{ text, language? }`(T-030-D1)。
@@ -198,16 +219,18 @@ export async function transcribeAudio(
   opts: TranscribeAudioOptions,
   registry: MultimodalProviderRegistry,
 ): Promise<GeneratedTranscript> {
-  const adapter = registry[spec.provider];
-  if (!adapter) {
-    throw new MultimodalConfigError(
-      `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
-    );
-  }
-  if (!adapter.transcribeAudio) {
-    throw new MultimodalConfigError(
-      `provider "${spec.provider}" 不支持逐字稿转写(transcribe.audio)`,
-    );
-  }
-  return adapter.transcribeAudio(spec, opts);
+  return protectChannelCall(spec, async () => {
+    const adapter = registry[spec.provider];
+    if (!adapter) {
+      throw new MultimodalConfigError(
+        `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
+      );
+    }
+    if (!adapter.transcribeAudio) {
+      throw new MultimodalConfigError(
+        `provider "${spec.provider}" 不支持逐字稿转写(transcribe.audio)`,
+      );
+    }
+    return adapter.transcribeAudio(spec, opts);
+  });
 }

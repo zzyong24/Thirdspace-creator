@@ -92,6 +92,10 @@ import {
 } from "./positioning-runner";
 import { parseLearnings, reviewFacets } from "./review-runner";
 import { parseDiagnosis } from "./calibration-diagnose-runner";
+import {
+  formatErrorDiagnostic,
+  observableModelKey,
+} from "./error-diagnostics";
 
 // 上下文感知 ChatBox 的服务端装配(SPEC §3.3)—— /api/chat 路由的「大脑」,从这里调
 // streamText。把路由薄壳化:路由只管鉴权 + 解析 body + 持久化;真正的「resolve skill →
@@ -1396,9 +1400,10 @@ export async function buildChatAssembly(
         } catch (err) {
           // 未配/检索失败 → 诚实降级纯记忆(不 crash);记日志供 dev 排查。
           console.warn(
-            `[chat-runner] gatherMaterials searchWeb 降级(model_memory): ${
-              err instanceof Error ? err.message : String(err)
-            }`,
+            `[chat-runner] gatherMaterials searchWeb 降级(model_memory): ${formatErrorDiagnostic(
+              err,
+              { omitMessage: true },
+            )}`,
           );
           searchResults = [];
         }
@@ -1409,7 +1414,7 @@ export async function buildChatAssembly(
       const spec = await deps.resolveModelSpec(ctx, "research.gather");
       console.info(
         `[chat-runner] tool=material.gather capability=research.gather apiFormat=${spec.apiFormat} ` +
-          `model=${spec.model} endpoint=${spec.baseUrl ? "custom" : "official"}`,
+          `model=${observableModelKey(spec)} endpoint=${spec.baseUrl ? "custom" : "official"}`,
       );
       const { runResearchNode, formatUserMaterialFacet } = await import(
         "@creatoros/ai-worker"

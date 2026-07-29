@@ -9,6 +9,7 @@ import {
 import {
   resolveSkillForSurface,
   runChatStream,
+  formatErrorDiagnostic,
   type ChatContext,
 } from "@creatoros/backend/modules/ai-runtime";
 import { runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
@@ -508,8 +509,12 @@ export async function POST(req: Request): Promise<Response> {
     // [T-094] 平台类错误(内容审核/限流/配额)先过人话映射,用户拿到能行动的说明。
     const message =
       humanizeAiError(err)?.message ??
-      (err instanceof Error ? err.message : String(err));
-    console.error("[api/chat] stream failed:", err);
+      "模型调用失败，请稍后重试或检查模型配置。";
+    console.error(
+      `[api/chat] stream failed ${formatErrorDiagnostic(err, {
+        omitMessage: true,
+      })}`,
+    );
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

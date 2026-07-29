@@ -14,8 +14,13 @@ export function safeErrorMessage(err: unknown): string {
   const redacted = singleLine
     .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [REDACTED]")
     .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[REDACTED]")
+    .replace(/https?:\/\/[^\s,;)"']+/gi, "[REDACTED_URL]")
     .replace(
       /((?:api[-_ ]?key|token|secret|password)\s*[:=]\s*)[^\s,;]+/gi,
+      "$1[REDACTED]",
+    )
+    .replace(
+      /((?:model(?:name|id)?|provider|base[-_ ]?url)\s*[:=]\s*)[^\s,;]+/gi,
       "$1[REDACTED]",
     );
   if (!redacted) return "unknown error";
@@ -24,11 +29,31 @@ export function safeErrorMessage(err: unknown): string {
     : `${redacted.slice(0, MAX_DIAGNOSTIC_MESSAGE_CHARS)}…`;
 }
 
+export function observableModelKey(spec: {
+  model: string;
+  displayModelKey?: "channel-managed";
+}): string {
+  return spec.displayModelKey ?? spec.model;
+}
+
+/** 渠道托管模式下不允许把 provider 返回的 model、URL、key 等正文带到任务失败原因。 */
+export function safeModelFailureMessage(
+  err: unknown,
+  spec?: { displayModelKey?: "channel-managed" } | null,
+): string {
+  return spec?.displayModelKey === "channel-managed"
+    ? "渠道模型调用失败，请稍后重试或联系官方处理"
+    : safeErrorMessage(err);
+}
+
 /**
  * 结构化错误摘要：不落 headers/response/request 对象，只记录错误类、分类、状态码、错误码和
  * 脱敏后的短消息。适合写入 sidecar 诊断日志。
  */
-export function formatErrorDiagnostic(err: unknown): string {
+export function formatErrorDiagnostic(
+  err: unknown,
+  options: { omitMessage?: boolean } = {},
+): string {
   const e =
     err && typeof err === "object"
       ? (err as {
@@ -56,6 +81,8 @@ export function formatErrorDiagnostic(err: unknown): string {
     `reason=${cls.reason}`,
     ...(status === null ? [] : [`status=${status}`]),
     ...(code ? [`code=${code}`] : []),
-    `message=${JSON.stringify(safeErrorMessage(err))}`,
+    ...(options.omitMessage
+      ? []
+      : [`message=${JSON.stringify(safeErrorMessage(err))}`]),
   ].join(" ");
 }

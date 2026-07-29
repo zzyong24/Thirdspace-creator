@@ -7,7 +7,8 @@ import {
 } from "./creative-context";
 import {
   formatErrorDiagnostic,
-  safeErrorMessage,
+  observableModelKey,
+  safeModelFailureMessage,
 } from "./error-diagnostics";
 
 export type { ScriptShot };
@@ -95,6 +96,7 @@ export async function runScriptDraft(
   task: ScriptTask,
   deps: ScriptDeps,
 ): Promise<void> {
+  let resolvedSpec: ModelSpec | null = null;
   try {
     await deps.ai.markRunning(ctx, task.id);
     const artifactId =
@@ -116,9 +118,10 @@ export async function runScriptDraft(
     // Vercel AI SDK 路径:解析 model(按 capability) + 跑 ai-worker 写文案节点(外置 script.draft 模板),
     // 步骤事件落 ai_task_steps(窗口步骤日志)。弃旧 LlmCompleter。
     const spec = await deps.resolveModelSpec(ctx, "script.draft");
+    resolvedSpec = spec;
     console.info(
       `[script-runner] task=${task.id} capability=script.draft apiFormat=${spec.apiFormat} ` +
-        `model=${spec.model} endpoint=${spec.baseUrl ? "custom" : "official"}`,
+        `model=${observableModelKey(spec)} endpoint=${spec.baseUrl ? "custom" : "official"}`,
     );
     const {
       modelFor,
@@ -235,7 +238,9 @@ export async function runScriptDraft(
       },
     });
   } catch (err) {
-    const failureMessage = safeErrorMessage(err);
+    const channelManaged =
+      resolvedSpec?.displayModelKey === "channel-managed";
+    const failureMessage = safeModelFailureMessage(err, resolvedSpec);
     const failure = err as {
       code?: unknown;
       violations?: Array<{ message?: unknown }>;
@@ -290,7 +295,9 @@ export async function runScriptDraft(
     }
     // eslint-disable-next-line no-console
     console.error(
-      `[script-runner] draft failed task=${task.id} ${formatErrorDiagnostic(err)}`,
+      `[script-runner] draft failed task=${task.id} ${formatErrorDiagnostic(err, {
+        omitMessage: channelManaged,
+      })}`,
     );
   }
 }

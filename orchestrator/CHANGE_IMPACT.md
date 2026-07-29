@@ -173,6 +173,18 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   code-frame panic 阻断，不归入 T-534 代码范围，也不伪报发布构建全绿。证据见
   `GATE-T534-BUILD.md`。
 
+## CI-TSB-002 — Activity 最小运行快照与 Growth 业务解释权（DEC-BOUNDARY-002，2026-07-29）
+
+- **变更**：明确 Activity 的 `projectKey/channelRef` 只是授权范围快照，不是渠道、应用或模型
+  业务目录；Growth 是唯一业务解释方，CreatorOS 只消费两边签名结果。
+- **兼容**：不删除现有激活码、project/channel 字段或本机 license；用户无需重激活。
+- **下游重派生**：
+  - T-606 authority contract → 增加 §1.1 与 TC-T617-11..13；
+  - Activity v1/额外 client/application 字段 → 明确 fail-closed，不再“兼容忽略”；
+  - AI 日志、raw error 与异步任务 modelKey → 必须统一脱敏为 `channel-managed`。
+- **发布影响**：不新增 wire 或 migration；Growth/Activity live HTTPS E2E、正式 key 和用户
+  发布许可仍未完成，不能把单仓测试写成已上线。
+
 ## CI-FDB-003 — 产品 Bug 临时飞书降级（DEC-FDB-003，2026-07-26）
 
 - **变更**：签名 `bugFeedbackUrl` 缺失时，问题反馈弹窗打开内置官方飞书表；自动发送禁用，

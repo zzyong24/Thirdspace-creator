@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  ChannelManagedProviderError,
+} from "./provider-factory";
+import {
   generateImage,
   generateVideo,
   transcribeAudio,
@@ -76,6 +79,49 @@ describe("multimodal provider 工厂 —— 按 provider 分派 + 统一 { asset
     await expect(
       generateImage({ ...imageSpec, provider: "unknown" }, { prompt: "x" }, registry),
     ).rejects.toBeInstanceOf(MultimodalConfigError);
+  });
+
+  it("渠道托管适配器的原始 model/baseURL/key 错误在工厂边界被替换", async () => {
+    const registry: MultimodalProviderRegistry = {
+      fake: {
+        generateImage: async () => {
+          throw new Error(
+            "https://channel-model.internal model=private-model apiKey=SECRET_CHANNEL_KEY",
+          );
+        },
+      },
+    };
+    await expect(
+      generateImage(
+        { ...imageSpec, displayModelKey: "channel-managed" },
+        { prompt: "x" },
+        registry,
+      ),
+    ).rejects.toEqual(
+      expect.objectContaining({
+        name: ChannelManagedProviderError.name,
+        message: "渠道模型调用失败，请稍后重试或联系官方处理",
+      }),
+    );
+  });
+
+  it("渠道托管模式连未知 provider 和能力不支持错误也不暴露真实名称", async () => {
+    const channelSpec = {
+      ...imageSpec,
+      provider: "private-provider",
+      model: "private-model",
+      displayModelKey: "channel-managed" as const,
+    };
+    await expect(
+      generateImage(channelSpec, { prompt: "x" }, {}),
+    ).rejects.toBeInstanceOf(ChannelManagedProviderError);
+    await expect(
+      generateVideo(
+        channelSpec,
+        { prompt: "x" },
+        { "private-provider": createImageOnlyFakeAdapter() },
+      ),
+    ).rejects.toBeInstanceOf(ChannelManagedProviderError);
   });
 });
 

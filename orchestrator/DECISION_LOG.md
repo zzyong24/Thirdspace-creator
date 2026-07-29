@@ -1123,3 +1123,22 @@ BUILD Gate。
 **User confirmation**：用户 2026-07-29 对四任务口径明确回复“认可”。
 
 **Status**：resolved；T-600 可直接按 T-598 既有 CONTRACT 做兼容任务退役。
+
+## DEC-BOUNDARY-002 (2026-07-29) — Activity 最小运行快照不等于业务权威
+
+**来源**：用户在评估 pure activationRef 全量迁移成本后，确认采用兼容折中方案，并要求把
+产品边界写入项目，避免后续再次跑偏。
+
+**决策**：
+
+1. Activity 保留现有 project/channel 授权字段并继续负责激活码、设备、期限、撤权、签名和
+   防重放；这些字段只是 Growth 下发的 opaque 运行快照，不要求现有用户重激活。
+2. Growth 唯一解释范围标签对应的渠道、代理、客户、产品、应用目录、协议和模型配置。
+3. CreatorOS 先取得 Activity 当前签名授权，再把凭证交给 Growth 获取配置；不得自报
+   `projectKey/channelRef/clientId`，不得让本地缓存覆盖服务端撤权。
+4. Activity 的 ticket/内省不得携带 `clientId`、应用目录或模型/商业字段；CreatorOS 只接受
+   current v2 closed wire，并只信任 Growth-signed bundle 中的应用身份和配置。
+5. pure activationRef 作为未来独立 breaking migration 保留，不在 T-606/T-617 删除字段、
+   重发激活码或引入双协议。
+
+**Status**：resolved；进入 T-617 增量复核和 BUILD。
