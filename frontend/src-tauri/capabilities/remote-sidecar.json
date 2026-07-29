@@ -13,6 +13,9 @@
     "opener:default",
     "allow-license-activate",
     "allow-license-check",
+    "allow-entitlement-claim-start",
+    "allow-entitlement-claim-poll",
+    "allow-entitlement-claim-resume",
     "allow-license-last-decision",
     "allow-license-latest-version"
   ]

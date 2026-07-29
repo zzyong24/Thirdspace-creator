@@ -467,4 +467,55 @@ describe("T-573 热点宝新版低粉爆款路由", () => {
       expect.objectContaining({ waitUntil: "domcontentloaded" }),
     );
   });
+
+  it("同轮多条匹配响应中忽略最后的过渡空壳，采用前面的真实结果", async () => {
+    const fake = createFakePage({
+      url: "https://douhot.douyin.com/analysis",
+      userInfoCodes: [0],
+      billboardResponses: [
+        {
+          payload: {
+            code: 0,
+            data: {
+              objs: [
+                {
+                  item_id: "item-real",
+                  item_title: "真实结果",
+                  publish_time: 1_800_000_000,
+                },
+              ],
+            },
+          },
+          requestBody: {
+            sub_type: 1002,
+            date_window: 72,
+            keyword: "川菜",
+          },
+        },
+        {
+          payload: { code: 0, data: {} },
+          requestBody: {
+            sub_type: 1002,
+            date_window: 72,
+            keyword: "川菜",
+          },
+        },
+      ],
+    });
+
+    await expect(
+      fetchDouhotLowFollowerBreakout(
+        {
+          authDir: "/tmp/fake-auth",
+          keyword: "川菜",
+          board: "low_follower_breakout",
+        },
+        { openPage: async () => fake },
+      ),
+    ).resolves.toMatchObject({
+      listValid: true,
+      windowHours: 72,
+      candidates: [{ itemId: "item-real" }],
+    });
+  });
 });

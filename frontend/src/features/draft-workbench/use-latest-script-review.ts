@@ -6,8 +6,8 @@
  * 病根:审核在右栏对话内完成(工具流落库),稿面的审核卡/软门横幅拿的是 server 首屏
  * props(initialReport)——完成路径上的 router.refresh 不总是覆盖到(真机实测:重新审核
  * 完成后横幅仍说「未重新审核」)。与其逐条完成路径埋刷新(易漏),这里让消费组件自愈:
- * **仅当报告缺失或 stale(版本落后当前脚本)时**轮询 getLatestScriptReview,追上即停;
- * 窗口聚焦时立即补拉一次。非 stale 时零请求。
+ * **已有旧报告且 stale(版本落后当前脚本)时**轮询 getLatestScriptReview,追上即停;
+ * 从未审核(null)只在窗口聚焦/重新可见时补拉，不再每 8 秒把正常空态刷成异常日志。
  */
 
 import * as React from "react";
@@ -39,7 +39,8 @@ export function useLatestScriptReview(
   currentVersion: number,
 ): ScriptReviewReportResource | null {
   const [report, setReport] = React.useState(initialReport);
-  const needsFresh = report === null || report.artifactVersion < currentVersion;
+  const stale = report !== null && report.artifactVersion < currentVersion;
+  const needsFresh = report === null || stale;
 
   React.useEffect(() => {
     if (!needsFresh) return;
@@ -55,17 +56,19 @@ export function useLatestScriptReview(
           : prev,
       );
     };
-    const iv = setInterval(() => void pull(), POLL_MS);
+    // 从未审核是正常空态，不应无限请求一个必定 404 的资源。已有报告变旧时才需要
+    // T-393 的短周期自愈；null 仍保留 focus/visibility 唤醒，审核完成后回到稿面即可追上。
+    const iv = stale ? setInterval(() => void pull(), POLL_MS) : null;
     const onWake = () => void pull();
     window.addEventListener("focus", onWake);
     document.addEventListener("visibilitychange", onWake);
     return () => {
       stopped = true;
-      clearInterval(iv);
+      if (iv !== null) clearInterval(iv);
       window.removeEventListener("focus", onWake);
       document.removeEventListener("visibilitychange", onWake);
     };
-  }, [needsFresh, projectId]);
+  }, [needsFresh, projectId, stale]);
 
   return report;
 }

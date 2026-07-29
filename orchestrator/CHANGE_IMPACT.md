@@ -161,6 +161,43 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   `https://my.feishu.cn/share/base/form/...`；用无登录态浏览器验证可填写，且不会暴露
   Base 底表或其他用户的反馈记录。表单保留日志附件字段，内部“处理状态”不对填写者展示。
 
+## CI-TSL-001 — T-076-CREATOR 权益领取与纯文字反馈上线增量（DEC-TSL-001，2026-07-27）
+
+- **产品边界变更**：P-04/NFR-PRIVACY 从“应用内发送固定禁用”改为“只有用户明确确认后，可向
+  Growth 官方收件服务提交用户已预览的纯文字并回显真实编号”。contract 必填的非敏感应用版本、
+  系统名称和语言必须在高级诊断可见并纳入本次确认；日志、附件、截图、激活码、token、手机号、
+  机器标识及其他用户内容仍禁止自动上传。
+- **上游不变**：Growth 继续拥有渠道、商业关系、反馈正文与优先级；AM 继续拥有
+  license/entitlement/claim 与签名；Creator 只做终端交互和可信消费。
+- **受影响工件**：
+  - `docs/产品定位.md` → 已重派生；
+  - DEC-FDB-003 → 保留为服务不可用/安全门关闭时的手动降级，不再是永久唯一流程；
+  - T-538 feedback adapter/UI → 由 T-575 承接收口，不能并行修改同一路径；
+  - T-534 runtime、parser、cache 与双入口语义 → 不失效，只需回归；
+  - Growth T-076/AM claim exact contract → AM consume 已 Round 2 PASS，最终 descriptor/vector
+    已逐字复制并完成 SHA pin；Growth API-210..212 Round 2 也已 PASS（receipt
+    `3bb73429a8e3`），0028 migration、API-210..212、durable delivery/readiness 本地 BUILD
+    全绿。HARD-575-001 仅保留 live HTTPS 三仓 E2E、部署、正式密钥与 release receipt。
+- **发布影响**：当前 0.2.0 已发布主功能不变；两项新能力默认关闭。本任务不 commit、push、
+  deploy 或重新发布，整体 GO 后再由用户决定。
+- **安全输入边界**：浏览器不接收 claimToken。Creator 生成 device session，user code 只用于
+  Growth 登录态 ownership+reauth 批准；device secret/verifier 只在内存或 OS 安全临时区。
+  claimToken 从 API-212 approved no-store launch 到达后，唯一允许的短期持久化是首次 AM 出网前
+  的独立 OS 原生凭据 pending-consume journal；普通文件、数据库、query/fragment、剪贴板、日志、
+  crash report、APM 与遥测全部禁止。AM 以同 requestId+同 consume digest exact replay；只有
+  `.license` 原子落盘并读后验真才删 journal，长期只保存正式授权事实与既有 code。
+- **恢复影响**：HARD-575-002 的 wire 方案已由 pending journal 收敛，不新增 Growth ack/replay
+  API；native 实现与确定性 fault tests 已证明 journal-before-network、prepared/attempted exact
+  replay、签名验证、`.license` 原子写入/读回和清理顺序。真实 OS keychain 进程强杀、AM commit
+  后丢包及 Windows replace 逐点强杀仍是 release 验证门，不能写成已完成真机矩阵。
+- **反馈 readiness 裁决**：DEC-TSL-002 以 `avoid` 关闭 HARD-575-003，不新增 API、表、角色或
+  健康平台。能力由当前事务内联证明：AM signed feedback context → Growth API-170 → closed
+  `202 publicRef`；任一步失败保留草稿、明确未提交并进入复制文字 + 官方反馈页。历史成功、
+  URL、telemetry 或 UI state 不得冒充本次成功。
+- **完成红线**：DEC-TSL-002 已授权默认关闭的 Creator BUILD，禁止 Round 4。Growth
+  API-210..212 PASS、最终 device-flow fixture 逐字一致、真实 provider/领取 UI、journal
+  fault-injection 与跨系统联调未闭环时 capability 不得开启、T-575 不得完成。
+
 ---
 
 ### How to use this file going forward

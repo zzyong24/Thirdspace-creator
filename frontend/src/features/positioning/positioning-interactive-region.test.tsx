@@ -177,6 +177,29 @@ describe("PositioningDraftDrawer", () => {
     expect(screen.getByLabelText("一句话定位")).toBeTruthy();
   });
 
+  it("新建定位版本先确认，确认后以空白定位重新开始且取消确认不打开", () => {
+    const confirm = vi.spyOn(window, "confirm");
+    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
+    render(
+      <PositioningDraftDrawer
+        profile={PROFILE}
+        triggerLabel="新建定位版本"
+        title="新建定位版本"
+        description="重新开始定位。"
+        confirmClearOnOpen
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /新建定位版本/ }));
+    expect(screen.queryByTestId("positioning-draft-dialog")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /新建定位版本/ }));
+    expect(screen.getByTestId("positioning-draft-dialog")).toBeTruthy();
+    expect((screen.getByLabelText("人设") as HTMLInputElement).value).toBe("");
+    expect(confirm).toHaveBeenCalledTimes(2);
+    confirm.mockRestore();
+  });
+
   it("规则入口打开时直达定位规则，而不是让用户再猜第三个 tab", () => {
     render(
       <PositioningDraftDrawer

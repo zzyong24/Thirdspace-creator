@@ -103,7 +103,7 @@ describe("IssueFeedbackDialog", () => {
     expect(fetchMock.mock.calls[0]?.[1]?.method ?? "GET").toBe("GET");
   });
 
-  it("[T-546] Growth 未配置时仍使用飞书降级渠道，且引导压缩日志后手动上传", async () => {
+  it("[T-575] Growth 未配置时仍使用官方反馈页降级，且明确不会自动上传日志", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
@@ -113,8 +113,8 @@ describe("IssueFeedbackDialog", () => {
     const user = userEvent.setup();
     render(<IssueFeedbackDialog pathname="/projects/123456789" collapsed={false} />);
     await user.click(screen.getByRole("button", { name: "问题反馈" }));
-    expect(await screen.findByText(/压缩为 zip/)).toBeInTheDocument();
-    expect(screen.getByText(/手动上传/)).toBeInTheDocument();
+    expect(await screen.findByText(/不会自动上传日志/)).toBeInTheDocument();
+    expect(screen.getByText(/服务不可用时仍可复制文字/)).toBeInTheDocument();
     const channel = screen.getByRole("button", { name: "打开反馈渠道" });
     expect(channel).toBeEnabled();
     expect(screen.getByRole("button", { name: "发送问题反馈" })).toBeDisabled();
@@ -266,21 +266,143 @@ describe("IssueFeedbackDialog", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("[T-546] 自动发送明确禁用，不调用 product-feedback 假装已经提交", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(
-        JSON.stringify(
-          runtimeResponse("https://growth.example.com/official-bug-form"),
+  it("[T-575] 只有真实 202 publicRef 才显示提交成功", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
         ),
-      ),
-    );
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            publicRef: "FDB-01J7K0T2AB",
+            status: "new",
+            channelBinding: "verified",
+          }),
+          { status: 202 },
+        ),
+      );
     const user = userEvent.setup();
-    render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        submissionEnabled
+      />,
+    );
     await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.type(
+      screen.getByLabelText("问题摘要"),
+      "导出按钮没有反应",
+    );
+    await user.type(
+      screen.getByLabelText("问题描述"),
+      "点击导出后没有文件，也没有错误提示。",
+    );
     const submit = screen.getByRole("button", { name: "发送问题反馈" });
     expect(submit).toBeDisabled();
-    fireEvent.click(submit);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /我已检查并确认发送上方文字和基本版本信息/,
+      }),
+    );
+    expect(submit).toBeEnabled();
+    await user.click(submit);
+    expect(await screen.findByText(/反馈已收到，编号 FDB-01J7K0T2AB/)).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).includes("/api/v1/local/product-feedback"),
+      ),
+    ).toBe(true);
+  });
+
+  it("[T-575] 提交失败保留草稿并继续提供复制和官方反馈页", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: false,
+            code: "FEEDBACK_AUTHORITY_UNAVAILABLE",
+            message: "反馈服务暂时不可用，请稍后重试",
+            retryable: true,
+          }),
+          { status: 503 },
+        ),
+      );
+    const user = userEvent.setup();
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        submissionEnabled
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
+    const description = screen.getByLabelText("问题描述");
+    await user.type(description, "点击同步按钮后一直没有任何状态变化。");
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: /我已检查并确认发送上方文字和基本版本信息/,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "发送问题反馈" }));
+
+    expect(await screen.findByText(/反馈服务暂时不可用/)).toBeInTheDocument();
+    expect(description).toHaveValue("点击同步按钮后一直没有任何状态变化。");
+    expect(screen.getByRole("button", { name: "复制反馈内容" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "打开反馈渠道" })).toBeEnabled();
+    expect(screen.queryByText(/反馈已收到/)).not.toBeInTheDocument();
+  });
+
+  it("[T-575] 编辑草稿会撤销本次确认，未重新确认时零提交", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify(
+            runtimeResponse("https://growth.example.com/official-bug-form"),
+          ),
+        ),
+      );
+    const user = userEvent.setup();
+    render(
+      <IssueFeedbackDialog
+        pathname="/"
+        collapsed={false}
+        submissionEnabled
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "问题反馈" }));
+    await user.type(screen.getByLabelText("问题摘要"), "同步按钮没有反应");
+    await user.type(
+      screen.getByLabelText("问题描述"),
+      "点击同步按钮后一直没有任何状态变化。",
+    );
+    const consent = screen.getByRole("checkbox", {
+      name: /我已检查并确认发送上方文字和基本版本信息/,
+    });
+    await user.click(consent);
+    expect(consent).toBeChecked();
+
+    await user.type(screen.getByLabelText("问题描述"), " 我补充了一段说明。");
+
+    expect(consent).not.toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "发送问题反馈" }),
+    ).toBeDisabled();
     expect(
       fetchMock.mock.calls.some(([url]) =>
         String(url).includes("/api/v1/local/product-feedback"),

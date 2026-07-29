@@ -29,6 +29,45 @@ Status: active
 ```
 
 ```text
+ID: DEC-PKG565-001
+Date: 2026-07-27
+Stage: T-565 PLAN
+Type: user-confirmed-architecture-direction
+Decision: 重选 CreatorOS Windows Runtime 交付架构。默认发布小型 Web Installer，同时保留
+          完整 Offline Installer；两者使用同一签名分层 Runtime Image 与安装事务。setup
+          必须完成全部必需 runtime 的下载/读取、校验、物化和 smoke；正式应用首启完整
+          runtime 解压次数恒为 0。必须实质减少 node_modules/JS 散文件，不能只把原 tar
+          改成联网下载。Windows 正式安装树不得保留通用 node_modules/源码项目结构；纯
+          JS/JSON 优先 bundle，只有 Chromium、媒体工具、WASM、native addon、migrations
+          等有真实路径要求的资产可进入签名 allowlist。安装失败不得显示成功或转移给首启修复。
+Rationale: Windows 0.2.0 真机在安装后白屏约 30 分钟，已确认是在处理大量小文件。现有
+           NSIS POSTINSTALL 失败后保留 tar、首启 AppData 兼容解压的 fail-forward 破坏
+           “安装完成即可使用”与诚实失败边界；当前 runtime 26,381 个文件中 24,756 个来自
+           node_modules，在线下载本身不能消除 NTFS/Defender 小文件成本。RAT-565-01 已证明
+           高置信 prune 可把普通文件减至 16,381（-37.91%）且真实能力 smoke 通过，但距离
+           ≤5,000 仍必须进行 production closure bundle；`pnpm deploy`/Next standalone/压缩
+           容器都不能单独成为最终解法。
+Architecture Refinement: 实际 Tauri 壳与四层 runtime 组成不可变、版本化 compatibility set；
+                         固定 shortcut 只启动稳定 launcher，installer 在 pending set 真 smoke
+                         后以单一 `current` 指针同时切换壳与 runtime。0.2.0 首迁移不信任旧 tar
+                         为新 layer，必须全量取得新签名 layers，并在提交前保留 legacy fallback。
+                         默认 Web 发布阈值：首装 ≤500 MiB、core-only 更新 ≤100 MiB、每成功
+                         安装 CDN 成本 ≤US$0.10；超限阻断或另开 DEC。
+Source: 用户 2026-07-27 明确要求“必须得 setup 阶段完成小文件的解压缩，并且必须合理的减少
+        小文件”；在收到“默认 Web Installer + 保留 Offline Installer”的推荐与确认请求后
+        回复“启动”。
+Affected Artifacts: T-565、Windows runtime packaging、installer、updater、release workflow、
+                    desktop startup resolver；替代 T-487 的 Windows 交付条款。
+Invalidates: T-487/T-493 中“NSIS hook 失败后首启兼容解压可作为发布兜底”以及 T-487 已完成的
+             Windows 零解压验收结论；macOS 交付条款不受影响。
+Explicit Limits: 不触发付费 Windows runner、不发布安装包、不改变领域数据存储、不把必需
+                 runtime 改成应用首启/功能首次使用时按需下载。
+Owner: user+agent
+Revisit Trigger: Windows 原生 RAT 证明 WiX Burn/少文件方案不可行，或用户改变在线/离线分发取舍。
+Status: active
+```
+
+```text
 ID: DEC-MC-002
 Date: 2026-07-26
 Stage: T-501 4-build
@@ -849,3 +888,77 @@ code-frame panic 阻断，不影响本决策落地结论，但发布前必须由
 4. 这是发布前 accepted-risk 降级；Growth/AM 的长期权威、签名 runtime 和三系统商业边界不变。
 
 **Status**：accepted-risk（用户确认的临时发布降级；T-546）。
+
+## DEC-TSL-001 (2026-07-27) — T-076-CREATOR 允许用户确认后的纯文字反馈，claim 未闭环不得完成
+
+**来源**：用户明确要求让已发布 CreatorOS 成为三系统闭环终端，并固定 CreatorOS 只负责终端
+交互、身份会话、权益领取入口、用户确认后的问题提交和本地脱敏诊断；Growth/AM 权威边界不变。
+T-575 Round 1 独立评审指出该要求与旧 P-04“应用内发送固定禁用”冲突，并指出 disabled claim
+adapter 不能冒充真实权益领取。
+
+**决策**：
+
+1. 更新产品宪法 P-04/NFR-PRIVACY：只有用户明确点击后，CreatorOS 才可把用户已预览并脱敏的
+   问题纯文字提交到 Growth 官方收件服务，并只以 Growth 真实 `publicRef` 回显成功。
+2. 渠道身份只能来自 AM 已验签授权上下文；Growth 决定渠道优先级。Creator 不上传日志、附件、
+   截图、激活码、token、手机号、机器标识或其他用户内容。
+3. `bugFeedbackUrl` 缺失、服务 health 未过或任一安全门关闭时，继续使用 DEC-FDB-003 的复制+
+   官方飞书手动降级；打开网页不等于提交。
+4. AM claim canonical 尚未落盘时允许先完成零出网 adapter、fixture 和 feature flag，但它们只是
+   T-575 内部步骤。AM canonical、真实 provider、领取 UI、三仓正负 fixture 和真实联调未全部
+   完成时，T-575 必须保持 blocked/未完成。
+5. CreatorOS 不成为渠道、价格、订单、佣金、反馈优先级或 entitlement 真相源；不扩张
+   `channelConfig` closed schema。
+6. 当前已发布主功能优先：两项新能力默认关闭，任何异常先关远端签名门/capability；本任务不
+   commit、push、deploy 或重新发布。
+7. 后续主调度确认 AM final exact 已 Round 2 独立评审 PASS；并指出浏览器 owner API
+   无法在禁止 deep-link/query/fragment/clipboard 的前提下把 claimToken 安全交给 Creator。
+   Creator consumer 因此只预留 Growth API-210..212 device authorization + S256 PKCE：
+   Creator 生成 session 并展示 user code，用户在 Growth 登录态完成 ownership+reauth 批准，
+   Creator 持 device secret+verifier 轮询 API-212。approved no-store launch 到达后，在首次 AM
+   consume 前，必须把 token/path/requestId/nonce/绑定语义摘要写入独立 OS 原生凭据
+   pending-consume journal；这是 claimToken 唯一允许的短期持久化例外，禁止普通文件、数据库、
+   URL、剪贴板、日志和遥测。AM 已锁同 requestId+同 consume digest exact replay；重启必须复用
+   原请求，只有 `.license` 原子落盘并读后验真才删 journal。成功后只长期保存 AM Ed25519 验签
+   通过的正式授权事实与既有 activation code。AM final descriptor/fixture SHA-256 分别为
+   `52ce9b41…2d3`、`e4992497…384`，Creator 已逐字复制并 cmp；Growth API-210..212 PASS、最终
+   device-flow fixture 一致和 Creator consumer 复审前，T-575 不进入 BUILD。
+8. Creator Round 3 独立评审为 `CONCERNS`（0 blocker/2 major）。pending journal 删除条件收敛
+   为 closed 状态表：`attempted` 后的取消、TTL、网络未知、坏签名和旧 `.license` 均不能删除，
+   必须先 exact replay；本地成功但删除失败也先重放并把签名响应与本地快照逐字段核对。反馈直提
+   由两门改为三门，新增不可伪造且未过期的服务 readiness；当前上游没有 Creator 可消费的 exact
+   source/shape/TTL，登记 HARD-575-003。缺该门时 direct submit 固定 disabled，不由 URL、历史
+   成功、telemetry 或 UI 猜 ready，也不新增通用健康平台。
+
+**User confirmation**：用户 2026-07-27 的 T-076-CREATOR 明确授权。
+
+**Pattern-Ref**：沿用 T-534/DEC-TSB-001 的现有可信边界，不新增第三方 flag 平台。
+
+**Status**：resolved（方向变更已确认；仍须 T-575 独立评审与 contract gates）。
+
+## DEC-TSL-002 (2026-07-27) — T-575 三轮后收敛裁决：不新增反馈 readiness 平台
+
+**来源**：用户更新 `product-to-code-orchestrator` 至 3.7.0，并明确要求收敛审核、重新委派
+Growth / Activation Manager / CreatorOS 继续推进。T-575 已完成三轮独立评审；按新规则不得
+开启 Round 4，遗留问题由用户裁决。
+
+**决策**：
+
+1. Round 3 的 pending-consume journal 删除条件已按 closed 状态表修订，作为 BUILD 的
+   fault-injection 验收条件，不再重复评审。
+2. 不采纳“新增 Creator 可消费的独立 feedback readiness API/平台”这一实现扩张。
+   “服务能力可用”由既有真实事务内联证明：CreatorOS 先取得 AM 签名反馈上下文，再调用
+   Growth `API-170`；只有 Growth 返回并通过 closed-schema 校验的真实 `202 publicRef`
+   才显示提交成功。
+3. 任一步骤超时、断网、坏签名、上下文过期、Growth 非 `202`、回执不合法或服务降级，都必须
+   保留用户草稿、显示未提交，并进入既有复制文字 + 官方反馈页的手动降级。历史成功、URL、
+   telemetry、UI 本地状态不得冒充 ready。
+4. 本裁决不新增 API、表、角色、健康平台或渠道字段，也不降低“失败不得冒充成功、用户明确
+   确认后才出网、禁止附件/日志/激活码自动上传”的已确认验收标准。
+5. T-575 可在 Growth API-210..212 契约 PASS 后进入完整 BUILD；任务仍须一次完成权益领取、
+   签名渠道配置、纯文字反馈、真实回读、故障恢复和跨仓 E2E，不能把未完成部分静默延期。
+
+**Risk disposition**：`avoid`（避免 reviewer 建议诱发的新 readiness 产品面），以现有
+AM assertion + Growth authoritative POST receipt 的 fail-closed 事务作为最小结果约束。
+
+**Status**：resolved（用户三轮后裁决；禁止 Round 4）。

@@ -150,6 +150,11 @@ describe("T-482 内容雷达转为我的选题", () => {
         ],
         sourceUrl: detail.item.canonicalUrl,
       });
+      expect(ready.transforms[0]).toMatchObject({
+        taskStatus: "succeeded",
+        taskErrorCode: null,
+        taskErrorMessage: null,
+      });
       expect(createTopic).not.toHaveBeenCalled();
 
       const confirmed = await intelligence.confirmTopic(

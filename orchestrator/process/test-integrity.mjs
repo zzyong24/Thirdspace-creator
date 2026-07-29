@@ -67,13 +67,6 @@ const DEFAULTS = {
   // Comment lead-ins used to separate code from comments. `#` only counts at a token boundary (so JS private
   // fields `this.#x` are not mistaken for a comment). `--` is NOT a default (it collides with JS `i--`).
   lineComments: ['//', '#'],
-  // Exact, audited test relocations/retirements. Each group must name the deleted source tests, the
-  // replacement tests, and a non-empty reason. The replacement aggregate must retain at least as many
-  // test cases and assertions as the deleted aggregate; this is intentionally NOT a glob/baseline escape.
-  testMigrations: [],
-  // Exact, audited suppression increases. Each entry is path + literal directive + maximum net increase
-  // + reason. Broad globs and reason-less allowances are rejected.
-  suppressionAllowances: [],
   // Coverage config to scan for LOWERED thresholds. Keys matched as the LEFT identifier before `:` / `=`.
   coverageConfigPath: null,             // e.g. "vitest.config.ts" | "jest.config.js" | "pyproject.toml" | ".nycrc"
   coverageThresholdKeys: ['statements', 'branches', 'functions', 'lines', 'fail_under'],
@@ -183,24 +176,9 @@ function countHits(content, patterns, scope) {
     const { code, comment } = splitCodeComment(raw);
     const hay = scope === 'comment' ? comment : code;
     if (!hay) continue;
-    const hits = [];
     for (const pat of patterns) {
       let from = 0, idx;
-      while ((idx = hay.indexOf(pat, from)) !== -1) {
-        hits.push({ start: idx, end: idx + pat.length, length: pat.length });
-        from = idx + Math.max(1, pat.length);
-      }
-    }
-    // Configs often contain a specific token and its prefix (for example
-    // `eslint-disable-next-line` + `eslint-disable`, or `test.skip` + `.skip`).
-    // One directive is one criterion change, not two. Prefer the longest match at the same/overlapping
-    // range, then count only non-overlapping occurrences.
-    hits.sort((a, b) => a.start - b.start || b.length - a.length);
-    let acceptedEnd = -1;
-    for (const hit of hits) {
-      if (hit.start < acceptedEnd) continue;
-      n++;
-      acceptedEnd = hit.end;
+      while ((idx = hay.indexOf(pat, from)) !== -1) { n++; from = idx + pat.length; }
     }
   }
   return n;
@@ -253,61 +231,12 @@ const changed = changedFiles().filter(c => !isExcluded(c));
 const testChanges = changed.filter(c => isTestFile(c.path) || isTestFile(c.old));
 if (!testChanges.length) ok('no changed test files in range — assertion/skip checks have nothing to inspect.');
 
-// Exact migration declarations let an architectural move retire obsolete test paths without pretending
-// the criteria vanished. They are deliberately stricter than an exclusion/baseline: exact paths only,
-// a written reason, existing replacement tests, and aggregate case/assertion counts that do not fall.
-const migratedDeletedTests = new Set();
-const deletedTestPaths = new Set(
-  testChanges
-    .filter(c => c.code === 'D' || (readAt(target, c.path) === null && readAt(base, c.old) !== null))
-    .map(c => c.old),
-);
-for (const [index, migration] of (cfg.testMigrations ?? []).entries()) {
-  const label = `testMigrations[${index}]`;
-  const from = Array.isArray(migration?.from) ? migration.from : [];
-  const to = Array.isArray(migration?.to) ? migration.to : [];
-  const reason = typeof migration?.reason === 'string' ? migration.reason.trim() : '';
-  if (!from.some(path => deletedTestPaths.has(path))) continue; // declaration is dormant for this diff
-  if (!from.length || !to.length || !reason) {
-    err(`${label}: active migration requires non-empty exact "from", "to", and "reason" fields.`);
-    from.forEach(path => migratedDeletedTests.add(path));
-    continue;
-  }
-  const broad = [...from, ...to].some(path => typeof path !== 'string' || /[*?[\]{}]/.test(path));
-  if (broad) {
-    err(`${label}: glob-like paths are forbidden; migration allowances must name exact files.`);
-    from.forEach(path => migratedDeletedTests.add(path));
-    continue;
-  }
-  const missingSources = from.filter(path => readAt(base, path) === null);
-  const liveSources = from.filter(path => !deletedTestPaths.has(path));
-  const missingTargets = to.filter(path => readAt(target, path) === null || !isTestFile(path));
-  if (missingSources.length || liveSources.length || missingTargets.length) {
-    err(`${label}: migration proof incomplete (missing-at-base: ${missingSources.join(', ') || 'none'}; not-deleted: ${liveSources.join(', ') || 'none'}; missing/non-test targets: ${missingTargets.join(', ') || 'none'}).`);
-    from.forEach(path => migratedDeletedTests.add(path));
-    continue;
-  }
-  const before = from.map(path => readAt(base, path)).join('\n');
-  const after = to.map(path => readAt(target, path)).join('\n');
-  const beforeCases = countHits(before, cfg.testCaseKeywords, 'code');
-  const afterCases = countHits(after, cfg.testCaseKeywords, 'code');
-  const beforeAssertions = countHits(before, cfg.assertionKeywords, 'code');
-  const afterAssertions = countHits(after, cfg.assertionKeywords, 'code');
-  if (afterCases < beforeCases || afterAssertions < beforeAssertions) {
-    err(`${label}: replacement criteria too small (cases ${beforeCases}→${afterCases}, assertions ${beforeAssertions}→${afterAssertions}); ${reason}`);
-  } else {
-    ok(`${label}: audited migration retained aggregate criteria (cases ${beforeCases}→${afterCases}, assertions ${beforeAssertions}→${afterAssertions}); ${reason}`);
-  }
-  from.forEach(path => migratedDeletedTests.add(path));
-}
-
 for (const c of testChanges) {
   const beforeContent = readAt(base, c.old);
   const afterContent  = c.code === 'D' ? null : readAt(target, c.path);
 
   // Pure deletion of a whole test file = removing criteria. Always weakening.
   if (c.code === 'D' || (afterContent === null && beforeContent !== null)) {
-    if (migratedDeletedTests.has(c.old)) continue;
     err(`test file DELETED: ${c.old} — removes judging criteria (use accepted-risk + a DEC entry if intentional).`);
     continue;
   }
@@ -347,37 +276,8 @@ for (const c of changed) {
   const after  = readAt(target, c.path);
   if (after === null) continue;
   const iB = countHits(before, cfg.ignorePatterns, 'comment'), iA = countHits(after, cfg.ignorePatterns, 'comment');
-  if (iA > iB) {
-    const allowances = (cfg.suppressionAllowances ?? []).filter(a => a?.path === c.path);
-    let allowedIncrease = 0;
-    const reasons = [];
-    let invalid = false;
-    for (const [index, allowance] of allowances.entries()) {
-      const pattern = typeof allowance?.pattern === 'string' ? allowance.pattern : '';
-      const maxIncrease = allowance?.maxIncrease;
-      const reason = typeof allowance?.reason === 'string' ? allowance.reason.trim() : '';
-      if (!pattern || !cfg.ignorePatterns.includes(pattern) || !Number.isInteger(maxIncrease) || maxIncrease < 1 || !reason) {
-        err(`suppressionAllowances[${index}] for ${c.path}: requires an exact configured pattern, positive integer maxIncrease, and non-empty reason.`);
-        invalid = true;
-        continue;
-      }
-      const patternBefore = countHits(before, [pattern], 'comment');
-      const patternAfter = countHits(after, [pattern], 'comment');
-      const increase = Math.max(0, patternAfter - patternBefore);
-      if (increase > maxIncrease) {
-        err(`${c.path}: audited "${pattern}" allowance exceeded ${increase}>${maxIncrease}; ${reason}`);
-        invalid = true;
-        continue;
-      }
-      allowedIncrease += increase;
-      if (increase) reasons.push(`${pattern} +${increase}: ${reason}`);
-    }
-    if (!invalid && allowedIncrease === iA - iB) {
-      ok(`${c.path}: suppression increase ${iB}→${iA} is exactly audited (${reasons.join(' | ')}).`);
-    } else if (!invalid) {
-      err(`${c.path}: type/lint suppressions INCREASED ${iB}→${iA} (+${iA - iB}); only +${allowedIncrease} is covered by exact audited allowances.`);
-    }
-  }
+  if (iA > iB)
+    err(`${c.path}: type/lint suppressions INCREASED ${iB}→${iA} (+${iA - iB}) — hiding failures is weakening (non-test file).`);
 }
 
 // ── (3) coverage threshold must not be LOWERED ───────────────────────────────────────────────────────────

@@ -5,6 +5,40 @@ import { resolve } from "node:path";
 // 触发。additive:web 运行(pnpm dev / pnpm build)不设该 env,行为完全不变。
 const isDesktopBuild = process.env.CREATOROS_DESKTOP === "1";
 
+function binaryBuildFlag(value: string | undefined): "0" | "1" {
+  return value?.trim() === "1" ? "1" : "0";
+}
+
+function feedbackOfficialOrigins(value: string | undefined): string {
+  const raw = value?.trim() ?? "";
+  if (!raw) return "";
+  for (const item of raw.split(",").map((entry) => entry.trim())) {
+    const url = new URL(item);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash
+    ) {
+      throw new Error(`[T-575] 非法 CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${item}`);
+    }
+  }
+  return raw;
+}
+
+const desktopEntitlementClaimEnabled = binaryBuildFlag(
+  process.env.CREATOROS_ENTITLEMENT_CLAIM_ENABLED,
+);
+const desktopFeedbackSubmitEnabled = binaryBuildFlag(
+  process.env.CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED,
+);
+const desktopFeedbackOfficialOrigins = isDesktopBuild
+  ? feedbackOfficialOrigins(process.env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS)
+  : "";
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: resolve(import.meta.dirname, ".."),
@@ -49,7 +83,21 @@ const nextConfig: NextConfig = {
   //   裸 `node server.js` 运行时省不掉、改不了)。loopback-guard 据此在**缺握手 token**时 fail-CLOSED
   //   (堵「解压 sidecar 裸跑」白嫖);web/dev 不烘焙 → undefined → fail-open,行为完全不变(不变式)。
   //   诚实边界:明文 sidecar 的检查终可 patch,此层是把白嫖从「一条命令」抬到「须 patch 混淆产物」。
-  env: isDesktopBuild ? { CREATOROS_HANDSHAKE_REQUIRED: "1" } : {},
+  env: isDesktopBuild
+    ? {
+        CREATOROS_HANDSHAKE_REQUIRED: "1",
+        // [T-575] 三项都由 desktop package 构建期固化；普通 build 缺省 0/空。
+        // 服务端门和客户端可见门从同一个受控输入派生，避免只亮按钮却不能提交。
+        CREATOROS_ENTITLEMENT_CLAIM_ENABLED:
+          desktopEntitlementClaimEnabled,
+        CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:
+          desktopFeedbackSubmitEnabled,
+        NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:
+          desktopFeedbackSubmitEnabled,
+        CREATOROS_FEEDBACK_OFFICIAL_ORIGINS:
+          desktopFeedbackOfficialOrigins,
+      }
+    : {},
   // pglite ships WASM; keep it external so the server bundler requires it at
   // runtime instead of trying to bundle the WASM asset.
   serverExternalPackages: [

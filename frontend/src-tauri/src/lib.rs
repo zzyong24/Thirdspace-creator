@@ -14,6 +14,8 @@ use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
 mod license;
+// [T-575] Growth device authorization → OS protected pending-consume → AM signed consume。
+mod entitlement_claim;
 // [T-399b] 蜜罐授权门:纯诱饵,零真实引用(真链一行不碰),仅 #[used] 强制进二进制过 DCE。
 //   故意重放明文命名的教科书假验签门,诱逆向 AR 的 nm/strings 撞它而非 obfstr 藏起的真门(见 decoy_gate.rs)。
 mod decoy_gate;
@@ -30,14 +32,41 @@ use base64::Engine as _;
 // [T-391 H-key] master key 传递加固:SecretString 包裹 base64 key(Drop 时 zeroize,不进 Debug/log),
 //   Zeroize 抹掉注入 sidecar 后的临时明文 buffer。
 use secrecy::{ExposeSecret, SecretString};
-use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 use tauri::webview::PageLoadEvent;
+use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 use zeroize::Zeroize as _;
 // [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
 //   macOS 走 std::process 直接 spawn server.app(Dock 隐身),不引这些,故按平台条件 import,免 macOS
 //   下 unused import / dead_code warning。
 #[cfg(not(target_os = "macos"))]
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+
+// [T-575] 正式包只使用 build.rs 固化值；debug 才允许本机 env 指向 mock。这样 Finder /
+// 快捷方式启动与 CI 打包结果一致，也不能靠修改用户机启动 env 打开发布能力。
+fn packaged_binary_flag(runtime_name: &str, built_in: &str) -> String {
+    let raw = if cfg!(debug_assertions) {
+        std::env::var(runtime_name).unwrap_or_else(|_| built_in.to_string())
+    } else {
+        built_in.to_string()
+    };
+    if raw.trim() == "1" {
+        "1".to_string()
+    } else {
+        "0".to_string()
+    }
+}
+
+fn packaged_text(runtime_name: &str, built_in: &str) -> String {
+    if cfg!(debug_assertions) {
+        std::env::var(runtime_name)
+            .ok()
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+            .unwrap_or_else(|| built_in.trim().to_string())
+    } else {
+        built_in.trim().to_string()
+    }
+}
 #[cfg(not(target_os = "macos"))]
 use tauri_plugin_shell::ShellExt;
 
@@ -146,7 +175,10 @@ fn obfuscate_master_key_file(plaintext_b64: &str, machine_seed: &str, nonce: &[u
     packed.extend_from_slice(&nonce[..]);
     packed.extend_from_slice(&body);
     body.zeroize();
-    let out = format!("v2:{}", base64::engine::general_purpose::STANDARD.encode(&packed));
+    let out = format!(
+        "v2:{}",
+        base64::engine::general_purpose::STANDARD.encode(&packed)
+    );
     packed.zeroize();
     out
 }
@@ -162,7 +194,9 @@ fn deobfuscate_master_key_file(stored: &str, machine_seed: &str) -> Option<Strin
         // 存量明文(老格式)—— 原样返回,调用方校验 + 迁移。
         return Some(s.to_string());
     };
-    let packed = base64::engine::general_purpose::STANDARD.decode(rest).ok()?;
+    let packed = base64::engine::general_purpose::STANDARD
+        .decode(rest)
+        .ok()?;
     if packed.len() < 16 {
         return None;
     }
@@ -245,7 +279,11 @@ fn resolve_or_create_master_key(app_data_dir: &std::path::Path) -> Option<Secret
 }
 
 /// 把 master key(明文 base64)以**混淆格式**写入 `.master-key`(chmod 600)。成功返回 true。
-fn write_master_key_file(key_file: &std::path::Path, plaintext_b64: &str, machine_seed: &str) -> bool {
+fn write_master_key_file(
+    key_file: &std::path::Path,
+    plaintext_b64: &str,
+    machine_seed: &str,
+) -> bool {
     use rand::RngCore as _;
     let mut nonce = [0u8; 16];
     rand::rngs::OsRng.fill_bytes(&mut nonce);
@@ -275,7 +313,10 @@ enum SelfSignature {
     /// 未签名(内测期常态)—— 如实降级,不硬拦。
     Unsigned,
     /// 已签名。`valid` = codesign --verify 是否通过;`team_id` = TeamIdentifier(可能缺)。
-    Signed { team_id: Option<String>, valid: bool },
+    Signed {
+        team_id: Option<String>,
+        valid: bool,
+    },
     /// 无法判定(codesign 不可用 / 输出异常)—— 保守当"未知",不硬拦。
     Unknown,
 }
@@ -396,7 +437,10 @@ fn resolve_machine_id(app: &AppHandle) -> Option<String> {
     let mut hasher = Sha256::new();
     hasher.update(seed.as_bytes());
     let digest = hasher.finalize();
-    let hex = digest.iter().map(|b| format!("{b:02x}")).collect::<String>();
+    let hex = digest
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
     Some(hex[..32].to_string())
 }
 
@@ -590,12 +634,7 @@ fn startup_failure_script(title: &str, detail: &str, logs_dir: &str) -> String {
     )
 }
 
-fn show_startup_failure(
-    win: tauri::WebviewWindow,
-    title: &str,
-    detail: &str,
-    logs_dir: &str,
-) {
+fn show_startup_failure(win: tauri::WebviewWindow, title: &str, detail: &str, logs_dir: &str) {
     let script = startup_failure_script(title, detail, logs_dir);
     // setup 尚未返回时 WebView event loop 可能还没完成静态 splash 加载。把 eval 延后到
     // event loop 已运行后；即便 eval 极端失败，静态 splash 也不会退化成纯白。
@@ -614,19 +653,17 @@ fn show_startup_failure(
 /// 诚实边界(SPEC §9 gate-F4):此校验只防 **JS 层篡改**(改 tarball 里的 server.js 等);
 /// ① patch 本 Rust 二进制可绕;② 已解压的 runtime 缓存目录(appDataDir/runtime/…)被直接
 /// 改写不在每次启动的校验范围内(tarball 尺寸指纹变了才重解压)——不假装形成全链路防篡改。
-fn verify_file_sha256(
-    path: &std::path::Path,
-    expected: &str,
-    label: &str,
-) -> Result<(), String> {
+fn verify_file_sha256(path: &std::path::Path, expected: &str, label: &str) -> Result<(), String> {
     use sha2::{Digest, Sha256};
     use std::io::Read as _;
 
     if expected.is_empty() {
-        return Err(format!("构建期未内嵌{label}哈希，拒绝运行无法验证的正式资源"));
+        return Err(format!(
+            "构建期未内嵌{label}哈希，拒绝运行无法验证的正式资源"
+        ));
     }
-    let mut file = std::fs::File::open(path)
-        .map_err(|e| format!("读{label}失败 {}: {e}", path.display()))?;
+    let mut file =
+        std::fs::File::open(path).map_err(|e| format!("读{label}失败 {}: {e}", path.display()))?;
     let mut hasher = Sha256::new();
     // [T-446] 堆分配 1MB 缓冲(避免 Windows 线程栈 1MB 场景下的栈溢出;运行时主线程栈通常更大
     //   但 Tauri 生命周期钩子里的辅助线程默认仍 1MB,统一堆分配更稳)。
@@ -817,14 +854,8 @@ fn write_windows_runtime_pointer(
     runtime_id: &str,
 ) -> Result<(), String> {
     let current = runtime_root.join("runtime-current.txt");
-    let temp = runtime_root.join(format!(
-        ".runtime-current-{}.tmp",
-        std::process::id()
-    ));
-    let backup = runtime_root.join(format!(
-        ".runtime-current-{}.previous",
-        std::process::id()
-    ));
+    let temp = runtime_root.join(format!(".runtime-current-{}.tmp", std::process::id()));
+    let backup = runtime_root.join(format!(".runtime-current-{}.previous", std::process::id()));
     std::fs::write(&temp, format!("{runtime_id}\n"))
         .map_err(|e| format!("写 Windows runtime 临时指针失败: {e}"))?;
     let _ = std::fs::remove_file(&backup);
@@ -945,8 +976,7 @@ fn parse_integrity_manifest(blob: &[u8]) -> Result<Vec<(String, [u8; 32])>, Stri
         if cur + 2 > plain.len() {
             return Err("integrity manifest 截断(path_len 前)".to_string());
         }
-        let path_len =
-            u16::from_le_bytes(plain[cur..cur + 2].try_into().unwrap()) as usize;
+        let path_len = u16::from_le_bytes(plain[cur..cur + 2].try_into().unwrap()) as usize;
         cur += 2;
         if cur + path_len + 32 > plain.len() {
             return Err("integrity manifest 截断(path/hash)".to_string());
@@ -982,11 +1012,7 @@ fn derive_integrity_sample_seed(machine_id: &str, wall_secs: u64) -> u64 {
 }
 
 /// 从 [0, total) 里不放回抽 N 个索引(简单 Fisher-Yates 前 N 段)。StdRng seed 决定序列。
-fn sample_without_replacement(
-    seed: u64,
-    total: usize,
-    n: usize,
-) -> Vec<usize> {
+fn sample_without_replacement(seed: u64, total: usize, n: usize) -> Vec<usize> {
     use rand::rngs::StdRng;
     use rand::{RngCore as _, SeedableRng as _};
     let n = n.min(total);
@@ -1008,10 +1034,7 @@ fn sample_without_replacement(
 /// 校验的时钟源:SystemTime::now(墙钟)——用于 hour_bucket,不用于安全敏感判定,墙钟被改
 /// 只影响样本 rotation 节奏,不影响单次校验正确性(某次校验发生时,build 期 hash 与磁盘文件
 /// hash 要么相等要么不等,与时钟无关)。
-fn integrity_sample_verify(
-    sidecar_root: &std::path::Path,
-    machine_id: &str,
-) -> Result<(), String> {
+fn integrity_sample_verify(sidecar_root: &std::path::Path, machine_id: &str) -> Result<(), String> {
     let records = parse_integrity_manifest(INTEGRITY_MANIFEST_BLOB)?;
     if records.is_empty() {
         return Err(
@@ -1068,7 +1091,6 @@ fn verify_file_sha256_bytes(
     Ok(())
 }
 
-
 /// tar 兜底平台的原子解压：先在同盘临时目录完成并校验，再 rename 切换；失败绝不留下半成品。
 fn extract_sidecar_tarball(
     tarball: &std::path::Path,
@@ -1090,7 +1112,10 @@ fn extract_sidecar_tarball(
         .ok_or_else(|| format!("sidecar 解压目标无父目录: {}", dest.display()))?;
     std::fs::create_dir_all(parent)
         .map_err(|e| format!("建 sidecar runtime 父目录失败 {}: {e}", parent.display()))?;
-    let name = dest.file_name().and_then(|s| s.to_str()).unwrap_or("sidecar");
+    let name = dest
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("sidecar");
     let temp = parent.join(format!("{name}.extracting-{}", std::process::id()));
     let backup = parent.join(format!("{name}.previous-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&temp);
@@ -1165,7 +1190,10 @@ fn extract_sidecar_tarball(
             let _ = std::fs::rename(&backup, dest);
         }
         let _ = std::fs::remove_dir_all(&temp);
-        return Err(format!("原子切换 sidecar runtime 失败 {}: {e}", dest.display()));
+        return Err(format!(
+            "原子切换 sidecar runtime 失败 {}: {e}",
+            dest.display()
+        ));
     }
     let _ = std::fs::remove_dir_all(&backup);
     Ok(true)
@@ -1178,9 +1206,8 @@ fn extract_sidecar_tarball(
 /// 失败不影响主启动流**。文本已 JSON 转义避免注入。
 fn splash_status(app: &AppHandle, msg: &str) {
     let escaped = serde_json::to_string(msg).unwrap_or_else(|_| "\"\"".to_string());
-    let js = format!(
-        "if(window.__creatorosSplashStatus)window.__creatorosSplashStatus({escaped});"
-    );
+    let js =
+        format!("if(window.__creatorosSplashStatus)window.__creatorosSplashStatus({escaped});");
     if let Some(win) = app.get_webview_window("main") {
         let _ = win.eval(&js);
     }
@@ -1281,10 +1308,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     } else {
         format!("sha256:{expected}")
     };
-    splash_status(
-        app,
-        "正在展开首启资源(约 1GB,5-10 分钟,仅首次启动)…",
-    );
+    splash_status(app, "正在展开首启资源(约 1GB,5-10 分钟,仅首次启动)…");
     if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
         eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
     }
@@ -1427,6 +1451,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             license::license_activate,
             license::license_check,
+            entitlement_claim::entitlement_claim_start,
+            entitlement_claim::entitlement_claim_poll,
+            entitlement_claim::entitlement_claim_resume,
             // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
             license::license_last_decision,
             // [T-396c] 版本检查(latest-version 端点 + 渠道 downloadUrl,替代 updater check)。
@@ -1708,18 +1735,18 @@ pub fn run() {
             // official origins 由发布环境烘焙，也允许开发/排障时用进程 env 显式覆盖。二者缺失时
             // 本地 product-feedback service fail-closed，绝不退到任意 bugFeedbackUrl origin。
             let license_public_key_b64 = license::embedded_pubkey_b64();
-            let feedback_official_origins = std::env::var(
+            let feedback_official_origins = packaged_text(
                 "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
-            )
-            .ok()
-            .map(|value| value.trim().to_string())
-            .filter(|value| !value.is_empty())
-            .or_else(|| {
-                option_env!("CREATOROS_FEEDBACK_OFFICIAL_ORIGINS")
-                    .map(|value| value.trim().to_string())
-                    .filter(|value| !value.is_empty())
-            })
-            .unwrap_or_default();
+                option_env!("CREATOROS_BUILTIN_FEEDBACK_OFFICIAL_ORIGINS").unwrap_or(""),
+            );
+            let entitlement_claim_enabled = packaged_binary_flag(
+                "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+                option_env!("CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED").unwrap_or("0"),
+            );
+            let product_feedback_submit_enabled = packaged_binary_flag(
+                "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                option_env!("CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED").unwrap_or("0"),
+            );
 
             // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
             let license_ctx = std::sync::Arc::new(license::ShellLicenseCtx {
@@ -1881,6 +1908,18 @@ pub fn run() {
                         "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
                         &feedback_official_origins,
                     )
+                    .env(
+                        "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+                        &entitlement_claim_enabled,
+                    )
+                    .env(
+                        "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        &product_feedback_submit_enabled,
+                    )
+                    .env(
+                        "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        &product_feedback_submit_enabled,
+                    )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     // [T-391 H-key] master key **不再走 env 明文**;改经 ChildStdin(fd 0)传。
@@ -2021,6 +2060,18 @@ pub fn run() {
                     .env(
                         "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
                         &feedback_official_origins,
+                    )
+                    .env(
+                        "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+                        &entitlement_claim_enabled,
+                    )
+                    .env(
+                        "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        &product_feedback_submit_enabled,
+                    )
+                    .env(
+                        "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
+                        &product_feedback_submit_enabled,
                     )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
@@ -2260,7 +2311,11 @@ mod runtime_cleanup_tests {
         std::fs::write(root.join("stray.log"), "keep").unwrap();
         let removed = super::cleanup_stale_runtimes(&root, "0.3.0");
         assert_eq!(removed, 2);
-        assert!(root.join("0.3.0").join("sidecar").join("server.js").exists());
+        assert!(root
+            .join("0.3.0")
+            .join("sidecar")
+            .join("server.js")
+            .exists());
         assert!(!root.join("0.1.0").exists());
         assert!(!root.join("0.2.0").exists());
         assert!(root.join("stray.log").exists()); // 非目录项不动
@@ -2289,8 +2344,7 @@ mod runtime_cleanup_tests {
     #[test]
     fn windows_旧缓存清理只删_runtime_不碰_db_和_auth() {
         let app_data = temp_runtime_root("legacy-root");
-        std::fs::create_dir_all(app_data.join("runtime").join("0.1.0").join("sidecar"))
-            .unwrap();
+        std::fs::create_dir_all(app_data.join("runtime").join("0.1.0").join("sidecar")).unwrap();
         std::fs::create_dir_all(app_data.join("db")).unwrap();
         std::fs::create_dir_all(app_data.join(".auth")).unwrap();
         std::fs::write(app_data.join("db").join("data"), "keep").unwrap();
@@ -2408,9 +2462,7 @@ mod runtime_cleanup_tests {
         )
         .unwrap();
 
-        assert!(
-            super::resolve_installed_runtime_with_hash(&install_dir, "unused").is_err()
-        );
+        assert!(super::resolve_installed_runtime_with_hash(&install_dir, "unused").is_err());
         let _ = std::fs::remove_dir_all(&install_dir);
     }
 
@@ -2493,8 +2545,7 @@ mod runtime_cleanup_tests {
         std::fs::write(source.join("frontend").join("server.js"), "ready").unwrap();
         let tarball = root.join("sidecar.tar.gz");
         let file = std::fs::File::create(&tarball).unwrap();
-        let encoder =
-            flate2::write::GzEncoder::new(file, flate2::Compression::default());
+        let encoder = flate2::write::GzEncoder::new(file, flate2::Compression::default());
         let mut builder = tar::Builder::new(encoder);
         builder.append_dir_all(".", &source).unwrap();
         builder.into_inner().unwrap().finish().unwrap();
@@ -2666,7 +2717,10 @@ mod tests {
     #[test]
     fn interpret_codesign_unknown() {
         // 无任何签名迹象、也没明说未签名 → Unknown(保守,不硬拦)。
-        assert_eq!(interpret_codesign(false, "garbage output"), SelfSignature::Unknown);
+        assert_eq!(
+            interpret_codesign(false, "garbage output"),
+            SelfSignature::Unknown
+        );
     }
 
     // ── H-mac:entitlements plist 内容硬约束(SPEC §6 / §13.4)──────────────

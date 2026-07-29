@@ -22,11 +22,11 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "正式 build 只跑某端(留空=双端；RAT job 不受此项影响)"
+        description: "测试发行平台（默认 macOS；Windows/双端必须手动显式选择；RAT job 不受此项影响）"
         required: false
         type: choice
-        options: ["", "macos", "windows"]
-        default: ""
+        options: ["macos", "windows", "all"]
+        default: "macos"
       windows_runtime_rat:
         description: "仅运行 T-565 Windows Runtime/Burn 原生 RAT（不构建、不发布正式安装包）"
         required: false
@@ -63,10 +63,13 @@ jobs:
           ONLY: ${{ github.event.inputs.only }}
         run: |
           all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
-          if [ -n "$ONLY" ]; then
+          if [ "$ONLY" = "all" ]; then
+            echo "matrix=$all" >> "$GITHUB_OUTPUT"
+          elif [ "$ONLY" = "windows" ]; then
             echo "matrix=$(echo "$all" | jq -c "[.[]|select(.os|contains(\"$ONLY\"))]")" >> "$GITHUB_OUTPUT"
           else
-            echo "matrix=$all" >> "$GITHUB_OUTPUT"
+            # tag push 没有 workflow_dispatch input，也必须默认只发 macOS。
+            echo "matrix=$(echo "$all" | jq -c '[.[]|select(.os|contains("macos"))]')" >> "$GITHUB_OUTPUT"
           fi
 
   build:
@@ -104,6 +107,7 @@ jobs:
         id: runtime-inputs
         env:
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
         run: |
           node <<'NODE'
           const { createHash } = require("node:crypto");
@@ -123,9 +127,20 @@ jobs:
             .update(publicKey)
             .digest("hex")
             .slice(0, 20);
+          const releaseConfig = JSON.stringify({
+            growthOrigin: "https://growth.aitongban.cloud",
+            entitlementClaimEnabled: "1",
+            productFeedbackSubmitEnabled: "1",
+            feedbackOfficialOrigins:
+              (process.env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS || "").trim(),
+          });
+          const configDigest = createHash("sha256")
+            .update(releaseConfig)
+            .digest("hex")
+            .slice(0, 20);
           appendFileSync(
             process.env.GITHUB_OUTPUT,
-            `fingerprint=${fingerprint}\npubkey=${publicKeyDigest}\n`,
+            `fingerprint=${fingerprint}\npubkey=${publicKeyDigest}\nconfig=${configDigest}\n`,
           );
           NODE
 
@@ -139,7 +154,7 @@ jobs:
           path: |
             frontend/src-tauri/sidecar
             frontend/src-tauri/binaries
-          key: creatoros-runtime-v2-${{ steps.runtime-inputs.outputs.fingerprint }}-${{ runner.os }}-${{ runner.arch }}-verdict-${{ steps.runtime-inputs.outputs.pubkey }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'frontend/package.json', 'frontend/src/**', 'frontend/public/**', 'ai-worker/**', 'backend/**', 'contract/**', 'frontend/next.config.ts', 'frontend/scripts/desktop/build-sidecar.mjs', 'frontend/scripts/desktop/fetch-ffmpeg.mjs', 'frontend/scripts/desktop/platform-paths.mjs') }}
+          key: creatoros-runtime-v2-${{ steps.runtime-inputs.outputs.fingerprint }}-${{ runner.os }}-${{ runner.arch }}-verdict-${{ steps.runtime-inputs.outputs.pubkey }}-config-${{ steps.runtime-inputs.outputs.config }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'frontend/package.json', 'frontend/src/**', 'frontend/public/**', 'ai-worker/**', 'backend/**', 'contract/**', 'frontend/next.config.ts', 'frontend/scripts/desktop/build-sidecar.mjs', 'frontend/scripts/desktop/fetch-ffmpeg.mjs', 'frontend/scripts/desktop/platform-paths.mjs') }}
 
       - name: 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
         id: runtime-abi
@@ -211,6 +226,12 @@ jobs:
         if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
         env:
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          # [T-575] 测试发布包显式开启；普通本地/web build 缺省关闭。
+          GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1"
+          CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
           # 缓存只保存展开后的 clean runtime；最终变换完成后再唯一压一次 tar。
           CREATOROS_SKIP_TARBALL: "1"
         run: node frontend/scripts/desktop/build-sidecar.mjs
@@ -230,13 +251,28 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: 校验产品反馈官方 origin(T-538)
+      - name: 校验测试发布的领取与反馈配置(T-575)
         env:
-          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${{ vars.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS }}
+          GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1"
+          CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
         run: |
           node <<'NODE'
+          const expected = {
+            GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud",
+            CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1",
+            CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
+            NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
+          };
+          for (const [name, value] of Object.entries(expected)) {
+            if (process.env[name] !== value) {
+              throw new Error(`[T-575] ${name} 必须为 ${value}`);
+            }
+          }
           const raw = (process.env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS || "").trim();
-          if (!raw) throw new Error("[T-538] Actions variable CREATOROS_FEEDBACK_OFFICIAL_ORIGINS 未配置");
+          if (!raw) throw new Error("[T-575] CREATOROS_FEEDBACK_OFFICIAL_ORIGINS 未配置");
           for (const value of raw.split(",").map((item) => item.trim())) {
             const url = new URL(value);
             if (
@@ -248,7 +284,7 @@ jobs:
               url.search ||
               url.hash
             ) {
-              throw new Error(`[T-538] 非法 official origin: ${value}`);
+              throw new Error(`[T-575] 非法 official origin: ${value}`);
             }
           }
           NODE
@@ -270,7 +306,12 @@ jobs:
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           # [T-538] Rust 编译期烘焙后只注入本机 sidecar；Web UI 不可读取。
-          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${{ vars.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS }}
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
+          # [T-575] 领取授权/反馈仅由这次测试发布构建显式开启；build.rs/Next 都将其固化。
+          GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1"
+          CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           # [T-452 后修] CI 打的是正式发布包,走 fat lto `release` profile(而非本地内测的
           #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
           #   本地日常打包不设此 env,走 release-fast 快通道。
@@ -818,5 +859,6 @@ jobs:
             exit 1
           fi
           tag="${GITHUB_REF#refs/tags/}"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
-          gh release upload "$tag" artifacts/* --clobber
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --title "$tag" --notes "CreatorOS 用户安装包（macOS DMG / Windows setup.exe）"
+          gh release upload "$tag" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber

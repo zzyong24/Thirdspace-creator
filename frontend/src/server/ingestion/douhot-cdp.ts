@@ -310,9 +310,9 @@ async function fillKeyword(page: Page, keyword: string): Promise<void> {
     'input[type="search"]',
     'input[type="text"]',
   ];
-  // 热点宝是微前端：外壳 domcontentloaded 时榜单应用仍可能未挂载。旧代码只查一次，
-  // 在真机稳定抢跑成“关键词输入框不可用”。最多等 10 秒，只等 DOM，不吞登录/网络错误。
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  // 热点宝是微前端：外壳 domcontentloaded 时榜单应用仍可能未挂载。旧实现只探测一次，
+  // 慢一拍就误报“关键词输入框不可用”；最多等 15 秒，只等 DOM，不吞登录/网络错误。
+  for (let attempt = 0; attempt < 60; attempt += 1) {
     for (const selector of selectors) {
       const input = page.locator(selector).filter({ visible: true }).first();
       if (await input.isVisible().catch(() => false)) {
@@ -344,6 +344,20 @@ function isRequestedLowFollowerResponse(
     );
   } catch {
     return false;
+  }
+}
+
+function safeRequestBody(response: Response): unknown {
+  try {
+    return response.request().postDataJSON();
+  } catch {
+    const raw = response.request().postData();
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return Object.fromEntries(new URLSearchParams(raw));
+    }
   }
 }
 
@@ -406,30 +420,57 @@ export async function fetchDouhotLowFollowerBreakout(
     await page.waitForTimeout(6_000);
     page.off("response", onResponse);
 
-    const response = responses.at(-1);
-    if (!response || response.status() !== 200) {
+    const successfulResponses = responses.filter(
+      (response) => response.status() === 200,
+    );
+    if (successfulResponses.length === 0) {
       throw Object.assign(new Error("热点宝榜单未返回有效响应"), {
         name: "DouhotNoValidResponseError",
       });
     }
-    const parsed = parseDouhotBillboard(
-      await response.json(),
-      response.request().postDataJSON(),
+
+    // 同一轮可能收到多条匹配响应，最后一条有时只是过渡空壳。由新到旧解析，
+    // 只接受结构合法且至少覆盖 48 小时的官方结果。
+    const parsedResponses: Array<
+      DouhotBatch & { windowHours: number | null }
+    > = [];
+    for (const response of successfulResponses.toReversed()) {
+      try {
+        parsedResponses.push(
+          parseDouhotBillboard(
+            await response.json(),
+            safeRequestBody(response),
+          ),
+        );
+      } catch {
+        // 继续检查同轮其他官方响应；全部不可解析时仍在下方诚实失败。
+      }
+    }
+    const parsed = parsedResponses.find(
+      (candidate) =>
+        candidate.listValid &&
+        candidate.windowHours !== null &&
+        candidate.windowHours >= MIN_DARKHORSE_WINDOW_HOURS,
     );
-    if (!parsed.listValid) {
+    if (parsed) return parsed;
+
+    const validList = parsedResponses.find((candidate) => candidate.listValid);
+    if (!validList) {
       throw Object.assign(new Error("热点宝榜单响应结构已变化"), {
         name: "DouhotResponseShapeChangedError",
       });
     }
     if (
-      parsed.windowHours === null ||
-      parsed.windowHours < MIN_DARKHORSE_WINDOW_HOURS
+      validList.windowHours === null ||
+      validList.windowHours < MIN_DARKHORSE_WINDOW_HOURS
     ) {
       throw Object.assign(new Error("热点宝榜单时间窗不足 48 小时"), {
         name: "DouhotResponseShapeChangedError",
       });
     }
-    return parsed;
+    throw Object.assign(new Error("热点宝榜单未返回有效响应"), {
+      name: "DouhotNoValidResponseError",
+    });
   } finally {
     await opened.close().catch(() => {});
   }

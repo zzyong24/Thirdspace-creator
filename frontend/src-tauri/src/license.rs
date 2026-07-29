@@ -158,7 +158,7 @@ fn resolve_license_project_key(runtime_value: Option<String>, built_in_value: &s
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// `.license` 明文形状(加密前 JSON,camelCase 与 sidecar 读端约定一致)。
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct LicenseSnapshot {
     pub v: u32,
@@ -400,7 +400,8 @@ pub fn verify_response_signature(
     let sig_raw = base64::engine::general_purpose::STANDARD
         .decode(sig_b64.trim())
         .map_err(|_| "X-License-Signature 非法 base64".to_string())?;
-    let sig = Signature::from_slice(&sig_raw).map_err(|_| "X-License-Signature 长度非法".to_string())?;
+    let sig =
+        Signature::from_slice(&sig_raw).map_err(|_| "X-License-Signature 长度非法".to_string())?;
 
     let signing_string = build_signing_string(request_target, host, date, &computed);
     key.verify(signing_string.as_bytes(), &sig)
@@ -651,7 +652,7 @@ pub fn parse_iso_ms(s: &str) -> Option<i64> {
     Some(((days * 86_400) + hour * 3600 + minute * 60 + second) * 1000 + millis)
 }
 
-fn format_iso_ms(ms: i64) -> String {
+pub(crate) fn format_iso_ms(ms: i64) -> String {
     // 只用于日志/展示副本;精度到秒即可。逆运算同上公式。
     let secs = ms.div_euclid(1000);
     let days = secs.div_euclid(86_400);
@@ -728,7 +729,10 @@ impl LastSeenStore for FileLastSeen {
             let _ = std::fs::create_dir_all(parent);
         }
         if let Err(e) = std::fs::write(&self.path, ms.to_string()) {
-            eprintln!("[license] 写 last-seen 文件失败({}): {e}", self.path.display());
+            eprintln!(
+                "[license] 写 last-seen 文件失败({}): {e}",
+                self.path.display()
+            );
         }
     }
 }
@@ -752,7 +756,10 @@ impl LastSeenStore for DefaultsLastSeen {
         if !out.status.success() {
             return None;
         }
-        String::from_utf8_lossy(&out.stdout).trim().parse::<i64>().ok()
+        String::from_utf8_lossy(&out.stdout)
+            .trim()
+            .parse::<i64>()
+            .ok()
     }
     fn write(&self, ms: i64) {
         let r = std::process::Command::new("defaults")
@@ -870,15 +877,9 @@ pub fn read_snapshot_file(path: &Path, key: Option<&[u8; 32]>) -> Option<License
     }
 }
 
-pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8; 32]>) {
+fn snapshot_content(snap: &LicenseSnapshot, key: Option<&[u8; 32]>) -> Result<String, String> {
     let content = match key {
-        Some(k) => match encrypt_snapshot(snap, k) {
-            Ok(c) => c,
-            Err(e) => {
-                eprintln!("[license] {e} → 本次不落 .license");
-                return;
-            }
-        },
+        Some(k) => encrypt_snapshot(snap, k)?,
         None => {
             // 无 master key 时保留既有授权快照兼容，但 runtime 必须 fail-closed：不得把已签
             // 商业入口、渠道 identity/摘要降级写成明文。
@@ -886,52 +887,125 @@ pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8
             let mut degraded = snap.clone();
             degraded.channel_ref = None;
             degraded.channel_runtime = None;
-            match serde_json::to_string(&degraded) {
-                Ok(s) => s,
-                Err(_) => return,
-            }
+            serde_json::to_string(&degraded).map_err(|e| format!(".license 序列化失败: {e}"))?
         }
     };
+    Ok(content)
+}
+
+/// [T-575] 需要知道 replace 是否真的完成，不能沿用 best-effort void 写法猜成功。
+/// 所有平台先写同目录临时文件并 fsync，再以平台原子 replace primitive 替换目标。
+pub fn write_snapshot_file_checked(
+    path: &Path,
+    snap: &LicenseSnapshot,
+    key: Option<&[u8; 32]>,
+) -> Result<(), String> {
+    let content = snapshot_content(snap, key)?;
     if let Some(parent) = path.parent() {
-        let _ = std::fs::create_dir_all(parent);
+        std::fs::create_dir_all(parent).map_err(|e| format!("创建 .license 目录失败: {e}"))?;
     }
-    #[cfg(target_os = "macos")]
-    {
+    let mut suffix = [0u8; 8];
+    use rand::RngCore as _;
+    rand::rngs::OsRng.fill_bytes(&mut suffix);
+    let suffix = suffix
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+    let tmp = path.with_extension(format!("license.tmp.{suffix}"));
+    let write_result = (|| -> std::io::Result<()> {
         use std::io::Write as _;
-        use std::os::unix::fs::{OpenOptionsExt as _, PermissionsExt as _};
-        let tmp = path.with_extension(format!("license.tmp.{}", std::process::id()));
-        let write_result = (|| -> std::io::Result<()> {
-            let mut file = std::fs::OpenOptions::new()
-                .create(true)
-                .truncate(true)
-                .write(true)
-                .mode(0o600)
-                .open(&tmp)?;
-            file.write_all(content.as_bytes())?;
-            file.flush()?;
-            file.sync_all()?;
-            std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600))?;
-            std::fs::rename(&tmp, path)?;
-            if let Some(parent) = path.parent() {
-                std::fs::File::open(parent)?.sync_all()?;
-            }
-            Ok(())
-        })();
-        if let Err(e) = write_result {
-            let _ = std::fs::remove_file(&tmp);
-            eprintln!("[license] 原子写 .license 失败({}): {e}", path.display());
+        let mut options = std::fs::OpenOptions::new();
+        options.create_new(true).write(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt as _;
+            options.mode(0o600);
         }
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-        if let Err(e) = std::fs::write(path, content) {
-            eprintln!("[license] 写 .license 失败({}): {e}", path.display());
-        }
+        let mut file = options.open(&tmp)?;
+        file.write_all(content.as_bytes())?;
+        file.flush()?;
+        file.sync_all()?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt as _;
-            let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600));
+            std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600))?;
         }
+        Ok(())
+    })();
+    if let Err(e) = write_result {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(format!("写 .license 临时文件失败: {e}"));
+    }
+
+    #[cfg(unix)]
+    {
+        if let Err(e) = std::fs::rename(&tmp, path) {
+            let _ = std::fs::remove_file(&tmp);
+            return Err(format!("原子替换 .license 失败: {e}"));
+        }
+        if let Some(parent) = path.parent() {
+            std::fs::File::open(parent)
+                .and_then(|file| file.sync_all())
+                .map_err(|e| format!("同步 .license 目录失败: {e}"))?;
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt as _;
+        type Bool = i32;
+        extern "system" {
+            fn ReplaceFileW(
+                replaced: *const u16,
+                replacement: *const u16,
+                backup: *const u16,
+                flags: u32,
+                exclude: *mut core::ffi::c_void,
+                reserved: *mut core::ffi::c_void,
+            ) -> Bool;
+            fn MoveFileExW(existing: *const u16, new: *const u16, flags: u32) -> Bool;
+        }
+        const REPLACEFILE_WRITE_THROUGH: u32 = 0x0000_0002;
+        const MOVEFILE_WRITE_THROUGH: u32 = 0x0000_0008;
+        let wide = |value: &Path| {
+            value
+                .as_os_str()
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect::<Vec<_>>()
+        };
+        let target_wide = wide(path);
+        let tmp_wide = wide(&tmp);
+        let ok = unsafe {
+            if path.exists() {
+                ReplaceFileW(
+                    target_wide.as_ptr(),
+                    tmp_wide.as_ptr(),
+                    std::ptr::null(),
+                    REPLACEFILE_WRITE_THROUGH,
+                    std::ptr::null_mut(),
+                    std::ptr::null_mut(),
+                )
+            } else {
+                MoveFileExW(
+                    tmp_wide.as_ptr(),
+                    target_wide.as_ptr(),
+                    MOVEFILE_WRITE_THROUGH,
+                )
+            }
+        };
+        if ok == 0 {
+            let error = std::io::Error::last_os_error();
+            let _ = std::fs::remove_file(&tmp);
+            return Err(format!("Windows 原子替换 .license 失败: {error}"));
+        }
+    }
+    Ok(())
+}
+
+pub fn write_snapshot_file(path: &Path, snap: &LicenseSnapshot, key: Option<&[u8; 32]>) {
+    if let Err(e) = write_snapshot_file_checked(path, snap, key) {
+        eprintln!("[license] 写 .license 失败({}): {e}", path.display());
     }
 }
 
@@ -982,8 +1056,7 @@ const RUNTIME_V2_KEYS: [&str; 17] = [
     "supportUrl",
     "syncedAt",
 ];
-const RUNTIME_LEGACY_KEYS: [&str; 4] =
-    ["brandName", "downloadUrl", "purchaseUrl", "supportUrl"];
+const RUNTIME_LEGACY_KEYS: [&str; 4] = ["brandName", "downloadUrl", "purchaseUrl", "supportUrl"];
 
 fn has_exact_keys(value: &serde_json::Value, expected: &[&str]) -> bool {
     let Some(obj) = value.as_object() else {
@@ -995,10 +1068,7 @@ fn has_exact_keys(value: &serde_json::Value, expected: &[&str]) -> bool {
     obj.keys().all(|key| expected.contains(&key.as_str()))
 }
 
-fn nullable_string(
-    value: &serde_json::Value,
-    key: &str,
-) -> Result<Option<String>, &'static str> {
+fn nullable_string(value: &serde_json::Value, key: &str) -> Result<Option<String>, &'static str> {
     match value.get(key) {
         Some(serde_json::Value::Null) => Ok(None),
         Some(serde_json::Value::String(s)) => Ok(Some(s.clone())),
@@ -1095,10 +1165,7 @@ fn sanitize_runtime_url(raw: Option<String>) -> Result<Option<String>, &'static 
         .find('/')
         .map(|at| &after_authority[at..])
         .unwrap_or("");
-    let raw_path = raw_path
-        .split(['?', '#'])
-        .next()
-        .unwrap_or(raw_path);
+    let raw_path = raw_path.split(['?', '#']).next().unwrap_or(raw_path);
     for segment in raw_path.split('/') {
         let lower = segment.to_ascii_lowercase();
         if segment == "."
@@ -1127,7 +1194,7 @@ fn runtime_brand(value: &serde_json::Value) -> Result<Option<String>, &'static s
     Ok(Some(trimmed.to_string()))
 }
 
-fn parse_signed_channel_runtime(
+pub(crate) fn parse_signed_channel_runtime(
     value: &serde_json::Value,
     expected_project_key: &str,
     signed_channel_ref: Option<&str>,
@@ -1140,10 +1207,8 @@ fn parse_signed_channel_runtime(
             if !has_exact_keys(value, &RUNTIME_LEGACY_KEYS) {
                 return Err("CHANNEL_RUNTIME_LEGACY_INVALID");
             }
-            let channel_ref =
-                signed_channel_ref.ok_or("CHANNEL_RUNTIME_IDENTITY_MISMATCH")?;
-            let support_url =
-                sanitize_runtime_url(nullable_string(value, "supportUrl")?)?;
+            let channel_ref = signed_channel_ref.ok_or("CHANNEL_RUNTIME_IDENTITY_MISMATCH")?;
+            let support_url = sanitize_runtime_url(nullable_string(value, "supportUrl")?)?;
             Ok(CachedChannelRuntime {
                 schema_version: "channel-runtime-legacy-v1".to_string(),
                 contract_version: None,
@@ -1156,17 +1221,11 @@ fn parse_signed_channel_runtime(
                 synced_at: None,
                 stale: None,
                 brand_name: runtime_brand(value)?,
-                purchase_url: sanitize_runtime_url(nullable_string(
-                    value,
-                    "purchaseUrl",
-                )?)?,
+                purchase_url: sanitize_runtime_url(nullable_string(value, "purchaseUrl")?)?,
                 renewal_url: None,
                 channel_support_url: support_url.clone(),
                 bug_feedback_url: None,
-                download_url: sanitize_runtime_url(nullable_string(
-                    value,
-                    "downloadUrl",
-                )?)?,
+                download_url: sanitize_runtime_url(nullable_string(value, "downloadUrl")?)?,
                 support_url,
             })
         }
@@ -1193,9 +1252,7 @@ fn parse_signed_channel_runtime(
             if !valid_identity(project_key) || !valid_identity(channel_ref) {
                 return Err("CHANNEL_RUNTIME_VALUE_INVALID");
             }
-            if project_key != expected_project_key
-                || signed_channel_ref != Some(channel_ref)
-            {
+            if project_key != expected_project_key || signed_channel_ref != Some(channel_ref) {
                 return Err("CHANNEL_RUNTIME_IDENTITY_MISMATCH");
             }
             if string("contractVersion")? != "growth-channel-runtime-v1"
@@ -1243,8 +1300,7 @@ fn parse_signed_channel_runtime(
             }
             let channel_support_url =
                 sanitize_runtime_url(nullable_string(value, "channelSupportUrl")?)?;
-            let support_url =
-                sanitize_runtime_url(nullable_string(value, "supportUrl")?)?;
+            let support_url = sanitize_runtime_url(nullable_string(value, "supportUrl")?)?;
             if support_url != channel_support_url {
                 return Err("CHANNEL_RUNTIME_VALUE_INVALID");
             }
@@ -1260,23 +1316,11 @@ fn parse_signed_channel_runtime(
                 synced_at: Some(synced_at.to_string()),
                 stale: Some(stale),
                 brand_name: runtime_brand(value)?,
-                purchase_url: sanitize_runtime_url(nullable_string(
-                    value,
-                    "purchaseUrl",
-                )?)?,
-                renewal_url: sanitize_runtime_url(nullable_string(
-                    value,
-                    "renewalUrl",
-                )?)?,
+                purchase_url: sanitize_runtime_url(nullable_string(value, "purchaseUrl")?)?,
+                renewal_url: sanitize_runtime_url(nullable_string(value, "renewalUrl")?)?,
                 channel_support_url,
-                bug_feedback_url: sanitize_runtime_url(nullable_string(
-                    value,
-                    "bugFeedbackUrl",
-                )?)?,
-                download_url: sanitize_runtime_url(nullable_string(
-                    value,
-                    "downloadUrl",
-                )?)?,
+                bug_feedback_url: sanitize_runtime_url(nullable_string(value, "bugFeedbackUrl")?)?,
+                download_url: sanitize_runtime_url(nullable_string(value, "downloadUrl")?)?,
                 support_url,
             })
         }
@@ -1540,11 +1584,7 @@ fn host_of(base_url: &str) -> String {
         .split_once("://")
         .map(|(_, rest)| rest)
         .unwrap_or(base_url);
-    no_scheme
-        .split('/')
-        .next()
-        .unwrap_or(no_scheme)
-        .to_string()
+    no_scheme.split('/').next().unwrap_or(no_scheme).to_string()
 }
 
 fn is_expired(expires_at: &Option<String>, trusted_now_ms: i64) -> bool {
@@ -1622,8 +1662,7 @@ impl WireBody {
     /// 改走 `serde_json::Value`(重复键 **last-wins**,不报错)+ camel/snake 双取,和 sidecar 的
     /// `license-client.ts`(`body.licenseMode ?? body.license_mode`)同策略。解析不出 → 全 None(宽容)。
     fn from_response_bytes(bytes: &[u8]) -> WireBody {
-        let v: serde_json::Value =
-            serde_json::from_slice(bytes).unwrap_or(serde_json::Value::Null);
+        let v: serde_json::Value = serde_json::from_slice(bytes).unwrap_or(serde_json::Value::Null);
         let str_of = |ck: &str, sk: &str| {
             v.get(ck)
                 .or_else(|| v.get(sk))
@@ -1634,7 +1673,10 @@ impl WireBody {
         WireBody {
             success: bool_of("success"),
             valid: bool_of("valid"),
-            message: v.get("message").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            message: v
+                .get("message")
+                .and_then(|x| x.as_str())
+                .map(|s| s.to_string()),
             expires_at: str_of("expiresAt", "expires_at"),
             license_mode: str_of("licenseMode", "license_mode"),
             server_time: str_of("serverTime", "server_time"),
@@ -1643,13 +1685,14 @@ impl WireBody {
                 .get("graceSeconds")
                 .or_else(|| v.get("grace_seconds"))
                 .and_then(|x| x.as_i64()),
-            nonce: v.get("nonce").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            nonce: v
+                .get("nonce")
+                .and_then(|x| x.as_str())
+                .map(|s| s.to_string()),
             channel_ref: match v.get("channelRef") {
                 None => None,
                 Some(serde_json::Value::Null) => Some(None),
-                Some(serde_json::Value::String(s)) if !s.is_empty() => {
-                    Some(Some(s.clone()))
-                }
+                Some(serde_json::Value::String(s)) if !s.is_empty() => Some(Some(s.clone())),
                 Some(_) => Some(None),
             },
             raw_channel_config: v.get("channelConfig").cloned(),
@@ -1718,15 +1761,31 @@ pub fn run_license_chain(
             let c = code.trim();
             if c.is_empty() {
                 return ChainOutcome {
-                    decision: decision(false, "inactive", None, false, false, strict, "请输入激活码"),
+                    decision: decision(
+                        false,
+                        "inactive",
+                        None,
+                        false,
+                        false,
+                        strict,
+                        "请输入激活码",
+                    ),
                     snapshot: None,
                     channel_config: None,
                 };
             }
-            (c.to_string(), "/api/license/activate", "post /api/license/activate")
+            (
+                c.to_string(),
+                "/api/license/activate",
+                "post /api/license/activate",
+            )
         }
         LicenseOp::Status => match existing {
-            Some(s) => (s.code.clone(), "/api/license/status", "post /api/license/status"),
+            Some(s) => (
+                s.code.clone(),
+                "/api/license/status",
+                "post /api/license/status",
+            ),
             None => {
                 return ChainOutcome {
                     decision: decision(false, "inactive", None, false, false, strict, "尚未激活"),
@@ -1929,7 +1988,9 @@ pub fn run_license_chain(
             decision: decision(
                 false,
                 "expired",
-                body.expires_at.clone().or(existing.and_then(|s| s.expires_at.clone())),
+                body.expires_at
+                    .clone()
+                    .or(existing.and_then(|s| s.expires_at.clone())),
                 revoked,
                 signature_verified,
                 strict,
@@ -1996,7 +2057,15 @@ pub fn run_license_chain(
                 message: msg.clone(),
             };
             return ChainOutcome {
-                decision: decision(false, "expired", expires_at, true, signature_verified, strict, &msg),
+                decision: decision(
+                    false,
+                    "expired",
+                    expires_at,
+                    true,
+                    signature_verified,
+                    strict,
+                    &msg,
+                ),
                 snapshot: Some(snap),
                 channel_config: body.channel_config.clone(),
             };
@@ -2024,7 +2093,15 @@ pub fn run_license_chain(
                 verdict_at_ms: wall,
                 message: msg.clone(),
             };
-            let mut d = decision(true, "active", expires_at, true, signature_verified, strict, &msg);
+            let mut d = decision(
+                true,
+                "active",
+                expires_at,
+                true,
+                signature_verified,
+                strict,
+                &msg,
+            );
             d.updates_blocked = true;
             return ChainOutcome {
                 decision: d,
@@ -2061,7 +2138,15 @@ pub fn run_license_chain(
             message: msg.clone(),
         };
         return ChainOutcome {
-            decision: decision(false, "expired", expires_at, false, signature_verified, strict, &msg),
+            decision: decision(
+                false,
+                "expired",
+                expires_at,
+                false,
+                signature_verified,
+                strict,
+                &msg,
+            ),
             snapshot: Some(snap),
             channel_config: body.channel_config.clone(),
         };
@@ -2096,7 +2181,15 @@ pub fn run_license_chain(
         message: msg.clone(),
     };
     ChainOutcome {
-        decision: decision(true, "active", expires_at, false, signature_verified, strict, &msg),
+        decision: decision(
+            true,
+            "active",
+            expires_at,
+            false,
+            signature_verified,
+            strict,
+            &msg,
+        ),
         snapshot: Some(snap),
         channel_config: body.channel_config.clone(),
     }
@@ -2284,7 +2377,7 @@ fn untrusted_outcome(
             d.updates_blocked = s.updates_blocked;
             return ChainOutcome {
                 decision: d,
-                snapshot: None, // 不可信输入不落盘:快照维持原样
+                snapshot: None,       // 不可信输入不落盘:快照维持原样
                 channel_config: None, // 不可信输入不动渠道缓存(SPEC §7 测锚)
             };
         }
@@ -2351,7 +2444,10 @@ impl LicenseHttp for ReqwestHttp {
         let signature = header("x-license-signature");
         let date = header("x-license-date");
         let digest = header("x-license-digest");
-        let body = resp.bytes().map_err(|e| format!("读响应体失败: {e}"))?.to_vec();
+        let body = resp
+            .bytes()
+            .map_err(|e| format!("读响应体失败: {e}"))?
+            .to_vec();
         Ok(LicenseHttpResponse {
             status,
             signature,
@@ -2733,10 +2829,7 @@ pub fn sign_verdict_token(
 ///   生效**(当前 token 不重签,保持时序简单;OQ-2 已明确保守方案)。
 ///
 /// 与 run_chain_and_persist 的区别:后者会联网 + 落新快照;本函数只读现有快照(如无则 inactive)。
-pub fn derive_local_verdict(
-    ctx: &ShellLicenseCtx,
-    _now_ms: i64,
-) -> GateDecision {
+pub fn derive_local_verdict(ctx: &ShellLicenseCtx, _now_ms: i64) -> GateDecision {
     let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
     let path = license_file_path(&ctx.app_data_dir);
     match read_snapshot_file(&path, key.as_ref()) {
@@ -2793,13 +2886,14 @@ pub async fn license_activate(
 
 /// 复校:读 .license → 决策链(在线 status / 离线宽限 / 回拨检测)→ 返回放行结果。
 #[tauri::command]
-pub async fn license_check(
-    state: tauri::State<'_, LicenseState>,
-) -> Result<GateDecision, String> {
+pub async fn license_check(state: tauri::State<'_, LicenseState>) -> Result<GateDecision, String> {
     let ctx = state.0.clone();
     tauri::async_runtime::spawn_blocking(move || {
         // [T-391 H-native §7 去单点化·复算点②]
-        apply_runtime_gate(run_chain_and_persist(&ctx, LicenseOp::Status), &SysDebugProbe)
+        apply_runtime_gate(
+            run_chain_and_persist(&ctx, LicenseOp::Status),
+            &SysDebugProbe,
+        )
     })
     .await
     .map_err(|e| format!("授权校验任务执行失败: {e}"))
@@ -3300,7 +3394,14 @@ mod tests {
         server.tamper_body_after_sign = true;
         let cfg = config(&pk, true);
         let existing = snapshot_active();
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(!out.decision.licensed);
         assert_eq!(out.decision.status, "untrusted");
         let snap = out.snapshot.expect("应把快照置为不放行");
@@ -3361,7 +3462,11 @@ mod tests {
             LicenseOp::Activate { code: "CODE-1" },
             None,
         );
-        assert!(out.decision.licensed, "重试后应激活成功: {:?}", out.decision);
+        assert!(
+            out.decision.licensed,
+            "重试后应激活成功: {:?}",
+            out.decision
+        );
         assert_eq!(out.decision.status, "active");
         assert_eq!(server.calls.get(), 3, "应重试到第 3 次才成功");
     }
@@ -3383,11 +3488,27 @@ mod tests {
         );
         assert!(!out.decision.licensed);
         assert_eq!(out.decision.status, "untrusted");
-        assert_eq!(server.calls.get(), MAX_ONLINE_ATTEMPTS, "应重试满 MAX_ONLINE_ATTEMPTS 次");
+        assert_eq!(
+            server.calls.get(),
+            MAX_ONLINE_ATTEMPTS,
+            "应重试满 MAX_ONLINE_ATTEMPTS 次"
+        );
         // 关键:不把「疑似重放」等安全术语甩给用户。
-        assert!(!out.decision.message.contains("重放"), "{}", out.decision.message);
-        assert!(!out.decision.message.contains("不可信"), "{}", out.decision.message);
-        assert!(out.decision.message.contains("重试"), "应给可操作提示: {}", out.decision.message);
+        assert!(
+            !out.decision.message.contains("重放"),
+            "{}",
+            out.decision.message
+        );
+        assert!(
+            !out.decision.message.contains("不可信"),
+            "{}",
+            out.decision.message
+        );
+        assert!(
+            out.decision.message.contains("重试"),
+            "应给可操作提示: {}",
+            out.decision.message
+        );
     }
 
     // ④d [T-408] 真实服务器对同一字段下发 snake+camel 双份 → 旧 strict 结构体判 duplicate field 解析
@@ -3397,7 +3518,10 @@ mod tests {
         let raw = r#"{"success":true,"message":"激活码激活成功","expires_at":"2026-07-19T16:42:16Z","expiresAt":"2026-07-19T16:42:16Z","remaining_count":null,"license_mode":"TRIAL","licenseMode":"TRIAL","isActivated":true,"is_activated":true,"valid":true,"serverTime":"2026-07-18T18:30:23Z","revoked":false,"graceSeconds":86400,"nonce":"abc123"}"#.as_bytes();
         // 反证:旧 strict 结构体解析对含双份键的真实响应确实失败(root cause)。
         let strict: Result<WireBody, _> = serde_json::from_slice(raw);
-        assert!(strict.is_err(), "旧 strict 解析应因 duplicate field 失败(证明根因)");
+        assert!(
+            strict.is_err(),
+            "旧 strict 解析应因 duplicate field 失败(证明根因)"
+        );
         // 容错解析取到全部关键字段,尤其 nonce 不丢。
         let wb = WireBody::from_response_bytes(raw);
         assert_eq!(wb.nonce.as_deref(), Some("abc123"), "双份键不该丢 nonce");
@@ -3428,8 +3552,16 @@ mod tests {
         assert!(!out.decision.licensed);
         assert_eq!(out.decision.status, "untrusted");
         // [T-408] 用户文案友好可操作(校准时间),不含「疑似重放」等安全术语;技术原因只进日志。
-        assert!(out.decision.message.contains("校准"), "{}", out.decision.message);
-        assert!(!out.decision.message.contains("重放"), "不该把安全术语给用户: {}", out.decision.message);
+        assert!(
+            out.decision.message.contains("校准"),
+            "{}",
+            out.decision.message
+        );
+        assert!(
+            !out.decision.message.contains("重放"),
+            "不该把安全术语给用户: {}",
+            out.decision.message
+        );
     }
 
     // ⑥ 回拨:墙钟 < last-seen − 1h → 判过期(网络都不必发起)。
@@ -3442,7 +3574,14 @@ mod tests {
         // 墙钟被回拨 2 小时(超 1h 容差)。
         let rolled_back = NOW_MS - 2 * 3_600_000 - 3_600_000;
         let p1 = MemPoint::new(Some(NOW_MS));
-        let out = run(&cfg, &server, rolled_back, &[&p1], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            rolled_back,
+            &[&p1],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(!out.decision.licensed);
         assert_eq!(out.decision.status, "expired");
         assert!(out.decision.message.contains("回拨"));
@@ -3459,7 +3598,14 @@ mod tests {
         let slightly_back = NOW_MS - 30 * 60_000; // 回拨 30 分钟,容差内
         let p1 = MemPoint::new(Some(NOW_MS));
         // 响应 date 与可信时间(max(墙钟, last_seen)=NOW_MS)一致 → 不触发偏移拒。
-        let out = run(&cfg, &server, slightly_back, &[&p1], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            slightly_back,
+            &[&p1],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(out.decision.licensed, "{:?}", out.decision);
     }
 
@@ -3558,7 +3704,11 @@ mod tests {
         // 占位公钥 → 诚实不放行(status=untrusted);技术原因(公钥未配置)进日志,用户见友好文案。
         assert!(!out.decision.licensed);
         assert_eq!(out.decision.status, "untrusted");
-        assert!(!out.decision.message.contains("重放"), "{}", out.decision.message);
+        assert!(
+            !out.decision.message.contains("重放"),
+            "{}",
+            out.decision.message
+        );
     }
 
     // ⑪ 网络不可达 → 宽限窗内放行(grace),超窗拒;Activate 离线直接失败。
@@ -3570,7 +3720,14 @@ mod tests {
         let cfg = config(&pk, true);
         // 窗内:上次在线校 1h 前,grace 86400s。
         let existing = snapshot_active();
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(out.decision.licensed);
         assert_eq!(out.decision.status, "grace");
         // 超窗:上次在线校 25h 前 > 86400s。
@@ -3603,7 +3760,14 @@ mod tests {
         let server = FakeServer::ok(sk, body);
         let cfg = config(&pk, true);
         let existing = snapshot_active();
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(!out.decision.licensed);
         assert!(out.decision.revoked);
         // 内测吊销 = 整体不放行,绝不是「仅停更新」软降级(那是买断专属语义)。
@@ -3660,10 +3824,9 @@ mod tests {
         assert_eq!(back.code, snap.code);
         assert!(back.allowed);
         // 错 key 解不开(auth tag 校验失败)。
-        let wrong = derive_license_key(
-            &base64::engine::general_purpose::STANDARD.encode([1u8; 32]),
-        )
-        .unwrap();
+        let wrong =
+            derive_license_key(&base64::engine::general_purpose::STANDARD.encode([1u8; 32]))
+                .unwrap();
         assert!(decrypt_snapshot(&packed, Some(&wrong)).is_err());
     }
 
@@ -3671,10 +3834,7 @@ mod tests {
     #[test]
     fn iso_parse_basics() {
         assert_eq!(parse_iso_ms("2026-07-17T12:00:00Z"), Some(NOW_MS));
-        assert_eq!(
-            parse_iso_ms("2026-07-17T12:00:00.500Z"),
-            Some(NOW_MS + 500)
-        );
+        assert_eq!(parse_iso_ms("2026-07-17T12:00:00.500Z"), Some(NOW_MS + 500));
         assert!(parse_iso_ms("not-a-date").is_none());
         assert!(parse_iso_ms("2026-07-17T12:00:00+08:00").is_none());
         assert_eq!(format_iso_ms(NOW_MS), "2026-07-17T12:00:00Z");
@@ -3709,7 +3869,14 @@ mod tests {
         server.network_error = true;
         let cfg = config(&pk, true);
         let existing = snapshot_active(); // 上次在线校 1h 前,grace 86400s
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(out.decision.licensed);
         assert_eq!(out.decision.status, "grace");
         // 剩余 = 86400 - 3600 = 82800s(SPEC §7 宽限窗内显示离线剩余倒计时)。
@@ -3731,7 +3898,10 @@ mod tests {
         assert!(out.decision.licensed, "{:?}", out.decision);
         assert_eq!(out.decision.status, "active");
         assert_eq!(out.decision.mode, "perpetual");
-        assert!(out.decision.offline_remaining.is_none(), "买断无宽限倒计时概念");
+        assert!(
+            out.decision.offline_remaining.is_none(),
+            "买断无宽限倒计时概念"
+        );
         assert!(out.snapshot.unwrap().allowed);
     }
 
@@ -3746,8 +3916,19 @@ mod tests {
         let server = FakeServer::ok(sk, body);
         let cfg = config(&pk, true);
         let existing = snapshot_perpetual();
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
-        assert!(out.decision.licensed, "买断撤销不锁核心功能: {:?}", out.decision);
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&existing),
+        );
+        assert!(
+            out.decision.licensed,
+            "买断撤销不锁核心功能: {:?}",
+            out.decision
+        );
         assert!(out.decision.revoked);
         assert!(out.decision.updates_blocked, "撤销 → 停更新态");
         assert!(out.decision.message.contains("核心功能不受影响"));
@@ -3768,7 +3949,14 @@ mod tests {
         let mut server = FakeServer::ok(sk, body);
         server.no_signature_headers = true; // 无签名头
         let cfg = config(&pk, false); // gate-F2 弱验签
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&snapshot_perpetual()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&snapshot_perpetual()),
+        );
         assert!(out.decision.licensed);
         assert!(!out.decision.updates_blocked, "未签名 revoked 不触发停更新");
     }
@@ -3782,14 +3970,28 @@ mod tests {
         server.tamper_body_after_sign = true;
         let cfg = config(&pk, true);
         let existing = snapshot_perpetual();
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(out.decision.licensed, "{:?}", out.decision);
         assert!(out.snapshot.is_none(), "不可信输入不落盘");
         // 已有停更新态也不被伪造响应清除。
         let mut blocked = snapshot_perpetual();
         blocked.updates_blocked = true;
         blocked.revoked = true;
-        let out2 = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&blocked));
+        let out2 = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&blocked),
+        );
         assert!(out2.decision.licensed);
         assert!(out2.decision.updates_blocked, "伪造响应清不掉撤销停更新态");
         assert!(out2.snapshot.is_none());
@@ -3806,7 +4008,14 @@ mod tests {
         let existing = snapshot_perpetual();
         let p1 = MemPoint::new(Some(NOW_MS));
         let rolled_back = NOW_MS - 4 * 3_600_000; // 回拨 4h(远超 1h 容差)
-        let out = run(&cfg, &server, rolled_back, &[&p1], LicenseOp::Status, Some(&existing));
+        let out = run(
+            &cfg,
+            &server,
+            rolled_back,
+            &[&p1],
+            LicenseOp::Status,
+            Some(&existing),
+        );
         assert!(out.decision.licensed, "{:?}", out.decision);
         assert_eq!(out.decision.mode, "perpetual");
     }
@@ -3820,14 +4029,28 @@ mod tests {
         let mut body = valid_body();
         body.as_object_mut().unwrap().remove("graceSeconds");
         let server = FakeServer::ok(sk.clone(), body);
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Activate { code: "C" }, None);
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Activate { code: "C" },
+            None,
+        );
         assert_eq!(out.snapshot.unwrap().grace_seconds, 86_400);
         // 买断:缺 graceSeconds → 2_592_000。
         let mut body2 = valid_body();
         body2["expiresAt"] = serde_json::Value::Null;
         body2.as_object_mut().unwrap().remove("graceSeconds");
         let server2 = FakeServer::ok(sk, body2);
-        let out2 = run(&cfg, &server2, NOW_MS, &[], LicenseOp::Activate { code: "C" }, None);
+        let out2 = run(
+            &cfg,
+            &server2,
+            NOW_MS,
+            &[],
+            LicenseOp::Activate { code: "C" },
+            None,
+        );
         assert_eq!(out2.snapshot.unwrap().grace_seconds, 2_592_000);
     }
 
@@ -3870,7 +4093,14 @@ mod tests {
         let mut blocked = snapshot_perpetual();
         blocked.updates_blocked = true;
         blocked.revoked = true;
-        let out = run(&cfg, &server, NOW_MS, &[], LicenseOp::Status, Some(&blocked));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[],
+            LicenseOp::Status,
+            Some(&blocked),
+        );
         assert!(out.decision.licensed);
         assert!(!out.decision.updates_blocked);
         let snap = out.snapshot.unwrap();
@@ -3999,8 +4229,12 @@ mod tests {
     fn mieba_dian_pubkey_split_reassemble_and_crosscheck() {
         // 任意 32B 测试向量(非真钥)。
         let raw: [u8; 32] = core::array::from_fn(|i| (i as u8).wrapping_mul(11).wrapping_add(5));
-        let mask_a: Vec<u8> = (0..16u8).map(|i| i.wrapping_mul(7).wrapping_add(1)).collect();
-        let mask_b: Vec<u8> = (0..16u8).map(|i| i.wrapping_mul(5).wrapping_add(3)).collect();
+        let mask_a: Vec<u8> = (0..16u8)
+            .map(|i| i.wrapping_mul(7).wrapping_add(1))
+            .collect();
+        let mask_b: Vec<u8> = (0..16u8)
+            .map(|i| i.wrapping_mul(5).wrapping_add(3))
+            .collect();
         let frag_a: Vec<u8> = raw[..16].iter().zip(&mask_a).map(|(b, m)| b ^ m).collect();
         let frag_b: Vec<u8> = raw[16..].iter().zip(&mask_b).map(|(b, m)| b ^ m).collect();
         let fp = sha256_bytes(&raw)[..4].to_vec();
@@ -4038,7 +4272,10 @@ mod tests {
             b64, "Tn9/DNG1gNNb2f33o9GAOyBL5hvS/8x0Fea3i//kYX0=",
             "嵌入公钥重组结果应与 L1s 服务端公钥一致"
         );
-        assert!(resolve_public_key(&b64).is_ok(), "嵌入公钥应为合法 Ed25519 钥");
+        assert!(
+            resolve_public_key(&b64).is_ok(),
+            "嵌入公钥应为合法 Ed25519 钥"
+        );
     }
 
     // ── 灭靶点:构建后二进制内无 license 相关明文定位串(post-build 断言,读 current_exe) ──
@@ -4078,12 +4315,9 @@ mod tests {
             "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
         ))
         .expect("projection fixture json");
-        let runtime = parse_signed_channel_runtime(
-            &fixture["channelConfig"],
-            "creatoros",
-            Some("agent-42"),
-        )
-        .expect("canonical v2 fixture must be accepted");
+        let runtime =
+            parse_signed_channel_runtime(&fixture["channelConfig"], "creatoros", Some("agent-42"))
+                .expect("canonical v2 fixture must be accepted");
         assert_eq!(runtime.schema_version, "channel-runtime-v2");
         assert_eq!(runtime.snapshot_version, Some(17));
         assert_eq!(
@@ -4100,17 +4334,14 @@ mod tests {
             "../../../docs/contracts/fixtures/growth-channel-runtime-v1.vector.json"
         ))
         .expect("source digest vector json");
-        let canonical =
-            serde_json_canonicalizer::to_string(&vector["semanticSnapshot"]).unwrap();
+        let canonical = serde_json_canonicalizer::to_string(&vector["semanticSnapshot"]).unwrap();
         assert_eq!(canonical.as_bytes().len(), 567);
         assert_eq!(canonical, vector["canonicalUtf8"].as_str().unwrap());
         assert_eq!(
             format!("sha256:{:x}", Sha256::digest(canonical.as_bytes())),
             vector["sourceDigest"].as_str().unwrap()
         );
-        let negative = vector["negativeVector"]["canonicalUtf8"]
-            .as_str()
-            .unwrap();
+        let negative = vector["negativeVector"]["canonicalUtf8"].as_str().unwrap();
         assert_eq!(negative.as_bytes().len(), 571);
         assert_eq!(
             format!("sha256:{:x}", Sha256::digest(negative.as_bytes())),
@@ -4129,8 +4360,7 @@ mod tests {
         let mut extra = fixture["channelConfig"].clone();
         extra["price"] = serde_json::json!(99);
         assert_eq!(
-            parse_signed_channel_runtime(&extra, "creatoros", Some("agent-42"))
-                .unwrap_err(),
+            parse_signed_channel_runtime(&extra, "creatoros", Some("agent-42")).unwrap_err(),
             "CHANNEL_RUNTIME_SCHEMA_INVALID"
         );
         assert_eq!(
@@ -4159,9 +4389,8 @@ mod tests {
             "supportUrl": "https://agent.example.com/help?q=1#contact",
             "downloadUrl": "https://downloads.example.com/latest?q=mac#download"
         });
-        let runtime =
-            parse_signed_channel_runtime(&legacy, "creatoros", Some("agent-42"))
-                .expect("closed legacy v1");
+        let runtime = parse_signed_channel_runtime(&legacy, "creatoros", Some("agent-42"))
+            .expect("closed legacy v1");
         assert_eq!(runtime.schema_version, "channel-runtime-legacy-v1");
         assert_eq!(runtime.channel_support_url, runtime.support_url);
         assert!(runtime.bug_feedback_url.is_none());
@@ -4295,12 +4524,9 @@ mod tests {
             "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
         ))
         .unwrap();
-        let old = parse_signed_channel_runtime(
-            &fixture["channelConfig"],
-            "creatoros",
-            Some("agent-42"),
-        )
-        .unwrap();
+        let old =
+            parse_signed_channel_runtime(&fixture["channelConfig"], "creatoros", Some("agent-42"))
+                .unwrap();
         let mut existing = snapshot_active();
         existing.project_key = "creatoros".to_string();
         existing.channel_ref = Some("agent-42".to_string());
@@ -4337,12 +4563,9 @@ mod tests {
             "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
         ))
         .unwrap();
-        let runtime = parse_signed_channel_runtime(
-            &fixture["channelConfig"],
-            "creatoros",
-            Some("agent-42"),
-        )
-        .unwrap();
+        let runtime =
+            parse_signed_channel_runtime(&fixture["channelConfig"], "creatoros", Some("agent-42"))
+                .unwrap();
         let mut snapshot = snapshot_active();
         snapshot.project_key = "creatoros".to_string();
         snapshot.channel_ref = Some("agent-42".to_string());
@@ -4384,13 +4607,29 @@ mod tests {
         let server = FakeServer::ok(sk, valid_body_with_channel());
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         assert!(out.decision.licensed);
         let update = out.channel_config.expect("应有渠道缓存覆写指令");
         let ch = update.expect("应为具体渠道配置");
-        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
-        assert_eq!(ch.support_url.as_deref(), Some("https://agent.example.com/contact"));
-        assert_eq!(ch.download_url.as_deref(), Some("https://agent.example.com/download"));
+        assert_eq!(
+            ch.purchase_url.as_deref(),
+            Some("https://agent.example.com/buy")
+        );
+        assert_eq!(
+            ch.support_url.as_deref(),
+            Some("https://agent.example.com/contact")
+        );
+        assert_eq!(
+            ch.download_url.as_deref(),
+            Some("https://agent.example.com/download")
+        );
     }
 
     // 字段缺失(旧服务端)→ None,不动现有缓存(向后兼容)。
@@ -4400,7 +4639,14 @@ mod tests {
         let server = FakeServer::ok(sk, valid_body());
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         assert!(out.decision.licensed);
         assert!(out.channel_config.is_none(), "字段缺失不该产生覆写指令");
     }
@@ -4414,8 +4660,19 @@ mod tests {
         let server = FakeServer::ok(sk, body);
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
-        assert_eq!(out.channel_config, Some(None), "显式 null 应覆写为中性降级态");
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
+        assert_eq!(
+            out.channel_config,
+            Some(None),
+            "显式 null 应覆写为中性降级态"
+        );
     }
 
     // 非 https 协议头被滤掉(白名单防线纵深;javascript:/http: 都不放行)。
@@ -4431,11 +4688,21 @@ mod tests {
         let server = FakeServer::ok(sk, body);
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         let ch = out.channel_config.expect("有字段").expect("有对象");
         assert!(ch.purchase_url.is_none(), "http:// 应被滤掉");
         assert!(ch.support_url.is_none(), "javascript: 应被滤掉");
-        assert_eq!(ch.download_url.as_deref(), Some("https://ok.example.com/dl"));
+        assert_eq!(
+            ch.download_url.as_deref(),
+            Some("https://ok.example.com/dl")
+        );
     }
 
     // [SPEC §8-5 测锚] 假服务器坏签名 → untrusted,渠道缓存**不动**(保留旧缓存)。
@@ -4446,9 +4713,19 @@ mod tests {
         server.tamper_body_after_sign = true;
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         assert_eq!(out.decision.status, "untrusted");
-        assert!(out.channel_config.is_none(), "坏签名绝不产生渠道覆写指令(沿用旧缓存)");
+        assert!(
+            out.channel_config.is_none(),
+            "坏签名绝不产生渠道覆写指令(沿用旧缓存)"
+        );
     }
 
     // 码无效(过期)响应也更新渠道链接:续期入口正是这时最需要。
@@ -4461,10 +4738,20 @@ mod tests {
         let server = FakeServer::ok(sk, body);
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         assert!(!out.decision.licensed);
         let ch = out.channel_config.expect("有字段").expect("有对象");
-        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
+        assert_eq!(
+            ch.purchase_url.as_deref(),
+            Some("https://agent.example.com/buy")
+        );
     }
 
     // 离线 → 不动缓存(SPEC §7「离线用缓存」)。
@@ -4475,7 +4762,14 @@ mod tests {
         server.network_error = true;
         let cfg = config(&pk, true);
         let p = MemPoint::new(Some(NOW_MS - 1000));
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         assert!(out.channel_config.is_none(), "离线不该动渠道缓存");
     }
 
@@ -4505,8 +4799,11 @@ mod tests {
         assert_eq!(read_channel_links_file(&path), None);
 
         // schema 版本不匹配 → 丢弃。
-        std::fs::write(&path, r#"{"version":99,"channel":{"purchaseUrl":"https://x.example.com"}}"#)
-            .unwrap();
+        std::fs::write(
+            &path,
+            r#"{"version":99,"channel":{"purchaseUrl":"https://x.example.com"}}"#,
+        )
+        .unwrap();
         assert_eq!(read_channel_links_file(&path), None, "版本不匹配应丢弃");
 
         // 坏 JSON → 丢弃(不 panic)。
@@ -4521,7 +4818,10 @@ mod tests {
         )
         .unwrap();
         let old = read_channel_links_file(&path).expect("老 schema-1 文件必须仍可读");
-        assert_eq!(old.purchase_url.as_deref(), Some("https://old.example.com/buy"));
+        assert_eq!(
+            old.purchase_url.as_deref(),
+            Some("https://old.example.com/buy")
+        );
         assert_eq!(old.brand_name, None, "无 brandName 键 = 未配置");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -4542,11 +4842,21 @@ mod tests {
         let server = FakeServer::ok(sk, body);
         let cfg = config(&pk, true);
         let p = MemPoint::new(None);
-        let out = run(&cfg, &server, NOW_MS, &[&p], LicenseOp::Status, Some(&snapshot_active()));
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&snapshot_active()),
+        );
         assert!(out.decision.licensed);
         let ch = out.channel_config.expect("有字段").expect("有对象");
         assert_eq!(ch.brand_name.as_deref(), Some("星辰传媒"));
-        assert_eq!(ch.purchase_url.as_deref(), Some("https://agent.example.com/buy"));
+        assert_eq!(
+            ch.purchase_url.as_deref(),
+            Some("https://agent.example.com/buy")
+        );
     }
 
     // snake_case `brand_name` 双取兼容(沿 parse_channel_config 既有宽容策略)。
@@ -4583,7 +4893,11 @@ mod tests {
     fn brand_name_over_30_chars_dropped_entirely() {
         let thirty: String = "星".repeat(30);
         let ch = parse_channel_config(&serde_json::json!({ "brandName": thirty.clone() }));
-        assert_eq!(ch.brand_name.as_deref(), Some(thirty.as_str()), "30 字符恰好合法");
+        assert_eq!(
+            ch.brand_name.as_deref(),
+            Some(thirty.as_str()),
+            "30 字符恰好合法"
+        );
         let thirty_one: String = "星".repeat(31);
         let ch = parse_channel_config(&serde_json::json!({ "brandName": thirty_one }));
         assert_eq!(ch.brand_name, None, "超 30 字符整体弃用,不截断");
@@ -4592,10 +4906,8 @@ mod tests {
     // channelConfig 显式 null → 覆写中性态,品牌名随之清空(落盘读回 None)。
     #[test]
     fn brand_name_cleared_on_explicit_null_channel() {
-        let dir = std::env::temp_dir().join(format!(
-            "creatoros-brand-name-test-{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("creatoros-brand-name-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = channel_links_file_path(&dir);
@@ -4607,12 +4919,18 @@ mod tests {
             }),
         );
         assert_eq!(
-            read_channel_links_file(&path).and_then(|c| c.brand_name).as_deref(),
+            read_channel_links_file(&path)
+                .and_then(|c| c.brand_name)
+                .as_deref(),
             Some("星辰传媒")
         );
         // 服务端显式 null(Some(None) 覆写指令)→ 品牌名不残留。
         write_channel_links_file(&path, &None);
-        assert_eq!(read_channel_links_file(&path), None, "显式清空后品牌名不得残留");
+        assert_eq!(
+            read_channel_links_file(&path),
+            None,
+            "显式清空后品牌名不得残留"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -4645,7 +4963,10 @@ mod tests {
     #[test]
     fn latest_version_signed_update_available() {
         let (sk, pk) = test_keypair();
-        let server = FakeServer::ok(sk, latest_body("0.2.0", Some("https://agent.example.com/dl")));
+        let server = FakeServer::ok(
+            sk,
+            latest_body("0.2.0", Some("https://agent.example.com/dl")),
+        );
         let cfg = config(&pk, true);
         let info = fetch_latest_version(
             &cfg,
@@ -4657,7 +4978,10 @@ mod tests {
         .expect("应成功");
         assert!(info.update_available);
         assert_eq!(info.latest_version.as_deref(), Some("0.2.0"));
-        assert_eq!(info.download_url.as_deref(), Some("https://agent.example.com/dl"));
+        assert_eq!(
+            info.download_url.as_deref(),
+            Some("https://agent.example.com/dl")
+        );
         // 请求应携带快照里的激活码(渠道按码解析)。
         let req = server.last_request.borrow().clone().unwrap();
         assert_eq!(req["code"].as_str(), Some("CODE-1"));
@@ -4685,7 +5009,10 @@ mod tests {
     #[test]
     fn latest_version_up_to_date() {
         let (sk, pk) = test_keypair();
-        let server = FakeServer::ok(sk, latest_body("0.1.0", Some("https://agent.example.com/dl")));
+        let server = FakeServer::ok(
+            sk,
+            latest_body("0.1.0", Some("https://agent.example.com/dl")),
+        );
         let cfg = config(&pk, true);
         let info = fetch_latest_version(
             &cfg,
@@ -4702,7 +5029,10 @@ mod tests {
     #[test]
     fn latest_version_revoked_trial_no_prompt() {
         let (sk, pk) = test_keypair();
-        let server = FakeServer::ok(sk, latest_body("9.9.9", Some("https://agent.example.com/dl")));
+        let server = FakeServer::ok(
+            sk,
+            latest_body("9.9.9", Some("https://agent.example.com/dl")),
+        );
         let cfg = config(&pk, true);
         let snap = LicenseSnapshot {
             revoked: true,

@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * 口播脚本「编辑 | 结构」双视图(T-070 首建只读;T-072 升级为**结构化编辑**——
+ * 口播脚本「纯文本稿 | 分镜脚本」双视图(T-070 首建只读;T-072 升级为**结构化编辑**——
  * 用户看图拍板的目标形态:每段左侧挂段型徽章,段内容就地可编辑)。
  *
- * 编辑视图 = 现有 TipTap(children 原样);结构视图 = 可编辑分段卡:
+ * 纯文本稿 = 现有 TipTap(children 原样);分镜脚本 = 可编辑分段卡:
  *   段序号 + 段型徽章(可切换:钩子/开场/正文/转场/收尾/金句)+ 标题(inline input)
  *   + 正文(自适应高 textarea)+ 段操作(上移/下移/删除/在下方加段)。
  *
@@ -125,8 +125,8 @@ export function ScriptStructureToggle({
       >
         {(
           [
-            { key: "edit", label: "编辑" },
-            { key: "structure", label: "结构" },
+            { key: "edit", label: "纯文本稿" },
+            { key: "structure", label: "分镜脚本" },
           ] as const
         ).map((v) => (
           <button

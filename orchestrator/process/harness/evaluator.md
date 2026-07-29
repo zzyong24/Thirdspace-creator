@@ -19,10 +19,11 @@ auto-completed. See "Heterogeneous + rebuttal model" below.
    plan/contract; flag any **undocumented or unrequested** change (scope creep).
 2. **Test sufficiency.** Are the core path AND important states covered? Is there a real create→persist(SQL)→
    list round-trip test, not just a unit stub? Are determinism rules respected?
-3. **End-to-end / visual (the honest gate).** Confirm the rendered behavior actually works — run the
-   project's E2E + visual/verify command (the one wired in `verify-task.sh` / `package.json` / `Makefile`;
-   e.g. `pnpm test:visual` on the JS/TS reference stack). "Looks done" / green-unit-tests is NOT enough — a
-   suite that EXCLUDES the failing cases (e.g. a known-red visual suite dropped from `verify`) does not count.
+3. **End-to-end journey (the honest gate).** Confirm intent→outcome in the real browser/desktop, not only
+   rendering: immediate feedback, settled collection/selection/detail state, next action, back/refresh,
+   non-fixture witnesses, and normal/minimum viewports. For a UI task with a PAGE journey contract, run its
+   named E2E command plus `frontend-validation.mjs validate`; green unit/component tests or a screenshot-only
+   suite is insufficient. A suite that excludes a known-red journey does not count.
 4. **Consistency.** `node orchestrator/process/reconcile.mjs` is 0; the upstream→downstream chain for this
    vertical now has API + persisted TEST (closes its part of the consistency gap).
 

@@ -538,6 +538,14 @@ export async function submitProductFeedback(
 ): Promise<LocalProductFeedbackResponse> {
   const input = localProductFeedbackRequest.parse(rawInput);
   const env = dependencies.env ?? process.env;
+  if (env.CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED !== "1") {
+    fail(
+      "FEEDBACK_SUBMISSION_DISABLED",
+      503,
+      true,
+      "当前版本尚未开放应用内发送，请复制文字并使用官方反馈页",
+    );
+  }
   const fetchImpl = dependencies.fetchImpl ?? fetch;
   const readVerdict =
     dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());

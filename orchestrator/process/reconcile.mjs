@@ -5,7 +5,8 @@
 // blocking-consistency rule, and flags staleness vs the decision log. Exit 0=clean, 1=drift, 2=missing.
 //
 // Per-project config (optional): orchestrator/process/reconcile.config.json
-//   { "work_branch": "feat/x", "probes": [ { "stage": "16-backend-tdd", "path": "backend/src" } ] }
+//   { "work_branch": "feat/x", "receipt_policy": "required",
+//     "probes": [ { "stage": "16-backend-tdd", "path": "backend/src" } ] }
 // If absent, work_branch is read from the manifest and probes default to empty (structural + consistency +
 // staleness checks still run).
 
@@ -14,6 +15,8 @@ import { tallyLessonStats } from './lessons-stats.mjs';
 import { neverFiredFindings, selfRefFindings, quarantineFindings, computeMetrics, parseLedgerRules, buildReuseCandidate, emitDeadLetterWarn } from './evolution-guards.mjs';
 import { runAllAntiChecks } from './anti-check.mjs';
 import { readNewEvents, archiveConsumed } from './run-events.mjs';
+import { auditReviewReceipts } from './reviewctl.mjs';
+import { auditFrontendReceipts } from './frontend-validation.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,7 +31,16 @@ const VALID_STATUS = ['not-started','draft','needs-user-confirmation','blocked',
 // control_root (optional, repo-relative): directory holding the control artifacts (manifest, logs,
 // registry). Defaults to the orchestrator/ folder (the standard layout) so existing projects keep working.
 let cfg = { work_branch: null, probes: [], control_root: null };
-if (existsSync(CONFIG)) { try { cfg = { ...cfg, ...JSON.parse(readFileSync(CONFIG, 'utf8')) }; } catch (e) { /* ignore */ } }
+let configReadError = null;
+if (existsSync(CONFIG)) {
+  try {
+    cfg = { ...cfg, ...JSON.parse(readFileSync(CONFIG, 'utf8')) };
+    if (cfg.receipt_policy != null && !['legacy', 'required'].includes(cfg.receipt_policy))
+      throw new Error(`receipt_policy=${JSON.stringify(cfg.receipt_policy)} is not legacy|required`);
+  } catch (e) {
+    configReadError = e.message;
+  }
+}
 
 const CONTROL_ROOT = cfg.control_root ? resolve(REPO, cfg.control_root) : ORCH;
 const MANIFEST = resolve(CONTROL_ROOT, 'ARTIFACT_MANIFEST.yaml');
@@ -38,6 +50,7 @@ const findings = [];
 const err  = (m) => findings.push({ level: 'ERROR', m });
 const warn = (m) => findings.push({ level: 'WARN',  m });
 const ok   = (m) => findings.push({ level: 'OK',    m });
+if (configReadError) err(`reconcile.config.json invalid — refusing legacy fallback: ${configReadError}`);
 
 function die(code) {
   const order = { ERROR: 0, WARN: 1, OK: 2 };
@@ -199,6 +212,33 @@ if (existsSync(BACKLOG_HEALTH)) {
   else if (r.status === 0) ok('backlog-health.mjs: BACKLOG within size/line limits.');
   else if (r.status === 2) err('backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.');
   else warn('backlog-health.mjs reported BACKLOG bloat (exit 1). Run `node orchestrator/process/backlog-health.mjs` for the oversized lines — compact per rules/task-ledger-rules.md (`backlog-compact.mjs` handles ✅ rows). (WARN-biased: does not block reconcile.)');
+}
+
+// Review/acceptance receipts are the CI backstop for edits that bypass taskctl or the optional
+// editor hook. Legacy projects (no receipt_policy or old tables) stay readable; fresh projects set
+// receipt_policy=required and therefore fail closed on missing columns, stale hashes, or forged state.
+{
+  const BACKLOG = resolve(REPO, 'BACKLOG.md');
+  if (!existsSync(BACKLOG)) {
+    warn('BACKLOG.md absent — review/frontend receipt audit skipped.');
+  } else {
+    try {
+      const reviewErrors = auditReviewReceipts({ root: REPO, backlogFile: BACKLOG });
+      if (reviewErrors.length) {
+        for (const message of reviewErrors) err(`review receipt: ${message}`);
+      } else ok('reviewctl: review receipts + current snapshots + event chain reconcile.');
+    } catch (e) {
+      err(`review receipt audit could not run: ${e.message}`);
+    }
+    try {
+      const frontendErrors = auditFrontendReceipts({ root: REPO, backlogFile: BACKLOG });
+      if (frontendErrors.length) {
+        for (const message of frontendErrors) err(`frontend receipt: ${message}`);
+      } else ok('frontend-validation: journey receipts reconcile (or no UI receipts yet).');
+    } catch (e) {
+      err(`frontend receipt audit could not run: ${e.message}`);
+    }
+  }
 }
 
 // Knowledge-layer guards (sibling executables). All three self-skip (exit 0) when the project has no

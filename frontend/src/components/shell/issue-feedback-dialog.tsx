@@ -14,6 +14,7 @@ import {
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -64,6 +65,8 @@ export function IssueFeedbackDialog({
   collapsed,
   correlationId,
   bugFeedbackUrl: cachedBugFeedbackUrl,
+  submissionEnabled = process.env
+    .NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED === "1",
 }: {
   readonly pathname: string;
   readonly collapsed: boolean;
@@ -73,6 +76,8 @@ export function IssueFeedbackDialog({
    * 独立组件/旧嵌入方的兼容读取；正式侧边栏不会在每次开弹窗时重复读渠道运行时。
    */
   readonly bugFeedbackUrl?: string | null;
+  /** 包能力默认关闭；服务端还有独立 fail-closed 门，二者都开启才会真实提交。 */
+  readonly submissionEnabled?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const [summary, setSummary] = React.useState("");
@@ -97,6 +102,7 @@ export function IssueFeedbackDialog({
   const [validationError, setValidationError] = React.useState<string | null>(
     null,
   );
+  const [submissionConfirmed, setSubmissionConfirmed] = React.useState(false);
 
   const preview = React.useMemo(
     () =>
@@ -138,6 +144,7 @@ export function IssueFeedbackDialog({
       setSubmitState({ state: "idle" });
       setIdempotencyKey(newIdempotencyKey());
       setValidationError(null);
+      setSubmissionConfirmed(false);
     }
   }, [cachedBugFeedbackUrl]);
 
@@ -145,10 +152,16 @@ export function IssueFeedbackDialog({
     if (!open) return;
     let active = true;
     void getAppVersion().then((value) => {
-      if (active) setAppVersion(value);
+      if (active) {
+        setAppVersion(value);
+        setSubmissionConfirmed(false);
+      }
     });
     void getRuntimeSystemLabel().then((value) => {
-      if (active) setSystemLabel(value);
+      if (active) {
+        setSystemLabel(value);
+        setSubmissionConfirmed(false);
+      }
     });
     return () => {
       active = false;
@@ -224,6 +237,7 @@ export function IssueFeedbackDialog({
   async function submitFeedback() {
     if (
       submitState.state === "submitting" ||
+      !submissionConfirmed ||
       !validateSummary() ||
       !validateDescription()
     ) {
@@ -335,7 +349,7 @@ export function IssueFeedbackDialog({
         <DialogHeader>
           <DialogTitle>问题反馈</DialogTitle>
           <DialogDescription>
-            先复制反馈内容，再打开日志文件夹并将整个文件夹压缩为 zip；最后打开反馈渠道，在飞书多维表格中粘贴内容并手动上传压缩包。CreatorOS 不会自动发送或上传日志。
+            请先预览并确认文字。发送只包含下方文字与基本版本信息，不会自动上传日志、附件、截图、激活码或其他用户内容；服务不可用时仍可复制文字并打开官方反馈页。
           </DialogDescription>
         </DialogHeader>
 
@@ -355,6 +369,7 @@ export function IssueFeedbackDialog({
                 setCopyState("editing");
                 setSubmitState({ state: "idle" });
                 setIdempotencyKey(newIdempotencyKey());
+                setSubmissionConfirmed(false);
               }}
             />
           </div>
@@ -376,6 +391,7 @@ export function IssueFeedbackDialog({
                 setCopyState("editing");
                 setSubmitState({ state: "idle" });
                 setIdempotencyKey(newIdempotencyKey());
+                setSubmissionConfirmed(false);
               }}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -408,6 +424,27 @@ export function IssueFeedbackDialog({
               />
             </div>
           </div>
+
+          {submissionEnabled ? (
+            <label
+              htmlFor="issue-feedback-confirmation"
+              className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-muted/25 p-3 text-xs leading-5"
+            >
+              <Checkbox
+                id="issue-feedback-confirmation"
+                checked={submissionConfirmed}
+                onCheckedChange={(checked) =>
+                  setSubmissionConfirmed(checked === true)
+                }
+              />
+              <span>
+                我已检查并确认发送上方文字和基本版本信息
+                <span className="block text-muted-foreground">
+                  不发送日志、附件、激活码、手机号或本机路径
+                </span>
+              </span>
+            </label>
+          ) : null}
 
           <div
             aria-live="polite"
@@ -487,11 +524,24 @@ export function IssueFeedbackDialog({
           <Button
             type="button"
             variant="outline"
-            disabled
-            title="当前版本请使用“打开反馈渠道”手动提交"
+            disabled={
+              !submissionEnabled ||
+              submitState.state === "submitting" ||
+              !submissionConfirmed
+            }
+            title={
+              !submissionEnabled
+                ? "当前安装包尚未开放应用内发送，请使用官方反馈页"
+                : !submissionConfirmed
+                  ? "请先检查并确认发送内容"
+                  : undefined
+            }
             onClick={() => void submitFeedback()}
           >
-            发送问题反馈
+            {submitState.state === "submitting" ? (
+              <Loader2 className="animate-spin" />
+            ) : null}
+            {submitState.state === "submitting" ? "发送中…" : "发送问题反馈"}
           </Button>
         </DialogFooter>
       </DialogContent>

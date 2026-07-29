@@ -2,6 +2,12 @@
   "_meta": "TEMPLATE — copy to reconcile.config.json and fill per project.",
   "work_branch": "<the branch where implementation lives, e.g. main or feat/x>",
   "control_root": "orchestrator",
+  "receipt_policy": "required",
+  "_receipt_policy_note": "Fresh projects use required: review/验收 receipts and both BACKLOG columns are enforced by taskctl + reconcile. Upgraded projects whose existing config omits this field remain legacy-compatible until explicitly migrated.",
+  "frontend_verify_commands": {
+    "content-radar:e2e": "pnpm playwright test content-radar.spec.ts"
+  },
+  "_frontend_verify_note": "Allowlist by report.run.verify_key. On strict projects taskctl complete executes this exact command; report prose alone cannot claim a run. Replace the example with project commands.",
   "_control_root_note": "Repo-relative dir holding the control artifacts (manifest, logs, registry). Default layout is orchestrator/ (SKILL.md Startup 2); omit or keep as-is unless the project uses a custom control dir.",
   "probes": [
     { "stage": "00-intake", "path": "PROJECT_CONTEXT.md" },
