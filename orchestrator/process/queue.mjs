@@ -21,7 +21,7 @@ if (!existsSync(DECLOG)) {
 }
 const text = readFileSync(DECLOG, "utf8");
 
-// A/B/C impact grade (mirrors prompts/question-budget.md): A = changes behavior/security/
+// A/B/C impact grade (mirrors workflows/_COMMON.md Question Budget): A = changes behavior/security/
 // contract/release (must ask); B = has a default; C = inferable.
 function grade(body) {
   if (/security|data.ownership|contract|release|product direction|\bIA\b/i.test(body)) return "A";
