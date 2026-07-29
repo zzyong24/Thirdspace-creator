@@ -1,5 +1,10 @@
 # T-575 CreatorOS 客户端配置消费契约 v1
 
+> **历史契约，T-606 已取代模型 extension 规则。** `creatoros.model-config` 的当前权威、secret
+> 边界、三态裁决和运行时采用规则只见
+> `docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md`。
+> 本文的三键 parser、长期 Key 禁止、24 小时远端 LKG 与 `ready/offline` 规则不得用于新实现。
+
 > 状态：用户 2026-07-29 明确授权进入 BUILD；上游 Growth
 > `client-config-distribution-v1` 已独立评审 PASS[REV:d2895a3b6dac]
 > 上游权威：Growth `docs/contracts/client-config-distribution-v1.md`

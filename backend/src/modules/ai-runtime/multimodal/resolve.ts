@@ -1,5 +1,9 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
+import {
+  channelMultimodalSpec,
+  type ChannelModelPayload,
+} from "../channel-model-config";
 
 // 多模态 model-config 解析(SPEC 2026-07-01 §2.2 / §8 M1)—— 与文本 `resolveLlmConfig`
 // (../llm/resolve.ts)**并列**的一层:把用户在 model_configurations 表里为 image.generate /
@@ -38,6 +42,7 @@ export interface ResolveMultimodalDeps {
     capability: string,
   ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
+  getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
 }
 
 /** 未配 / 无凭据 —— 上层(asset.generate runner)接住 → cancelTask + 录制页显
@@ -201,6 +206,8 @@ export async function resolveMultimodalSpec(
 ): Promise<MultimodalSpec> {
   const { env } = deps;
   const kind = CAP_TO_KIND[capability];
+  const channel = await deps.getChannelModelConfig?.();
+  if (channel) return channelMultimodalSpec(channel, kind);
 
   // Tier 1 — 用户配的 DB row(先 per-capability,再该 kind 的默认行)。
   const fromCap = tryDbRow(await deps.getModelConfig(ctx, capability), kind, env);

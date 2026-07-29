@@ -115,6 +115,12 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | FR-575-05..07；HARD-575-003 | FLOW-575-02 | UI-575-002 | API-575-001 + Growth T-069 API-AM-013/API-170 | TEST-575-03/05 | DEC-TSL-002 closed HARD-575-003：不新增 readiness wire，真实 closed 202 receipt 才成功 |
 
 | DEC-TSL-003；FR-575-08 | FLOW-575-03 | server-only config refresh / safe modelPolicy projection | [Creator config consumer CONTRACT](../docs/contracts/creator-client-config-consumer-v1.md)；API-575-002；Growth T-077 PASS[REV:d2895a3b6dac] | TEST-575-06 | 本地 BUILD PASS：fixture byte-pin、启动/激活/claim 接线、6h 抖动刷新、AES-GCM LKG 与 fail-closed 已验证；live HTTPS E2E、正式公钥/keyId、Mac beta 仍未完成 |
+
+## T-606 渠道模型配置权威纠偏
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-MODEL-606；Growth FR-055/NFR-029 | 既有激活 locator → config.pull → configured/not_configured/unreachable/security_error → channel/local 唯一 authority | PAGE-017 设置页脱敏来源状态；本地配置始终可编辑 | [T-606 CreatorOS 绑定 SPEC](../docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md)；既有 API-575-002 | TC-T606-01..09；聚焦 backend 31 + frontend 86；Playwright 桌面/390px | BUILD 已验证：review PASS[REV:bc38a5b47eac]、Next build PASS；Growth/Activity live HTTPS、正式 Key 与发布许可仍未完成 |
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链

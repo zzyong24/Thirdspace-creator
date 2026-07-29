@@ -30,8 +30,8 @@ export async function POST(request: Request): Promise<Response> {
   ) {
     return response(
       {
-        state: "unavailable",
-        modelPolicy: null,
+        authority: "local",
+        outcome: "security_error",
         action: "请求格式不正确，请重新打开设置后重试",
         retryable: false,
       },
@@ -46,8 +46,8 @@ export async function POST(request: Request): Promise<Response> {
         const expired = error.code === "CLIENT_CONFIG_ACCESS_EXPIRED";
         return response(
           {
-            state: pending ? "pending" : "unavailable",
-            modelPolicy: null,
+            authority: "local",
+            outcome: pending ? "unreachable" : "security_error",
             action: error.message,
             retryable: error.retryable,
           },
@@ -56,8 +56,8 @@ export async function POST(request: Request): Promise<Response> {
       }
       return response(
         {
-          state: "unavailable",
-          modelPolicy: null,
+          authority: "local",
+          outcome: "unreachable",
           action: "渠道配置暂时不可用，请稍后重试",
           retryable: true,
         },

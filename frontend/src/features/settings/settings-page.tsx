@@ -81,6 +81,8 @@ export interface SettingsPageProps {
    * hasSecret instead of the fixture default. Omitted in unit tests.
    */
   readonly model?: ModelState;
+  /** T-606 当前模型来源的脱敏状态；不包含渠道 JSON、Key、locator 或版本材料。 */
+  readonly modelAuthority?: ModelAuthorityState;
   /**
    * Real DB-backed storage config + usage (read by the `(creator)/settings`
    * route via `settings.storage.get`). When supplied, the StorageUsageCard shows
@@ -272,6 +274,16 @@ export interface ModelState {
   readonly temperature: number;
 }
 
+export interface ModelAuthorityState {
+  readonly authority: "channel" | "local";
+  readonly outcome:
+    | "configured"
+    | "not_configured"
+    | "unreachable"
+    | "security_error";
+  readonly action: string;
+}
+
 // ---------------------------------------------------------------------------
 // Multimodal (image / video) model config — SPEC 2026-07-01 §2.1 / M3
 // ---------------------------------------------------------------------------
@@ -401,6 +413,7 @@ export function SettingsPage({
   viewModel,
   identity,
   model,
+  modelAuthority,
   storage,
   multimodalModels,
   douyinAccount,
@@ -435,6 +448,7 @@ export function SettingsPage({
     >
       <SettingsDialog
         viewModel={vm}
+        modelAuthority={modelAuthority}
         skills={skills}
         activation={activation}
         channelLinks={channelLinks}

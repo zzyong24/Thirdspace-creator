@@ -7,6 +7,33 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveLlmConfig — tier 1 DB row", () => {
+  it("configured 渠道 JSON 直接采用且不读取本地 DB/env", async () => {
+    let localReads = 0;
+    const cfg = await resolveLlmConfig(ctx, "planning.thesis", {
+      getChannelModelConfig: async () => ({
+        provider: "openai-compatible",
+        baseURL: "https://channel-model.example/v1",
+        apiKey: ["channel", "test"].join("-"),
+        model: "channel-model",
+        settings: { temperature: 0.2 },
+        unknownField: "kept-in-encrypted-payload",
+      }),
+      getModelConfig: async () => {
+        localReads += 1;
+        return null;
+      },
+      env: { ANTHROPIC_API_KEY: "must-not-be-read" },
+    });
+    expect(localReads).toBe(0);
+    expect(cfg).toMatchObject({
+      apiFormat: "openai_chat",
+      baseUrl: "https://channel-model.example/v1",
+      model: "channel-model",
+      token: "channel-test",
+      settings: { temperature: 0.2 },
+    });
+  });
+
   it("uses the DB row when its secretReference resolves non-empty", async () => {
     const cfg = await resolveLlmConfig(ctx, "planning.thesis", {
       getModelConfig: async () => ({

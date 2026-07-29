@@ -13,6 +13,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   ClientConfigPullError,
+  readChannelModelAuthority,
   refreshClientConfig,
   type ClientConfigCacheRecord,
   type ClientConfigStore,
@@ -79,12 +80,11 @@ function signedBundle(
         protocolVersion: "creatoros-model-config-v1",
         revision: 3,
         payload: {
-          serviceMode: "managed_default_user_override_allowed",
-          profileKey: "balanced",
-          capabilityRoutes: {
-            "script.draft": "text-quality",
-            "script.review": "text-balanced",
-          },
+          provider: "openai-compatible",
+          baseURL: "https://models.example/v1",
+          apiKey: ["test", "only", "channel"].join("-"),
+          model: "test-model",
+          unknownField: { kept: true },
         },
       },
     ],
@@ -141,6 +141,27 @@ class MemoryStore implements ClientConfigStore {
   async save(record: ClientConfigCacheRecord) {
     this.record = structuredClone(record);
   }
+}
+
+function configuredRecord(
+  bundle: SignedClientConfigBundle,
+  checkedAt = "2026-07-28T12:09:00.000Z",
+): ClientConfigCacheRecord {
+  const extension = bundle.extensions[0]!;
+  return {
+    state: "channel",
+    outcome: "configured",
+    checkedAt,
+    bundle,
+    channel: {
+      projectKey: bundle.projectKey,
+      channelRef: bundle.channelRef,
+      bundleVersion: bundle.bundleVersion,
+      bundleDigest: bundle.bundleDigest,
+      extensionRevision: extension.revision,
+      payload: extension.payload as Record<string, never>,
+    },
+  };
 }
 
 const verdict = {
@@ -239,7 +260,7 @@ describe("T-575 config.pull Creator consumer", () => {
     });
   }
 
-  it("拿短期 ticket、验签 closed bundle，并由 CreatorOS 产品协议解析安全投影", async () => {
+  it("拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影", async () => {
     const fetchImpl = successfulFetch();
     const result = await refreshClientConfig({
       env: env(),
@@ -251,19 +272,17 @@ describe("T-575 config.pull Creator consumer", () => {
     });
 
     expect(result).toEqual({
-      state: "ready",
-      modelPolicy: {
-        serviceMode: "managed_default_user_override_allowed",
-        profileKey: "balanced",
-        capabilityRoutes: {
-          "script.draft": "text-quality",
-          "script.review": "text-balanced",
-        },
-      },
-      action: "配置已更新",
+      authority: "channel",
+      outcome: "configured",
+      action: "渠道模型正在使用",
+      retryable: false,
     });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
-    expect(store.record?.state).toBe("ready");
+    expect(store.record?.state).toBe("channel");
+    expect(store.record?.channel?.payload).toMatchObject({
+      provider: "openai-compatible",
+      unknownField: { kept: true },
+    });
   });
 
   it("逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest", async () => {
@@ -286,8 +305,8 @@ describe("T-575 config.pull Creator consumer", () => {
       readVerdict: async () => ({ state: "ready", verdict }),
       store,
     });
-    expect(result.state).toBe("ready");
-    expect(result.modelPolicy.profileKey).toBe("balanced");
+    expect(result.authority).toBe("channel");
+    expect(result.outcome).toBe("configured");
   });
 
   it("坏签名、额外 envelope 字段和未知产品协议均 fail-closed", async () => {
@@ -309,8 +328,9 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({
-      code: "CLIENT_CONFIG_SIGNATURE_INVALID",
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
     });
 
     const extra = signedBundle(growthKeys.privateKey, { unexpected: true });
@@ -323,7 +343,10 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({ code: "CLIENT_CONFIG_INVALID" });
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
 
     const unknownProtocol = signedBundle(growthKeys.privateKey, {
       extensions: [
@@ -344,7 +367,11 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({ code: "CLIENT_PROTOCOL_NOT_SUPPORTED" });
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record?.state).toBe("quarantined");
   });
 
   it("Activity/Growth exact response headers 漂移时 fail-closed", async () => {
@@ -368,7 +395,10 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({ code: "CLIENT_CONFIG_AUTHORITY_INVALID" });
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
     expect(missingAmNoStore).toHaveBeenCalledTimes(1);
 
     const missingGrowthCorrelation = successfulFetch();
@@ -401,16 +431,15 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({ code: "CLIENT_CONFIG_INVALID" });
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
   });
 
-  it("低版本与同版本不同 digest 拒绝，不覆盖现有 LKG", async () => {
+  it("低版本与同版本不同 digest 隔离，历史密文保留但不激活", async () => {
     const current = signedBundle(growthKeys.privateKey, { bundleVersion: 43 });
-    store.record = {
-      state: "ready",
-      checkedAt: "2026-07-28T12:09:00.000Z",
-      bundle: current,
-    };
+    store.record = configuredRecord(current);
     const previous = structuredClone(store.record);
 
     await expect(
@@ -424,8 +453,15 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({ code: "CLIENT_CONFIG_VERSION_DOWNGRADE" });
-    expect(store.record).toEqual(previous);
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record).toMatchObject({
+      state: "quarantined",
+      channel: previous.channel,
+    });
+    store.record = previous;
 
     const collision = signedBundle(growthKeys.privateKey, {
       bundleVersion: 43,
@@ -451,17 +487,19 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).rejects.toMatchObject({ code: "CLIENT_CONFIG_VERSION_COLLISION" });
-    expect(store.record).toEqual(previous);
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record).toMatchObject({
+      state: "quarantined",
+      channel: previous.channel,
+    });
   });
 
   it("304 仍核对签名 LKG 的版本、digest、keyId 与在线 correlation", async () => {
     const current = signedBundle(growthKeys.privateKey);
-    store.record = {
-      state: "ready",
-      checkedAt: "2026-07-28T12:09:00.000Z",
-      bundle: current,
-    };
+    store.record = configuredRecord(current);
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
@@ -496,19 +534,109 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
         store,
       }),
-    ).resolves.toMatchObject({ state: "ready" });
+    ).resolves.toMatchObject({
+      authority: "channel",
+      outcome: "configured",
+    });
     expect(store.record).toMatchObject({
-      state: "ready",
+      state: "channel",
       checkedAt: NOW.toISOString(),
     });
   });
 
-  it("仅网络/authority 不可用可在 24 小时内使用 LKG，超时后明确不可用", async () => {
+  it("304 遇到缓存 payload 与签名 bundle 不一致时隔离并使用本地", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    const configured = configuredRecord(current);
     store.record = {
-      state: "ready",
-      checkedAt: "2026-07-27T12:10:00.001Z",
-      bundle: signedBundle(growthKeys.privateKey),
+      ...configured,
+      channel: {
+        ...configured.channel!,
+        payload: { provider: "tampered-cache-payload" },
+      },
     };
+    const fetchImpl = successfulFetch();
+    fetchImpl.mockImplementationOnce(async () =>
+      signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v1",
+        configAccessTicket: "header.payload.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-client-config-0001",
+      }),
+    );
+    fetchImpl.mockImplementationOnce(async () =>
+      new Response(null, {
+        status: 304,
+        headers: {
+          etag: `"${current.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": String(current.bundleVersion),
+          "x-config-key-id": current.keyId,
+          "x-correlation-id": "cor_abcdef0123456789abcdef0123456789",
+        },
+      }),
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "local",
+      outcome: "security_error",
+    });
+    expect(store.record).toMatchObject({
+      state: "quarantined",
+      outcome: "security_error",
+    });
+  });
+
+  it("明确无 extension 时保留历史渠道密文但切到本地", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    store.record = configuredRecord(current);
+    const withoutExtension = signedBundle(growthKeys.privateKey, {
+      bundleVersion: current.bundleVersion + 1,
+      extensions: [],
+    });
+    const result = await refreshClientConfig({
+      env: env(),
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl: successfulFetch(withoutExtension),
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+    });
+    expect(result).toMatchObject({
+      authority: "local",
+      outcome: "not_configured",
+    });
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "not_configured",
+      channel: configuredRecord(current).channel,
+    });
+    await expect(
+      readChannelModelAuthority({
+        env: env(),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "not_configured",
+      payload: null,
+    });
+  });
+
+  it("网络/authority 不可用立即停用历史渠道密文并使用本地", async () => {
+    store.record = configuredRecord(
+      signedBundle(growthKeys.privateKey),
+      "2026-07-27T12:10:00.001Z",
+    );
     const offline = await refreshClientConfig({
       env: env(),
       now: () => NOW,
@@ -519,37 +647,19 @@ describe("T-575 config.pull Creator consumer", () => {
       readVerdict: async () => ({ state: "ready", verdict }),
       store,
     });
-    expect(offline.state).toBe("offline");
-    expect(offline.action).toBe("正在使用最近一次已验证配置；联网后可重试");
-
-    store.record = {
-      state: "ready",
-      checkedAt: "2026-07-27T12:09:59.999Z",
-      bundle: signedBundle(growthKeys.privateKey),
-    };
-    await expect(
-      refreshClientConfig({
-        env: env(),
-        now: () => NOW,
-        nonce: () => "nonce-client-config-0001",
-        fetchImpl: vi.fn<typeof fetch>(async () => {
-          throw new TypeError("offline");
-        }),
-        readVerdict: async () => ({ state: "ready", verdict }),
-        store,
-      }),
-    ).rejects.toMatchObject({
-      code: "CLIENT_CONFIG_OFFLINE_EXPIRED",
-      message: "配置已超过离线可用时间，请联网后重试",
+    expect(offline).toMatchObject({
+      authority: "local",
+      outcome: "unreachable",
     });
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "unreachable",
+    });
+    expect(store.record?.channel).not.toBeNull();
   });
 
-  it("Growth signer 暂时不可用时可使用 24 小时内 LKG", async () => {
-    store.record = {
-      state: "ready",
-      checkedAt: "2026-07-28T12:09:00.000Z",
-      bundle: signedBundle(growthKeys.privateKey),
-    };
+  it("Growth signer 暂时不可用时使用本地，不启用远端 LKG", async () => {
+    store.record = configuredRecord(signedBundle(growthKeys.privateKey));
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async (input) => {
       expect(String(input)).toBe(
@@ -584,17 +694,13 @@ describe("T-575 config.pull Creator consumer", () => {
         store,
       }),
     ).resolves.toMatchObject({
-      state: "offline",
-      action: "正在使用最近一次已验证配置；联网后可重试",
+      authority: "local",
+      outcome: "unreachable",
     });
   });
 
   it("Activity/Growth 明确撤权、过期或重放拒绝时禁止 LKG，且保存阻断态", async () => {
-    store.record = {
-      state: "ready",
-      checkedAt: "2026-07-28T12:09:00.000Z",
-      bundle: signedBundle(growthKeys.privateKey),
-    };
+    store.record = configuredRecord(signedBundle(growthKeys.privateKey));
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async () =>
       signedAmResponse(
@@ -687,12 +793,12 @@ describe("T-575 config.pull Creator consumer", () => {
         readVerdict: async () => ({ state: "ready", verdict }),
       });
       const encrypted = await readFile(
-        join(directory, ".client-config-lkg"),
+        join(directory, ".channel-model-config"),
         "utf8",
       );
       expect(encrypted).toMatch(/^enc:v1:/);
       expect(encrypted).not.toMatch(
-        /balanced|script\.draft|agent-42|growth-client-config-bundle-v1/,
+        /test-model|models\.example|agent-42|growth-client-config-bundle-v1/,
       );
 
       await expect(
@@ -705,7 +811,10 @@ describe("T-575 config.pull Creator consumer", () => {
           }),
           readVerdict: async () => ({ state: "ready", verdict }),
         }),
-      ).resolves.toMatchObject({ state: "offline" });
+      ).resolves.toMatchObject({
+        authority: "local",
+        outcome: "unreachable",
+      });
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

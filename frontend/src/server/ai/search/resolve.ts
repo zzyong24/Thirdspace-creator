@@ -1,6 +1,10 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
+import {
+  channelModelRow,
+  type ChannelModelPayload,
+} from "@creatoros/backend/modules/ai-runtime";
 
 // 联网检索 model-config 解析(SPEC 2026-07-03 §1.1 T-084a)—— 与多模态 `resolveMultimodalSpec`
 // (backend/src/modules/ai-runtime/multimodal/resolve.ts)、文本 `resolveLlmConfig`
@@ -29,6 +33,7 @@ export interface ResolveSearchDeps {
     capability: string,
   ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
+  getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
 }
 
 /** 未配 / 无凭据 —— 上层(gatherMaterials)接住 → 降级 model_memory(诚实,不假装能搜)。
@@ -106,6 +111,16 @@ export async function resolveSearchSpec(
   deps: ResolveSearchDeps,
 ): Promise<SearchSpec> {
   const { env } = deps;
+  const channel = await deps.getChannelModelConfig?.();
+  if (channel) {
+    const row = channelModelRow(channel);
+    return {
+      provider: row.provider,
+      baseUrl: row.baseUrl,
+      model: row.modelName,
+      token: row.secretValue as string,
+    };
+  }
 
   // Tier 1 — 用户配的 DB row(先 per-capability web.search,再 search.default 默认行)。
   const fromCap = tryDbRow(await deps.getModelConfig(ctx, "web.search"), env);

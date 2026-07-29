@@ -111,6 +111,7 @@ import type {
   ActivationState,
   ChannelLinksState,
   DouyinAccountState,
+  ModelAuthorityState,
   MultimodalModelState,
   SettingsViewModel,
 } from "./settings-page";
@@ -264,11 +265,13 @@ const HIGHLIGHT_TAB: Record<string, string> = {
 
 export function SettingsDialog({
   viewModel,
+  modelAuthority,
   skills = [],
   activation,
   channelLinks,
 }: {
   viewModel: SettingsViewModel;
+  modelAuthority?: ModelAuthorityState;
   /**
    * T-077a:技能清单(route server 侧经 ai-worker listTemplates + settings.prompts.list
    * 投影)。单测/无 server 数据时缺省空数组 → SkillsSection 渲诚实空态。
@@ -424,6 +427,28 @@ export function SettingsDialog({
             </SettingsPanel>
             <SettingsPanel tabId="models" active={tab}>
               <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
+                <div
+                  data-slot="model-authority-status"
+                  data-authority={modelAuthority?.authority ?? "local"}
+                  className={cn(
+                    "rounded-xl border px-4 py-3",
+                    modelAuthority?.authority === "channel"
+                      ? "border-brand/25 bg-brand/5"
+                      : modelAuthority?.outcome === "security_error"
+                        ? "border-destructive/25 bg-destructive/5"
+                        : "border-border bg-muted/35",
+                  )}
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    {modelAuthority?.action ??
+                      "本地模型正在使用 · 暂时无法取得渠道配置"}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {modelAuthority?.authority === "channel"
+                      ? "下面的本地配置会安全保留，渠道不可用时才会使用。"
+                      : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
+                  </p>
+                </div>
                 {/* ① 必配块:文本模型是 AI 写字 / 对话的地基,配这一个就能用。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">

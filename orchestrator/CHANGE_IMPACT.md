@@ -11,6 +11,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-MODEL-606 — 渠道完整模型 JSON 成为 CreatorOS 条件权威（2026-07-29）
+
+- **上游变化**：Growth T-086 最终契约允许 exact CreatorOS extension 携带长期 Key 和任意
+  JSON object；verified configured 必须由 CreatorOS 自动采用。
+- **失效**：T-575 的安全三键 parser、长期 Key 禁止、24 小时远端 LKG；T-604 的 Gateway、
+  短 bearer、alias routing、`managed_locked` 和远端 LKG 优先全部失效。
+- **重新派生**：既有 `config.pull` envelope/验签/locator 保留；extension 改为独立加密 secret
+  namespace 和 `channel/local` 唯一裁决；所有模型 resolver 通过同一 authority 边界。
+- **UI 影响**：设置页增加脱敏当前来源状态，本地配置始终可编辑；API/UI 不返回渠道 JSON。
+- **发布影响**：CreatorOS 分支验证不能替代 Growth/Activity 跨仓联调、生产密钥和用户发布许可。
+
 ## CI-COL-001 — 内容雷达采集账号与工作区 owner 解耦（DEC-COL-001，2026-07-26）
 
 - **范围**：只覆盖内容雷达 `creator_profile`、`favorites_folder`、`darkhorse_query`；经营数据、

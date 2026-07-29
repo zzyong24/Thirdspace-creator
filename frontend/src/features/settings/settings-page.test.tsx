@@ -29,7 +29,7 @@
  */
 
 import * as React from "react";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
@@ -193,6 +193,26 @@ describe("SettingsPage", () => {
         document.querySelector(`[data-slot="${slot}"]`),
       ).not.toBeNull();
     }
+  });
+
+  it("[T-606] 渠道模型状态只显示脱敏来源，本地表单仍可编辑", async () => {
+    await renderSettings({
+      modelAuthority: {
+        authority: "channel",
+        outcome: "configured",
+        action: "渠道模型正在使用",
+      },
+    });
+    const status = document.querySelector(
+      '[data-slot="model-authority-status"]',
+    );
+    expect(status).not.toBeNull();
+    expect(status).toHaveAttribute("data-authority", "channel");
+    expect(status).toHaveTextContent("渠道模型正在使用");
+    expect(status).toHaveTextContent("本地配置会安全保留");
+    expect(
+      document.querySelector('[data-slot="model-configuration-card"]'),
+    ).not.toBeNull();
   });
 
   it("renders form rows with the compact label + control pattern", async () => {

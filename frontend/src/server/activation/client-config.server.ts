@@ -42,24 +42,18 @@ const RAW_ED25519_SPKI_PREFIX = Buffer.from(
   "hex",
 );
 const CACHE_PREFIX = "enc:v1:";
-const CACHE_CONTEXT = "creatoros-client-config-lkg-v1";
-const CACHE_SCHEMA = "creatoros-client-config-cache-v1";
+const CACHE_CONTEXT = "creatoros-channel-model-config-v1";
+const CACHE_SCHEMA = "creatoros-channel-model-config-cache-v1";
 const IV_BYTES = 12;
 const TAG_BYTES = 16;
 
 type JsonPrimitive = null | boolean | number | string;
-type JsonValue =
+export type JsonValue =
   | JsonPrimitive
   | readonly JsonValue[]
   | { readonly [key: string]: JsonValue };
 
-export type CreatorModelPolicy = {
-  readonly serviceMode:
-    | "managed_default_user_override_allowed"
-    | "byok_required";
-  readonly profileKey: "balanced" | "quality";
-  readonly capabilityRoutes: Readonly<Record<string, string>>;
-};
+export type ChannelModelJson = { readonly [key: string]: JsonValue };
 
 type ChannelConfigBundle = {
   readonly revision: number;
@@ -97,20 +91,28 @@ export type SignedClientConfigBundle = {
   readonly signature: string;
 };
 
-export type ClientConfigCacheRecord =
-  | {
-      readonly state: "ready";
-      readonly checkedAt: string;
-      readonly bundle: SignedClientConfigBundle;
-    }
-  | {
-      readonly state: "blocked";
-      readonly reason:
-        | "authorization_changed"
-        | "authorization_expired"
-        | "channel_terminated";
-      readonly checkedAt: string;
-    };
+export type ClientConfigCacheRecord = {
+  readonly state: "channel" | "local" | "quarantined" | "blocked";
+  readonly outcome:
+    | "configured"
+    | "not_configured"
+    | "unreachable"
+    | "security_error";
+  readonly checkedAt: string;
+  readonly bundle: SignedClientConfigBundle | null;
+  readonly channel: {
+    readonly projectKey: string;
+    readonly channelRef: string;
+    readonly bundleVersion: number;
+    readonly bundleDigest: string;
+    readonly extensionRevision: number;
+    readonly payload: ChannelModelJson;
+  } | null;
+  readonly reason?:
+    | "authorization_changed"
+    | "authorization_expired"
+    | "channel_terminated";
+};
 
 export interface ClientConfigStore {
   load(): Promise<ClientConfigCacheRecord | null>;
@@ -118,10 +120,27 @@ export interface ClientConfigStore {
 }
 
 export type ClientConfigProjection = {
-  readonly state: "ready" | "offline";
-  readonly modelPolicy: CreatorModelPolicy;
+  readonly authority: "channel" | "local";
+  readonly outcome:
+    | "configured"
+    | "not_configured"
+    | "unreachable"
+    | "security_error";
   readonly action: string;
+  readonly retryable: boolean;
 };
+
+export type ChannelModelAuthority =
+  | {
+      readonly authority: "channel";
+      readonly outcome: "configured";
+      readonly payload: ChannelModelJson;
+    }
+  | {
+      readonly authority: "local";
+      readonly outcome: "not_configured" | "unreachable" | "security_error";
+      readonly payload: null;
+    };
 
 type ActiveVerdict = Pick<
   LicenseVerdict,
@@ -584,8 +603,17 @@ function parseBundleShape(value: unknown): SignedClientConfigBundle {
       );
     }
   }
+  if (value.extensions.length > 1) {
+    fail(
+      "CLIENT_CONFIG_INVALID",
+      "当前产品配置响应无法验证，请稍后重试",
+      false,
+    );
+  }
+  if (value.extensions.length === 0) {
+    return value as unknown as SignedClientConfigBundle;
+  }
   if (
-    value.extensions.length !== 1 ||
     !exactObject(value.extensions[0], [
       "extensionKey",
       "payload",
@@ -596,7 +624,7 @@ function parseBundleShape(value: unknown): SignedClientConfigBundle {
   ) {
     fail(
       "CLIENT_CONFIG_INVALID",
-      "当前产品配置不完整，请稍后重试",
+      "当前产品配置响应无法验证，请稍后重试",
       false,
     );
   }
@@ -612,7 +640,10 @@ function parseBundleShape(value: unknown): SignedClientConfigBundle {
     typeof extension.revision !== "number" ||
     !Number.isSafeInteger(extension.revision) ||
     extension.revision < 1 ||
-    !isJsonValue(extension.payload)
+    !isJsonValue(extension.payload) ||
+    !extension.payload ||
+    typeof extension.payload !== "object" ||
+    Array.isArray(extension.payload)
   ) {
     fail(
       "CLIENT_CONFIG_INVALID",
@@ -710,107 +741,22 @@ function verifyBundle(
   return bundle;
 }
 
-function parseModelPolicy(bundle: SignedClientConfigBundle): CreatorModelPolicy {
-  const payload = bundle.extensions[0]?.payload;
-  if (
-    !payload ||
-    typeof payload !== "object" ||
-    Array.isArray(payload) ||
-    !exactObject(payload, [
-      "capabilityRoutes",
-      "profileKey",
-      "serviceMode",
-    ])
-  ) {
-    fail(
-      "CLIENT_CONFIG_PRODUCT_INVALID",
-      "当前产品配置无法解析，请联系官方处理",
-      false,
-    );
-  }
-  if (
-    payload.serviceMode !== "managed_default_user_override_allowed" &&
-    payload.serviceMode !== "byok_required"
-  ) {
-    fail(
-      "CLIENT_CONFIG_PRODUCT_INVALID",
-      "当前模型服务方式不受支持，请更新 CreatorOS",
-      false,
-    );
-  }
-  if (payload.profileKey !== "balanced" && payload.profileKey !== "quality") {
-    fail(
-      "CLIENT_CONFIG_PRODUCT_INVALID",
-      "当前模型服务方案不受支持，请更新 CreatorOS",
-      false,
-    );
-  }
-  if (
-    !payload.capabilityRoutes ||
-    typeof payload.capabilityRoutes !== "object" ||
-    Array.isArray(payload.capabilityRoutes)
-  ) {
-    fail(
-      "CLIENT_CONFIG_PRODUCT_INVALID",
-      "当前模型能力配置不完整，请联系官方处理",
-      false,
-    );
-  }
-  const routes = Object.entries(payload.capabilityRoutes);
-  if (
-    routes.length > 64 ||
-    routes.some(
-      ([capability, alias]) =>
-        !/^[a-z][a-z0-9.-]{0,63}$/.test(capability) ||
-        typeof alias !== "string" ||
-        !/^[a-z][a-z0-9.-]{0,63}$/.test(alias),
-    )
-  ) {
-    fail(
-      "CLIENT_CONFIG_PRODUCT_INVALID",
-      "当前模型能力配置无法解析，请联系官方处理",
-      false,
-    );
-  }
-  return {
-    serviceMode: payload.serviceMode,
-    profileKey: payload.profileKey,
-    capabilityRoutes: Object.fromEntries(routes) as Record<string, string>,
-  };
-}
-
 function project(
-  bundle: SignedClientConfigBundle,
-  state: "ready" | "offline",
+  authority: "channel" | "local",
+  outcome: ClientConfigProjection["outcome"],
 ): ClientConfigProjection {
+  const actions = {
+    configured: "渠道模型正在使用",
+    not_configured: "本地模型正在使用 · 渠道未配置",
+    unreachable: "本地模型正在使用 · 暂时无法取得渠道配置",
+    security_error: "本地模型正在使用 · 渠道配置安全校验未通过",
+  } as const;
   return {
-    state,
-    modelPolicy: parseModelPolicy(bundle),
-    action:
-      state === "ready"
-        ? "配置已更新"
-        : "正在使用最近一次已验证配置；联网后可重试",
+    authority,
+    outcome,
+    action: actions[outcome],
+    retryable: outcome === "unreachable",
   };
-}
-
-function lkgWithinTolerance(
-  record: ClientConfigCacheRecord | null,
-  verdict: ActiveVerdict,
-  now: Date,
-): SignedClientConfigBundle | null {
-  if (record?.state !== "ready") return null;
-  const checkedAt = parseUtcMs(record.checkedAt);
-  if (
-    checkedAt === null ||
-    now.getTime() - checkedAt >= OFFLINE_TOLERANCE_MS ||
-    record.bundle.projectKey !== verdict.projectKey ||
-    record.bundle.channelRef !== verdict.channelRef ||
-    parseUtcMs(record.bundle.hardExpiresAt) === null ||
-    now.getTime() >= Date.parse(record.bundle.hardExpiresAt)
-  ) {
-    return null;
-  }
-  return record.bundle;
 }
 
 function isOfflineEligible(error: unknown): boolean {
@@ -950,7 +896,7 @@ class EncryptedClientConfigStore implements ClientConfigStore {
     await mkdir(dir, { recursive: true });
     const temp = join(
       dir,
-      `.client-config-lkg.${process.pid}.${randomBytes(6).toString("hex")}.tmp`,
+      `.channel-model-config.${process.pid}.${randomBytes(6).toString("hex")}.tmp`,
     );
     const handle = await open(temp, "wx", 0o600);
     try {
@@ -1003,7 +949,7 @@ function defaultStore(
     .update(CACHE_CONTEXT)
     .digest();
   return new EncryptedClientConfigStore(
-    join(dirname(licensePath), ".client-config-lkg"),
+    join(dirname(licensePath), ".channel-model-config"),
     key,
   );
 }
@@ -1083,7 +1029,7 @@ export async function refreshClientConfig(
       Accept: "application/json",
       Authorization: `Bearer ${ticket.configAccessTicket}`,
     };
-    if (previous?.state === "ready") {
+    if (previous?.bundle) {
       headers["If-None-Match"] = `"${previous.bundle.bundleDigest}"`;
     }
     const response = await fetchNoRedirect(
@@ -1097,7 +1043,7 @@ export async function refreshClientConfig(
         : null;
     if (response.status === 304) {
       if (
-        previous?.state !== "ready" ||
+        !previous?.bundle ||
         response.headers.get("etag") !==
           `"${previous.bundle.bundleDigest}"` ||
         response.headers.get("x-config-bundle-version") !==
@@ -1111,15 +1057,37 @@ export async function refreshClientConfig(
           true,
         );
       }
+      const extension = previous.bundle.extensions[0];
+      if (
+        extension &&
+        (!previous.channel ||
+          previous.channel.projectKey !== verdict.projectKey ||
+          previous.channel.channelRef !== verdict.channelRef ||
+          previous.channel.bundleVersion !== previous.bundle.bundleVersion ||
+          previous.channel.bundleDigest !== previous.bundle.bundleDigest ||
+          previous.channel.extensionRevision !== extension.revision ||
+          canonicalJson(previous.channel.payload) !==
+            canonicalJson(extension.payload))
+      ) {
+        fail(
+          "CLIENT_CONFIG_INVALID",
+          "配置版本确认无法验证，请重新同步",
+          false,
+        );
+      }
       const refreshed = {
         ...previous,
+        state: extension ? "channel" : "local",
+        outcome: extension ? "configured" : "not_configured",
         checkedAt: now.toISOString(),
       } as const;
       await store.save(refreshed);
       console.info(
         `[client-config] refresh=not-modified correlation=${correlationId}`,
       );
-      return project(refreshed.bundle, "ready");
+      return extension
+        ? project("channel", "configured")
+        : project("local", "not_configured");
     }
     const raw = await limitedBytes(response);
     let value: unknown;
@@ -1146,7 +1114,7 @@ export async function refreshClientConfig(
         true,
       );
     }
-    if (previous?.state === "ready") {
+    if (previous?.bundle) {
       if (bundle.bundleVersion < previous.bundle.bundleVersion) {
         fail(
           "CLIENT_CONFIG_VERSION_DOWNGRADE",
@@ -1165,36 +1133,122 @@ export async function refreshClientConfig(
         );
       }
     }
-    parseModelPolicy(bundle);
-    const next = {
-      state: "ready",
-      checkedAt: now.toISOString(),
-      bundle,
-    } as const;
+    const extension = bundle.extensions[0];
+    const next: ClientConfigCacheRecord = extension
+      ? {
+          state: "channel",
+          outcome: "configured",
+          checkedAt: now.toISOString(),
+          bundle,
+          channel: {
+            projectKey: bundle.projectKey,
+            channelRef: bundle.channelRef,
+            bundleVersion: bundle.bundleVersion,
+            bundleDigest: bundle.bundleDigest,
+            extensionRevision: extension.revision,
+            payload: extension.payload as ChannelModelJson,
+          },
+        }
+      : {
+          state: "local",
+          outcome: "not_configured",
+          checkedAt: now.toISOString(),
+          bundle,
+          channel: previous?.channel ?? null,
+        };
     await store.save(next);
-    console.info(`[client-config] refresh=ready correlation=${correlationId}`);
-    return project(bundle, "ready");
+    console.info(
+      `[client-config] refresh=${extension ? "configured" : "not-configured"} correlation=${correlationId}`,
+    );
+    return extension
+      ? project("channel", "configured")
+      : project("local", "not_configured");
   } catch (error) {
     if (error instanceof ClientConfigPullError) {
       const reason = blockReason(error);
       if (reason) {
         await store.save({
           state: "blocked",
+          outcome: "security_error",
           reason,
           checkedAt: now.toISOString(),
+          bundle: previous?.bundle ?? null,
+          channel: previous?.channel ?? null,
         });
         throw error;
       }
       if (isOfflineEligible(error)) {
-        const lkg = lkgWithinTolerance(previous, verdict, now);
-        if (lkg) return project(lkg, "offline");
-        fail(
-          "CLIENT_CONFIG_OFFLINE_EXPIRED",
-          "配置已超过离线可用时间，请联网后重试",
-          true,
-        );
+        await store.save({
+          state: "local",
+          outcome: "unreachable",
+          checkedAt: now.toISOString(),
+          bundle: previous?.bundle ?? null,
+          channel: previous?.channel ?? null,
+        });
+        return project("local", "unreachable");
       }
+      await store.save({
+        state: "quarantined",
+        outcome: "security_error",
+        checkedAt: now.toISOString(),
+        bundle: previous?.bundle ?? null,
+        channel: previous?.channel ?? null,
+      });
+      return project("local", "security_error");
     }
     throw error;
+  }
+}
+
+/**
+ * 模型运行时的唯一 authority 读面。只在当前激活 identity 与加密记录完全一致时返回 payload；
+ * 其他任何状态都返回 local，且从不把 opaque JSON 投影到 Web。
+ */
+export async function readChannelModelAuthority(
+  dependencies: Pick<Dependencies, "env" | "readVerdict" | "store"> = {},
+): Promise<ChannelModelAuthority> {
+  const env = dependencies.env ?? process.env;
+  if (env.CREATOROS_CLIENT_CONFIG_PULL_ENABLED?.trim() !== "1") {
+    return { authority: "local", outcome: "unreachable", payload: null };
+  }
+  try {
+    const readVerdict =
+      dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());
+    const verdict = activeVerdict(await readVerdict());
+    const store = dependencies.store ?? defaultStore(env);
+    const record = await store.load();
+    const channel = record?.channel;
+    const extension = record?.bundle?.extensions[0];
+    if (
+      record?.state === "channel" &&
+      record.outcome === "configured" &&
+      channel !== null &&
+      channel !== undefined &&
+      channel.projectKey === verdict.projectKey &&
+      channel.channelRef === verdict.channelRef &&
+      record.bundle?.projectKey === verdict.projectKey &&
+      record.bundle.channelRef === verdict.channelRef &&
+      record.bundle.bundleVersion === channel.bundleVersion &&
+      record.bundle.bundleDigest === channel.bundleDigest &&
+      extension?.revision === channel.extensionRevision &&
+      canonicalJson(extension.payload) === canonicalJson(channel.payload)
+    ) {
+      return {
+        authority: "channel",
+        outcome: "configured",
+        payload: channel.payload,
+      };
+    }
+    return {
+      authority: "local",
+      outcome:
+        record?.outcome === "not_configured" ||
+        record?.outcome === "security_error"
+          ? record.outcome
+          : "unreachable",
+      payload: null,
+    };
+  } catch {
+    return { authority: "local", outcome: "unreachable", payload: null };
   }
 }

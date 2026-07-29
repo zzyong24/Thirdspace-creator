@@ -29,28 +29,22 @@ function localRequest(origin = "http://127.0.0.1") {
 describe("POST /api/v1/local/client-config（API-575-002）", () => {
   beforeEach(() => refreshClientConfig.mockReset());
 
-  it("只返回产品协议安全投影，不返回 ticket/identity/digest/signature", async () => {
+  it("只返回脱敏 authority，不返回渠道 JSON/ticket/identity/digest/signature", async () => {
     refreshClientConfig.mockResolvedValue({
-      state: "ready",
-      modelPolicy: {
-        serviceMode: "managed_default_user_override_allowed",
-        profileKey: "balanced",
-        capabilityRoutes: { "script.draft": "text-quality" },
-      },
-      action: "配置已更新",
+      authority: "channel",
+      outcome: "configured",
+      action: "渠道模型正在使用",
+      retryable: false,
     });
     const response = await POST(localRequest());
     const text = await response.text();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toContain("no-store");
     expect(JSON.parse(text)).toEqual({
-      state: "ready",
-      modelPolicy: {
-        serviceMode: "managed_default_user_override_allowed",
-        profileKey: "balanced",
-        capabilityRoutes: { "script.draft": "text-quality" },
-      },
-      action: "配置已更新",
+      authority: "channel",
+      outcome: "configured",
+      action: "渠道模型正在使用",
+      retryable: false,
     });
     expect(text).not.toMatch(
       /channelRef|projectKey|configAccessTicket|bundleDigest|signature|keyId/,
@@ -68,8 +62,8 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
     const response = await POST(localRequest());
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({
-      state: "pending",
-      modelPolicy: null,
+      authority: "local",
+      outcome: "unreachable",
       action: "渠道配置同步尚未启用",
       retryable: false,
     });

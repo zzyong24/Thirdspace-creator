@@ -11,6 +11,31 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
+  it("configured 渠道 JSON 覆盖多模态本地行且不读取本地", async () => {
+    let localReads = 0;
+    const spec = await resolveMultimodalSpec(ctx, "image.generate", {
+      getChannelModelConfig: async () => ({
+        provider: "openai",
+        baseURL: "https://channel-image.example/v1",
+        apiKey: ["channel", "image", "test"].join("-"),
+        model: "channel-image",
+      }),
+      getModelConfig: async () => {
+        localReads += 1;
+        return null;
+      },
+      env: {},
+    });
+    expect(localReads).toBe(0);
+    expect(spec).toEqual({
+      provider: "openai",
+      baseUrl: "https://channel-image.example/v1",
+      model: "channel-image",
+      token: "channel-image-test",
+      kind: "image",
+    });
+  });
+
   it("按 image.generate 命中行 → 投影成 MultimodalSpec(kind=image),secretValue 优先", async () => {
     const spec = await resolveMultimodalSpec(ctx, "image.generate", {
       getModelConfig: async () => ({

@@ -15,6 +15,7 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
+import { readChannelModelAuthority } from "@/server/activation/client-config.server";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
@@ -488,6 +489,7 @@ import {
 } from "@creatoros/backend/modules/ai-runtime";
 import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
 import {
+  channelLlmConfig,
   resolveLlmConfig,
   resolveDedicatedLlmConfig,
 } from "@creatoros/backend/modules/ai-runtime";
@@ -1526,6 +1528,12 @@ const globalForPersistence = globalThis as unknown as {
 };
 
 async function buildPersistence(): Promise<PersistenceBundle> {
+  // T-606：所有模型 resolver 共用这一条 server-only authority 读面。configured 时返回渠道
+  // opaque JSON；其他三态返回 null，既有本地 DB/env 链才可继续。
+  const getChannelModelConfig = async () => {
+    const authority = await readChannelModelAuthority();
+    return authority.authority === "channel" ? authority.payload : null;
+  };
   // 本地优先存储 driver(L0,SPEC §4.1/§7-L0)—— 三态优先级,经 backend 的
   // createConfiguredDb 统一解析:
   //   1. DATABASE_URL    → 真 Postgres(node-postgres;用户当前 docker-PG + 71 作品走这条,不变)。
@@ -4541,6 +4549,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   getModelConfig: (cc: RequestContext, cap: string) =>
                     settingsService.getModelConfig(cc, cap),
                   env: process.env,
+                  getChannelModelConfig,
                 }),
               assets: {
                 getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
@@ -4697,6 +4706,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   getModelConfig: (cc, cap) =>
                     settingsService.getModelConfig(cc, cap),
                   env: process.env,
+                  getChannelModelConfig,
                 }),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
               transcribeAudio: (spec, opts, registry) =>
@@ -6327,6 +6337,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const spec = await resolveTranscribeSpecFn(c, {
       getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
       env: process.env,
+      getChannelModelConfig,
     });
     const { text } = await transcribeAudioFn(
       spec,
@@ -6373,6 +6384,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           getModelConfig: (cc, capability) =>
             settingsService.getModelConfig(cc, capability),
           env: process.env,
+          getChannelModelConfig,
         });
         const result = await transcribeAudioFn(
           spec,
@@ -8970,6 +8982,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+      getChannelModelConfig,
     }),
   );
 
@@ -9049,6 +9062,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+      getChannelModelConfig,
     });
   const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
   executorRegistry.register(
@@ -9089,6 +9103,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const cfg = await resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+      getChannelModelConfig,
     });
     return {
       apiFormat: cfg.apiFormat,
@@ -9104,6 +9119,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const cfg = await resolveDedicatedLlmConfig(ctx, "chat.fallback", {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+      getChannelModelConfig,
     });
     if (!cfg) return null;
     return {
@@ -9144,6 +9160,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             getModelConfig: (ctx, capability) =>
               settingsService.getModelConfig(ctx, capability),
             env: process.env,
+            getChannelModelConfig,
           }),
         ),
       // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
@@ -9221,6 +9238,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     model: string;
     token: string;
   } | null> => {
+    const channel = await getChannelModelConfig();
+    if (channel) {
+      const cfg = channelLlmConfig(channel);
+      return {
+        apiFormat: cfg.apiFormat,
+        baseUrl: cfg.baseUrl,
+        model: cfg.model,
+        token: cfg.token,
+      };
+    }
     const row = await settingsService.getModelConfig(
       ctx,
       "knowledge.search.embed",
@@ -9361,6 +9388,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveMultimodalSpecFn(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+      getChannelModelConfig,
     });
   // 多模态 provider 适配器注册表(keyed by provider)。真链路注册 MiniMax(M1 适配器,含 video
   // 异步轮询状态机 submit→poll→retrieve + 超时);加 provider = 在此注册一个适配器,不改 runner
@@ -9409,6 +9437,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveSearchSpecFn(ctx, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+      getChannelModelConfig,
     });
   // 搜索 provider 注册表(keyed by provider)。三家首发适配器(纯自建 REST,不碰 Agent SDK);
   // 加 provider = 在此注册一个适配器,不改 runner 与业务代码。真检索要真 web.search key(未配 →
@@ -9442,11 +9471,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       resolveLlmConfig(ctx, capability, {
         getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
         env: process.env,
+        getChannelModelConfig,
       }),
     resolveDedicatedLlm: (ctx, capability) =>
       resolveDedicatedLlmConfig(ctx, capability, {
         getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
         env: process.env,
+        getChannelModelConfig,
       }),
     resolveMultimodal: (ctx, capability) =>
       resolveMultimodalSpecFn(
@@ -9455,12 +9486,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         {
           getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
           env: process.env,
+          getChannelModelConfig,
         },
       ),
     resolveTranscribe: (ctx) =>
       resolveTranscribeSpecFn(ctx, {
         getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
         env: process.env,
+        getChannelModelConfig,
       }),
     resolveEmbed: (ctx) =>
       resolveEmbedSpec(ctx).then((spec) =>

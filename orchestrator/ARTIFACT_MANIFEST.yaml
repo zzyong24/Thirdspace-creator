@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "16-backend-tdd"        # 2026-07-05(T-145): 更新至真实 frontier;stage 分段机制已被 BACKLOG+SPEC gate 取代(见 CLAUDE.md/BACKLOG.md)
   frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
-  updated_at: "2026-07-28"               # DEC-MODEL-001 收敛模型配置面，不改变全局阶段状态
+  updated_at: "2026-07-29"               # DEC-MODEL-606 重派生 CreatorOS 渠道模型消费，不改变全局阶段状态
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -201,6 +201,8 @@ stages:
       - existing: "orchestrator/GATE-T534-BUILD.md (TDD/BUILD/tests/runtime evidence; global next build blocker retained)"
       - existing: "orchestrator/GATE-T471-RETROSPECTIVE.md (retrospective gate; historical TDD fail retained)"
       - existing: "docs/contracts/creator-client-config-consumer-v1.md (T-575 product-specific config consumer; Growth T-077 PASS baseline)"
+      - existing: "docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md (T-606 current CreatorOS channel model authority binding; PASS[REV:bc38a5b47eac])"
+      - existing: "docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md (T-606 local implementation and validation evidence)"
     notes: >
       15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):
       Zod envelope (SPEC §14) + primitives + 15 module resource DTOs + 4 page DTOs + endpoint registry
@@ -217,8 +219,11 @@ stages:
       T-534 does not claim that release-build gate green.
       T-575 的 product-specific config 增量按用户 DEC-TSL-003 消费 Growth 已审
       `client-config-distribution-v1`，不扩展 T-534 runtime；fixture byte-pin、启动/激活/claim
-      刷新、定时抖动和本地 BUILD 已完成，证据见 GATE-T575-BUILD.md。live HTTPS E2E、
+      刷新、定时抖动和本地 BUILD 已完成，证据见 GATE-T575-BUILD.md；live HTTPS E2E、
       Growth 正式公钥/keyId 与 Mac beta 仍属于 SHIP 证据，不在本 manifest 冒充已完成。
+      T-606 按 Growth T-086 最终契约将 modelPolicy/LKG 历史路径重派生为渠道 opaque JSON
+      当前权威；本地实现、类型、定向测试、构建及双视口浏览器证据已完成，但跨仓生产联调、
+      正式渠道配置、生产密钥与桌面发布仍受 release gate 阻断。
 
   "16-backend-tdd":
     status: "draft"   # CHANGED from not-started — contradicted by DEC-011 (real code + tests exist)

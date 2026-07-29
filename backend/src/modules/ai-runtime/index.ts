@@ -34,6 +34,7 @@ export * from "./topic-preference-distill-runner";
 export * from "./chat-context";
 export * from "./chat-runner";
 export * from "./chat-tools";
+export * from "./channel-model-config";
 // [T-429/T-430] 长输入 AI 节点统一的确定性分块、串行执行与进度契约。
 export * from "./chunk-and-merge";
 // [T-253] local.read 安全硬门(denylist/路径归一/二进制探测,纯函数)—— composition root

@@ -5,6 +5,27 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-MODEL-606
+Date: 2026-07-29
+Stage: T-606 PLAN / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: CreatorOS 继续使用既有 config.pull ticket 和当前激活 locator。verified configured
+          渠道 JSON 是当前模型配置权威，即使 Key/URL/model/provider 错误或模型调用失败也
+          不回退本地；明确未配置、不可达且本次未取得 JSON、或安全校验失败时才使用本地。
+          用户本地配置始终允许编辑并作为 inactive 备用。
+Rationale: Growth T-086 最终契约与 2026-07-29 用户确认明确取代旧 T-575/T-604 设计。
+Supersedes: T-575 的三键 parser/长期 Key 禁止/24h 远端 LKG；T-604 的 Gateway、短 bearer、
+            introspection、alias routing、managed_locked 与远端 LKG 优先。
+Invariant: 激活码归属和 projectKey/channelRef/clientId 固定 locator 不变；渠道 JSON/Key
+           不进入 URL、日志、错误、审计摘要或 Web 响应。
+Authority: Growth docs/contracts/T-086-creatoros-managed-model-service.md
+           SHA-256 be1d4546b080e8b30144e31dd20d2e094d82b66d3c57d0f6116782fb89650182；
+           T-086-review-concern-resolution.md
+           SHA-256 68bd438f9893a7c4508cff396274e893cb630d7ad488109e6b91430f18cdbc0f。
+Status: active（独立评审通过前不得 BUILD）
+```
+
+```text
 ID: DEC-PKG565-002
 Date: 2026-07-27
 Stage: T-565 PLAN / RAT
