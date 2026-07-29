@@ -6,6 +6,14 @@
 > `review_mode: homogeneous`  
 > WARNING：本次为新上下文同模型独立评审，不是异构模型评审；按 orchestrator 规则属于较弱 review gate，不能冒充 cross-model PASS。
 
+## 2026-07-29 用户裁决
+
+三轮评审最终只剩 `R2-01 USER_DECISION_REQUIRED`。用户于 2026-07-29 明确确认统一调度只能有
+一套，并确认推荐方案 A；主 Agent 已将 forward-only、roll-forward/hotfix、禁止自动快照恢复、
+恢复前保全当前库和显式数据损失提示写入 `DEC-AUTO-001`。因此本文件历史 verdict 仍保留
+`FAIL → CONCERNS → CONCERNS`，但唯一遗留 major 已由人类裁决处理，T-598 可按修订后的
+PLAN 进入 CONTRACT；不得把本段改写成 reviewer `PASS`。
+
 ## 结论
 
 **Verdict：FAIL**

@@ -34,6 +34,7 @@ export {
   OwnershipError,
   UnsupportedOperationError,
   AuthenticationError,
+  ValidationError,
 } from "./scheduling.errors";
 
 export {

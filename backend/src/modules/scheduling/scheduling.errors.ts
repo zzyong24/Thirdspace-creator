@@ -9,6 +9,8 @@
 // `UnsupportedOperationError` / `AuthenticationError` are re-exported from shared infra so
 // the transport's default + no-ctx branches raise them (the composite never masks a real
 // error).
+import { ErrorCode } from "@creatoros/contract";
+
 export { OwnershipError } from "@creatoros/backend";
 export {
   UnsupportedOperationError,
@@ -17,3 +19,11 @@ export {
   AccountRequiredError,
   requireAccountId,
 } from "@creatoros/backend";
+
+export class ValidationError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}

@@ -2550,16 +2550,25 @@ export function createIntelligenceService(
     startRun,
 
     /**
-     * APP 内部调度器入口：跨账号扫描到期来源，并用各来源自己的 user/account 上下文
-     * 排队 schedule run。只在 APP 进程存活时执行；错过的 nextRunAt 会在下次启动时补跑。
+     * T-598 统一自动化 handler 入口：只扫描当前 `(userId, accountId)` 的到期来源。
+     * 账号上下文由 scheduled_job 行派生；禁止跨库扫描后再从来源行拼 owner。
      */
-    async enqueueDueSourceRuns(limit = 50): Promise<number> {
+    async enqueueDueSourceRuns(
+      ctx: RequestContext,
+      limit = 50,
+    ): Promise<number> {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "intelligence.enqueueDueSourceRuns",
+      );
       const stamp = now();
       const due = await db
         .select()
         .from(intelligenceSources)
         .where(
           and(
+            eq(intelligenceSources.userId, ctx.userId),
+            eq(intelligenceSources.accountId, accountId),
             eq(intelligenceSources.status, "active"),
             eq(intelligenceSources.monitorEnabled, true),
             or(
@@ -2582,8 +2591,8 @@ export function createIntelligenceService(
         // 一次即可恢复，并由成功 run 重算下次每日计划。
         if (latest?.status === "blocked") continue;
         const sourceCtx: RequestContext = {
-          userId: source.userId,
-          accountId: source.accountId,
+          userId: ctx.userId,
+          accountId,
           requestId: `intelligence-scheduler:${source.id}:${stamp}`,
           source: "ingestion",
         };

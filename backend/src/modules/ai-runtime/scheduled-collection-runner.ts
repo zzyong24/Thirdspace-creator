@@ -165,6 +165,7 @@ const SOURCE_LABEL: Record<string, string> = {
   "topic.daily": "每日选题",
   // [T-235c] 指定收藏夹采集（favorites sourceKind:登记夹按名匹配 → 拉夹内视频 → 限量进池）。
   favorites: "收藏夹",
+  "intelligence.sync": "内容雷达到期来源",
 };
 
 /**

@@ -22,7 +22,7 @@ import { OwnershipError, requireAccountId } from "./scheduling.errors";
 export type ScheduledJobRow = typeof scheduledJobs.$inferSelect;
 export type JobRunRow = typeof jobRuns.$inferSelect;
 
-// [T-367] 6 类采集 sourceKind —— createJob 对这些 kind 幂等复用(同 user+号+kind 至多
+// [T-367/T-598] 系统采集 sourceKind —— createJob 对这些 kind 幂等复用(同 user+号+kind 至多
 // 一条)。与三处保持一致:contract scheduledJobSourceKind 枚举、collection-bootstrap
 // DAILY_COLLECTION_JOB_DEFAULTS、迁移 0046 部分唯一索引 ux_scheduled_job_user_account_source
 // 的 WHERE 列表。非采集类 kind 不在集合内 → 行为不变(可多实例)。
@@ -33,6 +33,7 @@ export const COLLECTION_JOB_SOURCE_KINDS: ReadonlySet<string> = new Set([
   "benchmark",
   "topic.daily",
   "favorites",
+  "intelligence.sync",
 ]);
 
 /** [T-367] 撞唯一约束判据(PGlite/PG 语义:code 23505 或错误文案带索引名)。 */

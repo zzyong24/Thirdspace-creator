@@ -1008,3 +1008,35 @@ AM assertion + Growth authoritative POST receipt 的 fail-closed 事务作为最
 projects / publishing 跨边界走明确内部服务契约）。
 
 **Status**：confirmed，待 T-595 独立 SPEC 评审。
+
+## DEC-AUTO-001 (2026-07-29) — 内容雷达与全局自动化必须共用唯一调度基础架构
+
+**来源**：用户再次明确指出“定时任务这里要统一一套基础架构，绝对不能两套”，并确认采用
+T-517 / T-598 推荐的方案 A。代码核查确认当前生产组合根同时启动
+`automation-driver` 与内容雷达独立 `intelligenceTimer`，与既有 `DEC-CR-016` 冲突。
+
+**决策**：
+
+1. 生产环境只允许 execution 模块的统一自动化 driver 判断账号级自动化作业是否到期；
+   内容雷达不得保留独立 `setInterval`、cron、启动 due-source 扫描器或第二套运行记录。
+2. 每个 `(userId, accountId)` 只保留一个系统托管的 `intelligence.sync` 聚合作业。自动化中心
+   管账号级总开关、立即检查和聚合历史；内容雷达管来源级启停、频率、采集账号、手动同步及
+   来源运行详情。
+3. 旧 `benchmark`、`favorites` 作业与内容雷达来源重叠，切换时必须停用并完成生产者对账；
+   `self.metrics`、`comments`、`self.detail` 与 `topic.daily` 仍作为不重叠的系统预设保留。
+4. 到期发现、持久任务 claim/lease/recovery 与运行投影统一走
+   `scheduled_job → job_run → PersistentTaskService → typed handler`。来源同步可以继续使用
+   `source_sync` 子任务，但只能由 `intelligence.sync` handler 或用户手动操作创建。
+5. 采用 forward-only 方案 A：enforce 后不允许旧二进制直接打开新数据库；故障通过同版本
+   hotfix 或更高版本 roll-forward 修复。升级前快照仅作人工灾备，不得自动或静默覆盖当前库；
+   恢复前必须停止写入、另存当前数据库并明确提示恢复点之后的业务写入会从恢复库中消失。
+6. 本决策不授权云端常驻调度、不新增第三套执行状态机，也不允许为了兼容而保留第二个业务
+   timer。
+
+**User confirmation**：用户 2026-07-29 明确确认单一调度架构，并对推荐方案 A 回复“对的”。
+
+**Risk disposition**：`avoid`（删除重复调度）；灾备恢复的数据损失风险通过默认 roll-forward、
+禁止自动恢复、恢复前保全当前库和显式确认控制。
+
+**Status**：resolved；解除 T-517 Delta SPEC `R2-01` 的用户裁决阻断，T-598 可进入 CONTRACT /
+BUILD Gate。

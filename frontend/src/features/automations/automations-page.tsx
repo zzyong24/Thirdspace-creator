@@ -67,6 +67,10 @@ export async function AutomationsPage({
       rows = [];
     }
   }
+  // T-598：旧 benchmark/favorites 只保留数据库历史，不再作为第二套自动化入口展示。
+  rows = rows.filter(
+    (job) => job.sourceKind !== "benchmark" && job.sourceKind !== "favorites",
+  );
 
   // [T-332 S4·§6.3] 解析当前号 handle(user 级读,不需要当前号)→ badge。读失败/
   // 未选号 → null(island 显「未选择账号」提示,不猜)。
@@ -115,7 +119,7 @@ export async function AutomationsPage({
           data-slot="automations-subtitle"
           className="text-sm text-muted-foreground"
         >
-          周期性抓取「自己作品指标 / 评论」的调度作业 —— 到点自动跑,数据落库供 Dashboard 与选题消费。
+          统一管理账号数据采集、每日选题与内容雷达同步；来源级频率和采集账号仍在内容雷达设置。
         </p>
         {multiAccount ? (
           <p

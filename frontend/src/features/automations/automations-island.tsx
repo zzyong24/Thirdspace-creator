@@ -53,6 +53,7 @@ import {
   Flame,
   Lightbulb,
   Star,
+  Radar,
   type LucideIcon,
 } from "lucide-react";
 
@@ -146,6 +147,7 @@ const EXTRA_SOURCE_LABELS: Record<string, string> = {
   benchmark: "对标爆款",
   "topic.daily": "每日选题",
   favorites: "收藏夹跟拍",
+  "intelligence.sync": "内容雷达",
 };
 
 // [T-258] 登记源驱动源的模板卡图标(SOURCE_META 无 icon 时兜底,让 6 张卡视觉可辨)。
@@ -153,6 +155,7 @@ const EXTRA_SOURCE_ICONS: Record<string, LucideIcon> = {
   benchmark: Flame,
   "topic.daily": Lightbulb,
   favorites: Star,
+  "intelligence.sync": Radar,
 };
 
 function sourceLabel(kind: string): string {
@@ -320,7 +323,15 @@ interface ChannelThrottle {
 //   self.metrics / self.detail → creator-center(抓创作者中心指标 / 明细导出)。
 //   comments                   → creator-center(评论采集实际走创作者中心评论管理页,
 //     非 iesdouyin;修正 stale 口径,与 douyin-request-gateway/T-176 退避 channel 对齐)。
-function channelForSourceKind(_sourceKind: string): DouyinChannel {
+function channelForSourceKind(sourceKind: string): DouyinChannel | null {
+  // 聚合雷达可能同时包含网页、RSS、抖音和热点宝，不能冒充 creator-center 单通道；
+  // 每日选题也不是抖音采集任务。
+  if (
+    sourceKind === "intelligence.sync" ||
+    sourceKind === "topic.daily"
+  ) {
+    return null;
+  }
   return "creator-center";
 }
 
@@ -561,17 +572,19 @@ export function JobRow({
 
       {/* 操作:编辑(T-248)+ needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
       <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          data-slot="automation-edit"
-          data-testid="automation-edit"
-          onClick={onEdit}
-          title="编辑任务(名称/描述/频率/目标)"
-          className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-foreground hover:bg-surface-subtle"
-        >
-          <Pencil className="size-3.5" />
-          编辑
-        </button>
+        {job.sourceKind !== "intelligence.sync" ? (
+          <button
+            type="button"
+            data-slot="automation-edit"
+            data-testid="automation-edit"
+            onClick={onEdit}
+            title="编辑任务(名称/描述/频率/目标)"
+            className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-foreground hover:bg-surface-subtle"
+          >
+            <Pencil className="size-3.5" />
+            编辑
+          </button>
+        ) : null}
         {needsReconnect ? (
           <button
             type="button"
@@ -1143,16 +1156,8 @@ export function CreateJobDialog({
                 <SelectItem value="self.detail">
                   作品明细(完播/封面点击/留存)
                 </SelectItem>
-                {/* [T-258] 登记源驱动的采集源(手动补建入口,与模板卡一致):无 per-job target,
-                    来源统一在「内容雷达」配置。 */}
-                <SelectItem value="benchmark">
-                  对标爆款(需登记对标源)
-                </SelectItem>
                 <SelectItem value="topic.daily">
                   每日自动选题(需配文本模型)
-                </SelectItem>
-                <SelectItem value="favorites">
-                  收藏夹跟拍(需登记收藏夹)
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -1994,11 +1999,10 @@ export function AutomationsIsland({
                   job={job}
                   currentAccount={currentAccount}
                   latestRun={latestRuns[job.id] ?? null}
-                  channelThrottle={
-                    throttleByChannel[
-                      channelForSourceKind(job.sourceKind)
-                    ] ?? null
-                  }
+                  channelThrottle={(() => {
+                    const channel = channelForSourceKind(job.sourceKind);
+                    return channel ? throttleByChannel[channel] ?? null : null;
+                  })()}
                   pendingToggle={pendingToggleId === job.id}
                   pendingRunNow={pendingRunNowId === job.id}
                   loginPhase={loginPhaseById[job.id] ?? "idle"}

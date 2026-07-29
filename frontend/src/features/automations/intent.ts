@@ -127,12 +127,11 @@ const CADENCE_DAILY_9: PeriodCadence = {
   hour: 9,
   minute: 0,
 };
-const CADENCE_DAILY_930: PeriodCadence = { ...CADENCE_DAILY_9, minute: 30 };
 const CADENCE_DAILY_940: PeriodCadence = { ...CADENCE_DAILY_9, minute: 40 };
-const CADENCE_DAILY_950: PeriodCadence = { ...CADENCE_DAILY_9, minute: 50 };
 
 /**
- * 采集模板(SPEC §8.1)。**六张**全部可用 —— 与后端 DAILY_COLLECTION_JOB_DEFAULTS(单一真源,
+ * 用户可创建/调整的系统预设。内容雷达 `intelligence.sync` 由系统按账号幂等建立，
+ * 不进入通用新建模板；旧 benchmark/favorites 已并入内容雷达来源，不再暴露第二入口。
  * 绑定 T-189a / 启动兜底 T-227 共用)一一对齐,让用户有「手动补建」这些定时采集 job 的入口。
  * 前三张(self.metrics/comments/self.detail)是「有 per-job 手动 target」的源;后三张
  * (benchmark/topic.daily/favorites,[T-258] 补齐)是**登记源驱动、无 per-job target**的采集器
@@ -168,17 +167,6 @@ export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
     cadence: CADENCE_DAILY_9,
   },
   {
-    // [T-258/T-212a] 对标他号爆款采集:读登记的对标源 → 抓公开作品 → detectViral 筛爆款落库,
-    //   供拆解转化进选题池。来源靠「内容雷达→博主主页」登记,无 per-job target。错峰 9:30。
-    id: "daily-benchmark",
-    title: "每天抓对标号的爆款作品",
-    description:
-      "同步你在内容雷达登记的博主主页公开作品；作品先进入雷达，只有手动转写并确认结构拆解后才进入选题池。",
-    sourceKind: "benchmark",
-    prompt: "每天抓我登记的对标博主主页的公开爆款作品",
-    cadence: CADENCE_DAILY_930,
-  },
-  {
     // [T-258/T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点)→ 护栏排序 → 候选落
     //   pool(防灌库 ≤N/天)。纯 AI + 库内数据,无 per-job target;未配文本模型时诚实跳过。错峰 9:40。
     id: "daily-topic",
@@ -188,16 +176,5 @@ export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
     sourceKind: "topic.daily",
     prompt: "每天结合我的定位、评论信号、知识库和当下热点,自动出一批选题进选题池",
     cadence: CADENCE_DAILY_940,
-  },
-  {
-    // [T-258/T-235c] 指定收藏夹采集:读登记的抖音收藏夹 → 拉夹内视频落台账 → 限量进候选池
-    //   作品统一进内容雷达，不再由旧收藏夹任务直接创建候选。错峰 9:50。
-    id: "daily-favorites",
-    title: "每天采我的指定收藏夹",
-    description:
-      "同步你在内容雷达登记的抖音收藏夹；只建档公开作品，不自动转写，也不直接创建选题。",
-    sourceKind: "favorites",
-    prompt: "每天采集我登记的抖音指定收藏夹里的视频,作为跟拍选题候选",
-    cadence: CADENCE_DAILY_950,
   },
 ];

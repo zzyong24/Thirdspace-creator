@@ -4,7 +4,7 @@
 >
 > `stage: 1-plan`
 >
-> `status: USER_DECISION_REQUIRED — 第二轮复审 CONCERNS；R2-01 待用户裁决，R2-02/03/04 已回修待复核`
+> `status: USER_CONFIRMED — 方案 A 已由 DEC-AUTO-001 确认；三轮复审遗留 R2-01 已经人工裁决`
 >
 > `date: 2026-07-24`
 >
@@ -659,11 +659,12 @@ CONTRACT 评审必须同步修正现有内容雷达 contract 中“建来源即�
 
 ### 8.1 兼容承诺与 forward-only 边界
 
-> `USER_DECISION_REQUIRED`
+> `USER_CONFIRMED — DEC-AUTO-001`
 >
-> 现有 `DEC-CR-016` 没有授权“降级时能否丢弃升级后数据”。在用户确认前，以下两案都只是候选，`enforce/cutover` 必须保持阻断。
+> 用户于 2026-07-29 确认方案 A：升级后采用 forward-only，默认以同版本 hotfix 或更高版本
+> roll-forward 修复；快照只作带保全与显式确认的人工灾备，不提供静默数据库降级。
 
-**方案 A（推荐，但未确认）：forward-only + roll-forward / 同版本 hotfix**
+**方案 A（已确认）：forward-only + roll-forward / 同版本 hotfix**
 
 - expand 后进入 forward-only；故障优先由同版本 hotfix 或更高版本 roll-forward 修复，不提供 binary-only downgrade。
 - preflight snapshot 只作**人工灾备**，应用不得自动恢复、不得静默覆盖当前库。
@@ -671,15 +672,15 @@ CONTRACT 评审必须同步修正现有内容雷达 contract 中“建来源即�
 - 恢复失败时保留当前库、安全副本与 snapshot 三者，不得只剩一个半写文件。
 - 该方案的正常 RPO 为 0（只 roll-forward）；只有用户主动选择灾备恢复时，RPO 才是 snapshot 时刻至恢复时的全部写入。
 
-推荐 A 的理由是调度 schema/status 已发生真实前向变化，以同版本修复保持当前数据，比自动回到旧库更符合本地数据主权；但此推荐不构成用户决定。
+选择 A 的理由是调度 schema/status 已发生真实前向变化，以同版本修复保持当前数据，比自动回到旧库更符合本地数据主权；该裁决已记录在 `DEC-AUTO-001`。
 
-**方案 B（未确认）：投入额外兼容工程，支持保留当前数据降级**
+**方案 B（未采用）：投入额外兼容工程，支持保留当前数据降级**
 
 - 在 enforce 前另做完整降级兼容设计，使 N-1 能安全读写或隔离新 kind/status/字段，并保留升级后数据；不能只靠 nullable 列。
 - 必须覆盖旧 reader projection、新 writer dual-write、未知 kind/status 隔离、execution/outcome 保留、再次升级对账和真实 N-1 rehearsal。
 - 若用户选择 B，本 SPEC 需回到 PLAN 补兼容 Delta 并重新独立评审；当前 forward-only 矩阵不得直接用于 CONTRACT。
 
-以下矩阵和状态机仅描述**方案 A 被用户确认后**的实现，不代表已经形成 DEC。
+以下矩阵和状态机描述已经由 `DEC-AUTO-001` 确认的方案 A。
 
 下表的 create/list/get/update 覆盖 `scheduled_jobs`、`job_runs`、`execution_tasks` 三类资源；run-now/read-history 覆盖完整调度旅程，不只测一张表。
 
@@ -784,7 +785,7 @@ dry-run 必须比较三组 producer 的候选与写入目标：
 
 **应用版本降级**：
 
-- 当前为 `USER_DECISION_REQUIRED`，未选择 A/B 前不得 enforce。
+- 当前为 `USER_CONFIRMED`；enforce 仍须通过本节全部 preflight、备份与真实 rehearsal Gate。
 - 若确认 A：禁止二进制单独降级，优先同版本 hotfix/roll-forward；snapshot 只按 §8.1 人工灾备流程使用，绝不自动覆盖当前库。
 - 若确认 B：先完成另行评审的兼容 Delta，才能定义保留当前数据的降级步骤。
 - 无论哪案，都不能把尚未确认/演练的恢复路径显示为可用按钮。
@@ -846,7 +847,7 @@ dry-run 必须比较三组 producer 的候选与写入目标：
 | AC-CR-AUTO-009 | 全局关闭后不再自动发现 due source，手动同步仍真实工作；重开只由统一 scheduler 恢复 |
 | AC-CR-AUTO-010 | T-514 业务 timer、环境变量、启动 due scan 全部消失；来源队列恢复仍可消费已入库任务 |
 | AC-CR-AUTO-011 | 一个虚拟非 collection executor 可通过同一 registry、triggerKey、recovery、run projection 测试，证明 T-516 可复用而无需第二 timer |
-| AC-CR-AUTO-012 | `USER_DECISION_REQUIRED`：用户选择 §8.1 A 或 B 后，所选兼容/恢复 Gate 全部有真实 rehearsal；未确认前 enforce/cutover 禁止 |
+| AC-CR-AUTO-012 | `DEC-AUTO-001` 已确认方案 A；expand 兼容与 enforce 后人工灾备恢复 Gate 必须有真实 rehearsal，否则发布阻断 |
 | AC-CR-AUTO-013 | 非 canonical user 的到期账号也执行；复用相似 ID/idempotency key 时复合 owner FK 与 tuple SQL 零串号 |
 | AC-CR-AUTO-014 | 扇出各 crash point 重启后复用原 parent/outcome；两个 parent 同 occurrence 只有一个 owning claim/child，loser outcome=deduped，两边 summary 守恒 |
 | AC-CR-AUTO-015 | overlap timer/benchmark/favorites/new job 的 producer fence 与 intelligence claim 证明任一账号最多一个 owning producer/source run |
@@ -929,7 +930,7 @@ allowlist 必须按“职责 + 文件 + 调用点”精确维护；不能把整�
 
 发布证据必须同时包含：
 
-1. `USER_DECISION_REQUIRED` 已由用户选择 A/B 并形成真实 DEC；未选择即阻断；
+1. `DEC-AUTO-001` 已确认方案 A；若该 DEC 被推翻则重新阻断；
 2. 两案共同：N-1 + expand 数据库六操作 rehearsal；
 3. 若 A：roll-forward/hotfix rehearsal、禁止 binary-only downgrade 断言、人工灾备当前库安全副本/警告/确认/失败保全演练；不得自动 restore；
 4. 若 B：经另行评审的兼容 reader/writer/projection/再次升级 rehearsal；
@@ -1050,7 +1051,7 @@ sourcesDue =
 
 | Finding | Disposition | 主 SPEC 修订位置 |
 |---|---|---|
-| `R2-01` forward-only 数据保留边界 | **`USER_DECISION_REQUIRED`**。列出 A（推荐但未确认：forward-only + roll-forward/hotfix，snapshot 仅人工灾备且先保全当前库）与 B（额外兼容工程支持保留数据降级）；用户确认前禁止 enforce/cutover，不生成 DEC | §8.1、§8.6、§10.4、AC-012 |
+| `R2-01` forward-only 数据保留边界 | **`RESOLVED_BY_USER`**。用户于 2026-07-29 选择 A：forward-only + roll-forward/hotfix，snapshot 仅人工灾备且先保全当前库；裁决记录为 `DEC-AUTO-001` | §8.1、§8.6、§10.4、AC-012 |
 | `R2-02` per-parent outcome 与全局 occurrence 唯一冲突 | intelligence 新增全局唯一 occurrence claim；per-parent audit outcome 允许多条，winner 唯一拥有 child 写权，loser 写 deduped；NFR/Gate 改为一个 owning claim + 至多一个 source task/run | FR-CR-AUTO-004、NFR-002、AC-014/015、§10.4 |
 | `R2-03` failed_to_enqueue 不可达 | outcome 增加 attempt/retry metadata；定义 source retryable/permanent/parent-critical、来源预算、独立原子终结事务、partial/fail 裁决及 kill/retry tests | FR-CR-AUTO-004A、Intelligence tests |
 | `R2-04` outcome 数据属主冲突 | 保持 `DEC-CR-013`：claim/outcome/snapshot/source run 均归 intelligence；scheduling 仅 parent job/run/execution；application coordinator 只经 service ports，无跨域 repository import；T-516 零 intelligence 依赖 | §4.1/4.2、Contract Delta、NFR-007、Boundary tests |

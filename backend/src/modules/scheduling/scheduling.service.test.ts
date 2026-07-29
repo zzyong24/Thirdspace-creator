@@ -5,7 +5,11 @@ import {
   createSchedulingService,
   type SchedulingService,
 } from "./scheduling.service";
-import { OwnershipError, AccountRequiredError } from "./scheduling.errors";
+import {
+  OwnershipError,
+  AccountRequiredError,
+  ValidationError,
+} from "./scheduling.errors";
 
 // Scheduling service test (T-007 D1 → T-332 S2) — the service builds a (user, account)
 // 双维 scoped repo per request(repoFor bakes ctx.userId + ctx.accountId)。Proves:
@@ -74,6 +78,29 @@ describe("scheduling service", () => {
       nextRunAt: null,
       createdAt: NOW,
       updatedAt: NOW,
+    });
+  });
+
+  it("[T-598] intelligence.sync 只能由系统创建，用户只能开关不能编辑定义", async () => {
+    await expect(
+      svc.createJob(ctxA, {
+        name: "伪造雷达任务",
+        sourceKind: "intelligence.sync",
+        schedule: "* * * * *",
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    const job = await svc.createJob(ctxA, {
+      name: "内容雷达自动同步",
+      sourceKind: "intelligence.sync",
+      schedule: "*/15 * * * *",
+      systemManaged: true,
+    });
+    await expect(
+      svc.updateJob(ctxA, job.id, { schedule: "* * * * *" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(svc.setEnabled(ctxA, job.id, false)).resolves.toMatchObject({
+      enabled: false,
     });
   });
 

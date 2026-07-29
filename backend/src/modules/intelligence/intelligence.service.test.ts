@@ -23,6 +23,11 @@ const ctx: RequestContext = {
   requestId: "request-1",
   source: "user",
 };
+const ctxAccount2: RequestContext = {
+  ...ctx,
+  accountId: "account-2",
+  requestId: "request-account-2",
+};
 
 function deps() {
   let serial = 0;
@@ -698,7 +703,7 @@ describe("T-482 内容雷达领域主链", () => {
       expect(created.source.nextRunAt).toBe("2026-07-24T12:00:00.000Z");
 
       d.clock.value = "2026-07-24T12:00:01.000Z";
-      await expect(service.enqueueDueSourceRuns()).resolves.toBe(1);
+      await expect(service.enqueueDueSourceRuns(ctx)).resolves.toBe(1);
       const runs = await service.listRuns(ctx, created.source.id);
       expect(runs.rows).toHaveLength(1);
       expect(runs.rows[0]).toMatchObject({
@@ -713,6 +718,52 @@ describe("T-482 内容雷达领域主链", () => {
       expect(refreshed.rows[0]?.nextRunAt).toBe(
         "2026-07-25T12:00:01.000Z",
       );
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-598] 聚合调度只扫描 job 所属账号，不跨账号排队来源", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const first = await service.createSource(ctx, {
+        collectionId: null,
+        type: "darkhorse_query",
+        config: {
+          type: "darkhorse_query",
+          collectorAccountId: "account-1",
+          keyword: "账号一",
+          board: "low_follower_breakout",
+        },
+        monitorEnabled: true,
+        runInitial: false,
+        idempotencyKey: "source-account-1",
+      });
+      const second = await service.createSource(ctxAccount2, {
+        collectionId: null,
+        type: "darkhorse_query",
+        config: {
+          type: "darkhorse_query",
+          collectorAccountId: "account-2",
+          keyword: "账号二",
+          board: "low_follower_breakout",
+        },
+        monitorEnabled: true,
+        runInitial: false,
+        idempotencyKey: "source-account-2",
+      });
+      d.clock.value = "2026-07-24T12:00:01.000Z";
+
+      await expect(service.enqueueDueSourceRuns(ctx)).resolves.toBe(1);
+      await expect(service.listRuns(ctx, first.source.id)).resolves.toMatchObject({
+        total: 1,
+      });
+      await expect(
+        service.listRuns(ctxAccount2, second.source.id),
+      ).resolves.toMatchObject({ total: 0 });
     } finally {
       await client.close();
     }

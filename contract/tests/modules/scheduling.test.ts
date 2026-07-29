@@ -140,6 +140,7 @@ describe("scheduling contract", () => {
       "benchmark",
       "topic.daily",
       "favorites",
+      "intelligence.sync",
     ]);
     expect(jobRunStatus.options).toEqual([
       "running",

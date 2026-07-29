@@ -186,4 +186,50 @@ describe("T-517 automation driver", () => {
     );
     expect(report).toMatchObject({ succeeded: 0, failed: 1 });
   });
+
+  it("[T-598] 启动恢复可触发未命中当前分钟的 intelligence.sync，普通任务不补跑", async () => {
+    const enqueue = vi.fn(async () => taskFixture().task);
+    const tasks = {
+      recoverExpiredLeases: vi.fn(async () => ({
+        requeued: 0,
+        failed: 0,
+        paused: 0,
+        cancelled: 0,
+      })),
+      enqueue,
+      claimNext: vi.fn(async () => null),
+    } as unknown as PersistentTaskService;
+    const registry = createAutomationHandlerRegistry()
+      .register("scheduled_collection", async () => undefined)
+      .seal();
+    const radarJob: AutomationDriverJob = {
+      ...dueJob,
+      id: "job-radar",
+      sourceKind: "intelligence.sync",
+      schedule: "*/15 * * * *",
+    };
+    const ordinaryJob: AutomationDriverJob = {
+      ...dueJob,
+      id: "job-comments",
+      sourceKind: "comments",
+      schedule: "0 9 * * *",
+    };
+
+    await runAutomationDriverTick({
+      ctx,
+      tasks,
+      registry,
+      listRunnableJobs: async () => [radarJob, ordinaryJob],
+      now: () => "2026-07-26T09:07:20.000Z",
+      workerId: "automation-worker",
+      cron: { validate: () => true },
+      startupRecovery: true,
+    });
+
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ownerId: "job-radar" }),
+    );
+  });
 });

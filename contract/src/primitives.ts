@@ -183,6 +183,7 @@ export const scheduledJobSourceKind = z.enum([
   "benchmark",
   "topic.daily",
   "favorites",
+  "intelligence.sync",
 ]);
 
 // JobRun 的调度触发记录状态(§4)。running=进行中;succeeded/failed=终态;

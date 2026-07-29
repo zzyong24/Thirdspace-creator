@@ -5914,51 +5914,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return result;
     },
   };
-  // 恢复租约后继续真正排队的来源同步，并补跑已错过 nextRunAt 的每日监控。
-  // APP 退出时没有伪装成云端常驻进程；下次启动会先扫 due source，再驱动真实 run。
-  let intelligenceScheduleRunning = false;
-  const runIntelligenceSchedule = async () => {
-    if (intelligenceScheduleRunning) return;
-    intelligenceScheduleRunning = true;
-    try {
-      // 先回收上次进程退出遗留的过期租约，再 drain；否则 task 仍是 running，
-      // drain 只认 queued，来源 run 会永久占着 active 状态。
-      await persistentTaskService.recoverExpiredLeases();
-      await drainIntelligenceSourceQueue(sourceRunnerDeps);
-      const enqueued = await intelligenceService.enqueueDueSourceRuns();
-      if (enqueued > 0) {
-        await drainIntelligenceSourceQueue(sourceRunnerDeps);
-      }
-    } finally {
-      intelligenceScheduleRunning = false;
-    }
-  };
-  void runIntelligenceSchedule().catch((error) => {
-    console.error(
-      "[intelligence] 启动恢复/定时补跑失败:",
-      error instanceof Error ? error.name : "UnknownError",
-    );
-  });
-  if (
-    !(process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI)
-  ) {
-    const configured = Number(
-      process.env.CREATOROS_INTELLIGENCE_SCHEDULER_INTERVAL_MS,
-    );
-    const intervalMs =
-      Number.isFinite(configured) && configured >= 30_000
-        ? Math.floor(configured)
-        : 60_000;
-    const intelligenceTimer = setInterval(() => {
-      void runIntelligenceSchedule().catch((error) => {
-        console.error(
-          "[intelligence] 定时监控扫描失败:",
-          error instanceof Error ? error.name : "UnknownError",
-        );
-      });
-    }, intervalMs);
-    intelligenceTimer.unref?.();
-  }
+  // T-598：内容雷达不再自建 timer。到期发现由下方唯一 automation-driver 触发
+  // `intelligence.sync`；本段只保留用户手动操作产生的持久 source_sync runner。
   void drainProjectScriptCandidateQueue(projectScriptRunnerDeps).catch(
     (error) => {
       console.error(
@@ -6440,6 +6397,36 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }
   >();
   const scheduledCollectors: Record<string, ScheduledCollector> = {
+    "intelligence.sync": async (ctx, _target, report) => {
+      report({
+        stage: "radar_scan",
+        processed: 0,
+        total: null,
+        message: "检查当前账号已到期的内容雷达来源",
+      });
+      const enqueued = await intelligenceService.enqueueDueSourceRuns(ctx);
+      let processed = 0;
+      // source_sync 是统一自动化的持久子任务；分批 drain，避免只处理前 20 条。
+      for (let batchNo = 0; batchNo < 10; batchNo += 1) {
+        const batch = await drainIntelligenceSourceQueue(sourceRunnerDeps, 20);
+        processed += batch;
+        if (batch < 20) break;
+      }
+      report({
+        stage: "radar_sync",
+        processed,
+        total: enqueued,
+        message: `已排队 ${enqueued} 个到期来源，完成 ${processed} 个来源任务`,
+      });
+      return {
+        itemsNew: enqueued,
+        itemsUpdated: processed,
+        message:
+          enqueued === 0
+            ? "当前账号没有到期来源"
+            : `已统一调度 ${enqueued} 个来源`,
+      };
+    },
     // 自己主页作品+指标：self.metrics 与旧 self.detail 统一进入同一个 canonical
     // visible-only collector。采集先在内存确认公开性，再写项目/发布/指标并运行重活。
     "self.metrics": async (ctx, target, report) => {
@@ -7779,8 +7766,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     source: "ingestion",
   };
 
-  // triggerScheduledJob 的共用 deps(TriggerDeps):cron 到点(startScheduler)与「立即运行」
-  // (D5,scheduledJobs.runNow)共用同一份端口 —— 触发点单一(SPEC §5),幂等双闸只此一处。
+  // triggerScheduledJob 的共用 deps(TriggerDeps):唯一 automation-driver 与「立即运行」
+  // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
   const triggerDeps: TriggerDeps = {
@@ -7873,6 +7860,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           target: input.target,
           // [T-359] 分层启用透传:默认关的模板建即 disabled(缺省 undefined = service 默认 true)。
           enabled: input.enabled,
+          systemManaged: input.sourceKind === "intelligence.sync",
         });
         return { id: job.id };
       },
@@ -7992,7 +7980,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-389] 低频周期复扫(默认 30min,CREATOROS_AI_TASK_SWEEP_INTERVAL_MS 可配):兜
   // 「启动扫单条 markFailed 失败」与「本进程运行期悬挂超阈值」的残留。带 processStartedAt
   // 锚 → 进程内类型只判上一进程遗留,本进程正在跑的活任务不误杀(落回年龄门)。
-  // fire-and-forget,best-effort;测试/CI 环境不起(与 startScheduler 同守卫族),unref
+  // fire-and-forget,best-effort;测试/CI 环境不起,unref
   // 不占进程退出。
   if (
     !(process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI)
@@ -8092,16 +8080,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     })
     .seal();
 
-  void startAutomationDriver({
-    ctx: schedulerCtx,
-    tasks: persistentTaskService,
-    registry: automationHandlers,
-    listRunnableJobs: listRunnableAutomationJobs,
-    now: deps.now,
-    workerId: `automation-driver:${process.pid}`,
-    maxClaims: 8,
-    leaseSeconds: 120,
-  }).catch((e) => console.error("[automation-driver] 启动失败:", e));
+  const startUnifiedAutomationDriver = () =>
+    startAutomationDriver({
+      ctx: schedulerCtx,
+      tasks: persistentTaskService,
+      registry: automationHandlers,
+      listRunnableJobs: listRunnableAutomationJobs,
+      now: deps.now,
+      workerId: `automation-driver:${process.pid}`,
+      maxClaims: 8,
+      leaseSeconds: 120,
+    });
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected
@@ -8790,6 +8779,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               target: input.target,
               // [T-359] 启动兜底补建同样分层:默认关的补建即 disabled。
               enabled: input.enabled,
+              systemManaged: input.sourceKind === "intelligence.sync",
             });
             return { id: job.id };
           },
@@ -8809,6 +8799,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ensureErr instanceof Error ? ensureErr.message : ensureErr,
     );
   }
+
+  // 所有 active account 的 system job 已 ensure 后再启动唯一 driver，使启动恢复不会
+  // 因 intelligence.sync 尚未创建而漏掉本次补跑。
+  void startUnifiedAutomationDriver().catch((e) =>
+    console.error("[automation-driver] 启动失败:", e),
+  );
 
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
@@ -11586,7 +11582,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 // [T-326 ENG-H02] `next build` 绝不允许触碰持久层。build(预渲染/收集页面数据)是产编译
 // 产物的阶段,不是运行时 —— 而 buildPersistence() 一旦执行就会:建 DB 连接 + 跑迁移、seed
 // canonical user/课程 + 回填 tag、sweep 僵尸 job_run/ai_task/沙箱、解析 master key(无 keychain
-// 即降级告警)、startScheduler 起 node-cron(审计实录:普通 web build 日志已出现上述全部副作
+// 即降级告警)、启动统一 automation-driver(审计实录:普通 web build 日志曾出现上述副作
 // 用;且多个预渲染 worker 进程并发各建一个连接,还违反 PGlite 单写者)。
 //
 // 信号选择:`process.env.NEXT_PHASE === "phase-production-build"`。依据(Next 16.2.9 实查):
@@ -11598,7 +11594,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 //
 // 守卫落点 = 组合根**唯一入口** getBundle():所有 transport/service getter(getProjects/
 // getIdentityService/getChatRuntime/…)都经它,buildPersistence 里的 createConfiguredDb/
-// seed/sweep/startScheduler 因此一个都不会执行 —— 不是只挡一半。同步 throw(先于单例缓存
+// seed/sweep/automation-driver 因此一个都不会执行 —— 不是只挡一半。同步 throw(先于单例缓存
 // 赋值),不会把 rejected promise 钉进 globalThis。
 export class PersistenceUnavailableDuringBuildError extends Error {
   constructor() {

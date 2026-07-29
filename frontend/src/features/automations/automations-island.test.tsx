@@ -484,8 +484,8 @@ describe("TemplateCards — 从模板入手", () => {
     const onPick = vi.fn();
     const onEnableExisting = vi.fn();
     const existingJob = makeJob({
-      id: "job-bm",
-      sourceKind: "benchmark",
+      id: "job-topic",
+      sourceKind: "topic.daily",
       enabled: false,
     });
     render(
@@ -496,7 +496,7 @@ describe("TemplateCards — 从模板入手", () => {
       />,
     );
     const card = document.querySelector(
-      '[data-template-id="daily-benchmark"]',
+      '[data-template-id="daily-topic"]',
     ) as HTMLButtonElement;
     // 「已存在」态:disabled 既有 job → 文案引导去启用,不再是「用此模板新建」。
     expect(card).toHaveAttribute("data-existing", "true");
@@ -581,13 +581,18 @@ describe("AutomationsIsland — 新建接线", () => {
     render(
       <AutomationsIsland
         jobs={[
-          makeJob({ id: "job-bm", sourceKind: "benchmark", enabled: false, name: "对标采集" }),
+          makeJob({
+            id: "job-topic",
+            sourceKind: "topic.daily",
+            enabled: false,
+            name: "每日选题",
+          }),
         ]}
       />,
     );
     fireEvent.click(
       screen
-        .getByText("每天抓对标号的爆款作品")
+        .getByText("每天自动出题")
         .closest("button") as HTMLButtonElement,
     );
     await waitFor(() =>
@@ -597,7 +602,7 @@ describe("AutomationsIsland — 新建接线", () => {
       params: { jobId: string };
       body: { enabled: boolean };
     };
-    expect(arg.params.jobId).toBe("job-bm");
+    expect(arg.params.jobId).toBe("job-topic");
     expect(arg.body.enabled).toBe(true);
     // 不走 create(根治重复建第二条)。
     expect(mockClient.createScheduledJob).not.toHaveBeenCalled();

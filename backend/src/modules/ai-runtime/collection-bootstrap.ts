@@ -1,6 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
 
-// 绑定抖音 → 组合根 bootstrap(T-189a/T-595):扫码绑定成功后,为该账号**幂等**建六个
+// 绑定抖音 → 组合根 bootstrap(T-189a/T-595/T-598):扫码绑定成功后,为该账号幂等建立
 // 「每天定时」job。self.metrics 是唯一启用的自有作品 canonical visible-only collector；
 // self.detail 仅保留为旧任务兼容别名且新号默认关闭。
 //
@@ -30,14 +30,10 @@ export interface CollectionJobDefault {
   readonly enabledByDefault: boolean;
 }
 
-// 每天定时的默认采集 job(模板顺序:self.metrics → self.detail → comments → benchmark
-//   → topic.daily → favorites)。schedule 是**账号内基准**(9:00 / 9:10 / 9:20 / 9:30 / 9:40 / 9:50):
-//   ① 每天早上一次;② 账号内六源不同时到点,减少并发抢占(采集本已 gate-F5 串行,错峰更稳)。
-//   [T-433 S3] **跨账号错峰**:建 job 时对该基准叠加 per-account 确定性偏移(staggeredSchedule),
-//   同号 6 job 同偏移(保内部 10 分错开)、跨号打散到早间窗口,避免疯狂绑 N 号时所有号都压 9:00
-//   同刻爆发(=用户所指「灾难」)。基准即偏移 0 的账号时刻。
-//   名称/提示词与前端 COLLECTION_TEMPLATES 对齐(frontend/src/features/automations/intent.ts),
-//   便于用户在 /automations 里认出这三条自动建的 job。常量集中于此,便于调时间。
+// 默认系统 job。对标主页、收藏夹已经归内容雷达来源管理，不再建立 benchmark/favorites
+// 第二 producer；intelligence.sync 每 15 分钟只检查该账号是否有到期来源。
+// 每日采集任务继续按账号应用确定性偏移(staggeredSchedule)，避免多个账号同时争用同一
+// gateway；intelligence.sync 的 15 分钟表达式保持原样，不参与每日错峰。
 export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   {
     sourceKind: "self.metrics",
@@ -60,15 +56,6 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     schedule: "20 9 * * *",
     enabledByDefault: false, // [T-359] 用户拍板后放:有导入作品后手动开
   },
-  // [T-212a] 对标他号爆款采集:读该号 enabled 对标源 → 抓公开作品 → detectViral 筛爆款落库
-  //   (供 T-212c 拆解转化进选题池)。无对标源时诚实空跑(非失败),登记对标源后即生效。错峰 9:30。
-  {
-    sourceKind: "benchmark",
-    name: "每天抓对标号的爆款作品",
-    prompt: "每天抓我登记的对标博主主页的公开爆款作品",
-    schedule: "30 9 * * *",
-    enabledByDefault: false, // [T-359] 前置=信号源登记对标博主
-  },
   // [T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点 brief)→ topic.generate 同模板
   //   出题 → T-212d 护栏排序(探索位防茧房)→ 候选落 pool(防灌库 ≤N/天,默认 5)。错峰 9:40
   //   (排 benchmark 9:30 后:当天新拆解的对标爆款已入库,可作出题引用)。未配文本模型 → 诚实
@@ -81,16 +68,13 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     schedule: "40 9 * * *",
     enabledByDefault: false, // [T-359] 前置=配文本模型(+定位),新号先跑通自己数据
   },
-  // [T-235c] 指定收藏夹采集:读该号登记的指定抖音收藏夹(信号源→收藏夹)→ 按名匹配回填
-  //   collects_id → 拉夹内视频落台账 → 限量(≤3/run)进候选池(source=favorites)。过
-  //   douyinGateway 限流(采集类 job,页内 fetch 每页 acquire)。无登记夹时诚实空跑(非失败,
-  //   message 引导去登记)。错峰 9:50(排 topic.daily 9:40 后,采集类互不同时到点)。
   {
-    sourceKind: "favorites",
-    name: "每天采我的指定收藏夹",
-    prompt: "每天采集我登记的抖音指定收藏夹里的视频,作为跟拍选题候选",
-    schedule: "50 9 * * *",
-    enabledByDefault: false, // [T-359] 前置=信号源登记指定收藏夹
+    sourceKind: "intelligence.sync",
+    name: "内容雷达自动同步",
+    prompt: "检查内容雷达中已到期的来源并同步",
+    schedule: "*/15 * * * *",
+    // 来源自身的 monitorEnabled/syncPolicy 决定是否采集；账号级聚合作业无需用户二次开启。
+    enabledByDefault: true,
   },
 ];
 
@@ -270,10 +254,10 @@ export async function ensureCollectionJobs(
 }
 
 /**
- * 绑定抖音成功后:幂等建**六个**每天定时采集 job + 按序初始化触发一次(拉全量)。
+ * 绑定抖音成功后：幂等建立系统采集 job，并只初始化触发默认需要立即执行的自有作品采集。
  *
  * 幂等:每个 sourceKind 有存量 job 就复用(不重建);触发经 triggerScheduledJob 当天幂等双闸。
- * 顺序:self.metrics → self.detail → comments → benchmark → topic.daily → favorites
+ * 顺序:self.metrics → self.detail → comments → topic.daily → intelligence.sync
  *   (await 串行 enqueue → gate-F5 串行链按序执行)。
  * best-effort:单个 job 建/触发失败不阻断其余(记日志继续),整体 fire-and-forget 不阻塞绑定返回。
  */
@@ -285,8 +269,8 @@ export async function bootstrapDouyinCollectionJobs(
   //   strict 世界所有 per-account 行出生即带号(ISO-01/03),绑定 = 只建号绑定 job + 初始化触发,
   //   **零 claim** —— 绑第二个号不改动任何既有行归属(ISO-08 双号验收前提)。
 
-  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → benchmark → topic.daily
-  //   → favorites)。
+  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → topic.daily
+  //   → intelligence.sync)。
   //   [T-227] 实体抽到 ensureCollectionJobs(启动兜底与绑定 bootstrap 共用同一份 ensure,单一真源)。
   const { created, jobsInOrder } = await ensureCollectionJobs(ctx, deps);
 
@@ -295,7 +279,14 @@ export async function bootstrapDouyinCollectionJobs(
   //   初始化触发=纯空跑噪音,跳过——用户配好前置打开开关后,到点/立即运行照常跑。
   const triggered: string[] = [];
   for (const job of jobsInOrder) {
-    if (!job.enabledByDefault) continue;
+    // intelligence.sync 默认开启，但绑定动作不直接触发雷达全量扫描；启动恢复与随后
+    // 15 分钟检查统一由 automation-driver 驱动。
+    if (
+      !job.enabledByDefault ||
+      job.sourceKind === "intelligence.sync"
+    ) {
+      continue;
+    }
     try {
       // [T-433 S1] 绑号轻触发:self.detail 初始化跑跳过尾部逐条重活(封面/逐字稿/重建),避免多账号
       //   疯狂绑号把重活堆进 gate-F5 超长串行队列;明细(作品列表/标题/明细)照常当刻出,重活留

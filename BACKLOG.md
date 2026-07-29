@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
+| T-598 | 重新梳理并改造定时任务，使其完整承接内容雷达能力【产品+调度契约·用户 2026-07-29】 | ✅ | CONCERNS(已处理) | [统一调度 PLAN](docs/superpowers/specs/2026-07-24-content-radar-unified-automation-design.md) · [T-598 CONTRACT](docs/superpowers/specs/2026-07-29-content-radar-single-scheduler.contract.md) · [精简自动化底座](docs/superpowers/specs/2026-07-26-creatoros-automation-kernel-minimal.md) | 以当前内容雷达的来源类型、来源级启停/频率/采集账号、手动同步和运行历史为真实输入，审计自动化页、`scheduled_job/job_run`、持久任务与现存独立 timer 的错位；统一“来源在哪里配置、账号级任务在哪里开关、运行结果在哪里查看”，删除过时采集任务与重复调度，不新增第二套执行状态机。方案 A 与单一调度边界已由 DEC-AUTO-001 确认。 |
 | T-591 | 审计已隐藏作品在列表、统计与下游消费中的过滤能力【数据口径·用户 2026-07-28】 | ✅ 免审 | — | [审计报告](docs/research/2026-07-28-hidden-work-filter-audit.md) | 逐层核对作品隐藏状态的真实字段与写入入口，以及作品列表、首页/账号统计、定位、复盘、AI 上下文、发布与其他聚合查询是否在服务端过滤；区分服务端过滤、仅 UI 隐藏和完全未过滤，给出代码/测试/本机数据证据与缺口清单，本轮先审计不擅自改业务口径。 |
 | T-595 | 建立“仅公开作品入库”的全局单一数据边界【数据归属·用户确认·收口 T-592/593/594】 | ✅ | PASS[REV:caefac7913c6] | [SPEC](docs/superpowers/specs/2026-07-28-visible-only-ingestion-boundary.md) · [真实验收](docs/research/2026-07-28-visible-only-ingestion-validation.md) · [T-591 审计](docs/research/2026-07-28-hidden-work-filter-audit.md) | `self.metrics/self.detail` 统一先用源侧状态确认公开、再持久化；确认隐藏即清理平台派生数据，未知不新增也不误删，恢复公开可由全量源扫描重新采入；完成存量对账后列表、统计、搜索、定位与 AI 不再各自承担 hidden 过滤。 |
 | T-594 | 让搜索只消费公开作品域【并入 T-595】 | ✅ 免审 | — | [T-595 SPEC](docs/superpowers/specs/2026-07-28-visible-only-ingestion-boundary.md) | 不再新增搜索侧 hidden 口径；由 T-595 在隐藏清理时移除派生索引，重建只消费归一化后的公开作品域。 |

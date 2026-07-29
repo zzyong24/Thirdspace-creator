@@ -75,6 +75,8 @@ export interface AutomationDriverTickDeps {
   cron: { validate(expr: string): boolean };
   maxClaims?: number;
   leaseSeconds?: number;
+  /** 启动恢复只对声明 missed-run=once 的系统聚合作业生效。 */
+  startupRecovery?: boolean;
 }
 
 export interface AutomationDriverTickReport {
@@ -152,10 +154,15 @@ export async function runAutomationDriverTick(
   const now = new Date(nowIso);
   const jobs = await deps.listRunnableJobs(deps.ctx);
   for (const job of jobs) {
+    const scheduleMatches =
+      deps.cron.validate(job.schedule) &&
+      cronMatchesMinute(job.schedule, now);
+    const startupRecovery =
+      deps.startupRecovery === true &&
+      job.sourceKind === "intelligence.sync";
     if (
       !job.enabled ||
-      !deps.cron.validate(job.schedule) ||
-      !cronMatchesMinute(job.schedule, now)
+      (!scheduleMatches && !startupRecovery)
     ) {
       continue;
     }
@@ -268,8 +275,18 @@ export async function startAutomationDriver(
   globalThis.__creatorosAutomationDriverStarted = true;
   try {
     const cron = await import("node-cron");
+    // 同一 driver 完成启动恢复；内容雷达不再另起启动扫描器。
+    await runAutomationDriverTick({
+      ...deps,
+      cron,
+      startupRecovery: true,
+    });
     cron.schedule("* * * * *", () => {
-      void runAutomationDriverTick({ ...deps, cron }).catch((error) =>
+      void runAutomationDriverTick({
+        ...deps,
+        cron,
+        startupRecovery: false,
+      }).catch((error) =>
         console.error("[automation-driver] tick 失败:", error),
       );
     });

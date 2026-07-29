@@ -11,6 +11,7 @@ import {
   type ScheduledJobResource,
   type JobRunResource,
 } from "./scheduling.schema";
+import { ValidationError } from "./scheduling.errors";
 
 // Scheduling service (foundation §5.3) — every public method takes
 // `(ctx: RequestContext, …)` and builds a repository bound to `ctx.userId`
@@ -44,6 +45,8 @@ export interface CreateJobInput {
   toolGrants?: unknown[];
   /** [T-359] 新绑号分层启用:缺省 undefined = true(旧调用方零变);默认关的模板建即 false。 */
   enabled?: boolean;
+  /** 仅组合根/系统 bootstrap 可创建 system-managed kind；wire 不暴露。 */
+  systemManaged?: boolean;
 }
 
 export interface UpdateJobInput {
@@ -156,6 +159,14 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createJob(ctx, input) {
+      if (
+        input.sourceKind === "intelligence.sync" &&
+        input.systemManaged !== true
+      ) {
+        throw new ValidationError(
+          "内容雷达自动同步由系统按账号管理，不能手动新建",
+        );
+      }
       const row = await repoFor(ctx).createJob({
         name: input.name,
         prompt: input.prompt ?? "",
@@ -181,6 +192,17 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async updateJob(ctx, jobId, patch) {
+      const current = await repoFor(ctx).getJob(jobId);
+      if (
+        current.sourceKind === "intelligence.sync" &&
+        Object.entries(patch).some(
+          ([key, value]) => key !== "enabled" && value !== undefined,
+        )
+      ) {
+        throw new ValidationError(
+          "内容雷达自动同步只允许启用、停用和立即检查",
+        );
+      }
       const row = await repoFor(ctx).updateJob(jobId, {
         name: patch.name,
         prompt: patch.prompt,

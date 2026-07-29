@@ -84,8 +84,8 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
   // 登记源驱动的 benchmark/topic.daily/favorites 是显式(模板卡/下拉)源,分类器不覆盖(设计如此)。
   const CLASSIFIER_KINDS = ["self.metrics", "comments", "self.detail"] as const;
 
-  it("[T-258] 六张模板,一一对齐后端 DAILY_COLLECTION_JOB_DEFAULTS", () => {
-    expect(COLLECTION_TEMPLATES).toHaveLength(6);
+  it("[T-598] 通用模板只保留非内容雷达重复入口", () => {
+    expect(COLLECTION_TEMPLATES).toHaveLength(4);
 
     const byId = Object.fromEntries(
       COLLECTION_TEMPLATES.map((t) => [t.id, t]),
@@ -94,10 +94,9 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
     expect(byId["daily-self-metrics"]?.sourceKind).toBe("self.metrics");
     expect(byId["daily-comments"]?.sourceKind).toBe("comments");
     expect(byId["daily-detail"]?.sourceKind).toBe("self.detail");
-    // 后三张([T-258] 补齐):登记源驱动的采集器,手动补建入口。
-    expect(byId["daily-benchmark"]?.sourceKind).toBe("benchmark");
     expect(byId["daily-topic"]?.sourceKind).toBe("topic.daily");
-    expect(byId["daily-favorites"]?.sourceKind).toBe("favorites");
+    expect(byId["daily-benchmark"]).toBeUndefined();
+    expect(byId["daily-favorites"]).toBeUndefined();
 
     for (const t of COLLECTION_TEMPLATES) {
       expect(t.prompt.length).toBeGreaterThan(0);
@@ -119,14 +118,9 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
     }
   });
 
-  it("[T-258] 新增三张卡的 cadence 分钟与后端错峰 cron 对齐(benchmark 9:30 / topic.daily 9:40 / favorites 9:50)", () => {
-    // 新增 3 卡按 backend DAILY_COLLECTION_JOB_DEFAULTS 的 cron 分钟错峰对齐(30/40/50)。
-    // 原有 3 卡沿用 9:00 缺省(模板 cadence 只是「手动补建」时的友好预填,用户可改;与自动建 job
-    // 的实际时刻各自独立,不强行改动既有 UX)。
+  it("[T-598] 每日选题仍保留 9:40，内容雷达聚合作业不进入通用模板", () => {
     const newCardMinute: Record<string, number> = {
-      "daily-benchmark": 30,
       "daily-topic": 40,
-      "daily-favorites": 50,
     };
     for (const [id, minute] of Object.entries(newCardMinute)) {
       const t = COLLECTION_TEMPLATES.find((x) => x.id === id);

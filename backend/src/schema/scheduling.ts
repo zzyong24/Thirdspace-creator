@@ -123,5 +123,5 @@ CREATE INDEX IF NOT EXISTS ix_job_run_job ON job_run (job_id, started_at);
 -- 主路径,这里是最后一道闸)。部分索引仅约束 6 类采集 kind,不限制未来非采集类 job
 -- 多实例。与 0046_scheduled_job_unique_source.sql 对齐(迁移才是运行时真正建索引的那份;
 -- 迁移同时清了存量重复:enabled 优先 → created_at 最早保留)。
-CREATE UNIQUE INDEX IF NOT EXISTS ux_scheduled_job_user_account_source ON scheduled_job (user_id, account_id, source_kind) WHERE source_kind IN ('self.metrics','self.detail','comments','benchmark','topic.daily','favorites');
+CREATE UNIQUE INDEX IF NOT EXISTS ux_scheduled_job_user_account_source ON scheduled_job (user_id, account_id, source_kind) WHERE source_kind IN ('self.metrics','self.detail','comments','benchmark','topic.daily','favorites','intelligence.sync');
 `;
