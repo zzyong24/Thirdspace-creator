@@ -15,9 +15,9 @@ use zeroize::{Zeroize as _, Zeroizing};
 
 use crate::license::{
     derive_license_key, format_iso_ms, license_file_path, parse_iso_ms,
-    parse_signed_channel_runtime, read_snapshot_file, resolve_public_key, sync_mirror_to_sidecar,
-    verify_response_signature, write_snapshot_file_checked, LicenseConfig, LicenseHttpResponse,
-    LicenseSnapshot, LicenseState,
+    parse_signed_channel_runtime, read_snapshot_file, refresh_client_config_sidecar_async,
+    resolve_public_key, sync_mirror_to_sidecar, verify_response_signature,
+    write_snapshot_file_checked, LicenseConfig, LicenseHttpResponse, LicenseSnapshot, LicenseState,
 };
 
 const CONTRACT_VERSION: &str = "growth-entitlement-delivery-v1";
@@ -856,6 +856,7 @@ fn persist_success(
         return Err("正式授权写入后验真不一致".to_string());
     }
     sync_mirror_to_sidecar(ctx, &snapshot);
+    refresh_client_config_sidecar_async(state.0.clone());
     Ok(())
 }
 

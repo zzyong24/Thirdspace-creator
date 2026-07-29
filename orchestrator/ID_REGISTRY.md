@@ -710,3 +710,8 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | HARD-575-002 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-04, TEST-575-02 |
 | HARD-575-003 | risk | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-06, TEST-575-03 |
 ```
+| DEC-TSL-003 | decision | orchestrator/DECISION_LOG.md | FR-575-08 |
+| FR-575-08 | requirement | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FLOW-575-03, API-575-002, TEST-575-06 |
+| FLOW-575-03 | flow | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-08 |
+| API-575-002 | api | docs/contracts/creator-client-config-consumer-v1.md | FR-575-08, TEST-575-06 |
+| TEST-575-06 | test | docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md | FR-575-08, API-575-002 |

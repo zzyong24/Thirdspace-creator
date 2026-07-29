@@ -19,9 +19,9 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "Cargo.toml"),
       "utf8",
     );
-    expect(frontendPackage.version).toBe("0.2.1-beta.2");
-    expect(tauriConfig.version).toBe("0.2.1-beta.2");
-    expect(cargoToml).toContain('version = "0.2.1-beta.2"');
+    expect(frontendPackage.version).toBe("0.2.1-beta.3");
+    expect(tauriConfig.version).toBe("0.2.1-beta.3");
+    expect(cargoToml).toContain('version = "0.2.1-beta.3"');
     expect(workflow).not.toContain("sites/creatoros/updates/latest.json");
   });
 
@@ -94,6 +94,32 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:",
     );
     expect(nextConfig).toContain("desktopFeedbackSubmitEnabled");
+  });
+
+  it("T-575 config.pull 只把构建期 origin、公钥与开关注入 server-only sidecar", () => {
+    const buildRs = readFileSync(
+      join(process.cwd(), "src-tauri", "build.rs"),
+      "utf8",
+    );
+    const shellSource = readFileSync(
+      join(process.cwd(), "src-tauri", "src", "lib.rs"),
+      "utf8",
+    );
+    for (const name of [
+      "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+      "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
+      "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+      "CREATOROS_GROWTH_CONFIG_KEY_ID",
+    ]) {
+      expect(buildRs).toContain(`"${name}"`);
+      expect(shellSource).toContain(`"${name}"`);
+      expect(shellSource.match(new RegExp(`"${name}"`, "g"))?.length).toBeGreaterThanOrEqual(
+        3,
+      );
+    }
+    expect(shellSource).not.toContain(
+      "NEXT_PUBLIC_CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+    );
   });
 
   it("T-557 双端正式打包显式注入既定产品级 projectKey", () => {

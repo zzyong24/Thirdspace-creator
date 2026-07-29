@@ -963,6 +963,31 @@ AM assertion + Growth authoritative POST receipt 的 fail-closed 事务作为最
 
 **Status**：resolved（用户三轮后裁决；禁止 Round 4）。
 
+## DEC-TSL-003 (2026-07-29) — T-575 只消费 Growth 签名产品配置，不扩展授权或 runtime 权威
+
+**来源**：用户明确要求 CreatorOS 在 T-575 内从 Growth 拉取 product-specific opaque JSON，
+由 CreatorOS 按产品协议解析；同时重申 Growth/Activity/CreatorOS 三方权威边界、24 小时离线
+容错和 revoked/expired/replay fail-closed。
+
+**决策**：
+
+1. 采用 Growth 已独立评审 PASS[REV:d2895a3b6dac] 的
+   `config-access-ticket-v1 + growth-client-config-bundle-v1`：Activity 只签短票并证明当前授权，
+   Growth 保存/签名配置正文，Creator 只验签和解析。
+2. `channelConfig` 继续只认 T-534 的 Activity signed `channel-runtime-v2`；Growth bundle 内六键
+   不建立第二套 UI runtime。
+3. Creator 首个产品协议固定为
+   `creatoros.model-config@creatoros-model-config-v1`，只输出安全 modelPolicy；长期模型 key、
+   支付/服务端 secret、激活码、原始设备标识和长期 bearer 禁止进入 bundle/LKG/UI/日志。
+4. 仅 network/authority unavailable 可在 24 小时内使用 AES-GCM LKG；撤权、到期、重放、
+   改绑、terminated、坏签名和版本倒退均 fail-closed，禁止 silent mock fallback。
+5. 应用启动和授权事实成功落盘后异步 refresh；feature/config 默认关闭。真实联调前不得把代码或
+   fixture 写成已上线。
+6. 本决定是用户对 T-575 的新增明确裁决，复用 Growth 已审 exact contract；不重开
+   DEC-TSL-002 已禁止的 T-575 Round 4。
+
+**Status**：resolved（用户确认；进入 TDD/BUILD 与 live HTTPS 验收）。
+
 ## DEC-MODEL-001 (2026-07-28) — 内容雷达不新增专用模型配置面
 
 **来源**：用户在 T-589 性能优化完成后明确指出“模型配置已经够多”，否决新增的

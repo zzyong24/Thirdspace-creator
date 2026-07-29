@@ -217,6 +217,32 @@ canonical；最终 closed bytes 仍须用共同 fixture 互操作证明：
 PKCE、claimToken、consume path、签名、digest、内部 entitlement/channel identity 均不得进入
 普通页面；高级诊断也只显示稳定阶段与脱敏错误码。
 
+### 4.3 FR-575-08：产品专用配置拉取
+
+用户 2026-07-29 明确把 Growth 产品专用 opaque JSON 纳入 T-575。该增量不扩展 T-534 的
+`channelConfig`，也不让 CreatorOS 成为配置或授权权威：
+
+1. Creator 从当前加密授权取得 identity，向 Activity 取得 300 秒 `config.pull` ticket；
+2. 持 ticket 向固定 Growth API-216 拉取 signed bundle，禁止客户端自报
+   `projectKey/channelRef/clientId`；
+3. Creator 校验 Activity raw-body Ed25519，再校验 Growth RFC 8785 digest、Ed25519、
+   identity、版本与 TTL；
+4. Growth core 不解释 `extensions[].payload`；Creator 只解析
+   `creatoros.model-config@creatoros-model-config-v1`，输出不含 secret/identity/digest/signature
+   的安全 `modelPolicy`；
+5. 成功结果进入 AES-256-GCM LKG。只有网络或 authority 暂时不可用可在 24 小时内继续使用；
+   expired/revoked/replay/identity 变化/terminated/坏签名/版本倒退均 fail-closed；
+6. 应用启动、旧激活或新 claim 成功落盘后异步刷新；进程持续运行时每 6 小时加最多
+   15 分钟本机稳定抖动刷新，不阻塞主界面；默认 feature flag 关闭，缺公钥、keyId 或
+   origin 时零出网，不 silent mock fallback；
+7. LKG 只允许由既有原生 master key 派生；master key 处于开发降级态时必须在出网前
+   fail-closed，禁止把随机降级 key 当成受保护存储。
+
+exact consumer contract：
+`docs/contracts/creator-client-config-consumer-v1.md`。上游 Growth
+`client-config-distribution-v1` 已独立评审 PASS[REV:d2895a3b6dac]；本增量是用户确认后的
+Creator consumer，不开启已被 DEC-TSL-002 禁止的 T-575 Round 4。
+
 ## 5. 产品问题反馈放行
 
 ### FR-575-05 不可伪造授权上下文
@@ -293,6 +319,7 @@ accepted-risk 手动降级。若改为 Growth 官方同源网页表单，Creator
 | FR-575-03 | 本地 closed fixture → disabled provider → 不渲染按钮 | feasible；零网络 |
 | FR-575-04 | Growth API-210..212 device session → owner 网页批准 → API-212 no-store launch → OS journal → AM consume 签名验证 → 本地正式授权 | Creator/AM/Growth 本地 BUILD feasible/PASS；live HTTPS E2E、部署与正式密钥是 capability 启用门 |
 | FR-575-05/06/07 | encrypted `.license` → API-AM-013 signed context → API-170 → closed `202 publicRef` → UI | feasible；任一步失败保留草稿并手动降级 |
+| FR-575-08 | encrypted `.license` identity → Activity config ticket → Growth signed opaque bundle → Creator product parser → AES-GCM LKG/safe projection | Growth exact contract 已 PASS；Creator fixture pin、启动刷新和 live HTTPS E2E 是本轮 Gate |
 
 ### 7.1 HARD 台账
 
@@ -372,6 +399,17 @@ fault-injection 验收。HARD-575-001 只冻结 capability 启用、真实 E2E �
 - 离线启动不清 LKG；
 - 真正联调必须使用非 fixture 授权；未获得 Growth/AM 生产凭据时记录为 BLOCKED，不伪报。
 
+### TEST-575-06 产品专用配置
+
+- Activity ticket raw-body digest/Ed25519/date/nonce/expiry 与 Growth ticket fixture；
+- Growth bundle closed schema、RFC 8785 digest、Ed25519、keyId、identity、200/304 headers；
+- shared fixture 与 Growth canonical `cmp`/SHA pin；
+- `creatoros-model-config-v1` closed parser 与 forbidden secret/extra field；
+- lower、same/different、expired、revoked、replay、terminated、改绑均不使用 LKG；
+- 只有 network/authority unavailable 可在 24 小时内使用 LKG，边界后 fail-closed；
+- 启动和授权成功触发本地 refresh；flag/config 缺失时外网调用为 0；
+- Web/local route 只输出人话 state/action 与安全 modelPolicy，不出现 ID/digest/token/signature。
+
 ## 9. 生产配置、health、灰度与回滚
 
 | 配置 | owner | 默认 | 安全要求 |
@@ -381,6 +419,10 @@ fault-injection 验收。HARD-575-001 只冻结 capability 启用、真实 E2E �
 | `CREATOROS_FEEDBACK_OFFICIAL_ORIGINS` | Creator release | 空 | HTTPS origin allowlist；无 path/query/hash/userinfo/port |
 | `CREATOROS_ENTITLEMENT_CLAIM_ENABLED` | Creator release | `0` | AM PASS + 最终 descriptor/fixture pin 前不得加入发布配置；之后仍默认 disabled |
 | `GROWTH_ENTITLEMENT_API_ORIGIN` | Creator signed release configuration | 空 | 只接受 Growth 官方 HTTPS origin；不得从渠道 URL 或用户输入推导；缺失即 disabled |
+| `CREATOROS_CLIENT_CONFIG_PULL_ENABLED` | Creator release | `0` | 只接受 `0/1`；真实 Growth/Activity 联调前保持关闭 |
+| `CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN` | Creator release | 空 | 只接受 `https://growth.aitongban.cloud`，不得从渠道 URL 推导 |
+| `CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64` | Creator release | 空 | Growth bundle Ed25519 公钥；server-only，不进入 Web |
+| `CREATOROS_GROWTH_CONFIG_KEY_ID` | Creator release | 空 | 必须 exact 匹配 signed bundle keyId |
 | AM/Growth origins | 既有部署配置 | 不在 UI 暴露 | HTTPS、禁止 redirect |
 
 health 只报告 capability 状态和聚合计数：
@@ -420,6 +462,7 @@ telemetry 不是放行真相。`feedback_submit=ready` 只表示本次事务获�
 | 激活页售后只读 `channelSupportUrl` | `frontend/src/app/activate/page.tsx:46,67-83` |
 | 设置页四个商业入口已独立 | `frontend/src/features/settings/settings-interactive-region.tsx:1297-1353` |
 | claim consumer 已实现但默认关闭 | `frontend/src-tauri/src/entitlement_claim.rs`、`frontend/src/app/activate/entitlement-claim-panel.tsx`；Growth final device-flow Gate 未通过前不得启用 |
+| product-specific config consumer 本地 BUILD 已闭合 | `frontend/src/server/activation/client-config.server.ts`、本地 route、Tauri 启动/激活/claim hook；canonical fixture byte-pin、签名/版本/LKG/降级密钥/定时刷新测试已通过，仍缺 live HTTPS E2E 与正式公钥/keyId |
 
 ### 10.2 候选比较
 
@@ -508,3 +551,21 @@ AM/Growth wire 或数据归属时，立即回到评审，不以“临时兼容�
 HARD-575-002 的实现接缝与确定性 fault tests 已闭合；真实 OS 凭据/进程强杀矩阵仍是 release
 验证门。Growth 本地 BUILD 已 PASS；HARD-575-001 现只阻断 capability 启用、live HTTPS
 跨仓 E2E、部署/正式密钥与 T-575 完成，不阻断默认关闭的本地 BUILD 工件。
+
+### 13.4 产品配置增量 BUILD 实证（2026-07-29）
+
+| 证据 | 结果 |
+| --- | --- |
+| 红测：无原生 master key | 首次失败并实际继续出网；修复后 `CLIENT_CONFIG_STORAGE_UNAVAILABLE` 且 provider 调用数 0 |
+| 红测：启动后长期刷新 | 首次因缺 `client_config_refresh_interval_secs` 编译失败；修复后启动接线与 6h+≤15min 稳定抖动测试 PASS |
+| config.pull consumer + local route | 15 tests PASS：Activity raw-body Ed25519、Growth JCS/Ed25519、identity/version/collision、closed headers、304、24h LKG、revoked/expired/replay fail-closed、AES-GCM 原子读后验真 |
+| 领取 + 配置 + 反馈联合定向 | 隔离干净快照 8 files / 74 tests PASS |
+| Rust claim/journal | 隔离 `CARGO_TARGET_DIR`，10 tests PASS |
+| Rust 启动刷新 | 隔离 `CARGO_TARGET_DIR`，1 test PASS |
+| TypeScript / ESLint | PASS |
+| Rust `cargo check --locked` | PASS；只保留范围外 `decoy_gate.rs` dead-code warning |
+| Growth fixture byte pin | `cmp` PASS；ticket SHA-256 `a71d…8620`，bundle SHA-256 `5a2d…3251` |
+| Next production build | `0.2.1-beta.3`；`/private/tmp` 干净 HEAD+T-575 快照，Turbopack PASS；仅将插件执行器临时切到 worker thread 以适配沙箱禁止本地 IPC 端口，源仓构建配置未改 |
+| capability / live E2E | 默认关闭；缺 Growth 正式 `CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64`、`CREATOROS_GROWTH_CONFIG_KEY_ID`，未执行真实 claim/config/feedback，不冒充上线 |
+
+完整命令与边界见 `orchestrator/GATE-T575-BUILD.md`。本轮没有发布、部署或生成 Windows 包。

@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "growth-client-config-bundle-fixture-v1",
+  "contractVersion": "growth-client-config-bundle-v1",
+  "algorithm": "Ed25519",
+  "publicKey": {
+    "kid": "growth-config-test-01",
+    "rawBase64": "2inpWwLgD/oVZFd1+x0roiKhlDOV7qBrlOLAV7e+adA="
+  },
+  "semantic": {
+    "contractVersion": "growth-client-config-bundle-v1",
+    "bundleVersion": 42,
+    "projectKey": "creatoros",
+    "channelRef": "agent-42",
+    "clientId": "creatoros.desktop",
+    "environment": "production",
+    "issuedAt": "2026-07-28T12:00:00.000Z",
+    "softExpiresAt": "2026-07-29T12:00:00.000Z",
+    "hardExpiresAt": "2026-08-04T12:00:00.000Z",
+    "channelConfig": {
+      "revision": 17,
+      "payload": {
+        "brandName": "星河工作室",
+        "purchaseUrl": "https://growth.example/buy",
+        "renewalUrl": "https://growth.example/renew",
+        "channelSupportUrl": "https://growth.example/support",
+        "bugFeedbackUrl": "https://growth.example/feedback",
+        "downloadUrl": "https://growth.example/download"
+      }
+    },
+    "extensions": [
+      {
+        "extensionKey": "creatoros.model-config",
+        "protocolVersion": "creatoros-model-config-v1",
+        "revision": 3,
+        "payload": {
+          "serviceMode": "managed_default_user_override_allowed",
+          "profileKey": "balanced",
+          "capabilityRoutes": {
+            "script.draft": "text-quality",
+            "script.review": "text-balanced"
+          }
+        }
+      }
+    ]
+  },
+  "semanticJcs": "{\"bundleVersion\":42,\"channelConfig\":{\"payload\":{\"brandName\":\"星河工作室\",\"bugFeedbackUrl\":\"https://growth.example/feedback\",\"channelSupportUrl\":\"https://growth.example/support\",\"downloadUrl\":\"https://growth.example/download\",\"purchaseUrl\":\"https://growth.example/buy\",\"renewalUrl\":\"https://growth.example/renew\"},\"revision\":17},\"channelRef\":\"agent-42\",\"clientId\":\"creatoros.desktop\",\"contractVersion\":\"growth-client-config-bundle-v1\",\"environment\":\"production\",\"extensions\":[{\"extensionKey\":\"creatoros.model-config\",\"payload\":{\"capabilityRoutes\":{\"script.draft\":\"text-quality\",\"script.review\":\"text-balanced\"},\"profileKey\":\"balanced\",\"serviceMode\":\"managed_default_user_override_allowed\"},\"protocolVersion\":\"creatoros-model-config-v1\",\"revision\":3}],\"hardExpiresAt\":\"2026-08-04T12:00:00.000Z\",\"issuedAt\":\"2026-07-28T12:00:00.000Z\",\"projectKey\":\"creatoros\",\"softExpiresAt\":\"2026-07-29T12:00:00.000Z\"}",
+  "bundleDigest": "sha256:cddab7e8a859a4925ce6a353ebee47c46824cb06a3c066e87e47fd2482fcb4ba",
+  "signedObjectJcs": "{\"bundleDigest\":\"sha256:cddab7e8a859a4925ce6a353ebee47c46824cb06a3c066e87e47fd2482fcb4ba\",\"bundleVersion\":42,\"channelConfig\":{\"payload\":{\"brandName\":\"星河工作室\",\"bugFeedbackUrl\":\"https://growth.example/feedback\",\"channelSupportUrl\":\"https://growth.example/support\",\"downloadUrl\":\"https://growth.example/download\",\"purchaseUrl\":\"https://growth.example/buy\",\"renewalUrl\":\"https://growth.example/renew\"},\"revision\":17},\"channelRef\":\"agent-42\",\"clientId\":\"creatoros.desktop\",\"contractVersion\":\"growth-client-config-bundle-v1\",\"environment\":\"production\",\"extensions\":[{\"extensionKey\":\"creatoros.model-config\",\"payload\":{\"capabilityRoutes\":{\"script.draft\":\"text-quality\",\"script.review\":\"text-balanced\"},\"profileKey\":\"balanced\",\"serviceMode\":\"managed_default_user_override_allowed\"},\"protocolVersion\":\"creatoros-model-config-v1\",\"revision\":3}],\"hardExpiresAt\":\"2026-08-04T12:00:00.000Z\",\"issuedAt\":\"2026-07-28T12:00:00.000Z\",\"keyId\":\"growth-config-test-01\",\"projectKey\":\"creatoros\",\"softExpiresAt\":\"2026-07-29T12:00:00.000Z\"}",
+  "signatureBase64Url": "h_UYOdnteJ6wlpFMuSiEGNJeKwl7C0CDAV16z6vVwy6P9Y5ee0HZbDP-b-q9sRWM3Aq7OHVDiFlFNW3LW_5HDA",
+  "responseBody": {
+    "contractVersion": "growth-client-config-bundle-v1",
+    "bundleVersion": 42,
+    "projectKey": "creatoros",
+    "channelRef": "agent-42",
+    "clientId": "creatoros.desktop",
+    "environment": "production",
+    "issuedAt": "2026-07-28T12:00:00.000Z",
+    "softExpiresAt": "2026-07-29T12:00:00.000Z",
+    "hardExpiresAt": "2026-08-04T12:00:00.000Z",
+    "channelConfig": {
+      "revision": 17,
+      "payload": {
+        "brandName": "星河工作室",
+        "purchaseUrl": "https://growth.example/buy",
+        "renewalUrl": "https://growth.example/renew",
+        "channelSupportUrl": "https://growth.example/support",
+        "bugFeedbackUrl": "https://growth.example/feedback",
+        "downloadUrl": "https://growth.example/download"
+      }
+    },
+    "extensions": [
+      {
+        "extensionKey": "creatoros.model-config",
+        "protocolVersion": "creatoros-model-config-v1",
+        "revision": 3,
+        "payload": {
+          "serviceMode": "managed_default_user_override_allowed",
+          "profileKey": "balanced",
+          "capabilityRoutes": {
+            "script.draft": "text-quality",
+            "script.review": "text-balanced"
+          }
+        }
+      }
+    ],
+    "bundleDigest": "sha256:cddab7e8a859a4925ce6a353ebee47c46824cb06a3c066e87e47fd2482fcb4ba",
+    "keyId": "growth-config-test-01",
+    "signature": "h_UYOdnteJ6wlpFMuSiEGNJeKwl7C0CDAV16z6vVwy6P9Y5ee0HZbDP-b-q9sRWM3Aq7OHVDiFlFNW3LW_5HDA"
+  },
+  "responseBodyJcs": "{\"bundleDigest\":\"sha256:cddab7e8a859a4925ce6a353ebee47c46824cb06a3c066e87e47fd2482fcb4ba\",\"bundleVersion\":42,\"channelConfig\":{\"payload\":{\"brandName\":\"星河工作室\",\"bugFeedbackUrl\":\"https://growth.example/feedback\",\"channelSupportUrl\":\"https://growth.example/support\",\"downloadUrl\":\"https://growth.example/download\",\"purchaseUrl\":\"https://growth.example/buy\",\"renewalUrl\":\"https://growth.example/renew\"},\"revision\":17},\"channelRef\":\"agent-42\",\"clientId\":\"creatoros.desktop\",\"contractVersion\":\"growth-client-config-bundle-v1\",\"environment\":\"production\",\"extensions\":[{\"extensionKey\":\"creatoros.model-config\",\"payload\":{\"capabilityRoutes\":{\"script.draft\":\"text-quality\",\"script.review\":\"text-balanced\"},\"profileKey\":\"balanced\",\"serviceMode\":\"managed_default_user_override_allowed\"},\"protocolVersion\":\"creatoros-model-config-v1\",\"revision\":3}],\"hardExpiresAt\":\"2026-08-04T12:00:00.000Z\",\"issuedAt\":\"2026-07-28T12:00:00.000Z\",\"keyId\":\"growth-config-test-01\",\"projectKey\":\"creatoros\",\"signature\":\"h_UYOdnteJ6wlpFMuSiEGNJeKwl7C0CDAV16z6vVwy6P9Y5ee0HZbDP-b-q9sRWM3Aq7OHVDiFlFNW3LW_5HDA\",\"softExpiresAt\":\"2026-07-29T12:00:00.000Z\"}",
+  "etag": "\"sha256:cddab7e8a859a4925ce6a353ebee47c46824cb06a3c066e87e47fd2482fcb4ba\"",
+  "negativeCases": [
+    {
+      "id": "payload-tamper",
+      "mutation": "extensions[0].payload.profileKey=evil without resign",
+      "expectedCode": "CLIENT_CONFIG_SIGNATURE_INVALID"
+    },
+    {
+      "id": "version-downgrade",
+      "lastKnownBundleVersion": 43,
+      "expectedCode": "CLIENT_CONFIG_VERSION_DOWNGRADE"
+    }
+  ]
+}

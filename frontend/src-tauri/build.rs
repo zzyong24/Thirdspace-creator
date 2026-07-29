@@ -7,6 +7,10 @@ fn main() {
         "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
         "GROWTH_ENTITLEMENT_API_ORIGIN",
         "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
+        "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+        "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
+        "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+        "CREATOROS_GROWTH_CONFIG_KEY_ID",
     ] {
         println!("cargo:rerun-if-env-changed={name}");
     }
@@ -29,6 +33,10 @@ fn main() {
         "cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED={}",
         build_flag("CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED")
     );
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED={}",
+        build_flag("CREATOROS_CLIENT_CONFIG_PULL_ENABLED")
+    );
     let growth_origin = std::env::var("GROWTH_ENTITLEMENT_API_ORIGIN")
         .unwrap_or_default()
         .trim()
@@ -49,6 +57,39 @@ fn main() {
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_FEEDBACK_OFFICIAL_ORIGINS={feedback_official_origins}"
     );
+    let client_config_origin = std::env::var("CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if !client_config_origin.is_empty() && client_config_origin != "https://growth.aitongban.cloud"
+    {
+        panic!("CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN 只允许空值或 https://growth.aitongban.cloud");
+    }
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CLIENT_CONFIG_ORIGIN={client_config_origin}"
+    );
+    let growth_config_public_key = std::env::var("CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if growth_config_public_key.contains('\r') || growth_config_public_key.contains('\n') {
+        panic!("CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 不得包含换行");
+    }
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_PUBLIC_KEY_B64={growth_config_public_key}"
+    );
+    let growth_config_key_id = std::env::var("CREATOROS_GROWTH_CONFIG_KEY_ID")
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if !growth_config_key_id.is_empty()
+        && !growth_config_key_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+    {
+        panic!("CREATOROS_GROWTH_CONFIG_KEY_ID 只能使用 ASCII locator");
+    }
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID={growth_config_key_id}");
 
     // [T-535] verdict 签名 seed 由 option_env! 编进 Rust 壳。显式声明环境依赖，避免
     // Cargo 增量复用“上一次没配 key”的壳二进制，制造公钥已烘焙但壳签不出 token 的白屏包。

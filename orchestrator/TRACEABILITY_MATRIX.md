@@ -114,6 +114,7 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | FR-575-03/04；HARD-575-001/002 | FLOW-575-01 | UI-575-001 | [Creator consumer CONTRACT](../docs/contracts/creator-entitlement-claim-consumer-v1.md)；PORT-575-001；AM final descriptor/vector pinned；Growth API-210..212/0028/durable readiness local BUILD PASS | TEST-575-02/05 | 三仓 local BUILD verified with capability off；live HTTPS E2E、部署、正式密钥与 release receipt 仍为完成门 |
 | FR-575-05..07；HARD-575-003 | FLOW-575-02 | UI-575-002 | API-575-001 + Growth T-069 API-AM-013/API-170 | TEST-575-03/05 | DEC-TSL-002 closed HARD-575-003：不新增 readiness wire，真实 closed 202 receipt 才成功 |
 
+| DEC-TSL-003；FR-575-08 | FLOW-575-03 | server-only config refresh / safe modelPolicy projection | [Creator config consumer CONTRACT](../docs/contracts/creator-client-config-consumer-v1.md)；API-575-002；Growth T-077 PASS[REV:d2895a3b6dac] | TEST-575-06 | 本地 BUILD PASS：fixture byte-pin、启动/激活/claim 接线、6h 抖动刷新、AES-GCM LKG 与 fail-closed 已验证；live HTTPS E2E、正式公钥/keyId、Mac beta 仍未完成 |
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链
@@ -158,4 +159,5 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 | DEC-TSL-001, FR-575-01, FR-575-02 | FLOW-575-01 | ENT-TSB-001 | UI-TSB-001, UI-TSB-002 | API-TSB-001 | TEST-575-01, TEST-575-04 | RISK |
 | FR-575-03, FR-575-04, HARD-575-001, HARD-575-002 | FLOW-575-01 | NONE | UI-575-001 | PORT-575-001 | TEST-575-02, TEST-575-05 | RISK |
 | DEC-TSL-001, FR-575-05, FR-575-06, FR-575-07, HARD-575-003 | FLOW-575-02 | NONE | UI-575-002 | API-575-001 | TEST-575-03, TEST-575-05 | RISK |
+| DEC-TSL-003, FR-575-08 | FLOW-575-03 | NONE | NONE | API-575-002 | TEST-575-06 | RISK |
 ```

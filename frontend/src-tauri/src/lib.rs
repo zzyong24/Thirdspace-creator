@@ -1747,6 +1747,22 @@ pub fn run() {
                 "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
                 option_env!("CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED").unwrap_or("0"),
             );
+            let client_config_pull_enabled = packaged_binary_flag(
+                "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+                option_env!("CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED").unwrap_or("0"),
+            );
+            let growth_client_config_origin = packaged_text(
+                "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
+                option_env!("CREATOROS_BUILTIN_GROWTH_CLIENT_CONFIG_ORIGIN").unwrap_or(""),
+            );
+            let growth_config_public_key_b64 = packaged_text(
+                "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+                option_env!("CREATOROS_BUILTIN_GROWTH_CONFIG_PUBLIC_KEY_B64").unwrap_or(""),
+            );
+            let growth_config_key_id = packaged_text(
+                "CREATOROS_GROWTH_CONFIG_KEY_ID",
+                option_env!("CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID").unwrap_or(""),
+            );
 
             // [T-372 L2] 壳层许可上下文:决策链(license.rs)经 Tauri command / 启动线程使用。
             let license_ctx = std::sync::Arc::new(license::ShellLicenseCtx {
@@ -1920,6 +1936,22 @@ pub fn run() {
                         "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
                         &product_feedback_submit_enabled,
                     )
+                    .env(
+                        "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+                        &client_config_pull_enabled,
+                    )
+                    .env(
+                        "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
+                        &growth_client_config_origin,
+                    )
+                    .env(
+                        "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+                        &growth_config_public_key_b64,
+                    )
+                    .env(
+                        "CREATOROS_GROWTH_CONFIG_KEY_ID",
+                        &growth_config_key_id,
+                    )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     // [T-391 H-key] master key **不再走 env 明文**;改经 ChildStdin(fd 0)传。
@@ -2072,6 +2104,22 @@ pub fn run() {
                     .env(
                         "NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
                         &product_feedback_submit_enabled,
+                    )
+                    .env(
+                        "CREATOROS_CLIENT_CONFIG_PULL_ENABLED",
+                        &client_config_pull_enabled,
+                    )
+                    .env(
+                        "CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN",
+                        &growth_client_config_origin,
+                    )
+                    .env(
+                        "CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+                        &growth_config_public_key_b64,
+                    )
+                    .env(
+                        "CREATOROS_GROWTH_CONFIG_KEY_ID",
+                        &growth_config_key_id,
                     )
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);

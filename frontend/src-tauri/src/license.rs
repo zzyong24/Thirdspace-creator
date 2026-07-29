@@ -2590,6 +2590,83 @@ pub fn sync_mirror_to_sidecar(ctx: &ShellLicenseCtx, snap: &LicenseSnapshot) {
     }
 }
 
+fn client_config_refresh_url(sidecar_port: u16) -> String {
+    format!("http://127.0.0.1:{sidecar_port}/api/v1/local/client-config")
+}
+
+fn client_config_pull_enabled() -> bool {
+    let built_in = option_env!("CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED")
+        .unwrap_or("0")
+        .trim();
+    if cfg!(debug_assertions) {
+        std::env::var("CREATOROS_CLIENT_CONFIG_PULL_ENABLED")
+            .ok()
+            .map(|value| value.trim() == "1")
+            .unwrap_or(built_in == "1")
+    } else {
+        built_in == "1"
+    }
+}
+
+fn client_config_refresh_interval_secs(sidecar_port: u16) -> u64 {
+    const SIX_HOURS_SECONDS: u64 = 6 * 60 * 60;
+    const MAX_JITTER_SECONDS: u64 = 15 * 60;
+    SIX_HOURS_SECONDS + u64::from(sidecar_port) % (MAX_JITTER_SECONDS + 1)
+}
+
+/// [T-575] 触发一次 server-only config.pull。
+///
+/// 这里只向当前启动随机端口发送空 POST，并携带同一启动级 handshake；所有授权 identity、
+/// ticket、Growth 验签和 LKG 都留在 sidecar 内。失败只影响产品配置刷新，不阻塞授权或主界面。
+pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx) {
+    if !client_config_pull_enabled() {
+        return;
+    }
+    let client = match reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+    {
+        Ok(client) => client,
+        Err(_) => return,
+    };
+    let response = client
+        .post(client_config_refresh_url(ctx.sidecar_port))
+        .header("Accept", "application/json")
+        .header("Content-Length", "0")
+        .header("x-creatoros-handshake", &ctx.handshake_token)
+        .send();
+    match response {
+        Ok(value) if value.status().is_success() => {
+            eprintln!("[client-config] 启动刷新完成");
+        }
+        Ok(value) => {
+            eprintln!(
+                "[client-config] 启动刷新未完成(status={})",
+                value.status().as_u16()
+            );
+        }
+        Err(_) => {
+            eprintln!("[client-config] 启动刷新暂不可用");
+        }
+    }
+}
+
+pub fn refresh_client_config_sidecar_async(ctx: std::sync::Arc<ShellLicenseCtx>) {
+    std::thread::spawn(move || refresh_client_config_sidecar(&ctx));
+}
+
+fn spawn_client_config_refresh_loop(ctx: std::sync::Arc<ShellLicenseCtx>) {
+    if !client_config_pull_enabled() {
+        return;
+    }
+    std::thread::spawn(move || loop {
+        std::thread::sleep(std::time::Duration::from_secs(
+            client_config_refresh_interval_secs(ctx.sidecar_port),
+        ));
+        refresh_client_config_sidecar(&ctx);
+    });
+}
+
 /// [T-372 L3] 读当前快照的码型 + 到期毫秒(心跳节奏的输入;无快照 = 未激活,按内测节奏,
 /// 激活落快照后下一轮自动收敛到真码型)。
 fn current_mode_and_expiry(ctx: &ShellLicenseCtx) -> (String, Option<i64>) {
@@ -2651,6 +2728,8 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
                 {
                     sync_mirror_to_sidecar(&ctx, &snap);
                 }
+                refresh_client_config_sidecar(&ctx);
+                spawn_client_config_refresh_loop(ctx.clone());
                 break;
             }
             std::thread::sleep(std::time::Duration::from_millis(500));
@@ -2875,10 +2954,14 @@ pub async fn license_activate(
     tauri::async_runtime::spawn_blocking(move || {
         // [T-391 H-native §7 去单点化·复算点②] 命令返回口再复算一次(与复算点①不同代码位置:
         // patch 掉 run_chain_and_persist 的门,这里仍复算降级)。
-        apply_runtime_gate(
+        let decision = apply_runtime_gate(
             run_chain_and_persist(&ctx, LicenseOp::Activate { code: &code }),
             &SysDebugProbe,
-        )
+        );
+        if decision.licensed {
+            refresh_client_config_sidecar_async(ctx);
+        }
+        decision
     })
     .await
     .map_err(|e| format!("激活任务执行失败: {e}"))
@@ -5129,5 +5212,34 @@ mod tests {
         )
         .expect("应成功");
         assert!(info.download_url.is_none());
+    }
+
+    #[test]
+    fn t575_client_config_refresh_is_bound_to_local_sidecar_and_startup() {
+        assert_eq!(
+            client_config_refresh_url(43127),
+            "http://127.0.0.1:43127/api/v1/local/client-config"
+        );
+        let source = include_str!("license.rs");
+        let startup = source
+            .split("pub fn startup_license_task")
+            .nth(1)
+            .expect("startup license task")
+            .split("pub fn gen_handshake_token")
+            .next()
+            .expect("startup task body");
+        assert!(
+            startup.contains("refresh_client_config_sidecar(&ctx);"),
+            "sidecar ready 后必须自动刷新产品配置"
+        );
+        assert!(
+            startup.contains("spawn_client_config_refresh_loop(ctx.clone());"),
+            "长时间运行必须启动独立的定时配置刷新"
+        );
+        let interval = client_config_refresh_interval_secs(43127);
+        assert!(
+            (21_600..=22_500).contains(&interval),
+            "刷新间隔应为 6 小时并带最多 15 分钟稳定抖动"
+        );
     }
 }
