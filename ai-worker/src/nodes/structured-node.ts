@@ -61,6 +61,8 @@ export interface RunStructuredNodeInput<T> {
   outputSchema?: FlexibleSchema<T>;
   /** 护栏:校验失败的最大重试次数(默认 2,Vercel SDK 透传 generateObject;文本兜底独立重试)。 */
   maxRetries?: number;
+  /** 限制单次响应 token，避免小型结构化任务被超长输出拖慢。 */
+  maxOutputTokens?: number;
 }
 
 export interface RunStructuredNodeResult<T> {
@@ -222,6 +224,9 @@ ${JSON.stringify(previousOutput)}`;
 export async function runStructuredNode<T>(
   input: RunStructuredNodeInput<T>,
 ): Promise<RunStructuredNodeResult<T>> {
+  const startedAt = Date.now();
+  let modelCalls = 0;
+  let lastPath: "structured" | "text_fallback" | "unknown" = "unknown";
   const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
   // T-513:只要声明了 completionPolicy/adapter，就不允许从无 snapshot 的 legacy 路径
   // 启动模型调用；普通旧 Skill 在宿主逐入口迁移期间仍走 official registry。
@@ -257,6 +262,14 @@ export async function runStructuredNode<T>(
   let firstSegmentCount: number | null = null;
   let finalSegmentCount: number | null = null;
   const repairReasons: CompletionPolicyViolation[] = [];
+  const logPerformance = (
+    status: "ok" | "error",
+    path: "structured" | "text_fallback" | "unknown",
+  ) => {
+    console.info(
+      `[structured-node] template=${template.id} status=${status} durationMs=${Date.now() - startedAt} path=${path} modelCalls=${modelCalls} inputTokens=${totalUsage.inputTokens ?? 0} outputTokens=${totalUsage.outputTokens ?? 0}`,
+    );
+  };
 
   const generateOnce = async (
     currentPrompt: string,
@@ -264,14 +277,18 @@ export async function runStructuredNode<T>(
     object: T;
     finishReason: string;
     usage: StructuredNodeUsage;
+    path: "structured" | "text_fallback";
   }> => {
     try {
+      lastPath = "structured";
+      modelCalls += 1;
       const result = await generateObject({
         model: input.model,
         system,
         prompt: currentPrompt,
         schema,
         maxRetries,
+        maxOutputTokens: input.maxOutputTokens,
         // [T-122] 防端点挂起把任务永远卡 running(见 MODEL_CALL_TIMEOUT_MS 注释)。
         abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
       });
@@ -279,6 +296,7 @@ export async function runStructuredNode<T>(
         object: result.object as T,
         finishReason: String(result.finishReason),
         usage: normalizeUsage(result.usage),
+        path: "structured",
       };
     } catch (err) {
       // 只对「模型没产出结构化对象」降级(端点 tool-mode flaky);其它错误(鉴权/网络)照常抛。
@@ -293,17 +311,20 @@ export async function runStructuredNode<T>(
       const validator = asSchema(schema);
       const validate = validator.validate?.bind(validator);
       if (!validate) throw err;
+      lastPath = "text_fallback";
       let lastError: unknown = err;
-      const textAttempts = Math.max(maxRetries, 1) + 1;
+      const textAttempts = Math.max(maxRetries, 0) + 1;
       let fallbackUsage = normalizeUsage(
         (err as { usage?: LanguageModelUsage }).usage,
       );
       for (let i = 0; i < textAttempts; i++) {
+        modelCalls += 1;
         const result = await generateText({
           model: input.model,
           system,
           prompt: currentPrompt,
           maxRetries: 0,
+          maxOutputTokens: input.maxOutputTokens,
           abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
         });
         fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
@@ -315,6 +336,7 @@ export async function runStructuredNode<T>(
               object: validated.value as T,
               finishReason: String(result.finishReason),
               usage: fallbackUsage,
+              path: "text_fallback",
             };
           }
           lastError = validated.error;
@@ -328,93 +350,104 @@ export async function runStructuredNode<T>(
     }
   };
 
-  let currentPrompt = prompt;
-  for (let repairAttempt = 0; repairAttempt <= repairBudget; repairAttempt += 1) {
-    const generated = await generateOnce(currentPrompt);
-    attempts.push({
-      finishReason: generated.finishReason,
-      usage: generated.usage,
-      kind: repairAttempt === 0 ? "initial" : "repair",
-    });
-    totalUsage = addUsage(totalUsage, generated.usage);
-
-    let violations: CompletionPolicyViolation[] = [];
-    let evaluation = null;
-    if (hasEffectiveScope) {
-      evaluation = evaluateCompletionPolicy(template.id, generated.object);
-      if (evaluation) {
-        firstSegmentCount ??= evaluation.segmentCount;
-        finalSegmentCount = evaluation.segmentCount;
-        violations = [...evaluation.errors];
-      }
-    }
-    if (
-      generated.finishReason === "length" ||
-      generated.finishReason === "content-filter" ||
-      generated.finishReason === "error"
+  try {
+    let currentPrompt = prompt;
+    for (
+      let repairAttempt = 0;
+      repairAttempt <= repairBudget;
+      repairAttempt += 1
     ) {
-      violations.push({
-        code: "OUTPUT_INCOMPLETE",
-        path: "finishReason",
-        message: `模型终止原因 ${generated.finishReason} 表明输出可能未完成`,
+      const generated = await generateOnce(currentPrompt);
+      lastPath = generated.path;
+      attempts.push({
+        finishReason: generated.finishReason,
+        usage: generated.usage,
+        kind: repairAttempt === 0 ? "initial" : "repair",
       });
-    }
+      totalUsage = addUsage(totalUsage, generated.usage);
 
-    if (violations.length === 0) {
-      const enforced = hasEffectiveScope
-        ? enforceCompletionPolicy(template.id, generated.object)
-        : null;
-      return {
-        object: generated.object,
-        generation: {
-          finishReason: generated.finishReason,
-          usage: totalUsage,
-          attempts,
-        },
-        ...(enforced
-          ? {
-              validation: {
-                status: "valid" as const,
-                errors: [] as [],
-                policySnapshot: {
-                  policy: structuredClone(enforced.policy),
-                  adapter: structuredClone(enforced.adapter),
-                },
-                originalSegmentCount:
-                  firstSegmentCount ?? enforced.segmentCount,
-                finalSegmentCount:
-                  finalSegmentCount ?? enforced.segmentCount,
-                repairAttemptsUsed: repairAttempt,
-                repairReasons,
-              },
-            }
-          : {}),
-      };
-    }
+      let violations: CompletionPolicyViolation[] = [];
+      let evaluation = null;
+      if (hasEffectiveScope) {
+        evaluation = evaluateCompletionPolicy(template.id, generated.object);
+        if (evaluation) {
+          firstSegmentCount ??= evaluation.segmentCount;
+          finalSegmentCount = evaluation.segmentCount;
+          violations = [...evaluation.errors];
+        }
+      }
+      if (
+        generated.finishReason === "length" ||
+        generated.finishReason === "content-filter" ||
+        generated.finishReason === "error"
+      ) {
+        violations.push({
+          code: "OUTPUT_INCOMPLETE",
+          path: "finishReason",
+          message: `模型终止原因 ${generated.finishReason} 表明输出可能未完成`,
+        });
+      }
 
-    repairReasons.push(...violations);
-    if (repairAttempt >= repairBudget) {
-      if (evaluation) {
-        throw new CompletionPolicyRuntimeError(
-          "COMPLETION_POLICY_REPAIR_EXHAUSTED",
-          `skill "${template.id}" 输出未满足完整性策略，自动修复 ${repairBudget} 次后仍失败；请重试生成`,
-          violations,
-          firstSegmentCount,
-          finalSegmentCount,
-          undefined,
-          {
+      if (violations.length === 0) {
+        const enforced = hasEffectiveScope
+          ? enforceCompletionPolicy(template.id, generated.object)
+          : null;
+        logPerformance("ok", generated.path);
+        return {
+          object: generated.object,
+          generation: {
             finishReason: generated.finishReason,
             usage: totalUsage,
             attempts,
           },
+          ...(enforced
+            ? {
+                validation: {
+                  status: "valid" as const,
+                  errors: [] as [],
+                  policySnapshot: {
+                    policy: structuredClone(enforced.policy),
+                    adapter: structuredClone(enforced.adapter),
+                  },
+                  originalSegmentCount:
+                    firstSegmentCount ?? enforced.segmentCount,
+                  finalSegmentCount:
+                    finalSegmentCount ?? enforced.segmentCount,
+                  repairAttemptsUsed: repairAttempt,
+                  repairReasons,
+                },
+              }
+            : {}),
+        };
+      }
+
+      repairReasons.push(...violations);
+      if (repairAttempt >= repairBudget) {
+        if (evaluation) {
+          throw new CompletionPolicyRuntimeError(
+            "COMPLETION_POLICY_REPAIR_EXHAUSTED",
+            `skill "${template.id}" 输出未满足完整性策略，自动修复 ${repairBudget} 次后仍失败；请重试生成`,
+            violations,
+            firstSegmentCount,
+            finalSegmentCount,
+            undefined,
+            {
+              finishReason: generated.finishReason,
+              usage: totalUsage,
+              attempts,
+            },
+          );
+        }
+        throw new Error(
+          `结构化节点:模型输出未完整结束(${generated.finishReason})`,
         );
       }
-      throw new Error(
-        `结构化节点:模型输出未完整结束(${generated.finishReason})`,
-      );
+      currentPrompt = repairPrompt(prompt, violations, generated.object);
     }
-    currentPrompt = repairPrompt(prompt, violations, generated.object);
-  }
 
-  throw new Error("结构化节点:不可达的 repair 状态");
+    throw new Error("结构化节点:不可达的 repair 状态");
+  } catch (error) {
+    logPerformance("error", lastPath);
+    throw error;
+  }
 }

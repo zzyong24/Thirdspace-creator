@@ -63,6 +63,8 @@ const REGISTERED_SKILL_IDS: ReadonlySet<string> = new Set([
   "chatbox.calibration",
   "chatbox.positioning",
   "chatbox.review",
+  "intelligence.topic-decompose",
+  "intelligence.topic-from-decomposition",
 ]);
 
 // SettingsService (foundation §5.3) — RequestContext-taking methods. Settings has

@@ -295,7 +295,9 @@ export interface MultimodalModelState {
     // [T-084a] 联网搜索(素材搜集前置真检索;未配 → 素材来自模型记忆需核实)。
     | "web.search"
     // [T-239b] 备用对话模型(主模型可重试错误耗尽时接管一次;未配 → 现状报错)。
-    | "chat.fallback";
+    | "chat.fallback"
+    // [T-589] 内容雷达逐字稿拆解专用文本模型(未配 → 兼容 topic.generate / 默认模型)。
+    | "intelligence.topic-decompose";
   /** Free-form provider name (the dispatch switch; "minimax"/"siliconflow" today, extensible). */
   readonly provider: string;
   /** Free-form model id (e.g. image-01 / video-01 / FunAudioLLM/SenseVoiceSmall). */
@@ -354,6 +356,8 @@ export interface MultimodalModelsState {
    * 现状报错(诚实,不静默换模型)。模型用户可配的铁律:绝不写死 fallback 厂商。
    */
   readonly fallback: MultimodalModelState;
+  /** [T-589] 内容雷达拆解专用模型；选配，未配继续走既有选题模型解析链。 */
+  readonly radar: MultimodalModelState;
 }
 
 // ---------------------------------------------------------------------------

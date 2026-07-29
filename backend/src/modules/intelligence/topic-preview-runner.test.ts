@@ -113,6 +113,7 @@ describe("T-482 内容雷达转为我的选题", () => {
         idempotencyKey: "topic-preview-1",
       });
       expect(createTopic).not.toHaveBeenCalled();
+      let firstReusableDecomposition: unknown = "not-called";
 
       await runIntelligenceTopicPreviewTask(
         ctx,
@@ -122,24 +123,28 @@ describe("T-482 内容雷达转为我的选题", () => {
           intelligence,
           workerId: () => "topic-worker",
           generator: {
-            generate: async (_ctx, input) => ({
-              hook: "先反驳参数决定论制造认知反差",
-              structureSteps: [
-                "指出常见误区",
-                "拆解业务输入与责任边界",
-                "回到模型选择",
-              ],
-              coreClaims: ["工作流稳定性比模型参数更先决定落地效果"],
-              reusablePattern: "反常识开场—拆必要条件—给判断顺序",
-              factRisks: [],
-              title: "参数不重要，工作流才是 AI 落地的分水岭",
-              angle: `从“${input.positioning.oneLiner}”切入`,
-              differentiation: "不做参数盘点，只拆业务中的责任边界",
-              sourceSummary: "来源用参数与工作流的反差解释 AI 落地",
-            }),
+            generate: async (_ctx, input) => {
+              firstReusableDecomposition = input.reusableDecomposition;
+              return {
+                hook: "先反驳参数决定论制造认知反差",
+                structureSteps: [
+                  "指出常见误区",
+                  "拆解业务输入与责任边界",
+                  "回到模型选择",
+                ],
+                coreClaims: ["工作流稳定性比模型参数更先决定落地效果"],
+                reusablePattern: "反常识开场—拆必要条件—给判断顺序",
+                factRisks: [],
+                title: "参数不重要，工作流才是 AI 落地的分水岭",
+                angle: `从“${input.positioning.oneLiner}”切入`,
+                differentiation: "不做参数盘点，只拆业务中的责任边界",
+                sourceSummary: "来源用参数与工作流的反差解释 AI 落地",
+              };
+            },
           },
         },
       );
+      expect(firstReusableDecomposition).toBeNull();
       const ready = await intelligence.getItem(ctx, detail.item.id);
       expect(ready.transforms[0]?.outputSnapshot).toMatchObject({
         title: "参数不重要，工作流才是 AI 落地的分水岭",
@@ -156,6 +161,50 @@ describe("T-482 内容雷达转为我的选题", () => {
         taskErrorMessage: null,
       });
       expect(createTopic).not.toHaveBeenCalled();
+
+      const regenerated = await intelligence.startTopicPreview(ctx, {
+        itemId: detail.item.id,
+        sourceSnapshotId: detail.snapshots[0]!.id,
+        positioningVersionId: "positioning-v1",
+        idempotencyKey: "topic-preview-2",
+      });
+      let reusedDecomposition: unknown = null;
+      await runIntelligenceTopicPreviewTask(
+        ctx,
+        { taskId: regenerated.task.id },
+        {
+          tasks,
+          intelligence,
+          workerId: () => "topic-worker-repeat",
+          generator: {
+            generate: async (_ctx, input) => {
+              reusedDecomposition = input.reusableDecomposition;
+              return {
+                hook: "沿用首轮拆解钩子",
+                structureSteps: ["指出常见误区", "给出判断顺序"],
+                coreClaims: ["工作流优先于参数选择"],
+                reusablePattern: "反常识开场—给判断顺序",
+                factRisks: [],
+                title: "重新生成的选题",
+                angle: "换一个业务落地切口",
+                differentiation: "改用失败复盘案例",
+                sourceSummary: "复用同一来源拆解证据",
+              };
+            },
+          },
+        },
+      );
+      expect(reusedDecomposition).toMatchObject({
+        hook: "先反驳参数决定论制造认知反差",
+        structureSteps: [
+          "指出常见误区",
+          "拆解业务输入与责任边界",
+          "回到模型选择",
+        ],
+        coreClaims: ["工作流稳定性比模型参数更先决定落地效果"],
+        reusablePattern: "反常识开场—拆必要条件—给判断顺序",
+        factRisks: [],
+      });
 
       const confirmed = await intelligence.confirmTopic(
         ctx,

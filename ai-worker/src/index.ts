@@ -416,6 +416,11 @@ export {
   intelligenceTopicDecomposeSchema,
   type IntelligenceTopicDecomposeOutput,
 } from "./prompt/templates/intelligence-topic-decompose";
+export {
+  INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
+  intelligenceTopicFromDecompositionSchema,
+  type IntelligenceTopicFromDecompositionOutput,
+} from "./prompt/templates/intelligence-topic-from-decomposition";
 // [T-235b] 热点信源信号抽取(trend.extract)外置模板 + 输出 schema —— 信源页正文 → 结构化信号
 // (无热度不编)。schema 定义在本包(有 zod);backend 采集器引类型,无需直引 zod。
 export {

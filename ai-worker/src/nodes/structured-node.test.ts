@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
 import { z } from "zod";
@@ -46,17 +46,27 @@ describe("runStructuredNode 跨模型健壮性", () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => textResult(json),
     });
-    const { object } = await runStructuredNode<z.infer<typeof schema>>({
-      model,
-      template: TEMPLATE,
-      facets: { t: "go" },
-      outputSchema: schema,
-    });
-    expect(object.hooks).toHaveLength(1);
-    expect(object.hooks[0]?.text).toBe("反直觉钩子");
-    expect(object.cases[0]?.title).toBe("案例X");
-    expect(object.dataPoints[0]?.stat).toBe("28%");
-    expect(object.quotes[0]?.line).toBe("金句Y");
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    try {
+      const { object } = await runStructuredNode<z.infer<typeof schema>>({
+        model,
+        template: TEMPLATE,
+        facets: { t: "go" },
+        outputSchema: schema,
+      });
+      expect(object.hooks).toHaveLength(1);
+      expect(object.hooks[0]?.text).toBe("反直觉钩子");
+      expect(object.cases[0]?.title).toBe("案例X");
+      expect(object.dataPoints[0]?.stat).toBe("28%");
+      expect(object.quotes[0]?.line).toBe("金句Y");
+      expect(log).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^\[structured-node\] template=test\.structured status=ok durationMs=\d+ path=text_fallback modelCalls=\d+ inputTokens=\d+ outputTokens=\d+$/,
+        ),
+      );
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("generateObject 落空 + 文本也无合 schema 的 JSON → 抛错(不假成功)", async () => {
@@ -71,6 +81,26 @@ describe("runStructuredNode 跨模型健壮性", () => {
         outputSchema: schema,
       }),
     ).rejects.toThrow();
+  });
+
+  it("交互调用显式 maxRetries=0 时文本兜底只请求一次，避免失败路径成倍放大", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return textResult("不是 JSON");
+      },
+    });
+    await expect(
+      runStructuredNode({
+        model,
+        template: TEMPLATE,
+        facets: { t: "go" },
+        outputSchema: schema,
+        maxRetries: 0,
+      }),
+    ).rejects.toThrow();
+    expect(calls).toBe(2);
   });
 });
 

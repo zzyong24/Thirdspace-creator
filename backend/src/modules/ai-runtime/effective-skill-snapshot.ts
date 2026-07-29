@@ -53,6 +53,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "cover.brief",
   "favorites.triage",
   "intelligence.topic-decompose",
+  "intelligence.topic-from-decomposition",
   "knowledge.classify",
   "knowledge.distill",
   "knowledge.relate",

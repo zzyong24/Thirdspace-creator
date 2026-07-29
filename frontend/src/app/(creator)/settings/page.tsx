@@ -182,6 +182,8 @@ export default async function SettingsRoutePage() {
         search: multimodalRow("web.search"),
         // [T-239b] 备用对话模型(未配 = 主模型重试耗尽后现状报错,不静默换模型)。
         fallback: multimodalRow("chat.fallback"),
+        // [T-589] 内容雷达拆解专用模型(未配 = 兼容 topic.generate / 默认文本模型)。
+        radar: multimodalRow("intelligence.topic-decompose"),
       };
     } catch {
       // [FE-H02] listModels 读失败 → 文本模型卡诚实显「未配置」(model 保持 UNCONFIGURED_MODEL);

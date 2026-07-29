@@ -396,3 +396,4 @@
 {"ts":"2026-07-29T01:16:31.191Z","actor":"taskctl","action":"complete","task":"T-588","evidence":"commit 0da5596a；雷达定向 29 tests PASS；frontend typecheck、boundary、reconcile PASS","sha_before":"cf7cfafd4b74","sha_after":"a572e31ddf12"}
 {"ts":"2026-07-29T01:16:31.398Z","actor":"taskctl","action":"complete","task":"T-586","evidence":"commit 7189c25d；macOS runtime compatibility 5 tests PASS；frontend typecheck、boundary、reconcile PASS","sha_before":"a572e31ddf12","sha_after":"273b84c7e07e"}
 {"ts":"2026-07-29T01:16:31.613Z","actor":"taskctl","action":"complete","task":"T-578","evidence":"commit 1b51791a；定位相关 backend 161 tests、frontend 6 tests PASS；双端 typecheck、boundary、reconcile PASS","sha_before":"273b84c7e07e","sha_after":"9bd11007c2e0"}
+{"ts":"2026-07-29T03:48:04.154Z","actor":"taskctl","action":"start","task":"T-589","sha_before":"d4c5b8161c7f","sha_after":"cfaae4d66313"}

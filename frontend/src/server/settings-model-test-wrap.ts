@@ -389,6 +389,16 @@ export async function runModelConnectionTest(
         const r = await textModelProbe(spec, deps.probeTextModel);
         return { ...r, provider: spec.apiFormat, model: spec.model };
       }
+      case "intelligence.topic-decompose": {
+        const spec = await deps.resolveDedicatedLlm(ctx, capability);
+        if (!spec) {
+          return unconfigured(
+            "内容雷达拆解模型尚未专配；当前仍会复用既有选题/默认模型。",
+          );
+        }
+        const r = await textModelProbe(spec, deps.probeTextModel);
+        return { ...r, provider: spec.apiFormat, model: spec.model };
+      }
       case "asset.classify": {
         const spec = await deps.resolveMultimodal(ctx, capability);
         // 视觉卡走 OpenAI 兼容 chat:纯文本 1 token 补全足以校验鉴权 + 模型可达。

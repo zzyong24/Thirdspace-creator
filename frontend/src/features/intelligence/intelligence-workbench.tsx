@@ -643,6 +643,12 @@ export function sourceVerificationErrorMessage(
 
 const DETAIL_WIDTH_KEY = "creatoros:intelligence:detail-width";
 const MIN_DETAIL_WIDTH = 320;
+// 结构化主请求 + 文本兜底各自最多 90 秒，再给队列/网络回显留出余量。
+const TOPIC_PREVIEW_POLL_TIMEOUT_MS = 240_000;
+
+function topicPreviewPollDelayMs(attempt: number): number {
+  return Math.min(400 + attempt * 100, 2_500);
+}
 const MAX_DETAIL_WIDTH = 640;
 
 function clampDetailWidth(value: number): number {
@@ -802,7 +808,14 @@ export function IntelligenceWorkbench({
   const [removalError, setRemovalError] = React.useState<string | null>(null);
   const watchedRunIds = React.useRef<Set<string>>(new Set());
   const topicGenerationInFlight = React.useRef(false);
+  const activeDetailItemId = React.useRef<string | null>(
+    initialDetail?.item.id ?? null,
+  );
   const itemScopeRequestId = React.useRef(0);
+
+  React.useEffect(() => {
+    activeDetailItemId.current = detail?.item.id ?? null;
+  }, [detail?.item.id]);
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -1273,11 +1286,26 @@ export function IntelligenceWorkbench({
           : current,
       );
       setNotice("选题候选正在结合当前定位生成，完成前不会写入选题池。");
+      // 入队成功后不再锁住整个详情面板；只保留“生成中”状态并在后台跟踪终态。
+      setBusy(false);
       let completed = false;
-      for (let attempt = 0; attempt < 20; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 400));
+      const pollStartedAt = Date.now();
+      for (
+        let attempt = 0;
+        Date.now() - pollStartedAt < TOPIC_PREVIEW_POLL_TIMEOUT_MS;
+        attempt += 1
+      ) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, topicPreviewPollDelayMs(attempt)),
+        );
+        if (activeDetailItemId.current !== detail.item.id) {
+          completed = true;
+          break;
+        }
         const refreshed = await api.getItem(detail.item.id);
-        setDetail(refreshed);
+        setDetail((current) =>
+          current?.item.id === detail.item.id ? refreshed : current,
+        );
         const currentTransform = refreshed.transforms.find(
           (transform) => transform.id === started.transform.id,
         );

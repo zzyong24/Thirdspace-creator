@@ -9,15 +9,15 @@ import type { PromptTemplate } from "../template";
  * 复用结构证据，但不得把来源原文当成自己的稿件。
  */
 export const intelligenceTopicDecomposeSchema = z.object({
-  hook: z.string().min(1),
-  structureSteps: z.array(z.string().min(1)).min(2),
-  coreClaims: z.array(z.string().min(1)).min(1),
-  reusablePattern: z.string().min(1),
-  factRisks: z.array(z.string().min(1)).default([]),
-  title: z.string().min(1),
-  angle: z.string().min(1),
-  differentiation: z.string().min(1),
-  sourceSummary: z.string().min(1),
+  hook: z.string().min(1).max(300),
+  structureSteps: z.array(z.string().min(1).max(300)).min(2).max(8),
+  coreClaims: z.array(z.string().min(1).max(300)).min(1).max(8),
+  reusablePattern: z.string().min(1).max(500),
+  factRisks: z.array(z.string().min(1).max(300)).max(12).default([]),
+  title: z.string().min(1).max(80),
+  angle: z.string().min(1).max(300),
+  differentiation: z.string().min(1).max(300),
+  sourceSummary: z.string().min(1).max(300),
 });
 
 export type IntelligenceTopicDecomposeOutput = z.infer<

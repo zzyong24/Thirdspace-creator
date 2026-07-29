@@ -52,6 +52,7 @@ import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
 // [T-212c] 对标爆款拆解 skill（benchmark.teardown）—— 爆款拆解 → 换角度转化选题（generateObject 绑结构化 schema）。
 import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
 import { INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE } from "./templates/intelligence-topic-decompose";
+import { INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE } from "./templates/intelligence-topic-from-decomposition";
 // [T-212d] 防茧房校准 skill（topic.preference）—— 淘汰原因批 → 结构化偏好信号（≥3 硬门在 backend 护栏强制）。
 import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-distill";
 // [T-235b] 热点信源信号抽取 skill(trend.extract)—— 信源页正文 → 结构化信号(无热度不编,诚实门)。
@@ -129,6 +130,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   BENCHMARK_TEARDOWN_TEMPLATE,
   // [T-482] 内容雷达：只有用户手动转写完成后，才按完整逐字稿拆结构并生成本账号选题候选。
   INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+  // [T-589] 同一逐字稿已有拆解证据时，只重新生成选题字段，避免重复发送整篇逐字稿。
+  INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
   // [T-212d] 防茧房校准:淘汰原因批 → 结构化偏好信号(avoid/prefer + keyword + supportingCount)。
   TOPIC_PREFERENCE_DISTILL_TEMPLATE,
   // [T-235b] 热点信源信号抽取:信源页正文 → 结构化信号列表(无热度/链接/时间一律 null 不编)。

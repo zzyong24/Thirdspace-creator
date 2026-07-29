@@ -161,6 +161,13 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false as const,
     },
+    radar: {
+      capability: "intelligence.topic-decompose" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
   },
   douyinAccount: { loggedIn: false },
 };
@@ -513,6 +520,39 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     ).toBeNull();
   });
 
+  it("[T-589] 内容雷达可保存低延迟专用文本模型", async () => {
+    const doc = renderDialog();
+    fireEvent.change(
+      doc.querySelector(
+        '[data-slot="multimodal-radar-provider-input"]',
+      ) as HTMLInputElement,
+      { target: { value: "deepseek" } },
+    );
+    fireEvent.change(
+      doc.querySelector(
+        '[data-slot="multimodal-radar-model-input"]',
+      ) as HTMLInputElement,
+      { target: { value: "deepseek-chat" } },
+    );
+    fireEvent.click(
+      doc.querySelector(
+        '[data-slot="multimodal-radar-save"]',
+      ) as HTMLButtonElement,
+    );
+
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    expect(mockClient.putModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { capability: "intelligence.topic-decompose" },
+        body: expect.objectContaining({
+          provider: "deepseek",
+          modelName: "deepseek-chat",
+          apiFormat: "anthropic",
+        }),
+      }),
+    );
+  });
+
   // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
 
   // [T-379] 生图去 MiniMax 唯一:provider 候选加 openai(OpenAI 兼容 images API,中转站
@@ -632,6 +672,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         review: VM.multimodalModels.review,
         search: VM.multimodalModels.search,
         fallback: VM.multimodalModels.fallback,
+        radar: VM.multimodalModels.radar,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);

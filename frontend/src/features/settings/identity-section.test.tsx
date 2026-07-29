@@ -164,6 +164,13 @@ function buildStubViewModel(): SettingsViewModel {
       baseUrl: "",
       hasSecret: false as const,
     },
+    radar: {
+      capability: "intelligence.topic-decompose" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     douyinAccount: { loggedIn: false },
   };

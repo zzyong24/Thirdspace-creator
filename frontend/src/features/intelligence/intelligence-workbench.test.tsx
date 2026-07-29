@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -197,6 +198,7 @@ function api(): RadarApi {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
   refresh.mockReset();
   push.mockReset();
@@ -1566,6 +1568,99 @@ describe("T-482 内容雷达工作区", () => {
       await screen.findByDisplayValue("完整候选标题"),
     ).toBeInTheDocument();
     expect(screen.getByText("反差开场")).toBeInTheDocument();
+  });
+
+  it("[T-589] 模型超过 8 秒仍自动跟踪到终态，不要求用户手动刷新", async () => {
+    vi.useFakeTimers();
+    const stub = api();
+    const readyDetail: RadarItemDetail = {
+      ...detail,
+      snapshots: [
+        {
+          id: "snapshot-1",
+          title: "真实作品",
+          capturedAt: "2026-07-23T12:00:00.000Z",
+          finalUrl: detail.item.canonicalUrl,
+        },
+      ],
+      transcript: {
+        itemId: detail.item.id,
+        status: "done",
+        text: "完整逐字稿",
+        errorCode: null,
+      },
+    };
+    const pending: RadarItemDetail = {
+      ...readyDetail,
+      transforms: [
+        {
+          id: "transform-slow",
+          status: "candidate",
+          taskStatus: "running",
+          taskErrorCode: null,
+          taskErrorMessage: null,
+          outputSnapshot: null,
+          targetTopicId: null,
+        },
+      ],
+    };
+    const completed: RadarItemDetail = {
+      ...readyDetail,
+      transforms: [
+        {
+          ...pending.transforms[0]!,
+          taskStatus: "succeeded",
+          outputSnapshot: {
+            title: "慢模型也会自动回显",
+            angle: "真实切入角度",
+            differentiation: "本账号差异化",
+            sourceSummary: "真实摘要",
+            hook: "反差开场",
+            structureSteps: ["提出问题", "拆解原因"],
+          },
+        },
+      ],
+    };
+    stub.previewTopic = vi.fn().mockResolvedValue({
+      transform: {
+        id: "transform-slow",
+        status: "candidate",
+        outputSnapshot: null,
+        targetTopicId: null,
+      },
+      task: { id: "task-slow", status: "queued" },
+    });
+    let reads = 0;
+    stub.getItem = vi.fn().mockImplementation(async () => {
+      reads += 1;
+      return reads > 20 ? completed : pending;
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={readyDetail}
+        positioningVersionId="positioning-v1"
+        api={stub}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "生成选题候选" }),
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(90_000);
+    });
+
+    expect(reads).toBeGreaterThan(20);
+    expect(
+      screen.getByDisplayValue("慢模型也会自动回显"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "刷新生成结果" }),
+    ).not.toBeInTheDocument();
   });
 
   it("[T-579] 生成任务失败后停止假进度，显示真实错误并允许重新生成", async () => {

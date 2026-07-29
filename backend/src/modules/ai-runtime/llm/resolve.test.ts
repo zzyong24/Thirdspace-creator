@@ -1,12 +1,69 @@
 import { describe, it, expect } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
-import { resolveLlmConfig } from "./resolve";
+import {
+  resolveLlmConfig,
+  resolveLlmConfigWithCapabilityFallback,
+} from "./resolve";
 import { LlmCredentialError } from "./provider";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveLlmConfig — tier 1 DB row", () => {
+  it("内容雷达优先专用模型，未专配时兼容既有 topic.generate 覆盖", async () => {
+    const rows = {
+      "intelligence.topic-decompose": {
+        provider: "fast",
+        modelName: "fast-topic-model",
+        baseUrl: "https://fast.example.com/v1",
+        apiFormat: "openai_chat" as const,
+        secretReference: "",
+        secretValue: "sk-fast",
+        settings: {},
+      },
+      "topic.generate": {
+        provider: "legacy",
+        modelName: "legacy-topic-model",
+        baseUrl: "https://legacy.example.com/v1",
+        apiFormat: "anthropic" as const,
+        secretReference: "",
+        secretValue: "sk-legacy",
+        settings: {},
+      },
+    };
+    const deps = {
+      getModelConfig: async (_c: RequestContext, capability: string) =>
+        rows[capability as keyof typeof rows] ?? null,
+      env: {},
+    };
+    expect(
+      (
+        await resolveLlmConfigWithCapabilityFallback(
+          ctx,
+          "intelligence.topic-decompose",
+          "topic.generate",
+          deps,
+        )
+      ).model,
+    ).toBe("fast-topic-model");
+    expect(
+      (
+        await resolveLlmConfigWithCapabilityFallback(
+          ctx,
+          "intelligence.topic-decompose",
+          "topic.generate",
+          {
+            ...deps,
+            getModelConfig: async (_c, capability) =>
+              capability === "topic.generate"
+                ? rows["topic.generate"]
+                : null,
+          },
+        )
+      ).model,
+    ).toBe("legacy-topic-model");
+  });
+
   it("uses the DB row when its secretReference resolves non-empty", async () => {
     const cfg = await resolveLlmConfig(ctx, "planning.thesis", {
       getModelConfig: async () => ({

@@ -60,6 +60,50 @@ type SnapshotRow = typeof sourceSnapshots.$inferSelect;
 type TransformRow = typeof intelligenceTransforms.$inferSelect;
 type MigrationLedgerRow = typeof intelligenceMigrationLedgers.$inferSelect;
 
+export interface ReusableTopicDecomposition {
+  hook: string;
+  structureSteps: string[];
+  coreClaims: string[];
+  reusablePattern: string;
+  factRisks: string[];
+}
+
+function reusableTopicDecomposition(
+  snapshot: unknown,
+  transcriptHash: string,
+): ReusableTopicDecomposition | null {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+  const value = snapshot as Record<string, unknown>;
+  const nonEmptyStrings = (candidate: unknown, min = 1) =>
+    Array.isArray(candidate) &&
+    candidate.length >= min &&
+    candidate.every(
+      (entry) => typeof entry === "string" && entry.trim().length > 0,
+    );
+  if (
+    value.transcriptHash !== transcriptHash ||
+    value.decompositionVersion !== "v1" ||
+    typeof value.hook !== "string" ||
+    !value.hook.trim() ||
+    !nonEmptyStrings(value.structureSteps, 2) ||
+    !nonEmptyStrings(value.coreClaims) ||
+    typeof value.reusablePattern !== "string" ||
+    !value.reusablePattern.trim() ||
+    !nonEmptyStrings(value.factRisks, 0)
+  ) {
+    return null;
+  }
+  return {
+    hook: value.hook,
+    structureSteps: value.structureSteps as string[],
+    coreClaims: value.coreClaims as string[],
+    reusablePattern: value.reusablePattern,
+    factRisks: value.factRisks as string[],
+  };
+}
+
 type SourceType =
   | "creator_profile"
   | "favorites_folder"
@@ -3387,6 +3431,7 @@ export function createIntelligenceService(
         provider: string | null;
         model: string | null;
       };
+      reusableDecomposition: ReusableTopicDecomposition | null;
     }> {
       const accountId = await account(
         ctx,
@@ -3431,6 +3476,27 @@ export function createIntelligenceService(
         );
       }
       const transcriptText = transcript.text.trim();
+      const transcriptHash = `sha256:${hash(transcriptText)}`;
+      const priorTransforms = await db
+        .select({ outputSnapshot: intelligenceTransforms.outputSnapshot })
+        .from(intelligenceTransforms)
+        .where(
+          and(
+            eq(intelligenceTransforms.itemId, item.id),
+            eq(intelligenceTransforms.userId, ctx.userId),
+            eq(intelligenceTransforms.accountId, accountId),
+          ),
+        )
+        .orderBy(desc(intelligenceTransforms.createdAt));
+      const reusableDecomposition =
+        priorTransforms
+          .map((row) =>
+            reusableTopicDecomposition(row.outputSnapshot, transcriptHash),
+          )
+          .find(
+            (candidate): candidate is ReusableTopicDecomposition =>
+              candidate !== null,
+          ) ?? null;
       return {
         transformId: transform.id,
         item: toItem(item),
@@ -3438,11 +3504,12 @@ export function createIntelligenceService(
         positioning,
         transcript: {
           text: transcriptText,
-          hash: `sha256:${hash(transcriptText)}`,
+          hash: transcriptHash,
           completedAt: transcript.completedAt,
           provider: transcript.provider,
           model: transcript.model,
         },
+        reusableDecomposition,
       };
     },
 

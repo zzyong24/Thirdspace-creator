@@ -489,6 +489,7 @@ import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modul
 import {
   resolveLlmConfig,
   resolveDedicatedLlmConfig,
+  resolveLlmConfigWithCapabilityFallback,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
@@ -5814,11 +5815,51 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 generate: async (c, target) => {
                   const {
                     INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                    INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
                     intelligenceTopicDecomposeSchema,
+                    intelligenceTopicFromDecompositionSchema,
                     modelFor,
                     runStructuredNode,
                   } = await import("@creatoros/ai-worker");
-                  const spec = await resolveModelSpec(c, "topic.generate");
+                  const spec = await resolveTopicPreviewModelSpec(c);
+                  const positioning = [
+                    target.positioning.oneLiner,
+                    target.positioning.keywords.length > 0
+                      ? `关键词：${target.positioning.keywords.join("、")}`
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join("\n");
+                  if (target.reusableDecomposition) {
+                    const result = await runWithResolvedEffectiveSkills(
+                      c,
+                      ["intelligence.topic-from-decomposition"],
+                      () =>
+                        runStructuredNode({
+                          model: modelFor(spec),
+                          template:
+                            INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
+                          facets: {
+                            positioning,
+                            sourceTitle: target.item.title,
+                            sourceAuthor:
+                              target.item.authorName ?? target.item.platform,
+                            sourceUrl: target.item.canonicalUrl,
+                            decomposition: JSON.stringify(
+                              target.reusableDecomposition,
+                            ),
+                          },
+                          maxRetries: 0,
+                          maxOutputTokens: 900,
+                        }),
+                    );
+                    return {
+                      ...target.reusableDecomposition,
+                      ...intelligenceTopicFromDecompositionSchema.parse(
+                        result.object,
+                      ),
+                    };
+                  }
                   const result = await runWithResolvedEffectiveSkills(
                     c,
                     ["intelligence.topic-decompose"],
@@ -5827,14 +5868,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                         model: modelFor(spec),
                         template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
                         facets: {
-                          positioning: [
-                            target.positioning.oneLiner,
-                            target.positioning.keywords.length > 0
-                              ? `关键词：${target.positioning.keywords.join("、")}`
-                              : "",
-                          ]
-                            .filter(Boolean)
-                            .join("\n"),
+                          positioning,
                           sourceTitle: target.item.title,
                           sourceAuthor:
                             target.item.authorName ?? target.item.platform,
@@ -5842,6 +5876,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                           // 这里必须使用手动转写完成的逐字稿，不能退化成标题/摘要猜结构。
                           transcript: target.transcript.text,
                         },
+                        maxRetries: 0,
+                        maxOutputTokens: 1_600,
                       }),
                   );
                   return intelligenceTopicDecomposeSchema.parse(
@@ -9039,6 +9075,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
     });
+    return {
+      apiFormat: cfg.apiFormat,
+      baseUrl: cfg.baseUrl,
+      model: cfg.model,
+      token: cfg.token,
+    };
+  };
+
+  // [T-589] 内容雷达允许绑定低延迟专用模型；未专配时继续读取既有 topic.generate，
+  // 避免升级后要求用户重复配置，也避免误把全局 default 当成专配。
+  const resolveTopicPreviewModelSpec = async (ctx: RequestContext) => {
+    const cfg = await resolveLlmConfigWithCapabilityFallback(
+      ctx,
+      "intelligence.topic-decompose",
+      "topic.generate",
+      {
+        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+        env: process.env,
+      },
+    );
     return {
       apiFormat: cfg.apiFormat,
       baseUrl: cfg.baseUrl,
