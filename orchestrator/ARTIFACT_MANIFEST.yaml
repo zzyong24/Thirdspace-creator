@@ -201,7 +201,7 @@ stages:
       - existing: "orchestrator/GATE-T534-BUILD.md (TDD/BUILD/tests/runtime evidence; global next build blocker retained)"
       - existing: "orchestrator/GATE-T471-RETROSPECTIVE.md (retrospective gate; historical TDD fail retained)"
       - existing: "docs/contracts/creator-client-config-consumer-v1.md (T-575 product-specific config consumer; Growth T-077 PASS baseline)"
-      - existing: "docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md (T-606 current CreatorOS channel model authority binding; PASS[REV:bc38a5b47eac])"
+      - existing: "docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md (T-610 amended CreatorOS channel model authority binding; prior REV bc38a5b47eac invalidated, pending rereview)"
       - existing: "docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md (T-606 local implementation and validation evidence)"
     notes: >
       15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):
@@ -222,8 +222,9 @@ stages:
       刷新、定时抖动和本地 BUILD 已完成，证据见 GATE-T575-BUILD.md；live HTTPS E2E、
       Growth 正式公钥/keyId 与 Mac beta 仍属于 SHIP 证据，不在本 manifest 冒充已完成。
       T-606 按 Growth T-086 最终契约将 modelPolicy/LKG 历史路径重派生为渠道 opaque JSON
-      当前权威；本地实现、类型、定向测试、构建及双视口浏览器证据已完成，但跨仓生产联调、
-      正式渠道配置、生产密钥与桌面发布仍受 release gate 阻断。
+      当前权威；T-610 又将 clientId 权威从 Activity 归位 Growth registry，并使旧 review
+      receipt 失效。本地实现、类型、定向测试、构建及双视口浏览器证据已完成，但整改后独立
+      复审、跨仓生产联调、正式渠道配置、生产密钥与桌面发布仍受 release gate 阻断。
 
   "16-backend-tdd":
     status: "draft"   # CHANGED from not-started — contradicted by DEC-011 (real code + tests exist)

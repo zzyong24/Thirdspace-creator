@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
+| T-610 | 关闭 T-606 独立代码审查的 1 Blocker + 5 Major【安全整改·总控 2026-07-29】 | ✅ | — | [T-606 SPEC](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) · [验证报告](docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md) | 修复跨 locator 版本串线、网络/5xx 错误隔离、apiFormat 猜测、opaque payload 外显、日志/错误泄密和损坏密文静默吞错；补齐 133 项反例增强及双视口验收，完成后追加提交推送但不发布。 |
 | T-606 | 将 CreatorOS 模型配置纠偏为“渠道 JSON 拉到即用、拉不到才用本地”【配置权威·用户确认 2026-07-29】 | ✅ | PASS[REV:bc38a5b47eac] | [CreatorOS 绑定 SPEC](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) | 渠道在 Growth 保存完整模型 JSON（允许含长期 Key），同渠道全部激活码通过既有固定 projectKey/channelRef 拉取；CreatorOS 成功取得 JSON 后原样自动采用，即使模型参数或 Key 错误也不回退本地；只有渠道未配置或本次无法取得配置时才允许使用用户本地模型配置。废止 T-604 的 Gateway、短期 bearer、managed_locked 禁配与远端 LKG 优先规则，但不改变激活码归属。 |
 | T-609 | 定位复盘经验采纳后未出现在知识库的原因【真机数据闭环诊断·用户 2026-07-29】 | ✅ 免审 | — | [诊断报告](docs/research/2026-07-29-review-learning-knowledge-root-cause.md) | 读取当前桌面包真实日志与本机数据库，逐段核对 `review.analyze` 经验候选、点击采纳后的持久化结果、知识库页面实际查询的数据源和筛选条件，判断是采纳失败、写入了错误领域还是知识库读面漏接；本轮先给根因与证据，不擅自修改领域数据。 |
 | T-608 | 复盘复盘页点击“帮我复盘”弹出第二个 Copilot 的原因【真机 UX 诊断·用户截图 2026-07-29】 | ✅ 免审 | — | [诊断报告](docs/research/2026-07-29-review-copilot-overlay-root-cause.md) | 只读追踪复盘 CTA、侧栏 AI 助手卡、全局 overlay 与项目会话 scope，核清截图中的弹窗是否是第二个 Copilot、为何没有复用页面已有入口，以及当前实现与“复盘页同一 rail”设计注释是否漂移；本轮先给根因与正确收口方向，不擅自修改交互。 |

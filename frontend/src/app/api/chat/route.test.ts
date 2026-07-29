@@ -29,6 +29,7 @@ let capturedStreamInit:
   | {
       headers?: Record<string, string>;
       consumeSseStream?: unknown;
+      onError?: (error: unknown) => string;
       onFinish?: (e: {
         responseMessage: unknown;
         isAborted?: boolean;
@@ -126,6 +127,7 @@ beforeEach(() => {
     toUIMessageStreamResponse: (init?: {
       headers?: Record<string, string>;
       consumeSseStream?: unknown;
+      onError?: (error: unknown) => string;
       onFinish?: (e: {
         responseMessage: unknown;
         isAborted?: boolean;
@@ -263,6 +265,22 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     expect(input.messages).toHaveLength(1);
     const [, , deps] = runChatStream.mock.calls[0];
     expect(deps.dispatchDouyinSharePort).toBe(dispatchDouyinShare);
+
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const exposed = capturedStreamInit?.onError?.(
+      new Error(
+        "raw-error opaque-model opaque-secret https://opaque.example/v1 response-body",
+      ),
+    );
+    expect(exposed).toBe("模型调用失败，请稍后重试。");
+    const logSnapshot = JSON.stringify(consoleSpy.mock.calls);
+    expect(logSnapshot).toContain("provider_stream_error");
+    expect(logSnapshot).not.toMatch(
+      /opaque-model|opaque-secret|opaque\.example|response-body|raw-error/,
+    );
+    consoleSpy.mockRestore();
   });
 
   it("[T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文", async () => {

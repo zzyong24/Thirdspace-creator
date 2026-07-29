@@ -99,6 +99,7 @@ export interface RawLlmConfig {
    * pi-ai 模型描述符(SPEC「模型须可配」/ 用户 2026-07-14 拍板)。缺失字段各自兜底,不阻断。
    */
   settings?: Record<string, unknown>;
+  displayModelKey?: "channel-managed";
 }
 
 /**

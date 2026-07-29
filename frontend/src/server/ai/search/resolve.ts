@@ -25,6 +25,7 @@ export interface SearchSpec {
   baseUrl: string | null;
   model: string;
   token: string;
+  displayModelKey?: "channel-managed";
 }
 
 export interface ResolveSearchDeps {
@@ -119,6 +120,7 @@ export async function resolveSearchSpec(
       baseUrl: row.baseUrl,
       model: row.modelName,
       token: row.secretValue as string,
+      displayModelKey: "channel-managed",
     };
   }
 

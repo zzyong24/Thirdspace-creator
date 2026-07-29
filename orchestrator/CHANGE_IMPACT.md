@@ -11,6 +11,19 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-MODEL-610 — clientId 权威从 Activity 归位 Growth registry（2026-07-29）
+
+- **上游变化**：应用/客户端目录唯一归 Growth；Activity ticket/introspection 只证明
+  `projectKey/channelRef` 与授权事实，不再向 Creator 提供权威 `clientId`。
+- **失效**：T-606/旧 T-575 中 Creator 向 Activity 请求自报 `clientId`、以及把该自报值视为
+  授权 claim 的描述失效；早期 T-606 review receipt 不再代表当前契约。
+- **重新派生**：Creator 只声明接受的 extension/protocol；Growth registry 解析并签入最终
+  `clientId`。Creator 兼容忽略旧 ticket 响应 `clientId`，继续验 Growth-signed
+  `creatoros.desktop`，并以 `projectKey + channelRef + clientId` 隔离版本/ETag 序列。
+- **下游验证**：config.pull 请求/parser、locator cache、31/50/24/11/17 反例、验证报告均更新。
+- **发布影响**：正式 Growth/Activity 字段契约、三端同环境联调和整改后独立复审前保持
+  release `NO-GO`。
+
 ## CI-MODEL-606 — 渠道完整模型 JSON 成为 CreatorOS 条件权威（2026-07-29）
 
 - **上游变化**：Growth T-086 最终契约允许 exact CreatorOS extension 携带长期 Key 和任意

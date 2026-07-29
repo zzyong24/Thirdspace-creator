@@ -9110,6 +9110,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       baseUrl: cfg.baseUrl,
       model: cfg.model,
       token: cfg.token,
+      ...(cfg.displayModelKey
+        ? { displayModelKey: cfg.displayModelKey }
+        : {}),
     };
   };
 
@@ -9127,6 +9130,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       baseUrl: cfg.baseUrl,
       model: cfg.model,
       token: cfg.token,
+      ...(cfg.displayModelKey
+        ? { displayModelKey: cfg.displayModelKey }
+        : {}),
     };
   };
 
@@ -9246,6 +9252,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         baseUrl: cfg.baseUrl,
         model: cfg.model,
         token: cfg.token,
+        ...(cfg.displayModelKey
+          ? { displayModelKey: cfg.displayModelKey }
+          : {}),
       };
     }
     const row = await settingsService.getModelConfig(

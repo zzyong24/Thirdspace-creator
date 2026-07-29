@@ -1,6 +1,6 @@
 # T-606 CreatorOS 渠道模型配置权威绑定
 
-> 状态：待独立评审。本文只绑定 CreatorOS 消费实现，不复制或改写 Growth 产品真相。
+> 状态：T-610 架构纠偏后待独立复审。本文只绑定 CreatorOS 消费实现，不复制或改写 Growth 产品真相。
 >
 > 最终上游契约：
 > `/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-086-creatoros-managed-model-service.md`
@@ -17,9 +17,12 @@
   远端 LKG 优先和 `ready/offline` 权威规则；旧文档只保留 T-575 历史。
 - 废止 T-604 的 Gateway、短 bearer、introspection、alias routing、`managed_locked` 和
   “渠道配置存在时禁止编辑本地配置”。T-606 不实现或保留这些兼容分支。
-- 继续复用既有 `config.pull` ticket、Growth bundle 验签、ETag、版本单调性与
-  `projectKey/channelRef/clientId` 固定 locator。身份只来自当前加密激活事实；请求和页面不得
-  覆盖 locator，激活码归属不变。
+- 继续复用既有 `config.pull` ticket、Growth bundle 验签、ETag 与版本单调性。Activity
+  只证明当前加密激活事实中的 `projectKey/channelRef` 与授权状态，不提供权威 `clientId`；
+  Creator 不向 Activity 自报 `clientId` 作为授权依据。Creator 只声明接受的
+  extension/protocol，Growth 从自身 registry 解析最终 `clientId` 并签入 bundle。
+- 版本/ETag locator 是 Growth-signed `projectKey/channelRef/clientId`。Creator 继续验
+  `clientId=creatoros.desktop` 与协议，但不得把自报值或旧 ticket 字段视作授权 claim。
 - Growth 下发的 payload 只要求根节点是 JSON object。CreatorOS 在 pull 成功阶段不检查
   provider、URL、Key、模型名、参数或未知字段，也不做连通探测。
 
@@ -58,8 +61,8 @@ authority 选择：
 
 该边界必须覆盖文本 `resolveLlmConfig/resolveDedicatedLlmConfig`、Vercel `ModelSpec`、
 agentic raw config、图像/视频/视觉/ASR、embedding、联网搜索和“测试当前实际配置”读面。
-投影只是调用 adapter 的字段读取，不是 pull 阶段的 schema validator；缺字段、错类型或未知值
-必须在对应模型调用中诚实失败，不能被解释成“渠道未配置”。
+投影只是调用 adapter 的字段读取，不是 pull 阶段的 schema validator；`apiFormat` 缺失、
+错类型或未知值必须在 SDK/网络调用前诚实失败，不能猜成 OpenAI，也不能被解释成“渠道未配置”。
 
 官方 template 的兼容字段为 `provider`、`baseURL`（同时接受 CreatorOS 既有拼写
 `baseUrl`）、`apiKey`、`model`、`apiFormat`、`settings`。未知字段完整保存在加密 payload，
@@ -75,6 +78,8 @@ agentic raw config、图像/视频/视觉/ASR、embedding、联网搜索和“�
 - 用户本地模型表单继续可编辑和安全保存；渠道生效时说明它是备用配置，不锁定、不隐藏。
 - 本地 refresh API 仅返回 `authority/outcome/action/retryable` 安全投影，不再返回
   `modelPolicy` 或 opaque JSON。所有响应 `private, no-store`。
+- settings test、消息/任务 `modelKey`、RSC 与 API 对渠道 provider/model 只显示
+  `channel-managed`；日志只允许 category/status/correlationId。
 
 ## 6. 验收
 
@@ -90,8 +95,10 @@ agentic raw config、图像/视频/视觉/ASR、embedding、联网搜索和“�
   authority 选择；channel 模型调用失败不触发 local resolver。
 - `TC-T606-08`：设置页桌面与 390px 视口可辨认四种状态，本地表单始终可编辑，页面、日志、
   错误和请求 URL 不含测试 Key 原文。
-- `TC-T606-09`：现有激活 locator、AM ticket 请求与 Growth ticket consume 不变，客户端无法
-  覆盖 `projectKey/channelRef/clientId`。
+- `TC-T606-09`：AM ticket 请求不含 `clientId`；旧响应字段只兼容忽略。Growth-signed
+  `clientId` 与 extension/protocol 继续强校验，客户端无法覆盖 Growth registry 结果。
+- `TC-T610-10`：cache 只有 `ENOENT` 表示无记录；prefix/tag/wrong key/schema/结构损坏均
+  typed security error 并隔离 `.corrupt.*`。
 
 ## 7. 发布边界
 

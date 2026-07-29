@@ -420,3 +420,5 @@
 {"ts":"2026-07-29T15:03:36.294Z","actor":"taskctl","action":"complete","task":"T-609","evidence":"真机 DB/会话审计：14:56 三个唯一复盘经验被写为 candidate 且 project_id=NULL，知识库 validated 命中 0、复盘项目候选命中 0；首条重复写入 2 次；代码与 0.2.1-beta.3 运行包同链，详见 docs/research/2026-07-29-review-learning-knowledge-root-cause.md","sha_before":"dc737b785964","sha_after":"6159eae065ea"}
 {"ts":"2026-07-29T15:45:25.221Z","actor":"taskctl","action":"start","task":"T-606","sha_before":"cbfea116fc0d","sha_after":"9fa910b523b1"}
 {"ts":"2026-07-29T16:09:11.297Z","actor":"taskctl","action":"complete","task":"T-606","evidence":"docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md","sha_before":"9fa910b523b1","sha_after":"7cf5726409b7"}
+{"ts":"2026-07-29T16:28:56.767Z","actor":"taskctl","action":"start","task":"T-610","sha_before":"298a10626b9b","sha_after":"045c993cef91"}
+{"ts":"2026-07-29T16:56:28.399Z","actor":"taskctl","action":"complete","task":"T-610","evidence":"docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md","sha_before":"045c993cef91","sha_after":"6b0babcfbee8"}

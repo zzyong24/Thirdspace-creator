@@ -26,6 +26,14 @@ export interface ModelSpec {
   model: string;
   /** 用户自带的 API key。 */
   token: string;
+  displayModelKey?: "channel-managed";
+}
+
+export class ModelConfigurationError extends Error {
+  constructor() {
+    super("模型接口格式配置无效");
+    this.name = "ModelConfigurationError";
+  }
 }
 
 /**
@@ -41,36 +49,41 @@ export function normalizeAnthropicBaseUrl(baseUrl: string): string {
 
 /** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
-  if (spec.apiFormat === "anthropic") {
-    const provider = createAnthropic({
-      apiKey: spec.token,
-      ...(spec.baseUrl
-        ? { baseURL: normalizeAnthropicBaseUrl(spec.baseUrl) }
-        : {}),
-    });
-    return provider(spec.model);
+  switch (spec.apiFormat) {
+    case "anthropic": {
+      const provider = createAnthropic({
+        apiKey: spec.token,
+        ...(spec.baseUrl
+          ? { baseURL: normalizeAnthropicBaseUrl(spec.baseUrl) }
+          : {}),
+      });
+      return provider(spec.model);
+    }
+    case "openai_responses": {
+      const provider = createOpenAI({
+        apiKey: spec.token,
+        ...(spec.baseUrl
+          ? { baseURL: spec.baseUrl, name: "creatoros-custom" }
+          : {}),
+      });
+      return provider.responses(spec.model);
+    }
+    case "openai_chat": {
+      // openai_chat 必须显式选 Chat，不能依赖 SDK 默认 callable。
+      if (spec.baseUrl) {
+        const provider = createOpenAICompatible({
+          name: "creatoros-custom",
+          apiKey: spec.token,
+          baseURL: spec.baseUrl,
+        });
+        return provider.chatModel(spec.model);
+      }
+      const provider = createOpenAI({ apiKey: spec.token });
+      return provider.chat(spec.model);
+    }
+    default:
+      throw new ModelConfigurationError();
   }
-  if (spec.apiFormat === "openai_responses") {
-    const provider = createOpenAI({
-      apiKey: spec.token,
-      ...(spec.baseUrl
-        ? { baseURL: spec.baseUrl, name: "creatoros-custom" }
-        : {}),
-    });
-    return provider.responses(spec.model);
-  }
-  // openai_chat:两条路径都显式选 Chat,不能再用 createOpenAI()(model)——
-  // @ai-sdk/openai 4 的默认 callable 已是 Responses,会让同一配置因 baseUrl 有无而分叉。
-  if (spec.baseUrl) {
-    const provider = createOpenAICompatible({
-      name: "creatoros-custom",
-      apiKey: spec.token,
-      baseURL: spec.baseUrl,
-    });
-    return provider.chatModel(spec.model);
-  }
-  const provider = createOpenAI({ apiKey: spec.token });
-  return provider.chat(spec.model);
 }
 
 /**
@@ -83,19 +96,25 @@ export function modelFor(spec: ModelSpec): LanguageModel {
  *     应引导用户为该 capability 配 OpenAI 兼容 embedding 模型,不静默降级成聊天模型)。
  */
 export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
-  if (spec.apiFormat === "anthropic") {
-    throw new Error(
-      "anthropic 协议不提供 embedding 端点:请为该 capability 配置 openai_chat 协议的 embedding 模型(如 SiliconFlow BAAI/bge-m3)",
-    );
+  switch (spec.apiFormat) {
+    case "anthropic":
+      throw new Error(
+        "anthropic 协议不提供 embedding 端点:请为该 capability 配置 openai_chat 协议的 embedding 模型(如 SiliconFlow BAAI/bge-m3)",
+      );
+    case "openai_chat":
+    case "openai_responses": {
+      if (spec.baseUrl) {
+        const provider = createOpenAICompatible({
+          name: "creatoros-custom-embedding",
+          apiKey: spec.token,
+          baseURL: spec.baseUrl,
+        });
+        return provider.textEmbeddingModel(spec.model);
+      }
+      const provider = createOpenAI({ apiKey: spec.token });
+      return provider.textEmbeddingModel(spec.model);
+    }
+    default:
+      throw new ModelConfigurationError();
   }
-  if (spec.baseUrl) {
-    const provider = createOpenAICompatible({
-      name: "creatoros-custom-embedding",
-      apiKey: spec.token,
-      baseURL: spec.baseUrl,
-    });
-    return provider.textEmbeddingModel(spec.model);
-  }
-  const provider = createOpenAI({ apiKey: spec.token });
-  return provider.textEmbeddingModel(spec.model);
 }

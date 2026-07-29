@@ -13,14 +13,24 @@ function field(payload: ChannelModelPayload, ...names: string[]): unknown {
   return undefined;
 }
 
+export class ChannelModelConfigurationError extends Error {
+  constructor() {
+    super("渠道模型配置不完整，请联系官方处理");
+    this.name = "ChannelModelConfigurationError";
+  }
+}
+
 function apiFormat(payload: ChannelModelPayload): ApiFormat {
   const explicit = field(payload, "apiFormat");
-  if (explicit !== undefined) return explicit as ApiFormat;
-  const provider = field(payload, "provider");
-  if (provider === "anthropic") return "anthropic";
-  if (provider === "openai-compatible") return "openai_chat";
-  // 不猜未知 provider。无效值会在正式 provider adapter 中诚实失败，不能触发本地回退。
-  return undefined as unknown as ApiFormat;
+  switch (explicit) {
+    case "anthropic":
+    case "openai_chat":
+    case "openai_responses":
+      return explicit;
+    default:
+      // 渠道 payload 是 opaque 输入；缺失、错类型或未知值都不得按 provider/model 猜协议。
+      throw new ChannelModelConfigurationError();
+  }
 }
 
 function baseUrl(payload: ChannelModelPayload): string | null {
@@ -43,7 +53,7 @@ function settings(payload: ChannelModelPayload): Record<string, unknown> {
     : {};
 }
 
-/** configured payload 的文本投影；不做语义验证，也不存在 local fallback。 */
+/** configured payload 的文本投影；协议族必须显式合法，其余字段由正式调用验证且不存在 local fallback。 */
 export function channelLlmConfig(
   payload: ChannelModelPayload,
 ): ResolvedLlmConfig {
@@ -57,6 +67,7 @@ export function channelLlmConfig(
     authStyle: format === "anthropic" ? "x-api-key" : "bearer",
     token: token(payload),
     settings: settings(payload),
+    displayModelKey: "channel-managed",
   };
 }
 
@@ -71,6 +82,7 @@ export function channelMultimodalSpec(
     model: model(payload),
     token: token(payload),
     kind,
+    displayModelKey: "channel-managed",
   };
 }
 

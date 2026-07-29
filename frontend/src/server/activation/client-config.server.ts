@@ -99,6 +99,8 @@ export type ClientConfigCacheRecord = {
     | "unreachable"
     | "security_error";
   readonly checkedAt: string;
+  /** 当前激活事实对应的唯一 locator；版本序列只能在这个作用域内比较。 */
+  readonly activeLocator?: ClientConfigLocator;
   readonly bundle: SignedClientConfigBundle | null;
   readonly channel: {
     readonly projectKey: string;
@@ -108,10 +110,24 @@ export type ClientConfigCacheRecord = {
     readonly extensionRevision: number;
     readonly payload: ChannelModelJson;
   } | null;
+  /** 其他 locator 的历史密文只作 inactive 序列保留，绝不参与当前版本/ETag 判定。 */
+  readonly inactiveLocators?: readonly ClientConfigLocatorSnapshot[];
   readonly reason?:
     | "authorization_changed"
     | "authorization_expired"
     | "channel_terminated";
+};
+
+export type ClientConfigLocator = {
+  readonly projectKey: string;
+  readonly channelRef: string;
+  readonly clientId: typeof CLIENT_ID;
+};
+
+export type ClientConfigLocatorSnapshot = {
+  readonly locator: ClientConfigLocator;
+  readonly bundle: SignedClientConfigBundle;
+  readonly channel: ClientConfigCacheRecord["channel"];
 };
 
 export interface ClientConfigStore {
@@ -181,6 +197,17 @@ export class ClientConfigPullError extends Error {
   ) {
     super(message);
     this.name = "ClientConfigPullError";
+  }
+}
+
+export class ClientConfigCacheSecurityError extends ClientConfigPullError {
+  constructor() {
+    super(
+      "CLIENT_CONFIG_CACHE_SECURITY_ERROR",
+      "本机渠道配置安全校验未通过",
+      false,
+    );
+    this.name = "ClientConfigCacheSecurityError";
   }
 }
 
@@ -505,12 +532,22 @@ function parseTicket(
   }
   const value = response.value;
   if (
-    !exactObject(value, [
-      "configAccessTicket",
-      "contractVersion",
-      "expiresAt",
-      "nonce",
-    ]) ||
+    !(
+      exactObject(value, [
+        "configAccessTicket",
+        "contractVersion",
+        "expiresAt",
+        "nonce",
+      ]) ||
+      (exactObject(value, [
+        "clientId",
+        "configAccessTicket",
+        "contractVersion",
+        "expiresAt",
+        "nonce",
+      ]) &&
+        typeof value.clientId === "string")
+    ) ||
     value.contractVersion !== TICKET_CONTRACT ||
     typeof value.configAccessTicket !== "string" ||
     value.configAccessTicket.length < 5 ||
@@ -787,6 +824,13 @@ function blockReason(error: ClientConfigPullError) {
 }
 
 function parseGrowthError(response: Response, value: unknown): never {
+  if (response.status >= 500) {
+    fail(
+      "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE",
+      "配置服务暂时不可用，请稍后重试",
+      true,
+    );
+  }
   if (
     !exactObject(value, ["error"]) ||
     !exactObject(value.error, ["code", "message"]) ||
@@ -818,18 +862,6 @@ function parseGrowthError(response: Response, value: unknown): never {
       false,
     );
   }
-  if (
-    response.status === 503 &&
-    (code === "CONFIG_AUTHORITY_UNAVAILABLE" ||
-      code === "CLIENT_CONFIG_UNAVAILABLE" ||
-      code === "CLIENT_CONFIG_SIGNER_UNAVAILABLE")
-  ) {
-    fail(
-      "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE",
-      "配置服务暂时不可用，请稍后重试",
-      true,
-    );
-  }
   if (response.status === 401) {
     fail(
       "CLIENT_CONFIG_ACCESS_DENIED",
@@ -844,7 +876,264 @@ function parseGrowthError(response: Response, value: unknown): never {
   );
 }
 
-class EncryptedClientConfigStore implements ClientConfigStore {
+function locatorFromVerdict(verdict: ActiveVerdict): ClientConfigLocator {
+  return {
+    projectKey: verdict.projectKey!,
+    channelRef: verdict.channelRef!,
+    clientId: CLIENT_ID,
+  };
+}
+
+function locatorFromBundle(
+  bundle: SignedClientConfigBundle,
+): ClientConfigLocator {
+  return {
+    projectKey: bundle.projectKey,
+    channelRef: bundle.channelRef,
+    clientId: bundle.clientId,
+  };
+}
+
+function sameLocator(
+  left: ClientConfigLocator | null | undefined,
+  right: ClientConfigLocator | null | undefined,
+): boolean {
+  return Boolean(
+    left &&
+      right &&
+      left.projectKey === right.projectKey &&
+      left.channelRef === right.channelRef &&
+      left.clientId === right.clientId,
+  );
+}
+
+function snapshotFromRecord(
+  record: ClientConfigCacheRecord,
+): ClientConfigLocatorSnapshot | null {
+  if (!record.bundle) return null;
+  return {
+    locator: locatorFromBundle(record.bundle),
+    bundle: record.bundle,
+    channel: record.channel,
+  };
+}
+
+function dedupeSnapshots(
+  snapshots: readonly ClientConfigLocatorSnapshot[],
+): ClientConfigLocatorSnapshot[] {
+  const result: ClientConfigLocatorSnapshot[] = [];
+  for (const snapshot of snapshots) {
+    if (result.some((item) => sameLocator(item.locator, snapshot.locator))) {
+      continue;
+    }
+    result.push(snapshot);
+  }
+  return result;
+}
+
+/**
+ * 把单文件 cache 切到当前激活 locator 的独立版本序列。其他 locator 只进 inactive 密文集合：
+ * 不发它的 ETag、不比较版本，也不会因网络失败重新激活。
+ */
+function scopeRecordToLocator(
+  record: ClientConfigCacheRecord | null,
+  verdict: ActiveVerdict,
+): ClientConfigCacheRecord | null {
+  if (!record) return null;
+  const target = locatorFromVerdict(verdict);
+  const currentLocator =
+    record.activeLocator ??
+    (record.bundle ? locatorFromBundle(record.bundle) : null);
+  const inactive = [...(record.inactiveLocators ?? [])];
+  if (sameLocator(currentLocator, target)) {
+    return {
+      ...record,
+      activeLocator: target,
+      inactiveLocators: dedupeSnapshots(inactive),
+    };
+  }
+
+  const currentSnapshot = snapshotFromRecord(record);
+  const candidates = dedupeSnapshots([
+    ...(currentSnapshot ? [currentSnapshot] : []),
+    ...inactive,
+  ]);
+  const selected = candidates.find((item) => sameLocator(item.locator, target));
+  return {
+    state: "local",
+    outcome: "unreachable",
+    checkedAt: record.checkedAt,
+    activeLocator: target,
+    bundle: selected?.bundle ?? null,
+    channel: selected?.channel ?? null,
+    inactiveLocators: candidates.filter(
+      (item) => !sameLocator(item.locator, target),
+    ),
+  };
+}
+
+function parseCacheLocator(value: unknown): ClientConfigLocator {
+  if (
+    !exactObject(value, ["channelRef", "clientId", "projectKey"]) ||
+    typeof value.projectKey !== "string" ||
+    typeof value.channelRef !== "string" ||
+    value.clientId !== CLIENT_ID
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  return value as ClientConfigLocator;
+}
+
+function parseCacheChannel(
+  value: unknown,
+): ClientConfigCacheRecord["channel"] {
+  if (value === null) return null;
+  if (
+    !exactObject(value, [
+      "bundleDigest",
+      "bundleVersion",
+      "channelRef",
+      "extensionRevision",
+      "payload",
+      "projectKey",
+    ]) ||
+    typeof value.projectKey !== "string" ||
+    typeof value.channelRef !== "string" ||
+    typeof value.bundleVersion !== "number" ||
+    !Number.isSafeInteger(value.bundleVersion) ||
+    typeof value.bundleDigest !== "string" ||
+    !/^sha256:[0-9a-f]{64}$/.test(value.bundleDigest) ||
+    typeof value.extensionRevision !== "number" ||
+    !Number.isSafeInteger(value.extensionRevision) ||
+    !isJsonValue(value.payload) ||
+    !value.payload ||
+    typeof value.payload !== "object" ||
+    Array.isArray(value.payload)
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  return value as ClientConfigCacheRecord["channel"];
+}
+
+function parseCachedBundle(value: unknown): SignedClientConfigBundle {
+  try {
+    return parseBundleShape(value);
+  } catch {
+    throw new ClientConfigCacheSecurityError();
+  }
+}
+
+function parseCacheRecord(value: unknown): ClientConfigCacheRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  const raw = value as Record<string, unknown>;
+  const allowed = new Set([
+    "activeLocator",
+    "bundle",
+    "channel",
+    "checkedAt",
+    "inactiveLocators",
+    "outcome",
+    "reason",
+    "state",
+  ]);
+  if (Object.keys(raw).some((key) => !allowed.has(key))) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  if (
+    !["channel", "local", "quarantined", "blocked"].includes(
+      String(raw.state),
+    ) ||
+    ![
+      "configured",
+      "not_configured",
+      "unreachable",
+      "security_error",
+    ].includes(String(raw.outcome)) ||
+    parseUtcMs(raw.checkedAt) === null
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  const bundle =
+    raw.bundle === null ? null : parseCachedBundle(raw.bundle);
+  const activeLocator =
+    raw.activeLocator === undefined
+      ? bundle
+        ? locatorFromBundle(bundle)
+        : undefined
+      : parseCacheLocator(raw.activeLocator);
+  const channel = parseCacheChannel(raw.channel);
+  if (
+    raw.reason !== undefined &&
+    ![
+      "authorization_changed",
+      "authorization_expired",
+      "channel_terminated",
+    ].includes(String(raw.reason))
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  if (
+    raw.inactiveLocators !== undefined &&
+    !Array.isArray(raw.inactiveLocators)
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  const inactiveLocators = (
+    (raw.inactiveLocators ?? []) as unknown[]
+  ).map((item) => {
+    if (
+      !exactObject(item, ["bundle", "channel", "locator"])
+    ) {
+      throw new ClientConfigCacheSecurityError();
+    }
+    const locator = parseCacheLocator(item.locator);
+    const inactiveBundle = parseCachedBundle(item.bundle);
+    if (!sameLocator(locator, locatorFromBundle(inactiveBundle))) {
+      throw new ClientConfigCacheSecurityError();
+    }
+    return {
+      locator,
+      bundle: inactiveBundle,
+      channel: parseCacheChannel(item.channel),
+    };
+  });
+  if (
+    activeLocator &&
+    bundle &&
+    !sameLocator(activeLocator, locatorFromBundle(bundle))
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  if (
+    new Set(
+      inactiveLocators.map(
+        (item) =>
+          `${item.locator.projectKey}\u0000${item.locator.channelRef}\u0000${item.locator.clientId}`,
+      ),
+    ).size !== inactiveLocators.length ||
+    inactiveLocators.some((item) =>
+      sameLocator(item.locator, activeLocator),
+    )
+  ) {
+    throw new ClientConfigCacheSecurityError();
+  }
+  return {
+    state: raw.state as ClientConfigCacheRecord["state"],
+    outcome: raw.outcome as ClientConfigCacheRecord["outcome"],
+    checkedAt: raw.checkedAt as string,
+    ...(activeLocator ? { activeLocator } : {}),
+    bundle,
+    channel,
+    inactiveLocators,
+    ...(raw.reason
+      ? { reason: raw.reason as NonNullable<ClientConfigCacheRecord["reason"]> }
+      : {}),
+  };
+}
+
+export class EncryptedClientConfigStore implements ClientConfigStore {
   constructor(
     private readonly path: string,
     private readonly key: Buffer,
@@ -854,11 +1143,37 @@ class EncryptedClientConfigStore implements ClientConfigStore {
     let raw: string;
     try {
       raw = await readFile(this.path, "utf8");
-    } catch {
-      return null;
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return null;
+      }
+      return this.quarantineDamagedFile();
     }
     try {
-      const packed = Buffer.from(raw.trim().slice(CACHE_PREFIX.length), "base64");
+      const encoded = raw.trim();
+      if (!encoded.startsWith(CACHE_PREFIX)) {
+        throw new ClientConfigCacheSecurityError();
+      }
+      const base64 = encoded.slice(CACHE_PREFIX.length);
+      if (
+        !base64 ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(base64) ||
+        base64.length % 4 !== 0
+      ) {
+        throw new ClientConfigCacheSecurityError();
+      }
+      const packed = Buffer.from(base64, "base64");
+      if (
+        packed.length <= IV_BYTES + TAG_BYTES ||
+        packed.toString("base64") !== base64
+      ) {
+        throw new ClientConfigCacheSecurityError();
+      }
       const iv = packed.subarray(0, IV_BYTES);
       const tag = packed.subarray(IV_BYTES, IV_BYTES + TAG_BYTES);
       const ciphertext = packed.subarray(IV_BYTES + TAG_BYTES);
@@ -871,16 +1186,31 @@ class EncryptedClientConfigStore implements ClientConfigStore {
       const envelope: unknown = JSON.parse(plain);
       if (
         !exactObject(envelope, ["record", "schemaVersion"]) ||
-        envelope.schemaVersion !== CACHE_SCHEMA ||
-        !envelope.record ||
-        typeof envelope.record !== "object"
+        envelope.schemaVersion !== CACHE_SCHEMA
       ) {
-        return null;
+        throw new ClientConfigCacheSecurityError();
       }
-      return envelope.record as ClientConfigCacheRecord;
+      return parseCacheRecord(envelope.record);
     } catch {
-      return null;
+      return this.quarantineDamagedFile();
     }
+  }
+
+  private async quarantineDamagedFile(): Promise<never> {
+    const quarantinedPath = `${this.path}.corrupt.${Date.now()}.${randomBytes(6).toString("hex")}`;
+    try {
+      await rename(this.path, quarantinedPath);
+    } catch (error) {
+      if (
+        !error ||
+        typeof error !== "object" ||
+        !("code" in error) ||
+        error.code !== "ENOENT"
+      ) {
+        throw new ClientConfigCacheSecurityError();
+      }
+    }
+    throw new ClientConfigCacheSecurityError();
   }
 
   async save(record: ClientConfigCacheRecord): Promise<void> {
@@ -956,7 +1286,9 @@ function defaultStore(
 
 /**
  * API-575-002（Growth 跨仓编号 API-CREATOR-002）server-only refresh。所有 identity 来自当前加密授权；请求不接受
- * channelRef/projectKey/clientId override，Web 永远拿不到 code/machineId/ticket。
+ * channelRef/projectKey override，Web 永远拿不到 code/machineId/ticket。Creator 不向 Activity
+ * 自报 clientId 作为授权依据；它只向 Growth 声明接受的 extension/protocol，最终 clientId
+ * 由 Growth registry 决定并签入 bundle。
  */
 export async function refreshClientConfig(
   dependencies: Dependencies = {},
@@ -985,7 +1317,23 @@ export async function refreshClientConfig(
     dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());
   const verdict = activeVerdict(await readVerdict());
   const store = dependencies.store ?? defaultStore(env);
-  const previous = await store.load();
+  const activeLocator = locatorFromVerdict(verdict);
+  let previous: ClientConfigCacheRecord | null;
+  try {
+    previous = scopeRecordToLocator(await store.load(), verdict);
+  } catch (error) {
+    if (!(error instanceof ClientConfigCacheSecurityError)) throw error;
+    await store.save({
+      state: "quarantined",
+      outcome: "security_error",
+      checkedAt: now.toISOString(),
+      activeLocator,
+      bundle: null,
+      channel: null,
+      inactiveLocators: [],
+    });
+    return project("local", "security_error");
+  }
   const fetchImpl = dependencies.fetchImpl ?? fetch;
   const nonce = (
     dependencies.nonce ?? (() => randomBytes(16).toString("base64url"))
@@ -1002,12 +1350,18 @@ export async function refreshClientConfig(
       body: JSON.stringify({
         contractVersion: TICKET_CONTRACT,
         projectKey: verdict.projectKey,
-        clientId: CLIENT_ID,
         code: verdict.code,
         machineId: verdict.machineId,
         nonce,
       }),
     });
+    if (amHttp.status >= 500) {
+      fail(
+        "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE",
+        "授权服务暂时不可用，请稍后重试",
+        true,
+      );
+    }
     const ticket = parseTicket(
       await verifyAmResponse(
         amHttp,
@@ -1029,7 +1383,10 @@ export async function refreshClientConfig(
       Accept: "application/json",
       Authorization: `Bearer ${ticket.configAccessTicket}`,
     };
-    if (previous?.bundle) {
+    if (
+      previous?.bundle &&
+      sameLocator(previous.activeLocator, activeLocator)
+    ) {
       headers["If-None-Match"] = `"${previous.bundle.bundleDigest}"`;
     }
     const response = await fetchNoRedirect(
@@ -1037,6 +1394,13 @@ export async function refreshClientConfig(
       growthUrl.toString(),
       { method: "GET", headers },
     );
+    if (response.status >= 500) {
+      fail(
+        "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE",
+        "配置服务暂时不可用，请稍后重试",
+        true,
+      );
+    }
     const correlationId =
       response.status === 200 || response.status === 304
         ? validateGrowthSuccessHeaders(response)
@@ -1044,6 +1408,7 @@ export async function refreshClientConfig(
     if (response.status === 304) {
       if (
         !previous?.bundle ||
+        !sameLocator(previous.activeLocator, activeLocator) ||
         response.headers.get("etag") !==
           `"${previous.bundle.bundleDigest}"` ||
         response.headers.get("x-config-bundle-version") !==
@@ -1080,6 +1445,7 @@ export async function refreshClientConfig(
         state: extension ? "channel" : "local",
         outcome: extension ? "configured" : "not_configured",
         checkedAt: now.toISOString(),
+        activeLocator,
       } as const;
       await store.save(refreshed);
       console.info(
@@ -1114,7 +1480,10 @@ export async function refreshClientConfig(
         true,
       );
     }
-    if (previous?.bundle) {
+    if (
+      previous?.bundle &&
+      sameLocator(previous.activeLocator, activeLocator)
+    ) {
       if (bundle.bundleVersion < previous.bundle.bundleVersion) {
         fail(
           "CLIENT_CONFIG_VERSION_DOWNGRADE",
@@ -1139,6 +1508,7 @@ export async function refreshClientConfig(
           state: "channel",
           outcome: "configured",
           checkedAt: now.toISOString(),
+          activeLocator,
           bundle,
           channel: {
             projectKey: bundle.projectKey,
@@ -1148,13 +1518,17 @@ export async function refreshClientConfig(
             extensionRevision: extension.revision,
             payload: extension.payload as ChannelModelJson,
           },
+          inactiveLocators: previous?.inactiveLocators ?? [],
         }
       : {
           state: "local",
           outcome: "not_configured",
           checkedAt: now.toISOString(),
+          activeLocator,
           bundle,
+          // 明确未配置后不激活旧 payload，但仍保留同 locator 的历史密文以便审计/恢复。
           channel: previous?.channel ?? null,
+          inactiveLocators: previous?.inactiveLocators ?? [],
         };
     await store.save(next);
     console.info(
@@ -1172,8 +1546,10 @@ export async function refreshClientConfig(
           outcome: "security_error",
           reason,
           checkedAt: now.toISOString(),
+          activeLocator,
           bundle: previous?.bundle ?? null,
           channel: previous?.channel ?? null,
+          inactiveLocators: previous?.inactiveLocators ?? [],
         });
         throw error;
       }
@@ -1182,8 +1558,10 @@ export async function refreshClientConfig(
           state: "local",
           outcome: "unreachable",
           checkedAt: now.toISOString(),
+          activeLocator,
           bundle: previous?.bundle ?? null,
           channel: previous?.channel ?? null,
+          inactiveLocators: previous?.inactiveLocators ?? [],
         });
         return project("local", "unreachable");
       }
@@ -1191,8 +1569,10 @@ export async function refreshClientConfig(
         state: "quarantined",
         outcome: "security_error",
         checkedAt: now.toISOString(),
+        activeLocator,
         bundle: previous?.bundle ?? null,
         channel: previous?.channel ?? null,
+        inactiveLocators: previous?.inactiveLocators ?? [],
       });
       return project("local", "security_error");
     }
@@ -1222,6 +1602,7 @@ export async function readChannelModelAuthority(
     if (
       record?.state === "channel" &&
       record.outcome === "configured" &&
+      sameLocator(record.activeLocator, locatorFromVerdict(verdict)) &&
       channel !== null &&
       channel !== undefined &&
       channel.projectKey === verdict.projectKey &&
@@ -1248,7 +1629,10 @@ export async function readChannelModelAuthority(
           : "unreachable",
       payload: null,
     };
-  } catch {
+  } catch (error) {
+    if (error instanceof ClientConfigCacheSecurityError) {
+      return { authority: "local", outcome: "security_error", payload: null };
+    }
     return { authority: "local", outcome: "unreachable", payload: null };
   }
 }

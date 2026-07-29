@@ -34,6 +34,7 @@ export interface MultimodalSpec {
   model: string;
   token: string;
   kind: "image" | "video" | "audio" | "vision";
+  displayModelKey?: "channel-managed";
 }
 
 export interface ResolveMultimodalDeps {

@@ -5,6 +5,24 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-MODEL-610
+Date: 2026-07-29
+Stage: T-610 REMEDIATION / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: Activity 的 config.pull ticket/introspection 只证明 projectKey/channelRef 与授权事实，
+          不再提供权威 clientId。Creator 请求 Activity 时不得把自报 clientId 当授权依据；
+          旧 ticket 响应若仍带 clientId 只兼容忽略。Creator 仅向 Growth 声明接受的
+          extension/protocol，由 Growth registry 解析并签入最终 clientId；Creator 验签
+          bundle 时继续强校验 Growth 签入的 creatoros.desktop 和协议。
+Rationale: 应用/客户端目录唯一归 Growth，Activity 不拥有客户端目录，不能反向授权 clientId。
+Affected Artifacts: T-606 Creator contract、creator-client-config-consumer-v1、Creator
+                    config.pull request/parser/tests、T-610 validation、CHANGE_IMPACT。
+Compatibility: 在 Growth/Activity 最终字段契约落定前，Creator parser 兼容旧响应字段但不信任；
+               该兼容不允许恢复 request clientId，也不允许跨 locator 比较版本或 ETag。
+Status: active（整改代码已验证；正式三端联调与独立复审前 release NO-GO）
+```
+
+```text
 ID: DEC-MODEL-606
 Date: 2026-07-29
 Stage: T-606 PLAN / CONTRACT
@@ -16,8 +34,8 @@ Decision: CreatorOS 继续使用既有 config.pull ticket 和当前激活 locato
 Rationale: Growth T-086 最终契约与 2026-07-29 用户确认明确取代旧 T-575/T-604 设计。
 Supersedes: T-575 的三键 parser/长期 Key 禁止/24h 远端 LKG；T-604 的 Gateway、短 bearer、
             introspection、alias routing、managed_locked 与远端 LKG 优先。
-Invariant: 激活码归属和 projectKey/channelRef/clientId 固定 locator 不变；渠道 JSON/Key
-           不进入 URL、日志、错误、审计摘要或 Web 响应。
+Invariant: Activity 只证明 projectKey/channelRef 授权；Growth-signed clientId 与其二者共同
+           组成配置版本 locator。渠道 JSON/Key 不进入 URL、日志、错误、审计摘要或 Web 响应。
 Authority: Growth docs/contracts/T-086-creatoros-managed-model-service.md
            SHA-256 be1d4546b080e8b30144e31dd20d2e094d82b66d3c57d0f6116782fb89650182；
            T-086-review-concern-resolution.md

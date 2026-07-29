@@ -33,6 +33,7 @@ describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
       model: "channel-image",
       token: "channel-image-test",
       kind: "image",
+      displayModelKey: "channel-managed",
     });
   });
 

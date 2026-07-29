@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { modelFor, normalizeAnthropicBaseUrl } from "./provider-factory";
+import {
+  ModelConfigurationError,
+  modelFor,
+  normalizeAnthropicBaseUrl,
+} from "./provider-factory";
 
 // 不走网络(假 key),但必须断言 provider identity:这能锁住真实 wire protocol,
 // 防止 @ai-sdk/openai 的默认 callable 行为升级后把 openai_chat 悄悄切到 Responses。
@@ -19,6 +23,17 @@ describe("modelFor", () => {
       token: "sk-test",
     });
     expect(typeof m).toBe("object"); // 真模型实例,非裸字符串
+
+    for (const invalidApiFormat of [undefined, "unknown", 42]) {
+      expect(() =>
+        modelFor({
+          apiFormat: invalidApiFormat,
+          baseUrl: "https://must-not-call.example/v1",
+          model: "must-not-leak",
+          token: "must-not-leak",
+        } as never),
+      ).toThrow(ModelConfigurationError);
+    }
   });
 
   it("openai_chat + 自定义 baseURL(DeepSeek/MiniMax/relay)", () => {
@@ -120,5 +135,15 @@ describe("embeddingModelFor", () => {
         token: "sk-test",
       }),
     ).toThrow(/embedding/);
+    for (const invalidApiFormat of [undefined, "unknown", { wrong: true }]) {
+      expect(() =>
+        embeddingModelFor({
+          apiFormat: invalidApiFormat,
+          baseUrl: "https://must-not-call.example/v1",
+          model: "must-not-leak",
+          token: "must-not-leak",
+        } as never),
+      ).toThrow(ModelConfigurationError);
+    }
   });
 });

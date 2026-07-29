@@ -388,10 +388,12 @@ export async function POST(req: Request): Promise<Response> {
         };
       },
       onError: (error) => {
-        console.error("[api/chat] stream errored:", error);
+        console.error("[api/chat] stream_error", {
+          category: "provider_stream_error",
+        });
         const human = humanizeAiError(error);
         if (human) return human.message;
-        return error instanceof Error ? error.message : String(error);
+        return "模型调用失败，请稍后重试。";
       },
       // [T-128] assistant 回复落库带**完整 parts**(text + tool-result 卡数据)。之前 onFinish 只拿
       // finalText → 只存纯文本,tool-result 卡(候选卡/素材卡/审核报告卡)在存那刻就丢 → 刷新即消失

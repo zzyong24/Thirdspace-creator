@@ -12,6 +12,7 @@ describe("resolveLlmConfig — tier 1 DB row", () => {
     const cfg = await resolveLlmConfig(ctx, "planning.thesis", {
       getChannelModelConfig: async () => ({
         provider: "openai-compatible",
+        apiFormat: "openai_chat",
         baseURL: "https://channel-model.example/v1",
         apiKey: ["channel", "test"].join("-"),
         model: "channel-model",
@@ -31,7 +32,34 @@ describe("resolveLlmConfig — tier 1 DB row", () => {
       model: "channel-model",
       token: "channel-test",
       settings: { temperature: 0.2 },
+      displayModelKey: "channel-managed",
     });
+
+    for (const invalidApiFormat of [undefined, "unknown", 42]) {
+      let invalidLocalReads = 0;
+      await expect(
+        resolveLlmConfig(ctx, "planning.thesis", {
+          getChannelModelConfig: async () => ({
+            provider: "openai-compatible",
+            ...(invalidApiFormat === undefined
+              ? {}
+              : { apiFormat: invalidApiFormat }),
+            baseURL: "https://must-not-leak.example/v1",
+            apiKey: "must-not-leak",
+            model: "must-not-leak",
+          }),
+          getModelConfig: async () => {
+            invalidLocalReads += 1;
+            return null;
+          },
+          env: { ANTHROPIC_API_KEY: "must-not-be-read" },
+        }),
+      ).rejects.toMatchObject({
+        name: "ChannelModelConfigurationError",
+        message: "渠道模型配置不完整，请联系官方处理",
+      });
+      expect(invalidLocalReads).toBe(0);
+    }
   });
 
   it("uses the DB row when its secretReference resolves non-empty", async () => {

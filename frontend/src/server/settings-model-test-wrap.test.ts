@@ -118,17 +118,38 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
   });
 
   it("正式流式调用发生非鉴权异常 → ✗ 通用人话提示(不泄原始错误,也不说「未配置」)", async () => {
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const opaque = {
+      ...llmSpec,
+      baseUrl: "https://opaque-channel.example/v1",
+      model: "opaque-channel-model",
+      token: "opaque-channel-secret",
+      displayModelKey: "channel-managed" as const,
+    };
     const deps = makeDeps({
+      resolveLlm: vi.fn(async () => opaque),
       probeTextModel: vi.fn(async () => {
-        throw new Error("socket hang up at upstream.internal");
+        throw new Error(
+          "raw-error opaque-channel-secret opaque-channel-model opaque-channel.example response-body",
+        );
       }),
     });
     const r = await runModelConnectionTest(ctx, "default", deps);
     expect(r.ok).toBe(false);
+    expect(r.provider).toBe("channel-managed");
+    expect(r.model).toBe("channel-managed");
     expect(r.detail).toContain("连接失败");
-    expect(r.detail).not.toContain("socket hang up");
-    expect(r.detail).not.toContain("upstream.internal");
+    expect(r.detail).not.toContain("raw-error");
+    expect(r.detail).not.toContain("opaque-channel");
     expect(r.detail).not.toContain("未配置");
+    const logSnapshot = JSON.stringify(consoleSpy.mock.calls);
+    expect(logSnapshot).toContain("provider_error");
+    expect(logSnapshot).not.toMatch(
+      /opaque-channel|response-body|raw-error/,
+    );
+    consoleSpy.mockRestore();
   });
 
   it("正式流式调用返回 2xx 空流 → ✗，不能把空内容误判成连通", async () => {
@@ -370,14 +391,34 @@ describe("createSettingsWithModelTest — wrap 拦截与透传", () => {
     const passthrough = vi.fn(async () => ({ data: [], meta: { requestId: "r1" } }));
     const wrapped = createSettingsWithModelTest({
       settings: { request: passthrough },
-      ...makeDeps(),
+      ...makeDeps({
+        resolveLlm: vi.fn(async () => ({
+          ...llmSpec,
+          baseUrl: "https://opaque.example/v1",
+          model: "opaque-model",
+          token: "opaque-secret",
+          displayModelKey: "channel-managed" as const,
+        })),
+      }),
     });
     const res = (await wrapped.request(
       ENDPOINTS.testModelConnection,
       { params: { capability: "default" }, query: undefined, body: undefined },
       ctx,
-    )) as { data: { ok: boolean; detail: string } };
+    )) as {
+      data: {
+        ok: boolean;
+        detail: string;
+        provider: string;
+        model: string;
+      };
+    };
     expect(res.data.ok).toBe(true);
+    expect(res.data.provider).toBe("channel-managed");
+    expect(res.data.model).toBe("channel-managed");
+    expect(JSON.stringify(res)).not.toMatch(
+      /opaque\.example|opaque-model|opaque-secret/,
+    );
     expect(passthrough).not.toHaveBeenCalled();
 
     await wrapped.request(

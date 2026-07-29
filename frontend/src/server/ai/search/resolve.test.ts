@@ -15,6 +15,7 @@ describe("resolveSearchSpec — tier 1 DB row(库存密钥优先)", () => {
     const spec = await resolveSearchSpec(ctx, {
       getChannelModelConfig: async () => ({
         provider: "tavily",
+        apiFormat: "openai_chat",
         baseURL: "https://channel-search.example",
         apiKey: ["channel", "search", "test"].join("-"),
         model: "search-model",
@@ -31,7 +32,32 @@ describe("resolveSearchSpec — tier 1 DB row(库存密钥优先)", () => {
       baseUrl: "https://channel-search.example",
       model: "search-model",
       token: "channel-search-test",
+      displayModelKey: "channel-managed",
     });
+
+    for (const invalidApiFormat of [undefined, "unknown", false]) {
+      await expect(
+        resolveSearchSpec(ctx, {
+          getChannelModelConfig: async () => ({
+            provider: "tavily",
+            ...(invalidApiFormat === undefined
+              ? {}
+              : { apiFormat: invalidApiFormat }),
+            baseURL: "https://must-not-call.example",
+            apiKey: "must-not-leak",
+            model: "must-not-leak",
+          }),
+          getModelConfig: async () => {
+            localReads += 1;
+            return null;
+          },
+          env: {},
+        }),
+      ).rejects.toMatchObject({
+        name: "ChannelModelConfigurationError",
+      });
+    }
+    expect(localReads).toBe(0);
   });
 
   it("web.search 命中行 → 投影 SearchSpec,secretValue 优先于 env-ref", async () => {

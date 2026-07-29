@@ -2119,7 +2119,7 @@ export async function runChatStream(
       modelKey:
         recovery.fallbackUsed && fallbackSpecModel
           ? fallbackSpecModel
-          : assembly.modelSpec.model,
+          : assembly.modelSpec.displayModelKey ?? assembly.modelSpec.model,
     });
   };
   const addUsage = (u: {
@@ -2154,7 +2154,8 @@ export async function runChatStream(
       const fallbackSpec = await deps.resolveFallbackModelSpec(ctx);
       if (fallbackSpec) {
         fallbackModel = modelFor(fallbackSpec);
-        fallbackSpecModel = fallbackSpec.model;
+        fallbackSpecModel =
+          fallbackSpec.displayModelKey ?? fallbackSpec.model;
       }
     } catch {
       fallbackModel = null;

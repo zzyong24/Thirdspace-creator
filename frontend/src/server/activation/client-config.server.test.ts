@@ -1,11 +1,19 @@
 import {
+  createCipheriv,
   createHash,
   generateKeyPairSync,
+  randomBytes,
   sign,
   type KeyObject,
 } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -13,6 +21,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   ClientConfigPullError,
+  ClientConfigCacheSecurityError,
+  EncryptedClientConfigStore,
   readChannelModelAuthority,
   refreshClientConfig,
   type ClientConfigCacheRecord,
@@ -164,6 +174,20 @@ function configuredRecord(
   };
 }
 
+function encryptedEnvelope(key: Buffer, envelope: unknown): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([
+    cipher.update(Buffer.from(JSON.stringify(envelope))),
+    cipher.final(),
+  ]);
+  return `enc:v1:${Buffer.concat([
+    iv,
+    cipher.getAuthTag(),
+    ciphertext,
+  ]).toString("base64")}\n`;
+}
+
 const verdict = {
   v: 1,
   allowed: true,
@@ -220,16 +244,18 @@ describe("T-575 config.pull Creator consumer", () => {
     };
   }
 
-  function successfulFetch(bundle = signedBundle(growthKeys.privateKey)) {
+  function successfulFetch(
+    bundle = signedBundle(growthKeys.privateKey),
+    active = verdict,
+  ) {
     return vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url === `${AM_ORIGIN}/api/license/client-config-tickets`) {
         expect(JSON.parse(String(init?.body))).toEqual({
           contractVersion: "config-access-ticket-v1",
-          projectKey: "creatoros",
-          clientId: "creatoros.desktop",
-          code: verdict.code,
-          machineId: verdict.machineId,
+          projectKey: active.projectKey,
+          code: active.code,
+          machineId: active.machineId,
           nonce: "nonce-client-config-0001",
         });
         return signedAmResponse(amKeys.privateKey, {
@@ -658,47 +684,6 @@ describe("T-575 config.pull Creator consumer", () => {
     expect(store.record?.channel).not.toBeNull();
   });
 
-  it("Growth signer 暂时不可用时使用本地，不启用远端 LKG", async () => {
-    store.record = configuredRecord(signedBundle(growthKeys.privateKey));
-    const fetchImpl = successfulFetch();
-    fetchImpl.mockImplementationOnce(async (input) => {
-      expect(String(input)).toBe(
-        `${AM_ORIGIN}/api/license/client-config-tickets`,
-      );
-      return signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v1",
-        configAccessTicket: "header.payload.signature",
-        expiresAt: "2026-07-28T12:15:00.000Z",
-        nonce: "nonce-client-config-0001",
-      });
-    });
-    fetchImpl.mockImplementationOnce(async () =>
-      Response.json(
-        {
-          error: {
-            code: "CLIENT_CONFIG_SIGNER_UNAVAILABLE",
-            message: "CLIENT_CONFIG_SIGNER_UNAVAILABLE",
-          },
-        },
-        { status: 503 },
-      ),
-    );
-
-    await expect(
-      refreshClientConfig({
-        env: env(),
-        now: () => NOW,
-        nonce: () => "nonce-client-config-0001",
-        fetchImpl,
-        readVerdict: async () => ({ state: "ready", verdict }),
-        store,
-      }),
-    ).resolves.toMatchObject({
-      authority: "local",
-      outcome: "unreachable",
-    });
-  });
-
   it("Activity/Growth 明确撤权、过期或重放拒绝时禁止 LKG，且保存阻断态", async () => {
     store.record = configuredRecord(signedBundle(growthKeys.privateKey));
     const fetchImpl = successfulFetch();
@@ -817,6 +802,343 @@ describe("T-575 config.pull Creator consumer", () => {
       });
     } finally {
       await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界", async () => {
+    const bundleA = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 42,
+    });
+    const verdictB = {
+      ...verdict,
+      projectKey: "creatoros-b",
+      channelRef: "agent-b",
+    };
+    const bundleB1 = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 1,
+      projectKey: verdictB.projectKey,
+      channelRef: verdictB.channelRef,
+    });
+
+    store.record = configuredRecord(bundleA);
+    const fetchB1 = successfulFetch(bundleB1, verdictB);
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: fetchB1,
+        readVerdict: async () => ({ state: "ready", verdict: verdictB }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+    expect(fetchB1.mock.calls[1]?.[1]?.headers).not.toMatchObject({
+      "If-None-Match": expect.anything(),
+    });
+    expect(store.record).toMatchObject({
+      activeLocator: {
+        projectKey: "creatoros-b",
+        channelRef: "agent-b",
+        clientId: "creatoros.desktop",
+      },
+      bundle: { bundleVersion: 1 },
+      inactiveLocators: [
+        {
+          locator: {
+            projectKey: "creatoros",
+            channelRef: "agent-42",
+            clientId: "creatoros.desktop",
+          },
+        },
+      ],
+    });
+
+    // A42 与 B42 是不同序列；同版本不同 digest 也必须接受，不能碰撞。
+    store.record = configuredRecord(bundleA);
+    const bundleB42 = signedBundle(growthKeys.privateKey, {
+      bundleVersion: 42,
+      projectKey: verdictB.projectKey,
+      channelRef: verdictB.channelRef,
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(bundleB42, verdictB),
+        readVerdict: async () => ({ state: "ready", verdict: verdictB }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+
+    // B 不可达时 A 密文只留在 inactive，不得被重新激活。
+    store.record = configuredRecord(bundleA);
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: vi.fn<typeof fetch>(async () => {
+          throw new TypeError("dns failed");
+        }),
+        readVerdict: async () => ({ state: "ready", verdict: verdictB }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "unreachable" });
+    expect(store.record).toMatchObject({
+      state: "local",
+      activeLocator: {
+        projectKey: "creatoros-b",
+        channelRef: "agent-b",
+      },
+      bundle: null,
+      inactiveLocators: [{ bundle: { bundleVersion: 42 } }],
+    });
+
+    // 切回 A 后才可发送 A 的 ETag；Growth 304 验证通过后重新激活 A。
+    const switchBack = vi.fn<typeof fetch>(async (input, init) => {
+      if (String(input).startsWith(AM_ORIGIN)) {
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v1",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+        });
+      }
+      expect(init?.headers).toMatchObject({
+        "If-None-Match": `"${bundleA.bundleDigest}"`,
+      });
+      return new Response(null, {
+        status: 304,
+        headers: {
+          etag: `"${bundleA.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": "42",
+          "x-config-key-id": bundleA.keyId,
+          "x-correlation-id": "cor_abcdef0123456789abcdef0123456789",
+        },
+      });
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: switchBack,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+
+    // Activity 所有 5xx（含未知正文）都是 authority unavailable，不是安全攻击。
+    for (const status of [500, 502, 503, 599]) {
+      store.record = configuredRecord(signedBundle(growthKeys.privateKey));
+      const fetchImpl = vi.fn<typeof fetch>(async () =>
+        Response.json({ unknown: "body-must-not-matter" }, { status }),
+      );
+      await expect(
+        refreshClientConfig({
+          env: env(),
+          now: () => NOW,
+          nonce: () => "nonce-client-config-0001",
+          fetchImpl,
+          readVerdict: async () => ({ state: "ready", verdict }),
+          store,
+        }),
+      ).resolves.toMatchObject({ authority: "local", outcome: "unreachable" });
+      expect(store.record).toMatchObject({
+        state: "local",
+        outcome: "unreachable",
+        channel: expect.any(Object),
+      });
+    }
+
+    // Growth 所有 5xx（含未知 code）同样只停用渠道，不隔离历史密文。
+    for (const status of [500, 502, 503, 599]) {
+      store.record = configuredRecord(signedBundle(growthKeys.privateKey));
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          signedAmResponse(amKeys.privateKey, {
+            contractVersion: "config-access-ticket-v1",
+            configAccessTicket: "header.payload.signature",
+            expiresAt: "2026-07-28T12:15:00.000Z",
+            nonce: "nonce-client-config-0001",
+          }),
+        )
+        .mockResolvedValueOnce(
+          Response.json(
+            { error: { code: "UNKNOWN_5XX", message: "opaque" } },
+            { status },
+          ),
+        );
+      await expect(
+        refreshClientConfig({
+          env: env(),
+          now: () => NOW,
+          nonce: () => "nonce-client-config-0001",
+          fetchImpl,
+          readVerdict: async () => ({ state: "ready", verdict }),
+          store,
+        }),
+      ).resolves.toMatchObject({ authority: "local", outcome: "unreachable" });
+      expect(store.record).toMatchObject({
+        state: "local",
+        outcome: "unreachable",
+        channel: expect.any(Object),
+      });
+    }
+
+    for (const kind of [
+      "prefix",
+      "gcm-tag",
+      "wrong-key",
+      "schema",
+      "structure",
+    ]) {
+      const directory = await mkdtemp(
+        join(tmpdir(), "creatoros-client-config-corrupt-"),
+      );
+      const path = join(directory, ".channel-model-config");
+      const key = Buffer.alloc(32, 7);
+      const bundle = signedBundle(growthKeys.privateKey);
+      const configured = configuredRecord(bundle);
+      const validRecord: ClientConfigCacheRecord = {
+        state: configured.state,
+        outcome: configured.outcome,
+        checkedAt: configured.checkedAt,
+        activeLocator: {
+          projectKey: bundle.projectKey,
+          channelRef: bundle.channelRef,
+          clientId: "creatoros.desktop",
+        },
+        bundle: configured.bundle,
+        channel: configured.channel,
+        inactiveLocators: [],
+      };
+      try {
+        if (kind === "prefix") {
+          await writeFile(path, "plaintext-cache\n", "utf8");
+        } else if (kind === "gcm-tag") {
+          const valid = encryptedEnvelope(key, {
+            schemaVersion: "creatoros-channel-model-config-cache-v1",
+            record: validRecord,
+          });
+          const packed = Buffer.from(valid.trim().slice("enc:v1:".length), "base64");
+          packed[12] = packed[12]! ^ 0xff;
+          await writeFile(path, `enc:v1:${packed.toString("base64")}\n`, "utf8");
+        } else if (kind === "wrong-key") {
+          await new EncryptedClientConfigStore(path, Buffer.alloc(32, 8)).save(
+            validRecord,
+          );
+        } else if (kind === "schema") {
+          await writeFile(
+            path,
+            encryptedEnvelope(key, {
+              schemaVersion: "unknown-schema",
+              record: validRecord,
+            }),
+            "utf8",
+          );
+        } else {
+          await writeFile(
+            path,
+            encryptedEnvelope(key, {
+              schemaVersion: "creatoros-channel-model-config-cache-v1",
+              record: { state: "channel", injected: "opaque" },
+            }),
+            "utf8",
+          );
+        }
+        await expect(
+          new EncryptedClientConfigStore(path, key).load(),
+        ).rejects.toBeInstanceOf(ClientConfigCacheSecurityError);
+        expect(await readdir(directory)).toEqual([
+          expect.stringMatching(/^\.channel-model-config\.corrupt\./),
+        ]);
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    }
+
+    {
+    // 兼容旧 Activity ticket 的 clientId 字段但不信任，Creator 请求不再自报 clientId。
+    const bundle = signedBundle(growthKeys.privateKey);
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      if (String(input).startsWith(AM_ORIGIN)) {
+        expect(JSON.parse(String(init?.body))).not.toHaveProperty("clientId");
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v1",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+          clientId: "untrusted-legacy-value",
+        });
+      }
+      return Response.json(bundle, {
+        status: 200,
+        headers: {
+          etag: `"${bundle.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": "42",
+          "x-config-key-id": bundle.keyId,
+          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        },
+      });
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+    }
+
+    {
+    // Growth registry 签入错误 clientId 时安全失败。
+    const wrongClient = signedBundle(growthKeys.privateKey, {
+      clientId: "other.desktop",
+    });
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl: successfulFetch(wrongClient),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({ authority: "local", outcome: "security_error" });
+    expect(store.record?.state).toBe("quarantined");
+    }
+
+    {
+    // runtime authority 还必须匹配 active locator，不能仅凭 bundle/channel 字段激活。
+    const bundle = signedBundle(growthKeys.privateKey);
+    store.record = {
+      ...configuredRecord(bundle),
+      activeLocator: {
+        projectKey: "other-project",
+        channelRef: "other-channel",
+        clientId: "creatoros.desktop",
+      },
+      inactiveLocators: [],
+    };
+    await expect(
+      readChannelModelAuthority({
+        env: env(),
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "unreachable",
+      payload: null,
+    });
     }
   });
 });
