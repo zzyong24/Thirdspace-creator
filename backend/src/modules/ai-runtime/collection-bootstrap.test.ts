@@ -10,7 +10,7 @@ import {
 } from "./collection-bootstrap";
 import type { RequestContext } from "@creatoros/contract";
 
-// T-189a —— 绑定抖音成功后:幂等建三个每天定时采集 job(self.metrics / self.detail / comments)+
+// T-189a/T-600 —— 绑定抖音成功后幂等建立四个不重复的产品任务，
 //   按序初始化触发一次拉全量。纯编排 + 注入端口,零成本单测(不碰真抖音/不建真 job)。
 // [T-332 S2] claimOrphans/hasOtherActiveDouyinAccount(T-200/T-331)已全链退役(SPEC §4.4):
 //   绑定 = 只建号绑定 job + 初始化触发,零 claim;本文件的「绑定链零 claim」用例是该裁决的守护。
@@ -93,16 +93,13 @@ function makeDeps(
 }
 
 describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
-  it("① 全新绑定 → 建 5 个统一系统 job", async () => {
+  it("① 全新绑定 → 建 4 个不重复的系统 job", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // [T-212a][T-235a][T-235c] 建了恰好 6 个 job(self 三源 + benchmark 对标 +
-    // topic.daily 每日出题 + favorites 指定收藏夹)。
-    expect(deps._createJob).toHaveBeenCalledTimes(5);
+    expect(deps._createJob).toHaveBeenCalledTimes(4);
     expect(res.created).toEqual([
       "self.metrics",
-      "self.detail",
       "comments",
       "topic.daily",
       "intelligence.sync",
@@ -114,7 +111,6 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       deps.createdJobs.map((j) => [j.sourceKind, j.schedule]),
     );
     expect(bySource.get("self.metrics")).toBe(staggeredSchedule("0 9 * * *", "acct-1"));
-    expect(bySource.get("self.detail")).toBe(staggeredSchedule("10 9 * * *", "acct-1"));
     expect(bySource.get("comments")).toBe(staggeredSchedule("20 9 * * *", "acct-1"));
     expect(bySource.get("topic.daily")).toBe(staggeredSchedule("40 9 * * *", "acct-1"));
     expect(bySource.get("intelligence.sync")).toBe("*/15 * * * *");
@@ -129,16 +125,14 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       return Number(h) * 60 + Number(m);
     };
     const base = minuteOfDay(bySource.get("self.metrics")!);
-    expect(minuteOfDay(bySource.get("self.detail")!) - base).toBe(10);
     expect(minuteOfDay(bySource.get("comments")!) - base).toBe(20);
     expect(minuteOfDay(bySource.get("topic.daily")!) - base).toBe(40);
   });
 
   it("② 已有同 sourceKind job → 不重建(幂等)", async () => {
-    // 三源都已存在 → 一个都不建。
+    // 四个产品任务都已存在 → 一个都不建。
     const deps = makeDeps({
       "self.metrics": [{ id: "existing-metrics" }],
-      "self.detail": [{ id: "existing-detail" }],
       comments: [{ id: "existing-comments" }],
       "topic.daily": [{ id: "existing-topic-daily" }],
       "intelligence.sync": [{ id: "existing-intelligence-sync" }],
@@ -148,7 +142,6 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps._createJob).not.toHaveBeenCalled();
     expect(res.created).toEqual([]);
     // 但仍初始化触发既有 job(拉全量)——复用既有 id。
-    // [T-595] 可见性闸门已并入 self.metrics；self.detail 是默认关闭的兼容入口。
     expect(res.triggered).toEqual(["self.metrics"]);
   });
 
@@ -158,9 +151,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._createJob).toHaveBeenCalledTimes(4);
+    expect(deps._createJob).toHaveBeenCalledTimes(3);
     expect(res.created).toEqual([
-      "self.detail",
       "comments",
       "topic.daily",
       "intelligence.sync",
@@ -176,19 +168,14 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(res.triggered).toEqual(["self.metrics"]);
   });
 
-  it("③ [T-433 S1] 绑号初始化触发:self.detail 带 skipHeavyBackfill(尾部重活跳过,留次日定时补),self.metrics 不带", async () => {
+  it("③ 绑号初始化只触发 self.metrics canonical collector", async () => {
     const deps = makeDeps();
     await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // 触发顺序即 [self.metrics, self.detail](顺序铁律)。绑号是一次性重触发,
-    // 只跑轻量明细拿可见性;封面/逐字稿/复刻等尾部重活延到次日定时任务,
-    // 避免多账号同时绑号把重活挤成灾难。
     expect(deps.triggeredSourceKinds).toEqual(["self.metrics"]);
     const bySource = new Map(
       deps.triggeredSourceKinds.map((k, i) => [k, deps.triggeredOptions[i]]),
     );
-    expect(bySource.get("self.detail")).toBeUndefined();
-    // self.metrics 无重活尾巴,不传 options(保持默认全量)。
     expect(bySource.get("self.metrics")).toBeUndefined();
   });
 
@@ -203,10 +190,10 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
 
   it("单源建 job 失败 → 不阻断其余源(best-effort)", async () => {
     const deps = makeDeps();
-    // 让 self.detail 建失败,验 self.metrics/comments 仍建 + 触发。
+    // 让 comments 建失败，验其余任务仍建且 canonical collector 仍触发。
     deps._createJob.mockImplementation(
       async (_c: RequestContext, input: { sourceKind: string }) => {
-        if (input.sourceKind === "self.detail") {
+        if (input.sourceKind === "comments") {
           throw new Error("boom");
         }
         return { id: `job-${input.sourceKind}` };
@@ -215,11 +202,9 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
     expect(res.created).toEqual([
       "self.metrics",
-      "comments",
       "topic.daily",
       "intelligence.sync",
     ]);
-    // self.detail 建失败 → 不触发它;[T-359] 默认关的四类也不触发 → 只剩 self.metrics。
     expect(res.triggered).toEqual(["self.metrics"]);
   });
 
@@ -232,7 +217,6 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
   it("[T-200] 复用既有 job → 带既有 job 的属主号给触发", async () => {
     const deps = makeDeps({
       "self.metrics": [{ id: "existing-metrics", accountId: "acct-1" }],
-      "self.detail": [{ id: "existing-detail", accountId: "acct-1" }],
       comments: [{ id: "existing-comments", accountId: "acct-1" }],
       "topic.daily": [{ id: "existing-topic-daily", accountId: "acct-1" }],
       "intelligence.sync": [{ id: "existing-intelligence-sync", accountId: "acct-1" }],
@@ -254,11 +238,11 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const res = await bootstrapDouyinCollectionJobs(secondBindCtx, deps);
 
     // 二绑照常建 job + 触发(strict 门下 listJobs 只见 acct-2 的 job → 全量补建)。
-    expect(res.created).toHaveLength(5);
+    expect(res.created).toHaveLength(4);
     // 初始化只触发 canonical self.metrics。
     expect(res.triggered).toHaveLength(1);
-    expect(deps._listJobs).toHaveBeenCalledTimes(5);
-    expect(deps._createJob).toHaveBeenCalledTimes(5);
+    expect(deps._listJobs).toHaveBeenCalledTimes(4);
+    expect(deps._createJob).toHaveBeenCalledTimes(4);
     expect(deps._trigger).toHaveBeenCalledTimes(1);
   });
 
@@ -272,7 +256,6 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       ]),
     );
     expect(byKind.get("self.metrics")).toBe(true);
-    expect(byKind.get("self.detail")).toBe(false);
     expect(byKind.get("comments")).toBe(false);
     expect(byKind.get("topic.daily")).toBe(false);
     expect(byKind.get("intelligence.sync")).toBe(true);
@@ -282,14 +265,12 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     // 存量账号启动时补齐每日选题与内容雷达聚合作业，但不直接触发。
     const deps = makeDeps({
       "self.metrics": [{ id: "existing-metrics", accountId: "acct-1" }],
-      "self.detail": [{ id: "existing-detail", accountId: "acct-1" }],
       comments: [{ id: "existing-comments", accountId: "acct-1" }],
     });
     const res = await ensureCollectionJobs(ctx, deps);
     expect(res.created).toEqual(["topic.daily", "intelligence.sync"]);
     expect(res.jobsInOrder.map((j) => j.sourceKind)).toEqual([
       "self.metrics",
-      "self.detail",
       "comments",
       "topic.daily",
       "intelligence.sync",
@@ -298,20 +279,18 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     // 再跑一次(全部已存在)→ 幂等零建。
     const deps2 = makeDeps({
       "self.metrics": [{ id: "j1" }],
-      "self.detail": [{ id: "j2" }],
-      comments: [{ id: "j3" }],
-      "topic.daily": [{ id: "j4" }],
-      "intelligence.sync": [{ id: "j5" }],
+      comments: [{ id: "j2" }],
+      "topic.daily": [{ id: "j3" }],
+      "intelligence.sync": [{ id: "j4" }],
     });
     const res2 = await ensureCollectionJobs(ctx, deps2);
     expect(res2.created).toEqual([]);
     expect(deps2._createJob).not.toHaveBeenCalled();
   });
 
-  it("[T-598] 默认任务移除 benchmark/favorites 第二 producer，增加 intelligence.sync", () => {
+  it("[T-600] 默认任务只保留四个不重复的产品语义", () => {
     expect(DAILY_COLLECTION_JOB_DEFAULTS.map((t) => t.sourceKind)).toEqual([
       "self.metrics",
-      "self.detail",
       "comments",
       "topic.daily",
       "intelligence.sync",

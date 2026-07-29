@@ -2,7 +2,7 @@ import type { RequestContext } from "@creatoros/contract";
 
 // 绑定抖音 → 组合根 bootstrap(T-189a/T-595/T-598):扫码绑定成功后,为该账号幂等建立
 // 「每天定时」job。self.metrics 是唯一启用的自有作品 canonical visible-only collector；
-// self.detail 仅保留为旧任务兼容别名且新号默认关闭。
+// self.detail 仅保留底层历史 handler 兼容，不再作为独立自动化任务创建。
 //
 // 定位:纯编排逻辑(所有 IO 经注入端口),可直接单测。ingestion.service 在 loginDouyin 成功后经
 //   注入的 onDouyinBound 回调触发本函数(backend 模块**不 import scheduling**,守 SPEC §22 模块边界)——
@@ -18,7 +18,7 @@ import type { RequestContext } from "@creatoros/contract";
 
 /** 一条默认采集 job 模板(sourceKind + 展示名 + 提示词 + 每天定时 cron)。 */
 export interface CollectionJobDefault {
-  // self.metrics | self.detail | comments | benchmark | topic.daily | favorites
+  // self.metrics | comments | topic.daily | intelligence.sync
   //   ([T-258] 与 contract scheduledJobSourceKind 6 值枚举对齐,单一真源即下方 DEFAULTS 列表)。
   readonly sourceKind: string;
   readonly name: string;
@@ -37,21 +37,14 @@ export interface CollectionJobDefault {
 export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   {
     sourceKind: "self.metrics",
-    name: "每天抓我的新作品指标",
+    name: "我的作品数据同步",
     prompt: "每天抓我主页的新作品和最新指标",
     schedule: "0 9 * * *",
     enabledByDefault: true, // [T-359] 绑号即有意义(自己作品)
   },
   {
-    sourceKind: "self.detail",
-    name: "作品明细采集（兼容入口）",
-    prompt: "兼容旧任务：与我的作品指标共用公开作品采集，不再单独重复运行",
-    schedule: "10 9 * * *",
-    enabledByDefault: false, // [T-595] canonical collector 已并入 self.metrics；新号不再双跑
-  },
-  {
     sourceKind: "comments",
-    name: "每天抓我作品的最新评论",
+    name: "我的作品评论同步",
     prompt: "每天抓我所有作品的最新评论",
     schedule: "20 9 * * *",
     enabledByDefault: false, // [T-359] 用户拍板后放:有导入作品后手动开
@@ -63,7 +56,7 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   //   douyinGateway(与采集类 job 无限流冲突;gate-F5 串行闸仍统一排队)。
   {
     sourceKind: "topic.daily",
-    name: "每天自动出题",
+    name: "每日自动生成选题",
     prompt: "每天结合我的定位、评论信号、知识库和当下热点,自动出一批选题进选题池",
     schedule: "40 9 * * *",
     enabledByDefault: false, // [T-359] 前置=配文本模型(+定位),新号先跑通自己数据
@@ -257,7 +250,7 @@ export async function ensureCollectionJobs(
  * 绑定抖音成功后：幂等建立系统采集 job，并只初始化触发默认需要立即执行的自有作品采集。
  *
  * 幂等:每个 sourceKind 有存量 job 就复用(不重建);触发经 triggerScheduledJob 当天幂等双闸。
- * 顺序:self.metrics → self.detail → comments → topic.daily → intelligence.sync
+ * 顺序:self.metrics → comments → topic.daily → intelligence.sync
  *   (await 串行 enqueue → gate-F5 串行链按序执行)。
  * best-effort:单个 job 建/触发失败不阻断其余(记日志继续),整体 fire-and-forget 不阻塞绑定返回。
  */
@@ -269,13 +262,12 @@ export async function bootstrapDouyinCollectionJobs(
   //   strict 世界所有 per-account 行出生即带号(ISO-01/03),绑定 = 只建号绑定 job + 初始化触发,
   //   **零 claim** —— 绑第二个号不改动任何既有行归属(ISO-08 双号验收前提)。
 
-  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → topic.daily
-  //   → intelligence.sync)。
+  // ① 幂等建 job(顺序即模板顺序 self.metrics → comments → topic.daily → intelligence.sync)。
   //   [T-227] 实体抽到 ensureCollectionJobs(启动兜底与绑定 bootstrap 共用同一份 ensure,单一真源)。
   const { created, jobsInOrder } = await ensureCollectionJobs(ctx, deps);
 
-  // ② 初始化拉全量:按序触发一次(self.metrics 先建 publication → self.detail 落可见性 → comments)。
-  //   [T-359] 只触发**默认启用**的(自己作品指标/明细);默认关的(收藏夹/对标/出题/评论)前置未配,
+  // ② 初始化拉全量：只触发默认启用的 self.metrics canonical collector；默认关的
+  //   出题/评论前置未配，
   //   初始化触发=纯空跑噪音,跳过——用户配好前置打开开关后,到点/立即运行照常跑。
   const triggered: string[] = [];
   for (const job of jobsInOrder) {
@@ -288,16 +280,7 @@ export async function bootstrapDouyinCollectionJobs(
       continue;
     }
     try {
-      // [T-433 S1] 绑号轻触发:self.detail 初始化跑跳过尾部逐条重活(封面/逐字稿/重建),避免多账号
-      //   疯狂绑号把重活堆进 gate-F5 超长串行队列;明细(作品列表/标题/明细)照常当刻出,重活留
-      //   次日 daily self.detail(不带此标)到点补(现有增量幂等,不漏首次数据)。
-      await deps.trigger(
-        ctx,
-        job,
-        job.sourceKind === "self.detail"
-          ? { skipHeavyBackfill: true }
-          : undefined,
-      );
+      await deps.trigger(ctx, job);
       triggered.push(job.sourceKind);
     } catch (err) {
       // 单源触发失败不阻断其余(下一次到点或手动「立即运行」仍可采;记错不静默)。

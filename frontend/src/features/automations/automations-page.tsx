@@ -67,9 +67,12 @@ export async function AutomationsPage({
       rows = [];
     }
   }
-  // T-598：旧 benchmark/favorites 只保留数据库历史，不再作为第二套自动化入口展示。
+  // T-600：旧 self.detail/benchmark/favorites 只保留数据库历史，不再作为独立任务展示。
   rows = rows.filter(
-    (job) => job.sourceKind !== "benchmark" && job.sourceKind !== "favorites",
+    (job) =>
+      job.sourceKind !== "self.detail" &&
+      job.sourceKind !== "benchmark" &&
+      job.sourceKind !== "favorites",
   );
 
   // [T-332 S4·§6.3] 解析当前号 handle(user 级读,不需要当前号)→ badge。读失败/

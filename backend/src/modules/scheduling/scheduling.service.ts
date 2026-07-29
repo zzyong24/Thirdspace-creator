@@ -139,6 +139,7 @@ export interface SchedulingService {
 
 export function createSchedulingService(deps: ServiceDeps): SchedulingService {
   const { db, now, nextId } = deps;
+  const retiredSourceKinds = new Set(["self.detail", "benchmark", "favorites"]);
 
   function repoFor(ctx: RequestContext): SchedulingRepository {
     // [T-332 S2] accountId 透传进 repo(strict 双维门在 repo 内落地:用户路径未选号 → 抛
@@ -159,6 +160,11 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createJob(ctx, input) {
+      if (retiredSourceKinds.has(input.sourceKind)) {
+        throw new ValidationError(
+          "该兼容任务已退役，请使用作品数据同步或内容雷达",
+        );
+      }
       if (
         input.sourceKind === "intelligence.sync" &&
         input.systemManaged !== true
@@ -193,6 +199,9 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
 
     async updateJob(ctx, jobId, patch) {
       const current = await repoFor(ctx).getJob(jobId);
+      if (retiredSourceKinds.has(current.sourceKind)) {
+        throw new ValidationError("该兼容任务已退役，只保留历史记录");
+      }
       if (
         current.sourceKind === "intelligence.sync" &&
         Object.entries(patch).some(
@@ -215,6 +224,12 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async setEnabled(ctx, jobId, enabled) {
+      if (enabled) {
+        const current = await repoFor(ctx).getJob(jobId);
+        if (retiredSourceKinds.has(current.sourceKind)) {
+          throw new ValidationError("该兼容任务已退役，不能重新启用");
+        }
+      }
       const row = await repoFor(ctx).setEnabled(jobId, enabled);
       return toScheduledJobDto(row);
     },

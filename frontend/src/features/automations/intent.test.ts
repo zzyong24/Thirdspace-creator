@@ -61,40 +61,38 @@ describe("classifyIntent — freeform prompt → sourceKind", () => {
     );
   });
 
-  it("「拉我作品的后台明细数据」→ self.detail(明细优先,T-030-D8a)", () => {
+  it("「拉我作品的后台明细数据」→ 统一 self.metrics", () => {
     const c = classifyIntent("每天拉我作品的后台明细数据");
-    expect(c.sourceKind).toBe("self.detail");
+    expect(c.sourceKind).toBe("self.metrics");
     expect(c.confidence).toBe("high");
   });
 
-  it("明细优先于评论/作品:「作品的明细完播和评论」→ self.detail", () => {
-    // 同时含「作品」「明细」「完播」「评论」→ self.detail(最具体的意图落在明细导出)
+  it("明细优先于评论/作品，但归入统一作品数据任务", () => {
     expect(classifyIntent("把我作品的明细完播率和评论都拉一下").sourceKind).toBe(
-      "self.detail",
+      "self.metrics",
     );
   });
 
-  it("「完播率/留存」等明细独有词命中 self.detail", () => {
-    expect(classifyIntent("我想看完播率和留存").sourceKind).toBe("self.detail");
+  it("「完播率/留存」等明细词命中 self.metrics", () => {
+    expect(classifyIntent("我想看完播率和留存").sourceKind).toBe("self.metrics");
   });
 });
 
 describe("COLLECTION_TEMPLATES — 模板定义", () => {
-  // 分类器覆盖域:freeform prompt 只确定性映射到这 3 个源(明细/评论/作品)。
+  // 分类器覆盖域：freeform prompt 只确定性映射到作品数据或评论。
   // 登记源驱动的 benchmark/topic.daily/favorites 是显式(模板卡/下拉)源,分类器不覆盖(设计如此)。
-  const CLASSIFIER_KINDS = ["self.metrics", "comments", "self.detail"] as const;
+  const CLASSIFIER_KINDS = ["self.metrics", "comments"] as const;
 
   it("[T-598] 通用模板只保留非内容雷达重复入口", () => {
-    expect(COLLECTION_TEMPLATES).toHaveLength(4);
+    expect(COLLECTION_TEMPLATES).toHaveLength(3);
 
     const byId = Object.fromEntries(
       COLLECTION_TEMPLATES.map((t) => [t.id, t]),
     );
-    // 前三张:有 per-job 手动 target 的源(明细模板 T-030-D8a 已翻真)。
     expect(byId["daily-self-metrics"]?.sourceKind).toBe("self.metrics");
     expect(byId["daily-comments"]?.sourceKind).toBe("comments");
-    expect(byId["daily-detail"]?.sourceKind).toBe("self.detail");
     expect(byId["daily-topic"]?.sourceKind).toBe("topic.daily");
+    expect(byId["daily-detail"]).toBeUndefined();
     expect(byId["daily-benchmark"]).toBeUndefined();
     expect(byId["daily-favorites"]).toBeUndefined();
 

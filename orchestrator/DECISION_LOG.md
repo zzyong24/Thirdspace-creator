@@ -1040,3 +1040,22 @@ T-517 / T-598 推荐的方案 A。代码核查确认当前生产组合根同时�
 
 **Status**：resolved；解除 T-517 Delta SPEC `R2-01` 的用户裁决阻断，T-598 可进入 CONTRACT /
 BUILD Gate。
+
+## DEC-AUTO-002 (2026-07-29) — 自动化中心只保留四个不重复的产品任务
+
+**来源**：在 T-598 完成单一调度架构后，用户确认自动化任务语义继续收口，不向用户暴露
+仅用于历史兼容、且与主采集任务调用同一 collector 的 `self.detail`。
+
+**决策**：
+
+1. 用户可见任务固定为“我的作品数据同步、我的作品评论同步、内容雷达自动同步、每日自动生成
+   选题”四个。
+2. `self.detail` 不再进入新账号 bootstrap、创建模板或自动化列表；存量 job 统一停用，
+   `job_run` 历史保留用于排障和审计。
+3. 作品后台明细能力不删除：`self.metrics` 继续复用既有 visible-only canonical collector，
+   只删除重复的调度语义和入口。
+4. `benchmark/favorites` 延续 DEC-AUTO-001：只保留历史兼容，不恢复为自动化任务。
+
+**User confirmation**：用户 2026-07-29 对四任务口径明确回复“认可”。
+
+**Status**：resolved；T-600 可直接按 T-598 既有 CONTRACT 做兼容任务退役。

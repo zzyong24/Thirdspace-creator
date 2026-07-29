@@ -104,6 +104,19 @@ enqueueDueSourceRuns(
 - 双账号同时有到期来源时，一个账号的聚合作业不会排队另一个账号的来源。
 - 定时与立即检查都产生真实 `job_run`，来源结果继续落真实 `intelligence_sync_runs`。
 
+## 7. T-600 用户确认后的任务语义收口
+
+自动化中心只保留四个产品任务：
+
+1. `self.metrics`：我的作品数据同步；同时承接公开作品、指标与后台明细的 canonical collector。
+2. `comments`：我的作品评论同步。
+3. `intelligence.sync`：内容雷达自动同步，只检查并同步该账号已到期来源。
+4. `topic.daily`：每日自动生成选题。
+
+`self.detail` 与 `benchmark/favorites` 一样只保留历史枚举和既有运行记录。新 bootstrap、创建模板
+和自动化列表均不得再暴露；迁移 `0060_retire_self_detail_automation.sql` 停用存量 job，但不删除
+历史。用户于 2026-07-29 明确认可该四任务口径（`DEC-AUTO-002`）。
+
 ### 2026-07-29 实测证据
 
 - 调度/内容雷达定向后端：5 文件、65 tests PASS。

@@ -10,6 +10,7 @@ import {
   AccountRequiredError,
   ValidationError,
 } from "./scheduling.errors";
+import { scheduledJobs } from "../../schema/scheduling";
 
 // Scheduling service test (T-007 D1 → T-332 S2) — the service builds a (user, account)
 // 双维 scoped repo per request(repoFor bakes ctx.userId + ctx.accountId)。Proves:
@@ -102,6 +103,39 @@ describe("scheduling service", () => {
     await expect(svc.setEnabled(ctxA, job.id, false)).resolves.toMatchObject({
       enabled: false,
     });
+  });
+
+  it("[T-600] 退役 sourceKind 不能新建或重新启用", async () => {
+    for (const sourceKind of ["self.detail", "benchmark", "favorites"] as const) {
+      await expect(
+        svc.createJob(ctxA, {
+          name: "旧兼容任务",
+          sourceKind,
+          schedule: "0 9 * * *",
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    }
+
+    await db.insert(scheduledJobs).values({
+      id: "legacy-detail",
+      userId: ctxA.userId,
+      accountId: ctxA.accountId!,
+      name: "作品明细采集（兼容入口）",
+      prompt: "",
+      sourceKind: "self.detail",
+      target: {},
+      schedule: "10 9 * * *",
+      toolGrants: [],
+      enabled: false,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await expect(
+      svc.setEnabled(ctxA, "legacy-detail", true),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      svc.updateJob(ctxA, "legacy-detail", { name: "重新包装旧任务" }),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("listJobs filters by sourceKind + enabled, scoped to owner", async () => {

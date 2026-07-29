@@ -9,16 +9,13 @@
  *    **确定性关键词分类器**映射到 sourceKind。可靠优先、可单测、不 flaky。
  *
  * 规则(确定性):
- *  - 含「明细 / 后台数据 / 完播 / 留存」类词 → `self.detail`(T-030-D8a 后台明细导出)。
+ *  - 含「明细 / 后台数据 / 完播 / 留存」类词 → `self.metrics`（同一作品数据任务）。
  *  - 含「评论」类词 → `comments`。
  *  - 含「作品 / 指标 / 播放 / 数据」类词 → `self.metrics`。
- *  - 优先级:明细 > 评论 > 作品 —— 「明细」最具体(点名后台导出),「评论」次之,「作品/指标」
- *    最泛;一句「拉我作品的后台明细」同时含三类词 → self.detail(意图落在明细导出)。
+ *  - 优先级:明细 > 评论 > 作品 —— 明细仍优先，但归入统一的 `self.metrics`。
  *  - 都不含(歧义/空)→ 默认 `self.metrics`,置信度 low(UI 可提示用户改下拉)。
  *
- * 【未来可升级】意图集合扩到 self.detail(本片已加)/ 他人对标(T-031)后,关键词分类器
- * 的边界会变糊;届时可升级为 schema 约束的 LLM 分类(Vercel generateObject 映射到同一
- * intent 枚举,合 §9 铁律)。**本片刻意不上 LLM**,只留此扩展点注释。
+ * 【未来可升级】意图集合扩张后可升级为 schema 约束的 LLM 分类；本片保持确定性。
  *
  * Determinism:纯函数,输入定则输出定;无 I/O、无 Date.now、无随机。
  */
@@ -42,8 +39,7 @@ export interface IntentClassification {
 }
 
 // 关键词表(小写归一后匹配)。中文无需分词,直接子串包含即可。
-// 明细(self.detail):点名「后台明细导出」独有的深度指标 —— 完播/留存/封面点击/跳出 等
-// (这些是 D8a 明细导出才有的字段,泛「数据/指标」不算)。放最前、优先级最高。
+// 明细词仍最具体，但 T-600 起统一映射到 self.metrics，不再产生 self.detail 调度任务。
 const DETAIL_KEYWORDS = [
   "明细",
   "后台数据",
@@ -71,8 +67,7 @@ const METRIC_KEYWORDS = [
 /**
  * freeform prompt → 采集意图(确定性关键词分类)。
  *
- * 优先级 明细 > 评论 > 作品:「明细/完播/留存」最具体(点名后台导出)→ self.detail;其次评论词
- * → comments;再次作品/指标词 → self.metrics。一句「拉我作品的后台明细」三类词都含 → self.detail。
+ * 优先级 明细 > 评论 > 作品；明细和普通作品数据统一进入 self.metrics。
  * 无任何关键词 → 默认 self.metrics + low 置信(让 UI 提示用户校正)。
  */
 export function classifyIntent(prompt: string): IntentClassification {
@@ -83,7 +78,7 @@ export function classifyIntent(prompt: string): IntentClassification {
 
   if (detailHits.length > 0) {
     return {
-      sourceKind: "self.detail",
+      sourceKind: "self.metrics",
       confidence: "high",
       matched: detailHits,
     };
@@ -118,8 +113,7 @@ export interface CollectionTemplate {
 
 // [T-258] 每天定时的错峰时刻常量。与后端 collection-bootstrap 的 DAILY_COLLECTION_JOB_DEFAULTS
 //   cron 一一对齐(单一真源在 backend/src/modules/ai-runtime/collection-bootstrap.ts):
-//   self.metrics 9:00 / self.detail 9:10 / comments 9:20 / benchmark 9:30 / topic.daily 9:40 /
-//   favorites 9:50。友好频率(period/daily/HH:mm)编译回同一 cron,用户仍可在弹窗改时间(T-248)。
+//   self.metrics 9:00 / comments 9:20 / topic.daily 9:40；内容雷达由系统固定每 15 分钟检查。
 const CADENCE_DAILY_9: PeriodCadence = {
   mode: "period",
   unit: "daily",
@@ -133,16 +127,13 @@ const CADENCE_DAILY_940: PeriodCadence = { ...CADENCE_DAILY_9, minute: 40 };
  * 用户可创建/调整的系统预设。内容雷达 `intelligence.sync` 由系统按账号幂等建立，
  * 不进入通用新建模板；旧 benchmark/favorites 已并入内容雷达来源，不再暴露第二入口。
  * 绑定 T-189a / 启动兜底 T-227 共用)一一对齐,让用户有「手动补建」这些定时采集 job 的入口。
- * 前三张(self.metrics/comments/self.detail)是「有 per-job 手动 target」的源;后三张
- * (benchmark/topic.daily/favorites,[T-258] 补齐)是**登记源驱动、无 per-job target**的采集器
- * (benchmark 读登记的对标源、topic.daily 纯 AI 出题、favorites 读登记的收藏夹),点卡预填后
- * 直接建 job(target={}),真正的来源统一在「内容雷达」配置。原「灰置占位」机制(disabled
- * 字段 + 卡片灰置分支)在 D8a 落地后已整体移除,模板卡一律可点。
+ * `self.metrics/comments/topic.daily` 是用户可管理模板；`self.detail`、benchmark、favorites
+ * 只保留历史枚举，均不再形成独立入口。
  */
 export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   {
     id: "daily-self-metrics",
-    title: "每天抓我的新作品指标",
+    title: "我的作品数据同步",
     description: "每天定时刷新主页作品与播放/点赞/评论等指标快照,喂 Dashboard 与选题。",
     sourceKind: "self.metrics",
     prompt: "每天抓我主页的新作品和最新指标",
@@ -150,27 +141,17 @@ export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   },
   {
     id: "daily-comments",
-    title: "每天抓我作品的最新评论",
+    title: "我的作品评论同步",
     description: "每天定时拉取作品最新评论,落库供复盘与受众洞察消费。",
     sourceKind: "comments",
     prompt: "每天抓我所有作品的最新评论",
     cadence: CADENCE_DAILY_9,
   },
   {
-    // T-030-D8a 已落地 —— 明细导出采集(16 字段)接通复盘核心指标,翻真(去灰置)。
-    id: "daily-detail",
-    title: "每天拉我的作品明细数据",
-    description:
-      "创作者后台明细数据(完播率/封面点击率/5s完播/2s跳出/平均时长/主页访问/粉丝增量)导出落库,喂复盘核心指标与漏斗。",
-    sourceKind: "self.detail",
-    prompt: "每天拉取我作品的后台明细数据(完播、封面点击、留存)",
-    cadence: CADENCE_DAILY_9,
-  },
-  {
     // [T-258/T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点)→ 护栏排序 → 候选落
     //   pool(防灌库 ≤N/天)。纯 AI + 库内数据,无 per-job target;未配文本模型时诚实跳过。错峰 9:40。
     id: "daily-topic",
-    title: "每天自动出题",
+    title: "每日自动生成选题",
     description:
       "每天结合你的定位、评论信号、知识库与当下热点,自动出一批选题进选题池。需配置文本模型。",
     sourceKind: "topic.daily",

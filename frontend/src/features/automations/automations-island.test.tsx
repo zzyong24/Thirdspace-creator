@@ -415,7 +415,7 @@ describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 pro
         onOpenChange={vi.fn()}
         onCreate={onCreate}
         prefill={{
-          name: "每天抓我作品的最新评论",
+          name: "我的作品评论同步",
           prompt: "每天抓我所有作品的最新评论",
           sourceKind: "comments",
           cadence: {
@@ -432,7 +432,7 @@ describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 pro
     expect(
       (screen.getByPlaceholderText("例:每天抓我的主页指标") as HTMLInputElement)
         .value,
-    ).toBe("每天抓我作品的最新评论");
+    ).toBe("我的作品评论同步");
     expect(
       (screen.getByPlaceholderText(/每天抓我主页的新作品/) as HTMLTextAreaElement)
         .value,
@@ -464,12 +464,12 @@ describe("TemplateCards — 从模板入手", () => {
     const onPick = vi.fn();
     render(<TemplateCards onPick={onPick} />);
     expect(screen.getByText("从模板入手")).toBeInTheDocument();
-    expect(screen.getByText("每天抓我的新作品指标")).toBeInTheDocument();
-    expect(screen.getByText("每天抓我作品的最新评论")).toBeInTheDocument();
-    // 点「每天抓我作品的最新评论」模板卡
+    expect(screen.getByText("我的作品数据同步")).toBeInTheDocument();
+    expect(screen.getByText("我的作品评论同步")).toBeInTheDocument();
+    // 点“我的作品评论同步”模板卡
     fireEvent.click(
       screen
-        .getByText("每天抓我作品的最新评论")
+        .getByText("我的作品评论同步")
         .closest("button") as HTMLButtonElement,
     );
     expect(onPick).toHaveBeenCalledTimes(1);
@@ -528,18 +528,11 @@ describe("TemplateCards — 从模板入手", () => {
     expect(card.textContent).toContain("已有此任务 → 去查看/编辑");
   });
 
-  it("明细模板(T-030-D8a)已翻真:可点,pick 带 self.detail", () => {
-    const onPick = vi.fn();
-    render(<TemplateCards onPick={onPick} />);
-    const detailCard = document.querySelector(
-      '[data-template-id="daily-detail"]',
-    ) as HTMLButtonElement;
-    expect(detailCard).not.toBeDisabled();
-    fireEvent.click(detailCard);
-    expect(onPick).toHaveBeenCalledTimes(1);
-    const tpl = onPick.mock.calls[0]![0] as { sourceKind: string; id: string };
-    expect(tpl.id).toBe("daily-detail");
-    expect(tpl.sourceKind).toBe("self.detail");
+  it("[T-600] 不再渲染作品明细兼容模板", () => {
+    render(<TemplateCards onPick={vi.fn()} />);
+    expect(
+      document.querySelector('[data-template-id="daily-detail"]'),
+    ).toBeNull();
   });
 });
 
@@ -592,7 +585,7 @@ describe("AutomationsIsland — 新建接线", () => {
     );
     fireEvent.click(
       screen
-        .getByText("每天自动出题")
+        .getByText("每日自动生成选题")
         .closest("button") as HTMLButtonElement,
     );
     await waitFor(() =>
@@ -617,7 +610,7 @@ describe("AutomationsIsland — 新建接线", () => {
     );
     fireEvent.click(
       screen
-        .getByText("每天抓我的新作品指标")
+        .getByText("我的作品数据同步")
         .closest("button") as HTMLButtonElement,
     );
     // 给微任务队列一拍:无 create、无 setEnabled(只定位既有行)。
@@ -626,12 +619,12 @@ describe("AutomationsIsland — 新建接线", () => {
     expect(mockClient.setScheduledJobEnabled).not.toHaveBeenCalled();
   });
 
-  it("点模板卡「每天抓我作品的最新评论」→ 弹窗预填并可直接创建(sourceKind=comments)", async () => {
+  it("点模板卡“我的作品评论同步”→ 弹窗预填并可直接创建(sourceKind=comments)", async () => {
     render(<AutomationsIsland jobs={[]} />);
     // 点模板卡(TemplateCards 在列表页顶部)
     fireEvent.click(
       screen
-        .getByText("每天抓我作品的最新评论")
+        .getByText("我的作品评论同步")
         .closest("button") as HTMLButtonElement,
     );
     // 弹窗预填了 name/prompt
@@ -642,7 +635,7 @@ describe("AutomationsIsland — 新建接线", () => {
             "例:每天抓我的主页指标",
           ) as HTMLInputElement
         ).value,
-      ).toBe("每天抓我作品的最新评论"),
+      ).toBe("我的作品评论同步"),
     );
     fireEvent.click(screen.getByText("创建任务"));
     await waitFor(() =>

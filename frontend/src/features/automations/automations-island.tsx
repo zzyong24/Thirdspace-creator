@@ -107,9 +107,8 @@ import {
   classifyIntent,
 } from "./intent";
 
-// [T-258] 只覆盖「有 per-job 手动 target」的源(self.metrics/comments/self.detail)。SourceKind 现为
-//   6 值(含 benchmark/topic.daily/favorites),但后三张是登记源驱动、无 per-job target → 不进本表
-//   (故用 Partial)。其展示名走 EXTRA_SOURCE_LABELS、图标走 EXTRA_SOURCE_ICONS、新建弹窗不显 target 字段。
+// 用户可创建入口只覆盖 self.metrics/comments；self.detail 仅为历史详情兼容，
+// topic.daily 无 per-job target。其余历史 kind 不进入新建下拉。
 const SOURCE_META: Partial<
   Record<
     SourceKind,
@@ -130,7 +129,7 @@ const SOURCE_META: Partial<
     targetKey: "awemeId",
     targetPlaceholder: "awemeId(要抓评论的作品 id)",
   },
-  // 作品明细导出(T-030-D8a):全量列表导出,无 per-作品 id;来源标识同 self.metrics。
+  // 历史 self.detail 行只用于旧运行详情兼容；页面入口已由 T-600 过滤。
   "self.detail": {
     label: "作品明细",
     icon: Gauge,
@@ -140,9 +139,7 @@ const SOURCE_META: Partial<
   },
 };
 
-// 登记源驱动(collection-bootstrap 模板,无 per-job target)、不进 SOURCE_META 的 sourceKind 的
-// 展示名兜底([T-212a] benchmark / [T-235a] topic.daily / [T-258/T-235c] favorites,与 backend
-// SOURCE_LABEL 对齐口径)。这些源现有模板卡「手动补建入口」,故也进新建下拉(展示名同此)。
+// 不进 SOURCE_META 的 sourceKind 展示名兜底；退役 kind 只服务历史数据读取。
 const EXTRA_SOURCE_LABELS: Record<string, string> = {
   benchmark: "对标爆款",
   "topic.daily": "每日选题",
@@ -1153,9 +1150,6 @@ export function CreateJobDialog({
               <SelectContent>
                 <SelectItem value="self.metrics">自己作品(指标快照)</SelectItem>
                 <SelectItem value="comments">评论</SelectItem>
-                <SelectItem value="self.detail">
-                  作品明细(完播/封面点击/留存)
-                </SelectItem>
                 <SelectItem value="topic.daily">
                   每日自动选题(需配文本模型)
                 </SelectItem>
