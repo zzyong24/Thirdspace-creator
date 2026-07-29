@@ -401,3 +401,4 @@
 {"ts":"2026-07-29T04:18:27.249Z","actor":"taskctl","action":"start","task":"T-590","sha_before":"e8a6399dac79","sha_after":"50faa5896719"}
 {"ts":"2026-07-29T04:24:10.941Z","actor":"taskctl","action":"complete","task":"T-590","evidence":"commit 9e3ad6dc；设置页专用模型卡 RED→GREEN；Frontend 104 tests、Backend 46 tests PASS；frontend/backend typecheck、受影响 lint、boundary、reconcile PASS；内容雷达复用既有 topic.generate，T-589 其余性能优化保留","sha_before":"50faa5896719","sha_after":"0fc4bfe4c802"}
 {"ts":"2026-07-29T04:26:47.814Z","actor":"taskctl","action":"start","task":"T-591","sha_before":"0ded548697e1","sha_after":"4f17da01e8df"}
+{"ts":"2026-07-29T04:37:47.479Z","actor":"taskctl","action":"complete","task":"T-591","evidence":"审计报告 commit 2913683a；Backend 隐藏相关 189 tests PASS；Frontend 隐藏相关 66 tests PASS；boundary 无新增违规；reconcile 0 error（保留既有 BACKLOG 体积 warning）；已登记 T-592/T-593/T-594/T-595 根因任务","sha_before":"1a10855a67f4","sha_after":"369ef96325c3"}
