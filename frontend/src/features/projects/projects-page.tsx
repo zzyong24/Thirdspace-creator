@@ -75,11 +75,6 @@ export interface ProjectsPageProps {
   readonly status?: string;
   readonly sort?: string;
   /**
-   * [T-073] 是否显示平台侧已隐藏的作品(?hidden=1)。默认 false:抖音端「仅自己
-   * 可见/已隐藏」的导入作品(platformRef.hidden)从列表与 tab 计数中过滤掉。
-   */
-  readonly showHidden?: boolean;
-  /**
    * Session-scoped contract client for the production read path. The route
    * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
@@ -115,7 +110,6 @@ export async function ProjectsPage({
   page = 1,
   status = "all",
   sort = "updated",
-  showHidden = false,
   client = defaultClient,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
@@ -126,7 +120,7 @@ export async function ProjectsPage({
     viewModel === undefined
       ? ((await client.listProjects({
           params: undefined,
-          query: { page: 1, pageSize: 500, hidden: showHidden ? true : undefined },
+          query: { page: 1, pageSize: 500 },
           body: undefined,
         })) as unknown as ReadonlyArray<Project>)
       : [];
@@ -143,10 +137,8 @@ export async function ProjectsPage({
   // Build the VM from the FULL real set so the status-tab counts stay correct,
   // then filter (status tab) + sort + slice the rows to the current page.
   const vm = viewModel ?? buildProjectsViewModel(realProjects);
-  // [T-073] 平台侧已隐藏(抖音端「仅自己可见/已隐藏」)默认过滤:行集与 tab 计数都
-  //   基于过滤后的集合;?hidden=1 时全量显示(行上带「已隐藏」徽标)。
-  const hiddenCount = vm.rows.filter((row) => row.hidden).length;
-  const baseRows = showHidden ? vm.rows : vm.rows.filter((row) => !row.hidden);
+  // T-595：页面直接消费采集边界归一后的项目域，不再二次解释 hidden。
+  const baseRows = vm.rows;
   const tabs = buildProjectStatusTabs(baseRows);
 
   // [T-051 2b] 状态 tab 真筛选:tab 计数看全量(上面),行集按选中 tab 过滤。
@@ -186,7 +178,7 @@ export async function ProjectsPage({
       ? await Promise.all(
           pagedRows.map(async (row) => ({
             ...row,
-            coverAssetId: await resolveProjectCoverAssetId(client, row.id, showHidden),
+            coverAssetId: await resolveProjectCoverAssetId(client, row.id),
           })),
         )
       : pagedRows;
@@ -200,7 +192,6 @@ export async function ProjectsPage({
     if (p > 1) params.set("page", String(p));
     if (status !== "all") params.set("status", status);
     if (sort !== "updated") params.set("sort", sort);
-    if (showHidden) params.set("hidden", "1"); // [T-073] 翻页保留「显示已隐藏」
     const qs = params.toString();
     return qs ? `/projects?${qs}` : "/projects";
   };
@@ -229,8 +220,6 @@ export async function ProjectsPage({
         tabs={tabs}
         status={status}
         sort={sort}
-        showHidden={showHidden}
-        hiddenCount={hiddenCount}
       />
 
       <ProjectList rows={rows} />
@@ -314,7 +303,6 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
       data-project-id={row.id}
       data-project-status={row.status}
       data-project-stage={row.currentStage}
-      data-project-hidden={row.hidden ? "true" : "false"}
       className="grid grid-cols-[minmax(0,1fr)_140px_140px_190px_120px_100px] items-center gap-4 px-5 py-6"
     >
       <div className="flex min-w-0 items-center gap-4">
@@ -344,15 +332,6 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
             >
               {row.title}
             </h3>
-            {/* [T-073] 平台侧已隐藏徽标(仅「显示已隐藏」开关打开、行被显示时可见)。 */}
-            {row.hidden ? (
-              <span
-                data-slot="project-hidden-badge"
-                className="inline-flex h-5 shrink-0 items-center rounded-md bg-surface-subtle px-1.5 text-[11px] font-medium text-muted-foreground"
-              >
-                已隐藏
-              </span>
-            ) : null}
           </div>
           <p
             data-slot="project-summary"
@@ -644,9 +623,8 @@ async function resolveProjectCoverAssetId(
         typeof defaultClient,
         "listOutputs" | "listPublications" | "listPublicationRevisions"
       >
-    >,
+  >,
   projectId: string,
-  showHidden: boolean,
 ): Promise<string | null> {
   try {
     // contract client 的类型标的是单资源,运行时 list op 返回数组 —— 与
@@ -659,7 +637,7 @@ async function resolveProjectCoverAssetId(
     for (const output of outputs.slice(0, 3)) {
       const pubs = (await client.listPublications({
         params: { outputId: output.id },
-        query: { page: 1, pageSize: 10, hidden: showHidden ? true : undefined },
+        query: { page: 1, pageSize: 10 },
         body: undefined,
       })) as unknown as ReadonlyArray<{
         id: string;

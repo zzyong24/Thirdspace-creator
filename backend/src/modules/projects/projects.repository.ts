@@ -83,13 +83,9 @@ export interface ProjectRepository {
   seedTasks(rows: TaskRow[]): Promise<void>;
   seedActivities(rows: ActivityRow[]): Promise<void>;
 
-  // Project root (user-scoped). [T-033] includeHidden: ?hidden=1 → 全显(私密作品也展示,
-  // 行上带 platformRef.hidden=true 徽标);默认 → 过滤 platformRef.hidden=true(单条件过滤
-  // 已足够,无需再加 status —— 项目 status='imported' 是物理标识,与抖音审核态正交)。
-  list(
-    ctx: RequestContext,
-    opts?: { includeHidden?: boolean },
-  ): Promise<ProjectRow[]>;
+  // Project root (user-scoped)。T-595 后可见性已在采集边界归一：
+  // 确认隐藏的导入作品会被清理，因此下游列表不再重复解释 platformRef.hidden。
+  list(ctx: RequestContext): Promise<ProjectRow[]>;
   // 数据底座(SPEC §1.4):user-scoped 且 source='imported' 的项目(真实采集导入)。
   //   "优先读真"判据 hasImportedProjects + 三向 portfolio 让位的物理读源。
   listImported(ctx: RequestContext): Promise<ProjectRow[]>;
@@ -117,7 +113,16 @@ export interface ProjectRepository {
   deleteProjectCascade(
     ctx: RequestContext,
     projectId: string,
+    opts?: { deletePlatformSignals?: boolean },
   ): Promise<ProjectRow>;
+  deletePlatformPublicationCascade(
+    ctx: RequestContext,
+    ref: { platform: string; externalId: string },
+  ): Promise<{ publicationId: string } | null>;
+  normalizeVisiblePlatformWork(
+    ctx: RequestContext,
+    ref: { platform: string; externalId: string; updatedAt: string },
+  ): Promise<{ publicationId: string; projectId: string } | null>;
 
   // Activity (ownership via parent project).
   listActivity(ctx: RequestContext, projectId: string): Promise<ActivityRow[]>;
@@ -308,12 +313,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
       await db.insert(projectActivities).values(rows).onConflictDoNothing();
     },
 
-    async list(ctx, opts) {
-      // [T-033] 默认过滤 platformRef.hidden=true 的项目(平台侧私密/已隐藏),
-      // includeHidden=true 时全显。
-      const hiddenFilter = opts?.includeHidden
-        ? sql`1 = 1`
-        : sql`coalesce((${projects.platformRef}->>'hidden')::boolean, false) = false`;
+    async list(ctx) {
       return db
         .select()
         .from(projects)
@@ -321,7 +321,6 @@ export function createProjectRepository(db: Db): ProjectRepository {
           and(
             eq(projects.userId, ctx.userId),
             accountGate(ctx),
-            hiddenFilter,
           ),
         )
         .orderBy(asc(projects.createdAt));
@@ -397,7 +396,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
       return updated[0]!;
     },
 
-    async deleteProjectCascade(ctx, projectId) {
+    async deleteProjectCascade(ctx, projectId, opts) {
       // 删前再断言所有权(cross-user/missing → 404,不泄露存在性)。
       const target = await get(ctx, projectId);
       // 一个事务包裹整条级联:全成或全不成(pglite/node-postgres 同一 Drizzle API)。
@@ -547,9 +546,9 @@ export function createProjectRepository(db: Db): ProjectRepository {
         }
         await tx.delete(artifacts).where(eq(artifacts.projectId, projectId));
 
-        // 发布链:revisions + review_publications(join)先删,audience_signals 的
-        // publication_id 锚置空(评论/信号带独立 ingestion 溯源,不随项目物理删除而丢,
-        // 但其指向的 publication 已不存在 → 解锚,避免悬挂引用)。
+        // 发布链：普通用户删项目时保留有独立 ingestion 溯源的 audience_signals 并解锚；
+        // T-595 源侧确认隐藏的自动导入项目则删除平台评论/信号本身，避免隐藏作品继续
+        // 进入受众洞察。两种行为都在当前项目级联事务内完成。
         if (publicationIds.length > 0) {
           await tx
             .delete(publicationRevisions)
@@ -557,10 +556,16 @@ export function createProjectRepository(db: Db): ProjectRepository {
           await tx
             .delete(reviewPublications)
             .where(inArray(reviewPublications.publicationId, publicationIds));
-          await tx
-            .update(audienceSignals)
-            .set({ publicationId: null })
-            .where(inArray(audienceSignals.publicationId, publicationIds));
+          if (opts?.deletePlatformSignals) {
+            await tx
+              .delete(audienceSignals)
+              .where(inArray(audienceSignals.publicationId, publicationIds));
+          } else {
+            await tx
+              .update(audienceSignals)
+              .set({ publicationId: null })
+              .where(inArray(audienceSignals.publicationId, publicationIds));
+          }
           await tx
             .delete(publications)
             .where(inArray(publications.id, publicationIds));
@@ -783,6 +788,191 @@ export function createProjectRepository(db: Db): ProjectRepository {
           );
       });
       return target;
+    },
+
+    async deletePlatformPublicationCascade(ctx, ref) {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "projects.deletePlatformPublicationCascade",
+      );
+      const found = await db
+        .select({
+          id: publications.id,
+          contentOutputId: publications.contentOutputId,
+        })
+        .from(publications)
+        .where(
+          and(
+            eq(publications.userId, ctx.userId),
+            eq(publications.accountId, accountId),
+            eq(publications.platform, ref.platform),
+            eq(publications.externalId, ref.externalId),
+          ),
+        );
+      const target = found[0];
+      if (!target) return null;
+      // output→project ownership gate；手工项目根及其创作资产不会被删除。
+      await getOutput(ctx, target.contentOutputId);
+
+      await db.transaction(async (tx) => {
+        const snapshotRows = await tx
+          .select({ id: metricSnapshots.id })
+          .from(metricSnapshots)
+          .where(eq(metricSnapshots.publicationId, target.id));
+        const snapshotIds = snapshotRows.map((row) => row.id);
+        const predictionRows = await tx
+          .select({ id: predictions.id })
+          .from(predictions)
+          .where(
+            and(
+              eq(predictions.subjectType, "publication"),
+              eq(predictions.subjectId, target.id),
+            ),
+          );
+        const predictionIds = predictionRows.map((row) => row.id);
+
+        if (snapshotIds.length > 0) {
+          await tx
+            .delete(metricValues)
+            .where(inArray(metricValues.metricSnapshotId, snapshotIds));
+        }
+        await tx
+          .delete(metricSnapshots)
+          .where(eq(metricSnapshots.publicationId, target.id));
+        await tx
+          .delete(retentionPoints)
+          .where(eq(retentionPoints.publicationId, target.id));
+        await tx
+          .delete(audienceSnapshots)
+          .where(eq(audienceSnapshots.publicationId, target.id));
+        await tx
+          .delete(topicAttributions)
+          .where(eq(topicAttributions.publicationId, target.id));
+        if (predictionIds.length > 0) {
+          await tx
+            .delete(calibrationResults)
+            .where(inArray(calibrationResults.predictionId, predictionIds));
+          await tx.delete(predictions).where(inArray(predictions.id, predictionIds));
+        }
+        await tx
+          .delete(audienceSignals)
+          .where(eq(audienceSignals.publicationId, target.id));
+        await tx
+          .delete(reviewPublications)
+          .where(eq(reviewPublications.publicationId, target.id));
+        await tx
+          .delete(publicationRevisions)
+          .where(eq(publicationRevisions.publicationId, target.id));
+
+        const tagCountRows = await tx
+          .select({
+            tagId: entityTags.tagId,
+            n: sql<number>`count(*)::int`,
+          })
+          .from(entityTags)
+          .where(
+            and(
+              eq(entityTags.userId, ctx.userId),
+              eq(entityTags.entityId, target.id),
+            ),
+          )
+          .groupBy(entityTags.tagId);
+        for (const { tagId, n } of tagCountRows) {
+          await tx
+            .update(tags)
+            .set({ usageCount: sql`GREATEST(${tags.usageCount} - ${n}, 0)` })
+            .where(and(eq(tags.id, tagId), eq(tags.userId, ctx.userId)));
+        }
+        await tx
+          .delete(entityTags)
+          .where(
+            and(
+              eq(entityTags.userId, ctx.userId),
+              eq(entityTags.entityId, target.id),
+            ),
+          );
+        await tx
+          .delete(searchDocuments)
+          .where(
+            and(
+              eq(searchDocuments.userId, ctx.userId),
+              eq(searchDocuments.accountId, accountId),
+              eq(searchDocuments.entityId, target.id),
+            ),
+          );
+        await tx
+          .delete(publications)
+          .where(
+            and(
+              eq(publications.id, target.id),
+              eq(publications.userId, ctx.userId),
+              eq(publications.accountId, accountId),
+            ),
+          );
+      });
+      return { publicationId: target.id };
+    },
+
+    async normalizeVisiblePlatformWork(ctx, ref) {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "projects.normalizeVisiblePlatformWork",
+      );
+      const found = await db
+        .select({
+          publicationId: publications.id,
+          contentOutputId: publications.contentOutputId,
+        })
+        .from(publications)
+        .where(
+          and(
+            eq(publications.userId, ctx.userId),
+            eq(publications.accountId, accountId),
+            eq(publications.platform, ref.platform),
+            eq(publications.externalId, ref.externalId),
+          ),
+        );
+      const target = found[0];
+      if (!target) return null;
+      const output = await getOutput(ctx, target.contentOutputId);
+      const project = await get(ctx, output.projectId);
+      const platformRef = (project.platformRef ?? {}) as Record<string, unknown>;
+
+      await db.transaction(async (tx) => {
+        await tx
+          .update(publications)
+          .set({
+            hiddenAt: null,
+            platformStatus: "已通过",
+            updatedAt: ref.updatedAt,
+          })
+          .where(
+            and(
+              eq(publications.id, target.publicationId),
+              eq(publications.userId, ctx.userId),
+              eq(publications.accountId, accountId),
+            ),
+          );
+        if (
+          platformRef.platform === ref.platform &&
+          platformRef.externalId === ref.externalId
+        ) {
+          await tx
+            .update(projects)
+            .set({
+              platformRef: { ...platformRef, hidden: false },
+              updatedAt: ref.updatedAt,
+            })
+            .where(
+              and(
+                eq(projects.id, project.id),
+                eq(projects.userId, ctx.userId),
+                accountGate(ctx),
+              ),
+            );
+        }
+      });
+      return { publicationId: target.publicationId, projectId: project.id };
     },
 
     async listActivity(ctx, projectId) {

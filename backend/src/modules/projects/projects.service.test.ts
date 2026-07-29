@@ -35,6 +35,7 @@ import {
   StageTransitionError,
   ProjectStateError,
   StageGateError,
+  OwnershipError,
 } from "./projects.errors";
 
 const NOW = "2026-06-13T10:00:00+08:00";
@@ -1229,6 +1230,55 @@ describe("Brief stage gate (立项 Brief 地基)", () => {
     });
     const rows = await repo.listTargetPlatforms(ctx, p.id);
     expect(rows.map((r) => r.platform).sort()).toEqual(["douyin", "xiaohongshu"]);
+  });
+});
+
+describe("projects.service — T-595 平台隐藏对账", () => {
+  it("自动导入项目整体清除时连同平台评论删除", async () => {
+    const project = await service.createProject(ctx, {
+      title: "待隐藏导入作品",
+      source: "imported",
+      platformRef: {
+        platform: "douyin",
+        externalId: "aweme-hidden-imported",
+      },
+    });
+    const output = await service.createOutput(ctx, project.id, {
+      title: "导入作品",
+    });
+    await db.insert(publications).values({
+      id: "pub-hidden-imported",
+      userId: ctx.userId,
+      accountId: "acct-1",
+      contentOutputId: output.id,
+      platform: "douyin",
+      accountReference: "acc-1",
+      status: "published",
+      externalId: "aweme-hidden-imported",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(audienceSignals).values({
+      id: "sig-hidden-imported",
+      userId: ctx.userId,
+      accountId: "acct-1",
+      source: "comment",
+      rawText: "平台评论",
+      publicationId: "pub-hidden-imported",
+      createdAt: NOW,
+    });
+
+    await expect(
+      service.reconcilePlatformWork(ctx, {
+        platform: "douyin",
+        externalId: "aweme-hidden-imported",
+        visibility: "hidden",
+      }),
+    ).resolves.toEqual({ kind: "project", id: project.id });
+
+    await expect(repo.get(ctx, project.id)).rejects.toBeInstanceOf(OwnershipError);
+    expect(await db.select().from(publications)).toHaveLength(0);
+    expect(await db.select().from(audienceSignals)).toHaveLength(0);
   });
 });
 

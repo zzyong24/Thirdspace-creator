@@ -250,6 +250,17 @@ export interface ProjectsService {
     ctx: RequestContext,
     input: { platform: string; externalId: string; hidden: boolean },
   ): Promise<ProjectRow | null>;
+  reconcilePlatformWork(
+    ctx: RequestContext,
+    input: {
+      platform: string;
+      externalId: string;
+      visibility: "visible" | "hidden";
+    },
+  ): Promise<
+    | { kind: "project" | "publication" | "visible"; id: string }
+    | { kind: "missing"; id: null }
+  >;
   patchProject(
     ctx: RequestContext,
     projectId: string,
@@ -1003,6 +1014,31 @@ export function createProjectsService(
         updatedAt: deps.now(),
       } as Partial<ProjectRow>);
       return repo.get(ctx, existing.id);
+    },
+
+    async reconcilePlatformWork(ctx, input) {
+      requireAccountId(ctx.accountId, "projects.reconcilePlatformWork");
+      if (input.visibility === "visible") {
+        const normalized = await repo.normalizeVisiblePlatformWork(ctx, {
+          platform: input.platform,
+          externalId: input.externalId,
+          updatedAt: deps.now(),
+        });
+        return normalized
+          ? { kind: "visible", id: normalized.publicationId }
+          : { kind: "missing", id: null };
+      }
+      const imported = await repo.findImportedByRef(ctx, input);
+      if (imported) {
+        await repo.deleteProjectCascade(ctx, imported.id, {
+          deletePlatformSignals: true,
+        });
+        return { kind: "project", id: imported.id };
+      }
+      const deleted = await repo.deletePlatformPublicationCascade(ctx, input);
+      return deleted
+        ? { kind: "publication", id: deleted.publicationId }
+        : { kind: "missing", id: null };
     },
 
     async patchProject(ctx, projectId, patch) {

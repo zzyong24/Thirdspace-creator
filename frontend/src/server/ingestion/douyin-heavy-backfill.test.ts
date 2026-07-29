@@ -8,8 +8,8 @@ import {
 } from "./douyin-heavy-backfill";
 
 // [T-195] 初始化重活编排(self.detail 尾)单测:全端口注 fake,零 DB / 零浏览器。
-// 覆盖 T-195 核心:①重活确实被触发(两个子 helper 都调)②可见性过滤接上(隐藏作品**不**回填
-// 封面、逐字稿 + 重建**都不排**)③封面绑项目接上 ④两步 best-effort 互不拖垮。
+// 覆盖 T-195/T-595 核心:①重活确实被触发(两个子 helper 都调)②下游直接消费源边界
+// 归一后的作品域，不再二次判 hidden ③封面绑项目接上 ④两步 best-effort 互不拖垮。
 // 注:self.metrics 不再触发重活由 persistence-client 侧删除保证(本模块只被 self.detail 调用),
 // 昵称回填仍在 self.metrics 的 refreshDouyin 内(applyDouyinIdentity,不经本模块)。
 
@@ -19,39 +19,24 @@ const ctx: RequestContext = {
   source: "ingestion",
 };
 
-/** A 可跑(已通过)、B 隐藏(platform_status 非已通过)、C 隐藏(hidden_at 非空)。 */
+/** B/C 故意带旧可见性标记：T-595 后下游不得再据此改写结果集。 */
 const missingRows: HeavyBackfillPubRow[] = [
   {
     id: "pub-A",
     externalId: "aweme-A",
     contentOutputId: "out-A",
-    hiddenAt: null,
-    platformStatus: "已通过",
   },
   {
     id: "pub-B",
     externalId: "aweme-B",
     contentOutputId: "out-B",
-    hiddenAt: null,
-    platformStatus: "仅自己可见",
   },
   {
     id: "pub-C",
     externalId: "aweme-C",
     contentOutputId: "out-C",
-    hiddenAt: "2026-01-01T00:00:00.000Z",
-    platformStatus: null,
   },
 ];
-
-const visibilityByExternal: Record<
-  string,
-  { hiddenAt: string | null; platformStatus: string | null } | null
-> = {
-  "aweme-A": { hiddenAt: null, platformStatus: "已通过" },
-  "aweme-B": { hiddenAt: null, platformStatus: "仅自己可见" },
-  "aweme-C": { hiddenAt: "2026-01-01T00:00:00.000Z", platformStatus: null },
-};
 
 interface Calls {
   fetchedVideoUrl: string[];
@@ -61,7 +46,6 @@ interface Calls {
   boundProjects: Array<{ contentOutputId: string; coverAssetId: string }>;
   transcribed: string[][];
   reconstructed: string[];
-  visibilityChecked: string[];
 }
 
 function makeHost(overrides?: Partial<DouyinHeavyBackfillHost>): {
@@ -76,7 +60,6 @@ function makeHost(overrides?: Partial<DouyinHeavyBackfillHost>): {
     boundProjects: [],
     transcribed: [],
     reconstructed: [],
-    visibilityChecked: [],
   };
   let assetSeq = 0;
   const host: DouyinHeavyBackfillHost = {
@@ -105,10 +88,6 @@ function makeHost(overrides?: Partial<DouyinHeavyBackfillHost>): {
       { projectId: "proj-B", externalId: "aweme-B" },
       { projectId: "proj-C", externalId: "aweme-C" },
     ],
-    resolvePublicationVisibility: async (_c, externalId) => {
-      calls.visibilityChecked.push(externalId);
-      return visibilityByExternal[externalId] ?? null;
-    },
     enqueueTranscribe: async (_c, awemeIds) => {
       calls.transcribed.push(awemeIds);
     },
@@ -126,25 +105,25 @@ afterEach(() => {
 });
 
 describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
-  it("真 impl:只对可见作品回填封面 + 排逐字稿/重建,隐藏作品全跳", async () => {
+  it("真 impl:直接消费归一化作品域，不再按旧 hidden 标记二次过滤", async () => {
     const { host, calls } = makeHost();
     const res = await runDouyinHeavyBackfill(ctx, host, { coverLimit: 100 });
 
-    // 封面:只有可见的 aweme-A 进候选(B platform_status 非已通过、C hidden_at 非空 → 滤掉)。
-    expect(calls.fetchedVideoUrl).toEqual(["aweme-A"]);
+    expect(calls.fetchedVideoUrl).toEqual(["aweme-A", "aweme-B", "aweme-C"]);
     expect(calls.setCovers).toEqual([
       { publicationId: "pub-A", coverAssetId: "asset-1" },
+      { publicationId: "pub-B", coverAssetId: "asset-2" },
+      { publicationId: "pub-C", coverAssetId: "asset-3" },
     ]);
-    expect(res.coversFilled).toBe(1);
-    // 封面绑项目:只对 A 的 output 绑(隐藏的 B/C 未回填自然不绑)。
+    expect(res.coversFilled).toBe(3);
     expect(calls.boundProjects).toEqual([
       { contentOutputId: "out-A", coverAssetId: "asset-1" },
+      { contentOutputId: "out-B", coverAssetId: "asset-2" },
+      { contentOutputId: "out-C", coverAssetId: "asset-3" },
     ]);
 
-    // 逐字稿:一批只含可见 aweme-A(B/C 经 isWorkHidden 跳)。
-    expect(calls.transcribed).toEqual([["aweme-A"]]);
-    // 重建:只排可见 proj-A(隐藏的 proj-B / proj-C 不排)。
-    expect(calls.reconstructed).toEqual(["proj-A"]);
+    expect(calls.transcribed).toEqual([["aweme-A", "aweme-B", "aweme-C"]]);
+    expect(calls.reconstructed).toEqual(["proj-A", "proj-B", "proj-C"]);
   });
 
   it("两个子 helper 都被触发(spy impl),coversFilled 取封面回填结果", async () => {
@@ -189,37 +168,32 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
         // 直调 host 端口路径:走 ports.enqueueTranscribe / enqueueReconstruct。
         const works = await ports.listImportedWorks(c);
         for (const w of works) {
-          const hidden = ports.isWorkHidden
-            ? await ports.isWorkHidden(c, w.externalId)
-            : false;
-          if (hidden) continue;
           await ports.enqueueReconstruct(c, w.projectId);
         }
         return {
           considered: works.length,
           transcribeEnqueued: false,
           transcribeAwemeCount: 0,
-          reconstructEnqueued: 1,
+          reconstructEnqueued: 3,
           reconstructSkipped: 0,
-          hiddenSkipped: 2,
+          hiddenSkipped: 0,
           failed: 0,
         };
       },
     };
     const res = await runDouyinHeavyBackfill(ctx, host, { coverLimit: 10 }, impl);
 
-    // 封面抛错被吞 → coversFilled 0;逐字稿/重建仍跑(只排可见 proj-A)。
+    // 封面抛错被吞 → coversFilled 0；逐字稿/重建仍消费全部归一化作品。
     expect(res.coversFilled).toBe(0);
-    expect(calls.reconstructed).toEqual(["proj-A"]);
+    expect(calls.reconstructed).toEqual(["proj-A", "proj-B", "proj-C"]);
   });
 
-  it("找不到 publication 可见性(null)→ 不硬跳,该作品照排重建", async () => {
+  it("不需要 publication 可见性反查也能排重建", async () => {
     const { host, calls } = makeHost({
       listPublicationsMissingCover: async () => [],
       listImportedWorks: async () => [
         { projectId: "proj-X", externalId: "aweme-X" },
       ],
-      resolvePublicationVisibility: async () => null, // 无判据
     });
     await runDouyinHeavyBackfill(ctx, host, { coverLimit: 100 });
     expect(calls.reconstructed).toEqual(["proj-X"]);

@@ -30,9 +30,8 @@ export default async function PublishingCenterRoutePage({
   searchParams: Promise<{ hidden?: string }>;
 }) {
   const session = await resolveSession();
-  // [T-033] 「显示已隐藏作品」开关:URL ?hidden=1 显私密 + 未通过;默认过滤。
-  const sp = await searchParams;
-  const includeHidden = sp.hidden === "1";
+  // T-595：旧 hidden URL 参数只做兼容吞掉，不参与下游筛选。
+  await searchParams;
 
   if (!session) {
     // No session (the (creator) layout guard redirects on a real request).
@@ -53,8 +52,6 @@ export default async function PublishingCenterRoutePage({
   const client = createServerClient(
     session.ctx,
   ) as unknown as PublishingCenterDataClient;
-  const viewModel = await buildPublishingCenterViewModelReal(client, {
-    includeHidden,
-  });
+  const viewModel = await buildPublishingCenterViewModelReal(client);
   return <PublishingCenterPage viewModel={viewModel} />;
 }

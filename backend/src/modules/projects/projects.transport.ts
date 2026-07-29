@@ -209,12 +209,8 @@ export function createProjectsTransport(
 
       switch (endpoint.id) {
         case "projects.list": {
-          // [T-033] hidden=true/1 → 全显(私密项目也展示,行上带 platformRef.hidden=true 徽标);
-          // 默认 → 过滤 hidden。query.hidden 接 0/1/true/false,undefined/缺省=过滤。
-          const q = (query ?? {}) as { hidden?: unknown };
-          const includeHidden =
-            q.hidden === true || q.hidden === "true" || q.hidden === 1;
-          const rows = await repo.list(ctx, { includeHidden });
+          // T-595：源边界已归一，下游列表不再解释 hidden 查询参数。
+          const rows = await repo.list(ctx);
           return { data: rows.map(toProject), meta: listMeta(rows.length) };
         }
         case "projects.create": {

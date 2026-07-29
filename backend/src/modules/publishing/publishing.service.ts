@@ -121,12 +121,11 @@ export interface PublishingService {
   listPublications(
     ctx: RequestContext,
     outputId: string,
-    pagination: { limit: number; offset: number; includeHidden?: boolean },
+    pagination: { limit: number; offset: number },
   ): Promise<PublicationRow[]>;
-  // [T-033] 同 listPublications 的 includeHidden + 分页(analytics 跨模块读路径用)。
   listPublicationsForUser(
     ctx: RequestContext,
-    pagination: { limit: number; offset: number; includeHidden?: boolean },
+    pagination: { limit: number; offset: number },
   ): Promise<PublicationRow[]>;
   /**
    * 组合层批量读取指定 outputs 的 canonical publication 事实；按联合归属收窄，
@@ -135,7 +134,6 @@ export interface PublishingService {
   listPublicationsByOutputIds(
     ctx: RequestContext,
     outputIds: ReadonlyArray<string>,
-    opts?: { visibility?: "all" | "visible" },
   ): Promise<PublicationRow[]>;
   createPublication(
     ctx: RequestContext,
@@ -172,7 +170,7 @@ export interface PublishingService {
   // Downstream consumers (SPEC §19 DashboardQueryService / SPEC §11 Analytics).
   getRecentPublications(
     ctx: RequestContext,
-    opts: { limit: number; offset?: number; includeHidden?: boolean },
+    opts: { limit: number; offset?: number },
   ): Promise<PublicationRow[]>;
   // Dashboard「最近发布」(GAP-DASH-3): the recent publications joined with their
   // REAL display title (resolved from the owning revision — the title lives on a
@@ -181,7 +179,7 @@ export interface PublishingService {
   // via Analytics (cross-module composition stays at the facade layer).
   getRecentPublicationsWithTitle(
     ctx: RequestContext,
-    opts: { limit: number; offset?: number; includeHidden?: boolean },
+    opts: { limit: number; offset?: number },
   ): Promise<
     Array<
       PublicationRow & {
@@ -370,8 +368,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repoFor(ctx).listPublicationsForUser(pagination);
     },
 
-    async listPublicationsByOutputIds(ctx, outputIds, opts) {
-      return repoFor(ctx).listPublicationsByOutputs(outputIds, opts);
+    async listPublicationsByOutputIds(ctx, outputIds) {
+      return repoFor(ctx).listPublicationsByOutputs(outputIds);
     },
 
     async createPublication(ctx, outputId, body) {
@@ -555,7 +553,6 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repoFor(ctx).listPublicationsForUser({
         limit: opts.limit,
         offset: opts.offset ?? 0,
-        includeHidden: opts.includeHidden,
       });
     },
 
@@ -564,7 +561,6 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const rows = await repo.listPublicationsForUser({
         limit: opts.limit,
         offset: opts.offset ?? 0,
-        includeHidden: opts.includeHidden,
       });
       // Resolve each publication's display title from its revisions (prefer the
       // current revision, else the highest revisionNumber). A publication with no

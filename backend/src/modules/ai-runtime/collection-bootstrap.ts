@@ -1,8 +1,8 @@
 import type { RequestContext } from "@creatoros/contract";
 
-// 绑定抖音 → 组合根 bootstrap(T-189a):扫码绑定成功后,为该账号**幂等**建**六个**「每天定时」采集
-// job(self.metrics / self.detail / comments / benchmark / topic.daily / favorites,单一真源
-// DAILY_COLLECTION_JOB_DEFAULTS)+ **立即初始化跑一次**拉全量。
+// 绑定抖音 → 组合根 bootstrap(T-189a/T-595):扫码绑定成功后,为该账号**幂等**建六个
+// 「每天定时」job。self.metrics 是唯一启用的自有作品 canonical visible-only collector；
+// self.detail 仅保留为旧任务兼容别名且新号默认关闭。
 //
 // 定位:纯编排逻辑(所有 IO 经注入端口),可直接单测。ingestion.service 在 loginDouyin 成功后经
 //   注入的 onDouyinBound 回调触发本函数(backend 模块**不 import scheduling**,守 SPEC §22 模块边界)——
@@ -13,12 +13,8 @@ import type { RequestContext } from "@creatoros/contract";
 //   有则复用既有 job(不重建);无则 createJob。初始化触发经 triggerScheduledJob 的当天幂等双闸
 //   (同 job 当天已有 in-flight run → 短路),故重复绑定同一天不重复采集。
 //
-// 首轮时序(接 T-190 遗留):初始化按 self.metrics → self.detail → comments **顺序** await 触发
-//   —— 每次 trigger 内部 dispatch 把 runScheduledCollection 挂到组合根 gate-F5 采集串行链(并发=1),
-//   故三源按 enqueue 次序串行执行。self.metrics 先建作品 publication(self.detail 的前置);self.detail
-//   落 hidden_at/platform_status;之后 comments/重活据 T-190 判据跳隐藏。诚实残留:self.metrics 自带的
-//   封面回填(重活)在本轮先于 self.detail 跑 → 首轮该重活仍可能碰隐藏作品(T-190 判据从第二轮起全面
-//   生效),self.detail 必须晚于 self.metrics(依赖其建的 publication),无法在首轮完全消除。
+// 初始化按模板顺序触发 enabled job，并由 gate-F5 串行执行。自有作品先在内存中完成
+// 公开/隐藏/未知判定；只有明确公开记录才进入项目、发布、指标及后续重活。
 
 /** 一条默认采集 job 模板(sourceKind + 展示名 + 提示词 + 每天定时 cron)。 */
 export interface CollectionJobDefault {
@@ -34,10 +30,9 @@ export interface CollectionJobDefault {
   readonly enabledByDefault: boolean;
 }
 
-// 每天定时的默认采集 job(顺序即初始化触发顺序:self.metrics → self.detail → comments → benchmark
+// 每天定时的默认采集 job(模板顺序:self.metrics → self.detail → comments → benchmark
 //   → topic.daily → favorites)。schedule 是**账号内基准**(9:00 / 9:10 / 9:20 / 9:30 / 9:40 / 9:50):
-//   ① 每天早上一次;② 让每日 self.detail 早于 comments(接 T-190
-//   隐藏判据在 self.detail 后可用);③ 账号内六源不同时到点,减少并发抢占(采集本已 gate-F5 串行,错峰更稳)。
+//   ① 每天早上一次;② 账号内六源不同时到点,减少并发抢占(采集本已 gate-F5 串行,错峰更稳)。
 //   [T-433 S3] **跨账号错峰**:建 job 时对该基准叠加 per-account 确定性偏移(staggeredSchedule),
 //   同号 6 job 同偏移(保内部 10 分错开)、跨号打散到早间窗口,避免疯狂绑 N 号时所有号都压 9:00
 //   同刻爆发(=用户所指「灾难」)。基准即偏移 0 的账号时刻。
@@ -53,10 +48,10 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   },
   {
     sourceKind: "self.detail",
-    name: "每天拉我的作品明细数据",
-    prompt: "每天拉取我作品的后台明细数据(完播、封面点击、留存)",
+    name: "作品明细采集（兼容入口）",
+    prompt: "兼容旧任务：与我的作品指标共用公开作品采集，不再单独重复运行",
     schedule: "10 9 * * *",
-    enabledByDefault: true, // [T-359] 绑号即有意义(自己作品)
+    enabledByDefault: false, // [T-595] canonical collector 已并入 self.metrics；新号不再双跑
   },
   {
     sourceKind: "comments",

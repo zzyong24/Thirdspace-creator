@@ -249,8 +249,8 @@ describe("ProjectsPage", () => {
     expect(active.textContent?.trim()).toBe("项目");
   });
 
-  // [T-073] 平台侧已隐藏(抖音端「仅自己可见/已隐藏」)默认过滤;?hidden=1 显示 + 徽标。
-  it("filters platform-hidden works by default and shows them with showHidden", async () => {
+  // [T-595] 下游直接消费归一化作品域，不再按旧 hidden 标记二次过滤。
+  it("does not reinterpret legacy hidden flags or expose a show-hidden control", async () => {
     const { buildProjectsViewModel } = await import("@/fixtures/selectors");
     const base = buildProjectsViewModel();
     const hiddenId = base.rows[0]!.id;
@@ -261,28 +261,20 @@ describe("ProjectsPage", () => {
       ),
     };
 
-    // 默认(showHidden 缺省 false):隐藏行不渲染,开关渲染且带计数。
+    // 人工注入的旧标记不会改变结果集；真实隐藏作品应在采集边界被清理。
     const first = await renderProjects({ viewModel: vm });
     expect(
       first.container.querySelector(`[data-project-id="${hiddenId}"]`),
-    ).toBeNull();
+    ).not.toBeNull();
     const toggle = first.container.querySelector(
       '[data-slot="projects-show-hidden-toggle"]',
     );
-    expect(toggle).not.toBeNull();
-    expect(toggle!.getAttribute("aria-pressed")).toBe("false");
+    expect(toggle).toBeNull();
     cleanup();
 
-    // showHidden=true(?hidden=1):行显示,带「已隐藏」徽标 + data-project-hidden。
-    const second = await renderProjects({ viewModel: vm, showHidden: true });
-    const row = second.container.querySelector(
-      `[data-project-id="${hiddenId}"]`,
-    );
-    expect(row).not.toBeNull();
-    expect(row!.getAttribute("data-project-hidden")).toBe("true");
     expect(
-      row!.querySelector('[data-slot="project-hidden-badge"]')?.textContent,
-    ).toBe("已隐藏");
+      first.container.querySelector('[data-slot="project-hidden-badge"]'),
+    ).toBeNull();
   });
 
   // [T-102 前半锁测] 归档项目从「全部」视图与计数中剔除,只在「已归档」tab 出现。

@@ -106,28 +106,21 @@ function normalizeExternalUrl(raw: unknown): string | null {
 function paginationFrom(query: unknown): {
   limit: number;
   offset: number;
-  includeHidden?: boolean;
 } {
   // The contract paginationQuery is { page, pageSize } (1-based). Map it to the
   // repository's limit/offset. Tolerate a raw { limit, offset } too (the
   // module's own tests drive the transport directly).
-  // [T-033] includeHidden: ?hidden=1 全显私密/未通过,默认过滤(双闸 hidden_at + 未通过)。
   const q = (query ?? {}) as {
     page?: number;
     pageSize?: number;
     limit?: number;
     offset?: number;
-    hidden?: unknown;
   };
   const limit = q.limit ?? q.pageSize ?? 20;
   const offset =
     q.offset ?? (typeof q.page === "number" ? (q.page - 1) * limit : 0);
-  // hidden=true / "true" / 1 都视为开;'false'/0/undefined → 默认过滤。
-  let includeHidden = false;
-  if (q.hidden === true || q.hidden === "true" || q.hidden === 1) {
-    includeHidden = true;
-  }
-  return { limit, offset, includeHidden };
+  // 旧 hidden 参数由结构解析自然忽略；T-595 后下游不再维护可见性分支。
+  return { limit, offset };
 }
 
 export function createPublishingTransport(

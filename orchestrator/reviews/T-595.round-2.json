@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 均已由修订规格以事务边界、失败验收和唯一匹配规则销账；所列修订行未引入新的 blocker 或 major。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-VIS-002",
+        "quote": "本轮明确判定为隐藏的作品，必须清除其既有平台派生数据。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-VIS-002",
+        "quote": "会清除其 publication、指标、评论、归因、搜索和平台派生物。"
+      },
+      "where": "SPEC §4.2 的跨模块清理链与 §6 的“清理失败”恢复语义。",
+      "failure_mode": "publication/指标已删除而 Search（或 Attribution）删除失败时，规格只要求标为“待清理”并下轮重试，未规定在重试成功前如何阻止遗留派生数据继续被下游读取；搜索读侧可直接命中遗留 search document，因而已确认隐藏作品仍会在产品中可见。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-07-28-visible-only-ingestion-boundary.md §4.2, §6；backend/src/modules/search/search.repository.ts:138-167",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定关键清理部分失败时的唯一可见性后置条件：在所有派生物清除完成前，不得让任何遗留派生物被下游读取；并为该失败—重试期间补一条跨模块验收。",
+      "resolution_evidence": "SPEC-LINE:114:ecffb31f6beae1f4 至 SPEC-LINE:119:5391d4739c659076 将完整清理限定为单一数据库事务，任一步失败即回滚；SPEC-LINE:148:f509115a9a3b33cc、SPEC-LINE:149:ad0a72835150f1ed 规定失败后只能保留上一次完整公开快照；SPEC-LINE:200:8bcd7fb99097afd7 至 SPEC-LINE:204:a76e848e2c52b353 新增四个删除阶段的回滚验收。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-VIS-005",
+        "quote": "明细导出失败、匹配失败或状态无法识别时：本轮不写入该作品的新数据；不因缺失证据删除上一次确认公开的数据。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-VIS-004",
+        "quote": "不新增未确认作品、不清除既有公开作品。"
+      },
+      "where": "SPEC §4.1 第 3 步的“规范化标题 + 发布时间作受控匹配”。",
+      "failure_mode": "同账号出现同标题且同发布时间粒度相同的多条作品时，规格未规定多候选必须视为 unknown。实现若任取首个候选，可能把隐藏状态归到另一条公开作品，继而错误清除其 publication 与派生数据；实现若跳过则得到不同用户可见结果。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/src/server/ingestion/douyin-work-detail.ts:455-459,462-520（现有匹配器在无法唯一消歧时返回 null）",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "将“受控匹配”定义为唯一匹配才可产生 visible/hidden 决议；零个或多个候选一律计为 unknown，禁止写入或清理，并纳入运行计数和测试夹具。",
+      "resolution_evidence": "SPEC-LINE:92:a074951857de37b9 至 SPEC-LINE:94:5036a96ae9ef7f52 明确候选必须唯一，零个或多个候选一律为 unknown、零写入零清理并计入未知数；SPEC-LINE:223:9e98b3d4283c197b、SPEC-LINE:224:ba41c8a7b4674f78 要求同标题同发布时间多候选夹具断言 unknown、零写入、零清理。",
+      "parent_id": ""
+    }
+  ]
+}

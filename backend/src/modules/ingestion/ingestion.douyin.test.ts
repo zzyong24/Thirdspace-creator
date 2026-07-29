@@ -793,10 +793,7 @@ describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账�
     });
   });
 
-  // [Bug-13 T-029] 扫码成功 → 立即 fire-and-forget refreshDouyin 刷真昵称,避免「占位未刷 → 立即
-  // 触发 job 时 collector 拿不到 accountId/cookies → needs_reconnect」的时序坑。test 模拟 douyinFetch.fetch
-  // 计数(被 refreshDouyin 内部调)→ 等 fire-and-forget 链跑完再断言 fetch 被调到 1 次。
-  it("[Bug-13 T-029] 扫码成功 → fire-and-forget 立即 refreshDouyin 一次(刷真昵称,end-to-end 扫码即齐活)", async () => {
+  it("[T-595] 未注入 canonical collector 时扫码只完成绑定，不回退全量指标写入", async () => {
     const { db } = await createDb();
     let fetchCalls = 0;
     const accountPort: IngestionPlatformAccountPort = {
@@ -828,13 +825,8 @@ describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账�
     });
     const res = await svc.loginDouyin(ctx);
     expect(res.loggedIn).toBe(true);
-    // 等 fire-and-forget 链跑完:用 await new Promise(setImmediate) 把微任务队列抽干
-    // (refreshDouyin 内部 await 多个 IO,需要多轮)。
-    for (let i = 0; i < 20; i++) {
-      await new Promise<void>((resolve) => setImmediate(resolve));
-    }
-    // 关键:fire-and-forget refreshDouyin 跑了 → douyinFetch.fetch 被调 1 次。
-    expect(fetchCalls).toBe(1);
+    // 无组合根时宁可等下次 canonical collector，也不能绕过可见性闸门。
+    expect(fetchCalls).toBe(0);
   });
 });
 
@@ -1210,12 +1202,11 @@ describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", 
     expect(staged.calls).toEqual([]); // loginNew/fetchIdentity/adoptStaging/discardStaging 零调用
   });
 
-  it("onDouyinBound 未注入 → 回退 fire-and-forget refreshDouyin(带真号初始化采集)", async () => {
+  it("onDouyinBound 未注入 → 完成新号绑定但不回退全量指标写入", async () => {
     const { db } = await createDb();
     let fetchCalls = 0;
-    const fetchCtxSeen: Array<string | null> = [];
     const staged = stagedPort();
-    // 包一层 fetch 计数(refreshDouyin 内部调 douyinFetch.fetch)。
+    // 包一层 fetch 计数：canonical collector 未注入时不应调用。
     const port: DouyinFetchPort = {
       ...staged.port,
       fetch: async () => {
@@ -1232,10 +1223,6 @@ describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", 
     });
     const res = await svc.loginDouyin(ctx, { forceNew: true });
     expect(res.loggedIn).toBe(true);
-    for (let i = 0; i < 20; i++) {
-      await new Promise<void>((resolve) => setImmediate(resolve));
-    }
-    expect(fetchCalls).toBe(1);
-    void fetchCtxSeen;
+    expect(fetchCalls).toBe(0);
   });
 });

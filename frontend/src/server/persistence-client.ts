@@ -308,12 +308,13 @@ import {
   visibilityFromDetailStatus,
   type PublicationCatalogEntry,
 } from "@/server/ingestion/douyin-work-detail";
+import { decideVisibleDouyinCollection } from "@/server/ingestion/visible-douyin-collection";
 // [T-078] 作品封面回填字节下载 + 默认上限(封面回填/逐字稿/重建编排见 douyin-heavy-backfill)。
 import {
   downloadDouyinImage,
   DEFAULT_COVER_BACKFILL_LIMIT,
 } from "@/server/ingestion/douyin-cover-backfill";
-// [T-195] 抖音初始化重活编排:封面回填(只对可见作品)+ 逐字稿/重建排队(隐藏经 isWorkHidden 跳)。
+// [T-195/T-595] 抖音重活编排直接消费源边界归一后的公开作品域。
 //   由 self.detail 落完明细(hidden_at/platform_status 已标)后调 —— 可见性已知才跑重活(见根因注释)。
 //   多闸幂等在子 helper 内(runner 逐 aweme 跳已转写 / 已有 reconstructed artifact 跳过 / createTask 去重)。
 import { runDouyinHeavyBackfill } from "@/server/ingestion/douyin-heavy-backfill";
@@ -3159,8 +3160,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       listPublicationsByOutputIds: (ctx, outputIds) =>
         publishingService.listPublicationsByOutputIds(ctx, outputIds),
     });
-  // [T-578] 定位生成专用作品投影：Publishing service 负责 canonical 可见性
-  // (hiddenAt/platformStatus)，投影只保留有真实 publishedAt 的 published 行并按其新→旧。
+  // [T-578/T-595] 定位投影直接消费源边界归一后的 publication 域，
+  // 只保留有真实 publishedAt 的 published 行并按其新→旧。
   // 后台 runner 与对话 runner 绑定下面同一个 reader 对象，避免再次分叉。
   const listPositioningWorks = async (
     c: RequestContext,
@@ -3171,9 +3172,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       listOutputRefsByProjects: (ctx, projectIds) =>
         projectsService.listOutputRefsByProjects(ctx, projectIds),
       listVisiblePublicationsByOutputIds: (ctx, outputIds) =>
-        publishingService.listPublicationsByOutputIds(ctx, outputIds, {
-          visibility: "visible",
-        }),
+        publishingService.listPublicationsByOutputIds(ctx, outputIds),
     });
   const positioningWorksReader = { listProjects: listPositioningWorks };
 
@@ -6433,60 +6432,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
+  const recentVisibleCollections = new Map<
+    string,
+    {
+      completedAtMs: number;
+      result: Awaited<ReturnType<ScheduledCollector>>;
+    }
+  >();
   const scheduledCollectors: Record<string, ScheduledCollector> = {
-    // 自己主页作品+指标:直接复用 ingestionService.refreshDouyin(内部:校验源 → fetchDouyin
-    // Metrics(launchPersistentContext 复用扫码登录态)→ ensureImportedProject×N →
-    // ingestMetrics → completeRun)。未登录 → refreshDouyin 抛 DouyinNotLoggedInError(runner
-    // catch → needs_reconnect)。itemsNew=本次真写入快照数(recordsWritten);metric_snapshots
-    // 是 append-only 时间序列(同 capturedAt 幂等),无"更新"语义。
-    // [T-078] 指标落库后追加封面回填(best-effort):对尚无 coverAssetId 的已发布抖音
-    // publication,iesdouyin 分享页(经限流网关)抽 coverUrl → 下载(带 Referer)→
-    // createGeneratedAsset 直落字节 → setCover 写 revision.coverAssetId。幂等(已有
-    // 封面不进候选集)、单作品降级(runner 内 catch 继续)、整批失败不影响指标主流程
-    // (此处再 catch 一层)。itemsUpdated = 本轮真回填的封面数(publication 确被更新,诚实)。
+    // 自己主页作品+指标：self.metrics 与旧 self.detail 统一进入同一个 canonical
+    // visible-only collector。采集先在内存确认公开性，再写项目/发布/指标并运行重活。
     "self.metrics": async (ctx, target, report) => {
-      // [T-152] 阶段①:登录校验 + 确保采集源(refreshDouyin 内部先校验登录态再抓)。
-      report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
-      const externalSourceId =
-        typeof target.externalSourceId === "string" && target.externalSourceId
-          ? target.externalSourceId
-          : // [T-144] 空 target(job 未绑源)→ ensure 本 user 的真实抖音采集源(无源建、有源
-            // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
-            // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
-            await ingestionService.ensureDouyinSource(ctx);
-      // [T-152] 阶段②:抓主页作品列表 + 落库(refreshDouyin 内部翻页/逐字稿是慢阶段,但在
-      //   douyinFetch 端口后不可逐页上报 —— 见诚实存疑⑥。此处只标进入抓取阶段,完成后报条数)。
-      report({ stage: "fetch", processed: 0, total: null, message: "抓取主页作品与指标" });
-      const run = await ingestionService.refreshDouyin(ctx, {
-        externalSourceId,
-      });
-      // 抓取落库完成:上报本轮真写入的快照数(累计条数)。
-      report({
-        stage: "fetch",
-        processed: run.recordsWritten,
-        total: null,
-        message: `已落库 ${run.recordsWritten} 条作品指标`,
-      });
-      // [T-195] self.metrics 轻量化:封面回填 + 逐字稿/重建排队(重活)已整体挪到 self.detail 尾。
-      //   根因(真机实测):这两步撞可见性——可见性(hidden_at/platform_status)要到 self.detail 落
-      //   明细才标。原挂在 self.metrics 尾会照撞全部作品(含隐藏),隐藏作品分享页 item_list 为空逐个
-      //   失败(~40s/个),把串行闸(gate-F5 并发 1)后面的 self.detail/comments/逐字稿全堵住。故只保留
-      //   建作品(ensureImportedProject)+ 指标快照(ingestMetrics)+ 身份回填(applyDouyinIdentity/
-      //   昵称,均在 refreshDouyin 内),让 self.metrics 秒返回、昵称秒回;重活见 self.detail 尾。
-      const selfMetricsResult = {
-        itemsNew: run.recordsWritten,
-        // [T-195] 封面回填已挪到 self.detail → self.metrics 不再回填封面,itemsUpdated 恒 0。
-        itemsUpdated: 0,
-      };
-      // [T-176] 移除 self.metrics → self.detail 的每轮 fire-and-forget 自接。
-      //   旧行为(Bug-10/11 T-023/T-024):self.metrics 每次成功后自动再跑一次 self.detail 全量导出。
-      //   死循环根因之一:self.detail 走创作者中心导出面板,DOM 极脆(直播 tab 无数据 / 图集 /
-      //   微前端未就绪)→ waitForEvent('download') 超时,反复触发脆弱路径 + 污染共享的 creator-center
-      //   退避状态,把评论采集拖进退避死循环。故**解耦**:self.detail 改由用户/调度显式触发,
-      //   拉指标不再每轮自动接全量导出(finish_rate/follower_gain/ctr 请单独配 self.detail job)。
-      //   注:即便 self.detail 单跑失败,classifyDouyinOutcome(export-download-timeout)也已判
-      //   content-error 不顶退避(见 douyin-request-gateway.ts),双保险。
-      return selfMetricsResult;
+      // [T-595] 旧 self.metrics 不再拥有“先写全量指标”的旁路；兼容旧调度记录但统一
+      // 委托 self.detail 的 canonical visible-only collector。对象在任务真正执行前已完成
+      // 构造，不存在初始化期递归；同账号调度仍由 gate-F5 串行与 run 幂等键兜底。
+      return scheduledCollectors["self.detail"]!(ctx, target, report);
     },
     // 评论:fetchDouyinComments(target)→ ingestComments(D2 的纯 ports 落库:建 run → 逐条经
     // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=
@@ -6747,6 +6707,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect,§6);导出非 xlsx →
     // DouyinExportError(普通失败)。itemsNew=真写入快照数;明细快照 append-only → itemsUpdated 0。
     "self.detail": async (ctx, target, report) => {
+      const collectionCacheKey = `${ctx.userId}:${ctx.accountId ?? "none"}`;
+      const cached = recentVisibleCollections.get(collectionCacheKey);
+      if (cached && Date.now() - cached.completedAtMs < 30 * 60_000) {
+        report({
+          stage: "visibility",
+          processed: cached.result.itemsNew,
+          total: cached.result.itemsNew,
+          message: "已复用 30 分钟内同账号的公开作品采集结果",
+        });
+        return cached.result;
+      }
       // [T-152] 阶段①:登录校验 + 确保采集源(导出前 fetchDouyinWorkListExport 内先校验登录态)。
       report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
       const externalSourceId =
@@ -6757,10 +6728,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
             await ingestionService.ensureDouyinSource(ctx);
       const capturedAt = deps.now();
+      const detailCapturedAt = new Date(Date.parse(capturedAt) + 1).toISOString();
+      // [T-595] 原始指标先只进内存；禁止在可见性已确认前调用 ingestion 写库。
+      report({
+        stage: "fetch",
+        processed: 0,
+        total: null,
+        message: "抓取完整作品目录（尚未入库）",
+      });
+      const rawBatch = await (await loadDouyinCdp()).fetchDouyinMetrics({
+        capturedAt,
+        authDir: douyinAuthDirFor(ctx.accountId),
+        gateway: douyinGateway,
+        // 公开恢复必须能重新发现，不能被当前库里的 knownAwemeIds 提前截断。
+        knownAwemeIds: undefined,
+      });
       // [T-322] detailWritten 提到 try 外(下方封面回填段 return 读它)。导出→解析→可见性
       //   同步→明细落库整段包 try:任一抛错只 console.error + 报一条 export 降级,**不**
       //   rethrow,让控制流继续到下方 runDouyinHeavyBackfill(封面回填不依赖导出结果,§④修点 A)。
       let detailWritten = 0;
+      let metricsWritten = 0;
       try {
         // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
         // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
@@ -6795,8 +6782,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
           limit: 500,
         });
-        const catalog: PublicationCatalogEntry[] = [];
+        const catalogByExternalId = new Map<string, PublicationCatalogEntry>();
+        for (const record of rawBatch.records) {
+          catalogByExternalId.set(record.externalId, {
+            id: record.externalId,
+            platform: record.platform,
+            title: record.title ?? "",
+            publishedAt: record.publishedAt ?? null,
+            externalId: record.externalId,
+          });
+        }
         for (const p of pubs) {
+          if (!p.externalId) continue;
           let title = p.title;
           if (!title) {
             try {
@@ -6806,21 +6803,55 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // 防御:取不到作品标题就保持空(该条明细自然匹配不上,诚实跳过)。
             }
           }
-          catalog.push({
-            id: p.id,
+          // catalog 的 id 统一使用 externalId，避免同一作品的“原始记录 + 存量 publication”
+          // 形成两个候选而被误判多义；存量只补原始记录缺失的标题/发布时间。
+          const previous = catalogByExternalId.get(p.externalId);
+          catalogByExternalId.set(p.externalId, {
+            id: p.externalId,
             platform: p.platform,
-            title,
-            publishedAt: p.publishedAt,
-            // [T-036] 同名同刻双轨(fixture 无 externalId / imported 有)消歧优先 imported ——
-            // 落库锚就是 externalId,匹到 fixture 轨整条明细会被 toDetailMetricRecords 丢弃。
-            externalId: p.externalId ?? null,
+            title: previous?.title || title,
+            publishedAt: previous?.publishedAt || p.publishedAt,
+            externalId: p.externalId,
           });
         }
+        const catalog = [...catalogByExternalId.values()];
         const externalIdById = new Map<string, string>();
-        for (const p of pubs) {
-          if (p.externalId) externalIdById.set(p.id, p.externalId);
+        for (const item of catalog) {
+          if (item.externalId) externalIdById.set(item.id, item.externalId);
         }
         const matches = matchDetailsToPublications(details, catalog);
+        const decision = decideVisibleDouyinCollection({
+          records: rawBatch.records,
+          details,
+          catalog,
+        });
+        const visibleExternalIds = new Set(
+          decision.visibleRecords.map((record) => record.externalId),
+        );
+        report({
+          stage: "visibility",
+          processed: decision.counts.visible,
+          total: decision.counts.observed,
+          message:
+            `公开 ${decision.counts.visible} · 隐藏 ${decision.counts.hidden} · ` +
+            `未知跳过 ${decision.counts.unknown} · 明细未匹配 ${decision.counts.unmatchedDetails}`,
+        });
+
+        // 先原子清理明确隐藏的存量平台派生树；任一失败直接抛出，禁止继续入库或跑重活。
+        for (const externalId of decision.hiddenExternalIds) {
+          await projectsService.reconcilePlatformWork(ctx, {
+            platform: "douyin",
+            externalId,
+            visibility: "hidden",
+          });
+        }
+        const metricsRun = await ingestionService.ingestApprovedDouyinBatch(ctx, {
+          externalSourceId,
+          capturedAt,
+          records: decision.visibleRecords,
+          identity: rawBatch.identity,
+        });
+        metricsWritten = metricsRun.recordsWritten;
         // 3b) [T-073] 平台侧可见性同步:明细「审核状态」列(如「仅自己可见」/「已通过」)
         //     → publication.hidden_at + 导入项目 platform_ref.hidden。判定不了(审核中/
         //     未通过/空)诚实跳过,不动既有标记;找不到承载行也跳过(不硬造)。放在指标
@@ -6861,30 +6892,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             continue; // 无 externalId 锚(fixture 轨)→ 跳过
           }
           const hidden = vis === "hidden";
+          if (hidden) {
+            // 已由上方原子清理链处理；不再回写一份 hidden 标记制造双写真相。
+            visDiag.hiddenSynced += 1;
+            continue;
+          }
           try {
-            await publishingService.setVisibilityByExternalKey(ctx, {
+            // [T-595] 旧 hidden_at/platform_ref.hidden 只作迁移兼容；公开归一也由同一
+            // Projects 事务协调器一次提交，退役原先三个 service 的 best-effort 双写链。
+            await projectsService.reconcilePlatformWork(ctx, {
               platform: "douyin",
               externalId: extId,
-              hidden,
+              visibility: "visible",
             });
-            // [T-033] 同步平台侧审核状态,供 list「默认只显示已通过」+ 重活判据
-            //   (isPublicationRunnableForHeavyWork)的 `platformStatus = '已通过'` 用。
-            // [T-206] **归一**:真机 xlsx 原值是「公开」/「自见」而非「已通过」/「仅自己可见」——
-            //   若直落原值,可见作品(公开)的 platformStatus='公开' 会被过滤器/判据 `=已通过` 误杀
-            //   (连列表都不显)。故 visible → 落规范值「已通过」(过滤器/判据放行);hidden 由 hidden_at
-            //   兜住(过滤器先判 hiddenAt IS NULL),platformStatus 保留原值方便诊断。
-            await publishingService.setPlatformStatusByExternalKey(ctx, {
-              platform: "douyin",
-              externalId: extId,
-              platformStatus: hidden ? (m.detail.status ?? null) : "已通过",
-            });
-            await projectsService.setImportedProjectHidden(ctx, {
-              platform: "douyin",
-              externalId: extId,
-              hidden,
-            });
-            if (hidden) visDiag.hiddenSynced += 1;
-            else visDiag.visibleSynced += 1;
+            visDiag.visibleSynced += 1;
           } catch {
             // 可见性同步失败不拖垮整批指标落库(best-effort;下轮采集会再同步)。
           }
@@ -6908,8 +6929,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
         const records = toDetailMetricRecords(
           matches,
-          (pubId) => externalIdById.get(pubId) ?? null,
-          capturedAt,
+          (pubId) => {
+            const externalId = externalIdById.get(pubId) ?? null;
+            return externalId && visibleExternalIds.has(externalId)
+              ? externalId
+              : null;
+          },
+          detailCapturedAt,
         );
         // [T-195] records 空(一条都没匹配上)时**不早退**:可见性已在上面同步(hidden_at/
         //   platform_status 已标),缺封面 / 待重建的可见作品仍应跑重活。故只跳过「建空 run」,
@@ -6925,7 +6951,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const run = await ingestionService.createRun(ctx, {
             externalSourceId,
             runType: "douyin_detail",
-            idempotencyKey: `${externalSourceId}:detail:${capturedAt}`,
+            idempotencyKey: `${externalSourceId}:detail:${detailCapturedAt}`,
           });
           const result = await ingestionService.ingestMetrics(ctx, {
             runId: run.id,
@@ -6946,24 +6972,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           `[douyin-detail-ingest] 明细落库 ${detailWritten} 条快照(匹配上 ${records.length} 条 record)`,
         );
       } catch (detailErr) {
-        // [T-322] 导出/解析/可见性/落库任一失败 → 只记日志 + 报一条 export 降级,**不**
-        //   rethrow:继续跑下方封面回填(候选是纯 DB 查、分享页独立拉,不依赖 xlsx;可见性
-        //   未同步 → platformStatus NULL 仍被重活判据 isPublicationRunnableForHeavyWork 放行,§②)。
+        // [T-595] 可见性闸门失败必须 fail-closed：不入新作品、不按缺失状态清理，也不继续
+        // 跑封面/逐字稿等重活。旧“吞错后继续”会把 unknown 当可见，已正式退役。
         console.error(
-          "[douyin-detail] 明细导出/解析/同步失败,跳过明细、继续回填封面:",
+          "[douyin-visible-collection] 源可见性确认失败，本轮未入库:",
           detailErr,
         );
         report({
           stage: "export",
           processed: 0,
           total: null,
-          message: "明细导出失败,跳过明细、继续回填封面",
+          message: "可见性无法确认，本轮未入库且未清理",
         });
+        throw detailErr;
       }
-      // 5) [T-195] 明细落库(可见性已标)后跑初始化重活:①封面回填(只对可见作品)②逐字稿 +
-      //    重建排队(隐藏经 isWorkHidden 跳)。整体从 self.metrics 尾挪到这里 —— 此刻 hidden_at /
-      //    platform_status 已标,故重活天然只对可见作品跑(不撞隐藏作品空 item_list 分享页)。两步
-      //    各自 best-effort(见 runDouyinHeavyBackfill),整批失败绝不拖垮明细采集主流程。
+      // 5) 已确认公开并落库后再跑初始化重活：①封面回填 ②逐字稿 + 重建排队。
+      //    隐藏/未知作品从未进入本轮写集合，重活天然只看到公开作品。
       // [T-433 S1] 绑号轻触发:target.__skipHeavyBackfill 时跳过尾部逐条重活(封面/逐字稿/重建),
       //   避免多账号绑号把逐条重活堆进 gate-F5 超长串行队列;重活留次日 daily self.detail(不带此标)
       //   到点幂等补,不漏。明细导出/落库主流程不受影响(coversFilled=0 仅供 return itemsUpdated)。
@@ -6984,8 +7008,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               id: p.id,
               externalId: p.externalId ?? null,
               contentOutputId: p.contentOutputId ?? null,
-              hiddenAt: p.hiddenAt,
-              platformStatus: p.platformStatus,
             })),
           // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
           fetchVideoUrl: async (awemeId) =>
@@ -7023,15 +7045,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           },
           // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
           listImportedWorks: (c) => projectsService.listImportedWorks(c),
-          // [T-190] 反查作品 publication 可见性两列(找不到 → null,模块据此不硬跳)。
-          resolvePublicationVisibility: async (c, externalId) => {
-            const pub = await publishingService.resolvePublication(c, {
-              platform: "douyin",
-              externalId,
-            });
-            if (!pub) return null;
-            return { hiddenAt: pub.hiddenAt, platformStatus: pub.platformStatus };
-          },
           // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
           //   ai.tasks.create → runTranscribe;直调 service 会死链)。
           enqueueTranscribe: async (c, awemeIds) => {
@@ -7102,7 +7115,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return false;
           }
         },
-        // 候选作品:近期已发布(隐藏的跳过)+ 解析 projectId(output → project;导入作品的
+        // 候选作品:近期已发布 + 解析 projectId(output → project;导入作品的
         // title 回退 content_output 真实标题,与上方 catalog 装配同款回退)。单条解析失败跳过。
         listWorks: async (c, limit) => {
           const recent = await publishingService.getRecentPublicationsWithTitle(
@@ -7115,7 +7128,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             title: string;
           }> = [];
           for (const p of recent) {
-            if (p.hiddenAt) continue; // 隐藏作品不归因(与重活判据同口径)
             let projectId: string | null = null;
             let title = p.title;
             try {
@@ -7251,7 +7263,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         );
       });
       // itemsUpdated 承载本轮真回填的封面数(诚实;明细写入数入 itemsNew)。
-      return { itemsNew: detailWritten, itemsUpdated: heavy.coversFilled };
+      const visibleCollectionResult = {
+        itemsNew: metricsWritten + detailWritten,
+        itemsUpdated: heavy.coversFilled,
+      };
+      recentVisibleCollections.set(collectionCacheKey, {
+        completedAtMs: Date.now(),
+        result: visibleCollectionResult,
+      });
+      return visibleCollectionResult;
     },
     // [T-212a] 对标他号采集:读该号 enabled 对标源 → 逐源抓公开作品列表(fetchDouyinUserPosts:
     //   sec_uid 主页 aweme/post,只读公开统计)→ detectViral 筛爆款 → 每源 ≤10 条落 benchmark_works

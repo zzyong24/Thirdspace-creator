@@ -23,6 +23,8 @@ import {
   searchDocuments,
   reviews,
   aiTasks,
+  audienceSignals,
+  sql,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -667,5 +669,263 @@ describe("ProjectRepository — deleteProjectCascade 补全 (T-326 DATA-H05)", (
     // 项目根行:P_DEL 没了,P_KEEP 完好。
     await expect(repo.get(ctxA, "P_DEL")).rejects.toBeInstanceOf(OwnershipError);
     expect((await repo.get(ctxA, "P_KEEP")).title).toBe("链路-keep");
+  });
+});
+
+describe("ProjectRepository — T-595 手工项目只清平台发布子树", () => {
+  it("在一个事务中归一 publication 与 project 的公开兼容标记", async () => {
+    await repo.insertProject(
+      ctxA,
+      projectRow({
+        id: "P_VISIBLE",
+        userId: "user-a",
+        source: "imported",
+        platformRef: {
+          platform: "douyin",
+          externalId: "aweme-visible",
+          hidden: true,
+        },
+      }),
+    );
+    await repo.insertOutput(ctxA, {
+      id: "O_VISIBLE",
+      projectId: "P_VISIBLE",
+      title: "恢复公开",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "published",
+      contentRole: "traffic",
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(publications).values({
+      id: "PUB_VISIBLE",
+      userId: "user-a",
+      accountId: "acct-a",
+      contentOutputId: "O_VISIBLE",
+      platform: "douyin",
+      accountReference: "acct-ref",
+      status: "published",
+      externalId: "aweme-visible",
+      hiddenAt: NOW,
+      platformStatus: "自见",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+
+    expect(
+      await repo.normalizeVisiblePlatformWork(ctxA, {
+        platform: "douyin",
+        externalId: "aweme-visible",
+        updatedAt: "2026-07-28T11:00:00.000Z",
+      }),
+    ).toEqual({ publicationId: "PUB_VISIBLE", projectId: "P_VISIBLE" });
+    const [publication] = await db.select().from(publications);
+    expect(publication?.hiddenAt).toBeNull();
+    expect(publication?.platformStatus).toBe("已通过");
+    expect(
+      ((await repo.get(ctxA, "P_VISIBLE")).platformRef as { hidden?: boolean })
+        .hidden,
+    ).toBe(false);
+  });
+
+  it("原子删除 publication/指标/归因/搜索，保留手工 project 与 output", async () => {
+    await repo.insertProject(
+      ctxA,
+      projectRow({
+        id: "P_MANUAL",
+        userId: "user-a",
+        source: "manual",
+        title: "我的原创项目",
+      }),
+    );
+    await repo.insertOutput(ctxA, {
+      id: "O_MANUAL",
+      projectId: "P_MANUAL",
+      title: "原创脚本",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "published",
+      contentRole: "traffic",
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(publications).values({
+      id: "PUB_HIDDEN",
+      userId: "user-a",
+      accountId: "acct-a",
+      contentOutputId: "O_MANUAL",
+      platform: "douyin",
+      accountReference: "acct-ref",
+      status: "published",
+      externalId: "aweme-hidden",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(metricSnapshots).values({
+      id: "MS_HIDDEN",
+      userId: "user-a",
+      accountId: "acct-a",
+      publicationId: "PUB_HIDDEN",
+      capturedAt: NOW,
+      source: "ingestion",
+      createdAt: NOW,
+    });
+    await db.insert(topicAttributions).values({
+      id: "TA_HIDDEN",
+      userId: "user-a",
+      accountId: "acct-a",
+      publicationId: "PUB_HIDDEN",
+      projectId: "P_MANUAL",
+      topicType: "教程",
+      hookType: "痛点直击",
+      structureFormula: "三步教程",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(searchDocuments).values({
+      id: "SD_HIDDEN",
+      userId: "user-a",
+      accountId: "acct-a",
+      entityType: "publication",
+      entityId: "PUB_HIDDEN",
+      title: "不应再命中",
+      body: "",
+      searchText: "不应再命中",
+      indexedAt: NOW,
+    });
+    await db.insert(audienceSignals).values({
+      id: "SIG_HIDDEN",
+      userId: "user-a",
+      accountId: "acct-a",
+      source: "comment",
+      rawText: "隐藏作品评论",
+      publicationId: "PUB_HIDDEN",
+      createdAt: NOW,
+    });
+
+    expect(
+      await repo.deletePlatformPublicationCascade(ctxA, {
+        platform: "douyin",
+        externalId: "aweme-hidden",
+      }),
+    ).toEqual({ publicationId: "PUB_HIDDEN" });
+
+    expect(await db.select().from(publications)).toHaveLength(0);
+    expect(await db.select().from(metricSnapshots)).toHaveLength(0);
+    expect(await db.select().from(topicAttributions)).toHaveLength(0);
+    expect(await db.select().from(searchDocuments)).toHaveLength(0);
+    expect(await db.select().from(audienceSignals)).toHaveLength(0);
+    expect((await repo.get(ctxA, "P_MANUAL")).title).toBe("我的原创项目");
+    expect((await repo.getOutput(ctxA, "O_MANUAL")).title).toBe("原创脚本");
+  });
+
+  it.each([
+    "metric_snapshots",
+    "topic_attributions",
+    "search_documents",
+    "publications",
+  ])("删除阶段 %s 失败时整笔回滚，不留下半清理状态", async (failTable) => {
+    await repo.insertProject(
+      ctxA,
+      projectRow({
+        id: "P_ROLLBACK",
+        userId: "user-a",
+        source: "manual",
+      }),
+    );
+    await repo.insertOutput(ctxA, {
+      id: "O_ROLLBACK",
+      projectId: "P_ROLLBACK",
+      title: "事务回滚",
+      contentType: "video",
+      format: "",
+      aspectRatio: "",
+      targetDurationSeconds: 0,
+      status: "published",
+      contentRole: "traffic",
+      primaryAssetId: null,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(publications).values({
+      id: "PUB_ROLLBACK",
+      userId: "user-a",
+      accountId: "acct-a",
+      contentOutputId: "O_ROLLBACK",
+      platform: "douyin",
+      accountReference: "acct-ref",
+      status: "published",
+      externalId: "aweme-rollback",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(metricSnapshots).values({
+      id: "MS_ROLLBACK",
+      userId: "user-a",
+      accountId: "acct-a",
+      publicationId: "PUB_ROLLBACK",
+      capturedAt: NOW,
+      source: "ingestion",
+      createdAt: NOW,
+    });
+    await db.insert(topicAttributions).values({
+      id: "TA_ROLLBACK",
+      userId: "user-a",
+      accountId: "acct-a",
+      publicationId: "PUB_ROLLBACK",
+      projectId: "P_ROLLBACK",
+      topicType: "教程",
+      hookType: "痛点直击",
+      structureFormula: "三步教程",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await db.insert(searchDocuments).values({
+      id: "SD_ROLLBACK",
+      userId: "user-a",
+      accountId: "acct-a",
+      entityType: "publication",
+      entityId: "PUB_ROLLBACK",
+      title: "事务回滚",
+      body: "",
+      searchText: "事务回滚",
+      indexedAt: NOW,
+    });
+
+    await db.execute(
+      sql.raw(`
+        CREATE FUNCTION fail_visible_cleanup() RETURNS trigger AS $$
+        BEGIN
+          RAISE EXCEPTION 'forced visible cleanup rollback';
+        END;
+        $$ LANGUAGE plpgsql
+      `),
+    );
+    await db.execute(
+      sql.raw(`
+        CREATE TRIGGER fail_visible_cleanup_trigger
+        BEFORE DELETE ON ${failTable}
+        FOR EACH ROW EXECUTE FUNCTION fail_visible_cleanup()
+      `),
+    );
+
+    await expect(
+      repo.deletePlatformPublicationCascade(ctxA, {
+        platform: "douyin",
+        externalId: "aweme-rollback",
+      }),
+    ).rejects.toThrow("forced visible cleanup rollback");
+
+    expect(await db.select().from(publications)).toHaveLength(1);
+    expect(await db.select().from(metricSnapshots)).toHaveLength(1);
+    expect(await db.select().from(topicAttributions)).toHaveLength(1);
+    expect(await db.select().from(searchDocuments)).toHaveLength(1);
   });
 });

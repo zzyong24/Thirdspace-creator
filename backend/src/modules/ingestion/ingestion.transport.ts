@@ -80,19 +80,12 @@ export function createIngestionTransport(
           return { data: toRunResource(run), meta };
         }
         case "ingestion.douyin.refresh": {
-          const b = (body ?? {}) as {
-            externalSourceId?: string;
-            capturedAt?: string;
-          };
-          // [T-136 §D/§A 切片 c] 号来自 **ctx.accountId**(x-account-id header 经
-          //   resolveRequestContext 属主校验的唯一可信路径),不读 body.accountId —— body 的
-          //   accountId 是 additive 客户端声明位,客户端应同步写 header;transport 认 body 会绕过
-          //   §A BLOCKER-1 属主校验(伪造 body.accountId 指他人号)。service 从 ctx.accountId 取号。
-          const run = await service.refreshDouyin(ctx, {
-            externalSourceId: b.externalSourceId ?? "",
-            capturedAt: b.capturedAt,
-          });
-          return { data: toRunResource(run), meta };
+          // [T-595] 公开 API 不再允许绕过创作者中心可见性闸门直接“抓指标即入库”。
+          // 真采集统一由 scheduled self.metrics canonical collector 执行：先确认公开，再调用
+          // ingestApprovedDouyinBatch。保留 endpoint id 只为旧客户端得到明确升级错误。
+          throw new Error(
+            "直接刷新作品指标已退役，请运行“我的作品指标”采集任务以先确认作品公开状态",
+          );
         }
         case "ingestion.douyin.login": {
           // [T-136] 号取 ctx.accountId(见 refresh 注释);扫码落该号独立登录态目录。

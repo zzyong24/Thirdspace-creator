@@ -308,11 +308,24 @@ export interface IngestionService {
       publishedAt?: string;
     },
   ): Promise<{ projectId: string; outputId: string; publicationId: string } | null>;
-  // 抖音真实指标刷新:校验来源→抓取(复用扫码登录态)→ensureImportedProject×N(未知作品
-  // 就地建历史项目,治"24 条被 reject")→createRun→ingestMetrics(此时全命中)→completeRun。
+  // 旧抖音全量刷新实现，仅供底层兼容测试；产品入口已关闭，不能再由调度或 transport 调用。
+  // 新链必须先在组合层确认 visibility，再调用 ingestApprovedDouyinBatch。
   refreshDouyin(
     ctx: RequestContext,
     input: { externalSourceId: string; capturedAt?: string },
+  ): Promise<IngestionRunRow>;
+  /**
+   * T-595：只持久化已由组合层 canonical visibility gate 明确放行的抖音记录。
+   * 此操作不抓源、不推断可见性；空数组会留下诚实的 0 写入 run。
+   */
+  ingestApprovedDouyinBatch(
+    ctx: RequestContext,
+    input: {
+      externalSourceId: string;
+      capturedAt: string;
+      records: MetricRecord[];
+      identity: DouyinSelfIdentity | null;
+    },
   ): Promise<IngestionRunRow>;
   // T-144 —— 确保本 user 有一条确定 id 的真实抖音采集源(无源建、有源复用),返回源 id。
   // 取代采集器写死的已退役 "src-douyin-canonical" fallback(新库查无 → 0 条的根因)。复用
@@ -354,10 +367,10 @@ export function createIngestionService(args: {
   throttleStatus?: DouyinThrottleStatusPort;
   // T-144:扫码绑定时 ensure 平台账号的端口(可选;未注入时 loginDouyin 仅建 external_source)。
   platformAccount?: IngestionPlatformAccountPort;
-  // [T-189a] 绑定成功回调(可选;组合根注入)——扫码成功 + ensure 源/账号后 fire-and-forget 调它,
-  //   由组合根「幂等建三个每天定时采集 job + 初始化跑一次(按 self.metrics→self.detail→comments 序)」。
+  // [T-189a/T-595] 绑定成功回调(可选;组合根注入)——扫码成功 + ensure 源/账号后
+  //   fire-and-forget 调它，由组合根建立任务并触发 canonical visible-only collector。
   //   backend 模块**不 import scheduling**(守 SPEC §22),故经此回调把跨模块编排下推到组合根。
-  //   未注入(旧最小组合)→ 回退 Bug-13 内联 refreshDouyin 刷昵称(identity backfill,不破旧行为)。
+  //   未注入时只完成绑定与身份回填，不允许回退旧全量写入旁路。
   onDouyinBound?: (ctx: RequestContext) => void;
 }): IngestionService {
   const {
@@ -560,9 +573,8 @@ export function createIngestionService(args: {
     if (sourceId) {
       await applyDouyinIdentity(boundCtx, sourceId, identity);
     }
-    // ⑥ 绑定成功编排沿现链(T-189a):onDouyinBound(建号绑定 job + 初始化采集;claim 已随
-    //   T-332 S2 退役 —— 清库世界没有孤儿,新数据出生即带号)fire-and-forget,传真号;
-    //   未注入时回退 Bug-13 内联 refreshDouyin(同现链语义)。
+    // ⑥ 绑定成功交给组合根触发 canonical visible-only collector。未注入组合根时停在
+    //   已绑定/已回填身份状态，禁止回退旧 refreshDouyin 全量落库旁路。
     if (onDouyinBound) {
       try {
         onDouyinBound(boundCtx);
@@ -572,15 +584,6 @@ export function createIngestionService(args: {
           err,
         );
       }
-    } else if (sourceId) {
-      void service
-        .refreshDouyin(boundCtx, { externalSourceId: sourceId })
-        .catch((refreshErr) => {
-          console.error(
-            "[ingestion] loginDouyin(forceNew): refreshDouyin 初始化刷新失败:",
-            refreshErr instanceof Error ? refreshErr.message : refreshErr,
-          );
-        });
     }
     return { loggedIn: true };
   }
@@ -958,6 +961,47 @@ export function createIngestionService(args: {
       return service.completeRun(ctx, { runId: run.id });
     },
 
+    async ingestApprovedDouyinBatch(ctx, input) {
+      requireAccountId(ctx.accountId, "ingestion.ingestApprovedDouyinBatch");
+      const repo = repoFor(ctx);
+      const src = await repo.getExternalSource(input.externalSourceId);
+      if (!src) {
+        throw new Error(`外部来源不存在:${input.externalSourceId}`);
+      }
+      if (src.sourceType !== "douyin") {
+        throw new Error("该外部来源不是抖音(sourceType≠douyin)");
+      }
+      await applyDouyinIdentity(ctx, src.id, input.identity);
+      if (ports.projects) {
+        for (const record of input.records) {
+          try {
+            await service.ensureImportedProject(ctx, {
+              title:
+                record.title?.trim() || `抖音作品 ${record.externalId}`,
+              brief: record.desc,
+              platform: record.platform,
+              externalId: record.externalId,
+              shareUrl: record.shareUrl,
+              publishedAt: record.publishedAt,
+            });
+          } catch {
+            // 与 refreshDouyin 现有逐条 partial 语义一致：导入失败后由 ingestMetrics
+            // 记录 publication not found，不让一条坏记录拖垮整批。
+          }
+        }
+      }
+      const run = await service.createRun(ctx, {
+        externalSourceId: input.externalSourceId,
+        runType: "douyin_visible_metrics",
+        idempotencyKey: input.capturedAt,
+      });
+      await service.ingestMetrics(ctx, {
+        runId: run.id,
+        records: input.records as unknown as Array<Record<string, unknown>>,
+      });
+      return service.completeRun(ctx, { runId: run.id });
+    },
+
     async ensureDouyinSource(ctx) {
       // T-144 → [T-332 S2] 每号独立源(未选号 → AccountRequiredError)。无源 seed 一条
       //   真实 source_type=douyin,有源(onConflictDoNothing)复用不覆盖用户自定义 name/handle。
@@ -1045,11 +1089,9 @@ export function createIngestionService(args: {
           // per-account 源);其余失败同样只告警 —— 不把已成功的扫码翻成失败。
           console.error("[ingestion] loginDouyin: ensure external_source 失败:", err);
         }
-        // [T-189a] 绑定成功 → 组合根 bootstrap:幂等建三个每天定时采集 job(self.metrics /
-        //   self.detail / comments)+ 立即初始化跑一次拉全量(按序,gate-F5 串行链)。fire-and-forget
-        //   (回调内部 void,不阻塞绑定返回)。「已有账户」路径也复用 loginDouyin,故此处同样触发。
-        //   identity backfill 由初始化的 self.metrics(=refreshDouyin→applyDouyinIdentity)顺带完成,
-        //   故 onDouyinBound 注入时**不再**跑下方 Bug-13 内联 refreshDouyin(避免双跑 Chromium 抢号)。
+        // [T-189a/T-595] 绑定成功 → 组合根 bootstrap:幂等建采集 job，并立即触发
+        // canonical visible-only collector。fire-and-forget(回调内部 void,不阻塞绑定返回)。
+        // 「已有账户」路径也复用 loginDouyin，故此处同样触发。
         //   [T-201a → T-332 S2] 传 boundCtx(带真号)→ 建的 job/初始化采集 ctx 带真号
         //   (triggerScheduledJob 由 job.accountId 派生采集 ctx);claim 已随 T-332 S2 退役,
         //   绑定即建号绑定 job,新数据出生即带号。
@@ -1058,35 +1100,6 @@ export function createIngestionService(args: {
             onDouyinBound(boundCtx);
           } catch (err) {
             console.error("[ingestion] loginDouyin: onDouyinBound 建 job/初始化触发失败:", err);
-          }
-        } else if (platformAccount) {
-          // [Bug-13 T-029] 扫码后**立即** fire-and-forget 跑 refreshDouyin(cookies 刚落了 .auth/,
-          // 直接 headless 复用)→ applyDouyinIdentity 把 accountHandle 从占位「我的抖音」改成
-          // 真实抖音昵称。**这步之前**:sidebar 显空 handle(占位)、后续 collector 用 _default/
-          // 找不到 accountId、jobs 触发时 needs_reconnect —— 用户实操「扫码完立刻叉掉提示→建任务→跑
-          // 必坏」的真根。**这步之后**:sidebar 显真实昵称 + 后续 collector 拿得到 accountId + source
-          // 就绪,端到端扫码即齐活。失败吞掉(不把已成功的扫码翻成失败,登录态已落是真的)。
-          // [Bug-13] 用 findDouyinSourceId 拿真源 ID(上一步 ensureDouyinSource 刚建过,这里能拿到),
-          // 不能传空串(refreshDouyin 会因「外部来源不存在」抛错,反而把成功扫码翻失败)。
-          try {
-            const sourceId = await findDouyinSourceId(boundCtx);
-            if (sourceId) {
-              void service
-                .refreshDouyin(boundCtx, { externalSourceId: sourceId })
-                .catch((refreshErr) => {
-                  console.error(
-                    "[ingestion] loginDouyin: refreshDouyin 刷新昵称失败(cookies 可能没就绪):",
-                    refreshErr instanceof Error
-                      ? refreshErr.message
-                      : refreshErr,
-                  );
-                });
-            }
-          } catch (refreshErr) {
-            console.error(
-              "[ingestion] loginDouyin: refreshDouyin 同步调度失败:",
-              refreshErr instanceof Error ? refreshErr.message : refreshErr,
-            );
           }
         }
       }

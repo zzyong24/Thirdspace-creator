@@ -16,11 +16,8 @@ export const publishingOperations = {
     method: "GET",
     path: "/outputs/:outputId/publications",
     params: outputParams,
-    // [T-033] includeHidden:默认过滤 hidden+未通过(平台审核);?hidden=1 全显。
-    //  整型 query(z.coerce.boolean 接 0/1/true/false)。NULL=用默认(过滤)。
-    query: paginationQuery.extend({
-      hidden: z.coerce.boolean().optional(),
-    }),
+    // T-595：可见性已在采集边界归一，列表只有普通分页，不再暴露 hidden 分支。
+    query: paginationQuery,
     response: publicationResource,
     isList: true,
     fr: ["FR-PUBLISHING-LIST"],

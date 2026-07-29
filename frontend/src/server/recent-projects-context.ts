@@ -43,10 +43,7 @@ export interface PositioningWorksContextPorts {
     ctx: RequestContext,
     projectIds: ReadonlyArray<string>,
   ): Promise<Array<{ projectId: string; outputId: string }>>;
-  /**
-   * 必须由 Publishing service 以 visibility='visible' 实现；本投影不在组合层重写
-   * hiddenAt/platformStatus 规则。
-   */
+  /** 兼容旧端口名；T-595 后返回的就是源边界归一后的公开作品域。 */
   listVisiblePublicationsByOutputIds(
     ctx: RequestContext,
     outputIds: ReadonlyArray<string>,

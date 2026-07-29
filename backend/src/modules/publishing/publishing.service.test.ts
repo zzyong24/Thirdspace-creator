@@ -100,8 +100,8 @@ describe("service — 未选号 ctx → AccountRequiredError (T-332 S2)", () => 
   });
 });
 
-describe("[T-578] 定位作品批量窄读复用 canonical 可见性口径", () => {
-  it("visible 模式过滤 hiddenAt/仅自己可见，并继续按 accountId 隔离", async () => {
+describe("[T-595] 定位作品批量窄读直接消费源边界归一结果", () => {
+  it("旧 visibility 参数不再二次过滤，但继续按 accountId 隔离", async () => {
     const visible = await service.createImportedPublication(ctx, "output-visible", {
       platform: "douyin",
       externalId: "aweme-visible",
@@ -165,11 +165,15 @@ describe("[T-578] 定位作品批量窄读复用 canonical 可见性口径", () 
         legacyUnknown.contentOutputId,
         otherAccount.contentOutputId,
       ],
-      { visibility: "visible" },
     );
 
     expect(rows.map((row) => row.externalId).sort()).toEqual(
-      ["aweme-legacy-unknown", "aweme-visible"].sort(),
+      [
+        "aweme-hidden",
+        "aweme-legacy-unknown",
+        "aweme-private",
+        "aweme-visible",
+      ].sort(),
     );
   });
 });
@@ -604,7 +608,7 @@ describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () =>
     expect(rev.revisionNumber).toBe(3); // v1 空版 + v2 真标题 + v3 带封面
   });
 
-  it("候选集过滤:无 externalId(草稿)/ 已隐藏 / 其他平台 都不进", async () => {
+  it("候选集只按任务必要条件过滤，不再解释旧 hidden 标记", async () => {
     // 站内草稿(published=false 且无 externalId)。
     await service.createPublication(ctx, "output-1", {
       platform: "douyin",
@@ -628,7 +632,7 @@ describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () =>
     const missing = await service.listPublicationsMissingCover(ctx, {
       platform: "douyin",
     });
-    expect(missing).toEqual([]);
+    expect(missing.map((row) => row.externalId)).toEqual(["aweme-hidden"]);
   });
 
   it("setCover 走 assertCoverOwned 校验:非本用户 asset → ValidationError", async () => {

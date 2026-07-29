@@ -123,8 +123,8 @@ describe("PublishingCenterPage interactions", () => {
     expect(secondPageFirstRow).not.toBe(firstPageFirstRow);
   });
 
-  // [T-073] 平台侧已隐藏行:默认过滤,「显示已隐藏」开关切换后可见(带「已隐藏」徽标)。
-  it("hides platform-hidden rows by default and reveals them via the toggle", () => {
+  // [T-595] 发布中心直接消费归一化作品域，不再按旧 hidden 标记二次过滤。
+  it("does not reinterpret legacy hidden flags or expose a show-hidden toggle", () => {
     const base = buildPublishingCenterViewModel();
     // 把第一行标成平台侧已隐藏(hiddenAt 语义 → row.hidden)。
     const hiddenId = base.publications[0]!.id;
@@ -135,31 +135,16 @@ describe("PublishingCenterPage interactions", () => {
       ),
     };
     const { container } = render(<PublishingCenterPage viewModel={vm} />);
-    // 默认:隐藏行不渲染。
+    // 人工注入的旧标记不会改变结果集；真实隐藏作品应在采集边界被清理。
     expect(
       container.querySelector(`[data-publication-id="${hiddenId}"]`),
-    ).toBeNull();
-    // 开关存在(hiddenCount>0)且带计数。
+    ).not.toBeNull();
     const toggle = container.querySelector<HTMLButtonElement>(
       '[data-slot="publishing-show-hidden-toggle"]',
     );
-    expect(toggle).not.toBeNull();
-    expect(toggle!.getAttribute("aria-pressed")).toBe("false");
-    // 打开开关 → 隐藏行显示,行上带「已隐藏」徽标 + data-hidden。
-    fireEvent.click(toggle!);
-    expect(toggle!.getAttribute("aria-pressed")).toBe("true");
-    const row = container.querySelector(
-      `[data-publication-id="${hiddenId}"]`,
-    );
-    expect(row).not.toBeNull();
-    expect(row!.getAttribute("data-hidden")).toBe("true");
+    expect(toggle).toBeNull();
     expect(
-      row!.querySelector('[data-slot="publication-hidden-badge"]')?.textContent,
-    ).toBe("已隐藏");
-    // 再切回 → 重新过滤。
-    fireEvent.click(toggle!);
-    expect(
-      container.querySelector(`[data-publication-id="${hiddenId}"]`),
+      container.querySelector('[data-slot="publication-hidden-badge"]'),
     ).toBeNull();
   });
 

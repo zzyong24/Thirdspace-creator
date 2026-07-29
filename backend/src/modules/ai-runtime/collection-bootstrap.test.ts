@@ -151,9 +151,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps._createJob).not.toHaveBeenCalled();
     expect(res.created).toEqual([]);
     // 但仍初始化触发既有 job(拉全量)——复用既有 id。
-    // [T-359] 只触发默认启用的两个(自己作品);默认关的(评论/对标/出题/收藏夹)前置未配,
-    // 初始化触发=空跑噪音,跳过。
-    expect(res.triggered).toEqual(["self.metrics", "self.detail"]);
+    // [T-595] 可见性闸门已并入 self.metrics；self.detail 是默认关闭的兼容入口。
+    expect(res.triggered).toEqual(["self.metrics"]);
   });
 
   it("② 部分已存在 → 只补建缺的(幂等,不重复)", async () => {
@@ -173,15 +172,13 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     ]);
   });
 
-  it("③ 绑定 → 初始化只触发默认启用的自己作品两源([T-359] 分层)", async () => {
+  it("③ 绑定 → 初始化只触发 canonical 公开作品采集", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // [T-359] 初始化只触发默认启用的两个(顺序铁律仍在:self.metrics 先建 publication →
-    // self.detail 落可见性);默认关的四类(comments/benchmark/topic.daily/favorites)建而不触发。
-    expect(deps._trigger).toHaveBeenCalledTimes(2);
-    expect(deps.triggeredSourceKinds).toEqual(["self.metrics", "self.detail"]);
-    expect(res.triggered).toEqual(["self.metrics", "self.detail"]);
+    expect(deps._trigger).toHaveBeenCalledTimes(1);
+    expect(deps.triggeredSourceKinds).toEqual(["self.metrics"]);
+    expect(res.triggered).toEqual(["self.metrics"]);
   });
 
   it("③ [T-433 S1] 绑号初始化触发:self.detail 带 skipHeavyBackfill(尾部重活跳过,留次日定时补),self.metrics 不带", async () => {
@@ -191,11 +188,11 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     // 触发顺序即 [self.metrics, self.detail](顺序铁律)。绑号是一次性重触发,
     // 只跑轻量明细拿可见性;封面/逐字稿/复刻等尾部重活延到次日定时任务,
     // 避免多账号同时绑号把重活挤成灾难。
-    expect(deps.triggeredSourceKinds).toEqual(["self.metrics", "self.detail"]);
+    expect(deps.triggeredSourceKinds).toEqual(["self.metrics"]);
     const bySource = new Map(
       deps.triggeredSourceKinds.map((k, i) => [k, deps.triggeredOptions[i]]),
     );
-    expect(bySource.get("self.detail")).toEqual({ skipHeavyBackfill: true });
+    expect(bySource.get("self.detail")).toBeUndefined();
     // self.metrics 无重活尾巴,不传 options(保持默认全量)。
     expect(bySource.get("self.metrics")).toBeUndefined();
   });
@@ -235,8 +232,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
   it("[T-200] 触发的 job 带当前号(新建 job accountId = ctx.accountId)", async () => {
     const deps = makeDeps();
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    // [T-359] 初始化只触发默认启用两条,均带 acct-1(采集 ctx.accountId 由此派生,修串号根因)。
-    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1"]);
+    expect(deps.triggeredAccountIds).toEqual(["acct-1"]);
   });
 
   it("[T-200] 复用既有 job → 带既有 job 的属主号给触发", async () => {
@@ -249,8 +245,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       favorites: [{ id: "existing-favorites", accountId: "acct-1" }],
     });
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    // [T-359] 初始化只触发默认启用两条(self.metrics/self.detail),均带既有 job 的属主号。
-    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1"]);
+    expect(deps.triggeredAccountIds).toEqual(["acct-1"]);
   });
 
   it("[T-332 S2] 绑定链零 claim:bootstrap 只走 listJobs/createJob/trigger 三个端口,不触碰任何数据行归属", async () => {
@@ -267,15 +262,14 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
 
     // 二绑照常建 job + 触发(strict 门下 listJobs 只见 acct-2 的 job → 全量补建)。
     expect(res.created).toHaveLength(6);
-    // [T-359] 建 6 条(默认关的 4 条建即 disabled),初始化只触发默认启用的 2 条。
-    expect(res.triggered).toHaveLength(2);
-    // 端口调用次数恰为:listJobs 6 + createJob 6 + trigger 2(无任何额外「认领」动作)。
+    // [T-595] 建 6 条兼容模板，初始化只触发 canonical self.metrics。
+    expect(res.triggered).toHaveLength(1);
     expect(deps._listJobs).toHaveBeenCalledTimes(6);
     expect(deps._createJob).toHaveBeenCalledTimes(6);
-    expect(deps._trigger).toHaveBeenCalledTimes(2);
+    expect(deps._trigger).toHaveBeenCalledTimes(1);
   });
 
-  it("[T-359] 分层启用:自己作品两源建即 enabled=true,评论/对标/出题/收藏夹建即 enabled=false", async () => {
+  it("[T-595] 分层启用:只默认开启 canonical self.metrics", async () => {
     const deps = makeDeps();
     await bootstrapDouyinCollectionJobs(ctx, deps);
     const byKind = new Map(
@@ -285,7 +279,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       ]),
     );
     expect(byKind.get("self.metrics")).toBe(true);
-    expect(byKind.get("self.detail")).toBe(true);
+    expect(byKind.get("self.detail")).toBe(false);
     expect(byKind.get("comments")).toBe(false);
     expect(byKind.get("benchmark")).toBe(false);
     expect(byKind.get("topic.daily")).toBe(false);

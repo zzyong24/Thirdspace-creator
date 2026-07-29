@@ -9,19 +9,17 @@ import {
   type ReconstructEnqueuePorts,
   type ImportedWork,
 } from "@/server/ingestion/reconstruct-enqueue";
-import { isPublicationRunnableForHeavyWork } from "@/server/ingestion/douyin-work-detail";
 
 // [T-195] 抖音「初始化重活」编排(封面回填 + 逐字稿/重建排队)。
 //
 // 背景(真机实测,T-195 根因):这两步重活原挂在 self.metrics 采集器尾部——但可见性
-// (hidden_at / platform_status)要到 self.detail 落明细才标。结果首轮封面回填照撞全部
+// (hidden_at / platform_status)过去要到 self.detail 落明细才标。结果首轮封面回填照撞全部
 // 75 条(含隐藏),隐藏作品分享页 item_list 为空逐个失败(~40s/个),14/75 磨 9 分钟,
 // 还把排在后面的 self.detail / comments / 逐字稿全堵在串行闸后(gate-F5 并发 1)。
 //
 // 修法:把这两步整体从 self.metrics 尾部**挪到 self.detail 尾部**——self.detail 落完明细
-// (hidden_at / platform_status 已标)后再跑,天然「可见性已知」,故只对**可见作品**跑重活
-// (复用 T-190 isPublicationRunnableForHeavyWork 判据:封面候选先滤、逐字稿/重建靠 isWorkHidden
-// 端口滤)。self.metrics 因此轻量化(只建作品 + 落指标 + 回填昵称,秒返回)。
+// 后再跑。T-595 进一步把可见性归一提前到持久化边界：进入这里的 imported works 与
+// publication 已经都是公开作品，因此本模块不再维护第二份 hidden 判据。
 //
 // 铁律(与两个子 helper 同款):
 //   ① 全端口注入——本模块不 import ai / projects / assets / publishing service,host 在
@@ -39,15 +37,11 @@ export interface HeavyBackfillPubRow {
   externalId: string | null;
   /** 作品所属 content_output(封面绑项目用;为空则封面只进全局池)。 */
   contentOutputId: string | null;
-  /** [T-190] 明细同步落的隐藏时刻(非空 → 不可跑重活)。 */
-  hiddenAt: string | null;
-  /** [T-190] 明细同步落的平台侧审核状态(非「已通过」→ 不可跑重活)。 */
-  platformStatus: string | null;
 }
 
 /**
- * host 端口(persistence-client self.detail 接真实现;单测注 fake)。可见性过滤 / 候选
- * 装配 / outputId→project 映射由本模块内部完成,host 只提供**原始**读写能力。
+ * host 端口(persistence-client canonical collector 接真实现;单测注 fake)。
+ * 候选装配 / outputId→project 映射由本模块内部完成,host 只提供**原始**读写能力。
  */
 export interface DouyinHeavyBackfillHost {
   // ── 封面回填 ────────────────────────────────────────────────────────────
@@ -84,15 +78,6 @@ export interface DouyinHeavyBackfillHost {
   // ── 逐字稿 + 重建排队 ─────────────────────────────────────────────────────
   /** 本 user 全部 imported 作品的两维锚(host 绑 projectsService.listImportedWorks)。 */
   listImportedWorks(ctx: RequestContext): Promise<ImportedWork[]>;
-  /**
-   * [T-190] 反查作品(externalId=aweme_id)在平台侧的可见性两列(host 绑
-   * publishingService.resolvePublication → { hiddenAt, platformStatus })。找不到 → null
-   * (本模块据此判「无判据 → 不跳」,诚实)。
-   */
-  resolvePublicationVisibility(
-    ctx: RequestContext,
-    externalId: string,
-  ): Promise<{ hiddenAt: string | null; platformStatus: string | null } | null>;
   /** 排一个 transcribe.douyin 批任务(host 绑 ai transport 的 ai.tasks.create,inputData={awemeIds})。 */
   enqueueTranscribe(ctx: RequestContext, awemeIds: string[]): Promise<void>;
   /** 该项目是否已有 origin='reconstructed' 的 artifact(host 绑 listProjectArtifacts 过滤 origin)。 */
@@ -123,14 +108,12 @@ export interface DouyinHeavyBackfillResult {
 }
 
 /**
- * self.detail 落完明细(可见性已标)后跑的初始化重活:①封面回填(只对可见作品)②逐字稿 +
- * 重建排队(隐藏作品经 isWorkHidden 端口跳)。两步各自 best-effort,互不拖垮,更不拖垮 run。
+ * canonical collector 完成源边界归一后跑的初始化重活：①封面回填 ②逐字稿 +
+ * 重建排队。两步各自 best-effort,互不拖垮,更不拖垮 run。
  *
  * 可见性接线(T-195 核心):
- *   - 封面候选:host 返回的缺封面行**在本模块内**先按 externalId 非空 + isPublicationRunnableForHeavyWork
- *     过滤(隐藏作品不进候选,不撞空 item_list 分享页),再喂 backfillDouyinCovers;
- *   - 逐字稿/重建:装配 isWorkHidden 端口(resolvePublicationVisibility → !isPublicationRunnableForHeavyWork),
- *     隐藏作品逐字稿 + 重建都不排。
+ *   - 封面候选：只校验 externalId；可见性已经由 canonical collector 保证；
+ *   - 逐字稿/重建：直接消费归一化后的 imported works，不再反查 hidden。
  */
 export async function runDouyinHeavyBackfill(
   ctx: RequestContext,
@@ -150,14 +133,6 @@ export async function runDouyinHeavyBackfill(
     listMissingCover: async (limit) =>
       (await host.listPublicationsMissingCover(ctx, limit))
         .filter((p) => typeof p.externalId === "string" && p.externalId)
-        // [T-190 / T-195] 采集入口过滤:平台侧已知隐藏的作品不回填封面(不撞空 item_list、不当
-        //   飞轮素材)。self.detail 已先标 hidden_at / platform_status,故此处判据可靠生效。
-        .filter((p) =>
-          isPublicationRunnableForHeavyWork({
-            hiddenAt: p.hiddenAt,
-            platformStatus: p.platformStatus,
-          }),
-        )
         .map((p) => {
           if (typeof p.contentOutputId === "string" && p.contentOutputId) {
             outputIdByPublication.set(p.id, p.contentOutputId);
@@ -194,16 +169,9 @@ export async function runDouyinHeavyBackfill(
     console.error("[douyin-cover-backfill] 封面回填整批失败(明细不受影响):", err);
   }
 
-  // ── ② 逐字稿 + 重建排队(隐藏作品经 isWorkHidden 跳) ───────────────────────────
+  // ── ② 逐字稿 + 重建排队 ───────────────────────────────────────────────────
   const reconstructPorts: ReconstructEnqueuePorts = {
     listImportedWorks: (c) => host.listImportedWorks(c),
-    // [T-190] 只读可见性判据:反查该作品 publication 的 hiddenAt / platformStatus,已知隐藏 →
-    //   逐字稿 + 重建都不排。查不到 publication → false(无判据,诚实不硬跳)。
-    isWorkHidden: async (c, externalId) => {
-      const pub = await host.resolvePublicationVisibility(c, externalId);
-      if (!pub) return false;
-      return !isPublicationRunnableForHeavyWork(pub);
-    },
     enqueueTranscribe: (c, awemeIds) => host.enqueueTranscribe(c, awemeIds),
     hasReconstructedArtifact: (c, projectId) =>
       host.hasReconstructedArtifact(c, projectId),
@@ -216,7 +184,7 @@ export async function runDouyinHeavyBackfill(
     );
     if (enqueued.considered > 0) {
       console.log(
-        `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,重建排队 ${enqueued.reconstructEnqueued},跳过 ${enqueued.reconstructSkipped},隐藏跳 ${enqueued.hiddenSkipped},失败 ${enqueued.failed}`,
+        `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,重建排队 ${enqueued.reconstructEnqueued},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
       );
     }
   } catch (err) {
