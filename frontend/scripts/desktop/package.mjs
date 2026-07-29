@@ -212,30 +212,45 @@ function verifyPackagedTlsRuntime() {
   if (existsSync(missingCert) || existsSync(missingCertDir)) {
     throw new Error("[desktop:package] [T-445] 隔离探针占位路径意外存在，请删除后重试");
   }
-  const httpsProbe = spawnSync(
-    bundledNode,
-    [
-      "--use-bundled-ca",
-      "-e",
-      "fetch('https://example.com/').then(r=>{console.log('TLS_OK='+r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(e.cause?.code||e);process.exit(2)})",
-    ],
-    {
-      encoding: "utf8",
-      timeout: 30_000,
-      env: {
-        ...process.env,
-        SSL_CERT_FILE: missingCert,
-        SSL_CERT_DIR: missingCertDir,
+  // 单一公网探针会把目标站临时 reset/限流误判成 CA 缺失。依次握手两个不同站点，
+  // 任一 2xx 即可证明随包 Node 在外部 cert 路径失效时仍能使用内置 CA。
+  const probeUrls = ["https://example.com/", "https://www.apple.com/"];
+  const probeFailures = [];
+  let successfulProbe = null;
+  for (const probeUrl of probeUrls) {
+    const httpsProbe = spawnSync(
+      bundledNode,
+      [
+        "--use-bundled-ca",
+        "-e",
+        "fetch(process.argv[1]).then(r=>{console.log('TLS_OK='+r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(e.cause?.code||e);process.exit(2)})",
+        probeUrl,
+      ],
+      {
+        encoding: "utf8",
+        timeout: 30_000,
+        env: {
+          ...process.env,
+          SSL_CERT_FILE: missingCert,
+          SSL_CERT_DIR: missingCertDir,
+        },
       },
-    },
-  );
-  if (httpsProbe.status !== 0 || !httpsProbe.stdout.includes("TLS_OK=200")) {
+    );
+    if (httpsProbe.status === 0 && httpsProbe.stdout.includes("TLS_OK=")) {
+      successfulProbe = probeUrl;
+      break;
+    }
+    probeFailures.push(
+      `${probeUrl} → ${httpsProbe.stdout}${httpsProbe.stderr}`.trim(),
+    );
+  }
+  if (!successfulProbe) {
     throw new Error(
-      `[desktop:package] [T-445] 最终产物自检失败：随包 Node 在无外部 cert.pem 时 HTTPS 不通\n${httpsProbe.stdout}${httpsProbe.stderr}`,
+      `[desktop:package] [T-445] 最终产物自检失败：随包 Node 在无外部 cert.pem 时 HTTPS 不通\n${probeFailures.join("\n")}`,
     );
   }
   console.log(
-    `[desktop:package] ✓ [T-445] 最终 .app TLS 自包含：${usesSharedOpenSsl ? "libssl + libcrypto 已入内嵌 tar；" : "Node 非 shared-openssl；"}--use-bundled-ca 已入壳；无外部 cert.pem 的 HTTPS=200`,
+    `[desktop:package] ✓ [T-445] 最终 .app TLS 自包含：${usesSharedOpenSsl ? "libssl + libcrypto 已入内嵌 tar；" : "Node 非 shared-openssl；"}--use-bundled-ca 已入壳；无外部 cert.pem 的 HTTPS 通过（${successfulProbe}）`,
   );
 }
 
