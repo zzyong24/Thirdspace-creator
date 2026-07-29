@@ -16,6 +16,7 @@ vi.mock("@/server/persistence-client", () => ({
 }));
 
 vi.mock("@/lib/request-context.server", () => ({
+  readRequestAccountId: (req: Request) => req.headers.get("x-account-id"),
   resolveRequestContext: (...args: unknown[]) => resolveRequestContext(...args),
   isAuthError: (err: unknown) =>
     (err as { name?: string } | null)?.name === "AuthenticationError",
@@ -130,28 +131,6 @@ describe("POST /api/v1/settings-transfer/models(导入)", () => {
     expect(res.status).toBe(400);
     const data = (await res.json()) as { error: string };
     expect(data.error).toContain("kind");
-  });
-
-  it("渠道托管时导入返回 409 稳定错误码", async () => {
-    importModelConfigs.mockRejectedValue(
-      Object.assign(new Error("managed"), {
-        code: "MODEL_CONFIGURATION_MANAGED",
-      }),
-    );
-    const res = await POST(
-      makeReq({
-        method: "POST",
-        body: JSON.stringify({
-          kind: "creatoros.model-config-export",
-          version: 1,
-          models: [],
-        }),
-      }),
-    );
-    expect(res.status).toBe(409);
-    await expect(res.json()).resolves.toMatchObject({
-      code: "MODEL_CONFIGURATION_MANAGED",
-    });
   });
 
   it("导入是写路径:present-but-invalid cookie(鉴权错)→ 401", async () => {

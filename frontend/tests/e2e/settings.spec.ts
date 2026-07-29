@@ -22,6 +22,25 @@ import { expect, test } from "../helpers/test-environment";
  */
 
 test.describe("Settings page", () => {
+  test("[T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用", async ({
+    page,
+  }) => {
+    for (const viewport of [
+      { width: 1536, height: 1024 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto("/settings");
+      await page.getByRole("tab", { name: "模型配置" }).click();
+      const status = page.locator('[data-slot="model-authority-status"]');
+      await expect(status).toBeVisible();
+      await expect(status).toContainText("本地模型正在使用");
+      await expect(
+        page.locator('[data-slot="model-configuration-card"]'),
+      ).toBeVisible();
+    }
+  });
+
   test("renders the settings structure on the /settings route", async ({
     page,
   }) => {

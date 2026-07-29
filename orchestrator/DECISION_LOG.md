@@ -28,6 +28,45 @@ Status: active
 ```
 
 ```text
+ID: DEC-MODEL-619
+Date: 2026-07-29
+Stage: T-619 REMEDIATION / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: Activity 的 config.pull ticket/introspection 只证明 projectKey/channelRef 与授权事实，
+          不再提供权威 clientId。Creator 请求 Activity 时不得把自报 clientId 当授权依据；
+          旧 ticket 响应若仍带 clientId 只兼容忽略。Creator 仅向 Growth 声明接受的
+          extension/protocol，由 Growth registry 解析并签入最终 clientId；Creator 验签
+          bundle 时继续强校验 Growth 签入的 creatoros.desktop 和协议。
+Rationale: 应用/客户端目录唯一归 Growth，Activity 不拥有客户端目录，不能反向授权 clientId。
+Affected Artifacts: T-606 Creator contract、creator-client-config-consumer-v1、Creator
+                    config.pull request/parser/tests、T-619 validation、CHANGE_IMPACT。
+Compatibility: 在 Growth/Activity 最终字段契约落定前，Creator parser 兼容旧响应字段但不信任；
+               该兼容不允许恢复 request clientId，也不允许跨 locator 比较版本或 ETag。
+Status: active（整改代码已验证；正式三端联调与独立复审前 release NO-GO）
+```
+
+```text
+ID: DEC-MODEL-606
+Date: 2026-07-29
+Stage: T-606 PLAN / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: CreatorOS 继续使用既有 config.pull ticket 和当前激活 locator。verified configured
+          渠道 JSON 是当前模型配置权威，即使 Key/URL/model/provider 错误或模型调用失败也
+          不回退本地；明确未配置、不可达且本次未取得 JSON、或安全校验失败时才使用本地。
+          用户本地配置始终允许编辑并作为 inactive 备用。
+Rationale: Growth T-086 最终契约与 2026-07-29 用户确认明确取代旧 T-575/T-604 设计。
+Supersedes: T-575 的三键 parser/长期 Key 禁止/24h 远端 LKG；T-604 的 Gateway、短 bearer、
+            introspection、alias routing、managed_locked 与远端 LKG 优先。
+Invariant: Activity 只证明 projectKey/channelRef 授权；Growth-signed clientId 与其二者共同
+           组成配置版本 locator。渠道 JSON/Key 不进入 URL、日志、错误、审计摘要或 Web 响应。
+Authority: Growth docs/contracts/T-086-creatoros-managed-model-service.md
+           SHA-256 be1d4546b080e8b30144e31dd20d2e094d82b66d3c57d0f6116782fb89650182；
+           T-086-review-concern-resolution.md
+           SHA-256 68bd438f9893a7c4508cff396274e893cb630d7ad488109e6b91430f18cdbc0f。
+Status: active（独立评审通过前不得 BUILD）
+```
+
+```text
 ID: DEC-PKG565-002
 Date: 2026-07-27
 Stage: T-565 PLAN / RAT
@@ -1203,3 +1242,22 @@ CreatorOS 端实施。代码审计确认 T-575 仅完成签名配置拉取，现
 **User confirmation**：用户 2026-07-29 回复“creatoros端的你来实现吧”。
 
 **Status**：confirmed scope；T-604 SPEC/CONTRACT 独立评审通过后进入 BUILD。
+
+## DEC-BOUNDARY-002 (2026-07-29) — Activity 最小运行快照不等于业务权威
+
+**来源**：用户在评估 pure activationRef 全量迁移成本后，确认采用兼容折中方案，并要求把
+产品边界写入项目，避免后续再次跑偏。
+
+**决策**：
+
+1. Activity 保留现有 project/channel 授权字段并继续负责激活码、设备、期限、撤权、签名和
+   防重放；这些字段只是 Growth 下发的 opaque 运行快照，不要求现有用户重激活。
+2. Growth 唯一解释范围标签对应的渠道、代理、客户、产品、应用目录、协议和模型配置。
+3. CreatorOS 先取得 Activity 当前签名授权，再把凭证交给 Growth 获取配置；不得自报
+   `projectKey/channelRef/clientId`，不得让本地缓存覆盖服务端撤权。
+4. Activity 的 ticket/内省不得携带 `clientId`、应用目录或模型/商业字段；CreatorOS 只接受
+   current v2 closed wire，并只信任 Growth-signed bundle 中的应用身份和配置。
+5. pure activationRef 作为未来独立 breaking migration 保留，不在 T-606/T-620 删除字段、
+   重发激活码或引入双协议。
+
+**Status**：resolved；进入 T-620 增量复核和 BUILD。

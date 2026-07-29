@@ -1,11 +1,17 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import type {
-  MultimodalSpec,
   MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-376] 失败分类人话(「未配置」vs「配置了但调用失败」),写进步骤流末条供前端诚实展示。
-import { describeMultimodalFailure } from "./multimodal/resolve";
+import {
+  describeMultimodalFailure,
+  type MultimodalSpec,
+} from "./multimodal/resolve";
+import {
+  formatErrorDiagnostic,
+  safeModelFailureMessage,
+} from "./error-diagnostics";
 
 // asset.generate runner (L5 录制 · SPEC 2026-07-01 §3 + §8 M2) —— AI 生成素材 → 落对象存储 →
 // 建 asset → 记候选(非直接物化)。仿 research-runner 的生命周期(markRunning → 跑节点 →
@@ -98,6 +104,7 @@ export async function runAssetGenerate(
 ): Promise<void> {
   // [DATA-H07] 「asset 已建、候选未记成」失败窗口的清理锚:catch 里据此 best-effort 丢弃。
   let createdAssetId: string | null = null;
+  let resolvedSpec: ResolvedMultimodalSpec | null = null;
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while生成(可能数十秒~分钟)
 
@@ -117,6 +124,7 @@ export async function runAssetGenerate(
     const capability =
       kind === "image" ? "image.generate" : "video.generate";
     const spec = await deps.resolveMultimodalSpec(ctx, capability);
+    resolvedSpec = spec;
 
     // 2) 生成字节。上层统一 `{ assetBytes }`([gate-F1]);异步 video 的轮询/超时封在适配器内
     //    —— generateVideo 内部 submit→poll→retrieve,超时抛 MultimodalGenerationError,坍缩到
@@ -177,7 +185,10 @@ export async function runAssetGenerate(
       await deps.ai.recordStep(ctx, task.id, {
         stepNo: 99,
         kind: "error",
-        text: describeMultimodalFailure(err, label),
+        text:
+          resolvedSpec?.displayModelKey === "channel-managed"
+            ? safeModelFailureMessage(err, resolvedSpec)
+            : describeMultimodalFailure(err, label),
         toolCalls: [],
       });
     } catch {
@@ -191,8 +202,10 @@ export async function runAssetGenerate(
       /* task may already be terminal */
     }
     console.error(
-      `[asset-generate-runner] generate failed for task ${task.id}:`,
-      err,
+      `[asset-generate-runner] generate failed task=${task.id} ${formatErrorDiagnostic(
+        err,
+        { omitMessage: resolvedSpec?.displayModelKey === "channel-managed" },
+      )}`,
     );
   }
 }

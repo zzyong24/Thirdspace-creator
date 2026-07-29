@@ -81,6 +81,8 @@ export interface SettingsPageProps {
    * hasSecret instead of the fixture default. Omitted in unit tests.
    */
   readonly model?: ModelState;
+  /** T-606 当前模型来源的脱敏状态；不包含渠道 JSON、Key、locator 或版本材料。 */
+  readonly modelAuthority?: ModelAuthorityState;
   /**
    * Real DB-backed storage config + usage (read by the `(creator)/settings`
    * route via `settings.storage.get`). When supplied, the StorageUsageCard shows
@@ -126,17 +128,7 @@ export interface SettingsPageProps {
    * 缺省/null 键 → 对应入口中性降级(购买按钮隐藏/联系文案无链接),不回退官方链接。
    */
   readonly channelLinks?: ChannelLinksState;
-  /** T-604 正式渠道模型由 Growth 统一托管；managed 时模型页只展示状态，不渲染配置控件。 */
-  readonly modelAuthority?: ModelAuthorityState;
 }
-
-export type ModelAuthorityState =
-  | { authority: "local"; state: "ready"; action: string }
-  | {
-      authority: "managed_locked";
-      state: "ready" | "offline" | "unavailable";
-      action: string;
-    };
 
 /**
  * [T-167] 激活状态视图段。字段直接来自 `activation-service.getStatus()`(`ActivationStatusView`);
@@ -282,6 +274,16 @@ export interface ModelState {
   readonly temperature: number;
 }
 
+export interface ModelAuthorityState {
+  readonly authority: "channel" | "local";
+  readonly outcome:
+    | "configured"
+    | "not_configured"
+    | "unreachable"
+    | "security_error";
+  readonly action: string;
+}
+
 // ---------------------------------------------------------------------------
 // Multimodal (image / video) model config — SPEC 2026-07-01 §2.1 / M3
 // ---------------------------------------------------------------------------
@@ -411,6 +413,7 @@ export function SettingsPage({
   viewModel,
   identity,
   model,
+  modelAuthority,
   storage,
   multimodalModels,
   douyinAccount,
@@ -418,7 +421,6 @@ export function SettingsPage({
   skills,
   activation,
   channelLinks,
-  modelAuthority,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -446,10 +448,10 @@ export function SettingsPage({
     >
       <SettingsDialog
         viewModel={vm}
+        modelAuthority={modelAuthority}
         skills={skills}
         activation={activation}
         channelLinks={channelLinks}
-        modelAuthority={modelAuthority}
       />
     </main>
   );

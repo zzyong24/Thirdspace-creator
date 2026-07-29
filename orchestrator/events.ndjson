@@ -453,3 +453,7 @@
 {"ts":"2026-07-29T17:23:28.590Z","actor":"taskctl","action":"start","task":"T-617","sha_before":"2399d74aa9f0","sha_after":"55f2934804c3"}
 {"ts":"2026-07-29T17:26:35.271Z","actor":"taskctl","action":"complete","task":"T-617","evidence":"只读解密最新 sidecar-2026-07-29-5.log.enc 并对齐截图调用：chat turn 47.928s；topic.enrich structured node 33.340s、1 model call、input 6643/output 1847；外层调用前后各约 7s；确认 UI 仅有全局 streaming + tool pending 两层、无工具内部阶段事件。诊断报告 docs/research/2026-07-29-copilot-tool-progress-and-latency.md；git diff --check PASS。未改代码/模型配置/运行中数据。reconcile 仅剩既有 T-604/T-599/T-595 receipt 过期与 manifest 日期漂移。","sha_before":"f68acaa8c7d6","sha_after":"01a523b29dcd"}
 {"ts":"2026-07-29T18:08:54.451Z","actor":"taskctl","action":"start","task":"T-618","sha_before":"138bc8563297","sha_after":"da1fefc48331"}
+{"ts":"2026-07-29T15:45:25.221Z","actor":"taskctl","action":"start","task":"T-606","sha_before":"cbfea116fc0d","sha_after":"9fa910b523b1"}
+{"ts":"2026-07-29T16:09:11.297Z","actor":"taskctl","action":"complete","task":"T-606","evidence":"docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md","sha_before":"9fa910b523b1","sha_after":"7cf5726409b7"}
+{"ts":"2026-07-29T16:28:56.767Z","actor":"taskctl","action":"start","task":"T-619","sha_before":"298a10626b9b","sha_after":"045c993cef91"}
+{"ts":"2026-07-29T16:56:28.399Z","actor":"taskctl","action":"complete","task":"T-619","evidence":"docs/research/2026-07-29-t606-creatoros-channel-model-authority-validation.md","sha_before":"045c993cef91","sha_after":"6b0babcfbee8"}

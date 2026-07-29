@@ -11,6 +11,30 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-MODEL-610 — clientId 权威从 Activity 归位 Growth registry（2026-07-29）
+
+- **上游变化**：应用/客户端目录唯一归 Growth；Activity ticket/introspection 只证明
+  `projectKey/channelRef` 与授权事实，不再向 Creator 提供权威 `clientId`。
+- **失效**：T-606/旧 T-575 中 Creator 向 Activity 请求自报 `clientId`、以及把该自报值视为
+  授权 claim 的描述失效；早期 T-606 review receipt 不再代表当前契约。
+- **重新派生**：Creator 只声明接受的 extension/protocol；Growth registry 解析并签入最终
+  `clientId`。Creator 兼容忽略旧 ticket 响应 `clientId`，继续验 Growth-signed
+  `creatoros.desktop`，并以 `projectKey + channelRef + clientId` 隔离版本/ETag 序列。
+- **下游验证**：config.pull 请求/parser、locator cache、31/50/24/11/17 反例、验证报告均更新。
+- **发布影响**：正式 Growth/Activity 字段契约、三端同环境联调和整改后独立复审前保持
+  release `NO-GO`。
+
+## CI-MODEL-606 — 渠道完整模型 JSON 成为 CreatorOS 条件权威（2026-07-29）
+
+- **上游变化**：Growth T-086 最终契约允许 exact CreatorOS extension 携带长期 Key 和任意
+  JSON object；verified configured 必须由 CreatorOS 自动采用。
+- **失效**：T-575 的安全三键 parser、长期 Key 禁止、24 小时远端 LKG；T-604 的 Gateway、
+  短 bearer、alias routing、`managed_locked` 和远端 LKG 优先全部失效。
+- **重新派生**：既有 `config.pull` envelope/验签/locator 保留；extension 改为独立加密 secret
+  namespace 和 `channel/local` 唯一裁决；所有模型 resolver 通过同一 authority 边界。
+- **UI 影响**：设置页增加脱敏当前来源状态，本地配置始终可编辑；API/UI 不返回渠道 JSON。
+- **发布影响**：CreatorOS 分支验证不能替代 Growth/Activity 跨仓联调、生产密钥和用户发布许可。
+
 ## CI-COL-001 — 内容雷达采集账号与工作区 owner 解耦（DEC-COL-001，2026-07-26）
 
 - **范围**：只覆盖内容雷达 `creator_profile`、`favorites_folder`、`darkhorse_query`；经营数据、
@@ -148,6 +172,18 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   PASS；`next build` 仍被当前 HEAD 中 T-535 已提交的 `instrumentation.ts` Turbopack
   code-frame panic 阻断，不归入 T-534 代码范围，也不伪报发布构建全绿。证据见
   `GATE-T534-BUILD.md`。
+
+## CI-TSB-002 — Activity 最小运行快照与 Growth 业务解释权（DEC-BOUNDARY-002，2026-07-29）
+
+- **变更**：明确 Activity 的 `projectKey/channelRef` 只是授权范围快照，不是渠道、应用或模型
+  业务目录；Growth 是唯一业务解释方，CreatorOS 只消费两边签名结果。
+- **兼容**：不删除现有激活码、project/channel 字段或本机 license；用户无需重激活。
+- **下游重派生**：
+  - T-606 authority contract → 增加 §1.1 与 TC-T617-11..13；
+  - Activity v1/额外 client/application 字段 → 明确 fail-closed，不再“兼容忽略”；
+  - AI 日志、raw error 与异步任务 modelKey → 必须统一脱敏为 `channel-managed`。
+- **发布影响**：不新增 wire 或 migration；Growth/Activity live HTTPS E2E、正式 key 和用户
+  发布许可仍未完成，不能把单仓测试写成已上线。
 
 ## CI-FDB-003 — 产品 Bug 临时飞书降级（DEC-FDB-003，2026-07-26）
 

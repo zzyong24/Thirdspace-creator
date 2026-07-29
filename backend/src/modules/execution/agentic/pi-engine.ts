@@ -46,6 +46,13 @@ export class PiNotInstalledError extends Error {
   }
 }
 
+export class PiModelConfigurationError extends Error {
+  constructor() {
+    super("模型接口格式配置无效");
+    this.name = "PiModelConfigurationError";
+  }
+}
+
 /** [legacy] 旧 streamFn 构造器类型别名 —— 保留仅为 barrel 兼容(新装配用 buildStreamSimple)。 */
 export type PiStreamFnBuilder = (input: AgenticEngineRunInput) => unknown;
 
@@ -81,9 +88,16 @@ export const EXCLUDED_BUILTIN_TOOLS = [
 
 /** apiFormat → pi-ai api 名。 */
 export function piApiForFormat(apiFormat: RawLlmConfig["apiFormat"]): string {
-  if (apiFormat === "anthropic") return "anthropic-messages";
-  if (apiFormat === "openai_responses") return "openai-responses";
-  return "openai-completions";
+  switch (apiFormat) {
+    case "anthropic":
+      return "anthropic-messages";
+    case "openai_chat":
+      return "openai-completions";
+    case "openai_responses":
+      return "openai-responses";
+    default:
+      throw new PiModelConfigurationError();
+  }
 }
 
 /** 从用户 model-config 的 settings 读正数配置(缺/非法 → 兜底)。模型描述符不再硬编。 */
@@ -111,7 +125,9 @@ export function buildPiProviderRegistration(
   llmConfig: RawLlmConfig,
   opts: { apiName?: string; streamSimple?: unknown } = {},
 ): PiProviderRegistration {
-  const piApi = opts.apiName ?? piApiForFormat(llmConfig.apiFormat);
+  // 即便测试/宿主注入 faux apiName，也必须先验证正式配置，禁止绕过后猜成 OpenAI。
+  const configuredApi = piApiForFormat(llmConfig.apiFormat);
+  const piApi = opts.apiName ?? configuredApi;
   const baseUrl =
     llmConfig.baseUrl ??
     (llmConfig.apiFormat === "anthropic"
@@ -434,6 +450,8 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         );
         return deps.fallback.run(input);
       }
+      // 配置错误不是“依赖缺席”，不得进入确定性 fallback，也不得加载 SDK/发网络。
+      piApiForFormat(input.llmConfig.apiFormat);
       const sdk = await loadPiSdk();
       if (!sdk) {
         await input.onStep(
@@ -552,14 +570,14 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
 
         // 诚实:LLM 调用报错(未配/凭据错/网络)→ 末条助手消息 stopReason "error" → 记 llm_error,
         // 不假成功(与确定性引擎 llm_error 同口径,SPEC honesty)。
-        let llmErrorMsg: string | undefined;
+        let llmErrorCategory: "provider_error" | undefined;
         if (stopReason === "completed") {
           const errored = sess.messages?.find((m) => m.stopReason === "error");
           if (errored) {
             stopReason = "llm_error";
-            llmErrorMsg = errored.errorMessage;
+            llmErrorCategory = "provider_error";
             await input.onStep(
-              `Pi 推理报错(${(errored.errorMessage ?? "error").slice(0, 120)})—— 诚实标记 llm_error`,
+              "Pi 推理报错（provider_error）—— 诚实标记 llm_error",
               "warn",
             );
           }
@@ -584,18 +602,17 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
             outputs,
             toolLog,
             stopReason,
-            ...(llmErrorMsg ? { llmError: llmErrorMsg } : {}),
+            ...(llmErrorCategory ? { llmError: llmErrorCategory } : {}),
             tokens: stats?.tokens,
           },
           steps: controller.stepsUsed(),
           stopReason,
         };
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+      } catch {
         // [RT-M01] 仅当**本轮零真实副作用**时,整体回退确定性兜底才安全(保命路径,SPEC §3.1)。
         if (sideEffectsCommitted === 0) {
           await input.onStep(
-            `Pi 引擎运行异常(${msg.slice(0, 160)})—— 本轮零副作用,退确定性兜底`,
+            "Pi 引擎运行异常（provider_runtime_error）—— 本轮零副作用，退确定性兜底",
             "warn",
           );
           return deps.fallback.run(input);
@@ -603,7 +620,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         // 已提交真实副作用 → **绝不**整体重放(否则重复付费/重复落库);诚实返回已完成部分做检查点。
         stopReason = "llm_error";
         await input.onStep(
-          `Pi 引擎运行异常(${msg.slice(0, 160)})—— 已提交 ${sideEffectsCommitted} 次真实工具副作用,不整体重放;返回部分产物供检查点`,
+          `Pi 引擎运行异常（provider_runtime_error）—— 已提交 ${sideEffectsCommitted} 次真实工具副作用，不整体重放；返回部分产物供检查点`,
           "warn",
         );
         const detail =
@@ -619,7 +636,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
             outputs,
             toolLog,
             stopReason,
-            error: msg,
+            error: "provider_runtime_error",
             // 检查点:续跑时喂回 params.checkpoint(硬顶跨续跑生效,不重置预算)。
             checkpoint: {
               stepsUsed: controller.stepsUsed(),

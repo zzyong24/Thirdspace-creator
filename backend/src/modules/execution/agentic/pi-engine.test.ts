@@ -12,6 +12,7 @@ import {
   piApiForFormat,
   zodToPiParameters,
   EXCLUDED_BUILTIN_TOOLS,
+  PiModelConfigurationError,
   __setPiSdkForTest,
   type PiSdkHandle,
 } from "./pi-engine";
@@ -80,6 +81,17 @@ describe("pi-engine §6.1 provider 映射(纯)", () => {
     expect(piApiForFormat("anthropic")).toBe("anthropic-messages");
     expect(piApiForFormat("openai_chat")).toBe("openai-completions");
     expect(piApiForFormat("openai_responses")).toBe("openai-responses");
+    for (const invalid of [undefined, "unknown", 42]) {
+      expect(() => piApiForFormat(invalid as never)).toThrow(
+        PiModelConfigurationError,
+      );
+      expect(() =>
+        buildPiProviderRegistration(
+          { ...OPENAI_CHAT, apiFormat: invalid } as never,
+          { apiName: "creatoros-faux", streamSimple: () => undefined },
+        ),
+      ).toThrow(PiModelConfigurationError);
+    }
   });
 
   it("anthropic bearer(relay/MiniMax)→ authHeader:true(Authorization Bearer)+ baseUrl 透传", () => {
@@ -156,11 +168,11 @@ describe("pi-engine zodToPiParameters(zod→JSON Schema)", () => {
 
 describe("pi-engine 退兜底(不破坏现有全绿默认路径)", () => {
   it("无 §6.1 llmConfig → 退确定性兜底(fallback 被调,产出确定性结果)", async () => {
-    let fallbackCalled = false;
+    let fallbackCalls = 0;
     const fallback: AgenticEngine = {
       name: "deterministic",
       async run() {
-        fallbackCalled = true;
+        fallbackCalls += 1;
         return { summary: "det", output: {}, steps: 0, stopReason: "completed" };
       },
     };
@@ -173,8 +185,37 @@ describe("pi-engine 退兜底(不破坏现有全绿默认路径)", () => {
         // 无 llmConfig
       }),
     );
-    expect(fallbackCalled).toBe(true);
+    expect(fallbackCalls).toBe(1);
     expect(final.summary).toBe("det");
+
+    __setPiSdkForTest(null);
+    for (const invalid of [undefined, "unknown", { wrong: true }]) {
+      let streamBuilderCalls = 0;
+      const invalidEngine = createPiAgenticEngine({
+        fallback,
+        buildStreamSimple: () => {
+          streamBuilderCalls += 1;
+          return () => undefined;
+        },
+      });
+      await expect(
+        invalidEngine.run(
+          runInput({
+            tools: [],
+            controller: createLoopController({
+              maxSteps: 8,
+              maxTokens: 20000,
+            }),
+            llmConfig: {
+              ...ANTHROPIC_OFFICIAL,
+              apiFormat: invalid,
+            } as never,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(PiModelConfigurationError);
+      expect(streamBuilderCalls).toBe(0);
+      expect(fallbackCalls).toBe(1);
+    }
     __setPiSdkForTest(undefined);
   });
 
@@ -615,7 +656,10 @@ describe("pi-engine RT-M01 副作用感知回退(fake SDK)", () => {
     expect(fallbackCalled).toBe(false); // 关键:不回退 = 不重放
     expect(search.calls.length).toBe(1); // 真实工具只跑了这一次,没被 fallback 重放第二次
     expect(final.stopReason).toBe("llm_error");
-    expect(String((final.output as { error?: unknown }).error)).toContain(
+    expect((final.output as { error?: unknown }).error).toBe(
+      "provider_runtime_error",
+    );
+    expect(JSON.stringify(final.output)).not.toContain(
       "boom after side effect",
     );
     expect((final.output as { checkpoint?: unknown }).checkpoint).toBeTruthy();

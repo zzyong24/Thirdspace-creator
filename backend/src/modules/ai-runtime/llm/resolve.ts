@@ -6,6 +6,10 @@ import {
   type ApiFormat,
   type ResolvedLlmConfig,
 } from "./provider";
+import {
+  channelLlmConfig,
+  type ChannelModelPayload,
+} from "../channel-model-config";
 
 export interface ResolveDeps {
   getModelConfig: (
@@ -13,6 +17,7 @@ export interface ResolveDeps {
     capability: string,
   ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
+  getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
 }
 
 // "env:FOO" → env.FOO ; trims; returns "" for missing/blank (cc-switch first_non_empty:
@@ -79,6 +84,8 @@ export async function resolveDedicatedLlmConfig(
   capability: string,
   deps: ResolveDeps,
 ): Promise<ResolvedLlmConfig | null> {
+  const channel = await deps.getChannelModelConfig?.();
+  if (channel) return channelLlmConfig(channel);
   return tryDbRow(await deps.getModelConfig(ctx, capability), deps.env);
 }
 
@@ -88,6 +95,8 @@ export async function resolveLlmConfig(
   deps: ResolveDeps,
 ): Promise<ResolvedLlmConfig> {
   const { env } = deps;
+  const channel = await deps.getChannelModelConfig?.();
+  if (channel) return channelLlmConfig(channel);
 
   // Tier 1 — the user-configured DB row. Prefer the per-capability row, then the
   // global "default" row. A stored secretValue wins; else the env-ref resolves.

@@ -1,5 +1,10 @@
 # T-575 CreatorOS 客户端配置消费契约 v1
 
+> **历史契约，T-606 已取代模型 extension 规则。** `creatoros.model-config` 的当前权威、secret
+> 边界、三态裁决和运行时采用规则只见
+> `docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md`。
+> 本文的三键 parser、长期 Key 禁止、24 小时远端 LKG 与 `ready/offline` 规则不得用于新实现。
+
 > 状态：用户 2026-07-29 明确授权进入 BUILD；上游 Growth
 > `client-config-distribution-v1` 已独立评审 PASS[REV:d2895a3b6dac]
 > 上游权威：Growth `docs/contracts/client-config-distribution-v1.md`
@@ -84,12 +89,15 @@ closed body：
 {
   "contractVersion": "config-access-ticket-v1",
   "projectKey": "creatoros",
-  "clientId": "creatoros.desktop",
   "code": "<只发送给 AM>",
   "machineId": "<当前绑定标识>",
   "nonce": "nonce-client-config-0001"
 }
 ```
+
+Activity 只证明 `projectKey/channelRef` 和当前授权事实，不拥有应用/客户端目录，也不授权
+`clientId`。过渡期若旧 ticket 响应仍带 `clientId`，Creator 只兼容忽略，不参与任何授权、
+版本或路由判断。
 
 Creator 必须按顺序验证原始 body 大小、`X-License-Digest`、Ed25519、`X-License-Date`
 五分钟窗口、closed body、request nonce 与 300 秒 ticket expiry。任一步失败不得调用
@@ -106,12 +114,17 @@ If-None-Match: "<last bundleDigest>"
 
 - origin 固定为构建期 `https://growth.aitongban.cloud`；HTTPS、无 userinfo/port/path/query/
   fragment，不跟随 redirect。
-- 请求不得携带 `projectKey/channelRef/clientId` override。
+- 请求不得携带 `projectKey/channelRef/clientId` override；Creator 只用 `accept` 声明
+  extension/protocol，由 Growth registry 解析并签入最终 `clientId`。
 - 200 body 必须是 `growth-client-config-bundle-v1` closed envelope；只允许一条已请求的
   `creatoros.model-config@creatoros-model-config-v1` extension。
 - Creator 用 RFC 8785 JCS 复算 semantic digest，再用构建期 Growth Ed25519 公钥和 exact
   `keyId` 验证 signed object；随后匹配当前授权 `(projectKey,channelRef)`。
-- `bundleVersion` 只能上升，same/same 幂等；lower 或 same/different 均保留 LKG 并拒绝。
+- Creator 继续强校验 Growth-signed `clientId=creatoros.desktop`；该值不得来自 Creator
+  自报或 Activity claim。
+- `bundleVersion` 只在完全相同的 `projectKey/channelRef/clientId` locator 内单调上升，
+  same/same 幂等；lower 或 same/different 均保留该 locator 的密文并拒绝。切换 locator
+  必须开启独立序列，旧密文只作 inactive 保留。
 - 304 仍要求 Growth 已完成在线 AM introspection；Creator 必须核对 ETag、bundleVersion 和
   keyId 与本地 LKG 完全一致后才能刷新 `checkedAt`。
 - response 超过 300000 bytes、payload canonical UTF-8 超过 262144 bytes、深度超过 32、

@@ -10,6 +10,56 @@ import { resolveSearchSpec } from "./resolve";
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
 describe("resolveSearchSpec — tier 1 DB row(库存密钥优先)", () => {
+  it("configured 渠道 JSON 覆盖搜索本地行且不读取本地", async () => {
+    let localReads = 0;
+    const spec = await resolveSearchSpec(ctx, {
+      getChannelModelConfig: async () => ({
+        provider: "tavily",
+        apiFormat: "openai_chat",
+        baseURL: "https://channel-search.example",
+        apiKey: ["channel", "search", "test"].join("-"),
+        model: "search-model",
+      }),
+      getModelConfig: async () => {
+        localReads += 1;
+        return null;
+      },
+      env: {},
+    });
+    expect(localReads).toBe(0);
+    expect(spec).toEqual({
+      provider: "tavily",
+      baseUrl: "https://channel-search.example",
+      model: "search-model",
+      token: "channel-search-test",
+      displayModelKey: "channel-managed",
+    });
+
+    for (const invalidApiFormat of [undefined, "unknown", false]) {
+      await expect(
+        resolveSearchSpec(ctx, {
+          getChannelModelConfig: async () => ({
+            provider: "tavily",
+            ...(invalidApiFormat === undefined
+              ? {}
+              : { apiFormat: invalidApiFormat }),
+            baseURL: "https://must-not-call.example",
+            apiKey: "must-not-leak",
+            model: "must-not-leak",
+          }),
+          getModelConfig: async () => {
+            localReads += 1;
+            return null;
+          },
+          env: {},
+        }),
+      ).rejects.toMatchObject({
+        name: "ChannelModelConfigurationError",
+      });
+    }
+    expect(localReads).toBe(0);
+  });
+
   it("web.search 命中行 → 投影 SearchSpec,secretValue 优先于 env-ref", async () => {
     const spec = await resolveSearchSpec(ctx, {
       getModelConfig: async () => ({

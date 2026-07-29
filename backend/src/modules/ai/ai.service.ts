@@ -226,12 +226,6 @@ export interface ServiceDeps {
     taskType: string,
     inputData: Readonly<Record<string, unknown>>,
   ) => Promise<Record<string, unknown>>;
-  // T-604 模型路由权威由组合根注入。托管态只返回渠道 alias，不允许 AI repo
-  // 直接读取 model_configurations；未注入时保留既有本地行为供测试/自托管构建。
-  resolveModelKey?: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<string>;
 }
 
 export interface CreateTaskInput {
@@ -841,10 +835,6 @@ export function createAiService(deps: ServiceDeps): AiService {
         }
       }
 
-      const modelKey = deps.resolveModelKey
-        ? await deps.resolveModelKey(ctx, body.taskType)
-        : (DEFAULT_MODEL_FOR_CAPABILITY[body.taskType] ?? "claude-opus-4-8");
-
       const projectId =
         typeof inputData.projectId === "string" ? inputData.projectId : null;
       const contentOutputId =
@@ -858,6 +848,16 @@ export function createAiService(deps: ServiceDeps): AiService {
           body.taskType,
           Object.freeze({ ...inputData }),
         )) ?? {};
+      // 渠道模型正文和真实 model id 都只在 server-only 运行时 authority 中使用。任务列表只
+      // 记录稳定展示值，既不回读本地默认模型冒充渠道模型，也不把 Growth 下发的 model 泄露
+      // 到 task DTO / 日志。
+      const modelKey =
+        runtimeData.modelAuthority === "channel-managed"
+          ? "channel-managed"
+          : (await repo.getModelConfig(body.taskType))?.modelName ??
+            (await repo.getDefaultModelConfig())?.modelName ??
+            DEFAULT_MODEL_FOR_CAPABILITY[body.taskType] ??
+            "claude-opus-4-8";
 
       const task = await repo.createTaskIfAbsent({
         projectId,

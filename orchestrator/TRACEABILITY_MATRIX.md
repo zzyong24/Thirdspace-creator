@@ -121,6 +121,12 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 |---|---|---|---|---|---|
 | DEC-SCHED-001/002；FR-SCHED-001..007；NFR-SCHED-001..004 | FLOW-SCHED-001..004 | 项目列表、发布中心、首页；旧 `/calendar` 兼容跳转 | [PLAN](../docs/superpowers/specs/2026-07-29-project-publishing-schedule-design.md)；[CONTRACT](../docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md)；复用 content-calendar operations | TEST-SCHED-CONTRACT-001；TEST-SCHED-DB-001；TEST-SCHED-SVC-001/002；TEST-SCHED-DASH-001；TEST-SCHED-UI-001..004 | BUILD PASS：后端 217 文件 / 2576 测试、T-599 前端 17 文件 / 110 测试、真实浏览器 2/2；生产构建 PASS；全量前端仅 T-600 退役模板旧断言 1 条范围外失败 |
 
+## T-606 渠道模型配置权威纠偏
+
+| Requirement | Flow | Surface | Contract | Tests | 状态 |
+|---|---|---|---|---|---|
+| DEC-MODEL-606；Growth FR-055/NFR-029 | 既有激活 locator → config.pull → configured/not_configured/unreachable/security_error → channel/local 唯一 authority | PAGE-017 设置页脱敏来源状态；本地配置始终可编辑 | [T-606 CreatorOS 绑定 SPEC](../docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md)；既有 API-575-002 | TC-T606-01..09；聚焦 backend 31 + frontend 86；Playwright 桌面/390px | BUILD 已验证：review PASS[REV:bc38a5b47eac]、Next build PASS；Growth/Activity live HTTPS、正式 Key 与发布许可仍未完成 |
+| DEC-BOUNDARY-002；Growth DEC-080；Activity DEC-018 | Activity current auth → Growth business interpretation → CreatorOS signed consume；无客户端 locator override | 无新增页面；所有渠道模型身份只显示 `channel-managed` | T-606 §1.1；T-620 | TC-T617-11..13；日志/异步任务/无效授权负例 | PASS-T620；完整生产链路测试增强见 T-621 |
 ## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
 
 > 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链

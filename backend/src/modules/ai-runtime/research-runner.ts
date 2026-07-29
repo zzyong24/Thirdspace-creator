@@ -7,7 +7,8 @@ import {
 } from "./creative-context";
 import {
   formatErrorDiagnostic,
-  safeErrorMessage,
+  observableModelKey,
+  safeModelFailureMessage,
 } from "./error-diagnostics";
 
 // 机制③④ 素材搜集 runner —— 跑在 **Vercel AI SDK** 上。L2「创作向重写」:AI 逻辑在
@@ -49,6 +50,7 @@ export async function runGatherMaterial(
   task: GatherTask,
   deps: GatherDeps,
 ): Promise<void> {
+  let resolvedSpec: ModelSpec | null = null;
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while the agent works
     const topic =
@@ -65,9 +67,10 @@ export async function runGatherMaterial(
     // 可解析输出 —— 根治旧版自由文本解析对 MiniMax-M3「未产出可解析素材」的卡死(用户配的 default
     // capability 即 MiniMax,无对等内置 web search 时旧路径必失败)。
     const spec = await deps.resolveModelSpec(ctx, "research.gather");
+    resolvedSpec = spec;
     console.info(
       `[research-runner] task=${task.id} capability=research.gather apiFormat=${spec.apiFormat} ` +
-        `model=${spec.model} endpoint=${spec.baseUrl ? "custom" : "official"}`,
+        `model=${observableModelKey(spec)} endpoint=${spec.baseUrl ? "custom" : "official"}`,
     );
     const { modelFor, runResearchNode, formatUserMaterialFacet } = await import(
       "@creatoros/ai-worker"
@@ -93,7 +96,9 @@ export async function runGatherMaterial(
       resultData: { items, categories, topic: context.topic.title },
     });
   } catch (err) {
-    const failureMessage = safeErrorMessage(err);
+    const channelManaged =
+      resolvedSpec?.displayModelKey === "channel-managed";
+    const failureMessage = safeModelFailureMessage(err, resolvedSpec);
     // Best-effort cancel; swallow so a background failure never crashes the server.
     try {
       await deps.ai.cancelTask(ctx, task.id, failureMessage);
@@ -101,7 +106,9 @@ export async function runGatherMaterial(
       /* task may already be terminal */
     }
     console.error(
-      `[research-runner] gather failed task=${task.id} ${formatErrorDiagnostic(err)}`,
+      `[research-runner] gather failed task=${task.id} ${formatErrorDiagnostic(err, {
+        omitMessage: channelManaged,
+      })}`,
     );
   }
 }

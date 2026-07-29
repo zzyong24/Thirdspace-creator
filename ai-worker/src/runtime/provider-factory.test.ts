@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { modelFor, normalizeAnthropicBaseUrl } from "./provider-factory";
+import {
+  ModelConfigurationError,
+  modelFor,
+  normalizeAnthropicBaseUrl,
+  protectChannelEmbeddingModel,
+  protectChannelModel,
+} from "./provider-factory";
 
 // 不走网络(假 key),但必须断言 provider identity:这能锁住真实 wire protocol,
 // 防止 @ai-sdk/openai 的默认 callable 行为升级后把 openai_chat 悄悄切到 Responses。
@@ -19,6 +25,17 @@ describe("modelFor", () => {
       token: "sk-test",
     });
     expect(typeof m).toBe("object"); // 真模型实例,非裸字符串
+
+    for (const invalidApiFormat of [undefined, "unknown", 42]) {
+      expect(() =>
+        modelFor({
+          apiFormat: invalidApiFormat,
+          baseUrl: "https://must-not-call.example/v1",
+          model: "must-not-leak",
+          token: "must-not-leak",
+        } as never),
+      ).toThrow(ModelConfigurationError);
+    }
   });
 
   it("openai_chat + 自定义 baseURL(DeepSeek/MiniMax/relay)", () => {
@@ -30,6 +47,72 @@ describe("modelFor", () => {
     });
     expect(typeof m).toBe("object");
     expect(providerOf(m)).toBe("creatoros-custom.chat");
+  });
+
+  it("渠道托管模型对外只暴露统一 provider/model identity", () => {
+    const m = modelFor({
+      apiFormat: "openai_chat",
+      baseUrl: "https://channel-model.internal/v1",
+      model: "private-model",
+      token: "SECRET_CHANNEL_KEY",
+      displayModelKey: "channel-managed",
+    });
+    if (typeof m === "string") throw new Error("预期包装后的模型对象");
+    expect(m.provider).toBe("channel-managed");
+    expect(m.modelId).toBe("channel-managed");
+  });
+
+  it("渠道托管模型统一脱敏 generate、stream throw 与 error chunk", async () => {
+    const secret = new Error(
+      "https://channel-model.internal model=private-model apiKey=SECRET_CHANNEL_KEY",
+    );
+    const generateModel = protectChannelModel({
+      specificationVersion: "v4",
+      provider: "private-provider",
+      modelId: "private-model",
+      supportedUrls: {},
+      doGenerate: async () => {
+        throw secret;
+      },
+      doStream: async () => {
+        throw secret;
+      },
+    } as never);
+    if (typeof generateModel === "string") throw new Error("预期模型对象");
+
+    await expect(generateModel.doGenerate({} as never)).rejects.toThrow(
+      "渠道模型调用失败",
+    );
+    await expect(generateModel.doStream({} as never)).rejects.toThrow(
+      "渠道模型调用失败",
+    );
+
+    const chunkModel = protectChannelModel({
+      specificationVersion: "v4",
+      provider: "private-provider",
+      modelId: "private-model",
+      supportedUrls: {},
+      doGenerate: async () => {
+        throw secret;
+      },
+      doStream: async () => ({
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "error", error: secret });
+            controller.close();
+          },
+        }),
+      }),
+    } as never);
+    if (typeof chunkModel === "string") throw new Error("预期模型对象");
+    const streamed = await chunkModel.doStream({} as never);
+    const chunk = (await streamed.stream.getReader().read()).value as {
+      error: Error;
+    };
+    expect(chunk.error.message).toContain("渠道模型调用失败");
+    expect(chunk.error.message).not.toContain("SECRET_CHANNEL_KEY");
+    expect(chunk.error.message).not.toContain("private-model");
+    expect(chunk.error.message).not.toContain("channel-model.internal");
   });
 
   it("openai_chat(官方 OpenAI)", () => {
@@ -111,6 +194,39 @@ describe("embeddingModelFor", () => {
     expect(typeof m).toBe("object");
   });
 
+  it("渠道托管 embedding 统一模型身份并脱敏 doEmbed 错误", async () => {
+    const protectedModel = protectChannelEmbeddingModel({
+      specificationVersion: "v4",
+      provider: "private-embedding-provider",
+      modelId: "private-embedding-model",
+      maxEmbeddingsPerCall: 16,
+      supportsParallelCalls: true,
+      doEmbed: async () => {
+        throw new Error(
+          "https://embedding.internal model=private-embedding-model apiKey=SECRET_EMBED_KEY",
+        );
+      },
+    } as never);
+    expect(protectedModel.provider).toBe("channel-managed");
+    expect(protectedModel.modelId).toBe("channel-managed");
+    await expect(
+      protectedModel.doEmbed({ values: ["hello"] } as never),
+    ).rejects.toThrow("渠道模型调用失败");
+  });
+
+  it("embeddingModelFor 对渠道托管配置只暴露统一身份", () => {
+    const model = embeddingModelFor({
+      apiFormat: "openai_chat",
+      baseUrl: "https://embedding.internal/v1",
+      model: "private-embedding-model",
+      token: "SECRET_EMBED_KEY",
+      displayModelKey: "channel-managed",
+    });
+    if (typeof model === "string") throw new Error("预期 embedding 模型对象");
+    expect(model.provider).toBe("channel-managed");
+    expect(model.modelId).toBe("channel-managed");
+  });
+
   it("anthropic 协议 → 诚实抛错(不静默把聊天模型当 embedding 用)", () => {
     expect(() =>
       embeddingModelFor({
@@ -120,5 +236,15 @@ describe("embeddingModelFor", () => {
         token: "sk-test",
       }),
     ).toThrow(/embedding/);
+    for (const invalidApiFormat of [undefined, "unknown", { wrong: true }]) {
+      expect(() =>
+        embeddingModelFor({
+          apiFormat: invalidApiFormat,
+          baseUrl: "https://must-not-call.example/v1",
+          model: "must-not-leak",
+          token: "must-not-leak",
+        } as never),
+      ).toThrow(ModelConfigurationError);
+    }
   });
 });

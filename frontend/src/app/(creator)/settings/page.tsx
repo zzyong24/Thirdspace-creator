@@ -27,15 +27,15 @@ import {
   SettingsPage,
   type PreferencesState,
   type ModelState,
+  type ModelAuthorityState,
   type MultimodalModelState,
   type MultimodalModelsState,
   type StorageState,
   type ActivationState,
   type ChannelLinksState,
-  type ModelAuthorityState,
 } from "@/features/settings/settings-page";
 import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
-import { readModelAuthoritySnapshot } from "@/server/activation/client-config.server";
+import { readChannelModelAuthority } from "@/server/activation/client-config.server";
 import {
   buildSkillItems,
   type SkillItem,
@@ -80,15 +80,6 @@ const EMPTY_STORAGE: StorageState = {
 };
 
 export default async function SettingsRoutePage() {
-  const authoritySnapshot = await readModelAuthoritySnapshot();
-  const modelAuthority: ModelAuthorityState =
-    authoritySnapshot.authority === "local"
-      ? authoritySnapshot
-      : {
-          authority: authoritySnapshot.authority,
-          state: authoritySnapshot.state,
-          action: authoritySnapshot.action,
-        };
   // Resolve the request's session → ctx (the (creator) layout already guarded
   // it). Read the account card from the real `settings.get` op under that ctx
   // (user-scoped). Fall back to the session user DTO, then to the fixture, so
@@ -138,7 +129,7 @@ export default async function SettingsRoutePage() {
   // 把不存在的模型当真)。
   let model: ModelState = UNCONFIGURED_MODEL;
   let multimodalModels: MultimodalModelsState | undefined;
-  if (session && modelAuthority.authority === "local") {
+  if (session) {
     try {
       const models = await createServerClient(session.ctx).listModels({
         params: undefined,
@@ -308,6 +299,7 @@ export default async function SettingsRoutePage() {
 
   // [T-534] 渠道 runtime 只从 Rust 已验证并写入加密 `.license` 的投影读取。
   let channelLinks: ChannelLinksState | undefined;
+  let modelAuthority: ModelAuthorityState | undefined;
   if (isDesktopRuntime()) {
     const runtime = await readChannelRuntime();
     channelLinks = {
@@ -316,19 +308,31 @@ export default async function SettingsRoutePage() {
       channelSupportUrl: runtime.channelSupportUrl,
       downloadUrl: runtime.downloadUrl,
     };
+    const authority = await readChannelModelAuthority();
+    const actions = {
+      configured: "渠道模型正在使用",
+      not_configured: "本地模型正在使用 · 渠道未配置",
+      unreachable: "本地模型正在使用 · 暂时无法取得渠道配置",
+      security_error: "本地模型正在使用 · 渠道配置安全校验未通过",
+    } as const;
+    modelAuthority = {
+      authority: authority.authority,
+      outcome: authority.outcome,
+      action: actions[authority.outcome],
+    };
   }
 
   return (
     <SettingsPage
       identity={identity}
       model={model}
+      modelAuthority={modelAuthority}
       storage={storage}
       multimodalModels={multimodalModels}
       preferences={preferences}
       skills={skills}
       activation={activation}
       channelLinks={channelLinks}
-      modelAuthority={modelAuthority}
     />
   );
 }

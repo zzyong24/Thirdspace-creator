@@ -2,7 +2,6 @@ import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import type {
   ModelSpec,
-  MultimodalSpec,
   MultimodalProviderRegistry,
   CoverBriefOutput,
 } from "@creatoros/ai-worker";
@@ -12,7 +11,14 @@ import {
   type CreativeContext,
 } from "./creative-context";
 // [T-376] 失败分类人话(「未配置」vs「配置了但调用失败」),写进步骤流末条供前端诚实展示。
-import { describeMultimodalFailure } from "./multimodal/resolve";
+import {
+  describeMultimodalFailure,
+  type MultimodalSpec,
+} from "./multimodal/resolve";
+import {
+  formatErrorDiagnostic,
+  safeModelFailureMessage,
+} from "./error-diagnostics";
 
 // 封面 runner (cover.generate node) —— [T-271] 制作封面链 0→1。
 //
@@ -213,6 +219,7 @@ export async function runCoverGenerate(
 ): Promise<void> {
   // [DATA-H07] 「asset 已建、候选未记成」失败窗口的清理锚(与 asset-generate-runner 同款)。
   let createdAssetId: string | null = null;
+  let channelManaged = false;
   try {
     await deps.ai.markRunning(ctx, task.id);
 
@@ -226,6 +233,7 @@ export async function runCoverGenerate(
 
     // 1) 结构化封面方案(文案接地）—— 复用 copy.generate 文本模型 + cover.brief 模板(硬锚 brief+script）。
     const spec = await deps.resolveModelSpec(ctx, "copy.generate");
+    channelManaged ||= spec.displayModelKey === "channel-managed";
     const {
       modelFor,
       runStructuredNode,
@@ -315,6 +323,7 @@ export async function runCoverGenerate(
 
     // 4) 生图(image.generate 用户可配;上层统一 { assetBytes };未配/超时/审核 → 抛 → 下方 catch）。
     const imgSpec = await deps.resolveMultimodalSpec(ctx, "image.generate");
+    channelManaged ||= imgSpec.displayModelKey === "channel-managed";
     const { assetBytes } = await generateImage(
       imgSpec,
       {
@@ -406,7 +415,11 @@ export async function runCoverGenerate(
       await deps.ai.recordStep(ctx, task.id, {
         stepNo: 99,
         kind: "error",
-        text: describeMultimodalFailure(err, "生图"),
+        text: channelManaged
+          ? safeModelFailureMessage(err, {
+              displayModelKey: "channel-managed",
+            })
+          : describeMultimodalFailure(err, "生图"),
         toolCalls: [],
       });
     } catch {
@@ -420,6 +433,11 @@ export async function runCoverGenerate(
       /* task may already be terminal */
     }
     // eslint-disable-next-line no-console
-    console.error(`[cover-runner] generate failed for task ${task.id}:`, err);
+    console.error(
+      `[cover-runner] generate failed task=${task.id} ${formatErrorDiagnostic(
+        err,
+        { omitMessage: channelManaged },
+      )}`,
+    );
   }
 }

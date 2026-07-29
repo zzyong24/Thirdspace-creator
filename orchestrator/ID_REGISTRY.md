@@ -37,6 +37,9 @@ Stable IDs so downstream artifacts trace to upstream intent and changes invalida
 | `DEC-ODR-001` | 四个过度设计任务统一退回最小现有能力路线 | DECISION_LOG.md | resolved |
 | `DEC-SCHED-001` | 项目唯一排期入口与发布中心日历主视图 | DECISION_LOG.md | confirmed |
 | `DEC-SCHED-002` | 排期复用共享契约与真实数据库 | DECISION_LOG.md | confirmed-scope |
+| `DEC-MODEL-606` | 渠道 JSON 拉到即用、拉不到才用本地 | DECISION_LOG.md | active |
+| `DEC-MODEL-619` | Activity 只证明授权事实，Growth 签入权威客户端身份 | DECISION_LOG.md | active |
+| `DEC-BOUNDARY-002` | Activity 最小运行快照不等于业务权威 | DECISION_LOG.md | resolved |
 
 ## FR — Functional Requirements (source: docs/CreatorOS-implementation-plan.md) — status: to-confirm
 

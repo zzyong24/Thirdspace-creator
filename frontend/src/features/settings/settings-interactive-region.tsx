@@ -111,8 +111,8 @@ import type {
   ActivationState,
   ChannelLinksState,
   DouyinAccountState,
-  MultimodalModelState,
   ModelAuthorityState,
+  MultimodalModelState,
   SettingsViewModel,
 } from "./settings-page";
 // T-077a 技能页签:列表/详情组件 + 可序列化条目类型(route server 侧投影传入)。
@@ -265,12 +265,13 @@ const HIGHLIGHT_TAB: Record<string, string> = {
 
 export function SettingsDialog({
   viewModel,
+  modelAuthority,
   skills = [],
   activation,
   channelLinks,
-  modelAuthority,
 }: {
   viewModel: SettingsViewModel;
+  modelAuthority?: ModelAuthorityState;
   /**
    * T-077a:技能清单(route server 侧经 ai-worker listTemplates + settings.prompts.list
    * 投影)。单测/无 server 数据时缺省空数组 → SkillsSection 渲诚实空态。
@@ -286,7 +287,6 @@ export function SettingsDialog({
    * 购买入口隐藏、更新卡「联系授权方」纯文案 —— 中性降级,不回退官方链接(红线)。
    */
   channelLinks?: ChannelLinksState;
-  modelAuthority?: ModelAuthorityState;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -427,34 +427,28 @@ export function SettingsDialog({
             </SettingsPanel>
             <SettingsPanel tabId="models" active={tab}>
               <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
-                {modelAuthority?.authority === "managed_locked" ? (
-                  <SectionCard
-                    title="模型服务"
-                    description="模型能力由当前渠道统一配置"
-                    className="border-brand/25"
-                  >
-                    <div className="flex items-start justify-between gap-4 rounded-lg border border-border/70 bg-surface-subtle/40 p-4">
-                      <div className="flex min-w-0 flex-col gap-1.5">
-                        <span className="text-sm font-medium text-foreground">
-                          无需填写 API Key
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {modelAuthority.action}
-                        </span>
-                      </div>
-                      <Badge
-                        variant={
-                          modelAuthority.state === "unavailable"
-                            ? "secondary"
-                            : "outline"
-                        }
-                      >
-                        渠道托管
-                      </Badge>
-                    </div>
-                  </SectionCard>
-                ) : (
-                  <>
+                <div
+                  data-slot="model-authority-status"
+                  data-authority={modelAuthority?.authority ?? "local"}
+                  className={cn(
+                    "rounded-xl border px-4 py-3",
+                    modelAuthority?.authority === "channel"
+                      ? "border-brand/25 bg-brand/5"
+                      : modelAuthority?.outcome === "security_error"
+                        ? "border-destructive/25 bg-destructive/5"
+                        : "border-border bg-muted/35",
+                  )}
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    {modelAuthority?.action ??
+                      "本地模型正在使用 · 暂时无法取得渠道配置"}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {modelAuthority?.authority === "channel"
+                      ? "下面的本地配置会安全保留，渠道不可用时才会使用。"
+                      : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
+                  </p>
+                </div>
                 {/* ① 必配块:文本模型是 AI 写字 / 对话的地基,配这一个就能用。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
@@ -544,8 +538,6 @@ export function SettingsDialog({
 
                 {/* [T-363] 配置备份:导出/导入全部模型配置(重置/换机兜底;文件含密钥,卡内警示)。 */}
                 <ModelConfigTransferCard />
-                  </>
-                )}
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
@@ -1325,7 +1317,7 @@ function ActivationStatusCard({
           </SettingsFormRow>
         ) : null}
         <div className="grid gap-2 rounded-md border border-border p-3">
-          <p className="text-xs font-medium text-foreground">产品与服务</p>
+          <p className="text-xs font-medium text-foreground">渠道服务入口</p>
           <div className="flex flex-wrap gap-2">
             {purchaseUrl ? (
               <Button asChild variant="outline" size="sm">
@@ -1336,12 +1328,12 @@ function ActivationStatusCard({
                   rel="noopener noreferrer"
                 >
                   <KeyRound aria-hidden="true" className="size-4 shrink-0" />
-                  购买 CreatorOS
+                  购买激活码
                 </a>
               </Button>
             ) : (
               <span className="text-xs text-muted-foreground">
-                购买：暂时不可用
+                购买：当前未提供
               </span>
             )}
             {renewalUrl ? (
@@ -1352,12 +1344,12 @@ function ActivationStatusCard({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  续费 CreatorOS
+                  续费
                 </a>
               </Button>
             ) : (
               <span className="text-xs text-muted-foreground">
-                续费：暂时不可用
+                续费：当前未提供
               </span>
             )}
             {channelSupportUrl ? (
@@ -1368,7 +1360,7 @@ function ActivationStatusCard({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  购买与续费帮助
+                  商业售后
                 </a>
               </Button>
             ) : null}
@@ -1380,7 +1372,7 @@ function ActivationStatusCard({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  下载 CreatorOS
+                  渠道下载
                 </a>
               </Button>
             ) : null}

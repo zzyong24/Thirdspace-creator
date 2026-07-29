@@ -21,6 +21,7 @@ function makeService(
   db: Db,
   clock: { now: string },
   nextIdOverride?: (prefix: string) => string,
+  modelAuthority?: "channel-managed",
 ) {
   let seq = 0;
   const artifacts: AiArtifactsPort = {
@@ -55,6 +56,7 @@ function makeService(
         accountId: ctx.accountId,
         taskType,
       },
+      ...(modelAuthority ? { modelAuthority } : {}),
     })),
   });
 }
@@ -136,6 +138,21 @@ describe("T-513 AI task idempotency and atomic execution ownership", () => {
         task.id,
       ),
     ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("渠道 authority 的异步任务只记录 channel-managed，不把本地或真实渠道 model 当展示真值", async () => {
+    const service = makeService(db, clock, undefined, "channel-managed");
+    const task = await service.createTask(ctx, {
+      taskType: "script.draft",
+      attemptId: "018f8d8a-90ab-7def-8123-channelmodel1",
+      inputData: { projectId: "project-1" },
+    });
+
+    expect(task.modelKey).toBe("channel-managed");
+    expect(task).not.toHaveProperty("runtimeData");
+    await expect(service.getTaskRuntimeData(ctx, task.id)).resolves.toEqual(
+      expect.objectContaining({ modelAuthority: "channel-managed" }),
+    );
   });
 
   it("retryOf must be a same-owner, same-taskType terminal task and is fingerprinted", async () => {

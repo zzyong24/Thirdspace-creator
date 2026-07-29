@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "config-access-ticket-fixture-v2",
+  "contractVersion": "config-access-ticket-v2",
+  "algorithm": "Ed25519",
+  "publicKey": {
+    "kid": "am-license-test-02",
+    "rawBase64": "yyzG8nebmCN1aR3ddZpcNjjQMhCtYW9cvKHTPEpU6ts="
+  },
+  "header": {
+    "alg": "EdDSA",
+    "kid": "am-license-test-02",
+    "typ": "TS-CLIENT-CONFIG-TICKET"
+  },
+  "headerJcs": "{\"alg\":\"EdDSA\",\"kid\":\"am-license-test-02\",\"typ\":\"TS-CLIENT-CONFIG-TICKET\"}",
+  "payload": {
+    "contractVersion": "config-access-ticket-v2",
+    "issuer": "activation-manager",
+    "audience": "config.pull",
+    "scope": "client-config:read",
+    "projectKey": "creatoros",
+    "channelRef": "agent-42",
+    "entitlementBindingHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorizationVersion": 7,
+    "jti": "01K0ABCDEFGHJKMNPQRSTVWXYZ",
+    "issuedAt": "2026-07-28T12:00:00.000Z",
+    "expiresAt": "2026-07-28T12:05:00.000Z"
+  },
+  "payloadJcs": "{\"audience\":\"config.pull\",\"authorizationVersion\":7,\"channelRef\":\"agent-42\",\"contractVersion\":\"config-access-ticket-v2\",\"entitlementBindingHash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"expiresAt\":\"2026-07-28T12:05:00.000Z\",\"issuedAt\":\"2026-07-28T12:00:00.000Z\",\"issuer\":\"activation-manager\",\"jti\":\"01K0ABCDEFGHJKMNPQRSTVWXYZ\",\"projectKey\":\"creatoros\",\"scope\":\"client-config:read\"}",
+  "signingInput": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFtLWxpY2Vuc2UtdGVzdC0wMiIsInR5cCI6IlRTLUNMSUVOVC1DT05GSUctVElDS0VUIn0.eyJhdWRpZW5jZSI6ImNvbmZpZy5wdWxsIiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjcsImNoYW5uZWxSZWYiOiJhZ2VudC00MiIsImNvbnRyYWN0VmVyc2lvbiI6ImNvbmZpZy1hY2Nlc3MtdGlja2V0LXYyIiwiZW50aXRsZW1lbnRCaW5kaW5nSGFzaCI6InNoYTI1NjphYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwiZXhwaXJlc0F0IjoiMjAyNi0wNy0yOFQxMjowNTowMC4wMDBaIiwiaXNzdWVkQXQiOiIyMDI2LTA3LTI4VDEyOjAwOjAwLjAwMFoiLCJpc3N1ZXIiOiJhY3RpdmF0aW9uLW1hbmFnZXIiLCJqdGkiOiIwMUswQUJDREVGR0hKS01OUFFSU1RWV1hZWiIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJzY29wZSI6ImNsaWVudC1jb25maWc6cmVhZCJ9",
+  "signatureBase64Url": "rUAR4dnsOXabvLJwo4KP2XHZovxl-7Kmh9rFMvgAno9Z-uK-gYzLZ_O6YPauKMD7A_VZFGIPTaB2qhlvwI4gDQ",
+  "token": "eyJhbGciOiJFZERTQSIsImtpZCI6ImFtLWxpY2Vuc2UtdGVzdC0wMiIsInR5cCI6IlRTLUNMSUVOVC1DT05GSUctVElDS0VUIn0.eyJhdWRpZW5jZSI6ImNvbmZpZy5wdWxsIiwiYXV0aG9yaXphdGlvblZlcnNpb24iOjcsImNoYW5uZWxSZWYiOiJhZ2VudC00MiIsImNvbnRyYWN0VmVyc2lvbiI6ImNvbmZpZy1hY2Nlc3MtdGlja2V0LXYyIiwiZW50aXRsZW1lbnRCaW5kaW5nSGFzaCI6InNoYTI1NjphYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwiZXhwaXJlc0F0IjoiMjAyNi0wNy0yOFQxMjowNTowMC4wMDBaIiwiaXNzdWVkQXQiOiIyMDI2LTA3LTI4VDEyOjAwOjAwLjAwMFoiLCJpc3N1ZXIiOiJhY3RpdmF0aW9uLW1hbmFnZXIiLCJqdGkiOiIwMUswQUJDREVGR0hKS01OUFFSU1RWV1hZWiIsInByb2plY3RLZXkiOiJjcmVhdG9yb3MiLCJzY29wZSI6ImNsaWVudC1jb25maWc6cmVhZCJ9.rUAR4dnsOXabvLJwo4KP2XHZovxl-7Kmh9rFMvgAno9Z-uK-gYzLZ_O6YPauKMD7A_VZFGIPTaB2qhlvwI4gDQ",
+  "tokenSha256": "sha256:7b43a8b9bde159c663bb4bc9f700d7de98d6baefef383880cb55197326e45ec7",
+  "negativeCases": [
+    {
+      "id": "legacy-client-selector",
+      "mutation": "payload.clientId=legacy without resign",
+      "expectedCode": "CONFIG_TICKET_INVALID"
+    },
+    {
+      "id": "expired-at-boundary",
+      "clock": "2026-07-28T12:05:30.001Z",
+      "expectedCode": "CONFIG_TICKET_EXPIRED"
+    },
+    {
+      "id": "stale-authorization-version",
+      "introspectionAuthorizationVersion": 8,
+      "expectedCode": "CONFIG_TICKET_STALE"
+    }
+  ]
+}
