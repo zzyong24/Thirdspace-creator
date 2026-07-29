@@ -962,3 +962,22 @@ Growth / Activation Manager / CreatorOS 继续推进。T-575 已完成三轮独�
 AM assertion + Growth authoritative POST receipt 的 fail-closed 事务作为最小结果约束。
 
 **Status**：resolved（用户三轮后裁决；禁止 Round 4）。
+
+## DEC-MODEL-001 (2026-07-28) — 内容雷达不新增专用模型配置面
+
+**来源**：用户在 T-589 性能优化完成后明确指出“模型配置已经够多”，否决新增的
+“内容雷达拆解模型”设置卡。
+
+**决策**：
+
+1. 内容雷达逐字稿拆解与选题转换统一复用既有 `topic.generate` / 默认文本模型配置。
+2. 删除 `intelligence.topic-decompose` 专用模型 capability 的解析、设置卡和连接测试，
+   不让性能优化转化为新的用户配置负担。
+3. 保留与模型配置数量无关的性能改进：逐字稿 hash 复用拆解、输出预算、重试收紧、
+   安全耗时日志和慢任务终态回显。
+4. `intelligence.topic-decompose` 继续作为内部 Skill/Prompt ID 使用；它不再表示用户需要
+   单独配置模型。
+
+**User confirmation**：用户 2026-07-28 明确要求撤掉该配置项。
+
+**Status**：resolved（配置面收敛；不改服务契约、数据归属或发布标准）。

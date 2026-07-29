@@ -189,20 +189,6 @@ describe("runModelConnectionTest — chat.fallback(只认专配行)", () => {
   });
 });
 
-describe("runModelConnectionTest — intelligence.topic-decompose", () => {
-  it("专用雷达模型未配置时如实提示仍会复用既有模型", async () => {
-    const deps = makeDeps({ resolveDedicatedLlm: vi.fn(async () => null) });
-    const r = await runModelConnectionTest(
-      ctx,
-      "intelligence.topic-decompose",
-      deps,
-    );
-    expect(r.ok).toBe(false);
-    expect(r.detail).toContain("未配置");
-    expect(r.detail).toContain("复用既有选题");
-  });
-});
-
 describe("runModelConnectionTest — image.generate(真实最小生图)", () => {
   it("fake 生图返回字节 → ✓ + 额度消耗提示", async () => {
     const deps = makeDeps();

@@ -509,12 +509,6 @@ export function SettingsDialog({
                     kind="fallback"
                     state={viewModel.multimodalModels.fallback}
                   />
-                  {/* [T-589] 内容雷达可单独绑定低延迟文本模型；未配继续复用既有模型。 */}
-                  <MultimodalModelCard
-                    key={`radar:${JSON.stringify(viewModel.multimodalModels.radar)}`}
-                    kind="radar"
-                    state={viewModel.multimodalModels.radar}
-                  />
                 </CollapsibleModelGroup>
 
                 {/* [T-363] 配置备份:导出/导入全部模型配置(重置/换机兜底;文件含密钥,卡内警示)。 */}
@@ -2848,21 +2842,6 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "https://api.anthropic.com(留空=provider 默认)",
     disabledHint: "未配 → 主模型重试耗尽后直接报错。",
   },
-  // [T-589] 雷达转选题是长输入结构化调用，允许单独绑定低延迟文本模型。
-  radar: {
-    capability: "intelligence.topic-decompose" as const,
-    title: "内容雷达拆解模型",
-    icon: Cpu,
-    description:
-      "内容雷达把逐字稿转成选题时使用；建议绑定低延迟文本模型。不配则继续复用既有选题/默认模型。",
-    providerSuggestions: ["anthropic", "minimax", "deepseek", "openai"] as ReadonlyArray<string>,
-    providerPlaceholder: "anthropic",
-    providerHelp: "任意文本模型厂商，可自定义；优先选择首 token 和结构化输出延迟较低的模型。",
-    modelHelp: "模型 id 自由填；应兼顾长文本理解与结构化 JSON 输出稳定性。",
-    modelPlaceholder: "",
-    baseUrlPlaceholder: "https://api.anthropic.com(留空=provider 默认)",
-    disabledHint: "未配 → 继续复用既有选题/默认模型。",
-  },
 } as const;
 
 // [T-132] 多模态卡 kind → onboarding stepKey(?highlight=<stepKey> 深链落地定位)。
@@ -2876,8 +2855,7 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   | "vision"
   | "review"
   | "search"
-  | "fallback"
-  | "radar",
+  | "fallback",
   string | undefined
 > = {
   image: "image-model",
@@ -2889,7 +2867,6 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   vision: undefined,
   // [T-239b] 备用对话模型无 onboarding 步 → 无深链锚点。
   fallback: undefined,
-  radar: undefined,
 };
 
 function MultimodalModelCard({
@@ -2904,8 +2881,7 @@ function MultimodalModelCard({
     | "vision"
     | "review"
     | "search"
-    | "fallback"
-    | "radar";
+    | "fallback";
   state: MultimodalModelState;
 }) {
   const meta = MULTIMODAL_META[kind];
@@ -2920,9 +2896,9 @@ function MultimodalModelCard({
   // [T-325] 仅备用对话卡(fallback,apiFormat 分派的文本 LLM)复用供应商预设 —— 与文本
   // 模型卡同款目录。其它多模态卡按 provider 分派、字段语义不同,不挂预设(state 恒存
   // 但仅 fallback 渲染,遵守 Hooks 规则)。
-  const isTextLlm = kind === "fallback" || kind === "radar";
+  const isFallback = kind === "fallback";
   const [presetId, setPresetId] = React.useState<string>(() =>
-    isTextLlm
+    isFallback
       ? matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??
         CUSTOM_PRESET_ID
       : CUSTOM_PRESET_ID,
@@ -2969,7 +2945,7 @@ function MultimodalModelCard({
             // 其余多模态卡不带 apiFormat 不变。
             ...(kind === "embed" || kind === "review"
               ? { apiFormat: "openai_chat" as const }
-              : isTextLlm
+              : isFallback
                 ? { apiFormat }
                 : {}),
           },
@@ -2985,7 +2961,7 @@ function MultimodalModelCard({
     modelName,
     baseUrl,
     apiFormat,
-    isTextLlm,
+    isFallback,
     secret,
   ]);
 
@@ -3030,8 +3006,8 @@ function MultimodalModelCard({
             provider / model / 接口地址 / 密钥(与文本模型同款配置;密钥存本地库)
           </span>
         </div>
-        {isTextLlm ? (
-          // 文本模型能力卡复用供应商预设(与主文本模型卡同款)。
+        {isFallback ? (
+          // [T-325] 备用对话卡复用供应商预设(与文本模型卡同款)。
           <ProviderPresetRow
             idPrefix={`multimodal-${kind}`}
             presetId={presetId}
@@ -3068,7 +3044,7 @@ function MultimodalModelCard({
           <Input
             id={`multimodal-${kind}-model`}
             data-slot={`multimodal-${kind}-model-input`}
-            list={isTextLlm ? `multimodal-${kind}-model-suggestions` : undefined}
+            list={isFallback ? `multimodal-${kind}-model-suggestions` : undefined}
             value={modelName}
             disabled={pending}
             placeholder={meta.modelPlaceholder}
@@ -3076,7 +3052,7 @@ function MultimodalModelCard({
             aria-label={`${meta.title}名称`}
           />
           {/* [T-325] 备用对话卡:候选随选中预设切换;custom / 无候选时为空。 */}
-          {isTextLlm ? (
+          {isFallback ? (
             <datalist id={`multimodal-${kind}-model-suggestions`}>
               {presetModels(presetId).map((m) => (
                 <option key={m} value={m} />
@@ -3099,7 +3075,7 @@ function MultimodalModelCard({
               const next = event.target.value;
               setBaseUrl(next);
               // [T-325] 备用对话卡:手改地址 → 重算预设高亮(其它卡无预设,不需重算)。
-              if (isTextLlm) {
+              if (isFallback) {
                 setPresetId(
                   matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
                 );
@@ -3108,8 +3084,8 @@ function MultimodalModelCard({
             aria-label={`${meta.title}接口地址`}
           />
         </SettingsFormRow>
-        {isTextLlm ? (
-          // 文本 LLM 能力按 apiFormat 分派 → 需要接口格式(与主模型卡同款下拉)。
+        {isFallback ? (
+          // [T-239b] 备用对话模型走文本 LLM 解析链 → 需要接口格式(与文本模型卡同款下拉)。
           <SettingsFormRow
             label="接口格式"
             controlId={`multimodal-${kind}-api-format`}

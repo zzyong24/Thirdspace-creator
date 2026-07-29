@@ -81,7 +81,6 @@ const VM: SettingsViewModel = {
     review: { capability: "script.review", provider: "", modelName: "", baseUrl: "", hasSecret: false },
     search: { capability: "web.search", provider: "", modelName: "", baseUrl: "", hasSecret: false },
     fallback: { capability: "chat.fallback", provider: "", modelName: "", baseUrl: "", hasSecret: false },
-    radar: { capability: "intelligence.topic-decompose", provider: "", modelName: "", baseUrl: "", hasSecret: false },
   },
   douyinAccount: { loggedIn: false },
 };

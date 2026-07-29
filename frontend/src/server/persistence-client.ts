@@ -489,7 +489,6 @@ import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modul
 import {
   resolveLlmConfig,
   resolveDedicatedLlmConfig,
-  resolveLlmConfigWithCapabilityFallback,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
@@ -5821,7 +5820,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     modelFor,
                     runStructuredNode,
                   } = await import("@creatoros/ai-worker");
-                  const spec = await resolveTopicPreviewModelSpec(c);
+                  const spec = await resolveModelSpec(c, "topic.generate");
                   const positioning = [
                     target.positioning.oneLiner,
                     target.positioning.keywords.length > 0
@@ -9075,26 +9074,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
     });
-    return {
-      apiFormat: cfg.apiFormat,
-      baseUrl: cfg.baseUrl,
-      model: cfg.model,
-      token: cfg.token,
-    };
-  };
-
-  // [T-589] 内容雷达允许绑定低延迟专用模型；未专配时继续读取既有 topic.generate，
-  // 避免升级后要求用户重复配置，也避免误把全局 default 当成专配。
-  const resolveTopicPreviewModelSpec = async (ctx: RequestContext) => {
-    const cfg = await resolveLlmConfigWithCapabilityFallback(
-      ctx,
-      "intelligence.topic-decompose",
-      "topic.generate",
-      {
-        getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-        env: process.env,
-      },
-    );
     return {
       apiFormat: cfg.apiFormat,
       baseUrl: cfg.baseUrl,

@@ -82,26 +82,6 @@ export async function resolveDedicatedLlmConfig(
   return tryDbRow(await deps.getModelConfig(ctx, capability), deps.env);
 }
 
-/**
- * 优先使用某项能力的专用模型；没有专配时再按既有能力的完整解析链回退。
- *
- * 适用于把高延迟节点逐步迁到更快模型，同时兼容用户已经配置好的旧 capability，
- * 不会误把全局 default 当成“专用模型已配置”。
- */
-export async function resolveLlmConfigWithCapabilityFallback(
-  ctx: RequestContext,
-  primaryCapability: string,
-  fallbackCapability: string,
-  deps: ResolveDeps,
-): Promise<ResolvedLlmConfig> {
-  const dedicated = await resolveDedicatedLlmConfig(
-    ctx,
-    primaryCapability,
-    deps,
-  );
-  return dedicated ?? resolveLlmConfig(ctx, fallbackCapability, deps);
-}
-
 export async function resolveLlmConfig(
   ctx: RequestContext,
   capability: string,
