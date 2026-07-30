@@ -6,8 +6,9 @@
 > 本文的三键 parser、长期 Key 禁止、24 小时远端 LKG 与 `ready/offline` 规则不得用于新实现。
 
 > 状态：用户 2026-07-29 明确授权进入 BUILD；上游 Growth
-> `client-config-distribution-v1` 已独立评审 PASS[REV:d2895a3b6dac]
-> 上游权威：Growth `docs/contracts/client-config-distribution-v1.md`
+> `client-config-distribution-v1` 已独立评审 PASS[REV:d2895a3b6dac]。Growth 单运行时提交
+> `a74b92e` 已将实际 transport 基路径从 `/api/v2` 收敛为 `/api`；签名、授权与响应语义不变。
+> 上游权威：Growth `SERVICE_CONTRACT.md` 与运行时 transport
 > 本仓范围：只定义 CreatorOS 消费、验签、产品协议解析、LKG 与本地安全投影
 
 ## 1. 权威与固定边界
@@ -107,7 +108,7 @@ AM 网络或 authority 暂时不可达才可进入 §6 的离线判断。
 ## 4. Growth bundle exact consume
 
 ```http
-GET /api/v2/client-config/bundles/current?clientVersion=<app-version>&accept=creatoros.model-config%40creatoros-model-config-v1
+GET /api/client-config/bundles/current?clientVersion=<app-version>&accept=creatoros.model-config%40creatoros-model-config-v1
 Authorization: Bearer <configAccessTicket>
 If-None-Match: "<last bundleDigest>"
 ```

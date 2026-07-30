@@ -222,6 +222,10 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **配置/缓存影响**：增加默认关闭的 client-config build inputs 与
   `.client-config-lkg` AES-GCM 缓存；旧 `.license`、用户内容、BYOK secret 和已发布主功能不
   迁移、不清空。live HTTPS E2E 或公钥/keyId 缺失时保持关闭。
+- **2026-07-29 Growth 单运行时路径适配**：上游提交 `a74b92e` 已将真实 API-216 transport
+  从 `/api/v2/client-config/bundles/current` 收敛为
+  `/api/client-config/bundles/current`。Creator 只同步固定 path 与测试；授权、签名、缓存、
+  fail-closed 和 capability 默认关闭边界均不变。
 - **安全输入边界**：浏览器不接收 claimToken。Creator 生成 device session，user code 只用于
   Growth 登录态 ownership+reauth 批准；device secret/verifier 只在内存或 OS 安全临时区。
   claimToken 从 API-212 approved no-store launch 到达后，唯一允许的短期持久化是首次 AM 出网前

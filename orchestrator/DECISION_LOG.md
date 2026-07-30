@@ -1047,6 +1047,10 @@ AM assertion + Growth authoritative POST receipt 的 fail-closed 事务作为最
    fixture 写成已上线。
 6. 本决定是用户对 T-575 的新增明确裁决，复用 Growth 已审 exact contract；不重开
    DEC-TSL-002 已禁止的 T-575 Round 4。
+7. Growth 已提交的单运行时重构 `a74b92e` 将 API-216 实际 transport 从 `/api/v2` 收敛到
+   `/api`。Creator 同步改为 `/api/client-config/bundles/current`；本次只适配已提交的上游
+   路径，不改变 ticket、验签、身份、缓存或 fail-closed 语义。用户 2026-07-29 已要求核实后
+   收敛到 `main`。
 
 **Status**：resolved（用户确认；进入 TDD/BUILD 与 live HTTPS 验收）。
 
