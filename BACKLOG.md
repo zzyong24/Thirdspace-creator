@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
-| T-627 | CreatorOS 消费 Growth 渠道多模型数组【用户 2026-07-30 恢复】 | 🔨 待办 | PASS | [绑定契约](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) | 客户端按能力读取 Growth 签名模型数组并采用官方默认项；本任务不把本地选择写回或覆盖渠道配置。 |
+| T-627 | CreatorOS 消费 Growth 渠道多模型数组【用户 2026-07-30 恢复】 | ✅ 待办 | PASS | [绑定契约](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) | 客户端按能力读取 Growth 签名模型数组并采用官方默认项；本任务不把本地选择写回或覆盖渠道配置。 |
 | T-621 | 补齐渠道模型 authority snapshot 生产链路回归【非阻断测试增强·T-606 复核】 | 📋 待办 | — | [绑定契约](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) | 补 `createTask → persistence → authority change → cancel/no provider call` 完整链路证据，不改变已确认契约。 |
 | T-576 | 统一跟进尚未关闭的飞书线上用户反馈【线上支持】 | 🔨 免审 | — | [反馈表](https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz) | 只负责新反馈分诊、进度同步和邮件闭环；故障实现由各自任务承接，未真机解决不得提前结案。 |
 | T-575 | 接通 CreatorOS 权益领取、渠道配置与问题反馈【跨系统上线闭环】 | 🔨 本地PASS·待生产E2E | — | [SPEC](docs/superpowers/specs/2026-07-27-t076-creator-three-system-launch.md) · [Gate](orchestrator/GATE-T575-BUILD.md) | 本地链路已通过；待真实发布材料、live HTTPS 三仓 E2E、双平台凭据后端与正式发布许可。 |

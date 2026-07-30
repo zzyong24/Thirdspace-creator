@@ -481,3 +481,4 @@
 {"ts":"2026-07-30T07:26:13.092Z","actor":"taskctl","action":"block","task":"T-626","reason":"用户已明确延期；Growth 数组合同保留，但 CreatorOS 9 类能力选择器在用户重新启用前不得进入自动执行队列。","sha_before":"3cbeb1565dd7","sha_after":"2f1781ca3db2"}
 {"ts":"2026-07-30T07:30:07.034Z","actor":"taskctl","action":"complete","task":"T-629","evidence":"已关闭 T-547/T-559/T-546/T-566，暂停 T-577/T-565/T-626；10 条既有完成项归档，暂停项移出执行区，BACKLOG 14.6KB/0 warning；pmem 改为只读 BACKLOG 且拒绝 legacy add/set，node --test pmem.test.mjs 3/3 PASS；boundary 无新增、orphan clean、reconcile 0 error/0 warning。","sha_before":"70c01077ba2d","sha_after":"1efde71d81b2"}
 {"ts":"2026-07-30T08:04:53.424Z","actor":"taskctl","action":"start","task":"T-627","sha_before":"8cf0ffdddb43","sha_after":"c54f19f9b3d9"}
+{"ts":"2026-07-30T08:17:58.591Z","actor":"taskctl","action":"complete","task":"T-627","evidence":"fce40ce6: channel model array resolvers and tests passed","sha_before":"c3393085af92","sha_after":"b4963c390d7d"}
