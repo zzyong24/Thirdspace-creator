@@ -1240,7 +1240,10 @@ Postgres/PGlite transcript 行，不命中新增存储方案。`MOD-001` 不采�
 **User confirmation**：用户 2026-07-29 明确纠正为“一旦生成选题了，这个逐字稿就捆绑了，
 就死了。这不能变了”。
 
-**Status**：confirmed；T-622 须据此重派生交互与服务契约，完成独立评审后才能 BUILD。
+**Build confirmation**：用户随后明确回复“你两个一起来实现吧，两个需求”，同时授权筛选排序
+与逐字稿纠错/锁定按已记录方案进入实现。
+
+**Status**：confirmed for BUILD；T-622 同一切片完成契约、backend、frontend 与测试。
 
 ## DEC-MAUTH-001 (2026-07-29) — 正式 CreatorOS 的模型配置由 Growth 渠道端完全托管
 

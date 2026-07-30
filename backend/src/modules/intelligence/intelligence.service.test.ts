@@ -7,9 +7,11 @@ import {
   executionTasks,
   favoritesFolders,
   favoritesItems,
+  intelligenceTransforms,
   intelligenceSources,
   intelligenceSyncRuns,
   intelligenceMigrationLedgers,
+  itemMetricSnapshots,
   trendSources,
   eq,
 } from "@creatoros/backend";
@@ -957,7 +959,7 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
-  it("[T-603] 人工逐字稿相同正文幂等，不同正文与活动转写均拒绝覆盖", async () => {
+  it("[T-603] 人工逐字稿相同正文幂等，生成候选前可替换、生成后拒绝覆盖", async () => {
     const { db, client } = await createDb();
     const d = deps();
     const tasks = createPersistentTaskService(db, d);
@@ -979,9 +981,38 @@ describe("T-482 内容雷达领域主链", () => {
       await expect(
         service.uploadManualTranscript(ctx, {
           ...input,
-          text: "另一份正文",
+          text: "生成选题前允许纠错的正文",
         }),
-      ).rejects.toThrow("TRANSCRIPT_EXISTS");
+      ).resolves.toMatchObject({
+        status: "done",
+        text: "生成选题前允许纠错的正文",
+      });
+
+      await db.insert(intelligenceTransforms).values({
+        id: "transform-lock-manual",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        itemId,
+        sourceSnapshotId: "snapshot-lock-manual",
+        kind: "topic",
+        positioningVersionId: "positioning-lock-manual",
+        aiTaskId: null,
+        idempotencyKey: "transform-lock-manual",
+        status: "candidate",
+        outputSnapshot: {
+          title: "已生成候选",
+          transcriptHash: "sha256:locked",
+        },
+        targetTopicId: null,
+        createdAt: d.clock.value,
+        updatedAt: d.clock.value,
+      });
+      await expect(
+        service.uploadManualTranscript(ctx, {
+          ...input,
+          text: "候选生成后不可再改",
+        }),
+      ).rejects.toThrow("TRANSCRIPT_LOCKED");
 
       const queuedItemId = await service.seedItemForTest(ctx, {
         canonicalUrl: "https://www.douyin.com/video/manual-busy",
@@ -1000,6 +1031,206 @@ describe("T-482 内容雷达领域主链", () => {
           text: "不能覆盖活动任务",
         }),
       ).rejects.toThrow("TRANSCRIPT_BUSY");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-622] 已完成逐字稿可重新转写，失败保留旧稿；成功候选后永久拒绝", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/retranscribe",
+        externalId: "retranscribe",
+        title: "需要纠错的作品",
+      });
+      await service.uploadManualTranscript(ctx, {
+        itemId,
+        format: "txt",
+        fileName: "旧稿.txt",
+        text: "应当保留的旧稿",
+      });
+      const queued = await service.enqueueTranscripts(ctx, {
+        itemIds: [itemId],
+        idempotencyKey: "retranscribe-before-topic",
+      });
+      expect(queued.tasks).toHaveLength(1);
+      expect((await service.getItem(ctx, itemId)).transcript).toMatchObject({
+        status: "queued",
+        text: "应当保留的旧稿",
+      });
+      await service.finishTranscript(ctx, {
+        taskId: queued.tasks[0]!.id,
+        status: "failed",
+        errorCode: "TRANSCRIBE_FAILED",
+      });
+      expect((await service.getItem(ctx, itemId)).transcript).toMatchObject({
+        status: "done",
+        text: "应当保留的旧稿",
+        errorCode: "TRANSCRIBE_FAILED",
+      });
+
+      await db.insert(intelligenceTransforms).values({
+        id: "transform-lock-retranscribe",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        itemId,
+        sourceSnapshotId: "snapshot-lock-retranscribe",
+        kind: "topic",
+        positioningVersionId: "positioning-lock-retranscribe",
+        aiTaskId: null,
+        idempotencyKey: "transform-lock-retranscribe",
+        status: "cancelled",
+        outputSnapshot: {
+          title: "生成过但取消的候选",
+          transcriptHash: "sha256:locked",
+        },
+        targetTopicId: null,
+        createdAt: d.clock.value,
+        updatedAt: d.clock.value,
+      });
+      const locked = await service.enqueueTranscripts(ctx, {
+        itemIds: [itemId],
+        idempotencyKey: "retranscribe-after-topic",
+      });
+      expect(locked.tasks).toHaveLength(0);
+      expect(locked.skipped).toEqual([
+        { itemId, reason: "TRANSCRIPT_LOCKED" },
+      ]);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-622] 列表由服务端组合筛选、投影进度并稳定按真实互动排序", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const untranscribed = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/untranscribed",
+        externalId: "untranscribed",
+        title: "待转写",
+      });
+      const pendingTopic = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/pending-topic",
+        externalId: "pending-topic",
+        title: "待生成选题",
+      });
+      const candidate = await service.seedItemForTest(ctx, {
+        canonicalUrl: "https://www.douyin.com/video/candidate",
+        externalId: "candidate",
+        title: "待确认选题",
+      });
+      await service.uploadManualTranscript(ctx, {
+        itemId: pendingTopic,
+        format: "txt",
+        fileName: "待生成.txt",
+        text: "待生成选题逐字稿",
+      });
+      await service.uploadManualTranscript(ctx, {
+        itemId: candidate,
+        format: "txt",
+        fileName: "候选.txt",
+        text: "候选逐字稿",
+      });
+      await db.insert(intelligenceTransforms).values({
+        id: "transform-candidate-list",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        itemId: candidate,
+        sourceSnapshotId: "snapshot-candidate-list",
+        kind: "topic",
+        positioningVersionId: "positioning-candidate-list",
+        aiTaskId: null,
+        idempotencyKey: "transform-candidate-list",
+        status: "candidate",
+        outputSnapshot: {
+          title: "候选",
+          transcriptHash: "sha256:candidate",
+        },
+        targetTopicId: null,
+        createdAt: d.clock.value,
+        updatedAt: d.clock.value,
+      });
+      await db.insert(itemMetricSnapshots).values([
+        {
+          id: "metric-untranscribed",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          itemId: untranscribed,
+          capturedAt: d.clock.value,
+          likeCount: 100,
+          commentCount: null,
+          collectCount: null,
+          shareCount: null,
+          followerCount: null,
+          metricSource: "test",
+          qualityFlags: [],
+        },
+        {
+          id: "metric-pending-topic",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          itemId: pendingTopic,
+          capturedAt: d.clock.value,
+          likeCount: 300,
+          commentCount: null,
+          collectCount: 80,
+          shareCount: null,
+          followerCount: null,
+          metricSource: "test",
+          qualityFlags: [],
+        },
+        {
+          id: "metric-candidate",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          itemId: candidate,
+          capturedAt: d.clock.value,
+          likeCount: 200,
+          commentCount: null,
+          collectCount: 120,
+          shareCount: null,
+          followerCount: null,
+          metricSource: "test",
+          qualityFlags: [],
+        },
+      ]);
+
+      const pending = await service.listItems(ctx, {
+        transcriptState: "extracted",
+        topicState: "not_generated",
+        sort: "collect_desc",
+        limit: 100,
+      });
+      expect(pending.rows).toHaveLength(1);
+      expect(pending.rows[0]).toMatchObject({
+        item: { id: pendingTopic },
+        transcriptState: "extracted",
+        topicState: "not_generated",
+        progressState: "pending_topic",
+      });
+
+      const byLikes = await service.listItems(ctx, {
+        sort: "like_desc",
+        limit: 100,
+      });
+      expect(byLikes.rows.map((row) => row.item.id)).toEqual([
+        pendingTopic,
+        candidate,
+        untranscribed,
+      ]);
+      expect(
+        byLikes.rows.find((row) => row.item.id === candidate),
+      ).toMatchObject({
+        topicState: "awaiting_confirmation",
+        progressState: "awaiting_confirmation",
+      });
     } finally {
       await client.close();
     }

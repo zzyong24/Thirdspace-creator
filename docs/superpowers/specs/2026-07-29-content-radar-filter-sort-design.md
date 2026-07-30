@@ -2,7 +2,7 @@
 
 > Task: `T-622`  
 > 日期：2026-07-29  
-> 状态：待用户确认（逐字稿录入与选题后锁定规则已确认）
+> 状态：已确认，进入 BUILD（用户 2026-07-29 要求两个需求一起实现）
 > 上游：[内容雷达产品规格](2026-07-23-content-radar-restructure-design.md) · [服务契约](2026-07-23-content-radar-service-contract.md)
 
 ## 1. 用户要解决的问题
@@ -41,7 +41,7 @@
 - “逐字稿”“选题”改变集合，放左侧。
 - “排序”只改变顺序，放右侧，与筛选形成视觉分组。
 - “清除筛选”仅在任一筛选生效时出现；不重置搜索和当前来源。
-- 宽度不足时，两个筛选合并成一个“筛选 · N”按钮；排序继续独立显示。
+- 宽度不足时控件自然换行，筛选和排序仍全部可见、可操作。
 - 筛选、排序和搜索在切换分类/来源时保留，离开内容雷达后恢复默认，避免旧筛选长期造成“内容丢了”的错觉。
 
 ## 4. 筛选项
@@ -63,13 +63,18 @@
 | 用户看到的值 | 真实判定 |
 |---|---|
 | 全部 | 不限制 |
-| 尚未生成 | 没有可用候选，也没有已确认 transform；失败任务仍归此项并在卡片标出失败 |
-| 生成中 | 最新 transform 的执行任务为 `queued/running/pause_requested/cancel_requested` |
+| 尚未生成 | 没有成功候选、没有已确认 transform，且最新任务不处于活动或失败/受阻状态 |
+| 生成中 | 最新 transform 的执行任务为 `queued/running/pause_requested/paused/cancel_requested` |
 | 待确认 | 存在 `status=candidate` 且候选正文可用 |
 | 已转为选题 | 任一 transform 为 `confirmed` 且 `targetTopicId` 非空 |
 | 失败或受阻 | 没有已确认结果，且最新 transform 的任务为 `failed/blocked` |
 
 不直接使用含糊的“未转化”：一个候选已经生成但尚未确认时，它既不是“尚未生成”，也不是“已转为选题”。拆出“待确认”后，用户知道下一步该做什么。
+
+服务端只返回一个互斥 `topicState`，按以下优先级判定：`converted`（任一已确认）
+→ `awaiting_confirmation`（存在未取消的成功候选）→ `generating`（最新任务活动）
+→ `attention`（最新任务失败/受阻）→ `not_generated`。后续失败重试不得覆盖既有
+`converted`；已取消但曾成功生成的候选仍会锁定逐字稿，但不显示为“待确认”。
 
 ### 4.3 最常用组合
 
@@ -96,7 +101,7 @@
 
 - 内容卡右下角增加一个单一进度标签：`待转写 / 提取中 / 待生成选题 / 生成中 / 待确认 / 已转为选题 / 需要处理`。
 - 标签由服务端列表投影返回，不逐卡请求详情，不由前端拼状态。
-- 计数显示为“23 / 90 条内容”；左侧是筛选后总数，右侧是当前来源范围总数。
+- 计数显示当前服务端结果的“23 条真实内容”，不拿当前页数据伪装完整来源总数。
 - 搜索、筛选或排序变化时保留旧列表并显示轻量 loading；成功后原子替换，避免整页闪白。
 - 如果当前选中内容被筛掉，自动选中结果第一条；结果为空则清空详情并显示“没有符合条件的内容”和“清除筛选”。
 - 请求失败时恢复变更前的控件和值，保留旧列表，并提示“筛选失败，已保留原结果”。
@@ -116,9 +121,9 @@ type IntelligenceItemListQuery = {
     | "attention";
   topicState?:
     | "not_generated"
-    | "processing"
-    | "candidate"
-    | "confirmed"
+    | "generating"
+    | "awaiting_confirmation"
+    | "converted"
     | "attention";
 };
 ```
@@ -126,7 +131,7 @@ type IntelligenceItemListQuery = {
 列表行增加只读投影：
 
 ```ts
-type IntelligenceItemProgress = {
+type IntelligenceItemListRow = {
   transcriptState:
     | "not_extracted"
     | "processing"
@@ -134,16 +139,16 @@ type IntelligenceItemProgress = {
     | "attention";
   topicState:
     | "not_generated"
-    | "processing"
-    | "candidate"
-    | "confirmed"
+    | "generating"
+    | "awaiting_confirmation"
+    | "converted"
     | "attention";
-  actionState:
-    | "needs_transcript"
-    | "transcribing"
-    | "needs_topic"
-    | "generating_topic"
-    | "needs_confirmation"
+  progressState:
+    | "pending_transcript"
+    | "transcript_processing"
+    | "pending_topic"
+    | "topic_generating"
+    | "awaiting_confirmation"
     | "converted"
     | "attention";
 };
@@ -159,7 +164,7 @@ type IntelligenceItemProgress = {
 | 选题筛选 | `intelligence.items.list.topicState` |
 | 排序 | `intelligence.items.list.sort` |
 | 搜索 | `intelligence.items.list.query`，250ms debounce |
-| 状态标签 | 列表响应 `progress.actionState` |
+| 状态标签 | 列表响应 `progressState` |
 | 清除筛选 | 本地清除两个筛选值并重新请求同一 list operation |
 
 所有控件都有真实 operation；不画未接线按钮。
@@ -185,9 +190,9 @@ detail == null || detail.item.id == selectedId
 6. 正常宽度与最小桌面宽度均可操作；窄宽时控件折叠但不消失。
 7. 空结果、请求失败、处理中、失败受阻均有真实反馈与下一步。
 
-## 11. 待确认
+## 11. 已确认范围
 
-建议确认以下范围后进入 CONTRACT/BUILD：
+用户已确认以下范围并授权进入 CONTRACT/BUILD：
 
 1. 默认仍按“最新收录”，不默认按收藏或点赞。
 2. 采用两个可组合筛选（逐字稿、选题），并把“待确认”从“未转化”中独立出来。
@@ -241,7 +246,7 @@ detail == null || detail.item.id == selectedId
 
 已有逐字稿但尚未锁定时，在“替换逐字稿”旁显示“重新转写”：
 
-- 点击后确认“转写成功后会替换当前逐字稿”。
+- 点击后直接发起重新转写，并明确显示“成功后会替换当前逐字稿”。
 - 新转写成功前继续保留并显示当前正文。
 - 新转写失败时保留当前正文，只显示失败原因和重试入口。
 - 成功后原子替换当前正文；产品不提供版本历史或恢复旧稿入口。

@@ -279,6 +279,12 @@ export function createIntelligenceTransport(
               Parameters<IntelligenceService["listItems"]>[1]
             >["sort"];
             transcriptStatus?: string;
+            transcriptState?: NonNullable<
+              Parameters<IntelligenceService["listItems"]>[1]
+            >["transcriptState"];
+            topicState?: NonNullable<
+              Parameters<IntelligenceService["listItems"]>[1]
+            >["topicState"];
             page?: number;
             pageSize?: number;
           };
@@ -292,6 +298,10 @@ export function createIntelligenceTransport(
             ...(q.transcriptStatus
               ? { transcriptStatus: q.transcriptStatus }
               : {}),
+            ...(q.transcriptState
+              ? { transcriptState: q.transcriptState }
+              : {}),
+            ...(q.topicState ? { topicState: q.topicState } : {}),
             sort: q.sort ?? "newest",
             limit: pageSize,
             offset: (page - 1) * pageSize,
@@ -339,6 +349,7 @@ export function createIntelligenceTransport(
         case "intelligence.transcripts.uploadManual": {
           const b = (body ?? {}) as {
             itemId?: string;
+            inputMode?: "paste" | "file";
             format?: "txt" | "md" | "srt" | "vtt";
             fileName?: string;
             text?: string;
@@ -347,8 +358,13 @@ export function createIntelligenceTransport(
             data: {
               transcript: await service.uploadManualTranscript(ctx, {
                 itemId: b.itemId ?? "",
-                format: b.format ?? "txt",
-                fileName: b.fileName ?? "",
+                inputMode: b.inputMode ?? "paste",
+                ...(b.inputMode === "file"
+                  ? {
+                      format: b.format,
+                      fileName: b.fileName,
+                    }
+                  : {}),
                 text: b.text ?? "",
               }),
             },

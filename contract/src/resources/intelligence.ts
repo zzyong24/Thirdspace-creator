@@ -30,6 +30,28 @@ export const intelligenceTranscriptStatus = z.enum([
   "failed",
   "blocked",
 ]);
+export const intelligenceTranscriptState = z.enum([
+  "not_extracted",
+  "processing",
+  "extracted",
+  "attention",
+]);
+export const intelligenceTopicState = z.enum([
+  "not_generated",
+  "generating",
+  "awaiting_confirmation",
+  "converted",
+  "attention",
+]);
+export const intelligenceProgressState = z.enum([
+  "pending_transcript",
+  "transcript_processing",
+  "pending_topic",
+  "topic_generating",
+  "awaiting_confirmation",
+  "converted",
+  "attention",
+]);
 export const adapterStatus = z.enum([
   "succeeded_with_items",
   "succeeded_no_change",

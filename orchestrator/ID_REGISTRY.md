@@ -528,7 +528,8 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | FR-CR-019 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-004 |
 | FR-CR-020 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
 | FR-CR-021 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-003, DEC-CR-007, DEC-CR-015 |
-| FR-CR-022 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-007, DEC-CR-014, DEC-CR-017 |
+| FR-CR-022 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-007, DEC-CR-014, DEC-CR-017, DEC-CR-018 |
+| FR-CR-023 | requirement | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-018 |
 | NFR-CR-001 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
 | NFR-CR-002 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | DEC-CR-004 |
 | NFR-CR-003 | nfr | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
@@ -606,6 +607,8 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | API-CR-032 | api | docs/superpowers/specs/2026-07-23-content-radar-service-contract.md | FR-CR-022 |
 | TEST-CR-001 | test | backend/src/modules/intelligence/intelligence.service.test.ts | FR-CR-022, API-CR-032 |
 | TEST-CR-002 | test | frontend/src/features/intelligence/intelligence-workbench.test.tsx | FR-CR-022, FLOW-CR-010, AC-CR-025 |
+| TEST-CR-003 | test | backend/src/modules/intelligence/intelligence.service.test.ts | FR-CR-023, API-CR-015, AC-CR-026 |
+| TEST-CR-004 | test | frontend/src/features/intelligence/intelligence-workbench.test.tsx | FR-CR-023, API-CR-015, AC-CR-026 |
 | RAT-CR-001 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-003 |
 | RAT-CR-002 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-004 |
 | RAT-CR-003 | test | docs/research/2026-07-23-content-radar-rat.md | FR-CR-010 |

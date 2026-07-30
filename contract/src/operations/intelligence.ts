@@ -8,12 +8,15 @@ import {
   intelligenceCollectionResource,
   intelligenceCollectorResource,
   intelligenceItemResource,
+  intelligenceProgressState,
   intelligenceRunStatus,
   intelligenceSourceConfig,
   intelligenceSourceMembershipResource,
   intelligenceSourceResource,
   intelligenceSourceStatus,
   intelligenceSourceType,
+  intelligenceTopicState,
+  intelligenceTranscriptState,
   intelligenceTranscriptStatus,
   intelligenceTransformResource,
   itemMetricSnapshotResource,
@@ -369,19 +372,26 @@ export const intelligenceOperations = {
         "growth_desc",
         "published_desc",
         "engagement_desc",
+        "collect_desc",
+        "like_desc",
       ]),
       cursor: z.string().optional(),
       transcriptStatus: intelligenceTranscriptStatus.optional(),
+      transcriptState: intelligenceTranscriptState.optional(),
+      topicState: intelligenceTopicState.optional(),
     }),
     response: z
       .object({
         item: intelligenceItemResource,
         latestMetric: itemMetricSnapshotResource.nullable(),
         sourceCount: z.number().int().positive(),
+        transcriptState: intelligenceTranscriptState,
+        topicState: intelligenceTopicState,
+        progressState: intelligenceProgressState,
       })
       .strict(),
     isList: true,
-    fr: ["FR-CR-005", "FR-CR-011", "FR-CR-019"],
+    fr: ["FR-CR-005", "FR-CR-011", "FR-CR-019", "FR-CR-023"],
   }),
   getIntelligenceItem: defineEndpoint({
     id: "intelligence.items.get",
@@ -439,14 +449,24 @@ export const intelligenceOperations = {
     id: "intelligence.transcripts.uploadManual",
     method: "POST",
     path: "/intelligence/transcripts/upload-manual",
-    body: z
-      .object({
-        itemId: id,
-        format: z.enum(["txt", "md", "srt", "vtt"]),
-        fileName: z.string().trim().min(1).max(255),
-        text: z.string().min(1).max(500_000),
-      })
-      .strict(),
+    body: z.discriminatedUnion("inputMode", [
+      z
+        .object({
+          itemId: id,
+          inputMode: z.literal("paste"),
+          text: z.string().min(1).max(500_000),
+        })
+        .strict(),
+      z
+        .object({
+          itemId: id,
+          inputMode: z.literal("file"),
+          format: z.enum(["txt", "md", "srt", "vtt"]),
+          fileName: z.string().trim().min(1).max(255),
+          text: z.string().min(1).max(500_000),
+        })
+        .strict(),
+    ]),
     response: z.object({ transcript: itemTranscriptResource }).strict(),
     fr: ["FR-CR-022"],
   }),

@@ -55,7 +55,7 @@
 
 ### `DEC-CR-014` 外部视频转选题的证据门
 
-来自他人的外部视频必须保留可点击 canonical URL；只有标题/摘要不得进入选题生成。`previewTopic` 只能消费用户手动取得且状态为 `done` 的明确逐字稿版本，先产结构拆解，再产选题候选。transform 固定 `sourceSnapshotId + transcriptVersionId + transcriptHash + positioningVersionId`；Project 创建后只通过该 transform 派生来源引用，避免客户端拼出不一致证据。逐字稿版本是不可变来源证据，不是 Project 稿件。
+来自他人的外部视频必须保留可点击 canonical URL；只有标题/摘要不得进入选题生成。`previewTopic` 只能消费状态为 `done` 的明确逐字稿，先产结构拆解，再产选题候选。transform 固定 `sourceSnapshotId + transcriptHash + positioningVersionId`；候选成功后逐字稿永久锁定，Project 创建后只通过该 transform 派生来源引用。
 
 ### `DEC-CR-015` 抖音分享链接单条建档
 
@@ -195,7 +195,7 @@ claim 必须以事务比较更新实现；lease 过期由 startup recovery 重�
 - `ItemTranscript.id + contentHash` 是不可变版本锚；状态到 `done` 后禁止更新 `text/contentHash`，重新转写新增行并填写 `supersedesVersionId`。
 - `SyncRun.executionTaskId: string`。
 - `IntelligenceTransform.idempotencyKey: string`；`decompositionSnapshot` 至少包含 `hook`、`structureSteps[]`、`coreClaims[]`、`reusablePattern`、`factRisks[]`。
-- `ProjectIntelligenceReference` 唯一键：`projectId + transformId`；其 item、snapshot、URL、定位版本和逐字稿版本全部从已确认 transform 派生，不接受客户端分别改写。
+- `ProjectIntelligenceReference` 唯一键：`projectId + transformId`；其 item、snapshot、URL、定位版本和逐字稿哈希全部从已确认 transform 派生，不接受客户端分别改写。
 - `IntelligenceSourceCollectionMembership` 唯一键：`userId + accountId + sourceId + collectionId`；重复分享导入不得重复关联。
 
 数据库唯一锚：
@@ -263,7 +263,7 @@ type Result<T> =
 | `VIDEO_UNAVAILABLE` | 424 | 分享链接对应作品已失效、不可访问或无法确认真实作品身份 |
 | `CANDIDATE_NOT_READY` | 409 | 候选任务未成功 |
 | `TOPIC_NOT_CONFIRMED` | 409 | 未确认选题不能挂 Project 引用 |
-| `TRANSCRIPT_REQUIRED` | 424 | 尚无状态为 `done` 的用户手动逐字稿版本，不能拆解或转选题 |
+| `TRANSCRIPT_REQUIRED` | 424 | 尚无状态为 `done` 的逐字稿，不能拆解或转选题 |
 | `SIMILARITY_HIGH` | 422 | 高相似候选禁止采纳 |
 | `CANDIDATE_STALE` | 409 | Project/reference 已变更，候选过期 |
 | `INVENTORY_STALE` | 409 | 迁移 inventory hash 已失效 |
@@ -294,14 +294,14 @@ type Result<T> =
 | `API-CR-012` | `intelligence.runs.start` | `{sourceId,trigger:"manual"|"initial"|"retry",idempotencyKey}` | `SyncRun + ExecutionTask` | `SOURCE_PAUSED`、`RUN_ALREADY_ACTIVE` | 原子创建；`FR-CR-004/014/020` |
 | `API-CR-013` | `intelligence.runs.list` | `{sourceId,cursor?,status?}` | runs + step counts | 公共错误 | 只读 |
 | `API-CR-014` | `intelligence.runs.get` | `{runId}` | run、events、adapter evidence、next action | 公共错误 | 安全诊断；`FR-CR-014` |
-| `API-CR-015` | `intelligence.items.list` | `{accountId,collectionId?,sourceId?,query?,sort,cursor?,transcriptStatus?}` | paged items（外部视频含 `canonicalUrl` 与 `canTransformToTopic`）+ latest metrics + source count | 公共错误 | P95 目标；`FR-CR-005/011/019` |
+| `API-CR-015` | `intelligence.items.list` | `{accountId,collectionId?,sourceId?,query?,sort:"newest"|"collect_desc"|"like_desc",transcriptState?,topicState?,cursor?}` | paged items + latest metrics + source count + 服务端 `transcriptState/topicState/progressState` | 公共错误 | 未知互动值最后，同值按 `capturedAt DESC,itemId ASC`；`FR-CR-005/011/019/023` |
 | `API-CR-016` | `intelligence.items.get` | `{itemId}` | item、latest/series metrics、observations、snapshots、transcript、transforms | 公共错误 | `FR-CR-005/006/011` |
-| `API-CR-017` | `intelligence.transcripts.enqueue` | `{itemIds:string[],idempotencyKey}` | tasks、费用预估、skipped | `NO_AUDIO`、`MODEL_NOT_CONFIGURED` | 仅用户手动；`FR-CR-007/020` |
+| `API-CR-017` | `intelligence.transcripts.enqueue` | `{itemIds:string[],idempotencyKey}` | tasks、费用预估、skipped | `NO_AUDIO`、`MODEL_NOT_CONFIGURED`、`TRANSCRIPT_LOCKED`、`TRANSCRIPT_TOPIC_BUSY` | 仅用户手动；成功候选前允许对 `done` 重新转写并保留旧正文至成功；`FR-CR-007/020/022` |
 | `API-CR-018` | `execution.tasks.command` | `{taskIds,command:"pause"|"resume"|"cancel"|"retry",idempotencyKey}` | tasks | `ILLEGAL_TRANSITION` | 批量原子归属校验；`FR-CR-020` |
 | `API-CR-019` | `execution.tasks.list` | `{accountId,kind?,ownerId?,status?,cursor?}` | tasks + queue position | 公共错误 | 只读 |
-| `API-CR-020` | `intelligence.transforms.previewTopic` | `{itemId,sourceSnapshotId,transcriptVersionId,positioningVersionId,idempotencyKey}` | candidate transform/task；成功输出结构拆解、选题候选、`canonicalUrl` 与完整证据锚 | `SOURCE_URL_REQUIRED`、`TRANSCRIPT_REQUIRED`、`POSITIONING_MISSING`、`SNAPSHOT_UNAVAILABLE` | 仅消费 `done` 逐字稿；取消前零 topic 写入；`FR-CR-012` |
+| `API-CR-020` | `intelligence.transforms.previewTopic` | `{itemId,sourceSnapshotId,positioningVersionId,idempotencyKey}` | candidate transform/task；成功输出结构拆解、选题候选、`canonicalUrl` 与 `transcriptHash` | `SOURCE_URL_REQUIRED`、`TRANSCRIPT_REQUIRED`、`POSITIONING_MISSING`、`SNAPSHOT_UNAVAILABLE` | 仅消费 `done` 逐字稿；候选落地时校验哈希并永久锁定；`FR-CR-012` |
 | `API-CR-021` | `intelligence.transforms.confirmTopic` | `{transformId,editedCandidate,idempotencyKey}` | topic + provenance（含可点击 `canonicalUrl`、transform/逐字稿证据） | `CANDIDATE_NOT_READY` | backend candidate service 写入；选题读模型持续暴露原视频链接；`FR-CR-012` |
-| `API-CR-022` | `projects.intelligence.attach` | `{projectId,topicId,transformId,idempotencyKey}` | reference（服务端派生 item/snapshot/URL/定位/逐字稿版本） | `TOPIC_NOT_CONFIRMED`、`CANDIDATE_STALE` | 创建 Project 后调用；拒绝 topic/transform 不匹配；`FR-CR-013` |
+| `API-CR-022` | `projects.intelligence.attach` | `{projectId,topicId,transformId,idempotencyKey}` | reference（服务端派生 item/snapshot/URL/定位/逐字稿哈希） | `TOPIC_NOT_CONFIRMED`、`CANDIDATE_STALE` | 创建 Project 后调用；拒绝 topic/transform 不匹配；`FR-CR-013` |
 | `API-CR-023` | `projects.scripts.generateCandidate` | `{projectId,referenceIds,strategy,idempotencyKey}` | execution task | `TRANSCRIPT_REQUIRED`、`MODEL_NOT_CONFIGURED` | 只产候选；`FR-CR-013/020` |
 | `API-CR-024` | `projects.scripts.acceptCandidate` | `{projectId,candidateTaskId,editedText?,idempotencyKey}` | artifact version + provenance | `SIMILARITY_HIGH`、`CANDIDATE_STALE` | 用户采纳；`FR-CR-013` |
 | `API-CR-025` | `intelligence.migrations.inventory` | `{accountId}` | 旧域计数、writers/readers、风险 | 公共错误 | 只读；`FR-CR-016` |
@@ -311,7 +311,7 @@ type Result<T> =
 | `API-CR-029` | `browserSessions.openLogin` | `{accountId,site,returnTo}` | `{browserSessionRef,status}` | `SESSION_LAUNCH_FAILED` | 外部副作用仅打开登录页 |
 | `API-CR-030` | `browserSessions.clear` | `{browserSessionRef,confirmToken}` | `{cleared,blockedSources}` | `CONFIRMATION_REQUIRED` | 清会话后来源 blocked |
 | `API-CR-031` | `intelligence.items.importDouyinShare` | `{accountId,collectionId,shareInput,idempotencyKey}` | `{task}`；任务成功结果为 `{item,creatorSource,membership,observation,sourceSnapshot,deduplicated,transcriptStatus}` | `SHARE_LINK_INVALID`、`VIDEO_UNAVAILABLE`、adapter login/captcha errors | `shareInput` 接受单 URL 或含 URL 的抖音分享文本；幂等创建持久 `share_import` task；完成时单事务复用/创建作者与 item；不得创建 transcript task；`FR-CR-021` |
-| `API-CR-032` | `intelligence.transcripts.uploadManual` | `{itemId,format:"txt"|"md"|"srt"|"vtt",fileName,text}`；`text` UTF-8 ≤2 MiB 且 ≤500,000 字符 | `{transcript}` | `TRANSCRIPT_FILE_UNSUPPORTED`、`TRANSCRIPT_FILE_EMPTY`、`TRANSCRIPT_FILE_TOO_LARGE`、`TRANSCRIPT_BUSY`、`TRANSCRIPT_EXISTS` | backend 按收到的正文重算 UTF-8 字节数，不验证原文件大小；只写当前账号作品的既有 transcript；相同 `done` 正文幂等返回，不同正文拒绝；不保存文件、不创建 task；`FR-CR-022` |
+| `API-CR-032` | `intelligence.transcripts.uploadManual` | `{itemId,inputMode:"paste",text}` 或 `{itemId,inputMode:"file",format,fileName,text}`；`text` UTF-8 ≤2 MiB 且 ≤500,000 字符 | `{transcript}` | `TRANSCRIPT_FILE_UNSUPPORTED_FORMAT`、`TRANSCRIPT_FILE_EXTENSION_MISMATCH`、`TRANSCRIPT_FILE_EMPTY`、`TRANSCRIPT_FILE_INVALID_ENCODING`、`TRANSCRIPT_FILE_TOO_LARGE`、`TRANSCRIPT_BUSY`、`TRANSCRIPT_TOPIC_BUSY`、`TRANSCRIPT_LOCKED` | 成功候选前可替换同一 transcript；候选成功后永久拒绝；不保存文件、不创建 task；`FR-CR-022` |
 
 ## 6. 适配器写入协议
 
@@ -365,7 +365,7 @@ type Result<T> =
 - 迁移每个源行记录 old key→new id；重复执行返回同一映射。
 - 回滚先冻结新写；旧域不能表达的 observation/snapshot/run 导出保全报告，绝不删除。
 - 已被 topic/Project 引用的最小 snapshot 不随来源删除。
-- 已被 transform/Project 引用的逐字稿版本、内容哈希和 canonical URL 不随重新转写或来源删除而覆盖；新转写只能新增版本。
+- 首个成功候选写入 transform 后，逐字稿、内容哈希和 canonical URL 永久固定；backend 拒绝重新转写或覆盖，不产生新版本。
 - 未引用全文到达 retention deadline 后清理，保留 hash、URL、捕获时间和引用摘要。
 
 ## 9. 示例
@@ -403,7 +403,7 @@ type Result<T> =
 
 ### 9.3 选题确认
 
-preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot 与状态为 `done` 的 `transcriptVersionId`。preview 返回结构拆解、transform candidate 与固定证据锚；取消不调用 confirm。confirm 使用同一 `idempotencyKey` 重复提交只返回首次 topic，不创建 Project 或稿件；选题卡通过 provenance 显示原视频链接。
+preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot 与状态为 `done` 的逐字稿。preview 返回结构拆解、transform candidate 与固定 `transcriptHash`；候选成功后逐字稿永久锁定。confirm 使用同一 `idempotencyKey` 重复提交只返回首次 topic，不创建 Project 或稿件；选题卡通过 provenance 显示原视频链接。
 
 ### 9.4 全 operation 最小实例
 
@@ -428,7 +428,7 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 | `API-CR-017` | 批量转写实例见 §9.2 → queued/skipped/blocked per item |
 | `API-CR-018` | `{taskIds:["task_1"],command:"pause",idempotencyKey:"pause:task_1"}` → `pause_requested` |
 | `API-CR-019` | `{kind:"transcribe",status:"queued"}` → tasks + queue positions |
-| `API-CR-020` | `{itemId:"item_1",sourceSnapshotId:"snap_1",transcriptVersionId:"txv_1",positioningVersionId:"pos_v2",idempotencyKey:"topic-preview:1"}` → decomposition + candidate task + immutable evidence |
+| `API-CR-020` | `{itemId:"item_1",sourceSnapshotId:"snap_1",positioningVersionId:"pos_v2",idempotencyKey:"topic-preview:1"}` → decomposition + candidate task + immutable transcript hash evidence |
 | `API-CR-021` | `{transformId:"tr_1",editedCandidate:{title:"我的 AI 工作流"},idempotencyKey:"topic-confirm:1"}` → one topic + clickable source provenance |
 | `API-CR-022` | `{projectId:"prj_1",topicId:"topic_1",transformId:"tr_1",idempotencyKey:"attach:1"}` → one server-derived reference |
 | `API-CR-023` | `{projectId:"prj_1",referenceIds:["ref_1"],strategy:"结构借鉴",idempotencyKey:"script:1"}` → candidate task |
@@ -440,7 +440,7 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 | `API-CR-029` | `{accountId:"acc_01",site:"douhot.douyin.com",returnTo:"/radar"}` → opened `browserSessionRef` |
 | `API-CR-030` | `{browserSessionRef:"douyin-profile:acc_01",confirmToken:"ct_2"}` → cleared + blocked source ids |
 | `API-CR-031` | `{accountId:"acc_01",collectionId:"col_ai",shareInput:"https://v.douyin.com/...",idempotencyKey:"share:acc01:..."}` → queued share_import task；成功结果为 canonical item + reused/created creator + membership；zero transcript tasks |
-| `API-CR-032` | `{itemId:"item_1",format:"srt",fileName:"访谈.srt",text:"第一句\\n第二句"}` → 同一 item 的 transcript=`done/manual`；再次提交相同正文返回既有资源，不创建 execution task |
+| `API-CR-032` | `{itemId:"item_1",inputMode:"paste",text:"第一句\\n第二句"}` 或 `inputMode:"file"` 导入 → 同一 item 的 transcript=`done/manual`；成功候选前可替换，候选成功后 `TRANSCRIPT_LOCKED` |
 
 ## 10. 逐 FR 数据链路可行性
 
@@ -457,7 +457,7 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 | `FR-CR-009` | 用户录入/授权第三方 | `RAT-CR-006/007` + 测试预览交互 | sources/items/snapshots/runs | `API-CR-006/008/015/016` | 确认监控起 | HARD：URL 安全/登录 reader 后端化；`PKG-CR-WEB`，Build 安全 Gate 前 |
 | `FR-CR-010` | 授权第三方 | `RAT-CR-003`：21 条热点宝结构化候选 | source/run/item/observation | `API-CR-008/012/015/016` | 官方可覆盖最近 48h | HARD：adapter + 修订判定函数；`PKG-CR-INGEST`，首个真实 canary 前 |
 | `FR-CR-011` | 系统内生 | item 聚合定义 | item/metrics/transcript/snapshot | `API-CR-016` | 随数据到达 | feasible |
-| `FR-CR-012` | 系统内生 | canonical URL + 手动逐字稿版本 + 定位版本 + 候选确认门 | transcript/version + decomposition transform + topic provenance | `API-CR-020/021` | 逐字稿 `done` 后 | HARD：不可变证据锚、结构拆解与跨模块 service port；`PKG-CR-TRANSFORM`，Build slice 内 |
+| `FR-CR-012` | 系统内生 | canonical URL + 当前逐字稿 + 定位版本 + 候选确认门 | transcript + decomposition transform + topic provenance | `API-CR-020/021` | 逐字稿 `done` 后 | HARD：候选哈希证据锚、永久锁与跨模块 service port；`PKG-CR-TRANSFORM`，Build slice 内 |
 | `FR-CR-013` | 系统内生 | Project/artifact/AI task 已有 | server-derived reference + candidate task + artifact version | `API-CR-022..024` | Project 创建后 | HARD：选题证据透传、相似性与采纳事务；`PKG-CR-TRANSFORM`，Build 安全测试前 |
 | `FR-CR-014` | 系统内生 | adapter envelope/run event 定义 | runs/events/tasks | `API-CR-013/014/019` | 每次运行 | feasible |
 | `FR-CR-015` | 用户录入/系统内生 | create source 监控开关交互 | source + schedule | `API-CR-008/010` | 创建后 | feasible |
@@ -467,7 +467,8 @@ preview 前置条件是 item 有可点击 canonical URL、可用 source snapshot
 | `FR-CR-019` | 系统内生 | 多来源 item/observation/snapshot 模型 | item/observation/snapshot | `API-CR-015/016` | 首次发现起 | HARD：跨源合并与冲突队列；`PKG-CR-PROVENANCE`，Build fixture 前 |
 | `FR-CR-020` | 系统内生 | execution task 状态机 | execution_tasks | `API-CR-018/019` + owner APIs | 任务创建起 | HARD：DB lease/heartbeat/recovery；`PKG-CR-TASKS`，任何长任务接入前 |
 | `FR-CR-021` | 用户录入/授权第三方 | 抖音分享链接 + 所选分类；现有单视频 reader | execution task + source membership + item + observation + snapshot | `API-CR-031` | 用户提交后持久排队，任务完成时单事务 | HARD：短链安全解析、author/item 双锚幂等且零自动转写；`PKG-CR-INGEST`，Build 单条导入测试前 |
-| `FR-CR-022` | 用户本地文件 | 浏览器 File API 读取 UTF-8 文本；无外部服务 | 既有 item transcript 行 | `API-CR-032` 写后返回 + `API-CR-016` 刷新读回 | 用户选择文件时即时 | feasible：客户端格式清理 + backend 原子状态守卫；不需要对象存储、迁移或异步任务 |
+| `FR-CR-022` | 用户粘贴/本地文件/ASR | 编辑框或 File API；既有转写任务 | 既有 item transcript 行 | `API-CR-017/032` 写后返回 + `API-CR-016` 读回 | 候选生成前可纠错 | feasible：复用唯一 transcript；transform output + task 状态作锁，无 schema 变更 |
+| `FR-CR-023` | 系统内生 | transcript/transform/task/latest metric 真相 | 不新增存储 | `API-CR-015` 服务端组合投影 | 数据到达即查 | feasible：单次列表读取后确定性筛选排序；无逐卡详情请求 |
 
 没有 FR 判 `cut`，没有无合法来源的 HARD。所有 HARD 都有具体候选解、归属 PKG 和验证时点。
 

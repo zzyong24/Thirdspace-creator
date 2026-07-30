@@ -159,4 +159,76 @@ describe("T-482 内容雷达 contract", () => {
     expect(task.maxAttempts).toBe(3);
     expect(task.errorCode).toBeNull();
   });
+
+  it("[T-622] 列表契约接受组合筛选和收藏/点赞排序，并返回服务端进度投影", () => {
+    expect(
+      ENDPOINTS.listIntelligenceItems.query.safeParse({
+        accountId: "account_1",
+        sort: "collect_desc",
+        transcriptState: "extracted",
+        topicState: "not_generated",
+      }).success,
+    ).toBe(true);
+    expect(
+      ENDPOINTS.listIntelligenceItems.query.safeParse({
+        accountId: "account_1",
+        sort: "like_desc",
+        topicState: "converted",
+      }).success,
+    ).toBe(true);
+    expect(
+      ENDPOINTS.listIntelligenceItems.response.safeParse({
+        item: {
+          id: "item_1",
+          userId: "user_1",
+          accountId: "account_1",
+          type: "video",
+          platform: "douyin",
+          externalId: "1",
+          canonicalUrl: "https://www.douyin.com/video/1",
+          authorId: null,
+          authorName: "作者",
+          title: "作品",
+          summary: null,
+          coverUrl: null,
+          coverAssetId: null,
+          publishedAt: null,
+          durationMs: null,
+          capturedAt: "2026-07-29T00:00:00.000Z",
+          availability: "available",
+        },
+        latestMetric: null,
+        sourceCount: 1,
+        transcriptState: "extracted",
+        topicState: "not_generated",
+        progressState: "pending_topic",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("[T-622] 逐字稿写入契约区分粘贴与文件导入", () => {
+    expect(
+      ENDPOINTS.uploadManualIntelligenceTranscript.body.safeParse({
+        itemId: "item_1",
+        inputMode: "paste",
+        text: "直接粘贴的逐字稿",
+      }).success,
+    ).toBe(true);
+    expect(
+      ENDPOINTS.uploadManualIntelligenceTranscript.body.safeParse({
+        itemId: "item_1",
+        inputMode: "file",
+        format: "srt",
+        fileName: "访谈.srt",
+        text: "文件导入的逐字稿",
+      }).success,
+    ).toBe(true);
+    expect(
+      ENDPOINTS.uploadManualIntelligenceTranscript.body.safeParse({
+        itemId: "item_1",
+        inputMode: "file",
+        text: "缺少文件证据",
+      }).success,
+    ).toBe(false);
+  });
 });

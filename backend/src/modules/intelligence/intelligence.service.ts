@@ -7,6 +7,7 @@ import {
   benchmarkWorks,
   desc,
   eq,
+  executionTasks,
   favoritesFolders,
   favoritesItems,
   inArray,
@@ -58,7 +59,95 @@ type RunEventRow = typeof intelligenceSyncRunEvents.$inferSelect;
 type ObservationRow = typeof itemSourceObservations.$inferSelect;
 type SnapshotRow = typeof sourceSnapshots.$inferSelect;
 type TransformRow = typeof intelligenceTransforms.$inferSelect;
+type ExecutionTaskRow = typeof executionTasks.$inferSelect;
 type MigrationLedgerRow = typeof intelligenceMigrationLedgers.$inferSelect;
+
+type TranscriptState =
+  | "not_extracted"
+  | "processing"
+  | "extracted"
+  | "attention";
+type TopicState =
+  | "not_generated"
+  | "generating"
+  | "awaiting_confirmation"
+  | "converted"
+  | "attention";
+type ProgressState =
+  | "pending_transcript"
+  | "transcript_processing"
+  | "pending_topic"
+  | "topic_generating"
+  | "awaiting_confirmation"
+  | "converted"
+  | "attention";
+
+const ACTIVE_TOPIC_TASK_STATUSES = new Set([
+  "queued",
+  "running",
+  "pause_requested",
+  "paused",
+  "cancel_requested",
+]);
+
+function itemWorkflowProjection(
+  transcript: TranscriptRow | undefined,
+  transforms: TransformRow[],
+  taskStatusById: Map<string, ExecutionTaskRow["status"]>,
+): {
+  transcriptState: TranscriptState;
+  topicState: TopicState;
+  progressState: ProgressState;
+} {
+  const transcriptState: TranscriptState =
+    transcript?.status === "queued" || transcript?.status === "running"
+      ? "processing"
+      : transcript?.status === "done" && Boolean(transcript.text?.trim())
+        ? "extracted"
+        : transcript?.status === "failed" ||
+            transcript?.status === "blocked"
+          ? "attention"
+          : "not_extracted";
+
+  const confirmed = transforms.some(
+    (transform) =>
+      transform.status === "confirmed" && Boolean(transform.targetTopicId),
+  );
+  const candidate = transforms.some(
+    (transform) =>
+      transform.status === "candidate" &&
+      transform.outputSnapshot !== null,
+  );
+  const latest = transforms[0];
+  const latestTaskStatus = latest?.aiTaskId
+    ? taskStatusById.get(latest.aiTaskId)
+    : undefined;
+  const topicState: TopicState = confirmed
+    ? "converted"
+    : candidate
+      ? "awaiting_confirmation"
+      : latestTaskStatus && ACTIVE_TOPIC_TASK_STATUSES.has(latestTaskStatus)
+        ? "generating"
+        : latestTaskStatus === "failed" || latestTaskStatus === "blocked"
+          ? "attention"
+          : "not_generated";
+
+  const progressState: ProgressState =
+    topicState === "converted"
+      ? "converted"
+      : topicState === "awaiting_confirmation"
+        ? "awaiting_confirmation"
+        : topicState === "generating"
+          ? "topic_generating"
+          : transcriptState === "processing"
+            ? "transcript_processing"
+            : transcriptState === "attention" || topicState === "attention"
+              ? "attention"
+              : transcriptState === "not_extracted"
+                ? "pending_transcript"
+                : "pending_topic";
+  return { transcriptState, topicState, progressState };
+}
 
 export interface ReusableTopicDecomposition {
   hook: string;
@@ -842,6 +931,49 @@ export function createIntelligenceService(
       .limit(1);
     if (!row) throw new OwnershipError("Intelligence transform not found");
     return row;
+  }
+
+  async function transcriptTopicLock(
+    ctx: RequestContext,
+    itemId: string,
+  ): Promise<{ locked: boolean; topicBusy: boolean }> {
+    const accountId = await account(ctx, "intelligence.transcript.lock");
+    const transforms = await db
+      .select()
+      .from(intelligenceTransforms)
+      .where(
+        and(
+          eq(intelligenceTransforms.itemId, itemId),
+          eq(intelligenceTransforms.userId, ctx.userId),
+          eq(intelligenceTransforms.accountId, accountId),
+        ),
+      )
+      .orderBy(desc(intelligenceTransforms.createdAt));
+    if (transforms.some((transform) => transform.outputSnapshot !== null)) {
+      return { locked: true, topicBusy: false };
+    }
+    const taskIds = transforms
+      .map((transform) => transform.aiTaskId)
+      .filter((id): id is string => Boolean(id));
+    if (taskIds.length === 0) {
+      return { locked: false, topicBusy: false };
+    }
+    const tasks = await db
+      .select({ status: executionTasks.status })
+      .from(executionTasks)
+      .where(
+        and(
+          eq(executionTasks.userId, ctx.userId),
+          eq(executionTasks.accountId, accountId),
+          inArray(executionTasks.id, taskIds),
+        ),
+      );
+    return {
+      locked: false,
+      topicBusy: tasks.some((task) =>
+        ACTIVE_TOPIC_TASK_STATUSES.has(task.status),
+      ),
+    };
   }
 
   async function ensureSourceMembership(
@@ -2728,15 +2860,38 @@ export function createIntelligenceService(
         ctx,
         input.taskId,
       );
+      const [current] = await db
+        .select()
+        .from(itemTranscripts)
+        .where(eq(itemTranscripts.itemId, target.itemId))
+        .limit(1);
+      const retainPrevious =
+        input.status !== "done" && Boolean(current?.text?.trim());
       await db
         .update(itemTranscripts)
         .set({
-          status: input.status,
-          text: input.status === "done" ? (input.text ?? null) : null,
-          source: "manual",
-          provider: input.provider ?? null,
-          model: input.model ?? null,
-          language: input.language ?? null,
+          status: retainPrevious ? "done" : input.status,
+          text:
+            input.status === "done"
+              ? (input.text ?? null)
+              : retainPrevious
+                ? (current?.text ?? null)
+                : null,
+          source:
+            input.status === "done"
+              ? "asr"
+              : retainPrevious
+                ? (current?.source ?? null)
+                : "asr",
+          provider: retainPrevious
+            ? (current?.provider ?? null)
+            : (input.provider ?? null),
+          model: retainPrevious
+            ? (current?.model ?? null)
+            : (input.model ?? null),
+          language: retainPrevious
+            ? (current?.language ?? null)
+            : (input.language ?? null),
           completedAt: now(),
           errorCode: input.errorCode ?? null,
           updatedAt: now(),
@@ -2792,8 +2947,12 @@ export function createIntelligenceService(
           | "newest"
           | "growth_desc"
           | "published_desc"
-          | "engagement_desc";
+          | "engagement_desc"
+          | "collect_desc"
+          | "like_desc";
         transcriptStatus?: string;
+        transcriptState?: TranscriptState;
+        topicState?: TopicState;
         limit?: number;
         offset?: number;
       } = {},
@@ -2892,6 +3051,9 @@ export function createIntelligenceService(
             eq(itemTranscripts.accountId, accountId),
           ),
         );
+      const transcriptByItem = new Map(
+        transcripts.map((transcript) => [transcript.itemId, transcript]),
+      );
       if (query.transcriptStatus) {
         const allowedItems = new Set(
           transcripts
@@ -2899,6 +3061,64 @@ export function createIntelligenceService(
             .map((row) => row.itemId),
         );
         rows = rows.filter((item) => allowedItems.has(item.id));
+      }
+      const transforms = await db
+        .select()
+        .from(intelligenceTransforms)
+        .where(
+          and(
+            eq(intelligenceTransforms.userId, ctx.userId),
+            eq(intelligenceTransforms.accountId, accountId),
+          ),
+        )
+        .orderBy(desc(intelligenceTransforms.createdAt));
+      const transformsByItem = new Map<string, TransformRow[]>();
+      for (const transform of transforms) {
+        const current = transformsByItem.get(transform.itemId) ?? [];
+        current.push(transform);
+        transformsByItem.set(transform.itemId, current);
+      }
+      const taskIds = transforms
+        .map((transform) => transform.aiTaskId)
+        .filter((id): id is string => Boolean(id));
+      const topicTasks =
+        taskIds.length > 0
+          ? await db
+              .select()
+              .from(executionTasks)
+              .where(
+                and(
+                  eq(executionTasks.userId, ctx.userId),
+                  eq(executionTasks.accountId, accountId),
+                  inArray(executionTasks.id, taskIds),
+                ),
+              )
+          : [];
+      const taskStatusById = new Map(
+        topicTasks.map((task) => [task.id, task.status]),
+      );
+      const projectionByItem = new Map(
+        rows.map((item) => [
+          item.id,
+          itemWorkflowProjection(
+            transcriptByItem.get(item.id),
+            transformsByItem.get(item.id) ?? [],
+            taskStatusById,
+          ),
+        ]),
+      );
+      if (query.transcriptState) {
+        rows = rows.filter(
+          (item) =>
+            projectionByItem.get(item.id)?.transcriptState ===
+            query.transcriptState,
+        );
+      }
+      if (query.topicState) {
+        rows = rows.filter(
+          (item) =>
+            projectionByItem.get(item.id)?.topicState === query.topicState,
+        );
       }
       const metrics = await db
         .select()
@@ -2933,7 +3153,7 @@ export function createIntelligenceService(
           );
         }
       }
-      const score = (item: ItemRow) => {
+      const metricSortValue = (item: ItemRow): number | null => {
         const metric = latestMetric.get(item.id);
         if (query.sort === "engagement_desc") {
           return (
@@ -2943,23 +3163,50 @@ export function createIntelligenceService(
             (metric?.shareCount ?? 0)
           );
         }
+        if (query.sort === "collect_desc") {
+          return metric?.collectCount ?? null;
+        }
+        if (query.sort === "like_desc") {
+          return metric?.likeCount ?? null;
+        }
         return Date.parse(
           query.sort === "published_desc"
             ? (item.publishedAt ?? item.capturedAt)
             : item.capturedAt,
         );
       };
-      rows.sort((left, right) => score(right) - score(left));
+      rows.sort((left, right) => {
+        const leftValue = metricSortValue(left);
+        const rightValue = metricSortValue(right);
+        if (leftValue === null && rightValue !== null) return 1;
+        if (leftValue !== null && rightValue === null) return -1;
+        if (
+          leftValue !== null &&
+          rightValue !== null &&
+          leftValue !== rightValue
+        ) {
+          return rightValue - leftValue;
+        }
+        const captured =
+          Date.parse(right.capturedAt) - Date.parse(left.capturedAt);
+        return captured !== 0 ? captured : left.id.localeCompare(right.id);
+      });
       const offset = Math.max(0, query.offset ?? 0);
       const limit = Math.max(1, query.limit ?? 20);
       return {
-        rows: rows.slice(offset, offset + limit).map((item) => ({
-          item: toItem(item),
-          latestMetric: latestMetric.has(item.id)
-            ? toMetric(latestMetric.get(item.id)!)
-            : null,
-          sourceCount: Math.max(1, sourceCount.get(item.id) ?? 1),
-        })),
+        rows: rows.slice(offset, offset + limit).map((item) => {
+          const projection =
+            projectionByItem.get(item.id) ??
+            itemWorkflowProjection(undefined, [], new Map());
+          return {
+            item: toItem(item),
+            latestMetric: latestMetric.has(item.id)
+              ? toMetric(latestMetric.get(item.id)!)
+              : null,
+            sourceCount: Math.max(1, sourceCount.get(item.id) ?? 1),
+            ...projection,
+          };
+        }),
         total: rows.length,
       };
     },
@@ -3051,23 +3298,27 @@ export function createIntelligenceService(
       ctx: RequestContext,
       input: {
         itemId: string;
-        format: "txt" | "md" | "srt" | "vtt";
-        fileName: string;
+        inputMode?: "paste" | "file";
+        format?: "txt" | "md" | "srt" | "vtt";
+        fileName?: string;
         text: string;
       },
     ) {
       const supportedFormats = new Set(["txt", "md", "srt", "vtt"]);
-      if (!supportedFormats.has(input.format)) {
-        throw new IntelligenceValidationError(
-          "TRANSCRIPT_FILE_UNSUPPORTED_FORMAT",
-        );
-      }
-      const fileName = input.fileName.trim();
-      const extension = fileName.split(".").pop()?.toLowerCase();
-      if (!fileName || extension !== input.format) {
-        throw new IntelligenceValidationError(
-          "TRANSCRIPT_FILE_EXTENSION_MISMATCH",
-        );
+      const inputMode = input.inputMode ?? "file";
+      if (inputMode === "file") {
+        if (!input.format || !supportedFormats.has(input.format)) {
+          throw new IntelligenceValidationError(
+            "TRANSCRIPT_FILE_UNSUPPORTED_FORMAT",
+          );
+        }
+        const fileName = input.fileName?.trim() ?? "";
+        const extension = fileName.split(".").pop()?.toLowerCase();
+        if (!fileName || extension !== input.format) {
+          throw new IntelligenceValidationError(
+            "TRANSCRIPT_FILE_EXTENSION_MISMATCH",
+          );
+        }
       }
       const text = input.text
         .replace(/^\ufeff/, "")
@@ -3092,7 +3343,13 @@ export function createIntelligenceService(
       const initial = (await service.getItem(ctx, item.id)).transcript;
       if (initial.status === "done") {
         if (initial.text === text) return initial;
-        throw new IntelligenceConflictError("TRANSCRIPT_EXISTS");
+      }
+      const lock = await transcriptTopicLock(ctx, item.id);
+      if (lock.locked) {
+        throw new IntelligenceConflictError("TRANSCRIPT_LOCKED");
+      }
+      if (lock.topicBusy) {
+        throw new IntelligenceConflictError("TRANSCRIPT_TOPIC_BUSY");
       }
       if (initial.status === "queued" || initial.status === "running") {
         throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
@@ -3124,6 +3381,7 @@ export function createIntelligenceService(
               "failed",
               "blocked",
               "skipped",
+              "done",
             ]),
           ),
         )
@@ -3147,7 +3405,14 @@ export function createIntelligenceService(
       if (current?.status === "queued" || current?.status === "running") {
         throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
       }
-      throw new IntelligenceConflictError("TRANSCRIPT_EXISTS");
+      const currentLock = await transcriptTopicLock(ctx, item.id);
+      if (currentLock.locked) {
+        throw new IntelligenceConflictError("TRANSCRIPT_LOCKED");
+      }
+      if (currentLock.topicBusy) {
+        throw new IntelligenceConflictError("TRANSCRIPT_TOPIC_BUSY");
+      }
+      throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
     },
 
     /**
@@ -3673,6 +3938,23 @@ export function createIntelligenceService(
           "coreClaims 至少需要一个非空主张",
         );
       }
+      const [currentTranscript] = await db
+        .select()
+        .from(itemTranscripts)
+        .where(eq(itemTranscripts.itemId, transform.itemId))
+        .limit(1);
+      const currentText = currentTranscript?.text?.trim() ?? "";
+      const currentTranscriptHash = currentText
+        ? `sha256:${hash(currentText)}`
+        : null;
+      if (
+        currentTranscript?.status !== "done" ||
+        currentTranscriptHash !== output.transcriptHash
+      ) {
+        throw new IntelligenceConflictError(
+          "TRANSCRIPT_CHANGED_DURING_TOPIC_GENERATION",
+        );
+      }
       const [updated] = await db
         .update(intelligenceTransforms)
         .set({
@@ -4146,15 +4428,21 @@ export function createIntelligenceService(
           .limit(1);
         if (
           transcript &&
-          ["queued", "running", "done"].includes(transcript.status)
+          ["queued", "running"].includes(transcript.status)
         ) {
           skipped.push({
             itemId,
-            reason:
-              transcript.status === "done"
-                ? "TRANSCRIPT_ALREADY_DONE"
-                : "TRANSCRIPT_ALREADY_QUEUED",
+            reason: "TRANSCRIPT_ALREADY_QUEUED",
           });
+          continue;
+        }
+        const lock = await transcriptTopicLock(ctx, itemId);
+        if (lock.locked) {
+          skipped.push({ itemId, reason: "TRANSCRIPT_LOCKED" });
+          continue;
+        }
+        if (lock.topicBusy) {
+          skipped.push({ itemId, reason: "TRANSCRIPT_TOPIC_BUSY" });
           continue;
         }
         const task = await deps.tasks.enqueue(ctx, {

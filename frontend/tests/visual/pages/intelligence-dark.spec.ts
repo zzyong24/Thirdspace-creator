@@ -46,11 +46,11 @@ async function openDarkRadar(page: Page, accountId: string): Promise<void> {
 }
 
 test.describe("T-520 内容雷达暗色与响应式结构", () => {
-  test("窄桌面双栏、宽桌面三栏，暗色侧栏取主题 token", async ({
+  test("窄桌面单栏、宽桌面三栏，暗色侧栏取主题 token", async ({
     page,
   }) => {
     const accountId = await createAccount(page);
-    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.setViewportSize({ width: 1279, height: 900 });
     await openDarkRadar(page, accountId);
 
     const layout = page.getByTestId("intelligence-responsive-layout");
@@ -60,7 +60,7 @@ test.describe("T-520 内容雷达暗色与响应式结构", () => {
           .split(" ")
           .filter(Boolean).length,
     );
-    expect(narrowTracks).toBe(2);
+    expect(narrowTracks).toBe(1);
 
     const sidebar = page.getByTestId("intelligence-sidebar");
     const colors = await sidebar.evaluate((element) => {
@@ -105,7 +105,25 @@ test.describe("T-520 内容雷达暗色与响应式结构", () => {
     await expect(page.getByTestId("source-type-choices")).toBeVisible();
     await dialog.getByRole("button", { name: "我的收藏" }).click();
     await expect(
-      dialog.getByRole("button", { name: "读取我的收藏夹" }),
+      dialog.getByRole("button", { name: "读取并选择收藏夹" }),
+    ).toBeVisible();
+  });
+});
+
+test.describe("T-622 内容雷达筛选排序真机布局", () => {
+  test("最小桌面宽度仍能看到并操作两个筛选和排序", async ({ page }) => {
+    const accountId = await createAccount(page);
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openDarkRadar(page, accountId);
+
+    await expect(
+      page.getByRole("combobox", { name: "逐字稿筛选" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("combobox", { name: "选题筛选" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("combobox", { name: "内容排序" }),
     ).toBeVisible();
   });
 });

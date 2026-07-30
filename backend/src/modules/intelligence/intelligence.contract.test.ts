@@ -111,6 +111,7 @@ describe("T-482 内容雷达 transport 契约", () => {
           query: undefined,
           body: {
             itemId,
+            inputMode: "file",
             format: "txt",
             fileName: "人工稿.txt",
             text: "人工上传的逐字稿正文",

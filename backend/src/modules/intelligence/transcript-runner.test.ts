@@ -59,7 +59,7 @@ describe("T-482 手动逐字稿持久队列", () => {
       expect(detail.transcript).toMatchObject({
         status: "done",
         text: "这是用户手动请求后取得的逐字稿。",
-        source: "manual",
+        source: "asr",
         provider: "openai",
       });
       expect((await tasks.get(ctx, task.id)).status).toBe("succeeded");

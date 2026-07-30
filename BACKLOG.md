@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
-| T-622 | 完善内容雷达筛选排序与逐字稿录入、纠错和选题后锁定体验【产品体验·用户 2026-07-29】 | 🔨 待办 | — | [交互设计](docs/superpowers/specs/2026-07-29-content-radar-filter-sort-design.md) | 增加收藏/点赞排序及逐字稿、选题状态组合筛选；逐字稿支持粘贴或文件导入，未生成选题前允许替换或重新转写，一旦成功生成选题候选即永久锁定；所有状态基于真实查询并完成主从布局真机验收。 |
+| T-622 | 完善内容雷达筛选排序与逐字稿录入、纠错和选题后锁定体验【产品体验·用户 2026-07-29】 | ✅ 待办 | — | [交互设计](docs/superpowers/specs/2026-07-29-content-radar-filter-sort-design.md) | 增加收藏/点赞排序及逐字稿、选题状态组合筛选；逐字稿支持粘贴或文件导入，未生成选题前允许替换或重新转写，一旦成功生成选题候选即永久锁定；所有状态基于真实查询并完成主从布局真机验收。 |
 | T-621 | 补齐渠道模型异步 authority snapshot 的完整生产链路回归：createTask → persistence → authority change → cancel/no provider call【非阻断测试增强·T-606 独立复核 2026-07-29】 | 📋 待办 | — | [T-606 CreatorOS 绑定 SPEC](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) | 当前 digest、AsyncLocalStorage、service marker 与执行前取消已分别有单元/集成测试并获独立复核 PASS；本任务只补完整链路证据，不改变已确认契约或本轮完成结论。 |
 | T-576 | 汇总并统一跟进飞书线上用户反馈，首查安装失败加密日志【线上故障·用户 2026-07-28】 | 🔨 免审 | — | [首轮汇总](docs/research/2026-07-28-production-feedback-triage.md) · [飞书反馈表](https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz) | 飞书已按真实进度回写：安装与账号定位为“待处理”，雷达生成、重新定位和脚本双视图为“处理中”并写明待发版验证；继续统一跟进发布、真机复验与邮件反馈，不提前写成线上已解决。 |
 | T-577 | 定位安装后无法启动且 bundle 缺 sidecar.tar.gz 的异常分发链【发布阻断·用户日志 2026-07-28】 | 📋 免审 | — | [飞书反馈表](https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz) | 228B 加密日志已完整解出，唯一错误是 `bundle 资源缺 sidecar.tar.gz(打包不完整)`；用户 2026-07-28 明确要求本轮忽略，现暂停跟进且未声称修复，后续重启时再补系统、版本与下载来源并沿对应平台最终安装物查根因。 |

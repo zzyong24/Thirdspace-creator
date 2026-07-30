@@ -14,7 +14,7 @@
   - 用户 2026-07-23 产品口径确认：评论只取公开数量且允许诚实降级；逐字稿只能由用户手动发起并异步排队；首批支持抖音、通用网页、RSS，登录墙需引导登录；雷达只产选题，稿件生成/改写在 Project 创建后进行，高相似候选不得采纳为正式稿件。
   - 用户 2026-07-23 指定“抖音热点宝”可作为关键词黑马来源；只读实机验证确认其低粉爆款榜、关键词筛选、作品详情和结构化接口可用。
   - 用户 2026-07-23 明确认可采用热点宝的最终方案：热点宝只作为登录态下的策展榜单数据源，逐字稿仍由用户手动异步触发，雷达只产选题、Project 内再生成或改写稿件。
-  - 用户 2026-07-23 追加确认：任何来自他人的对标、收藏、黑马/爆款等外部视频选题都必须保留可点击的视频原链接；只有标题不得直接转选题，必须先由用户手动完成逐字稿，再对逐字稿做结构拆解后生成选题候选；被采用的逐字稿版本作为不可变来源证据贯穿选题与 Project，具体稿件生成/改写仍只在 Project 创建后发生。
+  - 用户 2026-07-23 追加确认：任何来自他人的对标、收藏、黑马/爆款等外部视频选题都必须保留可点击的视频原链接；只有标题不得直接转选题，必须先由用户手动完成逐字稿，再对逐字稿做结构拆解后生成选题候选；候选保存的逐字稿哈希作为不可变来源证据贯穿选题与 Project，具体稿件生成/改写仍只在 Project 创建后发生。
   - 用户 2026-07-23 追加“复制抖音分享链接单条建档”：用户粘贴单条分享链接并选择分类，系统解析真实作品与作者；已有博主复用其节点并归入所选分类，未有则自动创建博主节点；重复链接幂等去重，只建档，不自动转写。
   - 用户 2026-07-24 追加确认“自动化一定要收敛”：内容雷达不得保留独立调度循环，必须复用全局自动化调度、持久任务和运行记录；来源页保留来源级策略，自动化页仅展示账号级聚合任务。
   - T-517 调度 Delta：[`2026-07-24-content-radar-unified-automation-design.md`](2026-07-24-content-radar-unified-automation-design.md)；独立评审通过前不得进入调度架构实现。
@@ -32,7 +32,7 @@
   - `DEC-CR-008`：评论仅采集公开数量；取不到时记 `null/未知` 和质量原因，允许作品元数据同步继续，绝不以 0 冒充。
   - `DEC-CR-009`：首批支持抖音、通用网页与 RSS；网页/RSS 命中登录墙时引导用户打开登录会话，登录后重新测试，不保存明文凭据。
   - `DEC-CR-010`：关键词黑马改用抖音热点宝“低粉爆款”榜单，不再使用已证伪的抖音原始搜索接口；复用抖音按账号隔离的受控浏览器 profile 登录态和官方页面生成的签名，不写死签名、不把原始 Cookie/签名复制进 adapter、情报表、任务检查点或日志。热点宝只提供候选集，是否命中仍由仓内 `detectDarkhorse` 的确定性 48 小时三档规则判定；官方 rank/score 只作来源证据。该来源是策展榜单，不承诺全站穷举。
-  - `DEC-CR-014`：外部视频必须保留可点击的 canonical 视频链接；标题/摘要不能直接转为选题。只有用户手动转写完成后，系统才能基于被锁定的逐字稿版本执行结构拆解并生成选题候选。选题与 Project 只引用该不可变逐字稿证据，不把原文复制为选题正文或 Project 正式稿件；具体稿件生成/改写仍只发生在 Project 内。
+  - `DEC-CR-014`：外部视频必须保留可点击的 canonical 视频链接；标题/摘要不能直接转为选题。只有用户手动转写完成后，系统才能基于当前逐字稿执行结构拆解并生成选题候选。候选成功时保存正文哈希并永久锁定该逐字稿；选题与 Project 引用 transform 中的不可变哈希证据，不把原文复制为选题正文或 Project 正式稿件。
   - `DEC-CR-015`：抖音分享链接提供单条建档入口。建档必须解析 stable item/author identity 与 canonical 视频 URL；作者节点全账号唯一、可关联多个分类，重复分享链接或同一作品的不同短链只返回既有 item。新建作者节点默认不持续监控，且该入口绝不自动创建逐字稿任务。
   - `DEC-CR-016`：自动化触发必须收敛到全局 `scheduled_jobs/job_runs/triggerScheduledJob` 单一链路。内容雷达每账号只映射一条聚合自动化任务，由其扫描该账号已到期来源；业务模块不得自建 `setInterval`、cron、启动扫描器或第二套运行记录。来源级启停、周期与明细留在内容雷达，账号级总开关与聚合记录留在自动化页。
   - `DEC-CR-017`：逐字稿除手动发起 ASR 外，允许用户给当前作品上传已有文本稿。客户端只读取 UTF-8 的 `.txt/.md/.srt/.vtt`，将清理后的正文通过 typed operation 写入当前作品既有逐字稿真相，不保存原文件、不新增文件存储；已完成或已进入选题/Project 证据链的逐字稿禁止覆盖。
@@ -106,15 +106,15 @@ Independent Test：固定测试数据能复现每档判定；实机 canary 命�
 
 ### `SCN-CR-006` 转为自己的选题
 
-用户从外部视频情报点击“转为我的选题”时，系统先检查可点击视频原链接和已完成的手动逐字稿；缺任一项都不能仅凭标题生成选题。证据齐全后，系统锁定逐字稿版本，先拆出钩子、叙事/论证步骤、核心主张、可借鉴的结构模式与事实风险，再结合当前账号定位生成选题卡预览，列出借鉴点、差异化角度和来源。用户确认后才进入选题池。
+用户从外部视频情报点击“转为我的选题”时，系统先检查可点击视频原链接和已完成的手动逐字稿；缺任一项都不能仅凭标题生成选题。证据齐全后，系统以当前逐字稿拆出钩子、叙事/论证步骤、核心主张、可借鉴的结构模式与事实风险，再结合当前账号定位生成选题卡预览；候选成功时保存逐字稿哈希并永久锁定正文。用户确认后才进入选题池。
 
-Independent Test：只有标题或逐字稿仍在排队时，“转为我的选题”被明确阻止并引导手动转写；转写完成后才可生成结构拆解和候选。取消预览不新增候选；确认后只新增一条选题，并能从选题卡点击原视频、反查逐字稿版本和拆解结果。
+Independent Test：只有标题或逐字稿仍在排队时，“转为我的选题”被明确阻止并引导手动转写；转写完成后才可生成结构拆解和候选。候选成功后正文永久锁定；确认后只新增一条选题，并能从选题卡点击原视频、反查逐字稿哈希和拆解结果。
 
 ### `SCN-CR-007` 从已确认选题进入 Project 后创作稿件
 
-用户先在内容雷达确认选题，再通过现有“创建 Project”流程建立自己的 Project；系统把来源内容、可点击原视频、来源快照、选题时的结构拆解和对应不可变逐字稿版本作为创作参考带入 Project。逐字稿是证据，不是待覆盖的 Project 正式稿件。稿件生成或改写只在 Project 的脚本工作区发起，产生可编辑候选版本，并显示改写策略、事实核验、来源和相似性风险。
+用户先在内容雷达确认选题，再通过现有“创建 Project”流程建立自己的 Project；系统把来源内容、可点击原视频、来源快照、选题时的结构拆解和逐字稿哈希作为创作参考带入 Project。逐字稿是证据，不是待覆盖的 Project 正式稿件。稿件生成或改写只在 Project 的脚本工作区发起，产生可编辑候选版本，并显示改写策略、事实核验、来源和相似性风险。
 
-Independent Test：内容雷达确认选题时不产生稿件或 Project；Project 建立后自动带入与选题一致的来源 URL、逐字稿版本、拆解结果和来源快照，之后才能发起生成/改写。取消候选不新增正式稿件版本；高相似候选不能被采纳，降级后采纳的版本能反查来源快照、逐字稿哈希与定位版本。
+Independent Test：内容雷达确认选题时不产生稿件或 Project；Project 建立后自动带入与选题一致的来源 URL、逐字稿哈希、拆解结果和来源快照，之后才能发起生成/改写。取消候选不新增正式稿件版本；高相似候选不能被采纳，降级后采纳的版本能反查来源快照、逐字稿哈希与定位版本。
 
 ### `SCN-CR-008` 诊断同步
 
@@ -181,7 +181,7 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
 | 添加网页/RSS | 3：粘贴→测试预览→确认监控 | URL；登录站点另需网站会话 | HTTP、登录墙、空正文、抽取失败分别提示 |
 | 我的收藏 | 3：授权→选择文件夹→确认 | 本人抖音登录态 | 找不到文件夹、权限、风控分别提示 |
 | 转为自己的选题 | 4：打开原视频核对→手动转写→结构拆解预览→确认 | 可点击原视频、已完成逐字稿、当前账号定位与来源快照 | 缺链接时禁止转选题；未转写时引导手动排队；本步骤不生成稿件 |
-| Project 内创作稿件 | 3：创建 Project→发起生成/改写→采纳候选 | 已确认选题及其逐字稿版本/拆解/来源引用；文本模型 | 来源证据缺失、模型未配或高相似时有明确下一步 |
+| Project 内创作稿件 | 3：创建 Project→发起生成/改写→采纳候选 | 已确认选题及其逐字稿哈希/拆解/来源引用；文本模型 | 来源证据缺失、模型未配或高相似时有明确下一步 |
 
 ### 6. 商业假设
 
@@ -222,8 +222,8 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
 
   每次独立运行展示榜单返回数、三档命中数、榜单类型、官方窗口、过滤原因、作者粉丝数据质量与受阻状态。不得把策展榜单描述成全站搜索。价值：删除后黑马继续是不可诊断的隐藏副作用。
 - `FR-CR-011` 内容详情：详情完整展示原始证据、指标、逐字稿状态及手动转写完成后的正文、同步记录、所属分类和所有转化结果；可打开原链接。价值：删除后用户只能看标题，无法做判断。
-- `FR-CR-012` 转为我的选题：外部视频必须同时具备可点击 canonical 视频链接和状态为 `done` 的用户手动逐字稿，只有标题、摘要或指标时禁止生成选题。系统锁定本次采用的逐字稿版本与哈希，先生成结构拆解（钩子、叙事/论证步骤、核心主张、可复用结构、事实风险），再结合当前账号定位生成选题卡候选，展示差异化角度与来源。选题池卡片及详情持续展示可点击原视频；仅用户确认后写入选题池，取消零写入，重复确认幂等。价值：删除后只拿一个爆款标题无法形成有意义的结构借鉴，来源也会在跨阶段时丢失。
-- `FR-CR-013` Project 内稿件生成与改写：内容雷达确认的选题可进入现有 Project 创建流程，并把 item/source snapshot、canonical 视频 URL、选题 transform、定位版本及其锁定的逐字稿版本/哈希作为 Project 来源引用；只有 Project 已存在后，用户才能在脚本工作区基于定位、来源证据、结构拆解及该逐字稿生成或改写纯口播稿候选。逐字稿原文保持不可变来源证据，不直接成为选题正文、Project 草稿或正式稿件。候选包含改写策略、事实核验、来源和相似性风险；采纳后才成为 Project 正式稿件版本。价值：删除后选题与后续创作证据断裂，或错误地把稿件功能塞进选题阶段。
+- `FR-CR-012` 转为我的选题：外部视频必须同时具备可点击 canonical 视频链接和状态为 `done` 的用户手动逐字稿，只有标题、摘要或指标时禁止生成选题。系统以本次逐字稿哈希生成结构拆解和选题候选；候选成功写入 transform 后永久锁定当前逐字稿。选题池卡片及详情持续展示可点击原视频；仅用户确认后写入选题池，重复确认幂等。
+- `FR-CR-013` Project 内稿件生成与改写：内容雷达确认的选题可进入现有 Project 创建流程，并把 item/source snapshot、canonical 视频 URL、选题 transform、定位版本及逐字稿哈希作为 Project 来源引用；只有 Project 已存在后，用户才能在脚本工作区基于定位、来源证据、结构拆解及该逐字稿生成或改写纯口播稿候选。
 - `FR-CR-014` 运行与诊断：每个源展示最近真实运行、下一次计划、成功/新增/更新/跳过/失败数、结构化错误与建议；支持重试。健康状态读取实际 run，不读取未维护的计划字段。价值：删除后“成功 0 条”继续误导。
 - `FR-CR-015` 监控开关：创建源时由用户明确选择“立即同步并持续监控”或“仅保存”；不要求再去自动化页面开启隐藏 job。价值：删除后用户以为已登记就会自动运行。
 - `FR-CR-016` 迁移：旧 `benchmark_sources/works`、`favorites_folders/items`、`trend_sources` 和黑马记录幂等迁入新域，生成可核对的迁移报告；未通过计数与抽样校验前不删除旧数据。价值：删除后现有用户数据与来源会丢失。
@@ -232,7 +232,8 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
 - `FR-CR-019` 多来源归因：同一作品可同时被对标博主、收藏夹、多个黑马关键词或网页条目发现；系统只合并内容本体，不覆盖来源观察、首次/末次发现时间和所属 run。价值：删除后用户无法解释“为什么看到它”，迁移也会丢关系。
 - `FR-CR-020` 持久任务控制：来源同步、用户手动发起的单条/批量转写和 Project 内 AI 稿件任务均支持排队、暂停、继续、取消、安全重试和应用重启恢复；每个动作展示当前步骤、检查点和是否可能产生费用。价值：删除后长任务仍会卡在“后台生成”或重启即丢。
 - `FR-CR-021` 抖音分享链接单条建档：内容雷达提供“粘贴分享链接”入口，用户选择分类后提交；系统安全解析短链/长链对应的真实作品与作者稳定身份，保存 canonical 视频 URL、封面、标题、公开指标及来源快照。作者已存在时复用同一博主节点并确保其关联所选分类，未存在时自动创建默认 `monitorEnabled=false` 的博主节点；同一 `awemeId` 的不同分享文本/短链幂等合并为一个 item。建档只写 item/source/分类关系/observation/snapshot，不自动创建转写任务，逐字稿仍须用户单独手动异步发起。价值：删除后用户看到单条好视频时只能先登记整个主页或把链接放回系统外。
-- `FR-CR-022` 人工上传逐字稿：作品尚无已完成逐字稿且没有正在执行的转写任务时，详情页在“手动转写”旁提供“上传逐字稿”。首批支持 UTF-8 `.txt/.md/.srt/.vtt`；客户端以真实 `File.size` 拒绝超过 2 MiB 的所选文件，清理 BOM、字幕序号与时间轴后正文必须非空。客户端只把格式、原始文件名和规范化正文交给 typed operation；backend 无法也不声称反推原文件大小，而是重新校验格式、正文、当前作品归属，并按 UTF-8 字节数拒绝超过 2 MiB 或超过 500,000 字符的规范化正文，再原子写入既有 `ItemTranscript` 为 `done/source=manual` 后立即返回同一资源。空文件、乱码、任一可执行上限超限、格式不支持、逐字稿已完成、转写排队/执行中或跨账号请求均不得产生部分写入。上传不建立对象存储、不保留原文件、不创建转写任务；成功后可沿现有逐字稿拆解与选题生成链继续。价值：用户已有字幕或人工整理稿时无需再次消耗 ASR，也不必把逐字稿留在系统外。
+- `FR-CR-022` 逐字稿录入与纠错：详情页用同一编辑框支持直接粘贴正文，或导入 UTF-8 `.txt/.md/.srt/.vtt` 后检查再保存；客户端以真实 `File.size` 拒绝超过 2 MiB 的所选文件，清理 BOM、字幕序号与时间轴后正文必须非空。backend 重新校验正文、当前作品归属、UTF-8 2 MiB 与 500,000 字符上限，并写入当前作品唯一 `ItemTranscript`。首个选题候选成功产生前，已完成逐字稿可被再次粘贴、导入或重新转写覆盖；重新转写失败保留旧正文。候选一旦成功产生，逐字稿永久锁定，即使候选未采纳或后来取消也不可再改；选题生成中临时禁止修改。全流程不建立逐字稿版本表、不保存原文件，文件/粘贴保存不创建转写任务。价值：用户可在生成选题前修正误稿，又不会让已生成选题与来源证据漂移。
+- `FR-CR-023` 内容列表筛选与排序：内容列表支持按逐字稿状态和选题状态组合筛选，并按最新收录、收藏最多或点赞最多排序；筛选、搜索与排序均由 `intelligence.items.list` 读取完整真实集合，列表行返回统一进度状态，前端不逐卡请求详情或猜测状态。未知互动值排在真实数值之后，同值按收录时间和 item id 稳定排序。价值：内容增多后用户仍能快速找到待转写、待生成、待确认和已转选题内容。
 
 ## Non-functional requirements
 
@@ -243,7 +244,7 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
 - `NFR-CR-005` 数据质量：稳定外部 ID 幂等；重复内容率低于 1%；未知粉丝/指标存空值并展示“未知”，不置 0。
 - `NFR-CR-006` 可支持性：源运行、外部适配器步骤、AI 抽取/改写任务、模型配置摘要、输入快照哈希、错误分类和 request/run ID 落盘至少保留 30 天。用户隔天反馈时，可从单个 run 复原“读了什么、在哪步失败、是否写入、用了哪个模型”；日志不得含 cookie、token 或完整隐私正文。
 - `NFR-CR-007` 可替换性与会话边界：抖音主页、热点宝黑马、收藏夹、网页、RSS 分别实现采集适配器；领域服务不依赖 Playwright 或模型 SDK。抖音主页/收藏/热点宝复用 canonical appData 下按 `userId + accountId` 隔离、可撤销的持久 profile；通用网页复用既有 `browser-sessions` 服务，由该专用服务用 master key 对 storageState 执行 AES-256-GCM 加密后保存，情报/任务/adapter 只持有不透明 `browserSessionRef`，不得把原始 Cookie/签名复制到情报表、任务检查点或日志。用户清除会话或平台会话失效后，计划运行必须转为 `blocked/login_required`，不得自动登录。
-- `NFR-CR-008` 来源与版权：内容雷达选题候选、选题池卡片和 Project 内稿件候选均保留可点击源内容 URL、source snapshot、逐字稿版本/哈希、选题 transform、定位版本和生成任务；已被选题/Project 引用的逐字稿版本不可覆盖或原地修改，重新转写只能产生新版本。原始逐字稿不复制成选题正文、Project 正式稿件或知识项，只以来源引用参与拆解和生成。
+- `NFR-CR-008` 来源与版权：内容雷达选题候选、选题池卡片和 Project 内稿件候选均保留可点击源内容 URL、source snapshot、逐字稿哈希、选题 transform、定位版本和生成任务；首个候选成功后当前逐字稿永久锁定，不允许覆盖、重新转写或产生另一版本。原始逐字稿不复制成选题正文、Project 正式稿件或知识项，只以来源引用参与拆解和生成。
 - `NFR-CR-009` 无双真值：迁移窗口允许只读兼容，但完成时只有内容情报域负责新写入；不得长期双写旧表和新表。
 - `NFR-CR-010` 可访问性与键盘：树、列表、详情、弹窗、批量选择均可用键盘操作，焦点清晰；Windows `Ctrl+A` 等标准编辑行为不得被全局快捷键吞掉。
 - `NFR-CR-011` 任意 URL 安全：网页/RSS 读取必须沿用并强化 URL guard；拒绝非 HTTP(S)、本机/私网/云元数据地址，逐跳校验重定向与 DNS 解析，限制响应体、超时和重定向次数，防止 SSRF、DNS rebinding 与资源耗尽。
@@ -290,14 +291,14 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
 
 1. 用户在内容详情核对可点击原视频并发起“转为我的选题”。
 2. 系统检查 canonical 视频链接、可用来源快照和状态为 `done` 的手动逐字稿；任一缺失时禁止继续，未转写时引导用户发起异步转写，不能用标题/摘要降级生成。
-3. 系统固定本次 `transcriptVersionId + transcriptHash`，先拆解逐字稿的钩子、叙事/论证步骤、核心主张、可复用结构和事实风险，再读取当前定位生成候选预览；拆解产物与选题候选写入同一 transform 证据快照。
+3. 系统计算并固定本次 `transcriptHash`，先拆解逐字稿的钩子、叙事/论证步骤、核心主张、可复用结构和事实风险，再读取当前定位生成候选预览；拆解产物、选题候选和哈希写入同一 transform 证据快照。
 4. 用户编辑或取消；取消零写入。
-5. 用户确认后由 backend service 创建候选，写来源关系；选题卡和详情保留可点击原视频及 transform/逐字稿版本引用。
+5. 用户确认后由 backend service 创建选题，写来源关系；选题卡和详情保留可点击原视频及 transform/逐字稿哈希引用。
 
 ### `FLOW-CR-006` 从选题创建 Project，并在 Project 内生成/改写稿件
 
 1. 用户在内容雷达确认选题；本步骤只创建选题，不创建 Project 或稿件，选题持续显示原视频链接。
-2. 用户从已确认选题进入现有 Project 创建流程；Project 创建后写入 `ProjectIntelligenceReference`，固定关联来源 item、source snapshot、canonical URL、选题 transform、定位版本和该 transform 使用的逐字稿版本/哈希。
+2. 用户从已确认选题进入现有 Project 创建流程；Project 创建后写入 `ProjectIntelligenceReference`，固定关联来源 item、source snapshot、canonical URL、选题 transform、定位版本和该 transform 使用的逐字稿哈希。
 3. 用户在 Project 脚本工作区查看来源原视频、不可变逐字稿证据和选题阶段的结构拆解，再手动发起“生成稿件”或“根据建议改写”；不得在 Project 创建前提前生成具体稿件。
 4. AI 在持久任务中使用上述固定证据生成纯口播稿候选及改写说明、事实核验和相似性风险；原逐字稿不成为 Project 可编辑稿件。
 5. 用户编辑、取消、重新生成或采纳；取消不新增正式稿件版本，高相似候选不能采纳。
@@ -328,19 +329,18 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
 4. service 按 `awemeId` 幂等 upsert item，追加分享导入 observation/source snapshot；同一作品的短链、长链或重复提交均返回既有 item，不重复计数。
 5. UI 打开新建档作品并显示可点击原视频与“未转写”；本流程结束时 transcript task 增量必须为 0，用户另行点击“转写”后才进入 `FLOW-CR-005` 的前置准备。
 
-### `FLOW-CR-010` 人工上传逐字稿
+### `FLOW-CR-010` 逐字稿录入、纠错与选题后锁定
 
-1. 用户在尚无已完成逐字稿的作品详情点击“上传逐字稿”，选择 `.txt/.md/.srt/.vtt`；取消选择
-   不调用任何写 operation。
-2. 客户端先按真实 `File.size` 检查扩展名与 2 MiB 上限，以 UTF-8 读取并拒绝解码替代字符；`.srt/.vtt` 清除
-   BOM、文件头、字幕序号和时间轴，只保留正文，合并连续空行。
-3. 客户端调用 `API-CR-032`；backend 重新校验格式、文件名、正文 UTF-8 字节数、字符数和作品
-   归属，并以条件更新只允许 `not_requested/failed/blocked/skipped → done`。backend 不接收
-   原文件，也不声称验证原文件大小。
-4. `queued/running` 明确提示先等待或取消转写；已有 `done` 且正文相同则返回既有资源，不同则
-   拒绝覆盖，避免改变已锁定的选题/Project 来源证据。
-5. UI 用响应中的 transcript 立即回显，再通过 `API-CR-016` 刷新读回；“生成选题候选”只在
-   真实 `done` 后启用。全流程不保存原文件、不创建 execution task。
+1. 用户点击“添加逐字稿”或“替换逐字稿”，可直接粘贴正文，也可选择 `.txt/.md/.srt/.vtt`；
+   文件仅把规范化正文填入编辑框，用户检查后才保存，取消不调用写 operation。
+2. 客户端检查真实 `File.size`、扩展名、UTF-8 与正文上限；backend 再校验正文、作品归属和
+   当前锁定状态，将内容写入当前作品唯一 `ItemTranscript`。
+3. 尚无成功选题候选且没有活动转写/选题任务时，已有 `done` 正文可以替换，也可点击“重新
+   转写”。重新转写期间保留旧正文；失败时恢复旧正文，成功时原子覆盖。
+4. 用户发起选题生成前确认“成功后逐字稿不可再修改”。生成中逐字稿操作临时禁用；任务失败
+   且无候选时恢复。
+5. 首个可用候选写入 transform 后，backend 永久拒绝粘贴覆盖、文件覆盖和重新转写；UI 显示
+   “已用于生成选题，逐字稿已锁定”。不新增版本表，不提供回滚旧稿。
 
 ## Domain model
 
@@ -368,7 +368,7 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
   - 字段：`runId, step, status, occurredAt, itemRef, message, safeDetails`
   - 用于支持性和 partial 成功解释。
 - `ENT-CR-008 IntelligenceTransform`
-  - 字段：`id, itemId, sourceSnapshotId, transcriptVersionId, transcriptHash, kind(topic), positioningVersionId, aiTaskId, status(candidate|confirmed|cancelled), decompositionSnapshot, outputSnapshot, targetTopicId`
+  - 字段：`id, itemId, sourceSnapshotId, transcriptHash(保存在 outputSnapshot), kind(topic), positioningVersionId, aiTaskId, status(candidate|confirmed|cancelled), decompositionSnapshot, outputSnapshot, targetTopicId`
   - `decompositionSnapshot` 至少保存钩子、叙事/论证步骤、核心主张、可复用结构和事实风险；只表达内容雷达的选题候选，confirmed 后由 service 写选题池，不创建 Project 或稿件。
 - `ENT-CR-009 ItemSourceObservation`
   - 字段：`id, itemId, sourceId, runId, externalRef, firstSeenAt, lastSeenAt, discoveryContext`
@@ -377,7 +377,7 @@ RAT 已执行，详见 [`2026-07-23-content-radar-rat.md`](../../research/2026-0
   - 字段：`id, sourceId, runId, itemId?, capturedAt, finalUrl, title, contentHash, safeExtract, storageRef, retentionUntil, privacyClass`
   - 不可变；AI 转化固定绑定当次 snapshot。默认只保留必要证据和哈希，完整正文按来源权限及保留策略删除；删除源时已确认转化保留最小来源证明。
 - `ENT-CR-011 ProjectIntelligenceReference`
-  - 字段：`id, projectId, topicId, itemId, sourceSnapshotId, canonicalUrl, transformId, positioningVersionId, transcriptVersionId, transcriptHash, createdAt`
+  - 字段：`id, projectId, topicId, itemId, sourceSnapshotId, canonicalUrl, transformId, positioningVersionId, transcriptHash, createdAt`
   - 在用户从已确认选题创建 Project 后由 backend service 写入；Project 内稿件 AI task 和候选 artifact version 引用该关系。外部 item 不因此变成 Project，原逐字稿也不因此成为 Project 稿件。
 - `ENT-CR-012 IntelligenceSourceCollectionMembership`
   - 字段：`id, userId, accountId, sourceId, collectionId, createdAt`
@@ -563,7 +563,7 @@ flowchart LR
 ### AI 与数据边界
 
 - `AC-CR-009`（`FR-CR-012/013`）：只有标题、缺 canonical 视频链接、逐字稿未请求/排队中/失败时，`previewTopic` 均不创建 transform/topic，并明确引导用户补链接或手动转写。转写完成后，预览必须同时返回逐字稿结构拆解和选题候选；取消预览后 topics/projects/artifact versions 行数不变；确认选题只新增一条 topic，不创建 Project 或稿件。Project 创建后，取消稿件候选不新增正式 artifact version；采纳只新增一次，重复提交幂等。
-- `AC-CR-010`（`NFR-CR-008`）：外部作品和逐字稿不会创建 imported Project/artifact；选题池中来自对标、收藏、黑马/爆款等外部视频的选题始终有可点击原视频。只有用户从已确认选题主动创建 Project 后才写 `ProjectIntelligenceReference`，且其 `sourceSnapshotId + transformId + transcriptVersionId + transcriptHash` 与选题确认时一致。Project 内采纳的正式稿件版本能反查 source item、原视频 URL、source snapshot、逐字稿版本、结构拆解、定位版本与 aiTask；重新转写不会改写这些历史引用。
+- `AC-CR-010`（`NFR-CR-008`）：外部作品和逐字稿不会创建 imported Project/artifact；选题池中来自外部视频的选题始终有可点击原视频。只有用户从已确认选题主动创建 Project 后才写 `ProjectIntelligenceReference`，且其 `sourceSnapshotId + transformId + transcriptHash` 与选题 transform 一致。Project 内采纳的正式稿件能反查 source item、原视频 URL、source snapshot、逐字稿哈希、结构拆解、定位版本与 aiTask。
 - `AC-CR-011`（`FR-CR-016`, `NFR-CR-009`, `FLOW-CR-008`）：迁移前后每账号 source/item/observation/transcript/candidate 计数对账，抽样关联一致；benchmark teardown 与 favorites promotion 等旧写者已被 write fence；新写只进入新域。回滚演练能保全切换后的新域独有数据并输出 orphan 报告。
 - `AC-CR-012`（`FR-CR-018`）：两个账号登记相同 URL/博主后数据独立；切号列表、详情、run、转化无交叉。
 - `AC-CR-020`（`FR-CR-019`）：同一作品先后由对标、收藏和两个黑马词发现时仅有一个 item、四条 observation；删除任一来源不影响其他关系；转化仍固定指向当时的不可变 source snapshot。
@@ -571,7 +571,8 @@ flowchart LR
 - `AC-CR-022`（`FR-CR-017`）：停用、归档、解除分类和永久删除分别产生不同结果；永久删除需二次确认。已确认选题、Project 来源关系和其最小 source snapshot 不随源删除而丢失，未引用且过保留期的正文按策略清理。
 - `AC-CR-023`（`NFR-CR-007`）：主页、热点宝黑马、收藏、网页、RSS 五个 adapter 可分别用 contract fixture 替换；领域 service 测试不加载 Playwright、浏览器 session 或模型 SDK，任一 adapter 故障不改变统一领域状态语义。
 - `AC-CR-024`（`FR-CR-021`, `FLOW-CR-009`）：短分享链接、canonical URL、含口令分享文本三种输入均经可恢复的 `share_import` task 解析到真实且相同的 `awemeId/authorId/canonicalUrl`；重复导入只保留一个 item/作者源，所选分类 membership 幂等。已有博主不重复创建，未有博主自动创建但 `monitorEnabled=false`；失效作品/验证码/身份不明不建假档。导入只新增 share_import 任务、不新增 transcript task，用户随后手动转写才新增转写任务。
-- `AC-CR-025`（`FR-CR-022`, `FLOW-CR-010`）：未转写作品上传合法 `.txt/.md/.srt/.vtt` 后，详情立即读回 `done` 的规范化正文并解锁“生成选题候选”，数据库不出现文件对象或转写任务；刷新、切换作品再返回仍显示同一正文。客户端选择超过 2 MiB 的真实文件时不得调用写 operation；backend 收到空白、含解码替代字符、UTF-8 正文字节数超过 2 MiB、字符数超过 500,000、格式不支持、跨账号、已有 `done` 逐字稿或 `queued/running` 转写的请求时均明确失败且旧状态不变。相同正文的网络重试返回既有资源，不重复写入。普通与最小桌面宽度均能看到“手动转写 / 上传逐字稿”两个真实入口，取消文件选择零写入。
+- `AC-CR-025`（`FR-CR-022`, `FLOW-CR-010`）：无逐字稿时可粘贴保存，也可导入合法 `.txt/.md/.srt/.vtt` 后编辑再保存；已有 `done` 且尚无成功选题候选时可再次覆盖或重新转写，失败保留旧正文、成功才替换。选题生成中临时拒绝修改；首个候选成功后，即使未采纳或后来取消，frontend 和 backend 均永久拒绝覆盖与重新转写。空白、乱码、UTF-8 正文字节数超过 2 MiB、字符数超过 500,000、格式不支持、跨账号和活动任务请求均零部分写入。数据库不新增文件对象、逐字稿版本或人工保存任务。
+- `AC-CR-026`（`FR-CR-023`, `API-CR-015`）：列表可组合筛选逐字稿 `未提取/提取中/已提取/失败或受阻` 与选题 `尚未生成/生成中/待确认/已转为选题/失败或受阻`，并按最新、收藏、点赞稳定排序。筛选、搜索和排序实际传入 typed operation；卡片进度由服务端投影。未知互动值排在有真实值的内容之后，筛空时可一键清除，当前选中项被筛掉后详情不再错配。
 
 ### 可支持性与发布门
 

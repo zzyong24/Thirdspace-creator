@@ -9,6 +9,7 @@ import {
   FileAudio,
   FolderPlus,
   Link2,
+  LockKeyhole,
   Pause,
   Play,
   Plus,
@@ -139,6 +140,25 @@ export interface RadarItemRow {
   item: RadarItem;
   latestMetric: RadarMetric | null;
   sourceCount: number;
+  transcriptState?:
+    | "not_extracted"
+    | "processing"
+    | "extracted"
+    | "attention";
+  topicState?:
+    | "not_generated"
+    | "generating"
+    | "awaiting_confirmation"
+    | "converted"
+    | "attention";
+  progressState?:
+    | "pending_transcript"
+    | "transcript_processing"
+    | "pending_topic"
+    | "topic_generating"
+    | "awaiting_confirmation"
+    | "converted"
+    | "attention";
 }
 
 export interface RadarItemDetail {
@@ -339,18 +359,40 @@ export interface RadarApi {
     accountId: string;
     collectionId?: string;
     sourceId?: string;
+    query?: string;
+    sort: "newest" | "collect_desc" | "like_desc";
+    transcriptState?:
+      | "not_extracted"
+      | "processing"
+      | "extracted"
+      | "attention";
+    topicState?:
+      | "not_generated"
+      | "generating"
+      | "awaiting_confirmation"
+      | "converted"
+      | "attention";
   }): Promise<RadarItemRow[]>;
   getItem(itemId: string): Promise<RadarItemDetail>;
   enqueueTranscript(input: {
     itemId: string;
     idempotencyKey: string;
   }): Promise<unknown>;
-  uploadTranscript(input: {
-    itemId: string;
-    format: "txt" | "md" | "srt" | "vtt";
-    fileName: string;
-    text: string;
-  }): Promise<RadarItemDetail["transcript"]>;
+  uploadTranscript(
+    input:
+      | {
+          itemId: string;
+          inputMode: "paste";
+          text: string;
+        }
+      | {
+          itemId: string;
+          inputMode: "file";
+          format: "txt" | "md" | "srt" | "vtt";
+          fileName: string;
+          text: string;
+        },
+  ): Promise<RadarItemDetail["transcript"]>;
   previewTopic(input: {
     itemId: string;
     sourceSnapshotId: string;
@@ -368,6 +410,14 @@ export interface RadarApi {
     idempotencyKey: string;
   }): Promise<unknown>;
 }
+
+type RadarSort = Parameters<RadarApi["listItems"]>[0]["sort"];
+type RadarTranscriptState = NonNullable<
+  Parameters<RadarApi["listItems"]>[0]["transcriptState"]
+>;
+type RadarTopicState = NonNullable<
+  Parameters<RadarApi["listItems"]>[0]["topicState"]
+>;
 
 function defaultApi(): RadarApi {
   return {
@@ -477,11 +527,16 @@ function defaultApi(): RadarApi {
           accountId: input.accountId,
           page: 1,
           pageSize: 100,
-          sort: "newest",
+          sort: input.sort,
           ...(input.collectionId
             ? { collectionId: input.collectionId }
             : {}),
           ...(input.sourceId ? { sourceId: input.sourceId } : {}),
+          ...(input.query ? { query: input.query } : {}),
+          ...(input.transcriptState
+            ? { transcriptState: input.transcriptState }
+            : {}),
+          ...(input.topicState ? { topicState: input.topicState } : {}),
         },
         body: undefined,
       }) as unknown as Promise<RadarItemRow[]>,
@@ -670,6 +725,27 @@ export function sourceVerificationErrorMessage(
   return "来源验证失败，请检查采集账号和来源配置。";
 }
 
+function transcriptSaveErrorMessage(error: unknown): string {
+  const signal = structuredErrorSignal(error);
+  if (/TRANSCRIPT_LOCKED/.test(signal)) {
+    return "这份逐字稿已经生成过选题候选，现已永久锁定，不能再替换。";
+  }
+  if (/TRANSCRIPT_TOPIC_BUSY/.test(signal)) {
+    return "选题正在生成，完成前暂时不能替换逐字稿。";
+  }
+  if (/TRANSCRIPT_BUSY/.test(signal)) {
+    return "逐字稿正在转写，完成后再替换。";
+  }
+  if (
+    /TRANSCRIPT_FILE_(EMPTY|INVALID_ENCODING|TOO_LARGE|UNSUPPORTED_FORMAT|EXTENSION_MISMATCH)/.test(
+      signal,
+    )
+  ) {
+    return "逐字稿正文无效或超出限制，请检查文件格式、乱码和内容大小。";
+  }
+  return "逐字稿保存失败，请检查内容后重试。";
+}
+
 const DETAIL_WIDTH_KEY = "creatoros:intelligence:detail-width";
 const MIN_DETAIL_WIDTH = 320;
 // 结构化主请求 + 文本兜底各自最多 90 秒，再给队列/网络回显留出余量。
@@ -783,6 +859,21 @@ function transcriptLabel(status: RadarItemDetail["transcript"]["status"]) {
   }[status];
 }
 
+function progressLabel(
+  state: RadarItemRow["progressState"],
+): string | null {
+  if (!state) return null;
+  return {
+    pending_transcript: "待转写",
+    transcript_processing: "提取中",
+    pending_topic: "待生成选题",
+    topic_generating: "生成中",
+    awaiting_confirmation: "待确认",
+    converted: "已转为选题",
+    attention: "需要处理",
+  }[state];
+}
+
 export function groupRadarSourceEvidence(
   snapshots: RadarItemDetail["snapshots"],
 ): Array<{
@@ -836,6 +927,11 @@ export function IntelligenceWorkbench({
   );
   const [sourceQuery, setSourceQuery] = React.useState("");
   const [query, setQuery] = React.useState("");
+  const [sort, setSort] = React.useState<RadarSort>("newest");
+  const [transcriptState, setTranscriptState] =
+    React.useState<RadarTranscriptState | null>(null);
+  const [topicState, setTopicState] =
+    React.useState<RadarTopicState | null>(null);
   const [scopedItems, setScopedItems] =
     React.useState<RadarItemRow[]>(items);
   const [itemsLoading, setItemsLoading] = React.useState(false);
@@ -875,6 +971,7 @@ export function IntelligenceWorkbench({
     initialDetail?.item.id ?? null,
   );
   const itemScopeRequestId = React.useRef(0);
+  const searchTimer = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     activeDetailItemId.current = detail?.item.id ?? null;
@@ -898,6 +995,15 @@ export function IntelligenceWorkbench({
     };
   }, []);
 
+  React.useEffect(
+    () => () => {
+      if (searchTimer.current !== null) {
+        window.clearTimeout(searchTimer.current);
+      }
+    },
+    [],
+  );
+
   React.useEffect(() => {
     if (!workspace.sources.some((source) => source.monitorEnabled)) return;
     const timer = window.setInterval(() => router.refresh(), 60_000);
@@ -914,8 +1020,7 @@ export function IntelligenceWorkbench({
     }
   }, []);
 
-  const visibleItems =
-    selectedCollectionId || selectedSourceId ? scopedItems : items;
+  const visibleItems = scopedItems;
 
   const filteredItems = React.useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("zh-CN");
@@ -933,6 +1038,34 @@ export function IntelligenceWorkbench({
       return true;
     });
   }, [query, visibleItems]);
+
+  const settleItemRows = React.useCallback(
+    async (rows: RadarItemRow[], requestId: number) => {
+      if (itemScopeRequestId.current !== requestId) return;
+      setScopedItems(rows);
+      const selectedId = activeDetailItemId.current;
+      if (selectedId && rows.some((row) => row.item.id === selectedId)) {
+        return;
+      }
+      const firstId = rows[0]?.item.id;
+      if (!firstId) {
+        setDetail(null);
+        return;
+      }
+      try {
+        const firstDetail = await api.getItem(firstId);
+        if (itemScopeRequestId.current === requestId) {
+          setDetail(firstDetail);
+        }
+      } catch {
+        if (itemScopeRequestId.current === requestId) {
+          setDetail(null);
+          setNotice("列表已更新，但第一条作品详情读取失败，请重新选择。");
+        }
+      }
+    },
+    [api],
+  );
 
   const selectItemScope = React.useCallback(
     async (collectionId: string | null, sourceId: string | null) => {
@@ -956,9 +1089,13 @@ export function IntelligenceWorkbench({
           accountId,
           ...(collectionId ? { collectionId } : {}),
           ...(sourceId ? { sourceId } : {}),
+          ...(query.trim() ? { query: query.trim() } : {}),
+          sort,
+          ...(transcriptState ? { transcriptState } : {}),
+          ...(topicState ? { topicState } : {}),
         });
         if (itemScopeRequestId.current !== requestId) return;
-        setScopedItems(nextItems);
+        await settleItemRows(nextItems, requestId);
       } catch {
         if (itemScopeRequestId.current !== requestId) return;
         setSelectedCollectionId(previous.collectionId);
@@ -978,8 +1115,98 @@ export function IntelligenceWorkbench({
       detail,
       selectedCollectionId,
       selectedSourceId,
+      query,
+      settleItemRows,
+      sort,
+      topicState,
+      transcriptState,
       visibleItems,
     ],
+  );
+
+  const applyItemView = React.useCallback(
+    async (next: {
+      sort: RadarSort;
+      transcriptState: RadarTranscriptState | null;
+      topicState: RadarTopicState | null;
+      query: string;
+    }) => {
+      const previous = {
+        sort,
+        transcriptState,
+        topicState,
+        items: visibleItems,
+        detail,
+      };
+      const requestId = itemScopeRequestId.current + 1;
+      itemScopeRequestId.current = requestId;
+      setSort(next.sort);
+      setTranscriptState(next.transcriptState);
+      setTopicState(next.topicState);
+      setItemsLoading(true);
+      setNotice(null);
+      try {
+        const nextItems = await api.listItems({
+          accountId,
+          ...(selectedCollectionId
+            ? { collectionId: selectedCollectionId }
+            : {}),
+          ...(selectedSourceId ? { sourceId: selectedSourceId } : {}),
+          ...(next.query.trim() ? { query: next.query.trim() } : {}),
+          sort: next.sort,
+          ...(next.transcriptState
+            ? { transcriptState: next.transcriptState }
+            : {}),
+          ...(next.topicState ? { topicState: next.topicState } : {}),
+        });
+        await settleItemRows(nextItems, requestId);
+        return true;
+      } catch {
+        if (itemScopeRequestId.current === requestId) {
+          setSort(previous.sort);
+          setTranscriptState(previous.transcriptState);
+          setTopicState(previous.topicState);
+          setScopedItems(previous.items);
+          setDetail(previous.detail);
+          setNotice("筛选失败，已保留原结果，请稍后重试。");
+        }
+        return false;
+      } finally {
+        if (itemScopeRequestId.current === requestId) {
+          setItemsLoading(false);
+        }
+      }
+    },
+    [
+      accountId,
+      api,
+      detail,
+      selectedCollectionId,
+      selectedSourceId,
+      settleItemRows,
+      sort,
+      topicState,
+      transcriptState,
+      visibleItems,
+    ],
+  );
+
+  const updateSearch = React.useCallback(
+    (nextQuery: string) => {
+      setQuery(nextQuery);
+      if (searchTimer.current !== null) {
+        window.clearTimeout(searchTimer.current);
+      }
+      searchTimer.current = window.setTimeout(() => {
+        void applyItemView({
+          sort,
+          transcriptState,
+          topicState,
+          query: nextQuery,
+        });
+      }, 250);
+    },
+    [applyItemView, sort, topicState, transcriptState],
   );
 
   const visibleSourceIds = React.useMemo(() => {
@@ -1303,27 +1530,41 @@ export function IntelligenceWorkbench({
   }, [api, detail, router]);
 
   const uploadTranscript = React.useCallback(
-    async (file: File) => {
-      if (!detail) return;
+    async (
+      input:
+        | { inputMode: "paste"; text: string }
+        | {
+            inputMode: "file";
+            format: "txt" | "md" | "srt" | "vtt";
+            fileName: string;
+            text: string;
+          },
+    ): Promise<boolean> => {
+      if (!detail) return false;
+      const itemId = detail.item.id;
+      const replacing = Boolean(detail.transcript.text);
       setBusy(true);
       setNotice(null);
       try {
-        const prepared = await prepareTranscriptUpload(file);
         const transcript = await api.uploadTranscript({
-          itemId: detail.item.id,
-          ...prepared,
+          itemId,
+          ...input,
         });
         setDetail((current) =>
-          current ? { ...current, transcript } : current,
+          current?.item.id === itemId
+            ? { ...current, transcript }
+            : current,
         );
-        setNotice("逐字稿已上传，可以继续生成选题候选。");
-        router.refresh();
-      } catch (error) {
         setNotice(
-          error instanceof Error
-            ? error.message
-            : "逐字稿上传失败，请检查文件后重试。",
+          replacing
+            ? "逐字稿已替换，可以继续生成选题候选。"
+            : "逐字稿已保存，可以继续生成选题候选。",
         );
+        router.refresh();
+        return true;
+      } catch (error) {
+        setNotice(transcriptSaveErrorMessage(error));
+        return false;
       } finally {
         setBusy(false);
       }
@@ -1514,7 +1755,7 @@ export function IntelligenceWorkbench({
               真实信源工作台
             </h2>
             <p className="truncate text-xs text-muted-foreground">
-              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿由你转写或上传
+              只收公开作品与公开计数 · 评论正文不采集 · 逐字稿可粘贴、导入或转写
             </p>
           </div>
         </div>
@@ -1837,13 +2078,107 @@ export function IntelligenceWorkbench({
           aria-busy={itemsLoading}
           className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
         >
+          <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>逐字稿</span>
+              <select
+                aria-label="逐字稿筛选"
+                value={transcriptState ?? ""}
+                disabled={itemsLoading}
+                onChange={(event) => {
+                  const next =
+                    (event.target.value as RadarTranscriptState) || null;
+                  void applyItemView({
+                    sort,
+                    transcriptState: next,
+                    topicState,
+                    query,
+                  });
+                }}
+                className="h-8 rounded-lg border border-input bg-surface px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">全部</option>
+                <option value="not_extracted">未提取</option>
+                <option value="processing">提取中</option>
+                <option value="extracted">已提取</option>
+                <option value="attention">失败或受阻</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>选题</span>
+              <select
+                aria-label="选题筛选"
+                value={topicState ?? ""}
+                disabled={itemsLoading}
+                onChange={(event) => {
+                  const next =
+                    (event.target.value as RadarTopicState) || null;
+                  void applyItemView({
+                    sort,
+                    transcriptState,
+                    topicState: next,
+                    query,
+                  });
+                }}
+                className="h-8 rounded-lg border border-input bg-surface px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">全部</option>
+                <option value="not_generated">尚未生成</option>
+                <option value="generating">生成中</option>
+                <option value="awaiting_confirmation">待确认</option>
+                <option value="converted">已转为选题</option>
+                <option value="attention">失败或受阻</option>
+              </select>
+            </label>
+            {transcriptState || topicState ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={itemsLoading}
+                onClick={() =>
+                  void applyItemView({
+                    sort,
+                    transcriptState: null,
+                    topicState: null,
+                    query,
+                  })
+                }
+                className="h-8 px-2 text-xs text-muted-foreground"
+              >
+                清除筛选
+              </Button>
+            ) : null}
+            <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>排序</span>
+              <select
+                aria-label="内容排序"
+                value={sort}
+                disabled={itemsLoading}
+                onChange={(event) => {
+                  const next = event.target.value as RadarSort;
+                  void applyItemView({
+                    sort: next,
+                    transcriptState,
+                    topicState,
+                    query,
+                  });
+                }}
+                className="h-8 rounded-lg border border-input bg-surface px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="newest">最新收录</option>
+                <option value="collect_desc">收藏最多</option>
+                <option value="like_desc">点赞最多</option>
+              </select>
+            </label>
+          </div>
           <div className="flex shrink-0 items-center gap-3 border-b border-border/70 px-4 py-3">
             <label className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 aria-label="搜索雷达内容"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => updateSearch(event.target.value)}
                 placeholder="搜索标题、作者或摘要"
                 className="h-9 rounded-xl border-border/80 bg-surface pl-9"
               />
@@ -1855,7 +2190,7 @@ export function IntelligenceWorkbench({
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {itemsLoading ? (
+            {itemsLoading && filteredItems.length === 0 ? (
               <div
                 role="status"
                 className="rounded-xl border border-dashed border-border/80 px-4 py-10 text-center text-sm text-muted-foreground"
@@ -1863,9 +2198,28 @@ export function IntelligenceWorkbench({
                 正在读取该分类的真实内容…
               </div>
             ) : filteredItems.length === 0 ? (
-              <RadarEmptyState hasSources={workspace.sources.length > 0} />
+              <RadarEmptyState
+                hasSources={workspace.sources.length > 0}
+                filtered={Boolean(
+                  query.trim() || transcriptState || topicState,
+                )}
+                onClear={() => {
+                  setQuery("");
+                  void applyItemView({
+                    sort,
+                    transcriptState: null,
+                    topicState: null,
+                    query: "",
+                  });
+                }}
+              />
             ) : (
-              <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+              <div
+                className={cn(
+                  "grid grid-cols-1 gap-2 transition-opacity xl:grid-cols-2",
+                  itemsLoading && "opacity-60",
+                )}
+              >
                 {filteredItems.map((row) => (
                   <ItemCard
                     key={row.item.id}
@@ -2234,6 +2588,11 @@ function ItemCard({
             评论 {compactNumber(row.latestMetric?.commentCount ?? null)}
           </span>
           <span>{row.sourceCount} 个来源</span>
+          {progressLabel(row.progressState) ? (
+            <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+              {progressLabel(row.progressState)}
+            </span>
+          ) : null}
         </div>
       </div>
     </button>
@@ -2256,7 +2615,16 @@ function ItemDetail({
   topicGenerating: boolean;
   positioningReady: boolean;
   onTranscribe: () => void;
-  onUploadTranscript: (file: File) => void;
+  onUploadTranscript: (
+    input:
+      | { inputMode: "paste"; text: string }
+      | {
+          inputMode: "file";
+          format: "txt" | "md" | "srt" | "vtt";
+          fileName: string;
+          text: string;
+        },
+  ) => Promise<boolean>;
   onPreviewTopic: () => void;
   onRefreshTopic: () => void;
   onConfirmTopic: (
@@ -2266,6 +2634,10 @@ function ItemDetail({
     >,
   ) => void;
 }) {
+  const [transcriptEditorOpen, setTranscriptEditorOpen] =
+    React.useState(false);
+  const [confirmGenerateOpen, setConfirmGenerateOpen] =
+    React.useState(false);
   const latest = detail.metrics[0] ?? null;
   const latestTransform = detail.transforms[0] ?? null;
   const topicCandidate = latestTransform?.outputSnapshot ?? null;
@@ -2278,15 +2650,71 @@ function ItemDetail({
     latestTransform !== null &&
     latestTransform.outputSnapshot === null &&
     latestTransform.taskStatus == null;
-  const transcriptCanStart = [
-    "not_requested",
-    "failed",
-    "blocked",
-    "skipped",
-  ].includes(detail.transcript.status);
+  const transcriptLocked = detail.transforms.some(
+    (transform) => transform.outputSnapshot !== null,
+  );
+  const topicTaskBusy =
+    topicGenerating ||
+    detail.transforms.some(
+      (transform) =>
+        transform.outputSnapshot === null &&
+        [
+          "queued",
+          "running",
+          "pause_requested",
+          "paused",
+          "cancel_requested",
+        ].includes(transform.taskStatus ?? ""),
+    );
+  const transcriptBusy =
+    detail.transcript.status === "queued" ||
+    detail.transcript.status === "running";
+  const transcriptCanChange =
+    !transcriptLocked && !topicTaskBusy && !transcriptBusy;
   const sourceEvidence = groupRadarSourceEvidence(detail.snapshots);
   return (
     <div className="flex min-h-full flex-col">
+      {transcriptEditorOpen ? (
+        <TranscriptEditorDialog
+          open
+          currentText={detail.transcript.text ?? ""}
+          replacing={Boolean(detail.transcript.text)}
+          busy={busy}
+          onClose={() => setTranscriptEditorOpen(false)}
+          onSave={onUploadTranscript}
+        />
+      ) : null}
+      <Dialog
+        open={confirmGenerateOpen}
+        onOpenChange={setConfirmGenerateOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认生成选题候选</DialogTitle>
+            <DialogDescription>
+              生成成功后，这份逐字稿将永久锁定，不能再替换或重新转写。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmGenerateOpen(false)}
+            >
+              返回检查逐字稿
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setConfirmGenerateOpen(false);
+                onPreviewTopic();
+              }}
+            >
+              确认生成
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="border-b border-border/70 p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -2384,7 +2812,7 @@ function ItemDetail({
                   detail.snapshots.length === 0 ||
                   detail.transcript.status !== "done"
                 }
-                onClick={onPreviewTopic}
+                onClick={() => setConfirmGenerateOpen(true)}
                 className="mt-3 gap-1.5"
               >
                 <RefreshCw className="size-3.5" />
@@ -2451,7 +2879,7 @@ function ItemDetail({
                   detail.snapshots.length === 0 ||
                   detail.transcript.status !== "done"
                 }
-                onClick={onPreviewTopic}
+                onClick={() => setConfirmGenerateOpen(true)}
                 className="mt-3 gap-1.5"
               >
                 <Sparkles className="size-3.5" />
@@ -2479,16 +2907,23 @@ function ItemDetail({
             <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               逐字稿
             </h4>
-            <span
-              className={cn(
-                "rounded-full px-2 py-1 text-[11px]",
-                detail.transcript.status === "done"
-                  ? "bg-success-soft text-success"
-                  : "bg-muted text-muted-foreground",
-              )}
-            >
-              {transcriptLabel(detail.transcript.status)}
-            </span>
+            {transcriptLocked ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] text-primary">
+                <LockKeyhole className="size-3" />
+                已锁定
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-1 text-[11px]",
+                  detail.transcript.status === "done"
+                    ? "bg-success-soft text-success"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {transcriptLabel(detail.transcript.status)}
+              </span>
+            )}
           </div>
           {detail.transcript.text ? (
             <p className="mt-3 whitespace-pre-wrap rounded-xl bg-muted/60 p-3 text-sm leading-6 text-foreground">
@@ -2497,46 +2932,55 @@ function ItemDetail({
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
-                不会自动转写。你可以发起转写，也可以上传已有的 TXT、Markdown、SRT 或 VTT 文件。
+                不会自动转写。你可以直接粘贴正文、从文件导入，或手动发起转写。
               </p>
-              {transcriptCanStart ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={busy}
-                    onClick={onTranscribe}
-                    className="gap-1.5"
-                  >
-                    <FileAudio className="size-3.5" />
-                    手动转写
-                  </Button>
-                  <label
-                    className={cn(
-                      "inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                      busy && "pointer-events-none opacity-50",
-                    )}
-                  >
-                    <Upload className="size-3.5" />
-                    上传逐字稿
-                    <input
-                      type="file"
-                      accept=".txt,.md,.srt,.vtt,text/plain,text/markdown,text/vtt,application/x-subrip"
-                      aria-label="上传逐字稿"
-                      className="sr-only"
-                      disabled={busy}
-                      onChange={(event) => {
-                        const file = event.currentTarget.files?.[0];
-                        if (file) onUploadTranscript(file);
-                        event.currentTarget.value = "";
-                      }}
-                    />
-                  </label>
-                </div>
-              ) : null}
             </div>
           )}
+          {transcriptLocked ? (
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <LockKeyhole className="size-3.5 text-primary" />
+              已用于生成选题，逐字稿永久锁定。
+            </p>
+          ) : topicTaskBusy ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              选题正在生成，完成前暂时不能修改逐字稿。
+            </p>
+          ) : transcriptBusy && detail.transcript.text ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              正在重新转写；新结果成功前继续保留当前正文。
+            </p>
+          ) : detail.transcript.status === "done" &&
+            detail.transcript.errorCode ? (
+            <p className="mt-2 text-xs text-warning">
+              上次重新转写失败，已保留当前正文。
+            </p>
+          ) : null}
+          {transcriptCanChange ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setTranscriptEditorOpen(true)}
+                className="gap-1.5"
+              >
+                <Upload className="size-3.5" />
+                {detail.transcript.text ? "替换逐字稿" : "添加逐字稿"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={onTranscribe}
+                className="gap-1.5"
+              >
+                <FileAudio className="size-3.5" />
+                {detail.transcript.text ? "重新转写" : "手动转写"}
+              </Button>
+            </div>
+          ) : null}
         </section>
 
         <section>
@@ -2576,6 +3020,174 @@ function ItemDetail({
         </section>
       </div>
     </div>
+  );
+}
+
+function TranscriptEditorDialog({
+  open,
+  currentText,
+  replacing,
+  busy,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  currentText: string;
+  replacing: boolean;
+  busy: boolean;
+  onClose: () => void;
+  onSave: (
+    input:
+      | { inputMode: "paste"; text: string }
+      | {
+          inputMode: "file";
+          format: "txt" | "md" | "srt" | "vtt";
+          fileName: string;
+          text: string;
+        },
+  ) => Promise<boolean>;
+}) {
+  const [text, setText] = React.useState(currentText);
+  const [file, setFile] =
+    React.useState<Awaited<ReturnType<typeof prepareTranscriptUpload>> | null>(
+      null,
+    );
+  const [error, setError] = React.useState<string | null>(null);
+  const [preparing, setPreparing] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+
+  const normalized = text.trim();
+  const byteLength = new TextEncoder().encode(normalized).byteLength;
+  const invalid =
+    !normalized ||
+    normalized.includes("\ufffd") ||
+    normalized.length > 500_000 ||
+    byteLength > 2 * 1024 * 1024;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !saving) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {replacing ? "替换逐字稿" : "添加逐字稿"}
+          </DialogTitle>
+          <DialogDescription>
+            直接粘贴正文，或从 TXT、Markdown、SRT、VTT 文件导入后检查再保存。
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <label
+            className={cn(
+              "inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+              (busy || preparing || saving) &&
+                "pointer-events-none opacity-50",
+            )}
+          >
+            <Upload className="size-3.5" />
+            从文件导入
+            <input
+              type="file"
+              accept=".txt,.md,.srt,.vtt,text/plain,text/markdown,text/vtt,application/x-subrip"
+              aria-label="从文件导入逐字稿"
+              className="sr-only"
+              disabled={busy || preparing || saving}
+              onChange={(event) => {
+                const selected = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (!selected) return;
+                setPreparing(true);
+                setError(null);
+                void prepareTranscriptUpload(selected)
+                  .then((prepared) => {
+                    setFile(prepared);
+                    setText(prepared.text);
+                  })
+                  .catch((caught) =>
+                    setError(
+                      caught instanceof Error
+                        ? caught.message
+                        : "文件读取失败，请重新选择。",
+                    ),
+                  )
+                  .finally(() => setPreparing(false));
+              }}
+            />
+          </label>
+          {file ? (
+            <p className="text-xs text-muted-foreground">
+              已导入 {file.fileName}，保存前仍可继续修改正文。
+            </p>
+          ) : null}
+          <Textarea
+            aria-label="逐字稿正文"
+            value={text}
+            disabled={busy || saving}
+            onChange={(event) => {
+              setText(event.target.value);
+              setError(null);
+            }}
+            placeholder="在这里粘贴或编辑逐字稿正文…"
+            className="min-h-64 resize-y text-sm leading-6"
+          />
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>
+              {normalized.length.toLocaleString("zh-CN")} 字 ·{" "}
+              {byteLength.toLocaleString("zh-CN")} 字节
+            </span>
+            {error ? (
+              <span role="alert" className="text-destructive">
+                {error}
+              </span>
+            ) : invalid ? (
+              <span className="text-warning">
+                正文不能为空、包含乱码或超过 2 MiB / 500,000 字。
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            onClick={onClose}
+          >
+            取消
+          </Button>
+          <Button
+            type="button"
+            disabled={busy || preparing || saving || invalid}
+            onClick={() => {
+              setSaving(true);
+              setError(null);
+              const payload = file
+                ? {
+                    inputMode: "file" as const,
+                    format: file.format,
+                    fileName: file.fileName,
+                    text: normalized,
+                  }
+                : {
+                    inputMode: "paste" as const,
+                    text: normalized,
+                  };
+              void onSave(payload)
+                .then((saved) => {
+                  if (saved) onClose();
+                })
+                .finally(() => setSaving(false));
+            }}
+          >
+            {saving ? "保存中…" : "保存逐字稿"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2693,20 +3305,45 @@ function TopicCandidateEditor({
   );
 }
 
-function RadarEmptyState({ hasSources }: { hasSources: boolean }) {
+function RadarEmptyState({
+  hasSources,
+  filtered = false,
+  onClear,
+}: {
+  hasSources: boolean;
+  filtered?: boolean;
+  onClear?: () => void;
+}) {
   return (
     <div className="flex h-full min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/70 px-8 text-center">
       <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
         <Activity className="size-5" />
       </span>
       <h3 className="mt-4 text-sm font-semibold">
-        {hasSources ? "来源已就绪，尚未同步到内容" : "先添加一个真实来源"}
+        {filtered
+          ? "没有符合条件的内容"
+          : hasSources
+            ? "来源已就绪，尚未同步到内容"
+            : "先添加一个真实来源"}
       </h3>
       <p className="mt-2 max-w-sm text-xs leading-5 text-muted-foreground">
-        {hasSources
+        {filtered
+          ? "可以清除筛选后查看当前来源中的全部真实内容。"
+          : hasSources
           ? "点击左侧来源旁的同步按钮。真无新增会显示“无变化”，登录或解析失败会明确提示，不会伪装成 0 条。"
           : "可以添加抖音博主主页、网页、RSS 或黑马关键词。收藏夹选择器将在登录抖音后提供。"}
       </p>
+      {filtered && onClear ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onClear}
+          className="mt-4"
+        >
+          清除筛选
+        </Button>
+      ) : null}
     </div>
   );
 }

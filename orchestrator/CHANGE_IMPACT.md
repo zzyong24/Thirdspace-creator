@@ -263,6 +263,9 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   锁定”；录入统一支持粘贴正文与文件导入，未锁定时允许替换或重新转写。
 - **上游失效**：`DEC-CR-017` 第 3 点及 `CI-CR-017` 的“已有 done 不被覆盖”边界已被
   `DEC-CR-018` 定向替代；其余文件格式、正文上限、唯一写者和不保存原文件规则继续有效。
+- **旧版本语义失效**：既有 `FR-CR-012/013`、`NFR-CR-008`、`API-CR-020/022` 与
+  `AC-CR-010` 中的 `transcriptVersionId`、重新转写新增版本和逐字稿版本表假设全部失效；
+  统一重派生为成功候选 `outputSnapshot.transcriptHash` + transform/source snapshot 锚。
 - **数据归属不变**：继续复用当前作品唯一 `ItemTranscript`，不新增版本表、历史资产或第二
   套逐字稿真相；backend intelligence service 仍是唯一写者。
 - **待重派生工件**：

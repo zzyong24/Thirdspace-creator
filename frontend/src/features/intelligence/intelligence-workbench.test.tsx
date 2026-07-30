@@ -573,6 +573,13 @@ describe("T-482 内容雷达工作区", () => {
       if (input.collectionId === "collection-darkhorse") return [darkhorseRow];
       return [favoritesRow, darkhorseRow];
     });
+    vi.mocked(stub.getItem).mockImplementation(async (itemId) => ({
+      ...detail,
+      item:
+        itemId === darkhorseRow.item.id
+          ? darkhorseRow.item
+          : favoritesRow.item,
+    }));
 
     render(
       <IntelligenceWorkbench
@@ -591,9 +598,10 @@ describe("T-482 内容雷达工作区", () => {
       expect(stub.listItems).toHaveBeenCalledWith({
         accountId: "account-1",
         collectionId: "collection-darkhorse",
+        sort: "newest",
       }),
     );
-    expect(await screen.findByText("黑马作品")).toBeInTheDocument();
+    expect(await screen.findAllByText("黑马作品")).toHaveLength(2);
     expect(screen.queryByText("真实作品")).not.toBeInTheDocument();
     expect(screen.getByText("1 条真实内容")).toBeInTheDocument();
 
@@ -607,6 +615,7 @@ describe("T-482 内容雷达工作区", () => {
         accountId: "account-1",
         collectionId: "collection-darkhorse",
         sourceId: "source-darkhorse",
+        sort: "newest",
       }),
     );
 
@@ -614,9 +623,10 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
+        sort: "newest",
       }),
     );
-    expect(await screen.findByText("真实作品")).toBeInTheDocument();
+    expect(await screen.findAllByText("真实作品")).toHaveLength(2);
     expect(screen.getByText("2 条真实内容")).toBeInTheDocument();
   });
 
@@ -1661,7 +1671,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("另一个来源发现")).toBeInTheDocument();
   });
 
-  it("[T-603] 上传逐字稿后立即读回正文并解锁生成选题", async () => {
+  it("[T-603] 文件先导入编辑器，确认保存后才写入逐字稿并解锁生成选题", async () => {
     const uploadedTranscript = {
       ...detail.transcript,
       status: "done" as const,
@@ -1697,11 +1707,26 @@ describe("T-482 内容雷达工作区", () => {
       "访谈.srt",
       { type: "application/x-subrip" },
     );
-    await userEvent.upload(screen.getByLabelText("上传逐字稿"), file);
+    await userEvent.click(
+      screen.getByRole("button", { name: "添加逐字稿" }),
+    );
+    await userEvent.upload(
+      screen.getByLabelText("从文件导入逐字稿"),
+      file,
+    );
+
+    expect(uploadTranscript).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("逐字稿正文")).toHaveValue(
+      "第一句\n第二句",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "保存逐字稿" }),
+    );
 
     await waitFor(() =>
       expect(uploadTranscript).toHaveBeenCalledWith({
         itemId: "item-1",
+        inputMode: "file",
         format: "srt",
         fileName: "访谈.srt",
         text: "第一句\n第二句",
@@ -1717,6 +1742,169 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       screen.getByRole("button", { name: "生成选题候选" }),
     ).toBeEnabled();
+  });
+
+  it("[T-622] 逐字稿和选题状态筛选、收藏排序统一交给服务端查询", async () => {
+    const stub = api();
+    const row = {
+      item: detail.item,
+      latestMetric: detail.metrics[0]!,
+      sourceCount: 1,
+      transcriptState: "not_extracted" as const,
+      topicState: "not_generated" as const,
+      progressState: "pending_transcript" as const,
+    };
+    stub.listItems = vi.fn().mockResolvedValue([row]);
+    stub.getItem = vi.fn().mockResolvedValue(detail);
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[row]}
+        initialDetail={detail}
+        api={stub}
+      />,
+    );
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "逐字稿筛选" }),
+      "extracted",
+    );
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenLastCalledWith({
+        accountId: "account-1",
+        sort: "newest",
+        transcriptState: "extracted",
+      }),
+    );
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "选题筛选" }),
+      "not_generated",
+    );
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenLastCalledWith({
+        accountId: "account-1",
+        sort: "newest",
+        transcriptState: "extracted",
+        topicState: "not_generated",
+      }),
+    );
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "内容排序" }),
+      "collect_desc",
+    );
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenLastCalledWith({
+        accountId: "account-1",
+        sort: "collect_desc",
+        transcriptState: "extracted",
+        topicState: "not_generated",
+      }),
+    );
+  });
+
+  it("[T-622] 支持直接粘贴逐字稿；生成候选前仍可替换和重新转写", async () => {
+    const savedTranscript = {
+      ...detail.transcript,
+      status: "done" as const,
+      text: "粘贴进来的完整逐字稿",
+    };
+    const uploadTranscript = vi.fn().mockResolvedValue(savedTranscript);
+    const stub = Object.assign(api(), { uploadTranscript });
+    const { rerender } = render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={detail}
+        api={stub}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "添加逐字稿" }),
+    );
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "逐字稿正文" }),
+      "粘贴进来的完整逐字稿",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "保存逐字稿" }),
+    );
+    await waitFor(() =>
+      expect(uploadTranscript).toHaveBeenCalledWith({
+        itemId: "item-1",
+        inputMode: "paste",
+        text: "粘贴进来的完整逐字稿",
+      }),
+    );
+
+    rerender(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          transcript: savedTranscript,
+        }}
+        api={stub}
+        positioningVersionId="positioning-1"
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "替换逐字稿" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "重新转写" }),
+    ).toBeEnabled();
+  });
+
+  it("[T-622] 任一选题候选生成成功后永久锁定逐字稿", () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          transcript: {
+            ...detail.transcript,
+            status: "done",
+            text: "已经参与生成的逐字稿",
+          },
+          transforms: [
+            {
+              id: "transform-locked",
+              status: "candidate",
+              targetTopicId: null,
+              outputSnapshot: {
+                title: "已生成候选",
+                angle: "真实角度",
+                differentiation: "差异化",
+                sourceSummary: "摘要",
+              },
+            },
+          ],
+        }}
+        api={api()}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    expect(
+      screen.getByText("已用于生成选题，逐字稿永久锁定。"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "替换逐字稿" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "重新转写" }),
+    ).not.toBeInTheDocument();
   });
 
   it("[T-546] 生成选题候选立即显示局部进度并阻止重复创建，完成后回显编辑卡", async () => {
@@ -1786,7 +1974,9 @@ describe("T-482 内容雷达工作区", () => {
       name: "生成选题候选",
     });
     fireEvent.click(generate);
-    fireEvent.click(generate);
+    fireEvent.click(
+      screen.getByRole("button", { name: "确认生成" }),
+    );
 
     expect(stub.previewTopic).toHaveBeenCalledTimes(1);
     expect(
@@ -1891,6 +2081,9 @@ describe("T-482 内容雷达工作区", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "生成选题候选" }),
     );
+    fireEvent.click(
+      screen.getByRole("button", { name: "确认生成" }),
+    );
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(90_000);
@@ -1962,6 +2155,9 @@ describe("T-482 内容雷达工作区", () => {
 
     await userEvent.click(
       screen.getByRole("button", { name: "生成选题候选" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "确认生成" }),
     );
 
     expect(
