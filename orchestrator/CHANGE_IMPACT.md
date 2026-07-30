@@ -257,6 +257,23 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **发布影响**：不改数据库 schema，不迁移历史数据；当前版本不受影响。T-603 完成前不得显示
   无接线的上传按钮。
 
+## CI-CR-018 — 内容雷达逐字稿纠错与选题后锁定增量（T-622，2026-07-29）
+
+- **变更**：逐字稿由“完成后永不覆盖”调整为“首个成功选题候选前可纠错、候选产生后永久
+  锁定”；录入统一支持粘贴正文与文件导入，未锁定时允许替换或重新转写。
+- **上游失效**：`DEC-CR-017` 第 3 点及 `CI-CR-017` 的“已有 done 不被覆盖”边界已被
+  `DEC-CR-018` 定向替代；其余文件格式、正文上限、唯一写者和不保存原文件规则继续有效。
+- **数据归属不变**：继续复用当前作品唯一 `ItemTranscript`，不新增版本表、历史资产或第二
+  套逐字稿真相；backend intelligence service 仍是唯一写者。
+- **待重派生工件**：
+  - 内容雷达服务契约中的人工上传、重新转写与选题候选状态机 → 待补充替换条件、永久锁和
+    `transcriptHash` 并发校验；
+  - `contract/src/operations/intelligence.ts`、backend intelligence service、worker 回写路径
+    与测试 → 待 BUILD；
+  - 内容雷达详情页 → 待增加粘贴/导入共用编辑框、替换、重新转写、生成前确认和锁定态。
+- **发布影响**：不改数据库 schema，不迁移历史数据；在契约与 backend 锁定检查完成前，不得
+  只开放前端覆盖按钮。
+
 ---
 
 ### How to use this file going forward
