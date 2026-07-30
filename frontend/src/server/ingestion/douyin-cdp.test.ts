@@ -50,7 +50,9 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
     const calls = {
       goto: 0,
       gotoUrls: [] as string[],
+      cookieUrls: [] as string[],
       probe: 0,
+      probeUrls: [] as string[],
       clearCookies: 0,
       close: 0,
     };
@@ -61,7 +63,8 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
         calls.goto += 1;
         calls.gotoUrls.push(url);
       },
-      async evaluate() {
+      async evaluate(_fn: unknown, url: string) {
+        calls.probeUrls.push(url);
         const result = probes[calls.probe] ?? probes.at(-1) ?? "unknown";
         calls.probe += 1;
         return result === "active"
@@ -83,7 +86,8 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
       async newPage() {
         return page;
       },
-      async cookies() {
+      async cookies(url: string) {
+        calls.cookieUrls.push(url);
         return hasCookie ? [{ name: "sessionid" }] : [];
       },
       async clearCookies() {
@@ -124,8 +128,16 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
     expect(calls.clearCookies).toBe(1);
     expect(calls.goto).toBe(2);
     expect(calls.gotoUrls).toEqual([
-      "https://www.douyin.com/",
-      "https://www.douyin.com/",
+      "https://creator.douyin.com/creator-micro/home",
+      "https://creator.douyin.com/creator-micro/home",
+    ]);
+    expect(calls.cookieUrls).toEqual([
+      "https://creator.douyin.com/creator-micro/home",
+      "https://creator.douyin.com/creator-micro/home",
+    ]);
+    expect(calls.probeUrls).toEqual([
+      "https://creator.douyin.com/aweme/v1/creator/user/info/",
+      "https://creator.douyin.com/aweme/v1/creator/user/info/",
     ]);
     expect(calls.probe).toBe(2);
     expect(calls.close).toBe(1);

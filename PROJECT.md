@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 7f3c1e88
+LAST_SYNCED: main @ 597ccd0b
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-633 根治内容雷达生成选题卡失败并恢复创作者中心自动扫码【线上阻断·用户 2026-07-30】
 - [wip] T-632 根治“新建定位母版”无效与逐字稿提取长时间无结果【线上阻断·用户 2026-07-30】
 - [wip] T-631 根治大视频上传被 10MB 截断并误报 ffmpeg 缺失【线上阻断·用户 2026-07-30】
 - [open] T-621 补齐渠道模型 authority snapshot 生产链路回归【非阻断测试增强·T-606 复核】

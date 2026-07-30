@@ -4,7 +4,10 @@ import { createDb, sourceSnapshots } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
-import { runIntelligenceTopicPreviewTask } from "./topic-preview-runner";
+import {
+  classifyTopicPreviewFailure,
+  runIntelligenceTopicPreviewTask,
+} from "./topic-preview-runner";
 
 const ctx: RequestContext = {
   userId: "user-1",
@@ -12,6 +15,38 @@ const ctx: RequestContext = {
   requestId: "request-1",
   source: "user",
 };
+
+describe("[T-633] 选题卡失败诊断脱敏", () => {
+  it("结构化 JSON 截断归类为输出不完整，不再只落一个 Error", () => {
+    expect(
+      classifyTopicPreviewFailure(
+        new Error("wrapper", {
+          cause: new Error(
+            "结构化节点:generateObject 落空,文本兜底仍未得到合 schema 的对象",
+          ),
+        }),
+      ),
+    ).toEqual({
+      category: "output_invalid",
+      message: "模型输出不完整，请重试生成选题卡",
+    });
+  });
+
+  it("超时与鉴权只落安全分类，不写上游原始响应", () => {
+    expect(
+      classifyTopicPreviewFailure(new Error("TimeoutError: request aborted")),
+    ).toEqual({
+      category: "timeout",
+      message: "模型响应超时，请重试生成选题卡",
+    });
+    expect(
+      classifyTopicPreviewFailure(new Error("401 invalid api key: secret")),
+    ).toEqual({
+      category: "credential",
+      message: "模型配置不可用，请在设置中检查后重试",
+    });
+  });
+});
 
 describe("T-482 内容雷达转为我的选题", () => {
   it("预览阶段只产候选，用户确认后才写入选题池并保留来源 provenance", async () => {

@@ -826,11 +826,13 @@ export {
   DouyinResponseShapeChangedError,
 } from "./douyin-errors";
 
-// 收藏夹、博主主页与普通抖音会话都消费 www.douyin.com 登录态。登录入口必须打开
-// 普通抖音，而不是创作者中心；后者会让用户误以为要登录另一个产品，并且不能代表
-// 收藏接口会话已经可用。
+// 用户绑定的是“创作者账号”，扫码入口固定打开创作者中心：首页会直接展示二维码，扫码后
+// 同一持久 profile 继续供 creator.douyin.com 指标与 www.douyin.com 收藏/主页使用。
+// 下游各接口仍按自己的域名校验会话；不能为了某一个下游把首次扫码降级成普通抖音首页。
 const DOUYIN_LOGIN_HOME = "https://www.douyin.com/";
 const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
+const CREATOR_SESSION_PROBE =
+  "https://creator.douyin.com/aweme/v1/creator/user/info/";
 const CREATOR_CONTENT = "https://creator.douyin.com/creator-micro/content/manage";
 // 作品列表 XHR —— cheat-on-content 验证过的真端点 + 旧 work_list 兜底(match 任一)。
 const WORK_LIST_HINTS = [
@@ -1051,7 +1053,7 @@ async function openContext(authDir: string, headless: boolean) {
 async function isLoggedIn(
   ctx: import("@playwright/test").BrowserContext,
 ): Promise<boolean> {
-  const cookies = await ctx.cookies(DOUYIN_LOGIN_HOME);
+  const cookies = await ctx.cookies(CREATOR_LOGIN_HOME);
   return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");
 }
 
@@ -1094,16 +1096,15 @@ export async function loginDouyin(
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
-      .goto(DOUYIN_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+      .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
     let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
       try {
         if (await isLoggedIn(ctx)) {
-          // 登录页已经改为普通抖音，与收藏接口同源。必须在这个真实页面环境里发探针：
-          // BrowserContext.request 虽共享 Cookie，却不带页面运行时建立的反爬上下文，页面
-          // 明明已登录时也可能只得到不可判定响应，最终被误报为“未检测到登录成功”。
-          const acceptance = await probeDouyinSessionAcceptance(page);
+          // 在创作者中心页面内请求同源账号资料，既验证服务端确实接受会话，也不会被
+          // BrowserContext.request 缺页面反爬上下文误判。扫码成功后即可自动关窗。
+          const acceptance = await probeCreatorSessionAcceptance(page);
           if (acceptance === "active") return true;
           if (acceptance === "expired" && !rejectedSessionCleared) {
             // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
@@ -1115,7 +1116,7 @@ export async function loginDouyin(
               .catch(() => {});
             rejectedSessionCleared = true;
             await page
-              .goto(DOUYIN_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+              .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
               .catch(() => {});
           }
         }
@@ -1185,6 +1186,35 @@ function classifyDouyinSessionProbe(result: {
     return "expired";
   }
   return result.statusCode === 0 ? "active" : "unknown";
+}
+
+/**
+ * 扫码绑定以创作者中心会话为准。必须在已打开的创作者中心页面里发同源请求，
+ * 否则跨域 fetch / 脱离页面的 request context 都可能把已登录误判为 unknown。
+ */
+async function probeCreatorSessionAcceptance(
+  page: MetricsCapablePage,
+): Promise<DouyinSessionProbeResult> {
+  const result = await page
+    .evaluate<
+      { statusCode: number | null; statusMessage: string } | null,
+      string
+    >(async (url) => {
+      try {
+        const response = await fetch(url, { credentials: "include" });
+        const json = (await response.json()) as Record<string, unknown>;
+        return {
+          statusCode:
+            typeof json.status_code === "number" ? json.status_code : null,
+          statusMessage:
+            typeof json.status_msg === "string" ? json.status_msg : "",
+        };
+      } catch {
+        return null;
+      }
+    }, CREATOR_SESSION_PROBE)
+    .catch(() => null);
+  return classifyDouyinSessionProbe(result);
 }
 
 /**

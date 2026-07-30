@@ -499,6 +499,7 @@ import {
   resolveLlmConfig,
   resolveDedicatedLlmConfig,
 } from "@creatoros/backend/modules/ai-runtime";
+import { topicPreviewGenerationOptions } from "@/server/intelligence-topic-preview-config";
 import {
   matchesPinnedModelAuthority,
   pinModelAuthority,
@@ -5884,6 +5885,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     .filter(Boolean)
                     .join("\n");
                   if (target.reusableDecomposition) {
+                    const generationOptions = topicPreviewGenerationOptions({
+                      hasReusableDecomposition: true,
+                    });
                     const result = await runWithResolvedEffectiveSkills(
                       c,
                       ["intelligence.topic-from-decomposition"],
@@ -5902,8 +5906,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                               target.reusableDecomposition,
                             ),
                           },
-                          maxRetries: 0,
-                          maxOutputTokens: 900,
+                          ...generationOptions,
                         }),
                     );
                     return {
@@ -5913,6 +5916,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                       ),
                     };
                   }
+                  const generationOptions = topicPreviewGenerationOptions({
+                    hasReusableDecomposition: false,
+                  });
                   const result = await runWithResolvedEffectiveSkills(
                     c,
                     ["intelligence.topic-decompose"],
@@ -5929,8 +5935,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                           // 这里必须使用手动转写完成的逐字稿，不能退化成标题/摘要猜结构。
                           transcript: target.transcript.text,
                         },
-                        maxRetries: 0,
-                        maxOutputTokens: 1_600,
+                        ...generationOptions,
                       }),
                   );
                   return intelligenceTopicDecomposeSchema.parse(
