@@ -2,14 +2,15 @@
 // pmem.mjs — 项目活记忆(Project Memory)心跳。
 //
 // 解决"文档腐烂 + 新会话不懂项目 + 不知道欠哪些任务"。两类数据:
-//   • DERIVED(生成,禁手改):模块地图 / 边界状态 / 开放任务 / SHA —— 跑 sync 重生成,不会腐。
+//   • DERIVED(生成,禁手改):模块地图 / 边界状态 / BACKLOG 开放任务 / SHA —— 跑 sync 重生成,不会腐。
 //   • CURATED(人写):定位 / 为什么 —— 见 orchestrator/SYSTEM_ARCHITECTURE.md 与本脚本顶部常量。
 //
 // 用法:
-//   node pmem.mjs tasks                       # 看开放任务(新会话先跑这个)
-//   node pmem.mjs add "<标题>" [--phase P2] [--status open|wip|blocked]
-//   node pmem.mjs set <id> <open|wip|blocked|done>
-//   node pmem.mjs sync                         # 心跳:codegraph sync + 门卫 + 重生成 PROJECT.md + 盖 SHA
+//   node pmem.mjs tasks  # 从 BACKLOG.md 看可执行任务
+//   node pmem.mjs sync   # 心跳:codegraph sync + 门卫 + 重生成 PROJECT.md + 盖 SHA
+//
+// `orchestrator/TASK_LEDGER.jsonl` 是 2026-06-29 早期遗留台账，只保留考古。任务新增和状态
+// 转换只能走 BACKLOG.md + taskctl.mjs，pmem 不再提供第二套 add/set 写入口。
 
 import fs from "node:fs";
 import path from "node:path";
@@ -18,7 +19,7 @@ import { execSync } from "node:child_process";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
-const LEDGER = path.join(REPO, "orchestrator", "TASK_LEDGER.jsonl");
+const BACKLOG = path.join(REPO, "BACKLOG.md");
 const PROJECT = path.join(REPO, "PROJECT.md");
 const BASELINE = path.join(HERE, "boundary-baseline.json");
 
@@ -26,16 +27,56 @@ const BASELINE = path.join(HERE, "boundary-baseline.json");
 const POSITIONING =
   "CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理工具),核心是「越用越准的编导智能体」:出选题、起草文案与结构、管素材,发布后采集真实表现回流校准。项目主干两阶段:脚本(选题/脚本/素材/发布动作一体)→ 复盘(数据对照/经验沉淀);研究/策划/制作不再是独立阶段。护城河=飞轮复利(盲预测→发布→采集→对照偏差→沉淀经验→回流)。pnpm monorepo(frontend Next.js / backend 库 / contract zod / worker)。";
 
-function readLedger() {
-  if (!fs.existsSync(LEDGER)) return [];
-  return fs
-    .readFileSync(LEDGER, "utf8")
-    .split("\n")
-    .filter((l) => l.trim())
-    .map((l) => JSON.parse(l));
+const BACKLOG_STATUS = {
+  "🔨": "wip",
+  "📋": "open",
+  "⛔": "blocked",
+};
+
+function parseTableRow(line) {
+  const cells = line
+    .split("|")
+    .slice(1, -1)
+    .map((cell) => cell.trim());
+  return cells;
 }
-function writeLedger(rows) {
-  fs.writeFileSync(LEDGER, rows.map((r) => JSON.stringify(r)).join("\n") + "\n");
+
+function readBacklogTasks() {
+  if (!fs.existsSync(BACKLOG)) return [];
+  const lines = fs.readFileSync(BACKLOG, "utf8").split("\n");
+  const rows = [];
+  let columns = null;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line.trimStart().startsWith("|")) continue;
+    const cells = parseTableRow(line);
+    const next = lines[index + 1] ?? "";
+    if (
+      next.trimStart().startsWith("|") &&
+      /^[|\s:\-]+$/.test(next.trim())
+    ) {
+      columns = {
+        id: cells.findIndex((cell) => cell.toUpperCase() === "ID"),
+        title: cells.findIndex((cell) => cell === "任务"),
+        status: cells.findIndex((cell) => cell.includes("状态")),
+      };
+      continue;
+    }
+    if (!columns || columns.id < 0 || columns.title < 0 || columns.status < 0) {
+      continue;
+    }
+    const id = cells[columns.id];
+    const marker = Object.keys(BACKLOG_STATUS).find((emoji) =>
+      cells[columns.status]?.includes(emoji),
+    );
+    if (!id?.startsWith("T-") || !marker) continue;
+    rows.push({
+      id,
+      title: cells[columns.title],
+      status: BACKLOG_STATUS[marker],
+    });
+  }
+  return rows;
 }
 function sh(cmd, opts = {}) {
   return execSync(cmd, { cwd: REPO, encoding: "utf8", ...opts });
@@ -52,70 +93,23 @@ const STATUS_ORDER = ["wip", "blocked", "open", "done"];
 const STATUS_LABEL = { wip: "进行中", blocked: "卡住", open: "待办", done: "完成" };
 
 function cmdTasks() {
-  const rows = readLedger();
-  const open = rows.filter((r) => r.status !== "done");
-  console.log(`\n开放任务 ${open.length} 条(共 ${rows.length}):\n`);
+  const rows = readBacklogTasks();
+  console.log(`\n可执行任务 ${rows.length} 条（BACKLOG.md 单一真相）:\n`);
   for (const s of STATUS_ORDER) {
     if (s === "done") continue;
     const g = rows.filter((r) => r.status === s);
     if (!g.length) continue;
     console.log(`[${STATUS_LABEL[s]}]`);
-    for (const r of g)
-      console.log(`  ${r.id}  (${r.phase ?? "-"})  ${r.title}`);
+    for (const r of g) console.log(`  ${r.id}  ${r.title}`);
     console.log("");
   }
-  const done = rows.filter((r) => r.status === "done").length;
-  console.log(`已完成:${done}/${rows.length}`);
 }
 
-function nextId(rows) {
-  const n =
-    rows.reduce((mx, r) => {
-      const m = /^T-(\d+)$/.exec(r.id);
-      return m ? Math.max(mx, Number(m[1])) : mx;
-    }, 0) + 1;
-  return `T-${String(n).padStart(3, "0")}`;
-}
-
-function cmdAdd(argv) {
-  const title = argv[0];
-  if (!title) {
-    console.error("用法: pmem add \"<标题>\" [--phase P2] [--status open]");
-    process.exit(1);
-  }
-  const phase = flag(argv, "--phase") ?? "-";
-  const status = flag(argv, "--status") ?? "open";
-  const rows = readLedger();
-  const id = nextId(rows);
-  rows.push({ id, phase, title, status, created: today(), ref: "" });
-  writeLedger(rows);
-  console.log(`+ ${id}  (${phase})  ${title}  [${status}]`);
-}
-
-function cmdSet(argv) {
-  const [id, status] = argv;
-  if (!id || !status) {
-    console.error("用法: pmem set <id> <open|wip|blocked|done>");
-    process.exit(1);
-  }
-  const rows = readLedger();
-  const r = rows.find((x) => x.id === id);
-  if (!r) {
-    console.error(`找不到任务 ${id}`);
-    process.exit(1);
-  }
-  r.status = status;
-  if (status === "done") r.closed = today();
-  writeLedger(rows);
-  console.log(`✓ ${id} → ${status}`);
-}
-
-function flag(argv, name) {
-  const i = argv.indexOf(name);
-  return i >= 0 ? argv[i + 1] : undefined;
-}
-function today() {
-  return new Date().toISOString().slice(0, 10);
+function rejectLegacyMutation() {
+  console.error(
+    "✗ BACKLOG.md 是唯一任务真相；请登记 BACKLOG 行，并用 taskctl.mjs start/complete/block 转换状态。",
+  );
+  process.exit(1);
 }
 
 function moduleList() {
@@ -157,8 +151,7 @@ function cmdSync() {
   const branch = shQuiet("git rev-parse --abbrev-ref HEAD") || "?";
   const { dir, mods } = moduleList();
   const b = boundarySummary();
-  const rows = readLedger();
-  const open = rows.filter((r) => r.status !== "done");
+  const open = readBacklogTasks();
 
   const lines = [];
   lines.push("# PROJECT.md — 项目活记忆(新会话先读这一个文件)");
@@ -187,9 +180,11 @@ function cmdSync() {
   lines.push("");
   if (!open.length) lines.push("- (无)");
   for (const r of open)
-    lines.push(`- [${r.status}] ${r.id} (${r.phase ?? "-"}) ${r.title}`);
+    lines.push(`- [${r.status}] ${r.id} ${r.title}`);
   lines.push("");
-  lines.push(`全部任务:\`node orchestrator/process/pmem.mjs tasks\``);
+  lines.push(
+    "任务真相：`BACKLOG.md`；查看可执行任务：`node orchestrator/process/pmem.mjs tasks`。",
+  );
   lines.push("");
   lines.push(`## 模块地图(生成自 ${dir})`);
   lines.push("");
@@ -201,10 +196,9 @@ function cmdSync() {
 
 const [cmd, ...rest] = process.argv.slice(2);
 if (cmd === "tasks") cmdTasks();
-else if (cmd === "add") cmdAdd(rest);
-else if (cmd === "set") cmdSet(rest);
+else if (cmd === "add" || cmd === "set") rejectLegacyMutation(rest);
 else if (cmd === "sync") cmdSync();
 else {
-  console.log("用法: pmem.mjs <tasks|add|set|sync>");
+  console.log("用法: pmem.mjs <tasks|sync>");
   process.exit(1);
 }

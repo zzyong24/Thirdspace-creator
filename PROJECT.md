@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ fcdd7797
+LAST_SYNCED: main @ d19c4d6c
 
 ## 这是什么(定位)
 
@@ -23,14 +23,15 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [open] T-007 (P2) 清 R2(31 处 AI SDK 前端泄漏)+ R3(跨模块 repo)
-- [open] T-010 (P4) ~13 runner 迁移成 skill+工具,删孤儿 ai-worker 与旧 frontend/src/server/ai/*
-- [open] T-011 (P5) 多模型按 capability(DeepSeek写文案/GPT做图/Claude推理)+ 即时可视化 spec
-- [open] T-012 (P6) (后续 YAGNI)Redis+BullMQ 持久队列 + worker 独立进程 + DB 写属主收口
-- [open] T-013 (SKILL) 房子图纸 gate + 门卫 + pmem + 大白话输出规则 promote 进 skill lab
-- [wip] T-033 (P2) [Feature] 发布/项目列表默认只显示已通过:detail ingest 同步 platform_status 进 publications;listPublications 过滤 hidden_at + (platform_status='已通过' OR NULL),'显示已隐藏'开关打开才显所有(修 T-073 死按钮+加 status 维度)
+- [open] T-621 补齐渠道模型 authority snapshot 生产链路回归【非阻断测试增强·T-606 复核】
+- [wip] T-576 统一跟进尚未关闭的飞书线上用户反馈【线上支持】
+- [wip] T-575 接通 CreatorOS 权益领取、渠道配置与问题反馈【跨系统上线闭环】
+- [wip] T-562 根治 CreatorOS 0.2.0 Windows 安装后持续白屏【发布阻断】
+- [wip] T-548 根治视频渲染重试后成片脱离项目且制作页实时预览消失【发布阻断·用户 2026-07-26】
+- [wip] T-538 接通渠道签名上下文的产品问题反馈【跨仓契约·上线闭环】
+- [wip] T-536 根治“我的收藏”同步错误分类与浏览器档案锁恢复【bug·多账号采集·用户 2026-07-26】
 
-全部任务:`node orchestrator/process/pmem.mjs tasks`
+任务真相：`BACKLOG.md`；查看可执行任务：`node orchestrator/process/pmem.mjs tasks`。
 
 ## 模块地图(生成自 backend/src/modules)
 
