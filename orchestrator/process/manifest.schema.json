@@ -43,6 +43,7 @@
     },
     "stages": {
       "type": "object",
+      "required": ["1-plan", "2-contract", "3-design", "4-build", "5-ship"],
       "additionalProperties": { "$ref": "#/definitions/stage" }
     },
     "stage_defaults": {

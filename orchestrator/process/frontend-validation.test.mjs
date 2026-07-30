@@ -330,7 +330,7 @@ test("声明可见文案 guard 后，缺浏览器文本证据不能 PASS；正�
 });
 
 test("taskctl 对待验 UI 任务拒绝任意绿色文字，只接受可验证报告并写 receipt", () => {
-  const root = setup();
+  const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
   let r = run(
     TASKCTL,
     ["complete", "T-RADAR", "--backlog", "BACKLOG.md", "--evidence", "unit tests green"],
@@ -348,7 +348,7 @@ test("taskctl 对待验 UI 任务拒绝任意绿色文字，只接受可验证�
   writeBlock(
     path.join(root, "FRONTEND_VALIDATION_REPORT.md"),
     "frontend-validation",
-    baseReport({ checks }),
+    strictReport(root, { checks }),
   );
   r = run(
     TASKCTL,
@@ -415,7 +415,7 @@ test("fixture/jsdom、重复 viewport、同一 witness 冒充两类都会 fail-c
 });
 
 test("required condition 不能用口头 N/A 豁免；篡改已完成报告会让 audit 变红", () => {
-  const root = setup();
+  const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
   const checks = ["LIST", "SELECTION", "DETAIL", "NEXT"].map((name) => ({
     id: `AC-RADAR-${name}`,
     test_id: "E2E-RADAR-01",
@@ -443,7 +443,7 @@ test("required condition 不能用口头 N/A 豁免；篡改已完成报告会�
   writeBlock(
     reportFile,
     "frontend-validation",
-    baseReport({ checks }),
+    strictReport(root, { checks }),
   );
   r = run(
     TASKCTL,
@@ -485,16 +485,58 @@ test("strict 项目删除验收列不能绕过 UI receipt audit", () => {
   assert.match(r.stderr + r.stdout, /缺少「验收」列|缺.*验收/i);
 });
 
-test("strict UI complete 实际执行 config allowlist 命令并记录输出 hash", () => {
+test("strict receipt audit 忽略不含状态列的暂停池", () => {
   const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
-  completeStrictReceipt(root);
+  fs.appendFileSync(
+    path.join(root, "BACKLOG.md"),
+    [
+      "",
+      "| ID | 任务 | 搁置 | 文档 | 恢复条件 |",
+      "|---|---|---|---|---|",
+      "| T-PAUSED | 暂停任务 | ⏸️ | — | 用户重启 |",
+      "",
+    ].join("\n"),
+  );
+  const r = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+});
+
+test("strict UI complete 只持久化命令输出摘要，不泄漏 stdout/stderr", () => {
+  const stdoutSecret = "stdout-secret-should-not-persist";
+  const stderrSecret = "stderr-secret-should-not-persist";
+  const verifyCommand =
+    `node -e "process.stdout.write('${stdoutSecret}'); process.stderr.write('${stderrSecret}')"`;
+  const root = setup({ strict: true, verifyCommand });
+  completeStrictReceipt(
+    root,
+    strictReport(root, {
+      run: {
+        verify_key: "content-radar:e2e",
+        command: verifyCommand,
+        exit_code: 0,
+        output_ref: "taskctl captured output summary",
+      },
+    }),
+  );
+  const eventsText = fs.readFileSync(path.join(root, "orchestrator", "events.ndjson"), "utf8");
   const event = JSON.parse(
-    fs.readFileSync(path.join(root, "orchestrator", "events.ndjson"), "utf8").trim(),
+    eventsText.trim(),
   );
   assert.equal(event.verification_executed, true);
   assert.match(event.verification_command_sha, /^[a-f0-9]{12}$/);
   assert.match(event.verification_output_sha, /^[a-f0-9]{12}$/);
-  assert.match(event.verification_output_tail, /journey-ok/);
+  assert.equal(
+    event.verification_output_bytes,
+    Buffer.byteLength(`${stdoutSecret}${stderrSecret}`, "utf8"),
+  );
+  for (const rawField of [
+    "verification_output_tail",
+    "verification_stdout",
+    "verification_stderr",
+  ]) {
+    assert.equal(rawField in event, false, `${rawField} 不得持久化`);
+  }
+  assert.doesNotMatch(eventsText, new RegExp(`${stdoutSecret}|${stderrSecret}`));
   const audit = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
   assert.equal(audit.status, 0, audit.stderr || audit.stdout);
 });
@@ -649,7 +691,7 @@ test("audit 拒绝 watched_paths 当前 dirty，并校验 completion event 的 c
 });
 
 test("链接 journey contract 的 UI 任务不能把验收改成 — 绕过", () => {
-  const root = setup();
+  const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
   const backlogFile = path.join(root, "BACKLOG.md");
   fs.writeFileSync(
     backlogFile,

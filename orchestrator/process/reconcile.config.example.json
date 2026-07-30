@@ -3,23 +3,16 @@
   "work_branch": "<the branch where implementation lives, e.g. main or feat/x>",
   "control_root": "orchestrator",
   "receipt_policy": "required",
-  "_receipt_policy_note": "Fresh projects use required: review/验收 receipts and both BACKLOG columns are enforced by taskctl + reconcile. Upgraded projects whose existing config omits this field remain legacy-compatible until explicitly migrated.",
+  "_receipt_policy_note": "required is mandatory. Missing/legacy policy is read-only and reconcile fails closed; run node orchestrator/process/strict-receipts-migrate.mjs check, then apply with explicit --non-ui IDs.",
+  "program_completion_required": false,
+  "_program_completion_required_note": "普通单项目保持 false；tools/init-program.sh 初始化跨项目控制面时会持久设置为 true，之后 program.config.json 缺失将直接使 reconcile 失败。",
   "frontend_verify_commands": {
     "content-radar:e2e": "pnpm playwright test content-radar.spec.ts"
   },
   "_frontend_verify_note": "Allowlist by report.run.verify_key. On strict projects taskctl complete executes this exact command; report prose alone cannot claim a run. Replace the example with project commands.",
   "_control_root_note": "Repo-relative dir holding the control artifacts (manifest, logs, registry). Default layout is orchestrator/ (SKILL.md Startup 2); omit or keep as-is unless the project uses a custom control dir.",
-  "probes": [
-    { "stage": "00-intake", "path": "PROJECT_CONTEXT.md" },
-    { "stage": "00-intake", "path": "orchestrator/DEFAULT_ASSUMPTIONS.md" },
-    { "stage": "01-project-kickoff", "path": "AGENTS.md" },
-    { "stage": "02-product-brainstorming", "path": "docs/FUNCTION_OUTLINE.md" },
-    { "stage": "03-product-spec", "path": "docs/PRODUCT_SPEC.md" },
-    { "stage": "06-ia-spec", "path": "docs/IA_SPEC.md" },
-    { "stage": "13-backend-spec", "path": "docs/BACKEND_SPEC.md" },
-    { "stage": "17-integration-release", "path": "docs/RELEASE_REVIEW.md" }
-  ],
-  "_probes_note": "path 为仓库相对路径,必须在该 stage 离开 not-started 后存在。示例用 docs/ 布局 — 按项目真实产物路径改;模块扇出阶段若产物落在 <module>/ 子目录,完成时把对应 probe path 改成真实模块路径。",
+  "probes": [],
+  "_probes_note": "此文件仅说明字段，不是可直接复制的项目配置。请用 tools/init-project.sh 生成当前项目配置；后续 probe 的 stage 必须来自当前 ARTIFACT_MANIFEST.yaml，path 必须指向该项目的真实产物。",
   "calibration_mode": true,
   "_calibration_note": "默认 ON:攒够真实 run 前,所有基于阈值的自动动作(stale 剪枝/quarantine/reuse emit 阈值)只 print '[calibration] would …' 不 act。攒够后人工 flip false + 回填阈值 + 留痕。",
   "stale_age_days": 90,

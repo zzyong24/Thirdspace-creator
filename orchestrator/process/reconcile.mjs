@@ -4,11 +4,11 @@
 // Validates the manifest, checks build-claims against git+fs reality on the work branch, enforces the
 // blocking-consistency rule, and flags staleness vs the decision log. Exit 0=clean, 1=drift, 2=missing.
 //
-// Per-project config (optional): orchestrator/process/reconcile.config.json
+// Required per-project config: orchestrator/process/reconcile.config.json
 //   { "work_branch": "feat/x", "receipt_policy": "required",
-//     "probes": [ { "stage": "16-backend-tdd", "path": "backend/src" } ] }
-// If absent, work_branch is read from the manifest and probes default to empty (structural + consistency +
-// staleness checks still run).
+//     "program_completion_required": false, "probes": [] }
+// Missing/legacy receipt policy or a missing topology classification fails closed. `init-project.sh`
+// creates the config; projects add probes whose stage IDs and paths come from their current manifest.
 
 import { readFileSync, existsSync, writeFileSync, appendFileSync } from 'node:fs';
 import { tallyLessonStats } from './lessons-stats.mjs';
@@ -27,6 +27,7 @@ const REPO = resolve(ORCH, '..');
 const CONFIG = resolve(HERE, 'reconcile.config.json');
 
 const VALID_STATUS = ['not-started','draft','needs-user-confirmation','blocked','passed','accepted-risk','invalidated'];
+const VALID_GATE_STATUS = ['not-run', 'pass', 'fail', 'accepted-risk'];
 
 // control_root (optional, repo-relative): directory holding the control artifacts (manifest, logs,
 // registry). Defaults to the orchestrator/ folder (the standard layout) so existing projects keep working.
@@ -37,9 +38,25 @@ if (existsSync(CONFIG)) {
     cfg = { ...cfg, ...JSON.parse(readFileSync(CONFIG, 'utf8')) };
     if (cfg.receipt_policy != null && !['legacy', 'required'].includes(cfg.receipt_policy))
       throw new Error(`receipt_policy=${JSON.stringify(cfg.receipt_policy)} is not legacy|required`);
+    if (cfg.program_completion_required != null && typeof cfg.program_completion_required !== 'boolean')
+      throw new Error('program_completion_required 必须是 boolean');
   } catch (e) {
     configReadError = e.message;
   }
+}
+if (!configReadError && cfg.receipt_policy !== 'required') {
+  configReadError =
+    `receipt_policy=${JSON.stringify(cfg.receipt_policy ?? '(missing)')} is not required; ` +
+    'legacy/unconfigured projects are fail-closed — run strict-receipts-migrate.mjs apply';
+}
+if (
+  !configReadError &&
+  cfg.receipt_policy === 'required' &&
+  typeof cfg.program_completion_required !== 'boolean'
+) {
+  configReadError =
+    'program_completion_required 必须显式为 boolean：single=false，multi=true；' +
+    '不得用缺字段默认跳过跨项目完成门';
 }
 
 const CONTROL_ROOT = cfg.control_root ? resolve(REPO, cfg.control_root) : ORCH;
@@ -83,6 +100,47 @@ const updatedAt  = topScalar('updated_at');
 const currentStage = topScalar('current_stage');
 
 const stages = {};
+function splitInlineMap(body, stageId) {
+  const tokens = [];
+  let start = 0;
+  let quote = null;
+  let escaped = false;
+  let depth = 0;
+  for (let index = 0; index < body.length; index += 1) {
+    const char = body[index];
+    if (quote) {
+      if (escaped) {
+        escaped = false;
+      } else if (quote === '"' && char === '\\') {
+        escaped = true;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === '[' || char === '{' || char === '(') {
+      depth += 1;
+      continue;
+    }
+    if (char === ']' || char === '}' || char === ')') {
+      if (depth === 0) err(`stage ${stageId}: malformed inline object`);
+      else depth -= 1;
+      continue;
+    }
+    if (char === ',' && depth === 0) {
+      tokens.push(body.slice(start, index));
+      start = index + 1;
+    }
+  }
+  if (quote || escaped || depth !== 0) err(`stage ${stageId}: malformed inline object`);
+  tokens.push(body.slice(start));
+  return tokens;
+}
+
 {
   let inStages = false, cur = null;
   for (const line of text.split('\n')) {
@@ -92,18 +150,101 @@ const stages = {};
     // inline-map form: `  "id": { status: "x", gate_status: "y", ... }` (one line)
     const inline = line.match(/^  "([^"]+)":\s*\{(.*)\}\s*$/);
     if (inline) {
-      const st = (inline[2].match(/status:\s*"?([\w-]+)"?/) || [])[1] || null;
-      const gs = (inline[2].match(/gate_status:\s*"?([\w-]+)"?/) || [])[1] || null;
-      stages[inline[1]] = { status: st, gate_status: gs }; cur = null; continue;
+      if (Object.hasOwn(stages, inline[1])) {
+        err(`duplicate stage key "${inline[1]}"`);
+        cur = null;
+        continue;
+      }
+      const fields = splitInlineMap(inline[2], inline[1]).flatMap((token) => {
+        const match = token.match(
+          /^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*([\s\S]*?)\s*$/,
+        );
+        if (!match) {
+          err(`stage ${inline[1]}: malformed inline field`);
+          return [];
+        }
+        return [{ key: match[1], rawValue: match[2] }];
+      });
+      const valuesFor = (key) => fields
+        .filter((field) => field.key === key)
+        .map((field) => {
+          const match = field.rawValue.match(
+            /^(?:"([\w-]+)"|'([\w-]+)'|([\w-]+))$/,
+          );
+          return match ? (match[1] || match[2] || match[3]) : null;
+        });
+      const statuses = valuesFor('status');
+      const gateStatuses = valuesFor('gate_status');
+      const statusKeyCount = statuses.length;
+      const gateStatusKeyCount = gateStatuses.length;
+      if (statusKeyCount > 1) err(`stage ${inline[1]}: duplicate inline status keys`);
+      if (gateStatusKeyCount > 1) err(`stage ${inline[1]}: duplicate inline gate_status keys`);
+      if (statusKeyCount === 1 && statuses[0] === null)
+        err(`stage ${inline[1]}: inline status has an empty or unsupported value`);
+      if (gateStatusKeyCount === 1 && gateStatuses[0] === null)
+        err(`stage ${inline[1]}: inline gate_status has an empty or unsupported value`);
+      const st = statuses[0] || null;
+      const gs = gateStatuses[0] || null;
+      stages[inline[1]] = {
+        status: st,
+        gate_status: gs,
+        _status_seen: statusKeyCount > 0,
+        _gate_status_seen: gateStatusKeyCount > 0,
+      };
+      cur = null;
+      continue;
     }
     // block form: `  "id":` then indented `status:` / `gate_status:` lines
     const head = line.match(/^  "([^"]+)":\s*(?:#.*)?$/);
-    if (head) { cur = head[1]; stages[cur] = { status: null, gate_status: null }; continue; }
+    if (head) {
+      if (Object.hasOwn(stages, head[1])) {
+        err(`duplicate stage key "${head[1]}"`);
+        cur = null;
+        continue;
+      }
+      cur = head[1];
+      stages[cur] = {
+        status: null,
+        gate_status: null,
+        _status_seen: false,
+        _gate_status_seen: false,
+      };
+      continue;
+    }
+    const unsupportedStage = line.match(/^  "([^"]+)":\s*(.+?)\s*$/);
+    if (unsupportedStage) {
+      if (Object.hasOwn(stages, unsupportedStage[1])) {
+        err(`duplicate stage key "${unsupportedStage[1]}"`);
+      } else {
+        stages[unsupportedStage[1]] = {
+          status: null,
+          gate_status: null,
+          _status_seen: false,
+          _gate_status_seen: false,
+        };
+        err(`stage ${unsupportedStage[1]} must use a block or inline object`);
+      }
+      cur = null;
+      continue;
+    }
     if (!cur) continue;
-    const st = line.match(/^    status:\s*"?([\w-]+)"?/);
-    if (st) { stages[cur].status = st[1]; continue; }
-    const gs = line.match(/^    gate_status:\s*"?([\w-]+)"?/);
-    if (gs) stages[cur].gate_status = gs[1];
+    if (/^    status\s*:/.test(line)) {
+      if (stages[cur]._status_seen) err(`stage ${cur}: duplicate block status keys`);
+      stages[cur]._status_seen = true;
+      const st = line.match(/^    status\s*:\s*(?:"([\w-]+)"|([\w-]+))\s*(?:#.*)?$/);
+      if (st) stages[cur].status = st[1] || st[2];
+      else err(`stage ${cur}: block status has an empty or unsupported value`);
+      continue;
+    }
+    if (/^    gate_status\s*:/.test(line)) {
+      if (stages[cur]._gate_status_seen) err(`stage ${cur}: duplicate block gate_status keys`);
+      stages[cur]._gate_status_seen = true;
+      const gs = line.match(
+        /^    gate_status\s*:\s*(?:"([\w-]+)"|([\w-]+))\s*(?:#.*)?$/,
+      );
+      if (gs) stages[cur].gate_status = gs[1] || gs[2];
+      else err(`stage ${cur}: block gate_status has an empty or unsupported value`);
+    }
   }
 }
 const stageIds = Object.keys(stages);
@@ -112,8 +253,19 @@ else if (/^stages:\s*$/m.test(text) && /^\s*-\s+id:\s*/m.test(text))
   err('manifest uses the legacy LIST-of-stages form (`stages:` then `- id:`). Canonical is a MAP of stage-id keys (`stages:` then `  "<stage-id>":` at 2-space indent). reconcile parses ZERO stages from the list form, so its drift/consistency checks silently no-op. Convert it — see templates/ARTIFACT_MANIFEST_TEMPLATE.yaml.');
 else err('could not parse any stages (format changed?)');
 
-for (const [id, s] of Object.entries(stages))
-  if (s.status && !VALID_STATUS.includes(s.status)) err(`stage ${id}: invalid status "${s.status}"`);
+const CANONICAL_STAGE_IDS = ['1-plan', '2-contract', '3-design', '4-build', '5-ship'];
+for (const id of CANONICAL_STAGE_IDS) {
+  if (!Object.hasOwn(stages, id)) {
+    err(`canonical stage "${id}" is missing — stage IDs are enforcement keys and cannot be renamed`);
+  }
+}
+
+for (const [id, s] of Object.entries(stages)) {
+  if (!s.status) err(`stage ${id}: required status is missing`);
+  else if (!VALID_STATUS.includes(s.status)) err(`stage ${id}: invalid status "${s.status}"`);
+  if (s.gate_status && !VALID_GATE_STATUS.includes(s.gate_status))
+    err(`stage ${id}: invalid gate_status "${s.gate_status}"`);
+}
 
 // A stage marked passed whose gate never ran is exactly the laundering this tool exists to catch.
 for (const [id, s] of Object.entries(stages))
@@ -215,8 +367,8 @@ if (existsSync(BACKLOG_HEALTH)) {
 }
 
 // Review/acceptance receipts are the CI backstop for edits that bypass taskctl or the optional
-// editor hook. Legacy projects (no receipt_policy or old tables) stay readable; fresh projects set
-// receipt_policy=required and therefore fail closed on missing columns, stale hashes, or forged state.
+// editor hook. Every project is fail-closed: legacy/missing receipt_policy is a migration error,
+// while receipt_policy=required additionally rejects missing columns, stale hashes, or forged state.
 {
   const BACKLOG = resolve(REPO, 'BACKLOG.md');
   if (!existsSync(BACKLOG)) {
@@ -391,6 +543,47 @@ if (CONSOLIDATE) {
   const lines = existsSync(OUTBOX) ? readFileSync(OUTBOX, 'utf8').split('\n').filter(Boolean).length : 0;
   const dl = emitDeadLetterWarn({ outboxLines: lines, consumedMarker: cfg.outbox_consumed ?? 0, rounds: cfg.outbox_idle_rounds ?? 0 });
   if (dl) findings.push(dl);
+}
+
+// Conditional product-program gate. During BUILD the coordinator may legitimately have no release set or
+// execution yet, so its existence alone does not make every reconcile red. Once SHIP claims readiness/pass,
+// however, per-repository green status is insufficient: the current cross-project execution must reconcile.
+{
+  const programConfig = resolve(ORCH, 'program', 'program.config.json');
+  const programCompletionRequired = cfg.program_completion_required === true;
+  if (programCompletionRequired && !existsSync(programConfig)) {
+    err('program_completion_required=true，但 orchestrator/program/program.config.json 缺失；拒绝跳过跨项目完成门禁。');
+  }
+  if (existsSync(programConfig)) {
+    const ship = stages['5-ship'];
+    const claimsShip =
+      ['needs-user-confirmation', 'passed', 'accepted-risk'].includes(ship?.status ?? '') ||
+      ['pass', 'accepted-risk'].includes(ship?.gate_status ?? '');
+    if (!claimsShip) {
+      ok('program control plane detected; cross-project GO will become mandatory when 5-ship claims readiness.');
+    } else {
+      const programGate = resolve(HERE, 'program-gate.mjs');
+      if (!existsSync(programGate)) {
+        err('5-ship claims readiness but program-gate.mjs is missing — update the vendored engine.');
+      } else {
+        const result = spawnSync(process.execPath, [programGate, '--audit'], {
+          cwd: REPO,
+          encoding: 'utf8',
+          maxBuffer: 4 * 1024 * 1024,
+        });
+        if (result.error) {
+          err(`5-ship program-gate could not start: ${result.error.message}`);
+        } else if (result.status !== 0) {
+          const detail = (result.stderr || result.stdout || `exit ${result.status}`)
+            .trim()
+            .slice(0, 4000);
+          err(`5-ship cross-project program-gate is NO-GO:\n${detail}`);
+        } else {
+          ok('5-ship cross-project program-gate: current deployed release passed fresh verification.');
+        }
+      }
+    }
+  }
 }
 
 die();

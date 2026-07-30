@@ -173,13 +173,25 @@ const from = canon(fromRaw);
 
 // ── 转换规则(fail-closed)────────────────────────────────────────────────────
 let config;
-try {
-  config = readReviewConfig(PROJ_ROOT);
-} catch (error) {
-  die(error.message);
+if (action === "block") {
+  // 风险收缩动作必须在 legacy、缺配置或配置损坏时仍可用；它不能制造“开工/完成”假象。
+  config = { receipt_policy: null };
+} else {
+  try {
+    config = readReviewConfig(PROJ_ROOT);
+  } catch (error) {
+    die(error.message);
+  }
 }
 const strictReceipts = config.receipt_policy === "required";
+if (!strictReceipts && action !== "block") {
+  die(
+    `项目 receipt_policy=${JSON.stringify(config.receipt_policy ?? "(missing)")}，` +
+      `legacy/未配置项目禁止 ${action}；请先运行 strict-receipts-migrate.mjs apply 迁移为 required`,
+  );
+}
 if (
+  action !== "block" &&
   strictReceipts &&
   (!taskColumns || taskColumns.review < 0 || taskColumns.acceptance < 0)
 ) {
@@ -295,7 +307,7 @@ if (frontendEvidence) {
   if (frontendExecution.executed) {
     ev.verification_command_sha = frontendExecution.commandSha;
     ev.verification_output_sha = frontendExecution.outputSha;
-    ev.verification_output_tail = frontendExecution.outputTail;
+    ev.verification_output_bytes = frontendExecution.outputBytes;
   }
 }
 ev.sha_before = shaBefore.slice(0, 12);

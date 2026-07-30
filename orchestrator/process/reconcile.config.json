@@ -1,10 +1,22 @@
 {
   "work_branch": "main",
   "probes": [
-    { "stage": "15-service-contract",    "path": "contract/package.json" },
-    { "stage": "16-backend-tdd",         "path": "backend/src" },
-    { "stage": "16-backend-tdd",         "path": "ai-worker" },
-    { "stage": "17-integration-release", "path": "frontend/src/app/api/v1/dispatch" }
+    {
+      "stage": "2-contract",
+      "path": "contract/package.json"
+    },
+    {
+      "stage": "4-build",
+      "path": "backend/src"
+    },
+    {
+      "stage": "4-build",
+      "path": "ai-worker"
+    },
+    {
+      "stage": "4-build",
+      "path": "frontend/src/app/api/v1/dispatch"
+    }
   ],
   "lessons": [
     {
@@ -37,5 +49,8 @@
       "check": "pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
       "onFail": "模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。"
     }
-  ]
+  ],
+  "program_completion_required": false,
+  "receipt_policy": "required",
+  "frontend_verify_commands": {}
 }

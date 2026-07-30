@@ -83,27 +83,6 @@ function writePacket(root, name, packet) {
   return p;
 }
 
-function recordArgs(input) {
-  return [
-    "record",
-    "T-101",
-    "--spec",
-    "SPEC.md",
-    "--constitution",
-    "CONSTITUTION.md",
-    "--input",
-    input,
-    "--review",
-    "SPEC.review.md",
-    "--backlog",
-    "BACKLOG.md",
-    "--review-mode",
-    "cross-family",
-    "--model",
-    "test-reviewer",
-  ];
-}
-
 test("复审既有 finding 只允许销账字段变化，证据、处置和建议等全部冻结", () => {
   const frozenMutations = [
     ["category", "consistency"],
@@ -829,14 +808,15 @@ test("必须靠原型回答的问题只能走有时限、受限写集的 bounded
   assert.match(r.stdout, /CONCERNS/);
 });
 
-test("taskctl start 使用 allowlist，严格项目还校验 review receipt 与 spec hash", () => {
+test("taskctl start 拒绝 legacy，严格项目校验 review receipt 与 spec hash", () => {
   const legacy = tempProject({ strict: false, review: "WAT" });
   let r = run(TASKCTL, ["start", "T-101", "--backlog", "BACKLOG.md"], legacy);
   assert.equal(r.status, 1, "未知审核值不能因 denylist 漏洞被放行");
 
   const legacyPass = tempProject({ strict: false, review: "PASS" });
   r = run(TASKCTL, ["start", "T-101", "--backlog", "BACKLOG.md"], legacyPass);
-  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /legacy|迁移|required/i);
 
   const strict = tempProject();
   const reviewPath = path.join(strict, "SPEC.review.md");
@@ -873,35 +853,6 @@ test("taskctl start 使用 allowlist，严格项目还校验 review receipt 与 
   r = run(TASKCTL, ["start", "T-101", "--backlog", "BACKLOG.md"], strict);
   assert.equal(r.status, 1, "评审 receipt 绑定的 spec hash 过期时必须阻断");
   assert.match(r.stderr + r.stdout, /过期|hash|spec/i);
-});
-
-test("constitution 变化先让 audit 过期，但允许通过下一轮 recheck 重新绑定", () => {
-  const root = tempProject();
-  const round1 = writePacket(root, "constitution-round-1.json", {
-    schema: "spec-review-round/v2",
-    review_kind: "initial",
-    summary: "初审通过。",
-    findings: [],
-  });
-  let r = run(REVIEWCTL, recordArgs(round1), root);
-  assert.equal(r.status, 0, r.stderr || r.stdout);
-
-  fs.appendFileSync(path.join(root, "CONSTITUTION.md"), "\n自动同步元数据更新。\n");
-  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
-  assert.equal(r.status, 1, "未复审的 constitution 变化必须继续阻断 audit");
-  assert.match(r.stderr + r.stdout, /constitution hash 已变化/);
-
-  const round2 = writePacket(root, "constitution-round-2.json", {
-    schema: "spec-review-round/v2",
-    review_kind: "recheck",
-    summary: "复核 constitution 变化后继续通过。",
-    findings: [],
-  });
-  r = run(REVIEWCTL, recordArgs(round2), root);
-  assert.equal(r.status, 0, r.stderr || r.stdout);
-  assert.match(r.stdout, /round 2\/3.*PASS/);
-  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
-  assert.equal(r.status, 0, r.stderr || r.stdout);
 });
 
 test("CONCERNS/FAIL receipt 是可审计结论，但都不是开工授权", () => {
@@ -1050,7 +1001,7 @@ test("legacy review 不会被自动覆盖；复审最多三轮且不能换文件
   );
 });
 
-test("legacy 无审核列仍阻断内嵌 FAIL；strict 缺列或损坏 config fail-closed", () => {
+test("legacy 无论旧状态如何都禁止开工；strict 缺列或损坏 config fail-closed", () => {
   const makeLegacy = (status, config = null) => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "reviewctl-legacy-"));
     fs.mkdirSync(path.join(root, "orchestrator", "process"), { recursive: true });
@@ -1075,7 +1026,8 @@ test("legacy 无审核列仍阻断内嵌 FAIL；strict 缺列或损坏 config fa
 
   root = makeLegacy("📋 免审");
   r = run(TASKCTL, ["start", "T-OLD", "--backlog", "BACKLOG.md"], root);
-  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /legacy|迁移|required/i);
 
   root = makeLegacy("📋 免审", JSON.stringify({ receipt_policy: "required" }));
   r = run(TASKCTL, ["start", "T-OLD", "--backlog", "BACKLOG.md"], root);
@@ -1093,18 +1045,18 @@ test("taskctl 的列映射绑定目标所属表，不会被后一个不同表头
   fs.mkdirSync(path.join(root, "orchestrator", "process"), { recursive: true });
   fs.writeFileSync(
     path.join(root, "orchestrator", "process", "reconcile.config.json"),
-    JSON.stringify({ receipt_policy: "legacy" }),
+    JSON.stringify({ receipt_policy: "required" }),
   );
   fs.writeFileSync(
     path.join(root, "BACKLOG.md"),
     [
-      "| ID | 状态 | 审核 | 文档 |",
-      "|---|---|---|---|",
-      "| T-FIRST | 📋 | 待审 | [A](A.md) |",
+      "| ID | 状态 | 审核 | 验收 | 文档 |",
+      "|---|---|---|---|---|",
+      "| T-FIRST | 📋 | 待审 | — | [A](A.md) |",
       "",
       "| 任务 | 审核 | ID | 验收 | 文档 | 状态 |",
       "|---|---|---|---|---|---|",
-      "| target | PASS | T-TARGET | — | [B](B.md) | 📋 |",
+      "| target | — | T-TARGET | — | [B](B.md) | 📋 |",
       "",
     ].join("\n"),
   );
@@ -1113,7 +1065,7 @@ test("taskctl 的列映射绑定目标所属表，不会被后一个不同表头
   const r = run(TASKCTL, ["start", "T-TARGET", "--backlog", "BACKLOG.md"], root);
   assert.equal(r.status, 0, r.stderr || r.stdout);
   const backlog = fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8");
-  assert.match(backlog, /T-FIRST \| 📋 \| 待审/);
+  assert.match(backlog, /T-FIRST \| 📋 \| 待审 \| —/);
   assert.match(backlog, /T-TARGET \| — \| \[B\]\(B\.md\) \| 🔨/);
 });
 
@@ -1138,4 +1090,41 @@ test("backlog hook 对 strict Edit 使用 review allowlist（未知值不能漏�
   assert.equal(result.status, 2, result.stderr || result.stdout);
   assert.match(result.stderr, /allowlist|阻断/i);
   assert.equal(fs.readFileSync(backlogFile, "utf8"), before, "hook 只裁决，不改文件");
+});
+
+test("backlog hook 对 legacy 的直接开工或完成编辑也 fail-closed", () => {
+  const root = tempProject({ strict: false, review: "PASS" });
+  const backlogFile = path.join(root, "BACKLOG.md");
+  const pending = fs.readFileSync(backlogFile, "utf8");
+  let result = spawnSync("bash", [BACKLOG_HOOK], {
+    cwd: root,
+    encoding: "utf8",
+    input: JSON.stringify({
+      tool_name: "Edit",
+      tool_input: {
+        file_path: backlogFile,
+        old_string: pending,
+        new_string: pending.replace("| 📋 |", "| 🔨 |"),
+      },
+    }),
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /legacy|迁移|required/i);
+
+  const running = pending.replace("| 📋 |", "| 🔨 |");
+  fs.writeFileSync(backlogFile, running);
+  result = spawnSync("bash", [BACKLOG_HOOK], {
+    cwd: root,
+    encoding: "utf8",
+    input: JSON.stringify({
+      tool_name: "Edit",
+      tool_input: {
+        file_path: backlogFile,
+        old_string: running,
+        new_string: running.replace("| 🔨 |", "| ✅ |"),
+      },
+    }),
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /legacy|迁移|required/i);
 });

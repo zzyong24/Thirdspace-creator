@@ -564,7 +564,9 @@ function readAcceptanceRows(backlogFile) {
       };
       continue;
     }
-    if (!columns || columns.id < 0 || !row.cells[columns.id]) continue;
+    // 只审计真正含「状态」列的活动任务表。暂停池/历史索引即使也有 ID，
+    // 也不属于 strict receipt 的执行队列，不能因缺验收列把 reconcile 全局打红。
+    if (!columns || columns.id < 0 || columns.status < 0 || !row.cells[columns.id]) continue;
     rows.push({
       id: row.cells[columns.id],
       status: row.cells[columns.status] ?? "",
@@ -681,7 +683,7 @@ export function executeFrontendVerification({ root, verified }) {
     watchedPathsSha: sha(JSON.stringify(verified.watchedPaths)).slice(0, 12),
     commandSha: sha(configured).slice(0, 12),
     outputSha: sha(output).slice(0, 12),
-    outputTail: output.trim().slice(-500),
+    outputBytes: Buffer.byteLength(output, "utf8"),
   };
 }
 
