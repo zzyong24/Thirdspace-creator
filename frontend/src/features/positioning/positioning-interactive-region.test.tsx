@@ -19,24 +19,32 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 const mockClient = {
   upsertProfile: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   createStatement: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
+  resetPositioningMaster: vi.fn(
+    (input: unknown): Promise<unknown> => Promise.resolve(input),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     upsertProfile: (input: unknown) => mockClient.upsertProfile(input),
     createStatement: (input: unknown) => mockClient.createStatement(input),
+    resetPositioningMaster: (input: unknown) =>
+      mockClient.resetPositioningMaster(input),
   },
 }));
 
 import {
   PositioningDraftDrawer,
   PositioningProfileForm,
+  ResetPositioningMasterButton,
   PositioningStatementForm,
 } from "./positioning-interactive-region";
 
 beforeEach(() => {
   mockRouter.refresh.mockClear();
+  mockRouter.push.mockClear();
   mockClient.upsertProfile.mockClear();
   mockClient.createStatement.mockClear();
+  mockClient.resetPositioningMaster.mockClear();
 });
 afterEach(cleanup);
 
@@ -177,29 +185,6 @@ describe("PositioningDraftDrawer", () => {
     expect(screen.getByLabelText("一句话定位")).toBeTruthy();
   });
 
-  it("新建定位版本先确认，确认后以空白定位重新开始且取消确认不打开", () => {
-    const confirm = vi.spyOn(window, "confirm");
-    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
-    render(
-      <PositioningDraftDrawer
-        profile={PROFILE}
-        triggerLabel="新建定位版本"
-        title="新建定位版本"
-        description="重新开始定位。"
-        confirmClearOnOpen
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: /新建定位版本/ }));
-    expect(screen.queryByTestId("positioning-draft-dialog")).toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: /新建定位版本/ }));
-    expect(screen.getByTestId("positioning-draft-dialog")).toBeTruthy();
-    expect((screen.getByLabelText("人设") as HTMLInputElement).value).toBe("");
-    expect(confirm).toHaveBeenCalledTimes(2);
-    confirm.mockRestore();
-  });
-
   it("规则入口打开时直达定位规则，而不是让用户再猜第三个 tab", () => {
     render(
       <PositioningDraftDrawer
@@ -216,6 +201,31 @@ describe("PositioningDraftDrawer", () => {
       "true",
     );
     expect(screen.getByLabelText("选题规则")).toBeVisible();
+  });
+
+  it("编辑时点击弹窗外部不会直接退出，只有显式取消才关闭", () => {
+    render(
+      <PositioningDraftDrawer
+        profile={PROFILE}
+        triggerLabel="编辑定位规则"
+        title="编辑定位规则"
+        description="修改规则。"
+        initialTab="rules"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "编辑定位规则" }));
+    fireEvent.change(screen.getByLabelText("选题规则"), {
+      target: { value: "正在编辑的新规则" },
+    });
+
+    fireEvent.pointerDown(document.body);
+    expect(screen.getByTestId("positioning-draft-dialog")).toBeVisible();
+    expect(
+      (screen.getByLabelText("选题规则") as HTMLTextAreaElement).value,
+    ).toBe("正在编辑的新规则");
+
+    fireEvent.click(screen.getByTestId("positioning-draft-cancel"));
+    expect(screen.queryByTestId("positioning-draft-dialog")).toBeNull();
   });
 
   it("先后保存画像与规则时，不用隐藏表单的旧快照覆盖刚保存的数据", async () => {
@@ -310,5 +320,32 @@ describe("PositioningDraftDrawer", () => {
     expect(
       (screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value,
     ).toBe("v2 把论文变生产级代码");
+  });
+});
+
+describe("ResetPositioningMasterButton", () => {
+  it("取消确认不清空；确认后先重置母版，再打开定位 AI 对话", async () => {
+    const confirm = vi.spyOn(window, "confirm");
+    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
+    render(<ResetPositioningMasterButton />);
+
+    fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
+    expect(mockClient.resetPositioningMaster).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
+    await waitFor(() =>
+      expect(mockClient.resetPositioningMaster).toHaveBeenCalledWith({
+        params: undefined,
+        query: undefined,
+        body: undefined,
+      }),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    expect(mockRouter.push).toHaveBeenCalledTimes(1);
+    const href = mockRouter.push.mock.calls[0]![0] as string;
+    expect(href).toContain("surface=positioning");
+    expect(href).toContain("fn=positioning.generate");
+    expect(href).toContain("prefill=");
+    confirm.mockRestore();
   });
 });

@@ -391,6 +391,39 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 
+  it("[T-623] embed.request without autoSend prefills the existing rail and waits for the user", async () => {
+    const embedBase = {
+      surface: "project",
+      selection: { kind: "project", id: "proj-1", title: "我的作品" },
+      persistKey: "project:proj-1",
+    } as const;
+    const { rerender } = render(
+      <AICopilotContent viewModel={VM} embed={{ ...embedBase, request: null }} />,
+    );
+    rerender(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{
+          ...embedBase,
+          request: {
+            functionKey: "review.analyze",
+            prefill: "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
+            autoSend: false,
+            selection: { kind: "project", id: "proj-1", title: "我的作品" },
+            nonce: 1,
+          },
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        (screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement).value,
+      ).toBe("帮我复盘,提炼可复用的爆款要素沉淀成经验。");
+    });
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
   it("[T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)", async () => {
     const embedBase = {
       surface: "project",

@@ -281,6 +281,23 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **发布影响**：不改数据库 schema，不迁移历史数据；在契约与 backend 锁定检查完成前，不得
   只开放前端覆盖按钮。
 
+## CI-POS-019 — 定位母版重建与复盘 Copilot 单入口（T-623，2026-07-29）
+
+- **变更**：定位中心“新建定位母版”从只清空前端草稿升级为真实
+  `positioning.master.reset`；复盘页“帮我复盘”从全局深链改为既有项目编导右栏预填。
+- **数据影响**：`creator_profiles` 增加 `statement_version_floor`，存量默认 0；重置时清空
+  profile 可变字段并记录当前最大版本。`positioning_statements` 不更新、不删除，历史完整保留。
+- **读取重派生**：当前定位与未指定 statement 的定位 Gate 只读取版本号大于 floor 的陈述；
+  历史列表继续读取全部版本。定位 AI 与其他 creative-context 消费面经同一
+  `getPositioningCenter` 自动得到空母版，不需要各下游单独过滤。
+- **交互重派生**：定位编辑 Dialog 禁止外部点击关闭；项目 layout 统一挂载
+  `DraftChatRequestProvider`，复盘三个入口只发送 `review.analyze` 预填请求，不自动发送、
+  不覆盖用户正在输入的文字、不打开第二个 Copilot。
+- **兼容与限制**：旧版本号继续递增；AI 仍只产候选，用户采纳后经既有 backend service 落库；
+  小屏继续遵守阶段右栏现有 `xl+` 显示约束，不回退全局弹窗。
+- **验证**：contract 全量、positioning service/contract/repository、定位与复盘前端定向、
+  Copilot embed 预填、三包 typecheck、boundary 与 reconcile。
+
 ---
 
 ### How to use this file going forward

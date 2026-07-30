@@ -40,6 +40,13 @@ export const positioningOperations = {
     response: creatorProfileResource,
     fr: ["FR-POSITIONING-PROFILE-UPSERT"],
   }),
+  resetPositioningMaster: defineEndpoint({
+    id: "positioning.master.reset",
+    method: "POST",
+    path: "/positioning/master/reset",
+    response: creatorProfileResource,
+    fr: ["FR-POS-623-001"],
+  }),
   listStatements: defineEndpoint({
     id: "positioning.statements.list",
     method: "GET",

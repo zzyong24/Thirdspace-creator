@@ -6,8 +6,8 @@
 // route maps. Repository is NOT exported (foundation §1). No cross-module repository
 // import.
 //
-// Positioning owns the 7 contract ops (positioning.profile.get/upsert /
-// positioning.statements.list/create/get / positioning.gate.evaluate /
+// Positioning owns the 8 contract ops (positioning.profile.get/upsert /
+// positioning.master.reset / positioning.statements.list/create/get / positioning.gate.evaluate /
 // pages.positioning.get). The project subject for the gate reaches Projects ONLY
 // through the injected PositioningProjectsPort (no cross-module repository import,
 // SPEC §22). `createStatementVersion` is exposed on the PositioningService so the AI

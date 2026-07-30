@@ -137,7 +137,7 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     ).not.toBeNull();
   });
 
-  it("无候选:本期经验区渲差异化空态 + 「帮我复盘」CTA(深链本项目 review.analyze)", () => {
+  it("无候选:本期经验区渲差异化空态 + 「帮我复盘」CTA(进入既有右栏，不再开浮层)", () => {
     const { container } = render(
       <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vmWith([])} />,
     );
@@ -149,14 +149,12 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
       region.querySelector('[data-slot="current-period-learnings-empty"]'),
     ).not.toBeNull();
     expect(region.textContent).toContain("本条视频还没有可裁决的经验候选");
-    const cta = region.querySelector<HTMLAnchorElement>(
+    const cta = region.querySelector<HTMLButtonElement>(
       '[data-slot="current-period-learnings-cta"]',
     );
     expect(cta).not.toBeNull();
-    // 深链带 review surface + review.analyze fn + 本项目 selection。
-    const href = cta!.getAttribute("href") ?? "";
-    expect(href).toContain("surface=review");
-    expect(href).toContain("fn=review.analyze");
+    expect(cta!.tagName).toBe("BUTTON");
+    expect(region.querySelector('a[href*="copilot=open"]')).toBeNull();
     // 无候选时不渲裁决队列(无采纳按钮)。
     expect(region.querySelector('[data-slot="learning-adopt"]')).toBeNull();
   });

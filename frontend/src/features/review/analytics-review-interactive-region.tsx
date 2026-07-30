@@ -27,9 +27,7 @@
  */
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
@@ -39,7 +37,7 @@ import { EmptyState } from "@/components/state/page-state";
 import { SectionCard } from "@/components/project/section-card";
 // [T-329] 复盘专用紧凑指标卡(12 卡响应式网格;共享 MetricCard 不动,别的页面在用)。
 import { ReviewMetricCard } from "./review-metric-card";
-import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+import { ReviewAnalyzeButton } from "./review-analyze-island";
 // [T-209] 复盘内容区把当前 viewModel 发布到 module 桥,供 header「导出报告」按钮读取。
 import { publishReviewExportModel } from "./review-report-export";
 // [T-118a §A] 复用经验裁决队列组件(采纳/不采→evaluateLearning、inline 编辑),不另造。
@@ -601,17 +599,11 @@ function CurrentPeriodLearnings({
         </div>
         {/* [T-356③] 常驻再跑入口(原「AI 要点」卡下架后,非空态也要能再复盘)。 */}
         {isEmpty ? null : (
-          <Link
-            href={copilotDeepLink("review", "review.analyze", {
-              kind: "project",
-              id: projectId,
-            })}
-            data-slot="current-period-learnings-rerun"
-            className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-control border border-brand/30 bg-brand-soft/50 px-3 text-[11px] font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft"
-          >
-            <Sparkles className="size-3.5" />
-            帮我复盘
-          </Link>
+          <ReviewAnalyzeButton
+            projectId={projectId}
+            slot="current-period-learnings-rerun"
+            className="h-7 shrink-0 px-3 text-[11px] [&_svg]:size-3.5"
+          />
         )}
       </header>
       {isEmpty ? (
@@ -625,17 +617,11 @@ function CurrentPeriodLearnings({
           <p className="text-[11px] leading-relaxed text-muted-foreground">
             点「帮我复盘」让编导从本期评论 / 指标提炼(复盘会同时产要点 + 经验候选)。
           </p>
-          <Link
-            href={copilotDeepLink("review", "review.analyze", {
-              kind: "project",
-              id: projectId,
-            })}
-            data-slot="current-period-learnings-cta"
-            className="inline-flex h-7 w-fit items-center gap-1.5 rounded-control border border-brand/30 bg-brand-soft/50 px-3 text-[11px] font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft"
-          >
-            <Sparkles className="size-3.5" />
-            帮我复盘
-          </Link>
+          <ReviewAnalyzeButton
+            projectId={projectId}
+            slot="current-period-learnings-cta"
+            className="h-7 w-fit px-3 text-[11px] [&_svg]:size-3.5"
+          />
         </div>
       ) : (
         <AdjudicationQueue candidates={candidates} />

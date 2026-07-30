@@ -158,6 +158,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   // 定位 (positioning)
   ["GET", "/positioning/profile"],
   ["POST", "/positioning/profile"],
+  ["POST", "/positioning/master/reset"],
   ["GET", "/positioning/statements"],
   ["POST", "/positioning/statements"],
   ["GET", "/positioning/statements/:statementId"],

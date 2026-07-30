@@ -7,7 +7,7 @@
  * real SQL via the composite transport). Empty-state (brand-new user, no profile)
  * renders a 「创建定位」 CTA (the draft drawer) instead of the version timeline.
  *
- * Layout (定位中心重建, two-column): 页头 + 新建定位版本 → 两栏 grid:
+ * Layout (定位中心重建, two-column): 页头 + 新建定位母版 → 两栏 grid:
  *   - 左主栏: 英雄区 当前定位母版 (一句话放大 + 9-facet 图标 chip 网格) → AI 区
  *       (✨ AI 生成定位建议) → 版本历史表.
  *   - 右规则栏: 「定位规则（供下游模块使用）」 5 条规则卡 (彩色图标 chip + 短文),
@@ -55,7 +55,10 @@ import type {
 } from "@creatoros/backend/modules/positioning";
 
 import { GeneratePositioningIsland } from "./generate-positioning-island";
-import { PositioningDraftDrawer } from "./positioning-interactive-region";
+import {
+  PositioningDraftDrawer,
+  ResetPositioningMasterButton,
+} from "./positioning-interactive-region";
 
 export type PositioningCenterViewModel = PositioningCenterResource;
 
@@ -149,7 +152,7 @@ export function PositioningCenterView({
       className="flex h-full min-h-0 flex-col gap-4"
     >
       <div className="shrink-0">
-        <PageHeader profile={profile} isEmpty={isEmpty} />
+        <PageHeader isEmpty={isEmpty} />
       </div>
 
       {isEmpty ? (
@@ -248,12 +251,10 @@ function EmptyStateAiCta() {
   );
 }
 
-// 页头：标题 + 副标题 + 右侧主按钮「+ 新建定位版本」(打开草稿抽屉).
+// 页头：标题 + 副标题 + 右侧主按钮「+ 新建定位母版」(确认后重置真母版并进入 AI 访谈).
 function PageHeader({
-  profile,
   isEmpty,
 }: {
-  readonly profile: CreatorProfileResource | null;
   readonly isEmpty: boolean;
 }) {
   return (
@@ -265,14 +266,7 @@ function PageHeader({
         </p>
       </div>
       {isEmpty ? null : (
-        <PositioningDraftDrawer
-          profile={profile}
-          triggerLabel="新建定位版本"
-          triggerIcon="plus"
-          title="新建定位版本"
-          description="更新账号画像，或追加一条新的不可变定位陈述。"
-          confirmClearOnOpen
-        />
+        <ResetPositioningMasterButton />
       )}
     </header>
   );

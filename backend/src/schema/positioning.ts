@@ -41,6 +41,9 @@ export const creatorProfiles = pgTable("creator_profiles", {
   // existing row reads back an empty object; the mapper fills missing keys.
   facets: jsonb("facets").notNull().default({}),
   downstreamRules: jsonb("downstream_rules").notNull().default({}),
+  // [T-623] 新建定位母版时不删除不可变陈述历史，而是记录“旧母版截至哪个版本”。
+  // currentStatement 只从 version_number > floor 的行中选择；存量 0 完全兼容。
+  statementVersionFloor: integer("statement_version_floor").notNull().default(0),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -80,11 +83,13 @@ CREATE TABLE IF NOT EXISTS creator_profiles (
   capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
   facets JSONB NOT NULL DEFAULT '{}'::jsonb,
   downstream_rules JSONB NOT NULL DEFAULT '{}'::jsonb,
+  statement_version_floor INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS facets JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS downstream_rules JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS statement_version_floor INTEGER NOT NULL DEFAULT 0;
 -- [T-136 多账号 · SPEC §C] 定位母版 per-account:加 account_id + 换唯一约束
 -- UNIQUE(user_id) → UNIQUE(user_id, account_id)。迁移 0025 有序做「建号→backfill→换约束」;
 -- 此 inline DDL 供 pglite/seed 新库初始化到终态(幂等:先删旧唯一索引再建复合)。

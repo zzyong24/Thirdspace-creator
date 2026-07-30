@@ -90,6 +90,7 @@ export interface PositioningRepository {
   getProfile(): Promise<CreatorProfileRow | undefined>;
   insertProfile(input: InsertProfileInput): Promise<CreatorProfileRow>;
   updateProfileRow(input: UpdateProfileInput): Promise<CreatorProfileRow>;
+  resetProfileRow(profileId: string): Promise<CreatorProfileRow>;
   clearStatusNoteIfMatches(
     profileId: string,
     expectedStatusNote: string,
@@ -103,6 +104,7 @@ export interface PositioningRepository {
   getStatement(statementId: string): Promise<PositioningStatementRow>;
   getCurrentStatement(
     profileId: string,
+    statementVersionFloor: number,
   ): Promise<PositioningStatementRow | undefined>;
   maxVersionNumber(profileId: string): Promise<number>;
 
@@ -188,6 +190,59 @@ export function createPositioningRepository(
       return updated[0]!;
     },
 
+    async resetProfileRow(profileId) {
+      // 一个 UPDATE 同时清空可变母版并把当前最大不可变版本记为 floor，避免“先读 max、
+      // 再更新 profile”之间插入新版本造成竞态。
+      const versionFloor = sql<number>`COALESCE((
+        SELECT MAX(${positioningStatements.versionNumber})
+        FROM ${positioningStatements}
+        WHERE ${positioningStatements.userId} = ${deps.userId}
+          AND ${positioningStatements.accountId} = ${deps.accountId}
+          AND ${positioningStatements.profileId} = ${profileId}
+      ), 0)`;
+      const updated = await db
+        .update(creatorProfiles)
+        .set({
+          persona: "",
+          field: "",
+          audience: "",
+          differentiation: "",
+          capabilities: [],
+          facets: {
+            contentScope: "",
+            avoid: "",
+            corePain: "",
+            coreValue: "",
+            tone: "",
+            statusNote: "",
+          },
+          downstreamRules: {
+            topicRule: "",
+            scriptRule: "",
+            projectRule: "",
+            forbidRule: "",
+            expressionRule: "",
+          },
+          statementVersionFloor: versionFloor,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(creatorProfiles.id, profileId),
+            eq(creatorProfiles.userId, deps.userId),
+            eq(creatorProfiles.accountId, deps.accountId),
+          ),
+        )
+        .returning();
+      const row = updated[0];
+      if (!row) {
+        throw new OwnershipError(
+          `OwnershipError: creator profile not found: ${profileId}`,
+        );
+      }
+      return row;
+    },
+
     async clearStatusNoteIfMatches(profileId, expectedStatusNote) {
       const updated = await db
         .update(creatorProfiles)
@@ -249,7 +304,7 @@ export function createPositioningRepository(
       return row;
     },
 
-    async getCurrentStatement(profileId) {
+    async getCurrentStatement(profileId, statementVersionFloor) {
       const rows = await db
         .select()
         .from(positioningStatements)
@@ -258,6 +313,7 @@ export function createPositioningRepository(
             eq(positioningStatements.userId, deps.userId),
             eq(positioningStatements.accountId, deps.accountId),
             eq(positioningStatements.profileId, profileId),
+            sql`${positioningStatements.versionNumber} > ${statementVersionFloor}`,
           ),
         )
         .orderBy(desc(positioningStatements.versionNumber))

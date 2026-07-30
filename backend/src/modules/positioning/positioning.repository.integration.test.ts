@@ -137,7 +137,7 @@ describe("positioning repository (integration, user-scoped)", () => {
     const { rows, total } = await repo.listStatements({ limit: 50, offset: 0 });
     expect(total).toBe(2);
     expect(rows[0]!.versionNumber).toBe(2);
-    const current = await repo.getCurrentStatement(profile.id);
+    const current = await repo.getCurrentStatement(profile.id, 0);
     expect(current!.versionNumber).toBe(2);
     expect(await repo.maxVersionNumber(profile.id)).toBe(2);
   });

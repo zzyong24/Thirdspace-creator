@@ -217,6 +217,114 @@ describe("positioning service", () => {
     ).toBeUndefined();
   });
 
+  it("[T-623] resetMaster clears the current master, preserves history, and only newer versions become current", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      facets: {
+        contentScope: "AI 工程",
+        avoid: "泛泛而谈",
+        corePain: "论文难落地",
+        coreValue: "可运行代码",
+        tone: "工程师口吻",
+        statusNote: "稳定更新",
+      },
+      downstreamRules: {
+        topicRule: "只做工程落地",
+        scriptRule: "先给结果",
+        projectRule: "必须可演示",
+        forbidRule: "不编数据",
+        expressionRule: "不用营销腔",
+      },
+    });
+    const v1 = await service.createStatementVersion(ctx, {
+      oneLiner: "旧定位",
+      keywords: ["旧", "定位", "规则"],
+      productAnchorIds: ["product-old"],
+    });
+
+    const reset = await service.resetMaster(ctx);
+    expect(reset).toMatchObject({
+      persona: "",
+      field: "",
+      audience: "",
+      differentiation: "",
+      capabilities: [],
+      facets: {
+        contentScope: "",
+        avoid: "",
+        corePain: "",
+        coreValue: "",
+        tone: "",
+        statusNote: "",
+      },
+      downstreamRules: {
+        topicRule: "",
+        scriptRule: "",
+        projectRule: "",
+        forbidRule: "",
+        expressionRule: "",
+      },
+    });
+
+    const emptyCurrent = await service.getPositioningCenter(ctx);
+    expect(emptyCurrent.currentStatement).toBeNull();
+    expect(emptyCurrent.keywords).toEqual([]);
+    expect(emptyCurrent.productAnchors).toEqual([]);
+    expect(emptyCurrent.history.map((item) => item.id)).toEqual([v1.id]);
+
+    await expect(
+      service.evaluateGate(ctx, {
+        subjectType: "candidate",
+        subjectId: "candidate-after-reset",
+        candidate: { title: "不应继续吃旧定位" },
+      }),
+    ).rejects.toBeInstanceOf(GateSubjectError);
+
+    const v2 = await service.createStatementVersion(ctx, {
+      oneLiner: "新定位",
+      keywords: ["新", "母版", "定位"],
+      productAnchorIds: ["product-new"],
+    });
+    expect(v2.versionNumber).toBe(2);
+    const rebuilt = await service.getPositioningCenter(ctx);
+    expect(rebuilt.currentStatement?.id).toBe(v2.id);
+    expect(rebuilt.history.map((item) => item.id)).toEqual([v2.id, v1.id]);
+  });
+
+  it("[T-623] resetMaster is account-scoped and cannot clear another account's master", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const ctxAcc1: RequestContext = { ...ctx, accountId: "acc-1" };
+    const ctxAcc2: RequestContext = { ...ctx, accountId: "acc-2" };
+    await service.upsertProfile(ctxAcc1, {
+      ...PROFILE_INPUT,
+      persona: "一号旧母版",
+    });
+    await service.upsertProfile(ctxAcc2, {
+      ...PROFILE_INPUT,
+      persona: "二号保留母版",
+      downstreamRules: { topicRule: "二号规则" },
+    });
+    await service.createStatementVersion(ctxAcc1, {
+      oneLiner: "一号旧定位",
+      keywords: ["一", "号", "旧"],
+      productAnchorIds: [],
+    });
+    await service.createStatementVersion(ctxAcc2, {
+      oneLiner: "二号当前定位",
+      keywords: ["二", "号", "新"],
+      productAnchorIds: [],
+    });
+
+    await service.resetMaster(ctxAcc1);
+
+    expect((await service.getPositioningCenter(ctxAcc1)).currentStatement).toBeNull();
+    const untouched = await service.getPositioningCenter(ctxAcc2);
+    expect(untouched.profile?.persona).toBe("二号保留母版");
+    expect(untouched.profile?.downstreamRules.topicRule).toBe("二号规则");
+    expect(untouched.currentStatement?.oneLiner).toBe("二号当前定位");
+  });
+
   it("[T-231⑥] changeReason 落库:传了存 trim 后原文,不传存 ''(留痕不丢)", async () => {
     const service = makeService(db, makeProjectsPort());
     await service.upsertProfile(ctx, PROFILE_INPUT);

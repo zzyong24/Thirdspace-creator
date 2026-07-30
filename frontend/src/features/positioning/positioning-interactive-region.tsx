@@ -49,6 +49,8 @@ import {
 
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
+import { describeUserError } from "@/lib/ai-error-humanize";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,6 +76,69 @@ type PositioningProfileDraft = Pick<
   | "facets"
   | "downstreamRules"
 >;
+
+const NEW_MASTER_PREFILL =
+  "帮我从头创建一份新的定位母版。请先通过对话逐步了解我的账号、受众、内容边界和表达规则，不要沿用旧定位。";
+
+/**
+ * 新建母版是显式破坏性命令：服务端先把当前母版切到新的空版本边界，成功后才打开
+ * 既有定位 Copilot。旧 statement 历史保留，但不会继续成为 currentStatement。
+ */
+export function ResetPositioningMasterButton() {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const reset = React.useCallback(() => {
+    if (busy) return;
+    const accepted = window.confirm(
+      "新建定位母版会立即清空当前账号画像、定位规则和“当前使用”定位；旧版本仍保留在历史记录中。是否继续？",
+    );
+    if (!accepted) return;
+    setBusy(true);
+    setError(null);
+    void (async () => {
+      try {
+        await client.resetPositioningMaster({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        });
+        router.refresh();
+        router.push(
+          copilotDeepLink(
+            "positioning",
+            "positioning.generate",
+            undefined,
+            NEW_MASTER_PREFILL,
+          ),
+        );
+      } catch (err) {
+        setError(describeUserError(err, "新建定位母版失败，请重试。"));
+        setBusy(false);
+      }
+    })();
+  }, [busy, router]);
+
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <Button
+        type="button"
+        onClick={reset}
+        disabled={busy}
+        data-testid="reset-positioning-master"
+      >
+        <Plus />
+        {busy ? "正在清空…" : "新建定位母版"}
+      </Button>
+      {error ? (
+        <p role="alert" className="max-w-72 text-right text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 function toProfileDraft(
   profile: PositioningProfileDraft | null,
@@ -740,8 +805,6 @@ export interface PositioningDraftDialogProps {
   readonly statementSeed?: PositioningStatementSeed;
   /** 入口对应的默认页签。规则卡入口直达 rules，避免用户还要猜页签。 */
   readonly initialTab?: DraftTab;
-  /** “重新定位”入口：先确认，再用空白草稿打开；不会删除已保存历史。 */
-  readonly confirmClearOnOpen?: boolean;
 }
 
 type DraftTab = "profile" | "rules" | "statement";
@@ -765,7 +828,6 @@ export function PositioningDraftDialog({
   description,
   statementSeed,
   initialTab = "profile",
-  confirmClearOnOpen = false,
 }: PositioningDraftDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [tab, setTab] = React.useState<DraftTab>(initialTab);
@@ -781,22 +843,11 @@ export function PositioningDraftDialog({
     },
     [initialTab],
   );
-  const openBlankDraft = React.useCallback(() => {
-    const accepted = window.confirm(
-      "新建定位版本会清空本次表单内容并重新开始；已保存的历史定位不会删除。是否继续？",
-    );
-    if (!accepted) return;
-    setSavedProfile(null);
-    setTab(initialTab);
-    setOpen(true);
-  }, [initialTab]);
-
   const trigger = (
     <Button
       variant={triggerVariant}
       size={triggerSize}
       data-testid="positioning-draft-trigger"
-      onClick={confirmClearOnOpen ? openBlankDraft : undefined}
     >
       {triggerIcon !== "none" ? <Icon /> : null}
       {triggerLabel}
@@ -822,9 +873,10 @@ export function PositioningDraftDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {confirmClearOnOpen ? trigger : <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
         showCloseButton
+        onPointerDownOutside={(event) => event.preventDefault()}
         className="flex max-h-[85vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 p-0 sm:max-w-3xl"
         data-testid="positioning-draft-dialog"
       >

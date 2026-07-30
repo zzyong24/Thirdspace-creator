@@ -492,6 +492,19 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | TEST-007 | test | frontend/scripts/desktop/build-sidecar.test.mjs | FR-069 |
 | TEST-008 | test | orchestrator/GATE-T471-RETROSPECTIVE.md | FR-069 |
 | RISK-011 | risk | orchestrator/GATE-T471-RETROSPECTIVE.md | DEC-019 |
+| DEC-POS-623 | decision | orchestrator/DECISION_LOG.md | NONE |
+| FR-POS-623-001 | requirement | docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md | DEC-POS-623 |
+| FR-POS-623-002 | requirement | docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md | DEC-POS-623 |
+| FR-POS-623-003 | requirement | docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md | DEC-POS-623 |
+| FLOW-POS-623-001 | flow | docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md | FR-POS-623-001, FR-POS-623-003 |
+| ENT-POS-623-001 | entity | backend/src/schema/positioning.ts | FR-POS-623-001 |
+| UI-POS-623-001 | component | frontend/src/features/positioning/positioning-interactive-region.tsx | FR-POS-623-001, FR-POS-623-002 |
+| UI-POS-623-002 | component | frontend/src/features/review/review-analyze-island.tsx | FR-POS-623-003 |
+| API-POS-623-001 | api | contract/src/operations/positioning.ts | FR-POS-623-001 |
+| TEST-POS-623-001 | test | backend/src/modules/positioning/positioning.service.test.ts | FR-POS-623-001, API-POS-623-001 |
+| TEST-POS-623-002 | test | frontend/src/features/positioning/positioning-interactive-region.test.tsx | FR-POS-623-001, FR-POS-623-002 |
+| TEST-POS-623-003 | test | frontend/src/features/review/review-analyze-island.test.tsx | FR-POS-623-003, FLOW-POS-623-001 |
+| TEST-POS-623-004 | test | frontend/src/features/copilot/ai-copilot-interactions.test.tsx | FR-POS-623-003 |
 | DEC-CR-001 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
 | DEC-CR-002 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |
 | DEC-CR-003 | decision | docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md | NONE |

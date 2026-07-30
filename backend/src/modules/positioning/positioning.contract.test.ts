@@ -9,7 +9,7 @@ import {
 import { createPositioningService } from "./positioning.service";
 import { createPositioningTransport } from "./positioning.transport";
 
-// Positioning contract test (Task 4) — for EACH of the 7 op ids, drive the transport
+// Positioning contract test (Task 4) — for EACH of the 8 op ids, drive the transport
 // with a seeded ctx + valid input and assert the op's contract response DTO
 // .parse(envelope.data) succeeds (the output validates against the wire shape;
 // per-item for the isList statements.list). Mirrors the learnings contract test.
@@ -106,6 +106,20 @@ describe("positioning contract (each op validates against its DTO)", () => {
     const env = await call(transport, "positioning.profile.get", {}, ctx);
     const parsed = ENDPOINTS.getProfile.response.parse(env.data);
     expect(parsed.userId).toBe("user-a");
+  });
+
+  it("positioning.master.reset → blank creatorProfileResource", async () => {
+    const transport = makeTransport(db);
+    await seedProfileAndStatement(transport);
+    const env = await call(transport, "positioning.master.reset", {}, ctx);
+    const parsed = ENDPOINTS.resetPositioningMaster.response.parse(env.data);
+    expect(parsed.persona).toBe("");
+    expect(parsed.downstreamRules.topicRule).toBe("");
+
+    const center = await call(transport, "pages.positioning.get", {}, ctx);
+    const parsedCenter = ENDPOINTS.getPositioningCenter.response.parse(center.data);
+    expect(parsedCenter.currentStatement).toBeNull();
+    expect(parsedCenter.history).toHaveLength(1);
   });
 
   it("positioning.statements.create → positioningStatementResource (version 1)", async () => {

@@ -5,6 +5,28 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-POS-623
+Date: 2026-07-29
+Stage: T-623 PLAN / CONTRACT
+Type: user-confirmed-product-semantics
+Decision: 定位中心右上角统一为“新建定位母版”。确认后清空当前账号 profile 的画像、
+          facets 与 downstreamRules，并以 statement_version_floor 建立新的当前母版边界；
+          positioning_statements 继续不可变保留，边界之前的历史不再成为 currentStatement。
+          随后只打开既有定位 AI 对话并预填从头访谈，不自动发送、不由 AI 直接写库。
+          复盘页“帮我复盘”不再打开全局 Copilot，而是预填既有项目编导右栏，用户发送后
+          复用 review.analyze。定位编辑点击外部不得关闭。
+Rationale: 现有重新定位只清前端表单，旧规则仍会进入 AI 上下文；物理删除定位陈述又破坏
+           不可变审计。复盘页已有右栏却再弹全局面板，造成双入口和会话混淆。
+Source: 用户 2026-07-29 截图与明确指令。
+Affected Artifacts: positioning contract/service/repository/schema、定位中心交互、项目阶段
+                    DraftChatRequestProvider、复盘入口、相关测试与追溯。
+Explicit Limits: 不删除历史定位陈述；不新增第二套 Copilot 或 review 工具；不自动发送
+                 预填话术；AI 候选仍须用户采纳后通过 backend service 落库。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-LEARNING-001
 Date: 2026-07-29
 Stage: T-610 BUILD

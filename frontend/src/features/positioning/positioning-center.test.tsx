@@ -29,7 +29,7 @@ import { PositioningCenterView } from "./positioning-center";
 import type { PositioningCenterViewModel } from "./positioning-center";
 
 // 定位中心 page render test (Phase B redesign — viewModel seam). Asserts the page
-// header + 新建定位版本 trigger, the empty-state CTA, the 当前定位母版 英雄区
+// header + 新建定位母版 trigger, the empty-state CTA, the 当前定位母版 英雄区
 // (一句话放大 + facet 网格 incl. product anchors), the AI 赋能带, the 下游影响
 // collapsible (real injected facets), and the version-desc history table with the
 // AI badge + 复制为草稿 action. Deterministic VM (no network).
@@ -95,11 +95,11 @@ const EMPTY: PositioningCenterViewModel = {
 };
 
 describe("PositioningCenterView", () => {
-  it("renders the page header with the title and the 新建定位版本 trigger (populated)", () => {
+  it("renders the page header with the title and the 新建定位母版 trigger (populated)", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getByText("定位中心")).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: /新建定位版本/ }),
+      screen.getByRole("button", { name: /新建定位母版/ }),
     ).toBeTruthy();
   });
 

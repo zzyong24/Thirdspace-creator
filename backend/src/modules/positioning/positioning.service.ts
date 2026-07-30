@@ -132,6 +132,7 @@ export interface PositioningService {
     ctx: RequestContext,
     input: UpsertProfileInput,
   ): Promise<CreatorProfileResource>;
+  resetMaster(ctx: RequestContext): Promise<CreatorProfileResource>;
   // Append-only version chain. Requires a profile (ProfileRequiredError). The AI
   // confirm formalize (C-3) calls this with createdByType:"ai" + aiTaskId.
   createStatementVersion(
@@ -354,6 +355,38 @@ export function createPositioningService(
       return toCreatorProfileDto(row);
     },
 
+    async resetMaster(ctx) {
+      const repo = repoFor(ctx, "positioning.resetMaster");
+      const existing = await repo.getProfile();
+      if (!existing) {
+        // 防御性幂等：空账号直接建立一张空母版；生产 UI 只在已有母版时显示重建按钮。
+        const row = await repo.insertProfile({
+          persona: "",
+          field: "",
+          audience: "",
+          differentiation: "",
+          capabilities: [],
+          facets: {
+            contentScope: "",
+            avoid: "",
+            corePain: "",
+            coreValue: "",
+            tone: "",
+            statusNote: "",
+          },
+          downstreamRules: {
+            topicRule: "",
+            scriptRule: "",
+            projectRule: "",
+            forbidRule: "",
+            expressionRule: "",
+          },
+        });
+        return toCreatorProfileDto(row);
+      }
+      return toCreatorProfileDto(await repo.resetProfileRow(existing.id));
+    },
+
     async createStatementVersion(ctx, input) {
       const repo = repoFor(ctx, "positioning.createStatementVersion");
       const { profileId } = await requireProfileId(repo);
@@ -411,7 +444,10 @@ export function createPositioningService(
       } else {
         const profile = await repo.getProfile();
         const current = profile
-          ? await repo.getCurrentStatement(profile.id)
+          ? await repo.getCurrentStatement(
+              profile.id,
+              profile.statementVersionFloor,
+            )
           : undefined;
         if (!current) {
           throw new GateSubjectError(
@@ -469,7 +505,13 @@ export function createPositioningService(
       const profile = toCreatorProfileDto(profileRow);
       const { rows } = await repo.listStatements({ limit: 200, offset: 0 });
       const history = rows.map(toPositioningStatementDto);
-      const currentStatement = history[0] ?? null; // version-desc → max first
+      const currentRow = await repo.getCurrentStatement(
+        profileRow.id,
+        profileRow.statementVersionFloor,
+      );
+      const currentStatement = currentRow
+        ? toPositioningStatementDto(currentRow)
+        : null;
       return {
         profile,
         currentStatement,
