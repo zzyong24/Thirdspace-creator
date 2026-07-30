@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
+| T-628 | 提供本机 CreatorOS 首次启动全量数据清理脚本【开发验收工具·用户 2026-07-29】 | ✅ 免审 | — | [使用说明](docs/testing/creatoros-local-first-run-reset.md) | 新增可重复使用的 macOS 清理脚本，覆盖 CreatorOS 用户库、配置、缓存、运行时、采集登录态、WebView 状态和本机激活凭据，以便测试渠道与从 0 到 1 首次使用流程；默认只预览、显式确认后才清理，严格限定 CreatorOS 白名单路径，不删除安装包或仓库，应用仍运行时拒绝执行，并以临时 HOME/假 Keychain 完成无真实数据破坏的回归。 |
+| T-627 | 定位最新飞书反馈“内容雷达生成选题卡卡住”【线上故障诊断·用户 2026-07-29】 | ✅ 免审 | — | [诊断结论](docs/research/2026-07-29-latest-radar-topic-generation-stuck.md) · [飞书反馈表](https://my.feishu.cn/base/S1BRb4i6kaD0bnsViJSco0jxnRg?table=tblIPu0er91yGTwL&view=vewb4HsOUz) | 读取最新反馈 `rec27T6wlsnDaI` 的加密日志，对齐 `/intelligence` 选题卡生成触发、模型调用与终态，判断它与 T-617“完成但慢”的同异；本轮只诊断，不修改代码或回写飞书结论。 |
 | T-625 | 根治安装版“新建定位母版”点击无反馈【真机交互 Bug·用户 2026-07-29】 | ✅ 免审 | — | [T-623 交互与契约增量](docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md) | 复盘真机按钮点击未出现确认、也未发起重置的链路，移除对桌面 WebView 原生 `window.confirm` 的依赖，改为产品内可见且可测试的确认对话框；确认后仍只走既有 `positioning.master.reset`，成功再进入右侧定位 Copilot，取消或失败不得清空。 |
 | T-624 | 生成当前 main 的 CreatorOS macOS 本地验收包【本地交付·用户 2026-07-29】 | ✅ 免审 | — | [T-623 交互与契约增量](docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md) | 使用既有桌面打包链基于当前 main 生成本机 arm64 `.app` 与 `.dmg`，保留 sidecar、TLS、验签材料和运行时冒烟硬闸并核对最终产物；仅供本地验收，不推送、不创建远端发布，未配置正式证书时如实标记未签名/未公证。 |
 | T-622 | 完善内容雷达筛选排序与逐字稿录入、纠错和选题后锁定体验【产品体验·用户 2026-07-29】 | ✅ 待办 | — | [交互设计](docs/superpowers/specs/2026-07-29-content-radar-filter-sort-design.md) | 增加收藏/点赞排序及逐字稿、选题状态组合筛选；逐字稿支持粘贴或文件导入，未生成选题前允许替换或重新转写，一旦成功生成选题候选即永久锁定；所有状态基于真实查询并完成主从布局真机验收。 |
