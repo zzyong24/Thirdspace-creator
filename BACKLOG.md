@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 文档 | 一句话 |
 |---|---|---|---|---|---|
+| T-625 | 根治安装版“新建定位母版”点击无反馈【真机交互 Bug·用户 2026-07-29】 | ✅ 免审 | — | [T-623 交互与契约增量](docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md) | 复盘真机按钮点击未出现确认、也未发起重置的链路，移除对桌面 WebView 原生 `window.confirm` 的依赖，改为产品内可见且可测试的确认对话框；确认后仍只走既有 `positioning.master.reset`，成功再进入右侧定位 Copilot，取消或失败不得清空。 |
+| T-624 | 生成当前 main 的 CreatorOS macOS 本地验收包【本地交付·用户 2026-07-29】 | ✅ 免审 | — | [T-623 交互与契约增量](docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md) | 使用既有桌面打包链基于当前 main 生成本机 arm64 `.app` 与 `.dmg`，保留 sidecar、TLS、验签材料和运行时冒烟硬闸并核对最终产物；仅供本地验收，不推送、不创建远端发布，未配置正式证书时如实标记未签名/未公证。 |
 | T-622 | 完善内容雷达筛选排序与逐字稿录入、纠错和选题后锁定体验【产品体验·用户 2026-07-29】 | ✅ 待办 | — | [交互设计](docs/superpowers/specs/2026-07-29-content-radar-filter-sort-design.md) | 增加收藏/点赞排序及逐字稿、选题状态组合筛选；逐字稿支持粘贴或文件导入，未生成选题前允许替换或重新转写，一旦成功生成选题候选即永久锁定；所有状态基于真实查询并完成主从布局真机验收。 |
 | T-623 | 收敛定位母版重建、规则编辑防误退出与发布复盘 Copilot 预填体验【产品体验·用户 2026-07-29】 | ✅ 待办 | — | [交互与契约增量](docs/superpowers/specs/2026-07-29-positioning-master-and-review-copilot-design.md) | 右上角统一为“新建定位母版”，确认后清空旧定位规则并进入现有 AI 对话创建新母版；规则编辑点击外部不再直接丢失；“帮我复盘”只把发布复盘消息预填到既有右侧 Copilot，用户发送后复用同一发布复盘链路，不再弹第二个 Copilot。 |
 | T-621 | 补齐渠道模型异步 authority snapshot 的完整生产链路回归：createTask → persistence → authority change → cancel/no provider call【非阻断测试增强·T-606 独立复核 2026-07-29】 | 📋 待办 | — | [T-606 CreatorOS 绑定 SPEC](docs/superpowers/specs/2026-07-29-creatoros-channel-model-authority.contract.md) | 当前 digest、AsyncLocalStorage、service marker 与执行前取消已分别有单元/集成测试并获独立复核 PASS；本任务只补完整链路证据，不改变已确认契约或本轮完成结论。 |
