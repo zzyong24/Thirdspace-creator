@@ -6396,6 +6396,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     intelligence: intelligenceService,
     transcript: {
       transcribe: async (c, input) => {
+        const totalStartedAt = Date.now();
+        let stage = "resolve-source";
+        let stageStartedAt = totalStartedAt;
+        const logStage = (
+          status: "start" | "done" | "error",
+          extra: Record<string, unknown> = {},
+        ) => {
+          console.log(
+            "[intelligence-transcript]",
+            JSON.stringify({
+              itemId: input.itemId,
+              stage,
+              status,
+              durationMs:
+                status === "start" ? 0 : Date.now() - stageStartedAt,
+              ...extra,
+            }),
+          );
+        };
         const awemeId =
           input.externalId ??
           input.canonicalUrl.match(/\/video\/([^/?#]+)/)?.[1] ??
@@ -6409,39 +6428,75 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             skippedReason: "NO_AUDIO_SOURCE",
           };
         }
-        const cdp = await loadDouyinCdp();
-        const source = await cdp.fetchDouyinVideoSource({
-          awemeId,
-          authDir: douyinAuthDirFor(c.accountId),
-          gateway: douyinGateway,
-        });
-        if (source.kind === "image-album") {
+        try {
+          logStage("start");
+          const cdp = await loadDouyinCdp();
+          const source = await cdp.fetchDouyinVideoSource({
+            awemeId,
+            authDir: douyinAuthDirFor(c.accountId),
+            gateway: douyinGateway,
+          });
+          logStage("done");
+          if (source.kind === "image-album") {
+            return {
+              text: null,
+              provider: null,
+              model: null,
+              language: "zh",
+              skippedReason: "IMAGE_ALBUM",
+            };
+          }
+
+          stage = "extract-audio";
+          stageStartedAt = Date.now();
+          logStage("start");
+          const audioBytes = await cdp.streamAudioFromVideo(source.playUrl);
+          logStage("done", { audioBytes: audioBytes.byteLength });
+
+          stage = "resolve-model";
+          stageStartedAt = Date.now();
+          logStage("start");
+          const spec = await resolveTranscribeSpecFn(c, {
+            getModelConfig: (cc, capability) =>
+              settingsService.getModelConfig(cc, capability),
+            env: process.env,
+            getChannelModelConfig,
+          });
+          logStage("done", {
+            provider: spec.provider,
+            model: spec.model,
+          });
+
+          stage = "asr";
+          stageStartedAt = Date.now();
+          logStage("start", {
+            provider: spec.provider,
+            model: spec.model,
+          });
+          const result = await transcribeAudioFn(
+            spec,
+            { audioBytes, language: "zh" },
+            asrRegistry,
+          );
+          logStage("done", {
+            provider: spec.provider,
+            model: spec.model,
+            totalDurationMs: Date.now() - totalStartedAt,
+          });
           return {
-            text: null,
-            provider: null,
-            model: null,
+            text: result.text,
+            provider: spec.provider,
+            model: spec.model,
             language: "zh",
-            skippedReason: "IMAGE_ALBUM",
           };
+        } catch (error) {
+          logStage("error", {
+            errorName:
+              error instanceof Error ? error.name : "UnknownError",
+            totalDurationMs: Date.now() - totalStartedAt,
+          });
+          throw error;
         }
-        const audioBytes = await cdp.streamAudioFromVideo(source.playUrl);
-        const spec = await resolveTranscribeSpecFn(c, {
-          getModelConfig: (cc, capability) =>
-            settingsService.getModelConfig(cc, capability),
-          env: process.env,
-          getChannelModelConfig,
-        });
-        const result = await transcribeAudioFn(
-          spec,
-          { audioBytes, language: "zh" },
-          asrRegistry,
-        );
-        return {
-          text: result.text,
-          provider: spec.provider,
-          model: spec.model,
-          language: "zh",
-        };
       },
     },
   };

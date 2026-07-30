@@ -114,6 +114,27 @@ describe("[gate-F7 插装点①] fetchDouyinVideoUrl 过 iesdouyin channel", () 
     expect(spy.reports("iesdouyin")).toEqual(["throttled"]);
   });
 
+  it("[T-632] 有 _ROUTER_DATA 但 item_list 为空是内容问题，不得污染共享冷却", async () => {
+    const spy = makeSpyGateway();
+    const unavailableContentFetch = async () =>
+      new Response(
+        `<script>window._ROUTER_DATA = ${JSON.stringify({
+          loaderData: {
+            "video_(id)/page": { videoInfoRes: { item_list: [] } },
+          },
+        })}</script>`,
+        { status: 200 },
+      ) as unknown as Response;
+
+    await expect(
+      fetchDouyinVideoUrl("7400", {
+        fetch: unavailableContentFetch as typeof fetch,
+        gateway: spy.gateway,
+      }),
+    ).rejects.toThrow(/item_list 为空/);
+    expect(spy.reports("iesdouyin")).toEqual(["content-error"]);
+  });
+
   // [Bug-4 T-017] 超时兜底:iesdouyin 半开连接 / 服务器静默 → AbortSignal.timeout
   // 30s 触发 → fetch reject AbortError → 包成 DouyinAudioFetchError → 网关归一 net-timeout。
   // 真根:旧实现裸 await 永不 resolve → runner 卡死在某条作品 → 任务「5/73」僵死。

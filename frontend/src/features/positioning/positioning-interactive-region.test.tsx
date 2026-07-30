@@ -324,7 +324,7 @@ describe("PositioningDraftDrawer", () => {
 });
 
 describe("ResetPositioningMasterButton", () => {
-  it("产品内确认框取消不清空；确认后先重置母版，再打开定位 AI 对话", async () => {
+  it("产品内确认框取消不清空；确认后直接重置为空白母版，不跳转 Copilot", async () => {
     render(<ResetPositioningMasterButton />);
 
     fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
@@ -347,11 +347,7 @@ describe("ResetPositioningMasterButton", () => {
       }),
     );
     expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
-    expect(mockRouter.push).toHaveBeenCalledTimes(1);
-    const href = mockRouter.push.mock.calls[0]![0] as string;
-    expect(href).toContain("surface=positioning");
-    expect(href).toContain("fn=positioning.generate");
-    expect(href).toContain("prefill=");
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
   it("重置失败时保留产品内确认框并显示错误，允许直接重试", async () => {

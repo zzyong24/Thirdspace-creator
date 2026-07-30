@@ -50,7 +50,6 @@ import {
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { describeUserError } from "@/lib/ai-error-humanize";
-import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,12 +76,9 @@ type PositioningProfileDraft = Pick<
   | "downstreamRules"
 >;
 
-const NEW_MASTER_PREFILL =
-  "帮我从头创建一份新的定位母版。请先通过对话逐步了解我的账号、受众、内容边界和表达规则，不要沿用旧定位。";
-
 /**
- * 新建母版是显式破坏性命令：服务端先把当前母版切到新的空版本边界，成功后才打开
- * 既有定位 Copilot。旧 statement 历史保留，但不会继续成为 currentStatement。
+ * 新建母版是显式破坏性命令：服务端把当前母版切到新的空版本边界。旧 statement
+ * 历史保留，但不会继续成为 currentStatement；成功后停留在定位中心显示空白母版。
  */
 export function ResetPositioningMasterButton() {
   const router = useRouter();
@@ -105,14 +101,6 @@ export function ResetPositioningMasterButton() {
         });
         setConfirming(false);
         router.refresh();
-        router.push(
-          copilotDeepLink(
-            "positioning",
-            "positioning.generate",
-            undefined,
-            NEW_MASTER_PREFILL,
-          ),
-        );
       } catch (err) {
         setError(describeUserError(err, "新建定位母版失败，请重试。"));
       } finally {
@@ -124,18 +112,6 @@ export function ResetPositioningMasterButton() {
 
   return (
     <div className="flex flex-col items-end gap-1.5">
-      <Button
-        type="button"
-        onClick={() => {
-          setError(null);
-          setConfirming(true);
-        }}
-        disabled={busy}
-        data-testid="reset-positioning-master"
-      >
-        <Plus />
-        {busy ? "正在清空…" : "新建定位母版"}
-      </Button>
       <Dialog
         open={confirming}
         onOpenChange={(open) => {
@@ -144,6 +120,17 @@ export function ResetPositioningMasterButton() {
           if (!open) setError(null);
         }}
       >
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            onClick={() => setError(null)}
+            disabled={busy}
+            data-testid="reset-positioning-master"
+          >
+            <Plus />
+            {busy ? "正在清空…" : "新建定位母版"}
+          </Button>
+        </DialogTrigger>
         <DialogContent
           data-testid="reset-positioning-master-confirm"
           className="max-w-md"
@@ -158,8 +145,8 @@ export function ResetPositioningMasterButton() {
           <DialogHeader>
             <DialogTitle>清空当前定位并新建？</DialogTitle>
             <DialogDescription>
-              会立即清空当前账号画像、定位规则和“当前使用”定位，再进入 AI
-              对话创建新母版。旧版本仍保留在历史记录中。
+              会立即清空当前账号画像、定位规则和“当前使用”定位，得到一份空白母版。
+              旧版本仍保留在历史记录中。
             </DialogDescription>
           </DialogHeader>
           {error ? (

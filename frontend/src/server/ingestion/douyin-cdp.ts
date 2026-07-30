@@ -572,8 +572,11 @@ const REAL_FETCH_DEPS: FetchDouyinVideoUrlDeps = {
 //   - 其余(网络失败 / HTTP 非 2xx / ffmpeg 等)→ net-timeout 单次(保守,单次不 cooldown)。
 function mapIesdouyinErr(err: unknown): ClassifyInput {
   const raw = err instanceof Error ? err.message : String(err ?? "");
-  if (raw.includes("_ROUTER_DATA")) return { kind: "router-data-missing" };
+  // `item_list 为空` 的完整错误文案也包含 `_ROUTER_DATA`。必须先判内容问题，
+  // 否则隐藏/下架/图集作品会被误判成风控，给整个共享通道加 2 分钟指数冷却，
+  // 连带阻塞用户手动发起的逐字稿提取。
   if (raw.includes("item_list 为空")) return { kind: "empty-item-list" };
+  if (raw.includes("_ROUTER_DATA")) return { kind: "router-data-missing" };
   return { kind: "net-timeout", consecutiveTimeouts: 1 };
 }
 
