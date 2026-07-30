@@ -266,6 +266,16 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
+  it("本地无 updater 私钥时只跳过更新制品，不阻断可安装包", () => {
+    const packageSource = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "package.mjs"),
+      "utf8",
+    );
+    expect(packageSource).toContain("TAURI_SIGNING_PRIVATE_KEY");
+    expect(packageSource).toContain('"createUpdaterArtifacts":false');
+    expect(packageSource).toContain("本次不生成 updater 制品");
+  });
+
   it("Windows 上传产物前执行安装冒烟，上传后执行卸载冒烟", () => {
     expect(workflow).toContain("Windows 安装期 runtime 原生冒烟(T-487)");
     expect(workflow).toContain('Start-Process -FilePath $setup.FullName');

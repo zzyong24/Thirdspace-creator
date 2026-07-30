@@ -403,6 +403,17 @@ const tauriBuildArgs = [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
 ];
+if (!process.env.TAURI_SIGNING_PRIVATE_KEY?.trim()) {
+  // 本地支持包只需要 .app/.dmg。缺 updater 私钥时关闭本轮 updater tar/signature 生成，
+  // 但不改 tauri.conf.json 中烘焙进应用的正式 updater 公钥，后续正式更新能力仍保留。
+  tauriBuildArgs.push(
+    "--config",
+    '{"bundle":{"createUpdaterArtifacts":false}}',
+  );
+  console.log(
+    "[desktop:package] ⏭ 未配 TAURI_SIGNING_PRIVATE_KEY，本次不生成 updater 制品；安装包继续构建。",
+  );
+}
 if (!isFullRelease) {
   // [T-452 后修] tauri CLI 本身不认 `--profile`;放在 `--` 后作为 cargo 参数透传。
   //   实测 CI 报 `error: unexpected argument '--profile' found ... tip: to pass '--profile'
