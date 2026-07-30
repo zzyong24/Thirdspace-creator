@@ -482,6 +482,11 @@ export function createAssetsService(
       // SPEC §20: validate the stored object's MIME/size/checksum via headObject.
       const storage = await objectStorageForCtx(ctx);
       const head = await storage.headObject(session.storageKey);
+      if (head.fileSize !== session.fileSize) {
+        throw new UploadValidationError(
+          `上传文件不完整：应为 ${session.fileSize} 字节，实际收到 ${head.fileSize} 字节，请重新上传`,
+        );
+      }
       const asset = await repo.completeUploadSession(
         ctx.userId,
         uploadId,

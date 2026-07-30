@@ -95,5 +95,7 @@ export function proxy(req: NextRequest): NextResponse {
 
 export const config = {
   // 扩到含 /api(原先排除 api)——default-deny 需要看到 /api 请求;仍跳过静态资源与 Next 内部。
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // blob 自带 HMAC + path-traversal 硬门，且视频 PUT 必须绕开 Next proxy 的 request-body clone：
+  // clone 默认只保留前 10MB，会把大视频静默截断成无法解析的残片。
+  matcher: ["/((?!api/v1/blob|_next/static|_next/image|favicon.ico).*)"],
 };

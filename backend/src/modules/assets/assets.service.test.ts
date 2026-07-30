@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createAssetRepository } from "./assets.repository";
-import { createMockObjectStorage } from "./object-storage";
+import {
+  createMockObjectStorage,
+  type ObjectStoragePort,
+} from "./object-storage";
 import { createAssetsService, type AssetsService } from "./assets.service";
 import {
   OwnershipError,
@@ -43,13 +46,14 @@ function deterministicDeps() {
 
 let db: Db;
 let service: AssetsService;
+let storage: ObjectStoragePort;
 
 beforeEach(async () => {
   ({ db } = await createDb());
   const deps = deterministicDeps();
   const repo = createAssetRepository(db, deps);
   let keySeq = 0;
-  const storage = createMockObjectStorage({
+  storage = createMockObjectStorage({
     nextKey: () => `uploads/key-${++keySeq}`,
   });
   // item B: AssetsService now takes a per-ctx storage factory (not a singleton).
@@ -126,6 +130,24 @@ describe("assets.service — completeUpload (C4)", () => {
     const replay = await service.completeUpload(ctxA, session.uploadId, { name: "x" });
     expect(replay.id).toBe(first.id);
     expect(replay.currentFileId).toBe(first.currentFileId);
+  });
+
+  it("rejects completion when stored bytes are shorter than the declared upload size", async () => {
+    const session = await service.createUpload(ctxA, {
+      assetType: "video",
+      mimeType: "video/quicktime",
+      fileSize: 32 * 1024 * 1024,
+    });
+    await storage.putObject({
+      storageKey: session.storageKey,
+      bytes: new Uint8Array(10 * 1024 * 1024),
+      mimeType: "video/quicktime",
+      assetType: "video",
+    });
+
+    await expect(
+      service.completeUpload(ctxA, session.uploadId, { name: "截断.mov" }),
+    ).rejects.toThrow(UploadValidationError);
   });
 
   it("session for the wrong user → OwnershipError", async () => {

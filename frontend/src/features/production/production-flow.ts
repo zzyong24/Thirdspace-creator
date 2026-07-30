@@ -75,6 +75,12 @@ export function humanizeRenderError(message: string | null): string | null {
     return "有一项素材不是可识别的视频。请检查人物粗剪视频是否完整、格式是否正确；图片素材应作为 B-roll 图片使用，然后点「重试」。";
   }
   if (
+    lower.includes("moov atom not found") ||
+    lower.includes("invalid data found when processing input")
+  ) {
+    return "视频素材上传不完整、文件已损坏或格式无法识别。请确认原视频能在本机正常播放，然后重新上传后再生成。";
+  }
+  if (
     (lower.includes("ffmpeg") || lower.includes("ffprobe")) &&
     (lower.includes("未检测到") ||
       lower.includes("未找到") ||

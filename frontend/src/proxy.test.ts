@@ -6,7 +6,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
-import { proxy } from "./proxy";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
+import { config, proxy } from "./proxy";
 
 const TOKEN = "handshake-token-xyz";
 const BASE = "http://127.0.0.1:5000";
@@ -38,6 +39,23 @@ describe("proxy default-deny (T-415)", () => {
   });
   afterEach(() => {
     process.env = { ...saved };
+  });
+
+  it("blob 大文件上传不经过 proxy body clone（避免默认 10MB 截断）", () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig: {},
+        url: `${BASE}/api/v1/blob/acct-a/video/demo.mov?exp=1&token=t`,
+      }),
+    ).toBe(false);
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig: {},
+        url: `${BASE}/api/v1/dispatch`,
+      }),
+    ).toBe(true);
   });
 
   describe("桌面打包态(REQUIRED 烘焙=1,Rust 注入 token)", () => {

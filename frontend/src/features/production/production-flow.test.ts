@@ -108,6 +108,16 @@ describe("humanizeRenderError(环境错误人话化)", () => {
     expect(message).not.toContain("重新安装");
   });
 
+  it("ffprobe 已运行但素材不完整时提示重新上传，不误报组件缺失", () => {
+    const message = humanizeRenderError(
+      "ffprobe 失败: moov atom not found\nasset.mov: Invalid data found when processing input",
+    );
+    expect(message).toContain("上传");
+    expect(message).toContain("不完整");
+    expect(message).not.toContain("重新安装");
+    expect(message).not.toContain("CREATOROS_FFPROBE_PATH");
+  });
+
   it("其他错误 → null(不编造解释,保留原始错误)", () => {
     expect(humanizeRenderError("模板生成失败:props.scenes 为空")).toBeNull();
     expect(humanizeRenderError(null)).toBeNull();
