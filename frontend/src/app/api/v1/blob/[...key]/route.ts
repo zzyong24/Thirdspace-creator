@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import * as fs from "node:fs/promises";
-import * as path from "node:path";
 import {
   safeJoin,
   verifyBlobToken,
@@ -10,6 +9,7 @@ import {
 import { getStorageRootForRequest } from "@/server/persistence-client";
 import { readSessionCookie } from "../../auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
+import { streamBlobToFile } from "@/server/blob-upload";
 
 // Local-fs blob route (item B). The local-fs object-storage adapter mints
 // token-gated URLs at `/api/v1/blob/<key>?exp=&token=`; this route is where the
@@ -86,9 +86,10 @@ async function gate(
 export async function PUT(req: Request, routeCtx: RouteCtx): Promise<Response> {
   const gated = await gate(req, routeCtx, "PUT");
   if (gated instanceof NextResponse) return gated;
-  const body = Buffer.from(await req.arrayBuffer());
-  await fs.mkdir(path.dirname(gated.absKey), { recursive: true });
-  await fs.writeFile(gated.absKey, body);
+  if (!req.body) {
+    return NextResponse.json({ error: "empty upload body" }, { status: 400 });
+  }
+  await streamBlobToFile(req.body, gated.absKey);
   return new NextResponse(null, { status: 200 });
 }
 
