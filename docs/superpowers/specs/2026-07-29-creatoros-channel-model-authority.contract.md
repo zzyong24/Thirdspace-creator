@@ -132,3 +132,14 @@ agentic raw config、图像/视频/视觉/ASR、embedding、联网搜索和“�
 本任务只形成 CreatorOS 私有分支候选，供总控与 Growth/Activity 联调。没有生产 key、
 正式渠道配置、跨仓联调证据和用户发布许可时，不发布下载站，不宣称三端上线；push/deploy
 继续作为独立发布确认点。
+
+## 8. 2026-07-30 多模型数组增量
+
+- Growth 可在 `payload.models[capability]` 下发布一个或多个模型选项；每项沿用
+  `provider/baseURL/apiKey/model/apiFormat/settings`，并增加只用于数组定位的 `id/name/isDefault`。
+- CreatorOS 每次调用按当前 capability 读取对应数组；不存在精确项时只允许回退
+  `models.default`，不得跨用其他能力数组。
+- 同一数组最多一个 `isDefault=true`；有默认项时采用默认项，否则采用第一项。空数组、非对象项
+  或多个默认项均以 `ChannelModelConfigurationError` 失败，且不得回退本地模型。
+- 旧的平铺单模型 object 继续兼容。模型数组与默认项由 Growth 统一管理；CreatorOS 不把本地选择
+  写回 Growth，也不能扩大当前渠道的可用模型集合。

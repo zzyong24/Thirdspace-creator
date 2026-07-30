@@ -20,6 +20,36 @@ export class ChannelModelConfigurationError extends Error {
   }
 }
 
+function modelOption(
+  payload: ChannelModelPayload,
+  capability: string,
+): ChannelModelPayload {
+  const models = field(payload, "models");
+  if (models === undefined) return payload;
+  if (!models || typeof models !== "object" || Array.isArray(models)) {
+    throw new ChannelModelConfigurationError();
+  }
+  const byCapability = models as Readonly<Record<string, unknown>>;
+  const options =
+    byCapability[capability] ??
+    byCapability.default;
+  if (!Array.isArray(options) || options.length === 0) {
+    throw new ChannelModelConfigurationError();
+  }
+  const objects = options.filter(
+    (option): option is ChannelModelPayload =>
+      Boolean(option) && typeof option === "object" && !Array.isArray(option),
+  );
+  if (objects.length !== options.length) {
+    throw new ChannelModelConfigurationError();
+  }
+  const defaults = objects.filter(option => option.isDefault === true);
+  if (defaults.length > 1) {
+    throw new ChannelModelConfigurationError();
+  }
+  return defaults[0] ?? objects[0]!;
+}
+
 function apiFormat(payload: ChannelModelPayload): ApiFormat {
   const explicit = field(payload, "apiFormat");
   switch (explicit) {
@@ -56,17 +86,19 @@ function settings(payload: ChannelModelPayload): Record<string, unknown> {
 /** configured payload 的文本投影；协议族必须显式合法，其余字段由正式调用验证且不存在 local fallback。 */
 export function channelLlmConfig(
   payload: ChannelModelPayload,
+  capability = "default",
 ): ResolvedLlmConfig {
-  const url = baseUrl(payload);
-  const format = apiFormat(payload);
+  const option = modelOption(payload, capability);
+  const url = baseUrl(option);
+  const format = apiFormat(option);
   return {
     apiFormat: format,
     baseUrl: url,
-    model: model(payload),
+    model: model(option),
     // authStyle 是 CreatorOS provider adapter 的内部字段，不从渠道 JSON 的未知字段猜造。
     authStyle: format === "anthropic" ? "x-api-key" : "bearer",
-    token: token(payload),
-    settings: settings(payload),
+    token: token(option),
+    settings: settings(option),
     displayModelKey: "channel-managed",
   };
 }
@@ -74,13 +106,15 @@ export function channelLlmConfig(
 /** configured payload 的多模态/ASR 投影；无效字段留给正式调用诚实失败。 */
 export function channelMultimodalSpec(
   payload: ChannelModelPayload,
+  capability: string,
   kind: MultimodalSpec["kind"],
 ): MultimodalSpec {
+  const option = modelOption(payload, capability);
   return {
-    provider: field(payload, "provider") as string,
-    baseUrl: baseUrl(payload),
-    model: model(payload),
-    token: token(payload),
+    provider: field(option, "provider") as string,
+    baseUrl: baseUrl(option),
+    model: model(option),
+    token: token(option),
     kind,
     displayModelKey: "channel-managed",
   };
@@ -89,14 +123,16 @@ export function channelMultimodalSpec(
 /** configured payload 的 settings-compatible 投影，仅供既有专用 resolver 复用。 */
 export function channelModelRow(
   payload: ChannelModelPayload,
+  capability = "default",
 ): ModelConfigInternal {
+  const option = modelOption(payload, capability);
   return {
-    provider: field(payload, "provider") as string,
-    modelName: model(payload),
-    baseUrl: baseUrl(payload),
-    apiFormat: apiFormat(payload),
+    provider: field(option, "provider") as string,
+    modelName: model(option),
+    baseUrl: baseUrl(option),
+    apiFormat: apiFormat(option),
     secretReference: "",
-    secretValue: token(payload),
-    settings: settings(payload),
+    secretValue: token(option),
+    settings: settings(option),
   };
 }

@@ -11,6 +11,45 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
+  it("按能力从 Growth 多模型数组选择默认生图模型", async () => {
+    const spec = await resolveMultimodalSpec(ctx, "image.generate", {
+      getChannelModelConfig: async () => ({
+        models: {
+          "image.generate": [
+            {
+              id: "image-fast",
+              name: "快速生图",
+              isDefault: false,
+              provider: "openai",
+              baseURL: "https://image-fast.example/v1",
+              apiKey: "fast-image-key",
+              model: "fast-image",
+            },
+            {
+              id: "image-quality",
+              name: "高质量生图",
+              isDefault: true,
+              provider: "openai",
+              baseURL: "https://image-quality.example/v1",
+              apiKey: "quality-image-key",
+              model: "quality-image",
+            },
+          ],
+        },
+      }),
+      getModelConfig: noRow,
+      env: {},
+    });
+    expect(spec).toMatchObject({
+      provider: "openai",
+      baseUrl: "https://image-quality.example/v1",
+      model: "quality-image",
+      token: "quality-image-key",
+      kind: "image",
+      displayModelKey: "channel-managed",
+    });
+  });
+
   it("configured 渠道 JSON 覆盖多模态本地行且不读取本地", async () => {
     let localReads = 0;
     const spec = await resolveMultimodalSpec(ctx, "image.generate", {

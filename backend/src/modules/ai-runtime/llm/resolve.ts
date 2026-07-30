@@ -85,7 +85,7 @@ export async function resolveDedicatedLlmConfig(
   deps: ResolveDeps,
 ): Promise<ResolvedLlmConfig | null> {
   const channel = await deps.getChannelModelConfig?.();
-  if (channel) return channelLlmConfig(channel);
+  if (channel) return channelLlmConfig(channel, capability);
   return tryDbRow(await deps.getModelConfig(ctx, capability), deps.env);
 }
 
@@ -96,7 +96,7 @@ export async function resolveLlmConfig(
 ): Promise<ResolvedLlmConfig> {
   const { env } = deps;
   const channel = await deps.getChannelModelConfig?.();
-  if (channel) return channelLlmConfig(channel);
+  if (channel) return channelLlmConfig(channel, capability);
 
   // Tier 1 — the user-configured DB row. Prefer the per-capability row, then the
   // global "default" row. A stored secretValue wins; else the env-ref resolves.

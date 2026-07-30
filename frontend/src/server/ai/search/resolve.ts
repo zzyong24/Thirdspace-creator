@@ -114,7 +114,7 @@ export async function resolveSearchSpec(
   const { env } = deps;
   const channel = await deps.getChannelModelConfig?.();
   if (channel) {
-    const row = channelModelRow(channel);
+    const row = channelModelRow(channel, "web.search");
     return {
       provider: row.provider,
       baseUrl: row.baseUrl,

@@ -7,6 +7,60 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveLlmConfig — tier 1 DB row", () => {
+  it("按能力从 Growth 多模型数组选择默认项，不读取本地配置", async () => {
+    let localReads = 0;
+    const cfg = await resolveLlmConfig(ctx, "script.review", {
+      getChannelModelConfig: async () => ({
+        models: {
+          default: [{
+            id: "text-default",
+            name: "日常模型",
+            isDefault: true,
+            provider: "openai-compatible",
+            apiFormat: "openai_chat",
+            baseURL: "https://default.example/v1",
+            apiKey: "default-key",
+            model: "default-model",
+          }],
+          "script.review": [
+            {
+              id: "review-fast",
+              name: "快速审核",
+              isDefault: false,
+              provider: "openai-compatible",
+              apiFormat: "openai_chat",
+              baseURL: "https://review-fast.example/v1",
+              apiKey: "fast-key",
+              model: "fast-review",
+            },
+            {
+              id: "review-quality",
+              name: "高质量审核",
+              isDefault: true,
+              provider: "openai-compatible",
+              apiFormat: "openai_chat",
+              baseURL: "https://review-quality.example/v1",
+              apiKey: "quality-key",
+              model: "quality-review",
+            },
+          ],
+        },
+      }),
+      getModelConfig: async () => {
+        localReads += 1;
+        return null;
+      },
+      env: {},
+    });
+    expect(localReads).toBe(0);
+    expect(cfg).toMatchObject({
+      model: "quality-review",
+      token: "quality-key",
+      baseUrl: "https://review-quality.example/v1",
+      displayModelKey: "channel-managed",
+    });
+  });
+
   it("configured 渠道 JSON 直接采用且不读取本地 DB/env", async () => {
     let localReads = 0;
     const cfg = await resolveLlmConfig(ctx, "planning.thesis", {

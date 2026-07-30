@@ -9437,7 +9437,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   } | null> => {
     const channel = await getChannelModelConfig();
     if (channel) {
-      const cfg = channelLlmConfig(channel);
+      const cfg = channelLlmConfig(channel, "knowledge.search.embed");
       return {
         apiFormat: cfg.apiFormat,
         baseUrl: cfg.baseUrl,

@@ -208,7 +208,9 @@ export async function resolveMultimodalSpec(
   const { env } = deps;
   const kind = CAP_TO_KIND[capability];
   const channel = await deps.getChannelModelConfig?.();
-  if (channel) return channelMultimodalSpec(channel, kind);
+  if (channel) {
+    return channelMultimodalSpec(channel, capability, kind);
+  }
 
   // Tier 1 — 用户配的 DB row(先 per-capability,再该 kind 的默认行)。
   const fromCap = tryDbRow(await deps.getModelConfig(ctx, capability), kind, env);
