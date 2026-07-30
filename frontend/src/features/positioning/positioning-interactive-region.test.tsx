@@ -324,15 +324,21 @@ describe("PositioningDraftDrawer", () => {
 });
 
 describe("ResetPositioningMasterButton", () => {
-  it("取消确认不清空；确认后先重置母版，再打开定位 AI 对话", async () => {
-    const confirm = vi.spyOn(window, "confirm");
-    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
+  it("产品内确认框取消不清空；确认后先重置母版，再打开定位 AI 对话", async () => {
     render(<ResetPositioningMasterButton />);
 
     fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
+    expect(
+      screen.getByRole("heading", { name: "清空当前定位并新建？" }),
+    ).toBeInTheDocument();
     expect(mockClient.resetPositioningMaster).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    expect(
+      screen.queryByRole("heading", { name: "清空当前定位并新建？" }),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
+    fireEvent.click(screen.getByRole("button", { name: "清空并新建" }));
     await waitFor(() =>
       expect(mockClient.resetPositioningMaster).toHaveBeenCalledWith({
         params: undefined,
@@ -346,6 +352,26 @@ describe("ResetPositioningMasterButton", () => {
     expect(href).toContain("surface=positioning");
     expect(href).toContain("fn=positioning.generate");
     expect(href).toContain("prefill=");
-    confirm.mockRestore();
+  });
+
+  it("重置失败时保留产品内确认框并显示错误，允许直接重试", async () => {
+    mockClient.resetPositioningMaster.mockRejectedValueOnce(
+      new Error("positioning reset failed"),
+    );
+    render(<ResetPositioningMasterButton />);
+
+    fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
+    fireEvent.click(screen.getByRole("button", { name: "清空并新建" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "新建定位母版失败",
+    );
+    expect(
+      screen.getByRole("heading", { name: "清空当前定位并新建？" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "清空并新建" }),
+    ).toBeEnabled();
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 });

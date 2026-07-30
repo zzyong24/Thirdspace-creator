@@ -86,15 +86,14 @@ const NEW_MASTER_PREFILL =
  */
 export function ResetPositioningMasterButton() {
   const router = useRouter();
+  const pendingRef = React.useRef(false);
+  const [confirming, setConfirming] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const reset = React.useCallback(() => {
-    if (busy) return;
-    const accepted = window.confirm(
-      "新建定位母版会立即清空当前账号画像、定位规则和“当前使用”定位；旧版本仍保留在历史记录中。是否继续？",
-    );
-    if (!accepted) return;
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setBusy(true);
     setError(null);
     void (async () => {
@@ -104,6 +103,7 @@ export function ResetPositioningMasterButton() {
           query: undefined,
           body: undefined,
         });
+        setConfirming(false);
         router.refresh();
         router.push(
           copilotDeepLink(
@@ -115,27 +115,82 @@ export function ResetPositioningMasterButton() {
         );
       } catch (err) {
         setError(describeUserError(err, "新建定位母版失败，请重试。"));
+      } finally {
+        pendingRef.current = false;
         setBusy(false);
       }
     })();
-  }, [busy, router]);
+  }, [router]);
 
   return (
     <div className="flex flex-col items-end gap-1.5">
       <Button
         type="button"
-        onClick={reset}
+        onClick={() => {
+          setError(null);
+          setConfirming(true);
+        }}
         disabled={busy}
         data-testid="reset-positioning-master"
       >
         <Plus />
         {busy ? "正在清空…" : "新建定位母版"}
       </Button>
-      {error ? (
-        <p role="alert" className="max-w-72 text-right text-xs text-destructive">
-          {error}
-        </p>
-      ) : null}
+      <Dialog
+        open={confirming}
+        onOpenChange={(open) => {
+          if (busy) return;
+          setConfirming(open);
+          if (!open) setError(null);
+        }}
+      >
+        <DialogContent
+          data-testid="reset-positioning-master-confirm"
+          className="max-w-md"
+          showCloseButton={!busy}
+          onEscapeKeyDown={(event) => {
+            if (busy) event.preventDefault();
+          }}
+          onPointerDownOutside={(event) => {
+            if (busy) event.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>清空当前定位并新建？</DialogTitle>
+            <DialogDescription>
+              会立即清空当前账号画像、定位规则和“当前使用”定位，再进入 AI
+              对话创建新母版。旧版本仍保留在历史记录中。
+            </DialogDescription>
+          </DialogHeader>
+          {error ? (
+            <p role="alert" className="text-xs leading-relaxed text-destructive">
+              {error}
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => {
+                setConfirming(false);
+                setError(null);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy}
+              data-testid="reset-positioning-master-confirm-button"
+              onClick={reset}
+            >
+              {busy ? "正在清空…" : "清空并新建"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
