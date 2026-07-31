@@ -9,13 +9,13 @@
   "task_id": "T-638",
   "contract_path": "docs/superpowers/specs/2026-07-31-reconstruct-dependency-and-small-window-ui.md",
   "contract_sha": "8558794f4480",
-  "commit_sha": "bd137c1c2504e53ece13e2ddfa6b5488aeb0c4f6",
-  "observed_at": "2026-07-31T14:37:41.000Z",
+  "commit_sha": "736eeaf77f531b65427c31449249ef7781d4e1d9",
+  "observed_at": "2026-07-31T16:10:53.000Z",
   "run": {
     "verify_key": "onboarding-sidebar:e2e",
     "command": "CREATOROS_TEST_PORT=3429 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/onboarding-and-small-sidebar.spec.ts --project=e2e",
     "exit_code": 0,
-    "output_ref": "Playwright e2e：2 passed；1024x640 真实页面保留账号与用户身份，导航可滚动且无横向溢出"
+    "output_ref": "Node 25 / Playwright e2e：2 passed；合并后主线 1024x640 真实页面保留账号与用户身份，导航可滚动且无横向溢出"
   },
   "environment": {
     "surface": "desktop-web",
@@ -52,7 +52,7 @@
   ],
   "visible_copy": {
     "artifact_path": "orchestrator/evidence/T-638-visible-copy.json",
-    "artifact_sha256": "f88ba2765e37885c5b0ed6fc6ab30d679adf502e15c5204d7ad4fb908f9a747c"
+    "artifact_sha256": "eef61a93b79def4ace17fff09f9f5b4d2886fb99f11786798b38ce48ce7bdbef"
   },
   "tdd_red_ref": "红测曾捕获逐字稿未就绪仍创建重建、转写完成不续排、40 条失败弹 40 张通知及短窗口身份被挤出",
   "open_defects": [],

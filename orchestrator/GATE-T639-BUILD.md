@@ -9,13 +9,13 @@
   "task_id": "T-639",
   "contract_path": "docs/superpowers/specs/2026-07-31-gradual-transcript-backfill-and-mimo-asr.md",
   "contract_sha": "e0ab14ac3657",
-  "commit_sha": "bd137c1c2504e53ece13e2ddfa6b5488aeb0c4f6",
-  "observed_at": "2026-07-31T14:37:41.000Z",
+  "commit_sha": "736eeaf77f531b65427c31449249ef7781d4e1d9",
+  "observed_at": "2026-07-31T16:10:53.000Z",
   "run": {
     "verify_key": "asr-configuration:e2e",
     "command": "CREATOROS_TEST_PORT=3428 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/asr-configuration.spec.ts --project=e2e",
     "exit_code": 0,
-    "output_ref": "Playwright e2e：1 passed；两档窗口验证小米预设、必配提示与高级设置收放"
+    "output_ref": "Node 25 / Playwright e2e：1 passed；合并后主线两档窗口验证小米预设、建议配置提示与高级设置收放"
   },
   "environment": {
     "surface": "desktop-web",

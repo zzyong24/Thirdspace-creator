@@ -9,13 +9,13 @@
   "task_id": "T-637",
   "contract_path": "docs/superpowers/specs/2026-07-06-onboarding-guided-flow-design.md",
   "contract_sha": "61bcf54db408",
-  "commit_sha": "bd137c1c2504e53ece13e2ddfa6b5488aeb0c4f6",
-  "observed_at": "2026-07-31T14:37:41.000Z",
+  "commit_sha": "736eeaf77f531b65427c31449249ef7781d4e1d9",
+  "observed_at": "2026-07-31T16:10:53.000Z",
   "run": {
     "verify_key": "onboarding-sidebar:e2e",
     "command": "CREATOROS_TEST_PORT=3429 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/onboarding-and-small-sidebar.spec.ts --project=e2e",
     "exit_code": 0,
-    "output_ref": "Playwright e2e：2 passed；真实页面从设置重开引导并切换新号/已有作品分支"
+    "output_ref": "Node 25 / Playwright e2e：2 passed；合并后主线真实页面从设置重开引导并切换新号/已有作品分支"
   },
   "environment": {
     "surface": "desktop-web",
@@ -55,7 +55,7 @@
   ],
   "visible_copy": {
     "artifact_path": "orchestrator/evidence/T-637-visible-copy.json",
-    "artifact_sha256": "325a3bd8a2e6f9dbf645ee041ed8bfcf3faa820c39d818f4b20ccfb8b7562f64"
+    "artifact_sha256": "551e72535537ffc317466f05169d45bfe87c1cfce5e5dde16ea2b9a2d791d620"
   },
   "tdd_red_ref": "红测曾捕获重新打开只改 localStorage 不导航、自动化被暴露为用户步骤、已有作品与新号路径断裂",
   "open_defects": [],

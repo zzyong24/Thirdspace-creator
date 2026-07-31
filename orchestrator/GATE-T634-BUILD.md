@@ -9,13 +9,13 @@
   "task_id": "T-634",
   "contract_path": "frontend/specs/INTERACTION_SPEC.md",
   "contract_sha": "15fad2ee9bee",
-  "commit_sha": "e2d59476776c6ef40d5f9e74287df9bf55a1af1e",
-  "observed_at": "2026-07-31T01:58:46.000Z",
+  "commit_sha": "736eeaf77f531b65427c31449249ef7781d4e1d9",
+  "observed_at": "2026-07-31T16:10:53.000Z",
   "run": {
     "verify_key": "review-history:e2e",
     "command": "CREATOROS_TEST_PORT=3427 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/review-history.spec.ts --project=e2e",
     "exit_code": 0,
-    "output_ref": "Playwright e2e：1 passed；隔离 PGlite 真链创建账号、项目、复盘、洞察并刷新读回"
+    "output_ref": "Node 25 / Playwright e2e：1 passed；合并后主线隔离 PGlite 真链创建账号、项目、复盘、洞察并刷新读回"
   },
   "environment": {
     "surface": "desktop-web",
