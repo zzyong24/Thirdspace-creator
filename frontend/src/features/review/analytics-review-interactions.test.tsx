@@ -216,8 +216,11 @@ describe("AnalyticsReviewPage interactions", () => {
     const row = container.querySelector<HTMLLIElement>(
       '[data-slot="review-history-item"]',
     );
+    const trigger = row?.querySelector<HTMLButtonElement>(
+      '[data-slot="review-history-trigger"]',
+    );
     expect(row!.getAttribute("data-selected")).toBe("false");
-    fireEvent.click(row!);
+    fireEvent.click(trigger!);
     expect(row!.getAttribute("data-selected")).toBe("true");
   });
 });

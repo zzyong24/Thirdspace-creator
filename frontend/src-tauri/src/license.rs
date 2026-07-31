@@ -124,13 +124,12 @@ impl LicenseConfig {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "https://license.aitongban.cloud".to_string());
-        let project_key = resolve_license_project_key(
+        let project_key = crate::product_identity::resolve_project_key(
             std::env::var("CREATOROS_LICENSE_PROJECT_KEY").ok(),
-            option_env!("CREATOROS_BUILTIN_LICENSE_PROJECT_KEY").unwrap_or(""),
         );
-        let strict_verify = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
-            .map(|v| v.trim() != "0")
-            .unwrap_or(true);
+        let strict_verify = crate::product_identity::resolve_strict_verify(
+            std::env::var("CREATOROS_LICENSE_STRICT_VERIFY").ok(),
+        );
         LicenseConfig {
             base_url,
             project_key,
@@ -140,17 +139,6 @@ impl LicenseConfig {
             machine_id,
         }
     }
-}
-
-fn resolve_license_project_key(runtime_value: Option<String>, built_in_value: &str) -> String {
-    runtime_value
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .or_else(|| {
-            let built_in = built_in_value.trim();
-            (!built_in.is_empty()).then(|| built_in.to_string())
-        })
-        .unwrap_or_default()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3371,25 +3359,6 @@ mod tests {
             public_key_b64: pk_b64.to_string(),
             machine_id: "machine-1".to_string(),
         }
-    }
-
-    #[test]
-    fn packaged_project_key_is_used_without_finder_environment_and_runtime_can_override() {
-        assert_eq!(
-            resolve_license_project_key(None, " test "),
-            "test",
-            "Finder 启动没有终端 env 时必须使用包内产品 key"
-        );
-        assert_eq!(
-            resolve_license_project_key(Some("creatoros-dev".to_string()), "test"),
-            "creatoros-dev",
-            "开发/诊断态仍允许显式运行时覆盖"
-        );
-        assert_eq!(
-            resolve_license_project_key(Some("  ".to_string()), ""),
-            "",
-            "直接 cargo dev 未配置时仍保持 fail-closed"
-        );
     }
 
     fn snapshot_active() -> LicenseSnapshot {

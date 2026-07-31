@@ -13,7 +13,15 @@ import { platform } from "node:process";
 import { readManifest, writeManifest } from "./release-manifest.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const BUNDLE_DIR = join(FRONTEND, "src-tauri", "target", "release", "bundle");
+const CARGO_PROFILE_DIR =
+  process.env.CREATOROS_CARGO_PROFILE_DIR ?? "release";
+const BUNDLE_DIR = join(
+  FRONTEND,
+  "src-tauri",
+  "target",
+  CARGO_PROFILE_DIR,
+  "bundle",
+);
 
 /** 判断是否配了公证 env。 */
 export function notarizeConfig(env = process.env, plat = platform) {

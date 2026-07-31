@@ -14,6 +14,8 @@ use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
 mod license;
+// [T-635] 编译期 ProductManifest / projectKey / strict verify 的统一产品身份入口。
+mod product_identity;
 // [T-575] Growth device authorization → OS protected pending-consume → AM signed consume。
 mod entitlement_claim;
 // [T-399b] 蜜罐授权门:纯诱饵,零真实引用(真链一行不碰),仅 #[used] 强制进二进制过 DCE。
@@ -1724,13 +1726,20 @@ pub fn run() {
                 .to_string_lossy()
                 .to_string();
             let master_key_seed = machine_uid::get().unwrap_or_default();
-            // [gate-F2] 强验签开关透传。**默认 "1" 强验签**(2026-07-18 翻回):翻回条件已达成
+            // [gate-F2 / T-635] 强验签开关透传。**默认 "1" 强验签**(2026-07-18 翻回):翻回条件已达成
             //   —— L1s 服务端签名私钥已部署上线(license.aitongban.cloud)+ 用户真码 Ed25519
             //   深验通过。此前内测过渡期默认 "0"(L1s 未上线时 strict 全拒 → /activate 无限
             //   重定向白屏,2026-07-18 真机实证)——那是显式过渡非静默降级,现按约定收口。
-            //   外部显式设 env 时始终尊重外部值(排障可临时设 "0" 退弱验签)。
-            let strict_verify_str = std::env::var("CREATOROS_LICENSE_STRICT_VERIFY")
-                .unwrap_or_else(|_| "1".to_string());
+            //   release/release-fast 不再接受运行时 env 降级；仅 tauri dev/debug 可显式设 "0"。
+            let strict_verify_str = if product_identity::resolve_strict_verify(
+                std::env::var("CREATOROS_LICENSE_STRICT_VERIFY").ok(),
+            ) {
+                "1"
+            } else {
+                "0"
+            };
+            let product_manifest_json = product_identity::product_manifest_json();
+            let built_in_license_project_key = product_identity::built_in_project_key();
             // [T-538] sidecar 的产品反馈可信出网配置。公钥只用于验证 AM 签名响应，不是秘密；
             // official origins 由发布环境烘焙，也允许开发/排障时用进程 env 显式覆盖。二者缺失时
             // 本地 product-feedback service fail-closed，绝不退到任意 bugFeedbackUrl origin。
@@ -1921,6 +1930,11 @@ pub fn run() {
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
+                    .env("CREATOROS_PRODUCT_MANIFEST_JSON", product_manifest_json)
+                    .env(
+                        "CREATOROS_BUILTIN_LICENSE_PROJECT_KEY",
+                        built_in_license_project_key,
+                    )
                     .env(
                         "CREATOROS_LICENSE_PUBLIC_KEY_B64",
                         &license_public_key_b64,
@@ -2094,6 +2108,11 @@ pub fn run() {
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
+                    .env("CREATOROS_PRODUCT_MANIFEST_JSON", product_manifest_json)
+                    .env(
+                        "CREATOROS_BUILTIN_LICENSE_PROJECT_KEY",
+                        built_in_license_project_key,
+                    )
                     .env(
                         "CREATOROS_LICENSE_PUBLIC_KEY_B64",
                         &license_public_key_b64,

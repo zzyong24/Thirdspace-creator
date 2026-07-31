@@ -75,16 +75,16 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     }
   });
 
-  it("T-575 测试发布显式开启领取/反馈，普通 build 仍由 Next 配置归零", () => {
+  it("T-635 可分发包固定关闭领取，反馈仍由受控双门开启", () => {
     const nextConfig = readFileSync(
       join(process.cwd(), "next.config.ts"),
       "utf8",
     );
     expect(workflow).toMatch(
-      /name:\s*构建 clean Runtime Image[\s\S]*?GROWTH_ENTITLEMENT_API_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_ENTITLEMENT_CLAIM_ENABLED:\s*"1"[\s\S]*?CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:\s*"1"/,
+      /name:\s*构建 clean Runtime Image[\s\S]*?GROWTH_ENTITLEMENT_API_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_ENTITLEMENT_CLAIM_ENABLED:\s*"0"[\s\S]*?CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:\s*"1"/,
     );
     expect(workflow).toMatch(
-      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?GROWTH_ENTITLEMENT_API_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_ENTITLEMENT_CLAIM_ENABLED:\s*"1"[\s\S]*?CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:\s*"1"/,
+      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?GROWTH_ENTITLEMENT_API_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_ENTITLEMENT_CLAIM_ENABLED:\s*"0"[\s\S]*?CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED:\s*"1"/,
     );
     expect(workflow).toContain("steps.runtime-inputs.outputs.config");
     expect(nextConfig).toContain(
@@ -122,13 +122,17 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
-  it("T-557 双端正式打包显式注入既定产品级 projectKey", () => {
+  it("T-635 release 与 release-fast 候选包均注入 exact CreatorOS projectKey", () => {
     expect(workflow).toMatch(
-      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"test"[\s\S]*?run:\s*node scripts\/desktop\/release\.mjs/,
+      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"creatoros"[\s\S]*?run:\s*node scripts\/desktop\/release\.mjs/,
     );
+    expect(workflow).toMatch(
+      /name:\s*构建真实 NSIS 候选包（不发布）[\s\S]*?CREATOROS_LICENSE_PROJECT_KEY:\s*"creatoros"[\s\S]*?--profile release-fast/,
+    );
+    expect(workflow).not.toMatch(/CREATOROS_LICENSE_PROJECT_KEY:\s*"test"/);
   });
 
-  it("T-545 将产品级 projectKey 固化进统一安装包，Finder 启动不依赖终端环境", () => {
+  it("T-635 将 canonical identity 固化进统一安装包，release runtime 不接受覆盖", () => {
     const packageSource = readFileSync(
       join(process.cwd(), "scripts", "desktop", "package.mjs"),
       "utf8",
@@ -137,8 +141,13 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "build.rs"),
       "utf8",
     );
-    const licenseRs = readFileSync(
-      join(process.cwd(), "src-tauri", "src", "license.rs"),
+    const productIdentityRs = readFileSync(
+      join(
+        process.cwd(),
+        "src-tauri",
+        "src",
+        "product_identity.rs",
+      ),
       "utf8",
     );
     expect(packageSource).toContain("assertLicenseProjectKey()");
@@ -148,8 +157,20 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(buildRs).toContain(
       "cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY",
     );
-    expect(licenseRs).toContain(
+    expect(buildRs).toContain("CARGO_CFG_DEBUG_ASSERTIONS");
+    expect(buildRs).toContain("thirdspace-product-manifest/v1");
+    expect(productIdentityRs).toContain(
       'option_env!("CREATOROS_BUILTIN_LICENSE_PROJECT_KEY")',
+    );
+    expect(productIdentityRs).toContain("resolve_project_key");
+    expect(productIdentityRs).toContain(
+      "cfg!(debug_assertions)",
+    );
+    expect(packageSource).toContain(
+      "writeProductReleaseAttestation",
+    );
+    expect(workflow).toContain(
+      "product-identity-attest.mjs release-fast",
     );
   });
 

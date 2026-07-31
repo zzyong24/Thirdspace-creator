@@ -16,7 +16,23 @@ export const DEFAULT_MANIFEST_PATH = join(
   "creatoros-release-manifest.json",
 );
 
-export function readManifest(path = DEFAULT_MANIFEST_PATH) {
+export function manifestPathForProfile(
+  profile = process.env.CREATOROS_CARGO_PROFILE_DIR ?? "release",
+) {
+  if (!["release", "release-fast"].includes(profile)) {
+    throw new Error(`[release-manifest] 非法 Cargo profile：${profile}`);
+  }
+  return join(
+    FRONTEND,
+    "src-tauri",
+    "target",
+    profile,
+    "bundle",
+    "creatoros-release-manifest.json",
+  );
+}
+
+export function readManifest(path = manifestPathForProfile()) {
   if (existsSync(path)) {
     try {
       return JSON.parse(readFileSync(path, "utf8"));
@@ -27,7 +43,7 @@ export function readManifest(path = DEFAULT_MANIFEST_PATH) {
   return { generatedAt: new Date().toISOString() };
 }
 
-export function writeManifest(manifest, path = DEFAULT_MANIFEST_PATH) {
+export function writeManifest(manifest, path = manifestPathForProfile()) {
   manifest.updatedAt = new Date().toISOString();
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n", "utf8");

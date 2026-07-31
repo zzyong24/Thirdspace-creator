@@ -1313,3 +1313,26 @@ CreatorOS 端实施。代码审计确认 T-575 仅完成签名配置拉取，现
    重发激活码或引入双协议。
 
 **Status**：resolved；进入 T-620 增量复核和 BUILD。
+
+## DEC-PID-001 (2026-07-30) — CreatorOS 正式包只认 Growth 商品的构建期产品身份
+
+**来源**：用户要求 Growth 创建产品、Activity 和产品客户端绑定同一个产品标识，并把日常操作
+统一收口到 Growth Admin。
+
+**决策**：
+
+1. CreatorOS 正式包的 `projectKey` 固定由受控构建变量写入，当前唯一值为 `creatoros`。
+2. `projectKey` 是公开产品身份，不是 secret；Growth→Activity 服务密钥永不进入 CreatorOS。
+3. 正式运行时不得通过环境变量切换 `projectKey` 或关闭 Activity 严格签名校验。
+4. release workflow 删除历史 `test` 项目标识；缺少合法产品身份时 fail closed。
+5. entitlement claim 在跨仓真实 program gate 通过前保持默认关闭，不能用 workflow hardcode
+   绕过发布准备度。
+6. 既有 license-hardening `[gate-F2]` 的 runtime 弱验签只保留给 debug/`tauri dev`；
+   `release`、`release-fast` 及所有可分发安装包中的 downgrade 权威被本决定废止。
+7. 本地 identity receipt 只证明 T-635 BUILD，不授权开启 claim；生产启用必须绑定三仓实际
+   release commit、HTTPS 部署、正式密钥和 live entitlement journey 的 T-575 program-gate GO。
+
+**影响**：新增 T-635；收紧 T-575 正式发布身份，不改变现有一次性 claim、配置 pull 或产品反馈
+契约。
+
+**Status**：confirmed scope；SPEC 独立评审通过后进入 BUILD。

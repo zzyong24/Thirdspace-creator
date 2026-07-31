@@ -129,7 +129,7 @@ jobs:
             .slice(0, 20);
           const releaseConfig = JSON.stringify({
             growthOrigin: "https://growth.aitongban.cloud",
-            entitlementClaimEnabled: "1",
+            entitlementClaimEnabled: "0",
             productFeedbackSubmitEnabled: "1",
             feedbackOfficialOrigins:
               (process.env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS || "").trim(),
@@ -226,9 +226,9 @@ jobs:
         if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
         env:
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
-          # [T-575] 测试发布包显式开启；普通本地/web build 缺省关闭。
+          # [T-635] live program-gate GO 前所有可分发包固定关闭领取。
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
-          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
           CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
@@ -251,10 +251,10 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: 校验测试发布的领取与反馈配置(T-575)
+      - name: 校验发布包领取关闭与反馈配置(T-635)
         env:
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
-          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
           CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
@@ -262,13 +262,13 @@ jobs:
           node <<'NODE'
           const expected = {
             GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud",
-            CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1",
+            CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0",
             CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
             NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
           };
           for (const [name, value] of Object.entries(expected)) {
             if (process.env[name] !== value) {
-              throw new Error(`[T-575] ${name} 必须为 ${value}`);
+              throw new Error(`[T-635] ${name} 必须为 ${value}`);
             }
           }
           const raw = (process.env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS || "").trim();
@@ -295,9 +295,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
           CREATOROS_UPDATE_BASE_URL: https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}
-          # [T-545/T-557] 双端统一打 CreatorOS test 产品包；渠道身份仍由激活码签名
+          # [T-635] 双端统一绑定 Growth CreatorOS 商品；渠道身份仍由激活码签名
           # channelRef 决定。必须在 package fail-fast 前显式注入，不能依赖启动环境。
-          CREATOROS_LICENSE_PROJECT_KEY: "test"
+          CREATOROS_LICENSE_PROJECT_KEY: "creatoros"
           # [T-451] verdict-token 签名密钥对(build.rs 编译期需要私钥;build-sidecar 期需要公钥
           #   烘焙进 sidecar/frontend/.next/server/verdict-verify-key.json)。两个 secret 需在
           #   仓库 Settings → Secrets and variables → Actions 配置(名字逐字对齐);缺任一 → 编译报
@@ -307,11 +307,14 @@ jobs:
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           # [T-538] Rust 编译期烘焙后只注入本机 sidecar；Web UI 不可读取。
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
-          # [T-575] 领取授权/反馈仅由这次测试发布构建显式开启；build.rs/Next 都将其固化。
+          # [T-635] 领取保持关闭；反馈仍由受控 release 双门开启。
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
-          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "1"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
           CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          CREATOROS_CREATOR_RELEASE_COMMIT: ${{ github.sha }}
+          CREATOROS_GROWTH_RELEASE_COMMIT: ${{ vars.CREATOROS_GROWTH_RELEASE_COMMIT }}
+          CREATOROS_ACTIVITY_RELEASE_COMMIT: ${{ vars.CREATOROS_ACTIVITY_RELEASE_COMMIT }}
           # [T-452 后修] CI 打的是正式发布包,走 fat lto `release` profile(而非本地内测的
           #   release-fast)—— 后续 T-446/updater/收集产物 校验步骤全按 target/release/bundle 找。
           #   本地日常打包不设此 env,走 release-fast 快通道。
@@ -404,6 +407,17 @@ jobs:
           name: desktop-${{ matrix.updater_target }}
           path: dist-upload/
           if-no-files-found: error
+
+      - name: 上传 T-635 产品身份与 release attestation（非发布产物）
+        uses: actions/upload-artifact@v4
+        with:
+          name: t635-product-identity-${{ matrix.updater_target }}-${{ github.run_attempt }}
+          path: |
+            frontend/src-tauri/target/release/bundle/creatoros-product-manifest.json
+            frontend/src-tauri/target/release/bundle/creatoros-release-attestation.json
+            frontend/src-tauri/target/release/bundle/creatoros-release-manifest.json
+          if-no-files-found: error
+          retention-days: 30
 
       # [T-562] 之前只执行 setup.exe 的安装期特殊入口，完全没有运行用户真正点击的
       # CreatorOS.exe，因此 sidecar cwd/verdict 公钥/WebView 导航回归都能带病上传。
@@ -603,13 +617,23 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
-          CREATOROS_LICENSE_PROJECT_KEY: "test"
+          CREATOROS_LICENSE_PROJECT_KEY: "creatoros"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${{ vars.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS }}
           CREATOROS_SKIP_SIDECAR_REBUILD: "1"
         run: |
           node node_modules/@tauri-apps/cli/tauri.js build -- --profile release-fast
+
+      - name: 生成 T-635 Windows 候选包产品身份与 release attestation
+        if: ${{ inputs.windows_package_rat == true }}
+        working-directory: frontend
+        env:
+          CREATOROS_CREATOR_RELEASE_COMMIT: ${{ github.sha }}
+          CREATOROS_GROWTH_RELEASE_COMMIT: ${{ vars.CREATOROS_GROWTH_RELEASE_COMMIT }}
+          CREATOROS_ACTIVITY_RELEASE_COMMIT: ${{ vars.CREATOROS_ACTIVITY_RELEASE_COMMIT }}
+        run: node scripts/desktop/product-identity-attest.mjs release-fast
 
       - name: 真安装、断网首启与 WebView 非白屏验证
         if: ${{ inputs.windows_package_rat == true }}
@@ -837,6 +861,17 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
+
+      - name: 上传 T-635 Windows 候选包身份与 attestation（非发布产物）
+        if: ${{ success() && inputs.windows_package_rat == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: t635-windows-product-identity-${{ github.run_attempt }}
+          path: |
+            frontend/src-tauri/target/release-fast/bundle/creatoros-product-manifest.json
+            frontend/src-tauri/target/release-fast/bundle/creatoros-release-attestation.json
+          if-no-files-found: error
+          retention-days: 30
 
   draft-release:
     needs: build

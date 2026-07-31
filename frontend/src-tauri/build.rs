@@ -15,6 +15,7 @@ fn main() {
     ] {
         println!("cargo:rerun-if-env-changed={name}");
     }
+    let debug_build = std::env::var_os("CARGO_CFG_DEBUG_ASSERTIONS").is_some();
     let build_flag = |name: &str| {
         if std::env::var(name)
             .ok()
@@ -26,9 +27,19 @@ fn main() {
             "0"
         }
     };
+    let requested_claim_enabled = build_flag("CREATOROS_ENTITLEMENT_CLAIM_ENABLED");
+    if !debug_build && requested_claim_enabled != "0" {
+        panic!(
+            "T-635: release/release-fast 等可分发构建的 CREATOROS_ENTITLEMENT_CLAIM_ENABLED 必须为 0"
+        );
+    }
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED={}",
-        build_flag("CREATOROS_ENTITLEMENT_CLAIM_ENABLED")
+        if debug_build {
+            requested_claim_enabled
+        } else {
+            "0"
+        }
     );
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED={}",
@@ -115,14 +126,73 @@ fn main() {
     // [T-535] verdict 签名 seed 由 option_env! 编进 Rust 壳。显式声明环境依赖，避免
     // Cargo 增量复用“上一次没配 key”的壳二进制，制造公钥已烘焙但壳签不出 token 的白屏包。
     println!("cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64");
-    // [T-545] projectKey 是产品级 identity（不是渠道 identity）。正式 package 已在重活前
-    // 校验其显式存在；这里把它固化进 Rust 壳，保证 Finder 启动不依赖终端环境变量。
+    let product_identity_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("product-identity.json");
+    println!("cargo:rerun-if-changed={}", product_identity_path.display());
+    let product_manifest_json = std::fs::read_to_string(&product_identity_path)
+        .expect("T-635: 缺 frontend/product-identity.json canonical build input");
+    let product_manifest_json = product_manifest_json.trim();
+    let product_manifest: serde_json::Value = serde_json::from_str(product_manifest_json)
+        .expect("T-635: product-identity.json 必须是合法 JSON");
+    let product_object = product_manifest
+        .as_object()
+        .expect("T-635: ProductManifest 必须是 JSON object");
+    if product_object.len() != 4
+        || product_manifest["schema"] != "thirdspace-product-manifest/v1"
+        || product_manifest["productRef"] != "creatoros"
+        || product_manifest["appIdentifier"] != "cloud.aitongban.creatoros"
+        || product_manifest["projectKey"] != "creatoros"
+    {
+        panic!("T-635: canonical ProductManifest 字段、值或 exact shape 非法");
+    }
+    let canonical_project_key = product_manifest["projectKey"]
+        .as_str()
+        .expect("T-635: ProductManifest projectKey 必须为 string");
+    let product_ref = product_manifest["productRef"]
+        .as_str()
+        .expect("T-635: ProductManifest productRef 必须为 string");
+    let app_identifier = product_manifest["appIdentifier"]
+        .as_str()
+        .expect("T-635: ProductManifest appIdentifier 必须为 string");
+
+    // [T-635] projectKey 是产品级 identity（不是渠道 identity）。任何关闭 debug
+    // assertions 的构建都属于可分发边界（含 release/release-fast/NSIS candidate），必须 exact
+    // 为 creatoros；只有 tauri dev/debug 可以使用显式的本机 key。
     println!("cargo:rerun-if-env-changed=CREATOROS_LICENSE_PROJECT_KEY");
     let project_key = std::env::var("CREATOROS_LICENSE_PROJECT_KEY")
         .unwrap_or_default()
         .trim()
         .to_string();
-    println!("cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY={project_key}");
+    if !debug_build && project_key != canonical_project_key {
+        panic!(
+            "T-635: 可分发构建 CREATOROS_LICENSE_PROJECT_KEY 必须 exact 为 creatoros（missing/test/其它产品均拒绝）"
+        );
+    }
+    if debug_build
+        && !project_key.is_empty()
+        && !project_key
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+    {
+        panic!("T-635: debug CREATOROS_LICENSE_PROJECT_KEY 只能使用 ASCII locator");
+    }
+    let built_in_project_key = if debug_build {
+        project_key.as_str()
+    } else {
+        canonical_project_key
+    };
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY={built_in_project_key}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_REF={product_ref}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_APP_IDENTIFIER={app_identifier}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_MANIFEST_JSON={product_manifest_json}");
+    let out_dir =
+        std::path::PathBuf::from(std::env::var_os("OUT_DIR").expect("Cargo 必须提供 OUT_DIR"));
+    std::fs::write(
+        out_dir.join("product-manifest.json"),
+        product_manifest_json.as_bytes(),
+    )
+    .expect("T-635: 写入编译期 ProductManifest 失败");
 
     // [T-372 L2 / T-487 RAT-PKG-05] sidecar 入口完整性:全平台构建期都对
     // src-tauri/sidecar.tar.gz 算 SHA-256,

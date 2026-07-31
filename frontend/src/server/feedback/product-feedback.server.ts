@@ -18,6 +18,10 @@ import {
   readLicenseVerdictDetailed,
   type LicenseVerdict,
 } from "@/server/activation/license-file.server";
+import {
+  assertVerdictProductIdentity,
+  ProductIdentitySecurityError,
+} from "@/server/activation/product-identity.server";
 
 const DEFAULT_LICENSE_BASE_URL = "https://license.aitongban.cloud";
 const AM_PATH = "/api/license/feedback-context";
@@ -550,6 +554,21 @@ export async function submitProductFeedback(
   const readVerdict =
     dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());
   const verdict = activeLicense(await readVerdict());
+  let productIdentity: ReturnType<typeof assertVerdictProductIdentity>;
+  try {
+    productIdentity = assertVerdictProductIdentity(
+      verdict.projectKey!,
+      env,
+    );
+  } catch (error) {
+    if (!(error instanceof ProductIdentitySecurityError)) throw error;
+    fail(
+      "FEEDBACK_PRODUCT_IDENTITY_INVALID",
+      503,
+      false,
+      "当前安装包产品身份校验未通过",
+    );
+  }
   const growthUrl = resolveGrowthOrigin(verdict, env);
   const amOrigin = resolveHttpsBaseUrl(
     env.CREATOROS_LICENSE_BASE_URL?.trim() || DEFAULT_LICENSE_BASE_URL,
@@ -594,7 +613,7 @@ export async function submitProductFeedback(
       body: JSON.stringify({
         contractVersion: "channel-bound-feedback-v1",
         feedbackContextToken: context.feedbackContextToken,
-        productRef: "creatoros",
+        productRef: productIdentity.productRef,
         summary: input.summary,
         description: input.description,
         reproductionSteps: input.reproductionSteps,

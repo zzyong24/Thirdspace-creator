@@ -22,6 +22,9 @@ tauri-build = { version = "2", features = [] }
 # [T-372/T-446] mac/Linux 构建期算 sidecar.tar.gz SHA-256；Windows 直接资源算
 # sidecar/frontend/server.js SHA-256，经 cargo:rustc-env 注入壳层做入口完整性校验。
 sha2 = "0.10"
+# [T-635] 读取并校验 frontend/product-identity.json，Rust builtin 与 ProductManifest
+# 必须从同一个 canonical build input 生成。
+serde_json = "1"
 
 [dependencies]
 # [T-365] macOS 进程组树杀(killpg):app 退出必须带走 sidecar 全家(node+Chrome+ffmpeg)。
