@@ -634,9 +634,10 @@ stages:
       - existing: "backend/src/modules/ai-runtime/chat-tools.ts"
       - existing: "backend/src/modules/ai-runtime/chat-runner.ts"
       - existing: "orchestrator/GATE-T642-BUILD.md"
+      - existing: "orchestrator/evidence/T-642-visible-copy.json"
     notes: >
       绑定 projectId 后 host 直接提供单项目读工具并移除全量项目库；长正文继续窗口读取。
-      后端 286 tests、前端 46 tests、两包 typecheck、boundary 与 diff-check 通过。全局 reconcile
+      后端 286 tests、前端 46 tests、Chrome 双视口 E2E、两包 typecheck、boundary 与 diff-check 通过。全局 reconcile
       仍被 T-635/T-639/T-638/T-637/T-634 的既有过期回执阻断，已在 Gate 诚实记录。
 
 

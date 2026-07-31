@@ -1,0 +1,35 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-642",
+  "commit_sha": "bfb9eac9e9db546a1486ccd0e38032307258ebce",
+  "captures": [
+    {
+      "checkpoint": "desktop-project-reference",
+      "check_ids": [
+        "AC-COPILOT-REF-LABEL",
+        "AC-COPILOT-REF-NO-DUP",
+        "AC-COPILOT-REF-NARROW",
+        "AC-COPILOT-REF-DIRECT"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "项目\n·\nCreatorOS 启动内测啦！做一条视频，最浪费时间的往往不是拍摄，而是在账这个作品讲的啥\n×\n输入正文：帮我看看 "
+    },
+    {
+      "checkpoint": "minimum-project-reference",
+      "check_ids": [
+        "AC-COPILOT-REF-LABEL",
+        "AC-COPILOT-REF-NO-DUP",
+        "AC-COPILOT-REF-NARROW",
+        "AC-COPILOT-REF-DIRECT"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "text": "项目\n·\nCreatorOS 启动内测啦！做一条视频，最浪费时间的往往不是拍摄，而是在账这个作品讲的啥\n×\n输入正文：帮我看看 "
+    }
+  ]
+}
