@@ -5,7 +5,7 @@
  *   - chat.fallback:专配行 null → 「未配置」(不回退主模型)。
  *   - image.generate:真实最小生图 fake 成功 → ✓(额度提示语);调用抛错 → ✗ 人话提示(不泄原始报错)。
  *   - video.generate:鉴权探测 —— 401 → ✗ 密钥无效或无权限;参数级 400 → ✓(不真生成);MiniMax base_resp 1004 → ✗。
- *   - transcribe.audio:whisper-local 回退 → 中性说明（不冒充云端已连通）。
+ *   - transcribe.audio:未配置 → 明确失败；云端 ASR → 三态鉴权探测。
  *   - web.search:browser 免 key → ✓;付费 provider 最小检索成功 → ✓。
  *   - wrap 透传:非 test op 原样进 settings transport。
  */
@@ -54,7 +54,12 @@ function makeDeps(
     resolveLlm: vi.fn(async () => llmSpec),
     resolveDedicatedLlm: vi.fn(async () => llmSpec),
     resolveMultimodal: vi.fn(async () => mmSpec),
-    resolveTranscribe: vi.fn(async () => ({ ...mmSpec, provider: "whisper-local", model: "small" })),
+    resolveTranscribe: vi.fn(async () => ({
+      provider: "xiaomi-mimo",
+      baseUrl: "https://api.xiaomimimo.com/v1",
+      model: "mimo-v2.5-asr",
+      token: "k",
+    })),
     resolveEmbed: vi.fn(async () => llmSpec),
     resolveSearch: vi.fn(async () => ({
       provider: "bocha",
@@ -304,13 +309,17 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
   });
 });
 
-describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路径", () => {
-  it("[T-470] whisper-local 回退只说明当前走本地，不把未配置云端渲成连通成功", async () => {
-    const r = await runModelConnectionTest(ctx, "transcribe.audio", makeDeps());
-    expect(r.ok).toBe(true);
-    expect(r.status).toBe("warn");
-    expect(r.detail).toContain("本地 Whisper");
-    expect(r.detail).toContain("未配置云端");
+describe("runModelConnectionTest — transcribe.audio / web.search", () => {
+  it("ASR 未配置 → 明确失败并指引先保存配置", async () => {
+    const err = new Error("未配置语音转文字模型");
+    err.name = "TranscribeConfigError";
+    const r = await runModelConnectionTest(
+      ctx,
+      "transcribe.audio",
+      makeDeps({ resolveTranscribe: vi.fn(async () => Promise.reject(err)) }),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.detail).toContain("未配置");
   });
 
   // [T-384] 云端 ASR 三态探测:200 → ✓;404/405(厂商无 /v1/models 端点)→ ⚠ 诚实中间态
@@ -333,6 +342,22 @@ describe("runModelConnectionTest — transcribe.audio / web.search 免 key 路�
     expect(r.status).toBe("ok");
     const url = (deps.fetchImpl as ReturnType<typeof vi.fn>).mock.calls[0]![0] as string;
     expect(url).toBe("https://api.siliconflow.cn/v1/models");
+  });
+
+  it("baseUrl 已含 /v1 时不重复拼接", async () => {
+    const deps = makeDeps({
+      resolveTranscribe: vi.fn(async () => ({
+        provider: "xiaomi-mimo",
+        baseUrl: "https://api.xiaomimimo.com/v1",
+        model: "mimo-v2.5-asr",
+        token: "k",
+      })),
+      fetchImpl: vi.fn(async () => jsonResponse(200, {})) as unknown as typeof fetch,
+    });
+    await runModelConnectionTest(ctx, "transcribe.audio", deps);
+    expect((deps.fetchImpl as ReturnType<typeof vi.fn>).mock.calls[0]![0]).toBe(
+      "https://api.xiaomimimo.com/v1/models",
+    );
   });
 
   it("云端 ASR /v1/models 404 → ⚠ warn(无法探测≠失败,不误报)", async () => {

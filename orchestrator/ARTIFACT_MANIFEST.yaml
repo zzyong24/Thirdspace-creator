@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-07-30"
+  updated_at: "2026-07-31"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -547,6 +547,38 @@ stages:
       API-537-01..05、迁移、owner/collector 双身份、错误映射、隐私负测与 TEST-537-01..13
       已完成三轮内部复审。正式 Gate 仍依赖 RAT-537-01；未满足前不确认②、不生成 BUILD
       manifest，也不实现假 selector。
+
+  "T-639-1-plan":
+    status: "passed"
+    gate: "01-product-gate + user-confirmation"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-31-gradual-transcript-backfill-and-mimo-asr.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-ASR-021"
+      - existing: "orchestrator/CHANGE_IMPACT.md#CI-ASR-021"
+    notes: >
+      用户已确认历史作品全量采集、逐字稿慢慢补齐，并要求云端 ASR 必配与小米 MiMo 接入。
+      不新增第二套自动化或公开契约，直接在既有统一采集尾部做小批补偿。
+
+  "T-639-4-build":
+    status: "draft"
+    gate: "backend/ai-worker/frontend tests + typecheck + boundary + reconcile"
+    gate_status: "not-run"
+    confirmation_required: false
+    artifacts:
+      - existing: "frontend/src/server/ingestion/reconstruct-enqueue.ts"
+      - existing: "backend/src/modules/ai-runtime/multimodal/resolve.ts"
+      - existing: "backend/src/modules/ai-runtime/transcribe-runner.ts"
+      - existing: "ai-worker/src/runtime/multimodal-mimo-asr.ts"
+      - existing: "frontend/src/features/settings/settings-interactive-region.tsx"
+    notes: >
+      已完成渐进回填、ASR 必配、小米 MiMo 独立协议、长音频 MP3 帧切片及轻量设置 UI。
+      AI worker 全套 301 tests、backend 聚焦 38 tests、frontend 聚焦 77 tests、三包 typecheck、
+      frontend 目标 lint、Chrome Playwright 双视口 E2E、boundary 与 reconcile 均通过。严格
+      UI 门仍要求最终提交后重跑并绑定当前 HEAD 的回执；按用户要求暂不构建安装包，因此任务
+      保留 BUILD draft，飞书反馈
+      rec27SR0KwF2ua 保持“处理中/待统一构建与真机验收”。
 
 stage_defaults:
   valid_statuses:

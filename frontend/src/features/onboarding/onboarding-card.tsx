@@ -1,22 +1,9 @@
 "use client";
 
 /**
- * OnboardingCard — [T-161] Dashboard 顶部常驻**有序引导流**卡(重构自 T-132/T-138 扁平清单卡)。
- *
- * 从「三档打勾清单」改「有序引导流」(SPEC `2026-07-06-onboarding-guided-flow-design.md`):
- *   - 竖向编号步(order 1..N)、当前步高亮、前置未满足(blocked)置灰 + 锁提示。
- *   - 起点分支:步2「确认起点」= 卡内二选一(从零 / 有存量),选完写 localStorage origin 并重算;
- *     origin=existing 才显示步3(扫码导入)/步4(后台初始化),fresh 跳过。
- *   - 步5(定位)在 existing 场景 CTA 深链带「基于我已导入的作品」prefill(复用 positioning.generate,
- *     它已吃真实作品画像 —— 见 chat-tools generatePositioning);fresh 走普通定位页。
- *   - 全可见步 done → 卡自动隐藏(isOnboardingComplete)。
- *
- * onboarding 只剩两个 localStorage flag:`creatoros:onboarding:hidden`(点「不再显示」永久隐藏)
- * 与 `creatoros:onboarding:origin`(起点选择,读/写在 onboarding-data)。
- *
- * 渲染条件(任一为真 → 不渲):数据未 ready / readHidden() / isOnboardingComplete()。
- * 诚实降级:loadState 失败一律当未完成(不假打勾)。不硬锁导航 —— blocked 只是灰 + 锁提示,
- * 用户仍可点开某页(推荐序 + 门控提示,非强制线性,SPEC §5)。
+ * Dashboard 顶部常驻有序引导卡。
+ * T-637 只展示创作成果路径；技术配置和自动化留在后台。force-open 让设置页可以在
+ * 全部步骤完成后仍真实重新打开卡片，同页事件避免设置路由覆盖首页时状态不刷新。
  */
 
 import * as React from "react";
@@ -40,12 +27,18 @@ import {
   type GuidedStep,
   type OnboardingState,
 } from "./onboarding-steps";
-import { loadState, writeOrigin } from "./onboarding-data";
-import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+import {
+  loadState,
+  writeOrigin,
+  writeReviewedImportedProjects,
+} from "./onboarding-data";
 import { useAccountsChanged } from "@/lib/account-events";
+import { readCurrentAccountId } from "@/lib/http-transport";
 
 /** 常驻卡「不再显示」的永久 localStorage key(onboarding 隐藏 flag)。 */
 const HIDDEN_KEY = "creatoros:onboarding:hidden";
+const FORCE_OPEN_KEY = "creatoros:onboarding:force-open";
+export const ONBOARDING_REOPEN_EVENT = "creatoros:onboarding-reopen";
 
 /** 读永久隐藏偏好(try/catch 降级,不抛)。 */
 export function readHidden(): boolean {
@@ -60,43 +53,32 @@ export function readHidden(): boolean {
 export function writeHidden(): void {
   try {
     window.localStorage.setItem(HIDDEN_KEY, "1");
+    window.localStorage.removeItem(FORCE_OPEN_KEY);
   } catch {
     /* noop */
   }
 }
 
-/**
- * [T-137;T-138] 清「永久隐藏」(hidden)flag,让常驻卡下次挂载重现(设置页「重新打开新手引导」用)。
- */
-export function clearOnboardingFlags(): void {
+export function readForceOpen(): boolean {
+  try {
+    return window.localStorage.getItem(FORCE_OPEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** 设置页调用：即使旧流程已全部完成，也强制把卡片重新展开。 */
+export function requestOnboardingReopen(): void {
   try {
     window.localStorage.removeItem(HIDDEN_KEY);
+    window.localStorage.setItem(FORCE_OPEN_KEY, "1");
   } catch {
-    /* noop */
+    /* storage 不可用时仍继续发事件，让当前页面即时响应 */
   }
+  window.dispatchEvent(new Event(ONBOARDING_REOPEN_EVENT));
 }
 
-/**
- * 步5(定位)在 existing 场景的 CTA 深链 —— 打开 Copilot 定位 surface 并预调 positioning.generate,
- * 带一句 prefill 让模型「基于我已导入的作品」草拟第一版定位。positioning.generate 已吃真实作品
- * 画像(后台 works 读端口读 imported 作品),故无需额外 facet:一进对话即可读作品反推定位。
- */
-const EXISTING_POSITIONING_PREFILL =
-  "请基于我已经导入的抖音作品(标题、逐字稿、数据表现),反推并草拟第一版账号定位提案给我过目。";
-
-function positioningHref(origin: OnboardingState["origin"]): string {
-  if (origin === "existing") {
-    return copilotDeepLink(
-      "positioning",
-      "positioning.generate",
-      undefined,
-      EXISTING_POSITIONING_PREFILL,
-    );
-  }
-  return "/positioning";
-}
-
-/** 步5 的 why 按 origin 微调(existing 强调基于导入作品预设)。 */
+/** 定位说明按账号情况微调；入口始终回定位中心，避免再弹全局 Copilot。 */
 function positioningWhy(
   step: GuidedStep,
   origin: OnboardingState["origin"],
@@ -113,7 +95,8 @@ type Load =
 
 export function OnboardingCard() {
   const [load, setLoad] = React.useState<Load>({ kind: "loading" });
-  const [hidden, setHidden] = React.useState(false);
+  const [hidden, setHidden] = React.useState(readHidden);
+  const [forceOpen, setForceOpen] = React.useState(readForceOpen);
   const [collapsed, setCollapsed] = React.useState(false);
 
   // 卸载后不再 setState(异步 loadState 回来时组件可能已卸载 → 防泄漏 / 防 warning)。
@@ -135,10 +118,20 @@ export function OnboardingCard() {
     })();
   }, []);
 
-  // 挂载后拉真值;同时读一次永久隐藏偏好。
+  // 挂载后拉真值；隐藏/强制打开偏好由 useState lazy initializer 读取。
   React.useEffect(() => {
-    setHidden(readHidden());
     refresh();
+  }, [refresh]);
+
+  React.useEffect(() => {
+    const reopen = () => {
+      setHidden(false);
+      setForceOpen(true);
+      setCollapsed(false);
+      refresh();
+    };
+    window.addEventListener(ONBOARDING_REOPEN_EVENT, reopen);
+    return () => window.removeEventListener(ONBOARDING_REOPEN_EVENT, reopen);
   }, [refresh]);
 
   // [T-189b Gap A] 订阅账号态广播(loginDouyin / 绑定成功后走 notifyAccountsChanged)→ 重拉引导态。
@@ -149,6 +142,7 @@ export function OnboardingCard() {
   const dismiss = React.useCallback(() => {
     writeHidden();
     setHidden(true);
+    setForceOpen(false);
   }, []);
 
   // 起点二选一:写 localStorage 后就地更新 state.origin(不重拉后端,其余信号不变)。
@@ -161,6 +155,21 @@ export function OnboardingCard() {
     );
   }, []);
 
+  const reviewImportedProjects = React.useCallback(() => {
+    writeReviewedImportedProjects(readCurrentAccountId());
+    setLoad((previous) =>
+      previous.kind === "ready"
+        ? {
+            kind: "ready",
+            state: {
+              ...previous.state,
+              hasReviewedImportedProjects: true,
+            },
+          }
+        : previous,
+    );
+  }, []);
+
   // 数据未 ready / 已永久隐藏 → 不渲。
   if (load.kind !== "ready" || hidden) return null;
 
@@ -168,7 +177,7 @@ export function OnboardingCard() {
   const origin = state.origin ?? null;
   const steps = deriveGuidedSteps(state);
   // 可见步全 done → 卡自动隐藏。
-  if (isOnboardingComplete(steps)) return null;
+  if (isOnboardingComplete(steps) && !forceOpen) return null;
 
   const { done, total } = progressOf(steps);
   // 当前步 = 第一个未 done 的可见步(高亮它;blocked 步不当当前步,当前步永远是「下一个能做的」)。
@@ -224,6 +233,12 @@ export function OnboardingCard() {
       {/* 进度条(折叠态也留)。 */}
       <GuidedProgressBar done={done} total={total} />
 
+      {forceOpen && isOnboardingComplete(steps) ? (
+        <p className="text-xs text-muted-foreground" data-slot="onboarding-reopened-complete">
+          引导已重新打开。当前步骤都已完成，你仍可回看完整路径。
+        </p>
+      ) : null}
+
       {collapsed ? null : (
         <ol
           data-slot="onboarding-card-body"
@@ -233,11 +248,10 @@ export function OnboardingCard() {
             <GuidedStepRow
               key={step.key}
               step={step}
-              index={i}
               isCurrent={i === currentIndex}
               origin={origin}
               onChooseOrigin={chooseOrigin}
-              onNavigate={() => {}}
+              onReviewImportedProjects={reviewImportedProjects}
             />
           ))}
         </ol>
@@ -273,22 +287,20 @@ function GuidedProgressBar({ done, total }: { done: number; total: number }) {
  */
 function GuidedStepRow({
   step,
-  index,
   isCurrent,
   origin,
   onChooseOrigin,
-  onNavigate,
+  onReviewImportedProjects,
 }: {
   readonly step: GuidedStep;
-  readonly index: number;
   readonly isCurrent: boolean;
   readonly origin: OnboardingState["origin"];
   readonly onChooseOrigin: (o: "fresh" | "existing") => void;
-  readonly onNavigate: () => void;
+  readonly onReviewImportedProjects: () => void;
 }) {
   const isOriginStep = step.key === "confirm-origin";
   const why = positioningWhy(step, origin);
-  const href = step.key === "positioning-profile" ? positioningHref(origin) : step.href;
+  const href = step.href;
 
   return (
     <li
@@ -410,8 +422,15 @@ function GuidedStepRow({
           className="shrink-0"
           data-slot="onboarding-step-cta"
         >
-          <Link href={href} onClick={onNavigate}>
-            去做
+          <Link
+            href={href}
+            onClick={
+              step.key === "review-imported-projects"
+                ? onReviewImportedProjects
+                : undefined
+            }
+          >
+            {step.ctaLabel}
             <ArrowRightIcon data-icon="inline-end" />
           </Link>
         </Button>

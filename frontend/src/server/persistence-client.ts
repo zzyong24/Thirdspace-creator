@@ -508,6 +508,7 @@ import {
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
   resolveTranscribeSpec as resolveTranscribeSpecFn,
+  TranscribeConfigError,
 } from "@creatoros/backend/modules/ai-runtime";
 // [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
 import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/resolve";
@@ -521,7 +522,8 @@ import {
   // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
   createOpenaiImagesAdapter,
   createOpenaiAsrAdapter,
-  // [T-160] 本地 Whisper 适配器(ASR 选配的兜底后端;未配云端 ASR 时走它,免 key、自动下模型)。
+  createMimoAsrAdapter,
+  // 本地 Whisper 适配器仅保留给旧的显式 provider 配置；未配置 ASR 时不再隐式启用。
   createDefaultWhisperLocalAdapter,
   transcribeAudio as transcribeAudioFn,
   // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
@@ -4889,6 +4891,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   createArtifactVersion: (cc, artifactId, versionInput) =>
                     artifactsService.createVersion(cc, artifactId, versionInput),
                 }),
+              // 真逐字稿一绑定就继续排项目重建，不等下一次定时采集；createTask 自带
+              // IN-FLIGHT 幂等，且已存在 reconstructed artifact 时直接跳过。
+              onTranscriptReady: async (c, { projectId }) => {
+                const rows = await artifactsService.listProjectArtifacts(c, projectId);
+                if (rows.some((row) => row.origin === "reconstructed")) return;
+                await ai.request(
+                  ENDPOINTS.createAITask,
+                  {
+                    params: undefined,
+                    query: undefined,
+                    body: {
+                      taskType: "reconstruct.project",
+                      attemptId: createAiTaskAttemptId(),
+                      inputData: { projectId },
+                    },
+                  },
+                  c,
+                );
+              },
             },
           );
         } else if (
@@ -7149,6 +7170,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           },
           // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
           listImportedWorks: (c) => projectsService.listImportedWorks(c),
+          // T-639：后台渐进回填只在 ASR 已有可执行配置时排队。
+          isTranscriptionConfigured: async (c) => {
+            try {
+              await resolveTranscribeSpecFn(c, {
+                getModelConfig: (cc, cap) =>
+                  settingsService.getModelConfig(cc, cap),
+                env: process.env,
+                getChannelModelConfig,
+              });
+              return true;
+            } catch (error) {
+              if (
+                error instanceof TranscribeConfigError ||
+                (error instanceof Error &&
+                  (error.name === "TranscribeConfigError" ||
+                    error.name === "MultimodalConfigError"))
+              ) {
+                return false;
+              }
+              throw error;
+            }
+          },
           // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
           //   ai.tasks.create → runTranscribe;直调 service 会死链)。
           enqueueTranscribe: async (c, awemeIds) => {
@@ -7165,6 +7208,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               },
               c,
             );
+          },
+          // 依赖闸：只有真实 ASR 逐字稿才允许重建；图集占位锚不能喂给重建模型。
+          hasReconstructableTranscript: async (c, projectId) => {
+            const rows = await artifactsService.listProjectArtifacts(c, projectId);
+            for (const row of rows) {
+              if (row.artifactType !== "output_script" || !row.currentVersionId) {
+                continue;
+              }
+              const versions = await artifactsService.listVersions(c, row.id);
+              const current = versions.find((v) => v.id === row.currentVersionId);
+              const data = current?.contentData as
+                | Record<string, unknown>
+                | null
+                | undefined;
+              if (
+                data?.source !== "image-album" &&
+                typeof data?.transcript === "string" &&
+                data.transcript.trim().length > 0
+              ) {
+                return true;
+              }
+            }
+            return false;
           },
           // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。
           hasReconstructedArtifact: async (c, projectId) => {
@@ -7191,6 +7257,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
         {
           coverLimit: resolveCoverBackfillLimit(),
+          transcribeBatchLimit: (() => {
+            const raw = Number(
+              process.env.CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT,
+            );
+            return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 5;
+          })(),
           // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
           onCoverProgress: (doneN, totalN) =>
             report({
@@ -9670,14 +9742,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (归一);加 provider = 在此注册。真跑要真 transcribe.audio key(未配 → resolveTranscribeSpec
   // 抛 TranscribeConfigError,整任务停 + 引导);单测装配注 fake,不碰这个真 registry。
   const openaiAsrAdapter = createOpenaiAsrAdapter();
-  // [T-160] 本地 Whisper 兜底(ASR 选配):用户没配云端 ASR → resolveTranscribeSpec 回退
-  // provider="whisper-local",转写走本地 Transformers.js(Xenova/whisper-<level>,默认 small,
-  // ffmpeg 解 16kHz mono PCM)。首次自动下模型到 ~/CreatorOS/models/whisper,幂等复用。免 key。
+  const mimoAsrAdapter = createMimoAsrAdapter();
+  // 本地 Whisper 保留兼容旧的显式 provider="whisper-local" 配置，不再承担未配置兜底。
   const whisperLocalAdapter = createDefaultWhisperLocalAdapter();
   const asrRegistry: MultimodalProviderRegistry = {
     siliconflow: openaiAsrAdapter,
     openai: openaiAsrAdapter,
     groq: openaiAsrAdapter,
+    "xiaomi-mimo": mimoAsrAdapter,
     "whisper-local": whisperLocalAdapter,
   };
   const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;

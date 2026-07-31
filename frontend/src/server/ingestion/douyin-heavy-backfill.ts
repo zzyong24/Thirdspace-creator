@@ -78,8 +78,15 @@ export interface DouyinHeavyBackfillHost {
   // ── 逐字稿 + 重建排队 ─────────────────────────────────────────────────────
   /** 本 user 全部 imported 作品的两维锚(host 绑 projectsService.listImportedWorks)。 */
   listImportedWorks(ctx: RequestContext): Promise<ImportedWork[]>;
+  /** 云端 ASR 是否已有可执行配置。 */
+  isTranscriptionConfigured(ctx: RequestContext): Promise<boolean>;
   /** 排一个 transcribe.douyin 批任务(host 绑 ai transport 的 ai.tasks.create,inputData={awemeIds})。 */
   enqueueTranscribe(ctx: RequestContext, awemeIds: string[]): Promise<void>;
+  /** 项目是否已有真实逐字稿；图集占位稿返回 false。 */
+  hasReconstructableTranscript(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<boolean>;
   /** 该项目是否已有 origin='reconstructed' 的 artifact(host 绑 listProjectArtifacts 过滤 origin)。 */
   hasReconstructedArtifact(
     ctx: RequestContext,
@@ -94,6 +101,8 @@ export interface DouyinHeavyBackfillOptions {
   coverLimit: number;
   /** 封面回填逐条进度回调(host 绑 job_run 进度上报;best-effort,子 helper 内吞错)。 */
   onCoverProgress?: (done: number, total: number) => void;
+  /** 每轮统一采集最多补多少条逐字稿；默认 5。 */
+  transcribeBatchLimit?: number;
 }
 
 /** 便于单测 spy 两个子 helper 是否被调(默认注真实现)。 */
@@ -172,7 +181,10 @@ export async function runDouyinHeavyBackfill(
   // ── ② 逐字稿 + 重建排队 ───────────────────────────────────────────────────
   const reconstructPorts: ReconstructEnqueuePorts = {
     listImportedWorks: (c) => host.listImportedWorks(c),
+    isTranscriptionConfigured: (c) => host.isTranscriptionConfigured(c),
     enqueueTranscribe: (c, awemeIds) => host.enqueueTranscribe(c, awemeIds),
+    hasReconstructableTranscript: (c, projectId) =>
+      host.hasReconstructableTranscript(c, projectId),
     hasReconstructedArtifact: (c, projectId) =>
       host.hasReconstructedArtifact(c, projectId),
     enqueueReconstruct: (c, projectId) => host.enqueueReconstruct(c, projectId),
@@ -181,10 +193,11 @@ export async function runDouyinHeavyBackfill(
     const enqueued = await impl.enqueueReconstructForImported(
       reconstructPorts,
       ctx,
+      { transcribeBatchLimit: opts.transcribeBatchLimit },
     );
     if (enqueued.considered > 0) {
       console.log(
-        `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,重建排队 ${enqueued.reconstructEnqueued},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
+        `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,延后 ${enqueued.transcribeDeferred} 条${enqueued.transcribeBlockedByConfig ? "(ASR 未配置)" : ""},重建排队 ${enqueued.reconstructEnqueued},等待逐字稿 ${enqueued.transcriptWaiting},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
       );
     }
   } catch (err) {

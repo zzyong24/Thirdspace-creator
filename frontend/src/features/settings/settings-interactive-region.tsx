@@ -118,7 +118,7 @@ import type {
 // T-077a 技能页签:列表/详情组件 + 可序列化条目类型(route server 侧投影传入)。
 import { SkillsSection } from "./skills-section";
 import type { SkillItem } from "./skills-data";
-import { clearOnboardingFlags } from "@/features/onboarding/onboarding-card";
+import { requestOnboardingReopen } from "@/features/onboarding/onboarding-card";
 
 // ---------------------------------------------------------------------------
 // useSettingsMutation — the shared island mutation seam (plan Step 5)
@@ -449,13 +449,13 @@ export function SettingsDialog({
                       : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
                   </p>
                 </div>
-                {/* ① 必配块:文本模型是 AI 写字 / 对话的地基,配这一个就能用。 */}
+                {/* ① 必配块:文本模型负责写字/对话，ASR 负责把历史作品变成可用逐字稿。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-sm font-semibold text-foreground">必配</span>
                       <span className="text-xs text-muted-foreground">
-                        AI 写字 / 对话的地基,配这一个就能用;不配时有官方兜底。
+                        先配置文本模型与语音转文字；前者负责创作，后者负责历史作品逐字稿。
                       </span>
                     </div>
                     <ModelConfigurationManual />
@@ -471,6 +471,11 @@ export function SettingsDialog({
                     ].join(":")}
                     model={viewModel.model}
                   />
+                  <MultimodalModelCard
+                    key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
+                    kind="audio"
+                    state={viewModel.multimodalModels.audio}
+                  />
                 </div>
 
                 {/* ② 折叠块「更多能力」:7 张按需卡,默认收起(不配也能用,各自诚实降级)。
@@ -482,16 +487,10 @@ export function SettingsDialog({
                     "review-model",
                     "image-model",
                     "video-model",
-                    "asr-model",
                     // [T-231⑪] 联网搜索深链(?highlight=web-search)也要能展开组并滚到卡。
                     "web-search",
                   ]}
                 >
-                  <MultimodalModelCard
-                    key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
-                    kind="audio"
-                    state={viewModel.multimodalModels.audio}
-                  />
                   {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
                   <MultimodalModelCard
                     key={`review:${JSON.stringify(viewModel.multimodalModels.review)}`}
@@ -1788,6 +1787,7 @@ function PreferenceSettingsCard({
 }: {
   viewModel: SettingsViewModel;
 }) {
+  const router = useRouter();
   const initial = viewModel.preferences;
   const [defaultCreationMode, setDefaultCreationMode] =
     React.useState<CreationMode>(initial.defaultCreationMode);
@@ -1875,11 +1875,8 @@ function PreferenceSettingsCard({
             size="sm"
             data-slot="pref-reopen-onboarding"
             onClick={() => {
-              // 清「不再显示」/「session-dismiss」两 flag,再 full-reload 回首页:
-              // 关掉设置 modal(避免两 modal 叠加把引导弹窗挤坏),首页 overlay 全新
-              // 挂载 → 因 dismissed 已清 + 必备未配全会自动弹 + 常驻卡重现。
-              clearOnboardingFlags();
-              window.location.href = "/";
+              requestOnboardingReopen();
+              router.replace("/");
             }}
           >
             重新打开新手引导
@@ -2754,26 +2751,23 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "示例:https://api.minimaxi.com/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
-  // 逐字稿 ASR(T-030-D1 / **T-160 改选配**)—— 与图/视频同款 cc-switch 表单,provider 走 OpenAI
-  // 兼容 ASR(SiliconFlow/OpenAI/Groq);建议值给 SiliconFlow(skill 已验)但不锁死。
-  // [T-160] ASR 变**选配**:不配 API 也能转写——回退本地 Whisper(免 key,首次自动下模型,默认
-  // small 级)。文案改「选配」+ 说明未配走本地。TODO:级别选择器(tiny/base/small/medium)——
-  // 现按 env CREATOROS_WHISPER_LEVEL 或默认 small;做进 UI 需新 model_config 字段/迁移,暂缓。
+  // 逐字稿 ASR(T-639)—— 必配。普通用户只需要选供应商、填模型名和 Key；provider/baseUrl
+  // 由预设自动填入，兼容旧配置与自定义供应商的技术字段收进「高级设置」。
   audio: {
     capability: "transcribe.audio" as const,
-    title: "语音转文字(选配)",
+    title: "语音转文字（必配）",
     icon: Cpu,
     description:
-      "把视频里的话转成文字稿(复盘 / 二创的底稿)。选配:不配则用本地 Whisper(免 key,首次自动下模型,默认 small 级);配了云端 ASR 则更快更准。",
-    providerSuggestions: ["siliconflow", "openai", "groq"] as ReadonlyArray<string>,
-    providerPlaceholder: "示例:siliconflow",
+      "把历史作品里的话转成逐字稿，供定位、复盘和二创使用。请先配置云端 ASR；后台会按小批次慢慢补齐，不会一次挤满任务队列。",
+    providerSuggestions: ["xiaomi-mimo", "siliconflow", "openai", "groq"] as ReadonlyArray<string>,
+    providerPlaceholder: "xiaomi-mimo",
     providerHelp:
-      "OpenAI 兼容 ASR 厂商,可自定义(SiliconFlow / OpenAI / Groq 同形状)。留空则用本地 Whisper。",
-    modelHelp: "ASR 模型 id,如 FunAudioLLM/SenseVoiceSmall(SiliconFlow)。",
-    modelPlaceholder: "示例:FunAudioLLM/SenseVoiceSmall",
+      "预设会自动填写；只有自建中转或其他厂商才需要修改。",
+    modelHelp: "填写供应商控制台中的准确模型名。小米 MiMo 使用 mimo-v2.5-asr。",
+    modelPlaceholder: "mimo-v2.5-asr",
     baseUrlPlaceholder:
-      "示例:https://api.siliconflow.cn/v1(留空=provider 默认)",
-    disabledHint: "未配 → 用本地 Whisper 转写(免 key,首次下载模型)。",
+      "https://api.xiaomimimo.com/v1",
+    disabledHint: "未配 → 暂停后台逐字稿补齐，并提示先完成 ASR 配置。",
   },
   // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI
   // 同形状);未配 → 知识库 AI 搜索诚实降级纯关键词。apiFormat 显式存 openai_chat
@@ -2869,6 +2863,67 @@ const MULTIMODAL_META = {
   },
 } as const;
 
+type AsrProviderPreset = {
+  id: string;
+  label: string;
+  provider: string;
+  baseUrl: string;
+  defaultModel: string;
+};
+
+const CUSTOM_ASR_PRESET_ID = "custom";
+const ASR_PROVIDER_PRESETS: ReadonlyArray<AsrProviderPreset> = [
+  {
+    id: "xiaomi-mimo",
+    label: "小米 MiMo（推荐）",
+    provider: "xiaomi-mimo",
+    baseUrl: "https://api.xiaomimimo.com/v1",
+    defaultModel: "mimo-v2.5-asr",
+  },
+  {
+    id: "siliconflow",
+    label: "硅基流动",
+    provider: "siliconflow",
+    baseUrl: "https://api.siliconflow.cn/v1",
+    defaultModel: "FunAudioLLM/SenseVoiceSmall",
+  },
+  {
+    id: "openai",
+    label: "OpenAI",
+    provider: "openai",
+    baseUrl: "https://api.openai.com/v1",
+    defaultModel: "gpt-4o-mini-transcribe",
+  },
+  {
+    id: "groq",
+    label: "Groq",
+    provider: "groq",
+    baseUrl: "https://api.groq.com/openai/v1",
+    defaultModel: "whisper-large-v3-turbo",
+  },
+  {
+    id: CUSTOM_ASR_PRESET_ID,
+    label: "其他 / 自定义",
+    provider: "",
+    baseUrl: "",
+    defaultModel: "",
+  },
+];
+
+function matchAsrPreset(provider: string, baseUrl: string): string {
+  const normalizedProvider = provider.trim().toLowerCase();
+  const normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, "").toLowerCase();
+  if (!normalizedProvider && !normalizedBaseUrl) return "";
+  return (
+    ASR_PROVIDER_PRESETS.find(
+      (preset) =>
+        preset.id !== CUSTOM_ASR_PRESET_ID &&
+        (preset.provider === normalizedProvider ||
+          preset.baseUrl.toLowerCase() === normalizedBaseUrl),
+    )?.id ?? CUSTOM_ASR_PRESET_ID
+  );
+}
+
 // [T-132] 多模态卡 kind → onboarding stepKey(?highlight=<stepKey> 深链落地定位)。
 // 只映射 onboarding 清单里有对应步的 kind;embed/vision 无 onboarding 步 → undefined
 // (不加 data-highlight,不影响定位)。
@@ -2913,6 +2968,13 @@ function MultimodalModelCard({
   const [provider, setProvider] = React.useState<string>(state.provider);
   const [modelName, setModelName] = React.useState<string>(state.modelName);
   const [baseUrl, setBaseUrl] = React.useState<string>(state.baseUrl);
+  const isAudio = kind === "audio";
+  const [showAudioAdvanced, setShowAudioAdvanced] = React.useState(false);
+  const [asrPresetId, setAsrPresetId] = React.useState<string>(() =>
+    kind === "audio"
+      ? matchAsrPreset(state.provider, state.baseUrl)
+      : CUSTOM_ASR_PRESET_ID,
+  );
   // [T-239b] 仅备用对话模型卡消费:文本 LLM 走 apiFormat 分派(anthropic / OpenAI 兼容),
   // 与文本模型卡同款下拉;其它多模态卡按 provider 分派,不渲此控件。
   const [apiFormat, setApiFormat] = React.useState<ApiFormat>(
@@ -2941,12 +3003,26 @@ function MultimodalModelCard({
     setApiFormat(preset.apiFormat);
   }, []);
 
+  const handleSelectAsrPreset = React.useCallback((id: string) => {
+    setAsrPresetId(id);
+    const preset = ASR_PROVIDER_PRESETS.find((item) => item.id === id);
+    if (!preset || preset.id === CUSTOM_ASR_PRESET_ID) {
+      setShowAudioAdvanced(true);
+      return;
+    }
+    setProvider(preset.provider);
+    setBaseUrl(preset.baseUrl);
+    setModelName(preset.defaultModel);
+  }, []);
+
   // 多数档要 provider + model 齐全;搜索档(web.search)model 选填,只需 provider(serpapi 用
   // model 当 engine、留空默认 google;bocha/tavily 无模型概念)。
   const configured =
     kind === "search"
       ? provider.trim().length > 0
-      : provider.trim().length > 0 && modelName.trim().length > 0;
+      : provider.trim().length > 0 &&
+        modelName.trim().length > 0 &&
+        (!isAudio || state.hasSecret || secret.trim().length > 0);
   const canSave = configured && !pending;
 
   // One PUT upserts the whole capability row; an empty secret is omitted so a
@@ -3028,9 +3104,44 @@ function MultimodalModelCard({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Icon aria-hidden="true" className="size-4 shrink-0" />
           <span>
-            provider / model / 接口地址 / 密钥(与文本模型同款配置;密钥存本地库)
+            {isAudio
+              ? "选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。"
+              : "provider / model / 接口地址 / 密钥(与文本模型同款配置;密钥存本地库)"}
           </span>
         </div>
+        {isAudio ? (
+          <SettingsFormRow
+            label="ASR 供应商"
+            controlId="multimodal-audio-preset"
+            help="小米 MiMo 为高性价比预设；也可继续使用已有 OpenAI 兼容 ASR。"
+          >
+            <Select
+              value={asrPresetId}
+              onValueChange={handleSelectAsrPreset}
+            >
+              <SelectTrigger
+                id="multimodal-audio-preset"
+                data-slot="multimodal-audio-preset-trigger"
+                size="sm"
+                className="w-full md:w-72"
+                disabled={pending}
+              >
+                <SelectValue placeholder="选择 ASR 供应商" />
+              </SelectTrigger>
+              <SelectContent data-slot="multimodal-audio-preset-content">
+                {ASR_PROVIDER_PRESETS.map((preset) => (
+                  <SelectItem
+                    key={preset.id}
+                    value={preset.id}
+                    data-slot={`multimodal-audio-preset-item-${preset.id}`}
+                  >
+                    {preset.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingsFormRow>
+        ) : null}
         {isFallback ? (
           // [T-325] 备用对话卡复用供应商预设(与文本模型卡同款)。
           <ProviderPresetRow
@@ -3040,27 +3151,36 @@ function MultimodalModelCard({
             onSelectPreset={handleSelectPreset}
           />
         ) : null}
-        <SettingsFormRow
-          label="提供商"
-          controlId={`multimodal-${kind}-provider`}
-          help={meta.providerHelp}
+        <div
+          hidden={isAudio && !showAudioAdvanced}
+          data-slot={isAudio ? "multimodal-audio-advanced-settings" : undefined}
         >
-          <Input
-            id={`multimodal-${kind}-provider`}
-            data-slot={`multimodal-${kind}-provider-input`}
-            list={providerListId}
-            value={provider}
-            disabled={pending}
-            placeholder={meta.providerPlaceholder}
-            onChange={(event) => setProvider(event.target.value)}
-            aria-label={`${meta.title}提供商`}
-          />
-          <datalist id={providerListId}>
-            {meta.providerSuggestions.map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
-        </SettingsFormRow>
+          <SettingsFormRow
+            label="提供商"
+            controlId={`multimodal-${kind}-provider`}
+            help={meta.providerHelp}
+          >
+            <Input
+              id={`multimodal-${kind}-provider`}
+              data-slot={`multimodal-${kind}-provider-input`}
+              list={providerListId}
+              value={provider}
+              disabled={pending}
+              placeholder={meta.providerPlaceholder}
+              onChange={(event) => {
+                const next = event.target.value;
+                setProvider(next);
+                if (isAudio) setAsrPresetId(matchAsrPreset(next, baseUrl));
+              }}
+              aria-label={`${meta.title}提供商`}
+            />
+            <datalist id={providerListId}>
+              {meta.providerSuggestions.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
+          </SettingsFormRow>
+        </div>
         <SettingsFormRow
           label="模型"
           controlId={`multimodal-${kind}-model`}
@@ -3085,30 +3205,33 @@ function MultimodalModelCard({
             </datalist>
           ) : null}
         </SettingsFormRow>
-        <SettingsFormRow
-          label="接口地址"
-          controlId={`multimodal-${kind}-base-url`}
-          help="自定义 baseUrl;留空走 provider 默认。"
-        >
-          <Input
-            id={`multimodal-${kind}-base-url`}
-            data-slot={`multimodal-${kind}-base-url-input`}
-            value={baseUrl}
-            disabled={pending}
-            placeholder={meta.baseUrlPlaceholder}
-            onChange={(event) => {
-              const next = event.target.value;
-              setBaseUrl(next);
-              // [T-325] 备用对话卡:手改地址 → 重算预设高亮(其它卡无预设,不需重算)。
-              if (isFallback) {
-                setPresetId(
-                  matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
-                );
-              }
-            }}
-            aria-label={`${meta.title}接口地址`}
-          />
-        </SettingsFormRow>
+        <div hidden={isAudio && !showAudioAdvanced}>
+          <SettingsFormRow
+            label="接口地址"
+            controlId={`multimodal-${kind}-base-url`}
+            help="自定义 baseUrl;留空走 provider 默认。"
+          >
+            <Input
+              id={`multimodal-${kind}-base-url`}
+              data-slot={`multimodal-${kind}-base-url-input`}
+              value={baseUrl}
+              disabled={pending}
+              placeholder={meta.baseUrlPlaceholder}
+              onChange={(event) => {
+                const next = event.target.value;
+                setBaseUrl(next);
+                if (isAudio) setAsrPresetId(matchAsrPreset(provider, next));
+                // [T-325] 备用对话卡:手改地址 → 重算预设高亮(其它卡无预设,不需重算)。
+                if (isFallback) {
+                  setPresetId(
+                    matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
+                  );
+                }
+              }}
+              aria-label={`${meta.title}接口地址`}
+            />
+          </SettingsFormRow>
+        </div>
         {isFallback ? (
           // [T-239b] 备用对话模型走文本 LLM 解析链 → 需要接口格式(与文本模型卡同款下拉)。
           <SettingsFormRow
@@ -3177,6 +3300,16 @@ function MultimodalModelCard({
             ) : null}
           </div>
         </SettingsFormRow>
+        {isAudio ? (
+          <button
+            type="button"
+            data-slot="multimodal-audio-advanced-toggle"
+            className="w-fit text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            onClick={() => setShowAudioAdvanced((visible) => !visible)}
+          >
+            {showAudioAdvanced ? "收起高级设置" : "高级设置（自定义供应商）"}
+          </button>
+        ) : null}
         <div className="flex items-start justify-between gap-3">
           {/* [T-377] 测试连接:按能力走最小真实调用/最便宜鉴权探测(生图/付费搜索会真实
               调用 → 额度提示;生视频只验鉴权不真生成)。 */}

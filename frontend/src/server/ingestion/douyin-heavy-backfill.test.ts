@@ -88,9 +88,11 @@ function makeHost(overrides?: Partial<DouyinHeavyBackfillHost>): {
       { projectId: "proj-B", externalId: "aweme-B" },
       { projectId: "proj-C", externalId: "aweme-C" },
     ],
+    isTranscriptionConfigured: async () => true,
     enqueueTranscribe: async (_c, awemeIds) => {
       calls.transcribed.push(awemeIds);
     },
+    hasReconstructableTranscript: async () => true,
     hasReconstructedArtifact: async () => false,
     enqueueReconstruct: async (_c, projectId) => {
       calls.reconstructed.push(projectId);
@@ -122,7 +124,7 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
       { contentOutputId: "out-C", coverAssetId: "asset-3" },
     ]);
 
-    expect(calls.transcribed).toEqual([["aweme-A", "aweme-B", "aweme-C"]]);
+    expect(calls.transcribed).toEqual([]);
     expect(calls.reconstructed).toEqual(["proj-A", "proj-B", "proj-C"]);
   });
 
@@ -139,8 +141,11 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
         considered: 3,
         transcribeEnqueued: true,
         transcribeAwemeCount: 1,
+        transcribeDeferred: 0,
+        transcribeBlockedByConfig: false,
         reconstructEnqueued: 1,
         reconstructSkipped: 0,
+        transcriptWaiting: 0,
         hiddenSkipped: 2,
         failed: 0,
       })),
@@ -174,8 +179,11 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
           considered: works.length,
           transcribeEnqueued: false,
           transcribeAwemeCount: 0,
+          transcribeDeferred: 0,
+          transcribeBlockedByConfig: false,
           reconstructEnqueued: 3,
           reconstructSkipped: 0,
+          transcriptWaiting: 0,
           hiddenSkipped: 0,
           failed: 0,
         };
@@ -197,6 +205,6 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
     });
     await runDouyinHeavyBackfill(ctx, host, { coverLimit: 100 });
     expect(calls.reconstructed).toEqual(["proj-X"]);
-    expect(calls.transcribed).toEqual([["aweme-X"]]);
+    expect(calls.transcribed).toEqual([]);
   });
 });

@@ -212,9 +212,9 @@ describe("resolveMultimodalSpec — tier 3 未配抛错(诚实禁用)", () => {
   });
 });
 
-// ── ASR 逐字稿(transcribe.audio,T-030-D1)—— 与 image/video 同款三层回退,只是 capability
-//    固定 transcribe.audio、未配错误类型换成 TranscribeConfigError。────────────────────────
-describe("resolveTranscribeSpec — 3 层回退(kind=audio)", () => {
+// ── ASR 逐字稿(transcribe.audio,T-030-D1/T-639)—— 用户配置 → 环境变量两层；都没有
+//    必须明确报错，禁止隐式切本地 Whisper 把普通电脑拖慢。──────────────────────────────
+describe("resolveTranscribeSpec — 必配(kind=audio)", () => {
   it("tier 1:transcribe.audio 命中 DB 行 → 出 spec(kind=audio),secretValue 优先", async () => {
     const spec = await resolveTranscribeSpec(ctx, {
       getModelConfig: async (_c, cap) =>
@@ -282,40 +282,16 @@ describe("resolveTranscribeSpec — 3 层回退(kind=audio)", () => {
     });
   });
 
-  // [T-160] ASR 改选配:tier 3 未配**不再抛**,回退本地 whisper spec(免 key)。
-  it("tier 3:都无 → 回退本地 whisper spec(不抛;provider=whisper-local,默认级别 small)", async () => {
-    const spec = await resolveTranscribeSpec(ctx, {
-      getModelConfig: noRow,
-      env: {},
-    });
-    expect(spec).toEqual({
-      provider: "whisper-local",
-      baseUrl: null,
-      model: "small",
-      token: "",
-      kind: "audio",
-    });
+  it("两层都无 → 明确报 TranscribeConfigError，并指向设置页", async () => {
+    await expect(
+      resolveTranscribeSpec(ctx, {
+        getModelConfig: noRow,
+        env: { CREATOROS_WHISPER_LEVEL: "medium" },
+      }),
+    ).rejects.toThrow(/未配置语音转文字模型.*设置.*模型配置/);
   });
 
-  it("tier 3:CREATOROS_WHISPER_LEVEL 覆盖回退级别(medium)", async () => {
-    const spec = await resolveTranscribeSpec(ctx, {
-      getModelConfig: noRow,
-      env: { CREATOROS_WHISPER_LEVEL: "medium" },
-    });
-    expect(spec.provider).toBe("whisper-local");
-    expect(spec.model).toBe("medium");
-  });
-
-  it("tier 3:非法 CREATOROS_WHISPER_LEVEL → 回退 small", async () => {
-    const spec = await resolveTranscribeSpec(ctx, {
-      getModelConfig: noRow,
-      env: { CREATOROS_WHISPER_LEVEL: "gigantic" },
-    });
-    expect(spec.model).toBe("small");
-  });
-
-  // 用户**配了**云端 ASR → 仍走用户 provider(不被 whisper 回退抢路)。
-  it("配了云端 ASR 仍走用户 spec(whisper 回退只在未配时兜底)", async () => {
+  it("配了云端 ASR 走用户 spec", async () => {
     const spec = await resolveTranscribeSpec(ctx, {
       getModelConfig: async (_c, cap) =>
         cap === "transcribe.audio"

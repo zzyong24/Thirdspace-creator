@@ -68,8 +68,14 @@ export {
   createOpenaiAsrAdapter,
   type OpenaiAsrAdapterDeps,
 } from "./runtime/multimodal-openai-asr";
-// 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— ASR 选配的兜底后端:
-// 用户没配 transcribe.audio provider 时,resolveTranscribeSpec 回退到 provider "whisper-local"。
+// 小米 MiMo-V2.5-ASR 使用 input_audio + chat/completions，协议不同于 multipart transcription。
+export {
+  createMimoAsrAdapter,
+  splitMp3ForMimo,
+  type MimoAsrAdapterDeps,
+} from "./runtime/multimodal-mimo-asr";
+// 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— 保留给旧配置与
+// 明确选择本地运行的开发场景；T-639 起未配置 ASR 时不再隐式回退到本 provider。
 // 用 Transformers.js(@xenova/transformers)本地跑 Whisper(Xenova/whisper-<level>,默认 small),
 // 音频用 ffmpeg 解成 16kHz mono f32le PCM。host 用 createDefaultWhisperLocalAdapter() 装配;
 // 单测注 fake deps(不真下模型/不 spawn 真 ffmpeg)。免 key、免外部 API、桌面化零 Python。

@@ -183,23 +183,25 @@ export function ModelConfigurationManual() {
               </span>
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
-                  语音转文字 ASR（建议优先配置）
+                  语音转文字 ASR（必配）
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  ASR 决定逐字稿速度和准确率。未配置时仍可使用本地 Whisper；
-                  配置云端后更适合批量转写。
+                  ASR 决定逐字稿速度和准确率。未配置时后台逐字稿任务会暂停；
+                  配置完成后，系统会按小批次逐步补齐历史作品。
                 </p>
               </div>
             </div>
             <ManualFigure
               slot="model-manual-figure-asr"
               eyebrow="截图 03"
-              title="硅基流动 SenseVoice ASR 填写示例"
+              title="小米 MiMo ASR 填写示例"
             >
-              <Field label="提供商" value="siliconflow" />
-              <Field label="模型" value="FunAudioLLM/SenseVoiceSmall" />
-              <Field label="接口地址" value="https://api.siliconflow.cn/v1" />
+              <Field label="ASR 供应商" value="小米 MiMo（推荐）" />
+              <Field label="模型" value="mimo-v2.5-asr" />
               <Field label="API 密钥" value="" tone="secret" />
+              <div className="rounded-md bg-brand-soft px-3 py-2 text-xs leading-relaxed text-brand">
+                选择预设后接口地址会自动填写；只有接其他供应商时才需要打开高级设置。
+              </div>
             </ManualFigure>
           </section>
 

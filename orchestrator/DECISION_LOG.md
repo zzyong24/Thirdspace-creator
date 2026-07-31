@@ -5,6 +5,24 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-ONB-637
+Date: 2026-07-31
+Stage: T-637 BUILD
+Type: user-confirmed-information-architecture
+Decision: 新手引导不再暴露文本模型配置和自动化任务。主线统一为绑定账号→确认账号情况→
+          （已有作品账号）等待并查看历史项目→确定定位→监控对标→从对标创建选题→进入项目；
+          新号跳过历史项目。设置页“重新打开”必须强制展示完整引导，即使全部步骤已完成。
+Rationale: 自动化是后台基础设施，不是用户目标；用户需要围绕作品、定位、对标、选题和项目
+           建立第一次成功体验。旧重新打开只清 hidden、又被 complete 自动隐藏，属于假按钮。
+Source: 用户 2026-07-31 明确确认的引导顺序与“自动化用户完全不需要感知”。
+Affected Artifacts: onboarding SPEC/状态机/数据装配/首页卡片、设置页重新打开入口与测试。
+Explicit Limits: 不新增第二套自动化或后端持久化；不把 imported 历史项目算作用户新建项目；
+                 历史项目确认按当前账号本地隔离。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-POS-623
 Date: 2026-07-29
 Stage: T-623 PLAN / CONTRACT
@@ -1313,3 +1331,49 @@ CreatorOS 端实施。代码审计确认 T-575 仅完成签名配置拉取，现
    重发激活码或引入双协议。
 
 **Status**：resolved；进入 T-620 增量复核和 BUILD。
+
+## DEC-RCN-020 (2026-07-31) — 历史作品重建必须以真实逐字稿为执行前置
+
+**来源**：飞书反馈 `rec27TB16PMMin` 的真实日志。40 条公开历史作品导入后，系统同时排
+`transcribe.douyin` 与 `reconstruct.project`，后者先执行并统一因“D3 尚未绑定”失败；对话区
+又逐任务显示失败，形成通知风暴。
+
+**决策**：
+
+1. 初始化重活仍只维护一套采集编排，但重建排队增加真实逐字稿门禁；图集占位锚不满足门禁。
+2. `transcribe-runner` 在真逐字稿成功绑定后，通过组合根注入的后续端口立即、幂等地排对应项目
+   重建；后续排队失败只告警并由下一轮补偿，不反向污染转写终态。
+3. `reconstruct.project` 同一原因的批量失败按语义跨轮聚合为一张通知并显示真实数量；用户主动
+   创作任务仍逐条展示。
+4. 侧栏在短高度窗口把导航变为内部滚动区，账号与用户身份作为不可收缩底部区保留；AI 助手/
+   存储提示卡属于次要信息，短高度时隐藏。
+
+**数据与架构边界**：不新增表、不改 artifact 归属、不引入第二套任务系统；AI 仍只经既有
+`ai.tasks.create` 排队，artifact 仍由 backend service 写入。
+
+**User confirmation**：用户要求查看飞书最新日志并修复截图中的重复错误与低分辨率布局问题。
+
+**Status**：confirmed for BUILD；由 T-638 承接。
+
+## DEC-ASR-021 (2026-07-31) — 历史作品全量保留，逐字稿小批补齐，云端 ASR 必配
+
+**来源**：用户明确确认“全部采集没问题，就慢慢采集”，同时要求 ASR 模型改成必配，并调研、
+接入飞书反馈中的小米 MiMo 性价比方案。
+
+**决策**：
+
+1. 作品、指标与公开状态继续走唯一统一采集链全量入库；逐字稿不新建第二套自动化，只在该链
+   尾部每轮最多补 5 条，成功后下轮幂等跳过，失败可后续补偿。
+2. 用户手动单条提取保持高优先、不中断；重建仍以真实逐字稿为前置。
+3. `transcribe.audio` 改为必配。未配置时后台排队前停止，手动任务返回设置指引，不再把普通用户
+   无感知地切到本地 Whisper。显式旧配置仍保留兼容。
+4. 小米 MiMo 作为独立 `xiaomi-mimo` provider，固定官方预设 model=`mimo-v2.5-asr`、
+   baseUrl=`https://api.xiaomimimo.com/v1`；因协议是 `chat/completions + input_audio`，不得映射
+   到既有 `/audio/transcriptions` multipart adapter。
+5. MiMo 单次 base64 音频上限由内部 MP3 帧切分处理，不通过限制用户视频大小规避。
+6. 设置页普通路径只要求选择 ASR 供应商、确认模型名和填写 Key；provider/baseUrl 进入高级设置。
+
+**数据与架构边界**：不新增表、不改数据归属、不新增公开契约或调度器；AI 结果仍经 backend
+service port 落库。
+
+**Status**：confirmed for BUILD；由 T-639 承接。

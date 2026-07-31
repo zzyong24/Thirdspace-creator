@@ -73,7 +73,7 @@ export function SidebarStorageCard() {
       data-slot="sidebar-contextual-card"
       data-variant="storage"
       data-storage-state={state.kind}
-      className="flex flex-col gap-1 rounded-card border border-border bg-surface-subtle p-3 text-xs text-muted-foreground"
+      className="flex flex-col gap-1 rounded-card border border-border bg-surface-subtle p-3 text-xs text-muted-foreground [@media(max-height:760px)]:hidden"
     >
       <div className="flex items-center justify-between text-foreground">
         <span className="font-medium">素材库存储</span>

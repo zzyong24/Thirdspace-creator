@@ -11,6 +11,14 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-ONB-637 — 新手引导从技术配置改为创作成果路径（2026-07-31）
+
+- **上游变化**：用户确认自动化不应被感知；引导改为账号、历史项目、定位、对标、选题、项目。
+- **失效**：T-161/T-348 中“文本模型配置”“后台初始化自动化”为必经步骤、项目总数代表首个项目的语义失效。
+- **重新派生**：引导完成态改读定位中心、内容雷达与项目来源真值；已有作品确认按账号隔离；新号动态跳过历史项目并连续编号。
+- **交互影响**：设置页重新打开增加 force-open + 同页事件，完整状态也必须展示；关闭后恢复自动隐藏。
+- **契约影响**：无公开服务契约、数据归属或自动化执行架构变化；仅客户端信息架构和读模型组合变化。
+
 ## CI-MODEL-610 — clientId 权威从 Activity 归位 Growth registry（2026-07-29）
 
 - **上游变化**：应用/客户端目录唯一归 Growth；Activity ticket/introspection 只证明
@@ -297,6 +305,34 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   小屏继续遵守阶段右栏现有 `xl+` 显示约束，不回退全局弹窗。
 - **验证**：contract 全量、positioning service/contract/repository、定位与复盘前端定向、
   Copilot embed 预填、三包 typecheck、boundary 与 reconcile。
+
+## CI-RCN-020 — 历史作品重建依赖与短窗口侧栏修复（T-638，2026-07-31）
+
+- **变更**：导入作品只先排逐字稿；已有真稿或真稿刚绑定时才排 `reconstruct.project`，同因批量
+  失败通知跨轮聚合；低高度侧栏固定保留账号与用户身份。
+- **数据影响**：无 schema、迁移或归属变化；沿用 `output_script` 当前版本中的 transcript/source
+  判真稿，`source=image-album` 明确不参与重建。
+- **执行影响**：`transcribe-runner` 新增可选后续端口，由 composition root 通过既有
+  `ai.tasks.create` 排重建；幂等和任务终态继续由现有 ai service 管理。
+- **前端影响**：Copilot 通知增加重建失败语义聚合与数量；侧栏采用 `dvh`、导航内部滚动、底部
+  身份区不收缩，短高度隐藏次要提示卡。
+- **失效工件**：旧 `reconstruct-enqueue` 中“同轮同时排两个任务、靠以后轮次碰巧成功”的注释
+  与测试已重派生；其余自动化、模型配置和数据源契约不变。
+
+## CI-ASR-021 — 历史逐字稿渐进回填与小米 MiMo ASR（T-639，2026-07-31）
+
+- **产品变化**：公开历史作品与指标继续全量采集，但统一采集尾部每轮最多只补 5 条缺失逐字稿；
+  手动单条转写不受限制。未配置 ASR 时后台不创建注定失败的任务。
+- **模型配置变化**：`transcribe.audio` 从隐式本地 Whisper 兜底改为云端 ASR 必配；普通设置路径
+  只见供应商预设、模型名和 Key，provider/baseUrl 收进高级设置。旧显式 `whisper-local` 与已有
+  SiliconFlow/OpenAI/Groq 配置保留兼容，不迁移、不覆盖。
+- **执行变化**：新增 `xiaomi-mimo` adapter，走官方 `chat/completions + input_audio`；现有 OpenAI
+  multipart adapter 不改。超过 MiMo 单次 base64 上限的 MP3 按帧安全切片并顺序合并，不增加
+  用户视频大小限制。
+- **数据与契约影响**：无 schema、迁移或公开 operation 变化；仍由既有 backend service port
+  写逐字稿，AI worker 不直接写库；仍复用唯一统一采集任务，不新建调度器。
+- **失效工件**：T-160 中“未配置就自动下载并运行本地 Whisper”的默认产品语义被本决策替代；
+  adapter 代码仅作旧显式配置兼容。旧研究和历史 SPEC 保留原貌，由 T-639 作为当前增量真相。
 
 ---
 

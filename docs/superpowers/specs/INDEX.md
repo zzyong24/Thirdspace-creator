@@ -45,6 +45,7 @@
 | [2026-07-24-model-configuration-experience-redesign.md](2026-07-24-model-configuration-experience-redesign.md) | 模型配置从"六字段自由组合"改为选用途+选 Key 来源+粘 Key 向导+动态目录+真实能力测试(T-501) | passed(三轮通过·确认①) |
 | [2026-07-25-model-configuration-experience-redesign.page-spec.md](2026-07-25-model-configuration-experience-redesign.page-spec.md) | T-501 PAGE SPEC:沿用现有 Settings 外壳做增量,用"证据轨"呈现分项测试结果 | —(page-spec·内部 PASS) |
 | [2026-07-26-model-configuration-lightweight-optimization.md](2026-07-26-model-configuration-lightweight-optimization.md) | 替代范围:只做收字段进高级+"保存并测试"复用正式 streamText 通路+更新教程(收窄 T-501) | 用户已确认·可进 BUILD |
+| [2026-07-31-gradual-transcript-backfill-and-mimo-asr.md](2026-07-31-gradual-transcript-backfill-and-mimo-asr.md) | 历史作品全量入库但逐字稿每轮小批补齐；ASR 改必配并接小米 MiMo 独立协议(T-639) | 用户已确认·BUILD 中 |
 
 ## 数据管线与采集
 
@@ -55,7 +56,7 @@
 | [2026-07-01-real-works-data-pipeline-v2-design.md](2026-07-01-real-works-data-pipeline-v2-design.md) | 真实作品数据管线2.0:逐字稿+创作链+评论+明细(T-030) | ⚠️ 已补清 F1–F4→可开工 |
 | [2026-07-02-douyin-collection-throttle-design.md](2026-07-02-douyin-collection-throttle-design.md) | 抖音采集统一限流/退避子系统防封 IP/账号(T-038) | ⚠️ 已处置→可开工 |
 | [2026-07-05-web-search-decoupling-design.md](2026-07-05-web-search-decoupling-design.md) | 联网搜索从模型内置工具解耦为自有检索层(T-126) | ⚠️ 已处置(现网已存在,范围塌缩) |
-| [2026-07-06-asr-local-whisper-design.md](2026-07-06-asr-local-whisper-design.md) | ASR 从必配 key 变选配,未配则下载本地 Whisper 自跑、零 key(T-160) | ✅ 已实现(真机端到端待验) |
+| [2026-07-06-asr-local-whisper-design.md](2026-07-06-asr-local-whisper-design.md) | ASR 从必配 key 变选配,未配则下载本地 Whisper 自跑、零 key(T-160) | 历史已实现；隐式兜底由 T-639 替代 |
 | [2026-07-11-benchmark-topic-flywheel-design.md](2026-07-11-benchmark-topic-flywheel-design.md) | 对标从手动拆 pattern 升级为精选源采集→爆款判定→AI 拆解→自动转选题供给飞轮(T-212) | ⚠️ CONCERNS(已处置)可开工 T-212a~d |
 | [2026-07-11-daily-topic-autopilot-design.md](2026-07-11-daily-topic-autopilot-design.md) | 选题从静态池升级为每天自动出题+多源证据入口+已发布作品按选题归因回流(T-235) | ⚠️ CONCERNS(已处置)可开工 T-235a~e |
 | [2026-07-15-transcript-fetch-two-surfaces-design.md](2026-07-15-transcript-fetch-two-surfaces-design.md) | 对标视频+已发布作品各加单条「抓逐字稿」按钮,失败收敛到单条(T-349) | — |

@@ -40,6 +40,10 @@ export interface ReconstructEnqueueResult {
   transcribeEnqueued: boolean;
   /** transcribe 批任务里的 awemeId 数(0 = 没有可转写的作品)。 */
   transcribeAwemeCount: number;
+  /** 本轮因小批上限留到后续统一采集继续处理的作品数。 */
+  transcribeDeferred: number;
+  /** ASR 未配置时为 true；此时不创建注定失败的后台转写任务。 */
+  transcribeBlockedByConfig: boolean;
   /**
    * 调了 createTask 排 reconstruct 的项目数(闸「已有 reconstructed artifact」未命中)。注:
    * createTask 自身对 IN-FLIGHT(queued/running)重复幂等命中既有(不建第二行),故本计数是
@@ -48,6 +52,8 @@ export interface ReconstructEnqueueResult {
   reconstructEnqueued: number;
   /** 闸命中:已有 reconstructed artifact → 诚实跳过(重建过了不重跑)。 */
   reconstructSkipped: number;
+  /** 还没有真实逐字稿，等待 transcribe 完成后再排重建。 */
+  transcriptWaiting: number;
   /** 兼容旧运行统计；T-595 后源边界已清理隐藏作品，恒为 0。 */
   hiddenSkipped: number;
   /** 单步(读 artifact / 排队)失败 → 降级继续,计数(绝不抛出拖垮整批)。 */
@@ -57,12 +63,19 @@ export interface ReconstructEnqueueResult {
 export interface ReconstructEnqueuePorts {
   /** 本 user 全部 imported 作品的两维锚(host 绑 projectsService.listImportedWorks)。 */
   listImportedWorks(ctx: RequestContext): Promise<ImportedWork[]>;
+  /** 云端 ASR 是否已有可执行配置；后台回填未配置时直接停在排队前。 */
+  isTranscriptionConfigured(ctx: RequestContext): Promise<boolean>;
   /**
    * 排一个 transcribe.douyin 任务(host 绑 ai transport 的 ai.tasks.create,inputData={awemeIds})。
    * **必须经 ai transport**(dispatch 链只在拦 ai.tasks.create 时触发;直调 service 会死链)。
    * 一批 awemeId 排一个批任务(runner 内逐 aweme 幂等)。awemeIds 空则调用方不调此端口。
    */
   enqueueTranscribe(ctx: RequestContext, awemeIds: string[]): Promise<void>;
+  /** 当前项目是否已有可供重建消费的真实逐字稿；图集占位锚必须返回 false。 */
+  hasReconstructableTranscript(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<boolean>;
   /** 该项目是否已有 origin='reconstructed' 的 artifact(闸;host 绑 listProjectArtifacts 过滤 origin)。 */
   hasReconstructedArtifact(
     ctx: RequestContext,
@@ -79,20 +92,24 @@ export interface ReconstructEnqueuePorts {
 /**
  * 导入后触发逐字稿 + 重建(fire-and-forget 语义:本函数只排队即返回,不等 runner)。
  *   1) 收全 imported 作品的 awemeId → 排一个 transcribe.douyin 批任务(产逐字稿 D3);
- *   2) 逐项目排 reconstruct.project(已重建的跳过;reconstruct 依赖逐字稿存在,故靠后续采集轮次
- *      再排时逐字稿已就绪 —— 本函数每轮采集都调,幂等,直到重建成功)。
+ *   2) 逐项目先检查真实逐字稿；只有已就绪者才排 reconstruct.project，未就绪者等待
+ *      transcribe runner 在绑定真稿后直接触发。绝不把两个有依赖关系的任务同时抢跑。
  * 单步失败降级继续(③),整批异常由调用方 best-effort 兜底。
  */
 export async function enqueueReconstructForImported(
   ports: ReconstructEnqueuePorts,
   ctx: RequestContext,
+  options: { transcribeBatchLimit?: number } = {},
 ): Promise<ReconstructEnqueueResult> {
   const result: ReconstructEnqueueResult = {
     considered: 0,
     transcribeEnqueued: false,
     transcribeAwemeCount: 0,
+    transcribeDeferred: 0,
+    transcribeBlockedByConfig: false,
     reconstructEnqueued: 0,
     reconstructSkipped: 0,
+    transcriptWaiting: 0,
     hiddenSkipped: 0,
     failed: 0,
   };
@@ -108,27 +125,17 @@ export async function enqueueReconstructForImported(
   // T-595：listImportedWorks 已是源边界归一后的公开作品域，组合层不再二次判 hidden。
   const works = allWorks;
 
-  // 1) 逐字稿:一批 awemeId 排一个 transcribe.douyin 批任务(runner 逐 aweme 幂等跳已转写)。
-  const awemeIds = works.map((w) => w.externalId).filter((x) => x.length > 0);
-  if (awemeIds.length > 0) {
-    try {
-      await ports.enqueueTranscribe(ctx, awemeIds);
-      result.transcribeEnqueued = true;
-      result.transcribeAwemeCount = awemeIds.length;
-    } catch (err) {
-      result.failed += 1;
-      console.error(
-        "[reconstruct-enqueue] 排队 transcribe.douyin 逐字稿任务失败:",
-        err instanceof Error ? err.message : err,
-      );
-    }
-  }
-
-  // 2) 重建:逐项目排 reconstruct.project(已有 reconstructed artifact 的跳过)。
+  // 1) 先判逐字稿与重建状态。已有真稿的项目可直接补重建；无稿作品进入渐进回填候选。
+  const missingTranscriptIds: string[] = [];
   for (const work of works) {
     try {
       if (await ports.hasReconstructedArtifact(ctx, work.projectId)) {
         result.reconstructSkipped += 1;
+        continue;
+      }
+      if (!(await ports.hasReconstructableTranscript(ctx, work.projectId))) {
+        result.transcriptWaiting += 1;
+        if (work.externalId) missingTranscriptIds.push(work.externalId);
         continue;
       }
       await ports.enqueueReconstruct(ctx, work.projectId);
@@ -137,6 +144,39 @@ export async function enqueueReconstructForImported(
       result.failed += 1;
       console.error(
         `[reconstruct-enqueue] 项目 ${work.projectId} 排队 reconstruct 失败:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
+  // 2) 后台逐字稿只走统一采集尾部的一小批。用户手动单条转写走另一入口，不受此限制。
+  if (missingTranscriptIds.length > 0) {
+    let configured = false;
+    try {
+      configured = await ports.isTranscriptionConfigured(ctx);
+    } catch {
+      configured = false;
+    }
+    if (!configured) {
+      result.transcribeBlockedByConfig = true;
+      result.transcribeDeferred = missingTranscriptIds.length;
+      return result;
+    }
+    const requestedLimit = options.transcribeBatchLimit ?? 5;
+    const batchLimit =
+      Number.isFinite(requestedLimit) && requestedLimit > 0
+        ? Math.max(1, Math.floor(requestedLimit))
+        : 5;
+    const awemeIds = missingTranscriptIds.slice(0, batchLimit);
+    result.transcribeDeferred = missingTranscriptIds.length - awemeIds.length;
+    try {
+      await ports.enqueueTranscribe(ctx, awemeIds);
+      result.transcribeEnqueued = true;
+      result.transcribeAwemeCount = awemeIds.length;
+    } catch (err) {
+      result.failed += 1;
+      console.error(
+        "[reconstruct-enqueue] 排队 transcribe.douyin 逐字稿任务失败:",
         err instanceof Error ? err.message : err,
       );
     }

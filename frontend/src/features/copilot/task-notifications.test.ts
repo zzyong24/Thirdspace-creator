@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   detectTaskNotifications,
+  mergeTaskNotifications,
   NOTIFY_STATUSES,
   type TaskStatusRow,
 } from "./task-notifications";
@@ -196,6 +197,47 @@ describe("detectTaskNotifications", () => {
       true,
     );
     expect(notifications.map((n) => n.taskId).sort()).toEqual(["a", "b"]);
+  });
+
+  it("同轮大量项目重建因缺逐字稿失败时，聚合成一条并保留真实数量", () => {
+    const running = Array.from({ length: 40 }, (_, i) =>
+      row({ id: `reconstruct-${i}`, taskType: "reconstruct.project" }),
+    );
+    const seed = detectTaskNotifications(new Map(), running, false);
+    const failed = running.map((item, i) => ({
+      ...item,
+      status: "failed",
+      errorMessage: `项目 project-${i} 无逐字稿(D3 尚未绑定),无法反推重建`,
+    }));
+
+    const { notifications } = detectTaskNotifications(
+      seed.nextSnapshot,
+      failed,
+      true,
+    );
+
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]).toMatchObject({
+      taskType: "reconstruct.project",
+      status: "failed",
+      count: 40,
+      errorMessage: "逐字稿尚未就绪，系统会在转写完成后继续。",
+    });
+  });
+
+  it("同一批失败跨轮到达时仍合并到原通知，而不是继续弹新卡", () => {
+    const first = [{
+      taskId: "bulk:reconstruct.project:failed:missing-transcript",
+      taskType: "reconstruct.project",
+      status: "failed" as const,
+      errorMessage: "逐字稿尚未就绪，系统会在转写完成后继续。",
+      count: 24,
+    }];
+    const next = [{ ...first[0]!, count: 16 }];
+
+    expect(mergeTaskNotifications(first, next)).toEqual([
+      { ...first[0]!, count: 40 },
+    ]);
   });
 
   it("不改入参 prev(返回新 Map)", () => {

@@ -676,15 +676,17 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   // --- Transcribe (ASR) model config (SPEC 2026-07-01 §5.1, T-030-D1) --------
 
-  it("[T-489] ASR 是更多能力第一项，必配标题旁提供可读的模型配置手册", async () => {
+  it("ASR 与文本模型同属必配区，模型配置手册可读", async () => {
     const user = userEvent.setup();
     const doc = renderDialog();
+    const requiredGroup = doc.querySelector('[data-slot="models-required-group"]');
+    expect(
+      requiredGroup?.querySelector('[data-capability="transcribe.audio"]'),
+    ).not.toBeNull();
     const moreBody = doc.querySelector('[data-slot="models-more-body"]');
     expect(
-      moreBody?.firstElementChild
-        ?.querySelector("[data-capability]")
-        ?.getAttribute("data-capability"),
-    ).toBe("transcribe.audio");
+      moreBody?.querySelector('[data-capability="transcribe.audio"]'),
+    ).toBeNull();
 
     await user.click(screen.getByRole("tab", { name: "模型配置" }));
     await user.click(screen.getByRole("button", { name: "打开模型配置手册" }));
@@ -719,13 +721,22 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     const baseUrl = doc.querySelector(
       '[data-slot="multimodal-audio-base-url-input"]',
     ) as HTMLInputElement;
-    // [T-470] 空 DB 行必须保持真实空值；提示值明确写“示例”，不能看起来像已保存配置。
+    // 空 DB 行必须保持真实空值；供应商与接口地址默认收进高级设置。
     expect(provider.value).toBe("");
     expect(model.value).toBe("");
     expect(baseUrl.value).toBe("");
-    expect(provider.placeholder).toContain("示例");
-    expect(model.placeholder).toContain("示例");
-    expect(baseUrl.placeholder).toContain("示例");
+    expect(model.placeholder).toBe("mimo-v2.5-asr");
+    expect(
+      doc.querySelector('[data-slot="multimodal-audio-preset-trigger"]'),
+    ).not.toBeNull();
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-advanced-settings"]',
+      ) as HTMLElement).hidden,
+    ).toBe(true);
+    expect(
+      doc.querySelector('[data-slot="multimodal-audio-advanced-toggle"]'),
+    ).not.toBeNull();
     expect(
       doc.querySelector('[data-slot="multimodal-audio-provider-input"]'),
     ).not.toBeNull();
@@ -748,6 +759,44 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     ).toBe("video.generate");
   });
 
+  it("选择小米 MiMo 预设会自动填模型和技术参数，普通路径只需再填 Key", async () => {
+    const user = userEvent.setup();
+    const doc = renderDialog();
+    await user.click(
+      doc.querySelector(
+        '[data-slot="multimodal-audio-preset-trigger"]',
+      ) as HTMLElement,
+    );
+    const mimoItem = await waitFor(() => {
+      const item = document.querySelector(
+        '[data-slot="multimodal-audio-preset-item-xiaomi-mimo"]',
+      );
+      if (!item) throw new Error("MiMo preset item not mounted yet");
+      return item as HTMLElement;
+    });
+    await user.click(mimoItem);
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-provider-input"]',
+      ) as HTMLInputElement).value,
+    ).toBe("xiaomi-mimo");
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-model-input"]',
+      ) as HTMLInputElement).value,
+    ).toBe("mimo-v2.5-asr");
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-base-url-input"]',
+      ) as HTMLInputElement).value,
+    ).toBe("https://api.xiaomimimo.com/v1");
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-advanced-settings"]',
+      ) as HTMLElement).hidden,
+    ).toBe(true);
+  });
+
   it("saving the 逐字稿 form PUTs the transcribe.audio capability (provider/model/baseUrl/secret)", async () => {
     const doc = renderDialog();
     const provider = doc.querySelector(
@@ -759,19 +808,24 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     const baseUrl = doc.querySelector(
       '[data-slot="multimodal-audio-base-url-input"]',
     ) as HTMLInputElement;
+    const secret = doc.querySelector(
+      '[data-slot="multimodal-audio-secret-input"]',
+    ) as HTMLInputElement;
     const save = doc.querySelector(
       '[data-slot="multimodal-audio-save"]',
     ) as HTMLButtonElement;
-    // Unconfigured → save disabled until provider + model filled.
+    // 必配 ASR：新配置必须 provider + model + Key 齐全。
     expect(save.disabled).toBe(true);
 
-    fireEvent.change(provider, { target: { value: "siliconflow" } });
+    fireEvent.change(provider, { target: { value: "xiaomi-mimo" } });
     fireEvent.change(modelName, {
-      target: { value: "FunAudioLLM/SenseVoiceSmall" },
+      target: { value: "mimo-v2.5-asr" },
     });
     fireEvent.change(baseUrl, {
-      target: { value: "https://api.siliconflow.cn/v1" },
+      target: { value: "https://api.xiaomimimo.com/v1" },
     });
+    expect(save.disabled).toBe(true);
+    fireEvent.change(secret, { target: { value: "mimo-key" } });
     expect(save.disabled).toBe(false);
     fireEvent.click(save);
 
@@ -782,9 +836,10 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     };
     expect(call.params).toEqual({ capability: "transcribe.audio" });
     expect(call.body).toEqual({
-      provider: "siliconflow",
-      modelName: "FunAudioLLM/SenseVoiceSmall",
-      baseUrl: "https://api.siliconflow.cn/v1",
+      provider: "xiaomi-mimo",
+      modelName: "mimo-v2.5-asr",
+      baseUrl: "https://api.xiaomimimo.com/v1",
+      secret: "mimo-key",
     });
     // Multimodal rows carry NO apiFormat / settings (resolver ignores them).
     expect(call.body.apiFormat).toBeUndefined();
@@ -1209,11 +1264,11 @@ describe("Settings 测试连接 (T-377)", () => {
     expect(result.textContent ?? "").toContain("invalid api key");
   });
 
-  it("[T-470] 未配云端 ASR 时显示中性本地回退说明，不出现绿色连通勾", async () => {
+  it("ASR 未配置时明确失败并提示先配置", async () => {
     mockClient.testModelConnection.mockResolvedValueOnce({
-      ok: true,
-      status: "warn",
-      detail: "未配置云端 ASR，当前使用本地 Whisper。",
+      ok: false,
+      status: "fail",
+      detail: "未配置：请先保存语音转文字模型配置。",
     });
     const doc = renderDialog();
     fireEvent.click(
@@ -1228,8 +1283,8 @@ describe("Settings 测试连接 (T-377)", () => {
       if (!el) throw new Error("result not rendered yet");
       return el;
     });
-    expect(result.getAttribute("data-status")).toBe("warn");
-    expect(result.textContent ?? "").toContain("当前使用本地 Whisper");
-    expect(result.textContent ?? "").not.toContain("✓ 连通");
+    expect(result.getAttribute("data-status")).toBe("fail");
+    expect(result.textContent ?? "").toContain("请先保存语音转文字模型配置");
+    expect(result.textContent ?? "").toContain("✗ 失败");
   });
 });

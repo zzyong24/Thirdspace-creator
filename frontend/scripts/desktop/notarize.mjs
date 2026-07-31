@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// [T-147 P6 / T-164] 公证占位 —— SPEC §3.3(mac notarization)。
-// 读 env APPLE_ID / APPLE_TEAM_ID / APPLE_APP_PASSWORD。
+// [T-147 P6 / T-164 / T-640] macOS 公证 —— SPEC §3.3(mac notarization)。
+// 优先读 APPLE_NOTARY_KEYCHAIN_PROFILE（凭据由 notarytool 存进 macOS 钥匙串）。
+// 兼容旧的 APPLE_ID / APPLE_TEAM_ID / APPLE_APP_PASSWORD 环境变量方式。
 //   未配 → skip 退 0 + 引导 + release manifest 标 notarized:false。
 //   配了 → xcrun notarytool submit --wait + xcrun stapler staple。
 // Windows 无公证概念(签名即可),win 直接 skip。
@@ -18,17 +19,48 @@ const BUNDLE_DIR = join(FRONTEND, "src-tauri", "target", "release", "bundle");
 /** 判断是否配了公证 env。 */
 export function notarizeConfig(env = process.env, plat = platform) {
   if (plat !== "darwin") return { platform: plat, applicable: false, configured: false };
+  const keychainProfile = env.APPLE_NOTARY_KEYCHAIN_PROFILE?.trim();
   const appleId = env.APPLE_ID;
   const teamId = env.APPLE_TEAM_ID;
   const appPassword = env.APPLE_APP_PASSWORD;
+  if (keychainProfile) {
+    return {
+      platform: "darwin",
+      applicable: true,
+      configured: true,
+      method: "keychain-profile",
+      keychainProfile,
+      appleId: null,
+      teamId: null,
+      appPassword: null,
+    };
+  }
   return {
     platform: "darwin",
     applicable: true,
     configured: Boolean(appleId && teamId && appPassword),
+    method: "apple-id",
+    keychainProfile: null,
     appleId: appleId ?? null,
     teamId: teamId ?? null,
     appPassword: appPassword ?? null,
   };
+}
+
+/** 生成 notarytool 参数。钥匙串模式不会把任何密码放进进程参数或日志。 */
+export function notarytoolSubmitArgs(artifact, cfg) {
+  const args = ["notarytool", "submit", artifact];
+  if (cfg.method === "keychain-profile") {
+    args.push("--keychain-profile", cfg.keychainProfile);
+  } else {
+    args.push(
+      "--apple-id", cfg.appleId,
+      "--team-id", cfg.teamId,
+      "--password", cfg.appPassword,
+    );
+  }
+  args.push("--wait");
+  return args;
 }
 
 /** 找 .dmg / .app 公证靶(dmg 优先,notarytool 吃 dmg/zip)。 */
@@ -41,7 +73,9 @@ function findArtifacts() {
 
 function printSkipGuide() {
   console.log("[notarize] ⏭ 未配公证凭据,跳过(退 0)。");
-  console.log("[notarize]   拿到 Apple ID + app-specific password 后,零改码启用:");
+  console.log("[notarize]   推荐先用 notarytool store-credentials 把凭据存进 macOS 钥匙串:");
+  console.log("[notarize]     export APPLE_NOTARY_KEYCHAIN_PROFILE=<profile-name>");
+  console.log("[notarize]   也兼容 Apple ID + app-specific password:");
   console.log("[notarize]     export APPLE_ID=<你的 apple id>");
   console.log("[notarize]     export APPLE_TEAM_ID=<TEAMID>");
   console.log("[notarize]     export APPLE_APP_PASSWORD=<app-specific-password>");
@@ -78,13 +112,7 @@ export function main() {
     console.log(`[notarize] ▶ 公证 ${art}(xcrun notarytool submit --wait)…`);
     const sub = spawnSync(
       "xcrun",
-      [
-        "notarytool", "submit", art,
-        "--apple-id", cfg.appleId,
-        "--team-id", cfg.teamId,
-        "--password", cfg.appPassword,
-        "--wait",
-      ],
+      notarytoolSubmitArgs(art, cfg),
       { stdio: "inherit" },
     );
     if (sub.status !== 0) {
@@ -101,7 +129,13 @@ export function main() {
   }
 
   const m = readManifest();
-  m.notarize = { notarized: allOk, platform: "darwin", artifacts };
+  m.notarize = {
+    notarized: allOk,
+    platform: "darwin",
+    method: cfg.method,
+    keychainProfile: cfg.keychainProfile ?? undefined,
+    artifacts,
+  };
   writeManifest(m);
 
   if (!allOk) process.exit(1);

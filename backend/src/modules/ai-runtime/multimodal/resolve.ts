@@ -236,33 +236,12 @@ export async function resolveMultimodalSpec(
   );
 }
 
-// [T-160] 本地 Whisper 回退 provider 名(与 ai-worker registry keyed by "whisper-local" 对齐)。
-// ASR 选配:用户没配 transcribe.audio 时,resolveTranscribeSpec **不再抛**,而回退本地 whisper
-// (免 key、免外部 API,首次自动下模型)。级别默认 small,可用 env CREATOROS_WHISPER_LEVEL 覆盖。
+// 保留 provider 常量供旧显式配置与打包兼容使用；T-639 起不再把它当未配置时的隐式兜底。
 export const WHISPER_LOCAL_PROVIDER = "whisper-local";
-const DEFAULT_WHISPER_LEVEL = "small";
-const VALID_WHISPER_LEVELS: ReadonlySet<string> = new Set([
-  "tiny",
-  "base",
-  "small",
-  "medium",
-]);
-
-/** 从 env 读回退 whisper 级别(默认 small;非法值 → small)。级别经 spec.model 传给 ai-worker
- *  whisper-local 适配器(whisperLevelFromSpec 再归一一次,双保)。 */
-function resolveWhisperLevel(env: Record<string, string | undefined>): string {
-  const raw = env.CREATOROS_WHISPER_LEVEL?.trim().toLowerCase();
-  return raw && VALID_WHISPER_LEVELS.has(raw) ? raw : DEFAULT_WHISPER_LEVEL;
-}
 
 /**
- * ASR 逐字稿模型解析(T-030-D1 / **T-160 改选配**,SPEC 2026-07-06)—— 与 image/video 同款三层
- * 回退,但 capability 固定 `transcribe.audio`;**关键差异:未配不再抛,而回退本地 Whisper**。
- *   Tier 1 库存密钥:transcribe.audio 行 → asr.default 行;库存 secretValue > env-ref(用户配了云端 ASR → 照旧走)。
- *   Tier 2 env 默认:CREATOROS_ASR_*(需 provider+model+key 齐全)。
- *   Tier 3 **未配 → 本地 Whisper 回退**:返回 `{ provider:"whisper-local", model:<级别 ?? "small">,
- *          kind:"audio", token:"", baseUrl:null }`,**不抛 TranscribeConfigError**。runner 不因未配停整链,
- *          转写走本地(首次自动下模型)。ai-worker registry 的 whisper-local adapter 接手推理。
+ * ASR 逐字稿模型解析(T-639)—— 与 image/video 同款三层解析，但未配置时必须明确失败。
+ * 本地 Whisper 仍保留为可维护的显式 adapter，不再承担用户无感知的默认回退。
  * 返回的 spec.kind === "audio",喂给 ai-worker `transcribeAudio` 工厂(按 provider 取 ASR adapter)。
  *
  * 注:TranscribeConfigError 仍导出保留(向后兼容 + runner 里对它的 catch 分支仍在,只是此路径不再触发)。
@@ -274,15 +253,10 @@ export async function resolveTranscribeSpec(
   try {
     return await resolveMultimodalSpec(ctx, "transcribe.audio", deps);
   } catch (err) {
-    // [T-160] 未配(MultimodalConfigError)→ **不抛**,回退本地 whisper spec(免 key)。
     if (err instanceof MultimodalConfigError) {
-      return {
-        provider: WHISPER_LOCAL_PROVIDER,
-        baseUrl: null,
-        model: resolveWhisperLevel(deps.env),
-        token: "", // 本地 whisper 免 key
-        kind: "audio",
-      };
+      throw new TranscribeConfigError(
+        "未配置语音转文字模型，请先到「设置 → 模型配置 → 语音转文字」选择供应商并填写模型名和 API Key。",
+      );
     }
     throw err;
   }

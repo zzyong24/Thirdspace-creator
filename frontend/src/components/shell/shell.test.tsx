@@ -406,6 +406,25 @@ describe("AppShell", () => {
     expect(profile?.textContent ?? "").toMatch(/个人版/);
   });
 
+  it("低高度窗口把导航变为可滚动区，并把账号与用户身份固定留在视口内", async () => {
+    const { container } = await renderShell();
+    const sidebar = container.querySelector('[data-slot="app-sidebar"]');
+    const scrollRegion = container.querySelector(
+      '[data-slot="sidebar-scroll-region"]',
+    );
+    const identityFooter = container.querySelector(
+      '[data-slot="sidebar-identity-footer"]',
+    );
+    const contextualCard = container.querySelector(
+      '[data-slot="sidebar-contextual-card"]',
+    );
+
+    expect(sidebar).toHaveClass("h-dvh", "min-h-0", "overflow-hidden");
+    expect(scrollRegion).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+    expect(identityFooter).toHaveClass("shrink-0");
+    expect(contextualCard).toHaveClass("[@media(max-height:760px)]:hidden");
+  });
+
   it("dashboard header renders search, notifications and the New Project CTA", async () => {
     const { container } = await renderShell();
     const header = container.querySelector('[data-slot="app-top-header"]');

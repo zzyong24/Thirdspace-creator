@@ -182,6 +182,7 @@ import { resolveChatScope, scopeHistoryLabel } from "./chat-scope";
 // [T-239g] 长任务完成 → 对话内通知卡:纯检测逻辑(轮询 feed 检出「新到终态」的任务)。
 import {
   detectTaskNotifications,
+  mergeTaskNotifications,
   type TaskNotification,
 } from "./task-notifications";
 import {
@@ -405,6 +406,7 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   // 持久任务 kind（不是 chat tool 名）；通知/任务状态按 execution 真值显示。
   share_import: { label: "抖音内容建档", sub: "读取并归档分享作品" },
   transcribe: { label: "语音转写", sub: "提取逐字稿" },
+  "reconstruct.project": { label: "历史作品重建", sub: "依据逐字稿还原创作结构" },
   // [T-255a] 执行层任务(exec.* 命名空间,脑手分离)。
   "exec.echo.manifest": { label: "执行自检", sub: "沙箱执行框架演示" },
   "exec.video.render": { label: "渲染成片", sub: "模板确定性渲染视频" },
@@ -1235,9 +1237,7 @@ export function AICopilotContent({
           setTaskNotifications((prev) => {
             // 同 taskId 用最新一条覆盖(awaiting_confirmation→succeeded 就地更新文案),
             // 新任务追加在后。保持插入顺序。
-            const byId = new Map(prev.map((n) => [n.taskId, n]));
-            for (const n of notifications) byId.set(n.taskId, n);
-            return Array.from(byId.values());
+            return mergeTaskNotifications(prev, notifications);
           });
         }
       } catch {
@@ -1693,6 +1693,7 @@ export function AICopilotContent({
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-[12px] font-medium leading-snug text-foreground">
                       「{taskTypeLabel(n.taskType)}」
+                      {(n.count ?? 1) > 1 ? `（${n.count} 个任务）` : ""}
                       <span className={meta.text}>{meta.verb}</span>
                     </span>
                     {detail ? (

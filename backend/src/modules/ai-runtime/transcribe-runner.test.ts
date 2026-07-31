@@ -133,6 +133,10 @@ function makeDeps(opts: {
       );
     },
   );
+  const onTranscriptReady = vi.fn(
+    async (_c: RequestContext, _input: { awemeId: string; projectId: string }) =>
+      undefined,
+  );
 
   const deps: TranscribeRunnerDeps = {
     ai: { markRunning, recordStep, markSucceeded, markFailed },
@@ -143,6 +147,7 @@ function makeDeps(opts: {
     registry: FAKE_REGISTRY,
     hasTranscriptArtifact,
     ensureTranscriptArtifact,
+    onTranscriptReady,
   };
   return {
     deps,
@@ -157,6 +162,7 @@ function makeDeps(opts: {
       transcribeAudio,
       hasTranscriptArtifact,
       ensureTranscriptArtifact,
+      onTranscriptReady,
     },
     ensureCalls,
   };
@@ -189,12 +195,39 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
     expect(writeCall?.transcript).toBe("逐字稿X");
     expect(writeCall?.source).toBe("transcribed");
     expect(writeCall?.awemeId).toBe("7400000000000000001");
+    expect(spies.onTranscriptReady).toHaveBeenCalledWith(ctx, {
+      awemeId: "7400000000000000001",
+      projectId: "proj-7400000000000000001",
+    });
   });
 
-  it("[T-160] F7-a:resolveTranscribeSpec 真抛(被注入假 dep / 罕见 provider bug)→ 与取音频失败归一:每条 aweme 失败、其余继续;0 成功 → markFailed(诚实 0 结果)", async () => {
-    // [T-160] 真实生产 resolveTranscribeSpec 永不抛(Tier 3 whisper-local 兜底);但若上游真抛
-    // (注入假 dep / 罕见 provider bug),runner 不再「整任务停」分支,按单作品失败降级 —— 与
-    // 取音频失败同路径。最终 0 条成功 → markFailed(诚实:任务实际没拿到结果)。
+  it("逐字稿已落库后，后续重建排队失败只告警，不反向把转写判失败", async () => {
+    const { deps, spies } = makeDeps({ awemeIds: ["ready"] });
+    deps.onTranscriptReady = vi.fn(async () => {
+      throw new Error("重建队列暂不可用");
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await runTranscribe(
+      ctx,
+      {
+        id: "task-ready",
+        taskType: "transcribe.douyin",
+        inputData: { awemeIds: ["ready"] },
+      },
+      deps,
+    );
+
+    expect(spies.ensureTranscriptArtifact).toHaveBeenCalledTimes(1);
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+    expect(spies.markFailed).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("逐字稿已就绪，但重建排队失败"),
+      expect.any(String),
+    );
+  });
+
+  it("F7-a:ASR 未配置 → 整批立即停止并给设置指引，不继续逐条调用", async () => {
     const { deps, spies } = makeDeps({
       awemeIds: ["a1", "a2"],
       resolveThrows: new TranscribeConfigError("transcribe.audio 未配置(测试注入)"),
@@ -209,15 +242,13 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
       deps,
     );
     expect(spies.markRunning).toHaveBeenCalledTimes(1);
-    // [T-160] 没有「整任务停」特殊分支(注释也不再说),改走与取音频失败同路径:每条 aweme 走 inner
-    // try/catch,resolveTranscribeSpec 抛被当单作品失败;两条都失败 → 0 成功 → markFailed(诚实)。
     expect(spies.markSucceeded).not.toHaveBeenCalled();
     expect(spies.markFailed).toHaveBeenCalledTimes(1);
-    // 取音频都跑了(每条都进 inner try),但 transcribeAudio 永远没成功(resolve 之前抛)。
     expect(spies.transcribeAudio).not.toHaveBeenCalled();
-    // 失败消息如实拼出两条 error,不再有「去设置配 ASR」特殊引导(那是老 dead 路径的话术)。
+    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
+    expect(spies.streamAudio).not.toHaveBeenCalled();
     const [, , msg] = spies.markFailed.mock.calls[0]!;
-    expect(String(msg)).toMatch(/a1.*a2|全部失败/);
+    expect(String(msg)).toMatch(/设置.*模型配置.*小米 MiMo/);
   });
 
   it("F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)", async () => {
@@ -304,6 +335,11 @@ describe("[T-243] runTranscribe 图集跳过 + ffmpeg 重试 + 失败分类", ()
     expect(albumWrite?.transcript).toBe(IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER);
     expect(albumWrite?.source).toBe("image-album");
     expect(albumWrite?.skipMasterScript).toBe(true);
+    expect(spies.onTranscriptReady).toHaveBeenCalledTimes(1);
+    expect(spies.onTranscriptReady).toHaveBeenCalledWith(ctx, {
+      awemeId: "vid1",
+      projectId: "proj-vid1",
+    });
     // 图集不算失败 → markSucceeded;汇总含「图集跳过 1 条」且失败 0。
     expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
     expect(spies.markFailed).not.toHaveBeenCalled();

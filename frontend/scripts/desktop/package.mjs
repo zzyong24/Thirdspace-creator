@@ -435,11 +435,11 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
 
 measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);
 
-// 4) [T-164 P6] 代码签名占位(未配 env → skip 退 0 + 标 signed:false)。
-step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
+// 4) [T-164 P6 / T-640] 代码签名(未配 env → skip 退 0 + 标 signed:false)。
+step("代码签名", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
 
-// 5) [T-164 P6] 公证占位(未配 env → skip 退 0 + 标 notarized:false)。
-step("公证(占位)", process.execPath, [join("scripts", "desktop", "notarize.mjs")]);
+// 5) [T-164 P6 / T-640] 公证(未配凭据 → skip 退 0 + 标 notarized:false)。
+step("公证", process.execPath, [join("scripts", "desktop", "notarize.mjs")]);
 
 console.log(
   `\n[desktop:package] ✅ 完成。产物在 src-tauri/target/${CARGO_PROFILE_DIR}/bundle/(macos/*.app + dmg/*.dmg)。`,

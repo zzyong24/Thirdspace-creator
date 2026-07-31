@@ -1,121 +1,163 @@
-/**
- * onboarding-data — [T-161] 有序引导流的 state 装配层(重构自 T-132 扁平三档装配)。
- *
- * `loadState` 供常驻卡(onboarding-card)挂载后并行拉真值 → deriveGuidedSteps。每个读 op
- * 各自 try/catch:失败 → 该字段留 undefined(诚实降级),不让一个读失败拖垮整份 state,
- * deriveGuidedSteps 一律当未完成、绝不假打勾。
- *
- * 引导流只依赖 5 个信号(SPEC §3.1 六步的 done 判据):
- *   - configuredCapabilities(步1 文本模型)
- *   - origin(步2 起点,localStorage 落盘,非后端 —— additive、不碰 user_preferences schema)
- *   - douyinLoggedIn(步3 扫码导入)
- *   - hasImportedWorks(步4 后台初始化,由 imported 作品推断)
- *   - hasPositioningProfile(步5 定位)/ projectCount(步6 项目)
- *
- * 本模块 import contract-client(client),故消费方(card)是 client 组件;但本文件不 import
- * React —— 纯装配逻辑,好复用。origin 的 localStorage 读/写也放这里(浏览器 API,非 React)。
- */
+/** 新手引导状态装配：所有完成态都来自真实产品数据，失败时保持未完成。 */
 
 import { client } from "@/lib/contract-client";
+import { readCurrentAccountId } from "@/lib/http-transport";
 import {
   resolveOrigin,
-  type OnboardingState,
   type OnboardingOrigin,
+  type OnboardingState,
 } from "./onboarding-steps";
 
-/** 起点选择的 localStorage key(引导流专属存储;与 hidden flag 同源,不碰后端 schema)。 */
 const ORIGIN_KEY = "creatoros:onboarding:origin";
+const REVIEWED_PROJECTS_PREFIX =
+  "creatoros:onboarding:reviewed-imported-projects:";
 
-/**
- * 读起点选择(try/catch 降级,不抛)。脏值 / 未写 / localStorage 不可用 → null(未选)。
- * 只认 "fresh" / "existing" 两个合法值,其余一律降级 null(诚实,防脏值污染分支判定)。
- */
 export function readOrigin(): OnboardingOrigin {
   try {
-    const v = window.localStorage.getItem(ORIGIN_KEY);
-    return v === "fresh" || v === "existing" ? v : null;
+    const value = window.localStorage.getItem(ORIGIN_KEY);
+    return value === "fresh" || value === "existing" ? value : null;
   } catch {
     return null;
   }
 }
 
-/** 写起点选择(try/catch 降级,不抛)。 */
 export function writeOrigin(origin: "fresh" | "existing"): void {
   try {
     window.localStorage.setItem(ORIGIN_KEY, origin);
   } catch {
-    /* noop —— 写失败不抛,origin 只是本地引导偏好 */
+    /* 本地引导偏好写失败不阻断产品 */
   }
 }
 
-/**
- * 并行拉各能力 state + 读 origin。每个读 op 各自 try/catch:失败 → 该字段留 undefined
- * (诚实降级)。返回可直接喂 deriveGuidedSteps 的 state。
- */
+function reviewedProjectsKey(accountId: string): string {
+  return `${REVIEWED_PROJECTS_PREFIX}${accountId}`;
+}
+
+export function readReviewedImportedProjects(accountId: string | null): boolean {
+  if (!accountId) return false;
+  try {
+    return window.localStorage.getItem(reviewedProjectsKey(accountId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function writeReviewedImportedProjects(accountId: string | null): void {
+  if (!accountId) return;
+  try {
+    window.localStorage.setItem(reviewedProjectsKey(accountId), "1");
+  } catch {
+    /* 本地确认写失败不阻断导航 */
+  }
+}
+
+export async function loadProjectSignals(): Promise<{
+  readonly hasImportedWorks?: boolean;
+  readonly hasCreatedProject?: boolean;
+}> {
+  try {
+    const rows = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ source?: unknown }>;
+    if (!Array.isArray(rows)) return {};
+    return {
+      hasImportedWorks: rows.some((row) => row.source === "imported"),
+      // 历史作品由采集生成，不能冒充用户完成了新建项目。
+      hasCreatedProject: rows.some(
+        (row) => row.source === "manual" || row.source === "topic",
+      ),
+    };
+  } catch {
+    return {};
+  }
+}
+
+export async function loadRadarSignals(): Promise<{
+  readonly hasBenchmarkMonitor?: boolean;
+  readonly hasBenchmarkTopic?: boolean;
+}> {
+  const accountId = readCurrentAccountId();
+  if (!accountId) return {};
+  try {
+    const workspace = (await client.getIntelligenceWorkspace({
+      params: undefined,
+      query: { accountId },
+      body: undefined,
+    })) as {
+      sources?: ReadonlyArray<{
+        id?: unknown;
+        type?: unknown;
+        monitorEnabled?: unknown;
+        status?: unknown;
+      }>;
+    };
+    const benchmarkSources = (workspace.sources ?? []).filter(
+      (source): source is typeof source & { id: string } =>
+        typeof source.id === "string" && source.type === "creator_profile",
+    );
+    const activeSources = benchmarkSources.filter(
+      (source) => source.monitorEnabled === true && source.status === "active",
+    );
+    const convertedBySource = await Promise.allSettled(
+      benchmarkSources.map((source) =>
+        client.listIntelligenceItems({
+          params: undefined,
+          query: {
+            accountId,
+            sourceId: source.id,
+            page: 1,
+            pageSize: 1,
+            sort: "newest",
+            topicState: "converted",
+          },
+          body: undefined,
+        }),
+      ),
+    );
+    return {
+      hasBenchmarkMonitor: activeSources.length > 0,
+      hasBenchmarkTopic: convertedBySource.some(
+        (result) =>
+          result.status === "fulfilled" &&
+          Array.isArray(result.value) &&
+          result.value.length > 0,
+      ),
+    };
+  } catch {
+    return {};
+  }
+}
+
 export async function loadState(): Promise<OnboardingState> {
-  const [
-    configuredCapabilities,
-    douyinLoggedIn,
-    hasImportedWorks,
-    hasPositioningProfile,
-    projectCount,
-  ] = await Promise.all([
-    loadConfiguredCapabilities(),
-    loadDouyinLoggedIn(),
-    loadHasImportedWorks(),
-    loadHasProfile(),
-    loadProjectCount(),
-  ]);
+  const accountId = readCurrentAccountId();
+  const [projectSignals, radarSignals, douyinLoggedIn, hasPositioningProfile] =
+    await Promise.all([
+      loadProjectSignals(),
+      loadRadarSignals(),
+      loadDouyinLoggedIn(),
+      loadHasProfile(),
+    ]);
+  const hasImportedWorks = projectSignals.hasImportedWorks;
   return {
-    configuredCapabilities,
-    // [T-189b / T-348] origin:localStorage 显式选择**优先**;无显式选择但**已有导入作品** → 回灌
-    // existing(真有存量的人不再被问新 / 老)。**绑号(douyinLoggedIn)不再触发回灌**——全隔离后
-    // 绑号是全员前提,新号也绑,绑号≠有存量;绑号后仍问新 / 老才准(见 resolveOrigin §T-348)。
-    origin: resolveOrigin(readOrigin(), { douyinLoggedIn, hasImportedWorks }),
+    origin: resolveOrigin(readOrigin(), {
+      douyinLoggedIn,
+      hasImportedWorks,
+    }),
     douyinLoggedIn,
     hasImportedWorks,
+    hasReviewedImportedProjects:
+      hasImportedWorks === true
+        ? readReviewedImportedProjects(accountId)
+        : false,
     hasPositioningProfile,
-    projectCount,
+    hasCreatedProject: projectSignals.hasCreatedProject,
+    hasBenchmarkMonitor: radarSignals.hasBenchmarkMonitor,
+    hasBenchmarkTopic: radarSignals.hasBenchmarkTopic,
   };
 }
 
-/**
- * 已配的 model capability 集合。**「已配」= 真能跑,不是「行存在」**。
- *
- * [Bug #3] 以 `provider 非空 且 hasSecret` 为「真配了」下限 —— 空占位骨架
- * (provider="" / hasSecret=false)不入集合 → 防新手清单假打勾。读失败 → undefined。
- */
-export async function loadConfiguredCapabilities(): Promise<
-  ReadonlySet<string> | undefined
-> {
-  try {
-    const rows = (await client.listModels({
-      params: undefined,
-      query: undefined,
-      body: undefined,
-    })) as ReadonlyArray<{
-      capability?: unknown;
-      provider?: unknown;
-      hasSecret?: unknown;
-    }>;
-    const set = new Set<string>();
-    for (const row of rows) {
-      const capability =
-        typeof row.capability === "string" ? row.capability : "";
-      const provider = typeof row.provider === "string" ? row.provider : "";
-      const hasSecret = row.hasSecret === true;
-      if (capability && provider && hasSecret) {
-        set.add(capability);
-      }
-    }
-    return set;
-  } catch {
-    return undefined;
-  }
-}
-
-/** [T-194] 定位母版是否**真存在**:读成功但 profile=null → false(原来 getProfile 一 resolve
- *  就返 true 是假阳,母版为空也算完成);读失败 → undefined。改用 getPositioningCenter 判 profile 非空。 */
 export async function loadHasProfile(): Promise<boolean | undefined> {
   try {
     const center = (await client.getPositioningCenter({
@@ -129,51 +171,14 @@ export async function loadHasProfile(): Promise<boolean | undefined> {
   }
 }
 
-/** 项目数(listProjects 长度)。读失败 → undefined。 */
-export async function loadProjectCount(): Promise<number | undefined> {
-  try {
-    const rows = (await client.listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<unknown>;
-    return Array.isArray(rows) ? rows.length : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * [T-161] 步4「后台数据初始化」done 推断 —— 是否已有 ≥1 个 source==="imported" 的项目。
- *
- * 导入采集会给已发布作品建 source:imported 的历史项目(contract projectSource 枚举,
- * persistence-client 采集链)。存在即视为「后台初始化跑过一轮」(SPEC §3.1 importInitialized)。
- * 读失败 → undefined(诚实降级)。
- */
-export async function loadHasImportedWorks(): Promise<boolean | undefined> {
-  try {
-    const rows = (await client.listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{ source?: unknown }>;
-    if (!Array.isArray(rows)) return undefined;
-    return rows.some((r) => r.source === "imported");
-  } catch {
-    return undefined;
-  }
-}
-
-/** [T-131d] 抖音扫码登录态(statusDouyin → {loggedIn})。读失败 → undefined。 */
 export async function loadDouyinLoggedIn(): Promise<boolean | undefined> {
   try {
-    const s = (await client.statusDouyin({
+    const status = (await client.statusDouyin({
       params: undefined,
-      // [T-136] 被动探针不显式指号 → 走 header 注入的 ctx.accountId(当前号)。
       query: {},
       body: undefined,
     })) as { loggedIn?: unknown };
-    return s.loggedIn === true ? true : undefined;
+    return status.loggedIn === true ? true : undefined;
   } catch {
     return undefined;
   }

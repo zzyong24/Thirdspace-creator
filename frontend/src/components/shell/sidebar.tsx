@@ -234,19 +234,25 @@ export function Sidebar({
         data-collapsed={collapsed ? "true" : "false"}
         aria-label="主侧栏"
         className={cn(
-          "flex h-screen shrink-0 flex-col gap-4 border-r border-border bg-surface pb-8 pt-6 transition-[width] duration-200",
+          "flex h-dvh min-h-0 shrink-0 flex-col gap-4 overflow-hidden border-r border-border bg-surface pb-8 pt-6 transition-[width] duration-200 [@media(max-height:760px)]:gap-2 [@media(max-height:760px)]:py-3",
           collapsed ? "w-16 px-2" : "w-sidebar px-4",
           className,
         )}
       >
         <SidebarHeader collapsed={collapsed} onToggle={handleToggle} />
-        <PrimaryNav activeId={activeNavId} collapsed={collapsed} />
-        {contextSection && !collapsed ? (
-          <ContextSection section={contextSection} />
-        ) : null}
         <div
+          data-slot="sidebar-scroll-region"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
+          <PrimaryNav activeId={activeNavId} collapsed={collapsed} />
+          {contextSection && !collapsed ? (
+            <ContextSection section={contextSection} />
+          ) : null}
+        </div>
+        <div
+          data-slot="sidebar-identity-footer"
           className={cn(
-            "mt-auto flex flex-col gap-card-gap",
+            "flex shrink-0 flex-col gap-card-gap [@media(max-height:760px)]:gap-2",
             collapsed && "items-center",
           )}
         >
@@ -301,7 +307,7 @@ function SidebarHeader({
     <div
       data-slot="sidebar-header"
       className={cn(
-        "mb-7 flex",
+        "mb-7 flex [@media(max-height:760px)]:mb-2",
         collapsed
           ? "flex-col items-center gap-2"
           : "items-center justify-between",
@@ -475,7 +481,7 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
     <div
       data-slot="sidebar-contextual-card"
       data-variant="assistant"
-      className="flex min-h-36 flex-col gap-3 rounded-xl border border-border bg-surface-subtle p-4 text-xs"
+      className="flex min-h-36 flex-col gap-3 rounded-xl border border-border bg-surface-subtle p-4 text-xs [@media(max-height:760px)]:hidden"
     >
       <div className="flex items-center gap-2 text-foreground">
         <span

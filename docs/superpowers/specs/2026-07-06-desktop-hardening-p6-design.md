@@ -47,7 +47,7 @@
 
 ### 3.3 代码签名 / 公证占位 —— `scripts/desktop/codesign.mjs` + `notarize.mjs`
 - **codesign.mjs**:读 env `APPLE_SIGNING_IDENTITY`(+ Windows `WINDOWS_CERTIFICATE_*`)。**未配 → skip + 打印**「未配代码签名证书,跳过;拿到证书后 export APPLE_SIGNING_IDENTITY 即启用(零改码)」。配了 → 调 `codesign`(mac)/ signtool(win)对 .app/.exe 签。
-- **notarize.mjs**:读 env `APPLE_ID`/`APPLE_TEAM_ID`/`APPLE_APP_PASSWORD`。未配 → skip + 引导;配了 → `xcrun notarytool submit` + staple。
+- **notarize.mjs**:优先读 `APPLE_NOTARY_KEYCHAIN_PROFILE`，让 `notarytool` 从 macOS 登录钥匙串读取公证凭据；兼容 env `APPLE_ID`/`APPLE_TEAM_ID`/`APPLE_APP_PASSWORD`。未配 → skip + 引导；配了 → `xcrun notarytool submit` + staple。密码/API Key 不写入仓库或打包日志。
 - **skip 防误判(gate 关切⑥)**:codesign/notarize skip 时,在 release manifest / 产物旁写 `signed:false`(对齐 §3.2 updater 「不产未签但被误当已签」的同类声明)——防未签 .app 被下游/自动更新链误当已签分发。
 - **tauri.conf.json(新增,非"预留"——gate 关切⑤b)**:现状 `bundle.macOS` 无 `signingIdentity`、`bundle.windows:{}`。需**新增** `bundle.macOS.signingIdentity`(读 env,未配为 null=不签)+ Windows 证书字段。
 - **原则**:占位 = **未配零副作用(且如实标 `signed:false`)、配了零改码**。你拿到证书只填 env,不动脚本。

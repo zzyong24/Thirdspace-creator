@@ -41,6 +41,8 @@ export interface TaskNotification {
   readonly taskType: string;
   readonly status: TaskNotifyStatus;
   readonly errorMessage: string | null;
+  /** 同一轮同因后台任务合并后的真实数量；单条省略。 */
+  readonly count?: number;
 }
 
 export interface DetectResult {
@@ -48,6 +50,42 @@ export interface DetectResult {
   readonly notifications: TaskNotification[];
   /** 下一轮对比的基线快照(合并 prev + 本轮 rows,不可变,不改入参)。 */
   readonly nextSnapshot: Map<string, string>;
+}
+
+const RECONSTRUCT_MISSING_TRANSCRIPT_KEY = "missing-transcript";
+
+function reconstructFailureGroup(errorMessage: string | null): {
+  key: string;
+  displayMessage: string | null;
+} {
+  const raw = (errorMessage ?? "").trim();
+  if (raw.includes("无逐字稿") && raw.includes("无法反推重建")) {
+    return {
+      key: RECONSTRUCT_MISSING_TRANSCRIPT_KEY,
+      displayMessage: "逐字稿尚未就绪，系统会在转写完成后继续。",
+    };
+  }
+  return { key: raw || "unknown", displayMessage: errorMessage };
+}
+
+/** 把跨轮到达的同一后台批失败继续并入原卡；普通任务按 taskId 覆盖最新状态。 */
+export function mergeTaskNotifications(
+  previous: readonly TaskNotification[],
+  incoming: readonly TaskNotification[],
+): TaskNotification[] {
+  const byId = new Map(previous.map((n) => [n.taskId, n]));
+  for (const notification of incoming) {
+    const existing = byId.get(notification.taskId);
+    if (existing && notification.taskId.startsWith("bulk:")) {
+      byId.set(notification.taskId, {
+        ...notification,
+        count: (existing.count ?? 1) + (notification.count ?? 1),
+      });
+    } else {
+      byId.set(notification.taskId, notification);
+    }
+  }
+  return Array.from(byId.values());
 }
 
 /**
@@ -85,5 +123,37 @@ export function detectTaskNotifications(
       });
     }
   }
-  return { notifications, nextSnapshot };
+  // 历史项目重建属于后台批处理：同一轮同因失败若逐条展示，会把一个根因放大成
+  // “疯狂弹出”。只对该批处理类型按状态+原始原因聚合；用户主动发起的创作任务仍逐条保留。
+  const compacted: TaskNotification[] = [];
+  const reconstructGroupIndexes = new Map<string, number>();
+  for (const notification of notifications) {
+    if (
+      notification.taskType !== "reconstruct.project" ||
+      notification.status !== "failed"
+    ) {
+      compacted.push(notification);
+      continue;
+    }
+    const failureGroup = reconstructFailureGroup(notification.errorMessage);
+    const key = `${notification.status}\u0000${failureGroup.key}`;
+    const existingIndex = reconstructGroupIndexes.get(key);
+    if (existingIndex !== undefined) {
+      const existing = compacted[existingIndex]!;
+      compacted[existingIndex] = {
+        ...existing,
+        count: (existing.count ?? 1) + 1,
+      };
+    } else {
+      const grouped = {
+        ...notification,
+        taskId: `bulk:${notification.taskType}:${notification.status}:${failureGroup.key}`,
+        errorMessage: failureGroup.displayMessage,
+        count: 1,
+      };
+      reconstructGroupIndexes.set(key, compacted.length);
+      compacted.push(grouped);
+    }
+  }
+  return { notifications: compacted, nextSnapshot };
 }
