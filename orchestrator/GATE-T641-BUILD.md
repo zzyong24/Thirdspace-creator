@@ -9,11 +9,11 @@
   "task_id": "T-641",
   "contract_path": "docs/superpowers/specs/2026-07-31-asr-recommended-local-fallback.md",
   "contract_sha": "1ce4d8ec417e",
-  "commit_sha": "4f7e17e3b424f68a4180eff5ec5a6d2929e5873e",
+  "commit_sha": "f81f341d2fbfc20544fefe1ce674fb081f63beb4",
   "observed_at": "2026-07-31T15:32:54.000Z",
   "run": {
-    "verify_key": "asr-recommended-local-fallback:e2e",
-    "command": "pnpm --dir frontend exec playwright test tests/e2e/asr-configuration.spec.ts --project=e2e",
+    "verify_key": "asr-configuration:e2e",
+    "command": "CREATOROS_TEST_PORT=3428 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/asr-configuration.spec.ts --project=e2e",
     "exit_code": 0,
     "output_ref": "Playwright e2e：1 passed；1536×1024 与 1024×768 均验证建议配置文案、MiMo 预设与高级设置"
   },
@@ -50,7 +50,7 @@
   ],
   "visible_copy": {
     "artifact_path": "orchestrator/evidence/T-641-visible-copy.json",
-    "artifact_sha256": "7ea05a3f98bda008ba0fbb32f1347b506c33fbda968bfc2fbab81b77ca976325"
+    "artifact_sha256": "616c74ac218b3c42b15bc3efa94ee4d8474780c3920fd760ebf878d7f4a7981e"
   },
   "tdd_red_ref": "红测先捕获未配置仍抛 TranscribeConfigError、后台配置闸阻止排队、设置页仍写必配和测试连接误报云端连通",
   "open_defects": [],
