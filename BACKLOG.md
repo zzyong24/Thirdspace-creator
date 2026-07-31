@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-641 | 纠正 ASR 为建议配置并在未配置时自动回退本地 Whisper【配置体验·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [渐进回填与 MiMo ASR SPEC](docs/superpowers/specs/2026-07-31-gradual-transcript-backfill-and-mimo-asr.md) | 设置页把 ASR 放在重点模型配置区并用自然语言解释“建议配置 ASR 转录模型，避免本地转录时间过长”；已配置时优先云端 ASR，未配置时后台和手动转写仍可自动使用本地 Whisper，不阻断用户从 0 到 1 使用。 |
 | T-640 | 配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包【发布·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [T-575 测试发行与回滚](docs/handoffs/T-575-CreatorOS测试发行与回滚.md) | Developer ID Application 私钥只存本机登录钥匙串，公证凭据只存 notarytool 钥匙串 profile；先完成 T-637/T-638/T-639 与既有安装包 Gate，再产出签名、公证、staple 且可通过 Gatekeeper 验证的 DMG，不把证书私钥、密码或 API Key 写进仓库和日志。 |
 | T-639 | 渐进回填历史逐字稿并把云端 ASR 改为必配，接入小米 MiMo ASR【性能+配置·用户 2026-07-31】 | ✅ 待办 | — | PASS:eb1cad334d38 | [渐进回填与 MiMo ASR SPEC](docs/superpowers/specs/2026-07-31-gradual-transcript-backfill-and-mimo-asr.md) | 历史作品元数据照常全量采集，逐字稿只在现有统一采集任务每轮小批量补齐；未配置云端 ASR 时不再偷偷跑本地 Whisper；设置页普通路径只选 ASR 供应商、填模型名和 Key，并新增小米 `mimo-v2.5-asr` 独立协议适配。 |
 | T-638 | 修复历史作品重建依赖竞态、失败通知风暴与低高度侧栏身份区不可见【线上反馈·用户 2026-07-31】 | ✅ 待办 | — | PASS:d8c8eec188af | [故障修复 SPEC](docs/superpowers/specs/2026-07-31-reconstruct-dependency-and-small-window-ui.md) | 逐字稿未就绪时绝不排重建，真稿绑定后再自动触发；同批重建失败只显示一条汇总通知；低分辨率或高缩放下当前账号与用户名始终留在可视区。 |

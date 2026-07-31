@@ -56,9 +56,8 @@ export class MultimodalConfigError extends Error {
   }
 }
 
-/** 未配 / 无凭据的 ASR 专用错误(T-030-D1)—— 与 MultimodalConfigError 平行,但让上层
- *  (D2 transcribe-runner)能按类型精确接住「逐字稿未配」→ 停任务 + 引导去设置配 ASR,
- *  区别于图/视频的 MultimodalConfigError。语义同款(诚实禁用,不假装能转写)。 */
+/** ASR 专用兼容错误。默认解析已在 T-641 改为本地 Whisper 回退；该类型只保留给旧 host
+ *  或显式注入的配置失败路径，让 runner 能精确收口而不残留 running 任务。 */
 export class TranscribeConfigError extends Error {
   constructor(message: string) {
     super(message);
@@ -236,15 +235,25 @@ export async function resolveMultimodalSpec(
   );
 }
 
-// 保留 provider 常量供旧显式配置与打包兼容使用；T-639 起不再把它当未配置时的隐式兜底。
+// 本地 Whisper 回退 provider 名（与 ai-worker registry 的 "whisper-local" 对齐）。
 export const WHISPER_LOCAL_PROVIDER = "whisper-local";
+const DEFAULT_WHISPER_LEVEL = "small";
+const VALID_WHISPER_LEVELS: ReadonlySet<string> = new Set([
+  "tiny",
+  "base",
+  "small",
+  "medium",
+]);
+
+function resolveWhisperLevel(env: Record<string, string | undefined>): string {
+  const raw = env.CREATOROS_WHISPER_LEVEL?.trim().toLowerCase();
+  return raw && VALID_WHISPER_LEVELS.has(raw) ? raw : DEFAULT_WHISPER_LEVEL;
+}
 
 /**
- * ASR 逐字稿模型解析(T-639)—— 与 image/video 同款三层解析，但未配置时必须明确失败。
- * 本地 Whisper 仍保留为可维护的显式 adapter，不再承担用户无感知的默认回退。
+ * ASR 逐字稿模型解析(T-641)—— 用户云端配置优先；完全未配置时回退本地 Whisper。
+ * 本地回退保证新用户无需先申请第三方 Key 也能完成逐字稿，只是处理时间可能更长。
  * 返回的 spec.kind === "audio",喂给 ai-worker `transcribeAudio` 工厂(按 provider 取 ASR adapter)。
- *
- * 注:TranscribeConfigError 仍导出保留(向后兼容 + runner 里对它的 catch 分支仍在,只是此路径不再触发)。
  */
 export async function resolveTranscribeSpec(
   ctx: RequestContext,
@@ -254,9 +263,13 @@ export async function resolveTranscribeSpec(
     return await resolveMultimodalSpec(ctx, "transcribe.audio", deps);
   } catch (err) {
     if (err instanceof MultimodalConfigError) {
-      throw new TranscribeConfigError(
-        "未配置语音转文字模型，请先到「设置 → 模型配置 → 语音转文字」选择供应商并填写模型名和 API Key。",
-      );
+      return {
+        provider: WHISPER_LOCAL_PROVIDER,
+        baseUrl: null,
+        model: resolveWhisperLevel(deps.env),
+        token: "",
+        kind: "audio",
+      };
     }
     throw err;
   }

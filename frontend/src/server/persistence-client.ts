@@ -508,7 +508,6 @@ import {
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
   resolveTranscribeSpec as resolveTranscribeSpecFn,
-  TranscribeConfigError,
 } from "@creatoros/backend/modules/ai-runtime";
 // [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
 import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/resolve";
@@ -523,7 +522,7 @@ import {
   createOpenaiImagesAdapter,
   createOpenaiAsrAdapter,
   createMimoAsrAdapter,
-  // 本地 Whisper 适配器仅保留给旧的显式 provider 配置；未配置 ASR 时不再隐式启用。
+  // 本地 Whisper 同时支持旧显式配置与未配置云端 ASR 时的自动回退。
   createDefaultWhisperLocalAdapter,
   transcribeAudio as transcribeAudioFn,
   // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
@@ -4717,7 +4716,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 抖音逐字稿采集 node(transcribe.douyin, T-030-D2, SPEC §5.2/§5.3)—— 取音频(iesdouyin
           // 无水印直链 + ffmpeg 抽 mp3)→ 云端 ASR(用户可配 provider,铁律:绝不写死)→ 按 aweme_id
           // 绑 imported 作品的 script transcript artifact(幂等,已有则跳过 fetch/ASR 省流)。F7 失败
-          // 分类:ASR 未配(TranscribeConfigError)→ 整任务停 markFailed + 引导;取音频失败 → 标该
+          // 分类:旧 host 配置错误(TranscribeConfigError)→ 整任务停 markFailed；正常未配置
+          // 会由 resolveTranscribeSpec 回退本地 Whisper。取音频失败 → 标该
           // aweme 失败其余继续。端口全注入真依赖(下方装配),runner 本身可确定性单测(见 test)。
           await runTranscribe(
             ctx,
@@ -4748,7 +4748,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
               streamAudio: async (_c, playUrl) =>
                 (await loadDouyinCdp()).streamAudioFromVideo(playUrl),
-              // 解析用户配的 ASR model(transcribe.audio;未配抛 TranscribeConfigError → 整任务停)。
+              // 解析 ASR model(transcribe.audio;用户云端配置优先，未配回退本地 Whisper)。
               resolveTranscribeSpec: (c) =>
                 resolveTranscribeSpecFn(c, {
                   getModelConfig: (cc, cap) =>
@@ -7170,28 +7170,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           },
           // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
           listImportedWorks: (c) => projectsService.listImportedWorks(c),
-          // T-639：后台渐进回填只在 ASR 已有可执行配置时排队。
-          isTranscriptionConfigured: async (c) => {
-            try {
-              await resolveTranscribeSpecFn(c, {
-                getModelConfig: (cc, cap) =>
-                  settingsService.getModelConfig(cc, cap),
-                env: process.env,
-                getChannelModelConfig,
-              });
-              return true;
-            } catch (error) {
-              if (
-                error instanceof TranscribeConfigError ||
-                (error instanceof Error &&
-                  (error.name === "TranscribeConfigError" ||
-                    error.name === "MultimodalConfigError"))
-              ) {
-                return false;
-              }
-              throw error;
-            }
-          },
           // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
           //   ai.tasks.create → runTranscribe;直调 service 会死链)。
           enqueueTranscribe: async (c, awemeIds) => {
@@ -9739,11 +9717,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
   // ASR provider 注册表(T-030-D2 逐字稿转写)—— 一个 OpenAI 兼容 adapter 覆盖 SiliconFlow/
   // OpenAI/Groq(转写端点同形状,SPEC D-d)。按用户可能所配的 provider 名各挂同一适配器实例
-  // (归一);加 provider = 在此注册。真跑要真 transcribe.audio key(未配 → resolveTranscribeSpec
-  // 抛 TranscribeConfigError,整任务停 + 引导);单测装配注 fake,不碰这个真 registry。
+  // (归一);加 provider = 在此注册。未配置云端 ASR 时 resolveTranscribeSpec 返回
+  // whisper-local；单测装配注 fake,不碰这个真 registry。
   const openaiAsrAdapter = createOpenaiAsrAdapter();
   const mimoAsrAdapter = createMimoAsrAdapter();
-  // 本地 Whisper 保留兼容旧的显式 provider="whisper-local" 配置，不再承担未配置兜底。
+  // 本地 Whisper 同时承接旧显式配置与未配置云端 ASR 时的默认回退。
   const whisperLocalAdapter = createDefaultWhisperLocalAdapter();
   const asrRegistry: MultimodalProviderRegistry = {
     siliconflow: openaiAsrAdapter,

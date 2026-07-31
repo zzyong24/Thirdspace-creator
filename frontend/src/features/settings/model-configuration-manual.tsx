@@ -183,11 +183,11 @@ export function ModelConfigurationManual() {
               </span>
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
-                  语音转文字 ASR（必配）
+                  语音转文字 ASR（建议配置）
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  ASR 决定逐字稿速度和准确率。未配置时后台逐字稿任务会暂停；
-                  配置完成后，系统会按小批次逐步补齐历史作品。
+                  建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地
+                  Whisper，但处理较慢；系统会按小批次逐步补齐历史作品。
                 </p>
               </div>
             </div>

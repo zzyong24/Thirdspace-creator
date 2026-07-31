@@ -449,13 +449,13 @@ export function SettingsDialog({
                       : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
                   </p>
                 </div>
-                {/* ① 必配块:文本模型负责写字/对话，ASR 负责把历史作品变成可用逐字稿。 */}
+                {/* ① 重点配置:文本模型负责写字/对话，ASR 建议配置以提升转录速度。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-semibold text-foreground">必配</span>
+                      <span className="text-sm font-semibold text-foreground">重点配置</span>
                       <span className="text-xs text-muted-foreground">
-                        先配置文本模型与语音转文字；前者负责创作，后者负责历史作品逐字稿。
+                        文本模型负责创作。建议配置 ASR 转录模型，避免本地转录时间过长；未配置时仍可使用本地 Whisper。
                       </span>
                     </div>
                     <ModelConfigurationManual />
@@ -2751,14 +2751,14 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "示例:https://api.minimaxi.com/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
-  // 逐字稿 ASR(T-639)—— 必配。普通用户只需要选供应商、填模型名和 Key；provider/baseUrl
+  // 逐字稿 ASR(T-641)—— 建议配置但不阻断。普通用户只需要选供应商、填模型名和 Key；provider/baseUrl
   // 由预设自动填入，兼容旧配置与自定义供应商的技术字段收进「高级设置」。
   audio: {
     capability: "transcribe.audio" as const,
-    title: "语音转文字（必配）",
+    title: "语音转文字（建议配置）",
     icon: Cpu,
     description:
-      "把历史作品里的话转成逐字稿，供定位、复盘和二创使用。请先配置云端 ASR；后台会按小批次慢慢补齐，不会一次挤满任务队列。",
+      "建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。",
     providerSuggestions: ["xiaomi-mimo", "siliconflow", "openai", "groq"] as ReadonlyArray<string>,
     providerPlaceholder: "xiaomi-mimo",
     providerHelp:
@@ -2767,7 +2767,8 @@ const MULTIMODAL_META = {
     modelPlaceholder: "mimo-v2.5-asr",
     baseUrlPlaceholder:
       "https://api.xiaomimimo.com/v1",
-    disabledHint: "未配 → 暂停后台逐字稿补齐，并提示先完成 ASR 配置。",
+    disabledHint:
+      "建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。",
   },
   // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI
   // 同形状);未配 → 知识库 AI 搜索诚实降级纯关键词。apiFormat 显式存 openai_chat

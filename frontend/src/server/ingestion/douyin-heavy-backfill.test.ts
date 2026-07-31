@@ -88,7 +88,6 @@ function makeHost(overrides?: Partial<DouyinHeavyBackfillHost>): {
       { projectId: "proj-B", externalId: "aweme-B" },
       { projectId: "proj-C", externalId: "aweme-C" },
     ],
-    isTranscriptionConfigured: async () => true,
     enqueueTranscribe: async (_c, awemeIds) => {
       calls.transcribed.push(awemeIds);
     },
@@ -142,7 +141,6 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
         transcribeEnqueued: true,
         transcribeAwemeCount: 1,
         transcribeDeferred: 0,
-        transcribeBlockedByConfig: false,
         reconstructEnqueued: 1,
         reconstructSkipped: 0,
         transcriptWaiting: 0,
@@ -180,7 +178,6 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
           transcribeEnqueued: false,
           transcribeAwemeCount: 0,
           transcribeDeferred: 0,
-          transcribeBlockedByConfig: false,
           reconstructEnqueued: 3,
           reconstructSkipped: 0,
           transcriptWaiting: 0,

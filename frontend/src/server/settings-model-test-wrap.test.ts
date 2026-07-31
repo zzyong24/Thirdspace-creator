@@ -310,16 +310,23 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
 });
 
 describe("runModelConnectionTest — transcribe.audio / web.search", () => {
-  it("ASR 未配置 → 明确失败并指引先保存配置", async () => {
-    const err = new Error("未配置语音转文字模型");
-    err.name = "TranscribeConfigError";
+  it("ASR 未配置 → 中性说明当前使用本地 Whisper，不伪装云端已连通", async () => {
     const r = await runModelConnectionTest(
       ctx,
       "transcribe.audio",
-      makeDeps({ resolveTranscribe: vi.fn(async () => Promise.reject(err)) }),
+      makeDeps({
+        resolveTranscribe: vi.fn(async () => ({
+          provider: "whisper-local",
+          baseUrl: null,
+          model: "small",
+          token: "",
+        })),
+      }),
     );
-    expect(r.ok).toBe(false);
-    expect(r.detail).toContain("未配置");
+    expect(r.ok).toBe(true);
+    expect(r.status).toBe("warn");
+    expect(r.detail).toContain("未配置云端 ASR");
+    expect(r.detail).toContain("本地 Whisper");
   });
 
   // [T-384] 云端 ASR 三态探测:200 → ✓;404/405(厂商无 /v1/models 端点)→ ⚠ 诚实中间态

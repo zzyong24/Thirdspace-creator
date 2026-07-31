@@ -42,8 +42,6 @@ export interface ReconstructEnqueueResult {
   transcribeAwemeCount: number;
   /** 本轮因小批上限留到后续统一采集继续处理的作品数。 */
   transcribeDeferred: number;
-  /** ASR 未配置时为 true；此时不创建注定失败的后台转写任务。 */
-  transcribeBlockedByConfig: boolean;
   /**
    * 调了 createTask 排 reconstruct 的项目数(闸「已有 reconstructed artifact」未命中)。注:
    * createTask 自身对 IN-FLIGHT(queued/running)重复幂等命中既有(不建第二行),故本计数是
@@ -63,8 +61,6 @@ export interface ReconstructEnqueueResult {
 export interface ReconstructEnqueuePorts {
   /** 本 user 全部 imported 作品的两维锚(host 绑 projectsService.listImportedWorks)。 */
   listImportedWorks(ctx: RequestContext): Promise<ImportedWork[]>;
-  /** 云端 ASR 是否已有可执行配置；后台回填未配置时直接停在排队前。 */
-  isTranscriptionConfigured(ctx: RequestContext): Promise<boolean>;
   /**
    * 排一个 transcribe.douyin 任务(host 绑 ai transport 的 ai.tasks.create,inputData={awemeIds})。
    * **必须经 ai transport**(dispatch 链只在拦 ai.tasks.create 时触发;直调 service 会死链)。
@@ -106,7 +102,6 @@ export async function enqueueReconstructForImported(
     transcribeEnqueued: false,
     transcribeAwemeCount: 0,
     transcribeDeferred: 0,
-    transcribeBlockedByConfig: false,
     reconstructEnqueued: 0,
     reconstructSkipped: 0,
     transcriptWaiting: 0,
@@ -151,17 +146,6 @@ export async function enqueueReconstructForImported(
 
   // 2) 后台逐字稿只走统一采集尾部的一小批。用户手动单条转写走另一入口，不受此限制。
   if (missingTranscriptIds.length > 0) {
-    let configured = false;
-    try {
-      configured = await ports.isTranscriptionConfigured(ctx);
-    } catch {
-      configured = false;
-    }
-    if (!configured) {
-      result.transcribeBlockedByConfig = true;
-      result.transcribeDeferred = missingTranscriptIds.length;
-      return result;
-    }
     const requestedLimit = options.transcribeBatchLimit ?? 5;
     const batchLimit =
       Number.isFinite(requestedLimit) && requestedLimit > 0

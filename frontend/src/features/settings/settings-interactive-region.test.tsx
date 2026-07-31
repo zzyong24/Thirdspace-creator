@@ -676,7 +676,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   // --- Transcribe (ASR) model config (SPEC 2026-07-01 §5.1, T-030-D1) --------
 
-  it("ASR 与文本模型同属必配区，模型配置手册可读", async () => {
+  it("ASR 与文本模型同属重点配置区，并明确云端建议、本地可用", async () => {
     const user = userEvent.setup();
     const doc = renderDialog();
     const requiredGroup = doc.querySelector('[data-slot="models-required-group"]');
@@ -687,6 +687,11 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(
       moreBody?.querySelector('[data-capability="transcribe.audio"]'),
     ).toBeNull();
+    expect(requiredGroup?.textContent).toContain("重点配置");
+    expect(requiredGroup?.textContent).toContain(
+      "建议配置 ASR 转录模型，避免本地转录时间过长",
+    );
+    expect(requiredGroup?.textContent).toContain("未配置时仍可使用本地 Whisper");
 
     await user.click(screen.getByRole("tab", { name: "模型配置" }));
     await user.click(screen.getByRole("button", { name: "打开模型配置手册" }));
@@ -698,6 +703,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(manual.textContent).toContain("New API / 自建中转站");
     expect(manual.textContent).toContain("保存并测试");
     expect(manual.textContent).toContain("语音转文字");
+    expect(manual.textContent).toContain("建议配置 ASR 转录模型");
+    expect(manual.textContent).toContain("未配置时仍可使用本地 Whisper");
     expect(
       manual.querySelector('[data-slot="model-manual-figure-default"]'),
     ).not.toBeNull();
@@ -814,7 +821,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     const save = doc.querySelector(
       '[data-slot="multimodal-audio-save"]',
     ) as HTMLButtonElement;
-    // 必配 ASR：新配置必须 provider + model + Key 齐全。
+    // 云端 ASR 是建议配置；一旦填写新配置，仍必须 provider + model + Key 齐全。
     expect(save.disabled).toBe(true);
 
     fireEvent.change(provider, { target: { value: "xiaomi-mimo" } });
@@ -1264,11 +1271,11 @@ describe("Settings 测试连接 (T-377)", () => {
     expect(result.textContent ?? "").toContain("invalid api key");
   });
 
-  it("ASR 未配置时明确失败并提示先配置", async () => {
+  it("ASR 未配置时中性说明使用本地 Whisper，不显示失败", async () => {
     mockClient.testModelConnection.mockResolvedValueOnce({
-      ok: false,
-      status: "fail",
-      detail: "未配置：请先保存语音转文字模型配置。",
+      ok: true,
+      status: "warn",
+      detail: "未配置云端 ASR，当前使用本地 Whisper；处理时间可能更长。",
     });
     const doc = renderDialog();
     fireEvent.click(
@@ -1283,8 +1290,8 @@ describe("Settings 测试连接 (T-377)", () => {
       if (!el) throw new Error("result not rendered yet");
       return el;
     });
-    expect(result.getAttribute("data-status")).toBe("fail");
-    expect(result.textContent ?? "").toContain("请先保存语音转文字模型配置");
-    expect(result.textContent ?? "").toContain("✗ 失败");
+    expect(result.getAttribute("data-status")).toBe("warn");
+    expect(result.textContent ?? "").toContain("本地 Whisper");
+    expect(result.textContent ?? "").not.toContain("✗ 失败");
   });
 });

@@ -19,8 +19,7 @@ import type { RequestContext } from "@creatoros/contract";
  *     消耗少量额度 —— UI 文案已提示)。definitive:出字节 = 真连通。
  *   - video.generate:生视频分钟级且计费,不真生成 —— 对生成端点发**缺 prompt 的鉴权探测**
  *     (401/403 或 MiniMax base_resp 1004 → 鉴权失败;参数级报错 → 鉴权/端点可达)。
- *   - transcribe.audio:resolveTranscribe(必配云端 ASR)→ GET /v1/models 鉴权探测；
- *     未配置由统一错误分类返回明确指引。
+ *   - transcribe.audio:云端配置 → GET /v1/models 鉴权探测；未配置 → 中性说明本地 Whisper 回退。
  *   - web.search:resolveSearch → browser 免 key 直接 ✓;rss → GET 首个 feed URL;
  *     bocha/tavily/serpapi → 真实最小检索(1 条,消耗少量额度)。
  *
@@ -79,7 +78,7 @@ export interface SettingsModelTestDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<MmSpecLite>;
-  /** ASR 解析:未配抛 TranscribeConfigError。 */
+  /** ASR 解析：云端配置优先，未配返回 whisper-local。 */
   resolveTranscribe: (ctx: RequestContext) => Promise<MmSpecLite>;
   /** embedding 解析:未配 → null。 */
   resolveEmbed: (ctx: RequestContext) => Promise<LlmSpecLite | null>;
@@ -497,6 +496,15 @@ export async function runModelConnectionTest(
       }
       case "transcribe.audio": {
         const spec = await deps.resolveTranscribe(ctx);
+        if (spec.provider === "whisper-local") {
+          return {
+            ok: true,
+            status: "warn",
+            ...resultIdentity(spec, spec.provider, spec.model),
+            detail:
+              "未配置云端 ASR，当前使用本地 Whisper；仍可转录，但处理时间可能更长。没有云端连接可测试。",
+          };
+        }
         const r = await modelsListProbe(spec, fetchImpl);
         return {
           ...r,

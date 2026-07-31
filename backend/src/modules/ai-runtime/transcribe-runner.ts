@@ -97,13 +97,13 @@ function formatFailureBreakdown(
 //   (幂等,§4.3/F8)先试 ensureTranscriptArtifact —— 它幂等,已有 transcript artifact 直接
 //      skip 不重复转写(为省流,已存在就跳过 fetch/ASR)。
 //   → 否则 fetchVideoUrl(iesdouyin 无水印直链)→ streamAudio(ffmpeg 抽 mp3 bytes)
-//   → resolveTranscribeSpec(用户配置的必配 ASR；缺配置则整批立即停止并指引设置)
+//   → resolveTranscribeSpec(用户云端 ASR 优先；未配置则自动使用本地 Whisper)
 //   → transcribeAudio(spec + 音频 bytes → 文本)
 //   → ensureTranscriptArtifact(awemeId, text, source:"transcribed") 绑到 imported 作品
 //   → recordStep(kind:"transcribe")
 //
 // F7 失败分类(SPEC §5.3,别一条视频拖垮整批):
-//   - ASR 未配置 → **整任务立即停止**并指引设置，避免每条作品重复失败。
+//   - 旧 host 若仍抛 TranscribeConfigError → 整任务停止并给出兼容指引。
 //   - 取音频失败(ffmpeg / 直链 / 去水印,DouyinAudioFetchError 等)→ **标该 aweme 失败、
 //     recordStep 记因、其余 aweme 继续**。
 //   - 末尾:全失败 → markFailed;有成功 → markSucceeded(带失败计数,写在最后一条 step)。
@@ -143,8 +143,8 @@ export interface TranscribeRunnerDeps {
     playUrl: string,
   ) => Promise<Uint8Array>;
   /**
-   * 解析 ASR model spec。T-639 起 ASR 必配；未配置抛 TranscribeConfigError，runner 整批
-   * 立即停止，避免先下载几十条音频再逐条失败。host 绑 resolveTranscribeSpec。
+   * 解析 ASR model spec。T-641 起云端配置优先、未配置回退本地 Whisper。host 绑
+   * resolveTranscribeSpec；旧 host 抛 TranscribeConfigError 时仍由 runner 兼容收口。
    */
   resolveTranscribeSpec: (ctx: RequestContext) => Promise<MultimodalSpec>;
   /** 云端 ASR 转写(spec + 音频 bytes → 文本)。host 绑 ai-worker transcribeAudio;测试注 fake。 */
@@ -226,7 +226,7 @@ function readAwemeIds(inputData: Record<string, unknown>): string[] {
  * Orchestrate one transcribe.douyin task end to end —— 确定性、逐 aweme 取音频 + ASR 转写 + 绑作品。
  *   markRunning → 逐 awemeId:(幂等)已有则 skip;否则 fetch 直链 → 抽音 → 解析 ASR → 转写 → 绑作品
  *   → recordStep(transcribe)。
- *   F7:ASR 未配置整批立即停止；取音频或单条调用失败 → 标该 aweme 失败其余继续;
+ *   F7:旧配置错误整批立即停止；取音频或单条调用失败 → 标该 aweme 失败其余继续;
  *   末尾全失败→markFailed,有成功→markSucceeded(带失败计数)。
  *   fire-and-forget 兜底:catch 里 best-effort markFailed,绝不把 task 卡 running / 崩服务。
  */
@@ -305,8 +305,8 @@ export async function runTranscribe(
           return;
         }
 
-        // 先解析必配 ASR，再下载/抽取音频。未配置时此处直接结束整批，避免已经知道无法
-        // 转写还继续消耗抖音网络与 ffmpeg；图集不需要 ASR，仍可在上面的分支诚实落锚。
+        // 先解析 ASR，再下载/抽取音频。正常路径会得到云端 spec 或本地 Whisper 回退；
+        // 图集不需要 ASR，仍可在上面的分支诚实落锚。
         const spec = await deps.resolveTranscribeSpec(ctx);
         resolvedSpec = spec;
 

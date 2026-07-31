@@ -212,9 +212,9 @@ describe("resolveMultimodalSpec — tier 3 未配抛错(诚实禁用)", () => {
   });
 });
 
-// ── ASR 逐字稿(transcribe.audio,T-030-D1/T-639)—— 用户配置 → 环境变量两层；都没有
-//    必须明确报错，禁止隐式切本地 Whisper 把普通电脑拖慢。──────────────────────────────
-describe("resolveTranscribeSpec — 必配(kind=audio)", () => {
+// ── ASR 逐字稿(transcribe.audio,T-030-D1/T-641)—— 用户配置 → 环境变量两层；都没有
+//    自动回退本地 Whisper，保证未配置云端也能完成转录。──────────────────────────────
+describe("resolveTranscribeSpec — 云端优先、本地兜底(kind=audio)", () => {
   it("tier 1:transcribe.audio 命中 DB 行 → 出 spec(kind=audio),secretValue 优先", async () => {
     const spec = await resolveTranscribeSpec(ctx, {
       getModelConfig: async (_c, cap) =>
@@ -282,13 +282,28 @@ describe("resolveTranscribeSpec — 必配(kind=audio)", () => {
     });
   });
 
-  it("两层都无 → 明确报 TranscribeConfigError，并指向设置页", async () => {
+  it("两层都无 → 自动回退本地 Whisper，并沿用合法级别", async () => {
     await expect(
       resolveTranscribeSpec(ctx, {
         getModelConfig: noRow,
         env: { CREATOROS_WHISPER_LEVEL: "medium" },
       }),
-    ).rejects.toThrow(/未配置语音转文字模型.*设置.*模型配置/);
+    ).resolves.toEqual({
+      provider: "whisper-local",
+      baseUrl: null,
+      model: "medium",
+      token: "",
+      kind: "audio",
+    });
+  });
+
+  it("本地 Whisper 级别非法时回退 small", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: noRow,
+      env: { CREATOROS_WHISPER_LEVEL: "huge" },
+    });
+    expect(spec.provider).toBe("whisper-local");
+    expect(spec.model).toBe("small");
   });
 
   it("配了云端 ASR 走用户 spec", async () => {

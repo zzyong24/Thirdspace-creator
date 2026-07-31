@@ -7,12 +7,12 @@ import { expect, test } from "../helpers/test-environment";
 
 const CHECK_IDS = [
   "AC-ASR-PRESET",
-  "AC-ASR-REQUIRED",
+  "AC-ASR-RECOMMENDED",
   "AC-ASR-ADVANCED",
   "AC-ASR-NARROW",
 ];
 
-test.describe("ASR 必配与小米 MiMo 轻量配置", () => {
+test.describe("ASR 建议配置与小米 MiMo 轻量配置", () => {
   test("普通路径只需预设、模型与 Key，高级字段可按需展开", async ({ page }) => {
     const captures: Array<{
       checkpoint: string;
@@ -27,7 +27,9 @@ test.describe("ASR 必配与小米 MiMo 轻量配置", () => {
 
     const card = page.locator('[data-slot="multimodal-audio-card"]');
     await expect(card).toBeVisible();
-    await expect(card).toContainText("语音转文字（必配）");
+    await expect(card).toContainText("语音转文字（建议配置）");
+    await expect(card).toContainText("建议配置 ASR 转录模型，避免本地转录时间过长");
+    await expect(card).toContainText("未配置时仍可使用本地 Whisper");
     await expect(
       page.locator('[data-slot="multimodal-audio-advanced-settings"]'),
     ).toBeHidden();
@@ -91,14 +93,14 @@ test.describe("ASR 必配与小米 MiMo 轻量配置", () => {
     const artifact = `${JSON.stringify(
       {
         schema: "frontend-visible-copy/v1",
-        task_id: "T-639",
+        task_id: "T-641",
         commit_sha: commitSha,
         captures,
       },
       null,
       2,
     )}\n`;
-    writeFileSync(resolve(evidenceDir, "T-639-visible-copy.json"), artifact);
+    writeFileSync(resolve(evidenceDir, "T-641-visible-copy.json"), artifact);
     expect(createHash("sha256").update(artifact).digest("hex")).toHaveLength(64);
   });
 });

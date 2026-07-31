@@ -78,8 +78,6 @@ export interface DouyinHeavyBackfillHost {
   // ── 逐字稿 + 重建排队 ─────────────────────────────────────────────────────
   /** 本 user 全部 imported 作品的两维锚(host 绑 projectsService.listImportedWorks)。 */
   listImportedWorks(ctx: RequestContext): Promise<ImportedWork[]>;
-  /** 云端 ASR 是否已有可执行配置。 */
-  isTranscriptionConfigured(ctx: RequestContext): Promise<boolean>;
   /** 排一个 transcribe.douyin 批任务(host 绑 ai transport 的 ai.tasks.create,inputData={awemeIds})。 */
   enqueueTranscribe(ctx: RequestContext, awemeIds: string[]): Promise<void>;
   /** 项目是否已有真实逐字稿；图集占位稿返回 false。 */
@@ -181,7 +179,6 @@ export async function runDouyinHeavyBackfill(
   // ── ② 逐字稿 + 重建排队 ───────────────────────────────────────────────────
   const reconstructPorts: ReconstructEnqueuePorts = {
     listImportedWorks: (c) => host.listImportedWorks(c),
-    isTranscriptionConfigured: (c) => host.isTranscriptionConfigured(c),
     enqueueTranscribe: (c, awemeIds) => host.enqueueTranscribe(c, awemeIds),
     hasReconstructableTranscript: (c, projectId) =>
       host.hasReconstructableTranscript(c, projectId),
@@ -197,7 +194,7 @@ export async function runDouyinHeavyBackfill(
     );
     if (enqueued.considered > 0) {
       console.log(
-        `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,延后 ${enqueued.transcribeDeferred} 条${enqueued.transcribeBlockedByConfig ? "(ASR 未配置)" : ""},重建排队 ${enqueued.reconstructEnqueued},等待逐字稿 ${enqueued.transcriptWaiting},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
+        `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,延后 ${enqueued.transcribeDeferred} 条,重建排队 ${enqueued.reconstructEnqueued},等待逐字稿 ${enqueued.transcriptWaiting},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
       );
     }
   } catch (err) {

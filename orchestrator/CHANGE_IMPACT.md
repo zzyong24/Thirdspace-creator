@@ -350,6 +350,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **失效工件**：T-160 中“未配置就自动下载并运行本地 Whisper”的默认产品语义被本决策替代；
   adapter 代码仅作旧显式配置兼容。旧研究和历史 SPEC 保留原貌，由 T-639 作为当前增量真相。
 
+## CI-ASR-022 — ASR 建议配置与本地 Whisper 回退纠偏（T-641，2026-07-31）
+
+- **产品变化**：ASR 仍在重点模型配置区，但由“必配”纠正为“建议配置”；未配置不阻断用户。
+- **执行变化**：完全未配置云端 ASR 时恢复 `whisper-local` 自动回退，后台渐进回填与手动转写
+  均继续执行；有效云端配置仍优先，显式错误配置仍报错。
+- **前端变化**：删除“未配暂停/必配”语义，改为解释云端配置可避免本地转录过慢，并明确未配
+  仍可使用本地 Whisper。
+- **数据与契约影响**：无 schema、迁移、公开 operation 或数据归属变化。
+- **失效与重派生**：DEC-ASR-021 第 3、6 条和 CI-ASR-021 的必配语义被 DEC-ASR-022 替代；
+  T-639 SPEC、解析测试、渐进排队测试、设置页测试与可见文案证据需按 T-641 重派生。
+
 ---
 
 ### How to use this file going forward

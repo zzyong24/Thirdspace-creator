@@ -38,7 +38,6 @@ function makePorts(overrides?: Partial<ReconstructEnqueuePorts>): {
   };
   const ports: ReconstructEnqueuePorts = {
     listImportedWorks: async () => [],
-    isTranscriptionConfigured: async () => true,
     enqueueTranscribe: async (_c, awemeIds) => {
       calls.transcribed.push(awemeIds);
     },
@@ -200,16 +199,12 @@ describe("enqueueReconstructForImported", () => {
     expect(res.transcriptWaiting).toBe(40);
   });
 
-  it("ASR 未配置时不创建注定失败的后台任务，保留到后续采集补偿", async () => {
-    const { ports, calls } = makePorts({
-      listImportedWorks: async () => works(3),
-      isTranscriptionConfigured: async () => false,
-    });
+  it("未配置云端 ASR 也照常排小批任务，由转写解析层回退本地 Whisper", async () => {
+    const { ports, calls } = makePorts({ listImportedWorks: async () => works(3) });
     const res = await enqueueReconstructForImported(ports, ctx);
-    expect(calls.transcribed).toEqual([]);
-    expect(res.transcribeBlockedByConfig).toBe(true);
-    expect(res.transcribeDeferred).toBe(3);
-    expect(res.transcribeAwemeCount).toBe(0);
+    expect(calls.transcribed).toEqual([["aweme-1", "aweme-2", "aweme-3"]]);
+    expect(res.transcribeDeferred).toBe(0);
+    expect(res.transcribeAwemeCount).toBe(3);
   });
 
 });

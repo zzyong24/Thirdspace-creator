@@ -130,9 +130,8 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                 {script.versionCount > 0
                   ? `v${script.versionCount} · 写你的口播稿——保存即新版本,可回滚`
                   : project.imported
-                    // 用户视角文案不暴露内部队列术语；ASR 已配时系统会渐进补齐，未配时
-                    // 任务通知会指向设置页。这里仍给“不等逐字稿、先起草”的透明替代动作。
-                    ? "系统会从抖音逐步补齐逐字稿；若尚未配置 ASR，请先到设置完成配置。着急的话也可让右侧编导先起草"
+                    // 用户视角文案不暴露内部队列术语；未配云端 ASR 时仍走本地 Whisper。
+                    ? "系统会从抖音逐步补齐逐字稿；未配置云端 ASR 时会使用本地 Whisper，处理可能较慢。着急的话也可让右侧编导先起草"
                     : "写你的口播稿——直接开写,或在右侧让编导起草"}
               </span>
             </div>
