@@ -83,6 +83,55 @@ function writePacket(root, name, packet) {
   return p;
 }
 
+test("constitution 演进后允许 record 复审刷新，但旧 receipt 在 audit 中仍 fail closed", () => {
+  const root = tempProject();
+  const args = (input) => [
+    "record",
+    "T-101",
+    "--spec",
+    "SPEC.md",
+    "--constitution",
+    "CONSTITUTION.md",
+    "--input",
+    input,
+    "--review",
+    "SPEC.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "same-model-constitution-refresh",
+    "--model",
+    "test-reviewer",
+  ];
+  const initial = writePacket(root, "round-1.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "initial",
+    summary: "首轮通过。",
+    findings: [],
+  });
+  let result = run(REVIEWCTL, args(initial), root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  fs.appendFileSync(
+    path.join(root, "CONSTITUTION.md"),
+    "\n新增已确认边界：不改变 FR-101 的范围。\n",
+  );
+  result = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(result.status, 1, "旧 receipt 必须因 constitution 漂移失效");
+  assert.match(result.stderr + result.stdout, /constitution hash 已变化/);
+
+  const recheck = writePacket(root, "round-2.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "recheck",
+    summary: "复核当前 constitution 后仍通过。",
+    findings: [],
+  });
+  result = run(REVIEWCTL, args(recheck), root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  result = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
 test("复审既有 finding 只允许销账字段变化，证据、处置和建议等全部冻结", () => {
   const frozenMutations = [
     ["category", "consistency"],

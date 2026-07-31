@@ -26,6 +26,10 @@ import {
   resolveLicenseFilePath,
   type LicenseVerdict,
 } from "./license-file.server";
+import {
+  assertVerdictProductIdentity,
+  ProductIdentitySecurityError,
+} from "./product-identity.server";
 
 const TICKET_CONTRACT = "config-access-ticket-v2";
 const BUNDLE_CONTRACT = "growth-client-config-bundle-v1";
@@ -1306,6 +1310,16 @@ export async function refreshClientConfig(
   const readVerdict =
     dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());
   const verdict = activeVerdict(await readVerdict());
+  try {
+    assertVerdictProductIdentity(verdict.projectKey!, env);
+  } catch (error) {
+    if (!(error instanceof ProductIdentitySecurityError)) throw error;
+    fail(
+      "CLIENT_CONFIG_PRODUCT_IDENTITY_INVALID",
+      "当前安装包产品身份校验未通过",
+      false,
+    );
+  }
   const store = dependencies.store ?? defaultStore(env);
   const activeLocator = locatorFromVerdict(verdict);
   let previous: ClientConfigCacheRecord | null;

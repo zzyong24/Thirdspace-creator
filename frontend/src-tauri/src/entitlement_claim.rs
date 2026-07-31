@@ -1053,7 +1053,7 @@ pub async fn entitlement_claim_start(
         let challenge = base64::engine::general_purpose::URL_SAFE_NO_PAD
             .encode(Sha256::digest(verifier.as_bytes()));
         let body = serde_json_canonicalizer::to_string(&serde_json::json!({
-            "client": "creatoros",
+            "client": crate::product_identity::product_ref(),
             "codeChallenge": challenge,
             "codeChallengeMethod": "S256",
         }))
@@ -1682,7 +1682,7 @@ mod tests {
         let challenge = base64::engine::general_purpose::URL_SAFE_NO_PAD
             .encode(Sha256::digest(verifier.as_bytes()));
         let create_body = serde_json_canonicalizer::to_string(&serde_json::json!({
-            "client": "creatoros",
+            "client": crate::product_identity::product_ref(),
             "codeChallenge": challenge,
             "codeChallengeMethod": "S256",
         }))

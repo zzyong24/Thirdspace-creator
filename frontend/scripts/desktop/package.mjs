@@ -19,6 +19,16 @@ import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
 import { createBuildTimingRecorder } from "./build-timing.mjs";
 import { assertLicenseProjectKey } from "./license-project-key.mjs";
+import {
+  findShellBinary,
+  releaseCommitsFromEnv,
+  writeProductReleaseAttestation,
+} from "./product-identity.mjs";
+import {
+  manifestPathForProfile,
+  readManifest,
+  writeManifest,
+} from "./release-manifest.mjs";
 import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -436,13 +446,78 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
 measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);
 
 // 4) [T-164 P6 / T-640] 代码签名(未配 env → skip 退 0 + 标 signed:false)。
-step("代码签名", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
+step(
+  "代码签名",
+  process.execPath,
+  [join("scripts", "desktop", "codesign.mjs")],
+  { CREATOROS_CARGO_PROFILE_DIR: CARGO_PROFILE_DIR },
+);
 
 // 5) [T-164 P6 / T-640] 公证(未配凭据 → skip 退 0 + 标 notarized:false)。
-step("公证", process.execPath, [join("scripts", "desktop", "notarize.mjs")]);
+step(
+  "公证",
+  process.execPath,
+  [join("scripts", "desktop", "notarize.mjs")],
+  { CREATOROS_CARGO_PROFILE_DIR: CARGO_PROFILE_DIR },
+);
+
+const productIdentityEvidence = measured(
+  "T-635 ProductManifest 与 release attestation",
+  () => {
+    const targetDir = join(
+      FRONTEND,
+      "src-tauri",
+      "target",
+      CARGO_PROFILE_DIR,
+    );
+    const bundleDir = join(targetDir, "bundle");
+    const binaryPath = findShellBinary({
+      targetDir,
+      bundleDir,
+      platform,
+    });
+    const creatorCommit =
+      process.env.CREATOROS_CREATOR_RELEASE_COMMIT?.trim() ||
+      process.env.GITHUB_SHA?.trim() ||
+      spawnSync("git", ["rev-parse", "HEAD"], {
+        cwd: FRONTEND,
+        encoding: "utf8",
+      }).stdout?.trim();
+    const evidence = writeProductReleaseAttestation({
+      bundleDir,
+      profile: CARGO_PROFILE_DIR,
+      binaryPath,
+      releaseCommits: releaseCommitsFromEnv({
+        ...process.env,
+        CREATOROS_CREATOR_RELEASE_COMMIT: creatorCommit,
+      }),
+    });
+    const releaseManifestPath =
+      manifestPathForProfile(CARGO_PROFILE_DIR);
+    const releaseManifest = readManifest(releaseManifestPath);
+    releaseManifest.productIdentity = {
+      schema: evidence.manifest.schema,
+      productRef: evidence.manifest.productRef,
+      appIdentifier: evidence.manifest.appIdentifier,
+      projectKey: evidence.manifest.projectKey,
+      productManifest: evidence.manifestPath,
+      releaseAttestation: evidence.attestationPath,
+      claimEnabled: false,
+      publishAuthorized: false,
+    };
+    writeManifest(releaseManifest, releaseManifestPath);
+    return evidence;
+  },
+);
 
 console.log(
   `\n[desktop:package] ✅ 完成。产物在 src-tauri/target/${CARGO_PROFILE_DIR}/bundle/(macos/*.app + dmg/*.dmg)。`,
 );
 console.log("[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。");
+console.log(
+  `[desktop:package] T-635 产品身份清单：${productIdentityEvidence.manifestPath}`,
+);
+console.log(
+  `[desktop:package] T-635 release attestation：${productIdentityEvidence.attestationPath}`,
+);
 console.log(`[desktop:package] 阶段耗时报告:${BUILD_TIMING_REPORT}`);
