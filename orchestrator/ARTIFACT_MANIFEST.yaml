@@ -586,7 +586,7 @@ stages:
     gate_status: "pass"
     confirmation_required: false
     artifacts:
-      - existing: "docs/superpowers/specs/2026-07-31-gradual-transcript-backfill-and-mimo-asr.md"
+      - existing: "docs/superpowers/specs/2026-07-31-asr-recommended-local-fallback.md"
       - existing: "orchestrator/DECISION_LOG.md#DEC-ASR-022"
       - existing: "orchestrator/CHANGE_IMPACT.md#CI-ASR-022"
     notes: >
@@ -594,17 +594,21 @@ stages:
       本地 Whisper。设置页保留 ASR 在重点配置区并用自然语言解释速度收益。
 
   "T-641-4-build":
-    status: "draft"
+    status: "passed"
     gate: "backend/frontend focused tests + typecheck + boundary + reconcile"
-    gate_status: "not-run"
+    gate_status: "pass"
     confirmation_required: false
     artifacts:
       - existing: "backend/src/modules/ai-runtime/multimodal/resolve.ts"
       - existing: "frontend/src/server/ingestion/reconstruct-enqueue.ts"
       - existing: "frontend/src/features/settings/settings-interactive-region.tsx"
       - existing: "frontend/src/features/settings/model-configuration-manual.tsx"
+      - existing: "orchestrator/GATE-T641-BUILD.md"
     notes: >
-      已记录用户确认与测试红证据；实现与 Gate 正在进行，按用户要求本轮不构建安装包。
+      后端 39 tests、前端 77 tests、三包 typecheck、目标 lint、双视口 E2E、boundary 与
+      git diff --check 通过；T-641 frontend receipt 绑定实现提交 4f7e17e3。全局 reconcile
+      仍被 T-635 review receipt 与 T-637/T-638/T-634 连带失效的 frontend receipt 阻断，
+      已诚实保留到最终统一收口；按用户要求本轮不构建安装包。
 
 stage_defaults:
   valid_statuses:
