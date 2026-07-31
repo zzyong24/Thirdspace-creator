@@ -41,3 +41,48 @@ flowchart LR
   显式伪造其他 ID 不能覆盖绑定 ID。
 - 无绑定项目时维持原有显式 ID 契约和账号级项目库查询能力。
 - 聚焦单测、类型检查、边界检查和 `git diff --check` 通过；本任务不触发安装包构建。
+
+## 4. frontend-journey-contract/v2
+
+```frontend-journey-contract
+{
+  "schema": "frontend-journey-contract/v2",
+  "task_id": "T-642",
+  "journey": "在 Copilot 中引用一个具体项目并直接进入单项目上下文",
+  "entry": "Creator Copilot → 输入 @ → 选择项目",
+  "watched_paths": [
+    "frontend/src/features/copilot/project-mention.ts",
+    "frontend/src/features/copilot/ai-copilot-content.tsx",
+    "frontend/tests/e2e/copilot-project-reference.spec.ts",
+    "backend/src/modules/ai-runtime/chat-tools.ts",
+    "backend/src/modules/ai-runtime/chat-runner.ts"
+  ],
+  "required_checks": [
+    {"id": "AC-COPILOT-REF-LABEL", "test_id": "E2E-COPILOT-REF-01"},
+    {"id": "AC-COPILOT-REF-NO-DUP", "test_id": "E2E-COPILOT-REF-01"},
+    {"id": "AC-COPILOT-REF-NARROW", "test_id": "E2E-COPILOT-REF-01"},
+    {"id": "AC-COPILOT-REF-DIRECT", "test_id": "UNIT-COPILOT-REF-02"}
+  ],
+  "required_conditions": ["long-title", "narrow", "bound-id", "unbound-account"],
+  "viewports": [
+    {"width": 1536, "height": 1024},
+    {"width": 1024, "height": 768}
+  ],
+  "coherence_groups": [],
+  "copy_guard": {"forbid_internal_ids": true},
+  "states": [
+    {"id": "unbound", "visible": "未关联项目 · 输入 @ 引用一个项目"},
+    {"id": "bound", "visible": "项目 · <项目标题>"},
+    {"id": "ready", "visible": "用户正文只保留问题，不重复完整 @标题"}
+  ],
+  "actions": [
+    {"from": "unbound", "action": "输入 @关键词并选择真实项目", "to": "bound"},
+    {"from": "bound", "action": "继续输入问题", "to": "ready"}
+  ],
+  "honesty": [
+    "显示裁剪不改变真实 projectId",
+    "绑定项目后不向模型暴露全量项目库",
+    "长正文仍按窗口读取，不宣称一次拿到无限数据"
+  ]
+}
+```
