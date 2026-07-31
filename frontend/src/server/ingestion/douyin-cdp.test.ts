@@ -53,6 +53,7 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
       cookieUrls: [] as string[],
       probe: 0,
       probeUrls: [] as string[],
+      authDirs: [] as string[],
       clearCookies: 0,
       close: 0,
     };
@@ -112,8 +113,10 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
     type OpenContext = NonNullable<
       NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
     >;
-    const openContext: OpenContext = async () =>
-      context as unknown as Awaited<ReturnType<OpenContext>>;
+    const openContext: OpenContext = async (authDir) => {
+      calls.authDirs.push(authDir);
+      return context as unknown as Awaited<ReturnType<OpenContext>>;
+    };
     return { calls, openContext };
   }
 
@@ -156,7 +159,7 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
     expect(calls.close).toBe(1);
   });
 
-  it("普通抖音页面已登录时使用同源页面探针确认，不被脱离页面环境的未知响应误报未登录", async () => {
+  it("创作者中心已登录时使用同源页面探针确认，不被脱离页面环境的未知响应误报未登录", async () => {
     const { calls, openContext } = makeLoginContext(["active"]);
     await expect(
       loginDouyin(
@@ -166,6 +169,40 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
     ).resolves.toBe(true);
     expect(calls.probe).toBe(1);
     expect(calls.clearCookies).toBe(0);
+  });
+
+  it("[T-636] 创作者中心扫码与内容雷达收藏采集复用同一 profile，但各自访问正确域名", async () => {
+    const authDir = "/fake/shared-account-profile";
+    const login = makeLoginContext(["active"]);
+    await expect(
+      loginDouyin(
+        { authDir, timeoutSec: 1 },
+        { openContext: login.openContext },
+      ),
+    ).resolves.toBe(true);
+
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx, calls } = makeCollectsContext({ loggedIn: true });
+    const collectAuthDirs: string[] = [];
+    await fetchDouyinCollectsFolders(
+      { authDir },
+      {
+        openContext: async (receivedAuthDir) => {
+          collectAuthDirs.push(receivedAuthDir);
+          return ctx;
+        },
+      },
+    );
+
+    expect(login.calls.authDirs).toEqual([authDir]);
+    expect(login.calls.gotoUrls[0]).toBe(
+      "https://creator.douyin.com/creator-micro/home",
+    );
+    expect(collectAuthDirs).toEqual([authDir]);
+    expect(calls.cookieUrls).toEqual(["https://www.douyin.com"]);
+    expect(calls.urls[0]).toContain(
+      "https://www.douyin.com/user/self?showTab=favorite_collection",
+    );
   });
 
   it("用户主动关闭登录窗口时返回未登录，不把 Playwright TargetClosedError 包成 HTTP 400", async () => {
@@ -2762,7 +2799,13 @@ function makeCollectsContext(opts: {
   bodyText?: string;
   fetchPages?: unknown[];
 }) {
-  const calls = { goto: 0, close: 0, fetch: 0, urls: [] as string[] };
+  const calls = {
+    goto: 0,
+    close: 0,
+    fetch: 0,
+    urls: [] as string[],
+    cookieUrls: [] as string[],
+  };
   const pages = opts.fetchPages ?? [COLLECTS_LIST_JSON];
   const page = {
     async goto(url: string) {
@@ -2786,8 +2829,10 @@ function makeCollectsContext(opts: {
   const ctx = {
     pages: () => [page],
     newPage: async () => page,
-    cookies: async () =>
-      opts.loggedIn ? [{ name: "sessionid" }] : [{ name: "other" }],
+    cookies: async (url: string) => {
+      calls.cookieUrls.push(url);
+      return opts.loggedIn ? [{ name: "sessionid" }] : [{ name: "other" }];
+    },
     close: async () => {
       calls.close += 1;
     },

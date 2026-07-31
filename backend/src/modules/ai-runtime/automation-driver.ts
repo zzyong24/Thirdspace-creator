@@ -14,6 +14,8 @@ export interface AutomationDriverJob {
   target: Record<string, unknown>;
   schedule: string;
   enabled: boolean;
+  /** 最近一次真实 job_run 的开始时间；用于判断每日作品同步是否已经尝试过。 */
+  lastRunStartedAt?: string | null;
 }
 
 export interface AutomationHandlerInput {
@@ -77,6 +79,8 @@ export interface AutomationDriverTickDeps {
   leaseSeconds?: number;
   /** 启动恢复只对声明 missed-run=once 的系统聚合作业生效。 */
   startupRecovery?: boolean;
+  /** 每次分钟 tick 检查一次每日作品任务是否已错过，错过且尚未尝试时补跑。 */
+  recoverMissedDailyRuns?: boolean;
   /** 复用唯一分钟 tick 清理无活跃执行的僵尸 job_run；不得另起第二个 timer。 */
   sweepStaleJobRuns?: () => Promise<number>;
 }
@@ -94,6 +98,35 @@ function minuteAnchor(iso: string): string {
   const value = new Date(iso);
   value.setSeconds(0, 0);
   return value.toISOString();
+}
+
+/**
+ * `self.metrics` 是按本机自然日执行的每日任务。CreatorOS 关闭或事件循环阻塞时可能错过
+ * 精确 cron 分钟；此处把简单的 `M H * * *` 计划还原成当天本地时间锚。当天计划之后
+ * 已经出现过任意 run（成功/失败/手动初始化均算一次尝试）就不再自动补，避免分钟级重试。
+ */
+function missedDailyRunAnchor(
+  job: AutomationDriverJob,
+  now: Date,
+): string | null {
+  if (job.sourceKind !== "self.metrics") return null;
+  const match = job.schedule.trim().match(/^(\d{1,2})\s+(\d{1,2})\s+\*\s+\*\s+\*$/);
+  if (!match) return null;
+  const minute = Number(match[1]);
+  const hour = Number(match[2]);
+  if (minute < 0 || minute > 59 || hour < 0 || hour > 23) return null;
+
+  const scheduled = new Date(now);
+  scheduled.setHours(hour, minute, 0, 0);
+  if (now.getTime() < scheduled.getTime()) return null;
+
+  if (job.lastRunStartedAt) {
+    const lastRunMs = new Date(job.lastRunStartedAt).getTime();
+    if (Number.isFinite(lastRunMs) && lastRunMs >= scheduled.getTime()) {
+      return null;
+    }
+  }
+  return scheduled.toISOString();
 }
 
 function errorMessageOf(error: unknown): string {
@@ -114,6 +147,10 @@ function payloadOf(value: Record<string, unknown>): {
     value.job && typeof value.job === "object"
       ? (value.job as Record<string, unknown>)
       : {};
+  const lastRunStartedAt =
+    typeof rawJob.lastRunStartedAt === "string"
+      ? rawJob.lastRunStartedAt
+      : null;
   const job: AutomationDriverJob = {
     id: typeof rawJob.id === "string" ? rawJob.id : "",
     accountId:
@@ -127,6 +164,7 @@ function payloadOf(value: Record<string, unknown>): {
     schedule:
       typeof rawJob.schedule === "string" ? rawJob.schedule : "",
     enabled: rawJob.enabled === true,
+    ...(lastRunStartedAt ? { lastRunStartedAt } : {}),
   };
   if (!handler || !scheduledFor || !job.id || !job.accountId || !job.sourceKind) {
     throw new Error("自动化任务 payload 不完整");
@@ -159,17 +197,27 @@ export async function runAutomationDriverTick(
   const now = new Date(nowIso);
   const jobs = await deps.listRunnableJobs(deps.ctx);
   for (const job of jobs) {
+    const validSchedule = deps.cron.validate(job.schedule);
     const scheduleMatches =
-      deps.cron.validate(job.schedule) &&
-      cronMatchesMinute(job.schedule, now);
+      validSchedule && cronMatchesMinute(job.schedule, now);
     const startupRecovery =
       deps.startupRecovery === true &&
       job.sourceKind === "intelligence.sync";
+    const missedDailyAnchor =
+      deps.recoverMissedDailyRuns === true && validSchedule
+        ? missedDailyRunAnchor(job, now)
+        : null;
     if (
       !job.enabled ||
-      (!scheduleMatches && !startupRecovery)
+      (!scheduleMatches && !startupRecovery && !missedDailyAnchor)
     ) {
       continue;
+    }
+    const triggerAnchor = missedDailyAnchor ?? scheduledFor;
+    if (missedDailyAnchor && !scheduleMatches) {
+      console.log(
+        `[automation-driver] 补跑错过的作品同步 job=${job.id} scheduledFor=${missedDailyAnchor}`,
+      );
     }
     const jobCtx: RequestContext = { ...deps.ctx, accountId: job.accountId };
     try {
@@ -177,11 +225,11 @@ export async function runAutomationDriverTick(
         kind: AUTOMATION_TASK_KIND,
         ownerType: AUTOMATION_TASK_OWNER_TYPE,
         ownerId: job.id,
-        idempotencyKey: `scheduled-job:${job.id}:${scheduledFor}`,
+        idempotencyKey: `scheduled-job:${job.id}:${triggerAnchor}`,
         payload: {
           handler: "scheduled_collection",
           job,
-          scheduledFor,
+          scheduledFor: triggerAnchor,
         },
         maxAttempts: 3,
       });
@@ -285,12 +333,14 @@ export async function startAutomationDriver(
       ...deps,
       cron,
       startupRecovery: true,
+      recoverMissedDailyRuns: true,
     });
     cron.schedule("* * * * *", () => {
       void runAutomationDriverTick({
         ...deps,
         cron,
         startupRecovery: false,
+        recoverMissedDailyRuns: true,
       }).catch((error) =>
         console.error("[automation-driver] tick 失败:", error),
       );

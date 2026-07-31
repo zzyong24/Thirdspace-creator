@@ -8165,6 +8165,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         schedule: job.schedule,
         enabled: job.enabled,
         accountId: job.accountId,
+        // [T-636] 每日作品同步漏跑补偿只需知道“当天计划后是否已经尝试过”。最近 run
+        // 无论成功或失败都算一次尝试，避免失败时每分钟自动重试；needs_reconnect 已在上方停跑。
+        lastRunStartedAt: last?.startedAt ?? null,
       });
     }
     return runnable;

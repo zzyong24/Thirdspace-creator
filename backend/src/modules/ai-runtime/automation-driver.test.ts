@@ -195,7 +195,7 @@ describe("T-517 automation driver", () => {
     expect(report).toMatchObject({ succeeded: 0, failed: 1 });
   });
 
-  it("[T-598] 启动恢复可触发未命中当前分钟的 intelligence.sync，普通任务不补跑", async () => {
+  it("[T-636] 启动恢复内容雷达，并补跑今天已错过且尚未尝试的作品同步", async () => {
     const enqueue = vi.fn(async () => taskFixture().task);
     const tasks = {
       recoverExpiredLeases: vi.fn(async () => ({
@@ -222,22 +222,77 @@ describe("T-517 automation driver", () => {
       sourceKind: "comments",
       schedule: "0 9 * * *",
     };
+    const metricsJob: AutomationDriverJob = {
+      ...dueJob,
+      id: "job-metrics",
+      sourceKind: "self.metrics",
+      schedule: "0 9 * * *",
+    };
+    const now = new Date(2026, 6, 26, 9, 7, 20);
+    const missedAnchor = new Date(2026, 6, 26, 9, 0, 0).toISOString();
 
     await runAutomationDriverTick({
       ctx,
       tasks,
       registry,
-      listRunnableJobs: async () => [radarJob, ordinaryJob],
-      now: () => "2026-07-26T09:07:20.000Z",
+      listRunnableJobs: async () => [radarJob, ordinaryJob, metricsJob],
+      now: () => now.toISOString(),
       workerId: "automation-worker",
       cron: { validate: () => true },
       startupRecovery: true,
+      recoverMissedDailyRuns: true,
     });
 
-    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledTimes(2);
     expect(enqueue).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ ownerId: "job-radar" }),
     );
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        ownerId: "job-metrics",
+        idempotencyKey: `scheduled-job:job-metrics:${missedAnchor}`,
+      }),
+    );
+  });
+
+  it("[T-636] 后续分钟也能补偿阻塞错过；当天计划后已有任意尝试则不重复", async () => {
+    const enqueue = vi.fn(async () => taskFixture().task);
+    const tasks = {
+      recoverExpiredLeases: vi.fn(async () => ({
+        requeued: 0,
+        failed: 0,
+        paused: 0,
+        cancelled: 0,
+      })),
+      enqueue,
+      claimNext: vi.fn(async () => null),
+    } as unknown as PersistentTaskService;
+    const registry = createAutomationHandlerRegistry()
+      .register("scheduled_collection", async () => undefined)
+      .seal();
+    const now = new Date(2026, 6, 26, 9, 7, 20);
+    const attemptedMetricsJob: AutomationDriverJob = {
+      ...dueJob,
+      id: "job-metrics",
+      sourceKind: "self.metrics",
+      schedule: "0 9 * * *",
+      lastRunStartedAt: new Date(2026, 6, 26, 9, 3, 0).toISOString(),
+    };
+
+    await runAutomationDriverTick({
+      ctx,
+      tasks,
+      registry,
+      listRunnableJobs: async () => [attemptedMetricsJob],
+      now: () => now.toISOString(),
+      workerId: "automation-worker",
+      cron: { validate: () => true },
+      startupRecovery: false,
+      recoverMissedDailyRuns: true,
+    });
+
+    expect(enqueue).not.toHaveBeenCalled();
   });
 });
