@@ -61,6 +61,8 @@ export const positioningStatements = pgTable("positioning_statements", {
   aiTaskId: text("ai_task_id"), // nullable — FK soft to ai_tasks (AI 演进回流)
   // [T-231⑥] 修改原因(团队留痕)—— 这次为什么开新版本。additive,存量行 ''(迁移 0034)。
   changeReason: text("change_reason").notNull().default(""),
+  // [T-632] 该陈述被保存时的完整定位母版。旧版 nullable；禁止拿当前 profile 猜历史。
+  masterSnapshot: jsonb("master_snapshot"),
   createdAt: text("created_at").notNull(),
   // NO updated_at — rows never update (immutable version chain).
 });
@@ -108,6 +110,7 @@ CREATE TABLE IF NOT EXISTS positioning_statements (
   created_by_type TEXT NOT NULL DEFAULT 'human',
   ai_task_id TEXT,
   change_reason TEXT NOT NULL DEFAULT '',
+  master_snapshot JSONB,
   created_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_positioning_statements_version ON positioning_statements (profile_id, version_number);
@@ -117,4 +120,6 @@ CREATE INDEX IF NOT EXISTS idx_positioning_statements_current ON positioning_sta
 ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS account_id TEXT;
 -- [T-231⑥] 修改原因(团队留痕,additive、幂等)。存量行 ''(真库走迁移 0034,此处供 pglite/seed 新库)。
 ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS change_reason TEXT NOT NULL DEFAULT '';
+-- [T-632] 完整母版历史快照；旧行保持 NULL，由第一次重置前的真实当前值只写一次补齐。
+ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS master_snapshot JSONB;
 `;

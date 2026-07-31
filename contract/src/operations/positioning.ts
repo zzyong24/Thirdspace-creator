@@ -6,6 +6,7 @@ import {
   creatorProfileFacets,
   creatorProfileDownstreamRules,
   positioningStatementResource,
+  positioningMasterRestoreResultResource,
   positioningGateResultResource,
 } from "../resources/positioning";
 
@@ -46,6 +47,14 @@ export const positioningOperations = {
     path: "/positioning/master/reset",
     response: creatorProfileResource,
     fr: ["FR-POS-623-001"],
+  }),
+  restorePositioningMaster: defineEndpoint({
+    id: "positioning.master.restore",
+    method: "POST",
+    path: "/positioning/master/restore",
+    body: z.object({ statementId: id }),
+    response: positioningMasterRestoreResultResource,
+    fr: ["FR-POS-632-001"],
   }),
   listStatements: defineEndpoint({
     id: "positioning.statements.list",

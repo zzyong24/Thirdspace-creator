@@ -58,6 +58,7 @@ import { GeneratePositioningIsland } from "./generate-positioning-island";
 import {
   PositioningDraftDrawer,
   ResetPositioningMasterButton,
+  RestorePositioningMasterButton,
 } from "./positioning-interactive-region";
 
 export type PositioningCenterViewModel = PositioningCenterResource;
@@ -571,7 +572,7 @@ const RULE_HINTS: ReadonlyArray<{ label: string; icon: LucideIcon }> = [
   { label: "表达风格", icon: Mic2 },
 ];
 
-// 历史版本紧凑表：版本号 / 一句话 / 状态 pill / 操作（复制为草稿）.
+// 历史版本紧凑表：有完整快照走真实恢复；旧版缺快照只诚实复制陈述。
 function HistoryTable({
   history,
   profile,
@@ -583,7 +584,7 @@ function HistoryTable({
     <SectionCard
       className="shrink-0"
       title="版本历史"
-      description="定位陈述是不可变版本链，最新在前。"
+      description="完整母版按版本保留，恢复会生成新版本，旧历史不变。"
     >
       <ol
         data-testid="positioning-history"
@@ -608,23 +609,33 @@ function HistoryTable({
                   AI 建议
                 </Badge>
               ) : null}
-              {/* 复制为草稿 = 预填进新建抽屉的 statement 表单 → createStatement (真 op).
-                  「设为当前」无对应 op(statements append-only)故不放. */}
-              <PositioningDraftDrawer
-                profile={profile}
-                triggerLabel="复制为草稿"
-                triggerVariant="outline"
-                triggerSize="sm"
-                triggerIcon="none"
-                title={`复制 v${s.versionNumber} 为草稿`}
-                description="基于该版本预填，编辑后保存为新版本。"
-                initialTab="statement"
-                statementSeed={{
-                  oneLiner: s.oneLiner,
-                  keywords: s.keywords,
-                  productAnchorIds: s.productAnchorIds,
-                }}
-              />
+              {s.masterSnapshot ? (
+                <RestorePositioningMasterButton
+                  statementId={s.id}
+                  versionNumber={s.versionNumber}
+                />
+              ) : (
+                <>
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                    旧版仅保留陈述
+                  </Badge>
+                  <PositioningDraftDrawer
+                    profile={profile}
+                    triggerLabel="复制定位陈述"
+                    triggerVariant="outline"
+                    triggerSize="sm"
+                    triggerIcon="none"
+                    title={`复制 v${s.versionNumber} 的定位陈述`}
+                    description="该记录来自旧版，只保存了一句话、关键词和产品锚；画像与规则无法从历史反推。"
+                    initialTab="statement"
+                    statementSeed={{
+                      oneLiner: s.oneLiner,
+                      keywords: s.keywords,
+                      productAnchorIds: s.productAnchorIds,
+                    }}
+                  />
+                </>
+              )}
             </span>
           </li>
         ))}

@@ -122,6 +122,22 @@ describe("positioning contract (each op validates against its DTO)", () => {
     expect(parsedCenter.history).toHaveLength(1);
   });
 
+  it("positioning.master.restore → restored profile + appended statement", async () => {
+    const transport = makeTransport(db);
+    const statementId = await seedProfileAndStatement(transport);
+    await call(transport, "positioning.master.reset", {}, ctx);
+    const env = await call(
+      transport,
+      "positioning.master.restore",
+      { body: { statementId } },
+      ctx,
+    );
+    const parsed = ENDPOINTS.restorePositioningMaster.response.parse(env.data);
+    expect(parsed.restoredFromVersion).toBe(1);
+    expect(parsed.statement.versionNumber).toBe(2);
+    expect(parsed.profile.persona).toBe("p");
+  });
+
   it("positioning.statements.create → positioningStatementResource (version 1)", async () => {
     const transport = makeTransport(db);
     await call(

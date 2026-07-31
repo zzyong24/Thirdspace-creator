@@ -306,6 +306,22 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **验证**：contract 全量、positioning service/contract/repository、定位与复盘前端定向、
   Copilot embed 预填、三包 typecheck、boundary 与 reconcile。
 
+## CI-POS-022 — 定位历史从“陈述版本”修正为可恢复的完整母版快照（T-632，2026-07-31）
+
+- **根因**：重置只在 `creator_profiles` 清空可变画像/规则；`positioning_statements` 历史没有
+  保存这些字段。旧“复制为草稿”只预填陈述，却把当前已清空 profile 传给其余页签，形成假恢复。
+- **数据变化**：`positioning_statements` 增加 nullable `master_snapshot`。新陈述创建时写完整
+  profile 快照；重置前为当前真实母版补快照或追加自动备份。历史正文仍不可变，旧 null 行不回填
+  猜测值。
+- **契约变化**：statement resource 暴露 nullable `masterSnapshot`；新增
+  `positioning.master.restore`，输入 statementId，返回恢复后的 profile 与新追加的 statement。
+- **交互变化**：完整快照显示“恢复此版本”并确认后真实回写；无快照旧记录只显示
+  “复制定位陈述”与明确缺失提示。
+- **失效与重派生**：T-623 中“历史只复制陈述即可”的限制被本条定向替代；当前定位 floor、
+  AI 候选采纳、下游统一读取和复盘 Copilot 不失效，只需回归。
+- **验证**：真实 PGlite migration/事务、完整字段写后读、跨账号 404、旧记录降级、定位中心
+  normal/minimum viewport 交互与刷新回显。
+
 ## CI-RCN-020 — 历史作品重建依赖与短窗口侧栏修复（T-638，2026-07-31）
 
 - **变更**：导入作品只先排逐字稿；已有真稿或真稿刚绑定时才排 `reconstruct.project`，同因批量

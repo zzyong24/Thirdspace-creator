@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import {
+  createDb,
+  eq,
+  positioningStatements,
+  type Db,
+} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createPositioningService,
@@ -10,6 +15,8 @@ import {
   ProfileRequiredError,
   GateSubjectError,
   StatementValidationError,
+  MasterSnapshotUnavailableError,
+  OwnershipError,
 } from "./positioning.errors";
 
 // Positioning service test (Task 3) — fake now/nextId, pglite db, stubbed
@@ -199,6 +206,11 @@ describe("positioning service", () => {
       productAnchorIds: ["product-1"],
     });
     expect(v1.versionNumber).toBe(1);
+    expect(v1.masterSnapshot).toMatchObject({
+      persona: PROFILE_INPUT.persona,
+      field: PROFILE_INPUT.field,
+      audience: PROFILE_INPUT.audience,
+    });
     const v2 = await service.createStatementVersion(ctx, {
       oneLiner: "v2 文案",
       keywords: ["论文", "生产级", "工程化"],
@@ -290,6 +302,140 @@ describe("positioning service", () => {
     const rebuilt = await service.getPositioningCenter(ctx);
     expect(rebuilt.currentStatement?.id).toBe(v2.id);
     expect(rebuilt.history.map((item) => item.id)).toEqual([v2.id, v1.id]);
+  });
+
+  it("[T-632] reset 前保留完整母版，恢复会回写全部字段并追加新版本而不改旧历史", async () => {
+    const service = makeService(db, makeProjectsPort(), "restore");
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      facets: {
+        contentScope: "AI 工程实战",
+        avoid: "泛泛而谈",
+        corePain: "不会落地",
+        coreValue: "可运行代码",
+        tone: "工程师口吻",
+        statusNote: "稳定更新",
+      },
+      downstreamRules: {
+        topicRule: "必须可复现",
+        scriptRule: "先给结果",
+        projectRule: "必须有演示",
+        forbidRule: "不编数据",
+        expressionRule: "不用营销腔",
+      },
+    });
+    const v1 = await service.createStatementVersion(ctx, {
+      oneLiner: "完整旧母版",
+      keywords: ["工程", "代码", "复现"],
+      productAnchorIds: ["product-1"],
+    });
+    const immutableV1 = structuredClone(v1);
+
+    await service.resetMaster(ctx);
+    expect((await service.getPositioningCenter(ctx)).currentStatement).toBeNull();
+
+    const restored = await service.restoreMaster(ctx, v1.id);
+    expect(restored.restoredFromVersion).toBe(1);
+    expect(restored.statement.versionNumber).toBe(2);
+    expect(restored.statement.oneLiner).toBe("完整旧母版");
+    expect(restored.profile).toMatchObject({
+      persona: PROFILE_INPUT.persona,
+      field: PROFILE_INPUT.field,
+      facets: { contentScope: "AI 工程实战", coreValue: "可运行代码" },
+      downstreamRules: {
+        topicRule: "必须可复现",
+        expressionRule: "不用营销腔",
+      },
+    });
+    expect(await service.getStatement(ctx, v1.id)).toEqual(immutableV1);
+    const center = await service.getPositioningCenter(ctx);
+    expect(center.currentStatement?.id).toBe(restored.statement.id);
+    expect(center.profile?.downstreamRules.forbidRule).toBe("不编数据");
+  });
+
+  it("[T-632] statement 保存后画像又编辑，reset 会追加精确的重置前备份", async () => {
+    const service = makeService(db, makeProjectsPort(), "backup");
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await service.createStatementVersion(ctx, {
+      oneLiner: "仍沿用的陈述",
+      keywords: ["一", "二", "三"],
+      productAnchorIds: [],
+    });
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      persona: "陈述保存后改过的人设",
+      downstreamRules: { topicRule: "重置前最后规则" },
+    });
+
+    await service.resetMaster(ctx);
+    const history = (await service.getPositioningCenter(ctx)).history;
+    expect(history).toHaveLength(2);
+    expect(history[0]).toMatchObject({
+      versionNumber: 2,
+      oneLiner: "仍沿用的陈述",
+      changeReason: "重置前自动备份（基于 v1）",
+      masterSnapshot: {
+        persona: "陈述保存后改过的人设",
+        downstreamRules: { topicRule: "重置前最后规则" },
+      },
+    });
+  });
+
+  it("[T-632] 旧版无快照拒绝假恢复，跨账号恢复与未知 id 同样按 404 隔离", async () => {
+    const service = makeService(db, makeProjectsPort(), "legacy");
+    const ctxAcc1: RequestContext = { ...ctx, accountId: "acc-1" };
+    const ctxAcc2: RequestContext = { ...ctx, accountId: "acc-2" };
+    await service.upsertProfile(ctxAcc1, PROFILE_INPUT);
+    await service.upsertProfile(ctxAcc2, PROFILE_INPUT);
+    const legacy = await service.createStatementVersion(ctxAcc1, {
+      oneLiner: "旧版只留陈述",
+      keywords: ["旧", "版", "陈述"],
+      productAnchorIds: [],
+    });
+    await db
+      .update(positioningStatements)
+      .set({ masterSnapshot: null })
+      .where(eq(positioningStatements.id, legacy.id));
+
+    await expect(
+      service.restoreMaster(ctxAcc1, legacy.id),
+    ).rejects.toBeInstanceOf(MasterSnapshotUnavailableError);
+    await expect(
+      service.restoreMaster(ctxAcc2, legacy.id),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("[T-632] 升级后的第一次 reset 会在清空前为旧版当前陈述只写一次补齐真实快照", async () => {
+    const service = makeService(db, makeProjectsPort(), "upgrade");
+    await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      persona: "升级前仍在使用的人设",
+      downstreamRules: { topicRule: "升级前真实规则" },
+    });
+    const legacyCurrent = await service.createStatementVersion(ctx, {
+      oneLiner: "旧安装包创建的陈述",
+      keywords: ["旧", "安装包", "陈述"],
+      productAnchorIds: [],
+    });
+    await db
+      .update(positioningStatements)
+      .set({ masterSnapshot: null })
+      .where(eq(positioningStatements.id, legacyCurrent.id));
+
+    await service.resetMaster(ctx);
+    const history = (await service.getPositioningCenter(ctx)).history;
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({
+      id: legacyCurrent.id,
+      versionNumber: 1,
+      masterSnapshot: {
+        persona: "升级前仍在使用的人设",
+        downstreamRules: { topicRule: "升级前真实规则" },
+      },
+    });
+    const restored = await service.restoreMaster(ctx, legacyCurrent.id);
+    expect(restored.profile.persona).toBe("升级前仍在使用的人设");
+    expect(restored.profile.downstreamRules.topicRule).toBe("升级前真实规则");
   });
 
   it("[T-623] resetMaster is account-scoped and cannot clear another account's master", async () => {

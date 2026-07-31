@@ -37,6 +37,21 @@ export type CreatorProfileDownstreamRules = z.infer<
   typeof creatorProfileDownstreamRules
 >;
 
+// 定位母版的不可变快照。它刻意不含 id/userId/timestamps：这些属于当前 profile 行，
+// 恢复时继续沿用当前账号的 ownership 与审计时间；这里只保存用户可恢复的业务内容。
+export const positioningMasterSnapshotResource = z.object({
+  persona: z.string(),
+  field: z.string(),
+  audience: z.string(),
+  differentiation: z.string(),
+  capabilities: z.array(z.string()),
+  facets: creatorProfileFacets,
+  downstreamRules: creatorProfileDownstreamRules,
+});
+export type PositioningMasterSnapshotResource = z.infer<
+  typeof positioningMasterSnapshotResource
+>;
+
 // CreatorProfile — 账号自我认知 (七步①). One per user this wave.
 export const creatorProfileResource = z.object({
   id,
@@ -66,10 +81,21 @@ export const positioningStatementResource = z.object({
   aiTaskId: id.nullable(),
   // [T-234 读侧补] 修改原因(硬约束留痕):写侧 0034 已落库,读侧此前漏投影 → get 读不回。
   changeReason: z.string().default(""),
+  // [T-632] 完整定位母版快照。旧版本可能为 null；不得用当前 profile 猜历史值。
+  masterSnapshot: positioningMasterSnapshotResource.nullable().default(null),
   createdAt: iso8601,
 });
 export type PositioningStatementResource = z.infer<
   typeof positioningStatementResource
+>;
+
+export const positioningMasterRestoreResultResource = z.object({
+  profile: creatorProfileResource,
+  statement: positioningStatementResource,
+  restoredFromVersion: z.number().int(),
+});
+export type PositioningMasterRestoreResultResource = z.infer<
+  typeof positioningMasterRestoreResultResource
 >;
 
 // PositioningGate result — value object (no table). Advisory 0–100 fit score.

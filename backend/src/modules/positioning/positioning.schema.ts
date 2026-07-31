@@ -33,6 +33,11 @@ export const positioningCenterResource =
 export type CreatorProfileResource = (typeof creatorProfileResource)["_output"];
 export type PositioningStatementResource =
   (typeof positioningStatementResource)["_output"];
+export type PositioningMasterSnapshotResource = NonNullable<
+  PositioningStatementResource["masterSnapshot"]
+>;
+export type PositioningMasterRestoreResultResource =
+  (typeof ENDPOINTS.restorePositioningMaster.response)["_output"];
 export type PositioningGateResultResource =
   (typeof positioningGateResultResource)["_output"];
 export type PositioningCenterResource =
@@ -69,6 +74,24 @@ function toRulesDto(raw: unknown): RulesDto {
     projectRule: str(o, "projectRule"),
     forbidRule: str(o, "forbidRule"),
     expressionRule: str(o, "expressionRule"),
+  };
+}
+
+export function toPositioningMasterSnapshotDto(
+  raw: unknown,
+): PositioningMasterSnapshotResource | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  return {
+    persona: str(o, "persona"),
+    field: str(o, "field"),
+    audience: str(o, "audience"),
+    differentiation: str(o, "differentiation"),
+    capabilities: Array.isArray(o.capabilities)
+      ? o.capabilities.filter((item): item is string => typeof item === "string")
+      : [],
+    facets: toFacetsDto(o.facets),
+    downstreamRules: toRulesDto(o.downstreamRules),
   };
 }
 
@@ -109,6 +132,7 @@ export function toPositioningStatementDto(
     aiTaskId: row.aiTaskId ?? null,
     // [T-234 读侧补] 写侧 0034 已落库,补投影让 get/list 读得回。
     changeReason: (row as { changeReason?: string }).changeReason ?? "",
+    masterSnapshot: toPositioningMasterSnapshotDto(row.masterSnapshot),
     createdAt: row.createdAt,
   };
 }

@@ -10,7 +10,7 @@
  *    on success a NEW immutable version row appears in the 历史版本 timeline
  *    (append-only — the prior 版本保留). `router.refresh()`.
  *
- * `PositioningDraftDialog` (「编辑定位」/「新建定位版本」/「复制为草稿」) houses both
+ * `PositioningDraftDialog` (「编辑定位」/「新建定位版本」/「复制定位陈述」) houses both
  * forms inside a CENTERED Dialog (max-w-3xl, 85vh, sticky footer). Tabs split the
  * 16 fields into three groups (账号画像 / 定位规则 / 定位陈述) so the form is no
  * longer one long column. The active tab drives which form the sticky 「保存」
@@ -179,6 +179,93 @@ export function ResetPositioningMasterButton() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export function RestorePositioningMasterButton({
+  statementId,
+  versionNumber,
+}: {
+  readonly statementId: string;
+  readonly versionNumber: number;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const restore = React.useCallback(() => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    void (async () => {
+      try {
+        await client.restorePositioningMaster({
+          params: undefined,
+          query: undefined,
+          body: { statementId },
+        });
+        setOpen(false);
+        router.refresh();
+      } catch (err) {
+        setError(describeUserError(err, "恢复定位母版失败，请重试。"));
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [busy, router, statementId]);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (busy) return;
+        setOpen(nextOpen);
+        if (!nextOpen) setError(null);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm">
+          <History />
+          恢复此版本
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        className="max-w-md"
+        showCloseButton={!busy}
+        onEscapeKeyDown={(event) => {
+          if (busy) event.preventDefault();
+        }}
+        onPointerDownOutside={(event) => {
+          if (busy) event.preventDefault();
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle>恢复 v{versionNumber} 为当前母版？</DialogTitle>
+          <DialogDescription>
+            画像、定位规则和定位陈述都会恢复，并生成一个新的当前版本。旧历史不会被修改。
+          </DialogDescription>
+        </DialogHeader>
+        {error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={busy}
+            onClick={() => setOpen(false)}
+          >
+            取消
+          </Button>
+          <Button type="button" disabled={busy} onClick={restore}>
+            {busy ? "正在恢复…" : "确认恢复"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -873,11 +960,27 @@ export function PositioningDraftDialog({
 }: PositioningDraftDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [tab, setTab] = React.useState<DraftTab>(initialTab);
-  const [savedProfile, setSavedProfile] =
-    React.useState<PositioningProfileDraft | null>(profile);
+  const profileRevision = profile?.updatedAt ?? "profile:none";
+  const [savedProfileState, setSavedProfileState] = React.useState<{
+    readonly sourceRevision: string;
+    readonly profile: PositioningProfileDraft | null;
+  }>({ sourceRevision: profileRevision, profile });
+  // RSC refresh 带来新版 profile 时直接采用新 prop；同一 revision 内的连续分 tab 保存
+  // 则保留本地刚保存值，避免隐藏表单的旧快照覆盖它。不需要 effect 同步派生 state。
+  const savedProfile =
+    savedProfileState.sourceRevision === profileRevision
+      ? savedProfileState.profile
+      : profile;
+  const setSavedProfile = React.useCallback(
+    (nextProfile: PositioningProfileDraft) =>
+      setSavedProfileState({
+        sourceRevision: profileRevision,
+        profile: nextProfile,
+      }),
+    [profileRevision],
+  );
   const close = React.useCallback(() => setOpen(false), []);
   const Icon = triggerIcon === "pencil" ? PencilLine : Plus;
-  React.useEffect(() => setSavedProfile(profile), [profile]);
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (nextOpen) setTab(initialTab);

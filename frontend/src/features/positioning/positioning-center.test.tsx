@@ -23,6 +23,7 @@ vi.mock("@/lib/contract-client", () => ({
   client: {
     upsertProfile: () => Promise.resolve({}),
     createStatement: () => Promise.resolve({}),
+    restorePositioningMaster: () => Promise.resolve({}),
     createAITask: () => Promise.resolve({ id: "t1" }),
     getTask: () => Promise.resolve({ status: "running" }),
     listTaskResults: () => Promise.resolve([]),
@@ -38,12 +39,28 @@ import type { PositioningCenterViewModel } from "./positioning-center";
 // header + 新建定位母版 trigger, the empty-state CTA, the 当前定位母版 英雄区
 // (一句话放大 + facet 网格 incl. product anchors), the AI 赋能带, the 下游影响
 // collapsible (real injected facets), and the version-desc history table with the
-// AI badge + 复制为草稿 action. Deterministic VM (no network).
+// AI badge + 完整母版恢复 / 旧版陈述复制 action. Deterministic VM (no network).
 
 afterEach(cleanup);
 
-const STATEMENT = (versionNumber: number, oneLiner: string, ai = false) => ({
+const STATEMENT = (
+  versionNumber: number,
+  oneLiner: string,
+  ai = false,
+  fullSnapshot = true,
+) => ({
   changeReason: "", // [T-234 读侧补] resource 新增字段,fixture 同步
+  masterSnapshot: fullSnapshot
+    ? {
+        persona: "硬核科普",
+        field: "AI 工程",
+        audience: "开发者",
+        differentiation: "论文到代码",
+        capabilities: ["拆解", "演示"],
+        facets: FACETS,
+        downstreamRules: RULES,
+      }
+    : null,
   id: `posstmt-${versionNumber}`,
   userId: "user-a",
   profileId: "profile-1",
@@ -208,14 +225,13 @@ describe("PositioningCenterView", () => {
     expect(screen.getByText("AI 建议")).toBeTruthy();
   });
 
-  it("offers a 复制为草稿 action per history row (createStatement seed) and NO 设为当前", () => {
+  it("有完整快照的历史行提供真实恢复，并且不篡改旧行为设为当前", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
-    expect(screen.getAllByRole("button", { name: "复制为草稿" }).length).toBe(2);
-    // statements are append-only — there is no real 设为当前 op, so no such button.
+    expect(screen.getAllByRole("button", { name: "恢复此版本" }).length).toBe(2);
     expect(screen.queryByRole("button", { name: "设为当前" })).toBeNull();
   });
 
-  it("[T-632] 重置为空白母版后，复制历史版本会直达所选陈述并完整预填", () => {
+  it("[T-632] 重置为空白母版后，完整历史走确认并调用真实恢复 operation", () => {
     const resetWithHistory: PositioningCenterViewModel = {
       ...POPULATED,
       profile: {
@@ -239,7 +255,23 @@ describe("PositioningCenterView", () => {
     };
     render(<PositioningCenterView viewModel={resetWithHistory} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "复制为草稿" }));
+    fireEvent.click(screen.getByRole("button", { name: "恢复此版本" }));
+    expect(
+      screen.getByRole("heading", { name: "恢复 v1 为当前母版？" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "确认恢复" }));
+  });
+
+  it("[T-632] 旧版无快照只显示诚实降级，并可复制定位陈述", () => {
+    const legacy: PositioningCenterViewModel = {
+      ...POPULATED,
+      history: [STATEMENT(1, "旧版只剩陈述", false, false)],
+    };
+    render(<PositioningCenterView viewModel={legacy} />);
+
+    expect(screen.getByText("旧版仅保留陈述")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "恢复此版本" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "复制定位陈述" }));
 
     expect(screen.getByRole("tab", { name: /定位陈述/ })).toHaveAttribute(
       "aria-selected",
@@ -247,7 +279,7 @@ describe("PositioningCenterView", () => {
     );
     expect(
       (screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value,
-    ).toBe("v1 重置前的历史定位");
+    ).toBe("旧版只剩陈述");
     expect((screen.getByLabelText("关键词 1") as HTMLInputElement).value).toBe(
       "论文",
     );

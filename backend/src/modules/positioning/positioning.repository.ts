@@ -1,4 +1,4 @@
-import { and, desc, eq, sql, type Db } from "@creatoros/backend";
+import { and, desc, eq, isNull, sql, type Db } from "@creatoros/backend";
 import {
   creatorProfiles,
   positioningStatements,
@@ -79,6 +79,23 @@ export interface InsertStatementInput {
   aiTaskId: string | null;
   // [T-231⑥] 修改原因(团队留痕);缺省/"" = 未填。行不可变,只在 INSERT 时写入。
   changeReason?: string;
+  masterSnapshot?: PositioningMasterSnapshotInput | null;
+}
+
+export interface PositioningMasterSnapshotInput {
+  persona: string;
+  field: string;
+  audience: string;
+  differentiation: string;
+  capabilities: string[];
+  facets: ProfileFacetsInput;
+  downstreamRules: ProfileDownstreamRulesInput;
+}
+
+export interface RestoreMasterResultRow {
+  profile: CreatorProfileRow;
+  statement: PositioningStatementRow;
+  restoredFromVersion: number;
 }
 
 export interface PositioningRepository {
@@ -90,7 +107,14 @@ export interface PositioningRepository {
   getProfile(): Promise<CreatorProfileRow | undefined>;
   insertProfile(input: InsertProfileInput): Promise<CreatorProfileRow>;
   updateProfileRow(input: UpdateProfileInput): Promise<CreatorProfileRow>;
-  resetProfileRow(profileId: string): Promise<CreatorProfileRow>;
+  archiveAndResetProfileRow(
+    profileId: string,
+    snapshot: PositioningMasterSnapshotInput,
+  ): Promise<CreatorProfileRow>;
+  restoreMasterFromStatement(
+    statementId: string,
+    snapshot: PositioningMasterSnapshotInput,
+  ): Promise<RestoreMasterResultRow>;
   clearStatusNoteIfMatches(
     profileId: string,
     expectedStatusNote: string,
@@ -118,6 +142,31 @@ export function createPositioningRepository(
   db: Db,
   deps: RepoDeps,
 ): PositioningRepository {
+  const snapshotFromProfileRow = (
+    row: CreatorProfileRow,
+  ): PositioningMasterSnapshotInput => ({
+    persona: row.persona,
+    field: row.field,
+    audience: row.audience,
+    differentiation: row.differentiation,
+    capabilities: (row.capabilities ?? []) as string[],
+    facets: (row.facets ?? {}) as ProfileFacetsInput,
+    downstreamRules: (row.downstreamRules ?? {}) as ProfileDownstreamRulesInput,
+  });
+  const canonicalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonicalize);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([key, child]) => [key, canonicalize(child)]),
+      );
+    }
+    return value;
+  };
+  const sameSnapshot = (left: unknown, right: unknown): boolean =>
+    JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
+
   return {
     async seedProfiles(rows) {
       if (rows.length === 0) return;
@@ -190,57 +239,281 @@ export function createPositioningRepository(
       return updated[0]!;
     },
 
-    async resetProfileRow(profileId) {
-      // 一个 UPDATE 同时清空可变母版并把当前最大不可变版本记为 floor，避免“先读 max、
-      // 再更新 profile”之间插入新版本造成竞态。
-      const versionFloor = sql<number>`COALESCE((
-        SELECT MAX(${positioningStatements.versionNumber})
-        FROM ${positioningStatements}
-        WHERE ${positioningStatements.userId} = ${deps.userId}
-          AND ${positioningStatements.accountId} = ${deps.accountId}
-          AND ${positioningStatements.profileId} = ${profileId}
-      ), 0)`;
-      const updated = await db
-        .update(creatorProfiles)
-        .set({
-          persona: "",
-          field: "",
-          audience: "",
-          differentiation: "",
-          capabilities: [],
-          facets: {
-            contentScope: "",
-            avoid: "",
-            corePain: "",
-            coreValue: "",
-            tone: "",
-            statusNote: "",
-          },
-          downstreamRules: {
-            topicRule: "",
-            scriptRule: "",
-            projectRule: "",
-            forbidRule: "",
-            expressionRule: "",
-          },
-          statementVersionFloor: versionFloor,
-          updatedAt: deps.now(),
-        })
-        .where(
-          and(
-            eq(creatorProfiles.id, profileId),
-            eq(creatorProfiles.userId, deps.userId),
-            eq(creatorProfiles.accountId, deps.accountId),
-          ),
-        )
-        .returning();
-      const row = updated[0];
-      if (!row) {
-        throw new OwnershipError(
-          `OwnershipError: creator profile not found: ${profileId}`,
-        );
-      }
-      return row;
+    async archiveAndResetProfileRow(profileId, snapshot) {
+      return db.transaction(async (tx) => {
+        const profileRows = await tx
+          .select()
+          .from(creatorProfiles)
+          .where(
+            and(
+              eq(creatorProfiles.id, profileId),
+              eq(creatorProfiles.userId, deps.userId),
+              eq(creatorProfiles.accountId, deps.accountId),
+            ),
+          );
+        const profile = profileRows[0];
+        if (!profile) {
+          throw new OwnershipError(
+            `OwnershipError: creator profile not found: ${profileId}`,
+          );
+        }
+
+        const currentRows = await tx
+          .select()
+          .from(positioningStatements)
+          .where(
+            and(
+              eq(positioningStatements.userId, deps.userId),
+              eq(positioningStatements.accountId, deps.accountId),
+              eq(positioningStatements.profileId, profileId),
+              sql`${positioningStatements.versionNumber} > ${profile.statementVersionFloor}`,
+            ),
+          )
+          .orderBy(desc(positioningStatements.versionNumber))
+          .limit(1);
+        const current = currentRows[0];
+        if (current) {
+          if (current.masterSnapshot == null) {
+            // 只写一次补齐旧版元数据；不改陈述正文、关键词、锚点或版本号。
+            await tx
+              .update(positioningStatements)
+              .set({ masterSnapshot: snapshot })
+              .where(
+                and(
+                  eq(positioningStatements.id, current.id),
+                  eq(positioningStatements.userId, deps.userId),
+                  eq(positioningStatements.accountId, deps.accountId),
+                  isNull(positioningStatements.masterSnapshot),
+                ),
+              );
+          } else if (!sameSnapshot(current.masterSnapshot, snapshot)) {
+            // 陈述保存后 profile 又被编辑：追加一条重置前备份，绝不改写旧版本的历史含义。
+            const maxRows = await tx
+              .select({ versionNumber: positioningStatements.versionNumber })
+              .from(positioningStatements)
+              .where(
+                and(
+                  eq(positioningStatements.userId, deps.userId),
+                  eq(positioningStatements.accountId, deps.accountId),
+                  eq(positioningStatements.profileId, profileId),
+                ),
+              )
+              .orderBy(desc(positioningStatements.versionNumber))
+              .limit(1);
+            await tx.insert(positioningStatements).values({
+              id: deps.nextId("posstmt"),
+              userId: deps.userId,
+              accountId: deps.accountId,
+              profileId,
+              oneLiner: current.oneLiner,
+              keywords: current.keywords,
+              productAnchorIds: current.productAnchorIds,
+              versionNumber: (maxRows[0]?.versionNumber ?? 0) + 1,
+              createdByType: "human",
+              aiTaskId: null,
+              changeReason: `重置前自动备份（基于 v${current.versionNumber}）`,
+              masterSnapshot: snapshot,
+              createdAt: deps.now(),
+            });
+          }
+        }
+
+        // 在同一事务中推进 floor，保证刚补的快照/备份也被划入旧母版历史。
+        const versionFloor = sql<number>`COALESCE((
+          SELECT MAX(${positioningStatements.versionNumber})
+          FROM ${positioningStatements}
+          WHERE ${positioningStatements.userId} = ${deps.userId}
+            AND ${positioningStatements.accountId} = ${deps.accountId}
+            AND ${positioningStatements.profileId} = ${profileId}
+        ), 0)`;
+        const updated = await tx
+          .update(creatorProfiles)
+          .set({
+            persona: "",
+            field: "",
+            audience: "",
+            differentiation: "",
+            capabilities: [],
+            facets: {
+              contentScope: "",
+              avoid: "",
+              corePain: "",
+              coreValue: "",
+              tone: "",
+              statusNote: "",
+            },
+            downstreamRules: {
+              topicRule: "",
+              scriptRule: "",
+              projectRule: "",
+              forbidRule: "",
+              expressionRule: "",
+            },
+            statementVersionFloor: versionFloor,
+            updatedAt: deps.now(),
+          })
+          .where(
+            and(
+              eq(creatorProfiles.id, profileId),
+              eq(creatorProfiles.userId, deps.userId),
+              eq(creatorProfiles.accountId, deps.accountId),
+            ),
+          )
+          .returning();
+        return updated[0]!;
+      });
+    },
+
+    async restoreMasterFromStatement(statementId, snapshot) {
+      return db.transaction(async (tx) => {
+        const sourceRows = await tx
+          .select()
+          .from(positioningStatements)
+          .where(
+            and(
+              eq(positioningStatements.id, statementId),
+              eq(positioningStatements.userId, deps.userId),
+              eq(positioningStatements.accountId, deps.accountId),
+            ),
+          );
+        const source = sourceRows[0];
+        if (!source) {
+          throw new OwnershipError(
+            `OwnershipError: positioning statement not found: ${statementId}`,
+          );
+        }
+        const profileRows = await tx
+          .select()
+          .from(creatorProfiles)
+          .where(
+            and(
+              eq(creatorProfiles.id, source.profileId),
+              eq(creatorProfiles.userId, deps.userId),
+              eq(creatorProfiles.accountId, deps.accountId),
+            ),
+          );
+        const profile = profileRows[0];
+        if (!profile) {
+          throw new OwnershipError(
+            `OwnershipError: creator profile not found: ${source.profileId}`,
+          );
+        }
+
+        // 恢复前先保护当前真实母版；用户随后仍可从历史撤回这次恢复。
+        const currentRows = await tx
+          .select()
+          .from(positioningStatements)
+          .where(
+            and(
+              eq(positioningStatements.userId, deps.userId),
+              eq(positioningStatements.accountId, deps.accountId),
+              eq(positioningStatements.profileId, profile.id),
+              sql`${positioningStatements.versionNumber} > ${profile.statementVersionFloor}`,
+            ),
+          )
+          .orderBy(desc(positioningStatements.versionNumber))
+          .limit(1);
+        const current = currentRows[0];
+        const currentSnapshot = snapshotFromProfileRow(profile);
+        if (current?.masterSnapshot == null && current) {
+          await tx
+            .update(positioningStatements)
+            .set({ masterSnapshot: currentSnapshot })
+            .where(
+              and(
+                eq(positioningStatements.id, current.id),
+                isNull(positioningStatements.masterSnapshot),
+              ),
+            );
+        } else if (
+          current &&
+          !sameSnapshot(current.masterSnapshot, currentSnapshot)
+        ) {
+          const maxRows = await tx
+            .select({ versionNumber: positioningStatements.versionNumber })
+            .from(positioningStatements)
+            .where(
+              and(
+                eq(positioningStatements.userId, deps.userId),
+                eq(positioningStatements.accountId, deps.accountId),
+                eq(positioningStatements.profileId, profile.id),
+              ),
+            )
+            .orderBy(desc(positioningStatements.versionNumber))
+            .limit(1);
+          await tx.insert(positioningStatements).values({
+            id: deps.nextId("posstmt"),
+            userId: deps.userId,
+            accountId: deps.accountId,
+            profileId: profile.id,
+            oneLiner: current.oneLiner,
+            keywords: current.keywords,
+            productAnchorIds: current.productAnchorIds,
+            versionNumber: (maxRows[0]?.versionNumber ?? 0) + 1,
+            createdByType: "human",
+            aiTaskId: null,
+            changeReason: `恢复前自动备份（基于 v${current.versionNumber}）`,
+            masterSnapshot: currentSnapshot,
+            createdAt: deps.now(),
+          });
+        }
+
+        const maxRows = await tx
+          .select({ versionNumber: positioningStatements.versionNumber })
+          .from(positioningStatements)
+          .where(
+            and(
+              eq(positioningStatements.userId, deps.userId),
+              eq(positioningStatements.accountId, deps.accountId),
+              eq(positioningStatements.profileId, profile.id),
+            ),
+          )
+          .orderBy(desc(positioningStatements.versionNumber))
+          .limit(1);
+        const restoredProfiles = await tx
+          .update(creatorProfiles)
+          .set({
+            persona: snapshot.persona,
+            field: snapshot.field,
+            audience: snapshot.audience,
+            differentiation: snapshot.differentiation,
+            capabilities: snapshot.capabilities,
+            facets: snapshot.facets,
+            downstreamRules: snapshot.downstreamRules,
+            updatedAt: deps.now(),
+          })
+          .where(
+            and(
+              eq(creatorProfiles.id, profile.id),
+              eq(creatorProfiles.userId, deps.userId),
+              eq(creatorProfiles.accountId, deps.accountId),
+            ),
+          )
+          .returning();
+        const restoredStatements = await tx
+          .insert(positioningStatements)
+          .values({
+            id: deps.nextId("posstmt"),
+            userId: deps.userId,
+            accountId: deps.accountId,
+            profileId: profile.id,
+            oneLiner: source.oneLiner,
+            keywords: source.keywords,
+            productAnchorIds: source.productAnchorIds,
+            versionNumber: (maxRows[0]?.versionNumber ?? 0) + 1,
+            createdByType: "human",
+            aiTaskId: null,
+            changeReason: `恢复自 v${source.versionNumber}`,
+            masterSnapshot: snapshot,
+            createdAt: deps.now(),
+          })
+          .returning();
+        return {
+          profile: restoredProfiles[0]!,
+          statement: restoredStatements[0]!,
+          restoredFromVersion: source.versionNumber,
+        };
+      });
     },
 
     async clearStatusNoteIfMatches(profileId, expectedStatusNote) {
@@ -354,6 +627,7 @@ export function createPositioningRepository(
           aiTaskId: input.aiTaskId,
           // [T-231⑥] 修改原因留痕落列(缺省 = "" 未填)。
           changeReason: input.changeReason ?? "",
+          masterSnapshot: input.masterSnapshot ?? null,
           createdAt: deps.now(),
         })
         .returning();

@@ -10,6 +10,8 @@ import {
   toCreatorProfileDto,
   toPositioningStatementDto,
   type CreatorProfileResource,
+  type PositioningMasterSnapshotResource,
+  type PositioningMasterRestoreResultResource,
   type PositioningStatementResource,
   type PositioningGateResultResource,
   type PositioningCenterResource,
@@ -18,6 +20,7 @@ import {
   ProfileRequiredError,
   GateSubjectError,
   StatementValidationError,
+  MasterSnapshotUnavailableError,
 } from "./positioning.errors";
 
 // Positioning service (foundation §5.3) — every public method takes
@@ -133,6 +136,10 @@ export interface PositioningService {
     input: UpsertProfileInput,
   ): Promise<CreatorProfileResource>;
   resetMaster(ctx: RequestContext): Promise<CreatorProfileResource>;
+  restoreMaster(
+    ctx: RequestContext,
+    statementId: string,
+  ): Promise<PositioningMasterRestoreResultResource>;
   // Append-only version chain. Requires a profile (ProfileRequiredError). The AI
   // confirm formalize (C-3) calls this with createdByType:"ai" + aiTaskId.
   createStatementVersion(
@@ -305,6 +312,20 @@ export function createPositioningService(
     return { profileId: profile.id };
   }
 
+  function snapshotFromProfile(
+    profile: CreatorProfileResource,
+  ): PositioningMasterSnapshotResource {
+    return {
+      persona: profile.persona,
+      field: profile.field,
+      audience: profile.audience,
+      differentiation: profile.differentiation,
+      capabilities: [...profile.capabilities],
+      facets: { ...profile.facets },
+      downstreamRules: { ...profile.downstreamRules },
+    };
+  }
+
   return {
     async upsertProfile(ctx, input) {
       const repo = repoFor(ctx, "positioning.upsertProfile");
@@ -384,12 +405,42 @@ export function createPositioningService(
         });
         return toCreatorProfileDto(row);
       }
-      return toCreatorProfileDto(await repo.resetProfileRow(existing.id));
+      const snapshot = snapshotFromProfile(toCreatorProfileDto(existing));
+      return toCreatorProfileDto(
+        await repo.archiveAndResetProfileRow(existing.id, snapshot),
+      );
+    },
+
+    async restoreMaster(ctx, statementId) {
+      const repo = repoFor(ctx, "positioning.restoreMaster");
+      const source = toPositioningStatementDto(
+        await repo.getStatement(statementId),
+      );
+      if (!source.masterSnapshot) {
+        throw new MasterSnapshotUnavailableError(
+          "这个历史版本来自旧版，只保存了定位陈述，无法恢复已经缺失的画像和规则。",
+        );
+      }
+      const restored = await repo.restoreMasterFromStatement(
+        statementId,
+        source.masterSnapshot,
+      );
+      return {
+        profile: toCreatorProfileDto(restored.profile),
+        statement: toPositioningStatementDto(restored.statement),
+        restoredFromVersion: restored.restoredFromVersion,
+      };
     },
 
     async createStatementVersion(ctx, input) {
       const repo = repoFor(ctx, "positioning.createStatementVersion");
       const { profileId } = await requireProfileId(repo);
+      const profileRow = await repo.getProfile();
+      if (!profileRow) {
+        throw new ProfileRequiredError(
+          "ProfileRequiredError: a CreatorProfile is required before a positioning statement",
+        );
+      }
 
       if (input.keywords.length !== 3) {
         throw new StatementValidationError(
@@ -410,6 +461,7 @@ export function createPositioningService(
         aiTaskId: input.aiTaskId ?? null,
         // [T-231⑥] 修改原因留痕(trim 后落库;未填 = "" 诚实表示"没写原因")。
         changeReason: (input.changeReason ?? "").trim(),
+        masterSnapshot: snapshotFromProfile(toCreatorProfileDto(profileRow)),
       });
       return toPositioningStatementDto(row);
     },

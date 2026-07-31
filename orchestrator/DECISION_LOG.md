@@ -45,6 +45,27 @@ Status: active
 ```
 
 ```text
+ID: DEC-POS-632
+Date: 2026-07-31
+Stage: T-632 BUILD remediation
+Type: user-confirmed-data-semantics-correction
+Decision: “定位版本”必须可恢复完整母版，不再把只有一句话/关键词/产品锚的
+          positioning_statements 冒充完整历史。新增只写一次的 masterSnapshot；重置前保存当前
+          画像、facets、五类规则与陈述；恢复通过 backend 事务回写 profile 并追加新陈述版本，
+          不修改旧历史。旧版确实没有快照的记录只提供“复制定位陈述”并明确缺失边界。
+Rationale: 当前 reset 会物理清空唯一可变 creator_profiles，而历史行没有画像/规则，导致用户
+           点击旧版本后表单仍为空，属于写真读空和潜在数据丢失。用户明确要求旧版本可恢复。
+Pattern-Ref: PAT-002（RF-001 跨 profile/statement 原子恢复；RF-002 用户定位需重启留存；
+             RF-004 正规 migration）。
+Affected Artifacts: positioning resource/operation、0065 migration、positioning repository/service/
+                    transport、定位中心历史交互、T-632 SPEC/Gate/测试。
+Explicit Limits: 不覆盖或删除历史陈述；不伪造旧版缺失的画像/规则；不新增第二套定位模块；
+                 AI 仍不直接写库。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-LEARNING-001
 Date: 2026-07-29
 Stage: T-610 BUILD

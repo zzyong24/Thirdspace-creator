@@ -160,6 +160,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/positioning/profile"],
   ["POST", "/positioning/profile"],
   ["POST", "/positioning/master/reset"],
+  ["POST", "/positioning/master/restore"],
   ["GET", "/positioning/statements"],
   ["POST", "/positioning/statements"],
   ["GET", "/positioning/statements/:statementId"],

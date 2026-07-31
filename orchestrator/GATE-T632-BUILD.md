@@ -53,6 +53,32 @@
 2. 内容雷达手动提取逐字稿时，日志出现四段耗时；不可用作品不再让后续任务额外等待
    2 分钟冷却。
 
+## 2026-07-31 历史母版恢复缺陷修订
+
+用户真机再次验证后确认：旧“复制为草稿”只恢复定位陈述，账号画像与定位规则仍取已经被
+reset 清空的 current profile，因此并不是完整母版恢复。上文“旧定位丢失的错觉”结论被本节
+纠正，保留作为失败历史，不再作为当前验收结论。
+
+- `positioning_statements.master_snapshot` 通过 0065 migration 保存画像、capabilities、facets、
+  五类规则；新建陈述时和陈述一起落库。
+- 第一次升级后 reset 遇到旧版当前 statement，会在清空前以真实 current profile 只写一次补齐
+  快照；若 statement 保存后 profile 又被编辑，则追加“重置前自动备份”，不改旧版本含义。
+- `positioning.master.restore` 在事务中保护恢复前当前母版、回写完整 profile，并复制源陈述为新的
+  递增版本。跨账号 id 按 404 隔离。
+- 已被旧安装包清空且从未有快照的记录无法反推画像/规则，UI 只显示“旧版仅保留陈述 / 复制定位
+  陈述”，不再提供假“恢复”。
+
+本轮新增证据：
+
+- backend positioning service/contract/repository：3 files / 36 tests PASS；其中 service 21 tests
+  覆盖完整恢复、编辑后自动备份、旧版升级前补快照、旧版缺失拒绝假恢复与跨账号隔离。
+- contract 全量：27 files / 147 tests PASS；endpoint registry 已登记 restore。
+- frontend positioning：2 files / 23 tests PASS；覆盖确认恢复和旧版诚实降级。
+- contract/backend/frontend typecheck：PASS；目标 ESLint 0 errors（保留页面既有 canonical client
+  import warning 1 条）；boundary 无新增，orphan-scan 0 errors，`git diff --check` PASS。
+
+本节仍没有冒充安装包真机点击证据；按用户要求不重复构建，等全部问题收口后统一打包验收。
+
 ## 2026-07-30 本地新包验证
 
 - 基于功能提交 `9f13f001` 完成 `pnpm desktop:package`，版本

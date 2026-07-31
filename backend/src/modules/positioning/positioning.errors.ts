@@ -51,3 +51,11 @@ export class StatementValidationError extends Error {
     this.name = "StatementValidationError";
   }
 }
+
+export class MasterSnapshotUnavailableError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  constructor(message: string) {
+    super(message);
+    this.name = "MasterSnapshotUnavailableError";
+  }
+}

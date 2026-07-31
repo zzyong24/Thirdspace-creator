@@ -22,6 +22,9 @@ const mockClient = {
   resetPositioningMaster: vi.fn(
     (input: unknown): Promise<unknown> => Promise.resolve(input),
   ),
+  restorePositioningMaster: vi.fn(
+    (input: unknown): Promise<unknown> => Promise.resolve(input),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -29,6 +32,8 @@ vi.mock("@/lib/contract-client", () => ({
     createStatement: (input: unknown) => mockClient.createStatement(input),
     resetPositioningMaster: (input: unknown) =>
       mockClient.resetPositioningMaster(input),
+    restorePositioningMaster: (input: unknown) =>
+      mockClient.restorePositioningMaster(input),
   },
 }));
 
@@ -36,6 +41,7 @@ import {
   PositioningDraftDrawer,
   PositioningProfileForm,
   ResetPositioningMasterButton,
+  RestorePositioningMasterButton,
   PositioningStatementForm,
 } from "./positioning-interactive-region";
 
@@ -45,6 +51,7 @@ beforeEach(() => {
   mockClient.upsertProfile.mockClear();
   mockClient.createStatement.mockClear();
   mockClient.resetPositioningMaster.mockClear();
+  mockClient.restorePositioningMaster.mockClear();
 });
 afterEach(cleanup);
 
@@ -372,5 +379,33 @@ describe("ResetPositioningMasterButton", () => {
       screen.getByRole("button", { name: "清空并新建" }),
     ).toBeEnabled();
     expect(mockRouter.push).not.toHaveBeenCalled();
+  });
+});
+
+describe("RestorePositioningMasterButton", () => {
+  it("确认后调用完整母版恢复并刷新，取消不写入", async () => {
+    render(
+      <RestorePositioningMasterButton
+        statementId="posstmt-old"
+        versionNumber={3}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "恢复此版本" }));
+    expect(
+      screen.getByRole("heading", { name: "恢复 v3 为当前母版？" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    expect(mockClient.restorePositioningMaster).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "恢复此版本" }));
+    fireEvent.click(screen.getByRole("button", { name: "确认恢复" }));
+    await waitFor(() =>
+      expect(mockClient.restorePositioningMaster).toHaveBeenCalledWith({
+        params: undefined,
+        query: undefined,
+        body: { statementId: "posstmt-old" },
+      }),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
   });
 });

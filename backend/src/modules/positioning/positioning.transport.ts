@@ -6,7 +6,7 @@ import {
 } from "./positioning.errors";
 import type { PositioningService } from "./positioning.service";
 
-// Positioning transport (foundation §5.4) — the module's 8 contract ops served over
+// Positioning transport (foundation §5.4) — the module's 9 contract ops served over
 // REAL SQL behind the same /api/v1/dispatch route. Mirrors the realized learnings
 // transport: a `Transport` whose request(endpoint,input,ctx) switches on
 // endpoint.id, threads ctx into the service, and returns the SPEC §14 envelope
@@ -29,6 +29,7 @@ export const POSITIONING_OP_IDS = [
   "positioning.profile.get",
   "positioning.profile.upsert",
   "positioning.master.reset",
+  "positioning.master.restore",
   "positioning.statements.list",
   "positioning.statements.create",
   "positioning.statements.get",
@@ -85,6 +86,14 @@ export function createPositioningTransport(
         case "positioning.master.reset": {
           const profile = await service.resetMaster(ctx);
           return { data: profile, meta: { requestId } };
+        }
+        case "positioning.master.restore": {
+          const b = (body ?? {}) as { statementId?: string };
+          const restored = await service.restoreMaster(
+            ctx,
+            b.statementId ?? "",
+          );
+          return { data: restored, meta: { requestId } };
         }
         case "positioning.statements.list": {
           const q = (query ?? {}) as { page?: number; pageSize?: number };
