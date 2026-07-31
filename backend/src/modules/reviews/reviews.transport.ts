@@ -23,6 +23,7 @@ export const REVIEWS_OP_IDS = [
   "reviews.create",
   "reviews.list",
   "reviews.get",
+  "reviews.insights.list",
   "reviews.insights.create",
   "reviews.complete",
 ] as const;
@@ -73,6 +74,21 @@ export function createReviewsTransport(
         case "reviews.get": {
           const review = await service.getReview(ctx, p.reviewId ?? "");
           return { data: review, meta: { requestId } };
+        }
+        case "reviews.insights.list": {
+          const insights = await service.listReviewInsights(
+            ctx,
+            p.reviewId ?? "",
+          );
+          return {
+            data: insights,
+            meta: {
+              requestId,
+              page: 1,
+              pageSize: Math.max(1, insights.length),
+              total: insights.length,
+            },
+          };
         }
         case "reviews.insights.create": {
           const b = (body ?? {}) as {

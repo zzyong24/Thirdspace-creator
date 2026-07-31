@@ -141,12 +141,13 @@ describe("reviews acceptance (SPEC §22)", () => {
     expect(typeof service.listCompletedReviewInsights).toBe("function");
   });
 
-  it("registers the five owned ops into the module op-id list", () => {
+  it("registers the six owned ops into the module op-id list", () => {
     expect([...REVIEWS_OP_IDS].sort()).toEqual([
       "reviews.complete",
       "reviews.create",
       "reviews.get",
       "reviews.insights.create",
+      "reviews.insights.list",
       // [T-053 断点③] 复盘记录列表读 op(复盘页「复盘记录」区)。
       "reviews.list",
     ]);

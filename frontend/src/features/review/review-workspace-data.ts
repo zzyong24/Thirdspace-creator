@@ -296,15 +296,22 @@ async function readReviewHistory(
       body: undefined,
     });
     const rows = (Array.isArray(listed) ? listed : []) as ReviewRowDto[];
-    return rows.map((r) => ({
-      id: r.id,
-      title: `${r.reviewType === "project" ? "项目复盘" : "作品复盘"} · ${r.periodStart.slice(0, 10)} ~ ${r.periodEnd.slice(0, 10)}`,
-      completedAt: r.completedAt ?? r.createdAt,
-      tone: r.status === "completed" ? ("positive" as const) : ("neutral" as const),
-      // [T-329] 状态透传:复盘编辑面板据此接管「进行中」的复盘(刷新后继续记洞察,
-      // 不再另起新复盘)。
-      status: r.status,
-    }));
+    return [...rows]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((r) => ({
+        id: r.id,
+        title: r.reviewType === "project" ? "项目复盘" : "作品复盘",
+        completedAt: r.completedAt ?? r.createdAt,
+        periodStart: r.periodStart,
+        periodEnd: r.periodEnd,
+        tone:
+          r.status === "completed"
+            ? ("positive" as const)
+            : ("neutral" as const),
+        // [T-329] 状态透传:复盘编辑面板据此接管「进行中」的复盘(刷新后继续记洞察,
+        // 不再另起新复盘)。
+        status: r.status,
+      }));
   } catch (err) {
     // [T-356④] 读失败仍诚实空,但**必须留痕**:此前静默吞掉 envelope ZodError,让
     // 「transport 漏 listMeta → 复盘记录永远空」这类结构性 bug 无声潜伏(用户以为没写进去)。

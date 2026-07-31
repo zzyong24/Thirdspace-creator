@@ -5,8 +5,7 @@
 // + op-id list the composite merges, REVIEWS_DDL, the contract DTOs, and the error
 // classes the dispatch route maps.
 //
-// Reviews owns the four contract ops (reviews.create / reviews.get /
-// reviews.insights.create / reviews.complete). Cross-module reads (project/output
+// Reviews owns the review + insight read/write contract ops. Cross-module reads (project/output
 // ownership, publishing window, analytics evidence) + the activity append reach
 // peers ONLY through the injected ports (no cross-module repository import, SPEC
 // §22). listCompletedReviewInsights is the G14 Learnings / G15 AI bridge read —

@@ -232,13 +232,11 @@
 | 右栏 AI 洞察 InsightCard | 展示 | 无 | ✅真(`learnings.list`,validated 优先,真项目空则空卡) | 空态有 | ✅真实 |
 | AI 复盘「帮我复盘」 | AI 触发 | `ai.tasks` review.analyze → 候选 | 真 | AdoptCandidateCard 自带态 | ✅真实 |
 | 复盘 采纳 | 采纳 | 采纳→Learnings(回喂选题) | 真 | — | ✅真实 |
-| 复盘编辑 开始复盘 | 按钮 | `reviews.create {project}` → refresh | reviewsWiring 真 / 无则 inert | — | ✅真实 |
-| 复盘编辑 类型 select + 标题/说明 + 添加洞察 | 输入/按钮 | `reviews.insights.create` → refresh | 真(需先 开始复盘) | 标题空 no-op | ✅真实 |
-| 完成复盘 | 按钮 | `reviews.complete` → refresh | 真 | — | ✅真实 |
-| 添加发布 / 生成复盘报告 | 按钮 | `data-inert="decorative"` disabled | 无(未来波次) | — | ❌未实现(故意) |
-| 复盘记录 行选中 | 行 | `reviews.get` 读详情(只读,不 refresh) | 列表 fixture reviewHistory；点开详情真 | 详情 panel 条件渲染 | ⚠️部分(列表桩,详情真) |
+| 复盘编辑 类型 + 标题/说明 + 添加洞察 | 输入/按钮 | 无进行中复盘时链式 `reviews.create` → `reviews.insights.create` → refresh；否则复用进行中复盘 | 手动洞察真存 `review_insights`，界面明示属于本次复盘、不会直接进知识库 | 标题空内联报错；保存中/成功/失败均可见 | ✅真实 |
+| 完成复盘 | 按钮 | `reviews.complete` → refresh | 真；完成后引导用「帮我复盘」提炼经验，采纳后进入知识库 | 无洞察时禁用并明示原因 | ✅真实 |
+| 复盘记录 行展开 | 语义按钮 | `reviews.get` + `reviews.insights.list` 并行读取；再次点击收起 | `reviews.list` 真列表；展开区真显示本次手动洞察 | 加载/失败/无洞察都有就地反馈；时间按本机时区格式化 | ✅真实 |
 
-**缺口**: 整体表现(指标卡/漏斗/趋势)+右栏(洞察/复盘 CRUD/AI 复盘)是真的；但 7 个 tab 共用一套布局只换时间窗——平台/内容维度无数据,收益/对比 tab 完全未实现(monetization 模块未接入),观众三图+关键时刻+热门作品全 fixture,经验沉淀 tab 无专属内容(经验实际在右栏)。
+**数据归属**:手动录入的是“本次复盘洞察”，存入 `review_insights` 并随复盘记录读取；它不是长期知识。长期经验由「帮我复盘」产候选，用户采纳后进入知识库经验区，避免未经验证的随手记录污染后续生成。
 ## Knowledge & Memory 知识库 (`/knowledge`)
 **数据入口**: `buildKnowledgeDashboardViewModel()` (server) → `knowledge.list` (real, page1/pageSize200) + `knowledge.relations.list` (fan-out per item); 写侧 `knowledge.create` / `knowledge.revisions.create`. 洞察栏/图谱来自 fixture `buildKnowledgeViewModel()`.
 
@@ -1717,3 +1715,77 @@
 | AST-1 | 用料历史(materialLinks.list,选项B待op)、存储已用近似 | 字节上传/下载、收藏、存储总量 |
 
 **重活一律标规划中**：文件字节存储/下载、视频剪辑与媒体管线、真实对象存储、账户删除 REST、跨项目任务聚合、后端 facet 聚合。
+
+---
+
+## T-634 项目复盘记录交互契约
+
+大白话：手动录入的洞察先跟着“这一次复盘”保存，用户可以随时从复盘记录里重新打开查看；
+它不会绕过采纳动作直接进入知识库。用户完成复盘后，可继续用「帮我复盘」提炼经验，
+采纳后的经验才进入知识库。
+
+```frontend-journey-contract
+{
+  "schema": "frontend-journey-contract/v1",
+  "task_id": "T-634",
+  "required_checks": [
+    {
+      "id": "AC-REVIEW-HISTORY-TRIGGER",
+      "test_id": "E2E-REVIEW-HISTORY-01"
+    },
+    {
+      "id": "AC-REVIEW-HISTORY-INSIGHTS",
+      "test_id": "E2E-REVIEW-HISTORY-01"
+    },
+    {
+      "id": "AC-REVIEW-HISTORY-TIME",
+      "test_id": "E2E-REVIEW-HISTORY-01"
+    },
+    {
+      "id": "AC-REVIEW-HISTORY-NARROW",
+      "test_id": "E2E-REVIEW-HISTORY-01"
+    }
+  ],
+  "required_conditions": [
+    "loading",
+    "empty",
+    "error",
+    "refresh",
+    "repeat"
+  ],
+  "watched_paths": [
+    "contract/src/operations/reviews.ts",
+    "contract/tests/registry.test.ts",
+    "backend/src/modules/reviews",
+    "frontend/src/features/review",
+    "frontend/src/lib/date-time.ts",
+    "frontend/tests/e2e/review-history.spec.ts",
+    "frontend/playwright.config.ts",
+    "frontend/specs/INTERACTION_SPEC.md"
+  ],
+  "viewports": [
+    {
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "width": 1024,
+      "height": 768
+    }
+  ],
+  "coherence_groups": []
+}
+```
+
+| 用户动作 | 立即反馈 | 稳定结果 |
+|---|---|---|
+| 添加手动洞察 | 按钮进入保存态；成功提示其保存位置 | 洞察进入当前 `review_insights`，刷新后仍在 |
+| 完成复盘 | 完成按钮进入提交态 | 当前复盘变为已完成，历史列表按最新优先显示 |
+| 点击历史记录 | 条目展开并显示加载态；失败原位可重试 | 展示该复盘真实周期、状态和全部洞察 |
+| 再点当前记录 | 箭头与 `aria-expanded` 同步收起 | 不跳页、不丢编辑区上下文 |
+
+时间规则：
+
+- 复盘周期是日历日期，保留服务端年月日，不能因为电脑时区变化而前后错一天；
+- 完成时间隐藏秒和原始 ISO/UTC 字符串，页面接管后按用户电脑本地时区显示；
+- 服务端首屏和浏览器水合必须使用同一稳定文本，禁止 hydration mismatch。

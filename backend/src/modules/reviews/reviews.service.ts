@@ -85,6 +85,10 @@ export interface ReviewsService {
   getReview(ctx: RequestContext, reviewId: string): Promise<ReviewResource>;
   // [T-053 断点③] 项目复盘记录列表(复盘页「复盘记录」区读真)。
   listReviews(ctx: RequestContext, projectId: string): Promise<ReviewResource[]>;
+  listReviewInsights(
+    ctx: RequestContext,
+    reviewId: string,
+  ): Promise<ReviewInsightResource[]>;
   createInsight(
     ctx: RequestContext,
     reviewId: string,
@@ -197,6 +201,13 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
       await projects.verifyProjectOwned(ctx, projectId);
       const rows = await repoFor(ctx, "reviews.listReviews").listReviewsByProject(projectId);
       return rows.map(toReviewDto);
+    },
+
+    async listReviewInsights(ctx, reviewId) {
+      const repo = repoFor(ctx, "reviews.listReviewInsights");
+      await repo.getReview(reviewId);
+      const rows = await repo.listInsights(reviewId);
+      return rows.map(toReviewInsightDto);
     },
 
     async createInsight(ctx, reviewId, body) {

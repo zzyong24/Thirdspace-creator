@@ -546,6 +546,9 @@ export interface AnalyticsViewModel extends BasePageViewModel {
     readonly title: string;
     readonly completedAt: Iso8601;
     readonly tone: "positive" | "warning" | "neutral";
+    /** 由客户端按用户本机时区格式化，避免 SSR 与 WebView 时区不一致。 */
+    readonly periodStart?: Iso8601;
+    readonly periodEnd?: Iso8601;
     /**
      * [T-329] 复盘状态(reviewResource.status:in_progress / completed / abandoned)。
      * 可选 additive:复盘编辑面板据此接管「进行中」的复盘(刷新后不再另起新复盘)。

@@ -31,6 +31,11 @@ import { useRouter } from "next/navigation";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import {
+  formatCalendarDateRange,
+  formatLocalDateTime,
+  formatUtcDateTime,
+} from "@/lib/date-time";
 import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
 import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-chart";
 import { EmptyState } from "@/components/state/page-state";
@@ -91,6 +96,36 @@ interface ReviewDto {
   readonly completedAt: string | null;
 }
 
+interface ReviewInsightDto {
+  readonly id: string;
+  readonly reviewId: string;
+  readonly insightType: "success" | "issue" | "action" | "hypothesis";
+  readonly title: string;
+  readonly description: string;
+  readonly priority: number;
+}
+
+interface ReviewDetailDto extends ReviewDto {
+  readonly insights: ReadonlyArray<ReviewInsightDto>;
+}
+
+const subscribeHydration = () => () => {};
+const isHydrated = () => true;
+const isServerRendering = () => false;
+
+function LocalDateTime({ value }: { value: string }) {
+  const hydrated = React.useSyncExternalStore(
+    subscribeHydration,
+    isHydrated,
+    isServerRendering,
+  );
+  return (
+    <time dateTime={value}>
+      {hydrated ? formatLocalDateTime(value) : formatUtcDateTime(value)}
+    </time>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // AnalyticsReviewInteractiveRegion
 // ---------------------------------------------------------------------------
@@ -114,7 +149,11 @@ export function AnalyticsReviewInteractiveRegion({
   );
   // Review-history drill (wired-local → backend): the selected review's detail
   // (reviews.get). A read-only drill — no router.refresh().
-  const [reviewDetail, setReviewDetail] = React.useState<ReviewDto | null>(null);
+  const [reviewDetail, setReviewDetail] =
+    React.useState<ReviewDetailDto | null>(null);
+  const [reviewDetailLoadingId, setReviewDetailLoadingId] =
+    React.useState<string | null>(null);
+  const reviewDetailRequestRef = React.useRef(0);
   // [T-329] 详情读失败内联可见(此前 getReview 失败是未处理的 rejection,静默无反馈)。
   const [reviewDetailError, setReviewDetailError] = React.useState<
     string | null
@@ -129,26 +168,61 @@ export function AnalyticsReviewInteractiveRegion({
 
   const onSelectReview = React.useCallback(
     (id: string) => {
+      if (id === activeReviewId) {
+        reviewDetailRequestRef.current += 1;
+        setActiveReviewId(null);
+        setReviewDetail(null);
+        setReviewDetailError(null);
+        setReviewDetailLoadingId(null);
+        return;
+      }
+      const requestSequence = reviewDetailRequestRef.current + 1;
+      reviewDetailRequestRef.current = requestSequence;
       setActiveReviewId(id);
-      if (!reviewsWiring) return; // inert without the ops surface (fixture-only)
+      setReviewDetail(null);
       setReviewDetailError(null);
+      if (!reviewsWiring) {
+        setReviewDetailError("登录状态还没准备好，暂时无法读取复盘详情。");
+        return;
+      }
+      setReviewDetailLoadingId(id);
       void (async () => {
         try {
-          const detail = (await client.getReview({
-            params: { reviewId: id },
-            query: undefined,
-            body: undefined,
-          })) as ReviewDto;
-          setReviewDetail(detail);
+          const [detail, insights] = await Promise.all([
+            client.getReview({
+              params: { reviewId: id },
+              query: undefined,
+              body: undefined,
+            }),
+            client.listReviewInsights({
+              params: { reviewId: id },
+              query: undefined,
+              body: undefined,
+            }),
+          ]);
+          const review = detail as ReviewDto;
+          if (review.id !== id) {
+            throw new Error("复盘详情与所选记录不一致");
+          }
+          if (reviewDetailRequestRef.current !== requestSequence) return;
+          setReviewDetail({
+            ...review,
+            insights: insights as unknown as ReviewInsightDto[],
+          });
         } catch (err) {
+          if (reviewDetailRequestRef.current !== requestSequence) return;
           setReviewDetail(null);
           setReviewDetailError(
             describeUserError(err, "读取复盘详情失败，请重试。"),
           );
+        } finally {
+          if (reviewDetailRequestRef.current === requestSequence) {
+            setReviewDetailLoadingId(null);
+          }
         }
       })();
     },
-    [reviewsWiring],
+    [activeReviewId, reviewsWiring],
   );
 
   // [T-329] 进行中的复盘(reviews.list status=in_progress)→ 复盘编辑面板接管它
@@ -216,6 +290,7 @@ export function AnalyticsReviewInteractiveRegion({
           onSelect={onSelectReview}
           detail={reviewDetail}
           detailError={reviewDetailError}
+          loadingId={reviewDetailLoadingId}
         />
       </div>
     </div>
@@ -643,14 +718,26 @@ function ReviewHistoryCard({
   onSelect,
   detail,
   detailError,
+  loadingId,
 }: {
   items: ReadonlyArray<ReviewHistoryItem>;
   activeId: string | null;
   onSelect: (id: string) => void;
-  detail?: ReviewDto | null;
+  detail?: ReviewDetailDto | null;
   /** [T-329] reviews.get 读失败的可见反馈(此前静默 rejection)。 */
   detailError?: string | null;
+  loadingId?: string | null;
 }) {
+  const activeItemRef = React.useRef<HTMLLIElement | null>(null);
+
+  React.useEffect(() => {
+    if (detail?.id !== activeId) return;
+    activeItemRef.current?.scrollIntoView?.({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [activeId, detail]);
+
   return (
     <article
       data-slot="review-history-card"
@@ -677,53 +764,151 @@ function ReviewHistoryCard({
       >
         {items.map((item) => {
           const selected = item.id === activeId;
+          const loading = item.id === loadingId;
+          const statusLabel =
+            item.status === "completed"
+              ? "已完成"
+              : item.status === "abandoned"
+                ? "已结束"
+                : "进行中";
           return (
             <li
+              ref={selected ? activeItemRef : undefined}
               key={item.id}
               data-slot="review-history-item"
               data-history-id={item.id}
               data-tone={item.tone}
               data-selected={selected ? "true" : "false"}
-              onClick={() => onSelect(item.id)}
               className={
-                "flex cursor-pointer items-center justify-between rounded-md border border-border px-3 py-2 text-sm " +
-                (selected ? "bg-brand-soft/50" : "bg-surface-subtle")
+                "overflow-hidden rounded-lg border text-sm transition-colors " +
+                (selected
+                  ? "border-brand/40 bg-brand-soft/35"
+                  : "border-border bg-surface-subtle hover:border-brand/25")
               }
             >
-              <span className="font-medium text-foreground">{item.title}</span>
-              <span className="font-mono text-xs text-muted-foreground">
-                {item.completedAt}
-              </span>
+              <button
+                type="button"
+                data-slot="review-history-trigger"
+                aria-expanded={selected}
+                aria-controls={`review-detail-${item.id}`}
+                onClick={() => onSelect(item.id)}
+                className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/40"
+              >
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span className="font-medium leading-snug text-foreground">
+                    {item.title}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {item.periodStart && item.periodEnd
+                      ? `${formatCalendarDateRange(item.periodStart, item.periodEnd)} · `
+                      : ""}
+                    <LocalDateTime value={item.completedAt} />
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <span
+                    data-slot="review-history-status"
+                    className={
+                      "rounded-full px-2 py-0.5 text-[10px] font-medium " +
+                      (item.status === "completed"
+                        ? "bg-success/10 text-success"
+                        : "bg-brand-soft text-brand")
+                    }
+                  >
+                    {statusLabel}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={
+                      "text-muted-foreground transition-transform " +
+                      (selected ? "rotate-90" : "")
+                    }
+                  >
+                    ›
+                  </span>
+                </span>
+              </button>
+              {selected && loading ? (
+                <p
+                  data-slot="review-detail-loading"
+                  role="status"
+                  className="border-t border-border/70 px-3 py-3 text-xs text-muted-foreground"
+                >
+                  正在读取复盘内容…
+                </p>
+              ) : null}
+              {selected && detailError ? (
+                <p
+                  data-slot="review-detail-error"
+                  role="status"
+                  aria-live="polite"
+                  className="border-t border-border/70 px-3 py-3 text-[11px] text-destructive"
+                >
+                  {detailError}
+                </p>
+              ) : null}
+              {selected && detail?.id === item.id ? (
+                <div
+                  id={`review-detail-${item.id}`}
+                  data-slot="review-detail-panel"
+                  data-review-id={detail.id}
+                  data-review-status={detail.status}
+                  className="flex flex-col gap-3 border-t border-border/70 bg-surface px-3 py-3 text-xs"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium text-foreground">复盘周期</span>
+                    <span className="text-muted-foreground">
+                      {formatCalendarDateRange(
+                        detail.periodStart,
+                        detail.periodEnd,
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="font-medium text-foreground">
+                      洞察记录 · {detail.insights.length} 条
+                    </span>
+                    {detail.insights.length === 0 ? (
+                      <span className="text-muted-foreground">
+                        这次复盘还没有记录洞察。
+                      </span>
+                    ) : (
+                      <ul
+                        data-slot="review-detail-insights"
+                        className="flex flex-col gap-1.5"
+                      >
+                        {detail.insights.map((insight) => (
+                          <li
+                            key={insight.id}
+                            className="rounded-md border border-border bg-surface-subtle px-2.5 py-2"
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="shrink-0 rounded bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand">
+                                {INSIGHT_TYPES.find(
+                                  (type) =>
+                                    type.value === insight.insightType,
+                                )?.label ?? "洞察"}
+                              </span>
+                              <span className="font-medium leading-relaxed text-foreground">
+                                {insight.title}
+                              </span>
+                            </div>
+                            {insight.description ? (
+                              <p className="mt-1 pl-[50px] leading-relaxed text-muted-foreground">
+                                {insight.description}
+                              </p>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </li>
           );
         })}
       </ul>
-      {detailError ? (
-        // [T-329] 详情读失败可见(role=status 供读屏);点其它行会重试。
-        <p
-          data-slot="review-detail-error"
-          role="status"
-          aria-live="polite"
-          className="text-[11px] text-destructive"
-        >
-          {detailError}
-        </p>
-      ) : null}
-      {detail ? (
-        <div
-          data-slot="review-detail-panel"
-          data-review-id={detail.id}
-          data-review-status={detail.status}
-          className="flex flex-col gap-1 rounded-md border border-border bg-surface-subtle px-3 py-2 text-xs"
-        >
-          <span className="font-medium text-foreground">
-            复盘详情 · {detail.reviewType === "output" ? "单作品" : "项目"}
-          </span>
-          <span className="text-muted-foreground">
-            状态：{detail.status} · 周期 {detail.periodStart} ~ {detail.periodEnd}
-          </span>
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -828,7 +1013,10 @@ function ReviewAuthoringPanel({
         setInsightCount((c) => c + 1);
         setTitle("");
         setDescription("");
-        setFeedback({ tone: "success", text: "已添加洞察" });
+        setFeedback({
+          tone: "success",
+          text: "已保存到本次复盘，可在下方「复盘记录」查看",
+        });
         router.refresh();
       } catch (err) {
         setFeedback({
@@ -867,7 +1055,10 @@ function ReviewAuthoringPanel({
         });
         setActiveReviewId(null);
         setInsightCount(0);
-        setFeedback({ tone: "success", text: "已完成复盘" });
+        setFeedback({
+          tone: "success",
+          text: "复盘已完成；需要沉淀经验时，可点上方「帮我复盘」",
+        });
         router.refresh();
       } catch (err) {
         setFeedback({ tone: "error", text: describeUserError(err, "完成复盘失败，请重试。") });
@@ -892,6 +1083,12 @@ function ReviewAuthoringPanel({
             : "直接记录洞察（首次添加自动创建复盘），随时完成"}
         </p>
       </header>
+      <p
+        data-slot="review-storage-note"
+        className="rounded-lg border border-brand/15 bg-brand-soft/25 px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground"
+      >
+        手动洞察保存在本次复盘记录，不会直接进入知识库。完成后可点上方「帮我复盘」提炼经验，采纳后进入知识库。
+      </p>
 
       <div data-slot="add-insight-form" className="flex flex-col gap-1.5">
         <select

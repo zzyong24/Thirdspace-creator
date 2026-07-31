@@ -113,6 +113,7 @@ export default defineConfig({
   updateSnapshots: "none",
   use: {
     baseURL: TEST_BASE_URL,
+    channel: process.env.CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL || undefined,
     colorScheme: "light",
     contextOptions: {
       reducedMotion: "reduce",

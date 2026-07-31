@@ -52,5 +52,7 @@
   ],
   "program_completion_required": false,
   "receipt_policy": "required",
-  "frontend_verify_commands": {}
+  "frontend_verify_commands": {
+    "review-history:e2e": "CREATOROS_TEST_PORT=3427 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/review-history.spec.ts --project=e2e"
+  }
 }

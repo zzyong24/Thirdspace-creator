@@ -42,6 +42,15 @@ export const reviewsOperations = {
     response: reviewResource,
     fr: ["FR-REVIEWS-GET"],
   }),
+  listReviewInsights: defineEndpoint({
+    id: "reviews.insights.list",
+    method: "GET",
+    path: "/reviews/:reviewId/insights",
+    params: reviewParams,
+    response: reviewInsightResource,
+    isList: true,
+    fr: ["FR-REVIEWS-INSIGHT-LIST"],
+  }),
   createReviewInsight: defineEndpoint({
     id: "reviews.insights.create",
     method: "POST",

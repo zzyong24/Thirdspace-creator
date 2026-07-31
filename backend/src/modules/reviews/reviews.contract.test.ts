@@ -120,6 +120,27 @@ describe("reviews contract (each op validates against its DTO)", () => {
     expect(Number.isInteger(parsed.priority)).toBe(true);
   });
 
+  it("reviews.insights.list → 完整 listEnvelope，可读回复盘里的手动洞察", async () => {
+    const transport = makeTransport(db);
+    const created = await call(transport, "reviews.create", {
+      params: { projectId: "project-1" },
+      body: { reviewType: "project", contentOutputId: null },
+    }, ctx);
+    const id = (created.data as { id: string }).id;
+    await call(transport, "reviews.insights.create", {
+      params: { reviewId: id },
+      body: { insightType: "action", title: "前三秒先给结果", description: "减少铺垫" },
+    }, ctx);
+
+    const raw = await transport.request(ep("reviews.insights.list"), {
+      params: { reviewId: id },
+    } as never, ctx);
+    const parsed = listEnvelope(ENDPOINTS.listReviewInsights.response).parse(raw);
+
+    expect(parsed.data.map((item) => item.title)).toEqual(["前三秒先给结果"]);
+    expect(parsed.meta.total).toBe(1);
+  });
+
   it("reviews.complete → reviewResource (completed, non-null completedAt)", async () => {
     const transport = makeTransport(db);
     const created = await call(transport, "reviews.create", {

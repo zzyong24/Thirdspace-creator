@@ -153,6 +153,29 @@ describe("reviews service", () => {
     expect(first.evidence).toMatchObject({ source: "analytics", value: 0.42 });
   });
 
+  it("listReviewInsights reads the selected review's persisted insights in priority order", async () => {
+    const { service } = makeService(db);
+    const review = await service.createReview(ctx, "project-1", {
+      reviewType: "project",
+      contentOutputId: null,
+    });
+    await service.createInsight(ctx, review.id, {
+      insightType: "success",
+      title: "真实数据比口号更有说服力",
+    });
+    await service.createInsight(ctx, review.id, {
+      insightType: "action",
+      title: "前三秒先展示结果",
+    });
+
+    const insights = await service.listReviewInsights(ctx, review.id);
+
+    expect(insights.map((item) => item.title)).toEqual([
+      "真实数据比口号更有说服力",
+      "前三秒先展示结果",
+    ]);
+  });
+
   it("createInsight on a completed review → ConflictError", async () => {
     const { service } = makeService(db);
     const review = await service.createReview(ctx, "project-1", {

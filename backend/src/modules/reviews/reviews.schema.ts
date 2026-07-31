@@ -9,7 +9,8 @@
 // files. The op responses are reachable as ENDPOINTS.<opKey>.response:
 //   - createReview.response === getReview.response === completeReview.response
 //       === reviewResource
-//   - createReviewInsight.response === reviewInsightResource
+//   - listReviewInsights.response === createReviewInsight.response
+//       === reviewInsightResource
 // The reviewPublicationResource has no owned read op this wave (the attach path is
 // decorative — Step 5) but is re-exported for the module.
 import { ENDPOINTS } from "@creatoros/contract";

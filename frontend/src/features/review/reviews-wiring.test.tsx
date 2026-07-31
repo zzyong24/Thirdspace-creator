@@ -43,15 +43,28 @@ const mockClient = {
   completeReview: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "review-new", status: "completed" }),
   ),
-  getReview: vi.fn((_input: unknown): Promise<unknown> =>
+  getReview: vi.fn((input: unknown): Promise<unknown> =>
     Promise.resolve({
-      id: "review-hist-1",
+      id: (input as { params: { reviewId: string } }).params.reviewId,
       status: "completed",
       reviewType: "project",
       periodStart: "2026-06-10T00:00:00.000Z",
       periodEnd: "2026-06-15T00:00:00.000Z",
       completedAt: "2026-06-16T00:00:00.000Z",
     }),
+  ),
+  listReviewInsights: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve([
+      {
+        id: "insight-hist-1",
+        reviewId: "review-hist-1",
+        insightType: "action",
+        title: "前三秒先展示结果",
+        description: "减少背景铺垫",
+        evidence: {},
+        priority: 0,
+      },
+    ]),
   ),
 };
 vi.mock("@/lib/contract-client", () => ({
@@ -60,6 +73,7 @@ vi.mock("@/lib/contract-client", () => ({
     createReviewInsight: (i: unknown) => mockClient.createReviewInsight(i),
     completeReview: (i: unknown) => mockClient.completeReview(i),
     getReview: (i: unknown) => mockClient.getReview(i),
+    listReviewInsights: (i: unknown) => mockClient.listReviewInsights(i),
   },
 }));
 
@@ -74,14 +88,27 @@ beforeEach(() => {
     id: "insight-new",
     priority: 0,
   });
-  mockClient.getReview.mockResolvedValue({
-    id: "review-hist-1",
-    status: "completed",
-    reviewType: "project",
-    periodStart: "2026-06-10T00:00:00.000Z",
-    periodEnd: "2026-06-15T00:00:00.000Z",
-    completedAt: "2026-06-16T00:00:00.000Z",
-  });
+  mockClient.getReview.mockImplementation((input: unknown) =>
+    Promise.resolve({
+      id: (input as { params: { reviewId: string } }).params.reviewId,
+      status: "completed",
+      reviewType: "project",
+      periodStart: "2026-06-10T00:00:00.000Z",
+      periodEnd: "2026-06-15T00:00:00.000Z",
+      completedAt: "2026-06-16T00:00:00.000Z",
+    }),
+  );
+  mockClient.listReviewInsights.mockResolvedValue([
+    {
+      id: "insight-hist-1",
+      reviewId: "review-hist-1",
+      insightType: "action",
+      title: "前三秒先展示结果",
+      description: "减少背景铺垫",
+      evidence: {},
+      priority: 0,
+    },
+  ]);
   mockRouter.refresh.mockClear();
 });
 
@@ -302,15 +329,28 @@ describe("Reviews authoring wiring ([T-329] 直接可用)", () => {
     expect(mockClient.createReviewInsight).not.toHaveBeenCalled();
   });
 
-  it("selecting a review-history row calls reviews.get (no refresh) and renders the detail", async () => {
+  it("复盘记录是可访问按钮，点击后就地展开真实洞察与可读时间", async () => {
     const { container } = await renderIsland(WIRING);
-    const row = container.querySelector<HTMLLIElement>(
+    const row = container.querySelector<HTMLElement>(
       '[data-slot="review-history-item"]',
     );
+    const trigger = row?.querySelector<HTMLButtonElement>(
+      '[data-slot="review-history-trigger"]',
+    );
     expect(row).not.toBeNull();
-    fireEvent.click(row!);
+    expect(trigger).not.toBeNull();
+    expect(trigger?.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(trigger!);
     await waitFor(() => expect(mockClient.getReview).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(mockClient.listReviewInsights).toHaveBeenCalledTimes(1),
+    );
     expect(mockClient.getReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { reviewId: row!.getAttribute("data-history-id") },
+      }),
+    );
+    expect(mockClient.listReviewInsights).toHaveBeenCalledWith(
       expect.objectContaining({
         params: { reviewId: row!.getAttribute("data-history-id") },
       }),
@@ -322,16 +362,19 @@ describe("Reviews authoring wiring ([T-329] 直接可用)", () => {
         container.querySelector('[data-slot="review-detail-panel"]'),
       ).not.toBeNull(),
     );
+    expect(trigger?.getAttribute("aria-expanded")).toBe("true");
+    expect(
+      container.querySelector('[data-slot="review-detail-panel"]')?.textContent ?? "",
+    ).toContain("前三秒先展示结果");
+    expect(row?.textContent ?? "").not.toContain("T00:00:00.000Z");
   });
 
   it("reviews.get 读失败 → 错误内联可见(不再静默 rejection)", async () => {
     mockClient.getReview.mockRejectedValueOnce(new Error("boom"));
     const { container } = await renderIsland(WIRING);
-    fireEvent.click(
-      container.querySelector<HTMLLIElement>(
-        '[data-slot="review-history-item"]',
-      )!,
-    );
+    fireEvent.click(container.querySelector<HTMLButtonElement>(
+      '[data-slot="review-history-trigger"]',
+    )!);
     await waitFor(() =>
       expect(
         container.querySelector('[data-slot="review-detail-error"]'),
@@ -392,5 +435,13 @@ describe("Reviews authoring wiring ([T-329] 直接可用)", () => {
     expect(mockClient.createReviewInsight).not.toHaveBeenCalled();
     expect(mockClient.completeReview).not.toHaveBeenCalled();
     expect(mockClient.getReview).not.toHaveBeenCalled();
+    expect(mockClient.listReviewInsights).not.toHaveBeenCalled();
+  });
+
+  it("复盘编辑明确说明手动洞察与知识库的关系", async () => {
+    const { container } = await renderIsland(WIRING);
+    const note = container.querySelector('[data-slot="review-storage-note"]');
+    expect(note?.textContent ?? "").toContain("保存在本次复盘");
+    expect(note?.textContent ?? "").toContain("采纳后进入知识库");
   });
 });
