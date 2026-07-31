@@ -757,6 +757,9 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("context.artifact.text");
     // 明令别用 context.projects 列全站找这一条(修 groping 根因)。
     expect(a.system).toContain("绝不要用 context.projects");
+    // [T-642] 不只靠提示词：host 直接从本轮工具集合移除全量项目库。
+    expect(a.tools["context.projects"]).toBeUndefined();
+    expect(a.tools["context.project.detail"]).toBeDefined();
   });
 
   it("[T-106] 无 projectId(账号级对话)→ 不注入当前项目块", async () => {
@@ -1210,7 +1213,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).toContain("calibration.diagnose"); // 盲预测按钮深链落 project
       // [T-385] project.transcribe 与 review.analyze 同被阶段感知砍(创作前无已发布作品可抓稿)。
       expect(names).not.toContain("project.transcribe");
-      expect(names.length).toBe(35); // project 全集 37（[T-350a] publish.package + [T-385] project.transcribe）− 阶段感知砍掉的 review.analyze + project.transcribe
+      expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
+      expect(names.length).toBe(34); // project 全集 37 − review.analyze − project.transcribe − context.projects
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -1231,7 +1235,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
         deps,
       );
       expect(Object.keys(a.tools)).toContain("review.analyze");
-      expect(Object.keys(a.tools).length).toBe(37); // [T-385] +project.transcribe
+      expect(Object.keys(a.tools)).not.toContain("context.projects");
+      expect(Object.keys(a.tools).length).toBe(36); // [T-642] 已绑定项目 − context.projects
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -1242,7 +1247,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
         noReaders,
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
-      expect(Object.keys(b.tools).length).toBe(37); // [T-385] +project.transcribe
+      expect(Object.keys(b.tools)).not.toContain("context.projects");
+      expect(Object.keys(b.tools).length).toBe(36); // 阶段未知仍保留复盘工具，但项目库无需摸索
     });
 
     it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 37 工具(向后兼容)", async () => {
@@ -1403,15 +1409,21 @@ describe("buildChatAssembly — 三层注入装配", () => {
         getProjectDetail,
       },
     });
-    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const a = await buildChatAssembly(
+      ctx,
+      { surface: "topics", projectId: "proj-1" },
+      deps,
+    );
     const result = (await runToolExecute(a.tools["context.project.detail"]!, {
-      projectId: "proj-1",
+      // [T-642] 已绑定项目后模型无需再传 id；即使伪造另一个，host 也只用可信绑定。
+      projectId: "fake-project",
     })) as {
       kind: string;
       found: boolean;
       project: { title: string; stage: string; publish: { published: boolean }; artifacts: unknown[] };
     };
     expect(getProjectDetail).toHaveBeenCalledWith(ctx, { projectId: "proj-1" });
+    expect(a.tools["context.projects"]).toBeUndefined();
     expect(result.kind).toBe("context.project.detail");
     expect(result.found).toBe(true);
     expect(result.project.title).toBe("上下文工程");

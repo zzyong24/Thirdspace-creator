@@ -86,8 +86,8 @@ describe("filterProjectOptions — 标题模糊过滤", () => {
   });
 });
 
-describe("applyProjectMention — 替换 @query 为 @标题", () => {
-  it("把 [start,end) 的 @query 换成 @标题 + 尾空格,并返回替换后光标位置", () => {
+describe("applyProjectMention — @ 只选择上下文，不写进消息正文", () => {
+  it("移除 [start,end) 的 @query，并返回清理后光标位置", () => {
     // 贴合真实检测:提及 token 不含尾随空白 —— 光标就在查询串末尾(「下」后,index 8)。
     const value = "帮我基于 @上下";
     // @上下 的范围:start=5(@),end=8(串末,= value.length)。
@@ -96,15 +96,15 @@ describe("applyProjectMention — 替换 @query 为 @标题", () => {
       id: "p1",
       title: "上下文工程",
     });
-    expect(r.value).toBe("帮我基于 @上下文工程 ");
-    // 光标落在插入 chip(@上下文工程 + 空格)之后。
-    expect(r.caret).toBe(5 + "@上下文工程 ".length);
+    expect(r.value).toBe("帮我基于 ");
+    expect(r.caret).toBe(5);
   });
 
-  it("token 在结尾 → 追加 chip + 尾空格", () => {
-    const value = "看看 @";
-    const range = { start: 3, end: 4 };
+  it("token 位于句中且两侧都有空格 → 不留下双空格", () => {
+    const value = "看看 @RAG 怎么样";
+    const range = { start: 3, end: 7 };
     const r = applyProjectMention(value, range, { id: "p2", title: "RAG" });
-    expect(r.value).toBe("看看 @RAG ");
+    expect(r.value).toBe("看看 怎么样");
+    expect(r.caret).toBe(3);
   });
 });

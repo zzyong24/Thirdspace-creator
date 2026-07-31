@@ -361,6 +361,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **失效与重派生**：DEC-ASR-021 第 3、6 条和 CI-ASR-021 的必配语义被 DEC-ASR-022 替代；
   T-639 SPEC、解析测试、渐进排队测试、设置页测试与可见文案证据需按 T-641 重派生。
 
+## CI-COPILOT-023 — 项目引用直读与标签收敛（T-642，2026-07-31）
+
+- **交互变化**：`@` 选择不再把完整项目标题写进消息正文；上下文标签改为“项目 · 短标题”，
+  完整标题保留在 tooltip/无障碍名称。
+- **工具变化**：可信项目上下文绑定后，详情、产物索引与产物正文工具可缺省使用绑定 ID；全量
+  `context.projects` 不再暴露给该回合，杜绝翻页找当前对象。
+- **数据与架构影响**：无 schema、迁移、公开 operation 或数据归属变化；复用既有 user-scoped
+  详情/产物读端口，AI 仍不写库。
+- **失效与重派生**：T-039b 的“把 `@项目标题` 写入 textarea”展示约定被替代；T-106 只靠提示词
+  禁止全库摸索的保护升级为 host 侧工具集合约束，相关前端和 chat-runner 测试需重派生。
+
 ---
 
 ### How to use this file going forward

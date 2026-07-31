@@ -838,6 +838,11 @@ export async function buildChatAssembly(
     projectPublished: projectStage ? projectStage.published : null,
   });
   let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+  // [T-642] 已有可信项目引用时，当前对象不再需要全量项目库。host 侧直接拿掉列表工具，
+  // 把 T-106 的“提示模型别摸索”升级成确定性约束；单项目工具由 boundProjectId 自动补 ID。
+  if (chatContext.projectId) {
+    baseAllowed = baseAllowed.filter((name) => name !== "context.projects");
+  }
   if (mediaRoute?.kind === "douyin.share") {
     baseAllowed = baseAllowed.filter((name) => name !== "web.read");
   } else {
@@ -856,7 +861,9 @@ export async function buildChatAssembly(
     mediaRoute?.kind === "douyin.share" &&
     chatContext.functionKey === "web.read"
       ? undefined
-      : chatContext.functionKey;
+      : chatContext.projectId && chatContext.functionKey === "context.projects"
+        ? undefined
+        : chatContext.functionKey;
   let allowedNames =
     effectiveFunctionKey &&
     ALL_CHAT_TOOL_NAMES.includes(effectiveFunctionKey) &&
@@ -964,7 +971,9 @@ export async function buildChatAssembly(
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
     // [T-224 诚实门·场景半] 无稿门只管「拆解/复盘已发布作品」;创作前立框架不适用(S2)。
-    "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:用 context.metrics / context.projects 拿到该作品的 projectId,再调 context.artifact.text(传该 projectId)读它的真文案;拆经验就调 review.analyze 并传该 projectId(它会强制读真稿,读不到会拒绝产卡)。读不到真稿时,若该作品关联了抖音,**顺手调 project.transcribe(传该 projectId)帮用户立即抓逐字稿**(约 1-3 分钟,完成后再拆);抓不了(无抖音锚)就直说做不到、要用户贴逐字稿,绝不推测充数。",
+    chatContext.projectId
+      ? `S1.(仅在拆解/复盘一条**已发布**作品时生效)当前作品已绑定 projectId="${chatContext.projectId}",**直接调 context.project.detail / context.artifact.text 读真档案与真逐字稿,绝不调 context.projects 拉全库找它**;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。`
+      : "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:账号级未引用具体作品时,先用 context.metrics / context.projects 找到 projectId,再调 context.artifact.text 读真文案;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。",
     "S2.(仅在为**创作前(未发布)**的项目立框架时生效)立论点/写大纲/起草脚本的依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝立框架的理由。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
@@ -1049,6 +1058,8 @@ export async function buildChatAssembly(
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
+    // [T-642] 单项目只读工具使用可信 ChatContext 绑定，不让模型靠标题/自造 id 改绑。
+    boundProjectId: chatContext.projectId ?? undefined,
     // [T-163] 错误→人话端口透传(route 注入前端 humanizeAiError)。
     humanizeError: deps.humanizeError,
     // [T-084a] 联网检索是否已配 —— 驱动 material.gather 工具的动态诚实描述(上方已探测)。

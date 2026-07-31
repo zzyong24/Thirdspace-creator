@@ -30,6 +30,12 @@ import { wrapUntrustedContent } from "./untrusted-content";
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
   /**
+   * [T-642] host 从可信 ChatContext 绑定的当前项目。存在时，所有“单项目”只读工具都优先
+   * 使用这个 id，模型即使显式传入别的 projectId 也不能改绑；避免 @ 引用后再拉全库找标题，
+   * 同时防止模型幻觉/伪造 id 越过当前对象边界。
+   */
+  boundProjectId?: string;
+  /**
    * [T-163] 错误→人话端口。humanizeAiError 所在 lib 含 ArtifactType(前端 domain 类型)依赖,
    * 故留前端;此处经端口注入(host=chat-runner deps→route 传 humanizeAiError),backend 不跨包
    * import 前端 lib。返回 null=无匹配人话映射,调用方回落原始 message。
@@ -2163,17 +2169,16 @@ const CONTEXT_MATERIALS_PARAMS = jsonSchema<{ query?: string; limit?: number }>(
   additionalProperties: false,
 });
 
-// [T-099b] context.project.detail 入参 —— projectId 必填(单实体全档查)。
-const CONTEXT_PROJECT_DETAIL_PARAMS = jsonSchema<{ projectId: string }>({
+// [T-642] projectId 可省略：有可信引用时由 host 绑定；账号级无绑定时仍须显式传入。
+const CONTEXT_PROJECT_DETAIL_PARAMS = jsonSchema<{ projectId?: string }>({
   type: "object",
   properties: {
     projectId: {
       type: "string",
       description:
-        "要查全档的项目 id(从 context.projects 清单卡拿到的 id)。返回该项目的立项 brief 全字段 + 当前阶段 + 发布状态 + 产物索引 + 最新指标摘要。",
+        "要查全档的项目 id。当前对话已引用项目时可省略，由系统使用可信的当前项目 ID；账号级找项目时才从 context.projects 清单卡取 id。",
     },
   },
-  required: ["projectId"],
   additionalProperties: false,
 });
 
@@ -2198,17 +2203,16 @@ const CONTEXT_KNOWLEDGE_DETAIL_PARAMS = jsonSchema<{ id: string }>({
   additionalProperties: false,
 });
 
-// [T-099c] context.artifacts 入参 —— projectId 必填(某项目产物清单)。
-const CONTEXT_ARTIFACTS_PARAMS = jsonSchema<{ projectId: string }>({
+// [T-642] projectId 可省略：有可信引用时由 host 绑定；账号级无绑定时仍须显式传入。
+const CONTEXT_ARTIFACTS_PARAMS = jsonSchema<{ projectId?: string }>({
   type: "object",
   properties: {
     projectId: {
       type: "string",
       description:
-        "要列产物清单的项目 id(从 context.projects 清单卡拿到的 id)。返回该项目每类产物(脚本/逐字稿/论点树等)的类型 + 当前版本号 + 更新时间 + 字数。要读某类产物正文用 context.artifact.text。",
+        "要列产物清单的项目 id。当前对话已引用项目时可省略，由系统使用可信的当前项目 ID；返回真实 artifactType，正文再用 context.artifact.text 读取。",
     },
   },
-  required: ["projectId"],
   additionalProperties: false,
 });
 
@@ -2227,7 +2231,7 @@ const WINDOW_MAX_CHARS_PROPERTY = {
 
 // [T-099c] context.artifact.text 入参 —— projectId + artifactType 必填,offset/maxChars 可选(窗口)。
 const CONTEXT_ARTIFACT_TEXT_PARAMS = jsonSchema<{
-  projectId: string;
+  projectId?: string;
   artifactType: string;
   offset?: number;
   maxChars?: number;
@@ -2237,7 +2241,7 @@ const CONTEXT_ARTIFACT_TEXT_PARAMS = jsonSchema<{
     projectId: {
       type: "string",
       description:
-        "产物所属项目 id(从 context.projects 拿)。先用 context.artifacts 看该项目有哪些 artifactType,再来读正文。",
+        "产物所属项目 id。当前对话已引用项目时可省略，由系统使用可信的当前项目 ID；账号级找项目时才从 context.projects 取 id。",
     },
     artifactType: {
       type: "string",
@@ -2247,7 +2251,7 @@ const CONTEXT_ARTIFACT_TEXT_PARAMS = jsonSchema<{
     offset: WINDOW_OFFSET_PROPERTY,
     maxChars: WINDOW_MAX_CHARS_PROPERTY,
   },
-  required: ["projectId", "artifactType"],
+  required: ["artifactType"],
   additionalProperties: false,
 });
 
@@ -2292,7 +2296,7 @@ const CONTEXT_METRICS_PARAMS = jsonSchema<{ projectId?: string }>({
     projectId: {
       type: "string",
       description:
-        "要看指标的项目 id(从 context.projects 拿):给了 → 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。",
+        "要看指标的项目 id。当前对话已引用项目时可省略，由系统使用可信的当前项目 ID；账号级未引用时不给 id 才返回最近若干作品指标。",
     },
   },
   additionalProperties: false,
@@ -2404,6 +2408,10 @@ export function knowledgeRelevanceScore(haystack: string, query: string): number
  * 断言每个 kind 在前端 CONTEXT_CARD_REGISTRY 有渲染卡 —— 新增 context 工具不配卡 = 测试红。
  */
 export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
+  const boundProjectId = deps.boundProjectId?.trim() || "";
+  // 可信上下文优先于模型入参。无绑定时保持旧契约：模型必须给出一个明确 id。
+  const resolveProjectId = (candidate: unknown): string =>
+    boundProjectId || (typeof candidate === "string" ? candidate.trim() : "");
   // [T-473] allChatTools 每个 chat request 只构造一次，因此此 Map 的生命周期恰好是一回合。
   // 同一回合里弱模型若用同参重复调 topic.enrich，复用第一次 Promise/结果，不重复跑昂贵 runner。
   const topicEnrichRuns = new Map<string, Promise<TopicEnrichToolResult>>();
@@ -3362,10 +3370,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    §3 详情档预算:长文本字段恒 ≤200 字 + totalChars + 指针到全文工具(切片三)。
     "context.project.detail": defineChatTool("context.project.detail", {
       description:
-        "只读:拉取某个项目/作品的**全档**(立项 brief 全字段 + 当前阶段 + 发布状态 + 产物索引「每类产物有几个版本/多少字/何时更新」+ 最新指标摘要)。当用户问「这个项目做到哪了 / 它的策划是什么 / 有哪些产物 / 数据怎么样」时,先用 context.projects 拿到 id,再调它拿真实全档。产物正文不在这里(只给字数索引)——要读脚本/逐字稿全文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
+        "只读:拉取某个项目/作品的**全档**(立项 brief 全字段 + 当前阶段 + 发布状态 + 产物索引 + 最新指标摘要)。当前对话已经引用具体项目时，直接调用本工具，projectId 可省略且由系统绑定；**不要再调用 context.projects 拉全库找当前作品**。只有账号级对话未引用项目时，才先从项目库取 id。产物正文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PROJECT_DETAIL_PARAMS,
       execute: async ({ projectId }): Promise<ContextProjectDetailToolResult> => {
-        const pid = typeof projectId === "string" ? projectId.trim() : "";
+        const pid = resolveProjectId(projectId);
         if (!pid || !deps.getProjectDetail) {
           return { kind: "context.project.detail", found: false, project: null };
         }
@@ -3450,10 +3458,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    offset/totalChars/hasMore 真相字段,模型按需翻窗。
     "context.artifacts": defineChatTool("context.artifacts", {
       description:
-        "只读:列某个项目/作品的**产物清单**(每类产物「脚本/逐字稿/结构方案/论点树等」的 artifactType + 当前版本号 + 字数 + 更新时间)。当用户问「这个项目有哪些产物 / 脚本写了没 / 逐字稿多长」时,先用 context.projects 拿到 id,再调它。这里只给字数索引,不给正文——要读某类产物的正文全文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
+        "只读:列某个项目/作品的**产物清单**(artifactType + 当前版本号 + 字数 + 更新时间)。当前对话已引用项目时直接调用，projectId 可省略且由系统绑定；**不要再用 context.projects 找当前作品**。这里只给索引，正文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_ARTIFACTS_PARAMS,
       execute: async ({ projectId }): Promise<ContextArtifactsToolResult> => {
-        const pid = typeof projectId === "string" ? projectId.trim() : "";
+        const pid = resolveProjectId(projectId);
         if (!pid || !deps.listProjectArtifacts) {
           return {
             kind: "context.artifacts",
@@ -3484,7 +3492,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "context.artifact.text": defineChatTool("context.artifact.text", {
       description:
-        "只读:按窗口读取某个项目某类产物的**正文全文**(脚本/逐字稿/结构方案等)。这是让你真正摸到作品正文的通路——绝不要拿标题脑补内容。入参 projectId + artifactType(**先从 context.artifacts 拿真实 type 名,不要凭常识猜**),offset/maxChars 控制窗口(默认 4000 字/封顶 8000)。返回 { artifactType, text(窗口正文), offset, totalChars, hasMore }:hasMore=true 时带 offset 继续翻窗读全,或如实告知还剩多少字没读。found:false 时结果里的 availableTypes 列出该项目**真实存在**的产物类型和字数——直接换成其中的 type 重读即可;读到空只说明你传的 type 名不存在,**绝不要**据此推测「产物被覆写/没入库/数据丢了」。正文已在对话的全文阅读卡里渲给用户,你只有指针权(引用/归纳),别逐字复述整段。纯读取上下文,不产候选、不写库。",
+        "只读:按窗口读取某个项目某类产物的**正文全文**(脚本/逐字稿/结构方案等)。当前对话已引用项目时直接调用，projectId 可省略且由系统绑定；**不要再用 context.projects 找当前作品**。artifactType 先从 context.project.detail 的产物索引或 context.artifacts 取得真实值，offset/maxChars 控制窗口(默认 4000 字/封顶 8000)。found:false 时按 availableTypes 自纠，绝不要拿标题脑补。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_ARTIFACT_TEXT_PARAMS,
       execute: async ({
         projectId,
@@ -3492,7 +3500,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         offset,
         maxChars,
       }): Promise<ContextArtifactTextToolResult> => {
-        const pid = typeof projectId === "string" ? projectId.trim() : "";
+        const pid = resolveProjectId(projectId);
         const atype = typeof artifactType === "string" ? artifactType.trim() : "";
         const emptyWindow = readTextWindow("", { offset, maxChars });
         // [T-405] 空态自纠:读不到该 type 时带上项目真实产物类型清单(best-effort,拉不到就缺席),
@@ -3625,13 +3633,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "context.metrics": defineChatTool("context.metrics", {
       description:
-        "只读:拉取作品指标数据。给 projectId(从 context.projects 拿)→ 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。当用户问「这条数据怎么样 / 播放多少 / 我最近作品的数据 / 留存曲线」时调它拿真实指标回答,别瞎报数。**账号级每行都带 projectId + 真实作品标题**:要拆某条(如「最高播放那条」)作品时,先从这里拿到它的 projectId,再调 context.artifact.text 传该 projectId 读它的真逐字稿——绝不凭标题/指标空想内容。纯读取上下文,不产候选、不写库。",
+        "只读:拉取作品指标数据。当前对话已引用项目时直接调用，projectId 可省略且由系统绑定，返回这条作品的播放/点赞/评论/分享快照 + 留存点；账号级未引用时不给 id 才返回最近若干作品指标。要拆作品正文再调 context.artifact.text，绝不凭标题/指标空想内容。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_METRICS_PARAMS,
       execute: async ({ projectId }): Promise<ContextMetricsToolResult> => {
-        const pid =
-          typeof projectId === "string" && projectId.trim()
-            ? projectId.trim()
-            : undefined;
+        const resolvedPid = resolveProjectId(projectId);
+        const pid = resolvedPid || undefined;
         if (!deps.getMetrics) {
           return { kind: "context.metrics", subject: null, rows: [], retention: [] };
         }

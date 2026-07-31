@@ -610,6 +610,36 @@ stages:
       仍被 T-635 review receipt 与 T-637/T-638/T-634 连带失效的 frontend receipt 阻断，
       已诚实保留到最终统一收口；按用户要求本轮不构建安装包。
 
+  "T-642-1-plan":
+    status: "passed"
+    gate: "01-product-gate + user-confirmation"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-07-31-copilot-project-reference-direct-read.md"
+      - existing: "orchestrator/DECISION_LOG.md#DEC-COPILOT-023"
+      - existing: "orchestrator/CHANGE_IMPACT.md#CI-COPILOT-023"
+    notes: >
+      用户明确要求优化 @ 引用显示，并质疑已有作品 ID 时仍全量读取项目库。核查确认现有
+      单项目档案/产物正文工具已具备，本任务只收紧引用与工具编排，不新增第二套读链。
+
+  "T-642-4-build":
+    status: "passed"
+    gate: "backend/frontend focused tests + typecheck + boundary + reconcile"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "frontend/src/features/copilot/project-mention.ts"
+      - existing: "frontend/src/features/copilot/ai-copilot-content.tsx"
+      - existing: "backend/src/modules/ai-runtime/chat-tools.ts"
+      - existing: "backend/src/modules/ai-runtime/chat-runner.ts"
+      - existing: "orchestrator/GATE-T642-BUILD.md"
+    notes: >
+      绑定 projectId 后 host 直接提供单项目读工具并移除全量项目库；长正文继续窗口读取。
+      后端 286 tests、前端 46 tests、两包 typecheck、boundary 与 diff-check 通过。全局 reconcile
+      仍被 T-635/T-639/T-638/T-637/T-634 的既有过期回执阻断，已在 Gate 诚实记录。
+
+
 stage_defaults:
   valid_statuses:
     - "not-started"

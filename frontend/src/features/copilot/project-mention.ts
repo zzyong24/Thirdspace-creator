@@ -76,15 +76,18 @@ export function filterProjectOptions(
 }
 
 /**
- * 应用选中的项目 —— 把 textarea 值里 [start,end) 的「@query」替换成「@项目标题 」(尾随一个空格,
- * 便于继续输入),返回新值 + 替换后光标应落的位置。纯函数(不碰 DOM),供组件 setState + setSelectionRange。
+ * 应用选中的项目 —— `@query` 只承担“选择上下文”的动作，选中后从 textarea 正文移除；
+ * 项目标题由输入框上方的独立上下文标签展示，避免长标题在标签和用户消息里重复两遍。
+ * 若 token 两侧都是空白，只保留一个，返回清理后的值 + 光标位置。
  */
 export function applyProjectMention(
   value: string,
   range: { start: number; end: number },
   project: ProjectOption,
 ): { value: string; caret: number } {
-  const chip = `@${project.title} `;
-  const next = value.slice(0, range.start) + chip + value.slice(range.end);
-  return { value: next, caret: range.start + chip.length };
+  void project;
+  const before = value.slice(0, range.start);
+  const rawAfter = value.slice(range.end);
+  const after = /\s$/.test(before) && /^\s/.test(rawAfter) ? rawAfter.slice(1) : rawAfter;
+  return { value: before + after, caret: before.length };
 }

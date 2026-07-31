@@ -1418,6 +1418,22 @@ service port 落库。
 
 **Status**：用户已确认，T-641 进入 BUILD。
 
+## DEC-COPILOT-023 (2026-07-31) — 项目引用绑定 ID 后只走单项目读取链
+
+**来源**：用户指出 Copilot 的 `@` 引用展示冗长，且已选中具体作品后仍读取 49 条项目库并翻页查找，
+质疑为何不直接透传作品 ID 调单条查询。
+
+**决策**：
+
+1. `@` 仅承担项目选择；可见正文不再复制完整 `@标题`，上下文标签改为“项目 · 短标题”。
+2. 可信 `chatContext.projectId` 是当前引用对象的唯一权威。绑定后单项目工具缺省使用它，模型入参
+   不能改绑到其他项目。
+3. 绑定项目的回合不暴露 `context.projects`；直接复用现有 `context.project.detail`、
+   `context.artifacts`、`context.artifact.text`，不新增平行 repo、operation 或数据库读路径。
+4. 单项目档案保持有界，长正文继续窗口读取；这不是把“所有数据”无上限塞给模型。
+
+**Status**：用户已确认，T-642 进入 BUILD。
+
 ## DEC-PID-001 (2026-07-30) — CreatorOS 正式包只认 Growth 商品的构建期产品身份
 
 **来源**：用户要求 Growth 创建产品、Activity 和产品客户端绑定同一个产品标识，并把日常操作

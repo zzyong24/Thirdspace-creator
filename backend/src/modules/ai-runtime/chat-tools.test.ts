@@ -1614,6 +1614,15 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
     expect(result.project).toBeNull();
   });
 
+  it("[T-642] context.project.detail 有可信绑定 → 可省略 id，模型伪造 id 也不能改绑", async () => {
+    const { deps, getProjectDetail } = makeDeps({ boundProjectId: "proj-bound" });
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    await runExecute(tools["context.project.detail"]!, {});
+    await runExecute(tools["context.project.detail"]!, { projectId: "proj-spoofed" });
+    expect(getProjectDetail).toHaveBeenNthCalledWith(1, { projectId: "proj-bound" });
+    expect(getProjectDetail).toHaveBeenNthCalledWith(2, { projectId: "proj-bound" });
+  });
+
   it("context.positioning.detail.execute 调 getPositioningDetail(无入参,全 facets/rules/账号画像)", async () => {
     const { deps, getPositioningDetail } = makeDeps();
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
@@ -1742,6 +1751,23 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
     expect(result.projectTitle).toBe("上下文工程");
     expect(result.items).toHaveLength(2);
     expect(result.items[0]!.artifactType).toBe("output_script");
+  });
+
+  it("[T-642] 全文类工具复用可信绑定 projectId，无需先查项目库", async () => {
+    const { deps, listProjectArtifacts, getArtifactText } = makeDeps({
+      boundProjectId: "proj-bound",
+    });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    await runExecute(tools["context.artifacts"]!, {});
+    await runExecute(tools["context.artifact.text"]!, {
+      projectId: "proj-spoofed",
+      artifactType: "output_script",
+    });
+    expect(listProjectArtifacts).toHaveBeenCalledWith({ projectId: "proj-bound" });
+    expect(getArtifactText).toHaveBeenCalledWith({
+      projectId: "proj-bound",
+      artifactType: "output_script",
+    });
   });
 
   it("context.artifacts.execute 空 projectId → found:false(不调端口,诚实空态)", async () => {
@@ -2056,6 +2082,21 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     expect(result.rows[0]!.projectId).toBe("proj-A");
     expect(result.rows[0]!.title).toBe("作品A");
     expect(result.rows[1]!.projectId).toBe("proj-B");
+  });
+
+  it("[T-642] context.metrics 已绑定项目 → 省略或伪造 id 都只读绑定作品", async () => {
+    const { deps, getMetrics } = makeDeps({ boundProjectId: "proj-bound" });
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    await runExecute(tools["context.metrics"]!, {});
+    await runExecute(tools["context.metrics"]!, { projectId: "proj-spoofed" });
+    expect(getMetrics).toHaveBeenNthCalledWith(1, {
+      projectId: "proj-bound",
+      limit: 20,
+    });
+    expect(getMetrics).toHaveBeenNthCalledWith(2, {
+      projectId: "proj-bound",
+      limit: 20,
+    });
   });
 
   it("[切片五] context.learnings.execute 调 listLearnings(透传 query/type/status)", async () => {

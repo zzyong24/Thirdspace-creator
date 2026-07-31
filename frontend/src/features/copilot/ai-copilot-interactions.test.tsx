@@ -718,7 +718,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       expect(screen.queryByText("上下文工程")).toBeNull();
     });
 
-    it("选中某项目 → 插入 @标题 chip + 显式项目引用 chip(注入 chatContext 的可见凭证)", async () => {
+    it("选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题", async () => {
       const user = userEvent.setup();
       listProjects.mockResolvedValue([{ id: "proj-1", title: "上下文工程" }]);
       render(<AICopilotContent viewModel={VM} />);
@@ -729,15 +729,18 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       const option = await screen.findByRole("option", { name: /上下文工程/ });
       await user.click(option);
 
-      // textarea 里 @上下 被替换成 @上下文工程(+尾空格)。
+      // @ 只负责选择上下文，完整标题不再塞进 textarea / 用户消息。
       await waitFor(() => {
-        expect(textarea.value).toContain("@上下文工程");
+        expect(textarea.value).not.toContain("@上下");
+        expect(textarea.value).not.toContain("上下文工程");
       });
       // 显式的项目引用 chip 出现(带 projectId),= 本次对话已注入该项目的可见凭证。
       const chip = document.querySelector(
         '[data-slot="context-chip"][data-kind="project"][data-project-id="proj-1"]',
       );
       expect(chip).not.toBeNull();
+      expect(chip!.textContent).toContain("项目·上下文工程");
+      expect(chip!.getAttribute("title")).toBe("项目 · 上下文工程");
     });
 
     it("[T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入", async () => {

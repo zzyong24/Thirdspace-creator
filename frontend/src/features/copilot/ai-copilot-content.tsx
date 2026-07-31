@@ -1352,8 +1352,8 @@ export function AICopilotContent({
     [syncMentionState],
   );
 
-  // 选中某项目:把「@query」替换成「@项目标题 」+ 落到 chatContext(mentionedProject)。
-  // 用受控值 + setSelectionRange 把光标移到插入 chip 之后(下一 tick,等 DOM 应用新值)。
+  // 选中某项目:`@query` 只负责选择，随后从正文移除；完整标题在独立上下文标签里展示，
+  // 稳定 projectId 仍落到 chatContext(mentionedProject)。避免长标题在标签和消息中重复。
   const pickMentionProject = React.useCallback(
     (project: ProjectOption) => {
       const range = mentionRange;
@@ -1588,7 +1588,7 @@ export function AICopilotContent({
         )}
       </div>
 
-      {/* [T-055b SPEC §5.1] 上下文 chips —— 常驻显示本会话注入的上下文(@项目名 + 对象),
+      {/* [T-055b SPEC §5.1] 上下文 chips —— 常驻显示本会话注入的上下文(项目短标题 + 对象),
           可一键摘除;什么都没带时显式「未关联项目」空态提示(gate-F2:缺失不静默)。 */}
       <div
         data-slot="copilot-context-chips"
@@ -1599,12 +1599,14 @@ export function AICopilotContent({
             data-slot="context-chip"
             data-kind="project"
             data-project-id={activeProjectChip.id}
-            className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand"
+            title={`项目 · ${activeProjectChip.title}`}
+            aria-label={`当前项目：${activeProjectChip.title}`}
+            className="inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"
           >
             <FolderOpen className="size-3" aria-hidden="true" />
-            <span className="max-w-[200px] truncate">
-              @{activeProjectChip.title}
-            </span>
+            <span className="shrink-0 font-medium text-brand/75">项目</span>
+            <span aria-hidden="true" className="shrink-0 text-brand/40">·</span>
+            <span className="min-w-0 truncate font-medium">{activeProjectChip.title}</span>
             {/* [T-108] 稿面常驻项目上下文(embed.selection)不给摘除按钮 —— 它是本页固定归属;
                 URL/@ 引用来的项目仍可一键摘除。 */}
             {activeProjectChip.dismiss ? (
