@@ -307,6 +307,7 @@ describe("PositioningDraftDrawer", () => {
         triggerIcon="none"
         title="复制 v2 为草稿"
         description="基于该版本预填，编辑后保存为新版本。"
+        initialTab="statement"
         statementSeed={{
           oneLiner: "v2 把论文变生产级代码",
           keywords: ["论文", "代码", "工程化"],
@@ -315,8 +316,10 @@ describe("PositioningDraftDrawer", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "复制为草稿" }));
-    // the statement form lives on the 定位陈述 tab — switch to it first.
-    fireEvent.click(screen.getByRole("tab", { name: /定位陈述/ }));
+    expect(screen.getByRole("tab", { name: /定位陈述/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(
       (screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value,
     ).toBe("v2 把论文变生产级代码");

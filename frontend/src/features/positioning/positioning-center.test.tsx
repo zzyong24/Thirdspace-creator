@@ -1,5 +1,11 @@
 import * as React from "react";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // The view embeds client islands: the draft-drawer forms (PositioningProfileForm/
@@ -207,5 +213,46 @@ describe("PositioningCenterView", () => {
     expect(screen.getAllByRole("button", { name: "复制为草稿" }).length).toBe(2);
     // statements are append-only — there is no real 设为当前 op, so no such button.
     expect(screen.queryByRole("button", { name: "设为当前" })).toBeNull();
+  });
+
+  it("[T-632] 重置为空白母版后，复制历史版本会直达所选陈述并完整预填", () => {
+    const resetWithHistory: PositioningCenterViewModel = {
+      ...POPULATED,
+      profile: {
+        ...POPULATED.profile!,
+        persona: "",
+        field: "",
+        audience: "",
+        differentiation: "",
+        capabilities: [],
+        facets: Object.fromEntries(
+          Object.keys(FACETS).map((key) => [key, ""]),
+        ) as typeof FACETS,
+        downstreamRules: Object.fromEntries(
+          Object.keys(RULES).map((key) => [key, ""]),
+        ) as typeof RULES,
+      },
+      currentStatement: null,
+      keywords: [],
+      productAnchors: [],
+      history: [STATEMENT(1, "v1 重置前的历史定位")],
+    };
+    render(<PositioningCenterView viewModel={resetWithHistory} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "复制为草稿" }));
+
+    expect(screen.getByRole("tab", { name: /定位陈述/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      (screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value,
+    ).toBe("v1 重置前的历史定位");
+    expect((screen.getByLabelText("关键词 1") as HTMLInputElement).value).toBe(
+      "论文",
+    );
+    expect((screen.getByLabelText("产品锚") as HTMLInputElement).value).toBe(
+      "product-1",
+    );
   });
 });

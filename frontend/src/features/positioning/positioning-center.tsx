@@ -618,6 +618,7 @@ function HistoryTable({
                 triggerIcon="none"
                 title={`复制 v${s.versionNumber} 为草稿`}
                 description="基于该版本预填，编辑后保存为新版本。"
+                initialTab="statement"
                 statementSeed={{
                   oneLiner: s.oneLiner,
                   keywords: s.keywords,

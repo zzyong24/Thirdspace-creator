@@ -7,6 +7,10 @@
 - “新建定位母版”使用产品内确认框；确认后调用既有
   `positioning.master.reset`，清空当前画像、定位规则与当前定位，停留在定位中心显示
   空白母版，不再跳转 Copilot。
+- 修复重置后的历史复制假空白：历史 statement 本来就由后端不可变版本链保留，但
+  “复制为草稿”此前仍默认打开已清空的“账号画像”页签，造成旧定位丢失的错觉。现在
+  点击任一历史版本会直达“定位陈述”，并从所选历史快照回填一句话定位、3 个关键词与
+  产品锚；当前空白母版不再覆盖历史草稿。
 - 内容雷达逐字稿继续读取 `transcribe.audio`。本机数据库只读证据确认本次实际使用
   `siliconflow / FunAudioLLM/SenseVoiceSmall`，不是本地 Whisper。
 - 修复 iesdouyin 错误分类顺序：`item_list 为空` 的完整文案同时包含
@@ -33,6 +37,8 @@
   - `item_list 为空` 被上报为 `throttled`，测试失败。
 - 绿测：
   - 定位交互 + 抖音限流集成：2 files / 27 tests PASS。
+  - 定位中心历史复制 + 定位交互：2 files / 21 tests PASS；覆盖“当前母版已重置为空，
+    v1 历史仍可一键复制并完整预填”的回归场景。
   - Frontend TypeScript：PASS。
   - 相关 ESLint：0 errors；4 条既有未使用参数 warning。
   - `git diff --check`：PASS。
