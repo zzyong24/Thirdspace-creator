@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-643 | 沉淀 Apple Developer 签名与公证资产复用知识并建立安全索引【开发资产·用户 2026-07-31】 | ✅ 待办 | — | — | [复用指南](/Users/zyongzhu/ThirdSpace/03-知识/开发/20260731_Apple_Developer_签名与公证资产复用指南.md) | 私钥和公证凭据只进 macOS 登录钥匙串，公开证书归档到按 Team ID 隔离的受控目录；知识库记录身份、指纹、有效期、安全位置、换机与新产品复用流程，绝不保存秘密明文。 |
 | T-642 | 优化 Copilot 项目引用展示并按稳定 ID 直读单项目上下文【交互+性能·用户 2026-07-31】 | ✅ 待办 | — | PASS:7931144a5b7a | [项目引用直读 SPEC](docs/superpowers/specs/2026-07-31-copilot-project-reference-direct-read.md) | `@` 只负责选择项目，选中后显示“项目 · 短标题”上下文标签且不把长标题重复写进消息正文；已绑定项目 ID 时直接调用单项目档案/产物正文工具，禁止先拉全量项目库再翻页猜项目。 |
 | T-641 | 纠正 ASR 为建议配置并在未配置时自动回退本地 Whisper【配置体验·用户 2026-07-31】 | ✅ 待办 | — | PASS:5ff8407e0415 | [ASR 建议配置纠偏 SPEC](docs/superpowers/specs/2026-07-31-asr-recommended-local-fallback.md) | 设置页把 ASR 放在重点模型配置区并用自然语言解释“建议配置 ASR 转录模型，避免本地转录时间过长”；已配置时优先云端 ASR，未配置时后台和手动转写仍可自动使用本地 Whisper，不阻断用户从 0 到 1 使用。 |
 | T-640 | 配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包【发布·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [T-575 测试发行与回滚](docs/handoffs/T-575-CreatorOS测试发行与回滚.md) | Developer ID Application 私钥只存本机登录钥匙串，公证凭据只存 notarytool 钥匙串 profile；先完成 T-637/T-638/T-639 与既有安装包 Gate，再产出签名、公证、staple 且可通过 Gatekeeper 验证的 DMG，不把证书私钥、密码或 API Key 写进仓库和日志。 |
