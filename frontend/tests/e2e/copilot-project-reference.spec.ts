@@ -1,8 +1,18 @@
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
 import { expect, test } from "../helpers/test-environment";
 
 const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
 const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
+const CHECK_IDS = [
+  "AC-COPILOT-REF-LABEL",
+  "AC-COPILOT-REF-NO-DUP",
+  "AC-COPILOT-REF-NARROW",
+  "AC-COPILOT-REF-DIRECT",
+];
 
 async function dispatch<T extends { id: string }>(
   page: Page,
@@ -45,6 +55,12 @@ test.describe("Copilot 项目引用直读（T-642）", () => {
     page,
     baseURL,
   }) => {
+    const captures: Array<{
+      checkpoint: string;
+      check_ids: string[];
+      viewport: { width: number; height: number };
+      text: string;
+    }> = [];
     const title =
       "CreatorOS 启动内测啦！做一条视频，最浪费时间的往往不是拍摄，而是在账这个作品讲的啥";
     const account = await dispatch(page, "accounts.create", {
@@ -83,6 +99,12 @@ test.describe("Copilot 项目引用直读（T-642）", () => {
     await expect(chip).toContainText(title);
     await expect(chip).toHaveAttribute("title", `项目 · ${title}`);
     await expect(input).toHaveValue("帮我看看 ");
+    captures.push({
+      checkpoint: "desktop-project-reference",
+      check_ids: [...CHECK_IDS],
+      viewport: { width: 1536, height: 1024 },
+      text: `${await chip.innerText()}\n输入正文：${await input.inputValue()}`,
+    });
 
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(chip).toBeVisible();
@@ -91,5 +113,31 @@ test.describe("Copilot 项目引用直读（T-642）", () => {
         () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
       ),
     ).toBe(false);
+    captures.push({
+      checkpoint: "minimum-project-reference",
+      check_ids: [...CHECK_IDS],
+      viewport: { width: 1024, height: 768 },
+      text: `${await chip.innerText()}\n输入正文：${await input.inputValue()}`,
+    });
+
+    const repoRoot = resolve(process.cwd(), "..");
+    const evidenceDir = resolve(repoRoot, "orchestrator", "evidence");
+    mkdirSync(evidenceDir, { recursive: true });
+    const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    }).trim();
+    const artifact = `${JSON.stringify(
+      {
+        schema: "frontend-visible-copy/v1",
+        task_id: "T-642",
+        commit_sha: commitSha,
+        captures,
+      },
+      null,
+      2,
+    )}\n`;
+    writeFileSync(resolve(evidenceDir, "T-642-visible-copy.json"), artifact);
+    expect(createHash("sha256").update(artifact).digest("hex")).toHaveLength(64);
   });
 });
