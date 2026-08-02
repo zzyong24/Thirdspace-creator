@@ -715,19 +715,15 @@ fn verify_direct_sidecar_dir_with_hash(
     dir: &std::path::Path,
     expected_entry_hash: &str,
 ) -> Result<(), String> {
-    let entry = dir.join("frontend").join("server.js");
+    let frontend = dir.join("frontend");
+    let entry = frontend.join("server.js");
     for required in [
         entry.clone(),
-        dir.join("frontend").join(".next"),
-        dir.join("frontend").join("creatoros-module-resolver.cjs"),
+        frontend.join(".next"),
         dir.join("backend")
             .join("drizzle")
             .join("meta")
             .join("_journal.json"),
-        dir.join("layers").join("core"),
-        dir.join("layers").join("browser").join("browsers"),
-        dir.join("layers").join("media").join("bin"),
-        dir.join("layers").join("local-ai").join("vendor"),
     ] {
         if !required.exists() {
             return Err(format!(
@@ -735,6 +731,45 @@ fn verify_direct_sidecar_dir_with_hash(
                 required.display()
             ));
         }
+    }
+
+    // [T-565/T-487] 分层 runtime 仍在独立 RAT 验证，当前用户安装包继续使用已经过
+    // 真启动验证的传统完整 runtime。启动代码本身也按“分层优先、传统回退”解析 bin / browser，
+    // 因此安装期校验必须镜像同一兼容边界：两套布局任选其一完整成立；禁止把两套各缺一半的
+    // 混合目录当成可运行产物。此前这里只接受分层布局，导致传统包解压 17 分钟后被误判残缺。
+    let legacy_required = [
+        frontend.join("node_modules"),
+        frontend.join("bin"),
+        frontend.join("browsers"),
+    ];
+    let layered_required = [
+        frontend.join("creatoros-module-resolver.cjs"),
+        dir.join("layers").join("core"),
+        dir.join("layers").join("browser").join("browsers"),
+        dir.join("layers").join("media").join("bin"),
+        dir.join("layers").join("local-ai").join("vendor"),
+    ];
+    let legacy_missing = legacy_required
+        .iter()
+        .filter(|path| !path.exists())
+        .collect::<Vec<_>>();
+    let layered_missing = layered_required
+        .iter()
+        .filter(|path| !path.exists())
+        .collect::<Vec<_>>();
+    if !legacy_missing.is_empty() && !layered_missing.is_empty() {
+        let render = |paths: &[&PathBuf]| {
+            paths
+                .iter()
+                .map(|path| path.display().to_string())
+                .collect::<Vec<_>>()
+                .join("、")
+        };
+        return Err(format!(
+            "Windows 安装目录中的 sidecar 不完整：传统完整 runtime 缺 {}；分层 runtime 缺 {}。请重新安装 CreatorOS。",
+            render(&legacy_missing),
+            render(&layered_missing)
+        ));
     }
     verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
 }
@@ -2564,6 +2599,34 @@ mod runtime_cleanup_tests {
         )
         .unwrap();
         assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn windows_传统完整_runtime_与分层_runtime_都可通过但混合残缺拒绝() {
+        let root = temp_runtime_root("legacy-direct-runtime");
+        std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
+        std::fs::create_dir_all(root.join("frontend").join("node_modules")).unwrap();
+        std::fs::create_dir_all(root.join("frontend").join("bin")).unwrap();
+        std::fs::create_dir_all(root.join("frontend").join("browsers")).unwrap();
+        std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
+        std::fs::write(root.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            root.join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+            "{}",
+        )
+        .unwrap();
+
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+        assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_ok());
+
+        std::fs::remove_dir_all(root.join("frontend").join("browsers")).unwrap();
+        let error = super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).unwrap_err();
+        assert!(error.contains("传统完整 runtime 缺"));
+        assert!(error.contains("分层 runtime 缺"));
         let _ = std::fs::remove_dir_all(&root);
     }
 
