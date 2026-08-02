@@ -31,6 +31,12 @@ describe("Windows sidecar runtime 打包契约", () => {
     expect(hook).toContain("$INSTDIR\\${MAINBINARYNAME}.exe");
     expect(hook).toContain("--creatoros-install-runtime");
     expect(hook).toContain('Delete "$INSTDIR\\sidecar.tar.gz"');
+    expect(hook).toContain(
+      'nsExec::ExecToLog /TIMEOUT=600000 \'"$INSTDIR\\${MAINBINARYNAME}.exe" --creatoros-install-runtime\'',
+    );
+    expect(hook).toContain(
+      'nsExec::ExecToLog /TIMEOUT=600000 \'"$INSTDIR\\${MAINBINARYNAME}.exe" --creatoros-uninstall-runtime\'',
+    );
     expect(hook).toContain("首次启动将自动修复");
     expect(hook).toContain("NSIS_HOOK_PREUNINSTALL");
     expect(hook).toContain("--creatoros-uninstall-runtime");
