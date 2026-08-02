@@ -12,12 +12,9 @@
 
 !macro NSIS_HOOK_POSTINSTALL
   DetailPrint "正在准备 CreatorOS 离线运行环境（首次启动无需再次解压）…"
-  ; sidecar.tar.gz 体积较大，Rust 在开始逐条解压前会先做整包 SHA-256 校验。
-  ; nsExec 的 /TIMEOUT 是“连续无输出”超时，不是总执行时长；默认窗口不足时会在
-  ; 校验阶段误报 timeout，导致安装器保留 tar、runtime-current.txt 未生成。允许单段
-  ; 最长 30 分钟静默，后续每 1000 项 stdout 解压日志会主动 flush 并重置该计时器。
-  nsExec::ExecToLog /TIMEOUT=1800000 '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-install-runtime'
-  Pop $0
+  ; 使用 NSIS 原生同步等待，避免 nsExec 对 stdout/stderr 和静默超时的插件语义把
+  ; 正常的大包 SHA/解压误判成 timeout。真实失败由 Rust 落盘诊断文件供 CI/用户日志读取。
+  ExecWait '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-install-runtime' $0
   ${If} $0 != 0
     RMDir /r "$INSTDIR\runtime-images\.staging"
     ; POSTINSTALL 时官方模板已经写完 exe/注册表/快捷方式，Abort 不能事务回滚。
@@ -37,9 +34,8 @@
   ; updater 的 /UPDATE 必须保留 current runtime，供新版本安装期原子替换。
   ${If} $UpdateMode <> 1
     DetailPrint "正在清理 CreatorOS 离线运行环境…"
-    ; 深层 node_modules 清理也可能在长时间内没有 stdout/stderr，避免同类误超时。
-    nsExec::ExecToLog /TIMEOUT=1800000 '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-uninstall-runtime'
-    Pop $0
+    ; 深层 node_modules 清理同样使用原生同步等待，不依赖输出刷新超时。
+    ExecWait '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-uninstall-runtime' $0
     ${If} $0 != 0
       DetailPrint "离线运行环境清理失败（错误码 $0），将继续执行卸载器兜底清理。"
     ${EndIf}

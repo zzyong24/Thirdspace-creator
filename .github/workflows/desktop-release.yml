@@ -375,6 +375,16 @@ jobs:
 
           $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
           if (-not (Test-Path $pointer -PathType Leaf)) {
+            $diagnostic = Join-Path $installDir "creatoros-runtime-install-error.log"
+            Write-Host "===== Windows runtime 安装目录 ====="
+            Get-ChildItem $installDir -Force -ErrorAction SilentlyContinue |
+              Select-Object Name,Length,LastWriteTime | Format-Table -AutoSize
+            if (Test-Path $diagnostic -PathType Leaf) {
+              Write-Host "===== Windows runtime 安装错误 ====="
+              Get-Content $diagnostic -Raw
+            } else {
+              Write-Host "[T-487] 安装错误日志不存在，安装期入口可能未被执行"
+            }
             throw "[T-487] 安装完成但缺 runtime-current.txt"
           }
           $runtimeId = (Get-Content $pointer -Raw).Trim()

@@ -1477,15 +1477,25 @@ pub fn run() {
         let install_dir = std::env::current_exe()
             .ok()
             .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+        let diagnostic = install_dir
+            .as_ref()
+            .map(|dir| dir.join("creatoros-runtime-install-error.log"));
         let result = install_dir
+            .as_ref()
             .ok_or_else(|| "无法定位 CreatorOS 安装目录".to_string())
-            .and_then(|dir| materialize_windows_runtime(&dir));
+            .and_then(|dir| materialize_windows_runtime(dir));
         match result {
             Ok(path) => {
+                if let Some(file) = diagnostic {
+                    let _ = std::fs::remove_file(file);
+                }
                 eprintln!("[installer] runtime ready: {}", path.display());
                 std::process::exit(0);
             }
             Err(e) => {
+                if let Some(file) = diagnostic {
+                    let _ = std::fs::write(&file, format!("{e}\n"));
+                }
                 eprintln!("[installer] runtime materialize failed: {e}");
                 std::process::exit(41);
             }

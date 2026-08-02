@@ -316,6 +316,8 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain("Windows 安装期 runtime 原生冒烟(T-487)");
     expect(workflow).toContain('Start-Process -FilePath $setup.FullName');
     expect(workflow).toContain("runtime-current.txt");
+    expect(workflow).toContain("creatoros-runtime-install-error.log");
+    expect(workflow).toContain("Windows runtime 安装错误");
     expect(workflow).toContain("runtime-images/$runtimeId/sidecar/frontend/server.js");
     expect(workflow).toContain('Test-Path (Join-Path $installDir "sidecar.tar.gz")');
     expect(workflow).toContain("CreatorOS RAT02 Space");
