@@ -737,7 +737,11 @@ export function ProductionWorkbench({
         readContentData("thesis_tree"),
       ]);
       // 候选 id(按来源优先级 script → thesis → ammo;聚合时先到先得)。
-      const candidates: Array<{ assetId: string; source: AutoBrollItem["source"] }> =
+      const candidates: Array<{
+        assetId: string;
+        source: AutoBrollItem["source"];
+        role?: string;
+      }> =
         [
           ...assetRefsFromScriptContentData(scriptData).map((id) => ({
             assetId: id,
@@ -751,10 +755,15 @@ export function ProductionWorkbench({
             .filter(
               (l) =>
                 l.entityType === "asset" &&
-                l.role !== "clip" &&
-                l.role !== "broll",
+                l.role !== "broll" &&
+                l.role !== "cover" &&
+                l.role !== "final",
             )
-            .map((l) => ({ assetId: l.entityId, source: "ammo" as const })),
+            .map((l) => ({
+              assetId: l.entityId,
+              source: "ammo" as const,
+              role: l.role,
+            })),
         ];
       const resolved = await Promise.all(
         candidates.map(async (cand) => {
@@ -766,6 +775,7 @@ export function ProductionWorkbench({
             })) as unknown as { assetType: string; name: string };
             // 只有图/视频能当 B-roll(文档/知识条目自然被 getAsset 失败或类型过滤掉)。
             if (a.assetType !== "video" && a.assetType !== "image") return null;
+            if (cand.role === "clip" && a.assetType === "video") return null;
             return {
               assetId: cand.assetId,
               name: a.name,

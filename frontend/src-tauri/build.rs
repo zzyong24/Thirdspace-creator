@@ -1,3 +1,73 @@
+use base64::Engine as _;
+use rand::RngCore as _;
+use zeroize::Zeroize as _;
+
+const VERDICT_KEY_BLOB_NAME: &str = "verdict-signing-key.bin";
+
+fn decode_canonical_verdict_seed(value: &str) -> Result<[u8; 32], &'static str> {
+    if value.is_empty() {
+        return Err("缺少 CREATOROS_VERDICT_SIGNING_KEY_B64");
+    }
+    if value.trim() != value
+        || value.contains('=')
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
+    {
+        return Err(
+            "CREATOROS_VERDICT_SIGNING_KEY_B64 必须是无空白、无 padding 的 canonical base64url",
+        );
+    }
+    let mut decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD
+        .decode(value)
+        .map_err(|_| "CREATOROS_VERDICT_SIGNING_KEY_B64 不是合法 base64url")?;
+    if decoded.len() != 32
+        || base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&decoded) != value
+    {
+        decoded.zeroize();
+        return Err("CREATOROS_VERDICT_SIGNING_KEY_B64 必须解码为 32B Ed25519 seed");
+    }
+    let mut seed = [0u8; 32];
+    seed.copy_from_slice(&decoded);
+    decoded.zeroize();
+    Ok(seed)
+}
+
+fn write_verdict_key_blob(out_dir: &std::path::Path, debug_build: bool) {
+    let output_path = out_dir.join(VERDICT_KEY_BLOB_NAME);
+    let configured = std::env::var("CREATOROS_VERDICT_SIGNING_KEY_B64").unwrap_or_default();
+    let mut seed = match decode_canonical_verdict_seed(&configured) {
+        Ok(seed) => seed,
+        Err(_error) if debug_build && configured.is_empty() => {
+            std::fs::write(&output_path, []).expect("T-656: 写入 debug 空 verdict key blob 失败");
+            return;
+        }
+        Err(error) => panic!("T-656: {error}"),
+    };
+
+    // 同一个 OUT_DIR 的 seed 未变化时复用旧 blob，避免随机 mask 让 Cargo 每次都重编壳。
+    if let Ok(existing) = std::fs::read(&output_path) {
+        if existing.len() == 64
+            && (0..32).all(|index| existing[index] ^ existing[index + 32] == seed[index])
+        {
+            seed.zeroize();
+            return;
+        }
+    }
+
+    let mut mask = [0u8; 32];
+    rand::rngs::OsRng.fill_bytes(&mut mask);
+    let mut blob = [0u8; 64];
+    blob[..32].copy_from_slice(&mask);
+    for index in 0..32 {
+        blob[index + 32] = seed[index] ^ mask[index];
+    }
+    std::fs::write(&output_path, blob).expect("T-656: 写入 verdict key blob 失败");
+    seed.zeroize();
+    mask.zeroize();
+    blob.zeroize();
+}
+
 fn main() {
     // [T-575] 领取授权与应用内反馈均为包级能力。正式壳只读取构建期固化值，普通
     // build 缺省为关闭；debug 仍可由本机 env 指向 mock，不能把任意启动 env 变成
@@ -123,9 +193,12 @@ fn main() {
     }
     println!("cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID={growth_config_key_id}");
 
-    // [T-535] verdict 签名 seed 由 option_env! 编进 Rust 壳。显式声明环境依赖，避免
-    // Cargo 增量复用“上一次没配 key”的壳二进制，制造公钥已烘焙但壳签不出 token 的白屏包。
+    // [T-656] 签名 seed 只在 build.rs 内严格解析，壳只 include OUT_DIR 的 mask + XOR blob。
+    // release/release-fast 缺失或非法均 fail-closed；debug 无 key 保留本地开发能力。
     println!("cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64");
+    let verdict_out_dir =
+        std::path::PathBuf::from(std::env::var_os("OUT_DIR").expect("Cargo 必须提供 OUT_DIR"));
+    write_verdict_key_blob(&verdict_out_dir, debug_build);
     let product_identity_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("product-identity.json");
@@ -351,10 +424,7 @@ fn generate_integrity_manifest(sidecar_root: &std::path::Path, target_os: &str) 
     if pnpm_root.is_dir() {
         walk_pnpm_natives(&pnpm_root, sidecar_root, native_extensions, &mut records);
     }
-    let layered_native_root = sidecar_root
-        .join("layers")
-        .join("local-ai")
-        .join("vendor");
+    let layered_native_root = sidecar_root.join("layers").join("local-ai").join("vendor");
     if layered_native_root.is_dir() {
         walk_native_leaf(
             &layered_native_root,

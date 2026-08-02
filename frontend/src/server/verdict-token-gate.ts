@@ -27,23 +27,6 @@ export function verifyVerdictTokenOrExit(): void {
     // dev 分支豁免:pnpm dev 场景无 Rust 壳、无 token。此路径打包版永不进入(NODE_ENV=production)。
     return;
   }
-  // [T-451 后修] Build-time smoke bypass —— 打包脚本 desktop:package 有一步「混淆后运行时冒烟」
-  //   直起 `node server.js` 验证混淆没炸 chunk 加载,不经 Rust 壳 → 无 verdict-token → 会被下面
-  //   拦。放行条件极严:①CREATOROS_SMOKE_BYPASS_VERDICT===1(显式 opt-in);②CREATOROS_DESKTOP===1
-  //   保底(smoke 时脚本会设);③命令行 argv[1] 尾部对齐 "server.js"(Next standalone 入口)。
-  //   Rust 壳 spawn 时永不设 CREATOROS_SMOKE_BYPASS_VERDICT,攻击者拿到 packaged exe 从二进制里
-  //   看不见这个 env 名(在源码里明文,但打包后不会被 Rust 壳传给 sidecar,除非攻击者能改 Rust
-  //   壳——那本就是 [T-450] 完整性抽样在守)。诚实边界:防"官方 build 流水线冒烟能过"而已。
-  const isSmokeBypass =
-    process.env.CREATOROS_SMOKE_BYPASS_VERDICT === "1" &&
-    process.env.CREATOROS_DESKTOP === "1";
-  if (isSmokeBypass) {
-    console.log(
-      "[T-451] smoke-bypass=1 detected → 跳过 verdict-token 校验(仅打包冒烟合法路径,packaged app 永不进入)",
-    );
-    process.env.CREATOROS_VERDICT_MODE = "licensed";
-    return;
-  }
   const token = process.env.CREATOROS_SIDECAR_VERDICT_TOKEN;
   if (!token) {
     console.error(

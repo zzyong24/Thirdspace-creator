@@ -2,7 +2,8 @@ import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
 import {
-  channelModelRow,
+  channelRouteToken,
+  resolveChannelCapabilityRoute,
   type ChannelModelPayload,
 } from "@creatoros/backend/modules/ai-runtime";
 
@@ -35,6 +36,7 @@ export interface ResolveSearchDeps {
   ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
   getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
+  getChannelModelCredential?: (serviceId: string) => Promise<string | null>;
 }
 
 /** 未配 / 无凭据 —— 上层(gatherMaterials)接住 → 降级 model_memory(诚实,不假装能搜)。
@@ -114,14 +116,19 @@ export async function resolveSearchSpec(
   const { env } = deps;
   const channel = await deps.getChannelModelConfig?.();
   if (channel) {
-    const row = channelModelRow(channel, "web.search");
-    return {
-      provider: row.provider,
-      baseUrl: row.baseUrl,
-      model: row.modelName,
-      token: row.secretValue as string,
-      displayModelKey: "channel-managed",
-    };
+    const route = resolveChannelCapabilityRoute(channel, "web.search");
+    if (route) {
+      const credential = route.serviceId
+        ? await deps.getChannelModelCredential?.(route.serviceId)
+        : null;
+      return {
+        provider: route.provider,
+        baseUrl: route.baseUrl,
+        model: route.model,
+        token: channelRouteToken(route, credential),
+        displayModelKey: "channel-managed",
+      };
+    }
   }
 
   // Tier 1 — 用户配的 DB row(先 per-capability web.search,再 search.default 默认行)。

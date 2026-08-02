@@ -385,10 +385,17 @@ export async function collectProjectBrollInventory(
   await deps.assertProjectAccess(ctx, projectId);
 
   const rows: BrollAssetRef[] = [];
-  const tryPush = async (assetId: string, source: BrollSource) => {
+  const tryPush = async (
+    assetId: string,
+    source: BrollSource,
+    options: { excludeVideoClip?: boolean } = {},
+  ) => {
     try {
       const asset = await deps.getAsset(ctx, assetId);
       if (asset.assetType !== "video" && asset.assetType !== "image") return;
+      // 兼容旧版把 AI 生图误绑成 role=clip：图片仍应进入 B-roll；真正的口播
+      // 粗剪视频继续排除，避免把主视频再当插画送进决策。
+      if (options.excludeVideoClip && asset.assetType === "video") return;
       rows.push({
         assetId: asset.id,
         label: asset.name,
@@ -441,8 +448,13 @@ export async function collectProjectBrollInventory(
 
   const links = await deps.listProjectMaterialLinks(ctx, projectId);
   for (const link of links) {
-    if (link.entityType !== "asset" || link.role === "clip") continue;
-    await tryPush(link.entityId, link.role === "broll" ? "manual" : "ammo");
+    if (link.entityType !== "asset") continue;
+    if (link.role === "cover" || link.role === "final") continue;
+    await tryPush(
+      link.entityId,
+      link.role === "broll" ? "manual" : "ammo",
+      { excludeVideoClip: link.role === "clip" },
+    );
   }
   return dedupeBrollRefs(rows);
 }
@@ -459,6 +471,32 @@ export interface StructuredCallInput<T> {
 export type StructuredCall = <T>(input: StructuredCallInput<T>) => Promise<T>;
 
 // ── 四决策函数(纯编排:调模型 → 后处理吸附/剔除;各自可独测)──────────────────
+
+const INTERNAL_SCENE_TITLE_RE =
+  /^(?:新闻|开场|黄金|悬念|冲突|痛点|反差|价值|论点|正文|展开|案例|转折|总结|结尾|行动|cta|hook)(?:钩子|段落|段|部分|场景)?$/i;
+
+function compactSceneTitle(text: string): string {
+  const chars = Array.from(text.trim().replace(/\s+/g, " "));
+  return chars.length <= 15
+    ? chars.join("")
+    : `${chars.slice(0, 14).join("")}…`;
+}
+
+function normalizeSceneTitle(
+  title: string,
+  startSec: number,
+  endSec: number,
+  srtLines: readonly SrtLine[],
+): string {
+  const clean = title.trim();
+  if (clean && !INTERNAL_SCENE_TITLE_RE.test(clean)) {
+    return compactSceneTitle(clean);
+  }
+  const spoken = srtLines.find(
+    (line) => line.startSec >= startSec && line.startSec < endSec,
+  )?.text;
+  return compactSceneTitle(spoken || clean || "本段重点");
+}
 
 /** ① 语义分场:边界吸附 SRT 行 start,排序去重,首场对齐首行,endSec = 下场 start / 总时长。
  *  [T-387c] storyboard(凝固分镜 facet,可选):有 authored 意图段 → scene 切分对齐段边界
@@ -486,12 +524,20 @@ export async function decideScenes(
   if (snapped.length === 0) throw new Error("分场结果为空");
   // 首场强制从第一行起(不留片头空洞);endSec 一律推导(下一场 start / 总时长),不信模型。
   snapped[0] = { ...snapped[0]!, startSec: starts[0] ?? 0 };
-  return snapped.map((s, i) => ({
-    title: s.title.trim(),
-    startSec: s.startSec,
-    endSec: i + 1 < snapped.length ? snapped[i + 1]!.startSec : total,
-    summary: s.summary.trim(),
-  }));
+  return snapped.map((s, i) => {
+    const endSec = i + 1 < snapped.length ? snapped[i + 1]!.startSec : total;
+    return {
+      title: normalizeSceneTitle(
+        s.title,
+        s.startSec,
+        endSec,
+        input.srtLines,
+      ),
+      startSec: s.startSec,
+      endSec,
+      summary: s.summary.trim(),
+    };
+  });
 }
 
 /** ② 信息卡:at 吸附 + 钳进所属场景;content 可溯校验不过 → 剔除(诚实门)。 */

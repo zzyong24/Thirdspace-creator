@@ -191,6 +191,12 @@ export interface ModelConfigImportReport {
   rows: ModelConfigImportRowResult[];
 }
 
+export interface ChannelModelCredentialStatus {
+  serviceId: string;
+  hasSecret: boolean;
+  updatedAt: string | null;
+}
+
 /** 导入文件校验失败(结构/版本不对)→ 400。 */
 export class ModelConfigImportError extends Error {
   readonly code = "ValidationError";
@@ -247,6 +253,21 @@ export interface SettingsService {
   listModelConfigs(
     ctx: RequestContext,
   ): Promise<ModelConfigurationResource[]>;
+  getChannelModelCredential(
+    ctx: RequestContext,
+    scopeId: string,
+    serviceId: string,
+  ): Promise<string | null>;
+  listChannelModelCredentials(
+    ctx: RequestContext,
+    scopeId: string,
+  ): Promise<ChannelModelCredentialStatus[]>;
+  setChannelModelCredential(
+    ctx: RequestContext,
+    scopeId: string,
+    serviceId: string,
+    secret: string,
+  ): Promise<ChannelModelCredentialStatus>;
   // [T-363] 模型配置导出/导入(见上方类型注释;导入走 setModelConfiguration 既有写路径)。
   exportModelConfigs(ctx: RequestContext): Promise<ModelConfigExportFile>;
   importModelConfigs(
@@ -612,6 +633,29 @@ export function createSettingsService(
     async listModelConfigs(ctx) {
       const rows = await repoForCtx(ctx).listModels(ctx);
       return rows.map(toModelResource);
+    },
+
+    async getChannelModelCredential(ctx, scopeId, serviceId) {
+      return repoForCtx(ctx).getChannelModelCredential(ctx, scopeId, serviceId);
+    },
+
+    async listChannelModelCredentials(ctx, scopeId) {
+      const rows = await repoForCtx(ctx).listChannelModelCredentials(ctx, scopeId);
+      return rows.map((row) => ({
+        serviceId: row.serviceId,
+        hasSecret: true,
+        updatedAt: row.updatedAt,
+      }));
+    },
+
+    async setChannelModelCredential(ctx, scopeId, serviceId, secret) {
+      const row = await repoForCtx(ctx).putChannelModelCredential(
+        ctx,
+        scopeId,
+        serviceId,
+        secret,
+      );
+      return { serviceId: row.serviceId, hasSecret: true, updatedAt: row.updatedAt };
     },
 
     // [T-363] 导出:原始读(不解密),密钥保持库中存储形态;secretForm 如实标注。

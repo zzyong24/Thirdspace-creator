@@ -810,8 +810,7 @@ function KnowledgeAiSearchResults({
           data-slot="knowledge-ai-search-degraded"
           className="rounded-md border border-warning/40 bg-warning/5 px-2 py-1 text-[11px] text-muted-foreground"
         >
-          AI 语义搜索未启用:请在 设置 → 模型 里为 knowledge.search.embed 配置 embedding
-          模型;当前结果为纯关键词匹配。
+          当前使用关键词搜索，语义召回暂未启用。
           {state.semanticError ? `(原因:${state.semanticError})` : ""}
         </p>
       ) : null}

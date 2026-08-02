@@ -34,8 +34,15 @@ describe("knowledgeDistillSchema(输出契约)", () => {
   });
 
   it("缺字段走默认(跨模型健壮:老 provider 落空字段也过校验)", () => {
-    const parsed = knowledgeDistillSchema.parse({});
-    expect(parsed.atoms).toEqual([]);
+    const parsed = knowledgeDistillSchema.parse({
+      atoms: [{ title: "可独立引用的知识" }],
+    });
+    expect(parsed.atoms[0]).toEqual({
+      type: "claim",
+      title: "可独立引用的知识",
+      note: "",
+      sourceNote: "",
+    });
     expect(parsed.suggestedTags).toEqual([]);
     const atom = knowledgeAtomSchema.parse({});
     expect(atom.type).toBe("claim");

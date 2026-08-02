@@ -10,6 +10,56 @@ import { resolveSearchSpec } from "./resolve";
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
 describe("resolveSearchSpec — tier 1 DB row(库存密钥优先)", () => {
+  it("现代渠道 graph 未完整提供 web.search 时不锁搜索能力，继续走本地", async () => {
+    const spec = await resolveSearchSpec(ctx, {
+      getChannelModelConfig: async () => ({
+        services: [
+          {
+            id: "text-service",
+            name: "文本服务",
+            credential: { type: "api_key", source: "user_input" },
+          },
+        ],
+        connections: [
+          {
+            id: "text-connection",
+            serviceId: "text-service",
+            provider: "minimax",
+            baseURL: "https://api.minimaxi.com/anthropic",
+            apiFormat: "anthropic_messages",
+          },
+        ],
+        models: {
+          default: [
+            {
+              id: "text-model",
+              name: "M3",
+              connectionId: "text-connection",
+              model: "MiniMax-M3",
+              isDefault: true,
+              settings: {},
+            },
+          ],
+        },
+      }),
+      getModelConfig: async (_c, capability) =>
+        capability === "web.search"
+          ? {
+              provider: "tavily",
+              modelName: "",
+              baseUrl: null,
+              apiFormat: "openai_chat",
+              secretReference: "",
+              secretValue: "local-search-key",
+              settings: {},
+            }
+          : null,
+      env: {},
+    });
+    expect(spec.provider).toBe("tavily");
+    expect(spec.token).toBe("local-search-key");
+  });
+
   it("configured 渠道 JSON 覆盖搜索本地行且不读取本地", async () => {
     let localReads = 0;
     const spec = await resolveSearchSpec(ctx, {

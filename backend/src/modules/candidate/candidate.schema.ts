@@ -90,6 +90,69 @@ export function parseSourceReferences(
   return references;
 }
 
+function stringList(raw: unknown, max: number): string[] {
+  return Array.isArray(raw)
+    ? raw
+        .map((value) => (typeof value === "string" ? value.trim() : ""))
+        .filter(Boolean)
+        .slice(0, max)
+    : [];
+}
+
+export function parseSourceDecomposition(
+  raw: unknown,
+): CandidateCard["sourceDecomposition"] | undefined {
+  if (raw == null || typeof raw !== "object") return undefined;
+  const value = raw as Record<string, unknown>;
+  const hook = str(value.hook)?.trim();
+  const reusablePattern = str(value.reusablePattern)?.trim();
+  const structureSteps = stringList(value.structureSteps, 8);
+  const coreClaims = stringList(value.coreClaims, 8);
+  if (!hook || !reusablePattern || structureSteps.length < 2 || coreClaims.length < 1) {
+    return undefined;
+  }
+  return {
+    hook,
+    structureSteps,
+    coreClaims,
+    reusablePattern,
+    factRisks: stringList(value.factRisks, 12),
+  };
+}
+
+export function parseAdaptationStrategy(
+  raw: unknown,
+): CandidateCard["adaptationStrategy"] | undefined {
+  if (raw == null || typeof raw !== "object") return undefined;
+  const value = raw as Record<string, unknown>;
+  return {
+    keep: stringList(value.keep, 8),
+    replace: stringList(value.replace, 8),
+    add: stringList(value.add, 8),
+    avoid: stringList(value.avoid, 8),
+  };
+}
+
+export function parseAdaptedDraft(
+  raw: unknown,
+): CandidateCard["adaptedDraft"] | undefined {
+  if (raw == null || typeof raw !== "object") return undefined;
+  const value = raw as Record<string, unknown>;
+  const contentText = str(value.contentText)?.trim();
+  const generatedFromTranscriptHash = str(value.generatedFromTranscriptHash)?.trim();
+  const strategyHash = str(value.strategyHash)?.trim();
+  const templateVersion = str(value.templateVersion)?.trim();
+  if (!contentText || !generatedFromTranscriptHash || !strategyHash || !templateVersion) {
+    return undefined;
+  }
+  return {
+    contentText: contentText.slice(0, 50_000),
+    generatedFromTranscriptHash,
+    strategyHash,
+    templateVersion,
+  };
+}
+
 // [T-284a] 复刻补链 G1 —— 原爆款拆解要素(candidate.card.teardown)的解析。5 段可迁移要素
 // (钩子/结构/为什么爆/可借鉴点/适配本账号建议),benchmark-teardown-runner 建候选后 patch 挂上。
 // 全字段可空;整体无任一有效段 → undefined(候选 card 里不留空壳,读端 toCardDto 也就不带 teardown)。
@@ -149,6 +212,9 @@ export function toCardDto(raw: unknown): CandidateCard {
     teardown: parseTeardownRef(c.teardown),
     // [T-482] 只回显校验过的 HTTP(S) 来源；非法/重复链接在领域 DTO 边界丢弃。
     sourceReferences: parseSourceReferences(c.sourceReferences),
+    sourceDecomposition: parseSourceDecomposition(c.sourceDecomposition),
+    adaptationStrategy: parseAdaptationStrategy(c.adaptationStrategy),
+    adaptedDraft: parseAdaptedDraft(c.adaptedDraft),
   };
 }
 
@@ -200,6 +266,18 @@ export function pickCardFields(raw: unknown): Record<string, unknown> {
   }
   if ("sourceReferences" in c) {
     out.sourceReferences = parseSourceReferences(c.sourceReferences);
+  }
+  if ("sourceDecomposition" in c) {
+    const parsed = parseSourceDecomposition(c.sourceDecomposition);
+    if (parsed) out.sourceDecomposition = parsed;
+  }
+  if ("adaptationStrategy" in c) {
+    const parsed = parseAdaptationStrategy(c.adaptationStrategy);
+    if (parsed) out.adaptationStrategy = parsed;
+  }
+  if ("adaptedDraft" in c) {
+    const parsed = parseAdaptedDraft(c.adaptedDraft);
+    if (parsed) out.adaptedDraft = parsed;
   }
   return out;
 }

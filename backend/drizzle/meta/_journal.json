@@ -463,6 +463,20 @@
       "when": 1785117600000,
       "tag": "0065_positioning_master_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1785542400000,
+      "tag": "0066_positioning_discovery_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1785628800000,
+      "tag": "0067_channel_model_credentials",
+      "breakpoints": true
     }
   ]
 }

@@ -174,7 +174,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
-  it("所有可安装包在重活前校验 verdict 密钥对，私钥只进入 Tauri/Rust 编译", () => {
+  it("所有可安装包在重活前校验 verdict 密钥对，Rust 壳只嵌入构建期拆分材料", () => {
     const packageSource = readFileSync(
       join(process.cwd(), "scripts", "desktop", "package.mjs"),
       "utf8",
@@ -185,6 +185,10 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
     const buildRs = readFileSync(
       join(process.cwd(), "src-tauri", "build.rs"),
+      "utf8",
+    );
+    const licenseRs = readFileSync(
+      join(process.cwd(), "src-tauri", "src", "license.rs"),
       "utf8",
     );
     const sidecarSource = readFileSync(
@@ -204,6 +208,17 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(buildRs).toContain(
       "cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64",
     );
+    expect(buildRs).toContain("write_verdict_key_blob");
+    expect(buildRs).toContain("URL_SAFE_NO_PAD");
+    expect(licenseRs).toContain("verdict-signing-key.bin");
+    expect(licenseRs).toContain("reconstruct_verdict_signing_seed");
+    expect(licenseRs).not.toContain(
+      'option_env!("CREATOROS_VERDICT_SIGNING_KEY_B64")',
+    );
+    expect(licenseRs).not.toContain("T451-BOUND");
+    expect(packageSource).toContain("verifyPackagedVerdictHardening");
+    expect(packageSource).not.toContain("CREATOROS_SKIP_SMOKE");
+    expect(workflow.match(/--scan-installed-runtime/g)).toHaveLength(2);
   });
 
   it("正式 runner 先精确恢复/构建并立即保存 clean runtime", () => {

@@ -100,6 +100,125 @@ describe("positioning contract (each op validates against its DTO)", () => {
     expect(parsed.field).toBe("AI");
   });
 
+  it("positioning.discovery.start/update → persisted questionnaire DTO", async () => {
+    const transport = makeTransport(db);
+    const started = await call(
+      transport,
+      "positioning.discovery.start",
+      { body: { sourceMode: "scratch" } },
+      ctx,
+    );
+    const session = ENDPOINTS.startDiscovery.response.parse(started.data);
+    expect(session.inputManifest).toEqual({
+      legacyProfileId: null,
+      legacyStatementIds: [],
+      legacyWorkIds: [],
+    });
+
+    const updated = await call(
+      transport,
+      "positioning.discovery.answer.update",
+      {
+        params: { sessionId: session.id },
+        body: {
+          themeId: "goal",
+          selectedOptionIds: ["personal-brand", "lead-generation"],
+          customText: "先建立专业信任",
+          skipped: false,
+          expectedRevision: session.revision,
+        },
+      },
+      ctx,
+    );
+    const next = ENDPOINTS.updateDiscoveryAnswer.response.parse(updated.data);
+    expect(next.answers[0]?.selectedOptionIds).toEqual([
+      "personal-brand",
+      "lead-generation",
+    ]);
+    expect(next.revision).toBe(1);
+  });
+
+  it("positioning.discovery.confirm → atomic profile + statement + adopted session DTO", async () => {
+    const transport = makeTransport(db);
+    const currentStatementId = await seedProfileAndStatement(transport);
+    const started = await call(
+      transport,
+      "positioning.discovery.start",
+      { body: { sourceMode: "optimize" } },
+      ctx,
+    );
+    let session = ENDPOINTS.startDiscovery.response.parse(started.data);
+    for (const themeId of [
+      "goal",
+      "strength",
+      "audience",
+      "need",
+      "proof",
+      "expression",
+    ] as const) {
+      const updated = await call(
+        transport,
+        "positioning.discovery.answer.update",
+        {
+          params: { sessionId: session.id },
+          body: {
+            themeId,
+            selectedOptionIds: [`${themeId}-choice`],
+            customText: "",
+            skipped: false,
+            expectedRevision: session.revision,
+          },
+        },
+        ctx,
+      );
+      session = ENDPOINTS.updateDiscoveryAnswer.response.parse(updated.data);
+    }
+    const confirmed = await call(
+      transport,
+      "positioning.discovery.confirm",
+      {
+        params: { sessionId: session.id },
+        body: {
+          candidateId: "candidate-a",
+          candidateRevision: session.revision,
+          expectedCurrentStatementId: currentStatementId,
+          idempotencyKey: "confirm-attempt-a",
+          proposal: {
+            persona: "实战顾问",
+            field: "家装",
+            audience: "装修家庭",
+            differentiation: "真实工地",
+            capabilities: ["验收"],
+            facets: {
+              contentScope: "装修决策",
+              avoid: "不夸大",
+              corePain: "预算不透明",
+              coreValue: "降低决策风险",
+              tone: "直接",
+              statusNote: "",
+            },
+            downstreamRules: {
+              topicRule: "真实问题",
+              scriptRule: "先场景",
+              projectRule: "真实素材",
+              forbidRule: "不虚构",
+              expressionRule: "说人话",
+            },
+            oneLiner: "帮装修家庭看懂预算和施工",
+            keywords: ["装修", "预算", "施工"],
+            productAnchorIds: [],
+          },
+        },
+      },
+      ctx,
+    );
+    const parsed = ENDPOINTS.confirmDiscovery.response.parse(confirmed.data);
+    expect(parsed.session.status).toBe("adopted");
+    expect(parsed.session.adoptedCandidateId).toBe("candidate-a");
+    expect(parsed.statement.versionNumber).toBe(2);
+    expect(parsed.profile.persona).toBe("实战顾问");
+  });
+
   it("positioning.profile.get → creatorProfileResource", async () => {
     const transport = makeTransport(db);
     await seedProfileAndStatement(transport);

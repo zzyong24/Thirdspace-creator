@@ -356,6 +356,9 @@ jobs:
       - name: Windows 安装期 runtime 原生冒烟(T-487)
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
         run: |
           $ErrorActionPreference = "Stop"
           $setup = Get-ChildItem "frontend/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" |
@@ -385,6 +388,8 @@ jobs:
           if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
             throw "[T-487] 安装成功后仍残留 sidecar.tar.gz"
           }
+          node frontend/scripts/desktop/verdict-artifact-hardening.mjs `
+            --scan-installed-runtime $installDir
           Write-Host "[T-487] ✓ 原生安装期物化通过: $server"
 
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
@@ -638,6 +643,9 @@ jobs:
       - name: 真安装、断网首启与 WebView 非白屏验证
         if: ${{ inputs.windows_package_rat == true }}
         shell: pwsh
+        env:
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
         run: |
           $ErrorActionPreference = "Stop"
           $setup = Get-ChildItem "frontend/src-tauri/target/release-fast/bundle/nsis" -Filter "*-setup.exe" |
@@ -684,6 +692,10 @@ jobs:
           if ($nodeModules.Count -ne 0) {
             throw "[T-565] 安装 runtime 仍含 node_modules:$($nodeModules.Count)"
           }
+          node frontend/scripts/desktop/verdict-artifact-hardening.mjs `
+            --scan-installed-runtime $installDir
+          Remove-Item Env:CREATOROS_VERDICT_SIGNING_KEY_B64 -ErrorAction SilentlyContinue
+          Remove-Item Env:CREATOROS_VERDICT_PUBKEY_B64 -ErrorAction SilentlyContinue
           $runtimeBytes = ($runtimeFiles | Measure-Object Length -Sum).Sum
 
           $appExe = Join-Path $installDir "CreatorOS.exe"

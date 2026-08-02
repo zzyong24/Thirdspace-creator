@@ -24,7 +24,35 @@ import {
   pruneStandaloneLeaks,
   resolveEntryPackage,
   assertNoPackagedBuildArtifacts,
+  copyPortableBundleTree,
 } from "./build-sidecar.mjs";
+
+describe("macOS bundle 可搬运复制", () => {
+  it("保留 Framework 的相对 symlink，不改写成构建机绝对路径", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-portable-bundle-"));
+    try {
+      const src = join(root, "cache", "Browser.app");
+      const framework = join(src, "Contents", "Frameworks", "Browser.framework");
+      const version = join(framework, "Versions", "1.0");
+      mkdirSync(join(version, "Resources"), { recursive: true });
+      symlinkSync("1.0", join(framework, "Versions", "Current"));
+      symlinkSync("Versions/Current/Resources", join(framework, "Resources"));
+
+      const dest = join(root, "bundle", "Browser.app");
+      mkdirSync(dirname(dest), { recursive: true });
+      copyPortableBundleTree(src, dest);
+
+      const copiedFramework = join(dest, "Contents", "Frameworks", "Browser.framework");
+      expect(readlinkSync(join(copiedFramework, "Versions", "Current"))).toBe("1.0");
+      expect(readlinkSync(join(copiedFramework, "Resources"))).toBe("Versions/Current/Resources");
+      expect(realpathSync(join(copiedFramework, "Resources"))).toBe(
+        realpathSync(join(copiedFramework, "Versions", "1.0", "Resources")),
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("Pi 打包协议自检", () => {
   it("覆盖 CreatorOS 会使用的 Chat / Responses / Anthropic 三种 wire API", () => {

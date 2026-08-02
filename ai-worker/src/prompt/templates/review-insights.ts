@@ -26,13 +26,22 @@ export const learningItemSchema = z.object({
   insight: z.string().default(""),
 });
 // 顶层输出契约:一个 learnings 数组(顶层对象,非裸数组)。
-export const reviewInsightsSchema = z.object({
-  learnings: z.array(learningItemSchema).default([]),
-});
+export const reviewInsightsSchema = z
+  .object({
+    learnings: z.array(learningItemSchema).default([]),
+  })
+  .refine(
+    (value) =>
+      value.learnings.some(
+        (learning) => learning.title.trim() || learning.insight.trim(),
+      ),
+    { message: "至少返回一条可用复盘经验" },
+  );
 export type ReviewInsightsOutput = z.infer<typeof reviewInsightsSchema>;
 
 export const REVIEW_INSIGHTS_TEMPLATE: PromptTemplate = {
   id: "review.insights",
+  outputRecovery: "creative-partial",
   version: "v2",
   outputSchema: reviewInsightsSchema,
   tools: [],

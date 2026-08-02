@@ -40,8 +40,28 @@ import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, blindPrediction, ammo, scriptReview, thesis } = vm;
-  const initialHtml = script.editorHtml ?? sectionsToHtml(script.sections);
+  const { project, script, scriptArtifactId, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview, thesis } = vm;
+  const radarDraftSeed = vm.radarDraftSeed ?? "";
+  const seedHtml = radarDraftSeed
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) =>
+      `<p>${line
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")}</p>`,
+    )
+    .join("");
+  const persistedHtml =
+    script.editorHtml ??
+    (script.sections.length > 0 ? sectionsToHtml(script.sections) : "");
+  // 内容雷达的改写稿已经由用户在上游确认：项目尚无正式稿时直接填进现有编辑器。
+  // 有正式版本后始终以 output_script 为准，即使用户把正式稿清空也不回灌旧 seed。
+  const initialHtml =
+    script.versionCount > 0 || persistedHtml.trim()
+      ? persistedHtml
+      : seedHtml;
 
   return (
     <main
@@ -164,6 +184,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           {/* ── 发布包区 ── */}
           <PublishPackSection
             publishPack={publishPack}
+            projectCoverAssetId={projectCoverAssetId}
             unlocked={publishUnlocked}
             projectId={project.id}
             projectTitle={project.title}
@@ -195,6 +216,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
 
 function PublishPackSection({
   publishPack,
+  projectCoverAssetId,
   unlocked,
   projectId,
   projectTitle,
@@ -204,6 +226,7 @@ function PublishPackSection({
   scriptVersion,
 }: {
   publishPack: DraftWorkbenchVm["publishPack"];
+  projectCoverAssetId: string | null;
   unlocked: boolean;
   projectId: string;
   projectTitle: string;
@@ -228,7 +251,7 @@ function PublishPackSection({
       <div className="flex items-center gap-3">
         {/* [T-078] 有真封面(采集回填/手选)渲真图;无则保留「封面待生成」占位。 */}
         <CoverThumb
-          assetId={publishPack?.coverAssetId ?? null}
+          assetId={projectCoverAssetId}
           alt={publishPack?.title || "作品封面"}
           className="h-10 w-16 shrink-0 rounded-md border border-border object-cover bg-surface-subtle"
           fallback={
@@ -236,7 +259,7 @@ function PublishPackSection({
               aria-hidden="true"
               className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md border border-border bg-surface-subtle text-[10px] text-text-subtle"
             >
-              {publishPack?.hasCover ? "封面已选" : "封面待生成"}
+              {projectCoverAssetId ? "封面已选" : "封面待生成"}
             </div>
           }
         />
@@ -372,14 +395,14 @@ function MissingMaterialsNote({
         ))}
       </ul>
       <p className="mt-1.5 text-[11px] text-amber-700/80 dark:text-amber-400/80">
-        这些是脚本画面点名但项目里还没有的素材 —— 用上方「搜素材(联网)/＋上传素材」补齐,再进制作。
+        这些是脚本画面已经点名、但项目里还没有的素材。可以用上方「联网找资料」或「上传 / 管理素材」补齐。
       </p>
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// 弹药抽屉(读侧;来源链完整版在 T-055g)
+// 创作素材(读侧;底层仍复用既有 material_links 单一数据源)
 // ---------------------------------------------------------------------------
 
 function AmmoDrawer({
@@ -390,16 +413,25 @@ function AmmoDrawer({
   projectId: string;
 }) {
   return (
-    <section data-slot="draft-ammo-drawer" className="pb-2">
-      <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
-        <h2 className="text-[13.5px] font-semibold text-foreground">这条内容的弹药</h2>
+    <section
+      data-slot="draft-ammo-drawer"
+      aria-label="创作素材"
+      className="rounded-xl border border-border/70 bg-surface p-3"
+    >
+      <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[13.5px] font-semibold text-foreground">创作素材</h2>
+          <p className="mt-0.5 text-xs leading-5 text-text-subtle">
+            联网找到的资料、你上传的文件和制作中产生的截图、录屏，都统一保存在这里，整个创作周期都能继续使用。
+          </p>
+        </div>
         {/* [T-055g SPEC §8.1] 知识库可写:稿面就地记一条,存入即挂本项目。 */}
         <AmmoNoteForm projectId={projectId} />
-        <span className="text-xs text-text-subtle">
-          {ammo.length > 0
-            ? `知识与素材 ${ammo.length} 件 · 来自研究与制作`
-            : "研究搜到的资料、制作倒入的素材会出现在这里"}
-        </span>
+        {ammo.length > 0 ? (
+          <span className="rounded-full bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+            已保存 {ammo.length} 件
+          </span>
+        ) : null}
       </div>
       {/* [T-057②] 弹药区主交互 = 拖放倾倒场:截图/录屏丢进来 → 原名落盘项目文件夹 +
           自动归类 + 挂本项目;「记一条」降级为头部次入口。 */}

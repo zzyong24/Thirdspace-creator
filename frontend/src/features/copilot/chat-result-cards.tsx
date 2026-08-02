@@ -19,7 +19,18 @@ import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
-type AdoptState = "idle" | "adopting" | "adopted" | "error";
+type AdoptState = "idle" | "adopting" | "adopted" | "error" | "stale";
+
+function isDiscoveryConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const record = error as { code?: unknown; name?: unknown; message?: unknown };
+  return (
+    record.code === "ConflictError" ||
+    record.name === "DiscoveryConflictError" ||
+    (typeof record.message === "string" &&
+      /定位方向或当前母版已经变化|前采.*版本|ConflictError/u.test(record.message))
+  );
+}
 
 // ── 维度评分诊断卡(calibration.diagnosis)──────────────────────────────────
 // [T-103a] 盲预测进对话:诊断卡在**稿面盲预测场景**(blindPredict != null,即深链带
@@ -408,6 +419,12 @@ export interface ChatPositioningSuggestion {
   };
 }
 
+export interface ChatPositioningDiscoveryProvenance {
+  sessionId: string;
+  candidateId: string;
+  candidateRevision: number;
+}
+
 // [T-234] downstreamRules 的 5 个键(顺序 = 手动表单/契约声明顺序)。
 const RULE_KEYS = [
   "topicRule",
@@ -434,16 +451,70 @@ function clampKeywords(raw: readonly string[]): [string, string, string] {
 
 export function ChatPositioningCard({
   suggestion,
+  discovery = null,
 }: {
   readonly suggestion: ChatPositioningSuggestion | null;
+  readonly discovery?: ChatPositioningDiscoveryProvenance | null;
 }) {
   const router = useRouter();
   const [state, setState] = React.useState<AdoptState>("idle");
+  const idempotencyKeyRef = React.useRef<string | null>(null);
 
   const adopt = React.useCallback(async () => {
-    if (!suggestion) return;
+    if (!suggestion || state === "adopting" || state === "adopted" || state === "stale") {
+      return;
+    }
     setState("adopting");
     try {
+      // 定位中心前采产出的提案走单一原子确认门：画像、完整母版快照、不可变陈述版本和
+      // session 终态同事务提交。重复点击复用同一 idempotencyKey，不会追加第二个版本。
+      if (discovery) {
+        const center = await client.getPositioningCenter({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        });
+        idempotencyKeyRef.current ??= createAiTaskAttemptId();
+        await client.confirmDiscovery({
+          params: { sessionId: discovery.sessionId },
+          query: undefined,
+          body: {
+            candidateId: discovery.candidateId,
+            candidateRevision: discovery.candidateRevision,
+            expectedCurrentStatementId: center.currentStatement?.id ?? null,
+            idempotencyKey: idempotencyKeyRef.current,
+            proposal: {
+              persona: suggestion.persona,
+              field: suggestion.field,
+              audience: suggestion.audience,
+              differentiation: suggestion.differentiation,
+              capabilities: suggestion.capabilities,
+              facets: {
+                contentScope: suggestion.facets?.contentScope ?? "",
+                avoid: suggestion.facets?.avoid ?? "",
+                corePain: suggestion.facets?.corePain ?? "",
+                coreValue: suggestion.facets?.coreValue ?? "",
+                tone: suggestion.facets?.tone ?? "",
+                statusNote: "",
+              },
+              downstreamRules: {
+                topicRule: suggestion.downstreamRules?.topicRule ?? "",
+                scriptRule: suggestion.downstreamRules?.scriptRule ?? "",
+                projectRule: suggestion.downstreamRules?.projectRule ?? "",
+                forbidRule: suggestion.downstreamRules?.forbidRule ?? "",
+                expressionRule:
+                  suggestion.downstreamRules?.expressionRule ?? "",
+              },
+              oneLiner: suggestion.oneLiner,
+              keywords: clampKeywords(suggestion.keywords),
+              productAnchorIds: [],
+            },
+          },
+        });
+        setState("adopted");
+        router.refresh();
+        return;
+      }
       // [T-234] 硬约束合并:AI 只对聊到的键给值,没聊到的是空串。契约层对 downstreamRules
       // 的缺省键会补 ""(zod default),直接传部分对象会把库里已有规则抹空 —— 故先读现有
       // profile,逐键「新值非空则取新值,否则保留现值」合成全量对象再提交(与手动表单
@@ -511,10 +582,10 @@ export function ChatPositioningCard({
       }
       setState("adopted");
       router.refresh();
-    } catch {
-      setState("error");
+    } catch (error) {
+      setState(discovery && isDiscoveryConflict(error) ? "stale" : "error");
     }
-  }, [router, suggestion]);
+  }, [discovery, router, state, suggestion]);
 
   if (!suggestion || (!suggestion.oneLiner && !suggestion.persona)) return null;
 
@@ -600,15 +671,24 @@ export function ChatPositioningCard({
             <button
               type="button"
               data-slot="chat-positioning-adopt"
-              disabled={state === "adopting"}
+              disabled={state === "adopting" || state === "stale"}
               onClick={adopt}
               className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
             >
-              {state === "adopting" ? "采纳中…" : "采纳为当前定位"}
+              {state === "adopting"
+                ? "采纳中…"
+                : state === "stale"
+                  ? "定位卡已过期"
+                  : "采纳为当前定位"}
             </button>
           )}
           {state === "error" ? (
             <span className="text-[10px] text-destructive">采纳失败,重试</span>
+          ) : null}
+          {state === "stale" ? (
+            <span className="text-[10px] leading-relaxed text-warning">
+              前采内容在生成后有更新，这张定位卡已过期。请重新生成后再采纳，现有定位没有被覆盖。
+            </span>
           ) : null}
         </div>
       </div>

@@ -1,9 +1,14 @@
-import { generateKeyPairSync } from "node:crypto";
+import {
+  createPublicKey,
+  generateKeyPairSync,
+  verify as cryptoVerify,
+} from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import {
   assertVerdictPublicKey,
   assertVerdictKeyMaterial,
+  createBuildSmokeVerdictToken,
   validateVerdictPublicKey,
   validateVerdictKeyMaterial,
 } from "./verdict-key-material.mjs";
@@ -88,5 +93,70 @@ describe("桌面 verdict 密钥材料门禁", () => {
         CREATOROS_VERDICT_PUBKEY_B64: left.CREATOROS_VERDICT_PUBKEY_B64,
       }),
     ).toMatchObject({ ok: false, code: "invalid-signing-key" });
+  });
+
+  it("拒绝旧哨兵、换行与 padding，构建输入只接受 canonical base64url seed", () => {
+    const env = makePair();
+    for (const signingKey of [
+      `${env.CREATOROS_VERDICT_SIGNING_KEY_B64}[T451-BOUND]`,
+      `${env.CREATOROS_VERDICT_SIGNING_KEY_B64}\n`,
+      `${env.CREATOROS_VERDICT_SIGNING_KEY_B64}=`,
+    ]) {
+      expect(
+        validateVerdictKeyMaterial({
+          ...env,
+          CREATOROS_VERDICT_SIGNING_KEY_B64: signingKey,
+        }),
+      ).toMatchObject({ ok: false, code: "invalid-signing-key" });
+    }
+  });
+
+  it("给打包冒烟签发绑定端口的短时真实 verdict token", () => {
+    const env = makePair();
+    const token = createBuildSmokeVerdictToken(
+      {
+        sidecarPort: 43123,
+        nowMs: Date.parse("2026-08-02T12:00:00.000Z"),
+        ttlMs: 5 * 60_000,
+      },
+      env,
+    );
+    const [payloadB64, signatureB64] = token.split(".");
+    const payloadJson = Buffer.from(payloadB64, "base64url").toString("utf8");
+    const payload = JSON.parse(payloadJson);
+    const publicKey = createPublicKey({
+      key: {
+        kty: "OKP",
+        crv: "Ed25519",
+        x: Buffer.from(env.CREATOROS_VERDICT_PUBKEY_B64, "base64").toString(
+          "base64url",
+        ),
+      },
+      format: "jwk",
+    });
+
+    expect(payload).toMatchObject({
+      v: 1,
+      mode: "licensed",
+      machineId: "build-smoke",
+      sidecarPort: 43123,
+      issuedAt: "2026-08-02T12:00:00.000Z",
+      expiresAt: "2026-08-02T12:05:00.000Z",
+    });
+    expect(payload.nonce).toMatch(/^[a-f0-9]{32}$/);
+    expect(
+      cryptoVerify(
+        null,
+        Buffer.from(payloadJson, "utf8"),
+        publicKey,
+        Buffer.from(signatureB64, "base64url"),
+      ),
+    ).toBe(true);
+    expect(() =>
+      createBuildSmokeVerdictToken(
+        { sidecarPort: 43123, ttlMs: 5 * 60_000 + 1 },
+        env,
+      ),
+    ).toThrow(/有效期非法/);
   });
 });

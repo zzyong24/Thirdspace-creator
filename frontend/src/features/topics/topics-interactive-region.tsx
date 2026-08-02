@@ -1095,6 +1095,28 @@ function CandidateCardDetail({
 }) {
   const { pending, run, router } = useMutation();
   const card = candidate.card;
+  const [radarTranscript, setRadarTranscript] = React.useState("");
+  const radarItemId = card.sourceReferences?.find(
+    (reference) => reference.intelligenceItemId,
+  )?.intelligenceItemId;
+  React.useEffect(() => {
+    if (!radarItemId || !card.adaptedDraft) return;
+    let alive = true;
+    void client
+      .getIntelligenceItem({
+        params: { itemId: radarItemId },
+        query: undefined,
+        body: undefined,
+      })
+      .then((result) => {
+        const text = (result as { transcript?: { text?: unknown } }).transcript?.text;
+        if (alive && typeof text === "string") setRadarTranscript(text);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [card.adaptedDraft, radarItemId]);
 
   function promote() {
     run(
@@ -1119,6 +1141,23 @@ function CandidateCardDetail({
       </p>
 
       <SourceReferenceLinks candidate={candidate} />
+
+      {card.adaptedDraft ? (
+        <div className="grid gap-3 rounded-control border border-border bg-surface-subtle p-3 md:grid-cols-2">
+          <div className="min-w-0">
+            <p className="mb-1 text-xs font-semibold text-foreground">对标原稿 · 只读</p>
+            <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface p-2 text-xs leading-5 text-muted-foreground">
+              {radarTranscript || "正在读取对标逐字稿…"}
+            </pre>
+          </div>
+          <div className="min-w-0">
+            <p className="mb-1 text-xs font-semibold text-foreground">我的改写初稿</p>
+            <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface p-2 text-xs leading-5 text-foreground">
+              {card.adaptedDraft.contentText}
+            </pre>
+          </div>
+        </div>
+      ) : null}
 
       <DetailRow label="目标观众" value={card.targetAudience} />
       <DetailRow label="观众痛点" value={card.audiencePain} />

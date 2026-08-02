@@ -85,7 +85,7 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     expect(props.scenes[0]).toMatchObject({
       id: "scene-1",
       label: "SCENE 1",
-      title: "开场钩子",
+      title: "大家好,效率提升 47%",
       sub: "抛出 47% 数字",
       role: "body",
     });
@@ -94,6 +94,62 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
       { at: 3.5, file: "asset-1", durationSec: 3, label: "提示词录屏", big: false },
     ]);
     expect(props.delivery).toEqual({ width: 1920, height: 1080, fps: 30 });
+  });
+
+  it("内部结构标签不上屏，场景标题从真实口播提炼，长卡片收敛为视觉摘要", () => {
+    const props = assembleVideoRenderProps(
+      {
+        ...DECISIONS,
+        scenes: [
+          {
+            title: "新闻钩子",
+            startSec: 0,
+            endSec: 12,
+            summary: "有人说中文 AI 训练师时薪能到三百元，这个说法需要回到岗位要求里看。",
+          },
+        ],
+        cards: [
+          {
+            sceneIdx: 0,
+            kind: "quote",
+            content:
+              "大家好,效率提升 47%，这是一段很长很长的卡片文案，不应该整段压在视频画面里和字幕互相打架。",
+            at: 0,
+          },
+          {
+            sceneIdx: 0,
+            kind: "quote",
+            content:
+              "大家好,效率提升 47%，这是一段很长很长的卡片文案，不应该整段压在视频画面里和字幕互相打架。",
+            at: 1,
+          },
+        ],
+        subtitles: [
+          {
+            index: 1,
+            startSec: 0,
+            endSec: 12,
+            zh: "有个博主说中文 AI 训练师时薪三百元",
+            en: "",
+          },
+        ],
+        srtLines: [
+          {
+            index: 1,
+            startSec: 0,
+            endSec: 12,
+            text: "有个博主说中文 AI 训练师时薪三百元",
+          },
+        ],
+      },
+      OPTS,
+    );
+    expect(props.scenes[0]!.title).toBe("有个博主说中文 AI 训练师…");
+    expect(props.scenes[0]!.title).not.toContain("新闻钩子");
+    expect(props.scenes[0]!.sub!.length).toBeLessThanOrEqual(37);
+    expect(props.scenes[0]!.cards[0]).toMatchObject({ kind: "quote" });
+    expect(props.scenes[0]!.cards).toHaveLength(1);
+    expect((props.scenes[0]!.cards[0] as { text: string }).text.length).toBeLessThanOrEqual(45);
   });
 
   it("六 kind 派生:list 按顿号切分;compare 切两半;compare 切不出/ image 无文件 → 降级 quote", () => {

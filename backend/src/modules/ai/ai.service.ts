@@ -1175,8 +1175,12 @@ export function createAiService(deps: ServiceDeps): AiService {
       // AI bytes, so the confirm门 reuses material_link_list's binding ACTION but needs its own
       // thin resultType. Only fires when the task carries a project; a generated asset on a
       // project-less task 采纳s to a no-op bind (the asset still exists in the library).
+      // role 语义：cover.generate → cover；普通生图/生视频 → broll；非视觉生成物 → reference。
       if (candidate.resultType === "generated_asset") {
-        const data = (candidate.resultData ?? {}) as { assetId?: unknown };
+        const data = (candidate.resultData ?? {}) as {
+          assetId?: unknown;
+          assetType?: unknown;
+        };
         const assetId =
           typeof data.assetId === "string" && data.assetId
             ? data.assetId
@@ -1201,7 +1205,14 @@ export function createAiService(deps: ServiceDeps): AiService {
               projectId: task.projectId,
               entityType: "asset",
               entityId: assetId,
-              role: "clip",
+              // 封面是 cover；普通 AI 生图/视频是制作 B-roll。clip 只留给用户上传的
+              // 口播粗剪，否则采纳的截图会被制作页当成口播原片排除。
+              role:
+                task.taskType === "cover.generate"
+                  ? "cover"
+                  : data.assetType === "image" || data.assetType === "video"
+                    ? "broll"
+                    : "reference",
               stage: "production",
               // [T-146 切片 b] AI 生成素材(asset.generate)采纳 → priority='normal'。
               addedByType: "ai",

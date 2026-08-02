@@ -26,6 +26,7 @@ const EXPECTED_SCRIPT_DRAFT_KEYS = [
   "projectMaterials",
   "brief",
   "assets",
+  "projectIntelligence",
 ] as const;
 
 // 一个「全源齐备」的假 registry:每个 key 挂一个可辨识的哨兵对象(不需要真 reader 逻辑,只验挑选)。
@@ -44,6 +45,7 @@ const fullRegistry = {
   artifactOrigin: sentinel("artifactOrigin"),
   projectMaterials: sentinel("projectMaterials"),
   brief: sentinel("brief"),
+  projectIntelligence: sentinel("projectIntelligence"),
 } as unknown as Registry;
 
 describe("[T-184] resolveContextDeps — 声明式 context 注入", () => {

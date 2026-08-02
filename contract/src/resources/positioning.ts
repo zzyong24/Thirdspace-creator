@@ -110,6 +110,109 @@ export type PositioningGateResultResource = z.infer<
   typeof positioningGateResultResource
 >;
 
+// T-652 定位前采：它只保存“定位候选形成前”的用户选择和公开联网参考，
+// 不成为第二份定位真相。只有用户最终采纳定位提案后，正式母版/陈述才会更新。
+export const positioningDiscoverySourceMode = z.enum([
+  "optimize",
+  "pivot",
+  "scratch",
+]);
+export type PositioningDiscoverySourceMode = z.infer<
+  typeof positioningDiscoverySourceMode
+>;
+
+export const positioningDiscoveryThemeId = z.enum([
+  "goal",
+  "strength",
+  "audience",
+  "need",
+  "proof",
+  "expression",
+]);
+export type PositioningDiscoveryThemeId = z.infer<
+  typeof positioningDiscoveryThemeId
+>;
+
+export const positioningDiscoveryAnswerResource = z.object({
+  themeId: positioningDiscoveryThemeId,
+  selectedOptionIds: z.array(z.string()),
+  customText: z.string(),
+  skipped: z.boolean(),
+  updatedAt: iso8601,
+});
+export type PositioningDiscoveryAnswerResource = z.infer<
+  typeof positioningDiscoveryAnswerResource
+>;
+
+export const positioningDiscoveryWebReferenceResource = z.object({
+  id,
+  title: z.string(),
+  url: z.string().url(),
+  snippet: z.string(),
+  query: z.string(),
+  purpose: z.string(),
+  targetThemeId: positioningDiscoveryThemeId,
+  market: z.enum(["cn", "global"]).default("cn"),
+  language: z.enum(["zh-CN", "any"]).default("zh-CN"),
+  adopted: z.boolean(),
+});
+export type PositioningDiscoveryWebReferenceResource = z.infer<
+  typeof positioningDiscoveryWebReferenceResource
+>;
+
+export const positioningDiscoveryInputManifestResource = z.object({
+  // scratch 必须三个都为空；这样“从零开始”不是一句提示词，而是可验的数据边界。
+  legacyProfileId: id.nullable(),
+  legacyStatementIds: z.array(id),
+  legacyWorkIds: z.array(id),
+});
+
+export const positioningDiscoverySessionResource = z.object({
+  id,
+  userId: id,
+  accountId: id,
+  sourceMode: positioningDiscoverySourceMode,
+  status: z.enum(["draft", "ready", "adopted", "abandoned"]),
+  answers: z.array(positioningDiscoveryAnswerResource),
+  webReferences: z.array(positioningDiscoveryWebReferenceResource),
+  inputManifest: positioningDiscoveryInputManifestResource,
+  adoptedCandidateId: id.nullable().default(null),
+  adoptedStatementId: id.nullable().default(null),
+  revision: z.number().int().nonnegative(),
+  createdAt: iso8601,
+  updatedAt: iso8601,
+});
+export type PositioningDiscoverySessionResource = z.infer<
+  typeof positioningDiscoverySessionResource
+>;
+
+// 前采完成后的正式提案候选。AI 只能产出这份候选；用户确认后才由 positioning
+// service 在同一事务内更新 profile、追加 statement 并标记 discovery 已采纳。
+export const positioningDiscoveryProposalResource = z.object({
+  persona: z.string().default(""),
+  field: z.string().default(""),
+  audience: z.string().default(""),
+  differentiation: z.string().default(""),
+  capabilities: z.array(z.string()).default([]),
+  facets: creatorProfileFacets,
+  downstreamRules: creatorProfileDownstreamRules,
+  oneLiner: z.string().trim().min(1),
+  keywords: z.array(z.string()).length(3),
+  productAnchorIds: z.array(id).default([]),
+});
+export type PositioningDiscoveryProposalResource = z.infer<
+  typeof positioningDiscoveryProposalResource
+>;
+
+export const positioningDiscoveryConfirmResultResource = z.object({
+  profile: creatorProfileResource,
+  statement: positioningStatementResource,
+  session: positioningDiscoverySessionResource,
+});
+export type PositioningDiscoveryConfirmResultResource = z.infer<
+  typeof positioningDiscoveryConfirmResultResource
+>;
+
 // 定位中心 page-composition DTO.
 export const positioningCenterResource = z.object({
   profile: creatorProfileResource.nullable(),
@@ -117,6 +220,7 @@ export const positioningCenterResource = z.object({
   keywords: z.array(z.string()),
   productAnchors: z.array(id),
   history: z.array(positioningStatementResource),
+  activeDiscovery: positioningDiscoverySessionResource.nullable(),
 });
 export type PositioningCenterResource = z.infer<
   typeof positioningCenterResource

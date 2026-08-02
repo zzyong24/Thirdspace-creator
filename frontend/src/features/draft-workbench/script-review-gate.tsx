@@ -221,7 +221,6 @@ export function ScriptReviewGate({
 
   const opening = phase === "opening";
   const stale = report !== null && report.artifactVersion < currentVersion;
-  const nonDedicated = report?.modelLabel.includes("非专用") ?? false;
 
   return (
     <div
@@ -267,7 +266,6 @@ export function ScriptReviewGate({
         <ReviewReportPanel
           report={report}
           stale={stale}
-          nonDedicated={nonDedicated}
         />
       )}
 
@@ -282,11 +280,9 @@ export function ScriptReviewGate({
 function ReviewReportPanel({
   report,
   stale,
-  nonDedicated,
 }: {
   readonly report: ScriptReviewReportResource;
   readonly stale: boolean;
-  readonly nonDedicated: boolean;
 }) {
   const verdict = VERDICT_META[report.verdict];
   const VerdictIcon = verdict.Icon;
@@ -324,16 +320,12 @@ function ReviewReportPanel({
         <p className="text-[12px] text-foreground">{report.summary}</p>
       ) : null}
 
-      {/* modelLabel 诚实标注:非专用审核模型醒目提示。 */}
+      {/* 审核统一走通用文本模型；只展示实际使用的模型。 */}
       <p
         data-testid="script-review-model"
-        className={cn(
-          "text-[11px]",
-          nonDedicated ? "font-medium text-warning" : "text-muted-foreground",
-        )}
+        className="text-[11px] text-muted-foreground"
       >
-        {nonDedicated ? "⚠ " : ""}
-        审核模型:{report.modelLabel}
+        语义审核：{report.modelLabel}
       </p>
 
       {/* 命中列表(L1 lint + L2 语义审合并渲染,各带来源标签)。 */}

@@ -155,6 +155,7 @@ export type ChannelModelAuthority =
       readonly authority: "channel";
       readonly outcome: "configured";
       readonly payload: ChannelModelJson;
+      readonly scopeId: string;
     }
   | {
       readonly authority: "local";
@@ -171,6 +172,29 @@ type ActiveVerdict = Pick<
   | "projectKey"
   | "channelRef"
 >;
+
+export function deriveChannelModelScopeId(identity: {
+  readonly projectKey: string;
+  readonly channelRef: string;
+  readonly clientId: string;
+}): string {
+  const fields = [identity.projectKey, identity.channelRef, identity.clientId];
+  if (
+    fields.some(
+      (value) =>
+        typeof value !== "string" || !value || /[\u0000-\u001f]/.test(value),
+    )
+  ) {
+    throw new Error("channel model identity is invalid");
+  }
+  const material = JSON.stringify([
+    "creatoros-channel-model-scope-v1",
+    identity.projectKey,
+    identity.channelRef,
+    identity.clientId,
+  ]);
+  return createHash("sha256").update(material, "utf8").digest("hex");
+}
 
 type Dependencies = {
   readonly env?: Record<string, string | undefined>;
@@ -1622,6 +1646,11 @@ export async function readChannelModelAuthority(
         authority: "channel",
         outcome: "configured",
         payload: channel.payload,
+        scopeId: deriveChannelModelScopeId({
+          projectKey: verdict.projectKey,
+          channelRef: verdict.channelRef,
+          clientId: CLIENT_ID,
+        }),
       };
     }
     return {

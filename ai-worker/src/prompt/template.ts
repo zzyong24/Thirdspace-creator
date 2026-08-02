@@ -21,6 +21,7 @@ import type {
   CompletionPolicyV1,
   EditableSkillField,
 } from "./effective-skill-types";
+import type { OutputRecoveryMode } from "./creative-output-recovery";
 
 /**
  * 一个 AI 能力的提示词模板(= 一份可版本化的 skill,三位一体)。纯数据,可被外部源覆盖。
@@ -72,6 +73,11 @@ export interface PromptTemplate {
    * 配置口子:override 通道接受 JSON Schema 形式下发,运行时转回校验器套用(SPEC §4.3)。
    */
   outputSchema?: z.ZodType;
+  /**
+   * 输出恢复边界。strict 只做协议包装兼容；creative-partial 允许删除 schema 已判坏的
+   * 非关键字段/单条候选后重验。它是代码侧安全策略，不开放给账号配置覆盖。
+   */
+  outputRecovery?: OutputRecoveryMode;
   /** T-513 official base metadata：合法的 required/optional facet allowlist。 */
   availableFacets?: readonly string[];
   /** T-513：账号增量允许编辑的字段；未声明时 official provider 使用六字段默认集。 */

@@ -38,6 +38,7 @@ import {
 import { createHash } from "node:crypto";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createBuildSmokeVerdictToken } from "./verdict-key-material.mjs";
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 // SIDECAR 可经 env 覆盖(测试/浏览器冒烟指向 standalone 副本;正式打包不设 → 默认 src-tauri/sidecar)。
@@ -634,6 +635,29 @@ async function runShard(shard, workerScript, onMessage) {
 // 独立函数,package.mjs 调它;本环境真起太重时可 skip(标注真机/CI 跑)。
 // ─────────────────────────────────────────────────────────────────────────────
 
+export function buildSmokeSidecarEnv(
+  baseEnv,
+  { port, token, smokeDataRoot, libDir },
+) {
+  const childEnv = {
+    ...baseEnv,
+    PORT: String(port),
+    HOSTNAME: "127.0.0.1",
+    NODE_ENV: "production",
+    CREATOROS_DESKTOP: "1",
+    CREATOROS_SIDECAR_VERDICT_TOKEN: token,
+    DATABASE_URL: "",
+    PGLITE_DATA_DIR: join(smokeDataRoot, "db"),
+    CREATOROS_DB_DIR: join(smokeDataRoot, "db"),
+    DYLD_LIBRARY_PATH: libDir,
+    LD_LIBRARY_PATH: libDir,
+  };
+  delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+  delete childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY;
+  delete childEnv.CREATOROS_SMOKE_BYPASS_VERDICT;
+  return childEnv;
+}
+
 /**
  * 混淆后真起 sidecar 冒烟。spawn node server.js → TCP ready-probe → GET / 200 →
  * POST /api/v1/dispatch(经 backend/modules/ai-runtime 的 composite transport;不崩即证
@@ -666,24 +690,15 @@ export async function smokeBootAfterObfuscation(opts = {}) {
   const { mkdtempSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const smokeDataRoot = mkdtempSync(join(tmpdir(), "creatoros-smoke-"));
+  const verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port });
 
   const child = spawn(process.execPath, [serverJs], {
-    env: {
-      ...process.env,
-      PORT: String(port),
-      HOSTNAME: "127.0.0.1",
-      NODE_ENV: "production",
-      CREATOROS_DESKTOP: "1",
-      // [T-451 后修] 冒烟绕过 verdict-token 校验 —— 打包期直起 sidecar 没经 Rust 壳,
-      //   无 token。Rust 壳 spawn 时永不设这个 env,攻击者也无从设。见
-      //   verdict-token-gate.ts::verifyVerdictTokenOrExit 的 isSmokeBypass 分支。
-      CREATOROS_SMOKE_BYPASS_VERDICT: "1",
-      DATABASE_URL: "",
-      PGLITE_DATA_DIR: join(smokeDataRoot, "db"),
-      CREATOROS_DB_DIR: join(smokeDataRoot, "db"),
-      DYLD_LIBRARY_PATH: libDir,
-      LD_LIBRARY_PATH: libDir,
-    },
+    env: buildSmokeSidecarEnv(process.env, {
+      port,
+      token: verdictToken,
+      smokeDataRoot,
+      libDir,
+    }),
     // stdin 必须是**保持打开的管道**,不能 "ignore":lifecycle 的 Win 孤儿自检以「stdin 管道
     // 断开」判父进程已死,"ignore" 下 sidecar 启动即判孤儿 → 自觉优雅退出 → 首个请求
     // ECONNRESET(第 11 轮 CI 实证)。真实 Tauri spawn 的 stdin 本就是管道(H-key 传 key 用),

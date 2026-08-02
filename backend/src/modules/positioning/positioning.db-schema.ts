@@ -7,5 +7,6 @@
 export {
   creatorProfiles,
   positioningStatements,
+  positioningDiscoverySessions,
   POSITIONING_DDL,
 } from "@creatoros/backend";

@@ -54,6 +54,27 @@ export const modelConfigurations = pgTable("model_configurations", {
   isDefault: boolean("is_default").notNull().default(false),
 });
 
+// T-645 — 渠道只下发公开模型路由，用户填写的 service Key 仍只保存在本机。
+// 以 user + 已验签渠道 scope + service 三元组隔离；不同 capability 共用同一 service 时
+// 复用一把 Key，切换渠道不会误读旧 scope。
+export const channelModelCredentials = pgTable(
+  "channel_model_credentials",
+  {
+    userId: text("user_id").notNull(),
+    scopeId: text("scope_id").notNull(),
+    serviceId: text("service_id").notNull(),
+    encryptedSecret: text("encrypted_secret").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("ux_channel_model_credentials_owner_scope_service").on(
+      table.userId,
+      table.scopeId,
+      table.serviceId,
+    ),
+  ],
+);
+
 // STORAGE_CONFIGURATION (item B) — the media-storage binding, keyed by user_id
 // (one row per user). `backend` is 'local' | 's3'; `root_path` is the media root
 // (empty → the service resolves the default `~/CreatorOS/media`). The repo upserts
@@ -216,6 +237,14 @@ CREATE TABLE IF NOT EXISTS model_configurations (
   base_url TEXT,
   api_format TEXT NOT NULL DEFAULT 'anthropic',
   is_default BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE TABLE IF NOT EXISTS channel_model_credentials (
+  user_id TEXT NOT NULL,
+  scope_id TEXT NOT NULL,
+  service_id TEXT NOT NULL,
+  encrypted_secret TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (user_id, scope_id, service_id)
 );
 CREATE TABLE IF NOT EXISTS agent_configurations (
   id TEXT PRIMARY KEY,

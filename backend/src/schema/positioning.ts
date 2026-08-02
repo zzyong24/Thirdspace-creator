@@ -67,6 +67,29 @@ export const positioningStatements = pgTable("positioning_statements", {
   // NO updated_at — rows never update (immutable version chain).
 });
 
+// T-652 定位前采草稿。answers / web_references 是候选形成前的工作区；正式定位仍只认
+// creator_profiles + positioning_statements。每个 user/account 可有历史 session，服务层
+// 启动新前采时会把旧 active session 标成 abandoned。
+export const positioningDiscoverySessions = pgTable(
+  "positioning_discovery_sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    accountId: text("account_id").notNull(),
+    sourceMode: text("source_mode").notNull(),
+    status: text("status").notNull().default("draft"),
+    answers: jsonb("answers").notNull().default([]),
+    webReferences: jsonb("web_references").notNull().default([]),
+    inputManifest: jsonb("input_manifest").notNull().default({}),
+    adoptedCandidateId: text("adopted_candidate_id"),
+    adoptedStatementId: text("adopted_statement_id"),
+    confirmIdempotencyKey: text("confirm_idempotency_key"),
+    revision: integer("revision").notNull().default(0),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+);
+
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - uq_creator_profiles_user: one CreatorProfile per user (OQ1).
 //   - uq_positioning_statements_version: one row per (profile, version) — append-only.
@@ -122,4 +145,25 @@ ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS account_id TEXT;
 ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS change_reason TEXT NOT NULL DEFAULT '';
 -- [T-632] 完整母版历史快照；旧行保持 NULL，由第一次重置前的真实当前值只写一次补齐。
 ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS master_snapshot JSONB;
+CREATE TABLE IF NOT EXISTS positioning_discovery_sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  source_mode TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft',
+  answers JSONB NOT NULL DEFAULT '[]'::jsonb,
+  web_references JSONB NOT NULL DEFAULT '[]'::jsonb,
+  input_manifest JSONB NOT NULL DEFAULT '{}'::jsonb,
+  adopted_candidate_id TEXT,
+  adopted_statement_id TEXT,
+  confirm_idempotency_key TEXT,
+  revision INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+ALTER TABLE positioning_discovery_sessions ADD COLUMN IF NOT EXISTS adopted_candidate_id TEXT;
+ALTER TABLE positioning_discovery_sessions ADD COLUMN IF NOT EXISTS adopted_statement_id TEXT;
+ALTER TABLE positioning_discovery_sessions ADD COLUMN IF NOT EXISTS confirm_idempotency_key TEXT;
+CREATE INDEX IF NOT EXISTS idx_positioning_discovery_active
+  ON positioning_discovery_sessions (user_id, account_id, updated_at DESC);
 `;

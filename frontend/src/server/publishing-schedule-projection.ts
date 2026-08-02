@@ -131,6 +131,7 @@ function formatPerformance(snapshot: LatestSnapshot | null): {
 
 function buildRailFromSnapshots(
   rows: ReadonlyArray<RailInput>,
+  dailyPlayTrend: PublishingCenterViewModel["trend"],
 ): Pick<
   PublishingCenterViewModel,
   "metrics" | "platformComparison" | "trend" | "topContent"
@@ -184,14 +185,11 @@ function buildRailFromSnapshots(
     },
   ];
   const playsByPlatform = new Map<string, number>();
-  const playsByDay = new Map<string, number>();
   for (const row of measured) {
     playsByPlatform.set(
       row.platform,
       (playsByPlatform.get(row.platform) ?? 0) + row.snapshot.plays,
     );
-    const day = row.snapshot.capturedAt.slice(0, 10);
-    playsByDay.set(day, (playsByDay.get(day) ?? 0) + row.snapshot.plays);
   }
   return {
     metrics,
@@ -203,9 +201,10 @@ function buildRailFromSnapshots(
         share: plays,
         views: formatCount(plays),
       })),
-    trend: [...playsByDay]
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([label, value]) => ({ label, value })),
+    // 历史趋势必须来自 append-only metric_snapshots 的逐日查询；最新快照集合只负责
+    // 当前总量/榜单。若拿 latest-per-publication 再按日分组，每轮采集都会把前一天从
+    // 查询结果中替掉，曲线将永久退化成单点。
+    trend: dailyPlayTrend,
     topContent: measured
       .slice()
       .sort(
@@ -341,25 +340,39 @@ export async function buildPublishingScheduleProjection(
       ctx,
       outputs.map((output) => output.outputId),
     );
-    const [revisionResult, snapshotResult] = await Promise.allSettled([
+    const publicationIds = publications.map((publication) => publication.id);
+    const [revisionResult, snapshotResult, dailyTrendResult] = await Promise.allSettled([
       deps.publishing.listCurrentRevisionSummariesByPublicationIds(
         ctx,
-        publications.map((publication) => publication.id),
+        publicationIds,
       ),
       deps.analytics.listLatestSnapshotsByPublicationIds(
         ctx,
-        publications.map((publication) => publication.id),
+        publicationIds,
       ),
+      deps.analytics.getDailyPlayTrend(ctx, {
+        publicationIds,
+        days: 7,
+      }),
     ]);
     const revisions =
       revisionResult.status === "fulfilled" ? revisionResult.value : [];
     const snapshots =
       snapshotResult.status === "fulfilled" ? snapshotResult.value : [];
+    const dailyPlayTrend =
+      dailyTrendResult.status === "fulfilled"
+        ? dailyTrendResult.value.map((point) => ({
+            label: point.day,
+            value: point.plays,
+          }))
+        : [];
     const projectionError =
       revisionResult.status === "rejected"
         ? revisionResult.reason
         : snapshotResult.status === "rejected"
           ? snapshotResult.reason
+          : dailyTrendResult.status === "rejected"
+            ? dailyTrendResult.reason
           : null;
     const revisionByPublication = new Map(
       revisions.map((revision) => [revision.publicationId, revision]),
@@ -419,7 +432,7 @@ export async function buildPublishingScheduleProjection(
       });
     }
     rows.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-    const rail = buildRailFromSnapshots(railInputs);
+    const rail = buildRailFromSnapshots(railInputs, dailyPlayTrend);
     return {
       projects,
       rows,

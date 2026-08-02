@@ -7,6 +7,92 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveLlmConfig — tier 1 DB row", () => {
+  it("T-645 渠道只配置 ASR 时，文本模型继续读取用户本地配置", async () => {
+    let localReads = 0;
+    const cfg = await resolveLlmConfig(ctx, "default", {
+      getChannelModelConfig: async () => ({
+        services: [{
+          id: "asr-service",
+          name: "ASR",
+          credential: { type: "api_key", source: "user_input" },
+        }],
+        connections: [{
+          id: "asr-connection",
+          serviceId: "asr-service",
+          provider: "xiaomi-mimo",
+          baseURL: "https://api.xiaomimimo.com/v1",
+          apiFormat: "openai_chat",
+        }],
+        models: {
+          "transcribe.audio": [{
+            id: "asr-model",
+            name: "MiMo ASR",
+            connectionId: "asr-connection",
+            model: "mimo-v2.5-asr",
+            isDefault: true,
+            settings: {},
+          }],
+        },
+      }),
+      getModelConfig: async () => {
+        localReads += 1;
+        return {
+          provider: "deepseek",
+          modelName: "deepseek-chat",
+          baseUrl: "https://api.deepseek.com",
+          apiFormat: "openai_chat",
+          secretReference: "",
+          secretValue: "local-key",
+          settings: {},
+        };
+      },
+      env: {},
+    });
+    expect(localReads).toBe(1);
+    expect(cfg).toMatchObject({ model: "deepseek-chat", token: "local-key" });
+  });
+
+  it("T-645 完整渠道文本能力只读取对应 service Key，不读取本地配置", async () => {
+    let localReads = 0;
+    const cfg = await resolveLlmConfig(ctx, "planning.thesis", {
+      getChannelModelConfig: async () => ({
+        services: [{
+          id: "text-service",
+          name: "MiniMax",
+          credential: { type: "api_key", source: "user_input" },
+        }],
+        connections: [{
+          id: "text-connection",
+          serviceId: "text-service",
+          provider: "minimax",
+          baseURL: "https://api.minimaxi.com/anthropic",
+          apiFormat: "anthropic_messages",
+        }],
+        models: { default: [{
+          id: "text-model",
+          name: "M3",
+          connectionId: "text-connection",
+          model: "MiniMax-M3",
+          isDefault: true,
+          settings: {},
+        }] },
+      }),
+      getChannelModelCredential: async (serviceId) =>
+        serviceId === "text-service" ? "channel-key" : null,
+      getModelConfig: async () => {
+        localReads += 1;
+        return null;
+      },
+      env: {},
+    });
+    expect(localReads).toBe(0);
+    expect(cfg).toMatchObject({
+      model: "MiniMax-M3",
+      token: "channel-key",
+      displayModelKey: "channel-managed",
+    });
+  });
+
   it("按能力从 Growth 多模型数组选择默认项，不读取本地配置", async () => {
     let localReads = 0;
     const cfg = await resolveLlmConfig(ctx, "script.review", {

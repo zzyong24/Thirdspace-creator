@@ -216,7 +216,10 @@ export interface ChatToolDeps {
    * prompt(优先级高于既有档案)—— 修「模型翻完 80 条作品得出洞察却无通道传入,工具永远复读
    * 旧定位」的上下文断裂。
    */
-  generatePositioning: (input: { extraBrief?: string }) => Promise<{
+  generatePositioning: (input: {
+    extraBrief?: string;
+    sourceMode?: "optimize" | "pivot" | "scratch";
+  }) => Promise<{
     persona: string;
     field: string;
     audience: string;
@@ -225,6 +228,13 @@ export interface ChatToolDeps {
     oneLiner: string;
     keywords: string[];
   } | null>;
+  /**
+   * [T-652] 前采定位候选的服务端真值读端口。对话里的版本只是发送消息时的快照，
+   * 真正生成前必须重读当前 session，避免生成一张注定无法采纳的旧卡。
+   */
+  getPositioningDiscovery?: (
+    sessionId: string,
+  ) => Promise<PositioningDiscoverySnapshot | null>;
   /**
    * [T-077b] brief.fill 的只读现状端口 —— 读**当前项目**的 briefDetail(选题卡现状),
    * 供工具结果带 `current`(前端卡渲「现值 → 建议值」字段对照)。chat-runner 用
@@ -596,6 +606,25 @@ export interface ChatToolDeps {
    * reflowRows + KPI + getCurrentRubricVersion)。读不到 → rows 空 + rubric:null(诚实空态)。**纯读**。
    */
   getPredictions?: (input: { limit: number }) => Promise<PredictionsRaw>;
+}
+
+export interface PositioningDiscoverySnapshot {
+  id: string;
+  sourceMode: "optimize" | "pivot" | "scratch";
+  status: "draft" | "ready" | "adopted" | "abandoned";
+  revision: number;
+  answers: Array<{
+    themeId: string;
+    selectedOptionIds: string[];
+    customText: string;
+    skipped: boolean;
+  }>;
+  webReferences: Array<{
+    title: string;
+    url: string;
+    snippet: string;
+    adopted: boolean;
+  }>;
 }
 
 // [T-099 切片四] context.publications 的原始全值(publishing 公开读源拼装)。
@@ -1139,6 +1168,11 @@ export interface ReviewAnalyzeToolResult {
 export interface PositioningGenerateToolResult {
   kind: "positioning.suggestion";
   suggestion: Awaited<ReturnType<ChatToolDeps["generatePositioning"]>>;
+  discovery: {
+    sessionId: string;
+    candidateId: string;
+    candidateRevision: number;
+  } | null;
 }
 
 // [T-062a] learning.capture 的 8 类经验(与 learnings.create 契约 enum 同源)。
@@ -2099,13 +2133,77 @@ export function clampDistillContent(raw: unknown): string {
 
 // [T-081] positioning.generate 原为零入参(洞察无通道传入 → 工具内部只吃旧定位母版+账号画像,
 // 永远复读旧卡)。现加 extraBrief:对话里翻真数据得出的定位洞察经它进 prompt。
-const POSITIONING_GENERATE_PARAMS = jsonSchema<{ extraBrief?: string }>({
+const POSITIONING_GENERATE_PARAMS = jsonSchema<{
+  extraBrief?: string;
+  sourceMode?: "optimize" | "pivot" | "scratch";
+  discoverySessionId?: string;
+  discoveryRevision?: number;
+  selectedDirectionKey?: string;
+}>({
   type: "object",
   properties: {
     extraBrief: EXTRA_BRIEF_PROPERTY,
+    sourceMode: {
+      type: "string",
+      enum: ["optimize", "pivot", "scratch"],
+      description:
+        "本轮前采路径。完全从零开始必须传 scratch，生成端会物理排除旧定位、账号画像和旧作品；在现有方向优化传 optimize；转向新方向传 pivot。",
+    },
+    discoverySessionId: {
+      type: "string",
+      description:
+        "从定位中心前采包进入时，原样传入包内的前采会话 ID；普通对话生成定位时省略。",
+    },
+    discoveryRevision: {
+      type: "number",
+      description:
+        "从定位中心前采包进入时，原样传入包内的前采版本号；普通对话生成定位时省略。",
+    },
+    selectedDirectionKey: {
+      type: "string",
+      maxLength: 80,
+      description:
+        "用户明确选择的方向短名称，例如“方向A-行业实战教练”；用于稳定标识待采纳候选。",
+    },
   },
   additionalProperties: false,
 });
+
+const DISCOVERY_THEME_LABELS: Record<string, string> = {
+  goal: "最终目标",
+  strength: "优势与积累",
+  audience: "优先帮助的人",
+  need: "用户需要",
+  proof: "可信证据",
+  expression: "表达风格",
+};
+
+function formatPositioningDiscoverySnapshot(
+  snapshot: PositioningDiscoverySnapshot,
+): string {
+  const answerLines = snapshot.answers.map((answer) => {
+    const label = DISCOVERY_THEME_LABELS[answer.themeId] ?? answer.themeId;
+    if (answer.skipped) return `- ${label}：暂不确定`;
+    const values = [...answer.selectedOptionIds, answer.customText.trim()]
+      .filter(Boolean)
+      .join("；");
+    return `- ${label}：${values || "未填写"}`;
+  });
+  const referenceLines = snapshot.webReferences
+    .filter((reference) => reference.adopted)
+    .map(
+      (reference) =>
+        `- ${reference.title}｜${reference.snippet.trim()}｜${reference.url}`,
+    );
+  return [
+    `【服务端最新前采快照（版本 ${snapshot.revision}）】`,
+    "以下内容是生成前刚从服务端读取的真值，优先于对话中更早的前采版本：",
+    ...answerLines,
+    ...(referenceLines.length > 0
+      ? ["已采纳的公开参考：", ...referenceLines]
+      : []),
+  ].join("\n");
+}
 
 // ── 只读 context 工具入参 —— limit 可选(execute 兜默认 + 封顶),query 可选(缺省回最近)──────
 const CONTEXT_PROJECTS_PARAMS = jsonSchema<{
@@ -2586,7 +2684,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
       // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
       description: deps.searchConfigured
-        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉『内容雷达』已登记网页/RSS 来源的真实信号。"
+        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者可逐条挑选并保存到当前项目的「创作素材」。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉『内容雷达』已登记网页/RSS 来源的真实信号。"
         : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {
@@ -3123,7 +3221,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // dispatch 失败 → error 非 null(卡渲错误态,诚实提示),不假装审过。
     "review.script": defineChatTool("review.script", {
       description:
-        "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。若未配专用审核模型,报告会如实标注(L1 违禁词 lint 照常跑,确定性)。",
+        "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。语义审核统一使用通用文本模型，无需专用审核模型。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。通用文本模型不可用时，L1 基础规则检查仍会运行并如实标注降级。",
       inputSchema: REVIEW_SCRIPT_PARAMS,
       execute: async ({ projectId }): Promise<ReviewScriptToolResult> => {
         try {
@@ -3216,13 +3314,63 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "positioning.generate": defineChatTool("positioning.generate", {
       description:
-        "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。[T-382] 调用前先并行用 context.projects/context.metrics/context.comments/context.positioning.detail 拉真数据:**老号(有真实作品数据)拉完即可直接调本工具**,把作品表现规律/受众信号/画像洞察整理进 extraBrief;[T-210] 零作品新号才走完整访谈,5 问(新手/老手、领域受众、目标、内容形态、对标风格)答齐后调用、回答整理进 extraBrief(否则结论会丢、只会复读旧档案)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
+        "把用户已经选定的一个定位方向生成结构化正式提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。调用前必须完成六组前采并先向用户展示 2–3 个方向，只有用户明确选定一个方向后才能调用；extraBrief 必须带上前采答案、用户采用的公开参考、所选方向和全部硬约束。从零开始时不得混入旧定位或旧作品；优化/转型时旧数据也只能作为辅助证据。结果仍是候选，需人采纳后才写入定位母版——不直接写库。",
       inputSchema: POSITIONING_GENERATE_PARAMS,
-      execute: async ({ extraBrief }): Promise<PositioningGenerateToolResult> => {
+      execute: async ({
+        extraBrief,
+        sourceMode,
+        discoverySessionId,
+        discoveryRevision,
+        selectedDirectionKey,
+      }): Promise<PositioningGenerateToolResult> => {
+        const sessionId = discoverySessionId?.trim() ?? "";
+        const directionKey = selectedDirectionKey?.trim() ?? "";
+        const hasDiscoveryIdentity = sessionId.length > 0 && directionKey.length > 0;
+        let authoritativeDiscovery: PositioningDiscoverySnapshot | null = null;
+        if (hasDiscoveryIdentity && deps.getPositioningDiscovery) {
+          authoritativeDiscovery = await deps.getPositioningDiscovery(sessionId);
+          if (!authoritativeDiscovery) {
+            throw new Error(
+              "定位前采会话不存在或当前账号无权访问，请返回定位中心重新开始。",
+            );
+          }
+          if (authoritativeDiscovery.status !== "ready") {
+            throw new Error(
+              "定位前采内容尚未准备完成，请先完成前采再生成定位卡。",
+            );
+          }
+        }
+        const requestedBrief = clampExtraBrief(extraBrief);
+        const effectiveBrief = authoritativeDiscovery
+          ? [
+              requestedBrief,
+              formatPositioningDiscoverySnapshot(authoritativeDiscovery),
+            ]
+              .filter(Boolean)
+              .join("\n\n")
+          : requestedBrief;
         const suggestion = await deps.generatePositioning({
-          extraBrief: clampExtraBrief(extraBrief),
+          extraBrief: effectiveBrief,
+          ...(authoritativeDiscovery
+            ? { sourceMode: authoritativeDiscovery.sourceMode }
+            : sourceMode
+              ? { sourceMode }
+              : {}),
         });
-        return { kind: "positioning.suggestion", suggestion };
+        const candidateRevision = authoritativeDiscovery?.revision ?? discoveryRevision;
+        const hasDiscoveryProvenance =
+          hasDiscoveryIdentity && Number.isInteger(candidateRevision);
+        return {
+          kind: "positioning.suggestion",
+          suggestion,
+          discovery: hasDiscoveryProvenance
+            ? {
+                sessionId,
+                candidateId: `poscand:${sessionId}:${candidateRevision}:${directionKey}`,
+                candidateRevision: candidateRevision!,
+              }
+            : null,
+        };
       },
     }, deps.humanizeError),
     // [T-094] 知识蒸馏(倾倒场 Copilot 化):用户在对话里粘原文 → 本工具走既有 knowledge.distill

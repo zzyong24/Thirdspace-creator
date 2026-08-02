@@ -131,6 +131,9 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["PATCH", "/settings/preferences"],
   ["GET", "/settings/models"],
   ["PUT", "/settings/models/:capability"],
+  // [T-645] 当前验签渠道 scope 内的服务级 Key（明文不回显）。
+  ["GET", "/settings/channel-model-credentials"],
+  ["PUT", "/settings/channel-model-credentials/:serviceId"],
   // [T-377] 测试连接(composition-only,persistence-client settingsWithModelTest 拦截)。
   ["POST", "/settings/models/:capability/test"],
   // [T-248 批C] POST /settings/agents 已删(孤 op,零调用方)。
@@ -157,6 +160,11 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/ingestion/runs/:runId"],
   // ── contract v0.4 (七步 seven-step) ────────────────────────────────────
   // 定位 (positioning)
+  ["POST", "/positioning/discovery"],
+  ["PATCH", "/positioning/discovery/:sessionId/answers"],
+  ["POST", "/positioning/discovery/:sessionId/research"],
+  ["PATCH", "/positioning/discovery/:sessionId/evidence/:evidenceId"],
+  ["POST", "/positioning/discovery/:sessionId/confirm"],
   ["GET", "/positioning/profile"],
   ["POST", "/positioning/profile"],
   ["POST", "/positioning/master/reset"],
@@ -275,6 +283,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/intelligence/transforms/topic-preview"],
   ["POST", "/intelligence/transforms/:transformId/confirm-topic"],
   ["POST", "/projects/:projectId/intelligence"],
+  ["GET", "/projects/:projectId/intelligence"],
   ["POST", "/projects/:projectId/scripts/candidates"],
   ["POST", "/projects/:projectId/scripts/candidates/:taskId/accept"],
   ["GET", "/intelligence/migrations/inventory"],

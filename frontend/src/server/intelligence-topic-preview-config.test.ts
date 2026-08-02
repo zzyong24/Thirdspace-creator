@@ -3,21 +3,21 @@ import { describe, expect, it } from "vitest";
 import { topicPreviewGenerationOptions } from "./intelligence-topic-preview-config";
 
 describe("[T-633] 内容雷达选题卡生成预算", () => {
-  it("首次拆解给推理模型保留完整 JSON 的输出空间，同时不放大失败重试", () => {
+  it("来源拆解只生成小结构，不携带选题和长稿", () => {
     expect(
       topicPreviewGenerationOptions({ hasReusableDecomposition: false }),
     ).toEqual({
       maxRetries: 0,
-      maxOutputTokens: 4_096,
+      maxOutputTokens: 3_072,
     });
   });
 
-  it("复用拆解只生成四个字段，但仍给推理内容和最终 JSON 留出空间", () => {
+  it("复用拆解时只生成选题卡和策略，保持零重试", () => {
     expect(
       topicPreviewGenerationOptions({ hasReusableDecomposition: true }),
     ).toEqual({
       maxRetries: 0,
-      maxOutputTokens: 2_400,
+      maxOutputTokens: 2_048,
     });
   });
 });

@@ -36,6 +36,7 @@ import {
 } from "@/features/settings/settings-page";
 import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
+import { resolveChannelCapabilityRoute } from "@creatoros/backend/modules/ai-runtime";
 import {
   buildSkillItems,
   type SkillItem,
@@ -310,15 +311,96 @@ export default async function SettingsRoutePage() {
     };
     const authority = await readChannelModelAuthority();
     const actions = {
-      configured: "渠道模型正在使用",
+      configured: "渠道模型配置已读取",
       not_configured: "本地模型正在使用 · 渠道未配置",
       unreachable: "本地模型正在使用 · 暂时无法取得渠道配置",
       security_error: "本地模型正在使用 · 渠道配置安全校验未通过",
     } as const;
+    let capabilities: ModelAuthorityState["capabilities"];
+    let services: ModelAuthorityState["services"];
+    let action: string = actions[authority.outcome];
+    if (authority.authority === "channel") {
+      const visibleCapabilities = [
+        "default",
+        "transcribe.audio",
+        "image.generate",
+        "video.generate",
+      ] as const;
+      let credentialStatuses: readonly {
+        serviceId: string;
+        hasSecret: boolean;
+      }[] = [];
+      if (session) {
+        try {
+          credentialStatuses = await createServerClient(
+            session.ctx,
+          ).listChannelModelCredentials({
+            params: undefined,
+            query: undefined,
+            body: undefined,
+          });
+        } catch {
+          credentialStatuses = [];
+        }
+      }
+      const statusByService = new Map(
+        credentialStatuses.map((row) => [row.serviceId, row.hasSecret]),
+      );
+      const managedRoutes = visibleCapabilities.flatMap((capability) => {
+        const route = resolveChannelCapabilityRoute(
+          authority.payload,
+          capability,
+        );
+        return route ? [{ capability, route }] : [];
+      });
+      capabilities = Object.fromEntries(
+        managedRoutes.map(({ capability, route }) => {
+          const hasSecret = route.inlineToken
+            ? true
+            : route.serviceId
+              ? (statusByService.get(route.serviceId) ?? false)
+              : false;
+          return [
+            capability,
+            {
+              capability,
+              authority: "channel" as const,
+              serviceId: route.serviceId,
+              serviceName: route.serviceName,
+              provider: route.provider,
+              modelName: route.modelName,
+              baseUrl: route.baseUrl,
+              hasSecret,
+            },
+          ];
+        }),
+      );
+      const serviceById = new Map<
+        string,
+        NonNullable<ModelAuthorityState["services"]>[number]
+      >();
+      for (const { route } of managedRoutes) {
+        if (!route.serviceId || serviceById.has(route.serviceId)) continue;
+        serviceById.set(route.serviceId, {
+          serviceId: route.serviceId,
+          serviceName: route.serviceName,
+          hasSecret: statusByService.get(route.serviceId) ?? false,
+          ...route.links,
+        });
+      }
+      services = [...serviceById.values()];
+      const managedCount = managedRoutes.length;
+      action =
+        managedCount === 0
+          ? "渠道未接管这 4 类模型，全部由你配置"
+          : `渠道已接管 ${managedCount}/4 类模型，其余由你配置`;
+    }
     modelAuthority = {
       authority: authority.authority,
       outcome: authority.outcome,
-      action: actions[authority.outcome],
+      action,
+      capabilities,
+      services,
     };
   }
 

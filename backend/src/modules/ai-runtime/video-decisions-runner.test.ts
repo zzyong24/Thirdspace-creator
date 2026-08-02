@@ -166,6 +166,8 @@ describe("decideScenes(吸附与推导)", () => {
     const scenes = await decideScenes({ srtLines, script: SCRIPT }, call);
     expect(scenes.map((s) => s.startSec)).toEqual([0, 3.5, 12]);
     expect(scenes.map((s) => s.endSec)).toEqual([3.5, 12, 15]); // 推导,不信模型
+    expect(scenes[0]!.title).toBe("大家好,今天讲三个提示词技巧…");
+    expect(scenes.map((s) => s.title)).not.toContain("开场");
   });
 
   it("吸附后撞到同一 start 的场景去重", async () => {
@@ -271,7 +273,9 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
       order.push(`links:${projectId}`);
       return [
         { entityType: "asset", entityId: "manual", role: "broll" },
-        { entityType: "asset", entityId: "clip", role: "clip" },
+        { entityType: "asset", entityId: "rough-clip", role: "clip" },
+        { entityType: "asset", entityId: "legacy-image", role: "clip" },
+        { entityType: "asset", entityId: "project-cover", role: "cover" },
         { entityType: "asset", entityId: "foreign", role: "reference" },
         { entityType: "asset", entityId: "doc", role: "reference" },
       ];
@@ -280,6 +284,14 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
       if (assetId === "foreign") throw new Error("cross-account hidden");
       if (assetId === "doc") {
         return { id: assetId, name: "资料.pdf", assetType: "document", description: "" };
+      }
+      if (assetId === "legacy-image") {
+        return {
+          id: assetId,
+          name: "已采纳的 AI 截图",
+          assetType: "image",
+          description: "作为制作阶段画面",
+        };
       }
       return {
         id: assetId,
@@ -296,7 +308,8 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
     });
     expect(order.slice(0, 2)).toEqual(["project:proj-1", "links:proj-1"]);
     expect(listProjectMaterialLinks).toHaveBeenCalledWith(ctx, "proj-1");
-    expect(getAsset).not.toHaveBeenCalledWith(ctx, "clip");
+    expect(getAsset).toHaveBeenCalledWith(ctx, "rough-clip");
+    expect(getAsset).not.toHaveBeenCalledWith(ctx, "project-cover");
     expect(result).toEqual([
       {
         assetId: "manual",
@@ -304,6 +317,13 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
         kind: "video",
         description: "展示产品操作",
         source: "manual",
+      },
+      {
+        assetId: "legacy-image",
+        label: "已采纳的 AI 截图",
+        kind: "image",
+        description: "作为制作阶段画面",
+        source: "ammo",
       },
     ]);
   });

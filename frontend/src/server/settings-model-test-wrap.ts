@@ -105,6 +105,7 @@ export interface SettingsModelTestDeps {
 // ── 各家默认端点(与对应 adapter 内的 DEFAULT_BASE_URL 对齐;探测层本地镜像,不反向
 //    依赖 adapter 私有常量)──────────────────────────────────────────────────────
 const MINIMAX_DEFAULT = "https://api.minimax.io"; // multimodal-minimax DEFAULT_BASE_URL
+const OMNIHI_VIDEO_DEFAULT = "https://api.omnihi.ai/media/v1";
 const SILICONFLOW_ASR_DEFAULT = "https://api.siliconflow.cn"; // multimodal-openai-asr
 const SILICONFLOW_V1_DEFAULT = "https://api.siliconflow.cn/v1"; // vision.ts baseURL 默认
 
@@ -235,11 +236,14 @@ async function textModelProbe(
 // ── 生成端点鉴权探测(video.generate:不真生成,发缺 prompt 请求判鉴权)────────────
 async function generationAuthProbe(
   spec: MmSpecLite,
-  path: string,
   fetchImpl: typeof fetch,
 ): Promise<{ ok: boolean; detail: string }> {
   try {
-    const url = `${trimBase(spec.baseUrl ?? MINIMAX_DEFAULT)}${path}`;
+    const provider = spec.provider.toLowerCase();
+    const omnihi = provider === "omnihi" || provider === "seedance" || provider === "seeddance";
+    const defaultBase = omnihi ? OMNIHI_VIDEO_DEFAULT : MINIMAX_DEFAULT;
+    const path = omnihi ? "/videos/generations" : "/v1/video_generation";
+    const url = `${trimBase(spec.baseUrl ?? defaultBase)}${path}`;
     const res = await fetchImpl(url, {
       method: "POST",
       headers: {
@@ -486,7 +490,6 @@ export async function runModelConnectionTest(
         const spec = await deps.resolveMultimodal(ctx, capability);
         const r = await generationAuthProbe(
           spec,
-          "/v1/video_generation",
           fetchImpl,
         );
         return {

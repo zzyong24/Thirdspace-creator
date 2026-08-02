@@ -12,6 +12,7 @@ import type {
   SettingsRepository,
   UserPreferenceRow,
   ModelConfigurationRow,
+  ChannelModelCredentialRow,
   AgentConfigurationRow,
   StorageConfigRow,
   SkillConfigOverrideRow,
@@ -56,6 +57,7 @@ function makeFakeRepo(
   const state = {
     _pref: undefined as UserPreferenceRow | undefined,
     _models: [] as ModelConfigurationRow[],
+    _channelCredentials: [] as ChannelModelCredentialRow[],
     _agents: [] as AgentConfigurationRow[],
     _storage: undefined as StorageConfigRow | undefined,
     _prompts: [] as SkillConfigOverrideRow[],
@@ -118,6 +120,31 @@ function makeFakeRepo(
     },
     async listModels() {
       return state._models;
+    },
+    async getChannelModelCredential(_c, scopeId, serviceId) {
+      return (
+        state._channelCredentials.find(
+          (row) => row.scopeId === scopeId && row.serviceId === serviceId,
+        )?.encryptedSecret ?? null
+      );
+    },
+    async putChannelModelCredential(_c, scopeId, serviceId, secret) {
+      const row: ChannelModelCredentialRow = {
+        userId: ctx.userId,
+        scopeId,
+        serviceId,
+        encryptedSecret: secret,
+        updatedAt: NOW,
+      };
+      const index = state._channelCredentials.findIndex(
+        (item) => item.scopeId === scopeId && item.serviceId === serviceId,
+      );
+      if (index >= 0) state._channelCredentials[index] = row;
+      else state._channelCredentials.push(row);
+      return row;
+    },
+    async listChannelModelCredentials(_c, scopeId) {
+      return state._channelCredentials.filter((row) => row.scopeId === scopeId);
     },
     // [T-363] 导出原始读(fake 无加密,与 listModels 同源)+ 导入解包(明文透传)。
     async listModelsRaw() {

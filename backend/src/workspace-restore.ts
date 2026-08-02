@@ -31,6 +31,7 @@ import { users, sessions } from "./schema/identity";
 import {
   userPreferences,
   modelConfigurations,
+  channelModelCredentials,
   agentConfigurations,
   storageConfigs,
   accountSkillOverlays,
@@ -48,6 +49,7 @@ const TABLE_BY_NAME: Record<string, PgTable> = {
   sessions,
   user_preferences: userPreferences,
   model_configurations: modelConfigurations,
+  channel_model_credentials: channelModelCredentials,
   agent_configurations: agentConfigurations,
   storage_configs: storageConfigs,
   account_skill_overlays: accountSkillOverlays,

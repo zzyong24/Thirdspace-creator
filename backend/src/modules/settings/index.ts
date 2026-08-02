@@ -17,6 +17,7 @@ export {
   type AccountProfilePatch,
   type ResolvedModel,
   type ModelConfigInternal,
+  type ChannelModelCredentialStatus,
   // [T-363] 模型配置导出/导入(设置页兜底;route 直调 service,无契约 op)。
   ModelConfigImportError,
   type ModelConfigExportFile,
@@ -32,6 +33,7 @@ export {
   type RepoDeps,
   type UserPreferenceRow,
   type ModelConfigurationRow,
+  type ChannelModelCredentialRow,
   type AgentConfigurationRow,
   type StorageConfigRow,
   type SkillConfigOverrideRow,

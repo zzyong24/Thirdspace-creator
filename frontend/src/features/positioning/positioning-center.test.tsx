@@ -107,6 +107,7 @@ const POPULATED: PositioningCenterViewModel = {
   keywords: ["论文", "代码", "工程化"],
   productAnchors: ["product-1"],
   history: [STATEMENT(2, "v2 把论文变生产级代码"), STATEMENT(1, "v1 把论文变代码", true)],
+  activeDiscovery: null,
 };
 
 const EMPTY: PositioningCenterViewModel = {
@@ -115,6 +116,7 @@ const EMPTY: PositioningCenterViewModel = {
   keywords: [],
   productAnchors: [],
   history: [],
+  activeDiscovery: null,
 };
 
 describe("PositioningCenterView", () => {
@@ -126,19 +128,13 @@ describe("PositioningCenterView", () => {
     ).toBeTruthy();
   });
 
-  it("renders the empty-state CTAs when there is no profile: 显眼的「和 AI 聊定位」入口 + 手动创建 (brand-new user)", () => {
+  it("[T-652] brand-new user先选择完整前采路径，而不是直接跳到 AI 生成", () => {
     render(<PositioningCenterView viewModel={EMPTY} />);
-    expect(screen.getByTestId("positioning-empty-state")).toBeTruthy();
-    // T-143 ①:空态必须显眼可见「和 AI 聊定位」主入口(深链到 Copilot positioning
-    // surface,新用户对话式聊出第一版定位,采纳时一次成型建 profile)。
-    const aiCta = screen.getByTestId("positioning-empty-ai-cta");
-    expect(aiCta).toBeTruthy();
-    const aiLink = screen.getByTestId("positioning-empty-open-copilot");
-    expect(aiLink.getAttribute("href")).toContain("surface=positioning");
-    expect(aiLink.getAttribute("href")).toContain("fn=positioning.generate");
-    // 手动兜底入口仍在(想清楚了直接落库)。
-    expect(screen.getByRole("button", { name: "手动创建定位" })).toBeTruthy();
-    // populated 分支的 AI 带(英雄区下)仍不在空态出现。
+    expect(screen.getByTestId("positioning-discovery-entry")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /在现有方向上优化/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /转向一个新方向/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /完全从零开始/ })).toBeTruthy();
+    expect(screen.queryByTestId("positioning-empty-open-copilot")).toBeNull();
     expect(screen.queryByTestId("positioning-ai-band")).toBeNull();
   });
 

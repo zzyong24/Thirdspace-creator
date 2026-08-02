@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "发现两处会导致已确认的渠道隔离与异步调用语义无法唯一实现的阻断性缺口。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "blocker",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "FR-645-05",
+        "quote": "Key 以 `userId + scopeId + serviceId` 唯一保存；切换渠道后不得复用旧渠道 Key。"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T645-05",
+        "quote": "切换 channelRef 后旧 scope Key不可见、不可调用；切回后原 Key仍可读。"
+      },
+      "where": "§2 FR-645-05；§6 异步任务 scope 说明",
+      "failure_mode": "SPEC 同时要求切换后旧 scope Key“不可调用”，又要求异步任务在执行期间从其启动时的相同 scope 取 Key，却未定义渠道切换后的在途任务应继续、取消还是重新授权，也未定义该例外的授权边界。实现者可合理地让旧任务继续读取旧 scope 密钥，违反“不可调用”；也可按当前 authority 拒绝读取，导致已启动任务无法按其 pin 的渠道执行。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md#FR-645-05, #运行时选择",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定渠道切换对在途任务的唯一语义，并限定任何旧 scope 凭据读取仅能发生在该任务已绑定的、可审计的执行授权内；补充覆盖切换期间任务的验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "FR-645-05",
+        "quote": "`scopeId` 由当前已验签的 `projectKey/channelRef/clientId` 在 server-only 侧摘要产生。"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T645-05",
+        "quote": "切换 channelRef 后旧 scope Key不可见、不可调用；切回后原 Key仍可读。"
+      },
+      "where": "§2 FR-645-05；§4 本地凭据表唯一键",
+      "failure_mode": "`scopeId` 是密钥隔离唯一键，但 SPEC 未规定对三项 identity 的规范化、无歧义编码、版本化及摘要算法。不同实现可对同一身份产生不同 scope，或因拼接/编码歧义使不同身份产生同一 scope，导致切换后不能读回原 Key，或跨渠道读取到错误 Key。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md#FR-645-05, #数据与秘密边界",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把 scopeId 规定为对已验签 identity 的固定版本、字段规范化和无歧义序列化后的确定性抗碰撞摘要；同一规则须用于保存、列表、运行时解析和异步 pin，并以切换后不可读、切回可读的测试锁定。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

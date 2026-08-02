@@ -4,74 +4,41 @@ import {
   chatboxPositioningSchema,
 } from "./chatbox-surfaces";
 
-// [T-210] 定位编导改「结构化多轮访谈」—— 锚定 system prompt 的访谈语义,防回退成「一次出提案」。
-// 会话本就多轮(chat-runner 收全量 messages 历史),本改动只在 system 层把「先出提案」改成
-// 「按 5 问一问一答访谈 → 答齐才合成」;采纳链(positioning.generate 工具 + confirm 门)不动。
-describe("chatbox.positioning — T-210 访谈式多轮定位", () => {
+describe("chatbox.positioning — T-652 选项式完整前采", () => {
   const sys = CHATBOX_POSITIONING_TEMPLATE.system;
 
-  it("system 定调为访谈式一问一答(私教 / 一次一个问题)", () => {
+  it("新号和老号都必须完整前采，每轮一个问题并给多选项", () => {
     expect(sys).toContain("访谈");
     expect(sys).toContain("私教");
-    // 每轮只问一个尚未答的问题 —— 反「一次抛多个 / 提前合成」的核心约束。
     expect(sys).toContain("每轮只问一个");
+    expect(sys).toContain("可多选");
+    expect(sys).toContain("不要因为有历史作品就跳过");
   });
 
-  it("system 含用户认可的 5 问序列要点(新手老手 / 领域受众 / 目标 / 内容形态 / 对标风格)", () => {
-    // Q1 新手 vs 老手分支(老手结合已注入的账号画像/真实作品数据)。
-    expect(sys).toContain("新手");
-    expect(sys).toContain("老手");
-    expect(sys).toContain("真实作品数据");
-    // Q2 领域 + 目标受众;Q3 目标(变现/涨粉/影响力);Q4 内容形态 + 卖货;Q5 对标风格。
-    expect(sys).toContain("领域");
-    expect(sys).toContain("目标受众");
-    expect(sys).toContain("变现");
-    expect(sys).toContain("内容形态");
-    expect(sys).toContain("对标账号");
+  it("前采包先给 2–3 个方向比较，用户选定后才调生成工具", () => {
+    expect(sys).toContain("【定位前采已完成】");
+    expect(sys).toContain("2–3 个");
+    expect(sys).toMatch(/用户明确选定一个方向后[\s\S]*positioning\.generate/);
+    expect(sys).toContain("proposals 恒留空");
   });
 
-  it("system 要求答齐才调 positioning.generate 并把访谈回答整理进 extraBrief", () => {
-    expect(sys).toContain("positioning.generate");
-    expect(sys).toContain("extraBrief");
-    // 铁律:答齐之前绝不调工具、绝不在 reply 里写提案。
-    expect(sys).toMatch(/答齐之前[\s\S]*绝不调 positioning\.generate/);
-    expect(sys).toContain("proposals 字段恒留空");
+  it("联网只允许短关键词，不外发访谈和逐字稿", () => {
+    expect(sys).toContain("短行业/IP 关键词");
+    expect(sys).toContain("绝不把整份访谈");
+    expect(sys).toContain("逐字稿");
   });
 
-  it("template facet 契约不变(positioning 必需 + 每轮两段 reply/proposals)", () => {
-    expect(CHATBOX_POSITIONING_TEMPLATE.requiredFacets).toContain("positioning");
+  it("旧定位不再无条件注入，scratch 只含前采包", () => {
+    expect(CHATBOX_POSITIONING_TEMPLATE.requiredFacets).toEqual([]);
     expect(CHATBOX_POSITIONING_TEMPLATE.tools).toContain("positioning.generate");
-    // 每轮输出契约仍是两段(reply 必填,proposals 走工具产)—— 采纳链不动。
-    expect(chatboxPositioningSchema.safeParse({ reply: "你是想开始做,还是已经在做了?" }).success).toBe(
+    expect(chatboxPositioningSchema.safeParse({ reply: "先选一个方向。" }).success).toBe(
       true,
     );
     expect(chatboxPositioningSchema.safeParse({}).success).toBe(false);
   });
-});
 
-// [T-382] 定位流程「先拉数据再问」—— 锚定新的第 0 步语义,防回退成「不拉数据反问用户」。
-// 实录病例:用户开局「结合我的账号画像给 X 号生成定位提案」,编导不拉数据反问「你想定位哪个号/
-// 是不是已经在做/想做什么领域」(画像与 49 条作品早就回答了)。
-describe("chatbox.positioning — T-382 先拉数据再问", () => {
-  const sys = CHATBOX_POSITIONING_TEMPLATE.system;
-
-  it("system 第 0 步要求先并行拉四个 context 真数据源", () => {
-    expect(sys).toContain("先并行调 context.projects + context.metrics + context.comments + context.positioning.detail");
-  });
-
-  it("老号(有真实作品数据)不走完整访谈:直接产提案或最多问 1-2 个数据答不了的高质量问题", () => {
-    expect(sys).toContain("不走完整访谈");
-    expect(sys).toContain("1-2 个");
-    // 画像/作品已能回答的绝不再问(重复问 = 浪费用户)。
-    expect(sys).toMatch(/已能回答的问题[\s\S]*绝不再问/);
-  });
-
-  it("完整 5 问访谈只属零作品新号", () => {
-    expect(sys).toContain("零作品新号");
-    expect(sys).toContain("仅零作品新号");
-  });
-
-  it("tools preferred 序补 context.metrics / context.positioning.detail(第 0 步要用)", () => {
+  it("用户选择参考历史时仍可显式读取四类辅助证据", () => {
+    expect(CHATBOX_POSITIONING_TEMPLATE.tools).toContain("context.projects");
     expect(CHATBOX_POSITIONING_TEMPLATE.tools).toContain("context.metrics");
     expect(CHATBOX_POSITIONING_TEMPLATE.tools).toContain("context.positioning.detail");
   });

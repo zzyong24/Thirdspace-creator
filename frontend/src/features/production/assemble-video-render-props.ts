@@ -56,31 +56,80 @@ function deliveryForOrientation(
 /** content 里第一个数值 token(供 stat 卡 value;与 runner 可溯校验同域的数字形态)。 */
 const FIRST_NUMBER_RE = /\d+(?:[.,]\d+)?\s*[%万亿kKmMxX×倍]?/;
 
+const INTERNAL_SCENE_TITLE_RE =
+  /^(?:新闻|开场|黄金|悬念|冲突|痛点|反差|价值|论点|正文|展开|案例|转折|总结|结尾|行动|cta|hook)(?:钩子|段落|段|部分|场景)?$/i;
+
+/** 视觉摘要不改底稿，只限制上屏长度；完整口播仍由字幕与原音承载。 */
+function compactVisualText(text: string, maxChars: number): string {
+  const chars = Array.from(text.trim().replace(/\s+/g, " "));
+  return chars.length <= maxChars
+    ? chars.join("")
+    : `${chars.slice(0, Math.max(1, maxChars - 1)).join("")}…`;
+}
+
+function visibleSceneTitle(
+  title: string,
+  scene: { startSec: number; endSec: number },
+  decisions: VideoDecisions,
+): string {
+  const normalized = title.trim();
+  if (normalized && !INTERNAL_SCENE_TITLE_RE.test(normalized)) {
+    return compactVisualText(normalized, 15);
+  }
+  const spoken =
+    decisions.srtLines.find(
+      (line) => line.startSec >= scene.startSec && line.startSec < scene.endSec,
+    )?.text ??
+    decisions.subtitles.find(
+      (line) => line.startSec >= scene.startSec && line.startSec < scene.endSec,
+    )?.zh ??
+    normalized;
+  return compactVisualText(spoken || "本段重点", 15);
+}
+
+function uniqueVisibleCards(cards: readonly VideoInfoCard[]): VideoInfoCard[] {
+  const seen = new Set<string>();
+  return cards.filter((card) => {
+    const key = card.content.replace(/\s+/g, "").toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /** 决策卡(kind+content 单字符串)→ 契约六 kind 卡的确定性映射(schema 由 parse 兜底)。 */
 function toContractCard(card: VideoInfoCard): Record<string, unknown> {
-  const content = card.content.trim();
+  const rawContent = card.content.trim();
   // [T-295] motion 透传:有则随卡走(compare/image 降级 quote 时 base 已含 motion,一并带走)。
   const base = { at: card.at, ...(card.motion ? { motion: card.motion } : {}) };
   switch (card.kind) {
     case "stat": {
-      const value = content.match(FIRST_NUMBER_RE)?.[0]?.trim() ?? content;
-      return { kind: "stat", ...base, value, label: content };
+      const value = rawContent.match(FIRST_NUMBER_RE)?.[0]?.trim() ?? rawContent;
+      return {
+        kind: "stat",
+        ...base,
+        value: compactVisualText(value, 12),
+        label: compactVisualText(rawContent, 28),
+      };
     }
     case "list": {
-      const items = content
+      const items = rawContent
         .split(/\r?\n|;|;|、/)
         .map((t) => t.trim())
         .filter(Boolean)
         .slice(0, 8)
-        .map((text) => ({ text }));
+        .map((text) => ({ text: compactVisualText(text, 22) }));
       return {
         kind: "list",
         ...base,
-        items: items.length > 0 ? items : [{ text: content }],
+        items:
+          items.length > 0
+            ? items
+            : [{ text: compactVisualText(rawContent, 22) }],
       };
     }
     case "compare": {
-      const halves = content
+      const halves = rawContent
         .split(/\s+vs\.?\s+|\s+VS\s+|↔|对比/)
         .map((t) => t.trim())
         .filter(Boolean);
@@ -88,21 +137,39 @@ function toContractCard(card: VideoInfoCard): Record<string, unknown> {
         return {
           kind: "compare",
           ...base,
-          left: { title: halves[0], items: [halves[0]] },
-          right: { title: halves[1], items: [halves[1]] },
+          left: {
+            title: compactVisualText(halves[0]!, 18),
+            items: [compactVisualText(halves[0]!, 18)],
+          },
+          right: {
+            title: compactVisualText(halves[1]!, 18),
+            items: [compactVisualText(halves[1]!, 18)],
+          },
         };
       }
       // 切不出两半 → 降级 quote(原文可见,不编造结构)。
-      return { kind: "quote", ...base, text: content };
+      return {
+        kind: "quote",
+        ...base,
+        text: compactVisualText(rawContent, 45),
+      };
     }
     case "code":
-      return { kind: "code", ...base, code: content };
+      return { kind: "code", ...base, code: compactVisualText(rawContent, 120) };
     case "image":
       // 决策层没有图片文件可引(契约 image.file=mountAs 路径)→ 降级 quote。
-      return { kind: "quote", ...base, text: content };
+      return {
+        kind: "quote",
+        ...base,
+        text: compactVisualText(rawContent, 45),
+      };
     case "quote":
     default:
-      return { kind: "quote", ...base, text: content };
+      return {
+        kind: "quote",
+        ...base,
+        text: compactVisualText(rawContent, 45),
+      };
   }
 }
 
@@ -165,11 +232,11 @@ export function assembleVideoRenderProps(
       id: `scene-${i + 1}`,
       // 场景眉标决策层不产出,确定性占位(全大写短语,契约形态)。
       label: `SCENE ${i + 1}`,
-      title: s.title,
-      ...(s.summary ? { sub: s.summary } : {}),
+      title: visibleSceneTitle(s.title, s, decisions),
+      ...(s.summary ? { sub: compactVisualText(s.summary, 37) } : {}),
       startSec: s.startSec,
       endSec: s.endSec,
-      cards: (cardsByScene.get(i) ?? [])
+      cards: uniqueVisibleCards(cardsByScene.get(i) ?? [])
         .slice()
         .sort((a, b) => a.at - b.at)
         .map(toContractCard),

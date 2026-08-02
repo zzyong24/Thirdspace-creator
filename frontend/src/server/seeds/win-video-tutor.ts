@@ -1,22 +1,26 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 
 import { lessonPointsToMarkdown } from "@/features/knowledge/knowledge-lesson-content";
+import {
+  getAllBuiltInCourseLessons,
+} from "@/features/knowledge/built-in-ip-course.server";
+import { BUILT_IN_IP_COURSE } from "@/features/knowledge/built-in-ip-course";
 
 // win-video-tutor 22 节课程 → CreatorOS 知识库 seed。
 //
-// 用户明确安装并配置 22 节完整短视频课程包路径后,首次启动把课程落到自家
+// 22 节完整短视频课程随软件发布,首次启动把课程投影到自家
 // knowledge_items 表里(每节 1 个 reference 类型的
 // knowledgeItem + 1 个 revision,content 存整篇 markdown)——
 // 知识库开箱就有真内容(不是空)且可被项目弹药、复盘、对话蒸馏消费。
 //
 // 实现要点:
-//   1. 仅在调用方显式传 skillPath 或部署显式配置 env 时读源文件。生产缺省不猜测
-//      开发者 home 路径,安静返回 0(课程包未安装是合法状态)。
+//   1. 生产缺省只读随包资产,不猜测开发者 home 路径。skillPath 仅保留给测试/显式迁移。
 //   2. 解析每个 .md 头几行 YAML-like 抽 module/lesson 标题(失败时 fallback 标题)。
-//   3. 幂等:每节写入前先看 source_metadata->>'origin'='win-video-tutor' AND
-//      source_metadata->>'lessonNumber'=<N> 是否已存在 → 存在则 skip(重装 / 重启安全)。
+//   3. 幂等:稳定身份是 courseId+lessonId(兼容旧 lessonNumber),contentHash 只判断
+//      是否追加 revision。逐课 upsert,首次中断后可继续补齐。
 //   4. 每节 = 1 个 knowledgeItem(`reference` 类型,知识型,适合整节课程归档)+ 1 个
 //      revision(content=课程 YAML 转成的**可读 markdown**(带小标题:一句话/正文/案例/
 //      易错点/苏格拉底提问/实践作业),而非原始 YAML dump —— 新装机预览直接可读
@@ -25,6 +29,8 @@ import { lessonPointsToMarkdown } from "@/features/knowledge/knowledge-lesson-co
 //      module,标记来源可追溯。
 
 const SEED_ORIGIN = "win-video-tutor";
+const COURSE_ID = BUILT_IN_IP_COURSE.courseId;
+const COURSE_VERSION = BUILT_IN_IP_COURSE.version;
 
 // [T-211] 旧标题品牌前缀。用户裁决:课程保留作预设,但标题去掉「Win 短视频私教 · 」
 // 品牌前缀(新 seed 用不带前缀的模板)。存量装机(seed 早于本改动)的 22 条仍带此
@@ -36,6 +42,7 @@ interface ParsedLesson {
   readonly title: string; // 文件解析不出时用「第 N 节」兜底
   readonly module: string; // 解析不出空串
   readonly content: string; // 整个 .md
+  readonly contentHash: string;
 }
 
 interface KnowledgeItemLike {
@@ -46,12 +53,20 @@ interface KnowledgeItemLike {
   readonly sourceMetadata?: unknown;
 }
 
+interface KnowledgeRevisionLike {
+  readonly content?: string;
+}
+
 /** 兼容真实的 KnowledgeService 接口 — ctx 走 unknown 避坑 RequestContext 全字段耦合
  * (seed 只用 userId + accountId,接口不该管 service 不读的字段)。 */
 type KnowledgeServiceCtx = unknown;
 
 interface KnowledgeServiceLike {
   listKnowledge(ctx: KnowledgeServiceCtx): Promise<ReadonlyArray<KnowledgeItemLike>>;
+  listRevisions(
+    ctx: KnowledgeServiceCtx,
+    knowledgeId: string,
+  ): Promise<ReadonlyArray<KnowledgeRevisionLike>>;
   createKnowledge(
     ctx: KnowledgeServiceCtx,
     input: {
@@ -62,6 +77,34 @@ interface KnowledgeServiceLike {
       sourceMetadata: Record<string, unknown>;
     },
   ): Promise<{ id: string }>;
+  createRevision(
+    ctx: KnowledgeServiceCtx,
+    knowledgeId: string,
+    input: { content: string },
+  ): Promise<unknown>;
+  updateSourceMetadata(
+    ctx: KnowledgeServiceCtx,
+    knowledgeId: string,
+    sourceMetadata: Record<string, unknown>,
+  ): Promise<unknown>;
+}
+
+function courseSourceMetadata(lesson: ParsedLesson): Record<string, unknown> {
+  return {
+    origin: SEED_ORIGIN,
+    courseId: COURSE_ID,
+    courseVersion: COURSE_VERSION,
+    lessonId: `lesson-${String(lesson.lessonNumber).padStart(2, "0")}`,
+    lessonNumber: lesson.lessonNumber,
+    lessonOrder: lesson.lessonNumber,
+    module: lesson.module,
+    moduleId:
+      BUILT_IN_IP_COURSE.lessons.find(
+        (item) => item.number === lesson.lessonNumber,
+      )?.moduleId ?? "unknown",
+    contentHash: lesson.contentHash,
+    sourceName: SEED_ORIGIN,
+  };
 }
 
 /**
@@ -178,9 +221,9 @@ export async function fixupWinVideoTutorModuleTags(
       continue;
     }
     const moduleRaw = (meta as { module?: unknown }).module;
-    const module = typeof moduleRaw === "string" ? moduleRaw : "";
-    if (module.trim().length === 0 || !it.id) continue;
-    entries.push({ knowledgeId: it.id, module });
+    const lessonModule = typeof moduleRaw === "string" ? moduleRaw : "";
+    if (lessonModule.trim().length === 0 || !it.id) continue;
+    entries.push({ knowledgeId: it.id, module: lessonModule });
   }
   if (entries.length === 0) return 0;
   return assignModuleTags(taxonomyService, ctx, entries);
@@ -197,19 +240,19 @@ export async function fixupWinVideoTutorModuleTags(
  */
 function parseLessonFrontmatter(raw: string): { module: string; title: string } {
   const lines = raw.split("\n");
-  let module = "";
+  let lessonModule = "";
   let title = "";
   for (let i = 0; i < Math.min(lines.length, 12); i++) {
     const l = lines[i] ?? "";
     const moduleMatch = /^  module:\s*(.+?)\s*$/.exec(l);
-    if (moduleMatch) module = moduleMatch[1] ?? "";
+    if (moduleMatch) lessonModule = moduleMatch[1] ?? "";
     const titleMatch = /^  title:\s*(.+?)\s*$/.exec(l);
     if (titleMatch) {
       title = (titleMatch[1] ?? "").trim();
       break;
     }
   }
-  return { module, title };
+  return { module: lessonModule, title };
 }
 
 async function parseLessonFile(filePath: string): Promise<ParsedLesson | null> {
@@ -227,23 +270,50 @@ async function parseLessonFile(filePath: string): Promise<ParsedLesson | null> {
     title: title || `第 ${lessonNumber} 节`,
     module,
     content,
+    contentHash: createHash("sha256").update(content, "utf8").digest("hex"),
   };
 }
 
-async function isAlreadySeeded(
-  knowledgeService: KnowledgeServiceLike,
-  ctx: KnowledgeServiceCtx,
-): Promise<boolean> {
-  // 任一已种过的课就视为已 seed(避免漏种单课)。
-  const items = await knowledgeService.listKnowledge(ctx);
-  return items.some((it: KnowledgeItemLike) => {
-    const meta = it.sourceMetadata;
-    return (
-      typeof meta === "object" &&
-      meta !== null &&
-      (meta as { origin?: unknown }).origin === SEED_ORIGIN
-    );
-  });
+function bundledLessons(): ParsedLesson[] {
+  return getAllBuiltInCourseLessons().map(({ meta, raw }) => ({
+    lessonNumber: meta.number,
+    title: meta.title,
+    module: meta.module,
+    content: raw,
+    contentHash: meta.contentHash,
+  }));
+}
+
+async function explicitSkillLessons(skillPath: string): Promise<ParsedLesson[]> {
+  const knowledgeDir = path.join(skillPath, "knowledge");
+  const files = (await fs.readdir(knowledgeDir))
+    .filter((file) => /^\d{2}\.md$/.test(file))
+    .sort();
+  const lessons: ParsedLesson[] = [];
+  for (const file of files) {
+    const lesson = await parseLessonFile(path.join(knowledgeDir, file));
+    if (lesson) lessons.push(lesson);
+  }
+  return lessons;
+}
+
+function lessonNumberFromItem(item: KnowledgeItemLike): number | null {
+  const meta = item.sourceMetadata;
+  if (typeof meta !== "object" || meta === null) return null;
+  const value = meta as {
+    origin?: unknown;
+    courseId?: unknown;
+    lessonId?: unknown;
+    lessonNumber?: unknown;
+  };
+  if (value.origin !== SEED_ORIGIN) return null;
+  if (typeof value.courseId === "string" && value.courseId !== COURSE_ID) return null;
+  const lessonMatch =
+    typeof value.lessonId === "string"
+      ? /^lesson-(\d{2})$/.exec(value.lessonId)
+      : null;
+  if (lessonMatch) return Number(lessonMatch[1]);
+  return typeof value.lessonNumber === "number" ? value.lessonNumber : null;
 }
 
 /**
@@ -251,7 +321,7 @@ async function isAlreadySeeded(
  *
  * @param knowledgeService 知识库 service
  * @param ctx canonical user ctx(userId + accountId)
- * @param opts.skillPath 显式课程包路径；未传时仅接受显式 env 注入，不扫描用户 home
+ * @param opts.skillPath 测试/迁移用显式课程包路径；未传时使用随包课程资产
  * @param opts.taxonomyService [T-218] tag 写侧 service;传入则每节按 module 挂 tag
  *   (观点地图开箱即在)。不传则只建知识条目(向后兼容旧调用/测试)。
  * @returns 实际种入的知识条目数(0 = 未配置 / 已种过 / 文件缺失 / 失败)。
@@ -263,60 +333,101 @@ export async function seedWinVideoTutor(
 ): Promise<number> {
   const configuredSkillPath =
     opts.skillPath ?? process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
-  if (!configuredSkillPath || configuredSkillPath === "0") {
-    return 0;
-  }
-  const skillPath = configuredSkillPath;
-  const knowledgeDir = path.join(skillPath, "knowledge");
-
-  if (await isAlreadySeeded(knowledgeService, ctx)) {
-    return 0;
-  }
-  // 1. 读 22 个 .md
-  let files: string[];
+  // `0` 仅关闭旧的外部 skill 路径，不关闭随包课程。
+  let lessons: ParsedLesson[];
   try {
-    files = (await fs.readdir(knowledgeDir))
-      .filter((f) => /^\d{2}\.md$/.test(f))
-      .sort();
+    lessons =
+      configuredSkillPath && configuredSkillPath !== "0"
+        ? await explicitSkillLessons(configuredSkillPath)
+        : bundledLessons();
   } catch (err) {
-    // 该 skill 没装到本机(新人 / 其他机器)→ 安静返回。
+    // 显式迁移路径缺失不阻塞 app；生产随包资产在构建期已 fail-closed 校验。
     console.warn(
-      `[seed] win-video-tutor 课程源不存在于 ${knowledgeDir}:`,
+      "[seed] win-video-tutor 课程读取失败:",
       err instanceof Error ? err.message : err,
     );
     return 0;
   }
-  if (files.length === 0) {
+  if (lessons.length === 0) {
     return 0;
   }
 
-  // 2. 逐节 → 1 个 knowledgeItem + 1 个 revision
+  const existing = await knowledgeService.listKnowledge(ctx);
+  const byLessonNumber = new Map<number, KnowledgeItemLike>();
+  for (const item of existing) {
+    const lessonNumber = lessonNumberFromItem(item);
+    if (lessonNumber !== null && !byLessonNumber.has(lessonNumber)) {
+      byLessonNumber.set(lessonNumber, item);
+    }
+  }
+
+  // 逐课 upsert → 缺课创建;同课内容变化只追加 revision。
   let count = 0;
   // [T-218] 记下每节的 (knowledgeId, module),入库完成后统一挂 module tag。
   const taggedEntries: { knowledgeId: string; module: string }[] = [];
-  for (const f of files) {
-    const lesson = await parseLessonFile(path.join(knowledgeDir, f));
-    if (!lesson) continue;
+  for (const lesson of lessons) {
     try {
       // [T-198] 入库存可读 markdown(YAML → 带小标题);解析不出退回原文(诚实)。
       const readableContent =
         lessonPointsToMarkdown(lesson.content) ?? lesson.content;
-      const created = await knowledgeService.createKnowledge(
-        ctx,
-        {
+      const current = byLessonNumber.get(lesson.lessonNumber);
+      if (current?.id) {
+        const meta =
+          typeof current.sourceMetadata === "object" && current.sourceMetadata !== null
+            ? (current.sourceMetadata as {
+                contentHash?: unknown;
+                courseVersion?: unknown;
+                courseId?: unknown;
+                lessonId?: unknown;
+              })
+            : {};
+        if (meta.contentHash === lesson.contentHash) {
+          const expectedLessonId = `lesson-${String(lesson.lessonNumber).padStart(2, "0")}`;
+          if (
+            meta.courseVersion !== COURSE_VERSION ||
+            meta.courseId !== COURSE_ID ||
+            meta.lessonId !== expectedLessonId
+          ) {
+            await knowledgeService.updateSourceMetadata(
+              ctx,
+              current.id,
+              courseSourceMetadata(lesson),
+            );
+          }
+          taggedEntries.push({ knowledgeId: current.id, module: lesson.module });
+          continue;
+        }
+        const revisions = await knowledgeService.listRevisions(ctx, current.id);
+        if (revisions.some((revision) => revision.content === readableContent)) {
+          await knowledgeService.updateSourceMetadata(
+            ctx,
+            current.id,
+            courseSourceMetadata(lesson),
+          );
+          taggedEntries.push({ knowledgeId: current.id, module: lesson.module });
+          continue;
+        }
+        await knowledgeService.createRevision(ctx, current.id, {
+          content: readableContent,
+        });
+        await knowledgeService.updateSourceMetadata(
+          ctx,
+          current.id,
+          courseSourceMetadata(lesson),
+        );
+        count += 1;
+        taggedEntries.push({ knowledgeId: current.id, module: lesson.module });
+        continue;
+      }
+
+      const created = await knowledgeService.createKnowledge(ctx, {
           // [T-211] 标题去品牌前缀「Win 短视频私教 · 」,只留课程/章节自然名。
           title: `第 ${lesson.lessonNumber} 节 · ${lesson.title}`,
           knowledgeType: "reference",
           content: readableContent,
           sourceType: "import",
-          sourceMetadata: {
-            origin: SEED_ORIGIN,
-            lessonNumber: lesson.lessonNumber,
-            module: lesson.module,
-            skillPath,
-          },
-        },
-      );
+          sourceMetadata: courseSourceMetadata(lesson),
+        });
       count += 1;
       if (created?.id && lesson.module.trim().length > 0) {
         taggedEntries.push({ knowledgeId: created.id, module: lesson.module });

@@ -53,6 +53,14 @@ export default async function KnowledgeRoutePage({
   searchParams,
 }: KnowledgeRoutePageProps = {}) {
   const resolvedSearchParams = (await searchParams) ?? {};
+  const view = firstParam(resolvedSearchParams.view) === "knowledge" ? "knowledge" : "course";
+  const lesson = firstParam(resolvedSearchParams.lesson);
+
+  // 内置课程随安装包发布,不依赖登录态/选中账号。默认先进入课程目录；
+  // 用户自己的知识仍保持严格 account-scoped。
+  if (view === "course") {
+    return <KnowledgePage activeView="course" activeLessonId={lesson} />;
+  }
   // KNOW-13:热门标签 chip 链到 /knowledge?tag=<name>;读侧真消费该参数,
   // recent 列表只保留挂该标签的条目(过滤逻辑见 knowledge-data.ts)。
   const tag = firstParam(resolvedSearchParams.tag);
@@ -65,7 +73,7 @@ export default async function KnowledgeRoutePage({
     // No session (the (creator) layout guard redirects on a real request). Keep
     // the fixture seam: `<KnowledgePage />` 无 VM 走 singleton(canonical ctx),
     // SSR/测试不崩。
-    return <KnowledgePage />;
+    return <KnowledgePage activeView="knowledge" />;
   }
 
   // [T-353] 未选号(含 0 号)= 引导态(T-332 §4.2):本页 per-account 读会撞 S2 strict 门
@@ -86,5 +94,5 @@ export default async function KnowledgeRoutePage({
     page,
   });
 
-  return <KnowledgePage viewModel={knowledgeVM} />;
+  return <KnowledgePage activeView="knowledge" viewModel={knowledgeVM} />;
 }

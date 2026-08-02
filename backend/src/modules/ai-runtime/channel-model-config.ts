@@ -4,6 +4,31 @@ import type { MultimodalSpec } from "./multimodal/resolve";
 
 export type ChannelModelPayload = Readonly<Record<string, unknown>>;
 
+type ChannelCapabilityKind = "llm" | MultimodalSpec["kind"];
+
+export interface ChannelServiceLinks {
+  readonly portalUrl: string | null;
+  readonly purchaseUrl: string | null;
+  readonly rechargeUrl: string | null;
+  readonly helpUrl: string | null;
+}
+
+export interface ChannelCapabilityRoute {
+  readonly capability: string;
+  readonly kind: ChannelCapabilityKind;
+  readonly serviceId: string | null;
+  readonly serviceName: string;
+  readonly links: ChannelServiceLinks;
+  readonly provider: string;
+  readonly baseUrl: string | null;
+  readonly apiFormat: ApiFormat | string;
+  readonly model: string;
+  readonly modelName: string;
+  readonly settings: Record<string, unknown>;
+  /** 只兼容旧版已验签 flat payload；新版 graph 的 Key 必须从本地 service credential 读取。 */
+  readonly inlineToken: string | null;
+}
+
 function field(payload: ChannelModelPayload, ...names: string[]): unknown {
   for (const name of names) {
     if (Object.prototype.hasOwnProperty.call(payload, name)) {
@@ -13,6 +38,201 @@ function field(payload: ChannelModelPayload, ...names: string[]): unknown {
   return undefined;
 }
 
+function object(value: unknown): ChannelModelPayload | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as ChannelModelPayload)
+    : null;
+}
+
+function nonEmptyString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function objectArray(value: unknown): readonly ChannelModelPayload[] | null {
+  if (!Array.isArray(value)) return null;
+  const rows = value.map(object);
+  return rows.every((row): row is ChannelModelPayload => row !== null)
+    ? rows
+    : null;
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  const row = object(value);
+  return row ? { ...row } : null;
+}
+
+function safeHttpsUrl(value: unknown): string | null {
+  const raw = nonEmptyString(value);
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) {
+      return null;
+    }
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
+function optionalSafeHttpsUrl(value: unknown): string | null {
+  return value === undefined || value === null || value === ""
+    ? null
+    : safeHttpsUrl(value);
+}
+
+function serviceLinks(service: ChannelModelPayload): ChannelServiceLinks {
+  const credential = object(field(service, "credential"));
+  const links = object(field(credential ?? {}, "links")) ?? {};
+  return {
+    portalUrl: optionalSafeHttpsUrl(field(links, "portalUrl")),
+    purchaseUrl: optionalSafeHttpsUrl(field(links, "purchaseUrl")),
+    rechargeUrl: optionalSafeHttpsUrl(field(links, "rechargeUrl")),
+    helpUrl: optionalSafeHttpsUrl(field(links, "helpUrl")),
+  };
+}
+
+function capabilityKind(capability: string): ChannelCapabilityKind {
+  switch (capability) {
+    case "transcribe.audio":
+      return "audio";
+    case "image.generate":
+      return "image";
+    case "video.generate":
+      return "video";
+    case "asset.classify":
+      return "vision";
+    default:
+      return "llm";
+  }
+}
+
+function normalizedApiFormat(value: unknown): ApiFormat | string | null {
+  const raw = nonEmptyString(value);
+  if (raw === "anthropic_messages") return "anthropic";
+  return raw;
+}
+
+function normalizedProvider(value: unknown, kind: ChannelCapabilityKind): string | null {
+  const raw = nonEmptyString(value);
+  if (!raw) return null;
+  if (kind === "image" && raw === "openai-compatible") return "openai";
+  if (kind === "video" && (raw === "seedance" || raw === "seeddance")) {
+    return "omnihi";
+  }
+  return raw;
+}
+
+function adapterSupported(
+  kind: ChannelCapabilityKind,
+  provider: string,
+  apiFormat: string,
+): boolean {
+  if (kind === "llm") {
+    return (
+      apiFormat === "anthropic" ||
+      apiFormat === "openai_chat" ||
+      apiFormat === "openai_responses"
+    );
+  }
+  if (kind === "audio") {
+    return new Set([
+      "qwen-asr",
+      "xiaomi-mimo",
+      "siliconflow",
+      "openai",
+      "groq",
+    ]).has(provider);
+  }
+  if (kind === "image") return provider === "minimax" || provider === "openai";
+  if (kind === "video") return provider === "minimax" || provider === "omnihi";
+  return provider === "openai" || provider === "minimax";
+}
+
+function hasUniqueIds(rows: readonly ChannelModelPayload[]): boolean {
+  const ids = rows.map((row) => nonEmptyString(field(row, "id")));
+  return ids.every(Boolean) && new Set(ids).size === ids.length;
+}
+
+function exactlyOne<T>(rows: readonly T[], predicate: (row: T) => boolean): T | null {
+  const matches = rows.filter(predicate);
+  return matches.length === 1 ? matches[0]! : null;
+}
+
+function modernGraphRoute(
+  payload: ChannelModelPayload,
+  capability: string,
+  allowDefaultFallback: boolean,
+): ChannelCapabilityRoute | null {
+  const services = objectArray(field(payload, "services"));
+  const connections = objectArray(field(payload, "connections"));
+  const models = object(field(payload, "models"));
+  if (!services || !connections || !models) return null;
+  if (!hasUniqueIds(services) || !hasUniqueIds(connections)) return null;
+
+  const selectedCapability = Object.prototype.hasOwnProperty.call(models, capability)
+    ? capability
+    : allowDefaultFallback && capabilityKind(capability) === "llm"
+      ? "default"
+      : null;
+  if (!selectedCapability) return null;
+  const options = objectArray(field(models, selectedCapability));
+  if (!options || options.length === 0 || !hasUniqueIds(options)) return null;
+  const option = exactlyOne(options, (row) => field(row, "isDefault") === true);
+  if (!option) return null;
+
+  const optionId = nonEmptyString(field(option, "id"));
+  const optionName = nonEmptyString(field(option, "name"));
+  const model = nonEmptyString(field(option, "model", "modelName"));
+  const connectionId = nonEmptyString(field(option, "connectionId"));
+  const settings = record(field(option, "settings"));
+  if (!optionId || !optionName || !model || !connectionId || !settings) return null;
+
+  const connection = exactlyOne(
+    connections,
+    (row) => nonEmptyString(field(row, "id")) === connectionId,
+  );
+  if (!connection) return null;
+  const serviceId = nonEmptyString(field(connection, "serviceId"));
+  const kind = capabilityKind(capability);
+  const provider = normalizedProvider(field(connection, "provider"), kind);
+  const baseUrl = safeHttpsUrl(field(connection, "baseURL", "baseUrl"));
+  const apiFormat = normalizedApiFormat(field(connection, "apiFormat"));
+  if (!serviceId || !provider || !baseUrl || !apiFormat) return null;
+
+  const service = exactlyOne(
+    services,
+    (row) => nonEmptyString(field(row, "id")) === serviceId,
+  );
+  if (!service) return null;
+  const serviceName = nonEmptyString(field(service, "name"));
+  const credential = object(field(service, "credential"));
+  if (
+    !serviceName ||
+    !credential ||
+    field(credential, "type") !== "api_key" ||
+    field(credential, "source") !== "user_input"
+  ) {
+    return null;
+  }
+  if (!adapterSupported(kind, provider, apiFormat)) return null;
+
+  return {
+    capability,
+    kind,
+    serviceId,
+    serviceName,
+    links: serviceLinks(service),
+    provider,
+    baseUrl,
+    apiFormat,
+    model,
+    modelName: optionName,
+    settings,
+    inlineToken: null,
+  };
+}
+
 export class ChannelModelConfigurationError extends Error {
   constructor() {
     super("渠道模型配置不完整，请联系官方处理");
@@ -20,119 +240,192 @@ export class ChannelModelConfigurationError extends Error {
   }
 }
 
-function modelOption(
+export class ChannelModelCredentialRequiredError extends Error {
+  readonly capability: string;
+  readonly serviceId: string;
+
+  constructor(capability: string, serviceId: string) {
+    super(`渠道已配置 ${capability}，请先在设置中填写 ${serviceId} 的 API Key`);
+    this.name = "ChannelModelCredentialRequiredError";
+    this.capability = capability;
+    this.serviceId = serviceId;
+  }
+}
+
+/** 兼容历史已验签 inline payload；它仍保持旧版 fail-closed，不参与新版 graph 的逐项残缺回退。 */
+function legacyInlineRoute(
   payload: ChannelModelPayload,
   capability: string,
-): ChannelModelPayload {
+  allowDefaultFallback: boolean,
+): ChannelCapabilityRoute | null {
+  if (field(payload, "services") !== undefined || field(payload, "connections") !== undefined) {
+    return null;
+  }
   const models = field(payload, "models");
-  if (models === undefined) return payload;
-  if (!models || typeof models !== "object" || Array.isArray(models)) {
+  let option = payload;
+  if (models !== undefined) {
+    const byCapability = object(models);
+    if (!byCapability) throw new ChannelModelConfigurationError();
+    const raw =
+      field(byCapability, capability) ??
+      (allowDefaultFallback ? field(byCapability, "default") : undefined);
+    const options = objectArray(raw);
+    if (!options || options.length === 0) throw new ChannelModelConfigurationError();
+    const defaults = options.filter((row) => field(row, "isDefault") === true);
+    if (defaults.length > 1) throw new ChannelModelConfigurationError();
+    option = defaults[0] ?? options[0]!;
+  }
+
+  const kind = capabilityKind(capability);
+  const provider = normalizedProvider(field(option, "provider"), kind);
+  const model = nonEmptyString(field(option, "model", "modelName"));
+  const token = nonEmptyString(field(option, "apiKey"));
+  const rawBaseUrl = field(option, "baseURL", "baseUrl");
+  const baseUrl = rawBaseUrl === undefined ? null : safeHttpsUrl(rawBaseUrl);
+  const apiFormat =
+    kind === "llm" ? normalizedApiFormat(field(option, "apiFormat")) : "legacy";
+  if (
+    !provider ||
+    !model ||
+    !token ||
+    (rawBaseUrl !== undefined && !baseUrl) ||
+    !apiFormat ||
+    !adapterSupported(kind, provider, apiFormat)
+  ) {
     throw new ChannelModelConfigurationError();
   }
-  const byCapability = models as Readonly<Record<string, unknown>>;
-  const options =
-    byCapability[capability] ??
-    byCapability.default;
-  if (!Array.isArray(options) || options.length === 0) {
-    throw new ChannelModelConfigurationError();
-  }
-  const objects = options.filter(
-    (option): option is ChannelModelPayload =>
-      Boolean(option) && typeof option === "object" && !Array.isArray(option),
-  );
-  if (objects.length !== options.length) {
-    throw new ChannelModelConfigurationError();
-  }
-  const defaults = objects.filter(option => option.isDefault === true);
-  if (defaults.length > 1) {
-    throw new ChannelModelConfigurationError();
-  }
-  return defaults[0] ?? objects[0]!;
+  return {
+    capability,
+    kind,
+    serviceId: null,
+    serviceName: "渠道模型",
+    links: { portalUrl: null, purchaseUrl: null, rechargeUrl: null, helpUrl: null },
+    provider,
+    baseUrl,
+    apiFormat,
+    model,
+    modelName: nonEmptyString(field(option, "name")) ?? model,
+    settings: record(field(option, "settings")) ?? {},
+    inlineToken: token,
+  };
 }
 
-function apiFormat(payload: ChannelModelPayload): ApiFormat {
-  const explicit = field(payload, "apiFormat");
-  switch (explicit) {
-    case "anthropic":
-    case "openai_chat":
-    case "openai_responses":
-      return explicit;
-    default:
-      // 渠道 payload 是 opaque 输入；缺失、错类型或未知值都不得按 provider/model 猜协议。
-      throw new ChannelModelConfigurationError();
-  }
-}
-
-function baseUrl(payload: ChannelModelPayload): string | null {
-  const value = field(payload, "baseURL", "baseUrl");
-  return value === undefined ? null : (value as string);
-}
-
-function token(payload: ChannelModelPayload): string {
-  return field(payload, "apiKey") as string;
-}
-
-function model(payload: ChannelModelPayload): string {
-  return field(payload, "model", "modelName") as string;
-}
-
-function settings(payload: ChannelModelPayload): Record<string, unknown> {
-  const value = field(payload, "settings");
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-/** configured payload 的文本投影；协议族必须显式合法，其余字段由正式调用验证且不存在 local fallback。 */
-export function channelLlmConfig(
+/**
+ * 渠道模型唯一逐能力 parser。新版 graph 的缺失、残缺或不支持一律只返回 null，让该能力走本地；
+ * 历史 inline payload 保持原有 fail-closed 兼容。
+ */
+export function resolveChannelCapabilityRoute(
   payload: ChannelModelPayload,
-  capability = "default",
+  capability: string,
+  options: { readonly allowDefaultFallback?: boolean } = {},
+): ChannelCapabilityRoute | null {
+  const allowDefaultFallback = options.allowDefaultFallback ?? false;
+  if (field(payload, "services") !== undefined || field(payload, "connections") !== undefined) {
+    return modernGraphRoute(payload, capability, allowDefaultFallback);
+  }
+  return legacyInlineRoute(payload, capability, allowDefaultFallback);
+}
+
+export function channelRouteToken(
+  route: ChannelCapabilityRoute,
+  credential: string | null | undefined,
+): string {
+  const token = route.inlineToken ?? credential?.trim() ?? "";
+  if (token) return token;
+  throw new ChannelModelCredentialRequiredError(
+    route.capability,
+    route.serviceId ?? "channel-service",
+  );
+}
+
+export function channelLlmConfigFromRoute(
+  route: ChannelCapabilityRoute,
+  credential?: string | null,
 ): ResolvedLlmConfig {
-  const option = modelOption(payload, capability);
-  const url = baseUrl(option);
-  const format = apiFormat(option);
+  const format = route.apiFormat;
+  if (
+    format !== "anthropic" &&
+    format !== "openai_chat" &&
+    format !== "openai_responses"
+  ) {
+    throw new ChannelModelConfigurationError();
+  }
   return {
     apiFormat: format,
-    baseUrl: url,
-    model: model(option),
-    // authStyle 是 CreatorOS provider adapter 的内部字段，不从渠道 JSON 的未知字段猜造。
-    authStyle: format === "anthropic" ? "x-api-key" : "bearer",
-    token: token(option),
-    settings: settings(option),
+    baseUrl: route.baseUrl,
+    model: route.model,
+    authStyle: format === "anthropic" && !route.baseUrl ? "x-api-key" : "bearer",
+    token: channelRouteToken(route, credential),
+    settings: route.settings,
     displayModelKey: "channel-managed",
   };
 }
 
-/** configured payload 的多模态/ASR 投影；无效字段留给正式调用诚实失败。 */
+export function channelMultimodalSpecFromRoute(
+  route: ChannelCapabilityRoute,
+  credential?: string | null,
+): MultimodalSpec {
+  if (route.kind === "llm") throw new ChannelModelConfigurationError();
+  return {
+    provider: route.provider,
+    baseUrl: route.baseUrl,
+    model: route.model,
+    token: channelRouteToken(route, credential),
+    kind: route.kind,
+    displayModelKey: "channel-managed",
+  };
+}
+
+/** 历史调用兼容；新代码应先 resolveChannelCapabilityRoute 再注入本地 service Key。 */
+export function channelLlmConfig(
+  payload: ChannelModelPayload,
+  capability = "default",
+  credential?: string | null,
+): ResolvedLlmConfig {
+  const route = resolveChannelCapabilityRoute(payload, capability, {
+    allowDefaultFallback: true,
+  });
+  if (!route) throw new ChannelModelConfigurationError();
+  return channelLlmConfigFromRoute(route, credential);
+}
+
+/** 历史调用兼容；新代码应先 resolveChannelCapabilityRoute 再注入本地 service Key。 */
 export function channelMultimodalSpec(
   payload: ChannelModelPayload,
   capability: string,
   kind: MultimodalSpec["kind"],
+  credential?: string | null,
 ): MultimodalSpec {
-  const option = modelOption(payload, capability);
-  return {
-    provider: field(option, "provider") as string,
-    baseUrl: baseUrl(option),
-    model: model(option),
-    token: token(option),
-    kind,
-    displayModelKey: "channel-managed",
-  };
+  const route = resolveChannelCapabilityRoute(payload, capability);
+  if (!route || route.kind !== kind) throw new ChannelModelConfigurationError();
+  return channelMultimodalSpecFromRoute(route, credential);
 }
 
 /** configured payload 的 settings-compatible 投影，仅供既有专用 resolver 复用。 */
 export function channelModelRow(
   payload: ChannelModelPayload,
   capability = "default",
+  credential?: string | null,
 ): ModelConfigInternal {
-  const option = modelOption(payload, capability);
+  const route = resolveChannelCapabilityRoute(payload, capability, {
+    allowDefaultFallback: capability !== "web.search" && capability !== "knowledge.search.embed",
+  });
+  if (!route) throw new ChannelModelConfigurationError();
+  const format = route.apiFormat;
+  if (
+    format !== "anthropic" &&
+    format !== "openai_chat" &&
+    format !== "openai_responses"
+  ) {
+    throw new ChannelModelConfigurationError();
+  }
   return {
-    provider: field(option, "provider") as string,
-    modelName: model(option),
-    baseUrl: baseUrl(option),
-    apiFormat: apiFormat(option),
+    provider: route.provider,
+    modelName: route.model,
+    baseUrl: route.baseUrl,
+    apiFormat: format,
     secretReference: "",
-    secretValue: token(option),
-    settings: settings(option),
+    secretValue: channelRouteToken(route, credential),
+    settings: route.settings,
   };
 }

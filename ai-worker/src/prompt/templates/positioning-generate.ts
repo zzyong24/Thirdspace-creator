@@ -64,13 +64,17 @@ export const positioningSuggestionSchema = z.object({
       forbidRule: "",
       expressionRule: "",
     }),
-});
+}).refine(
+  (value) => Boolean(value.oneLiner.trim() || value.persona.trim() || value.field.trim()),
+  { message: "定位建议至少包含一句话定位、人设或领域" },
+);
 export type PositioningSuggestionOutput = z.infer<
   typeof positioningSuggestionSchema
 >;
 
 export const POSITIONING_GENERATE_TEMPLATE: PromptTemplate = {
   id: "positioning.generate",
+  outputRecovery: "creative-partial",
   version: "v2",
   outputSchema: positioningSuggestionSchema,
   tools: [],
@@ -82,6 +86,7 @@ export const POSITIONING_GENERATE_TEMPLATE: PromptTemplate = {
 {{current}}{{accounts}}{{works}}
 
 【任务】像一个专业的 MCN 定位策划那样，结合「当前定位 + 抖音账号画像（粉丝量/赛道）+ 真实作品列表（若有）」，产出一份**清晰、差异化、能支撑信任与转化**的定位提案。
+- 若本次生成指令声明“完全从零开始”，调用方已物理排除旧定位、账号画像和旧作品；只能以本次前采与用户选定方向为依据，不得猜测或延续旧方向。
 - 若已有定位，做**进化**：保留有效内核，补差异化/收窄人群/强化变现锚点；不要推翻重来。
 - 若没有定位，做**从 0 到 1**：基于账号画像与赛道给出可立得住的定位。
 

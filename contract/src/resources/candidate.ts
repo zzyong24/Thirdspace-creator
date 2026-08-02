@@ -36,6 +36,34 @@ export type CandidateSourceReference = z.infer<
   typeof candidateSourceReference
 >;
 
+// [T-642] 内容雷达的两层创作依据。sourceDecomposition 是来源作品的只读拆解证据；
+// adaptationStrategy 是用户在转选题时确认的“保留/替换/新增/避开”改写策略。二者与
+// 选题卡分开存放，避免把原作品的表达误当成本账号的最终选题字段。
+export const sourceDecomposition = z.object({
+  hook: z.string().min(1),
+  structureSteps: z.array(z.string().min(1)).min(2).max(8),
+  coreClaims: z.array(z.string().min(1)).min(1).max(8),
+  reusablePattern: z.string().min(1),
+  factRisks: z.array(z.string().min(1)).max(12).default([]),
+});
+export type SourceDecomposition = z.infer<typeof sourceDecomposition>;
+
+export const adaptationStrategy = z.object({
+  keep: z.array(z.string().min(1)).max(8).default([]),
+  replace: z.array(z.string().min(1)).max(8).default([]),
+  add: z.array(z.string().min(1)).max(8).default([]),
+  avoid: z.array(z.string().min(1)).max(8).default([]),
+});
+export type AdaptationStrategy = z.infer<typeof adaptationStrategy>;
+
+export const adaptedDraftCandidate = z.object({
+  contentText: z.string().min(1).max(50_000),
+  generatedFromTranscriptHash: z.string().min(1),
+  strategyHash: z.string().min(1),
+  templateVersion: z.string().min(1),
+});
+export type AdaptedDraftCandidate = z.infer<typeof adaptedDraftCandidate>;
+
 // 选题卡 (topic.enrich, 选题中心大改) — the AI-filled 详情 (一句话/观众/痛点/冲突/Hook/
 // 结构/形式/素材/风险/建议) + 指标 (受众痛感/素材充足/制作难度) a candidate carries once a
 // topic.enrich task formalizes it. EVERY field is optional/default so a bare `{}` is a
@@ -68,6 +96,9 @@ export const candidateCard = z.object({
   // [T-482] 原视频/原页面的可点击来源。普通手动选题可无；内容雷达确认的选题必须至少带
   // 一条 original_video。max(10) 防止 card 被无界外链灌大。
   sourceReferences: z.array(candidateSourceReference).max(10).optional(),
+  sourceDecomposition: sourceDecomposition.optional(),
+  adaptationStrategy: adaptationStrategy.optional(),
+  adaptedDraft: adaptedDraftCandidate.optional(),
 });
 export type CandidateCard = z.infer<typeof candidateCard>;
 

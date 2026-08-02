@@ -145,6 +145,7 @@ export async function runScriptDraft(
       // [T-284a] 复刻补链 G1:复刻项目携带的原爆款拆解要素(对标参照·复刻用,段头带诚实门)。
       // creative-context 已按 projectId + briefDetail.benchmarkRef 决定是否装配(非复刻/账号态空,整段省略)。
       benchmarkRefBrief: context.benchmarkRefBrief || undefined,
+      projectIntelligenceBrief: context.projectIntelligenceBrief || undefined,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
       extraBrief:
@@ -185,7 +186,7 @@ export async function runScriptDraft(
       },
     });
     const { shots, generation, validation } = result;
-    if (!validation || validation.status !== "valid") {
+    if (!validation) {
       throw new Error(
         "script-runner: 整稿缺少有效的 completionPolicy 校验结果，禁止记录候选",
       );
@@ -210,9 +211,10 @@ export async function runScriptDraft(
         contentData: {
           sections: renderSections(board),
         },
-        validationStatus: "valid",
-        validationErrors: [],
-        canAdopt: true,
+        validationStatus:
+          validation.status === "valid" ? "valid" : "invalid",
+        validationErrors: validation.errors.map((error) => error.message),
+        canAdopt: validation.status === "valid",
         accountId: activeSnapshot.accountId,
         skillSnapshot: {
           skillId: effectiveSkill.skillId,

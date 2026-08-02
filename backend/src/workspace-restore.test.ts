@@ -18,6 +18,7 @@ import { users, sessions } from "./schema/identity";
 import {
   accountSkillOverlays,
   accountSkillOverlayVersions,
+  channelModelCredentials,
   modelConfigurations,
   skillConfigOverrides,
   skillConfigOverrideVersions,
@@ -72,6 +73,13 @@ describe("workspace-restore(T-363 归档后 user 级资产迁回)", () => {
       settings: { temperature: 0.6 },
       apiFormat: "anthropic",
       isDefault: true,
+    });
+    await db.insert(channelModelCredentials).values({
+      userId: "user-zyongzhu",
+      scopeId: "scope-growth-official",
+      serviceId: "service-default",
+      encryptedSecret: "enc:v1:channel-key",
+      updatedAt: "2026-08-02T00:00:00.000Z",
     });
     await db.insert(skillConfigOverrides).values({
       id: "script.draft",
@@ -171,6 +179,14 @@ describe("workspace-restore(T-363 归档后 user 级资产迁回)", () => {
       expect(models).toHaveLength(1);
       expect(models[0]!.provider).toBe("minimax");
       expect(models[0]!.secretValue).toBe("enc:v1:abc"); // 密文原样保留
+      const channelCredentials = await db
+        .select()
+        .from(channelModelCredentials);
+      expect(channelCredentials).toHaveLength(1);
+      expect(channelCredentials[0]!.scopeId).toBe("scope-growth-official");
+      expect(channelCredentials[0]!.encryptedSecret).toBe(
+        "enc:v1:channel-key",
+      ); // 只迁密文,不解密/不改写
       const overrides = await db.select().from(accountSkillOverlays);
       expect(overrides).toHaveLength(1);
       expect(overrides[0]!.accountId).toBe("account-a");

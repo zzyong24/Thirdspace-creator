@@ -5,6 +5,7 @@ import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
 import {
   userPreferences,
   modelConfigurations,
+  channelModelCredentials,
   agentConfigurations,
   storageConfigs,
   skillConfigOverrides,
@@ -36,6 +37,7 @@ export interface RepoDeps {
 
 export type UserPreferenceRow = typeof userPreferences.$inferSelect;
 export type ModelConfigurationRow = typeof modelConfigurations.$inferSelect;
+export type ChannelModelCredentialRow = typeof channelModelCredentials.$inferSelect;
 export type AgentConfigurationRow = typeof agentConfigurations.$inferSelect;
 export type StorageConfigRow = typeof storageConfigs.$inferSelect;
 // T-040c — skill_config_overrides row (提示词/skill 服务端可配的持久层, SPEC 2026-07-02
@@ -167,6 +169,21 @@ export interface SettingsRepository {
     body: ModelPutBody,
   ): Promise<ModelConfigurationRow>;
   listModels(ctx: RequestContext): Promise<ModelConfigurationRow[]>;
+  getChannelModelCredential(
+    ctx: RequestContext,
+    scopeId: string,
+    serviceId: string,
+  ): Promise<string | null>;
+  putChannelModelCredential(
+    ctx: RequestContext,
+    scopeId: string,
+    serviceId: string,
+    secret: string,
+  ): Promise<ChannelModelCredentialRow>;
+  listChannelModelCredentials(
+    ctx: RequestContext,
+    scopeId: string,
+  ): Promise<ChannelModelCredentialRow[]>;
   // [T-363] 导出用原始读:secret_value 保持**库中存储形态**(enc:v1: 密文 / 存量明文 /
   // NULL),**不解密** —— 导出文件里的密钥默认就是密文,不落明文盘。
   listModelsRaw(ctx: RequestContext): Promise<ModelConfigurationRow[]>;
@@ -461,6 +478,69 @@ export function createSettingsRepository(
         .where(eq(modelConfigurations.userId, ctx.userId));
       // T-147 P2 — 每行读出即解密。
       return rows.map(decRow);
+    },
+
+    async getChannelModelCredential(ctx, scopeId, serviceId) {
+      const rows = await db
+        .select()
+        .from(channelModelCredentials)
+        .where(
+          and(
+            eq(channelModelCredentials.userId, ctx.userId),
+            eq(channelModelCredentials.scopeId, scopeId),
+            eq(channelModelCredentials.serviceId, serviceId),
+          ),
+        )
+        .limit(1);
+      const stored = rows[0]?.encryptedSecret;
+      if (!stored) return null;
+      if (!key) {
+        throw new Error("channel model credential requires desktop master key");
+      }
+      return decryptSecret(stored, key);
+    },
+
+    async putChannelModelCredential(ctx, scopeId, serviceId, secret) {
+      if (!key) {
+        throw new Error("channel model credential requires desktop master key");
+      }
+      const plain = secret.trim();
+      if (!plain) throw new Error("channel model credential secret is required");
+      const encryptedSecret = encryptSecret(plain, key);
+      if (decryptSecret(encryptedSecret, key) !== plain) {
+        throw new Error("channel model credential encryption round-trip failed");
+      }
+      const rows = await db
+        .insert(channelModelCredentials)
+        .values({
+          userId: ctx.userId,
+          scopeId,
+          serviceId,
+          encryptedSecret,
+          updatedAt: deps.now(),
+        })
+        .onConflictDoUpdate({
+          target: [
+            channelModelCredentials.userId,
+            channelModelCredentials.scopeId,
+            channelModelCredentials.serviceId,
+          ],
+          set: { encryptedSecret, updatedAt: deps.now() },
+        })
+        .returning();
+      return rows[0]!;
+    },
+
+    async listChannelModelCredentials(ctx, scopeId) {
+      return db
+        .select()
+        .from(channelModelCredentials)
+        .where(
+          and(
+            eq(channelModelCredentials.userId, ctx.userId),
+            eq(channelModelCredentials.scopeId, scopeId),
+          ),
+        );
     },
 
     // [T-363] 导出用原始读 —— **不过 decRow**,secret_value 保持库中存储形态(密文/存量

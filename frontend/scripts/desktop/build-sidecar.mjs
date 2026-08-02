@@ -40,6 +40,7 @@ import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
 import { assertVerdictPublicKey } from "./verdict-key-material.mjs";
 import { assertMacosRuntimeCompatibility } from "./macos-runtime-compat.mjs";
+import { signMacRuntimePayloadForNotarization } from "./macos-runtime-signing.mjs";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -1384,6 +1385,17 @@ function bundleXenovaTransformers() {
 //   revision 从**已实拷进 sidecar 的 playwright-core browsers.json** 读(与 executablePath 同源,
 //   保证版本一致)。~341MB(headed chromium)—— 换 app 体积保渲染稳,用户已认。放在打 tarball 前,
 //   让浏览器进 tarball。本机未装该 rev / 非 mac → 跳过(不阻塞打包;渲染回落运行时下载兜底)。
+export function copyPortableBundleTree(src, dest) {
+  // macOS .app/.framework 用相对 symlink 描述 Versions/Current、Resources、Helpers 等标准布局。
+  // Node cpSync 的非 verbatim 模式会把它们改写为构建机绝对路径；公证签名会解析到缓存目录，
+  // 用户机则直接断链。保留链接字面值，才能让副本既可搬运又可被 codesign 正确封装。
+  cpSync(src, dest, {
+    recursive: true,
+    dereference: false,
+    verbatimSymlinks: true,
+  });
+}
+
 function bundleChromiumBrowser() {
   const bj = join(
     SIDECAR_RUNTIME,
@@ -1428,7 +1440,7 @@ function bundleChromiumBrowser() {
   console.log(
     `[build-sidecar] 打包 Chromium 浏览器 chromium-${rev}(~341MB)→ sidecar/frontend/browsers/…`,
   );
-  cpSync(srcBrowser, destBrowser, { recursive: true, dereference: true });
+  copyPortableBundleTree(srcBrowser, destBrowser);
   console.log(
     `[build-sidecar]   ✓ Chromium 已打进 bundle(运行时 instrumentation 设 PLAYWRIGHT_BROWSERS_PATH → frontend/browsers)`,
   );
@@ -1935,6 +1947,17 @@ function main() {
   const isWin = platform === "win32";
   console.log(`[build-sidecar] target triple = ${triple}`);
 
+  // [T-663] 课程发布资产是安装包真值。Next build 由本脚本直接调用，不会触发
+  // package.json 的 prebuild，因此桌面链必须在编译前显式校验仓库资产。
+  const builtInCourseVerifier = join(FRONTEND, "scripts", "verify-built-in-course.mjs");
+  const builtInCourseSource = join(
+    FRONTEND,
+    "public",
+    "courses",
+    "xuehui-ip-practical-course",
+  );
+  run(process.execPath, [builtInCourseVerifier, "--asset-root", builtInCourseSource]);
+
   // 1) next standalone build(桌面模式)。
   //    直接 spawn node + next 的 JS 入口(同 package.mjs 跑 tauri.js 的惯例),不走
   //    `pnpm exec` —— Windows 上 pnpm 是 pnpm.cmd 批处理 shim,spawnSync 无 shell 解析不了
@@ -1988,6 +2011,19 @@ function main() {
       verbatimSymlinks: true,
     });
   }
+  // [T-663] 再校验一次最终 sidecar 中实际随包的 public 资产，防止复制/裁剪阶段
+  // 截断但仍生成安装包。
+  run(process.execPath, [
+    builtInCourseVerifier,
+    "--asset-root",
+    join(
+      SIDECAR_RUNTIME,
+      "frontend",
+      "public",
+      "courses",
+      "xuehui-ip-practical-course",
+    ),
+  ]);
 
   // 校验迁移文件确实在位(否则运行时会 500)。
   if (!existsSync(join(SIDECAR_RUNTIME, "backend", "drizzle", "meta", "_journal.json"))) {
@@ -2134,6 +2170,19 @@ function main() {
   //   位置选择:sanitizeBuildPaths 之后(避免脱敏误伤 JSON 里的 base64 串)、packSidecarTarball
   //   之前(公钥要进 tarball / Windows 直装目录)。
   bakeVerdictPublicKey();
+
+  // [T-640] Apple 公证会递归扫描 sidecar.tar.gz。仅签外层 CreatorOS.app 不会触达压缩包内的
+  // Chromium、Node、原生 addon 与 dylib，因此必须在 tar 前按“Mach-O → 嵌套 bundle 由内到外”
+  // 使用同一 Developer ID + secure timestamp + hardened runtime 重签。保留 Chromium entitlements，
+  // 但不保留原厂 designated requirements（否则换签后 requirement 与新证书冲突）。
+  // [T-441] 必须先把 cpSync 改写成绝对路径的 Chromium Framework symlink 恢复为包内相对链；
+  // 否则 codesign 会把链接目标解析回构建机缓存，并以“framework 根目录含未封装内容”拒签。
+  // packSidecarTarball 内仍保留同一道闸作为最终防线；此处提前执行是签名前置条件。
+  fixOutOfTreeSymlinks();
+  signMacRuntimePayloadForNotarization(SIDECAR_RUNTIME, {
+    identity: process.env.APPLE_SIGNING_IDENTITY,
+    jitEntitlementsPath: join(SRC_TAURI, "runtime-jit-entitlements.plist"),
+  });
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。

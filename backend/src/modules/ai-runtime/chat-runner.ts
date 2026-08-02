@@ -41,6 +41,7 @@ import {
   ALL_CHAT_TOOL_NAMES,
   getSurfaceToolScope,
   type ChatToolDeps,
+  type PositioningDiscoverySnapshot,
   type ProjectDetailRaw,
   type PositioningDetailRaw,
   type KnowledgeDetailRaw,
@@ -111,6 +112,11 @@ export interface AssembleChatDeps extends ContextDeps {
   humanizeError: (
     err: unknown,
   ) => { message: string; suggestSwitchModel: boolean } | null;
+  /** [T-652] 定位卡生成前读取当前账号的最新前采 session，防止信任旧对话版本。 */
+  getPositioningDiscovery?: (
+    ctx: RequestContext,
+    sessionId: string,
+  ) => Promise<PositioningDiscoverySnapshot | null>;
   /** 按 capability 解析用户配的 model(复用 persistence-client 的 resolveModelSpec)。 */
   resolveModelSpec: (
     ctx: RequestContext,
@@ -719,6 +725,24 @@ export function detectCopilotMediaRoute(
   return null;
 }
 
+export function isScratchPositioningConversation(messages: UIMessage[]): boolean {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message?.role !== "user") continue;
+    const text = (message.parts ?? [])
+      .map((part) =>
+        part.type === "text" && typeof part.text === "string" ? part.text : "",
+      )
+      .join("\n");
+    if (!text.includes("【定位前采已完成】")) continue;
+    return (
+      /前采路径代码：scratch/u.test(text) ||
+      /路径：完全从零开始/u.test(text)
+    );
+  }
+  return false;
+}
+
 /** 只有全库图片精确总数为 1 时才自动选择；分页未读全也必须要求用户明确选择。 */
 export function resolveUniqueCoverReference(
   images: Array<{ id: string; title: string; kind: string }>,
@@ -762,6 +786,7 @@ export async function buildChatAssembly(
   chatContext: ChatContext,
   deps: AssembleChatDeps,
   mediaRoute: CopilotMediaRoute | null = null,
+  options: { positioningScratch?: boolean } = {},
 ): Promise<ChatAssembly> {
   const runWithSkillSnapshot = <T>(
     requiredSkillIds: readonly string[],
@@ -838,6 +863,17 @@ export async function buildChatAssembly(
     projectPublished: projectStage ? projectStage.published : null,
   });
   let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+  if (options.positioningScratch && chatContext.surface === "positioning") {
+    baseAllowed = baseAllowed.filter(
+      (name) =>
+        ![
+          "context.projects",
+          "context.metrics",
+          "context.comments",
+          "context.positioning.detail",
+        ].includes(name),
+    );
+  }
   // [T-642] 已有可信项目引用时，当前对象不再需要全量项目库。host 侧直接拿掉列表工具，
   // 把 T-106 的“提示模型别摸索”升级成确定性约束；单项目工具由 boundProjectId 自动补 ID。
   if (chatContext.projectId) {
@@ -857,10 +893,21 @@ export async function buildChatAssembly(
       : mediaRoute?.kind === "cover.reference"
         ? "cover.generate"
         : null;
+  const scratchForbiddenTools = new Set([
+    "context.projects",
+    "context.metrics",
+    "context.comments",
+    "context.positioning.detail",
+  ]);
   const effectiveFunctionKey =
     mediaRoute?.kind === "douyin.share" &&
     chatContext.functionKey === "web.read"
       ? undefined
+      : options.positioningScratch &&
+          chatContext.surface === "positioning" &&
+          chatContext.functionKey &&
+          scratchForbiddenTools.has(chatContext.functionKey)
+        ? undefined
       : chatContext.projectId && chatContext.functionKey === "context.projects"
         ? undefined
         : chatContext.functionKey;
@@ -897,6 +944,12 @@ export async function buildChatAssembly(
     {
       projectId: chatContext.projectId ?? null,
       topic: chatContext.selection?.label?.trim() ?? "",
+      excludePositioning:
+        options.positioningScratch && chatContext.surface === "positioning",
+      excludeAccounts:
+        options.positioningScratch && chatContext.surface === "positioning",
+      excludeHistoricalCreatorContext:
+        options.positioningScratch && chatContext.surface === "positioning",
     },
     deps,
   );
@@ -905,7 +958,8 @@ export async function buildChatAssembly(
   // T-039b per-action 注入矩阵:定位对话(chatbox.positioning)额外注入账号画像 accountsBrief
   // ——定位提案要立足「这个人在平台上已经是谁」;其它 surface 不注(避免账号噪声)。
   const baseSystem = assembleChatSystem(skill.system, context, {
-    includeAccounts: skillId === "chatbox.positioning",
+    includeAccounts:
+      skillId === "chatbox.positioning" && !options.positioningScratch,
   });
   // [T-084a] 联网检索配置探测(honestyBlock 第 6.5 条 + material.gather 工具动态描述用)。
   // 只查配置、不打网络;端口未装配(probeSearchConfigured 缺省)或探测抛错 → 视为未配(诚实降级)。
@@ -1062,6 +1116,9 @@ export async function buildChatAssembly(
     boundProjectId: chatContext.projectId ?? undefined,
     // [T-163] 错误→人话端口透传(route 注入前端 humanizeAiError)。
     humanizeError: deps.humanizeError,
+    getPositioningDiscovery: deps.getPositioningDiscovery
+      ? (sessionId) => deps.getPositioningDiscovery!(ctx, sessionId)
+      : undefined,
     // [T-084a] 联网检索是否已配 —— 驱动 material.gather 工具的动态诚实描述(上方已探测)。
     searchConfigured,
     generateTopics: async ({ basis, extraBrief }) => {
@@ -1842,17 +1899,30 @@ export async function buildChatAssembly(
       );
       return { items: parseLearnings(text), error: null };
     },
-    generatePositioning: async ({ extraBrief }) => {
+    generatePositioning: async ({ extraBrief, sourceMode }) => {
       // 复用 positioning-runner 的 prompt + parseSuggestion —— 产定位提案候选(非实体)。
       // [T-081②/T-578] 真实作品画像:与后台任务共用当前账号可见、publishedAt 新→旧的
       // 专用 reader + brief 装配器；读失败 → 空(诚实降级,不阻断生成)。
       // [T-081①] extraBrief:对话洞察经新 facet 段进 prompt(优先级高于既有档案)。
-      const worksBrief = await loadPositioningWorksBrief(
-        ctx,
-        deps.positioningWorks,
-      );
+      const scratch =
+        sourceMode === "scratch" ||
+        extraBrief?.includes("路径：完全从零开始") === true;
+      const worksBrief = scratch
+        ? ""
+        : await loadPositioningWorksBrief(
+            ctx,
+            deps.positioningWorks,
+            sourceMode ? 12 : undefined,
+          );
       const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
-      const facets = positioningFacets(context, worksBrief);
+      const facets = scratch
+        ? {
+            current:
+              "（本轮用户明确选择完全从零开始：禁止读取、引用或延续旧定位、账号画像与旧作品。）",
+            accounts: "",
+            works: "",
+          }
+        : positioningFacets(context, worksBrief);
       if (extraBrief?.trim()) {
         facets.current = [
           facets.current,
@@ -2097,6 +2167,7 @@ export async function runChatStream(
     input.chatContext,
     deps,
     detectCopilotMediaRoute(input.messages),
+    { positioningScratch: isScratchPositioningConversation(input.messages) },
   );
   const { modelFor } = await import("@creatoros/ai-worker");
   // [T-239d] 喂模型前投影(chat-history-window 纯函数;**只改喂模型的副本,ai_messages 存储

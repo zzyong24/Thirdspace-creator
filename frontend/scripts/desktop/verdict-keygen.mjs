@@ -3,9 +3,10 @@
 // （塞 CI secret,构建期烘焙进 sidecar）。
 //
 // 用途:授权判定 verdict-bound handshake token 的密码学根:
-//   · 私钥只签,不进包(明文不进 git、不进制品、不进用户机器磁盘的独立文件);
+//   · 私钥不进 git/独立文件；构建时由 build.rs 拆成 mask + XOR 材料嵌入壳，避免
+//     base64 明文靶点，但专业逆向仍可恢复，不能当成服务端秘密;
 //   · 公钥进 sidecar 常量(经 rc4 + bytecode 保护),仅用于校验签名;
-//   · 攻击者伪造 token 需私钥,拿不到就伪造不了 → 挡随包 node 裸启 sidecar 白嫖(SPEC §4.1)。
+//   · 该链只抬高低成本裸启 sidecar 的门槛；付费模型额度仍须由服务端中转站终判。
 //
 // SPEC: docs/superpowers/specs/2026-07-21-license-verdict-native-verdict-design.md
 //

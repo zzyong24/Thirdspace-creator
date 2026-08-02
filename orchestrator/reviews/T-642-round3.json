@@ -1,0 +1,49 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 保持已解决；新增 1 项 major：改写初稿的 output_script 写入加入 promotion 原子链后，尚未定义其失败时的可观察全有或全无结果与验证。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {"id": "FR-CR-013", "quote": "用户才能在脚本工作区基于定位、来源证据、结构拆解及该逐字稿生成或改写纯口播稿候选。"},
+      "acceptance_anchor": {"id": "AC-CR-021", "quote": "事实与标注引用不会单独触发误拦截。"},
+      "where": "§4.5 `script.draft` 的共享相似性内核与 §7 相似性验收。",
+      "failure_mode": "实现可仅按‘连续复用 + 语义相似’分数判高风险；当候选只复用了必要事实、专有名词或已标注引用时，语义检查仍可将其判为高风险并阻止采纳，导致已确认的例外验收无法成立。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "2026-08-01-content-radar-creative-handoff.md#§4.5,§7；2026-07-23-content-radar-restructure-design.md#AC-CR-021",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确共享内核对事实、专有名词和已标注引用的单独出现不得判为复制风险，并把该例外纳入常规 `script.draft` 的低/中/高风险采纳测试。",
+      "resolution_evidence": "SPEC-LINE:160:8c186be8657f1ed1 明确排除必要事实、专有名词与清晰标注短引用的单独重合，并要求风险结果可解释；SPEC-LINE:202:ffa6c5e322fc317d 要求常规低/中/高风险测试覆盖三类允许样本及真实表达/叙事复用的升级情形。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {"id": "FR-CR-013", "quote": "内容雷达确认的选题可进入现有 Project 创建流程，并把 item/source snapshot、canonical 视频 URL、选题 transform、定位版本及逐字稿哈希作为 Project 来源引用。"},
+      "acceptance_anchor": {"id": "AC-CR-009", "quote": "Project 创建后，取消稿件候选不新增正式 artifact version；采纳只新增一次，重复提交幂等。"},
+      "where": "§4.3 `candidates.promote` 中新增 `output_script` 初始版本的 promotion 一致性要求。",
+      "failure_mode": "实现可先提交 Project、promotion 和 reference，再在创建或写入初始 `output_script` 版本时失败；当前文本只要求读回 `topicSource` 与 reference，且只定义 reference attach 失败的半成功验收。用户刷新会看到已创建的内容雷达 Project 却没有应随之进入的右稿，重试还可能造成重复 promotion 或 artifact version。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "2026-08-01-content-radar-creative-handoff.md#§4.3,§7",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:164:871214776df7798b",
+      "suggestion": "把 `output_script` 初始版本及其 provenance 纳入与 Project/reference 相同的可观察原子后置条件：其写入、provenance 或读回失败时，刷新后不得留下本次新建的 Project、promotion、reference 或初始版本；幂等重试后恰有一组完整记录，并加入 artifact 写入失败注入测试。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

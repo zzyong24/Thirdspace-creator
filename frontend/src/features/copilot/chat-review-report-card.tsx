@@ -110,7 +110,7 @@ export function ChatReviewReportCard({
             if (!cancelledRef.current) {
               setPhase("error");
               setError(
-                "审核失败——系统会优先使用专用审核模型，未配置时自动回退普通默认模型。请检查这两项中至少一项可用后重试。",
+                "审核失败——请检查「设置 → 模型配置」的通用文本模型后重试。",
               );
             }
             return;
@@ -183,7 +183,6 @@ function ReviewReportBody({
 }) {
   const verdict = VERDICT_META[report.verdict];
   const findingCount = report.lintFindings.length + report.llmFindings.length;
-  const nonDedicated = report.modelLabel.includes("非专用");
   // 改写建议应用的目标脚本 artifact(报告绑的那一版脚本;null = 无 artifact 无法改写)。
   const artifactId = report.artifactId;
   return (
@@ -207,16 +206,12 @@ function ReviewReportBody({
         <p className="text-[12px] text-foreground">{report.summary}</p>
       ) : null}
 
-      {/* modelLabel 诚实标注:非专用审核模型醒目提示。 */}
+      {/* 审核统一走通用文本模型。 */}
       <p
         data-testid="chat-review-model"
-        className={cn(
-          "text-[11px]",
-          nonDedicated ? "font-medium text-warning" : "text-muted-foreground",
-        )}
+        className="text-[11px] text-muted-foreground"
       >
-        {nonDedicated ? "⚠ " : ""}
-        审核模型:{report.modelLabel}
+        语义审核：{report.modelLabel}
       </p>
 
       {findingCount > 0 ? (

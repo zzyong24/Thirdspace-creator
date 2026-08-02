@@ -87,7 +87,7 @@ const passReport: ScriptReviewReportResource = {
       ruleRef: null,
     },
   ],
-  modelLabel: "默认模型(非专用审核模型)",
+  modelLabel: "MiniMax-M3（通用文本模型）",
   reviewedAt: "2026-07-03T00:00:00.000Z",
 };
 
@@ -146,7 +146,7 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b · T-108 自动发+fl
     expect(screen.getByTestId("script-review-trigger")).toBeTruthy();
   });
 
-  it("有报告:verdict 徽章 + L1/L2 命中 + 非专用模型醒目标注 + 版本过期提示", () => {
+  it("有报告:verdict 徽章 + L1/L2 命中 + 通用文本模型 + 版本过期提示", () => {
     render(
       <ScriptReviewGate
         projectId="p1"
@@ -161,9 +161,9 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b · T-108 自动发+fl
     );
     // 报告 v2 < 当前 v3 → 过期提示。
     expect(screen.getByTestId("script-review-stale")).toBeTruthy();
-    // 非专用模型醒目标注。
+    // 审核统一使用通用文本模型。
     const model = screen.getByTestId("script-review-model");
-    expect(model.textContent).toContain("非专用");
+    expect(model.textContent).toContain("通用文本模型");
     // L1 + L2 命中各一条。
     const findings = screen.getByTestId("script-review-findings");
     expect(findings.textContent).toContain("第一");

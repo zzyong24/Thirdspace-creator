@@ -36,6 +36,7 @@ export const INTELLIGENCE_OP_IDS = [
   "intelligence.migrations.report",
   "intelligence.migrations.rollback",
   "projects.intelligence.attach",
+  "projects.intelligence.list",
   "projects.scripts.generateCandidate",
   "projects.scripts.acceptCandidate",
 ] as const;
@@ -395,6 +396,16 @@ export function createIntelligenceTransport(
               angle: string;
               differentiation: string;
               sourceSummary: string;
+              targetAudience: string;
+              audiencePain: string;
+              coreConflict: string;
+              format: string;
+              adaptationStrategy: {
+                keep: string[];
+                replace: string[];
+                add: string[];
+                avoid: string[];
+              };
             };
             idempotencyKey?: string;
           };
@@ -480,6 +491,45 @@ export function createIntelligenceTransport(
               itemId: b.itemId,
               sourceSnapshotId: b.sourceSnapshotId,
               idempotencyKey: b.idempotencyKey ?? "",
+            }),
+            meta: { requestId },
+          };
+        }
+        case "projects.intelligence.list": {
+          if (!projectReferencesFactory) {
+            throw new UnsupportedOperationError(endpoint.id);
+          }
+          const contexts = await projectReferencesFactory().getSourceContexts(ctx, {
+            projectId: p.projectId ?? "",
+          });
+          return {
+            data: contexts.map((context) => {
+              const rawDraft = context.transform.outputSnapshot.adaptedDraft;
+              const adaptedDraft =
+                typeof rawDraft === "string"
+                  ? rawDraft.trim()
+                  : rawDraft &&
+                      typeof rawDraft === "object" &&
+                      !Array.isArray(rawDraft) &&
+                      typeof (rawDraft as Record<string, unknown>).contentText ===
+                        "string"
+                    ? String(
+                        (rawDraft as Record<string, unknown>).contentText,
+                      ).trim()
+                    : "";
+              return {
+                reference: context.reference,
+                item: {
+                  title: context.item.title,
+                  canonicalUrl: context.item.canonicalUrl,
+                  authorName: context.item.authorName,
+                },
+                transcript: {
+                  text: context.transcript.text,
+                  hash: context.transcript.hash,
+                },
+                adaptedDraft: adaptedDraft || null,
+              };
             }),
             meta: { requestId },
           };

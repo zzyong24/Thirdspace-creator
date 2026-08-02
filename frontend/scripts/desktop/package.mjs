@@ -18,6 +18,7 @@ import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:process";
 import { createBuildTimingRecorder } from "./build-timing.mjs";
+import { enforceDesktopBuildNode25 } from "./node-runtime.mjs";
 import { assertLicenseProjectKey } from "./license-project-key.mjs";
 import {
   findShellBinary,
@@ -30,6 +31,11 @@ import {
   writeManifest,
 } from "./release-manifest.mjs";
 import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
+import { verifyPackagedVerdictHardening } from "./verdict-artifact-hardening.mjs";
+
+// 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
+// 入口会自动重启到已验证的 Node 25；找不到则硬失败，禁止继续产错 V8 字节码包。
+enforceDesktopBuildNode25();
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CARGO_PROFILE_DIR =
@@ -66,8 +72,8 @@ function step(name, cmd, args, extraEnv = {}) {
   console.log(`\n[desktop:package] ▶ ${name}\n[desktop:package]   $ ${cmd} ${args.join(" ")}`);
   const timing = buildTiming.start(name);
   const childEnv = { ...process.env, ...extraEnv };
-  // verdict 私钥只允许进入最终 Rust/Tauri 编译步骤。Next/混淆/字节码/诱饵等子进程
-  // 不需要它，默认剥离，避免第三方构建脚本或诊断输出扩大秘密暴露面。
+  // verdict 私钥只允许进入冒烟驱动和最终 Rust/Tauri 编译。冒烟驱动签完真实短时 token
+  // 后会从实际 sidecar child env 显式删除；其它构建子进程默认剥离。
   if (extraEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY !== "1") {
     delete childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
   }
@@ -92,6 +98,18 @@ function measured(name, fn) {
   const timing = buildTiming.start(name);
   try {
     const value = fn();
+    timing.finish({ status: "passed", exitCode: 0 });
+    return value;
+  } catch (error) {
+    timing.finish({ status: "failed", exitCode: 1 });
+    throw error;
+  }
+}
+
+async function measuredAsync(name, fn) {
+  const timing = buildTiming.start(name);
+  try {
+    const value = await fn();
     timing.finish({ status: "passed", exitCode: 0 });
     return value;
   } catch (error) {
@@ -389,15 +407,13 @@ step("sidecar 版权/专有声明盖章", process.execPath, [join("scripts", "de
 // 2.5) [T-164] 混淆+字节码后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
 //    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
 //    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
-//    真机/CI 必跑;本地若嫌重可 CREATOROS_SKIP_SMOKE=1 跳过(默认跑)。
-if (process.env.CREATOROS_SKIP_SMOKE !== "1") {
-  step("混淆后运行时冒烟(真起 sidecar)", process.execPath, [
-    join("scripts", "desktop", "obfuscate.mjs"),
-    "--smoke-only",
-  ]);
-} else {
-  console.log("[desktop:package] ⏭ CREATOROS_SKIP_SMOKE=1 → 跳过运行时冒烟(真机/CI 必跑)。");
-}
+//    可分发打包入口必须执行，禁止环境变量跳过后继续产包。
+step(
+  "混淆后运行时冒烟(真起 sidecar)",
+  process.execPath,
+  [join("scripts", "desktop", "obfuscate.mjs"), "--smoke-only"],
+  { CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1" },
+);
 
 // 3) tauri build。beforeBuildCommand(build-sidecar)会重建 sidecar → 覆盖步2的混淆。
 //    注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让 build-sidecar 在此阶段短路(保住已混淆的 sidecar)。
@@ -441,6 +457,32 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
   ...pathEnv,
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
   CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
+});
+
+await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
+  if (platform !== "darwin" && platform !== "win32") return;
+  const targetDir = join(FRONTEND, "src-tauri", "target", CARGO_PROFILE_DIR);
+  const bundleDir = join(targetDir, "bundle");
+  const shellPath = findShellBinary({ targetDir, bundleDir, platform });
+  const canonicalTarball = join(FRONTEND, "src-tauri", "sidecar.tar.gz");
+  const packagedTarball =
+    platform === "darwin"
+      ? join(
+          bundleDir,
+          "macos",
+          "CreatorOS.app",
+          "Contents",
+          "Resources",
+          "sidecar.tar.gz",
+        )
+      : undefined;
+  await verifyPackagedVerdictHardening({
+    shellPath,
+    canonicalTarball,
+    packagedTarball,
+    signingSeed: process.env.CREATOROS_VERDICT_SIGNING_KEY_B64,
+    publicKeyB64: process.env.CREATOROS_VERDICT_PUBKEY_B64,
+  });
 });
 
 measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);

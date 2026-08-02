@@ -48,6 +48,77 @@ describe("[T-633] 选题卡失败诊断脱敏", () => {
   });
 });
 
+describe("[T-646] 内容雷达分段生成", () => {
+  it("后续阶段失败时保留已完成检查点，不把整条链清空", async () => {
+    const saveTopicPreviewCheckpoint = vi.fn().mockResolvedValue(undefined);
+    const finishTopicPreview = vi.fn();
+    const markTopicPreviewStageFailed = vi.fn().mockResolvedValue(undefined);
+    const finishTask = vi.fn().mockResolvedValue(undefined);
+    const target = {
+      transformId: "transform-1",
+      item: { canonicalUrl: "https://example.com/work" },
+      transcript: { hash: "sha256:transcript" },
+    };
+
+    await runIntelligenceTopicPreviewTask(
+      ctx,
+      { taskId: "task-1" },
+      {
+        tasks: {
+          claimTask: vi.fn().mockResolvedValue({
+            lease: { workerId: "worker-1", attempt: 1 },
+          }),
+          finish: finishTask,
+        } as never,
+        intelligence: {
+          getTopicPreviewForExecution: vi.fn().mockResolvedValue(target),
+          saveTopicPreviewCheckpoint,
+          markTopicPreviewStageFailed,
+          finishTopicPreview,
+        } as never,
+        generator: {
+          generate: async (_ctx, _input, onCheckpoint) => {
+            await onCheckpoint({
+              stage: "decomposition",
+              value: {
+                hook: "反常识开场",
+                structureSteps: ["提出问题", "给出方法"],
+                coreClaims: ["先稳定流程"],
+                reusablePattern: "问题—方法",
+                factRisks: [],
+              },
+            });
+            throw new Error("NoObjectGeneratedError: output invalid");
+          },
+        },
+      },
+    );
+
+    expect(saveTopicPreviewCheckpoint).toHaveBeenCalledTimes(1);
+    expect(saveTopicPreviewCheckpoint).toHaveBeenCalledWith(
+      ctx,
+      "transform-1",
+      expect.objectContaining({
+        stage: "decomposition",
+        sourceUrl: "https://example.com/work",
+        transcriptHash: "sha256:transcript",
+      }),
+    );
+    expect(finishTopicPreview).not.toHaveBeenCalled();
+    expect(markTopicPreviewStageFailed).toHaveBeenCalledWith(
+      ctx,
+      "transform-1",
+      { stage: "topic", errorCode: "output_invalid" },
+    );
+    expect(finishTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "failed",
+        errorCode: "TOPIC_PREVIEW_FAILED",
+      }),
+    );
+  });
+});
+
 describe("T-482 内容雷达转为我的选题", () => {
   it("预览阶段只产候选，用户确认后才写入选题池并保留来源 provenance", async () => {
     const { db, client } = await createDb();
@@ -158,9 +229,9 @@ describe("T-482 内容雷达转为我的选题", () => {
           intelligence,
           workerId: () => "topic-worker",
           generator: {
-            generate: async (_ctx, input) => {
+            generate: async (_ctx, input, onCheckpoint) => {
               firstReusableDecomposition = input.reusableDecomposition;
-              return {
+              const generated = {
                 hook: "先反驳参数决定论制造认知反差",
                 structureSteps: [
                   "指出常见误区",
@@ -173,8 +244,30 @@ describe("T-482 内容雷达转为我的选题", () => {
                 title: "参数不重要，工作流才是 AI 落地的分水岭",
                 angle: `从“${input.positioning.oneLiner}”切入`,
                 differentiation: "不做参数盘点，只拆业务中的责任边界",
+                targetAudience: "正在落地 AI 的业务负责人",
+                audiencePain: "只盯模型参数却无法稳定交付",
+                coreConflict: "参数竞赛与业务闭环的优先级冲突",
+                format: "案例拆解口播",
+                adaptationStrategy: {
+                  keep: ["反常识开场"],
+                  replace: ["替换来源案例"],
+                  add: ["加入本账号实战判断"],
+                  avoid: ["不照搬原句"],
+                },
+                adaptedDraft: "很多人以为 AI 项目做不成，是模型参数还不够强。可我复盘了交付现场，真正先出问题的，往往是没人说清输入、判断和责任边界。先把工作流稳定下来，再谈换模型。",
                 sourceSummary: "来源用参数与工作流的反差解释 AI 落地",
               };
+              await onCheckpoint({
+                stage: "decomposition",
+                value: {
+                  hook: generated.hook,
+                  structureSteps: generated.structureSteps,
+                  coreClaims: generated.coreClaims,
+                  reusablePattern: generated.reusablePattern,
+                  factRisks: generated.factRisks,
+                },
+              });
+              return generated;
             },
           },
         },
@@ -189,6 +282,11 @@ describe("T-482 内容雷达转为我的选题", () => {
           "回到模型选择",
         ],
         sourceUrl: detail.item.canonicalUrl,
+        generationProgress: {
+          decomposition: { status: "completed" },
+          topic: { status: "completed" },
+          draft: { status: "completed" },
+        },
       });
       expect(ready.transforms[0]).toMatchObject({
         taskStatus: "succeeded",
@@ -223,6 +321,17 @@ describe("T-482 内容雷达转为我的选题", () => {
                 title: "重新生成的选题",
                 angle: "换一个业务落地切口",
                 differentiation: "改用失败复盘案例",
+                targetAudience: "正在落地 AI 的业务负责人",
+                audiencePain: "方案看起来先进但交付不稳定",
+                coreConflict: "模型能力与工作流责任边界冲突",
+                format: "复盘口播",
+                adaptationStrategy: {
+                  keep: ["判断顺序"],
+                  replace: ["替换来源案例"],
+                  add: ["加入失败复盘"],
+                  avoid: ["不照搬叙事顺序"],
+                },
+                adaptedDraft: "这次我们不聊参数榜单，只复盘一个交付失败的现场。模型能答对问题，但流程里没人负责确认输入，最后每一步看似完成，结果却无法上线。",
                 sourceSummary: "复用同一来源拆解证据",
               };
             },
@@ -250,6 +359,16 @@ describe("T-482 内容雷达转为我的选题", () => {
             angle: string;
             differentiation: string;
             sourceSummary: string;
+            targetAudience: string;
+            audiencePain: string;
+            coreConflict: string;
+            format: string;
+            adaptationStrategy: {
+              keep: string[];
+              replace: string[];
+              add: string[];
+              avoid: string[];
+            };
           },
           idempotencyKey: "confirm-1",
         },
@@ -260,14 +379,39 @@ describe("T-482 内容雷达转为我的选题", () => {
         expect.objectContaining({
           card: {
             oneLiner: "参数不重要，工作流才是 AI 落地的分水岭",
+            targetAudience: "正在落地 AI 的业务负责人",
+            audiencePain: "只盯模型参数却无法稳定交付",
+            coreConflict: "参数竞赛与业务闭环的优先级冲突",
             hook: "先反驳参数决定论制造认知反差",
             contentStructure: [
               "指出常见误区",
               "拆解业务输入与责任边界",
               "回到模型选择",
             ],
+            format: "案例拆解口播",
             materialBasis: "来源用参数与工作流的反差解释 AI 落地",
             proposal: "差异化切法：不做参数盘点，只拆业务中的责任边界",
+            sourceDecomposition: {
+              hook: "先反驳参数决定论制造认知反差",
+              structureSteps: [
+                "指出常见误区",
+                "拆解业务输入与责任边界",
+                "回到模型选择",
+              ],
+              coreClaims: ["工作流稳定性比模型参数更先决定落地效果"],
+              reusablePattern: "反常识开场—拆必要条件—给判断顺序",
+              factRisks: [],
+            },
+            adaptationStrategy: {
+              keep: ["反常识开场"],
+              replace: ["替换来源案例"],
+              add: ["加入本账号实战判断"],
+              avoid: ["不照搬原句"],
+            },
+            adaptedDraft: expect.objectContaining({
+              contentText: expect.stringContaining("工作流稳定下来"),
+              generatedFromTranscriptHash: expect.stringContaining("sha256:"),
+            }),
           },
           sourceReferences: [
             expect.objectContaining({

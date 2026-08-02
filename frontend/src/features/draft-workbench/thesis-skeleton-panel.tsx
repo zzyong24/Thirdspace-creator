@@ -526,7 +526,7 @@ function ThesisNodeRow({
           <span className="inline-flex items-center rounded-full border border-amber-300/60 bg-amber-50 px-1.5 py-px font-medium text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400">
             缺素材
           </span>
-          用上方「搜素材(联网)/＋上传素材」补一条支撑素材,再回来挂载 —— 图文并茂更立得住。
+          用上方「联网找资料」或「上传 / 管理素材」补一条支撑素材，再回来挂载。
         </p>
       ) : null}
       {/* 挂载的素材 chips(× 卸载)+ 挂素材入口。 */}
@@ -578,7 +578,7 @@ function ThesisNodeRow({
         >
           {ammo.length === 0 ? (
             <p className="px-1 py-0.5 text-[11px] text-text-subtle">
-              还没有可挂的素材 —— 先在下方「弹药」区加素材,或用「搜素材」联网找。
+              还没有可挂的素材——先到上方「创作素材」上传文件，或联网找资料。
             </p>
           ) : available.length === 0 ? (
             <p className="px-1 py-0.5 text-[11px] text-text-subtle">

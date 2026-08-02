@@ -422,7 +422,37 @@ describe("ai service", () => {
         projectId: "p-1",
         entityType: "asset",
         entityId: "asset-gen-7",
-        role: "clip",
+        role: "broll",
+        stage: "production",
+      }),
+    );
+  });
+
+  it("confirmTask on cover.generate binds the adopted asset as the project's cover", async () => {
+    const { service, materialLinks } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "cover.generate",
+      inputData: { projectId: "p-1", prompt: "训练师主题封面" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-cover-1",
+      resultData: {
+        assetId: "asset-cover-1",
+        assetType: "image",
+        name: "AI 训练师 · 封面",
+      },
+    });
+
+    await service.confirmTask(ctx, task.id);
+
+    expect(materialLinks.link).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        projectId: "p-1",
+        entityType: "asset",
+        entityId: "asset-cover-1",
+        role: "cover",
         stage: "production",
       }),
     );

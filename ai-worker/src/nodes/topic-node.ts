@@ -158,18 +158,26 @@ export interface RunTopicNodeResult {
 export async function runTopicNode(
   input: RunTopicNodeInput,
 ): Promise<RunTopicNodeResult> {
-  const { object } = await runStructuredNode<TopicArrayOutput>({
-    model: input.model,
-    template: TOPIC_GENERATE_TEMPLATE,
-    facets: topicFacets(
-      input.positioningBrief,
-      input.basis,
-      input.basisBrief,
-      input.knowledgeBrief,
-      input.learningsBrief,
-      input.signalQualityBrief,
-    ),
-  });
+  let object: TopicArrayOutput;
+  try {
+    ({ object } = await runStructuredNode<TopicArrayOutput>({
+      model: input.model,
+      template: TOPIC_GENERATE_TEMPLATE,
+      facets: topicFacets(
+        input.positioningBrief,
+        input.basis,
+        input.basisBrief,
+        input.knowledgeBrief,
+        input.learningsBrief,
+        input.signalQualityBrief,
+      ),
+    }));
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("结构化节点:")) {
+      throw new Error("topic-node: agent 未产出可解析选题", { cause: error });
+    }
+    throw error;
+  }
   const topics = normalizeTopics(object.topics);
   if (topics.length === 0) {
     throw new Error("topic-node: agent 未产出可解析选题");

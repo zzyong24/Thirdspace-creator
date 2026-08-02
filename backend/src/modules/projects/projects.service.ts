@@ -126,6 +126,7 @@ export interface BriefDetail {
   targetAudience?: string;
   contentGoal?: string;
   contentFormat?: string;
+  orientation?: "landscape" | "portrait";
   targetPlatforms?: string[];
   durationEstimate?: string;
   coreMessage?: string;
@@ -140,6 +141,34 @@ export interface BriefDetail {
     为什么爆?: string;
     可借鉴点?: string[];
     适配本账号建议?: string;
+  };
+  contentRadarEvidence?: {
+    sourceReferences: Array<{
+      kind: "original_video" | "source_page";
+      platform: string;
+      label: string;
+      url: string;
+      intelligenceItemId?: string;
+    }>;
+    decomposition: {
+      hook: string;
+      structureSteps: string[];
+      coreClaims: string[];
+      reusablePattern: string;
+      factRisks: string[];
+    };
+    strategy: {
+      keep: string[];
+      replace: string[];
+      add: string[];
+      avoid: string[];
+    };
+    adaptedDraftSeed: {
+      contentText: string;
+      generatedFromTranscriptHash: string;
+      strategyHash: string;
+      templateVersion: string;
+    };
   };
 }
 
@@ -510,6 +539,9 @@ export function normalizeBriefDetail(raw: unknown): BriefDetail {
   if (cg) out.contentGoal = cg;
   const cf = s(c.contentFormat);
   if (cf) out.contentFormat = cf;
+  if (c.orientation === "landscape" || c.orientation === "portrait") {
+    out.orientation = c.orientation;
+  }
   const de = s(c.durationEstimate);
   if (de) out.durationEstimate = de;
   const cm = s(c.coreMessage);
@@ -521,7 +553,102 @@ export function normalizeBriefDetail(raw: unknown): BriefDetail {
   //   只留有效段(空段丢),整体无有效段 → 不写(不留空壳)。
   const br = parseBenchmarkRef(c.benchmarkRef);
   if (br) out.benchmarkRef = br;
+  const radar = parseContentRadarEvidence(c.contentRadarEvidence);
+  if (radar) out.contentRadarEvidence = radar;
   return out;
+}
+
+export function parseContentRadarEvidence(
+  raw: unknown,
+): BriefDetail["contentRadarEvidence"] | undefined {
+  if (raw == null || typeof raw !== "object") return undefined;
+  const value = raw as Record<string, unknown>;
+  const decomposition = value.decomposition as Record<string, unknown> | undefined;
+  const strategy = value.strategy as Record<string, unknown> | undefined;
+  const strings = (input: unknown, max: number) =>
+    Array.isArray(input)
+      ? input
+          .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+          .filter(Boolean)
+          .slice(0, max)
+      : [];
+  const hook = typeof decomposition?.hook === "string" ? decomposition.hook.trim() : "";
+  const reusablePattern =
+    typeof decomposition?.reusablePattern === "string"
+      ? decomposition.reusablePattern.trim()
+      : "";
+  const structureSteps = strings(decomposition?.structureSteps, 8);
+  const coreClaims = strings(decomposition?.coreClaims, 8);
+  if (!hook || !reusablePattern || structureSteps.length < 2 || coreClaims.length < 1) {
+    return undefined;
+  }
+  const sourceReferences = Array.isArray(value.sourceReferences)
+    ? value.sourceReferences.flatMap((rawReference) => {
+        if (rawReference == null || typeof rawReference !== "object") return [];
+        const reference = rawReference as Record<string, unknown>;
+        if (
+          (reference.kind !== "original_video" && reference.kind !== "source_page") ||
+          typeof reference.platform !== "string" ||
+          typeof reference.label !== "string" ||
+          typeof reference.url !== "string"
+        ) return [];
+        try {
+          const url = new URL(reference.url);
+          if (url.protocol !== "http:" && url.protocol !== "https:") return [];
+        } catch {
+          return [];
+        }
+        const kind: "original_video" | "source_page" = reference.kind;
+        return [{
+          kind,
+          platform: reference.platform.trim(),
+          label: reference.label.trim(),
+          url: reference.url,
+          ...(typeof reference.intelligenceItemId === "string"
+            ? { intelligenceItemId: reference.intelligenceItemId }
+            : {}),
+        }];
+      }).slice(0, 10)
+    : [];
+  const draft = value.adaptedDraftSeed as Record<string, unknown> | undefined;
+  const contentText = typeof draft?.contentText === "string" ? draft.contentText.trim() : "";
+  const generatedFromTranscriptHash =
+    typeof draft?.generatedFromTranscriptHash === "string"
+      ? draft.generatedFromTranscriptHash.trim()
+      : "";
+  const strategyHash = typeof draft?.strategyHash === "string" ? draft.strategyHash.trim() : "";
+  const templateVersion =
+    typeof draft?.templateVersion === "string" ? draft.templateVersion.trim() : "";
+  if (
+    sourceReferences.length === 0 ||
+    strategy == null ||
+    !contentText ||
+    !generatedFromTranscriptHash ||
+    !strategyHash ||
+    !templateVersion
+  ) return undefined;
+  return {
+    sourceReferences,
+    decomposition: {
+      hook,
+      structureSteps,
+      coreClaims,
+      reusablePattern,
+      factRisks: strings(decomposition?.factRisks, 12),
+    },
+    strategy: {
+      keep: strings(strategy.keep, 8),
+      replace: strings(strategy.replace, 8),
+      add: strings(strategy.add, 8),
+      avoid: strings(strategy.avoid, 8),
+    },
+    adaptedDraftSeed: {
+      contentText: contentText.slice(0, 50_000),
+      generatedFromTranscriptHash,
+      strategyHash,
+      templateVersion,
+    },
+  };
 }
 
 // [T-284a] 复刻补链 G1 —— 解析 briefDetail.benchmarkRef(原爆款 5 段拆解要素)。逐字段裁空,

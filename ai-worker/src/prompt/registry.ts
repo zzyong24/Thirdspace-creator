@@ -14,6 +14,7 @@
  */
 import { jsonSchema as sdkJsonSchema, type FlexibleSchema } from "ai";
 import type { PromptTemplate } from "./template";
+import { recoverCreativeZodOutput } from "./creative-output-recovery";
 import {
   applySchemaOverride,
   exportZodToJsonSchema,
@@ -53,6 +54,7 @@ import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
 import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
 import { INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE } from "./templates/intelligence-topic-decompose";
 import { INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE } from "./templates/intelligence-topic-from-decomposition";
+import { INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE } from "./templates/intelligence-topic-adapted-draft";
 // [T-212d] 防茧房校准 skill（topic.preference）—— 淘汰原因批 → 结构化偏好信号（≥3 硬门在 backend 护栏强制）。
 import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-distill";
 // [T-235b] 热点信源信号抽取 skill(trend.extract)—— 信源页正文 → 结构化信号(无热度不编,诚实门)。
@@ -132,6 +134,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
   // [T-589] 同一逐字稿已有拆解证据时，只重新生成选题字段，避免重复发送整篇逐字稿。
   INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
+  INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
   // [T-212d] 防茧房校准:淘汰原因批 → 结构化偏好信号(avoid/prefer + keyword + supportingCount)。
   TOPIC_PREFERENCE_DISTILL_TEMPLATE,
   // [T-235b] 热点信源信号抽取:信源页正文 → 结构化信号列表(无热度/链接/时间一律 null 不编)。
@@ -274,6 +277,27 @@ export function getTemplate(id: string): PromptTemplate {
     throw new Error(`prompt template 未注册: ${id}`);
   }
   return tpl;
+}
+
+/**
+ * 输出恢复是官方代码策略，不随 prompt/schema 的账号覆盖下发。判断/控制型默认 strict；
+ * 只有官方模板显式声明 creative-partial 才允许局部丢弃坏字段/坏候选。
+ */
+export function normalizeOfficialOutput(id: string, value: unknown): unknown {
+  ensureOfficialRegistry();
+  const official = OFFICIAL_REGISTRY.get(id);
+  if (
+    official?.outputRecovery !== "creative-partial" ||
+    !official.outputSchema
+  ) {
+    return value;
+  }
+  return recoverCreativeZodOutput(official.outputSchema, value);
+}
+
+export function isCreativePartialOutput(id: string): boolean {
+  ensureOfficialRegistry();
+  return OFFICIAL_REGISTRY.get(id)?.outputRecovery === "creative-partial";
 }
 
 /** 是否已注册某能力。 */

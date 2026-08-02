@@ -991,6 +991,74 @@ describe("buildChatAssembly — 三层注入装配", () => {
     );
   });
 
+  it("[T-652] scratch 生成物理排除旧定位、账号画像和旧作品", async () => {
+    const getPositioningCenter = vi.fn(async () => ({
+      profile: {
+        persona: "旧人设",
+        field: "旧领域",
+        audience: "旧人群",
+        differentiation: "旧差异",
+        capabilities: ["旧能力"],
+      },
+      currentStatement: { oneLiner: "旧定位", keywords: ["旧"] },
+    }));
+    const getSuggestions = vi.fn(async () => [
+      { title: "旧作品经验", insight: "不应注入" },
+    ]);
+    const listSignals = vi.fn(async () => [
+      { source: "douyin_comment", rawText: "旧作品评论", demandTag: null },
+    ]);
+    const listKnowledge = vi.fn(async () => [
+      { title: "旧内容资料", knowledgeType: "claim", usedCount: 1 },
+    ]);
+    const listAccounts = vi.fn(async () => [
+      { platform: "douyin", accountHandle: "@旧账号", followerBaseline: 99 },
+    ]);
+    const { deps } = makeDeps({
+      positioning: { getPositioningCenter },
+      learnings: { getSuggestions },
+      signals: { list: listSignals },
+      knowledge: { list: listKnowledge },
+      accounts: { list: listAccounts },
+    });
+    const listProjects = vi.fn(async () => ({ total: 0, rows: [] }));
+    (
+      deps as AssembleChatDeps & {
+        positioningWorks: { listProjects: typeof listProjects };
+      }
+    ).positioningWorks = { listProjects };
+    positioningStructuredCalls.length = 0;
+
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "positioning" },
+      deps,
+      null,
+      { positioningScratch: true },
+    );
+    expect(getPositioningCenter).not.toHaveBeenCalled();
+    expect(getSuggestions).not.toHaveBeenCalled();
+    expect(listSignals).not.toHaveBeenCalled();
+    expect(listKnowledge).not.toHaveBeenCalled();
+    expect(listAccounts).not.toHaveBeenCalled();
+    expect(Object.keys(assembly.tools)).not.toContain("context.projects");
+    expect(Object.keys(assembly.tools)).not.toContain("context.metrics");
+    expect(Object.keys(assembly.tools)).not.toContain("context.comments");
+    expect(Object.keys(assembly.tools)).not.toContain(
+      "context.positioning.detail",
+    );
+    await runToolExecute(assembly.tools["positioning.generate"]!, {
+      sourceMode: "scratch",
+      extraBrief: "路径：完全从零开始\n目标：建立个人品牌",
+    });
+
+    expect(listProjects).not.toHaveBeenCalled();
+    const facets = positioningStructuredCalls.at(-1)?.facets;
+    expect(facets?.current).toContain("完全从零开始");
+    expect(facets?.accounts).toBe("");
+    expect(facets?.works).toBe("");
+  });
+
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
     const { deps } = makeDeps({
       accounts: {

@@ -35,10 +35,24 @@ export {
   positioningStatementResource,
   positioningGateResultResource,
   positioningCenterResource,
+  positioningDiscoverySourceMode,
+  positioningDiscoveryThemeId,
+  positioningDiscoverySessionResource,
+  positioningDiscoveryAnswerResource,
+  positioningDiscoveryWebReferenceResource,
+  positioningDiscoveryProposalResource,
+  positioningDiscoveryConfirmResultResource,
   type CreatorProfileResource,
   type PositioningStatementResource,
   type PositioningGateResultResource,
   type PositioningCenterResource,
+  type PositioningDiscoverySourceMode,
+  type PositioningDiscoveryThemeId,
+  type PositioningDiscoverySessionResource,
+  type PositioningDiscoveryAnswerResource,
+  type PositioningDiscoveryWebReferenceResource,
+  type PositioningDiscoveryProposalResource,
+  type PositioningDiscoveryConfirmResultResource,
 } from "./resources/positioning";
 // [T-052 裁决③] monetization resource 导出(product/offer/lead/conversionEvent/
 // contentOutputProduct/funnelStage/monetizationFunnel)已随变现中心物理删除(宪法 §8)。
@@ -96,7 +110,9 @@ export {
 } from "./resources/ai";
 export {
   agentConfigurationResource,
+  channelModelCredentialResource,
   type AgentConfigurationResource,
+  type ChannelModelCredentialResource,
 } from "./resources/settings";
 export {
   benchmarkSourceResource,

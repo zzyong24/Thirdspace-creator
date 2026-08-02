@@ -135,7 +135,7 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
       <div
         role="button"
         tabIndex={0}
-        aria-label="拖拽、点击或粘贴上传素材到弹药区"
+        aria-label="拖拽、点击或粘贴上传创作素材"
         data-slot="ammo-dump-area"
         data-drag-active={dragActive ? "true" : "false"}
         onDragOver={(e) => {
@@ -170,7 +170,7 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
         )}
       >
         <UploadCloud className="size-4 shrink-0" aria-hidden="true" />
-        把截图、录屏、封面直接丢进来 —— 原名存进项目文件夹,自动归类,变成这条内容的弹药
+        把文档、截图、录屏或封面拖进来 —— 统一保存到当前项目，写稿、制作和复盘时都能继续使用
       </div>
       {pending.length > 0 ? (
         <ul data-slot="ammo-dump-pending" className="flex flex-col gap-1">

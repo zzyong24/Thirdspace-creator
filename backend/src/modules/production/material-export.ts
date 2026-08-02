@@ -346,6 +346,8 @@ function roleLabel(role: string): string {
       return "SRT 字幕 / 参考文件";
     case "broll":
       return "B-roll 素材";
+    case "cover":
+      return "项目封面";
     case "final":
       return "成片视频";
     default:
@@ -433,7 +435,7 @@ export interface MaterialExportPorts {
   getAssetBytes(
     ctx: RequestContext,
     assetId: string,
-  ): Promise<{ bytes: Uint8Array } | null>;
+  ): Promise<{ bytes: Uint8Array; mimeType?: string } | null>;
   /** 口播稿全文(output_script 当前版本);无稿 → 空串。 */
   getScriptText(ctx: RequestContext, projectId: string): Promise<string>;
   /** 最近一次 video.decisions 候选产物(unknown,内部 coerce);没跑过 → null。 */
@@ -448,6 +450,31 @@ export interface MaterialExportBundle {
   fileCount: number;
   totalBytes: number;
   hasDecisions: boolean;
+}
+
+const MATERIAL_EXT_BY_MIME: Readonly<Record<string, string>> = {
+  "image/jpeg": ".jpg",
+  "image/jpg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "video/mp4": ".mp4",
+  "video/quicktime": ".mov",
+  "video/webm": ".webm",
+  "audio/mpeg": ".mp3",
+  "audio/wav": ".wav",
+  "application/pdf": ".pdf",
+  "application/x-subrip": ".srt",
+  "text/plain": ".txt",
+  "text/markdown": ".md",
+};
+
+/** 展示名常常是「提示词 · 生成图」而没有后缀；ZIP 必须按真实 MIME 补扩展名。 */
+function materialFileName(display: string, mimeType?: string): string {
+  const safe = sanitizeZipName(display);
+  if (/\.[a-z0-9]{1,8}$/i.test(safe)) return safe;
+  const normalizedMime = mimeType?.split(";")[0]?.trim().toLowerCase() ?? "";
+  return safe + (MATERIAL_EXT_BY_MIME[normalizedMime] ?? "");
 }
 
 /**
@@ -495,7 +522,9 @@ export async function aggregateMaterialExport(
       });
       continue;
     }
-    const fileName = uniqueName(`素材/${sanitizeZipName(display)}`);
+    const fileName = uniqueName(
+      `素材/${materialFileName(display, blob.mimeType)}`,
+    );
     entries.push({ name: fileName, bytes: blob.bytes });
     included.push({
       fileName,

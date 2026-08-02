@@ -63,6 +63,7 @@ export { searchDocuments, searchHistory, SEARCH_DDL } from "./schema/search";
 export {
   userPreferences,
   modelConfigurations,
+  channelModelCredentials,
   agentConfigurations,
   storageConfigs,
   skillConfigOverrides,
@@ -155,6 +156,7 @@ export {
 export {
   creatorProfiles,
   positioningStatements,
+  positioningDiscoverySessions,
   POSITIONING_DDL,
 } from "./schema/positioning";
 // [T-052 裁决③] monetization schema 导出(products/offers/leads/conversionEvents/

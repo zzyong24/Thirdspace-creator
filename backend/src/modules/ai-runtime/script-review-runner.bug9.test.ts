@@ -22,13 +22,25 @@ const baseTask: ScriptReviewTask = {
 // [T-022 测试] 简化 ai mock:只覆写 runner 用的 4 个方法,其余不关心(用 Pick + as unknown as 强转,
 function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
   deps: ScriptReviewDeps;
-  reports: Array<{ verdict: string; summary: string; modelLabel: string }>;
+  reports: Array<{
+    verdict: string;
+    summary: string;
+    modelLabel: string;
+    artifactId: string | null;
+    artifactVersion: number;
+  }>;
   steps: Array<{ text: string }>;
   failed: Array<{ reason: string }>;
   /** counter ref — read .current after runScriptReview completes。 */
   counters: { succeedCount: number };
 } {
-  const reports: Array<{ verdict: string; summary: string; modelLabel: string }> = [];
+  const reports: Array<{
+    verdict: string;
+    summary: string;
+    modelLabel: string;
+    artifactId: string | null;
+    artifactVersion: number;
+  }> = [];
   const steps: Array<{ text: string }> = [];
   const failed: Array<{ reason: string }> = [];
   const counters = { succeedCount: 0 };
@@ -73,6 +85,8 @@ function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
           verdict: input.verdict,
           summary: input.summary,
           modelLabel: input.modelLabel,
+          artifactId: input.artifactId,
+          artifactVersion: input.artifactVersion,
         });
         return { id: "rep-1" };
       },
@@ -152,8 +166,8 @@ describe("runScriptReview — Bug-9 T-022 降级路径", () => {
     expect(failed).toHaveLength(0);
     expect(counters.succeedCount).toBe(1);
     expect(reports).toHaveLength(1);
-    expect(reports[0]?.summary).toMatch(/L2 语义审未运行|仅含 L1/);
-    expect(reports[0]?.summary).toMatch(/请在「设置 → 模型」配置审核模型/);
+    expect(reports[0]?.summary).toMatch(/语义审核暂未运行|基础规则检查/);
+    expect(reports[0]?.summary).toMatch(/通用文本模型/);
     // verdict 仍按 L1 命中给:block(official_hard 命中)。
     expect(reports[0]?.verdict).toBe("block");
   });
@@ -166,6 +180,27 @@ describe("runScriptReview — Bug-9 T-022 降级路径", () => {
     await runScriptReview({} as never, baseTask, deps);
     expect(failed).toHaveLength(0);
     expect(counters.succeedCount).toBe(1);
-    expect(reports[0]?.summary).toMatch(/L2 语义审未运行/);
+    expect(reports[0]?.summary).toMatch(/语义审核暂未运行/);
+  });
+
+  it("内容雷达首存前的口播稿可在没有正式 artifact 时先完成审核", async () => {
+    const { deps, reports, failed, counters } = makeDeps({
+      scriptSource: {
+        getLatestScript: async () => ({
+          artifactId: null,
+          version: 0,
+          text: "这是内容雷达已经确认并带进项目的口播稿。",
+        }),
+      },
+      resolveModelSpec: async () => null as never,
+    });
+
+    await runScriptReview({} as never, baseTask, deps);
+
+    expect(failed).toHaveLength(0);
+    expect(counters.succeedCount).toBe(1);
+    expect(reports[0]).toEqual(
+      expect.objectContaining({ artifactId: null, artifactVersion: 0 }),
+    );
   });
 });

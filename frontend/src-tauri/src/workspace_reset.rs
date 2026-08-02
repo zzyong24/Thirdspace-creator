@@ -67,7 +67,9 @@ fn format_utc_compact(unix_secs: u64) -> String {
 fn archive_destination(src: &Path, stamp: &str) -> PathBuf {
     let base = format!(
         "{}.archived-{stamp}",
-        src.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()
+        src.file_name()
+            .map(|n| n.to_string_lossy())
+            .unwrap_or_default()
     );
     let parent = src.parent().unwrap_or_else(|| Path::new("."));
     let mut dest = parent.join(&base);
@@ -150,10 +152,8 @@ mod tests {
 
     /// 建一个唯一的临时 appDataDir(测试进程 id + 计数器,避免并发用例互踩)。
     fn temp_app_data_dir(tag: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!(
-            "creatoros-reset-test-{}-{tag}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("creatoros-reset-test-{}-{tag}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("建测试目录失败");
         dir
@@ -182,7 +182,11 @@ mod tests {
         std::fs::write(dir.join(".license"), b"enc:v1:xxxx").unwrap();
         std::fs::write(dir.join(".license-seen"), b"123").unwrap();
         // [T-396b] 渠道链接缓存:同 .license 进 PRESERVE 语义(重置不丢渠道归属)。
-        std::fs::write(dir.join(".channel-links"), b"{\"version\":1,\"channel\":null}").unwrap();
+        std::fs::write(
+            dir.join(".channel-links"),
+            b"{\"version\":1,\"channel\":null}",
+        )
+        .unwrap();
         std::fs::write(dir.join(RESET_MARKER_FILE), b"{}").unwrap();
 
         let outcome = apply_pending_workspace_reset(&dir).expect("应执行归档");

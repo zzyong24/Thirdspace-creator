@@ -12,7 +12,10 @@ import {
   hasTemplate,
   registerAllTemplates,
   resolveOutputSchema,
+  normalizeOfficialOutput,
+  isCreativePartialOutput,
 } from "../prompt/registry";
+import { structuredProtocolCandidates } from "../prompt/creative-output-recovery";
 import {
   getActiveEffectiveSkillSnapshot,
   getEffectiveSkill,
@@ -59,10 +62,16 @@ export interface RunStructuredNodeInput<T> {
    * 吃 JSON Schema 配置覆盖);显式传入即作逃生口覆盖 registry。generateObject 绑它校验 + 不符自动重试。
    */
   outputSchema?: FlexibleSchema<T>;
-  /** 护栏:校验失败的最大重试次数(默认 2,Vercel SDK 透传 generateObject;文本兜底独立重试)。 */
+  /** 护栏:校验失败的最大重试次数(默认 0；显式配置才允许增加)。 */
   maxRetries?: number;
   /** 限制单次响应 token，避免小型结构化任务被超长输出拖慢。 */
   maxOutputTokens?: number;
+  /**
+   * 创作型业务的确定性归一化钩子。只允许把同一次模型输出整理成业务 schema
+   * （如单值转数组、裁掉超长尾部、兼容包装层），不得补造模型没有表达的事实。
+   * 判断/控制型任务默认不传，继续严格 fail-closed。
+   */
+  normalizeObject?: (raw: unknown) => unknown;
 }
 
 export interface RunStructuredNodeResult<T> {
@@ -78,8 +87,8 @@ export interface RunStructuredNodeResult<T> {
     }>;
   };
   validation?: {
-    status: "valid";
-    errors: [];
+    status: "valid" | "partial";
+    errors: CompletionPolicyViolation[];
     policySnapshot: {
       policy: CompletionPolicyV1;
       adapter: { id: string; version: string };
@@ -107,14 +116,47 @@ export function extractJsonObject(text: string): unknown {
   let body = text.trim();
   const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(body);
   if (fence?.[1]) body = fence[1].trim();
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-  try {
-    return JSON.parse(body.slice(start, end + 1));
-  } catch {
-    return null;
+
+  // 不能用「第一个 { 到最后一个 }」：DeepSeek 等 reasoning 模型可能在 JSON 前后
+  // 解释对象形状，旧算法会把两段花括号粘成一个必坏字符串。逐个起点做字符串感知的
+  // 括号配对，返回第一个可解析对象；正文中的 { } 和 JSON 字符串里的转义括号都不干扰。
+  for (let start = body.indexOf("{"); start !== -1; start = body.indexOf("{", start + 1)) {
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < body.length; index += 1) {
+      const char = body[index];
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (char === "\\") {
+          escaped = true;
+        } else if (char === '"') {
+          inString = false;
+        }
+        continue;
+      }
+      if (char === '"') {
+        inString = true;
+      } else if (char === "{") {
+        depth += 1;
+      } else if (char === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          try {
+            const parsed = JSON.parse(body.slice(start, index + 1));
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+              return parsed;
+            }
+          } catch {
+            // 当前起点不是完整 JSON，继续找下一个可能的对象起点。
+          }
+          break;
+        }
+      }
+    }
   }
+  return null;
 }
 
 /**
@@ -252,7 +294,9 @@ export async function runStructuredNode<T>(
       : resolveOutputSchema(template.id)) as FlexibleSchema<T>);
 
   const { system, prompt } = bindPrompt(template, input.facets);
-  const maxRetries = input.maxRetries ?? 2;
+  // DEC-AI-025:默认一次结构化尝试 + 一次文本协议降级。继续自动重试会让所有
+  // 交互工具在同一坏输出上成倍等待；离线任务如确有需要必须由调用方显式声明。
+  const maxRetries = input.maxRetries ?? 0;
   const policy = hasEffectiveScope
     ? getEffectiveSkill(template.id).effective.completionPolicy
     : null;
@@ -317,6 +361,43 @@ export async function runStructuredNode<T>(
       let fallbackUsage = normalizeUsage(
         (err as { usage?: LanguageModelUsage }).usage,
       );
+
+      const validateRaw = async (raw: unknown) => {
+        let lastValidationError: unknown = new Error("没有可校验的结构化候选");
+        for (const candidate of structuredProtocolCandidates(raw)) {
+          try {
+            const normalized = input.normalizeObject
+              ? input.normalizeObject(candidate)
+              : normalizeOfficialOutput(template.id, candidate);
+            const result = await validate(normalized);
+            if (result.success) return result;
+            lastValidationError = result.error;
+          } catch (normalizationError) {
+            lastValidationError = normalizationError;
+          }
+        }
+        return { success: false as const, error: lastValidationError };
+      };
+
+      // generateObject 校验失败时 SDK 会把已经生成的原文保存在 NoObjectGeneratedError.text。
+      // 旧实现无视这份结果，再完整调用一次模型；创作型调用传 normalizer 后先在本地抢救，
+      // 成功即一轮结束，既降低延迟，也避免第二次输出继续出现同类格式偏差。
+      if (NoObjectGeneratedError.isInstance(err) && err.text) {
+        const raw = extractJsonObject(err.text);
+        if (raw !== null) {
+          const validated = await validateRaw(raw);
+          if (validated.success) {
+            return {
+              object: validated.value as T,
+              finishReason: String(err.finishReason ?? "unknown"),
+              usage: fallbackUsage,
+              path: "text_fallback",
+            };
+          }
+          lastError = validated.error;
+        }
+      }
+
       for (let i = 0; i < textAttempts; i++) {
         modelCalls += 1;
         const result = await generateText({
@@ -330,7 +411,7 @@ export async function runStructuredNode<T>(
         fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
         const raw = extractJsonObject(result.text);
         if (raw !== null) {
-          const validated = await validate(raw);
+          const validated = await validateRaw(raw);
           if (validated.success) {
             return {
               object: validated.value as T,
@@ -424,19 +505,47 @@ export async function runStructuredNode<T>(
       repairReasons.push(...violations);
       if (repairAttempt >= repairBudget) {
         if (evaluation) {
-          throw new CompletionPolicyRuntimeError(
-            "COMPLETION_POLICY_REPAIR_EXHAUSTED",
-            `skill "${template.id}" 输出未满足完整性策略，自动修复 ${repairBudget} 次后仍失败；请重试生成`,
-            violations,
-            firstSegmentCount,
-            finalSegmentCount,
-            undefined,
-            {
+          if (!isCreativePartialOutput(template.id)) {
+            throw new CompletionPolicyRuntimeError(
+              "COMPLETION_POLICY_REPAIR_EXHAUSTED",
+              `skill "${template.id}" 输出未满足完整性策略，自动修复 ${repairBudget} 次后仍失败；请重试生成`,
+              violations,
+              firstSegmentCount,
+              finalSegmentCount,
+              undefined,
+              {
+                finishReason: generated.finishReason,
+                usage: totalUsage,
+                attempts,
+              },
+            );
+          }
+          // 创作结果优先：对象已经通过业务 outputSchema，只是镜数/角色完整度不足。
+          // 保留为不可直接采纳的 partial 候选，由 UI 告诉用户缺什么；不能为了完整性
+          // 把已生成内容清空，更不能在默认策略下整稿重写多遍。
+          logPerformance("ok", generated.path);
+          return {
+            object: generated.object,
+            generation: {
               finishReason: generated.finishReason,
               usage: totalUsage,
               attempts,
             },
-          );
+            validation: {
+              status: "partial",
+              errors: violations,
+              policySnapshot: {
+                policy: structuredClone(evaluation.policy),
+                adapter: structuredClone(evaluation.adapter),
+              },
+              originalSegmentCount:
+                firstSegmentCount ?? evaluation.segmentCount,
+              finalSegmentCount:
+                finalSegmentCount ?? evaluation.segmentCount,
+              repairAttemptsUsed: repairAttempt,
+              repairReasons,
+            },
+          };
         }
         throw new Error(
           `结构化节点:模型输出未完整结束(${generated.finishReason})`,

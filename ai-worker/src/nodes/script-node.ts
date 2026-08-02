@@ -56,6 +56,7 @@ export interface RunScriptNodeInput {
    * 适配建议。有则注入(照这条爆款的结构逻辑换本账号定位重做);非复刻/账号态 → 空,整段省略。
    */
   benchmarkRefBrief?: string;
+  projectIntelligenceBrief?: string;
   /** 本期选题标题/切入(选填)。 */
   topicTitle?: string;
   topicAngle?: string;
@@ -174,6 +175,9 @@ export async function runScriptNode(
       // 则整段省略。放在立项硬约束之后,让模型先读到本条立项的钦定前提、再读复刻参照。
       benchmarkRef: input.benchmarkRefBrief
         ? `\n${input.benchmarkRefBrief}`
+        : "",
+      projectIntelligence: input.projectIntelligenceBrief
+        ? `\n${input.projectIntelligenceBrief}`
         : "",
       learnings: input.learningsBrief
         ? `\n【过往复盘爆款要素】\n${input.learningsBrief}`

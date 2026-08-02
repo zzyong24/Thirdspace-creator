@@ -26,6 +26,11 @@ import type { PositioningService } from "./positioning.service";
 // shared OwnershipError to surface 404 (cross-tenant-safe, never reveals existence).
 
 export const POSITIONING_OP_IDS = [
+  "positioning.discovery.start",
+  "positioning.discovery.answer.update",
+  "positioning.discovery.research",
+  "positioning.discovery.evidence.set",
+  "positioning.discovery.confirm",
   "positioning.profile.get",
   "positioning.profile.upsert",
   "positioning.master.reset",
@@ -48,9 +53,91 @@ export function createPositioningTransport(
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
       const { params, query, body } = (input ?? {}) as Input;
-      const p = (params ?? {}) as { statementId?: string };
+      const p = (params ?? {}) as {
+        statementId?: string;
+        sessionId?: string;
+        evidenceId?: string;
+      };
 
       switch (endpoint.id) {
+        case "positioning.discovery.start": {
+          const b = (body ?? {}) as {
+            sourceMode: "optimize" | "pivot" | "scratch";
+          };
+          return {
+            data: await service.startDiscovery(ctx, b.sourceMode),
+            meta: { requestId },
+          };
+        }
+        case "positioning.discovery.answer.update": {
+          const b = (body ?? {}) as {
+            themeId: "goal" | "strength" | "audience" | "need" | "proof" | "expression";
+            selectedOptionIds?: string[];
+            customText?: string;
+            skipped?: boolean;
+            expectedRevision: number;
+          };
+          return {
+            data: await service.updateDiscoveryAnswer(ctx, {
+              sessionId: p.sessionId ?? "",
+              themeId: b.themeId,
+              selectedOptionIds: b.selectedOptionIds ?? [],
+              customText: b.customText ?? "",
+              skipped: b.skipped ?? false,
+              expectedRevision: b.expectedRevision,
+            }),
+            meta: { requestId },
+          };
+        }
+        case "positioning.discovery.research": {
+          const b = (body ?? {}) as {
+            query: string;
+            purpose: string;
+            targetThemeId: "goal" | "strength" | "audience" | "need" | "proof" | "expression";
+            market?: "cn" | "global";
+            language?: "zh-CN" | "any";
+            expectedRevision: number;
+          };
+          return {
+            data: await service.researchDiscovery(ctx, {
+              sessionId: p.sessionId ?? "",
+              ...b,
+              market: b.market ?? "cn",
+              language: b.language ?? "zh-CN",
+            }),
+            meta: { requestId },
+          };
+        }
+        case "positioning.discovery.evidence.set": {
+          const b = (body ?? {}) as {
+            adopted: boolean;
+            expectedRevision: number;
+          };
+          return {
+            data: await service.setDiscoveryEvidence(ctx, {
+              sessionId: p.sessionId ?? "",
+              evidenceId: p.evidenceId ?? "",
+              ...b,
+            }),
+            meta: { requestId },
+          };
+        }
+        case "positioning.discovery.confirm": {
+          const b = (body ?? {}) as {
+            candidateId: string;
+            candidateRevision: number;
+            expectedCurrentStatementId: string | null;
+            idempotencyKey: string;
+            proposal: Parameters<PositioningService["confirmDiscovery"]>[1]["proposal"];
+          };
+          return {
+            data: await service.confirmDiscovery(ctx, {
+              sessionId: p.sessionId ?? "",
+              ...b,
+            }),
+            meta: { requestId },
+          };
+        }
         case "positioning.profile.get": {
           const profile = await service.getProfile(ctx);
           if (!profile) {

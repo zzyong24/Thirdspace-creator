@@ -16,6 +16,7 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
+import { contentRadarDraftSeedOf } from "@/server/project-script-truth";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import {
   buildPublishingScheduleProjection,
@@ -495,7 +496,8 @@ import {
 } from "@creatoros/backend/modules/ai-runtime";
 import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
 import {
-  channelLlmConfig,
+  channelLlmConfigFromRoute,
+  resolveChannelCapabilityRoute,
   resolveLlmConfig,
   resolveDedicatedLlmConfig,
 } from "@creatoros/backend/modules/ai-runtime";
@@ -517,11 +519,13 @@ import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/res
 // transcribeAudio = ASR 工厂(按 provider 取适配器 → { text })。
 import {
   createMinimaxAdapter,
+  createOmnihiVideoAdapter,
   modelFor,
   // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
   createOpenaiImagesAdapter,
   createOpenaiAsrAdapter,
   createMimoAsrAdapter,
+  createQwenAsrAdapter,
   // 本地 Whisper 同时支持旧显式配置与未配置云端 ASR 时的自动回退。
   createDefaultWhisperLocalAdapter,
   transcribeAudio as transcribeAudioFn,
@@ -535,6 +539,7 @@ import {
   consumeTextProbeStream,
   createSettingsWithModelTest,
 } from "./settings-model-test-wrap";
+import { createSettingsWithChannelModelCredentials } from "./settings-channel-model-credentials-wrap";
 // [T-084a] 联网检索工厂 + 三家 provider 适配器 —— host 注册进 registry(keyed by provider),
 // gatherMaterials 前置检索用。与多模态 registry 并列;加 provider = 在此注册一个适配器。
 import {
@@ -561,6 +566,7 @@ import {
 import {
   createPositioningService,
   createPositioningTransport,
+  type PositioningDiscoverySessionResource,
   // [T-135] createPositioningRepository / CreatorProfileRow / PositioningStatementRow
   // 已随 canonical positioning seed(Zyong Zhu 人设)退役移除——唯一调用点是被删的 seed。
   POSITIONING_OP_IDS,
@@ -1337,6 +1343,11 @@ export interface ChatRuntime {
     model: string;
     token: string;
   } | null>;
+  /** [T-652] Copilot 生成定位卡前读取最新前采真值，避免旧 revision 候选。 */
+  getPositioningDiscovery: (
+    ctx: RequestContext,
+    sessionId: string,
+  ) => Promise<PositioningDiscoverySessionResource>;
   context: ChatContextDeps;
   // 只读 context 工具(context.projects / context.knowledge / context.materials)的真数据读端口。
   // 与 `context`(CreativeContext facet reader,进 system 的记忆)不同:这些是「用户问才实时拉」的
@@ -1556,6 +1567,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (pinnedPayload !== undefined) return pinnedPayload;
     const authority = await readChannelModelAuthority();
     return authority.authority === "channel" ? authority.payload : null;
+  };
+  // T-645：渠道 graph 只下发“服务与模型”，service Key 永不进入渠道 payload。
+  // resolver 通过当前任务钉住的 scopeId（同步请求则读当前验签 authority）从本地加密库取 Key。
+  // 绑定函数在 settingsService 装配后赋值；所有调用都发生在 build 完成后的请求/任务期。
+  let readStoredChannelModelCredential:
+    | ((ctx: RequestContext, scopeId: string, serviceId: string) => Promise<string | null>)
+    | null = null;
+  const getChannelModelCredential = async (
+    ctx: RequestContext,
+    serviceId: string,
+  ): Promise<string | null> => {
+    const pinnedScopeId = taskModelAuthorityScope.currentScopeId();
+    let scopeId: string | null;
+    if (pinnedScopeId !== undefined) {
+      scopeId = pinnedScopeId;
+    } else {
+      const authority = await readChannelModelAuthority();
+      scopeId = authority.authority === "channel" ? authority.scopeId : null;
+    }
+    if (!scopeId) return null;
+    if (!readStoredChannelModelCredential) {
+      throw new Error("渠道模型凭据存储尚未初始化");
+    }
+    return readStoredChannelModelCredential(ctx, scopeId, serviceId);
   };
   // 本地优先存储 driver(L0,SPEC §4.1/§7-L0)—— 三态优先级,经 backend 的
   // createConfiguredDb 统一解析:
@@ -2406,7 +2441,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         getAssetBytes: async (ctx, assetId) => {
           try {
             const blob = await assetsService.getAssetBytes(ctx, assetId);
-            return blob ? { bytes: blob.bytes } : null;
+            return blob
+              ? { bytes: blob.bytes, mimeType: blob.mimeType }
+              : null;
           } catch {
             return null;
           }
@@ -3118,7 +3155,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       await aiService.cancelTask(
         ctx,
         taskId,
-        "模型配置在排队期间发生变化，请重新发起任务",
+        "模型配置已变化，请重新发起",
       );
       return;
     }
@@ -3193,6 +3230,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const row = await projectsRepo.get(ctx, projectId);
         return { title: row.title, brief: row.brief };
       },
+      listWorkIds: async (ctx) => {
+        const rows = await projectsRepo.list(ctx);
+        return rows.map((row) => row.id);
+      },
+    },
+    // T-652 复用全局唯一的联网检索端口。闭包只在用户显式点击“联网补充”后执行；
+    // service 只传用户确认过的短 query，不会拼接访谈答案、作品或账号资料。
+    research: {
+      search: (ctx, query, opts) => searchWebPort(ctx, query, opts),
     },
     // T-521：清理事件进入 sidecar 结构化日志，只记内部归属 ID + 旧值 hash，
     // 不记录 statusNote 原文。实际写库仍只发生在 Positioning service 内。
@@ -3230,6 +3276,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         publishingService.listPublicationsByOutputIds(ctx, outputIds),
     });
   const positioningWorksReader = { listProjects: listPositioningWorks };
+  const readProjectRadarDraftSeed = async (
+    c: RequestContext,
+    projectId: string,
+  ): Promise<string | null> => {
+    const project = await projectsRepo.get(c, projectId);
+    return contentRadarDraftSeedOf(project.briefDetail);
+  };
 
   // 复盘对象 reader 工厂 (T-039a) —— 读「本次复盘的这一条作品」的真材料(标题/文案/数据/评论),
   // 供 review.analyze 路径(后端 task runner + ChatBox 对话复盘)注入 review.insights prompt,让复盘
@@ -3271,9 +3324,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             data && typeof data.transcript === "string"
               ? data.transcript
               : version.contentText;
-          if (t && t.trim()) return t;
+          // 一旦正式版本存在，它就是唯一正文真相；用户主动保存空稿时也不回灌 seed。
+          return t?.trim() ? t : "";
         }
-        return "";
+        return (await readProjectRadarDraftSeed(c, projectId)) ?? "";
       } catch {
         return "";
       }
@@ -3410,6 +3464,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             可借鉴点?: string[];
             适配本账号建议?: string;
           };
+          contentRadarEvidence?: {
+            sourceReferences: Array<{
+              kind: "original_video" | "source_page";
+              platform: string;
+              label: string;
+              url: string;
+              intelligenceItemId?: string;
+            }>;
+            decomposition: {
+              hook: string;
+              structureSteps: string[];
+              coreClaims: string[];
+              reusablePattern: string;
+              factRisks: string[];
+            };
+            strategy: {
+              keep: string[];
+              replace: string[];
+              add: string[];
+              avoid: string[];
+            };
+            adaptedDraftSeed: {
+              contentText: string;
+              generatedFromTranscriptHash: string;
+              strategyHash: string;
+              templateVersion: string;
+            };
+          };
         };
         return {
           orientation: d.orientation,
@@ -3420,6 +3502,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           successCriteria: d.successCriteria,
           // [T-284a] 带出复刻参照(creative-context 据此产 benchmarkRefBrief 回流写稿/立论点/搭结构)。
           benchmarkRef: d.benchmarkRef,
+          contentRadarEvidence: d.contentRadarEvidence,
         };
       } catch {
         return null; // best-effort;读不到 brief 绝不阻塞写文案/立论点
@@ -3778,6 +3861,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           artifactOrigin: artifactOriginReader,
           projectMaterials: makeProjectMaterialsReader(),
           brief: briefReader,
+          projectIntelligence: {
+            getSourceContexts: async (c, projectId) => {
+              const contexts = await projectIntelligenceReferences.getSourceContexts(c, {
+                projectId,
+              });
+              return contexts.map((context) => ({
+                item: context.item,
+                transcript: {
+                  text: context.transcript.text,
+                  hash: context.transcript.hash,
+                },
+              }));
+            },
+          },
           // [T-271] 封面链声明 reviewSubject 以读**口播稿主张**(getScript 读 output_script 当前版本,
           // 与复盘同一读法)—— assembleCreativeContext 据此填 context.reviewScript,封面文案硬锚正片主张。
           reviewSubject: makeReviewSubjectReader(),
@@ -4597,6 +4694,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     settingsService.getModelConfig(cc, cap),
                   env: process.env,
                   getChannelModelConfig,
+                  getChannelModelCredential: (serviceId) =>
+                    getChannelModelCredential(c, serviceId),
                 }),
               assets: {
                 getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
@@ -4755,6 +4854,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     settingsService.getModelConfig(cc, cap),
                   env: process.env,
                   getChannelModelConfig,
+                  getChannelModelCredential: (serviceId) =>
+                    getChannelModelCredential(c, serviceId),
                 }),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
               transcribeAudio: (spec, opts, registry) =>
@@ -5324,7 +5425,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           modelFor,
           runStructuredNode,
         } = await import("@creatoros/ai-worker");
-        const spec = await resolveModelSpec(ctx, "script.review");
+        // 相似度判断也是通用文本能力，不再依赖已隐藏的审核专用配置。
+        const spec = await resolveModelSpec(ctx, "default");
         const result = await runStructuredNode({
           model: modelFor(spec),
           template: SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
@@ -5887,14 +5989,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               tasks: persistentTaskService,
               intelligence: intelligenceService,
               generator: {
-                generate: async (c, target) => {
+                generate: async (c, target, onCheckpoint) => {
                   const {
+                    INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
                     INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
                     INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
                     intelligenceTopicDecomposeSchema,
+                    normalizeIntelligenceTopicDecomposeOutput,
                     intelligenceTopicFromDecompositionSchema,
                     modelFor,
                     runStructuredNode,
+                    runTemplatedNode,
                   } = await import("@creatoros/ai-worker");
                   const spec = await resolveModelSpec(c, "topic.generate");
                   const positioning = [
@@ -5905,63 +6010,112 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   ]
                     .filter(Boolean)
                     .join("\n");
-                  if (target.reusableDecomposition) {
-                    const generationOptions = topicPreviewGenerationOptions({
-                      hasReusableDecomposition: true,
-                    });
-                    const result = await runWithResolvedEffectiveSkills(
-                      c,
-                      ["intelligence.topic-from-decomposition"],
-                      () =>
-                        runStructuredNode({
-                          model: modelFor(spec),
-                          template:
-                            INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
-                          facets: {
-                            positioning,
-                            sourceTitle: target.item.title,
-                            sourceAuthor:
-                              target.item.authorName ?? target.item.platform,
-                            sourceUrl: target.item.canonicalUrl,
-                            decomposition: JSON.stringify(
-                              target.reusableDecomposition,
-                            ),
-                          },
-                          ...generationOptions,
-                        }),
-                    );
-                    return {
-                      ...target.reusableDecomposition,
-                      ...intelligenceTopicFromDecompositionSchema.parse(
-                        result.object,
-                      ),
-                    };
-                  }
-                  const generationOptions = topicPreviewGenerationOptions({
-                    hasReusableDecomposition: false,
+                  const sourceAuthor =
+                    target.item.authorName ?? target.item.platform;
+                  const decomposition = target.reusableDecomposition
+                    ? target.reusableDecomposition
+                    : intelligenceTopicDecomposeSchema.parse(
+                        (
+                          await runWithResolvedEffectiveSkills(
+                            c,
+                            ["intelligence.topic-decompose"],
+                            () =>
+                              runStructuredNode({
+                                model: modelFor(spec),
+                                template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                                normalizeObject:
+                                  normalizeIntelligenceTopicDecomposeOutput,
+                                facets: {
+                                  positioning,
+                                  sourceTitle: target.item.title,
+                                  sourceAuthor,
+                                  sourceUrl: target.item.canonicalUrl,
+                                  transcript: target.transcript.text,
+                                },
+                                ...topicPreviewGenerationOptions({
+                                  hasReusableDecomposition: false,
+                                }),
+                              }),
+                          )
+                        ).object,
+                      );
+                  await onCheckpoint({
+                    stage: "decomposition",
+                    value: decomposition,
                   });
-                  const result = await runWithResolvedEffectiveSkills(
+
+                  const topicCandidate = target.reusableCandidate
+                    ? target.reusableCandidate
+                    : intelligenceTopicFromDecompositionSchema.parse(
+                        (
+                          await runWithResolvedEffectiveSkills(
+                            c,
+                            ["intelligence.topic-from-decomposition"],
+                            () =>
+                              runStructuredNode({
+                                model: modelFor(spec),
+                                template:
+                                  INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
+                                facets: {
+                                  positioning,
+                                  sourceTitle: target.item.title,
+                                  sourceAuthor,
+                                  sourceUrl: target.item.canonicalUrl,
+                                  decomposition: JSON.stringify(decomposition),
+                                },
+                                ...topicPreviewGenerationOptions({
+                                  hasReusableDecomposition: true,
+                                }),
+                              }),
+                          )
+                        ).object,
+                      );
+                  await onCheckpoint({ stage: "topic", value: topicCandidate });
+
+                  const draftResult = await runWithResolvedEffectiveSkills(
                     c,
-                    ["intelligence.topic-decompose"],
+                    ["intelligence.topic-adapted-draft"],
                     () =>
-                      runStructuredNode({
+                      runTemplatedNode({
                         model: modelFor(spec),
-                        template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                        template: INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
+                        maxSteps: 1,
                         facets: {
                           positioning,
                           sourceTitle: target.item.title,
-                          sourceAuthor:
-                            target.item.authorName ?? target.item.platform,
+                          sourceAuthor,
                           sourceUrl: target.item.canonicalUrl,
-                          // 这里必须使用手动转写完成的逐字稿，不能退化成标题/摘要猜结构。
                           transcript: target.transcript.text,
+                          decomposition: JSON.stringify(decomposition),
+                          topicCandidate: JSON.stringify({
+                            title: topicCandidate.title,
+                            angle: topicCandidate.angle,
+                            differentiation: topicCandidate.differentiation,
+                            sourceSummary: topicCandidate.sourceSummary,
+                            targetAudience: topicCandidate.targetAudience,
+                            audiencePain: topicCandidate.audiencePain,
+                            coreConflict: topicCandidate.coreConflict,
+                            format: topicCandidate.format,
+                          }),
+                          adaptationStrategy: JSON.stringify(
+                            topicCandidate.adaptationStrategy,
+                          ),
                         },
-                        ...generationOptions,
                       }),
                   );
-                  return intelligenceTopicDecomposeSchema.parse(
-                    result.object,
-                  );
+                  const adaptedDraft = draftResult.text.trim();
+                  if (!adaptedDraft) {
+                    throw new Error("output invalid: adapted draft is empty");
+                  }
+                  await onCheckpoint({
+                    stage: "draft",
+                    value: { contentText: adaptedDraft },
+                  });
+                  return {
+                    ...decomposition,
+                    ...topicCandidate,
+                    adaptedDraft,
+                  };
                 },
               },
             },
@@ -6409,6 +6563,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(c, serviceId),
     });
     const { text } = await transcribeAudioFn(
       spec,
@@ -6487,6 +6643,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               settingsService.getModelConfig(cc, capability),
             env: process.env,
             getChannelModelConfig,
+            getChannelModelCredential: (serviceId) =>
+              getChannelModelCredential(c, serviceId),
           });
           logStage("done", {
             provider: spec.provider,
@@ -9251,6 +9409,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
   );
+  readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
+    settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
   const settings = createSettingsTransport(() => settingsService);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
@@ -9287,6 +9447,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(ctx, serviceId),
     }),
   );
 
@@ -9367,6 +9529,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(ctx, serviceId),
     });
   const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
   executorRegistry.register(
@@ -9408,6 +9572,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(ctx, serviceId),
     });
     return {
       apiFormat: cfg.apiFormat,
@@ -9427,6 +9593,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(ctx, serviceId),
     });
     if (!cfg) return null;
     return {
@@ -9471,6 +9639,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               settingsService.getModelConfig(ctx, capability),
             env: process.env,
             getChannelModelConfig,
+            getChannelModelCredential: (serviceId) =>
+              getChannelModelCredential(c, serviceId),
           }),
         ),
       // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
@@ -9485,37 +9655,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const target =
             scriptArtifacts.find((a) => a.artifactType === "output_script") ??
             scriptArtifacts.find((a) => a.artifactType === "master_script");
-          if (!target) return null;
-          const versions = await artifactsService.listVersions(c, target.id);
-          if (versions.length === 0) return null;
-          const current = versions
-            .slice()
-            .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
-          // 文本抽取:contentData.transcript / sections(拼段)/ body 兜底。
-          const data = (current.contentData ?? {}) as Record<string, unknown>;
-          let text = "";
-          if (typeof data.transcript === "string") {
-            text = data.transcript;
-          } else if (Array.isArray(data.sections)) {
-            text = (data.sections as unknown[])
-              .map((s) => {
-                const so = (s ?? {}) as Record<string, unknown>;
-                return [so.label, so.text, so.narration, so.body]
-                  .filter(
-                    (x): x is string =>
-                      typeof x === "string" && x.length > 0,
-                  )
-                  .join(" ");
-              })
-              .join("\n");
-          } else if (typeof data.body === "string") {
-            text = data.body;
+          if (target) {
+            const versions = await artifactsService.listVersions(c, target.id);
+            if (versions.length > 0) {
+              const current = versions
+                .slice()
+                .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
+              return {
+                artifactId: target.id,
+                version: current.versionNumber,
+                text: extractArtifactText(
+                  current.contentText,
+                  current.contentData,
+                ),
+              };
+            }
           }
-          return {
-            artifactId: target.id,
-            version: current.versionNumber,
-            text,
-          };
+          const seed = await readProjectRadarDraftSeed(c, projectId);
+          return seed
+            ? { artifactId: null, version: 0, text: seed }
+            : null;
         },
       },
       lintRules: {
@@ -9550,16 +9709,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   } | null> => {
     const channel = await getChannelModelConfig();
     if (channel) {
-      const cfg = channelLlmConfig(channel, "knowledge.search.embed");
-      return {
-        apiFormat: cfg.apiFormat,
-        baseUrl: cfg.baseUrl,
-        model: cfg.model,
-        token: cfg.token,
-        ...(cfg.displayModelKey
-          ? { displayModelKey: cfg.displayModelKey }
-          : {}),
-      };
+      const route = resolveChannelCapabilityRoute(
+        channel,
+        "knowledge.search.embed",
+      );
+      if (route) {
+        const credential = route.serviceId
+          ? await getChannelModelCredential(ctx, route.serviceId)
+          : null;
+        const cfg = channelLlmConfigFromRoute(route, credential);
+        return {
+          apiFormat: cfg.apiFormat,
+          baseUrl: cfg.baseUrl,
+          model: cfg.model,
+          token: cfg.token,
+          ...(cfg.displayModelKey
+            ? { displayModelKey: cfg.displayModelKey }
+            : {}),
+        };
+      }
     }
     const row = await settingsService.getModelConfig(
       ctx,
@@ -9702,6 +9870,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(ctx, serviceId),
     });
   // 多模态 provider 适配器注册表(keyed by provider)。真链路注册 MiniMax(M1 适配器,含 video
   // 异步轮询状态机 submit→poll→retrieve + 超时);加 provider = 在此注册一个适配器,不改 runner
@@ -9709,11 +9879,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 未配抛错、诚实禁用);单测装配用 M1 的 fake provider 注入,不碰这个真 registry。
   // [T-379] "openai" = OpenAI 兼容 images API 适配器(POST /v1/images/generations)——
   // 覆盖 gpt-image 系官方 + one-api/new-api 系中转站(Seedream/Flux/Nano Banana 等经中转
-  // 同形状;用户配中转 baseUrl + 任意生图 model id 即通)。生视频仍仅 minimax(各家视频
-  // API 形态不统一,裁决见 docs/research/2026-07-17-image-video-gen-provider-landscape-research.md)。
+  // 同形状;用户配中转 baseUrl + 任意生图 model id 即通)。生视频额外接入 OmniHi 的
+  // Seedance 异步任务协议；历史保存的 seedance / seeddance provider 拼写继续兼容。
+  const omnihiVideoAdapter = createOmnihiVideoAdapter();
   const multimodalRegistry: MultimodalProviderRegistry = {
     minimax: createMinimaxAdapter(),
     openai: createOpenaiImagesAdapter(),
+    omnihi: omnihiVideoAdapter,
+    seedance: omnihiVideoAdapter,
+    seeddance: omnihiVideoAdapter,
   };
   // ASR provider 注册表(T-030-D2 逐字稿转写)—— 一个 OpenAI 兼容 adapter 覆盖 SiliconFlow/
   // OpenAI/Groq(转写端点同形状,SPEC D-d)。按用户可能所配的 provider 名各挂同一适配器实例
@@ -9721,6 +9895,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // whisper-local；单测装配注 fake,不碰这个真 registry。
   const openaiAsrAdapter = createOpenaiAsrAdapter();
   const mimoAsrAdapter = createMimoAsrAdapter();
+  const qwenAsrAdapter = createQwenAsrAdapter();
   // 本地 Whisper 同时承接旧显式配置与未配置云端 ASR 时的默认回退。
   const whisperLocalAdapter = createDefaultWhisperLocalAdapter();
   const asrRegistry: MultimodalProviderRegistry = {
@@ -9728,6 +9903,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     openai: openaiAsrAdapter,
     groq: openaiAsrAdapter,
     "xiaomi-mimo": mimoAsrAdapter,
+    "qwen-asr": qwenAsrAdapter,
     "whisper-local": whisperLocalAdapter,
   };
   const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
@@ -9751,6 +9927,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
+      getChannelModelCredential: (serviceId) =>
+        getChannelModelCredential(ctx, serviceId),
     });
   // 搜索 provider 注册表(keyed by provider)。三家首发适配器(纯自建 REST,不碰 Agent SDK);
   // 加 provider = 在此注册一个适配器,不改 runner 与业务代码。真检索要真 web.search key(未配 →
@@ -9785,12 +9963,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
         env: process.env,
         getChannelModelConfig,
+        getChannelModelCredential: (serviceId) =>
+          getChannelModelCredential(ctx, serviceId),
       }),
     resolveDedicatedLlm: (ctx, capability) =>
       resolveDedicatedLlmConfig(ctx, capability, {
         getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
         env: process.env,
         getChannelModelConfig,
+        getChannelModelCredential: (serviceId) =>
+          getChannelModelCredential(ctx, serviceId),
       }),
     resolveMultimodal: (ctx, capability) =>
       resolveMultimodalSpecFn(
@@ -9800,6 +9982,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
           env: process.env,
           getChannelModelConfig,
+          getChannelModelCredential: (serviceId) =>
+            getChannelModelCredential(ctx, serviceId),
         },
       ),
     resolveTranscribe: (ctx) =>
@@ -9807,6 +9991,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
         env: process.env,
         getChannelModelConfig,
+        getChannelModelCredential: (serviceId) =>
+          getChannelModelCredential(ctx, serviceId),
       }),
     resolveEmbed: (ctx) =>
       resolveEmbedSpec(ctx).then((spec) =>
@@ -9849,6 +10035,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     fetchImpl: fetch,
   });
+  const settingsWithChannelModelCredentials =
+    createSettingsWithChannelModelCredentials({
+      settings: settingsWithModelTest,
+      readAuthority: readChannelModelAuthority,
+      listCredentials: (ctx, scopeId) =>
+        settingsService.listChannelModelCredentials(ctx, scopeId),
+      putCredential: (ctx, scopeId, serviceId, secret) =>
+        settingsService.setChannelModelCredential(
+          ctx,
+          scopeId,
+          serviceId,
+          secret,
+        ),
+    });
   // [T-235b] 已登记信源信号端口(热点多源证据主路)—— trend 出题(topic.generate trend basis /
   //   topic.daily)经它逐 enabled 信源抓信号:
   //   · web 型:readUrl(webAuthDirFor(domain),T-217b 带登录态读正文,**只 import 不改**)→
@@ -10104,6 +10304,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveModelSpec,
     // [T-239b] 备用对话模型端口(只认 chat.fallback 专配行)。
     resolveFallbackModelSpec,
+    getPositioningDiscovery: (c, sessionId) =>
+      positioningService.getDiscoverySession(c, sessionId),
     context: {
       positioning: {
         getPositioningCenter: (c: RequestContext) =>
@@ -10351,7 +10553,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
             accountId: requireAccountId(c.accountId, "artifacts.repo"),
           });
-          const artifacts = await Promise.all(
+          const persistedArtifacts = await Promise.all(
             artifactRows.map(async (a) => {
               let versionCount = 0;
               let charCount = 0;
@@ -10387,6 +10589,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               };
             }),
           );
+          const radarDraftSeed = contentRadarDraftSeedOf(project.briefDetail);
+          const hasPersistedOutputScript = persistedArtifacts.some(
+            (artifact) =>
+              artifact.artifactType === "output_script" &&
+              artifact.versionCount > 0,
+          );
+          const artifacts =
+            radarDraftSeed && !hasPersistedOutputScript
+              ? [
+                  ...persistedArtifacts.filter(
+                    (artifact) => artifact.artifactType !== "output_script",
+                  ),
+                  {
+                    artifactType: "output_script",
+                    versionCount: 0,
+                    updatedAt: project.updatedAt ?? null,
+                    charCount: radarDraftSeed.length,
+                  },
+                ]
+              : persistedArtifacts;
           // 发布状态 —— 项目 outputs → publications;取首个已发布(publishedAt 非空)作代表。
           let publish = {
             published: false,
@@ -10596,7 +10818,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
             accountId: requireAccountId(c.accountId, "artifacts.repo"),
           });
-          const items = await Promise.all(
+          const persistedItems = await Promise.all(
             artifactRows.map(async (a) => {
               let currentVersion: number | null = null;
               let totalChars = 0;
@@ -10628,6 +10850,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               };
             }),
           );
+          const radarDraftSeed = contentRadarDraftSeedOf(project.briefDetail);
+          const hasPersistedOutputScript = persistedItems.some(
+            (item) =>
+              item.artifactType === "output_script" &&
+              item.currentVersion !== null,
+          );
+          const items =
+            radarDraftSeed && !hasPersistedOutputScript
+              ? [
+                  ...persistedItems.filter(
+                    (item) => item.artifactType !== "output_script",
+                  ),
+                  {
+                    artifactType: "output_script",
+                    currentVersion: null,
+                    updatedAt: project.updatedAt ?? null,
+                    totalChars: radarDraftSeed.length,
+                  },
+                ]
+              : persistedItems;
           return {
             projectId: project.id,
             projectTitle: project.title,
@@ -10654,7 +10896,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const target = artifactRows.find(
             (a) => a.artifactType === opts.artifactType,
           );
-          if (!target || !target.currentVersionId) return null;
+          if (!target || !target.currentVersionId) {
+            if (opts.artifactType !== "output_script") return null;
+            const seed = await readProjectRadarDraftSeed(c, opts.projectId);
+            return seed
+              ? { artifactType: "output_script", fullText: seed }
+              : null;
+          }
           const repo = createArtifactRepository(db, {
             ...deps,
             userId: c.userId,
@@ -11887,7 +12135,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     taxonomy,
     notifications,
     search,
-    settings: settingsWithModelTest, // wrap:透传 CRUD + 拦 settings.models.test(T-377)
+    // 两层 composition wrap：测试连接 + 当前验签 scope 下的渠道 service Key。
+    settings: settingsWithChannelModelCredentials,
     knowledge,
     assets,
     artifacts,

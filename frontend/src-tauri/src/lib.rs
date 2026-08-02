@@ -1487,6 +1487,10 @@ pub fn run() {
             .title("CreatorOS")
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
+            // Tauri 默认原生 drag-drop handler 会先于 WebView 截获 Finder/Explorer 文件，
+            // React 的 onDrop 因而在真包完全收不到事件。禁用壳层拦截后，知识蒸馏和项目
+            // 素材区统一走已有 HTML5 DataTransfer 上传链；窗口本身不消费文件路径。
+            .disable_drag_drop_handler()
             .initialization_script(&init_script);
             // Wry 会通过 CoreWebView2EnvironmentOptions 显式写入自己的默认参数，Windows
             // WebView2 的同名环境变量因此不会自动生效。显式合并官方变量，供真包 RAT 打开
@@ -2501,7 +2505,9 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
         std::fs::write(sidecar.join("frontend").join("server.js"), "hello").unwrap();
         std::fs::write(
-            sidecar.join("frontend").join("creatoros-module-resolver.cjs"),
+            sidecar
+                .join("frontend")
+                .join("creatoros-module-resolver.cjs"),
             "module.exports={}",
         )
         .unwrap();

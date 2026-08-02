@@ -29,7 +29,7 @@ const worker = vi.hoisted(() => ({
         minSegments: 6,
         maxSegments: 10,
         requiredSequence: ["hook", "body", "cta"],
-        repairAttempts: 2,
+        repairAttempts: 0,
       },
       completionPolicyAdapter: {
         id: "script.draft.shots",
@@ -94,27 +94,21 @@ function successResult() {
     },
     validation: {
       status: "valid",
-      errors: [],
+      errors: [] as Array<{ code: string; path: string; message: string }>,
       policySnapshot: {
         policy: {
           schemaVersion: 1,
           minSegments: 6,
           maxSegments: 10,
           requiredSequence: ["hook", "body", "cta"],
-          repairAttempts: 2,
+          repairAttempts: 0,
         },
         adapter: { id: "script.draft.shots", version: "1" },
       },
-      originalSegmentCount: 1,
+      originalSegmentCount: 6,
       finalSegmentCount: 6,
-      repairAttemptsUsed: 1,
-      repairReasons: [
-        {
-          code: "MIN_SEGMENTS",
-          path: "segments",
-          message: "段落数 1 少于下限 6",
-        },
-      ],
+      repairAttemptsUsed: 0,
+      repairReasons: [] as Array<{ code: string; path: string; message: string }>,
     },
   };
 }
@@ -202,9 +196,9 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
           validationErrors: [],
           canAdopt: true,
           accountId: "acct-1",
-          originalSegmentCount: 1,
+          originalSegmentCount: 6,
           finalSegmentCount: 6,
-          repairAttemptsUsed: 1,
+          repairAttemptsUsed: 0,
           finishReason: "stop",
           usage: result.generation.usage,
           skillSnapshot: expect.objectContaining({
@@ -219,68 +213,55 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
     expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
   });
 
-  it("repair 耗尽时取消任务且绝不 record candidate", async () => {
-    const exhausted = Object.assign(
-      new Error(
-        '[COMPLETION_POLICY_REPAIR_EXHAUSTED] skill "script.draft" 输出未满足完整性策略，自动修复 2 次后仍失败；请重试生成',
-      ),
-      {
-        code: "COMPLETION_POLICY_REPAIR_EXHAUSTED",
-        violations: [
-          {
-            code: "MIN_SEGMENTS",
-            path: "segments",
-            message: "段落数 2 少于下限 6",
-          },
-        ],
-        originalSegmentCount: 1,
-        finalSegmentCount: 2,
-        evidence: {
-          finishReason: "stop",
-          usage: {
-            inputTokens: 220,
-            outputTokens: 90,
-            cachedTokens: 0,
-            totalTokens: 310,
-          },
-          attempts: [],
+  it("完整性不足时保留不可采纳候选，不取消任务也不丢已生成分镜", async () => {
+    const partial = successResult();
+    partial.shots = partial.shots.slice(0, 2);
+    partial.validation = {
+      ...partial.validation,
+      status: "partial",
+      errors: [
+        {
+          code: "MIN_SEGMENTS",
+          path: "segments",
+          message: "段落数 2 少于下限 6",
         },
-      },
-    );
-    worker.runScriptNode.mockRejectedValueOnce(exhausted);
+      ],
+      originalSegmentCount: 2,
+      finalSegmentCount: 2,
+      repairReasons: [
+        {
+          code: "MIN_SEGMENTS",
+          path: "segments",
+          message: "段落数 2 少于下限 6",
+        },
+      ],
+    };
+    worker.runScriptNode.mockResolvedValueOnce(partial);
     const runtimeDeps = deps();
 
     await runScriptDraft(
       ctx,
       {
-        id: "task-script-exhausted",
+        id: "task-script-partial",
         projectId: null,
         inputData: { artifactId: "artifact-script" },
       },
       runtimeDeps,
     );
 
-    expect(runtimeDeps.ai.cancelTask).toHaveBeenCalledWith(
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledWith(
       ctx,
-      "task-script-exhausted",
-      expect.stringContaining("自动修复 2 次后仍失败"),
-    );
-    expect(runtimeDeps.ai.recordCandidate).not.toHaveBeenCalled();
-    expect(runtimeDeps.ai.recordStep).toHaveBeenCalledWith(
-      ctx,
-      "task-script-exhausted",
+      "task-script-partial",
       expect.objectContaining({
-        kind: "validation",
-        text: expect.stringContaining('"canAdopt":false'),
+        resultData: expect.objectContaining({
+          validationStatus: "invalid",
+          validationErrors: ["段落数 2 少于下限 6"],
+          canAdopt: false,
+          finalSegmentCount: 2,
+        }),
       }),
     );
-    expect(runtimeDeps.ai.recordStep).toHaveBeenCalledWith(
-      ctx,
-      "task-script-exhausted",
-      expect.objectContaining({
-        text: expect.stringContaining('"inputTokens":220'),
-      }),
-    );
+    expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
   });
 });
 

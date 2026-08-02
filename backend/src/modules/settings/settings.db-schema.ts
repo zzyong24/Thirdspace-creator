@@ -8,6 +8,7 @@
 export {
   userPreferences,
   modelConfigurations,
+  channelModelCredentials,
   agentConfigurations,
   storageConfigs,
   skillConfigOverrides,

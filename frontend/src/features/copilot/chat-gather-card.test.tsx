@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // [T-084a] ChatGatherCard 诚实降级 UI:
-//   - grounding=model_memory → 头部黄条「未配置联网搜索…需核实」+「去设置配联网搜索」链接。
+//   - grounding=model_memory → 头部黄条诚实提示未取得实时检索结果,不暴露内部搜索配置。
 //   - 带 sourceUrl 的条目 → 可点域名链接(新窗打开真实来源)。
 //   - 无 sourceUrl 的条目 → 「需核实」徽标(非查证过的真信源)。
 //   - grounding=web → 不显黄条,头部文案「联网搜到素材」。
@@ -51,7 +51,7 @@ const MEMORY_ITEM = {
 };
 
 describe("ChatGatherCard — T-084a 诚实降级", () => {
-  it("grounding=model_memory → 显黄条 + 去设置链接", () => {
+  it("grounding=model_memory → 显诚实黄条且不引导配置内部搜索能力", () => {
     render(
       <ChatGatherCard
         items={[MEMORY_ITEM]}
@@ -61,16 +61,10 @@ describe("ChatGatherCard — T-084a 诚实降级", () => {
     );
     const warn = document.querySelector('[data-slot="chat-gather-warning"]');
     expect(warn).not.toBeNull();
-    // [Bug-12 T-026] 措辞更新:明示「浏览器/RSS 免 key」与「付费 API」两条路径,不再让人误以为要再配模型。
-    expect(warn?.textContent).toContain("本轮素材来自模型记忆");
+    expect(warn?.textContent).toContain("本轮未取得实时检索结果");
+    expect(warn?.textContent).toContain("模型记忆");
     expect(warn?.textContent).toContain("来源需自行核实");
-    expect(warn?.textContent).toContain("浏览器抓取 Bing");
-    expect(warn?.textContent).toContain("RSS 订阅");
-    // 去设置链接指向 models 面板 + 联网搜索 capability(深链到搜索项,免用户再找)。
-    const link = warn?.querySelector("a");
-    expect(link?.getAttribute("href")).toBe(
-      "/settings?tab=models&capability=web.search",
-    );
+    expect(warn?.querySelector("a")).toBeNull();
     // 无 sourceUrl → 「需核实」徽标(不渲链接)。
     expect(
       document.querySelector('[data-slot="chat-gather-needs-check"]'),

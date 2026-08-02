@@ -49,13 +49,18 @@ export const topicItemSchema = z.object({
   // basis=comments 时每条 1-3 条;非评论依据可为空数组(default 兜底,缺字段也过校验)。
   sourceComments: z.array(z.string()).default([]),
 });
-export const topicArraySchema = z.object({
-  topics: z.array(topicItemSchema).default([]),
-});
+export const topicArraySchema = z
+  .object({
+    topics: z.array(topicItemSchema).default([]),
+  })
+  .refine((value) => value.topics.some((topic) => topic.title.trim()), {
+    message: "至少返回一条有标题的选题",
+  });
 export type TopicArrayOutput = z.infer<typeof topicArraySchema>;
 
 export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
   id: "topic.generate",
+  outputRecovery: "creative-partial",
   // [T-238] v3:新增选填 facet signalQuality(依据质量画像)—— 装配层(topic-task-adapter /
   // topic-daily-collector / chat-runner)按各依据源**真实数据**算质量画像注入;模板指引按画像
   // 动态定权(评论样本少噪声高→降权只取强信号;定位完整→当骨架),每条候选 reason 注明主要

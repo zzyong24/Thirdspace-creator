@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "当前 SPEC 对课程随包来源、稳定投影升级、用户知识隔离、学习进度、响应式阅读及双平台发布验收已形成可实现、可验证的闭环；未发现 blocker 或 major。",
+  "findings": []
+}

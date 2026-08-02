@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/verify-built-in-course.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -24,6 +25,7 @@
     "visual:capture-current": "node scripts/visual/capture-current.mjs",
     "visual:diff": "node scripts/visual/diff.mjs",
     "fixtures:export": "tsx --tsconfig tsconfig.json scripts/fixtures/export-canonical-json.mts",
+    "verify:built-in-course": "node scripts/verify-built-in-course.mjs",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "tauri": "tauri",
     "desktop:build-sidecar": "node scripts/desktop/build-sidecar.mjs",

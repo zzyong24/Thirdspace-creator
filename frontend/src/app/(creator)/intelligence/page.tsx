@@ -29,7 +29,7 @@ export default async function IntelligencePage() {
       accountId: session.ctx.accountId,
       page: 1,
       pageSize: 100,
-      sort: "newest",
+      sort: "published_desc",
     },
     body: undefined,
   })) as unknown as RadarItemRow[];

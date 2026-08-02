@@ -75,6 +75,7 @@ import { ChatHookCard, type ChatHookItem } from "./chat-hook-card";
 import { ChatScriptDraftCard } from "./chat-script-draft-card";
 import { ChatPublishPackageCard } from "./chat-publish-package-card";
 import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
+import { CopilotUserMessageText } from "./copilot-user-message";
 // [T-084b/c] 截图卡(公开页真截图 → 加入弹药)+ 生成卡(dispatch asset.generate → 轮询采纳)。
 import {
   ChatScreenshotCard,
@@ -1726,13 +1727,13 @@ export function AICopilotContent({
           ref={messagesScrollRef}
           onScroll={handleMessagesScroll}
           data-slot="copilot-message-scroll"
-          className="min-h-[120px] flex-1 overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
+          className="min-h-[120px] min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
           {messages.length > 0 ? (
             <ol
               data-slot="copilot-messages"
               aria-label="助手活动记录"
-              className="flex flex-col gap-1.5"
+              className="flex min-w-0 flex-col gap-1.5"
             >
               {messages.map((message) => (
                 <li
@@ -1741,8 +1742,8 @@ export function AICopilotContent({
                   data-role={message.role}
                   className={
                     message.role === "user"
-                      ? "flex flex-col gap-1 self-end"
-                      : "flex flex-col gap-1 self-start"
+                      ? "flex min-w-0 max-w-[92%] flex-col gap-1 self-end"
+                      : "flex w-full min-w-0 flex-col gap-1 self-start"
                   }
                 >
                   {/* 文本 part:用户消息纯文本气泡;AI 回复走 markdown 富呈现(T-029:标题/列表/
@@ -1754,12 +1755,7 @@ export function AICopilotContent({
                       .join("");
                     if (!text.trim()) return null;
                     return message.role === "user" ? (
-                      <span
-                        data-slot="copilot-message-text"
-                        className="rounded-lg bg-brand-soft px-3 py-2 text-sm leading-[1.7] text-foreground"
-                      >
-                        {text}
-                      </span>
+                      <CopilotUserMessageText text={text} />
                     ) : (
                       <div
                         data-slot="copilot-message-text"
@@ -2295,11 +2291,17 @@ export function AICopilotContent({
                     ) {
                       const o = out as {
                         suggestion?: ChatPositioningSuggestion | null;
+                        discovery?: {
+                          sessionId: string;
+                          candidateId: string;
+                          candidateRevision: number;
+                        } | null;
                       };
                       return (
                         <ChatPositioningCard
                           key={key}
                           suggestion={o.suggestion ?? null}
+                          discovery={o.discovery ?? null}
                         />
                       );
                     }

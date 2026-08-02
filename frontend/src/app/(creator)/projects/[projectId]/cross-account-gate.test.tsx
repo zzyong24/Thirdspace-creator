@@ -30,6 +30,9 @@ vi.mock("@/lib/session.server", () => ({
 
 // --- contract client:getProject 行为由每个用例拨(跨号抛 OwnershipError / 同号返回)。 ---
 const getProject = vi.fn();
+const productionProps = vi.hoisted(() => ({
+  current: null as null | { scriptText?: string | null },
+}));
 const stubClient = {
   getProject: (...args: unknown[]) => getProject(...args),
   listProjects: async () => [],
@@ -51,9 +54,10 @@ vi.mock("@/features/review/review-workspace-data", () => ({
   buildPredictionComparison: vi.fn(async () => null),
 }));
 vi.mock("@/features/production/production-workbench", () => ({
-  ProductionWorkbench: () => (
-    <div data-testid="production-workbench">production-workspace</div>
-  ),
+  ProductionWorkbench: (props: { scriptText?: string | null }) => {
+    productionProps.current = props;
+    return <div data-testid="production-workbench">production-workspace</div>;
+  },
 }));
 vi.mock("@/features/script/script-editor-data", () => ({
   resolveScriptArtifactIdFromDb: vi.fn(async () => null),
@@ -90,6 +94,7 @@ describe("[T-373] 跨号项目整页门(不再半渲染)", () => {
   // promise → 假失败。
   beforeEach(() => {
     getProject.mockReset();
+    productionProps.current = null;
   });
   afterEach(() => cleanup());
 
@@ -133,6 +138,23 @@ describe("[T-373] 跨号项目整页门(不再半渲染)", () => {
     getProject.mockResolvedValue({ id: "project-old-acct" });
     await renderProductionRoute();
     expect(screen.getByTestId("production-workbench")).toBeInTheDocument();
+  });
+
+  it("production 路由:尚无正式脚本时复用内容雷达改写稿作为口播稿", async () => {
+    getProject.mockResolvedValue({
+      id: "project-old-acct",
+      briefDetail: {
+        contentRadarEvidence: {
+          adaptedDraftSeed: { contentText: "已经从内容雷达带入的口播稿" },
+        },
+      },
+    });
+
+    await renderProductionRoute();
+
+    expect(productionProps.current?.scriptText).toBe(
+      "已经从内容雷达带入的口播稿",
+    );
   });
 
   it("非所有权读失败(transport 等)→ 维持原降级路径,不误判成跨号", async () => {

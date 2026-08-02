@@ -63,7 +63,8 @@ export const SCRIPT_DRAFT_COMPLETION_POLICY: CompletionPolicyV1 = {
   minSegments: 6,
   maxSegments: 10,
   requiredSequence: ["hook", "body", "cta"],
-  repairAttempts: 2,
+  // 首版先可见；完整性不足由候选态提示用户完善，不再自动整稿重写两遍后清空结果。
+  repairAttempts: 0,
 };
 
 export const SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER: CompletionPolicyAdapter = {
@@ -96,6 +97,7 @@ registerOfficialCompletionPolicyAdapter(
 
 export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   id: "script.draft",
+  outputRecovery: "creative-partial",
   // T-512 v6：shot.role + skill 自有 completionPolicy/adapter，完整性不再靠提示词软约束。
   version: "v6",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry 取它
@@ -121,7 +123,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   // [T-269] 模板正文尾部嵌 ANTI_FABRICATION_CLAUSE(可溯硬约束段,单一真值 grounding-facets)——
   //   把对话外层 honesty rule #9 下沉进写稿子调用,弱模型也不敢编数字/偷换事实。
   template: `【创作者定位】
-{{positioning}}{{projectBriefHard}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
+{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
 
 【任务】基于定位(+立项硬约束+过往爆款要素)+选题+**用户第一手资料**,写一条**分镜脚本**。
 
@@ -139,6 +141,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
 若上方给了【本条内容立项硬约束】,**整条脚本的主张必须与其核心信息一致、不得自创与之矛盾的论点,内容目标里的『避免/不要…』是负向硬约束**。
 若上方给了【策划结构方案】/【论点树】/【内容合同】,**必须据此铺分镜**:按结构方案的段落顺序展开、把论点树的核心/支撑/证据写进口播、遵守内容合同的受众定位与价值主张,不要另起一套结构。
 若上方给了【对标参照·复刻用】,那是这条内容复刻的原爆款拆解——**可借鉴它「为什么爆」的底层逻辑与结构编排,但严禁照搬原文案、原标题、原句子**,必须用本账号的定位/人设/真实素材换一套表达重做。
+若上方给了【本次创作依据·内容雷达】,必须逐项执行用户确认的“保留/替换/新增/避开”策略，并以来源逐字稿核对事实与语境；禁止退化成只根据定位泛写，也禁止复制来源表达。
 ${AUDIENCE_MINDSET_CLAUSE}
 ${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"shots": [...]},shots 是分镜数组,每一项:
@@ -164,6 +167,7 @@ ${ANTI_FABRICATION_CLAUSE}
     "artifactOrigin",
     "projectMaterials",
     "brief",
+    "projectIntelligence",
     // [T-387b] 素材库清单(id | 名称 (类型))—— visual.assetRefs 点名真实 assetId 的唯一可选集。
     // 中央 registry 已有 assets reader(assetsBrief),声明即注入(缺清单 → facet 空,整段省略)。
     "assets",

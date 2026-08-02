@@ -90,6 +90,22 @@ const ACTIVE_TOPIC_TASK_STATUSES = new Set([
   "cancel_requested",
 ]);
 
+function hasTopicCandidate(snapshot: unknown): boolean {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return false;
+  }
+  const value = snapshot as Record<string, unknown>;
+  // 旧快照没有阶段元数据，沿用“非空即候选”的既有投影；新分段快照只有真正形成
+  // 最小选题卡后才进入待确认，纯拆解/待补卡片显示 attention。
+  if (!("generationProgress" in value)) return true;
+  return [
+    value.title,
+    value.angle,
+    value.differentiation,
+    value.sourceSummary,
+  ].every((field) => typeof field === "string" && field.trim().length > 0);
+}
+
 function itemWorkflowProjection(
   transcript: TranscriptRow | undefined,
   transforms: TransformRow[],
@@ -116,7 +132,11 @@ function itemWorkflowProjection(
   const candidate = transforms.some(
     (transform) =>
       transform.status === "candidate" &&
-      transform.outputSnapshot !== null,
+      hasTopicCandidate(transform.outputSnapshot),
+  );
+  const partialCandidate = transforms.some(
+    (transform) =>
+      transform.status === "candidate" && transform.outputSnapshot !== null,
   );
   const latest = transforms[0];
   const latestTaskStatus = latest?.aiTaskId
@@ -124,13 +144,15 @@ function itemWorkflowProjection(
     : undefined;
   const topicState: TopicState = confirmed
     ? "converted"
-    : candidate
-      ? "awaiting_confirmation"
-      : latestTaskStatus && ACTIVE_TOPIC_TASK_STATUSES.has(latestTaskStatus)
+    : latestTaskStatus && ACTIVE_TOPIC_TASK_STATUSES.has(latestTaskStatus)
         ? "generating"
         : latestTaskStatus === "failed" || latestTaskStatus === "blocked"
           ? "attention"
-          : "not_generated";
+          : candidate
+            ? "awaiting_confirmation"
+            : partialCandidate
+              ? "attention"
+              : "not_generated";
 
   const progressState: ProgressState =
     topicState === "converted"
@@ -155,6 +177,23 @@ export interface ReusableTopicDecomposition {
   coreClaims: string[];
   reusablePattern: string;
   factRisks: string[];
+}
+
+export interface ReusableTopicCandidate {
+  title: string;
+  angle: string;
+  differentiation: string;
+  sourceSummary: string;
+  targetAudience: string;
+  audiencePain: string;
+  coreConflict: string;
+  format: string;
+  adaptationStrategy: {
+    keep: string[];
+    replace: string[];
+    add: string[];
+    avoid: string[];
+  };
 }
 
 function reusableTopicDecomposition(
@@ -191,6 +230,91 @@ function reusableTopicDecomposition(
     reusablePattern: value.reusablePattern,
     factRisks: value.factRisks as string[],
   };
+}
+
+function topicCandidateFromSnapshot(
+  snapshot: unknown,
+  transcriptHash: string,
+): ReusableTopicCandidate | null {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+  const value = snapshot as Record<string, unknown>;
+  const strategy =
+    value.adaptationStrategy &&
+    typeof value.adaptationStrategy === "object" &&
+    !Array.isArray(value.adaptationStrategy)
+      ? (value.adaptationStrategy as Record<string, unknown>)
+      : null;
+  const strings = [
+    "title",
+    "angle",
+    "differentiation",
+    "sourceSummary",
+    "targetAudience",
+    "audiencePain",
+    "coreConflict",
+    "format",
+  ] as const;
+  const stringArray = (candidate: unknown) =>
+    Array.isArray(candidate) &&
+    candidate.every(
+      (entry) => typeof entry === "string" && entry.trim().length > 0,
+    );
+  if (
+    value.transcriptHash !== transcriptHash ||
+    strings.some(
+      (field) =>
+        typeof value[field] !== "string" || !value[field].trim(),
+    ) ||
+    !strategy ||
+    !stringArray(strategy.keep) ||
+    !stringArray(strategy.replace) ||
+    !stringArray(strategy.add) ||
+    !stringArray(strategy.avoid)
+  ) {
+    return null;
+  }
+  return {
+    title: value.title as string,
+    angle: value.angle as string,
+    differentiation: value.differentiation as string,
+    sourceSummary: value.sourceSummary as string,
+    targetAudience: value.targetAudience as string,
+    audiencePain: value.audiencePain as string,
+    coreConflict: value.coreConflict as string,
+    format: value.format as string,
+    adaptationStrategy: {
+      keep: strategy.keep as string[],
+      replace: strategy.replace as string[],
+      add: strategy.add as string[],
+      avoid: strategy.avoid as string[],
+    },
+  };
+}
+
+function reusableTopicCandidate(
+  snapshot: unknown,
+  transcriptHash: string,
+): ReusableTopicCandidate | null {
+  const candidate = topicCandidateFromSnapshot(snapshot, transcriptHash);
+  if (!candidate || !snapshot || typeof snapshot !== "object") return null;
+  const progress = (snapshot as Record<string, unknown>).generationProgress;
+  if (!progress || typeof progress !== "object" || Array.isArray(progress)) {
+    return null;
+  }
+  const state = progress as Record<string, unknown>;
+  const topic =
+    state.topic && typeof state.topic === "object" && !Array.isArray(state.topic)
+      ? (state.topic as Record<string, unknown>)
+      : null;
+  const draft =
+    state.draft && typeof state.draft === "object" && !Array.isArray(state.draft)
+      ? (state.draft as Record<string, unknown>)
+      : null;
+  return topic?.status === "completed" && draft?.status === "failed"
+    ? candidate
+    : null;
 }
 
 type SourceType =
@@ -321,11 +445,34 @@ export interface IntelligenceServiceDeps {
         angle: string;
         card?: {
           oneLiner: string;
+          targetAudience?: string;
+          audiencePain?: string;
+          coreConflict?: string;
           hook?: string;
           contentStructure?: string[];
+          format?: string;
           materialBasis?: string;
           riskNote?: string;
           proposal?: string;
+          sourceDecomposition?: {
+            hook: string;
+            structureSteps: string[];
+            coreClaims: string[];
+            reusablePattern: string;
+            factRisks: string[];
+          };
+          adaptationStrategy?: {
+            keep: string[];
+            replace: string[];
+            add: string[];
+            avoid: string[];
+          };
+          adaptedDraft?: {
+            contentText: string;
+            generatedFromTranscriptHash: string;
+            strategyHash: string;
+            templateVersion: string;
+          };
         };
         sourceReferences?: Array<{
           kind: "original_video" | "source_page";
@@ -357,6 +504,46 @@ function canonicalUrl(value: string): string {
 
 function hash(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function adaptationStrategyHash(strategy: {
+  keep: string[];
+  replace: string[];
+  add: string[];
+  avoid: string[];
+}): string {
+  return `sha256:${hash(
+    JSON.stringify({
+      keep: strategy.keep,
+      replace: strategy.replace,
+      add: strategy.add,
+      avoid: strategy.avoid,
+    }),
+  )}`;
+}
+
+function adaptationStrategyFromSnapshot(
+  snapshot: Record<string, unknown>,
+): ReusableTopicCandidate["adaptationStrategy"] | null {
+  const value = snapshot.adaptationStrategy;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const strategy = value as Record<string, unknown>;
+  const stringArray = (candidate: unknown): candidate is string[] =>
+    Array.isArray(candidate) &&
+    candidate.every(
+      (entry) => typeof entry === "string" && entry.trim().length > 0,
+    );
+  return stringArray(strategy.keep) &&
+    stringArray(strategy.replace) &&
+    stringArray(strategy.add) &&
+    stringArray(strategy.avoid)
+    ? {
+        keep: strategy.keep,
+        replace: strategy.replace,
+        add: strategy.add,
+        avoid: strategy.avoid,
+      }
+    : null;
 }
 
 function legacyId(kind: string, value: string): string {
@@ -3153,6 +3340,11 @@ export function createIntelligenceService(
           );
         }
       }
+      const timestamp = (value: string | null | undefined): number | null => {
+        if (!value) return null;
+        const parsed = Date.parse(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
       const metricSortValue = (item: ItemRow): number | null => {
         const metric = latestMetric.get(item.id);
         if (query.sort === "engagement_desc") {
@@ -3169,11 +3361,11 @@ export function createIntelligenceService(
         if (query.sort === "like_desc") {
           return metric?.likeCount ?? null;
         }
-        return Date.parse(
-          query.sort === "published_desc"
-            ? (item.publishedAt ?? item.capturedAt)
-            : item.capturedAt,
-        );
+        // “最新发布”只认作品真实发布时间。缺失发布时间不能拿收录时间
+        // 冒充，否则晚采集的旧作品会错误排到最前面。
+        return query.sort === "published_desc"
+          ? timestamp(item.publishedAt)
+          : timestamp(item.capturedAt);
       };
       rows.sort((left, right) => {
         const leftValue = metricSortValue(left);
@@ -3188,8 +3380,9 @@ export function createIntelligenceService(
           return rightValue - leftValue;
         }
         const captured =
-          Date.parse(right.capturedAt) - Date.parse(left.capturedAt);
-        return captured !== 0 ? captured : left.id.localeCompare(right.id);
+          (timestamp(right.capturedAt) ?? 0) -
+          (timestamp(left.capturedAt) ?? 0);
+        return captured !== 0 ? captured : right.id.localeCompare(left.id);
       });
       const offset = Math.max(0, query.offset ?? 0);
       const limit = Math.max(1, query.limit ?? 20);
@@ -3809,6 +4002,7 @@ export function createIntelligenceService(
         model: string | null;
       };
       reusableDecomposition: ReusableTopicDecomposition | null;
+      reusableCandidate: ReusableTopicCandidate | null;
     }> {
       const accountId = await account(
         ctx,
@@ -3855,7 +4049,10 @@ export function createIntelligenceService(
       const transcriptText = transcript.text.trim();
       const transcriptHash = `sha256:${hash(transcriptText)}`;
       const priorTransforms = await db
-        .select({ outputSnapshot: intelligenceTransforms.outputSnapshot })
+        .select({
+          outputSnapshot: intelligenceTransforms.outputSnapshot,
+          positioningVersionId: intelligenceTransforms.positioningVersionId,
+        })
         .from(intelligenceTransforms)
         .where(
           and(
@@ -3874,6 +4071,19 @@ export function createIntelligenceService(
             (candidate): candidate is ReusableTopicDecomposition =>
               candidate !== null,
           ) ?? null;
+      const reusableCandidate =
+        priorTransforms
+          .filter(
+            (row) =>
+              row.positioningVersionId === transform.positioningVersionId,
+          )
+          .map((row) =>
+            reusableTopicCandidate(row.outputSnapshot, transcriptHash),
+          )
+          .find(
+            (candidate): candidate is ReusableTopicCandidate =>
+              candidate !== null,
+          ) ?? null;
       return {
         transformId: transform.id,
         item: toItem(item),
@@ -3887,7 +4097,159 @@ export function createIntelligenceService(
           model: transcript.model,
         },
         reusableDecomposition,
+        reusableCandidate,
       };
+    },
+
+    async saveTopicPreviewCheckpoint(
+      ctx: RequestContext,
+      transformId: string,
+      checkpoint:
+        | {
+            stage: "decomposition";
+            value: ReusableTopicDecomposition;
+            sourceUrl: string;
+            transcriptHash: string;
+          }
+        | {
+            stage: "topic";
+            value: ReusableTopicCandidate;
+            sourceUrl: string;
+            transcriptHash: string;
+          }
+        | {
+            stage: "draft";
+            value: { contentText: string };
+            sourceUrl: string;
+            transcriptHash: string;
+          },
+    ) {
+      const transform = await requireTransform(ctx, transformId);
+      const [currentTranscript] = await db
+        .select()
+        .from(itemTranscripts)
+        .where(eq(itemTranscripts.itemId, transform.itemId))
+        .limit(1);
+      const currentText = currentTranscript?.text?.trim() ?? "";
+      const currentTranscriptHash = currentText
+        ? `sha256:${hash(currentText)}`
+        : null;
+      if (
+        currentTranscript?.status !== "done" ||
+        currentTranscriptHash !== checkpoint.transcriptHash
+      ) {
+        throw new IntelligenceConflictError(
+          "TRANSCRIPT_CHANGED_DURING_TOPIC_GENERATION",
+        );
+      }
+      const previous =
+        transform.outputSnapshot &&
+        typeof transform.outputSnapshot === "object" &&
+        !Array.isArray(transform.outputSnapshot)
+          ? (transform.outputSnapshot as Record<string, unknown>)
+          : {};
+      const previousProgress =
+        previous.generationProgress &&
+        typeof previous.generationProgress === "object" &&
+        !Array.isArray(previous.generationProgress)
+          ? (previous.generationProgress as Record<string, unknown>)
+          : {};
+      const previousStrategy = adaptationStrategyFromSnapshot(previous);
+      if (checkpoint.stage === "draft" && !previousStrategy) {
+        throw new IntelligenceConflictError(
+          "ADAPTATION_STRATEGY_REQUIRED_BEFORE_DRAFT",
+        );
+      }
+      const stamp = now();
+      const stagePatch =
+        checkpoint.stage === "decomposition"
+          ? {
+              ...checkpoint.value,
+              decompositionVersion: "v1",
+            }
+          : checkpoint.stage === "topic"
+            ? checkpoint.value
+            : {
+                adaptedDraft: {
+                  contentText: checkpoint.value.contentText.trim(),
+                  generatedFromTranscriptHash: checkpoint.transcriptHash,
+                  strategyHash: adaptationStrategyHash(
+                    previousStrategy!,
+                  ),
+                  templateVersion: "intelligence-topic-draft-v1",
+                },
+              };
+      if (
+        checkpoint.stage === "draft" &&
+        !checkpoint.value.contentText.trim()
+      ) {
+        throw new IntelligenceValidationError("adaptedDraft 不能为空");
+      }
+      const [updated] = await db
+        .update(intelligenceTransforms)
+        .set({
+          outputSnapshot: {
+            ...previous,
+            ...stagePatch,
+            sourceUrl: checkpoint.sourceUrl,
+            transcriptHash: checkpoint.transcriptHash,
+            generationProgress: {
+              ...previousProgress,
+              [checkpoint.stage]: {
+                status: "completed",
+                completedAt: stamp,
+              },
+            },
+          },
+          updatedAt: stamp,
+        })
+        .where(eq(intelligenceTransforms.id, transform.id))
+        .returning();
+      if (!updated) throw new Error("failed to save topic preview checkpoint");
+      return toTransform(updated);
+    },
+
+    async markTopicPreviewStageFailed(
+      ctx: RequestContext,
+      transformId: string,
+      input: {
+        stage: "decomposition" | "topic" | "draft";
+        errorCode: string;
+      },
+    ) {
+      const transform = await requireTransform(ctx, transformId);
+      const previous =
+        transform.outputSnapshot &&
+        typeof transform.outputSnapshot === "object" &&
+        !Array.isArray(transform.outputSnapshot)
+          ? (transform.outputSnapshot as Record<string, unknown>)
+          : {};
+      const previousProgress =
+        previous.generationProgress &&
+        typeof previous.generationProgress === "object" &&
+        !Array.isArray(previous.generationProgress)
+          ? (previous.generationProgress as Record<string, unknown>)
+          : {};
+      const [updated] = await db
+        .update(intelligenceTransforms)
+        .set({
+          outputSnapshot: {
+            ...previous,
+            generationProgress: {
+              ...previousProgress,
+              [input.stage]: {
+                status: "failed",
+                errorCode: input.errorCode,
+                failedAt: now(),
+              },
+            },
+          },
+          updatedAt: now(),
+        })
+        .where(eq(intelligenceTransforms.id, transform.id))
+        .returning();
+      if (!updated) throw new Error("failed to mark topic preview stage");
+      return toTransform(updated);
     },
 
     async finishTopicPreview(
@@ -3903,6 +4265,17 @@ export function createIntelligenceService(
         angle: string;
         differentiation: string;
         sourceSummary: string;
+        targetAudience: string;
+        audiencePain: string;
+        coreConflict: string;
+        format: string;
+        adaptationStrategy: {
+          keep: string[];
+          replace: string[];
+          add: string[];
+          avoid: string[];
+        };
+        adaptedDraft: string;
         sourceUrl: string;
         transcriptHash: string;
       },
@@ -3911,10 +4284,7 @@ export function createIntelligenceService(
       for (const [key, value] of Object.entries({
         hook: output.hook,
         reusablePattern: output.reusablePattern,
-        title: output.title,
-        angle: output.angle,
-        differentiation: output.differentiation,
-        sourceSummary: output.sourceSummary,
+        adaptedDraft: output.adaptedDraft,
         sourceUrl: output.sourceUrl,
         transcriptHash: output.transcriptHash,
       })) {
@@ -3959,8 +4329,21 @@ export function createIntelligenceService(
         .update(intelligenceTransforms)
         .set({
           outputSnapshot: {
+            ...((transform.outputSnapshot as Record<string, unknown> | null) ??
+              {}),
             ...output,
+            adaptedDraft: {
+              contentText: output.adaptedDraft.trim(),
+              generatedFromTranscriptHash: output.transcriptHash,
+              strategyHash: adaptationStrategyHash(output.adaptationStrategy),
+              templateVersion: "intelligence-topic-draft-v1",
+            },
             decompositionVersion: "v1",
+            generationProgress: {
+              decomposition: { status: "completed", completedAt: now() },
+              topic: { status: "completed", completedAt: now() },
+              draft: { status: "completed", completedAt: now() },
+            },
           },
           updatedAt: now(),
         })
@@ -3979,6 +4362,16 @@ export function createIntelligenceService(
           angle: string;
           differentiation: string;
           sourceSummary: string;
+          targetAudience: string;
+          audiencePain: string;
+          coreConflict: string;
+          format: string;
+          adaptationStrategy: {
+            keep: string[];
+            replace: string[];
+            add: string[];
+            avoid: string[];
+          };
         };
         idempotencyKey: string;
       },
@@ -4008,8 +4401,22 @@ export function createIntelligenceService(
         angle: input.editedCandidate.angle,
         differentiation: input.editedCandidate.differentiation,
         sourceSummary: input.editedCandidate.sourceSummary,
+        targetAudience: input.editedCandidate.targetAudience,
+        audiencePain: input.editedCandidate.audiencePain,
+        coreConflict: input.editedCandidate.coreConflict,
+        format: input.editedCandidate.format,
+        adaptationStrategy: input.editedCandidate.adaptationStrategy,
       };
-      for (const [key, value] of Object.entries(candidate)) {
+      for (const [key, value] of Object.entries({
+        title: candidate.title,
+        angle: candidate.angle,
+        differentiation: candidate.differentiation,
+        sourceSummary: candidate.sourceSummary,
+        targetAudience: candidate.targetAudience,
+        audiencePain: candidate.audiencePain,
+        coreConflict: candidate.coreConflict,
+        format: candidate.format,
+      })) {
         if (!value.trim()) {
           throw new IntelligenceValidationError(`${key} 不能为空`);
         }
@@ -4018,7 +4425,10 @@ export function createIntelligenceService(
       const preview = transform.outputSnapshot as {
         hook?: unknown;
         structureSteps?: unknown;
+        coreClaims?: unknown;
+        reusablePattern?: unknown;
         factRisks?: unknown;
+        adaptedDraft?: unknown;
       };
       const structureSteps = Array.isArray(preview.structureSteps)
         ? preview.structureSteps.filter(
@@ -4032,22 +4442,86 @@ export function createIntelligenceService(
               typeof risk === "string" && risk.trim().length > 0,
           )
         : [];
+      const coreClaims = Array.isArray(preview.coreClaims)
+        ? preview.coreClaims.filter(
+            (claim): claim is string =>
+              typeof claim === "string" && claim.trim().length > 0,
+          )
+        : [];
+      const reusablePattern =
+        typeof preview.reusablePattern === "string"
+          ? preview.reusablePattern.trim()
+          : "";
+      const adaptedDraft =
+        preview.adaptedDraft &&
+        typeof preview.adaptedDraft === "object" &&
+        !Array.isArray(preview.adaptedDraft)
+          ? (preview.adaptedDraft as Record<string, unknown>)
+          : null;
+      const expectedStrategyHash = adaptationStrategyHash(
+        candidate.adaptationStrategy,
+      );
+      if (
+        !adaptedDraft ||
+        typeof adaptedDraft.contentText !== "string" ||
+        !adaptedDraft.contentText.trim() ||
+        adaptedDraft.strategyHash !== expectedStrategyHash
+      ) {
+        throw new IntelligenceConflictError(
+          "改写策略与初稿版本不一致，请重新生成后再采纳",
+        );
+      }
       const topic = await deps.topics.create(ctx, {
         title: candidate.title,
         angle: `${candidate.angle}\n差异化：${candidate.differentiation}\n来源：${candidate.sourceSummary}`,
         card: {
           oneLiner: candidate.title,
+          targetAudience: candidate.targetAudience,
+          audiencePain: candidate.audiencePain,
+          coreConflict: candidate.coreConflict,
           ...(typeof preview.hook === "string" && preview.hook.trim()
             ? { hook: preview.hook }
             : {}),
           ...(structureSteps.length > 0
             ? { contentStructure: structureSteps }
             : {}),
+          format: candidate.format,
           materialBasis: candidate.sourceSummary,
           ...(factRisks.length > 0
             ? { riskNote: factRisks.join("；") }
             : {}),
           proposal: `差异化切法：${candidate.differentiation}`,
+          ...(typeof preview.hook === "string" &&
+          preview.hook.trim() &&
+          structureSteps.length >= 2 &&
+          coreClaims.length > 0 &&
+          reusablePattern
+            ? {
+                sourceDecomposition: {
+                  hook: preview.hook.trim(),
+                  structureSteps,
+                  coreClaims,
+                  reusablePattern,
+                  factRisks,
+                },
+              }
+            : {}),
+          adaptationStrategy: candidate.adaptationStrategy,
+          ...(adaptedDraft &&
+          typeof adaptedDraft.contentText === "string" &&
+          typeof adaptedDraft.generatedFromTranscriptHash === "string" &&
+          typeof adaptedDraft.strategyHash === "string" &&
+          typeof adaptedDraft.templateVersion === "string"
+            ? {
+                adaptedDraft: {
+                  contentText: adaptedDraft.contentText,
+                  generatedFromTranscriptHash:
+                    adaptedDraft.generatedFromTranscriptHash,
+                  strategyHash: adaptedDraft.strategyHash,
+                  templateVersion: adaptedDraft.templateVersion,
+                },
+              }
+            : {}),
         },
         sourceReferences: [
           {

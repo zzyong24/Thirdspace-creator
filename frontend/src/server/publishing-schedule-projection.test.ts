@@ -90,6 +90,10 @@ function stubs(options?: { analyticsFails?: boolean }) {
       },
     ];
   });
+  const getDailyPlayTrend = vi.fn(async () => [
+    { day: "2026-07-28", plays: 180 },
+    { day: "2026-07-29", plays: 240 },
+  ]);
 
   return {
     deps: {
@@ -102,7 +106,7 @@ function stubs(options?: { analyticsFails?: boolean }) {
         listPublicationsByOutputIds,
         listCurrentRevisionSummariesByPublicationIds,
       },
-      analytics: { listLatestSnapshotsByPublicationIds },
+      analytics: { listLatestSnapshotsByPublicationIds, getDailyPlayTrend },
     } as unknown as PublishingScheduleProjectionDeps,
     calls: {
       getCalendarRequestContext,
@@ -112,6 +116,7 @@ function stubs(options?: { analyticsFails?: boolean }) {
       listPublicationsByOutputIds,
       listCurrentRevisionSummariesByPublicationIds,
       listLatestSnapshotsByPublicationIds,
+      getDailyPlayTrend,
     },
   };
 }
@@ -136,6 +141,10 @@ describe("[T-599] publishing schedule batch projection", () => {
     }
     expect(result.performance.error).toBeNull();
     expect(result.performance.metrics[0]?.value).toBe("1,200");
+    expect(result.performance.trend).toEqual([
+      { label: "2026-07-28", value: 180 },
+      { label: "2026-07-29", value: 240 },
+    ]);
     for (const call of [
       calls.listCalendar,
       calls.listProjectsForComposition,
@@ -143,10 +152,15 @@ describe("[T-599] publishing schedule batch projection", () => {
       calls.listPublicationsByOutputIds,
       calls.listCurrentRevisionSummariesByPublicationIds,
       calls.listLatestSnapshotsByPublicationIds,
+      calls.getDailyPlayTrend,
     ]) {
       expect(call).toHaveBeenCalledTimes(1);
     }
     expect(calls.getCalendarRequestContext).toHaveBeenCalledTimes(1);
+    expect(calls.getDailyPlayTrend).toHaveBeenCalledWith(ctx, {
+      publicationIds: ["publication-1"],
+      days: 7,
+    });
   });
 
   it("analytics 失败只让右侧表现报错，月历仍保留排期和发布事实", async () => {

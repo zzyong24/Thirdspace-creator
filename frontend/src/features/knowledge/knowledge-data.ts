@@ -90,6 +90,16 @@ interface KnowledgeListDto {
   readonly usedInPublished?: boolean;
   readonly folderId?: string | null;
   readonly assetId?: string | null;
+  readonly sourceMetadata?: unknown;
+}
+
+function isBuiltInCourseItem(item: KnowledgeListDto): boolean {
+  const metadata = item.sourceMetadata;
+  return Boolean(
+    typeof metadata === "object" &&
+      metadata !== null &&
+      (metadata as { origin?: unknown }).origin === "win-video-tutor",
+  );
 }
 
 interface KnowledgeFolderDto {
@@ -275,7 +285,7 @@ export async function buildKnowledgeDashboardViewModel(
     // [T-247] 读侧滤 archived:knowledge.list 是全量行(repo 不按 status 过滤),
     // 归档(soft-delete)后的条目不再进列表/地图/指标 —— 归档动作在 UI 上真生效。
     items = (Array.isArray(rows) ? rows : []).filter(
-      (row) => row.status !== "archived",
+      (row) => row.status !== "archived" && !isBuiltInCourseItem(row),
     );
   } catch (err) {
     // Primary list read FAILED → honest ERROR tri-state (scenario "error" +

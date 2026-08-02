@@ -12,6 +12,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const upsertProfile = vi.fn();
 const createStatement = vi.fn();
 const getProfile = vi.fn();
+const getPositioningCenter = vi.fn();
+const confirmDiscovery = vi.fn();
 const routerRefresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -22,6 +24,8 @@ vi.mock("@/lib/contract-client", () => ({
     upsertProfile: (...a: unknown[]) => upsertProfile(...a),
     createStatement: (...a: unknown[]) => createStatement(...a),
     getProfile: (...a: unknown[]) => getProfile(...a),
+    getPositioningCenter: (...a: unknown[]) => getPositioningCenter(...a),
+    confirmDiscovery: (...a: unknown[]) => confirmDiscovery(...a),
   },
 }));
 
@@ -51,6 +55,12 @@ beforeEach(() => {
       forbidRule: "",
       expressionRule: "",
     },
+  });
+  getPositioningCenter.mockResolvedValue({
+    currentStatement: { id: "stmt-current" },
+  });
+  confirmDiscovery.mockResolvedValue({
+    statement: { id: "stmt-next" },
   });
 });
 
@@ -140,5 +150,68 @@ describe("ChatPositioningCard — downstreamRules 硬约束 (T-234)", () => {
         }),
       }),
     );
+  });
+
+  it("前采提案只调用原子 confirm，不再分两步更新画像和陈述", async () => {
+    const user = userEvent.setup();
+    render(
+      <ChatPositioningCard
+        suggestion={{ ...BASE }}
+        discovery={{
+          sessionId: "session-1",
+          candidateId: "candidate-1",
+          candidateRevision: 6,
+        }}
+      />,
+    );
+    await user.click(screen.getByText("采纳为当前定位"));
+    await waitFor(() => expect(confirmDiscovery).toHaveBeenCalledTimes(1));
+    expect(upsertProfile).not.toHaveBeenCalled();
+    expect(createStatement).not.toHaveBeenCalled();
+    expect(confirmDiscovery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { sessionId: "session-1" },
+        body: expect.objectContaining({
+          candidateId: "candidate-1",
+          candidateRevision: 6,
+          expectedCurrentStatementId: "stmt-current",
+          proposal: expect.objectContaining({
+            oneLiner: BASE.oneLiner,
+            keywords: BASE.keywords,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("前采版本已变化 → 明确提示卡片过期并禁用按钮，避免重复提交冲突", async () => {
+    confirmDiscovery.mockRejectedValue(
+      Object.assign(new Error("定位方向或当前母版已经变化"), {
+        code: "ConflictError",
+      }),
+    );
+    const user = userEvent.setup();
+    render(
+      <ChatPositioningCard
+        suggestion={{ ...BASE }}
+        discovery={{
+          sessionId: "session-1",
+          candidateId: "candidate-1",
+          candidateRevision: 6,
+        }}
+      />,
+    );
+
+    await user.click(screen.getByText("采纳为当前定位"));
+
+    expect(
+      await screen.findByText(
+        "前采内容在生成后有更新，这张定位卡已过期。请重新生成后再采纳，现有定位没有被覆盖。",
+      ),
+    ).toBeTruthy();
+    const button = screen.getByRole("button", { name: "定位卡已过期" });
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(confirmDiscovery).toHaveBeenCalledTimes(1);
   });
 });

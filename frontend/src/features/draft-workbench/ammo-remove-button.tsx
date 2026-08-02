@@ -92,7 +92,7 @@ export function AmmoRemoveButton({
         size="icon-sm"
         data-slot="ammo-remove-trigger"
         data-testid="ammo-remove-trigger"
-        aria-label="移除这条弹药"
+        aria-label="从项目移除这条素材"
         title="移除(只解绑,不删实体)"
         className="size-6 text-text-subtle hover:text-destructive"
         onClick={() => handleOpenChange(true)}
@@ -102,7 +102,7 @@ export function AmmoRemoveButton({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent data-slot="ammo-remove-dialog">
           <DialogHeader>
-            <DialogTitle data-slot="ammo-remove-title">移除这条弹药？</DialogTitle>
+            <DialogTitle data-slot="ammo-remove-title">从项目移除这条素材？</DialogTitle>
             <DialogDescription data-slot="ammo-remove-warning">
               只解绑「{title}」与本项目的关联，
               <strong className="text-foreground">不删除{kindLabel}本身</strong>

@@ -56,6 +56,7 @@ interface CreatedRecord {
   knowledgeType: string;
   sourceType: string;
   sourceMetadata: Record<string, unknown>;
+  revisions: string[];
 }
 
 function makeService(alreadySeeded = false) {
@@ -69,6 +70,7 @@ function makeService(alreadySeeded = false) {
       sourceType: "import",
       // 存量条目:seed 时已落 module(供 fixup 回填 tag)。
       sourceMetadata: { origin: "win-video-tutor", lessonNumber: 1, module: "模块1" },
+      revisions: ["old"],
     });
   }
   let seq = 0;
@@ -92,8 +94,34 @@ function makeService(alreadySeeded = false) {
         knowledgeType: input.knowledgeType,
         sourceType: input.sourceType,
         sourceMetadata: input.sourceMetadata,
+        revisions: [input.content],
       });
       return { id };
+    },
+    listRevisions: async (_ctx: unknown, knowledgeId: string) => {
+      const item = items.find((entry) => entry.id === knowledgeId);
+      return (item?.revisions ?? []).map((content) => ({ content }));
+    },
+    createRevision: async (
+      _ctx: unknown,
+      knowledgeId: string,
+      input: { content: string },
+    ) => {
+      const item = items.find((entry) => entry.id === knowledgeId);
+      if (!item) throw new Error(`KnowledgeNotFound: ${knowledgeId}`);
+      item.revisions.push(input.content);
+      item.content = input.content;
+      return { id: `${knowledgeId}-revision-${item.revisions.length}` };
+    },
+    updateSourceMetadata: async (
+      _ctx: unknown,
+      knowledgeId: string,
+      sourceMetadata: Record<string, unknown>,
+    ) => {
+      const item = items.find((entry) => entry.id === knowledgeId);
+      if (!item) throw new Error(`KnowledgeNotFound: ${knowledgeId}`);
+      item.sourceMetadata = sourceMetadata;
+      return item;
     },
   };
   return { svc, items };
@@ -199,15 +227,27 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
     expect(l5?.sourceMetadata.module).toBe("模块2");
   });
 
-  it("幂等:已有 origin=win-video-tutor → 跳过,不重复入", async () => {
+  it("部分种入后重启:补齐缺失课程且不重复已有 lesson", async () => {
     const skillRoot = await writeFakeSkill();
     const { svc, items } = makeService(true); // already seeded
     const count = await seedWinVideoTutor(svc as never, {
       userId: "user-test",
       accountId: null,
     }, { skillPath: skillRoot });
-    expect(count).toBe(0);
-    expect(items).toHaveLength(1); // 只有那 1 条预先存在的
+    expect(count).toBe(22); // lesson 1 追加新 revision + 补齐其余 21 节
+    expect(items).toHaveLength(22);
+    expect(
+      items.filter((item) => item.sourceMetadata.lessonNumber === 1),
+    ).toHaveLength(1);
+    expect(items[0]!.revisions).toHaveLength(2);
+
+    const secondCount = await seedWinVideoTutor(svc as never, {
+      userId: "user-test",
+      accountId: null,
+    }, { skillPath: skillRoot });
+    expect(secondCount).toBe(0);
+    expect(items).toHaveLength(22);
+    expect(items[0]!.revisions).toHaveLength(2);
   });
 
   it("skill 目录不存在(没装 skill)→ 安静返回 0,不炸", async () => {
@@ -222,7 +262,7 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
     expect(items).toHaveLength(0);
   });
 
-  it("生产默认未配置课程包路径 → 返回 0 且不扫描开发者 home 或任何文件目录", async () => {
+  it("生产默认不依赖开发者 home:直接从随包资产种入 22 节", async () => {
     const previousPath = process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
     delete process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
     const readdir = vi
@@ -234,9 +274,11 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
         userId: "user-test",
         accountId: null,
       });
-      expect(count).toBe(0);
-      expect(items).toHaveLength(0);
+      expect(count).toBe(22);
+      expect(items).toHaveLength(22);
       expect(readdir).not.toHaveBeenCalled();
+      expect(items.every((item) => item.sourceMetadata.courseId === "xuehui-ip-practical-course")).toBe(true);
+      expect(items.every((item) => item.sourceMetadata.skillPath === undefined)).toBe(true);
     } finally {
       readdir.mockRestore();
       if (previousPath === undefined) {

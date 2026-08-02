@@ -22,6 +22,7 @@ import { isOwnershipError } from "@/features/project-overview/project-overview-w
 import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
+import { resolveProjectScriptText } from "@/server/project-script-truth";
 
 interface ProductionRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -64,6 +65,12 @@ interface ScopedClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+}
+
+interface ProjectWithRadarDraft {
+  readonly id: string;
+  readonly title?: string;
+  readonly briefDetail?: unknown;
 }
 
 async function resolveProject(
@@ -140,12 +147,13 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
   // [T-373] 跨号整页门:项目按当前号读不到(OwnershipError,跨号/未知同貌,不泄露
   // 存在性)→ 整页诚实引导(与稿面根路由 T-332 S4 / review 页同款),不再半渲染
   // (此前逐区 best-effort 降级,跨号项目照渲工作台空壳)。其他读失败维持原降级。
+  let ownedProject: ProjectWithRadarDraft | null = null;
   try {
-    await scoped.getProject({
+    ownedProject = (await scoped.getProject({
       params: { projectId },
       query: undefined,
       body: undefined,
-    });
+    })) as ProjectWithRadarDraft;
   } catch (err) {
     if (isOwnershipError(err)) {
       return (
@@ -173,7 +181,11 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
     scriptArtifactId,
     scoped as unknown as ScriptDataClient,
   );
-  const scriptText = sectionsToScriptText(scriptData?.sections ?? null);
+  const scriptText = resolveProjectScriptText({
+    persistedText: sectionsToScriptText(scriptData?.sections ?? null),
+    persistedVersionCount: scriptData?.versions.length ?? 0,
+    briefDetail: ownedProject?.briefDetail,
+  });
 
   // 项目首个产出 + production 状态 + 分场数(全 best-effort)。
   let outputId: string | null = null;

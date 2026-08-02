@@ -1,8 +1,6 @@
 /**
- * 内容雷达选题卡是结构化输出，预算既要容纳模型的推理 token，也要容纳最终 JSON。
- *
- * 旧值 1600/900 对会返回 thinking block 的模型过紧：模型在 JSON 完成前就触发 length，
- * generateObject 与文本兜底会连续失败。这里保持零重试控制等待时间，把空间留给单次完整输出。
+ * 内容雷达结构化阶段只承担拆解或选题卡，不再携带长篇改写稿。
+ * 保持零重试控制等待时间；长稿由独立纯文本阶段生成。
  */
 export function topicPreviewGenerationOptions(input: {
   hasReusableDecomposition: boolean;
@@ -12,6 +10,6 @@ export function topicPreviewGenerationOptions(input: {
 } {
   return {
     maxRetries: 0,
-    maxOutputTokens: input.hasReusableDecomposition ? 2_400 : 4_096,
+    maxOutputTokens: input.hasReusableDecomposition ? 2_048 : 3_072,
   };
 }

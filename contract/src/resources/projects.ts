@@ -8,6 +8,12 @@ import {
   creationMode,
   contentType,
 } from "../primitives";
+import {
+  adaptationStrategy,
+  adaptedDraftCandidate,
+  candidateSourceReference,
+  sourceDecomposition,
+} from "./candidate";
 
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
@@ -51,6 +57,16 @@ export const projectBriefDetail = z.object({
   durationEstimate: z.string().optional(), // 预估时长
   coreMessage: z.string().optional(), // 核心信息(一句话主张)
   successCriteria: z.string().optional(), // 成功标准
+  // [T-642] 内容雷达立项时冻结的创作依据。普通项目不带此字段；雷达项目必须保留来源、
+  // 拆解和改写策略，标准 script.draft 链路据此生成，而不是退化成只读定位。
+  contentRadarEvidence: z
+    .object({
+      sourceReferences: z.array(candidateSourceReference).min(1).max(10),
+      decomposition: sourceDecomposition,
+      strategy: adaptationStrategy,
+      adaptedDraftSeed: adaptedDraftCandidate,
+    })
+    .optional(),
 });
 export type ProjectBriefDetail = z.infer<typeof projectBriefDetail>;
 

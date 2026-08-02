@@ -25,11 +25,20 @@ export const outlineSchema = z.object({
     .default([]),
   ending: z.string().default(""),
   cta: z.string().default(""),
-});
+}).refine(
+  (value) =>
+    Boolean(
+      value.opening.trim() ||
+        value.ending.trim() ||
+        value.sections.some((section) => section.label.trim() || section.intent.trim()),
+    ),
+  { message: "结构方案至少包含开头、结尾或一条段落" },
+);
 export type OutlineOutput = z.infer<typeof outlineSchema>;
 
 export const PLANNING_OUTLINE_TEMPLATE: PromptTemplate = {
   id: "planning.outline",
+  outputRecovery: "creative-partial",
   version: "v2",
   outputSchema: outlineSchema,
   tools: [],

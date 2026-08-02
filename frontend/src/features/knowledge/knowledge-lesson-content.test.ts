@@ -37,6 +37,14 @@ const LESSON_YAML = [
   "",
   "  practice_task: |",
   "    去找 3 个账号拆解。",
+  "",
+  "  rubric:",
+  "    grade_60: |",
+  "      能说清产品与人物的分工。",
+  "    grade_80: |",
+  "      能拆解一个真实账号。",
+  "    grade_95: |",
+  "      能将方法用于自己的业务。",
   "- id: KP-01-2",
   "  lesson: 1",
   "  module: 认知定位",
@@ -67,6 +75,9 @@ describe("parseLessonPoints", () => {
     ]);
     expect(p1.socratic[0]!.hint).toContain("管大叔");
     expect(p1.practiceTask).toContain("去找 3 个账号");
+    expect(p1.rubric.grade60).toContain("产品与人物");
+    expect(p1.rubric.grade80).toContain("真实账号");
+    expect(p1.rubric.grade95).toContain("自己的业务");
     const p2 = points![1]!;
     expect(p2.title).toBe("感性脑做决策");
     expect(p2.oneLine).toBe("人在感性脑做决策。");
@@ -101,6 +112,8 @@ describe("lessonPointsToMarkdown", () => {
     expect(md).toContain("## 苏格拉底提问");
     expect(md).toContain("### Q1.");
     expect(md).toContain("- 产品满足需求");
+    expect(md).toContain("## 自评标准");
+    expect(md).toContain("### 95 分 · 精通");
     // 不是原始 YAML dump。
     expect(md).not.toMatch(/^- id:/);
   });

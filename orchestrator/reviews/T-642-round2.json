@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 已由共享内核约束及常规 script.draft 低/中/高风险测试要求销账。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-CR-013",
+        "quote": "用户才能在脚本工作区基于定位、来源证据、结构拆解及该逐字稿生成或改写纯口播稿候选。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CR-021",
+        "quote": "事实与标注引用不会单独触发误拦截。"
+      },
+      "where": "§4.5 `script.draft` 的共享相似性内核与 §7 相似性验收。",
+      "failure_mode": "实现可仅按‘连续复用 + 语义相似’分数判高风险；当候选只复用了必要事实、专有名词或已标注引用时，语义检查仍可将其判为高风险并阻止采纳，导致已确认的例外验收无法成立。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "2026-08-01-content-radar-creative-handoff.md#§4.5,§7；2026-07-23-content-radar-restructure-design.md#AC-CR-021",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确共享内核对事实、专有名词和已标注引用的单独出现不得判为复制风险，并把该例外纳入常规 `script.draft` 的低/中/高风险采纳测试。",
+      "resolution_evidence": "SPEC-LINE:160:8c186be8657f1ed1 明确排除必要事实、专有名词与清晰标注短引用的单独重合，并要求风险结果可解释；SPEC-LINE:202:ffa6c5e322fc317d 要求常规低/中/高风险测试覆盖三类允许样本及真实表达/叙事复用的升级情形。",
+      "parent_id": ""
+    }
+  ]
+}

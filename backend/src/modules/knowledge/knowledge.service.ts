@@ -81,6 +81,12 @@ export interface KnowledgeService {
     knowledgeId: string,
     input: { content: string },
   ): Promise<KnowledgeRevisionRow>;
+  /** 组合根的内置课程升级使用；不改正文,只同步来源版本和校验锚。 */
+  updateSourceMetadata(
+    ctx: RequestContext,
+    knowledgeId: string,
+    sourceMetadata: Record<string, unknown>,
+  ): Promise<KnowledgeItemWithStats>;
   createRelation(
     ctx: RequestContext,
     knowledgeId: string,
@@ -194,6 +200,19 @@ export function createKnowledgeService(
         );
       }
       return rev;
+    },
+
+    async updateSourceMetadata(ctx, knowledgeId, sourceMetadata) {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "knowledge.updateSourceMetadata",
+      );
+      return repo.updateSourceMetadata(
+        ctx.userId,
+        accountId,
+        knowledgeId,
+        sourceMetadata,
+      );
     },
 
     async createRelation(ctx, knowledgeId, input) {

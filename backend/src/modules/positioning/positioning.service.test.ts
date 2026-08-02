@@ -16,6 +16,7 @@ import {
   GateSubjectError,
   StatementValidationError,
   MasterSnapshotUnavailableError,
+  DiscoveryConflictError,
   OwnershipError,
 } from "./positioning.errors";
 
@@ -79,6 +80,203 @@ describe("positioning service", () => {
     const center = await service.getPositioningCenter(ctx);
     expect(center.history).toHaveLength(0);
     expect(center.profile!.id).toBe(first.id);
+  });
+
+  it("[T-652] 前采支持多选/自定义，从零模式隔离旧数据，联网只发送显式关键词", async () => {
+    let seq = 0;
+    const search = vi.fn(async (_ctx, query: string) =>
+      query.includes("企业智能体")
+        ? [
+            {
+              title: "国内企业智能体客户需求观察",
+              url: "https://www.36kr.com/p/agent-demand",
+              snippet: "中国企业客户正在关注智能体的交付与知识库能力。",
+            },
+          ]
+        : [
+            {
+              title: "国内智能体用户高频痛点",
+              url: "https://www.zhihu.com/question/agent-needs",
+              snippet: `中文公开资料：${query}`,
+            },
+            {
+              title: "智能体落地案例",
+              url: "https://juejin.cn/post/agent-case",
+              snippet: "面向国内用户的智能体落地案例。",
+            },
+            {
+              title: "Cafe Flora | Vegetarian Restaurant Seattle",
+              url: "https://cafeflora.com/",
+              snippet: "Seattle brunch, lunch and dinner.",
+            },
+          ],
+    );
+    const listWorkIds = vi.fn(async () =>
+      Array.from({ length: 20 }, (_, index) => `work-secret-${index + 1}`),
+    );
+    const service = createPositioningService({
+      db,
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-discovery-${++seq}`,
+      projects: {
+        getProjectSubject: vi.fn(async () => ({ title: "", brief: "" })),
+        listWorkIds,
+      },
+      research: { search },
+    });
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await service.createStatementVersion(ctx, {
+      oneLiner: "旧定位",
+      keywords: ["旧", "定位", "历史"],
+      productAnchorIds: [],
+    });
+
+    let session = await service.startDiscovery(ctx, "scratch");
+    expect(session.inputManifest).toEqual({
+      legacyProfileId: null,
+      legacyStatementIds: [],
+      legacyWorkIds: [],
+    });
+    expect(listWorkIds).not.toHaveBeenCalled();
+    session = await service.updateDiscoveryAnswer(ctx, {
+      sessionId: session.id,
+      themeId: "goal",
+      selectedOptionIds: ["personal-brand", "lead-generation"],
+      customText: "服务杭州家装业主",
+      skipped: false,
+      expectedRevision: session.revision,
+    });
+    expect(session.answers[0]?.selectedOptionIds).toHaveLength(2);
+
+    session = await service.researchDiscovery(ctx, {
+      sessionId: session.id,
+      query: "国内智能体 用户高频痛点",
+      purpose: "补充公开用户问题",
+      targetThemeId: "need",
+      market: "cn",
+      language: "zh-CN",
+      expectedRevision: session.revision,
+    });
+    expect(search).toHaveBeenCalledTimes(1);
+    expect(search.mock.calls[0]?.[1]).toContain("国内智能体 用户高频痛点");
+    expect(search.mock.calls[0]?.[1]).toContain("中国大陆");
+    expect(search.mock.calls[0]?.[1]).toContain("简体中文");
+    expect(JSON.stringify(search.mock.calls)).not.toContain("服务杭州家装业主");
+    expect(session.webReferences.map((item) => item.title)).not.toContain(
+      "Cafe Flora | Vegetarian Restaurant Seattle",
+    );
+    expect(session.webReferences).toHaveLength(2);
+    expect(session.webReferences[0]?.adopted).toBe(false);
+
+    session = await service.setDiscoveryEvidence(ctx, {
+      sessionId: session.id,
+      evidenceId: session.webReferences[0]!.id,
+      adopted: true,
+      expectedRevision: session.revision,
+    });
+    expect(session.webReferences[0]?.adopted).toBe(true);
+
+    session = await service.researchDiscovery(ctx, {
+      sessionId: session.id,
+      query: "企业智能体 客户需求",
+      purpose: "补充公开用户问题",
+      targetThemeId: "need",
+      market: "cn",
+      language: "zh-CN",
+      expectedRevision: session.revision,
+    });
+    expect(session.webReferences).toHaveLength(2);
+    expect(session.webReferences[0]?.title).toBe("国内智能体用户高频痛点");
+    expect(session.webReferences[0]?.adopted).toBe(true);
+    expect(session.webReferences[1]?.title).toBe("国内企业智能体客户需求观察");
+    expect(session.webReferences.map((item) => item.title)).not.toContain(
+      "智能体落地案例",
+    );
+
+    const optimizeSession = await service.startDiscovery(ctx, "optimize");
+    expect(optimizeSession.inputManifest.legacyWorkIds).toHaveLength(12);
+    expect(optimizeSession.inputManifest.legacyWorkIds[0]).toBe("work-secret-1");
+    expect(optimizeSession.inputManifest.legacyWorkIds[11]).toBe("work-secret-12");
+  });
+
+  it("[T-652] 前采采纳原子写入且幂等，并发候选只有一个成功", async () => {
+    const service = makeService(db, makeProjectsPort(), "confirm");
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    const oldStatement = await service.createStatementVersion(ctx, {
+      oneLiner: "旧定位",
+      keywords: ["旧", "定位", "历史"],
+      productAnchorIds: [],
+    });
+    let session = await service.startDiscovery(ctx, "scratch");
+    const themes = [
+      "goal",
+      "strength",
+      "audience",
+      "need",
+      "proof",
+      "expression",
+    ] as const;
+    for (const themeId of themes) {
+      session = await service.updateDiscoveryAnswer(ctx, {
+        sessionId: session.id,
+        themeId,
+        selectedOptionIds: [`${themeId}-choice`],
+        customText: "",
+        skipped: false,
+        expectedRevision: session.revision,
+      });
+    }
+    expect(session.status).toBe("ready");
+
+    const proposal = {
+      persona: "实战型家装顾问",
+      field: "杭州家装",
+      audience: "准备装修的家庭",
+      differentiation: "真实工地避坑",
+      capabilities: ["工地验收", "预算拆解"],
+      facets: {
+        contentScope: "装修决策与工地实拍",
+        avoid: "不做虚假报价",
+        corePain: "预算不透明",
+        coreValue: "少花冤枉钱",
+        tone: "直接、具体",
+        statusNote: "",
+      },
+      downstreamRules: {
+        topicRule: "每题解决一个真实装修决策",
+        scriptRule: "先场景再判断",
+        projectRule: "优先真实工地",
+        forbidRule: "不承诺绝对低价",
+        expressionRule: "说人话",
+      },
+      oneLiner: "帮杭州家庭看懂装修里的钱和坑",
+      keywords: ["杭州家装", "预算", "避坑"],
+      productAnchorIds: [],
+    };
+    const input = {
+      sessionId: session.id,
+      candidateId: "candidate-a",
+      candidateRevision: session.revision,
+      expectedCurrentStatementId: oldStatement.id,
+      idempotencyKey: "confirm-attempt-a",
+      proposal,
+    };
+    const first = await service.confirmDiscovery(ctx, input);
+    const replay = await service.confirmDiscovery(ctx, input);
+    expect(replay.statement.id).toBe(first.statement.id);
+    expect(replay.profile.id).toBe(first.profile.id);
+    expect(first.session.status).toBe("adopted");
+    expect((await service.listStatements(ctx, { limit: 20, offset: 0 })).total).toBe(2);
+
+    await expect(
+      service.confirmDiscovery(ctx, {
+        ...input,
+        candidateId: "candidate-b",
+        idempotencyKey: "confirm-attempt-b",
+      }),
+    ).rejects.toBeInstanceOf(DiscoveryConflictError);
+    expect((await service.getProfile(ctx))?.persona).toBe("实战型家装顾问");
+    expect((await service.listStatements(ctx, { limit: 20, offset: 0 })).total).toBe(2);
   });
 
   it("[T-521] 旧动态 statusNote 清理按账号隔离、幂等，并只审计 hash 不泄露原文", async () => {

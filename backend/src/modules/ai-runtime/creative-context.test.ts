@@ -1028,6 +1028,79 @@ describe("[T-284a] assembleCreativeContext — benchmarkRefBrief 仅复刻项目
   });
 });
 
+describe("[T-642] assembleCreativeContext — 内容雷达创作依据进入标准写稿链", () => {
+  const evidence = {
+    sourceReferences: [{
+      kind: "original_video" as const,
+      platform: "douyin",
+      label: "原视频",
+      url: "https://www.douyin.com/video/1",
+      intelligenceItemId: "item-1",
+    }],
+    decomposition: {
+      hook: "反常识开场",
+      structureSteps: ["指出误区", "给出判断顺序"],
+      coreClaims: ["工作流稳定性优先"],
+      reusablePattern: "反常识—拆条件—给顺序",
+      factRisks: ["数字待核验"],
+    },
+    strategy: {
+      keep: ["判断顺序"],
+      replace: ["替换来源案例"],
+      add: ["加入本账号项目经验"],
+      avoid: ["不照搬原句"],
+    },
+    adaptedDraftSeed: {
+      contentText: "这是本账号改写初稿",
+      generatedFromTranscriptHash: "sha256:test",
+      strategyHash: "sha256:strategy",
+      templateVersion: "intelligence-topic-v2",
+    },
+  };
+
+  it("注入确认策略和 hash 校验后的来源逐字稿", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-radar", topic: "工作流选题" },
+      {
+        positioning: {
+          getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
+        },
+        brief: { getBriefDetail: async () => ({ contentRadarEvidence: evidence }) },
+        projectIntelligence: {
+          getSourceContexts: async () => [{
+            item: {
+              title: "来源作品",
+              canonicalUrl: "https://www.douyin.com/video/1",
+              authorName: "原作者",
+            },
+            transcript: { text: "这是经校验的完整来源逐字稿", hash: "sha256:test" },
+          }],
+        },
+      },
+    );
+    expect(context.projectIntelligenceBrief).toContain("本次创作依据·内容雷达");
+    expect(context.projectIntelligenceBrief).toContain("替换来源案例");
+    expect(context.projectIntelligenceBrief).toContain("这是经校验的完整来源逐字稿");
+  });
+
+  it("雷达项目有证据但来源引用缺失时阻断，不允许退化成只按定位写", async () => {
+    await expect(
+      assembleCreativeContext(
+        ctx,
+        { projectId: "proj-radar", topic: "工作流选题" },
+        {
+          positioning: {
+            getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
+          },
+          brief: { getBriefDetail: async () => ({ contentRadarEvidence: evidence }) },
+          projectIntelligence: { getSourceContexts: async () => [] },
+        },
+      ),
+    ).rejects.toThrow("不能退化为仅按定位生成稿件");
+  });
+});
+
 // ── [T-382] 当前选中号标注(accountsBrief ⭐ + currentAccountLine)───────────────────
 // 治实录病例:两个号并列进画像、没标哪个是 ctx.accountId 指向的当前号 → 编导答「没法判断
 // 你登录的是哪个号」。装配层据 reader 行 id 与 ctx.accountId 匹配:命中行标「⭐当前选中号」

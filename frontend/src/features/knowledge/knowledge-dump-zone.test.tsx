@@ -6,7 +6,7 @@
  *  - 旧表单蒸馏流已移除:不再 POST /api/knowledge/distill、不再渲内联确认门
  *    (确认门抽到 knowledge-atom-gate,由 Copilot 蒸馏卡消费,另有单测);
  *  - 手动补录降级路径(type 下拉=四原子+reference,直接 knowledge.create);
- *  - 拖入 .md/.txt 文本文件 → FileReader 读入输入区;非文本内联提示。
+ *  - 拖入 PDF/DOCX/Markdown/TXT → 直接复用文件导入真链;非支持格式内联提示。
  */
 
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -202,16 +202,26 @@ describe("KnowledgeDumpZone — 手动补录降级路径", () => {
   });
 });
 
-describe("KnowledgeDumpZone — 拖入文本文件", () => {
-  it("拖入 .txt → FileReader 读文本进输入区", async () => {
+describe("KnowledgeDumpZone — 拖入文件直接导入", () => {
+  it("拖入 .txt → 直接上传并写入知识库，不再只填入输入框", async () => {
     const { container } = render(<KnowledgeDumpZone />);
     const input = q<HTMLTextAreaElement>(container, "knowledge-dump-input")!;
     const file = new File(["文件里的内容"], "note.txt", { type: "text/plain" });
     fireEvent.drop(input, { dataTransfer: { files: [file], types: ["Files"] } });
-    await waitFor(() => expect(input.value).toContain("文件里的内容"));
+    await waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(1));
+    expect(createUpload).toHaveBeenCalledTimes(1);
+    expect(createKnowledge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          title: "note.txt",
+          content: "文件里的内容",
+        }),
+      }),
+    );
+    expect(input.value).toBe("");
   });
 
-  it("拖入非文本文件 → 内联提示,不静默吞", async () => {
+  it("拖入不支持的文件 → 内联提示,不静默吞", async () => {
     const { container } = render(<KnowledgeDumpZone />);
     const input = q<HTMLTextAreaElement>(container, "knowledge-dump-input")!;
     const file = new File([new Uint8Array([1, 2])], "photo.png", {
@@ -221,7 +231,7 @@ describe("KnowledgeDumpZone — 拖入文本文件", () => {
     await waitFor(() =>
       expect(q(container, "knowledge-dump-error")).not.toBeNull(),
     );
-    expect(q(container, "knowledge-dump-error")!.textContent).toContain(".md / .txt");
+    expect(q(container, "knowledge-dump-error")!.textContent).toContain("PDF");
   });
 });
 

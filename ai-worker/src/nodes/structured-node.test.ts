@@ -15,7 +15,11 @@ const schema = z.object({
   cases: z.array(z.object({ title: z.string() })).default([]),
   dataPoints: z.array(z.object({ stat: z.string() })).default([]),
   quotes: z.array(z.object({ line: z.string() })).default([]),
-});
+}).refine(
+  (value) =>
+    value.hooks.length + value.cases.length + value.dataPoints.length + value.quotes.length > 0,
+  { message: "至少返回一条内容" },
+);
 const TEMPLATE: PromptTemplate = {
   id: "test.structured",
   version: "v1",
@@ -102,6 +106,25 @@ describe("runStructuredNode 跨模型健壮性", () => {
     ).rejects.toThrow();
     expect(calls).toBe(2);
   });
+
+  it("默认也只做一次结构化尝试和一次文本降级，避免所有工具隐式六次调用", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return textResult("不是 JSON");
+      },
+    });
+    await expect(
+      runStructuredNode({
+        model,
+        template: TEMPLATE,
+        facets: { t: "go" },
+        outputSchema: schema,
+      }),
+    ).rejects.toThrow();
+    expect(calls).toBe(2);
+  });
 });
 
 describe("extractJsonObject", () => {
@@ -114,6 +137,58 @@ describe("extractJsonObject", () => {
   it("无 JSON → null", () => {
     expect(extractJsonObject("纯文字没有对象")).toBeNull();
     expect(extractJsonObject("")).toBeNull();
+  });
+
+  it("reasoning 前后各有花括号时提取第一个真实 JSON，而不是首尾粘连", () => {
+    expect(
+      extractJsonObject(
+        '我先考虑 {这不是 JSON}。最终结果：{"hooks":[],"cases":[],"dataPoints":[],"quotes":[]}。补充 {也不是 JSON}',
+      ),
+    ).toEqual({ hooks: [], cases: [], dataPoints: [], quotes: [] });
+  });
+});
+
+describe("runStructuredNode 创作型本地归一化", () => {
+  it("提供商把对象包进 result 时复用首次返回，仍由原 schema 严格验收", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return textResult(
+          '{"result":{"hooks":[{"text":"已生成","why":"真实内容"}],"cases":[],"dataPoints":[],"quotes":[]}}',
+        );
+      },
+    });
+    const { object } = await runStructuredNode({
+      model,
+      template: TEMPLATE,
+      facets: { t: "go" },
+      outputSchema: schema,
+    });
+    expect(object.hooks[0]?.text).toBe("已生成");
+    expect(calls).toBe(1);
+  });
+
+  it("generateObject 已返回可恢复 JSON 时本地归一化成功，不再发起第二次模型调用", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return textResult('{"headline":"先展示可用结果"}');
+      },
+    });
+    const smallSchema = z.object({ title: z.string().min(1) });
+    const { object } = await runStructuredNode({
+      model,
+      template: TEMPLATE,
+      facets: { t: "go" },
+      outputSchema: smallSchema,
+      normalizeObject: (raw) => ({
+        title: (raw as { headline?: unknown }).headline,
+      }),
+    });
+    expect(object).toEqual({ title: "先展示可用结果" });
+    expect(calls).toBe(1);
   });
 });
 

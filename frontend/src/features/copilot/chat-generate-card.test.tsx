@@ -55,6 +55,22 @@ afterEach(() => {
 });
 
 describe("ChatGenerateCard — T-376 失败态诚实呈现", () => {
+  it("重新进入项目时任务已经采纳成功，立即恢复完成态，不继续显示正在生成", async () => {
+    mockClient.getTask.mockResolvedValueOnce({ status: "succeeded" });
+    const { container } = render(
+      <ChatGenerateCard taskId="t-succeeded" kindOf="image" error={null} />,
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(
+      container
+        .querySelector('[data-slot="chat-generate-card"]')
+        ?.getAttribute("data-phase"),
+    ).toBe("done");
+    expect(container.querySelector('[data-slot="chat-generate-running"]')).toBeNull();
+  });
+
   it("任务 cancelled + 步骤流有 error 条 → 展示真实原因(已配置,但调用失败),链接改「检查配置」", async () => {
     const { container } = render(
       <ChatGenerateCard taskId="t-1" kindOf="image" error={null} />,

@@ -109,7 +109,10 @@ fn decode_b64(s: &str) -> Option<Vec<u8>> {
     for (i, &c) in A.iter().enumerate() {
         lut[c as usize] = i as u8;
     }
-    let clean: Vec<u8> = s.bytes().filter(|&b| b != b'=' && !b.is_ascii_whitespace()).collect();
+    let clean: Vec<u8> = s
+        .bytes()
+        .filter(|&b| b != b'=' && !b.is_ascii_whitespace())
+        .collect();
     let mut out = Vec::with_capacity(clean.len() * 3 / 4);
     let mut acc = 0u32;
     let mut bits = 0u32;

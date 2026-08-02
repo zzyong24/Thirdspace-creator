@@ -79,9 +79,10 @@ function mp3FrameLength(bytes: Uint8Array, offset: number): number | null {
  * 按 MP3 帧边界拆分，保证每段都能独立解码；不能可靠识别帧时明确失败，不做任意字节截断。
  * 当前抖音抽音固定输出 16kHz/单声道/mp3，因此会稳定走此路径。
  */
-export function splitMp3ForMimo(
+export function splitMp3ForDataUrl(
   bytes: Uint8Array,
   maxEncodedBytes = DEFAULT_MAX_ENCODED_BYTES,
+  providerLabel = "ASR",
 ): Uint8Array[] {
   if (encodedDataUrlLength(bytes.byteLength) <= maxEncodedBytes) return [bytes];
   const rawLimit = maxRawBytes(maxEncodedBytes);
@@ -104,7 +105,7 @@ export function splitMp3ForMimo(
   }
   if (frames.length === 0) {
     throw new MultimodalGenerationError(
-      "MiMo ASR 音频超过单次上限，且无法按 MP3 帧安全分段；请重试或检查音频格式。",
+      `${providerLabel} 音频超过单次上限，且无法按 MP3 帧安全分段；请重试或检查音频格式。`,
     );
   }
   const chunks: Uint8Array[] = [];
@@ -123,10 +124,17 @@ export function splitMp3ForMimo(
     chunks.some((chunk) => encodedDataUrlLength(chunk.byteLength) > maxEncodedBytes)
   ) {
     throw new MultimodalGenerationError(
-      "MiMo ASR 音频分段后仍超过单次上限，请重试。",
+      `${providerLabel} 音频分段后仍超过单次上限，请重试。`,
     );
   }
   return chunks;
+}
+
+export function splitMp3ForMimo(
+  bytes: Uint8Array,
+  maxEncodedBytes = DEFAULT_MAX_ENCODED_BYTES,
+): Uint8Array[] {
+  return splitMp3ForDataUrl(bytes, maxEncodedBytes, "MiMo ASR");
 }
 
 async function safeText(res: Response): Promise<string> {

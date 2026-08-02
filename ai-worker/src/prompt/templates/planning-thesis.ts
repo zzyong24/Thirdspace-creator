@@ -29,11 +29,20 @@ export const thesisTreeSchema = z.object({
       }),
     )
     .default([]),
-});
+}).refine(
+  (value) =>
+    Boolean(
+      value.core.title.trim() ||
+        value.core.summary.trim() ||
+        value.branches.some((branch) => branch.title.trim() || branch.summary.trim()),
+    ),
+  { message: "论点树至少包含核心论点或一条分支" },
+);
 export type ThesisTreeOutput = z.infer<typeof thesisTreeSchema>;
 
 export const PLANNING_THESIS_TEMPLATE: PromptTemplate = {
   id: "planning.thesis",
+  outputRecovery: "creative-partial",
   version: "v2",
   outputSchema: thesisTreeSchema,
   tools: [],

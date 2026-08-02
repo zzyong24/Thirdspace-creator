@@ -48,8 +48,9 @@ const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> =
   { value: "reference", label: "参考" },
 ];
 
-// 可读入的文本文件后缀(SPEC §4:拖入 .md/.txt)。
+// 文本文件可本地直读；其他文档复用现有上传 + 正文提取链。
 const TEXT_FILE_RE = /\.(md|txt|markdown)$/i;
+const SUPPORTED_DOCUMENT_RE = /\.(pdf|docx|md|markdown|txt)$/i;
 const DOCUMENT_EXTRACT_POLL_MS = 500;
 const DOCUMENT_EXTRACT_MAX_POLLS = 120;
 
@@ -170,6 +171,29 @@ export function KnowledgeDumpZone() {
     React.useState<ImportDialogState | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const queueDocumentFiles = React.useCallback((files: ReadonlyArray<File>) => {
+    const supported = files.filter((file) => SUPPORTED_DOCUMENT_RE.test(file.name));
+    const rejected = files.filter((file) => !SUPPORTED_DOCUMENT_RE.test(file.name));
+    setDragActive(false);
+    if (supported.length === 0) {
+      setError("可导入 PDF、DOCX、Markdown 或 TXT 文件。");
+      return;
+    }
+    setError(
+      rejected.length > 0
+        ? `已选中 ${supported.length} 个可导入文件；${rejected.length} 个不支持的文件已跳过。`
+        : null,
+    );
+    setImportDialog({
+      files: supported,
+      phase: "confirm",
+      completed: 0,
+      succeeded: 0,
+      failures: [],
+      currentFileName: null,
+    });
+  }, []);
+
   const reset = React.useCallback(() => {
     setContent("");
     setError(null);
@@ -177,33 +201,6 @@ export function KnowledgeDumpZone() {
     setManualTitle("");
     setManualType("claim");
   }, []);
-
-  // 拖入 .md/.txt → 读文本追加进输入区(非文本文件内联提示,不静默吞)。
-  const handleDrop = React.useCallback(
-    (event: React.DragEvent<HTMLTextAreaElement>) => {
-      const files = Array.from(event.dataTransfer?.files ?? []);
-      if (files.length === 0) return; // 纯文本拖拽走原生行为
-      event.preventDefault();
-      setDragActive(false);
-      void (async () => {
-        const readable = files.filter((f) => TEXT_FILE_RE.test(f.name));
-        if (readable.length === 0) {
-          setError("只支持拖入 .md / .txt 文本文件;其他素材请去项目弹药区上传。");
-          return;
-        }
-        try {
-          const texts = await Promise.all(readable.map(readTextFile));
-          setContent((prev) =>
-            [prev.trim(), ...texts.map((t) => t.trim())].filter(Boolean).join("\n\n"),
-          );
-          setError(null);
-        } catch {
-          setError("读取文件失败,请重试或直接粘贴文本。");
-        }
-      })();
-    },
-    [],
-  );
 
   // [T-094] 「AI 蒸馏」→ 深链打开 Copilot(knowledge-distill 隔离桶):原文短则 prefill 带上,
   // 长则带引导话术在对话里粘。query-only href 用 router.push 就地开浮层(不跳页,bug #3 语义)。
@@ -372,12 +369,51 @@ export function KnowledgeDumpZone() {
     [busy, router],
   );
 
+  // 拖放即开始上传；与按钮导入共用 handleDocumentFiles，但省去一次确认点击。
+  const handleDrop = React.useCallback(
+    (event: React.DragEvent<HTMLElement>) => {
+      const files = Array.from(event.dataTransfer?.files ?? []);
+      if (files.length === 0) return; // 纯文本拖拽走原生行为
+      event.preventDefault();
+      setDragActive(false);
+      const supported = files.filter((file) =>
+        SUPPORTED_DOCUMENT_RE.test(file.name),
+      );
+      const rejectedCount = files.length - supported.length;
+      if (supported.length === 0) {
+        setError("可导入 PDF、DOCX、Markdown 或 TXT 文件。");
+        return;
+      }
+      if (rejectedCount > 0) {
+        setError(`${rejectedCount} 个不支持的文件已跳过。`);
+      }
+      void handleDocumentFiles(supported);
+    },
+    [handleDocumentFiles],
+  );
+
   return (
     <>
       <section
         data-slot="knowledge-dump-zone"
         aria-label="知识倾倒场"
-        className="flex flex-col gap-2 rounded-card border border-dashed border-border bg-surface-subtle/50 p-3"
+        onDragOver={(event) => {
+          if ((event.dataTransfer?.types ?? []).includes("Files")) {
+            event.preventDefault();
+            setDragActive(true);
+          }
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDragActive(false);
+          }
+        }}
+        onDrop={handleDrop}
+        data-drag-active={dragActive ? "true" : "false"}
+        className={cn(
+          "relative flex flex-col gap-2 rounded-card border border-dashed bg-surface-subtle/50 p-3 transition-colors",
+          dragActive ? "border-brand bg-brand-soft/30" : "border-border",
+        )}
       >
       <div className="flex items-center gap-2 text-xs text-text-subtle">
         <Inbox className="size-4 shrink-0" aria-hidden="true" />
@@ -385,26 +421,22 @@ export function KnowledgeDumpZone() {
       </div>
       <textarea
         data-slot="knowledge-dump-input"
-        aria-label="倒入文本、URL,或拖入 .md/.txt 文件"
-        placeholder="粘贴文本 / URL,或把 .md / .txt 文件拖进来…(点「AI 蒸馏」带着它开聊,或走「手动补录」直接存)"
+        aria-label="粘贴文本或 URL，也可拖入 PDF、DOCX、Markdown 或 TXT 文件"
+        placeholder="粘贴文本 / URL，或把 PDF、DOCX、Markdown、TXT 文件拖进这个框…"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        onDragOver={(e) => {
-          if ((e.dataTransfer?.types ?? []).includes("Files")) {
-            e.preventDefault();
-            setDragActive(true);
-          }
-        }}
-        onDragLeave={() => setDragActive(false)}
-        onDrop={handleDrop}
         rows={4}
-        data-drag-active={dragActive ? "true" : "false"}
         className={cn(
           inputCls,
           "min-h-24 resize-y",
           dragActive && "border-brand bg-brand-soft/30",
         )}
       />
+      {dragActive ? (
+        <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-brand bg-surface/95 text-sm font-medium text-brand shadow-sm">
+          松开即可上传并读取文件内容
+        </div>
+      ) : null}
 
       {/* 内联错误(非 toast):读文件/手动补录失败落这,输入保留供重试 [gate-F2]。 */}
       {error ? (
@@ -430,15 +462,7 @@ export function KnowledgeDumpZone() {
             const files = Array.from(event.target.files ?? []);
             event.target.value = "";
             if (files.length === 0) return;
-            setError(null);
-            setImportDialog({
-              files,
-              phase: "confirm",
-              completed: 0,
-              succeeded: 0,
-              failures: [],
-              currentFileName: null,
-            });
+            queueDocumentFiles(files);
           }}
         />
         <button

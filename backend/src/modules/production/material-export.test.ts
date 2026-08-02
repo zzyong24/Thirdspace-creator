@@ -329,4 +329,23 @@ describe("aggregateMaterialExport", () => {
     expect(names).toContain("素材/同名.mp4");
     expect(names).toContain("素材/同名-2.mp4");
   });
+
+  it("AI 图片名称没有扩展名时，按真实 MIME 补扩展名，导出后可直接打开", async () => {
+    const bundle = await aggregateMaterialExport(
+      CTX,
+      { projectId: "p1", nowIso: NOW },
+      makePorts({
+        listMaterialAssets: async () => [
+          { assetId: "cover-no-ext", role: "cover" },
+        ],
+        getAssetName: async () => "别再写懂业务三个字了 · 封面",
+        getAssetBytes: async () => ({
+          bytes: enc.encode("png-bytes"),
+          mimeType: "image/png",
+        }),
+      }),
+    );
+    const names = parseStoreZip(bundle.zipBytes).map((f) => f.name);
+    expect(names).toContain("素材/别再写懂业务三个字了 · 封面.png");
+  });
 });

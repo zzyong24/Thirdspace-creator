@@ -7,6 +7,7 @@ import {
   executionTasks,
   favoritesFolders,
   favoritesItems,
+  intelligenceItems,
   intelligenceTransforms,
   intelligenceSources,
   intelligenceSyncRuns,
@@ -1126,6 +1127,14 @@ describe("T-482 内容雷达领域主链", () => {
         externalId: "candidate",
         title: "待确认选题",
       });
+      await db
+        .update(intelligenceItems)
+        .set({ publishedAt: "2026-07-20T08:00:00.000Z" })
+        .where(eq(intelligenceItems.id, pendingTopic));
+      await db
+        .update(intelligenceItems)
+        .set({ publishedAt: "2026-07-22T08:00:00.000Z" })
+        .where(eq(intelligenceItems.id, candidate));
       await service.uploadManualTranscript(ctx, {
         itemId: pendingTopic,
         format: "txt",
@@ -1231,6 +1240,16 @@ describe("T-482 内容雷达领域主链", () => {
         topicState: "awaiting_confirmation",
         progressState: "awaiting_confirmation",
       });
+
+      const byPublishedAt = await service.listItems(ctx, {
+        sort: "published_desc",
+        limit: 100,
+      });
+      expect(byPublishedAt.rows.map((row) => row.item.id)).toEqual([
+        candidate,
+        pendingTopic,
+        untranscribed,
+      ]);
     } finally {
       await client.close();
     }

@@ -149,7 +149,7 @@ describe("[T-512] script.draft official 完整性策略", () => {
       minSegments: 6,
       maxSegments: 10,
       requiredSequence: ["hook", "body", "cta"],
-      repairAttempts: 2,
+      repairAttempts: 0,
     });
     expect(base?.completionPolicyAdapter).toEqual({
       id: "script.draft.shots",
@@ -165,7 +165,7 @@ describe("[T-512] script.draft official 完整性策略", () => {
     ).toHaveProperty("role");
   });
 
-  it("默认 skill 持续只产 1 段时耗尽 repair，绝不假成功", async () => {
+  it("默认 skill 只产 1 段时保留为 partial，不自动整稿重写也不假装可采纳", async () => {
     const oneShot = {
       shots: [
         {
@@ -178,17 +178,22 @@ describe("[T-512] script.draft official 完整性策略", () => {
       ],
     };
 
-    await expect(
-      runWithEffectiveSkillSnapshot(scriptSnapshot("acct-default"), () =>
+    const result = await runWithEffectiveSkillSnapshot(
+      scriptSnapshot("acct-default"),
+      () =>
         runScriptNode({
           model: sequenceModel([oneShot]),
           positioningBrief: "测试账号",
         }),
-      ),
-    ).rejects.toMatchObject({
-      code: "COMPLETION_POLICY_REPAIR_EXHAUSTED",
+    );
+
+    expect(result.shots).toHaveLength(1);
+    expect(result.generation.attempts).toHaveLength(1);
+    expect(result.validation).toMatchObject({
+      status: "partial",
       originalSegmentCount: 1,
       finalSegmentCount: 1,
+      repairAttemptsUsed: 0,
     });
   });
 

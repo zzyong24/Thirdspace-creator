@@ -158,29 +158,18 @@ export function ChatGatherCard({
       data-grounding={grounding}
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
-      {/* [Bug-12 T-026] 未配联网检索 → 黄条诚实告知素材来自模型记忆、来源需核实。措辞更新:
-          T-126 解耦后搜索有「免 key」(浏览器/RSS)与「付费 API」(bocha/tavily/serpapi)两条路径,
-          用户看到「去设置配联网搜索」容易误以为又要配模型。换成两条路径都明示 + 给免 key
-          选项深链,降低「我明明浏览器搜索了为什么还要配」的困惑。 */}
+      {/* [T-645] 搜索属于内部能力路由。降级时诚实告知结果来源，但不再把普通用户
+          引向已经隐藏的技术配置项。 */}
       {grounding === "model_memory" ? (
         <div
           data-slot="chat-gather-warning"
           className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-md border border-warning/40 bg-warning-soft px-2 py-1.5 text-[10px] leading-snug text-warning-foreground"
         >
-          <span>
-            ⚠️ 本轮素材来自模型记忆(非实时检索),来源需自行核实 —— 在
-          </span>
-          <a
-            href="/settings?tab=models&capability=web.search"
-            className="font-medium text-brand underline underline-offset-2"
-          >
-            设置 → 模型 → 联网搜索
-          </a>
-          <span>启用「浏览器抓取 Bing / RSS 订阅」(免 key)或配置付费 API</span>
+          <span>⚠️ 本轮未取得实时检索结果，素材来自模型记忆，来源需自行核实。</span>
         </div>
       ) : null}
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        {grounding === "web" ? "联网搜到素材" : "搜到素材"} · {items.length} 条 · 逐条/批量存入弹药
+        {grounding === "web" ? "联网找到资料" : "找到创作素材"} · {items.length} 条 · 可保存到当前项目
       </span>
       <ol className="flex flex-col gap-1.5">
         {items.map((it, i) => {
@@ -247,7 +236,7 @@ export function ChatGatherCard({
                 {projectId ? (
                   s === "saved" ? (
                     <span className="shrink-0 text-[10px] font-medium text-success">
-                      已进弹药
+                      已保存到项目
                     </span>
                   ) : (
                     <button
@@ -257,7 +246,7 @@ export function ChatGatherCard({
                       onClick={() => void save(i)}
                       className="inline-flex h-6 shrink-0 items-center rounded-control border border-brand/40 px-2 text-[10px] font-medium text-brand hover:bg-brand-soft disabled:opacity-50"
                     >
-                      {s === "saving" ? "存入中…" : s === "error" ? "重试" : "存入弹药"}
+                      {s === "saving" ? "保存中…" : s === "error" ? "重试" : "保存到项目"}
                     </button>
                   )
                 ) : null}
@@ -279,7 +268,7 @@ export function ChatGatherCard({
             onClick={() => void batchSave()}
             className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
           >
-            {batchBusy ? "批量存入中…" : `存入选中 ${batchIndices.length} 条`}
+            {batchBusy ? "批量保存中…" : `保存选中 ${batchIndices.length} 条`}
           </button>
           {batchError ? (
             <span className="text-[10px] text-destructive">
@@ -290,7 +279,7 @@ export function ChatGatherCard({
       ) : null}
       {!projectId ? (
         <p className="text-[11px] text-text-subtle">
-          未关联项目 —— 输入 @ 引用一个项目后可把素材存进它的弹药。
+          未关联项目——输入 @ 引用一个项目后，可把这些素材统一保存进项目。
         </p>
       ) : null}
     </div>

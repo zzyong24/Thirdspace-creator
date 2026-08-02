@@ -307,6 +307,29 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
     expect(r.detail).toContain("密钥无效或无权限");
     expect(r.detail).not.toContain("invalid api key");
   });
+
+  it("OmniHi / Seedance 使用 media/v1/videos/generations 做零计费鉴权探测", async () => {
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse(400, { error: "prompt required" }),
+    ) as unknown as typeof fetch;
+    const deps = makeDeps({
+      resolveMultimodal: vi.fn(async () => ({
+        provider: "seeddance",
+        baseUrl: "https://api.omnihi.ai/media/v1",
+        model: "seedance/seedance-2.0-fast",
+        token: "key",
+      })),
+      fetchImpl,
+    });
+
+    const r = await runModelConnectionTest(ctx, "video.generate", deps);
+
+    expect(r.ok).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "https://api.omnihi.ai/media/v1/videos/generations",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });
 
 describe("runModelConnectionTest — transcribe.audio / web.search", () => {

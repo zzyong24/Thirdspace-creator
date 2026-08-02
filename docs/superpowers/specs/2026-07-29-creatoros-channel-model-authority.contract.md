@@ -1,5 +1,9 @@
 # T-606 CreatorOS 渠道模型配置权威绑定
 
+> 2026-08-02 增量说明：本文 §2、§4、§5 与 §8 的“extension 整体接管全部能力”已被
+> [T-645 逐能力管控契约](2026-08-02-capability-scoped-channel-model-authority.md)精确取代。
+> 票据、bundle 验签、缓存、防降级、locator 和脱敏边界继续有效。
+
 > 状态：T-620 独立增量复核 `PASS`（blocker/major = 0）。本文只绑定 CreatorOS
 > 消费实现，不复制或改写 Growth 产品真相；跨仓 live HTTPS、SHIP 与整体 release 仍为
 > `NO-GO`。

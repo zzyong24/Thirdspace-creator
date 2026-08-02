@@ -95,6 +95,29 @@ describe("knowledge.service — invariants", () => {
     expect(r3.revisionNumber).toBeGreaterThan(r2.revisionNumber);
   });
 
+  it("updateSourceMetadata 只更新来源锚,不伪造正文 revision", async () => {
+    const item = await service.createKnowledge(ctxA, {
+      title: "内置课程",
+      content: "正文 v1",
+      sourceType: "import",
+      sourceMetadata: { courseVersion: "v1", contentHash: "h1" },
+    });
+    const before = await service.listRevisions(ctxA, item.id);
+    const updated = await service.updateSourceMetadata(ctxA, item.id, {
+      courseVersion: "v2",
+      contentHash: "h2",
+    });
+    const after = await service.listRevisions(ctxA, item.id);
+    expect(updated.sourceMetadata).toEqual({
+      courseVersion: "v2",
+      contentHash: "h2",
+    });
+    expect(after).toHaveLength(before.length);
+    await expect(
+      service.updateSourceMetadata(ctxA2, item.id, { contentHash: "越权" }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
   it("createRelation with target === source throws ConflictError", async () => {
     const item = await service.createKnowledge(ctxA, { title: "笔记" });
     await expect(

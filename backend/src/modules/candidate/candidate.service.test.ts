@@ -369,6 +369,73 @@ describe("candidate service", () => {
     await svc.promote(ctx, cand.id);
     const [, cmd] = ports.projects.createProject.mock.calls[0]!;
     expect(cmd.briefDetail?.benchmarkRef).toBeUndefined();
+    expect(cmd.briefDetail?.contentRadarEvidence).toBeUndefined();
+  });
+
+  it("[T-642] promote freezes radar decomposition and adaptation strategy into Project brief", async () => {
+    const cand = await svc.createCandidate(ctx, {
+      title: "不是模型强，而是工作流稳",
+      angle: "用交付失败复盘切入",
+      source: "benchmark",
+      card: {
+        oneLiner: "工作流决定 AI 能否稳定交付",
+        targetAudience: "AI 业务负责人",
+        audiencePain: "模型升级了但交付仍不稳定",
+        coreConflict: "模型参数与责任边界的优先级冲突",
+        format: "案例复盘口播",
+        proposal: "先用交付失败现场证明责任边界比换模型更重要",
+        sourceReferences: [{
+          kind: "original_video",
+          platform: "douyin",
+          label: "原视频",
+          url: "https://www.douyin.com/video/1",
+          intelligenceItemId: "item-1",
+        }],
+        sourceDecomposition: {
+          hook: "反驳参数决定论",
+          structureSteps: ["指出误区", "拆责任边界"],
+          coreClaims: ["工作流稳定性优先"],
+          reusablePattern: "反常识—拆条件—给顺序",
+          factRisks: ["案例数字待核验"],
+        },
+        adaptationStrategy: {
+          keep: ["反常识开场"],
+          replace: ["替换来源案例"],
+          add: ["加入本账号交付经验"],
+          avoid: ["不照搬原句"],
+        },
+        adaptedDraft: {
+          contentText: "很多人以为模型越强越好，但交付现场真正先坏掉的是责任边界。",
+          generatedFromTranscriptHash: "sha256:transcript",
+          strategyHash: "sha256:strategy",
+          templateVersion: "intelligence-topic-v2",
+        },
+      },
+    });
+    await svc.promote(ctx, cand.id);
+    const [, cmd] = ports.projects.createProject.mock.calls[0]!;
+    expect(cmd.briefDetail?.targetAudience).toBe("AI 业务负责人");
+    expect(cmd.briefDetail?.contentFormat).toBe("案例复盘口播");
+    expect(cmd.briefDetail?.coreMessage).toBe("工作流决定 AI 能否稳定交付");
+    expect(cmd.briefDetail?.contentGoal).toBe(
+      "先用交付失败现场证明责任边界比换模型更重要",
+    );
+    expect(cmd.briefDetail?.contentRadarEvidence).toEqual({
+      sourceReferences: expect.arrayContaining([
+        expect.objectContaining({ intelligenceItemId: "item-1" }),
+      ]),
+      decomposition: expect.objectContaining({
+        coreClaims: ["工作流稳定性优先"],
+      }),
+      strategy: expect.objectContaining({
+        replace: ["替换来源案例"],
+        add: ["加入本账号交付经验"],
+      }),
+      adaptedDraftSeed: expect.objectContaining({
+        contentText: expect.stringContaining("责任边界"),
+        generatedFromTranscriptHash: "sha256:transcript",
+      }),
+    });
   });
 
   it("promote on an already-promoted Candidate throws PromoteStateError (no double-promote)", async () => {

@@ -68,6 +68,8 @@ vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
+    putChannelModelCredential: vi.fn().mockResolvedValue({}),
+    testModelConnection: vi.fn().mockResolvedValue({ ok: true, detail: "已连通" }),
     patchProfile: vi.fn().mockResolvedValue({}),
     putStorage: vi.fn().mockResolvedValue({}),
     // AccountBindingCard (T-032a) pulls status on mount + calls loginDouyin on click.
@@ -195,12 +197,35 @@ describe("SettingsPage", () => {
     }
   });
 
-  it("[T-606] 渠道模型状态只显示脱敏来源，本地表单仍可编辑", async () => {
+  it("[T-645] 只锁渠道完整返回的能力，未返回的 ASR 仍可由用户配置", async () => {
     await renderSettings({
       modelAuthority: {
         authority: "channel",
         outcome: "configured",
-        action: "渠道模型正在使用",
+        action: "渠道已接管 1/4 类模型，其余由你配置",
+        capabilities: {
+          default: {
+            capability: "default",
+            authority: "channel",
+            serviceId: "relay",
+            serviceName: "统一中转服务",
+            provider: "minimax",
+            modelName: "MiniMax-M3",
+            baseUrl: "https://relay.example/v1",
+            hasSecret: false,
+          },
+        },
+        services: [
+          {
+            serviceId: "relay",
+            serviceName: "统一中转服务",
+            hasSecret: false,
+            portalUrl: null,
+            purchaseUrl: null,
+            rechargeUrl: "https://growth.example/recharge",
+            helpUrl: null,
+          },
+        ],
       },
     });
     const status = document.querySelector(
@@ -208,10 +233,55 @@ describe("SettingsPage", () => {
     );
     expect(status).not.toBeNull();
     expect(status).toHaveAttribute("data-authority", "channel");
-    expect(status).toHaveTextContent("渠道模型正在使用");
-    expect(status).toHaveTextContent("本地配置会安全保留");
+    expect(status).toHaveTextContent("渠道已接管 1/4 类模型");
+    expect(status).toHaveTextContent("每类模型独立判断");
     expect(
       document.querySelector('[data-slot="model-configuration-card"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector(
+        '[data-slot="channel-managed-model-card"][data-capability="default"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-slot="multimodal-audio-card"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-slot="channel-model-service-credential"]'),
+    ).not.toBeNull();
+  });
+
+  it("[T-645] 渠道只提供 ASR 时，文本模型仍保留用户本地表单", async () => {
+    await renderSettings({
+      modelAuthority: {
+        authority: "channel",
+        outcome: "configured",
+        action: "渠道已接管 1/4 类模型，其余由你配置",
+        capabilities: {
+          "transcribe.audio": {
+            capability: "transcribe.audio",
+            authority: "channel",
+            serviceId: "asr-service",
+            serviceName: "ASR 服务",
+            provider: "xiaomi-mimo",
+            modelName: "mimo-v2.5-asr",
+            baseUrl: "https://api.xiaomimimo.com/v1",
+            hasSecret: true,
+          },
+        },
+        services: [],
+      },
+    });
+    expect(
+      document.querySelector('[data-slot="model-configuration-card"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-slot="multimodal-audio-card"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector(
+        '[data-slot="channel-managed-model-card"][data-capability="transcribe.audio"]',
+      ),
     ).not.toBeNull();
   });
 

@@ -12,6 +12,7 @@ export const PRESERVE_TABLES: readonly string[] = [
   "sessions", // 保持登录态(免重登)
   "user_preferences", // 用户偏好/设置
   "model_configurations", // AI 模型 + key(免每次重配;key 密文列一并保留)
+  "channel_model_credentials", // 渠道 service Key(本机密文;重置后免重复填写)
   "agent_configurations", // AI agent 路由配置
   "storage_configs", // 对象存储配置(blob 路由可用)
   // [T-513] 只迁回账号增量覆盖；旧全局 skill_config_overrides 明确不迁移、不回灌。

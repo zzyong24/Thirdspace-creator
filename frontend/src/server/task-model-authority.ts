@@ -13,11 +13,13 @@ export type PinnedTaskModelAuthority =
       authority: "channel-managed";
       digest: string;
       payload: ChannelModelPayload;
+      scopeId: string;
     }
   | {
       authority: "local";
       digest: "local";
       payload: null;
+      scopeId: null;
     };
 
 function canonicalJson(value: unknown): string {
@@ -38,14 +40,15 @@ export function pinModelAuthority(
   authority: ChannelModelAuthority,
 ): PinnedTaskModelAuthority {
   if (authority.authority === "local") {
-    return { authority: "local", digest: "local", payload: null };
+    return { authority: "local", digest: "local", payload: null, scopeId: null };
   }
   return {
     authority: "channel-managed",
     digest: `sha256:${createHash("sha256")
-      .update(canonicalJson(authority.payload))
+      .update(canonicalJson({ scopeId: authority.scopeId, payload: authority.payload }))
       .digest("hex")}`,
     payload: authority.payload,
+    scopeId: authority.scopeId,
   };
 }
 
@@ -65,6 +68,10 @@ export class TaskModelAuthorityScope {
 
   currentPayload(): ChannelModelPayload | null | undefined {
     return this.storage.getStore()?.payload;
+  }
+
+  currentScopeId(): string | null | undefined {
+    return this.storage.getStore()?.scopeId;
   }
 
   run<T>(

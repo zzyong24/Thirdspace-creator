@@ -40,11 +40,16 @@ export const coverBriefSchema = z
     visualConcept: "",
     composition: "",
     palette: "",
-  });
+  })
+  .refine(
+    (value) => Boolean(value.headline.trim() || value.visualConcept.trim()),
+    { message: "封面方案至少包含标题或主视觉" },
+  );
 export type CoverBriefOutput = z.infer<typeof coverBriefSchema>;
 
 export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
   id: "cover.brief",
+  outputRecovery: "creative-partial",
   version: "v1",
   outputSchema: coverBriefSchema,
   tools: [],

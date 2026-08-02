@@ -6,7 +6,9 @@ import { render, screen } from "@testing-library/react";
 
 // mock 重 child components(避免拉整条 ScriptStructureToggle / ScriptRichEditor 的依赖树)。
 vi.mock("@/features/script/script-rich-editor", () => ({
-  ScriptRichEditor: () => <div data-slot="mock-rich-editor" />,
+  ScriptRichEditor: ({ initialHtml }: { initialHtml: string }) => (
+    <div data-slot="mock-rich-editor" data-initial-html={initialHtml} />
+  ),
 }));
 vi.mock("@/features/script/script-structure-view", () => ({
   ScriptStructureToggle: ({ children }: { children: React.ReactNode }) => (
@@ -17,7 +19,9 @@ vi.mock("./script-review-gate", () => ({
   ScriptReviewGate: () => <div data-slot="mock-review-gate" />,
 }));
 vi.mock("@/components/resources/cover-thumb", () => ({
-  CoverThumb: () => <div data-slot="mock-cover-thumb" />,
+  CoverThumb: ({ assetId }: { assetId: string | null }) => (
+    <div data-slot="mock-cover-thumb" data-asset-id={assetId ?? ""} />
+  ),
 }));
 vi.mock("./topic-card", () => ({
   TopicCard: () => <div data-slot="mock-topic-card" />,
@@ -92,7 +96,9 @@ function baseVm(overrides: Partial<DraftWorkbenchVm> = {}): DraftWorkbenchVm {
     scriptArtifactId: null,
     outputId: "out-1",
     script: { editorHtml: null, sections: [], versionCount: 0 },
+    radarDraftSeed: null,
     publishPack: null,
+    projectCoverAssetId: null,
     publishUnlocked: false,
     blindPrediction: null,
     ammo: [],
@@ -167,6 +173,98 @@ describe("DraftWorkbenchPage — Bug-8 T-021 口播脚本副行文案", () => {
     const hint = section.parentElement?.textContent ?? "";
     expect(hint).toContain("v1");
     expect(hint).toContain("写你的口播稿");
+  });
+});
+
+describe("DraftWorkbenchPage — T-642 按选题来源分流", () => {
+  it("直接创建的普通选题项目保持单稿编辑器，不显示对标原稿，也不注入雷达初稿", () => {
+    const { container } = render(<DraftWorkbenchPage vm={baseVm()} />);
+
+    expect(
+      container.querySelector('[data-slot="radar-script-comparison"]'),
+    ).toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="mock-rich-editor"]')
+        ?.getAttribute("data-initial-html"),
+    ).toBe("");
+  });
+
+  it("携带内容雷达证据的项目仍使用单稿编辑器，并用改写初稿初始化口播稿", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          radarDraftSeed: "我的改写初稿",
+        })}
+      />,
+    );
+
+    expect(
+      container.querySelector('[data-slot="radar-script-comparison"]'),
+    ).toBeNull();
+    expect(container.textContent).not.toContain("对标原稿");
+    expect(
+      container
+        .querySelector('[data-slot="mock-rich-editor"]')
+        ?.getAttribute("data-initial-html"),
+    ).toBe("<p>我的改写初稿</p>");
+  });
+
+  it("来源原稿暂时读不到时，雷达改写稿仍直接填进现有编辑器", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          radarDraftSeed: "已经在内容雷达确认的改写稿",
+        })}
+      />,
+    );
+
+    expect(
+      container.querySelector('[data-slot="radar-script-comparison"]'),
+    ).toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="mock-rich-editor"]')
+        ?.getAttribute("data-initial-html"),
+    ).toBe("<p>已经在内容雷达确认的改写稿</p>");
+  });
+
+  it("雷达项目已有正式稿件版本时，以正式稿为准，不被初稿覆盖", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          radarDraftSeed: "雷达初稿",
+          script: {
+            editorHtml: "<p>用户已保存的正式稿</p>",
+            sections: [],
+            versionCount: 1,
+          },
+        })}
+      />,
+    );
+
+    expect(
+      container
+        .querySelector('[data-slot="mock-rich-editor"]')
+        ?.getAttribute("data-initial-html"),
+    ).toBe("<p>用户已保存的正式稿</p>");
+  });
+});
+
+describe("DraftWorkbenchPage — T-660 已采纳项目封面", () => {
+  it("尚未创建发布行时，也展示项目已采纳的封面", () => {
+    const { container } = render(
+      <DraftWorkbenchPage
+        vm={baseVm({ projectCoverAssetId: "asset-cover-1" })}
+      />,
+    );
+
+    expect(
+      container
+        .querySelector('[data-slot="mock-cover-thumb"]')
+        ?.getAttribute("data-asset-id"),
+    ).toBe("asset-cover-1");
+    expect(container.textContent).not.toContain("封面待生成");
   });
 });
 
@@ -273,7 +371,8 @@ describe("DraftWorkbenchPage — T-387b 缺素材清单", () => {
     const note = container.querySelector('[data-slot="draft-missing-materials"]');
     expect(note).not.toBeNull();
     expect(note!.textContent).toContain("产品操作录屏");
-    expect(note!.textContent).toContain("搜素材");
+    expect(note!.textContent).toContain("联网找资料");
+    expect(note!.textContent).toContain("上传 / 管理素材");
 
     rerender(<DraftWorkbenchPage vm={baseVm()} />);
     expect(

@@ -598,7 +598,7 @@ describe("T-482 内容雷达工作区", () => {
       expect(stub.listItems).toHaveBeenCalledWith({
         accountId: "account-1",
         collectionId: "collection-darkhorse",
-        sort: "newest",
+        sort: "published_desc",
       }),
     );
     expect(await screen.findAllByText("黑马作品")).toHaveLength(2);
@@ -615,7 +615,7 @@ describe("T-482 内容雷达工作区", () => {
         accountId: "account-1",
         collectionId: "collection-darkhorse",
         sourceId: "source-darkhorse",
-        sort: "newest",
+        sort: "published_desc",
       }),
     );
 
@@ -623,7 +623,7 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
-        sort: "newest",
+        sort: "published_desc",
       }),
     );
     expect(await screen.findAllByText("真实作品")).toHaveLength(2);
@@ -654,6 +654,34 @@ describe("T-482 内容雷达工作区", () => {
     expect(container.querySelector("img")).toBeNull();
     expect(screen.getAllByText("真实作品")).toHaveLength(2);
     expect(screen.getAllByText(/赞/).length).toBeGreaterThan(0);
+  });
+
+  it("[T-651] 缺失发布时间时如实展示收录时间，不伪装成发布时间", () => {
+    const itemWithoutPublishedAt = {
+      ...detail.item,
+      id: "item-without-published-at",
+      publishedAt: null,
+      capturedAt: "2026-07-31T12:00:00.000Z",
+    };
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[
+          {
+            item: itemWithoutPublishedAt,
+            latestMetric: detail.metrics[0]!,
+            sourceCount: 1,
+          },
+        ]}
+        initialDetail={{ ...detail, item: itemWithoutPublishedAt }}
+        api={api()}
+      />,
+    );
+
+    expect(
+      screen.getAllByText(/发布时间未知 · 收录于/),
+    ).not.toHaveLength(0);
   });
 
   it("[T-520] 收藏错误只按端到端结构化 code 给出不同处理建议", () => {
@@ -1774,7 +1802,7 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
-        sort: "newest",
+        sort: "published_desc",
         transcriptState: "extracted",
       }),
     );
@@ -1786,7 +1814,7 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
-        sort: "newest",
+        sort: "published_desc",
         transcriptState: "extracted",
         topicState: "not_generated",
       }),
@@ -2170,6 +2198,74 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       screen.getByRole("button", { name: "重新生成" }),
     ).toBeEnabled();
+  });
+
+  it("[T-646] 改写阶段失败仍展示拆解和选题，不把已有结果清空", () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          transcript: {
+            ...detail.transcript,
+            status: "done",
+            text: "来源完整逐字稿",
+          },
+          transforms: [
+            {
+              id: "transform-partial",
+              status: "candidate",
+              taskStatus: "failed",
+              taskErrorCode: "TOPIC_PREVIEW_FAILED",
+              taskErrorMessage: "改写初稿暂未完成",
+              targetTopicId: null,
+              outputSnapshot: {
+                hook: "反常识开场",
+                structureSteps: ["提出误区", "给出新方法"],
+                coreClaims: ["流程比参数优先"],
+                reusablePattern: "误区—方法",
+                factRisks: [],
+                title: "先稳定流程，再选择模型",
+                angle: "从交付现场切入",
+                differentiation: "不用来源案例",
+                sourceSummary: "来源讨论模型与工作流",
+                targetAudience: "业务负责人",
+                audiencePain: "交付不稳定",
+                coreConflict: "参数与流程优先级",
+                format: "复盘口播",
+                adaptationStrategy: {
+                  keep: ["反常识结构"],
+                  replace: ["来源案例"],
+                  add: ["本账号经验"],
+                  avoid: ["照搬原句"],
+                },
+                generationProgress: {
+                  decomposition: { status: "completed" },
+                  topic: { status: "completed" },
+                  draft: { status: "failed" },
+                },
+              },
+            },
+          ],
+        }}
+        api={api()}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    expect(screen.getByText("反常识开场")).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("先稳定流程，再选择模型"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("拆解和选题已保留，改写初稿待重试"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("改写初稿暂未完成")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "确认写入选题池" }),
+    ).toBeDisabled();
   });
 
   it("博主主页必须真实预览成功后才能保存并首次同步", async () => {

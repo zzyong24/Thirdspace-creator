@@ -44,7 +44,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
         }
       }
       setPhase(ok ? "done" : "error");
-      // 出现在弹药卡(materialLinks 已挂本项目)。
+      // 出现在当前项目的「创作素材」(materialLinks 已挂本项目)。
       router.refresh();
       // 2s 后回 idle(反馈短促,不长期占位)。
       window.setTimeout(() => setPhase("idle"), 2000);
@@ -60,7 +60,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
       aria-label="创作流引导"
       className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface-subtle px-3 py-2"
     >
-      <span className="text-xs text-text-subtle">写之前先备料:</span>
+      <span className="text-xs font-medium text-foreground">先准备创作素材</span>
 
       {/* [T-146] ＋上传素材(最高优先级):把自己的 PDF/Word/MD 资料上传进当前项目弹药库。 */}
       <input
@@ -97,7 +97,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
             ? "已上传 ✓"
             : phase === "error"
               ? "上传失败,重试"
-              : "＋上传素材"}
+              : "上传 / 管理素材"}
       </Button>
 
       <Button
@@ -117,7 +117,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
         }
       >
         <Search className="size-3.5" />
-        搜素材(联网)
+        联网找资料
       </Button>
       <Button
         type="button"
@@ -137,7 +137,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
         立论点
       </Button>
       <span className="text-[11px] text-text-subtle">
-        —— 先上传/搜素材、再基于素材立论点,写出来的脚本才有据可依
+        系统找到的资料和你上传的文件，都会统一保存在当前项目里
       </span>
     </section>
   );

@@ -56,7 +56,10 @@ impl SidecarJob {
         unsafe {
             let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
             if job.is_null() {
-                return Err(format!("CreateJobObjectW 失败(GetLastError={})", GetLastError()));
+                return Err(format!(
+                    "CreateJobObjectW 失败(GetLastError={})",
+                    GetLastError()
+                ));
             }
             let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
             info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;

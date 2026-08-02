@@ -86,7 +86,7 @@ export function AmmoNoteForm({ projectId }: { projectId: string }) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="标题(如「评论区高频问题:xx」)"
-          aria-label="弹药标题"
+          aria-label="创作素材标题"
           data-slot="ammo-note-title"
           className="h-7 min-w-0 flex-1 rounded-control border border-border bg-transparent px-2 text-xs text-foreground placeholder:text-text-subtle focus:outline-none focus:ring-1 focus:ring-ring/40"
         />
@@ -111,7 +111,7 @@ export function AmmoNoteForm({ projectId }: { projectId: string }) {
         onChange={(e) => setContent(e.target.value)}
         rows={2}
         placeholder="正文(可空)"
-        aria-label="弹药正文"
+        aria-label="创作素材正文"
         data-slot="ammo-note-content"
         className="w-full resize-none rounded-control border border-border bg-transparent px-2 py-1.5 text-xs text-foreground placeholder:text-text-subtle focus:outline-none focus:ring-1 focus:ring-ring/40"
       />
@@ -135,7 +135,7 @@ export function AmmoNoteForm({ projectId }: { projectId: string }) {
           onClick={() => void save()}
           className="h-7 rounded-control bg-brand px-3 text-[11px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
         >
-          {state === "saving" ? "保存中…" : "存入弹药"}
+          {state === "saving" ? "保存中…" : "保存到项目"}
         </button>
       </div>
     </div>

@@ -59,7 +59,10 @@ fn cli_encrypt_decrypt_roundtrip() {
         .output()
         .unwrap();
     assert!(out.status.success(), "decrypt 应成功");
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "alpha\nbravo\ncharlie\n");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        "alpha\nbravo\ncharlie\n"
+    );
 
     let _ = std::fs::remove_file(&plain);
     let _ = std::fs::remove_file(&enc);
@@ -95,7 +98,10 @@ fn cli_tail_truncation_exit_zero_with_prefix() {
         .unwrap();
     assert!(out.status.success(), "尾部截断仍应退出码 0");
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.starts_with("one\ntwo\nthree\n"), "应保留前缀行: {stdout:?}");
+    assert!(
+        stdout.starts_with("one\ntwo\nthree\n"),
+        "应保留前缀行: {stdout:?}"
+    );
     assert!(!stdout.contains("four"), "被截断的行不应出现: {stdout:?}");
 
     let _ = std::fs::remove_file(&plain);

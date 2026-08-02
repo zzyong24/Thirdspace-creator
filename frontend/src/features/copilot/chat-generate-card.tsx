@@ -156,8 +156,12 @@ export function ChatGenerateCard({
     void (async () => {
       for (let i = 0; i < MAX_POLLS; i++) {
         if (abandoned) return;
-        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-        if (abandoned) return;
+        // 首次立即查：用户重进项目时任务往往已终态，不能先虚假转圈 4 秒；
+        // 后续轮次再按间隔等待。
+        if (i > 0) {
+          await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+          if (abandoned) return;
+        }
         let status: string;
         try {
           const t = (await client.getTask({
@@ -188,6 +192,10 @@ export function ChatGenerateCard({
           } catch {
             setPhase("error");
           }
+          return;
+        }
+        if (status === "succeeded") {
+          if (!abandoned) setPhase("done");
           return;
         }
         if (status === "cancelled" || status === "failed") {

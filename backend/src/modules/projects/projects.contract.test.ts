@@ -83,6 +83,57 @@ describe("projects.transport — 17-op contract conformance", () => {
     expect(() => successEnvelope(projectResource).parse(got)).not.toThrow();
   });
 
+  it("projects.get 保留内容雷达创作依据，不能在 row→DTO 映射时丢掉改写稿", async () => {
+    const evidence = {
+      sourceReferences: [
+        {
+          kind: "original_video" as const,
+          platform: "douyin",
+          label: "原视频",
+          url: "https://www.douyin.com/video/1",
+          intelligenceItemId: "intelligence-item-1",
+        },
+      ],
+      decomposition: {
+        hook: "来源钩子",
+        structureSteps: ["第一步", "第二步"],
+        coreClaims: ["来源主张"],
+        reusablePattern: "可复用结构",
+        factRisks: ["事实待核验"],
+      },
+      strategy: {
+        keep: ["保留结构"],
+        replace: ["替换案例"],
+        add: ["加入本账号经验"],
+        avoid: ["避免照搬"],
+      },
+      adaptedDraftSeed: {
+        contentText: "这是已经在内容雷达生成并确认的完整改写稿。",
+        generatedFromTranscriptHash: "sha256:source",
+        strategyHash: "sha256:strategy",
+        templateVersion: "intelligence-topic-draft-v1",
+      },
+    };
+    const created = await call("projects.create", {
+      body: {
+        title: "雷达项目",
+        briefDetail: {
+          orientation: "portrait",
+          targetPlatforms: ["douyin"],
+          contentRadarEvidence: evidence,
+        },
+      },
+    });
+    const projectId = (created as { data: { id: string } }).data.id;
+
+    const got = successEnvelope(projectResource).parse(
+      await call("projects.get", { params: { projectId } }),
+    );
+
+    expect(got.data.briefDetail.orientation).toBe("portrait");
+    expect(got.data.briefDetail.contentRadarEvidence).toEqual(evidence);
+  });
+
   it("projects.patch / archive / stage.transition → ProjectResource", async () => {
     const created = await call("projects.create", { body: { title: "T" } });
     const projectId = (created as { data: { id: string } }).data.id;

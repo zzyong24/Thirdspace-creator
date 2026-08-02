@@ -61,7 +61,7 @@ const REPORT = {
       ruleRef: null,
     },
   ],
-  modelLabel: "默认模型(非专用审核模型)",
+  modelLabel: "MiniMax-M3（通用文本模型）",
   reviewedAt: "2026-07-04T00:00:00.000Z",
 };
 
@@ -103,7 +103,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     expect(getTask).not.toHaveBeenCalled();
   });
 
-  it("轮询 succeeded → 读报告 → 渲 verdict + L1/L2 命中 + 非专用模型醒目", async () => {
+  it("轮询 succeeded → 读报告 → 渲 verdict + L1/L2 命中 + 通用文本模型", async () => {
     render(
       <ChatReviewReportCard
         taskId="task-rev-1"
@@ -127,9 +127,9 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     const findings = screen.getByTestId("chat-review-findings");
     expect(findings.textContent).toContain("第一");
     expect(findings.textContent).toContain("私信我");
-    // 非专用模型醒目标注。
+    // 只展示实际使用的通用文本模型。
     expect(screen.getByTestId("chat-review-model").textContent).toContain(
-      "非专用",
+      "通用文本模型",
     );
     // 两条命中各带 replacement/suggestion → 两个应用按钮。
     const apply = document.querySelectorAll(
@@ -177,7 +177,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     });
   });
 
-  it("轮询 failed → 提示检查审核模型或普通默认模型，不误导为必须配置专用审核模型", async () => {
+  it("轮询 failed → 只提示检查通用文本模型", async () => {
     getTask.mockResolvedValue({ status: "failed" });
     render(
       <ChatReviewReportCard
@@ -190,7 +190,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     await waitFor(() => {
       expect(
         document.querySelector('[data-slot="chat-review-error"]')?.textContent,
-      ).toContain("普通默认模型");
+      ).toContain("通用文本模型");
     });
     expect(
       document.querySelector('[data-slot="chat-review-settings-link"]')

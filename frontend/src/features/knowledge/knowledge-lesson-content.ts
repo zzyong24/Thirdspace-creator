@@ -19,6 +19,12 @@ export interface SocraticQuestion {
   readonly hint?: string;
 }
 
+export interface LessonRubric {
+  readonly grade60?: string;
+  readonly grade80?: string;
+  readonly grade95?: string;
+}
+
 export interface LessonPoint {
   readonly id?: string;
   readonly title?: string;
@@ -30,6 +36,7 @@ export interface LessonPoint {
   readonly misconceptions?: string;
   readonly socratic: ReadonlyArray<SocraticQuestion>;
   readonly practiceTask?: string;
+  readonly rubric: LessonRubric;
 }
 
 function leadingSpaces(s: string): number {
@@ -144,10 +151,49 @@ function parseSocratic(raw: ReadonlyArray<string>): SocraticQuestion[] {
   return items;
 }
 
+function parseRubric(raw: ReadonlyArray<string>): LessonRubric {
+  let grade60: string | undefined;
+  let grade80: string | undefined;
+  let grade95: string | undefined;
+  for (let i = 0; i < raw.length; i += 1) {
+    const match = /^\s*grade_(60|80|95):\s*(.*)$/.exec(raw[i]!);
+    if (!match) continue;
+    const grade = match[1];
+    const rest = (match[2] ?? "").trim();
+    let value = "";
+    if (rest === "|" || rest === ">") {
+      const collected: string[] = [];
+      let next = i + 1;
+      while (
+        next < raw.length &&
+        !/^\s*grade_(60|80|95):/.test(raw[next]!)
+      ) {
+        collected.push(raw[next]!);
+        next += 1;
+      }
+      while (collected.length > 0 && collected.at(-1)?.trim() === "") {
+        collected.pop();
+      }
+      const indents = collected
+        .filter((line) => line.trim() !== "")
+        .map(leadingSpaces);
+      const minIndent = indents.length > 0 ? Math.min(...indents) : 0;
+      value = collected.map((line) => line.slice(minIndent)).join("\n").trim();
+      i = next - 1;
+    } else {
+      value = stripQuotes(rest);
+    }
+    if (grade === "60") grade60 = value;
+    if (grade === "80") grade80 = value;
+    if (grade === "95") grade95 = value;
+  }
+  return { grade60, grade80, grade95 };
+}
+
 function parseItem(itemLines: ReadonlyArray<string>): LessonPoint {
   let id: string | undefined;
   let title: string | undefined;
-  let module: string | undefined;
+  let lessonModule: string | undefined;
   let difficulty: string | undefined;
   let oneLine: string | undefined;
   let core: string | undefined;
@@ -155,6 +201,7 @@ function parseItem(itemLines: ReadonlyArray<string>): LessonPoint {
   let misconceptions: string | undefined;
   let practiceTask: string | undefined;
   let socratic: SocraticQuestion[] = [];
+  let rubric: LessonRubric = {};
 
   const assign = (key: string, value: string): void => {
     switch (key) {
@@ -165,7 +212,7 @@ function parseItem(itemLines: ReadonlyArray<string>): LessonPoint {
         title = value;
         break;
       case "module":
-        module = value;
+        lessonModule = value;
         break;
       case "difficulty":
         difficulty = value;
@@ -203,6 +250,12 @@ function parseItem(itemLines: ReadonlyArray<string>): LessonPoint {
       i = next - 1;
       continue;
     }
+    if (key === "rubric") {
+      const [block, next] = collectRaw(itemLines, i + 1);
+      rubric = parseRubric(block);
+      i = next - 1;
+      continue;
+    }
     if (rest === "|" || rest === ">") {
       const [text, next] = collectBlock(itemLines, i + 1);
       assign(key, text);
@@ -217,7 +270,7 @@ function parseItem(itemLines: ReadonlyArray<string>): LessonPoint {
   return {
     id,
     title,
-    module,
+    module: lessonModule,
     difficulty,
     oneLine,
     core,
@@ -225,6 +278,7 @@ function parseItem(itemLines: ReadonlyArray<string>): LessonPoint {
     misconceptions,
     socratic,
     practiceTask,
+    rubric,
   };
 }
 
@@ -309,5 +363,13 @@ function onePointToMarkdown(p: LessonPoint): string {
     parts.push(`## 苏格拉底提问\n\n${qs}`);
   }
   if (p.practiceTask) parts.push(`## 实践作业\n\n${p.practiceTask}`);
+  const rubricLines = [
+    p.rubric.grade60 ? `### 60 分 · 懂了\n\n${p.rubric.grade60}` : "",
+    p.rubric.grade80 ? `### 80 分 · 做了\n\n${p.rubric.grade80}` : "",
+    p.rubric.grade95 ? `### 95 分 · 精通\n\n${p.rubric.grade95}` : "",
+  ].filter(Boolean);
+  if (rubricLines.length > 0) {
+    parts.push(`## 自评标准\n\n${rubricLines.join("\n\n")}`);
+  }
   return parts.join("\n\n");
 }

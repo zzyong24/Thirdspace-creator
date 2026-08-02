@@ -87,6 +87,7 @@ export type ResearchMaterialOutput = z.infer<typeof researchMaterialSchema>;
 
 export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {
   id: "research.gather",
+  outputRecovery: "creative-partial",
   // [T-228] v5:新增选填 facet groundingNote(降级模式硬约束块)—— 无联网检索结果(grounding=
   // model_memory)时由 research-node 注入,硬禁「编造具体引用」(论文编号/精确百分比/榜单成绩/
   // 机构报告名);配合节点后处理清洗(sanitizeModelMemoryCategories)prompt+清洗双管。

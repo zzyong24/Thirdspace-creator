@@ -22,7 +22,6 @@
  */
 
 import * as React from "react";
-import Link from "next/link";
 import {
   User,
   Compass,
@@ -31,7 +30,6 @@ import {
   HeartPulse,
   Sparkles,
   MessageCircle,
-  MessagesSquare,
   Gem,
   Activity,
   Lightbulb,
@@ -45,7 +43,6 @@ import {
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
-import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { cn } from "@/lib/utils";
 import type {
@@ -55,6 +52,7 @@ import type {
 } from "@creatoros/backend/modules/positioning";
 
 import { GeneratePositioningIsland } from "./generate-positioning-island";
+import { PositioningDiscoveryWorkflow } from "./positioning-discovery-workflow";
 import {
   PositioningDraftDrawer,
   ResetPositioningMasterButton,
@@ -141,8 +139,14 @@ export function PositioningCenterView({
 }: {
   readonly viewModel: PositioningCenterViewModel;
 }) {
-  const { profile, currentStatement, keywords, productAnchors, history } =
-    viewModel;
+  const {
+    profile,
+    currentStatement,
+    keywords,
+    productAnchors,
+    history,
+    activeDiscovery,
+  } = viewModel;
   const isEmpty = profile === null;
 
   return (
@@ -156,98 +160,46 @@ export function PositioningCenterView({
         <PageHeader isEmpty={isEmpty} />
       </div>
 
-      {isEmpty ? (
-        <div className="shrink-0">
-          <SectionCard title="账号定位">
-            <div
-              data-testid="positioning-empty-state"
-              className="flex flex-col items-start gap-4 py-4"
-            >
-              <p className="text-sm text-muted-foreground">
-                还没有账号定位。下游的选题、评分与变现都会以它为约束源——先定好第一版。
-              </p>
-
-              {/* T-143 ①:空态显眼的「和 AI 聊定位」主入口。深链到 Copilot 的
-                  positioning surface(positioning.generate),让新用户用对话逐步聊出
-                  第一版定位;对话内采纳卡采纳时会先 upsertProfile(无则创建)再追加
-                  一条 AI 陈述——全新用户一次成型落库(诚实,非空承诺)。 */}
-              <EmptyStateAiCta />
-
-              <div className="flex items-center gap-2 text-xs text-text-subtle">
-                <span>已经想清楚了？</span>
-                <PositioningDraftDrawer
-                  profile={null}
-                  triggerLabel="手动创建定位"
-                  triggerVariant="outline"
-                  triggerSize="sm"
-                  triggerIcon="plus"
-                  title="创建定位"
-                  description="填写账号画像与第一条定位陈述。"
-                />
-              </div>
-            </div>
-          </SectionCard>
-        </div>
+      {activeDiscovery ? (
+        <PositioningDiscoveryWorkflow
+          initialSession={activeDiscovery}
+          hasCurrentProfile={!isEmpty}
+        />
+      ) : isEmpty ? (
+        <PositioningDiscoveryWorkflow
+          initialSession={null}
+          hasCurrentProfile={false}
+        />
       ) : (
         // 两栏：左主 (英雄区 + AI 区 + 历史表) + 右规则栏 (定位规则). flex-1 占满,每列各自
         // 框内滚动 (列内裁切而非整页滚)。窄屏 (无 lg) 退回单列。
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
-          {/* 左列子卡片必须 shrink-0:否则 flex 会把卡片压缩适应列高,卡片自身
-              overflow-hidden 无声裁掉内容 → 列 scrollHeight==clientHeight 永不滚 (T-090)。 */}
-          <div className="flex min-h-0 min-w-0 flex-col gap-section-gap overflow-y-auto pr-1">
-            <HeroMaster
-              profile={profile}
-              currentStatement={currentStatement}
-              keywords={keywords}
-              productAnchors={productAnchors}
-            />
+        <div className="flex min-h-0 flex-1 flex-col gap-section-gap">
+          <PositioningDiscoveryWorkflow
+            initialSession={null}
+            hasCurrentProfile
+          />
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
+            {/* 左列子卡片必须 shrink-0:否则 flex 会把卡片压缩适应列高,卡片自身
+                overflow-hidden 无声裁掉内容 → 列 scrollHeight==clientHeight 永不滚 (T-090)。 */}
+            <div className="flex min-h-0 min-w-0 flex-col gap-section-gap overflow-y-auto pr-1">
+              <HeroMaster
+                profile={profile}
+                currentStatement={currentStatement}
+                keywords={keywords}
+                productAnchors={productAnchors}
+              />
 
-            <div data-testid="positioning-ai-band" className="shrink-0">
-              <GeneratePositioningIsland />
+              <div data-testid="positioning-ai-band" className="shrink-0">
+                <GeneratePositioningIsland />
+              </div>
+
+              <HistoryTable history={history} profile={profile} />
             </div>
 
-            <HistoryTable history={history} profile={profile} />
+            <DownstreamRules profile={profile} />
           </div>
-
-          <DownstreamRules profile={profile} />
         </div>
       )}
-    </div>
-  );
-}
-
-// T-143 ①:空态的「和 AI 聊定位」主入口。显眼 brand 强调卡 + 深链到 Copilot 的
-// positioning surface(positioning.generate),让新用户对话式聊出第一版定位。采纳链
-// (chat-result-cards adopt)会 upsertProfile(无则创建)+ createStatement,一次成型落库。
-function EmptyStateAiCta() {
-  return (
-    <div
-      data-testid="positioning-empty-ai-cta"
-      // [UI] 去"紫压紫":卡片改中性面(原 border-brand/30 + bg-brand-soft/40 与内部紫按钮+紫图标叠三层紫)。
-      //   中性卡 → 让实心品牌按钮成为唯一强色焦点,图标 chip 作小面积品牌点缀。
-      className="flex w-full flex-col gap-3 rounded-card border border-border bg-surface-subtle/60 p-4"
-    >
-      <div className="flex items-start gap-3">
-        <IconChip icon={Sparkles} tone="brand" />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          {/* [T-210] 定位改多轮访谈:编导像私教按 5 问一问一答带你聊清楚,答齐才合成第一版定位。 */}
-          <p className="text-sm font-semibold text-foreground">
-            AI 访谈式带你定位
-          </p>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            不用一次填满表单——编导像私教一样一问一答,带你把账号与内容方向聊清楚,
-            再合成第一版定位。聊清楚后在对话里点「采纳」，就会自动建好你的定位母版。
-          </p>
-        </div>
-      </div>
-      <Link
-        href={copilotDeepLink("positioning", "positioning.generate")}
-        data-testid="positioning-empty-open-copilot"
-        className="inline-flex h-9 w-fit items-center gap-1.5 rounded-control bg-brand px-3.5 text-[13px] font-medium text-brand-foreground transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <MessagesSquare className="size-4" />
-        开始访谈式定位
-      </Link>
     </div>
   );
 }

@@ -294,7 +294,7 @@ type Result<T> =
 | `API-CR-012` | `intelligence.runs.start` | `{sourceId,trigger:"manual"|"initial"|"retry",idempotencyKey}` | `SyncRun + ExecutionTask` | `SOURCE_PAUSED`、`RUN_ALREADY_ACTIVE` | 原子创建；`FR-CR-004/014/020` |
 | `API-CR-013` | `intelligence.runs.list` | `{sourceId,cursor?,status?}` | runs + step counts | 公共错误 | 只读 |
 | `API-CR-014` | `intelligence.runs.get` | `{runId}` | run、events、adapter evidence、next action | 公共错误 | 安全诊断；`FR-CR-014` |
-| `API-CR-015` | `intelligence.items.list` | `{accountId,collectionId?,sourceId?,query?,sort:"newest"|"collect_desc"|"like_desc",transcriptState?,topicState?,cursor?}` | paged items + latest metrics + source count + 服务端 `transcriptState/topicState/progressState` | 公共错误 | 未知互动值最后，同值按 `capturedAt DESC,itemId ASC`；`FR-CR-005/011/019/023` |
+| `API-CR-015` | `intelligence.items.list` | `{accountId,collectionId?,sourceId?,query?,sort:"published_desc"|"collect_desc"|"like_desc"（兼容旧 `newest`）,transcriptState?,topicState?,cursor?}` | paged items + latest metrics + source count + 服务端 `transcriptState/topicState/progressState` | 公共错误 | 默认按真实 `publishedAt DESC`；缺失发布时间沉底；同值按 `capturedAt DESC,itemId DESC`；`FR-CR-005/011/019/023` |
 | `API-CR-016` | `intelligence.items.get` | `{itemId}` | item、latest/series metrics、observations、snapshots、transcript、transforms | 公共错误 | `FR-CR-005/006/011` |
 | `API-CR-017` | `intelligence.transcripts.enqueue` | `{itemIds:string[],idempotencyKey}` | tasks、费用预估、skipped | `NO_AUDIO`、`MODEL_NOT_CONFIGURED`、`TRANSCRIPT_LOCKED`、`TRANSCRIPT_TOPIC_BUSY` | 仅用户手动；成功候选前允许对 `done` 重新转写并保留旧正文至成功；`FR-CR-007/020/022` |
 | `API-CR-018` | `execution.tasks.command` | `{taskIds,command:"pause"|"resume"|"cancel"|"retry",idempotencyKey}` | tasks | `ILLEGAL_TRANSITION` | 批量原子归属校验；`FR-CR-020` |
@@ -302,6 +302,7 @@ type Result<T> =
 | `API-CR-020` | `intelligence.transforms.previewTopic` | `{itemId,sourceSnapshotId,positioningVersionId,idempotencyKey}` | candidate transform/task；成功输出结构拆解、选题候选、`canonicalUrl` 与 `transcriptHash` | `SOURCE_URL_REQUIRED`、`TRANSCRIPT_REQUIRED`、`POSITIONING_MISSING`、`SNAPSHOT_UNAVAILABLE` | 仅消费 `done` 逐字稿；候选落地时校验哈希并永久锁定；`FR-CR-012` |
 | `API-CR-021` | `intelligence.transforms.confirmTopic` | `{transformId,editedCandidate,idempotencyKey}` | topic + provenance（含可点击 `canonicalUrl`、transform/逐字稿证据） | `CANDIDATE_NOT_READY` | backend candidate service 写入；选题读模型持续暴露原视频链接；`FR-CR-012` |
 | `API-CR-022` | `projects.intelligence.attach` | `{projectId,topicId,transformId,idempotencyKey}` | reference（服务端派生 item/snapshot/URL/定位/逐字稿哈希） | `TOPIC_NOT_CONFIRMED`、`CANDIDATE_STALE` | 创建 Project 后调用；拒绝 topic/transform 不匹配；`FR-CR-013` |
+| `API-CR-022A` | `projects.intelligence.list` | `{projectId}` | 当前 Project 已绑定的只读来源标题、URL、hash 校验后的逐字稿与 reference | `SOURCE_CONTEXT_INCOMPLETE`、`TRANSCRIPT_CHANGED` | 仅内容雷达 Project 对照稿面读取；普通 Project 返回空数组；`FR-CR-013` |
 | `API-CR-023` | `projects.scripts.generateCandidate` | `{projectId,referenceIds,strategy,idempotencyKey}` | execution task | `TRANSCRIPT_REQUIRED`、`MODEL_NOT_CONFIGURED` | 只产候选；`FR-CR-013/020` |
 | `API-CR-024` | `projects.scripts.acceptCandidate` | `{projectId,candidateTaskId,editedText?,idempotencyKey}` | artifact version + provenance | `SIMILARITY_HIGH`、`CANDIDATE_STALE` | 用户采纳；`FR-CR-013` |
 | `API-CR-025` | `intelligence.migrations.inventory` | `{accountId}` | 旧域计数、writers/readers、风险 | 公共错误 | 只读；`FR-CR-016` |

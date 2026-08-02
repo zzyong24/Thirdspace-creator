@@ -70,6 +70,9 @@ export interface CreativeContext {
   //   项目态**(deps.brief 装配 + projectId 有值 + briefDetail.benchmarkRef 非空);非复刻/账号态 → 空串
   //   (下游整段省略,不污染普通创作)。诚实门对齐 benchmark.teardown「绝不抄袭」硬约束。
   benchmarkRefBrief: string;
+  // [T-642] 内容雷达项目的创作依据：确认时的来源拆解、用户改写策略，以及经 hash 校验的
+  // 来源逐字稿。普通项目为空；雷达项目在标准 script.draft 路径注入，断链时必须报错。
+  projectIntelligenceBrief?: string;
   // ── 复盘专用字段(review.analyze)—— 只在有 projectId + 装配了 reviewSubject reader 时才填。
   //    复盘要「就这一条作品」提炼经验,而非账号级泛论,故把本作品的真实文案/标题/数据/评论读进来
   //    分别喂给 review prompt 的对应占位符(有则注入、空则该块在 prompt 里省略)。全部诚实空兜底:
@@ -318,7 +321,45 @@ export interface ProjectBriefReader {
       可借鉴点?: string[];
       适配本账号建议?: string;
     };
+    contentRadarEvidence?: {
+      sourceReferences: Array<{
+        kind: "original_video" | "source_page";
+        platform: string;
+        label: string;
+        url: string;
+        intelligenceItemId?: string;
+      }>;
+      decomposition: {
+        hook: string;
+        structureSteps: string[];
+        coreClaims: string[];
+        reusablePattern: string;
+        factRisks: string[];
+      };
+      strategy: {
+        keep: string[];
+        replace: string[];
+        add: string[];
+        avoid: string[];
+      };
+      adaptedDraftSeed: {
+        contentText: string;
+        generatedFromTranscriptHash: string;
+        strategyHash: string;
+        templateVersion: string;
+      };
+    };
   } | null>;
+}
+
+export interface ProjectIntelligenceReader {
+  getSourceContexts(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<Array<{
+    item: { title: string; canonicalUrl: string; authorName: string | null };
+    transcript: { text: string; hash: string };
+  }>>;
 }
 
 // 复盘对象 reader (T-039a) — 读「本次复盘的这一条作品」的真实材料,喂给 review.analyze,让复盘
@@ -377,6 +418,7 @@ export interface ContextDeps {
   contract?: ContractReader;
   outline?: OutlineReader;
   brief?: ProjectBriefReader;
+  projectIntelligence?: ProjectIntelligenceReader;
   // 复盘对象 (T-039a): 只有 review.analyze 路径装配,读本次复盘作品的真文案/标题/数据/评论。Optional。
   reviewSubject?: ReviewSubjectReader;
   // F2 (T-030-D4): reports origin of the thesis_tree / content_contract /
@@ -428,6 +470,10 @@ export interface AssembleInput {
   projectId: string | null;
   topic: string;
   angle?: string;
+  // T-652 从零定位：旧定位与账号画像连读端口都不触发，避免“读了但靠提示词说不用”。
+  excludePositioning?: boolean;
+  excludeAccounts?: boolean;
+  excludeHistoricalCreatorContext?: boolean;
 }
 
 export async function assembleCreativeContext(
@@ -436,17 +482,19 @@ export async function assembleCreativeContext(
   deps: ContextDeps,
 ): Promise<CreativeContext> {
   let positioningBrief = "";
-  try {
-    const center = await deps.positioning.getPositioningCenter(ctx);
-    positioningBrief = formatPositioning(center);
-  } catch {
-    // Positioning is optional context — a brand-new creator can still gather material;
-    // the agent just loses the relevance constraint. Degrade, never block.
-    positioningBrief = "";
+  if (!input.excludePositioning) {
+    try {
+      const center = await deps.positioning.getPositioningCenter(ctx);
+      positioningBrief = formatPositioning(center);
+    } catch {
+      // Positioning is optional context — a brand-new creator can still gather material;
+      // the agent just loses the relevance constraint. Degrade, never block.
+      positioningBrief = "";
+    }
   }
 
   let learningsBrief = "";
-  if (deps.learnings) {
+  if (deps.learnings && !input.excludeHistoricalCreatorContext) {
     try {
       // [T-062b] validated 经验全量当约束(SPEC §3:candidate 不进 prompt);20 上限防爆。
       const rows = await deps.learnings.getSuggestions(ctx, { limit: 20 });
@@ -472,7 +520,7 @@ export async function assembleCreativeContext(
 
   let accountsBrief = "";
   let currentAccountLine = "";
-  if (deps.accounts) {
+  if (deps.accounts && !input.excludeAccounts) {
     try {
       const rows = await deps.accounts.list(ctx);
       // [T-382] 当前选中号标注:平台账号 registry 是 user-scoped(跨号全列,这是账号切换器
@@ -495,7 +543,7 @@ export async function assembleCreativeContext(
   }
 
   let signalsBrief = "";
-  if (deps.signals) {
+  if (deps.signals && !input.excludeHistoricalCreatorContext) {
     try {
       const rows = await deps.signals.list(ctx, { limit: 30 });
       signalsBrief = rows
@@ -510,7 +558,7 @@ export async function assembleCreativeContext(
   }
 
   let knowledgeBrief = "";
-  if (deps.knowledge) {
+  if (deps.knowledge && !input.excludeHistoricalCreatorContext) {
     try {
       // [T-186] L3 策展护栏 —— 知识注入从「最近 40 条 dump」升级为「按当前选题/定位相关性检索 +
       // token 预算截断」。scope 感知(SPEC §3-L3.3):有选题 → 贴该选题检索(项目态最高优先);无选题
@@ -623,9 +671,12 @@ export async function assembleCreativeContext(
   let orientationHint = "";
   let projectBriefHard = "";
   let benchmarkRefBrief = "";
+  let projectIntelligenceBrief = "";
+  let briefDetail: Awaited<ReturnType<ProjectBriefReader["getBriefDetail"]>> = null;
   if (deps.brief && input.projectId) {
     try {
       const detail = await deps.brief.getBriefDetail(ctx, input.projectId);
+      briefDetail = detail;
       if (detail?.orientation === "landscape") orientationHint = "横屏";
       else if (detail?.orientation === "portrait") orientationHint = "竖屏";
       projectBriefHard = renderProjectBriefHard(detail);
@@ -635,6 +686,18 @@ export async function assembleCreativeContext(
       projectBriefHard = "";
       benchmarkRefBrief = "";
     }
+  }
+  if (briefDetail?.contentRadarEvidence && input.projectId) {
+    const contexts = deps.projectIntelligence
+      ? await deps.projectIntelligence.getSourceContexts(ctx, input.projectId)
+      : [];
+    if (deps.projectIntelligence && contexts.length === 0) {
+      throw new Error("内容雷达来源引用缺失，不能退化为仅按定位生成稿件");
+    }
+    projectIntelligenceBrief = renderProjectIntelligence(
+      briefDetail.contentRadarEvidence,
+      contexts,
+    );
   }
 
   // 复盘对象(T-039a)—— 只有 review.analyze 路径装配 reviewSubject reader + 有 projectId 时,读
@@ -717,6 +780,7 @@ export async function assembleCreativeContext(
     orientationHint,
     projectBriefHard,
     benchmarkRefBrief,
+    projectIntelligenceBrief,
     reviewTitle,
     reviewScript,
     reviewMetrics,
@@ -1008,6 +1072,47 @@ export function renderProjectBriefHard(
   ].join("\n");
 }
 
+export function renderProjectIntelligence(
+  evidence: NonNullable<
+    NonNullable<Awaited<ReturnType<ProjectBriefReader["getBriefDetail"]>>>["contentRadarEvidence"]
+  >,
+  contexts: Array<{
+    item: { title: string; canonicalUrl: string; authorName: string | null };
+    transcript: { text: string; hash: string };
+  }>,
+): string {
+  const list = (label: string, values: string[]) =>
+    values.length ? `${label}：\n${values.map((value) => `- ${value}`).join("\n")}` : "";
+  const strategy = evidence.strategy;
+  const decomposition = evidence.decomposition;
+  const sourceLines = evidence.sourceReferences.map(
+    (reference) => `- ${reference.label}（${reference.platform}）：${reference.url}`,
+  );
+  const transcriptLines = contexts.map((context) => {
+    const text = context.transcript.text.trim();
+    const clipped = text.length > 20_000 ? `${text.slice(0, 20_000)}\n[逐字稿过长，已按 20,000 字符截取]` : text;
+    return `【${context.item.title}｜${context.item.authorName ?? "作者未提供"}】\n${clipped}`;
+  });
+  return [
+    "【本次创作依据·内容雷达 —— 必须消费】以下是用户已确认的来源证据与改写策略；学习方法和结构，但禁止照搬原标题、原句、案例及叙事顺序。",
+    "来源：",
+    ...sourceLines,
+    `来源钩子机制：${decomposition.hook}`,
+    list("来源结构", decomposition.structureSteps),
+    list("来源核心主张", decomposition.coreClaims),
+    `可迁移模式：${decomposition.reusablePattern}`,
+    list("待核验事实", decomposition.factRisks),
+    list("保留的方法", strategy.keep),
+    list("必须替换", strategy.replace),
+    list("本账号新增", strategy.add),
+    list("明确避开", strategy.avoid),
+    `【内容雷达已生成的本账号改写初稿】\n${evidence.adaptedDraftSeed.contentText}`,
+    transcriptLines.length ? `【经 hash 校验的来源逐字稿】\n${transcriptLines.join("\n\n")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 // ── [T-284a] 复刻补链 G1 —— 「对标参照·复刻用」段组装 ────────────────────────────────────
 // 复刻项目(从 benchmark 转化候选立项)的 briefDetail.benchmarkRef 存有原爆款的 5 段拆解要素
 // (他号作品 AI 拆解:钩子/结构/为什么爆/可借鉴点/适配本账号建议)。渲成一段给创作生成链的参照文本,
@@ -1161,11 +1266,12 @@ export function formatWorksBrief(
 export async function loadPositioningWorksBrief(
   ctx: RequestContext,
   reader?: PositioningWorksReader,
+  limit = WORKS_BRIEF_MAX_ROWS,
 ): Promise<string> {
   if (!reader) return "";
   try {
     const { rows, total } = await reader.listProjects(ctx, {
-      limit: WORKS_BRIEF_MAX_ROWS,
+      limit: Math.max(1, Math.min(limit, WORKS_BRIEF_MAX_ROWS)),
       offset: 0,
     });
     return formatWorksBrief(rows, total);

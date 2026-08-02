@@ -1,7 +1,8 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
 import {
-  channelMultimodalSpec,
+  channelMultimodalSpecFromRoute,
+  resolveChannelCapabilityRoute,
   type ChannelModelPayload,
 } from "../channel-model-config";
 
@@ -44,6 +45,7 @@ export interface ResolveMultimodalDeps {
   ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
   getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
+  getChannelModelCredential?: (serviceId: string) => Promise<string | null>;
 }
 
 /** 未配 / 无凭据 —— 上层(asset.generate runner)接住 → cancelTask + 录制页显
@@ -208,7 +210,13 @@ export async function resolveMultimodalSpec(
   const kind = CAP_TO_KIND[capability];
   const channel = await deps.getChannelModelConfig?.();
   if (channel) {
-    return channelMultimodalSpec(channel, capability, kind);
+    const route = resolveChannelCapabilityRoute(channel, capability);
+    if (route && route.kind === kind) {
+      const credential = route.serviceId
+        ? await deps.getChannelModelCredential?.(route.serviceId)
+        : null;
+      return channelMultimodalSpecFromRoute(route, credential);
+    }
   }
 
   // Tier 1 — 用户配的 DB row(先 per-capability,再该 kind 的默认行)。

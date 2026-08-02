@@ -212,13 +212,35 @@ export interface RadarItemDetail {
       coreClaims?: string[];
       reusablePattern?: string;
       factRisks?: string[];
-      title: string;
-      angle: string;
-      differentiation: string;
-      sourceSummary: string;
+      title?: string;
+      angle?: string;
+      differentiation?: string;
+      sourceSummary?: string;
+      targetAudience?: string;
+      audiencePain?: string;
+      coreConflict?: string;
+      format?: string;
+      adaptationStrategy?: {
+        keep: string[];
+        replace: string[];
+        add: string[];
+        avoid: string[];
+      };
+      adaptedDraft?: {
+        contentText: string;
+        generatedFromTranscriptHash: string;
+        strategyHash: string;
+        templateVersion: string;
+      };
       sourceUrl?: string;
       transcriptHash?: string;
       decompositionVersion?: string;
+      generationProgress?: Partial<
+        Record<
+          "decomposition" | "topic" | "draft",
+          { status: "pending" | "running" | "completed" | "failed"; completedAt?: string }
+        >
+      >;
     } | null;
     targetTopicId: string | null;
   }>;
@@ -360,7 +382,7 @@ export interface RadarApi {
     collectionId?: string;
     sourceId?: string;
     query?: string;
-    sort: "newest" | "collect_desc" | "like_desc";
+    sort: "published_desc" | "collect_desc" | "like_desc";
     transcriptState?:
       | "not_extracted"
       | "processing"
@@ -406,6 +428,16 @@ export interface RadarApi {
       angle: string;
       differentiation: string;
       sourceSummary: string;
+      targetAudience: string;
+      audiencePain: string;
+      coreConflict: string;
+      format: string;
+      adaptationStrategy: {
+        keep: string[];
+        replace: string[];
+        add: string[];
+        avoid: string[];
+      };
     };
     idempotencyKey: string;
   }): Promise<unknown>;
@@ -927,7 +959,7 @@ export function IntelligenceWorkbench({
   );
   const [sourceQuery, setSourceQuery] = React.useState("");
   const [query, setQuery] = React.useState("");
-  const [sort, setSort] = React.useState<RadarSort>("newest");
+  const [sort, setSort] = React.useState<RadarSort>("published_desc");
   const [transcriptState, setTranscriptState] =
     React.useState<RadarTranscriptState | null>(null);
   const [topicState, setTopicState] =
@@ -1645,11 +1677,6 @@ export function IntelligenceWorkbench({
         const currentTransform = refreshed.transforms.find(
           (transform) => transform.id === started.transform.id,
         );
-        if (currentTransform?.outputSnapshot) {
-          completed = true;
-          setNotice("选题候选已生成，请检查后确认写入选题池。");
-          break;
-        }
         if (
           currentTransform &&
           ["failed", "blocked", "cancelled"].includes(
@@ -1663,6 +1690,30 @@ export function IntelligenceWorkbench({
               : "生成任务已失败，可查看候选卡中的原因并重新生成。",
           );
           break;
+        }
+        const snapshot = currentTransform?.outputSnapshot;
+        const generationProgress = snapshot?.generationProgress;
+        const completeSnapshot = Boolean(
+          snapshot &&
+            (generationProgress
+              ? generationProgress.draft?.status === "completed"
+              : snapshot.title?.trim()),
+        );
+        if (completeSnapshot) {
+          completed = true;
+          setNotice(
+            snapshot?.adaptedDraft?.contentText
+              ? "选题候选和改写初稿已生成，请检查后确认写入选题池。"
+              : "选题候选已生成，请检查后确认写入选题池。",
+          );
+          break;
+        }
+        if (generationProgress?.topic?.status === "completed") {
+          setNotice("选题已生成，正在生成本账号改写初稿。");
+        } else if (
+          generationProgress?.decomposition?.status === "completed"
+        ) {
+          setNotice("逐字稿已拆解，正在生成选题和改写策略。");
         }
       }
       if (!completed) {
@@ -1692,8 +1743,10 @@ export function IntelligenceWorkbench({
           latest.taskStatus ?? "",
         );
       setNotice(
-        latest?.outputSnapshot
-          ? "选题候选已生成，请检查后确认写入选题池。"
+        latest?.outputSnapshot?.adaptedDraft?.contentText
+          ? "选题候选和改写初稿已生成，请检查后确认写入选题池。"
+          : latest?.outputSnapshot
+            ? "已保留当前生成进度，未完成部分会在候选卡中说明。"
           : terminalFailure
             ? latest.taskStatus === "blocked"
               ? "生成任务已受阻，请按候选卡提示处理后重试。"
@@ -1721,15 +1774,27 @@ export function IntelligenceWorkbench({
         await api.confirmTopic({
           transformId,
           editedCandidate: {
-            title: candidate.title,
-            angle: candidate.angle,
-            differentiation: candidate.differentiation,
-            sourceSummary: candidate.sourceSummary,
+            title: candidate.title ?? "",
+            angle: candidate.angle ?? "",
+            differentiation: candidate.differentiation ?? "",
+            sourceSummary: candidate.sourceSummary ?? "",
+            targetAudience: candidate.targetAudience ?? "",
+            audiencePain: candidate.audiencePain ?? "",
+            coreConflict: candidate.coreConflict ?? "",
+            format: candidate.format ?? "",
+            adaptationStrategy: candidate.adaptationStrategy ?? {
+              keep: [],
+              replace: [],
+              add: [],
+              avoid: [],
+            },
           },
           idempotencyKey: operationKey("topic-confirm"),
         });
         setDetail(await api.getItem(detail.item.id));
-        setNotice("已确认写入选题池；稿件生成和改写仍在创建 Project 后进行。");
+        setNotice(
+          "已写入选题池。立项后，对标原稿、改写规则和我的初稿会一起带入项目。",
+        );
         router.refresh();
       } catch {
         setNotice("写入选题池失败，候选仍保留，可以稍后重试。");
@@ -2166,7 +2231,7 @@ export function IntelligenceWorkbench({
                 }}
                 className="h-8 rounded-lg border border-input bg-surface px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="newest">最新收录</option>
+                <option value="published_desc">最新发布</option>
                 <option value="collect_desc">收藏最多</option>
                 <option value="like_desc">点赞最多</option>
               </select>
@@ -2580,7 +2645,9 @@ function ItemCard({
         </span>
         <span className="mt-1 truncate text-xs text-muted-foreground">
           {row.item.authorName ?? row.item.platform} ·{" "}
-          {dateLabel(row.item.publishedAt ?? row.item.capturedAt)}
+          {row.item.publishedAt
+            ? dateLabel(row.item.publishedAt)
+            : `发布时间未知 · 收录于 ${dateLabel(row.item.capturedAt)}`}
         </span>
         <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-3 text-[11px] text-muted-foreground">
           <span>赞 {compactNumber(row.latestMetric?.likeCount ?? null)}</span>
@@ -2640,7 +2707,14 @@ function ItemDetail({
     React.useState(false);
   const latest = detail.metrics[0] ?? null;
   const latestTransform = detail.transforms[0] ?? null;
-  const topicCandidate = latestTransform?.outputSnapshot ?? null;
+  const rawTopicSnapshot = latestTransform?.outputSnapshot ?? null;
+  const topicCandidate =
+    rawTopicSnapshot &&
+    (rawTopicSnapshot.hook?.trim() ||
+      rawTopicSnapshot.title?.trim() ||
+      rawTopicSnapshot.adaptedDraft?.contentText?.trim())
+      ? rawTopicSnapshot
+      : null;
   const topicTaskTerminalFailure =
     latestTransform !== null &&
     ["failed", "blocked", "cancelled"].includes(
@@ -2651,13 +2725,14 @@ function ItemDetail({
     latestTransform.outputSnapshot === null &&
     latestTransform.taskStatus == null;
   const transcriptLocked = detail.transforms.some(
-    (transform) => transform.outputSnapshot !== null,
+    (transform) =>
+      transform.status === "confirmed" ||
+      Boolean(transform.outputSnapshot?.title?.trim()),
   );
   const topicTaskBusy =
     topicGenerating ||
     detail.transforms.some(
       (transform) =>
-        transform.outputSnapshot === null &&
         [
           "queued",
           "running",
@@ -2723,9 +2798,9 @@ function ItemDetail({
             </h3>
             <p className="mt-2 text-xs text-muted-foreground">
               {detail.item.authorName ?? detail.item.platform} ·{" "}
-              {dateLabel(
-                detail.item.publishedAt ?? detail.item.capturedAt,
-              )}
+              {detail.item.publishedAt
+                ? dateLabel(detail.item.publishedAt)
+                : `发布时间未知 · 收录于 ${dateLabel(detail.item.capturedAt)}`}
             </p>
           </div>
           <a
@@ -2776,6 +2851,7 @@ function ItemDetail({
                 ...latestTransform,
                 outputSnapshot: topicCandidate,
               }}
+              sourceTranscript={detail.transcript.text ?? ""}
               busy={busy}
               onConfirm={onConfirmTopic}
             />
@@ -3193,6 +3269,7 @@ function TranscriptEditorDialog({
 
 function TopicCandidateEditor({
   transform,
+  sourceTranscript,
   busy,
   onConfirm,
 }: {
@@ -3201,6 +3278,7 @@ function TopicCandidateEditor({
       RadarItemDetail["transforms"][number]["outputSnapshot"]
     >;
   };
+  sourceTranscript: string;
   busy: boolean;
   onConfirm: (
     transformId: string,
@@ -3209,10 +3287,67 @@ function TopicCandidateEditor({
     >,
   ) => void;
 }) {
-  const [candidate, setCandidate] = React.useState(transform.outputSnapshot);
+  const [candidate, setCandidate] = React.useState(() => ({
+    ...transform.outputSnapshot,
+    title: transform.outputSnapshot.title ?? "",
+    angle: transform.outputSnapshot.angle ?? "",
+    differentiation: transform.outputSnapshot.differentiation ?? "",
+    sourceSummary: transform.outputSnapshot.sourceSummary ?? "",
+    targetAudience: transform.outputSnapshot.targetAudience ?? "",
+    audiencePain: transform.outputSnapshot.audiencePain ?? "",
+    coreConflict: transform.outputSnapshot.coreConflict ?? "",
+    format: transform.outputSnapshot.format ?? "",
+    adaptationStrategy: transform.outputSnapshot.adaptationStrategy ?? {
+      keep: [],
+      replace: [],
+      add: [],
+      avoid: [],
+    },
+  }));
+  const [draftText] = React.useState(
+    transform.outputSnapshot.adaptedDraft?.contentText ?? "",
+  );
   const confirmed = transform.status === "confirmed";
+  const progress = transform.outputSnapshot.generationProgress;
+  const progressLabel =
+    progress?.draft?.status === "failed"
+      ? "拆解和选题已保留，改写初稿待重试"
+      : progress?.topic?.status === "failed"
+          ? "逐字稿拆解已保留，选题待重试"
+        : progress?.decomposition?.status === "failed"
+          ? "逐字稿拆解待重试"
+          : progress?.draft?.status === "completed"
+            ? "改写初稿已生成"
+            : progress?.topic?.status === "completed"
+              ? "选题已生成，正在改写初稿"
+              : progress?.decomposition?.status === "completed"
+                ? "逐字稿已拆解，正在生成选题"
+                : null;
   return (
     <div className="mt-3 space-y-2 rounded-xl border border-primary/20 bg-primary/[0.035] p-3">
+      {progressLabel ? (
+        <div
+          role="status"
+          className="rounded-lg bg-primary/8 px-3 py-2 text-xs text-primary"
+        >
+          {progressLabel}
+        </div>
+      ) : null}
+      {["failed", "blocked", "cancelled"].includes(
+        transform.taskStatus ?? "",
+      ) ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2"
+        >
+          <p className="text-xs font-medium text-foreground">
+            后续生成暂未完成，已生成的内容已保留
+          </p>
+          <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+            {transform.taskErrorMessage?.trim() || "可以稍后只重试未完成部分。"}
+          </p>
+        </div>
+      ) : null}
       {candidate.hook || candidate.structureSteps?.length ? (
       <div className="space-y-2 rounded-lg border border-border/70 bg-surface p-3">
         <div className="flex items-center justify-between gap-2">
@@ -3250,6 +3385,31 @@ function TopicCandidateEditor({
         ) : null}
       </div>
       ) : null}
+      {draftText ? (
+        <div className="grid gap-3 rounded-lg border border-border/70 bg-surface p-3 md:grid-cols-2">
+          <label className="grid min-w-0 gap-1 text-[11px] font-semibold text-foreground">
+            对标原稿（只读）
+            <textarea
+              aria-label="对标原稿"
+              value={sourceTranscript}
+              readOnly
+              className="min-h-64 resize-y rounded-lg border border-input bg-muted/40 px-3 py-2 text-xs font-normal leading-5 text-muted-foreground"
+            />
+          </label>
+          <label className="grid min-w-0 gap-1 text-[11px] font-semibold text-foreground">
+            我的改写初稿
+            <textarea
+              aria-label="我的改写初稿"
+              value={draftText}
+              readOnly
+              className="min-h-64 resize-y rounded-lg border border-input bg-background px-3 py-2 text-xs font-normal leading-5 text-foreground"
+            />
+            <span className="font-normal text-muted-foreground">
+              采纳选题后会随选题进入 Project；在项目稿面编辑和保存版本。
+            </span>
+          </label>
+        </div>
+      ) : null}
       <Input
         aria-label="选题候选标题"
         value={candidate.title}
@@ -3264,6 +3424,10 @@ function TopicCandidateEditor({
           ["angle", "角度"],
           ["differentiation", "差异化"],
           ["sourceSummary", "来源摘要"],
+          ["targetAudience", "目标观众"],
+          ["audiencePain", "观众痛点"],
+          ["coreConflict", "核心冲突"],
+          ["format", "内容形式"],
         ] as const
       ).map(([field, label]) => (
         <label key={field} className="grid gap-1 text-[11px] text-muted-foreground">
@@ -3279,17 +3443,64 @@ function TopicCandidateEditor({
           />
         </label>
       ))}
+      <div
+        role="group"
+        aria-label="改写规则"
+        className="space-y-2 rounded-lg border border-border/70 bg-surface p-3"
+      >
+        <div>
+          <p className="text-[11px] font-semibold text-foreground">改写规则</p>
+          <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
+            系统根据对标原稿和当前定位生成，随本次选题锁定。需要换方向时，请重新生成选题卡。
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+        {(
+          [
+            ["keep", "保留什么"],
+            ["replace", "替换什么"],
+            ["add", "新增什么"],
+            ["avoid", "避开什么"],
+          ] as const
+        ).map(([field, label]) => {
+          const rules = candidate.adaptationStrategy[field];
+          return (
+            <section
+              key={field}
+              aria-label={label}
+              className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2"
+            >
+              <p className="text-[11px] font-medium text-foreground">{label}</p>
+              {rules.length > 0 ? (
+                <ul className="mt-1 space-y-1 text-xs leading-5 text-muted-foreground">
+                  {rules.map((rule, index) => (
+                    <li key={`${field}:${index}:${rule}`}>· {rule}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">暂无额外规则</p>
+              )}
+            </section>
+          );
+        })}
+        </div>
+      </div>
       {!confirmed ? (
         <Button
           type="button"
           size="sm"
           disabled={
             busy ||
+            !draftText.trim() ||
             [
               candidate.title,
               candidate.angle,
               candidate.differentiation,
               candidate.sourceSummary,
+              candidate.targetAudience,
+              candidate.audiencePain,
+              candidate.coreConflict,
+              candidate.format,
             ].some((value) => !value.trim())
           }
           onClick={() => onConfirm(transform.id, candidate)}
@@ -3299,7 +3510,7 @@ function TopicCandidateEditor({
         </Button>
       ) : null}
       <p className="text-[10px] leading-4 text-muted-foreground">
-        这里只创建选题；口播稿生成和改写仍在 Project 创建后进行。
+        采纳后会把对标原稿、改写规则和当前初稿一起带入项目。进入项目后，可继续编辑「我的稿子」。
       </p>
     </div>
   );

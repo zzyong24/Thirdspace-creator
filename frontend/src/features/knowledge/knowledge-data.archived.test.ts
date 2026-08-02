@@ -51,4 +51,23 @@ describe("knowledge-data 读侧滤 archived (T-247)", () => {
     );
     expect(vm.recent.length).toBe(0);
   });
+
+  it("内置课程保留给课程视图与搜索,不混进用户自己的知识统计和列表", async () => {
+    const courseItem = {
+      ...item("course-lesson-01", "active"),
+      title: "第 1 节 · 粉丝经济的核心公式",
+      knowledgeType: "reference",
+      sourceMetadata: {
+        origin: "win-video-tutor",
+        courseId: "xuehui-ip-practical-course",
+        lessonId: "lesson-01",
+      },
+    };
+    const vm = await buildKnowledgeDashboardViewModel(
+      makeClient([item("k-user", "active"), courseItem]),
+    );
+    expect(vm.recent.map((row) => row.id)).toEqual(["k-user"]);
+    expect(vm.workspace?.items.map((row) => row.id)).toEqual(["k-user"]);
+    expect(vm.metrics.find((metric) => metric.id === "km-total")?.value).toBe("1");
+  });
 });

@@ -65,6 +65,18 @@ const topicCandidate = z
     angle: z.string().min(1),
     differentiation: z.string().min(1),
     sourceSummary: z.string().min(1),
+    targetAudience: z.string().min(1),
+    audiencePain: z.string().min(1),
+    coreConflict: z.string().min(1),
+    format: z.string().min(1),
+    adaptationStrategy: z
+      .object({
+        keep: z.array(z.string().min(1)).max(8),
+        replace: z.array(z.string().min(1)).max(8),
+        add: z.array(z.string().min(1)).max(8),
+        avoid: z.array(z.string().min(1)).max(8),
+      })
+      .strict(),
   })
   .strict();
 
@@ -530,6 +542,35 @@ export const intelligenceOperations = {
       })
       .strict(),
     response: projectIntelligenceReferenceResource,
+    fr: ["FR-CR-013"],
+  }),
+  getProjectIntelligence: defineEndpoint({
+    id: "projects.intelligence.list",
+    method: "GET",
+    path: "/projects/:projectId/intelligence",
+    params: projectParams,
+    response: z
+      .object({
+        reference: projectIntelligenceReferenceResource,
+        item: z
+          .object({
+            title: z.string(),
+            canonicalUrl: z.string().url(),
+            authorName: z.string().nullable(),
+          })
+          .strict(),
+        transcript: z
+          .object({
+            text: z.string().min(1),
+            hash: z.string().min(1),
+          })
+          .strict(),
+        // 已确认的本账号改写初稿：Project 读侧可直接恢复双栏，
+        // 不需要再去猜 Candidate/Brief 中间态是否丢失。
+        adaptedDraft: z.string().min(1).nullable(),
+      })
+      .strict(),
+    isList: true,
     fr: ["FR-CR-013"],
   }),
   generateProjectScriptCandidate: defineEndpoint({

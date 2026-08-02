@@ -8,6 +8,7 @@ import {
 } from "./positioning.repository";
 import {
   toCreatorProfileDto,
+  toPositioningDiscoverySessionDto,
   toPositioningStatementDto,
   type CreatorProfileResource,
   type PositioningMasterSnapshotResource,
@@ -15,13 +16,23 @@ import {
   type PositioningStatementResource,
   type PositioningGateResultResource,
   type PositioningCenterResource,
+  type PositioningDiscoverySessionResource,
+  type PositioningDiscoveryConfirmResultResource,
 } from "./positioning.schema";
 import {
   ProfileRequiredError,
   GateSubjectError,
   StatementValidationError,
   MasterSnapshotUnavailableError,
+  DiscoveryConflictError,
+  DiscoveryValidationError,
 } from "./positioning.errors";
+import {
+  buildDiscoveryResearchQuery,
+  selectDiscoveryResearchResults,
+  type DiscoveryResearchLanguage,
+  type DiscoveryResearchMarket,
+} from "./positioning-research";
 
 // Positioning service (foundation §5.3) — every public method takes
 // `(ctx: RequestContext, …)` and builds a repository bound to `ctx.userId`
@@ -49,6 +60,23 @@ export interface PositioningProjectsPort {
     ctx: RequestContext,
     projectId: string,
   ): Promise<PositioningProjectSubject>;
+  listWorkIds?(ctx: RequestContext): Promise<string[]>;
+}
+
+export interface PositioningResearchPort {
+  search(
+    ctx: RequestContext,
+    query: string,
+    opts?: { count?: number },
+  ): Promise<
+    Array<{
+      title: string;
+      url: string;
+      snippet: string;
+      publishedAt?: string;
+      siteName?: string;
+    }>
+  >;
 }
 
 export interface ServiceDeps {
@@ -56,6 +84,7 @@ export interface ServiceDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   projects: PositioningProjectsPort;
+  research?: PositioningResearchPort;
   auditLegacyStatusNoteCleanup?: (
     event: LegacyStatusNoteCleanupAudit,
   ) => Promise<void> | void;
@@ -131,6 +160,81 @@ export interface EvaluateGateInput {
 }
 
 export interface PositioningService {
+  startDiscovery(
+    ctx: RequestContext,
+    sourceMode: "optimize" | "pivot" | "scratch",
+  ): Promise<PositioningDiscoverySessionResource>;
+  getDiscoverySession(
+    ctx: RequestContext,
+    sessionId: string,
+  ): Promise<PositioningDiscoverySessionResource>;
+  updateDiscoveryAnswer(
+    ctx: RequestContext,
+    input: {
+      sessionId: string;
+      themeId: "goal" | "strength" | "audience" | "need" | "proof" | "expression";
+      selectedOptionIds: string[];
+      customText: string;
+      skipped: boolean;
+      expectedRevision: number;
+    },
+  ): Promise<PositioningDiscoverySessionResource>;
+  researchDiscovery(
+    ctx: RequestContext,
+    input: {
+      sessionId: string;
+      query: string;
+      purpose: string;
+      targetThemeId: "goal" | "strength" | "audience" | "need" | "proof" | "expression";
+      market?: DiscoveryResearchMarket;
+      language?: DiscoveryResearchLanguage;
+      expectedRevision: number;
+    },
+  ): Promise<PositioningDiscoverySessionResource>;
+  setDiscoveryEvidence(
+    ctx: RequestContext,
+    input: {
+      sessionId: string;
+      evidenceId: string;
+      adopted: boolean;
+      expectedRevision: number;
+    },
+  ): Promise<PositioningDiscoverySessionResource>;
+  confirmDiscovery(
+    ctx: RequestContext,
+    input: {
+      sessionId: string;
+      candidateId: string;
+      candidateRevision: number;
+      expectedCurrentStatementId: string | null;
+      idempotencyKey: string;
+      proposal: {
+        persona: string;
+        field: string;
+        audience: string;
+        differentiation: string;
+        capabilities: string[];
+        facets: {
+          contentScope: string;
+          avoid: string;
+          corePain: string;
+          coreValue: string;
+          tone: string;
+          statusNote: string;
+        };
+        downstreamRules: {
+          topicRule: string;
+          scriptRule: string;
+          projectRule: string;
+          forbidRule: string;
+          expressionRule: string;
+        };
+        oneLiner: string;
+        keywords: string[];
+        productAnchorIds: string[];
+      };
+    },
+  ): Promise<PositioningDiscoveryConfirmResultResource>;
   upsertProfile(
     ctx: RequestContext,
     input: UpsertProfileInput,
@@ -175,6 +279,29 @@ export function createPositioningService(
   deps: ServiceDeps,
 ): PositioningService {
   const { db, now, nextId, projects } = deps;
+
+  function requireDiscoveryUpdate<T>(row: T | undefined): T {
+    if (!row) throw new DiscoveryConflictError();
+    return row;
+  }
+
+  function validateResearchQuery(query: string): string {
+    const normalized = query.trim().replace(/\s+/gu, " ");
+    // 这是第二道服务端边界：只有短关键词能离开本地。整段访谈、链接、文件路径和
+    // 明显的逐字稿指令直接拒绝；服务端也绝不把 answers/profile/works 拼进 query。
+    if (
+      normalized.length < 2 ||
+      normalized.length > 80 ||
+      /[\r\n@。！？；：，,]|https?:\/\/|file:\/\/|(?:逐字稿|完整访谈|全部回答|聊天记录|本地文件)/iu.test(
+        normalized,
+      )
+    ) {
+      throw new DiscoveryValidationError(
+        "联网补充只接受简短的行业/IP 关键词，请不要粘贴访谈、逐字稿、链接或文件内容。",
+      );
+    }
+    return normalized;
+  }
 
   function isLegacyDynamicStatusNote(value: string): boolean {
     const normalized = value.trim();
@@ -327,6 +454,161 @@ export function createPositioningService(
   }
 
   return {
+    async startDiscovery(ctx, sourceMode) {
+      const repo = repoFor(ctx, "positioning.discovery.start");
+      // scratch 在分支入口即截断，不读取旧 profile / statement / work；不仅结果清单为空，
+      // 连旧数据读端口都不会触发，防止后续重构时“读了再丢”悄悄变成提示词输入。
+      if (sourceMode === "scratch") {
+        return toPositioningDiscoverySessionDto(
+          await repo.startDiscoverySession({
+            sourceMode,
+            inputManifest: {
+              legacyProfileId: null,
+              legacyStatementIds: [],
+              legacyWorkIds: [],
+            },
+          }),
+        );
+      }
+      const profile = await repo.getProfile();
+      const statements = profile
+        ? (await repo.listStatements({ limit: 200, offset: 0 })).rows
+        : [];
+      // 只保留项目读端口给出的前 12 条代表作品锚点；前采不因几十/上百条作品
+      // 批量转写而阻塞。实际方向比较需要旧数据时，再由 Copilot 只读工具按需展开。
+      const workIds = ((await projects.listWorkIds?.(ctx)) ?? []).slice(0, 12);
+      const inputManifest = {
+        legacyProfileId: profile?.id ?? null,
+        legacyStatementIds: statements.map((item) => item.id),
+        legacyWorkIds: workIds,
+      };
+      return toPositioningDiscoverySessionDto(
+        await repo.startDiscoverySession({ sourceMode, inputManifest }),
+      );
+    },
+
+    async getDiscoverySession(ctx, sessionId) {
+      const repo = repoFor(ctx, "positioning.discovery.get");
+      return toPositioningDiscoverySessionDto(
+        await repo.getDiscoverySession(sessionId),
+      );
+    },
+
+    async updateDiscoveryAnswer(ctx, input) {
+      if (
+        input.selectedOptionIds.length === 0 &&
+        input.customText.trim().length === 0 &&
+        !input.skipped
+      ) {
+        throw new DiscoveryValidationError(
+          "请选择至少一个选项、补充自己的答案，或选择暂不确定。",
+        );
+      }
+      const repo = repoFor(ctx, "positioning.discovery.answer.update");
+      const row = requireDiscoveryUpdate(
+        await repo.updateDiscoveryAnswer({
+          sessionId: input.sessionId,
+          expectedRevision: input.expectedRevision,
+          answer: {
+            themeId: input.themeId,
+            selectedOptionIds: [...new Set(input.selectedOptionIds)],
+            customText: input.customText.trim(),
+            skipped: input.skipped,
+            updatedAt: now(),
+          },
+        }),
+      );
+      return toPositioningDiscoverySessionDto(row);
+    },
+
+    async researchDiscovery(ctx, input) {
+      const query = validateResearchQuery(input.query);
+      const purpose = input.purpose.trim();
+      const repo = repoFor(ctx, "positioning.discovery.research");
+      const current = await repo.getDiscoverySession(input.sessionId);
+      if (
+        current.revision !== input.expectedRevision ||
+        !["draft", "ready"].includes(current.status)
+      ) {
+        throw new DiscoveryConflictError();
+      }
+      if (!deps.research) {
+        throw new DiscoveryValidationError("当前环境尚未接入联网检索。");
+      }
+      const market = input.market ?? "cn";
+      const language = input.language ?? "zh-CN";
+      const effectiveQuery = buildDiscoveryResearchQuery(query, {
+        market,
+        language,
+      });
+      const results = await deps.research.search(ctx, effectiveQuery, {
+        count: 12,
+      });
+      const references = selectDiscoveryResearchResults(
+        query,
+        results,
+        { market, language },
+        5,
+      )
+        .filter((result) => {
+          try {
+            const url = new URL(result.url);
+            return url.protocol === "http:" || url.protocol === "https:";
+          } catch {
+            return false;
+          }
+        })
+        .slice(0, 5)
+        .map((result) => ({
+          id: nextId("posevd"),
+          title: result.title.trim() || result.url,
+          url: result.url,
+          snippet: result.snippet.trim(),
+          query,
+          purpose,
+          targetThemeId: input.targetThemeId,
+          market,
+          language,
+          adopted: false,
+        }));
+      const row = requireDiscoveryUpdate(
+        await repo.replaceDiscoveryWebReferences({
+          sessionId: input.sessionId,
+          expectedRevision: input.expectedRevision,
+          references,
+        }),
+      );
+      return toPositioningDiscoverySessionDto(row);
+    },
+
+    async setDiscoveryEvidence(ctx, input) {
+      const repo = repoFor(ctx, "positioning.discovery.evidence.set");
+      const row = requireDiscoveryUpdate(
+        await repo.setDiscoveryEvidence(input),
+      );
+      return toPositioningDiscoverySessionDto(row);
+    },
+
+    async confirmDiscovery(ctx, input) {
+      if (input.proposal.keywords.length !== 3) {
+        throw new StatementValidationError(
+          `StatementValidationError: keywords must be exactly 3 (got ${input.proposal.keywords.length})`,
+        );
+      }
+      const repo = repoFor(ctx, "positioning.discovery.confirm");
+      const result = await repo.confirmDiscoveryCandidate(input);
+      if (!result) {
+        throw new DiscoveryConflictError(
+          "定位方向或当前母版已经变化，请刷新后重新确认；现有定位未被覆盖。",
+        );
+      }
+      return {
+        profile: toCreatorProfileDto(result.profile),
+        statement: toPositioningStatementDto(result.statement),
+        session: toPositioningDiscoverySessionDto(result.session),
+      };
+    },
+
     async upsertProfile(ctx, input) {
       const repo = repoFor(ctx, "positioning.upsertProfile");
       const existing = await repo.getProfile();
@@ -544,6 +826,7 @@ export function createPositioningService(
       await cleanupLegacyDynamicStatusNote(ctx);
       const repo = repoFor(ctx, "positioning.getPositioningCenter");
       const profileRow = await repo.getProfile();
+      const activeDiscoveryRow = await repo.getActiveDiscoverySession();
       if (!profileRow) {
         // Empty-state (brand-new user) — render the page, never an error.
         return {
@@ -552,6 +835,9 @@ export function createPositioningService(
           keywords: [],
           productAnchors: [],
           history: [],
+          activeDiscovery: activeDiscoveryRow
+            ? toPositioningDiscoverySessionDto(activeDiscoveryRow)
+            : null,
         };
       }
       const profile = toCreatorProfileDto(profileRow);
@@ -570,6 +856,9 @@ export function createPositioningService(
         keywords: currentStatement?.keywords ?? [],
         productAnchors: currentStatement?.productAnchorIds ?? [],
         history,
+        activeDiscovery: activeDiscoveryRow
+          ? toPositioningDiscoverySessionDto(activeDiscoveryRow)
+          : null,
       };
     },
   };

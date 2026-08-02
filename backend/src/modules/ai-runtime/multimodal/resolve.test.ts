@@ -11,6 +11,88 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
+  it("T-645 渠道仅配置文本时，ASR 仍读取用户本地配置", async () => {
+    let localReads = 0;
+    const spec = await resolveTranscribeSpec(ctx, {
+      getChannelModelConfig: async () => ({
+        services: [{
+          id: "text-service",
+          name: "Text",
+          credential: { type: "api_key", source: "user_input" },
+        }],
+        connections: [{
+          id: "text-connection",
+          serviceId: "text-service",
+          provider: "minimax",
+          baseURL: "https://api.minimaxi.com/anthropic",
+          apiFormat: "anthropic",
+        }],
+        models: { default: [{
+          id: "text-model",
+          name: "Text",
+          connectionId: "text-connection",
+          model: "MiniMax-M3",
+          isDefault: true,
+          settings: {},
+        }] },
+      }),
+      getModelConfig: async (_c, capability) => {
+        localReads += 1;
+        return capability === "transcribe.audio"
+          ? {
+              provider: "siliconflow",
+              modelName: "FunAudioLLM/SenseVoiceSmall",
+              baseUrl: "https://api.siliconflow.cn/v1",
+              apiFormat: "openai_chat",
+              secretReference: "",
+              secretValue: "local-asr-key",
+              settings: {},
+            }
+          : null;
+      },
+      env: {},
+    });
+    expect(localReads).toBe(1);
+    expect(spec).toMatchObject({ provider: "siliconflow", token: "local-asr-key" });
+  });
+
+  it("T-645 完整渠道 ASR 缺 service Key 时明确报错，不回退本地或 Whisper", async () => {
+    let localReads = 0;
+    await expect(
+      resolveTranscribeSpec(ctx, {
+        getChannelModelConfig: async () => ({
+          services: [{
+            id: "asr-service",
+            name: "ASR",
+            credential: { type: "api_key", source: "user_input" },
+          }],
+          connections: [{
+            id: "asr-connection",
+            serviceId: "asr-service",
+            provider: "xiaomi-mimo",
+            baseURL: "https://api.xiaomimimo.com/v1",
+            apiFormat: "openai_chat",
+          }],
+          models: { "transcribe.audio": [{
+            id: "asr-model",
+            name: "MiMo ASR",
+            connectionId: "asr-connection",
+            model: "mimo-v2.5-asr",
+            isDefault: true,
+            settings: {},
+          }] },
+        }),
+        getChannelModelCredential: async () => null,
+        getModelConfig: async () => {
+          localReads += 1;
+          return null;
+        },
+        env: {},
+      }),
+    ).rejects.toMatchObject({ name: "ChannelModelCredentialRequiredError" });
+    expect(localReads).toBe(0);
+  });
+
   it("按能力从 Growth 多模型数组选择默认生图模型", async () => {
     const spec = await resolveMultimodalSpec(ctx, "image.generate", {
       getChannelModelConfig: async () => ({
@@ -215,6 +297,32 @@ describe("resolveMultimodalSpec — tier 3 未配抛错(诚实禁用)", () => {
 // ── ASR 逐字稿(transcribe.audio,T-030-D1/T-641)—— 用户配置 → 环境变量两层；都没有
 //    自动回退本地 Whisper，保证未配置云端也能完成转录。──────────────────────────────
 describe("resolveTranscribeSpec — 云端优先、本地兜底(kind=audio)", () => {
+  it("tier 1:Qwen ASR 用户配置可原样解析到运行时 spec", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: async (_c, cap) =>
+        cap === "transcribe.audio"
+          ? {
+              provider: "qwen-asr",
+              modelName: "qwen3-asr-flash",
+              baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+              apiFormat: "openai_chat",
+              secretReference: "",
+              secretValue: "dashscope-key",
+              settings: { language: "zh" },
+            }
+          : null,
+      env: {},
+    });
+
+    expect(spec).toEqual({
+      provider: "qwen-asr",
+      baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      model: "qwen3-asr-flash",
+      token: "dashscope-key",
+      kind: "audio",
+    });
+  });
+
   it("tier 1:transcribe.audio 命中 DB 行 → 出 spec(kind=audio),secretValue 优先", async () => {
     const spec = await resolveTranscribeSpec(ctx, {
       getModelConfig: async (_c, cap) =>

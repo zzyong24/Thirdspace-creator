@@ -312,6 +312,8 @@ export async function POST(req: Request): Promise<Response> {
         // (它含 ArtifactType 依赖),改由这里(前端边界)把 humanizeAiError 注入。
         humanizeError: humanizeAiError,
         resolveModelSpec: runtime.resolveModelSpec,
+        // [T-652] 模型填入的前采版本不可信；执行定位工具前从服务端读取最新 session。
+        getPositioningDiscovery: runtime.getPositioningDiscovery,
         // [T-513] chatbox 工具同步调用 topic/research/review 等子 Skill 时，为子调用
         // 按同一 user/account 解析独立 snapshot；AsyncLocalStorage 嵌套作用域结束后会
         // 自动恢复外层 chatbox snapshot，账号之间不会共享可变 registry。

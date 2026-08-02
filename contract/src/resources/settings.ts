@@ -55,6 +55,16 @@ export type ModelConfigurationResource = z.infer<
   typeof modelConfigurationResource
 >;
 
+// T-645 — 渠道 service Key 的公开状态。明文 Key、scopeId 与渠道 identity 永不出 Web。
+export const channelModelCredentialResource = z.object({
+  serviceId: z.string().min(1),
+  hasSecret: z.boolean(),
+  updatedAt: iso8601.nullable(),
+});
+export type ChannelModelCredentialResource = z.infer<
+  typeof channelModelCredentialResource
+>;
+
 // StorageConfiguration — the media-storage binding (item B). `backend`/`rootPath`
 // are the editable config; `usedBytes`/`totalBytes`/`breakdown` are read-only
 // real usage (computed from asset_files + the disk that holds `rootPath`). The

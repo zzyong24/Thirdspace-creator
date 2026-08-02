@@ -32,11 +32,21 @@ export const topicCardSchema = z.object({
   audiencePainScore: z.number().nullable().default(null),
   materialScore: z.number().nullable().default(null),
   productionDifficulty: z.string().nullable().default(null),
-});
+}).refine(
+  (value) =>
+    Boolean(
+      value.oneLiner.trim() ||
+        value.audiencePain.trim() ||
+        value.coreConflict.trim() ||
+        value.hook.trim(),
+    ),
+  { message: "选题卡至少包含一句话选题、痛点、冲突或钩子" },
+);
 export type TopicCardOutput = z.infer<typeof topicCardSchema>;
 
 export const TOPIC_ENRICH_TEMPLATE: PromptTemplate = {
   id: "topic.enrich",
+  outputRecovery: "creative-partial",
   version: "v2",
   outputSchema: topicCardSchema,
   tools: [],

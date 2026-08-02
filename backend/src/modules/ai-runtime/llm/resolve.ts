@@ -7,7 +7,8 @@ import {
   type ResolvedLlmConfig,
 } from "./provider";
 import {
-  channelLlmConfig,
+  channelLlmConfigFromRoute,
+  resolveChannelCapabilityRoute,
   type ChannelModelPayload,
 } from "../channel-model-config";
 
@@ -18,6 +19,23 @@ export interface ResolveDeps {
   ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
   getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
+  getChannelModelCredential?: (serviceId: string) => Promise<string | null>;
+}
+
+async function channelConfigFor(
+  deps: ResolveDeps,
+  payload: ChannelModelPayload,
+  capability: string,
+  allowDefaultFallback: boolean,
+): Promise<ResolvedLlmConfig | null> {
+  const route = resolveChannelCapabilityRoute(payload, capability, {
+    allowDefaultFallback,
+  });
+  if (!route) return null;
+  const credential = route.serviceId
+    ? await deps.getChannelModelCredential?.(route.serviceId)
+    : null;
+  return channelLlmConfigFromRoute(route, credential);
 }
 
 // "env:FOO" → env.FOO ; trims; returns "" for missing/blank (cc-switch first_non_empty:
@@ -85,7 +103,10 @@ export async function resolveDedicatedLlmConfig(
   deps: ResolveDeps,
 ): Promise<ResolvedLlmConfig | null> {
   const channel = await deps.getChannelModelConfig?.();
-  if (channel) return channelLlmConfig(channel, capability);
+  if (channel) {
+    const managed = await channelConfigFor(deps, channel, capability, false);
+    if (managed) return managed;
+  }
   return tryDbRow(await deps.getModelConfig(ctx, capability), deps.env);
 }
 
@@ -96,7 +117,10 @@ export async function resolveLlmConfig(
 ): Promise<ResolvedLlmConfig> {
   const { env } = deps;
   const channel = await deps.getChannelModelConfig?.();
-  if (channel) return channelLlmConfig(channel, capability);
+  if (channel) {
+    const managed = await channelConfigFor(deps, channel, capability, true);
+    if (managed) return managed;
+  }
 
   // Tier 1 — the user-configured DB row. Prefer the per-capability row, then the
   // global "default" row. A stored secretValue wins; else the env-ref resolves.

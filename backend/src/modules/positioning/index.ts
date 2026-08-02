@@ -20,6 +20,7 @@ export {
   type PositioningService,
   type ServiceDeps,
   type PositioningProjectsPort,
+  type PositioningResearchPort,
   type PositioningProjectSubject,
   type UpsertProfileInput,
   type CreateStatementInput,
@@ -41,6 +42,8 @@ export {
   GateSubjectError,
   StatementValidationError,
   MasterSnapshotUnavailableError,
+  DiscoveryConflictError,
+  DiscoveryValidationError,
 } from "./positioning.errors";
 
 export {
@@ -48,14 +51,17 @@ export {
   positioningStatementResource,
   positioningGateResultResource,
   positioningCenterResource,
+  positioningDiscoverySessionResource,
   toCreatorProfileDto,
   toPositioningStatementDto,
+  toPositioningDiscoverySessionDto,
   type CreatorProfileResource,
   type PositioningStatementResource,
   type PositioningMasterSnapshotResource,
   type PositioningMasterRestoreResultResource,
   type PositioningGateResultResource,
   type PositioningCenterResource,
+  type PositioningDiscoverySessionResource,
 } from "./positioning.schema";
 
 // The repository factory + row types are exported ONLY for the composition root's
@@ -68,4 +74,5 @@ export {
   type RepoDeps,
   type CreatorProfileRow,
   type PositioningStatementRow,
+  type PositioningDiscoverySessionRow,
 } from "./positioning.repository";

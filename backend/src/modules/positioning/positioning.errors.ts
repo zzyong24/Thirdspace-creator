@@ -59,3 +59,19 @@ export class MasterSnapshotUnavailableError extends Error {
     this.name = "MasterSnapshotUnavailableError";
   }
 }
+
+export class DiscoveryConflictError extends Error {
+  readonly code = ErrorCode.ConflictError;
+  constructor(message = "定位前采已在其他窗口更新，请刷新后继续。") {
+    super(message);
+    this.name = "DiscoveryConflictError";
+  }
+}
+
+export class DiscoveryValidationError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  constructor(message: string) {
+    super(message);
+    this.name = "DiscoveryValidationError";
+  }
+}

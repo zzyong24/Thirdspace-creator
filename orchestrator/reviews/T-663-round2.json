@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "新增的随包 22 节 manifest 组合 checksum 与排版修订未改变已通过的需求、投影或验收语义。",
+  "findings": []
+}

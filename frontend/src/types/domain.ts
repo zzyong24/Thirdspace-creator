@@ -66,6 +66,34 @@ export interface ProjectBriefDetail {
   readonly durationEstimate?: string;
   readonly coreMessage?: string;
   readonly successCriteria?: string;
+  readonly contentRadarEvidence?: {
+    readonly sourceReferences: ReadonlyArray<{
+      readonly kind: "original_video" | "source_page";
+      readonly platform: string;
+      readonly label: string;
+      readonly url: string;
+      readonly intelligenceItemId?: string;
+    }>;
+    readonly decomposition: {
+      readonly hook: string;
+      readonly structureSteps: ReadonlyArray<string>;
+      readonly coreClaims: ReadonlyArray<string>;
+      readonly reusablePattern: string;
+      readonly factRisks: ReadonlyArray<string>;
+    };
+    readonly strategy: {
+      readonly keep: ReadonlyArray<string>;
+      readonly replace: ReadonlyArray<string>;
+      readonly add: ReadonlyArray<string>;
+      readonly avoid: ReadonlyArray<string>;
+    };
+    readonly adaptedDraftSeed: {
+      readonly contentText: string;
+      readonly generatedFromTranscriptHash: string;
+      readonly strategyHash: string;
+      readonly templateVersion: string;
+    };
+  };
 }
 
 // 数据底座(宪法 §7 / 契约 projectResource.source):项目来源。`imported` = 真实采集

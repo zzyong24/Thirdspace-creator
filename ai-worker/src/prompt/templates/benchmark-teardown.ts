@@ -28,11 +28,21 @@ export const benchmarkTeardownSchema = z.object({
   可借鉴点: z.array(z.string()).default([]), // 可迁移的要素清单
   适配本账号建议: z.string().default(""), // 结合本账号定位怎么改造
   转化选题: z.array(benchmarkTopicSchema).default([]), // 换角度的新题（high 才进池）
-});
+}).refine(
+  (value) =>
+    Boolean(
+      value.钩子拆解.trim() ||
+        value.结构拆解.trim() ||
+        value.为什么爆.trim() ||
+        value.转化选题.some((topic) => topic.title.trim()),
+    ),
+  { message: "对标拆解至少包含拆解结论或一条转化选题" },
+);
 export type BenchmarkTeardownOutput = z.infer<typeof benchmarkTeardownSchema>;
 
 export const BENCHMARK_TEARDOWN_TEMPLATE: PromptTemplate = {
   id: "benchmark.teardown",
+  outputRecovery: "creative-partial",
   version: "v1",
   // 三位一体「输出 Zod schema」位收口到 registry（SPEC §4.2）：runStructuredNode 从 registry 取它
   // 绑 generateObject（不再由调用方手传），校验失败自动重试。

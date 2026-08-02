@@ -53,6 +53,12 @@ export {
   createMinimaxAdapter,
   type MinimaxAdapterDeps,
 } from "./runtime/multimodal-minimax";
+// OmniHi / Seedance 文生视频适配器：POST generations → GET job → 下载成品。
+// 宿主会把规范 provider `omnihi` 与历史 `seedance` / `seeddance` 拼写都指向同一实例。
+export {
+  createOmnihiVideoAdapter,
+  type OmnihiVideoAdapterDeps,
+} from "./runtime/multimodal-omnihi";
 // OpenAI 兼容生图适配器(T-379)—— host 注册进 registry(keyed by "openai" 等用户所配
 // provider 名)。直连 `POST {baseUrl}/v1/images/generations`(JSON model+prompt+size,Bearer),
 // 响应 b64_json/url 双支持 → 统一 `{ assetBytes }`。一个适配器覆盖 gpt-image 系官方 +
@@ -71,9 +77,16 @@ export {
 // 小米 MiMo-V2.5-ASR 使用 input_audio + chat/completions，协议不同于 multipart transcription。
 export {
   createMimoAsrAdapter,
+  splitMp3ForDataUrl,
   splitMp3ForMimo,
   type MimoAsrAdapterDeps,
 } from "./runtime/multimodal-mimo-asr";
+// 通义千问 Qwen3-ASR-Flash 使用百炼 OpenAI 兼容 chat/completions + input_audio；
+// 与 MiMo 同为 JSON 音频协议，但默认端点、限制与 ASR 参数独立封装。
+export {
+  createQwenAsrAdapter,
+  type QwenAsrAdapterDeps,
+} from "./runtime/multimodal-qwen-asr";
 // 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— 保留给旧配置与
 // 明确选择本地运行的开发场景；T-639 起未配置 ASR 时不再隐式回退到本 provider。
 // 用 Transformers.js(@xenova/transformers)本地跑 Whisper(Xenova/whisper-<level>,默认 small),
@@ -420,6 +433,7 @@ export {
 export {
   INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
   intelligenceTopicDecomposeSchema,
+  normalizeIntelligenceTopicDecomposeOutput,
   type IntelligenceTopicDecomposeOutput,
 } from "./prompt/templates/intelligence-topic-decompose";
 export {
@@ -427,6 +441,7 @@ export {
   intelligenceTopicFromDecompositionSchema,
   type IntelligenceTopicFromDecompositionOutput,
 } from "./prompt/templates/intelligence-topic-from-decomposition";
+export { INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE } from "./prompt/templates/intelligence-topic-adapted-draft";
 // [T-235b] 热点信源信号抽取(trend.extract)外置模板 + 输出 schema —— 信源页正文 → 结构化信号
 // (无热度不编)。schema 定义在本包(有 zod);backend 采集器引类型,无需直引 zod。
 export {

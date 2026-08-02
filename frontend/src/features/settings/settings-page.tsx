@@ -282,6 +282,39 @@ export interface ModelAuthorityState {
     | "unreachable"
     | "security_error";
   readonly action: string;
+  /** 只列普通用户可见的四类能力；未出现或 authority=local 即继续用本地配置。 */
+  readonly capabilities?: Partial<
+    Record<ModelAuthorityCapability, ModelCapabilityAuthorityState>
+  >;
+  /** 同一渠道 service 被多个能力复用时只出现一次 Key。 */
+  readonly services?: readonly ChannelModelServiceState[];
+}
+
+export type ModelAuthorityCapability =
+  | "default"
+  | "transcribe.audio"
+  | "image.generate"
+  | "video.generate";
+
+export interface ModelCapabilityAuthorityState {
+  readonly capability: ModelAuthorityCapability;
+  readonly authority: "channel" | "local";
+  readonly serviceId: string | null;
+  readonly serviceName: string | null;
+  readonly provider: string | null;
+  readonly modelName: string | null;
+  readonly baseUrl: string | null;
+  readonly hasSecret: boolean;
+}
+
+export interface ChannelModelServiceState {
+  readonly serviceId: string;
+  readonly serviceName: string;
+  readonly hasSecret: boolean;
+  readonly portalUrl: string | null;
+  readonly purchaseUrl: string | null;
+  readonly rechargeUrl: string | null;
+  readonly helpUrl: string | null;
 }
 
 // ---------------------------------------------------------------------------

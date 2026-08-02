@@ -104,6 +104,12 @@ export interface CandidateProjectsPort {
           可借鉴点?: string[];
           适配本账号建议?: string;
         };
+        contentRadarEvidence?: {
+          sourceReferences: NonNullable<CandidateResource["card"]["sourceReferences"]>;
+          decomposition: NonNullable<CandidateResource["card"]["sourceDecomposition"]>;
+          strategy: NonNullable<CandidateResource["card"]["adaptationStrategy"]>;
+          adaptedDraftSeed: NonNullable<CandidateResource["card"]["adaptedDraft"]>;
+        };
       };
       contentType?: string;
       creationMode?: string;
@@ -504,10 +510,16 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // Sanitize a partial 选题卡 patch (drop unknown keys / clamp metrics) before it
       // reaches the repo's shallow-merge; everything else (含 [T-212d] dropReason) passes
       // through unchanged.
-      const cleaned: typeof patch =
-        patch.card !== undefined
-          ? { ...patch, card: pickCardFields(patch.card) }
-          : patch;
+      let cleaned: typeof patch = patch;
+      if (patch.card !== undefined) {
+        const editableCard = pickCardFields(patch.card);
+        // [T-642] 来源拆解、改写策略与初稿 provenance 只能由 intelligence.confirmTopic
+        // 的内部 create seam 写入；普通候选编辑不得伪造或覆盖这三段创作依据。
+        delete editableCard.sourceDecomposition;
+        delete editableCard.adaptationStrategy;
+        delete editableCard.adaptedDraft;
+        cleaned = { ...patch, card: editableCard };
+      }
       const row = await repoFor(ctx, "candidate.patchCandidate").patchCandidate(candidateId, cleaned);
       // [T-212d] 淘汰(status→dropped)且带原因 → 后台蒸馏偏好信号(fire-and-forget,不阻塞淘汰返回)。
       // 蒸馏每次从**全部**累积原因重算,累计到 ≥3 例才被 service 护栏升级为硬偏好(单次不立即改规则)。
@@ -553,6 +565,19 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       };
       if (card.teardown) {
         briefDraft.benchmarkRef = card.teardown;
+      }
+      if (
+        card.sourceReferences?.length &&
+        card.sourceDecomposition &&
+        card.adaptationStrategy &&
+        card.adaptedDraft
+      ) {
+        briefDraft.contentRadarEvidence = {
+          sourceReferences: card.sourceReferences,
+          decomposition: card.sourceDecomposition,
+          strategy: card.adaptationStrategy,
+          adaptedDraftSeed: card.adaptedDraft,
+        };
       }
       const SOURCE_LABELS: Record<string, string> = {
         trend: "行业热点",

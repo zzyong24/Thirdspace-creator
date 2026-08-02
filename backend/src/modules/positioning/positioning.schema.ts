@@ -16,6 +16,7 @@
 import { ENDPOINTS } from "@creatoros/contract";
 import type {
   CreatorProfileRow,
+  PositioningDiscoverySessionRow,
   PositioningStatementRow,
 } from "./positioning.repository";
 
@@ -26,6 +27,8 @@ export const positioningGateResultResource =
   ENDPOINTS.evaluateGate.response;
 export const positioningCenterResource =
   ENDPOINTS.getPositioningCenter.response;
+export const positioningDiscoverySessionResource =
+  ENDPOINTS.startDiscovery.response;
 
 // Derive the inferred output type from the schema's phantom `_output` (zod 4's
 // `z.infer<T>` is `T["_output"]`). The frontend package does not declare `zod` as a
@@ -42,6 +45,10 @@ export type PositioningGateResultResource =
   (typeof positioningGateResultResource)["_output"];
 export type PositioningCenterResource =
   (typeof positioningCenterResource)["_output"];
+export type PositioningDiscoverySessionResource =
+  (typeof positioningDiscoverySessionResource)["_output"];
+export type PositioningDiscoveryConfirmResultResource =
+  (typeof ENDPOINTS.confirmDiscovery.response)["_output"];
 
 // jsonb projection — a stored profile row may carry a partial / empty `{}` facets or
 // rules object (old rows, AI confirm). Normalize to the full key set with "" defaults so
@@ -114,6 +121,30 @@ export function toCreatorProfileDto(
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+export function toPositioningDiscoverySessionDto(
+  row: PositioningDiscoverySessionRow,
+): PositioningDiscoverySessionResource {
+  return positioningDiscoverySessionResource.parse({
+    id: row.id,
+    userId: row.userId,
+    accountId: row.accountId,
+    sourceMode: row.sourceMode,
+    status: row.status,
+    answers: row.answers ?? [],
+    webReferences: row.webReferences ?? [],
+    inputManifest: row.inputManifest ?? {
+      legacyProfileId: null,
+      legacyStatementIds: [],
+      legacyWorkIds: [],
+    },
+    adoptedCandidateId: row.adoptedCandidateId ?? null,
+    adoptedStatementId: row.adoptedStatementId ?? null,
+    revision: row.revision,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
 }
 
 export function toPositioningStatementDto(

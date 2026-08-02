@@ -505,3 +505,27 @@
 {"ts":"2026-07-31T15:58:23.173Z","actor":"taskctl","action":"complete","task":"T-642","evidence":"orchestrator/GATE-T642-BUILD.md","report":"orchestrator/GATE-T642-BUILD.md","report_sha":"7931144a5b7a","acceptance_checks":["AC-COPILOT-REF-LABEL","AC-COPILOT-REF-NO-DUP","AC-COPILOT-REF-NARROW","AC-COPILOT-REF-DIRECT"],"visible_copy_sha":"9f241a6132b814805cd82a80c3913bdae7f42335946cf6a632ddb12fd0b5af00","visible_copy_captures":2,"commit_sha":"bfb9eac9e9db546a1486ccd0e38032307258ebce","verification_executed":true,"verification_command_sha":"309481e8bc42","verification_output_sha":"c39408bce8a6","verification_output_bytes":8629,"sha_before":"12d0a80f4a6c","sha_after":"ce35e44eeacf"}
 {"ts":"2026-07-31T16:05:37.721Z","actor":"taskctl","action":"start","task":"T-643","sha_before":"b4db8376cecb","sha_after":"315c11897ed2"}
 {"ts":"2026-07-31T16:06:43.944Z","actor":"taskctl","action":"complete","task":"T-643","evidence":"KB-APPLE-DEVELOPER-ASSET-INDEX: identity+fingerprint+secure-path+permissions verified; global reconcile stale receipts deferred to T-640 release gate refresh","sha_before":"dff5f5890749","sha_after":"079fc265ea81"}
+{"ts":"2026-08-01T03:00:44.400Z","actor":"taskctl","action":"start","task":"T-641","sha_before":"bdaf9516b7ce","sha_after":"6f7e2b410741"}
+{"ts":"2026-08-01T12:28:09.957Z","actor":"taskctl","action":"start","task":"T-642","sha_before":"fa445411bb59","sha_after":"e607a96a5a1a"}
+{"ts":"2026-08-01T14:41:57.654Z","actor":"taskctl","action":"start","task":"T-644","sha_before":"1dde49d0ce05","sha_after":"7e66485d7719"}
+{"ts":"2026-08-01T15:05:41.567Z","actor":"taskctl","action":"start","task":"T-645","sha_before":"972f957eb50c","sha_after":"5359f5f62eb9"}
+{"ts":"2026-08-01T16:07:26.348Z","actor":"taskctl","action":"start","task":"T-646","sha_before":"df22f0767d7f","sha_after":"0a19a512ea47"}
+{"ts":"2026-08-01T16:40:05.170Z","actor":"taskctl","action":"start","task":"T-647","sha_before":"92590c9b2833","sha_after":"f4dd29692de2"}
+{"ts":"2026-08-01T16:43:23.075Z","actor":"taskctl","action":"complete","task":"T-647","evidence":"docs/research/2026-08-01-user-copilot-empty-response-log-diagnosis.md；两份日志 SHA-256 已记录，主故障 api.openai.com:443 UND_ERR_CONNECT_TIMEOUT 与空回复误导文案代码链闭环；临时明文已删除，git diff --check 通过；reconcile 仅余范围外既有 T-642/T-635 receipt 过期。","sha_before":"7892dc1b0700","sha_after":"a9429ecef2b7"}
+{"ts":"2026-08-01T16:47:12.160Z","actor":"taskctl","action":"start","task":"T-648","sha_before":"c294f9e6a0ed","sha_after":"6f08f9cdede8"}
+{"ts":"2026-08-01T16:56:33.450Z","actor":"taskctl","action":"complete","task":"T-648","evidence":"Node 25 构建门禁完成：新增 frontend/scripts/desktop/node-runtime.mjs 与 6 项专项测试；Node 22 实际调用 package.mjs --preclean-only 自动切换 /opt/homebrew/opt/node/bin/node 25.9.0；Node 25 全链 desktop:package exit 0，sidecar runtime compatibility、生产 build、混淆/字节码、真实冒烟、Tauri app/dmg 均通过；eslint 与 node --check 通过。pmem sync 完成；reconcile 的 orphan/boundary/backlog/frontend/knowledge/lesson guards 均通过，剩余 2 个 error 仅为既有 T-642 SPEC receipt 与 T-635 constitution receipt 过期，不属于本任务 Node runtime 范围。","sha_before":"42707623e528","sha_after":"a9d5974a286c"}
+{"ts":"2026-08-02T02:17:58.528Z","actor":"taskctl","action":"start","task":"T-650","sha_before":"5738c23c3241","sha_after":"362daa846448"}
+{"ts":"2026-08-02T02:58:38.267Z","actor":"taskctl","action":"start","task":"T-651","sha_before":"2566e3a972bf","sha_after":"9800611fa84d"}
+{"ts":"2026-08-02T05:21:19.353Z","actor":"taskctl","action":"start","task":"T-652","sha_before":"14a6cf159291","sha_after":"470b63c247c5"}
+{"ts":"2026-08-02T11:49:59.902Z","actor":"taskctl","action":"start","task":"T-654","sha_before":"2db35b3010d5","sha_after":"fac5fcee311e"}
+{"ts":"2026-08-02T12:10:06.285Z","actor":"taskctl","action":"start","task":"T-655","sha_before":"8b64b354758e","sha_after":"1d126c301433"}
+{"ts":"2026-08-02T12:27:18.457Z","actor":"taskctl","action":"start","task":"T-656","sha_before":"b1010042ecc0","sha_after":"7801c713a9a2"}
+{"ts":"2026-08-02T14:39:32.538Z","actor":"taskctl","action":"start","task":"T-657","sha_before":"7d47cf25d0f0","sha_after":"8c0e780d0279"}
+{"ts":"2026-08-02T15:12:02.523Z","actor":"taskctl","action":"start","task":"T-658","sha_before":"688e81acb301","sha_after":"a5b29fa4883f"}
+{"ts":"2026-08-02T15:41:10.074Z","actor":"taskctl","action":"complete","task":"T-658","evidence":"诊断报告：docs/research/2026-08-02-darkhorse-removal-sync-failure-diagnosis.md；已核对本机来源状态、加密日志、同步 run/task/event：归档成功但工作台读取未过滤 archived；首次运行 TimeoutError，随后三次 succeeded_no_change。pmem sync 通过；全局 reconcile 仍有 T-656/T-653/T-645/T-642/T-635 既有 review receipt 漂移，均非本诊断范围。","sha_before":"a5b29fa4883f","sha_after":"4dfec20ab5cd"}
+{"ts":"2026-08-02T15:55:20.247Z","actor":"taskctl","action":"start","task":"T-659","sha_before":"616dfde5967c","sha_after":"3aa24944d178"}
+{"ts":"2026-08-02T16:09:20.029Z","actor":"taskctl","action":"complete","task":"T-659","evidence":"orchestrator/GATE-T659-BUILD.md","sha_before":"622440c2ffa1","sha_after":"6cfdf9127e03"}
+{"ts":"2026-08-02T16:27:09.691Z","actor":"taskctl","action":"start","task":"T-660","sha_before":"ca430dbe16dc","sha_after":"2c3ec595c7f1"}
+{"ts":"2026-08-02T16:53:24.672Z","actor":"taskctl","action":"start","task":"T-661","sha_before":"3b9768d316de","sha_after":"7c1dbda160dd"}
+{"ts":"2026-08-02T16:53:24.796Z","actor":"taskctl","action":"start","task":"T-662","sha_before":"7c1dbda160dd","sha_after":"33e085e16894"}
+{"ts":"2026-08-02T17:42:47.527Z","actor":"taskctl","action":"start","task":"T-663","sha_before":"acd0a5781e91","sha_after":"3acb0ea67686"}

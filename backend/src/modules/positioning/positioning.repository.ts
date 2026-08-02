@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, sql, type Db } from "@creatoros/backend";
 import {
   creatorProfiles,
+  positioningDiscoverySessions,
   positioningStatements,
 } from "./positioning.db-schema";
 import { OwnershipError } from "./positioning.errors";
@@ -19,6 +20,29 @@ import { OwnershipError } from "./positioning.errors";
 export type CreatorProfileRow = typeof creatorProfiles.$inferSelect;
 export type PositioningStatementRow =
   typeof positioningStatements.$inferSelect;
+export type PositioningDiscoverySessionRow =
+  typeof positioningDiscoverySessions.$inferSelect;
+
+export interface DiscoveryAnswerInput {
+  themeId: string;
+  selectedOptionIds: string[];
+  customText: string;
+  skipped: boolean;
+  updatedAt: string;
+}
+
+export interface DiscoveryWebReferenceInput {
+  id: string;
+  title: string;
+  url: string;
+  snippet: string;
+  query: string;
+  purpose: string;
+  targetThemeId: string;
+  market: "cn" | "global";
+  language: "zh-CN" | "any";
+  adopted: boolean;
+}
 
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
@@ -98,6 +122,26 @@ export interface RestoreMasterResultRow {
   restoredFromVersion: number;
 }
 
+export interface ConfirmDiscoveryCandidateInput {
+  sessionId: string;
+  candidateId: string;
+  candidateRevision: number;
+  expectedCurrentStatementId: string | null;
+  idempotencyKey: string;
+  proposal: InsertProfileInput & {
+    oneLiner: string;
+    keywords: string[];
+    productAnchorIds: string[];
+  };
+}
+
+export interface ConfirmDiscoveryCandidateResultRow {
+  profile: CreatorProfileRow;
+  statement: PositioningStatementRow;
+  session: PositioningDiscoverySessionRow;
+  replayed: boolean;
+}
+
 export interface PositioningRepository {
   // Fixture hydration (insert with explicit user_id already on the row).
   seedProfiles(rows: CreatorProfileRow[]): Promise<void>;
@@ -136,6 +180,37 @@ export interface PositioningRepository {
   insertStatement(
     input: InsertStatementInput,
   ): Promise<PositioningStatementRow>;
+
+  // 前采工作区：不是正式定位真相；全部读写仍按 user + account 双重收窄。
+  getActiveDiscoverySession(): Promise<PositioningDiscoverySessionRow | undefined>;
+  getDiscoverySession(sessionId: string): Promise<PositioningDiscoverySessionRow>;
+  startDiscoverySession(input: {
+    sourceMode: "optimize" | "pivot" | "scratch";
+    inputManifest: {
+      legacyProfileId: string | null;
+      legacyStatementIds: string[];
+      legacyWorkIds: string[];
+    };
+  }): Promise<PositioningDiscoverySessionRow>;
+  updateDiscoveryAnswer(input: {
+    sessionId: string;
+    expectedRevision: number;
+    answer: DiscoveryAnswerInput;
+  }): Promise<PositioningDiscoverySessionRow | undefined>;
+  replaceDiscoveryWebReferences(input: {
+    sessionId: string;
+    expectedRevision: number;
+    references: DiscoveryWebReferenceInput[];
+  }): Promise<PositioningDiscoverySessionRow | undefined>;
+  setDiscoveryEvidence(input: {
+    sessionId: string;
+    evidenceId: string;
+    adopted: boolean;
+    expectedRevision: number;
+  }): Promise<PositioningDiscoverySessionRow | undefined>;
+  confirmDiscoveryCandidate(
+    input: ConfirmDiscoveryCandidateInput,
+  ): Promise<ConfirmDiscoveryCandidateResultRow | undefined>;
 }
 
 export function createPositioningRepository(
@@ -166,6 +241,27 @@ export function createPositioningRepository(
   };
   const sameSnapshot = (left: unknown, right: unknown): boolean =>
     JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
+  const loadDiscoverySession = async (
+    sessionId: string,
+  ): Promise<PositioningDiscoverySessionRow> => {
+    const rows = await db
+      .select()
+      .from(positioningDiscoverySessions)
+      .where(
+        and(
+          eq(positioningDiscoverySessions.id, sessionId),
+          eq(positioningDiscoverySessions.userId, deps.userId),
+          eq(positioningDiscoverySessions.accountId, deps.accountId),
+        ),
+      )
+      .limit(1);
+    if (!rows[0]) {
+      throw new OwnershipError(
+        `OwnershipError: positioning discovery session not found: ${sessionId}`,
+      );
+    }
+    return rows[0];
+  };
 
   return {
     async seedProfiles(rows) {
@@ -632,6 +728,369 @@ export function createPositioningRepository(
         })
         .returning();
       return inserted[0]!;
+    },
+
+    async getActiveDiscoverySession() {
+      const rows = await db
+        .select()
+        .from(positioningDiscoverySessions)
+        .where(
+          and(
+            eq(positioningDiscoverySessions.userId, deps.userId),
+            eq(positioningDiscoverySessions.accountId, deps.accountId),
+            sql`${positioningDiscoverySessions.status} IN ('draft', 'ready')`,
+          ),
+        )
+        .orderBy(desc(positioningDiscoverySessions.updatedAt))
+        .limit(1);
+      return rows[0];
+    },
+
+    async getDiscoverySession(sessionId) {
+      return loadDiscoverySession(sessionId);
+    },
+
+    async startDiscoverySession(input) {
+      return db.transaction(async (tx) => {
+        const now = deps.now();
+        await tx
+          .update(positioningDiscoverySessions)
+          .set({ status: "abandoned", updatedAt: now })
+          .where(
+            and(
+              eq(positioningDiscoverySessions.userId, deps.userId),
+              eq(positioningDiscoverySessions.accountId, deps.accountId),
+              sql`${positioningDiscoverySessions.status} IN ('draft', 'ready')`,
+            ),
+          );
+        const rows = await tx
+          .insert(positioningDiscoverySessions)
+          .values({
+            id: deps.nextId("posdisc"),
+            userId: deps.userId,
+            accountId: deps.accountId,
+            sourceMode: input.sourceMode,
+            status: "draft",
+            answers: [],
+            webReferences: [],
+            inputManifest: input.inputManifest,
+            revision: 0,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+        return rows[0]!;
+      });
+    },
+
+    async updateDiscoveryAnswer(input) {
+      const current = await loadDiscoverySession(input.sessionId);
+      if (current.revision !== input.expectedRevision) return undefined;
+      const answers = ((current.answers ?? []) as DiscoveryAnswerInput[]).filter(
+        (answer) => answer.themeId !== input.answer.themeId,
+      );
+      answers.push(input.answer);
+      const answeredThemeCount = new Set(answers.map((answer) => answer.themeId)).size;
+      const rows = await db
+        .update(positioningDiscoverySessions)
+        .set({
+          answers,
+          status: answeredThemeCount >= 6 ? "ready" : "draft",
+          revision: current.revision + 1,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(positioningDiscoverySessions.id, input.sessionId),
+            eq(positioningDiscoverySessions.userId, deps.userId),
+            eq(positioningDiscoverySessions.accountId, deps.accountId),
+            eq(positioningDiscoverySessions.revision, input.expectedRevision),
+            sql`${positioningDiscoverySessions.status} IN ('draft', 'ready')`,
+          ),
+        )
+        .returning();
+      return rows[0];
+    },
+
+    async replaceDiscoveryWebReferences(input) {
+      const current = await loadDiscoverySession(input.sessionId);
+      if (current.revision !== input.expectedRevision) return undefined;
+      const previous = (current.webReferences ?? []) as DiscoveryWebReferenceInput[];
+      // 二次搜索只替换上一批“未采用候选”；用户已经明确采用的证据继续保留。
+      const byUrl = new Map(
+        previous
+          .filter((item) => item.adopted)
+          .map((item) => [item.url, item] as const),
+      );
+      for (const item of input.references) {
+        if (!byUrl.has(item.url)) byUrl.set(item.url, item);
+      }
+      const rows = await db
+        .update(positioningDiscoverySessions)
+        .set({
+          webReferences: [...byUrl.values()],
+          revision: current.revision + 1,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(positioningDiscoverySessions.id, input.sessionId),
+            eq(positioningDiscoverySessions.userId, deps.userId),
+            eq(positioningDiscoverySessions.accountId, deps.accountId),
+            eq(positioningDiscoverySessions.revision, input.expectedRevision),
+            sql`${positioningDiscoverySessions.status} IN ('draft', 'ready')`,
+          ),
+        )
+        .returning();
+      return rows[0];
+    },
+
+    async setDiscoveryEvidence(input) {
+      const current = await loadDiscoverySession(input.sessionId);
+      if (current.revision !== input.expectedRevision) return undefined;
+      let found = false;
+      const references = (
+        (current.webReferences ?? []) as DiscoveryWebReferenceInput[]
+      ).map((item) => {
+        if (item.id !== input.evidenceId) return item;
+        found = true;
+        return { ...item, adopted: input.adopted };
+      });
+      if (!found) {
+        throw new OwnershipError(
+          `OwnershipError: discovery evidence not found: ${input.evidenceId}`,
+        );
+      }
+      const rows = await db
+        .update(positioningDiscoverySessions)
+        .set({
+          webReferences: references,
+          revision: current.revision + 1,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(positioningDiscoverySessions.id, input.sessionId),
+            eq(positioningDiscoverySessions.userId, deps.userId),
+            eq(positioningDiscoverySessions.accountId, deps.accountId),
+            eq(positioningDiscoverySessions.revision, input.expectedRevision),
+            sql`${positioningDiscoverySessions.status} IN ('draft', 'ready')`,
+          ),
+        )
+        .returning();
+      return rows[0];
+    },
+
+    async confirmDiscoveryCandidate(input) {
+      return db.transaction(async (tx) => {
+        const sessionRows = await tx
+          .select()
+          .from(positioningDiscoverySessions)
+          .where(
+            and(
+              eq(positioningDiscoverySessions.id, input.sessionId),
+              eq(positioningDiscoverySessions.userId, deps.userId),
+              eq(positioningDiscoverySessions.accountId, deps.accountId),
+            ),
+          )
+          .limit(1);
+        const session = sessionRows[0];
+        if (!session) {
+          throw new OwnershipError(
+            `OwnershipError: positioning discovery session not found: ${input.sessionId}`,
+          );
+        }
+
+        // 网络重试或重复点击：同一幂等键、或同一候选，都返回第一次成功的同一版本。
+        if (
+          session.status === "adopted" &&
+          (session.confirmIdempotencyKey === input.idempotencyKey ||
+            session.adoptedCandidateId === input.candidateId) &&
+          session.adoptedStatementId
+        ) {
+          const statementRows = await tx
+            .select()
+            .from(positioningStatements)
+            .where(
+              and(
+                eq(positioningStatements.id, session.adoptedStatementId),
+                eq(positioningStatements.userId, deps.userId),
+                eq(positioningStatements.accountId, deps.accountId),
+              ),
+            )
+            .limit(1);
+          const statement = statementRows[0];
+          if (!statement) return undefined;
+          const profileRows = await tx
+            .select()
+            .from(creatorProfiles)
+            .where(
+              and(
+                eq(creatorProfiles.id, statement.profileId),
+                eq(creatorProfiles.userId, deps.userId),
+                eq(creatorProfiles.accountId, deps.accountId),
+              ),
+            )
+            .limit(1);
+          if (!profileRows[0]) return undefined;
+          return {
+            profile: profileRows[0],
+            statement,
+            session,
+            replayed: true,
+          };
+        }
+
+        if (
+          session.status !== "ready" ||
+          session.revision !== input.candidateRevision
+        ) {
+          return undefined;
+        }
+
+        const profileRows = await tx
+          .select()
+          .from(creatorProfiles)
+          .where(
+            and(
+              eq(creatorProfiles.userId, deps.userId),
+              eq(creatorProfiles.accountId, deps.accountId),
+            ),
+          )
+          .limit(1);
+        const existingProfile = profileRows[0];
+        const currentRows = existingProfile
+          ? await tx
+              .select()
+              .from(positioningStatements)
+              .where(
+                and(
+                  eq(positioningStatements.userId, deps.userId),
+                  eq(positioningStatements.accountId, deps.accountId),
+                  eq(positioningStatements.profileId, existingProfile.id),
+                  sql`${positioningStatements.versionNumber} > ${existingProfile.statementVersionFloor}`,
+                ),
+              )
+              .orderBy(desc(positioningStatements.versionNumber))
+              .limit(1)
+          : [];
+        if (
+          (currentRows[0]?.id ?? null) !== input.expectedCurrentStatementId
+        ) {
+          return undefined;
+        }
+
+        const statementId = deps.nextId("posstmt");
+        const claimedRows = await tx
+          .update(positioningDiscoverySessions)
+          .set({
+            status: "adopted",
+            adoptedCandidateId: input.candidateId,
+            adoptedStatementId: statementId,
+            confirmIdempotencyKey: input.idempotencyKey,
+            revision: session.revision + 1,
+            updatedAt: deps.now(),
+          })
+          .where(
+            and(
+              eq(positioningDiscoverySessions.id, input.sessionId),
+              eq(positioningDiscoverySessions.userId, deps.userId),
+              eq(positioningDiscoverySessions.accountId, deps.accountId),
+              eq(positioningDiscoverySessions.revision, input.candidateRevision),
+              eq(positioningDiscoverySessions.status, "ready"),
+            ),
+          )
+          .returning();
+        if (!claimedRows[0]) return undefined;
+
+        const profile = existingProfile
+          ? (
+              await tx
+                .update(creatorProfiles)
+                .set({
+                  persona: input.proposal.persona,
+                  field: input.proposal.field,
+                  audience: input.proposal.audience,
+                  differentiation: input.proposal.differentiation,
+                  capabilities: input.proposal.capabilities,
+                  facets: input.proposal.facets,
+                  downstreamRules: input.proposal.downstreamRules,
+                  updatedAt: deps.now(),
+                })
+                .where(
+                  and(
+                    eq(creatorProfiles.id, existingProfile.id),
+                    eq(creatorProfiles.userId, deps.userId),
+                    eq(creatorProfiles.accountId, deps.accountId),
+                  ),
+                )
+                .returning()
+            )[0]!
+          : (
+              await tx
+                .insert(creatorProfiles)
+                .values({
+                  id: deps.nextId("profile"),
+                  userId: deps.userId,
+                  accountId: deps.accountId,
+                  persona: input.proposal.persona,
+                  field: input.proposal.field,
+                  audience: input.proposal.audience,
+                  differentiation: input.proposal.differentiation,
+                  capabilities: input.proposal.capabilities,
+                  facets: input.proposal.facets,
+                  downstreamRules: input.proposal.downstreamRules,
+                  createdAt: deps.now(),
+                  updatedAt: deps.now(),
+                })
+                .returning()
+            )[0]!;
+
+        const maxRows = await tx
+          .select({ versionNumber: positioningStatements.versionNumber })
+          .from(positioningStatements)
+          .where(
+            and(
+              eq(positioningStatements.userId, deps.userId),
+              eq(positioningStatements.accountId, deps.accountId),
+              eq(positioningStatements.profileId, profile.id),
+            ),
+          )
+          .orderBy(desc(positioningStatements.versionNumber))
+          .limit(1);
+        const statementRows = await tx
+          .insert(positioningStatements)
+          .values({
+            id: statementId,
+            userId: deps.userId,
+            accountId: deps.accountId,
+            profileId: profile.id,
+            oneLiner: input.proposal.oneLiner,
+            keywords: input.proposal.keywords,
+            productAnchorIds: input.proposal.productAnchorIds,
+            versionNumber: (maxRows[0]?.versionNumber ?? 0) + 1,
+            createdByType: "ai",
+            aiTaskId: null,
+            changeReason: "定位前采采纳",
+            masterSnapshot: {
+              persona: input.proposal.persona,
+              field: input.proposal.field,
+              audience: input.proposal.audience,
+              differentiation: input.proposal.differentiation,
+              capabilities: input.proposal.capabilities,
+              facets: input.proposal.facets,
+              downstreamRules: input.proposal.downstreamRules,
+            },
+            createdAt: deps.now(),
+          })
+          .returning();
+        return {
+          profile,
+          statement: statementRows[0]!,
+          session: claimedRows[0],
+          replayed: false,
+        };
+      });
     },
   };
 }

@@ -23,6 +23,9 @@ vi.mock("next/navigation", () => ({
 const mockClient = {
   patchPreferences: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putModel: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
+  putChannelModelCredential: vi.fn(
+    (input: unknown): Promise<unknown> => Promise.resolve(input),
+  ),
   patchProfile: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putStorage: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   // AccountBindingCard (T-032a): status pull on mount + loginDouyin on click.
@@ -54,6 +57,8 @@ vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
     putModel: (input: unknown) => mockClient.putModel(input),
+    putChannelModelCredential: (input: unknown) =>
+      mockClient.putChannelModelCredential(input),
     patchProfile: (input: unknown) => mockClient.patchProfile(input),
     putStorage: (input: unknown) => mockClient.putStorage(input),
     statusDouyin: (input: unknown) => mockClient.statusDouyin(input),
@@ -170,6 +175,7 @@ beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockClient.patchPreferences.mockClear();
   mockClient.putModel.mockClear();
+  mockClient.putChannelModelCredential.mockClear();
   mockClient.patchProfile.mockClear();
   mockClient.putStorage.mockClear();
   mockClient.statusDouyin.mockClear();
@@ -201,6 +207,47 @@ function renderDialog(vm: SettingsViewModel = VM) {
 }
 
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
+  it("[T-645] 渠道服务 Key 按 service 保存并刷新，不提交 scopeId", async () => {
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        modelAuthority={{
+          authority: "channel",
+          outcome: "configured",
+          action: "渠道已接管 1/4 类模型，其余由你配置",
+          capabilities: {},
+          services: [
+            {
+              serviceId: "relay-a",
+              serviceName: "统一中转",
+              hasSecret: false,
+              portalUrl: null,
+              purchaseUrl: null,
+              rechargeUrl: "https://growth.example/recharge",
+              helpUrl: null,
+            },
+          ],
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
+    const input = screen.getByLabelText("统一中转 API Key");
+    await userEvent.type(input, "sk-local");
+    fireEvent.click(screen.getByRole("button", { name: "保存 Key" }));
+    await waitFor(() =>
+      expect(mockClient.putChannelModelCredential).toHaveBeenCalledWith({
+        params: { serviceId: "relay-a" },
+        query: undefined,
+        body: { secret: "sk-local" },
+      }),
+    );
+    const body = mockClient.putChannelModelCredential.mock.calls[0]?.[0] as
+      | Record<string, unknown>
+      | undefined;
+    expect(JSON.stringify(body)).not.toContain("scopeId");
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
   it("toggling 自动保存 calls patchPreferences({ autosaveEnabled }) then router.refresh()", async () => {
     const doc = renderDialog();
     const sw = doc.querySelector(
@@ -483,34 +530,20 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     );
   });
 
-  it("[T-325] 备用对话卡(chat.fallback)复用预设:回显匹配 + 候选切换", () => {
-    const doc = renderDialog({
-      ...VM,
-      multimodalModels: {
-        ...VM.multimodalModels,
-        fallback: {
-          ...VM.multimodalModels.fallback,
-          baseUrl: "https://api.deepseek.com",
-          apiFormat: "openai_chat" as const,
-        },
-      },
-    });
-    const trigger = doc.querySelector(
-      '[data-slot="multimodal-fallback-preset-trigger"]',
-    ) as HTMLElement;
-    expect(trigger).not.toBeNull();
-    expect(trigger.textContent ?? "").toContain("DeepSeek");
-    const dl = doc.querySelector(
-      "#multimodal-fallback-model-suggestions",
-    ) as HTMLDataListElement;
-    // [T-377] 候选去硬编码 → 恒空(模型名自由填)。
-    expect(Array.from(dl.querySelectorAll("option")).map((o) => o.value)).toEqual(
-      [],
+  it("[T-645] 普通设置只展示文本、ASR、生图和生视频模型", () => {
+    const doc = renderDialog();
+
+    expect(doc.querySelector('[data-slot="model-configuration-card"]')).not.toBeNull();
+    expect(doc.querySelector('[data-slot="multimodal-audio-card"]')).not.toBeNull();
+    expect(doc.querySelector('[data-slot="multimodal-image-card"]')).not.toBeNull();
+    expect(doc.querySelector('[data-slot="multimodal-video-card"]')).not.toBeNull();
+
+    for (const kind of ["review", "embed", "vision", "search", "fallback"]) {
+      expect(doc.querySelector(`[data-slot="multimodal-${kind}-card"]`)).toBeNull();
+    }
+    expect(doc.querySelector('[data-slot="models-more-count"]')?.textContent).toContain(
+      "2 项",
     );
-    // 预设行只挂在 fallback 卡,其它文本模态卡(如文生图)不渲染。
-    expect(
-      doc.querySelector('[data-slot="multimodal-image-preset-trigger"]'),
-    ).toBeNull();
   });
 
   it("[T-590] 模型配置不再增加内容雷达专用卡", () => {
@@ -524,8 +557,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
 
   // [T-379] 生图去 MiniMax 唯一:provider 候选加 openai(OpenAI 兼容 images API,中转站
-  // 通用),帮助文案如实列内置适配;生视频文案如实「仅 minimax,Sora/Veo/Kling 待适配」。
-  it("文生图 provider 候选含 openai + 文案列内置适配;文生视频文案如实仅 minimax", () => {
+  // 通用),帮助文案如实列内置适配;生视频列出 MiniMax + OmniHi/Seedance。
+  it("文生图 provider 候选含 openai；文生视频列出 OmniHi/Seedance 适配", () => {
     const doc = renderDialog();
     const imageOptions = Array.from(
       doc.querySelectorAll("#multimodal-image-provider-suggestions option"),
@@ -538,9 +571,9 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     const videoOptions = Array.from(
       doc.querySelectorAll("#multimodal-video-provider-suggestions option"),
     ).map((o) => (o as HTMLOptionElement).value);
-    expect(videoOptions).toEqual(["minimax"]);
+    expect(videoOptions).toEqual(["omnihi", "minimax"]);
     expect(doc.body.textContent).toContain(
-      "内置适配:minimax;Sora / Veo / Kling 等需后续适配",
+      "内置适配:OmniHi / Seedance、MiniMax",
     );
   });
 
@@ -797,6 +830,44 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         '[data-slot="multimodal-audio-base-url-input"]',
       ) as HTMLInputElement).value,
     ).toBe("https://api.xiaomimimo.com/v1");
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-advanced-settings"]',
+      ) as HTMLElement).hidden,
+    ).toBe(true);
+  });
+
+  it("选择通义千问 Qwen 预设会自动填方言 ASR 模型和百炼地址", async () => {
+    const user = userEvent.setup();
+    const doc = renderDialog();
+    await user.click(
+      doc.querySelector(
+        '[data-slot="multimodal-audio-preset-trigger"]',
+      ) as HTMLElement,
+    );
+    const qwenItem = await waitFor(() => {
+      const item = document.querySelector(
+        '[data-slot="multimodal-audio-preset-item-qwen-asr"]',
+      );
+      if (!item) throw new Error("Qwen preset item not mounted yet");
+      return item as HTMLElement;
+    });
+    await user.click(qwenItem);
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-provider-input"]',
+      ) as HTMLInputElement).value,
+    ).toBe("qwen-asr");
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-model-input"]',
+      ) as HTMLInputElement).value,
+    ).toBe("qwen3-asr-flash");
+    expect(
+      (doc.querySelector(
+        '[data-slot="multimodal-audio-base-url-input"]',
+      ) as HTMLInputElement).value,
+    ).toBe("https://dashscope.aliyuncs.com/compatible-mode/v1");
     expect(
       (doc.querySelector(
         '[data-slot="multimodal-audio-advanced-settings"]',

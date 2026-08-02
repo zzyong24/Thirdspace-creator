@@ -42,11 +42,14 @@ export const platformDraftSchema = z.object({
 // 顶层输出契约:一个 drafts 数组(顶层对象,非裸数组)。
 export const platformAdaptSchema = z.object({
   drafts: z.array(platformDraftSchema).default([]),
+}).refine((value) => value.drafts.some((draft) => draft.body.trim()), {
+  message: "至少返回一个包含正文的平台草稿",
 });
 export type PlatformAdaptOutput = z.infer<typeof platformAdaptSchema>;
 
 export const PLATFORM_ADAPT_TEMPLATE: PromptTemplate = {
   id: "platform.adapt",
+  outputRecovery: "creative-partial",
   version: "v2",
   outputSchema: platformAdaptSchema,
   tools: [],

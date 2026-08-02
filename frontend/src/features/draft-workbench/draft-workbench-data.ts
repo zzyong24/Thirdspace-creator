@@ -74,6 +74,8 @@ interface MaterialLinkDto {
   readonly id: string;
   readonly entityType: "knowledge" | "asset";
   readonly entityId: string;
+  readonly role?: string;
+  readonly stage?: string;
 }
 
 interface KnowledgeDto {
@@ -125,6 +127,11 @@ interface AssetDto {
 
 export interface DraftWorkbenchClient extends ScriptDataClient {
   getProject(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  getProjectIntelligence?(input: {
     params: { projectId: string };
     query: undefined;
     body: undefined;
@@ -227,6 +234,8 @@ export interface DraftWorkbenchVm {
     readonly sections: ReadonlyArray<ScriptSectionView>;
     readonly versionCount: number;
   };
+  /** [T-642] 尚无正式 output_script 时，内容雷达已确认口播稿的直接初值。 */
+  readonly radarDraftSeed: string | null;
   /**
    * [T-055h③] 项目的第一个 ContentOutput id(登记已发布的挂点);null = 还没有
    * (登记表单提交时先 createOutput 铸一个)。
@@ -244,7 +253,9 @@ export interface DraftWorkbenchVm {
     /** [T-078] 真封面 asset id(采集回填/手选);null → 「封面待生成」占位。 */
     readonly coverAssetId: string | null;
   } | null;
-  /** 发布包解锁:脚本已有版本(SPEC §4.3;transition 门在主行动按钮上)。 */
+  /** 当前项目有效封面:发布 revision 优先，否则取项目已采纳的封面素材。 */
+  readonly projectCoverAssetId: string | null;
+  /** 发布包解锁:正式脚本版本或已确认雷达稿任一存在。 */
   readonly publishUnlocked: boolean;
   /**
    * [T-063e] 本项目产出(content_output = outputId)上最新的盲预测;null = 还没有
@@ -264,6 +275,8 @@ export interface DraftWorkbenchVm {
     readonly linkId: string;
     readonly id: string;
     readonly kind: "knowledge" | "asset";
+    /** 用料链角色；cover 用于识别已采纳项目封面。 */
+    readonly role?: string;
     readonly title: string;
     readonly sourceLabel: string;
     /** [T-058④] 图片素材的签名预览 URL(非图片/取不到 → null,卡片退回类型徽标)。 */
@@ -412,6 +425,7 @@ async function readAmmo(
               linkId: link.id,
               id: k.id,
               kind: "knowledge" as const,
+              role: link.role,
               title: k.title,
               // [T-055g] 来源链:sourceMetadata 作品指向 > sourceUrl > 手记 > 未记录。
               sourceLabel: knowledgeSourceLabel(k),
@@ -442,6 +456,7 @@ async function readAmmo(
             linkId: link.id,
             id: a.id,
             kind: "asset" as const,
+            role: link.role,
             title: a.name,
             sourceLabel: `素材 · ${a.assetType}`,
             previewUrl,
@@ -459,6 +474,31 @@ async function readAmmo(
     return resolved.filter((x): x is NonNullable<typeof x> => x !== null);
   } catch {
     return [];
+  }
+}
+
+/**
+ * 项目用料链中的显式封面。独立读取全部近期链接，不受稿面只展示前 12 条素材的 UI
+ * 截断影响；这样封面选定后即使又添加了很多素材，刷新也不会重新退回“待生成”。
+ */
+async function readLinkedProjectCoverAssetId(
+  client: DraftWorkbenchClient,
+  projectId: string,
+): Promise<string | null> {
+  try {
+    const linksRaw = await client.listMaterialLinks({
+      params: undefined,
+      query: { projectId, page: 1, pageSize: 100 },
+      body: undefined,
+    });
+    const links = (Array.isArray(linksRaw) ? linksRaw : []) as MaterialLinkDto[];
+    return (
+      links.find(
+        (link) => link.entityType === "asset" && link.role === "cover",
+      )?.entityId ?? null
+    );
+  } catch {
+    return null;
   }
 }
 
@@ -486,11 +526,39 @@ export async function buildDraftWorkbenchVm(
     client,
   );
   const scriptData = await loadScriptEditorData(scriptArtifactId, client);
+  const radarEvidence = project.briefDetail?.contentRadarEvidence;
+  let radarDraftSeed =
+    radarEvidence?.adaptedDraftSeed.contentText.trim() || null;
+  // 存量兼容：若旧版 transport 曾丢 briefDetail 扩展字段，从不可变雷达引用只恢复
+  // 已确认改写稿。来源逐字稿继续保留为后台证据，不再进入 Project 稿面 UI。
+  if (!radarDraftSeed && client.getProjectIntelligence) {
+    try {
+      const contexts = (await client.getProjectIntelligence({
+        params: { projectId: project.id },
+        query: undefined,
+        body: undefined,
+      })) as Array<{
+        item: { title: string; canonicalUrl: string };
+        transcript: { text: string };
+        adaptedDraft?: string | null;
+      }>;
+      radarDraftSeed = contexts[0]?.adaptedDraft?.trim() || null;
+    } catch {
+      // 证据读失败时保留真实空态；不影响已有正式 output_script。
+    }
+  }
 
-  const [{ outputId, publishPack }, ammo, thesis, transcriptState] =
+  const [
+    { outputId, publishPack },
+    ammo,
+    linkedProjectCoverAssetId,
+    thesis,
+    transcriptState,
+  ] =
     await Promise.all([
     readPublishPack(client, project.id),
     readAmmo(client, project.id),
+    readLinkedProjectCoverAssetId(client, project.id),
     // [T-127] 读已采纳论点骨架(无 → null,面板显诚实空态)。与 script/ammo 并行。
     loadThesisSkeleton(project.id, client),
     readProjectTranscriptState(client, project.id, douyinExternalId),
@@ -501,6 +569,24 @@ export async function buildDraftWorkbenchVm(
 
   // [T-086] 稿面审核门首屏报告(404=未审吞成 null,桩不带 op → null,诚实)。
   const scriptReview = await readScriptReview(client, project.id);
+
+  // 发布 revision 是最终发布真值；尚未创建发布行时，直接识别项目用料链中采纳的
+  // cover。兼容旧版把 cover.generate 错绑成 clip 的存量数据：生成器命名固定为
+  // “…… · 封面”/“AI 封面”，且只在图片素材 + clip 角色下兜底，避免误判普通素材。
+  const adoptedCover =
+    ammo.find((item) => item.kind === "asset" && item.role === "cover") ??
+    ammo.find(
+      (item) =>
+        item.kind === "asset" &&
+        item.role === "clip" &&
+        item.assetType === "image" &&
+        (item.title === "AI 封面" || item.title.endsWith(" · 封面")),
+    );
+  const projectCoverAssetId =
+    publishPack?.coverAssetId ??
+    linkedProjectCoverAssetId ??
+    adoptedCover?.id ??
+    null;
 
   return {
     project: {
@@ -521,8 +607,13 @@ export async function buildDraftWorkbenchVm(
       sections: scriptData?.sections ?? [],
       versionCount: scriptData?.versions.length ?? 0,
     },
+    radarDraftSeed,
     publishPack,
-    publishUnlocked: (scriptData?.versions.length ?? 0) > 0,
+    projectCoverAssetId,
+    // 雷达改写稿已在上游由用户确认并持久化，进入项目后不应要求用户再敲一个
+    // 空格制造“第一个版本”才能继续。正式版本存在时仍由正式稿接管。
+    publishUnlocked:
+      (scriptData?.versions.length ?? 0) > 0 || Boolean(radarDraftSeed),
     blindPrediction,
     ammo,
     scriptReview,

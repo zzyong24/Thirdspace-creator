@@ -109,8 +109,10 @@ import {
 
 import type {
   ActivationState,
+  ChannelModelServiceState,
   ChannelLinksState,
   DouyinAccountState,
+  ModelCapabilityAuthorityState,
   ModelAuthorityState,
   MultimodalModelState,
   SettingsViewModel,
@@ -256,9 +258,7 @@ const HIGHLIGHT_TAB: Record<string, string> = {
   "text-model": "models",
   "image-model": "models",
   "video-model": "models",
-  "review-model": "models",
   "asr-model": "models",
-  "web-search": "models",
   "review-rules": "models",
   "storage-root": "storage",
 };
@@ -445,10 +445,16 @@ export function SettingsDialog({
                   </p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     {modelAuthority?.authority === "channel"
-                      ? "下面的本地配置会安全保留，渠道不可用时才会使用。"
+                      ? "每类模型独立判断：渠道完整提供的项目只读使用渠道配置；未提供、残缺或客户端暂不支持的项目仍由你配置。"
                       : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
                   </p>
                 </div>
+                {modelAuthority?.services?.map((service) => (
+                  <ChannelServiceCredentialCard
+                    key={service.serviceId}
+                    service={service}
+                  />
+                ))}
                 {/* ① 重点配置:文本模型负责写字/对话，ASR 建议配置以提升转录速度。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
@@ -460,79 +466,79 @@ export function SettingsDialog({
                     </div>
                     <ModelConfigurationManual />
                   </div>
-                  <ModelConfigurationCard
-                    key={[
-                      viewModel.model.provider,
-                      viewModel.model.modelName,
-                      viewModel.model.baseUrl,
-                      viewModel.model.apiFormat,
-                      viewModel.model.hasSecret,
-                      viewModel.model.temperature,
-                    ].join(":")}
-                    model={viewModel.model}
-                  />
-                  <MultimodalModelCard
-                    key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
-                    kind="audio"
-                    state={viewModel.multimodalModels.audio}
-                  />
+                  {modelAuthority?.capabilities?.default?.authority ===
+                  "channel" ? (
+                    <ChannelManagedModelCard
+                      state={modelAuthority.capabilities.default}
+                      title="文本创作模型"
+                      highlight="text-model"
+                    />
+                  ) : (
+                    <ModelConfigurationCard
+                      key={[
+                        viewModel.model.provider,
+                        viewModel.model.modelName,
+                        viewModel.model.baseUrl,
+                        viewModel.model.apiFormat,
+                        viewModel.model.hasSecret,
+                        viewModel.model.temperature,
+                      ].join(":")}
+                      model={viewModel.model}
+                    />
+                  )}
+                  {modelAuthority?.capabilities?.["transcribe.audio"]
+                    ?.authority === "channel" ? (
+                    <ChannelManagedModelCard
+                      state={
+                        modelAuthority.capabilities["transcribe.audio"]
+                      }
+                      title="语音转文字模型"
+                      highlight="asr-model"
+                    />
+                  ) : (
+                    <MultimodalModelCard
+                      key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
+                      kind="audio"
+                      state={viewModel.multimodalModels.audio}
+                    />
+                  )}
                 </div>
 
-                {/* ② 折叠块「更多能力」:7 张按需卡,默认收起(不配也能用,各自诚实降级)。
-                    highlight 命中组内某张卡时初始展开,保证 ?highlight 深链能滚到它。 */}
+                {/* [T-645] 普通用户只需理解创作媒体模型。搜索、embedding、素材归类、
+                    文案审核和备用模型仍保留底层 capability 与历史配置兼容，但不再暴露配置卡。 */}
                 <CollapsibleModelGroup
-                  title="更多能力(按需,不配也能用)"
+                  title="创作媒体(按需)"
                   highlight={highlight}
-                  highlightKeys={[
-                    "review-model",
-                    "image-model",
-                    "video-model",
-                    // [T-231⑪] 联网搜索深链(?highlight=web-search)也要能展开组并滚到卡。
-                    "web-search",
-                  ]}
+                  highlightKeys={["image-model", "video-model"]}
                 >
-                  {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
-                  <MultimodalModelCard
-                    key={`review:${JSON.stringify(viewModel.multimodalModels.review)}`}
-                    kind="review"
-                    state={viewModel.multimodalModels.review}
-                  />
-                  <MultimodalModelCard
-                    key={`image:${JSON.stringify(viewModel.multimodalModels.image)}`}
-                    kind="image"
-                    state={viewModel.multimodalModels.image}
-                  />
-                  <MultimodalModelCard
-                    key={`video:${JSON.stringify(viewModel.multimodalModels.video)}`}
-                    kind="video"
-                    state={viewModel.multimodalModels.video}
-                  />
-                  {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
-                  <MultimodalModelCard
-                    key={`embed:${JSON.stringify(viewModel.multimodalModels.embed)}`}
-                    kind="embed"
-                    state={viewModel.multimodalModels.embed}
-                  />
-                  {/* [T-231⑪] 视觉理解(asset.classify)与联网搜索(web.search):组件与
-                      state 早已备好(MULTIMODAL_META.vision/search + viewModel 两档),
-                      此前一直没挂进面板 → 用户想配联网搜索(T-228)/视觉理解无入口。 */}
-                  <MultimodalModelCard
-                    key={`vision:${JSON.stringify(viewModel.multimodalModels.vision)}`}
-                    kind="vision"
-                    state={viewModel.multimodalModels.vision}
-                  />
-                  <MultimodalModelCard
-                    key={`search:${JSON.stringify(viewModel.multimodalModels.search)}`}
-                    kind="search"
-                    state={viewModel.multimodalModels.search}
-                  />
-                  {/* [T-239b] 备用对话模型(chat.fallback):主模型可重试错误耗尽时接管一次;
-                      未配 → 现状报错(诚实降级,不静默换模型)。 */}
-                  <MultimodalModelCard
-                    key={`fallback:${JSON.stringify(viewModel.multimodalModels.fallback)}`}
-                    kind="fallback"
-                    state={viewModel.multimodalModels.fallback}
-                  />
+                  {modelAuthority?.capabilities?.["image.generate"]
+                    ?.authority === "channel" ? (
+                    <ChannelManagedModelCard
+                      state={modelAuthority.capabilities["image.generate"]}
+                      title="文生图模型"
+                      highlight="image-model"
+                    />
+                  ) : (
+                    <MultimodalModelCard
+                      key={`image:${JSON.stringify(viewModel.multimodalModels.image)}`}
+                      kind="image"
+                      state={viewModel.multimodalModels.image}
+                    />
+                  )}
+                  {modelAuthority?.capabilities?.["video.generate"]
+                    ?.authority === "channel" ? (
+                    <ChannelManagedModelCard
+                      state={modelAuthority.capabilities["video.generate"]}
+                      title="文生视频模型"
+                      highlight="video-model"
+                    />
+                  ) : (
+                    <MultimodalModelCard
+                      key={`video:${JSON.stringify(viewModel.multimodalModels.video)}`}
+                      kind="video"
+                      state={viewModel.multimodalModels.video}
+                    />
+                  )}
                 </CollapsibleModelGroup>
 
                 {/* [T-363] 配置备份:导出/导入全部模型配置(重置/换机兜底;文件含密钥,卡内警示)。 */}
@@ -2337,6 +2343,150 @@ function TestConnectionButton({
   );
 }
 
+function ChannelServiceCredentialCard({
+  service,
+}: {
+  service: ChannelModelServiceState;
+}) {
+  const [secret, setSecret] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+  const { pending, run } = useSettingsMutation();
+  const save = React.useCallback(async () => {
+    if (!secret.trim() || pending) return;
+    setError(null);
+    try {
+      await run(() =>
+        client.putChannelModelCredential({
+          params: { serviceId: service.serviceId },
+          query: undefined,
+          body: { secret: secret.trim() },
+        }),
+      );
+      setSecret("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "保存失败，请重试");
+    }
+  }, [pending, run, secret, service.serviceId]);
+  const links = [
+    ["服务主页", service.portalUrl],
+    ["购买", service.purchaseUrl],
+    ["充值", service.rechargeUrl],
+    ["帮助", service.helpUrl],
+  ].filter((item): item is [string, string] => Boolean(item[1]));
+
+  return (
+    <SectionCard
+      title={`${service.serviceName} · 渠道服务 Key`}
+      description="渠道只决定服务和模型；Key 加密保存在本机，不会写回渠道配置。"
+    >
+      <div
+        data-slot="channel-model-service-credential"
+        data-service-id={service.serviceId}
+        className="flex flex-col gap-3"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant="outline"
+            className={service.hasSecret ? "text-success" : "text-warning"}
+          >
+            {service.hasSecret ? "已填写" : "待填写"}
+          </Badge>
+          {links.map(([label, href]) => (
+            <a
+              key={`${label}:${href}`}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
+            >
+              {label}
+              <ExternalLink className="size-3" aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="password"
+            value={secret}
+            disabled={pending}
+            onChange={(event) => setSecret(event.target.value)}
+            placeholder={
+              service.hasSecret
+                ? "留空保持不变，填写后覆盖"
+                : "粘贴这个服务的 API Key"
+            }
+            aria-label={`${service.serviceName} API Key`}
+          />
+          <Button
+            type="button"
+            disabled={!secret.trim() || pending}
+            onClick={() => void save()}
+          >
+            {pending ? "保存中…" : service.hasSecret ? "更新 Key" : "保存 Key"}
+          </Button>
+        </div>
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      </div>
+    </SectionCard>
+  );
+}
+
+function ChannelManagedModelCard({
+  state,
+  title,
+  highlight,
+}: {
+  state: ModelCapabilityAuthorityState;
+  title: string;
+  highlight: string;
+}) {
+  return (
+    <SectionCard
+      title={title}
+      description="这项能力已由当前渠道完整配置，服务与模型不可在客户端修改。"
+    >
+      <div
+        data-slot="channel-managed-model-card"
+        data-capability={state.capability}
+        data-highlight={highlight}
+        className="flex flex-col gap-3"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary">渠道管理</Badge>
+          <span className="text-sm font-medium text-foreground">
+            {state.serviceName ?? "渠道服务"}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {state.provider ?? ""} · {state.modelName ?? ""}
+          </span>
+        </div>
+        {state.baseUrl ? (
+          <p className="break-all text-xs text-muted-foreground">
+            接口：{state.baseUrl}
+          </p>
+        ) : null}
+        <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-3">
+          <p
+            className={cn(
+              "text-xs",
+              state.hasSecret ? "text-success" : "text-warning",
+            )}
+          >
+            {state.hasSecret
+              ? "服务 Key 已就绪"
+              : "请先在上方填写该渠道服务的 Key"}
+          </p>
+          <TestConnectionButton
+            capability={state.capability}
+            slotPrefix={`channel-${state.capability.replaceAll(".", "-")}`}
+            disabled={!state.hasSecret}
+          />
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
 // cc-switch-style configurable provider binding. provider / model / baseUrl /
 // apiFormat are free-form; the API key is stored in the LOCAL db (masked to
 // `hasSecret` on read — the raw key is never echoed back). A single 保存 upserts
@@ -2739,16 +2889,14 @@ const MULTIMODAL_META = {
     icon: Cpu,
     description:
       "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
-    providerSuggestions: ["minimax"] as ReadonlyArray<string>,
-    providerPlaceholder: "minimax",
-    // [T-379] 生视频各家 API 形态不统一(异步任务/专有协议),本期只内置 minimax;
-    // 裁决与后续适配建议见 docs/research/2026-07-17-image-video-gen-provider-landscape-research.md。
+    providerSuggestions: ["omnihi", "minimax"] as ReadonlyArray<string>,
+    providerPlaceholder: "omnihi",
     providerHelp:
-      "内置适配:minimax;Sora / Veo / Kling 等需后续适配(各家视频 API 形态不统一,见调研)。",
+      "内置适配:OmniHi / Seedance、MiniMax。旧配置中的 seedance / seeddance 也会自动兼容。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
-    modelHelp: "文生视频模型 id 自由填(示例:video-01;仅示例,以你的服务商最新型号为准)。",
-    modelPlaceholder: "示例:video-01(以服务商最新为准)",
-    baseUrlPlaceholder: "示例:https://api.minimaxi.com/v1(留空=provider 默认)",
+    modelHelp: "文生视频模型 id 自由填(示例:seedance/seedance-2.0-fast;以服务商控制台为准)。",
+    modelPlaceholder: "示例:seedance/seedance-2.0-fast",
+    baseUrlPlaceholder: "示例:https://api.omnihi.ai/media/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   // 逐字稿 ASR(T-641)—— 建议配置但不阻断。普通用户只需要选供应商、填模型名和 Key；provider/baseUrl
@@ -2759,11 +2907,12 @@ const MULTIMODAL_META = {
     icon: Cpu,
     description:
       "建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。",
-    providerSuggestions: ["xiaomi-mimo", "siliconflow", "openai", "groq"] as ReadonlyArray<string>,
+    providerSuggestions: ["qwen-asr", "xiaomi-mimo", "siliconflow", "openai", "groq"] as ReadonlyArray<string>,
     providerPlaceholder: "xiaomi-mimo",
     providerHelp:
       "预设会自动填写；只有自建中转或其他厂商才需要修改。",
-    modelHelp: "填写供应商控制台中的准确模型名。小米 MiMo 使用 mimo-v2.5-asr。",
+    modelHelp:
+      "填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。",
     modelPlaceholder: "mimo-v2.5-asr",
     baseUrlPlaceholder:
       "https://api.xiaomimimo.com/v1",
@@ -2874,6 +3023,13 @@ type AsrProviderPreset = {
 
 const CUSTOM_ASR_PRESET_ID = "custom";
 const ASR_PROVIDER_PRESETS: ReadonlyArray<AsrProviderPreset> = [
+  {
+    id: "qwen-asr",
+    label: "通义千问 Qwen（方言推荐）",
+    provider: "qwen-asr",
+    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    defaultModel: "qwen3-asr-flash",
+  },
   {
     id: "xiaomi-mimo",
     label: "小米 MiMo（推荐）",
@@ -3114,7 +3270,7 @@ function MultimodalModelCard({
           <SettingsFormRow
             label="ASR 供应商"
             controlId="multimodal-audio-preset"
-            help="小米 MiMo 为高性价比预设；也可继续使用已有 OpenAI 兼容 ASR。"
+            help="Qwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。"
           >
             <Select
               value={asrPresetId}

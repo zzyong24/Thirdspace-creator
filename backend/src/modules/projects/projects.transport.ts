@@ -12,12 +12,13 @@ import type {
   TaskRow,
   ActivityRow,
 } from "./projects.repository";
-import type {
-  ProjectResource,
-  ProjectStageResource,
-  ContentOutputResource,
-  TaskResource,
-  ProjectActivityResource,
+import {
+  projectResource,
+  type ProjectResource,
+  type ProjectStageResource,
+  type ContentOutputResource,
+  type TaskResource,
+  type ProjectActivityResource,
 } from "./projects.schema";
 
 // Projects transport (foundation §5.4) — all contract ops in the SPEC §13
@@ -59,21 +60,24 @@ export const PROJECT_OP_IDS = [
 // 平台数组只留非空字符串、字符串字段原样透传(empty `{}` → 全默认)。DTO 由显式
 // mapper 构造(SPEC §9),绝不直接把 Drizzle row 当 wire。
 function toBriefDetail(raw: unknown): ProjectResource["briefDetail"] {
-  const c = (raw ?? {}) as Record<string, unknown>;
-  const str = (v: unknown): string | undefined =>
-    typeof v === "string" && v.length > 0 ? v : undefined;
-  const platforms = Array.isArray(c.targetPlatforms)
-    ? c.targetPlatforms.filter((x): x is string => typeof x === "string")
-    : [];
-  return {
-    targetAudience: str(c.targetAudience),
-    contentGoal: str(c.contentGoal),
-    contentFormat: str(c.contentFormat),
-    targetPlatforms: platforms,
-    durationEstimate: str(c.durationEstimate),
-    coreMessage: str(c.coreMessage),
-    successCriteria: str(c.successCriteria),
-  };
+  // 必须由契约 schema 做唯一白名单。此前这里手写 7 个字段，新增的 orientation 与
+  // contentRadarEvidence 虽已完整落在 projects.brief_detail，却会在 projects.get
+  // row→DTO 时被静默丢掉，导致项目页拿不到对标原稿、拆解策略和改写稿。
+  const briefSchema = projectResource.shape.briefDetail;
+  const parsed = briefSchema.safeParse(raw ?? {});
+  if (parsed.success) return parsed.data;
+
+  // 存量库里若只有某一段雷达证据不完整，不能因此把受众、目标、画幅等整个 Brief
+  // 一并清空。先只移除不合法的嵌套证据，再保留其余合法字段；最坏才退回空 Brief。
+  const source =
+    raw && typeof raw === "object" && !Array.isArray(raw)
+      ? { ...(raw as Record<string, unknown>) }
+      : {};
+  delete source.contentRadarEvidence;
+  const withoutInvalidEvidence = briefSchema.safeParse(source);
+  return withoutInvalidEvidence.success
+    ? withoutInvalidEvidence.data
+    : briefSchema.parse({});
 }
 
 // jsonb(unknown)→ 契约 platformRef 规范形状(数据底座 / SPEC §1.2)。丢未知键、

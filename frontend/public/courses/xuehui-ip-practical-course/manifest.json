@@ -1,0 +1,470 @@
+{
+  "schemaVersion": "creatoros-built-in-course/v1",
+  "courseId": "xuehui-ip-practical-course",
+  "version": "2026.08.02.1",
+  "title": "从定位到变现：短视频 IP 实战课",
+  "subtitle": "根据薛辉短视频实战课程整理",
+  "description": "从商业定位、选题和脚本，到拍摄、剪辑与变现的系统实战课。",
+  "source": {
+    "name": "win-video-tutor",
+    "skillInstructionSha256": "d6972ecaa8180c029ce5809af7d68b4532d749d54ef1b1a2afb603851bc46f7d",
+    "indexSha256": "89f7a0d85b6dbe719538294376c2406e0b36029f1bb7da4631b8495aab09b338",
+    "packageSha256": "de10a7289f66937d2016c02adadc65c83a3d28175212a4e465bdd29b970b57c3"
+  },
+  "stats": {
+    "moduleCount": 6,
+    "lessonCount": 22,
+    "knowledgePointCount": 119
+  },
+  "modules": [
+    {
+      "id": "positioning",
+      "title": "认知定位",
+      "lessonIds": [
+        "lesson-01",
+        "lesson-02",
+        "lesson-03"
+      ],
+      "knowledgePointCount": 16
+    },
+    {
+      "id": "topics",
+      "title": "选题素材",
+      "lessonIds": [
+        "lesson-04",
+        "lesson-05"
+      ],
+      "knowledgePointCount": 10
+    },
+    {
+      "id": "scripts",
+      "title": "脚本创作",
+      "lessonIds": [
+        "lesson-06",
+        "lesson-07",
+        "lesson-08",
+        "lesson-09",
+        "lesson-10",
+        "lesson-11",
+        "lesson-12",
+        "lesson-13"
+      ],
+      "knowledgePointCount": 43
+    },
+    {
+      "id": "deconstruction",
+      "title": "拆片表现",
+      "lessonIds": [
+        "lesson-14",
+        "lesson-15",
+        "lesson-16"
+      ],
+      "knowledgePointCount": 17
+    },
+    {
+      "id": "production",
+      "title": "拍摄剪辑",
+      "lessonIds": [
+        "lesson-17",
+        "lesson-18",
+        "lesson-19"
+      ],
+      "knowledgePointCount": 17
+    },
+    {
+      "id": "growth",
+      "title": "变现运营",
+      "lessonIds": [
+        "lesson-20",
+        "lesson-21",
+        "lesson-22"
+      ],
+      "knowledgePointCount": 16
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson-01",
+      "number": 1,
+      "moduleId": "positioning",
+      "module": "认知定位",
+      "title": "粉丝经济的核心公式：产品满足需求，人物制造偏好",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "粉丝经济的核心公式：产品满足需求，人物制造偏好",
+        "人是感性脑做决策，不是理性权衡",
+        "标品靠人物加分，非标品里人几乎是一切",
+        "信息流营销三种经济形态与如何选",
+        "拍短视频要用学徒工心态：行动成本高，别指望五天速成"
+      ],
+      "contentHash": "a8bd0a005a0153687da347adcca29797b2138dd249adb48061bdd948ffb12674",
+      "asset": "lessons/01.json"
+    },
+    {
+      "id": "lesson-02",
+      "number": 2,
+      "moduleId": "positioning",
+      "module": "认知定位",
+      "title": "商业定位先于个人特点",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "商业定位先于个人特点",
+        "抖音四大变现方式与优先级",
+        "生意的本质——产品×流量",
+        "单品/赛道/全品类的成功率逻辑",
+        "从单品到IP再扩赛道"
+      ],
+      "contentHash": "8d137be88e81ad752817e8b697681a100342e34cd542f1001624db4901d68986",
+      "asset": "lessons/02.json"
+    },
+    {
+      "id": "lesson-03",
+      "number": 3,
+      "moduleId": "positioning",
+      "module": "认知定位",
+      "title": "用户思维:抖音不是淘宝,要想鱼喜欢吃什么",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "用户思维:抖音不是淘宝,要想鱼喜欢吃什么",
+        "内容被喜爱的三有原则(用处/兴趣/共鸣)",
+        "结合行业的四类脚本(晒过程/聊观点/讲故事/教知识)",
+        "内容定位第一核心:多维(一个账号要出多个主题)",
+        "内容定位第二核心:原生感(你是什么样就什么样)",
+        "内容定位第三核心:高频(靠多来几下让人记住并成交)"
+      ],
+      "contentHash": "4e36650fc9c77bc831a85e63fff72b69abd5bf80b260a2988522a50fffcafcf8",
+      "asset": "lessons/03.json"
+    },
+    {
+      "id": "lesson-04",
+      "number": 4,
+      "moduleId": "topics",
+      "module": "选题素材",
+      "title": "创作灵感来自「我见过」——素材库的本质",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "创作灵感来自「我见过」——素材库的本质",
+        "拍脑门 vs 专业创作流程",
+        "选题搜索三法(行业词+关键词/巨量算数/抖音话题)",
+        "蹭热点必须结合账号定位",
+        "跨领域对标做差异化呈现",
+        "开篇与金句:搜索+改编"
+      ],
+      "contentHash": "0c2d624712d6e32c2bed06ae79f0499a094fd7cd01218b58e56e8b0f78556ef7",
+      "asset": "lessons/04.json"
+    },
+    {
+      "id": "lesson-05",
+      "number": 5,
+      "moduleId": "topics",
+      "module": "选题素材",
+      "title": "选题定生死与散弹枪原则",
+      "knowledgePointCount": 4,
+      "knowledgePointTitles": [
+        "选题定生死与散弹枪原则",
+        "八大爆款元素",
+        "选题升级为主题IP",
+        "人群垂直不是赛道垂直"
+      ],
+      "contentHash": "e59cc8a01acff370f706dcabf7dd7072a8ef1d202ada88865c4889bd23e8758b",
+      "asset": "lessons/05.json"
+    },
+    {
+      "id": "lesson-06",
+      "number": 6,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "情绪波点是创作的起点",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "情绪波点是创作的起点",
+        "作品的定义——有情绪才叫作品",
+        "一个点拉成一条线——回忆/行动/分析三个创作方向",
+        "行动方向流量最高——记录美好生活",
+        "创作被打断的两大敌人——顾忌和无趣"
+      ],
+      "contentHash": "78e4a045dc81269c5a04c3f406cf86f44da5e36b4430884d43d197c0a141bc3a",
+      "asset": "lessons/06.json"
+    },
+    {
+      "id": "lesson-07",
+      "number": 7,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "文案是什么·文案不是一切",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "文案是什么·文案不是一切",
+        "好文案就是一个特写镜头·写文案就是说画面",
+        "画面感方法一·描述",
+        "画面感方法二·类比",
+        "力量感方法一·方言词汇",
+        "力量感方法二·强弱对比"
+      ],
+      "contentHash": "737a3961949638e91e36db0a7128d1b92dd0fe94289d1101f2648f765836280c",
+      "asset": "lessons/07.json"
+    },
+    {
+      "id": "lesson-08",
+      "number": 8,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "观点型内容的本质",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "观点型内容的本质",
+        "情绪波点到观点的转化",
+        "观点四件套",
+        "弱表达改强表达",
+        "观点型内容的五大误区"
+      ],
+      "contentHash": "a4a3a827914e83f8c2a98ecafcb7b259d21ce78b95efb28b11c8858d20db18fe",
+      "asset": "lessons/08.json"
+    },
+    {
+      "id": "lesson-09",
+      "number": 9,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "晒过程为什么最利于成交",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "晒过程为什么最利于成交",
+        "完播时长才是核心流量密码",
+        "火车节模型：先把晒过程做成流水账骨架",
+        "情绪曲线：好内容的唯一标准",
+        "埋钩子建立期待感",
+        "晒过程的四大内容方向"
+      ],
+      "contentHash": "0899c19e89468bb40013dbb4222b855e93bf187c44dbed6c5e9d66dda2f4b3e3",
+      "asset": "lessons/09.json"
+    },
+    {
+      "id": "lesson-10",
+      "number": 10,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "开篇期待优先于结尾惊喜",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "开篇期待优先于结尾惊喜",
+        "建立期待的十大钩子",
+        "钩子的营销化落地(技能型与产品型)",
+        "单钩钓与事件体验题材",
+        "晒过程创作顺序:先定方向再列步骤加钩子"
+      ],
+      "contentHash": "1cb7acf1f6c4f6867bca229521f57ab2c594124bfb8d857575076c2175217d1b",
+      "asset": "lessons/10.json"
+    },
+    {
+      "id": "lesson-11",
+      "number": 11,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "教知识的作用：粉丝精准与信息差",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "教知识的作用：粉丝精准与信息差",
+        "教知识选题的五个维度",
+        "教知识能火的核心：获得感",
+        "四大教知识脚本结构",
+        "教知识的四个常见错误",
+        "小宝宝法则：寓教于乐"
+      ],
+      "contentHash": "1821711d1297e5ff8a6f8714ff5f6f82945e77b75dcc21a52227f266c009a3df",
+      "asset": "lessons/11.json"
+    },
+    {
+      "id": "lesson-12",
+      "number": 12,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "讲故事的作用:交友破冰突破信任防线",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "讲故事的作用:交友破冰突破信任防线",
+        "三种故事脚本类型与选用",
+        "小有成就四段论结构",
+        "经典桥段:困境转机的灵魂",
+        "故事脚本的创作逻辑与两大避坑"
+      ],
+      "contentHash": "2777ef83bd9ee034020308bf3c9732313f139d319764922f9c5ddcf62d031f0a",
+      "asset": "lessons/12.json"
+    },
+    {
+      "id": "lesson-13",
+      "number": 13,
+      "moduleId": "scripts",
+      "module": "脚本创作",
+      "title": "苦难经历脚本三段结构",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "苦难经历脚本三段结构",
+        "猎奇型VS共鸣型：原因和困苦怎么分配",
+        "缺点才会被人喜爱：为什么要暴露不堪",
+        "释怀感悟：区别卖惨的核心",
+        "拍摄铁律：讲苦难不许哭，笑着讲"
+      ],
+      "contentHash": "3af8d3f8b2e96e771efbe62703467625f217627ed683385ad348b780ecd8d9f9",
+      "asset": "lessons/13.json"
+    },
+    {
+      "id": "lesson-14",
+      "number": 14,
+      "moduleId": "deconstruction",
+      "module": "拆片表现",
+      "title": "拆片的价值：爆款有固定结构",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "拆片的价值：爆款有固定结构",
+        "拆片三维度表格",
+        "账号策划拆解四项",
+        "六类人设识别",
+        "单条内容脚本结构逐段拆钩子",
+        "哪三类视频不值得拆"
+      ],
+      "contentHash": "4aa1f0b83b0e4ba504d39b9a2a20d53fb28e69ae43f4775b8a1730ca0d7df1a8",
+      "asset": "lessons/14.json"
+    },
+    {
+      "id": "lesson-15",
+      "number": 15,
+      "moduleId": "deconstruction",
+      "module": "拆片表现",
+      "title": "镜头感与紧张的真正来源",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "镜头感与紧张的真正来源",
+        "内心世相：因为什么事我才说出这段话",
+        "交流对象：跟一个认识的人说话",
+        "拍视频就是演自己·真听真看真感受",
+        "忘记镜头·不用提词器·多拍拍麻"
+      ],
+      "contentHash": "5cdce2c87842e7688a26a399a13223ac5abd205ba24a7a4e7ac5fcf591023cd9",
+      "asset": "lessons/15.json"
+    },
+    {
+      "id": "lesson-16",
+      "number": 16,
+      "moduleId": "deconstruction",
+      "module": "拆片表现",
+      "title": "场景是打开流量突破口的第一把刀",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "场景是打开流量突破口的第一把刀",
+        "素背景为什么坚决不能用",
+        "三种置景类型-素背景、包装型背景、生活背景",
+        "生活背景是最推荐的置景-降预期拉距离",
+        "短视频处处是心眼子-置景的原生感与小心机",
+        "置景不同情绪不同-同一句话换场景换情绪"
+      ],
+      "contentHash": "f4e4e1bc737fc1af88b84c12255c1b5c5ffba614fae63c58d0f6dfc2b04b3dc4",
+      "asset": "lessons/16.json"
+    },
+    {
+      "id": "lesson-17",
+      "number": 17,
+      "moduleId": "production",
+      "module": "拍摄剪辑",
+      "title": "四种主流呈现形式与优势力分析",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "四种主流呈现形式与优势力分析",
+        "口播的四种拍摄视角",
+        "vlog的两个硬要求与\"赋予主题+正常拍\"",
+        "景别:远全中近特与切换规则",
+        "构图三法与七大禁忌",
+        "运镜:推拉横移摇跟随环绕七种镜头运动"
+      ],
+      "contentHash": "ec71d69684f2fbfc767739f42a05c3d1ababe213df65ce2f1bdf4d3be3756c82",
+      "asset": "lessons/17.json"
+    },
+    {
+      "id": "lesson-18",
+      "number": 18,
+      "moduleId": "production",
+      "module": "拍摄剪辑",
+      "title": "写实镜头与写意镜头的本质区别",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "写实镜头与写意镜头的本质区别",
+        "什么时候用写实、什么时候用写意(选择法则)",
+        "写意镜头是作者心灵中画面的投射",
+        "打光的六种方式与光源认知",
+        "拍短视频的设备清单与原相机铁律"
+      ],
+      "contentHash": "e90f67359f2c8ed7ba70484062671a0e8871f80e1d8d3ecb8c5724ea0019e76e",
+      "asset": "lessons/18.json"
+    },
+    {
+      "id": "lesson-19",
+      "number": 19,
+      "moduleId": "production",
+      "module": "拍摄剪辑",
+      "title": "设备与软件选择：手机剪映就够了",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "设备与软件选择：手机剪映就够了",
+        "三分拍七分剪：一镜到底 + 剪掉气口",
+        "十八个基础工具与\"三驾马车\"",
+        "字幕剪辑的四个注意事项",
+        "关键帧：两点之间的变化过程",
+        "画中画与蒙版的原理和联动"
+      ],
+      "contentHash": "febfe671ea97d941e7cc0be05729ebac8dc78cb9c9658f61cb1b131f6ab9d448",
+      "asset": "lessons/19.json"
+    },
+    {
+      "id": "lesson-20",
+      "number": 20,
+      "moduleId": "growth",
+      "module": "变现运营",
+      "title": "流量小货带人-流量大人带货",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "流量小货带人-流量大人带货",
+        "有产品vs无产品两条选品路径",
+        "无产品选品三大来源",
+        "选品必看的五个筛选点",
+        "4P法则-把产品卖出去"
+      ],
+      "contentHash": "67515a9c755488ad12ca2a60e21e47377750cf7757f0c22f2792b188b218f7de",
+      "asset": "lessons/20.json"
+    },
+    {
+      "id": "lesson-21",
+      "number": 21,
+      "moduleId": "growth",
+      "module": "变现运营",
+      "title": "抖音标签机制的三种标签",
+      "knowledgePointCount": 6,
+      "knowledgePointTitles": [
+        "抖音标签机制的三种标签",
+        "话题分级与\"一行业配两内容\"",
+        "赛马机制与\"完播率是核心\"",
+        "完播时长与数据不稳定的两个原因",
+        "铁粉机制与多维高频破局",
+        "审核流程与违规申诉照读句式"
+      ],
+      "contentHash": "1a5b6384dafa1ab7f300389dd06e66ac48ad8cf2c1c006f7fec9ce3fe0bf4ad7",
+      "asset": "lessons/21.json"
+    },
+    {
+      "id": "lesson-22",
+      "number": 22,
+      "moduleId": "growth",
+      "module": "变现运营",
+      "title": "DOU+的本质与三大投放目的",
+      "knowledgePointCount": 5,
+      "knowledgePointTitles": [
+        "DOU+的本质与三大投放目的",
+        "点赞评论怎么投(为面子)",
+        "粉丝量怎么投(为以后赚钱)",
+        "商品推广怎么投(为现在赚钱)",
+        "资产与负债(粉丝是永不蒸发的流量资产)"
+      ],
+      "contentHash": "08eb0e0166a19624d18e05ebcc18a70b8e97de6aa8dceb3e90b0b077d22bcd01",
+      "asset": "lessons/22.json"
+    }
+  ]
+}

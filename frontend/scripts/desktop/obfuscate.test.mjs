@@ -17,7 +17,34 @@ import {
   obfuscateCode,
   FULL_OPTIONS,
   RENAME_ONLY_OPTIONS,
+  buildSmokeSidecarEnv,
 } from "./obfuscate.mjs";
+
+describe("打包冒烟 verdict 环境隔离", () => {
+  it("真实 token 进入 sidecar，但签名 seed 与放行开关不会继承", () => {
+    const childEnv = buildSmokeSidecarEnv(
+      {
+        PATH: "/usr/bin",
+        CREATOROS_VERDICT_SIGNING_KEY_B64: "private-seed",
+        CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
+      },
+      {
+        port: 43123,
+        token: "payload.signature",
+        smokeDataRoot: "/tmp/creatoros-smoke",
+        libDir: "/tmp/creatoros-sidecar/lib",
+      },
+    );
+
+    expect(childEnv.PATH).toBe("/usr/bin");
+    expect(childEnv.CREATOROS_SIDECAR_VERDICT_TOKEN).toBe(
+      "payload.signature",
+    );
+    expect(childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64).toBeUndefined();
+    expect(childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY).toBeUndefined();
+    expect(childEnv.CREATOROS_SMOKE_BYPASS_VERDICT).toBeUndefined();
+  });
+});
 
 describe("shouldExclude(硬排除 §3.1 ①②③)", () => {
   it("排除 server.js 入口", () => {

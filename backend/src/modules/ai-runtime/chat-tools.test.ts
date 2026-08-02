@@ -807,6 +807,88 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(result.kind).toBe("positioning.suggestion");
     expect(result.suggestion?.oneLiner).toBe("把论文落成代码");
   });
+
+  it("[T-652] positioning.generate 回传前采候选来源，供原子确认门校验", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["positioning.generate"], deps);
+    const result = (await runExecute(tools["positioning.generate"]!, {
+      extraBrief: "用户选择方向A",
+      sourceMode: "scratch",
+      discoverySessionId: "posdisc-1",
+      discoveryRevision: 6,
+      selectedDirectionKey: "方向A-实战顾问",
+    })) as {
+      discovery: {
+        sessionId: string;
+        candidateId: string;
+        candidateRevision: number;
+      } | null;
+    };
+    expect(result.discovery).toEqual({
+      sessionId: "posdisc-1",
+      candidateId: "poscand:posdisc-1:6:方向A-实战顾问",
+      candidateRevision: 6,
+    });
+  });
+
+  it("[T-652] 前采生成以服务端最新会话为准，不把对话里的旧版本做成必然冲突的候选", async () => {
+    const getPositioningDiscovery = vi.fn(async () => ({
+      id: "posdisc-1",
+      sourceMode: "scratch" as const,
+      status: "ready" as const,
+      revision: 16,
+      answers: [
+        {
+          themeId: "goal",
+          selectedOptionIds: ["建立专业知识体系"],
+          customText: "把真实项目经验讲给本地从业者",
+          skipped: false,
+        },
+      ],
+      webReferences: [
+        {
+          title: "FDE 是什么",
+          url: "https://example.com/fde?very=long",
+          snippet: "前沿部署工程师负责把客户反馈转成产品改进。",
+          adopted: true,
+        },
+      ],
+    }));
+    const { deps, generatePositioning } = makeDeps({
+      getPositioningDiscovery,
+    });
+    const tools = buildChatTools(["positioning.generate"], deps);
+
+    const result = (await runExecute(tools["positioning.generate"]!, {
+      extraBrief: "用户选择方向A",
+      sourceMode: "optimize",
+      discoverySessionId: "posdisc-1",
+      discoveryRevision: 10,
+      selectedDirectionKey: "方向A-实战顾问",
+    })) as {
+      discovery: {
+        sessionId: string;
+        candidateId: string;
+        candidateRevision: number;
+      } | null;
+    };
+
+    expect(getPositioningDiscovery).toHaveBeenCalledWith("posdisc-1");
+    expect(generatePositioning).toHaveBeenCalledWith({
+      sourceMode: "scratch",
+      extraBrief: expect.stringContaining("服务端最新前采快照（版本 16）"),
+    });
+    expect(generatePositioning).toHaveBeenCalledWith(
+      expect.objectContaining({
+        extraBrief: expect.stringContaining("把真实项目经验讲给本地从业者"),
+      }),
+    );
+    expect(result.discovery).toEqual({
+      sessionId: "posdisc-1",
+      candidateId: "poscand:posdisc-1:16:方向A-实战顾问",
+      candidateRevision: 16,
+    });
+  });
 });
 
 // [T-084b] material.screenshot 工具:真截图落 asset(成功);逐类报错(打不开/HTTP/登录墙)

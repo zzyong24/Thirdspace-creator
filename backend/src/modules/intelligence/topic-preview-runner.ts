@@ -8,6 +8,7 @@ export interface TopicPreviewGeneratorPort {
     input: Awaited<
       ReturnType<IntelligenceService["getTopicPreviewForExecution"]>
     >,
+    onCheckpoint: (checkpoint: TopicPreviewCheckpoint) => Promise<void>,
   ): Promise<{
     hook: string;
     structureSteps: string[];
@@ -18,8 +19,49 @@ export interface TopicPreviewGeneratorPort {
     angle: string;
     differentiation: string;
     sourceSummary: string;
+    targetAudience: string;
+    audiencePain: string;
+    coreConflict: string;
+    format: string;
+    adaptationStrategy: {
+      keep: string[];
+      replace: string[];
+      add: string[];
+      avoid: string[];
+    };
+    adaptedDraft: string;
   }>;
 }
+
+export type TopicPreviewDecomposition = {
+  hook: string;
+  structureSteps: string[];
+  coreClaims: string[];
+  reusablePattern: string;
+  factRisks: string[];
+};
+
+export type TopicPreviewCandidate = {
+  title: string;
+  angle: string;
+  differentiation: string;
+  sourceSummary: string;
+  targetAudience: string;
+  audiencePain: string;
+  coreConflict: string;
+  format: string;
+  adaptationStrategy: {
+    keep: string[];
+    replace: string[];
+    add: string[];
+    avoid: string[];
+  };
+};
+
+export type TopicPreviewCheckpoint =
+  | { stage: "decomposition"; value: TopicPreviewDecomposition }
+  | { stage: "topic"; value: TopicPreviewCandidate }
+  | { stage: "draft"; value: { contentText: string } };
 
 export interface TopicPreviewRunnerDeps {
   tasks: PersistentTaskService;
@@ -119,12 +161,35 @@ export async function runIntelligenceTopicPreviewTask(
     leaseSeconds: 120,
   });
   if (!claim) return;
+  let pendingStage: TopicPreviewCheckpoint["stage"] = "decomposition";
+  let targetTransformId: string | null = null;
   try {
     const target = await deps.intelligence.getTopicPreviewForExecution(
       ctx,
       input.taskId,
     );
-    const generated = await deps.generator.generate(ctx, target);
+    targetTransformId = target.transformId;
+    const generated = await deps.generator.generate(
+      ctx,
+      target,
+      async (checkpoint) => {
+        await deps.intelligence.saveTopicPreviewCheckpoint(
+          ctx,
+          target.transformId,
+          {
+            ...checkpoint,
+            sourceUrl: target.item.canonicalUrl,
+            transcriptHash: target.transcript.hash,
+          },
+        );
+        pendingStage =
+          checkpoint.stage === "decomposition"
+            ? "topic"
+            : checkpoint.stage === "topic"
+              ? "draft"
+              : "draft";
+      },
+    );
     await deps.intelligence.finishTopicPreview(
       ctx,
       target.transformId,
@@ -147,6 +212,22 @@ export async function runIntelligenceTopicPreviewTask(
     console.warn(
       `[intelligence-topic] generation_failed category=${failure.category}`,
     );
+    if (targetTransformId) {
+      try {
+        await deps.intelligence.markTopicPreviewStageFailed(
+          ctx,
+          targetTransformId,
+          {
+            stage: pendingStage,
+            errorCode: failure.category,
+          },
+        );
+      } catch {
+        console.warn(
+          "[intelligence-topic] failed_to_persist_stage_failure",
+        );
+      }
+    }
     await deps.tasks.finish({
       taskId: input.taskId,
       workerId: claim.lease.workerId,

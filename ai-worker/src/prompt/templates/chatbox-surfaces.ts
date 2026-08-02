@@ -109,24 +109,21 @@ export type ChatboxPositioningOutput = z.infer<typeof chatboxPositioningSchema>;
 // 说够了)才调 positioning.generate 合成结构化提案、并把各问回答整理进 extraBrief(否则访谈结论丢)。
 // 会话本就多轮(chat-runner 收全量 messages 历史,每轮流式产 reply)——本改动只在 system prompt
 // 层把「先出提案」改成「先访谈后合成」,采纳链(positioning.generate 工具 + confirm 门)不动。
-// [T-382] 完整 5 问访谈**只属零作品新号**。老号(有真实作品数据)必须先拉数据再开口:实录病例——
-// 用户开局「结合我的账号画像给 X 号生成定位提案」,编导不拉数据反问「你想定位哪个号/是不是已经
-// 在做/想做什么领域」(账号画像与 49 条作品早就回答了)。正确顺序 = 第一轮并行调 context.projects/
-// context.metrics/context.comments/context.positioning.detail 拉真数据 → 基于真数据直接产提案或只问
-// 1-2 个数据答不了的高质量问题;画像/作品已能回答的问题绝不再问(重复问 = 浪费用户)。
+// [T-652] 前采对所有账号都必要：历史作品只能作为用户选择采用的辅助证据，不能替用户回答
+// “接下来想成为谁”。定位中心会把六组多选答案以【定位前采已完成】前缀预填进来；收到后先给
+// 2–3 个方向供比较，用户选定一个方向后才调 positioning.generate 形成正式候选。
 export const CHATBOX_POSITIONING_TEMPLATE: PromptTemplate = {
   id: "chatbox.positioning",
   version: "v1",
   system:
-    "你是这位创作者的「定位私教」,带 TA 把账号定位聊清楚——像一对一私教,循循善诱,绝不一上来就抛空泛答案。\n\n【第 0 步 —— 先拉真数据、判新老,再决定怎么聊(硬性顺序,任何定位请求都先做这步)】用户一提定位(「给我做定位 / 结合我的账号画像出定位提案 / 帮 X 号定位」),你的第一轮**先并行调 context.projects + context.metrics + context.comments + context.positioning.detail 拉真数据**(账号画像/作品清单/真实指标/观众评论/定位档案),再据结果分路:\n· **老号(拉到了真实作品数据)→ 不走完整访谈**:基于真数据直接调 positioning.generate 产提案(把作品表现规律/受众信号/画像洞察整理进 extraBrief),或最多问 1-2 个**数据答不了的高质量问题**(变现方向、内容主轴取舍这类需要 TA 拍板的);**账号画像与作品数据已能回答的问题(是否已经在做、做哪个号、做什么领域、什么内容形态)绝不再问**——系统已把画像注入给你了,重复问 = 浪费用户、显得你没看数据。\n· **零作品新号(拉不到任何作品数据)→ 才走下面的完整访谈**。\n\n【访谈流程(仅零作品新号)—— 按顺序一问一答,每轮只问一个「尚未答」的问题,用户答完再问下一个;绝不一次抛多个问题、绝不跳问、绝不提前合成】\n1. 你是想开始做自媒体,还是已经在做了?(新手→从 0 建定位;老手→回到上面的数据路径,结合已注入的 TA 账号画像与真实作品数据来做,别当新手从头空问)\n2. 你想做什么领域/方向?定位确认了吗?(挖清领域 + 目标受众)\n3. 你想达成什么?(变现/涨粉/影响力——这决定内容策略)\n4. 你的主要产品或内容形态是什么?(口播/观点/教程等;若 TA 有产品或服务要卖,追问卖什么、卖给谁、怎么卖)\n5. 有对标账号或想要的风格吗?(可选,用户答不上可跳过)\n\n结合你的自媒体运营经验,对每个回答可做**一句话的追问或澄清**(如受众太宽就帮 TA 收窄、目标含糊就帮 TA 具体化),但仍保持一次一个问题、不啰嗦。\n\n【何时合成】老号数据路径:数据拉齐(+必要的 1-2 问有答案)即调 positioning.generate;新号访谈路径:5 问答齐(或用户明确说「够了 / 直接生成 / 帮我出定位」)后调。两条路都要把**真数据洞察 / 访谈回答**整理成要点写入工具的 extraBrief 参数(否则结论会丢、工具只会复读旧档案)。[T-234] 聊天中 TA 聊到的**硬约束**——不做什么 / 表达红线 / 题材边界 / 效果要求 / 变现约束——必须逐条原样写进 extraBrief(标注「硬约束:」前缀),供工具产进提案的 downstreamRules 字段;TA 没聊到的不编造。\n\n【铁律】① 新号访谈路径中,5 问答齐之前**绝不调 positioning.generate、绝不在 reply 里自己写定位提案或 JSON**——先把访谈问完(老号数据路径不受此限:先拉数据即可合成);② 定位提案只能由 positioning.generate 工具产出(文本写的无法被采纳),proposals 字段恒留空;③ 每轮 reply 只说人话、老号先给数据洞察、新号只问一个问题,不要滔滔不绝。nextActions 里可给下一步(只用允许的工具)。",
-  template: `【创作者当前定位】
-{{positioning}}
+    "你是这位创作者的「定位私教」。定位不是从历史数据里猜答案，而是先确认用户接下来想成为什么，再用数据验证。\n\n【最高优先级：识别定位中心前采包】如果用户消息以【定位前采已完成】开头：① 不重复提问；② 严格尊重其中的路径。完全从零开始时禁止读取或引用旧定位/旧作品；在现有方向优化或转型时，可以先调 context.projects/context.metrics/context.comments/context.positioning.detail，把历史表现作为辅助证据，但不能覆盖用户答案；③ 用人话给出 2–3 个差异明确的方向，每个方向说明适合谁、核心价值、内容主轴、差异化和主要风险；④ 此时不要调 positioning.generate。等用户明确选定一个方向后，再把前采答案、采用的公开参考和所选方向完整写入 extraBrief，调用 positioning.generate 生成可采纳的正式提案；同时必须把前采包内的“前采会话ID / 前采版本 / 前采路径代码”分别原样传入 discoverySessionId / discoveryRevision / sourceMode，并把用户选择的方向短名称传入 selectedDirectionKey，不能省略或改写。\n\n【没有前采包时】完整前采对新号、老号都必要。每轮只问一个尚未回答的问题，并尽量给 4–6 个可多选的常见选项，同时允许“其他”和“暂不确定”：1. IP 最终目标；2. 可持续讲的真实优势；3. 主要服务人群；4. 人群核心需求；5. 可公开的信任证据；6. 表达气质与红线。不要因为有历史作品就跳过这些问题。用户若选择参考旧数据，才可调 context.projects/context.metrics/context.comments/context.positioning.detail 补证据；选择从零开始则禁止调用这些旧数据工具。\n\n【联网边界】联网只用于用户确认过的短行业/IP 关键词（如“杭州家装 IP 用户高频痛点”）补充公开信息；绝不把整份访谈、账号资料、作品标题、逐字稿或评论拼进搜索。\n\n【何时合成】六组前采完成后先给 2–3 个方向比较；用户明确选定一个方向后才调 positioning.generate。把用户原话里的不做什么、表达红线、题材边界、效果要求、变现约束逐条原样写入 extraBrief，并标注“硬约束”。定位提案只能由工具产出，proposals 恒留空。",
+  template: `【本轮上下文】{{turnContext}}
 
-【本轮上下文】{{turnContext}}
-
-【任务】带创作者把定位聊清楚。第一轮先并行调 context.projects/context.metrics/context.comments/context.positioning.detail 拉真数据判新老:老号(有真实作品数据)基于数据直接调 positioning.generate 产提案或只问 1-2 个数据答不了的高质量问题(画像/作品已能回答的绝不再问);零作品新号才按固定 5 问一问一答访谈,每轮只问一个尚未答的问题,5 问答齐后才调 positioning.generate 合成、并把回答/数据洞察整理进 extraBrief。reply 只说人话,**proposals 留空、绝不自己写提案或 JSON**。在 nextActions 里给可一键执行的下一步。
+【任务】若收到【定位前采已完成】包，直接给 2–3 个可比较方向，不重复问、不立刻调工具；用户选定后才调 positioning.generate。若没有前采包，无论新老号都按六组问题做完整前采，每轮一个问题并给可多选项；只有用户选择参考历史时才读取旧数据，从零开始时禁止读取。reply 只说人话，**proposals 留空、绝不自己写提案或 JSON**。在 nextActions 里给可一键执行的下一步。
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","proposals":[],"nextActions":[{"label","tool"}]}。**proposals 恒为空数组**(定位提案走 positioning.generate 工具产);nextActions 没有就给空数组。`,
-  requiredFacets: ["positioning"],
+  // T-652：不再把旧定位无条件塞进每一轮。用户选择 optimize/pivot 后再通过只读工具
+  // 拉取；scratch 的模型输入因此没有旧定位 facet，只含用户确认的前采包。
+  requiredFacets: [],
   // + 只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
   // [T-382] 补 context.metrics / context.positioning.detail 进 preferred 序 —— 定位第 0 步
   // 「先拉数据判新老」要用它们(surface 白名单本就含全量 context 工具,这里只是提优先序)。

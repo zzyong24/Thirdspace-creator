@@ -32,6 +32,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import {
   EmptyState,
@@ -47,6 +48,8 @@ import { buildKnowledgeDashboardViewModel } from "./knowledge-data";
 import { KnowledgeCommentBackflow } from "./knowledge-comment-backflow";
 import { KnowledgeDumpZone } from "./knowledge-dump-zone";
 import { KnowledgeInteractiveRegion } from "./knowledge-interactive-region";
+import { KnowledgeCourseReader } from "./knowledge-course-reader";
+import { getBuiltInCourseLesson } from "./built-in-ip-course.server";
 import {
   KnowledgeFileWorkspace,
   type KnowledgeWorkspaceVm,
@@ -72,6 +75,10 @@ export interface KnowledgePageProps {
    * deterministic.
    */
   readonly viewModel?: KnowledgeViewModel;
+  /** 生产路由默认进入课程；测试与旧调用不传时维持原「我的知识」视图。 */
+  readonly activeView?: "course" | "knowledge";
+  /** 课程阅读器当前课；空值显示课程目录。 */
+  readonly activeLessonId?: string | null;
 }
 
 export interface KnowledgeViewModel extends BasePageViewModel {
@@ -178,7 +185,27 @@ export interface KnowledgeSnippet {
 // Page
 // ---------------------------------------------------------------------------
 
-export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
+export async function KnowledgePage({
+  viewModel,
+  activeView = "knowledge",
+  activeLessonId = null,
+}: KnowledgePageProps = {}) {
+  if (activeView === "course") {
+    const lesson = getBuiltInCourseLesson(activeLessonId);
+    return (
+      <main
+        data-app="creatoros"
+        data-page="knowledge"
+        data-knowledge-id="knowledge-root"
+        data-knowledge-view="course"
+        data-page-state="default"
+        className="flex flex-col gap-5"
+      >
+        <KnowledgeSectionNav activeView="course" />
+        <KnowledgeCourseReader lesson={lesson} />
+      </main>
+    );
+  }
   // READ-side made real ("知识库读侧做真"): the VM now derives `recent`, the
   // `metrics` row (知识条目 total / 本周新增 / 复用片段 / 知识关联 are REAL counts),
   // `categories` tally, the reusable-snippet LIST, the 未整理 (unlinked) LIST,
@@ -206,6 +233,7 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       data-page-state={state}
       className="flex flex-col gap-section-gap"
     >
+      <KnowledgeSectionNav activeView="knowledge" />
       {/* [T-118b gate-F4] 知识库页头:「记一条经验」入口并入(与已验证经验库同处)。
           手录一条经验 = 用户亲判,走 Copilot 深链(learning.capture)。经验 Tab
           退役后,这是记经验的唯一入口。仅 loading/error 不渲。 */}
@@ -244,5 +272,41 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
         <KnowledgeInteractiveRegion viewModel={vm} />
       )}
     </main>
+  );
+}
+
+function KnowledgeSectionNav({
+  activeView,
+}: {
+  readonly activeView: "course" | "knowledge";
+}) {
+  return (
+    <nav
+      aria-label="知识库视图"
+      className="flex w-fit items-center gap-1 rounded-full border border-stone-200 bg-white p-1 shadow-sm"
+    >
+      <Link
+        href="/knowledge?view=course"
+        aria-current={activeView === "course" ? "page" : undefined}
+        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+          activeView === "course"
+            ? "bg-stone-900 text-white"
+            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+        }`}
+      >
+        IP 实战课
+      </Link>
+      <Link
+        href="/knowledge?view=knowledge"
+        aria-current={activeView === "knowledge" ? "page" : undefined}
+        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+          activeView === "knowledge"
+            ? "bg-stone-900 text-white"
+            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+        }`}
+      >
+        我的知识
+      </Link>
+    </nav>
   );
 }

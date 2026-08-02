@@ -144,6 +144,13 @@ export interface KnowledgeRepository {
     knowledgeId: string,
     input: { content: string },
   ): Promise<KnowledgeRevisionRow>;
+  /** 内置内容升级时只更新来源版本/校验元数据,正文仍通过 append-only revision。 */
+  updateSourceMetadata(
+    userId: string,
+    accountId: AccountScope,
+    knowledgeId: string,
+    sourceMetadata: Record<string, unknown>,
+  ): Promise<KnowledgeItemWithStats>;
   createRelation(
     userId: string,
     accountId: AccountScope,
@@ -555,6 +562,27 @@ export function createKnowledgeRepository(
         .from(knowledgeRevisions)
         .where(eq(knowledgeRevisions.id, revId));
       return rows[0]!;
+    },
+
+    async updateSourceMetadata(
+      userId,
+      accountId,
+      knowledgeId,
+      sourceMetadata,
+    ) {
+      await getRow(userId, accountId, knowledgeId);
+      const now = deps.now();
+      await db
+        .update(knowledgeItems)
+        .set({ sourceMetadata, updatedAt: now })
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+            accountVisibility(accountId),
+          ),
+        );
+      return get(userId, accountId, knowledgeId);
     },
 
     async createRelation(userId, accountId, sourceKnowledgeId, input) {

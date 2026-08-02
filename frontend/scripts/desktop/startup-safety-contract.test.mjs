@@ -14,8 +14,17 @@ const splashHtml = readFileSync(
   join(process.cwd(), "src-tauri", "placeholder-dist", "index.html"),
   "utf8",
 );
+const verdictGate = readFileSync(
+  join(process.cwd(), "src", "server", "verdict-token-gate.ts"),
+  "utf8",
+);
 
 describe("T-535 desktop startup safety contract", () => {
+  it("生产 sidecar 不存在构建冒烟旁路，只有非生产开发模式可跳过 token", () => {
+    expect(verdictGate).not.toContain("CREATOROS_SMOKE_BYPASS_VERDICT");
+    expect(verdictGate).toContain('process.env.NODE_ENV !== "production"');
+    expect(verdictGate).toContain("CREATOROS_SIDECAR_VERDICT_TOKEN");
+  });
   it("keeps instrumentation runtime logs ASCII-safe for Turbopack code frames", () => {
     const runtimeLogs = [
       ...instrumentation.matchAll(/console\.log\(([\s\S]*?)\);/g),

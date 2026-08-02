@@ -2749,14 +2749,14 @@ pub fn gen_handshake_token() -> String {
 // ─────────────────────────────────────────────────────────────────────────────
 // [T-451] verdict-bound handshake token
 //
-// Rust 壳启动时先本地跑 verdict(读 .license 快照,不联网),仅在 allowed=true 时才用**内嵌
-// 签名私钥** Ed25519 签 payload(machineId+expiresAt+port+nonce+issuedAt+mode)→ 注入 sidecar
+// Rust 壳启动时先本地跑 verdict(读 .license 快照,不联网),再用构建期拆分后的**本地签名
+// 材料** Ed25519 签 payload(machineId+expiresAt+port+nonce+issuedAt+mode)→ 注入 sidecar
 // env `CREATOROS_SIDECAR_VERDICT_TOKEN`。sidecar 侧只验签名(带公钥常量,不带私钥)→ 通过才
 // listen,否则 exit(1)。攻击者裸启拿不到 token 也伪造不了 → 无法绕过 verdict 判定。
 //
 // 诚实边界(SPEC §8):
-//   · 私钥经 obfstr 混淆后进 Rust 二进制的 rdata 段,静态 grep 找不到;attach lldb/gdb dump
-//     内存仍可提取(与 T-372 §18/本 SPEC §8 一致的非目标)。
+//   · build.rs 把 seed 拆成随机 mask + XOR 材料，消除连续 base64 明文靶点；这不是加密，
+//     专业逆向仍可从二进制或运行时恢复 seed（与 T-372 §18 一致的非目标）。
 //   · payload 明文暴露(base64.body.base64.sig 结构可读),这是设计:唯一机密是签名私钥。
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2790,34 +2790,18 @@ pub struct VerdictTokenPayload {
 /// verdict-token 有效期(SPEC §DEC-2:24h;覆盖单次 app 进程寿命即可)。
 const VERDICT_TOKEN_TTL_SECS: i64 = 86_400;
 
-/// **签名私钥**(base64 raw 32B)。构建期由 CI/开发者机器经 `env!` 注入,再用 `obfstr::obfstring!`
-/// 编译期混淆存储:二进制内不再出现连续 base64 明文,静态 grep 不到。
-///
-/// 诚实边界(SPEC §4.1/§8):`env!` 展开后的字节经 obfstr 混淆后仍在二进制 rdata 段;
-/// **attach lldb dump 内存可提取**——与 T-372 §18 一致的非目标(不防专业逆向)。
-///
-/// dev / cargo check 环境无该 env → 空字符串 → `sign_verdict_token` 返回 None,sidecar 走 dev
-/// 分支(instrumentation 的 CREATOROS_DEV_MODE + NODE_ENV≠production 二组合豁免)。
-fn verdict_signing_key_b64() -> String {
-    // env!() 只在编译期可用,option_env!() 允许 CI 未设置 secret 时用空串编过(dev/自审)。
-    let compiled = option_env!("CREATOROS_VERDICT_SIGNING_KEY_B64").unwrap_or("");
-    // obfstr::obfstring! 只吃字面 &'static str,不能吃 env!() 结果(值编译期已固化,但类型
-    // 上不是字面量)——退而用 obfbytes!(不定长运行时 XOR)+ String::from_utf8。二进制里最终
-    // 存的是被 obfbytes 混淆后的字节,静态 grep 不到明文 base64。
-    if compiled.is_empty() {
-        return String::new();
+const VERDICT_SIGNING_KEY_BLOB: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/verdict-signing-key.bin"));
+
+fn reconstruct_verdict_signing_seed(blob: &[u8]) -> Option<[u8; 32]> {
+    if blob.len() != 64 {
+        return None;
     }
-    // 用 obfbytes! 逐字混淆同款 pattern(与 license_key_context 同用法),不引 obfstring! 那套
-    // 类型体操。obfbytes! 只对**字面 byte 数组常量**生效,option_env! 结果并非字面量,故此处
-    // **不额外混淆**——已由 env 值的**打包后不可见性**(不进二进制字符串表,而是 rdata 段)保护;
-    // 若追求进一步混淆,可在 build.rs 里将该 env 值转成 obfbytes 静态数组注入(留 follow-up)。
-    //
-    // 注意:option_env!() 返回 &'static str,rust 会把值内联到 rdata 段——strings 能看到 base64
-    // 密文行(45 字节 URL-safe base64)。防止一眼被 grep 到,采取的实操是**私钥前后加干扰字节
-    // 的宿主字符串**:实际值 = 45 字节 base64 + "\n[T451-BOUND]\n" 前缀,构建期由 CI script
-    // 生成,运行期 strip 掉 sentinel。缺陷是攻击者仍可 grep sentinel 定位——但 sentinel 本身不
-    // 是签名密钥的一部分,拿到 45 字节也需正确解析 base64,门槛已抬。
-    compiled.to_string()
+    let mut seed = [0u8; 32];
+    for index in 0..32 {
+        seed[index] = blob[index] ^ blob[index + 32];
+    }
+    Some(seed)
 }
 
 /// 生成 verdict-bound token。返回 base64_url(payload_json) + "." + base64_url(sig);签发失败(私
@@ -2830,31 +2814,19 @@ pub fn sign_verdict_token(
 ) -> Option<String> {
     use base64::Engine as _;
     use ed25519_dalek::{Signer as _, SigningKey};
+    use zeroize::Zeroize as _;
 
-    let signing_key_b64 = verdict_signing_key_b64();
-    if signing_key_b64.is_empty() {
-        eprintln!("[license][T-451] verdict signing key 未内嵌(dev/未 CI 构建),跳过 token 签发");
-        return None;
-    }
-    // 签名密钥宿主字符串:URL-safe base64 前后加 sentinel(见 verdict_signing_key_b64 注释)。
-    let key_b64 = signing_key_b64
-        .trim()
-        .replace("[T451-BOUND]", "")
-        .replace('\n', "");
-    let raw_key = base64::engine::general_purpose::URL_SAFE_NO_PAD
-        .decode(&key_b64)
-        .or_else(|_| base64::engine::general_purpose::STANDARD.decode(&key_b64))
-        .ok()?;
-    if raw_key.len() != 32 {
-        eprintln!(
-            "[license][T-451] verdict signing key 长度不合法(期望 32B 得 {})",
-            raw_key.len()
-        );
-        return None;
-    }
-    let mut raw_arr = [0u8; 32];
-    raw_arr.copy_from_slice(&raw_key);
+    let mut raw_arr = match reconstruct_verdict_signing_seed(VERDICT_SIGNING_KEY_BLOB) {
+        Some(seed) => seed,
+        None => {
+            eprintln!(
+                "[license][T-451] verdict signing key 未内嵌(dev/未 CI 构建),跳过 token 签发"
+            );
+            return None;
+        }
+    };
     let signing_key = SigningKey::from_bytes(&raw_arr);
+    raw_arr.zeroize();
 
     // 决定 mode:allowed && !updates_blocked = licensed;否则 activation-only(不签就 sidecar
     // exit(1) 用户完全进不去,连激活页都没;必须给个降级 mode 让 activation 页可跑)。
@@ -3211,6 +3183,19 @@ mod tests {
     use super::*;
     use ed25519_dalek::{Signer, SigningKey};
     use std::cell::{Cell, RefCell};
+
+    #[test]
+    fn reconstructs_masked_verdict_seed_and_rejects_wrong_blob_length() {
+        let seed = [0x5au8; 32];
+        let mask = [0xa5u8; 32];
+        let mut blob = [0u8; 64];
+        blob[..32].copy_from_slice(&mask);
+        for index in 0..32 {
+            blob[index + 32] = seed[index] ^ mask[index];
+        }
+        assert_eq!(reconstruct_verdict_signing_seed(&blob), Some(seed));
+        assert_eq!(reconstruct_verdict_signing_seed(&blob[..63]), None);
+    }
 
     /// 固定 seed 的测试签名密钥(不引 rand feature;公钥经 config 注入,非内嵌常量)。
     fn test_keypair() -> (SigningKey, String) {

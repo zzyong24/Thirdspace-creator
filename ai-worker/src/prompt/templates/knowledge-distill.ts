@@ -30,14 +30,19 @@ export const knowledgeAtomSchema = z.object({
 });
 export type KnowledgeAtom = z.infer<typeof knowledgeAtomSchema>;
 
-export const knowledgeDistillSchema = z.object({
-  atoms: z.array(knowledgeAtomSchema).default([]),
-  suggestedTags: z.array(z.string()).default([]),
-});
+export const knowledgeDistillSchema = z
+  .object({
+    atoms: z.array(knowledgeAtomSchema).default([]),
+    suggestedTags: z.array(z.string()).default([]),
+  })
+  .refine((value) => value.atoms.some((atom) => atom.title.trim()), {
+    message: "至少返回一条有正文的知识原子",
+  });
 export type KnowledgeDistillOutput = z.infer<typeof knowledgeDistillSchema>;
 
 export const KNOWLEDGE_DISTILL_TEMPLATE: PromptTemplate = {
   id: "knowledge.distill",
+  outputRecovery: "creative-partial",
   version: "v1",
   outputSchema: knowledgeDistillSchema,
   tools: [],

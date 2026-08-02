@@ -4,6 +4,7 @@ import {
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
+  channelModelCredentialResource,
   storageConfigResource,
   accountSkillOverlayPatchResource,
   accountSkillOverlayResource,
@@ -75,6 +76,22 @@ export const settingsOperations = {
     path: "/settings/models",
     response: z.array(modelConfigurationResource),
     fr: ["FR-SETTINGS-MODEL-LIST"],
+  }),
+  listChannelModelCredentials: defineEndpoint({
+    id: "settings.channelModelCredentials.list",
+    method: "GET",
+    path: "/settings/channel-model-credentials",
+    response: z.array(channelModelCredentialResource),
+    fr: ["FR-645-02", "FR-645-05"],
+  }),
+  putChannelModelCredential: defineEndpoint({
+    id: "settings.channelModelCredentials.put",
+    method: "PUT",
+    path: "/settings/channel-model-credentials/:serviceId",
+    params: z.object({ serviceId: z.string().min(1) }).strict(),
+    body: z.object({ secret: z.string().trim().min(1) }).strict(),
+    response: channelModelCredentialResource,
+    fr: ["FR-645-02", "FR-645-05"],
   }),
   // [T-377] 测试连接:按 capability 用**现有解析链**(resolveLlmConfig / resolveMultimodalSpec
   // / resolveSearchSpec 等)解析已保存的配置,发一次最小真实调用 / 最便宜鉴权探测,诚实回
