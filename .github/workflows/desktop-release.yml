@@ -413,6 +413,47 @@ jobs:
           path: dist-upload/
           if-no-files-found: error
 
+      # [T-663] 过去 macOS 只校验「DMG 里有 app/sidecar.tar.gz」，没有真的从
+      # LaunchServices 启动 app。结果 Tauri resource resolver 在临时签名包里返回
+      # `unknown path`，流水线仍然全绿、用户却只能看到占位页。现在直接启动本轮 bundle，
+      # 必须等到 WebView 完成 127.0.0.1 主页面加载；tauri://localhost 不算通过。
+      - name: macOS 真启动与主页面加载冒烟(T-663)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          app="frontend/src-tauri/target/release/bundle/macos/CreatorOS.app"
+          test -d "$app" || { echo "::error::[T-663] 未找到 CreatorOS.app"; exit 1; }
+          stdout="$RUNNER_TEMP/creatoros-macos-startup.stdout.log"
+          stderr="$RUNNER_TEMP/creatoros-macos-startup.stderr.log"
+          : > "$stdout"
+          : > "$stderr"
+
+          cleanup() {
+            osascript -e 'tell application id "cloud.aitongban.creatoros" to quit' >/dev/null 2>&1 || true
+            sleep 2
+            pkill -f "$app/Contents/MacOS/CreatorOS" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          open -n --stdout "$stdout" --stderr "$stderr" "$app"
+          ready=0
+          for _ in $(seq 1 3000); do
+            if grep -Eq '\[CreatorOS\] MAIN_PAGE_LOAD_FINISHED http://127\.0\.0\.1:' "$stderr"; then
+              ready=1
+              break
+            fi
+            sleep 0.2
+          done
+          if [ "$ready" != "1" ]; then
+            echo "===== CreatorOS stdout ====="
+            cat "$stdout" || true
+            echo "===== CreatorOS stderr ====="
+            cat "$stderr" || true
+            echo "::error::[T-663] macOS CreatorOS 600 秒内未完成 sidecar 启动与主页面加载"
+            exit 1
+          fi
+          echo "[T-663] ✓ macOS CreatorOS 真启动并完成主页面加载"
+
       - name: 上传 T-635 产品身份与 release attestation（非发布产物）
         uses: actions/upload-artifact@v4
         with:

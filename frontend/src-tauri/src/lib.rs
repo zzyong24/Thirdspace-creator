@@ -8,7 +8,7 @@
 //! 除 LLM API 外全本地:WebView ──HTTP──► sidecar 进程内库调 backend/ai-worker ──► PGlite 落盘。
 
 use std::net::TcpListener;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -1284,10 +1284,7 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     // [T-454/T-487] 兼容路径：新 Windows 安装应在上方命中安装期 runtime；旧安装包、
     // macOS 与 Linux 仍可从单文件 tar 在 appData 原子解压。解压使用 Rust flate2/tar，
     // 不依赖用户电脑 PATH 或额外安装 tar/7-Zip。
-    let tarball = app
-        .path()
-        .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
-        .map_err(|e| format!("无法解析 bundle sidecar.tar.gz 路径: {e}"))?;
+    let tarball = resolve_bundled_sidecar_tarball(app)?;
     if !tarball.is_file() {
         #[cfg(windows)]
         if let Some(installed_error) = installed_runtime_error {
@@ -1329,6 +1326,61 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         cleanup_stale_runtimes(&runtime_root, &keep);
     });
     Ok(dest)
+}
+
+/// [T-663] 定位随包 sidecar tarball。
+///
+/// `PathResolver::resolve(BaseDirectory::Resource)` 在 macOS 未签名/临时签名的 `.app`
+/// 通过 LaunchServices 启动时可能返回 `unknown path`，即使文件真实位于
+/// `Contents/Resources/sidecar.tar.gz`。发布流水线过去只检查文件是否被打进包，没有真启动，
+/// 因而遗漏了这个差异。可执行文件所在位置是安装包内稳定的物理事实，所以保留 Tauri
+/// resolver 为首选，同时用 `current_exe` 推导资源目录兜底；后续仍会执行 tarball SHA-256
+/// 校验，不会因此放宽完整性边界。
+fn resolve_bundled_sidecar_tarball(app: &AppHandle) -> Result<PathBuf, String> {
+    let resolved = app
+        .path()
+        .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource);
+    if let Ok(path) = &resolved {
+        if path.is_file() {
+            return Ok(path.clone());
+        }
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        for candidate in bundled_resource_candidates(&exe, "sidecar.tar.gz") {
+            if candidate.is_file() {
+                eprintln!(
+                    "[shell] Tauri resource resolver 不可用，按应用可执行文件定位 sidecar → {}",
+                    candidate.display()
+                );
+                return Ok(candidate);
+            }
+        }
+    }
+
+    match resolved {
+        Ok(path) => Err(format!(
+            "bundle 资源缺 sidecar.tar.gz(解析到 {})",
+            path.display()
+        )),
+        Err(error) => Err(format!(
+            "无法解析 bundle sidecar.tar.gz 路径，且应用资源目录中未找到文件: {error}"
+        )),
+    }
+}
+
+fn bundled_resource_candidates(exe: &Path, file_name: &str) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Some(exe_dir) = exe.parent() {
+        #[cfg(target_os = "macos")]
+        if let Some(contents_dir) = exe_dir.parent() {
+            candidates.push(contents_dir.join("Resources").join(file_name));
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        candidates.push(exe_dir.join(file_name));
+    }
+    candidates
 }
 
 /// [T-446] Windows 新包不再使用 `%APPDATA%/runtime`。只删这个明确的可再生缓存子目录，
@@ -2663,6 +2715,38 @@ mod runtime_cleanup_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bundled_resource_candidates_follow_installed_app_layout() {
+        #[cfg(target_os = "macos")]
+        {
+            let exe = Path::new("/Applications/CreatorOS.app/Contents/MacOS/CreatorOS");
+            assert_eq!(
+                bundled_resource_candidates(exe, "sidecar.tar.gz"),
+                vec![PathBuf::from(
+                    "/Applications/CreatorOS.app/Contents/Resources/sidecar.tar.gz"
+                )]
+            );
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            let exe = Path::new(r"C:\\Program Files\\CreatorOS\\CreatorOS.exe");
+            assert_eq!(
+                bundled_resource_candidates(exe, "sidecar.tar.gz"),
+                vec![PathBuf::from(r"C:\\Program Files\\CreatorOS").join("sidecar.tar.gz")]
+            );
+        }
+
+        #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+        {
+            let exe = Path::new("/opt/creatoros/CreatorOS");
+            assert_eq!(
+                bundled_resource_candidates(exe, "sidecar.tar.gz"),
+                vec![PathBuf::from("/opt/creatoros/sidecar.tar.gz")]
+            );
+        }
+    }
 
     #[test]
     fn startup_failure_script_escapes_dynamic_text_and_exposes_no_fake_action() {
