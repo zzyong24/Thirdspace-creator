@@ -780,7 +780,12 @@ fn resolve_installed_runtime_with_hash(
 #[cfg_attr(test, allow(dead_code))]
 fn materialize_windows_runtime(install_dir: &std::path::Path) -> Result<PathBuf, String> {
     let tarball = install_dir.join("sidecar.tar.gz");
+    runtime_progress(&format!(
+        "[installer] 正在校验离线运行环境: {}",
+        tarball.display()
+    ));
     verify_sidecar_tarball(&tarball)?;
+    runtime_progress("[installer] 离线运行环境校验完成，开始展开…");
 
     let tar_hash = env!("CREATOROS_SIDECAR_SHA256");
     let runtime_suffix = if tar_hash.len() >= 12 {
@@ -1093,6 +1098,16 @@ fn verify_file_sha256_bytes(
     Ok(())
 }
 
+/// 把长耗时 Runtime 阶段写到 stdout 并立即 flush。Windows NSIS 的 nsExec 只会在
+/// 捕获到子进程输出后重置静默超时；只写 stderr 会让正常的大包校验/解压被误杀。
+fn runtime_progress(message: &str) {
+    use std::io::Write as _;
+
+    let mut stdout = std::io::stdout();
+    let _ = writeln!(stdout, "{message}");
+    let _ = stdout.flush();
+}
+
 /// tar 兜底平台的原子解压：先在同盘临时目录完成并校验，再 rename 切换；失败绝不留下半成品。
 fn extract_sidecar_tarball(
     tarball: &std::path::Path,
@@ -1150,16 +1165,16 @@ fn extract_sidecar_tarball(
             // NSIS nsExec::ExecToLog 会把这些行显示在安装详情中；用户不再面对一个
             // 数分钟毫无变化的窗口。每 1000 项打印一次，避免 2 万行日志本身拖慢安装。
             if files % 1000 == 0 {
-                eprintln!(
+                runtime_progress(&format!(
                     "[runtime] 已展开 {files} 项（约 {} MiB）…",
                     bytes / 1024 / 1024
-                );
+                ));
             }
         }
-        eprintln!(
+        runtime_progress(&format!(
             "[runtime] 展开完成：{files} 项，约 {} MiB",
             bytes / 1024 / 1024
-        );
+        ));
         Ok(())
     })();
     if let Err(e) = unpack_result {

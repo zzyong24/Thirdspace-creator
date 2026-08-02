@@ -15,8 +15,8 @@
   ; sidecar.tar.gz 体积较大，Rust 在开始逐条解压前会先做整包 SHA-256 校验。
   ; nsExec 的 /TIMEOUT 是“连续无输出”超时，不是总执行时长；默认窗口不足时会在
   ; 校验阶段误报 timeout，导致安装器保留 tar、runtime-current.txt 未生成。允许单段
-  ; 最长 10 分钟静默，后续每 1000 项解压日志会重置该计时器。
-  nsExec::ExecToLog /TIMEOUT=600000 '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-install-runtime'
+  ; 最长 30 分钟静默，后续每 1000 项 stdout 解压日志会主动 flush 并重置该计时器。
+  nsExec::ExecToLog /TIMEOUT=1800000 '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-install-runtime'
   Pop $0
   ${If} $0 != 0
     RMDir /r "$INSTDIR\runtime-images\.staging"
@@ -38,7 +38,7 @@
   ${If} $UpdateMode <> 1
     DetailPrint "正在清理 CreatorOS 离线运行环境…"
     ; 深层 node_modules 清理也可能在长时间内没有 stdout/stderr，避免同类误超时。
-    nsExec::ExecToLog /TIMEOUT=600000 '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-uninstall-runtime'
+    nsExec::ExecToLog /TIMEOUT=1800000 '"$INSTDIR\${MAINBINARYNAME}.exe" --creatoros-uninstall-runtime'
     Pop $0
     ${If} $0 != 0
       DetailPrint "离线运行环境清理失败（错误码 $0），将继续执行卸载器兜底清理。"
