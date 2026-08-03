@@ -1,5 +1,58 @@
 # GATE-T668-BUILD — CreatorOS 官网定价更新
 
+```frontend-validation
+{
+  "schema": "frontend-validation/v1",
+  "task_id": "T-668",
+  "contract_path": "docs/superpowers/specs/2026-08-02-creatoros-website-pricing.md",
+  "contract_sha": "da95575a7d99",
+  "commit_sha": "b9f9aeb1623e986398360e29a5385e4c4e5e579a",
+  "observed_at": "2026-08-03T04:20:15.000Z",
+  "run": {
+    "verify_key": "website-pricing:test",
+    "command": "node --test website/pricing.test.mjs",
+    "exit_code": 0,
+    "output_ref": "Node test：3 passed；价格、设备范围、购买方式及旧口径删除均通过"
+  },
+  "environment": {
+    "surface": "browser",
+    "runtime": "Google Chrome stable / Playwright browser inspection",
+    "viewports": [
+      { "width": 1440, "height": 1200, "result": "pass" },
+      { "width": 390, "height": 844, "result": "pass" }
+    ]
+  },
+  "data": {
+    "mode": "non-fixture",
+    "witnesses": [{ "id": "creatoros-public-site", "role": "deployed-pricing-page" }]
+  },
+  "levels": {
+    "logic": { "status": "pass", "evidence_ref": "website/pricing.test.mjs 3/3" },
+    "surface": { "status": "pass", "evidence_ref": "桌面双栏与移动单列页面截图人工检查通过" },
+    "journey": { "status": "pass", "evidence_ref": "公开 HTTPS 页面进入价格区并继续到私聊入口" },
+    "experience": { "status": "not-requested", "evidence_ref": "不冒充购买者主观确认" }
+  },
+  "checks": [
+    { "id": "AC-PRICE-COPY", "test_id": "WEB-PRICE-01", "result": "pass", "evidence_ref": "599、899/年、199/年与截止时间在线可见" },
+    { "id": "AC-DEVICE-COPY", "test_id": "WEB-PRICE-02", "result": "pass", "evidence_ref": "一机一码、Apple 芯片 Mac、Windows 与 Intel Mac 推进状态在线可见" },
+    { "id": "AC-CONTACT-COPY", "test_id": "WEB-PRICE-03", "result": "pass", "evidence_ref": "私聊和单独内测共创群入口在线可见" }
+  ],
+  "coverage": [
+    { "condition": "desktop-layout", "result": "pass", "evidence_ref": "1440×1200 通用规则置顶、价格双栏", "reason": "" },
+    { "condition": "mobile-layout", "result": "pass", "evidence_ref": "390×844 价格卡单列且内容可读", "reason": "" },
+    { "condition": "legacy-copy-removed", "result": "pass", "evidence_ref": "线上不存在 1499、永久免费与版本分级旧口径", "reason": "" },
+    { "condition": "live-readback", "result": "pass", "evidence_ref": "公开 HTTPS 页面和远端静态文件读回一致", "reason": "" }
+  ],
+  "visible_copy": {
+    "artifact_path": "orchestrator/evidence/T-668-visible-copy.json",
+    "artifact_sha256": "8156661d6f0ca34ee6433def2293a6a2050b1c763aeb4ff81dccedd721a36cd2"
+  },
+  "tdd_red_ref": "实现前价格测试 3 项全红：缺 599/899/199 新口径且仍出现 1499",
+  "open_defects": [],
+  "status": "pass"
+}
+```
+
 ## 结论
 
 PASS。官网已按用户确认的唯一口径完成静态页面更新并发布到

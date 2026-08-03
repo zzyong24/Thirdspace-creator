@@ -1,0 +1,19 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-668",
+  "commit_sha": "b9f9aeb1623e986398360e29a5385e4c4e5e579a",
+  "captures": [
+    {
+      "checkpoint": "pricing-desktop-live",
+      "check_ids": ["AC-PRICE-COPY", "AC-DEVICE-COPY", "AC-CONTACT-COPY"],
+      "viewport": { "width": 1440, "height": 1200 },
+      "text": "CreatorOS\n内测共创与正式订阅\n内测一次买断，正式版按年订阅。\n一机一码\n每个激活码仅绑定 1 台设备\n当前支持\nApple 芯片 Mac · Windows\nIntel Mac\n适配推进中\n内测共创价\n¥599\n一次买断\n仅限内测群用户 · 8月10日截止\n正式版（内测结束后）\n¥899 / 年\n首年订阅\n次年续费 ¥199 / 年\n不再提供永久买断\n有意向，直接私聊。\n确认后进入单独的 CreatorOS 内测共创群"
+    },
+    {
+      "checkpoint": "pricing-mobile-live",
+      "check_ids": ["AC-PRICE-COPY", "AC-DEVICE-COPY", "AC-CONTACT-COPY"],
+      "viewport": { "width": 390, "height": 844 },
+      "text": "CreatorOS\n一机一码\nApple 芯片 Mac · Windows\nIntel Mac 适配推进中\n内测共创价 ¥599 一次买断\n2026年8月10日截止\n正式版 ¥899 / 年\n次年续费 ¥199 / 年\n不再提供永久买断\n咨询内测\n咨询正式版\n有意向，直接私聊"
+    }
+  ]
+}
