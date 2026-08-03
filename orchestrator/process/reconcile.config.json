@@ -57,6 +57,7 @@
     "asr-configuration:e2e": "CREATOROS_TEST_PORT=3428 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/asr-configuration.spec.ts --project=e2e",
     "onboarding-sidebar:e2e": "CREATOROS_TEST_PORT=3429 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/onboarding-and-small-sidebar.spec.ts --project=e2e",
     "copilot-project-reference:e2e": "CREATOROS_TEST_PORT=3430 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/copilot-project-reference.spec.ts --project=e2e",
-    "built-in-ip-course:e2e": "CREATOROS_TEST_PORT=3431 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/built-in-ip-course.spec.ts --project=e2e"
+    "built-in-ip-course:e2e": "CREATOROS_TEST_PORT=3431 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/built-in-ip-course.spec.ts --project=e2e",
+    "recent-data-safety:e2e": "CREATOROS_TEST_PORT=3432 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/recent-data-safety.spec.ts --project=e2e"
   }
 }
