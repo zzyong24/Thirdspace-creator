@@ -17,7 +17,8 @@
     "backend/src/modules/intelligence/intelligence.service.test.ts",
     "contract/src/operations/intelligence.ts",
     "frontend/src/features/intelligence/intelligence-workbench.tsx",
-    "frontend/tests/e2e/recent-data-safety.spec.ts"
+    "frontend/tests/e2e/recent-data-safety.spec.ts",
+    "frontend/tests/helpers/fixed-evidence-clock.cjs"
   ],
   "viewports": [
     { "width": 1440, "height": 900 },

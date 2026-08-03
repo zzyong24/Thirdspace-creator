@@ -18,7 +18,8 @@
     "backend/src/modules/positioning/positioning.service.test.ts",
     "frontend/src/features/positioning/positioning-center.tsx",
     "frontend/src/features/positioning/positioning-interactive-region.tsx",
-    "frontend/tests/e2e/recent-data-safety.spec.ts"
+    "frontend/tests/e2e/recent-data-safety.spec.ts",
+    "frontend/tests/helpers/fixed-evidence-clock.cjs"
   ],
   "viewports": [
     { "width": 1440, "height": 900 },

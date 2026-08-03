@@ -1,33 +1,50 @@
-# T-657 定位前采国内中文联网搜索 BUILD Gate
+# T-657 BUILD Gate：定位前采国内中文搜索
 
-日期：2026-08-02  
-结论：实现与聚焦自动化验证通过；未单独打包。
+```frontend-validation
+{
+  "schema": "frontend-validation/v1",
+  "task_id": "T-657",
+  "contract_path": "orchestrator/T657-FRONTEND-JOURNEY.md",
+  "contract_sha": "5c4712dbd9ed",
+  "commit_sha": "5fd4979031552f4cc91f59d6539b30d79a601e21",
+  "observed_at": "2026-08-03T03:33:57.000Z",
+  "run": {
+    "verify_key": "recent-data-safety:e2e",
+    "command": "CREATOROS_TEST_PORT=3432 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/recent-data-safety.spec.ts --project=e2e",
+    "exit_code": 0,
+    "output_ref": "Node 24 / Chrome stable：2 passed；定位数据安全、国内中文搜索默认值与信源删除旅程通过"
+  },
+  "environment": {
+    "surface": "desktop-web",
+    "runtime": "Google Chrome stable / Playwright 1.60 / Node 24.14",
+    "viewports": [
+      { "width": 1440, "height": 900, "result": "pass" },
+      { "width": 1024, "height": 720, "result": "pass" }
+    ]
+  },
+  "data": { "mode": "non-fixture", "witnesses": [{ "id": "hunan-catering-positioning", "role": "real-discovery-session" }] },
+  "levels": {
+    "logic": { "status": "pass", "evidence_ref": "后端相关性与二次搜索替换测试通过" },
+    "surface": { "status": "pass", "evidence_ref": "搜索地区和语言控件在两档窗口可见" },
+    "journey": { "status": "pass", "evidence_ref": "真实账号、正式母版和 scratch 前采页面连续打开" },
+    "experience": { "status": "not-requested", "evidence_ref": "不冒充用户主观确认" }
+  },
+  "checks": [
+    { "id": "AC-POSITIONING-MASTER", "test_id": "E2E-POS-SAFE-01", "result": "pass", "evidence_ref": "已有正式母版持续可见" },
+    { "id": "AC-POSITIONING-DRAFT", "test_id": "E2E-POS-SAFE-02", "result": "pass", "evidence_ref": "scratch 前采独立显示" },
+    { "id": "AC-POSITIONING-SEARCH-LOCALE", "test_id": "E2E-POS-SEARCH-01", "result": "pass", "evidence_ref": "默认地区为中国大陆、语言为简体中文，并明确二次搜索替换未采用结果" }
+  ],
+  "coverage": [
+    { "condition": "existing-master", "result": "pass", "evidence_ref": "真实创建定位母版", "reason": "" },
+    { "condition": "scratch-draft", "result": "pass", "evidence_ref": "真实创建 scratch session", "reason": "" },
+    { "condition": "cn-default", "result": "pass", "evidence_ref": "控件值为 cn / zh-CN", "reason": "" },
+    { "condition": "minimum-window", "result": "pass", "evidence_ref": "1024x720 页面仍可用", "reason": "" }
+  ],
+  "visible_copy": { "artifact_path": "orchestrator/evidence/T-657-visible-copy.json", "artifact_sha256": "9dff16d70e205930ed4affe196704aae56ae8e942c8950c58d53924abbd71039" },
+  "tdd_red_ref": "湖南餐饮行业 IP 曾命中省份百科和政府页面；相关性约束测试先红后绿",
+  "open_defects": [],
+  "status": "pass"
+}
+```
 
-## 故障证据
-
-- 用户以“国内智能体”搜索，却收到 Cafe Flora、Seattle 餐厅等英文境外结果。
-- 代码审计确认初版只把原始关键词交给全局搜索 provider，缺少地区/语言约束与结果相关性过滤。
-- repository 对所有历史候选永久 append，导致二次搜索无法覆盖上一轮未采纳结果。
-
-## 修复
-
-- 默认搜索范围改为中国大陆、简体中文，并在 UI 允许显式切换地区和语言。
-- 只发送本次可见短关键词与公开范围词；不拼接访谈答案、作品或逐字稿。
-- 新增关键词相关性、中文内容与国内来源优先筛选；明显无关英文结果直接过滤。
-- 二次搜索替换未采用候选，已采用证据跨搜索保留；空结果给出可行动提示。
-
-## 验证
-
-- TDD 红测：后端首次因缺少“中国大陆”限定失败；前端首次因 request body 缺少
-  `market/language` 失败。
-- backend `positioning-research.test.ts`：2 / 2 PASS。
-- backend T-652 positioning service 聚焦回归：2 / 2 PASS。
-- frontend `positioning-discovery-workflow.test.tsx`：3 / 3 PASS。
-- frontend 定位前采两个变更文件 ESLint PASS。
-- contract：27 files / 147 tests PASS。
-- contract、backend、frontend typecheck PASS（Node 25）。
-
-## 未宣称事项
-
-- 本轮按用户当前节奏不单独构建桌面安装包；真实 provider 的召回质量仍取决于所配置搜索服务，
-  但无关英文境外结果会在进入证据板前被本地领域筛选拦截。
+后端聚焦回归已覆盖：二次搜索替换未采纳候选、已采纳证据保留、国内中文语义优先，以及通用省份页面过滤。
