@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 import { expect, test } from "../helpers/test-environment";
 
-const TASK_ID = "T-663";
+const TASK_ID = "T-664";
 const CHECK_IDS = [
   "AC-COURSE-HOME",
   "AC-COURSE-LESSON",
@@ -13,7 +13,7 @@ const CHECK_IDS = [
   "AC-COURSE-SOURCE",
 ];
 const PROGRESS_KEY =
-  "xuehui-ip-practical-course:2026.08.02.1:progress";
+  "xuehui-ip-practical-course:2026.08.02.3:progress";
 
 interface VisibleCopyCapture {
   readonly checkpoint: string;
@@ -56,12 +56,15 @@ test("内置 IP 课程从目录到学习进度形成连续真实旅程", async (
   const home = page.locator('[data-slot="built-in-course-home"]');
   await expect(home).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "从定位到变现：短视频 IP 实战课" }),
+    page.getByRole("heading", { name: "CreatorOS IP 创作实战课" }),
   ).toBeVisible();
   await expect(home).toContainText("6");
   await expect(home).toContainText("22");
   await expect(home).toContainText("119");
-  await expect(home).toContainText("根据薛辉短视频实战课程整理");
+  await expect(home).toContainText("22 讲走通定位、选题、脚本、拍摄、运营与变现");
+  await expect(page.locator('[data-slot="built-in-course-attribution"]')).toContainText(
+    "基于已获授权的短视频实战课程整理",
+  );
 
   await page.getByRole("link", { name: /从第一课开始/ }).click();
   await expect(page).toHaveURL(/lesson=lesson-01/);
@@ -73,9 +76,11 @@ test("内置 IP 课程从目录到学习进度形成连续真实旅程", async (
       name: "粉丝经济的核心公式：产品满足需求，人物制造偏好",
     }),
   ).toBeVisible();
-  await expect(lesson).toContainText("想一想再展开");
+  await expect(lesson).toContainText("先自测，再看提示");
   await expect(lesson).toContainText("现在就做");
-  await expect(lesson).toContainText("做到什么算掌握");
+  await expect(lesson).toContainText("掌握标准");
+  await expect(lesson).toContainText("学完你会");
+  await expect(lesson).toContainText("这一节要交付");
 
   await page.getByRole("button", { name: "标记本节完成" }).click();
   await expect(page.getByRole("button", { name: "本节已完成" })).toBeDisabled();

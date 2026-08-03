@@ -8,6 +8,8 @@ export interface BuiltInCourseLessonMeta {
   readonly title: string;
   readonly knowledgePointCount: number;
   readonly knowledgePointTitles: ReadonlyArray<string>;
+  readonly learningGoal: string;
+  readonly deliverable: string;
   readonly contentHash: string;
   readonly asset: string;
 }
@@ -31,6 +33,10 @@ export interface BuiltInCourseManifest {
     readonly skillInstructionSha256: string;
     readonly indexSha256: string;
     readonly packageSha256: string;
+    readonly originalPackageSha256: string;
+    readonly editorialVersion: string;
+    readonly attribution: string;
+    readonly editorialSources: ReadonlyArray<string>;
   };
   readonly stats: {
     readonly moduleCount: number;
@@ -59,4 +65,3 @@ export function findBuiltInCourseLesson(
   if (!normalized) return null;
   return BUILT_IN_IP_COURSE.lessons.find((lesson) => lesson.id === normalized) ?? null;
 }
-

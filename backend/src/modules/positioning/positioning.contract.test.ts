@@ -227,24 +227,23 @@ describe("positioning contract (each op validates against its DTO)", () => {
     expect(parsed.userId).toBe("user-a");
   });
 
-  it("positioning.master.reset → blank creatorProfileResource", async () => {
+  it("[T-666] positioning.master.reset 对已有母版拒绝执行，正式定位保持不变", async () => {
     const transport = makeTransport(db);
     await seedProfileAndStatement(transport);
-    const env = await call(transport, "positioning.master.reset", {}, ctx);
-    const parsed = ENDPOINTS.resetPositioningMaster.response.parse(env.data);
-    expect(parsed.persona).toBe("");
-    expect(parsed.downstreamRules.topicRule).toBe("");
+    await expect(
+      call(transport, "positioning.master.reset", {}, ctx),
+    ).rejects.toThrow(/不能被清空/u);
 
     const center = await call(transport, "pages.positioning.get", {}, ctx);
     const parsedCenter = ENDPOINTS.getPositioningCenter.response.parse(center.data);
-    expect(parsedCenter.currentStatement).toBeNull();
+    expect(parsedCenter.currentStatement?.oneLiner).toBe("把论文变代码");
+    expect(parsedCenter.profile?.persona).toBe("p");
     expect(parsedCenter.history).toHaveLength(1);
   });
 
   it("positioning.master.restore → restored profile + appended statement", async () => {
     const transport = makeTransport(db);
     const statementId = await seedProfileAndStatement(transport);
-    await call(transport, "positioning.master.reset", {}, ctx);
     const env = await call(
       transport,
       "positioning.master.restore",

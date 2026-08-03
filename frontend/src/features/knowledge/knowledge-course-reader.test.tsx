@@ -31,9 +31,13 @@ describe("KnowledgeCourseReader", () => {
     expect(lesson).not.toBeNull();
     render(<KnowledgeCourseReader lesson={lesson} />);
     expect(screen.getByRole("heading", { level: 1, name: lesson!.meta.title })).toBeInTheDocument();
-    expect(screen.getByText("想一想再展开")).toBeInTheDocument();
+    expect(screen.getByText("先自测，再看提示")).toBeInTheDocument();
     expect(screen.getByText("现在就做")).toBeInTheDocument();
-    const rubric = screen.getByText("做到什么算掌握").closest("section");
+    expect(screen.getByText("学完你会")).toBeInTheDocument();
+    expect(screen.getByText(lesson!.meta.learningGoal)).toBeInTheDocument();
+    expect(screen.getByText("这一节要交付")).toBeInTheDocument();
+    expect(screen.getByText(lesson!.meta.deliverable)).toBeInTheDocument();
+    const rubric = screen.getByText("掌握标准").closest("section");
     expect(rubric).not.toBeNull();
     expect(within(rubric!).getByText("60")).toBeInTheDocument();
     expect(within(rubric!).getByText("80")).toBeInTheDocument();
@@ -43,7 +47,7 @@ describe("KnowledgeCourseReader", () => {
   it("完成状态只写本机课程进度,不触发知识写入", () => {
     const lesson = getBuiltInCourseLesson("lesson-01")!;
     render(<KnowledgeCourseReader lesson={lesson} />);
-    fireEvent.click(screen.getByRole("button", { name: /人是感性脑做决策/ }));
+    fireEvent.click(screen.getByRole("button", { name: /情绪参与决策，理性负责校验/ }));
     fireEvent.click(screen.getByRole("button", { name: "标记本节完成" }));
     expect(screen.getByRole("button", { name: "本节已完成" })).toBeDisabled();
     const saved = JSON.parse(window.localStorage.getItem(PROGRESS_KEY) ?? "{}") as {

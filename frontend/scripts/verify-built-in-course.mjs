@@ -9,6 +9,19 @@ const DEFAULT_ASSET_ROOT = resolve(
   "../public/courses/xuehui-ip-practical-course",
 );
 
+const FORBIDDEN_EDITORIAL_COPY = [
+  "薛老师",
+  "薛辉",
+  "老师原话",
+  "老师",
+  "原话",
+  "99%都是编",
+  "人设不等于真人",
+  "真的假的不重要",
+  "演绎的真实",
+  "成功率99%",
+];
+
 function arg(name) {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : undefined;
@@ -34,6 +47,12 @@ export function verifyBuiltInCourse(assetRoot = DEFAULT_ASSET_ROOT) {
   const modules = Array.isArray(manifest.modules) ? manifest.modules : [];
   if (modules.length !== 6) fail(`模块数应为 6，实际 ${modules.length}`);
   if (lessons.length !== 22) fail(`课时数应为 22，实际 ${lessons.length}`);
+  if (manifest.source?.editorialVersion !== "creatoros-course-copy/v2") {
+    fail(`课程编辑版本不支持: ${manifest.source?.editorialVersion ?? "<空>"}`);
+  }
+  if (typeof manifest.source?.attribution !== "string" || !manifest.source.attribution.trim()) {
+    fail("课程来源说明为空");
+  }
 
   let knowledgePointCount = 0;
   const packageLines = [];
@@ -48,6 +67,17 @@ export function verifyBuiltInCourse(assetRoot = DEFAULT_ASSET_ROOT) {
     const payload = JSON.parse(readFileSync(assetPath, "utf8"));
     const raw = typeof payload.raw === "string" ? payload.raw : "";
     if (raw.trim().length === 0) fail(`第 ${lesson.number} 课正文为空`);
+    if (typeof lesson.learningGoal !== "string" || !lesson.learningGoal.trim()) {
+      fail(`第 ${lesson.number} 课缺少学习目标`);
+    }
+    if (typeof lesson.deliverable !== "string" || !lesson.deliverable.trim()) {
+      fail(`第 ${lesson.number} 课缺少本节交付物`);
+    }
+    for (const token of FORBIDDEN_EDITORIAL_COPY) {
+      if (raw.includes(token)) {
+        fail(`第 ${lesson.number} 课仍含产品化禁词“${token}”`);
+      }
+    }
     const actualHash = sha256(raw);
     if (actualHash !== lesson.contentHash) {
       fail(`第 ${lesson.number} 课 checksum 不一致: ${actualHash} != ${lesson.contentHash}`);
@@ -81,4 +111,3 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(import.meta.filename
   const result = verifyBuiltInCourse(arg("--asset-root") ?? DEFAULT_ASSET_ROOT);
   console.log(`[built-in-course] PASS ${JSON.stringify(result)}`);
 }
-

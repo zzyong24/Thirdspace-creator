@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 
 import {
   fingerprintReferences,
@@ -21,6 +21,9 @@ process.env.no_proxy = NO_PROXY_VALUE;
 // config from. Playwright always runs the config from the
 // frontend workspace root, so process.cwd() is reliable here.
 const HERE = process.cwd();
+const TEST_RUNTIME_PATH = [dirname(process.execPath), process.env.PATH]
+  .filter(Boolean)
+  .join(delimiter);
 const REFERENCE_BASELINES_DIR = resolve(
   HERE,
   "tests",
@@ -148,6 +151,9 @@ export default defineConfig({
       ...process.env,
       NO_PROXY: NO_PROXY_VALUE,
       no_proxy: NO_PROXY_VALUE,
+      // Playwright 由哪个受支持的 Node 启动，webServer 就沿用同一运行时。
+      // 避免系统 PATH 里的旧 Node 22 通过 pnpm shebang 偷换回来。
+      PATH: TEST_RUNTIME_PATH,
       DATABASE_URL: "",
       PGLITE_DATA_DIR: PLAYWRIGHT_DATA_DIR,
       CREATOROS_DOUYIN_AUTH_DIR: join(PLAYWRIGHT_DATA_ROOT, "auth-douyin"),

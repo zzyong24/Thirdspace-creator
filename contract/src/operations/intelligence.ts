@@ -320,7 +320,7 @@ export const intelligenceOperations = {
       .object({
         affectedItems: z.number().int().nonnegative(),
         preservedSnapshots: z.number().int().nonnegative(),
-        status: intelligenceSourceStatus,
+        status: z.union([intelligenceSourceStatus, z.literal("deleted")]),
       })
       .strict(),
     fr: ["FR-CR-017"],

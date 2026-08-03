@@ -352,11 +352,12 @@ export interface RadarApi {
   }): Promise<RadarSource>;
   deleteSource(input: {
     sourceId: string;
-    mode: "archive";
+    mode: "permanent";
+    confirmToken: string;
   }): Promise<{
     affectedItems: number;
     preservedSnapshots: number;
-    status: RadarSource["status"];
+    status: RadarSource["status"] | "deleted";
   }>;
   importDouyinShare(input: {
     accountId: string;
@@ -511,7 +512,7 @@ function defaultApi(): RadarApi {
       client.deleteIntelligenceSource({
         params: { sourceId: input.sourceId },
         query: undefined,
-        body: { mode: input.mode },
+        body: { mode: input.mode, confirmToken: input.confirmToken },
       }),
     importDouyinShare: (input) =>
       client.importDouyinShareItem({
@@ -1500,7 +1501,7 @@ export function IntelligenceWorkbench({
     [api, router, updatingMonitorSourceIds],
   );
 
-  const archiveSource = React.useCallback(async () => {
+  const permanentlyDeleteSource = React.useCallback(async () => {
     const source = removalSource;
     if (!source || removalBusy) return;
     if (runningSourceIds.has(source.id)) {
@@ -1511,9 +1512,10 @@ export function IntelligenceWorkbench({
     setRemovalBusy(true);
     setRemovalError(null);
     try {
-      await api.deleteSource({
+      const result = await api.deleteSource({
         sourceId: source.id,
-        mode: "archive",
+        mode: "permanent",
+        confirmToken: source.id,
       });
       setSelectedSourceId((current) =>
         current === source.id ? null : current,
@@ -1527,11 +1529,11 @@ export function IntelligenceWorkbench({
       setReconnectError(null);
       setRemovalSource(null);
       setNotice(
-        `已移除「${source.displayName}」；后续同步已停止，已采集内容和快照仍会保留。`,
+        `已删除「${source.displayName}」及 ${result.affectedItems} 条独占内容；被其他信源或正式选题、项目引用的内容已安全保留。`,
       );
       router.refresh();
     } catch {
-      const message = `未能移除「${source.displayName}」。请确认来源未在同步并刷新后重试。`;
+      const message = `未能删除「${source.displayName}」。请确认来源未在同步并刷新后重试。`;
       setRemovalError(message);
       setNotice(message);
     } finally {
@@ -1942,10 +1944,10 @@ export function IntelligenceWorkbench({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {`移除「${removalSource?.displayName ?? "该来源"}」？`}
+              {`删除「${removalSource?.displayName ?? "该来源"}」及其内容？`}
             </DialogTitle>
             <DialogDescription>
-              移除后会停止后续同步，但保留已采集内容和快照。
+              删除后会停止同步，并清理这个信源独占的内容、快照和任务记录。被其他信源复用或已进入正式选题、项目的内容不会被破坏。
             </DialogDescription>
           </DialogHeader>
           {removalError ? (
@@ -1972,9 +1974,9 @@ export function IntelligenceWorkbench({
               type="button"
               variant="destructive"
               disabled={removalBusy}
-              onClick={() => void archiveSource()}
+              onClick={() => void permanentlyDeleteSource()}
             >
-              {removalBusy ? "正在移除…" : "确认移除"}
+              {removalBusy ? "正在删除…" : "删除信源与内容"}
             </Button>
           </DialogFooter>
         </DialogContent>

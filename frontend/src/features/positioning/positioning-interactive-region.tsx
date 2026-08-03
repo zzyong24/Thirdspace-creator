@@ -77,108 +77,17 @@ type PositioningProfileDraft = Pick<
 >;
 
 /**
- * 新建母版是显式破坏性命令：服务端把当前母版切到新的空版本边界。旧 statement
- * 历史保留，但不会继续成为 currentStatement；成功后停留在定位中心显示空白母版。
+ * T-666：重新定位只能进入非破坏式前采。这个兼容导出名被历史页面引用，
+ * 但它不再调用 reset operation，也不提供任何“清空母版”确认门。
  */
 export function ResetPositioningMasterButton() {
-  const router = useRouter();
-  const pendingRef = React.useRef(false);
-  const [confirming, setConfirming] = React.useState(false);
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  const reset = React.useCallback(() => {
-    if (pendingRef.current) return;
-    pendingRef.current = true;
-    setBusy(true);
-    setError(null);
-    void (async () => {
-      try {
-        await client.resetPositioningMaster({
-          params: undefined,
-          query: undefined,
-          body: undefined,
-        });
-        setConfirming(false);
-        router.refresh();
-      } catch (err) {
-        setError(describeUserError(err, "新建定位母版失败，请重试。"));
-      } finally {
-        pendingRef.current = false;
-        setBusy(false);
-      }
-    })();
-  }, [router]);
-
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <Dialog
-        open={confirming}
-        onOpenChange={(open) => {
-          if (busy) return;
-          setConfirming(open);
-          if (!open) setError(null);
-        }}
-      >
-        <DialogTrigger asChild>
-          <Button
-            type="button"
-            onClick={() => setError(null)}
-            disabled={busy}
-            data-testid="reset-positioning-master"
-          >
-            <Plus />
-            {busy ? "正在清空…" : "新建定位母版"}
-          </Button>
-        </DialogTrigger>
-        <DialogContent
-          data-testid="reset-positioning-master-confirm"
-          className="max-w-md"
-          showCloseButton={!busy}
-          onEscapeKeyDown={(event) => {
-            if (busy) event.preventDefault();
-          }}
-          onPointerDownOutside={(event) => {
-            if (busy) event.preventDefault();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>清空当前定位并新建？</DialogTitle>
-            <DialogDescription>
-              会立即清空当前账号画像、定位规则和“当前使用”定位，得到一份空白母版。
-              旧版本仍保留在历史记录中。
-            </DialogDescription>
-          </DialogHeader>
-          {error ? (
-            <p role="alert" className="text-xs leading-relaxed text-destructive">
-              {error}
-            </p>
-          ) : null}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => {
-                setConfirming(false);
-                setError(null);
-              }}
-            >
-              取消
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={busy}
-              data-testid="reset-positioning-master-confirm-button"
-              onClick={reset}
-            >
-              {busy ? "正在清空…" : "清空并新建"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    <Button asChild data-testid="reset-positioning-master">
+      <a href="#positioning-discovery">
+        <Plus />
+        重新定位
+      </a>
+    </Button>
   );
 }
 

@@ -323,6 +323,7 @@ export function PositioningDiscoveryWorkflow({
   if (!session || choosingMode) {
     return (
       <section
+        id="positioning-discovery"
         data-testid="positioning-discovery-entry"
         className="rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#fffdf7_0%,#f8fafc_68%,#eef7f4_100%)] p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,.45)]"
       >
@@ -382,6 +383,7 @@ export function PositioningDiscoveryWorkflow({
 
   return (
     <section
+      id="positioning-discovery"
       data-testid="positioning-discovery-workflow"
       className="grid min-h-0 flex-1 overflow-hidden rounded-[22px] border border-slate-200 bg-[#f7f8f6] shadow-[0_20px_55px_-42px_rgba(15,23,42,.5)] lg:grid-cols-[210px_minmax(0,1fr)_320px]"
     >

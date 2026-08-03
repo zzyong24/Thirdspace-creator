@@ -10,9 +10,15 @@ import {
   intelligenceItems,
   intelligenceTransforms,
   intelligenceSources,
+  intelligenceSourceCollectionMemberships,
+  intelligenceSyncRunEvents,
   intelligenceSyncRuns,
   intelligenceMigrationLedgers,
+  itemSourceObservations,
   itemMetricSnapshots,
+  itemTranscripts,
+  projectIntelligenceReferences,
+  sourceSnapshots,
   trendSources,
   eq,
 } from "@creatoros/backend";
@@ -1289,6 +1295,364 @@ describe("T-482 内容雷达领域主链", () => {
       expect(
         (await service.getItem(ctx, itemId)).transcript.status,
       ).toBe("not_requested");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("[T-665] 永久删除信源时级联清理独占内容，并保护共享内容、已转选题和正式项目证据", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    const stamp = d.clock.value;
+    const sourceBase = {
+      userId: ctx.userId,
+      accountId: ctx.accountId!,
+      collectionId: null,
+      type: "web",
+      platform: "web",
+      canonicalUrl: null,
+      canonicalUrlHash: null,
+      browserSessionRef: null,
+      adapterConfig: { type: "web" },
+      monitorEnabled: false,
+      syncPolicy: { mode: "manual" },
+      extractionInstruction: null,
+      status: "active",
+      version: 1,
+      lastRunAt: stamp,
+      nextRunAt: null,
+      createdAt: stamp,
+      updatedAt: stamp,
+    };
+    const itemBase = {
+      userId: ctx.userId,
+      accountId: ctx.accountId!,
+      type: "video",
+      platform: "douyin",
+      externalId: null,
+      authorId: null,
+      authorName: "作者",
+      summary: null,
+      coverUrl: null,
+      coverAssetId: null,
+      publishedAt: stamp,
+      durationMs: null,
+      capturedAt: stamp,
+      availability: "available",
+      createdAt: stamp,
+      updatedAt: stamp,
+    };
+    try {
+      await db.insert(intelligenceSources).values([
+        {
+          ...sourceBase,
+          id: "source-delete",
+          displayName: "待删除来源",
+          externalKey: "delete",
+        },
+        {
+          ...sourceBase,
+          id: "source-keep",
+          displayName: "保留来源",
+          externalKey: "keep",
+        },
+      ]);
+      await db.insert(intelligenceSourceCollectionMemberships).values({
+        id: "membership-delete",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        sourceId: "source-delete",
+        collectionId: "collection-1",
+        createdAt: stamp,
+      });
+      await db.insert(executionTasks).values([
+        {
+          id: "task-delete-run",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          kind: "source_sync",
+          ownerType: "source",
+          ownerId: "source-delete",
+          status: "succeeded",
+          priority: 0,
+          idempotencyKey: "delete-run",
+          payload: {},
+          checkpoint: null,
+          leaseOwner: null,
+          leaseExpiresAt: null,
+          heartbeatAt: null,
+          attempt: 1,
+          maxAttempts: 3,
+          costEstimate: null,
+          lastErrorCode: null,
+          lastErrorMessage: null,
+          createdAt: stamp,
+          updatedAt: stamp,
+        },
+        {
+          id: "task-keep-run",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          kind: "source_sync",
+          ownerType: "source",
+          ownerId: "source-keep",
+          status: "succeeded",
+          priority: 0,
+          idempotencyKey: "keep-run",
+          payload: {},
+          checkpoint: null,
+          leaseOwner: null,
+          leaseExpiresAt: null,
+          heartbeatAt: null,
+          attempt: 1,
+          maxAttempts: 3,
+          costEstimate: null,
+          lastErrorCode: null,
+          lastErrorMessage: null,
+          createdAt: stamp,
+          updatedAt: stamp,
+        },
+      ]);
+      await db.insert(intelligenceSyncRuns).values([
+        {
+          id: "run-delete",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          sourceId: "source-delete",
+          executionTaskId: "task-delete-run",
+          trigger: "manual",
+          status: "succeeded",
+          checkpoint: null,
+          adapterEvidence: null,
+          startedAt: stamp,
+          finishedAt: stamp,
+          scannedCount: 3,
+          newCount: 3,
+          updatedCount: 0,
+          skippedCount: 0,
+          failedCount: 0,
+          errorCode: null,
+          errorSummary: null,
+          nextAction: "none",
+          createdAt: stamp,
+          updatedAt: stamp,
+        },
+        {
+          id: "run-keep",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          sourceId: "source-keep",
+          executionTaskId: "task-keep-run",
+          trigger: "manual",
+          status: "succeeded",
+          checkpoint: null,
+          adapterEvidence: null,
+          startedAt: stamp,
+          finishedAt: stamp,
+          scannedCount: 1,
+          newCount: 1,
+          updatedCount: 0,
+          skippedCount: 0,
+          failedCount: 0,
+          errorCode: null,
+          errorSummary: null,
+          nextAction: "none",
+          createdAt: stamp,
+          updatedAt: stamp,
+        },
+      ]);
+      await db.insert(intelligenceSyncRunEvents).values({
+        id: "event-delete",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        runId: "run-delete",
+        step: "done",
+        status: "succeeded",
+        occurredAt: stamp,
+        itemRef: null,
+        message: "完成",
+        safeDetails: {},
+      });
+      await db.insert(intelligenceItems).values([
+        {
+          ...itemBase,
+          id: "item-exclusive",
+          canonicalUrl: "https://example.com/exclusive",
+          canonicalUrlHash: "exclusive",
+          title: "独占内容",
+        },
+        {
+          ...itemBase,
+          id: "item-shared",
+          canonicalUrl: "https://example.com/shared",
+          canonicalUrlHash: "shared",
+          title: "共享内容",
+        },
+        {
+          ...itemBase,
+          id: "item-project",
+          canonicalUrl: "https://example.com/project",
+          canonicalUrlHash: "project",
+          title: "项目内容",
+        },
+        {
+          ...itemBase,
+          id: "item-topic",
+          canonicalUrl: "https://example.com/topic",
+          canonicalUrlHash: "topic",
+          title: "已转选题内容",
+        },
+      ]);
+      await db.insert(itemSourceObservations).values([
+        ...["item-exclusive", "item-shared", "item-project", "item-topic"].map(
+          (itemId) => ({
+            id: `observation-delete-${itemId}`,
+            userId: ctx.userId,
+            accountId: ctx.accountId!,
+            itemId,
+            sourceId: "source-delete",
+            runId: "run-delete",
+            externalRef: itemId,
+            firstSeenAt: stamp,
+            lastSeenAt: stamp,
+            discoveryContext: {},
+          }),
+        ),
+        {
+          id: "observation-keep-shared",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          itemId: "item-shared",
+          sourceId: "source-keep",
+          runId: "run-keep",
+          externalRef: "shared",
+          firstSeenAt: stamp,
+          lastSeenAt: stamp,
+          discoveryContext: {},
+        },
+      ]);
+      await db.insert(sourceSnapshots).values(
+        ["item-exclusive", "item-shared", "item-project", "item-topic"].map((itemId) => ({
+          id: `snapshot-${itemId}`,
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          sourceId: "source-delete",
+          runId: "run-delete",
+          itemId,
+          capturedAt: stamp,
+          finalUrl: `https://example.com/${itemId}`,
+          title: itemId,
+          contentHash: itemId,
+          safeExtract: itemId,
+          storageRef: null,
+          retentionUntil: null,
+          privacyClass: "public",
+        })),
+      );
+      await db.insert(itemTranscripts).values(
+        ["item-exclusive", "item-shared", "item-project", "item-topic"].map((itemId) => ({
+          itemId,
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          status: "done",
+          text: `${itemId} transcript`,
+          source: "asr",
+          provider: "local",
+          model: "whisper",
+          language: "zh",
+          executionTaskId: null,
+          queuedAt: stamp,
+          completedAt: stamp,
+          errorCode: null,
+          updatedAt: stamp,
+        })),
+      );
+      await db.insert(itemMetricSnapshots).values(
+        ["item-exclusive", "item-shared", "item-project", "item-topic"].map((itemId) => ({
+          id: `metric-${itemId}`,
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          itemId,
+          capturedAt: stamp,
+          likeCount: 1,
+          commentCount: 1,
+          collectCount: 1,
+          shareCount: 1,
+          followerCount: null,
+          metricSource: "test",
+          qualityFlags: [],
+        })),
+      );
+      await db.insert(intelligenceTransforms).values(
+        ["item-exclusive", "item-shared", "item-project", "item-topic"].map((itemId) => ({
+          id: `transform-${itemId}`,
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          itemId,
+          sourceSnapshotId: `snapshot-${itemId}`,
+          kind: "topic",
+          positioningVersionId: "positioning-v1",
+          aiTaskId: null,
+          idempotencyKey: `transform-${itemId}`,
+          status: itemId === "item-topic" ? "confirmed" : "candidate",
+          outputSnapshot: { title: itemId },
+          targetTopicId: itemId === "item-topic" ? "topic-confirmed" : null,
+          createdAt: stamp,
+          updatedAt: stamp,
+        })),
+      );
+      await db.insert(projectIntelligenceReferences).values({
+        id: "reference-project",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        projectId: "project-1",
+        topicId: "topic-1",
+        itemId: "item-project",
+        sourceSnapshotId: "snapshot-item-project",
+        transformId: "transform-item-project",
+        transcriptHash: "hash",
+        createdAt: stamp,
+      });
+
+      await expect(
+        service.deleteSource(ctx, "source-delete", {
+          mode: "permanent",
+          confirmToken: "wrong-token",
+        }),
+      ).rejects.toThrow("永久删除确认令牌无效");
+
+      const result = await service.deleteSource(ctx, "source-delete", {
+        mode: "permanent",
+        confirmToken: "source-delete",
+      });
+      expect(result).toEqual({
+        affectedItems: 1,
+        preservedSnapshots: 2,
+        status: "deleted",
+      });
+      expect(
+        (await db.select().from(intelligenceSources)).map((row) => row.id),
+      ).toEqual(["source-keep"]);
+      expect(
+        (await db.select().from(intelligenceItems)).map((row) => row.id),
+      ).toEqual(["item-shared", "item-project", "item-topic"]);
+      expect(
+        (await db.select().from(sourceSnapshots)).map((row) => row.id),
+      ).toEqual(["snapshot-item-project", "snapshot-item-topic"]);
+      expect(
+        (await db.select().from(intelligenceTransforms)).map((row) => row.id),
+      ).toEqual(["transform-item-project", "transform-item-topic"]);
+      expect(
+        (await db.select().from(itemSourceObservations)).map(
+          (row) => `${row.sourceId}:${row.itemId}`,
+        ),
+      ).toEqual(["source-keep:item-shared"]);
+      expect((await service.listItems(ctx)).rows.map((row) => row.item.id)).toEqual([
+        "item-shared",
+      ]);
+      expect(await db.select().from(projectIntelligenceReferences)).toHaveLength(1);
     } finally {
       await client.close();
     }

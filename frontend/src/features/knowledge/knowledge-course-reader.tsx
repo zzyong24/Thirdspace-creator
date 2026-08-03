@@ -262,6 +262,10 @@ function CourseHome({
         </div>
       </section>
 
+      <p className="px-1 text-xs leading-5 text-stone-400" data-slot="built-in-course-attribution">
+        课程说明：{BUILT_IN_IP_COURSE.source.attribution}
+      </p>
+
       <section aria-labelledby="course-roadmap-title">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -367,6 +371,16 @@ function CourseLesson({
             <p className="mt-3 text-sm leading-6 text-stone-500">
               本节包含 {lesson.points.length} 个知识点。先读懂核心，再展开案例和易错点，最后用问题与练习检验自己。
             </p>
+            <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-[#F3F7EF] px-4 py-3">
+                <dt className="text-xs font-semibold tracking-[0.08em] text-emerald-700">学完你会</dt>
+                <dd className="mt-1.5 text-sm leading-6 text-emerald-950">{lesson.meta.learningGoal}</dd>
+              </div>
+              <div className="rounded-2xl bg-stone-50 px-4 py-3">
+                <dt className="text-xs font-semibold tracking-[0.08em] text-stone-500">这一节要交付</dt>
+                <dd className="mt-1.5 text-sm leading-6 text-stone-800">{lesson.meta.deliverable}</dd>
+              </div>
+            </dl>
           </div>
           <button
             type="button"
@@ -420,8 +434,8 @@ function CourseLesson({
                   {activePoint.oneLine}
                 </div>
               ) : null}
-              {activePoint.core ? <ReadableText title="讲透这件事" icon={<BookOpen className="size-5" />} content={activePoint.core} /> : null}
-              {activePoint.examples ? <Disclosure title="看一个例子" icon={<Lightbulb className="size-5" />} content={activePoint.examples} /> : null}
+              {activePoint.core ? <ReadableText title="核心方法" icon={<BookOpen className="size-5" />} content={activePoint.core} /> : null}
+              {activePoint.examples ? <Disclosure title="案例拆解" icon={<Lightbulb className="size-5" />} content={activePoint.examples} /> : null}
               {activePoint.misconceptions ? <Disclosure title="常见误区" icon={<Target className="size-5" />} content={activePoint.misconceptions} tone="warning" /> : null}
             </>
           ) : null}
@@ -432,7 +446,7 @@ function CourseLesson({
             <section className="rounded-3xl border border-stone-200 bg-[#FCFBF7] p-5">
               <div className="flex items-center gap-2 text-sm font-semibold text-stone-900">
                 <MessageCircleQuestion className="size-5 text-emerald-700" aria-hidden="true" />
-                想一想再展开
+                先自测，再看提示
               </div>
               <div className="mt-4 space-y-3">
                 {activePoint.socratic.map((question, index) => (
@@ -468,7 +482,7 @@ function CourseLesson({
             <section className="rounded-3xl border border-stone-200 bg-white p-5">
               <div className="flex items-center gap-2 text-sm font-semibold text-stone-900">
                 <Route className="size-5 text-emerald-700" aria-hidden="true" />
-                做到什么算掌握
+                掌握标准
               </div>
               <div className="mt-4 space-y-3">
                 <RubricRow score="60" label="懂了" text={activePoint.rubric.grade60} />

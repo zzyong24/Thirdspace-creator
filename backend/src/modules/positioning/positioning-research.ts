@@ -37,6 +37,37 @@ const CJK_STOP_BIGRAMS = new Set([
   "高频",
 ]);
 
+const GENERIC_QUERY_WORDS = [
+  "中国大陆",
+  "简体中文",
+  "中国",
+  "大陆",
+  "国内",
+  "中文",
+  "行业",
+  "市场",
+  "用户",
+  "内容",
+  "相关",
+  "高频",
+  "参考",
+  "案例",
+] as const;
+
+const IP_INTENT_TERMS = [
+  "ip打造",
+  "ip运营",
+  "个人品牌",
+  "账号运营",
+  "内容运营",
+  "内容创作",
+  "短视频",
+  "自媒体",
+  "博主",
+  "达人",
+  "探店",
+] as const;
+
 function hostOf(url: string): string {
   try {
     return new URL(url).hostname.toLowerCase().replace(/^www\./u, "");
@@ -74,6 +105,45 @@ function relevanceTerms(query: string): string[] {
     return terms;
   });
   return [...new Set([...latin, ...cjk])];
+}
+
+function semanticQueryMatch(query: string, text: string): {
+  accepted: boolean;
+  coverage: number;
+  intentScore: number;
+} {
+  const normalizedQuery = query.normalize("NFKC").toLowerCase();
+  const normalizedText = text.normalize("NFKC").toLowerCase();
+  let semanticQuery = normalizedQuery;
+  for (const word of GENERIC_QUERY_WORDS) {
+    semanticQuery = semanticQuery.replaceAll(word, " ");
+  }
+
+  const latinTerms = semanticQuery.match(/[a-z0-9][a-z0-9.+#-]{1,}/gu) ?? [];
+  const hasIpIntent = latinTerms.some((term) => term === "ip");
+  const ordinaryLatinTerms = latinTerms.filter((term) => term !== "ip");
+  if (ordinaryLatinTerms.some((term) => !normalizedText.includes(term))) {
+    return { accepted: false, coverage: 0, intentScore: 0 };
+  }
+
+  const intentMatched =
+    !hasIpIntent ||
+    /(?:^|[^a-z])ip(?:[^a-z]|$)/iu.test(normalizedText) ||
+    IP_INTENT_TERMS.some((term) => normalizedText.includes(term));
+  if (!intentMatched) return { accepted: false, coverage: 0, intentScore: 0 };
+
+  const coreChars = [
+    ...new Set(semanticQuery.match(/[\p{Script=Han}]/gu) ?? []),
+  ];
+  const matchedChars = coreChars.filter((char) => normalizedText.includes(char));
+  const coverage = coreChars.length === 0 ? 1 : matchedChars.length / coreChars.length;
+  // 仅命中地域（如“湖南省百科”）不能冒充“湖南餐饮行业 IP”的行业研究。
+  const minimumCoverage = coreChars.length <= 3 ? 2 / 3 : 0.6;
+  return {
+    accepted: coverage >= minimumCoverage,
+    coverage,
+    intentScore: hasIpIntent ? 8 : 0,
+  };
 }
 
 /**
@@ -120,11 +190,14 @@ export function selectDiscoveryResearchResults(
       const matched = terms.filter((term) => text.includes(term));
       const host = hostOf(result.url);
       const chineseChars = cjkCount(text);
-      if (terms.length > 0 && matched.length === 0) return null;
+      const semantic = semanticQueryMatch(query, text);
+      if (!semantic.accepted) return null;
       if (scope.language === "zh-CN" && chineseChars < 2) return null;
       const domestic = isDomesticHost(host);
       const score =
         matched.reduce((sum, term) => sum + Math.min(term.length, 4), 0) +
+        semantic.coverage * 20 +
+        semantic.intentScore +
         (chineseChars >= 8 ? 4 : chineseChars >= 2 ? 2 : 0) +
         (scope.market === "cn" && domestic ? 4 : 0);
       return { result, score, index, url: result.url.trim() };

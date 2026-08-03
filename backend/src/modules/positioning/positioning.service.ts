@@ -661,35 +661,10 @@ export function createPositioningService(
     async resetMaster(ctx) {
       const repo = repoFor(ctx, "positioning.resetMaster");
       const existing = await repo.getProfile();
-      if (!existing) {
-        // 防御性幂等：空账号直接建立一张空母版；生产 UI 只在已有母版时显示重建按钮。
-        const row = await repo.insertProfile({
-          persona: "",
-          field: "",
-          audience: "",
-          differentiation: "",
-          capabilities: [],
-          facets: {
-            contentScope: "",
-            avoid: "",
-            corePain: "",
-            coreValue: "",
-            tone: "",
-            statusNote: "",
-          },
-          downstreamRules: {
-            topicRule: "",
-            scriptRule: "",
-            projectRule: "",
-            forbidRule: "",
-            expressionRule: "",
-          },
-        });
-        return toCreatorProfileDto(row);
-      }
-      const snapshot = snapshotFromProfile(toCreatorProfileDto(existing));
-      return toCreatorProfileDto(
-        await repo.archiveAndResetProfileRow(existing.id, snapshot),
+      throw new DiscoveryValidationError(
+        existing
+          ? "为避免定位丢失，当前母版不能被清空。请从定位中心开始新的定位前采，只有确认采纳后才会切换版本。"
+          : "当前还没有定位母版。请先完成定位前采并采纳一个方向。",
       );
     },
 

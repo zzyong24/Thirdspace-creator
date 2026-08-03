@@ -160,25 +160,16 @@ export function PositioningCenterView({
         <PageHeader isEmpty={isEmpty} />
       </div>
 
-      {activeDiscovery ? (
+      {isEmpty ? (
         <PositioningDiscoveryWorkflow
           initialSession={activeDiscovery}
-          hasCurrentProfile={!isEmpty}
-        />
-      ) : isEmpty ? (
-        <PositioningDiscoveryWorkflow
-          initialSession={null}
           hasCurrentProfile={false}
         />
       ) : (
-        // 两栏：左主 (英雄区 + AI 区 + 历史表) + 右规则栏 (定位规则). flex-1 占满,每列各自
-        // 框内滚动 (列内裁切而非整页滚)。窄屏 (无 lg) 退回单列。
-        <div className="flex min-h-0 flex-1 flex-col gap-section-gap">
-          <PositioningDiscoveryWorkflow
-            initialSession={null}
-            hasCurrentProfile
-          />
-          <div className="grid min-h-0 flex-1 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
+        // T-666：正式母版永远在前采草稿之前展示。进行中的 scratch / pivot / optimize
+        // 只是可恢复草稿，不能再独占整页制造“旧定位已丢失”的错觉。
+        <div className="flex min-h-0 flex-1 flex-col gap-section-gap overflow-y-auto pr-1">
+          <div className="grid shrink-0 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
             {/* 左列子卡片必须 shrink-0:否则 flex 会把卡片压缩适应列高,卡片自身
                 overflow-hidden 无声裁掉内容 → 列 scrollHeight==clientHeight 永不滚 (T-090)。 */}
             <div className="flex min-h-0 min-w-0 flex-col gap-section-gap overflow-y-auto pr-1">
@@ -197,6 +188,18 @@ export function PositioningCenterView({
             </div>
 
             <DownstreamRules profile={profile} />
+          </div>
+
+          <div
+            className={cn(
+              "shrink-0 scroll-mt-4",
+              activeDiscovery ? "min-h-[680px]" : "",
+            )}
+          >
+            <PositioningDiscoveryWorkflow
+              initialSession={activeDiscovery}
+              hasCurrentProfile
+            />
           </div>
         </div>
       )}

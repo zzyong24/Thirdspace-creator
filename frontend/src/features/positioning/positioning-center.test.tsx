@@ -36,7 +36,7 @@ import { PositioningCenterView } from "./positioning-center";
 import type { PositioningCenterViewModel } from "./positioning-center";
 
 // 定位中心 page render test (Phase B redesign — viewModel seam). Asserts the page
-// header + 新建定位母版 trigger, the empty-state CTA, the 当前定位母版 英雄区
+// header + 非破坏式重新定位 trigger, the empty-state CTA, the 当前定位母版 英雄区
 // (一句话放大 + facet 网格 incl. product anchors), the AI 赋能带, the 下游影响
 // collapsible (real injected facets), and the version-desc history table with the
 // AI badge + 完整母版恢复 / 旧版陈述复制 action. Deterministic VM (no network).
@@ -120,12 +120,45 @@ const EMPTY: PositioningCenterViewModel = {
 };
 
 describe("PositioningCenterView", () => {
-  it("renders the page header with the title and the 新建定位母版 trigger (populated)", () => {
+  it("renders the page header with the title and the non-destructive 重新定位 trigger", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getByText("定位中心")).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: /新建定位母版/ }),
+      screen.getByRole("link", { name: /重新定位/ }),
     ).toBeTruthy();
+  });
+
+  it("[T-666] 前采进行中仍展示当前母版、规则和历史，不让草稿独占整页", () => {
+    const active: PositioningCenterViewModel = {
+      ...POPULATED,
+      activeDiscovery: {
+        id: "posdisc-active",
+        userId: "user-a",
+        accountId: "account-a",
+        sourceMode: "scratch",
+        status: "draft",
+        answers: [],
+        webReferences: [],
+        inputManifest: {
+          legacyProfileId: null,
+          legacyStatementIds: [],
+          legacyWorkIds: [],
+        },
+        adoptedCandidateId: null,
+        adoptedStatementId: null,
+        revision: 0,
+        createdAt: "2026-08-02T00:00:00.000Z",
+        updatedAt: "2026-08-02T00:00:00.000Z",
+      },
+    };
+    render(<PositioningCenterView viewModel={active} />);
+    expect(screen.getByTestId("positioning-one-liner")).toHaveTextContent(
+      "v2 把论文变生产级代码",
+    );
+    expect(screen.getByTestId("positioning-downstream")).toBeInTheDocument();
+    expect(screen.getAllByTestId("positioning-history-row")).toHaveLength(2);
+    expect(screen.getByTestId("positioning-discovery-workflow")).toBeInTheDocument();
+    expect(screen.getByText("从零开始 · 已隔离旧资料")).toBeInTheDocument();
   });
 
   it("[T-652] brand-new user先选择完整前采路径，而不是直接跳到 AI 生成", () => {

@@ -14,6 +14,7 @@ import {
   intelligenceCollections,
   intelligenceItems,
   intelligenceMigrationLedgers,
+  projectIntelligenceReferences,
   intelligenceSources,
   intelligenceSourceCollectionMemberships,
   intelligenceSyncRunEvents,
@@ -2835,8 +2836,11 @@ export function createIntelligenceService(
       },
     ) {
       const current = await requireSource(ctx, sourceId);
-      if (input.mode === "permanent" && !input.confirmToken) {
-        throw new IntelligenceValidationError("永久删除需要确认令牌");
+      if (
+        input.mode === "permanent" &&
+        input.confirmToken !== sourceId
+      ) {
+        throw new IntelligenceValidationError("永久删除确认令牌无效");
       }
       const observations = await db
         .select()
@@ -2846,8 +2850,241 @@ export function createIntelligenceService(
         .select()
         .from(sourceSnapshots)
         .where(eq(sourceSnapshots.sourceId, sourceId));
-      // 即使选择 permanent，也先进入 archived 并保留不可变来源证据；真正物理清理
-      // 由带恢复窗的迁移/retention 作业执行，避免误删已被选题或 Project 引用的证据。
+      if (input.mode === "permanent") {
+        const accountId = requireAccountId(
+          ctx.accountId,
+          "intelligence.sources.delete",
+        );
+        const runs = await db
+          .select()
+          .from(intelligenceSyncRuns)
+          .where(
+            and(
+              eq(intelligenceSyncRuns.userId, ctx.userId),
+              eq(intelligenceSyncRuns.accountId, accountId),
+              eq(intelligenceSyncRuns.sourceId, sourceId),
+            ),
+          );
+        const activeRun = runs.find((run) =>
+          [
+            "queued",
+            "running",
+            "pause_requested",
+            "paused",
+            "cancel_requested",
+          ].includes(run.status),
+        );
+        if (activeRun) {
+          throw new IntelligenceConflictError(
+            "该来源仍在同步中，请等待同步完成后再删除",
+          );
+        }
+
+        const itemIds = [...new Set(observations.map((row) => row.itemId))];
+        const projectReferences =
+          itemIds.length > 0
+            ? await db
+                .select()
+                .from(projectIntelligenceReferences)
+                .where(
+                  and(
+                    eq(projectIntelligenceReferences.userId, ctx.userId),
+                    eq(projectIntelligenceReferences.accountId, accountId),
+                    inArray(projectIntelligenceReferences.itemId, itemIds),
+                  ),
+                )
+            : [];
+        const confirmedTransforms =
+          itemIds.length > 0
+            ? (
+                await db
+                  .select()
+                  .from(intelligenceTransforms)
+                  .where(
+                    and(
+                      eq(intelligenceTransforms.userId, ctx.userId),
+                      eq(intelligenceTransforms.accountId, accountId),
+                      inArray(intelligenceTransforms.itemId, itemIds),
+                    ),
+                  )
+              ).filter(
+                (row) =>
+                  row.status === "confirmed" && Boolean(row.targetTopicId),
+              )
+            : [];
+        const protectedItemIds = new Set([
+          ...projectReferences.map((row) => row.itemId),
+          ...confirmedTransforms.map((row) => row.itemId),
+        ]);
+        const protectedSnapshotIds = new Set([
+          ...projectReferences.map((row) => row.sourceSnapshotId),
+          ...confirmedTransforms.map((row) => row.sourceSnapshotId),
+        ]);
+        const otherObservations =
+          itemIds.length > 0
+            ? (
+                await db
+                  .select()
+                  .from(itemSourceObservations)
+                  .where(
+                    and(
+                      eq(itemSourceObservations.userId, ctx.userId),
+                      eq(itemSourceObservations.accountId, accountId),
+                      inArray(itemSourceObservations.itemId, itemIds),
+                    ),
+                  )
+              ).filter((row) => row.sourceId !== sourceId)
+            : [];
+        const sharedItemIds = new Set(
+          otherObservations.map((row) => row.itemId),
+        );
+        const deletableItemIds = itemIds.filter(
+          (itemId) =>
+            !sharedItemIds.has(itemId) && !protectedItemIds.has(itemId),
+        );
+        const projectOnlyItemIds = [...protectedItemIds].filter(
+          (itemId) => !sharedItemIds.has(itemId),
+        );
+        const deletableSnapshotIds = snapshots
+          .filter((snapshot) => !protectedSnapshotIds.has(snapshot.id))
+          .map((snapshot) => snapshot.id);
+        const deletableTransforms =
+          deletableSnapshotIds.length > 0
+            ? await db
+                .select()
+                .from(intelligenceTransforms)
+                .where(
+                  and(
+                    eq(intelligenceTransforms.userId, ctx.userId),
+                    eq(intelligenceTransforms.accountId, accountId),
+                    inArray(
+                      intelligenceTransforms.sourceSnapshotId,
+                      deletableSnapshotIds,
+                    ),
+                  ),
+                )
+            : [];
+        const transcriptTasks =
+          deletableItemIds.length > 0
+            ? await db
+                .select()
+                .from(itemTranscripts)
+                .where(
+                  and(
+                    eq(itemTranscripts.userId, ctx.userId),
+                    eq(itemTranscripts.accountId, accountId),
+                    inArray(itemTranscripts.itemId, deletableItemIds),
+                  ),
+                )
+            : [];
+        const taskIds = [
+          ...runs.map((run) => run.executionTaskId),
+          ...deletableTransforms
+            .map((transform) => transform.aiTaskId)
+            .filter((id): id is string => Boolean(id)),
+          ...transcriptTasks
+            .map((transcript) => transcript.executionTaskId)
+            .filter((id): id is string => Boolean(id)),
+        ];
+        const runIds = runs.map((run) => run.id);
+
+        await db.transaction(async (tx) => {
+          if (runIds.length > 0) {
+            await tx
+              .delete(intelligenceSyncRunEvents)
+              .where(inArray(intelligenceSyncRunEvents.runId, runIds));
+          }
+          if (deletableTransforms.length > 0) {
+            await tx
+              .delete(intelligenceTransforms)
+              .where(
+                inArray(
+                  intelligenceTransforms.id,
+                  deletableTransforms.map((row) => row.id),
+                ),
+              );
+          }
+          if (deletableSnapshotIds.length > 0) {
+            await tx
+              .delete(sourceSnapshots)
+              .where(inArray(sourceSnapshots.id, deletableSnapshotIds));
+          }
+          await tx
+            .delete(itemSourceObservations)
+            .where(eq(itemSourceObservations.sourceId, sourceId));
+          if (deletableItemIds.length > 0) {
+            await tx
+              .delete(itemMetricSnapshots)
+              .where(inArray(itemMetricSnapshots.itemId, deletableItemIds));
+            await tx
+              .delete(itemTranscripts)
+              .where(inArray(itemTranscripts.itemId, deletableItemIds));
+            await tx
+              .delete(intelligenceItems)
+              .where(inArray(intelligenceItems.id, deletableItemIds));
+          }
+          if (projectOnlyItemIds.length > 0) {
+            await tx
+              .update(intelligenceItems)
+              .set({ availability: "archived", updatedAt: now() })
+              .where(inArray(intelligenceItems.id, projectOnlyItemIds));
+          }
+          if (runIds.length > 0) {
+            await tx
+              .delete(intelligenceSyncRuns)
+              .where(inArray(intelligenceSyncRuns.id, runIds));
+          }
+          if (taskIds.length > 0) {
+            await tx
+              .delete(executionTasks)
+              .where(inArray(executionTasks.id, [...new Set(taskIds)]));
+          }
+          await tx
+            .delete(executionTasks)
+            .where(
+              and(
+                eq(executionTasks.userId, ctx.userId),
+                eq(executionTasks.accountId, accountId),
+                eq(executionTasks.ownerType, "source"),
+                eq(executionTasks.ownerId, sourceId),
+              ),
+            );
+          await tx
+            .delete(intelligenceSourceCollectionMemberships)
+            .where(
+              and(
+                eq(
+                  intelligenceSourceCollectionMemberships.userId,
+                  ctx.userId,
+                ),
+                eq(
+                  intelligenceSourceCollectionMemberships.accountId,
+                  accountId,
+                ),
+                eq(
+                  intelligenceSourceCollectionMemberships.sourceId,
+                  sourceId,
+                ),
+              ),
+            );
+          await tx
+            .delete(intelligenceSources)
+            .where(
+              and(
+                eq(intelligenceSources.id, sourceId),
+                eq(intelligenceSources.userId, ctx.userId),
+                eq(intelligenceSources.accountId, accountId),
+              ),
+            );
+        });
+
+        return {
+          affectedItems: deletableItemIds.length,
+          preservedSnapshots: protectedSnapshotIds.size,
+          status: "deleted" as const,
+        };
+      }
+
       const status = input.mode === "pause" ? "paused" : "archived";
       await db
         .update(intelligenceSources)
@@ -3174,6 +3411,7 @@ export function createIntelligenceService(
             eq(intelligenceSources.accountId, accountId),
           ),
         );
+      rows = rows.filter((item) => item.availability !== "archived");
       const memberships = query.collectionId
         ? await db
             .select()

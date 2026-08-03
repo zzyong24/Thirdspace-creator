@@ -141,7 +141,7 @@ function api(): RadarApi {
     deleteSource: vi.fn().mockResolvedValue({
       affectedItems: 3,
       preservedSnapshots: 5,
-      status: "archived",
+      status: "deleted",
     }),
     importDouyinShare: vi.fn().mockResolvedValue({
       item: detail.item,
@@ -1059,7 +1059,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(stub.listRuns).toHaveBeenCalledWith("source-1");
   });
 
-  it("[T-588] 移除入口先打开系统 Dialog，取消时不调用归档接口", async () => {
+  it("[T-665] 删除入口先打开系统 Dialog，取消时不调用删除接口", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,
@@ -1097,21 +1097,27 @@ describe("T-482 内容雷达工作区", () => {
 
     expect(stub.deleteSource).not.toHaveBeenCalled();
     expect(
-      screen.getByRole("heading", { name: "移除「AI 工具」？" }),
+      screen.getByRole("heading", {
+        name: "删除「AI 工具」及其内容？",
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("移除后会停止后续同步，但保留已采集内容和快照。"),
+      screen.getByText(
+        "删除后会停止同步，并清理这个信源独占的内容、快照和任务记录。被其他信源复用或已进入正式选题、项目的内容不会被破坏。",
+      ),
     ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "取消" }));
 
     expect(stub.deleteSource).not.toHaveBeenCalled();
     expect(
-      screen.queryByRole("heading", { name: "移除「AI 工具」？" }),
+      screen.queryByRole("heading", {
+        name: "删除「AI 工具」及其内容？",
+      }),
     ).not.toBeInTheDocument();
   });
 
-  it("[T-588] 确认后精确 archive，清理选择、关闭确认框、刷新并提示成功", async () => {
+  it("[T-665] 确认后永久删除信源及独占内容，并说明共享与正式引用保护", async () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,
@@ -1151,29 +1157,32 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByRole("button", { name: "移除 AI 工具" }),
     );
     await userEvent.click(
-      screen.getByRole("button", { name: "确认移除" }),
+      screen.getByRole("button", { name: "删除信源与内容" }),
     );
 
     await waitFor(() =>
       expect(stub.deleteSource).toHaveBeenCalledWith({
         sourceId: "source-1",
-        mode: "archive",
+        mode: "permanent",
+        confirmToken: "source-1",
       }),
     );
     expect(stub.deleteSource).toHaveBeenCalledTimes(1);
     expect(
-      screen.queryByRole("heading", { name: "移除「AI 工具」？" }),
+      screen.queryByRole("heading", {
+        name: "删除「AI 工具」及其内容？",
+      }),
     ).not.toBeInTheDocument();
     expect(screen.getByTestId("radar-source-row-source-1")).not.toHaveClass(
       "ring-1",
     );
     expect(screen.getByRole("status")).toHaveTextContent(
-      "已移除「AI 工具」；后续同步已停止，已采集内容和快照仍会保留。",
+      "已删除「AI 工具」及 3 条独占内容；被其他信源或正式选题、项目引用的内容已安全保留。",
     );
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("[T-588] 归档失败时来源与确认框不消失，并显示可行动错误", async () => {
+  it("[T-665] 删除失败时来源与确认框不消失，并显示可行动错误", async () => {
     const stub = api();
     stub.deleteSource = vi.fn().mockRejectedValue(new Error("network"));
     const sourceWorkspace: RadarWorkspace = {
@@ -1210,20 +1219,22 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByRole("button", { name: "移除 行业观察" }),
     );
     await userEvent.click(
-      screen.getByRole("button", { name: "确认移除" }),
+      screen.getByRole("button", { name: "删除信源与内容" }),
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "未能移除「行业观察」。请确认来源未在同步并刷新后重试。",
+      "未能删除「行业观察」。请确认来源未在同步并刷新后重试。",
     );
     expect(
-      screen.getByRole("heading", { name: "移除「行业观察」？" }),
+      screen.getByRole("heading", {
+        name: "删除「行业观察」及其内容？",
+      }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("radar-source-row-source-1")).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
 
-  it("[T-588] 同步中的来源明确禁用移除，不能误调用归档接口", () => {
+  it("[T-665] 同步中的来源明确禁用移除，不能误调用删除接口", () => {
     const stub = api();
     const sourceWorkspace: RadarWorkspace = {
       ...workspace,

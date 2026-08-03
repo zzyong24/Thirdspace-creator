@@ -334,51 +334,12 @@ describe("PositioningDraftDrawer", () => {
 });
 
 describe("ResetPositioningMasterButton", () => {
-  it("产品内确认框取消不清空；确认后直接重置为空白母版，不跳转 Copilot", async () => {
+  it("重新定位只跳到非破坏式前采，不再调用清空母版 operation", () => {
     render(<ResetPositioningMasterButton />);
-
-    fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
-    expect(
-      screen.getByRole("heading", { name: "清空当前定位并新建？" }),
-    ).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "重新定位" });
+    expect(link).toHaveAttribute("href", "#positioning-discovery");
+    fireEvent.click(link);
     expect(mockClient.resetPositioningMaster).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "取消" }));
-    expect(
-      screen.queryByRole("heading", { name: "清空当前定位并新建？" }),
-    ).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
-    fireEvent.click(screen.getByRole("button", { name: "清空并新建" }));
-    await waitFor(() =>
-      expect(mockClient.resetPositioningMaster).toHaveBeenCalledWith({
-        params: undefined,
-        query: undefined,
-        body: undefined,
-      }),
-    );
-    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
-    expect(mockRouter.push).not.toHaveBeenCalled();
-  });
-
-  it("重置失败时保留产品内确认框并显示错误，允许直接重试", async () => {
-    mockClient.resetPositioningMaster.mockRejectedValueOnce(
-      new Error("positioning reset failed"),
-    );
-    render(<ResetPositioningMasterButton />);
-
-    fireEvent.click(screen.getByRole("button", { name: "新建定位母版" }));
-    fireEvent.click(screen.getByRole("button", { name: "清空并新建" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "新建定位母版失败",
-    );
-    expect(
-      screen.getByRole("heading", { name: "清空当前定位并新建？" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "清空并新建" }),
-    ).toBeEnabled();
-    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 });
 

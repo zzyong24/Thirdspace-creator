@@ -43,4 +43,39 @@ describe("positioning discovery research", () => {
       "https://example.com/agent-cn",
     ]);
   });
+
+  it("地域行业 IP 查询必须同时匹配行业与创作意图，不拿百科和政府页凑数", () => {
+    const results = selectDiscoveryResearchResults(
+      "湖南餐饮行业IP",
+      [
+        {
+          title: "湖南省_百度百科",
+          url: "https://baike.baidu.com/item/hunan",
+          snippet: "湖南省行政区划、人口和地理概况。",
+        },
+        {
+          title: "湖南省人民政府门户网站",
+          url: "https://www.hunan.gov.cn/",
+          snippet: "湖南省政务信息公开。",
+        },
+        {
+          title: "湖南餐饮门店如何打造短视频 IP",
+          url: "https://www.douyin.com/article/hunan-food-ip",
+          snippet: "本地餐饮主理人通过探店内容、门店故事和账号运营获得客户。",
+        },
+        {
+          title: "长沙餐饮老板做个人品牌的三个案例",
+          url: "https://www.zhihu.com/question/changsha-food-brand",
+          snippet: "湖南餐饮行业的短视频账号定位与内容运营方法。",
+        },
+      ],
+      { market: "cn", language: "zh-CN" },
+      5,
+    );
+
+    expect(results.map((item) => item.url).sort()).toEqual([
+      "https://www.douyin.com/article/hunan-food-ip",
+      "https://www.zhihu.com/question/changsha-food-brand",
+    ].sort());
+  });
 });

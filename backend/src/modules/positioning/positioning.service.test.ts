@@ -427,7 +427,7 @@ describe("positioning service", () => {
     ).toBeUndefined();
   });
 
-  it("[T-623] resetMaster clears the current master, preserves history, and only newer versions become current", async () => {
+  it("[T-666] resetMaster 不能清空已有母版，画像、规则、当前版本和历史都保持不变", async () => {
     const service = makeService(db, makeProjectsPort());
     await service.upsertProfile(ctx, {
       ...PROFILE_INPUT,
@@ -453,53 +453,15 @@ describe("positioning service", () => {
       productAnchorIds: ["product-old"],
     });
 
-    const reset = await service.resetMaster(ctx);
-    expect(reset).toMatchObject({
-      persona: "",
-      field: "",
-      audience: "",
-      differentiation: "",
-      capabilities: [],
-      facets: {
-        contentScope: "",
-        avoid: "",
-        corePain: "",
-        coreValue: "",
-        tone: "",
-        statusNote: "",
-      },
-      downstreamRules: {
-        topicRule: "",
-        scriptRule: "",
-        projectRule: "",
-        forbidRule: "",
-        expressionRule: "",
-      },
+    await expect(service.resetMaster(ctx)).rejects.toThrow(/不能被清空/u);
+    const center = await service.getPositioningCenter(ctx);
+    expect(center.currentStatement?.id).toBe(v1.id);
+    expect(center.profile).toMatchObject({
+      persona: PROFILE_INPUT.persona,
+      facets: { coreValue: "可运行代码" },
+      downstreamRules: { topicRule: "只做工程落地" },
     });
-
-    const emptyCurrent = await service.getPositioningCenter(ctx);
-    expect(emptyCurrent.currentStatement).toBeNull();
-    expect(emptyCurrent.keywords).toEqual([]);
-    expect(emptyCurrent.productAnchors).toEqual([]);
-    expect(emptyCurrent.history.map((item) => item.id)).toEqual([v1.id]);
-
-    await expect(
-      service.evaluateGate(ctx, {
-        subjectType: "candidate",
-        subjectId: "candidate-after-reset",
-        candidate: { title: "不应继续吃旧定位" },
-      }),
-    ).rejects.toBeInstanceOf(GateSubjectError);
-
-    const v2 = await service.createStatementVersion(ctx, {
-      oneLiner: "新定位",
-      keywords: ["新", "母版", "定位"],
-      productAnchorIds: ["product-new"],
-    });
-    expect(v2.versionNumber).toBe(2);
-    const rebuilt = await service.getPositioningCenter(ctx);
-    expect(rebuilt.currentStatement?.id).toBe(v2.id);
-    expect(rebuilt.history.map((item) => item.id)).toEqual([v2.id, v1.id]);
+    expect(center.history.map((item) => item.id)).toEqual([v1.id]);
   });
 
   it("[T-632] reset 前保留完整母版，恢复会回写全部字段并追加新版本而不改旧历史", async () => {
@@ -529,9 +491,6 @@ describe("positioning service", () => {
     });
     const immutableV1 = structuredClone(v1);
 
-    await service.resetMaster(ctx);
-    expect((await service.getPositioningCenter(ctx)).currentStatement).toBeNull();
-
     const restored = await service.restoreMaster(ctx, v1.id);
     expect(restored.restoredFromVersion).toBe(1);
     expect(restored.statement.versionNumber).toBe(2);
@@ -551,7 +510,7 @@ describe("positioning service", () => {
     expect(center.profile?.downstreamRules.forbidRule).toBe("不编数据");
   });
 
-  it("[T-632] statement 保存后画像又编辑，reset 会追加精确的重置前备份", async () => {
+  it("[T-666] statement 保存后画像又编辑，旧 reset 入口也不能新增备份或改写母版", async () => {
     const service = makeService(db, makeProjectsPort(), "backup");
     await service.upsertProfile(ctx, PROFILE_INPUT);
     await service.createStatementVersion(ctx, {
@@ -565,18 +524,11 @@ describe("positioning service", () => {
       downstreamRules: { topicRule: "重置前最后规则" },
     });
 
-    await service.resetMaster(ctx);
-    const history = (await service.getPositioningCenter(ctx)).history;
-    expect(history).toHaveLength(2);
-    expect(history[0]).toMatchObject({
-      versionNumber: 2,
-      oneLiner: "仍沿用的陈述",
-      changeReason: "重置前自动备份（基于 v1）",
-      masterSnapshot: {
-        persona: "陈述保存后改过的人设",
-        downstreamRules: { topicRule: "重置前最后规则" },
-      },
-    });
+    await expect(service.resetMaster(ctx)).rejects.toThrow(/不能被清空/u);
+    const center = await service.getPositioningCenter(ctx);
+    expect(center.history).toHaveLength(1);
+    expect(center.profile?.persona).toBe("陈述保存后改过的人设");
+    expect(center.profile?.downstreamRules.topicRule).toBe("重置前最后规则");
   });
 
   it("[T-632] 旧版无快照拒绝假恢复，跨账号恢复与未知 id 同样按 404 隔离", async () => {
@@ -603,7 +555,7 @@ describe("positioning service", () => {
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 
-  it("[T-632] 升级后的第一次 reset 会在清空前为旧版当前陈述只写一次补齐真实快照", async () => {
+  it("[T-666] 旧版陈述缺快照时 reset 也不以补齐为名清空当前母版", async () => {
     const service = makeService(db, makeProjectsPort(), "upgrade");
     await service.upsertProfile(ctx, {
       ...PROFILE_INPUT,
@@ -620,23 +572,18 @@ describe("positioning service", () => {
       .set({ masterSnapshot: null })
       .where(eq(positioningStatements.id, legacyCurrent.id));
 
-    await service.resetMaster(ctx);
-    const history = (await service.getPositioningCenter(ctx)).history;
+    await expect(service.resetMaster(ctx)).rejects.toThrow(/不能被清空/u);
+    const center = await service.getPositioningCenter(ctx);
+    const history = center.history;
     expect(history).toHaveLength(1);
-    expect(history[0]).toMatchObject({
-      id: legacyCurrent.id,
-      versionNumber: 1,
-      masterSnapshot: {
-        persona: "升级前仍在使用的人设",
-        downstreamRules: { topicRule: "升级前真实规则" },
-      },
-    });
-    const restored = await service.restoreMaster(ctx, legacyCurrent.id);
-    expect(restored.profile.persona).toBe("升级前仍在使用的人设");
-    expect(restored.profile.downstreamRules.topicRule).toBe("升级前真实规则");
+    expect(history[0]?.id).toBe(legacyCurrent.id);
+    expect(history[0]?.masterSnapshot).toBeNull();
+    expect(center.currentStatement?.id).toBe(legacyCurrent.id);
+    expect(center.profile?.persona).toBe("升级前仍在使用的人设");
+    expect(center.profile?.downstreamRules.topicRule).toBe("升级前真实规则");
   });
 
-  it("[T-623] resetMaster is account-scoped and cannot clear another account's master", async () => {
+  it("[T-666] resetMaster 对任何账号都拒绝，两个账号的母版都不受影响", async () => {
     const service = makeService(db, makeProjectsPort());
     const ctxAcc1: RequestContext = { ...ctx, accountId: "acc-1" };
     const ctxAcc2: RequestContext = { ...ctx, accountId: "acc-2" };
@@ -660,9 +607,10 @@ describe("positioning service", () => {
       productAnchorIds: [],
     });
 
-    await service.resetMaster(ctxAcc1);
-
-    expect((await service.getPositioningCenter(ctxAcc1)).currentStatement).toBeNull();
+    await expect(service.resetMaster(ctxAcc1)).rejects.toThrow(/不能被清空/u);
+    const first = await service.getPositioningCenter(ctxAcc1);
+    expect(first.profile?.persona).toBe("一号旧母版");
+    expect(first.currentStatement?.oneLiner).toBe("一号旧定位");
     const untouched = await service.getPositioningCenter(ctxAcc2);
     expect(untouched.profile?.persona).toBe("二号保留母版");
     expect(untouched.profile?.downstreamRules.topicRule).toBe("二号规则");
