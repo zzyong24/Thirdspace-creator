@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 均已由本轮受限修订销账：价格检查已覆盖主要币种、金额格式和商业报价语义类别；部署输入、历史残留及独立管理的公开目录均纳入递归扫描与线上回读。changed lines 未引入新的 blocker 或 major。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "§2-公开边界",
+        "quote": "不再公开：终端售价、内测价、正式版价格、续费价、代理进货价、指导价、利润、价差、价格截止日期。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-PUBLIC-NO-PRICE",
+        "quote": "官网可见文本、脚本内 FAQ 和 HTML 源码均不包含 `¥599`、`¥899`、`¥399`、`¥199`、`500 元价差`或同义公开报价。"
+      },
+      "where": "§5 验收与 frontend-journey-contract 的 WEB-PUBLIC-01",
+      "failure_mode": "实现只扫描列出的固定字符串时，仍可保留其他金额、不同币种或格式、未列举的代理价差与利润表述并通过测试；“同义公开报价”没有给出确定性判定边界，两个合理实现会形成不同的公开结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#当前唯一公开边界；docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#验收",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把禁止公开的价格与利润表达定义成可确定验证的类别，并要求测试覆盖金额格式变体及价格、利润、价差、截止日期等语义类别，而非只匹配当前列举的字符串。",
+      "resolution_evidence": "SPEC-LINE:38:81985d2736f1578d 将金额检查扩展为人民币、美元、欧元、英镑的符号、代码、中文名称及前后置格式，并明确空格、千分位、小数和报价尾部格式；§5 同时列出价格、续费、进货价、利润、价差与截止日期等商业报价语义类别及历史值回归样本。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "§2-公开静态站边界",
+        "quote": "代理内部政策、价盘与联系网络继续由 Growth/渠道运营体系管理，不写入公开静态站。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-PUBLIC-NO-PERSONAL-CONTACT",
+        "quote": "官网源码不包含个人微信 `zyong181818z`、备用微信 `R15929072019`、邮箱 `z17362936917@163.com` 或 `shots/wechat-qr.png`。"
+      },
+      "where": "§4 数据与契约边界、§5 验收及 watched_paths",
+      "failure_mode": "验收只扫描首页源码、FAQ 和四个 watched paths，并只对二维码历史 URL 做线上回读；其他现存或历史静态文件若包含价格、联系方式或二维码，仍可能通过直接 URL 公开访问，同时所有列出的检查均通过。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#数据与契约边界；docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#验收；docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#前端旅程契约",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "要求对实际部署输入目录中的全部公开静态文本与相关资源做递归检查，并为已知历史敏感资源建立线上 URL 回读清单；watched_paths 应覆盖决定这些公开资源与部署结果的路径。",
+      "resolution_evidence": "SPEC-LINE:37:69b71fed9c0c6228 要求递归扫描 deploy.sh 实际发布的全部公开文本，并将 updates/、prompts/ 纳入本地与线上响应检查；SPEC-LINE:45:2998559a7e9e4677 要求 rsync --delete、部署目录与输入清单比对，以及逐项扫描独立管理目录的公开响应。",
+      "parent_id": ""
+    }
+  ]
+}

@@ -3,496 +3,995 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="CreatorOS —— 编导式自媒体内容生产系统。定位、选题、脚本、复盘一条飞轮,数据留在本机。">
+<meta name="description" content="CreatorOS —— 住在你本机的「抖音编导创作系统」。定位、选题、脚本、制作、发布、复盘走完一条数据复利飞轮，数据全在本机。">
 <meta name="theme-color" content="#fbfbfd">
-<title>CreatorOS · 让创作不再只靠灵感</title>
+<title>CreatorOS · 住在你本机的抖音编导创作系统</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root{
+  --ground:#fbfbfd; --panel:#ffffff; --panel2:#f7f6fc;
+  --ink:#1d1d1f; --muted:#6e6e73; --faint:#86868b; --hair:#e3e1ea; --hair2:#eceaf3;
+  --brand:#6d3bef; --brand-soft:#a78bfa; --brand-ink:#4c22c9; --brand-wash:rgba(109,59,239,.08);
+  --good:#1a8f4c; --max:1180px;
+  --mono:"SF Mono","Cascadia Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+section[id]{scroll-margin-top:76px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:rgba(109,59,239,.18)}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+/* 背景氛围 */
+.stage{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.stage::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(1100px 560px at 78% -8%,rgba(109,59,239,.09),transparent 60%),
+             radial-gradient(820px 460px at 8% 26%,rgba(167,139,250,.08),transparent 55%)}
+.stage::after{content:"";position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(109,59,239,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(109,59,239,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 55% at 50% 0%,#000 8%,transparent 72%);
+          mask-image:radial-gradient(ellipse 90% 55% at 50% 0%,#000 8%,transparent 72%)}
+
+/* 通用 */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 28px}
+.mono{font-family:var(--mono);letter-spacing:.06em}
+.eyebrow{font-family:var(--mono);font-size:12px;color:var(--brand);letter-spacing:.28em;text-transform:uppercase}
+.sect{padding:104px 0}
+.sect-head{margin-bottom:60px;max-width:720px}
+.sect-head h2{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-.02em;margin-top:14px;line-height:1.12}
+.sect-head p{color:var(--muted);margin-top:14px;font-size:17px}
+.sect-head p b{color:var(--ink);font-weight:600}
+.rule{display:flex;align-items:center;gap:14px}
+.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(109,59,239,.25),transparent)}
+
+/* 顶栏 */
+header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);
+  background:rgba(251,251,253,.78);border-bottom:1px solid var(--hair2)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{display:flex;align-items:center;gap:11px;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.logo-mark{width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;
+  background:linear-gradient(145deg,var(--brand-soft),var(--brand) 60%,var(--brand-ink));box-shadow:inset 0 1px 1px rgba(255,255,255,.4)}
+.doc-no{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.16em;margin-left:6px}
+.nav-links{display:flex;gap:26px;margin-left:auto;margin-right:22px}
+.nav-links a{font-size:13.5px;color:var(--muted);letter-spacing:-.01em;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-tools{display:flex;gap:10px;align-items:center}
+.nav-svc{font-size:13px;padding:8px 15px;border:1px solid var(--hair);border-radius:8px;color:var(--brand);font-family:var(--mono);letter-spacing:.04em;cursor:pointer;background:none;transition:.22s}
+.nav-svc:hover{background:var(--brand-wash);border-color:var(--brand-soft)}
+.nav-cta{font-size:13.5px;font-weight:500;color:#fff;background:var(--brand);padding:8px 17px;border-radius:980px;transition:.22s}
+.nav-cta:hover{background:var(--brand-ink)}
+@media(max-width:860px){.nav-links{display:none}}
+@media(max-width:600px){.doc-no,.nav-svc{display:none}.nav-cta{font-size:12.5px;padding:8px 13px}.logo{font-size:16px}}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:6px}
+
+/* Hero */
+.hero{padding:92px 0 30px;text-align:center;position:relative}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:10px}
+.hero .eyebrow::before,.hero .eyebrow::after{content:"";width:30px;height:1px;background:var(--brand-soft)}
+.hero h1{font-size:clamp(40px,6.6vw,74px);font-weight:700;letter-spacing:-.03em;line-height:1.06;margin-top:22px;text-wrap:balance}
+.hero h1 .em{color:var(--brand)}
+.hero .sub{color:var(--muted);font-size:clamp(16px,1.7vw,20px);margin:24px auto 0;max-width:640px;letter-spacing:-.01em;text-wrap:balance}
+.hero .sub b{color:var(--ink);font-weight:600}
+.beta-rail{max-width:780px;margin:32px auto 0;padding:12px 14px 12px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;text-align:left;
+  background:linear-gradient(120deg,rgba(76,34,201,.98),rgba(109,59,239,.94) 58%,rgba(126,87,246,.9));color:#fff;border:1px solid rgba(255,255,255,.22);border-radius:18px;
+  box-shadow:0 18px 52px rgba(76,34,201,.22),inset 0 1px 0 rgba(255,255,255,.22);position:relative;overflow:hidden}
+.beta-rail::after{content:"";position:absolute;width:210px;height:210px;border:1px solid rgba(255,255,255,.16);border-radius:50%;right:23%;top:-150px;box-shadow:0 0 0 34px rgba(255,255,255,.035),0 0 0 68px rgba(255,255,255,.025)}
+.beta-seal{width:66px;height:66px;border-radius:14px;display:grid;place-content:center;text-align:center;background:rgba(20,10,58,.26);border:1px solid rgba(255,255,255,.2);position:relative;z-index:1}
+.beta-seal span{font-family:var(--mono);font-size:8px;letter-spacing:.22em;opacity:.72}
+.beta-seal b{font-family:var(--mono);font-size:27px;line-height:1.08;letter-spacing:-.04em}
+.beta-copy{display:flex;flex-direction:column;position:relative;z-index:1}
+.beta-copy small{font-family:var(--mono);font-size:10px;letter-spacing:.2em;opacity:.72;text-transform:uppercase}
+.beta-copy strong{font-size:18px;letter-spacing:-.01em;line-height:1.35}
+.beta-copy strong i{font-style:normal;opacity:.48;padding:0 5px}
+.beta-copy span{font-size:12.5px;opacity:.8}
+.beta-copy-btn{position:relative;z-index:1;border:1px solid rgba(255,255,255,.5);background:#fff;color:var(--brand-ink);border-radius:12px;padding:9px 14px;cursor:pointer;font-family:var(--sans);font-size:11px;text-align:left;line-height:1.35;transition:.2s}
+.beta-copy-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(22,10,64,.2)}
+.beta-copy-btn code{display:block;margin-top:2px;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.04em}
+.cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+.btn{font-size:15.5px;font-weight:500;padding:13px 26px;border-radius:980px;letter-spacing:-.01em;border:1px solid transparent;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-p{background:var(--brand);color:#fff;box-shadow:0 10px 30px -12px rgba(109,59,239,.5)}
+.btn-p:hover{background:var(--brand-ink);transform:translateY(-1px);box-shadow:0 16px 40px -14px rgba(109,59,239,.6)}
+.btn-g{background:var(--panel);color:var(--brand);border-color:var(--hair)}
+.btn-g:hover{border-color:var(--brand)}
+.hero-foot{margin-top:16px;font-size:12.5px;color:var(--faint)}
+.hero-offer{max-width:780px;margin:14px auto 0;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 16px 13px 18px;
+  color:var(--ink);background:rgba(255,255,255,.9);border:1px solid var(--hair);border-radius:14px;text-align:left;box-shadow:0 16px 42px -32px rgba(76,34,201,.5)}
+.hero-offer strong{font-size:14px;letter-spacing:-.01em}.hero-offer strong em{font-style:normal;color:var(--brand);font-size:18px}
+.hero-offer span{font-size:12px;color:var(--muted);margin-left:8px}
+.hero-offer a{flex:none;font-size:12px;color:var(--brand);font-weight:600;border-bottom:1px solid rgba(109,59,239,.3)}
+@media(max-width:650px){.hero-offer{display:block;text-align:center}.hero-offer span{display:block;margin:3px 0 7px}.hero-offer a{display:inline-block}}
+
+.spec-strip{display:flex;justify-content:center;gap:0;margin-top:46px;flex-wrap:wrap}
+.spec-strip .it{padding:6px 34px;border-right:1px solid var(--hair);text-align:center}
+.spec-strip .it:last-child{border-right:none}
+.spec-strip .n{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--brand)}
+.spec-strip .l{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-top:2px}
+@media(max-width:560px){.spec-strip .it{padding:6px 18px}.spec-strip .n{font-size:22px}}
+@media(max-width:760px){.beta-rail{grid-template-columns:auto 1fr;padding:11px}.beta-copy-btn{grid-column:1/-1;text-align:center}.beta-copy-btn code{display:inline;margin-left:7px}}
+@media(max-width:480px){.beta-seal{width:56px;height:56px}.beta-copy strong{font-size:15px}.beta-copy strong i{padding:0 2px}.beta-copy span{font-size:11.5px}}
+
+/* 购买与价格：先讲设备规则，再讲价格，避免把不同设备误解成不同版本。 */
+.price{padding:76px 0 94px;position:relative}
+.price::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,transparent,rgba(109,59,239,.045) 42%,transparent)}
+.price-head{text-align:center;max-width:760px;margin:0 auto 42px}.price-head h2{font-size:clamp(30px,4.8vw,50px);line-height:1.1;letter-spacing:-.03em;margin-top:14px}
+.price-head p{color:var(--muted);font-size:16px;margin-top:15px}.price-head p b{color:var(--ink)}
+.purchase-facts{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--hair);border-radius:18px;background:rgba(255,255,255,.86);overflow:hidden;margin-bottom:22px}
+.purchase-fact{padding:22px 24px;border-left:1px solid var(--hair2)}.purchase-fact:first-child{border-left:none}
+.purchase-fact small{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--brand)}
+.purchase-fact strong{display:block;font-size:17px;margin-top:6px}.purchase-fact span{display:block;color:var(--muted);font-size:13px;margin-top:3px;line-height:1.55}
+.purchase-fact .soon{display:inline-block;color:#a16207;background:#fff7d6;border-radius:980px;padding:1px 8px;margin-left:5px;font-size:11px}
+.pricing-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:20px}
+.price-card{border:1px solid var(--hair);border-radius:22px;background:var(--panel);padding:34px;position:relative;overflow:hidden;box-shadow:0 30px 70px -48px rgba(76,34,201,.42)}
+.price-card.primary{color:#fff;border-color:rgba(255,255,255,.18);background:linear-gradient(145deg,#24105f,#5a2bd6 66%,#7650ee)}
+.price-card.primary::after{content:"";position:absolute;width:260px;height:260px;right:-145px;top:-145px;border:1px solid rgba(255,255,255,.14);border-radius:50%;box-shadow:0 0 0 38px rgba(255,255,255,.035),0 0 0 76px rgba(255,255,255,.025)}
+.price-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--brand)}.primary .price-kicker{color:#d8ccff}
+.price-value{display:flex;align-items:flex-end;gap:9px;margin-top:16px}.price-value b{font-family:var(--mono);font-size:clamp(48px,7vw,76px);line-height:.95;letter-spacing:-.08em}.price-value span{font-size:15px;padding-bottom:7px;opacity:.72}
+.price-card h3{font-size:24px;margin-top:14px;letter-spacing:-.02em}.price-card p{font-size:14px;color:var(--muted);margin-top:8px;max-width:44ch}.primary p{color:rgba(255,255,255,.76)}
+.price-list{list-style:none;margin-top:24px;border-top:1px solid var(--hair2)}.primary .price-list{border-color:rgba(255,255,255,.18)}
+.price-list li{padding:12px 0 12px 24px;position:relative;border-bottom:1px solid var(--hair2);font-size:14px}.primary .price-list li{border-color:rgba(255,255,255,.13)}
+.price-list li::before{content:"✓";position:absolute;left:0;color:var(--brand);font-weight:800}.primary .price-list li::before{color:#d8ccff}
+.price-card .btn{margin-top:24px}.primary .btn{background:#fff;color:var(--brand-ink)}
+.renewal{margin-top:22px;padding-top:18px;border-top:1px dashed var(--hair);display:flex;justify-content:space-between;align-items:center;gap:16px}.renewal span{color:var(--muted);font-size:13px}.renewal b{font-family:var(--mono);font-size:24px;color:var(--brand-ink)}
+@media(max-width:820px){.purchase-facts,.pricing-grid{grid-template-columns:1fr}.purchase-fact{border-left:none;border-top:1px solid var(--hair2)}.purchase-fact:first-child{border-top:none}}
+@media(max-width:520px){.price-card{padding:26px 22px}.price-value b{font-size:54px}}
+
+/* 授权合作伙伴获取：只说明服务链，不公开内部商业规则。 */
+.agent-board{border-radius:26px;padding:clamp(24px,4vw,46px);color:#fff;background:linear-gradient(145deg,#17102e,#2b1764 52%,#4c22c9);position:relative;overflow:hidden;box-shadow:0 38px 90px -48px rgba(45,19,116,.8)}
+.agent-board::before{content:"";position:absolute;inset:0;background:radial-gradient(500px 260px at 86% 0%,rgba(167,139,250,.32),transparent 70%);pointer-events:none}
+.agent-lead{position:relative;display:grid;grid-template-columns:1.2fr .8fr;gap:34px;align-items:end}.agent-lead .eyebrow{color:#c9b8ff}.agent-lead h3{font-size:clamp(30px,4.8vw,54px);line-height:1.06;letter-spacing:-.035em;margin-top:14px}.agent-lead h3 em{display:block;font-style:normal;color:#c9b8ff}.agent-lead p{color:rgba(255,255,255,.7);font-size:15px}.agent-lead p b{color:#fff}
+.agent-zero{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.agent-zero span{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);border-radius:980px;padding:5px 11px;font-size:12px;color:#e9e2ff}
+.agent-numbers{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:34px}.agent-num{padding:20px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);border-radius:16px}.agent-num small{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#c9b8ff}.agent-num b{display:block;font-family:var(--mono);font-size:34px;line-height:1;margin-top:9px;letter-spacing:-.05em}.agent-num span{display:block;margin-top:6px;font-size:12px;color:rgba(255,255,255,.62)}
+.agent-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.agent-benefit{border:1px solid var(--hair);border-radius:16px;padding:22px;background:var(--panel)}.agent-benefit b{display:block;font-size:16px}.agent-benefit span{display:block;color:var(--muted);font-size:13.5px;margin-top:6px;line-height:1.65}.agent-note{font-size:12px;color:var(--faint);margin-top:16px;text-align:center}
+@media(max-width:820px){.agent-lead{grid-template-columns:1fr}.agent-numbers,.agent-benefits{grid-template-columns:1fr}}
+@media(max-width:520px){.agent-lead h3{font-size:28px}.agent-board{padding:24px}.agent-num{padding:18px}}
+
+/* 全景截图 */
+.shot-stage{margin:62px auto 0;max-width:1000px;position:relative}
+.shot-stage::before{content:"";position:absolute;inset:-30px -50px;z-index:-1;
+  background:radial-gradient(60% 70% at 50% 38%,rgba(109,59,239,.12),transparent 70%);filter:blur(8px)}
+.shot-frame{border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--panel);
+  box-shadow:0 2px 6px rgba(0,0,0,.04),0 40px 100px -40px rgba(76,34,201,.4)}
+.shot-frame .bar{display:flex;align-items:center;gap:8px;height:38px;padding:0 15px;border-bottom:1px solid var(--hair2);background:linear-gradient(#fafafc,#f2f1f7)}
+.shot-frame .bar i{width:11px;height:11px;border-radius:50%;background:#dcdbe4}
+.shot-frame .bar i:nth-child(1){background:#ff5f57}.shot-frame .bar i:nth-child(2){background:#febc2e}.shot-frame .bar i:nth-child(3){background:#28c840}
+.shot-frame .bar .addr{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:12px;letter-spacing:.04em}
+.shot-frame img{width:100%;display:block}
+.shot-cap{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.1em;margin-top:13px;padding:0 4px}
+
+/* 环形飞轮总览 */
+.wheel-block{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:clamp(30px,5vw,64px);align-items:center;margin:0 0 20px}
+@media(max-width:860px){.wheel-block{grid-template-columns:1fr;gap:34px}}
+.wheel{width:100%;height:auto;display:block;max-width:400px;margin:0 auto}
+.wheel .ring-base{fill:none;stroke:rgba(109,59,239,.14);stroke-width:1}
+.wheel .ring-dash{fill:none;stroke:rgba(109,59,239,.4);stroke-width:1;stroke-dasharray:3 9;stroke-linecap:round;transform-origin:200px 200px;animation:spin 46s linear infinite}
+.wheel .arc-glow{fill:none;stroke:url(#wg);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:130 620;transform-origin:200px 200px;animation:spin 13s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.wheel .ring-dash,.wheel .arc-glow{animation:none}}
+.wheel .node{fill:#fff;stroke:var(--brand-soft);stroke-width:1.5}
+.wheel .node-n{fill:var(--brand);font-family:var(--mono);font-size:14px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.wheel .node-l{fill:var(--ink);font-size:15px;font-weight:600;letter-spacing:.02em;text-anchor:middle;dominant-baseline:central}
+.wheel .hub-t{fill:var(--faint);font-size:11.5px;letter-spacing:.28em;text-anchor:middle;dominant-baseline:central;font-family:var(--mono)}
+.wheel-quote{font-size:clamp(22px,2.8vw,30px);font-weight:700;letter-spacing:-.02em;line-height:1.35;margin:0 0 16px}
+.wheel-quote em{font-style:normal;color:var(--brand)}
+.wheel-sub{font-size:16px;color:var(--muted);line-height:1.8;margin:0;max-width:34em}
+.wheel-sub b{color:var(--ink);font-weight:600}
+.wheel-hint{margin-top:22px;font-family:var(--mono);font-size:12.5px;color:var(--brand);letter-spacing:.06em}
+.flywheel-poster{max-width:920px;margin:58px auto 30px;padding:clamp(14px,2.5vw,26px);border:1px solid var(--hair);
+  border-radius:24px;background:rgba(255,255,255,.88);box-shadow:0 30px 90px -46px rgba(76,34,201,.42);position:relative}
+.flywheel-poster::before{content:"";position:absolute;inset:12% 10%;z-index:-1;
+  background:radial-gradient(circle,rgba(109,59,239,.16),transparent 68%);filter:blur(34px)}
+.flywheel-poster img{width:min(100%,760px);height:auto;margin:0 auto;border-radius:16px}
+.flywheel-poster figcaption{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px auto 0;
+  max-width:760px;color:var(--muted);font-size:13px}
+.flywheel-poster figcaption b{color:var(--ink)}
+.zoom-note{font-family:var(--mono);font-size:11px;color:var(--brand);letter-spacing:.06em;white-space:nowrap}
+@media(max-width:600px){
+  .flywheel-poster{width:calc(100vw - 20px);margin-left:calc(50% - 50vw + 10px);padding:8px;border-radius:18px}
+  .flywheel-poster img{border-radius:12px}
+  .flywheel-poster figcaption{display:block;padding:0 8px 6px;font-size:12px}
+  .flywheel-poster .zoom-note{display:block;margin-top:6px}
+}
+
+/* 飞轮工序 */
+.steps{counter-reset:step}
+.step{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(0,1.18fr);gap:clamp(36px,5vw,64px);align-items:center;padding:78px 0;position:relative}
+.step+.step{border-top:1px dashed var(--hair)}
+.step:nth-child(even) .step-shot{order:-1}
+.step>div:first-child{position:relative}
+@media(max-width:900px){
+  .step{grid-template-columns:1fr;gap:34px;padding:56px 0}
+  /* 手机端按阅读顺序呈现：文字在前、截图居中放大在后，避免双栏把界面压成缩略图。 */
+  .step:nth-child(even) .step-shot{order:initial}
+  .step-shot{max-width:760px;width:100%;margin:0 auto}
+}
+@media(max-width:560px){
+  .wrap{padding-left:18px;padding-right:18px}
+  .step{gap:26px;padding:46px 0}
+  .step-shot{width:calc(100vw - 20px);max-width:none;margin-left:calc(50% - 50vw + 10px)}
+  .step-shot .ph{border-radius:14px;box-shadow:0 22px 52px -28px rgba(76,34,201,.38);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+  .step-shot .ph::-webkit-scrollbar{display:none}
+  .step-shot .ph img{width:720px;max-width:none;cursor:zoom-in}
+  .step-shot::after{content:"左右滑动查看完整界面 · 点击放大";display:block;margin-top:12px;text-align:center;
+    font-family:var(--mono);font-size:10px;color:var(--brand);letter-spacing:.05em}
+  .step-shot .corner{width:16px;height:16px}
+}
+.step-num{font-family:var(--mono);font-size:clamp(80px,10vw,132px);font-weight:800;line-height:.9;
+  background:linear-gradient(180deg,var(--brand-soft) 8%,var(--brand-ink) 92%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.step-tag{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.24em;text-transform:uppercase;margin-top:16px}
+.step h3{font-size:clamp(25px,3vw,36px);font-weight:700;margin-top:11px;letter-spacing:-.02em}
+.step .desc{color:var(--muted);margin-top:16px;font-size:16.5px;line-height:1.8;max-width:520px}
+.step .desc b{color:var(--ink);font-weight:600}
+.step ul{list-style:none;margin-top:24px;max-width:520px}
+.step li{position:relative;padding:13px 18px 13px 42px;color:var(--muted);font-size:15px;line-height:1.65;margin-top:11px;
+  border:1px solid var(--hair2);border-radius:12px;background:var(--panel)}
+.step li::before{content:"▸";position:absolute;left:17px;top:13px;color:var(--brand);font-size:13px}
+.step li b{color:var(--ink);font-weight:600}
+.step-shot{position:relative;max-width:640px;justify-self:center;width:100%}
+.step-shot .ph{border:1px solid var(--hair);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:0 24px 60px -30px rgba(76,34,201,.3)}
+.step-shot img,.zoomable{cursor:zoom-in}
+.step-shot .corner{position:absolute;width:18px;height:18px;border:1.5px solid var(--brand-soft)}
+.step-shot .c1{top:-7px;left:-7px;border-right:none;border-bottom:none}
+.step-shot .c2{top:-7px;right:-7px;border-left:none;border-bottom:none}
+.step-shot .c3{bottom:-7px;left:-7px;border-right:none;border-top:none}
+.step-shot .c4{bottom:-7px;right:-7px;border-left:none;border-top:none}
+
+/* 差异化:规格表 */
+.specs{border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--panel)}
+.spec-row{display:grid;grid-template-columns:210px 1fr;border-top:1px solid var(--hair2)}
+.spec-row:first-child{border-top:none}
+.spec-row .k{padding:24px 26px;font-family:var(--mono);font-size:12.5px;color:var(--brand);letter-spacing:.06em;border-right:1px solid var(--hair2);display:flex;gap:10px;align-items:flex-start}
+.spec-row .k::before{content:"◈";font-size:10px;margin-top:4px;opacity:.7}
+.spec-row .v{padding:22px 28px}
+.spec-row .v h4{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.spec-row .v p{color:var(--muted);font-size:14.5px;margin-top:5px}
+.spec-row .v p b{color:var(--ink);font-weight:600}
+@media(max-width:760px){.spec-row{grid-template-columns:1fr}.spec-row .k{border-right:none;border-bottom:1px solid var(--hair2);padding-bottom:12px}}
+
+/* 适用人群 */
+.ucgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:900px){.ucgrid{grid-template-columns:1fr}}
+.uc{border:1px solid var(--hair);border-radius:16px;padding:32px 28px;background:var(--panel);position:relative;overflow:hidden;transition:.3s}
+.uc::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--brand),transparent 65%)}
+.uc:hover{transform:translateY(-3px);border-color:var(--brand-soft);box-shadow:0 24px 50px -30px rgba(76,34,201,.3)}
+.uc-tag{font-family:var(--mono);font-size:11.5px;color:var(--brand);letter-spacing:.22em}
+.uc h3{font-size:18.5px;font-weight:700;margin-top:13px;letter-spacing:-.01em}
+.uc p{color:var(--muted);font-size:14.5px;margin-top:11px;line-height:1.75}
+.uc p b{color:var(--ink);font-weight:600}
+.inds{margin-top:44px;border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--panel)}
+.ind{display:grid;grid-template-columns:180px 1fr;border-top:1px solid var(--hair2)}
+.ind:first-child{border-top:none}
+.ind b{padding:16px 26px;color:var(--brand);font-size:15px;border-right:1px solid var(--hair2);display:flex;align-items:center;gap:10px}
+.ind b::before{content:"◈";font-size:10px;opacity:.7}
+.ind span{padding:16px 26px;color:var(--muted);font-size:14.5px}
+.ind span em{color:var(--ink);font-style:normal;font-weight:600}
+@media(max-width:700px){.ind{grid-template-columns:1fr}.ind b{border-right:none;padding-bottom:4px}.ind span{padding-top:0}}
+
+/* 版本档案：官网单一更新日志入口 */
+.version-peek{display:inline-flex;align-items:center;gap:9px;margin-top:13px;color:var(--brand);font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+.version-peek span{color:#fff;background:var(--brand);border-radius:980px;padding:2px 8px;font-size:9px;letter-spacing:.14em}
+.release-board{border:1px solid var(--hair);border-radius:20px;background:rgba(255,255,255,.82);overflow:hidden;box-shadow:0 32px 80px -52px rgba(76,34,201,.4)}
+.release-tabs{display:flex;align-items:center;gap:4px;padding:10px;background:var(--panel2);border-bottom:1px solid var(--hair2)}
+.release-tab{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:10px;padding:9px 15px;cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.04em;transition:.2s}
+.release-tab:hover{color:var(--brand);background:var(--brand-wash)}
+.release-tab[aria-selected="true"]{color:#fff;background:var(--brand);box-shadow:0 8px 20px -10px rgba(76,34,201,.65)}
+.release-live{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;color:var(--good);letter-spacing:.1em;padding-right:8px}
+.release-live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px rgba(26,143,76,.45)}
+.release-panel{display:grid;grid-template-columns:210px 1fr;min-height:390px}
+.release-panel[hidden]{display:none}
+.release-stamp{padding:34px 30px;border-right:1px solid var(--hair2);background:linear-gradient(155deg,rgba(109,59,239,.08),transparent 68%);position:relative;overflow:hidden}
+.release-stamp::after{content:"";position:absolute;width:150px;height:150px;border:1px solid rgba(109,59,239,.13);border-radius:50%;left:-64px;bottom:-80px;box-shadow:0 0 0 25px rgba(109,59,239,.03),0 0 0 50px rgba(109,59,239,.02)}
+.release-stamp small{font-family:var(--mono);font-size:9.5px;color:var(--brand);letter-spacing:.2em;text-transform:uppercase}
+.release-stamp strong{display:block;font-family:var(--mono);font-size:36px;line-height:1.1;color:var(--brand-ink);margin-top:8px;letter-spacing:-.06em}
+.release-date{font-size:12px;color:var(--faint);margin-top:9px}
+.release-badge{display:inline-block;margin-top:20px;border:1px solid var(--brand-soft);border-radius:980px;padding:4px 10px;font-size:10px;color:var(--brand);font-family:var(--mono);letter-spacing:.08em}
+.release-content{padding:34px 38px 38px}
+.release-content h3{font-size:clamp(23px,3vw,32px);line-height:1.2;letter-spacing:-.025em}
+.release-lead{color:var(--muted);font-size:15px;margin-top:10px;max-width:650px}
+.release-list{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin-top:28px;list-style:none}
+.release-list li{padding:13px 0 13px 20px;border-top:1px solid var(--hair2);position:relative;font-size:14px;color:var(--muted);line-height:1.6}
+.release-list li::before{content:"";position:absolute;left:0;top:21px;width:7px;height:7px;border:1.5px solid var(--brand);transform:rotate(45deg)}
+.release-list li b{display:block;color:var(--ink);font-size:14.5px;font-weight:600}
+.release-footnote{margin-top:22px;padding:11px 14px;border-left:2px solid var(--brand-soft);background:var(--brand-wash);font-size:12.5px;color:var(--muted)}
+@media(max-width:760px){
+  .release-panel{grid-template-columns:1fr}.release-stamp{border-right:none;border-bottom:1px solid var(--hair2);padding:24px 22px}.release-stamp strong{font-size:30px}
+  .release-content{padding:26px 22px 30px}.release-list{grid-template-columns:1fr;margin-top:20px}.release-live{font-size:0}.release-live::after{content:"LIVE";font-size:9px}
+}
+
+/* 对比表 */
+.ctable{border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--panel)}
+.crow{display:grid;grid-template-columns:150px 1fr 1.25fr;border-top:1px solid var(--hair2)}
+.crow:first-child{border-top:none}
+.crow>div{padding:15px 22px;font-size:14.5px;color:var(--muted)}
+.crow>div:first-child{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.04em;border-right:1px solid var(--hair2)}
+.crow>div:nth-child(2){border-right:1px solid var(--hair2)}
+.crow .cu{color:var(--ink);background:var(--brand-wash)}
+.crow .cu::before{content:"✓  ";color:var(--brand);font-weight:700}
+.crow.chead>div{font-weight:600;color:var(--ink);background:var(--panel2);font-size:13px;font-family:var(--sans);letter-spacing:.02em}
+.crow.chead .cu::before{content:""}
+@media(max-width:760px){.crow{grid-template-columns:82px 1fr 1.2fr}.crow>div{padding:11px 11px;font-size:12px}}
+
+/* 权益卡 */
+.policy{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:52px}
+@media(max-width:900px){.policy{grid-template-columns:1fr}}
+.pcard{border:1px solid var(--hair);border-radius:14px;padding:30px 28px;background:var(--panel);position:relative;overflow:hidden;transition:.3s}
+.pcard::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--brand),transparent 60%);opacity:0;transition:.3s}
+.pcard:hover{border-color:var(--brand-soft);transform:translateY(-3px);box-shadow:0 22px 46px -28px rgba(76,34,201,.28)}
+.pcard:hover::before{opacity:1}
+.pcard .tag{font-family:var(--mono);font-size:11px;color:var(--brand);letter-spacing:.22em}
+.pcard h3{font-size:19px;font-weight:700;margin-top:11px;letter-spacing:-.01em}
+.pcard p{color:var(--muted);font-size:14.5px;margin-top:11px}
+.pcard p b{color:var(--ink);font-weight:600}
+
+/* 白标示意 */
+.wl{display:grid;grid-template-columns:.85fr 1.15fr;gap:52px;align-items:center;margin-top:80px}
+@media(max-width:900px){.wl{grid-template-columns:1fr;gap:34px}}
+.wl-txt h3{font-size:clamp(22px,2.6vw,30px);font-weight:700;margin-top:10px;letter-spacing:-.02em}
+.wl-txt .desc{color:var(--muted);margin-top:14px;font-size:16px;line-height:1.75}
+.wl-txt .desc b{color:var(--ink);font-weight:600}
+.wl-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+@media(max-width:560px){.wl-showcase{grid-template-columns:1fr}}
+.wl-window{border:1px solid var(--hair);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:0 16px 40px -26px rgba(0,0,0,.35)}
+.wl-bar{display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-bottom:1px solid var(--hair2);background:var(--panel2);font-size:11.5px;color:var(--muted)}
+.wl-bar i{width:8px;height:8px;border-radius:50%;background:#dcdbe4}
+.wl-bar span{margin-left:6px;font-weight:600;color:var(--b)}
+.wl-body{padding:15px 14px 18px}
+.wl-body .h{height:32px;border-radius:8px;background:var(--b);opacity:.85}
+.wl-body .l{height:9px;border-radius:5px;background:var(--hair);margin-top:9px}
+.wl-body .l.t{width:72%}.wl-body .l.s{width:46%}
+.wl-body .wbtn{display:block;width:82px;height:25px;border-radius:7px;background:var(--b);margin-top:13px}
+
+/* 授权链路 */
+.chain{display:flex;align-items:stretch;gap:0;margin:52px 0 10px;flex-wrap:wrap}
+.chain .node{flex:1;min-width:200px;border:1px solid var(--hair);border-radius:12px;padding:24px 22px;background:var(--panel);position:relative}
+.chain .node+.node{margin-left:44px}
+.chain .node+.node::before{content:"";position:absolute;left:-44px;top:50%;width:44px;height:1px;background:linear-gradient(90deg,var(--brand-soft),var(--brand));opacity:.7}
+.chain .node+.node::after{content:"▸";position:absolute;left:-16px;top:50%;transform:translateY(-52%);color:var(--brand);font-size:12px}
+.chain .idx{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.22em}
+.chain h4{font-size:16.5px;font-weight:700;margin-top:9px}
+.chain p{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.6}
+.chain p b{color:var(--ink);font-weight:600}
+@media(max-width:900px){.chain{flex-direction:column}.chain .node+.node{margin-left:0;margin-top:40px}
+  .chain .node+.node::before{left:50%;top:-40px;width:1px;height:40px;background:linear-gradient(180deg,var(--brand-soft),var(--brand))}
+  .chain .node+.node::after{left:50%;top:-18px;transform:translateX(-50%) rotate(90deg)}}
+
+/* 尾部 CTA */
+.final{padding:120px 0 110px;text-align:center;position:relative}
+.final::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(680px 300px at 50% 60%,rgba(109,59,239,.1),transparent 70%)}
+.final h2{font-size:clamp(30px,4.6vw,50px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.final p{color:var(--muted);margin-top:16px;font-size:16px}
+.join-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:52px auto 0}
+@media(max-width:640px){.join-grid{grid-template-columns:1fr}}
+.join-card{background:var(--panel);border:1px solid var(--hair);border-radius:20px;padding:34px 30px;text-align:center;display:flex;flex-direction:column;box-shadow:0 24px 60px -40px rgba(76,34,201,.3)}
+.join-card.accent{border-color:var(--brand-soft)}
+.join-ic{width:46px;height:46px;margin:0 auto 15px;border-radius:13px;display:grid;place-items:center}
+.join-ic.a{background:linear-gradient(145deg,var(--brand-soft),var(--brand))}
+.join-ic.b{background:var(--brand-wash)}
+.join-card h3{font-size:20px;font-weight:700;margin:0 0 9px;letter-spacing:-.01em}
+.join-card p{font-size:14.5px;color:var(--muted);margin:0 auto 22px;line-height:1.6;max-width:30ch;flex:1}
+.join-card .btn{align-self:center}
+/* 公域体验钩子：体验码公开，安装包与后续交付经私域确认 */
+.trial-card{max-width:640px;margin:44px auto 0;background:linear-gradient(180deg,rgba(109,59,239,.07),rgba(109,59,239,.02));
+  border:1px solid var(--brand-soft);border-radius:20px;padding:28px 30px;text-align:center}
+.trial-tag{font-family:var(--mono);font-size:11.5px;color:var(--brand);letter-spacing:.2em;text-transform:uppercase}
+.trial-code{display:inline-flex;align-items:center;gap:12px;background:var(--panel);border:1px dashed var(--brand-soft);border-radius:12px;padding:12px 16px;margin-top:14px}
+.trial-code code{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--brand-ink);letter-spacing:.06em}
+.trial-note{font-size:13px;color:var(--muted);margin:14px auto 0;line-height:1.7;max-width:42ch}
+@media(max-width:560px){.trial-code{flex-wrap:wrap;justify-content:center}.trial-code code{font-size:15px;word-break:break-all}}
+.trial-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px auto 0;max-width:820px;text-align:left}
+.trial-step{border:1px solid var(--hair);border-radius:12px;background:var(--panel);padding:13px 14px;display:flex;gap:10px;align-items:flex-start}
+.trial-step b{width:24px;height:24px;flex:none;border-radius:8px;display:grid;place-items:center;background:var(--brand-wash);color:var(--brand);font-family:var(--mono);font-size:11px}
+.trial-step span{font-size:13px;color:var(--muted);line-height:1.45}
+.trial-step span strong{display:block;color:var(--ink);font-weight:600}
+@media(max-width:700px){.trial-steps{grid-template-columns:1fr}}
+
+/* footer */
+footer{border-top:1px solid var(--hair);padding:36px 0}
+.foot-inner{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;font-size:12.5px;color:var(--faint)}
+.foot-inner a{color:var(--muted)}.foot-inner a:hover{color:var(--ink)}
+.foot-inner .sp{margin-left:auto;font-family:var(--mono);letter-spacing:.08em}
+
+/* 入场动效 */
+.rv{opacity:1;transform:none;transition:opacity .8s cubic-bezier(.2,.6,.2,1),transform .8s cubic-bezier(.2,.6,.2,1)}
+.rv.on{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}}
+.note-tag{position:fixed;left:14px;bottom:14px;z-index:40;font-size:11px;color:var(--faint);background:rgba(255,255,255,.82);backdrop-filter:blur(8px);border:1px solid var(--hair);border-radius:980px;padding:5px 13px;letter-spacing:-.01em}
+@media(max-width:520px){.note-tag{display:none}}
+
+/* 产品图放大查看 */
+#imageViewer{position:fixed;inset:0;z-index:120;display:none;place-items:center;padding:24px;background:rgba(18,15,28,.82);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#imageViewer.open{display:grid}
+#imageViewer img{max-width:min(1380px,96vw);max-height:90vh;width:auto;height:auto;border-radius:14px;background:#fff;
+  box-shadow:0 40px 120px rgba(0,0,0,.42)}
+#imageViewer button{position:absolute;top:18px;right:20px;width:42px;height:42px;border:1px solid rgba(255,255,255,.28);
+  border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px;cursor:pointer}
+@media(max-width:600px){
+  #imageViewer{place-items:start;padding:72px 12px 24px;overflow:auto}
+  #imageViewer img{width:1024px;max-width:none;max-height:none;margin:0;border-radius:10px}
+  #imageViewer button{position:fixed}
+}
+
+/* 智能客服 */
+#cwWrap{position:fixed;right:22px;bottom:22px;z-index:90;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+#cwBubble{width:54px;height:54px;border-radius:50%;border:none;background:linear-gradient(145deg,var(--brand-soft),var(--brand) 62%,var(--brand-ink));color:#fff;cursor:pointer;box-shadow:0 12px 32px rgba(109,59,239,.4);display:grid;place-items:center;transition:.25s}
+#cwBubble:hover{transform:translateY(-3px)}
+#cwBubble svg{width:24px;height:24px}
+#cwBubble.hide{display:none}
+#cwPanel{display:none;width:min(360px,calc(100vw - 44px));height:520px;max-height:calc(100vh - 100px);flex-direction:column;
+  background:var(--panel);border:1px solid var(--hair);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(76,34,201,.35)}
+#cwPanel.show{display:flex}
+.cw-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--hair2);background:var(--panel2)}
+.cw-head .dot{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+.cw-head .t b{font-size:14px;display:block}
+.cw-head .t span{font-size:11.5px;color:var(--faint)}
+.cw-x{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px}
+.cw-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--ground)}
+.cw-msg{max-width:86%;padding:10px 13px;border-radius:13px;font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.cw-bot{align-self:flex-start;background:var(--panel);color:var(--ink);border:1px solid var(--hair2)}
+.cw-bot a{color:var(--brand)}
+.cw-user{align-self:flex-end;background:var(--brand);color:#fff}
+.cw-chips{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 12px;background:var(--ground)}
+.cw-chip{font-size:12px;color:var(--brand);border:1px solid var(--hair);background:var(--panel);border-radius:980px;padding:6px 12px;cursor:pointer;transition:.2s}
+.cw-chip:hover{background:var(--brand-wash);border-color:var(--brand-soft)}
+.cw-foot{border-top:1px solid var(--hair2);background:var(--panel2);padding:10px 12px;display:flex;gap:8px;align-items:flex-end}
+.cw-foot textarea{flex:1;resize:none;font-family:var(--sans);font-size:13.5px;color:var(--ink);background:var(--panel);border:1px solid var(--hair);border-radius:10px;padding:9px 12px;max-height:88px;line-height:1.5;outline:none}
+.cw-foot textarea:focus{border-color:var(--brand-soft)}
+.cw-send{flex:none;width:38px;height:38px;border-radius:10px;background:var(--brand);color:#fff;border:none;cursor:pointer;display:grid;place-items:center}
+.cw-send svg{width:18px;height:18px}
+</style>
 </head>
 <body>
-<style>
-  :root {
-    --ground: #fbfbfd;
-    --panel: #ffffff;
-    --ink: #1d1d1f;
-    --muted: #6e6e73;
-    --faint: #86868b;
-    --hair: #d2d2d7;
-    --brand: #6d3bef;
-    --brand-soft: #a78bfa;
-    --brand-ink: #4c22c9;
-    --dark: #0b0b0f;
-    --dark-panel: #17171d;
-    --good: #1a8f4c;
-    --max: 1000px;
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-      "Helvetica Neue", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  }
+<div class="stage"></div>
 
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    * { animation: none !important; transition: none !important; }
-  }
-
-  body {
-    margin: 0;
-    font-family: var(--font);
-    color: var(--ink);
-    background: var(--ground);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    line-height: 1.5;
-  }
-
-  .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 24px; }
-
-  /* ---------- nav ---------- */
-  .nav {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(251, 251, 253, 0.72);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  }
-  .nav-inner {
-    max-width: var(--max); margin: 0 auto; padding: 0 24px;
-    height: 52px; display: flex; align-items: center; gap: 28px;
-  }
-  .brand {
-    display: flex; align-items: center; gap: 9px;
-    font-weight: 600; font-size: 18px; letter-spacing: -0.02em; color: var(--ink);
-    text-decoration: none;
-  }
-  .glyph {
-    width: 22px; height: 22px; border-radius: 6px; flex: none;
-    background: linear-gradient(145deg, var(--brand-soft), var(--brand) 60%, var(--brand-ink));
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4);
-    position: relative;
-  }
-  .glyph::after {
-    content: ""; position: absolute; inset: 6px 6px auto 6px; height: 2px;
-    border-radius: 2px; background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 0 rgba(255, 255, 255, 0.55), 0 8px 0 rgba(255, 255, 255, 0.3);
-  }
-  .nav-links { display: flex; gap: 26px; margin-left: auto; }
-  .nav-links a {
-    font-size: 13.5px; color: var(--muted); text-decoration: none; letter-spacing: -0.01em;
-    transition: color 0.2s;
-  }
-  .nav-links a:hover { color: var(--ink); }
-  .nav-cta {
-    font-size: 13.5px; font-weight: 500; color: #fff; background: var(--brand);
-    padding: 6px 15px; border-radius: 980px; text-decoration: none;
-    transition: background 0.2s, transform 0.2s;
-  }
-  .nav-cta:hover { background: var(--brand-ink); }
-  @media (max-width: 720px) { .nav-links { display: none; } .nav-cta { margin-left: auto; } }
-
-  a:focus-visible, button:focus-visible {
-    outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 4px;
-  }
-
-  /* ---------- hero ---------- */
-  .hero { text-align: center; padding: 96px 0 0; position: relative; overflow: hidden; }
-  .hero::before {
-    content: ""; position: absolute; left: 50%; top: -140px; transform: translateX(-50%);
-    width: 900px; height: 520px; pointer-events: none; z-index: 0;
-    background: radial-gradient(50% 50% at 50% 40%, rgba(109, 59, 239, 0.16), transparent 70%);
-    filter: blur(4px);
-  }
-  .hero .wrap { position: relative; z-index: 1; }
-  .eyebrow {
-    font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
-    color: var(--brand); margin: 0 0 14px;
-  }
-  h1 {
-    font-size: clamp(40px, 7vw, 76px); line-height: 1.05; letter-spacing: -0.03em;
-    font-weight: 650; margin: 0 auto; max-width: 15ch; text-wrap: balance;
-  }
-  .hero-sub {
-    font-size: clamp(18px, 2.2vw, 23px); line-height: 1.45; color: var(--muted);
-    max-width: 30ch; margin: 22px auto 0; letter-spacing: -0.01em; text-wrap: balance;
-  }
-  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
-  .btn {
-    font-size: 16px; font-weight: 500; padding: 12px 24px; border-radius: 980px;
-    text-decoration: none; letter-spacing: -0.01em; border: 1px solid transparent;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s; cursor: pointer;
-  }
-  .btn-primary { background: var(--brand); color: #fff; }
-  .btn-primary:hover { background: var(--brand-ink); transform: translateY(-1px); }
-  .btn-ghost { background: transparent; color: var(--brand); border-color: var(--hair); }
-  .btn-ghost:hover { border-color: var(--brand); }
-  .hero-foot { margin-top: 16px; font-size: 12.5px; color: var(--faint); }
-
-  /* ---------- product mockup ---------- */
-  .shot { margin: 58px auto 0; max-width: 940px; padding: 0 24px; position: relative; z-index: 1; }
-  .win {
-    border-radius: 16px; overflow: hidden; background: var(--panel);
-    border: 1px solid var(--hair);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04), 0 30px 70px -30px rgba(76, 34, 201, 0.35);
-  }
-  .titlebar {
-    height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 15px;
-    background: linear-gradient(#fafafc, #f2f2f5); border-bottom: 1px solid var(--hair);
-  }
-  .dot { width: 11px; height: 11px; border-radius: 50%; }
-  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
-  .titlebar .t { margin-left: 12px; font-size: 12px; color: var(--faint); letter-spacing: -0.01em; }
-  .app { display: grid; grid-template-columns: 190px 1fr; min-height: 372px; }
-  .side { background: #faf9fe; border-right: 1px solid var(--hair); padding: 14px 10px; }
-  .side-h { font-size: 10.5px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px 8px; }
-  .nav-item { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); padding: 8px 10px; border-radius: 8px; letter-spacing: -0.01em; }
-  .nav-item .ic { width: 15px; height: 15px; border-radius: 4px; background: var(--hair); flex: none; }
-  .nav-item.on { background: rgba(109, 59, 239, 0.1); color: var(--brand-ink); font-weight: 500; }
-  .nav-item.on .ic { background: var(--brand); }
-  .main { padding: 20px 22px; }
-  .crumb { font-size: 12px; color: var(--faint); letter-spacing: -0.01em; }
-  .h2m { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 5px 0 16px; }
-  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .c {
-    border: 1px solid var(--hair); border-radius: 12px; padding: 14px; background: #fff;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .c-tag { font-size: 10.5px; font-weight: 600; color: var(--brand); letter-spacing: 0.02em; }
-  .c-title { font-size: 13.5px; font-weight: 550; letter-spacing: -0.01em; line-height: 1.3; }
-  .bar { height: 6px; border-radius: 3px; background: #eee; overflow: hidden; }
-  .bar > i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--brand-soft), var(--brand)); }
-  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip { font-size: 10.5px; color: var(--muted); background: #f2f0fb; padding: 3px 8px; border-radius: 980px; }
-  .score { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--good); font-variant-numeric: tabular-nums; }
-  @media (max-width: 640px) { .app { grid-template-columns: 1fr; } .side { display: none; } .cards { grid-template-columns: 1fr; } }
-
-  /* ---------- section scaffolding ---------- */
-  section { padding: 108px 0; }
-  .sec-eyebrow { font-size: 14px; font-weight: 600; color: var(--brand); letter-spacing: -0.01em; text-align: center; margin: 0 0 12px; }
-  h2 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.08; letter-spacing: -0.025em; font-weight: 650; text-align: center; margin: 0 auto; max-width: 18ch; text-wrap: balance; }
-  .sec-sub { font-size: clamp(17px, 2vw, 20px); color: var(--muted); text-align: center; max-width: 34ch; margin: 18px auto 0; line-height: 1.5; letter-spacing: -0.01em; text-wrap: balance; }
-
-  /* feature flywheel */
-  .flywheel { padding-bottom: 40px; }
-  .flow { display: flex; align-items: stretch; gap: 0; margin: 64px auto 0; max-width: 920px; flex-wrap: wrap; justify-content: center; }
-  .step { flex: 1 1 150px; min-width: 140px; text-align: center; position: relative; padding: 0 8px; }
-  .step .n { width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 12px; display: grid; place-items: center; font-weight: 600; font-size: 17px; color: #fff; background: linear-gradient(145deg, var(--brand-soft), var(--brand)); box-shadow: 0 8px 18px -8px rgba(109, 59, 239, 0.6); }
-  .step h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 5px; }
-  .step p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.45; }
-  .step:not(:last-child)::after { content: "→"; position: absolute; right: -8px; top: 12px; color: var(--hair); font-size: 18px; }
-  @media (max-width: 640px) { .step:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -6px; transform: translateX(-50%); } .step { padding-bottom: 28px; } }
-
-  /* dark band */
-  .band { background: var(--dark); color: #f5f5f7; }
-  .band h2 { color: #f5f5f7; }
-  .band .sec-sub { color: #a1a1a8; }
-  .band .sec-eyebrow { color: var(--brand-soft); }
-  .feat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 60px auto 0; }
-  .feat {
-    background: var(--dark-panel); border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px; padding: 26px; text-align: left;
-  }
-  .feat .fi { width: 40px; height: 40px; border-radius: 11px; margin-bottom: 16px; background: linear-gradient(145deg, rgba(167, 139, 250, 0.9), var(--brand)); display: grid; place-items: center; }
-  .feat .fi span { width: 16px; height: 16px; border: 2px solid #fff; border-radius: 4px; }
-  .feat h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 8px; }
-  .feat p { font-size: 14px; color: #a1a1a8; margin: 0; line-height: 1.55; }
-  @media (max-width: 800px) { .feat-grid { grid-template-columns: 1fr; } }
-
-  /* updates */
-  .updates .u-card { max-width: 760px; margin: 56px auto 0; background: var(--panel); border: 1px solid var(--hair); border-radius: 20px; padding: 34px 36px; box-shadow: 0 24px 60px -34px rgba(76, 34, 201, 0.28); }
-  .u-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-  .pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--good); position: relative; flex: none; }
-  .pulse::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--good); animation: ring 2.2s ease-out infinite; }
-  @keyframes ring { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }
-  .u-head .lbl { font-size: 13px; font-weight: 600; color: var(--good); letter-spacing: -0.01em; }
-  .u-row { display: flex; gap: 14px; padding: 13px 0; border-top: 1px solid var(--hair); align-items: baseline; }
-  .u-ver { font-size: 13px; font-weight: 600; color: var(--brand); font-variant-numeric: tabular-nums; flex: none; width: 62px; }
-  .u-txt { font-size: 14.5px; color: var(--ink); letter-spacing: -0.01em; }
-  .u-txt small { color: var(--faint); }
-  .u-note { margin-top: 22px; font-size: 13px; color: var(--muted); text-align: center; }
-
-  /* pricing */
-  .price { text-align: center; }
-  .purchase-facts {
-    max-width: 920px; margin: 50px auto 0; padding: 26px;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
-    background: var(--hair); border: 1px solid var(--hair); border-radius: 20px; overflow: hidden;
-  }
-  .purchase-fact { background: var(--panel); padding: 24px 18px; min-width: 0; }
-  .purchase-fact strong { display: block; font-size: 17px; letter-spacing: -0.015em; margin-bottom: 7px; }
-  .purchase-fact span { display: block; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
-  .status-progress {
-    display: inline-flex !important; width: auto; margin-top: 8px; padding: 3px 10px;
-    border-radius: 980px; color: #915f00 !important; background: #fff2cc; font-size: 12px !important;
-  }
-  .pricing-grid {
-    max-width: 920px; margin: 22px auto 0; display: grid; grid-template-columns: 1fr 1fr;
-    gap: 22px; align-items: stretch;
-  }
-  .price-card {
-    margin: 0; background: var(--panel); text-align: left;
-    border: 1px solid var(--hair); border-radius: 24px; padding: 44px 40px 40px;
-    box-shadow: 0 30px 80px -40px rgba(76, 34, 201, 0.4); position: relative;
-  }
-  .price-card.beta {
-    color: #fff; border-color: transparent;
-    background: linear-gradient(145deg, #7b4bf5, var(--brand) 58%, var(--brand-ink));
-  }
-  .price-card h3 { margin: 18px 0 0; font-size: 24px; letter-spacing: -0.02em; }
-  .price-badge { display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--brand); background: rgba(109, 59, 239, 0.1); padding: 6px 14px; border-radius: 980px; letter-spacing: -0.01em; }
-  .beta .price-badge { color: #fff; background: rgba(255, 255, 255, 0.16); }
-  .price-amt { display: flex; align-items: baseline; justify-content: flex-start; gap: 4px; margin: 22px 0 4px; }
-  .price-amt .cur { font-size: 30px; font-weight: 600; }
-  .price-amt .num { font-size: 76px; font-weight: 650; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
-  .price-amt .term { font-size: 21px; font-weight: 600; margin-left: 4px; }
-  .price-kicker { font-size: 15px; color: var(--muted); }
-  .beta .price-kicker { color: rgba(255, 255, 255, 0.74); }
-  .price-list { list-style: none; padding: 0; margin: 28px 0; text-align: left; display: flex; flex-direction: column; gap: 13px; }
-  .price-list li { display: flex; gap: 11px; align-items: flex-start; font-size: 15px; letter-spacing: -0.01em; }
-  .tick { width: 20px; height: 20px; border-radius: 50%; background: rgba(109, 59, 239, 0.12); color: var(--brand); flex: none; display: grid; place-items: center; font-size: 12px; margin-top: 1px; }
-  .beta .tick { color: #fff; background: rgba(255, 255, 255, 0.18); }
-  .price-note { font-size: 12.5px; color: var(--faint); margin-top: 18px; }
-  .beta .price-note { color: rgba(255, 255, 255, 0.68); }
-  .beta .btn-primary { background: #fff; color: var(--brand-ink); }
-  .beta .btn-primary:hover { background: #f3efff; }
-  @media (max-width: 760px) {
-    .purchase-facts, .pricing-grid { grid-template-columns: 1fr; }
-    .purchase-facts { gap: 1px; padding: 0; }
-    .price-card { padding: 36px 28px 32px; }
-  }
-
-  /* buy / contact */
-  .buy { text-align: center; }
-  .buy-card { max-width: 460px; margin: 52px auto 0; background: var(--panel); border: 1px solid var(--hair); border-radius: 22px; padding: 36px 32px; text-align: center; }
-  .buy-card h3 { font-size: 21px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 10px; }
-  .buy-card > p { font-size: 14.5px; color: var(--muted); margin: 0 auto 22px; line-height: 1.55; max-width: 34ch; }
-  .contact-rows { display: flex; flex-direction: column; gap: 10px; }
-  .contact-line { font-size: 15px; color: var(--muted); display: flex; justify-content: center; align-items: baseline; gap: 8px; }
-  .contact-line span { color: var(--faint); font-size: 13px; letter-spacing: .02em; }
-  .contact-line b { color: var(--brand-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-
-  /* footer */
-  footer { border-top: 1px solid var(--hair); padding: 40px 0 56px; color: var(--faint); }
-  .foot-inner { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; font-size: 12.5px; }
-  .foot-inner a { color: var(--muted); text-decoration: none; }
-  .foot-inner a:hover { color: var(--ink); }
-  .foot-inner .sp { margin-left: auto; }
-
-  /* scroll reveal */
-  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .reveal.in { opacity: 1; transform: none; }
-  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
-
-  .note-tag { position: fixed; left: 12px; bottom: 12px; z-index: 80; font-size: 11px; color: var(--faint); background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); border: 1px solid var(--hair); border-radius: 980px; padding: 5px 12px; letter-spacing: -0.01em; }
-</style>
-
-<nav class="nav">
-  <div class="nav-inner">
-    <a class="brand" href="#top"><span class="glyph"></span>CreatorOS</a>
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top"><span class="logo-mark">C</span>CreatorOS<span class="doc-no">PRODUCT BRIEF · CR-1.4</span></a>
     <div class="nav-links">
       <a href="#flywheel">飞轮</a>
-      <a href="#features">能力</a>
-      <a href="#updates">更新</a>
-      <a href="#price">定价</a>
-      <a href="#buy">购买</a>
+      <a href="#why">为什么不一样</a>
+      <a href="#usecase">适用</a>
+      <a href="#changelog" onclick="jumpToSection(event,'changelog')">更新日志</a>
+      <a href="#delivery">适配与交付</a>
+      <a href="#partner">获取方式</a>
     </div>
-    <a class="nav-cta" href="#price">获取</a>
-  </div>
-</nav>
-
-<header class="hero" id="top">
-  <div class="wrap">
-    <p class="eyebrow">桌面版 · Apple 芯片 Mac / Windows</p>
-    <h1>创作,不再只靠灵感。</h1>
-    <p class="hero-sub">CreatorOS 把定位、选题、脚本、复盘连成一条飞轮 —— 一套住在你本机的内容生产系统。</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#price">获取 CreatorOS</a>
-      <a class="btn btn-ghost" href="#flywheel">看它怎么运转 ↓</a>
-    </div>
-    <p class="hero-foot">内测共创价 ¥599 · 一机一码 · 2026年8月10日截止</p>
-  </div>
-
-  <div class="shot reveal">
-    <div class="win">
-      <div class="titlebar">
-        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-        <span class="t">CreatorOS — 复盘</span>
-      </div>
-      <div class="app">
-        <aside class="side">
-          <div class="side-h">工作台</div>
-          <div class="nav-item"><span class="ic"></span>定位中心</div>
-          <div class="nav-item"><span class="ic"></span>选题岛</div>
-          <div class="nav-item"><span class="ic"></span>脚本台</div>
-          <div class="nav-item on"><span class="ic"></span>复盘</div>
-          <div class="nav-item"><span class="ic"></span>数据</div>
-          <div class="side-h" style="margin-top:10px">资产</div>
-          <div class="nav-item"><span class="ic"></span>知识库</div>
-          <div class="nav-item"><span class="ic"></span>素材</div>
-        </aside>
-        <div class="main">
-          <div class="crumb">复盘 · 已发布作品</div>
-          <div class="h2m">这条为什么爆?</div>
-          <div class="cards">
-            <div class="c">
-              <span class="c-tag">可复用要素</span>
-              <span class="c-title">开场 3 秒抛冲突,把结论前置</span>
-              <div class="chips"><span class="chip">钩子</span><span class="chip">已验证</span></div>
-            </div>
-            <div class="c">
-              <span class="c-tag">真实数据</span>
-              <span class="c-title">完播率 <span style="color:var(--brand-ink)">42%</span> · 高于账号均值</span>
-              <div class="bar"><i style="width:82%"></i></div>
-            </div>
-            <div class="c">
-              <span class="c-tag">观众信号</span>
-              <span class="c-title">评论集中在「求同款清单」</span>
-              <div class="chips"><span class="chip">选题线索</span></div>
-            </div>
-            <div class="c">
-              <span class="c-tag">AI 编导</span>
-              <span class="c-title">建议:把这条要素沉进定位母版
-                <span class="score">采纳</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="nav-tools">
+      <button class="nav-svc" onclick="cwToggle(true)">💬 智能客服</button>
+      <a class="nav-cta" href="#delivery" onclick="jumpToSection(event,'delivery')">查看支持平台</a>
     </div>
   </div>
 </header>
 
-<section class="flywheel" id="flywheel">
+<!-- HERO -->
+<section class="hero" id="top">
   <div class="wrap">
-    <p class="sec-eyebrow">飞轮,不是清单</p>
-    <h2>每一条作品,都反哺下一条。</h2>
-    <p class="sec-sub">别人做完就忘。CreatorOS 让复盘沉淀成定位,定位长出选题,一圈比一圈准。</p>
-    <div class="flow">
-      <div class="step reveal"><div class="n">1</div><h3>定位</h3><p>你是谁、给谁、凭什么。母版沉淀,越用越清。</p></div>
-      <div class="step reveal"><div class="n">2</div><h3>选题</h3><p>立足定位与真实评论出题,不再对着空白发呆。</p></div>
-      <div class="step reveal"><div class="n">3</div><h3>脚本</h3><p>AI 编导陪你写,合规审核前置,不踩雷。</p></div>
-      <div class="step reveal"><div class="n">4</div><h3>复盘</h3><p>用真数据提炼可复用爆款要素。</p></div>
-      <div class="step reveal"><div class="n">5</div><h3>回流</h3><p>要素沉回定位 —— 飞轮再转一圈。</p></div>
+    <span class="eyebrow rv">桌面版 · Apple 芯片 Mac / Windows · 数据本机</span>
+    <h1 class="rv">创作,不再<br>只靠<span class="em">灵感</span>。</h1>
+    <p class="sub rv">CreatorOS 是一套住在你本机的<b>「抖音编导创作系统」</b>。把一条内容从定位、选题、写稿、制作,到<b>发布前盲预测</b>、<b>发布后真实数据复盘</b>与<b>经验回流</b>,走完一条越用越准的数据复利飞轮。</p>
+    <div class="cta-row rv">
+      <a class="btn btn-p" href="#delivery" onclick="jumpToSection(event,'delivery')">查看适配与交付</a>
+      <a class="btn btn-g" href="#flywheel">看飞轮怎么转 ↓</a>
+    </div>
+    <p class="hero-foot rv">数据本机优先 · 一机一码 · Apple 芯片 Mac / Windows</p>
+    <a class="version-peek rv" href="#changelog" onclick="jumpToSection(event,'changelog')"><span>NEW</span> v0.2.0 更新日志 →</a>
+
+    <div class="spec-strip rv">
+      <div class="it"><div class="n">1:1</div><div class="l">一机一码</div></div>
+      <div class="it"><div class="n">7</div><div class="l">步飞轮闭环</div></div>
+      <div class="it"><div class="n">100%</div><div class="l">数据本机落盘</div></div>
+      <div class="it"><div class="n">M芯片·Win</div><div class="l">当前支持平台</div></div>
+    </div>
+
+    <div class="shot-stage rv">
+      <div class="shot-frame">
+        <div class="bar"><i></i><i></i><i></i><span class="addr">CreatorOS · 首页驾驶舱</span></div>
+        <img src="shots/shot-home.png" alt="CreatorOS 首页驾驶舱" loading="eager">
+      </div>
+      <div class="shot-cap"><span>驾驶舱 — 真实数据指标 + 待办 + 创作建议</span><span>LOCAL · 数据本机</span></div>
     </div>
   </div>
 </section>
 
-<section class="band" id="features">
+<!-- 适配与交付 -->
+<section class="price" id="delivery">
   <div class="wrap">
-    <p class="sec-eyebrow">为创作者造的</p>
-    <h2>强,但不喧宾夺主。</h2>
-    <p class="sec-sub">AI 只产候选,你说了算。数据全在本机,加密落盘。</p>
-    <div class="feat-grid">
-      <div class="feat reveal"><div class="fi"><span></span></div><h3>AI 编导对话</h3><p>选题、诊断、复盘、写稿,都能对着你的真实数据聊。它产候选卡,你点采纳才落库 —— 绝不替你瞎改。</p></div>
-      <div class="feat reveal"><div class="fi"><span></span></div><h3>数据留在你本机</h3><p>作品、定位、知识库全部本地优先落盘,模型密钥经系统钥匙串加密。你的创作资产,只属于你。</p></div>
-      <div class="feat reveal"><div class="fi"><span></span></div><h3>一键导入抖音</h3><p>扫码绑号,自动拉取作品、逐字稿、封面与真实指标,复盘立刻有据可依。</p></div>
+    <div class="price-head rv">
+      <span class="eyebrow">Device &amp; Delivery</span>
+      <h2>适配与交付</h2>
+      <p>CreatorOS 保持同一套完整产品能力，安装包按实际设备提供。</p>
+    </div>
+
+    <div class="purchase-facts rv">
+      <div class="purchase-fact"><small>DEVICE LICENSE</small><strong>一机一码</strong><span>每个激活码仅绑定 1 台设备</span></div>
+      <div class="purchase-fact"><small>AVAILABLE NOW</small><strong>Apple 芯片 Mac · Windows</strong><span>当前已支持安装使用</span></div>
+      <div class="purchase-fact"><small>COMING NEXT</small><strong>Intel Mac <i class="soon">适配推进中</i></strong><span>完成适配后另行通知</span></div>
     </div>
   </div>
 </section>
 
-<section class="updates" id="updates">
+<!-- 飞轮工序 -->
+<section class="sect" id="flywheel">
   <div class="wrap">
-    <p class="sec-eyebrow">越用越好</p>
-    <h2>持续迭代，稳定交付。</h2>
-    <p class="sec-sub">从第一轮内测到 v0.3.0，我们和内测用户一起把完整创作链路打磨出来。</p>
-    <div class="u-card reveal">
-      <div class="u-head"><span class="pulse"></span><span class="lbl">v0.3.0 即将推出</span></div>
-      <div class="u-row"><span class="u-ver">v0.3</span><span class="u-txt">逐字稿对标一键改写、内容日历与排期 <small>· 即将推出</small></span></div>
-      <div class="u-row"><span class="u-ver">v0.2</span><span class="u-txt">内容雷达、创作链路与桌面端稳定性升级 <small>· 7月26日</small></span></div>
-      <div class="u-row"><span class="u-ver">内测</span><span class="u-txt">CreatorOS 第一轮内测开启 <small>· 7月20日</small></span></div>
-      <p class="u-note">每一次真实反馈，都会进入下一次产品迭代。</p>
+    <div class="sect-head rv">
+      <div class="rule"><span class="eyebrow">Data Compounding Flywheel</span></div>
+      <h2>一条内容,走完一整条飞轮</h2>
+      <p>飞轮成立的最小单位不是「一次 AI 生成」,而是<b>一条作品走完整条链</b>——有定位、有锁定预测、有真实指标、有完成复盘、有回流经验。每一步都是产品里的独立工作面。</p>
+    </div>
+
+    <div class="wheel-block rv">
+      <div>
+        <svg class="wheel" viewBox="0 0 400 400" role="img" aria-label="CreatorOS 六环飞轮:定位、选题、脚本、制作、复盘、经验回流,循环往复,一圈比一圈准">
+          <defs>
+            <linearGradient id="wg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#a78bfa" stop-opacity="0"/>
+              <stop offset="55%" stop-color="#6d3bef" stop-opacity=".95"/>
+              <stop offset="100%" stop-color="#4c22c9" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-base" cx="200" cy="200" r="116"/>
+          <circle class="ring-dash" cx="200" cy="200" r="97"/>
+          <circle class="arc-glow" cx="200" cy="200" r="116"/>
+
+          <text class="hub-t" x="200" y="192">FLYWHEEL</text>
+          <text class="hub-t" x="200" y="210" style="letter-spacing:.05em">一圈比一圈准</text>
+
+          <circle class="node" cx="200" cy="84" r="16"/><text class="node-n" x="200" y="84">1</text><text class="node-l" x="200" y="48">定位</text>
+          <circle class="node" cx="300.5" cy="142" r="16"/><text class="node-n" x="300.5" y="142">2</text><text class="node-l" x="336" y="118">选题</text>
+          <circle class="node" cx="300.5" cy="258" r="16"/><text class="node-n" x="300.5" y="258">3</text><text class="node-l" x="336" y="283">脚本</text>
+          <circle class="node" cx="200" cy="316" r="16"/><text class="node-n" x="200" y="316">4</text><text class="node-l" x="200" y="352">制作</text>
+          <circle class="node" cx="99.5" cy="258" r="16"/><text class="node-n" x="99.5" y="258">5</text><text class="node-l" x="64" y="283">复盘</text>
+          <circle class="node" cx="99.5" cy="142" r="16"/><text class="node-n" x="99.5" y="142">6</text><text class="node-l" x="60" y="118">回流</text>
+        </svg>
+      </div>
+      <div>
+        <p class="wheel-quote">飞轮,不是清单。<br><em>一圈比一圈准。</em></p>
+        <p class="wheel-sub">别人做完就忘,每条从零。CreatorOS 让<b>复盘沉淀成定位,定位长出选题,经验回流再喂下一条</b>——转起来之后,内容不是一条条孤立地做,而是一台越跑越准的机器。</p>
+        <p class="wheel-hint">↓ 下面把这一圈的每一步拆开看</p>
+      </div>
+    </div>
+
+    <figure class="flywheel-poster rv">
+      <img class="zoomable" src="shots/creatoros-flywheel.png" alt="CreatorOS 一站式 AI 编导系统数据飞轮，展示定位、选题、写稿、发布与复盘" loading="lazy" decoding="async">
+      <figcaption>
+        <span><b>CreatorOS 全景能力图</b>：从定位到发布，从数据到经验，让创作越做越准。</span>
+        <span class="zoom-note">点击查看大图</span>
+      </figcaption>
+    </figure>
+
+    <div class="steps">
+
+      <div class="step rv">
+        <div>
+          <div class="step-num">01</div>
+          <div class="step-tag">Positioning · 定位中心</div>
+          <h3>定位母版</h3>
+          <p class="desc">账号「是谁、给谁、凭什么」的结构化定义。它是下游<b>选题、写稿、评分、素材匹配</b>的硬约束源——不先定好,后面全跑偏。</p>
+          <ul>
+            <li>九张定位卡:<b>我是谁 / 目标人群 / 核心痛点 / 表达风格 / 差异化视角</b> 等</li>
+            <li>右栏定位规则(选题/写稿/禁止事项)作为硬约束注入下游 AI:<b>改这里 = 改所有 AI 行为</b></li>
+            <li><b>AI 访谈式带你定位</b>,像编导私教一问一答,聊完合成结构化定位;版本不覆盖历史,可追溯</li>
+          </ul>
+        </div>
+        <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="ph"><img src="shots/shot-position.png" alt="定位中心" loading="lazy"></div>
+        </div>
+      </div>
+
+      <div class="step rv">
+        <div>
+          <div class="step-num">02</div>
+          <div class="step-tag">Topics · 选题</div>
+          <h3>从真实信号出题</h3>
+          <p class="desc">不对着空白发呆。<b>AI 选题会</b>依据定位、观众评论、知识库、行业热点四种真实信号出题,择优才立项。</p>
+          <ul>
+            <li>选题来源:评论问题 / 客户咨询 / 知识库 / 历史爆款 / 行业热点 / 项目复盘</li>
+            <li>候选池四维评分:<b>定位契合 / 受众痛感 / 素材充足 / 制作难度</b></li>
+            <li>选题卡详情给出目标观众、观众痛点、核心冲突与推荐 Hook,满意即「<b>立项为 Project</b>」</li>
+          </ul>
+        </div>
+        <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="ph"><img src="shots/shot-topic.png" alt="选题" loading="lazy"></div>
+        </div>
+      </div>
+
+      <div class="step rv">
+        <div>
+          <div class="step-num">03</div>
+          <div class="step-tag">Script · 脚本</div>
+          <h3>先备料,再立论点,后写稿</h3>
+          <p class="desc">脚本工作面:<b>备料 → 立论点 → 写口播稿 → 合规审核 → 锁定盲预测</b>。先有素材与论点,写出来的稿才有据可依。</p>
+          <ul>
+            <li>论点骨架:<b>核心论点 + 支撑依据 + 反驳</b>,采纳后自动作为写稿依据</li>
+            <li>右栏编导对话是项目级 copilot,随时帮你改钩子、找素材</li>
+            <li>发布前把预测「<b>锁定为盲预测</b>」——一份不可改的预测,留给发布后对照</li>
+          </ul>
+        </div>
+        <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="ph"><img src="shots/shot-script.png" alt="脚本" loading="lazy"></div>
+        </div>
+      </div>
+
+      <div class="step rv">
+        <div>
+          <div class="step-num">04</div>
+          <div class="step-tag">Produce · 制作视频</div>
+          <h3>受控成片,或直接上传成品</h3>
+          <p class="desc">把脚本做成成片,或跳过制作只走流程。两条路都行,不绑架你的剪辑习惯。</p>
+          <ul>
+            <li>照分段口播稿录制,导出粗剪 + SRT 字幕上传</li>
+            <li>AI 出<b>四维编导决策</b>(value / structure / audience_fit / conversion),你确认后受控渲染出成片</li>
+            <li>不想用受控成片?选「<b>直接上传成品视频</b>」,只用它管流程与复盘</li>
+          </ul>
+        </div>
+        <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="ph"><img src="shots/shot-make.png" alt="制作视频" loading="lazy"></div>
+        </div>
+      </div>
+
+      <div class="step rv">
+        <div>
+          <div class="step-num">05</div>
+          <div class="step-tag">Review · 复盘</div>
+          <h3>盲预测 vs 真实数据</h3>
+          <p class="desc">发布采到数据后,把发布前的盲预测和真实数据放一起对照,<b>校准飞轮</b>,沉淀可复用经验。</p>
+          <ul>
+            <li>真实指标墙:完播率 / 5s 完播 / 封面点击率 / 2s 跳出 / 平均播放时长 等</li>
+            <li>「帮我复盘」让编导从评论与指标提炼<b>经验候选</b>,你裁决后入库</li>
+            <li>本账号<b>可复用公式</b>:被真实数据验证过的选题 / 钩子 / 结构套路</li>
+          </ul>
+        </div>
+        <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="ph"><img src="shots/shot-review.png" alt="复盘" loading="lazy"></div>
+        </div>
+      </div>
+
+      <div class="step rv">
+        <div>
+          <div class="step-num">06</div>
+          <div class="step-tag">Knowledge · 知识库</div>
+          <h3>经验回流,越用越准</h3>
+          <p class="desc">复盘沉淀的经验回流到定位与知识库。把素材、金句、逐字稿、观众评论<b>蒸馏成「知识原子」</b>,供下一轮选题与写稿调用——飞轮再转一圈。</p>
+          <ul>
+            <li>AI 蒸馏:粘原文 / URL / 拖文件,一键蒸馏成知识原子</li>
+            <li>评论回流三级去噪(规则预筛 → AI 只留真疑问 → 人工采纳)</li>
+            <li>「<b>AI 找关联</b>」自动把知识原子织成网,出题写稿时被调用</li>
+          </ul>
+        </div>
+        <div class="step-shot"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="ph"><img src="shots/shot-kb.png" alt="知识库" loading="lazy"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
 
-<section class="price" id="price">
+<!-- 为什么不一样 -->
+<section class="sect" id="why" style="padding-top:36px">
   <div class="wrap">
-    <p class="sec-eyebrow">内测共创与正式订阅</p>
-    <h2>内测一次买断，正式版按年订阅。</h2>
-    <p class="sec-sub">价格、支持平台和设备规则，一次说清楚。</p>
-
-    <div class="purchase-facts reveal" aria-label="购买与设备说明">
-      <div class="purchase-fact">
-        <strong>一机一码</strong>
-        <span>每个激活码仅绑定 1 台设备</span>
-      </div>
-      <div class="purchase-fact">
-        <strong>当前支持</strong>
-        <span>Apple 芯片 Mac · Windows</span>
-      </div>
-      <div class="purchase-fact">
-        <strong>Intel Mac</strong>
-        <span class="status-progress">适配推进中</span>
-      </div>
+    <div class="sect-head rv">
+      <div class="rule"><span class="eyebrow">Why It's Different</span></div>
+      <h2>和普通 AI 文案工具,根本不是一回事</h2>
+      <p>大多数工具止步于「生成一段文案」。CreatorOS 是一条<b>会自我校准的生产线</b>——六件事,决定了它越用越准。</p>
     </div>
+    <div class="specs rv">
+      <div class="spec-row"><div class="k">盲预测</div><div class="v"><h4>发布前锁定,不可改</h4><p>发布前锁定一份<b>盲预测</b>,发布后与真实数据对照,形成校准——不是拍脑袋,是有据可查。</p></div></div>
+      <div class="spec-row"><div class="k">真实复盘</div><div class="v"><h4>采真实数据,不画假图</h4><p>自动采集完播、封面点击率、跳出等<b>真实指标</b>;数据不足时如实显示空态与 0,坚持不编假数据。</p></div></div>
+      <div class="spec-row"><div class="k">经验回流</div><div class="v"><h4>越用越准</h4><p>复盘沉淀的可复用经验<b>回流到定位</b>,下一条选题与写稿更准——内容不再每条从零。</p></div></div>
+      <div class="spec-row"><div class="k">本地优先</div><div class="v"><h4>数据主权在你</h4><p>项目、定位、素材、模型 Key <b>全在本机加密落盘</b>,不上云;Key 只写不回,不出现在日志与响应里。</p></div></div>
+      <div class="spec-row"><div class="k">人工确认门</div><div class="v"><h4>AI 只产候选,你说了算</h4><p>AI 只产候选与建议,<b>你确认才落库</b>,绝不替你瞎改——把判断权留在你手里。</p></div></div>
+      <div class="spec-row"><div class="k">一号一工作区</div><div class="v"><h4>多号运营不串号</h4><p>一号一套定位 / 数据 / 经验,<b>切号即切整个工作区</b>,一人管多号也不会串。</p></div></div>
+    </div>
+  </div>
+</section>
 
-    <div class="pricing-grid">
-      <article class="price-card beta reveal">
-        <span class="price-badge">仅限内测群用户 · 8月10日截止</span>
-        <h3>内测共创价</h3>
-        <div class="price-amt"><span class="cur">¥</span><span class="num">599</span></div>
-        <div class="price-kicker">一次买断</div>
-        <ul class="price-list">
-          <li><span class="tick">✓</span><span>仅限内测群用户</span></li>
-          <li><span class="tick">✓</span><span>参与产品共创与持续打磨</span></li>
-          <li><span class="tick">✓</span><span>当前支持 Apple 芯片 Mac 与 Windows</span></li>
-        </ul>
-        <a class="btn btn-primary" style="width:100%;display:block;box-sizing:border-box;text-align:center" href="#buy">咨询内测</a>
-        <p class="price-note">内测共创价于 2026年8月10日截止。</p>
+<!-- 适用人群 -->
+<section class="sect" id="usecase" style="padding-top:36px">
+  <div class="wrap">
+    <div class="sect-head rv">
+      <div class="rule"><span class="eyebrow">Who It Serves</span></div>
+      <h2>三种"卡壳",一套解法</h2>
+      <p>CreatorOS 解决的不是"会做内容的人更快",而是让<b>凭感觉发、发完就忘的人</b>,拥有一条有依据、能复盘的生产线。</p>
+    </div>
+    <div class="ucgrid">
+      <div class="uc rv"><div class="uc-tag">TYPE 01 · 凭感觉发</div><h3>没定位、凭手感,火不火全看运气?</h3><p>用定位中心 + AI 访谈建立<b>定位母版</b>,让选题、写稿、评分全部有约束源——不再东一榔头西一棒子。</p></div>
+      <div class="uc rv"><div class="uc-tag">TYPE 02 · 选题枯竭</div><h3>没灵感、憋不出选题、也请不起编导?</h3><p>从评论、对标、热点、知识库四种<b>真实信号出题</b>,候选带四维评分。每天的选题从"憋不出"变成"<b>挑一条改</b>"。</p></div>
+      <div class="uc rv"><div class="uc-tag">TYPE 03 · 发完就忘</div><h3>发完就完、不知道为什么爆、也没法复制?</h3><p><b>盲预测 + 真实数据复盘 + 经验回流</b>,把每条作品的经验沉进定位,让下一条比上一条更有依据。</p></div>
+    </div>
+    <div class="inds rv">
+      <div class="ind"><b>知识 / 服务业</b><span>财经、教育、法律咨询、大健康——专业内容<em>矩阵化日更</em>,不受真人状态与灵感波动限制。</span></div>
+      <div class="ind"><b>电商 / 带货</b><span>商品口播<em>批量产出</em>,选题有据、复盘有数,爆款要素可沉淀复用。</span></div>
+      <div class="ind"><b>本地商家</b><span>餐饮、美业、家居——<em>数据驱动同城获客</em>,把"发什么"交给飞轮而不是感觉。</span></div>
+      <div class="ind"><b>矩阵 / 多号运营</b><span>一号一套工作区<em>不串号</em>,一人管多号,定位、数据、经验各自独立。</span></div>
+      <div class="ind"><b>MCN / 代运营</b><span>批量做号、交付内容,<em>单条边际成本趋近于零</em>——也是最适合谈渠道合作的一类伙伴。</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 统一更新日志 -->
+<section class="sect" id="changelog" style="padding-top:36px">
+  <div class="wrap">
+    <div class="sect-head rv">
+      <div class="rule"><span class="eyebrow">Release Archive</span></div>
+      <h2>每一次更新，都有据可查</h2>
+      <p>版本号、发布时间和用户可感知变化统一收在这里。<b>不写技术流水账，只记录真正改变使用体验的内容。</b></p>
+    </div>
+    <div class="release-board rv">
+      <div class="release-tabs" role="tablist" aria-label="CreatorOS 版本选择">
+        <button class="release-tab" id="release-tab-020" role="tab" aria-selected="true" aria-controls="release-020" onclick="releaseSelect('020',this)">v0.2.0</button>
+        <button class="release-tab" id="release-tab-010" role="tab" aria-selected="false" aria-controls="release-010" onclick="releaseSelect('010',this)">v0.1.0</button>
+        <span class="release-live">CURRENT RELEASE</span>
+      </div>
+
+      <article class="release-panel" id="release-020" role="tabpanel" aria-labelledby="release-tab-020">
+        <div class="release-stamp">
+          <small>Current version</small>
+          <strong>0.2.0</strong>
+          <div class="release-date">2026.07.26</div>
+          <span class="release-badge">FINAL PUBLIC BETA</span>
+        </div>
+        <div class="release-content">
+          <h3>从“能用”，走到真实创作可以长期跑</h3>
+          <p class="release-lead">第二轮、也是最后一轮公开内测版本。重点不是增加更多按钮，而是让采集、创作、长任务和反馈都更真实、更清楚、更可恢复。</p>
+          <ul class="release-list">
+            <li><b>macOS / Windows 双端</b>安装、首次启动和日常使用主流程更稳定。</li>
+            <li><b>内容雷达接入真实来源</b>支持博主主页、收藏、网页、RSS 与黑马关键词。</li>
+            <li><b>AI 更懂真实素材</b>可处理参考图、抖音链接和项目当前状态，不擅自启动高成本动作。</li>
+            <li><b>脚本生成更完整</b>残缺结果不会伪装成可采纳整稿，正式写入仍由用户确认。</li>
+            <li><b>知识库与长任务升级</b>增加文件工作区，自动化任务可看进度、可恢复、避免重复提交。</li>
+            <li><b>反馈与上手路线补齐</b>侧边栏直达问题反馈，并提供完整 0→1 使用手册。</li>
+          </ul>
+          <div class="release-footnote">当前版本公告由官网 `updates/latest.json` 管理；CreatorOS 客户端会直接读取版本号与更新说明。</div>
+        </div>
       </article>
 
-      <article class="price-card reveal">
-        <span class="price-badge">内测结束后</span>
-        <h3>正式版（内测结束后）</h3>
-        <div class="price-amt"><span class="cur">¥</span><span class="num">899</span><span class="term">/ 年</span></div>
-        <div class="price-kicker">首年订阅</div>
-        <ul class="price-list">
-          <li><span class="tick">✓</span><span>统一版本 · 完整功能</span></li>
-          <li><span class="tick">✓</span><span>次年续费 <b>¥199 / 年</b></span></li>
-          <li><span class="tick">×</span><span>不再提供永久买断</span></li>
-        </ul>
-        <a class="btn btn-ghost" style="width:100%;display:block;box-sizing:border-box;text-align:center" href="#buy">咨询正式版</a>
-        <p class="price-note">正式版价格在内测结束后生效。</p>
+      <article class="release-panel" id="release-010" role="tabpanel" aria-labelledby="release-tab-010" hidden>
+        <div class="release-stamp">
+          <small>First baseline</small>
+          <strong>0.1.0</strong>
+          <div class="release-date">2026.07.10</div>
+          <span class="release-badge">PUBLIC BETA BASELINE</span>
+        </div>
+        <div class="release-content">
+          <h3>CreatorOS 的第一个公开内测基线</h3>
+          <p class="release-lead">建立“定位—选题—脚本—制作—发布—复盘—经验回流”的核心产品骨架，并首次接通官网远程版本公告。</p>
+          <ul class="release-list">
+            <li><b>完整创作飞轮成形</b>一条内容不再停在 AI 生成，而是进入可复盘的长期经营链路。</li>
+            <li><b>本机工作区建立</b>项目、定位、素材和创作数据以本机存储为主。</li>
+            <li><b>人工确认门落地</b>AI 产出候选，用户确认后才进入正式数据。</li>
+            <li><b>公开更新通道接通</b>客户端可通过 HTTPS 读取官网 `latest.json` 判断是否有新版。</li>
+          </ul>
+          <div class="release-footnote">0.1.0 是版本历史起点；后续所有用户可感知变化从 0.2.0 开始在此持续追加。</div>
+        </div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="buy" id="buy">
+<!-- 获取方式 -->
+<section class="sect" id="partner" style="padding-top:36px">
   <div class="wrap">
-    <p class="sec-eyebrow">加入内测共创</p>
-    <h2>有意向，直接私聊。</h2>
-    <p class="sec-sub">确认后进入单独的 CreatorOS 内测共创群，统一完成软件交付、版本更新与问题反馈。</p>
-    <div class="buy-card reveal">
-      <h3>联系作者申请内测</h3>
-      <p>加微信或发邮件时备注「CreatorOS」，确认内测资格后由作者手动发放专属激活码。</p>
-      <div class="contact-rows">
-        <p class="contact-line"><span>微信</span><b>zyong181818z</b></p>
-        <p class="contact-line"><span>邮箱</span><b>1968286694@qq.com</b></p>
+    <div class="sect-head rv">
+      <div class="rule"><span class="eyebrow">Authorized Partner</span></div>
+      <h2>通过授权合作伙伴获取</h2>
+      <p>不同用户的设备、使用方式与交付安排可能不同，由最初向你介绍 CreatorOS 的授权合作伙伴继续提供说明和支持。</p>
+    </div>
+
+    <div class="agent-board rv">
+      <div class="agent-lead">
+        <div>
+          <span class="eyebrow">LOCAL SERVICE · CLEAR DELIVERY</span>
+          <h3>从介绍、交付到使用支持，保持同一条服务链</h3>
+        </div>
+        <p>请联系向你推荐 CreatorOS 的授权合作伙伴，了解适用方案、交付方式与当前政策。</p>
       </div>
+    </div>
+
+    <div class="agent-benefits">
+      <div class="agent-benefit rv"><b>设备确认</b><span>先确认 Apple 芯片 Mac、Windows 或仍在推进适配的 Intel Mac。</span></div>
+      <div class="agent-benefit rv"><b>交付说明</b><span>由授权合作伙伴说明安装、激活与当前适用方案。</span></div>
+      <div class="agent-benefit rv"><b>持续支持</b><span>遇到安装或使用问题，继续通过原授权合作伙伴跟进。</span></div>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap foot-inner">
-    <a class="brand" href="#top" style="font-size:15px"><span class="glyph"></span>CreatorOS</a>
+    <a class="logo" href="#top" style="font-size:15px"><span class="logo-mark" style="width:24px;height:24px;font-size:13px">C</span>CreatorOS</a>
     <a href="#flywheel">飞轮</a>
-    <a href="#features">能力</a>
-    <a href="#price">定价</a>
-    <a href="#buy">购买</a>
-    <span class="sp">© 2026 CreatorOS · 数据本机优先 · 一机一码</span>
+    <a href="#why">为什么不一样</a>
+    <a href="#changelog" onclick="jumpToSection(event,'changelog')">更新日志</a>
+    <a href="#delivery">适配与交付</a>
+    <a href="#partner">获取方式</a>
+    <span class="sp">© 2026 CreatorOS · 数据本机优先 · 内测共创中</span>
   </div>
 </footer>
 
-<script>
-  (function () {
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-    }, { threshold: 0.14 });
-    document.querySelectorAll(".reveal").forEach(function (el, i) {
-      el.style.transitionDelay = (Math.min(i % 5, 4) * 60) + "ms";
-      io.observe(el);
-    });
-  })();
-</script>
+<div class="note-tag">一机一码 · 请通过授权合作伙伴获取</div>
 
+<div id="imageViewer" role="dialog" aria-modal="true" aria-label="产品图片大图预览" onclick="imageViewerClose(event)">
+  <button type="button" aria-label="关闭大图" onclick="imageViewerClose(event,true)">×</button>
+  <img src="" alt="">
+</div>
+
+<!-- 智能客服(规则化 FAQ) -->
+<div id="cwWrap">
+  <div id="cwPanel">
+    <div class="cw-head">
+      <span class="dot"></span>
+      <div class="t"><b>CreatorOS 智能客服</b><span>在线 · 产品 / 内测 / 合作 有问必答</span></div>
+      <button class="cw-x" onclick="cwToggle(false)" title="收起">✕</button>
+    </div>
+    <div class="cw-body" id="cwBody"></div>
+    <div class="cw-chips" id="cwChips"></div>
+    <div class="cw-foot">
+      <textarea id="cwInput" rows="1" placeholder="输入你的问题,回车发送…" onkeydown="cwKey(event)" oninput="cwGrow(this)"></textarea>
+      <button class="cw-send" onclick="cwSend()" title="发送" aria-label="发送"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <button id="cwBubble" onclick="cwToggle()" title="智能客服" aria-label="智能客服">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" fill="currentColor"/></svg>
+  </button>
+</div>
+
+<script>
+/* 滚动入场 */
+(function(){
+  var ob=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on");ob.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll(".rv").forEach(function(el,i){el.style.transitionDelay=(Math.min(i%6,3)*70)+"ms";ob.observe(el);});
+})();
+
+/* 长页导航：懒加载图片会改变上方高度，图片解码后再校准一次目标位置。 */
+window.jumpToSection=function(e,id){
+  if(e)e.preventDefault();
+  var target=document.getElementById(id);
+  if(!target)return;
+  history.replaceState(null,"","#"+id);
+  var imgs=Array.from(document.querySelectorAll("img[loading='lazy']"));
+  imgs.forEach(function(img){img.loading="eager";});
+  target.scrollIntoView({behavior:"smooth",block:"start"});
+  var decoded=imgs.map(function(img){return img.decode?img.decode().catch(function(){}):Promise.resolve();});
+  Promise.allSettled(decoded).then(function(){target.scrollIntoView({behavior:"auto",block:"start"});});
+  setTimeout(function(){target.scrollIntoView({behavior:"auto",block:"start"});},2200);
+};
+
+/* 更新日志 Tab：按钮、面板和键盘焦点保持同一状态。 */
+window.releaseSelect=function(id,btn){
+  document.querySelectorAll(".release-tab").forEach(function(tab){
+    var selected=tab===btn;
+    tab.setAttribute("aria-selected",selected?"true":"false");
+    tab.tabIndex=selected?0:-1;
+  });
+  document.querySelectorAll(".release-panel").forEach(function(panel){
+    panel.hidden=panel.id!=="release-"+id;
+  });
+};
+(function(){
+  var tabs=Array.from(document.querySelectorAll(".release-tab"));
+  tabs.forEach(function(tab,i){
+    tab.tabIndex=i===0?0:-1;
+    tab.addEventListener("keydown",function(e){
+      if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight")return;
+      e.preventDefault();
+      var next=(i+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;
+      tabs[next].focus();
+      tabs[next].click();
+    });
+  });
+})();
+
+/* 高信息密度产品图：手机端默认居中，可横向查看；点击进入大图。 */
+(function(){
+  var viewer=document.getElementById("imageViewer"), viewerImg=viewer.querySelector("img");
+  function centerShots(){
+    document.querySelectorAll(".step-shot .ph").forEach(function(ph){
+      if(window.matchMedia("(max-width:560px)").matches) ph.scrollLeft=(ph.scrollWidth-ph.clientWidth)/2;
+    });
+  }
+  window.imageViewerClose=function(e,force){
+    if(force||e.target===viewer){viewer.classList.remove("open");document.body.style.overflow="";viewerImg.src="";}
+  };
+  document.querySelectorAll(".step-shot img,.zoomable").forEach(function(img){
+    img.setAttribute("tabindex","0");
+    img.setAttribute("role","button");
+    img.setAttribute("aria-label",(img.alt||"产品图片")+"，点击放大");
+    function open(){
+      viewerImg.src=img.currentSrc||img.src;
+      viewerImg.alt=img.alt;
+      viewer.classList.add("open");
+      document.body.style.overflow="hidden";
+      requestAnimationFrame(function(){
+        viewer.scrollLeft=Math.max(0,(viewer.scrollWidth-viewer.clientWidth)/2);
+        viewer.scrollTop=0;
+      });
+    }
+    img.addEventListener("click",open);
+    img.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
+  });
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&viewer.classList.contains("open"))window.imageViewerClose(e,true);});
+  window.addEventListener("load",centerShots);
+  window.addEventListener("resize",centerShots);
+})();
+
+/* 智能客服:规则化 FAQ(静态站,无后端;商业问题统一引导回授权合作伙伴) */
+(function(){
+  var opened=false, greeted=false;
+  var REFERRAL="请联系向你推荐 CreatorOS 的授权合作伙伴，了解适用方案、交付方式与当前政策。";
+  // kw 越具体越靠前;命中打分 = 命中数×10 + 最长命中词长度,取最高,并列取靠前。
+  var FAQ=[
+    {kw:["已损坏","损坏","打不开","无法打开","闪退","gatekeeper","xattr","装不上","安装失败"],
+     a:"macOS 内测版第一次打开提示「已损坏」是正常拦截(内测版还没做苹果签名),软件没坏 🙂\n打开「终端」粘这行执行:\nxattr -cr \"/Applications/CreatorOS.app\"\n再双击即可。正式版签名后就不用了。"},
+    {kw:["价格","多少钱","收费","费用","报价","价位","贵不贵","怎么卖","钱"],
+     a:REFERRAL},
+    {kw:["购买","内测","申请","试用","体验","名额","怎么用上","内测资格","激活码","免费","怎么开始"],
+     a:"当前支持 Apple 芯片 Mac 与 Windows，Intel Mac 适配推进中。"+REFERRAL},
+    {kw:["代理","渠道","合作","分销","加盟","白标","招商","代理商","一起做"],
+     a:REFERRAL},
+    {kw:["联系","微信","加你","怎么找","联系方式","联系人","客服电话","加个好友"],
+     a:REFERRAL},
+    {kw:["数据","安全","上云","隐私","泄露","保密","本地","本机","会不会传"],
+     a:"数据全在你本机、加密落盘,不上云;模型 Key 只写不回、不进日志。数据主权完全在你手里。"},
+    {kw:["剪视频","剪辑","会剪","不会剪","做视频","会做视频","不会做","成片","剪片"],
+     a:"不用会剪。可以「直接上传成品视频」只用它管流程与复盘;也可以用受控成片(传粗剪+SRT,AI 决策后渲染)。两条路都行。"},
+    {kw:["系统","平台","mac","windows","win","苹果","电脑","手机","支持哪些","什么设备"],
+     a:"CreatorOS 是桌面端，当前支持 Apple 芯片 Mac 与 Windows，Intel Mac 适配推进中。暂无手机端，数据与工作区都在本机。"},
+    {kw:["会不会改","自己改","乱改","会改我","替我改","自动改"],
+     a:"不会。AI 只产候选与建议,你点确认才落库(人工确认门),绝不替你瞎改。"},
+    {kw:["飞轮","盲预测","复盘","经验回流","越用越准","怎么运转","原理"],
+     a:"飞轮 = 定位→选题→脚本→制作→发布→复盘→经验回流。发布前锁定盲预测,发布后采真实数据对照复盘,经验回流到定位——下一条更准。"},
+    {kw:["定位","母版","账号定位"],
+     a:"定位中心里建「定位母版」(我是谁/给谁/凭什么),它是下游选题、写稿、评分的硬约束源;可用 AI 访谈式一问一答聊出来,版本可追溯。"},
+    {kw:["多号","矩阵","切号","多个账号","一人多号","几个号"],
+     a:"支持一人管多号:一号一套定位/数据/经验,切号即切整个工作区,不会串号。"},
+    {kw:["功能","能干什么","能做什么","是什么","介绍","干嘛的","有什么用"],
+     a:"CreatorOS 是住在你本机的「抖音编导创作系统」:把一条内容从定位、选题、写稿、制作,到发布前盲预测、发布后真实数据复盘与经验回流走完一条飞轮,越用越准。"}
+  ];
+  var CHIPS=["如何获取 CreatorOS?","合作方式是什么?","数据安全吗?","一定要会剪视频吗?","Mac 打不开怎么办?","支持哪些设备?"];
+  var FALLBACK="这个问题暂时没有匹配到准确答案。"+REFERRAL;
+  function bodyEl(){return document.getElementById("cwBody");}
+  function esc(s){return (s||"").replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+  function nl2(s){return esc(s).replace(/\n/g,"<br>");}
+  function toBottom(){var b=bodyEl();b.scrollTop=b.scrollHeight;}
+  function addUser(t){var d=document.createElement("div");d.className="cw-msg cw-user";d.textContent=t;bodyEl().appendChild(d);toBottom();}
+  function addBot(t){var d=document.createElement("div");d.className="cw-msg cw-bot";d.innerHTML=nl2(t);bodyEl().appendChild(d);toBottom();}
+  function answer(q){
+    var s=(q||"").toLowerCase(), best=null, bestScore=0;
+    for(var i=0;i<FAQ.length;i++){
+      var hits=0, longest=0;
+      for(var j=0;j<FAQ[i].kw.length;j++){
+        var k=FAQ[i].kw[j].toLowerCase();
+        if(s.indexOf(k)>-1){ hits++; if(k.length>longest) longest=k.length; }
+      }
+      var score=hits*10+longest;
+      if(hits>0 && score>bestScore){ bestScore=score; best=FAQ[i]; }
+    }
+    return best ? best.a : FALLBACK;
+  }
+  function renderChips(){
+    var box=document.getElementById("cwChips");box.innerHTML="";
+    CHIPS.forEach(function(c){var b=document.createElement("button");b.className="cw-chip";b.textContent=c;
+      b.onclick=function(){addUser(c);setTimeout(function(){addBot(answer(c));},260);};box.appendChild(b);});
+  }
+  window.cwGrow=function(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,88)+"px";};
+  window.cwKey=function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();cwSend();}};
+  window.cwToggle=function(force){
+    var p=document.getElementById("cwPanel"),b=document.getElementById("cwBubble");
+    opened=(typeof force==="boolean")?force:!opened;
+    p.classList.toggle("show",opened);b.classList.toggle("hide",opened);
+    if(opened){
+      if(!greeted){greeted=true;addBot("你好~ 我是 CreatorOS 智能客服 😊\n产品功能、设备适配、安装使用与获取方式，都可以问我。也可以点下面的常见问题。");renderChips();}
+      setTimeout(function(){var i=document.getElementById("cwInput");if(i)i.focus();},120);
+    }
+  };
+  window.cwSend=function(){
+    var inp=document.getElementById("cwInput");var msg=(inp.value||"").trim();if(!msg)return;
+    addUser(msg);inp.value="";inp.style.height="auto";
+    setTimeout(function(){addBot(answer(msg));},280);
+  };
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "公开信息撤下方向明确，但禁用内容的可执行判定与公开静态资源覆盖范围尚未闭合，现有验收可能放过仍可公开访问的价格或个人联系方式。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "§2-公开边界",
+        "quote": "不再公开：终端售价、内测价、正式版价格、续费价、代理进货价、指导价、利润、价差、价格截止日期。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-PUBLIC-NO-PRICE",
+        "quote": "官网可见文本、脚本内 FAQ 和 HTML 源码均不包含 `¥599`、`¥899`、`¥399`、`¥199`、`500 元价差`或同义公开报价。"
+      },
+      "where": "§5 验收与 frontend-journey-contract 的 WEB-PUBLIC-01",
+      "failure_mode": "实现只扫描列出的固定字符串时，仍可保留其他金额、不同币种或格式、未列举的代理价差与利润表述并通过测试；“同义公开报价”没有给出确定性判定边界，两个合理实现会形成不同的公开结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#当前唯一公开边界；docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#验收",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把禁止公开的价格与利润表达定义成可确定验证的类别，并要求测试覆盖金额格式变体及价格、利润、价差、截止日期等语义类别，而非只匹配当前列举的字符串。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "§2-公开静态站边界",
+        "quote": "代理内部政策、价盘与联系网络继续由 Growth/渠道运营体系管理，不写入公开静态站。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-PUBLIC-NO-PERSONAL-CONTACT",
+        "quote": "官网源码不包含个人微信 `zyong181818z`、备用微信 `R15929072019`、邮箱 `z17362936917@163.com` 或 `shots/wechat-qr.png`。"
+      },
+      "where": "§4 数据与契约边界、§5 验收及 watched_paths",
+      "failure_mode": "验收只扫描首页源码、FAQ 和四个 watched paths，并只对二维码历史 URL 做线上回读；其他现存或历史静态文件若包含价格、联系方式或二维码，仍可能通过直接 URL 公开访问，同时所有列出的检查均通过。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#数据与契约边界；docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#验收；docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md#前端旅程契约",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "要求对实际部署输入目录中的全部公开静态文本与相关资源做递归检查，并为已知历史敏感资源建立线上 URL 回读清单；watched_paths 应覆盖决定这些公开资源与部署结果的路径。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}
