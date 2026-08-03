@@ -2,6 +2,68 @@
 
 > 状态：完成。代码 Gate、Windows 真安装/启动/卸载、macOS 流水线真启动与本机 DMG 二次启动均已通过。
 
+## 课程真实浏览器旅程
+
+```frontend-validation
+{
+  "schema": "frontend-validation/v1",
+  "task_id": "T-663",
+  "contract_path": "orchestrator/T663-FRONTEND-JOURNEY.md",
+  "contract_sha": "73e0a935aa52",
+  "commit_sha": "cb8849cc493a1a673eeca98d207308e8132a452b",
+  "observed_at": "2026-08-03T01:12:30.000Z",
+  "run": {
+    "verify_key": "built-in-ip-course:e2e",
+    "command": "CREATOROS_TEST_PORT=3431 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/built-in-ip-course.spec.ts --project=e2e",
+    "exit_code": 0,
+    "output_ref": "Node 25 / Google Chrome stable：1 passed；无绑定账号时课程目录、课时阅读、完成、刷新、窄屏和下一课全链路通过"
+  },
+  "environment": {
+    "surface": "desktop-web",
+    "runtime": "Google Chrome stable / Playwright 1.60",
+    "viewports": [
+      { "width": 1440, "height": 900, "result": "pass" },
+      { "width": 1024, "height": 720, "result": "pass" }
+    ]
+  },
+  "data": {
+    "mode": "non-fixture",
+    "witnesses": [
+      { "id": "packaged-course-6-22-119", "role": "repository-packaged-course-assets" },
+      { "id": "local-progress-lesson-01", "role": "real-browser-local-progress" }
+    ]
+  },
+  "levels": {
+    "logic": { "status": "pass", "evidence_ref": "课程校验、解析、投影与进度聚焦测试通过" },
+    "surface": { "status": "pass", "evidence_ref": "真实 Chrome 在 1440x900 与 1024x720 两档窗口无横向溢出" },
+    "journey": { "status": "pass", "evidence_ref": "0 号进入目录 → 第一课 → 标记完成 → 刷新恢复 → 目录进度 → 窄屏继续 → 下一课" },
+    "experience": { "status": "not-requested", "evidence_ref": "机器旅程不冒充用户主观体验确认" }
+  },
+  "checks": [
+    { "id": "AC-COURSE-HOME", "test_id": "E2E-COURSE-01", "result": "pass", "evidence_ref": "默认课程目录展示 6 模块、22 节课、119 个知识点和薛辉来源说明" },
+    { "id": "AC-COURSE-LESSON", "test_id": "E2E-COURSE-02", "result": "pass", "evidence_ref": "第一课正文、苏格拉底提问、实践任务、自评标准及前后课导航真实可用" },
+    { "id": "AC-COURSE-PROGRESS", "test_id": "E2E-COURSE-03", "result": "pass", "evidence_ref": "标记完成后按钮锁定，刷新仍保留，目录显示 1/22 与 5%" },
+    { "id": "AC-COURSE-RESPONSIVE", "test_id": "E2E-COURSE-04", "result": "pass", "evidence_ref": "1024x720 可继续学习并进入第二课，无横向溢出" },
+    { "id": "AC-COURSE-SOURCE", "test_id": "TEST-COURSE-01", "result": "pass", "evidence_ref": "随包课程 exact hash 保持 6/22/119，来源为 win-video-tutor" }
+  ],
+  "coverage": [
+    { "condition": "fresh", "result": "pass", "evidence_ref": "清空本机课程进度后显示从第一课开始", "reason": "" },
+    { "condition": "lesson", "result": "pass", "evidence_ref": "第一课完整结构化阅读内容可见", "reason": "" },
+    { "condition": "complete", "result": "pass", "evidence_ref": "标记完成后真实写入本机进度", "reason": "" },
+    { "condition": "refresh", "result": "pass", "evidence_ref": "刷新后本节已完成与目录进度仍在", "reason": "" },
+    { "condition": "minimum-window", "result": "pass", "evidence_ref": "1024x720 无横向溢出且动作可达", "reason": "" },
+    { "condition": "next-lesson", "result": "pass", "evidence_ref": "下一节进入商业定位先于个人特点并显示上一节入口", "reason": "" }
+  ],
+  "visible_copy": {
+    "artifact_path": "orchestrator/evidence/T-663-visible-copy.json",
+    "artifact_sha256": "5acb09523b2d9773e29d709c002ec54e344944c62d249212b821cb4af0e285b3"
+  },
+  "tdd_red_ref": "首次真实旅程失败并捕获：0 号全局守卫盖住了不依赖账号的随包课程；修正知识库入口白名单后转绿",
+  "open_defects": [],
+  "status": "pass"
+}
+```
+
 ## 发布资产
 
 - 课程来源：`win-video-tutor` Skill；仅在设计追溯中记录来源，运行时不依赖开发机路径。

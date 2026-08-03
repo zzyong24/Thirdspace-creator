@@ -28,7 +28,8 @@
     "frontend/src/features/knowledge/built-in-ip-course.ts",
     "frontend/src/features/knowledge/built-in-ip-course.server.ts",
     "frontend/src/features/knowledge/knowledge-course-reader.tsx",
-    "frontend/src/features/knowledge/knowledge-page.tsx"
+    "frontend/src/features/knowledge/knowledge-page.tsx",
+    "frontend/src/components/shell/zero-account-guidance.tsx"
   ],
   "viewports": [
     { "width": 1440, "height": 900 },
