@@ -210,20 +210,53 @@
 
   /* pricing */
   .price { text-align: center; }
+  .purchase-facts {
+    max-width: 920px; margin: 50px auto 0; padding: 26px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--hair); border: 1px solid var(--hair); border-radius: 20px; overflow: hidden;
+  }
+  .purchase-fact { background: var(--panel); padding: 24px 18px; min-width: 0; }
+  .purchase-fact strong { display: block; font-size: 17px; letter-spacing: -0.015em; margin-bottom: 7px; }
+  .purchase-fact span { display: block; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+  .status-progress {
+    display: inline-flex !important; width: auto; margin-top: 8px; padding: 3px 10px;
+    border-radius: 980px; color: #915f00 !important; background: #fff2cc; font-size: 12px !important;
+  }
+  .pricing-grid {
+    max-width: 920px; margin: 22px auto 0; display: grid; grid-template-columns: 1fr 1fr;
+    gap: 22px; align-items: stretch;
+  }
   .price-card {
-    max-width: 460px; margin: 56px auto 0; background: var(--panel);
+    margin: 0; background: var(--panel); text-align: left;
     border: 1px solid var(--hair); border-radius: 24px; padding: 44px 40px 40px;
     box-shadow: 0 30px 80px -40px rgba(76, 34, 201, 0.4); position: relative;
   }
+  .price-card.beta {
+    color: #fff; border-color: transparent;
+    background: linear-gradient(145deg, #7b4bf5, var(--brand) 58%, var(--brand-ink));
+  }
+  .price-card h3 { margin: 18px 0 0; font-size: 24px; letter-spacing: -0.02em; }
   .price-badge { display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--brand); background: rgba(109, 59, 239, 0.1); padding: 6px 14px; border-radius: 980px; letter-spacing: -0.01em; }
-  .price-amt { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: 22px 0 4px; }
+  .beta .price-badge { color: #fff; background: rgba(255, 255, 255, 0.16); }
+  .price-amt { display: flex; align-items: baseline; justify-content: flex-start; gap: 4px; margin: 22px 0 4px; }
   .price-amt .cur { font-size: 30px; font-weight: 600; }
   .price-amt .num { font-size: 76px; font-weight: 650; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .price-amt .term { font-size: 21px; font-weight: 600; margin-left: 4px; }
   .price-kicker { font-size: 15px; color: var(--muted); }
+  .beta .price-kicker { color: rgba(255, 255, 255, 0.74); }
   .price-list { list-style: none; padding: 0; margin: 28px 0; text-align: left; display: flex; flex-direction: column; gap: 13px; }
   .price-list li { display: flex; gap: 11px; align-items: flex-start; font-size: 15px; letter-spacing: -0.01em; }
   .tick { width: 20px; height: 20px; border-radius: 50%; background: rgba(109, 59, 239, 0.12); color: var(--brand); flex: none; display: grid; place-items: center; font-size: 12px; margin-top: 1px; }
+  .beta .tick { color: #fff; background: rgba(255, 255, 255, 0.18); }
   .price-note { font-size: 12.5px; color: var(--faint); margin-top: 18px; }
+  .beta .price-note { color: rgba(255, 255, 255, 0.68); }
+  .beta .btn-primary { background: #fff; color: var(--brand-ink); }
+  .beta .btn-primary:hover { background: #f3efff; }
+  @media (max-width: 760px) {
+    .purchase-facts, .pricing-grid { grid-template-columns: 1fr; }
+    .purchase-facts { gap: 1px; padding: 0; }
+    .price-card { padding: 36px 28px 32px; }
+  }
 
   /* buy / contact */
   .buy { text-align: center; }
@@ -266,14 +299,14 @@
 
 <header class="hero" id="top">
   <div class="wrap">
-    <p class="eyebrow">桌面版 · Mac / Windows</p>
+    <p class="eyebrow">桌面版 · Apple 芯片 Mac / Windows</p>
     <h1>创作,不再只靠灵感。</h1>
     <p class="hero-sub">CreatorOS 把定位、选题、脚本、复盘连成一条飞轮 —— 一套住在你本机的内容生产系统。</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="#price">获取 CreatorOS</a>
       <a class="btn btn-ghost" href="#flywheel">看它怎么运转 ↓</a>
     </div>
-    <p class="hero-foot">一次买断 · 永久激活 · 数据全在你本机</p>
+    <p class="hero-foot">内测共创价 ¥599 · 一机一码 · 2026年8月10日截止</p>
   </div>
 
   <div class="shot reveal">
@@ -357,47 +390,79 @@
 <section class="updates" id="updates">
   <div class="wrap">
     <p class="sec-eyebrow">越用越好</p>
-    <h2>持续迭代,自动更新。</h2>
-    <p class="sec-sub">签名的更新实时下发,不用重装、不用重买。买一次,一直新。</p>
+    <h2>持续迭代，稳定交付。</h2>
+    <p class="sec-sub">从第一轮内测到 v0.3.0，我们和内测用户一起把完整创作链路打磨出来。</p>
     <div class="u-card reveal">
-      <div class="u-head"><span class="pulse"></span><span class="lbl">正在实时更新</span></div>
-      <div class="u-row"><span class="u-ver">v1.4</span><span class="u-txt">复盘评论线索 → 一键转选题 <small>· 本周</small></span></div>
-      <div class="u-row"><span class="u-ver">v1.3</span><span class="u-txt">桌面端本地加密 + 一机一码激活 <small>· 已发布</small></span></div>
-      <div class="u-row"><span class="u-ver">v1.2</span><span class="u-txt">AI 编导提示词持续打磨,免更新即刻生效 <small>· 已发布</small></span></div>
-      <p class="u-note">提示词与能力经签名远程下发,你的本地定制永远优先。</p>
+      <div class="u-head"><span class="pulse"></span><span class="lbl">v0.3.0 即将推出</span></div>
+      <div class="u-row"><span class="u-ver">v0.3</span><span class="u-txt">逐字稿对标一键改写、内容日历与排期 <small>· 即将推出</small></span></div>
+      <div class="u-row"><span class="u-ver">v0.2</span><span class="u-txt">内容雷达、创作链路与桌面端稳定性升级 <small>· 7月26日</small></span></div>
+      <div class="u-row"><span class="u-ver">内测</span><span class="u-txt">CreatorOS 第一轮内测开启 <small>· 7月20日</small></span></div>
+      <p class="u-note">每一次真实反馈，都会进入下一次产品迭代。</p>
     </div>
   </div>
 </section>
 
 <section class="price" id="price">
   <div class="wrap">
-    <p class="sec-eyebrow">定价</p>
-    <h2>一次买断,永久属于你。</h2>
-    <p class="sec-sub">没有订阅、没有续费。一台机器,一个码,后续更新全免费。</p>
-    <div class="price-card reveal">
-      <span class="price-badge">永久激活 · 一机一码</span>
-      <div class="price-amt"><span class="cur">¥</span><span class="num">1499</span></div>
-      <div class="price-kicker">一次性 · 永久使用</div>
-      <ul class="price-list">
-        <li><span class="tick">✓</span><span>全部能力解锁:定位飞轮 / AI 编导 / 复盘 / 数据</span></li>
-        <li><span class="tick">✓</span><span>后续版本 <b>免费</b> 自动更新,不再收费</span></li>
-        <li><span class="tick">✓</span><span>数据全在你本机,加密落盘,永不上云</span></li>
-        <li><span class="tick">✓</span><span>Mac 与 Windows 桌面端</span></li>
-      </ul>
-      <a class="btn btn-primary" style="width:100%;display:block;box-sizing:border-box" href="#buy">购买激活码</a>
-      <p class="price-note">激活码绑定单台机器(一机一码)。换机请联系作者迁移。</p>
+    <p class="sec-eyebrow">内测共创与正式订阅</p>
+    <h2>内测一次买断，正式版按年订阅。</h2>
+    <p class="sec-sub">价格、支持平台和设备规则，一次说清楚。</p>
+
+    <div class="purchase-facts reveal" aria-label="购买与设备说明">
+      <div class="purchase-fact">
+        <strong>一机一码</strong>
+        <span>每个激活码仅绑定 1 台设备</span>
+      </div>
+      <div class="purchase-fact">
+        <strong>当前支持</strong>
+        <span>Apple 芯片 Mac · Windows</span>
+      </div>
+      <div class="purchase-fact">
+        <strong>Intel Mac</strong>
+        <span class="status-progress">适配推进中</span>
+      </div>
+    </div>
+
+    <div class="pricing-grid">
+      <article class="price-card beta reveal">
+        <span class="price-badge">仅限内测群用户 · 8月10日截止</span>
+        <h3>内测共创价</h3>
+        <div class="price-amt"><span class="cur">¥</span><span class="num">599</span></div>
+        <div class="price-kicker">一次买断</div>
+        <ul class="price-list">
+          <li><span class="tick">✓</span><span>仅限内测群用户</span></li>
+          <li><span class="tick">✓</span><span>参与产品共创与持续打磨</span></li>
+          <li><span class="tick">✓</span><span>当前支持 Apple 芯片 Mac 与 Windows</span></li>
+        </ul>
+        <a class="btn btn-primary" style="width:100%;display:block;box-sizing:border-box;text-align:center" href="#buy">咨询内测</a>
+        <p class="price-note">内测共创价于 2026年8月10日截止。</p>
+      </article>
+
+      <article class="price-card reveal">
+        <span class="price-badge">内测结束后</span>
+        <h3>正式版（内测结束后）</h3>
+        <div class="price-amt"><span class="cur">¥</span><span class="num">899</span><span class="term">/ 年</span></div>
+        <div class="price-kicker">首年订阅</div>
+        <ul class="price-list">
+          <li><span class="tick">✓</span><span>统一版本 · 完整功能</span></li>
+          <li><span class="tick">✓</span><span>次年续费 <b>¥199 / 年</b></span></li>
+          <li><span class="tick">×</span><span>不再提供永久买断</span></li>
+        </ul>
+        <a class="btn btn-ghost" style="width:100%;display:block;box-sizing:border-box;text-align:center" href="#buy">咨询正式版</a>
+        <p class="price-note">正式版价格在内测结束后生效。</p>
+      </article>
     </div>
   </div>
 </section>
 
 <section class="buy" id="buy">
   <div class="wrap">
-    <p class="sec-eyebrow">购买</p>
-    <h2>直接找作者拿激活码。</h2>
-    <p class="sec-sub">加微信,备注「CreatorOS」,确认后付款,作者手动发你专属激活码。</p>
+    <p class="sec-eyebrow">加入内测共创</p>
+    <h2>有意向，直接私聊。</h2>
+    <p class="sec-sub">确认后进入单独的 CreatorOS 内测共创群，统一完成软件交付、版本更新与问题反馈。</p>
     <div class="buy-card reveal">
-      <h3>联系作者购买</h3>
-      <p>目前限量、手动发码,确保每位用户都能顺利激活与迁移。加微信时请备注「CreatorOS」。</p>
+      <h3>联系作者申请内测</h3>
+      <p>加微信或发邮件时备注「CreatorOS」，确认内测资格后由作者手动发放专属激活码。</p>
       <div class="contact-rows">
         <p class="contact-line"><span>微信</span><b>zyong181818z</b></p>
         <p class="contact-line"><span>邮箱</span><b>1968286694@qq.com</b></p>
@@ -416,8 +481,6 @@
     <span class="sp">© 2026 CreatorOS · 数据本机优先 · 一机一码</span>
   </div>
 </footer>
-
-<div class="note-tag">概念稿 · 待填真实联系方式 / 截图</div>
 
 <script>
   (function () {
