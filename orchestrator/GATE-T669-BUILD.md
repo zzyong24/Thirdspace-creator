@@ -9,7 +9,9 @@
 - Node 25 类型检查：PASS
 - 架构边界：PASS（无新增违规，5 条既有基线）
 - Next.js 生产构建：PASS
-- 双平台流水线：待 GitHub Actions 完成后补 run 与 artifact 证据
+- 双平台流水线：PASS
+- macOS 真启动与主页面加载冒烟：PASS
+- Windows 原生安装、真启动主页面与主动卸载清理冒烟：PASS
 
 ## 当场证据
 
@@ -21,6 +23,14 @@ frontend typecheck: PASS
 boundary-scan: PASS（无新增违规）
 frontend next build: PASS（Node v25.9.0）
 ```
+
+## 双端安装包
+
+- GitHub Actions：[desktop-release #30786063714](https://github.com/zzyong24/Thirdspace-creator/actions/runs/30786063714)（`success`）
+- 构建提交：`ba15f09bbc1223118d2a17324d87d5018c0eb6d0`
+- macOS：`CreatorOS_0.2.1-beta.3_aarch64.dmg`，本地 426 MiB，SHA-256 `2c7a16908c2eb2e453fa2016794f073564fb32368da01532739bce254547ece8`
+- Windows：`CreatorOS_0.2.1-beta.3_x64-setup.exe`，本地 1.0 GiB，SHA-256 `fec42603f4ace8e5daedf01169c39b16aac9c88e5c66fa4f996062243c5c6d4b`
+- 本地目录：`/Users/zyongzhu/Downloads/CreatorOS-30786063714`
 
 ## 全仓既有测试债（不冒充全绿）
 
