@@ -560,6 +560,64 @@ describe("T-482 内容雷达领域主链", () => {
     }
   });
 
+  it("旧网页信源包含分享文案时提取有效 URL，无有效 URL 时登记 orphan 而不拖垮工作区", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      await db.insert(trendSources).values([
+        {
+          id: "legacy-share-text-source",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          name: "旧抖音分享信源",
+          url: "4- 长按复制此条消息，打开抖音搜索。 https://v.douyin.com/gSImUxElK4Q/ 0@0.com :1pm",
+          sourceType: "web",
+          domain: "v.douyin.com",
+          note: null,
+          enabled: true,
+          createdAt: d.clock.value,
+          updatedAt: d.clock.value,
+        },
+        {
+          id: "legacy-invalid-text-source",
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+          name: "无效旧信源",
+          url: "这里只剩下无法解析的历史分享口令",
+          sourceType: "web",
+          domain: "unknown",
+          note: null,
+          enabled: true,
+          createdAt: d.clock.value,
+          updatedAt: d.clock.value,
+        },
+      ]);
+
+      const workspace = await service.getWorkspace(ctx);
+      expect(
+        workspace.sources.find((source) => source.displayName === "旧抖音分享信源"),
+      ).toMatchObject({ canonicalUrl: "https://v.douyin.com/gSImUxElK4Q/" });
+      expect(
+        workspace.sources.some((source) => source.displayName === "无效旧信源"),
+      ).toBe(false);
+
+      const ledgers = await db.select().from(intelligenceMigrationLedgers);
+      expect(ledgers[0]?.counts).toMatchObject({
+        legacyTrendSources: 2,
+        migratedSources: 1,
+        orphanCount: 1,
+      });
+      expect(ledgers[0]?.orphanReport).toMatchObject({
+        count: 1,
+        samples: ["trend_source:legacy-invalid-text-source:invalid_url"],
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
   it("首次打开按账号创建“我的收藏”和“黑马发现”系统分类", async () => {
     const { db, client } = await createDb();
     const d = deps();

@@ -503,6 +503,24 @@ function canonicalUrl(value: string): string {
   return url.toString();
 }
 
+/**
+ * 旧版 trend_sources 曾把整段分享口令写进 url 列。新入口继续严格校验 URL；只有
+ * 一次性历史迁移允许从自由文本里提取首个有效 http(s) 地址，避免一条脏记录让
+ * getWorkspace 整体抛 ERR_INVALID_URL。
+ */
+function canonicalUrlFromLegacyText(value: string): string | null {
+  const candidates = value.match(/https?:\/\/[^\s<>"']+/giu) ?? [];
+  for (const raw of candidates) {
+    const candidate = raw.replace(/[，。！？；、)\]}>”’…]+$/gu, "");
+    try {
+      return canonicalUrl(candidate);
+    } catch {
+      // 继续尝试同一段历史文本中的下一个 URL；完全无有效地址时由迁移记 orphan。
+    }
+  }
+  return null;
+}
+
 function hash(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -1491,7 +1509,12 @@ export function createIntelligenceService(
     for (const old of oldTrendSources) {
       const type: "web" | "rss" =
         old.sourceType === "rss" ? "rss" : "web";
-      const normalizedUrl = canonicalUrl(old.url);
+      const normalizedUrl = canonicalUrlFromLegacyText(old.url);
+      if (!normalizedUrl) {
+        orphanSamples.push(`trend_source:${old.id}:invalid_url`);
+        continue;
+      }
+      const sourceDomain = new URL(normalizedUrl).hostname;
       const source = await ensureLegacySource({
         legacyKey: `trend:${old.id}`,
         type,
@@ -1500,13 +1523,13 @@ export function createIntelligenceService(
         canonicalUrl: normalizedUrl,
         externalKey: hash(normalizedUrl),
         browserSessionRef:
-          type === "web" ? `web-domain:${old.domain}` : null,
+          type === "web" ? `web-domain:${sourceDomain}` : null,
         adapterConfig:
           type === "web"
             ? {
                 type: "web",
                 url: normalizedUrl,
-                browserSessionRef: `web-domain:${old.domain}`,
+                browserSessionRef: `web-domain:${sourceDomain}`,
               }
             : { type: "rss", url: normalizedUrl },
         monitorEnabled: old.enabled,
@@ -1785,7 +1808,11 @@ export function createIntelligenceService(
         oldBenchmarkWorks.length +
         oldFavoritesItems.length -
         migratedItemIds.size -
-        orphanSamples.length,
+        orphanSamples.filter(
+          (sample) =>
+            sample.startsWith("benchmark_work:") ||
+            sample.startsWith("favorites_item:"),
+        ).length,
     };
     const [updated] = await db
       .update(intelligenceMigrationLedgers)

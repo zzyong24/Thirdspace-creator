@@ -135,6 +135,7 @@ describe("runDouyinHeavyBackfill (T-195 初始化重活编排)", () => {
         filled: 2,
         skipped: 0,
         failed: 1,
+        deferred: 0,
       })),
       enqueueReconstructForImported: vi.fn(async () => ({
         considered: 3,

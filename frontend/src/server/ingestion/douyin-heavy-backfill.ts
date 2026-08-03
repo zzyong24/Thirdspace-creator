@@ -168,7 +168,7 @@ export async function runDouyinHeavyBackfill(
     coversFilled = backfill.filled;
     if (backfill.attempted > 0) {
       console.log(
-        `[douyin-cover-backfill] 候选 ${backfill.attempted},回填 ${backfill.filled},跳过 ${backfill.skipped},失败 ${backfill.failed}`,
+        `[douyin-cover-backfill] 候选 ${backfill.attempted},回填 ${backfill.filled},跳过 ${backfill.skipped},失败 ${backfill.failed},延后 ${backfill.deferred}`,
       );
     }
   } catch (err) {

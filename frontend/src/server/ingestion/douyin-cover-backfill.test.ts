@@ -6,6 +6,7 @@ import {
   type CoverBackfillPorts,
   type MissingCoverPublication,
 } from "./douyin-cover-backfill";
+import { DouyinCooldownActiveError } from "./douyin-request-gateway";
 
 // T-078 封面回填 runner 单测:全端口注 fake(零网络零浏览器)。
 // 覆盖:正常回填 / 无 coverUrl 诚实跳过 / 单作品失败降级 / 幂等(候选集为空即无操作)/
@@ -70,7 +71,7 @@ describe("backfillDouyinCovers", () => {
       listMissingCover: async () => missing(2),
     });
     const result = await backfillDouyinCovers(ports);
-    expect(result).toEqual({ attempted: 2, filled: 2, skipped: 0, failed: 0 });
+    expect(result).toEqual({ attempted: 2, filled: 2, skipped: 0, failed: 0, deferred: 0 });
     expect(calls.fetched).toEqual(["aweme-1", "aweme-2"]);
     expect(calls.covers).toEqual([
       { publicationId: "pub-1", coverAssetId: "asset-1" },
@@ -83,7 +84,7 @@ describe("backfillDouyinCovers", () => {
   it("候选集为空(全部已有封面)→ 幂等零操作", async () => {
     const { ports, calls } = makePorts();
     const result = await backfillDouyinCovers(ports);
-    expect(result).toEqual({ attempted: 0, filled: 0, skipped: 0, failed: 0 });
+    expect(result).toEqual({ attempted: 0, filled: 0, skipped: 0, failed: 0, deferred: 0 });
     expect(calls.fetched).toEqual([]);
     expect(calls.covers).toEqual([]);
   });
@@ -94,7 +95,7 @@ describe("backfillDouyinCovers", () => {
       fetchVideoUrl: async () => ({}),
     });
     const result = await backfillDouyinCovers(ports);
-    expect(result).toEqual({ attempted: 1, filled: 0, skipped: 1, failed: 0 });
+    expect(result).toEqual({ attempted: 1, filled: 0, skipped: 1, failed: 0, deferred: 0 });
     expect(calls.assets).toEqual([]);
     expect(calls.covers).toEqual([]);
   });
@@ -111,7 +112,7 @@ describe("backfillDouyinCovers", () => {
       },
     });
     const result = await backfillDouyinCovers(ports);
-    expect(result).toEqual({ attempted: 2, filled: 1, skipped: 0, failed: 1 });
+    expect(result).toEqual({ attempted: 2, filled: 1, skipped: 0, failed: 1, deferred: 0 });
     expect(calls.covers).toEqual([
       { publicationId: "pub-2", coverAssetId: "asset-1" },
     ]);
@@ -127,10 +128,10 @@ describe("backfillDouyinCovers", () => {
       },
     });
     const result = await backfillDouyinCovers(ports);
-    expect(result).toEqual({ attempted: 2, filled: 1, skipped: 0, failed: 1 });
+    expect(result).toEqual({ attempted: 2, filled: 1, skipped: 0, failed: 1, deferred: 0 });
   });
 
-  it("limit 透传给候选集查询(默认 100)", async () => {
+  it("limit 透传给候选集查询(默认 10)", async () => {
     const seen: number[] = [];
     const { ports } = makePorts({
       listMissingCover: async (limit) => {
@@ -140,7 +141,30 @@ describe("backfillDouyinCovers", () => {
     });
     await backfillDouyinCovers(ports);
     await backfillDouyinCovers(ports, { limit: 3 });
-    expect(seen).toEqual([100, 3]);
+    expect(seen).toEqual([10, 3]);
+  });
+
+  it("共享网关进入长冷却时立即结束本轮，当前及剩余候选延后而不制造批量失败", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { ports, calls } = makePorts({
+      listMissingCover: async () => missing(3),
+      fetchVideoUrl: async (awemeId) => {
+        calls.fetched.push(awemeId);
+        throw new DouyinCooldownActiveError("iesdouyin", 960_000);
+      },
+    });
+
+    const result = await backfillDouyinCovers(ports);
+
+    expect(calls.fetched).toEqual(["aweme-1"]);
+    expect(result).toEqual({
+      attempted: 3,
+      filled: 0,
+      skipped: 0,
+      failed: 0,
+      deferred: 3,
+    });
   });
 
   it("[缺口 B] setCover 后把封面绑到作品所属项目(素材中心按项目可见)", async () => {
@@ -165,7 +189,7 @@ describe("backfillDouyinCovers", () => {
     });
     const result = await backfillDouyinCovers(ports);
     // 封面 setCover 已成功 → filled=1;绑定失败只记日志,不计 failed。
-    expect(result).toEqual({ attempted: 1, filled: 1, skipped: 0, failed: 0 });
+    expect(result).toEqual({ attempted: 1, filled: 1, skipped: 0, failed: 0, deferred: 0 });
   });
 
   it("[缺口 B] 未注入 bindCoverToProject 端口 → 退回旧行为(只落封面不绑项目)", async () => {
