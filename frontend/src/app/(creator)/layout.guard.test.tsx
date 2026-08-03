@@ -264,6 +264,15 @@ describe("(creator) layout — [T-348] 0 号引导守卫", () => {
     ).toBeNull();
   });
 
+  it("0 号 + 知识库 → 放行 children,让默认随包课程在未绑定账号时也能阅读", async () => {
+    listAccounts.mockResolvedValue([]);
+    await renderAt("/knowledge");
+    expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-testid="zero-account-guidance"]'),
+    ).toBeNull();
+  });
+
   it("0 号 + per-account 页(/projects)→ 守卫,渲染绑定引导(不渲 children)", async () => {
     listAccounts.mockResolvedValue([]);
     await renderAt("/projects");

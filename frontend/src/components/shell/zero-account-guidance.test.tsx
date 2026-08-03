@@ -12,10 +12,11 @@ import {
 afterEach(() => cleanup());
 
 describe("isZeroAccountAllowedPath", () => {
-  it("user 级页面放行(绑号入口/设置/激活)", () => {
+  it("user 级页面与随包课程入口放行(绑号入口/设置/知识库/激活)", () => {
     expect(isZeroAccountAllowedPath("/accounts")).toBe(true);
     expect(isZeroAccountAllowedPath("/accounts/new")).toBe(true);
     expect(isZeroAccountAllowedPath("/settings")).toBe(true);
+    expect(isZeroAccountAllowedPath("/knowledge")).toBe(true);
     expect(isZeroAccountAllowedPath("/activate")).toBe(true);
   });
 
@@ -28,7 +29,6 @@ describe("isZeroAccountAllowedPath", () => {
       "/projects",
       "/projects/p-1",
       "/topics",
-      "/knowledge",
       "/assets",
       "/publishing-center",
       "/automations",

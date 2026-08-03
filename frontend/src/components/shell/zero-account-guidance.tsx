@@ -18,6 +18,9 @@ import * as React from "react";
 const ZERO_ACCOUNT_ALLOWED_PREFIXES = [
   "/accounts", // 账号管理:绑定入口本体,绝不能拦
   "/settings", // 设置:模型配置等 user 级共享配置(C-01 裁决:模型配置共享)
+  // [T-663] 知识库默认入口是随包课程,课程不依赖账号；用户切到
+  // `?view=knowledge` 时由 route 自己返回绑定引导，不能让 layout 把课程也盖掉。
+  "/knowledge",
   "/activate", // 桌面激活流程
   "/login",
 ] as const;
