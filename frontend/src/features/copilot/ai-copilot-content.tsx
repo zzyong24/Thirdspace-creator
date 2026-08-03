@@ -64,8 +64,6 @@ import {
   DefaultChatTransport,
   isToolUIPart,
   getToolName as sdkGetToolName,
-  // [T-263] HITL 授权:工具调用挂起(approval-requested)时,用户「允许/拒绝」经 addToolApprovalResponse
-  // 回执;sendAutomaticallyWhen 挂此判定 → 授权响应齐了就**同回合自动 resume 续跑**(无新 user 消息)。
   lastAssistantMessageIsCompleteWithApprovalResponses,
   type UIMessage,
 } from "ai";
@@ -194,6 +192,7 @@ import {
   type MentionedProject,
 } from "./project-mention";
 import { ProjectMentionMenu } from "./project-mention-menu";
+import { shouldResumeToolApprovalOnce } from "./tool-approval-resume-guard";
 
 // ---------------------------------------------------------------------------
 // ViewModel — shaped by the `buildCopilotViewModel` selector. The Copilot
@@ -851,6 +850,19 @@ export function AICopilotContent({
       }),
     [chatContextBody, captureConversationId],
   );
+  // [T-673] 每个 approval id 只允许自动续跑一次。正常流会推进为 output-available；若服务端/
+  // provider 流畸形而仍停在 approval-responded，本 Set 会熔断自动重发，避免同一调用无限转圈。
+  const resumedApprovalIdsRef = React.useRef(new Set<string>());
+  const resumeApprovedToolsOnce = React.useCallback(
+    ({ messages: currentMessages }: { messages: UIMessage[] }) =>
+      shouldResumeToolApprovalOnce(
+        currentMessages,
+        resumedApprovalIdsRef.current,
+        lastAssistantMessageIsCompleteWithApprovalResponses,
+      ),
+    [],
+  );
+
   // [T-231⑩] regenerate:@ai-sdk/react 现成的「重发最后一轮」API(对话出错时的重试通路)。
   // [T-263] addToolApprovalResponse:HITL 授权卡「允许/拒绝」的回执口。sendAutomaticallyWhen 挂
   // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 授权响应齐了就**同回合自动
@@ -866,7 +878,7 @@ export function AICopilotContent({
     addToolApprovalResponse,
   } = useChat({
     transport,
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+    sendAutomaticallyWhen: resumeApprovedToolsOnce,
   });
   const streaming = status === "streaming" || status === "submitted";
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,

@@ -373,6 +373,11 @@ export async function POST(req: Request): Promise<Response> {
     // 人话规则未命中时回落原始 message(诚实)。前端错误气泡直接渲这段文案。
     return result.toUIMessageStreamResponse({
       headers: { "x-conversation-id": conversationId },
+      // [T-673] HITL 授权后的请求不是一条全新 assistant 消息，而是对末条
+      // approval-responded 工具调用的续写。SDK 随后只会流出 tool-output；若不把原消息作为
+      // 组装基线，服务端内部 processUIMessageStream 会从空态查 toolCallId，抛
+      // “No tool invocation found”，并在输出抵达客户端前截断，触发前端无限自动续跑。
+      originalMessages: messages,
       // [T-239c] 关键:客户端 abort/断开后没人消费 SSE 流 → onFinish 不会触发、部分产出落不了库。
       // consumeSseStream 让服务端自己把流消费完(SDK 官方中断持久化形态),onFinish 才能在中断轮
       // 也拿到 isAborted + 已组装的部分 responseMessage。

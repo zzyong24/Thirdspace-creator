@@ -28,6 +28,7 @@ const runWithEffectiveSkillSnapshot = vi.hoisted(() =>
 let capturedStreamInit:
   | {
       headers?: Record<string, string>;
+      originalMessages?: unknown[];
       consumeSseStream?: unknown;
       onError?: (error: unknown) => string;
       onFinish?: (e: {
@@ -127,6 +128,7 @@ beforeEach(() => {
   runChatStream.mockResolvedValue({
     toUIMessageStreamResponse: (init?: {
       headers?: Record<string, string>;
+      originalMessages?: unknown[];
       consumeSseStream?: unknown;
       onError?: (error: unknown) => string;
       onFinish?: (e: {
@@ -264,6 +266,12 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     const [, input] = runChatStream.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");
     expect(input.messages).toHaveLength(1);
+    // [T-673] HITL 续跑时服务端会先收到末条 assistant 的 approval-responded，随后只流出
+    // tool-output。必须把原消息交给 SDK 作为续写基线，否则服务端自己的流组装器从空态处理
+    // tool-output，会报 “No tool invocation found” 并让前端对同一授权无限续跑。
+    expect(capturedStreamInit?.originalMessages).toEqual([
+      userMessage("基于评论出 5 个选题"),
+    ]);
     const [, , deps] = runChatStream.mock.calls[0];
     expect(deps.dispatchDouyinSharePort).toBe(dispatchDouyinShare);
 
