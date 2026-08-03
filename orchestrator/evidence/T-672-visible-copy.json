@@ -1,0 +1,29 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-672",
+  "commit_sha": "2a69e1db142f502bc54e7ff1d199d5b8125c00f4",
+  "captures": [
+    {
+      "checkpoint": "desktop-live-settled",
+      "check_ids": [
+        "AC-PUBLIC-NO-PRICE",
+        "AC-PUBLIC-NO-PERSONAL-CONTACT",
+        "AC-PARTNER-REFERRAL",
+        "AC-LEGACY-QR-404"
+      ],
+      "viewport": { "width": 1440, "height": 1200 },
+      "text": "CreatorOS 让灵感、生产与复盘，形成一个可持续的内容系统。\n查看支持平台\n一机一码，每个激活码绑定一台设备。\n当前支持 Apple 芯片 Mac 与 Windows，Intel Mac 适配推进中。\n通过授权合作伙伴获取。\n请联系向你推荐 CreatorOS 的授权合作伙伴，了解适用方案、交付方式与当前政策。"
+    },
+    {
+      "checkpoint": "mobile-live-settled",
+      "check_ids": [
+        "AC-PUBLIC-NO-PRICE",
+        "AC-PUBLIC-NO-PERSONAL-CONTACT",
+        "AC-PARTNER-REFERRAL",
+        "AC-LEGACY-QR-404"
+      ],
+      "viewport": { "width": 390, "height": 844 },
+      "text": "CreatorOS 让灵感、生产与复盘，形成一个可持续的内容系统。\n查看支持平台\n一机一码，每个激活码绑定一台设备。\n当前支持 Apple 芯片 Mac 与 Windows，Intel Mac 适配推进中。\n通过授权合作伙伴获取。\n请联系向你推荐 CreatorOS 的授权合作伙伴，了解适用方案、交付方式与当前政策。"
+    }
+  ]
+}
