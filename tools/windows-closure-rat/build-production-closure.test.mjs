@@ -16,6 +16,14 @@ test("official and RAT closure use one deterministic build plan", () => {
   assert.deepEqual(official.slice(0, rat.length), rat);
   assert.equal(rat.at(-1).name, "runtime consumer smoke");
   assert.equal(official.at(-1).name, "prepare Tauri packaged runtime");
+  const bakeIndex = rat.findIndex(
+    (step) => step.name === "bake verdict public key",
+  );
+  assert.notEqual(bakeIndex, -1);
+  assert.ok(
+    bakeIndex < rat.findIndex((step) => step.name === "runtime consumer smoke"),
+    "真实 verdict 冒烟前必须先把验签公钥烘焙进闭包",
+  );
   assert.equal(
     rat.filter((step) => step.name === "Next adapter production build").length,
     1,
@@ -81,4 +89,17 @@ test("official Windows release and RAT are wired to the same guarded closure", (
   );
   assert.match(packageSource, /CREATOROS_PRODUCTION_CLOSURE/);
   assert.match(packageSource, /跳过依赖旧 node_modules 布局的 V8 字节码步骤/);
+});
+
+test("closure and packaged runtime share one verdict-key baker", () => {
+  const baker = readFileSync(resolve(HERE, "bake-verdict-public-key.mjs"), "utf8");
+  const packagedRuntime = readFileSync(
+    resolve(HERE, "prepare-packaged-runtime.mjs"),
+    "utf8",
+  );
+
+  assert.match(baker, /assertVerdictPublicKey/);
+  assert.match(baker, /verdict-verify-key\.json/);
+  assert.match(packagedRuntime, /bakeVerdictPublicKey/);
+  assert.doesNotMatch(packagedRuntime, /writeFileSync\([\s\S]*publicKeyB64/);
 });

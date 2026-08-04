@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
-import { assertVerdictPublicKey } from "../../frontend/scripts/desktop/verdict-key-material.mjs";
+import { bakeVerdictPublicKey } from "./bake-verdict-public-key.mjs";
 
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
@@ -56,21 +56,9 @@ for (const required of [
   }
 }
 
-// Next build 的 public key 不能靠旧 build-sidecar 兜底：精简闭包不再经过那条巨型
-// node_modules 组装链，所以在进入 Tauri 之前明确烘焙并校验。
-const { publicKeyB64 } = assertVerdictPublicKey();
-const verdictPath = resolve(
-  closureRoot,
-  "frontend",
-  ".next",
-  "server",
-  "verdict-verify-key.json",
-);
-mkdirSync(dirname(verdictPath), { recursive: true });
-writeFileSync(
-  verdictPath,
-  `${JSON.stringify({ publicKeyB64 }, null, 2)}\n`,
-);
+// 精简闭包不经过旧 build-sidecar；公共构建入口已在 runtime smoke 前烘焙公钥，
+// 这里再次执行同一个幂等 helper，防止脚本被单独调用时生成安装后必白屏的包。
+bakeVerdictPublicKey(closureRoot);
 
 rmSync(sidecarRoot, { recursive: true, force: true });
 rmSync(binariesRoot, { recursive: true, force: true });

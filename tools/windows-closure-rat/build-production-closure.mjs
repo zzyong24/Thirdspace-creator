@@ -85,6 +85,14 @@ export function productionClosurePlan({ preparePackage = false } = {}) {
       },
     },
     {
+      name: "bake verdict public key",
+      command: process.execPath,
+      args: [
+        resolve(SCRIPT_DIR, "bake-verdict-public-key.mjs"),
+        "tools/windows-closure-rat/out/closure",
+      ],
+    },
+    {
       name: "runtime consumer smoke",
       command: resolve(
         CLOSURE_ROOT,
