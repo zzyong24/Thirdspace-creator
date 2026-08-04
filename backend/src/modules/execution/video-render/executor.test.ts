@@ -35,7 +35,13 @@ function props(): VideoRenderProps {
 interface EngineCalls {
   ffmpegArgs: string[][];
   probed: string[];
-  rendered: Array<{ projectDir: string; outputFile: string; fps: number }>;
+  rendered: Array<{
+    projectDir: string;
+    outputFile: string;
+    fps: number;
+    ffmpegPath: string;
+    ffprobePath: string;
+  }>;
 }
 
 function fakeEngine(
@@ -67,6 +73,8 @@ function fakeEngine(
         projectDir: opts.projectDir,
         outputFile: opts.outputFile,
         fps: opts.fps,
+        ffmpegPath: opts.ffmpegPath,
+        ffprobePath: opts.ffprobePath,
       });
       // 真 CLI 前置:工程里必须已有 index.html + gsap + media
       await fs.access(path.join(opts.projectDir, "index.html"));
@@ -145,6 +153,8 @@ describe("createVideoRenderExecutor", () => {
     // 渲染指向 work/,输出 raw
     expect(calls.rendered).toHaveLength(1);
     expect(calls.rendered[0]!.fps).toBe(30);
+    expect(calls.rendered[0]!.ffmpegPath).toBe("/fake/ffmpeg");
+    expect(calls.rendered[0]!.ffprobePath).toBe("/fake/ffprobe");
     // 交付转码固定命令(bt709/yuv420p/faststart)→ out/final.mp4
     const delivery = calls.ffmpegArgs.at(-1)!;
     expect(delivery.join(" ")).toContain("-pix_fmt yuv420p");

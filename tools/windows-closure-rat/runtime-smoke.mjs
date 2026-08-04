@@ -169,8 +169,12 @@ if (
 }
 record("hyperframes-cli");
 
-for (const tool of ["ffmpeg", "ffprobe"]) {
-  const toolPath = resolve(mediaBin, `${tool}${suffix}`);
+const ffmpegPath = resolve(mediaBin, `ffmpeg${suffix}`);
+const ffprobePath = resolve(mediaBin, `ffprobe${suffix}`);
+for (const [tool, toolPath] of [
+  ["ffmpeg", ffmpegPath],
+  ["ffprobe", ffprobePath],
+]) {
   const probe = spawnSync(toolPath, ["-version"], {
     encoding: "utf8",
     timeout: 30_000,
@@ -256,6 +260,8 @@ const renderVideo = spawnSync(
       SystemRoot: process.env.SystemRoot,
       CREATOROS_RUNTIME_ROOT: runtimeRoot,
       HYPERFRAMES_BROWSER_PATH: chromiumPath,
+      HYPERFRAMES_FFMPEG_PATH: ffmpegPath,
+      HYPERFRAMES_FFPROBE_PATH: ffprobePath,
       HYPERFRAMES_TELEMETRY: "0",
     },
     timeout: 120_000,

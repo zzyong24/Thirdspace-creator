@@ -51,6 +51,8 @@ export interface VideoRenderEngine {
     outputFile: string;
     fps: number;
     chromiumPath: string;
+    ffmpegPath: string;
+    ffprobePath: string;
     signal: AbortSignal;
     onProgress: (line: string) => void;
   }): Promise<void>;
@@ -269,6 +271,8 @@ async function renderWithHyperframesCli(opts: {
   outputFile: string;
   fps: number;
   chromiumPath: string;
+  ffmpegPath: string;
+  ffprobePath: string;
   signal: AbortSignal;
   onProgress: (line: string) => void;
 }): Promise<void> {
@@ -283,6 +287,11 @@ async function renderWithHyperframesCli(opts: {
         // master key/NODE_OPTIONS 一律不透传(见 child-env.ts allowlist)。
         env: buildChildEnv({
           HYPERFRAMES_BROWSER_PATH: opts.chromiumPath,
+          // HyperFrames 0.7.x 只识别自己的显式路径变量。Windows 上仅把随包
+          // media/bin 塞进 PATH 会受 Path/PATH 大小写与 where.exe 解析影响，
+          // 因此把已经验证可执行的绝对路径直接交给它。
+          HYPERFRAMES_FFMPEG_PATH: opts.ffmpegPath,
+          HYPERFRAMES_FFPROBE_PATH: opts.ffprobePath,
           HYPERFRAMES_TELEMETRY: "0",
           // CLI 交互态探测走 TTY;子进程无 TTY 天然非交互。
         }),
@@ -540,6 +549,8 @@ export function createVideoRenderExecutor(
         outputFile: rawFile,
         fps: props.delivery.fps,
         chromiumPath,
+        ffmpegPath: ffmpeg,
+        ffprobePath: ffprobe,
         signal,
         onProgress: (line) => {
           if (line === lastReported) return;

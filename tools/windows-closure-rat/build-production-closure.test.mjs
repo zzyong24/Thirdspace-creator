@@ -61,6 +61,8 @@ test("runtime smoke uses a real short-lived verdict instead of the removed bypas
   assert.match(source, /layerSummary\.runtime\.files > 3_500/);
   assert.match(source, /layerSummary\.core\.files > 1_500/);
   assert.doesNotMatch(source, /layerSummary\.core\.files > 1_000/);
+  assert.match(source, /HYPERFRAMES_FFMPEG_PATH:\s*ffmpegPath/);
+  assert.match(source, /HYPERFRAMES_FFPROBE_PATH:\s*ffprobePath/);
 });
 
 test("official Windows release and RAT are wired to the same guarded closure", () => {
