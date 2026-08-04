@@ -58,6 +58,9 @@ test("runtime smoke uses a real short-lived verdict instead of the removed bypas
   assert.match(source, /CREATOROS_SIDECAR_VERDICT_TOKEN/);
   assert.doesNotMatch(source, /CREATOROS_SMOKE_BYPASS_VERDICT:\s*["']1["']/);
   assert.match(source, /delete sidecarEnv\.CREATOROS_VERDICT_SIGNING_KEY_B64/);
+  assert.match(source, /layerSummary\.runtime\.files > 3_500/);
+  assert.match(source, /layerSummary\.core\.files > 1_500/);
+  assert.doesNotMatch(source, /layerSummary\.core\.files > 1_000/);
 });
 
 test("official Windows release and RAT are wired to the same guarded closure", () => {

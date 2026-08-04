@@ -372,8 +372,11 @@ const layerSummary = JSON.parse(
   readFileSync(resolve(runtimeRoot, "layer-summary.json"), "utf8"),
 );
 if (
-  layerSummary.runtime.files > 5_000 ||
-  layerSummary.core.files > 1_000 ||
+  // [T-675] 与正式安装包使用同一总文件硬门；core 另保留更宽但明确的警戒线。
+  // 旧 1,000 门槛已被正常业务闭包(1,022)越过，却仍远低于总预算，不能让 RAT
+  // 与正式 Gate 使用两套互相矛盾的发布语义。
+  layerSummary.runtime.files > 3_500 ||
+  layerSummary.core.files > 1_500 ||
   layerSummary.nodeModulesDirectories !== 0
 ) {
   throw new Error(
