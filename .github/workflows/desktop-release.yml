@@ -104,6 +104,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+        if: runner.os != 'Windows'
         id: runtime-inputs
         env:
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
@@ -148,6 +149,7 @@ jobs:
       # 平台/架构/Node ABI/锁文件/源码任一变化都必须重建，不能拿相近旧包冒险。
       # 保存动作紧跟 clean build，早于混淆/字节码，避免 job 结束时把已变异 sidecar 写回缓存。
       - name: 恢复 clean Runtime Image(T-487)
+        if: runner.os != 'Windows'
         id: runtime-cache
         uses: actions/cache/restore@v4
         with:
@@ -157,6 +159,7 @@ jobs:
           key: creatoros-runtime-v2-${{ steps.runtime-inputs.outputs.fingerprint }}-${{ runner.os }}-${{ runner.arch }}-verdict-${{ steps.runtime-inputs.outputs.pubkey }}-config-${{ steps.runtime-inputs.outputs.config }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', 'frontend/package.json', 'frontend/src/**', 'frontend/public/**', 'ai-worker/**', 'backend/**', 'contract/**', 'frontend/next.config.ts', 'frontend/scripts/desktop/build-sidecar.mjs', 'frontend/scripts/desktop/fetch-ffmpeg.mjs', 'frontend/scripts/desktop/platform-paths.mjs') }}
 
       - name: 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+        if: runner.os != 'Windows'
         id: runtime-abi
         env:
           CACHE_HIT: ${{ steps.runtime-cache.outputs.cache-hit }}
@@ -219,11 +222,11 @@ jobs:
           NODE
 
       - name: 安装 Playwright Chromium(T-284,仅 cache miss)
-        if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
+        if: runner.os != 'Windows' && (steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true')
         run: pnpm -C frontend exec playwright install chromium
 
       - name: 构建 clean Runtime Image(T-487,仅 cache miss)
-        if: steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true'
+        if: runner.os != 'Windows' && (steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true')
         env:
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           # [T-635] live program-gate GO 前所有可分发包固定关闭领取。
@@ -239,13 +242,31 @@ jobs:
       - name: 保存 clean Runtime Image(T-487)
         # GitHub cache 不可覆盖：若命中内容损坏，本轮会重建后继续，但不假装能覆盖同 key。
         # 正常 exact miss 才保存；异常命中需从 Actions cache 管理页删除后由下一轮重建。
-        if: steps.runtime-cache.outputs.cache-hit != 'true'
+        if: runner.os != 'Windows' && steps.runtime-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
             frontend/src-tauri/sidecar
             frontend/src-tauri/binaries
           key: ${{ steps.runtime-cache.outputs.cache-primary-key }}
+
+      # [T-675] Windows 正式包与 7 月 26 日候选包复用同一个少文件 production
+      # closure 入口。禁止再调用 full build-sidecar，把开发依赖树打回用户安装包。
+      - name: 安装 Windows production closure 的 Chromium
+        if: runner.os == 'Windows'
+        run: pnpm -C frontend exec playwright install chromium
+
+      - name: 构建并接入 Windows production closure(T-675)
+        if: runner.os == 'Windows'
+        env:
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+          GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
+          CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
+          CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
+        run: node tools/windows-closure-rat/build-production-closure.mjs --prepare-package
 
       - name: 读版本号
         id: version
@@ -322,6 +343,9 @@ jobs:
           # 上面已精确恢复或构建 clean runtime；package 只做混淆/字节码/Tauri，
           # 不再重复跑 Next build + 生产依赖闭包组装。
           CREATOROS_SKIP_SIDECAR_REBUILD: "1"
+          # [T-675] Windows 已由公共入口准备少文件闭包；package 保留正式保护链，但
+          # 不得通过旧 bytecode 布局重新引入 node_modules。
+          CREATOROS_PRODUCTION_CLOSURE: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: node scripts/desktop/release.mjs
 
       - name: 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
@@ -343,11 +367,18 @@ jobs:
             echo "[T-454] setup.exe 仍误带展开 sidecar/,会让 NSIS 处理 20 万文件卡死" >&2
             exit 1
           fi
+          setup_bytes=$(wc -c < "$setup" | tr -d '[:space:]')
+          if [ "$setup_bytes" -gt 600000000 ]; then
+            echo "::error::[T-675] Windows setup 超出 600,000,000B 硬门:$setup_bytes"
+            exit 1
+          fi
           echo "[T-454] ✓ setup.exe 携带 sidecar.tar.gz,不含展开目录"
+          echo "[T-675] ✓ setupBytes=$setup_bytes"
 
       - name: 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
         run: |
-          ls -d frontend/src-tauri/sidecar/frontend/browsers/chromium-* \
+          find frontend/src-tauri/sidecar \
+            -path '*/browsers/chromium-*' -type d -print -quit | grep -q . \
             || { echo "::error::Chromium 未打进 sidecar——bundleChromiumBrowser 被静默跳过"; exit 1; }
 
       # [T-487 RAT-PKG-02] 真执行本轮 setup.exe，不拿 7z 清单冒充安装验收。
@@ -364,13 +395,21 @@ jobs:
           $setup = Get-ChildItem "frontend/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" |
             Select-Object -First 1
           if (-not $setup) { throw "[T-487] 未找到 NSIS setup.exe" }
+          if ($setup.Length -gt 600000000) {
+            throw "[T-675] Windows setup 超出 600,000,000B 硬门:$($setup.Length)"
+          }
 
           $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
           Remove-Item -Recurse -Force $installDir -ErrorAction SilentlyContinue
+          $installWatch = [Diagnostics.Stopwatch]::StartNew()
           $process = Start-Process -FilePath $setup.FullName -Wait -PassThru `
             -ArgumentList @("/S", "/D=$installDir")
+          $installWatch.Stop()
           if ($process.ExitCode -ne 0) {
             throw "[T-487] NSIS 静默安装失败(exit=$($process.ExitCode))"
+          }
+          if ($installWatch.Elapsed.TotalSeconds -gt 300) {
+            throw "[T-675] Windows 安装超过 300 秒:$($installWatch.Elapsed)"
           }
 
           $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
@@ -398,9 +437,34 @@ jobs:
           if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
             throw "[T-487] 安装成功后仍残留 sidecar.tar.gz"
           }
+          $runtime = Join-Path $installDir "runtime-images/$runtimeId/sidecar"
+          $runtimeFiles = @(Get-ChildItem $runtime -Recurse -File)
+          $nodeModules = @(Get-ChildItem $runtime -Recurse -Directory -Filter "node_modules")
+          $links = @(
+            Get-ChildItem $runtime -Recurse -Force |
+              Where-Object { $_.LinkType -or ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) }
+          )
+          if ($runtimeFiles.Count -gt 3500) {
+            throw "[T-675] 安装 runtime 超出 3,500 文件预算:$($runtimeFiles.Count)"
+          }
+          if ($nodeModules.Count -ne 0 -or $links.Count -ne 0) {
+            throw "[T-675] 安装 runtime 结构违规:node_modules=$($nodeModules.Count), links=$($links.Count)"
+          }
           node frontend/scripts/desktop/verdict-artifact-hardening.mjs `
             --scan-installed-runtime $installDir
-          Write-Host "[T-487] ✓ 原生安装期物化通过: $server"
+          $runtimeBytes = ($runtimeFiles | Measure-Object Length -Sum).Sum
+          $evidence = [ordered]@{
+            schemaVersion = 1
+            setupBytes = $setup.Length
+            installMilliseconds = $installWatch.ElapsedMilliseconds
+            runtimeFiles = $runtimeFiles.Count
+            runtimeBytes = $runtimeBytes
+            nodeModulesDirectories = $nodeModules.Count
+            linksOrReparsePoints = $links.Count
+          }
+          $evidence | ConvertTo-Json | Out-File `
+            "tools/windows-closure-rat/out/official-package-results.json" -Encoding utf8
+          Write-Host "[T-675] ✓ 原生安装期物化通过: $server"
 
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
         run: |
@@ -418,6 +482,7 @@ jobs:
           ls -la dist-upload/
 
       - uses: actions/upload-artifact@v4
+        if: runner.os != 'Windows'
         with:
           name: desktop-${{ matrix.updater_target }}
           path: dist-upload/
@@ -477,8 +542,8 @@ jobs:
 
       # [T-562] 之前只执行 setup.exe 的安装期特殊入口，完全没有运行用户真正点击的
       # CreatorOS.exe，因此 sidecar cwd/verdict 公钥/WebView 导航回归都能带病上传。
-      # 产物先上传以便失败时保留诊断；随后真启动已安装 GUI，等 Rust 在 WebView 完成加载
-      # 127.0.0.1 主页面后输出固定 marker。这里不重编译，直接复用本 job 已安装的产物。
+      # Windows 正式工件只有在安装、首启与主动卸载全部通过后才允许上传；失败包仅保留
+      # T-675 机器证据用于诊断，不能混入 desktop-windows-x86_64。
       - name: Windows 安装后真启动与主页面加载冒烟(T-562)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -493,6 +558,7 @@ jobs:
           $stdout = Join-Path $env:RUNNER_TEMP "creatoros-startup.stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "creatoros-startup.stderr.log"
           Remove-Item $stdout,$stderr -Force -ErrorAction SilentlyContinue
+          $launchWatch = [Diagnostics.Stopwatch]::StartNew()
           $app = Start-Process -FilePath $appExe -PassThru `
             -RedirectStandardOutput $stdout -RedirectStandardError $stderr
           $ready = $false
@@ -510,6 +576,7 @@ jobs:
               }
               Start-Sleep -Milliseconds 200
             }
+            $launchWatch.Stop()
             if (-not $ready) {
               Write-Host "===== CreatorOS stdout ====="
               if (Test-Path $stdout) { Get-Content $stdout }
@@ -520,7 +587,17 @@ jobs:
               }
               throw "[T-562] CreatorOS 120 秒内未完成 sidecar 启动与 WebView 主页面加载"
             }
-            Write-Host "[T-562] ✓ 已安装 CreatorOS 真启动并完成主页面加载"
+            if ($launchWatch.Elapsed.TotalSeconds -gt 45) {
+              throw "[T-675] Windows 首次启动超过 45 秒:$($launchWatch.Elapsed)"
+            }
+            $evidencePath = "tools/windows-closure-rat/out/official-package-results.json"
+            $evidence = Get-Content $evidencePath -Raw | ConvertFrom-Json
+            $evidence | Add-Member -NotePropertyName firstLaunchMilliseconds `
+              -NotePropertyValue $launchWatch.ElapsedMilliseconds -Force
+            $evidence | Add-Member -NotePropertyName mainPageLoadFinished `
+              -NotePropertyValue $true -Force
+            $evidence | ConvertTo-Json | Out-File $evidencePath -Encoding utf8
+            Write-Host "[T-675] ✓ 已安装 CreatorOS 真启动并完成主页面加载:$($launchWatch.Elapsed)"
           } finally {
             if (-not $app.HasExited) {
               $null = $app.CloseMainWindow()
@@ -556,6 +633,28 @@ jobs:
             throw "[T-557] 主动卸载后仍残留安装目录:$installDir"
           }
           Write-Host "[T-557] ✓ 官方卸载器已清理 runtime 与安装目录"
+
+      - name: 上传已通过 T-675 真安装与首启验证的 Windows 安装包
+        if: runner.os == 'Windows' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.updater_target }}
+          path: dist-upload/
+          if-no-files-found: error
+
+      - name: 上传 T-675 Windows production closure 正式证据
+        if: runner.os == 'Windows' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t675-windows-production-closure-${{ github.run_attempt }}
+          path: |
+            tools/windows-closure-rat/out/closure/layer-summary.json
+            tools/windows-closure-rat/out/closure/ncc-core-summary.json
+            tools/windows-closure-rat/out/closure/runtime-smoke-results.json
+            tools/windows-closure-rat/out/packaged-runtime-summary.json
+            tools/windows-closure-rat/out/official-package-results.json
+          if-no-files-found: warn
+          retention-days: 30
 
   windows-runtime-rat:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_runtime_rat == true }}
@@ -612,52 +711,11 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm -C frontend exec playwright install chromium
 
-      - name: 构建 Next adapter production closure
+      - name: 构建 Windows production closure（与正式发布共用入口）
         env:
-          CREATOROS_DESKTOP: "1"
-          NEXT_ADAPTER_PATH: ${{ github.workspace }}/tools/windows-closure-rat/next-output-adapter.mjs
-          CREATOROS_NEXT_OUTPUT_REPORT: ${{ github.workspace }}/tools/windows-closure-rat/out/next-adapter-outputs.json
-        run: pnpm -C frontend build
-
-      - name: 收束 Next bootstrap 与 Pi 引擎
-        run: |
-          node tools/windows-closure-rat/prepare-next-bootstrap.mjs \
-            frontend/.next/standalone
-          pnpm dlx @vercel/ncc@0.38.4 build \
-            frontend/.next/standalone/frontend/server.js \
-            -m \
-            -o tools/windows-closure-rat/out/ncc-core
-          node tools/windows-closure-rat/build-pi-bundle.mjs
-
-      - name: 物化五层少文件 runtime
-        env:
-          CREATOROS_TARGET_PLATFORM: win32
-          CREATOROS_TARGET_ARCH: x64
-        run: |
-          node tools/windows-closure-rat/materialize-next-closure.mjs \
-            tools/windows-closure-rat/out/next-adapter-outputs.json \
-            tools/windows-closure-rat/out/closure
-          node tools/windows-closure-rat/finalize-ncc-core.mjs \
-            tools/windows-closure-rat/out/closure \
-            tools/windows-closure-rat/out/ncc-core
-          node tools/windows-closure-rat/assemble-runtime-layers.mjs \
-            tools/windows-closure-rat/out/closure \
-            tools/windows-closure-rat/out/pi-bundle.mjs
-
-      - name: Windows 全消费链与文件预算冒烟
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          $runtime = (Resolve-Path "tools/windows-closure-rat/out/closure").Path
-          $node = Join-Path $runtime "layers/core/bin/creatoros-server.exe"
-          $resolver = Join-Path $runtime "frontend/creatoros-module-resolver.cjs"
-          $env:CREATOROS_RUNTIME_ROOT = $runtime
-          & $node --require $resolver `
-            tools/windows-closure-rat/runtime-smoke.mjs `
-            tools/windows-closure-rat/out/closure
-          if ($LASTEXITCODE -ne 0) {
-            throw "[T-565] Windows production closure smoke 失败(exit=$LASTEXITCODE)"
-          }
+          CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
+          CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
+        run: node tools/windows-closure-rat/build-production-closure.mjs
 
       - name: 接入 Tauri production sidecar
         if: ${{ inputs.windows_package_rat == true }}
@@ -702,6 +760,9 @@ jobs:
           $setup = Get-ChildItem "frontend/src-tauri/target/release-fast/bundle/nsis" -Filter "*-setup.exe" |
             Select-Object -First 1
           if (-not $setup) { throw "[T-565] 未找到真实 NSIS setup.exe" }
+          if ($setup.Length -gt 600000000) {
+            throw "[T-675] Windows 候选 setup 超出 600,000,000B 硬门:$($setup.Length)"
+          }
 
           $listing = Join-Path $env:RUNNER_TEMP "creatoros-package-listing.txt"
           & 7z l $setup.FullName | Out-File -Encoding utf8 $listing
@@ -737,11 +798,18 @@ jobs:
           }
           $runtimeFiles = @(Get-ChildItem $runtime -Recurse -File)
           $nodeModules = @(Get-ChildItem $runtime -Recurse -Directory -Filter "node_modules")
+          $links = @(
+            Get-ChildItem $runtime -Recurse -Force |
+              Where-Object { $_.LinkType -or ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) }
+          )
           if ($runtimeFiles.Count -gt 3500) {
             throw "[T-565] 安装 runtime 超出 3,500 文件预算:$($runtimeFiles.Count)"
           }
           if ($nodeModules.Count -ne 0) {
             throw "[T-565] 安装 runtime 仍含 node_modules:$($nodeModules.Count)"
+          }
+          if ($links.Count -ne 0) {
+            throw "[T-675] 安装 runtime 仍含链接/重解析点:$($links.Count)"
           }
           node frontend/scripts/desktop/verdict-artifact-hardening.mjs `
             --scan-installed-runtime $installDir
@@ -807,6 +875,9 @@ jobs:
               if (Test-Path $stdout) { Get-Content $stdout }
               if (Test-Path $stderr) { Get-Content $stderr }
               throw "[T-565] 断网首启 120 秒内未进入本地主页面"
+            }
+            if ($launchWatch.Elapsed.TotalSeconds -gt 45) {
+              throw "[T-675] Windows 候选首次启动超过 45 秒:$($launchWatch.Elapsed)"
             }
             Write-Host (
               "[T-565] setupBytes=$($setup.Length) " +

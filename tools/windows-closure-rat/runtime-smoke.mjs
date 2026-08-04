@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { delimiter, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
+import { createBuildSmokeVerdictToken } from "../../frontend/scripts/desktop/verdict-key-material.mjs";
 
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
@@ -284,22 +285,28 @@ async function freePort() {
 }
 
 const port = await freePort();
+const verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port });
 const serverLogs = [];
+const sidecarEnv = {
+  ...process.env,
+  CREATOROS_RUNTIME_ROOT: runtimeRoot,
+  CREATOROS_BROWSERS_DIR: browsersDir,
+  PLAYWRIGHT_BROWSERS_PATH: browsersDir,
+  CREATOROS_BIN_DIR: mediaBin,
+  CREATOROS_DESKTOP: "1",
+  CREATOROS_SIDECAR_VERDICT_TOKEN: verdictToken,
+  PGLITE_DATA_DIR: resolve(tempRoot, "db"),
+  HOSTNAME: "127.0.0.1",
+  PORT: String(port),
+  NODE_ENV: "production",
+};
+delete sidecarEnv.CREATOROS_VERDICT_SIGNING_KEY_B64;
+delete sidecarEnv.CREATOROS_VERDICT_PUBKEY_B64;
+delete sidecarEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY;
+delete sidecarEnv.CREATOROS_SMOKE_BYPASS_VERDICT;
 const sidecar = spawn(smokeNode, [resolve(runtimeRoot, "frontend", "server.js")], {
   cwd: resolve(runtimeRoot, "frontend"),
-  env: {
-    ...process.env,
-    CREATOROS_RUNTIME_ROOT: runtimeRoot,
-    CREATOROS_BROWSERS_DIR: browsersDir,
-    PLAYWRIGHT_BROWSERS_PATH: browsersDir,
-    CREATOROS_BIN_DIR: mediaBin,
-    CREATOROS_DESKTOP: "1",
-    CREATOROS_SMOKE_BYPASS_VERDICT: "1",
-    PGLITE_DATA_DIR: resolve(tempRoot, "db"),
-    HOSTNAME: "127.0.0.1",
-    PORT: String(port),
-    NODE_ENV: "production",
-  },
+  env: sidecarEnv,
   // Windows 生产壳会持有 sidecar stdin，并以管道断开作为父进程死亡信号。
   // RAT 必须复现同一契约；`ignore` 会立即产生 EOF，让正确的孤儿防护主动退出。
   stdio: ["pipe", "pipe", "pipe"],

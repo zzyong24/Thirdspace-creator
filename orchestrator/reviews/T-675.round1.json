@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "已完成首轮完整审核；SPEC 与物理架构及已确认范围一致，默认 production closure 路径、功能闭包、正式发布属性、防退化 Gate、证据上传和本机交付均有可追溯验收约束，未发现 blocker、major 或 minor 问题。",
+  "findings": []
+}

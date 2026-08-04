@@ -393,7 +393,22 @@ step("sidecar JS 混淆(§3.1)", process.execPath, [join("scripts", "desktop", "
 //    把 chunk-stringarray 业务 chunk 编成 .jsc + .js 换 stub + 实拷 bytenode 进 sidecar node_modules。
 //    版本铁律:用本机 node 编(= build-sidecar copyFileSync 打进 sidecar 的同一 node)→ 字节码版本匹配。
 //    失败 fail-fast。下面的冒烟(步2.5)因此测的是**字节码版**(turbopack require stub → 加载 .jsc)。
-step("sidecar V8 字节码化(§5,L1→L3)", process.execPath, [join("scripts", "desktop", "bytecode.mjs")]);
+const productionClosure =
+  process.platform === "win32" &&
+  process.env.CREATOROS_PRODUCTION_CLOSURE === "1";
+if (productionClosure) {
+  // [T-675] 少文件闭包以 `.next/vendor` 取代 `node_modules`。旧 bytecode 步会为了
+  // `require("bytenode")` 重新创建 node_modules，直接破坏 3,500 文件/零 node_modules
+  // 的 Windows 安装预算。production closure 仍保留服务端/客户端混淆、诱饵、版权盖章、
+  // Rust 壳 hardening 与最终泄漏扫描；字节码待迁到显式 vendor resolver 后再恢复。
+  console.log(
+    "[desktop:package] [T-675] production closure 保持零 node_modules；跳过依赖旧 node_modules 布局的 V8 字节码步骤。",
+  );
+} else {
+  step("sidecar V8 字节码化(§5,L1→L3)", process.execPath, [
+    join("scripts", "desktop", "bytecode.mjs"),
+  ]);
+}
 
 // 2.3) [T-399a] 反 AI 破解被动欺骗诱饵注入(**字节码之后**:诱饵进 static/chunks 保持可读,不被 bytecode 碰)。
 //    往可读客户端面注入矛盾诱饵污染破解 AI 上下文;R2/R3 = 零引用/未进 manifest(浏览器永不加载)/删除即字节等价,

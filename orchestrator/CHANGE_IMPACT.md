@@ -474,6 +474,21 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **验证影响**：新增搜索范围、无关英文过滤、国内来源排序、二次覆盖/已采用保留和前端请求契约
   用例；T-652 其他访谈、证据采纳和正式定位原子写入语义不变。
 
+## CI-REL-675 — Windows 默认发布切回少文件 production closure（2026-08-03）
+
+- **变更源**：用户确认 DEC-REL-032，要求恢复 2026-07-26 已验证的快速打包逻辑并长期作为默认。
+- **立即失效**：Windows 正式 `build` job 复用跨平台 full runtime image、把完整依赖树装入 NSIS 的
+  既有实现，以及“产物先上传、再检查首次启动”的上传顺序。
+- **重新派生**：正式发布和候选 RAT 共同调用 production closure 入口；Windows 正式包继续经过
+  当前保护、身份、授权、更新器和 attestation 链，再执行结构、安装、首启与卸载 Gate。
+- **安全影响**：Windows closure 暂停依赖旧 `node_modules` 布局的 V8 bytecode 步骤，但保留其余
+  保护和最终泄漏扫描；这不改变 verdict 信任边界，也不得作为降低授权门的理由。
+- **工件影响**：标准工件名仍为 `desktop-windows-x86_64`；失败构建仅上传 T-675 诊断证据，不能
+  上传或发布用户安装包。
+- **不受影响**：macOS 打包、业务数据、数据库迁移、公开服务契约、用户功能与更新渠道语义。
+- **验证影响**：新增 setup ≤600,000,000B、runtime ≤3,500 文件、零 `node_modules`、零链接、
+  安装 ≤300 秒、首启 ≤45 秒的机器门禁，并保留断网非白屏、主动卸载和产品身份验证。
+
 ---
 
 ### How to use this file going forward

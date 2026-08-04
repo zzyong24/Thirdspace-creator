@@ -1691,3 +1691,25 @@ API；完整范围与诚实边界见 T-656 SPEC。
 5. UI 明示当前地区、语言和覆盖语义；空结果诚实提示用户细化关键词或放宽范围。
 
 **Status**：用户已确认国内用户语境；作为 T-652 SPEC §6 的实现纠偏纳入 T-657 BUILD。
+
+## DEC-REL-032 (2026-08-03) — Windows 正式发布恢复 production closure 并设置防退化硬门
+
+**来源**：用户确认 Windows 2026-07-26 的少文件安装包明显快于当前约 1.08 GB 正式包，并要求
+恢复当时的打包逻辑、以后统一沿用并重新生成安装包。对比证据证明差异来自正式流水线重新打入完整
+依赖树，而不是业务能力增加。
+
+**决策**：
+
+1. Windows 正式发布与候选 RAT 共用仓内唯一的 `build-production-closure.mjs`；正式 job 不再运行
+   Windows full `build-sidecar.mjs`。
+2. 闭包必须保留 Chromium、ffmpeg/ffprobe、PGlite、ASR、Pi/Hyperframes 与 Next 动态路由等随包
+   能力，不允许靠删除用户功能换体积。
+3. 正式 NSIS、产品身份、授权验签、混淆/诱饵/版权盖章、Rust 壳 hardening、更新器与 release
+   attestation 继续执行。旧 V8 bytecode 步骤因会重新制造 `node_modules`，只在 Windows production
+   closure 下暂停；待其改成显式 vendor resolver 后再恢复，不能因此恢复完整依赖树。
+4. 正式包设置失败关闭硬门：setup 不大于 600,000,000 字节、运行时不大于 3,500 文件、零
+   `node_modules`、零链接/重解析点、安装不超过 300 秒、首次可用不超过 45 秒。
+5. Windows 标准安装包只能在安装、首启非白屏和主动卸载全部通过后上传；失败轮只上传诊断证据，
+   不能成为可分发工件。
+
+**Status**：用户已确认；纳入 T-675 BUILD 与后续 Windows 默认发布标准。
