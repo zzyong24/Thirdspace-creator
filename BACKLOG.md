@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-674 | 对比 7 月 26 日 v0.2.0 与当前 Windows 包的性能退化【线上诊断·用户 2026-08-03】 | ✅ 待办 | — | — | [T-667 旧版诊断](docs/research/2026-08-02-windows-user-lag-log-diagnosis.md) · [T-669 止损](docs/superpowers/specs/2026-08-02-windows-background-load-shedding.md) | 核对两版安装包体积、runtime 内容、启动项、数据库迁移、自动化/转写/封面任务与真实用户日志，区分安装/首启/常驻运行三类慢，给出有证据的主因、已覆盖项和仍未覆盖项；本轮只诊断，不把推测当结论。 |
 | T-673 | 根治 Copilot 读取本地文件后卡住并形成工具调用重试风暴【AI 对话阻断·用户 2026-08-03】 | ✅ 待办 | — | — | 既有 `local.read` HITL、AI SDK UI message stream 与对话历史窗口契约 | `local.read` 成功读取本地文件（含分段读取的大文件）后必须把结果与原工具调用稳定配对并继续回答；若历史消息或 provider 流缺失 invocation 起点，客户端必须以可恢复终态结束该轮，禁止 `sendAutomaticallyWhen` 对同一 call ID 自动无限续跑。补真实故障形态回归：同一坏调用只失败一次、不会持续转圈、不会产生重复请求与日志风暴。 |
 | T-672 | 官网撤下全部公开价格与个人联系方式【代理利润保护·用户 2026-08-03】 | ✅ 待办 | PASS[REV:178b9884695a] | PASS:32e96935e716 | [公开信息收口 SPEC](docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md) | 官网只介绍 CreatorOS 产品能力、支持平台和本机数据特点；公开页、智能客服、页面源码与可直接访问的静态资源不得再出现零售价、代理进货价、续费价、利润/价差、个人微信、备用微信、个人邮箱或个人二维码。获取方式统一为“联系向你推荐 CreatorOS 的授权合作伙伴”，避免终端客户绕开代理。 |
 | T-671 | 确定 CreatorOS 代理商业模式与官网价格边界【渠道商业化·用户 2026-08-02/03】 | 🔨 待办 | — | 待验 | [代理合作口径](docs/superpowers/specs/2026-08-02-creatoros-agent-channel-policy.md) · [公开信息收口](docs/superpowers/specs/2026-08-03-creatoros-public-price-contact-withdrawal.md) · [渠道白标调研](docs/research/2026-08-01-channel-white-label-runtime-branding-audit.md) | 代理价盘与资格仍是内部经营规则，不再作为官网公开内容；官网不展示任何价格、利润、个人联系方式或直营购买入口，只引导访问者联系向其推荐 CreatorOS 的授权合作伙伴，保护代理线索和成交空间。 |
