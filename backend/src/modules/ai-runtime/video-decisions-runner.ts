@@ -120,6 +120,8 @@ export function dedupeBrollRefs(
 export interface VideoDecisions {
   scenes: VideoScene[];
   cards: VideoInfoCard[];
+  /** v2 起提供；旧候选没有该字段时按空数组兼容。 */
+  visualSlots?: VideoBrollOutput["slots"];
   broll: VideoBrollPick[];
   subtitles: BilingualSubtitleLine[];
   /** 解析后的 SRT(时间真值,预览卡显示字幕样例/组 props 都要)。 */
@@ -594,30 +596,34 @@ export async function decideCards(
   return kept;
 }
 
-/** ③ B-roll:清单为空诚实跳过(不编);assetId 清单外剔除;at 吸附;时长钳进场景。 */
+/** ③ B-roll:先产出视觉需求；素材存在时精确绑定，清单外 id 剔除。 */
 export async function decideBroll(
   input: {
     scenes: readonly VideoScene[];
     srtLines: readonly SrtLine[];
+    script: string;
     inventory: readonly BrollAssetRef[];
     /** [T-387c] 凝固分镜 facet(可选):点名素材的段 broll 必选点名素材;空 = 现状。 */
     storyboard?: string;
   },
   call: StructuredCall,
-): Promise<VideoBrollPick[]> {
-  if (input.inventory.length === 0) return []; // 没有素材就没有 B-roll(宁缺毋滥,不调模型)
+): Promise<VideoBrollOutput> {
   const starts = srtStartSet(input.srtLines);
   const ids = input.inventory.map((a) => a.assetId);
   const out = await call<VideoBrollOutput>({
     skillId: "video.broll",
     facets: {
       scenes: scenesFacet(input.scenes),
+      script: input.script,
       library: libraryFacet(input.inventory),
       storyboard: input.storyboard ?? "",
     },
     outputSchema: buildBrollDecisionSchema(ids, input.scenes.length),
   });
   const idSet = new Set(ids);
+  const slots = (out.slots ?? []).filter(
+    (slot) => slot.sceneIdx >= 0 && slot.sceneIdx < input.scenes.length,
+  );
   const kept: VideoBrollPick[] = [];
   for (const b of out.broll) {
     if (!idSet.has(b.assetId)) continue; // 硬规则:清单外即编造,剔除
@@ -635,7 +641,7 @@ export async function decideBroll(
     const durationSec = Math.min(Math.max(b.durationSec, 1), maxDur);
     kept.push({ sceneIdx: b.sceneIdx, assetId: b.assetId, at, durationSec });
   }
-  return kept;
+  return { slots, broll: kept };
 }
 
 /** zh 校正「改动最小」守门阈值:与原行 token 相似度低于它 → 视为重写,退回原文。 */
@@ -853,21 +859,21 @@ export async function runVideoDecisions(
     const inventory = (
       await deps.listBrollInventory(ctx, task.projectId)
     ).filter((a) => !excluded.has(a.assetId));
-    const broll = await decideBroll(
-      { scenes, srtLines, inventory, storyboard },
+    const brollResult = await decideBroll(
+      { scenes, srtLines, script, inventory, storyboard },
       call,
     );
+    const broll = brollResult.broll;
+    const visualSlots = brollResult.slots;
     await step(
       2,
-      inventory.length === 0
-        ? `${VIDEO_DECISION_STEPS[2]}:素材清单为空,诚实跳过`
-        : `${VIDEO_DECISION_STEPS[2]}:${broll.length} 条(清单 ${inventory.length} 项)`,
+      `${VIDEO_DECISION_STEPS[2]}:${visualSlots.length} 个画面需求 / ${broll.length} 条已匹配(清单 ${inventory.length} 项)`,
       [
         {
           toolName: "video.broll",
           scope: { accountId: ctx.accountId ?? null, projectId: task.projectId },
           input: { inventory },
-          output: { broll },
+          output: { slots: visualSlots, broll },
         },
       ],
     );
@@ -896,7 +902,14 @@ export async function runVideoDecisions(
           : ""),
     );
 
-    const decisions: VideoDecisions = { scenes, cards, broll, subtitles, srtLines };
+    const decisions: VideoDecisions = {
+      scenes,
+      cards,
+      visualSlots,
+      broll,
+      subtitles,
+      srtLines,
+    };
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: VIDEO_DECISIONS_RESULT_TYPE,
       resultData: {

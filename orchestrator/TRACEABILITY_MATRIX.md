@@ -4,6 +4,12 @@ How product intent becomes flows, model concepts, pages, components, contracts, 
 evidence, and release decisions. Built during the ratification pass (2026-06-20) from ID_REGISTRY.md
 and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §8.
 
+## T-668 官网公开定价
+
+| 决策 / 需求 | 页面 | 规格 | 验证 | 当前结论 |
+| --- | --- | --- | --- | --- |
+| DEC-PRICE-668；T-668 | CreatorOS 官网 Hero、更新记录、定价、购买 | [官网定价 SPEC](../docs/superpowers/specs/2026-08-02-creatoros-website-pricing.md) | `node --test website/pricing.test.mjs`；桌面/390px Playwright；线上 HTTPS 读回 | BUILD + 线上静态发布 PASS；支付/激活/续费履约不在本任务范围 |
+
 ## Matrix (per page = one core journey)
 
 | Page | Flow IDs | Entity IDs (read/write) | Component IDs (sample) | Frontend Test | API IDs | Backend Test |

@@ -5,6 +5,68 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-WEB-672
+Date: 2026-08-03
+Stage: T-672 PLAN
+Type: user-confirmed-public-commercial-boundary
+Decision: CreatorOS 官网撤下全部公开价格、代理利润与作者个人联系方式。官网不再提供直营购买
+          入口；价格、购买、代理和联系问题统一引导访问者联系向其推荐 CreatorOS 的授权合作
+          伙伴，以保护代理的客户线索与利润空间。
+Rationale: 公开零售价、进货价、利润和作者联系方式会让终端客户绕开代理，削弱代理推广意愿与
+           成交空间。官网应成为代理可安全转发的产品说明页，而不是官方直销页。
+Source: 用户 2026-08-03 明确要求“官网的价格下掉吧，包括我的联系方式，保护代理的利润”。
+Affected Artifacts: T-668/T-671 公开范围、website/index.html、官网 FAQ、二维码静态资源与部署读回。
+Explicit Limits: 内部代理价盘、Growth 商品、Activity 激活和既有代理身份不因官网下架而自动
+                 变更；官网仍可公开产品能力、设备支持、一机一码和更新日志。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-AGENT-671
+Date: 2026-08-02
+Stage: T-671 PLAN
+Type: user-confirmed-channel-pricing
+Decision: 用户以 599 元首购 CreatorOS 内测版后自动成为代理，不需要提交申请，不设置人工审核、
+          加盟费或其他附加门槛。成为代理后进货价为 399 元/个，对外指导价为 899 元/个，
+          代理首年每单账面价差 500 元；代理合作口径不提续费、续费分成或续费抽成。成为代理
+          后进入“内测代理股东群”，并取得 CreatorOS 体系后续智能体产品的合作资格；各新智能
+          体的具体价盘和交付规则在产品发布时另定。
+Rationale: 用户希望代理收益简单、可直接解释，只赚首次销售价差，同时以长期产品合作资格增强
+           内测代理的参与感，不在当前招商中引入续费结算复杂度。
+Source: 用户 2026-08-02 最终纠正确认“没有提交申请一说，不要人为制造门槛”；首购 599 元后
+        自动成为代理，进货价 399、指导价 899、进入内测代理股东群、后续所有智能体都有合作
+        资格，并要求不要提续费。
+Affected Artifacts: T-671 代理合作 SPEC；后续官网、代理招商物料、Growth 渠道商品与协议。
+Explicit Limits: 399 元只适用于完成 599 元首购、自动成为代理后的后续进货；不得另设申请、审核、
+                 加盟费或其他未确认门槛。
+                 “代理股东群”当前是合作社群称谓，不构成工商股权承诺；未确认代理层级、最低
+                 进货量、退换、官方直营、价格约束与售后责任前，不进入实现或公开承诺。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-PRICE-668
+Date: 2026-08-02
+Stage: T-668 BUILD
+Type: user-confirmed-public-pricing
+Decision: CreatorOS 官网公开口径改为：内测群用户在 2026-08-10 前可按 599 元一次买断参与共创；
+          内测结束后正式版为 899 元/年、次年续费 199 元/年，且不再提供永久买断。
+          通用设备规则置于价格之前：一机一码，每个激活码仅绑定 1 台设备；当前支持 Apple
+          芯片 Mac 和 Windows；Intel Mac 只能显示“适配推进中”。页面不展示基础版、Plus、
+          Pro 或其他版本分级。购买意向通过现有联系方式私聊，确认后进入单独内测共创群。
+Rationale: 现官网 1499 元永久买断、永久免费更新和笼统 Mac 支持已经与用户确认的商业规则冲突，
+           继续公开会造成错误购买预期；静态官网应直接表达当前唯一价格真相。
+Source: 用户 2026-08-02 连续确认价格海报、微信群通知及官网同步要求。
+Affected Artifacts: website/index.html、T-668 SPEC、官网静态校验与部署读回。
+Explicit Limits: 不修改支付、Growth 商品、Activity 激活、续费执行或换机契约；不承诺 Intel Mac
+                 日期、免费更新、退款或多设备权益。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-RADAR-642
 Date: 2026-08-01
 Stage: T-642 BUILD
@@ -1713,3 +1775,26 @@ API；完整范围与诚实边界见 T-656 SPEC。
    不能成为可分发工件。
 
 **Status**：用户已确认；纳入 T-675 BUILD 与后续 Windows 默认发布标准。
+
+## DEC-MODEL-032 (2026-08-04) — CreatorOS 展示真实模型并支持白名单内选择
+
+**来源**：用户确认 CreatorOS 终端必须让用户看到实际使用的模型，并在渠道提供多个模型时支持
+自主选择，不能只展示营销档位或隐藏真实调用对象。
+
+**决策**：
+
+1. Growth 已验签配置中的 `models[capability]` 是该能力唯一可选白名单；一项只读展示，多项使用
+   普通下拉选择。
+2. UI 同时显示模型展示名和真实 `model` 标识，不以“快速/高质量”等档位冒充实际模型。
+3. 选择按账号、渠道 scope 与 capability 本机持久化；设置页、测试连接和真实调用共用同一结果。
+4. 白名单移除既有选择时回退到唯一默认模型并明确提示；前端篡改不能调用白名单外模型。
+5. 本决定并入 T-679，与受限子 Key和 Growth 配置消费一起验收，不创建第二套模型设置入口。
+
+**T-679 最新补充（2026-08-04）**：Growth 唯一目标已收敛为一个
+`credential.source=activation_managed` 的 `omnihi-main` service；文本、图片、视频三个
+connection 共用同一 Activity 权益子 Key。CreatorOS 从 API-265 安全取得子 Key，不显示用户填
+四套 Key 的交互；文本模型清单完全按 Growth 已验签数组动态展示和选择，当前为 13 项且
+`minimax-m3` 是唯一默认。图片/视频各一项，首期无 ASR。
+
+**Status**：用户已确认；契约已按 T-679 最新目标重派生，CreatorOS BUILD 进行中，真实跨仓 live
+HTTPS 联调仍待验收。

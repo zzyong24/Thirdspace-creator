@@ -8,6 +8,12 @@ import {
   ClientConfigPullError,
   refreshClientConfig,
 } from "@/server/activation/client-config.server";
+import { readSessionCookie } from "../../auth/_session";
+import {
+  readRequestAccountId,
+  resolveRequestContext,
+} from "@/lib/request-context.server";
+import { getSettingsService } from "@/server/persistence-client";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +44,30 @@ export async function POST(request: Request): Promise<Response> {
       422,
     );
   }
-  return refreshClientConfig().then(
+  let ctx;
+  try {
+    ctx = await resolveRequestContext(
+      readSessionCookie(request),
+      readRequestAccountId(request),
+      { rejectInvalidToken: true },
+    );
+  } catch {
+    return response(
+      {
+        authority: "local",
+        outcome: "security_error",
+        action: "当前账号状态无效，请重新打开软件后重试",
+        retryable: false,
+      },
+      401,
+    );
+  }
+  const settings = await getSettingsService();
+  return refreshClientConfig({
+    putManagedCredential: async (scopeId, serviceId, token) => {
+      await settings.setChannelModelCredential(ctx, scopeId, serviceId, token);
+    },
+  }).then(
     (result) => response(result, 200),
     (error: unknown) => {
       if (error instanceof ClientConfigPullError) {

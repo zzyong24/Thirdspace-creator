@@ -38,6 +38,8 @@ const EXTENSION_KEY = "creatoros.model-config";
 const PROTOCOL_VERSION = "creatoros-model-config-v1";
 const AM_PATH = "/api/license/client-config-tickets";
 const GROWTH_PATH = "/api/client-config/bundles/current";
+const MANAGED_CREDENTIAL_PATH = "/api/client-config/managed-credentials/current";
+const MANAGED_CREDENTIAL_CONTRACT = "growth-managed-model-credential-v1";
 const MAX_RESPONSE_BYTES = 300_000;
 const MAX_DATE_SKEW_MS = 300_000;
 const OFFLINE_TOLERANCE_MS = 24 * 60 * 60 * 1000;
@@ -203,6 +205,15 @@ type Dependencies = {
   readonly fetchImpl?: typeof fetch;
   readonly readVerdict?: () => ReturnType<typeof readLicenseVerdictDetailed>;
   readonly store?: ClientConfigStore;
+  /**
+   * T-679：完整子 Key 只允许从 no-store 响应直接写入系统密钥库支持的密文仓库，
+   * 不能进入公开 bundle、client-config cache、日志或 Web DTO。
+   */
+  readonly putManagedCredential?: (
+    scopeId: string,
+    serviceId: string,
+    token: string,
+  ) => Promise<void>;
 };
 
 type VerifiedAmResponse = {
@@ -216,6 +227,92 @@ type TicketResponse = {
   readonly expiresAt: string;
   readonly nonce: string;
 };
+
+function activationManagedServiceIds(payload: unknown): readonly string[] {
+  const row = payload && typeof payload === "object" && !Array.isArray(payload)
+    ? (payload as Record<string, unknown>)
+    : null;
+  const services = Array.isArray(row?.services) ? row.services : [];
+  const ids = new Set<string>();
+  for (const value of services) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    const service = value as Record<string, unknown>;
+    const credential = service.credential;
+    if (!credential || typeof credential !== "object" || Array.isArray(credential)) continue;
+    const credentialRow = credential as Record<string, unknown>;
+    if (
+      typeof service.id === "string" &&
+      service.id.trim() &&
+      service.provider === "omnihi" &&
+      credentialRow.type === "api_key" &&
+      credentialRow.source === "activation_managed" &&
+      credentialRow.allowMultiple === false
+    ) {
+      ids.add(service.id.trim());
+    }
+  }
+  return [...ids];
+}
+
+async function pullManagedCredentials(input: {
+  growthOrigin: string | URL;
+  ticket: string;
+  payload: unknown;
+  scopeId: string;
+  fetchImpl: typeof fetch;
+  putManagedCredential?: Dependencies["putManagedCredential"];
+}): Promise<void> {
+  if (!input.putManagedCredential) return;
+  for (const serviceId of activationManagedServiceIds(input.payload)) {
+    const url = new URL(MANAGED_CREDENTIAL_PATH, input.growthOrigin);
+    url.searchParams.set("serviceId", serviceId);
+    const response = await fetchNoRedirect(input.fetchImpl, url.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${input.ticket}`,
+      },
+    });
+    if (response.status !== 200) {
+      fail(
+        response.status >= 500
+          ? "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE"
+          : "CLIENT_CONFIG_INVALID",
+        "渠道模型凭据暂时无法取得，请稍后重新同步",
+        response.status >= 500 || response.status === 409,
+      );
+    }
+    if (
+      response.headers.get("cache-control") !== "private, no-store" ||
+      response.headers.get("pragma") !== "no-cache"
+    ) {
+      fail("CLIENT_CONFIG_INVALID", "渠道模型凭据响应无法验证", false);
+    }
+    let value: unknown;
+    try {
+      value = JSON.parse((await limitedBytes(response)).toString("utf8"));
+    } catch {
+      fail("CLIENT_CONFIG_INVALID", "渠道模型凭据响应无法验证", false);
+    }
+    const body = value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+    const credential = body?.credential;
+    const credentialRow = credential && typeof credential === "object" && !Array.isArray(credential)
+      ? (credential as Record<string, unknown>)
+      : null;
+    const token = typeof credentialRow?.token === "string" ? credentialRow.token.trim() : "";
+    if (
+      body?.contractVersion !== MANAGED_CREDENTIAL_CONTRACT ||
+      body?.serviceId !== serviceId ||
+      credentialRow?.type !== "api_key" ||
+      !token
+    ) {
+      fail("CLIENT_CONFIG_INVALID", "渠道模型凭据响应无法验证", false);
+    }
+    await input.putManagedCredential(input.scopeId, serviceId, token);
+  }
+}
 
 export class ClientConfigPullError extends Error {
   constructor(
@@ -1468,6 +1565,16 @@ export async function refreshClientConfig(
           false,
         );
       }
+      if (extension) {
+        await pullManagedCredentials({
+          growthOrigin,
+          ticket: ticket.configAccessTicket,
+          payload: extension.payload,
+          scopeId: deriveChannelModelScopeId(activeLocator),
+          fetchImpl,
+          putManagedCredential: dependencies.putManagedCredential,
+        });
+      }
       const refreshed = {
         ...previous,
         state: extension ? "channel" : "local",
@@ -1531,6 +1638,16 @@ export async function refreshClientConfig(
       }
     }
     const extension = bundle.extensions[0];
+    if (extension) {
+      await pullManagedCredentials({
+        growthOrigin,
+        ticket: ticket.configAccessTicket,
+        payload: extension.payload,
+        scopeId: deriveChannelModelScopeId(activeLocator),
+        fetchImpl,
+        putManagedCredential: dependencies.putManagedCredential,
+      });
+    }
     const next: ClientConfigCacheRecord = extension
       ? {
           state: "channel",

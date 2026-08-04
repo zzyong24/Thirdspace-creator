@@ -62,6 +62,8 @@ export interface RunScriptNodeInput {
   topicAngle?: string;
   /** 横屏/竖屏(SKL-02,选填):喂 AI 调 hook 与时长。 */
   orientation?: string;
+  /** 用户指定的目标口播时长；是自然表达目标，不是强行填满的硬字数。 */
+  targetDurationSeconds?: number;
   /** 策划论点树 brief(SEAM-01,选填):脚本据此把核心/支撑/证据写进口播。 */
   thesisBrief?: string;
   /** 内容合同 brief(SEAM-01,选填):脚本须遵守受众定位/价值主张/节奏/CTA。 */
@@ -194,6 +196,12 @@ export async function runScriptNode(
       orientation: input.orientation
         ? `\n【形式】${input.orientation}（据此调整钩子与时长）`
         : "",
+      durationTarget:
+        typeof input.targetDurationSeconds === "number" &&
+        Number.isFinite(input.targetDurationSeconds) &&
+        input.targetDurationSeconds > 0
+          ? `\n【目标口播时长】约 ${Math.round(input.targetDurationSeconds)} 秒。按自然中文口播约每秒 4–5 个字规划整体篇幅；这是目标区间，不是必须填满的硬字数。资料不足时宁可略短并保持完整，也不要重复、扩写空话或强塞预设信息。`
+          : "\n【目标口播时长】未指定。请按资料密度和叙事完整性给出自然长度，不为镜数或字数凑内容。",
       // SEAM-01:策划阶段产物 —— 论点树 / 内容合同 / 结构方案。有则注入,让脚本铺它们的结构与论点。
       thesis: input.thesisBrief
         ? `\n【论点树（核心/支撑/证据/反驳）】\n${input.thesisBrief}`

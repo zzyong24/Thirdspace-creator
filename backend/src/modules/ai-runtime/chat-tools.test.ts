@@ -324,7 +324,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     error: null as string | null,
   }));
   const gatherMaterials = vi.fn(async () => ({
-    grounding: "model_memory" as const,
+    grounding: "web" as const,
     items: [
       {
         title: "RAG 落地案例",
@@ -1437,6 +1437,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
     const result = (await runExecute(tools["script.draft"]!, {
       topic: "  上下文工程  ",
       angle: "  三段式  ",
+      targetDurationSeconds: 180,
     })) as {
       kind: string;
       taskId: string | null;
@@ -1448,6 +1449,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
     expect(deps.dispatchScriptDraft).toHaveBeenCalledWith({
       topic: "上下文工程",
       angle: "三段式",
+      targetDurationSeconds: 180,
       extraBrief: undefined,
     });
     expect(result.kind).toBe("script.draft");
@@ -2471,11 +2473,13 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
     // [T-268] script.draft 改异步 dispatch:extraBrief 透传进 dispatchScriptDraft(不再 inline)。
     await runExecute(tools["script.draft"]!, {
       topic: "RAG",
+      targetDurationSeconds: 90,
       extraBrief: "按我们刚聊的三段式结构写",
     });
     expect(deps.dispatchScriptDraft).toHaveBeenCalledWith({
       topic: "RAG",
       angle: undefined,
+      targetDurationSeconds: 90,
       extraBrief: "按我们刚聊的三段式结构写",
     });
   });

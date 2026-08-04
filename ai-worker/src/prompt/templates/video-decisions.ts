@@ -157,19 +157,40 @@ export const videoBrollPickSchema = z.object({
   at: z.number().default(0),
   durationSec: z.number().default(3),
 });
+export const videoBrollSlotSchema = z.object({
+  sceneIdx: z.number().int().default(0),
+  at: z.number().default(0),
+  purpose: z.enum([
+    "fact_evidence",
+    "analogy",
+    "process",
+    "contrast",
+    "mood",
+    "info_card",
+  ]),
+  /** 必须能在口播稿里定位到的原话锚点，禁止用“新闻钩子”等内部标签。 */
+  spokenAnchor: z.string().min(1),
+  /** 给搜索/文生图/人工备料看的具体画面，不是抽象主题词。 */
+  visualBrief: z.string().min(1),
+  searchQuery: z.string().default(""),
+});
 export const videoBrollSchema = z.object({
+  slots: z.array(videoBrollSlotSchema).default([]),
   broll: z.array(videoBrollPickSchema).default([]),
 });
 export type VideoBrollOutput = z.infer<typeof videoBrollSchema>;
 
 export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
   id: "video.broll",
-  version: "v1",
+  version: "v2",
   outputSchema: videoBrollSchema,
   tools: [],
   system:
-    "你是这位创作者的「B-roll 匹配 agent」,从他已有的素材清单里给口播视频的场景配空镜/示意画面(只用真实素材,精确匹配)。",
-  template: `为下面这条口播视频的各场景,从**已有素材清单**里挑 B-roll(叠画/空镜)。
+    "你是口播视频的视觉编导。先判断每段口播为什么需要画面，再从已有素材中精确匹配；没有现成素材时只产出可执行的画面需求，绝不编造素材 id。",
+  template: `为下面这条口播视频规划 B-roll(叠画/空镜)。先读口播原文，再决定画面的叙事作用。
+
+【口播原文】
+{{script}}
 
 【场景列表】(每行: 场景序号 | 起秒-止秒 | 标题 | 概括)
 {{scenes}}
@@ -177,16 +198,23 @@ export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
 【可用素材清单】(每行: assetId | 名称 (类型) | 描述 | 来源)
 {{library}}
 {{storyboard}}
-【任务】判断哪些场景适合插 B-roll、插哪条素材、什么时刻插、插多久。
+【任务】
+1. 先输出少而精的画面需求 slots。每个 slot 必须说明它服务于事实证据、类比联想、过程演示、前后对比、情绪氛围或信息卡中的哪一种。
+2. 如果已有素材清单里存在精确匹配，再把该 slot 绑定成 broll；没有就只保留 slot，等待联网搜索、文生图或人工上传。
 【硬约束(违反即废)】
+- spokenAnchor 必须摘自口播原文，不能写“新闻钩子”“价值段”“场景一”等内部标签。
+- visualBrief 要写成能直接搜索或生成的具体画面，例如“招聘网站上中文 AI 训练师时薪 300 元的岗位截图”，禁止“科技感背景”“抽象 AI 粒子”等万能素材。
+- 事实与数据优先真实截图/网页/图表；类比和情绪才允许生成画面。不得用 AI 图冒充新闻证据。
 - assetId **必须**是清单里出现过的真实 id,绝对不要编造。
 - 来源为「用户手动上传」代表创作者为这次制作明确备好的素材；来源为「脚本分镜点名」代表已采纳的 authored 意图。它们与口播对象精确匹配时必须优先，但来源本身不能替代语义匹配。
 - **精确匹配被讲对象**:讲的是 A 产品就只能配 A 产品的素材,**禁止**拿"看起来像/同类"的素材近似替代;没有精确匹配的素材就不配(宁缺毋滥)。
 - 引用素材时用它清单里的名称描述,**不要**输出文件路径、内部编号等内部词。
 - at(插入时刻,秒)落在所属场景时间范围内;durationSec 一般 2-6 秒,不超过场景长度。
-【输出】只输出一个 JSON 对象 {"broll": [...]}(不要多余文字、不要代码块),每条:
-{"sceneIdx"(整数),"assetId"(清单真实 id),"at"(数字,秒),"durationSec"(数字,秒)}。清单为空或没有匹配就返回 {"broll": []}。`,
-  requiredFacets: ["scenes", "library"],
+【输出】只输出一个 JSON 对象 {"slots": [...], "broll": [...]}(不要多余文字、不要代码块)。
+slot: {"sceneIdx"(整数),"at"(数字,秒),"purpose"(六选一),"spokenAnchor"(口播原话),"visualBrief"(具体画面),"searchQuery"(中文搜索词)}。
+broll: {"sceneIdx"(整数),"assetId"(清单真实 id),"at"(数字,秒),"durationSec"(数字,秒)}。
+清单为空或没有匹配时 broll 返回 [],但只要口播里存在值得视觉化的事实、过程、类比或对比，slots 仍应给出。`,
+  requiredFacets: ["scenes", "script", "library"],
 };
 
 // ── ④ 双语字幕补全(video.subtitles)──────────────────────────────────────────

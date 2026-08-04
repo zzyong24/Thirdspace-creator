@@ -126,6 +126,8 @@ export function ChatScriptDraftCard({
   const [confirming, setConfirming] = React.useState(false);
   const [canAdopt, setCanAdopt] = React.useState(false);
   const [validationErrors, setValidationErrors] = React.useState<string[]>([]);
+  const [qualityWarnings, setQualityWarnings] = React.useState<string[]>([]);
+  const [terminalError, setTerminalError] = React.useState<string | null>(null);
 
   // 轮询 task/candidate(仿 ChatThesisCard,从已 dispatch 的 taskId 起)。取消只靠本效应闭包内
   // 的 abandoned(effect cleanup 置真)—— **不用 mount-unmount ref**:React StrictMode(dev 默认开)
@@ -139,13 +141,18 @@ export function ChatScriptDraftCard({
         await new Promise((r) => setTimeout(r, pollIntervalMs));
         if (abandoned) return;
         let status: string;
+        let taskError: string | null = null;
         try {
           const t = (await client.getTask({
             params: { taskId },
             query: undefined,
             body: undefined,
-          })) as { status: string };
+          })) as { status: string; errorMessage?: string | null };
           status = t.status;
+          taskError =
+            typeof t.errorMessage === "string" && t.errorMessage.trim()
+              ? t.errorMessage.trim()
+              : null;
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
@@ -174,6 +181,15 @@ export function ChatScriptDraftCard({
                 ? gate.errors
                 : ["候选内容无法读取，已禁止采纳。请重新生成。"],
             );
+            const warnings = last?.resultData.qualityWarnings;
+            setQualityWarnings(
+              Array.isArray(warnings)
+                ? warnings.filter(
+                    (item): item is string =>
+                      typeof item === "string" && item.trim().length > 0,
+                  )
+                : [],
+            );
             setPhase("review");
           } catch {
             if (!abandoned) setPhase("error");
@@ -181,7 +197,12 @@ export function ChatScriptDraftCard({
           return;
         }
         if (status === "cancelled" || status === "failed") {
-          if (!abandoned) setPhase("error");
+          if (!abandoned) {
+            setTerminalError(
+              taskError || "本次整稿生成没有完成，请重新生成。",
+            );
+            setPhase("error");
+          }
           return;
         }
       }
@@ -275,6 +296,24 @@ export function ChatScriptDraftCard({
               ))}
             </div>
           ) : null}
+          {qualityWarnings.length > 0 ? (
+            <div
+              data-slot="chat-script-quality-warnings"
+              className="rounded-md border border-amber-300/70 bg-amber-50 px-2.5 py-2"
+            >
+              <p className="text-[11px] font-medium text-amber-900">
+                整稿已生成，可以先采纳；建议再检查：
+              </p>
+              {qualityWarnings.map((message) => (
+                <p
+                  key={message}
+                  className="mt-0.5 text-[12px] leading-relaxed text-amber-800"
+                >
+                  {message}
+                </p>
+              ))}
+            </div>
+          ) : null}
           {sections.length > 3 ? (
             <button
               type="button"
@@ -316,11 +355,12 @@ export function ChatScriptDraftCard({
       {phase === "error" ? (
         <div data-slot="chat-script-error" className="flex flex-col gap-1">
           <p className="text-[12px] leading-relaxed text-destructive">
-            {error
-              ? error
-              : "没能写出整稿 —— 可能是还没配置脚本生成模型、应用重启中断了任务，或本次生成失败;可在对话里再说一声重新生成。"}
+            {error || terminalError || "本次整稿生成没有完成，请重新生成。"}
           </p>
-          {error ? null : (
+          {error ||
+          !/未配置|尚未配置|api\s*key|密钥|credential|鉴权|401|403/i.test(
+            terminalError ?? "",
+          ) ? null : (
             <a
               href="/settings?tab=models"
               data-slot="chat-script-settings-link"

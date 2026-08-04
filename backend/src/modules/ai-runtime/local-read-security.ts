@@ -87,8 +87,8 @@ export function sensitivePathReason(absPath: string): string | null {
 /**
  * 路径归一化(穿越防护第一道):
  *   - 支持 `~`/`~/...` 展开(home 由调用方注入,纯函数不读 os);
- *   - 只接受**绝对路径**(相对路径无法确定基准,拒绝 —— 不隐式挂到 cwd 上);
- *   - 归一 `.`/`..` 段(POSIX 语义,手写实现避免依赖 node:path —— 本模块零 node 依赖可单测)。
+ *   - 接受 POSIX、Windows 盘符绝对路径和 UNC 共享路径；相对路径拒绝；
+ *   - 归一 `.`/`..` 段(手写实现避免依赖 node:path —— 本模块零 node 依赖可单测)。
  * 非法(空/相对)→ null。
  */
 export function normalizeLocalPath(raw: string, home: string): string | null {
@@ -97,7 +97,27 @@ export function normalizeLocalPath(raw: string, home: string): string | null {
   let p = trimmed;
   if (p === "~") p = home;
   else if (p.startsWith("~/")) p = `${home}/${p.slice(2)}`;
-  if (!p.startsWith("/")) return null; // 相对路径拒绝(单机产品面向 macOS/POSIX 绝对路径)
+  const windowsDrive = /^([A-Za-z]):[\\/](.*)$/.exec(p);
+  if (windowsDrive) {
+    const out: string[] = [];
+    for (const seg of (windowsDrive[2] ?? "").split(/[\\/]+/)) {
+      if (!seg || seg === ".") continue;
+      if (seg === "..") out.pop();
+      else out.push(seg);
+    }
+    return `${windowsDrive[1]!.toUpperCase()}:\\${out.join("\\")}`;
+  }
+  const unc = /^(?:\\\\|\/\/)([^\\/]+)[\\/]([^\\/]+)(.*)$/.exec(p);
+  if (unc) {
+    const out: string[] = [];
+    for (const seg of (unc[3] ?? "").split(/[\\/]+/)) {
+      if (!seg || seg === ".") continue;
+      if (seg === "..") out.pop();
+      else out.push(seg);
+    }
+    return `\\\\${unc[1]}\\${unc[2]}${out.length ? `\\${out.join("\\")}` : ""}`;
+  }
+  if (!p.startsWith("/")) return null;
   const out: string[] = [];
   for (const seg of p.split("/")) {
     if (!seg || seg === ".") continue;

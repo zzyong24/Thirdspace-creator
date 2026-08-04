@@ -2374,6 +2374,26 @@ function ChannelServiceCredentialCard({
     ["帮助", service.helpUrl],
   ].filter((item): item is [string, string] => Boolean(item[1]));
 
+  if (service.credentialSource === "activation_managed") {
+    return (
+      <SectionCard
+        title={`${service.serviceName} · 激活权益模型服务`}
+        description="激活后自动取得一把仅属于当前权益的受限 Key，并安全保存在本机；无需手动填写。"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className={service.hasSecret ? "text-success" : "text-warning"}>
+            {service.hasSecret ? "受管 Key 已就绪" : "等待同步受管 Key"}
+          </Badge>
+          {links.map(([label, href]) => (
+            <a key={`${label}:${href}`} href={href} target="_blank" rel="noreferrer" className="text-xs text-brand hover:underline">
+              {label}
+            </a>
+          ))}
+        </div>
+      </SectionCard>
+    );
+  }
+
   return (
     <SectionCard
       title={`${service.serviceName} · 渠道服务 Key`}
@@ -2440,6 +2460,26 @@ function ChannelManagedModelCard({
   title: string;
   highlight: string;
 }) {
+  const router = useRouter();
+  const [switching, setSwitching] = React.useState(false);
+  const [selectionError, setSelectionError] = React.useState<string | null>(null);
+  const selectModel = React.useCallback(async (optionId: string) => {
+    setSwitching(true);
+    setSelectionError(null);
+    try {
+      const response = await fetch("/api/v1/local/channel-model-selection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ capability: state.capability, optionId }),
+      });
+      if (!response.ok) throw new Error("模型切换失败，请重新同步渠道配置后重试");
+      router.refresh();
+    } catch (error) {
+      setSelectionError(error instanceof Error ? error.message : "模型切换失败");
+    } finally {
+      setSwitching(false);
+    }
+  }, [router, state.capability]);
   return (
     <SectionCard
       title={title}
@@ -2458,8 +2498,31 @@ function ChannelManagedModelCard({
           </span>
           <span className="text-xs text-muted-foreground">
             {state.provider ?? ""} · {state.modelName ?? ""}
+            {state.model && state.model !== state.modelName
+              ? `（${state.model}）`
+              : ""}
           </span>
         </div>
+        {state.selectionNotice ? (
+          <p className="text-xs text-warning">{state.selectionNotice}</p>
+        ) : null}
+        {(state.modelOptions?.length ?? 0) > 1 ? (
+          <label className="flex items-center gap-3 text-sm">
+            <span className="text-muted-foreground">使用模型</span>
+            <select
+              aria-label={`${title}使用模型`}
+              value={state.optionId ?? ""}
+              disabled={switching}
+              onChange={(event) => void selectModel(event.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2"
+            >
+              {state.modelOptions?.map((option) => (
+                <option key={option.id} value={option.id}>{option.name} · {option.model}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        {selectionError ? <p className="text-xs text-destructive">{selectionError}</p> : null}
         {state.baseUrl ? (
           <p className="break-all text-xs text-muted-foreground">
             接口：{state.baseUrl}
@@ -2474,7 +2537,7 @@ function ChannelManagedModelCard({
           >
             {state.hasSecret
               ? "服务 Key 已就绪"
-              : "请先在上方填写该渠道服务的 Key"}
+              : "服务 Key 尚未就绪，请同步渠道配置"}
           </p>
           <TestConnectionButton
             capability={state.capability}

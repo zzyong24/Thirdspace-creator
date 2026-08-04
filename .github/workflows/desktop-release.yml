@@ -990,7 +990,7 @@ jobs:
         if: ${{ success() && inputs.windows_package_rat == true }}
         uses: actions/upload-artifact@v4
         with:
-          name: creatoros-windows-0.2.0-${{ github.sha }}
+          name: creatoros-windows-${{ steps.version.outputs.version }}-${{ github.sha }}
           path: frontend/src-tauri/target/release-fast/bundle/nsis/*-setup.exe
           if-no-files-found: error
           compression-level: 0

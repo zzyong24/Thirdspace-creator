@@ -75,7 +75,7 @@ export interface KnowledgePageProps {
    * deterministic.
    */
   readonly viewModel?: KnowledgeViewModel;
-  /** 生产路由默认进入课程；测试与旧调用不传时维持原「我的知识」视图。 */
+  /** 默认进入「我的知识」；显式 course 才进入内置 IP 课。 */
   readonly activeView?: "course" | "knowledge";
   /** 课程阅读器当前课；空值显示课程目录。 */
   readonly activeLessonId?: string | null;
@@ -286,17 +286,6 @@ function KnowledgeSectionNav({
       className="flex w-fit items-center gap-1 rounded-full border border-stone-200 bg-white p-1 shadow-sm"
     >
       <Link
-        href="/knowledge?view=course"
-        aria-current={activeView === "course" ? "page" : undefined}
-        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-          activeView === "course"
-            ? "bg-stone-900 text-white"
-            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-        }`}
-      >
-        IP 实战课
-      </Link>
-      <Link
         href="/knowledge?view=knowledge"
         aria-current={activeView === "knowledge" ? "page" : undefined}
         className={`rounded-full px-4 py-2 text-sm font-medium transition ${
@@ -306,6 +295,17 @@ function KnowledgeSectionNav({
         }`}
       >
         我的知识
+      </Link>
+      <Link
+        href="/knowledge?view=course"
+        aria-current={activeView === "course" ? "page" : undefined}
+        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+          activeView === "course"
+            ? "bg-stone-900 text-white"
+            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+        }`}
+      >
+        IP 实战课
       </Link>
     </nav>
   );

@@ -20,6 +20,7 @@ export interface ResolveDeps {
   env: Record<string, string | undefined>;
   getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
   getChannelModelCredential?: (serviceId: string) => Promise<string | null>;
+  getChannelModelSelection?: (capability: string) => Promise<string | null>;
 }
 
 async function channelConfigFor(
@@ -30,6 +31,7 @@ async function channelConfigFor(
 ): Promise<ResolvedLlmConfig | null> {
   const route = resolveChannelCapabilityRoute(payload, capability, {
     allowDefaultFallback,
+    selectedOptionId: await deps.getChannelModelSelection?.(capability),
   });
   if (!route) return null;
   const credential = route.serviceId

@@ -30,3 +30,30 @@ export function resolveProjectScriptText(input: {
   if (persisted) return persisted;
   return contentRadarDraftSeedOf(input.briefDetail);
 }
+
+/**
+ * 选择项目当前可读的正式口播稿 artifact。
+ *
+ * 新链路只把 output_script 当作写入目标；这里保留 master_script 的只读回退，
+ * 让升级前已经保存的项目仍能审核、发布和复盘。output_script 一旦拥有正式版本，
+ * 即使正文为空也必须优先，不能再被旧 master_script 悄悄覆盖。
+ */
+export function selectReadableProjectScriptArtifact<
+  T extends {
+    readonly artifactType: string;
+    readonly currentVersionId?: string | null;
+  },
+>(artifacts: readonly T[]): T | null {
+  const versioned = (artifact: T) => Boolean(artifact.currentVersionId);
+  return (
+    artifacts.find(
+      (artifact) =>
+        artifact.artifactType === "output_script" && versioned(artifact),
+    ) ??
+    artifacts.find(
+      (artifact) =>
+        artifact.artifactType === "master_script" && versioned(artifact),
+    ) ??
+    null
+  );
+}

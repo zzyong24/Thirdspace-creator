@@ -60,10 +60,11 @@ export type ScriptDraftOutput = z.infer<typeof scriptDraftSchema>;
 
 export const SCRIPT_DRAFT_COMPLETION_POLICY: CompletionPolicyV1 = {
   schemaVersion: 1,
-  minSegments: 6,
-  maxSegments: 10,
-  requiredSequence: ["hook", "body", "cta"],
-  // 首版先可见；完整性不足由候选态提示用户完善，不再自动整稿重写两遍后清空结果。
+  // 结构门只拦真正的空稿。镜数、叙事角色与目标时长属于质量提示，不能再把
+  // 已经生成出来的完整内容挡在采纳界面之外。
+  minSegments: 1,
+  maxSegments: null,
+  requiredSequence: [],
   repairAttempts: 0,
 };
 
@@ -98,8 +99,8 @@ registerOfficialCompletionPolicyAdapter(
 export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   id: "script.draft",
   outputRecovery: "creative-partial",
-  // T-512 v6：shot.role + skill 自有 completionPolicy/adapter，完整性不再靠提示词软约束。
-  version: "v6",
+  // T-680 v7：结构门只拦空稿；时长成为用户可选目标，镜数不再作为采纳硬门。
+  version: "v7",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry 取它
   // 绑 generateObject,模型必须吐 { shots:[...] },校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: scriptDraftSchema,
@@ -123,7 +124,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   // [T-269] 模板正文尾部嵌 ANTI_FABRICATION_CLAUSE(可溯硬约束段,单一真值 grounding-facets)——
   //   把对话外层 honesty rule #9 下沉进写稿子调用,弱模型也不敢编数字/偷换事实。
   template: `【创作者定位】
-{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
+{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{durationTarget}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
 
 【任务】基于定位(+立项硬约束+过往爆款要素)+选题+**用户第一手资料**,写一条**分镜脚本**。
 
@@ -148,7 +149,7 @@ ${ANTI_FABRICATION_CLAUSE}
 {"role"(本镜结构角色；默认方法只允许 hook/body/cta，第一镜 hook、中间镜 body、最后一镜 cta),"口播"(这一镜**要念出来的那句话本身**——只放念的话,一句一个意思,禁放批注/修改建议/替代方案/括号说明/镜头字幕提示),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s"),
  "visual"(可选,结构化视觉意图):{"description"(这一镜配什么画面,一句),"assetRefs"(点名素材的 assetId 数组),"missing"(需要但项目里没有的素材描述数组)}}。
 【visual 硬约束(诚实门)】若上方给了【项目素材库】清单:assetRefs **只能**填清单里出现过的真实 assetId(优先引用已有素材,让画面落到实拍/实图);清单里没有合适素材时,把需要的素材如实写进 missing(如「产品操作录屏」),**绝不虚构 assetId**。没给清单则 assetRefs 留空、需要的素材写 missing。
-第一镜必须是前3秒钩子,最后一镜必须落在 CTA。6-10 镜为宜。`,
+第一镜优先用前3秒真实场景/反差抓住注意力,结尾自然给出下一步行动。镜数随目标时长、资料密度和叙事节奏自然拆分，**不设业务上限**；不要为了满足镜数、字数或时长重复观点、堆砌套话。`,
   requiredFacets: ["positioning"],
   // [T-184] 声明式 context 注入 —— 本模板要装配层注入的 context 源 reader(key = 组合根 ContextDeps
   // 字段名)。逐项对应旧组合根 runScriptDraft dispatch 手列的那批 facet reader(见 persistence-client

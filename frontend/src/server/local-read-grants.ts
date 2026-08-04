@@ -78,6 +78,21 @@ function persistDirs(): void {
   }
 }
 
+/**
+ * 判断目标是否位于已授权目录内。Windows 盘符与 UNC 路径使用反斜杠且大小写不敏感，
+ * 不能继续拿 POSIX 的 `${dir}/` 做前缀判断，否则“总是允许该目录”在 Windows 上永远失效。
+ */
+function isSameOrChildPath(resolvedPath: string, resolvedDir: string): boolean {
+  const windowsLike = /^[A-Za-z]:[\\/]/.test(resolvedDir) || /^(?:\\\\|\/\/)/.test(resolvedDir);
+  if (windowsLike) {
+    const path = resolvedPath.replaceAll("/", "\\").toLowerCase();
+    const dir = resolvedDir.replaceAll("/", "\\").replace(/\\+$/, "").toLowerCase();
+    return path === dir || path.startsWith(`${dir}\\`);
+  }
+  const dir = resolvedDir.replace(/\/+$/, "") || "/";
+  return resolvedPath === dir || (dir === "/" ? resolvedPath.startsWith("/") : resolvedPath.startsWith(`${dir}/`));
+}
+
 /** 一次授权:允许该 user 读这个**已归一路径**一次(下次读弹卡)。 */
 export function grantOnce(userId: string, resolvedPath: string): void {
   const s = state();
@@ -109,7 +124,7 @@ export function checkGrant(
   const dirs = s.dirs.get(userId);
   if (dirs) {
     for (const dir of dirs) {
-      if (resolvedPath === dir || resolvedPath.startsWith(`${dir}/`)) {
+      if (isSameOrChildPath(resolvedPath, dir)) {
         return "dir";
       }
     }

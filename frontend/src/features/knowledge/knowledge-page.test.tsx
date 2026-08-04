@@ -85,6 +85,14 @@ async function renderKnowledge(overrides: Partial<KnowledgePageProps> = {}) {
 }
 
 describe("KnowledgePage", () => {
+  it("知识库排在第一个 Tab，IP 实战课排在第二个 Tab", async () => {
+    await renderKnowledge();
+    const tabs = screen.getByRole("navigation", { name: "知识库视图" });
+    const links = Array.from(tabs.querySelectorAll("a")).map((node) =>
+      node.textContent?.trim(),
+    );
+    expect(links).toEqual(["我的知识", "IP 实战课"]);
+  });
   afterEach(() => {
     cleanup();
   });

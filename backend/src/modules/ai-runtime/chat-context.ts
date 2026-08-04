@@ -35,6 +35,8 @@ export interface ChatContext {
   projectId?: string | null;
   /** 选中的候选/作品(T-027 selection-aware:注入 system + 工具入参兜底)。 */
   selection?: ChatSelection;
+  /** 当前对话中已完成生成卡的人类别名；只映射到真实 assetId，模型不得靠标题猜。 */
+  assetAliases?: Readonly<Record<string, string>>;
 }
 
 // [T-134 / T-147 P4①] prompt-injection 加固:注进 system 的**用户可控内容**(逐字稿、观众评论、

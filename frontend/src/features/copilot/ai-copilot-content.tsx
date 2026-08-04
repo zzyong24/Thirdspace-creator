@@ -94,6 +94,10 @@ import {
   type LocalReadCandidates,
 } from "./chat-local-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
+import {
+  registerGeneratedAssetAlias,
+  type GeneratedAssetAliasRegistry,
+} from "./asset-aliases";
 import { ChatDouyinShareCard } from "./chat-douyin-share-card";
 import {
   ChatLearningCard,
@@ -727,6 +731,34 @@ export function AICopilotContent({
   // 重建 transport(重建会打断进行中的流)。fetch 包装层用 ref 里的 setter 回写捕获到的 id。
   const conversationIdRef = React.useRef<string | null>(null);
   conversationIdRef.current = conversationId;
+  const assetAliasRegistryRef = React.useRef<GeneratedAssetAliasRegistry>({
+    activeBatchKey: null,
+    activeBatchRank: -1,
+    aliases: {},
+  });
+  React.useEffect(() => {
+    const onAlias = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{
+          alias?: string;
+          assetId?: string;
+          batchKey?: string;
+          batchRank?: number;
+        }>
+      ).detail;
+      const alias = detail?.alias?.trim() ?? "";
+      const assetId = detail?.assetId?.trim() ?? "";
+      const batchKey = detail?.batchKey?.trim() ?? "";
+      const batchRank = detail?.batchRank;
+      if (!alias || !assetId || !batchKey || typeof batchRank !== "number") return;
+      assetAliasRegistryRef.current = registerGeneratedAssetAlias(
+        assetAliasRegistryRef.current,
+        { alias, assetId, batchKey, batchRank },
+      );
+    };
+    window.addEventListener("creatoros:asset-alias-ready", onAlias);
+    return () => window.removeEventListener("creatoros:asset-alias-ready", onAlias);
+  }, []);
   // 捕获到 x-conversation-id 时:更新 state + 持久化。[T-096] 持久化桶 = scope(global /
   // project:<id> / surface:<name>,入口级隔离);ref 读最新值,让 fetch 包装闭包不随
   // key 变(避免重建 transport 打断流)。
@@ -754,6 +786,7 @@ export function AICopilotContent({
       scope: string;
       projectId?: string;
       selection?: { kind: string; ids: string[]; label?: string };
+      assetAliases?: Record<string, string>;
     } = { surface, scope };
     // [T-108] 稿面常驻 rail:embed.selection 是项目(kind=project),始终把它的 id 当 projectId 注入,
     // 让后端项目 facet 恒能读到本项目材料 —— 即使本轮 selection 主题被 request 换成 content_output
@@ -829,7 +862,12 @@ export function AICopilotContent({
             ? { ...chatContextBody.chatContext, functionKey: requestedFn }
             : chatContextBody.chatContext;
           return {
-            chatContext,
+            chatContext: {
+              ...chatContext,
+              ...(Object.keys(assetAliasRegistryRef.current.aliases).length
+                ? { assetAliases: assetAliasRegistryRef.current.aliases }
+                : {}),
+            },
             ...(conversationIdRef.current
               ? { conversationId: conversationIdRef.current }
               : {}),
@@ -1473,6 +1511,13 @@ export function AICopilotContent({
       ? { kind: selKind, label: selTitle || selKind }
       : null;
 
+  // [T-687] 每条助手消息是一批生成结果，批内从图1/视频1重新编号。完整历史每次 render
+  // 都按同一顺序重放；注册器只接受最新批次，旧任务晚完成也不能覆盖“刚才那组”。
+  const generatedOrdinalsByMessage = new Map<
+    string,
+    { image: number; video: number }
+  >();
+
   // [T-239e] 会话成本角标:历史底数(落库行 token 列)+ 流式增量(本轮 metadata.usage,
   // route messageMetadata 在 finish part 注入,每轮 onFinish 后 messages 更新即自动刷新)。
   // 读回历史不带 metadata → 两账不重复。全 0(老会话/无 usage 模型)→ 不渲角标(诚实空态)。
@@ -1747,7 +1792,7 @@ export function AICopilotContent({
               aria-label="助手活动记录"
               className="flex min-w-0 flex-col gap-1.5"
             >
-              {messages.map((message) => (
+              {messages.map((message, messageIndex) => (
                 <li
                   key={message.id}
                   data-slot="copilot-message"
@@ -1990,21 +2035,21 @@ export function AICopilotContent({
                       );
                     }
                     // [T-057④/T-084a] 搜素材(material.gather)→ 逐条「存入弹药」(knowledge+
-                    // materialLink);grounding=model_memory 时卡片渲黄条 + 需核实徽标(未配联网)。
+                    // materialLink);grounding=unavailable 时明确浏览器失败且没有记忆兜底。
                     if (
                       name === "material.gather" &&
                       out.kind === "material.gather"
                     ) {
                       const o = out as {
                         items?: ChatGatherItem[];
-                        grounding?: "web" | "model_memory";
+                        grounding?: "web" | "unavailable";
                       };
                       return (
                         <ChatGatherCard
                           key={key}
                           items={o.items ?? []}
                           projectId={activeProjectChip?.id ?? null}
-                          grounding={o.grounding ?? "model_memory"}
+                          grounding={o.grounding ?? "unavailable"}
                         />
                       );
                     }
@@ -2089,12 +2134,25 @@ export function AICopilotContent({
                         kindOf?: "image" | "video";
                         error?: string | null;
                       };
+                      const ordinals = generatedOrdinalsByMessage.get(message.id) ?? {
+                        image: 0,
+                        video: 0,
+                      };
+                      const aliasLabel = o.kindOf === "video"
+                        ? `视频${++ordinals.video}`
+                        : `图${++ordinals.image}`;
+                      generatedOrdinalsByMessage.set(message.id, ordinals);
                       return (
                         <ChatGenerateCard
                           key={key}
                           taskId={o.taskId ?? null}
                           kindOf={o.kindOf ?? "image"}
                           error={o.error ?? null}
+                          aliasLabel={aliasLabel}
+                          aliasBatchKey={message.id}
+                          aliasBatchRank={messageIndex}
+                          projectId={activeProjectChip?.id ?? null}
+                          materialRole="broll"
                         />
                       );
                     }
@@ -2292,6 +2350,8 @@ export function AICopilotContent({
                             taskId={o.taskId ?? null}
                             kindOf="image"
                             error={o.error ?? null}
+                            projectId={activeProjectChip?.id ?? null}
+                            materialRole="cover"
                           />
                         </React.Fragment>
                       );

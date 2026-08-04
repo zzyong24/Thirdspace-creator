@@ -799,7 +799,10 @@ export function ProductionWorkbench({
   }, [projectId]);
 
   React.useEffect(() => {
-    void loadBroll();
+    const id = window.setTimeout(() => {
+      void loadBroll();
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [loadBroll]);
 
   const invalidateDecisionsForBrollChange = React.useCallback(async () => {
@@ -816,6 +819,32 @@ export function ProductionWorkbench({
     setRecoveredDecisions(false);
     setBrollRevisionNotice("素材已更新，请重新运行 AI 分场决策。");
   }, [decisionsTaskId]);
+
+  // [T-687] Copilot 中采纳生成素材后，制作页无需重进项目：立即刷新同一份项目用料链，
+  // 并把基于旧清单的分场决策标为失效。封面更新不影响 B-roll 决策，因此只响应 role=broll。
+  React.useEffect(() => {
+    const onMaterialsChanged = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        projectId?: string;
+        role?: string;
+      }>).detail;
+      if (detail?.projectId !== projectId || detail.role !== "broll") return;
+      void (async () => {
+        await loadBroll();
+        await invalidateDecisionsForBrollChange();
+      })();
+    };
+    window.addEventListener(
+      "creatoros:project-materials-changed",
+      onMaterialsChanged,
+    );
+    return () => {
+      window.removeEventListener(
+        "creatoros:project-materials-changed",
+        onMaterialsChanged,
+      );
+    };
+  }, [invalidateDecisionsForBrollChange, loadBroll, projectId]);
 
   const onBrollFiles = React.useCallback(
     async (files: FileList | null) => {
@@ -2242,7 +2271,6 @@ function BrollThumb({
     );
   }
   return (
-    // eslint-disable-next-line jsx-a11y/media-has-caption
     <video src={url} muted preload="metadata" className={cls} />
   );
 }
@@ -2276,7 +2304,6 @@ function FinalVideoPreview({
       ? "mx-auto aspect-[9/16] max-h-[70vh]"
       : "aspect-video";
   return (
-    // eslint-disable-next-line jsx-a11y/media-has-caption
     <video
       src={url}
       controls

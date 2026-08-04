@@ -3,12 +3,12 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// [T-084a] ChatGatherCard 诚实降级 UI:
-//   - grounding=model_memory → 头部黄条诚实提示未取得实时检索结果,不暴露内部搜索配置。
+// [T-084a/T-684] ChatGatherCard 诚实失败 UI:
+//   - grounding=unavailable → 头部黄条明确浏览器搜索失败,绝不拿模型记忆冒充联网结果。
 //   - 带 sourceUrl 的条目 → 可点域名链接(新窗打开真实来源)。
 //   - 无 sourceUrl 的条目 → 「需核实」徽标(非查证过的真信源)。
-//   - grounding=web → 不显黄条,头部文案「联网搜到素材」。
-// [T-264] 批量入库门:每条可勾选,「存入选中 N 条」一次 persist + 一次 refresh。
+//   - grounding=web → 不显黄条,头部文案「联网找到资料」。
+// [T-264] 批量入库门:每条可勾选,「保存选中 N 条」一次 persist + 一次 refresh。
 
 const createKnowledge = vi.fn();
 const createMaterialLink = vi.fn();
@@ -50,25 +50,21 @@ const MEMORY_ITEM = {
   category: "数据",
 };
 
-describe("ChatGatherCard — T-084a 诚实降级", () => {
-  it("grounding=model_memory → 显诚实黄条且不引导配置内部搜索能力", () => {
+describe("ChatGatherCard — T-084a/T-684 诚实失败", () => {
+  it("grounding=unavailable → 显真实失败提示且不渲染模型记忆素材", () => {
     render(
       <ChatGatherCard
-        items={[MEMORY_ITEM]}
+        items={[]}
         projectId="p-1"
-        grounding="model_memory"
+        grounding="unavailable"
       />,
     );
     const warn = document.querySelector('[data-slot="chat-gather-warning"]');
     expect(warn).not.toBeNull();
-    expect(warn?.textContent).toContain("本轮未取得实时检索结果");
-    expect(warn?.textContent).toContain("模型记忆");
-    expect(warn?.textContent).toContain("来源需自行核实");
+    expect(warn?.textContent).toContain("本轮浏览器搜索失败");
+    expect(warn?.textContent).toContain("没有用模型记忆伪造素材");
     expect(warn?.querySelector("a")).toBeNull();
-    // 无 sourceUrl → 「需核实」徽标(不渲链接)。
-    expect(
-      document.querySelector('[data-slot="chat-gather-needs-check"]'),
-    ).not.toBeNull();
+    expect(screen.queryByText(MEMORY_ITEM.title)).toBeNull();
     expect(
       document.querySelector('[data-slot="chat-gather-source-link"]'),
     ).toBeNull();
@@ -90,10 +86,10 @@ describe("ChatGatherCard — T-084a 诚实降级", () => {
     // 链接文案是去 www 的域名。
     expect(link?.textContent).toContain("blog.example.com");
     // web 头部文案。
-    expect(screen.getByText(/联网搜到素材/)).toBeTruthy();
+    expect(screen.getByText(/联网找到资料/)).toBeTruthy();
   });
 
-  it("grounding 缺省 → 默认 model_memory(显黄条,诚实兜底)", () => {
+  it("grounding 缺省 → 默认 unavailable(显黄条,诚实失败)", () => {
     render(<ChatGatherCard items={[MEMORY_ITEM]} projectId="p-1" />);
     expect(
       document.querySelector('[data-slot="chat-gather-warning"]'),
@@ -102,7 +98,7 @@ describe("ChatGatherCard — T-084a 诚实降级", () => {
 });
 
 describe("ChatGatherCard — T-264 批量入库", () => {
-  it("有项目 + ≥2 条 → 渲批量门;「存入选中 N 条」逐条 persist 但只 refresh 一次", async () => {
+  it("有项目 + ≥2 条 → 渲批量门;「保存选中 N 条」逐条 persist 但只 refresh 一次", async () => {
     const user = userEvent.setup();
     render(
       <ChatGatherCard
@@ -111,7 +107,7 @@ describe("ChatGatherCard — T-264 批量入库", () => {
         grounding="web"
       />,
     );
-    await user.click(screen.getByText("存入选中 2 条"));
+    await user.click(screen.getByText("保存选中 2 条"));
     // 两条各 create 一次 knowledge + 一次 materialLink。
     await vi.waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(2));
     expect(createMaterialLink).toHaveBeenCalledTimes(2);
@@ -130,7 +126,7 @@ describe("ChatGatherCard — T-264 批量入库", () => {
     );
     const checkboxes = screen.getAllByRole("checkbox");
     await user.click(checkboxes[0]); // 取消第 1 条
-    await user.click(screen.getByText("存入选中 1 条"));
+    await user.click(screen.getByText("保存选中 1 条"));
     await vi.waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(1));
     expect(createKnowledge.mock.calls[0][0].body.title).toBe("第二条素材");
   });

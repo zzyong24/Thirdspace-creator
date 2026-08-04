@@ -58,7 +58,7 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
       async (input: { searchResults?: unknown[] }) => {
         const hasSearch = (input.searchResults?.length ?? 0) > 0;
         return {
-          grounding: hasSearch ? "web" : "model_memory",
+          grounding: hasSearch ? "web" : "unavailable",
           categories: {
             hooks: [],
             cases: [],
@@ -67,7 +67,7 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
           },
           items: [
             {
-              title: hasSearch ? "案例：真实检索案例" : "案例：记忆案例",
+              title: hasSearch ? "案例：真实检索案例" : "未找到联网资料",
               url: hasSearch ? "https://blog.example.com/rag" : "",
               source: hasSearch ? "example.com" : "需核实",
               why_relevant: "同赛道",
@@ -693,6 +693,42 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("反直觉开头"); // 飞轮
     expect(a.system).toContain("怎么落地"); // 受众信号(真实评论)
     expect(a.system).toContain("RAG 实战"); // 知识库
+  });
+
+  it("当前对话的图N/imageN别名按真实 assetId 注入，模型无需猜素材标题", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      {
+        surface: "project",
+        projectId: "project-1",
+        assetAliases: {
+          图2: "asset-image-2",
+          image2: "asset-image-2",
+          第二张: "asset-image-2",
+          刚才那组第二张: "asset-image-2",
+          视频1: "asset-video-1",
+        },
+      },
+      deps,
+    );
+    expect(a.system).toContain("当前对话素材别名");
+    expect(a.system).toContain("图2 -> assetId=asset-image-2");
+    expect(a.system).toContain("image2 -> assetId=asset-image-2");
+    expect(a.system).toContain("第二张 -> assetId=asset-image-2");
+    expect(a.system).toContain("刚才那组第二张 -> assetId=asset-image-2");
+    expect(a.system).toContain("视频1 -> assetId=asset-video-1");
+    expect(a.system).toContain("绝不猜标题");
+  });
+
+  it("本机读取能力明确支持 Windows 盘符和 UNC 路径，不再误报只能识别 Unix 路径", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "project" }, deps);
+
+    expect(a.system).toContain("Windows 盘符路径");
+    expect(a.system).toContain("UNC 网络路径");
+    expect(a.system).toContain("Windows 路径读不了");
+    expect(a.system).toContain("E:\\资料\\稿子.md");
   });
 
   it("[T-096 矩阵#10] 系统注入不受 scope 隔离影响:任意 scope 声明下 system 仍含账号级 facets(不过度隔离)", async () => {
@@ -1811,34 +1847,36 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
   });
 });
 
-// [T-084a SPEC §1.3] 素材搜集诚实降级:honestyBlock 第 7 条按 probeSearchConfigured 动态注入;
-// gatherMaterials 先真检索(searchWeb)再综合,失败/未配降级 grounding=model_memory。
-describe("[T-084a] 联网检索诚实降级 + honestyBlock 动态第 7 条", () => {
-  it("未配联网检索(默认无 probe 端口)→ 注入「未配置联网检索…绝不假装搜过网」", async () => {
+// [T-684] 搜索模型下线后，素材搜集只认随包浏览器；失败不允许模型记忆兜底。
+describe("[T-684] 随包浏览器检索 + 禁止模型记忆兜底", () => {
+  it("宿主未装 searchWeb 端口 → 明确能力未接入，不引导配置搜索模型", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("未配置联网检索");
-    expect(a.system).toContain("绝不使用「我搜到/我查到/联网搜到」等话术");
-    expect(a.system).not.toContain("已配置联网检索:调用后素材会先经真实联网搜索");
+    expect(a.system).toContain("未装配浏览器搜索端口");
+    expect(a.system).toContain("不要引导用户配置已经下线的“搜索模型”");
+    expect(a.system).not.toContain("模型训练记忆");
   });
 
-  it("已配联网检索(probeSearchConfigured=true)→ 注入「已配置联网检索」措辞", async () => {
+  it("有 searchWeb 端口时，不受旧 probeSearchConfigured 配置影响", async () => {
     const { deps } = makeDeps({
-      probeSearchConfigured: async () => true,
+      probeSearchConfigured: async () => false,
+      searchWeb: async () => [],
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("已配置联网检索");
-    expect(a.system).not.toContain("未配置联网检索**:你给出的素材来自训练记忆");
+    expect(a.system).toContain("随包浏览器真实搜索");
+    expect(a.system).toContain("不得用模型记忆补齐数量");
+    expect(a.system).not.toContain("设置→模型→联网搜索");
   });
 
-  it("probeSearchConfigured 抛错 → 视为未配(诚实降级,不崩装配)", async () => {
+  it("旧 probeSearchConfigured 抛错也不影响随包浏览器能力", async () => {
     const { deps } = makeDeps({
       probeSearchConfigured: async () => {
         throw new Error("settings unavailable");
       },
+      searchWeb: async () => [],
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("未配置联网检索");
+    expect(a.system).toContain("随包浏览器真实搜索");
   });
 
   it("gatherMaterials 有 searchWeb 端口 → 真检索 + grounding=web + sourceUrl 透传", async () => {
@@ -1873,7 +1911,7 @@ describe("[T-084a] 联网检索诚实降级 + honestyBlock 动态第 7 条", () 
     expect(res.items[0]?.sourceUrl).toBe("https://blog.example.com/rag");
   });
 
-  it("searchWeb 抛错(未配/超时)→ catch 成 model_memory 降级,不 crash", async () => {
+  it("searchWeb 抛错 → 工具返回 unavailable 错误信封，不产模型记忆素材", async () => {
     const searchWeb = vi.fn(async () => {
       throw new Error("SearchConfigError: web.search 未配置");
     });
@@ -1884,8 +1922,8 @@ describe("[T-084a] 联网检索诚实降级 + honestyBlock 动态第 7 条", () 
       grounding: string;
     };
     expect(searchWeb).toHaveBeenCalled();
-    // 检索抛错被吞 → 走纯记忆综合,grounding=model_memory(诚实降级)。
-    expect(res.grounding).toBe("model_memory");
+    expect(res.grounding).toBe("unavailable");
+    expect((res as { error?: string }).error).toContain("SearchConfigError");
   });
 });
 

@@ -251,6 +251,46 @@ describe("SettingsPage", () => {
     ).not.toBeNull();
   });
 
+  it("[T-679] 按 Growth 下发顺序展示真实模型名和 model，移除旧选择时提示已回退", async () => {
+    await renderSettings({
+      modelAuthority: {
+        authority: "channel",
+        outcome: "configured",
+        action: "渠道已接管 3/4 类模型，其余由你配置",
+        capabilities: {
+          default: {
+            capability: "default",
+            authority: "channel",
+            serviceId: "omnihi-main",
+            serviceName: "OmniHi 模型服务",
+            provider: "openai-compatible",
+            modelName: "MiniMax M3",
+            model: "minimax-m3",
+            baseUrl: "https://api.omnihi.ai/openai",
+            hasSecret: true,
+            optionId: "minimax-m3",
+            selectionNotice: "原模型已不再提供，已切换为 MiniMax M3（minimax-m3）",
+            modelOptions: [
+              { id: "minimax-m3", name: "MiniMax M3", model: "minimax-m3" },
+              { id: "gpt-5-6-terra", name: "GPT 5.6 Terra", model: "gpt-5.6-terra" },
+            ],
+          },
+        },
+        services: [],
+      },
+    });
+    const select = document.querySelector(
+      'select[aria-label="文本创作模型使用模型"]',
+    ) as HTMLSelectElement | null;
+    expect(select).not.toBeNull();
+    expect(Array.from(select!.options).map((option) => option.textContent)).toEqual([
+      "MiniMax M3 · minimax-m3",
+      "GPT 5.6 Terra · gpt-5.6-terra",
+    ]);
+    expect(select!.value).toBe("minimax-m3");
+    expect(document.body.textContent).toContain("原模型已不再提供");
+  });
+
   it("[T-645] 渠道只提供 ASR 时，文本模型仍保留用户本地表单", async () => {
     await renderSettings({
       modelAuthority: {

@@ -57,6 +57,19 @@ describe("[T-253] local-read-grants — 运行时授权表", () => {
     expect(checkGrant(U, "/Users/u/notes-2/a.md")).toBeNull();
   });
 
+  it("Windows 目录授权:盘符大小写与分隔符兼容，且同名前缀目录不误命中", () => {
+    grantAlwaysDir(U, "E:\\资料\\项目");
+    expect(checkGrant(U, "e:\\资料\\项目\\图片\\封面.png")).toBe("dir");
+    expect(checkGrant(U, "E:/资料/项目/文稿.md")).toBe("dir");
+    expect(checkGrant(U, "E:\\资料\\项目备份\\文稿.md")).toBeNull();
+  });
+
+  it("Windows UNC 目录授权:共享目录及其子路径命中", () => {
+    grantAlwaysDir(U, "\\\\server\\share\\项目");
+    expect(checkGrant(U, "\\\\SERVER\\SHARE\\项目\\资料.md")).toBe("dir");
+    expect(checkGrant(U, "\\\\server\\share\\项目2\\资料.md")).toBeNull();
+  });
+
   it("授权按 user 隔离:A 的授权对 B 不可见", () => {
     grantAlwaysDir(U, "/Users/u/notes");
     expect(checkGrant("user-2", "/Users/u/notes/a.md")).toBeNull();

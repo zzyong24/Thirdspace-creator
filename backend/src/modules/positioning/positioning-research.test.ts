@@ -78,4 +78,28 @@ describe("positioning discovery research", () => {
       "https://www.zhihu.com/question/changsha-food-brand",
     ].sort());
   });
+
+  it("地域行业 IP 查询允许收录同时命中地域和行业的公开产业资料", () => {
+    const results = selectDiscoveryResearchResults(
+      "湖南餐饮行业 IP",
+      [
+        {
+          title: "第28届中国餐饮年度影响力峰会在湖南长沙举办",
+          url: "https://www.cnr.cn/ent/canyin/hunan.html",
+          snippet: "湖南餐饮品牌、门店经营者与产业趋势观察。",
+        },
+        {
+          title: "湖南省概况",
+          url: "https://www.hunan.gov.cn/hngk/",
+          snippet: "湖南行政区划、人口与地理信息。",
+        },
+      ],
+      { market: "cn", language: "zh-CN" },
+      5,
+    );
+
+    expect(results.map((item) => item.url)).toEqual([
+      "https://www.cnr.cn/ent/canyin/hunan.html",
+    ]);
+  });
 });

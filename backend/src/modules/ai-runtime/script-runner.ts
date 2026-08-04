@@ -153,6 +153,12 @@ export async function runScriptDraft(
         task.inputData.extraBrief.trim()
           ? task.inputData.extraBrief.trim()
           : undefined,
+      targetDurationSeconds:
+        typeof task.inputData.targetDurationSeconds === "number" &&
+        Number.isFinite(task.inputData.targetDurationSeconds) &&
+        task.inputData.targetDurationSeconds > 0
+          ? task.inputData.targetDurationSeconds
+          : undefined,
       orientation: context.orientationHint || undefined,
       // SEAM-01:把策划产物(论点树/内容合同/结构方案)注入写文案上下文,和 positioning+learnings 并列。
       // 经 reader 端口装配(creative-context),非跨模块直连 repo;脚本据此铺策划的结构与论点。
@@ -211,10 +217,15 @@ export async function runScriptDraft(
         contentData: {
           sections: renderSections(board),
         },
-        validationStatus:
-          validation.status === "valid" ? "valid" : "invalid",
-        validationErrors: validation.errors.map((error) => error.message),
-        canAdopt: validation.status === "valid",
+        // schema 已经保证 sections 非空且字段合法。镜数、角色顺序、输出截断等
+        // completion policy 问题降级成质量提醒，不能再让已有整稿消失或无法采纳。
+        validationStatus: "valid",
+        validationErrors: [],
+        qualityWarnings:
+          validation.status === "valid"
+            ? []
+            : validation.errors.map((error) => error.message),
+        canAdopt: true,
         accountId: activeSnapshot.accountId,
         skillSnapshot: {
           skillId: effectiveSkill.skillId,

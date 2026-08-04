@@ -8,7 +8,7 @@
  */
 
 import * as React from "react";
-import { act, cleanup, render } from "@testing-library/react";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
@@ -217,5 +217,61 @@ describe("ChatGenerateCard — T-523 参考图使用真相", () => {
       container.querySelector('[data-slot="chat-cover-reference"]')
         ?.textContent ?? "",
     ).toContain("未送给生图适配器");
+  });
+});
+
+describe("ChatGenerateCard — T-687 可引用别名与项目刷新", () => {
+  it("为生成图展示稳定别名，采纳后通知当前项目刷新素材并废弃旧决策", async () => {
+    mockClient.getTask.mockResolvedValueOnce({ status: "awaiting_confirmation" });
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          assetId: "asset-image-2",
+          assetType: "image",
+          name: "时薪对比图",
+        },
+      },
+    ]);
+    const changed = vi.fn();
+    const aliasReady = vi.fn();
+    window.addEventListener("creatoros:project-materials-changed", changed);
+    window.addEventListener("creatoros:asset-alias-ready", aliasReady);
+    const { container } = render(
+      <ChatGenerateCard
+        taskId="t-image-2"
+        kindOf="image"
+        error={null}
+        aliasLabel="图2"
+        aliasBatchKey="assistant-message-7"
+        aliasBatchRank={7}
+        projectId="project-1"
+      />,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4100);
+    });
+    expect(container.textContent ?? "").toContain("图2");
+    expect(aliasReady).toHaveBeenCalledOnce();
+    expect((aliasReady.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({
+      alias: "图2",
+      assetId: "asset-image-2",
+      batchKey: "assistant-message-7",
+      batchRank: 7,
+    });
+    await act(async () => {
+      fireEvent.click(
+        container.querySelector('[data-slot="chat-generate-adopt"]')!,
+      );
+      await Promise.resolve();
+    });
+    expect(changed).toHaveBeenCalledOnce();
+    const detail = (changed.mock.calls[0]?.[0] as CustomEvent).detail;
+    expect(detail).toEqual({
+      projectId: "project-1",
+      assetId: "asset-image-2",
+      role: "broll",
+    });
+    window.removeEventListener("creatoros:project-materials-changed", changed);
+    window.removeEventListener("creatoros:asset-alias-ready", aliasReady);
   });
 });

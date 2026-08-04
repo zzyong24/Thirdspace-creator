@@ -1,7 +1,7 @@
 # T-645 渠道模型逐能力管控与用户本地 Key 契约
 
 > 日期：2026-08-02  
-> 状态：用户已确认产品方向，独立评审 Round 1 问题已修订、待复核  
+> 状态：用户已确认；T-679 受管子 Key 增量已覆盖旧版 `user_input` 模板口径并进入 BUILD
 > 取代范围：只取代 `2026-07-29-creatoros-channel-model-authority.contract.md` 中“只要存在
 > extension 就由渠道接管全部模型能力”的 §2、§4、§5 与 §8 多模型回退语义；票据、bundle
 > 验签、缓存、locator、防降级和脱敏边界保持不变。
@@ -69,6 +69,19 @@ SHA-256，输出 64 位小写十六进制。保存、列表、测试、同步调
 
 设置页的只读/可编辑状态、测试连接和实际 AI 调用必须调用同一个逐能力 parser。禁止设置页说
 “渠道已提供”，运行时却走本地；也禁止运行时走渠道而设置页仍让用户修改 Base URL。
+
+### FR-645-08 · 用户看得到真实模型，并在白名单内选择
+
+渠道为某个 capability 下发多个有效模型时，CreatorOS 必须向用户展示每一项真实的
+`name + model`，并允许用户在这些模型之间选择；只有一个有效模型时只读展示当前模型，不渲染
+无意义的下拉框。不得用“快速”“高质量”等营销档位替代、隐藏或冒充实际调用的模型。
+
+选择范围只来自当前已验签 payload 的 `models[capability]`，前端不得手填、拼接或提交白名单外
+`model/connectionId/settings`。选择按当前账号、渠道 scope 与 capability 持久化；刷新和重启后
+保持。新版白名单删除既有选择时，系统切换到该能力唯一 `isDefault=true` 的模型，并在设置页明确
+提示“原模型已不再提供，已切换为 <真实模型名>”。设置页、测试连接、同步调用和异步任务 pin
+必须读取同一选择结果；用户切换后的下一次新调用必须真实携带所选模型，旧异步任务继续遵守
+§6 的 authority digest 变化取消规则。
 
 ## 3. 渠道能力完整性的唯一判定
 
@@ -143,10 +156,13 @@ resolve(capability):
   policy = parseSignedPayload(capability)
   if policy == local:
     return existingLocalResolver(capability)
+  option = settings.getChannelModelSelection(ctx, scopeId, capability)
+  if option is absent or no longer in policy.signedAllowlist:
+    option = policy.uniqueDefaultOption
   secret = settings.getChannelCredential(ctx, scopeId, policy.serviceId)
   if missing:
     throw USER_KEY_REQUIRED(capability)
-  return channelConnection + channelModel + secret
+  return option.connection + option.model + option.settings + secret
 ```
 
 - 完整渠道能力调用失败、Key 无效或余额不足时不得切回本地模型。
@@ -165,8 +181,9 @@ resolve(capability):
 
 顶部摘要显示“渠道已配置 N/4 类，其余由你配置”，不再显示会误导的一刀切“渠道模型正在使用”。
 
-- managed capability：只读显示服务、模型和必要连接信息；提供“测试连接”；不渲染 provider、
-  model、Base URL、协议的编辑控件。
+- managed capability：只读显示服务和必要连接信息；提供“测试连接”；不渲染 provider、Base URL、
+  协议的编辑控件。模型只有一项时显示“当前模型：<真实 name>（<真实 model>）”；有多项时显示
+  同样真实信息的下拉框，当前选择清晰可见。
 - local capability：保留现有完整表单与测试连接。
 - managed services：按 service 去重显示一次 Key 密码框、保存状态，以及已验签的开通、购买、
   充值和帮助链接；缺链接就不显示。
@@ -192,6 +209,11 @@ resolve(capability):
 - `TC-T645-12`：切换渠道后，新调用和新任务不能访问旧 Key；切换前仍未终态的旧任务在 provider
   调用前因 digest 不匹配进入取消终态，provider 调用次数为 0，并显示“模型配置已变化，请重新
   发起”。重新发起后只读新 scope；公开 API 传 scope/task 字段不参与授权且被 schema 拒绝。
+- `TC-T645-13`：同一 capability 下发三个有效模型时只出现这三项真实的 `name + model`；选择
+  第二项后，下一次测试连接和真实调用均携带第二项的 `model/connectionId/settings`，刷新与重启
+  后仍选中第二项。
+- `TC-T645-14`：Growth 更新白名单并移除当前选择后，CreatorOS 只回退到唯一默认项并显示明确
+  提示；旧模型既不能在 UI 中选择，也不能通过篡改请求调用。
 
 ## 9. 范围边界
 
@@ -200,3 +222,61 @@ resolve(capability):
 - 本任务不升级白标 Logo/主题/窗口标题契约；白标仍由 T-649 独立承接。
 - Growth 已支持 models capability 子集、严格图校验和 `user_input`；本轮只需修正新模板正式枚举
   并完成 CreatorOS 消费，不新建第二个协议版本。
+
+## 10. T-679 最新覆盖口径（2026-08-04）
+
+本节是用户对当前 CreatorOS + Growth 联调目标的最新确认，**只覆盖本文件中与当前
+`omnihi-main` 产品模板冲突的 `user_input`、OmniHi adapter 和“不接受管子 Key”旧结论**；
+其他逐 capability、本地回退、验签、scope 隔离和秘密不出可信边界的要求继续生效。
+
+### 10.1 唯一服务与凭据
+
+- Growth 当前只下发一个 `omnihi-main` service；其
+  `credential.source=activation_managed`、`allowMultiple=false`、`provider=omnihi`。
+- `relay-text`、`relay-image`、`relay-video` 三个 connection 共用该 service 与同一 Activity
+  激活权益子 Key；首期不下发 `transcribe.audio`，ASR 继续本地配置/Whisper 回退。
+- CreatorOS 使用取得公开 bundle 的同一 `config-access-ticket-v2` 调 Growth API-265
+  `GET /api/client-config/managed-credentials/current?serviceId=omnihi-main`；完整 token 只从
+  `private, no-store` 响应直接写入本机加密凭据库，不能进入公开 bundle、client-config cache、
+  Web DTO、日志或明文数据库。
+- 设置页只显示“受管 Key 已就绪/等待同步”，不渲染用户填写 Key 的输入框。凭据缺失时 fail
+  closed 并提示重新确认激活权益/同步，绝不误导用户手填四套 Key，也绝不回退本地模型。
+
+### 10.2 Growth 动态模型清单
+
+CreatorOS 不硬编码模型名单。`models.default` 当前生产配置完整下发 13 个选项，顺序和唯一默认项
+均以已验签数组为准；当前 `model` 真值为：
+
+1. `minimax-m3`（唯一 `isDefault=true`）
+2. `gpt-5.6-luna`
+3. `gpt-5.6-terra`
+4. `gpt-5.6-sol`
+5. `claude-haiku-4.5`
+6. `claude-sonnet-4.6`
+7. `claude-opus-4.8`
+8. `gemini-3.5-flash`
+9. `gemini-3.1-pro-preview`
+10. `deepseek-v4-flash`
+11. `deepseek-v4-pro`
+12. `kimi-k2.6`
+13. `glm-5.2`
+
+客户端下拉框展示每项 `name`，真实调用使用 `model`，按账号 + scope + capability 保存 Growth
+下发的 `id + model`。Growth 更新数组后客户端自然更新选项；旧 `id` 不再存在时只回退到唯一
+默认项并明确提示。选择接口只接受当前已验签数组中的 `id`，不得把客户端提交的 model、连接或
+settings 当成权威。
+
+图片当前仅 `openai/gpt-image-2-text-to-image`；视频当前仅
+`seedance/seedance-2.0-fast`，默认 `480p`、4 秒、无音频。图片和视频只有一项时只读展示，不
+渲染无意义下拉框。
+
+### 10.3 T-679 增量验收
+
+- 同一权益重复同步只覆写同一 `(scopeId, omnihi-main)` 密文，不产生第二个客户端槽位；三个
+  connection 的 resolver 读取同一 secret。
+- 白名单外 option ID 返回 422 且不写选择；选中项的 `id` 与 `model` 分离时两者均按 Growth
+  原值保存，下一次调用携带其 `model/connection/settings`。
+- 新登录后的桌面壳后台触发一次配置/凭据同步；web 部署不请求本机 loopback 接口，业务页面不
+  因同步网络耗时阻塞。
+- Growth/Activity live HTTPS 与真实 OmniHi 子 Key端到端仍需真实环境验收；本地测试不得伪造
+  成已完成的线上验收证据。

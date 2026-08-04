@@ -38,12 +38,12 @@ function domainOf(url: string): string {
 export function ChatGatherCard({
   items,
   projectId,
-  grounding = "model_memory",
+  grounding = "unavailable",
 }: {
   items: ReadonlyArray<ChatGatherItem>;
   projectId: string | null;
-  /** [T-084a] web=经联网检索(不显黄条)、model_memory=未配/降级(显黄条 + 需核实徽标)。 */
-  grounding?: "web" | "model_memory";
+  /** [T-684] web=真实浏览器结果；unavailable=搜索失败且没有模型记忆兜底。 */
+  grounding?: "web" | "unavailable";
 }) {
   const router = useRouter();
   const [states, setStates] = React.useState<
@@ -147,7 +147,13 @@ export function ChatGatherCard({
         data-empty="true"
         className="mt-1 rounded-[10px] border border-dashed border-border px-3 py-2 text-[11px] text-text-subtle"
       >
-        这轮没搜到可用素材 —— 换个关键词再试试。
+        {grounding === "unavailable" ? (
+          <span data-slot="chat-gather-warning">
+            ⚠️ 本轮浏览器搜索失败，没有用模型记忆伪造素材。请稍后重试。
+          </span>
+        ) : (
+          "这轮没搜到可用素材 —— 换个关键词再试试。"
+        )}
       </div>
     );
   }
@@ -160,16 +166,16 @@ export function ChatGatherCard({
     >
       {/* [T-645] 搜索属于内部能力路由。降级时诚实告知结果来源，但不再把普通用户
           引向已经隐藏的技术配置项。 */}
-      {grounding === "model_memory" ? (
+      {grounding === "unavailable" ? (
         <div
           data-slot="chat-gather-warning"
           className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-md border border-warning/40 bg-warning-soft px-2 py-1.5 text-[10px] leading-snug text-warning-foreground"
         >
-          <span>⚠️ 本轮未取得实时检索结果，素材来自模型记忆，来源需自行核实。</span>
+          <span>⚠️ 本轮浏览器搜索失败，没有用模型记忆伪造素材。请稍后重试。</span>
         </div>
       ) : null}
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        {grounding === "web" ? "联网找到资料" : "找到创作素材"} · {items.length} 条 · 可保存到当前项目
+        {grounding === "web" ? "联网找到资料" : "未找到联网资料"} · {items.length} 条 · 可保存到当前项目
       </span>
       <ol className="flex flex-col gap-1.5">
         {items.map((it, i) => {

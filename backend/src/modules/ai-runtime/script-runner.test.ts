@@ -160,9 +160,10 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
       {
         id: "task-script-valid",
         projectId: null,
-        inputData: {
+      inputData: {
           artifactId: "artifact-script",
           extraBrief: "  只使用采访里的真实案例  ",
+          targetDurationSeconds: 180,
         },
       },
       runtimeDeps,
@@ -171,6 +172,7 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
     expect(worker.runScriptNode).toHaveBeenCalledWith(
       expect.objectContaining({
         extraBrief: "只使用采访里的真实案例",
+        targetDurationSeconds: 180,
       }),
     );
     expect(runtimeDeps.ai.recordStep).toHaveBeenCalledWith(
@@ -213,7 +215,7 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
     expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
   });
 
-  it("完整性不足时保留不可采纳候选，不取消任务也不丢已生成分镜", async () => {
+  it("结构已合法但质量检查不足时保留为可采纳候选，并把问题降级为优化提醒", async () => {
     const partial = successResult();
     partial.shots = partial.shots.slice(0, 2);
     partial.validation = {
@@ -254,9 +256,10 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
       "task-script-partial",
       expect.objectContaining({
         resultData: expect.objectContaining({
-          validationStatus: "invalid",
-          validationErrors: ["段落数 2 少于下限 6"],
-          canAdopt: false,
+          validationStatus: "valid",
+          validationErrors: [],
+          qualityWarnings: ["段落数 2 少于下限 6"],
+          canAdopt: true,
           finalSegmentCount: 2,
         }),
       }),

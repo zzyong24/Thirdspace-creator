@@ -141,14 +141,14 @@ function scriptSnapshot(
   };
 }
 
-describe("[T-512] script.draft official 完整性策略", () => {
-  it("默认声明 6–10 段与 hook→body→cta，schema/adapter 可从 shot.role 提取", () => {
+describe("[T-512/T-685] script.draft official 完整性策略", () => {
+  it("默认只要求至少一段，不再用固定段数或套路结构阻断可用文案", () => {
     const base = getOfficialSkillBase("script.draft");
     expect(base?.completionPolicy).toEqual({
       schemaVersion: 1,
-      minSegments: 6,
-      maxSegments: 10,
-      requiredSequence: ["hook", "body", "cta"],
+      minSegments: 1,
+      maxSegments: null,
+      requiredSequence: [],
       repairAttempts: 0,
     });
     expect(base?.completionPolicyAdapter).toEqual({
@@ -165,7 +165,7 @@ describe("[T-512] script.draft official 完整性策略", () => {
     ).toHaveProperty("role");
   });
 
-  it("默认 skill 只产 1 段时保留为 partial，不自动整稿重写也不假装可采纳", async () => {
+  it("默认 skill 只产 1 段时仍是可用候选，长度与结构交给用户继续编辑", async () => {
     const oneShot = {
       shots: [
         {
@@ -190,7 +190,7 @@ describe("[T-512] script.draft official 完整性策略", () => {
     expect(result.shots).toHaveLength(1);
     expect(result.generation.attempts).toHaveLength(1);
     expect(result.validation).toMatchObject({
-      status: "partial",
+      status: "valid",
       originalSegmentCount: 1,
       finalSegmentCount: 1,
       repairAttemptsUsed: 0,

@@ -46,6 +46,7 @@ export interface ResolveMultimodalDeps {
   env: Record<string, string | undefined>;
   getChannelModelConfig?: () => Promise<ChannelModelPayload | null>;
   getChannelModelCredential?: (serviceId: string) => Promise<string | null>;
+  getChannelModelSelection?: (capability: string) => Promise<string | null>;
 }
 
 /** 未配 / 无凭据 —— 上层(asset.generate runner)接住 → cancelTask + 录制页显
@@ -210,7 +211,9 @@ export async function resolveMultimodalSpec(
   const kind = CAP_TO_KIND[capability];
   const channel = await deps.getChannelModelConfig?.();
   if (channel) {
-    const route = resolveChannelCapabilityRoute(channel, capability);
+    const route = resolveChannelCapabilityRoute(channel, capability, {
+      selectedOptionId: await deps.getChannelModelSelection?.(capability),
+    });
     if (route && route.kind === kind) {
       const credential = route.serviceId
         ? await deps.getChannelModelCredential?.(route.serviceId)

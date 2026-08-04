@@ -141,13 +141,9 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
   ) => Promise<ModelSpec | null>;
   /**
-   * [T-084a] 联网检索端口(可选)—— gatherMaterials 的「先真联网检索」用。由 composition root
-   * (persistence-client)绑:内部 resolveSearchSpec(web.search)+ 按 provider 分派 REST adapter。
-   *   - probeSearchConfigured: 探测用户是否配了 web.search(honestyBlock 第 6 条 + 工具动态描述用),
-   *     不打网络、只查配置;未装配 → 视为未配(诚实降级)。
-   *   - searchWeb: 真执行一次联网检索,返 SearchResult[];未配抛 SearchConfigError、检索失败抛
-   *     SearchExecutionError,由 gatherMaterials catch 成 model_memory 降级(不 crash)。
-   * 两者都可选:未装配时 gatherMaterials 走纯记忆(与今天现状一致),honestyBlock 注未配措辞。
+   * [T-684] 联网检索端口——由 composition root 绑定 CreatorOS 内置浏览器搜索。
+   * probeSearchConfigured 仅为兼容旧接口保留；是否可联网只看 searchWeb 是否装配。
+   * 浏览器失败时返回 unavailable，绝不以模型记忆伪装真实检索结果。
    */
   probeSearchConfigured?: (ctx: RequestContext) => Promise<boolean>;
   searchWeb?: (
@@ -356,7 +352,13 @@ export interface AssembleChatDeps extends ContextDeps {
    */
   dispatchScriptDraftPort?: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
+    input: {
+      projectId: string;
+      topic?: string;
+      angle?: string;
+      targetDurationSeconds?: number;
+      extraBrief?: string;
+    },
   ) => Promise<{ taskId: string }>;
   /**
    * [T-350a] publish.package 端口 —— dispatch 既有 publish.platform_adapt runner(单平台抖音,
@@ -961,16 +963,9 @@ export async function buildChatAssembly(
     includeAccounts:
       skillId === "chatbox.positioning" && !options.positioningScratch,
   });
-  // [T-084a] 联网检索配置探测(honestyBlock 第 6.5 条 + material.gather 工具动态描述用)。
-  // 只查配置、不打网络;端口未装配(probeSearchConfigured 缺省)或探测抛错 → 视为未配(诚实降级)。
-  let searchConfigured = false;
-  if (deps.probeSearchConfigured) {
-    try {
-      searchConfigured = await deps.probeSearchConfigured(ctx);
-    } catch {
-      searchConfigured = false;
-    }
-  }
+  // [T-684] 联网检索已改成随包浏览器能力，不再读取被隐藏的搜索模型配置。
+  // 只要宿主装配了 searchWeb 端口，就是真联网；失败时诚实失败，不回落模型记忆。
+  const searchConfigured = Boolean(deps.searchWeb);
   // [T-058①B / T-240②] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
   // 写库只经工具产卡+用户点采纳;禁止假承诺;工具带分页限制时如实说明。
   // [T-240②] 规则带作用域:分「全局条款」(1-10,任何场景都生效:不假承诺/不编数字/指针权/
@@ -992,8 +987,8 @@ export async function buildChatAssembly(
     // [T-084a SPEC §1.3] 素材搜集诚实降级第 6 条(动态,按 resolveSearchSpec 探测结果注入):
     // 未配联网检索时,素材来自训练记忆,模型必须主动告知非实时检索,绝不假装搜过网。
     searchConfigured
-      ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但转述结果时必须**分开报数**:多少条带真实 URL(查证过的真信源)、多少条来自模型记忆需核实。若工具结果 grounding=model_memory(说明本次联网检索失败降级),必须明说「本次联网检索失败,以下 N 条全部来自模型记忆」,不许再说「联网搜到」,并建议用户检查搜索配置(设置→模型→联网搜索)或去『内容雷达』登记来源。"
-      : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「联网检索未配置,以下 N 条素材全部来自我的训练记忆、非实时联网搜索,来源需你自行核实」(N 用真实条数),绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网、**绝不给素材编造论文编号/精确百分比/榜单名等看似真实的引用**。想要真实联网素材,引导用户去『设置→模型→联网搜索』配置搜索,或去『内容雷达』登记来源。",
+      ? "7. 素材搜集(material.gather)固定使用 CreatorOS 随包浏览器真实搜索，只返回带真实 URL 的结果；不得用模型记忆补齐数量。搜索失败或没有结果时如实说明，不要建议用户配置已经下线的“搜索模型”。"
+      : "7. 当前宿主未装配浏览器搜索端口，material.gather 不可用。必须如实说明能力未接入，绝不从模型记忆伪造搜索结果，也不要引导用户配置已经下线的“搜索模型”。",
     // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
     // 真实浏览器能力(web.read),**禁止再自称办不到**。
     "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。[T-251] web.read 结果按窗返回(window/hasMore 是真相字段):**hasMore=true 时必须带 offset 重调同一 URL 把正文读完再归纳**(重读不会重新抓取,直接按窗读已存全文)——绝不只读第一窗就下结论;确实读不完就如实告知「读了 X 字、还剩 Y 字没读」。",
@@ -1009,7 +1004,7 @@ export async function buildChatAssembly(
     // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
     "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①内容雷达中的网页/RSS 来源会保留真实条目、链接与抓取证据;②内容雷达的热点宝/黑马发现会保留官方榜单口径与原视频链接;③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**;若结果注明未拉到实时信号或用户还没登记来源,**引导 TA 去『内容雷达』登记网页/RSS、博主或分享链接**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动编造热点、更不是自称没能力。",
     // [T-253] 本机文件读取能力认知 + 授权协议 + 安全边界诚实(denylist 拒读时如实说明,绝不绕)。
-    "12. **你能读用户本机的文件**(local.read,任意绝对路径,支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件」时直接调它,绝不自称「我碰不到你的本地文件」。授权协议:首次读某路径会弹**确认卡**(needApproval)——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」,TA 点允许后你**再调一次 local.read 传同一路径**;被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
+    "12. **你能读用户本机的文件**(local.read,支持 macOS/Linux 绝对路径、Windows 盘符路径和 UNC 网络路径，也支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件 / 读 E:\\资料\\稿子.md / 读 \\\\server\\share\\稿子.md」时直接调它,绝不自称「Windows 路径读不了」「我碰不到你的本地文件」或要求用户换到 macOS。授权协议:首次读某路径会弹**确认卡**(needApproval)——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」,TA 点允许后你**再调一次 local.read 传同一路径**;被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
     // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
     // 铁律:探到什么报什么,缺工具诚实引导安装,绝不假装工具存在/编造版本号/臆造未授权目录。
     "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):要判断某能力能不能落地时先探——如用户要「抽音频/转码/渲染视频」前先看 ffmpeg 在不在,要跑脚本前看 node/python3 在不在。装了就说装了(可报版本),**没装就直说没装并给出安装命令**(如「ffmpeg 没装,装一下:brew install ffmpeg」),**绝不假装工具存在、绝不编造版本号**;你只能探内置白名单工具(ffmpeg/ffprobe/node/python3/git),传别的名字会被忽略并在结果里列出,照实说即可。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录(会返回文件清单)。清单为空就说还没授权过、引导 TA 去授权,**绝不臆造用户没授权过的目录**。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
@@ -1039,6 +1034,15 @@ export async function buildChatAssembly(
     buildSkillsBrief(toolWhitelist),
   ].join("\n");
   const selectionBlock = assembleSelectionContext(chatContext.selection);
+  const assetAliasBlock = chatContext.assetAliases && Object.keys(chatContext.assetAliases).length
+    ? [
+        "【当前对话素材别名 —— 用户说图2/image2/视频1时必须按此表识别，绝不猜标题】",
+        ...Object.entries(chatContext.assetAliases).map(
+          ([alias, assetId]) => `${alias} -> assetId=${assetId}`,
+        ),
+        "引用已有素材的工具若支持 referenceAssetId，直接传对应 assetId；工具不支持时要诚实说明，不能说‘识别不到图2’。",
+      ].join("\n")
+    : "";
   // T-039a 补:复盘对话「瞎问复盘对象」根因 —— 本项目真材料虽已装进 context(reviewSubject reader)
   // 且进了 review.analyze 工具的 facets,但**没进对话系统提示**,故 LLM 在决定调用工具前不知道复盘哪条,
   // 于是反复问「复盘对象是什么」并退回账号级泛论。这里把「本次复盘对象(真标题+文案+数据+评论)」直接
@@ -1104,6 +1108,7 @@ export async function buildChatAssembly(
     taskTruthBlock,
     reviewSubjectBlock,
     selectionBlock,
+    assetAliasBlock,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -1329,7 +1334,13 @@ export async function buildChatAssembly(
     // output_script 版本写进稿面),项目从模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话
     // 恒有)。无项目上下文 → 不 dispatch,诚实回 error(卡渲「去项目稿面写脚本」);端口未装配 → 同样
     // 诚实 error(不抛裸码)。topic 缺省用工作台选中标题兜底(与写稿/复盘同款 selection.label 派生)。
-    dispatchScriptDraft: async ({ projectId, topic, angle, extraBrief }) => {
+    dispatchScriptDraft: async ({
+      projectId,
+      topic,
+      angle,
+      targetDurationSeconds,
+      extraBrief,
+    }) => {
       const pid =
         (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
         chatContext.projectId ||
@@ -1358,6 +1369,9 @@ export async function buildChatAssembly(
           projectId: pid,
           ...(effTopic ? { topic: effTopic } : {}),
           ...(angle ? { angle } : {}),
+          ...(typeof targetDurationSeconds === "number"
+            ? { targetDurationSeconds }
+            : {}),
           ...(extraBrief ? { extraBrief } : {}),
         });
         return { taskId, projectId: pid, error: null };
@@ -1446,69 +1460,35 @@ export async function buildChatAssembly(
       }
     },
     gatherMaterials: async ({ query }) => {
-      // [T-057④/T-084a] 两步:①先真联网检索(searchWeb,失败/未配降级)②runResearchNode 结构化
-      // 综合(检索结果前置注入,非模型工具 —— 保住任何模型都产可解析输出,ffb7951 教训)。
+      // [T-684] 素材搜索直接复用随包浏览器结果。搜索模型已经下线，不再调用
+      // research.gather 用模型记忆“补齐”钩子/案例/数据/金句，避免无 URL 假素材。
       const baseQuery = query?.trim() || selectionTitle || "";
       // [T-146d] 搜索深度结合用户素材:构造 query 前读当前项目 high-priority 用户素材要点(关键词/
       // 实体)→ 扩展 query(标题 + 资料关键词,而非纯标题),让搜索贴着 PR/第一手资料搜。
       // context.userMaterialQueryTerms 已由 creative-context 从高优先素材要点卡抽好(只 high,去重上限)。
       const materialTerms = context.userMaterialQueryTerms ?? [];
       const effQuery = [baseQuery, ...materialTerms].filter(Boolean).join(" ");
-      // ① 联网检索(端口未装配 → 空;SearchConfigError/SearchExecutionError → catch 成空降级)。
-      let searchResults: Array<{
+      if (!deps.searchWeb) {
+        throw new Error("CreatorOS 浏览器搜索能力未接入，暂时无法联网找素材。");
+      }
+      const searchResults: Array<{
         title: string;
         url: string;
         snippet: string;
         publishedAt?: string;
         siteName?: string;
-      }> = [];
-      if (deps.searchWeb && effQuery) {
-        try {
-          searchResults = await deps.searchWeb(ctx, effQuery, { count: 10 });
-        } catch (err) {
-          // 未配/检索失败 → 诚实降级纯记忆(不 crash);记日志供 dev 排查。
-          console.warn(
-            `[chat-runner] gatherMaterials searchWeb 降级(model_memory): ${formatErrorDiagnostic(
-              err,
-              { omitMessage: true },
-            )}`,
-          );
-          searchResults = [];
-        }
-      }
-      // ② 结构化综合(research.gather capability,四类结构化素材;检索结果注入 → 模型据其填真实 URL)。
-      // [T-146d] 高优先用户素材要点作 facet 注入 → 综合「贴着资料产」(优先服务于它、补充它、佐证它,
-      // 而非跑题)。topicTitle 保持原选题(不掺资料词,避免污染综合的相关性判断);资料主权走 facet。
-      const spec = await deps.resolveModelSpec(ctx, "research.gather");
-      console.info(
-        `[chat-runner] tool=material.gather capability=research.gather apiFormat=${spec.apiFormat} ` +
-          `model=${observableModelKey(spec)} endpoint=${spec.baseUrl ? "custom" : "official"}`,
-      );
-      const { runResearchNode, formatUserMaterialFacet } = await import(
-        "@creatoros/ai-worker"
-      );
-      const { items, grounding } = await runWithSkillSnapshot(
-        ["research.gather"],
-        () =>
-          runResearchNode({
-            model: modelFor(spec),
-            positioningBrief: context.positioningBrief,
-            topicTitle: baseQuery,
-            searchResults,
-            userMaterialFacet: context.userMaterialHardBrief
-              ? formatUserMaterialFacet(context.userMaterialHardBrief)
-              : undefined,
-          }),
-      );
+      }> = effQuery
+        ? await deps.searchWeb(ctx, effQuery, { count: 10 })
+        : [];
       return {
-        grounding,
-        items: items.map((it) => ({
+        grounding: "web" as const,
+        items: searchResults.map((it) => ({
           title: it.title,
           url: it.url,
-          source: it.source,
-          whyRelevant: it.why_relevant,
-          category: it.source || "素材",
-          ...(it.sourceUrl ? { sourceUrl: it.sourceUrl } : {}),
+          source: it.siteName || new URL(it.url).hostname,
+          whyRelevant: it.snippet,
+          category: "联网资料",
+          sourceUrl: it.url,
         })),
       };
     },

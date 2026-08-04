@@ -115,11 +115,24 @@ export function ChatGenerateCard({
   taskId,
   kindOf,
   error,
+  aliasLabel,
+  aliasBatchKey,
+  aliasBatchRank,
+  projectId,
+  materialRole = "broll",
 }: {
   taskId: string | null;
   kindOf: "image" | "video";
   /** dispatch 阶段的错误(端口未接入等);非 null 时直接渲错误态。 */
   error: string | null;
+  /** 同一轮生成结果的稳定人类别名，例如“图2”，便于后续自然语言引用。 */
+  aliasLabel?: string | null;
+  /** 别名所属助手消息；批次序号用于阻止旧任务晚完成后覆盖“刚才那组”。 */
+  aliasBatchKey?: string | null;
+  aliasBatchRank?: number | null;
+  /** 采纳后通知对应项目刷新素材投影；无项目上下文时不发送。 */
+  projectId?: string | null;
+  materialRole?: "broll" | "cover";
 }) {
   const router = useRouter();
   const [phase, setPhase] = React.useState<Phase>(
@@ -148,6 +161,27 @@ export function ChatGenerateCard({
       alive = false;
     };
   }, [candidate]);
+
+  React.useEffect(() => {
+    if (
+      !aliasLabel ||
+      !aliasBatchKey ||
+      typeof aliasBatchRank !== "number" ||
+      !candidate?.assetId
+    ) {
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent("creatoros:asset-alias-ready", {
+        detail: {
+          alias: aliasLabel,
+          assetId: candidate.assetId,
+          batchKey: aliasBatchKey,
+          batchRank: aliasBatchRank,
+        },
+      }),
+    );
+  }, [aliasBatchKey, aliasBatchRank, aliasLabel, candidate?.assetId]);
 
   // 轮询 task/candidate(与 AdoptCandidateCard 同款循环,但从已 dispatch 的 taskId 起)。
   React.useEffect(() => {
@@ -237,13 +271,24 @@ export function ChatGenerateCard({
         body: undefined,
       });
       setPhase("done");
+      if (projectId && candidate?.assetId) {
+        window.dispatchEvent(
+          new CustomEvent("creatoros:project-materials-changed", {
+            detail: {
+              projectId,
+              assetId: candidate.assetId,
+              role: materialRole,
+            },
+          }),
+        );
+      }
       router.refresh();
     } catch {
       setPhase("error");
     } finally {
       setConfirming(false);
     }
-  }, [taskId, router]);
+  }, [candidate, materialRole, projectId, taskId, router]);
 
   const kindLabel = kindOf === "video" ? "视频" : "图";
 
@@ -255,6 +300,7 @@ export function ChatGenerateCard({
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
         AI 生成{kindLabel}素材 · 非真实拍摄
+        {aliasLabel ? ` · 可引用为 ${aliasLabel}` : ""}
       </span>
 
       {phase === "running" ? (
@@ -332,7 +378,6 @@ export function ChatGenerateCard({
         <div data-slot="chat-generate-review" className="flex flex-col gap-1.5">
           {previewUrl ? (
             kindOf === "video" ? (
-              // eslint-disable-next-line jsx-a11y/media-has-caption
               <video
                 src={previewUrl}
                 controls

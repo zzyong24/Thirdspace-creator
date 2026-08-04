@@ -303,14 +303,23 @@ export interface ModelCapabilityAuthorityState {
   readonly serviceName: string | null;
   readonly provider: string | null;
   readonly modelName: string | null;
+  readonly model?: string | null;
   readonly baseUrl: string | null;
   readonly hasSecret: boolean;
+  readonly optionId?: string | null;
+  readonly selectionNotice?: string | null;
+  readonly modelOptions?: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly model: string;
+  }[];
 }
 
 export interface ChannelModelServiceState {
   readonly serviceId: string;
   readonly serviceName: string;
   readonly hasSecret: boolean;
+  readonly credentialSource?: "user_input" | "activation_managed";
   readonly portalUrl: string | null;
   readonly purchaseUrl: string | null;
   readonly rechargeUrl: string | null;

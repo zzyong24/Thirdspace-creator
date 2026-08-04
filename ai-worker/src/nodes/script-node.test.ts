@@ -34,8 +34,8 @@ const SHOTS = [
 const SHOTS_OBJECT_JSON = JSON.stringify({ shots: SHOTS });
 const SHOTS_ARRAY_JSON = JSON.stringify(SHOTS);
 
-// 这些是 script-node 的装配/归一回归测试，不重复测试 T-512 默认 6–10 段策略；
-// 仍通过真实冻结 snapshot 运行，只把账号策略覆盖成允许 ≥1 段，避免绕过 T-513 fail-closed。
+// 这些是 script-node 的装配/归一回归测试；通过真实冻结 snapshot 运行，
+// 结构门只要求非空分镜，镜数与时长由资料密度决定。
 function runScriptNode(
   input: Parameters<typeof runScriptNodeRaw>[0],
 ): ReturnType<typeof runScriptNodeRaw> {
@@ -141,6 +141,24 @@ describe("runScriptNode", () => {
     await runScriptNode({ model, positioningBrief: "AI 工程科普" });
     expect(seenPrompt).not.toContain("本次生成指令");
     expect(seenPrompt).not.toContain("EXTRA_MARKER");
+  });
+
+  it("目标时长进入 prompt，但明确禁止靠重复和空话硬凑", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    await runScriptNode({
+      model,
+      positioningBrief: "本地餐饮 IP",
+      targetDurationSeconds: 180,
+    });
+    expect(seenPrompt).toContain("约 180 秒");
+    expect(seenPrompt).toContain("不是必须填满");
+    expect(seenPrompt).toContain("不要重复");
   });
 
   // [T-146 切片 c] 高优先用户素材 → 「【用户第一手资料 · 最高优先 · 必须遵守】」硬约束段 +

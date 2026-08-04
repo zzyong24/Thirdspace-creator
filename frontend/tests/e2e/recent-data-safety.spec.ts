@@ -79,6 +79,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
   page,
   baseURL,
 }) => {
+  test.setTimeout(90_000);
   const account = await dispatch<{ id: string }>(page, "accounts.create", {
     params: undefined,
     query: undefined,
@@ -139,6 +140,16 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
   await expect(page.getByLabel("搜索地区")).toHaveValue("cn");
   await expect(page.getByLabel("搜索语言")).toHaveValue("zh-CN");
   await expect(center).toContainText("二次搜索会替换上一批未采用结果");
+  const researchInput = page.getByPlaceholder("例如：杭州家装 IP 用户高频痛点");
+  await researchInput.fill("湖南餐饮行业 IP");
+  await page.getByRole("button", { name: "联网补充" }).click();
+  const researchCandidates = center.getByRole("button", { name: "采用" });
+  await expect(researchCandidates.first()).toBeVisible({ timeout: 45_000 });
+  await expect(center.locator('aside a[target="_blank"]').first()).toHaveAttribute(
+    "href",
+    /^https?:\/\//,
+  );
+  await expect(center).toContainText("帮湖南餐饮老板把门店经验变成可信、可执行的内容");
   captures.push({
     checkpoint: "official-master-with-scratch-discovery",
     check_ids: checkIds,
@@ -158,6 +169,14 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
 
   writeVisibleCopy("T-657", captures);
   writeVisibleCopy("T-666", captures);
+  writeVisibleCopy("T-686", captures.map((capture) => ({
+    ...capture,
+    check_ids: [
+      "AC-POSITIONING-SEARCH-REAL",
+      "AC-POSITIONING-SEARCH-LOCALE",
+      "AC-POSITIONING-SEARCH-DRAFT-SAFE",
+    ],
+  })));
 });
 
 test("信源确认删除后从工作台消失，并展示真实级联清理结果", async ({

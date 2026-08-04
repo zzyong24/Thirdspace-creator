@@ -234,17 +234,44 @@ describe("decideBroll(清单硬门)", () => {
         ],
       },
     });
-    const broll = await decideBroll({ scenes: SCENES, srtLines, inventory: INVENTORY }, call);
-    expect(broll).toHaveLength(1);
-    expect(broll[0]).toMatchObject({ assetId: "asset-2", at: 3.5 });
-    expect(broll[0]!.durationSec).toBeLessThanOrEqual(12 - 3.5);
+    const result = await decideBroll(
+      { scenes: SCENES, srtLines, script: SCRIPT, inventory: INVENTORY },
+      call,
+    );
+    expect(result.broll).toHaveLength(1);
+    expect(result.broll[0]).toMatchObject({ assetId: "asset-2", at: 3.5 });
+    expect(result.broll[0]!.durationSec).toBeLessThanOrEqual(12 - 3.5);
   });
 
-  it("素材清单为空 → 不调模型,诚实返回 []", async () => {
-    const call = vi.fn() as unknown as StructuredCall;
-    const broll = await decideBroll({ scenes: SCENES, srtLines, inventory: [] }, call);
-    expect(broll).toEqual([]);
-    expect(call).not.toHaveBeenCalled();
+  it("素材清单为空 → 仍生成可执行的联想画面需求，但不编造已存在素材", async () => {
+    const call = vi.fn(async () => ({
+      slots: [
+        {
+          sceneIdx: 0,
+          at: 0,
+          purpose: "fact_evidence",
+          spokenAnchor: "效率提升 47%",
+          visualBrief: "真实效率对比数据界面，突出 47% 差异",
+          searchQuery: "AI 提示词 效率 对比 数据",
+        },
+      ],
+      broll: [],
+    })) as unknown as StructuredCall;
+    const result = await decideBroll(
+      { scenes: SCENES, srtLines, script: SCRIPT, inventory: [] },
+      call,
+    );
+    expect(result.broll).toEqual([]);
+    expect(result.slots).toHaveLength(1);
+    expect(result.slots[0]).toMatchObject({
+      purpose: "fact_evidence",
+      spokenAnchor: "效率提升 47%",
+    });
+    expect(call).toHaveBeenCalledOnce();
+    expect((call as ReturnType<typeof vi.fn>).mock.calls[0]?.[0]).toMatchObject({
+      skillId: "video.broll",
+      facets: expect.objectContaining({ script: expect.stringContaining("效率提升 47%") }),
+    });
   });
 
   it("手动上传来源与语义描述必须进入可观测 prompt，模型能识别用户明确意图", () => {
@@ -530,7 +557,10 @@ describe("runVideoDecisions(编排)", () => {
         toolName: "video.broll",
         scope: { accountId: "acc-1", projectId: "proj-1" },
         input: { inventory: INVENTORY },
-        output: { broll: expect.any(Array) },
+        output: expect.objectContaining({
+          slots: expect.any(Array),
+          broll: expect.any(Array),
+        }),
       }),
     ]);
   });

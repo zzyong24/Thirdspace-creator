@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -42,6 +42,7 @@ const SESSION: PositioningDiscoverySessionResource = {
 describe("PositioningDiscoveryWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     startDiscovery.mockResolvedValue(SESSION);
     updateDiscoveryAnswer.mockImplementation(
       async (input: { body: Record<string, unknown> }) => ({
@@ -63,6 +64,39 @@ describe("PositioningDiscoveryWorkflow", () => {
       revision: 1,
       webReferences: [],
     });
+  });
+
+  it("离开页面再回来会恢复当前问题尚未保存的选择和补充文本", async () => {
+    const user = userEvent.setup();
+    const first = render(
+      <PositioningDiscoveryWorkflow
+        initialSession={SESSION}
+        hasCurrentProfile
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /建立个人品牌/ }));
+    await user.type(
+      screen.getByPlaceholderText("写下选项没有覆盖到的真实情况……"),
+      "先服务湖南餐饮老板",
+    );
+    first.unmount();
+
+    render(
+      <PositioningDiscoveryWorkflow
+        initialSession={SESSION}
+        hasCurrentProfile
+      />,
+    );
+
+    expect(await screen.findByText(/已恢复上次未保存的前采内容/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /建立个人品牌/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      screen.getByDisplayValue("先服务湖南餐饮老板"),
+    ).toBeTruthy();
+    cleanup();
   });
 
   it("新用户选择从零开始时调用真实 start operation，并明确隔离旧数据", async () => {

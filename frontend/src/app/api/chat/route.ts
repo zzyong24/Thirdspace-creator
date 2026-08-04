@@ -174,6 +174,19 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const messages = Array.isArray(body.messages) ? body.messages : [];
+  const rawAliases = body.chatContext?.assetAliases;
+  const assetAliases = rawAliases && typeof rawAliases === "object" && !Array.isArray(rawAliases)
+    ? Object.fromEntries(
+        Object.entries(rawAliases)
+          .filter(
+            ([alias, assetId]) =>
+              /^(?:图|image|视频|video)\d{1,3}$/i.test(alias) &&
+              typeof assetId === "string" &&
+              /^[A-Za-z0-9_-]{1,160}$/.test(assetId),
+          )
+          .slice(0, 100),
+      )
+    : undefined;
   // surface 必填(页面层注入);缺省回落 topics(当前唯一落地的 ChatBox skill)—— 路由不因
   // 缺 surface 崩,resolveSkillForSurface 也会兜底。
   const chatContext: ChatContext = {
@@ -184,6 +197,7 @@ export async function POST(req: Request): Promise<Response> {
     functionKey: body.chatContext?.functionKey,
     projectId: body.chatContext?.projectId ?? null,
     selection: body.chatContext?.selection,
+    assetAliases,
   };
 
   const runtime = await getChatRuntime();

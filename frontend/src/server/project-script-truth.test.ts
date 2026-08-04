@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   contentRadarDraftSeedOf,
   resolveProjectScriptText,
+  selectReadableProjectScriptArtifact,
 } from "./project-script-truth";
 
 describe("project script truth", () => {
@@ -43,6 +44,54 @@ describe("project script truth", () => {
         persistedVersionCount: 1,
         briefDetail,
       }),
+    ).toBeNull();
+  });
+});
+
+describe("selectReadableProjectScriptArtifact", () => {
+  it("优先读取已有正式版本的 output_script", () => {
+    const selected = selectReadableProjectScriptArtifact([
+      {
+        id: "legacy",
+        artifactType: "master_script",
+        currentVersionId: "v-legacy",
+      },
+      {
+        id: "canonical",
+        artifactType: "output_script",
+        currentVersionId: "v-current",
+      },
+    ]);
+
+    expect(selected?.id).toBe("canonical");
+  });
+
+  it("output_script 尚无版本时兼容读取旧 master_script", () => {
+    const selected = selectReadableProjectScriptArtifact([
+      {
+        id: "empty-output",
+        artifactType: "output_script",
+        currentVersionId: null,
+      },
+      {
+        id: "legacy",
+        artifactType: "master_script",
+        currentVersionId: "v-legacy",
+      },
+    ]);
+
+    expect(selected?.id).toBe("legacy");
+  });
+
+  it("没有正式版本时返回 null，让上层继续读取雷达初稿 seed", () => {
+    expect(
+      selectReadableProjectScriptArtifact([
+        {
+          id: "empty-output",
+          artifactType: "output_script",
+          currentVersionId: null,
+        },
+      ]),
     ).toBeNull();
   });
 });

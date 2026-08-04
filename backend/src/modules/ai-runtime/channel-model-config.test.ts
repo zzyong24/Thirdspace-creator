@@ -88,6 +88,134 @@ function graph(overrides: Record<string, unknown> = {}) {
 }
 
 describe("T-645 渠道模型逐 capability parser", () => {
+  it("T-679 接受单一 activation_managed OmniHi service，并按真实模型 ID 选择", () => {
+    const textModels = [
+      "minimax-m3",
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gpt-5.6-sol",
+      "claude-haiku-4.5",
+      "claude-sonnet-4.6",
+      "claude-opus-4.8",
+      "gemini-3.5-flash",
+      "gemini-3.1-pro-preview",
+      "deepseek-v4-flash",
+      "deepseek-v4-pro",
+      "kimi-k2.6",
+      "glm-5.2",
+    ];
+    const optionId = (model: string) => {
+      if (model === "gemini-3.1-pro-preview") return "gemini-3-1-pro";
+      if (model === "kimi-k2.6") return "kimi-k2-6";
+      if (model === "glm-5.2") return "glm-5-2";
+      return model.replaceAll(".", "-");
+    };
+    const payload = {
+      services: [
+        {
+          id: "omnihi-main",
+          name: "OmniHi 模型服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [
+        {
+          id: "relay-text",
+          serviceId: "omnihi-main",
+          provider: "openai-compatible",
+          baseURL: "https://api.omnihi.ai/openai",
+          apiFormat: "openai_chat",
+        },
+        {
+          id: "relay-image",
+          serviceId: "omnihi-main",
+          provider: "openai-compatible",
+          baseURL: "https://api.omnihi.ai/openai",
+          apiFormat: "openai_images",
+        },
+        {
+          id: "relay-video",
+          serviceId: "omnihi-main",
+          provider: "omnihi",
+          baseURL: "https://api.omnihi.ai/media/v1",
+          apiFormat: "omnihi_media",
+        },
+      ],
+      models: {
+        // CreatorOS 不维护模型白名单，只按 Growth 下发顺序展示；这里用完整生产清单
+        // 锁住动态渲染、默认项和后续增删兼容。
+        default: textModels.map((model, index) => ({
+          id: optionId(model),
+          name: `显示名 ${model}`,
+          connectionId: "relay-text",
+          model,
+          isDefault: index === 0,
+          settings: {},
+        })),
+        "image.generate": [
+          {
+            id: "gpt-image-2",
+            name: "GPT Image 2",
+            connectionId: "relay-image",
+            model: "openai/gpt-image-2-text-to-image",
+            isDefault: true,
+            settings: {},
+          },
+        ],
+        "video.generate": [
+          {
+            id: "seedance-fast",
+            name: "Seedance 2.0 Fast",
+            connectionId: "relay-video",
+            model: "seedance/seedance-2.0-fast",
+            isDefault: true,
+            settings: { resolution: "480p", durationSeconds: 4, audio: false },
+          },
+        ],
+      },
+    };
+
+    const selected = resolveChannelCapabilityRoute(payload, "default", {
+      selectedOptionId: "claude-sonnet-4-6",
+    });
+    expect(selected).toMatchObject({
+      credentialSource: "activation_managed",
+      serviceId: "omnihi-main",
+      optionId: "claude-sonnet-4-6",
+      model: "claude-sonnet-4.6",
+    });
+    expect(selected?.modelOptions.map((option) => option.model)).toEqual([
+      ...textModels,
+    ]);
+    expect(selected?.modelName).toBe("显示名 claude-sonnet-4.6");
+    const removedSelection = resolveChannelCapabilityRoute(payload, "default", {
+      selectedOptionId: "growth-removed-this-model",
+    });
+    expect(removedSelection).toMatchObject({
+      optionId: "minimax-m3",
+      model: "minimax-m3",
+      modelName: "显示名 minimax-m3",
+    });
+    expect(resolveChannelCapabilityRoute(payload, "image.generate")).toMatchObject({
+      serviceId: "omnihi-main",
+      model: "openai/gpt-image-2-text-to-image",
+    });
+    expect(resolveChannelCapabilityRoute(payload, "video.generate")).toMatchObject({
+      serviceId: "omnihi-main",
+      model: "seedance/seedance-2.0-fast",
+      settings: { resolution: "480p", durationSeconds: 4, audio: false },
+    });
+    expect(resolveChannelCapabilityRoute(payload, "transcribe.audio")).toBeNull();
+    expect(() => channelRouteToken(selected!, null)).toThrow(
+      "渠道托管的 omnihi-main 凭据尚未同步，请确认激活权益后重试",
+    );
+  });
+
   it("允许渠道为 transcribe.audio 下发 Qwen ASR 适配器", () => {
     const base = graph();
     const payload = graph({

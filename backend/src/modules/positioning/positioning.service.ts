@@ -526,11 +526,19 @@ export function createPositioningService(
       const purpose = input.purpose.trim();
       const repo = repoFor(ctx, "positioning.discovery.research");
       const current = await repo.getDiscoverySession(input.sessionId);
-      if (
-        current.revision !== input.expectedRevision ||
-        !["draft", "ready"].includes(current.status)
-      ) {
+      // 联网补充只新增/替换公开参考，不修改用户答案，因此可以安全地重放到同一
+      // draft/ready 会话的最新 revision。此前这里把普通的页面停留、返回页面或
+      // 另一项答案刚保存都当成致命冲突；前端随后又拿同一个旧 revision 重试，
+      // 形成“点一次立即报错、之后永远不可用”的死循环(T-686)。
+      //
+      // 正式/废弃会话仍然严格拒绝，避免把搜索结果写进已经结束的前采。
+      if (!["draft", "ready"].includes(current.status)) {
         throw new DiscoveryConflictError();
+      }
+      if (current.revision !== input.expectedRevision) {
+        console.info(
+          `[positioning-research] rebasing stale revision session=${input.sessionId} expected=${input.expectedRevision} actual=${current.revision}`,
+        );
       }
       if (!deps.research) {
         throw new DiscoveryValidationError("当前环境尚未接入联网检索。");
@@ -571,14 +579,30 @@ export function createPositioningService(
           language,
           adopted: false,
         }));
-      const row = requireDiscoveryUpdate(
-        await repo.replaceDiscoveryWebReferences({
+      // 搜索可能耗时数秒；期间用户仍可能保存答案或采纳证据。写入前重新读取
+      // 最新 revision，再利用 repository 的 URL 合并语义保留已采纳证据与全部答案。
+      // 极小窗口内若又发生一次并发更新，再重读并安全重试一次；仍冲突才提示刷新。
+      let latest = await repo.getDiscoverySession(input.sessionId);
+      if (!["draft", "ready"].includes(latest.status)) {
+        throw new DiscoveryConflictError();
+      }
+      let row = await repo.replaceDiscoveryWebReferences({
+        sessionId: input.sessionId,
+        expectedRevision: latest.revision,
+        references,
+      });
+      if (!row) {
+        latest = await repo.getDiscoverySession(input.sessionId);
+        if (!["draft", "ready"].includes(latest.status)) {
+          throw new DiscoveryConflictError();
+        }
+        row = await repo.replaceDiscoveryWebReferences({
           sessionId: input.sessionId,
-          expectedRevision: input.expectedRevision,
+          expectedRevision: latest.revision,
           references,
-        }),
-      );
-      return toPositioningDiscoverySessionDto(row);
+        });
+      }
+      return toPositioningDiscoverySessionDto(requireDiscoveryUpdate(row));
     },
 
     async setDiscoveryEvidence(ctx, input) {

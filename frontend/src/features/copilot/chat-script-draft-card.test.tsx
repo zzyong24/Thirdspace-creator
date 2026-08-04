@@ -129,6 +129,32 @@ describe("ChatScriptDraftCard(对话内整稿卡,T-268 异步)", () => {
     expect(screen.getByText("采纳写入稿面")).toBeTruthy();
   });
 
+  it("质量提醒不阻断已有整稿采纳", async () => {
+    listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          validationStatus: "valid",
+          validationErrors: [],
+          qualityWarnings: ["模型因输出长度提前结束，建议采纳后检查结尾。"],
+          canAdopt: true,
+          contentData: { sections: CANDIDATE_SECTIONS },
+        },
+      },
+    ]);
+
+    render(
+      <ChatScriptDraftCard
+        taskId="task-partial"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+
+    expect(await screen.findByText(/建议采纳后检查结尾/)).toBeTruthy();
+    expect(screen.getByText("采纳写入稿面")).toBeTruthy();
+  });
+
   it("invalid 候选显示服务端人话原因并隐藏采纳按钮", async () => {
     listTaskResults.mockResolvedValueOnce([
       {
@@ -222,8 +248,11 @@ describe("ChatScriptDraftCard(对话内整稿卡,T-268 异步)", () => {
     window.removeEventListener(SCRIPT_WRITE_EVENT, onWrite);
   });
 
-  it("任务 cancelled/failed(如未配模型)→ 诚实错误态 +「去设置」", async () => {
-    getTask.mockResolvedValue({ status: "failed" });
+  it("任务失败时展示服务端真实原因；只有模型配置问题才显示设置入口", async () => {
+    getTask.mockResolvedValue({
+      status: "failed",
+      errorMessage: "上游模型在 90 秒内没有返回，请重新生成。",
+    });
     render(
       <ChatScriptDraftCard
         taskId="task-draft-1"
@@ -237,9 +266,25 @@ describe("ChatScriptDraftCard(对话内整稿卡,T-268 异步)", () => {
         document.querySelector('[data-slot="chat-script-error"]'),
       ).toBeTruthy();
     });
-    expect(
-      document.querySelector('[data-slot="chat-script-settings-link"]'),
-    ).toBeTruthy();
+    expect(screen.getByText("上游模型在 90 秒内没有返回，请重新生成。")).toBeTruthy();
+    expect(document.querySelector('[data-slot="chat-script-settings-link"]')).toBeNull();
     expect(confirmTask).not.toHaveBeenCalled();
+  });
+
+  it("模型配置失败才给出设置入口", async () => {
+    getTask.mockResolvedValue({
+      status: "failed",
+      errorMessage: "脚本生成模型尚未配置 API Key。",
+    });
+    render(
+      <ChatScriptDraftCard
+        taskId="task-model-missing"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+    expect(await screen.findByText("脚本生成模型尚未配置 API Key。")).toBeTruthy();
+    expect(document.querySelector('[data-slot="chat-script-settings-link"]')).toBeTruthy();
   });
 });

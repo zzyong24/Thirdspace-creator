@@ -266,7 +266,7 @@ describe("T-575 config.pull Creator consumer", () => {
         });
       }
       expect(url).toBe(
-        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=0.2.1-beta.3&accept=creatoros.model-config%40creatoros-model-config-v1`,
+        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=0.3.0&accept=creatoros.model-config%40creatoros-model-config-v1`,
       );
       expect(init?.headers).toMatchObject({
         Authorization: "Bearer header.payload.signature",
@@ -309,6 +309,88 @@ describe("T-575 config.pull Creator consumer", () => {
       provider: "openai-compatible",
       unknownField: { kept: true },
     });
+  });
+
+  it("T-679 用同一 Activity ticket 拉取 activation_managed 子 Key，并只交给安全写入端口", async () => {
+    const managedPayload = {
+      services: [
+        {
+          id: "omnihi-main",
+          name: "OmniHi 模型服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [],
+      models: {},
+    };
+    const bundle = signedBundle(growthKeys.privateKey, {
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v1",
+          revision: 4,
+          payload: managedPayload,
+        },
+      ],
+    });
+    const putManagedCredential = vi.fn(async () => undefined);
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url === `${AM_ORIGIN}/api/license/client-config-tickets`) {
+        return signedAmResponse(amKeys.privateKey, {
+          contractVersion: "config-access-ticket-v2",
+          configAccessTicket: "header.payload.signature",
+          expiresAt: "2026-07-28T12:15:00.000Z",
+          nonce: "nonce-client-config-0001",
+        });
+      }
+      expect(init?.headers).toMatchObject({
+        Authorization: "Bearer header.payload.signature",
+      });
+      if (url.includes("/managed-credentials/current?serviceId=omnihi-main")) {
+        return Response.json(
+          {
+            contractVersion: "growth-managed-model-credential-v1",
+            serviceId: "omnihi-main",
+            credential: { type: "api_key", token: "omnihi-child-secret", tokenPrefix: "om***" },
+            includedCredit: { amount: "30.00000000", currency: "CNY" },
+          },
+          { headers: { "cache-control": "private, no-store", pragma: "no-cache" } },
+        );
+      }
+      return Response.json(bundle, {
+        headers: {
+          etag: `"${bundle.bundleDigest}"`,
+          "cache-control": "private, no-store",
+          "x-config-bundle-version": String(bundle.bundleVersion),
+          "x-config-key-id": bundle.keyId,
+          "x-correlation-id": "cor_0123456789abcdef0123456789abcdef",
+        },
+      });
+    });
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+        putManagedCredential,
+      }),
+    ).resolves.toMatchObject({ authority: "channel", outcome: "configured" });
+    expect(putManagedCredential).toHaveBeenCalledWith(
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+      "omnihi-main",
+      "omnihi-child-secret",
+    );
+    expect(JSON.stringify(store.record)).not.toContain("omnihi-child-secret");
   });
 
   it("逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest", async () => {

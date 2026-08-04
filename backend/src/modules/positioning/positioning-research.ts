@@ -130,11 +130,16 @@ function semanticQueryMatch(query: string, text: string): {
     !hasIpIntent ||
     /(?:^|[^a-z])ip(?:[^a-z]|$)/iu.test(normalizedText) ||
     IP_INTENT_TERMS.some((term) => normalizedText.includes(term));
-  if (!intentMatched) return { accepted: false, coverage: 0, intentScore: 0 };
 
   const coreChars = [
     ...new Set(semanticQuery.match(/[\p{Script=Han}]/gu) ?? []),
   ];
+  // “湖南餐饮行业 IP”既可能召回账号运营案例，也可能召回同时命中地域与行业的
+  // 真实产业资料。后者是前采需要的公开背景，不能因为标题没再重复“IP/短视频”就
+  // 全部误杀；但纯“IP”查询没有中文主题锚点时仍必须命中创作意图，不能放宽成任意页。
+  if (hasIpIntent && coreChars.length === 0 && !intentMatched) {
+    return { accepted: false, coverage: 0, intentScore: 0 };
+  }
   const matchedChars = coreChars.filter((char) => normalizedText.includes(char));
   const coverage = coreChars.length === 0 ? 1 : matchedChars.length / coreChars.length;
   // 仅命中地域（如“湖南省百科”）不能冒充“湖南餐饮行业 IP”的行业研究。
@@ -142,7 +147,7 @@ function semanticQueryMatch(query: string, text: string): {
   return {
     accepted: coverage >= minimumCoverage,
     coverage,
-    intentScore: hasIpIntent ? 8 : 0,
+    intentScore: hasIpIntent && intentMatched ? 8 : 0,
   };
 }
 

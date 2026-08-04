@@ -73,8 +73,8 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   "project.transcribe": { kind: "project.transcribe", extras: { taskId: null, projectId: null } },
   "material.gather": {
     kind: "material.gather",
-    // grounding 占位取保守值(错误态卡渲空列表;model_memory 对应「需核实」黄条,不夸大)。
-    extras: { items: [], grounding: "model_memory" },
+    // [T-684] 浏览器失败时明确 unavailable；禁止再伪装成模型记忆素材。
+    extras: { items: [], grounding: "unavailable" },
   },
   // 以下 5 个工具 execute 内已有定制 catch(人话/降级),门只兜非 Error 抛出等极端漏网。
   "material.screenshot": { kind: "material.screenshot", extras: { asset: null } },

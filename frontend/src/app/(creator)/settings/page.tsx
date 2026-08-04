@@ -45,7 +45,7 @@ import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 // [T-167] 激活状态面板:server 侧本地读 getActivationService().getStatus()(**不打网络**)。
 // 仅桌面态(isDesktopRuntime)有意义;web/未装配 → 传 undefined → 卡片显「桌面端专属」空态。
-import { getActivationService } from "@/server/persistence-client";
+import { getActivationService, getSettingsService } from "@/server/persistence-client";
 import { isDesktopRuntime } from "@/server/activation";
 
 // item B — localized labels + tones for the StorageUsageCard breakdown rows.
@@ -346,11 +346,36 @@ export default async function SettingsRoutePage() {
       const statusByService = new Map(
         credentialStatuses.map((row) => [row.serviceId, row.hasSecret]),
       );
+      const selectedOptionByCapability = new Map<string, string>();
+      if (session) {
+        const settingsService = await getSettingsService();
+        for (const capability of visibleCapabilities) {
+          const selected = await settingsService.getChannelModelCredential(
+            session.ctx,
+            authority.scopeId,
+            `__model_selection__:${capability}`,
+          );
+          if (selected) {
+            try {
+              const value = JSON.parse(selected) as { id?: unknown };
+              if (typeof value.id === "string" && value.id.trim()) {
+                selectedOptionByCapability.set(capability, value.id.trim());
+              }
+            } catch {
+              selectedOptionByCapability.set(capability, selected);
+            }
+          }
+        }
+      }
       const managedRoutes = visibleCapabilities.flatMap((capability) => {
-        const route = resolveChannelCapabilityRoute(
+        const selectedRoute = resolveChannelCapabilityRoute(
           authority.payload,
           capability,
+          { selectedOptionId: selectedOptionByCapability.get(capability) },
         );
+        const route =
+          selectedRoute ??
+          resolveChannelCapabilityRoute(authority.payload, capability);
         return route ? [{ capability, route }] : [];
       });
       capabilities = Object.fromEntries(
@@ -369,8 +394,20 @@ export default async function SettingsRoutePage() {
               serviceName: route.serviceName,
               provider: route.provider,
               modelName: route.modelName,
+              model: route.model,
               baseUrl: route.baseUrl,
               hasSecret,
+              optionId: route.optionId,
+              selectionNotice:
+                selectedOptionByCapability.has(capability) &&
+                selectedOptionByCapability.get(capability) !== route.optionId
+                  ? `原模型已不再提供，已切换为 ${route.modelName}（${route.model}）`
+                  : null,
+              modelOptions: route.modelOptions.map(({ id, name, model }) => ({
+                id,
+                name,
+                model,
+              })),
             },
           ];
         }),
@@ -385,6 +422,7 @@ export default async function SettingsRoutePage() {
           serviceId: route.serviceId,
           serviceName: route.serviceName,
           hasSecret: statusByService.get(route.serviceId) ?? false,
+          credentialSource: route.credentialSource ?? "user_input",
           ...route.links,
         });
       }

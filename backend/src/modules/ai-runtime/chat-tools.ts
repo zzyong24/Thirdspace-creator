@@ -125,6 +125,8 @@ export interface ChatToolDeps {
     topic?: string;
     /** 切入角度/风格要求,可选(随 inputData 进 runScriptDraft 上下文)。 */
     angle?: string;
+    /** 用户指定的目标口播时长；未指定时由内容密度决定。 */
+    targetDurationSeconds?: number;
     /** [T-081] 对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。 */
     extraBrief?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
@@ -157,14 +159,14 @@ export interface ChatToolDeps {
     projectId?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
-   * [T-057④/T-084a] material.gather 核心 —— 先真联网检索(resolveSearchSpec+searchWeb),再
-   * runResearchNode 结构化综合(检索结果前置注入,非模型工具),诚实降级。产物经 ChatGatherCard
+   * [T-684] material.gather 核心 —— 固定走随包浏览器，只返回真实 URL；不再使用搜索模型，
+   * 也不再用模型记忆补齐。产物经 ChatGatherCard
    * 逐条「存入弹药」(knowledge.create+materialLink,人采纳)。
-   *   - grounding: "web"=经联网检索、"model_memory"=未配/检索失败降级(前端渲黄条 + 需核实徽标)。
+   *   - grounding: "web"=经浏览器检索、"unavailable"=浏览器失败且无伪造兜底。
    *   - items[].sourceUrl: 该条素材引用的检索真实 URL(有则前端渲可点域名链接;无则渲需核实徽标)。
    */
   gatherMaterials: (input: { query?: string }) => Promise<{
-    grounding: "web" | "model_memory";
+    grounding: "web" | "unavailable";
     items: Array<{
       title: string;
       url: string;
@@ -933,8 +935,8 @@ export interface ProjectTranscribeToolResult {
 
 export interface MaterialGatherToolResult {
   kind: "material.gather";
-  // [T-084a] 整体信源打标:web=经联网检索、model_memory=未配/降级(前端据此渲黄条)。
-  grounding: "web" | "model_memory";
+  // [T-684] web=真实浏览器结果；unavailable=浏览器失败且没有模型记忆兜底。
+  grounding: "web" | "unavailable";
   items: Array<{
     title: string;
     url: string;
@@ -1741,12 +1743,20 @@ const SCRIPT_HOOKS_PARAMS = jsonSchema<{
 const SCRIPT_DRAFT_PARAMS = jsonSchema<{
   topic?: string;
   angle?: string;
+  targetDurationSeconds?: number;
   extraBrief?: string;
 }>({
   type: "object",
   properties: {
     topic: { type: "string", description: "内容主题/标题(缺省用当前项目标题)" },
     angle: { type: "string", description: "切入角度/风格要求,可选" },
+    targetDurationSeconds: {
+      type: "integer",
+      minimum: 10,
+      maximum: 3600,
+      description:
+        "用户明确要求的目标口播时长（秒），如 3 分钟传 180；用户未指定则不要猜、不要传",
+    },
     extraBrief: EXTRA_BRIEF_PROPERTY,
   },
   additionalProperties: false,
@@ -1844,7 +1854,7 @@ const LOCAL_READ_PARAMS = jsonSchema<{
     path: {
       type: "string",
       description:
-        "要读的本机文件/目录**绝对路径**(支持 ~ 开头,如 ~/Desktop/稿子.md 或 /Users/xx/notes.txt)。相对路径会被拒绝。目录路径返回文件清单。",
+        "要读的本机文件/目录**绝对路径**。支持 macOS/Linux（~/Desktop/稿子.md、/Users/xx/notes.txt）、Windows 盘符路径（E:\\资料\\稿子.md）和 UNC 网络路径（\\\\server\\share\\稿子.md）。相对路径会被拒绝；目录路径返回文件清单。",
     },
     offset: {
       type: "number",
@@ -2600,17 +2610,22 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 无项目上下文 / dispatch 失败 → error 非 null(卡渲诚实错误态,提示去项目稿面写脚本)。
     "script.draft": defineChatTool("script.draft", {
       description:
-        "为**当前项目**生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。当用户要写脚本/起草整稿/重写脚本、点「生成脚本」时调用。整稿生成在后台跑(不阻塞对话,整稿较重、分钟级),结果渲成整稿候选卡;用户点卡上「采纳写入稿面」才落成脚本新版本、写进稿面编辑器(铁律②确认门)——你没有直接写稿的能力,绝不口头宣称「脚本已写好/已写入稿面」,也**绝不因为整稿重就退回只给几组钩子**(整稿是后台异步跑的,不会占用你这回合)。只能为当前项目对话写整稿;没有项目上下文时会诚实提示去项目稿面里写。\n\n**整稿前必须先接地,否则会写出「像编的、没前因后果」的 AI 体空稿**:① 如果你已读过用户的一手资料(local.read/web.read/素材)或聊出了真实的**触发场景**(创作者为什么做这件事、当时遇到什么具体问题),把这些**真实细节 + 触发场景 + 出现的专有概念该怎么讲清**提炼进 extraBrief 传下去;② 如果还不清楚创作者的真实故事/一手细节,**先在对话里问清楚触发场景再整稿**,不要凭空开写。extraBrief 是你把「读到的真实资料」喂进整稿的唯一通道——别把它留空然后指望模型自己编。",
+        "为**当前项目**生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。当用户要写脚本/起草整稿/重写脚本、点「生成脚本」时调用。用户明确说了时长（如 3 分钟）就传 targetDurationSeconds=180；没说时长不要替用户猜，按资料密度自然生成，绝不靠重复或空话凑长度。整稿生成在后台跑(不阻塞对话,整稿较重、分钟级),结果渲成整稿候选卡;用户点卡上「采纳写入稿面」才落成脚本新版本、写进稿面编辑器(铁律②确认门)——你没有直接写稿的能力,绝不口头宣称「脚本已写好/已写入稿面」,也**绝不因为整稿重就退回只给几组钩子**(整稿是后台异步跑的,不会占用你这回合)。只能为当前项目对话写整稿;没有项目上下文时会诚实提示去项目稿面里写。\n\n**整稿前必须先接地,否则会写出「像编的、没前因后果」的 AI 体空稿**:① 如果你已读过用户的一手资料(local.read/web.read/素材)或聊出了真实的**触发场景**(创作者为什么做这件事、当时遇到什么具体问题),把这些**真实细节 + 触发场景 + 出现的专有概念该怎么讲清**提炼进 extraBrief 传下去;② 如果还不清楚创作者的真实故事/一手细节,**先在对话里问清楚触发场景再整稿**,不要凭空开写。extraBrief 是你把「读到的真实资料」喂进整稿的唯一通道——别把它留空然后指望模型自己编。",
       inputSchema: SCRIPT_DRAFT_PARAMS,
       execute: async ({
         topic,
         angle,
+        targetDurationSeconds,
         extraBrief,
       }): Promise<ScriptDraftToolResult> => {
         try {
           const { taskId, projectId: pid, error } = await deps.dispatchScriptDraft({
             topic: typeof topic === "string" && topic.trim() ? topic.trim() : undefined,
             angle: typeof angle === "string" && angle.trim() ? angle.trim() : undefined,
+            targetDurationSeconds:
+              typeof targetDurationSeconds === "number"
+                ? targetDurationSeconds
+                : undefined,
             extraBrief: clampExtraBrief(extraBrief),
           });
           return { kind: "script.draft", taskId, projectId: pid, error };
@@ -2681,11 +2696,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       },
     }, deps.humanizeError),
     "material.gather": defineChatTool("material.gather", {
-      // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
-      // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
+      // [T-684] 搜索模型已下线：生产端固定走随包浏览器，不允许模型记忆兜底。
       description: deps.searchConfigured
-        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者可逐条挑选并保存到当前项目的「创作素材」。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉『内容雷达』已登记网页/RSS 来源的真实信号。"
-        : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
+        ? "围绕主题用 CreatorOS 随包浏览器真实搜索创作资料，只返回带真实 URL 的结果。创作者可逐条挑选并保存到当前项目的「创作素材」。不要要求用户配置搜索模型；不要用模型记忆补齐不存在的案例、数据或金句。要拉实时热榜信号则用 topic.generate(basis=trend)，它读取『内容雷达』的真实信号。"
+        : "当前宿主没有装配 CreatorOS 浏览器搜索端口，调用会诚实失败；不要用模型记忆伪造搜索结果，也不要引导用户配置已经下线的搜索模型。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {
         const normalizedQuery = (query ?? "").trim().replace(/\s+/g, " ");
@@ -2886,7 +2900,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 明说原因;大小上限 1MB + 二进制拒读;目录返回清单。窗口截断在 execute 侧(4000/8000 同协议)。
     "local.read": defineChatTool("local.read", {
       description:
-        "读用户**本机**的一个文件或目录(优先绝对路径,支持 ~ 展开)。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议(HITL 阻塞式)**:首次读某路径会**弹出确认卡并把本次调用挂起**(这不是失败,也不需要你重发)——用户点「允许」后系统会在**同一回合自动续跑**、直接把文件内容读回给你;用户点「拒绝」则本次读取作废,你就不再尝试、换其他方式,**绝不换路径绕行**。**路径模糊/找不到时的按名搜索兜底**:用户常给相对或记错的路径(如 `scripts/xxx.md`);若精确路径解析不到,系统会自动提取文件名在用户**已授权目录 + 常用目录**里搜同名文件——结果 needApproval 且 foundByName 非空 = 按名找到唯一同名文件(确认卡会说明),结果 candidates 非空 = 找到多个同名文件。**这两种情况都别自己猜选哪个、别自行重调路径**,等用户在卡片里确认/选择;用户选定后你再按其选择的绝对路径读。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
+        "读用户**本机**的一个文件或目录。支持 macOS/Linux 绝对路径与 ~，也支持 Windows 盘符路径（如 E:\\资料\\稿子.md）及 UNC 路径（如 \\\\server\\share\\稿子.md）；绝不能因为是 Windows 就说无法读取。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议(HITL 阻塞式)**:首次读某路径会**弹出确认卡并把本次调用挂起**(这不是失败,也不需要你重发)——用户点「允许」后系统会在**同一回合自动续跑**、直接把文件内容读回给你;用户点「拒绝」则本次读取作废,你就不再尝试、换其他方式,**绝不换路径绕行**。**路径模糊/找不到时的按名搜索兜底**:用户常给相对或记错的路径(如 `scripts/xxx.md`);若精确路径解析不到,系统会自动提取文件名在用户**已授权目录 + 常用目录**里搜同名文件——结果 needApproval 且 foundByName 非空 = 按名找到唯一同名文件(确认卡会说明),结果 candidates 非空 = 找到多个同名文件。**这两种情况都别自己猜选哪个、别自行重调路径**,等用户在卡片里确认/选择;用户选定后你再按其选择的绝对路径读。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
       inputSchema: LOCAL_READ_PARAMS,
       // [T-263] HITL 授权门:判定与执行拆开 —— needsApproval 只跑授权判定(decideLocalRead),
       // 未授权 → 'user-approval' 挂起本工具调用、surface 确认卡(execute 暂不跑);已授权/敏感硬拒
@@ -2922,7 +2936,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           return {
             ...empty,
             error:
-              "没有收到要读取的路径 —— 请给一个本机绝对路径(如 ~/Desktop/稿子.md)。",
+              "没有收到要读取的路径 —— 请给一个本机绝对路径（如 ~/Desktop/稿子.md、E:\\资料\\稿子.md 或 \\\\server\\share\\稿子.md）。",
           };
         }
         try {

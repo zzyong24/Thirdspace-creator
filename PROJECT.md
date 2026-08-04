@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t675-windows-production-closure @ 25c019c7
+LAST_SYNCED: main @ b585cf2c
 
 ## 这是什么(定位)
 
@@ -23,6 +23,15 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-686 根治定位前采联网补充直接报错并恢复国内中文公开检索【定位前采·本机实测 2026-08-04】
+- [wip] T-687 建立口播联想画面 Skill 并打通图序号引用、项目 B-roll 与成片渲染【视觉创作主链·本机日志 2026-08-04】
+- [wip] T-685 排查并根治全流程写稿长度失控及审核不识别已采纳文案卡【创作主链·本机日志 2026-08-04】
+- [wip] T-684 根治 Copilot 联网搜素材失败后回退模型记忆并误导配置搜索模型【浏览器检索·用户截图 2026-08-04】
+- [wip] T-683 修复 Copilot 在 Windows 无法读取盘符绝对路径与目录授权失效【本地文件读取·用户截图 2026-08-04】
+- [wip] T-679 接入 Growth 按激活权益签发的 OmniHi 受限子 Key、真实模型白名单与用户选择【模型服务最小闭环·用户 2026-08-04】
+- [open] T-678 根治内容雷达生成选题继续读取旧定位【定位消费一致性·飞书用户 2026-08-04】
+- [open] T-677 优化首页与定位中心切换时整页骨架卡顿 1–2 秒【桌面交互性能·飞书用户 2026-08-03】
+- [open] T-676 根治云端 ASR 测试假阳性并接通 StepFun，同时修复 Windows 本地 Whisper 回退【逐字稿阻断·飞书用户 2026-08-03】
 - [wip] T-671 确定 CreatorOS 代理商业模式与官网价格边界【渠道商业化·用户 2026-08-02/03】
 - [wip] T-670 恢复 CreatorOS 部署前真实官网并收口公开商业信息【官网回滚纠偏·用户 2026-08-02/03】
 - [wip] T-666 根治定位前采误清空既有定位并改为非破坏草稿切换【定位数据安全·用户 2026-08-02】
@@ -62,4 +71,3 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 ## 模块地图(生成自 backend/src/modules)
 
 `ai` · `ai-runtime` · `analytics` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `content-calendar` · `execution` · `favorites` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources`
-

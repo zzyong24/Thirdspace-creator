@@ -16,7 +16,10 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
-import { contentRadarDraftSeedOf } from "@/server/project-script-truth";
+import {
+  contentRadarDraftSeedOf,
+  selectReadableProjectScriptArtifact,
+} from "@/server/project-script-truth";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import {
   buildPublishingScheduleProjection,
@@ -559,6 +562,7 @@ import { SCRIPT_DRAFT_TEMPLATE, PLANNING_THESIS_TEMPLATE } from "@creatoros/ai-w
 import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
+import { searchBundledBrowserWithFallback } from "@/server/ai/search/browser-search-fallback";
 import {
   discoverSameOriginFeedUrl,
   isSyndicationFeed,
@@ -1535,7 +1539,13 @@ export interface ChatRuntime {
   // 候选 → 采纳 confirmTask(artifact_version append 进 output_script → 稿面编辑器局部刷新读回)。
   dispatchScriptDraft: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
+    input: {
+      projectId: string;
+      topic?: string;
+      angle?: string;
+      targetDurationSeconds?: number;
+      extraBrief?: string;
+    },
   ) => Promise<{ taskId: string }>;
   // [T-350a] publish.package 端口 —— ensure 内容产出挂点(outputId)+ 读整稿正文(空稿诚实门)
   // + dispatch 既有 publish.platform_adapt runner(单平台抖音,platform.adapt 模板已内嵌审核 SOP),
@@ -1591,6 +1601,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       throw new Error("渠道模型凭据存储尚未初始化");
     }
     return readStoredChannelModelCredential(ctx, scopeId, serviceId);
+  };
+  const getChannelModelSelection = async (
+    ctx: RequestContext,
+    capability: string,
+  ): Promise<string | null> => {
+    const pinnedScopeId = taskModelAuthorityScope.currentScopeId();
+    const authority = pinnedScopeId === undefined
+      ? await readChannelModelAuthority()
+      : null;
+    const scopeId = pinnedScopeId !== undefined
+      ? pinnedScopeId
+      : authority?.authority === "channel"
+        ? authority.scopeId
+        : null;
+    if (!scopeId || !readStoredChannelModelCredential) return null;
+    const stored = await readStoredChannelModelCredential(
+      ctx,
+      scopeId,
+      `__model_selection__:${capability}`,
+    );
+    if (!stored) return null;
+    try {
+      const value = JSON.parse(stored) as { id?: unknown };
+      return typeof value.id === "string" && value.id.trim() ? value.id.trim() : null;
+    } catch {
+      // 兼容本功能内测阶段已存的单字符串 option id。
+      return stored.trim() || null;
+    }
   };
   // 本地优先存储 driver(L0,SPEC §4.1/§7-L0)—— 三态优先级,经 backend 的
   // createConfiguredDb 统一解析:
@@ -3238,7 +3276,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // T-652 复用全局唯一的联网检索端口。闭包只在用户显式点击“联网补充”后执行；
     // service 只传用户确认过的短 query，不会拼接访谈答案、作品或账号资料。
     research: {
-      search: (ctx, query, opts) => searchWebPort(ctx, query, opts),
+      // 定位前采是面向普通用户的内置能力：固定走随包浏览器检索，不读取已经
+      // 从设置 UI 隐藏的 web.search/search.default 旧配置。否则本机残留一个
+      // 失效 provider 时会在打开浏览器前直接报错，且无法自动回退(T-686)。
+      search: (ctx, query, opts) =>
+        positioningResearchSearchPort(ctx, query, opts),
     },
     // T-521：清理事件进入 sidecar 结构化日志，只记内部归属 ID + 旧值 hash，
     // 不记录 statusNote 原文。实际写库仍只发生在 Positioning service 内。
@@ -3301,8 +3343,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return "";
       }
     },
-    // 本作品真文案 —— output_script transcript artifact 当前版本(contentData.transcript 优先,
-    // 回退 contentText)。与 reconstruct task 的 getTranscript 同一读法(公开 service + per-ctx repo)。
+    // 本作品真文案 —— 新项目只读 output_script；旧项目在 output_script 尚无正式版本时，
+    // 兼容读取 master_script。正文仍按 transcript 优先、contentText 回退。
     getScript: async (c, projectId) => {
       try {
         const rows = await artifactsService.listProjectArtifacts(c, projectId);
@@ -3312,10 +3354,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
           accountId: requireAccountId(c.accountId, "artifacts.repo"),
         });
-        for (const r of rows) {
-          if (r.artifactType !== "output_script") continue;
-          if (!r.currentVersionId) continue;
-          const version = await repo.getVersion(r.currentVersionId);
+        const scriptArtifact = selectReadableProjectScriptArtifact(rows);
+        if (scriptArtifact?.currentVersionId) {
+          const version = await repo.getVersion(scriptArtifact.currentVersionId);
           const data = version.contentData as
             | Record<string, unknown>
             | null
@@ -4696,6 +4737,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   getChannelModelConfig,
                   getChannelModelCredential: (serviceId) =>
                     getChannelModelCredential(c, serviceId),
+                  getChannelModelSelection: (capability) =>
+                    getChannelModelSelection(c, capability),
                 }),
               assets: {
                 getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
@@ -4856,6 +4899,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   getChannelModelConfig,
                   getChannelModelCredential: (serviceId) =>
                     getChannelModelCredential(c, serviceId),
+                  getChannelModelSelection: (capability) =>
+                    getChannelModelSelection(c, capability),
                 }),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
               transcribeAudio: (spec, opts, registry) =>
@@ -6565,6 +6610,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
         getChannelModelCredential(c, serviceId),
+      getChannelModelSelection: (capability) =>
+        getChannelModelSelection(c, capability),
     });
     const { text } = await transcribeAudioFn(
       spec,
@@ -6645,6 +6692,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             getChannelModelConfig,
             getChannelModelCredential: (serviceId) =>
               getChannelModelCredential(c, serviceId),
+            getChannelModelSelection: (selectedCapability) =>
+              getChannelModelSelection(c, selectedCapability),
           });
           logStage("done", {
             provider: spec.provider,
@@ -9449,6 +9498,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
         getChannelModelCredential(ctx, serviceId),
+      getChannelModelSelection: (capability) =>
+        getChannelModelSelection(ctx, capability),
     }),
   );
 
@@ -9531,6 +9582,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
         getChannelModelCredential(ctx, serviceId),
+      getChannelModelSelection: (capability) =>
+        getChannelModelSelection(ctx, capability),
     });
   const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
   executorRegistry.register(
@@ -9641,6 +9694,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             getChannelModelConfig,
             getChannelModelCredential: (serviceId) =>
               getChannelModelCredential(c, serviceId),
+            getChannelModelSelection: (selectedCapability) =>
+              getChannelModelSelection(c, selectedCapability),
           }),
         ),
       // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
@@ -9872,6 +9927,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
         getChannelModelCredential(ctx, serviceId),
+      getChannelModelSelection: (selectedCapability) =>
+        getChannelModelSelection(ctx, selectedCapability),
     });
   // 多模态 provider 适配器注册表(keyed by provider)。真链路注册 MiniMax(M1 适配器,含 video
   // 异步轮询状态机 submit→poll→retrieve + 超时);加 provider = 在此注册一个适配器,不改 runner
@@ -9942,15 +9999,72 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // [T-126b] 浏览器采集 —— provider "browser",真开无头 Chromium 搜(默认 Bing,baseUrl 可换)+ 自截图存证,免 key。
     browser: createBrowserScrapeAdapter(),
   };
-  // ChatBox gatherMaterials 前置检索端口:解析 spec + 按 provider 分派 REST。未配抛 SearchConfigError、
-  // 检索失败抛 SearchExecutionError(chat-runner catch 成 model_memory 降级)。
+  // [T-684] ChatBox 素材搜索固定走随包 Chromium（中国大陆/简体中文默认百度）。
+  // 不再读取已经从 UI 下线的 web.search/search.default 配置，也不回落模型记忆。
   const searchWebPort = async (
-    ctx: RequestContext,
+    _ctx: RequestContext,
     query: string,
     opts?: { count?: number },
   ) => {
-    const spec = await resolveSearchSpec(ctx);
-    return searchWebFn(spec, query, searchRegistry, opts);
+    return searchBundledBrowserWithFallback(
+      query,
+      opts,
+      (baseUrl, q, options) =>
+        searchWebFn(
+          { provider: "browser", baseUrl, model: "", token: "" },
+          q,
+          searchRegistry,
+          options,
+        ),
+      (attempt) => {
+        const log = `[browser-search] engine=${attempt.engine} status=${attempt.status} durationMs=${attempt.durationMs} resultCount=${attempt.resultCount} queryLength=${query.trim().length}`;
+        if (attempt.status === "error") console.warn(log, attempt.error);
+        else console.info(log);
+      },
+    );
+  };
+
+  // [T-686] 定位前采专用真联网端口。前采 UI 已提供地区/语言选择，服务层会把
+  // “中国大陆/简体中文”拼进用户显式关键词并过滤结果；这里固定使用随包 Chromium，
+  // 彻底绕开历史 web.search 配置与模型记忆降级。浏览器失败会原样抛给前采页面，
+  // 不会伪造没有 URL 的参考。
+  const positioningResearchSearchPort = async (
+    _ctx: RequestContext,
+    query: string,
+    opts?: { count?: number },
+  ) => {
+    const startedAt = Date.now();
+    try {
+      // 定位前采默认是中国大陆/简体中文语境。Bing 在本机真实旅程中会把
+      // “湖南餐饮行业 IP”退化成只搜“湖南”，召回百科/旅游页；百度能保留完整
+      // 中文查询并返回真实落地 URL，因此该专用端口以百度为默认引擎。
+      const results = await searchBundledBrowserWithFallback(
+        query,
+        opts,
+        (baseUrl, q, options) =>
+          searchWebFn(
+            { provider: "browser", baseUrl, model: "", token: "" },
+            q,
+            searchRegistry,
+            options,
+          ),
+        (attempt) => {
+          const log = `[positioning-research] provider=browser engine=${attempt.engine} status=${attempt.status} durationMs=${attempt.durationMs} resultCount=${attempt.resultCount} queryLength=${query.trim().length}`;
+          if (attempt.status === "error") console.warn(log, attempt.error);
+          else console.info(log);
+        },
+      );
+      console.info(
+        `[positioning-research] provider=browser engine=baidu status=ok durationMs=${Date.now() - startedAt} resultCount=${results.length} queryLength=${query.trim().length}`,
+      );
+      return results;
+    } catch (error) {
+      console.error(
+        `[positioning-research] provider=browser status=error durationMs=${Date.now() - startedAt} queryLength=${query.trim().length}`,
+        error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+      );
+      throw error;
+    }
   };
 
   // ── [T-377] settings.models.test「测试连接」拦截:各能力现有解析链 + 最小真实调用/
@@ -9965,6 +10079,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         getChannelModelConfig,
         getChannelModelCredential: (serviceId) =>
           getChannelModelCredential(ctx, serviceId),
+        getChannelModelSelection: (selectedCapability) =>
+          getChannelModelSelection(ctx, selectedCapability),
       }),
     resolveDedicatedLlm: (ctx, capability) =>
       resolveDedicatedLlmConfig(ctx, capability, {
@@ -9984,6 +10100,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           getChannelModelConfig,
           getChannelModelCredential: (serviceId) =>
             getChannelModelCredential(ctx, serviceId),
+          getChannelModelSelection: (selectedCapability) =>
+            getChannelModelSelection(ctx, selectedCapability),
         },
       ),
     resolveTranscribe: (ctx) =>
@@ -9993,6 +10111,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         getChannelModelConfig,
         getChannelModelCredential: (serviceId) =>
           getChannelModelCredential(ctx, serviceId),
+        getChannelModelSelection: (selectedCapability) =>
+          getChannelModelSelection(ctx, selectedCapability),
       }),
     resolveEmbed: (ctx) =>
       resolveEmbedSpec(ctx).then((spec) =>
@@ -10096,15 +10216,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     });
 
-  // honestyBlock 第 6 条 + 工具动态描述用:探测 web.search 是否已配(只查配置、不打网络)。
-  const probeSearchConfigured = async (ctx: RequestContext): Promise<boolean> => {
-    try {
-      await resolveSearchSpec(ctx);
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  // 浏览器搜索随包可用，不再探测隐藏的搜索模型配置。
+  const probeSearchConfigured = async (_ctx: RequestContext): Promise<boolean> => true;
 
   // [T-135] canonical Settings 种子已退役(userPreferences + modelConfigurations +
   // agentConfigurations 都是 Zyong Zhu 的预设,含默认 Anthropic model + env key)。
@@ -11991,22 +12104,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // createTask({taskType:'script.draft'}),runner 是死链;对话整稿 inline 同步跑必超时)。整稿
     // runner 要求 inputData.artifactId(采纳时 confirmTask 的 artifact_version 分支 append 新
     // ArtifactVersion 到该 output_script artifact → 稿面编辑器读回),故先 ensure 项目的
-    // output_script/master_script artifact(无则建 output_script,stage=script),再经 ai transport
+    // output_script artifact(无则建 output_script,stage=script),再经 ai transport
     // 的 ai.tasks.create 起 script.draft task(inputData.projectId 让 service createTask 归属项目 →
     // dispatch 分支 task.taskType==="script.draft" 触发 void runScriptDraft)。立即返回 { taskId },
     // 不阻塞对话回合(整稿重、分钟级)。artifactsService 与本工厂同作用域(同 aiService 装配)。
     dispatchScriptDraft: async (
       ctx: RequestContext,
-      input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
+      input: {
+        projectId: string;
+        topic?: string;
+        angle?: string;
+        targetDurationSeconds?: number;
+        extraBrief?: string;
+      },
     ) => {
       // ensure output_script artifact(读写同一目标:采纳 append 版本、稿面编辑器读当前版本)。
-      // 与前端 ensureScriptArtifact / 读侧 resolveScriptArtifactIdFromDb 同口径:优先复用已有
-      // output_script,其次 master_script,都没有才建 output_script(读写同一目标)。
+      // 新生成的候选永远写入 output_script。master_script 仅作为历史项目只读兼容，
+      // 不能再成为采纳写入目标，否则审核端会误判“没有采纳文案”。
       const arts = await artifactsService.listProjectArtifacts(ctx, input.projectId);
       const scriptArts = arts.filter((a) => a.stage === "script");
-      const existing =
-        scriptArts.find((a) => a.artifactType === "output_script") ??
-        scriptArts.find((a) => a.artifactType === "master_script");
+      const existing = scriptArts.find(
+        (a) => a.artifactType === "output_script",
+      );
       const artifactId =
         existing?.id ??
         (
@@ -12031,6 +12150,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               projectId: input.projectId,
               ...(input.topic ? { topic: input.topic } : {}),
               ...(input.angle ? { angle: input.angle } : {}),
+              ...(typeof input.targetDurationSeconds === "number"
+                ? { targetDurationSeconds: input.targetDurationSeconds }
+                : {}),
               ...(input.extraBrief ? { extraBrief: input.extraBrief } : {}),
             },
           },

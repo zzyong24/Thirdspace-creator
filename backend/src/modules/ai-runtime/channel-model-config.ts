@@ -18,12 +18,20 @@ export interface ChannelCapabilityRoute {
   readonly kind: ChannelCapabilityKind;
   readonly serviceId: string | null;
   readonly serviceName: string;
+  readonly credentialSource: "user_input" | "activation_managed" | null;
   readonly links: ChannelServiceLinks;
   readonly provider: string;
   readonly baseUrl: string | null;
   readonly apiFormat: ApiFormat | string;
   readonly model: string;
   readonly modelName: string;
+  readonly optionId: string | null;
+  readonly modelOptions: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly model: string;
+    readonly isDefault: boolean;
+  }[];
   readonly settings: Record<string, unknown>;
   /** 只兼容旧版已验签 flat payload；新版 graph 的 Key 必须从本地 service credential 读取。 */
   readonly inlineToken: string | null;
@@ -163,6 +171,7 @@ function modernGraphRoute(
   payload: ChannelModelPayload,
   capability: string,
   allowDefaultFallback: boolean,
+  selectedOptionId?: string | null,
 ): ChannelCapabilityRoute | null {
   const services = objectArray(field(payload, "services"));
   const connections = objectArray(field(payload, "connections"));
@@ -178,7 +187,13 @@ function modernGraphRoute(
   if (!selectedCapability) return null;
   const options = objectArray(field(models, selectedCapability));
   if (!options || options.length === 0 || !hasUniqueIds(options)) return null;
-  const option = exactlyOne(options, (row) => field(row, "isDefault") === true);
+  const selectedOption = selectedOptionId
+    ? exactlyOne(options, (row) => nonEmptyString(field(row, "id")) === selectedOptionId)
+    : null;
+  // Growth 更新白名单移除旧选择时，下一次解析自动回到唯一默认项；绝不落到本地
+  // 模型或继续调用已被渠道撤下的 model id。
+  const option =
+    selectedOption ?? exactlyOne(options, (row) => field(row, "isDefault") === true);
   if (!option) return null;
 
   const optionId = nonEmptyString(field(option, "id"));
@@ -207,27 +222,46 @@ function modernGraphRoute(
   if (!service) return null;
   const serviceName = nonEmptyString(field(service, "name"));
   const credential = object(field(service, "credential"));
+  const credentialSource = nonEmptyString(field(credential ?? {}, "source"));
   if (
     !serviceName ||
     !credential ||
     field(credential, "type") !== "api_key" ||
-    field(credential, "source") !== "user_input"
+    (credentialSource !== "user_input" && credentialSource !== "activation_managed")
+  ) {
+    return null;
+  }
+  if (
+    credentialSource === "activation_managed" &&
+    (field(service, "provider") !== "omnihi" ||
+      field(credential, "allowMultiple") !== false)
   ) {
     return null;
   }
   if (!adapterSupported(kind, provider, apiFormat)) return null;
+
+  const modelOptions = options.flatMap((row) => {
+    const id = nonEmptyString(field(row, "id"));
+    const name = nonEmptyString(field(row, "name"));
+    const optionModel = nonEmptyString(field(row, "model", "modelName"));
+    if (!id || !name || !optionModel) return [];
+    return [{ id, name, model: optionModel, isDefault: field(row, "isDefault") === true }];
+  });
 
   return {
     capability,
     kind,
     serviceId,
     serviceName,
+    credentialSource,
     links: serviceLinks(service),
     provider,
     baseUrl,
     apiFormat,
     model,
     modelName: optionName,
+    optionId,
+    modelOptions,
     settings,
     inlineToken: null,
   };
@@ -243,12 +277,22 @@ export class ChannelModelConfigurationError extends Error {
 export class ChannelModelCredentialRequiredError extends Error {
   readonly capability: string;
   readonly serviceId: string;
+  readonly credentialSource: ChannelCapabilityRoute["credentialSource"];
 
-  constructor(capability: string, serviceId: string) {
-    super(`渠道已配置 ${capability}，请先在设置中填写 ${serviceId} 的 API Key`);
+  constructor(
+    capability: string,
+    serviceId: string,
+    credentialSource: ChannelCapabilityRoute["credentialSource"] = null,
+  ) {
+    super(
+      credentialSource === "activation_managed"
+        ? `渠道托管的 ${serviceId} 凭据尚未同步，请确认激活权益后重试`
+        : `渠道已配置 ${capability}，请先在设置中填写 ${serviceId} 的 API Key`,
+    );
     this.name = "ChannelModelCredentialRequiredError";
     this.capability = capability;
     this.serviceId = serviceId;
+    this.credentialSource = credentialSource;
   }
 }
 
@@ -299,12 +343,15 @@ function legacyInlineRoute(
     kind,
     serviceId: null,
     serviceName: "渠道模型",
+    credentialSource: null,
     links: { portalUrl: null, purchaseUrl: null, rechargeUrl: null, helpUrl: null },
     provider,
     baseUrl,
     apiFormat,
     model,
     modelName: nonEmptyString(field(option, "name")) ?? model,
+    optionId: null,
+    modelOptions: [],
     settings: record(field(option, "settings")) ?? {},
     inlineToken: token,
   };
@@ -317,11 +364,19 @@ function legacyInlineRoute(
 export function resolveChannelCapabilityRoute(
   payload: ChannelModelPayload,
   capability: string,
-  options: { readonly allowDefaultFallback?: boolean } = {},
+  options: {
+    readonly allowDefaultFallback?: boolean;
+    readonly selectedOptionId?: string | null;
+  } = {},
 ): ChannelCapabilityRoute | null {
   const allowDefaultFallback = options.allowDefaultFallback ?? false;
   if (field(payload, "services") !== undefined || field(payload, "connections") !== undefined) {
-    return modernGraphRoute(payload, capability, allowDefaultFallback);
+    return modernGraphRoute(
+      payload,
+      capability,
+      allowDefaultFallback,
+      options.selectedOptionId,
+    );
   }
   return legacyInlineRoute(payload, capability, allowDefaultFallback);
 }
@@ -335,6 +390,7 @@ export function channelRouteToken(
   throw new ChannelModelCredentialRequiredError(
     route.capability,
     route.serviceId ?? "channel-service",
+    route.credentialSource,
   );
 }
 

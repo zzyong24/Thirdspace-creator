@@ -37,6 +37,55 @@ type Theme = {
   options: Array<{ id: string; label: string; hint: string }>;
 };
 
+const DISCOVERY_DRAFT_VERSION = 1;
+
+type DiscoveryLocalDraft = {
+  version: typeof DISCOVERY_DRAFT_VERSION;
+  sessionId: string;
+  revision: number;
+  activeThemeId: PositioningDiscoveryThemeId;
+  selected: string[];
+  customText: string;
+  skipped: boolean;
+  query: string;
+  researchMarket: "cn" | "global";
+  researchLanguage: "zh-CN" | "any";
+};
+
+function discoveryDraftKey(session: PositioningDiscoverySessionResource) {
+  return `creatoros:positioning-discovery-draft:v${DISCOVERY_DRAFT_VERSION}:${session.accountId}:${session.id}`;
+}
+
+function readDiscoveryDraft(
+  session: PositioningDiscoverySessionResource,
+): DiscoveryLocalDraft | null {
+  try {
+    const raw = window.localStorage.getItem(discoveryDraftKey(session));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<DiscoveryLocalDraft>;
+    if (
+      parsed.version !== DISCOVERY_DRAFT_VERSION ||
+      parsed.sessionId !== session.id ||
+      parsed.revision !== session.revision ||
+      !THEMES.some((theme) => theme.id === parsed.activeThemeId) ||
+      !Array.isArray(parsed.selected)
+    ) {
+      return null;
+    }
+    return parsed as DiscoveryLocalDraft;
+  } catch {
+    return null;
+  }
+}
+
+function removeDiscoveryDraft(session: PositioningDiscoverySessionResource) {
+  try {
+    window.localStorage.removeItem(discoveryDraftKey(session));
+  } catch {
+    // 浏览器禁用存储时退回服务端逐题保存，不阻断前采。
+  }
+}
+
 const THEMES: Theme[] = [
   {
     id: "goal",
@@ -195,6 +244,76 @@ export function PositioningDiscoveryWorkflow({
   const [researchLanguage, setResearchLanguage] = React.useState<
     "zh-CN" | "any"
   >("zh-CN");
+  const [draftCacheReady, setDraftCacheReady] = React.useState(false);
+  const [draftRestored, setDraftRestored] = React.useState(false);
+
+  // 当前问题在点「保存并继续」前也持续落本机。路由跳转、刷新或应用重启后，
+  // 只恢复同账号、同会话、同 revision 的草稿，绝不拿旧草稿覆盖新的服务端答案。
+  React.useEffect(() => {
+    if (!session) return;
+    if (session.status === "ready") {
+      removeDiscoveryDraft(session);
+      const readyTimer = window.setTimeout(() => {
+        setDraftCacheReady(true);
+        setDraftRestored(false);
+      }, 0);
+      return () => window.clearTimeout(readyTimer);
+    }
+    const draft = readDiscoveryDraft(session);
+    const restoreTimer = window.setTimeout(() => {
+      if (draft) {
+        setActiveThemeId(draft.activeThemeId);
+        setSelected(draft.selected);
+        setCustomText(draft.customText);
+        setSkipped(draft.skipped);
+        setQuery(draft.query);
+        setResearchMarket(draft.researchMarket);
+        setResearchLanguage(draft.researchLanguage);
+        setDraftRestored(
+          draft.selected.length > 0 ||
+            draft.customText.trim().length > 0 ||
+            draft.skipped ||
+            draft.query.trim().length > 0,
+        );
+      }
+      setDraftCacheReady(true);
+    }, 0);
+    return () => window.clearTimeout(restoreTimer);
+  }, [session]);
+
+  React.useEffect(() => {
+    if (!session || !draftCacheReady || session.status === "ready") return;
+    const draft: DiscoveryLocalDraft = {
+      version: DISCOVERY_DRAFT_VERSION,
+      sessionId: session.id,
+      revision: session.revision,
+      activeThemeId,
+      selected,
+      customText,
+      skipped,
+      query,
+      researchMarket,
+      researchLanguage,
+    };
+    try {
+      window.localStorage.setItem(
+        discoveryDraftKey(session),
+        JSON.stringify(draft),
+      );
+    } catch {
+      // 隐私模式/磁盘配额异常时不影响正常提交。
+    }
+  }, [
+    activeThemeId,
+    customText,
+    draftCacheReady,
+    query,
+    researchLanguage,
+    researchMarket,
+    selected,
+    session,
+    skipped,
+  ]);
 
   const activeTheme = THEMES.find((theme) => theme.id === activeThemeId)!;
   const showTheme = React.useCallback(
@@ -223,6 +342,8 @@ export function PositioningDiscoveryWorkflow({
         body: { sourceMode: mode },
       });
       setSession(next);
+      setDraftCacheReady(false);
+      setDraftRestored(false);
       setChoosingMode(false);
       showTheme("goal", next);
     } catch (cause) {
@@ -248,6 +369,8 @@ export function PositioningDiscoveryWorkflow({
           expectedRevision: session.revision,
         },
       });
+      removeDiscoveryDraft(session);
+      setDraftRestored(false);
       setSession(next);
       const currentIndex = THEMES.findIndex((theme) => theme.id === activeThemeId);
       const nextTheme = THEMES[currentIndex + 1];
@@ -443,6 +566,33 @@ export function PositioningDiscoveryWorkflow({
 
       <div className="min-h-0 overflow-y-auto bg-white p-5 lg:p-7">
         <div className="mx-auto max-w-2xl">
+          {draftRestored ? (
+            <div
+              data-slot="positioning-discovery-draft-restored"
+              className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2"
+            >
+              <p className="text-xs text-emerald-800">
+                已恢复上次未保存的前采内容，你可以接着填写。
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  removeDiscoveryDraft(session);
+                  const answer = session.answers.find(
+                    (item) => item.themeId === activeThemeId,
+                  );
+                  setSelected(answer?.selectedOptionIds ?? []);
+                  setCustomText(answer?.customText ?? "");
+                  setSkipped(answer?.skipped ?? false);
+                  setQuery("");
+                  setDraftRestored(false);
+                }}
+                className="text-xs font-medium text-emerald-900 underline underline-offset-2"
+              >
+                清除未保存内容
+              </button>
+            </div>
+          ) : null}
           <p className="text-xs font-semibold tracking-[0.16em] text-emerald-700">
             {activeTheme.eyebrow}
           </p>

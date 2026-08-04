@@ -199,6 +199,50 @@ describe("positioning service", () => {
     expect(optimizeSession.inputManifest.legacyWorkIds[11]).toBe("work-secret-12");
   });
 
+  it("[T-686] 联网补充遇到旧 revision 时安全合并到最新前采会话", async () => {
+    const search = vi.fn(async () => [
+      {
+        title: "湖南餐饮行业观察",
+        url: "https://example.cn/hunan-catering",
+        snippet: "湖南本地餐饮品牌正在通过短视频建立区域认知。",
+      },
+    ]);
+    const service = createPositioningService({
+      db,
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-stale-revision`,
+      projects: makeProjectsPort(),
+      research: { search },
+    });
+    const staleSession = await service.startDiscovery(ctx, "scratch");
+    const latestSession = await service.updateDiscoveryAnswer(ctx, {
+      sessionId: staleSession.id,
+      themeId: "goal",
+      selectedOptionIds: ["personal-brand"],
+      customText: "服务湖南餐饮主理人",
+      skipped: false,
+      expectedRevision: staleSession.revision,
+    });
+
+    const researched = await service.researchDiscovery(ctx, {
+      sessionId: staleSession.id,
+      query: "湖南餐饮行业 IP",
+      purpose: "补充公开行业信息",
+      targetThemeId: "goal",
+      market: "cn",
+      language: "zh-CN",
+      // 模拟用户停留在旧页面：服务端答案已经保存，但按钮仍携带旧 revision。
+      expectedRevision: staleSession.revision,
+    });
+
+    expect(researched.revision).toBe(latestSession.revision + 1);
+    expect(researched.answers).toEqual(latestSession.answers);
+    expect(researched.webReferences).toHaveLength(1);
+    expect(researched.webReferences[0]?.url).toBe(
+      "https://example.cn/hunan-catering",
+    );
+  });
+
   it("[T-652] 前采采纳原子写入且幂等，并发候选只有一个成功", async () => {
     const service = makeService(db, makeProjectsPort(), "confirm");
     await service.upsertProfile(ctx, PROFILE_INPUT);

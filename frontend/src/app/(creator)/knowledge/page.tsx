@@ -53,11 +53,12 @@ export default async function KnowledgeRoutePage({
   searchParams,
 }: KnowledgeRoutePageProps = {}) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const view = firstParam(resolvedSearchParams.view) === "knowledge" ? "knowledge" : "course";
+  const view =
+    firstParam(resolvedSearchParams.view) === "course" ? "course" : "knowledge";
   const lesson = firstParam(resolvedSearchParams.lesson);
 
-  // 内置课程随安装包发布,不依赖登录态/选中账号。默认先进入课程目录；
-  // 用户自己的知识仍保持严格 account-scoped。
+  // 内置课程随安装包发布,不依赖登录态/选中账号；但默认入口回到用户自己的知识库，
+  // 更符合高频录入/检索习惯。显式 `view=course` 深链仍直达课程。
   if (view === "course") {
     return <KnowledgePage activeView="course" activeLessonId={lesson} />;
   }

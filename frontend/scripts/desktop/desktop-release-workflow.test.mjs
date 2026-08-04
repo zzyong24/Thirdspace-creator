@@ -8,7 +8,7 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
-  it("T-575 使用唯一测试版号，不覆盖 0.2.0 公共更新清单", () => {
+  it("桌面版本权威统一为 0.3.0，且不直接覆盖公共更新清单", () => {
     const frontendPackage = JSON.parse(
       readFileSync(join(process.cwd(), "package.json"), "utf8"),
     );
@@ -19,9 +19,9 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "Cargo.toml"),
       "utf8",
     );
-    expect(frontendPackage.version).toBe("0.2.1-beta.3");
-    expect(tauriConfig.version).toBe("0.2.1-beta.3");
-    expect(cargoToml).toContain('version = "0.2.1-beta.3"');
+    expect(frontendPackage.version).toBe("0.3.0");
+    expect(tauriConfig.version).toBe("0.3.0");
+    expect(cargoToml).toContain('version = "0.3.0"');
     expect(workflow).not.toContain("sites/creatoros/updates/latest.json");
   });
 

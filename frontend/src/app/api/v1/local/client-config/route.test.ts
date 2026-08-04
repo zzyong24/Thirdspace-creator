@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { refreshClientConfig, PullError } = vi.hoisted(() => ({
+const { refreshClientConfig, PullError, putManagedCredential } = vi.hoisted(() => ({
   refreshClientConfig: vi.fn(),
+  putManagedCredential: vi.fn(),
   PullError: class extends Error {
     constructor(
       readonly code: string,
@@ -17,6 +18,18 @@ vi.mock("@/server/activation/client-config.server", () => ({
   refreshClientConfig,
   ClientConfigPullError: PullError,
 }));
+vi.mock("@/lib/request-context.server", () => ({
+  readRequestAccountId: vi.fn(() => "acct-1"),
+  resolveRequestContext: vi.fn(async () => ({
+    userId: "u-1",
+    accountId: "acct-1",
+    requestId: "req-1",
+  })),
+}));
+vi.mock("@/server/persistence-client", () => ({
+  getSettingsService: vi.fn(async () => ({ setChannelModelCredential: putManagedCredential })),
+}));
+vi.mock("../../auth/_session", () => ({ readSessionCookie: vi.fn(() => "session") }));
 
 import { POST } from "./route";
 
@@ -27,7 +40,10 @@ function localRequest(origin = "http://127.0.0.1") {
 }
 
 describe("POST /api/v1/local/client-config（API-575-002）", () => {
-  beforeEach(() => refreshClientConfig.mockReset());
+  beforeEach(() => {
+    refreshClientConfig.mockReset();
+    putManagedCredential.mockReset();
+  });
 
   it("只返回脱敏 authority，不返回渠道 JSON/ticket/identity/digest/signature", async () => {
     refreshClientConfig.mockResolvedValue({

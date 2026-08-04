@@ -83,6 +83,18 @@ describe("[T-253] normalizeLocalPath — 路径归一 + 穿越防护", () => {
   it("`.` 段与重复斜杠归一", () => {
     expect(normalizeLocalPath("/Users/u/./a//b.md", HOME)).toBe("/Users/u/a/b.md");
   });
+
+  it("Windows 盘符路径与 UNC 共享路径可归一，不再被误判为相对路径", () => {
+    expect(normalizeLocalPath("E:\\资料\\项目\\..\\图片.png", HOME)).toBe(
+      "E:\\资料\\图片.png",
+    );
+    expect(normalizeLocalPath("c:/Users/test/Documents/a.md", HOME)).toBe(
+      "C:\\Users\\test\\Documents\\a.md",
+    );
+    expect(normalizeLocalPath("\\\\server\\share\\folder\\..\\a.txt", HOME)).toBe(
+      "\\\\server\\share\\a.txt",
+    );
+  });
 });
 
 describe("[T-253] isProbablyBinary — 二进制探测", () => {

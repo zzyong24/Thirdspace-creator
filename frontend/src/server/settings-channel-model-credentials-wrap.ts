@@ -42,6 +42,20 @@ function managedServiceIds(payload: ChannelModelPayload): readonly string[] {
   return [...ids];
 }
 
+function userInputServiceIds(payload: ChannelModelPayload): readonly string[] {
+  const services = Array.isArray(payload.services) ? payload.services : [];
+  return services.flatMap((value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    const service = value as Record<string, unknown>;
+    const credential = service.credential;
+    if (!credential || typeof credential !== "object" || Array.isArray(credential)) return [];
+    return (credential as Record<string, unknown>).source === "user_input" &&
+      typeof service.id === "string"
+      ? [service.id]
+      : [];
+  });
+}
+
 function validationError(message: string): Error {
   const error = new Error(`ValidationError: ${message}`) as Error & {
     code: string;
@@ -101,6 +115,9 @@ export function createSettingsWithChannelModelCredentials(
       const secret = body?.secret?.trim() ?? "";
       if (!serviceIds.includes(serviceId)) {
         throw validationError("当前渠道未提供这个模型服务");
+      }
+      if (!userInputServiceIds(authority.payload).includes(serviceId)) {
+        throw validationError("该服务 Key 由激活权益自动管理，无需手动填写");
       }
       if (!secret) throw validationError("API Key 不能为空");
       const data = await deps.putCredential(
