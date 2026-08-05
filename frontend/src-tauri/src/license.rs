@@ -1331,11 +1331,19 @@ fn resolve_channel_runtime(
 ) -> RuntimeResolution {
     let old_ref = existing.and_then(|s| s.channel_ref.clone());
     let old_runtime = existing.and_then(|s| s.channel_runtime.clone());
-    // T-534 runtime 不接受 gate-F2 弱验签。旧 AM 未下发 channelRef 时也不擅自改变 identity。
-    if !signature_verified || signed_channel_ref.is_none() {
+    // T-534 runtime 不接受 gate-F2 弱验签：不可信输入不能改写已验证缓存。
+    if !signature_verified {
         return RuntimeResolution {
             channel_ref: old_ref,
             runtime: old_runtime,
+        };
+    }
+    // T-701 已签名的新事实缺 channelRef = 当前权益没有可证明的渠道作用域。不得沿用旧 identity
+    // 冒充本次响应的渠道；保持产品授权放行，但清空渠道投影，让下游稳定显示 scope missing。
+    if signed_channel_ref.is_none() {
+        return RuntimeResolution {
+            channel_ref: None,
+            runtime: None,
         };
     }
     let new_ref = signed_channel_ref.clone().flatten();
@@ -2602,11 +2610,39 @@ fn client_config_refresh_interval_secs(sidecar_port: u16) -> u64 {
     SIX_HOURS_SECONDS + u64::from(sidecar_port) % (MAX_JITTER_SECONDS + 1)
 }
 
+#[derive(Clone, Copy)]
+pub enum ClientConfigRefreshTrigger {
+    Startup,
+    Activation,
+    Scheduled,
+}
+
+impl ClientConfigRefreshTrigger {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Startup => "startup",
+            Self::Activation => "activation",
+            Self::Scheduled => "scheduled",
+        }
+    }
+}
+
+fn sanitized_client_config_reason(value: Option<&str>) -> &'static str {
+    match value {
+        Some("configured") => "configured",
+        Some("not_configured") => "not_configured",
+        Some("activation_scope_missing") => "activation_scope_missing",
+        Some("security_error") => "security_error",
+        Some("unreachable") => "unreachable",
+        _ => "unknown",
+    }
+}
+
 /// [T-575] 触发一次 server-only config.pull。
 ///
 /// 这里只向当前启动随机端口发送空 POST，并携带同一启动级 handshake；所有授权 identity、
 /// ticket、Growth 验签和 LKG 都留在 sidecar 内。失败只影响产品配置刷新，不阻塞授权或主界面。
-pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx) {
+pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx, trigger: ClientConfigRefreshTrigger) {
     if !client_config_pull_enabled() {
         return;
     }
@@ -2621,26 +2657,41 @@ pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx) {
         .post(client_config_refresh_url(ctx.sidecar_port))
         .header("Accept", "application/json")
         .header("Content-Length", "0")
+        .header("x-creatoros-config-trigger", trigger.as_str())
         .header("x-creatoros-handshake", &ctx.handshake_token)
         .send();
     match response {
-        Ok(value) if value.status().is_success() => {
-            eprintln!("[client-config] 启动刷新完成");
-        }
         Ok(value) => {
+            let status_code = value.status().as_u16();
+            let completed = value.status().is_success();
+            let body = value.json::<serde_json::Value>().ok();
+            let reason = sanitized_client_config_reason(
+                body.as_ref()
+                    .and_then(|json| json.get("outcome"))
+                    .and_then(|outcome| outcome.as_str()),
+            );
             eprintln!(
-                "[client-config] 启动刷新未完成(status={})",
-                value.status().as_u16()
+                "[client-config] phase=config_sync reason={} trigger={} status={} http_status={}",
+                reason,
+                trigger.as_str(),
+                if completed { "completed" } else { "blocked" },
+                status_code,
             );
         }
         Err(_) => {
-            eprintln!("[client-config] 启动刷新暂不可用");
+            eprintln!(
+                "[client-config] phase=config_sync reason=sidecar_unreachable trigger={} status=retryable",
+                trigger.as_str(),
+            );
         }
     }
 }
 
-pub fn refresh_client_config_sidecar_async(ctx: std::sync::Arc<ShellLicenseCtx>) {
-    std::thread::spawn(move || refresh_client_config_sidecar(&ctx));
+pub fn refresh_client_config_sidecar_async(
+    ctx: std::sync::Arc<ShellLicenseCtx>,
+    trigger: ClientConfigRefreshTrigger,
+) {
+    std::thread::spawn(move || refresh_client_config_sidecar(&ctx, trigger));
 }
 
 fn spawn_client_config_refresh_loop(ctx: std::sync::Arc<ShellLicenseCtx>) {
@@ -2651,7 +2702,7 @@ fn spawn_client_config_refresh_loop(ctx: std::sync::Arc<ShellLicenseCtx>) {
         std::thread::sleep(std::time::Duration::from_secs(
             client_config_refresh_interval_secs(ctx.sidecar_port),
         ));
-        refresh_client_config_sidecar(&ctx);
+        refresh_client_config_sidecar(&ctx, ClientConfigRefreshTrigger::Scheduled);
     });
 }
 
@@ -2716,7 +2767,7 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
                 {
                     sync_mirror_to_sidecar(&ctx, &snap);
                 }
-                refresh_client_config_sidecar(&ctx);
+                refresh_client_config_sidecar(&ctx, ClientConfigRefreshTrigger::Startup);
                 spawn_client_config_refresh_loop(ctx.clone());
                 break;
             }
@@ -2919,7 +2970,7 @@ pub async fn license_activate(
             &SysDebugProbe,
         );
         if decision.licensed {
-            refresh_client_config_sidecar_async(ctx);
+            refresh_client_config_sidecar_async(ctx, ClientConfigRefreshTrigger::Activation);
         }
         decision
     })
@@ -2933,10 +2984,20 @@ pub async fn license_check(state: tauri::State<'_, LicenseState>) -> Result<Gate
     let ctx = state.0.clone();
     tauri::async_runtime::spawn_blocking(move || {
         // [T-391 H-native §7 去单点化·复算点②]
-        apply_runtime_gate(
+        let decision = apply_runtime_gate(
             run_chain_and_persist(&ctx, LicenseOp::Status),
             &SysDebugProbe,
-        )
+        );
+        eprintln!(
+            "[client-config] phase=activation_revalidate reason={} trigger=manual_revalidate status={}",
+            if decision.licensed {
+                "license_allowed"
+            } else {
+                "license_blocked"
+            },
+            if decision.licensed { "completed" } else { "blocked" },
+        );
+        decision
     })
     .await
     .map_err(|e| format!("授权校验任务执行失败: {e}"))
@@ -4446,7 +4507,7 @@ mod tests {
     }
 
     #[test]
-    fn channel_runtime_v2_is_persisted_only_from_strict_verified_response() {
+    fn signed_status_adds_channel_ref_for_followup_client_config_pull() {
         let (sk, pk) = test_keypair();
         let server = FakeServer::ok(sk, valid_body_with_runtime_v2());
         let mut cfg = config(&pk, true);
@@ -4470,6 +4531,10 @@ mod tests {
                 .as_ref()
                 .and_then(|runtime| runtime.snapshot_version),
             Some(17)
+        );
+        assert!(
+            out.decision.licensed,
+            "签名 status 补齐渠道身份后授权仍应放行"
         );
 
         let (weak_sk, weak_pk) = test_keypair();
@@ -4531,6 +4596,39 @@ mod tests {
             reassigned.channel_runtime.is_none(),
             "新 identity 配置无效时必须清空旧渠道 runtime，不能本地 fallback"
         );
+    }
+
+    #[test]
+    fn signed_status_missing_channel_ref_clears_old_scope_without_revoking_license() {
+        let (sk, pk) = test_keypair();
+        let server = FakeServer::ok(sk, valid_body());
+        let mut cfg = config(&pk, true);
+        cfg.project_key = "creatoros".to_string();
+        let p = MemPoint::new(None);
+        let mut existing = snapshot_active();
+        existing.project_key = "creatoros".to_string();
+        existing.channel_ref = Some("agent-42".to_string());
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../docs/contracts/fixtures/channel-runtime-v2.projection.json"
+        ))
+        .expect("channel runtime fixture");
+        existing.channel_runtime = Some(
+            parse_signed_channel_runtime(&fixture["channelConfig"], "creatoros", Some("agent-42"))
+                .expect("旧渠道 runtime"),
+        );
+
+        let out = run(
+            &cfg,
+            &server,
+            NOW_MS,
+            &[&p],
+            LicenseOp::Status,
+            Some(&existing),
+        );
+        let snapshot = out.snapshot.expect("签名 status 应更新快照");
+        assert!(out.decision.licensed, "缺渠道作用域不能错误撤销产品授权");
+        assert!(snapshot.channel_ref.is_none(), "不得沿用旧 channelRef");
+        assert!(snapshot.channel_runtime.is_none(), "不得沿用旧渠道 runtime");
     }
 
     fn recompute_fixture_source_digest(runtime: &mut serde_json::Value) {
@@ -5188,7 +5286,9 @@ mod tests {
             .next()
             .expect("startup task body");
         assert!(
-            startup.contains("refresh_client_config_sidecar(&ctx);"),
+            startup.contains(
+                "refresh_client_config_sidecar(&ctx, ClientConfigRefreshTrigger::Startup);"
+            ),
             "sidecar ready 后必须自动刷新产品配置"
         );
         assert!(
@@ -5199,6 +5299,15 @@ mod tests {
         assert!(
             (21_600..=22_500).contains(&interval),
             "刷新间隔应为 6 小时并带最多 15 分钟稳定抖动"
+        );
+        assert_eq!(
+            sanitized_client_config_reason(Some("activation_scope_missing")),
+            "activation_scope_missing"
+        );
+        assert_eq!(
+            sanitized_client_config_reason(Some("channelRef=secret")),
+            "unknown",
+            "sidecar 日志不得透传任意响应内容"
         );
     }
 }

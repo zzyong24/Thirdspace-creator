@@ -251,6 +251,25 @@ describe("SettingsPage", () => {
     ).not.toBeNull();
   });
 
+  it("[T-701] 缺渠道身份时明确阻塞且不把手工本地配置当正常渠道解法", async () => {
+    await renderSettings({
+      modelAuthority: {
+        authority: "local",
+        outcome: "activation_scope_missing",
+        action: "授权缺少渠道信息，无法同步受管模型",
+      },
+    });
+
+    const status = document.querySelector(
+      '[data-slot="model-authority-status"]',
+    );
+    expect(status).toHaveTextContent("授权缺少渠道信息，无法同步受管模型");
+    expect(status).toHaveTextContent("重新校验激活权益并重试配置同步");
+    expect(status).not.toHaveTextContent(
+      "保存后会作为当前或备用配置使用",
+    );
+  });
+
   it("[T-679] 按 Growth 下发顺序展示真实模型名和 model，移除旧选择时提示已回退", async () => {
     await renderSettings({
       modelAuthority: {

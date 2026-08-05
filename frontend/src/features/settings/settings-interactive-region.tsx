@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ChannelConfigRetryButton } from "@/components/shell/channel-config-bootstrap";
 import {
   Dialog,
   DialogContent,
@@ -446,8 +447,13 @@ export function SettingsDialog({
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     {modelAuthority?.authority === "channel"
                       ? "每类模型独立判断：渠道完整提供的项目只读使用渠道配置；未提供、残缺或客户端暂不支持的项目仍由你配置。"
+                      : modelAuthority?.outcome === "activation_scope_missing"
+                        ? "受管模型必须使用激活权益签名携带的渠道信息；应用不会猜测渠道，也不会要求你用手工配置替代。"
                       : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
                   </p>
+                  {modelAuthority?.outcome === "activation_scope_missing" ? (
+                    <ChannelConfigRetryButton />
+                  ) : null}
                 </div>
                 {modelAuthority?.services?.map((service) => (
                   <ChannelServiceCredentialCard

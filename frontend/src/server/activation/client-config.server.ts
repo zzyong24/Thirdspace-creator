@@ -146,6 +146,7 @@ export type ClientConfigProjection = {
   readonly outcome:
     | "configured"
     | "not_configured"
+    | "activation_scope_missing"
     | "unreachable"
     | "security_error";
   readonly action: string;
@@ -161,7 +162,11 @@ export type ChannelModelAuthority =
     }
   | {
       readonly authority: "local";
-      readonly outcome: "not_configured" | "unreachable" | "security_error";
+      readonly outcome:
+        | "not_configured"
+        | "activation_scope_missing"
+        | "unreachable"
+        | "security_error";
       readonly payload: null;
     };
 
@@ -464,12 +469,18 @@ function activeVerdict(
     verdict.allowed !== true ||
     !verdict.code ||
     !verdict.machineId ||
-    !verdict.projectKey ||
-    !verdict.channelRef
+    !verdict.projectKey
   ) {
     fail(
       "CLIENT_CONFIG_LICENSE_UNAVAILABLE",
       "当前没有可用于同步渠道配置的有效授权",
+      false,
+    );
+  }
+  if (!verdict.channelRef) {
+    fail(
+      "CLIENT_CONFIG_ACTIVATION_SCOPE_MISSING",
+      "授权缺少渠道信息，无法同步受管模型",
       false,
     );
   }
@@ -900,6 +911,7 @@ function project(
   const actions = {
     configured: "渠道模型正在使用",
     not_configured: "本地模型正在使用 · 渠道未配置",
+    activation_scope_missing: "授权缺少渠道信息，无法同步受管模型",
     unreachable: "本地模型正在使用 · 暂时无法取得渠道配置",
     security_error: "本地模型正在使用 · 渠道配置安全校验未通过",
   } as const;
@@ -1782,6 +1794,16 @@ export async function readChannelModelAuthority(
   } catch (error) {
     if (error instanceof ClientConfigCacheSecurityError) {
       return { authority: "local", outcome: "security_error", payload: null };
+    }
+    if (
+      error instanceof ClientConfigPullError &&
+      error.code === "CLIENT_CONFIG_ACTIVATION_SCOPE_MISSING"
+    ) {
+      return {
+        authority: "local",
+        outcome: "activation_scope_missing",
+        payload: null,
+      };
     }
     return { authority: "local", outcome: "unreachable", payload: null };
   }

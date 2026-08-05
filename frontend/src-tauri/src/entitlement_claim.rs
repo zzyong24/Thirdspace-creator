@@ -17,7 +17,8 @@ use crate::license::{
     derive_license_key, format_iso_ms, license_file_path, parse_iso_ms,
     parse_signed_channel_runtime, read_snapshot_file, refresh_client_config_sidecar_async,
     resolve_public_key, sync_mirror_to_sidecar, verify_response_signature,
-    write_snapshot_file_checked, LicenseConfig, LicenseHttpResponse, LicenseSnapshot, LicenseState,
+    write_snapshot_file_checked, ClientConfigRefreshTrigger, LicenseConfig, LicenseHttpResponse,
+    LicenseSnapshot, LicenseState,
 };
 
 const CONTRACT_VERSION: &str = "growth-entitlement-delivery-v1";
@@ -956,7 +957,7 @@ fn persist_success_with(
     let path = license_file_path(&ctx.app_data_dir);
     snapshot_store.replace_and_verify(&path, &snapshot, &key)?;
     sync_mirror_to_sidecar(ctx, &snapshot);
-    refresh_client_config_sidecar_async(state.0.clone());
+    refresh_client_config_sidecar_async(state.0.clone(), ClientConfigRefreshTrigger::Activation);
     Ok(())
 }
 

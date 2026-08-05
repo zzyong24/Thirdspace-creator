@@ -48,6 +48,12 @@
       "what": "文本模型连通探针退回只读正文流，思考流与流内错误被误报为空响应",
       "check": "pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
       "onFail": "模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。"
+    },
+    {
+      "led": "LED-008",
+      "what": "授权放行被误当成渠道作用域完整，缺 identity 时静默回退或继续出网",
+      "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/components/shell/channel-config-bootstrap.test.tsx src/features/settings/settings-page.test.tsx",
+      "onFail": "渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。"
     }
   ],
   "program_completion_required": false,
