@@ -72,8 +72,10 @@ describe("T-535 desktop startup safety contract", () => {
       'const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";',
     );
     expect(rustShell).toMatch(
-      /if tcp_ready && instrumentation_verified \{\s*return StartupWaitOutcome::Ready;/,
+      /if rendered_page_ready && instrumentation_verified \{\s*return StartupWaitOutcome::Ready;/,
     );
+    expect(rustShell).toContain("probe_sidecar_rendered_page(port)");
+    expect(rustShell).toContain("page not found");
     expect(rustShell).toContain("StartupWaitOutcome::Exited(reason)");
     expect(rustShell).toContain("startup_failure_script(");
   });

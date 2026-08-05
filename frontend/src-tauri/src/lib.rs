@@ -540,7 +540,8 @@ fn find_free_port() -> u16 {
 }
 
 /// 阻塞轮询 `http://127.0.0.1:PORT/`，同时消费 instrumentation 完成/子进程退出信号。
-/// 只有“完成哨兵 + 连续两次 TCP 可连”才返回 Ready；退出和超时都有独立结果。
+/// 只有“完成哨兵 + 首页（含激活重定向）真实渲染 2xx HTML”才返回 Ready；仅 TCP
+/// 监听不代表 Next 路由已可用，不能拿它驱动 WebView 导航。
 const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
 
 #[derive(Clone, Debug)]
@@ -558,7 +559,7 @@ enum StartupWaitOutcome {
 }
 
 fn classify_startup_probe(
-    tcp_ready: bool,
+    rendered_page_ready: bool,
     instrumentation_verified: bool,
     exit_reason: Option<&str>,
     timed_out: bool,
@@ -567,13 +568,49 @@ fn classify_startup_probe(
     if let Some(reason) = exit_reason {
         return StartupWaitOutcome::Exited(reason.to_string());
     }
-    if tcp_ready && instrumentation_verified {
+    if rendered_page_ready && instrumentation_verified {
         return StartupWaitOutcome::Ready;
     }
     if timed_out {
         return StartupWaitOutcome::TimedOut;
     }
     StartupWaitOutcome::Pending
+}
+
+fn probe_sidecar_rendered_page(port: u16) -> bool {
+    let client = match reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(2))
+        .redirect(reqwest::redirect::Policy::limited(2))
+        .build()
+    {
+        Ok(client) => client,
+        Err(_) => return false,
+    };
+    let response = match client.get(format!("http://127.0.0.1:{port}/")).send() {
+        Ok(response) => response,
+        Err(_) => return false,
+    };
+    if !response.status().is_success() {
+        return false;
+    }
+    let is_html = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_ascii_lowercase().starts_with("text/html"))
+        .unwrap_or(false);
+    if !is_html {
+        return false;
+    }
+    response
+        .text()
+        .map(|body| {
+            let normalized = body.to_ascii_lowercase();
+            !normalized.trim().is_empty()
+                && !normalized.contains("page not found")
+                && !normalized.contains("data-slot=\"creator-not-found\"")
+        })
+        .unwrap_or(false)
 }
 
 /// 同时等待 instrumentation 完成哨兵、稳定 TCP 与子进程存活。
@@ -583,9 +620,7 @@ fn wait_until_ready(
     signals: std::sync::mpsc::Receiver<StartupSignal>,
 ) -> StartupWaitOutcome {
     let deadline = std::time::Instant::now() + timeout;
-    let addr = format!("127.0.0.1:{port}");
     let mut instrumentation_verified = false;
-    let mut tcp_streak = 0_u8;
     loop {
         let mut exit_reason = None;
         for signal in signals.try_iter() {
@@ -594,14 +629,10 @@ fn wait_until_ready(
                 StartupSignal::Exited(reason) => exit_reason = Some(reason),
             }
         }
-        let tcp_ready = std::net::TcpStream::connect(&addr).is_ok();
-        tcp_streak = if tcp_ready {
-            tcp_streak.saturating_add(1)
-        } else {
-            0
-        };
+        let rendered_page_ready =
+            instrumentation_verified && probe_sidecar_rendered_page(port);
         let outcome = classify_startup_probe(
-            tcp_streak >= 2,
+            rendered_page_ready,
             instrumentation_verified,
             exit_reason.as_deref(),
             std::time::Instant::now() >= deadline,
@@ -2866,7 +2897,7 @@ mod tests {
         assert_eq!(
             classify_startup_probe(true, false, None, false),
             StartupWaitOutcome::Pending,
-            "只有 TCP 监听、尚未收到 instrumentation 哨兵时不能导航"
+            "首页已经渲染、尚未收到 instrumentation 哨兵时不能导航"
         );
         assert_eq!(
             classify_startup_probe(true, true, None, false),
@@ -2879,6 +2910,32 @@ mod tests {
         assert_eq!(
             classify_startup_probe(false, false, None, false),
             StartupWaitOutcome::Pending
+        );
+    }
+
+    #[test]
+    fn sidecar_http_probe_only_accepts_a_renderable_page() {
+        fn serve_once(status_line: &'static str, body: &'static str) -> u16 {
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            let port = listener.local_addr().unwrap().port();
+            std::thread::spawn(move || {
+                let (mut stream, _) = listener.accept().unwrap();
+                let response = format!(
+                    "HTTP/1.1 {status_line}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                std::io::Write::write_all(&mut stream, response.as_bytes()).unwrap();
+            });
+            port
+        }
+
+        let ready_port = serve_once("200 OK", "<main>CreatorOS</main>");
+        assert!(probe_sidecar_rendered_page(ready_port));
+
+        let not_found_port = serve_once("404 Not Found", "Page Not Found");
+        assert!(
+            !probe_sidecar_rendered_page(not_found_port),
+            "sidecar 只监听端口但首页仍是 404 时，壳层绝不能导航"
         );
     }
 
