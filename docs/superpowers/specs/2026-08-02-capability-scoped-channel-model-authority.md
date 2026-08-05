@@ -280,3 +280,25 @@ settings 当成权威。
   因同步网络耗时阻塞。
 - Growth/Activity live HTTPS 与真实 OmniHi 子 Key端到端仍需真实环境验收；本地测试不得伪造
   成已完成的线上验收证据。
+
+### 10.4 缺签名渠道身份的失败关闭与恢复（T-701，2026-08-05）
+
+- `allowed=true` 只代表产品授权放行，不代表渠道模型作用域已完整。Activity 的已验签响应若未携带
+  `channelRef`，CreatorOS 保持授权可用，但配置同步必须稳定投影为脱敏
+  `activation_scope_missing`；不得猜测、回填或伪造渠道身份，也不得继承一个不属于本次签名响应的
+  默认渠道。
+- `activation_scope_missing` 必须在读取授权投影后、创建配置缓存或向 Activity/Growth 发请求前
+  失败关闭，因此 ticket、bundle、credential 三类出网调用均为 0，已有渠道缓存和受管凭据不被
+  改写。日志只允许记录 `phase/reason/trigger/status` 等有限枚举，不得记录授权码、机器标识、
+  `channelRef`、ticket、签名、bundle 或子 Key。
+- 桌面壳启动、激活后、定时刷新和用户手动重试都要携带脱敏触发源；本地 route 将该状态稳定映射
+  为非重试型安全响应。Bootstrap 不得吞掉该响应；设置页明确显示“授权缺少渠道信息，无法同步受管
+  模型”，且不得把手工填写本地配置描述为渠道用户的正常解决方案。
+- 设置页提供真实动作“重新校验激活权益并重试配置同步”：先通过 Tauri `license_check` 重新取得并
+  验证 Activity 签名状态，再向本地可信 route 发起空 POST。复校仍缺身份则保持同一提示；签名状态
+  补齐 `channelRef` 后立即拉取 bundle 与 `omnihi-main` 受管凭据。成功同步必须广播安全状态并调用
+  `router.refresh()`，让 SSR 设置页读到新 authority，不能停留在启动时的 local 竞态快照。
+- 本地 route 在没有 session cookie、没有 account header 时仍按桌面本地上下文执行，不将登录态
+  错误冒充渠道身份错误；无效 token 仍须拒绝。验收覆盖：缺身份零出网、route 脱敏映射、Bootstrap
+  非静默错误与成功刷新、设置页提示/真实重试、无 session/无 account，以及已签名 status 补身份后
+  拉 bundle/credential 的跨层闭环。

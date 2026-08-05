@@ -62,3 +62,16 @@
   （已登记进 `reconcile.config.json` lessons[]）。
 - **Outcome(T+N)**: 待包含本修复的新安装包完成 DeepSeek V4 真机配置测试后回填。
 - **Ref**: T-563/T-564；本机加密日志 2026-07-27T10:58:16Z~11:00:33Z。
+
+## LED-008 — 把授权成功误当成渠道作用域完整，缺身份被静默回退
+- **Date**: 2026-08-05 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: Activity 已签名返回 `allowed=true` 但缺 `channelRef` 时，产品授权正常放行，配置同步
+  却只能抛出通用授权不可用；Bootstrap 吞掉非重试错误，设置页继续暗示用户配置本地模型，真实渠道
+  阻塞既不可见也不可恢复。
+- **RootCause**: 将“产品授权可用”和“下游渠道作用域完整”合成一个布尔判断；跨 Rust、sidecar、
+  route、SSR 的错误状态没有稳定枚举、脱敏日志和成功刷新协议。
+- **GuardRule**: 任何依赖签名作用域的下游能力都必须显式区分授权放行与作用域完整性；缺 identity
+  在出网前失败关闭、零伪造、零静默，并提供重新取得签名事实的真实恢复动作。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/components/shell/channel-config-bootstrap.test.tsx src/features/settings/settings-page.test.tsx`（已登记进 `reconcile.config.json` lessons[]）。
+- **Outcome(T+N)**: 待真实 Activity 补齐 `channelRef` 后完成 live HTTPS 与 OmniHi 子 Key验收。
+- **Ref**: T-701；DEC-MODEL-035；T-679 SPEC §10.4。

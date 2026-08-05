@@ -313,6 +313,7 @@ export default async function SettingsRoutePage() {
     const actions = {
       configured: "渠道模型配置已读取",
       not_configured: "本地模型正在使用 · 渠道未配置",
+      activation_scope_missing: "授权缺少渠道信息，无法同步受管模型",
       unreachable: "本地模型正在使用 · 暂时无法取得渠道配置",
       security_error: "本地模型正在使用 · 渠道配置安全校验未通过",
     } as const;

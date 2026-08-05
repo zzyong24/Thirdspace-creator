@@ -311,7 +311,49 @@ describe("T-575 config.pull Creator consumer", () => {
     });
   });
 
-  it("T-679 用同一 Activity ticket 拉取 activation_managed 子 Key，并只交给安全写入端口", async () => {
+  it("T-701 已授权但缺签名 channelRef 时稳定失败关闭且零出网、零缓存改写", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        fetchImpl,
+        readVerdict: async () => ({
+          state: "ready",
+          verdict: { ...verdict, channelRef: null },
+        }),
+        store,
+      }),
+    ).rejects.toEqual(
+      new ClientConfigPullError(
+        "CLIENT_CONFIG_ACTIVATION_SCOPE_MISSING",
+        "授权缺少渠道信息，无法同步受管模型",
+        false,
+      ),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(store.record).toBeNull();
+  });
+
+  it("T-701 authority 读面把缺签名 channelRef 投影为 activation_scope_missing", async () => {
+    await expect(
+      readChannelModelAuthority({
+        env: env(),
+        readVerdict: async () => ({
+          state: "ready",
+          verdict: { ...verdict, channelRef: null },
+        }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "activation_scope_missing",
+      payload: null,
+    });
+  });
+
+  it("T-701/T-679 已签名 status 带 channelRef 后拉 bundle 与 activation_managed 子 Key", async () => {
     const managedPayload = {
       services: [
         {

@@ -18,6 +18,27 @@ import { getSettingsService } from "@/server/persistence-client";
 export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "private, no-store, max-age=0" };
+const TRIGGERS = new Set([
+  "startup",
+  "activation",
+  "scheduled",
+  "bootstrap",
+  "manual_revalidate",
+]);
+
+function safeTrigger(request: Request): string {
+  const candidate = request.headers.get("x-creatoros-config-trigger") ?? "unknown";
+  return TRIGGERS.has(candidate) ? candidate : "unknown";
+}
+
+function logSync(fields: {
+  phase: string;
+  reason: string;
+  trigger: string;
+  status: string;
+}): void {
+  console.info(`[client-config] ${JSON.stringify(fields)}`);
+}
 
 function response(body: unknown, status: number): Response {
   return NextResponse.json(body, { status, headers: NO_STORE });
@@ -29,6 +50,7 @@ function response(body: unknown, status: number): Response {
  * bundle digest 与签名材料从不跨过本地可信边界。
  */
 export async function POST(request: Request): Promise<Response> {
+  const trigger = safeTrigger(request);
   if (!isTrustedLocalRequest(request)) return loopbackForbidden();
   if (
     request.body !== null ||
@@ -68,21 +90,48 @@ export async function POST(request: Request): Promise<Response> {
       await settings.setChannelModelCredential(ctx, scopeId, serviceId, token);
     },
   }).then(
-    (result) => response(result, 200),
+    (result) => {
+      logSync({
+        phase: "config_sync",
+        reason: result.outcome,
+        trigger,
+        status: "completed",
+      });
+      return response(result, 200);
+    },
     (error: unknown) => {
       if (error instanceof ClientConfigPullError) {
         const pending = error.code === "CLIENT_CONFIG_PENDING";
         const expired = error.code === "CLIENT_CONFIG_ACCESS_EXPIRED";
+        const scopeMissing =
+          error.code === "CLIENT_CONFIG_ACTIVATION_SCOPE_MISSING";
+        const outcome = scopeMissing
+          ? "activation_scope_missing"
+          : pending
+            ? "unreachable"
+            : "security_error";
+        logSync({
+          phase: scopeMissing ? "activation_scope" : "config_sync",
+          reason: scopeMissing ? "signed_channel_ref_missing" : outcome,
+          trigger,
+          status: "blocked",
+        });
         return response(
           {
             authority: "local",
-            outcome: pending ? "unreachable" : "security_error",
+            outcome,
             action: error.message,
             retryable: error.retryable,
           },
-          pending ? 503 : expired ? 410 : 503,
+          scopeMissing ? 409 : pending ? 503 : expired ? 410 : 503,
         );
       }
+      logSync({
+        phase: "config_sync",
+        reason: "unexpected_failure",
+        trigger,
+        status: "retryable",
+      });
       return response(
         {
           authority: "local",

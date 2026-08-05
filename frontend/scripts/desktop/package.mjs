@@ -32,10 +32,17 @@ import {
 } from "./release-manifest.mjs";
 import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 import { verifyPackagedVerdictHardening } from "./verdict-artifact-hardening.mjs";
+import { assertClientConfigBuildEnv } from "./client-config-release.mjs";
 
 // 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
 // 入口会自动重启到已验证的 Node 25；找不到则硬失败，禁止继续产错 V8 字节码包。
 enforceDesktopBuildNode25();
+const clientConfigBuild = assertClientConfigBuildEnv();
+console.log(
+  clientConfigBuild.enabled
+    ? `[desktop:package] ✓ [T-679] Growth 渠道配置拉取已启用，keyId=${clientConfigBuild.keyId}`
+    : "[desktop:package] [T-679] 本地包未启用 Growth 渠道配置拉取。",
+);
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CARGO_PROFILE_DIR =

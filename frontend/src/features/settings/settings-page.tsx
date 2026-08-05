@@ -279,6 +279,7 @@ export interface ModelAuthorityState {
   readonly outcome:
     | "configured"
     | "not_configured"
+    | "activation_scope_missing"
     | "unreachable"
     | "security_error";
   readonly action: string;

@@ -1798,3 +1798,24 @@ connection 共用同一 Activity 权益子 Key。CreatorOS 从 API-265 安全取
 
 **Status**：用户已确认；契约已按 T-679 最新目标重派生，CreatorOS BUILD 进行中，真实跨仓 live
 HTTPS 联调仍待验收。
+
+## DEC-MODEL-035 (2026-08-05) — 授权放行与渠道模型作用域完整性分开判定
+
+**来源**：真实渠道激活成功后，Activity 的已签名响应缺少 `channelRef`。CreatorOS 因而无法构造
+渠道作用域，却把下游错误吞掉并在设置页继续提示本地配置，造成“激活成功但受管模型无声失效”。
+
+**决策**：
+
+1. 授权放行不等于渠道身份完整；缺签名 `channelRef` 映射为稳定、脱敏的
+   `activation_scope_missing`，不得伪造默认渠道，也不得因此否定已通过的产品授权。
+2. 缺作用域时在任何 ticket/bundle/credential 请求前失败关闭，保留既有数据不改写；Rust、
+   sidecar 与本地 route 只记录有限枚举的阶段、原因、触发源和状态。
+3. 设置页显示明确阻塞原因与真实恢复动作：先调用 Rust `license_check` 重新校验 Activity 已签名
+   权益，再重试本地配置同步；成功后刷新服务端渲染 authority。
+4. 本地手工模型仍作为独立能力存在，但不再被文案描述为缺渠道身份时的正常解决方案。
+
+**Pattern-Ref**：none（细化既有 T-679 fail-closed 与签名 identity 契约）。
+
+**Asset-Ref**：none（复用现有 Rust 授权链、本地可信 route 与设置页 authority 卡）。
+
+**Status**：用户已确认；纳入 T-701 独立 BUILD 与提交，不包含打包或发布。
