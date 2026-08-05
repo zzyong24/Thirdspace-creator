@@ -87,6 +87,25 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
     );
   });
 
+  it("真实 Node/Next 代理把零字节 POST 表示为 body stream 时仍进入配置同步", async () => {
+    refreshClientConfig.mockResolvedValue({
+      authority: "channel",
+      outcome: "configured",
+      action: "渠道模型正在使用",
+      retryable: false,
+    });
+    const response = await POST(
+      new Request("http://127.0.0.1/api/v1/local/client-config", {
+        method: "POST",
+        headers: { "content-length": "0" },
+        body: new Uint8Array(),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(refreshClientConfig).toHaveBeenCalledTimes(1);
+  });
+
   it("pending/撤权/过期使用人话可恢复状态，绝不假成功", async () => {
     refreshClientConfig.mockImplementationOnce(async () => {
       throw new PullError(
@@ -166,6 +185,18 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
     const response = await POST(
       new Request("http://127.0.0.1/api/v1/local/client-config", {
         method: "POST",
+        body: "{}",
+      }),
+    );
+    expect(response.status).toBe(422);
+    expect(refreshClientConfig).not.toHaveBeenCalled();
+  });
+
+  it("即使伪报 Content-Length=0，也拒绝真实非空 body 且零出网", async () => {
+    const response = await POST(
+      new Request("http://127.0.0.1/api/v1/local/client-config", {
+        method: "POST",
+        headers: { "content-length": "0" },
         body: "{}",
       }),
     );

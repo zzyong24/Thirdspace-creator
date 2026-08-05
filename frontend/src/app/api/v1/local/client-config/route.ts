@@ -45,6 +45,37 @@ function response(body: unknown, status: number): Response {
 }
 
 /**
+ * Next.js 会把真实 Node POST（包括零字节 POST）适配成非 null 的 body stream，不能用
+ * `request.body !== null` 判断“客户端携带了数据”。本端点协议仍然只接受空 POST：声明的长度
+ * 非法/大于 0，或流里读到任何字节都 fail-closed；纯空流则允许进入 server-only 同步链。
+ */
+async function hasRequestPayload(request: Request): Promise<boolean> {
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null) {
+    const normalized = declaredLength.trim();
+    if (!/^\d+$/.test(normalized) || Number(normalized) > 0) return true;
+  }
+  if (request.body === null) return false;
+
+  const reader = request.body.getReader();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return false;
+      if (value.byteLength > 0) return true;
+    }
+  } catch {
+    return true;
+  } finally {
+    try {
+      await reader.cancel();
+    } catch {
+      // 已完成或异常的流无需继续处理；判定结果仍保持 fail-closed。
+    }
+  }
+}
+
+/**
  * API-575-002（Growth 跨仓编号 API-CREATOR-002）：触发一次 server-only config.pull。
  * Web 只得到 CreatorOS 产品协议解析后的安全投影；授权码、机器标识、ticket、渠道 identity、
  * bundle digest 与签名材料从不跨过本地可信边界。
@@ -52,10 +83,7 @@ function response(body: unknown, status: number): Response {
 export async function POST(request: Request): Promise<Response> {
   const trigger = safeTrigger(request);
   if (!isTrustedLocalRequest(request)) return loopbackForbidden();
-  if (
-    request.body !== null ||
-    Number(request.headers.get("content-length") ?? "0") > 0
-  ) {
+  if (await hasRequestPayload(request)) {
     return response(
       {
         authority: "local",
