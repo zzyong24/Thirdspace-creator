@@ -21,6 +21,7 @@ import { dirname, join } from "node:path";
 import { resolveMasterKey } from "@creatoros/backend";
 
 import packageJson from "../../../package.json";
+import { resolveActivationConfig } from "./activation-config";
 import {
   readLicenseVerdictDetailed,
   resolveLicenseFilePath,
@@ -1425,7 +1426,7 @@ export async function refreshClientConfig(
     fail("CLIENT_CONFIG_PENDING", "渠道配置同步尚未启用", false);
   }
   const amOrigin = resolveHttpsOrigin(
-    env.CREATOROS_LICENSE_BASE_URL,
+    resolveActivationConfig(env).baseUrl,
     "授权服务",
   );
   const growthOrigin = resolveHttpsOrigin(

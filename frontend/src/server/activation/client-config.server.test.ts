@@ -19,6 +19,7 @@ import { join } from "node:path";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { DEFAULT_LICENSE_BASE_URL } from "./activation-config";
 import {
   ClientConfigPullError,
   ClientConfigCacheSecurityError,
@@ -121,11 +122,12 @@ function signedAmResponse(
   privateKey: KeyObject,
   body: unknown,
   status = 200,
+  requestHost = "activity.example",
 ) {
   const bytes = Buffer.from(JSON.stringify(body));
   const date = "Tue, 28 Jul 2026 12:10:00 GMT";
   const digest = `SHA-256=${createHash("sha256").update(bytes).digest("base64")}`;
-  const signing = `post /api/license/client-config-tickets\nactivity.example\n${date}\n${digest}`;
+  const signing = `post /api/license/client-config-tickets\n${requestHost}\n${date}\n${digest}`;
   const signature = sign(null, Buffer.from(signing), privateKey).toString(
     "base64",
   );
@@ -247,10 +249,11 @@ describe("T-575 config.pull Creator consumer", () => {
   function successfulFetch(
     bundle = signedBundle(growthKeys.privateKey),
     active = verdict,
+    amOrigin = AM_ORIGIN,
   ) {
     return vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
-      if (url === `${AM_ORIGIN}/api/license/client-config-tickets`) {
+      if (url === `${amOrigin}/api/license/client-config-tickets`) {
         expect(JSON.parse(String(init?.body))).toEqual({
           contractVersion: "config-access-ticket-v2",
           projectKey: active.projectKey,
@@ -258,12 +261,17 @@ describe("T-575 config.pull Creator consumer", () => {
           machineId: active.machineId,
           nonce: "nonce-client-config-0001",
         });
-        return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v2",
-          configAccessTicket: "header.payload.signature",
-          expiresAt: "2026-07-28T12:15:00.000Z",
-          nonce: "nonce-client-config-0001",
-        });
+        return signedAmResponse(
+          amKeys.privateKey,
+          {
+            contractVersion: "config-access-ticket-v2",
+            configAccessTicket: "header.payload.signature",
+            expiresAt: "2026-07-28T12:15:00.000Z",
+            nonce: "nonce-client-config-0001",
+          },
+          200,
+          new URL(amOrigin).host,
+        );
       }
       expect(url).toBe(
         `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=0.3.0&accept=creatoros.model-config%40creatoros-model-config-v1`,
@@ -309,6 +317,58 @@ describe("T-575 config.pull Creator consumer", () => {
       provider: "openai-compatible",
       unknownField: { kept: true },
     });
+  });
+
+  it("T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值", async () => {
+    const packagedEnv: Record<string, string | undefined> = { ...env() };
+    delete packagedEnv.CREATOROS_LICENSE_BASE_URL;
+    const fetchImpl = successfulFetch(
+      signedBundle(growthKeys.privateKey),
+      verdict,
+      DEFAULT_LICENSE_BASE_URL,
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: packagedEnv,
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toMatchObject({
+      authority: "channel",
+      outcome: "configured",
+    });
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      1,
+      `${DEFAULT_LICENSE_BASE_URL}/api/license/client-config-tickets`,
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("T-706 显式注入非 HTTPS 授权 origin 时继续失败关闭且不出网", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      refreshClientConfig({
+        env: {
+          ...env(),
+          CREATOROS_LICENSE_BASE_URL: "http://activity.invalid",
+        },
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).rejects.toEqual(
+      new ClientConfigPullError(
+        "CLIENT_CONFIG_PENDING",
+        "授权服务配置无效",
+        false,
+      ),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it("T-701 已授权但缺签名 channelRef 时稳定失败关闭且零出网、零缓存改写", async () => {
