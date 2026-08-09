@@ -1184,6 +1184,56 @@ test("reconcile 口径把进行中任务的真实 hash 变化报告为在研，s
   assert.match(result.stderr + result.stdout, /SPEC hash/);
 });
 
+test("record 允许对已漂移 constitution 做真实复审并换发新 receipt", () => {
+  const root = tempProject();
+  const initial = writePacket(root, "round-1.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "initial",
+    summary: "初始规格与宪法一致。",
+    findings: [],
+  });
+  let result = run(
+    REVIEWCTL,
+    [
+      "record", "T-101",
+      "--spec", "SPEC.md",
+      "--constitution", "CONSTITUTION.md",
+      "--input", initial,
+      "--review", "SPEC.review.md",
+      "--backlog", "BACKLOG.md",
+      "--review-mode", "cross-family",
+      "--model", "test-reviewer",
+    ],
+    root,
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  fs.appendFileSync(path.join(root, "CONSTITUTION.md"), "\n新增安全边界。\n");
+  const recheck = writePacket(root, "round-2.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "recheck",
+    summary: "已按当前宪法重新核对，未发现新问题。",
+    findings: [],
+  });
+  result = run(
+    REVIEWCTL,
+    [
+      "record", "T-101",
+      "--spec", "SPEC.md",
+      "--constitution", "CONSTITUTION.md",
+      "--input", recheck,
+      "--review", "SPEC.review.md",
+      "--backlog", "BACKLOG.md",
+      "--review-mode", "cross-family",
+      "--model", "test-reviewer",
+    ],
+    root,
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  result = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md", "--quiet"], root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
 test("reconcile 只降级规范化的待审状态，未知审核文案仍 fail-closed", () => {
   const pendingRoot = tempProject({ status: "🔨", review: "待审" });
   const pending = auditReviewReceiptFindings({
