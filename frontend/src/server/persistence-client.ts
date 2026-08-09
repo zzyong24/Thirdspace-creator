@@ -4751,6 +4751,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               id: String(task.id),
               projectId:
                 typeof task.projectId === "string" ? task.projectId : null,
+              retryOfTaskId:
+                typeof task.retryOfTaskId === "string"
+                  ? task.retryOfTaskId
+                  : null,
               inputData: (task.inputData ?? {}) as Record<string, unknown>,
             },
             {

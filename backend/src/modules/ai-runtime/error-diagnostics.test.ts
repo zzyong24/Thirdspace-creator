@@ -28,7 +28,7 @@ describe("T-617 渠道模型可观测信息脱敏", () => {
     });
     const output = `${publicMessage}\n${diagnostic}`;
 
-    expect(output).toContain("渠道模型调用失败");
+    expect(output).toContain("模型调用失败");
     expect(output).not.toContain("SECRET_CHANNEL_KEY");
     expect(output).not.toContain("private-model");
     expect(output).not.toContain("channel-model.internal");
@@ -46,5 +46,35 @@ describe("T-617 渠道模型可观测信息脱敏", () => {
     expect(publicMessage).toBe("AI 额度不足，请充值后再试。");
     expect(publicMessage).not.toContain("SECRET_CHANNEL_KEY");
     expect(publicMessage).not.toContain("private-model");
+  });
+
+  it("[T-735] 渠道响应契约漂移保留行动分类与脱敏参考号", () => {
+    const contractError = Object.assign(
+      new Error("private response https://provider.internal SECRET"),
+      {
+        name: "ChannelManagedProviderError",
+        code: "CHANNEL_MODEL_RESPONSE_CONTRACT",
+        reason: "response_contract",
+        stage: "poll",
+        status: 200,
+        reference: "media-12ab34cd56",
+        retryable: false,
+      },
+    );
+
+    expect(
+      safeModelFailureMessage(contractError, {
+        displayModelKey: "channel-managed",
+      }),
+    ).toBe("生成服务已经返回结果，但当前版本无法识别该结果，请联系官方处理。");
+    const diagnostic = formatErrorDiagnostic(contractError, {
+      omitMessage: true,
+    });
+    expect(diagnostic).toContain("provider_reason=response_contract");
+    expect(diagnostic).toContain("stage=poll");
+    expect(diagnostic).toContain("reference=media-12ab34cd56");
+    expect(diagnostic).toContain("retryable=false");
+    expect(diagnostic).not.toContain("provider.internal");
+    expect(diagnostic).not.toContain("SECRET");
   });
 });

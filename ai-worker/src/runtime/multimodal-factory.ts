@@ -71,6 +71,8 @@ export interface GenerateImageOptions {
    * 不给 → 行为与纯文生图完全一致(零回归)。出参契约不变({ assetBytes })。
    */
   referenceImage?: { bytes: Uint8Array; mimeType: string };
+  /** 服务端按本次生成意图计算的稳定幂等键；只作为请求头发送，不进入公开结果。 */
+  idempotencyKey?: string;
 }
 
 export interface GenerateVideoOptions {
@@ -78,6 +80,15 @@ export interface GenerateVideoOptions {
   aspectRatio?: string;
   /** 首帧图(image-to-video 起始帧),可选。 */
   firstFrame?: Uint8Array;
+  /**
+   * T-735：本地任务在提交后失败/重启时，使用已持久化的 provider job 继续轮询，
+   * 绝不能再 POST 一次计费生成。该字段只存在于 server-only 运行时。
+   */
+  resumeJobId?: string;
+  /** 提交拿到 job id 后立刻持久化；回调完成前不进入轮询。 */
+  onJobSubmitted?: (jobId: string) => Promise<void>;
+  /** 与生图相同的稳定生成意图键。 */
+  idempotencyKey?: string;
 }
 
 /** ASR 逐字稿转写入参(T-030-D1)—— 与 image/video 的生成入参并列,但输入是**音频字节**
@@ -135,11 +146,49 @@ export class MultimodalConfigError extends Error {
   }
 }
 
+export type MultimodalFailureReason =
+  | "authentication"
+  | "credit_exhausted"
+  | "rate_limited"
+  | "upstream"
+  | "response_contract"
+  | "download"
+  | "network"
+  | "timeout"
+  | "unknown";
+
+export type MultimodalFailureStage =
+  | "submit"
+  | "poll"
+  | "download"
+  | "local_persist"
+  | "model_call";
+
+export interface MultimodalFailureDetails {
+  reason?: MultimodalFailureReason;
+  stage?: MultimodalFailureStage;
+  status?: number;
+  /** 脱敏后的稳定参考号，禁止放 provider job id、URL 或凭据。 */
+  reference?: string;
+  retryable?: boolean;
+}
+
 /** provider 生成过程本身失败(HTTP 非 2xx / 内容审核 / 轮询超时等)。 */
 export class MultimodalGenerationError extends Error {
-  constructor(message: string) {
+  readonly reason: MultimodalFailureReason;
+  readonly stage: MultimodalFailureStage;
+  readonly status?: number;
+  readonly reference?: string;
+  readonly retryable: boolean;
+
+  constructor(message: string, details: MultimodalFailureDetails = {}) {
     super(message);
     this.name = "MultimodalGenerationError";
+    this.reason = details.reason ?? "unknown";
+    this.stage = details.stage ?? "model_call";
+    this.status = details.status;
+    this.reference = details.reference;
+    this.retryable = details.retryable ?? false;
   }
 }
 

@@ -100,7 +100,7 @@ describe("multimodal provider 工厂 —— 按 provider 分派 + 统一 { asset
     ).rejects.toEqual(
       expect.objectContaining({
         name: ChannelManagedProviderError.name,
-        message: "渠道模型调用失败，请稍后重试或联系官方处理",
+        message: "模型调用失败，请稍后重试或联系官方处理。",
       }),
     );
   });

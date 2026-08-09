@@ -208,6 +208,11 @@ export interface AiRepository {
   addReferences(taskId: string, refs: ReferenceInput[]): Promise<void>;
   listReferences(taskId: string): Promise<ReferenceRow[]>;
   updateTaskStatus(taskId: string, patch: TaskStatusPatch): Promise<TaskRow>;
+  /** server-only 运行态补丁；不得投影到 task DTO/transport。 */
+  updateTaskRuntimeData(
+    taskId: string,
+    runtimeData: Record<string, unknown>,
+  ): Promise<void>;
   insertResult(rec: InsertResultInput): Promise<ResultRow>;
   getResult(resultId: string): Promise<ResultRow>;
   listResults(taskId: string): Promise<ResultRow[]>;
@@ -771,6 +776,20 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(and(eq(aiTasks.userId, deps.userId), eq(aiTasks.id, taskId)))
         .returning();
       return updated[0]!;
+    },
+
+    async updateTaskRuntimeData(taskId, runtimeData) {
+      await getTask(taskId); // ownership gate
+      await db
+        .update(aiTasks)
+        .set({ runtimeData })
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.accountId, deps.accountId),
+            eq(aiTasks.id, taskId),
+          ),
+        );
     },
 
     async insertResult(rec) {

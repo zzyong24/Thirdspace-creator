@@ -99,11 +99,12 @@ describe("runScriptNode", () => {
     expect(steps).toContain(1);
   });
 
-  it("[T-726] 新写稿忽略历史论点树，但继续注入合同与结构方案", async () => {
+  it("[T-730] 写稿节点注入上游已筛选为 adopted 的论点、合同与结构方案", async () => {
     let seenPrompt = "";
     const model = new MockLanguageModelV4({
       doGenerate: async (opts) => {
-        // 抓最后一条 user message 的文本，防止退役的论点树重新暗中影响新稿。
+        // 未采用的历史版本已在 CreativeContext reader 隔离；进入节点的 thesisBrief
+        // 只可能来自当前项目显式采用版本，必须真正影响本次生成。
         const msgs = (opts as { prompt?: unknown }).prompt;
         seenPrompt = JSON.stringify(msgs ?? "");
         return finalText(SHOTS_OBJECT_JSON);
@@ -116,7 +117,7 @@ describe("runScriptNode", () => {
       contractBrief: "· 受众定位：后端工程师",
       outlineBrief: "结构类型：问题-解决\n段落安排：\n  1. 钩子：反差",
     });
-    expect(seenPrompt).not.toContain("KV cache 可压到 1/10");
+    expect(seenPrompt).toContain("KV cache 可压到 1/10");
     expect(seenPrompt).toContain("后端工程师");
     expect(seenPrompt).toContain("问题-解决");
     expect(seenPrompt).toContain("策划结构方案");

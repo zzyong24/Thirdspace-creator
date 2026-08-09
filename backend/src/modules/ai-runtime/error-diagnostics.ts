@@ -74,9 +74,32 @@ export function safeModelFailureMessage(
   spec?: { displayModelKey?: "channel-managed" } | null,
 ): string {
   if (spec?.displayModelKey !== "channel-managed") return safeErrorMessage(err);
-  return isManagedAiCreditExhausted(err)
-    ? MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE
-    : "渠道模型调用失败，请稍后重试或联系官方处理";
+  if (isManagedAiCreditExhausted(err)) {
+    return MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE;
+  }
+  const code =
+    err && typeof err === "object" && typeof (err as { code?: unknown }).code === "string"
+      ? (err as { code: string }).code
+      : "";
+  const safeMessages: Record<string, string> = {
+    CHANNEL_MODEL_AUTHENTICATION:
+      "模型服务授权已失效，请重新校验激活权益后重试。",
+    CHANNEL_MODEL_RATE_LIMITED: "当前生成请求较多，请稍后再试。",
+    CHANNEL_MODEL_UPSTREAM: "生成服务暂时不可用，请稍后重试。",
+    CHANNEL_MODEL_RESPONSE_CONTRACT:
+      "生成服务已经返回结果，但当前版本无法识别该结果，请联系官方处理。",
+    CHANNEL_MODEL_DOWNLOAD:
+      "内容已经生成，但下载保存失败，请稍后重试或联系官方处理。",
+    CHANNEL_MODEL_NETWORK:
+      err &&
+      typeof err === "object" &&
+      (err as { stage?: unknown }).stage === "submit"
+        ? "生成请求的提交结果未知，为避免重复计费已停止自动重试，请联系官方处理。"
+        : "查询生成结果时网络中断，请稍后重试。",
+    CHANNEL_MODEL_TIMEOUT:
+      "生成仍在处理中或查询超时，系统没有重复发起生成，请稍后重试。",
+  };
+  return safeMessages[code] ?? "模型调用失败，请稍后重试或联系官方处理";
 }
 
 /**
@@ -94,6 +117,10 @@ export function formatErrorDiagnostic(
           statusCode?: unknown;
           status?: unknown;
           code?: unknown;
+          reason?: unknown;
+          stage?: unknown;
+          reference?: unknown;
+          retryable?: unknown;
         })
       : {};
   const errorClass =
@@ -108,12 +135,30 @@ export function formatErrorDiagnostic(
     typeof e.code === "string" && /^[A-Za-z0-9_.-]{1,80}$/.test(e.code)
       ? e.code
       : null;
+  const providerReason =
+    typeof e.reason === "string" && /^[a-z_]{3,40}$/.test(e.reason)
+      ? e.reason
+      : null;
+  const stage =
+    typeof e.stage === "string" && /^[a-z_]{3,40}$/.test(e.stage)
+      ? e.stage
+      : null;
+  const reference =
+    typeof e.reference === "string" && /^[a-z][a-z0-9-]{4,40}$/i.test(e.reference)
+      ? e.reference
+      : null;
   const cls = classifyLlmError(err);
   return [
     `class=${errorClass}`,
     `reason=${cls.reason}`,
+    ...(providerReason ? [`provider_reason=${providerReason}`] : []),
+    ...(stage ? [`stage=${stage}`] : []),
     ...(status === null ? [] : [`status=${status}`]),
     ...(code ? [`code=${code}`] : []),
+    ...(reference ? [`reference=${reference}`] : []),
+    ...(typeof e.retryable === "boolean"
+      ? [`retryable=${String(e.retryable)}`]
+      : []),
     ...(options.omitMessage
       ? []
       : [`message=${JSON.stringify(safeErrorMessage(err))}`]),

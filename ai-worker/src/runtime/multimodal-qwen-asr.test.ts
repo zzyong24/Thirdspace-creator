@@ -162,7 +162,7 @@ describe("Qwen ASR adapter", () => {
           }),
         },
       ),
-    ).rejects.toThrow("渠道模型调用失败，请稍后重试或联系官方处理");
+    ).rejects.toThrow("模型调用失败，请稍后重试或联系官方处理");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ redirect: "error" });
   });

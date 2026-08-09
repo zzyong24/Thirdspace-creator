@@ -411,6 +411,15 @@ export interface AiService {
     ctx: RequestContext,
     taskId: string,
   ): Promise<Record<string, unknown>>;
+  /**
+   * T-735 server-only：保存异步多模态 provider checkpoint。固定键写入，不能覆盖
+   * skillSnapshot/modelAuthority，也不通过 transport/DTO 暴露。
+   */
+  putMultimodalProviderCheckpoint(
+    ctx: RequestContext,
+    taskId: string,
+    checkpoint: Record<string, unknown>,
+  ): Promise<void>;
   // The composition-layer runner flips queued→running when the agent STARTS (so the UI's
   // status is honest while the agent works), before recordCandidate flips it to
   // awaiting_confirmation. No-op if already past queued. (机制④ async exec.)
@@ -1773,6 +1782,16 @@ export function createAiService(deps: ServiceDeps): AiService {
         "ai.getTaskRuntimeData",
       ).requireTask(taskId);
       return (task.runtimeData ?? {}) as Record<string, unknown>;
+    },
+
+    async putMultimodalProviderCheckpoint(ctx, taskId, checkpoint) {
+      const repo = repoFor(ctx, "ai.putMultimodalProviderCheckpoint");
+      const task = await repo.requireTask(taskId);
+      const current = (task.runtimeData ?? {}) as Record<string, unknown>;
+      await repo.updateTaskRuntimeData(taskId, {
+        ...current,
+        multimodalProviderCheckpoint: { ...checkpoint },
+      });
     },
 
     async markRunning(ctx, taskId) {

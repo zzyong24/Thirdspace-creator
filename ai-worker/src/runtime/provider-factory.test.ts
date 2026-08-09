@@ -1,11 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
+  ChannelManagedProviderError,
   ManagedAiCreditExhaustedError,
   ModelConfigurationError,
   modelFor,
   normalizeAnthropicBaseUrl,
   protectChannelEmbeddingModel,
   protectChannelModel,
+  toChannelManagedError,
 } from "./provider-factory";
 
 // 不走网络(假 key),但必须断言 provider identity:这能锁住真实 wire protocol,
@@ -18,6 +20,52 @@ function providerOf(model: ReturnType<typeof modelFor>): string {
 }
 
 describe("modelFor", () => {
+  it("[T-735] 渠道错误保留可行动分类、阶段、HTTP 与脱敏参考号", () => {
+    const error = toChannelManagedError(
+      Object.assign(new Error("private upstream body SECRET"), {
+        reason: "response_contract",
+        stage: "poll",
+        status: 200,
+        reference: "media-12ab34cd56",
+        retryable: false,
+      }),
+    );
+
+    expect(error).toBeInstanceOf(ChannelManagedProviderError);
+    expect(error).toMatchObject({
+      code: "CHANNEL_MODEL_RESPONSE_CONTRACT",
+      reason: "response_contract",
+      stage: "poll",
+      status: 200,
+      reference: "media-12ab34cd56",
+      retryable: false,
+    });
+    expect(error.message).toContain("当前版本无法识别");
+    expect(error.message).not.toContain("SECRET");
+  });
+
+  it("[T-735] 鉴权、限流和网络提交未知不再全部压成 unknown", () => {
+    expect(toChannelManagedError({ status: 401 })).toMatchObject({
+      code: "CHANNEL_MODEL_AUTHENTICATION",
+      reason: "authentication",
+    });
+    expect(toChannelManagedError({ statusCode: 429 })).toMatchObject({
+      code: "CHANNEL_MODEL_RATE_LIMITED",
+      reason: "rate_limited",
+    });
+    expect(
+      toChannelManagedError({
+        reason: "network",
+        stage: "submit",
+        retryable: false,
+      }),
+    ).toMatchObject({
+      code: "CHANNEL_MODEL_NETWORK",
+      stage: "submit",
+      retryable: false,
+    });
+  });
+
   it("anthropic(官方)", () => {
     const m = modelFor({
       apiFormat: "anthropic",
@@ -82,10 +130,10 @@ describe("modelFor", () => {
     if (typeof generateModel === "string") throw new Error("预期模型对象");
 
     await expect(generateModel.doGenerate({} as never)).rejects.toThrow(
-      "渠道模型调用失败",
+      "模型调用失败",
     );
     await expect(generateModel.doStream({} as never)).rejects.toThrow(
-      "渠道模型调用失败",
+      "模型调用失败",
     );
 
     const chunkModel = protectChannelModel({
@@ -110,7 +158,7 @@ describe("modelFor", () => {
     const chunk = (await streamed.stream.getReader().read()).value as {
       error: Error;
     };
-    expect(chunk.error.message).toContain("渠道模型调用失败");
+    expect(chunk.error.message).toContain("模型调用失败");
     expect(chunk.error.message).not.toContain("SECRET_CHANNEL_KEY");
     expect(chunk.error.message).not.toContain("private-model");
     expect(chunk.error.message).not.toContain("channel-model.internal");
@@ -247,7 +295,7 @@ describe("embeddingModelFor", () => {
     expect(protectedModel.modelId).toBe("channel-managed");
     await expect(
       protectedModel.doEmbed({ values: ["hello"] } as never),
-    ).rejects.toThrow("渠道模型调用失败");
+    ).rejects.toThrow("模型调用失败");
   });
 
   it("embeddingModelFor 对渠道托管配置只暴露统一身份", () => {

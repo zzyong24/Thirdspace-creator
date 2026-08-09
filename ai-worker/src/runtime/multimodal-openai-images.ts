@@ -32,11 +32,68 @@ const DEFAULT_BASE_URL = "https://api.openai.com";
 /** 可注入的副作用(测试零成本:注入 fake fetch;真跑时用默认全局 fetch)。 */
 export interface OpenaiImagesAdapterDeps {
   fetch: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
+  maxTransientAttempts?: number;
 }
 
 const REAL_DEPS: OpenaiImagesAdapterDeps = {
   fetch: (...args) => fetch(...args),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  maxTransientAttempts: 3,
 };
+
+type JsonRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): JsonRecord | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as JsonRecord)
+    : null;
+}
+
+function nonEmptyString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+interface ParsedImageResult {
+  url?: string;
+  b64_json?: string;
+}
+
+/** 只沿已签约 envelope 键递归，兼容 top-level data[0] 与 result.data[0]。 */
+function imageResultOf(value: unknown, depth = 0): ParsedImageResult | null {
+  if (depth > 4) return null;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const parsed = imageResultOf(item, depth + 1);
+      if (parsed) return parsed;
+    }
+    return null;
+  }
+  const row = asRecord(value);
+  if (!row) return null;
+  const b64 = nonEmptyString(row.b64_json);
+  if (b64) return { b64_json: b64 };
+  const url = nonEmptyString(row.url);
+  if (url && /^https?:\/\//i.test(url)) return { url };
+  for (const key of ["data", "result", "output", "response"] as const) {
+    const parsed = imageResultOf(row[key], depth + 1);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function reasonForHttp(status: number):
+  | "authentication"
+  | "credit_exhausted"
+  | "rate_limited"
+  | "upstream"
+  | "unknown" {
+  if (status === 401 || status === 403) return "authentication";
+  if (status === 402) return "credit_exhausted";
+  if (status === 429) return "rate_limited";
+  if (status >= 500) return "upstream";
+  return "unknown";
+}
 
 /**
  * 拼出生图端点 URL。与 multimodal-openai-asr 的 transcriptionsUrl 同款三态归一:
@@ -141,35 +198,73 @@ async function generateImage(
     form.append("model", spec.model);
     form.append("n", "1");
     if (size) form.append("size", size);
-    res = await deps.fetch(editsUrl(spec), {
-      method: "POST",
-      // 不手写 Content-Type:multipart boundary 由 fetch 按 FormData 自动生成。
-      headers: { Authorization: `Bearer ${spec.token}` },
-      body: form,
-    });
+    try {
+      res = await deps.fetch(editsUrl(spec), {
+        method: "POST",
+        // 不手写 Content-Type:multipart boundary 由 fetch 按 FormData 自动生成。
+        headers: {
+          Authorization: `Bearer ${spec.token}`,
+          ...(opts.idempotencyKey
+            ? { "Idempotency-Key": opts.idempotencyKey }
+            : {}),
+        },
+        body: form,
+      });
+    } catch {
+      throw new MultimodalGenerationError("生图任务提交结果未知", {
+        reason: "network",
+        stage: "submit",
+        retryable: false,
+      });
+    }
   } else {
-    res = await deps.fetch(generationsUrl(spec), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${spec.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: spec.model, // 如 "gpt-image-2-4K" / 中转站转发的任意生图 model id
-        prompt: opts.prompt,
-        n: 1,
-        ...(size ? { size } : {}),
-        // 不发 response_format(gpt-image 系拒收该参数);响应侧 b64_json / url 双支持。
-      }),
-    });
+    try {
+      res = await deps.fetch(generationsUrl(spec), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${spec.token}`,
+          "Content-Type": "application/json",
+          ...(opts.idempotencyKey
+            ? { "Idempotency-Key": opts.idempotencyKey }
+            : {}),
+        },
+        body: JSON.stringify({
+          model: spec.model, // 如 "gpt-image-2-4K" / 中转站转发的任意生图 model id
+          prompt: opts.prompt,
+          n: 1,
+          ...(size ? { size } : {}),
+          // 不发 response_format(gpt-image 系拒收该参数);响应侧 b64_json / url 双支持。
+        }),
+      });
+    } catch {
+      throw new MultimodalGenerationError("生图任务提交结果未知", {
+        reason: "network",
+        stage: "submit",
+        retryable: false,
+      });
+    }
   }
   if (!res.ok) {
     throw new MultimodalGenerationError(
       `OpenAI 兼容 images/${opts.referenceImage ? "edits" : "generations"} ${classifyHttpError(res.status, await safeText(res))}`,
+      {
+        reason: reasonForHttp(res.status),
+        stage: "submit",
+        status: res.status,
+        retryable: res.status === 429 || res.status >= 500,
+      },
     );
   }
-  const json = (await res.json()) as OpenaiImagesResponse;
-  const first = json.data?.[0];
+  let json: unknown;
+  try {
+    json = (await res.json()) as unknown;
+  } catch {
+    throw new MultimodalGenerationError("生图服务返回了无法解析的响应", {
+      reason: "response_contract",
+      stage: "submit",
+    });
+  }
+  const first = imageResultOf(json);
   if (first?.b64_json) {
     return { assetBytes: new Uint8Array(Buffer.from(first.b64_json, "base64")) };
   }
@@ -178,6 +273,7 @@ async function generateImage(
   }
   throw new MultimodalGenerationError(
     "OpenAI 兼容 images/generations 未返图片(data[0] 无 b64_json 也无 url;可能被内容审核拦截或端点不支持该模型出图)",
+    { reason: "response_contract", stage: "submit" },
   );
 }
 
@@ -186,10 +282,45 @@ async function downloadBytes(
   url: string,
   deps: OpenaiImagesAdapterDeps,
 ): Promise<Uint8Array> {
-  const res = await deps.fetch(url, { method: "GET" });
+  const maxAttempts = Math.max(1, deps.maxTransientAttempts ?? 3);
+  let res: Response | null = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      res = await deps.fetch(url, { method: "GET" });
+      if (
+        res.ok ||
+        ![408, 425, 429, 500, 502, 503, 504].includes(res.status) ||
+        attempt === maxAttempts
+      ) {
+        break;
+      }
+    } catch {
+      if (attempt === maxAttempts) {
+        throw new MultimodalGenerationError("生图产物下载网络中断", {
+          reason: "network",
+          stage: "download",
+          retryable: true,
+        });
+      }
+    }
+    await (deps.sleep ?? REAL_DEPS.sleep!)(250);
+  }
+  if (!res) {
+    throw new MultimodalGenerationError("生图产物下载网络中断", {
+      reason: "network",
+      stage: "download",
+      retryable: true,
+    });
+  }
   if (!res.ok) {
     throw new MultimodalGenerationError(
       `生图产物下载失败(HTTP ${res.status}):${url}`,
+      {
+        reason: "download",
+        stage: "download",
+        status: res.status,
+        retryable: res.status === 429 || res.status >= 500,
+      },
     );
   }
   return new Uint8Array(await res.arrayBuffer());
@@ -201,11 +332,6 @@ async function safeText(res: Response): Promise<string> {
   } catch {
     return "<no body>";
   }
-}
-
-// OpenAI 兼容生图响应(官方 + one-api/new-api 中转同形状):data[] 每项 url 或 b64_json 其一。
-interface OpenaiImagesResponse {
-  data?: Array<{ url?: string; b64_json?: string }>;
 }
 
 /** 构造 OpenAI 兼容生图适配器。deps 可注入(测试零成本);默认走真全局 fetch。

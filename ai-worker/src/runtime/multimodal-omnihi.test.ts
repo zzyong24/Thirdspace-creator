@@ -164,6 +164,91 @@ describe("OmniHi / Seedance 文生视频适配器", () => {
     expect(Array.from(out.assetBytes)).toEqual([9, 8]);
   });
 
+  it("[T-735] 接住真实 succeeded + result.data[0].url，不把已计费成品误判失败", async () => {
+    const sequence: Response[] = [
+      jsonResponse({ data: { task_id: "job-real-shape" } }),
+      jsonResponse({
+        status: "succeeded",
+        result: {
+          data: [{ url: "https://cdn.example/real-shape.mp4" }],
+        },
+      }),
+      bytesResponse(new Uint8Array([4, 2, 4, 2])),
+    ];
+    let index = 0;
+    const fetchImpl = (async () => sequence[index++]!) as unknown as typeof fetch;
+
+    const out = await createOmnihiVideoAdapter(deps(fetchImpl)).generateVideo!(
+      spec,
+      { prompt: "真实渠道响应" },
+    );
+
+    expect(Array.from(out.assetBytes)).toEqual([4, 2, 4, 2]);
+    expect(index).toBe(3);
+  });
+
+  it("[T-735] 轮询网络抖动只重试幂等 GET，不重复提交计费 POST", async () => {
+    const calls: string[] = [];
+    let pollAttempts = 0;
+    const fetchImpl = vi.fn(async (url: string) => {
+      const target = String(url);
+      calls.push(target);
+      if (target.endsWith("/videos/generations")) {
+        return jsonResponse({ id: "job-no-resubmit" });
+      }
+      if (target.endsWith("/jobs/job-no-resubmit")) {
+        pollAttempts += 1;
+        if (pollAttempts === 1) throw new TypeError("fetch failed");
+        return jsonResponse({
+          status: "succeeded",
+          result: { data: [{ url: "https://cdn.example/retry.mp4" }] },
+        });
+      }
+      return bytesResponse(new Uint8Array([5, 5]));
+    }) as unknown as typeof fetch;
+
+    const out = await createOmnihiVideoAdapter(deps(fetchImpl)).generateVideo!(
+      spec,
+      { prompt: "只提交一次" },
+    );
+
+    expect(out.assetBytes).toEqual(new Uint8Array([5, 5]));
+    expect(calls.filter((url) => url.endsWith("/videos/generations"))).toHaveLength(1);
+    expect(pollAttempts).toBe(2);
+  });
+
+  it("[T-735] 已持久化 provider job 时跳过提交，直接恢复轮询与下载", async () => {
+    const calls: string[] = [];
+    const onJobSubmitted = vi.fn(async () => undefined);
+    const fetchImpl = vi.fn(async (url: string) => {
+      const target = String(url);
+      calls.push(target);
+      if (target.endsWith("/jobs/job-resume")) {
+        return jsonResponse({
+          status: "succeeded",
+          result: { data: [{ url: "https://cdn.example/resumed.mp4" }] },
+        });
+      }
+      return bytesResponse(new Uint8Array([3, 3, 3]));
+    }) as unknown as typeof fetch;
+
+    const out = await createOmnihiVideoAdapter(deps(fetchImpl)).generateVideo!(
+      spec,
+      {
+        prompt: "恢复原任务",
+        resumeJobId: "job-resume",
+        onJobSubmitted,
+      },
+    );
+
+    expect(out.assetBytes).toEqual(new Uint8Array([3, 3, 3]));
+    expect(calls).toEqual([
+      "https://api.omnihi.ai/media/v1/jobs/job-resume",
+      "https://cdn.example/resumed.mp4",
+    ]);
+    expect(onJobSubmitted).not.toHaveBeenCalled();
+  });
+
   it("任务失败与轮询超时都返回明确生成错误", async () => {
     const failed = [
       jsonResponse({ id: "job-failed" }),

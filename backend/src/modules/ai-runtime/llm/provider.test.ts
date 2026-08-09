@@ -73,7 +73,7 @@ describe("createLlmCompleter", () => {
     ).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(Error);
     const message = (error as Error).message;
-    expect(message).toContain("渠道模型调用失败");
+    expect(message).toContain("模型调用失败");
     expect(message).not.toContain("SECRET_CHANNEL_KEY");
     expect(message).not.toContain("private-model");
     expect(message).not.toContain("channel-model.internal");

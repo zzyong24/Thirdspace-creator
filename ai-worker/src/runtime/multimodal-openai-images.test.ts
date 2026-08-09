@@ -223,6 +223,28 @@ describe("OpenAI 兼容生图适配器 —— generateImage(同步一次请求)"
     ]);
   });
 
+  it("[T-735] 同时兼容顶层 data[0] 与渠道 result.data[0] 成品形状", async () => {
+    const calls: string[] = [];
+    const fakeFetch = (async (url: string, init?: RequestInit) => {
+      calls.push(String(url));
+      if (init?.method === "GET" || calls.length === 2) {
+        return bytesResponse(new Uint8Array([6, 6, 6]));
+      }
+      return jsonResponse({
+        result: { data: [{ url: "https://cdn.example.com/nested.png" }] },
+      });
+    }) as unknown as typeof fetch;
+
+    const out = await createOpenaiImagesAdapter({ fetch: fakeFetch })
+      .generateImage!(spec, { prompt: "渠道真实响应" });
+
+    expect(out.assetBytes).toEqual(new Uint8Array([6, 6, 6]));
+    expect(calls).toEqual([
+      "https://dudu.mom/v1/images/generations",
+      "https://cdn.example.com/nested.png",
+    ]);
+  });
+
   it("url 下载失败(非 2xx)→ MultimodalGenerationError", async () => {
     const fakeFetch = (async (url: string) => {
       if (String(url).includes("cdn")) {

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import {
   MultimodalGenerationError,
   type GeneratedAsset,
@@ -15,6 +17,8 @@ export interface OmnihiVideoAdapterDeps {
   sleep: (ms: number) => Promise<void>;
   pollIntervalMs: number;
   maxPollAttempts: number;
+  /** 只用于幂等 GET（轮询/下载）；提交 POST 永不自动重试。 */
+  maxTransientAttempts?: number;
 }
 
 const REAL_DEPS: OmnihiVideoAdapterDeps = {
@@ -22,6 +26,7 @@ const REAL_DEPS: OmnihiVideoAdapterDeps = {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   pollIntervalMs: 5_000,
   maxPollAttempts: 120,
+  maxTransientAttempts: 3,
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -42,10 +47,14 @@ function base(spec: MultimodalSpec): string {
     .replace(/\/+$/, "");
 }
 
-function authHeaders(spec: MultimodalSpec): Record<string, string> {
+function authHeaders(
+  spec: MultimodalSpec,
+  idempotencyKey?: string,
+): Record<string, string> {
   return {
     Authorization: `Bearer ${spec.token}`,
     "Content-Type": "application/json",
+    ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
   };
 }
 
@@ -177,6 +186,13 @@ function outputUrlOf(value: unknown, depth = 0): string | null {
   if (depth > 4) return null;
   const directString = nonEmptyString(value);
   if (directString && /^https?:\/\//i.test(directString)) return directString;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = outputUrlOf(item, depth + 1);
+      if (url) return url;
+    }
+    return null;
+  }
   const row = asRecord(value);
   if (!row) return null;
   for (const key of URL_KEYS) {
@@ -200,30 +216,121 @@ function outputUrlOf(value: unknown, depth = 0): string | null {
 
 const DONE_STATUSES = new Set(["completed", "complete", "succeeded", "success", "done"]);
 const FAILED_STATUSES = new Set(["failed", "fail", "error", "cancelled", "canceled"]);
+const TRANSIENT_HTTP_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+function referenceOf(jobId: string): string {
+  return `media-${createHash("sha256").update(jobId).digest("hex").slice(0, 10)}`;
+}
+
+function reasonForHttp(status: number):
+  | "authentication"
+  | "credit_exhausted"
+  | "rate_limited"
+  | "upstream"
+  | "unknown" {
+  if (status === 401 || status === 403) return "authentication";
+  if (status === 402) return "credit_exhausted";
+  if (status === 429) return "rate_limited";
+  if (status >= 500) return "upstream";
+  return "unknown";
+}
+
+async function fetchIdempotent(
+  deps: OmnihiVideoAdapterDeps,
+  input: string,
+  init: RequestInit,
+  stage: "poll" | "download",
+  reference: string,
+): Promise<Response> {
+  const maxAttempts = Math.max(1, deps.maxTransientAttempts ?? 3);
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await deps.fetch(input, init);
+      if (
+        response.ok ||
+        !TRANSIENT_HTTP_STATUSES.has(response.status) ||
+        attempt === maxAttempts
+      ) {
+        return response;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === maxAttempts) {
+        throw new MultimodalGenerationError(
+          `OmniHi 视频${stage === "poll" ? "任务查询" : "成品下载"}网络中断`,
+          {
+            reason: "network",
+            stage,
+            reference,
+            retryable: true,
+          },
+        );
+      }
+    }
+    await deps.sleep(deps.pollIntervalMs);
+  }
+  throw lastError;
+}
+
+async function jsonBody(
+  response: Response,
+  stage: "submit" | "poll",
+  reference?: string,
+): Promise<unknown> {
+  try {
+    return (await response.json()) as unknown;
+  } catch {
+    throw new MultimodalGenerationError("OmniHi 返回了无法解析的响应", {
+      reason: "response_contract",
+      stage,
+      ...(reference ? { reference } : {}),
+    });
+  }
+}
 
 async function submit(
   spec: MultimodalSpec,
   opts: GenerateVideoOptions,
   deps: OmnihiVideoAdapterDeps,
 ): Promise<string> {
-  const response = await deps.fetch(`${base(spec)}/videos/generations`, {
-    method: "POST",
-    headers: authHeaders(spec),
-    body: JSON.stringify({
-      model: spec.model,
-      input: { prompt: promptForRequest(spec, opts.prompt) },
-      parameters: videoParameters(spec, opts),
-    }),
-  });
+  let response: Response;
+  try {
+    // 计费 POST 永不在适配器内自动重试；响应丢失时无法证明上游未受理。
+    response = await deps.fetch(`${base(spec)}/videos/generations`, {
+      method: "POST",
+      headers: authHeaders(spec, opts.idempotencyKey),
+      body: JSON.stringify({
+        model: spec.model,
+        input: { prompt: promptForRequest(spec, opts.prompt) },
+        parameters: videoParameters(spec, opts),
+      }),
+    });
+  } catch {
+    throw new MultimodalGenerationError("OmniHi 视频任务提交结果未知", {
+      reason: "network",
+      stage: "submit",
+      retryable: false,
+    });
+  }
   if (!response.ok) {
     throw new MultimodalGenerationError(
       `OmniHi 视频任务提交失败(HTTP ${response.status}): ${await safeText(response)}`,
+      {
+        reason: reasonForHttp(response.status),
+        stage: "submit",
+        status: response.status,
+        retryable: TRANSIENT_HTTP_STATUSES.has(response.status),
+      },
     );
   }
-  const body = (await response.json()) as unknown;
+  const body = await jsonBody(response, "submit");
   const jobId = jobIdOf(body);
   if (!jobId) {
-    throw new MultimodalGenerationError("OmniHi 视频任务提交成功但没有返回任务 ID");
+    throw new MultimodalGenerationError("OmniHi 视频任务提交成功但没有返回任务 ID", {
+      reason: "response_contract",
+      stage: "submit",
+    });
   }
   return jobId;
 }
@@ -233,33 +340,59 @@ async function waitForOutputUrl(
   jobId: string,
   deps: OmnihiVideoAdapterDeps,
 ): Promise<string> {
+  const reference = referenceOf(jobId);
   for (let attempt = 0; attempt < deps.maxPollAttempts; attempt += 1) {
-    const response = await deps.fetch(
+    const response = await fetchIdempotent(
+      deps,
       `${base(spec)}/jobs/${encodeURIComponent(jobId)}`,
       { method: "GET", headers: authHeaders(spec) },
+      "poll",
+      reference,
     );
     if (!response.ok) {
       throw new MultimodalGenerationError(
         `OmniHi 视频任务查询失败(HTTP ${response.status}): ${await safeText(response)}`,
+        {
+          reason: reasonForHttp(response.status),
+          stage: "poll",
+          status: response.status,
+          reference,
+          retryable: TRANSIENT_HTTP_STATUSES.has(response.status),
+        },
       );
     }
-    const body = (await response.json()) as unknown;
+    const body = await jsonBody(response, "poll", reference);
     const status = statusOf(body);
     if (FAILED_STATUSES.has(status)) {
       const detail = providerErrorOf(body);
       throw new MultimodalGenerationError(
         `OmniHi 视频任务失败${detail ? `: ${detail}` : ""}`,
+        {
+          reason: "upstream",
+          stage: "poll",
+          reference,
+        },
       );
     }
     const outputUrl = outputUrlOf(body);
     if (outputUrl && (DONE_STATUSES.has(status) || !status)) return outputUrl;
     if (DONE_STATUSES.has(status)) {
-      throw new MultimodalGenerationError("OmniHi 视频任务已完成但没有返回成品地址");
+      throw new MultimodalGenerationError("OmniHi 视频任务已完成但没有返回成品地址", {
+        reason: "response_contract",
+        stage: "poll",
+        reference,
+      });
     }
     await deps.sleep(deps.pollIntervalMs);
   }
   throw new MultimodalGenerationError(
     `OmniHi 视频任务轮询超时(${deps.maxPollAttempts} 次未完成)`,
+    {
+      reason: "timeout",
+      stage: "poll",
+      reference,
+      retryable: true,
+    },
   );
 }
 
@@ -268,17 +401,36 @@ async function generateVideo(
   opts: GenerateVideoOptions,
   deps: OmnihiVideoAdapterDeps,
 ): Promise<GeneratedAsset> {
-  const jobId = await submit(spec, opts, deps);
+  const jobId = opts.resumeJobId ?? (await submit(spec, opts, deps));
+  if (!opts.resumeJobId) await opts.onJobSubmitted?.(jobId);
   const outputUrl = await waitForOutputUrl(spec, jobId, deps);
-  const response = await deps.fetch(outputUrl, { method: "GET" });
+  const reference = referenceOf(jobId);
+  const response = await fetchIdempotent(
+    deps,
+    outputUrl,
+    { method: "GET" },
+    "download",
+    reference,
+  );
   if (!response.ok) {
     throw new MultimodalGenerationError(
       `OmniHi 视频成品下载失败(HTTP ${response.status})`,
+      {
+        reason: "download",
+        stage: "download",
+        status: response.status,
+        reference,
+        retryable: TRANSIENT_HTTP_STATUSES.has(response.status),
+      },
     );
   }
   const assetBytes = new Uint8Array(await response.arrayBuffer());
   if (assetBytes.byteLength === 0) {
-    throw new MultimodalGenerationError("OmniHi 视频成品为空");
+    throw new MultimodalGenerationError("OmniHi 视频成品为空", {
+      reason: "response_contract",
+      stage: "download",
+      reference,
+    });
   }
   return { assetBytes };
 }

@@ -1,7 +1,11 @@
+import { createHash } from "node:crypto";
+
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type {
-  MultimodalProviderRegistry,
+import {
+  MultimodalGenerationError,
+  type GenerateVideoOptions,
+  type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-376] 失败分类人话(「未配置」vs「配置了但调用失败」),写进步骤流末条供前端诚实展示。
 import {
@@ -82,7 +86,60 @@ export interface AssetGenerateDeps {
 export interface AssetGenerateTask {
   id: string;
   projectId: string | null;
+  retryOfTaskId?: string | null;
   inputData: Record<string, unknown>;
+}
+
+interface ProviderCheckpoint {
+  schemaVersion: 1;
+  capability: "video.generate";
+  inputFingerprint: string;
+  state: "submitted" | "submit_unknown";
+  jobId?: string;
+}
+
+function generationFingerprint(input: {
+  capability: string;
+  prompt: string;
+  aspectRatio?: string;
+  spec: ResolvedMultimodalSpec;
+}): string {
+  return `sha256:${createHash("sha256")
+    .update(
+      JSON.stringify({
+        capability: input.capability,
+        prompt: input.prompt,
+        aspectRatio: input.aspectRatio ?? null,
+        provider: input.spec.provider,
+        baseUrl: input.spec.baseUrl,
+        model: input.spec.model,
+        serviceId: input.spec.serviceId ?? null,
+      }),
+    )
+    .digest("hex")}`;
+}
+
+function parseProviderCheckpoint(
+  value: unknown,
+  fingerprint: string,
+): ProviderCheckpoint | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const row = value as Record<string, unknown>;
+  if (
+    row.schemaVersion !== 1 ||
+    row.capability !== "video.generate" ||
+    row.inputFingerprint !== fingerprint ||
+    (row.state !== "submitted" && row.state !== "submit_unknown")
+  ) {
+    return null;
+  }
+  if (
+    row.jobId !== undefined &&
+    (typeof row.jobId !== "string" || row.jobId.length < 1 || row.jobId.length > 512)
+  ) {
+    return null;
+  }
+  return row as unknown as ProviderCheckpoint;
 }
 
 // image → image/png, video → video/mp4(MiniMax 出的都是这两种容器;asset 建档用)。
@@ -105,6 +162,7 @@ export async function runAssetGenerate(
   // [DATA-H07] 「asset 已建、候选未记成」失败窗口的清理锚:catch 里据此 best-effort 丢弃。
   let createdAssetId: string | null = null;
   let resolvedSpec: ResolvedMultimodalSpec | null = null;
+  let inputFingerprint: string | null = null;
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while生成(可能数十秒~分钟)
 
@@ -125,15 +183,61 @@ export async function runAssetGenerate(
       kind === "image" ? "image.generate" : "video.generate";
     const spec = await deps.resolveMultimodalSpec(ctx, capability);
     resolvedSpec = spec;
+    inputFingerprint = generationFingerprint({
+      capability,
+      prompt,
+      aspectRatio,
+      spec,
+    });
+
+    let resumeJobId: string | undefined;
+    if (kind === "video" && typeof deps.ai.getTaskRuntimeData === "function") {
+      const checkpointTaskId = task.retryOfTaskId ?? task.id;
+      const runtimeData = await deps.ai.getTaskRuntimeData(ctx, checkpointTaskId);
+      const checkpoint = parseProviderCheckpoint(
+        runtimeData.multimodalProviderCheckpoint,
+        inputFingerprint,
+      );
+      if (checkpoint?.state === "submit_unknown") {
+        throw new MultimodalGenerationError(
+          "视频生成请求的提交结果未知，禁止自动重复提交",
+          { reason: "network", stage: "submit", retryable: false },
+        );
+      }
+      if (checkpoint?.state === "submitted" && checkpoint.jobId) {
+        resumeJobId = checkpoint.jobId;
+      }
+    }
 
     // 2) 生成字节。上层统一 `{ assetBytes }`([gate-F1]);异步 video 的轮询/超时封在适配器内
     //    —— generateVideo 内部 submit→poll→retrieve,超时抛 MultimodalGenerationError,坍缩到
     //    下方 catch。工厂按 spec.provider 分派;从 ai-worker 动态引入(与其它 runner 同款)。
     const { generateImage, generateVideo } = await import("@creatoros/ai-worker");
+    const idempotencyKey = inputFingerprint;
+    const videoOptions: GenerateVideoOptions = {
+      prompt,
+      aspectRatio,
+      idempotencyKey,
+      ...(resumeJobId ? { resumeJobId } : {}),
+      onJobSubmitted: async (jobId) => {
+        if (typeof deps.ai.putMultimodalProviderCheckpoint !== "function") return;
+        await deps.ai.putMultimodalProviderCheckpoint(ctx, task.id, {
+          schemaVersion: 1,
+          capability: "video.generate",
+          inputFingerprint,
+          state: "submitted",
+          jobId,
+        });
+      },
+    };
     const { assetBytes } =
       kind === "image"
-        ? await generateImage(spec, { prompt, aspectRatio }, deps.registry)
-        : await generateVideo(spec, { prompt, aspectRatio }, deps.registry);
+        ? await generateImage(
+            spec,
+            { prompt, aspectRatio, idempotencyKey },
+            deps.registry,
+          )
+        : await generateVideo(spec, videoOptions, deps.registry);
     if (!assetBytes || assetBytes.byteLength === 0) {
       throw new Error("asset-generate-runner: provider returned no bytes");
     }
@@ -164,6 +268,33 @@ export async function runAssetGenerate(
       },
     });
   } catch (err) {
+    const failure =
+      err && typeof err === "object"
+        ? (err as { reason?: unknown; stage?: unknown })
+        : null;
+    if (
+      resolvedSpec &&
+      inputFingerprint &&
+      task.inputData.kind === "video" &&
+      failure?.stage === "submit" &&
+      (failure.reason === "network" ||
+        failure.reason === "response_contract" ||
+        (failure.reason === "upstream" &&
+          typeof (err as { status?: unknown }).status === "number" &&
+          (err as { status: number }).status >= 500)) &&
+      typeof deps.ai.putMultimodalProviderCheckpoint === "function"
+    ) {
+      try {
+        await deps.ai.putMultimodalProviderCheckpoint(ctx, task.id, {
+          schemaVersion: 1,
+          capability: "video.generate",
+          inputFingerprint,
+          state: "submit_unknown",
+        });
+      } catch {
+        /* 原提交未知错误优先；checkpoint 失败由同一诊断链暴露。 */
+      }
+    }
     // [DATA-H07] asset 已建但候选没记成(recordCandidate 失败)→ 该 pending 资产没有任何
     // 候选卡指向它,永远无法被采纳/拒绝 → 在这里 best-effort 丢弃(软删进回收站),不留
     // 隐身孤儿。丢弃自身失败只记日志(绝不让清理失败盖掉原始错误)。

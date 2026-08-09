@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 import {
   MultimodalConfigError,
+  MultimodalGenerationError,
   createFakeAdapter,
   createFakeAsyncVideoAdapter,
   type MultimodalProviderRegistry,
@@ -28,7 +29,9 @@ function makeDeps(opts: {
   kind?: "image" | "video";
   resolveThrows?: boolean;
   createdAssetId?: string;
+  runtimeByTask?: Map<string, Record<string, unknown>>;
 }) {
+  const runtimeByTask = opts.runtimeByTask ?? new Map<string, Record<string, unknown>>();
   const markRunning = vi.fn(async () => undefined);
   const recordCandidate = vi.fn(
     async (
@@ -89,6 +92,21 @@ function makeDeps(opts: {
       _input: { stepNo: number; kind: string; text: string; toolCalls: unknown[] },
     ) => undefined,
   );
+  const getTaskRuntimeData = vi.fn(async (_ctx: RequestContext, taskId: string) =>
+    runtimeByTask.get(taskId) ?? {},
+  );
+  const putMultimodalProviderCheckpoint = vi.fn(
+    async (
+      _ctx: RequestContext,
+      taskId: string,
+      checkpoint: Record<string, unknown>,
+    ) => {
+      runtimeByTask.set(taskId, {
+        ...(runtimeByTask.get(taskId) ?? {}),
+        multimodalProviderCheckpoint: { ...checkpoint },
+      });
+    },
+  );
   return {
     deps: {
       ai: {
@@ -97,6 +115,8 @@ function makeDeps(opts: {
         cancelTask,
         discardGeneratedAsset,
         recordStep,
+        getTaskRuntimeData,
+        putMultimodalProviderCheckpoint,
       } as never,
       resolveMultimodalSpec,
       registry: opts.registry,
@@ -109,6 +129,9 @@ function makeDeps(opts: {
     createGeneratedAsset,
     resolveMultimodalSpec,
     recordStep,
+    getTaskRuntimeData,
+    putMultimodalProviderCheckpoint,
+    runtimeByTask,
   };
 }
 
@@ -183,6 +206,134 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
     const cand = recordCandidate.mock.calls[0]![2];
     expect(cand.resultType).toBe("generated_asset");
     expect(cand.assetId).toBe("asset-vid-9");
+  });
+
+  it("[T-735] provider job 已提交后本地失败，重试沿原 job 恢复而不二次提交", async () => {
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    let submitCount = 0;
+    const firstAdapter = {
+      generateVideo: async (
+        _spec: unknown,
+        options: {
+          onJobSubmitted?: (jobId: string) => Promise<void>;
+        },
+      ) => {
+        submitCount += 1;
+        await options.onJobSubmitted?.("provider-job-paid-once");
+        throw new MultimodalGenerationError("download interrupted", {
+          reason: "download",
+          stage: "download",
+          retryable: true,
+        });
+      },
+    } as unknown as MultimodalProviderRegistry[string];
+    const first = makeDeps({
+      registry: { fake: firstAdapter },
+      kind: "video",
+      runtimeByTask,
+    });
+
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-paid-source",
+        projectId: "p1",
+        inputData: { prompt: "同一条付费视频", kind: "video" },
+      },
+      first.deps,
+    );
+
+    expect(submitCount).toBe(1);
+    expect(runtimeByTask.get("t-paid-source")).toMatchObject({
+      multimodalProviderCheckpoint: {
+        state: "submitted",
+        jobId: "provider-job-paid-once",
+      },
+    });
+
+    const resumed = vi.fn(
+      async (
+        _spec: unknown,
+        options: { resumeJobId?: string; onJobSubmitted?: unknown },
+      ) => {
+        expect(options.resumeJobId).toBe("provider-job-paid-once");
+        expect(options.onJobSubmitted).toBeTypeOf("function");
+        return { assetBytes: new Uint8Array([8, 8, 8]) };
+      },
+    );
+    const retry = makeDeps({
+      registry: {
+        fake: { generateVideo: resumed } as unknown as MultimodalProviderRegistry[string],
+      },
+      kind: "video",
+      runtimeByTask,
+      createdAssetId: "asset-recovered",
+    });
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-paid-retry",
+        retryOfTaskId: "t-paid-source",
+        projectId: "p1",
+        inputData: { prompt: "同一条付费视频", kind: "video" },
+      },
+      retry.deps,
+    );
+
+    expect(submitCount).toBe(1);
+    expect(resumed).toHaveBeenCalledOnce();
+    expect(retry.recordCandidate).toHaveBeenCalledOnce();
+  });
+
+  it("[T-735] 提交响应丢失标记 unknown，重试不会盲目再发一次计费请求", async () => {
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    const generateVideo = vi.fn(async () => {
+      throw new MultimodalGenerationError("submit response lost", {
+        reason: "network",
+        stage: "submit",
+        retryable: false,
+      });
+    });
+    const first = makeDeps({
+      registry: {
+        fake: { generateVideo } as unknown as MultimodalProviderRegistry[string],
+      },
+      kind: "video",
+      runtimeByTask,
+    });
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-submit-unknown",
+        projectId: "p1",
+        inputData: { prompt: "不能重复计费", kind: "video" },
+      },
+      first.deps,
+    );
+    expect(generateVideo).toHaveBeenCalledOnce();
+    expect(runtimeByTask.get("t-submit-unknown")).toMatchObject({
+      multimodalProviderCheckpoint: { state: "submit_unknown" },
+    });
+
+    const retry = makeDeps({
+      registry: {
+        fake: { generateVideo } as unknown as MultimodalProviderRegistry[string],
+      },
+      kind: "video",
+      runtimeByTask,
+    });
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-submit-unknown-retry",
+        retryOfTaskId: "t-submit-unknown",
+        projectId: "p1",
+        inputData: { prompt: "不能重复计费", kind: "video" },
+      },
+      retry.deps,
+    );
+    expect(generateVideo).toHaveBeenCalledOnce();
+    expect(retry.cancelTask).toHaveBeenCalledOnce();
   });
 });
 

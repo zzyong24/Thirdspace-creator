@@ -45,9 +45,85 @@ export class ModelConfigurationError extends Error {
 }
 
 export class ChannelManagedProviderError extends Error {
-  constructor() {
-    super("渠道模型调用失败，请稍后重试或联系官方处理");
+  readonly code: string;
+  readonly reason: ChannelManagedFailureReason;
+  readonly stage: ChannelManagedFailureStage;
+  readonly status?: number;
+  readonly reference?: string;
+  readonly retryable: boolean;
+
+  constructor(details: ChannelManagedFailureDetails = {}) {
+    const reason = details.reason ?? "unknown";
+    super(channelFailureMessage(reason, details.stage));
     this.name = "ChannelManagedProviderError";
+    this.code = CHANNEL_FAILURE_CODES[reason];
+    this.reason = reason;
+    this.stage = details.stage ?? "model_call";
+    this.status = details.status;
+    this.reference = details.reference;
+    this.retryable = details.retryable ?? false;
+  }
+}
+
+export type ChannelManagedFailureReason =
+  | "authentication"
+  | "rate_limited"
+  | "upstream"
+  | "response_contract"
+  | "download"
+  | "network"
+  | "timeout"
+  | "unknown";
+
+export type ChannelManagedFailureStage =
+  | "submit"
+  | "poll"
+  | "download"
+  | "local_persist"
+  | "model_call";
+
+interface ChannelManagedFailureDetails {
+  reason?: ChannelManagedFailureReason;
+  stage?: ChannelManagedFailureStage;
+  status?: number;
+  reference?: string;
+  retryable?: boolean;
+}
+
+const CHANNEL_FAILURE_CODES: Record<ChannelManagedFailureReason, string> = {
+  authentication: "CHANNEL_MODEL_AUTHENTICATION",
+  rate_limited: "CHANNEL_MODEL_RATE_LIMITED",
+  upstream: "CHANNEL_MODEL_UPSTREAM",
+  response_contract: "CHANNEL_MODEL_RESPONSE_CONTRACT",
+  download: "CHANNEL_MODEL_DOWNLOAD",
+  network: "CHANNEL_MODEL_NETWORK",
+  timeout: "CHANNEL_MODEL_TIMEOUT",
+  unknown: "CHANNEL_MODEL_UNKNOWN",
+};
+
+function channelFailureMessage(
+  reason: ChannelManagedFailureReason,
+  stage?: ChannelManagedFailureStage,
+): string {
+  switch (reason) {
+    case "authentication":
+      return "模型服务授权已失效，请重新校验激活权益后重试。";
+    case "rate_limited":
+      return "当前生成请求较多，请稍后再试。";
+    case "response_contract":
+      return "生成服务已经返回结果，但当前版本无法识别该结果，请联系官方处理。";
+    case "download":
+      return "内容已经生成，但下载保存失败，请稍后重试或联系官方处理。";
+    case "network":
+      return stage === "submit"
+        ? "生成请求的提交结果未知，为避免重复计费已停止自动重试，请联系官方处理。"
+        : "查询生成结果时网络中断，请稍后重试。";
+    case "timeout":
+      return "生成仍在处理中或查询超时，系统没有重复发起生成，请稍后重试。";
+    case "upstream":
+      return "生成服务暂时不可用，请稍后重试。";
+    default:
+      return "模型调用失败，请稍后重试或联系官方处理。";
   }
 }
 
@@ -75,6 +151,10 @@ function collectProviderErrorSignals(error: unknown, depth = 0): string[] {
   if (error instanceof Error) {
     const record = error as Error & {
       code?: unknown;
+      reason?: unknown;
+      stage?: unknown;
+      reference?: unknown;
+      retryable?: unknown;
       status?: unknown;
       statusCode?: unknown;
       responseBody?: unknown;
@@ -84,6 +164,7 @@ function collectProviderErrorSignals(error: unknown, depth = 0): string[] {
       error.name,
       error.message,
       ...collectProviderErrorSignals(record.code, depth + 1),
+      ...collectProviderErrorSignals(record.reason, depth + 1),
       ...collectProviderErrorSignals(record.status, depth + 1),
       ...collectProviderErrorSignals(record.statusCode, depth + 1),
       ...collectProviderErrorSignals(record.responseBody, depth + 1),
@@ -95,6 +176,7 @@ function collectProviderErrorSignals(error: unknown, depth = 0): string[] {
     const record = error as Record<string, unknown>;
     return [
       ...collectProviderErrorSignals(record.code, depth + 1),
+      ...collectProviderErrorSignals(record.reason, depth + 1),
       ...collectProviderErrorSignals(record.status, depth + 1),
       ...collectProviderErrorSignals(record.statusCode, depth + 1),
       ...collectProviderErrorSignals(record.message, depth + 1),
@@ -118,9 +200,72 @@ export function isManagedAiCreditExhaustedError(error: unknown): boolean {
 }
 
 export function toChannelManagedError(error: unknown): Error {
-  return isManagedAiCreditExhaustedError(error)
-    ? new ManagedAiCreditExhaustedError()
-    : new ChannelManagedProviderError();
+  if (
+    error instanceof ManagedAiCreditExhaustedError ||
+    error instanceof ChannelManagedProviderError
+  ) {
+    return error;
+  }
+  if (isManagedAiCreditExhaustedError(error)) {
+    return new ManagedAiCreditExhaustedError();
+  }
+  const row =
+    error && typeof error === "object"
+      ? (error as Record<string, unknown>)
+      : {};
+  const status =
+    typeof row.status === "number"
+      ? row.status
+      : typeof row.statusCode === "number"
+        ? row.statusCode
+        : undefined;
+  const explicitReason =
+    typeof row.reason === "string" &&
+    [
+      "authentication",
+      "rate_limited",
+      "upstream",
+      "response_contract",
+      "download",
+      "network",
+      "timeout",
+      "unknown",
+    ].includes(row.reason)
+      ? (row.reason as ChannelManagedFailureReason)
+      : null;
+  const signals = collectProviderErrorSignals(error).join(" | ");
+  const reason: ChannelManagedFailureReason =
+    explicitReason ??
+    (status === 401 || status === 403
+      ? "authentication"
+      : status === 429
+        ? "rate_limited"
+        : typeof status === "number" && status >= 500
+          ? "upstream"
+          : /timeout|timed out|超时/i.test(signals)
+            ? "timeout"
+            : /network|fetch failed|ECONN|ENET|socket/i.test(signals)
+              ? "network"
+              : "unknown");
+  const stage =
+    typeof row.stage === "string" &&
+    ["submit", "poll", "download", "local_persist", "model_call"].includes(
+      row.stage,
+    )
+      ? (row.stage as ChannelManagedFailureStage)
+      : "model_call";
+  const reference =
+    typeof row.reference === "string" &&
+    /^[a-z][a-z0-9-]{4,40}$/i.test(row.reference)
+      ? row.reference
+      : undefined;
+  return new ChannelManagedProviderError({
+    reason,
+    stage,
+    ...(status === undefined ? {} : { status }),
+    ...(reference ? { reference } : {}),
+    retryable: row.retryable === true,
+  });
 }
 
 function sanitizeChannelStream<T>(stream: ReadableStream<T>): ReadableStream<T> {
