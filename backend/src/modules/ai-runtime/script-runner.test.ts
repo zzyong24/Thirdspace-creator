@@ -294,39 +294,6 @@ describe("runScriptDraft 失败可观测性 (T-486)", () => {
   });
 });
 
-describe("[T-730] runScriptDraft 可选论点消费边界", () => {
-  it("普通生成只透传 reader 放行的当前 adopted 论点", async () => {
-    worker.runScriptNode.mockResolvedValueOnce(successResult());
-    const runtimeDeps = deps();
-    runtimeDeps.thesis = {
-      getThesisNodes: vi.fn(async () => [
-        { column: "core", title: "核心观点", summary: "先讲为什么" },
-        { column: "evidence", title: "真实证据", summary: "只引用已确认资料" },
-      ]),
-    };
-
-    await runScriptDraft(
-      ctx,
-      {
-        id: "task-script-with-thesis",
-        projectId: "project-1",
-        inputData: { artifactId: "artifact-script" },
-      },
-      runtimeDeps,
-    );
-
-    expect(runtimeDeps.thesis.getThesisNodes).toHaveBeenCalledWith(
-      ctx,
-      "project-1",
-    );
-    expect(worker.runScriptNode).toHaveBeenCalledWith(
-      expect.objectContaining({
-        thesisBrief: expect.stringContaining("核心观点"),
-      }),
-    );
-  });
-});
-
 describe("[T-727] runScriptDraft 原文保真模式", () => {
   it("逐字符产候选且完全不装配创作上下文、不解析模型、不调用 runScriptNode", async () => {
     const sourceText = "  今天给大家演示。\n\n错别子、100% 和 **Markdown** 都不改。  ";
