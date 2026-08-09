@@ -94,7 +94,20 @@ export const PACKAGE_BRAND_ICON_DATA_URL = cleanBrandIconDataUrl(
   process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL,
 );
 
-const packagePublicLinks = resolvePackagePublicLinks(process.env);
+// Next.js 只会把字面量 `process.env.NEXT_PUBLIC_*` 访问替换进浏览器 bundle；
+// 不得把整个 process.env 交给动态索引，否则渠道构建会在真浏览器里误落官方缺省值。
+const packagePublicLinks = resolvePackagePublicLinks({
+  NEXT_PUBLIC_CREATOROS_PACKAGE_REF:
+    process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_REF,
+  NEXT_PUBLIC_CREATOROS_PACKAGE_WEBSITE_URL:
+    process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_WEBSITE_URL,
+  NEXT_PUBLIC_CREATOROS_PACKAGE_DOWNLOAD_URL:
+    process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_DOWNLOAD_URL,
+  NEXT_PUBLIC_CREATOROS_PACKAGE_HUMAN_FEEDBACK_URL:
+    process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_HUMAN_FEEDBACK_URL,
+  NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL:
+    process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL,
+});
 export const PACKAGE_WEBSITE_URL = packagePublicLinks.websiteUrl;
 export const PACKAGE_DOWNLOAD_URL = packagePublicLinks.downloadUrl;
 export const PACKAGE_HUMAN_FEEDBACK_URL = packagePublicLinks.humanFeedbackUrl;
