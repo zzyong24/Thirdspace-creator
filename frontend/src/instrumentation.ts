@@ -35,7 +35,7 @@ export async function register(): Promise<void> {
     const { installBlobTrustRootFromInheritedFd } = await import(
       "@/server/blob-trust-bootstrap"
     );
-    installBlobTrustRootFromInheritedFd();
+    await installBlobTrustRootFromInheritedFd();
   }
 
   // [T-365/T-362] 桌面态装 sidecar 生命周期守护:SIGTERM 优雅退出(flush PGlite)+ 孤儿自检

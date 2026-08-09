@@ -10,6 +10,7 @@ import {
   isEncrypted,
   ENC_PREFIX,
   __resetFdKeyCacheForTest,
+  primeMasterKeyFromInheritedFd,
 } from "./secret-crypto";
 
 // A deterministic 32-byte key (base64) for round-trip tests.
@@ -123,6 +124,21 @@ describe("resolveMasterKey — desktop keychain env vs web/dev fallback", () => 
 });
 
 describe("[T-391 H-key] master key via ChildStdin fd channel", () => {
+  it("启动协议可先缓存同一 stdin 的 master key，后续解析不再二次争抢管道", () => {
+    primeMasterKeyFromInheritedFd(0, KEY_B64);
+    const res = resolveMasterKey({ CREATOROS_MASTER_KEY_FD: "0" });
+    expect(res.source).toBe("fd");
+    expect(res.degraded).toBe(false);
+    expect(res.key.equals(KEY)).toBe(true);
+  });
+
+  it("启动协议拒绝非法 fd 与非 32 字节 master key", () => {
+    expect(() => primeMasterKeyFromInheritedFd(-1, KEY_B64)).toThrow(/fd/i);
+    expect(() =>
+      primeMasterKeyFromInheritedFd(0, Buffer.alloc(31).toString("base64")),
+    ).toThrow(/32/);
+  });
+
   it("reads the key from the injected fd reader (desktop path), source='fd'", () => {
     const res = resolveMasterKey(
       { CREATOROS_MASTER_KEY_FD: "0" },

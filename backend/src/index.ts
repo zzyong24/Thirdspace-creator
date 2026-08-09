@@ -248,6 +248,7 @@ export {
   encryptSecret,
   decryptSecret,
   resolveMasterKey,
+  primeMasterKeyFromInheritedFd,
 } from "./secret-crypto";
 export type { ResolvedMasterKey, MasterKeySource } from "./secret-crypto";
 // Re-export the drizzle query helpers modules need so per-module repositories

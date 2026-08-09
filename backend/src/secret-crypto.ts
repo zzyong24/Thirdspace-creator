@@ -102,6 +102,25 @@ const DEV_FALLBACK_KEY = randomBytes(32);
 //   同步读不会长阻塞。结果**按 fd 记忆化**(fd 可能读到 EOF,二次读为空;memo 保证只读一次)。
 const fdKeyCache = new Map<number, string>();
 
+/**
+ * 桌面启动协议已从共享 stdin 完整读出 master key 时，先写入 fd 缓存。这样后续
+ * persistence / license 消费者只读内存，不会与 blob trust 或 Windows 停机哨兵争抢 fd 0。
+ */
+export function primeMasterKeyFromInheritedFd(fd: number, raw: string): void {
+  if (!Number.isInteger(fd) || fd < 0) {
+    throw new Error("master key fd 必须是非负整数");
+  }
+  const normalized = raw.trim();
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(normalized) || normalized.length % 4 !== 0) {
+    throw new Error("master key 必须是标准 base64");
+  }
+  const key = Buffer.from(normalized, "base64");
+  if (key.length !== KEY_LEN || key.toString("base64") !== normalized) {
+    throw new Error(`master key 必须是标准 base64 编码的 ${KEY_LEN} 字节`);
+  }
+  fdKeyCache.set(fd, normalized);
+}
+
 // 同步小睡(非 busy-wait):Atomics.wait 阻塞当前线程 ms 毫秒。仅用于 fd 竞态等待。
 function sleepSyncMs(ms: number): void {
   try {

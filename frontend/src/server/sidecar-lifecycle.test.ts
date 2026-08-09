@@ -20,6 +20,7 @@ function makeProc(
   exited: number[];
   handlers: Map<string, () => void>;
   stdinHandlers: Map<string, (chunk?: unknown) => void>;
+  stdinResumed: number;
   setPpid: (v: number) => void;
   setParentAlive: (v: boolean) => void;
 } {
@@ -29,6 +30,7 @@ function makeProc(
   const exited: number[] = [];
   const handlers = new Map<string, () => void>();
   const stdinHandlers = new Map<string, (chunk?: unknown) => void>();
+  let stdinResumed = 0;
   return {
     get ppid() {
       return currentPpid;
@@ -52,11 +54,17 @@ function makeProc(
       on: (ev, h) => {
         stdinHandlers.set(ev, h);
       },
+      resume: () => {
+        stdinResumed += 1;
+      },
     },
     killed,
     exited,
     handlers,
     stdinHandlers,
+    get stdinResumed() {
+      return stdinResumed;
+    },
     setPpid: (v) => {
       currentPpid = v;
     },
@@ -156,6 +164,7 @@ describe("Windows 分支(platform=win32)", () => {
   it("stdin 收到停机哨兵 → 优雅退出(壳侧 kill 序列第①步的 Win 等价 SIGTERM)", async () => {
     const proc = makeProc(100, { platform: "win32" });
     const stop = installSidecarLifecycle(proc, () => {});
+    expect(proc.stdinResumed).toBe(1);
     proc.stdinHandlers.get("data")!(Buffer.from(`${SHUTDOWN_SENTINEL}\n`));
     await vi.waitFor(() => expect(proc.exited).toEqual([0]));
     stop();
