@@ -13,6 +13,7 @@
     { "id": "AC-NO-VISUAL-DRIFT", "test_id": "GIT-T729-04" }
   ],
   "required_conditions": [
+    "official-package-defaults",
     "real-zhisu-package-environment",
     "current-package-website-only",
     "current-package-human-feedback-only",
@@ -37,6 +38,7 @@
   "coherence_groups": [],
   "honesty": [
     "真实 Chrome 旅程只证明浏览器 bundle 与 DOM 目标，不能冒充签名安装包真机点击",
+    "正式发布候选只使用 creatoros 官方包参数；智溯环境仅作为隔离回归，不进入官方产物",
     "渠道包缺少本包入口时必须保持空，不能偷回 CreatorOS 官方入口",
     "远端更新 manifest 只能提供 version/notes，任何重定向必须失败关闭",
     "本任务不修改 CSS、布局、图标、颜色或视觉快照"
