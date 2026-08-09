@@ -50,10 +50,8 @@ export {
 
 export {
   CHANNEL_CREDENTIAL_SERVICE,
-  MODEL_CREDENTIAL_SERVICE,
   CredentialVaultUnavailableError,
   channelCredentialRef,
-  modelCredentialRef,
   storeCredentialVerified,
   createNativeCredentialVault,
   createUnavailableCredentialVault,

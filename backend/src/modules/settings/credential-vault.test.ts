@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CHANNEL_CREDENTIAL_SERVICE,
-  MODEL_CREDENTIAL_SERVICE,
   channelCredentialRef,
-  modelCredentialRef,
   storeCredentialVerified,
   type CredentialVault,
 } from "./credential-vault";
@@ -36,11 +34,6 @@ describe("T-731 系统凭据引用", () => {
       "68f7d864ffaac23c71c8b56d85ca6d10ea3bba3cda681d10a06b5845b9e656b8",
     );
     expect(CHANNEL_CREDENTIAL_SERVICE).toBe("com.creatoros.managed-credentials.v1");
-  });
-
-  it("用户模型 Key 使用独立固定 service 与不可逆 account", () => {
-    expect(modelCredentialRef("user-a", "default")).toMatch(/^[a-f0-9]{64}$/);
-    expect(MODEL_CREDENTIAL_SERVICE).toBe("com.creatoros.user-model-credentials.v1");
   });
 
   it("写入后必须读回恒时核对；不一致或 Keychain 拒绝都失败关闭", async () => {

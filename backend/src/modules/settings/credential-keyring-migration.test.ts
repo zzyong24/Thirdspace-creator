@@ -5,34 +5,36 @@ import { createDb, encryptSecret } from "@creatoros/backend";
 import { channelModelCredentials, modelConfigurations } from "./settings.db-schema";
 import {
   CHANNEL_CREDENTIAL_SERVICE,
-  MODEL_CREDENTIAL_SERVICE,
   channelCredentialRef,
-  modelCredentialRef,
   type CredentialVault,
 } from "./credential-vault";
 import { migrateLongTermCredentialsToKeyring } from "./credential-keyring-migration";
 
 class FakeVault implements CredentialVault {
   readonly values = new Map<string, string>();
+  readonly calls: string[] = [];
   failAccounts = new Set<string>();
   setCalls = 0;
   async get(service: string, account: string): Promise<string | null> {
+    this.calls.push(`get:${service}:${account}`);
     return this.values.get(`${service}:${account}`) ?? null;
   }
   async set(service: string, account: string, secret: string): Promise<void> {
+    this.calls.push(`set:${service}:${account}`);
     if (this.failAccounts.has(account)) throw new Error("keychain denied");
     this.setCalls += 1;
     this.values.set(`${service}:${account}`, secret);
   }
   async delete(service: string, account: string): Promise<void> {
+    this.calls.push(`delete:${service}:${account}`);
     this.values.delete(`${service}:${account}`);
   }
 }
 
 const KEY = Buffer.alloc(32, 17);
 
-describe("T-731 长期凭据升级迁移", () => {
-  it("逐条写入并读回 Keyring 后才清空渠道旧密文与用户模型旧密文", async () => {
+describe("T-731/T-739 长期受管凭据升级迁移", () => {
+  it("只迁移渠道受管 Key；用户模型旧密文保持本地加密且不访问其 Keychain service", async () => {
     const { db } = await createDb();
     await db.insert(channelModelCredentials).values({
       userId: "user-a",
@@ -60,7 +62,7 @@ describe("T-731 长期凭据升级迁移", () => {
       legacyMasterKey: KEY,
       now: () => "2026-08-08T00:00:00.000Z",
     });
-    expect(result).toMatchObject({ migrated: 2, blocked: 0 });
+    expect(result).toMatchObject({ total: 1, migrated: 1, blocked: 0 });
 
     const channel = (await db.select().from(channelModelCredentials))[0]!;
     expect(channel.encryptedSecret).toBeNull();
@@ -72,11 +74,11 @@ describe("T-731 长期凭据升级迁移", () => {
     );
 
     const model = (await db.select().from(modelConfigurations))[0]!;
-    expect(model.secretValue).toBeNull();
-    expect(model.keyringRef).toBe(modelCredentialRef("user-a", "default"));
-    expect(model.credentialMigrationState).toBe("keyring_v1");
-    expect(vault.values.get(`${MODEL_CREDENTIAL_SERVICE}:${model.keyringRef}`)).toBe(
-      "user-key",
+    expect(model.secretValue).toMatch(/^enc:v1:/);
+    expect(model.keyringRef).toBeNull();
+    expect(model.credentialMigrationState).toBe("not_required");
+    expect(vault.calls.every((call) => call.includes(CHANNEL_CREDENTIAL_SERVICE))).toBe(
+      true,
     );
 
     const second = await migrateLongTermCredentialsToKeyring(db, {
@@ -85,7 +87,7 @@ describe("T-731 长期凭据升级迁移", () => {
       now: () => "2026-08-08T00:00:01.000Z",
     });
     expect(second.migrated).toBe(0);
-    expect(vault.setCalls).toBe(2);
+    expect(vault.setCalls).toBe(1);
   });
 
   it("Keychain 拒绝时保留旧密文唯一副本并标 blocked，生产态不得读旧密文", async () => {
@@ -124,19 +126,14 @@ describe("T-731 长期凭据升级迁移", () => {
     expect(row.migrationState).toBe("keyring_unavailable");
   });
 
-  it("没有旧 master key 时不猜、不删，保留旧副本并阻断迁移", async () => {
+  it("渠道受管 Key 没有旧 master key 时不猜、不删，保留旧副本并阻断迁移", async () => {
     const { db } = await createDb();
-    await db.insert(modelConfigurations).values({
-      id: "model-a",
+    await db.insert(channelModelCredentials).values({
       userId: "user-a",
-      capability: "default",
-      provider: "openai",
-      modelName: "gpt",
-      secretReference: "",
-      secretValue: encryptSecret("only-copy", KEY),
-      settings: {},
-      apiFormat: "openai_responses",
-      isDefault: true,
+      scopeId: "scope-a",
+      serviceId: "omnihi-main",
+      encryptedSecret: encryptSecret("only-copy", KEY),
+      updatedAt: "2026-08-01T00:00:00.000Z",
     });
     const result = await migrateLongTermCredentialsToKeyring(db, {
       vault: new FakeVault(),
@@ -144,9 +141,9 @@ describe("T-731 长期凭据升级迁移", () => {
       now: () => "2026-08-08T00:00:00.000Z",
     });
     expect(result.blocked).toBe(1);
-    const row = (await db.select().from(modelConfigurations))[0]!;
-    expect(row.secretValue).toMatch(/^enc:v1:/);
+    const row = (await db.select().from(channelModelCredentials))[0]!;
+    expect(row.encryptedSecret).toMatch(/^enc:v1:/);
     expect(row.keyringRef).toBeNull();
-    expect(row.credentialMigrationState).toBe("legacy_key_unavailable");
+    expect(row.migrationState).toBe("legacy_key_unavailable");
   });
 });

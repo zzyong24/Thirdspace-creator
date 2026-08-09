@@ -1,7 +1,8 @@
 import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
 import { ErrorCode } from "@creatoros/contract";
 import { assets, assetFiles } from "@creatoros/backend";
-import { decryptSecret, isEncrypted } from "@creatoros/backend";
+import { decryptSecret, encryptSecret, isEncrypted } from "@creatoros/backend";
+import { randomBytes } from "node:crypto";
 import {
   userPreferences,
   modelConfigurations,
@@ -15,11 +16,9 @@ import {
 } from "./settings.db-schema";
 import {
   CHANNEL_CREDENTIAL_SERVICE,
-  MODEL_CREDENTIAL_SERVICE,
   CredentialVaultUnavailableError,
   createMemoryCredentialVaultForTest,
   channelCredentialRef,
-  modelCredentialRef,
   storeCredentialVerified,
   type CredentialVault,
 } from "./credential-vault";
@@ -37,10 +36,10 @@ import {
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
-  /** @deprecated 仅兼容旧装配参数；新凭据写路径不再使用可逆 master key。 */
+  /** 用户自填模型 Key 的本机 AES-GCM 密钥；由桌面受保护启动通道提供。 */
   masterKey?: Buffer;
   credentialVault?: CredentialVault;
-  /** 只用于升级旧密文与旧导出；新凭据写路径禁止使用。 */
+  /** 兼容既有装配名；同一密钥也用于读取旧 enc:v1 密文。 */
   legacyMasterKey?: Buffer | null;
 }
 
@@ -177,10 +176,7 @@ export interface SettingsRepository {
     capability: string,
     body: ModelPutBody,
   ): Promise<ModelConfigurationRow>;
-  /**
-   * 重置数据库后，在同一 OS 用户、同一 capability 下重新绑定导出文件里的
-   * 不可逆 Keyring 引用。实现必须复算引用并拒绝任意外部 account 注入。
-   */
+  /** @deprecated T-739 后不再重绑旧用户模型 Keychain 引用；调用恒定要求重新填写。 */
   bindExistingModelCredential(
     ctx: RequestContext,
     capability: string,
@@ -303,6 +299,9 @@ export function isDecryptFailSentinel(v: string | null | undefined): boolean {
   return v === SECRET_DECRYPT_FAIL_SENTINEL;
 }
 
+// 仅让没有显式提供加密依赖的旧自动化夹具继续工作；每进程随机，不进入桌面/开发生产路径。
+const TEST_LOCAL_MODEL_SECRET_KEY = randomBytes(32);
+
 export function createSettingsRepository(
   db: Db,
   deps: RepoDeps,
@@ -330,7 +329,15 @@ export function createSettingsRepository(
       .limit(1);
     return rows[0] ?? null;
   };
-  const legacyKey = deps.legacyMasterKey ?? deps.masterKey ?? null;
+  const localSecretKey = Object.prototype.hasOwnProperty.call(
+    deps,
+    "legacyMasterKey",
+  )
+    ? (deps.legacyMasterKey ?? null)
+    : (deps.masterKey ??
+      (process.env.NODE_ENV === "test" || process.env.VITEST
+        ? TEST_LOCAL_MODEL_SECRET_KEY
+        : null));
   const configuredVault =
     deps.credentialVault ??
     (process.env.NODE_ENV === "test" || process.env.VITEST
@@ -343,15 +350,24 @@ export function createSettingsRepository(
   const decRow = async (
     row: ModelConfigurationRow,
   ): Promise<ModelConfigurationRow> => {
-    if (row.keyringRef && row.credentialMigrationState === "keyring_v1") {
-      const secret = await requireVault().get(MODEL_CREDENTIAL_SERVICE, row.keyringRef);
-      if (secret === null) {
-        throw new CredentialVaultUnavailableError("系统钥匙串中的模型凭据不存在，受管能力已停止");
-      }
-      return { ...row, secretValue: secret };
-    }
     if (row.secretValue) {
-      throw new CredentialVaultUnavailableError("模型凭据尚未迁入系统钥匙串，受管能力已停止");
+      if (!localSecretKey) {
+        return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
+      }
+      try {
+        return {
+          ...row,
+          secretValue: decryptSecret(row.secretValue, localSecretKey),
+        };
+      } catch {
+        return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
+      }
+    }
+    // DEC-SEC-043：旧版本曾把用户模型 Key 写进 sidecar Keychain service。
+    // 这里故意不读、不删该条目，避免启动/设置/模型调用再次弹系统密码框；用户重填后
+    // putModel 会用本地密文覆盖数据库引用。
+    if (row.keyringRef && row.credentialMigrationState === "keyring_v1") {
+      return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
     }
     return row;
   };
@@ -423,20 +439,15 @@ export function createSettingsRepository(
       // (provider/model only) never clobbers an existing stored key.
       const secretProvided =
         typeof body.secret === "string" && body.secret.length > 0;
-      let keyringRef: string | null = null;
-      let previousVaultValue: string | null = null;
+      let encryptedSecret: string | null = null;
       if (secretProvided) {
-        keyringRef = modelCredentialRef(ctx.userId, capability);
-        previousVaultValue = await requireVault().get(
-          MODEL_CREDENTIAL_SERVICE,
-          keyringRef,
-        );
-        await storeCredentialVerified(
-          requireVault(),
-          MODEL_CREDENTIAL_SERVICE,
-          keyringRef,
-          body.secret!,
-        );
+        if (!localSecretKey) {
+          throw new Error("本机加密密钥不可用，未保存模型密钥");
+        }
+        encryptedSecret = encryptSecret(body.secret!, localSecretKey);
+        if (decryptSecret(encryptedSecret, localSecretKey) !== body.secret) {
+          throw new Error("本机模型密钥加密后核对失败，未保存模型密钥");
+        }
       }
       const updateSet: Record<string, unknown> = {
         provider: body.provider,
@@ -448,49 +459,34 @@ export function createSettingsRepository(
         isDefault,
       };
       if (secretProvided) {
-        updateSet.secretValue = null;
-        updateSet.keyringRef = keyringRef;
-        updateSet.credentialMigrationState = "keyring_v1";
+        updateSet.secretValue = encryptedSecret;
+        updateSet.keyringRef = null;
+        updateSet.credentialMigrationState = "encrypted_v1";
         updateSet.rotatedAt = deps.now();
       }
-      let inserted: ModelConfigurationRow[];
-      try {
-        inserted = await db
-          .insert(modelConfigurations)
-          .values({
-            id: deps.nextId("model"),
-            userId: ctx.userId,
-            capability,
-            provider: body.provider,
-            modelName: body.modelName,
-            secretReference,
-            secretValue: null,
-            keyringRef,
-            credentialMigrationState: secretProvided ? "keyring_v1" : "not_required",
-            rotatedAt: secretProvided ? deps.now() : null,
-            settings,
-            baseUrl,
-            apiFormat,
-            isDefault,
-          })
-          .onConflictDoUpdate({
-            target: [modelConfigurations.userId, modelConfigurations.capability],
-            set: updateSet,
-          })
-          .returning();
-      } catch (error) {
-        if (secretProvided && keyringRef) {
-          const keyVault = requireVault();
-          if (previousVaultValue === null) {
-            await keyVault.delete(MODEL_CREDENTIAL_SERVICE, keyringRef).catch(() => {});
-          } else {
-            await keyVault
-              .set(MODEL_CREDENTIAL_SERVICE, keyringRef, previousVaultValue)
-              .catch(() => {});
-          }
-        }
-        throw error;
-      }
+      const inserted = await db
+        .insert(modelConfigurations)
+        .values({
+          id: deps.nextId("model"),
+          userId: ctx.userId,
+          capability,
+          provider: body.provider,
+          modelName: body.modelName,
+          secretReference,
+          secretValue: encryptedSecret,
+          keyringRef: null,
+          credentialMigrationState: secretProvided ? "encrypted_v1" : "not_required",
+          rotatedAt: secretProvided ? deps.now() : null,
+          settings,
+          baseUrl,
+          apiFormat,
+          isDefault,
+        })
+        .onConflictDoUpdate({
+          target: [modelConfigurations.userId, modelConfigurations.capability],
+          set: updateSet,
+        })
+        .returning();
       return decRow(inserted[0]!);
     },
 
@@ -502,28 +498,8 @@ export function createSettingsRepository(
       return Promise.all(rows.map(decRow));
     },
 
-    async bindExistingModelCredential(ctx, capability, keyringRef) {
-      const expected = modelCredentialRef(ctx.userId, capability);
-      if (keyringRef !== expected) {
-        throw new CredentialVaultUnavailableError("模型凭据引用与当前用户或能力不匹配");
-      }
-      const rows = await db
-        .update(modelConfigurations)
-        .set({
-          secretValue: null,
-          keyringRef: expected,
-          credentialMigrationState: "keyring_v1",
-        })
-        .where(
-          and(
-            eq(modelConfigurations.userId, ctx.userId),
-            eq(modelConfigurations.capability, capability),
-          ),
-        )
-        .returning({ id: modelConfigurations.id });
-      if (rows.length !== 1) {
-        throw new Error("模型配置不存在，无法绑定系统钥匙串引用");
-      }
+    async bindExistingModelCredential() {
+      throw new Error("旧系统钥匙串模型密钥不再自动读取，请重新填写模型密钥");
     },
 
     async getChannelModelCredential(ctx, scopeId, serviceId) {
@@ -627,8 +603,8 @@ export function createSettingsRepository(
         );
     },
 
-    // 导出用原始读 —— **不过 decRow/不访问 Keychain**。新版行只返回 NULL + 不可逆
-    // keyring_ref；升级前旧行仍可能含 enc:v1/明文，供旧导出文件兼容处理。
+    // 导出用原始读 —— **不过 decRow/不访问 Keychain**。用户自填模型 Key 只以 enc:v1
+    // 密文形态进入导出；存量 keyring-only 行没有可导出的密钥，要求用户重新填写。
     async listModelsRaw(ctx) {
       return db
         .select()
@@ -636,12 +612,12 @@ export function createSettingsRepository(
         .where(eq(modelConfigurations.userId, ctx.userId));
     },
 
-    // 仅兼容升级前旧导出文件；成功解包后 putModel 会立即迁入 Keychain。
+    // 解包同机 enc:v1 导出；成功后 putModel 会用新 IV 重新加密落本地数据库。
     unwrapExportedSecret(stored) {
       if (!isEncrypted(stored)) return stored; // 明文(手编文件/存量明文导出)透传
-      if (!legacyKey) return null; // 密文但本环境无旧 key → 诚实解不开
+      if (!localSecretKey) return null; // 密文但本环境无本机 key → 诚实解不开
       try {
-        return decryptSecret(stored, legacyKey);
+        return decryptSecret(stored, localSecretKey);
       } catch {
         // auth tag 校验失败 = 非本机导出(master key 不符)→ null,调用方提示重填。
         return null;

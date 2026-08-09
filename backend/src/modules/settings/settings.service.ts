@@ -141,10 +141,9 @@ export interface ModelConfigInternal {
   settings: Record<string, unknown>;
 }
 
-// ── [T-363/T-731] 模型配置导出/导入────────────────────────────────────────────
-// 新版导出只携带不可逆 keyringRef，绝不读取或导出系统钥匙串中的密钥。同一 OS 用户重置
-// 数据库后可重新绑定该确定性引用；换机时引用仍可安全导入，但实际读取会因目标钥匙串无值而
-// fail closed。旧版 enc:v1/明文文件仍走一次性兼容导入，并立即写入系统钥匙串。
+// ── [T-363/T-739] 模型配置导出/导入────────────────────────────────────────────
+// 导出只携带数据库中的 enc:v1 本机密文，绝不访问系统钥匙串。同一台机器可用 master key
+// 解包后重新加密；换机或密钥已更换时诚实提示重填。旧版 keyringRef 只作输入兼容，绝不读取。
 export interface ModelConfigExportRow {
   capability: string;
   provider: string;
@@ -152,7 +151,7 @@ export interface ModelConfigExportRow {
   secretReference: string;
   /** 库中存储形态(enc:v1: 密文 / 存量明文 / null=未配 key)。 */
   secretValue: string | null;
-  /** 不可逆、按 userId + capability 确定性生成的系统钥匙串 account 引用。 */
+  /** 旧版 keyring-only 导出兼容字段；新导出恒为 null。 */
   keyringRef?: string | null;
   settings: Record<string, unknown>;
   baseUrl: string | null;
@@ -666,7 +665,7 @@ export function createSettingsService(
       return { serviceId: row.serviceId, hasSecret: true, updatedAt: row.updatedAt };
     },
 
-    // [T-731] 导出只含数据库元数据和不可逆引用，不访问系统钥匙串。
+    // [T-739] 导出数据库中的本机密文，不访问系统钥匙串。
     async exportModelConfigs(ctx) {
       const rows = await repoForCtx(ctx).listModelsRaw(ctx);
       const models: ModelConfigExportRow[] = rows.map((row) => ({
@@ -674,10 +673,8 @@ export function createSettingsService(
         provider: row.provider,
         modelName: row.modelName,
         secretReference: row.secretReference,
-        // 即使该行仍处于旧密文迁移阻塞态，也不能把唯一恢复副本复制进普通导出文件。
-        secretValue: null,
-        keyringRef:
-          row.credentialMigrationState === "keyring_v1" ? row.keyringRef : null,
+        secretValue: row.secretValue,
+        keyringRef: null,
         settings: (row.settings as Record<string, unknown>) ?? {},
         baseUrl: row.baseUrl ?? null,
         apiFormat: (row.apiFormat as string) ?? "anthropic",
@@ -722,6 +719,9 @@ export function createSettingsService(
               secret = plain;
               secretOutcome = "imported";
             }
+          } else if (m.keyringRef) {
+            // 旧版只导出了不可逆引用；T-739 明确禁止为恢复它而访问 sidecar Keychain。
+            secretOutcome = "unrecoverable";
           }
           await service.setModelConfiguration(ctx, m.capability, {
             provider: m.provider,
@@ -737,9 +737,6 @@ export function createSettingsService(
             settings: m.settings,
             isDefault: m.isDefault,
           });
-          if (!secret && m.keyringRef) {
-            await repo.bindExistingModelCredential(ctx, m.capability, m.keyringRef);
-          }
           rows.push({
             capability: m.capability,
             ok: true,

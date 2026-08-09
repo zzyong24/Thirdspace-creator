@@ -2,12 +2,10 @@ import { and, eq } from "drizzle-orm";
 import type { Db } from "@creatoros/backend";
 import { decryptSecret, isEncrypted } from "@creatoros/backend";
 
-import { channelModelCredentials, modelConfigurations } from "./settings.db-schema";
+import { channelModelCredentials } from "./settings.db-schema";
 import {
   CHANNEL_CREDENTIAL_SERVICE,
-  MODEL_CREDENTIAL_SERVICE,
   channelCredentialRef,
-  modelCredentialRef,
   storeCredentialVerified,
   type CredentialVault,
 } from "./credential-vault";
@@ -52,9 +50,8 @@ export async function migrateLongTermCredentialsToKeyring(
   deps: CredentialKeyringMigrationDeps,
 ): Promise<CredentialKeyringMigrationResult> {
   const channels = await db.select().from(channelModelCredentials);
-  const models = await db.select().from(modelConfigurations);
   const result: CredentialKeyringMigrationResult = {
-    total: channels.length + models.length,
+    total: channels.length,
     migrated: 0,
     blocked: 0,
     alreadyMigrated: 0,
@@ -132,61 +129,6 @@ export async function migrateLongTermCredentialsToKeyring(
             eq(channelModelCredentials.serviceId, row.serviceId),
           ),
         );
-      result.blocked += 1;
-    }
-  }
-
-  for (const row of models) {
-    if (
-      row.credentialMigrationState === "keyring_v1" &&
-      row.keyringRef &&
-      row.secretValue === null
-    ) {
-      result.alreadyMigrated += 1;
-      continue;
-    }
-    if (!row.secretValue) {
-      result.empty += 1;
-      continue;
-    }
-    const ref = modelCredentialRef(row.userId, row.capability);
-    let previous: string | null = null;
-    try {
-      const plain = recoverLegacySecret(row.secretValue, deps.legacyMasterKey);
-      previous = await deps.vault.get(MODEL_CREDENTIAL_SERVICE, ref);
-      await storeCredentialVerified(deps.vault, MODEL_CREDENTIAL_SERVICE, ref, plain);
-      try {
-        await db.transaction(async (tx) => {
-          await tx
-            .update(modelConfigurations)
-            .set({
-              secretValue: null,
-              keyringRef: ref,
-              credentialMigrationState: "keyring_v1",
-              rotatedAt: deps.now(),
-            })
-            .where(eq(modelConfigurations.id, row.id));
-        });
-      } catch (error) {
-        await rollbackVault(
-          deps.vault,
-          MODEL_CREDENTIAL_SERVICE,
-          ref,
-          previous,
-        ).catch(() => {});
-        throw error;
-      }
-      result.migrated += 1;
-    } catch (error) {
-      await db
-        .update(modelConfigurations)
-        .set({
-          credentialMigrationState:
-            error instanceof Error && error.message.includes("legacy master key")
-              ? "legacy_key_unavailable"
-              : "keyring_unavailable",
-        })
-        .where(eq(modelConfigurations.id, row.id));
       result.blocked += 1;
     }
   }

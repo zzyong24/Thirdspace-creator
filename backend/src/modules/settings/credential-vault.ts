@@ -3,8 +3,6 @@ import { createRequire } from "node:module";
 
 export const CHANNEL_CREDENTIAL_SERVICE =
   "com.creatoros.managed-credentials.v1";
-export const MODEL_CREDENTIAL_SERVICE =
-  "com.creatoros.user-model-credentials.v1";
 
 export interface CredentialVault {
   get(service: string, account: string): Promise<string | null>;
@@ -69,11 +67,6 @@ function sha256Ref(input: string): string {
 /** FR-731-05：account 不保存 scope/service 原文，只保存两者拼接后的 SHA-256。 */
 export function channelCredentialRef(scopeId: string, serviceId: string): string {
   return sha256Ref(`${scopeId}${serviceId}`);
-}
-
-/** 用户自填模型 Key 使用同一安全级别，但与渠道受管命名空间物理隔离。 */
-export function modelCredentialRef(userId: string, capability: string): string {
-  return sha256Ref(`${userId}${capability}`);
 }
 
 function equalSecret(left: string, right: string): boolean {

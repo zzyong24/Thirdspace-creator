@@ -1815,20 +1815,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const identityRepo = createIdentityRepository(db, deps);
   const identity = createIdentityService(identityRepo, deps);
 
-  // T-731：master key 只保留给仍待升级的旧密文和非长期会话数据；受管凭据/用户模型 Key
-  // 已改由各自的系统凭据库命名空间保存，不再使用这把可逆密钥。
+  // DEC-SEC-043：master key 继续用于用户自填模型 Key 与本机非长期数据的静态加密；
+  // Growth 渠道受管长期 Key 仍只进入系统凭据库，不得回退到该路径。
   const { key: masterKey, degraded: masterKeyDegraded } = resolveMasterKey(
     process.env,
   );
   if (masterKeyDegraded) {
     console.warn(
       "[persistence] 非长期会话数据使用降级 master key(未取到系统钥匙串 key)。" +
-        "长期模型/受管凭据不会回退到该路径。",
+        "用户模型 Key 将拒绝新写，受管凭据不会回退到该路径。",
     );
   }
 
-  // T-731 FR-05：长期受管/用户模型 Key 只进入原生系统凭据库。测试必须显式走内存桩；
-  // 桌面原生组件缺失或系统拒绝时注入永远抛错的 vault，让迁移/新写 fail closed。
+  // T-731 FR-05：Growth 渠道受管长期 Key 只进入原生系统凭据库。用户自填模型 Key
+  // 不使用该 vault；测试仍显式走内存桩，桌面原生组件缺失时受管路径 fail closed。
   const credentialVault =
     process.env.NODE_ENV === "test" || process.env.VITEST
       ? createMemoryCredentialVaultForTest()
@@ -9660,6 +9660,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const settingsRepo = createSettingsRepository(db, {
     ...deps,
     credentialVault,
+    masterKey: masterKeyDegraded ? undefined : masterKey,
     legacyMasterKey: masterKeyDegraded ? null : masterKey,
   });
   const settingsService = createSettingsService(

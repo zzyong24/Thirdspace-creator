@@ -44,11 +44,11 @@ export const modelConfigurations = pgTable("model_configurations", {
   provider: text("provider").notNull(),
   modelName: text("model_name").notNull(),
   secretReference: text("secret_reference").notNull().default(""),
-  // Inline secret value (the actual key), stored directly in the LOCAL db (the
-  // app's end form is a local client — no leak surface). The public DTO masks
-  // this to a `hasSecret` boolean and NEVER serializes the raw value.
+  // 用户自填模型 Key 的本机 AES-256-GCM 密文（enc:v1）；公有 DTO 只返回 hasSecret，
+  // 永不序列化明文。Growth 渠道受管 Key 不得写入本列。
   secretValue: text("secret_value"),
-  // T-731：长期用户模型 Key 只进入系统凭据库；数据库仅保留不可逆引用与迁移状态。
+  // 仅用于识别 T-731 曾迁入用户模型 Keychain 的存量行；T-739 后生产路径不再读取
+  // 或写入该引用，用户重填时清空。
   keyringRef: text("keyring_ref"),
   credentialMigrationState: text("credential_migration_state")
     .notNull()

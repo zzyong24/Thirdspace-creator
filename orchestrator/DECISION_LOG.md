@@ -4,6 +4,34 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-SEC-043 (2026-08-09) — 用户自填模型 Key 不直接使用系统钥匙串
+
+**来源**：V1 正式候选把用户在设置页填写的模型 API Key 迁入 macOS Keychain，导致捆绑的
+`next-server` sidecar 在保存或使用时弹系统登录钥匙串密码框。用户明确要求暂时撤回该方案，
+恢复无需系统授权弹窗的本地加密保存；该问题使当前安装包无法正常使用。
+
+**决策**：
+
+1. 用户自填模型 API Key 使用 CreatorOS 已有的本机 master key 做 AES-GCM 加密，并只把密文保存
+   在本地数据库；浏览器、RSC、日志与普通导出不得获得明文。
+2. Next sidecar 不再为用户自填模型 Key 读写 `com.creatoros.user-model-credentials.v1`，启动迁移也
+   不访问该 service，避免保存、启动或模型调用触发系统钥匙串密码框。
+3. 已经迁入 Keychain 的旧用户模型 Key 不自动读取、不删除。界面沿用既有“需重新填写”状态；用户
+   下次保存新 Key 后，以本地加密密文替换数据库中的旧引用。
+4. Growth/Activity 下发的渠道受管长期 Key 不在本次回退范围内，继续只进入系统 Keychain /
+   Windows Credential Manager；数据库仍只保存不可逆引用与状态。
+5. 不改视觉、不新增功能；当前已构建的 V1 安装包不得继续作为正式发布候选，修复验证后另行打包。
+
+**取舍**：用户自填 Key 的防护强度回到“本机数据库密文 + 本机 master key”，弱于直接由系统
+Keychain 隔离，但恢复买断桌面产品的无额外系统密码交互。受管渠道长期 Key 的更高安全边界不降级。
+
+**用户确认**：2026-08-09，用户明确表示该系统钥匙串方案“暂时不要”“太折腾了，都没法用”。
+
+**影响范围**：T-739（作为 T-731 FR-731-05 第 5 条的后续用户口径修订）、settings repository、
+长期凭据迁移与聚焦测试。T-731 的历史评审工件不回写或伪造。
+
+---
+
 ## DEC-AI-042 (2026-08-09) — 买断产品不设置付费/持久化二次确认
 
 **来源**：V1 本地包把 `positioning.generate` 误归为副作用并弹“预计消耗”确认；确认后又因
