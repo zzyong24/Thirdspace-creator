@@ -145,10 +145,15 @@ describe("checkLatestVersion (desktop) — 官网公开 latest.json", () => {
 
   it("无新版 → uptodate", async () => {
     markDesktop();
-    mockGetVersion.mockResolvedValue("0.2.0");
+    mockGetVersion.mockResolvedValue("1.0.0");
     mockFetch.mockResolvedValue(manifestResponse({ version: "0.2.0" }));
     const res = await checkLatestVersion();
-    expect(res).toEqual({ kind: "uptodate", currentVersion: "0.2.0" });
+    expect(res).toEqual({ kind: "uptodate", currentVersion: "1.0.0" });
+    expect(mockFetch).toHaveBeenCalledWith(PACKAGE_UPDATE_MANIFEST_URL, {
+      method: "GET",
+      cache: "no-store",
+      redirect: "error",
+    });
   });
 
   it("官网响应不是合法版本清单 → 人话错误，不假装已最新", async () => {

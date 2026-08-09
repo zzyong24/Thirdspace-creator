@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/v1-security-rollback @ 41c50538
+LAST_SYNCED: codex/v1-security-rollback @ bfaabc3c
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-745 修复 V1 检查更新被 CSP 拦截与首页滚动责任冲突【正式包细节·用户确认 2026-08-09】
 - [wip] T-744 补通内容雷达一键改写重试与选题淘汰后的再生成链路【创作迭代·用户确认 2026-08-09】
 - [wip] T-743 整包撤回发布前未逐项确认的安全收口方案【V1 发布纠偏·用户确认 2026-08-09】
 - [wip] T-742 收口 Windows 浏览器回落并软化首启性能观测门槛【V1 正式包重跑·用户确认 2026-08-09】

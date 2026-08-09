@@ -461,6 +461,18 @@ describe("AppShell", () => {
     expect(contextualCard).toHaveClass("[@media(max-height:760px)]:hidden");
   });
 
+  it("页面只让 Radix viewport 负责纵向滚动，外层 Root 不再形成第二滚动容器", async () => {
+    const { container } = await renderShell();
+    const root = container.querySelector('[data-slot="page-scroll-area"]');
+    const viewport = container.querySelector(
+      '[data-slot="scroll-area-viewport"]',
+    );
+
+    expect(root).toHaveClass("min-h-0", "flex-1", "overflow-hidden");
+    expect(root).not.toHaveClass("overflow-y-auto");
+    expect(viewport).not.toBeNull();
+  });
+
   it("dashboard header renders search, notifications and the New Project CTA", async () => {
     const { container } = await renderShell();
     const header = container.querySelector('[data-slot="app-top-header"]');
