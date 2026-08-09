@@ -560,6 +560,22 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **验证影响**：需覆盖稿面普通/最小视口、旧入口零写入、CreativeContext 零读取、B-roll 项目素材
   不丢、历史 hash 不变和退役 runner 不可达；T-127 其余写稿、审核、版本与历史兼容语义保持。
 
+## CI-CREATION-733 — 恢复可选“立论点”UI与显式采用（2026-08-09）
+
+- **变更源**：用户确认 DEC-CREATION-041；T-733 重新开放 T-726 已退役的用户入口和新建链，但不
+  恢复强制前置或无提示消费。
+- **局部失效**：T-726 的 FR-726-01“用户表面完全退役”、FR-726-02“停止所有新写入”以及
+  `capability_retired` 新建门需要按 T-733 重新派生；T-726 的历史数据保留、制作零 thesis 读取、
+  项目重建零自动写入和语义边界继续有效。
+- **重新派生**：恢复 `planning.thesis` candidate、固定四栏面板和编辑保存；新 version 以
+  `scriptBasis.status=adopted|inactive` 显式表达是否进入 `script.draft(generate)`，历史无标记版本
+  默认不消费。
+- **不受影响**：T-727 `verbatim` 保真导入、脚本版本、审核、发布、制作与 B-roll 数据源；不新增
+  数据表或迁移，不删除任何历史 artifact/version。
+- **后续拆分**：电商等分场景模板、字段改名和任意结构自定义移入 T-734，不属于 T-733 验收。
+- **验证影响**：更新 T-726 的退役测试为可选入口与标记门测试；新增未采用/采用/停止使用三态、
+  MiniMax 路由、保存刷新、逐字稿优先级、无词面素材预挂和真实稿面普通/最小视口旅程。
+
 ---
 
 ### How to use this file going forward

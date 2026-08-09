@@ -416,3 +416,105 @@ export async function loadPlanningOutline(
     return null;
   }
 }
+
+export type ThesisColumn = "core" | "support" | "evidence" | "counter";
+
+export interface ThesisMaterialRef {
+  readonly id: string;
+  readonly title: string;
+  readonly source?: "ai";
+}
+
+export interface ThesisSkeletonNode {
+  readonly column: ThesisColumn;
+  readonly title: string;
+  readonly summary: string;
+  readonly materialRefs: ReadonlyArray<ThesisMaterialRef>;
+}
+
+export interface ThesisSkeleton {
+  readonly artifactId: string;
+  readonly versionId: string;
+  readonly scriptBasisStatus: "adopted" | "inactive";
+  readonly nodes: ReadonlyArray<ThesisSkeletonNode>;
+}
+
+const THESIS_COLUMNS: ReadonlySet<string> = new Set([
+  "core",
+  "support",
+  "evidence",
+  "counter",
+]);
+
+/**
+ * T-730：读取当前项目的论点骨架供用户查看和编辑。历史无标记版本仍可见，但默认
+ * `inactive`；这里只呈现采用状态，不替生成式写稿做消费决定。
+ */
+export async function loadThesisSkeleton(
+  projectId: string | null,
+  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
+): Promise<ThesisSkeleton | null> {
+  if (!projectId || !client.listArtifacts) return null;
+  try {
+    const listed = await client.listArtifacts({
+      params: { projectId },
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    });
+    const artifacts = (Array.isArray(listed) ? listed : []) as OutlineArtifactDto[];
+    const thesisArtifact = artifacts.find(
+      (artifact) => artifact.artifactType === "thesis_tree",
+    );
+    if (!thesisArtifact) return null;
+    const fetched = await fetchVersionsAndCurrent(client, thesisArtifact.id);
+    if (!fetched) return null;
+    const data = fetched.current.contentData as
+      | { nodes?: unknown; scriptBasis?: unknown }
+      | undefined;
+    const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
+    const nodes: ThesisSkeletonNode[] = [];
+    for (const raw of rawNodes) {
+      const node = (raw ?? {}) as Record<string, unknown>;
+      const column = typeof node.column === "string" ? node.column : "";
+      const title = typeof node.title === "string" ? node.title.trim() : "";
+      const summary =
+        typeof node.summary === "string" ? node.summary.trim() : "";
+      if (!THESIS_COLUMNS.has(column) || (!title && !summary)) continue;
+
+      const refs = Array.isArray(node.materialRefs) ? node.materialRefs : [];
+      const materialRefs: ThesisMaterialRef[] = [];
+      for (const rawRef of refs) {
+        const ref = (rawRef ?? {}) as Record<string, unknown>;
+        const id = typeof ref.id === "string" ? ref.id : "";
+        if (!id) continue;
+        materialRefs.push({
+          id,
+          title: typeof ref.title === "string" ? ref.title.trim() : "",
+          ...(ref.source === "ai" ? { source: "ai" as const } : {}),
+        });
+      }
+      nodes.push({
+        column: column as ThesisColumn,
+        title,
+        summary,
+        materialRefs,
+      });
+    }
+    if (nodes.length === 0) return null;
+    const basis =
+      data?.scriptBasis &&
+      typeof data.scriptBasis === "object" &&
+      !Array.isArray(data.scriptBasis)
+        ? (data.scriptBasis as { status?: unknown })
+        : null;
+    return {
+      artifactId: thesisArtifact.id,
+      versionId: fetched.current.id,
+      scriptBasisStatus:
+        basis?.status === "adopted" ? "adopted" : "inactive",
+      nodes,
+    };
+  } catch {
+    return null;
+  }
+}

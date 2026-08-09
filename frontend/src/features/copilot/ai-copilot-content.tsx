@@ -123,6 +123,7 @@ import type {
 import { renderContextCard } from "./context-card-registry";
 // [T-103b] 对话内审核报告卡:review.script 工具结果 → 轮询报告 + verdict/findings + 逐条改写门。
 import { ChatReviewReportCard } from "./chat-review-report-card";
+import { ChatThesisCard } from "./chat-thesis-card";
 import {
   ChatDiagnosisCard,
   ChatLearningsCard,
@@ -431,6 +432,7 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "calibration.diagnose": { label: "编导诊断", sub: "逐维度盲评内容" },
   "topic.generate": { label: "AI 出题", sub: "生成选题候选" },
   "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
+  "planning.thesis": { label: "梳理观点", sub: "生成可选论点骨架" },
   "cover.generate": { label: "生成封面", sub: "结构化封面方案 + 生图" },
   "intelligence.douyin.share": {
     label: "抖音分享建档",
@@ -558,6 +560,8 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "review.script": "审核这份文案:跑一遍违禁词/合规诊断,命中给逐条改写建议。",
   "positioning.generate": "结合我的账号画像,生成/进化一份结构化定位提案。",
   "script.draft": "帮我为这条内容起草一版完整的分镜口播脚本。",
+  "planning.thesis":
+    "这条内容需要先梳理观点。请为当前项目生成一份可选的论点骨架；我确认采用后再用于生成式写稿。",
   "script.patch": "请按我的要求只改选中的这一段，先给我修改前后对照，我确认后再写入稿面。",
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
   // 通用 AI 素材生成(配图/B-roll;依赖设置里配好的生图/生视频模型;未配时工具卡自带「去设置」降级)。
@@ -2683,6 +2687,26 @@ export function AICopilotContent({
                           <ChatReviewReportCard
                             taskId={o.taskId ?? null}
                             projectId={o.projectId ?? activeProjectChip?.id ?? null}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
+                      );
+                    }
+                    // [T-730] 可选论点骨架：生成只产候选；用户点击「采纳并用于写稿」后，
+                    // 才由确认门原子写入当前版本并标记 adopted。完整逐字稿路径仍原文优先。
+                    if (
+                      name === "planning.thesis" &&
+                      out.kind === "planning.thesis"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatThesisCard
+                            taskId={o.taskId ?? null}
                             error={o.error ?? null}
                           />
                         </React.Fragment>

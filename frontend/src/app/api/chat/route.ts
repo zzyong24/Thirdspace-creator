@@ -729,6 +729,7 @@ export async function POST(req: Request): Promise<Response> {
         dispatchDouyinSharePort: runtime.dispatchDouyinShare,
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
         dispatchScriptReviewPort: runtime.dispatchScriptReview,
+        dispatchPlanningThesisPort: runtime.dispatchPlanningThesis,
         // [T-268] script.draft 端口 —— ensure output_script artifact + dispatch 异步整稿(采纳写稿面)。
         dispatchScriptDraftPort: runtime.dispatchScriptDraft,
         prepareVideoEditPort: runtime.prepareVideoEdit,

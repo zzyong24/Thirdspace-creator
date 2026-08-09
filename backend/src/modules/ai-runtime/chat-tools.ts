@@ -526,6 +526,15 @@ export interface ChatToolDeps {
     /** 显式项目 id(模型从 selection 拿到时可传);缺省用 chatContext.projectId。 */
     projectId?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  /** T-730：异步生成可选论点候选；只有用户在候选卡明确采纳后才用于写稿。 */
+  dispatchPlanningThesis: (input: {
+    projectId?: string;
+    topic?: string;
+  }) => Promise<{
+    taskId: string | null;
+    projectId: string | null;
+    error: string | null;
+  }>;
   /**
    * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
@@ -1295,6 +1304,13 @@ export interface ReviewScriptToolResult {
   /** 被审项目 id(卡据此读 getLatestScriptReview + 定位脚本 artifact;无项目上下文为 null)。 */
   projectId: string | null;
   /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
+  error: string | null;
+}
+
+export interface PlanningThesisToolResult {
+  kind: "planning.thesis";
+  taskId: string | null;
+  projectId: string | null;
   error: string | null;
 }
 
@@ -2393,6 +2409,24 @@ const REVIEW_SCRIPT_PARAMS = jsonSchema<{ projectId?: string }>({
       type: "string",
       description:
         "要审核脚本的项目 id(可选)。缺省用当前项目对话的项目——所以在稿面右栏对话里直接调、不用传。",
+    },
+  },
+  additionalProperties: false,
+});
+
+const PLANNING_THESIS_PARAMS = jsonSchema<{
+  projectId?: string;
+  topic?: string;
+}>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description: "目标项目 id；缺省使用当前项目对话。",
+    },
+    topic: {
+      type: "string",
+      description: "本期主题；缺省使用当前项目标题。",
     },
   },
   additionalProperties: false,
@@ -3763,6 +3797,33 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         }
       },
     }, deps.humanizeError),
+    "planning.thesis": defineChatTool("planning.thesis", {
+      description:
+        "为当前项目生成一份可选论点骨架候选（核心论点、支撑依据、证据、反驳）。适合知识讲解、观点评论、测评对比、较长内容或需要证据/反驳时使用；已有完整逐字稿、简单通知、短口播或只想快速成稿时不要调用，直接写稿。它不是写稿前置，只产候选；用户点击「采纳并用于写稿」后才追加版本并进入生成式写稿。",
+      inputSchema: PLANNING_THESIS_PARAMS,
+      execute: async ({ projectId, topic }): Promise<PlanningThesisToolResult> => {
+        try {
+          const result = await deps.dispatchPlanningThesis({
+            projectId:
+              typeof projectId === "string" && projectId.trim()
+                ? projectId.trim()
+                : undefined,
+            topic:
+              typeof topic === "string" && topic.trim()
+                ? topic.trim()
+                : undefined,
+          });
+          return { kind: "planning.thesis", ...result };
+        } catch (error) {
+          return {
+            kind: "planning.thesis",
+            taskId: null,
+            projectId: null,
+            error: error instanceof Error ? error.message : String(error),
+          };
+        }
+      },
+    }, deps.humanizeError),
     // [T-062a] 对话手录经验:「记一条经验:…」→ 模型填参 → 候选卡。execute 纯回显
     // (不读库不写库、不跑二次 LLM),故不占 ChatToolDeps —— 落库动作在前端卡上由人触发。
     "learning.capture": defineChatTool("learning.capture", {
@@ -4483,6 +4544,7 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "review.analyze",
   // [T-103b] 稿面文案审核进对话(dispatch script.review → 审核报告卡 + 改写 apply 门)。
   "review.script",
+  "planning.thesis",
   "learning.capture",
   "brief.fill",
   "positioning.generate",
@@ -4556,6 +4618,7 @@ const CREATION_TOOL_NAMES: readonly string[] = [
   "topic.enrich",
   "script.hooks",
   "script.draft",
+  "planning.thesis",
   // [T-350a] 发布物料生成是创作产出工具(需项目上下文 + 整稿;无则工具诚实降级报「去项目稿面写整稿」)。
   "publish.package",
   // [T-271] 制作封面是创作产出工具(封面锚项目核心信息/口播稿;无项目时工具诚实降级报「去项目稿面生成」)。

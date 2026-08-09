@@ -124,7 +124,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   // [T-269] 模板正文尾部嵌 ANTI_FABRICATION_CLAUSE(可溯硬约束段,单一真值 grounding-facets)——
   //   把对话外层 honesty rule #9 下沉进写稿子调用,弱模型也不敢编数字/偷换事实。
   template: `【创作者定位】
-{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{durationTarget}}{{contract}}{{outline}}{{extraBrief}}
+{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{durationTarget}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
 
 【任务】基于定位(+立项硬约束+过往爆款要素)+选题+**用户第一手资料**,写一条**分镜脚本**。
 
@@ -162,6 +162,7 @@ ${ANTI_FABRICATION_CLAUSE}
     "positioning",
     "learnings",
     "knowledge",
+    "thesis",
     "contract",
     "outline",
     "artifactOrigin",

@@ -50,6 +50,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   dispatchPublishPackage: ReturnType<typeof vi.fn>;
   dispatchProjectTranscribe: ReturnType<typeof vi.fn>;
   dispatchGenerateCover: ReturnType<typeof vi.fn>;
+  dispatchPlanningThesis: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
@@ -428,6 +429,11 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     projectId: "proj-1",
     error: null as string | null,
   }));
+  const dispatchPlanningThesis = vi.fn(async () => ({
+    taskId: "task-thesis-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const deps: ChatToolDeps = {
     sideEffectApproval: {
       request: async () => ({ status: "user-approval" as const }),
@@ -461,6 +467,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     dispatchGenerateAsset,
     dispatchScriptReview,
     dispatchGenerateCover,
+    dispatchPlanningThesis,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -497,6 +504,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     dispatchGenerateAsset,
     dispatchScriptReview,
     dispatchGenerateCover,
+    dispatchPlanningThesis,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -1331,11 +1339,32 @@ describe("[T-385] project.transcribe 工具 — 对话内一键抓逐字稿", ()
   });
 });
 
-describe("[T-726] planning.thesis 工具退役", () => {
-  it("不在公开工具清单，旧白名单也无法重新挂载", () => {
+describe("[T-730] planning.thesis 可选论点骨架", () => {
+  it("在公开工具清单中，白名单可挂载", () => {
     const { deps } = makeDeps();
-    expect(ALL_CHAT_TOOL_NAMES).not.toContain("planning.thesis");
-    expect(buildChatTools(["planning.thesis"], deps)).toEqual({});
+    expect(ALL_CHAT_TOOL_NAMES).toContain("planning.thesis");
+    expect(Object.keys(buildChatTools(["planning.thesis"], deps))).toEqual([
+      "planning.thesis",
+    ]);
+  });
+
+  it("execute 只分派候选任务，并规范化 projectId/topic", async () => {
+    const { deps, dispatchPlanningThesis } = makeDeps();
+    const tools = buildChatTools(["planning.thesis"], deps);
+    const result = await runExecute(tools["planning.thesis"]!, {
+      projectId: "  proj-1  ",
+      topic: "  为什么完整逐字稿应原文优先  ",
+    });
+    expect(dispatchPlanningThesis).toHaveBeenCalledWith({
+      projectId: "proj-1",
+      topic: "为什么完整逐字稿应原文优先",
+    });
+    expect(result).toEqual({
+      kind: "planning.thesis",
+      taskId: "task-thesis-1",
+      projectId: "proj-1",
+      error: null,
+    });
   });
 });
 

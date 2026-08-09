@@ -6,6 +6,8 @@ import {
   resolveMasterKey,
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
+  sql,
+  type Db,
   // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
   // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
   restorePreservedUserAssets,
@@ -187,6 +189,7 @@ import {
   createReviewGateRepository,
 } from "@creatoros/backend/modules/review";
 import { runScriptReview } from "@creatoros/backend/modules/ai-runtime";
+import { runPlanningThesis } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialSummary } from "@creatoros/backend/modules/ai-runtime";
 import { runEmbedTexts } from "@creatoros/backend/modules/ai-runtime";
 import {
@@ -572,7 +575,10 @@ import {
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
-import { SCRIPT_DRAFT_TEMPLATE } from "@creatoros/ai-worker";
+import {
+  PLANNING_THESIS_TEMPLATE,
+  SCRIPT_DRAFT_TEMPLATE,
+} from "@creatoros/ai-worker";
 // [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
 import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
@@ -1570,6 +1576,10 @@ export interface ChatRuntime {
   dispatchScriptReview: (
     ctx: RequestContext,
     input: { projectId: string },
+  ) => Promise<{ taskId: string }>;
+  dispatchPlanningThesis: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
   ) => Promise<{ taskId: string }>;
   // [T-271] cover.generate 端口 —— dispatch 既有 cover.generate ai_task(void runCoverGenerate:结构化
   // 封面方案硬锚 brief/口播稿 → 文案诚实门 → 结构化组装生图 prompt → image.generate 生图),立即返回
@@ -3148,6 +3158,98 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     artifacts: {
       createVersion: (ctx, artifactId, input) =>
         artifactsService.createVersion(ctx, artifactId, input),
+      adoptThesisCandidate: async (ctx, input) => {
+        const accountId = requireAccountId(
+          ctx.accountId,
+          "ai.adoptThesisCandidate",
+        );
+        await db.transaction(async (transaction) => {
+          const txDb = transaction as unknown as Db;
+          // 先锁项目，再锁任务：同一项目的并发确认按固定顺序串行，避免铸出两个 thesis_tree。
+          const projectLock = await txDb.execute(sql`
+            SELECT id
+            FROM projects
+            WHERE id = ${input.projectId}
+              AND user_id = ${ctx.userId}
+              AND account_id = ${accountId}
+            FOR UPDATE
+          `);
+          if (projectLock.rows.length === 0) {
+            throw new OwnershipError("Project not found");
+          }
+          await txDb.execute(sql`
+            SELECT id
+            FROM ai_tasks
+            WHERE id = ${input.taskId}
+              AND user_id = ${ctx.userId}
+              AND account_id = ${accountId}
+            FOR UPDATE
+          `);
+
+          const txAiRepo = createAiRepository(txDb, {
+            now: deps.now,
+            nextId: deps.nextId,
+            userId: ctx.userId,
+            accountId,
+          });
+          const lockedTask = await txAiRepo.requireTask(input.taskId);
+          if (lockedTask.status === "succeeded") return;
+          if (
+            lockedTask.status !== "awaiting_confirmation" ||
+            lockedTask.taskType !== "planning.thesis" ||
+            lockedTask.projectId !== input.projectId
+          ) {
+            throw new Error(
+              `planning.thesis adoption state mismatch: ${lockedTask.status}`,
+            );
+          }
+
+          const txArtifacts = createArtifactsService({
+            db: txDb,
+            now: deps.now,
+            nextId: deps.nextId,
+          });
+          const projectArtifacts = await txArtifacts.listProjectArtifacts(
+            ctx,
+            input.projectId,
+          );
+          const thesisArtifact =
+            projectArtifacts.find(
+              (artifact) => artifact.artifactType === "thesis_tree",
+            ) ??
+            (await txArtifacts.createArtifact(ctx, {
+              projectId: input.projectId,
+              title: "论点骨架",
+              artifactType: "thesis_tree",
+              stage: "planning",
+            }));
+          const versions = await txArtifacts.listVersions(ctx, thesisArtifact.id);
+          const existing = versions.find(
+            (version) => version.aiTaskId === input.taskId,
+          );
+          if (existing) {
+            if (thesisArtifact.currentVersionId !== existing.id) {
+              await txArtifacts.restoreVersion(
+                ctx,
+                thesisArtifact.id,
+                existing.id,
+              );
+            }
+          } else {
+            await txArtifacts.createVersion(ctx, thesisArtifact.id, {
+              contentText: input.contentText,
+              changeSummary: input.changeSummary,
+              contentData: input.contentData,
+              createdByType: "ai",
+              aiTaskId: input.taskId,
+            });
+          }
+          await txAiRepo.updateTaskStatus(input.taskId, {
+            status: "succeeded",
+            completedAt: deps.now(),
+          });
+        });
+      },
     },
     // 机制③ candidate-confirm bus — confirmTask materializes a `material_list` candidate
     // (research_gather node) into KnowledgeItems through the Knowledge public service.
@@ -3866,13 +3968,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           if (!target) return null;
           const versions = await artifactsService.listVersions(c, target.id);
           if (versions.length === 0) return null;
-          const current = versions
-            .slice()
-            .sort((a, b) => b.versionNumber - a.versionNumber)[0];
+          const current =
+            versions.find((version) => version.id === target.currentVersionId) ??
+            versions.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
           const data = current?.contentData;
           return data && typeof data === "object" && !Array.isArray(data)
             ? (data as Record<string, unknown>)
             : null;
+        };
+        // T-730：生成式写稿只读取当前项目当前 thesis_tree 版本上明确 adopted 的节点。
+        // 历史无标记、inactive 或非法状态一律返回空；UI 读侧仍可展示这些历史内容。
+        const thesisReader = {
+          getThesisNodes: async (c: RequestContext, projectId: string) => {
+            const data = await readArtifactContentData(c, projectId, "thesis_tree");
+            const basis =
+              data?.scriptBasis &&
+              typeof data.scriptBasis === "object" &&
+              !Array.isArray(data.scriptBasis)
+                ? (data.scriptBasis as { status?: unknown })
+                : null;
+            if (basis?.status !== "adopted") return [];
+            const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
+            return rawNodes
+              .map((raw) => {
+                const node = (raw ?? {}) as Record<string, unknown>;
+                return {
+                  column: typeof node.column === "string" ? node.column : "",
+                  title: typeof node.title === "string" ? node.title : "",
+                  summary: typeof node.summary === "string" ? node.summary : "",
+                };
+              })
+              .filter((node) => node.column && (node.title || node.summary));
+          },
         };
         // 内容合同 reader (planning.outline) — read the project's `content_contract`
         // artifact's current version's `contentData.cards` back as the constraint the
@@ -3979,6 +4106,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           accounts: accountsReader,
           signals: signalsReader,
           knowledge: knowledgeReader,
+          thesis: thesisReader,
           contract: contractReader,
           outline: outlineReader,
           artifactOrigin: artifactOriginReader,
@@ -4345,6 +4473,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   }));
                 },
               },
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "planning.thesis" &&
+          task.status === "queued"
+        ) {
+          await runPlanningThesis(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              ...resolveContextDeps(
+                PLANNING_THESIS_TEMPLATE.contextRequirements,
+                contextReaderRegistry,
+              ),
+              positioning: positioningReader,
+              resolveModelSpec,
             },
           );
         } else if (
@@ -12621,6 +12772,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
         throw new Error("dispatchScriptReview: 起 script.review task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
+    // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
+    // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
+    dispatchPlanningThesis: async (
+      ctx: RequestContext,
+      input: { projectId: string; topic?: string },
+    ) => {
+      const res = await ai.request(
+        ENDPOINTS.createAITask,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "planning.thesis",
+            attemptId: createAiTaskAttemptId(),
+            inputData: {
+              projectId: input.projectId,
+              ...(input.topic ? { topic: input.topic } : {}),
+            },
+          },
+        },
+        ctx,
+      );
+      const task = (res as { data?: { id?: unknown } }).data;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error(
+          "dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)",
+        );
       }
       return { taskId };
     },

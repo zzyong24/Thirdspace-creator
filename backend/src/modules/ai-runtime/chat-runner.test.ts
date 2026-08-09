@@ -1091,15 +1091,29 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(bogus.forcedTool).toBeUndefined();
   });
 
-  it("[T-726] 历史 functionKey=planning.thesis 不再挂工具，也不能 forcedTool 绕过退役门", async () => {
-    const { deps } = makeDeps();
+  it("[T-730] functionKey=planning.thesis 挂可选工具并真实分派当前项目候选", async () => {
+    const dispatchPlanningThesisPort = vi.fn(async () => ({ taskId: "task-thesis-1" }));
+    const { deps } = makeDeps({ dispatchPlanningThesisPort });
     const a = await buildChatAssembly(
       ctx,
       { surface: "project", projectId: "proj-1", functionKey: "planning.thesis" },
       deps,
     );
-    expect(Object.keys(a.tools)).not.toContain("planning.thesis");
-    expect(a.forcedTool).toBeUndefined();
+    expect(Object.keys(a.tools)).toContain("planning.thesis");
+    expect(a.forcedTool).toBe("planning.thesis");
+    const result = await runToolExecute(a.tools["planning.thesis"]!, {
+      topic: "可选论点骨架",
+    });
+    expect(dispatchPlanningThesisPort).toHaveBeenCalledWith(ctx, {
+      projectId: "proj-1",
+      topic: "可选论点骨架",
+    });
+    expect(result).toMatchObject({
+      kind: "planning.thesis",
+      taskId: "task-thesis-1",
+      projectId: "proj-1",
+      error: null,
+    });
   });
 
   it("[T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script", async () => {
@@ -1148,6 +1162,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "material.generate",
       // [T-084b] 网页截图(公开页真截图落 asset)。
       "material.screenshot",
+      "planning.thesis",
       "positioning.generate",
       // [T-350a] 发布物料生成(创作产出工具,dispatch publish.package;排序:'po' < 'pu' < 's')。
       "publish.package",
@@ -1475,7 +1490,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(36); // T-726:退役 planning.thesis 后减一
+    expect(names.length).toBe(37);
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -1534,11 +1549,12 @@ describe("buildChatAssembly — 三层注入装配", () => {
     it("② 规则带作用域:全局条款(编造禁令/直接写稿)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-      // 全局条款:编造禁令 + T-726 直接写稿路径。
+      // 全局条款:编造禁令 + 可选论点/直接写稿边界。
       expect(a.system).toContain("全局条款");
       expect(a.system).toContain("绝不编造具体数字、案例、来源");
       expect(a.system).toContain("准备素材 → 直接写稿");
-      expect(a.system).not.toContain("planning.thesis");
+      expect(a.system).toContain("planning.thesis");
+      expect(a.system).toContain("可选辅助，不是写稿前置");
       // 场景条款:S1 无稿门限定「已发布」;S2 创作前搭结构/起稿不适用无稿门。
       expect(a.system).toContain("场景条款");
       expect(a.system).toContain("S1.(仅在拆解/复盘一条**已发布**作品时生效)");
@@ -1547,11 +1563,11 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(a.system).toContain("不适用 S1 的无稿门");
     });
 
-    it("[T-726] 编导直接使用 Brief、定位和真实素材写稿", async () => {
+    it("[T-730] 编导仍可直接使用 Brief、定位和真实素材写稿，不强制论点前置", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
       expect(a.system).toContain("直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本");
-      expect(a.system).not.toContain("论点骨架面板");
+      expect(a.system).toContain("不得要求先立论点");
     });
 
     it("[T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)", async () => {
@@ -1579,7 +1595,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("project.transcribe");
       expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
       expect(names).toContain("video.edit.render");
-      expect(names.length).toBe(37); // T-726:退役 planning.thesis 后减一
+      expect(names.length).toBe(38);
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -1602,7 +1618,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("video.edit.render");
       expect(Object.keys(a.tools)).not.toContain("context.projects");
-      expect(Object.keys(a.tools).length).toBe(39); // T-726:退役 planning.thesis 后减一
+      expect(Object.keys(a.tools).length).toBe(40);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -1614,13 +1630,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
       expect(Object.keys(b.tools)).not.toContain("context.projects");
-      expect(Object.keys(b.tools).length).toBe(39); // 阶段未知仍保留复盘工具，但项目库无需摸索
+      expect(Object.keys(b.tools).length).toBe(40); // 阶段未知仍保留复盘工具，但项目库无需摸索
     });
 
     it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(40); // T-726:退役 planning.thesis 后减一
+      expect(Object.keys(a.tools).length).toBe(41);
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
     });
@@ -1635,7 +1651,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(37); // T-726:退役 planning.thesis 后减一
+      expect(Object.keys(a.tools).length).toBe(38);
     });
   });
 

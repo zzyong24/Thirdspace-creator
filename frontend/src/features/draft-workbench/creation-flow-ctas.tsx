@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Search, Upload, Loader2 } from "lucide-react";
+import { GitBranch, Search, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useDraftChatRequest } from "./draft-chat-request";
 import { uploadFileToProject } from "./upload-to-project";
 
-// T-726：创作链收敛为「准备素材 → 直接写稿」，只保留真实上传与联网找资料入口。
+// T-730：恢复可选“先梳理观点”入口；它不是写稿前置，用户仍可直接进入稿面。
 //
 // [T-146] 最前面加「＋上传素材」:PR/接商单场景先把自己的 PDF/Word/MD 资料上传进「当前项目」
 // 弹药库(最高优先级素材)。上传链复用 AmmoDumpZone 的同款 uploadFileToProject(createUpload →
@@ -113,8 +113,25 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
         <Search className="size-3.5" />
         联网找资料
       </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-7 gap-1.5 text-xs"
+        onClick={() =>
+          openChat({
+            functionKey: "planning.thesis",
+            prefill:
+              "这次内容需要先梳理复杂观点。请基于当前项目生成可选论点骨架，先给候选，等我明确采纳后再用于写稿。",
+            autoSend: true,
+          })
+        }
+      >
+        <GitBranch className="size-3.5" />
+        先梳理观点（可选）
+      </Button>
       <span className="text-[11px] text-text-subtle">
-        系统找到的资料和你上传的文件，都会统一保存在当前项目里
+        复杂观点可先梳理；已有完整逐字稿或简单短口播可直接写稿
       </span>
     </section>
   );

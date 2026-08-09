@@ -136,6 +136,7 @@ export function createArtifactsTransport(
         }
         case "artifacts.versions.create": {
           const b = (body ?? {}) as {
+            expectedCurrentVersionId?: string;
             contentText?: string;
             changeSummary?: string;
             contentData?: Record<string, unknown>;

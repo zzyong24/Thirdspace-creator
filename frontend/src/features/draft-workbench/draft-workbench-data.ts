@@ -2,9 +2,11 @@ import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
+  loadThesisSkeleton,
   loadScriptEditorData,
   resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
+  type ThesisSkeleton,
 } from "@/features/script/script-editor-data";
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
 import type { ScriptSectionView, ScriptViewModel } from "@/types/view-models";
@@ -227,6 +229,8 @@ export interface DraftWorkbenchVm {
   };
   /** 脚本区:DB 解析的 artifactId(null=还没有,首存/AI 起草时 ensure)。 */
   readonly scriptArtifactId: string | null;
+  /** 可选论点骨架；历史无采用标记仍可见，但不会被生成式写稿读取。 */
+  readonly thesis: ThesisSkeleton | null;
   readonly script: {
     readonly editorHtml: string | null;
     readonly sections: ReadonlyArray<ScriptSectionView>;
@@ -518,7 +522,10 @@ export async function buildDraftWorkbenchVm(
     project.id,
     client,
   );
-  const scriptData = await loadScriptEditorData(scriptArtifactId, client);
+  const [scriptData, thesis] = await Promise.all([
+    loadScriptEditorData(scriptArtifactId, client),
+    loadThesisSkeleton(project.id, client),
+  ]);
   const radarEvidence = project.briefDetail?.contentRadarEvidence;
   let radarDraftSeed =
     radarEvidence?.adaptedDraftSeed.contentText.trim() || null;
@@ -591,6 +598,7 @@ export async function buildDraftWorkbenchVm(
       transcriptState,
     },
     scriptArtifactId,
+    thesis,
     outputId,
     script: {
       editorHtml: scriptData?.editorHtml ?? null,

@@ -49,6 +49,9 @@ export const artifactsOperations = {
     path: "/artifacts/:artifactId/versions",
     params: artifactParams,
     body: z.object({
+      // 可选乐观并发门：需要基于当前版本编辑的调用方传入。服务端发现页面已落后时
+      // 拒绝追加，避免旧稿覆盖后来保存的 artifact version；旧调用保持兼容。
+      expectedCurrentVersionId: id.optional(),
       contentText: z.string().default(""),
       changeSummary: z.string().default(""),
       // Structured, editable payload (jsonb). The 脚本 editor serializes its

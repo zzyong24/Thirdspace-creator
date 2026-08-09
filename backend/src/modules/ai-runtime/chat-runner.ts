@@ -325,6 +325,11 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
+  /** T-730：可选论点候选异步分派；不预建 artifact/version。 */
+  dispatchPlanningThesisPort?: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
   /**
    * [T-271] cover.generate 端口 —— dispatch 既有 cover.generate ai_task(void runCoverGenerate:
    * 结构化封面方案硬锚立项 brief/口播稿 → 文案诚实门 → 结构化组装生图 prompt → image.generate 生图),
@@ -1204,7 +1209,7 @@ export async function buildChatAssembly(
     // [T-224 诚实门·全局半](原第 9 条拆两半:编造禁令是全局的,留此;「必先读真逐字稿」的
     //   无稿门只属「拆解/复盘已发布作品」场景,移到下方场景条款 S1 —— T-240②)。
     "9. **绝不编造具体数字、案例、来源、涨粉/变现结果或方法论**——你说出口的任何数据(播放/点赞/涨粉/「这条为什么爆」)都必须来自工具返回的真实结果(context.metrics 的真实指标、context.artifact.text 读到的真文案等);拿不到就直说拿不到,**不许用「账号通用规律」「一般来说」这类空想推测充数**。",
-    "10. 项目创作采用「准备素材 → 直接写稿」。拿到写稿需求后，直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本。",
+    "10. 论点骨架是**可选辅助，不是写稿前置**。正常路径始终允许「准备素材 → 直接写稿」：可直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本，不得要求先立论点。知识讲解、观点评论、测评对比、较长内容或需要证据/反驳，且用户明确想先梳理时，可调用 planning.thesis 给候选；已有完整逐字稿、简单通知、短口播、纯记录或用户要快速成稿时直接调用 script.draft。只有用户点击「采纳并用于写稿」的当前论点版本才能进入普通生成；verbatim 原文保真永远不读取论点。",
     // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
     // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
     "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①内容雷达中的网页/RSS 来源会保留真实条目、链接与抓取证据;②内容雷达的热点宝/黑马发现会保留官方榜单口径与原视频链接;③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**;若结果注明未拉到实时信号或用户还没登记来源,**引导 TA 去『内容雷达』登记网页/RSS、博主或分享链接**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动编造热点、更不是自称没能力。",
@@ -1951,6 +1956,46 @@ export async function buildChatAssembly(
           taskId: null,
           projectId: pid,
           error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    dispatchPlanningThesis: async ({ projectId, topic }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim()
+          ? projectId.trim()
+          : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "论点骨架要绑定具体项目。请在项目稿面右栏使用；也可以跳过，直接写稿。",
+        };
+      }
+      if (!deps.dispatchPlanningThesisPort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "可选论点梳理能力当前未接入，请直接写稿或稍后重试。",
+        };
+      }
+      const effectiveTopic =
+        (typeof topic === "string" && topic.trim() ? topic.trim() : "") ||
+        selectionTitle ||
+        "";
+      try {
+        const { taskId } = await deps.dispatchPlanningThesisPort(ctx, {
+          projectId: pid,
+          ...(effectiveTopic ? { topic: effectiveTopic } : {}),
+        });
+        return { taskId, projectId: pid, error: null };
+      } catch (error) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     },

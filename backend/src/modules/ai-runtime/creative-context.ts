@@ -38,7 +38,7 @@ export interface CreativeContext {
   // topic.generate `knowledge` basis can出题 from accumulated material. Empty until the
   // knowledge reader is wired or when the library is empty.
   knowledgeBrief: string;
-  // T-726：字段只为下游调用签名兼容而保留，新执行恒为空且不读取历史 thesis_tree。
+  // T-730：仅允许组合根 reader 返回的“当前项目当前版本、显式 adopted”论点进入写稿。
   thesisBrief: string;
   // 内容合同 brief — a compact rendering of the project's ADOPTED content contract (受众定位/
   // 价值主张/核心节奏/行动召唤). planning.outline reads it as the constraint the structure
@@ -614,8 +614,23 @@ export async function assembleCreativeContext(
     }
   };
 
-  // T-726：历史 reader/type 继续兼容 generic artifact 读取，但创作上下文不再触发它。
-  const thesisBrief = "";
+  let thesisBrief = "";
+  if (deps.thesis && input.projectId) {
+    try {
+      const nodes = await deps.thesis.getThesisNodes(ctx, input.projectId);
+      thesisBrief = nodes
+        .map((node) => {
+          const title = node.title.trim();
+          const summary = node.summary.trim();
+          if (!title && !summary) return "";
+          return `· [${node.column}] ${title}${summary ? `：${summary}` : ""}`;
+        })
+        .filter(Boolean)
+        .join("\n");
+    } catch {
+      thesisBrief = "";
+    }
+  }
 
   let contractBrief = "";
   if (deps.contract && input.projectId) {

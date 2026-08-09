@@ -214,7 +214,8 @@ export async function runScriptDraft(
           ? task.inputData.targetDurationSeconds
           : undefined,
       orientation: context.orientationHint || undefined,
-      // T-726：写稿直接消费内容合同/结构方案、Brief 与素材，不再透传历史论点树。
+      // T-730：这里只透传 reader 已验证为当前项目、当前版本且显式 adopted 的论点。
+      thesisBrief: context.thesisBrief || undefined,
       contractBrief: context.contractBrief || undefined,
       outlineBrief: context.outlineBrief || undefined,
       // [T-146c] 用户上传素材主权:高优先(用户第一手)进「必须遵守」硬约束段,normal(AI 找的)进

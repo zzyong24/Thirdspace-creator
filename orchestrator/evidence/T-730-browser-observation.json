@@ -1,0 +1,36 @@
+{
+  "schema": "browser-observation/v1",
+  "task_id": "T-730",
+  "observed_at": "2026-08-09T09:13:37.000Z",
+  "surface": "CreatorOS 本机项目稿面",
+  "runtime": "本机 Next.js 运行态、隔离 PGlite、Codex 内置浏览器",
+  "data_mode": "non-fixture",
+  "data_note": "仅在 /tmp/creatoros-t730-browser.JCIDdf 创建隔离账号和项目；未读取、写入或删除用户原数据库。",
+  "checks": [
+    {
+      "id": "optional-panel-visible",
+      "result": "pass",
+      "evidence": [
+        "论点骨架（可选）",
+        "适合知识讲解、观点评论、测评对比、较长内容",
+        "已有完整逐字稿、简单通知、短口播、纯记录时可以直接跳过",
+        "先梳理观点",
+        "跳过，直接写稿"
+      ]
+    },
+    {
+      "id": "skip-focuses-script",
+      "result": "pass",
+      "evidence": "点击跳过后 :focus 的 id 为 script"
+    },
+    {
+      "id": "skip-does-not-write",
+      "result": "pass",
+      "evidence": {
+        "planning_thesis_tasks": 0,
+        "thesis_tree_artifacts": 0,
+        "thesis_tree_versions": 0
+      }
+    }
+  ]
+}

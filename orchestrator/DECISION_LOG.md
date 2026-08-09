@@ -2035,3 +2035,29 @@ AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，
 **Asset-Ref**：现有项目 Brief、project materials、`material.match` 与通用 artifact 历史读取。
 
 **Status**：用户已确认；T-726 需通过独立 SPEC 评审后进入 BUILD。
+
+## DEC-CREATION-041 (2026-08-09) — 恢复可选论点骨架，但只有显式采用才进入写稿
+
+**来源**：T-726 上线方向确认后，有用户反馈“立论点”对复杂观点仍有帮助；用户进一步确认本次先
+恢复固定四栏 UI 和适用场景引导，分场景框架以后再做。
+
+**决策**：
+
+1. 稿面恢复“论点骨架（可选）”以及真实的 AI 生成、编辑和保存能力；同时提供“跳过，直接写稿”，
+   任何写稿、逐字稿导入、审核和制作都不以论点存在为前提。
+2. 只有用户明确点击“采纳并用于写稿”后，当前 `thesis_tree` version 才写入
+   `scriptBasis.status=adopted`；生成式写稿只读取带该标记的当前版本。历史无标记树默认零消费，
+   用户可以查看后重新采用，也可以随时停止使用。
+3. T-727 完整逐字稿的 `verbatim` 路径继续逐字保真，不读取论点、定位、Brief 或创作建议；显式
+   采用的论点只影响后续 `script.draft(generate)`。
+4. 恢复 `planning.thesis` 时删除旧 runner 的 token/Dice 素材预挂逻辑；制作/B-roll 继续不读取
+   `thesis_tree`，项目重建不替用户生成或采用论点。
+5. 本次固定“核心论点/支撑依据/证据/反驳”四栏，不做行业模板、字段改名或任意结构。分场景与
+   自定义框架另记 T-734。
+
+**Pattern-Ref**：DEC-AI-039（语义归 AI，代码只守边界）。
+
+**Asset-Ref**：现有 `planning.thesis` 结构化模板、AI candidate 确认门、generic artifact version
+追加链和受管文本模型解析。
+
+**Status**：用户已确认；原并发会话占用 T-730，候选收口后稳定编号为 T-733，并已通过独立 SPEC 评审。

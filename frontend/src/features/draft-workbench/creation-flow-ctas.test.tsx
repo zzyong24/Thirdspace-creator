@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CreationFlowCtas } from "./creation-flow-ctas";
 
-// T-726:论点骨架退役后，稿面只保留上传素材与联网找资料。
+// T-730:论点入口恢复为可选辅助，不替代上传与联网找资料。
 const openChat = vi.fn();
 vi.mock("./draft-chat-request", () => ({
   useDraftChatRequest: () => ({ openChat }),
@@ -16,18 +16,20 @@ vi.mock("next/navigation", () => ({
 describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
   beforeEach(() => openChat.mockClear());
 
-  it("[T-726] 只渲上传素材 + 联网找资料，不再出现立论点", () => {
+  it("[T-730] 保留上传与联网找资料，并恢复可选的先梳理观点", () => {
     render(<CreationFlowCtas projectId="project-x" />);
     expect(
       screen.getByRole("button", { name: /上传.*素材/ }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /联网找资料/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /立论点/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /先梳理观点.*可选/ }),
+    ).toBeInTheDocument();
   });
 
-  it("[T-726] 退役入口不以链接或第三个按钮残留", () => {
+  it("[T-733] 新方向只恢复一个可选按钮，不恢复旧的强制链接", () => {
     render(<CreationFlowCtas projectId="project-x" />);
-    expect(screen.getAllByRole("button")).toHaveLength(2);
+    expect(screen.getAllByRole("button")).toHaveLength(3);
     expect(screen.queryByRole("link", { name: /立论点/ })).not.toBeInTheDocument();
   });
 
@@ -56,6 +58,17 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
       functionKey: "material.gather",
       autoSend: true,
     });
+  });
+
+  it("[T-730] 点可选梳理入口 → planning.thesis，不自动写稿", () => {
+    render(<CreationFlowCtas projectId="project-x" />);
+    fireEvent.click(screen.getByRole("button", { name: /先梳理观点.*可选/ }));
+    expect(openChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionKey: "planning.thesis",
+        autoSend: true,
+      }),
+    );
   });
 
 });

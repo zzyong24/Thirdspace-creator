@@ -22,6 +22,7 @@ import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
 import { DraftResizableLayout } from "./draft-resizable-layout";
 import { CreationFlowCtas } from "./creation-flow-ctas";
+import { ThesisSkeletonPanel } from "./thesis-skeleton-panel";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
 // [T-146] 弹药卡列表 + 双击预览抽为 client 组件(Modal 交互)。
@@ -40,7 +41,7 @@ import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
+  const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
   const radarDraftSeed = vm.radarDraftSeed ?? "";
   const seedHtml = radarDraftSeed
     .split(/\n+/)
@@ -122,6 +123,15 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
 
           {/* [T-146/T-726] 弹药上移:用户先看到手里有哪些素材/资料，再直接写稿。 */}
           <AmmoDrawer ammo={ammo} projectId={project.id} />
+
+          <ThesisSkeletonPanel
+            thesis={thesis}
+            ammo={ammo.map((item) => ({
+              id: item.id,
+              title: item.title,
+              kind: item.kind,
+            }))}
+          />
 
           {/* [T-387b] 缺素材清单:采纳整稿的「分镜凝固 pass」把各段 visual.missing 汇总到这
               (弹药区下,离补料入口最近)。无缺项 → 不渲(零回归)。 */}

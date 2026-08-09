@@ -77,7 +77,9 @@ stages:
       - existing: "ai-worker"
       - existing: "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md (T-726 PASS[REV:2809820bf64a])"
       - existing: "orchestrator/GATE-T726-BUILD.md (实现与浏览器证据；strict receipt 待共享改动形成提交边界)"
-    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-726 已完成实现与真实页面验收，但因共享工作区 watched_paths 存在并行任务漂移，保持 draft 且不伪造 strict receipt。"
+      - existing: "docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md (T-733 PASS[REV:c5f51085613d])"
+      - existing: "orchestrator/GATE-T733-BUILD.md (可选论点实现、隔离浏览器来源证据与候选分支聚焦回归)"
+    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-733 已收口并发会话的 T-730 编号碰撞，重新生成连续 review receipt；BUILD Gate 仍以本轮真实验证结果为准。"
 
   "5-ship":
     status: "draft"

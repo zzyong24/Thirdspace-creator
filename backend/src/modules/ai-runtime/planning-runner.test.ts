@@ -24,13 +24,7 @@ vi.mock("@creatoros/ai-worker", async () => {
   };
 });
 
-import {
-  runPlanningThesis,
-  scoreAmmoMatch,
-  matchAmmoForNode,
-  prefillMaterialRefs,
-  AMMO_MATCH_MAX_REFS,
-} from "./planning-runner";
+import { runPlanningThesis } from "./planning-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
@@ -88,7 +82,7 @@ describe("runPlanningThesis (runStructuredNode + 外置模板)", () => {
     const { deps, recordCandidate, resolveModelSpec } = makeDeps(tree);
     await runPlanningThesis(
       ctx,
-      { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
+      { id: "t1", projectId: "p1", inputData: {} },
       deps,
     );
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "planning.thesis");
@@ -96,7 +90,7 @@ describe("runPlanningThesis (runStructuredNode + 外置模板)", () => {
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("artifact_version");
-    expect(input.artifactId).toBe("a1");
+    expect(input.artifactId).toBeNull();
     // contentData.nodes carries the core + branch nodes (writer↔reader contract).
     const nodes = (input.resultData.contentData as { nodes: unknown[] }).nodes;
     expect(Array.isArray(nodes)).toBe(true);
@@ -171,121 +165,160 @@ describe("runPlanningThesis (runStructuredNode + 外置模板)", () => {
     expect(evidence.summary).toContain("未溯源"); // 追加标注
   });
 
-  // ── [T-387a] AI 预挂素材(确定性词面匹配,纯函数 + runner 集成)────────────────
-
-  describe("[T-387a] scoreAmmoMatch / matchAmmoForNode(确定性词面匹配)", () => {
-    it("词面高度重合的弹药得高分,不相关的低分", () => {
-      const hi = scoreAmmoMatch(
-        "上下文工程是 AI 编程的核心方法",
-        "上下文工程实战笔记",
-      );
-      const lo = scoreAmmoMatch("上下文工程是 AI 编程的核心方法", "猫粮测评");
-      expect(hi).toBeGreaterThan(lo);
-      expect(lo).toBeLessThan(0.28);
+  it("忽略客户端传入的旧 artifactId，候选始终交给确认 UoW 解析", async () => {
+    const { deps, recordCandidate } = makeDeps({
+      core: { title: "核心", summary: "展开" },
+      branches: [],
     });
+    await runPlanningThesis(
+      ctx,
+      { id: "t-artifact", projectId: "p1", inputData: { artifactId: "forged" } },
+      deps,
+    );
 
-    it("弹药标题整体出现在节点文本 → 子串加成(强信号)", () => {
-      const s = scoreAmmoMatch(
-        "根据 产品发布会实录 里的现场数据可以证明这一点",
-        "产品发布会实录",
-      );
-      expect(s).toBeGreaterThanOrEqual(0.9);
-    });
-
-    it("匹配纯函数:高于阈值才挂、最多挂 2 条、标 source:'ai'(宁缺勿滥)", () => {
-      const ammo = [
-        { id: "k1", title: "上下文工程实战笔记", kind: "knowledge" },
-        { id: "a1", title: "上下文工程演示录屏", kind: "video" },
-        { id: "a2", title: "上下文工程速查图", kind: "image" },
-        { id: "x1", title: "猫粮测评", kind: "knowledge" },
-      ];
-      const refs = matchAmmoForNode(
-        { title: "上下文工程", summary: "上下文工程决定 AI 输出质量" },
-        ammo,
-      );
-      expect(refs.length).toBeLessThanOrEqual(AMMO_MATCH_MAX_REFS);
-      expect(refs.length).toBeGreaterThan(0);
-      for (const r of refs) {
-        expect(r.source).toBe("ai");
-        expect(["k1", "a1", "a2"]).toContain(r.id); // 绝不挂不相关的 x1
-      }
-      // 完全不相关的节点 → 一条不挂(诚实缺)。
-      expect(
-        matchAmmoForNode({ title: "早餐吃什么", summary: "" }, ammo),
-      ).toEqual([]);
-    });
-
-    it("prefillMaterialRefs:只给 support/evidence 挂;core/counter 与未匹配节点原样", () => {
-      const nodes = [
-        { column: "core" as const, title: "上下文工程", summary: "核心" },
-        { column: "support" as const, title: "上下文工程有效", summary: "" },
-        { column: "counter" as const, title: "上下文工程无用论", summary: "" },
-        { column: "evidence" as const, title: "早餐吃什么", summary: "" },
-      ];
-      const ammo = [{ id: "k1", title: "上下文工程实战笔记", kind: "knowledge" }];
-      const out = prefillMaterialRefs(nodes, ammo);
-      expect(out[0]!.materialRefs).toBeUndefined(); // core 不参与
-      expect(out[1]!.materialRefs?.[0]).toMatchObject({ id: "k1", source: "ai" });
-      expect(out[2]!.materialRefs).toBeUndefined(); // counter 不参与
-      expect(out[3]!.materialRefs).toBeUndefined(); // 匹配不到 → 不带字段(诚实缺)
-    });
+    const input = recordCandidate.mock.calls[0]![2];
+    expect(input.artifactId).toBeNull();
+    expect(input.resultType).toBe("artifact_version");
   });
 
-  it("[T-387a] runner 预挂:装配 projectAmmo → 候选 contentData.nodes 带 source:'ai' 的 materialRefs", async () => {
-    const tree = {
+  it("不再读取 projectAmmo 做词面预挂，候选节点保持无素材引用", async () => {
+    const { deps, recordCandidate } = makeDeps({
+      core: { title: "核心", summary: "展开" },
+      branches: [{ column: "evidence", title: "证据", summary: "说明" }],
+    });
+    const list = vi.fn(async () => {
+      throw new Error("不应读取");
+    });
+    (deps as Record<string, unknown>).projectAmmo = { list };
+
+    await runPlanningThesis(
+      ctx,
+      { id: "t-no-ammo", projectId: "p1", inputData: {} },
+      deps,
+    );
+
+    const nodes = (recordCandidate.mock.calls[0]![2].resultData.contentData as {
+      nodes: Array<Record<string, unknown>>;
+    }).nodes;
+    expect(list).not.toHaveBeenCalled();
+    expect(recordCandidate).toHaveBeenCalledTimes(1);
+    expect(nodes.every((node) => !("materialRefs" in node))).toBe(true);
+  });
+
+  it("模型输出夹带 materialRefs 时也不会进入受信候选", async () => {
+    const { deps, recordCandidate } = makeDeps({
+      core: { title: "核心", summary: "展开", materialRefs: [{ id: "x" }] },
+      branches: [
+        {
+          column: "support",
+          title: "支撑",
+          summary: "说明",
+          materialRefs: [{ id: "y" }],
+        },
+      ],
+    });
+    await runPlanningThesis(
+      ctx,
+      { id: "t-untrusted-ref", projectId: "p1", inputData: {} },
+      deps,
+    );
+
+    const nodes = (recordCandidate.mock.calls[0]![2].resultData.contentData as {
+      nodes: Array<Record<string, unknown>>;
+    }).nodes;
+    expect(nodes).toHaveLength(2);
+    expect(nodes.every((node) => !("materialRefs" in node))).toBe(true);
+  });
+
+  it("把中文列名归一成固定四栏契约", async () => {
+    const { deps, recordCandidate } = makeDeps({
       core: { title: "核心", summary: "展开" },
       branches: [
-        { column: "evidence", title: "上下文工程实战数据", summary: "" },
+        { column: "支持依据", title: "支撑", summary: "一" },
+        { column: "证据", title: "证据", summary: "二" },
+        { column: "反驳", title: "反驳", summary: "三" },
       ],
-    };
-    const { deps, recordCandidate } = makeDeps(tree);
-    (deps as Record<string, unknown>).projectAmmo = {
-      list: async () => [
-        { id: "k1", title: "上下文工程实战笔记", kind: "knowledge" },
-        { id: "x1", title: "猫粮测评", kind: "knowledge" },
-      ],
-    };
+    });
     await runPlanningThesis(
       ctx,
-      { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
+      { id: "t-columns", projectId: "p1", inputData: {} },
       deps,
     );
-    const input = recordCandidate.mock.calls[0]![2];
-    const nodes = (input.resultData.contentData as {
-      nodes: Array<{
-        column: string;
-        materialRefs?: Array<{ id: string; source?: string }>;
-      }>;
+
+    const nodes = (recordCandidate.mock.calls[0]![2].resultData.contentData as {
+      nodes: Array<{ column: string }>;
     }).nodes;
-    const evidence = nodes.find((n) => n.column === "evidence")!;
-    expect(evidence.materialRefs?.length).toBeGreaterThan(0);
-    expect(evidence.materialRefs![0]).toMatchObject({ id: "k1", source: "ai" });
-    // 只引用真实存在的弹药 —— 不相关的 x1 绝不被挂。
-    expect(evidence.materialRefs!.every((r) => r.id !== "x1")).toBe(true);
+    expect(nodes).toHaveLength(4);
+    expect(nodes.map((node) => node.column)).toEqual([
+      "core",
+      "support",
+      "evidence",
+      "counter",
+    ]);
   });
 
-  it("[T-387a] projectAmmo 读失败 → 不预挂、候选照常落(零回归)", async () => {
-    const tree = {
+  it("过滤未知列名，但保留同批合法节点", async () => {
+    const { deps, recordCandidate } = makeDeps({
       core: { title: "核心", summary: "展开" },
-      branches: [{ column: "support", title: "s", summary: "x" }],
-    };
-    const { deps, recordCandidate } = makeDeps(tree);
-    (deps as Record<string, unknown>).projectAmmo = {
-      list: async () => {
-        throw new Error("boom");
-      },
-    };
+      branches: [
+        { column: "sales_pitch", title: "越权列", summary: "不进入候选" },
+        { column: "support", title: "合法支撑", summary: "保留" },
+      ],
+    });
     await runPlanningThesis(
       ctx,
-      { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
+      { id: "t-filter", projectId: "p1", inputData: {} },
       deps,
     );
-    expect(recordCandidate).toHaveBeenCalledTimes(1);
-    const input = recordCandidate.mock.calls[0]![2];
-    const nodes = (input.resultData.contentData as {
-      nodes: Array<{ materialRefs?: unknown }>;
+
+    const nodes = (recordCandidate.mock.calls[0]![2].resultData.contentData as {
+      nodes: Array<{ column: string; title: string }>;
     }).nodes;
-    expect(nodes.every((n) => n.materialRefs === undefined)).toBe(true);
+    expect(recordCandidate).toHaveBeenCalledTimes(1);
+    expect(nodes.map((node) => node.column)).toEqual(["core", "support"]);
+    expect(nodes.some((node) => node.title === "越权列")).toBe(false);
+  });
+
+  it("裁掉空白节点并规范化标题与摘要空白", async () => {
+    const { deps, recordCandidate } = makeDeps({
+      core: { title: "  核心  ", summary: "  展开  " },
+      branches: [
+        { column: "support", title: "  支撑  ", summary: "  说明  " },
+        { column: "evidence", title: "  ", summary: "  " },
+      ],
+    });
+    await runPlanningThesis(
+      ctx,
+      { id: "t-trim", projectId: "p1", inputData: {} },
+      deps,
+    );
+
+    const nodes = (recordCandidate.mock.calls[0]![2].resultData.contentData as {
+      nodes: Array<{ title: string; summary: string }>;
+    }).nodes;
+    expect(nodes).toHaveLength(2);
+    expect(nodes.map((node) => node.title)).toEqual(["核心", "支撑"]);
+    expect(nodes.map((node) => node.summary)).toEqual(["展开", "说明"]);
+  });
+
+  it("缺 projectId 时在调用模型前失败关闭并取消任务", async () => {
+    const { deps, recordCandidate } = makeDeps({
+      core: { title: "不应生成", summary: "" },
+      branches: [],
+    });
+    const cancelTask = vi.fn(async () => undefined);
+    (deps.ai as { cancelTask: unknown }).cancelTask = cancelTask;
+    const modelCallsBefore = runStructuredNode.mock.calls.length;
+
+    await runPlanningThesis(
+      ctx,
+      { id: "t-no-project", projectId: null, inputData: {} },
+      deps,
+    );
+
+    expect(runStructuredNode.mock.calls).toHaveLength(modelCallsBefore);
+    expect(recordCandidate).not.toHaveBeenCalled();
+    expect(cancelTask).toHaveBeenCalledTimes(1);
   });
 
   it("cancels the task (no candidate) when the object normalizes to no nodes", async () => {

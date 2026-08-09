@@ -102,59 +102,68 @@ function makeDeps(
   };
 }
 
-describe("creative-context T-726 — 历史论点树只读保留但不进入新执行", () => {
-  async function expectRetiredThesisReader(origin: "reconstructed" | "user" | null) {
-      const deps = makeDeps(origin);
-      let thesisReads = 0;
-      let thesisOriginReads = 0;
-      deps.thesis = {
-        getThesisNodes: async () => {
-          thesisReads += 1;
-          return [{ column: "core", title: "历史核心论点", summary: "不应进入 prompt" }];
-        },
-      };
-      deps.artifactOrigin = {
-        getArtifactOrigin: async (_c, _projectId, artifactType) => {
-          if (artifactType === "thesis_tree") thesisOriginReads += 1;
-          return origin;
-        },
-      };
-
-      const context = await assembleCreativeContext(
-        ctx,
-        { projectId: "proj-history", topic: "当前选题" },
-        deps,
-      );
-
-      expect(context.thesisBrief).toBe("");
-      expect(context.thesisBrief).not.toContain("历史核心论点");
-      expect(deps.thesis).toBeDefined();
-      expect(thesisReads).toBe(0);
-      expect(thesisOriginReads).toBe(0);
-      expect(context.topic.title).toBe("当前选题");
-  }
-
-  it("reconstructed 历史论点不进入新执行", async () => {
-    await expectRetiredThesisReader("reconstructed");
-  });
-
-  it("user 历史论点不进入新执行", async () => {
-    await expectRetiredThesisReader("user");
-  });
-
-  it("legacy 历史论点不进入新执行", async () => {
-    await expectRetiredThesisReader(null);
-  });
-
-  it("未装配 artifactOrigin reader 也不回退读取历史论点", async () => {
-    const deps = makeDeps("reconstructed");
-    delete deps.artifactOrigin;
+describe("creative-context T-733 — 只消费 reader 已放行的显式采用论点", () => {
+  it("项目态把 adopted reader 返回的四栏论点装入 thesisBrief", async () => {
+    const deps = makeDeps("user");
     const context = await assembleCreativeContext(
       ctx,
-      { projectId: "proj-no-origin", topic: "当前选题" },
+      { projectId: "proj-adopted", topic: "当前选题" },
+      deps,
+    );
+
+    expect(context.thesisBrief).toContain("[core] 核心论点");
+    expect(context.thesisBrief).toContain("[support] 支撑一");
+    expect(context.topic.title).toBe("当前选题");
+  });
+
+  it("无项目上下文不读取论点", async () => {
+    let reads = 0;
+    const deps = makeDeps("user");
+    deps.thesis = {
+      getThesisNodes: async () => {
+        reads += 1;
+        return [{ column: "core", title: "不应读取", summary: "" }];
+      },
+    };
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "账号态选题" },
       deps,
     );
     expect(context.thesisBrief).toBe("");
+    expect(reads).toBe(0);
+  });
+
+  it("reader 对未采用历史版本返回空节点时保持零消费", async () => {
+    const deps = makeDeps(null);
+    deps.thesis = { getThesisNodes: async () => [] };
+
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-legacy", topic: "历史项目" },
+      deps,
+    );
+
+    expect(context.thesisBrief).toBe("");
+    expect(context.topic.title).toBe("历史项目");
+  });
+
+  it("adopted reader 失败时 fail closed，且不阻断其余创作上下文", async () => {
+    const deps = makeDeps("user");
+    deps.thesis = {
+      getThesisNodes: async () => {
+        throw new Error("artifact unavailable");
+      },
+    };
+
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-error", topic: "继续写稿" },
+      deps,
+    );
+
+    expect(context.thesisBrief).toBe("");
+    expect(context.topic.title).toBe("继续写稿");
   });
 });
 

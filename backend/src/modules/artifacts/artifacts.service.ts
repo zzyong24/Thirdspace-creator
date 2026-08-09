@@ -95,6 +95,7 @@ export interface ArtifactsService {
     ctx: RequestContext,
     artifactId: string,
     input: {
+      expectedCurrentVersionId?: string;
       contentText?: string;
       changeSummary?: string;
       contentData?: Record<string, unknown>;
@@ -182,6 +183,14 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
     async createVersion(ctx, artifactId, input) {
       const repo = repoFor(ctx, "artifacts.createVersion");
+      if (input.expectedCurrentVersionId) {
+        const artifact = await repo.requireArtifact(artifactId);
+        if (artifact.currentVersionId !== input.expectedCurrentVersionId) {
+          throw new ConflictError(
+            "内容已在其他页面更新，请刷新后基于当前版本重试",
+          );
+        }
+      }
       // [T-183] 改稿 delta 捕捉:在 append 重指针「前」先抓「前一版 = 当前版」快照(内容 +
       // createdByType),用于判定「AI 产出 → 用户手改」并算 before→after 差异。best-effort:
       // 仅在 recordEditDelta seam 已接线时才读,失败不影响主流程。
