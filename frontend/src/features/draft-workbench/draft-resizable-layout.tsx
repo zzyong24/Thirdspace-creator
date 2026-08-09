@@ -50,6 +50,7 @@ export function DraftResizableLayout({
   React.useEffect(() => {
     try {
       const v = window.localStorage.getItem(RAIL_WIDTH_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时从 localStorage 同步宽度偏好，SSR 首帧保持默认值
       if (v) setRailWidth(clampRail(parseInt(v, 10)));
     } catch {
       /* storage 不可用 → 用默认宽 */

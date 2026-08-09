@@ -154,6 +154,7 @@ describe("loadPlanningOutline (SEAM-02)", () => {
 });
 
 
+
 // ── [T-387b] 凝固分镜 visual 读回(loadScriptEditorSections)────────────────────
 
 describe("loadScriptEditorSections — T-387b visual 读回", () => {

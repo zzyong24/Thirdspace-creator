@@ -1,0 +1,46 @@
+# Verify CI — main/PR 验证门(init-project.sh 自动放到 .github/workflows/verify.yml)
+#
+# 来源教训(T-326 ENG-H01):仓里唯一 workflow 是自治 harness 不是验证 CI,main 可以在零门禁下进分发;
+# CI 运行时版本还与 engines 不齐。本模板 = field-lessons #58 的可执行化:发布证据必须能在干净环境重复,
+# "本地跑过"不算门。
+#
+# 使用说明:
+# - 两处 ← 标记按项目真实命令改(以 PROJECT_CONTEXT.md 记录的为准);其余可直接用。
+# - 非 GitHub 托管:把 steps 逐条搬到你的 CI(GitLab CI / Drone / Jenkins 语法自行转换)。
+# - 无远端托管的纯本地项目:本文件留着无害(无远端即不触发);SHIP 验收走 accepted-risk 通道
+#   (干净 worktree 全量 verify + reconcile 替代,见 workflows/v3-5-ship.md)。
+# - CD(部署)有意不在此处:git push / deploy 是人的确认点(state machine STOP #4),不自动化。
+
+name: verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 与 package.json engines 对齐(T-326 ENG-H01 的坑:CI Node 24 vs engines >=25)。
+          # 非 Node 项目删掉本 step,换对应 runtime 的 setup(setup-python/…),版本同样对齐声明。
+          node-version-file: package.json
+
+      - name: Install
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile   # ← 换成项目真实安装命令(npm ci / uv sync / …)
+
+      - name: Verify (typecheck + test + lint + build)
+        # ← 换成 PROJECT_CONTEXT.md 记录的真实 verify 命令;四件缺一不可:typecheck / test / lint / build。
+        # build 必须只读(field-lessons #57:构造时 seed/cron 让 build 写库——CI 里会当场暴露)。
+        run: pnpm verify
+
+      - name: Orchestrator control-plane guards
+        # vendored 引擎零依赖,CI 直接跑:契约追溯(orphan-scan)/物理边界棘轮/台账健康/知识层漂移。
+        # 本地 reconcile 绿而 CI 红 = 本地有未提交的隐性依赖,正是这道门要抓的。
+        run: node orchestrator/process/reconcile.mjs

@@ -27,8 +27,8 @@ import {
   checkLatestVersion,
   getAppVersion,
   isDesktopRuntimeClient,
-  OFFICIAL_DOWNLOAD_URL,
-  OFFICIAL_UPDATE_MANIFEST_URL,
+  PACKAGE_DOWNLOAD_URL,
+  PACKAGE_UPDATE_MANIFEST_URL,
   relaunchApp,
   versionNewer,
 } from "./desktop-updater";
@@ -103,10 +103,11 @@ describe("checkLatestVersion (desktop) — 官网公开 latest.json", () => {
     expect(res.info.latestVersion).toBe("0.2.0");
     expect(res.info.currentVersion).toBe("0.1.0");
     expect(res.info.releaseNotes).toBe("修复若干问题");
-    expect(res.info.downloadUrl).toBe(OFFICIAL_DOWNLOAD_URL);
-    expect(mockFetch).toHaveBeenCalledWith(OFFICIAL_UPDATE_MANIFEST_URL, {
+    expect(res.info.downloadUrl).toBe(PACKAGE_DOWNLOAD_URL);
+    expect(mockFetch).toHaveBeenCalledWith(PACKAGE_UPDATE_MANIFEST_URL, {
       method: "GET",
       cache: "no-store",
+      redirect: "error",
     });
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(JSON.stringify(mockFetch.mock.calls)).not.toMatch(
@@ -120,16 +121,39 @@ describe("checkLatestVersion (desktop) — 官网公开 latest.json", () => {
     mockFetch.mockResolvedValue(manifestResponse());
     const res = await checkLatestVersion();
     if (res.kind !== "available") throw new Error("unreachable");
-    expect(res.info.downloadUrl).toBe(OFFICIAL_DOWNLOAD_URL);
+    expect(res.info.downloadUrl).toBe(PACKAGE_DOWNLOAD_URL);
     expect(res.info.downloadUrl).not.toContain("evil.example.com");
+  });
+
+  it("manifest 30x 重定向 fail-closed，不跟随到外部 origin", async () => {
+    markDesktop();
+    mockGetVersion.mockResolvedValue("0.1.0");
+    mockFetch.mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { location: "https://evil.example.com/latest.json" },
+      }),
+    );
+    const res = await checkLatestVersion();
+    expect(res.kind).toBe("error");
+    expect(mockFetch).toHaveBeenCalledWith(PACKAGE_UPDATE_MANIFEST_URL, {
+      method: "GET",
+      cache: "no-store",
+      redirect: "error",
+    });
   });
 
   it("无新版 → uptodate", async () => {
     markDesktop();
-    mockGetVersion.mockResolvedValue("0.2.0");
+    mockGetVersion.mockResolvedValue("1.0.0");
     mockFetch.mockResolvedValue(manifestResponse({ version: "0.2.0" }));
     const res = await checkLatestVersion();
-    expect(res).toEqual({ kind: "uptodate", currentVersion: "0.2.0" });
+    expect(res).toEqual({ kind: "uptodate", currentVersion: "1.0.0" });
+    expect(mockFetch).toHaveBeenCalledWith(PACKAGE_UPDATE_MANIFEST_URL, {
+      method: "GET",
+      cache: "no-store",
+      redirect: "error",
+    });
   });
 
   it("官网响应不是合法版本清单 → 人话错误，不假装已最新", async () => {

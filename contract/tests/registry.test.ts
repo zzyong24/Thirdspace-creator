@@ -32,6 +32,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/artifacts/:artifactId/versions"],
   ["GET", "/artifacts/:artifactId/versions"],
   ["POST", "/artifacts/:artifactId/restore"],
+  // [T-716] 可信段落锚点局部改稿；只追加不可变版本，不让模型直接写领域实体。
+  ["POST", "/artifacts/:artifactId/script-patches/apply"],
   ["POST", "/artifacts/:artifactId/relations"],
   // 知识与素材
   ["GET", "/knowledge"],

@@ -2899,7 +2899,7 @@ function ItemDetail({
             </h4>
             {latestTransform?.status === "confirmed" ? (
               <span className="rounded-full bg-success-soft px-2 py-1 text-[11px] text-success">
-                已进入选题池
+                已采纳过
               </span>
             ) : null}
           </div>
@@ -3398,9 +3398,7 @@ function TopicCandidateEditor({
           {progressLabel}
         </div>
       ) : null}
-      {["failed", "blocked", "cancelled"].includes(
-        transform.taskStatus ?? "",
-      ) ? (
+      {terminalFailure ? (
         <div
           role="alert"
           className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2"
@@ -3491,7 +3489,7 @@ function TopicCandidateEditor({
       <Input
         aria-label="选题候选标题"
         value={candidate.title}
-        disabled={confirmed}
+        disabled={confirmed || busy}
         onChange={(event) =>
           setCandidate({ ...candidate, title: event.target.value })
         }
@@ -3513,7 +3511,7 @@ function TopicCandidateEditor({
           <textarea
             aria-label={`选题候选${label}`}
             value={candidate[field]}
-            disabled={confirmed}
+            disabled={confirmed || busy}
             onChange={(event) =>
               setCandidate({ ...candidate, [field]: event.target.value })
             }
@@ -3529,7 +3527,7 @@ function TopicCandidateEditor({
         <div>
           <p className="text-[11px] font-semibold text-foreground">改写规则</p>
           <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
-            系统根据对标原稿和当前定位生成，随本次选题锁定。需要换方向时，请重新生成选题卡。
+            系统根据对标原稿和当前定位生成，随本次选题锁定。文案不满意时，可重新生成改写稿。
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -3563,6 +3561,19 @@ function TopicCandidateEditor({
         })}
         </div>
       </div>
+      {draftText && !retrying && !terminalFailure ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={retryDisabled}
+          onClick={onRetry}
+          className="w-full gap-1.5"
+        >
+          <RefreshCw className="size-3.5" />
+          重新生成改写稿
+        </Button>
+      ) : null}
       {!confirmed ? (
         <Button
           type="button"

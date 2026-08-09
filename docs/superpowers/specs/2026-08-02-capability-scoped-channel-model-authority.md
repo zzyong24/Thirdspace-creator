@@ -237,7 +237,9 @@ resolve(capability):
   `credential.source=activation_managed`、`allowMultiple=false`、`provider=omnihi`。
 - `relay-text`、`relay-image`、`relay-video` 三个 connection 共用该 service 与同一 Activity
   激活权益子 Key；首期不下发 `transcribe.audio`，ASR 继续本地配置/Whisper 回退。
-- CreatorOS 使用取得公开 bundle 的同一 `config-access-ticket-v2` 调 Growth API-265
+- CreatorOS 由 server-only 当前 `machineId` 向 Activity 申请 `config-access-ticket-v3`，并使用
+  取得公开 bundle 的同一张最新 ticket 调 Growth API-265；CreatorOS 不决定套餐、金额或首赠，
+  也不把 `machineId`、ticket 或 code 放进 Growth 自报字段、Web、query、日志或普通缓存。API-265 为
   `GET /api/client-config/managed-credentials/current?serviceId=omnihi-main`；完整 token 只从
   `private, no-store` 响应直接写入本机加密凭据库，不能进入公开 bundle、client-config cache、
   Web DTO、日志或明文数据库。

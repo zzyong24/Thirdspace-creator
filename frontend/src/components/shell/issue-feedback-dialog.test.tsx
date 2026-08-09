@@ -46,7 +46,7 @@ describe("IssueFeedbackDialog", () => {
     const trigger = screen.getByRole("button", { name: "帮助与反馈" });
     await user.click(trigger);
     expect(
-      screen.getByRole("button", { name: "打开官方反馈页" }),
+      screen.getByRole("button", { name: "打开反馈页" }),
     ).toBeEnabled();
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
@@ -103,7 +103,7 @@ describe("IssueFeedbackDialog", () => {
     expect(fetchMock.mock.calls[0]?.[1]?.method ?? "GET").toBe("GET");
   });
 
-  it("[T-575] Growth 未配置时仍使用官方反馈页降级，且明确不会自动上传日志", async () => {
+  it("[T-729] 渠道运行时缺失时只回退当前包人工反馈页，不跨跳 CreatorOS 官方", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
@@ -111,18 +111,26 @@ describe("IssueFeedbackDialog", () => {
       )
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true })));
     const user = userEvent.setup();
-    render(<IssueFeedbackDialog pathname="/projects/123456789" collapsed={false} />);
+    render(
+      <IssueFeedbackDialog
+        pathname="/projects/123456789"
+        collapsed={false}
+        packageHumanFeedbackUrl="https://brand.example.com/feedback/"
+      />,
+    );
     await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     expect(await screen.findByText(/不会发送日志/)).toBeInTheDocument();
-    expect(screen.getByText(/此版本暂不能在应用内发送/)).toBeInTheDocument();
-    const channel = screen.getByRole("button", { name: "打开官方反馈页" });
+    const channel = screen.getByRole("button", { name: "打开反馈页" });
     expect(channel).toBeEnabled();
     expect(
       screen.queryByRole("button", { name: "发送问题反馈" }),
     ).not.toBeInTheDocument();
     await user.click(channel);
     expect(fetchMock.mock.calls[1]?.[1]?.body).toContain(
-      "https://my.feishu.cn/share/base/form/",
+      "https://brand.example.com/feedback/",
+    );
+    expect(fetchMock.mock.calls[1]?.[1]?.body).not.toContain(
+      "my.feishu.cn",
     );
     await user.type(screen.getByLabelText("问题描述"), "太短");
     await user.click(screen.getByRole("button", { name: "复制反馈内容" }));
@@ -180,10 +188,10 @@ describe("IssueFeedbackDialog", () => {
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
     await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "打开官方反馈页" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "打开反馈页" })).toBeEnabled(),
     );
-    await user.click(screen.getByRole("button", { name: "打开官方反馈页" }));
-    expect(await screen.findByText(/已请求打开官方反馈页/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "打开反馈页" }));
+    expect(await screen.findByText(/已请求打开反馈页/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "查看本机日志" }));
     expect(await screen.findByText(/未能打开日志文件夹/)).toBeInTheDocument();
     expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
@@ -210,11 +218,11 @@ describe("IssueFeedbackDialog", () => {
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
     await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     const channelButton = await screen.findByRole("button", {
-      name: "打开官方反馈页",
+      name: "打开反馈页",
     });
     await waitFor(() => expect(channelButton).toBeEnabled());
     await user.click(channelButton);
-    expect(await screen.findByText(/未能打开官方反馈页/)).toBeInTheDocument();
+    expect(await screen.findByText(/未能打开反馈页/)).toBeInTheDocument();
     expect(channelButton).toBeEnabled();
 
     const logsButton = screen.getByRole("button", {
@@ -245,7 +253,7 @@ describe("IssueFeedbackDialog", () => {
     render(<IssueFeedbackDialog pathname="/" collapsed={false} />);
     await user.click(screen.getByRole("button", { name: "帮助与反馈" }));
     const channelButton = await screen.findByRole("button", {
-      name: "打开官方反馈页",
+      name: "打开反馈页",
     });
     await waitFor(() => expect(channelButton).toBeEnabled());
     await user.click(channelButton);
@@ -268,13 +276,13 @@ describe("IssueFeedbackDialog", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("[T-575] 只有真实 202 publicRef 才显示提交成功", async () => {
+  it("[T-729] 人工反馈页缺失不阻断固定 Growth API 的真实 202 提交", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify(
-            runtimeResponse("https://growth.example.com/official-bug-form"),
+            runtimeResponse(null),
           ),
         ),
       )
@@ -294,6 +302,7 @@ describe("IssueFeedbackDialog", () => {
       <IssueFeedbackDialog
         pathname="/"
         collapsed={false}
+        packageHumanFeedbackUrl={null}
         submissionEnabled
       />,
     );
@@ -323,7 +332,7 @@ describe("IssueFeedbackDialog", () => {
     ).toBe(true);
   });
 
-  it("[T-575] 提交失败保留草稿并继续提供复制和官方反馈页", async () => {
+  it("[T-575] 提交失败保留草稿并继续提供复制和反馈页", async () => {
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         new Response(
@@ -365,7 +374,7 @@ describe("IssueFeedbackDialog", () => {
     expect(await screen.findByText(/反馈服务暂时不可用/)).toBeInTheDocument();
     expect(description).toHaveValue("点击同步按钮后一直没有任何状态变化。");
     expect(screen.getByRole("button", { name: "复制反馈内容" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "打开官方反馈页" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "打开反馈页" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "重新发送" })).toBeEnabled();
     expect(screen.queryByText(/反馈已收到/)).not.toBeInTheDocument();
   });

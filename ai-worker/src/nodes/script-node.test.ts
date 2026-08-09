@@ -99,11 +99,11 @@ describe("runScriptNode", () => {
     expect(steps).toContain(1);
   });
 
-  it("SEAM-01:策划产物(论点树/合同/结构方案)注入 prompt", async () => {
+  it("[T-726] 新写稿忽略历史论点树，但继续注入合同与结构方案", async () => {
     let seenPrompt = "";
     const model = new MockLanguageModelV4({
       doGenerate: async (opts) => {
-        // 抓最后一条 user message 的文本,断言策划产物确实进了 prompt。
+        // 抓最后一条 user message 的文本，防止退役的论点树重新暗中影响新稿。
         const msgs = (opts as { prompt?: unknown }).prompt;
         seenPrompt = JSON.stringify(msgs ?? "");
         return finalText(SHOTS_OBJECT_JSON);
@@ -116,7 +116,7 @@ describe("runScriptNode", () => {
       contractBrief: "· 受众定位：后端工程师",
       outlineBrief: "结构类型：问题-解决\n段落安排：\n  1. 钩子：反差",
     });
-    expect(seenPrompt).toContain("KV cache 可压到 1/10");
+    expect(seenPrompt).not.toContain("KV cache 可压到 1/10");
     expect(seenPrompt).toContain("后端工程师");
     expect(seenPrompt).toContain("问题-解决");
     expect(seenPrompt).toContain("策划结构方案");

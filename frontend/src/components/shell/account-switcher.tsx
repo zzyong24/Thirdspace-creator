@@ -108,6 +108,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
   // 重建)下每渲染返回新对象,直接进 useCallback/useEffect 依赖会造成「load 变 → effect
   // 重跑 → setState → 再渲染」死循环。ref 每渲染同步、回调恒拿最新,load 保持稳定标识。
   const routerRef = React.useRef(router);
+  // eslint-disable-next-line react-hooks/refs -- 同步 latest-value ref，保证稳定 load 回调读取当前 router；不参与渲染
   routerRef.current = router;
   const [state, setState] = React.useState<LoadState>({ kind: "loading" });
   const [currentId, setCurrentId] = React.useState<string | null>(null);

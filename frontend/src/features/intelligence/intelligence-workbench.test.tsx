@@ -2395,6 +2395,120 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeInTheDocument();
   });
 
+  it.each([
+    ["成功但未采纳", "candidate" as const, null],
+    ["已采纳且下游选题已淘汰", "confirmed" as const, "topic-dropped"],
+  ])(
+    "[T-744] %s 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳",
+    async (_label, status, targetTopicId) => {
+      const stub = api();
+      vi.mocked(stub.previewTopic).mockResolvedValue({
+        transform: {
+          id: "transform-rewrite-retry",
+          status: "candidate",
+          outputSnapshot: null,
+          targetTopicId: null,
+        },
+        task: { id: "task-rewrite-retry", status: "queued" },
+      });
+      vi.mocked(stub.getItem).mockImplementation(() => new Promise(() => {}));
+      render(
+        <IntelligenceWorkbench
+          accountId="account-1"
+          workspace={workspace}
+          items={[]}
+          positioningVersionId="positioning-v1"
+          initialDetail={{
+            ...detail,
+            transcript: {
+              ...detail.transcript,
+              status: "done",
+              text: "来源完整逐字稿",
+            },
+            snapshots: [
+              {
+                id: "snapshot-rewrite-retry",
+                title: "真实作品",
+                capturedAt: "2026-07-23T12:00:00.000Z",
+                finalUrl: detail.item.canonicalUrl,
+              },
+            ],
+            transforms: [
+              {
+                id: "transform-completed",
+                status,
+                taskStatus: "succeeded",
+                taskErrorCode: null,
+                taskErrorMessage: null,
+                targetTopicId,
+                outputSnapshot: {
+                  hook: "反常识开场",
+                  structureSteps: ["提出误区", "给出新方法"],
+                  coreClaims: ["流程比参数优先"],
+                  reusablePattern: "误区—方法",
+                  factRisks: [],
+                  title: "先稳定流程，再选择模型",
+                  angle: "从交付现场切入",
+                  differentiation: "不用来源案例",
+                  sourceSummary: "来源讨论模型与工作流",
+                  targetAudience: "业务负责人",
+                  audiencePain: "交付不稳定",
+                  coreConflict: "参数与流程优先级",
+                  format: "复盘口播",
+                  adaptationStrategy: {
+                    keep: ["反常识结构"],
+                    replace: ["来源案例"],
+                    add: ["本账号经验"],
+                    avoid: ["照搬原句"],
+                  },
+                  adaptedDraft: {
+                    contentText: "这是一版已经成功但用户想重试的改写稿。",
+                    generatedFromTranscriptHash: "sha256:transcript",
+                    strategyHash: "sha256:strategy",
+                    templateVersion: "intelligence-topic-draft-v1",
+                  },
+                  generationProgress: {
+                    decomposition: { status: "completed" },
+                    topic: { status: "completed" },
+                    draft: { status: "completed" },
+                  },
+                },
+              },
+            ],
+          }}
+          api={stub}
+        />,
+      );
+
+      if (status === "confirmed") {
+        expect(screen.getByText("已采纳过")).toBeInTheDocument();
+      }
+      await userEvent.click(
+        screen.getByRole("button", { name: "重新生成改写稿" }),
+      );
+      await waitFor(() =>
+        expect(stub.previewTopic).toHaveBeenCalledWith({
+          itemId: "item-1",
+          sourceSnapshotId: "snapshot-rewrite-retry",
+          positioningVersionId: "positioning-v1",
+          idempotencyKey: expect.stringMatching(/^topic-preview:/),
+        }),
+      );
+
+      expect(
+        screen.getByDisplayValue("这是一版已经成功但用户想重试的改写稿。"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "确认写入选题池" }),
+      ).toBeDisabled();
+      expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
+      expect(
+        screen.queryByRole("button", { name: "重新生成改写稿" }),
+      ).not.toBeInTheDocument();
+      expect(stub.confirmTopic).not.toHaveBeenCalled();
+    },
+  );
+
   it("博主主页必须真实预览成功后才能保存并首次同步", async () => {
     const stub = api();
     render(

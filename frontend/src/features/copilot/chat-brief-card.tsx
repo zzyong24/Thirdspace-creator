@@ -55,7 +55,7 @@ export function ChatBriefCard({
     (f) => typeof suggestion?.[f.key] === "string" && suggestion[f.key]!.trim(),
   );
 
-  const save = React.useCallback(async () => {
+  async function save() {
     if (!suggestion || !projectId) return;
     setState("saving");
     setErrorText("");
@@ -81,7 +81,7 @@ export function ChatBriefCard({
       setState("error");
       setErrorText(describeUserError(err, "写入选题卡失败，请重试。"));
     }
-  }, [suggestion, current, projectId, router]);
+  }
 
   // 模型没提炼出任何可填字段 → 诚实空态(不摆假对照表)。
   if (!suggestion || rows.length === 0) {

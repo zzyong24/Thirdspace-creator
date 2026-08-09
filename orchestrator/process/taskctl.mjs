@@ -10,11 +10,13 @@
 //   node orchestrator/process/taskctl.mjs start    <task-id> [--backlog <path>] [--expect-sha <hex前缀>]
 //   node orchestrator/process/taskctl.mjs complete <task-id> --evidence "<普通证据或 UI report path>"
 //   node orchestrator/process/taskctl.mjs block    <task-id> --reason "<原因>"
+//   node orchestrator/process/taskctl.mjs revalidate <task-id> --evidence "<新 UI report path>"
 //
 // 转换规则(fail-closed,拒绝即 exit 1):
 //   start    📋→🔨   审核值走 allowlist；strict 项目还校验 PASS review receipt + SPEC hash。
 //   complete 🔨→✅   拒绝:--evidence 缺失；「验收=待验」还必须通过 UI journey report 校验。
 //   block    任意→⏸️  拒绝:--reason 缺失或空。
+//   revalidate ✅→✅  保留历史完成事件，执行当前 HEAD 的 UI 旅程并换发新 receipt。
 //   --expect-sha:执行前算 BACKLOG.md 内容 sha256,前缀不匹配 → 拒绝(并发守卫)。
 //
 // 行定位:在 BACKLOG.md 的 Markdown 表格里找 ID 列 == task-id 的行(靠表头「ID」列定位;
@@ -22,7 +24,7 @@
 // 只替换该行状态 cell；UI complete 同时把同一行「验收」改为 PASS:<report hash>。
 //
 // 事件行(NDJSON,无关字段省略):
-//   {"ts":"<ISO>","actor":"taskctl","action":"start|complete|block","task":"<id>",
+//   {"ts":"<ISO>","actor":"taskctl","action":"start|complete|block|revalidate","task":"<id>",
 //    "evidence":"...","reason":"...","sha_before":"<12位>","sha_after":"<12位>"}
 //
 // --backlog 指定显式路径时(测试/其他布局),以该文件所在目录为项目根写 events.ndjson。
@@ -67,8 +69,8 @@ const flag = (name) => {
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
 };
 
-if (!["start", "complete", "block"].includes(action ?? ""))
-  die(`用法:taskctl.mjs <start|complete|block> <task-id> [选项] —— 收到 action「${action ?? ""}」不认识。`);
+if (!["start", "complete", "block", "revalidate"].includes(action ?? ""))
+  die(`用法:taskctl.mjs <start|complete|block|revalidate> <task-id> [选项] —— 收到 action「${action ?? ""}」不认识。`);
 if (!taskId || taskId.startsWith("--")) die(`缺 <task-id>(第二个位置参数)。`);
 
 const evidence = flag("--evidence");
@@ -76,8 +78,8 @@ const reason = flag("--reason");
 const expectSha = flag("--expect-sha");
 
 // fail-closed:证据/原因先验,不动文件
-if (action === "complete" && (!evidence || !evidence.trim()))
-  die(`complete 必须带 --evidence "<commit-id 或证据文本>"(无证据不得完成)。`);
+if (["complete", "revalidate"].includes(action) && (!evidence || !evidence.trim()))
+  die(`${action} 必须带 --evidence "<commit-id 或证据文本>"(无证据不得执行)。`);
 if (action === "block" && (!reason || !reason.trim()))
   die(`block 必须带 --reason "<原因>"。`);
 
@@ -251,6 +253,26 @@ if (action === "start") {
     } else if (acceptance !== "—") {
       die(`任务 ${taskId} 验收列为「${acceptance}」；complete 只接受 — 或待验`);
     }
+  }
+  to = "✅";
+} else if (action === "revalidate") {
+  if (from !== "✅") die(`revalidate 只接受 ✅→✅:任务 ${taskId} 当前状态是 ${from}。`);
+  const acceptance = row.cells[taskColumns.acceptance];
+  if (!/^PASS:[a-f0-9]{12}$/.test(acceptance)) {
+    die(`任务 ${taskId} 当前验收列为「${acceptance}」；只有已完成 UI receipt 才能 revalidate`);
+  }
+  try {
+    frontendEvidence = validateFrontendReport({
+      root: PROJ_ROOT,
+      reportPath: evidence,
+      taskId,
+    });
+    frontendExecution = executeFrontendVerification({
+      root: PROJ_ROOT,
+      verified: frontendEvidence,
+    });
+  } catch (error) {
+    die(`任务 ${taskId} UI 旅程复验失败:\n${error.message}`);
   }
   to = "✅";
 } else {

@@ -857,10 +857,9 @@ const CREATOR_DATA_CENTER_CONTENT =
 // [T-369] 启动预检/并发防抖/超时报错统一收进 chromium-guard.guardedLaunch(原地清锁的
 // clearSingletonLocks 升级为「杀残留进程+清锁+同 profile 串行+15s 超时人话报错」共享 helper)。
 
-// [T-173] Chromium 浏览器二进制(~344M)不打进桌面包 —— 首次用采集/扫码时**自动下载**到 Playwright
-//   默认缓存(Mac: ~/Library/Caches/ms-playwright;Win: %LOCALAPPDATA%\ms-playwright)。跨 Win/Mac:
-//   走 playwright CLI `install chromium`,平台差异由 Playwright 自己处理。装过即秒过(检查 executablePath
-//   实际存在)。用 bundled node(process.execPath)跑 CLI —— 桌面包里就是它。
+// [T-742] 正式桌面包已随包携带 Chromium，不得依赖 Playwright CLI、全局
+// Node/npm 或联网下载。ensureChromiumInstalled 只保留给本地开发/诊断环境；正式桌面端
+// 缺少系统 Chrome 和内置 Chromium 时必须人话失败。
 let chromiumEnsured = false;
 
 export interface LocatePlaywrightCliDeps {

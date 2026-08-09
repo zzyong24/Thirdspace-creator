@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "Round 3：SPEC hash 变更仅为标题元数据的行尾空白规范化；既有两项 major 仍由当前实现与聚焦测试覆盖，无新增 blocker/major。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "BR-744-03",
+        "quote": "新尝试必须复用同一作品、最新来源快照、当前定位版本，以及逐字稿 hash 相同的已完成拆解和选题策略。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-744-01",
+        "quote": "后端证明复用拆解和选题，只执行 draft。"
+      },
+      "where": "第 2、3、5 节的历史检查点复用条件",
+      "failure_mode": "startTopicPreview 只验证 snapshot 属于作品，历史 transform 检索又没有比较 sourceSnapshotId；来源最新快照变化但逐字稿 hash 未变时，可能复用旧来源证据生成新稿。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/modules/intelligence/intelligence.service.ts:4173-4179,4316-4351",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 independent full review",
+      "suggestion": "规定复用 tuple 同时匹配当前最新 sourceSnapshotId、逐字稿 hash 与定位版本；不匹配时不得只跑 draft，并补负向测试。",
+      "resolution_evidence": "SPEC-LINE:28:406200f4c9e025f4 明确 startTopicPreview 必须拒绝非最新 snapshot，并将复用 tuple 固定为 sourceSnapshotId + transcriptHash + positioningVersionId；SPEC-LINE:38:9b29baf785201314 重申不同快照不得借用检查点；SPEC-LINE:46:e2dbf68410b2547e 要求旧 snapshot 请求被服务端拒绝且新尝试不复用旧快照策略。实现 backend/src/modules/intelligence/intelligence.service.ts:4182-4195 读取最新快照并拒绝陈旧请求，:4350-4369 以 sourceSnapshotId、positioningVersionId 和 transcriptHash 过滤复用；backend/src/modules/intelligence/topic-preview-runner.test.ts:545-565 覆盖陈旧快照拒绝。实跑 `pnpm -C backend exec vitest run src/modules/intelligence/topic-preview-runner.test.ts`：5/5 通过。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "BR-744-06",
+        "quote": "活动重试期间保留旧内容用于阅读，但重试按钮和采纳按钮均不可用。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-744-05",
+        "quote": "重试任务处于 queued/running 时，旧稿可读但确认与再次重试不可点击。"
+      },
+      "where": "第 3、5 节的活动任务确认门",
+      "failure_mode": "前端确认按钮只检查本地 busy 和字段完整性，服务端 confirmTopic 也不读取目标 transform 的任务状态；迟到或陈旧客户端请求可在重试仍运行时把旧 draft 当作新结果创建 Candidate。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/src/features/intelligence/intelligence-workbench.tsx:3566-3584; backend/src/modules/intelligence/intelligence.service.ts:4644-4658,4739-4818",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 independent full review",
+      "suggestion": "前端按持久任务活动状态禁用确认；服务端确认前要求目标任务成功且 draft 检查点完整，补活动任务确认被拒绝测试。",
+      "resolution_evidence": "SPEC-LINE:31:e71bde8881f4c29f 明确活动期字段/采纳禁用，并要求服务端对新式 transform 重新读取持久任务，仅在 task=succeeded、topic/draft checkpoints completed 和既有 hash 校验通过时创建 Candidate；SPEC-LINE:50:c71d8a4d5046cc21 要求绕过前端直调 confirmTopic 也拒绝，成功且完整后才允许确认；存量无 generationProgress 保持兼容路径。实现 frontend/src/features/intelligence/intelligence-workbench.tsx:2791-2807、2914-2921、3517-3522、3580-3602 在活动任务期禁用编辑、重试和确认；backend/src/modules/intelligence/intelligence.service.ts:4705-4714 再读持久任务并拒绝未完成状态；backend/src/modules/intelligence/topic-preview-runner.test.ts:381-387 与 frontend/src/features/intelligence/intelligence-workbench.test.tsx:2498-2508 覆盖直调拒绝和 UI 禁用。实跑后端测试 5/5、前端测试 44/44 通过。",
+      "parent_id": ""
+    }
+  ]
+}

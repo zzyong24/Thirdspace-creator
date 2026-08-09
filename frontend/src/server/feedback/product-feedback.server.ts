@@ -121,11 +121,7 @@ type SubmitDependencies = {
 type FeedbackLicenseVerdict = Pick<
   LicenseVerdict,
   "v" | "allowed" | "status" | "code" | "machineId" | "projectKey"
-> & {
-  readonly channelRuntime?: {
-    readonly bugFeedbackUrl?: string | null;
-  } | null;
-};
+>;
 
 type FeedbackLicenseReadResult =
   | { readonly state: "ready"; readonly verdict: FeedbackLicenseVerdict }
@@ -362,60 +358,23 @@ function resolveHttpsBaseUrl(raw: string, code: string): URL {
   return parsed;
 }
 
-function resolveGrowthOrigin(
-  verdict: FeedbackLicenseVerdict,
+function resolveGrowthFeedbackApiUrl(
   env: Record<string, string | undefined>,
 ): URL {
-  const bugFeedbackUrl = verdict.channelRuntime?.bugFeedbackUrl;
-  if (!bugFeedbackUrl) {
-    fail(
-      "FEEDBACK_CHANNEL_UNAVAILABLE",
-      409,
-      false,
-      "当前授权还没有可用的问题反馈渠道",
-    );
-  }
-  let signedUrl: URL;
-  try {
-    signedUrl = new URL(bugFeedbackUrl);
-  } catch {
+  const raw = env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS?.trim() ?? "";
+  if (!raw || raw.includes(",")) {
     return fail(
       "FEEDBACK_ORIGIN_NOT_ALLOWED",
       503,
       false,
-      "问题反馈地址未通过安全校验",
+      "反馈 API authority 配置不可用",
     );
   }
-  if (
-    signedUrl.protocol !== "https:" ||
-    signedUrl.username ||
-    signedUrl.password ||
-    signedUrl.port
-  ) {
-    fail(
-      "FEEDBACK_ORIGIN_NOT_ALLOWED",
-      503,
-      false,
-      "问题反馈地址未通过安全校验",
-    );
-  }
-  const allowed = (env.CREATOROS_FEEDBACK_OFFICIAL_ORIGINS ?? "")
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((entry) =>
-      resolveHttpsBaseUrl(entry.endsWith("/") ? entry : `${entry}/`, "FEEDBACK_ORIGIN_NOT_ALLOWED"),
-    )
-    .map((entry) => entry.origin);
-  if (allowed.length === 0 || !allowed.includes(signedUrl.origin)) {
-    fail(
-      "FEEDBACK_ORIGIN_NOT_ALLOWED",
-      503,
-      false,
-      "问题反馈地址未通过官方服务校验",
-    );
-  }
-  return new URL(`${signedUrl.origin}${GROWTH_PATH}`);
+  const apiOrigin = resolveHttpsBaseUrl(
+    raw.endsWith("/") ? raw : `${raw}/`,
+    "FEEDBACK_ORIGIN_NOT_ALLOWED",
+  );
+  return new URL(GROWTH_PATH, apiOrigin);
 }
 
 function activeLicense(result: FeedbackLicenseReadResult): FeedbackLicenseVerdict {
@@ -569,7 +528,7 @@ export async function submitProductFeedback(
       "当前安装包产品身份校验未通过",
     );
   }
-  const growthUrl = resolveGrowthOrigin(verdict, env);
+  const growthUrl = resolveGrowthFeedbackApiUrl(env);
   const amOrigin = resolveHttpsBaseUrl(
     env.CREATOROS_LICENSE_BASE_URL?.trim() || DEFAULT_LICENSE_BASE_URL,
     "FEEDBACK_AUTHORITY_UNAVAILABLE",

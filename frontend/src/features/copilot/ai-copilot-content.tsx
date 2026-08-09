@@ -1058,8 +1058,8 @@ export function AICopilotContent({
 
   // [T-231⑩] regenerate:@ai-sdk/react 现成的「重发最后一轮」API(对话出错时的重试通路)。
   // [T-263] addToolApprovalResponse:HITL 授权卡「允许/拒绝」的回执口。sendAutomaticallyWhen 挂
-  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 授权响应齐了就**同回合自动
-  // resume 续跑** execute(读到文件),无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
+  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 的授权响应齐了就
+  // **同回合自动 resume** execute,无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
   const {
     messages,
     sendMessage,

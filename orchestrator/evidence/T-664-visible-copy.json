@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-664",
-  "commit_sha": "9199904a1236176f966ec35f51acfa73a080cbd1",
+  "commit_sha": "8d6f5257b8d1332101ce47c6cfb0bf6a6757b0cd",
   "captures": [
     {
       "checkpoint": "course-lesson-completed-normal",

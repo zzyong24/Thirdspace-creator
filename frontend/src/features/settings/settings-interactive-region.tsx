@@ -94,13 +94,13 @@ import {
   FolderOpen,
   type LucideIcon,
 } from "lucide-react";
-// [T-180 → T-396c → T-459] 桌面软件更新薄封装(client-only,web/SSR 安全降级)。
-// T-459 后只读官网公开 manifest,与激活/白标渠道完全解耦。
+// 桌面软件更新薄封装：只读当前包编译期入口，与激活态解耦且不跨渠道回退。
 import {
   checkLatestVersion,
   getAppVersion,
   isDesktopRuntimeClient,
-  OFFICIAL_DOWNLOAD_URL,
+  PACKAGE_DOWNLOAD_URL,
+  PACKAGE_WEBSITE_URL,
   type LatestVersionInfo,
 } from "@/lib/desktop-updater";
 // [T-372 L3] Rust 壳授权判定薄封装:内测离线宽限倒计时的实时数据源(零网络,读缓存+订阅事件)。
@@ -1631,19 +1631,21 @@ function CheckUpdateCard() {
                 {available.releaseNotes}
               </p>
             ) : null}
-            <div className="flex justify-end">
-              <Button asChild size="sm">
-                <a
-                  href={OFFICIAL_DOWNLOAD_URL}
-                  data-slot="check-update-download"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download aria-hidden="true" className="size-4 shrink-0" />
-                  去官网下载
-                </a>
-              </Button>
-            </div>
+            {PACKAGE_DOWNLOAD_URL ? (
+              <div className="flex justify-end">
+                <Button asChild size="sm">
+                  <a
+                    href={PACKAGE_DOWNLOAD_URL}
+                    data-slot="check-update-download"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download aria-hidden="true" className="size-4 shrink-0" />
+                    去官网下载
+                  </a>
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

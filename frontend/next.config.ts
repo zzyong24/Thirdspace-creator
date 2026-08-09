@@ -12,19 +12,20 @@ function binaryBuildFlag(value: string | undefined): "0" | "1" {
 function feedbackOfficialOrigins(value: string | undefined): string {
   const raw = value?.trim() ?? "";
   if (!raw) return "";
-  for (const item of raw.split(",").map((entry) => entry.trim())) {
-    const url = new URL(item);
-    if (
-      url.protocol !== "https:" ||
-      url.username ||
-      url.password ||
-      url.port ||
-      url.pathname !== "/" ||
-      url.search ||
-      url.hash
-    ) {
-      throw new Error(`[T-575] 非法 CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${item}`);
-    }
+  if (raw.includes(",")) {
+    throw new Error("[T-729] 反馈 API authority 必须是唯一 HTTPS origin");
+  }
+  const url = new URL(raw);
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    url.port ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(`[T-729] 非法 CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: ${raw}`);
   }
   return raw;
 }

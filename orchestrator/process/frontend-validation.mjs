@@ -763,7 +763,12 @@ export function auditFrontendReceipts({ root, backlogFile }) {
     }
     const event = [...events]
       .reverse()
-      .find((item) => item.task === row.id && item.action === "complete" && item.report_sha);
+      .find(
+        (item) =>
+          item.task === row.id &&
+          ["complete", "revalidate"].includes(item.action) &&
+          item.report_sha,
+      );
     if (!event) {
       errors.push(`${row.id}: PASS 验收缺 taskctl completion event`);
       continue;

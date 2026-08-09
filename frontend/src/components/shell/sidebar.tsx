@@ -219,6 +219,7 @@ export function Sidebar({
   React.useEffect(() => {
     try {
       if (window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时从 localStorage 同步折叠偏好，SSR 首帧保持展开
         setCollapsed(true);
       }
     } catch {

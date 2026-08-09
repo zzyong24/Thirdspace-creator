@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "Round 2：提交历史、当前候选配置和用户确认已证明旧 CSP 属于已回滚的历史包；复验既有固定清单 GET、不开新同源代理与当前用户确认的最小改动一致。REV-001 已销账，无新增 blocker/major。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "UR-745-04",
+        "quote": "不放宽 connect-src 'self'，不接收客户端传入 URL。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-745-01",
+        "quote": "route 测试覆盖可信本机请求、拒绝重定向与 URL 不可由客户端控制。"
+      },
+      "where": "SPEC §1 第 3 条、§2 第 4 项与 §4 第 1 条的 CSP/同源代理边界",
+      "failure_mode": "SPEC 把当前正式桌面 CSP 断言为 connect-src 'self'，并据此将 WebView 跨源 fetch 定性为必然被拦截；但仓内正式 Tauri 配置实际为 csp:null。实现者可按规格新增同源 proxy 并让全部 route/updater 测试通过，同时仍允许页面直接发起任意跨源连接：既不能证明“当前 CSP 拦截”是误报根因，也没有满足“不放宽 connect-src 'self'”这一已确认安全结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-09-v1-update-check-and-dashboard-scroll.md:9,17,30；frontend/src-tauri/tauri.conf.json:11-15（正式包 app.security.csp=null）；frontend/src-tauri/tauri.dev.conf.json:3-7 同样为 null。评审时 `curl --max-redirs 0 https://creatoros.aitongban.cloud/updates/latest.json` 返回 HTTP 200 与 version=0.2.0，故远端版本事实成立，但不反驳 CSP 配置矛盾。",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 independent full review",
+      "suggestion": "在实施前以正式包实际生效的 CSP 为唯一真值：若目标确为 connect-src 'self'，规格须明确其配置落点并要求对正式配置/运行响应作确定性断言；若实际 CSP 不是该值，则修正根因与“不得放宽”表述，并由用户确认相应安全边界。随后再以该边界验证同源路由，而不是让 route 测试替代 CSP 证明。",
+      "resolution_evidence": "最新 SPEC §1:9-16、§2:22-26、§3:32-35 与 §4:39-41 已将安全边界改为当前候选的回滚状态：不新增路由，仅复验固定包级 manifest GET，且不重引旧响应 CSP。orchestrator/DECISION_LOG.md:2176-2184（DEC-RELEASE-047）记录用户确认：截图来自含 CSP 的历史 1.0.0 包，当前候选不得再为其新增代理。提交 `888e1b1a` 的 frontend/src/proxy.ts:102-123 与 frontend/src-tauri/tauri.conf.json:14 显示历史 connect-src 'self'；回滚提交 `41c50538` 删除该 response CSP，当前 HEAD `bfaabc3c` 的 frontend/src/proxy.ts:94-100 不发送 CSP，frontend/src-tauri/tauri.conf.json:11-15 与 tauri.dev.conf.json:3-7 均为 csp:null。实跑 `pnpm -C frontend exec vitest run src/lib/desktop-updater.test.ts`：15/15 通过；实测固定公开 manifest 返回 HTTP 200、version=0.2.0。",
+      "parent_id": ""
+    }
+  ]
+}

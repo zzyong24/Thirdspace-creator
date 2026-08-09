@@ -15,7 +15,34 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "tests/visual/__artifacts__/**",
+    // Rust/Tauri build output is generated code and must not participate in
+    // the frontend source lint gate.
+    "src-tauri/target/**",
   ]),
+  // These files are intentionally CommonJS (`.cjs`) because they are invoked
+  // directly by Node. Applying the TypeScript ESM import rule to them makes a
+  // valid `require()` a false positive.
+  {
+    files: ["scripts/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  // The Copilot island predates React Compiler and deliberately uses mutable
+  // refs plus effect-driven transport state. React Compiler is not enabled in
+  // next.config.ts; keep the ordinary Rules of Hooks active while excluding
+  // only compiler-compatibility diagnostics for this legacy island. A compiler
+  // migration must first split the island and preserve its streaming/cancel
+  // semantics instead of changing them inside the V1 release gate.
+  {
+    files: ["src/features/copilot/ai-copilot-content.tsx"],
+    rules: {
+      "react-hooks/immutability": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
   // Singleton guard: the canonical-ctx `client` from contract-client.server is
   // hard-bound to `user-zyongzhu`, so it leaks the canonical tenant's data when
   // used from a real page. Production code under src/features/** and src/app/**

@@ -1,0 +1,103 @@
+# Artifact Manifest Template (v3 — 5 stages)
+#
+# Copy this file to the target project as orchestrator/ARTIFACT_MANIFEST.yaml
+# (the directory reconcile.mjs resolves against; see SKILL.md Startup 2).
+# It is the STAGE/GATE state source of truth (task-queue truth lives in BACKLOG.md;
+# never cross-assign — see Harness Control Plane §2).
+#
+# v3 main flow: 1-plan → 2-contract → 3-design → 4-build → 5-ship (workflows/v3-*.md).
+# BUILD slices are BACKLOG.md tasks, NOT manifest stages — the manifest tracks the five
+# decision boundaries; the board tracks the loop inside stage 4.
+
+project:
+  name: "<project-name>"
+  artifact_root: "<path>"
+  current_stage: "1-plan"
+  updated_at: "<date-or-run-id>"
+
+stages:
+  "1-plan":
+    status: "not-started"
+    artifacts:
+      - path: "PRODUCT_SPEC.md"
+        role: "product-source-of-truth"   # 章节化:FR/NFR + flow + domain model + IA + HARD 表
+    depends_on: []
+    gate: "01-product-gate"               # + 跨模型 spec-review(prompts/spec-reviewer.md)
+    gate_status: "not-run"
+    confirmation_required: true           # 确认① 用户签核 spec
+    invalidated_by: []
+    notes: ""
+  "2-contract":
+    status: "not-started"
+    artifacts:
+      - path: "SERVICE_CONTRACT.md"
+        role: "frontend-backend-contract" # 含逐 FR 数据链路可行性判定(feasible/HARD/cut)
+    depends_on: ["1-plan"]
+    gate: "12-service-contract-gate"      # + 15b-contract-completeness-gate(完备性,含可行性检查)
+    gate_status: "not-run"
+    confirmation_required: true           # 确认② = scope envelope,预授权 BUILD 自治推进
+    invalidated_by: []
+    notes: ""
+  "3-design":
+    status: "not-started"
+    artifacts:
+      - path: "UI_RULES.md"
+        role: "canonical-design-system"
+      - path: "PAGE_SPEC.md"
+        role: "page-contracts-with-binding" # binding 表:控件→API-xxx/planned/static,No API no UI
+    depends_on: ["2-contract"]
+    gate: "06-page-spec-gate"             # + 05-ui-gate(视觉一致性);S 类可 DEC 降级为 spec 内一节
+    gate_status: "not-run"
+    confirmation_required: false
+    invalidated_by: []
+    notes: ""
+  "4-build":
+    status: "not-started"
+    artifacts:
+      - path: "<code-paths>"
+        role: "vertical-slice-implementation" # 切片循环:契约细化→TDD→接真→回显 e2e→片级走查
+    depends_on: ["2-contract", "3-design"]
+    gate: "consistency-gates"             # 跨片孤儿扫描;片级门 = 13-tdd + 10-frontend-validation
+    gate_status: "not-run"
+    confirmation_required: false          # envelope 已授权;A 级新决策走异步队列
+    invalidated_by: []
+    notes: ""
+  "5-ship":
+    status: "not-started"
+    artifacts:
+      - path: "INTEGRATION_REPORT.md"
+        role: "integration-evidence"
+      - path: "RELEASE_REVIEW.md"
+        role: "release-readiness"
+    depends_on: ["4-build"]
+    gate: "14-integration-gate"           # 主线真机走查 + 销账 + 跨页词表
+    gate_status: "not-run"
+    confirmation_required: true           # 确认③ 发布签核
+    invalidated_by: []
+    notes: ""
+
+# Wire orphan-scan's computed verdict here (consistency-gates.md). Never hand-set "pass"
+# while the scan fails — reconcile.mjs detects and overrides that laundering.
+consistency_gate:
+  status: "not-run"   # pass | fail | not-run — from `node orchestrator/process/orphan-scan.mjs`
+  blocks: []          # stage ids blocked while status is "fail", e.g. ["5-ship"]
+
+stage_defaults:
+  valid_statuses:
+    - "not-started"
+    - "draft"
+    - "needs-user-confirmation"
+    - "blocked"
+    - "passed"
+    - "accepted-risk"
+    - "invalidated"
+  transition_rule: "See rules/orchestrator-state-machine.md"
+
+open_items:
+  - id: "OPEN-001"
+    stage: "<stage-id>"
+    type: "question | risk | missing-artifact | validation-finding"
+    description: "<specific item>"
+    owner: "<user | agent | team>"
+    revisit_trigger: "<when to resolve>"
+    status: "open"

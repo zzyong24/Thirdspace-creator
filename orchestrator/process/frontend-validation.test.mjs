@@ -700,6 +700,54 @@ test("audit 允许 receipt 后的无关提交，但 watched_paths 的后续提�
   assert.match(audit.stderr + audit.stdout, /watched_paths|代码.*变化|receipt.*失效/i);
 });
 
+test("已完成 UI 任务用 revalidate 换发当前 HEAD receipt，历史完成事件保持不变", () => {
+  const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
+  completeStrictReceipt(root);
+  const originalEvents = fs.readFileSync(
+    path.join(root, "orchestrator", "events.ndjson"),
+    "utf8",
+  );
+
+  fs.appendFileSync(path.join(root, "src", "ui.js"), "// release revalidation\n");
+  git(root, ["add", "src/ui.js"]);
+  git(root, ["commit", "-m", "release UI change"]);
+  writeBlock(
+    path.join(root, "REVALIDATION_REPORT.md"),
+    "frontend-validation",
+    strictReport(root),
+  );
+
+  const result = run(
+    TASKCTL,
+    [
+      "revalidate",
+      "T-RADAR",
+      "--backlog",
+      "BACKLOG.md",
+      "--evidence",
+      "REVALIDATION_REPORT.md",
+    ],
+    root,
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  const events = fs
+    .readFileSync(path.join(root, "orchestrator", "events.ndjson"), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  assert.equal(events.length, 2);
+  assert.equal(events[0].action, "complete");
+  assert.equal(events[1].action, "revalidate");
+  assert.ok(
+    fs.readFileSync(path.join(root, "orchestrator", "events.ndjson"), "utf8")
+      .startsWith(originalEvents),
+    "revalidate 必须 append，不得重写历史完成事件",
+  );
+  const audit = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(audit.status, 0, audit.stderr || audit.stdout);
+});
+
 test("audit 拒绝 watched_paths 当前 dirty，并校验 completion event 的 commit 绑定", () => {
   const dirtyRoot = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
   completeStrictReceipt(dirtyRoot);

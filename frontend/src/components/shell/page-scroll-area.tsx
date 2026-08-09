@@ -22,7 +22,9 @@ export const PageScrollArea = React.forwardRef<
       data-slot="page-scroll-area"
       data-testid="page-scroll-area"
       className={cn(
-        "min-h-0 flex-1 overflow-y-auto bg-canvas",
+        // Radix Viewport 才持有真实内容和滚动位置；Root 只负责 flex 尺寸与裁剪。
+        // 两层同时声明纵向滚动会让桌面 WebKit 的滚轮命中不稳定。
+        "min-h-0 flex-1 overflow-hidden bg-canvas",
         className,
       )}
       {...rest}

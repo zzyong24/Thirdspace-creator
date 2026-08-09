@@ -64,6 +64,18 @@
         "frontend/tests/e2e/publishing-center.spec.ts"
       ],
       "reason": "无真实 publisher 的批量发布/下架/改期控件已按 T-231 删除；替代测试锁定控件与选择框不再渲染，避免假按钮和伪写入。"
+    },
+    {
+      "from": [
+        "frontend/src/features/copilot/chat-thesis-card.test.tsx",
+        "frontend/src/features/draft-workbench/thesis-skeleton-panel.test.tsx"
+      ],
+      "to": [
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx",
+        "frontend/src/test/function-key-invariant.test.ts"
+      ],
+      "reason": "T-726 已退役 planning.thesis 新建链和论点骨架面板；替代测试在统一 Copilot、稿面工作台与函数键不变量层验证入口消失、既有稿面能力和可调用函数边界，历史 artifact 仅只读保留。"
     }
   ],
   "suppressionAllowances": [
@@ -158,6 +170,30 @@
       "reason": "资源 URL 切换时 effect 必须立即复位旧预览，单行 set-state-in-effect 例外避免闪旧图。"
     },
     {
+      "path": "frontend/src/components/resources/asset-attach-to-project.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "外部选中素材切换时必须原子复位本地成功反馈与默认项目；单行 set-state-in-effect 例外由素材挂接测试覆盖。"
+    },
+    {
+      "path": "frontend/src/components/resources/cover-thumb.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "素材或重试轮次变化时先清除旧预览，避免错误封面闪现；单行 set-state-in-effect 例外由封面测试覆盖。"
+    },
+    {
+      "path": "frontend/src/components/shell/account-switcher.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "latest-router ref 只供稳定异步回调读取且不参与渲染；单行 refs 例外避免 router 身份变化造成加载循环。"
+    },
+    {
+      "path": "frontend/src/components/shell/sidebar.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "挂载后从 localStorage 恢复折叠偏好属于外部状态同步；单行 set-state-in-effect 例外由 shell 测试覆盖。"
+    },
+    {
       "path": "frontend/src/components/resources/asset-thumbnail.tsx",
       "pattern": "eslint-disable-next-line",
       "maxIncrease": 1,
@@ -174,6 +210,18 @@
       "pattern": "eslint-disable-next-line",
       "maxIncrease": 1,
       "reason": "素材动作失败需给开发日志且 UI 已独立显示错误，单行 no-console 例外。"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-toolbar-search.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "URL 查询参数是受控输入的外部真相源；导航后同步本地值的单行 set-state-in-effect 例外由素材搜索测试覆盖。"
+    },
+    {
+      "path": "frontend/src/features/automations/automations-island.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "两个弹窗分别在外部 job/open 身份变化时初始化或清空跨对象状态；仅两行 set-state-in-effect 例外，防止旧作业数据串显。"
     },
     {
       "path": "frontend/src/features/draft-workbench/ammo-card-list.tsx",
@@ -194,10 +242,46 @@
       "reason": "自动保存 effect 只由稳定内容签名驱动，刻意排除 callback 身份以避免重复保存，单行 exhaustive-deps 例外。"
     },
     {
+      "path": "frontend/src/features/knowledge/knowledge-detail-preview.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 2,
+      "reason": "latest callback ref 与 knowledgeId 切换时清旧预览各一行窄例外；前者不参与渲染，后者防止跨知识条目闪旧内容。"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-manager-interactive-region.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "破坏性确认弹窗关闭时必须清除外部确认词，防止下次打开复用；单行 set-state-in-effect 例外由账号管理测试覆盖。"
+    },
+    {
+      "path": "frontend/src/features/review/calibration-suggestions-card.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "挂载 effect 只触发稳定异步加载，状态更新发生在 Promise 回调；单行 set-state-in-effect 例外由校准建议测试覆盖。"
+    },
+    {
       "path": "frontend/src/features/production/production-workbench.tsx",
       "pattern": "eslint-disable-next-line",
       "maxIncrease": 6,
       "reason": "制作台六处分别限定状态复位、稳定签名 effect、外部媒体 img/video 预览；均为下一行局部例外并有 production-workbench 测试。"
+    },
+    {
+      "path": "frontend/src/features/script/script-rich-editor.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "latest save-status ref 仅供事件与卸载回调读取且不参与渲染；单行 refs 例外由富文本自动保存测试覆盖。"
+    },
+    {
+      "path": "frontend/src/features/search/search-facets-panel.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "URL 查询被外部导航清空时必须同步清除上一查询 facets；单行 set-state-in-effect 例外由搜索 E2E 覆盖。"
+    },
+    {
+      "path": "frontend/src/features/settings/reset-workspace-card.tsx",
+      "pattern": "eslint-disable-next-line",
+      "maxIncrease": 1,
+      "reason": "桌面 runtime 只能在挂载后的浏览器环境探测；单行 set-state-in-effect 例外由重置工作区组件测试覆盖。"
     },
     {
       "path": "frontend/src/instrumentation.ts",

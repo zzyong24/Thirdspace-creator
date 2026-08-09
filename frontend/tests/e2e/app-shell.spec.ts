@@ -116,6 +116,74 @@ test.describe("AppShell", () => {
     await expect(scroll).toHaveCount(1);
   });
 
+  test("dashboard wheel scroll stays inside the Radix viewport", async ({
+    page,
+  }) => {
+    // 用低高度窗口稳定制造超出一屏的首页内容，避免测试数据恰好较少时没有滚动余量。
+    await page.setViewportSize({ width: 1365, height: 520 });
+    await page.goto("/");
+
+    const shell = page.getByTestId("app-shell");
+    const sidebar = page.getByTestId("app-sidebar");
+    const header = page.getByTestId("app-top-header");
+    const root = page.getByTestId("page-scroll-area");
+    const viewport = root.locator('[data-slot="scroll-area-viewport"]');
+    const recentPublications = page.locator(
+      '[data-slot="recent-publications-card"]',
+    );
+
+    await expect(viewport).toBeVisible();
+    await expect(recentPublications).toBeVisible();
+    const before = await page.evaluate(() => {
+      const readTop = (selector: string) =>
+        document.querySelector<HTMLElement>(selector)?.getBoundingClientRect()
+          .top ?? null;
+      return {
+        sidebarTop: readTop('[data-testid="app-sidebar"]'),
+        headerTop: readTop('[data-testid="app-top-header"]'),
+      };
+    });
+
+    await viewport.hover();
+    await page.mouse.wheel(0, 1_200);
+    await expect
+      .poll(() => viewport.evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(0);
+
+    const after = await page.evaluate(() => {
+      const readTop = (selector: string) =>
+        document.querySelector<HTMLElement>(selector)?.getBoundingClientRect()
+          .top ?? null;
+      const rootElement = document.querySelector<HTMLElement>(
+        '[data-testid="page-scroll-area"]',
+      );
+      const shellElement = document.querySelector<HTMLElement>(
+        '[data-testid="app-shell"]',
+      );
+      return {
+        windowScrollY: window.scrollY,
+        documentScrollTop: document.documentElement.scrollTop,
+        rootScrollTop: rootElement?.scrollTop ?? -1,
+        shellScrollTop: shellElement?.scrollTop ?? -1,
+        sidebarTop: readTop('[data-testid="app-sidebar"]'),
+        headerTop: readTop('[data-testid="app-top-header"]'),
+      };
+    });
+
+    expect(after).toMatchObject({
+      windowScrollY: 0,
+      documentScrollTop: 0,
+      rootScrollTop: 0,
+      shellScrollTop: 0,
+      sidebarTop: before.sidebarTop,
+      headerTop: before.headerTop,
+    });
+    await expect(recentPublications).toBeInViewport();
+    await expect(shell).toBeVisible();
+    await expect(sidebar).toBeVisible();
+    await expect(header).toBeVisible();
+  });
+
   test("applies shared page spacing tokens in the browser", async ({ page }) => {
     await page.goto("/");
 

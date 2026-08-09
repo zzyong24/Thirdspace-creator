@@ -4,6 +4,143 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-RADAR-046 (2026-08-09) — 内容雷达成功改写与选题淘汰后均可主动重试
+
+**来源**：用户在正式发布候选收口时明确提出：内容雷达一键改写生成的文案不满意时需要支持重试；
+选题采纳后如果在选题中心删除，原雷达条目不能断链，也应允许再次生成。
+
+**决策**：
+
+1. 复用现有 `previewTopic` 分段生成内核；同一逐字稿 hash 和定位版本下复用来源拆解与选题策略，
+   每次用户主动点击只重新生成改写稿。
+2. 新尝试使用新的 transform 与 operation key，不覆盖旧稿、旧 Candidate 或既有 Project；同一请求重放仍幂等。
+3. 已确认 transform 继续提供重试入口；旧 Candidate 即使已淘汰，新结果也走既有采纳门创建新的 Candidate，
+   不复活旧 ID。
+4. 生成中旧稿只读保留，但禁止确认旧稿或再次触发重试；失败后允许用户再次点击，不做后台自动循环。
+5. 本次复用现有操作样式，不修改视觉，不新增接口、数据表或模型提示词。
+
+**Status**：用户已确认；登记 T-744，独立评审通过后实现，并纳入 V1.0 正式候选后再打包。
+
+---
+
+## DEC-REL-044 (2026-08-09) — Windows 45 秒首启改为性能观测，真实可用性仍失败关闭
+
+**来源**：正式双平台 run `31318986792` 的 Windows 包在托管 runner 上用
+51.752 秒成功加载主页，却被旧的 45 秒固定阈值判为失败。用户明确要求不对
+偶发冷启超时作强硬限制，并要求提交后重跑正式 Windows + macOS 流水线。
+
+**决策**：
+
+1. 45 秒继续作为首启性能目标，超出时输出 `Write-Warning` 并保留
+   `firstLaunchMilliseconds`，不单独阻断工件。
+2. 120 秒内未出现 `MAIN_PAGE_LOAD_FINISHED`、进程提前退出、白屏、运行资源缺失、
+   安装或卸载失败继续作为硬失败，不得上传为通过工件。
+3. 本决策只改发布性能观测的阻断性，不放宽结构、安全、签名、公证、安装、
+   真启动或非白屏门，不修改视觉。
+
+**Status**：用户已确认；纳入 T-742 与 T-675 正式流水线口径。
+
+---
+
+## DEC-SEC-045 (2026-08-09) — 整包撤回未经逐项确认的 V1 安全行为变更
+
+**来源**：发布候选收口期间，`888e1b1a` 一次性修改 141 个文件，把钥匙串、
+AI 二次确认、blob 信任根、WebView/loopback、URL 读取、子进程环境、ASR 追踪与诊断
+同时改为新路径，却没有在正式发布前向用户逐项说明并取得确认。已实际引发素材/封面
+不可预览、买断产品出现付费/持久化确认、Windows 启动密钥争抢，以及用户保存
+模型 Key 时仍因系统 master key 不可用而报 400。
+
+**用户决策**：
+
+1. 以 `888e1b1a` 之前的产品行为为基准，整包撤回该安全方案与只为补救它而新增的链路，
+   不再用局部补丁继续叠加。
+2. 用户自填模型 Key 恢复已验证的本机保存路径，保存和调用不访问 macOS Keychain /
+   Windows Credential Manager，不弹系统密码框。
+3. AI 模型生成、转写、归档和持久化不再设付费/持久化二次确认；继续保留用户
+   对 AI 候选内容的采纳确认。
+4. 保留用户已确认的产品功能、T-729/T-740/T-741、官方打包 Skill、macOS Developer ID /
+   公证、Windows production closure、Windows 浏览器修复，以及 45 秒软警告/120 秒真启动硬门。
+5. 本轮不改视觉、不提交、不推送、不打包；先向用户提交完整文件差异和本地验证证据，
+   获得再次确认后才进入正式发布。
+
+**Status**：用户于 2026-08-09 明确表示认可上述整包撤回边界；T-743 执行。
+
+---
+
+## DEC-SEC-043 (2026-08-09) — 用户自填模型 Key 不直接使用系统钥匙串
+
+**来源**：V1 正式候选把用户在设置页填写的模型 API Key 迁入 macOS Keychain，导致捆绑的
+`next-server` sidecar 在保存或使用时弹系统登录钥匙串密码框。用户明确要求暂时撤回该方案，
+恢复无需系统授权弹窗的本地加密保存；该问题使当前安装包无法正常使用。
+
+**决策**：
+
+1. 用户自填模型 API Key 使用 CreatorOS 已有的本机 master key 做 AES-GCM 加密，并只把密文保存
+   在本地数据库；浏览器、RSC、日志与普通导出不得获得明文。
+2. Next sidecar 不再为用户自填模型 Key 读写 `com.creatoros.user-model-credentials.v1`，启动迁移也
+   不访问该 service，避免保存、启动或模型调用触发系统钥匙串密码框。
+3. 已经迁入 Keychain 的旧用户模型 Key 不自动读取、不删除。界面沿用既有“需重新填写”状态；用户
+   下次保存新 Key 后，以本地加密密文替换数据库中的旧引用。
+4. Growth/Activity 下发的渠道受管长期 Key 不在本次回退范围内，继续只进入系统 Keychain /
+   Windows Credential Manager；数据库仍只保存不可逆引用与状态。
+5. 不改视觉、不新增功能；当前已构建的 V1 安装包不得继续作为正式发布候选，修复验证后另行打包。
+
+**取舍**：用户自填 Key 的防护强度回到“本机数据库密文 + 本机 master key”，弱于直接由系统
+Keychain 隔离，但恢复买断桌面产品的无额外系统密码交互。受管渠道长期 Key 的更高安全边界不降级。
+
+**用户确认**：2026-08-09，用户明确表示该系统钥匙串方案“暂时不要”“太折腾了，都没法用”。
+
+**影响范围**：T-739（作为 T-731 FR-731-05 第 5 条的后续用户口径修订）、settings repository、
+长期凭据迁移与聚焦测试。T-731 的历史评审工件不回写或伪造。
+
+---
+
+## DEC-AI-042 (2026-08-09) — 买断产品不设置付费/持久化二次确认
+
+**来源**：V1 本地包把 `positioning.generate` 误归为副作用并弹“预计消耗”确认；确认后又因
+ai@7.0.4 丢失审批签名而报错。用户明确纠正：CreatorOS 是买断产品，模型生成、转写、归档和
+持久化能力应直接使用，不得因为预计费用或落库行为再限制一次。
+
+**决策**：
+
+1. 用户在可信聊天输入中要求模型生成、素材/封面生成、作品转写、网页素材读取/截图或抖音归档时，
+   当前指令即授权执行，不再弹付费/持久化二次确认，也不在 CreatorOS 判断套餐或金额。
+2. 继续保留不可信内容隔离：一旦模型读取网页、外部素材或本机文件，后续步骤只开放本地确定性
+   只读上下文，不让外部提示词驱动生成、归档、转写、联网或本机文件读取。
+3. 本机文件读取权限确认继续保留；它保护磁盘访问，不是收费门。ai@7.0.4 点击确认会覆盖并丢失
+   HMAC signature，前端只在续跑请求副本中按 approvalId 恢复服务端原签名，后端照常验签。
+4. AI 候选采纳门继续保留；它防止模型自动覆盖项目数据，不限制用户调用已购买的能力。
+
+**Explicit Limits**：不改视觉；不新增额度、套餐、金额判断；不移除 SSRF、提示词注入隔离、
+Keychain、loopback/CSP 或本机文件权限边界。
+
+**Status**：用户已确认；纳入 T-736 BUILD。
+
+```text
+ID: DEC-PACKAGE-729
+Date: 2026-08-09
+Stage: T-729 BUILD
+Type: package-public-link-authority
+Decision: PackageManifest 分别声明包官网、包下载页、包人工反馈页和更新 manifest；构建入口将四者
+          固化为当前包的公开配置。激活后的同类业务链接仍优先使用 Growth 已验签 runtime，缺失时
+          只能回退当前包对应值，渠道包不得跨回 CreatorOS 官方。更新响应只提供 version/notes；
+          自动反馈 API 只认构建期固定的唯一 Growth HTTPS authority 与固定 path，不从人工页面推导。
+Rationale: PAT-004 CF-001/CF-004 命中：PackageManifest→构建环境→WebView/服务端反馈是跨脚本、前端
+           与 Growth 边界且必须可追溯的协议，因此先修订清单契约并用解析、DOM 与服务端安全测试
+           锁定，不允许散落硬编码或运行时猜测。资产索引没有 package-link authority 的可复用模块，
+           本轮复用既有 PackageManifest 与 URL 校验入口，不新增依赖。
+Pattern-Ref: PAT-004
+Affected Artifacts: T-729、渠道包工厂 SPEC、PackageManifest、package-flavor、package-brand、
+                    desktop-updater、问题反馈服务与设置/反馈入口测试。
+Explicit Limits: 不改视觉样式、布局、图标或视觉快照；不把 machineId、激活码、ticket、Key 暴露给
+                 Web/日志；不部署 Growth，不发布渠道包，不创建 tag 或 GitHub Release。
+Audit Note: 候选分支早期曾把“前端零错误发布门”占用为 T-729；BACKLOG 已将该任务稳定别名为
+            T-732。既有 `events.ndjson` 与 `GATE-T729-BUILD.md` 作为历史收据保持只读；本次渠道任务
+            使用新的 SPEC/review 和 `GATE-T729-CHANNEL-LINKS-BUILD.md`，不篡改旧回执洗绿。
+Owner: user+agent
+Status: active
+```
+
 ```text
 ID: DEC-AI-727
 Date: 2026-08-08

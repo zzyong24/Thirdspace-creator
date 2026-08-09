@@ -313,7 +313,8 @@ function reusableTopicCandidate(
     state.draft && typeof state.draft === "object" && !Array.isArray(state.draft)
       ? (state.draft as Record<string, unknown>)
       : null;
-  return topic?.status === "completed" && draft?.status === "failed"
+  return topic?.status === "completed" &&
+    (draft?.status === "failed" || draft?.status === "completed")
     ? candidate
     : null;
 }
@@ -3721,7 +3722,7 @@ export function createIntelligenceService(
           .select()
           .from(sourceSnapshots)
           .where(eq(sourceSnapshots.itemId, itemId))
-          .orderBy(desc(sourceSnapshots.capturedAt)),
+          .orderBy(desc(sourceSnapshots.capturedAt), desc(sourceSnapshots.id)),
         db
           .select()
           .from(intelligenceTransforms)
@@ -4177,6 +4178,22 @@ export function createIntelligenceService(
           "sourceSnapshotId 不属于当前作品",
         );
       }
+      const accountId = await account(ctx, "intelligence.transform.preview");
+      const [latestSnapshot] = await db
+        .select({ id: sourceSnapshots.id })
+        .from(sourceSnapshots)
+        .where(
+          and(
+            eq(sourceSnapshots.itemId, item.id),
+            eq(sourceSnapshots.userId, ctx.userId),
+            eq(sourceSnapshots.accountId, accountId),
+          ),
+        )
+        .orderBy(desc(sourceSnapshots.capturedAt), desc(sourceSnapshots.id))
+        .limit(1);
+      if (!latestSnapshot || latestSnapshot.id !== snapshot.id) {
+        throw new IntelligenceConflictError("SOURCE_SNAPSHOT_STALE");
+      }
       const [transcript] = await db
         .select()
         .from(itemTranscripts)
@@ -4207,7 +4224,6 @@ export function createIntelligenceService(
         },
         priority: 20,
       });
-      const accountId = await account(ctx, "intelligence.transform.preview");
       const [existing] = await db
         .select()
         .from(intelligenceTransforms)
@@ -4316,6 +4332,7 @@ export function createIntelligenceService(
       const priorTransforms = await db
         .select({
           outputSnapshot: intelligenceTransforms.outputSnapshot,
+          sourceSnapshotId: intelligenceTransforms.sourceSnapshotId,
           positioningVersionId: intelligenceTransforms.positioningVersionId,
         })
         .from(intelligenceTransforms)
@@ -4329,6 +4346,11 @@ export function createIntelligenceService(
         .orderBy(desc(intelligenceTransforms.createdAt));
       const reusableDecomposition =
         priorTransforms
+          .filter(
+            (row) =>
+              row.sourceSnapshotId === transform.sourceSnapshotId &&
+              row.positioningVersionId === transform.positioningVersionId,
+          )
           .map((row) =>
             reusableTopicDecomposition(row.outputSnapshot, transcriptHash),
           )
@@ -4340,6 +4362,7 @@ export function createIntelligenceService(
         priorTransforms
           .filter(
             (row) =>
+              row.sourceSnapshotId === transform.sourceSnapshotId &&
               row.positioningVersionId === transform.positioningVersionId,
           )
           .map((row) =>
@@ -4655,6 +4678,40 @@ export function createIntelligenceService(
       }
       if (!transform.outputSnapshot) {
         throw new IntelligenceConflictError("选题候选尚未生成完成");
+      }
+      const persistedSnapshot = transform.outputSnapshot as Record<
+        string,
+        unknown
+      >;
+      const generationProgress = persistedSnapshot.generationProgress;
+      if (
+        generationProgress &&
+        typeof generationProgress === "object" &&
+        !Array.isArray(generationProgress)
+      ) {
+        const progress = generationProgress as Record<string, unknown>;
+        const topicProgress =
+          progress.topic &&
+          typeof progress.topic === "object" &&
+          !Array.isArray(progress.topic)
+            ? (progress.topic as Record<string, unknown>)
+            : null;
+        const draftProgress =
+          progress.draft &&
+          typeof progress.draft === "object" &&
+          !Array.isArray(progress.draft)
+            ? (progress.draft as Record<string, unknown>)
+            : null;
+        const task = transform.aiTaskId
+          ? await deps.tasks.get(ctx, transform.aiTaskId).catch(() => null)
+          : null;
+        if (
+          task?.status !== "succeeded" ||
+          topicProgress?.status !== "completed" ||
+          draftProgress?.status !== "completed"
+        ) {
+          throw new IntelligenceConflictError("TOPIC_PREVIEW_NOT_READY");
+        }
       }
       if (!deps.topics) {
         throw new IntelligenceValidationError("选题服务尚未接入");

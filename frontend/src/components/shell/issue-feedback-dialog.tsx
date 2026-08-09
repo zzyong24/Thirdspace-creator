@@ -28,11 +28,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { getAppVersion } from "@/lib/desktop-updater";
 import { handshakeHeaders } from "@/lib/handshake-client";
+import { PACKAGE_HUMAN_FEEDBACK_URL } from "@/lib/package-brand";
 import { getRuntimeSystemLabel } from "@/lib/runtime-system-info";
 import { cn } from "@/lib/utils";
 import {
   buildProductFeedbackPreview,
-  CREATOROS_FEISHU_FEEDBACK_URL,
   feedbackDescriptionLength,
   redactSensitiveText,
 } from "./issue-feedback";
@@ -63,6 +63,7 @@ function newIdempotencyKey(): string {
 export function IssueFeedbackDialog({
   collapsed,
   bugFeedbackUrl: cachedBugFeedbackUrl,
+  packageHumanFeedbackUrl = PACKAGE_HUMAN_FEEDBACK_URL,
   submissionEnabled = process.env
     .NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED === "1",
 }: {
@@ -74,6 +75,8 @@ export function IssueFeedbackDialog({
    * 独立组件/旧嵌入方的兼容读取；正式侧边栏不会在每次开弹窗时重复读渠道运行时。
    */
   readonly bugFeedbackUrl?: string | null;
+  /** 编译期 PackageManifest 的人工反馈页；渠道运行时缺失时只回退本包，不回退官方包。 */
+  readonly packageHumanFeedbackUrl?: string | null;
   /** 包能力默认关闭；服务端还有独立 fail-closed 门，二者都开启才会真实提交。 */
   readonly submissionEnabled?: boolean;
 }) {
@@ -83,20 +86,13 @@ export function IssueFeedbackDialog({
   const [appVersion, setAppVersion] = React.useState<string | null>(null);
   const [systemLabel, setSystemLabel] = React.useState("系统信息读取中");
   const [bugFeedbackUrl, setBugFeedbackUrl] = React.useState<string | null>(
-    cachedBugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
-  );
-  const [signedFeedbackAvailable, setSignedFeedbackAvailable] = React.useState<
-    boolean | null
-  >(
-    cachedBugFeedbackUrl === undefined
-      ? null
-      : cachedBugFeedbackUrl !== null,
+    cachedBugFeedbackUrl ?? packageHumanFeedbackUrl,
   );
   const [copyState, setCopyState] = React.useState<CopyState>("editing");
   const [channelState, setChannelState] = React.useState<ChannelState>(
     cachedBugFeedbackUrl === undefined
       ? "loading"
-      : cachedBugFeedbackUrl
+      : cachedBugFeedbackUrl || packageHumanFeedbackUrl
         ? "ready"
         : "channel_missing",
   );
@@ -131,8 +127,8 @@ export function IssueFeedbackDialog({
       systemLabel,
     ],
   );
-  const directSubmissionAvailable =
-    submissionEnabled && signedFeedbackAvailable === true;
+  // 自动提交只由固定 Growth API authority + 激活上下文授权；人工反馈页不再充当 API authority。
+  const directSubmissionAvailable = submissionEnabled;
 
   const handleOpenChange = React.useCallback((next: boolean) => {
     setOpen(next);
@@ -140,17 +136,12 @@ export function IssueFeedbackDialog({
       setSystemLabel("系统信息读取中");
       setCopyState("editing");
       setBugFeedbackUrl(
-        cachedBugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
-      );
-      setSignedFeedbackAvailable(
-        cachedBugFeedbackUrl === undefined
-          ? null
-          : cachedBugFeedbackUrl !== null,
+        cachedBugFeedbackUrl ?? packageHumanFeedbackUrl,
       );
       setChannelState(
         cachedBugFeedbackUrl === undefined
           ? "loading"
-          : cachedBugFeedbackUrl
+          : cachedBugFeedbackUrl || packageHumanFeedbackUrl
             ? "ready"
             : "channel_missing",
       );
@@ -159,7 +150,7 @@ export function IssueFeedbackDialog({
       setValidationError(null);
       setSubmissionConfirmed(false);
     }
-  }, [cachedBugFeedbackUrl]);
+  }, [cachedBugFeedbackUrl, packageHumanFeedbackUrl]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -194,24 +185,24 @@ export function IssueFeedbackDialog({
       })
       .then((result) => {
         if (!active) return;
-        setBugFeedbackUrl(
-          result.bugFeedbackUrl ?? CREATOROS_FEISHU_FEEDBACK_URL,
-        );
-        setSignedFeedbackAvailable(result.bugFeedbackUrl !== null);
+        const humanFeedbackUrl =
+          result.bugFeedbackUrl ?? packageHumanFeedbackUrl;
+        setBugFeedbackUrl(humanFeedbackUrl);
         setChannelState(
-          result.bugFeedbackUrl ? "ready" : "channel_missing",
+          humanFeedbackUrl ? "ready" : "channel_missing",
         );
       })
       .catch(() => {
         if (!active) return;
-        setBugFeedbackUrl(CREATOROS_FEISHU_FEEDBACK_URL);
-        setSignedFeedbackAvailable(false);
-        setChannelState("channel_missing");
+        setBugFeedbackUrl(packageHumanFeedbackUrl);
+        setChannelState(
+          packageHumanFeedbackUrl ? "ready" : "channel_missing",
+        );
       });
     return () => {
       active = false;
     };
-  }, [cachedBugFeedbackUrl, open]);
+  }, [cachedBugFeedbackUrl, open, packageHumanFeedbackUrl]);
 
   function validateSummary(): boolean {
     const summaryLength = Array.from(summary.trim()).length;
@@ -429,7 +420,7 @@ export function IssueFeedbackDialog({
               <span className="text-[11px] text-muted-foreground">
                 {directSubmissionAvailable
                   ? "下面就是应用内实际发送的内容"
-                  : "可复制后粘贴到官方反馈页"}
+                  : "可复制后粘贴到反馈页"}
               </span>
             </div>
             <div className="rounded-xl border border-border bg-muted/35 p-1">
@@ -470,22 +461,22 @@ export function IssueFeedbackDialog({
             className="grid min-h-5 gap-1 text-xs text-muted-foreground"
           >
             {copyState === "copied" ? (
-              <p>反馈内容已复制，请在官方反馈页中粘贴提交</p>
+              <p>反馈内容已复制，请在反馈页中粘贴提交</p>
             ) : copyState === "copy_failed" ? (
               <p className="text-destructive">复制失败，请手动选择上方内容复制</p>
             ) : null}
-            {channelState === "loading" ? <p>正在准备官方反馈页</p> : null}
+            {channelState === "loading" ? <p>正在准备反馈页</p> : null}
             {channelState === "channel_missing" ? (
               <p>
-                此版本暂不能在应用内发送。你可以复制上方文字，再打开官方反馈页完成提交。
+                此版本暂不能在应用内发送。你可以复制上方文字，再打开反馈页完成提交。
               </p>
             ) : null}
             {channelState === "channel_opened" ? (
-              <p>已请求打开官方反馈页，请在页面中粘贴并提交</p>
+              <p>已请求打开反馈页，请在页面中粘贴并提交</p>
             ) : null}
             {channelState === "channel_open_failed" ? (
               <p className="text-destructive">
-                未能打开官方反馈页，请重试或手动复制内容
+                未能打开反馈页，请重试或手动复制内容
               </p>
             ) : null}
             {logsState === "logs_opened" ? <p>日志文件夹已打开</p> : null}
@@ -532,7 +523,7 @@ export function IssueFeedbackDialog({
             ) : (
               <ExternalLink />
             )}
-            打开官方反馈页
+            打开反馈页
           </Button>
           <Button
             type="button"

@@ -108,3 +108,17 @@ test("closure and packaged runtime share one verdict-key baker", () => {
   assert.match(packagedRuntime, /bakeVerdictPublicKey/);
   assert.doesNotMatch(packagedRuntime, /writeFileSync\([\s\S]*publicKeyB64/);
 });
+
+test("materializer physically excludes traced engineering inputs without changing budgets", () => {
+  const materializer = readFileSync(
+    resolve(HERE, "materialize-next-closure.mjs"),
+    "utf8",
+  );
+
+  assert.match(materializer, /import \{ isNonRuntimeTracedAsset \}/);
+  assert.match(materializer, /isNonRuntimeTracedAsset\(destination\)/);
+  assert.match(materializer, /isNonRuntimeTracedAsset\(source\)/);
+  assert.match(materializer, /excludedNonRuntimeAssets/);
+  assert.doesNotMatch(materializer, /runtime\.files\s*>/);
+  assert.doesNotMatch(materializer, /core\.files\s*>/);
+});

@@ -1,10 +1,9 @@
 /**
  * `desktop-updater.ts` — [T-180 → T-396c → T-459] 桌面软件更新的前端薄封装(client-only)。
  *
- * [T-459 用户裁决] 更新检查与激活/白标完全拆开:只 GET 产品官网公开静态
- * `https://creatoros.aitongban.cloud/updates/latest.json`，不发送激活码、machineId、projectKey、
- * nonce，也不调用 Rust `license_latest_version`。只信 version/notes；下载入口写死官网，绝不
- * 采纳远端 JSON 里的任意 URL。`relaunchApp` 仍供重置工作区等场景复用。
+ * [T-729] 更新检查与激活完全拆开：只 GET 当前包编译期固定的公开 manifest，不发送激活码、
+ * machineId、projectKey 或 nonce。只信 version/notes；下载入口同样来自包级清单，绝不采纳
+ * 远端 JSON 的任意 URL，也不让渠道包回退 CreatorOS 官方入口。
  *
  * web / SSR(无 `__TAURI_INTERNALS__`)一律安全降级,绝不 throw、绝不假装有更新
  * (诚实铁律:非桌面态返回 `unavailable`,不误导用户)。
@@ -24,11 +23,17 @@ export function isDesktopRuntimeClient(): boolean {
   return "__TAURI_INTERNALS__" in w || "isTauri" in w;
 }
 
-/** 与授权系统无关的公开更新源；只承载版本公告。 */
-export const OFFICIAL_UPDATE_MANIFEST_URL =
-  "https://creatoros.aitongban.cloud/updates/latest.json";
-/** 有新版时统一跳产品官网，避免远端 JSON 形成开放重定向。 */
-export const OFFICIAL_DOWNLOAD_URL = "https://creatoros.aitongban.cloud/";
+import {
+  PACKAGE_DOWNLOAD_URL,
+  PACKAGE_UPDATE_MANIFEST_URL,
+  PACKAGE_WEBSITE_URL,
+} from "./package-brand";
+
+export {
+  PACKAGE_DOWNLOAD_URL,
+  PACKAGE_UPDATE_MANIFEST_URL,
+  PACKAGE_WEBSITE_URL,
+};
 
 interface OfficialUpdateManifest {
   version?: unknown;
@@ -42,7 +47,7 @@ export interface LatestVersionInfo {
   latestVersion: string | null;
   releaseNotes: string | null;
   /**
-   * T-459 后有新版时固定为产品官网；保留 null 类型兼容既有 UI。
+ * 有新版时固定为当前包下载页；远端 manifest 不能覆盖。
    */
   downloadUrl: string | null;
   updateAvailable: boolean;
@@ -56,7 +61,7 @@ export type CheckLatestResult =
   | { kind: "error"; message: string };
 
 /**
- * [T-459] 检查更新:非桌面态直接 `unavailable`;桌面态读壳版本 + GET 官网公开 manifest。
+ * [T-729] 检查更新:非桌面态直接 `unavailable`;桌面态读壳版本 + GET 包级公开 manifest。
  * 不调用授权 IPC，不携带任何用户/授权字段。远端只提供 version/notes，下载地址固定官网。
  */
 export async function checkLatestVersion(): Promise<CheckLatestResult> {
@@ -69,14 +74,21 @@ export async function checkLatestVersion(): Promise<CheckLatestResult> {
         message: "暂时无法读取当前版本,请重启软件后重试。",
       };
     }
-    const response = await fetch(OFFICIAL_UPDATE_MANIFEST_URL, {
+    if (!PACKAGE_UPDATE_MANIFEST_URL) {
+      return {
+        kind: "error",
+        message: "当前安装包没有可用的更新入口，请联系授权方。",
+      };
+    }
+    const response = await fetch(PACKAGE_UPDATE_MANIFEST_URL, {
       method: "GET",
       cache: "no-store",
+      redirect: "error",
     });
     if (!response.ok) {
       return {
         kind: "error",
-        message: "官网更新服务暂时不可用,请稍后重试。",
+        message: "更新服务暂时不可用,请稍后重试。",
       };
     }
     const manifest = (await response.json()) as OfficialUpdateManifest;
@@ -85,7 +97,7 @@ export async function checkLatestVersion(): Promise<CheckLatestResult> {
     if (!latestVersion || versionParts(latestVersion).length === 0) {
       return {
         kind: "error",
-        message: "官网更新服务响应格式有误,请稍后重试。",
+        message: "更新服务响应格式有误,请稍后重试。",
       };
     }
     const info: LatestVersionInfo = {
@@ -95,7 +107,7 @@ export async function checkLatestVersion(): Promise<CheckLatestResult> {
         typeof manifest.notes === "string" && manifest.notes.trim()
           ? manifest.notes.trim()
           : null,
-      downloadUrl: OFFICIAL_DOWNLOAD_URL,
+      downloadUrl: PACKAGE_DOWNLOAD_URL,
       updateAvailable: versionNewer(latestVersion, currentVersion),
     };
     if (info.updateAvailable) {

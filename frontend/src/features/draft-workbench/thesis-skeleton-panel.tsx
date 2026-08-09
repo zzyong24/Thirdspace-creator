@@ -213,6 +213,8 @@ export function ThesisSkeletonPanel({
     ? JSON.stringify([thesis.versionId, thesis.scriptBasisStatus, thesis.nodes])
     : "";
   React.useEffect(() => {
+    // 服务端版本切换是外部真值提交，必须在 effect 中开启一轮新的本地编辑会话。
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 同步外部服务端版本，而非由本地渲染派生状态
     setDraft(thesis ? toEditNodes(thesis.nodes) : []);
     setSaveStatus("idle");
     setBasisStatus("idle");

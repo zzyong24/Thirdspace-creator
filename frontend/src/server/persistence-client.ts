@@ -1815,7 +1815,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         "桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。",
     );
   }
-
   // [T-370a] 浏览器登录态系统化:web 域 storageState 加密单一真值(host 内部 service,
   // 无契约 op —— web-session 保管库 / browser-pool 经端口闭包用它,不暴露 API)。
   // gate F-3:service 内 master-key 不可用/加密失败 → 抛人话错拒存,绝不明文落库。

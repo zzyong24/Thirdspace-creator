@@ -119,6 +119,7 @@
   "program_completion_required": false,
   "receipt_policy": "required",
   "frontend_verify_commands": {
+    "channel-public-links:e2e": "CREATOROS_TEST_PORT=3433 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome NEXT_PUBLIC_CREATOROS_PACKAGE_REF=zhisu-ai NEXT_PUBLIC_CREATOROS_PACKAGE_WEBSITE_URL=https://zhisunet.com/ NEXT_PUBLIC_CREATOROS_PACKAGE_DOWNLOAD_URL=https://zhisunet.com/download/ NEXT_PUBLIC_CREATOROS_PACKAGE_HUMAN_FEEDBACK_URL=https://zhisunet.com/feedback/ NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL=https://creatoros.aitongban.cloud/updates/v2/packages/zhisu-ai/stable/latest.json pnpm --dir frontend exec playwright test tests/e2e/channel-public-links.spec.ts --project=e2e",
     "review-history:e2e": "CREATOROS_TEST_PORT=3427 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/review-history.spec.ts --project=e2e",
     "asr-configuration:e2e": "CREATOROS_TEST_PORT=3428 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/asr-configuration.spec.ts --project=e2e",
     "onboarding-sidebar:e2e": "CREATOROS_TEST_PORT=3429 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/onboarding-and-small-sidebar.spec.ts --project=e2e",

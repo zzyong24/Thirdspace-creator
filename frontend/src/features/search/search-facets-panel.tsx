@@ -74,6 +74,7 @@ export function SearchFacetsPanel({ initialQuery = "" }: SearchFacetsPanelProps)
 
   React.useEffect(() => {
     if (urlQuery === "") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- URL 查询清空时同步清除上一查询的外部 facets
       setState(EMPTY);
       return;
     }

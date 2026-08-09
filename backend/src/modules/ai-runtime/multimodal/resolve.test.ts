@@ -156,6 +156,9 @@ describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
       kind: "image",
       settings: {},
       displayModelKey: "channel-managed",
+      credentialLifecycle: undefined,
+      serviceId: undefined,
+      apiFormat: "legacy",
     });
   });
 
