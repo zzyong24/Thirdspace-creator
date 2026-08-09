@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "初审确认安全收口目标与已审计风险相符，但当前验收把独立任务范围与发布工件禁令留成两处不可裁决的矛盾，需先澄清才能形成可执行、可验收的 T-731 闭环。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "scope",
+      "requirement_anchor": {
+        "id": "SCOPE-731",
+        "quote": "本任务只关闭独立上线审计已经用源码证据确认的发布阻断，不新增产品功能。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-731-10",
+        "quote": "完整 workspace、lint、E2E、visual、boundary、semantic、orphan、reconcile 全退出 0。"
+      },
+      "where": "§6 AC-731-10 与 BACKLOG 中 T-729、T-730 的独立收口范围",
+      "failure_mode": "审计已确定 lint 和 orchestrator 全量测试为红，且 BACKLOG 将这两类历史债分别交给 T-729、T-730；T-731 位于二者之前，却把其全部归零作为自身验收。实现者无法判断应越过已确认任务边界修复无关债务，还是等待未声明的依赖，因而 T-731 的完成条件不可裁决。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-08-v1-security-and-side-effect-closure.md:14-16,165-166; BACKLOG.md:13-15; docs/research/2026-08-08-creatoros-v1-prelaunch-audit.md:173-198,339-343",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确 AC-731-10 中哪些是 T-731 自身必须修复的验收，哪些是 V1 发布总门及其已指定 owner/依赖；完成状态须能在不接管 T-729/T-730 范围的前提下唯一判断。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SCOPE-731",
+        "quote": "本任务不创建 tag、Release，不上传安装包。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-731-11",
+        "quote": "签名、公证、staple、Gatekeeper、DMG 安装和真启动只在代码门全绿后取证。"
+      },
+      "where": "§2 已确认边界、§6 AC-731-11 与现有 desktop-release 工作流",
+      "failure_mode": "当前可执行的 macOS 取证链在 DMG 安装与真启动均通过后使用 actions/upload-artifact 上传安装包。SPEC 同时禁止上传安装包，却没有规定允许的替代取证/保留方式或是否将受限 CI artifact 视为上传；两种合理解释会分别违反范围或无法完成 AC-731-11。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-08-v1-security-and-side-effect-closure.md:36-37,167-168,176; .github/workflows/desktop-release.yml:659-731; docs/research/2026-08-08-creatoros-v1-prelaunch-audit.md:204-221",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确 AC-731-11 的可执行证据路径以及安装包的允许存放、可见性和保留边界，或把产物取证交给有相应授权的后续发布任务；该路径必须同时满足“不分发/不放量”和本任务的上传禁令。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-722",
+  "commit_sha": "727cbf67552c5ba2ce6f5a9cf9ec8c5cc3dffb22",
+  "captures": [
+    {
+      "checkpoint": "历史智溯AI安装版可见文本（当前安全候选逻辑复核）",
+      "check_ids": [
+        "AC-SKILLS-LIST",
+        "AC-SKILLS-NO-ACCOUNT",
+        "AC-SKILLS-NO-ERROR"
+      ],
+      "viewport": { "width": 1440, "height": 900 },
+      "text": "技能。系统内置的 AI 技能清单。写文案。选择账号后可定制此技能。"
+    },
+    {
+      "checkpoint": "历史智溯AI安装版最小窗口可见文本（当前安全候选逻辑复核）",
+      "check_ids": [
+        "AC-SKILLS-LIST",
+        "AC-SKILLS-NO-ACCOUNT",
+        "AC-SKILLS-NO-ERROR"
+      ],
+      "viewport": { "width": 1024, "height": 720 },
+      "text": "技能。系统内置的 AI 技能清单。写文案。选择账号后可定制此技能。"
+    }
+  ]
+}
