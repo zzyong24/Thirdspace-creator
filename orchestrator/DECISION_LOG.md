@@ -1822,6 +1822,47 @@ connection 共用同一 Activity 权益子 Key。CreatorOS 从 API-265 安全取
 **Status**：用户已确认；契约已按 T-679 最新目标重派生，CreatorOS BUILD 进行中，真实跨仓 live
 HTTPS 联调仍待验收。
 
+## DEC-CONTEXT-033 (2026-08-04) — Copilot 工具层统一补齐项目全生命周期、历史检索与审核改稿闭环
+
+**来源**：用户发现稿面已经采纳并显示 `output_script v6`，Copilot 调用 `context.artifacts` 却得到
+`items: []`，继而错误判断“未采纳/没有稿子”；同时确认 Copilot 无法基于单项目读取稿面、分镜、
+素材、封面、发布、指标留存与审核报告，也无法在当前项目对话中检索前几期作品。
+
+**决策**：
+
+1. 不另建第二套 Context，也不以接入 Pi 或更换模型掩盖数据缺口；在 T-099 既有 Context 读层内
+   补齐一个项目全生命周期的索引、完整度与窗口读取协议。
+2. 页面和 Copilot 必须使用同一个经属主校验的账号/项目上下文；权限、账号、数据库或契约错误不得
+   再被吞成空列表。`error`、`partial`、`empty` 必须可区分并带 traceId。
+3. 当前项目默认直读，不再拉全库重新寻找；用户明确要求“前几期/历史/之前发布”时，允许受限的
+   历史项目搜索，并按真实发布时间检索项目及其稿面、封面、发布与指标。
+4. 审核报告成为 Context 可读事实。用户明确要求应用审核建议后，由确定性 backend service 校验
+   基准版本并追加一个可回滚的新稿版本；AI 仍不直接写库，并发稿面变化必须拒绝覆盖。
+5. 系统提示词、工具注册与 JSON schema 建立自动一致性测试；工具不得宣称不存在的“全档”能力，
+   模型不得从 taskId 或空列表推断用户是否采纳。
+
+**Status**：用户已确认问题合并范围并要求登记统一任务；T-691 SPEC 已建立，因涉及服务契约与受控
+写入命令，须独立评审非 FAIL 后才能进入 BUILD。
+
+## DEC-SEC-034 (2026-08-05) — Growth 配置签名私钥仓库外保存
+
+**来源**：用户授权生成 CreatorOS 渠道配置验签的 key 与 `keyId`，并要求把可复用信息保存到项目文档。
+
+**决策**：
+
+1. 生成独立 Ed25519 32-byte seed，`keyId` 为 `growth-client-config-20260805-01`。
+2. 私钥只保存在仓库外、权限 `0600` 的本机文件；项目文档只记录其路径引用，不记录内容。
+3. Growth 使用私钥签名；CreatorOS 和 CI 只持有 Base64 公钥与同一 `keyId`。
+4. 公开材料写入 Growth 运维文档和 CreatorOS 发布手册；轮换必须先发布信任新公钥的客户端，再切换
+   Growth 私钥，避免旧客户端突然无法拉取渠道配置。
+5. 真实上线完成权仍属于 J-133 Program Gate，不能用本机签名成功替代真实部署与激活权益回执。
+
+**Pattern-Ref**：none（沿用既有 T-133 Ed25519 服务契约，不引入新架构取舍）。
+
+**Asset-Ref**：none（复用项目内 `ClientConfigBundleSigner` 与公开材料导出脚本）。
+
+**Status**：用户已确认；T-697 已生成并验证材料，等待生产环境注入和真实 J-133 回执。
+
 ## DEC-MODEL-035 (2026-08-05) — 授权放行与渠道模型作用域完整性分开判定
 
 **来源**：真实渠道激活成功后，Activity 的已签名响应缺少 `channelRef`。CreatorOS 因而无法构造
@@ -1842,3 +1883,130 @@ HTTPS 联调仍待验收。
 **Asset-Ref**：none（复用现有 Rust 授权链、本地可信 route 与设置页 authority 卡）。
 
 **Status**：用户已确认；纳入 T-701 独立 BUILD 与提交，不包含打包或发布。
+
+## DEC-REL-036 (2026-08-05) — 多渠道独立品牌壳、集中签名与共享 Runtime 增量更新
+
+**来源**：用户确认未来会有 N 个渠道需要专属应用名、图标与链接，希望只提供渠道资料即可自动
+出包，并要求把增量更新正式落地；2026-08-05 对 T-694 的五项发行与安全决策逐项确认。
+
+**决策**：
+
+1. CreatorOS 统一集中签名，渠道方不持有更新私钥。产品级 Ed25519 release root 已在本机仓库外
+   生成；私钥路径为
+   `/Users/zyongzhu/.config/creatoros-release/keys/creatoros-update-root-20260805.pem`（权限 `0600`），
+   公钥路径为同目录 `creatoros-update-root-20260805.pub.pem`，`keyId` 为
+   `creatoros-update-root-20260805-01`，DER 公钥 SHA-256 为
+   `54f51d62d88b4bf429acef9a21d869a9a0957e1695d79938c00bff7e869f8a4c`。仓库、构建日志和发布证明
+   只允许出现公钥、指纹与路径引用，禁止出现私钥内容；该 root 只签 release keyset/package
+   envelope，不与 Tauri updater minisign key 共用。
+2. 每个渠道使用独立品牌壳和独立 OS 身份/数据/Keychain/更新命名空间，CreatorOS 公共 Runtime
+   在所有渠道间共享；渠道授权仍由 Activity 已签名 `channelRef` 与包内 `expectedChannelRef` 校验。
+3. 第一版更新源采用静态 CDN/对象存储，不建设更新后台。托管服务必须通过 HTTPS、Range、ETag、
+   Content-Length、固定 origin 与重定向拒绝探针；阿里云 OSS/COS/Edge CDN 只在真实 endpoint 通过
+   探针后启用，产品名称本身不视为兼容证据。
+4. Windows Runtime 从安装目录安全迁入包级 `appDataDir`；迁移、健康检查或切换失败时保留旧版
+   可启动，绝不清理数据库、授权、模型 Key、浏览器登录态、项目、知识或素材。
+5. `packageRef/appIdentifier/keychainService/Windows UpgradeCode` 首次正式确认后写入
+   `identity.lock.json` 并保持不可变；品牌文案、图标和业务链接可按新清单重新出包。
+
+**Pattern-Ref**：none（采用 T-694 已通过独立评审的发行契约）。
+
+**Asset-Ref**：none（复用 Tauri v2 updater、现有 release.mjs 与 runtime 打包链，新增确定性分块层）。
+
+**Status**：用户已确认；T-694 获准进入 BUILD。静态托管的真实域名、桶路径和凭据尚未提供，只阻塞
+真实上传/发布验证，不阻塞本地实现、dry-run、签名链和 hosting probe。
+
+## DEC-VIDEO-037 (2026-08-05) — 视频制作画幅由本次制作选择，成片采纳后仍可版本化再制作
+
+**来源**：用户确认制作视频时需要选择横屏或竖屏，并要求已经生成、预览或采纳进素材库的成片
+不能锁死后续制作，仍须支持重新分镜与重新生成。
+
+**决策**：
+
+1. 制作页提供竖屏 `9:16` 与横屏 `16:9` 二选一，初值复用项目画幅；选择作为本次制作 revision
+   的输入，不反向篡改历史分镜或历史成片。
+2. 同一 orientation 必须进入 `video.decisions` 构图 facet、`VideoRenderProps.delivery`、预览比例和
+   export resolution/aspectRatio；竖屏使用现有上半屏主体/下半屏信息区与字幕安全区，横屏复用现有
+   左右分区，用户录屏/截图继续 `contain` 完整展示。
+3. Production `ready` 与 execution/asset 已采纳均不是终态锁。制作页始终允许“重新分镜”和“按当前
+   分镜重新生成”，每次新建 task 与 editing plan revision，旧任务和旧 asset 保留。
+4. 新候选在用户采纳前不得替换项目当前成片；重新制作期间当前可用成片继续可见，符合既有
+   preview → confirm → asset gate。
+
+**Pattern-Ref**：none（复用既有 T-290 横竖屏布局和 T-703 版本化确认门）。
+
+**Asset-Ref**：`video-editing` skill（口播主时钟、用户素材 contain、横竖屏安全区、预览门）。
+
+**Status**：用户已确认；并入 T-703 BUILD 与本地包验收。
+
+## DEC-REL-038 (2026-08-05) — macOS 正式流水线强制 Developer ID 签名与 Apple 公证
+
+**来源**：用户明确要求把本机已具备的 macOS 证书与公证凭据接入 GitHub 流水线，同时要求本轮
+只修改流水线，不触发远端运行。
+
+**决策**：
+
+1. `desktop-release` 的 macOS 正式 job 从 GitHub Actions Secrets 读取 Developer ID P12、P12
+   密码、Apple ID 与 app-specific password；Team ID 和完整 signing identity 使用 Variables。
+   缺任一配置立即失败，不再允许未签名/未公证的 macOS 正式工件进入 artifact。
+2. CI 只在 `$RUNNER_TEMP` 创建一次性钥匙串和 `notarytool` profile。P12、密码和私钥不得进入
+   仓库、缓存、artifact、release manifest 或普通日志；job 结束时无论成功失败都删除临时材料。
+3. sidecar Runtime、Tauri App 与 DMG 使用同一 Developer ID 身份；Runtime cache key 纳入公开证书
+   SHA-256 指纹，证书轮换后必须重建，禁止复用旧签名缓存。
+4. 上传前必须同时通过 release manifest `signed/notarized` 证明、strict codesign、DMG 完整性、
+   staple、Gatekeeper、挂载后内层 App 签名以及既有真实启动门。Windows Authenticode 保持独立任务，
+   不因本决策被冒充为已完成。
+5. 本轮只落代码、测试和运维说明，不执行 `workflow_dispatch`、tag push 或任何远端发布。
+
+**Pattern-Ref**：`docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md`。
+
+**Asset-Ref**：本机证书/公证凭据只作为 GitHub Secrets 的运维输入，文档不记录其值。
+
+**Status**：用户已确认；纳入 T-709 BUILD，本轮远端流水线保持未运行。
+
+## DEC-AI-039 (2026-08-06) — 通用智能体的语义选择统一归 Skill，确定性代码只守边界
+
+**来源**：T-712 修复“用户上传素材未进入成片”时，一度用文件名 token、coverage 与 Jaccard 在
+代码中给素材匹配场景。用户明确指出 CreatorOS 是通用智能体，匹配应复用现有素材匹配 Skill，
+不能针对当前案例写死。
+
+**决策**：
+
+1. 意图理解、内容归类、素材/场景匹配、创作角度与画面取舍统一由可配置 Skill/模型负责；业务
+   runner 不得用词表、关键词分数、字符串相似度或业务名称分支替代 AI。
+2. 确定性代码只负责上下文归属、真实 ID、类型、范围、时间边界、幂等、安全和用户明确选择的
+   落实；AI 仍只产候选，不直接写领域实体。
+3. 视频链路中 `video.broll` 只规划画面需求，`material.match` 读取口播、场景、画面需求与真实
+   项目素材，由 AI 返回 `assetId / sceneIdx / at / durationSec / reason / presentation`；其中
+   `presentation` 决定 `full_frame / large_stage / overlay`，匹配失败保留人工指定，
+   不阻断成片。
+4. 确定性相似度若用于去重、协议纠错、输入恢复或安全校验，必须标记
+   `SEMANTIC_BOUNDARY_ALLOW:` 并用测试证明没有参与创作选择。
+5. 新增语义边界门卫并纳入 reconcile；当前门卫既扫描高风险启发式，也验证视频主链真实调用
+   `material.match`，避免未来再次旁路 Skill。
+
+**Status**：用户已确认；项目规则、架构图纸、教训账本与 T-712 实现同步生效。
+
+## DEC-CREATION-040 (2026-08-08) — 退役独立“论点骨架”，历史数据只读保留
+
+**来源**：用户认为项目稿面的“论点骨架”不是必须能力且造成冗余；T-725 完成跨 UI、Copilot、
+AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，用户明确回复“这个交给你来操作吧”。
+
+**决策**：
+
+1. 项目主链收敛为“准备素材 → 直接写稿”，退役论点骨架面板、“立论点”入口和
+   `planning.thesis` 用户能力。
+2. 新任务、新候选、新 artifact version、项目重建、写稿上下文和制作素材均不得再生成或消费
+   `thesis_tree`；不能只隐藏 UI 后让旧树暗中影响新结果。
+3. 历史 `thesis_tree` artifact/version、旧脚本、旧成片和任务不删除、不迁移、不改写；保留
+   generic artifact 只读解析兼容，第一轮不物理删除枚举。
+4. 写稿继续直接消费定位、选题、项目 Brief、用户资料、项目素材和内容雷达证据；制作继续消费
+   脚本点名与项目 `materialLinks`，不得因退役 thesis 来源丢失项目素材。
+5. 原论点树词面相似度预挂素材路径随能力退役而不可达；后续素材语义选择继续归
+   `material.match` Skill/模型。
+
+**Pattern-Ref**：none（删减已确认流程，不引入新机制）。
+
+**Asset-Ref**：现有项目 Brief、project materials、`material.match` 与通用 artifact 历史读取。
+
+**Status**：用户已确认；T-726 需通过独立 SPEC 评审后进入 BUILD。

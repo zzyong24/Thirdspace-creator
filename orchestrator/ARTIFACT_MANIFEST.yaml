@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-08-04"
+  updated_at: "2026-08-08"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -75,7 +75,9 @@ stages:
       - existing: "backend/src"
       - existing: "frontend/src"
       - existing: "ai-worker"
-    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。"
+      - existing: "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md (T-726 PASS[REV:2809820bf64a])"
+      - existing: "orchestrator/GATE-T726-BUILD.md (实现与浏览器证据；strict receipt 待共享改动形成提交边界)"
+    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-726 已完成实现与真实页面验收，但因共享工作区 watched_paths 存在并行任务漂移，保持 draft 且不伪造 strict receipt。"
 
   "5-ship":
     status: "draft"

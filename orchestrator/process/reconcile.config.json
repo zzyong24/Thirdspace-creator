@@ -56,6 +56,54 @@
       "onFail": "渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。"
     },
     {
+      "led": "LED-009",
+      "what": "用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断",
+      "check": "node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "onFail": "语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。"
+    },
+    {
+      "led": "LED-010",
+      "what": "CreatorOS 本机验收包退回手工拼接环境变量",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
+      "onFail": "本机打包入口回归：必须由 desktop:package-local 从 ~/.creatoros 读取 verdict 双密钥并补齐 CreatorOS/Growth 固定公共配置；缺失要在重型构建前失败，禁止私钥入库或输出。"
+    },
+    {
+      "led": "LED-011",
+      "what": "AI 已选素材但成片仍把录屏/截图缩成不可读小卡，竖屏人物被正方形 contain 再次缩小",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts",
+      "onFail": "视频可读性门回归：material.match 必须输出 presentation/时长并贯穿 render props；录屏/截图和竖屏人物必须满足真实像素占屏与容器比例下限。"
+    },
+    {
+      "led": "LED-012",
+      "what": "主画面素材使用居中大卡压住人物，只露半张脸，且没有成片级视觉审核发现问题",
+      "check": "pnpm --dir frontend exec vitest run src/features/copilot/execution-task-card.test.tsx && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+      "onFail": "视频版式门回归：full_frame 必须占满画布，large_stage 必须与人物安全区零重叠；渲染前跑确定性几何门，配置视觉模型时对成片接触表做非阻断审核并向用户展示问题。"
+    },
+    {
+      "led": "LED-013",
+      "what": "人工选材仍沿用旧时间线，竖图被拉伸，编辑器场景标签被烧进成片",
+      "check": "pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "onFail": "视频编导边界回归：人工选材必须触发二次分镜；素材须保源比例；SCENE/分镜序号/title/summary 只能留在编辑器，成片只上经 AI 筛选的短视觉信息。"
+    },
+    {
+      "led": "LED-014",
+      "what": "局部改稿退回让模型或用户补 artifact/version/section 等内部锚点",
+      "check": "pnpm --dir frontend exec vitest run src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx && pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts",
+      "onFail": "局部改稿门回归：技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段，其他段逐字不变，冲突不得静默覆盖。"
+    },
+    {
+      "led": "LED-015",
+      "what": "本地验收包再次暴露架构/任务/时间戳后缀，或把安装备份留给用户辨认",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
+      "onFail": "本地交付命名回归：构建成功后必须生成 ~/Downloads/CreatorOS-<version>.dmg（Windows 为 .exe）；安装目录只保留 CreatorOS.app，备份不得留在 /Applications。"
+    },
+    {
+      "led": "LED-016",
+      "what": "信息卡存在但仍缩成角落小标签，长场景留下大段连续视觉空档",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "onFail": "信息密度门回归：无真实素材场景必须按时长形成 2/3/4 个原文可溯信息节拍，连续视觉空档不得超过 7 秒；信息卡必须使用固定可读主舞台，不能依内容收缩成角落标签。"
+    },
+    {
       "led": "LED-017",
       "what": "用户明确要求原文不改时，系统仍把完整原稿压成摘要后交给写稿模型重写",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/script-runner.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts",
@@ -73,6 +121,7 @@
     "recent-data-safety:e2e": "CREATOROS_TEST_PORT=3432 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/recent-data-safety.spec.ts --project=e2e",
     "recent-data-safety-fixed:e2e": "node orchestrator/process/run-recent-data-safety-fixed.mjs",
     "website-pricing:test": "node --test website/pricing.test.mjs",
+    "channel-skill-no-account:test": "pnpm --dir frontend exec vitest run src/features/settings/skills-section.test.tsx -t \"未选择账号时\"",
     "project-publication-convergence:test": "pnpm --dir frontend exec vitest run src/features/projects/projects-page.test.tsx src/features/draft-workbench/register-published-form.test.tsx src/app/api/v1/dispatch/route.test.ts",
     "verbatim-script-import:test": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/server/script-draft-task-input.test.ts"
   }

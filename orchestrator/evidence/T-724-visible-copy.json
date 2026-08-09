@@ -1,0 +1,55 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-724",
+  "commit_sha": "489b256ee5b2324112a7cf3266cd411dd547a983",
+  "captures": [
+    {
+      "checkpoint": "标准窗口下的复盘项目",
+      "check_ids": [
+        "AC-PROJECT-CANONICAL-OWNER",
+        "AC-PROJECT-REVIEW-TAB",
+        "AC-PROJECT-REVIEW-NO-SCHEDULE"
+      ],
+      "viewport": { "width": 1440, "height": 900 },
+      "text": "复盘中 1。内容操盘手的一天:从选题到发布,AI 工具链实战排程。复盘中。数据复盘。100%。复盘中。打开。"
+    },
+    {
+      "checkpoint": "标准窗口下的已归档替代项目",
+      "check_ids": [
+        "AC-PROJECT-ARCHIVED-HIDDEN"
+      ],
+      "viewport": { "width": 1440, "height": 900 },
+      "text": "已归档 1。白天搬砖晚上做号,一晚一小时就能更完一周。已归档。项目已归档。100%。已归档。打开。"
+    },
+    {
+      "checkpoint": "最小窗口下的复盘项目",
+      "check_ids": [
+        "AC-PROJECT-CANONICAL-OWNER",
+        "AC-PROJECT-REVIEW-TAB",
+        "AC-PROJECT-REVIEW-NO-SCHEDULE"
+      ],
+      "viewport": { "width": 1024, "height": 720 },
+      "text": "复盘中 1。内容操盘手的一天:从选题到发布,AI 工具链实战排程。复盘中。数据复盘。100%。复盘中。打开。"
+    },
+    {
+      "checkpoint": "最小窗口下的已归档替代项目",
+      "check_ids": [
+        "AC-PROJECT-ARCHIVED-HIDDEN"
+      ],
+      "viewport": { "width": 1024, "height": 720 },
+      "text": "已归档 1。白天搬砖晚上做号,一晚一小时就能更完一周。已归档。项目已归档。100%。已归档。打开。"
+    }
+  ],
+  "observed_at": "2026-08-09T02:49:41.000Z",
+  "surface": "CreatorOS 本机项目页",
+  "data_mode": "non-fixture",
+  "data_note": "使用 CreatorOS 本机真实账户数据库的隔离副本启动；原数据库未写入、未删除。",
+  "list_counts": {
+    "all": 52,
+    "active": 2,
+    "published": 49,
+    "review": 1,
+    "archived": 1,
+    "total_including_archived": 53
+  }
+}

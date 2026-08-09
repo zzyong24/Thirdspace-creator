@@ -12,10 +12,11 @@
 
 import { readFileSync, existsSync, writeFileSync, appendFileSync } from 'node:fs';
 import { tallyLessonStats } from './lessons-stats.mjs';
-import { neverFiredFindings, selfRefFindings, quarantineFindings, computeMetrics, parseLedgerRules, buildReuseCandidate, emitDeadLetterWarn } from './evolution-guards.mjs';
+import { neverFiredFindings, selfRefFindings, quarantineFindings, computeMetrics, parseLedgerRules, buildReuseCandidate, buildLessonObservation, lessonLifecycleFindings, partitionEvolutionEvents, emitDeadLetterWarn } from './evolution-guards.mjs';
 import { runAllAntiChecks } from './anti-check.mjs';
 import { readNewEvents, archiveConsumed } from './run-events.mjs';
-import { auditReviewReceipts } from './reviewctl.mjs';
+import { appendJsonlUnique } from './lessonctl.mjs';
+import { auditReviewReceiptFindings } from './reviewctl.mjs';
 import { auditFrontendReceipts } from './frontend-validation.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
@@ -375,10 +376,16 @@ if (existsSync(BACKLOG_HEALTH)) {
     warn('BACKLOG.md absent — review/frontend receipt audit skipped.');
   } else {
     try {
-      const reviewErrors = auditReviewReceipts({ root: REPO, backlogFile: BACKLOG });
-      if (reviewErrors.length) {
-        for (const message of reviewErrors) err(`review receipt: ${message}`);
-      } else ok('reviewctl: review receipts + current snapshots + event chain reconcile.');
+      const reviewFindings = auditReviewReceiptFindings({
+        root: REPO,
+        backlogFile: BACKLOG,
+        inProgressDrift: 'warn',
+      });
+      for (const message of reviewFindings.errors) err(`review receipt: ${message}`);
+      for (const message of reviewFindings.warnings) warn(`review receipt (在研漂移): ${message}`);
+      if (!reviewFindings.errors.length) {
+        ok(`reviewctl: event chain 与有效收据结构一致（${reviewFindings.warnings.length} 个进行中 hash 漂移待复审）。`);
+      }
     } catch (e) {
       err(`review receipt audit could not run: ${e.message}`);
     }
@@ -511,6 +518,7 @@ if (CONSOLIDATE) {
   const ledgerRules = parseLedgerRules(resolve(CONTROL_ROOT, 'LESSON_LEDGER.md'));
   for (const f of neverFiredFindings(cfg.lessons ?? [], nextStats, new Date(), staleDays)) findings.push(f);
   for (const f of selfRefFindings(ledgerRules, cfg.lessons ?? [])) findings.push(f);
+  for (const f of lessonLifecycleFindings(ledgerRules, cfg.lessons ?? [])) findings.push(f);
   for (const f of quarantineFindings(cfg.lessons ?? [], cfg.quarantine_threshold ?? 3, calibrationOn)) findings.push(f);
   const METRICS = resolve(CONTROL_ROOT, 'METRICS.md');
   if (existsSync(METRICS)) {
@@ -528,18 +536,20 @@ if (process.argv.includes('--anti-check') || CONSOLIDATE) {
   }
 }
 
-// ④→② 接缝 emit:RUN_EVENTS 的 reuse_candidate/lesson_promoted/pattern_new → REUSE_OUTBOX.jsonl
-// (严格按冻结的 reuse-candidate/v1;单向 fire-and-forget;calibration ON 只 print would;断链可观测 WARN)。
+// 完整消费 RUN_EVENTS：eval_red → LESSON_INBOX(observation，不自动晋升)；可复用事件 → REUSE_OUTBOX。
+// 先分流、幂等写入、最后按原始总行数归档，避免 filter 后按错误行数归档导致失败事件丢失。
 if (CONSOLIDATE) {
   const OUTBOX = resolve(CONTROL_ROOT, 'REUSE_OUTBOX.jsonl');
-  const events = readNewEvents(CONTROL_ROOT).filter((e) => e.kind === 'reuse_candidate' || e.kind === 'lesson_promoted' || e.kind === 'pattern_new');
-  if (calibrationOn && events.length) {
-    console.log(`[calibration] would emit ${events.length} reuse-candidate(s) → REUSE_OUTBOX(不写)`);
-  } else {
-    let seq = 0;
-    for (const ev of events) appendFileSync(OUTBOX, JSON.stringify(buildReuseCandidate(ev, { project: cfg.project ?? 'unknown', seq: ++seq })) + '\n');
-    if (events.length) archiveConsumed(CONTROL_ROOT, events.length);
-  }
+  const INBOX = resolve(CONTROL_ROOT, 'LESSON_INBOX.jsonl');
+  const partition = partitionEvolutionEvents(readNewEvents(CONTROL_ROOT));
+  const observations = partition.lessonEvents.map((ev) => buildLessonObservation(ev, { project: cfg.project ?? 'unknown' }));
+  const reuseCandidates = partition.reuseEvents.map((ev, index) => buildReuseCandidate(ev, { project: cfg.project ?? 'unknown', seq: index + 1 }));
+  const observed = appendJsonlUnique(INBOX, observations);
+  const emitted = appendJsonlUnique(OUTBOX, reuseCandidates);
+  if (observed) ok(`captured ${observed} lesson observation(s) → LESSON_INBOX.jsonl`);
+  if (emitted) ok(`emitted ${emitted} reuse candidate(s) → REUSE_OUTBOX.jsonl`);
+  if (partition.ignoredEvents.length) warn(`RUN_EVENTS 有 ${partition.ignoredEvents.length} 条未知事件已归档；请确认是否需新增显式映射。`);
+  if (partition.consumedCount) archiveConsumed(CONTROL_ROOT, partition.consumedCount);
   const lines = existsSync(OUTBOX) ? readFileSync(OUTBOX, 'utf8').split('\n').filter(Boolean).length : 0;
   const dl = emitDeadLetterWarn({ outboxLines: lines, consumedMarker: cfg.outbox_consumed ?? 0, rounds: cfg.outbox_idle_rounds ?? 0 });
   if (dl) findings.push(dl);

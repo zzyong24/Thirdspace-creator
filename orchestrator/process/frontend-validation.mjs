@@ -32,6 +32,13 @@ const JOURNEY_SCHEMAS = new Set([
 ]);
 const INTERNAL_ID_PATTERN =
   /(?:^|[^A-Za-z0-9])((?:T\d{2,}|T-(?:\d{2,}|[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)|(?:ASM|DEC|FR|NFR|FLOW|ENT|IA|PAGE|COMP|MOCK|API|TEST|TC|INT|BR|PG|HARD|PKG|RISK|REV|FEAT|DFLOW|AC)-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*))(?=$|[^A-Za-z0-9])/g;
+const INTERNAL_JARGON_PATTERNS = [
+  /\btrace\s*id\b/gi,
+  /\bcorrelation[_ -]?id\b/gi,
+  /\bidempotency(?:[_ -]?key|[_ -]?required)?\b/gi,
+  /\b(?:provider|schema|enum|webhook|traceparent|tracestate)\b/gi,
+  /\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g,
+];
 
 function clean(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -199,6 +206,14 @@ function findInternalIds(text) {
   return [...String(text).matchAll(INTERNAL_ID_PATTERN)].map((match) => match[1]);
 }
 
+function findInternalJargon(text) {
+  const matches = new Set();
+  for (const pattern of INTERNAL_JARGON_PATTERNS) {
+    for (const match of String(text).matchAll(pattern)) matches.add(match[0]);
+  }
+  return [...matches];
+}
+
 function validateVisibleCopyEvidence(root, report, contract, taskId) {
   const errors = [];
   const required =
@@ -255,6 +270,7 @@ function validateVisibleCopyEvidence(root, report, contract, taskId) {
   const coveredChecks = new Set();
   const coveredViewports = [];
   const leaked = new Set();
+  const leakedJargon = new Set();
   for (const [index, capture] of artifact.captures.entries()) {
     const label = clean(capture?.checkpoint) || `capture[${index}]`;
     if (!clean(capture?.checkpoint)) errors.push(`visible_copy ${label} 缺 checkpoint`);
@@ -272,6 +288,7 @@ function validateVisibleCopyEvidence(root, report, contract, taskId) {
       errors.push(`visible_copy ${label} 的 text 为空，不能证明扫描了页面可见文案`);
     } else {
       for (const id of findInternalIds(capture.text)) leaked.add(id);
+      for (const term of findInternalJargon(capture.text)) leakedJargon.add(term);
     }
   }
 
@@ -288,6 +305,11 @@ function validateVisibleCopyEvidence(root, report, contract, taskId) {
   if (leaked.size) {
     errors.push(
       `用户可见文案泄漏内部追踪 ID: ${[...leaked].join(", ")}；内部编号只能留在代码、测试或诊断元数据`,
+    );
+  }
+  if (leakedJargon.size) {
+    errors.push(
+      `用户可见文案泄漏实现术语或机器错误暗号: ${[...leakedJargon].join(", ")}；请改写为发生了什么、是否受影响、下一步怎么做，诊断值只以“参考编号”作为次要信息`,
     );
   }
   return { errors, artifactSha, captureCount: artifact.captures.length };
@@ -564,8 +586,8 @@ function readAcceptanceRows(backlogFile) {
       };
       continue;
     }
-    // 只审计真正含「状态」列的活动任务表。暂停池/历史索引即使也有 ID，
-    // 也不属于 strict receipt 的执行队列，不能因缺验收列把 reconcile 全局打红。
+    // 只审计真正含「状态」列的执行任务表。暂停池/历史索引使用「搁置」等旧表头，
+    // 它们不是可完成任务，不能因后来新增的验收列被 retroactive strict 校验。
     if (!columns || columns.id < 0 || columns.status < 0 || !row.cells[columns.id]) continue;
     rows.push({
       id: row.cells[columns.id],
