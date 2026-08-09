@@ -266,7 +266,21 @@ export default async function SettingsRoutePage() {
         body: undefined,
       });
       skills = buildSkillItems(catalog);
-    } catch {
+    } catch (error) {
+      const errorRecord =
+        typeof error === "object" && error !== null
+          ? (error as { code?: unknown })
+          : null;
+      console.error(
+        "[settings] Skill 清单读取失败",
+        JSON.stringify({
+          errorName: error instanceof Error ? error.name : "UnknownError",
+          errorCode:
+            typeof errorRecord?.code === "string" ? errorRecord.code : null,
+          requestId: session.ctx.requestId,
+          hasSelectedAccount: Boolean(session.ctx.accountId),
+        }),
+      );
       // 目录不可用时诚实显空态；不能回退本地 registry，因为那会丢失账号归属。
       skills = undefined;
     }

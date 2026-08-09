@@ -228,6 +228,24 @@ describe("settings.transport (contract conformance)", () => {
     expect(list.find((p) => p.skillId === "script.draft")?.overlay).toBeNull();
   });
 
+  it("settings.prompts.list → 未选号也返回全 official catalog", async () => {
+    const noAccountCtx: RequestContext = {
+      userId: ctx.userId,
+      requestId: "req-c-no-account",
+      source: "user",
+    };
+    const client = createClient(ENDPOINTS, transport, noAccountCtx);
+
+    const list = await client.listPrompts({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    });
+
+    expect(list.length).toBeGreaterThan(1);
+    expect(list.find((p) => p.skillId === "script.draft")?.overlay).toBeNull();
+  });
+
   it("[T-165] settings.prompts.versions.list + rollback → 契约合形 + 回滚生效", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
     // 两次 put 产两版本。

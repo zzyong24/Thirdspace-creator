@@ -178,6 +178,34 @@ describe("SkillsSection 详情(行内展开)", () => {
     expect(restoreBtn!.disabled).toBe(true);
   });
 
+  it("未选择账号时可查看 official Skill，但定制控件保持只读", () => {
+    const officialOnly = [{ ...SKILLS[0]!, accountId: null }];
+    const { container, getByText } = render(
+      <SkillsSection skills={officialOnly} />,
+    );
+
+    expand(container, "chatbox.topic");
+
+    const detail = container.querySelector('[data-slot="skill-detail"]')!;
+    expect(getByText("选择账号后可定制此技能。")).toBeTruthy();
+    expect(
+      detail.querySelector<HTMLTextAreaElement>(
+        '[data-slot="skill-system-input"]',
+      )!.disabled,
+    ).toBe(true);
+    expect(
+      detail.querySelector<HTMLTextAreaElement>(
+        '[data-slot="skill-template-input"]',
+      )!.disabled,
+    ).toBe(true);
+    expect(
+      detail.querySelector<HTMLButtonElement>('[data-slot="skill-save"]')!
+        .disabled,
+    ).toBe(true);
+    expect(detail.querySelector('[data-slot="skill-version-history"]')).toBeNull();
+    expect(mockClient.putPrompt).not.toHaveBeenCalled();
+  });
+
   it("只改 template 时不制造冗余策略覆盖(settings.prompts.put)+ refresh", async () => {
     const { container } = render(<SkillsSection skills={SKILLS} />);
     expand(container, "script.draft");

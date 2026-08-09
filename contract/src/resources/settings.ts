@@ -185,7 +185,9 @@ export const accountSkillOverlayCompatibilityErrorResource = z.object({
 
 export const accountSkillOverlayResource = z.object({
   skillId: z.string().min(1),
-  accountId: z.string().min(1),
+  // Official catalog is readable before a platform account is selected.
+  // null means no account overlay is in scope; writes remain account-required.
+  accountId: z.string().min(1).nullable(),
   baseVersion: z.string().min(1),
   editableFields: z.array(
     z.enum([

@@ -512,7 +512,7 @@ function overlayView(
   const errors = compatibilityErrors(base, overlay);
   return {
     skillId: base.skillId,
-    accountId: ctx.accountId!,
+    accountId: row?.accountId ?? ctx.accountId ?? null,
     baseVersion: base.baseVersion,
     editableFields: [...base.editableFields],
     completionPolicySupported: Boolean(base.completionPolicyAdapter),
@@ -760,7 +760,13 @@ export function createSettingsService(
     },
 
     async listSkillConfigOverrides(ctx) {
-      const rows = await repoForCtx(ctx).listAccountSkillOverlays(ctx);
+      // Official Skills are shipped with the runtime and are not account-owned.
+      // A fresh channel install may not have a selected account yet; in that
+      // state there is simply no account overlay to merge. Mutating and
+      // single-overlay operations remain account-scoped below.
+      const rows = ctx.accountId?.trim()
+        ? await repoForCtx(ctx).listAccountSkillOverlays(ctx)
+        : [];
       const bySkill = new Map(rows.map((row) => [row.skillId, row]));
       return officialSkills
         .list()

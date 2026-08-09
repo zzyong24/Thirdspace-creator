@@ -272,6 +272,7 @@ function PolicyNumberField({
 
 function SkillDetail({ skill }: { skill: SkillItem }) {
   const router = useRouter();
+  const canCustomize = skill.accountId !== null;
   // 草稿初值 = 当前生效值(override ?? 内置,server 侧已归一投影)。
   const [system, setSystem] = React.useState<string>(skill.system);
   const [template, setTemplate] = React.useState<string>(skill.template);
@@ -305,6 +306,10 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
   const runPut = React.useCallback(
     (patch: AccountSkillOverlayPatchResource) => {
       if (pending) return;
+      if (!canCustomize) {
+        setError("请先选择账号，再保存技能定制。");
+        return;
+      }
       setPending(true);
       setError(null);
       void (async () => {
@@ -343,7 +348,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
         }
       })();
     },
-    [pending, router, skill.id, skill.rowRevision],
+    [canCustomize, pending, router, skill.id, skill.rowRevision],
   );
 
   const save = React.useCallback(() => {
@@ -393,6 +398,14 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
       data-skill-id={skill.id}
       className="mt-1 flex flex-col gap-3 rounded-md border border-border bg-surface-subtle/40 p-3"
     >
+      {!canCustomize ? (
+        <p
+          data-slot="skill-account-required"
+          className="rounded-md border border-border bg-background px-2.5 py-2 text-xs text-muted-foreground"
+        >
+          选择账号后可定制此技能。
+        </p>
+      ) : null}
       {/* system 提示(角色 + 方法论 = skill 本体)。 */}
       <div className="flex flex-col gap-1">
         <label
@@ -405,7 +418,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           id={`skill-system-${skill.id}`}
           data-slot="skill-system-input"
           value={system}
-          disabled={pending}
+          disabled={pending || !canCustomize}
           rows={6}
           onChange={(event) => setSystem(event.target.value)}
           className="w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -425,7 +438,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           id={`skill-template-${skill.id}`}
           data-slot="skill-template-input"
           value={template}
-          disabled={pending}
+          disabled={pending || !canCustomize}
           rows={8}
           onChange={(event) => setTemplate(event.target.value)}
           className="w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -514,7 +527,9 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               data-slot="skill-policy-restore-default"
               variant="ghost"
               size="sm"
-              disabled={pending || !skill.completionPolicyCustomized}
+              disabled={
+                pending || !canCustomize || !skill.completionPolicyCustomized
+              }
               onClick={restoreCompletionPolicy}
               title={
                 skill.completionPolicyCustomized
@@ -533,7 +548,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               value={policyMinSegments}
               min={1}
               max={100}
-              disabled={pending}
+              disabled={pending || !canCustomize}
               onChange={(value) => {
                 setPolicyMinSegments(value);
                 setPolicyTouched(true);
@@ -546,7 +561,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               value={policyMaxSegments}
               min={1}
               max={100}
-              disabled={pending}
+              disabled={pending || !canCustomize}
               onChange={(value) => {
                 setPolicyMaxSegments(value);
                 setPolicyTouched(true);
@@ -559,7 +574,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
               value={policyRepairAttempts}
               min={0}
               max={3}
-              disabled={pending}
+              disabled={pending || !canCustomize}
               onChange={(value) => {
                 setPolicyRepairAttempts(value);
                 setPolicyTouched(true);
@@ -572,7 +587,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
             <input
               data-slot="skill-policy-required-sequence"
               value={policyRequiredSequence}
-              disabled={pending}
+              disabled={pending || !canCustomize}
               onChange={(event) => {
                 setPolicyRequiredSequence(event.target.value);
                 setPolicyTouched(true);
@@ -596,12 +611,14 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
 
       {/* [T-165] 版本历史 + 一键回滚 —— 展开拉该 skill 历史快照,可回滚到任一版本(回滚后
           server 热更即生效,router.refresh 重取生效值)。 */}
-      <SkillVersionHistory
-        skillId={skill.id}
-        currentRevision={skill.rowRevision}
-        disabled={pending}
-        onRolledBack={() => router.refresh()}
-      />
+      {canCustomize ? (
+        <SkillVersionHistory
+          skillId={skill.id}
+          currentRevision={skill.rowRevision}
+          disabled={pending}
+          onRolledBack={() => router.refresh()}
+        />
+      ) : null}
 
       {error ? (
         <p
@@ -620,7 +637,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           data-slot="skill-restore-default"
           variant="ghost"
           size="sm"
-          disabled={pending || !skill.customized}
+          disabled={pending || !canCustomize || !skill.customized}
           onClick={restore}
           title={
             skill.customized
@@ -636,7 +653,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           data-slot="skill-save"
           variant="outline"
           size="sm"
-          disabled={!dirty || pending}
+          disabled={!canCustomize || !dirty || pending}
           onClick={save}
         >
           {pending ? "保存中…" : "保存"}

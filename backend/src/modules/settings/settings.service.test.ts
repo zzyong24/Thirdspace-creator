@@ -527,6 +527,24 @@ describe("settings.service", () => {
     expect(list.find((item) => item.skillId === "script.draft")?.overlay).toBeNull();
   });
 
+  it("未选择账号时直接返回 official catalog，不读取账号覆盖库", async () => {
+    const repo = makeFakeRepo();
+    repo.listAccountSkillOverlays = async () => {
+      throw new Error("未选号不应读取账号覆盖库");
+    };
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const noAccountCtx: RequestContext = {
+      userId: ctx.userId,
+      requestId: "req-no-account",
+      source: "user",
+    };
+
+    const list = await svc.listSkillConfigOverrides(noAccountCtx);
+
+    expect(list.length).toBeGreaterThan(1);
+    expect(list.find((item) => item.skillId === "script.draft")?.overlay).toBeNull();
+  });
+
   it("未知 Skill 按 404，不写入旧 global override", async () => {
     const repo = makeFakeRepo();
     const svc = createSettingsService(() => repo, accountReader, accountWriter);

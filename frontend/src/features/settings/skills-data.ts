@@ -22,8 +22,8 @@ import type {
 
 /** 一条技能列表条目(route server 侧投影,全部可序列化,客户端只读渲染 + 编辑草稿)。 */
 export interface SkillItem {
-  /** 当前联合目录归属账号；用于切号时强制丢弃旧编辑态。 */
-  readonly accountId: string;
+  /** 当前联合目录归属账号；null 表示未选号、只展示 official 目录。 */
+  readonly accountId: string | null;
   /** skill id(REGISTRY 注册 id,如 "script.draft")。 */
   readonly id: string;
   /** 当前版本标记(内置 version 或覆盖行 version)。 */
