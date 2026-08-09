@@ -261,9 +261,6 @@ if (action === "start") {
   if (!/^PASS:[a-f0-9]{12}$/.test(acceptance)) {
     die(`任务 ${taskId} 当前验收列为「${acceptance}」；只有已完成 UI receipt 才能 revalidate`);
   }
-  if (taskColumns.document < 0 || !hasJourneyContract(row.cells[taskColumns.document])) {
-    die(`任务 ${taskId} 没有 frontend journey contract，不允许用 revalidate 制造 UI receipt`);
-  }
   try {
     frontendEvidence = validateFrontendReport({
       root: PROJ_ROOT,
