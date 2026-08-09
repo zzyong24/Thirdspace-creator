@@ -41,9 +41,11 @@ function decodeKey(segments: string[]): string {
 async function resolveIdentityAndRoot(
   req: Request,
 ): Promise<{ userId: string; root: string } | null> {
-  // blob URL 即使持有有效 HMAC，也必须同时绑定当前真实 session；禁止回退 canonical user。
+  // CreatorOS 桌面端是单机免登录产品：没有 session 时仍必须通过统一 ctx 解析器取得
+  // 本机主用户；有效 session 则解析为其真实用户。无论哪条路径，后续 HMAC 都绑定这里
+  // 得到的 userId + storageRootId，且 route 前面仍有启动级 loopback 握手，不能把“免登录”
+  // 误写成“免身份”。库内无用户、无效显式 session 或 DB 异常继续失败关闭。
   const rawToken = readSessionCookie(req);
-  if (!rawToken) return null;
   try {
     const ctx = await resolveRequestContext(rawToken);
     return { userId: ctx.userId, root: await getStorageRootForRequest(ctx) };
