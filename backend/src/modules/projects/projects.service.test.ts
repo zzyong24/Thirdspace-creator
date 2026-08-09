@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createDb,
   type Db,
@@ -579,6 +579,82 @@ describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
     expect(works).toHaveLength(2);
     // 每条都有非空 externalId(无锚的诚实过滤,不返回)。
     for (const w of works) expect(w.externalId.length).toBeGreaterThan(0);
+  });
+});
+
+describe("T-724 imported 项目身份收口", () => {
+  it("两个 output 属主查询都只把真实不存在降级为 null，基础设施故障保持 fail-closed", async () => {
+    vi.spyOn(repo, "getOutput").mockRejectedValue(
+      new Error("database temporarily unavailable"),
+    );
+
+    await expect(
+      service.getProjectIdByOutput(ctx, "output-unavailable"),
+    ).rejects.toThrow("database temporarily unavailable");
+    await expect(
+      service.getOutputOwnerSummary(ctx, "output-unavailable"),
+    ).rejects.toThrow("database temporarily unavailable");
+  });
+
+  it("同平台作品的全部非 canonical imported 投影一次事务归档，重复调用不重复 activity", async () => {
+    const canonical = await service.createProject(ctx, {
+      title: "原创项目",
+      source: "manual",
+    });
+    const ref = {
+      platform: "douyin",
+      externalId: "aweme-t724-all",
+      publishedAt: NOW,
+    };
+    const first = await service.createProject(ctx, {
+      title: "自动导入 1",
+      source: "imported",
+      platformRef: ref,
+    });
+    const second = await service.createProject(ctx, {
+      title: "自动导入 2",
+      source: "imported",
+      platformRef: ref,
+    });
+    const already = await service.createProject(ctx, {
+      title: "已归档投影",
+      source: "imported",
+      platformRef: ref,
+    });
+    await service.archiveProject(ctx, already.id);
+
+    const reconciled = await service.reconcileImportedProjections(ctx, {
+      platform: "douyin",
+      externalId: "aweme-t724-all",
+      canonicalProjectId: canonical.id,
+    });
+    expect(reconciled.archivedProjectIds).toEqual([first.id, second.id]);
+    expect(reconciled.alreadyArchivedProjectIds).toEqual([already.id]);
+    expect((await repo.get(ctx, first.id)).status).toBe("archived");
+    expect((await repo.get(ctx, second.id)).status).toBe("archived");
+    expect((await repo.get(ctx, canonical.id)).status).toBe("active");
+    expect(
+      (await repo.listActivity(ctx, first.id)).filter(
+        (row) => row.eventType === "project_superseded",
+      ),
+    ).toHaveLength(1);
+
+    const repeated = await service.reconcileImportedProjections(ctx, {
+      platform: "douyin",
+      externalId: "aweme-t724-all",
+      canonicalProjectId: canonical.id,
+    });
+    expect(repeated.archivedProjectIds).toEqual([]);
+    expect(repeated.alreadyArchivedProjectIds).toEqual([
+      first.id,
+      second.id,
+      already.id,
+    ]);
+    expect(
+      (await repo.listActivity(ctx, first.id)).filter(
+        (row) => row.eventType === "project_superseded",
+      ),
+    ).toHaveLength(1);
   });
 });
 

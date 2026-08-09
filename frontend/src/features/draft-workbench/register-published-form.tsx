@@ -22,7 +22,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { parseDouyinAwemeId, douyinVideoUrl } from "@/lib/douyin-link";
 import { deriveReviewPublishGate } from "./review-publish-gate";
-import type { ScriptReviewReportResource } from "@creatoros/contract";
+import {
+  ErrorCode,
+  type ScriptReviewReportResource,
+} from "@creatoros/contract";
 
 interface ScheduledJobDto {
   readonly id: string;
@@ -78,6 +81,7 @@ export function RegisterPublishedForm({
   const [message, setMessage] = React.useState<{
     tone: "ok" | "error";
     text: string;
+    canonicalProjectId?: string;
   } | null>(null);
 
   // [T-110] 审核折中门:block(红)硬禁用登记;risk/stale 软提醒不禁用;pass/无报告放行。
@@ -124,11 +128,44 @@ export function RegisterPublishedForm({
         setMessage({ tone: "ok", text: hint });
         setLink("");
         router.refresh();
-      } catch {
-        setMessage({
-          tone: "error",
-          text: "登记失败,请稍后重试(链接已保留)。",
-        });
+      } catch (error) {
+        const code = (error as { code?: unknown } | null)?.code;
+        const details =
+          (error as { details?: unknown } | null)?.details ?? null;
+        const safeDetails =
+          details && typeof details === "object"
+            ? (details as Record<string, unknown>)
+            : {};
+        if (
+          code === ErrorCode.ConflictError &&
+          safeDetails.reason ===
+            "external_work_owned_by_another_project" &&
+          typeof safeDetails.canonicalProjectId === "string"
+        ) {
+          const title =
+            typeof safeDetails.canonicalProjectTitle === "string" &&
+            safeDetails.canonicalProjectTitle.trim()
+              ? `「${safeDetails.canonicalProjectTitle.trim()}」`
+              : "原项目";
+          setMessage({
+            tone: "error",
+            text: `这条作品已登记在另一个项目 ${title}，当前项目没有被错误绑定。`,
+            canonicalProjectId: safeDetails.canonicalProjectId,
+          });
+        } else if (
+          code === ErrorCode.ConflictError &&
+          safeDetails.reason === "target_project_archived"
+        ) {
+          setMessage({
+            tone: "error",
+            text: "这个项目已归档，不能登记作品。请先选择一个活动项目。",
+          });
+        } else {
+          setMessage({
+            tone: "error",
+            text: "登记失败,请稍后重试(链接已保留)。",
+          });
+        }
       } finally {
         setPhase("idle");
       }
@@ -208,17 +245,32 @@ export function RegisterPublishedForm({
         </Button>
       </form>
       {message ? (
-        <p
-          data-testid="register-published-message"
-          data-tone={message.tone}
-          className={
-            message.tone === "ok"
-              ? "pl-6 text-[11px] text-success"
-              : "pl-6 text-[11px] text-destructive"
-          }
-        >
-          {message.text}
-        </p>
+        <div className="flex flex-wrap items-center gap-2 pl-6">
+          <p
+            data-testid="register-published-message"
+            data-tone={message.tone}
+            className={
+              message.tone === "ok"
+                ? "text-[11px] text-success"
+                : "text-[11px] text-destructive"
+            }
+          >
+            {message.text}
+          </p>
+          {message.canonicalProjectId ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-6 px-2 text-[10px]"
+              onClick={() =>
+                router.push(`/projects/${message.canonicalProjectId}`)
+              }
+            >
+              打开已登记项目
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

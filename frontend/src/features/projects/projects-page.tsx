@@ -326,23 +326,10 @@ function ProjectListItem({
 }) {
   const schedule =
     scheduleContext?.entries.find((entry) => entry.projectId === row.id) ?? null;
+  const lifecycle = deriveProjectLifecycle(row);
   const scheduleEligible =
-    scheduleContext !== undefined &&
-    row.source !== "imported" &&
-    row.status !== "completed" &&
-    row.status !== "archived" &&
-    !row.outputs.some((output) => output.status === "published");
-  const scheduleStaticLabel = row.outputs.some(
-    (output) => output.status === "published",
-  )
-    ? "已发布"
-    : row.source === "imported"
-      ? "历史作品"
-      : row.status === "completed"
-        ? "已完成"
-        : row.status === "archived"
-          ? "已归档"
-          : "不可排期";
+    scheduleContext !== undefined && lifecycle.scheduleEligible;
+  const scheduleStaticLabel = lifecycle.scheduleStaticLabel;
 
   return (
     <article
@@ -590,20 +577,7 @@ function buildProjectStatusTabs(
 }
 
 function mapProjectRowToTab(row: ProjectListRow): string {
-  // 真机反馈 #2:导入的已发布历史作品计入「已发布」tab,而非按 status='active' 落「进行中」。
-  if (row.source === "imported") return "published";
-  switch (row.status) {
-    case "active":
-      return "active";
-    case "paused":
-      return "review";
-    case "completed":
-      return "published";
-    case "archived":
-      return "archived";
-    default:
-      return "active";
-  }
+  return deriveProjectLifecycle(row).tab;
 }
 
 // ---------------------------------------------------------------------------
@@ -632,33 +606,106 @@ function projectSortKey(project: Project): string {
 }
 
 function stageLabel(row: ProjectListRow): string {
-  // 真机反馈 #2(状态):导入的真实作品都是已发布的历史作品(currentStage 落 review
-  //   仅为复盘锚点,不代表"还在进行")。读侧据 source 直接显示「已发布」,不渲染阶段态。
-  //   只对 imported 生效,绝不误伤站内新建项目的真实阶段。
-  if (row.source === "imported") return "已发布";
-  if (row.status === "completed") return "已发布";
-  if (row.status === "paused") return "已暂停";
-  return STAGE_LABELS[row.currentStage] ?? row.currentStage;
+  return deriveProjectLifecycle(row).stageLabel;
 }
 
 function stageDescriptor(row: ProjectListRow): string {
-  if (row.source === "imported") return "历史作品";
-  if (row.status === "completed") return "数据复盘中";
-  if (row.status === "paused") {
-    return row.currentStage === "publishing" ? "等待素材" : "结构大纲";
-  }
-  return STAGE_DESCRIPTORS[row.currentStage] ?? "";
+  return deriveProjectLifecycle(row).stageDescriptor;
 }
 
 function stageChipStyle(row: ProjectListRow): React.CSSProperties {
-  // imported → 复用「已发布/完成」的绿色调,与标签语义一致。
-  const tone =
-    row.source === "imported" || row.status === "completed"
-      ? { bg: "rgba(16,185,129,0.14)", fg: "#059669" }
-      : row.status === "paused"
-        ? { bg: "rgba(107,114,128,0.12)", fg: "#64748b" }
-        : STAGE_CHIP_TONE[row.currentStage] ?? STAGE_CHIP_TONE.script;
+  const tone = deriveProjectLifecycle(row).stageTone;
   return { backgroundColor: tone.bg, color: tone.fg };
+}
+
+interface ProjectLifecyclePresentation {
+  readonly tab: "active" | "review" | "published" | "archived";
+  readonly stageLabel: string;
+  readonly stageDescriptor: string;
+  readonly stageTone: { bg: string; fg: string };
+  readonly scheduleEligible: boolean;
+  readonly scheduleStaticLabel: string;
+}
+
+/**
+ * T-724 单一生命周期解释器：status 是当前生命状态，source 只说明出生方式。
+ * 所有 Tab、标签、颜色和排期文案都必须从这里派生，避免 archived+imported 被复活。
+ */
+function deriveProjectLifecycle(
+  row: ProjectListRow,
+): ProjectLifecyclePresentation {
+  const mutedTone = { bg: "rgba(107,114,128,0.12)", fg: "#64748b" };
+  const publishedTone = { bg: "rgba(16,185,129,0.14)", fg: "#059669" };
+  if (row.status === "archived") {
+    return {
+      tab: "archived",
+      stageLabel: "已归档",
+      stageDescriptor: "项目已归档",
+      stageTone: mutedTone,
+      scheduleEligible: false,
+      scheduleStaticLabel: "已归档",
+    };
+  }
+
+  if (row.source === "imported") {
+    return {
+      tab: "published",
+      stageLabel: "已发布",
+      stageDescriptor: "历史作品",
+      stageTone: publishedTone,
+      scheduleEligible: false,
+      scheduleStaticLabel: "历史作品",
+    };
+  }
+
+  if (row.status === "completed") {
+    return {
+      tab: "published",
+      stageLabel: "已发布",
+      stageDescriptor: "数据复盘中",
+      stageTone: publishedTone,
+      scheduleEligible: false,
+      scheduleStaticLabel: "已完成",
+    };
+  }
+
+  // 进入 review 就代表发布动作已经结束、现在只做数据复盘。即使旧数据的
+  // output.status 尚未同步为 published，也不能把它重新解释成可排期项目。
+  if (row.currentStage === "review") {
+    return {
+      tab: "review",
+      stageLabel: "复盘中",
+      stageDescriptor: "数据复盘",
+      stageTone: STAGE_CHIP_TONE.review ?? mutedTone,
+      scheduleEligible: false,
+      scheduleStaticLabel: "复盘中",
+    };
+  }
+
+  const hasPublishedOutput = row.outputs.some(
+    (output) => output.status === "published",
+  );
+  if (row.status === "paused") {
+    return {
+      tab: "review",
+      stageLabel: "已暂停",
+      stageDescriptor:
+        row.currentStage === "publishing" ? "等待素材" : "结构大纲",
+      stageTone: mutedTone,
+      scheduleEligible: !hasPublishedOutput,
+      scheduleStaticLabel: hasPublishedOutput ? "已发布" : "不可排期",
+    };
+  }
+
+  return {
+    tab: "active",
+    stageLabel: STAGE_LABELS[row.currentStage] ?? row.currentStage,
+    stageDescriptor: STAGE_DESCRIPTORS[row.currentStage] ?? "",
+    stageTone:
+      STAGE_CHIP_TONE[row.currentStage] ?? STAGE_CHIP_TONE.script,
+    scheduleEligible: !hasPublishedOutput,
+    scheduleStaticLabel: hasPublishedOutput ? "已发布" : "不可排期",
+  };
 }
 
 // ---------------------------------------------------------------------------

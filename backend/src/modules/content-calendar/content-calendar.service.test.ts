@@ -186,6 +186,102 @@ describe("content-calendar service", () => {
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
+    it("archived 项目后端拒绝新建、改期和取消，既有排期记录不被删除", async () => {
+      let projectStatus = "active";
+      const { service } = makeService(db, {
+        projects: {
+          getScheduleProject: async (_ctx, projectId) => ({
+            id: projectId,
+            title: "归档边界项目",
+            status: projectStatus,
+            source: "manual",
+            currentStage: "script",
+            updatedAt: CLOCK,
+            outputs: [],
+          }),
+        },
+      });
+      const existing = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-21",
+      });
+      projectStatus = "archived";
+
+      await expect(
+        service.createEntry(ctx, ACC, {
+          projectId: "project-1",
+          plannedDate: "2026-07-22",
+        }),
+      ).rejects.toThrow("cannot be scheduled");
+      await expect(
+        service.updateEntry(ctx, existing.id, {
+          plannedDate: "2026-07-23",
+        }),
+      ).rejects.toBeInstanceOf(ConflictError);
+      await expect(service.deleteEntry(ctx, existing.id)).rejects.toBeInstanceOf(
+        ConflictError,
+      );
+
+      const rows = await service.listCalendar(
+        ctx,
+        ACC,
+        {
+          from: "2026-07-20T00:00:00.000Z",
+          to: "2026-07-31T00:00:00.000Z",
+        },
+        { limit: 50, offset: 0 },
+      );
+      expect(rows.rows.map((row) => row.id)).toContain(existing.id);
+    });
+
+    it("进入 review 的复盘项目后端拒绝新建、改期和取消，既有排期只读保留", async () => {
+      let currentStage = "script";
+      const { service } = makeService(db, {
+        projects: {
+          getScheduleProject: async (_ctx, projectId) => ({
+            id: projectId,
+            title: "已进入复盘的项目",
+            status: "active",
+            source: "manual",
+            currentStage,
+            updatedAt: CLOCK,
+            outputs: [{ id: "output-1", status: "ready" }],
+          }),
+        },
+      });
+      const existing = await service.createEntry(ctx, ACC, {
+        projectId: "project-1",
+        plannedDate: "2026-07-21",
+      });
+      currentStage = "review";
+
+      await expect(
+        service.createEntry(ctx, ACC, {
+          projectId: "project-1",
+          plannedDate: "2026-07-22",
+        }),
+      ).rejects.toBeInstanceOf(ConflictError);
+      await expect(
+        service.updateEntry(ctx, existing.id, {
+          plannedDate: "2026-07-23",
+        }),
+      ).rejects.toBeInstanceOf(ConflictError);
+      await expect(service.deleteEntry(ctx, existing.id)).rejects.toBeInstanceOf(
+        ConflictError,
+      );
+
+      const rows = await service.listCalendar(
+        ctx,
+        ACC,
+        {
+          from: "2026-07-20T00:00:00.000Z",
+          to: "2026-07-31T00:00:00.000Z",
+        },
+        { limit: 50, offset: 0 },
+      );
+      expect(rows.rows.map((row) => row.id)).toContain(existing.id);
+    });
+
     it("uses the identity timezone for today and rejects a different active date", async () => {
       const { service } = makeService(db, {
         identity: { getEffectiveTimezone: async () => "America/Los_Angeles" },

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, eq, metricSnapshots, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createIngestionService,
@@ -60,6 +60,10 @@ function wire(db: Db, records: MetricRecord[]) {
       const projectId = await projectsService.getProjectIdByOutput(c, outputId);
       if (projectId) await projectsService.markPublished(c, projectId);
     },
+    resolveOutputOwner: (c, outputId) =>
+      projectsService.getOutputOwnerSummary(c, outputId),
+    reconcileImportedProjections: (c, input) =>
+      projectsService.reconcileImportedProjections(c, input),
   });
 
   const analyticsService = createAnalyticsService({
@@ -97,6 +101,8 @@ function wire(db: Db, records: MetricRecord[]) {
           projectsService.getProjectIdByOutput(c, outputId),
         mergePublishedWork: (c, projectId, input) =>
           projectsService.mergePublishedWork(c, projectId, input),
+        reconcileImportedProjections: (c, input) =>
+          projectsService.reconcileImportedProjections(c, input),
       },
       analytics: {
         appendSnapshot: (c, input) => analyticsService.appendSnapshot(c, input),
@@ -301,6 +307,161 @@ describe("[T-321] 日拉命中已绑定已发布项目 → merge 更新不新建
     );
     expect(imported).toHaveLength(1);
     expect(imported[0]!.title).toBe("纯采集历史作品");
+  });
+});
+
+describe("[T-724] 自动导入投影与手工登记最终收敛", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+    await seedDouyinSource(db);
+  });
+
+  it("先自动化后补登记：publication/封面/指标原 ID 保留，loser 可逆归档，后续同步不复活", async () => {
+    const record = work("7800", "自动化先发现的作品", 8800, {
+      desc: "平台文案",
+      shareUrl: "https://v.douyin.com/t724/",
+    });
+    const { ingestionService, projectsService, publishingService } = wire(db, [
+      record,
+    ]);
+    await ingestionService.refreshDouyin(ctx, {
+      externalSourceId: "src-douyin",
+    });
+
+    const repo = createProjectRepository(db);
+    const imported = (await repo.list(ctx)).find(
+      (project) => project.source === "imported",
+    )!;
+    const publicationBefore = (await publishingService.resolvePublication(ctx, {
+      platform: "douyin",
+      externalId: "7800",
+    }))!;
+    const coverRevision = await publishingService.setCover(
+      ctx,
+      publicationBefore.id,
+      "asset-cover-t724",
+    );
+    const snapshotsBefore = await db
+      .select()
+      .from(metricSnapshots)
+      .where(eq(metricSnapshots.publicationId, publicationBefore.id));
+    expect(snapshotsBefore).toHaveLength(1);
+
+    const manual = await projectsService.createProject(ctx, {
+      title: "昨天制作的原创项目",
+      brief: "用户自己的创作内容",
+    });
+    const manualOutput = await projectsService.createOutput(ctx, manual.id, {
+      title: manual.title,
+    });
+    const registered = await publishingService.registerOwnerPublication(
+      ctx,
+      manualOutput.id,
+      { platform: "douyin", externalId: "7800", title: manual.title },
+    );
+
+    expect(registered.id).toBe(publicationBefore.id);
+    expect(registered.contentOutputId).toBe(manualOutput.id);
+    expect(registered.currentRevisionId).toBe(coverRevision.id);
+    expect((await repo.get(ctx, imported.id)).status).toBe("archived");
+    expect((await repo.get(ctx, manual.id)).status).not.toBe("archived");
+    expect(
+      (await db
+        .select()
+        .from(metricSnapshots)
+        .where(eq(metricSnapshots.publicationId, registered.id))).map(
+        (row) => row.id,
+      ),
+    ).toEqual(snapshotsBefore.map((row) => row.id));
+
+    // 同项目重复登记和下一次自动化都重进收口，但不增加项目/publication/activity。
+    await publishingService.registerOwnerPublication(ctx, manualOutput.id, {
+      platform: "douyin",
+      externalId: "7800",
+      title: manual.title,
+    });
+    const afterSync = await ingestionService.ensureImportedProject(ctx, {
+      title: record.title ?? "",
+      brief: record.desc,
+      platform: "douyin",
+      externalId: "7800",
+      shareUrl: record.shareUrl,
+      publishedAt: record.publishedAt,
+    });
+    expect(afterSync).toMatchObject({
+      projectId: manual.id,
+      outputId: manualOutput.id,
+      publicationId: publicationBefore.id,
+    });
+    expect(await repo.list(ctx)).toHaveLength(2);
+    expect(
+      (await repo.listActivity(ctx, imported.id)).filter(
+        (row) => row.eventType === "project_superseded",
+      ),
+    ).toHaveLength(1);
+    expect((await repo.get(ctx, imported.id)).status).toBe("archived");
+  });
+
+  it("竞争窗口：ensure 后 publication winner 属于另一项目时，返回真实 owner 并归档 loser", async () => {
+    const reconciled: string[] = [];
+    const merged: string[] = [];
+    let publicationReads = 0;
+    const service = createIngestionService({
+      deps: deterministicDeps(),
+      db,
+      douyinFetch: {
+        fetch: async () => [],
+        login: async () => true,
+        status: async () => true,
+      },
+      ports: {
+        publishing: {
+          resolvePublication: async () => {
+            publicationReads += 1;
+            return publicationReads === 1
+              ? null
+              : { id: "pub-winner", contentOutputId: "output-winner" };
+          },
+          createImportedPublication: async () => ({
+            id: "pub-winner",
+            contentOutputId: "output-winner",
+          }),
+        },
+        projects: {
+          ensureImportedProject: async () => ({
+            projectId: "project-loser",
+            outputId: "output-loser",
+            created: true,
+          }),
+          getProjectIdByOutput: async (_c, outputId) =>
+            outputId === "output-winner" ? "project-winner" : "project-loser",
+          mergePublishedWork: async (_c, projectId) => {
+            merged.push(projectId);
+          },
+          reconcileImportedProjections: async (_c, input) => {
+            reconciled.push(input.canonicalProjectId);
+          },
+        },
+        analytics: { appendSnapshot: async () => ({ created: true }) },
+        knowledge: { ingest: async () => ({ id: "kn" }) },
+        assets: { registerExternalAsset: async () => ({ id: "asset" }) },
+        artifacts: { createCandidateVersion: async () => ({ id: "version" }) },
+      },
+    });
+
+    const result = await service.ensureImportedProject(ctx, {
+      title: "并发作品",
+      platform: "douyin",
+      externalId: "7801",
+    });
+    expect(result).toEqual({
+      projectId: "project-winner",
+      outputId: "output-winner",
+      publicationId: "pub-winner",
+    });
+    expect(merged).toEqual(["project-winner"]);
+    expect(reconciled).toEqual(["project-winner"]);
   });
 });
 

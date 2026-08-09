@@ -27,9 +27,11 @@ export { AccountRequiredError, requireAccountId } from "@creatoros/backend";
 
 export class ConflictError extends Error {
   readonly code = ErrorCode.ConflictError;
-  constructor(message: string) {
+  readonly details: Record<string, unknown>;
+  constructor(message: string, details: Record<string, unknown> = {}) {
     super(message);
     this.name = "ConflictError";
+    this.details = details;
   }
 }
 

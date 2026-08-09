@@ -404,16 +404,16 @@ describe("ProjectsPage", () => {
   });
 
   // [T-102 前半锁测] 归档项目从「全部」视图与计数中剔除,只在「已归档」tab 出现。
-  it("excludes archived projects from the 全部 view/count but shows them in the 已归档 tab", async () => {
+  it("imported + archived 状态优先：从全部/已发布消失，只在已归档显示完整归档语义", async () => {
     const { buildProjectsViewModel } = await import("@/fixtures/selectors");
     const base = buildProjectsViewModel();
-    // 取一行改成 archived(source 保持非 imported,否则会被 mapProjectRowToTab 归到 published)。
+    // 真实事故组合：自动化导入项目已归档，但旧读侧会被 source=imported 抢先判成已发布。
     const archivedId = base.rows[0]!.id;
     const vm = {
       ...base,
       rows: base.rows.map((row) =>
         row.id === archivedId
-          ? { ...row, status: "archived" as const, source: "manual" as const }
+          ? { ...row, status: "archived" as const, source: "imported" as const }
           : row,
       ),
     };
@@ -437,6 +437,16 @@ describe("ProjectsPage", () => {
     }
     cleanup();
 
+    // 「已发布」tab 同样不能出现这个归档 imported 投影。
+    const published = await renderProjects({
+      viewModel: vm,
+      status: "published",
+    });
+    expect(
+      published.container.querySelector(`[data-project-id="${archivedId}"]`),
+    ).toBeNull();
+    cleanup();
+
     // 「已归档」tab:归档行渲染。
     const archived = await renderProjects({
       viewModel: vm,
@@ -445,5 +455,74 @@ describe("ProjectsPage", () => {
     expect(
       archived.container.querySelector(`[data-project-id="${archivedId}"]`),
     ).not.toBeNull();
+    const archivedRow = archived.container.querySelector(
+      `[data-project-id="${archivedId}"]`,
+    ) as HTMLElement;
+    expect(
+      archivedRow.querySelector('[data-slot="project-stage"]')?.textContent,
+    ).toContain("已归档");
+    expect(
+      archivedRow.querySelector('[data-slot="project-stage"]')?.textContent,
+    ).toContain("项目已归档");
+    expect(
+      archivedRow.querySelector('[data-slot="project-schedule-static"]')
+        ?.textContent,
+    ).toContain("已归档");
+    expect(
+      archivedRow.querySelector('[data-slot="project-schedule-trigger"]'),
+    ).toBeNull();
+  });
+
+  it("进入 review 的复盘项目归入复盘中且不可再排期", async () => {
+    const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+    const base = buildProjectsViewModel();
+    const reviewingId = base.rows[0]!.id;
+    const vm = {
+      ...base,
+      rows: base.rows.map((row) =>
+        row.id === reviewingId
+          ? {
+              ...row,
+              source: "manual" as const,
+              status: "active" as const,
+              currentStage: "review" as const,
+              outputs: row.outputs.map((output) => ({
+                ...output,
+                status: "drafting" as const,
+              })),
+            }
+          : row,
+      ),
+    };
+
+    const active = await renderProjects({ viewModel: vm, status: "active" });
+    expect(
+      active.container.querySelector(`[data-project-id="${reviewingId}"]`),
+    ).toBeNull();
+    cleanup();
+
+    const review = await renderProjects({
+      viewModel: vm,
+      status: "review",
+      scheduleContext: {
+        accountId: "account-1",
+        referenceDateKey: "2026-07-29",
+        entries: [],
+      },
+    });
+    const reviewingRow = review.container.querySelector(
+      `[data-project-id="${reviewingId}"]`,
+    ) as HTMLElement;
+    expect(reviewingRow).not.toBeNull();
+    expect(
+      reviewingRow.querySelector('[data-slot="project-stage"]')?.textContent,
+    ).toContain("复盘中");
+    expect(
+      reviewingRow.querySelector('[data-slot="project-schedule-static"]')
+        ?.textContent,
+    ).toContain("复盘中");
+    expect(
+      reviewingRow.querySelector('[data-slot="project-schedule-trigger"]'),
+    ).toBeNull();
   });
 });

@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 的修订均已以受控 changed lines 明确补齐；未发现由本轮改动引入的新问题。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "目标-6",
+        "quote": "归档/收口失败可观察、可重试；下一次登记或自动化同步能够自愈"
+      },
+      "acceptance_anchor": {
+        "id": "AC-724-08",
+        "quote": "下一次登记或自动化同步成功归档残留"
+      },
+      "where": "第 4 节状态流与第 6.3 节 Publishing 登记出口",
+      "failure_mode": "SPEC 只明确换锚成功后调用收口；若第一次换锚后的补偿失败，同一项目再次登记会走 existing owner=当前 output 的幂等成功分支，合理实现可能直接返回而不再收口，导致 imported 残留永久存在。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-08-project-publication-identity-convergence.md#63-publishing登记入口-fail-closed",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "要求 created、same-output 幂等命中、re-anchor、orphan repair 的每个成功出口都调用同一收口函数，并增加“首次补偿失败、同项目重复登记后恢复”的验收测试。",
+      "resolution_evidence": "SPEC-LINE:90:13a90ae71f3dc9bc 将 same-output 幂等成功路径接入收口；SPEC-LINE:163:7c9b229a61f2bf64 明定首次创建、same-output 幂等、孤儿修复与 imported→manual 换锚的每个成功出口均调用同一收口函数；SPEC-LINE:223:fab467a751125cb1 将同项目重复登记后的收口恢复写入 AC-724-08。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "INV-724-02",
+        "quote": "任何项目一旦 status=archived，列表、Tab、计数、阶段标签、颜色和排期能力都必须按‘已归档’解释"
+      },
+      "acceptance_anchor": {
+        "id": "AC-724-02",
+        "quote": "排期状态全部按 archived"
+      },
+      "where": "第 6.1 节前端单一生命周期解释器与第 9 节聚焦测试",
+      "failure_mode": "SPEC 只定义了归档项目的列表展示和静态排期文案，没有明确后端新建、修改、取消或归档时已有排期的行为；仅靠前端隐藏入口仍可被旧页面或直接请求绕过。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-08-project-publication-identity-convergence.md#61-前端单一生命周期解释器",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确归档项目不能新建或修改未来排期，后端必须 fail closed；归档动作不删除既有日历记录，历史排期只读保留，并用真实 service/transport 交互测试覆盖。",
+      "resolution_evidence": "SPEC-LINE:124:efdf5aadc0bffcab 明定 ContentCalendar 后端对 archived 项目的创建、改期、取消统一 ConflictError，归档不删除既有记录且仅允许系统对账收口为 published/missed；SPEC-LINE:234:f5ea0722b64f2260 与 SPEC-LINE:235:a14412009eeceb34 分别要求前端不渲染排期交互及 service/transport 对三类写操作 fail closed、保留历史记录并验证对账。",
+      "parent_id": ""
+    }
+  ]
+}

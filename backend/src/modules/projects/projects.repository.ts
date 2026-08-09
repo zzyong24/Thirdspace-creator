@@ -100,6 +100,23 @@ export interface ProjectRepository {
     ctx: RequestContext,
     ref: { platform: string; externalId: string },
   ): Promise<ProjectRow | null>;
+  /** T-724：稳定返回同一平台作品的全部 imported 投影，供身份收口。 */
+  listImportedByRef(
+    ctx: RequestContext,
+    ref: { platform: string; externalId: string },
+  ): Promise<ProjectRow[]>;
+  /**
+   * T-724：只归档仍活动的 imported 投影，并为实际发生状态边的行写一次 activity。
+   * 更新与 activity 在 Projects 自己的事务内提交；并发重复调用由 status 条件幂等化。
+   */
+  archiveImportedProjections(
+    ctx: RequestContext,
+    input: {
+      projectIds: string[];
+      archivedAt: string;
+      activities: ActivityRow[];
+    },
+  ): Promise<string[]>;
   updateProjectRow(
     ctx: RequestContext,
     projectId: string,
@@ -384,8 +401,62 @@ export function createProjectRepository(db: Db): ProjectRepository {
             sql`${projects.platformRef} ->> 'externalId' = ${ref.externalId}`,
           ),
         )
+        .orderBy(asc(projects.createdAt), asc(projects.id))
         .limit(1);
       return rows[0] ?? null;
+    },
+
+    async listImportedByRef(ctx, ref) {
+      return db
+        .select()
+        .from(projects)
+        .where(
+          and(
+            eq(projects.userId, ctx.userId),
+            eq(projects.source, "imported"),
+            accountGate(ctx),
+            sql`${projects.platformRef} ->> 'platform' = ${ref.platform}`,
+            sql`${projects.platformRef} ->> 'externalId' = ${ref.externalId}`,
+          ),
+        )
+        .orderBy(asc(projects.createdAt), asc(projects.id));
+    },
+
+    async archiveImportedProjections(ctx, input) {
+      if (input.projectIds.length === 0) return [];
+      const activityByProjectId = new Map(
+        input.activities.map((row) => [row.projectId, row]),
+      );
+      return db.transaction(async (tx) => {
+        // UPDATE 自带 status/source/双归属条件，两个并发收口只有真正跨过
+        // active→archived 的事务能拿到 returning id，也只有它会写 activity。
+        const updated = await tx
+          .update(projects)
+          .set({
+            status: "archived",
+            archivedAt: input.archivedAt,
+            updatedAt: input.archivedAt,
+          })
+          .where(
+            and(
+              eq(projects.userId, ctx.userId),
+              accountGate(ctx),
+              eq(projects.source, "imported"),
+              sql`${projects.status} <> 'archived'`,
+              inArray(projects.id, input.projectIds),
+            ),
+          )
+          .returning({ id: projects.id });
+        const archivedIds = updated.map((row) => row.id).sort();
+        const activities = archivedIds.flatMap((projectId) => {
+          const row = activityByProjectId.get(projectId);
+          return row ? [row] : [];
+        });
+        if (activities.length > 0) {
+          await tx.insert(projectActivities).values(activities);
+        }
+        return archivedIds;
+      });
     },
 
     async updateProjectRow(ctx, projectId, set) {

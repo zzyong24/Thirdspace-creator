@@ -102,19 +102,25 @@ export interface ServiceDeps {
     ctx: RequestContext,
     outputId: string,
   ) => Promise<void>;
-  // [T-323] register 重锚判据端口(可选,best-effort)。
-  //   resolveOutputOwner:反查一个 content_output 的属主项目 + source(判 imported 空壳 vs
-  //     用户手动项目)。**未注入 → 重锚分支拿不到 owner 信息,退化走保守「不抢」**(不误伤)。
-  //   archiveProjectSeam:归档被让位的 imported 空壳项目。未注入 → 跳过归档(重锚仍完成,
-  //     残留空壳可后续清理)。
+  // [T-724] register 身份判据与可重试补偿端口。生产组合根必须接 Projects 公共 service；
+  //   单测未注入时只保留旧的保守退化，不允许凭空推断项目语义。
   resolveOutputOwner?: (
     ctx: RequestContext,
     outputId: string,
-  ) => Promise<{ projectId: string; source: string } | null>;
-  archiveProjectSeam?: (
+  ) => Promise<{
+    projectId: string;
+    source: string;
+    status: string;
+    title: string;
+  } | null>;
+  reconcileImportedProjections?: (
     ctx: RequestContext,
-    projectId: string,
-  ) => Promise<void>;
+    input: {
+      platform: string;
+      externalId: string;
+      canonicalProjectId: string;
+    },
+  ) => Promise<unknown>;
 }
 
 export interface PublishingService {
@@ -320,22 +326,56 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     }
   }
 
-  // [T-323] 反查 output 属主 + source;未注入端口或失败 → null(重锚分支据此退化走保守「不抢」)。
-  async function safeResolveOwner(
+  // [T-724] 生产端口一旦存在就 fail closed：读取异常继续上抛，不能把基础设施失败伪装成
+  // 「没有 owner」并误走孤儿修复。只有单测/旧组合根未注入端口时才返回 null。
+  async function resolveOwner(
     ctx: RequestContext,
     outputId: string,
-  ): Promise<{ projectId: string; source: string } | null> {
+  ): Promise<{
+    projectId: string;
+    source: string;
+    status: string;
+    title: string;
+  } | null> {
     if (!deps.resolveOutputOwner) return null;
-    try {
-      return await deps.resolveOutputOwner(ctx, outputId);
-    } catch {
-      return null;
+    return deps.resolveOutputOwner(ctx, outputId);
+  }
+
+  async function reconcileImportedBestEffort(
+    ctx: RequestContext,
+    input: {
+      platform: string;
+      externalId: string;
+      canonicalProjectId: string;
+    },
+  ): Promise<void> {
+    if (!deps.reconcileImportedProjections) return;
+    // 核心 publication 写不能被跨模块补偿回滚；本次最多两次，后续登记/采集仍会重进。
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        await deps.reconcileImportedProjections(ctx, input);
+        return;
+      } catch (error) {
+        const rawCode = (error as { code?: unknown } | null)?.code;
+        console.error("PROJECT_IDENTITY_RECONCILE_FAILED", {
+          requestId: ctx.requestId,
+          operation: "registerOwnerPublication",
+          errorName:
+            error instanceof Error
+              ? error.name
+              : typeof (error as { name?: unknown } | null)?.name === "string"
+                ? String((error as { name: string }).name)
+                : "UnknownError",
+          errorCode: typeof rawCode === "string" ? rawCode : null,
+          attempt,
+        });
+      }
     }
   }
 
   // [DATA-H03] createPublication 前校验 outputId 存在且属当前用户 —— 复用已注入的
   //   resolveOutputOwner 端口(= projectsService.getOutputOwnerSummary:越权 / 不存在 →
-  //   null)。挡住「认证用户用任意 outputId 建跨属主 / 悬空 publication,平台发布成功后才暴露
+  //   null，基础设施故障原样上抛)。挡住「认证用户用任意 outputId 建跨属主 / 悬空 publication,平台发布成功后才暴露
   //   本地状态错误」。fail-closed:能校验就必须过;端口未注入(仅单测退化态)才降级放行 ——
   //   生产组合根恒接线,dispatch 路径必校验。
   async function assertOutputOwned(
@@ -697,95 +737,146 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         }
         return reconciled;
       }
-      return repo.createImportedPublication(outputId, {
-        platform: input.platform,
-        accountReference: input.accountReference ?? `${input.platform} 导入`,
-        externalId: input.externalId,
-        externalUrl: input.externalUrl?.trim() || null,
-        publishedAt: input.publishedAt ?? null,
-        title: input.title?.trim(),
-      });
+      try {
+        return await repo.createImportedPublication(outputId, {
+          platform: input.platform,
+          accountReference: input.accountReference ?? `${input.platform} 导入`,
+          externalId: input.externalId,
+          externalUrl: input.externalUrl?.trim() || null,
+          publishedAt: input.publishedAt ?? null,
+          title: input.title?.trim(),
+        });
+      } catch (error) {
+        // 两个自动化/登记请求都在 pre-read 后 INSERT 时，唯一索引决定 canonical。
+        // 竞争失败者回读真实 winner，而不是把幂等竞争冒充成批次失败。
+        const raced = await repo.findByExternalKey(
+          input.platform,
+          input.externalId,
+        );
+        if (raced) return raced;
+        throw error;
+      }
     },
 
     async registerOwnerPublication(ctx, outputId, input) {
-      // [T-323] register(登记已发布)入口。根因:日拉会先为一条真实作品自动建一个 imported
-      //   空壳项目 + 空壳 content_output,并把 aweme(platform+externalId)锚在空壳上;之后用户
-      //   手动新建项目绑定同链接来 register,若仍走 createImportedPublication 只会命中既有 pub
-      //   (锚在空壳)返回,用户手动项目永远成不了正主。本方法在这种情况下**重锚 + 归档空壳**。
-      //
-      //   四分支:
-      //   ① 无 existing → 建 published pub(同 createImportedPublication 语义)+ 跃迁本 output 属主。
-      //   ② existing 锚在同一 output → 幂等:只跃迁本 output 属主,返回 existing。
-      //   ③ existing 锚在别的 output 且「旧属主 = imported 空壳、新属主 = 非 imported(用户手动
-      //      项目)」→ 重锚到本 output + 跃迁本 output 属主 + 归档旧空壳,返回重锚后 pub。
-      //   ④ 其余(existing 已属真实手动项目 / 归属不明 / 端口未注入退化)→ 不抢:跃迁 existing
-      //      的属主后返回 existing(保持现状,绝不误伤用户已有项目)。
-      //   全程 best-effort:跨模块端口(markOwnerProjectPublished / resolveOutputOwner /
-      //   archiveProjectSeam)失败绝不回滚已落的 publication 事实(SPEC §11/§16)。
+      // T-724：publication 是唯一外部作品事实；登记只允许 imported→用户项目或孤儿修复，
+      // 两个用户项目之间绝不静默抢锚。Projects 投影归档是可重试补偿，不是假跨模块事务。
       if (!PLATFORMS.has(input.platform)) {
         throw new ValidationError(
           `ValidationError: unknown platform: ${input.platform}`,
         );
       }
+      const ownerNew = await resolveOwner(ctx, outputId);
+      if (deps.resolveOutputOwner && !ownerNew) {
+        throw new OwnershipError(
+          `OwnershipError: content output not found: ${outputId}`,
+        );
+      }
+      if (ownerNew?.status === "archived") {
+        throw new ConflictError(
+          "ConflictError: archived project cannot register a publication",
+          {
+            reason: "target_project_archived",
+            canonicalProjectId: ownerNew.projectId,
+            canonicalProjectTitle: ownerNew.title,
+          },
+        );
+      }
       const repo = repoFor(ctx);
-      const existing = await repo.findByExternalKey(
+      let existing = await repo.findByExternalKey(
         input.platform,
         input.externalId,
       );
 
-      // ① 无 existing → 建 published pub。
+      // 无 existing → 创建；若唯一索引竞争失败，回读 winner 后继续同一判定矩阵。
       if (!existing) {
-        const created = await repo.createImportedPublication(outputId, {
-          platform: input.platform,
-          accountReference: input.accountReference ?? `${input.platform} 导入`,
-          externalId: input.externalId,
-          externalUrl: input.externalUrl ?? null,
-          publishedAt: input.publishedAt ?? null,
-          // [B-02] 把登记项目标题带进原子补铸的 revision-1(currentRevisionId 恒非空,
-          //   且保留旧行为下 transport 补铸 revision 时捕获的用户标题)。
-          title: input.title,
-        });
-        await markOwnerPublishedBestEffort(ctx, outputId);
-        return created;
+        try {
+          const created = await repo.createImportedPublication(outputId, {
+            platform: input.platform,
+            accountReference:
+              input.accountReference ?? `${input.platform} 导入`,
+            externalId: input.externalId,
+            externalUrl: input.externalUrl?.trim() || null,
+            publishedAt: input.publishedAt ?? null,
+            title: input.title?.trim(),
+          });
+          await markOwnerPublishedBestEffort(ctx, outputId);
+          if (ownerNew) {
+            await reconcileImportedBestEffort(ctx, {
+              platform: input.platform,
+              externalId: input.externalId,
+              canonicalProjectId: ownerNew.projectId,
+            });
+          }
+          return created;
+        } catch (error) {
+          existing = await repo.findByExternalKey(
+            input.platform,
+            input.externalId,
+          );
+          if (!existing) throw error;
+        }
       }
 
-      // ② existing 已锚在本 output → 幂等,只跃迁属主项目。
+      // same-output 幂等成功也必须重进补偿，修复上一次换锚成功但归档失败的残留。
       if (existing.contentOutputId === outputId) {
         await markOwnerPublishedBestEffort(ctx, outputId);
+        if (ownerNew) {
+          await reconcileImportedBestEffort(ctx, {
+            platform: input.platform,
+            externalId: input.externalId,
+            canonicalProjectId: ownerNew.projectId,
+          });
+        }
         return existing;
       }
 
-      // existing 锚在别的 output —— 用两端属主 source 决定是否重锚。
-      const ownerOld = await safeResolveOwner(ctx, existing.contentOutputId);
-      const ownerNew = await safeResolveOwner(ctx, outputId);
+      const ownerOld = await resolveOwner(ctx, existing.contentOutputId);
 
-      // ③ 仅当「旧属主是 imported 空壳」且「新属主是非 imported(用户手动项目)」→ 重锚。
+      // 同一项目的另一个 output 已持有作品：项目身份没有冲突，保持现锚并补跑收口。
+      if (ownerNew && ownerOld?.projectId === ownerNew.projectId) {
+        await markOwnerPublishedBestEffort(ctx, existing.contentOutputId);
+        await reconcileImportedBestEffort(ctx, {
+          platform: input.platform,
+          externalId: input.externalId,
+          canonicalProjectId: ownerNew.projectId,
+        });
+        return existing;
+      }
+
+      // 只有 orphan repair 或 imported→非 imported 才自动换锚。
       if (
-        ownerOld?.source === "imported" &&
-        ownerNew != null &&
-        ownerNew.source !== "imported"
+        ownerNew &&
+        (!ownerOld ||
+          (ownerOld.source === "imported" && ownerNew.source !== "imported"))
       ) {
         const reAnchored = await repo.reAnchorPublicationOutput(
           existing.id,
           outputId,
         );
         await markOwnerPublishedBestEffort(ctx, outputId);
-        // 归档被让位的 imported 空壳(best-effort:archiveProject 对 already-archived 会抛
-        //   ProjectStateError,这里 catch 吞掉,绝不阻断重锚)。
-        // 封面不在本切片迁移:重锚后下次日拉的封面回填(T-322 已修)会落到现属主(手动
-        //   项目)的 publication 上,自愈即可 —— 无需在此搬运封面。
-        if (deps.archiveProjectSeam) {
-          try {
-            await deps.archiveProjectSeam(ctx, ownerOld.projectId);
-          } catch {
-            // 空壳已归档 / 归档失败 → 吞掉:重锚事实已落,归档是派生清理。
-          }
-        }
+        await reconcileImportedBestEffort(ctx, {
+          platform: input.platform,
+          externalId: input.externalId,
+          canonicalProjectId: ownerNew.projectId,
+        });
         return reAnchored;
       }
 
-      // ④ 不抢:existing 属真实手动项目 / 归属不明 / 端口未注入退化 → 保持现状,只跃迁
-      //    existing 的属主 output(绝不重锚、绝不归档,防误伤用户已有项目)。
+      // 生产 owner 已知时，manual/manual 或 imported/imported 争抢都明确 409，不能返回
+      // existing 让调用端误以为当前项目登记成功。同租户 owner 信息由 Projects 门验证后才返回。
+      if (ownerOld && ownerNew) {
+        throw new ConflictError(
+          "ConflictError: external work is already owned by another project",
+          {
+            reason: "external_work_owned_by_another_project",
+            canonicalProjectId: ownerOld.projectId,
+            canonicalProjectTitle: ownerOld.title,
+          },
+        );
+      }
+
+      // 仅兼容未注入 owner 端口的旧最小单测组合：不抢、不谎称换锚。
       await markOwnerPublishedBestEffort(ctx, existing.contentOutputId);
       return existing;
     },

@@ -64,7 +64,7 @@ export interface IngestionPublishingPort {
       publishedAt?: string | null;
       title?: string;
     },
-  ): Promise<{ id: string }>;
+  ): Promise<{ id: string; contentOutputId?: string | null }>;
 }
 
 // 数据底座(SPEC §1.3):为一条真实已发布作品就地建历史项目 + content_output 的端口
@@ -101,6 +101,15 @@ export interface IngestionProjectsPort {
       externalId: string;
       shareUrl?: string;
       publishedAt?: string;
+    },
+  ): Promise<unknown>;
+  /** T-724：按真实 publication owner 收口同作品的 loser imported 投影。 */
+  reconcileImportedProjections?(
+    ctx: RequestContext,
+    input: {
+      platform: string;
+      externalId: string;
+      canonicalProjectId: string;
     },
   ): Promise<unknown>;
 }
@@ -640,6 +649,37 @@ export function createIngestionService(args: {
     return repo.getRun(input.runId);
   }
 
+  async function reconcileImportedBestEffort(
+    ctx: RequestContext,
+    input: {
+      platform: string;
+      externalId: string;
+      canonicalProjectId: string;
+    },
+  ): Promise<void> {
+    if (!ports.projects?.reconcileImportedProjections) return;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        await ports.projects.reconcileImportedProjections(ctx, input);
+        return;
+      } catch (error) {
+        const rawCode = (error as { code?: unknown } | null)?.code;
+        console.error("PROJECT_IDENTITY_RECONCILE_FAILED", {
+          requestId: ctx.requestId,
+          operation: "ingestion.ensureImportedProject",
+          errorName:
+            error instanceof Error
+              ? error.name
+              : typeof (error as { name?: unknown } | null)?.name === "string"
+                ? String((error as { name: string }).name)
+                : "UnknownError",
+          errorCode: typeof rawCode === "string" ? rawCode : null,
+          attempt,
+        });
+      }
+    }
+  }
+
   const service: IngestionService = {
     async createRun(ctx, input) {
       requireAccountId(ctx.accountId, "ingestion.createRun"); // [T-332 S2]
@@ -746,6 +786,11 @@ export function createIngestionService(args: {
               },
             );
           }
+          await reconcileImportedBestEffort(ctx, {
+            platform: input.platform,
+            externalId: input.externalId,
+            canonicalProjectId: ownerProjectId,
+          });
           return {
             projectId: ownerProjectId,
             outputId: boundPub.contentOutputId,
@@ -765,14 +810,14 @@ export function createIngestionService(args: {
       // 确保对应 publication 存在(external_id=externalId),metrics 才能命中。既有查询
       // 已在上方 boundPub 完成(复用,不重复查);无则经 publishing 端口建(端口未提供 create
       // 时退回 resolve,缺则报错 —— 不静默)。
-      let publicationId = boundPub?.id ?? null;
-      if (!publicationId) {
+      let publication = boundPub;
+      if (!publication) {
         if (!ports.publishing.createImportedPublication) {
           throw new Error(
             "ensureImportedProject: publishing.createImportedPublication 端口未配置,无法落 publication",
           );
         }
-        const pub = await ports.publishing.createImportedPublication(
+        publication = await ports.publishing.createImportedPublication(
           ctx,
           ensured.outputId,
           {
@@ -783,11 +828,46 @@ export function createIngestionService(args: {
             title,
           },
         );
-        publicationId = pub.id;
       }
+      // 竞争窗口：ensure imported 后，create publication 可能命中另一条路径刚创建的
+      // winner。必须回读 publication 的真实 output owner，不能把刚建的 loser 壳当正主。
+      const canonicalPublication =
+        (await ports.publishing.resolvePublication(ctx, {
+          platform: input.platform,
+          externalId: input.externalId,
+        })) ?? publication;
+      const canonicalOutputId =
+        canonicalPublication?.contentOutputId ?? ensured.outputId;
+      const publicationId = canonicalPublication.id;
+      let canonicalProjectId = ensured.projectId;
+      if (ports.projects.getProjectIdByOutput) {
+        const resolvedProjectId = await ports.projects.getProjectIdByOutput(
+          ctx,
+          canonicalOutputId,
+        );
+        if (resolvedProjectId) canonicalProjectId = resolvedProjectId;
+      }
+      if (
+        canonicalProjectId !== ensured.projectId &&
+        ports.projects.mergePublishedWork
+      ) {
+        await ports.projects.mergePublishedWork(ctx, canonicalProjectId, {
+          title,
+          brief: input.brief,
+          platform: input.platform,
+          externalId: input.externalId,
+          shareUrl,
+          publishedAt: input.publishedAt,
+        });
+      }
+      await reconcileImportedBestEffort(ctx, {
+        platform: input.platform,
+        externalId: input.externalId,
+        canonicalProjectId,
+      });
       return {
-        projectId: ensured.projectId,
-        outputId: ensured.outputId,
+        projectId: canonicalProjectId,
+        outputId: canonicalOutputId,
         publicationId,
       };
     },

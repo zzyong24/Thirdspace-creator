@@ -15,6 +15,7 @@ import {
   TaskStateError,
   ProjectStateError,
   StageGateError,
+  OwnershipError,
   requireAccountId,
 } from "./projects.errors";
 
@@ -236,7 +237,8 @@ export interface ProjectsService {
   ): Promise<EnsureImportedProjectResult>;
   // [T-321] 反查一个 content_output 的属主项目 id(经 repo.getOutput 的所有权门 join)。
   //   ingestion 日拉去重用它:resolvePublication 命中的 publication → contentOutputId →
-  //   属主项目,判定「该作品已绑定到某项目」。找不到(越权/不存在)→ null(诚实,不硬造)。
+  //   属主项目,判定「该作品已绑定到某项目」。找不到(越权/不存在)→ null；基础设施
+  //   故障必须上抛，不能误走 create 路径制造重复项目。
   getProjectIdByOutput(
     ctx: RequestContext,
     outputId: string,
@@ -244,11 +246,31 @@ export interface ProjectsService {
   // [T-323] 反查一个 content_output 的属主项目 id + 其 source(重锚判据)。register
   //   (登记已发布)命中「已被别的 output 占用的作品」时,靠 source 判断该 output 属主是
   //   imported 空壳(日拉自动建的)还是用户手动项目,据此决定是否重锚让位。越权/不存在 →
-  //   null(诚实降级,重锚分支据此走保守「不抢」)。= getProjectIdByOutput + repo.get 取 source。
+  //   null；基础设施故障 fail closed，禁止冒充孤儿。另带 status/title 供归档门与安全冲突提示。
   getOutputOwnerSummary(
     ctx: RequestContext,
     outputId: string,
-  ): Promise<{ projectId: string; source: string } | null>;
+  ): Promise<{
+    projectId: string;
+    source: string;
+    status: string;
+    title: string;
+  } | null>;
+  /**
+   * T-724：把同一外部作品的非 canonical imported 投影幂等归档。
+   * 不删除项目及其素材/稿件/任务；状态边与 activity 由 Projects 事务持有。
+   */
+  reconcileImportedProjections(
+    ctx: RequestContext,
+    input: {
+      platform: string;
+      externalId: string;
+      canonicalProjectId: string;
+    },
+  ): Promise<{
+    archivedProjectIds: string[];
+    alreadyArchivedProjectIds: string[];
+  }>;
   // [T-321] 幂等把项目跃迁到「已发布/复盘」态(currentStage=review、前置阶段 completed、
   //   全阶段进度 100 → recomputeProgress=100),复用 createProject 的 imported 阶段布局
   //   (:701-726)。**不改 source**(manual 项目登记发布后仍 manual,绝不因此被 reconstruct
@@ -1041,28 +1063,77 @@ export function createProjectsService(
 
     async getProjectIdByOutput(ctx, outputId) {
       requireAccountId(ctx.accountId, "projects.getProjectIdByOutput"); // [T-332 S2] 未选号=引导态禁读写
-      // [T-321] 经 repo.getOutput(所有权门 join output→project)拿属主 projectId。
-      //   越权/不存在 → OwnershipError,吞成 null(诚实降级,调用方据此回退到 create 路径)。
+      // T-724：只有真实不存在/不可见才能回退 null；数据库故障时 fail closed，
+      // 避免自动化把一次读失败扩大成永久重复项目。
       try {
         const output = await repo.getOutput(ctx, outputId);
         return output.projectId ?? null;
-      } catch {
-        return null;
+      } catch (error) {
+        if (error instanceof OwnershipError) return null;
+        throw error;
       }
     },
 
     async getOutputOwnerSummary(ctx, outputId) {
       requireAccountId(ctx.accountId, "projects.getOutputOwnerSummary"); // [T-332 S2] 未选号=引导态禁读写
-      // [T-323] = getProjectIdByOutput(所有权门拿属主 projectId)+ repo.get 取该项目 source。
-      //   任何一步越权/不存在都吞成 null(诚实降级 → register 重锚分支据此走保守「不抢」)。
-      const projectId = await service.getProjectIdByOutput(ctx, outputId);
-      if (!projectId) return null;
+      // T-724: null 只代表 output/project 确实不存在或不可见；数据库/驱动故障必须
+      // 原样上抛。否则暂时性读故障会被误判成“孤儿锚”，进而错误换绑 publication。
       try {
+        const output = await repo.getOutput(ctx, outputId);
+        const projectId = output.projectId;
         const project = await repo.get(ctx, projectId);
-        return { projectId, source: project.source };
-      } catch {
-        return null;
+        return {
+          projectId,
+          source: project.source,
+          status: project.status,
+          title: project.title,
+        };
+      } catch (error) {
+        if (error instanceof OwnershipError) return null;
+        throw error;
       }
+    },
+
+    async reconcileImportedProjections(ctx, input) {
+      requireAccountId(ctx.accountId, "projects.reconcileImportedProjections");
+      // canonical 必须是当前 user/account 可访问的真实项目；跨租户仍统一 404。
+      await repo.get(ctx, input.canonicalProjectId);
+      const matches = await repo.listImportedByRef(ctx, {
+        platform: input.platform,
+        externalId: input.externalId,
+      });
+      const targets = matches.filter(
+        (project) => project.id !== input.canonicalProjectId,
+      );
+      const ts = deps.now();
+      const candidates = targets.filter(
+        (project) => project.status !== "archived",
+      );
+      const archivedProjectIds = await repo.archiveImportedProjections(ctx, {
+        projectIds: candidates.map((project) => project.id),
+        archivedAt: ts,
+        activities: candidates.map((project) =>
+          activity(
+            project.id,
+            "project_superseded",
+            "project",
+            project.id,
+            {
+              canonicalProjectId: input.canonicalProjectId,
+              fromStatus: project.status,
+            },
+          ),
+        ),
+      });
+      const archivedSet = new Set(archivedProjectIds);
+      return {
+        archivedProjectIds,
+        // 包含调用前已归档以及并发中由另一事务先归档的投影，稳定排序。
+        alreadyArchivedProjectIds: targets
+          .filter((project) => !archivedSet.has(project.id))
+          .map((project) => project.id)
+          .sort(),
+      };
     },
 
     async markPublished(ctx, projectId) {

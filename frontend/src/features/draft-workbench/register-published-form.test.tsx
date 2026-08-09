@@ -199,6 +199,42 @@ describe("RegisterPublishedForm", () => {
     expect(mockClient.createOutput).not.toHaveBeenCalled();
     expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
+
+  it("作品已属于另一个手工项目 → 显示明确冲突并可打开 canonical 项目", async () => {
+    mockClient.registerPublishedPublication.mockRejectedValueOnce({
+      code: "ConflictError",
+      details: {
+        reason: "external_work_owned_by_another_project",
+        canonicalProjectId: "project-canonical",
+        canonicalProjectTitle: "昨天制作的原项目",
+      },
+    });
+    render(
+      <RegisterPublishedForm
+        projectId="project-new"
+        projectTitle="今天误选的项目"
+        outputId="output-new"
+        scriptReview={null}
+        scriptVersion={1}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("抖音链接"), {
+      target: { value: LINK },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "登记已发布" }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("register-published-message").textContent).toMatch(
+        /已登记在另一个项目.*昨天制作的原项目/,
+      ),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "打开已登记项目" }),
+    );
+    expect(mockRouter.push).toHaveBeenCalledWith("/projects/project-canonical");
+    expect(mockClient.listScheduledJobs).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("抖音链接")).toHaveValue(LINK);
+  });
 });
 
 // [T-110] 审核折中门:红硬拦、黄软提醒、绿/无报告放行、stale 软提醒不硬拦。

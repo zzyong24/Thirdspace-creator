@@ -6,6 +6,7 @@ import {
 } from "./route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
+import { ConflictError as PublishingConflictError } from "@creatoros/backend/modules/publishing";
 
 // Task 9 — dispatch derives ctx from the `creatoros_session` cookie.
 // [用户裁决 2026-07-06] canonical email 已置空(用户属性不 seed)→ 不再 email-login。
@@ -210,6 +211,38 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     };
     expect(json.error.code).toBe("DOUYIN_FAVORITES_UPSTREAM");
     expect(json.error.details.upstreamStatusCode).toBe(2190008);
+  });
+
+  it("[T-724] 发布归属冲突经过 dispatch 保留 409 与 canonical 项目安全引用", async () => {
+    const response = dispatchErrorResponse(
+      new PublishingConflictError(
+        "ConflictError: external work is already owned by another project",
+        {
+          reason: "external_work_owned_by_another_project",
+          canonicalProjectId: "project-canonical",
+          canonicalProjectTitle: "原项目",
+        },
+      ),
+    );
+    expect(response.status).toBe(409);
+    const json = (await response.json()) as {
+      error: {
+        code: string;
+        details: {
+          reason: string;
+          canonicalProjectId: string;
+          canonicalProjectTitle: string;
+        };
+      };
+    };
+    expect(json.error).toMatchObject({
+      code: "ConflictError",
+      details: {
+        reason: "external_work_owned_by_another_project",
+        canonicalProjectId: "project-canonical",
+        canonicalProjectTitle: "原项目",
+      },
+    });
   });
 
   it("[T-546] dispatch 失败日志只保留操作与错误类型，不泄漏异常正文/details", () => {

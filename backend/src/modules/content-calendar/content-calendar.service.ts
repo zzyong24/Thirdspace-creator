@@ -370,7 +370,8 @@ export function createContentCalendarService(
     if (
       project.source === "imported" ||
       project.status === "completed" ||
-      project.status === "archived"
+      project.status === "archived" ||
+      project.currentStage === "review"
     ) {
       throw new ConflictError(
         `ConflictError: project ${projectId} cannot be scheduled`,
@@ -741,6 +742,11 @@ export function createContentCalendarService(
         throw new ConflictError(
           `ConflictError: published calendar entry ${entryId} cannot be deleted`,
         );
+      }
+      // T-724：归档项目的既有排期是只读历史。不能只靠前端隐藏按钮；旧页面或
+      // 直接请求也必须经过同一项目生命周期门，归档动作本身不删除日历记录。
+      if (existing.projectId) {
+        await assertProjectSchedulable(ctx, existing.projectId);
       }
       return repo.deleteEntry(entryId);
     },
