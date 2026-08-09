@@ -10,10 +10,14 @@
  *  - 空态:引导文案 + 「加第一段」起结构稿。
  */
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScriptStructureToggle } from "./script-structure-view";
+import {
+  DraftChatRequestProvider,
+  useDraftChatRequest,
+} from "@/features/draft-workbench/draft-chat-request";
 import type { ScriptSectionView } from "@/types/view-models";
 
 const mockRouter = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn() };
@@ -76,12 +80,44 @@ const SECTIONS: ScriptSectionView[] = [
 
 function renderToggle(
   sections: ScriptSectionView[],
-  props: { artifactId?: string | null; projectId?: string | null } = {},
+  props: {
+    artifactId?: string | null;
+    projectId?: string | null;
+    currentVersionId?: string | null;
+    assetLabels?: Readonly<Record<string, string>>;
+  } = {},
 ) {
   return render(
     <ScriptStructureToggle sections={sections} {...props}>
       <div data-testid="editor-stub">编辑器</div>
     </ScriptStructureToggle>,
+  );
+}
+
+function ChatRequestProbe() {
+  const { request } = useDraftChatRequest();
+  return (
+    <output data-testid="chat-request-probe">
+      {request ? JSON.stringify(request) : ""}
+    </output>
+  );
+}
+
+function renderToggleWithChat(
+  sections: ScriptSectionView[],
+  props: {
+    artifactId?: string | null;
+    projectId?: string | null;
+    currentVersionId?: string | null;
+  },
+) {
+  return render(
+    <DraftChatRequestProvider>
+      <ScriptStructureToggle sections={sections} {...props}>
+        <div data-testid="editor-stub">编辑器</div>
+      </ScriptStructureToggle>
+      <ChatRequestProbe />
+    </DraftChatRequestProvider>,
   );
 }
 
@@ -272,6 +308,25 @@ describe("ScriptStructureEditor(保存)", () => {
     expect(input.params.artifactId).toBe("art-created");
   });
 
+  it("[T-732] 保存携带当前版本并发锚点，禁止旧稿覆盖刚写入的新整稿", async () => {
+    renderToggle(SECTIONS, {
+      artifactId: "art-1",
+      currentVersionId: "version-6",
+    });
+    fireEvent.change(screen.getByDisplayValue("开场钩子"), {
+      target: { value: "基于 v6 的本地修改" },
+    });
+    fireEvent.click(
+      document.querySelector('[data-slot="structure-save-button"]')!,
+    );
+    await screen.findByText("已保存");
+
+    const input = mockCreateArtifactVersion.mock.calls[0]![0] as {
+      body: { expectedCurrentVersionId?: string };
+    };
+    expect(input.body.expectedCurrentVersionId).toBe("version-6");
+  });
+
   it("全部段清空 → 保存禁用并提示,不产空版本", () => {
     renderToggle([SECTIONS[0]!], { artifactId: "art-1" });
     fireEvent.change(screen.getByDisplayValue("开场钩子"), {
@@ -292,6 +347,112 @@ describe("ScriptStructureEditor(保存)", () => {
   });
 });
 
+describe("[T-716] AI 改写本段", () => {
+  it("点击按钮自动携带稿件/版本/段落/原文锚点，不让模型或用户补技术 ID", async () => {
+    renderToggleWithChat(SECTIONS, {
+      artifactId: "artifact-1",
+      currentVersionId: "version-6",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "AI 改写第 2 段" }));
+
+    await waitFor(() => {
+      const raw = screen.getByTestId("chat-request-probe").textContent || "";
+      expect(raw).not.toBe("");
+      const request = JSON.parse(raw) as {
+        functionKey: string;
+        selection: Record<string, string | number>;
+      };
+      expect(request.functionKey).toBe("script.patch");
+      expect(request.selection).toMatchObject({
+        kind: "script_section",
+        id: "s-2",
+        artifactId: "artifact-1",
+        versionId: "version-6",
+        sectionIndex: 1,
+        excerpt: "先把环境锁死,再逐模块复现。",
+      });
+    });
+    expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+  });
+
+  it("[T-732] 整稿换版后段落与版本作为同一快照重绑，再点击只发送新版本正文", async () => {
+    const currentSections = SECTIONS.map((section, index) => ({
+      ...section,
+      id: `current-${index + 1}`,
+      body: `当前 v10 第 ${index + 1} 段正文`,
+    }));
+    const rendered = renderToggleWithChat(SECTIONS, {
+      artifactId: "artifact-1",
+      currentVersionId: "version-9",
+    });
+
+    rendered.rerender(
+      <DraftChatRequestProvider>
+        <ScriptStructureToggle
+          sections={currentSections}
+          artifactId="artifact-1"
+          currentVersionId="version-10"
+        >
+          <div data-testid="editor-stub">编辑器</div>
+        </ScriptStructureToggle>
+        <ChatRequestProbe />
+      </DraftChatRequestProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("第 2 段正文")).toHaveValue(
+        "当前 v10 第 2 段正文",
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "AI 改写第 2 段" }));
+
+    await waitFor(() => {
+      const request = JSON.parse(
+        screen.getByTestId("chat-request-probe").textContent || "{}",
+      ) as { selection?: Record<string, string | number> };
+      expect(request.selection).toMatchObject({
+        id: "current-2",
+        artifactId: "artifact-1",
+        versionId: "version-10",
+        sectionIndex: 1,
+        excerpt: "当前 v10 第 2 段正文",
+      });
+    });
+  });
+
+  it("本地段落有未保存修改时先自动保存，再用新版本和新原文打开局部改写", async () => {
+    renderToggleWithChat(SECTIONS, {
+      artifactId: "artifact-1",
+      currentVersionId: "version-6",
+    });
+    fireEvent.change(screen.getByLabelText("第 2 段正文"), {
+      target: { value: "这是刚刚在稿面改过、还没手动保存的新原文。" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "AI 改写第 2 段" }));
+
+    await waitFor(() => expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1));
+    const saved = mockCreateArtifactVersion.mock.calls[0]![0] as {
+      body: { changeSummary: string };
+    };
+    expect(saved.body.changeSummary).toBe("AI 局部改稿前自动保存");
+
+    await waitFor(() => {
+      const request = JSON.parse(
+        screen.getByTestId("chat-request-probe").textContent || "{}",
+      ) as { selection?: Record<string, string | number> };
+      expect(request.selection).toMatchObject({
+        id: "s-2",
+        artifactId: "artifact-1",
+        versionId: "av-new",
+        sectionIndex: 1,
+        excerpt: "这是刚刚在稿面改过、还没手动保存的新原文。",
+      });
+    });
+  });
+});
+
 // ── [T-387b] 凝固分镜 visual:渲染 + 保存透传 ─────────────────────────────────
 
 describe("ScriptStructureEditor(凝固分镜 visual)", () => {
@@ -308,13 +469,17 @@ describe("ScriptStructureEditor(凝固分镜 visual)", () => {
   ];
 
   it("有 visual 的段渲画面描述/点名素材/缺素材;无 visual 的段不渲(旧稿零回归)", () => {
-    renderToggle(WITH_VISUAL, { artifactId: "art-1" });
+    renderToggle(WITH_VISUAL, {
+      artifactId: "art-1",
+      assetLabels: { "asset-9": "选题卡操作录屏.mov" },
+    });
     const blocks = document.querySelectorAll(
       '[data-slot="script-section-visual"]',
     );
     expect(blocks).toHaveLength(1); // 只有第一段有
     expect(blocks[0]!.textContent).toContain("产品操作录屏特写");
-    expect(blocks[0]!.textContent).toContain("asset-9");
+    expect(blocks[0]!.textContent).toContain("选题卡操作录屏.mov");
+    expect(blocks[0]!.textContent).not.toContain("asset-9");
     expect(blocks[0]!.textContent).toContain("对比图表");
   });
 

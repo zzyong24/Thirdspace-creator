@@ -16,6 +16,8 @@ const getConversation = vi.fn();
 const listMessages = vi.fn();
 const runChatStream = vi.fn();
 const dispatchDouyinShare = vi.fn();
+const readChatAttachment = vi.fn();
+const resolveCurrentScriptSelection = vi.fn();
 const resolveEffectiveSkillSnapshot = vi.fn();
 const runWithEffectiveSkillSnapshot = vi.hoisted(() =>
   vi.fn(
@@ -54,6 +56,8 @@ vi.mock("@/server/persistence-client", () => ({
     resolveEffectiveSkillSnapshot,
     resolveModelSpec: vi.fn(),
     dispatchDouyinShare,
+    readChatAttachment,
+    resolveCurrentScriptSelection,
     context: {
       positioning: {},
       learnings: {},
@@ -92,10 +96,55 @@ function chatReq(body: unknown, cookie?: string): Request {
   });
 }
 
+function chatReqWithAccountSources(
+  body: unknown,
+  headerAccountId: string,
+  cookieAccountId: string,
+): Request {
+  return new Request("http://localhost/api/chat", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-account-id": headerAccountId,
+      cookie: `creatoros_current_account=${encodeURIComponent(cookieAccountId)}`,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 // A minimal UIMessage (user) the way useChat posts it.
 function userMessage(text: string) {
   return { id: "u-1", role: "user", parts: [{ type: "text", text }] };
 }
+
+function minimalTextPdf(text: string): Uint8Array {
+  const escaped = text.replace(/([\\()])/g, "\\$1");
+  const stream = `BT\n/F1 18 Tf\n72 720 Td\n(${escaped}) Tj\nET`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+    `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets[index + 1] = Buffer.byteLength(pdf);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = Buffer.byteLength(pdf);
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  pdf += offsets
+    .slice(1)
+    .map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`)
+    .join("");
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return new Uint8Array(Buffer.from(pdf));
+}
+
+const MINIMAL_DOCX_BASE64 =
+  "UEsDBAoAAAAIAAwKB115bjPX6AAAAK0BAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbH1QyU7DMBD9FWuuKHHggBCK0wPLETiUDxjZk8SqN3nc0v49Tlt6QIXjzFv1+tXeO7GjzDYGBbdtB4KCjsaGScHn+rV5AMEFg0EXAyk4EMNq6NeHRCyqNrCCuZT0KCXrmTxyGxOFiowxeyz1zJNMqDc4kbzrunupYygUSlMWDxj6Zxpx64p42df3qUcmxyCeTsQlSwGm5KzGUnG5C+ZXSnNOaKvyyOHZJr6pBJBXExbk74Cz7r0Ok60h8YG5vKGvLPkVs5Em6q2vyvZ/mys94zhaTRf94pZy1MRcF/euvSAebfjpL49zD99QSwMECgAAAAAADAoHXQAAAAAAAAAAAAAAAAYAAABfcmVscy9QSwMECgAAAAgADAoHXZv9N+qtAAAAKQEAAAsAAABfcmVscy8ucmVsc43POw7CMAwG4KtE3mlaBoRQ0y4IqSsqB7ASN61oHkrCo7cnAwNFDIy2f3+W6/ZpZnanECdnBVRFCYysdGqyWsClP232wGJCq3B2lgQsFKFt6jPNmPJKHCcfWTZsFDCm5A+cRzmSwVg4TzZPBhcMplwGzT3KK2ri27Lc8fBpwNpknRIQOlUB6xdP/9huGCZJRydvhmz6ceIrkWUMmpKAhwuKq3e7yCzwpuarF5sXUEsDBAoAAAAAAAwKB10AAAAAAAAAAAAAAAAFAAAAd29yZC9QSwMECgAAAAgADAoHXXQLjfvZAAAA/wAAABEAAAB3b3JkL2RvY3VtZW50LnhtbEWOsU7DMBCGXyXyTh06IBQl6cbMAGI2tmkjxXeRzxC6IQRsqExIwErXdmOJ+jTEUvMW2GHo8p3uP/2fLp/dmzq505YqhIIdT1KWaJCoKpgX7PLi7OiUJeQEKFEj6IItNbFZmbeZQnlrNLgkCICytmAL55qMc5ILbQRNsNEQbjdojXBhtXPeolWNRamJgt/UfJqmJ9yIClhUXqNaxtlE2AhXXoXK8PHUdz9+te279X7b+dW7/9r5l+fh+21Yb/zms9+9/j485jwWIu3IUUNaunPLx+Dfzw+/l39QSwECFAAKAAAACAAMCgddeW4z1+gAAACtAQAAEwAAAAAAAAAAAAAAAAAAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAAoAAAAAAAwKB10AAAAAAAAAAAAAAAAGAAAAAAAAAAAAEAAAABkBAABfcmVscy9QSwECFAAKAAAACAAMCgddm/036q0AAAApAQAACwAAAAAAAAAAAAAAAAA9AQAAX3JlbHMvLnJlbHNQSwECFAAKAAAAAAAMCgddAAAAAAAAAAAAAAAABQAAAAAAAAAAABAAAAATAgAAd29yZC9QSwECFAAKAAAACAAMCgdddAuN+9kAAAD/AAAAEQAAAAAAAAAAAAAAAAA2AgAAd29yZC9kb2N1bWVudC54bWxQSwUGAAAAAAUABQAgAQAAPgMAAAAA";
 
 beforeEach(() => {
   resolveContextFromToken.mockReset();
@@ -122,6 +171,29 @@ beforeEach(() => {
   runWithEffectiveSkillSnapshot.mockClear();
   runChatStream.mockReset();
   dispatchDouyinShare.mockReset();
+  readChatAttachment.mockReset();
+  readChatAttachment.mockResolvedValue({
+    assetId: "asset-img",
+    name: "参考图.png",
+    assetType: "image",
+    mimeType: "image/png",
+    fileSize: 3,
+    extractedText: null,
+    bytes: new Uint8Array([1, 2, 3]),
+  });
+  resolveCurrentScriptSelection.mockReset();
+  resolveCurrentScriptSelection.mockImplementation(
+    async (
+      _ctx: unknown,
+      input: { artifactId: string; sectionId: string; excerpt: string },
+    ) => ({
+      artifactId: input.artifactId,
+      versionId: "version-current",
+      sectionId: input.sectionId,
+      originalText: input.excerpt,
+      matchStrategy: "id",
+    }),
+  );
   capturedStreamInit = null;
   // Default: a stream result whose toUIMessageStreamResponse captures its init(headers +
   // [T-128] onFinish 持久化回调)并返回普通 Response。
@@ -235,9 +307,264 @@ describe("POST /api/chat — 鉴权门", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
+
+  it("[T-691] header/Cookie 当前账号不一致 → 409 且不进入 Context", async () => {
+    const res = await POST(
+      chatReqWithAccountSources(
+        { messages: [userMessage("读一下当前稿件")] },
+        "acct-header",
+        "acct-cookie",
+      ),
+    );
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "ACCOUNT_CONTEXT_MISMATCH",
+    });
+    expect(runChatStream).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/chat — 装配 + 持久化", () => {
+  it("[T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch", async () => {
+    resolveCurrentScriptSelection.mockResolvedValueOnce({
+      artifactId: "artifact-script",
+      versionId: "version-8",
+      sectionId: "section-2",
+      originalText:
+        "内容雷达改写对标选题；自动化选题由定时任务结合账号数据原创生成。",
+      matchStrategy: "text",
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("把两类选题的差别讲清楚")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            functionKey: "script.patch",
+            selection: {
+              kind: "script_section",
+              ids: ["section-2"],
+              label: "第 2 段",
+              artifactId: "artifact-script",
+              versionId: "version-3",
+              sectionIndex: 1,
+              excerpt: "旧版段落正文",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(resolveCurrentScriptSelection).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      {
+        artifactId: "artifact-script",
+        versionId: "version-3",
+        sectionId: "section-2",
+        sectionIndex: 1,
+        excerpt: "旧版段落正文",
+      },
+    );
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext).toMatchObject({
+      functionKey: "script.patch",
+      selection: {
+        kind: "script_section",
+        ids: ["section-2"],
+        artifactId: "artifact-script",
+        versionId: "version-8",
+        excerpt:
+          "内容雷达改写对标选题；自动化选题由定时任务结合账号数据原创生成。",
+      },
+    });
+    expect(input.chatContext.diagnosticRef).toMatch(/^chat-[a-f0-9]{10}$/);
+
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const exposed = capturedStreamInit?.onError?.(
+      new Error("opaque-secret https://opaque.example/v1 stream interrupted"),
+    );
+    expect(exposed).toBe(
+      `本次局部改写中断，稿面未被修改，目标段落已保留。参考号：${input.chatContext.diagnosticRef}。请直接重试。`,
+    );
+    const logSnapshot = JSON.stringify(consoleSpy.mock.calls);
+    expect(logSnapshot).toContain("provider_stream_error");
+    expect(logSnapshot).toContain(input.chatContext.diagnosticRef);
+    expect(logSnapshot).toContain("script.patch");
+    expect(logSnapshot).toContain("class=Error reason=unknown");
+    expect(logSnapshot).not.toMatch(
+      /opaque-secret|opaque\.example|stream interrupted/,
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it("[T-716] 当前稿面已经没有目标段落时明确要求重新点选，不拿旧快照继续改", async () => {
+    resolveCurrentScriptSelection.mockResolvedValueOnce(null);
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("改写这一段")],
+          chatContext: {
+            surface: "project",
+            functionKey: "script.patch",
+            selection: {
+              kind: "script_section",
+              ids: ["section-stale"],
+              label: "旧段落",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              excerpt: "已经被删除的旧正文",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "SCRIPT_SELECTION_STALE",
+    });
+    expect(runChatStream).not.toHaveBeenCalled();
+  });
+
+  it("[T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求", async () => {
+    resolveCurrentScriptSelection.mockResolvedValueOnce({
+      artifactId: "artifact-script",
+      versionId: "version-current",
+      sectionId: "section-5",
+      originalText: "当前第 5 段正文",
+      matchStrategy: "id",
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("请根据现在的要求重新生成一份完整口播稿。")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            selection: {
+              kind: "script_section",
+              ids: ["section-5"],
+              label: "第 5 段",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              sectionIndex: 4,
+              excerpt: "旧第 5 段正文",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext.functionKey).toBeUndefined();
+    expect(input.chatContext.selection).toMatchObject({
+      kind: "script_section",
+      ids: ["section-5"],
+      versionId: "version-current",
+      excerpt: "当前第 5 段正文",
+    });
+  });
+
+  it("[T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409", async () => {
+    resolveCurrentScriptSelection.mockResolvedValueOnce(null);
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("不要再局部修改，请生成一份完整稿子。")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            selection: {
+              kind: "script_section",
+              ids: ["section-stale"],
+              label: "旧段落",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              sectionIndex: 4,
+              excerpt: "已经不存在的旧正文",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext.functionKey).toBeUndefined();
+    expect(input.chatContext.selection).toBeUndefined();
+  });
+
+  it("[T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("请生成完整稿。")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            functionKey: "script.draft",
+            selection: {
+              kind: "script_section",
+              ids: ["section-5"],
+              label: "第 5 段",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              sectionIndex: 4,
+              excerpt: "旧段落",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(resolveCurrentScriptSelection).not.toHaveBeenCalled();
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext.functionKey).toBe("script.draft");
+    expect(input.chatContext.selection).toBeUndefined();
+  });
+
+  it("[T-716] 显式局部改稿命令没有段落锚点时失败关闭，不降级成普通对话猜工具", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [
+            userMessage(
+              "请只改写我选中的这一段，保持其他段落不变。具体讲清两种选题来源。",
+            ),
+          ],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            functionKey: "script.patch",
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "SCRIPT_SELECTION_REQUIRED",
+      error: expect.stringContaining("不会因此改写整稿"),
+    });
+    expect(runChatStream).not.toHaveBeenCalled();
+  });
+
   it("有 cookie → 持久化会话+用户消息,委派 runChatStream,透传流式响应 + 会话头", async () => {
     const res = await POST(
       chatReq(
@@ -290,6 +617,13 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       /opaque-model|opaque-secret|opaque\.example|response-body|raw-error/,
     );
     consoleSpy.mockRestore();
+
+    const creditExhausted = capturedStreamInit?.onError?.(
+      Object.assign(new Error("AI 额度不足，请充值后再试。"), {
+        code: "AI_CREDIT_EXHAUSTED",
+      }),
+    );
+    expect(creditExhausted).toBe("AI 额度不足，请充值后再试。");
   });
 
   it("[T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文", async () => {
@@ -701,5 +1035,200 @@ describe("[T-239f] POST /api/chat — user 消息去重", () => {
     await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
     expect(listMessages).not.toHaveBeenCalled();
     expect(createMessage).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("[T-716] POST /api/chat — 附件上下文", () => {
+  it("图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("看看这张图")],
+          attachmentIds: ["asset-img"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(readChatAttachment).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      "asset-img",
+    );
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-1", {
+      content: "看看这张图",
+      attachments: ["asset-img"],
+    });
+    const [, input] = runChatStream.mock.calls[0];
+    const last = input.messages.at(-1);
+    expect(last.parts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "file",
+          mediaType: "image/png",
+          filename: "参考图.png",
+          url: "data:image/png;base64,AQID",
+        }),
+      ]),
+    );
+  });
+
+  it("文档抽取内容作为 user_data 注入，不把正文写进 attachments", async () => {
+    readChatAttachment.mockResolvedValueOnce({
+      assetId: "asset-doc",
+      name: "brief.md",
+      assetType: "document",
+      mimeType: "text/markdown",
+      fileSize: 12,
+      extractedText: "目标用户是国内餐饮老板。",
+      bytes: new TextEncoder().encode("目标用户是国内餐饮老板。"),
+    });
+    await POST(
+      chatReq(
+        {
+          messages: [userMessage("结合资料给建议")],
+          attachmentIds: ["asset-doc"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    const [, input] = runChatStream.mock.calls[0];
+    const injected = input.messages.at(-1).parts.at(-1);
+    expect(injected.type).toBe("text");
+    expect(injected.text).toContain("<user_data>");
+    expect(injected.text).toContain("目标用户是国内餐饮老板");
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-1", {
+      content: "结合资料给建议",
+      attachments: ["asset-doc"],
+    });
+  });
+
+  it("Markdown 无预抽取结果时仍直接读取原始字节", async () => {
+    readChatAttachment.mockResolvedValueOnce({
+      assetId: "asset-md-raw",
+      name: "访谈记录.md",
+      assetType: "document",
+      mimeType: "text/markdown",
+      fileSize: 30,
+      extractedText: null,
+      bytes: new TextEncoder().encode("# 前采\n用户希望服务国内餐饮老板。"),
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("文件内容是什么？")],
+          attachmentIds: ["asset-md-raw"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.messages.at(-1).parts.at(-1).text).toContain(
+      "用户希望服务国内餐饮老板",
+    );
+  });
+
+  it("PDF 无预抽取结果时可直接抽取文本", async () => {
+    const bytes = minimalTextPdf("PDF attachment works");
+    readChatAttachment.mockResolvedValueOnce({
+      assetId: "asset-pdf-raw",
+      name: "research.pdf",
+      assetType: "document",
+      mimeType: "application/pdf",
+      fileSize: bytes.byteLength,
+      extractedText: null,
+      bytes,
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("读取 PDF")],
+          attachmentIds: ["asset-pdf-raw"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.messages.at(-1).parts.at(-1).text).toContain(
+      "PDF attachment works",
+    );
+  });
+
+  it("DOCX 无预抽取结果时可直接抽取文本", async () => {
+    const bytes = new Uint8Array(Buffer.from(MINIMAL_DOCX_BASE64, "base64"));
+    readChatAttachment.mockResolvedValueOnce({
+      assetId: "asset-docx-raw",
+      name: "定位说明.docx",
+      assetType: "document",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      fileSize: bytes.byteLength,
+      extractedText: null,
+      bytes,
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("读取 Word")],
+          attachmentIds: ["asset-docx-raw"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.messages.at(-1).parts.at(-1).text).toContain(
+      "Word附件可以读取国内餐饮定位",
+    );
+  });
+
+  it("损坏 PDF 不泄漏解析器内部错误，返回明确的文件提示", async () => {
+    readChatAttachment.mockResolvedValueOnce({
+      assetId: "asset-pdf-broken",
+      name: "损坏文件.pdf",
+      assetType: "document",
+      mimeType: "application/pdf",
+      fileSize: 12,
+      extractedText: null,
+      bytes: new TextEncoder().encode("not-a-pdf"),
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("读取文件")],
+          attachmentIds: ["asset-pdf-broken"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: "附件内容解析失败，请确认文件未损坏后重试。",
+    });
+    expect(runChatStream).not.toHaveBeenCalled();
+  });
+
+  it("拒绝超过五个附件，且不会启动模型", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("读取")],
+          attachmentIds: ["a1", "a2", "a3", "a4", "a5", "a6"],
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(res.status).toBe(400);
+    expect(runChatStream).not.toHaveBeenCalled();
   });
 });

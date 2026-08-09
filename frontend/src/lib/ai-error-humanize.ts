@@ -18,6 +18,7 @@ import type { ArtifactType } from "@/types/domain";
 /** 稳定错误分类：渲染层可依赖 code 决定动作，不必反向解析人话文案。 */
 export type AiErrorCode =
   | "model_not_found"
+  | "image_input_unsupported"
   | "provider_invalid"
   | "provider_auth"
   | "content_safety_input"
@@ -33,6 +34,8 @@ export interface HumanAiError {
   message: string;
   /** true = 建议用户换模型(渲染层附「去设置」链接;不做自动切换 —— 确认门原则)。 */
   suggestSwitchModel: boolean;
+  /** true = 受管平台额度不足，渲染层应打开安全的 Growth 用户额度入口。 */
+  suggestOpenCredits?: boolean;
 }
 
 interface AiErrorRule {
@@ -46,6 +49,28 @@ interface AiErrorRule {
  * MiniMax 平台码参考:1026=输入敏感,1027=输出敏感,1008=余额不足,1002/1039=限流。
  */
 export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
+  {
+    // 受管平台额度状态必须先于通用模型方余额规则，不能误导用户去改模型配置。
+    pattern:
+      /\bAI_CREDIT_(?:EXHAUSTED|INSUFFICIENT)\b|ManagedAiCreditExhaustedError|AI\s*额度不足|平台\s*(?:AI\s*)?(?:额度|积分)不足/i,
+    human: {
+      code: "quota_exhausted",
+      message: "AI 额度不足，请充值后再试。",
+      suggestSwitchModel: false,
+      suggestOpenCredits: true,
+    },
+  },
+  {
+    // 不同代理/SDK 对视觉能力不足的错误措辞并不统一；只有同时出现 image/vision
+    // 与 unsupported/not support 才命中，避免把普通图片内容错误误报成模型能力问题。
+    pattern:
+      /(?:image|vision)[\s\S]{0,100}(?:not[\s_-]+support(?:ed)?|unsupported|not[\s_-]+allowed)|(?:not[\s_-]+support(?:ed)?|unsupported)[\s\S]{0,100}(?:image|vision)/i,
+    human: {
+      code: "image_input_unsupported",
+      message: "当前模型不支持识别图片，请切换支持图片的模型，或改用文字描述。",
+      suggestSwitchModel: true,
+    },
+  },
   {
     // DeepSeek/OpenAI 等模型名无效：必须先于通用 404/not-found 分类。
     pattern:

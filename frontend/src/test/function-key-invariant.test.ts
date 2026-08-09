@@ -6,10 +6,7 @@ import { ALL_CHAT_TOOL_NAMES } from "@creatoros/backend/modules/ai-runtime";
 
 // [T-265 附:审计新发现②] functionKey ↔ ALL_CHAT_TOOL_NAMES 构建期不变量。
 //
-// 病例:稿面「立论点」深链带 functionKey="planning.thesis",但它此前不在 ALL_CHAT_TOOL_NAMES
-// → chat-runner 的 forcedTool 恒 undefined、functionKey 静默丢弃(chat-runner.ts:550/1340)→
-// 点了 = 纯文本无工具,编导抓最近的 topic.enrich 冒充论点树。同类:「搜素材」曾带
-// research.gather_material(也不在白名单 → 空点)。
+// 病例:前端深链带了不在 ALL_CHAT_TOOL_NAMES 的 functionKey,会被 chat-runner 静默丢弃。
 //
 // 根治:凡前端源码里作为 openChat/深链 functionKey 用的字符串字面量,**必须 ∈ ALL_CHAT_TOOL_NAMES**
 // (否则 forcedTool 命不中 = 死链)。本测扫全部 src/ 生产源码(排除 .test.),抽出所有
@@ -59,8 +56,8 @@ describe("[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发)
 
   it("扫到至少一个 functionKey 字面量(否则正则失效 = 假绿)", () => {
     expect(occurrences.length).toBeGreaterThan(0);
-    // 确保覆盖到本任务复活的深链。
-    expect(occurrences.some((o) => o.key === "planning.thesis")).toBe(true);
+    // T-726:退役能力不得残留为前端深链。
+    expect(occurrences.some((o) => o.key === "planning.thesis")).toBe(false);
   });
 
   it("每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链)", () => {

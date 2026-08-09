@@ -94,6 +94,8 @@ export function AnalyticsReviewPage({
     vm.metrics.length === 0 &&
     vm.viewsTrend.length === 0 &&
     vm.conversionFunnel.length === 0;
+  const reviewEvidenceReady =
+    !metricsEmpty || (vm.comments?.length ?? 0) > 0;
   const state = resolvePageState(vm, metricsEmpty);
   // [T-329] 拆掉 isEmpty 吞噬门:指标空 ≠ 整页空。此前空指标把整个 interactive region
   // (含复盘编辑面板/复盘记录 —— 与指标采集无依赖的真 op 面)整体吞掉,用户在没跑
@@ -113,7 +115,9 @@ export function AnalyticsReviewPage({
         <ErrorState error={vm.error} />
       ) : (
         <>
-          <ReviewAnalyzeIsland projectId={vm.projectId} />
+          {reviewEvidenceReady ? (
+            <ReviewAnalyzeIsland projectId={vm.projectId} />
+          ) : null}
           {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。空指标态也照渲 ——
               已锁定盲预测、数据还没回流,正是「等待回流」该被看见的时刻。 */}
           {predictionComparison !== undefined ? (
@@ -127,6 +131,7 @@ export function AnalyticsReviewPage({
             viewModel={vm}
             reviewsWiring={reviewsWiring}
             metricsEmpty={state === "empty"}
+            reviewEvidenceReady={reviewEvidenceReady}
           />
         </>
       )}

@@ -21,7 +21,16 @@ const DECISIONS: VideoDecisions = {
     { sceneIdx: 0, kind: "stat", content: "效率提升 47%", at: 0 },
     { sceneIdx: 1, kind: "quote", content: "给模型一个角色", at: 3.5 },
   ],
-  broll: [{ sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 3 }],
+  broll: [
+    {
+      sceneIdx: 1,
+      assetId: "asset-1",
+      at: 3.5,
+      durationSec: 3,
+      presentation: "full_frame",
+      visualRole: "screen_recording",
+    },
+  ],
   subtitles: [
     { index: 1, startSec: 0, endSec: 3.5, zh: "大家好,效率提升 47%", en: "Hi, +47%" },
     { index: 2, startSec: 3.5, endSec: 12, zh: "给模型一个角色", en: "" },
@@ -36,11 +45,74 @@ const OPTS = {
   title: "提示词三技巧",
   talkingHeadAssetId: "asset-video-raw",
   inventory: [
-    { assetId: "asset-1", label: "提示词录屏", kind: "video", description: "" },
+    {
+      assetId: "asset-1",
+      label: "提示词录屏",
+      kind: "video",
+      description: "",
+      width: 1170,
+      height: 2532,
+      durationMs: 8_400,
+    },
   ],
 };
 
 describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () => {
+  it("界面视频即使 AI 误给 large_stage 也提升为 full_frame，静态图仍保留安全舞台", () => {
+    const props = assembleVideoRenderProps(
+      {
+        ...DECISIONS,
+        broll: [
+          {
+            sceneIdx: 1,
+            assetId: "screen-recording",
+            at: 4,
+            durationSec: 4,
+            presentation: "large_stage",
+            visualRole: "screen_recording",
+          },
+          {
+            sceneIdx: 1,
+            assetId: "portrait-image",
+            at: 8,
+            durationSec: 3,
+            presentation: "large_stage",
+            visualRole: "still_image",
+          },
+        ],
+      },
+      {
+        ...OPTS,
+        inventory: [
+          {
+            assetId: "screen-recording",
+            label: "项目操作录屏",
+            kind: "video",
+            description: "展示连续操作",
+            width: 1920,
+            height: 1080,
+            durationMs: 12_000,
+          },
+          {
+            assetId: "portrait-image",
+            label: "竖版配图",
+            kind: "image",
+            description: "静态补充画面",
+            width: 1080,
+            height: 1920,
+          },
+        ],
+      },
+    );
+
+    expect(props.broll[0]!.presentation).toBe("full_frame");
+    expect(props.broll[0]!.speakerMode).toBe("pip_bottom_left");
+    expect(props.broll[0]!.visualRole).toBe("screen_recording");
+    expect(props.broll[1]!.presentation).toBe("large_stage");
+    expect(props.broll[1]!.speakerMode).toBeUndefined();
+    expect(props.broll[1]!.visualRole).toBe("still_image");
+  });
+
   it("cards 按 sceneIdx 归场并按 at 排序;越界项丢弃;时长取 max(场景,字幕)", () => {
     const props = assembleVideoRenderProps(
       {
@@ -91,7 +163,19 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     });
     // B-roll 拍平到顶层:file=assetId(mountAs 约定),label=清单展示名。
     expect(props.broll).toEqual([
-      { at: 3.5, file: "asset-1", durationSec: 3, label: "提示词录屏", big: false },
+      {
+        at: 3.5,
+        file: "asset-1",
+        durationSec: 3,
+        label: "提示词录屏",
+        presentation: "full_frame",
+        visualRole: "screen_recording",
+        speakerMode: "pip_bottom_left",
+        motion: "static",
+        sourceWidth: 1170,
+        sourceHeight: 2532,
+        big: false,
+      },
     ]);
     expect(props.delivery).toEqual({ width: 1920, height: 1080, fps: 30 });
   });

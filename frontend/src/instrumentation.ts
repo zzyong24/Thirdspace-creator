@@ -10,7 +10,8 @@
  *
  * `register()` 在 Next server 启动时跑**一次**,早于任何路由用 playwright(douyin 采集 / 视频渲染)
  * → PLAYWRIGHT_BROWSERS_PATH 在 playwright registry 首次创建前就绪。
- *   - 仅 nodejs runtime(edge 无 playwright);已显式设过 → 不覆盖(尊重外部配置)。
+ *   - 仅 nodejs runtime(edge 无 playwright)。正式桌面态以 Rust 壳注入的绝对目录为唯一权威，
+ *     必须覆盖宿主机残留的 PLAYWRIGHT_BROWSERS_PATH，避免指向不存在的开发缓存。
  *   - dev / 未打包(无 browsers 目录)→ 不设 → 用默认缓存路径(开发机装过即可)。
  *
  * [T-451] **verdict-token 硬门 — sidecar 启动最早期**:
@@ -43,19 +44,21 @@ export async function register(): Promise<void> {
       /* 装不上不阻塞启动(守护是兜底,主线在壳侧 killpg) */
     }
   }
-  if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
-    try {
-      // 正式桌面包只接受 Rust 壳注入的绝对资源目录。开发态未设置时继续使用
-      // Playwright 默认缓存；不要用 process.cwd() 回退，否则 Next output tracing 会把
-      // 整个工作区误判为运行时资源，连源码、测试和 src-tauri 一起带入发布闭包。
-      const bundled = process.env.CREATOROS_BROWSERS_DIR?.trim();
-      if (bundled) {
-        process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
-        console.log("[instrumentation] bundled Chromium path configured");
-      }
-    } catch {
-      // 设不上就用默认路径,不阻塞启动。
+  try {
+    // [T-734] 正式桌面包只接受 Rust 壳注入的绝对资源目录。即使宿主机继承了一个旧的
+    // PLAYWRIGHT_BROWSERS_PATH，也不能让它把随包浏览器遮住；开发态才尊重显式外部配置。
+    // 不用 process.cwd() 回退，否则 Next tracing 会把整个工作区带入发布闭包。
+    const bundled = process.env.CREATOROS_BROWSERS_DIR?.trim();
+    if (
+      bundled &&
+      (process.env.CREATOROS_DESKTOP === "1" ||
+        !process.env.PLAYWRIGHT_BROWSERS_PATH)
+    ) {
+      process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
+      console.log("[instrumentation] bundled Chromium path configured");
     }
+  } catch {
+    // 壳层还会做运行时完整性校验；这里不阻塞 Next 启动，让页面能显示可行动错误。
   }
 
   // [T-535] 壳不能再把 Next 短暂 TCP listen 当成“业务已可用”。只有 verdict 校验、

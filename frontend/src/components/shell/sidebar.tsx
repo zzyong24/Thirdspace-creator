@@ -21,6 +21,7 @@
  */
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   PanelLeftClose,
@@ -38,6 +39,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { creatorIcons } from "@/lib/icons";
+import {
+  PACKAGE_BRAND_ICON_DATA_URL,
+  PACKAGE_BRAND_NAME,
+  resolveVisibleBrandName,
+} from "@/lib/package-brand";
 import { cn } from "@/lib/utils";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { SidebarStorageCard } from "./sidebar-storage-card";
@@ -58,11 +64,11 @@ const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
 // 「CreatorOS」。**品牌名回退官方名不涉密**(显示名而已),与渠道链接「null 绝不
 // 回退官方链接」的白标红线不同 —— 链接红线原样保留,别混淆。
 
-const OFFICIAL_BRAND_NAME = "CreatorOS";
-
 interface SidebarChannelRuntimeContextValue {
   readonly brandName: string | null;
   readonly bugFeedbackUrl: string | null | undefined;
+  readonly packageBrandName: string;
+  readonly packageBrandIconDataUrl: string | null;
 }
 
 const SidebarChannelRuntimeContext =
@@ -70,21 +76,32 @@ const SidebarChannelRuntimeContext =
     brandName: null,
     // undefined 只用于没有 Provider 的组件测试兼容；正式布局始终传入已验签投影。
     bugFeedbackUrl: undefined,
+    packageBrandName: PACKAGE_BRAND_NAME,
+    packageBrandIconDataUrl: PACKAGE_BRAND_ICON_DATA_URL,
   });
 
 /** [T-530] 品牌名注入口(由 (creator)/layout.tsx 服务端包裹;缺 Provider = 官方名)。 */
 export function SidebarBrandNameProvider({
   brandName,
   bugFeedbackUrl,
+  packageBrandName = PACKAGE_BRAND_NAME,
+  packageBrandIconDataUrl = PACKAGE_BRAND_ICON_DATA_URL,
   children,
 }: {
   readonly brandName: string | null;
   readonly bugFeedbackUrl?: string | null;
+  readonly packageBrandName?: string;
+  readonly packageBrandIconDataUrl?: string | null;
   readonly children: React.ReactNode;
 }) {
   return (
     <SidebarChannelRuntimeContext.Provider
-      value={{ brandName, bugFeedbackUrl }}
+      value={{
+        brandName,
+        bugFeedbackUrl,
+        packageBrandName,
+        packageBrandIconDataUrl,
+      }}
     >
       {children}
     </SidebarChannelRuntimeContext.Provider>
@@ -92,13 +109,6 @@ export function SidebarBrandNameProvider({
 }
 
 /** 有效(非空非纯空白)才用品牌名,否则官方名。读端已按契约清洗,这里薄防线兜底。 */
-function resolveBrandDisplayName(brandName: string | null): string {
-  if (typeof brandName === "string" && brandName.trim().length > 0) {
-    return brandName;
-  }
-  return OFFICIAL_BRAND_NAME;
-}
-
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
@@ -299,10 +309,13 @@ function SidebarHeader({
   // is reachable through the primary nav. Keeping the brand out of the
   // focus order ensures the first Tab lands inside the TopHeader.
   //
-  // [T-530] 品牌字样:渠道配置了 brandName → 显示品牌名;否则官方名「CreatorOS」。
-  // 只换这一处左上角文字;activate 页/设置页/窗口标题一律不动。
-  const { brandName } = React.useContext(SidebarChannelRuntimeContext);
-  const brandDisplayName = resolveBrandDisplayName(brandName);
+  // [T-718] Growth 已验签名称优先；未激活/暂不可用时使用构建期包品牌。
+  const { brandName, packageBrandName, packageBrandIconDataUrl } =
+    React.useContext(SidebarChannelRuntimeContext);
+  const brandDisplayName = resolveVisibleBrandName(
+    brandName,
+    packageBrandName,
+  );
   return (
     <div
       data-slot="sidebar-header"
@@ -322,9 +335,20 @@ function SidebarHeader({
           collapsed ? "" : "gap-2 px-2 py-1",
         )}
       >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-primary-foreground">
-          <Sparkles className="size-4" />
-        </span>
+        {packageBrandIconDataUrl ? (
+          <Image
+            src={packageBrandIconDataUrl}
+            alt=""
+            width={28}
+            height={28}
+            unoptimized
+            className="size-7 shrink-0 rounded-md object-cover"
+          />
+        ) : (
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-primary-foreground">
+            <Sparkles className="size-4" />
+          </span>
+        )}
         {!collapsed ? <span className="truncate">{brandDisplayName}</span> : null}
       </div>
       <SidebarCollapseToggle collapsed={collapsed} onToggle={onToggle} />

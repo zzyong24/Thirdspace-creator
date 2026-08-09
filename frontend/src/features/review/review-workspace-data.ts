@@ -145,6 +145,9 @@ async function readProjectCandidateLearnings(
     });
     const rows = (Array.isArray(listed) ? listed : []) as CandidateLearningDto[];
     return rows
+      // edit_delta 只表示当前稿件被人工编辑过，不是发布后指标/评论得出的复盘结论；
+      // 它可留在全局经验区，但不得冒充“本期复盘经验”。
+      .filter((row) => row.learningType !== "edit_delta")
       .map(toLearningVm)
       .sort((a, b) =>
         a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0,

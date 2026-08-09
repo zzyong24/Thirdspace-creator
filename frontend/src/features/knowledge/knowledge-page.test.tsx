@@ -129,13 +129,17 @@ describe("KnowledgePage", () => {
     expect(search).not.toBeNull();
   });
 
-  it("[T-118b gate-F4] 页头挂「记一条经验」入口(经验 Tab 退役后的唯一记经验入口)", async () => {
+  it("[T-741] 「记一条经验」只在倾倒场录入操作行出现，不再悬在页头", async () => {
     const { container } = await renderKnowledge();
     const captureLink = container.querySelector(
-      '[data-slot="knowledge-header"] [data-slot="experience-capture-link"]',
+      '[data-slot="knowledge-dump-zone"] [data-slot="experience-capture-link"]',
     );
     expect(captureLink).not.toBeNull();
     expect(captureLink!.textContent).toContain("记一条经验");
+    expect(container.querySelector('[data-slot="knowledge-header"]')).toBeNull();
+    expect(
+      container.querySelectorAll('[data-slot="experience-capture-link"]'),
+    ).toHaveLength(1);
   });
 
   it("[T-546] 暂停展示文件工作区 UI，知识库其余能力保持可用", async () => {

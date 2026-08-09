@@ -125,7 +125,7 @@ describe("POST /api/v1/settings-transfer/models(导入)", () => {
 
   it("结构校验失败(ModelConfigImportError)→ 400 + 可读文案", async () => {
     importModelConfigs.mockRejectedValue(
-      new ModelConfigImportError("不是 CreatorOS 模型配置导出文件(kind 不匹配)"),
+      new ModelConfigImportError("不是受支持的模型配置导出文件(kind 不匹配)"),
     );
     const res = await POST(makeReq({ method: "POST", body: "{}" }));
     expect(res.status).toBe(400);

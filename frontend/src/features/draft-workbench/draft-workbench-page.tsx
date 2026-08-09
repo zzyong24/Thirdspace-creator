@@ -15,6 +15,7 @@ import * as React from "react";
 import { CoverThumb } from "@/components/resources/cover-thumb";
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
 import { ScriptStructureToggle } from "@/features/script/script-structure-view";
+import { ScriptVersionMenu } from "@/features/script/script-version-restore";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
@@ -40,7 +41,7 @@ import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview, thesis } = vm;
+  const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
   const radarDraftSeed = vm.radarDraftSeed ?? "";
   const seedHtml = radarDraftSeed
     .split(/\n+/)
@@ -116,24 +117,25 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             briefDetail={project.briefDetail}
           />
 
-          {/* [T-127] 创作流引导 CTA:选题 → 搜素材(联网)→ 立论点 → 写脚本。
+          {/* [T-726] 创作流引导 CTA:选题 → 准备素材 → 直接写稿。
               [T-146] 传 projectId:「＋上传素材」把资料上传进「当前项目」弹药库。 */}
           <CreationFlowCtas projectId={project.id} />
 
-          {/* [T-146] 弹药上移:内容弹药是写作的原料,置于论点/脚本之上 —— 用户先看到手里
-              有哪些素材/资料,再立论点、写脚本(此前埋在最底部,写完才发现有料没用上)。 */}
+          {/* [T-146/T-726] 弹药上移:用户先看到手里有哪些素材/资料，再直接写稿。 */}
           <AmmoDrawer ammo={ammo} projectId={project.id} />
+
+          <ThesisSkeletonPanel
+            thesis={thesis}
+            ammo={ammo.map((item) => ({
+              id: item.id,
+              title: item.title,
+              kind: item.kind,
+            }))}
+          />
 
           {/* [T-387b] 缺素材清单:采纳整稿的「分镜凝固 pass」把各段 visual.missing 汇总到这
               (弹药区下,离补料入口最近)。无缺项 → 不渲(零回归)。 */}
           <MissingMaterialsNote sections={script.sections} />
-
-          {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面 +
-              可编辑(加/删/重排/挂用料链素材 → 保存追加新版本),空态引导立论点。 */}
-          <ThesisSkeletonPanel
-            thesis={thesis}
-            ammo={ammo.map((a) => ({ id: a.id, title: a.title, kind: a.kind }))}
-          />
 
           {/* ── 脚本区(活跃) ── */}
           <section
@@ -143,7 +145,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           >
             {/* [T-054 组B] 区头 = 编辑器唯一的用户视角标题(编辑器卡内不再叠「主脚本/
                 实现描述」双头);副行合并版本提示,一句话说清「写-存-回滚」。 */}
-            <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
+            <div className="mb-1.5 flex flex-wrap items-center gap-2 px-0.5">
               <h2 className="text-[13.5px] font-semibold text-foreground">口播脚本</h2>
               <span className="text-xs text-text-subtle">
                 {/* [Bug-8 T-021] imported 项目没跑逐字稿 → 提示去跑(而非「直接开写」误导)。 */}
@@ -154,6 +156,16 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                     ? "系统会从抖音逐步补齐逐字稿；未配置云端 ASR 时会使用本地 Whisper，处理可能较慢。着急的话也可让右侧编导先起草"
                     : "写你的口播稿——直接开写,或在右侧让编导起草"}
               </span>
+              {scriptArtifactId && (script.versions?.length ?? 0) > 0 ? (
+                <span className="ml-auto">
+                  <ScriptVersionMenu
+                    key={script.currentVersionId ?? "no-current-version"}
+                    artifactId={scriptArtifactId}
+                    currentVersionId={script.currentVersionId ?? null}
+                    versions={script.versions ?? []}
+                  />
+                </span>
+              ) : null}
             </div>
             {/* [T-070→T-072] 编辑|结构 双视图:结构 = **可编辑**分段卡(段型徽章内联,
                 保存产新 ArtifactVersion);有分段时默认进结构编辑(用户目标形态)。 */}
@@ -161,6 +173,12 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               sections={script.sections}
               artifactId={scriptArtifactId}
               projectId={project.id}
+              currentVersionId={script.currentVersionId ?? null}
+              assetLabels={Object.fromEntries(
+                ammo
+                  .filter((item) => item.kind === "asset")
+                  .map((item) => [item.id, item.title]),
+              )}
             >
               {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
               <ScriptRichEditor
@@ -308,14 +326,14 @@ function PublishPackSection({
           )}
         </div>
       </div>
-      {/* [T-350b] 发布物料生成入口:解锁后、还没发布时展示(已发布不再重复生成物料)。
-          点击自动发话术进右栏常驻编导对话(functionKey=publish.package,单平台抖音),
-          候选卡采纳后回填发布包(标题/标签)。 */}
-      {unlocked && publishPack?.status !== "published" ? (
+      {/* [T-350b/T-738] 无发布物料时生成；已有持久化物料时原位查看。
+          发布中心只负责排期，不承担发布物料查看。 */}
+      {unlocked ? (
         <PublishPackageCta
           projectId={projectId}
           projectTitle={projectTitle}
           outputId={outputId}
+          publishPack={publishPack}
         />
       ) : null}
       {/* [T-086 软门] 发布前动作旁的合规软门提示(不阻断,一键跳审核门)。 */}

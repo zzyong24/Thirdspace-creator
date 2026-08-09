@@ -33,6 +33,8 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { handshakeHeaders } from "@/lib/handshake-client";
+import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
 import { isAccountRequiredError } from "@/lib/http-transport";
 import { Badge } from "@/components/ui/badge";
 import { notifyAccountsChanged } from "@/lib/account-events";
@@ -427,59 +429,115 @@ export function SettingsDialog({
               <SystemSettingsCard viewModel={viewModel} />
             </SettingsPanel>
             <SettingsPanel tabId="models" active={tab}>
-              <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
-                <div
-                  data-slot="model-authority-status"
-                  data-authority={modelAuthority?.authority ?? "local"}
-                  className={cn(
-                    "rounded-xl border px-4 py-3",
-                    modelAuthority?.authority === "channel"
-                      ? "border-brand/25 bg-brand/5"
-                      : modelAuthority?.outcome === "security_error"
-                        ? "border-destructive/25 bg-destructive/5"
-                        : "border-border bg-muted/35",
-                  )}
-                >
-                  <p className="text-sm font-semibold text-foreground">
-                    {modelAuthority?.action ??
-                      "本地模型正在使用 · 暂时无法取得渠道配置"}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {modelAuthority?.authority === "channel"
-                      ? "每类模型独立判断：渠道完整提供的项目只读使用渠道配置；未提供、残缺或客户端暂不支持的项目仍由你配置。"
-                      : modelAuthority?.outcome === "activation_scope_missing"
-                        ? "受管模型必须使用激活权益签名携带的渠道信息；应用不会猜测渠道，也不会要求你用手工配置替代。"
-                      : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
-                  </p>
-                  {modelAuthority?.outcome === "activation_scope_missing" ? (
-                    <ChannelConfigRetryButton />
-                  ) : null}
-                </div>
-                {modelAuthority?.services?.map((service) => (
+              {(() => {
+                const usesManagedCredits = modelAuthority?.services?.some(
+                  (service) =>
+                    service.credentialSource === "activation_managed",
+                );
+                const capabilityCard = (
+                  capability:
+                    | "default"
+                    | "transcribe.audio"
+                    | "image.generate"
+                    | "video.generate",
+                  title: string,
+                  highlightKey:
+                    | "text-model"
+                    | "asr-model"
+                    | "image-model"
+                    | "video-model",
+                  fallback: React.ReactNode,
+                ) =>
+                  modelAuthority?.capabilities?.[capability]?.authority ===
+                  "channel" ? (
+                    <ChannelManagedModelCard
+                      state={modelAuthority.capabilities[capability]!}
+                      title={title}
+                      highlight={highlightKey}
+                    />
+                  ) : usesManagedCredits ? (
+                    <ManagedCapabilityPendingCard
+                      capability={capability}
+                      title={title}
+                      highlight={highlightKey}
+                    />
+                  ) : (
+                    fallback
+                  );
+
+                return (
+                  <div
+                    data-slot="settings-rail"
+                    className="flex flex-col gap-card-gap"
+                  >
+                    {modelAuthority?.authority === "channel" ||
+                    !viewModel.model.hasSecret ? (
+                      <div
+                        data-slot="model-authority-status"
+                        data-authority={modelAuthority?.authority ?? "local"}
+                        className={cn(
+                          "rounded-xl border px-4 py-3",
+                          modelAuthority?.authority === "channel"
+                            ? "border-brand/25 bg-brand/5"
+                            : modelAuthority?.outcome === "security_error"
+                              ? "border-destructive/25 bg-destructive/5"
+                              : "border-border bg-muted/35",
+                        )}
+                      >
+                    <p className="text-sm font-semibold text-foreground">
+                      {modelAuthority?.action ??
+                        "本地模型正在使用 · 暂时无法取得渠道配置"}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {usesManagedCredits
+                        ? "当前权益提供的模型无需填写密钥；尚未出现的能力请重新同步配置。"
+                        : modelAuthority?.authority === "channel"
+                          ? "当前渠道已提供的模型可以直接使用；未提供的模型仍可由你自行配置。"
+                        : modelAuthority?.outcome === "activation_scope_missing"
+                          ? "当前权益尚未同步模型配置，请重新校验激活状态后重试。"
+                          : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
+                    </p>
+                    {modelAuthority?.outcome === "activation_scope_missing" ||
+                    (usesManagedCredits &&
+                      Object.keys(modelAuthority?.capabilities ?? {}).length < 4) ? (
+                      <ChannelConfigRetryButton />
+                    ) : null}
+                      </div>
+                    ) : null}
+                {modelAuthority?.services?.some(
+                  (service) => service.credentialSource === "activation_managed",
+                ) ? (
+                  <AiCreditCenterCard />
+                ) : null}
+                {modelAuthority?.services
+                  ?.filter(
+                    (service) => service.credentialSource !== "activation_managed",
+                  )
+                  .map((service) => (
                   <ChannelServiceCredentialCard
                     key={service.serviceId}
                     service={service}
                   />
-                ))}
-                {/* ① 重点配置:文本模型负责写字/对话，ASR 建议配置以提升转录速度。 */}
+                  ))}
+                {/* ① 重点配置：受管能力不允许回退成用户填写供应商/Key 的旧界面。 */}
                 <div data-slot="models-required-group" className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-semibold text-foreground">重点配置</span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {usesManagedCredits ? "当前模型能力" : "重点配置"}
+                      </span>
                       <span className="text-xs text-muted-foreground">
-                        文本模型负责创作。建议配置 ASR 转录模型，避免本地转录时间过长；未配置时仍可使用本地 Whisper。
+                        {usesManagedCredits
+                          ? "文本创作与语音转文字由当前权益提供，无需配置服务商或密钥。语音能力暂未同步时仍可使用本地转写。"
+                          : "文本模型负责创作。建议配置 ASR 转录模型，避免本地转录时间过长；未配置时仍可使用本地 Whisper。"}
                       </span>
                     </div>
-                    <ModelConfigurationManual />
+                    {usesManagedCredits ? null : <ModelConfigurationManual />}
                   </div>
-                  {modelAuthority?.capabilities?.default?.authority ===
-                  "channel" ? (
-                    <ChannelManagedModelCard
-                      state={modelAuthority.capabilities.default}
-                      title="文本创作模型"
-                      highlight="text-model"
-                    />
-                  ) : (
+                  {capabilityCard(
+                    "default",
+                    "文本创作模型",
+                    "text-model",
                     <ModelConfigurationCard
                       key={[
                         viewModel.model.provider,
@@ -490,23 +548,17 @@ export function SettingsDialog({
                         viewModel.model.temperature,
                       ].join(":")}
                       model={viewModel.model}
-                    />
+                    />,
                   )}
-                  {modelAuthority?.capabilities?.["transcribe.audio"]
-                    ?.authority === "channel" ? (
-                    <ChannelManagedModelCard
-                      state={
-                        modelAuthority.capabilities["transcribe.audio"]
-                      }
-                      title="语音转文字模型"
-                      highlight="asr-model"
-                    />
-                  ) : (
+                  {capabilityCard(
+                    "transcribe.audio",
+                    "语音转文字",
+                    "asr-model",
                     <MultimodalModelCard
                       key={`audio:${JSON.stringify(viewModel.multimodalModels.audio)}`}
                       kind="audio"
                       state={viewModel.multimodalModels.audio}
-                    />
+                    />,
                   )}
                 </div>
 
@@ -517,39 +569,33 @@ export function SettingsDialog({
                   highlight={highlight}
                   highlightKeys={["image-model", "video-model"]}
                 >
-                  {modelAuthority?.capabilities?.["image.generate"]
-                    ?.authority === "channel" ? (
-                    <ChannelManagedModelCard
-                      state={modelAuthority.capabilities["image.generate"]}
-                      title="文生图模型"
-                      highlight="image-model"
-                    />
-                  ) : (
+                  {capabilityCard(
+                    "image.generate",
+                    "文生图模型",
+                    "image-model",
                     <MultimodalModelCard
                       key={`image:${JSON.stringify(viewModel.multimodalModels.image)}`}
                       kind="image"
                       state={viewModel.multimodalModels.image}
-                    />
+                    />,
                   )}
-                  {modelAuthority?.capabilities?.["video.generate"]
-                    ?.authority === "channel" ? (
-                    <ChannelManagedModelCard
-                      state={modelAuthority.capabilities["video.generate"]}
-                      title="文生视频模型"
-                      highlight="video-model"
-                    />
-                  ) : (
+                  {capabilityCard(
+                    "video.generate",
+                    "文生视频模型",
+                    "video-model",
                     <MultimodalModelCard
                       key={`video:${JSON.stringify(viewModel.multimodalModels.video)}`}
                       kind="video"
                       state={viewModel.multimodalModels.video}
-                    />
+                    />,
                   )}
                 </CollapsibleModelGroup>
 
                 {/* [T-363] 配置备份:导出/导入全部模型配置(重置/换机兜底;文件含密钥,卡内警示)。 */}
                 <ModelConfigTransferCard />
-              </div>
+                  </div>
+                );
+              })()}
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
               <SkillsSection
@@ -1502,7 +1548,7 @@ function CheckUpdateCard() {
   return (
     <SectionCard
       title="软件更新"
-      description="检查新版,前往 CreatorOS 官网获取"
+      description="检查新版，前往产品官网获取"
       action={
         <Badge
           data-slot="check-update-badge"
@@ -1565,7 +1611,7 @@ function CheckUpdateCard() {
           className="inline-flex items-center gap-1.5 self-start text-xs text-brand underline-offset-4 hover:underline"
         >
           <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
-          访问 CreatorOS 官网(查看最新版本与更新说明)
+          访问产品官网（查看最新版本与更新说明）
         </a>
 
         {/* [T-459] 有新版:显版本号 + releaseNotes；下载入口永远固定产品官网。 */}
@@ -2109,7 +2155,7 @@ function StorageUsageCard({
               data-slot="storage-root-path-input"
               value={rootPath}
               disabled={pending}
-              placeholder="~/CreatorOS/media"
+              placeholder="~/media"
               onChange={(event) => setRootPath(event.target.value)}
               aria-label="媒体存储路径"
             />
@@ -2349,6 +2395,97 @@ function TestConnectionButton({
   );
 }
 
+function AiCreditCenterCard() {
+  const [opening, setOpening] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const openCredits = React.useCallback(async () => {
+    if (opening) return;
+    setOpening(true);
+    setError(null);
+    try {
+      await openAiCreditCenter();
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "暂时无法打开 AI 额度，请稍后重试",
+      );
+    } finally {
+      setOpening(false);
+    }
+  }, [opening]);
+
+  return (
+    <SectionCard
+      title="AI 额度与消耗"
+      description="前往额度中心查看总额度、已消耗和剩余额度，并进行购买或充值。"
+    >
+      <div
+        data-slot="ai-credit-center-card"
+        className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p className="text-xs leading-5 text-muted-foreground">
+          首次使用时按页面提示完成账号连接；之后可从这里直接进入额度中心。
+        </p>
+        <Button
+          type="button"
+          data-slot="open-ai-credit-center"
+          disabled={opening}
+          onClick={() => void openCredits()}
+        >
+          {opening ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : null}
+          {opening ? "正在打开…" : "查看 AI 额度与消耗"}
+        </Button>
+      </div>
+      {error ? (
+        <p data-slot="ai-credit-center-error" className="mt-2 text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </SectionCard>
+  );
+}
+
+function ManagedCapabilityPendingCard({
+  capability,
+  title,
+  highlight,
+}: {
+  readonly capability:
+    | "default"
+    | "transcribe.audio"
+    | "image.generate"
+    | "video.generate";
+  readonly title: string;
+  readonly highlight:
+    | "text-model"
+    | "asr-model"
+    | "image-model"
+    | "video-model";
+}) {
+  return (
+    <SectionCard
+      title={title}
+      description="当前权益尚未同步这项能力。无需填写服务商、接口地址或密钥。"
+    >
+      <div
+        data-slot={highlight}
+        data-capability={capability}
+        className="flex flex-col items-start gap-2 rounded-lg border border-warning/25 bg-warning/5 px-3 py-2.5"
+      >
+        <p className="text-xs leading-5 text-muted-foreground">
+          {capability === "transcribe.audio"
+            ? "请重新校验并同步当前权益；同步完成前仍可使用本地语音转文字，只是处理时间较长。"
+            : "请重新校验并同步当前权益后再试。"}
+        </p>
+      </div>
+    </SectionCard>
+  );
+}
+
 function ChannelServiceCredentialCard({
   service,
 }: {
@@ -2373,37 +2510,10 @@ function ChannelServiceCredentialCard({
       setError(cause instanceof Error ? cause.message : "保存失败，请重试");
     }
   }, [pending, run, secret, service.serviceId]);
-  const links = [
-    ["服务主页", service.portalUrl],
-    ["购买", service.purchaseUrl],
-    ["充值", service.rechargeUrl],
-    ["帮助", service.helpUrl],
-  ].filter((item): item is [string, string] => Boolean(item[1]));
-
-  if (service.credentialSource === "activation_managed") {
-    return (
-      <SectionCard
-        title={`${service.serviceName} · 激活权益模型服务`}
-        description="激活后自动取得一把仅属于当前权益的受限 Key，并安全保存在本机；无需手动填写。"
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className={service.hasSecret ? "text-success" : "text-warning"}>
-            {service.hasSecret ? "受管 Key 已就绪" : "等待同步受管 Key"}
-          </Badge>
-          {links.map(([label, href]) => (
-            <a key={`${label}:${href}`} href={href} target="_blank" rel="noreferrer" className="text-xs text-brand hover:underline">
-              {label}
-            </a>
-          ))}
-        </div>
-      </SectionCard>
-    );
-  }
-
   return (
     <SectionCard
-      title={`${service.serviceName} · 渠道服务 Key`}
-      description="渠道只决定服务和模型；Key 加密保存在本机，不会写回渠道配置。"
+      title="模型访问密钥"
+      description="密钥只加密保存在本机，不会上传到产品配置。"
     >
       <div
         data-slot="channel-model-service-credential"
@@ -2417,21 +2527,10 @@ function ChannelServiceCredentialCard({
           >
             {service.hasSecret ? "已填写" : "待填写"}
           </Badge>
-          {links.map(([label, href]) => (
-            <a
-              key={`${label}:${href}`}
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
-            >
-              {label}
-              <ExternalLink className="size-3" aria-hidden="true" />
-            </a>
-          ))}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input
+            data-slot="channel-model-service-secret"
             type="password"
             value={secret}
             disabled={pending}
@@ -2441,14 +2540,14 @@ function ChannelServiceCredentialCard({
                 ? "留空保持不变，填写后覆盖"
                 : "粘贴这个服务的 API Key"
             }
-            aria-label={`${service.serviceName} API Key`}
+            aria-label="模型访问密钥"
           />
           <Button
             type="button"
             disabled={!secret.trim() || pending}
             onClick={() => void save()}
           >
-            {pending ? "保存中…" : service.hasSecret ? "更新 Key" : "保存 Key"}
+            {pending ? "保存中…" : service.hasSecret ? "更新密钥" : "保存密钥"}
           </Button>
         </div>
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
@@ -2475,7 +2574,10 @@ function ChannelManagedModelCard({
     try {
       const response = await fetch("/api/v1/local/channel-model-selection", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...handshakeHeaders(),
+        },
         body: JSON.stringify({ capability: state.capability, optionId }),
       });
       if (!response.ok) throw new Error("模型切换失败，请重新同步渠道配置后重试");
@@ -2489,7 +2591,7 @@ function ChannelManagedModelCard({
   return (
     <SectionCard
       title={title}
-      description="这项能力已由当前渠道完整配置，服务与模型不可在客户端修改。"
+      description="当前权益已提供这项能力，无需填写密钥；有多个模型时可以直接选择。"
     >
       <div
         data-slot="channel-managed-model-card"
@@ -2498,15 +2600,9 @@ function ChannelManagedModelCard({
         className="flex flex-col gap-3"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">渠道管理</Badge>
+          <Badge variant="secondary">已配置</Badge>
           <span className="text-sm font-medium text-foreground">
-            {state.serviceName ?? "渠道服务"}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {state.provider ?? ""} · {state.modelName ?? ""}
-            {state.model && state.model !== state.modelName
-              ? `（${state.model}）`
-              : ""}
+            {state.modelName ?? "模型已就绪"}
           </span>
         </div>
         {state.selectionNotice ? (
@@ -2523,17 +2619,12 @@ function ChannelManagedModelCard({
               className="rounded-md border border-border bg-background px-3 py-2"
             >
               {state.modelOptions?.map((option) => (
-                <option key={option.id} value={option.id}>{option.name} · {option.model}</option>
+                <option key={option.id} value={option.id}>{option.name}</option>
               ))}
             </select>
           </label>
         ) : null}
         {selectionError ? <p className="text-xs text-destructive">{selectionError}</p> : null}
-        {state.baseUrl ? (
-          <p className="break-all text-xs text-muted-foreground">
-            接口：{state.baseUrl}
-          </p>
-        ) : null}
         <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-3">
           <p
             className={cn(
@@ -2542,14 +2633,16 @@ function ChannelManagedModelCard({
             )}
           >
             {state.hasSecret
-              ? "服务 Key 已就绪"
-              : "服务 Key 尚未就绪，请同步渠道配置"}
+              ? "当前权益已就绪"
+              : "模型正在准备，请重新同步配置"}
           </p>
-          <TestConnectionButton
-            capability={state.capability}
-            slotPrefix={`channel-${state.capability.replaceAll(".", "-")}`}
-            disabled={!state.hasSecret}
-          />
+          {state.capability === "transcribe.audio" ? null : (
+            <TestConnectionButton
+              capability={state.capability}
+              slotPrefix={`channel-${state.capability.replaceAll(".", "-")}`}
+              disabled={!state.hasSecret}
+            />
+          )}
         </div>
       </div>
     </SectionCard>
@@ -2638,7 +2731,7 @@ function ModelConfigurationCard({
   return (
     <SectionCard
       title="模型配置"
-      description="选供应商、填模型和密钥即可；中转站与特殊协议放在高级设置"
+      description="选择模型服务并填写模型和密钥；特殊接口设置可在高级设置中修改。"
     >
       <div
         data-slot="model-configuration-card"
@@ -2711,7 +2804,7 @@ function ModelConfigurationCard({
             size="sm"
             onClick={() => setShowAdvanced((value) => !value)}
           >
-            {showAdvanced ? "收起高级设置" : "高级设置（中转站 / 协议）"}
+            {showAdvanced ? "收起高级设置" : "高级设置"}
           </Button>
         </div>
         <div
@@ -2742,7 +2835,7 @@ function ModelConfigurationCard({
           <SettingsFormRow
             label="接口地址"
             controlId="model-base-url"
-            help="中转站填写其 Base URL；通常应包含 /v1，具体以服务商文档为准。"
+            help="填写兼容 API 地址；通常应包含 /v1，具体以接口文档为准。"
           >
             <Input
               id="model-base-url"
@@ -2939,17 +3032,17 @@ const MULTIMODAL_META = {
     icon: Palette,
     description:
       "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
-    // [T-379] openai = OpenAI 兼容 images API(gpt-image 系及 one-api/new-api 中转站通用)。
+    // [T-379] openai = OpenAI 兼容 images API。
     providerSuggestions: ["openai", "minimax"] as ReadonlyArray<string>,
     providerPlaceholder: "openai",
     providerHelp:
-      "内置适配:minimax / openai 兼容(中转站通用)。openai = OpenAI 兼容 images API —— gpt-image 系及各中转站(one-api/new-api)通用,配中转就选它;其他厂商需接入适配器。",
+      "内置适配：MiniMax / OpenAI 兼容图片接口。其他接口需要对应适配能力。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
     modelHelp:
       "文生图模型 id 自由填(示例:gpt-image-2 / image-01;仅示例,以你的服务商最新型号为准)。",
     modelPlaceholder: "示例:gpt-image-2(以服务商最新为准)",
     baseUrlPlaceholder:
-      "示例:https://你的中转站域名 或 https://api.minimaxi.com/v1(留空=provider 默认)",
+      "示例：https://api.example.com/v1（留空使用默认地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   video: {
@@ -2958,14 +3051,14 @@ const MULTIMODAL_META = {
     icon: Cpu,
     description:
       "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
-    providerSuggestions: ["omnihi", "minimax"] as ReadonlyArray<string>,
-    providerPlaceholder: "omnihi",
+    providerSuggestions: ["seedance", "minimax"] as ReadonlyArray<string>,
+    providerPlaceholder: "seedance",
     providerHelp:
-      "内置适配:OmniHi / Seedance、MiniMax。旧配置中的 seedance / seeddance 也会自动兼容。",
+      "支持已接入的视频生成接口；旧配置中的 seedance / seeddance 会自动兼容。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
     modelHelp: "文生视频模型 id 自由填(示例:seedance/seedance-2.0-fast;以服务商控制台为准)。",
     modelPlaceholder: "示例:seedance/seedance-2.0-fast",
-    baseUrlPlaceholder: "示例:https://api.omnihi.ai/media/v1(留空=provider 默认)",
+    baseUrlPlaceholder: "示例：https://api.example.com/media/v1（留空使用默认地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   // 逐字稿 ASR(T-641)—— 建议配置但不阻断。普通用户只需要选供应商、填模型名和 Key；provider/baseUrl

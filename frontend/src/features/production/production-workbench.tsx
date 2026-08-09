@@ -45,6 +45,8 @@ import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url";
 import { ExecutionTaskCard } from "@/features/copilot/execution-task-card";
 import { VideoDecisionPreview } from "./video-decision-preview";
+import type { ManualMaterialAssignment } from "./video-decision-preview";
+import { assembleVideoRenderProps } from "./assemble-video-render-props";
 import type { VideoDecisions, BrollAssetRef } from "@creatoros/backend/modules/ai-runtime";
 import type { VideoRenderProps } from "@creatoros/contract";
 import {
@@ -61,10 +63,9 @@ import {
   statusStepsTo,
   buildRenderInputs,
   humanizeRenderError,
-  // [T-387c] B-roll 自动聚合(脚本画面点名 + 论点树挂载 + 项目弹药,纯函数)。
+  // [T-726] B-roll 自动聚合只取脚本画面点名 + 项目弹药。
   aggregateAutoBroll,
   assetRefsFromScriptContentData,
-  refIdsFromThesisContentData,
   BROLL_SOURCE_LABEL,
   type AutoBrollItem,
   type ProductionStatus,
@@ -101,6 +102,7 @@ interface WireTaskResult {
 interface WireProduction {
   id: string;
   status: string;
+  recordingConfig?: Record<string, unknown>;
 }
 
 interface WireExecTask {
@@ -113,6 +115,16 @@ interface WireExecTask {
   adoptedAssetIds: string[];
   errorMessage: string | null;
 }
+
+type RenderFlowStatus =
+  | "saving_plan"
+  | "creating_task"
+  | "queued"
+  | "running"
+  | "awaiting_confirmation"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
 
 interface WireMaterialLink {
   projectId: string;
@@ -377,6 +389,11 @@ export function ProductionWorkbench({
   orientation,
   readVideoDuration = readVideoDurationViaElement,
 }: ProductionWorkbenchProps) {
+  // 画幅属于“本次制作 revision”，不是只能从立项继承的只读属性。存量项目无值时
+  // 维持既有 landscape 行为；用户可在制作页显式切到 portrait。
+  const [renderOrientation, setRenderOrientation] = React.useState<
+    "portrait" | "landscape"
+  >(orientation ?? "landscape");
   const [outputId, setOutputId] = React.useState(initialOutputId);
   const [status, setStatus] = React.useState<string | null>(initialStatus);
   const [segmentCount, setSegmentCount] = React.useState(initialSegmentCount);
@@ -414,6 +431,8 @@ export function ProductionWorkbench({
     null,
   );
   const [decisions, setDecisions] = React.useState<VideoDecisions | null>(null);
+  const [editingPlanRevision, setEditingPlanRevision] = React.useState(0);
+  const [decisionsConfirmed, setDecisionsConfirmed] = React.useState(false);
   const [inventory, setInventory] = React.useState<readonly BrollAssetRef[]>([]);
   const [recoveredDecisions, setRecoveredDecisions] = React.useState(false);
   const [brollRevisionNotice, setBrollRevisionNotice] = React.useState<
@@ -424,6 +443,7 @@ export function ProductionWorkbench({
     ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
   >([]);
   const [brollBusy, setBrollBusy] = React.useState(false);
+  const [brollDragActive, setBrollDragActive] = React.useState(false);
   // [T-387c] 自动聚合的 B-roll 候选(脚本画面点名/论点树挂载/项目弹药,带来源徽标)+
   // 人剔除集(只影响本次决策的 inputData.excludedAssetIds,不动用料链)。
   const [autoBroll, setAutoBroll] = React.useState<ReadonlyArray<AutoBrollItem>>(
@@ -434,6 +454,9 @@ export function ProductionWorkbench({
   );
 
   const [renderTaskId, setRenderTaskId] = React.useState<string | null>(null);
+  const [renderDispatchBusy, setRenderDispatchBusy] = React.useState(false);
+  const [renderTaskStatus, setRenderTaskStatus] =
+    React.useState<RenderFlowStatus | null>(null);
   const [renderEnvHint, setRenderEnvHint] = React.useState<string | null>(null);
   const [renderFinalizeError, setRenderFinalizeError] = React.useState<
     string | null
@@ -445,6 +468,16 @@ export function ProductionWorkbench({
     null,
   );
   const [flowError, setFlowError] = React.useState<string | null>(null);
+  const renderInProgress =
+    renderDispatchBusy ||
+    renderTaskStatus === "queued" ||
+    renderTaskStatus === "running";
+  const renderProgressLabel =
+    renderTaskStatus === "saving_plan"
+      ? "正在保存分镜方案…"
+      : renderTaskStatus === "creating_task"
+        ? "正在创建渲染任务…"
+        : "渲染任务进行中…";
 
   // ── [T-366a] 制作方式二选一 ──────────────────────────────────────────────────
   const [method, setMethod] = React.useState<"creatoros" | "upload">(
@@ -544,6 +577,50 @@ export function ProductionWorkbench({
       }
     })();
   }, [projectId]);
+
+  // 已确认分镜是制作真值，刷新后必须从 production.recordingConfig 回读，不能只靠组件 state。
+  React.useEffect(() => {
+    if (!outputId) return;
+    void (async () => {
+      try {
+        const prod = (await client.getOutputProduction({
+          params: { outputId },
+          query: undefined,
+          body: undefined,
+        })) as unknown as WireProduction;
+        const plan = prod.recordingConfig?.videoEditingPlan as
+          | {
+              revision?: unknown;
+              decisions?: unknown;
+              renderProps?: unknown;
+              sourceRenderTaskId?: unknown;
+            }
+          | undefined;
+        if (!plan) return;
+        if (typeof plan.revision === "number") setEditingPlanRevision(plan.revision);
+        if (plan.decisions && typeof plan.decisions === "object") {
+          setDecisions(plan.decisions as VideoDecisions);
+          setDecisionsConfirmed(true);
+          setRecoveredDecisions(true);
+        }
+        const delivery = (plan.renderProps as { delivery?: unknown } | null)
+          ?.delivery as { width?: unknown; height?: unknown } | undefined;
+        if (
+          typeof delivery?.width === "number" &&
+          typeof delivery.height === "number"
+        ) {
+          setRenderOrientation(
+            delivery.height > delivery.width ? "portrait" : "landscape",
+          );
+        }
+        if (typeof plan.sourceRenderTaskId === "string") {
+          setRenderTaskId((current) => current ?? plan.sourceRenderTaskId as string);
+        }
+      } catch {
+        // 旧 production 没有方案或暂时不可读，不阻断重新分场。
+      }
+    })();
+  }, [outputId]);
 
   // ── SRT 匹配校验(挡在提交前)──────────────────────────────────────────────
   const durationCheck: SrtDurationCheck | null = React.useMemo(() => {
@@ -653,8 +730,8 @@ export function ProductionWorkbench({
   );
 
   // ── [T-294] B-roll 素材:列 / 补传(role=broll)/ 剔除 ────────────────────────
-  // [T-387c] 扩自动聚合:除手动上传(role=broll)外,把脚本凝固分镜点名素材(visual.assetRefs)、
-  // 论点树挂载素材(materialRefs)、项目弹药 image/video 资产也自动列入(来源徽标,人可剔)。
+  // [T-387c/T-739] 扩自动聚合:除手动上传(role=broll)外,把当前项目用料链中的
+  // image/video 资产自动列入；脚本凝固分镜点名只调整当前项目已挂载素材的来源和优先级。
   // 服务端决策的 listBrollInventory 用同一批来源;这里的剔除经 inputData.excludedAssetIds 传给决策。
   const loadBroll = React.useCallback(async () => {
     try {
@@ -732,29 +809,36 @@ export function ProductionWorkbench({
           return null;
         }
       };
-      const [scriptData, thesisData] = await Promise.all([
-        readContentData("output_script"),
-        readContentData("thesis_tree"),
-      ]);
-      // 候选 id(按来源优先级 script → thesis → ammo;聚合时先到先得)。
+      const scriptData = await readContentData("output_script");
+      const projectAssetLinks = links.filter(
+        (link) =>
+          link.entityType === "asset" &&
+          link.role !== "cover" &&
+          link.role !== "final",
+      );
+      const projectAssetIds = new Set(
+        projectAssetLinks.map((link) => link.entityId),
+      );
+      const projectRoleByAssetId = new Map(
+        projectAssetLinks.map((link) => [link.entityId, link.role]),
+      );
+      // 候选 id(按来源优先级 script → ammo;聚合时先到先得)。
       const candidates: Array<{
         assetId: string;
         source: AutoBrollItem["source"];
         role?: string;
       }> =
         [
-          ...assetRefsFromScriptContentData(scriptData).map((id) => ({
-            assetId: id,
-            source: "script" as const,
-          })),
-          ...refIdsFromThesisContentData(thesisData).map((id) => ({
-            assetId: id,
-            source: "thesis" as const,
-          })),
-          ...links
+          ...assetRefsFromScriptContentData(scriptData)
+            .filter((id) => projectAssetIds.has(id))
+            .map((id) => ({
+              assetId: id,
+              source: "script" as const,
+              role: projectRoleByAssetId.get(id),
+            })),
+          ...projectAssetLinks
             .filter(
               (l) =>
-                l.entityType === "asset" &&
                 l.role !== "broll" &&
                 l.role !== "cover" &&
                 l.role !== "final",
@@ -814,6 +898,7 @@ export function ProductionWorkbench({
       });
     }
     setDecisions(null);
+    setDecisionsConfirmed(false);
     setDecisionsTaskId(null);
     setInventory([]);
     setRecoveredDecisions(false);
@@ -847,12 +932,15 @@ export function ProductionWorkbench({
   }, [invalidateDecisionsForBrollChange, loadBroll, projectId]);
 
   const onBrollFiles = React.useCallback(
-    async (files: FileList | null) => {
+    async (files: FileList | readonly File[] | null) => {
       if (!files || files.length === 0) return;
       setBrollBusy(true);
       setUploadError(null);
       try {
         for (const file of Array.from(files)) {
+          if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+            throw new Error(`不支持的素材类型：${file.name}（仅支持图片或视频）`);
+          }
           const kind = file.type.startsWith("image/") ? "image" : "video";
           await uploadProductionAsset(projectId, file, kind, "broll");
         }
@@ -1000,8 +1088,9 @@ export function ProductionWorkbench({
           body: {
             format: "mp4",
             resolution:
-              orientation === "portrait" ? "1080x1920" : "1920x1080",
-            aspectRatio: orientation === "portrait" ? "9:16" : "16:9",
+              renderOrientation === "portrait" ? "1080x1920" : "1920x1080",
+            aspectRatio:
+              renderOrientation === "portrait" ? "9:16" : "16:9",
           },
         })) as unknown as { id: string };
         await client.completeExport({
@@ -1027,7 +1116,7 @@ export function ProductionWorkbench({
       projectId,
       readVideoDuration,
       advanceStatus,
-      orientation,
+      renderOrientation,
       hasExistingFinal,
       outputId,
       pubLocked,
@@ -1114,36 +1203,53 @@ export function ProductionWorkbench({
   }, [ensureOutputId]);
 
   // ── ② AI 分场决策 dispatch + 轮询 ───────────────────────────────────────────
-  const dispatchDecisions = React.useCallback(async () => {
-    if (!srt || !voiceoverText) return;
-    setDecisionsBusy(true);
-    setDecisionsError(null);
-    setBrollRevisionNotice(null);
-    try {
-      const task = (await client.createAITask({
-        params: undefined,
-        query: undefined,
-        body: {
-          taskType: "video.decisions",
-          attemptId: createAiTaskAttemptId(),
-          inputData: {
-            projectId,
-            srtText: srt.text,
-            script: voiceoverText,
-            // [T-387c] 备料③人剔除的自动聚合项 → 决策可选集里滤掉(不动用料链)。
-            excludedAssetIds: Array.from(excludedAuto),
+  const dispatchDecisions = React.useCallback(
+    async (
+      manualMaterialAssignments: readonly ManualMaterialAssignment[] = [],
+    ) => {
+      if (!srt || !voiceoverText) return;
+      setDecisionsBusy(true);
+      setDecisionsError(null);
+      setBrollRevisionNotice(null);
+      try {
+        const task = (await client.createAITask({
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "video.decisions",
+            attemptId: createAiTaskAttemptId(),
+            inputData: {
+              projectId,
+              srtText: srt.text,
+              script: voiceoverText,
+              // 本次制作画幅直接喂给候选节点与总导演，分场/信息卡/B-roll 从一开始就按
+              // 9:16 或 16:9 构图，而不是最后渲染时再粗暴裁切。
+              orientation: renderOrientation,
+              // [T-387c] 备料③人剔除的自动聚合项 → 决策可选集里滤掉(不动用料链)。
+              excludedAssetIds: Array.from(excludedAuto),
+              ...(manualMaterialAssignments.length > 0
+                ? { manualMaterialAssignments }
+                : {}),
+            },
           },
-        },
-      })) as unknown as WireAITask;
-      setDecisionsTaskId(task.id);
-    } catch (err) {
-      setDecisionsError(
-        err instanceof Error ? err.message : "决策任务创建失败,请重试",
-      );
-    } finally {
-      setDecisionsBusy(false);
-    }
-  }, [projectId, srt, voiceoverText, excludedAuto]);
+        })) as unknown as WireAITask;
+        // 新任务创建成功才切走旧确认卡。历史 plan/render/final 都在服务端与现有 state
+        // 保留；这里只把“当前正在编辑的候选”切到新任务。
+        setDecisionsConfirmed(false);
+        setDecisions(null);
+        setInventory([]);
+        setRecoveredDecisions(false);
+        setDecisionsTaskId(task.id);
+      } catch (err) {
+        setDecisionsError(
+          err instanceof Error ? err.message : "决策任务创建失败,请重试",
+        );
+      } finally {
+        setDecisionsBusy(false);
+      }
+    },
+    [projectId, srt, voiceoverText, excludedAuto, renderOrientation],
+  );
 
   const loadDecisionResult = React.useCallback(
     async (taskId: string): Promise<boolean> => {
@@ -1162,6 +1268,7 @@ export function ProductionWorkbench({
       };
       if (!data.decisions) return false;
       setDecisions(data.decisions as VideoDecisions);
+      setDecisionsConfirmed(false);
       setInventory(
         Array.isArray(data.inventory)
           ? (data.inventory as BrollAssetRef[])
@@ -1226,9 +1333,38 @@ export function ProductionWorkbench({
       decisions: VideoDecisions;
       renderProps: VideoRenderProps;
     }) => {
+      if (renderDispatchBusy) return;
       setFlowError(null);
+      setRenderDispatchBusy(true);
+      setRenderTaskStatus("saving_plan");
+      let createdTask = false;
       try {
-        // 渲染执行任务是主链,先发(inputs 物化声明:mountAs 必须 = assetId)。
+        const oid = await ensureOutputId();
+        // 先原子保存、再从响应回读确认；保存失败绝不创建渲染任务，避免“渲了但回顾为空”。
+        const persisted = (await client.confirmProductionEditingPlan({
+          params: { outputId: oid },
+          query: undefined,
+          body: {
+            expectedRevision: editingPlanRevision,
+            plan: {
+              sourceTaskId: decisionsTaskId,
+              confirmedAt: new Date().toISOString(),
+              decisions: payload.decisions as unknown as Record<string, unknown>,
+              renderProps: payload.renderProps as unknown as Record<string, unknown>,
+            },
+          },
+        })) as unknown as WireProduction;
+        const savedPlan = persisted.recordingConfig?.videoEditingPlan as
+          | { revision?: unknown }
+          | undefined;
+        if (typeof savedPlan?.revision !== "number") {
+          throw new Error("分镜方案保存后未能回读，请刷新后重试，未开始渲染");
+        }
+        setEditingPlanRevision(savedPlan.revision);
+        setDecisionsConfirmed(true);
+        setRenderTaskStatus("creating_task");
+
+        // 渲染执行任务是主链(inputs 物化声明:mountAs 必须 = assetId)。
         const created = (await client.createExecutionTask({
           params: undefined,
           query: undefined,
@@ -1247,9 +1383,33 @@ export function ProductionWorkbench({
             projectId,
           },
         })) as unknown as WireExecTask;
+        createdTask = true;
         setRenderTaskId(created.id);
+        setRenderTaskStatus(created.status as RenderFlowStatus);
+        // 再把本次 render task 关联回同一窄写 plan，刷新后仍能定位当前成片任务。
+        // 若关联写失败，首轮已保存的分镜方案仍保留；页面明确报错，不伪装完整成功。
+        const linked = (await client.confirmProductionEditingPlan({
+          params: { outputId: oid },
+          query: undefined,
+          body: {
+            expectedRevision: savedPlan.revision,
+            plan: {
+              sourceTaskId: decisionsTaskId,
+              sourceRenderTaskId: created.id,
+              confirmedAt: new Date().toISOString(),
+              decisions: payload.decisions as unknown as Record<string, unknown>,
+              renderProps: payload.renderProps as unknown as Record<string, unknown>,
+            },
+          },
+        })) as unknown as WireProduction;
+        const linkedPlan = linked.recordingConfig?.videoEditingPlan as
+          | { revision?: unknown }
+          | undefined;
+        if (typeof linkedPlan?.revision !== "number") {
+          throw new Error("成片任务已创建，但关联状态保存失败，请刷新后重试查看任务");
+        }
+        setEditingPlanRevision(linkedPlan.revision);
         const confirmedTaskId = decisionsTaskId;
-        setDecisions(null); // 预览卡收起,进入渲染跟踪
         setDecisionsTaskId(null); // 决策任务已消费,停掉轮询
         // 伴随记账(全部 best-effort,失败不撤销已发出的渲染任务):
         // 决策任务收口 succeeded。
@@ -1266,26 +1426,31 @@ export function ProductionWorkbench({
         const productionId = await advanceStatus("rendering");
         if (productionId) {
           try {
-            for (const [i, scene] of payload.decisions.scenes.entries()) {
-              await client.createProductionSegment({
-                params: { productionId },
-                query: undefined,
-                body: {
-                  title: scene.title,
-                  position: i,
-                  startMs: Math.round(scene.startSec * 1000),
-                  endMs: Math.round(scene.endSec * 1000),
-                },
-              });
+            // segment 是 production 的一次性结构登记；重新生成只新增 render/export
+            // 版本，不能把同一批分场重复插入数据库。
+            if (segmentCount === 0) {
+              for (const [i, scene] of payload.decisions.scenes.entries()) {
+                await client.createProductionSegment({
+                  params: { productionId },
+                  query: undefined,
+                  body: {
+                    title: scene.title,
+                    position: i,
+                    startMs: Math.round(scene.startSec * 1000),
+                    endMs: Math.round(scene.endSec * 1000),
+                  },
+                });
+              }
+              setSegmentCount(payload.decisions.scenes.length);
             }
-            setSegmentCount(payload.decisions.scenes.length);
+            const { width, height } = payload.renderProps.delivery;
             const exp = (await client.createProductionExport({
               params: { productionId },
               query: undefined,
               body: {
                 format: "mp4",
-                resolution: "1920x1080",
-                aspectRatio: "16:9",
+                resolution: `${width}x${height}`,
+                aspectRatio: height > width ? "9:16" : "16:9",
               },
             })) as unknown as { id: string };
             setExportId(exp.id);
@@ -1294,12 +1459,58 @@ export function ProductionWorkbench({
           }
         }
       } catch (err) {
+        if (!createdTask) setRenderTaskStatus("failed");
         setFlowError(
           err instanceof Error ? err.message : "渲染任务创建失败,请重试",
         );
+      } finally {
+        setRenderDispatchBusy(false);
       }
     },
-    [projectId, projectTitle, decisionsTaskId, advanceStatus],
+    [
+      projectId,
+      projectTitle,
+      decisionsTaskId,
+      advanceStatus,
+      ensureOutputId,
+      editingPlanRevision,
+      renderDispatchBusy,
+      segmentCount,
+    ],
+  );
+
+  const regenerateCurrentStoryboard = React.useCallback(() => {
+    if (!decisions || !video) return;
+    void onConfirmDecisions({
+      decisions,
+      renderProps: assembleVideoRenderProps(decisions, {
+        title: projectTitle,
+        talkingHeadAssetId: video.assetId,
+        talkingHeadDurationSec: video.durationSec ?? undefined,
+        inventory,
+        orientation: renderOrientation,
+      }),
+    });
+  }, [
+    decisions,
+    inventory,
+    onConfirmDecisions,
+    projectTitle,
+    renderOrientation,
+    video,
+  ]);
+
+  const regenerateStoryboard = React.useCallback(() => {
+    // dispatch 成功后才替换当前卡；请求失败时保留已确认方案，避免用户因一次网络错误
+    // 丢掉可回顾内容。旧 render/final asset 始终保留并继续可预览。
+    void dispatchDecisions();
+  }, [dispatchDecisions]);
+
+  const restoryboardWithManualAssignments = React.useCallback(
+    (assignments: readonly ManualMaterialAssignment[]) => {
+      void dispatchDecisions(assignments);
+    },
+    [dispatchDecisions],
   );
 
   const onDiscardDecisions = React.useCallback(() => {
@@ -1313,6 +1524,7 @@ export function ProductionWorkbench({
         .catch(() => undefined);
     }
     setDecisions(null);
+    setDecisionsConfirmed(false);
     setDecisionsTaskId(null);
     setRecoveredDecisions(false);
   }, [decisionsTaskId]);
@@ -1331,6 +1543,7 @@ export function ProductionWorkbench({
             body: undefined,
           })) as unknown as WireExecTask;
           if (abandoned) return;
+          setRenderTaskStatus(task.status as RenderFlowStatus);
           setRenderEnvHint(humanizeRenderError(task.errorMessage));
           if (task.status === "succeeded") {
             const resultAssetId = task.adoptedAssetIds[0];
@@ -1471,6 +1684,7 @@ export function ProductionWorkbench({
         );
         if (live && !abandoned) {
           setRenderTaskId((prev) => prev ?? live.id);
+          setRenderTaskStatus(live.status as RenderFlowStatus);
           return; // 渲染在途优先;决策候选不再恢复(已消费)
         }
         // [T-308] 当前活跃决策必须压过历史成功成片:用户可在已有成片后重新生成四决策,
@@ -1521,6 +1735,7 @@ export function ProductionWorkbench({
           if (aid) {
             setFinalVideoAssetId((prev) => prev ?? aid);
             setRenderTaskId((prev) => prev ?? doneRender.id);
+            setRenderTaskStatus(doneRender.status as RenderFlowStatus);
             return;
           }
         }
@@ -1530,6 +1745,7 @@ export function ProductionWorkbench({
         );
         if (failedRender && !abandoned) {
           setRenderTaskId((prev) => prev ?? failedRender.id);
+          setRenderTaskStatus(failedRender.status as RenderFlowStatus);
           return;
         }
       } catch {
@@ -1661,7 +1877,7 @@ export function ProductionWorkbench({
                 : "border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            用 CreatorOS 制作
+            在应用内制作
           </button>
           <button
             type="button"
@@ -1680,10 +1896,58 @@ export function ProductionWorkbench({
         </div>
         <p className="text-xs text-muted-foreground">
           {method === "creatoros"
-            ? "上传粗剪 + SRT,AI 四决策过目确认后受控渲染成片(现状流程)。"
+            ? "上传粗剪 + SRT，经 AI 分镜统筹和总导演审片，确认后受控渲染成片。"
             : "在剪映等工具剪好的成品直接上传登记为成片 —— 跳过四决策与渲染;盲预测 / 发布物料 / 登记发布照常可用。"}
         </p>
       </section>
+
+      {method === "creatoros" ? (
+        <section
+          data-slot="production-orientation"
+          data-orientation={renderOrientation}
+          className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
+        >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-medium">本次成片画幅</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              画幅会同时作用于分镜构图、素材安全区、字幕布局、预览和最终导出。
+            </p>
+          </div>
+          <div className="flex gap-2" role="radiogroup" aria-label="本次成片画幅">
+            {(
+              [
+                ["portrait", "竖屏 9:16"],
+                ["landscape", "横屏 16:9"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={renderOrientation === value}
+                data-slot={`orientation-${value}`}
+                data-active={renderOrientation === value}
+                disabled={decisionsBusy}
+                onClick={() => setRenderOrientation(value)}
+                className={`inline-flex h-8 items-center rounded-control border px-3 text-sm transition disabled:opacity-50 ${
+                  renderOrientation === value
+                    ? "border-brand bg-brand/10 font-medium text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {decisionsConfirmed || finalVideoAssetId ? (
+          <p className="text-xs text-muted-foreground">
+            切换只影响下一次“重新分镜”或“按当前分镜重新生成”；已保存分镜和旧成片不会被改写。
+          </p>
+        ) : null}
+        </section>
+      ) : null}
 
       {method === "upload" ? (
         /* [T-366a] 上传成品视频路径(复用两阶段上传链;mp4/mov + 时长探针;§5.1③ 禁覆盖) */
@@ -1768,13 +2032,13 @@ export function ProductionWorkbench({
               <p className="text-xs font-medium text-foreground">成片预览</p>
               <FinalVideoPreview
                 assetId={finalVideoAssetId}
-                orientation={orientation}
+                orientation={renderOrientation}
               />
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
               上传成功即登记为本项目成片(状态机到「成片就绪」);想改用受控成片,
-              上方随时切回「用 CreatorOS 制作」。
+              上方随时切回「在应用内制作」。
             </p>
           )}
         </section>
@@ -1926,12 +2190,37 @@ export function ProductionWorkbench({
       {/* [T-294] ③ B-roll 素材:决策前备好,AI 分场决策据此匹配空镜/截图 */}
       <section
         data-slot="production-broll"
+        data-drag-active={brollDragActive}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setBrollDragActive(true);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          event.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.currentTarget === event.target) setBrollDragActive(false);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setBrollDragActive(false);
+          void onBrollFiles(Array.from(event.dataTransfer.files));
+        }}
         className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
       >
         <h3 className="text-sm font-medium">③ B-roll 素材(截图 / 录屏,可选)</h3>
         <p className="text-xs text-muted-foreground">
           备好要插进成片的截图 / 录屏,AI 分场决策会从这里为对应画面挑 B-roll。
           <b className="text-foreground">先备素材,再点下方「AI 分场决策」,新素材才会被用上。</b>
+        </p>
+        <p className="rounded-control border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+          可直接把图片或录屏拖到这里上传；松手后仍停留在当前页面。
         </p>
         <label
           data-slot="broll-picker"
@@ -2067,7 +2356,7 @@ export function ProductionWorkbench({
             {!materialsReady ? (
               <p className="text-xs text-muted-foreground">
                 备料齐(口播稿 + 粗剪视频 + SRT)后可发起 —— AI 产出分场/信息卡/
-                B-roll/双语字幕决策,过目确认后才渲染。
+                B-roll/双语字幕，再经总导演统筹审核，过目确认后才渲染。
               </p>
             ) : checksBlocked && !override ? (
               <p className="text-xs text-destructive">
@@ -2079,7 +2368,7 @@ export function ProductionWorkbench({
         {decisionsTaskId && !decisions ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-            四决策进行中(分场/信息卡/B-roll/双语字幕)…任务后台跑,可离开本页
+            分镜统筹中(分场/信息卡/素材/字幕/总导演审片)…任务后台跑,可离开本页
           </div>
         ) : null}
         {decisionsError ? (
@@ -2089,6 +2378,44 @@ export function ProductionWorkbench({
         ) : null}
         {decisions ? (
           <>
+            {decisionsConfirmed ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-col gap-1">
+                  <p data-slot="confirmed-decisions-notice" className="text-xs text-success">
+                    ✓ 分镜方案已保存，可随时回顾；生成新版本不会删除旧成片。
+                  </p>
+                  {renderInProgress ? (
+                    <p
+                      data-slot="confirmed-render-progress"
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                    >
+                      <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                      {renderProgressLabel}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    data-slot="restart-storyboard"
+                    disabled={!canDispatchDecisions}
+                    onClick={regenerateStoryboard}
+                    className="inline-flex h-8 items-center rounded-control border border-border px-3 text-xs font-medium hover:bg-muted/50 disabled:opacity-50"
+                  >
+                    {decisionsBusy ? "创建新分镜中…" : "重新分镜"}
+                  </button>
+                  <button
+                    type="button"
+                    data-slot="rerender-current-storyboard"
+                    disabled={!video || decisionsBusy || renderDispatchBusy}
+                    onClick={regenerateCurrentStoryboard}
+                    className="inline-flex h-8 items-center rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground disabled:opacity-50"
+                  >
+                    按当前分镜重新生成
+                  </button>
+                </div>
+              </div>
+            ) : null}
             {recoveredDecisions && !video ? (
               <p className="text-xs text-muted-foreground">
                 已恢复上次的决策候选;刷新后视频引用丢失,请重新上传粗剪视频后再确认渲染。
@@ -2100,8 +2427,11 @@ export function ProductionWorkbench({
               title={projectTitle}
               talkingHeadAssetId={video?.assetId ?? null}
               talkingHeadDurationSec={video?.durationSec ?? undefined}
-              orientation={orientation}
+              orientation={renderOrientation}
+              readOnly={decisionsConfirmed}
+              confirming={renderDispatchBusy}
               onConfirm={(payload) => void onConfirmDecisions(payload)}
+              onRestoryboard={restoryboardWithManualAssignments}
               onDiscard={onDiscardDecisions}
             />
           </>
@@ -2114,7 +2444,7 @@ export function ProductionWorkbench({
       </section>
 
       {/* ④ 渲染跟踪(执行确认卡 + 环境引导) */}
-      {renderTaskId ? (
+      {renderDispatchBusy || renderTaskId ? (
         <section
           data-slot="production-render"
           className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
@@ -2128,25 +2458,37 @@ export function ProductionWorkbench({
               {renderEnvHint}
             </p>
           ) : null}
-          <ExecutionTaskCard
-            taskId={renderTaskId}
-            projectId={projectId}
-            onTaskIdChange={(nextTaskId) => {
-              setRenderEnvHint(null);
-              setRenderFinalizeError(null);
-              setRenderTaskId(nextTaskId);
-            }}
-            onTaskUpdate={(task) => {
-              if (
-                task.status === "succeeded" &&
-                task.adoptedAssetIds.length > 0
-              ) {
-                // 采纳动作已拿到真实 assetId，立即唤醒外层收口 usage/export/预览；
-                // 不等 4 秒轮询，也不要求用户再点一次“重试渲染”。
-                setRenderFinalizeRetry((value) => value + 1);
-              }
-            }}
-          />
+          {renderTaskId ? (
+            <ExecutionTaskCard
+              taskId={renderTaskId}
+              projectId={projectId}
+              onTaskIdChange={(nextTaskId) => {
+                setRenderEnvHint(null);
+                setRenderFinalizeError(null);
+                setRenderTaskId(nextTaskId);
+                setRenderTaskStatus("queued");
+              }}
+              onTaskUpdate={(task) => {
+                setRenderTaskStatus(task.status as RenderFlowStatus);
+                if (
+                  task.status === "succeeded" &&
+                  task.adoptedAssetIds.length > 0
+                ) {
+                  // 采纳动作已拿到真实 assetId，立即唤醒外层收口 usage/export/预览；
+                  // 不等 4 秒轮询，也不要求用户再点一次“重试渲染”。
+                  setRenderFinalizeRetry((value) => value + 1);
+                }
+              }}
+            />
+          ) : (
+            <div
+              data-slot="render-launch-loading"
+              className="flex items-center gap-2 rounded-control border border-border bg-muted/30 p-3 text-sm text-muted-foreground"
+            >
+              <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+              {renderProgressLabel}
+            </div>
+          )}
           {renderFinalizeError ? (
             <div
               data-slot="render-finalize-error"
@@ -2171,13 +2513,13 @@ export function ProductionWorkbench({
               <p className="text-xs font-medium text-foreground">成片预览</p>
               <FinalVideoPreview
                 assetId={finalVideoAssetId}
-                orientation={orientation}
+                orientation={renderOrientation}
               />
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              渲染完成后在上方卡片「采纳进素材库」—— 采纳才入库(exportRecord 同步
-              ready),丢弃/重试都在卡内;采纳后成片在此内联预览。
+              渲染完成后可先在上方卡片预览；确认满意再「采纳为项目成片」。未采纳的新版本
+              不会替换当前成片，丢弃/重试都在卡内。
             </p>
           )}
         </section>

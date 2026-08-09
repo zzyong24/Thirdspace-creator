@@ -2019,12 +2019,13 @@ describe("T-482 内容雷达工作区", () => {
 
     expect(stub.previewTopic).toHaveBeenCalledTimes(1);
     expect(
-      await screen.findByRole("button", {
-        name: "正在生成选题候选",
-      }),
-    ).toBeDisabled();
+      await screen.findByRole("status"),
+    ).toHaveTextContent("正在生成候选");
     expect(
       screen.getByText(/正在结合当前定位和逐字稿生成/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("后台完成后会自动更新当前选题，无需切换选题或页面。"),
     ).toBeInTheDocument();
 
     finishPreview({
@@ -2137,6 +2138,80 @@ describe("T-482 内容雷达工作区", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("[T-642] 重新进入后台生成中的当前选题时自动续接，读取抖动后仍回显选题卡", async () => {
+    vi.useFakeTimers();
+    const stub = api();
+    const pending: RadarItemDetail = {
+      ...detail,
+      snapshots: [
+        {
+          id: "snapshot-1",
+          title: "真实作品",
+          capturedAt: "2026-07-23T12:00:00.000Z",
+          finalUrl: detail.item.canonicalUrl,
+        },
+      ],
+      transcript: {
+        itemId: detail.item.id,
+        status: "done",
+        text: "完整逐字稿",
+        errorCode: null,
+      },
+      transforms: [
+        {
+          id: "transform-resume",
+          status: "candidate",
+          taskStatus: "running",
+          taskErrorCode: null,
+          taskErrorMessage: null,
+          outputSnapshot: null,
+          targetTopicId: null,
+        },
+      ],
+    };
+    const completed: RadarItemDetail = {
+      ...pending,
+      transforms: [
+        {
+          ...pending.transforms[0]!,
+          taskStatus: "succeeded",
+          outputSnapshot: {
+            title: "无需切换选题即可看到的新卡片",
+            angle: "当前选题角度",
+            differentiation: "本账号差异化",
+            sourceSummary: "真实摘要",
+            hook: "自动回显",
+            structureSteps: ["拆解", "生成", "回显"],
+          },
+        },
+      ],
+    };
+    stub.getItem = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("temporary network error"))
+      .mockResolvedValue(completed);
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={pending}
+        positioningVersionId="positioning-v1"
+        api={stub}
+      />,
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+
+    expect(stub.getItem).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByDisplayValue("无需切换选题即可看到的新卡片"),
+    ).toBeInTheDocument();
+  });
+
   it("[T-579] 生成任务失败后停止假进度，显示真实错误并允许重新生成", async () => {
     const stub = api();
     const readyDetail: RadarItemDetail = {
@@ -2211,7 +2286,18 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeEnabled();
   });
 
-  it("[T-646] 改写阶段失败仍展示拆解和选题，不把已有结果清空", () => {
+  it("[T-646] 改写阶段失败保留已有结果，并可只重试未完成部分", async () => {
+    const stub = api();
+    vi.mocked(stub.previewTopic).mockResolvedValue({
+      transform: {
+        id: "transform-retry",
+        status: "candidate",
+        outputSnapshot: null,
+        targetTopicId: null,
+      },
+      task: { id: "task-retry", status: "queued" },
+    });
+    vi.mocked(stub.getItem).mockImplementation(() => new Promise(() => {}));
     render(
       <IntelligenceWorkbench
         accountId="account-1"
@@ -2224,6 +2310,14 @@ describe("T-482 内容雷达工作区", () => {
             status: "done",
             text: "来源完整逐字稿",
           },
+          snapshots: [
+            {
+              id: "snapshot-partial",
+              title: "真实作品",
+              capturedAt: "2026-07-23T12:00:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+          ],
           transforms: [
             {
               id: "transform-partial",
@@ -2261,7 +2355,7 @@ describe("T-482 内容雷达工作区", () => {
             },
           ],
         }}
-        api={api()}
+        api={stub}
         positioningVersionId="positioning-1"
       />,
     );
@@ -2277,6 +2371,28 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       screen.getByRole("button", { name: "确认写入选题池" }),
     ).toBeDisabled();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "重试生成选题卡" }),
+    );
+
+    await waitFor(() =>
+      expect(stub.previewTopic).toHaveBeenCalledWith(
+        expect.objectContaining({
+          itemId: "item-1",
+          sourceSnapshotId: "snapshot-partial",
+          positioningVersionId: "positioning-1",
+          idempotencyKey: expect.any(String),
+        }),
+      ),
+    );
+    expect(screen.getByText("反常识开场")).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("先稳定流程，再选择模型"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("拆解和选题已保留，正在重试改写初稿"),
+    ).toBeInTheDocument();
   });
 
   it("博主主页必须真实预览成功后才能保存并首次同步", async () => {

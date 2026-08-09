@@ -438,7 +438,16 @@ export interface ScriptViewModel extends BasePageViewModel {
   readonly outline: ReadonlyArray<{ readonly id: Id; readonly heading: string; readonly position: number }>;
   readonly aiSuggestions: ReadonlyArray<{ readonly id: Id; readonly title: string; readonly body: string }>;
   readonly goldenQuotes: ReadonlyArray<{ readonly id: Id; readonly text: string }>;
-  readonly versions: ReadonlyArray<{ readonly id: Id; readonly label: string; readonly createdAt: Iso8601 }>;
+  readonly versions: ReadonlyArray<{
+    readonly id: Id;
+    readonly label: string;
+    readonly createdAt: Iso8601;
+    /** T-716:稿面版本下拉需要真实序号、摘要与只读预览；均为加法字段，旧 fixture 可省略。 */
+    readonly versionNumber?: number;
+    readonly summary?: string;
+    readonly previewText?: string;
+    readonly isCurrent?: boolean;
+  }>;
   readonly toolbarState: {
     readonly wordCount: number;
     readonly savedAt: Iso8601;

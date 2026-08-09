@@ -327,6 +327,79 @@ export interface ChannelModelServiceState {
   readonly helpUrl: string | null;
 }
 
+/**
+ * 设置弹窗是普通用户界面，不能把渠道内部服务实现随 RSC payload 下发给浏览器。
+ * 运行时仍在 server/ai-runtime 使用完整 service/provider/baseUrl；这里仅保留
+ * 模型选择和“是否已有受管额度”的最小业务投影。
+ */
+export function sanitizeModelAuthorityForClient(
+  state: ModelAuthorityState | undefined,
+): ModelAuthorityState | undefined {
+  if (!state) return undefined;
+
+  const capabilities = state.capabilities
+    ? Object.fromEntries(
+        Object.entries(state.capabilities).map(([capability, item]) => [
+          capability,
+          item
+            ? {
+                ...item,
+                serviceId: null,
+                serviceName: null,
+                provider: null,
+                baseUrl: null,
+                ...(capability === "transcribe.audio"
+                  ? {
+                      modelName: "语音转文字",
+                      model: null,
+                      optionId: null,
+                      modelOptions: undefined,
+                    }
+                  : {}),
+              }
+            : item,
+        ]),
+      ) as ModelAuthorityState["capabilities"]
+    : undefined;
+
+  const hasManagedCredits = state.services?.some(
+    (service) => service.credentialSource === "activation_managed",
+  );
+  const userInputServices = state.services
+    ?.filter((service) => service.credentialSource !== "activation_managed")
+    .map((service) => ({
+      ...service,
+      serviceName: "模型访问服务",
+      portalUrl: null,
+      purchaseUrl: null,
+      rechargeUrl: null,
+      helpUrl: null,
+    }));
+  const services: ModelAuthorityState["services"] = [
+    ...(hasManagedCredits
+      ? [
+          {
+            serviceId: "managed-ai-credits",
+            serviceName: "AI 额度服务",
+            hasSecret: true,
+            credentialSource: "activation_managed" as const,
+            portalUrl: null,
+            purchaseUrl: null,
+            rechargeUrl: null,
+            helpUrl: null,
+          },
+        ]
+      : []),
+    ...(userInputServices ?? []),
+  ];
+
+  return {
+    ...state,
+    capabilities,
+    services: services.length > 0 ? services : undefined,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Multimodal (image / video) model config — SPEC 2026-07-01 §2.1 / M3
 // ---------------------------------------------------------------------------
@@ -478,6 +551,7 @@ export function SettingsPage({
   const vm = douyinAccount
     ? { ...withMultimodal, douyinAccount }
     : withMultimodal;
+  const clientModelAuthority = sanitizeModelAuthorityForClient(modelAuthority);
   // 设置改弹窗式:页面本身只留一个 marker (供 shell-router 路由 + 测试定位),
   // 真正的内容是浮在其上的居中大弹窗 (SettingsDialog,Radix Portal 到 body)。
   // 弹窗默认打开,关闭 → router.back() 回上一页。背景仍是 (creator) 的 AppShell
@@ -491,7 +565,7 @@ export function SettingsPage({
     >
       <SettingsDialog
         viewModel={vm}
-        modelAuthority={modelAuthority}
+        modelAuthority={clientModelAuthority}
         skills={skills}
         activation={activation}
         channelLinks={channelLinks}

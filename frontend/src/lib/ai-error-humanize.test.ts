@@ -23,6 +23,19 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
     expect(human!.suggestSwitchModel).toBe(true);
   });
 
+  it("当前模型不支持图片输入 → 清晰提示切换视觉模型", () => {
+    for (const raw of [
+      "This model does not support image input.",
+      "unsupported vision content for current model",
+    ]) {
+      expect(humanizeAiErrorMessage(raw)).toMatchObject({
+        code: "image_input_unsupported",
+        message: "当前模型不支持识别图片，请切换支持图片的模型，或改用文字描述。",
+        suggestSwitchModel: true,
+      });
+    }
+  });
+
   it("OpenAI model_not_found / does not exist 风格也归入同一模型分类", () => {
     for (const raw of [
       '{"error":{"code":"model_not_found","message":"The model was not found"}}',
@@ -84,6 +97,19 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
     const human = humanizeAiErrorMessage("insufficient balance (1008)");
     expect(human).not.toBeNull();
     expect(human!.suggestSwitchModel).toBe(true);
+    expect(human!.suggestOpenCredits).not.toBe(true);
+  });
+
+  it("受管 AI 额度不足 → 引导充值，不误导用户修改模型", () => {
+    const human = humanizeAiErrorMessage(
+      "ManagedAiCreditExhaustedError: AI 额度不足，请充值后再试。",
+    );
+    expect(human).toMatchObject({
+      code: "quota_exhausted",
+      message: "AI 额度不足，请充值后再试。",
+      suggestSwitchModel: false,
+      suggestOpenCredits: true,
+    });
   });
 
   it("不命中规则 → null(诚实,不把未知错误装成人话)", () => {

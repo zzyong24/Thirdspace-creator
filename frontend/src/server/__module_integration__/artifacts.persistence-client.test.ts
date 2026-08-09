@@ -2,12 +2,13 @@ import { describe, it, expect, beforeEach } from "vitest";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
+  getChatRuntime,
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { ARTIFACT_OP_IDS } from "@creatoros/backend/modules/artifacts";
 
-// Step 4/5 — the 7 artifacts ops are registered into the composite (PERSISTED_OPS)
+// Step 4/5 — the 8 artifacts ops are registered into the composite (PERSISTED_OPS)
 // and a versions.create round-trips through compositeTransport against the seeded
 // pglite store. Proves the module is wired into the SAME store server reads + the
 // /api/v1 route share (foundation §1 registry) — this is the FE save path.
@@ -52,7 +53,7 @@ beforeEach(async () => {
     owner,
   )) as { data: { id: string } };
   SCRIPT_ARTIFACT_ID = artifact.data.id;
-  // 铸初始版本:createArtifact 不自动建版,restore 用例需要非空 currentVersionId。
+  // createArtifact 已自动建立空白 v1；再建立一版真实稿面，供版本切换和局部改稿使用。
   await compositeTransport.request(
     ep("artifacts.versions.create"),
     {
@@ -65,7 +66,7 @@ beforeEach(async () => {
 });
 
 describe("artifacts ops registered in the composite transport", () => {
-  it("the 7 artifacts op ids are persistence-backed (not the mock)", async () => {
+  it("the 8 artifacts op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of ARTIFACT_OP_IDS) {
@@ -73,7 +74,7 @@ describe("artifacts ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(ARTIFACT_OP_IDS).toHaveLength(7);
+    expect(ARTIFACT_OP_IDS).toHaveLength(8);
   });
 
   it("artifacts.list returns the seeded artifacts for the owner (user-scoped)", async () => {
@@ -124,14 +125,18 @@ describe("artifacts ops registered in the composite transport", () => {
     expect(list.data.some((r) => r.id === created.data.id)).toBe(true);
   });
 
-  it("artifacts.restore round-trips: restoring an old version mints a NEW current version", async () => {
+  it("artifacts.restore round-trips: restoring re-points to the selected immutable version", async () => {
     const owner = ctx(canonicalDataset.user.id);
-    const before = (await compositeTransport.request(
-      ep("artifacts.get"),
-      { params: { artifactId: SCRIPT_ARTIFACT_ID }, query: undefined, body: undefined } as never,
+    const versionsBefore = (await compositeTransport.request(
+      ep("artifacts.versions.list", true),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: { page: 1, pageSize: 50 },
+        body: undefined,
+      } as never,
       owner,
-    )) as { data: { currentVersionId: string } };
-    const oldVersionId = before.data.currentVersionId;
+    )) as { data: Array<{ id: string }> };
+    const oldVersionId = versionsBefore.data[0]!.id;
 
     const restored = (await compositeTransport.request(
       ep("artifacts.restore"),
@@ -142,6 +147,99 @@ describe("artifacts ops registered in the composite transport", () => {
       } as never,
       owner,
     )) as { data: { currentVersionId: string } };
-    expect(restored.data.currentVersionId).not.toBe(oldVersionId);
+    expect(restored.data.currentVersionId).toBe(oldVersionId);
+
+    const versionsAfter = (await compositeTransport.request(
+      ep("artifacts.versions.list", true),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: { page: 1, pageSize: 50 },
+        body: undefined,
+      } as never,
+      owner,
+    )) as { data: Array<{ id: string }> };
+    expect(versionsAfter.data).toHaveLength(versionsBefore.data.length);
+  });
+
+  it("artifacts.scriptPatches.apply round-trips through the deterministic write command", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const source = (await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: {
+          contentText: "第一段\n\n第二段",
+          contentData: {
+            sections: [
+              { id: "section-1", body: "第一段" },
+              { id: "section-2", body: "第二段" },
+            ],
+          },
+          changeSummary: "结构化脚本",
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+
+    const patched = (await compositeTransport.request(
+      ep("artifacts.scriptPatches.apply"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: {
+          expectedVersionId: source.data.id,
+          sectionId: "section-2",
+          expectedOriginalText: "第二段",
+          replacementText: "只改第二段",
+          changeSummary: "局部改稿",
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string; contentData: { sections: Array<{ body: string }> } } };
+
+    expect(patched.data.contentData.sections.map((section) => section.body)).toEqual([
+      "第一段",
+      "只改第二段",
+    ]);
+  });
+
+  it("[T-732] 当前 AI 整稿没有历史 section id 时仍能按第 2 段重绑", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const current = (await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: {
+          contentText: "第一段\n\n第二段",
+          contentData: {
+            sections: [
+              { heading: "第一段", body: "正文一" },
+              { heading: "第二段", body: "正文二" },
+            ],
+          },
+          changeSummary: "历史 AI 整稿",
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+
+    const runtime = await getChatRuntime();
+    await expect(
+      runtime.resolveCurrentScriptSelection?.(owner, {
+        artifactId: SCRIPT_ARTIFACT_ID,
+        versionId: current.data.id,
+        sectionId: "script-saved-1",
+        sectionIndex: 1,
+        excerpt: "正文二",
+      }),
+    ).resolves.toEqual({
+      artifactId: SCRIPT_ARTIFACT_ID,
+      versionId: current.data.id,
+      sectionId: "script-saved-1",
+      originalText: "正文二",
+      matchStrategy: "id",
+    });
   });
 });

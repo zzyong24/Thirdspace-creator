@@ -6,16 +6,23 @@ import {
   resolveMasterKey,
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
+  sql,
+  type Db,
   // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
   // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
   restorePreservedUserAssets,
 } from "@creatoros/backend";
-import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
+import { videoRenderProps, type Endpoint, type Transport, type RequestContext } from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
+import {
+  prepareManagedTranscribeSpec,
+  transcribeWithManagedFallback,
+} from "@/server/activation/managed-asr.server";
+import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
 import { buildScriptDraftTaskInputData } from "@/server/script-draft-task-input";
 import {
   contentRadarDraftSeedOf,
@@ -26,15 +33,18 @@ import {
   buildPublishingScheduleProjection,
   type PublishingScheduleProjection,
 } from "./publishing-schedule-projection";
+import { resolveCurrentScriptSelectionFromTruth } from "./current-script-selection";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
 import {
   listPositioningWorksWithPublicationFacts,
   listRecentProjectsWithPublicationFacts,
+  searchProjectsWithPublicationFacts,
 } from "./recent-projects-context";
 import { composeDashboardTodos } from "@creatoros/backend/modules/query-services";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
+import { listAllProjectMaterialAssets } from "@/server/material-export-pagination";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
 // [T-135] DOUYIN_FAN_TOTAL 已随 canonical platform account seed(唯一使用点)退役移除。
 import {
@@ -132,6 +142,7 @@ import {
   // [T-135] AssetRow / AssetFileRow 已随 canonical assets seed(toAssetRow/toAssetFileRow)退役移除。
 } from "@creatoros/backend/modules/assets";
 import {
+  canonicalizeScriptSectionRecords,
   createArtifactRepository,
   createArtifactsService,
   createArtifactsTransport,
@@ -175,6 +186,7 @@ import {
   createReviewGateRepository,
 } from "@creatoros/backend/modules/review";
 import { runScriptReview } from "@creatoros/backend/modules/ai-runtime";
+import { runPlanningThesis } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialSummary } from "@creatoros/backend/modules/ai-runtime";
 import { runEmbedTexts } from "@creatoros/backend/modules/ai-runtime";
 import {
@@ -251,7 +263,10 @@ import type {
   ContextDeps as CreativeContextDeps,
   ProjectBriefReader,
 } from "@creatoros/backend/modules/ai-runtime";
-import type { ContextReaders as ChatContextReaders } from "@creatoros/backend/modules/ai-runtime";
+import type {
+  ContextReaders as ChatContextReaders,
+  ProjectLifecycleRaw,
+} from "@creatoros/backend/modules/ai-runtime";
 import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
 import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
 import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
@@ -456,7 +471,6 @@ import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
 import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
-import { runPlanningThesis } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningContract } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningOutline } from "@creatoros/backend/modules/ai-runtime";
 import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
@@ -557,8 +571,10 @@ import {
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
-// [T-269/T-270] planning.thesis 也走声明式注入(补 brief 硬锚 + projectMaterials 素材可溯的 reader)。
-import { SCRIPT_DRAFT_TEMPLATE, PLANNING_THESIS_TEMPLATE } from "@creatoros/ai-worker";
+import {
+  PLANNING_THESIS_TEMPLATE,
+  SCRIPT_DRAFT_TEMPLATE,
+} from "@creatoros/ai-worker";
 // [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
 import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
@@ -1210,6 +1226,13 @@ interface PersistenceBundle {
   ai: Transport;
   // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
   execution: Transport;
+  executionPreviewRuntime: {
+    readVideo(
+      ctx: RequestContext,
+      taskId: string,
+      artifactPath: string,
+    ): Promise<{ bytes: Uint8Array; mimeType: string }>;
+  };
   // T-482 内容雷达领域 transport。
   intelligence: Transport;
   positioning: Transport;
@@ -1353,6 +1376,42 @@ export interface ChatRuntime {
     ctx: RequestContext,
     sessionId: string,
   ) => Promise<PositioningDiscoverySessionResource>;
+  /**
+   * [T-716] 局部改稿可信锚点。浏览器只负责表达“用户点了哪一段”，服务端在每次发送前
+   * 重新读取 artifact.currentVersionId 与当前版本正文，避免恢复/保存后继续拿旧快照改稿。
+   */
+  resolveCurrentScriptSelection?: (
+    ctx: RequestContext,
+    input: {
+      artifactId: string;
+      versionId?: string;
+      sectionId: string;
+      sectionIndex?: number;
+      excerpt: string;
+    },
+  ) => Promise<{
+    artifactId: string;
+    versionId: string;
+    sectionId: string;
+    originalText: string;
+    matchStrategy: "id" | "text" | "position" | "whole_text";
+  } | null>;
+  /**
+   * Copilot 附件读取门：先经 asset user+account 归属校验，再取 current file 与字节。
+   * 路由只在单次模型调用内消费 bytes；消息持久化只保存 assetId。
+   */
+  readChatAttachment?: (
+    ctx: RequestContext,
+    assetId: string,
+  ) => Promise<{
+    assetId: string;
+    name: string;
+    assetType: string;
+    mimeType: string;
+    fileSize: number;
+    extractedText: string | null;
+    bytes: Uint8Array;
+  }>;
   context: ChatContextDeps;
   // 只读 context 工具(context.projects / context.knowledge / context.materials)的真数据读端口。
   // 与 `context`(CreativeContext facet reader,进 system 的记忆)不同:这些是「用户问才实时拉」的
@@ -1514,9 +1573,6 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
-  // [T-265] planning.thesis 端口 —— ensure 项目 thesis_tree artifact + dispatch 既有 planning.thesis
-  // ai_task(复活孤儿 runPlanningThesis),立即返回 taskId(不阻塞对话回合)。对话论点树工具
-  // (planning.thesis)据此触发,前端 ChatThesisCard 轮询 getTask → awaiting_confirmation 渲候选 → 采纳落面板。
   dispatchPlanningThesis: (
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
@@ -1553,6 +1609,17 @@ export interface ChatRuntime {
       verbatimSourceSha256?: string;
     },
   ) => Promise<{ taskId: string }>;
+  prepareVideoEdit: (
+    ctx: RequestContext,
+    input: {
+      projectId: string;
+      instruction: string;
+      removeBrollAssetIds?: string[];
+      replaceBroll?: Array<{ sceneIdx: number; assetId: string }>;
+      moveBroll?: Array<{ assetId: string; at: number; durationSec?: number }>;
+      removeCardIndexes?: number[];
+    },
+  ) => Promise<import("@creatoros/backend/modules/ai-runtime").VideoEditToolResult>;
   // [T-350a] publish.package 端口 —— ensure 内容产出挂点(outputId)+ 读整稿正文(空稿诚实门)
   // + dispatch 既有 publish.platform_adapt runner(单平台抖音,platform.adapt 模板已内嵌审核 SOP),
   // 立即返回 taskId。发布物料工具(publish.package)据此触发,前端候选卡轮询 → 采纳物化 Publication。
@@ -2444,36 +2511,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // [T-366b] 素材包统一导出接线 —— 全部经各模块公开 service(无跨模块 repo):
     //   素材枚举 materialLinksService.list / 素材名+字节 assetsService / 口播稿
     //   makeReviewSubjectReader().getScript(与复盘同一读法)/ 四决策 aiService
-    //   listTasks+listResults(video.decisions 最近候选)/ zip 落 asset
-    //   createGeneratedAsset(服务端直写,P-04 本地不出网)/ 下载 getDownloadUrl。
+    //   listTasks+listResults(video.decisions 最近候选)/ zip 只落一次性对象存储产物。
     //   下方各 const(materialLinksService/aiService/makeReviewSubjectReader)在
     //   request 时才求值(lazy 箭头,TDZ-safe,同 learningsService thunk 范式)。
     materialExport: {
       resolveProjectIdByOutput: (ctx, outputId) =>
         projectsService.getProjectIdByOutput(ctx, outputId),
-      storeZipAsset: async (ctx, input) => {
-        const asset = await assetsService.createGeneratedAsset(ctx, {
-          assetType: "document",
+      storeDownloadArtifact: (ctx, input) =>
+        assetsService.createTemporaryDownload(ctx, {
           name: input.name,
           bytes: input.bytes,
           mimeType: "application/zip",
-        });
-        return { assetId: asset.id };
-      },
-      getDownloadUrl: (ctx, assetId) =>
-        assetsService.getDownloadUrl(ctx, assetId),
+        }),
       ports: {
         // 项目关联素材全量(VP-04 不挑不减):materialLinks entityType=asset。
-        listMaterialAssets: async (ctx, projectId) => {
-          const { rows } = await materialLinksService.list(ctx, {
-            projectId,
-            page: 1,
-            pageSize: 100,
-          });
-          return rows
-            .filter((l) => l.entityType === "asset")
-            .map((l) => ({ assetId: l.entityId, role: l.role }));
-        },
+        listMaterialAssets: (ctx, projectId) =>
+          listAllProjectMaterialAssets(projectId, (query) =>
+            materialLinksService.list(ctx, query),
+          ),
         getAssetName: async (ctx, assetId) => {
           try {
             const a = await assetsService.getAsset(ctx, assetId);
@@ -3047,6 +3102,98 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     artifacts: {
       createVersion: (ctx, artifactId, input) =>
         artifactsService.createVersion(ctx, artifactId, input),
+      adoptThesisCandidate: async (ctx, input) => {
+        const accountId = requireAccountId(
+          ctx.accountId,
+          "ai.adoptThesisCandidate",
+        );
+        await db.transaction(async (transaction) => {
+          const txDb = transaction as unknown as Db;
+          // 先锁项目，再锁任务：同一项目的并发确认按固定顺序串行，避免铸出两个 thesis_tree。
+          const projectLock = await txDb.execute(sql`
+            SELECT id
+            FROM projects
+            WHERE id = ${input.projectId}
+              AND user_id = ${ctx.userId}
+              AND account_id = ${accountId}
+            FOR UPDATE
+          `);
+          if (projectLock.rows.length === 0) {
+            throw new OwnershipError("Project not found");
+          }
+          await txDb.execute(sql`
+            SELECT id
+            FROM ai_tasks
+            WHERE id = ${input.taskId}
+              AND user_id = ${ctx.userId}
+              AND account_id = ${accountId}
+            FOR UPDATE
+          `);
+
+          const txAiRepo = createAiRepository(txDb, {
+            now: deps.now,
+            nextId: deps.nextId,
+            userId: ctx.userId,
+            accountId,
+          });
+          const lockedTask = await txAiRepo.requireTask(input.taskId);
+          if (lockedTask.status === "succeeded") return;
+          if (
+            lockedTask.status !== "awaiting_confirmation" ||
+            lockedTask.taskType !== "planning.thesis" ||
+            lockedTask.projectId !== input.projectId
+          ) {
+            throw new Error(
+              `planning.thesis adoption state mismatch: ${lockedTask.status}`,
+            );
+          }
+
+          const txArtifacts = createArtifactsService({
+            db: txDb,
+            now: deps.now,
+            nextId: deps.nextId,
+          });
+          const projectArtifacts = await txArtifacts.listProjectArtifacts(
+            ctx,
+            input.projectId,
+          );
+          const thesisArtifact =
+            projectArtifacts.find(
+              (artifact) => artifact.artifactType === "thesis_tree",
+            ) ??
+            (await txArtifacts.createArtifact(ctx, {
+              projectId: input.projectId,
+              title: "论点骨架",
+              artifactType: "thesis_tree",
+              stage: "planning",
+            }));
+          const versions = await txArtifacts.listVersions(ctx, thesisArtifact.id);
+          const existing = versions.find(
+            (version) => version.aiTaskId === input.taskId,
+          );
+          if (existing) {
+            if (thesisArtifact.currentVersionId !== existing.id) {
+              await txArtifacts.restoreVersion(
+                ctx,
+                thesisArtifact.id,
+                existing.id,
+              );
+            }
+          } else {
+            await txArtifacts.createVersion(ctx, thesisArtifact.id, {
+              contentText: input.contentText,
+              changeSummary: input.changeSummary,
+              contentData: input.contentData,
+              createdByType: "ai",
+              aiTaskId: input.taskId,
+            });
+          }
+          await txAiRepo.updateTaskStatus(input.taskId, {
+            status: "succeeded",
+            completedAt: deps.now(),
+          });
+        });
+      },
     },
     // 机制③ candidate-confirm bus — confirmTask materializes a `material_list` candidate
     // (research_gather node) into KnowledgeItems through the Knowledge public service.
@@ -3489,9 +3636,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-270] 立项 Brief reader 工厂(单一真值)—— 读项目 brief_detail jsonb 的全核心字段(画幅 +
   // 核心信息/内容目标/内容形式/目标受众/成功标准),供 creative-context 渲成立项硬锚段。dispatch 路径
-  // (script.draft/planning.thesis)与对话路径(runtime.context → chat)共用同一份读法,不造影子。
+  // script.draft 与对话路径(runtime.context → chat)共用同一份读法,不造影子。
   // 病根:此前 dispatch 内联 briefReader 只投影 orientation + 对话路径根本没绑 brief → brief 核心字段
-  // 从读取端就被丢。best-effort:读不到 → null(绝不阻塞写文案/立论点)。
+  // 从读取端就被丢。best-effort:读不到 → null(绝不阻塞写文案)。
   const makeBriefReader = (): ProjectBriefReader => ({
     getBriefDetail: async (c, projectId) => {
       try {
@@ -3547,12 +3694,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           contentFormat: d.contentFormat,
           targetAudience: d.targetAudience,
           successCriteria: d.successCriteria,
-          // [T-284a] 带出复刻参照(creative-context 据此产 benchmarkRefBrief 回流写稿/立论点/搭结构)。
+          // [T-284a] 带出复刻参照(creative-context 据此产 benchmarkRefBrief 回流写稿/搭结构)。
           benchmarkRef: d.benchmarkRef,
           contentRadarEvidence: d.contentRadarEvidence,
         };
       } catch {
-        return null; // best-effort;读不到 brief 绝不阻塞写文案/立论点
+        return null; // best-effort;读不到 brief 绝不阻塞写文案
       }
     },
   });
@@ -3752,10 +3899,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return rows;
           },
         };
-        // 论点树 reader (策划 downstream nodes) — read the project's `thesis_tree` artifact's
-        // current version's `contentData.nodes` back as the upstream 编导判断 that
-        // planning.contract / planning.outline build on. Reaches Artifacts ONLY through the
-        // public service (listProjectArtifacts + listVersions); no cross-module repo import.
         const readArtifactContentData = async (
           c: RequestContext,
           projectId: string,
@@ -3769,32 +3912,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           if (!target) return null;
           const versions = await artifactsService.listVersions(c, target.id);
           if (versions.length === 0) return null;
-          const current = versions
-            .slice()
-            .sort((a, b) => b.versionNumber - a.versionNumber)[0];
+          const current =
+            versions.find((version) => version.id === target.currentVersionId) ??
+            versions.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
           const data = current?.contentData;
           return data && typeof data === "object" && !Array.isArray(data)
             ? (data as Record<string, unknown>)
             : null;
         };
+        // T-730：生成式写稿只读取当前项目当前 thesis_tree 版本上明确 adopted 的节点。
+        // 历史无标记、inactive 或非法状态一律返回空；UI 读侧仍可展示这些历史内容。
         const thesisReader = {
           getThesisNodes: async (c: RequestContext, projectId: string) => {
-            const data = await readArtifactContentData(
-              c,
-              projectId,
-              "thesis_tree",
-            );
-            const rawNodes = Array.isArray(data?.nodes) ? data!.nodes : [];
+            const data = await readArtifactContentData(c, projectId, "thesis_tree");
+            const basis =
+              data?.scriptBasis &&
+              typeof data.scriptBasis === "object" &&
+              !Array.isArray(data.scriptBasis)
+                ? (data.scriptBasis as { status?: unknown })
+                : null;
+            if (basis?.status !== "adopted") return [];
+            const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
             return rawNodes
               .map((raw) => {
-                const o = (raw ?? {}) as Record<string, unknown>;
+                const node = (raw ?? {}) as Record<string, unknown>;
                 return {
-                  column: typeof o.column === "string" ? o.column : "",
-                  title: typeof o.title === "string" ? o.title : "",
-                  summary: typeof o.summary === "string" ? o.summary : "",
+                  column: typeof node.column === "string" ? node.column : "",
+                  title: typeof node.title === "string" ? node.title : "",
+                  summary: typeof node.summary === "string" ? node.summary : "",
                 };
               })
-              .filter((n) => n.column && (n.title || n.summary));
+              .filter((node) => node.column && (node.title || node.summary));
           },
         };
         // 内容合同 reader (planning.outline) — read the project's `content_contract`
@@ -3822,7 +3970,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 结构方案 reader (SEAM-01, script.draft) — read the project's `content_outline`
         // artifact's current version `contentData` ({structureType, opening, sections,
         // ending, cta}) back as the blueprint the script.draft node fleshes out. Same
-        // public-service read path as thesis/contract (no cross-module repo import).
+        // public-service read path as contract (no cross-module repo import).
         const outlineReader = {
           getOutline: async (c: RequestContext, projectId: string) => {
             const data = await readArtifactContentData(
@@ -3863,7 +4011,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // F2 消费侧隔离 reader (T-030-D4, SPEC §7 边界②) — reports the origin of the
         // project's current artifact of a given type so assembleCreativeContext can mark a
-        // reconstructed thesis/contract/outline brief "未经确认" before it rides downstream
+        // reconstructed contract/outline brief "未经确认" before it rides downstream
         // as a 已确认前提. Reuses the SAME public-service read (listProjectArtifacts →
         // ArtifactRow.origin) the content readers use — no extra content fetch, no repo import.
         const artifactOriginReader = {
@@ -4273,6 +4421,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
+          task.taskType === "planning.thesis" &&
+          task.status === "queued"
+        ) {
+          await runPlanningThesis(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              ...resolveContextDeps(
+                PLANNING_THESIS_TEMPLATE.contextRequirements,
+                contextReaderRegistry,
+              ),
+              positioning: positioningReader,
+              resolveModelSpec,
+            },
+          );
+        } else if (
+          task &&
           task.taskType === "script.draft" &&
           task.status === "queued"
         ) {
@@ -4308,76 +4479,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
-          task.taskType === "planning.thesis" &&
-          task.status === "queued"
-        ) {
-          // 论点树 node (策划 stage) — drafts a thesis tree (核心论点 + 支撑/证据/反驳
-          // 分支) from the creative context, records an `artifact_version` candidate;
-          // 采纳 appends a new ArtifactVersion onto the project's `thesis_tree` artifact
-          // (reuses the existing artifact_version confirm path). The 策划 workspace reads
-          // that version's contentData.nodes back into the 论点树 surface.
-          // [T-269/T-270] 声明式 context 注入(同 script.draft 范式):按 PLANNING_THESIS_TEMPLATE
-          // .contextRequirements 从中央 registry 自动取 reader —— 补上此前手列漏掉的 brief(立项硬锚)
-          // + projectMaterials(素材可溯弹药)+ artifactOrigin(F2 反推标注),不再只有 positioning/
-          // learnings 两项悬空。positioning 显式 pin 满足 PlanningDeps 必需类型(值同 registry,零行为变化)。
-          await runPlanningThesis(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              ...resolveContextDeps(
-                PLANNING_THESIS_TEMPLATE.contextRequirements,
-                contextReaderRegistry,
-              ),
-              positioning: positioningReader,
-              // [T-387a] 项目弹药 reader(materialLinks ⋈ assets/knowledge 轻量 id+标题+类型
-              // 投影,与稿面 readAmmo 同一数据源)—— runner 产树后据此对支撑/证据节点做
-              // 确定性词面匹配预挂 1-2 条(source:"ai")。best-effort:单条读失败跳过,
-              // 整体失败 runner 侧吞掉不阻塞(零回归)。
-              projectAmmo: {
-                list: async (c: RequestContext, projectId: string) => {
-                  const { rows: links } = await materialLinksService.list(c, {
-                    projectId,
-                    page: 1,
-                    pageSize: 30,
-                  });
-                  const items: Array<{ id: string; title: string; kind: string }> =
-                    [];
-                  for (const link of links) {
-                    try {
-                      if (link.entityType === "knowledge") {
-                        const k = await knowledgeService.getKnowledge(
-                          c,
-                          link.entityId,
-                        );
-                        items.push({ id: k.id, title: k.title, kind: "knowledge" });
-                      } else if (link.entityType === "asset") {
-                        const a = await assetsService.getAsset(c, link.entityId);
-                        items.push({ id: a.id, title: a.name, kind: a.assetType });
-                      }
-                    } catch {
-                      continue; // 单条越权/已删跳过,不牵连整批
-                    }
-                  }
-                  return items;
-                },
-              },
-              // Vercel AI SDK 路径(弃 LlmCompleter):论点树节点跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
           task.taskType === "planning.contract" &&
           task.status === "queued"
         ) {
           // 内容合同 node (策划 stage) — drafts the audience contract (受众定位/价值主张/
-          // 核心节奏/行动召唤) from 定位 + 选题 + 已采纳论点树, records an `artifact_version`
+          // 核心节奏/行动召唤) from 定位 + 选题, records an `artifact_version`
           // candidate; 采纳 appends a new ArtifactVersion onto the project's
           // `content_contract` artifact (reuses the existing artifact_version confirm path).
           // The 策划 workspace reads that version's contentData.cards back into the 内容合同
@@ -4394,8 +4500,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              thesis: thesisReader,
-              // F2:反推论点树注入内容合同上下文时标「未经确认」。
               artifactOrigin: artifactOriginReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):内容合同节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
@@ -4407,7 +4511,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           task.status === "queued"
         ) {
           // 结构方案 node (策划 stage, 脚本阶段入口票) — drafts ONE structure plan
-          // (结构类型/开头策略/段落安排/结尾/CTA) from 内容合同 + 论点树, records an
+          // (结构类型/开头策略/段落安排/结尾/CTA) from 内容合同, records an
           // `artifact_version` candidate; 采纳 appends a new ArtifactVersion onto the
           // project's `content_outline` artifact (reuses the existing artifact_version
           // confirm path).
@@ -4423,9 +4527,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              thesis: thesisReader,
               contract: contractReader,
-              // F2:反推论点树/合同注入结构方案上下文时标「未经确认」。
+              // F2:反推合同注入结构方案上下文时标「未经确认」。
               artifactOrigin: artifactOriginReader,
               // [T-284a] 复刻补链 G1:装配 brief reader,让 creative-context 带出 benchmarkRef →
               //   结构方案参照原爆款结构编排(段头诚实门,非复刻项目为空,不污染)。
@@ -4548,8 +4651,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               resolveModelSpec,
               // [T-309/T-387c] B-roll 备料自动聚合:数据源从「项目 material-links」扩为——
               //   ① 脚本凝固分镜点名的素材(visual.assetRefs,source:"script")
-              //   ② 论点树挂载的图/视频素材(thesis_tree nodes[].materialRefs,source:"thesis")
-              //   ③ 项目弹药 image/video 资产(material-links;role=broll 手动上传标 "manual",
+              //   ② 项目弹药 image/video 资产(material-links;role=broll 手动上传标 "manual",
               //      其余标 "ammo";role=clip 口播原片仍排除)
               listBrollInventory: (c, projectId) =>
                 collectProjectBrollInventory(c, projectId, {
@@ -4571,8 +4673,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                         pageSize: 100,
                       })
                     ).rows,
-                  getAsset: (scopeCtx, assetId) =>
-                    assetsService.getAsset(scopeCtx, assetId),
+                  getAsset: async (scopeCtx, assetId) => {
+                    const asset = await assetsService.getAsset(scopeCtx, assetId);
+                    const file = asset.currentFileId
+                      ? (
+                          await assetsService.listFilesByIds(scopeCtx, [
+                            asset.currentFileId,
+                          ])
+                        )[0] ?? null
+                      : null;
+                    return {
+                      ...asset,
+                      width: file?.width ?? null,
+                      height: file?.height ?? null,
+                      durationMs: file?.durationMs ?? null,
+                    };
+                  },
                 }),
               // [T-387c] 凝固分镜 reader:output_script 当前版本 contentData → 分镜投影
               // (storyboardFromContentData 宽容解析;旧稿无 visual → 空数组 → facet 空 = 现状)。
@@ -4668,7 +4784,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // → 封面文案诚实门(annotateUngroundedClaims,数字/成绩只能从内容提取禁编造)→ 生图 prompt
           // 由结构化方案确定性组装(非裸自由文本)→ 走既有 image.generate 生图(模型用户可配,铁律不写死
           // MiniMax)→ 记 generated_asset 候选(**复用既有 asset 采纳门**,人采纳才绑项目用料链,铁律②)。
-          // 声明式 context 注入(同 script.draft/planning.thesis 范式):按 COVER_BRIEF_TEMPLATE
+          // 声明式 context 注入(同 script.draft 范式):按 COVER_BRIEF_TEMPLATE
           // .contextRequirements 从中央 registry 自动取 reader —— brief(立项硬锚)+ reviewSubject(读
           // 口播稿)+ projectMaterials(封面数字可溯来源)+ knowledge。文本层 resolveModelSpec(封面方案)
           // 与多模态 resolveMultimodalSpec/multimodalRegistry(生图)并列注入,是封面链「文案 + 图」两产物
@@ -4908,9 +5024,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   getChannelModelSelection: (capability) =>
                     getChannelModelSelection(c, capability),
                 }),
+              prepareTranscribeSpec: (c, spec, input) =>
+                prepareManagedTranscribeSpec(c, spec, input),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
               transcribeAudio: (spec, opts, registry) =>
-                transcribeAudioFn(spec, opts, registry),
+                transcribeWithManagedFallback(spec, (current) =>
+                  transcribeAudioFn(current, opts, registry),
+                ),
               // ASR provider 适配器注册表 —— OpenAI 兼容 adapter 一件覆盖 SiliconFlow/OpenAI/Groq
               // (同形状转写端点);按用户所配 provider 名归一到同一适配器,加 provider 只需在此注册。
               registry: asrRegistry,
@@ -5071,8 +5191,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ) {
           // 作品初始化 auto-fill 重建 node(reconstruct.project, T-030-D4, SPEC §4.5/§6/§7)——
           // 仅 source='imported' 的已发布作品:逐字稿(D3)+ 真实指标 + 定位 → runStructuredNode
-          // 产 { research, planning } → 物化 research(trend_analysis)+ planning(thesis_tree),
-          // **均 origin='reconstructed'**(F1)。§5 守卫:runner 断言仅 imported,manual/topic 不触发。
+          // 只产 research 并物化 trend_analysis(origin='reconstructed')。
+          // §5 守卫:runner 断言仅 imported,manual/topic 不触发。
           // 确定性终态 runner(不产候选、不过采纳门,§6.1 明确不走 candidate 确认路径)。端口全注入。
           await runReconstruct(
             ctx,
@@ -5311,6 +5431,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       onProgress?.("首次渲染需下载 Chromium(~340MB),下载中…(之后共享缓存,秒过)");
       await (await loadDouyinCdp()).ensureChromiumInstalled();
       onProgress?.("Chromium 下载完成");
+    },
+    // [T-712] 成片抽帧视觉审核复用既有 asset.classify/vision.default。只在已配置时
+    // 调一次受控 VLM 端口；未配置返回 null，executor 记录 skipped 且不阻断成片。
+    videoVisualReview: async (c, input) => {
+      let spec;
+      try {
+        spec = await resolveMultimodalSpecFn(c, "asset.classify", {
+          getModelConfig: (cc: RequestContext, cap: string) =>
+            settingsService.getModelConfig(cc, cap),
+          env: process.env,
+          getChannelModelConfig,
+          getChannelModelCredential: (serviceId) =>
+            getChannelModelCredential(c, serviceId),
+          getChannelModelSelection: (capability) =>
+            getChannelModelSelection(c, capability),
+        });
+      } catch (err) {
+        if (err instanceof Error && err.name === "MultimodalConfigError") return null;
+        throw err;
+      }
+      const { describeImageOpenAICompatible } = await import(
+        "@creatoros/ai-worker"
+      );
+      return describeImageOpenAICompatible(spec, input);
     },
   });
   const executionWorkspacesRoot = resolveWorkspacesRoot();
@@ -6610,7 +6754,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     });
     if (src.kind === "image-album") return null;
     const audioBytes = await cdp.streamAudioFromVideo(src.playUrl);
-    const spec = await resolveTranscribeSpecFn(c, {
+    const baseSpec = await resolveTranscribeSpecFn(c, {
       getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
       env: process.env,
       getChannelModelConfig,
@@ -6619,10 +6763,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelSelection: (capability) =>
         getChannelModelSelection(c, capability),
     });
-    const { text } = await transcribeAudioFn(
-      spec,
-      { audioBytes, language: "zh" },
-      asrRegistry,
+    const spec = await prepareManagedTranscribeSpec(c, baseSpec, {
+      audioBytes,
+      intentId: `aweme:${awemeId}`,
+    });
+    const { text } = await transcribeWithManagedFallback(spec, (current) =>
+      transcribeAudioFn(
+        current,
+        { audioBytes, language: "zh" },
+        asrRegistry,
+      ),
     );
     return text && text.trim() ? text : null;
   };
@@ -6691,7 +6841,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           stage = "resolve-model";
           stageStartedAt = Date.now();
           logStage("start");
-          const spec = await resolveTranscribeSpecFn(c, {
+          const baseSpec = await resolveTranscribeSpecFn(c, {
             getModelConfig: (cc, capability) =>
               settingsService.getModelConfig(cc, capability),
             env: process.env,
@@ -6701,31 +6851,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             getChannelModelSelection: (selectedCapability) =>
               getChannelModelSelection(c, selectedCapability),
           });
-          logStage("done", {
-            provider: spec.provider,
-            model: spec.model,
+          const spec = await prepareManagedTranscribeSpec(c, baseSpec, {
+            audioBytes,
+            intentId: `intelligence:${input.itemId}:aweme:${awemeId}`,
           });
+          const observableModel =
+            spec.displayModelKey === "channel-managed"
+              ? "channel-managed"
+              : spec.model;
+          logStage("done", { model: observableModel });
 
           stage = "asr";
           stageStartedAt = Date.now();
-          logStage("start", {
-            provider: spec.provider,
-            model: spec.model,
-          });
-          const result = await transcribeAudioFn(
-            spec,
-            { audioBytes, language: "zh" },
-            asrRegistry,
+          logStage("start", { model: observableModel });
+          const result = await transcribeWithManagedFallback(spec, (current) =>
+            transcribeAudioFn(
+              current,
+              { audioBytes, language: "zh" },
+              asrRegistry,
+            ),
           );
           logStage("done", {
-            provider: spec.provider,
-            model: spec.model,
+            model: observableModel,
             totalDurationMs: Date.now() - totalStartedAt,
           });
           return {
             text: result.text,
-            provider: spec.provider,
-            model: spec.model,
+            provider: observableModel,
+            model: observableModel,
             language: "zh",
           };
         } catch (error) {
@@ -8353,7 +8506,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
   // transcribe 挂 running 2.5h+),撞 createTask 的 in-flight 幂等闸挡后续同键任务。
-  // [T-389] 类型感知:进程内 runner 类型(planning.thesis/script.draft/cover.generate 等
+  // [T-389] 类型感知:进程内 runner 类型(script.draft/cover.generate 等
   // live dispatch void runXxx 的)重启即死 → 启动扫到 running 直接判死(不看年龄);
   // transcribe.douyin/agentic.* 保留宽阈值 —— running 且 startedAt(缺失退 requestedAt)
   // 超 2h(CREATOROS_STALE_AI_TASK_MS 可配)→ markFailed(stale-on-boot)。
@@ -8779,78 +8932,88 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           videoTodos: derivedTodos,
           storedTodos,
         });
-        try {
-          const [calendarContext, schedules, projects] = await Promise.all([
-            contentCalendarService.getCalendarRequestContext(ctx),
-            contentCalendarService.listActiveProjectSchedules(
-              ctx,
-              requireAccountId(
-                ctx.accountId,
-                "dashboard.scheduleReminders",
+        const scheduleAccountId = ctx.accountId;
+        // 排期属于抖音账号维度。尚未绑定账号是正常上手状态，不应调用账号服务，更不能误报成
+        // “排期暂不可用”。只有已绑定账号后的真实读取异常才进入可重试错误态。
+        if (scheduleAccountId) {
+          try {
+            const [calendarContext, schedules, projects] = await Promise.all([
+              contentCalendarService.getCalendarRequestContext(ctx),
+              contentCalendarService.listActiveProjectSchedules(
+                ctx,
+                scheduleAccountId,
               ),
-            ),
-            projectsService.listProjectsForComposition(ctx),
-          ]);
-          const outputRefs = await projectsService.listOutputRefsByProjects(
-            ctx,
-            projects.map((project) => project.id),
-          );
-          const publications =
-            await publishingService.listPublicationsByOutputIds(
+              projectsService.listProjectsForComposition(ctx),
+            ]);
+            const outputRefs = await projectsService.listOutputRefsByProjects(
               ctx,
-              outputRefs.map((output) => output.outputId),
+              projects.map((project) => project.id),
             );
-          const projectIdByOutput = new Map(
-            outputRefs.map((output) => [
-              output.outputId,
-              output.projectId,
-            ]),
-          );
-          const publishedProjectIds = new Set(
-            publications
-              .filter((publication) => publication.publishedAt !== null)
-              .map((publication) =>
-                projectIdByOutput.get(publication.contentOutputId),
-              )
-              .filter((projectId): projectId is string => Boolean(projectId)),
-          );
-          const outputsByProject = new Map<
-            string,
-            Array<{ id: string; status: string }>
-          >();
-          for (const output of outputRefs) {
-            const rows = outputsByProject.get(output.projectId) ?? [];
-            rows.push({ id: output.outputId, status: output.status });
-            outputsByProject.set(output.projectId, rows);
+            const publications =
+              await publishingService.listPublicationsByOutputIds(
+                ctx,
+                outputRefs.map((output) => output.outputId),
+              );
+            const projectIdByOutput = new Map(
+              outputRefs.map((output) => [
+                output.outputId,
+                output.projectId,
+              ]),
+            );
+            const publishedProjectIds = new Set(
+              publications
+                .filter((publication) => publication.publishedAt !== null)
+                .map((publication) =>
+                  projectIdByOutput.get(publication.contentOutputId),
+                )
+                .filter((projectId): projectId is string => Boolean(projectId)),
+            );
+            const outputsByProject = new Map<
+              string,
+              Array<{ id: string; status: string }>
+            >();
+            for (const output of outputRefs) {
+              const rows = outputsByProject.get(output.projectId) ?? [];
+              rows.push({ id: output.outputId, status: output.status });
+              outputsByProject.set(output.projectId, rows);
+            }
+            todos = composeDashboardTodos({
+              today: calendarContext.today,
+              schedules: schedules.map((entry) => ({
+                id: entry.id,
+                projectId: entry.projectId,
+                plannedDate: entry.plannedDate,
+              })),
+              projects: projects.map((project) => ({
+                id: project.id,
+                title: project.title,
+                status: project.status,
+                source: project.source,
+                currentStage: project.currentStage as ProjectStageName,
+                updatedAt: project.updatedAt,
+                outputs: outputsByProject.get(project.id) ?? [],
+              })),
+              publishedProjectIds,
+              videoTodos: derivedTodos,
+              storedTodos,
+            });
+          } catch (error) {
+            console.error("[dashboard.schedule-reminders] 读取排期失败", {
+              requestId: ctx.requestId,
+              errorName: error instanceof Error ? error.name : "UnknownError",
+              errorCode:
+                error && typeof error === "object" && "code" in error
+                  ? String(error.code)
+                  : "unknown",
+            });
+            scheduleReminderReadState = {
+              state: "error",
+              error: {
+                code: "schedule_reminders_unavailable",
+                message: "排期提醒暂不可用，请重试",
+              },
+            };
           }
-          todos = composeDashboardTodos({
-            today: calendarContext.today,
-            schedules: schedules.map((entry) => ({
-              id: entry.id,
-              projectId: entry.projectId,
-              plannedDate: entry.plannedDate,
-            })),
-            projects: projects.map((project) => ({
-              id: project.id,
-              title: project.title,
-              status: project.status,
-              source: project.source,
-              currentStage: project.currentStage as ProjectStageName,
-              updatedAt: project.updatedAt,
-              outputs: outputsByProject.get(project.id) ?? [],
-            })),
-            publishedProjectIds,
-            videoTodos: derivedTodos,
-            storedTodos,
-          });
-        } catch {
-          scheduleReminderReadState = {
-            state: "error",
-            error: {
-              code: "schedule_reminders_unavailable",
-              message: "排期提醒暂不可用，请重试",
-            },
-          };
         }
         return {
           continueCreating: s.continueCreating
@@ -9333,9 +9496,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // 所有 active account 的 system job 已 ensure 后再启动唯一 driver，使启动恢复不会
   // 因 intelligence.sync 尚未创建而漏掉本次补跑。
-  void startUnifiedAutomationDriver().catch((e) =>
-    console.error("[automation-driver] 启动失败:", e),
-  );
+  // [T-712] 真实剪辑回归会复制生产 DB 到临时目录，并通过同一 transport 跑当前模型。
+  // 回归进程不应顺带启动自动化采集；生产默认不变，只有显式测试环境变量才关闭 driver。
+  if (process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
+    void startUnifiedAutomationDriver().catch((e) =>
+      console.error("[automation-driver] 启动失败:", e),
+    );
+  }
 
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
@@ -9633,6 +9800,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
         getChannelModelCredential(ctx, serviceId),
+      getChannelModelSelection: (selectedCapability) =>
+        getChannelModelSelection(ctx, selectedCapability),
     });
     return {
       apiFormat: cfg.apiFormat,
@@ -9967,6 +10136,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     groq: openaiAsrAdapter,
     "xiaomi-mimo": mimoAsrAdapter,
     "qwen-asr": qwenAsrAdapter,
+    qwen: qwenAsrAdapter,
     "whisper-local": whisperLocalAdapter,
   };
   const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
@@ -10425,6 +10595,145 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveFallbackModelSpec,
     getPositioningDiscovery: (c, sessionId) =>
       positioningService.getDiscoverySession(c, sessionId),
+    resolveCurrentScriptSelection: async (c, input) => {
+      const artifact = await artifactsService.getArtifact(c, input.artifactId);
+      if (!artifact.currentVersionId) return null;
+      const versions = await artifactsService.listVersions(c, input.artifactId);
+      const current = versions.find(
+        (version) => version.id === artifact.currentVersionId,
+      );
+      if (!current) return null;
+
+      const data =
+        current.contentData && typeof current.contentData === "object"
+          ? (current.contentData as Record<string, unknown>)
+          : null;
+      const rawSections =
+        data && Array.isArray(data.sections) ? data.sections : [];
+      const contentDataSections = canonicalizeScriptSectionRecords(
+        rawSections,
+      ).map((section) => {
+        const id = section.id;
+        const originalText = [
+          section.body,
+          section.narration,
+          section.text,
+          section.content,
+        ].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        return { id, originalText: originalText ?? "" };
+      });
+
+      // 一些历史稿把结构化段落存在 script_sections，而 contentData 只留整稿/摘要。
+      // 版本恢复后必须读取“当前版本自己的”结构化行，不能继续拿恢复前的前端快照判定
+      // sectionId 不存在。两种存储形态合并后仍只允许 id 命中或唯一原文命中。
+      const storedRows = await artifactsService.getScriptSections(c, current.id);
+      const structuredSections = storedRows.flatMap((section) => {
+        const id = typeof section.id === "string" ? section.id.trim() : "";
+        const originalText =
+          typeof section.content === "string" ? section.content.trim() : "";
+        return id && originalText ? [{ id, originalText }] : [];
+      });
+
+      // 旧桌面包的局部改稿请求还没有 sectionIndex。若用户在 v16 点过第 3 段、随后稿面
+      // 切到 v17，不能因为旧 sectionId 失效就要求再点一次；服务端从请求明确指向的 v16
+      // 恢复“第 3 段”这个结构位置，再交给 resolver 读取 v17 的第 3 段当前正文。
+      // 该历史版本只用于恢复用户已明确表达的位置，不会把历史正文重新送给工具。
+      let requestedVersionSections:
+        | Array<{ id: string; originalText: string }>
+        | undefined;
+      if (
+        !Number.isInteger(input.sectionIndex) &&
+        input.versionId &&
+        input.versionId !== current.id
+      ) {
+        const requestedVersion = versions.find(
+          (version) => version.id === input.versionId,
+        );
+        if (requestedVersion) {
+          const requestedData =
+            requestedVersion.contentData &&
+            typeof requestedVersion.contentData === "object"
+              ? (requestedVersion.contentData as Record<string, unknown>)
+              : null;
+          const requestedRawSections =
+            requestedData && Array.isArray(requestedData.sections)
+              ? requestedData.sections
+              : [];
+          requestedVersionSections = canonicalizeScriptSectionRecords(
+            requestedRawSections,
+          ).map((section) => {
+            const id = section.id;
+            const originalText = [
+              section.body,
+              section.narration,
+              section.text,
+              section.content,
+            ].find(
+              (value): value is string =>
+                typeof value === "string" && value.trim().length > 0,
+            );
+            return { id, originalText: originalText ?? "" };
+          });
+          if (requestedVersionSections.length === 0) {
+            const requestedRows = await artifactsService.getScriptSections(
+              c,
+              requestedVersion.id,
+            );
+            requestedVersionSections = requestedRows.flatMap((section) => {
+              const id =
+                typeof section.id === "string" ? section.id.trim() : "";
+              const originalText =
+                typeof section.content === "string"
+                  ? section.content.trim()
+                  : "";
+              return id && originalText ? [{ id, originalText }] : [];
+            });
+          }
+        }
+      }
+      const selected = resolveCurrentScriptSelectionFromTruth({
+        currentVersionId: current.id,
+        requestedVersionId: input.versionId,
+        requestedSectionId: input.sectionId,
+        requestedSectionIndex: input.sectionIndex,
+        requestedExcerpt: input.excerpt,
+        requestedVersionSections,
+        contentDataSections,
+        structuredSections,
+        contentText: current.contentText,
+      });
+      if (!selected) return null;
+      return {
+        artifactId: artifact.id,
+        versionId: current.id,
+        sectionId: selected.sectionId,
+        originalText: selected.originalText,
+        matchStrategy: selected.matchStrategy,
+      };
+    },
+    readChatAttachment: async (c, assetId) => {
+      const asset = await assetsService.getAsset(c, assetId);
+      if (!asset.currentFileId) {
+        throw new Error("附件尚未完成上传，请重新添加后再试。");
+      }
+      const [file] = await assetsService.listFilesByIds(c, [asset.currentFileId]);
+      const blob = await assetsService.getAssetBytes(c, assetId);
+      if (!file || !blob) {
+        throw new Error("附件文件暂时不可读取，请重新添加后再试。");
+      }
+      return {
+        assetId: asset.id,
+        name: asset.name,
+        assetType: asset.assetType,
+        mimeType: blob.mimeType || file.mimeType,
+        fileSize: file.fileSize,
+        extractedText: file.extractedText ?? null,
+        bytes: blob.bytes,
+      };
+    },
     context: {
       positioning: {
         getPositioningCenter: (c: RequestContext) =>
@@ -10517,6 +10826,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // [T-058②] 分页 + 总数仍走通用 listRecentProjects；定位生成另走上方
       // positioningWorks，避免隐藏作品混入画像又不误伤项目检索。
       listProjects: listRecentProjects,
+      searchProjects: async (c, opts) =>
+        searchProjectsWithPublicationFacts(c, opts, {
+          listProjects: (ctx) => projectsRepo.list(ctx),
+          listOutputRefsByProjects: (ctx, projectIds) =>
+            projectsService.listOutputRefsByProjects(ctx, projectIds),
+          listPublicationsByOutputIds: (ctx, outputIds) =>
+            publishingService.listPublicationsByOutputIds(ctx, outputIds),
+        }),
       // [T-077b] brief.fill 的现状读 —— 复用 projectsRepo.get(user-scoped)取当前项目的
       // brief_detail jsonb 原样返回(契约 projectBriefDetail 形状)。读不到(项目不存在/越权)
       // → null(工具结果 current=null,前端卡现值显「未填」),绝不抛崩对话流。
@@ -10789,6 +11106,418 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         } catch {
           return null;
         }
+      },
+      // [T-691] 项目生命周期索引：一次给编导稳定 id 与各模块真实状态。项目本身失败才整体失败；
+      // 产物/素材/发布/指标/审核各自隔离，失败显式进入 errors，绝不把异常伪装成“用户没做”。
+      getProjectLifecycle: async (
+        c: RequestContext,
+        opts: { projectId: string },
+      ) => {
+        let project: Awaited<ReturnType<typeof projectsRepo.get>>;
+        try {
+          project = await projectsRepo.get(c, opts.projectId);
+        } catch (error) {
+          if (
+            error instanceof OwnershipError ||
+            (error instanceof Error && /not found/i.test(error.message))
+          ) {
+            return null;
+          }
+          throw error;
+        }
+
+        const traceId = `lifecycle-${createHash("sha256")
+          .update(`${c.userId}:${opts.projectId}:${Date.now()}`)
+          .digest("hex")
+          .slice(0, 12)}`;
+        const errors: Array<{ section: string; code: string }> = [];
+        const availability = (
+          value: unknown[] | null | undefined,
+        ): "available" | "empty" =>
+          Array.isArray(value) && value.length > 0 ? "available" : "empty";
+        const errorCode = (section: string, error: unknown): void => {
+          const name = error instanceof Error ? error.name : "UnknownError";
+          errors.push({ section, code: `${section.toUpperCase()}_${name}` });
+        };
+        const artifactRepo = createArtifactRepository(db, {
+          ...deps,
+          userId: c.userId,
+          accountId: requireAccountId(c.accountId, "artifacts.repo"),
+        });
+
+        const artifactsPromise = (async () => {
+          const rows = await artifactsService.listProjectArtifacts(c, project.id);
+          return Promise.all(
+            rows.map(async (artifact) => {
+              const versions = await artifactsService.listVersions(c, artifact.id);
+              const current = artifact.currentVersionId
+                ? await artifactRepo.getVersion(artifact.currentVersionId)
+                : null;
+              return {
+                artifactId: artifact.id,
+                artifactType: artifact.artifactType,
+                currentVersionId: artifact.currentVersionId ?? null,
+                versionNumber: current?.versionNumber ?? null,
+                charCount: current
+                  ? extractArtifactText(current.contentText, current.contentData).length
+                  : 0,
+                updatedAt: artifact.updatedAt ?? versions[0]?.createdAt ?? null,
+              };
+            }),
+          );
+        })();
+
+        const materialsPromise = (async () => {
+          const { rows } = await materialLinksService.list(c, {
+            projectId: project.id,
+            page: 1,
+            pageSize: 200,
+          });
+          return Promise.all(
+            rows
+              .filter((link) => link.entityType === "asset")
+              .map(async (link) => {
+                const asset = await assetsService.getAsset(c, link.entityId);
+                return {
+                  linkId: link.id,
+                  assetId: asset.id,
+                  title: asset.name,
+                  kind: asset.assetType,
+                  role: link.role,
+                  priority: link.priority,
+                };
+              }),
+          );
+        })();
+
+        const publicationsPromise = (async () => {
+          const outputIds = await projectsService.listOutputIdsByProject(
+            c,
+            project.id,
+          );
+          const rows = (
+            await Promise.all(
+              outputIds.map((outputId) =>
+                publishingService.listPublications(c, outputId, {
+                  limit: 100,
+                  offset: 0,
+                }),
+              ),
+            )
+          ).flat();
+          return rows
+            .map((publication) => ({
+              id: publication.id,
+              platform: publication.platform,
+              url: publication.externalUrl ?? null,
+              publishedAt: publication.publishedAt ?? null,
+              projectTitle: project.title,
+              // listPublications 的窄读不投影封面；封面真值从项目素材 role=cover 解析。
+              coverAssetId: null,
+              status: publication.status,
+            }))
+            .sort((a, b) =>
+              (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+            );
+        })();
+
+        const reviewPromise = (async () => {
+          try {
+            const report = await reviewGateService.getLatestReport(c, project.id);
+            return {
+              reportId: report.id,
+              verdict: report.verdict,
+              artifactId: report.artifactId,
+              artifactVersion: report.artifactVersion,
+              findingCount:
+                report.lintFindings.length + report.llmFindings.length,
+              reviewedAt: report.reviewedAt,
+            };
+          } catch (error) {
+            if (error instanceof Error && error.name === "ReportNotFoundError") {
+              return null;
+            }
+            throw error;
+          }
+        })();
+
+        const [artifactsResult, materialsResult, publicationsResult, reviewResult] =
+          await Promise.allSettled([
+            artifactsPromise,
+            materialsPromise,
+            publicationsPromise,
+            reviewPromise,
+          ]);
+        if (artifactsResult.status === "rejected")
+          errorCode("artifacts", artifactsResult.reason);
+        if (materialsResult.status === "rejected")
+          errorCode("materials", materialsResult.reason);
+        if (publicationsResult.status === "rejected")
+          errorCode("publications", publicationsResult.reason);
+        if (reviewResult.status === "rejected")
+          errorCode("review", reviewResult.reason);
+
+        const artifacts =
+          artifactsResult.status === "fulfilled" ? artifactsResult.value : [];
+        const materials =
+          materialsResult.status === "fulfilled" ? materialsResult.value : [];
+        const publications =
+          publicationsResult.status === "fulfilled"
+            ? publicationsResult.value
+            : [];
+        const review =
+          reviewResult.status === "fulfilled" ? reviewResult.value : null;
+
+        const metrics: {
+          subject: string | null;
+          rows: Array<{
+            projectId?: string;
+            title: string;
+            plays: number | null;
+            likes: number | null;
+            comments: number | null;
+            shares: number | null;
+          }>;
+          retention: Array<{ atSeconds: number; retentionRate: number }>;
+        } = { subject: project.title, rows: [], retention: [] };
+        try {
+          const merged = {
+            plays: null as number | null,
+            likes: null as number | null,
+            comments: null as number | null,
+            shares: null as number | null,
+          };
+          for (const publication of publications) {
+            const page = await analyticsService.getPublicationAnalytics(
+              c,
+              publication.id,
+              1,
+              10,
+            );
+            const latest = page.rows
+              .slice()
+              .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
+            const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
+            const num = (key: string): number | null => {
+              const value = raw[key];
+              return typeof value === "number" && Number.isFinite(value)
+                ? value
+                : null;
+            };
+            merged.plays = merged.plays ?? num("views") ?? num("plays");
+            merged.likes = merged.likes ?? num("likes") ?? num("digg");
+            merged.comments = merged.comments ?? num("comments");
+            merged.shares = merged.shares ?? num("shares");
+          }
+          if (Object.values(merged).some((value) => value !== null)) {
+            metrics.rows.push({ projectId: project.id, title: project.title, ...merged });
+          }
+        } catch (error) {
+          errorCode("metrics", error);
+        }
+
+        let cover: { assetId: string; title: string } | null = null;
+        const coverAssetId =
+          publications.find((publication) => publication.coverAssetId)?.coverAssetId ??
+          materials.find((material) => material.role === "cover")?.assetId ??
+          null;
+        if (coverAssetId) {
+          try {
+            const asset = await assetsService.getAsset(c, coverAssetId);
+            cover = { assetId: asset.id, title: asset.name };
+          } catch (error) {
+            errorCode("cover", error);
+          }
+        }
+
+        const brief = (project.briefDetail ?? {}) as Record<string, unknown>;
+        const str = (value: unknown): string | undefined =>
+          typeof value === "string" && value.trim() ? value.trim() : undefined;
+        const publishedAt = publications.find((row) => row.publishedAt)?.publishedAt ?? null;
+        const lifecycle: ProjectLifecycleRaw = {
+          traceId,
+          project: {
+            id: project.id,
+            title: project.title,
+            stage: project.currentStage,
+            status: project.status,
+            source: project.source,
+            publishedAt,
+          },
+          brief: {
+            targetAudience: str(brief.targetAudience),
+            contentGoal: str(brief.contentGoal),
+            contentFormat: str(brief.contentFormat),
+            targetPlatforms: Array.isArray(brief.targetPlatforms)
+              ? brief.targetPlatforms.filter(
+                  (value): value is string => typeof value === "string",
+                )
+              : undefined,
+            durationEstimate: str(brief.durationEstimate),
+            coreMessage: str(brief.coreMessage),
+            successCriteria: str(brief.successCriteria),
+          },
+          artifacts,
+          materials,
+          cover,
+          publications,
+          metrics,
+          review,
+          retrospective: { learningCount: 0 },
+          completeness: {
+            brief: Object.keys(brief).length > 0 ? "available" : "empty",
+            artifacts:
+              artifactsResult.status === "rejected"
+                ? "error"
+                : availability(artifacts),
+            materials:
+              materialsResult.status === "rejected"
+                ? "error"
+                : availability(materials),
+            cover: errors.some((error) => error.section === "cover")
+              ? "error"
+              : cover
+                ? "available"
+                : "empty",
+            publications:
+              publicationsResult.status === "rejected"
+                ? "error"
+                : availability(publications),
+            metrics: errors.some((error) => error.section === "metrics")
+              ? "error"
+              : availability(metrics.rows),
+            review:
+              reviewResult.status === "rejected"
+                ? "error"
+                : review
+                  ? "available"
+                  : "empty",
+            retrospective: "unavailable",
+          },
+          errors,
+        };
+        console.info(
+          "[copilot-context]",
+          JSON.stringify({
+            traceId,
+            userId: c.userId,
+            accountId: c.accountId ?? null,
+            projectId: project.id,
+            artifactCount: artifacts.length,
+            artifacts: artifacts.map((artifact) => ({
+              artifactId: artifact.artifactId,
+              currentVersionId: artifact.currentVersionId,
+              versionNumber: artifact.versionNumber,
+            })),
+            readSurface: "copilot-context",
+            errorSections: errors.map((error) => error.section),
+          }),
+        );
+        return lifecycle;
+      },
+      getReviewReport: async (
+        c: RequestContext,
+        opts: { projectId: string; reportId?: string },
+      ) => {
+        await projectsRepo.get(c, opts.projectId);
+        let report: Awaited<ReturnType<typeof reviewGateService.getLatestReport>>;
+        try {
+          report = await reviewGateService.getLatestReport(c, opts.projectId);
+        } catch (error) {
+          if (error instanceof Error && error.name === "ReportNotFoundError") {
+            return null;
+          }
+          throw error;
+        }
+        // 当前 service 只有 latest 窄读；指定过期 reportId 时明确查不到，绝不拿最新冒充。
+        if (opts.reportId && opts.reportId !== report.id) return null;
+
+        let artifactVersionId: string | null = null;
+        let currentVersionId: string | null = null;
+        let reviewedText = "";
+        if (report.artifactId) {
+          const artifact = await artifactsService.getArtifact(c, report.artifactId);
+          currentVersionId = artifact.currentVersionId ?? null;
+          const versions = await artifactsService.listVersions(c, report.artifactId);
+          artifactVersionId =
+            versions.find(
+              (version) => version.versionNumber === report.artifactVersion,
+            )?.id ?? null;
+          if (artifactVersionId) {
+            const repo = createArtifactRepository(db, {
+              ...deps,
+              userId: c.userId,
+              accountId: requireAccountId(c.accountId, "artifacts.repo"),
+            });
+            const reviewedVersion = await repo.getVersion(artifactVersionId);
+            reviewedText = extractArtifactText(
+              reviewedVersion.contentText,
+              reviewedVersion.contentData,
+            );
+          }
+        }
+        const stale = Boolean(
+          currentVersionId && currentVersionId !== artifactVersionId,
+        );
+        const occurrence = (
+          quote: string,
+        ): { start: number | null; end: number | null; unique: boolean } => {
+          if (!quote) return { start: null, end: null, unique: false };
+          const start = reviewedText.indexOf(quote);
+          const unique =
+            start >= 0 &&
+            reviewedText.indexOf(quote, start + quote.length) < 0;
+          return {
+            start: start >= 0 ? start : null,
+            end: start >= 0 ? start + quote.length : null,
+            unique,
+          };
+        };
+        return {
+          id: report.id,
+          projectId: report.projectId,
+          artifactId: report.artifactId,
+          artifactVersion: report.artifactVersion,
+          artifactVersionId,
+          verdict: report.verdict,
+          summary: report.summary,
+          modelLabel: report.modelLabel,
+          reviewedAt: report.reviewedAt,
+          stale,
+          findings: [
+            ...report.lintFindings.map((finding, index) => {
+              const located = occurrence(finding.quote);
+              return {
+                findingId: `${report.id}:L1:${finding.ruleId}:${index}`,
+                level: "L1" as const,
+                quote: finding.quote,
+                start: located.start ?? finding.offset,
+                end:
+                  located.end ?? finding.offset + finding.quote.length,
+                category: finding.category,
+                reason: finding.note,
+                suggestion: finding.replacement,
+                applicable:
+                  !stale && Boolean(finding.replacement) && located.unique,
+              };
+            }),
+            ...report.llmFindings.map((finding, index) => {
+              const located = occurrence(finding.quote);
+              return {
+                findingId: `${report.id}:L2:${index}`,
+                level: "L2" as const,
+                quote: finding.quote,
+                start: located.start,
+                end: located.end,
+                category: finding.category,
+                reason: finding.reason,
+                suggestion: finding.suggestion,
+                applicable:
+                  !stale && Boolean(finding.suggestion) && located.unique,
+              };
+            }),
+          ],
+        };
       },
       // [T-099b] context.positioning.detail —— 定位母版全档 + 账号画像并入(不单开账号工具)。
       // 复用 positioningService.getPositioningCenter(profile 全 facets + downstreamRules + 陈述 +
@@ -11939,38 +12668,44 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       input: { projectId: string },
     ) => {
-      // [T-277] 防「审核跑在整稿前 → 审到旧空稿」(用户实测:审核结论基于 25 字/2 版本的陈旧稿,
-      //   编导自己都标注「审核跑在整稿前面是 bug」)。触发前两道诚实门:
-      //   ① 整稿任务在飞:该项目有未终态的 script.draft 任务(queued/running/awaiting_confirmation)
-      //      → 新整稿还没落地/待采纳,此刻审的是旧版本 → 拦下,让用户等整稿采纳后再审;
-      //   ② 空/过短稿:当前 output_script 正文不足 → 没有可审内容 → 拦下,不白起审空稿的 task。
-      //   两道门都抛友好错误 → review.script 工具 execute 接住 → ChatReviewReportCard 渲诚实提示。
-      let draftInFlight = false;
-      try {
-        const { rows } = await aiService.listTasks(ctx, {
-          limit: 20,
-          offset: 0,
-          projectId: input.projectId,
-          taskType: "script.draft",
-        });
-        draftInFlight = rows.some(
-          (t) => !["succeeded", "failed", "cancelled"].includes(t.status),
-        );
-      } catch {
-        // 探测失败(极少)不阻断:宁可少拦一层,也不因探测异常挡住正常审核。
-      }
-      if (draftInFlight) {
-        throw new Error(
-          "整稿还在生成中或待采纳 —— 现在审核会审到旧版本。请等整稿候选卡出结果、点「采纳写入稿面」后再审核。",
-        );
-      }
+      // [T-708] 当前已保存稿面是审核唯一真值。后台新候选即使仍在生成或等待采纳，也不能
+      // 反向锁死一份已经可审的稿件；只有稿面为空/过短时，才查看任务状态并解释缺口。
       const currentScript = await makeReviewSubjectReader().getScript(
         ctx,
         input.projectId,
       );
+      let taskStatuses: string[] = [];
       if (currentScript.trim().length < MIN_REVIEWABLE_SCRIPT_CHARS) {
+        try {
+          const { rows } = await aiService.listTasks(ctx, {
+            limit: 20,
+            offset: 0,
+            projectId: input.projectId,
+            taskType: "script.draft",
+          });
+          taskStatuses = rows.map((task) => task.status);
+        } catch {
+          // 状态探测失败不冒充「仍在生成」；按当前真实稿面给出空稿提示。
+        }
+      }
+      const blockReason = getScriptReviewBlockReason(
+        currentScript,
+        taskStatuses,
+        MIN_REVIEWABLE_SCRIPT_CHARS,
+      );
+      if (blockReason === "running") {
         throw new Error(
-          "当前项目还没有可审的整稿(稿面为空或太短)—— 先生成整稿并采纳写入稿面,再来审核,别审一份空稿。",
+          "当前稿面还没有可审的整稿，新的整稿正在生成中。你可以等它完成，也可以先粘贴并保存现有文案再审核。",
+        );
+      }
+      if (blockReason === "awaiting_adoption") {
+        throw new Error(
+          "当前稿面还没有可审的整稿，但已有一份候选稿等待确认。采纳候选，或直接粘贴并保存自己的文案后即可审核。",
+        );
+      }
+      if (blockReason === "empty") {
+        throw new Error(
+          "当前项目还没有可审的整稿（稿面为空或太短）。可以生成候选，也可以直接粘贴并保存文案后审核。",
         );
       }
       const task = (await reviewGateService.triggerReview(
@@ -11983,32 +12718,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { taskId };
     },
-    // [T-265] planning.thesis 端口 —— 复活孤儿 runPlanningThesis 的创建端(T-127 改路由时删了)。
-    // 论点树 runner 要求 inputData.artifactId(采纳时 confirmTask 的 artifact_version 分支 append 新
-    // ArtifactVersion 到该 thesis_tree artifact → 稿面「论点骨架」面板读回),故先 ensure 项目的
-    // thesis_tree artifact(无则建,stage=planning),再经 ai transport 的 ai.tasks.create 起
-    // planning.thesis task(inputData.projectId 让 service createTask 归属项目 → dispatch 分支
-    // task.taskType==="planning.thesis" 触发 void runPlanningThesis)。立即返回 { taskId, projectId },
-    // 不阻塞对话回合(论点树生成重、分钟级)。artifactsService 与本工厂同作用域(同 aiService 装配)。
+    // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
+    // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
     dispatchPlanningThesis: async (
       ctx: RequestContext,
       input: { projectId: string; topic?: string },
     ) => {
-      // ensure thesis_tree artifact(读写同一目标:采纳 append 版本、面板读当前版本)。
-      const arts = await artifactsService.listProjectArtifacts(ctx, input.projectId);
-      const existing = arts.find((a) => a.artifactType === "thesis_tree");
-      const artifactId =
-        existing?.id ??
-        (
-          await artifactsService.createArtifact(ctx, {
-            projectId: input.projectId,
-            title: "论点树",
-            artifactType: "thesis_tree",
-            stage: "planning",
-          })
-        ).id;
       const res = await ai.request(
-        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
         ENDPOINTS.createAITask,
         {
           params: undefined,
@@ -12017,7 +12733,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             taskType: "planning.thesis",
             attemptId: createAiTaskAttemptId(),
             inputData: {
-              artifactId,
               projectId: input.projectId,
               ...(input.topic ? { topic: input.topic } : {}),
             },
@@ -12028,14 +12743,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const task = (res as { data?: { id?: unknown } }).data;
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
-        throw new Error("dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)");
+        throw new Error(
+          "dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)",
+        );
       }
       return { taskId };
     },
     // [T-271] cover.generate 端口 —— dispatch 制作封面链 task(经 ai transport 的 ai.tasks.create →
     // dispatch 分支 task.taskType==="cover.generate" 触发 void runCoverGenerate)。projectId 走
     // inputData(service createTask 据它归属项目 → 采纳时既有 asset 采纳门把封面图绑进该项目用料链)。
-    // 与 planning.thesis 不同:封面记 generated_asset 候选(非 artifact_version),故**不 ensure
+    // 封面记 generated_asset 候选(非 artifact_version),故**不 ensure
     // artifact**(复用既有 asset 采纳门,无需 artifactId)。立即返回 { taskId },不阻塞对话回合。
     dispatchGenerateCover: async (
       ctx: RequestContext,
@@ -12171,6 +12888,102 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { taskId };
     },
+    prepareVideoEdit: async (ctx, input) => {
+      const outputId = (await projectsService.listOutputIdsByProject(ctx, input.projectId))[0];
+      if (!outputId) throw new Error("当前项目还没有可调整的制作记录。");
+      const production = await productionService.getProduction(ctx, outputId);
+      const plan = (production.recordingConfig as Record<string, unknown> | null)?.videoEditingPlan as
+        | Record<string, unknown>
+        | undefined;
+      if (!plan || typeof plan.revision !== "number") {
+        throw new Error("当前项目还没有已确认的分镜方案，请先完成 AI 分场决策并确认。");
+      }
+      const parsed = videoRenderProps.safeParse(plan.renderProps);
+      if (!parsed.success) throw new Error("当前剪辑方案已损坏，请回制作页重新确认分镜。");
+
+      const props = structuredClone(parsed.data);
+      const summary: string[] = [];
+      const replacements = input.replaceBroll ?? [];
+      if (replacements.length > 0) {
+        const { rows: projectLinks } = await materialLinksService.list(ctx, {
+          projectId: input.projectId,
+          page: 1,
+          pageSize: 100,
+        });
+        const linkedAssetIds = new Set(
+          projectLinks
+            .filter((link) => link.entityType === "asset")
+            .map((link) => link.entityId),
+        );
+        for (const replacement of replacements) {
+          if (!linkedAssetIds.has(replacement.assetId)) {
+            throw new Error(`素材 ${replacement.assetId} 不属于当前项目，请先上传或关联到“创作素材”。`);
+          }
+          await assetsService.getAsset(ctx, replacement.assetId);
+        }
+      }
+      const removeIds = new Set(input.removeBrollAssetIds ?? []);
+      if (removeIds.size > 0) {
+        const before = props.broll.length;
+        props.broll = props.broll.filter((item) => !removeIds.has(item.file));
+        summary.push(`移除 ${before - props.broll.length} 条 B-roll`);
+      }
+      for (const replacement of replacements) {
+        const scene = props.scenes[replacement.sceneIdx];
+        if (!scene) throw new Error(`找不到第 ${replacement.sceneIdx + 1} 个场景。`);
+        props.broll = props.broll.filter(
+          (item) => item.at < scene.startSec || item.at >= scene.endSec,
+        );
+        props.broll.push({
+          file: replacement.assetId,
+          at: scene.startSec,
+          durationSec: Math.max(0.2, Math.min(3, scene.endSec - scene.startSec)),
+          label: "项目素材",
+          big: false,
+        });
+        summary.push(`第 ${replacement.sceneIdx + 1} 场改用指定素材`);
+      }
+      for (const move of input.moveBroll ?? []) {
+        const found = props.broll.find((item) => item.file === move.assetId);
+        if (!found) throw new Error(`当前时间线里没有素材 ${move.assetId}。`);
+        found.at = move.at;
+        if (typeof move.durationSec === "number") found.durationSec = move.durationSec;
+        summary.push(`调整素材 ${move.assetId} 的出现时间`);
+      }
+      const removeCards = new Set(input.removeCardIndexes ?? []);
+      if (removeCards.size > 0) {
+        let globalIndex = 0;
+        let removed = 0;
+        for (const scene of props.scenes) {
+          scene.cards = scene.cards.filter(() => {
+            const keep = !removeCards.has(globalIndex++);
+            if (!keep) removed += 1;
+            return keep;
+          });
+        }
+        summary.push(`移除 ${removed} 张信息卡`);
+      }
+      if (summary.length === 0) {
+        throw new Error("这条意见还没有形成可执行的剪辑改动，请明确要替换、移除或移动哪个素材/卡片。");
+      }
+      const verified = videoRenderProps.parse(props);
+      return {
+        kind: "video.edit" as const,
+        projectId: input.projectId,
+        outputId,
+        expectedRevision: plan.revision,
+        sourceRenderTaskId:
+          typeof plan.sourceRenderTaskId === "string" ? plan.sourceRenderTaskId : null,
+        instruction: input.instruction,
+        summary,
+        decisions:
+          plan.decisions && typeof plan.decisions === "object"
+            ? (plan.decisions as Record<string, unknown>)
+            : {},
+        renderProps: verified as unknown as Record<string, unknown>,
+        error: null,
+      };
+    },
     // [T-350a] publish.package 端口 —— 稿面「生成发布物料」:复用既有 publish.platform_adapt runner
     // (platform.adapt 模板已内嵌 cheat-package 发布审核 SOP),**单平台抖音**。
     //   ① 空稿诚实门:当前整稿为空/过短 → 抛友好错误(同 dispatchScriptReview 口径,不生成空物料);
@@ -12276,6 +13089,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     learnings,
     ai,
     execution,
+    executionPreviewRuntime: {
+      readVideo: (ctx, taskId, artifactPath) =>
+        executionService.previewArtifact(ctx, taskId, artifactPath),
+    },
     intelligence,
     positioning,
     candidate,
@@ -12567,6 +13384,13 @@ export async function getLocalFileRuntime(): Promise<
   PersistenceBundle["localFileRuntime"]
 > {
   return (await getBundle()).localFileRuntime;
+}
+
+/** T-703：待确认执行产物的只读临时预览，采纳/丢弃后 service 自动返回 404。 */
+export async function getExecutionPreviewRuntime(): Promise<
+  PersistenceBundle["executionPreviewRuntime"]
+> {
+  return (await getBundle()).executionPreviewRuntime;
 }
 
 /**

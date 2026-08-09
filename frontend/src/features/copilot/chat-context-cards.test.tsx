@@ -11,7 +11,9 @@ import {
   ChatCommentListCard,
   ChatContextGenericCard,
   ChatKnowledgeListCard,
+  ChatProjectLifecycleCard,
   ChatProjectListCard,
+  ChatReviewContextCard,
 } from "./chat-context-cards";
 
 afterEach(() => cleanup());
@@ -48,6 +50,83 @@ describe("ChatProjectListCard", () => {
   it("空结果 → 诚实空态,不渲假行", () => {
     render(<ChatProjectListCard items={[]} total={0} hasMore={false} />);
     expect(screen.getByText(/项目库还是空的/)).toBeTruthy();
+  });
+});
+
+describe("[T-691] ChatProjectLifecycleCard", () => {
+  it("分区失败明确显示读取失败，不伪装成用户没有内容", () => {
+    render(
+      <ChatProjectLifecycleCard
+        lifecycle={{
+          traceId: "lifecycle-trace-1",
+          project: {
+            id: "p1",
+            title: "真实项目",
+            stage: "script",
+            status: "active",
+            source: "manual",
+            publishedAt: null,
+          },
+          brief: {},
+          artifacts: [],
+          materials: [],
+          cover: null,
+          publications: [],
+          metrics: { subject: "真实项目", rows: [], retention: [] },
+          review: null,
+          retrospective: { learningCount: 0 },
+          completeness: {
+            brief: "empty",
+            artifacts: "error",
+            materials: "empty",
+          },
+          errors: [{ section: "artifacts", code: "ARTIFACTS_DATABASE_ERROR" }],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("项目全流程 · 真实项目")).toBeTruthy();
+    expect(screen.getByText("读取失败")).toBeTruthy();
+    expect(screen.getByText(/这不代表用户没有内容/)).toBeTruthy();
+    expect(screen.getByText(/lifecycle-trace-1/)).toBeTruthy();
+  });
+});
+
+describe("[T-691] ChatReviewContextCard", () => {
+  it("旧版报告明确提示已过期，并展示真实建议", () => {
+    render(
+      <ChatReviewContextCard
+        report={{
+          id: "report-1",
+          projectId: "p1",
+          artifactId: "artifact-1",
+          artifactVersion: 2,
+          artifactVersionId: "version-2",
+          verdict: "needs_changes",
+          summary: "需要调整",
+          modelLabel: "通用模型",
+          reviewedAt: "2026-08-04T00:00:00.000Z",
+          stale: true,
+          findings: [
+            {
+              findingId: "finding-1",
+              level: "L2",
+              quote: "原句",
+              start: 0,
+              end: 2,
+              category: "表达",
+              reason: "表达不够自然",
+              suggestion: "改成更自然的口语",
+              applicable: true,
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/这份报告只代表旧版本/)).toBeTruthy();
+    expect(screen.getByText(/表达不够自然/)).toBeTruthy();
+    expect(screen.getByText(/改成更自然的口语/)).toBeTruthy();
   });
 });
 

@@ -8,9 +8,9 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// [T-265] 对话内论点树卡:planning.thesis 工具 dispatch 论点树生成后返回 { taskId }。
+// [T-730] 对话内可选论点骨架卡:planning.thesis 工具 dispatch 后返回 { taskId }。
 // 卡据 taskId 轮询 getTask → awaiting_confirmation 后 listTaskResults 拿候选 nodes 渲论点树 →
-// 「采纳进论点骨架」confirmTask(→ thesis_tree append → 稿面面板 router.refresh 读回)。
+// 「采纳并用于写稿」confirmTask(→ thesis_tree append → 稿面面板 router.refresh 读回)。
 //   - dispatch 失败态(error 非 null / 无 taskId)→ 卡渲诚实错误,不轮询。
 //   - 轮询到 awaiting_confirmation → 渲核心论点 + 支撑/证据/反驳 + 采纳按钮。
 //   - 点采纳 → confirmTask + router.refresh(不自动写库,铁律②人点才落)。
@@ -58,7 +58,7 @@ beforeEach(() => {
   confirmTask.mockResolvedValue({ id: "task-thesis-1", status: "succeeded" });
 });
 
-describe("ChatThesisCard(对话内论点树卡,T-265)", () => {
+describe("ChatThesisCard(可选论点骨架,T-730)", () => {
   it("dispatch 失败(error 非 null)→ 诚实错误态,不轮询", () => {
     render(
       <ChatThesisCard
@@ -98,11 +98,11 @@ describe("ChatThesisCard(对话内论点树卡,T-265)", () => {
     expect(confirmTask).not.toHaveBeenCalled();
   });
 
-  it("点「采纳进论点骨架」→ confirmTask + router.refresh(不自动写库,人点才落 thesis_tree)", async () => {
+  it("点「采纳并用于写稿」→ confirmTask + router.refresh(不自动写库,人点才落 thesis_tree)", async () => {
     render(
       <ChatThesisCard taskId="task-thesis-1" error={null} pollIntervalMs={0} />,
     );
-    const adopt = await screen.findByText("采纳进论点骨架");
+    const adopt = await screen.findByText("采纳并用于写稿");
     fireEvent.click(adopt);
     await waitFor(() => {
       expect(confirmTask).toHaveBeenCalledWith({
@@ -119,7 +119,7 @@ describe("ChatThesisCard(对话内论点树卡,T-265)", () => {
     });
   });
 
-  it("任务 cancelled/failed(如未配模型)→ 诚实错误态 +「去设置」", async () => {
+  it("任务 cancelled/failed → 诚实提示当前托管 MiniMax 可重试，不伪造独立设置入口", async () => {
     getTask.mockResolvedValue({ status: "failed" });
     render(
       <ChatThesisCard taskId="task-thesis-1" error={null} pollIntervalMs={0} />,
@@ -130,8 +130,11 @@ describe("ChatThesisCard(对话内论点树卡,T-265)", () => {
       ).toBeTruthy();
     });
     expect(
+      document.querySelector('[data-slot="chat-thesis-error"]')?.textContent,
+    ).toContain("MiniMax");
+    expect(
       document.querySelector('[data-slot="chat-thesis-settings-link"]'),
-    ).toBeTruthy();
+    ).toBeNull();
     // 没走到采纳。
     expect(confirmTask).not.toHaveBeenCalled();
   });

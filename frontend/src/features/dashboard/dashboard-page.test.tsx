@@ -313,8 +313,13 @@ describe("[T-348] DashboardPage — 0 号降级(未绑号,诚实空态)", () => 
     const { zeroAccountDashboardViewModel } = await import(
       "./zero-account-dashboard"
     );
+    const viewModel = zeroAccountDashboardViewModel();
+    expect(viewModel.scheduleReminderReadState).toEqual({
+      state: "ready",
+      error: null,
+    });
     const { container } = await renderDashboard({
-      viewModel: zeroAccountDashboardViewModel(),
+      viewModel,
     });
     // 顶部一排仍是 5 张指标(占位「—」)。
     const summary = container.querySelector(

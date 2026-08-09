@@ -260,6 +260,12 @@ describe("本期经验 candidate learnings (T-118a §A)", () => {
     const client = candidateLearningsClient({
       rows: [
         learningRow({ id: "l-new", createdAt: "2026-07-04T05:00:00.000Z" }),
+        learningRow({
+          id: "l-edit-delta",
+          learningType: "edit_delta",
+          title: "跨作品编辑信号",
+          createdAt: "2026-07-04T03:00:00.000Z",
+        }),
         learningRow({ id: "l-old", createdAt: "2026-07-04T01:00:00.000Z" }),
       ],
       onListLearningsQuery: (q) => {

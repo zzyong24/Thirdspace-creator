@@ -12,7 +12,7 @@
  * (localStorage 持久,默认展开不改 T-055b 常驻默认):收起 → 右栏 + 拖拽手柄隐藏、左稿面
  * 满宽、最右露一条细竖条 affordance 可点展开;展开恢复到之前持久的宽度(不丢 T-130 记忆)。
  * 关键边界:本组件在 DraftChatRequestProvider 内,监听 request.nonce —— 收起态来了新 request
- * (立论点/审核/搜素材/盲预测)自动展开右栏,否则结果喂进隐藏 rail 就丢了。
+ * (审核/搜素材/盲预测)自动展开右栏,否则结果喂进隐藏 rail 就丢了。
  */
 
 import * as React from "react";
@@ -150,7 +150,7 @@ export function DraftResizableLayout({
   );
 
   // [T-150] 关键边界:收起态来了**新** request(nonce 变)→ 自动展开右栏,否则用户收起后点
-  // 「立论点/审核/搜素材/盲预测」结果喂进隐藏 rail 就丢了。用 ref 记上一个 nonce,只在真的
+  // 「审核/搜素材/盲预测」结果喂进隐藏 rail 就丢了。用 ref 记上一个 nonce,只在真的
   // 变化时展开(首挂载 request=null / nonce 概念上为 0,不误触发把手动收起顶开)。
   const { request } = useDraftChatRequest();
   const nonce = request?.nonce ?? null;

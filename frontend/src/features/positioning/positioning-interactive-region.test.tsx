@@ -334,10 +334,13 @@ describe("PositioningDraftDrawer", () => {
 });
 
 describe("ResetPositioningMasterButton", () => {
-  it("重新定位只跳到非破坏式前采，不再调用清空母版 operation", () => {
+  it("重新定位直接打开非破坏式 Copilot，不再调用清空母版 operation", () => {
     render(<ResetPositioningMasterButton />);
     const link = screen.getByRole("link", { name: "重新定位" });
-    expect(link).toHaveAttribute("href", "#positioning-discovery");
+    expect(link).toHaveAttribute("href", expect.stringContaining("copilot=open"));
+    expect(decodeURIComponent(link.getAttribute("href") ?? "")).toContain(
+      "完全从零开始",
+    );
     fireEvent.click(link);
     expect(mockClient.resetPositioningMaster).not.toHaveBeenCalled();
   });

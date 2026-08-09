@@ -26,6 +26,7 @@ import {
   EncryptedClientConfigStore,
   readChannelModelAuthority,
   refreshClientConfig,
+  requestFreshClientConfigAccess,
   type ClientConfigCacheRecord,
   type ClientConfigStore,
   type SignedClientConfigBundle,
@@ -255,7 +256,7 @@ describe("T-575 config.pull Creator consumer", () => {
       const url = String(input);
       if (url === `${amOrigin}/api/license/client-config-tickets`) {
         expect(JSON.parse(String(init?.body))).toEqual({
-          contractVersion: "config-access-ticket-v2",
+          contractVersion: "config-access-ticket-v3",
           projectKey: active.projectKey,
           code: active.code,
           machineId: active.machineId,
@@ -264,7 +265,7 @@ describe("T-575 config.pull Creator consumer", () => {
         return signedAmResponse(
           amKeys.privateKey,
           {
-            contractVersion: "config-access-ticket-v2",
+            contractVersion: "config-access-ticket-v3",
             configAccessTicket: "header.payload.signature",
             expiresAt: "2026-07-28T12:15:00.000Z",
             nonce: "nonce-client-config-0001",
@@ -346,6 +347,42 @@ describe("T-575 config.pull Creator consumer", () => {
       `${DEFAULT_LICENSE_BASE_URL}/api/license/client-config-tickets`,
       expect.objectContaining({ method: "POST" }),
     );
+  });
+
+  it("T-715 为额度入口申请全新 ticket，且只在 server 内存返回", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      expect(String(input)).toBe(
+        `${AM_ORIGIN}/api/license/client-config-tickets`,
+      );
+      expect(JSON.parse(String(init?.body))).toEqual({
+        contractVersion: "config-access-ticket-v3",
+        projectKey: verdict.projectKey,
+        code: verdict.code,
+        machineId: verdict.machineId,
+        nonce: "nonce-ai-credit-0001",
+      });
+      return signedAmResponse(amKeys.privateKey, {
+        contractVersion: "config-access-ticket-v3",
+        configAccessTicket: "fresh.ticket.signature",
+        expiresAt: "2026-07-28T12:15:00.000Z",
+        nonce: "nonce-ai-credit-0001",
+      });
+    });
+
+    await expect(
+      requestFreshClientConfigAccess({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-ai-credit-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+      }),
+    ).resolves.toEqual({
+      configAccessTicket: "fresh.ticket.signature",
+      expiresAt: "2026-07-28T12:15:00.000Z",
+      growthOrigin: "https://growth.example/",
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("T-706 显式注入非 HTTPS 授权 origin 时继续失败关闭且不出网", async () => {
@@ -445,7 +482,7 @@ describe("T-575 config.pull Creator consumer", () => {
       const url = String(input);
       if (url === `${AM_ORIGIN}/api/license/client-config-tickets`) {
         return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v2",
+          contractVersion: "config-access-ticket-v3",
           configAccessTicket: "header.payload.signature",
           expiresAt: "2026-07-28T12:15:00.000Z",
           nonce: "nonce-client-config-0001",
@@ -493,6 +530,50 @@ describe("T-575 config.pull Creator consumer", () => {
       "omnihi-child-secret",
     );
     expect(JSON.stringify(store.record)).not.toContain("omnihi-child-secret");
+  });
+
+  it("T-679 不会为未登记的 activation_managed service 请求或保存子 Key", async () => {
+    const managedPayload = {
+      services: [
+        {
+          id: "unexpected-managed-service",
+          name: "未登记受管服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [],
+      models: {},
+    };
+    const bundle = signedBundle(growthKeys.privateKey, {
+      extensions: [
+        {
+          extensionKey: "creatoros.model-config",
+          protocolVersion: "creatoros-model-config-v1",
+          revision: 5,
+          payload: managedPayload,
+        },
+      ],
+    });
+    const putManagedCredential = vi.fn(async () => undefined);
+    const fetchImpl = successfulFetch(bundle);
+
+    await refreshClientConfig({
+      env: env(),
+      now: () => NOW,
+      nonce: () => "nonce-client-config-0001",
+      fetchImpl,
+      readVerdict: async () => ({ state: "ready", verdict }),
+      store,
+      putManagedCredential,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(putManagedCredential).not.toHaveBeenCalled();
   });
 
   it("逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest", async () => {
@@ -588,7 +669,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const missingAmNoStore = successfulFetch();
     missingAmNoStore.mockImplementationOnce(async () => {
       const response = signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v2",
+        contractVersion: "config-access-ticket-v3",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -614,7 +695,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const missingGrowthCorrelation = successfulFetch();
     missingGrowthCorrelation.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v2",
+        contractVersion: "config-access-ticket-v3",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -713,7 +794,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v2",
+        contractVersion: "config-access-ticket-v3",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -767,7 +848,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const fetchImpl = successfulFetch();
     fetchImpl.mockImplementationOnce(async () =>
       signedAmResponse(amKeys.privateKey, {
-        contractVersion: "config-access-ticket-v2",
+        contractVersion: "config-access-ticket-v3",
         configAccessTicket: "header.payload.signature",
         expiresAt: "2026-07-28T12:15:00.000Z",
         nonce: "nonce-client-config-0001",
@@ -866,6 +947,53 @@ describe("T-575 config.pull Creator consumer", () => {
       outcome: "unreachable",
     });
     expect(store.record?.channel).not.toBeNull();
+  });
+
+  it("T-733 v3 票据不适用于当前激活时按未配置处理而不是安全阻断", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    store.record = {
+      ...configuredRecord(current),
+      state: "blocked",
+      outcome: "security_error",
+      reason: "authorization_changed",
+    };
+    const fetchImpl = vi.fn<typeof fetch>(async () =>
+      signedAmResponse(
+        amKeys.privateKey,
+        {
+          success: false,
+          error: {
+            code: "CONFIG_TICKET_REQUEST_INVALID",
+            message: "activation unit is not eligible for v3 tickets",
+          },
+        },
+        422,
+      ),
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "not_configured",
+      action: "本地模型正在使用 · 渠道未配置",
+      retryable: false,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "not_configured",
+      bundle: current,
+      channel: configuredRecord(current).channel,
+    });
+    expect(store.record).not.toHaveProperty("reason");
   });
 
   it("Activity/Growth 明确撤权、过期或重放拒绝时禁止 LKG，且保存阻断态", async () => {
@@ -1083,7 +1211,7 @@ describe("T-575 config.pull Creator consumer", () => {
     const switchBack = vi.fn<typeof fetch>(async (input, init) => {
       if (String(input).startsWith(AM_ORIGIN)) {
         return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v2",
+          contractVersion: "config-access-ticket-v3",
           configAccessTicket: "header.payload.signature",
           expiresAt: "2026-07-28T12:15:00.000Z",
           nonce: "nonce-client-config-0001",
@@ -1144,7 +1272,7 @@ describe("T-575 config.pull Creator consumer", () => {
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
           signedAmResponse(amKeys.privateKey, {
-            contractVersion: "config-access-ticket-v2",
+            contractVersion: "config-access-ticket-v3",
             configAccessTicket: "header.payload.signature",
             expiresAt: "2026-07-28T12:15:00.000Z",
             nonce: "nonce-client-config-0001",
@@ -1246,12 +1374,12 @@ describe("T-575 config.pull Creator consumer", () => {
     }
 
     {
-    // v2 response 是 closed schema：Activity 多发 clientId 也必须 fail-closed，且不得请求 Growth。
+    // v3 response 是 closed schema：Activity 多发 clientId 也必须 fail-closed，且不得请求 Growth。
     const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
       if (String(input).startsWith(AM_ORIGIN)) {
         expect(JSON.parse(String(init?.body))).not.toHaveProperty("clientId");
         return signedAmResponse(amKeys.privateKey, {
-          contractVersion: "config-access-ticket-v2",
+          contractVersion: "config-access-ticket-v3",
           configAccessTicket: "header.payload.signature",
           expiresAt: "2026-07-28T12:15:00.000Z",
           nonce: "nonce-client-config-0001",

@@ -30,6 +30,7 @@ import {
   verifyAccountSelection,
   isOwnershipError,
   readRequestAccountId,
+  readRequestAccountSelection,
 } from "./request-context.server";
 
 const LOCAL = { userId: "user-zyongzhu", requestId: "r", source: "user" as const };
@@ -313,5 +314,22 @@ describe("readRequestAccountId — 自定义 route 的账号入口", () => {
         new Request("http://localhost/api/knowledge/relate"),
       ),
     ).toBeNull();
+  });
+
+  it("[T-691] header 与 cookie 不一致时保留冲突真相，不静默选号", () => {
+    const selection = readRequestAccountSelection(
+      new Request("http://localhost/api/chat", {
+        headers: {
+          "x-account-id": "acct-header",
+          cookie: "creatoros_current_account=acct-cookie",
+        },
+      }),
+    );
+    expect(selection).toEqual({
+      headerAccountId: "acct-header",
+      cookieAccountId: "acct-cookie",
+      effectiveAccountId: "acct-header",
+      mismatch: true,
+    });
   });
 });

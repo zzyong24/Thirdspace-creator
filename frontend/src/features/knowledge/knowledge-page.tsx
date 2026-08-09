@@ -61,7 +61,6 @@ const SHOW_KNOWLEDGE_FILE_WORKSPACE = false;
 // [T-118b gate-F4]「记一条经验」入口并入知识库(与已验证经验库同处)。复用经验
 // 模块的 Copilot 深链入口组件(client,走 ?copilot=open&surface=experience 就地
 // 开浮层,与页面路径解耦)—— 手录一条经验走同一 learning.capture 链路。
-import { ExperienceCaptureLink } from "@/features/experience/experience-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -234,17 +233,6 @@ export async function KnowledgePage({
       className="flex flex-col gap-section-gap"
     >
       <KnowledgeSectionNav activeView="knowledge" />
-      {/* [T-118b gate-F4] 知识库页头:「记一条经验」入口并入(与已验证经验库同处)。
-          手录一条经验 = 用户亲判,走 Copilot 深链(learning.capture)。经验 Tab
-          退役后,这是记经验的唯一入口。仅 loading/error 不渲。 */}
-      {state === "default" || state === "empty" ? (
-        <div
-          data-slot="knowledge-header"
-          className="flex items-center justify-end"
-        >
-          <ExperienceCaptureLink />
-        </div>
-      ) : null}
       {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
           空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
       {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}

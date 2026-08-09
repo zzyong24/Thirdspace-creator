@@ -32,16 +32,29 @@ const mockClient = vi.hoisted(() => ({
   createMaterialLink: vi.fn(async () => ({ id: "mlink-1" })),
   createOutput: vi.fn(async () => ({ id: "out-1" })),
   patchOutput: vi.fn(async () => ({ id: "out-1" })),
-  getOutputProduction: vi.fn(async () => ({
-    id: "prod-1",
-    status: state.prodStatus,
-  })),
+  getOutputProduction: vi.fn(
+    async (): Promise<{
+      id: string;
+      status: string;
+      recordingConfig?: unknown;
+    }> => ({
+      id: "prod-1",
+      status: state.prodStatus,
+    }),
+  ),
   putOutputProduction: vi.fn(
     async (input: { body: { status?: string } }) => {
       state.prodStatus = input.body.status ?? state.prodStatus;
       return { id: "prod-1", status: state.prodStatus };
     },
   ),
+  confirmProductionEditingPlan: vi.fn(async (input: { body: { expectedRevision: number } }) => ({
+    id: "prod-1",
+    status: state.prodStatus,
+    recordingConfig: {
+      videoEditingPlan: { revision: input.body.expectedRevision + 1 },
+    },
+  })),
   createProductionSegment: vi.fn(async () => ({ id: "seg-1" })),
   createProductionExport: vi.fn(async () => ({ id: "exp-1" })),
   completeExport: vi.fn(async () => ({ id: "exp-1", status: "ready" })),
@@ -201,6 +214,14 @@ function dispatchButton(container: HTMLElement): HTMLButtonElement {
   return el as HTMLButtonElement;
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   state.prodStatus = "drafting";
@@ -225,6 +246,34 @@ beforeEach(() => {
   mockClient.listAssetUsage.mockResolvedValue([]);
   mockClient.getAsset.mockResolvedValue({ fileSize: null });
   mockClient.listPublications.mockResolvedValue([]);
+  mockClient.getOutputProduction.mockImplementation(async () => ({
+    id: "prod-1",
+    status: state.prodStatus,
+  }));
+  mockClient.confirmProductionEditingPlan.mockImplementation(
+    async (input: { body: { expectedRevision: number } }) => ({
+      id: "prod-1",
+      status: state.prodStatus,
+      recordingConfig: {
+        videoEditingPlan: { revision: input.body.expectedRevision + 1 },
+      },
+    }),
+  );
+  mockClient.createExecutionTask.mockResolvedValue({
+    id: "exec-1",
+    execType: "video.render",
+    status: "queued",
+    spec: {
+      taskType: "video.render",
+      goal: "渲染成片",
+      inputs: [],
+      params: {},
+      constraints: {},
+    },
+    manifest: null,
+    adoptedAssetIds: [],
+    errorMessage: null,
+  });
   // [T-387c] 自动聚合读 artifact 的三连:默认空(无脚本/论点树)。
   mockClient.listArtifacts.mockResolvedValue([]);
   mockClient.getArtifact.mockResolvedValue({ currentVersionId: null });
@@ -356,6 +405,9 @@ describe("ProductionWorkbench", () => {
     const { container } = render(<ProductionWorkbench {...makeProps()} />);
     await uploadVideo(container);
     await uploadSrt(container, GOOD_SRT);
+    fireEvent.click(
+      container.querySelector('[data-slot="orientation-portrait"]')!,
+    );
 
     expect(
       container.querySelector('[data-check="duration"]')?.getAttribute("data-ok"),
@@ -377,6 +429,7 @@ describe("ProductionWorkbench", () => {
             projectId: "p-1",
             srtText: GOOD_SRT,
             script: SCRIPT,
+            orientation: "portrait",
             // [T-387c] 备料③自动聚合的人剔除集(未剔任何项 → 空数组)。
             excludedAssetIds: [],
           },
@@ -435,6 +488,7 @@ describe("ProductionWorkbench", () => {
     );
     // 刷新恢复的候选没有视频引用 → 先重新上传粗剪视频。
     await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
 
     const confirm = Array.from(container.querySelectorAll("button")).find(
       (b) => b.textContent === "确认决策,进入渲染",
@@ -512,6 +566,182 @@ describe("ProductionWorkbench", () => {
         container.querySelector('[data-slot="execution-task-card"]'),
       ).toBeTruthy(),
     );
+
+    // 成片任务已创建后仍可按已确认分镜再生成一个版本；旧分场不重复写入。
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="rerender-current-storyboard"]'),
+      ).toBeTruthy(),
+    );
+    fireEvent.click(
+      container.querySelector('[data-slot="rerender-current-storyboard"]')!,
+    );
+    await waitFor(() =>
+      expect(mockClient.createExecutionTask).toHaveBeenCalledTimes(2),
+    );
+    expect(mockClient.createProductionSegment).toHaveBeenCalledTimes(1);
+
+    // 也可从头重新跑分镜；创建新任务成功后才切走旧确认卡。
+    fireEvent.click(
+      container.querySelector('[data-slot="restart-storyboard"]')!,
+    );
+    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(1));
+    expect(mockClient.discardExecutionTask).not.toHaveBeenCalled();
+  });
+
+  it("点击确认后不等任务 ID 就立即展示保存/建任务进度，任务创建后原地接上执行卡", async () => {
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "ai-loading", status: "awaiting_confirmation" },
+    ]);
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultType: "video_decisions",
+        resultData: {
+          decisions: {
+            scenes: [
+              { title: "开场", startSec: 0, endSec: 12, summary: "开场介绍" },
+            ],
+            cards: [],
+            broll: [],
+            subtitles: [
+              { index: 1, startSec: 0, endSec: 6, zh: "大家好", en: "Hello" },
+            ],
+            srtLines: [
+              { index: 1, startSec: 0, endSec: 6, text: "大家好" },
+            ],
+          },
+          inventory: [],
+        },
+      },
+    ]);
+    const save = deferred<
+      Awaited<ReturnType<typeof mockClient.confirmProductionEditingPlan>>
+    >();
+    const create = deferred<
+      Awaited<ReturnType<typeof mockClient.createExecutionTask>>
+    >();
+    mockClient.confirmProductionEditingPlan.mockImplementationOnce(
+      async () => save.promise,
+    );
+    mockClient.createExecutionTask.mockImplementationOnce(
+      async () => create.promise,
+    );
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() => expect(container.textContent).toContain("分场预览"));
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+
+    const confirm = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "确认决策,进入渲染",
+    );
+    fireEvent.click(confirm!);
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="render-launch-loading"]')
+          ?.textContent,
+      ).toContain("正在保存分镜方案"),
+    );
+    expect(mockClient.createExecutionTask).not.toHaveBeenCalled();
+
+    save.resolve({
+      id: "prod-1",
+      status: state.prodStatus,
+      recordingConfig: { videoEditingPlan: { revision: 1 } },
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="render-launch-loading"]')
+          ?.textContent,
+      ).toContain("正在创建渲染任务"),
+    );
+
+    create.resolve({
+      id: "exec-loading",
+      execType: "video.render",
+      status: "queued",
+      spec: {
+        taskType: "video.render",
+        goal: "渲染成片",
+        inputs: [],
+        params: {},
+        constraints: {},
+      },
+      manifest: null,
+      adoptedAssetIds: [],
+      errorMessage: null,
+    });
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="execution-task-card"]'),
+      ).not.toBeNull(),
+    );
+    expect(
+      container.querySelector('[data-slot="confirmed-render-progress"]')
+        ?.textContent,
+    ).toContain("渲染任务进行中");
+  });
+
+  it("刷新恢复在跑渲染后，执行卡和已确认分镜共用同一运行状态", async () => {
+    const recoveredDecisions = {
+      scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "开场介绍" }],
+      cards: [],
+      broll: [],
+      subtitles: [{ index: 1, startSec: 0, endSec: 6, zh: "大家好", en: "Hello" }],
+      srtLines: [{ index: 1, startSec: 0, endSec: 6, text: "大家好" }],
+    };
+    mockClient.getOutputProduction.mockResolvedValue({
+      id: "prod-1",
+      status: "rendering",
+      recordingConfig: {
+        videoEditingPlan: {
+          revision: 3,
+          decisions: recoveredDecisions,
+          renderProps: { delivery: { width: 1920, height: 1080, fps: 30 } },
+          sourceRenderTaskId: "exec-running",
+        },
+      },
+    });
+    mockClient.listExecutionTasks.mockResolvedValue([
+      {
+        id: "exec-running",
+        execType: "video.render",
+        status: "running",
+        adoptedAssetIds: [],
+        errorMessage: null,
+      },
+    ]);
+    mockClient.getExecutionTask.mockResolvedValue({
+      id: "exec-running",
+      execType: "video.render",
+      status: "running",
+      spec: {
+        taskType: "video.render",
+        goal: "渲染成片",
+        inputs: [],
+        params: {},
+        constraints: {},
+      },
+      manifest: null,
+      adoptedAssetIds: [],
+      errorMessage: null,
+    });
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="confirmed-render-progress"]')
+          ?.textContent,
+      ).toContain("渲染任务进行中"),
+    );
+    expect(
+      container.querySelector('[data-slot="execution-task-card"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="confirmed-decisions-notice"]'),
+    ).not.toBeNull();
   });
 
   // ── [FE-H01] 「后台运行,可离开」承诺:进度不丢、不重复付费、失败可见可恢复 ──────────
@@ -583,7 +813,7 @@ describe("ProductionWorkbench", () => {
     // 决不重新 createAITask(不重复触发付费决策)。
     expect(mockClient.createAITask).not.toHaveBeenCalled();
     // 进行中态可见(承诺「后台跑,可离开」)。
-    expect(container.textContent).toContain("四决策进行中");
+    expect(container.textContent).toContain("分镜统筹中");
   });
 
   it("[T-308] 有历史成片时,当前 running 四决策仍优先恢复(旧 succeeded render 不得遮住新任务)", async () => {
@@ -610,7 +840,7 @@ describe("ProductionWorkbench", () => {
       ),
     );
     expect(mockClient.createAITask).not.toHaveBeenCalled();
-    expect(container.textContent).toContain("四决策进行中");
+    expect(container.textContent).toContain("分镜统筹中");
     expect(
       container.querySelector('[data-slot="dispatch-decisions"]'),
     ).toBeNull();
@@ -900,7 +1130,7 @@ describe("ProductionWorkbench", () => {
 
   // ── [T-366a] 制作方式二选一(上传成品直登成片) ────────────────────────────────
 
-  it("[T-366a] 默认「用 CreatorOS 制作」= 现状流零破坏;切换按钮在,成品上传区不在", () => {
+  it("[T-366a] 默认「在应用内制作」= 现状流零破坏;切换按钮在,成品上传区不在", () => {
     const { container } = render(<ProductionWorkbench {...makeProps()} />);
     expect(
       container.querySelector('[data-slot="method-creatoros"]')?.getAttribute("data-active"),
@@ -914,6 +1144,9 @@ describe("ProductionWorkbench", () => {
   it("[T-366a] 上传成品:跳过四决策/渲染,export 建档+complete(resultAssetId=成品),状态机补记中间态到 ready", async () => {
     const { container } = render(<ProductionWorkbench {...makeProps()} />);
     fireEvent.click(container.querySelector('[data-slot="method-upload"]')!);
+    expect(
+      container.querySelector('[data-slot="production-orientation"]'),
+    ).toBeNull();
     const file = new File(["final-bytes"], "成片.mp4", { type: "video/mp4" });
     fireEvent.change(fileInput(container, "上传成品视频"), {
       target: { files: [file] },
@@ -1022,7 +1255,7 @@ describe("ProductionWorkbench", () => {
     expect(mockClient.createUpload).not.toHaveBeenCalled();
   });
 
-  it("[T-366a VP-03] 可退回:切到上传成品再切回,CreatorOS 现状链 UI 原样恢复", async () => {
+  it("[T-366a VP-03] 可退回:切到上传成品再切回,应用内制作链 UI 原样恢复", async () => {
     const { container } = render(<ProductionWorkbench {...makeProps()} />);
     fireEvent.click(container.querySelector('[data-slot="method-upload"]')!);
     expect(
@@ -1121,6 +1354,55 @@ describe("ProductionWorkbench", () => {
 // ── [T-387c] 备料③ B-roll 自动聚合(来源徽标 + 人可剔 → excludedAssetIds)────────
 
 describe("ProductionWorkbench — T-387c B-roll 自动聚合", () => {
+  it("[T-739] 空项目不采信旧脚本 assetRefs，也不读取历史 thesis_tree", async () => {
+    mockClient.listArtifacts.mockResolvedValue([
+      { id: "art-script", artifactType: "output_script" },
+      { id: "art-thesis", artifactType: "thesis_tree" },
+    ]);
+    mockClient.getArtifact.mockImplementation((async (input: unknown) => {
+      const id = (input as { params?: { artifactId?: string } }).params?.artifactId;
+      return { currentVersionId: id === "art-thesis" ? "v-thesis" : "v-script" };
+    }) as never);
+    mockClient.listArtifactVersions.mockImplementation((async (input: unknown) => {
+      const id = (input as { params?: { artifactId?: string } }).params?.artifactId;
+      if (id === "art-thesis") {
+        return [{
+          id: "v-thesis",
+          versionNumber: 1,
+          contentData: { nodes: [{ materialRefs: [{ id: "thesis-only" }] }] },
+        }];
+      }
+      return [{
+        id: "v-script",
+        versionNumber: 1,
+        contentData: {
+          sections: [{ visual: { description: "录屏", assetRefs: ["script-only"] } }],
+        },
+      }];
+    }) as never);
+    mockClient.listMaterialLinks.mockResolvedValue([]);
+    mockClient.getAsset.mockImplementation((async (input: unknown) => {
+      const id = (input as { params?: { assetId?: string } }).params?.assetId;
+      return { assetType: "image", name: id, fileSize: null };
+    }) as never);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() => expect(mockClient.listMaterialLinks).toHaveBeenCalled());
+
+    expect(container.querySelector('[data-slot="broll-auto"]')).toBeNull();
+    expect(container.textContent).not.toContain("script-only");
+    expect(container.textContent).not.toContain("thesis-only");
+    expect(mockClient.getAsset).not.toHaveBeenCalledWith(
+      expect.objectContaining({ params: { assetId: "script-only" } }),
+    );
+    const artifactReads = mockClient.getArtifact.mock.calls as unknown as Array<
+      [{ params: { artifactId: string } }]
+    >;
+    expect(artifactReads.map((call) => call[0].params.artifactId)).toEqual([
+      "art-script",
+    ]);
+  });
+
   it("脚本点名素材 + 弹药资产自动列入(来源徽标);剔除后 dispatch 带 excludedAssetIds", async () => {
     // 脚本 artifact(output_script)当前版本带凝固 visual 点名 a-script。
     mockClient.listArtifacts.mockResolvedValue([
@@ -1144,6 +1426,7 @@ describe("ProductionWorkbench — T-387c B-roll 自动聚合", () => {
     ]);
     // 项目弹药链(非 broll/clip)→ ammo 来源。
     mockClient.listMaterialLinks.mockResolvedValue([
+      { id: "l0", entityType: "asset", entityId: "a-script", role: "reference" },
       { id: "l1", entityType: "asset", entityId: "a-ammo", role: "reference" },
     ]);
     mockClient.getAsset.mockImplementation((async (input: unknown) => {

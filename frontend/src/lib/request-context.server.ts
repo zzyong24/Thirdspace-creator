@@ -49,18 +49,41 @@ export interface ResolveContextOptions {
  * 校验，cookie 兜底不会放松安全边界。
  */
 export function readRequestAccountId(req: Request): string | null {
-  const fromHeader = req.headers.get("x-account-id")?.trim();
-  if (fromHeader) return fromHeader;
+  return readRequestAccountSelection(req).effectiveAccountId;
+}
 
+/**
+ * [T-691] 同时保留 header / cookie 两个账号来源，供有副作用的入口在进入 Context 前
+ * 做一致性校验。普通读路由仍可消费 effectiveAccountId，保持既有 header 优先行为。
+ */
+export function readRequestAccountSelection(req: Request): {
+  headerAccountId: string | null;
+  cookieAccountId: string | null;
+  effectiveAccountId: string | null;
+  mismatch: boolean;
+} {
+  const headerAccountId = req.headers.get("x-account-id")?.trim() || null;
   const match = /(?:^|;\s*)creatoros_current_account=([^;]+)/.exec(
     req.headers.get("cookie") ?? "",
   );
-  if (!match?.[1]) return null;
-  try {
-    return decodeURIComponent(match[1]);
-  } catch {
-    return match[1];
+  let cookieAccountId: string | null = null;
+  if (match?.[1]) {
+    try {
+      cookieAccountId = decodeURIComponent(match[1]).trim() || null;
+    } catch {
+      cookieAccountId = match[1].trim() || null;
+    }
   }
+  return {
+    headerAccountId,
+    cookieAccountId,
+    effectiveAccountId: headerAccountId ?? cookieAccountId,
+    mismatch: Boolean(
+      headerAccountId &&
+        cookieAccountId &&
+        headerAccountId !== cookieAccountId,
+    ),
+  };
 }
 
 // [T-046 单机免登录] route 层的统一 ctx 解析:有 session token 照旧验 token;无 token 或

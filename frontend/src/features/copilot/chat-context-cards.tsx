@@ -27,8 +27,10 @@ import type {
   ContextPositioningDetailToolResult,
   ContextPredictionsToolResult,
   ContextProjectDetailToolResult,
+  ContextProjectLifecycleToolResult,
   ContextProjectsToolResult,
   ContextPublicationsToolResult,
+  ContextReviewReportToolResult,
   DetailTextField,
 } from "@creatoros/backend/modules/ai-runtime";
 
@@ -170,6 +172,135 @@ export function ChatProjectListCard({
         ))}
       </ol>
       {hasHidden ? <ExpandButton count={items.length} onClick={expand} /> : null}
+    </CardShell>
+  );
+}
+
+// ── [T-691] context.project.lifecycle → 项目全流程索引卡 ──────────────────────
+
+type ProjectLifecycle = NonNullable<
+  ContextProjectLifecycleToolResult["lifecycle"]
+>;
+
+const LIFECYCLE_SECTION_LABELS: Readonly<Record<string, string>> = {
+  brief: "选题卡",
+  artifacts: "稿件",
+  materials: "创作素材",
+  cover: "封面",
+  publications: "发布",
+  metrics: "数据",
+  review: "审核",
+  retrospective: "复盘",
+};
+
+const LIFECYCLE_STATE_LABELS: Readonly<Record<string, string>> = {
+  available: "已有",
+  empty: "暂无",
+  unavailable: "暂未接入",
+  error: "读取失败",
+};
+
+export function ChatProjectLifecycleCard({
+  lifecycle,
+}: {
+  lifecycle: ProjectLifecycle | null;
+}) {
+  if (!lifecycle) {
+    return (
+      <EmptyCard
+        slot="chat-project-lifecycle-card"
+        text="没有读到这个项目，可能项目已删除或不属于当前账号。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-project-lifecycle-card"
+      heading={`项目全流程 · ${lifecycle.project.title}`}
+      footer={
+        lifecycle.errors.length > 0 ? (
+          <p className="text-[10px] text-warning">
+            有 {lifecycle.errors.length} 个分区读取失败；这不代表用户没有内容。追踪号：
+            {lifecycle.traceId}
+          </p>
+        ) : null
+      }
+    >
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        {Object.entries(lifecycle.completeness).map(([section, state]) => (
+          <div
+            key={section}
+            data-state={state}
+            className="rounded-md border border-border px-2 py-1.5"
+          >
+            <p className="text-[10px] text-text-subtle">
+              {LIFECYCLE_SECTION_LABELS[section] ?? section}
+            </p>
+            <p className="text-[11px] font-medium text-foreground">
+              {LIFECYCLE_STATE_LABELS[state] ?? state}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className="text-[10px] text-text-subtle">
+        {lifecycle.artifacts.length} 类稿件 · {lifecycle.materials.length} 份素材 · {lifecycle.publications.length} 条发布记录
+      </p>
+    </CardShell>
+  );
+}
+
+// ── [T-691] context.review.report → 审核报告真值卡 ───────────────────────────
+
+type ReviewContextReport = NonNullable<ContextReviewReportToolResult["report"]>;
+
+export function ChatReviewContextCard({
+  report,
+}: {
+  report: ReviewContextReport | null;
+}) {
+  if (!report) {
+    return (
+      <EmptyCard
+        slot="chat-review-context-card"
+        text="这个项目还没有审核报告。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-review-context-card"
+      heading={`文案审核 · ${report.verdict}`}
+      footer={
+        <p className="text-[10px] text-text-subtle">
+          {report.modelLabel} · {String(report.reviewedAt).slice(0, 16)}
+        </p>
+      }
+    >
+      {report.stale ? (
+        <p className="rounded-md bg-warning-soft px-2 py-1 text-[10px] text-warning">
+          稿件已更新，这份报告只代表旧版本；建议重新审核。
+        </p>
+      ) : null}
+      <p className="whitespace-pre-wrap text-[11px] text-foreground">
+        {report.summary}
+      </p>
+      <ol className="flex flex-col gap-1">
+        {report.findings.slice(0, CONTEXT_CARD_VISIBLE).map((finding) => (
+          <li key={finding.findingId} className="rounded-md bg-surface-subtle px-2 py-1.5">
+            <p className="text-[10px] font-medium text-foreground">
+              {finding.level} · {finding.category}
+            </p>
+            <p className="line-clamp-2 text-[10px] text-muted-foreground">
+              {finding.reason}
+            </p>
+            {finding.suggestion ? (
+              <p className="mt-0.5 line-clamp-2 text-[10px] text-brand">
+                建议：{finding.suggestion}
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ol>
     </CardShell>
   );
 }

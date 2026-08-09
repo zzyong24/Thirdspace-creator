@@ -33,6 +33,7 @@ import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { KNOWLEDGE_DISTILL_SCOPE } from "@/features/copilot/chat-scope";
+import { ExperienceCaptureLink } from "@/features/experience/experience-interactive-region";
 import { type AtomType } from "./knowledge-atom-gate";
 
 // 兼容既有 import 面:确认门与两个纯函数已抽到 knowledge-atom-gate(T-094),原路径再导出。
@@ -501,6 +502,7 @@ export function KnowledgeDumpZone() {
         >
           手动补录
         </button>
+        <ExperienceCaptureLink />
       </div>
 
       {/* 手动补录降级入口:最小字段 title + type,正文用倾倒场输入。 */}
@@ -580,9 +582,9 @@ export function KnowledgeDumpZone() {
               </h2>
               <p className="mt-1 text-xs leading-5 text-text-subtle">
                 {importDialog.phase === "confirm"
-                  ? "CreatorOS 会先保存原文件，再读取正文；只有正文读取成功的文件才会加入知识库。"
+                  ? "系统会先保存原文件，再读取正文；只有正文读取成功的文件才会加入知识库。"
                   : importDialog.phase === "running"
-                    ? `已处理 ${importDialog.completed}/${importDialog.files.length}，请保持 CreatorOS 打开。`
+                    ? `已处理 ${importDialog.completed}/${importDialog.files.length}，请保持应用打开。`
                     : `成功 ${importDialog.succeeded} 个，失败 ${importDialog.failures.length} 个。`}
               </p>
             </div>

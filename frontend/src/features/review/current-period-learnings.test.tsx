@@ -10,7 +10,7 @@
  */
 
 import * as React from "react";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AnalyticsViewModel } from "@/types/view-models";
 import { AnalyticsReviewPage } from "./analytics-review-page";
@@ -50,6 +50,18 @@ function vmWith(
   return {
     ...buildAnalyticsReviewViewModel(PROJECT_ID),
     candidateLearnings,
+  };
+}
+
+function vmWithoutPostPublishEvidence(
+  candidateLearnings: AnalyticsViewModel["candidateLearnings"],
+): AnalyticsViewModel {
+  return {
+    ...vmWith(candidateLearnings),
+    metrics: [],
+    viewsTrend: [],
+    conversionFunnel: [],
+    comments: [],
   };
 }
 
@@ -157,5 +169,43 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     expect(region.querySelector('a[href*="copilot=open"]')).toBeNull();
     // 无候选时不渲裁决队列(无采纳按钮)。
     expect(region.querySelector('[data-slot="learning-adopt"]')).toBeNull();
+  });
+
+  it("[T-739] 未发布或没有本项目指标/评论时，不展示候选和帮我复盘入口", () => {
+    const { container } = render(
+      <AnalyticsReviewPage
+        projectId={PROJECT_ID}
+        viewModel={vmWithoutPostPublishEvidence([
+          candidate({ id: "legacy-edit", learningType: "edit_delta" }),
+        ])}
+      />,
+    );
+
+    expect(container.querySelector('[data-slot="review-analyze-island"]')).toBeNull();
+    expect(container.querySelector('[data-slot="candidate-card"]')).toBeNull();
+    expect(container.querySelector('[data-slot="current-period-learnings-cta"]')).toBeNull();
+    expect(container.textContent).toContain("发布并同步真实数据后才能复盘");
+  });
+
+  it("[T-739] 复盘候选长依据默认只展示摘要，可按需展开全文", () => {
+    const longInsight = `开头摘要${"这是详细依据".repeat(40)}`;
+    const { container } = render(
+      <AnalyticsReviewPage
+        projectId={PROJECT_ID}
+        viewModel={vmWith([candidate({ insight: longInsight })])}
+      />,
+    );
+    const insight = container.querySelector<HTMLElement>(
+      '[data-slot="learning-insight"]',
+    )!;
+    expect(insight.textContent).not.toBe(longInsight);
+    const toggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="learning-insight-toggle"]',
+    )!;
+    expect(toggle).not.toBeNull();
+    expect(toggle.textContent).toContain("展开");
+    fireEvent.click(toggle);
+    expect(insight.textContent).toBe(longInsight);
+    expect(toggle.textContent).toContain("收起");
   });
 });

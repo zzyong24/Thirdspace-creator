@@ -9,6 +9,9 @@ function makeClient(options?: {
   radarDraftSeed?: string;
   materialLinks?: Array<Record<string, unknown>>;
   assets?: Record<string, { id: string; name: string; assetType: string }>;
+  outputs?: Array<Record<string, unknown>>;
+  publications?: Array<Record<string, unknown>>;
+  publicationRevisions?: Array<Record<string, unknown>>;
 }): DraftWorkbenchClient {
   const assets = options?.assets ?? {};
   return {
@@ -34,9 +37,11 @@ function makeClient(options?: {
     listArtifacts: vi.fn(async () => []),
     getArtifact: vi.fn(async () => ({})),
     listArtifactVersions: vi.fn(async () => []),
-    listOutputs: vi.fn(async () => []),
-    listPublications: vi.fn(async () => []),
-    listPublicationRevisions: vi.fn(async () => []),
+    listOutputs: vi.fn(async () => options?.outputs ?? []),
+    listPublications: vi.fn(async () => options?.publications ?? []),
+    listPublicationRevisions: vi.fn(
+      async () => options?.publicationRevisions ?? [],
+    ),
     listMaterialLinks: vi.fn(async () => options?.materialLinks ?? []),
     getKnowledge: vi.fn(async () => ({})),
     getAsset: vi.fn(async ({ params }) => assets[params.assetId] ?? {}),
@@ -120,5 +125,40 @@ describe("draft workbench project state", () => {
       (vm as unknown as { projectCoverAssetId?: string | null })
         .projectCoverAssetId,
     ).toBe("legacy-cover");
+  });
+
+  it("刷新稿面时从当前发布 revision 回读完整发布物料", async () => {
+    const vm = await buildDraftWorkbenchVm(
+      "p-1",
+      makeClient({
+        outputs: [{ id: "out-1" }],
+        publications: [
+          {
+            id: "pub-1",
+            platform: "douyin",
+            status: "draft",
+            currentRevisionId: "rev-2",
+            publishedAt: null,
+          },
+        ],
+        publicationRevisions: [
+          {
+            id: "rev-2",
+            title: "九点还没起床，我让智能体先拍",
+            description: "这是已经采纳并持久化的发布正文。",
+            platformTags: ["AI提效", "编导智能体"],
+            coverAssetId: null,
+          },
+        ],
+      }),
+    );
+
+    expect(vm.publishPack).toMatchObject({
+      publicationId: "pub-1",
+      platform: "douyin",
+      title: "九点还没起床，我让智能体先拍",
+      description: "这是已经采纳并持久化的发布正文。",
+      tags: ["AI提效", "编导智能体"],
+    });
   });
 });

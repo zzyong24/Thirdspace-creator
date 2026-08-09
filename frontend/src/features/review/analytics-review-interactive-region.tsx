@@ -134,6 +134,7 @@ export function AnalyticsReviewInteractiveRegion({
   viewModel,
   reviewsWiring,
   metricsEmpty = false,
+  reviewEvidenceReady = true,
 }: {
   readonly viewModel: AnalyticsViewModel;
   readonly reviewsWiring?: ReviewsWiring;
@@ -143,6 +144,8 @@ export function AnalyticsReviewInteractiveRegion({
    * (各自带诚实空态)—— 复盘编辑不依赖指标采集,不该被指标空态吞掉。
    */
   readonly metricsEmpty?: boolean;
+  /** 当前项目已有发布后指标或评论；没有证据时禁止生成/展示伪复盘。 */
+  readonly reviewEvidenceReady?: boolean;
 }) {
   const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
     null,
@@ -273,8 +276,11 @@ export function AnalyticsReviewInteractiveRegion({
         {/* [T-404 用户拍板 2026-07-18] 本期经验裁决区(含「帮我复盘」CTA)从左列移到右栏、
             复盘编辑之上 —— 帮我复盘是复盘编辑的入口动作,放一起动线更顺。 */}
         <CurrentPeriodLearnings
-          candidates={viewModel.candidateLearnings ?? []}
+          candidates={
+            reviewEvidenceReady ? (viewModel.candidateLearnings ?? []) : []
+          }
           projectId={viewModel.projectId}
+          reviewEvidenceReady={reviewEvidenceReady}
         />
         {/* [T-356③] 「AI 要点 · 本期复盘摘要」卡已下架:与「本期经验 · 可采纳沉淀」
             同源(一次「帮我复盘」review.analyze 同时产要点+经验候选),两块并存=概念重复
@@ -651,9 +657,11 @@ function CommentsSection({
 function CurrentPeriodLearnings({
   candidates,
   projectId,
+  reviewEvidenceReady,
 }: {
   candidates: AdjudicationQueueProps["candidates"];
   projectId: string;
+  reviewEvidenceReady: boolean;
 }) {
   const isEmpty = candidates.length === 0;
   return (
@@ -673,7 +681,7 @@ function CurrentPeriodLearnings({
           </p>
         </div>
         {/* [T-356③] 常驻再跑入口(原「AI 要点」卡下架后,非空态也要能再复盘)。 */}
-        {isEmpty ? null : (
+        {!reviewEvidenceReady || isEmpty ? null : (
           <ReviewAnalyzeButton
             projectId={projectId}
             slot="current-period-learnings-rerun"
@@ -681,7 +689,19 @@ function CurrentPeriodLearnings({
           />
         )}
       </header>
-      {isEmpty ? (
+      {!reviewEvidenceReady ? (
+        <div
+          data-slot="current-period-learnings-empty"
+          className="rounded-lg border border-dashed border-border bg-surface px-3 py-4"
+        >
+          <p className="text-[12px] font-medium text-foreground">
+            发布并同步真实数据后才能复盘
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            当前项目还没有可核验的指标或观众评论，不会读取其他作品的改稿记录来补位。
+          </p>
+        </div>
+      ) : isEmpty ? (
         <div
           data-slot="current-period-learnings-empty"
           className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-4"
@@ -699,7 +719,7 @@ function CurrentPeriodLearnings({
           />
         </div>
       ) : (
-        <AdjudicationQueue candidates={candidates} />
+        <AdjudicationQueue candidates={candidates} compact />
       )}
     </section>
   );

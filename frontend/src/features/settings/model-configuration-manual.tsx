@@ -95,8 +95,8 @@ export function ModelConfigurationManual() {
             <DialogTitle className="text-lg">模型配置手册</DialogTitle>
           </div>
           <DialogDescription>
-            通常只需选供应商、填写模型 ID 和密钥。只有使用 New API / 自建中转站时，
-            才需要展开高级设置填写地址和协议。
+            通常只需选择模型服务、填写模型 ID 和密钥。使用自定义 API 时，
+            再展开高级设置填写地址和接口格式。
           </DialogDescription>
         </DialogHeader>
 
@@ -152,22 +152,22 @@ export function ModelConfigurationManual() {
           <section className="flex flex-col gap-3">
             <div>
               <h3 className="text-sm font-semibold text-foreground">
-                New API / 自建中转站
+                自定义 API
               </h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                供应商选“自定义”后展开高级设置。Base URL 必须是 API 地址，很多中转站需要以
-                /v1 结尾；接口格式按渠道实际支持选择 OpenAI Chat 或 OpenAI Responses，
+                选择“自定义”后展开高级设置。Base URL 必须是 API 地址，通常需要以
+                /v1 结尾；接口格式按实际支持选择 OpenAI Chat 或 OpenAI Responses，
                 不能只凭模型名称猜。
               </p>
             </div>
             <ManualFigure
               slot="model-manual-figure-relay"
               eyebrow="截图 02"
-              title="New API / 中转站填写示例"
+              title="自定义 API 填写示例"
             >
               <Field label="供应商预设" value="自定义" />
               <Field label="模型" value="控制台显示的精确模型 ID" />
-              <Field label="Base URL" value="https://your-relay.example/v1" />
+              <Field label="Base URL" value="https://api.example.com/v1" />
               <Field label="接口格式" value="按渠道选择 Chat 或 Responses" />
               <Field label="API 密钥" value="" tone="secret" />
               <div className="rounded-md bg-brand-soft px-3 py-2 text-xs leading-relaxed text-brand">

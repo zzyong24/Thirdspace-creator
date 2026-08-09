@@ -50,6 +50,7 @@ import {
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { describeUserError } from "@/lib/ai-error-humanize";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,13 +78,20 @@ type PositioningProfileDraft = Pick<
 >;
 
 /**
- * T-666：重新定位只能进入非破坏式前采。这个兼容导出名被历史页面引用，
- * 但它不再调用 reset operation，也不提供任何“清空母版”确认门。
+ * T-666/T-707：重新定位直接进入非破坏式 Copilot 对话。这个兼容导出名被历史页面引用，
+ * 但它不再调用 reset operation，也不提供任何“清空母版”确认门或中间问卷。
  */
 export function ResetPositioningMasterButton() {
+  const href = copilotDeepLink(
+    "positioning",
+    "positioning.generate",
+    undefined,
+    "帮我重新梳理账号定位。先问我想基于当前账号继续深入、调整到一个新方向，还是完全从零开始；每轮最多问一个真正影响结果的问题，我说先给一版时就立即生成定位候选。",
+    "surface:positioning",
+  );
   return (
     <Button asChild data-testid="reset-positioning-master">
-      <a href="#positioning-discovery">
+      <a href={href}>
         <Plus />
         重新定位
       </a>

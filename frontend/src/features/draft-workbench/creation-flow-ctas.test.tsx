@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CreationFlowCtas } from "./creation-flow-ctas";
 
-// T-127:稿面创作流引导 CTA。锁「搜素材/立论点」两钮 → openChat 用对的 functionKey(半自动一键触发)。
-// T-146:新增「＋上传素材」钮(上传进当前项目弹药库)。
+// T-730:论点入口恢复为可选辅助，不替代上传与联网找资料。
 const openChat = vi.fn();
 vi.mock("./draft-chat-request", () => ({
   useDraftChatRequest: () => ({ openChat }),
@@ -17,19 +16,21 @@ vi.mock("next/navigation", () => ({
 describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
   beforeEach(() => openChat.mockClear());
 
-  it("[T-146] 渲三钮:＋上传素材 + 搜素材(联网)+ 立论点", () => {
+  it("[T-730] 保留上传与联网找资料，并恢复可选的先梳理观点", () => {
     render(<CreationFlowCtas projectId="project-x" />);
     expect(
-      screen.getByRole("button", { name: /上传素材/ }),
+      screen.getByRole("button", { name: /上传.*素材/ }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /搜素材/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /立论点/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /联网找资料/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /先梳理观点.*可选/ }),
+    ).toBeInTheDocument();
   });
 
   it("[T-146] 上传按钮在最前面(第一个 CTA 按钮)", () => {
     const { container } = render(<CreationFlowCtas projectId="project-x" />);
     const buttons = container.querySelectorAll("button");
-    expect(buttons[0]?.textContent ?? "").toMatch(/上传素材/);
+    expect(buttons[0]?.textContent ?? "").toMatch(/上传.*素材/);
   });
 
   it("[T-146] 有隐藏 file input,accept 覆盖文档类型(pdf/doc/docx/md/txt)", () => {
@@ -45,7 +46,7 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
 
   it("[T-265] 点「搜素材」→ openChat functionKey=material.gather + autoSend(死链修:原 research.gather_material 不在 ALL_CHAT_TOOL_NAMES → 空点)", () => {
     render(<CreationFlowCtas projectId="project-x" />);
-    fireEvent.click(screen.getByRole("button", { name: /搜素材/ }));
+    fireEvent.click(screen.getByRole("button", { name: /联网找资料/ }));
     expect(openChat).toHaveBeenCalledTimes(1);
     expect(openChat.mock.calls[0][0]).toMatchObject({
       functionKey: "material.gather",
@@ -53,13 +54,15 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
     });
   });
 
-  it("点「立论点」→ openChat functionKey=planning.thesis + autoSend", () => {
+  it("[T-730] 点可选梳理入口 → planning.thesis，不自动写稿", () => {
     render(<CreationFlowCtas projectId="project-x" />);
-    fireEvent.click(screen.getByRole("button", { name: /立论点/ }));
-    expect(openChat).toHaveBeenCalledTimes(1);
-    expect(openChat.mock.calls[0][0]).toMatchObject({
-      functionKey: "planning.thesis",
-      autoSend: true,
-    });
+    fireEvent.click(screen.getByRole("button", { name: /先梳理观点.*可选/ }));
+    expect(openChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        functionKey: "planning.thesis",
+        autoSend: true,
+      }),
+    );
   });
+
 });

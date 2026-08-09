@@ -55,4 +55,22 @@ describe("[T-381] sortAssetsByNewest", () => {
       "older",
     ]);
   });
+
+  it("createdAt 相同时固定按 id ASC，输入顺序变化也不抖动", () => {
+    const same = "2026-08-06T08:00:00.000Z";
+    const a = summary("asset-a", same, same);
+    const b = summary("asset-b", same, same);
+    const c = summary("asset-c", same, same);
+
+    expect(sortAssetsByNewest([c, a, b]).map((r) => r.id)).toEqual([
+      "asset-a",
+      "asset-b",
+      "asset-c",
+    ]);
+    expect(sortAssetsByNewest([b, c, a]).map((r) => r.id)).toEqual([
+      "asset-a",
+      "asset-b",
+      "asset-c",
+    ]);
+  });
 });

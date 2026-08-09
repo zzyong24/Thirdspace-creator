@@ -204,7 +204,7 @@ function CourseHome({
               <span className="grid size-9 place-items-center rounded-full border border-[#B8D8B9]/35 bg-[#B8D8B9]/10">
                 <Sparkles className="size-4" aria-hidden="true" />
               </span>
-              CREATOROS 内置课程
+              内置课程
             </div>
             <h1 className="max-w-3xl text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-5xl">
               {BUILT_IN_IP_COURSE.title}

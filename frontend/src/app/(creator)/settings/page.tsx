@@ -397,6 +397,8 @@ export default async function SettingsRoutePage() {
         managedRoutes.map(({ capability, route }) => {
           const hasSecret = route.inlineToken
             ? true
+            : route.credentialLifecycle === "per_request"
+              ? true
             : route.serviceId
               ? (statusByService.get(route.serviceId) ?? false)
               : false;
@@ -436,15 +438,24 @@ export default async function SettingsRoutePage() {
         serviceById.set(route.serviceId, {
           serviceId: route.serviceId,
           serviceName: route.serviceName,
-          hasSecret: statusByService.get(route.serviceId) ?? false,
+          hasSecret:
+            route.credentialLifecycle === "per_request"
+              ? true
+              : (statusByService.get(route.serviceId) ?? false),
           credentialSource: route.credentialSource ?? "user_input",
           ...route.links,
         });
       }
       services = [...serviceById.values()];
       const managedCount = managedRoutes.length;
-      action =
-        managedCount === 0
+      const usesManagedCredits = managedRoutes.some(
+        ({ route }) => route.credentialSource === "activation_managed",
+      );
+      action = usesManagedCredits
+        ? managedCount === 4
+          ? "当前权益已提供文本、图片、视频与语音转文字"
+          : `当前权益已同步 ${managedCount}/4 类模型，缺失能力请重新同步`
+        : managedCount === 0
           ? "渠道未接管这 4 类模型，全部由你配置"
           : `渠道已接管 ${managedCount}/4 类模型，其余由你配置`;
     }

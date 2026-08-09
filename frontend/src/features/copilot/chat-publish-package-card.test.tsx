@@ -132,6 +132,9 @@ describe("ChatPublishPackageCard(对话内发布物料卡,T-350b 异步)", () =>
         document.querySelector('[data-slot="chat-publish-done"]'),
       ).toBeTruthy();
     });
+    const done = document.querySelector('[data-slot="chat-publish-done"]');
+    expect(done?.textContent).toContain("查看发布物料");
+    expect(done?.textContent).not.toContain("发布中心");
   });
 
   it("任务 cancelled/failed(如未配模型)→ 诚实错误态 +「去设置」", async () => {

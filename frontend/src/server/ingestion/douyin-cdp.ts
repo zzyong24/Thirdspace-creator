@@ -866,6 +866,8 @@ let chromiumEnsured = false;
 export interface LocatePlaywrightCliDeps {
   isFile?: (candidate: string) => Promise<boolean>;
   readDir?: (dir: string) => Promise<string[]>;
+  runtimeRoot?: string;
+  pathApi?: Pick<typeof import("node:path"), "resolve" | "join" | "dirname">;
 }
 
 /**
@@ -878,7 +880,7 @@ export async function locatePlaywrightCli(
   startDir = process.cwd(),
   deps: LocatePlaywrightCliDeps = {},
 ): Promise<string | null> {
-  const path = await import("node:path");
+  const path = deps.pathApi ?? (await import("node:path"));
   const fs = await import("node:fs/promises");
   const isFile =
     deps.isFile ??
@@ -891,24 +893,31 @@ export async function locatePlaywrightCli(
     deps.readDir ??
     ((dir: string) => fs.readdir(dir).catch(() => [] as string[]));
 
+  // [T-734] Windows production closure 明确是零 node_modules 的少文件布局，动态包放在
+  // layers/browser/vendor；Next vendor 是兼容入口。下载兜底只用于开发/诊断，但定位器仍须
+  // 认识真实 runtime，不能把“扫描父级 node_modules”当成唯一世界模型。
+  const runtimeRoot = (deps.runtimeRoot ?? process.env.CREATOROS_RUNTIME_ROOT)?.trim();
+  if (runtimeRoot) {
+    for (const candidate of [
+      path.join(runtimeRoot, "layers", "browser", "vendor", "playwright", "cli.js"),
+      path.join(runtimeRoot, "frontend", ".next", "vendor", "playwright", "cli.js"),
+    ]) {
+      if (await isFile(candidate)) return candidate;
+    }
+  }
+
+  const visited = new Set<string>();
   let current = path.resolve(startDir);
-  while (true) {
+  while (!visited.has(current)) {
+    visited.add(current);
     const nodeModules = path.join(current, "node_modules");
     const direct = path.join(nodeModules, "playwright", "cli.js");
     if (await isFile(direct)) return direct;
 
     const pnpmDir = path.join(nodeModules, ".pnpm");
     const entries = await readDir(pnpmDir);
-    for (const entry of entries
-      .filter((name) => name.startsWith("playwright@"))
-      .sort()) {
-      const candidate = path.join(
-        pnpmDir,
-        entry,
-        "node_modules",
-        "playwright",
-        "cli.js",
-      );
+    for (const entry of entries.filter((name) => name.startsWith("playwright@")).sort()) {
+      const candidate = path.join(pnpmDir, entry, "node_modules", "playwright", "cli.js");
       if (await isFile(candidate)) return candidate;
     }
 
@@ -933,6 +942,9 @@ export async function ensureChromiumInstalled(): Promise<void> {
     }
   } catch {
     // executablePath 抛错 = 版本/注册表异常,照样走下载兜底。
+  }
+  if (process.env.CREATOROS_DESKTOP === "1") {
+    throw new BrowserRuntimeUnavailableError();
   }
   // 未装 → playwright install chromium(首启一次性下载;之后共享缓存,app 更新也复用)。
   console.warn("[ingestion] 未检测到 Chromium,首次自动下载(playwright install chromium)…");
@@ -1011,41 +1023,82 @@ export async function resolveChromiumExecutable(): Promise<string | undefined> {
 //   起不来回落**已打包全量 chromium**(executablePath,绕缺失的 chrome-headless-shell)。
 //   `chromium.launch` 与 `launchPersistentContext` 都经此双试——关键是保证「谁写登录态、谁读登录态」
 //   用**同一个浏览器**:否则系统 Chrome 用钥匙串加密的 cookie,Chromium-for-Testing 解不开 → 读不到登录态。
+export interface LaunchWithBrowserDeps {
+  desktop?: boolean;
+  resolveBundledExecutable?: () => Promise<string | undefined>;
+}
+
+const BROWSER_RUNTIME_UNAVAILABLE_MESSAGE =
+  "CreatorOS 无法启动浏览器：本机 Chrome 与 CreatorOS 内置浏览器均不可用。请重新安装当前版本；若仍失败，请在“帮助与反馈”导出诊断日志。";
+
+export class BrowserRuntimeUnavailableError extends Error {
+  constructor(cause?: unknown) {
+    super(BROWSER_RUNTIME_UNAVAILABLE_MESSAGE, cause === undefined ? undefined : { cause });
+    this.name = "BrowserRuntimeUnavailableError";
+  }
+}
+
 export async function launchWithBrowser<T>(
   run: (sel: { channel?: string; executablePath?: string }) => Promise<T>,
+  deps: LaunchWithBrowserDeps = {},
 ): Promise<T> {
+  let systemChromeFailure: unknown;
   try {
     return await run({ channel: "chrome" });
-  } catch {
-    const executablePath = await resolveChromiumExecutable();
-    return await run(executablePath ? { executablePath } : {});
+  } catch (error) {
+    systemChromeFailure = error;
   }
+
+  const resolveBundledExecutable =
+    deps.resolveBundledExecutable ?? resolveChromiumExecutable;
+  const executablePath = await resolveBundledExecutable();
+  if (executablePath) {
+    try {
+      return await run({ executablePath });
+    } catch (bundledFailure) {
+      console.error("[browser-runtime] system Chrome and bundled Chromium failed", {
+        systemChromeFailure,
+        bundledFailure,
+      });
+      throw new BrowserRuntimeUnavailableError(bundledFailure);
+    }
+  }
+
+  if (deps.desktop ?? process.env.CREATOROS_DESKTOP === "1") {
+    console.error("[browser-runtime] bundled Chromium executable is missing", {
+      systemChromeFailure,
+      browsersDir: process.env.CREATOROS_BROWSERS_DIR,
+    });
+    throw new BrowserRuntimeUnavailableError(systemChromeFailure);
+  }
+
+  // 本地开发环境保留 Playwright 默认缓存，方便贡献者不打完整桌面 runtime 调试。
+  return run({});
 }
 
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
 async function openContext(authDir: string, headless: boolean) {
-  await ensureChromiumInstalled(); // [T-173] 首启自动下载 Chromium(装过秒过)
   const { chromium } = await import("@playwright/test");
   const { mkdir } = await import("node:fs/promises");
   const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
   await mkdir(authDir, { recursive: true }).catch(() => {});
-  // [T-299] 显式全量 chromium(headless 也用它,绕开缺失的 chrome-headless-shell)。
-  const executablePath = await resolveChromiumExecutable();
   // [T-369] guardedLaunch:预检杀残留+清锁(只清锁,不动登录态)→ 同 profile 串行 → 超时人话报错。
   return guardedLaunch(
     authDir,
     () =>
-      chromium.launchPersistentContext(authDir, {
-        headless,
-        ...(executablePath ? { executablePath } : {}),
-        ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox(警告横幅根因)
-        viewport: { width: 1440, height: 900 },
-        acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
-        args: [
-          "--disable-blink-features=AutomationControlled",
-          "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
-        ],
-      }),
+      launchWithBrowser((selection) =>
+        chromium.launchPersistentContext(authDir, {
+          headless,
+          ...selection,
+          ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox(警告横幅根因)
+          viewport: { width: 1440, height: 900 },
+          acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
+          args: [
+            "--disable-blink-features=AutomationControlled",
+            "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
+          ],
+        }),
+      ),
     { label: "抖音浏览器窗口" },
   );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 // [Bug-8 T-021] 口播脚本 section 的副行文案对 imported 项目要给出针对性引导,
 // 不能误导成「直接开写」(用户压根没创建过这项目,是从抖音导入的)。
@@ -17,6 +17,7 @@ vi.mock("@/features/script/script-structure-view", () => ({
 }));
 vi.mock("./script-review-gate", () => ({
   ScriptReviewGate: () => <div data-slot="mock-review-gate" />,
+  ReviewSoftGateHint: () => <div data-slot="mock-review-soft-gate" />,
 }));
 vi.mock("@/components/resources/cover-thumb", () => ({
   CoverThumb: ({ assetId }: { assetId: string | null }) => (
@@ -30,7 +31,7 @@ vi.mock("./creation-flow-ctas", () => ({
   CreationFlowCtas: () => <div data-slot="mock-flow-ctas" />,
 }));
 vi.mock("./thesis-skeleton-panel", () => ({
-  ThesisSkeletonPanel: () => <div data-slot="mock-thesis" />,
+  ThesisSkeletonPanel: () => <div data-slot="mock-thesis-skeleton" />,
 }));
 vi.mock("./ammo-note-form", () => ({ AmmoNoteForm: () => null }));
 vi.mock("./ammo-dump-zone", () => ({ AmmoDumpZone: () => null }));
@@ -59,6 +60,10 @@ vi.mock("./draft-chat-request", () => ({
   DraftChatRequestProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
   ),
+  useDraftChatRequest: () => ({
+    openChat: vi.fn(),
+    flushSave: vi.fn(async () => undefined),
+  }),
 }));
 vi.mock("./draft-resizable-layout", () => ({
   DraftResizableLayout: ({
@@ -265,6 +270,34 @@ describe("DraftWorkbenchPage — T-660 已采纳项目封面", () => {
         ?.getAttribute("data-asset-id"),
     ).toBe("asset-cover-1");
     expect(container.textContent).not.toContain("封面待生成");
+  });
+});
+
+describe("DraftWorkbenchPage — T-738 发布物料查看闭环", () => {
+  it("已发布的持久化物料仍在原稿面提供查看，不跳转发布中心", () => {
+    render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          publishUnlocked: true,
+          publishPack: {
+            publicationId: "publication-1",
+            platform: "douyin",
+            status: "published",
+            publishedAt: "2026-08-09T10:00:00.000Z",
+            title: "正式发布标题",
+            description: "正式发布正文",
+            tags: ["AI提效"],
+            hasCover: false,
+            coverAssetId: null,
+          },
+        })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "查看发布物料" }));
+    expect(screen.getByRole("dialog").textContent).toContain("正式发布正文");
+    expect(screen.queryByText("生成发布物料")).toBeNull();
+    expect(screen.getByRole("dialog").textContent).not.toContain("发布中心");
   });
 });
 

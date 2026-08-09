@@ -48,7 +48,7 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
 
   // 状态可读提示:到期 vs 从未激活,措辞不同。
   const heading =
-    check.status === "expired" ? "CreatorOS 已到期" : "开始使用 CreatorOS";
+    check.status === "expired" ? "产品授权已到期" : "开始使用产品";
   const subtitle =
     check.status === "expired"
       ? "续费后可以重新领取，也可以输入新的激活码。"

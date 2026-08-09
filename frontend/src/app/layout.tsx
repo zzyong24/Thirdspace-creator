@@ -4,10 +4,11 @@ import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 
 import { ExternalLinkOpener } from "@/components/shell/external-link-opener";
+import { PACKAGE_BRAND_NAME } from "@/lib/package-brand";
 import { isDesktopRuntime } from "@/server/activation/is-desktop";
 
 export const metadata: Metadata = {
-  title: "CreatorOS",
+  title: PACKAGE_BRAND_NAME,
   description: "A personal workspace for planning and producing creator projects.",
   // [法律声明] 渲染进 HTML <head> 的版权/专有 meta —— AI 读页面源码即见(第三人称法律事实)。
   other: {

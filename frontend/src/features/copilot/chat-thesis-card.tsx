@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * [T-265] 对话内论点树结果卡 —— 复活「论点树对话内真生成」断链的前端半。
+ * [T-730] 对话内可选论点骨架结果卡。
  *
  * planning.thesis 工具 dispatch 了一个既有 planning.thesis ai_task(不直接生成 —— 论点树生成重、
  * 分钟级不能阻塞对话回合),把 taskId 交给本卡。本卡据 taskId **轮询** task/candidate(与
  * ChatGenerateCard 同款循环):
  *   running/queued → 进行中;
- *   awaiting_confirmation → 拉 candidate 渲论点树(核心论点 + 支撑/证据/反驳)+「采纳进论点骨架」
+ *   awaiting_confirmation → 拉 candidate 渲论点树(核心论点 + 支撑/证据/反驳)+「采纳并用于写稿」
  *     (client.confirmTask → artifact_version 分支 append 进项目 thesis_tree 当前版本 →
  *      稿面「论点骨架」面板 router.refresh 读回,铁律②人点才落);
- *   cancelled/failed → 失败(含未配 planning.thesis 模型)→ 卡内诚实「去设置 / 重试」。
+ *   cancelled/failed → 失败 → 卡内诚实提示按当前托管文本模型重试。
  *
  * dispatch 本身失败 / 无项目上下文(error 非 null)→ 直接渲错误态(诚实提示去项目稿面立论点)。
  * 论点树生成吃波1接地(brief 硬锚 + 素材可溯 + anti-fabrication),不凭空编数字。
@@ -171,7 +171,7 @@ export function ChatThesisCard({
       className="mt-1 flex w-full max-w-[460px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        论点树候选 · 采纳后挂进稿面论点骨架
+        可选论点骨架 · 确认采用后才影响生成式写稿
       </span>
 
       {phase === "running" ? (
@@ -180,7 +180,7 @@ export function ChatThesisCard({
           className="flex items-center gap-2 text-[12px] text-muted-foreground"
         >
           <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-          正在基于定位/选题/立项 brief/已搜素材立论点树…
+          正在用当前托管文本模型梳理核心论点、支撑、证据与反驳…
         </div>
       ) : null}
 
@@ -238,14 +238,14 @@ export function ChatThesisCard({
             onClick={() => void adopt()}
             className="inline-flex h-7 w-fit items-center rounded-control bg-brand px-3 text-[11px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
           >
-            {confirming ? "采纳中…" : "采纳进论点骨架"}
+            {confirming ? "采纳中…" : "采纳并用于写稿"}
           </button>
         </div>
       ) : null}
 
       {phase === "done" ? (
         <p data-slot="chat-thesis-done" className="text-[12px] text-success">
-          ✓ 已采纳，论点树挂进稿面「论点骨架」面板（可在稿面直接编辑，写脚本时作为依据）。
+          ✓ 已采纳并用于生成式写稿；完整逐字稿仍按原文优先，不会被论点骨架改写。
         </p>
       ) : null}
 
@@ -254,17 +254,8 @@ export function ChatThesisCard({
           <p className="text-[12px] leading-relaxed text-destructive">
             {error
               ? error
-              : "没能立出论点树 —— 可能是还没配置论点树生成模型、应用重启中断了任务，或本次生成失败;可在对话里再说一声重新生成。"}
+              : "没能梳理出论点骨架。当前托管文本模型（MiniMax）可能暂时不可用、任务被重启中断，或本次生成失败；可以直接重试，也可以跳过论点骨架继续写稿。"}
           </p>
-          {error ? null : (
-            <a
-              href="/settings?tab=models"
-              data-slot="chat-thesis-settings-link"
-              className="text-[11px] font-medium text-brand underline underline-offset-2"
-            >
-              去设置配论点树模型 →
-            </a>
-          )}
         </div>
       ) : null}
     </div>

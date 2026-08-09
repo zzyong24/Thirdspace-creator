@@ -49,6 +49,7 @@ interface FakeData {
       }>
     | "throw";
   readonly projects?: ReadonlyArray<{ id: string; title: string }> | "throw";
+  readonly trashedAssets?: FakeData["assets"];
   // Per-assetId usage edges (用料反查); a value of "throw" simulates a failed read.
   readonly usage?: Record<
     string,
@@ -72,13 +73,19 @@ interface FakeData {
 
 function fakeClient(data: FakeData): AssetsDataClient {
   return {
-    async listAssets() {
-      if (data.assets === "throw") throw new Error("assets read failed");
-      return data.assets ?? [];
+    async listAssets({ query }) {
+      const source =
+        query.status === "deleted" ? data.trashedAssets : data.assets;
+      if (source === "throw") throw new Error("assets read failed");
+      const rows = source ?? [];
+      const start = (query.page - 1) * query.pageSize;
+      return rows.slice(start, start + query.pageSize);
     },
-    async listProjects() {
+    async listProjects({ query }) {
       if (data.projects === "throw") throw new Error("projects read failed");
-      return data.projects ?? [];
+      const rows = data.projects ?? [];
+      const start = (query.page - 1) * query.pageSize;
+      return rows.slice(start, start + query.pageSize);
     },
     // listMaterialLinks remains on the client surface but is no longer used by
     // the usage assembly (kept for interface parity); return empty.
@@ -100,6 +107,54 @@ function fakeClient(data: FakeData): AssetsDataClient {
 }
 
 describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
+  it("超过 200 条素材和 100 个项目时完整分页加载", async () => {
+    const assets = Array.from({ length: 205 }, (_, index) => ({
+      id: `asset-page-${index}`,
+      currentFileId: firstFile.id,
+      assetType: "image" as const,
+      name: `素材 ${index}`,
+      description: "",
+      updatedAt: `2026-06-01T00:00:${String(index % 60).padStart(2, "0")}.000Z`,
+    }));
+    const projects = Array.from({ length: 105 }, (_, index) => ({
+      id: `project-page-${index}`,
+      title: `项目 ${index}`,
+    }));
+    const trashedAssets = Array.from({ length: 203 }, (_, index) => ({
+      ...assets[index % assets.length]!,
+      id: `trashed-page-${index}`,
+      name: `回收站素材 ${index}`,
+    }));
+    const result = await buildAssetsViewModelReal(
+      fakeClient({ assets, trashedAssets, projects }),
+    );
+    expect(result.viewModel.assets).toHaveLength(205);
+    expect(result.viewModel.trashedAssets).toHaveLength(203);
+    expect(result.projects).toHaveLength(105);
+  });
+
+  it("分页接口重复返回同一页时按 ID 无新增退出，不死循环", async () => {
+    let activeCalls = 0;
+    const repeated = Array.from({ length: 200 }, (_, index) => ({
+      id: `asset-repeat-${index}`,
+      currentFileId: firstFile.id,
+      assetType: "image" as const,
+      name: `重复页 ${index}`,
+      description: "",
+      updatedAt: "2026-06-01T00:00:00.000Z",
+    }));
+    const client = fakeClient({ assets: repeated });
+    const result = await buildAssetsViewModelReal({
+      ...client,
+      async listAssets(input) {
+        if (input.query.status === "deleted") return [];
+        activeCalls += 1;
+        return repeated;
+      },
+    });
+    expect(result.viewModel.assets).toHaveLength(200);
+    expect(activeCalls).toBe(2);
+  });
   it("maps REAL assets.list rows to gallery summaries", async () => {
     const { viewModel } = await buildAssetsViewModelReal(
       fakeClient({

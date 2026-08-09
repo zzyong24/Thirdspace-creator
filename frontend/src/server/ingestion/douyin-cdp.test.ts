@@ -15,6 +15,7 @@ import {
   fetchDouyinUserPosts,
   loginDouyin,
   locatePlaywrightCli,
+  launchWithBrowser,
   DouyinNotLoggedInError,
   DouyinFavoritesBrowserLockedError,
   DouyinFavoritesCaptchaError,
@@ -374,6 +375,77 @@ describe("[T-469] Playwright CLI 确定性定位", () => {
         readDir: async () => [],
       }),
     ).resolves.toBeNull();
+  });
+
+  it("Windows 少文件 runtime 能从 browser vendor 找到 CLI，不假定存在 node_modules", async () => {
+    const runtimeRoot =
+      "C:\\Users\\测试用户\\AppData\\Local\\CreatorOS\\runtime-images\\0.2.1-beta.3\\sidecar";
+    const cli = `${runtimeRoot}\\layers\\browser\\vendor\\playwright\\cli.js`;
+    const { win32 } = await import("node:path");
+
+    await expect(
+      locatePlaywrightCli(`${runtimeRoot}\\frontend`, {
+        runtimeRoot,
+        pathApi: win32,
+        isFile: async (candidate) => candidate === cli,
+        readDir: async () => [],
+      }),
+    ).resolves.toBe(cli);
+  });
+});
+
+describe("[T-734] 桌面端浏览器选择不再被 Playwright CLI 前置阻断", () => {
+  it("本机 Chrome 可启动时直接使用，不检查或下载随包 Chromium", async () => {
+    const selections: Array<{ channel?: string; executablePath?: string }> = [];
+    const resolveBundledExecutable = vi.fn(async () => "C:\\CreatorOS\\chrome.exe");
+
+    await expect(
+      launchWithBrowser(
+        async (selection) => {
+          selections.push(selection);
+          return "chrome-ok";
+        },
+        { desktop: true, resolveBundledExecutable },
+      ),
+    ).resolves.toBe("chrome-ok");
+    expect(selections).toEqual([{ channel: "chrome" }]);
+    expect(resolveBundledExecutable).not.toHaveBeenCalled();
+  });
+
+  it("本机 Chrome 失败后只回落到已验证的随包 Chromium", async () => {
+    const selections: Array<{ channel?: string; executablePath?: string }> = [];
+    await expect(
+      launchWithBrowser(
+        async (selection) => {
+          selections.push(selection);
+          if (selection.channel === "chrome") throw new Error("Chrome 未安装");
+          return "bundled-ok";
+        },
+        {
+          desktop: true,
+          resolveBundledExecutable: async () =>
+            "C:\\Program Files\\CreatorOS 内置\\chrome.exe",
+        },
+      ),
+    ).resolves.toBe("bundled-ok");
+    expect(selections).toEqual([
+      { channel: "chrome" },
+      { executablePath: "C:\\Program Files\\CreatorOS 内置\\chrome.exe" },
+    ]);
+  });
+
+  it("正式桌面端两套浏览器均不可用时人话失败，不尝试默认缓存或 CLI", async () => {
+    const selections: Array<{ channel?: string; executablePath?: string }> = [];
+    await expect(
+      launchWithBrowser(
+        async (selection) => {
+          selections.push(selection);
+          throw new Error("Chrome 未安装");
+        },
+        { desktop: true, resolveBundledExecutable: async () => undefined },
+      ),
+    ).rejects.toThrow(/本机 Chrome 与 CreatorOS 内置浏览器均不可用.*重新安装.*诊断日志/);
+    expect(selections).toEqual([{ channel: "chrome" }]);
   });
 });
 

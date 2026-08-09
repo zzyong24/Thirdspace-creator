@@ -3,6 +3,7 @@ import type { RequestContext } from "@creatoros/contract";
 import {
   listPositioningWorksWithPublicationFacts,
   listRecentProjectsWithPublicationFacts,
+  searchProjectsWithPublicationFacts,
 } from "./recent-projects-context";
 
 const ctx: RequestContext = {
@@ -135,6 +136,41 @@ describe("[T-521] listRecentProjects canonical project/publication 投影", () =
       stage: "review",
       publishedAt: null,
     });
+  });
+});
+
+describe("[T-691] searchProjectsWithPublicationFacts — 历史项目检索", () => {
+  it("按真实发布时间找前几期，支持排除当前项目和标题筛选", async () => {
+    const projects = [
+      { id: "current", title: "当前 AI", currentStage: "script", status: "active", source: "manual", updatedAt: "2026-08-04" },
+      { id: "old", title: "AI 旧作", currentStage: "review", status: "completed", source: "imported", updatedAt: "2026-08-03" },
+      { id: "latest", title: "AI 新作", currentStage: "review", status: "completed", source: "imported", updatedAt: "2026-01-01" },
+    ];
+    const result = await searchProjectsWithPublicationFacts(
+      ctx,
+      {
+        query: "AI",
+        publishedOnly: true,
+        orderBy: "publishedAt",
+        direction: "desc",
+        limit: 3,
+        excludeProjectId: "current",
+      },
+      {
+        listProjects: async () => projects,
+        listOutputRefsByProjects: async () => [
+          { projectId: "current", outputId: "o-current" },
+          { projectId: "old", outputId: "o-old" },
+          { projectId: "latest", outputId: "o-latest" },
+        ],
+        listPublicationsByOutputIds: async () => [
+          { contentOutputId: "o-old", status: "published", publishedAt: "2026-07-01T00:00:00.000Z" },
+          { contentOutputId: "o-latest", status: "published", publishedAt: "2026-08-01T00:00:00.000Z" },
+        ],
+      },
+    );
+    expect(result.rows.map((row) => row.id)).toEqual(["latest", "old"]);
+    expect(result.total).toBe(2);
   });
 });
 

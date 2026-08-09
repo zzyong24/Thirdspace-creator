@@ -284,7 +284,7 @@ export function ChatPublishPackageCard({
 
       {phase === "done" ? (
         <p data-slot="chat-publish-done" className="text-[12px] text-success">
-          ✓ 发布物料已采纳（标题/标签已写入发布包，可去发布中心继续；发布后仍可在平台改标签）。
+          ✓ 发布物料已采纳，可在当前项目点击“查看发布物料”。
         </p>
       ) : null}
 

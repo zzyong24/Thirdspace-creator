@@ -68,7 +68,7 @@ describe("VideoDecisionPreview", () => {
 
   it("删卡:✕ 后确认产物不含该卡(决策与 props 双侧)", () => {
     const onConfirm = vi.fn();
-    const { getByLabelText, getByText } = render(
+    const { getByLabelText, getByText, queryByText } = render(
       <VideoDecisionPreview
         decisions={DECISIONS}
         inventory={INVENTORY}
@@ -89,33 +89,84 @@ describe("VideoDecisionPreview", () => {
     expect(payload.renderProps.scenes[1]!.cards).toHaveLength(1);
   });
 
-  it("B-roll 换选:下拉换素材,确认产物用新 assetId(仅清单内可选)", () => {
+  it("B-roll 换选后保留原分镜与既有绑定，只在当前方案内自动优化", () => {
     const onConfirm = vi.fn();
+    const onRestoryboard = vi.fn();
     const { getByTestId, getByText } = render(
       <VideoDecisionPreview
         decisions={DECISIONS}
         inventory={INVENTORY}
         onConfirm={onConfirm}
+        onRestoryboard={onRestoryboard}
         title="提示词三技巧"
         talkingHeadAssetId="asset-video-raw"
       />,
     );
     const select = getByTestId("broll-0").querySelector("select")!;
     fireEvent.change(select, { target: { value: "asset-2" } });
-    fireEvent.click(getByText("确认决策,进入渲染"));
-    const payload = onConfirm.mock.calls[0]![0] as {
-      decisions: VideoDecisions;
-      renderProps: VideoRenderProps;
-    };
-    expect(payload.decisions.broll[0]!.assetId).toBe("asset-2");
-    // 契约 B-roll 是顶层插点轴:file=assetId(mountAs 约定),label=清单展示名。
-    expect(payload.renderProps.broll[0]!.file).toBe("asset-2");
-    expect(payload.renderProps.broll[0]!.label).toBe("角色示意图");
+    expect(getByText(/系统会保留原分镜/)).toBeTruthy();
+    fireEvent.click(getByText("应用选材并自动优化"));
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onRestoryboard).toHaveBeenCalledWith([
+      {
+        assetId: "asset-2",
+        sceneIdx: 1,
+        sceneTitle: "角色技巧",
+        sceneSummary: "给模型一个角色",
+      },
+    ]);
+  });
+
+  it("T-712 AI 未采用的用户项目素材不会静默丢失，可明确分配到任意场景", () => {
+    const onConfirm = vi.fn();
+    const onRestoryboard = vi.fn();
+    const inventory: BrollAssetRef[] = [
+      ...INVENTORY,
+      {
+        assetId: "user-upload",
+        label: "用户准备的真实录屏.mov",
+        kind: "video",
+        description: "",
+        source: "ammo",
+      },
+    ];
+    const { getByLabelText, getByText, queryByText } = render(
+      <VideoDecisionPreview
+        decisions={DECISIONS}
+        inventory={inventory}
+        onConfirm={onConfirm}
+        onRestoryboard={onRestoryboard}
+        title="提示词三技巧"
+        talkingHeadAssetId="asset-video-raw"
+      />,
+    );
+
+    expect(getByText("可选补充素材 · 1 个")).toBeTruthy();
+    fireEvent.change(getByLabelText("将 用户准备的真实录屏.mov 放入场景"), {
+      target: { value: "0" },
+    });
+    expect(queryByText("可选补充素材 · 1 个")).toBeNull();
+    fireEvent.click(getByText("应用选材并自动优化"));
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onRestoryboard).toHaveBeenCalledWith([
+      {
+        assetId: "user-upload",
+        sceneIdx: 0,
+        sceneTitle: "开场钩子",
+        sceneSummary: "抛出 47% 数字",
+      },
+      {
+        assetId: "asset-1",
+        sceneIdx: 1,
+        sceneTitle: "角色技巧",
+        sceneSummary: "给模型一个角色",
+      },
+    ]);
   });
 
   it("确认产物 = 组装好的渲染 props(contract 真值形状:meta/talkingHead/captions/delivery)", () => {
     const onConfirm = vi.fn();
-    const { getByText } = render(
+    const { getByText, queryByText } = render(
       <VideoDecisionPreview
         decisions={DECISIONS}
         inventory={INVENTORY}
@@ -142,6 +193,149 @@ describe("VideoDecisionPreview", () => {
       en: "Hi, +47%",
     });
     expect(renderProps.delivery).toEqual({ width: 1920, height: 1080, fps: 30 });
+  });
+
+  it("提交渲染期间立即锁住确认按钮并展示明确进度，避免重复创建任务", () => {
+    const onConfirm = vi.fn();
+    const { getByRole } = render(
+      <VideoDecisionPreview
+        decisions={DECISIONS}
+        inventory={INVENTORY}
+        onConfirm={onConfirm}
+        talkingHeadAssetId="asset-video-raw"
+        confirming
+      />,
+    );
+
+    const button = getByRole("button", {
+      name: "正在保存分镜并创建渲染任务…",
+    }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    fireEvent.click(button);
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("兼容旧候选时不再把阻断甩给用户，并携带全部既有绑定进入自动修片", () => {
+    const onConfirm = vi.fn();
+    const onRestoryboard = vi.fn();
+    const decisions: VideoDecisions = {
+      ...DECISIONS,
+      directorReview: {
+        status: "needs_attention",
+        summary: "第二场画面承接不足。",
+        source: "ai",
+        issues: [
+          {
+            sceneIdx: 1,
+            severity: "blocking",
+            code: "visual_gap",
+            message: "长场景没有有效信息卡或真实素材。",
+          },
+        ],
+      },
+    };
+    const { getByText, queryByText } = render(
+      <VideoDecisionPreview
+        decisions={decisions}
+        inventory={INVENTORY}
+        onConfirm={onConfirm}
+        onRestoryboard={onRestoryboard}
+      />,
+    );
+
+    expect(getByText("总导演将自动修片并复审")).toBeTruthy();
+    expect(queryByText(/长场景没有有效信息卡或真实素材/)).toBeNull();
+    expect(queryByText(/阻断|缺失|请手动选择|重新分镜/)).toBeNull();
+    fireEvent.click(getByText("自动修片并复审"));
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onRestoryboard).toHaveBeenCalledWith([
+      {
+        assetId: "asset-1",
+        sceneIdx: 1,
+        sceneTitle: "角色技巧",
+        sceneSummary: "给模型一个角色",
+      },
+    ]);
+  });
+
+  it("同一素材被绑定到多个场景时，应用补充选材不会丢掉任一既有绑定", () => {
+    const onRestoryboard = vi.fn();
+    const decisions: VideoDecisions = {
+      ...DECISIONS,
+      broll: [
+        { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 2 },
+        { sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 3 },
+      ],
+    };
+    const inventory: BrollAssetRef[] = [
+      ...INVENTORY,
+      {
+        assetId: "user-upload",
+        label: "用户补充录屏.mov",
+        kind: "video",
+        description: "",
+        source: "manual",
+      },
+    ];
+    const { getByLabelText, getByText } = render(
+      <VideoDecisionPreview
+        decisions={decisions}
+        inventory={inventory}
+        onConfirm={vi.fn()}
+        onRestoryboard={onRestoryboard}
+      />,
+    );
+
+    fireEvent.change(getByLabelText("将 用户补充录屏.mov 放入场景"), {
+      target: { value: "1" },
+    });
+    fireEvent.click(getByText("应用选材并自动优化"));
+
+    expect(onRestoryboard).toHaveBeenCalledWith([
+      {
+        assetId: "asset-1",
+        sceneIdx: 0,
+        sceneTitle: "开场钩子",
+        sceneSummary: "抛出 47% 数字",
+      },
+      {
+        assetId: "asset-1",
+        sceneIdx: 1,
+        sceneTitle: "角色技巧",
+        sceneSummary: "给模型一个角色",
+      },
+      {
+        assetId: "user-upload",
+        sceneIdx: 1,
+        sceneTitle: "角色技巧",
+        sceneSummary: "给模型一个角色",
+      },
+    ]);
+  });
+
+  it("总导演审片通过后仍由用户最终确认进入渲染", () => {
+    const onConfirm = vi.fn();
+    const decisions: VideoDecisions = {
+      ...DECISIONS,
+      directorReview: {
+        status: "ready",
+        summary: "叙事、素材与时间线完整。",
+        source: "ai",
+        issues: [],
+      },
+    };
+    const { getByText } = render(
+      <VideoDecisionPreview
+        decisions={decisions}
+        inventory={INVENTORY}
+        onConfirm={onConfirm}
+        talkingHeadAssetId="asset-video-raw"
+      />,
+    );
+
+    expect(getByText("总导演审片通过")).toBeTruthy();
+    fireEvent.click(getByText("确认决策,进入渲染"));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
   it("丢弃回调可选:传了才显示按钮并触发", () => {

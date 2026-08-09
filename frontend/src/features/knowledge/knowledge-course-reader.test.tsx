@@ -26,6 +26,22 @@ describe("KnowledgeCourseReader", () => {
     expect(screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.includes("lesson="))).toHaveLength(23);
   });
 
+  it("课程用户文案保持品牌中性", () => {
+    const lessonCopy = Array.from({ length: 22 }, (_, index) =>
+      getBuiltInCourseLesson(`lesson-${String(index + 1).padStart(2, "0")}`)?.raw ?? "",
+    ).join("\n");
+    const visibleCopy = [
+      BUILT_IN_IP_COURSE.title,
+      BUILT_IN_IP_COURSE.subtitle,
+      BUILT_IN_IP_COURSE.description,
+      BUILT_IN_IP_COURSE.source.attribution,
+      lessonCopy,
+    ].join("\n");
+
+    expect(visibleCopy).not.toMatch(/creatoros/i);
+    expect(BUILT_IN_IP_COURSE.title).toBe("创作实战课");
+  });
+
   it("课程页逐点呈现正文、提问、练习和 60/80/95 自评", () => {
     const lesson = getBuiltInCourseLesson("lesson-01");
     expect(lesson).not.toBeNull();

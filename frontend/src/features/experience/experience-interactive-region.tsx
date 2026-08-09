@@ -118,9 +118,14 @@ export function ExperienceCaptureLink() {
 
 export interface AdjudicationQueueProps {
   readonly candidates: ReadonlyArray<LearningVm>;
+  /** 复盘侧栏使用紧凑摘要；经验中心仍保留全文。 */
+  readonly compact?: boolean;
 }
 
-export function AdjudicationQueue({ candidates }: AdjudicationQueueProps) {
+export function AdjudicationQueue({
+  candidates,
+  compact = false,
+}: AdjudicationQueueProps) {
   const { pending, run } = useLearningMutations();
   const router = useRouter();
   // 当前展开 inline 编辑的 learningId(一次编辑一张卡)。
@@ -157,6 +162,7 @@ export function AdjudicationQueue({ candidates }: AdjudicationQueueProps) {
         <CandidateCard
           key={learning.id}
           learning={learning}
+          compact={compact}
           pending={pending}
           editing={editingId === learning.id}
           onToggleEdit={() =>
@@ -175,6 +181,7 @@ export function AdjudicationQueue({ candidates }: AdjudicationQueueProps) {
 
 function CandidateCard({
   learning,
+  compact,
   pending,
   editing,
   onToggleEdit,
@@ -182,12 +189,20 @@ function CandidateCard({
   onSaved,
 }: {
   learning: LearningVm;
+  compact: boolean;
   pending: boolean;
   editing: boolean;
   onToggleEdit: () => void;
   onEvaluate: (learningId: string, status: "validated" | "discarded") => void;
   onSaved: () => void;
 }) {
+  const [insightExpanded, setInsightExpanded] = React.useState(false);
+  const insightLimit = 180;
+  const insightIsLong = compact && learning.insight.length > insightLimit;
+  const visibleInsight =
+    insightIsLong && !insightExpanded
+      ? `${learning.insight.slice(0, insightLimit).trimEnd()}…`
+      : learning.insight;
   return (
     <article
       data-slot="candidate-card"
@@ -202,13 +217,24 @@ function CandidateCard({
           </h3>
         </div>
       </div>
-      {/* insight 全文(裁决要看全貌,不截断)。 */}
+      {/* 经验中心展示全文；复盘窄栏先给摘要，依据可按需展开。 */}
       <p
         data-slot="learning-insight"
         className="whitespace-pre-wrap text-sm text-muted-foreground"
       >
-        {learning.insight}
+        {visibleInsight}
       </p>
+      {insightIsLong ? (
+        <button
+          type="button"
+          data-slot="learning-insight-toggle"
+          aria-expanded={insightExpanded}
+          onClick={() => setInsightExpanded((value) => !value)}
+          className="w-fit text-xs font-medium text-brand hover:underline"
+        >
+          {insightExpanded ? "收起详细依据" : "展开详细依据"}
+        </button>
+      ) : null}
       <EvidenceRow learning={learning} />
 
       {editing ? (

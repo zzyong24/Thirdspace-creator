@@ -104,6 +104,42 @@ describe("AppShell", () => {
     expect(headers).toHaveLength(1);
   });
 
+  it("[T-718] 激活前使用包级品牌名和品牌图标，Growth 品牌可在激活后覆盖名称", async () => {
+    const { AppShell } = await import("./app-shell");
+    const { SidebarBrandNameProvider } = await import("./sidebar");
+    const icon = "data:image/x-icon;base64,AAECAw==";
+    const view = render(
+      <SidebarBrandNameProvider
+        brandName={null}
+        packageBrandName="智溯AI"
+        packageBrandIconDataUrl={icon}
+      >
+        <AppShell pathname="/">
+          <div>内容</div>
+        </AppShell>
+      </SidebarBrandNameProvider>,
+    );
+
+    const brand = view.container.querySelector('[data-slot="sidebar-brand"]');
+    expect(brand).toHaveTextContent("智溯AI");
+    expect(brand?.querySelector("img")).toHaveAttribute("src", icon);
+
+    view.rerender(
+      <SidebarBrandNameProvider
+        brandName="Growth 已验签品牌"
+        packageBrandName="智溯AI"
+        packageBrandIconDataUrl={icon}
+      >
+        <AppShell pathname="/">
+          <div>内容</div>
+        </AppShell>
+      </SidebarBrandNameProvider>,
+    );
+    expect(
+      view.container.querySelector('[data-slot="sidebar-brand"]'),
+    ).toHaveTextContent("Growth 已验签品牌");
+  });
+
   it("[T-518] keeps a real issue-feedback entry available in expanded and collapsed sidebar", async () => {
     await renderShell();
     const feedback = screen.getByRole("button", { name: "帮助与反馈" });

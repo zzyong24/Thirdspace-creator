@@ -1,19 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Search, Sparkles, Upload, Loader2 } from "lucide-react";
+import { GitBranch, Search, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useDraftChatRequest } from "./draft-chat-request";
 import { uploadFileToProject } from "./upload-to-project";
 
-// [T-127] 稿面「创作流引导」CTA 行 —— 把原本只藏在 Copilot 里的「素材搜集 / 立论点」两步显性化到
-// 稿面(选题卡与脚本区之间),对应用户拍板的创作链:选题 → 搜素材(联网)→ 立论点(基于素材)→
-// 写脚本。点一下即把话术自动发进右栏常驻编导对话(复用 T-108 openChat/autoSend,不开全局弹层)。
-//
-// 半自动(决策①):按钮 = 用户一键授权,后台真跑(素材搜集走 T-126 真联网检索;论点走
-// planning.thesis 论点树)。不全自动(省额度、人出判断),不去别页手动(内嵌当前稿面)。
-// 论点树采纳后经 CreativeContext.thesisBrief 自动喂进写脚本 facet(SEAM 已通,T-127d),脚本有据可依。
+// T-730：恢复可选“先梳理观点”入口；它不是写稿前置，用户仍可直接进入稿面。
 //
 // [T-146] 最前面加「＋上传素材」:PR/接商单场景先把自己的 PDF/Word/MD 资料上传进「当前项目」
 // 弹药库(最高优先级素材)。上传链复用 AmmoDumpZone 的同款 uploadFileToProject(createUpload →
@@ -128,16 +122,16 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
           openChat({
             functionKey: "planning.thesis",
             prefill:
-              "基于选题、我的定位和已搜到的素材,帮我立一棵论点树:核心论点 + 支撑/证据/反驳分支。",
+              "这次内容需要先梳理复杂观点。请基于当前项目生成可选论点骨架，先给候选，等我明确采纳后再用于写稿。",
             autoSend: true,
           })
         }
       >
-        <Sparkles className="size-3.5" />
-        立论点
+        <GitBranch className="size-3.5" />
+        先梳理观点（可选）
       </Button>
       <span className="text-[11px] text-text-subtle">
-        系统找到的资料和你上传的文件，都会统一保存在当前项目里
+        复杂观点可先梳理；已有完整逐字稿或简单短口播可直接写稿
       </span>
     </section>
   );

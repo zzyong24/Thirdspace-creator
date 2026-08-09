@@ -51,7 +51,7 @@ export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
     order: 1,
     branch: "all",
     title: "绑定你的抖音号",
-    why: "绑定后，CreatorOS 会把这个账号的作品、项目和创作资料放进同一个工作区。",
+    why: "绑定后，系统会把这个账号的作品、项目和创作资料放进同一个工作区。",
     ctaLabel: "去绑定",
     href: "/accounts",
     isDone: (state) => state.douyinLoggedIn === true,

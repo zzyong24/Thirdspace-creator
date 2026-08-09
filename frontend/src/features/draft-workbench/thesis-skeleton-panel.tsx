@@ -37,9 +37,9 @@ export interface AvailableMaterial {
 //
 // 可编辑保存 = 追加一个新 thesis_tree ArtifactVersion(与脚本编辑器同款 createArtifactVersion +
 // router.refresh;writer↔reader 契约 contentData.nodes=[{column,title,summary}],见 planning-runner)。
-// 空态 = 引导「立论点」(深链 planning.thesis 到右栏编导对话生成)。采纳/编辑后经
-// CreativeContext.thesisBrief 自动喂进写脚本 facet(SEAM 已通),脚本有据可依。
-// 「每分论点挂 1-2 素材」= 后续增量(需 node.materialRefs + 用料链 picker),本版聚焦论点 CRUD。
+// 空态 = 引导「先梳理观点」(深链 planning.thesis 到右栏编导对话生成)。只有用户明确
+// 采用的当前版本才经 CreativeContext.thesisBrief 进入生成式写稿；完整逐字稿永不读取。
+// 人工挂/卸资料只记录论点依据，不把 thesis_tree 恢复为制作/B-roll 素材来源。
 
 const COLUMN_ORDER: ReadonlyArray<ThesisColumn> = [
   "core",
@@ -61,7 +61,7 @@ const COLUMN_ADD_LABEL: Record<ThesisColumn, string> = {
 };
 
 const THESIS_PREFILL =
-  "基于选题、我的定位和已搜到的素材,帮我立一棵论点树:核心论点 + 支撑/证据/反驳分支。";
+  "这次内容需要先梳理复杂观点。请基于当前项目的选题、定位、Brief 和已有资料，生成一份可选论点骨架：核心论点 + 支撑依据 + 证据 + 反驳。先给候选，等我明确采纳后再用于写稿。";
 
 // ── 纯逻辑(可单测)──────────────────────────────────────────────────────
 
@@ -187,7 +187,16 @@ export function ThesisSkeletonPanel({
     });
   }, [openChat]);
 
+  const skipToScript = React.useCallback(() => {
+    const script = document.getElementById("script");
+    if (!script) return;
+    script.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!script.hasAttribute("tabindex")) script.tabIndex = -1;
+    script.focus({ preventScroll: true });
+  }, []);
+
   const hasThesis = thesis != null && thesis.nodes.length > 0;
+  const isAdopted = thesis?.scriptBasisStatus === "adopted";
 
   const [draft, setDraft] = React.useState<EditNode[]>(() =>
     hasThesis ? toEditNodes(thesis!.nodes) : [],
@@ -195,12 +204,18 @@ export function ThesisSkeletonPanel({
   const [saveStatus, setSaveStatus] = React.useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
+  const [basisStatus, setBasisStatus] = React.useState<
+    "idle" | "saving" | "error"
+  >("idle");
 
   // 服务端真值签名:保存后 router.refresh 回流(thesis prop 变)/ 首次 → 重置草稿到服务端真值。
-  const serverSig = thesis ? JSON.stringify(thesis.nodes) : "";
+  const serverSig = thesis
+    ? JSON.stringify([thesis.versionId, thesis.scriptBasisStatus, thesis.nodes])
+    : "";
   React.useEffect(() => {
     setDraft(thesis ? toEditNodes(thesis.nodes) : []);
     setSaveStatus("idle");
+    setBasisStatus("idle");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serverSig]);
 
@@ -215,6 +230,16 @@ export function ThesisSkeletonPanel({
     [draft],
   );
   const dirty = thesis != null && currentSer !== baseline;
+
+  React.useEffect(() => {
+    if (!dirty) return;
+    const warnUnsaved = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnUnsaved);
+    return () => window.removeEventListener("beforeunload", warnUnsaved);
+  }, [dirty]);
 
   const editNode = React.useCallback(
     (key: string, field: "title" | "summary", value: string) => {
@@ -251,8 +276,12 @@ export function ThesisSkeletonPanel({
         params: { artifactId: thesis.artifactId },
         query: undefined,
         body: {
+          expectedCurrentVersionId: thesis.versionId,
           contentText: "",
-          contentData: { nodes: serializeNodes(draft) },
+          contentData: {
+            nodes: serializeNodes(draft),
+            scriptBasis: { status: isAdopted ? "adopted" : "inactive" },
+          },
           changeSummary: "编辑论点骨架",
         },
       });
@@ -261,7 +290,31 @@ export function ThesisSkeletonPanel({
     } catch {
       setSaveStatus("error");
     }
-  }, [thesis, draft, router]);
+  }, [thesis, draft, isAdopted, router]);
+
+  const setScriptBasis = React.useCallback(
+    async (status: "adopted" | "inactive") => {
+      if (!thesis || dirty) return;
+      setBasisStatus("saving");
+      try {
+        await client.createArtifactVersion({
+          params: { artifactId: thesis.artifactId },
+          query: undefined,
+          body: {
+            expectedCurrentVersionId: thesis.versionId,
+            contentText: "",
+            contentData: { nodes: serializeNodes(draft), scriptBasis: { status } },
+            changeSummary:
+              status === "adopted" ? "采用论点作为写稿依据" : "停止使用论点写稿",
+          },
+        });
+        router.refresh();
+      } catch {
+        setBasisStatus("error");
+      }
+    },
+    [thesis, dirty, draft, router],
+  );
 
   const reset = React.useCallback(() => {
     setDraft(thesis ? toEditNodes(thesis.nodes) : []);
@@ -272,33 +325,90 @@ export function ThesisSkeletonPanel({
     <section
       data-slot="thesis-skeleton-panel"
       data-has-thesis={hasThesis ? "true" : "false"}
-      aria-label="论点骨架"
+      aria-label="论点骨架（可选）"
       className="flex flex-col gap-3 rounded-card border border-border bg-surface px-4 py-3"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h2 className="flex items-center gap-1.5 text-[13.5px] font-semibold text-foreground">
             <GitBranch className="size-4 text-brand" aria-hidden="true" />
-            论点骨架
+            论点骨架（可选）
           </h2>
           <p className="text-xs text-text-subtle">
-            写脚本前先立论点:核心论点 + 支撑/证据/反驳 —— 采纳后自动作为写脚本的依据,可直接加/删/重排。
+            适合知识讲解、观点评论、测评对比、较长内容，或需要证据与反驳时先理清观点。
+          </p>
+          <p className="text-xs text-text-subtle">
+            已有完整逐字稿、简单通知、短口播、纯记录或只想快速成稿时，可以直接跳过。
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 shrink-0 gap-1.5 text-xs"
-          onClick={buildThesis}
-        >
-          <Sparkles className="size-3.5" />
-          {hasThesis ? "重新立论点" : "立论点"}
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 text-xs"
+            onClick={buildThesis}
+          >
+            <Sparkles className="size-3.5" />
+            {hasThesis ? "重新梳理观点" : "先梳理观点"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-muted-foreground"
+            onClick={skipToScript}
+          >
+            跳过，直接写稿
+          </Button>
+        </div>
       </div>
 
       {hasThesis ? (
         <div data-slot="thesis-skeleton-body" className="flex flex-col gap-3">
+          <div
+            data-slot="thesis-script-basis-status"
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2",
+              isAdopted
+                ? "border-emerald-300/60 bg-emerald-50/70 dark:border-emerald-400/30 dark:bg-emerald-400/10"
+                : "border-border bg-surface-subtle",
+            )}
+          >
+            <div>
+              <p className="text-xs font-medium text-foreground">
+                {isAdopted ? "本次写稿采用" : "尚未用于写稿"}
+              </p>
+              <p className="text-[11px] text-text-subtle">
+                {isAdopted
+                  ? "生成式写稿会读取当前版本；完整逐字稿导入仍保持原文优先。"
+                  : "查看和编辑不会影响稿面，只有你明确采用后才会进入生成式写稿。"}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant={isAdopted ? "outline" : "default"}
+              size="sm"
+              className="h-7 text-xs"
+              disabled={dirty || basisStatus === "saving"}
+              onClick={() => void setScriptBasis(isAdopted ? "inactive" : "adopted")}
+            >
+              {basisStatus === "saving"
+                ? "处理中…"
+                : isAdopted
+                  ? "停止用于写稿"
+                  : "采用并用于写稿"}
+            </Button>
+            {dirty ? (
+              <p className="w-full text-[11px] text-amber-700 dark:text-amber-400">
+                请先保存或重置当前编辑，再切换是否用于写稿。
+              </p>
+            ) : basisStatus === "error" ? (
+              <p className="w-full text-[11px] text-destructive">
+                采用状态保存失败，当前状态未改变，请重试。
+              </p>
+            ) : null}
+          </div>
           {COLUMN_ORDER.map((col) => (
             <ThesisColumnEditor
               key={col}
@@ -349,10 +459,12 @@ export function ThesisSkeletonPanel({
               {saveStatus === "saved" && !dirty
                 ? "已保存"
                 : saveStatus === "error"
-                  ? "保存失败,请重试"
+                  ? "保存失败；尚未保存，刷新或离开会丢失，请重试"
                   : dirty
-                    ? "有未保存的改动"
-                    : "改动会追加为新版本,写脚本时作为依据"}
+                    ? "尚未保存，刷新或离开会丢失"
+                    : isAdopted
+                      ? "改动会追加为新版本，并保持本次写稿采用"
+                      : "改动会追加为新版本，不会自动用于写稿"}
             </span>
           </div>
         </div>
@@ -362,7 +474,7 @@ export function ThesisSkeletonPanel({
           className="rounded-md border border-dashed border-border bg-surface-subtle px-3 py-4 text-center"
         >
           <p className="text-xs text-muted-foreground">
-            还没立论点。先搜素材、再基于素材立论点 —— 核心论点 + 支撑/证据/反驳会显示在这里,可直接编辑,写脚本时自动作为依据。
+            还没有论点骨架。需要复杂论证时可先梳理核心论点、支撑依据、证据和反驳；不需要时直接写稿即可。
           </p>
         </div>
       )}
