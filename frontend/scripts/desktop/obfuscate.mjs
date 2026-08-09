@@ -35,7 +35,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBuildSmokeVerdictToken } from "./verdict-key-material.mjs";
@@ -645,6 +645,7 @@ export function buildSmokeSidecarEnv(
     NODE_ENV: "production",
     CREATOROS_DESKTOP: "1",
     CREATOROS_SIDECAR_VERDICT_TOKEN: token,
+    CREATOROS_BLOB_SECRET_FD: "0",
     DATABASE_URL: "",
     PGLITE_DATA_DIR: join(smokeDataRoot, "db"),
     CREATOROS_DB_DIR: join(smokeDataRoot, "db"),
@@ -705,6 +706,11 @@ export async function smokeBootAfterObfuscation(opts = {}) {
     // pipe 让冒烟更贴真实调用路径;mac 用 ppid 判定不受影响。
     stdio: ["pipe", "pipe", "pipe"],
   });
+  // 与正式 Rust 壳保持同一 stdin 协议：第一行传启动级 blob 信任根，管道继续保持打开，
+  // 供生命周期检测以及后续可选的 master-key 行使用。secret 不进入 argv/env/log/file。
+  child.stdin.write(
+    `BLOBV2:${randomBytes(32).toString("base64url")}:${randomBytes(16).toString("base64url")}\n`,
+  );
   let stderr = "";
   child.stderr.on("data", (d) => (stderr += d.toString()));
   // stdout 必须消费:①Next standalone 部分报错走 stdout;②pipe 不读会背压堵死 server。
