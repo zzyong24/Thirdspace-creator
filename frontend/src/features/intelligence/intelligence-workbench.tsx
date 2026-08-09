@@ -1000,6 +1000,8 @@ export function IntelligenceWorkbench({
   const [removalError, setRemovalError] = React.useState<string | null>(null);
   const watchedRunIds = React.useRef<Set<string>>(new Set());
   const topicGenerationInFlight = React.useRef(false);
+  const topicPollingKeys = React.useRef<Set<string>>(new Set());
+  const mounted = React.useRef(true);
   const activeDetailItemId = React.useRef<string | null>(
     initialDetail?.item.id ?? null,
   );
@@ -1009,6 +1011,145 @@ export function IntelligenceWorkbench({
   React.useEffect(() => {
     activeDetailItemId.current = detail?.item.id ?? null;
   }, [detail?.item.id]);
+
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  const trackTopicTransform = React.useCallback(
+    (itemId: string, transformId: string) => {
+      const pollingKey = `${itemId}:${transformId}`;
+      if (topicPollingKeys.current.has(pollingKey)) return;
+      topicPollingKeys.current.add(pollingKey);
+
+      const startedAt = Date.now();
+      void (async () => {
+        try {
+          for (
+            let attempt = 0;
+            Date.now() - startedAt < TOPIC_PREVIEW_POLL_TIMEOUT_MS;
+            attempt += 1
+          ) {
+            if (attempt > 0) {
+              await new Promise((resolve) =>
+                window.setTimeout(
+                  resolve,
+                  topicPreviewPollDelayMs(attempt - 1),
+                ),
+              );
+            }
+            if (
+              !mounted.current ||
+              activeDetailItemId.current !== itemId
+            ) {
+              return;
+            }
+
+            let refreshed: RadarItemDetail;
+            try {
+              refreshed = await api.getItem(itemId);
+            } catch {
+              // 后台任务仍然存在时，单次详情读取抖动不能中止自动回显。
+              continue;
+            }
+            if (
+              !mounted.current ||
+              activeDetailItemId.current !== itemId
+            ) {
+              return;
+            }
+            setDetail((current) =>
+              current?.item.id === itemId ? refreshed : current,
+            );
+
+            const currentTransform = refreshed.transforms.find(
+              (transform) => transform.id === transformId,
+            );
+            if (!currentTransform) continue;
+            if (
+              ["failed", "blocked", "cancelled"].includes(
+                currentTransform.taskStatus ?? "",
+              )
+            ) {
+              setNotice(
+                currentTransform.taskStatus === "blocked"
+                  ? "生成任务已受阻，请按候选卡提示处理后重试。"
+                  : "生成任务已失败，可查看候选卡中的原因并重新生成。",
+              );
+              return;
+            }
+
+            const snapshot = currentTransform.outputSnapshot;
+            const progress = snapshot?.generationProgress;
+            const complete = Boolean(
+              snapshot &&
+                (progress
+                  ? progress.draft?.status === "completed"
+                  : snapshot.title?.trim()),
+            );
+            if (complete) {
+              setNotice(
+                snapshot?.adaptedDraft?.contentText
+                  ? "选题候选和改写初稿已生成，请检查后确认写入选题池。"
+                  : "选题候选已生成，请检查后确认写入选题池。",
+              );
+              return;
+            }
+            if (progress?.topic?.status === "completed") {
+              setNotice("选题已生成，正在生成本账号改写初稿。");
+            } else if (progress?.decomposition?.status === "completed") {
+              setNotice("逐字稿已拆解，正在生成选题和改写策略。");
+            }
+          }
+          if (
+            mounted.current &&
+            activeDetailItemId.current === itemId
+          ) {
+            setNotice(
+              "生成任务仍在后台执行，当前选题会继续自动更新，无需切换页面或重复生成。",
+            );
+          }
+        } finally {
+          topicPollingKeys.current.delete(pollingKey);
+        }
+      })();
+    },
+    [api],
+  );
+
+  const trackedTopicTransform = detail?.transforms[0] ?? null;
+  const trackedTopicSnapshot = trackedTopicTransform?.outputSnapshot ?? null;
+  const trackedTopicProgress = trackedTopicSnapshot?.generationProgress;
+  const trackedTopicComplete = Boolean(
+    trackedTopicSnapshot &&
+      (trackedTopicProgress
+        ? trackedTopicProgress.draft?.status === "completed"
+        : trackedTopicSnapshot.title?.trim()),
+  );
+
+  React.useEffect(() => {
+    const itemId = detail?.item.id;
+    const transformId = trackedTopicTransform?.id;
+    const taskStatus = trackedTopicTransform?.taskStatus ?? null;
+    if (
+      !itemId ||
+      !transformId ||
+      trackedTopicComplete ||
+      !["queued", "running", "pause_requested"].includes(taskStatus ?? "")
+    ) {
+      return;
+    }
+    trackTopicTransform(itemId, transformId);
+  }, [
+    detail?.item.id,
+    trackTopicTransform,
+    trackedTopicComplete,
+    trackedTopicTransform?.id,
+    trackedTopicTransform?.taskStatus,
+  ]);
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -1299,6 +1440,7 @@ export function IntelligenceWorkbench({
 
   const selectItem = React.useCallback(
     async (itemId: string) => {
+      activeDetailItemId.current = itemId;
       setBusy(true);
       setTopicGenerating(false);
       topicGenerationInFlight.current = false;
@@ -1624,6 +1766,14 @@ export function IntelligenceWorkbench({
         positioningVersionId,
         idempotencyKey: operationKey("topic-preview"),
       });
+      const reusableOutputSnapshot =
+        (started.transform.outputSnapshot as RadarItemDetail["transforms"][number]["outputSnapshot"]) ??
+        detail.transforms.find(
+          (transform) => transform.id === started.transform.id,
+        )?.outputSnapshot ??
+        detail.transforms.find((transform) => transform.outputSnapshot !== null)
+          ?.outputSnapshot ??
+        null;
       const pendingTransform: RadarItemDetail["transforms"][number] = {
         id: started.transform.id,
         status: started.transform.status,
@@ -1639,7 +1789,9 @@ export function IntelligenceWorkbench({
           | "blocked",
         taskErrorCode: null,
         taskErrorMessage: null,
-        outputSnapshot: null,
+        // 重试只替换执行状态；后端会复用检查点，前端也不能在等待期间
+        // 把已经生成的拆解、选题或改写初稿清空。
+        outputSnapshot: reusableOutputSnapshot,
         targetTopicId: started.transform.targetTopicId,
       };
       setDetail((current) =>
@@ -1655,74 +1807,12 @@ export function IntelligenceWorkbench({
             }
           : current,
       );
-      setNotice("选题候选正在结合当前定位生成，完成前不会写入选题池。");
-      // 入队成功后不再锁住整个详情面板；只保留“生成中”状态并在后台跟踪终态。
-      setBusy(false);
-      let completed = false;
-      const pollStartedAt = Date.now();
-      for (
-        let attempt = 0;
-        Date.now() - pollStartedAt < TOPIC_PREVIEW_POLL_TIMEOUT_MS;
-        attempt += 1
-      ) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, topicPreviewPollDelayMs(attempt)),
-        );
-        if (activeDetailItemId.current !== detail.item.id) {
-          completed = true;
-          break;
-        }
-        const refreshed = await api.getItem(detail.item.id);
-        setDetail((current) =>
-          current?.item.id === detail.item.id ? refreshed : current,
-        );
-        const currentTransform = refreshed.transforms.find(
-          (transform) => transform.id === started.transform.id,
-        );
-        if (
-          currentTransform &&
-          ["failed", "blocked", "cancelled"].includes(
-            currentTransform.taskStatus ?? "",
-          )
-        ) {
-          completed = true;
-          setNotice(
-            currentTransform.taskStatus === "blocked"
-              ? "生成任务已受阻，请按候选卡提示处理后重试。"
-              : "生成任务已失败，可查看候选卡中的原因并重新生成。",
-          );
-          break;
-        }
-        const snapshot = currentTransform?.outputSnapshot;
-        const generationProgress = snapshot?.generationProgress;
-        const completeSnapshot = Boolean(
-          snapshot &&
-            (generationProgress
-              ? generationProgress.draft?.status === "completed"
-              : snapshot.title?.trim()),
-        );
-        if (completeSnapshot) {
-          completed = true;
-          setNotice(
-            snapshot?.adaptedDraft?.contentText
-              ? "选题候选和改写初稿已生成，请检查后确认写入选题池。"
-              : "选题候选已生成，请检查后确认写入选题池。",
-          );
-          break;
-        }
-        if (generationProgress?.topic?.status === "completed") {
-          setNotice("选题已生成，正在生成本账号改写初稿。");
-        } else if (
-          generationProgress?.decomposition?.status === "completed"
-        ) {
-          setNotice("逐字稿已拆解，正在生成选题和改写策略。");
-        }
-      }
-      if (!completed) {
-        setNotice(
-          "生成任务仍在后台执行。当前作品会保留“生成中”状态，可稍后刷新结果；无需再次生成。",
-        );
-      }
+      setNotice(
+        reusableOutputSnapshot
+          ? "已保留现有生成结果，正在重试未完成部分。"
+          : "选题候选正在结合当前定位生成，完成前不会写入选题池。",
+      );
+      trackTopicTransform(detail.item.id, started.transform.id);
     } catch {
       setNotice("选题候选生成失败，请检查定位版本和来源快照后重试。");
     } finally {
@@ -1730,37 +1820,7 @@ export function IntelligenceWorkbench({
       setTopicGenerating(false);
       setBusy(false);
     }
-  }, [api, detail, positioningVersionId]);
-
-  const refreshTopicResult = React.useCallback(async () => {
-    if (!detail || busy) return;
-    setBusy(true);
-    try {
-      const refreshed = await api.getItem(detail.item.id);
-      setDetail(refreshed);
-      const latest = refreshed.transforms[0];
-      const terminalFailure =
-        latest &&
-        ["failed", "blocked", "cancelled"].includes(
-          latest.taskStatus ?? "",
-        );
-      setNotice(
-        latest?.outputSnapshot?.adaptedDraft?.contentText
-          ? "选题候选和改写初稿已生成，请检查后确认写入选题池。"
-          : latest?.outputSnapshot
-            ? "已保留当前生成进度，未完成部分会在候选卡中说明。"
-          : terminalFailure
-            ? latest.taskStatus === "blocked"
-              ? "生成任务已受阻，请按候选卡提示处理后重试。"
-              : "生成任务已失败，可查看候选卡中的原因并重新生成。"
-          : "候选仍在后台生成，请稍后再刷新；无需重新创建。",
-      );
-    } catch {
-      setNotice("暂时无法刷新候选状态，请稍后重试。");
-    } finally {
-      setBusy(false);
-    }
-  }, [api, busy, detail]);
+  }, [api, detail, positioningVersionId, trackTopicTransform]);
 
   const confirmTopic = React.useCallback(
     async (
@@ -2338,7 +2398,6 @@ export function IntelligenceWorkbench({
                 onTranscribe={enqueueTranscript}
                 onUploadTranscript={uploadTranscript}
                 onPreviewTopic={previewTopic}
-                onRefreshTopic={refreshTopicResult}
                 onConfirmTopic={confirmTopic}
               />
             ) : (
@@ -2676,7 +2735,6 @@ function ItemDetail({
   onTranscribe,
   onUploadTranscript,
   onPreviewTopic,
-  onRefreshTopic,
   onConfirmTopic,
 }: {
   detail: RadarItemDetail;
@@ -2695,7 +2753,6 @@ function ItemDetail({
         },
   ) => Promise<boolean>;
   onPreviewTopic: () => void;
-  onRefreshTopic: () => void;
   onConfirmTopic: (
     transformId: string,
     candidate: NonNullable<
@@ -2855,6 +2912,14 @@ function ItemDetail({
               }}
               sourceTranscript={detail.transcript.text ?? ""}
               busy={busy}
+              retryDisabled={
+                busy ||
+                topicTaskBusy ||
+                !positioningReady ||
+                detail.snapshots.length === 0 ||
+                detail.transcript.status !== "done"
+              }
+              onRetry={onPreviewTopic}
               onConfirm={onConfirmTopic}
             />
           ) : topicTaskTerminalFailure || topicTaskUnavailable ? (
@@ -2909,38 +2974,20 @@ function ItemDetail({
             >
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <RefreshCw
-                    className={cn(
-                      "size-4",
-                      topicGenerating && "animate-spin",
-                    )}
-                  />
+                  <RefreshCw className="size-4 animate-spin" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-foreground">
-                    {topicGenerating ? "正在生成候选" : "候选仍在后台生成"}
+                    正在生成候选
                   </p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     正在结合当前定位和逐字稿生成。任务已经创建，请勿重复点击；生成完成后会在这里出现可编辑选题卡。
                   </p>
                 </div>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={topicGenerating || busy}
-                onClick={onRefreshTopic}
-                className="mt-3 gap-1.5"
-              >
-                <RefreshCw
-                  className={cn(
-                    "size-3.5",
-                    topicGenerating && "animate-spin",
-                  )}
-                />
-                {topicGenerating ? "正在生成选题候选" : "刷新生成结果"}
-              </Button>
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                后台完成后会自动更新当前选题，无需切换选题或页面。
+              </p>
             </div>
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
@@ -3273,6 +3320,8 @@ function TopicCandidateEditor({
   transform,
   sourceTranscript,
   busy,
+  retryDisabled,
+  onRetry,
   onConfirm,
 }: {
   transform: RadarItemDetail["transforms"][number] & {
@@ -3282,6 +3331,8 @@ function TopicCandidateEditor({
   };
   sourceTranscript: string;
   busy: boolean;
+  retryDisabled: boolean;
+  onRetry: () => void;
   onConfirm: (
     transformId: string,
     candidate: NonNullable<
@@ -3311,8 +3362,17 @@ function TopicCandidateEditor({
   );
   const confirmed = transform.status === "confirmed";
   const progress = transform.outputSnapshot.generationProgress;
+  const retrying = ["queued", "running", "pause_requested"].includes(
+    transform.taskStatus ?? "",
+  );
   const progressLabel =
-    progress?.draft?.status === "failed"
+    retrying && progress?.draft?.status === "failed"
+      ? "拆解和选题已保留，正在重试改写初稿"
+      : retrying && progress?.topic?.status === "failed"
+        ? "逐字稿拆解已保留，正在重试选题"
+        : retrying && progress?.decomposition?.status === "failed"
+          ? "正在重试逐字稿拆解"
+          : progress?.draft?.status === "failed"
       ? "拆解和选题已保留，改写初稿待重试"
       : progress?.topic?.status === "failed"
           ? "逐字稿拆解已保留，选题待重试"
@@ -3332,6 +3392,9 @@ function TopicCandidateEditor({
           role="status"
           className="rounded-lg bg-primary/8 px-3 py-2 text-xs text-primary"
         >
+          {retrying ? (
+            <RefreshCw className="mr-1 inline size-3 animate-spin" />
+          ) : null}
           {progressLabel}
         </div>
       ) : null}
@@ -3348,6 +3411,19 @@ function TopicCandidateEditor({
           <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
             {transform.taskErrorMessage?.trim() || "可以稍后只重试未完成部分。"}
           </p>
+          {!confirmed ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={retryDisabled}
+              onClick={onRetry}
+              className="mt-2 gap-1.5"
+            >
+              <RefreshCw className="size-3.5" />
+              重试生成选题卡
+            </Button>
+          ) : null}
         </div>
       ) : null}
       {candidate.hook || candidate.structureSteps?.length ? (
