@@ -590,6 +590,7 @@ function FormFooter({
       >
         <Checkbox
           id="new-project-enter-after-create"
+          aria-label="创建后进入工作区"
           checked={enterAfterCreate}
           onCheckedChange={(value) =>
             onEnterAfterCreateChange(value === true)
