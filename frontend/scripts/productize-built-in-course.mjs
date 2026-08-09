@@ -692,8 +692,8 @@ async function main() {
     await writeFile(assetPath, `${JSON.stringify({ raw }, null, 2)}\n`, "utf8");
   }
 
-  for (const module of manifest.modules) {
-    module.title = MODULE_TITLES.get(module.id) ?? module.title;
+  for (const courseModule of manifest.modules) {
+    courseModule.title = MODULE_TITLES.get(courseModule.id) ?? courseModule.title;
   }
 
   manifest.title = "创作实战课";

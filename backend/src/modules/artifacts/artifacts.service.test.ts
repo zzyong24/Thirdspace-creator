@@ -153,11 +153,12 @@ describe("artifacts.service — append-only versioning", () => {
     });
 
     expect(patched.versionNumber).toBe(source.versionNumber + 1);
-    expect(patched.contentData?.html).toBeUndefined();
-    expect(patched.contentData?.sections).toEqual([
-      { id: "section-1", heading: "第一段", body: "原文一", visual: "画面一" },
-      { id: "section-2", heading: "第二段", body: "只改后的原文二", visual: "画面二" },
-    ]);
+    expect(patched.contentData).toEqual({
+      sections: [
+        { id: "section-1", heading: "第一段", body: "原文一", visual: "画面一" },
+        { id: "section-2", heading: "第二段", body: "只改后的原文二", visual: "画面二" },
+      ],
+    });
     expect(patched.contentText).toContain("原文一");
     expect(patched.contentText).toContain("只改后的原文二");
 
