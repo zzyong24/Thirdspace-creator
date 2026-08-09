@@ -580,9 +580,9 @@ export function KnowledgeDumpZone() {
               </h2>
               <p className="mt-1 text-xs leading-5 text-text-subtle">
                 {importDialog.phase === "confirm"
-                  ? "CreatorOS 会先保存原文件，再读取正文；只有正文读取成功的文件才会加入知识库。"
+                  ? "系统会先保存原文件，再读取正文；只有正文读取成功的文件才会加入知识库。"
                   : importDialog.phase === "running"
-                    ? `已处理 ${importDialog.completed}/${importDialog.files.length}，请保持 CreatorOS 打开。`
+                    ? `已处理 ${importDialog.completed}/${importDialog.files.length}，请保持应用打开。`
                     : `成功 ${importDialog.succeeded} 个，失败 ${importDialog.failures.length} 个。`}
               </p>
             </div>

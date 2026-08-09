@@ -56,7 +56,7 @@ test("内置 IP 课程从目录到学习进度形成连续真实旅程", async (
   const home = page.locator('[data-slot="built-in-course-home"]');
   await expect(home).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "CreatorOS IP 创作实战课" }),
+    page.getByRole("heading", { name: "创作实战课" }),
   ).toBeVisible();
   await expect(home).toContainText("6");
   await expect(home).toContainText("22");

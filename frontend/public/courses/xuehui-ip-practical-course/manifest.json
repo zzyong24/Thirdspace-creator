@@ -2,17 +2,17 @@
   "schemaVersion": "creatoros-built-in-course/v1",
   "courseId": "xuehui-ip-practical-course",
   "version": "2026.08.02.3",
-  "title": "CreatorOS IP 创作实战课",
+  "title": "创作实战课",
   "subtitle": "22 讲走通定位、选题、脚本、拍摄、运营与变现",
   "description": "从商业定位出发，把选题、素材、表达、拍摄和变现接成一条能反复练习的创作路径。",
   "source": {
     "name": "win-video-tutor",
     "skillInstructionSha256": "d6972ecaa8180c029ce5809af7d68b4532d749d54ef1b1a2afb603851bc46f7d",
     "indexSha256": "89f7a0d85b6dbe719538294376c2406e0b36029f1bb7da4631b8495aab09b338",
-    "packageSha256": "7886cd6c1a4c13f577b4da146c4b71128e875b6b1379e4b9678b11279fe078ec",
+    "packageSha256": "87c77bacdae8b2158c63dee1894c400e55781fa1cdc817e8df23ecd20fd4559f",
     "originalPackageSha256": "de10a7289f66937d2016c02adadc65c83a3d28175212a4e465bdd29b970b57c3",
     "editorialVersion": "creatoros-course-copy/v2",
-    "attribution": "基于已获授权的短视频实战课程整理，并由 CreatorOS 方法论知识库完成产品化编辑。",
+    "attribution": "基于已获授权的短视频实战课程整理，并结合实战方法论完成产品化编辑。",
     "editorialSources": [
       "七步做自媒体完整体系",
       "3 个月合格博主学习方案",
@@ -183,7 +183,7 @@
         "把验证过的选题发展为系列",
         "垂直的核心是人群与长期承诺"
       ],
-      "contentHash": "77a6a6f113664ed2b7ad577425dd93d273b990c19b2d15c0677b4f269b3940fb",
+      "contentHash": "2c648959caec9216eb33e6a7738d08547fdedac6d655c1aa4d1e742c29d7459f",
       "asset": "lessons/05.json",
       "learningGoal": "用传播面与目标人群的交集筛选选题，让内容既有人看又能筛到对的人。",
       "deliverable": "一张候选选题评分表"
