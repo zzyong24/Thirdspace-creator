@@ -10,6 +10,10 @@ import {
   type StructuredContent,
 } from "./artifacts.repository";
 import { ConflictError } from "./artifacts.errors";
+import {
+  canonicalizeScriptContentData,
+  canonicalizeScriptSectionRecords,
+} from "./script-section-identity";
 
 // Artifacts service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into a user-scoped repository built per-call via `repoFor(ctx)`
@@ -183,14 +187,26 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
     async createVersion(ctx, artifactId, input) {
       const repo = repoFor(ctx, "artifacts.createVersion");
+      const artifactForWrite = await repo.requireArtifact(artifactId);
       if (input.expectedCurrentVersionId) {
-        const artifact = await repo.requireArtifact(artifactId);
-        if (artifact.currentVersionId !== input.expectedCurrentVersionId) {
+        if (
+          artifactForWrite.currentVersionId !== input.expectedCurrentVersionId
+        ) {
           throw new ConflictError(
             "内容已在其他页面更新，请刷新后基于当前版本重试",
           );
         }
       }
+      const isScriptArtifact =
+        artifactForWrite.artifactType === "output_script" ||
+        artifactForWrite.artifactType === "master_script";
+      const versionInput =
+        isScriptArtifact && input.contentData
+          ? {
+              ...input,
+              contentData: canonicalizeScriptContentData(input.contentData),
+            }
+          : input;
       // [T-183] 改稿 delta 捕捉:在 append 重指针「前」先抓「前一版 = 当前版」快照(内容 +
       // createdByType),用于判定「AI 产出 → 用户手改」并算 before→after 差异。best-effort:
       // 仅在 recordEditDelta seam 已接线时才读,失败不影响主流程。
@@ -198,7 +214,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       let artifactBefore: ArtifactRow | null = null;
       if (deps.recordEditDelta) {
         try {
-          artifactBefore = await repo.requireArtifact(artifactId);
+          artifactBefore = artifactForWrite;
           if (artifactBefore.currentVersionId) {
             prevVersion = await repo.getVersion(artifactBefore.currentVersionId);
           }
@@ -210,7 +226,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
       // origin lifecycle (flip 'reconstructed'→'user' on user edit) is applied in
       // the repo's createVersion (F1, SPEC §4.5); input.origin passes through.
-      const version = await repo.createVersion(artifactId, input);
+      const version = await repo.createVersion(artifactId, versionInput);
       // Post-commit (SPEC §11): re-index best-effort. A failure never rolls back
       // the version write — the index is derived data.
       if (deps.searchUpsert) {
@@ -280,10 +296,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
           ? { ...(current.contentData as Record<string, unknown>) }
           : {};
       const rawSections = Array.isArray(data.sections) ? data.sections : [];
-      const sections = rawSections.filter(
-        (value): value is Record<string, unknown> =>
-          Boolean(value) && typeof value === "object" && !Array.isArray(value),
-      );
+      const sections = canonicalizeScriptSectionRecords(rawSections);
       const targetIndex = sections.findIndex(
         (section) => section.id === input.sectionId,
       );

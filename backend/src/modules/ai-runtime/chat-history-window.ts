@@ -98,6 +98,62 @@ function isToolPart(part: unknown): part is { type: string; output?: unknown } {
   );
 }
 
+/**
+ * T-740:兼容 SDK 安全名、旧点号名，以及无效调用产生的 dynamic-tool。
+ * 这里仅识别协议形态，不做任何创作语义判断。
+ * SEMANTIC_BOUNDARY_ALLOW:匹配的是已注册工具的协议标识符，用于过滤当前不可执行的历史调用；
+ * 不根据用户文字判断创作意图，也不选择改写内容。
+ */
+function isScriptPatchToolPart(part: unknown): boolean {
+  const rec = part as { type?: unknown; toolName?: unknown };
+  if (rec.type === "tool-script_patch" || rec.type === "tool-script.patch") {
+    return true;
+  }
+  return (
+    rec.type === "dynamic-tool" &&
+    (rec.toolName === "script.patch" || rec.toolName === "script_patch")
+  );
+}
+
+/**
+ * script.patch 只有在当前请求绑定可信段落锚点时才真实可用。
+ *
+ * 历史候选卡仍需原样持久化、回放给 UI；但当前未挂载该工具时，模型投影不能继续携带
+ * 旧的 script.patch tool-call/result，否则模型会沿用一个本轮不存在的工具并触发
+ * AI_NoSuchToolError。此函数只做浅拷贝投影，不修改调用方的数组、消息或 parts。
+ */
+export function dropUnavailableScriptPatchParts(
+  messages: UIMessage[],
+  scriptPatchAvailable: boolean,
+): UIMessage[] {
+  if (scriptPatchAvailable) return messages;
+  let changed = false;
+  const projected: UIMessage[] = [];
+  for (const message of messages) {
+    if (message.role !== "assistant") {
+      projected.push(message);
+      continue;
+    }
+    const parts = (message as { parts?: unknown[] }).parts;
+    if (!Array.isArray(parts)) {
+      projected.push(message);
+      continue;
+    }
+    const nextParts = parts.filter((part) => !isScriptPatchToolPart(part));
+    if (nextParts.length === parts.length) {
+      projected.push(message);
+      continue;
+    }
+    changed = true;
+    // 若这条 assistant 原本只有已不可用的 patch parts，整条从模型投影摘掉；
+    // 不留空 parts 消息给 convertToModelMessages/provider。UI/持久化原数组不变。
+    if (nextParts.length > 0) {
+      projected.push({ ...(message as object), parts: nextParts } as UIMessage);
+    }
+  }
+  return changed ? projected : messages;
+}
+
 // 清体一条消息:tool part 的 output 替换为指针占位(浅拷贝,不动原对象 —— 存储层/调用方
 // 的 messages 原样)。只清「已有输出」的 part(state=output-available 的 output 字段);
 // 无输出的(input-available/错误态)原样保留。返回 [投影消息, 清掉的 part 数]。

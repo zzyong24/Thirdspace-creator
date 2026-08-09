@@ -949,6 +949,53 @@ describe("T-575 config.pull Creator consumer", () => {
     expect(store.record?.channel).not.toBeNull();
   });
 
+  it("[T-741] v3 票据不适用于当前激活时按未配置处理而不是安全阻断", async () => {
+    const current = signedBundle(growthKeys.privateKey);
+    store.record = {
+      ...configuredRecord(current),
+      state: "blocked",
+      outcome: "security_error",
+      reason: "authorization_changed",
+    };
+    const fetchImpl = vi.fn<typeof fetch>(async () =>
+      signedAmResponse(
+        amKeys.privateKey,
+        {
+          success: false,
+          error: {
+            code: "CONFIG_TICKET_REQUEST_INVALID",
+            message: "activation unit is not eligible for v3 tickets",
+          },
+        },
+        422,
+      ),
+    );
+
+    await expect(
+      refreshClientConfig({
+        env: env(),
+        now: () => NOW,
+        nonce: () => "nonce-client-config-0001",
+        fetchImpl,
+        readVerdict: async () => ({ state: "ready", verdict }),
+        store,
+      }),
+    ).resolves.toEqual({
+      authority: "local",
+      outcome: "not_configured",
+      action: "本地模型正在使用 · 渠道未配置",
+      retryable: false,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(store.record).toMatchObject({
+      state: "local",
+      outcome: "not_configured",
+      bundle: current,
+      channel: configuredRecord(current).channel,
+    });
+    expect(store.record).not.toHaveProperty("reason");
+  });
+
   it("Activity/Growth 明确撤权、过期或重放拒绝时禁止 LKG，且保存阻断态", async () => {
     store.record = configuredRecord(signedBundle(growthKeys.privateKey));
     const fetchImpl = successfulFetch();

@@ -35,6 +35,11 @@ export { ARTIFACTS_DDL } from "./artifacts.db-schema";
 export { OwnershipError, ConflictError } from "./artifacts.errors";
 
 export {
+  canonicalizeScriptContentData,
+  canonicalizeScriptSectionRecords,
+} from "./script-section-identity";
+
+export {
   artifactResource,
   artifactVersionResource,
   artifactRelationResource,

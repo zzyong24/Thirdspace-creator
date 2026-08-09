@@ -170,6 +170,67 @@ describe("artifacts.service — append-only versioning", () => {
     );
   });
 
+  it("[T-740] createVersion 为脚本的无 ID 段落持久化稳定锚点", async () => {
+    const artifact = await seedArtifact(ctxA);
+
+    const created = await service.createVersion(ctxA, artifact.id, {
+      contentText: "第一段\n\n第二段",
+      contentData: {
+        sections: [
+          { heading: "第一段", body: "正文一" },
+          { heading: "第二段", body: "正文二" },
+        ],
+      },
+      changeSummary: "AI 整稿",
+      createdByType: "ai",
+    });
+
+    const createdData = created.contentData as { sections?: unknown[] };
+    expect(createdData.sections).toEqual([
+      { id: "script-saved-0", heading: "第一段", body: "正文一" },
+      { id: "script-saved-1", heading: "第二段", body: "正文二" },
+    ]);
+  });
+
+  it("[T-740] 存量无 ID 脚本可按兼容锚点只改目标段，并在新版本中自愈 ID", async () => {
+    const artifact = await seedArtifact(ctxA);
+    let legacySeq = 0;
+    const legacyRepo = createArtifactRepository(db, {
+      userId: ctxA.userId,
+      accountId: "acct-a",
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-legacy-${++legacySeq}`,
+    });
+    const legacy = await legacyRepo.createVersion(artifact.id, {
+      contentText: "第一段\n\n第二段",
+      contentData: {
+        sections: [
+          { heading: "第一段", body: "正文一" },
+          { heading: "第二段", body: "正文二" },
+        ],
+      },
+      changeSummary: "历史 AI 整稿",
+      createdByType: "ai",
+    });
+
+    const patched = await service.applyScriptPatch(ctxA, artifact.id, {
+      expectedVersionId: legacy.id,
+      sectionId: "script-saved-1",
+      expectedOriginalText: "正文二",
+      replacementText: "只改后的正文二",
+    });
+
+    const healedData = patched.contentData as { sections?: unknown[] };
+    expect(healedData.sections).toEqual([
+      { id: "script-saved-0", heading: "第一段", body: "正文一" },
+      {
+        id: "script-saved-1",
+        heading: "第二段",
+        body: "只改后的正文二",
+      },
+    ]);
+  });
+
   it("applyScriptPatch refuses a stale version anchor", async () => {
     const artifact = await seedArtifact(ctxA);
     const source = await service.createVersion(ctxA, artifact.id, {

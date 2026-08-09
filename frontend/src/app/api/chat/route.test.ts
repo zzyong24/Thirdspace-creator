@@ -342,6 +342,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
           chatContext: {
             surface: "project",
             projectId: "project-1",
+            functionKey: "script.patch",
             selection: {
               kind: "script_section",
               ids: ["section-2"],
@@ -411,6 +412,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
           messages: [userMessage("改写这一段")],
           chatContext: {
             surface: "project",
+            functionKey: "script.patch",
             selection: {
               kind: "script_section",
               ids: ["section-stale"],
@@ -432,7 +434,111 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     expect(runChatStream).not.toHaveBeenCalled();
   });
 
-  it("[T-716] 局部改稿话术没有段落锚点时失败关闭，不降级成普通对话猜工具", async () => {
+  it("[T-740] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求", async () => {
+    resolveCurrentScriptSelection.mockResolvedValueOnce({
+      artifactId: "artifact-script",
+      versionId: "version-current",
+      sectionId: "section-5",
+      originalText: "当前第 5 段正文",
+      matchStrategy: "id",
+    });
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("请根据现在的要求重新生成一份完整口播稿。")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            selection: {
+              kind: "script_section",
+              ids: ["section-5"],
+              label: "第 5 段",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              sectionIndex: 4,
+              excerpt: "旧第 5 段正文",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext.functionKey).toBeUndefined();
+    expect(input.chatContext.selection).toMatchObject({
+      kind: "script_section",
+      ids: ["section-5"],
+      versionId: "version-current",
+      excerpt: "当前第 5 段正文",
+    });
+  });
+
+  it("[T-740] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409", async () => {
+    resolveCurrentScriptSelection.mockResolvedValueOnce(null);
+
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("不要再局部修改，请生成一份完整稿子。")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            selection: {
+              kind: "script_section",
+              ids: ["section-stale"],
+              label: "旧段落",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              sectionIndex: 4,
+              excerpt: "已经不存在的旧正文",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext.functionKey).toBeUndefined();
+    expect(input.chatContext.selection).toBeUndefined();
+  });
+
+  it("[T-740] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("请生成完整稿。")],
+          chatContext: {
+            surface: "project",
+            projectId: "project-1",
+            functionKey: "script.draft",
+            selection: {
+              kind: "script_section",
+              ids: ["section-5"],
+              label: "第 5 段",
+              artifactId: "artifact-script",
+              versionId: "version-old",
+              sectionIndex: 4,
+              excerpt: "旧段落",
+            },
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(resolveCurrentScriptSelection).not.toHaveBeenCalled();
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext.functionKey).toBe("script.draft");
+    expect(input.chatContext.selection).toBeUndefined();
+  });
+
+  it("[T-716] 显式局部改稿命令没有段落锚点时失败关闭，不降级成普通对话猜工具", async () => {
     const res = await POST(
       chatReq(
         {
@@ -444,6 +550,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
           chatContext: {
             surface: "project",
             projectId: "project-1",
+            functionKey: "script.patch",
           },
         },
         "creatoros_session=tok",

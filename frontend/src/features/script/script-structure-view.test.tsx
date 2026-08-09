@@ -308,6 +308,25 @@ describe("ScriptStructureEditor(保存)", () => {
     expect(input.params.artifactId).toBe("art-created");
   });
 
+  it("[T-740] 保存携带当前版本并发锚点，禁止旧稿覆盖刚写入的新整稿", async () => {
+    renderToggle(SECTIONS, {
+      artifactId: "art-1",
+      currentVersionId: "version-6",
+    });
+    fireEvent.change(screen.getByDisplayValue("开场钩子"), {
+      target: { value: "基于 v6 的本地修改" },
+    });
+    fireEvent.click(
+      document.querySelector('[data-slot="structure-save-button"]')!,
+    );
+    await screen.findByText("已保存");
+
+    const input = mockCreateArtifactVersion.mock.calls[0]![0] as {
+      body: { expectedCurrentVersionId?: string };
+    };
+    expect(input.body.expectedCurrentVersionId).toBe("version-6");
+  });
+
   it("全部段清空 → 保存禁用并提示,不产空版本", () => {
     renderToggle([SECTIONS[0]!], { artifactId: "art-1" });
     fireEvent.change(screen.getByDisplayValue("开场钩子"), {
@@ -355,6 +374,51 @@ describe("[T-716] AI 改写本段", () => {
       });
     });
     expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+  });
+
+  it("[T-740] 整稿换版后段落与版本作为同一快照重绑，再点击只发送新版本正文", async () => {
+    const currentSections = SECTIONS.map((section, index) => ({
+      ...section,
+      id: `current-${index + 1}`,
+      body: `当前 v10 第 ${index + 1} 段正文`,
+    }));
+    const rendered = renderToggleWithChat(SECTIONS, {
+      artifactId: "artifact-1",
+      currentVersionId: "version-9",
+    });
+
+    rendered.rerender(
+      <DraftChatRequestProvider>
+        <ScriptStructureToggle
+          sections={currentSections}
+          artifactId="artifact-1"
+          currentVersionId="version-10"
+        >
+          <div data-testid="editor-stub">编辑器</div>
+        </ScriptStructureToggle>
+        <ChatRequestProbe />
+      </DraftChatRequestProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("第 2 段正文")).toHaveValue(
+        "当前 v10 第 2 段正文",
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "AI 改写第 2 段" }));
+
+    await waitFor(() => {
+      const request = JSON.parse(
+        screen.getByTestId("chat-request-probe").textContent || "{}",
+      ) as { selection?: Record<string, string | number> };
+      expect(request.selection).toMatchObject({
+        id: "current-2",
+        artifactId: "artifact-1",
+        versionId: "version-10",
+        sectionIndex: 1,
+        excerpt: "当前 v10 第 2 段正文",
+      });
+    });
   });
 
   it("本地段落有未保存修改时先自动保存，再用新版本和新原文打开局部改写", async () => {

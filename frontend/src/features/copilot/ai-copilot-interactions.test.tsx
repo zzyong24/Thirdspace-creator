@@ -657,7 +657,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       ).not.toBeNull(),
     );
 
-    // 候选回来后，用户补充“不是这个意思”仍应继续调用 script.patch，不能退化成普通聊天。
+    // 候选回来后仍带着这段的可信锚点，但自由文本不再把一次性按钮命令跨轮复用。
+    // 是否继续局改由同一个对话模型按本轮完整语义选择；用户也可以直接转向整稿。
     const textarea = screen.getByLabelText("我能帮你做什么");
     await user.type(textarea, "不是这个意思，请基于当前稿面的这一段再改一次。");
     await user.click(screen.getByLabelText("提交提示给 Copilot"));
@@ -671,7 +672,6 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     )();
     expect(requestBody).toMatchObject({
       chatContext: {
-        functionKey: "script.patch",
         selection: {
           kind: "script_section",
           artifactId: "artifact-1",
@@ -680,6 +680,171 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
         },
       },
     });
+    expect(
+      (requestBody.chatContext as Record<string, unknown>).functionKey,
+    ).toBeUndefined();
+  });
+
+  it("[T-740] provider 失败后普通新消息不复用局部命令", async () => {
+    const user = userEvent.setup();
+    const embed = {
+      surface: "project",
+      selection: { kind: "project", id: "proj-1", title: "我的作品" },
+      persistKey: "project:proj-1",
+      request: {
+        functionKey: "script.patch",
+        prefill: "请只改写我选中的这一段。",
+        selection: {
+          kind: "script_section",
+          id: "section-2",
+          title: "第 2 段",
+          artifactId: "artifact-1",
+          versionId: "version-6",
+          sectionIndex: 1,
+          excerpt: "旧段落正文",
+        },
+        nonce: 1,
+      },
+    } as const;
+    const { rerender } = render(
+      <AICopilotContent viewModel={VM} embed={embed} />,
+    );
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    mockMessages = [
+      {
+        id: "u1",
+        role: "user",
+        parts: [{ type: "text", text: embed.request.prefill }],
+      },
+    ];
+    mockError = new Error("provider stream interrupted");
+    rerender(<AICopilotContent viewModel={VM} embed={embed} />);
+    expect(await screen.findByText(/目标段落已保留/)).toBeInTheDocument();
+
+    const textarea = screen.getByLabelText("我能帮你做什么");
+    await user.type(textarea, "先不要改这一段，改为生成完整稿。");
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    const resolver = initialChatTransport?.body;
+    expect(typeof resolver).toBe("function");
+    const body = await (
+      resolver as () => Promise<Record<string, unknown>> | Record<string, unknown>
+    )();
+    expect(body).toMatchObject({
+      chatContext: { selection: { kind: "script_section" } },
+    });
+    expect(
+      (body.chatContext as Record<string, unknown>).functionKey,
+    ).toBeUndefined();
+  });
+
+  it("[T-740] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断", async () => {
+    const user = userEvent.setup();
+    const embedBase = {
+      surface: "project",
+      selection: { kind: "project", id: "proj-1", title: "我的作品" },
+      persistKey: "project:proj-1",
+    } as const;
+    const staleRequest = {
+      functionKey: "script.patch",
+      prefill: "请只改写我选中的这一段。",
+      selection: {
+        kind: "script_section",
+        id: "section-stale",
+        title: "第 2 段",
+        artifactId: "artifact-1",
+        versionId: "version-old",
+        sectionIndex: 1,
+        excerpt: "已经不在当前版本的段落",
+      },
+      nonce: 1,
+    } as const;
+    const { rerender } = render(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{ ...embedBase, request: staleRequest }}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    mockMessages = [
+      {
+        id: "u-stale",
+        role: "user",
+        parts: [{ type: "text", text: staleRequest.prefill }],
+      },
+    ];
+    mockError = new Error(
+      JSON.stringify({
+        code: "SCRIPT_SELECTION_STALE",
+        error:
+          "稿面刚刚切换过版本，这一段已不在当前稿中。请在当前稿面目标段重新点一次“AI 改写本段”。",
+      }),
+    );
+    rerender(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{ ...embedBase, request: staleRequest }}
+      />,
+    );
+
+    expect(await screen.findByText(/本次局部改写已结束/)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        document.querySelector(
+          '[data-slot="context-chip"][data-kind="script_section"]',
+        ),
+      ).toBeNull(),
+    );
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+
+    mockError = null;
+    rerender(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{ ...embedBase, request: staleRequest }}
+      />,
+    );
+    const textarea = screen.getByLabelText("我能帮你做什么");
+    await user.type(textarea, "什么原因？先回答我这个问题。");
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    expect(sendMessage).toHaveBeenLastCalledWith({
+      text: "什么原因？先回答我这个问题。",
+    });
+    const resolver = initialChatTransport?.body;
+    expect(typeof resolver).toBe("function");
+    const ordinaryBody = await (
+      resolver as () => Promise<Record<string, unknown>> | Record<string, unknown>
+    )();
+    expect(ordinaryBody).not.toMatchObject({
+      chatContext: {
+        functionKey: "script.patch",
+        selection: { kind: "script_section" },
+      },
+    });
+
+    const currentRequest = {
+      ...staleRequest,
+      nonce: 2,
+      selection: {
+        ...staleRequest.selection,
+        id: "section-current",
+        versionId: "version-current",
+        excerpt: "当前版本的第 2 段",
+      },
+    } as const;
+    rerender(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{ ...embedBase, request: currentRequest }}
+      />,
+    );
+    await waitFor(() =>
+      expect(
+        document.querySelector(
+          '[data-slot="context-chip"][data-kind="script_section"]',
+        ),
+      ).not.toBeNull(),
+    );
   });
 
   it("[T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段", async () => {

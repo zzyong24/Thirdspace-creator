@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/v1.0-candidate @ 9aee9496
+LAST_SYNCED: codex/v1.0-candidate @ 1985eeca
 
 ## 这是什么(定位)
 
@@ -23,7 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-739 撤回用户自填模型 Key 的 sidecar 系统钥匙串依赖【V1 真机可用性·用户确认 2026-08-09】
 - [wip] T-737 根治 Windows 正式闭包启动密钥与停机哨兵争抢 stdin【V1 正式包阻断·用户授权 2026-08-09】
 - [wip] T-736 移除买断产品的模型/转写/归档二次确认并修复本机文件确认签名续跑【正式包回归·用户实测 2026-08-09】
 - [wip] T-735 修复 V1 本地包素材预览与项目封面统一失效【正式包回归·用户实测 2026-08-09】

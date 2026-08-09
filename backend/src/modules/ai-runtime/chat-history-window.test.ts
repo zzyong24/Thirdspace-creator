@@ -10,6 +10,7 @@ import {
   projectChatHistory,
   formatChatContextLog,
   dropAbandonedApprovalParts,
+  dropUnavailableScriptPatchParts,
 } from "./chat-history-window";
 
 // [T-239d] 对话历史窗口化 —— 投影层单测:①tool-result 清体只影响 N 轮之前、近轮原样;
@@ -272,5 +273,121 @@ describe("[T-274] dropAbandonedApprovalParts", () => {
     expect(dropAbandonedApprovalParts(only)).toBe(only);
     const firstUser = [userMsg("u0", "hi"), assistantWithToolState("a0", "approval-requested")];
     expect(dropAbandonedApprovalParts(firstUser)).toBe(firstUser);
+  });
+});
+
+describe("[T-740] dropUnavailableScriptPatchParts", () => {
+  it("当前未挂载局部补丁工具时，仅从喂模型的历史摘掉新旧形态的 script.patch parts", () => {
+    const messages = [
+      userMsg("u0", "改写第 2 段"),
+      {
+        id: "a0",
+        role: "assistant",
+        parts: [
+          { type: "text", text: "已给出候选" },
+          {
+            type: "tool-script_patch",
+            toolCallId: "tc-safe",
+            state: "output-available",
+            input: { replacementText: "新文" },
+            output: { kind: "script.patch", replacementText: "新文" },
+          },
+          {
+            type: "tool-script.patch",
+            toolCallId: "tc-old-static",
+            state: "output-available",
+            input: { replacementText: "旧版候选" },
+            output: { kind: "script.patch", replacementText: "旧版候选" },
+          },
+          {
+            type: "tool-context.projects",
+            toolCallId: "tc-keep",
+            state: "output-available",
+            input: {},
+            output: { kind: "context.projects", rows: [] },
+          },
+        ],
+      } as UIMessage,
+      {
+        id: "a1",
+        role: "assistant",
+        parts: [
+          {
+            type: "dynamic-tool",
+            toolName: "script.patch",
+            toolCallId: "tc-legacy",
+            state: "output-error",
+            input: {},
+            errorText: "No such tool",
+          },
+        ],
+      } as UIMessage,
+      {
+        id: "a2",
+        role: "assistant",
+        parts: [
+          {
+            type: "dynamic-tool",
+            toolName: "script_patch",
+            toolCallId: "tc-safe-dynamic",
+            state: "output-error",
+            input: {},
+            errorText: "Invalid tool input",
+          },
+        ],
+      } as UIMessage,
+      userMsg("u1", "什么原因？"),
+    ];
+
+    const projected = dropUnavailableScriptPatchParts(messages, false);
+    const projectedParts = projected.flatMap(
+      (message) =>
+        ((message as { parts?: Array<{ type?: string; toolName?: string }> })
+          .parts ?? []),
+    );
+    expect(
+      projectedParts.some(
+        (part) =>
+          part.type === "tool-script_patch" ||
+          part.type === "tool-script.patch" ||
+          (part.type === "dynamic-tool" &&
+            (part.toolName === "script.patch" ||
+              part.toolName === "script_patch")),
+      ),
+    ).toBe(false);
+    expect(projectedParts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "text", text: "已给出候选" }),
+        expect.objectContaining({ type: "tool-context.projects" }),
+      ]),
+    );
+    expect(projected.map((message) => message.id)).not.toContain("a1");
+    expect(projected.map((message) => message.id)).not.toContain("a2");
+    expect(
+      (messages[1] as { parts: Array<{ type: string }> }).parts.map(
+        (part) => part.type,
+      ),
+    ).toContain("tool-script_patch");
+  });
+
+  it("当前有可信锚点且工具已挂载时原样保留局部改稿历史", () => {
+    const messages = [
+      userMsg("u0", "继续改这一段"),
+      {
+        id: "a0",
+        role: "assistant",
+        parts: [
+          {
+            type: "tool-script_patch",
+            toolCallId: "tc-safe",
+            state: "output-available",
+            input: { replacementText: "新文" },
+            output: { kind: "script.patch", replacementText: "新文" },
+          },
+        ],
+      } as UIMessage,
+    ];
+
+    expect(dropUnavailableScriptPatchParts(messages, true)).toBe(messages);
   });
 });

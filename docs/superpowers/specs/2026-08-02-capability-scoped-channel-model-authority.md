@@ -375,3 +375,16 @@ T-679 / T-715，**不创建第二套模型配置任务**；API-282 已稳定，C
 CreatorOS 已从 Growth 正式合同确认 API-282 精确响应和错误字段、签名 HTTPS origin/model 校验
 规则以及稳定转写 intent 的幂等约束。真机联调必须使用真实激活权益与额度账户；不得用 fixture、
 聊天口径或自拟字段替代正式回执。
+
+## 12. T-741 票据不适用与本地模型提示收口（2026-08-09）
+
+- Activity 对 `config-access-ticket-v3` 返回已验签的 `CONFIG_TICKET_REQUEST_INVALID`，表示当前
+  激活单元不适用这类渠道配置票据；CreatorOS 必须将其投影为 `local / not_configured`，不得写成
+  `authorization_changed`、`blocked` 或 `security_error`，也不得继续请求 Growth。
+- 上述兼容只覆盖这个精确、已验签错误码。坏签名、响应结构漂移、撤权、过期、绑定变化、locator
+  不一致、版本降级与碰撞仍按原安全规则失败关闭，不得因本地模型存在而吞掉真实安全事件。
+- 已保存本地文本模型凭据且当前 authority 为 `local` 时，设置页不再渲染渠道状态提示；模型卡自身
+  继续显示并允许编辑、保存和测试。本地文本模型尚未配置，或当前 authority 确为 `channel` 时，仍
+  显示对当前操作有帮助的真实状态。
+- 回归必须覆盖：不适用票据从既有误阻断态恢复为 `not_configured` 且不触达 Growth；真正撤权仍保存
+  blocked 并抛错；本地模型有凭据时两行误报警均不存在，本地未配置或渠道已接管时状态仍可见。

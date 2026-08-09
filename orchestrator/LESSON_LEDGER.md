@@ -189,14 +189,22 @@
   实际没有完成它承诺的一次点击局部改稿。
 - **RootCause**: 把并发校验需要的可信稿面锚点设计成模型可填写参数；没有在按钮点击时把当前
   artifact、版本、段落和原文绑定到服务端工具依赖，也没有覆盖未保存稿面先落新版本的真实链路。
+  后续补了服务端重绑门，却仍把 `script_section` 做成跨轮粘滞状态；终态冲突没有清理锚点，
+  结果安全拒绝从“只挡错误覆盖”扩大成“阻断此后全部普通对话”。同时 AI 整稿长期写入无 ID
+  `sections`：稿面临时合成 `script-saved-N` 后能显示多段，执行侧却要求 `id &&正文` 并把同一
+  当前版本过滤成 0 段；即使点击正确第 2 段也会在调用模型前失败，采纳侧又会二次找不到段落。
 - **GuardRule**: 局部修改的对象标识、版本、选区和原文必须由用户点击时的可信 UI 状态绑定，
   绝不向模型或用户索取。模型只产目标段的新正文；点击前若稿面有未保存修改，系统先自动保存。
   更一般地，任何工具中的客户端 ID、版本、正文和状态都只是意图线索，执行前必须经 backend
   service port 重读当下服务端真值；能唯一重绑则覆盖旧快照，不能则明确冲突，禁止继续执行。
+  无法重绑是该次局部命令的终态：必须同时清理 pending/sticky/in-flight/functionKey，恢复普通
+  对话，且不提供必然重复冲突的“重试上一轮”；重新局部改稿只能由用户再点当前稿面段落。
+  所有脚本版本写入时必须在 artifact service 单写边界补齐稳定段落 ID；存量无 ID 版本由稿面、
+  执行重绑与补丁应用复用同一确定性兼容 ID，并在新补丁版本中自愈，禁止修改不可变历史版本。
   采纳只替换目标段并追加完整新版本，其他段落逐字不变，版本冲突必须拒绝覆盖。
-- **GuardCheck**: `pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx && pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts`。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts`。
 - **Outcome(T+N)**: 待本地测试包用真实稿面按钮完成一次“自动保存 → 局部改写 → 采纳 → 版本回退”后回填。
-- **Ref**: T-716；`script-structure-view.tsx`；`chat-tools.ts`；用户 2026-08-06 真实失败对话。
+- **Ref**: T-716、T-740；`script-structure-view.tsx`；`ai-copilot-content.tsx`；`chat-tools.ts`；用户 2026-08-06 与 2026-08-09 真实失败对话。
 
 ## LED-015 — 安装备份留在 Applications，Launchpad 显示多个真假难辨的 CreatorOS
 - **Date**: 2026-08-06 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: active

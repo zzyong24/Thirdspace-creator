@@ -470,37 +470,40 @@ export function SettingsDialog({
                     data-slot="settings-rail"
                     className="flex flex-col gap-card-gap"
                   >
-                <div
-                  data-slot="model-authority-status"
-                  data-authority={modelAuthority?.authority ?? "local"}
-                  className={cn(
-                    "rounded-xl border px-4 py-3",
-                    modelAuthority?.authority === "channel"
-                      ? "border-brand/25 bg-brand/5"
-                      : modelAuthority?.outcome === "security_error"
-                        ? "border-destructive/25 bg-destructive/5"
-                        : "border-border bg-muted/35",
-                  )}
-                >
-                  <p className="text-sm font-semibold text-foreground">
-                    {modelAuthority?.action ??
-                      "本地模型正在使用 · 暂时无法取得渠道配置"}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {usesManagedCredits
-                      ? "当前权益提供的模型无需填写密钥；尚未出现的能力请重新同步配置。"
-                      : modelAuthority?.authority === "channel"
-                        ? "当前渠道已提供的模型可以直接使用；未提供的模型仍可由你自行配置。"
-                      : modelAuthority?.outcome === "activation_scope_missing"
-                        ? "当前权益尚未同步模型配置，请重新校验激活状态后重试。"
-                        : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
-                  </p>
-                  {modelAuthority?.outcome === "activation_scope_missing" ||
-                  (usesManagedCredits &&
-                    Object.keys(modelAuthority?.capabilities ?? {}).length < 4) ? (
-                    <ChannelConfigRetryButton />
-                  ) : null}
-                </div>
+                {modelAuthority?.authority === "channel" ||
+                !viewModel.model.hasSecret ? (
+                  <div
+                    data-slot="model-authority-status"
+                    data-authority={modelAuthority?.authority ?? "local"}
+                    className={cn(
+                      "rounded-xl border px-4 py-3",
+                      modelAuthority?.authority === "channel"
+                        ? "border-brand/25 bg-brand/5"
+                        : modelAuthority?.outcome === "security_error"
+                          ? "border-destructive/25 bg-destructive/5"
+                          : "border-border bg-muted/35",
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-foreground">
+                      {modelAuthority?.action ??
+                        "本地模型正在使用 · 暂时无法取得渠道配置"}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {usesManagedCredits
+                        ? "当前权益提供的模型无需填写密钥；尚未出现的能力请重新同步配置。"
+                        : modelAuthority?.authority === "channel"
+                          ? "当前渠道已提供的模型可以直接使用；未提供的模型仍可由你自行配置。"
+                        : modelAuthority?.outcome === "activation_scope_missing"
+                          ? "当前权益尚未同步模型配置，请重新校验激活状态后重试。"
+                          : "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。"}
+                    </p>
+                    {modelAuthority?.outcome === "activation_scope_missing" ||
+                    (usesManagedCredits &&
+                      Object.keys(modelAuthority?.capabilities ?? {}).length < 4) ? (
+                      <ChannelConfigRetryButton />
+                    ) : null}
+                  </div>
+                ) : null}
                 {modelAuthority?.services?.some(
                   (service) => service.credentialSource === "activation_managed",
                 ) ? (

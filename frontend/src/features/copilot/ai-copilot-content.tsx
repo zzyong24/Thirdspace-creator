@@ -228,7 +228,10 @@ import {
   type CopilotAttachmentPickerHandle,
   type CopilotAttachmentState,
 } from "./copilot-attachment-picker";
-import { extractChatApiPublicError } from "./chat-api-error";
+import {
+  extractChatApiPublicError,
+  isTerminalScriptSelectionError,
+} from "./chat-api-error";
 
 // ---------------------------------------------------------------------------
 // ViewModel — shaped by the `buildCopilotViewModel` selector. The Copilot
@@ -717,13 +720,18 @@ export function AICopilotContent({
     React.useState<EmbeddedDraftChatRequest | null>(null);
   const pendingComposerRequestRef =
     React.useRef<EmbeddedDraftChatRequest | null>(null);
-  // [T-716] 局部改稿是一个可连续对话的“当前段落工作上下文”，不是只能消费一次的按钮命令。
-  // 首轮候选成功后仍保留这个轻量锚点；用户继续说“改得不对/再口语一点”时，下一轮仍强制走
-  // script.patch。真正的 version/originalText 不信任这里的旧快照，route 每轮都会按
-  // sectionIndex 重读服务端当前稿面后覆盖（见 current-script-selection）。
+  // [T-740] 局部改稿按钮包含两个不同生命周期：functionKey 是只消费一次的明确命令；
+  // script_section 是可供后续对话继续使用的轻量锚点。首轮候选成功后保留锚点，但自由文本
+  // 不再强制走 script.patch——同一个对话模型会按本轮完整语义在局改、整稿或其他能力间选择。
+  // 真正的 version/originalText 不信任这里的旧快照，route 每轮都会重读服务端当前稿面。
   const [stickyScriptPatchRequest, setStickyScriptPatchRequest] =
     React.useState<EmbeddedDraftChatRequest | null>(null);
   const stickyScriptPatchRequestRef =
+    React.useRef<EmbeddedDraftChatRequest | null>(null);
+  // 明确局部命令失败后只允许“重试”按钮复用，普通发送永远不读取这里，避免旧命令劫持新意图。
+  const [retryableScriptPatchRequest, setRetryableScriptPatchRequest] =
+    React.useState<EmbeddedDraftChatRequest | null>(null);
+  const retryableScriptPatchRequestRef =
     React.useRef<EmbeddedDraftChatRequest | null>(null);
   const localComposerNonceRef = React.useRef(-1);
   const [composerLifecycleError, setComposerLifecycleError] =
@@ -732,6 +740,7 @@ export function AICopilotContent({
     nonce: number;
     functionKey: string;
     messageCountBefore: number;
+    mode: "required" | "available";
   } | null>(null);
   const providerRequest = embed?.request ?? null;
   const activeRequest =
@@ -809,13 +818,21 @@ export function AICopilotContent({
       activeRequest.functionKey === "script.patch" &&
       activeRequest.selection?.kind === "script_section"
     ) {
+      retryableScriptPatchRequestRef.current = null;
+      setRetryableScriptPatchRequest(null);
       stickyScriptPatchRequestRef.current = activeRequest;
       setStickyScriptPatchRequest(activeRequest);
       return;
     }
     // 用户显式点击了另一个功能，旧段落不应暗中污染新的工具调用。
+    retryableScriptPatchRequestRef.current = null;
+    setRetryableScriptPatchRequest(null);
     stickyScriptPatchRequestRef.current = null;
     setStickyScriptPatchRequest(null);
+    if (pendingComposerRequestRef.current?.functionKey === "script.patch") {
+      pendingComposerRequestRef.current = null;
+      setPendingComposerRequest(null);
+    }
   }, [activeRequest]);
   // [T-354] 次区(推荐指令 / 最近任务 / 继续任务 三卡)已整体下架 —— 用户真机反馈冗余(对话 +
   // 快捷 chip 已覆盖其功能;任务进度经对话区顶部完成通知卡呈现)。底层任务轮询保留(喂通知卡)。
@@ -1178,6 +1195,7 @@ export function AICopilotContent({
 
   // [T-094] 本轮流式错误 → 人话气泡:服务端 onError 已转人话;若客户端拿到的仍是原始机器码
   // (装配期 4xx 等路径),这里再过一次共享映射兜底。命中「换模型可解」类附「去设置」链接。
+  const terminalScriptSelectionError = isTerminalScriptSelectionError(error);
   const chatError = React.useMemo(() => {
     if (!error && !composerLifecycleError) return null;
     if (!error && composerLifecycleError) {
@@ -1185,6 +1203,7 @@ export function AICopilotContent({
         message: composerLifecycleError,
         suggestSwitchModel: false,
         suggestOpenCredits: false,
+        canRetry: true,
       };
     }
     if (!error) return null;
@@ -1192,13 +1211,17 @@ export function AICopilotContent({
     const human = humanizeAiErrorMessage(raw);
     const chatApiPublicError = extractChatApiPublicError(error);
     const localPatchWasPreserved =
-      pendingComposerRequest?.functionKey === "script.patch" &&
+      (pendingComposerRequest?.functionKey === "script.patch" ||
+        retryableScriptPatchRequest?.functionKey === "script.patch") &&
       !human?.suggestOpenCredits &&
       !chatApiPublicError;
     return {
       // [T-133] 命中 AI 人话优先;否则走通用收口(结构化码人话 / fallback),
       // 绝不把裸 raw 机器码渲进错误气泡。
       message:
+        (terminalScriptSelectionError
+          ? "稿面版本已经变化，本次局部改写已结束。你可以继续普通对话；如需改这一段，请在当前稿面重新点一次“AI 改写本段”。"
+          : null) ??
         human?.message ??
         chatApiPublicError ??
         (localPatchWasPreserved
@@ -1207,8 +1230,15 @@ export function AICopilotContent({
         describeUserError(error, "出错了，请重试。"),
       suggestSwitchModel: human?.suggestSwitchModel ?? /在设置里换一个模型/.test(raw),
       suggestOpenCredits: human?.suggestOpenCredits ?? false,
+      canRetry: !terminalScriptSelectionError,
     };
-  }, [composerLifecycleError, error, pendingComposerRequest?.functionKey]);
+  }, [
+    composerLifecycleError,
+    error,
+    pendingComposerRequest?.functionKey,
+    retryableScriptPatchRequest?.functionKey,
+    terminalScriptSelectionError,
+  ]);
   const [openingCredits, setOpeningCredits] = React.useState(false);
   const [creditOpenError, setCreditOpenError] = React.useState<string | null>(null);
   const handleOpenCredits = React.useCallback(async () => {
@@ -1240,6 +1270,39 @@ export function AICopilotContent({
     );
   }, []);
 
+  // [T-740] stale/缺失锚点不是瞬时模型故障，重发上一轮只会再次命中同一个 409。这里把
+  // 一次性命令、连续修订锚点和 in-flight 生命周期一起收口；项目上下文仍由 embed 保留，
+  // 所以下一条普通消息可立即恢复，而新的局部改稿必须来自用户重新点击当前稿面段落。
+  const recoveredTerminalSelectionErrorRef = React.useRef<unknown>(null);
+  React.useEffect(() => {
+    if (!terminalScriptSelectionError || !error) {
+      recoveredTerminalSelectionErrorRef.current = null;
+      return;
+    }
+    if (recoveredTerminalSelectionErrorRef.current === error) return;
+    recoveredTerminalSelectionErrorRef.current = error;
+    const failedRequest =
+      pendingComposerRequestRef.current ??
+      stickyScriptPatchRequestRef.current ??
+      (activeRequest?.functionKey === "script.patch" ? activeRequest : null);
+    inFlightComposerRequestRef.current = null;
+    quickFunctionKeyRef.current = null;
+    retryableScriptPatchRequestRef.current = null;
+    setRetryableScriptPatchRequest(null);
+    stickyScriptPatchRequestRef.current = null;
+    setStickyScriptPatchRequest(null);
+    setComposerLifecycleError(null);
+    if (failedRequest) {
+      finishComposerRequest(failedRequest.nonce);
+    } else {
+      pendingComposerRequestRef.current = null;
+      setPendingComposerRequest(null);
+    }
+    console.warn("[T-740][script.patch] terminal selection cleared", {
+      nonce: failedRequest?.nonce ?? null,
+    });
+  }, [activeRequest, error, finishComposerRequest, terminalScriptSelectionError]);
+
   const beginComposerRequest = React.useCallback(
     (request: EmbeddedDraftChatRequest) => {
       setComposerLifecycleError(null);
@@ -1249,6 +1312,7 @@ export function AICopilotContent({
         nonce: request.nonce,
         functionKey: request.functionKey,
         messageCountBefore: messages.length,
+        mode: "required",
       };
       console.info("[T-716][script.patch] composer request started", {
         nonce: request.nonce,
@@ -1261,17 +1325,39 @@ export function AICopilotContent({
     [messages],
   );
 
-  // 只有成功得到本轮结果后才消费稿面命令。script.patch 进一步要求候选卡已经返回；
-  // provider/网络失败时 pending request 原样保留，重试仍携带当下稿面与同一段落锚点。
+  // 明确按钮回合要求真实候选；自由跟进回合只把段落作为可选锚点。两者必须分别结算，
+  // 否则模型正常转向整稿/回答问题也会被误报成“没有局部候选”，并把旧命令继续卡住。
   React.useEffect(() => {
     const inFlight = inFlightComposerRequestRef.current;
     if (!inFlight || error || status !== "ready") return;
     const newMessages = messages.slice(inFlight.messageCountBefore);
     if (!newMessages.some((message) => message.role === "assistant")) return;
-    if (inFlight.functionKey === "script.patch" && !hasCompletedScriptPatch(newMessages)) {
-      // 模型已经结束回复却没有真正产出 script.patch 候选，不能继续假装“正在调用”。
-      // 保留段落锚点和本轮 request 供用户原子重试，但明确结束 loading。
+    const completedScriptPatch = hasCompletedScriptPatch(newMessages);
+    if (inFlight.mode === "available") {
       inFlightComposerRequestRef.current = null;
+      setComposerLifecycleError(null);
+      if (!completedScriptPatch) {
+        // 模型已经按本轮语义选择了整稿、其他工具或纯对话；旧段落到此结束，避免下一轮
+        // 仍携带一个用户已经转离的上下文。若模型确实继续局改，则锚点继续保留。
+        stickyScriptPatchRequestRef.current = null;
+        setStickyScriptPatchRequest(null);
+      }
+      return;
+    }
+    // 正常 transport 会在发请求时消费 quickFunctionKey；兼容替换式重试/测试适配器没有
+    // 再求值 body 的情况，明确回合一旦结束也必须兜底清掉，不能泄漏到下一次普通发送。
+    quickFunctionKeyRef.current = null;
+    entryFunctionKeyRef.current?.consume();
+    if (inFlight.functionKey === "script.patch" && !completedScriptPatch) {
+      // 明确按钮已经结束却没有候选：结束本轮命令并保存一个仅供“重试”按钮读取的快照。
+      // 普通发送永远不会从 retryable 取命令，因此用户可以立即转向整稿或其他问题。
+      inFlightComposerRequestRef.current = null;
+      const failedRequest = pendingComposerRequestRef.current;
+      if (failedRequest?.nonce === inFlight.nonce) {
+        retryableScriptPatchRequestRef.current = failedRequest;
+        setRetryableScriptPatchRequest(failedRequest);
+      }
+      finishComposerRequest(inFlight.nonce);
       setComposerLifecycleError(
         "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留。请直接重试。",
       );
@@ -1284,20 +1370,29 @@ export function AICopilotContent({
       return;
     }
     inFlightComposerRequestRef.current = null;
+    retryableScriptPatchRequestRef.current = null;
+    setRetryableScriptPatchRequest(null);
     finishComposerRequest(inFlight.nonce);
   }, [error, finishComposerRequest, messages, status]);
 
   const retryLastTurn = React.useCallback(() => {
     setComposerLifecycleError(null);
-    const request = pendingComposerRequestRef.current;
+    const request =
+      pendingComposerRequestRef.current ?? retryableScriptPatchRequestRef.current;
     if (request) {
       // entry function key 在失败的首次请求中已被 one-shot 消费；重试前重新武装，保证
       // regenerate 仍是 script.patch，而不是退化为普通闲聊或整稿生成。
       quickFunctionKeyRef.current = request.functionKey;
+      const lastUserMessageIndex = messages.findLastIndex(
+        (message) => message.role === "user",
+      );
       inFlightComposerRequestRef.current = {
         nonce: request.nonce,
         functionKey: request.functionKey,
-        messageCountBefore: messages.length,
+        // regenerate 会替换上一条 assistant，不能以重试前总条数切片，否则永远看不到结果。
+        messageCountBefore:
+          lastUserMessageIndex >= 0 ? lastUserMessageIndex + 1 : messages.length,
+        mode: "required",
       };
     }
     return regenerate();
@@ -1383,7 +1478,25 @@ export function AICopilotContent({
     ) {
       return;
     }
+    setComposerLifecycleError(null);
     requestAttachmentIdsRef.current = [...attachmentState.ids];
+    // provider 失败后，旧的明确按钮命令仍可由“重试”复用，但用户此刻主动发送的是一条
+    // 新消息。先把失败命令移入 retry-only 槽，不能让普通 submit 再次读取并强制 patch。
+    const failedInFlight = error ? inFlightComposerRequestRef.current : null;
+    const failedRequiredNonce =
+      failedInFlight?.mode === "required" ? failedInFlight.nonce : null;
+    const failedPendingRequest = pendingComposerRequestRef.current;
+    if (
+      failedRequiredNonce !== null &&
+      failedPendingRequest?.nonce === failedRequiredNonce
+    ) {
+      retryableScriptPatchRequestRef.current = failedPendingRequest;
+      setRetryableScriptPatchRequest(failedPendingRequest);
+      inFlightComposerRequestRef.current = null;
+      quickFunctionKeyRef.current = null;
+      entryFunctionKeyRef.current?.consume();
+      finishComposerRequest(failedPendingRequest.nonce);
+    }
     const stickyRequest =
       !selectionDismissed &&
       stickyScriptPatchRequestRef.current?.functionKey === "script.patch" &&
@@ -1392,16 +1505,26 @@ export function AICopilotContent({
         : null;
     // 首轮显式按钮保留原 nonce；连续修订用负数本地 nonce 跟踪本轮生命周期。负数不会推进
     // provider 的 consumedRequestNonce，因此下一次真实按钮仍能正常覆盖当前上下文。
-    const composerRequest =
+    const explicitRequest =
       pendingComposerRequestRef.current ??
-      activeRequest ??
-      (stickyRequest
-        ? { ...stickyRequest, nonce: localComposerNonceRef.current-- }
-        : null);
-    if (composerRequest) beginComposerRequest(composerRequest);
-    if (composerRequest?.functionKey) {
+      (activeRequest?.nonce !== failedRequiredNonce ? activeRequest : null);
+    if (explicitRequest) {
+      beginComposerRequest(explicitRequest);
       // transport.body 是发送瞬间求值；同步写 ref，避免 React state 尚未提交就退化为普通聊天。
-      quickFunctionKeyRef.current = composerRequest.functionKey;
+      quickFunctionKeyRef.current = explicitRequest.functionKey;
+    } else if (stickyRequest) {
+      // 用户没有点“重试”而是发送了新消息，说明已经离开上一次失败命令；旧重试快照到此失效，
+      // 避免将来一次无关的网络错误又被误写成“局部改写中断”。段落本身仍只是本轮可选锚点。
+      retryableScriptPatchRequestRef.current = null;
+      setRetryableScriptPatchRequest(null);
+      // 连续对话只携带可信段落锚点，不再复用按钮的一次性 functionKey。模型可以继续 patch，
+      // 也可以按“生成完整稿/回答问题”等本轮意图选择其他工具或纯文本。
+      inFlightComposerRequestRef.current = {
+        nonce: localComposerNonceRef.current--,
+        functionKey: "script.patch",
+        messageCountBefore: messages.length,
+        mode: "available",
+      };
     }
     // useChat 正常返回 Promise；测试 seam 或兼容适配器可能返回 void。统一包成 Promise，
     // 既保证附件 ids 活到 transport 读取本轮 body，又不让旧适配器触发 finally 崩溃。
@@ -1418,8 +1541,11 @@ export function AICopilotContent({
     sendMessage,
     attachmentState.ids,
     attachmentState.uploading,
-    activeRequest?.nonce,
+    activeRequest,
     beginComposerRequest,
+    error,
+    finishComposerRequest,
+    messages.length,
     selectionDismissed,
   ]);
 
@@ -1430,12 +1556,22 @@ export function AICopilotContent({
     (item: { readonly prefill?: string; readonly functionKey?: string }, fallbackText: string) => {
       const text = item.prefill ?? fallbackText;
       if (!text) return;
+      if (item.functionKey && item.functionKey !== "script.patch") {
+        // 用户点了另一个明确功能，旧段落锚点和失败重试都不应暗中跟过去。
+        stickyScriptPatchRequestRef.current = null;
+        setStickyScriptPatchRequest(null);
+        retryableScriptPatchRequestRef.current = null;
+        setRetryableScriptPatchRequest(null);
+        if (pendingComposerRequestRef.current?.functionKey === "script.patch") {
+          finishComposerRequest(pendingComposerRequestRef.current.nonce);
+        }
+      }
       setPrompt(text);
       lastPrefillRef.current = text;
       quickFunctionKeyRef.current = item.functionKey ?? null;
       textareaRef.current?.focus();
     },
-    [],
+    [finishComposerRequest],
   );
 
   // [T-239e] 会话成本角标 —— 历史底数(读回时从落库行 token 列累计;老消息 null 兼容跳过)。
@@ -1581,13 +1717,27 @@ export function AICopilotContent({
   // prefilledRef 复位,让「新对话」后一键岛预调仍可触发一次。
   const startNewConversation = React.useCallback(() => {
     setHistoryOpen(false);
+    // 新对话必须同时结束上一条局部命令、可选段落锚点和失败重试；否则新会话第一句
+    // 仍可能继承旧稿面的 script.patch，形成“什么都发不了”的跨会话阻断。
+    quickFunctionKeyRef.current = null;
+    inFlightComposerRequestRef.current = null;
+    pendingComposerRequestRef.current = null;
+    setPendingComposerRequest(null);
+    stickyScriptPatchRequestRef.current = null;
+    setStickyScriptPatchRequest(null);
+    retryableScriptPatchRequestRef.current = null;
+    setRetryableScriptPatchRequest(null);
+    setComposerLifecycleError(null);
+    setConsumedRequestNonce((current) =>
+      Math.max(current, providerRequest?.nonce ?? 0),
+    );
     conversationIdRef.current = null;
     setConversationId(null);
     writeStoredConversationId(scopeRef.current, null);
     setMessages([]);
     setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 新对话底数归零
     prefilledRef.current = false;
-  }, [setMessages]);
+  }, [providerRequest?.nonce, setMessages]);
 
   // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
   // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
@@ -1865,14 +2015,19 @@ export function AICopilotContent({
       : null;
   const dismissObjectContext = React.useCallback(() => {
     setSelectionDismissed(true);
+    if (quickFunctionKeyRef.current === "script.patch") {
+      quickFunctionKeyRef.current = null;
+    }
+    inFlightComposerRequestRef.current = null;
     stickyScriptPatchRequestRef.current = null;
     setStickyScriptPatchRequest(null);
+    retryableScriptPatchRequestRef.current = null;
+    setRetryableScriptPatchRequest(null);
     if (pendingComposerRequestRef.current?.functionKey === "script.patch") {
-      pendingComposerRequestRef.current = null;
-      setPendingComposerRequest(null);
+      finishComposerRequest(pendingComposerRequestRef.current.nonce);
     }
     setComposerLifecycleError(null);
-  }, []);
+  }, [finishComposerRequest]);
 
   // [T-687] 每条助手消息是一批生成结果，批内从图1/视频1重新编号。完整历史每次 render
   // 都按同一顺序重放；注册器只接受最新批次，旧任务晚完成也不能覆盖“刚才那组”。
@@ -2814,7 +2969,10 @@ export function AICopilotContent({
                   ) : null}
                   {/* [T-231⑩] 出错不再只让用户「请重试」却无处可点:regenerate() 重发
                       最后一条用户消息(@ai-sdk/react 现成 API,不手搓重放)。流式中不渲。 */}
-                  {!chatError.suggestOpenCredits && !streaming && messages.length > 0 ? (
+                  {chatError.canRetry &&
+                  !chatError.suggestOpenCredits &&
+                  !streaming &&
+                  messages.length > 0 ? (
                     <button
                       type="button"
                       data-slot="copilot-error-retry"

@@ -667,6 +667,13 @@ function parseTicket(
         true,
       );
     }
+    if (code === "CONFIG_TICKET_REQUEST_INVALID") {
+      fail(
+        "CLIENT_CONFIG_NOT_APPLICABLE",
+        "当前激活未提供渠道模型配置",
+        false,
+      );
+    }
     fail(
       "CLIENT_CONFIG_ACCESS_DENIED",
       "当前授权无法同步渠道配置",
@@ -1780,6 +1787,18 @@ export async function refreshClientConfig(
       : project("local", "not_configured");
   } catch (error) {
     if (error instanceof ClientConfigPullError) {
+      if (error.code === "CLIENT_CONFIG_NOT_APPLICABLE") {
+        await store.save({
+          state: "local",
+          outcome: "not_configured",
+          checkedAt: now.toISOString(),
+          activeLocator,
+          bundle: previous?.bundle ?? null,
+          channel: previous?.channel ?? null,
+          inactiveLocators: previous?.inactiveLocators ?? [],
+        });
+        return project("local", "not_configured");
+      }
       const reason = blockReason(error);
       if (reason) {
         await store.save({

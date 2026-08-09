@@ -199,23 +199,24 @@ function ScriptStructureEditor({
   React.useEffect(() => {
     statusRef.current = status;
   }, [status]);
-  React.useEffect(() => {
-    if (artifactId && currentVersionId && statusRef.current === "saved") {
-      persistedAnchorRef.current = { artifactId, versionId: currentVersionId };
-    }
-  }, [artifactId, currentVersionId]);
 
   // 外部 sections 变化(保存 refresh 回流 / 对话整稿写入 / 版本回滚)→ 未在编辑
   // (status=saved)时重灌本地态;编辑中(dirty/saving)不覆盖在途改动。
-  const propsKey = JSON.stringify(sections);
+  // 版本与 sections 是一个不可拆的快照：只有真正重灌 local 后才消费 key 并切换锚点。
+  // 若新快照在 dirty/saving 时到达，等状态恢复 saved 后本 effect 会再次执行，不能先把
+  // key 标成已应用而永久留下“旧段落 + 新版本”的混合态。
+  const propsKey = JSON.stringify({ currentVersionId, sections });
   const appliedKeyRef = React.useRef(propsKey);
   React.useEffect(() => {
     if (appliedKeyRef.current === propsKey) return;
-    appliedKeyRef.current = propsKey;
-    if (statusRef.current !== "saved") return;
+    if (status !== "saved") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 服务端换版快照必须在同一已挂载编辑器内原子回灌，不能用初始 state 保留旧稿。
     setLocal(toEditable(sections));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propsKey]);
+    if (artifactId && currentVersionId) {
+      persistedAnchorRef.current = { artifactId, versionId: currentVersionId };
+    }
+    appliedKeyRef.current = propsKey;
+  }, [artifactId, currentVersionId, propsKey, sections, status]);
 
   const markDirty = React.useCallback(() => setStatus("dirty"), []);
 
@@ -291,6 +292,10 @@ function ScriptStructureEditor({
       targetId = ensured.artifactId as string;
     }
     if (!targetId) throw new Error("no script artifact target");
+    const expectedCurrentVersionId =
+      persistedAnchorRef.current?.artifactId === targetId
+        ? persistedAnchorRef.current.versionId
+        : undefined;
     const payloadSections = nonEmpty.map((s, i) => ({
       id: s.id || `script-section-${i}`,
       type: s.type,
@@ -307,6 +312,7 @@ function ScriptStructureEditor({
       params: { artifactId: targetId },
       query: undefined,
       body: {
+        ...(expectedCurrentVersionId ? { expectedCurrentVersionId } : {}),
         // 不写 contentData.html:读侧会从新 sections 重拼编辑器 HTML,
         // 避免结构改动被旧富文本真值盖掉(双向一致的关键)。
         contentText: plainTextFromSections(

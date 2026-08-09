@@ -93,6 +93,7 @@ const SELECTION_KIND_LABEL: Record<string, string> = {
  */
 export function assembleSelectionContext(
   selection: ChatSelection | undefined,
+  options: { readonly scriptPatchRequired?: boolean } = {},
 ): string {
   const label = selection?.label?.trim();
   if (!selection || !label) return "";
@@ -106,7 +107,9 @@ export function assembleSelectionContext(
       ? [
           "【局部改稿锚点】",
           `原文:${wrapUserData(selection.excerpt)}`,
-          "系统已经锁定这段对应的稿件、版本和段落，不要向用户询问任何技术 ID，也不要要求用户重新选择。只允许围绕这段提出替换候选；不得把局部改写升级为整稿重写。立即使用系统提供的局部改稿能力产出候选卡。对用户只描述修改结果，不得暴露、猜测或讨论任何内部工具名、参数、路由和实现限制。",
+          options.scriptPatchRequired
+            ? "系统已经锁定这段对应的稿件、版本和段落，不要向用户询问任何技术 ID，也不要要求用户重新选择。只允许围绕这段提出替换候选；不得把局部改写升级为整稿重写。立即使用系统提供的局部改稿能力产出候选卡。对用户只描述修改结果，不得暴露、猜测或讨论任何内部工具名、参数、路由和实现限制。"
+            : "这是上一轮保留的可继续修改段落，不代表本轮必须局部改稿。请理解用户本轮的完整语义：只有仍在修改这一段时才使用局部改稿能力；用户明确转向整稿或其他任务时，忽略这个旧锚点并执行本轮要求。不要向用户询问任何技术 ID，也不得暴露、猜测或讨论内部工具名、参数、路由和实现限制。",
         ].join("\n")
       : "";
   return [

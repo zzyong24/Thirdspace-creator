@@ -212,6 +212,81 @@ function renderDialog(vm: SettingsViewModel = VM) {
 }
 
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
+  describe("[T-741] 本地文本模型状态", () => {
+    it("本地文本模型已保存可用时不渲染渠道权威状态", () => {
+      render(
+        <SettingsDialog
+          viewModel={{
+            ...VM,
+            model: { ...VM.model, hasSecret: true },
+          }}
+          modelAuthority={{
+            authority: "local",
+            outcome: "security_error",
+            action: "本地模型正在使用 · 渠道配置安全校验未通过",
+            capabilities: {},
+            services: [],
+          }}
+        />,
+      );
+
+      expect(
+        document.querySelector('[data-slot="model-authority-status"]'),
+      ).toBeNull();
+      expect(document.body.textContent).not.toContain(
+        "渠道配置安全校验未通过",
+      );
+      expect(document.body.textContent).not.toContain(
+        "你可以继续编辑本地配置，保存后会作为当前或备用配置使用。",
+      );
+    });
+
+    it("本地文本模型未配置时仍显示真实可操作状态", () => {
+      render(
+        <SettingsDialog
+          viewModel={VM}
+          modelAuthority={{
+            authority: "local",
+            outcome: "not_configured",
+            action: "请配置本地文本模型",
+            capabilities: {},
+            services: [],
+          }}
+        />,
+      );
+
+      const status = document.querySelector(
+        '[data-slot="model-authority-status"]',
+      );
+      expect(status).not.toBeNull();
+      expect(status?.textContent).toContain("请配置本地文本模型");
+    });
+
+    it("渠道接管时即使本地已有密钥也仍显示渠道状态", () => {
+      render(
+        <SettingsDialog
+          viewModel={{
+            ...VM,
+            model: { ...VM.model, hasSecret: true },
+          }}
+          modelAuthority={{
+            authority: "channel",
+            outcome: "configured",
+            action: "模型已由当前权益配置",
+            capabilities: {},
+            services: [],
+          }}
+        />,
+      );
+
+      const status = document.querySelector(
+        '[data-slot="model-authority-status"]',
+      );
+      expect(status).not.toBeNull();
+      expect(status).toHaveAttribute("data-authority", "channel");
+    });
+  });
+
   it("[T-645] 用户自行填写的模型访问密钥按 service 保存且不展示技术服务名", async () => {
     render(
       <SettingsDialog

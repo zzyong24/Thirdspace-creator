@@ -75,6 +75,7 @@ import {
   resolveTruncateKeepTurns,
   resolveContextWindowTokens,
   dropAbandonedApprovalParts,
+  dropUnavailableScriptPatchParts,
 } from "./chat-history-window";
 import {
   enrichFacets,
@@ -1112,13 +1113,14 @@ export async function buildChatAssembly(
   // 对话。若继续把项目分析、联网、生成整稿等几十个工具一并发给模型，不仅浪费上下文，
   // OpenAI-compatible 模型还可能在强制 tool_choice 后于流中途拒绝复杂 schema，最终只剩
   // “局部改写中断”。这里把它收敛为单工具最小回合；段落锚点仍由服务端当下真值绑定。
-  const isScriptPatchAction =
-    effectiveFunctionKey === "script.patch" &&
+  const hasTrustedScriptPatchAnchor =
     chatContext.selection?.kind === "script_section" &&
     Boolean(chatContext.selection.artifactId?.trim()) &&
     Boolean(chatContext.selection.versionId?.trim()) &&
     Boolean(chatContext.selection.ids[0]?.trim()) &&
     Boolean(chatContext.selection.excerpt?.trim());
+  const isScriptPatchAction =
+    effectiveFunctionKey === "script.patch" && hasTrustedScriptPatchAnchor;
   let allowedNames =
     effectiveFunctionKey &&
     ALL_CHAT_TOOL_NAMES.includes(effectiveFunctionKey) &&
@@ -1127,6 +1129,12 @@ export async function buildChatAssembly(
       : baseAllowed;
   if (routedTool && !allowedNames.includes(routedTool)) {
     allowedNames = [...allowedNames, routedTool];
+  }
+  // allChatTools 只会在可信段落锚点完整时真实挂载 script.patch。若仅从 surface skill 或
+  // 失效 functionKey 把它留在白名单，技能简介会宣传一个不存在的工具，forcedTool 还会
+  // 继续强制调用它。白名单必须与真实挂载条件使用同一真值。
+  if (!hasTrustedScriptPatchAnchor) {
+    allowedNames = allowedNames.filter((name) => name !== "script.patch");
   }
   const preferredTools = applyFunctionKey(
     hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId),
@@ -1239,7 +1247,9 @@ export async function buildChatAssembly(
     "【你的技能清单 —— 本对话你能调用的全部工具,回答「你能干什么」时以此为准,不要编造清单外的能力】",
     buildSkillsBrief(toolWhitelist),
   ].join("\n");
-  const selectionBlock = assembleSelectionContext(chatContext.selection);
+  const selectionBlock = assembleSelectionContext(chatContext.selection, {
+    scriptPatchRequired: isScriptPatchAction,
+  });
   const assetAliasBlock = chatContext.assetAliases && Object.keys(chatContext.assetAliases).length
     ? [
         "【当前对话素材别名 —— 用户说图2/image2/视频1时必须按此表识别，绝不猜标题】",
@@ -2512,7 +2522,12 @@ function unwrapJsonFence(value: string): string {
 export function repairScriptPatchToolCall(
   toolCall: RepairableToolCall,
 ): RepairableToolCall | null {
-  if (toolCall.toolName !== sanitizeToolName("script.patch")) return null;
+  const safeToolName = sanitizeToolName("script.patch");
+  // SEMANTIC_BOUNDARY_ALLOW:这里只修复同一已注册工具的点号/下划线协议别名，
+  // 不根据用户文字判断创作意图，也不将其它工具猜成 script.patch。
+  if (toolCall.toolName !== "script.patch" && toolCall.toolName !== safeToolName) {
+    return null;
+  }
   const rawInput = unwrapJsonFence(toolCall.input ?? "");
   if (!rawInput) return null;
 
@@ -2549,7 +2564,7 @@ export function repairScriptPatchToolCall(
   if (!replacementText || replacementText.length > 12_000) return null;
   return {
     ...toolCall,
-    toolName: sanitizeToolName("script.patch"),
+    toolName: safeToolName,
     input: JSON.stringify({
       replacementText,
       ...(summary ? { summary } : {}),
@@ -2602,7 +2617,10 @@ export async function runChatStream(
   // UIMessage 层按「轮」操作最薄;转 ModelMessage 后 tool-call/result 拆散成对,再截会拦腰断对。
   // [T-274] 先净化「被后续对话遗弃的未完成 tool 调用」(HITL 授权卡没点就发新消息 → 悬空
   // tool-call → convertToLanguageModelPrompt 抛 MissingToolResultsError 崩整流)。再投影窗口。
-  const sanitized = dropAbandonedApprovalParts(input.messages);
+  const sanitized = dropUnavailableScriptPatchParts(
+    dropAbandonedApprovalParts(input.messages),
+    Boolean(assembly.tools["script.patch"]),
+  );
   const projection = projectChatHistory(sanitized, {
     systemText: assembly.system,
     keepToolResultTurns: resolveToolResultKeepTurns(process.env),

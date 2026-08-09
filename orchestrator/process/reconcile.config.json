@@ -87,9 +87,9 @@
     },
     {
       "led": "LED-014",
-      "what": "局部改稿退回让模型或用户补 artifact/version/section 等内部锚点",
-      "check": "pnpm --dir frontend exec vitest run src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx && pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts",
-      "onFail": "局部改稿门回归：技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段，其他段逐字不变，冲突不得静默覆盖。"
+      "what": "局部改稿退回让模型或用户补内部锚点、AI 整稿无 ID 导致服务端看不到段落，或锚点失效后继续阻断普通对话",
+      "check": "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts",
+      "onFail": "局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。"
     },
     {
       "led": "LED-015",

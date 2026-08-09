@@ -1040,6 +1040,63 @@ describe("buildChatAssembly — 三层注入装配", () => {
     });
   });
 
+  it("[T-740] 无可信段落锚点时不挂载、不强制、不宣传 script.patch", async () => {
+    const { deps } = makeDeps();
+    const staleCommand = await buildChatAssembly(
+      ctx,
+      {
+        surface: "project",
+        projectId: "proj-1",
+        functionKey: "script.patch",
+        selection: {
+          kind: "script_section",
+          ids: ["section-stale"],
+          label: "旧段落",
+        },
+      },
+      deps,
+    );
+
+    expect(staleCommand.tools["script.patch"]).toBeUndefined();
+    expect(staleCommand.forcedTool).toBeUndefined();
+    expect(staleCommand.system).not.toContain("script.patch");
+
+    const ordinaryChat = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "proj-1" },
+      deps,
+    );
+    expect(ordinaryChat.tools["script.patch"]).toBeUndefined();
+    expect(ordinaryChat.system).not.toContain("script.patch");
+  });
+
+  it("[T-740] 连续对话的段落锚点同时开放局部与整稿工具，由模型按本轮语义选择", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      {
+        surface: "project",
+        projectId: "proj-1",
+        selection: {
+          kind: "script_section",
+          ids: ["section-5"],
+          label: "第 5 段",
+          artifactId: "artifact-script",
+          versionId: "version-10",
+          excerpt: "当前第 5 段正文",
+        },
+      },
+      deps,
+    );
+
+    expect(a.forcedTool).toBeUndefined();
+    expect(a.tools["script.patch"]).toBeDefined();
+    expect(a.tools["script.draft"]).toBeDefined();
+    expect(Object.keys(a.tools).length).toBeGreaterThan(2);
+    expect(a.system).not.toContain("局部改稿专用回合");
+    expect(a.system).toContain("不代表本轮必须局部改稿");
+  });
+
   it("[T-716] 局部改稿工具参数只修复等价字段别名和纯文本，不猜锚点或吞截断 JSON", () => {
     const base = {
       type: "tool-call" as const,
@@ -1058,6 +1115,17 @@ describe("buildChatAssembly — 三层注入装配", () => {
     });
     expect(repaired).not.toHaveProperty("artifactId");
     expect(repaired).not.toHaveProperty("sectionId");
+
+    const dottedName = repairScriptPatchToolCall({
+      ...base,
+      toolName: "script.patch",
+    });
+    expect(dottedName).not.toBeNull();
+    expect(dottedName!.toolName).toBe("script_patch");
+    expect(JSON.parse(dottedName!.input)).toEqual({
+      replacementText: "内容雷达改写对标选题；自动化任务原创生成账号选题。",
+      summary: "讲清两条选题来源",
+    });
 
     const plain = repairScriptPatchToolCall({
       ...base,

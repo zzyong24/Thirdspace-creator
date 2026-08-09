@@ -57,6 +57,7 @@ function renderBody(board: Storyboard): string {
 function renderSections(
   board: Storyboard,
 ): Array<{
+  id: string;
   heading: string;
   body: string;
   visual?: { description: string; assetRefs: string[]; missing: string[] };
@@ -73,6 +74,7 @@ function renderSections(
       shot.字幕 && `字幕：${shot.字幕}`,
     ].filter((line): line is string => Boolean(line));
     return {
+      id: `script-saved-${i}`,
       heading,
       body: bodyLines.join("\n"),
       ...(shot.visual ? { visual: shot.visual } : {}),
@@ -153,7 +155,11 @@ export async function runScriptDraft(
           sourceLength: sourceText.length,
           sourceSha256: actualHash,
           sections: [{ heading: "", body: sourceText }],
-          contentData: { sections: [{ heading: "", body: sourceText }] },
+          contentData: {
+            sections: [
+              { id: "script-saved-0", heading: "", body: sourceText },
+            ],
+          },
           validationStatus: "valid",
           validationErrors: [],
           qualityWarnings: [],

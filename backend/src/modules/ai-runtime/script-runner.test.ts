@@ -213,6 +213,14 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
         }),
       }),
     );
+    const recorded = vi.mocked(runtimeDeps.ai.recordCandidate).mock.calls[0]?.[2] as {
+      resultData?: { contentData?: { sections?: Array<{ id?: string }> } };
+    };
+    const sectionIds =
+      recorded.resultData?.contentData?.sections?.map((section) => section.id) ?? [];
+    expect(sectionIds).toHaveLength(result.shots.length);
+    expect(sectionIds.every(Boolean)).toBe(true);
+    expect(new Set(sectionIds).size).toBe(sectionIds.length);
     expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
   });
 
@@ -341,7 +349,9 @@ describe("[T-727] runScriptDraft 原文保真模式", () => {
           validationErrors: [],
           canAdopt: true,
           contentData: {
-            sections: [{ heading: "", body: sourceText }],
+            sections: [
+              { id: "script-saved-0", heading: "", body: sourceText },
+            ],
           },
         }),
       }),

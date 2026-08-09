@@ -174,6 +174,26 @@ describe("assembleSelectionContext(T-027 选中态注入)", () => {
     expect(block).toContain("《某条内容》");
   });
 
+  it("[T-740] 连续对话保留的段落只作为可选锚点，不把后续任意消息强制成局部改稿", () => {
+    const selection = {
+      kind: "script_section",
+      ids: ["section-5"],
+      label: "第 5 段",
+      artifactId: "artifact-script",
+      versionId: "version-10",
+      excerpt: "当前第 5 段正文",
+    };
+    const optional = assembleSelectionContext(selection);
+    expect(optional).toContain("不代表本轮必须局部改稿");
+    expect(optional).toContain("用户明确转向整稿或其他任务");
+    expect(optional).not.toContain("只允许围绕这段提出替换候选");
+
+    const required = assembleSelectionContext(selection, {
+      scriptPatchRequired: true,
+    });
+    expect(required).toContain("只允许围绕这段提出替换候选");
+  });
+
   it("无选中态 / 无标题 → 空串(不喂噪声)", () => {
     expect(assembleSelectionContext(undefined)).toBe("");
     expect(assembleSelectionContext({ kind: "project", ids: ["p"] })).toBe("");

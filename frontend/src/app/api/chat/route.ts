@@ -114,25 +114,6 @@ function textOf(message: UIMessage | undefined): string {
     .trim();
 }
 
-/**
- * 局部改稿按钮会生成一条明确的自然语言指令。若这句话抵达服务端时没有同时携带段落锚点，
- * 说明前端发生了“话术/上下文分裂”；此时必须失败关闭，不能降级成普通 Copilot 让模型猜
- * 工具、整稿重写或要求用户补内部 ID。
- */
-export function requestsSelectedScriptPatch(messages: UIMessage[]): boolean {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index];
-    if (message?.role !== "user") continue;
-    const text = textOf(message);
-    return (
-      /请只(?:改写|修改)我选中的(?:这一|这)段/u.test(text) ||
-      /只改(?:写|动)(?:当前|选中|这一|这)(?:的)?(?:一)?段/u.test(text) ||
-      /AI\s*改写本段/iu.test(text)
-    );
-  }
-  return false;
-}
-
 const MAX_CHAT_ATTACHMENTS = 5;
 const MAX_CHAT_ATTACHMENT_TOTAL_BYTES = 30 * 1024 * 1024;
 const MAX_CHAT_ATTACHMENT_TEXT_CHARS = 80_000;
@@ -398,11 +379,10 @@ export async function POST(req: Request): Promise<Response> {
     chatContext.selection.artifactId.trim().length > 0 &&
     typeof chatContext.selection.ids?.[0] === "string" &&
     chatContext.selection.ids[0].trim().length > 0;
-  if (
-    (chatContext.functionKey === "script.patch" ||
-      requestsSelectedScriptPatch(messages)) &&
-    !hasCompleteScriptSelection
-  ) {
+  // functionKey 是来自可信 UI 动作的一次性协议；自然语言的任务语义交给模型本轮工具选择，
+  // 不在 route 用关键词猜。旧段落 selection 只是可用锚点，绝不能自行升级成持续命令。
+  const scriptPatchRequired = chatContext.functionKey === "script.patch";
+  if (scriptPatchRequired && !hasCompleteScriptSelection) {
     return NextResponse.json(
       {
         error:
@@ -415,6 +395,16 @@ export async function POST(req: Request): Promise<Response> {
 
   const runtime = await getChatRuntime();
 
+  // 用户明确点击了另一个功能时，该结构化动作优先于上一轮保留的段落上下文。
+  // 这只是协议优先级，不判断自然语言语义。
+  if (
+    chatContext.selection?.kind === "script_section" &&
+    chatContext.functionKey &&
+    chatContext.functionKey !== "script.patch"
+  ) {
+    chatContext.selection = undefined;
+  }
+
   // [T-716][LED-014] 所有工具调用以执行当下的服务端真值为准。客户端 selection 只表达
   // 用户点了哪一段，不是可直接执行的版本快照；稿面可能在发送前刚保存、恢复或被另一动作
   // 更新，因此这里重读 currentVersionId + 当前段落正文，并覆盖旧 version/excerpt。
@@ -426,77 +416,105 @@ export async function POST(req: Request): Promise<Response> {
     chatContext.selection.ids[0].trim()
   ) {
     if (!runtime.resolveCurrentScriptSelection) {
-      return NextResponse.json(
-        {
-          error: "当前版本尚未启用稿面实时校验，请更新后重试。",
-          code: "SCRIPT_SELECTION_RESOLVER_UNAVAILABLE",
-        },
-        { status: 409 },
-      );
-    }
-    try {
-      const latest = await runtime.resolveCurrentScriptSelection(ctx, {
-        artifactId: chatContext.selection.artifactId.trim(),
-        versionId:
-          typeof chatContext.selection.versionId === "string"
-            ? chatContext.selection.versionId
-            : undefined,
-        sectionId: chatContext.selection.ids[0].trim(),
-        sectionIndex:
-          typeof chatContext.selection.sectionIndex === "number"
-            ? chatContext.selection.sectionIndex
-            : undefined,
-        excerpt:
-          typeof chatContext.selection.excerpt === "string"
-            ? chatContext.selection.excerpt
-            : "",
-      });
-      if (!latest) {
-        console.warn("[T-716][script.patch] current selection rebind failed", {
-          diagnosticRef,
-          requestedVersionPresent:
-            typeof chatContext.selection.versionId === "string" &&
-            chatContext.selection.versionId.length > 0,
-          requestedSectionIndex:
-            typeof chatContext.selection.sectionIndex === "number"
-              ? chatContext.selection.sectionIndex
-              : null,
-        });
+      if (scriptPatchRequired) {
         return NextResponse.json(
           {
-            error:
-              "稿面刚刚切换过版本，这一段已不在当前稿中。请在当前稿面目标段重新点一次“AI 改写本段”。",
-            code: "SCRIPT_SELECTION_STALE",
+            error: "当前版本尚未启用稿面实时校验，请更新后重试。",
+            code: "SCRIPT_SELECTION_RESOLVER_UNAVAILABLE",
           },
           { status: 409 },
         );
       }
-      chatContext.selection = {
-        ...chatContext.selection,
-        ids: [latest.sectionId],
-        artifactId: latest.artifactId,
-        versionId: latest.versionId,
-        excerpt: latest.originalText,
-      };
-      console.info("[T-716][script.patch] rebound to current script truth", {
+      chatContext.selection = undefined;
+      console.info("[T-740][script.patch] optional anchor dropped", {
         diagnosticRef,
-        matchStrategy: latest.matchStrategy,
-        requestedSectionIndex:
-          typeof chatContext.selection.sectionIndex === "number"
-            ? chatContext.selection.sectionIndex
-            : null,
+        reason: "resolver_unavailable",
       });
-      // 只要用户保留了明确段落选区，本轮就是局部改稿；不依赖一次性 functionKey 是否因
-      // UI 重渲染而丢失，避免模型退化成解释、反问或整稿重写。
-      chatContext.functionKey = "script.patch";
-    } catch (err) {
-      if (err instanceof OwnershipError || isOwnershipError(err)) {
-        return NextResponse.json(
-          { error: "当前稿面不存在或不属于当前账号。" },
-          { status: 404 },
-        );
+    } else {
+      try {
+        const latest = await runtime.resolveCurrentScriptSelection(ctx, {
+          artifactId: chatContext.selection.artifactId.trim(),
+          versionId:
+            typeof chatContext.selection.versionId === "string"
+              ? chatContext.selection.versionId
+              : undefined,
+          sectionId: chatContext.selection.ids[0].trim(),
+          sectionIndex:
+            typeof chatContext.selection.sectionIndex === "number"
+              ? chatContext.selection.sectionIndex
+              : undefined,
+          excerpt:
+            typeof chatContext.selection.excerpt === "string"
+              ? chatContext.selection.excerpt
+              : "",
+        });
+        if (!latest) {
+          if (scriptPatchRequired) {
+            console.warn(
+              "[T-716][script.patch] current selection rebind failed",
+              {
+                diagnosticRef,
+                requestedVersionPresent:
+                  typeof chatContext.selection.versionId === "string" &&
+                  chatContext.selection.versionId.length > 0,
+                requestedSectionIndex:
+                  typeof chatContext.selection.sectionIndex === "number"
+                    ? chatContext.selection.sectionIndex
+                    : null,
+              },
+            );
+            return NextResponse.json(
+              {
+                error:
+                  "稿面刚刚切换过版本，这一段已不在当前稿中。请在当前稿面目标段重新点一次“AI 改写本段”。",
+                code: "SCRIPT_SELECTION_STALE",
+              },
+              { status: 409 },
+            );
+          }
+          chatContext.selection = undefined;
+          console.info("[T-740][script.patch] optional anchor dropped", {
+            diagnosticRef,
+            reason: "selection_stale",
+          });
+        } else {
+          chatContext.selection = {
+            ...chatContext.selection,
+            ids: [latest.sectionId],
+            artifactId: latest.artifactId,
+            versionId: latest.versionId,
+            excerpt: latest.originalText,
+          };
+          console.info("[T-716][script.patch] rebound to current script truth", {
+            diagnosticRef,
+            matchStrategy: latest.matchStrategy,
+            mode: scriptPatchRequired ? "required" : "available",
+            requestedSectionIndex:
+              typeof chatContext.selection.sectionIndex === "number"
+                ? chatContext.selection.sectionIndex
+                : null,
+          });
+          if (scriptPatchRequired) {
+            chatContext.functionKey = "script.patch";
+          }
+        }
+      } catch (err) {
+        if (err instanceof OwnershipError || isOwnershipError(err)) {
+          if (scriptPatchRequired) {
+            return NextResponse.json(
+              { error: "当前稿面不存在或不属于当前账号。" },
+              { status: 404 },
+            );
+          }
+          chatContext.selection = undefined;
+          console.info("[T-740][script.patch] optional anchor dropped", {
+            diagnosticRef,
+            reason: "selection_unavailable",
+          });
+        } else {
+          throw err;
+        }
       }
-      throw err;
     }
   }
 

@@ -146,6 +146,7 @@ import {
   // [T-135] AssetRow / AssetFileRow 已随 canonical assets seed(toAssetRow/toAssetFileRow)退役移除。
 } from "@creatoros/backend/modules/assets";
 import {
+  canonicalizeScriptSectionRecords,
   createArtifactRepository,
   createArtifactsService,
   createArtifactsTransport,
@@ -10670,18 +10671,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         current.contentData && typeof current.contentData === "object"
           ? (current.contentData as Record<string, unknown>)
           : null;
-      const rawSections = data && Array.isArray(data.sections) ? data.sections : [];
-      const contentDataSections = rawSections.flatMap((raw) => {
-        if (!raw || typeof raw !== "object") return [];
-        const section = raw as Record<string, unknown>;
-        const id = typeof section.id === "string" ? section.id.trim() : "";
+      const rawSections =
+        data && Array.isArray(data.sections) ? data.sections : [];
+      const contentDataSections = canonicalizeScriptSectionRecords(
+        rawSections,
+      ).map((section) => {
+        const id = section.id;
         const originalText = [
           section.body,
           section.narration,
           section.text,
           section.content,
-        ].find((value): value is string => typeof value === "string" && value.trim().length > 0);
-        return id && originalText ? [{ id, originalText }] : [];
+        ].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        return { id, originalText: originalText ?? "" };
       });
 
       // 一些历史稿把结构化段落存在 script_sections，而 contentData 只留整稿/摘要。
@@ -10720,10 +10725,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             requestedData && Array.isArray(requestedData.sections)
               ? requestedData.sections
               : [];
-          requestedVersionSections = requestedRawSections.flatMap((raw) => {
-            if (!raw || typeof raw !== "object") return [];
-            const section = raw as Record<string, unknown>;
-            const id = typeof section.id === "string" ? section.id.trim() : "";
+          requestedVersionSections = canonicalizeScriptSectionRecords(
+            requestedRawSections,
+          ).map((section) => {
+            const id = section.id;
             const originalText = [
               section.body,
               section.narration,
@@ -10733,7 +10738,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               (value): value is string =>
                 typeof value === "string" && value.trim().length > 0,
             );
-            return id && originalText ? [{ id, originalText }] : [];
+            return { id, originalText: originalText ?? "" };
           });
           if (requestedVersionSections.length === 0) {
             const requestedRows = await artifactsService.getScriptSections(

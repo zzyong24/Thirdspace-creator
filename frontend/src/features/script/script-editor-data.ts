@@ -1,6 +1,7 @@
 import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
+import { canonicalizeScriptSectionRecords } from "@creatoros/backend/modules/artifacts";
 import { sectionsToHtml } from "./script-editor-bridge";
 import type {
   ScriptSectionView,
@@ -79,17 +80,16 @@ function coerceSectionVisual(
 
 function coerceSavedSections(
   raw: unknown,
-  index: () => number,
 ): ScriptSectionView[] | null {
-  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const canonical = canonicalizeScriptSectionRecords(raw);
+  if (canonical.length === 0) return null;
   const out: ScriptSectionView[] = [];
-  for (const item of raw) {
+  for (const item of canonical) {
     const s = (item ?? {}) as SavedSection;
     const heading = typeof s.heading === "string" ? s.heading : "";
     const body = typeof s.body === "string" ? s.body : "";
     if (!heading && !body) continue;
-    const id =
-      typeof s.id === "string" && s.id ? s.id : `script-saved-${index()}`;
+    const id = s.id as string;
     // L4 task-review 修:读回保存时写进的 type/emphasis/时间码(原来全写死 → 金句轨首次保存即空、
     // 段落类型全塌"正文"、分镜时间码丢)。缺字段才回退默认(向后兼容旧版本)。
     const emphasis = typeof s.emphasis === "boolean" ? s.emphasis : false;
@@ -161,11 +161,8 @@ async function fetchVersionsAndCurrent(
 //   - else contentText → a single "脚本正文" section,
 //   - else null.
 function sectionsFromVersion(current: VersionRow): ScriptSectionView[] | null {
-  let counter = 0;
-  const next = () => counter++;
   const structured = coerceSavedSections(
     (current.contentData as { sections?: unknown } | undefined)?.sections,
-    next,
   );
   if (structured) return structured;
 
@@ -271,10 +268,6 @@ export async function loadScriptEditorData(
           typeof v.contentText === "string" ? v.contentText.trim() : "";
         const structured = coerceSavedSections(
           (v.contentData as { sections?: unknown } | undefined)?.sections,
-          (() => {
-            let i = 0;
-            return () => i++;
-          })(),
         );
         const previewText = (
           contentText ||

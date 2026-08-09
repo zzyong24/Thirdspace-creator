@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
+  getChatRuntime,
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
@@ -201,5 +202,44 @@ describe("artifacts ops registered in the composite transport", () => {
       "第一段",
       "只改第二段",
     ]);
+  });
+
+  it("[T-740] 当前 AI 整稿没有历史 section id 时仍能按第 2 段重绑", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const current = (await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: {
+          contentText: "第一段\n\n第二段",
+          contentData: {
+            sections: [
+              { heading: "第一段", body: "正文一" },
+              { heading: "第二段", body: "正文二" },
+            ],
+          },
+          changeSummary: "历史 AI 整稿",
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+
+    const runtime = await getChatRuntime();
+    await expect(
+      runtime.resolveCurrentScriptSelection?.(owner, {
+        artifactId: SCRIPT_ARTIFACT_ID,
+        versionId: current.data.id,
+        sectionId: "script-saved-1",
+        sectionIndex: 1,
+        excerpt: "正文二",
+      }),
+    ).resolves.toEqual({
+      artifactId: SCRIPT_ARTIFACT_ID,
+      versionId: current.data.id,
+      sectionId: "script-saved-1",
+      originalText: "正文二",
+      matchStrategy: "id",
+    });
   });
 });
