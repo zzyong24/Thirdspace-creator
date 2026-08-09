@@ -3365,6 +3365,9 @@ function TopicCandidateEditor({
   const retrying = ["queued", "running", "pause_requested"].includes(
     transform.taskStatus ?? "",
   );
+  const terminalFailure = ["failed", "blocked", "cancelled"].includes(
+    transform.taskStatus ?? "",
+  );
   const progressLabel =
     retrying && progress?.draft?.status === "failed"
       ? "拆解和选题已保留，正在重试改写初稿"
@@ -3489,7 +3492,7 @@ function TopicCandidateEditor({
       <Input
         aria-label="选题候选标题"
         value={candidate.title}
-        disabled={confirmed || busy}
+        disabled={confirmed || busy || retrying}
         onChange={(event) =>
           setCandidate({ ...candidate, title: event.target.value })
         }
@@ -3511,7 +3514,7 @@ function TopicCandidateEditor({
           <textarea
             aria-label={`选题候选${label}`}
             value={candidate[field]}
-            disabled={confirmed || busy}
+            disabled={confirmed || busy || retrying}
             onChange={(event) =>
               setCandidate({ ...candidate, [field]: event.target.value })
             }
@@ -3580,6 +3583,7 @@ function TopicCandidateEditor({
           size="sm"
           disabled={
             busy ||
+            retrying ||
             !draftText.trim() ||
             [
               candidate.title,
