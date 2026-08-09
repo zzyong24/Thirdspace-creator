@@ -53,7 +53,6 @@ function markBootstrappedInThisWindow(): void {
     // WebView 禁用存储时仍允许同步；只是不依赖存储作为业务真相。
   }
 }
-
 async function pullClientConfig(
   signal: AbortSignal | undefined,
   trigger: "bootstrap" | "manual_revalidate",
