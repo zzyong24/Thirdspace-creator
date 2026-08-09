@@ -124,7 +124,7 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   // [T-269] 模板正文尾部嵌 ANTI_FABRICATION_CLAUSE(可溯硬约束段,单一真值 grounding-facets)——
   //   把对话外层 honesty rule #9 下沉进写稿子调用,弱模型也不敢编数字/偷换事实。
   template: `【创作者定位】
-{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{durationTarget}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
+{{positioning}}{{projectBriefHard}}{{projectIntelligence}}{{benchmarkRef}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{assetsLibrary}}{{topic}}{{orientation}}{{durationTarget}}{{contract}}{{outline}}{{extraBrief}}
 
 【任务】基于定位(+立项硬约束+过往爆款要素)+选题+**用户第一手资料**,写一条**分镜脚本**。
 
@@ -154,7 +154,7 @@ ${ANTI_FABRICATION_CLAUSE}
   // [T-184] 声明式 context 注入 —— 本模板要装配层注入的 context 源 reader(key = 组合根 ContextDeps
   // 字段名)。逐项对应旧组合根 runScriptDraft dispatch 手列的那批 facet reader(见 persistence-client
   // 的 script.draft 分支):positioning(定位,必需已兜底)· learnings(过往爆款要素)· knowledge
-  // (知识库沉淀,T-182a 曾漏接的根因源)· thesis/contract/outline(SEAM-01 策划产物)· artifactOrigin
+  // (知识库沉淀,T-182a 曾漏接的根因源)· contract/outline(SEAM-01 策划产物)· artifactOrigin
   // (F2 origin 标注「未经确认」)· projectMaterials(T-146c 用户第一手素材主权)· brief(立项画幅)。
   // 装配层 resolveContextDeps 据此从中央 registry 自动取 reader,取代手列(漏接即 facet 恒空)。
   // 注:ai / resolveModelSpec 是非 facet 基础设施,由组合根 always-注入,不进本声明。
@@ -162,7 +162,6 @@ ${ANTI_FABRICATION_CLAUSE}
     "positioning",
     "learnings",
     "knowledge",
-    "thesis",
     "contract",
     "outline",
     "artifactOrigin",

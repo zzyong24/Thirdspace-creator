@@ -1,4 +1,5 @@
-import type { RequestContext } from "@creatoros/contract";
+import { ErrorCode, type RequestContext } from "@creatoros/contract";
+import { AccountRequiredError } from "../../errors";
 import type {
   DashboardPage,
   ProjectOverviewPage,
@@ -128,6 +129,18 @@ export function createDashboardQueryService(
           assistantPrompt: DASHBOARD_ASSISTANT_PROMPT,
         };
       } catch (err) {
+        // 未绑定账号不是页面服务异常。把这个领域错误原样交给页面边界，
+        // 由首页渲染真实的零账号引导；不能吞成“排期提醒暂不可用”。
+        if (
+          err instanceof AccountRequiredError ||
+          (typeof err === "object" &&
+            err !== null &&
+            "code" in err &&
+            (err as { code?: unknown }).code === ErrorCode.AccountRequiredError)
+        ) {
+          throw err;
+        }
+
         // Error isolation: one failing upstream → render an error state, not a
         // 500. The DTO must still validate (other sections empty).
         return {

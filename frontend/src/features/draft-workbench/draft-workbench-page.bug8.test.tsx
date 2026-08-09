@@ -29,9 +29,6 @@ vi.mock("./topic-card", () => ({
 vi.mock("./creation-flow-ctas", () => ({
   CreationFlowCtas: () => <div data-slot="mock-flow-ctas" />,
 }));
-vi.mock("./thesis-skeleton-panel", () => ({
-  ThesisSkeletonPanel: () => <div data-slot="mock-thesis" />,
-}));
 vi.mock("./ammo-note-form", () => ({ AmmoNoteForm: () => null }));
 vi.mock("./ammo-dump-zone", () => ({ AmmoDumpZone: () => null }));
 vi.mock("./ammo-card-list", () => ({

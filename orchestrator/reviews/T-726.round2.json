@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "当前规格已为首轮三项问题补齐可执行验收：重建零写入、三个 runner 的 thesis 隔离，以及前端与 backend 制作候选的素材来源断言。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-726-02",
+        "quote": "项目重建不再物化新的 `thesis_tree`。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-02",
+        "quote": "直接调用旧 `planning.thesis` 新建入口返回 `capability_retired`，任务数、候选数和 `thesis_tree` version 数不变。"
+      },
+      "where": "项目重建的新增 artifact/version 路径",
+      "failure_mode": "实现可以让旧 `planning.thesis` 入口和候选确认都 fail closed，从而通过 AC-726-02，同时仍由项目重建为变更后新项目物化 `thesis_tree`。这会造成用户看不见的新增 artifact/version 写入，直接违背“停止所有新写入”。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "orchestrator/SYSTEM_ARCHITECTURE.md#2.1-and-3; docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md#FR-726-02-and-AC-726-02",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在 AC-726-02 或新增同级验收中，以没有历史树的项目触发当前重建路径，并断言不创建 `thesis_tree` artifact 或 version；同时只验证既有的非 thesis 重建结果仍走原契约。",
+      "resolution_evidence": "AC-726-02 现要求无历史树 imported 项目的 reconstruct 前后 `thesis_tree` artifact/version 均为 0，并要求有历史树项目的 artifact/version/hash 不变；复审上下文 SPEC-LINE:164:9b5c99a231e3883f。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-726-03",
+        "quote": "`script.draft`、`planning.contract`、`planning.outline` 不再从论点树获得输入。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-03",
+        "quote": "给同一项目种入历史 `thesis_tree` 后运行新 script context/runner，`thesisBrief` 仍为空。"
+      },
+      "where": "三个策划/写稿 runner 的上下文与 prompt 装配",
+      "failure_mode": "AC-726-03 只执行 script context/runner。实现可以仅在该路径清空 `thesisBrief`，而 `planning.contract` 或 `planning.outline` 仍读取历史树并把它注入新结果；现有 AC 仍会通过，违反隐藏消费必须全部断开的用户结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "orchestrator/SYSTEM_ARCHITECTURE.md#2.1; docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md#FR-726-03-and-AC-726-03",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "将 AC-726-03 的相同历史树夹具分别运行 `script.draft`、`planning.contract`、`planning.outline`，断言三个生成输入均不含论点树块且保留其余既有上下文。",
+      "resolution_evidence": "AC-726-03 现逐一要求 `script.draft`、`planning.contract`、`planning.outline` 的 thesisBrief 为空、输入无论点树块且非 thesis 上下文不变；复审上下文 SPEC-LINE:165:767d4f34235931a0。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-726-03",
+        "quote": "前端制作候选与 backend `video.decisions` 不再读取 `thesis_tree.nodes[].materialRefs`；B-roll 继续读取脚本明确点名素材和项目 `materialLinks`。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-04",
+        "quote": "同一图片/视频同时存在于项目 `materialLinks` 和历史 thesis refs 时，新 B-roll inventory 仍包含该素材且来源为项目素材/脚本，而非 thesis。"
+      },
+      "where": "前端制作候选与 backend `video.decisions` 的 B-roll 素材装配",
+      "failure_mode": "AC-726-04 没有把“新 B-roll inventory”绑定到两个独立消费者，且其共享素材同时属于 `materialLinks`，无法证明脚本明确点名但未进入 materialLinks 的素材仍被保留。实现可只修一个消费者或只保留项目用料链，仍通过该用例，却让另一个消费者继续隐藏读取 thesis refs 或丢失脚本点名素材。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "orchestrator/SYSTEM_ARCHITECTURE.md#2.1; docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md#FR-726-03-and-AC-726-04",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把 AC-726-04 拆成可执行断言：分别覆盖前端制作候选和 `video.decisions` 输入；在两处断言 thesis-only ref 被排除、共享项目素材保留且无 thesis 来源，并增加脚本明确点名但不在 `materialLinks` 的素材仍保留的用例。",
+      "resolution_evidence": "AC-726-04 现分别覆盖前端制作候选和 backend `video.decisions`，并断言 shared、script-only、thesis-only 三类素材及零 thesis 读取；复审上下文 SPEC-LINE:166:01e9fcd58900d3b2。",
+      "parent_id": ""
+    }
+  ]
+}

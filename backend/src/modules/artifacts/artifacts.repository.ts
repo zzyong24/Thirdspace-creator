@@ -24,8 +24,8 @@ import { OwnershipError } from "./artifacts.errors";
 //  - create mints version #1 and sets currentVersionId (born `drafting`).
 //  - createVersion appends the next version (max+1), repoints currentVersionId,
 //    and NEVER UPDATE/DELETE an existing artifact_versions row (rule 6).
-//  - restore CLONES the target version into a NEW version; currentVersionId moves
-//    to the clone, never back to the old id (rule 7).
+//  - restore only moves currentVersionId to an existing immutable version. It
+//    never mutates that version and never manufactures a duplicate revision.
 
 export type ArtifactRow = typeof artifacts.$inferSelect;
 export type ArtifactVersionRow = typeof artifactVersions.$inferSelect;
@@ -323,7 +323,7 @@ export function createArtifactRepository(
     },
 
     async restore(artifactId, versionId) {
-      await requireArtifact(artifactId);
+      const artifact = await requireArtifact(artifactId);
       // Load the target version and assert it belongs to THIS artifact (rule 7).
       const targetRows = await db
         .select()
@@ -333,18 +333,14 @@ export function createArtifactRepository(
       if (!target || target.artifactId !== artifactId) {
         throw new OwnershipError("Version not found for this artifact");
       }
-      // Clone the target content into a NEW version (max+1) — never re-point to
-      // the old id.
-      const versionNumber = await nextVersionNumber(artifactId);
-      const clone = await insertVersion(artifactId, versionNumber, {
-        contentText: target.contentText,
-        contentData: (target.contentData ?? {}) as Record<string, unknown>,
-        changeSummary: `restore v${target.versionNumber}`,
-        createdByType: "user",
-      });
+
+      // A restore is a selection of an existing immutable snapshot, not an edit.
+      // Move the current pointer directly so browsing/restoring never creates
+      // vN+1 noise. A later real save still appends max+1 as usual.
+      if (artifact.currentVersionId === target.id) return artifact;
       await db
         .update(artifacts)
-        .set({ currentVersionId: clone.id, updatedAt: deps.now() })
+        .set({ currentVersionId: target.id, updatedAt: deps.now() })
         .where(
           and(
             eq(artifacts.id, artifactId),

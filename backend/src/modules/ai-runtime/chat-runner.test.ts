@@ -15,6 +15,8 @@ import {
   buildChatPrepareStep,
   buildForcedToolInstruction,
   detectCopilotMediaRoute,
+  isScratchPositioningConversation,
+  repairScriptPatchToolCall,
   resolveUniqueCoverReference,
   collectVerbatimSources,
   parseSemanticVerbatimSelection,
@@ -533,6 +535,30 @@ describe("[T-727] 原文来源清单与当前指令优先级", () => {
   });
 });
 
+describe("[T-707] 定位 Copilot 的 scratch 隔离识别", () => {
+  const userMessage = (text: string) =>
+    ({ role: "user", parts: [{ type: "text", text }] }) as never;
+
+  it("识别 Copilot 明确选择的重新定位，不再依赖旧六问完成暗号", () => {
+    expect(
+      isScratchPositioningConversation([
+        userMessage("帮我梳理账号定位。\n\n定位路径：scratch\n\n本次起点：重新定位。"),
+      ]),
+    ).toBe(true);
+    expect(
+      isScratchPositioningConversation([userMessage("我要重新定位")]),
+    ).toBe(true);
+  });
+
+  it("入口只是询问三种路径时不误判 scratch", () => {
+    expect(
+      isScratchPositioningConversation([
+        userMessage("先问我想继续深入当前账号、调整方向，还是重新定位"),
+      ]),
+    ).toBe(false);
+  });
+});
+
 const FAKE_SPEC = {
   apiFormat: "anthropic" as const,
   baseUrl: null,
@@ -952,6 +978,96 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.forcedTool).toBe("topic.enrich");
   });
 
+  it("[T-716] AI 改写本段从 ChatContext 绑定可信锚点，模型无需技术 ID 也只能改目标段", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      {
+        surface: "project",
+        projectId: "proj-1",
+        functionKey: "script.patch",
+        selection: {
+          kind: "script_section",
+          ids: ["section-2"],
+          label: "第 2 段",
+          artifactId: "artifact-script",
+          versionId: "version-6",
+          excerpt: "内容雷达会把对标博主的选题一键改写。",
+        },
+      },
+      deps,
+    );
+
+    expect(a.forcedTool).toBe("script.patch");
+    expect(a.tools["script.patch"]).toBeDefined();
+    expect(Object.keys(a.tools)).toEqual(["script.patch"]);
+    expect(a.system).toContain("局部改稿专用回合");
+    expect(a.system).not.toContain("能力边界 —— 全局条款");
+    expect(a.system).toContain("不要向用户询问任何技术 ID");
+    expect(a.system).not.toContain("artifact-script");
+    expect(a.system).not.toContain("version-6");
+
+    const execute = a.tools["script.patch"]!.execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    const result = await execute(
+      {
+        replacementText:
+          "内容雷达是一键改写对标博主的选题；自动化选题则由定时任务结合账号数据原创生成。",
+        // provider 即使越过 schema 塞入伪造锚点，也不能改掉服务端绑定。
+        artifactId: "malicious-artifact",
+        sectionId: "section-12",
+      },
+      { toolCallId: "tc-script-patch", messages: [], context: {} },
+    );
+    expect(result).toEqual({
+      kind: "script.patch",
+      artifactId: "artifact-script",
+      versionId: "version-6",
+      sectionId: "section-2",
+      originalText: "内容雷达会把对标博主的选题一键改写。",
+      replacementText:
+        "内容雷达是一键改写对标博主的选题；自动化选题则由定时任务结合账号数据原创生成。",
+      summary: "Copilot 局部改稿",
+    });
+  });
+
+  it("[T-716] 局部改稿工具参数只修复等价字段别名和纯文本，不猜锚点或吞截断 JSON", () => {
+    const base = {
+      type: "tool-call" as const,
+      toolCallId: "tc-repair",
+      toolName: "script_patch",
+      input: JSON.stringify({
+        new_text: "内容雷达改写对标选题；自动化任务原创生成账号选题。",
+        summary: "讲清两条选题来源",
+      }),
+    };
+    const repaired = repairScriptPatchToolCall(base);
+    expect(repaired).not.toBeNull();
+    expect(JSON.parse(repaired!.input)).toEqual({
+      replacementText: "内容雷达改写对标选题；自动化任务原创生成账号选题。",
+      summary: "讲清两条选题来源",
+    });
+    expect(repaired).not.toHaveProperty("artifactId");
+    expect(repaired).not.toHaveProperty("sectionId");
+
+    const plain = repairScriptPatchToolCall({
+      ...base,
+      input: "这是模型直接返回的新段落正文。",
+    });
+    expect(JSON.parse(plain!.input)).toEqual({
+      replacementText: "这是模型直接返回的新段落正文。",
+    });
+
+    expect(
+      repairScriptPatchToolCall({ ...base, input: '{"replacementText":"半截' }),
+    ).toBeNull();
+    expect(
+      repairScriptPatchToolCall({ ...base, toolName: "script_draft" }),
+    ).toBeNull();
+  });
+
   it("[T-117] 无 functionKey / functionKey 非真工具 → forcedTool undefined(自由对话不强制)", async () => {
     const { deps } = makeDeps();
     const none = await buildChatAssembly(ctx, { surface: "topics" }, deps);
@@ -964,18 +1080,15 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(bogus.forcedTool).toBeUndefined();
   });
 
-  it("[T-265] 死链修:functionKey=planning.thesis(稿面「立论点」深链)→ 挂上工具 + forcedTool 命中(第0步强制调,不再空点/被 topic.enrich 冒充)", async () => {
+  it("[T-726] 历史 functionKey=planning.thesis 不再挂工具，也不能 forcedTool 绕过退役门", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(
       ctx,
       { surface: "project", projectId: "proj-1", functionKey: "planning.thesis" },
       deps,
     );
-    // 此前 planning.thesis 不在 ALL_CHAT_TOOL_NAMES → forcedTool 恒 undefined、functionKey 静默丢弃。
-    // 现在:挂上工具 + forcedTool 命中 → runChatStream 第0步 toolChoice 强制调它(弱模型也压得住,
-    // 不再吐文本谎称/抓 topic.enrich 冒充)。深链落 forcedTool 即真值,不依赖它在工具列表里的排位。
-    expect(Object.keys(a.tools)).toContain("planning.thesis");
-    expect(a.forcedTool).toBe("planning.thesis");
+    expect(Object.keys(a.tools)).not.toContain("planning.thesis");
+    expect(a.forcedTool).toBeUndefined();
   });
 
   it("[T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script", async () => {
@@ -1004,9 +1117,12 @@ describe("buildChatAssembly — 三层注入装配", () => {
       // [T-099 切片五] context.predictions(排在 positioning 后、project 前:'pre' < 'pro')。
       "context.predictions",
       "context.project.detail",
+      "context.project.lifecycle",
       "context.projects",
+      "context.projects.search",
       // [T-099 切片四] context.publications(排在 projects 后:'pro' < 'pub')。
       "context.publications",
+      "context.review.report",
       // [T-271] 制作封面链(创作产出工具;'context.*' < 'cover.*' < 'knowledge.*')。
       "cover.generate",
       "knowledge.distill",
@@ -1021,8 +1137,6 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "material.generate",
       // [T-084b] 网页截图(公开页真截图落 asset)。
       "material.screenshot",
-      // [T-265] 论点树对话内真生成(创作产出工具,dispatch planning.thesis;排序:'pl' < 'po')。
-      "planning.thesis",
       "positioning.generate",
       // [T-350a] 发布物料生成(创作产出工具,dispatch publish.package;排序:'po' < 'pu' < 's')。
       "publish.package",
@@ -1089,7 +1203,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("learning.capture");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names.length).toBe(24);
+    expect(names.length).toBe(27);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -1102,7 +1216,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("positioning.generate");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("review.analyze");
-    expect(names.length).toBe(24);
+    expect(names.length).toBe(27);
   });
 
   it("[T-578] 对话 positioning.generate 只读专用可见作品端口，并保留 publishedAt 新→旧顺序", async () => {
@@ -1284,7 +1398,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("context.metrics");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names.length).toBe(25); // 3 产出([T-385] 含 project.transcribe 无稿门顺手抓稿)+ 7 素材([T-253] 含 local.read、[T-256a] 含 local.tools/local.workspace)+ 15 只读
+    expect(names.length).toBe(28); // [T-691] + 生命周期/历史检索/审核报告三个只读工具
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -1350,7 +1464,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(34); // [T-240③] topics 场景集(12 产出[T-265 含 planning.thesis + T-271 cover.generate + T-350a publish.package] + 7 素材 + 15 只读)
+    expect(names.length).toBe(36); // T-726:退役 planning.thesis 后减一
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -1406,30 +1520,27 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(a.system).not.toContain("当前项目阶段");
     });
 
-    it("② 规则带作用域:全局条款(编造禁令/论点树铁律)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)", async () => {
+    it("② 规则带作用域:全局条款(编造禁令/直接写稿)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-      // 全局条款:编造禁令(原第 9 条的全局半)+ 论点树铁律。
+      // 全局条款:编造禁令 + T-726 直接写稿路径。
       expect(a.system).toContain("全局条款");
       expect(a.system).toContain("绝不编造具体数字、案例、来源");
-      expect(a.system).toContain("论点树铁律");
-      expect(a.system).toContain("挂不进论点骨架面板、写脚本时不会被引用");
-      // 场景条款:S1 无稿门限定「已发布」;S2 创作前立框架不适用无稿门。
+      expect(a.system).toContain("准备素材 → 直接写稿");
+      expect(a.system).not.toContain("planning.thesis");
+      // 场景条款:S1 无稿门限定「已发布」;S2 创作前搭结构/起稿不适用无稿门。
       expect(a.system).toContain("场景条款");
       expect(a.system).toContain("S1.(仅在拆解/复盘一条**已发布**作品时生效)");
       expect(a.system).toContain("必须先读到这条作品的真逐字稿");
-      expect(a.system).toContain("S2.(仅在为**创作前(未发布)**的项目立框架时生效)");
+      expect(a.system).toContain("S2.(仅在为**创作前(未发布)**的项目搭结构或起草脚本时生效)");
       expect(a.system).toContain("不适用 S1 的无稿门");
     });
 
-    it("[T-265] 论点树铁律订正:指向对话里的 planning.thesis 工具(现在有这条路了)+ 禁 topic.enrich 冒充", async () => {
+    it("[T-726] 编导直接使用 Brief、定位和真实素材写稿", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-      // 订正后 rule #10 要用户「直接调 planning.thesis 工具」(此前只说文本树不算成品、没给工具路径)。
-      expect(a.system).toContain("直接调 planning.thesis 工具");
-      expect(a.system).toContain(
-        "绝不用别的工具(如 topic.enrich 补全选题卡)冒充论点树",
-      );
+      expect(a.system).toContain("直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本");
+      expect(a.system).not.toContain("论点骨架面板");
     });
 
     it("[T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)", async () => {
@@ -1456,7 +1567,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
       // [T-385] project.transcribe 与 review.analyze 同被阶段感知砍(创作前无已发布作品可抓稿)。
       expect(names).not.toContain("project.transcribe");
       expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
-      expect(names.length).toBe(34); // project 全集 37 − review.analyze − project.transcribe − context.projects
+      expect(names).toContain("video.edit.render");
+      expect(names.length).toBe(37); // T-726:退役 planning.thesis 后减一
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -1477,8 +1589,9 @@ describe("buildChatAssembly — 三层注入装配", () => {
         deps,
       );
       expect(Object.keys(a.tools)).toContain("review.analyze");
+      expect(Object.keys(a.tools)).toContain("video.edit.render");
       expect(Object.keys(a.tools)).not.toContain("context.projects");
-      expect(Object.keys(a.tools).length).toBe(36); // [T-642] 已绑定项目 − context.projects
+      expect(Object.keys(a.tools).length).toBe(39); // T-726:退役 planning.thesis 后减一
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -1490,13 +1603,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
       expect(Object.keys(b.tools)).not.toContain("context.projects");
-      expect(Object.keys(b.tools).length).toBe(36); // 阶段未知仍保留复盘工具，但项目库无需摸索
+      expect(Object.keys(b.tools).length).toBe(39); // 阶段未知仍保留复盘工具，但项目库无需摸索
     });
 
-    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 37 工具(向后兼容)", async () => {
+    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(37); // [T-385] +project.transcribe
+      expect(Object.keys(a.tools).length).toBe(40); // T-726:退役 planning.thesis 后减一
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
     });
@@ -1511,7 +1624,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(35); // 34(topics 场景集，[T-350a] 含 publish.package)+ 补回的 1
+      expect(Object.keys(a.tools).length).toBe(37); // T-726:退役 planning.thesis 后减一
     });
   });
 
@@ -1983,6 +2096,26 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
     expect(a.system).toContain("禁止逐字复述清单内容");
     expect(a.system).toContain("已展示在卡片中");
   });
+
+  it("[T-708] 创作完整度统一为软提示，用户要先生成时不再被形式门禁拦住", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("创作完整度不是拒绝服务的理由");
+    expect(a.system).toContain("六问未答完");
+    expect(a.system).toContain("联网失败");
+    expect(a.system).toContain("直接生成/先给一版");
+    expect(a.system).toContain("待验证/待补证据/待补真实案例");
+    expect(a.system).toContain("隐私安全");
+  });
+
+  it("[T-708] 长文允许阶段结果，本机授权在同一回合续跑而不是重复调用", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("仅基于已读 X/总 Y 字");
+    expect(a.system).toContain("不要一直转圈而不给结果");
+    expect(a.system).toContain("同一回合自动续跑");
+    expect(a.system).toContain("不要重复调用制造循环");
+  });
 });
 
 // [T-684] 搜索模型下线后，素材搜集只认随包浏览器；失败不允许模型记忆兜底。
@@ -2270,6 +2403,17 @@ describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制
     });
     expect(prep({ stepNumber: 1 })).toEqual({});
     // 末步禁工具收尾(T-239f)不受影响。
+    expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
+  });
+
+  it("[T-716] 局部改稿首步必须调用唯一补丁候选工具", () => {
+    const prep = buildChatPrepareStep({
+      forcedTool: "script_patch",
+      maxSteps: 6,
+    });
+    expect(prep({ stepNumber: 0 })).toEqual({
+      toolChoice: { type: "tool", toolName: "script_patch" },
+    });
     expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
   });
 

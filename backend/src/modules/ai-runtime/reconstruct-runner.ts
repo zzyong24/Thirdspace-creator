@@ -9,8 +9,8 @@ import {
 // 作品初始化 auto-fill 重建 runner(T-030-D4,SPEC §4.5/§6/§7)——
 // **仅 source='imported' 的已发布作品**:拿逐字稿(D3 script transcript artifact)+ 真实指标
 // (digg/comment/play,来自 analytics)+ 账号定位 brief → runStructuredNode(schema 约束,
-// reconstruct.project 模板)产 { research, planning } 重建包 → **物化成 research + planning
-// artifact**,经 artifacts.service,**强制 origin='reconstructed'**(F1)。
+// reconstruct.project 模板)产 research 重建包 → **只物化 research artifact**，不再生成论点树；
+// 经 artifacts.service **强制 origin='reconstructed'**(F1)。
 //
 // 与 planning-runner / research-runner 的根本区别:那些为**新选题正向创作**,产 candidate 走
 // 人确认门;本 runner 为**已发布作品逆向重建历史记忆**,SPEC §6.1 明确「**不走 candidate 确认
@@ -20,10 +20,7 @@ import {
 // §5 守卫(边界①,F1):runner **断言仅 imported**。manual/topic/新建项目 → 直接失败,
 // **绝不触发 auto-fill**(getProjectSource 注入,非 imported → markFailed,不写任何 artifact)。
 //
-// artifactType(去 validateStageGate 白名单取合法值):
-//   research 产物 → "trend_analysis"(research 阶段白名单)
-//   planning 产物 → "thesis_tree"(planning 阶段白名单)
-// 这样重建产物落在合法阶段交付物上,研究/策划工作台能读回。
+// artifactType:research 产物 → "trend_analysis"(research 阶段白名单)。
 //
 // 端口全注入(ai / resolveModelSpec / getProjectSource / getTranscript / getMetricsSummary /
 // materializeArtifact + ContextDeps),故 runner 可确定性单测(fake 模型 via resolveModelSpec+
@@ -105,11 +102,9 @@ export interface ReconstructTask {
   inputData: Record<string, unknown>; // { projectId }
 }
 
-// research 产物落 trend_analysis(research 阶段白名单);planning 产物落 thesis_tree(planning 阶段白名单)。
+// research 产物落 trend_analysis；T-726 后不再物化 planning/thesis_tree。
 const RESEARCH_ARTIFACT_TYPE = "trend_analysis";
 const RESEARCH_STAGE = "research";
-const PLANNING_ARTIFACT_TYPE = "thesis_tree";
-const PLANNING_STAGE = "planning";
 
 // 把 CreativeContext + 真实数据映射成 reconstruct.project 模板的 facets。
 function reconstructFacets(
@@ -178,49 +173,11 @@ function renderResearch(research: ReconstructProjectOutput["research"]): {
   };
 }
 
-// planning 产物:thesis 论点树 + outline,渲染成 planning 工作台可读的 nodes（core/support）。
-function renderPlanning(planning: ReconstructProjectOutput["planning"]): {
-  contentText: string;
-  contentData: Record<string, unknown>;
-} {
-  const nodes: Array<{ column: string; title: string; summary: string }> = [];
-  nodes.push({
-    column: "core",
-    title: planning.thesis.coreThesis,
-    summary: "",
-  });
-  for (const s of planning.thesis.supportingPoints) {
-    nodes.push({ column: "support", title: s, summary: "" });
-  }
-  const lines: string[] = ["# 策划重建（AI 历史反推）", ""];
-  lines.push(`## 目标受众\n${planning.targetAudience}`, "");
-  lines.push(`## 核心论点\n${planning.thesis.coreThesis}`, "");
-  if (planning.thesis.supportingPoints.length > 0) {
-    lines.push("## 支撑论点");
-    for (const s of planning.thesis.supportingPoints) lines.push(`- ${s}`);
-    lines.push("");
-  }
-  if (planning.outline.length > 0) {
-    lines.push("## 结构脉络");
-    planning.outline.forEach((o, i) => lines.push(`${i + 1}. ${o}`));
-    lines.push("");
-  }
-  return {
-    contentText: lines.join("\n").trimEnd(),
-    contentData: {
-      nodes,
-      targetAudience: planning.targetAudience,
-      outline: planning.outline,
-      reconstructed: true,
-    },
-  };
-}
-
 /**
  * Orchestrate one reconstruct.project task —— 确定性、仅 imported、直接物化(origin='reconstructed')。
  *   markRunning → 断言 imported(§5 守卫,非 imported → markFailed 不写)→ 读逐字稿 + 真实指标 +
- *   定位 → runStructuredNode 产 { research, planning } → 物化 research(trend_analysis) + planning
- *   (thesis_tree),均 origin='reconstructed'(F1)→ recordStep → markSucceeded。
+ *   定位 → runStructuredNode 产 research → 只物化 research(trend_analysis)，不写 thesis_tree
+ *   → recordStep → markSucceeded。
  *   任一步失败 → markFailed(诚实终态,绝不把 task 卡 running / 崩服务)。
  */
 export async function runReconstruct(
@@ -267,18 +224,18 @@ export async function runReconstruct(
     const title = context.topic.title ?? "";
 
     // 结构化节点(schema 约束):产 { research, planning } 重建包。任何模型都产可解析输出。
-    const spec = await deps.resolveModelSpec(ctx, "planning.thesis");
+    const spec = await deps.resolveModelSpec(ctx, "reconstruct.project");
     const runNode = deps.runNode ?? defaultRunNode;
     const pkg = await runNode(
       ctx,
       spec,
       reconstructFacets(context, transcript, metrics, title),
     );
-    if (!pkg?.research?.coreTopic || !pkg?.planning?.thesis?.coreThesis) {
-      throw new Error("reconstruct-runner: 模型未产出可用的重建包(research/planning 缺失)");
+    if (!pkg?.research?.coreTopic) {
+      throw new Error("reconstruct-runner: 模型未产出可用的研究重建包");
     }
 
-    // 物化 research + planning,均 origin='reconstructed'(F1 强制,§7 例外的审计前提)。
+    // 只物化 research；历史 thesis_tree 保持原样，新重建不再新增或改写。
     const research = renderResearch(pkg.research);
     const researchArtifact = await deps.artifacts.materializeReconstructed(ctx, {
       projectId,
@@ -289,22 +246,11 @@ export async function runReconstruct(
       contentData: research.contentData,
     });
 
-    const planning = renderPlanning(pkg.planning);
-    const planningArtifact = await deps.artifacts.materializeReconstructed(ctx, {
-      projectId,
-      artifactType: PLANNING_ARTIFACT_TYPE,
-      stage: PLANNING_STAGE,
-      title: "策划重建（AI 反推）",
-      contentText: planning.contentText,
-      contentData: planning.contentData,
-    });
-
     await deps.ai.recordStep(ctx, task.id, {
       stepNo: 1,
       kind: "reconstruct",
       text:
-        `已重建 2 阶段（研究 ${researchArtifact.id} · 策划 ${planningArtifact.id}）,` +
-        `均标记 origin='reconstructed'（AI 历史反推、未经确认）`,
+        `已重建研究 ${researchArtifact.id}，标记 origin='reconstructed'（AI 历史反推、未经确认）`,
       toolCalls: [],
     });
     await deps.ai.markSucceeded(ctx, task.id);

@@ -31,7 +31,6 @@ import { TOPIC_GENERATE_TEMPLATE } from "./templates/topic-generate";
 import { SCRIPT_DRAFT_TEMPLATE } from "./templates/script-draft";
 // T-086 文案审核门:L2 语义审 skill(generateObject 绑结构化报告 schema)。
 import { SCRIPT_REVIEW_TEMPLATE } from "./templates/script-review";
-import { PLANNING_THESIS_TEMPLATE } from "./templates/planning-thesis";
 // [T-271] 封面方案 skill(cover.brief)—— 制作封面链的「结构化产方案」位(brief/script 硬锚 + 文案诚实门)。
 import { COVER_BRIEF_TEMPLATE } from "./templates/cover-brief";
 import { PLANNING_CONTRACT_TEMPLATE } from "./templates/planning-contract";
@@ -70,6 +69,7 @@ import {
   VIDEO_CARDS_TEMPLATE,
   VIDEO_BROLL_TEMPLATE,
   VIDEO_SUBTITLES_TEMPLATE,
+  VIDEO_DIRECTOR_TEMPLATE,
 } from "./templates/video-decisions";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
@@ -105,7 +105,6 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   SCRIPT_DRAFT_TEMPLATE,
   // T-086 文案审核门 L2 语义审(script.review)。
   SCRIPT_REVIEW_TEMPLATE,
-  PLANNING_THESIS_TEMPLATE,
   // [T-271] 封面方案:立项 brief(核心信息/内容形式)+ 口播稿主张硬锚 → 结构化封面文案 + 主视觉 + 构图。
   COVER_BRIEF_TEMPLATE,
   PLANNING_CONTRACT_TEMPLATE,
@@ -149,6 +148,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   VIDEO_CARDS_TEMPLATE,
   VIDEO_BROLL_TEMPLATE,
   VIDEO_SUBTITLES_TEMPLATE,
+  VIDEO_DIRECTOR_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

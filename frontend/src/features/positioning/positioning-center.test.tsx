@@ -8,14 +8,8 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// The view embeds client islands: the draft-drawer forms (PositioningProfileForm/
-// StatementForm → upsertProfile/createStatement) AND the AI band
-// (GeneratePositioningIsland → AdoptCandidateCard, which on mount reconciles via
-// client.listAITasks and can poll createAITask/getTask/...). Stub next/navigation +
-// the whole client surface so the render test stays deterministic and network-free.
-// The island's hydration effect is async + catches its own errors, so the synchronous
-// render asserts on layout structure only; the AI create→poll→confirm wiring lives in
-// AdoptCandidateCard's own tests and the positioning-confirm integration test.
+// The view embeds client islands: the draft-drawer forms and the single Copilot entry.
+// Stub navigation + contract client so the render test stays deterministic and network-free.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh() {}, push() {}, replace() {} }),
 }));
@@ -157,18 +151,16 @@ describe("PositioningCenterView", () => {
     );
     expect(screen.getByTestId("positioning-downstream")).toBeInTheDocument();
     expect(screen.getAllByTestId("positioning-history-row")).toHaveLength(2);
-    expect(screen.getByTestId("positioning-discovery-workflow")).toBeInTheDocument();
-    expect(screen.getByText("从零开始 · 已隔离旧资料")).toBeInTheDocument();
+    expect(screen.getByTestId("positioning-copilot-entry")).toBeInTheDocument();
+    expect(screen.getByText(/已恢复 0 条旧前采信息 · 重新定位/)).toBeInTheDocument();
   });
 
-  it("[T-652] brand-new user先选择完整前采路径，而不是直接跳到 AI 生成", () => {
+  it("[T-707] brand-new user直接进入定位 Copilot，不再展示固定路径问卷", () => {
     render(<PositioningCenterView viewModel={EMPTY} />);
-    expect(screen.getByTestId("positioning-discovery-entry")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /在现有方向上优化/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /转向一个新方向/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /完全从零开始/ })).toBeTruthy();
-    expect(screen.queryByTestId("positioning-empty-open-copilot")).toBeNull();
-    expect(screen.queryByTestId("positioning-ai-band")).toBeNull();
+    expect(screen.getByTestId("positioning-copilot-entry")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /开始定位对话/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /在现有方向上优化/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /完全从零开始/ })).toBeNull();
   });
 
   it("renders the 当前定位母版 英雄区: one-liner enlarged, current pill, 9-facet grid", () => {
@@ -209,13 +201,11 @@ describe("PositioningCenterView", () => {
     expect(screen.getAllByTestId("positioning-facet").length).toBe(5);
   });
 
-  it("[T-055b/T-210] AI 赋能带唯一入口 =「开始访谈式定位」深链(任务流按钮已退役)", () => {
+  it("[T-707] 已有母版时仍只有一个定位 Copilot 入口", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
-    expect(screen.getByTestId("positioning-ai-band")).toBeTruthy();
+    expect(screen.getByTestId("positioning-copilot-entry")).toBeTruthy();
     const link = screen.getByTestId("positioning-open-copilot");
-    // [T-210] 定位改多轮访谈:入口文案从「在对话里聊定位」改为「开始访谈式定位」。
-    expect(link.textContent).toContain("开始访谈式定位");
-    // 旧 createAITask 任务流按钮不复存在(用户裁决:双 AI 入口合一)。
+    expect(link.textContent).toContain("开始定位对话");
     expect(screen.queryByText(/AI 生成定位建议/)).toBeNull();
   });
 

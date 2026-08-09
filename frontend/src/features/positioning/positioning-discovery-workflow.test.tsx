@@ -1,106 +1,42 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import type { PositioningDiscoverySessionResource } from "@creatoros/contract";
-import { PositioningDiscoveryWorkflow } from "./positioning-discovery-workflow";
-
-const startDiscovery = vi.fn();
-const updateDiscoveryAnswer = vi.fn();
-const researchDiscovery = vi.fn();
-const setDiscoveryEvidence = vi.fn();
-
-vi.mock("@/lib/contract-client", () => ({
-  client: {
-    startDiscovery: (...args: unknown[]) => startDiscovery(...args),
-    updateDiscoveryAnswer: (...args: unknown[]) => updateDiscoveryAnswer(...args),
-    researchDiscovery: (...args: unknown[]) => researchDiscovery(...args),
-    setDiscoveryEvidence: (...args: unknown[]) => setDiscoveryEvidence(...args),
-  },
-}));
+import {
+  buildCopilotPrefill,
+  PositioningDiscoveryWorkflow,
+} from "./positioning-discovery-workflow";
 
 const SESSION: PositioningDiscoverySessionResource = {
   id: "posdisc-1",
   userId: "user-a",
   accountId: "account-a",
-  sourceMode: "scratch",
+  sourceMode: "optimize",
   status: "draft",
-  answers: [],
+  answers: [
+    {
+      themeId: "goal",
+      selectedOptionIds: ["personal-brand", "lead-generation"],
+      customText: "先服务湖南餐饮老板",
+      skipped: false,
+      updatedAt: "2026-08-01T00:00:00.000Z",
+    },
+  ],
   webReferences: [],
   inputManifest: {
-    legacyProfileId: null,
-    legacyStatementIds: [],
-    legacyWorkIds: [],
+    legacyProfileId: "profile-1",
+    legacyStatementIds: ["statement-1"],
+    legacyWorkIds: ["work-1"],
   },
   adoptedCandidateId: null,
   adoptedStatementId: null,
-  revision: 0,
+  revision: 1,
   createdAt: "2026-08-01T00:00:00.000Z",
   updatedAt: "2026-08-01T00:00:00.000Z",
 };
 
-describe("PositioningDiscoveryWorkflow", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    window.localStorage.clear();
-    startDiscovery.mockResolvedValue(SESSION);
-    updateDiscoveryAnswer.mockImplementation(
-      async (input: { body: Record<string, unknown> }) => ({
-        ...SESSION,
-        revision: 1,
-        answers: [
-          {
-            themeId: input.body.themeId,
-            selectedOptionIds: input.body.selectedOptionIds,
-            customText: input.body.customText,
-            skipped: input.body.skipped,
-            updatedAt: SESSION.updatedAt,
-          },
-        ],
-      }),
-    );
-    researchDiscovery.mockResolvedValue({
-      ...SESSION,
-      revision: 1,
-      webReferences: [],
-    });
-  });
-
-  it("离开页面再回来会恢复当前问题尚未保存的选择和补充文本", async () => {
-    const user = userEvent.setup();
-    const first = render(
-      <PositioningDiscoveryWorkflow
-        initialSession={SESSION}
-        hasCurrentProfile
-      />,
-    );
-    await user.click(screen.getByRole("button", { name: /建立个人品牌/ }));
-    await user.type(
-      screen.getByPlaceholderText("写下选项没有覆盖到的真实情况……"),
-      "先服务湖南餐饮老板",
-    );
-    first.unmount();
-
-    render(
-      <PositioningDiscoveryWorkflow
-        initialSession={SESSION}
-        hasCurrentProfile
-      />,
-    );
-
-    expect(await screen.findByText(/已恢复上次未保存的前采内容/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /建立个人品牌/ })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(
-      screen.getByDisplayValue("先服务湖南餐饮老板"),
-    ).toBeTruthy();
-    cleanup();
-  });
-
-  it("新用户选择从零开始时调用真实 start operation，并明确隔离旧数据", async () => {
-    const user = userEvent.setup();
+describe("PositioningDiscoveryWorkflow — T-707", () => {
+  it("只展示一个 Copilot 入口，不再渲染固定六问或完成度门禁", () => {
     render(
       <PositioningDiscoveryWorkflow
         initialSession={null}
@@ -108,19 +44,13 @@ describe("PositioningDiscoveryWorkflow", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /完全从零开始/ }));
-    await waitFor(() =>
-      expect(startDiscovery).toHaveBeenCalledWith({
-        params: undefined,
-        query: undefined,
-        body: { sourceMode: "scratch" },
-      }),
-    );
-    expect(screen.getByText("你希望这个 IP 最终帮你完成什么？")).toBeTruthy();
+    expect(screen.getByText("用 Copilot 把定位聊清楚")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /开始定位对话/ })).toBeTruthy();
+    expect(screen.queryByText(/还差 .* 个问题/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /保存并继续/ })).toBeNull();
   });
 
-  it("同一问题可多选并补充自定义文本，再持久化为一个答案", async () => {
-    const user = userEvent.setup();
+  it("恢复旧前采答案并带入 Copilot，但不要求 session ready", () => {
     render(
       <PositioningDiscoveryWorkflow
         initialSession={SESSION}
@@ -128,55 +58,31 @@ describe("PositioningDiscoveryWorkflow", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /建立个人品牌/ }));
-    await user.click(screen.getByRole("button", { name: /获得客户线索/ }));
-    await user.type(
-      screen.getByPlaceholderText("写下选项没有覆盖到的真实情况……"),
-      "先建立专业信任",
+    expect(screen.getByText(/已恢复 1 条旧前采信息/)).toBeTruthy();
+    const link = screen.getByRole("link", { name: /继续定位对话/ });
+    expect(link).toHaveAttribute("href", expect.stringContaining("copilot=open"));
+    expect(decodeURIComponent(link.getAttribute("href") ?? "")).toContain(
+      "先服务湖南餐饮老板",
     );
-    await user.click(screen.getByRole("button", { name: /保存并继续/ }));
-
-    await waitFor(() => expect(updateDiscoveryAnswer).toHaveBeenCalledTimes(1));
-    expect(updateDiscoveryAnswer.mock.calls[0]?.[0]).toMatchObject({
-      params: { sessionId: "posdisc-1" },
-      body: {
-        themeId: "goal",
-        selectedOptionIds: ["personal-brand", "lead-generation"],
-        customText: "先建立专业信任",
-        skipped: false,
-        expectedRevision: 0,
-      },
-    });
   });
 
-  it("联网补充默认使用国内中文范围，并把本次可见关键词独立发送", async () => {
-    const user = userEvent.setup();
-    render(
-      <PositioningDiscoveryWorkflow
-        initialSession={SESSION}
-        hasCurrentProfile
-      />,
-    );
+  it("预填话术明确纯人设/产品通版和随时生成", () => {
+    const prompt = buildCopilotPrefill(SESSION, true);
+    expect(prompt).toContain("纯人设和有产品/服务");
+    expect(prompt).toContain("每轮最多问一个");
+    expect(prompt).toContain("立即调用 positioning.generate");
+    expect(prompt).toContain("不要用六问、逐字稿、联网或方向选择阻断");
+  });
 
-    await user.type(
-      screen.getByPlaceholderText("例如：杭州家装 IP 用户高频痛点"),
-      "国内智能体",
+  it("旧 scratch 会话携带明确机器路由，普通入口不误写 scratch", () => {
+    const scratch = buildCopilotPrefill(
+      { ...SESSION, sourceMode: "scratch" },
+      true,
     );
-    await user.click(screen.getByRole("button", { name: /联网补充/ }));
+    expect(scratch).toContain("定位路径：scratch");
+    expect(scratch).toContain("本次起点：重新定位");
 
-    await waitFor(() => expect(researchDiscovery).toHaveBeenCalledTimes(1));
-    expect(researchDiscovery.mock.calls[0]?.[0]).toMatchObject({
-      params: { sessionId: "posdisc-1" },
-      body: {
-        query: "国内智能体",
-        market: "cn",
-        language: "zh-CN",
-        targetThemeId: "goal",
-        expectedRevision: 0,
-      },
-    });
-    expect(
-      screen.getByText(/二次搜索会替换上一批未采用结果/),
-    ).toBeTruthy();
+    const fresh = buildCopilotPrefill(null, true);
+    expect(fresh).not.toContain("定位路径：scratch");
   });
 });

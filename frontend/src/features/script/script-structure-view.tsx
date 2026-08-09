@@ -20,12 +20,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Sparkles, Trash2 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { plainTextFromSections } from "./script-editor-bridge";
 import type { ScriptSectionView } from "@/types/view-models";
+import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 
 type SectionType = ScriptSectionView["type"];
 
@@ -49,6 +50,7 @@ const TYPE_ORDER: ReadonlyArray<SectionType> = [
 ];
 
 type SaveStatus = "saved" | "saving" | "dirty";
+type PersistedScriptAnchor = { artifactId: string; versionId: string };
 
 /** 结构编辑的本地段模型(可变副本;保存时组装回 sections shape)。
  *  [T-387b] visual = 凝固分镜(只读透传:结构编辑不动它,保存时原样带回,防结构编辑把
@@ -101,6 +103,8 @@ export function ScriptStructureToggle({
   sections,
   artifactId = null,
   projectId = null,
+  currentVersionId = null,
+  assetLabels = {},
   children,
 }: {
   readonly sections: ReadonlyArray<ScriptSectionView>;
@@ -111,6 +115,8 @@ export function ScriptStructureToggle({
    */
   readonly artifactId?: string | null;
   readonly projectId?: string | null;
+  readonly currentVersionId?: string | null;
+  readonly assetLabels?: Readonly<Record<string, string>>;
   readonly children: React.ReactNode;
 }) {
   // T-072:有结构化分段 → 默认进结构编辑(用户目标形态);没有 → 默认自由文本编辑。
@@ -153,6 +159,8 @@ export function ScriptStructureToggle({
           sections={sections}
           artifactId={artifactId}
           projectId={projectId}
+          currentVersionId={currentVersionId}
+          assetLabels={assetLabels}
         />
       )}
     </div>
@@ -167,18 +175,35 @@ function ScriptStructureEditor({
   sections,
   artifactId,
   projectId,
+  currentVersionId,
+  assetLabels,
 }: {
   readonly sections: ReadonlyArray<ScriptSectionView>;
   readonly artifactId: string | null;
   readonly projectId: string | null;
+  readonly currentVersionId: string | null;
+  readonly assetLabels: Readonly<Record<string, string>>;
 }) {
   const router = useRouter();
+  const { openChat } = useDraftChatRequest();
   const [local, setLocal] = React.useState<EditableSection[]>(() =>
     toEditable(sections),
   );
   const [status, setStatus] = React.useState<SaveStatus>("saved");
   const statusRef = React.useRef<SaveStatus>("saved");
-  statusRef.current = status;
+  const persistedAnchorRef = React.useRef<PersistedScriptAnchor | null>(
+    artifactId && currentVersionId
+      ? { artifactId, versionId: currentVersionId }
+      : null,
+  );
+  React.useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+  React.useEffect(() => {
+    if (artifactId && currentVersionId && statusRef.current === "saved") {
+      persistedAnchorRef.current = { artifactId, versionId: currentVersionId };
+    }
+  }, [artifactId, currentVersionId]);
 
   // 外部 sections 变化(保存 refresh 回流 / 对话整稿写入 / 版本回滚)→ 未在编辑
   // (status=saved)时重灌本地态;编辑中(dirty/saving)不覆盖在途改动。
@@ -249,54 +274,96 @@ function ScriptStructureEditor({
     (s) => s.heading.trim().length > 0 || s.body.trim().length > 0,
   );
 
-  const handleSave = React.useCallback(async () => {
+  const persistCurrentSections = React.useCallback(async (
+    changeSummary = "结构编辑",
+  ): Promise<PersistedScriptAnchor | null> => {
     if (!artifactId && !projectId) {
       // fixture-only 渲染(结构测试):不打契约,仅本地翻「已保存」。
       setStatus("saved");
-      return;
+      return null;
     }
-    if (nonEmpty.length === 0) return;
+    if (nonEmpty.length === 0) return null;
     setStatus("saving");
+    // 真项目还没有脚本 artifact → 首存 getOrCreate(与 TipTap 保存同路径)。
+    let targetId = artifactId;
+    if (!targetId && projectId) {
+      const ensured = await ensureScriptArtifact(projectId, null);
+      targetId = ensured.artifactId as string;
+    }
+    if (!targetId) throw new Error("no script artifact target");
+    const payloadSections = nonEmpty.map((s, i) => ({
+      id: s.id || `script-section-${i}`,
+      type: s.type,
+      heading: s.heading,
+      body: s.body,
+      // 金句段型语义上即强调;其余保留原 emphasis(TipTap 整段加粗的往返)。
+      emphasis: s.type === "golden_quote" ? true : s.emphasis,
+      startSeconds: s.startSeconds,
+      endSeconds: s.endSeconds,
+      // [T-387b] 凝固分镜原样带回(结构编辑不洗掉分镜真源;无 visual 的段不带字段)。
+      ...(s.visual ? { visual: s.visual } : {}),
+    }));
+    const created = (await client.createArtifactVersion({
+      params: { artifactId: targetId },
+      query: undefined,
+      body: {
+        // 不写 contentData.html:读侧会从新 sections 重拼编辑器 HTML,
+        // 避免结构改动被旧富文本真值盖掉(双向一致的关键)。
+        contentText: plainTextFromSections(
+          payloadSections as unknown as ReadonlyArray<ScriptSectionView>,
+        ),
+        contentData: { sections: payloadSections },
+        changeSummary,
+      },
+    })) as unknown as { id?: string };
+    const versionId = created.id?.trim();
+    if (!versionId) throw new Error("script version id missing after save");
+    const anchor = { artifactId: targetId, versionId };
+    persistedAnchorRef.current = anchor;
+    setStatus("saved");
+    router.refresh();
+    return anchor;
+  }, [artifactId, projectId, nonEmpty, router]);
+
+  const handleSave = React.useCallback(async () => {
     try {
-      // 真项目还没有脚本 artifact → 首存 getOrCreate(与 TipTap 保存同路径)。
-      let targetId = artifactId;
-      if (!targetId && projectId) {
-        const ensured = await ensureScriptArtifact(projectId, null);
-        targetId = ensured.artifactId as string;
-      }
-      if (!targetId) throw new Error("no script artifact target");
-      const payloadSections = nonEmpty.map((s, i) => ({
-        id: s.id || `script-section-${i}`,
-        type: s.type,
-        heading: s.heading,
-        body: s.body,
-        // 金句段型语义上即强调;其余保留原 emphasis(TipTap 整段加粗的往返)。
-        emphasis: s.type === "golden_quote" ? true : s.emphasis,
-        startSeconds: s.startSeconds,
-        endSeconds: s.endSeconds,
-        // [T-387b] 凝固分镜原样带回(结构编辑不洗掉分镜真源;无 visual 的段不带字段)。
-        ...(s.visual ? { visual: s.visual } : {}),
-      }));
-      await client.createArtifactVersion({
-        params: { artifactId: targetId },
-        query: undefined,
-        body: {
-          // 不写 contentData.html:读侧会从新 sections 重拼编辑器 HTML,
-          // 避免结构改动被旧富文本真值盖掉(双向一致的关键)。
-          contentText: plainTextFromSections(
-            payloadSections as unknown as ReadonlyArray<ScriptSectionView>,
-          ),
-          contentData: { sections: payloadSections },
-          changeSummary: "结构编辑",
-        },
-      });
-      setStatus("saved");
-      router.refresh();
+      await persistCurrentSections();
     } catch {
       // 失败保留 dirty,用户可重试。
       setStatus("dirty");
     }
-  }, [artifactId, projectId, nonEmpty, router]);
+  }, [persistCurrentSections]);
+
+  const handleRewrite = React.useCallback(
+    async (section: EditableSection, index: number) => {
+      if (!section.body.trim() || statusRef.current === "saving") return;
+      try {
+        // 本地有修改时先自动保存成新版本，再用新 versionId 做并发锚点。否则候选会基于旧稿，
+        // 用户采纳时必然冲突；这是“AI 改写本段”必须自洽的一次点击链路。
+        let anchor = persistedAnchorRef.current;
+        if (statusRef.current === "dirty" || !anchor) {
+          anchor = await persistCurrentSections("AI 局部改稿前自动保存");
+        }
+        if (!anchor) return;
+        openChat({
+          functionKey: "script.patch",
+          prefill: "请只改写我选中的这一段，保持其他段落不变。具体修改要求：",
+          selection: {
+            kind: "script_section",
+            id: section.id,
+            title: section.heading || `第 ${index + 1} 段`,
+            artifactId: anchor.artifactId,
+            versionId: anchor.versionId,
+            sectionIndex: index,
+            excerpt: section.body,
+          },
+        });
+      } catch {
+        setStatus("dirty");
+      }
+    },
+    [openChat, persistCurrentSections],
+  );
 
   if (local.length === 0) {
     return (
@@ -333,6 +400,8 @@ function ScriptStructureEditor({
             onMove={moveSection}
             onRemove={removeSection}
             onInsertBelow={insertBelow}
+            assetLabels={assetLabels}
+            onRewrite={(section) => handleRewrite(section, i)}
           />
         ))}
       </ol>
@@ -387,6 +456,8 @@ function SectionCard({
   onMove,
   onRemove,
   onInsertBelow,
+  onRewrite,
+  assetLabels,
 }: {
   readonly section: EditableSection;
   readonly index: number;
@@ -395,6 +466,8 @@ function SectionCard({
   readonly onMove: (index: number, delta: -1 | 1) => void;
   readonly onRemove: (index: number) => void;
   readonly onInsertBelow: (index: number) => void;
+  readonly onRewrite: (section: EditableSection) => void | Promise<void>;
+  readonly assetLabels: Readonly<Record<string, string>>;
 }) {
   const t = TYPE_LABEL[section.type] ?? TYPE_LABEL.body;
   const time =
@@ -446,6 +519,17 @@ function SectionCard({
         </span>
         {/* 段操作:上移/下移/删除/在下方加段(hover 常显策略交给 opacity,键盘可达)。 */}
         <span className="flex shrink-0 items-center gap-0.5 opacity-40 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+          <button
+            type="button"
+            data-slot="script-section-ai-rewrite"
+            aria-label={`AI 改写第 ${index + 1} 段`}
+            disabled={!section.body.trim()}
+            onClick={() => void onRewrite(section)}
+            className="mr-1 inline-flex h-6 items-center gap-1 rounded-md border border-brand/25 bg-brand-soft px-1.5 text-[11px] font-medium text-brand hover:bg-brand/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Sparkles className="size-3" aria-hidden="true" />
+            AI 改写本段
+          </button>
           <SectionOpButton
             id="section-move-up"
             label="上移"
@@ -502,9 +586,10 @@ function SectionCard({
               {section.visual.assetRefs.map((ref) => (
                 <span
                   key={ref}
+                  data-asset-state={assetLabels[ref] ? "resolved" : "missing"}
                   className="inline-flex max-w-full items-center truncate rounded-full border border-border bg-surface px-1.5 py-px"
                 >
-                  {ref}
+                  {assetLabels[ref] || "素材已失效"}
                 </span>
               ))}
             </p>

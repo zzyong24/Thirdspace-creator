@@ -47,7 +47,6 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   listAuthorizedDirs: ReturnType<typeof vi.fn>;
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
-  dispatchPlanningThesis: ReturnType<typeof vi.fn>;
   dispatchPublishPackage: ReturnType<typeof vi.fn>;
   dispatchProjectTranscribe: ReturnType<typeof vi.fn>;
   dispatchGenerateCover: ReturnType<typeof vi.fn>;
@@ -423,12 +422,6 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     projectId: "proj-1",
     error: null as string | null,
   }));
-  // [T-265] planning.thesis 核心(fake:dispatch planning.thesis → 返回 taskId + projectId)。
-  const dispatchPlanningThesis = vi.fn(async () => ({
-    taskId: "task-thesis-1",
-    projectId: "proj-1",
-    error: null as string | null,
-  }));
   // [T-271] cover.generate 核心(fake:dispatch cover.generate → 返回 taskId + projectId)。
   const dispatchGenerateCover = vi.fn(async () => ({
     taskId: "task-cover-1",
@@ -463,7 +456,6 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listAuthorizedDirs,
     dispatchGenerateAsset,
     dispatchScriptReview,
-    dispatchPlanningThesis,
     dispatchGenerateCover,
     diagnoseContent,
     analyzeReview,
@@ -500,7 +492,6 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listAuthorizedDirs,
     dispatchGenerateAsset,
     dispatchScriptReview,
-    dispatchPlanningThesis,
     dispatchGenerateCover,
     diagnoseContent,
     analyzeReview,
@@ -540,7 +531,16 @@ async function runExecute(tool: Tool, input: unknown): Promise<unknown> {
 
 describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
   it("[T-104] ALL_CHAT_TOOL_NAMES 与 allChatTools 全实现同步(drift guard:加工具忘更新单一真值即挂)", () => {
-    const { deps } = makeDeps();
+    const { deps } = makeDeps({
+      // script.patch 是唯一按可信稿面锚点条件挂载的工具；drift guard 用合法锚点
+      // 展开完整实现表，普通无选区会话另有用例证明该工具物理不存在。
+      scriptPatchAnchor: {
+        artifactId: "artifact-guard",
+        versionId: "version-guard",
+        sectionId: "section-guard",
+        originalText: "guard",
+      },
+    });
     expect([...ALL_CHAT_TOOL_NAMES].sort()).toEqual(
       Object.keys(allChatTools(deps)).sort(),
     );
@@ -696,6 +696,40 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(result).toEqual({
       kind: "script.hooks",
       items: [{ text: "你们公司那堆文档,90% 没人看", angle: "反常识断言" }],
+    });
+  });
+
+  it("[T-716] 没有稿面可信锚点时物理不挂 script.patch，模型不能反问技术 ID", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["script.patch"], deps);
+    expect(tools["script.patch"]).toBeUndefined();
+  });
+
+  it("[T-716] 稿面已绑定锚点时模型只需给 replacementText，技术 ID 强制取可信上下文", async () => {
+    const { deps } = makeDeps({
+      scriptPatchAnchor: {
+        artifactId: "trusted-artifact",
+        versionId: "trusted-version",
+        sectionId: "trusted-section",
+        originalText: "被选中的真实原文",
+      },
+    });
+    const tools = buildChatTools(["script.patch"], deps);
+    const result = await runExecute(tools["script.patch"]!, {
+      replacementText: "只改这一段后的新正文",
+      summary: "区分内容雷达改写与自动原创选题",
+      // 即使某个 provider 额外塞入伪造字段，execute 也不能让它覆盖可信锚点。
+      artifactId: "malicious-artifact",
+      sectionId: "wrong-section",
+    });
+    expect(result).toEqual({
+      kind: "script.patch",
+      artifactId: "trusted-artifact",
+      versionId: "trusted-version",
+      sectionId: "trusted-section",
+      originalText: "被选中的真实原文",
+      replacementText: "只改这一段后的新正文",
+      summary: "区分内容雷达改写与自动原创选题",
     });
   });
 
@@ -889,6 +923,50 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
       sessionId: "posdisc-1",
       candidateId: "poscand:posdisc-1:16:方向A-实战顾问",
       candidateRevision: 16,
+    });
+  });
+
+  it("[T-707] 未答完六问且未选择方向时也能直接生成可采纳候选", async () => {
+    const getPositioningDiscovery = vi.fn(async () => ({
+      id: "posdisc-draft",
+      sourceMode: "optimize" as const,
+      status: "draft" as const,
+      revision: 2,
+      answers: [
+        {
+          themeId: "goal",
+          selectedOptionIds: ["建立个人品牌"],
+          customText: "先给我一版",
+          skipped: false,
+        },
+      ],
+      webReferences: [],
+    }));
+    const { deps, generatePositioning } = makeDeps({ getPositioningDiscovery });
+    const tools = buildChatTools(["positioning.generate"], deps);
+
+    const result = (await runExecute(tools["positioning.generate"]!, {
+      discoverySessionId: "posdisc-draft",
+      discoveryRevision: 1,
+      extraBrief: "信息不足处标为待验证，不要拒绝产出。",
+    })) as {
+      discovery: {
+        sessionId: string;
+        candidateId: string;
+        candidateRevision: number;
+      } | null;
+    };
+
+    expect(generatePositioning).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceMode: "optimize",
+        extraBrief: expect.stringContaining("服务端最新前采快照（版本 2）"),
+      }),
+    );
+    expect(result.discovery).toEqual({
+      sessionId: "posdisc-draft",
+      candidateId: "poscand:posdisc-draft:2:direct",
+      candidateRevision: 2,
     });
   });
 });
@@ -1135,6 +1213,60 @@ describe("[T-350a] publish.package 工具 — 发布物料生成(单平台抖音
   });
 });
 
+describe("[T-703] video.edit.render 工具 — 只产可确认剪辑候选", () => {
+  const WHITELIST = ["video.edit.render"] as const;
+
+  it("把有界修改参数透传给预演端口，不在工具执行阶段写库或启动渲染", async () => {
+    const prepareVideoEdit = vi.fn(async (input: {
+      instruction: string;
+      replaceBroll?: Array<{ sceneIdx: number; assetId: string }>;
+    }) => ({
+      kind: "video.edit" as const,
+      projectId: "proj-1",
+      outputId: "out-1",
+      expectedRevision: 3,
+      sourceRenderTaskId: "task-old",
+      instruction: input.instruction,
+      summary: ["第 2 场改用指定素材"],
+      decisions: { scenes: [] },
+      renderProps: { scenes: [], broll: [] },
+      error: null,
+    }));
+    const { deps } = makeDeps({ prepareVideoEdit });
+    const tools = buildChatTools(WHITELIST, deps);
+    const input = {
+      instruction: "第二段换成录屏",
+      replaceBroll: [{ sceneIdx: 1, assetId: "asset-screen-1" }],
+    };
+
+    const result = (await runExecute(tools["video.edit.render"]!, input)) as {
+      kind: string;
+      expectedRevision: number | null;
+      error: string | null;
+    };
+
+    expect(prepareVideoEdit).toHaveBeenCalledWith(input);
+    expect(result).toMatchObject({
+      kind: "video.edit",
+      expectedRevision: 3,
+      error: null,
+    });
+  });
+
+  it("端口未接入时返回可见错误候选，不伪装修改成功", async () => {
+    const { deps } = makeDeps({ prepareVideoEdit: undefined });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["video.edit.render"]!, {
+      instruction: "删掉第一张信息卡",
+      removeCardIndexes: [0],
+    })) as { kind: string; renderProps: unknown; error: string | null };
+
+    expect(result.kind).toBe("video.edit");
+    expect(result.renderProps).toBeNull();
+    expect(result.error).toContain("尚未接入");
+  });
+});
+
 // [T-385] 复盘无稿 → 对话内一键抓逐字稿(execute → dispatchProjectTranscribe,复用 T-374
 // projects.transcribe 链)。同 publish.package 异步 dispatch 范式。
 describe("[T-385] project.transcribe 工具 — 对话内一键抓逐字稿", () => {
@@ -1195,80 +1327,11 @@ describe("[T-385] project.transcribe 工具 — 对话内一键抓逐字稿", ()
   });
 });
 
-// [T-265] 论点树对话内真生成 —— 复活断链的 chat 工具半(execute → dispatchPlanningThesis)。
-describe("[T-265] planning.thesis 工具 — 论点树对话内真生成", () => {
-  const WHITELIST = ["planning.thesis"] as const;
-
-  it("[T-265] planning.thesis 可挂(此前不在 ALL_CHAT_TOOL_NAMES → 深链死链)", () => {
+describe("[T-726] planning.thesis 工具退役", () => {
+  it("不在公开工具清单，旧白名单也无法重新挂载", () => {
     const { deps } = makeDeps();
-    const tools = buildChatTools([...WHITELIST], deps);
-    expect(Object.keys(tools)).toEqual(["planning.thesis"]);
-    // 也在单一真值里(否则 functionKey=planning.thesis 深链的 forcedTool 恒 undefined)。
-    expect(ALL_CHAT_TOOL_NAMES).toContain("planning.thesis");
-  });
-
-  it("execute 调注入的 dispatchPlanningThesis,返回 taskId + projectId(kind=planning.thesis,异步 dispatch)", async () => {
-    const { deps, dispatchPlanningThesis } = makeDeps();
-    const tools = buildChatTools(WHITELIST, deps);
-    const result = (await runExecute(tools["planning.thesis"]!, {
-      projectId: "  proj-1  ",
-      topic: "  AI 原生浏览器  ",
-    })) as {
-      kind: string;
-      taskId: string | null;
-      projectId: string | null;
-      error: string | null;
-    };
-    // projectId/topic trim 后透传;不直接生成(异步 dispatch,不阻塞对话回合)。
-    expect(dispatchPlanningThesis).toHaveBeenCalledWith({
-      projectId: "proj-1",
-      topic: "AI 原生浏览器",
-    });
-    expect(result.kind).toBe("planning.thesis");
-    expect(result.taskId).toBe("task-thesis-1");
-    expect(result.projectId).toBe("proj-1");
-    expect(result.error).toBeNull();
-  });
-
-  it("无参(稿面右栏对话)→ projectId/topic 缺省不传,由 chat-runner 端口从 chatContext 兜底", async () => {
-    const { deps, dispatchPlanningThesis } = makeDeps();
-    const tools = buildChatTools(WHITELIST, deps);
-    await runExecute(tools["planning.thesis"]!, {});
-    expect(dispatchPlanningThesis).toHaveBeenCalledWith({
-      projectId: undefined,
-      topic: undefined,
-    });
-  });
-
-  it("端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装立好)", async () => {
-    const { deps } = makeDeps({
-      dispatchPlanningThesis: async () => ({
-        taskId: null,
-        projectId: null,
-        error: "论点树要挂进具体项目的稿面「论点骨架」面板 —— 请在项目稿面右栏立论点。",
-      }),
-    });
-    const tools = buildChatTools(WHITELIST, deps);
-    const result = (await runExecute(tools["planning.thesis"]!, {})) as {
-      taskId: string | null;
-      error: string | null;
-    };
-    expect(result.taskId).toBeNull();
-    expect(result.error).toContain("论点骨架");
-  });
-
-  it("dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级,不裸机器码)", async () => {
-    const { deps } = makeDeps({
-      dispatchPlanningThesis: async () => {
-        throw new Error("论点树能力当前未接入");
-      },
-    });
-    const tools = buildChatTools(WHITELIST, deps);
-    const result = (await runExecute(tools["planning.thesis"]!, {
-      projectId: "proj-1",
-    })) as { taskId: string | null; error: string | null };
-    expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(ALL_CHAT_TOOL_NAMES).not.toContain("planning.thesis");
+    expect(buildChatTools(["planning.thesis"], deps)).toEqual({});
   });
 });
 
@@ -1832,6 +1895,116 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
       items: unknown[];
     };
     expect(result.items).toEqual([]);
+  });
+});
+
+describe("[T-691] 项目生命周期 / 历史项目 / 审核报告只读工具", () => {
+  it("绑定当前项目后 lifecycle 忽略模型伪造的 projectId，并返回分区错误真相", async () => {
+    const getProjectLifecycle = vi.fn(async ({ projectId }: { projectId: string }) => ({
+      traceId: "lifecycle-trace-1",
+      project: {
+        id: projectId,
+        title: "当前项目",
+        stage: "script",
+        status: "active",
+        source: "manual",
+        publishedAt: null,
+      },
+      brief: {},
+      artifacts: [],
+      materials: [],
+      cover: null,
+      publications: [],
+      metrics: { subject: "当前项目", rows: [], retention: [] },
+      review: null,
+      retrospective: { learningCount: 0 },
+      completeness: {
+        brief: "empty" as const,
+        artifacts: "error" as const,
+      },
+      errors: [{ section: "artifacts", code: "ARTIFACTS_DATABASE_ERROR" }],
+    }));
+    const { deps } = makeDeps({
+      boundProjectId: "proj-bound",
+      getProjectLifecycle,
+    });
+    const tools = buildChatTools(["context.project.lifecycle"], deps);
+
+    const result = (await runExecute(tools["context.project.lifecycle"]!, {
+      projectId: "proj-spoofed",
+    })) as {
+      found: boolean;
+      lifecycle: { project: { id: string }; errors: Array<{ code: string }> };
+    };
+
+    expect(getProjectLifecycle).toHaveBeenCalledWith({ projectId: "proj-bound" });
+    expect(result.found).toBe(true);
+    expect(result.lifecycle.project.id).toBe("proj-bound");
+    expect(result.lifecycle.errors[0]?.code).toBe("ARTIFACTS_DATABASE_ERROR");
+  });
+
+  it("历史项目检索透传真实排序条件，并默认排除绑定项目", async () => {
+    const searchProjects = vi.fn(async () => ({
+      rows: [
+        {
+          id: "proj-old",
+          title: "上一期",
+          stage: "review",
+          status: "completed",
+          source: "imported",
+          publishedAt: "2026-08-01T00:00:00.000Z",
+        },
+      ],
+      total: 1,
+    }));
+    const { deps } = makeDeps({ boundProjectId: "proj-current", searchProjects });
+    const tools = buildChatTools(["context.projects.search"], deps);
+
+    const result = (await runExecute(tools["context.projects.search"]!, {
+      query: "上一期",
+      limit: 3,
+    })) as { items: Array<{ id: string }>; total: number };
+
+    expect(searchProjects).toHaveBeenCalledWith({
+      query: "上一期",
+      publishedOnly: true,
+      orderBy: "publishedAt",
+      direction: "desc",
+      limit: 3,
+      excludeProjectId: "proj-current",
+    });
+    expect(result.items[0]?.id).toBe("proj-old");
+    expect(result.total).toBe(1);
+  });
+
+  it("审核报告按可信绑定项目读取，指定 reportId 不被吞掉", async () => {
+    const getReviewReport = vi.fn(async ({ projectId }: { projectId: string }) => ({
+      id: "report-1",
+      projectId,
+      artifactId: "artifact-1",
+      artifactVersion: 2,
+      artifactVersionId: "version-2",
+      verdict: "needs_changes",
+      summary: "有一处需要调整",
+      modelLabel: "通用模型",
+      reviewedAt: "2026-08-04T00:00:00.000Z",
+      stale: false,
+      findings: [],
+    }));
+    const { deps } = makeDeps({ boundProjectId: "proj-bound", getReviewReport });
+    const tools = buildChatTools(["context.review.report"], deps);
+
+    const result = (await runExecute(tools["context.review.report"]!, {
+      projectId: "proj-spoofed",
+      reportId: "report-1",
+    })) as { found: boolean; report: { projectId: string } };
+
+    expect(getReviewReport).toHaveBeenCalledWith({
+      projectId: "proj-bound",
+      reportId: "report-1",
+    });
+    expect(result.found).toBe(true);
+    expect(result.report.projectId).toBe("proj-bound");
   });
 });
 
@@ -2932,6 +3105,8 @@ describe("[T-240③] getSurfaceToolScope — 场景工具白名单", () => {
     expect(SURFACE_TOOL_SCOPES.project).toContain("review.analyze");
     expect(SURFACE_TOOL_SCOPES.project).toContain("review.script");
     expect(SURFACE_TOOL_SCOPES.project).toContain("calibration.diagnose");
+    expect(SURFACE_TOOL_SCOPES.project).toContain("video.edit.render");
+    expect(SURFACE_TOOL_SCOPES.topics).not.toContain("video.edit.render");
   });
 
   it("阶段感知:project + 明确未发布 → 砍 review.analyze;已发布/未知 → 保留;未知 surface → null(回落全量)", async () => {
@@ -3570,7 +3745,7 @@ describe("[T-256a] local.workspace 工具 — 工作区目录感知(复用授权
 // 真机事故:①「联网搜今天 kimi 新模型再补选题卡」→ 搜索没完成就出卡,materialBasis 写「待联网
 // 拉取」占位冒充产出;② web.read 把 bing 搜索结果页整页正文渲成大素材卡(SERP 噪音)。
 
-describe("[T-371] topic.enrich 先搜后卡 — verifiedBrief 透传 + 顺序门描述", () => {
+describe("[T-371/T-708] topic.enrich 事实增强 — verifiedBrief 透传但不阻断候选", () => {
   it("verifiedBrief 透传到 deps.enrichTopic(照 extraBrief 清洗范式:trim)", async () => {
     const { deps, enrichTopic } = makeDeps();
     const tools = buildChatTools(["topic.enrich"], deps);
@@ -3597,17 +3772,49 @@ describe("[T-371] topic.enrich 先搜后卡 — verifiedBrief 透传 + 顺序门
     });
   });
 
-  it("工具描述含「先搜后卡」硬顺序门:先 material.gather/web.read → verifiedBrief → 禁占位冒充", () => {
+  it("搜索失败仍允许先产候选，但禁止把模型记忆冒充检索结果", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(["topic.enrich"], deps);
     const desc = (tools["topic.enrich"]! as { description?: string }).description!;
-    expect(desc).toContain("先搜后卡");
+    expect(desc).toContain("事实核验是增强，不是生成门禁");
     expect(desc).toContain("material.gather");
     expect(desc).toContain("web.read");
     expect(desc).toContain("verifiedBrief");
-    // 占位文案冒充产出 = 欺骗,硬话在场。
-    expect(desc).toContain("待联网拉取");
-    expect(desc).toContain("欺骗");
+    expect(desc).toContain("仍可基于用户已确认的信息立即生成可编辑候选");
+    expect(desc).toContain("不得伪造 URL");
+    expect(desc).not.toContain("不可跳");
+  });
+});
+
+describe("[T-708] 创作工具完整度条件一律软化，安全与真相门保留", () => {
+  it("script.draft 缺少真实故事时先出可编辑稿，不编个人经历", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["script.draft"], deps);
+    const desc = (tools["script.draft"]! as { description?: string }).description!;
+    expect(desc).toContain("真实资料优先，但不是整稿门禁");
+    expect(desc).toContain("仍应基于当前项目 brief");
+    expect(desc).toContain("待补真实案例");
+    expect(desc).toContain("不得编造个人经历");
+  });
+
+  it("长网页和本地文件允许阶段结果，但必须标明只读范围", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["web.read", "local.read"], deps);
+    const webDesc = (tools["web.read"]! as { description?: string }).description!;
+    const localDesc = (tools["local.read"]! as { description?: string }).description!;
+    expect(webDesc).toContain("仅基于已读 X/总 Y 字");
+    expect(webDesc).toContain("绝不把局部冒充全文");
+    expect(localDesc).toContain("不能一直转圈而不给阶段结果");
+    expect(localDesc).toContain("标明已读范围和剩余字数");
+  });
+
+  it("本地读取的授权、敏感文件和路径选择仍是硬门", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["local.read"], deps);
+    const desc = (tools["local.read"]! as { description?: string }).description!;
+    expect(desc).toContain("授权协议(HITL 阻塞式)");
+    expect(desc).toContain("敏感文件");
+    expect(desc).toContain("绝不换路径绕行");
   });
 });
 

@@ -55,7 +55,7 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
             id="ai-copilot-title"
             className="font-heading text-lg font-semibold leading-tight text-foreground"
           >
-            Creator Copilot
+            AI 助手
           </h2>
           {/* [T-096 #3] 「⌘K 全局唤醒」假徽标已摘:⌘K 实际绑定 /search(T-051 裁决),
               浮层从无该监听 —— 死入口不再假承诺(T-048 审计实锤)。 */}

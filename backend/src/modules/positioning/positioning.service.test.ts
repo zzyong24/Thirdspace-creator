@@ -323,6 +323,48 @@ describe("positioning service", () => {
     expect((await service.listStatements(ctx, { limit: 20, offset: 0 })).total).toBe(2);
   });
 
+  it("[T-707] draft 前采候选可直接采纳，不再要求六问全部完成", async () => {
+    const service = makeService(db, makeProjectsPort(), "confirm-draft");
+    const session = await service.startDiscovery(ctx, "scratch");
+    expect(session.status).toBe("draft");
+
+    const result = await service.confirmDiscovery(ctx, {
+      sessionId: session.id,
+      candidateId: "candidate-direct",
+      candidateRevision: session.revision,
+      expectedCurrentStatementId: null,
+      idempotencyKey: "confirm-direct-draft",
+      proposal: {
+        persona: "真实成长记录者",
+        field: "个人成长",
+        audience: "待验证",
+        differentiation: "用真实过程代替空洞说教",
+        capabilities: ["经历复盘"],
+        facets: {
+          contentScope: "成长过程与阶段性思考",
+          avoid: "不虚构产品和结果",
+          corePain: "待验证",
+          coreValue: "提供可参考的真实路径",
+          tone: "坦率、具体",
+          statusNote: "",
+        },
+        downstreamRules: {
+          topicRule: "从真实经历出题",
+          scriptRule: "事实与假设分开",
+          projectRule: "优先记录真实过程",
+          forbidRule: "不虚构产品",
+          expressionRule: "说人话",
+        },
+        oneLiner: "记录普通人把想法做成作品的真实过程",
+        keywords: ["成长", "实践", "复盘"],
+        productAnchorIds: [],
+      },
+    });
+
+    expect(result.session.status).toBe("adopted");
+    expect(result.statement.oneLiner).toBe("记录普通人把想法做成作品的真实过程");
+  });
+
   it("[T-521] 旧动态 statusNote 清理按账号隔离、幂等，并只审计 hash 不泄露原文", async () => {
     const audit = vi.fn(async () => undefined);
     let seq = 0;

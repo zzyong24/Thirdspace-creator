@@ -115,9 +115,14 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     expect(
       requiredSkillIdsForTask("video.decisions", { kind: "subtitles" }),
     ).toEqual(["video.subtitles"]);
+    expect(
+      requiredSkillIdsForTask("video.decisions", { kind: "broll" }),
+    ).toEqual(["material.match", "video.broll"]);
     expect(requiredSkillIdsForTask("video.decisions", {})).toEqual([
+      "material.match",
       "video.broll",
       "video.cards",
+      "video.director",
       "video.scenes",
       "video.subtitles",
     ]);

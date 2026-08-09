@@ -13,6 +13,7 @@ import {
   createPublishingCenterQueryService,
 } from "./query-services.service";
 import { OwnershipError } from "./query-services.errors";
+import { AccountRequiredError } from "../../errors";
 
 const ctx: RequestContext = {
   userId: "user-a",
@@ -195,6 +196,27 @@ describe("DashboardQueryService.getDashboard", () => {
     expect(result.error).not.toBeNull();
     expect(result.error?.code).toBeDefined();
     expect(result.error?.message).toBeDefined();
+  });
+
+  it("未绑定账号时保留 AccountRequiredError，交给页面渲染零账号引导", async () => {
+    const svc = createDashboardQueryService({
+      projects: {
+        getDashboardSummary: vi.fn(async () => {
+          throw new AccountRequiredError();
+        }),
+      },
+      publishing: { getRecentPublications: vi.fn(async () => []) },
+      analytics: {
+        getDashboardMetrics: vi.fn(async () => ({ metrics: [], trend: [] })),
+      },
+      learnings: { getSuggestions: vi.fn(async () => []) },
+      notifications: { getUnreadCount: vi.fn(async () => 0) },
+      knowledge: { getTrendingTopics: vi.fn(async () => []) },
+    });
+
+    await expect(svc.getDashboard(ctx)).rejects.toBeInstanceOf(
+      AccountRequiredError,
+    );
   });
 });
 

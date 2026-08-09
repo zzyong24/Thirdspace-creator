@@ -102,49 +102,38 @@ function makeDeps(
   };
 }
 
-describe("creative-context F2 — reconstructed 论点树 brief 显式标注", () => {
-  it("origin='reconstructed' → thesisBrief 前缀「未经确认」标注", async () => {
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-imported-1", topic: "" },
-      makeDeps("reconstructed"),
-    );
-    expect(context.thesisBrief).toContain(RECONSTRUCTED_MARK);
-    // 原内容仍在(是「标注 + 内容」,不是「排除」——下游还能读到,但不当已确认)。
-    expect(context.thesisBrief).toContain("核心论点");
-  });
+describe("creative-context T-726 — 历史论点树只读保留但不进入新执行", () => {
+  it.each(["reconstructed", "user", null] as const)(
+    "origin=%s → thesis reader 与 origin reader 都不触发，thesisBrief 恒空",
+    async (origin) => {
+      const deps = makeDeps(origin);
+      let thesisReads = 0;
+      let thesisOriginReads = 0;
+      deps.thesis = {
+        getThesisNodes: async () => {
+          thesisReads += 1;
+          return [{ column: "core", title: "历史核心论点", summary: "不应进入 prompt" }];
+        },
+      };
+      deps.artifactOrigin = {
+        getArtifactOrigin: async (_c, _projectId, artifactType) => {
+          if (artifactType === "thesis_tree") thesisOriginReads += 1;
+          return origin;
+        },
+      };
 
-  it("origin='user' → thesisBrief 不带「未经确认」标注(用户已确认前提)", async () => {
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-manual-1", topic: "" },
-      makeDeps("user"),
-    );
-    expect(context.thesisBrief).not.toContain(RECONSTRUCTED_MARK);
-    expect(context.thesisBrief).toContain("核心论点");
-  });
+      const context = await assembleCreativeContext(
+        ctx,
+        { projectId: "proj-history", topic: "当前选题" },
+        deps,
+      );
 
-  it("origin=null(legacy)→ thesisBrief 不带标注", async () => {
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-legacy-1", topic: "" },
-      makeDeps(null),
-    );
-    expect(context.thesisBrief).not.toContain(RECONSTRUCTED_MARK);
-  });
-
-  it("未装配 artifactOrigin reader → 降级为不标注(不阻塞节点)", async () => {
-    const deps = makeDeps("reconstructed");
-    delete deps.artifactOrigin;
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-1", topic: "" },
-      deps,
-    );
-    // 没有 origin reader 就退回 legacy 行为(不标注),但 brief 内容仍在。
-    expect(context.thesisBrief).not.toContain(RECONSTRUCTED_MARK);
-    expect(context.thesisBrief).toContain("核心论点");
-  });
+      expect(context.thesisBrief).toBe("");
+      expect(thesisReads).toBe(0);
+      expect(thesisOriginReads).toBe(0);
+      expect(context.topic.title).toBe("当前选题");
+    },
+  );
 });
 
 // ── T-039a:复盘对象注入(reviewSubject reader → CreativeContext 复盘字段)────────────

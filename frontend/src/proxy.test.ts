@@ -95,8 +95,15 @@ describe("proxy default-deny (T-415)", () => {
       expect(denied(makeReq("/projects/new", { method: "POST", nextAction: "abc123", handshake: TOKEN }))).toBe(false);
     });
 
-    it("allowlist(blob/activate/auth)缺握手也放行", () => {
+    it("allowlist(blob/execution-preview/activate/auth)缺握手也放行", () => {
       expect(denied(makeReq("/api/v1/blob/xyz.png"))).toBe(false);
+      expect(
+        denied(
+          makeReq(
+            "/api/v1/local/execution-preview/ai-task-1/final.mp4",
+          ),
+        ),
+      ).toBe(false);
       expect(denied(makeReq("/api/v1/activate", { method: "POST" }))).toBe(false);
       expect(denied(makeReq("/api/v1/auth/login", { method: "POST" }))).toBe(false);
     });

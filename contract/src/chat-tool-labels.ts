@@ -19,6 +19,10 @@ export interface ChatToolLabel {
 
 /** 全部 chatbox 白名单工具的中文名 + 一句话用途。 */
 export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
+  "video.edit.render": {
+    name: "调整剪辑",
+    purpose: "读取当前已确认分镜，按意见生成可确认的局部调整与重渲染候选",
+  },
   "topic.generate": {
     name: "AI 出题",
     purpose: "按你的定位与真实依据(观众评论/知识库)产一批选题候选",
@@ -30,6 +34,10 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
   "script.hooks": {
     name: "生成 HOOK 候选",
     purpose: "产 4 个切角不同的开场钩子候选,可逐条写入稿面",
+  },
+  "script.patch": {
+    name: "局部改稿",
+    purpose: "只改用户在稿面选中的一个段落，确认后追加为新的完整脚本版本",
   },
   "script.draft": {
     name: "起草整稿脚本",
@@ -75,12 +83,6 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "抖音分享建档",
     purpose: "持久归档抖音分享；仅在用户本轮明确授权时续接转写",
   },
-  // [T-265] 论点树对话内真生成 —— 产 thesis_tree 候选,采纳后挂进稿面「论点骨架」面板。
-  "planning.thesis": {
-    name: "立论点树",
-    purpose:
-      "基于定位/选题/立项 brief/已搜素材生成一棵论点树(核心论点+支撑/证据/反驳),采纳后挂进稿面「论点骨架」面板、写脚本时作为依据",
-  },
   "learning.capture": {
     name: "记录经验",
     purpose: "把对话里口述的经验整理成结构化经验卡,采纳后沉淀进飞轮",
@@ -115,6 +117,10 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "读取项目库",
     purpose: "实时拉取你最近的项目/作品清单",
   },
+  "context.projects.search": {
+    name: "检索历史项目",
+    purpose: "按真实发布时间查找前几期或历史作品",
+  },
   "context.knowledge": {
     name: "检索知识库",
     purpose: "按关键词搜你的知识库条目",
@@ -131,6 +137,14 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
   "context.project.detail": {
     name: "读取项目档案",
     purpose: "拉某项目全档:立项 brief/阶段/发布状态/产物索引/最新指标",
+  },
+  "context.project.lifecycle": {
+    name: "读取项目全流程",
+    purpose: "读取项目从立项到稿件、素材、发布、数据、审核和复盘的真实状态",
+  },
+  "context.review.report": {
+    name: "读取审核报告",
+    purpose: "读取当前稿件真实审核结果、命中项和可用改写建议",
   },
   "context.positioning.detail": {
     name: "读取定位档案",

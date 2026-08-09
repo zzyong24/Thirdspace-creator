@@ -9,6 +9,7 @@ import {
   type AiPositioningPort,
 } from "./ai.service";
 import { ConflictError } from "./ai.errors";
+import { createAiRepository } from "./ai.repository";
 
 // AI service test (Step 3) — the six cases: idempotent create, references persisted +
 // status queued, confirm state-machine guard (valid + invalid), confirm→createVersion(ai)
@@ -83,6 +84,53 @@ describe("ai service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+  });
+
+  it("[T-726] createTask 对退役 planning.thesis fail closed，reason 稳定且零写入", async () => {
+    const { service } = makeService(db);
+
+    await expect(
+      service.createTask(ctx, {
+        taskType: "planning.thesis",
+        inputData: { projectId: "project-history", artifactId: "thesis-history" },
+      }),
+    ).rejects.toMatchObject({
+      code: "ConflictError",
+      details: { reason: "capability_retired" },
+    });
+
+    await expect(
+      service.listTasks(ctx, { taskType: "planning.thesis", limit: 20, offset: 0 }),
+    ).resolves.toEqual({ rows: [], total: 0 });
+  });
+
+  it("[T-726] 历史 planning.thesis 候选确认同样 fail closed，不追加 artifact version", async () => {
+    const { service, port } = makeService(db);
+    const repo = createAiRepository(db, {
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-history`,
+      userId: ctx.userId,
+      accountId: ctx.accountId!,
+    });
+    const task = await repo.createTaskIfAbsent({
+      projectId: "project-history",
+      contentOutputId: null,
+      taskType: "planning.thesis",
+      inputData: { artifactId: "artifact-history" },
+      modelKey: "legacy-model",
+      idempotencyKey: "legacy-planning-thesis",
+      attemptId: "018f8d8a-90ab-7def-8123-legacythesis",
+      requestFingerprint: "sha256:legacy",
+      requestedAt: NOW,
+    });
+    expect(task).not.toBeNull();
+    await repo.updateTaskStatus(task!.id, { status: "awaiting_confirmation" });
+
+    await expect(service.confirmTask(ctx, task!.id)).rejects.toMatchObject({
+      code: "ConflictError",
+      details: { reason: "capability_retired" },
+    });
+    expect(port.createVersion).not.toHaveBeenCalled();
   });
 
   it("createTask is idempotent: same idempotencyKey returns the existing task, no second row", async () => {

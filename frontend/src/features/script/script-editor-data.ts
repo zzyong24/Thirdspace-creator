@@ -216,6 +216,8 @@ export interface ScriptEditorData {
   readonly editorHtml: string | null;
   /** REAL version history (newest-first) from artifacts.versions.list. */
   readonly versions: ScriptViewModel["versions"];
+  /** 当前版本锚点：版本恢复/局部改稿必须据它做并发校验，不能只凭“共 N 版”。 */
+  readonly currentVersionId: string;
   /** Outline derived from the CURRENT version's section headings. */
   readonly outline: ScriptViewModel["outline"];
   /** Pull-quote candidates derived from emphasis sections of the CURRENT version. */
@@ -263,12 +265,33 @@ export async function loadScriptEditorData(
       .map((v) => {
         const summary =
           typeof v.changeSummary === "string" && v.changeSummary.trim()
-            ? ` · ${v.changeSummary.trim()}`
+            ? v.changeSummary.trim()
             : "";
+        const contentText =
+          typeof v.contentText === "string" ? v.contentText.trim() : "";
+        const structured = coerceSavedSections(
+          (v.contentData as { sections?: unknown } | undefined)?.sections,
+          (() => {
+            let i = 0;
+            return () => i++;
+          })(),
+        );
+        const previewText = (
+          contentText ||
+          (structured ?? [])
+            .map((section) => [section.heading, section.body].filter(Boolean).join("\n"))
+            .join("\n\n")
+        )
+          .replace(/\s+/g, " ")
+          .slice(0, 320);
         return {
           id: v.id,
-          label: `脚本 · v${v.versionNumber}${summary}`,
+          label: `脚本 · v${v.versionNumber}${summary ? ` · ${summary}` : ""}`,
           createdAt: typeof v.createdAt === "string" ? v.createdAt : "",
+          versionNumber: v.versionNumber,
+          summary,
+          previewText,
+          isCurrent: v.id === current.id,
         };
       });
 
@@ -287,7 +310,14 @@ export async function loadScriptEditorData(
       )
       .map((s) => ({ id: `script-quote-${s.id}`, text: s.body.trim() }));
 
-    return { sections, editorHtml, versions, outline, goldenQuotes };
+    return {
+      sections,
+      editorHtml,
+      versions,
+      currentVersionId: current.id,
+      outline,
+      goldenQuotes,
+    };
   } catch {
     return null;
   }
@@ -382,101 +412,6 @@ export async function loadPlanningOutline(
           r !== null,
       );
     return rows.length > 0 ? rows : null;
-  } catch {
-    return null;
-  }
-}
-
-// [T-127] 论点骨架一等类型 —— 稿面「论点骨架」面板据它渲染(核心论点 + 支撑/证据/反驳 分支)。
-// 与 CreativeContext 的 ThesisReader(server/ai/creative-context.ts)同源:都读 `thesis_tree`
-// artifact 当前版本的 `contentData.nodes`(column ∈ core|support|evidence|counter + title + summary)。
-export type ThesisColumn = "core" | "support" | "evidence" | "counter";
-// [T-127] 分论点挂载的素材引用(用户拍板②「每分论点挂 1-2 素材」)。存 entity id + 冗余 title
-// 供展示(免二次读用料链)。AI 生成的节点无此字段 → []。
-// [T-387a] additive source 字段:"ai" = planning.thesis 产树时确定性词面匹配预挂(面板渲
-// 「AI」小标,复用现有删/换机制);缺省 = 人挂(向后兼容,旧数据无此字段)。
-export interface ThesisMaterialRef {
-  readonly id: string;
-  readonly title: string;
-  readonly source?: "ai";
-}
-export interface ThesisSkeletonNode {
-  readonly column: ThesisColumn;
-  readonly title: string;
-  readonly summary: string;
-  readonly materialRefs: ReadonlyArray<ThesisMaterialRef>;
-}
-// [T-127] 返回 artifactId 一并给稿面面板 —— 可编辑保存时 createArtifactVersion 需要目标 artifact。
-export interface ThesisSkeleton {
-  readonly artifactId: string;
-  readonly nodes: ReadonlyArray<ThesisSkeletonNode>;
-}
-
-const THESIS_COLUMNS: ReadonlySet<string> = new Set([
-  "core",
-  "support",
-  "evidence",
-  "counter",
-]);
-
-/**
- * [T-127] 读项目已采纳的论点树(`thesis_tree` artifact 当前版本 `contentData.nodes`)→ 稿面
- * 「论点骨架」面板的数据。让原本埋在 Copilot(planning.thesis 生成 + 采纳成 artifact)、稿面看不到
- * 的论点显性化到稿面(用户复盘「不知道要先立论点」的根因)。返回:
- *   - 规整后的节点数组(至少一条有内容的 core/support/evidence/counter),
- *   - null:无 projectId / 无 thesis_tree artifact / 无当前版本 / 无有效节点 / 任何读解析失败
- *     → 面板渲染诚实空态(「还没立论点」+ 立论点 CTA)。
- *
- * 优雅降级(任何失败 → null);绝不炸页面。与 loadPlanningOutline 同款读法(复用
- * fetchVersionsAndCurrent + listArtifacts + OutlineArtifactDto)。
- */
-export async function loadThesisSkeleton(
-  projectId: string | null,
-  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
-): Promise<ThesisSkeleton | null> {
-  if (!projectId || !client.listArtifacts) return null;
-  try {
-    const listed = await client.listArtifacts({
-      params: { projectId },
-      query: { page: 1, pageSize: 200 },
-      body: undefined,
-    });
-    const artifacts = (Array.isArray(listed) ? listed : []) as OutlineArtifactDto[];
-    const thesisArtifact = artifacts.find(
-      (a) => a.artifactType === "thesis_tree",
-    );
-    if (!thesisArtifact) return null;
-    const fetched = await fetchVersionsAndCurrent(client, thesisArtifact.id);
-    if (!fetched) return null;
-    const data = fetched.current.contentData as { nodes?: unknown } | undefined;
-    const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
-    const out: ThesisSkeletonNode[] = [];
-    for (const raw of rawNodes) {
-      const o = (raw ?? {}) as Record<string, unknown>;
-      const column = typeof o.column === "string" ? o.column : "";
-      const title = typeof o.title === "string" ? o.title.trim() : "";
-      const summary = typeof o.summary === "string" ? o.summary.trim() : "";
-      if (!THESIS_COLUMNS.has(column)) continue;
-      if (!title && !summary) continue;
-      // [T-127] 读回挂载的素材引用(AI 生成节点无此字段 → [];规整 {id,title})。
-      const rawRefs = Array.isArray(o.materialRefs) ? o.materialRefs : [];
-      const materialRefs: ThesisMaterialRef[] = [];
-      for (const r of rawRefs) {
-        const ro = (r ?? {}) as Record<string, unknown>;
-        const id = typeof ro.id === "string" ? ro.id : "";
-        const t = typeof ro.title === "string" ? ro.title.trim() : "";
-        // [T-387a] 读回 AI 预挂标记(source:"ai";缺省 = 人挂,不带字段)。
-        if (id) {
-          materialRefs.push({
-            id,
-            title: t,
-            ...(ro.source === "ai" ? { source: "ai" as const } : {}),
-          });
-        }
-      }
-      out.push({ column: column as ThesisColumn, title, summary, materialRefs });
-    }
-    return out.length > 0 ? { artifactId: thesisArtifact.id, nodes: out } : null;
   } catch {
     return null;
   }

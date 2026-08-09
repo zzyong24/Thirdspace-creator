@@ -51,6 +51,7 @@ interface WireExecutionTask {
     taskType: string;
     artifacts: WireArtifact[];
     summary: string;
+    meta?: Record<string, unknown>;
   } | null;
   adoptedAssetIds: string[];
   errorMessage: string | null;
@@ -237,6 +238,31 @@ export function ExecutionTaskCard({
 
   const status = task?.status ?? "queued";
   const artifacts = task?.manifest?.artifacts ?? [];
+  const videoArtifacts = artifacts.filter((artifact) =>
+    (artifact.mimeType ?? "").toLowerCase().startsWith("video/"),
+  );
+  const visualReview = React.useMemo(() => {
+    const raw = task?.manifest?.meta?.visualReview;
+    if (!raw || typeof raw !== "object") return null;
+    const value = raw as Record<string, unknown>;
+    if (value.status !== "reviewed") return null;
+    const issues = Array.isArray(value.issues)
+      ? value.issues.filter(
+          (item): item is Record<string, unknown> =>
+            !!item && typeof item === "object" && typeof (item as Record<string, unknown>).message === "string",
+        )
+      : [];
+    return {
+      verdict: value.verdict === "warn" ? "warn" : "pass",
+      summary: typeof value.summary === "string" ? value.summary : "视觉审核已完成。",
+      issues,
+    };
+  }, [task?.manifest?.meta]);
+  const previewUrl = (artifact: WireArtifact) =>
+    `/api/v1/local/execution-preview/${encodeURIComponent(taskId)}/${artifact.path
+      .split("/")
+      .map(encodeURIComponent)
+      .join("/")}`;
 
   return (
     <div
@@ -270,6 +296,44 @@ export function ExecutionTaskCard({
               {task.manifest.summary}
             </p>
           ) : null}
+          {visualReview ? (
+            <div
+              data-slot="execution-task-visual-review"
+              className={`rounded-md border p-2 text-[11px] ${
+                visualReview.verdict === "warn"
+                  ? "border-warning/40 bg-warning/10 text-foreground"
+                  : "border-success/40 bg-success/10 text-foreground"
+              }`}
+            >
+              <p className="font-medium">
+                {visualReview.verdict === "warn" ? "视觉审核发现可优化项" : "视觉审核通过"}
+              </p>
+              <p className="mt-0.5 text-muted-foreground">{visualReview.summary}</p>
+              {visualReview.issues.length > 0 ? (
+                <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                  {visualReview.issues.map((issue, index) => (
+                    <li key={`${String(issue.code ?? "issue")}:${index}`}>
+                      {String(issue.message)}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+          {videoArtifacts.map((artifact) => (
+            <div key={`preview:${artifact.path}`} className="flex flex-col gap-1">
+              <video
+                data-slot="execution-task-video-preview"
+                src={previewUrl(artifact)}
+                controls
+                preload="metadata"
+                className="max-h-[420px] w-full rounded-md bg-black object-contain"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                先预览，再决定是否采纳；预览不会把文件写入素材库。
+              </p>
+            </div>
+          ))}
           {artifacts.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">
               (本次执行没有产出文件)

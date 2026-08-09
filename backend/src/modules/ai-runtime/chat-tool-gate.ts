@@ -62,9 +62,33 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   "topic.generate": { kind: "topic.candidates", extras: { items: [] } },
   "topic.enrich": { kind: "topic.card", extras: { card: null } },
   "script.hooks": { kind: "script.hooks", extras: { items: [] } },
+  "script.patch": {
+    kind: "script.patch",
+    extras: {
+      artifactId: "",
+      versionId: "",
+      sectionId: "",
+      originalText: "",
+      replacementText: "",
+      summary: "",
+    },
+  },
   // [T-268] script.draft —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文 →
   // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
   "script.draft": { kind: "script.draft", extras: { taskId: null, projectId: null } },
+  "video.edit.render": {
+    kind: "video.edit",
+    extras: {
+      projectId: null,
+      outputId: null,
+      expectedRevision: null,
+      sourceRenderTaskId: null,
+      instruction: "",
+      summary: [],
+      decisions: null,
+      renderProps: null,
+    },
+  },
   // [T-350a] publish.package —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文/空稿门 →
   // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
   "publish.package": { kind: "publish.package", extras: { taskId: null, projectId: null } },
@@ -127,12 +151,6 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
     kind: "review.report",
     extras: { taskId: null, projectId: null },
   },
-  // [T-265] planning.thesis —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文 →
-  // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
-  "planning.thesis": {
-    kind: "planning.thesis",
-    extras: { taskId: null, projectId: null },
-  },
   // [T-271] cover.generate —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文 →
   // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
   "cover.generate": {
@@ -164,6 +182,10 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
     kind: "context.projects",
     extras: { items: [], total: 0, offset: 0, hasMore: false },
   },
+  "context.projects.search": {
+    kind: "context.projects.search",
+    extras: { items: [], total: 0, hasMore: false, query: "" },
+  },
   "context.comments": {
     kind: "context.comments",
     extras: { items: [], total: 0, offset: 0, hasMore: false },
@@ -173,6 +195,14 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   "context.project.detail": {
     kind: "context.project.detail",
     extras: { found: false, project: null },
+  },
+  "context.project.lifecycle": {
+    kind: "context.project.lifecycle",
+    extras: { found: false, lifecycle: null },
+  },
+  "context.review.report": {
+    kind: "context.review.report",
+    extras: { found: false, report: null },
   },
   "context.positioning.detail": {
     kind: "context.positioning.detail",

@@ -942,7 +942,7 @@ export function createPositioningRepository(
         }
 
         if (
-          session.status !== "ready" ||
+          (session.status !== "draft" && session.status !== "ready") ||
           session.revision !== input.candidateRevision
         ) {
           return undefined;
@@ -997,7 +997,7 @@ export function createPositioningRepository(
               eq(positioningDiscoverySessions.userId, deps.userId),
               eq(positioningDiscoverySessions.accountId, deps.accountId),
               eq(positioningDiscoverySessions.revision, input.candidateRevision),
-              eq(positioningDiscoverySessions.status, "ready"),
+              sql`${positioningDiscoverySessions.status} IN ('draft', 'ready')`,
             ),
           )
           .returning();

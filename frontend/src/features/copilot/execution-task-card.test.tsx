@@ -53,6 +53,7 @@ function makeTask(over: Record<string, unknown> = {}) {
         },
       ],
       summary: "已回显 0 项输入清单",
+      meta: {},
     },
     adoptedAssetIds: [],
     errorMessage: null,
@@ -79,6 +80,12 @@ describe("ExecutionTaskCard", () => {
     expect(screen.getByText("采纳进素材库")).toBeInTheDocument();
     expect(screen.getByText("重试")).toBeInTheDocument();
     expect(screen.getByText("丢弃")).toBeInTheDocument();
+    const preview = document.querySelector('[data-slot="execution-task-video-preview"]');
+    expect(preview).toHaveAttribute(
+      "src",
+      "/api/v1/local/execution-preview/task-1/clip.mp4",
+    );
+    expect(screen.getByText(/先预览，再决定是否采纳/)).toBeInTheDocument();
   });
 
   it("采纳 → confirmExecutionTask → 已采纳态", async () => {
@@ -111,6 +118,33 @@ describe("ExecutionTaskCard", () => {
         adoptedAssetIds: ["a1", "a2"],
       }),
     );
+  });
+
+  it("成片配置视觉模型后展示抽帧审核结论和具体问题", async () => {
+    getExecutionTask.mockResolvedValue(
+      makeTask({
+        execType: "video.render",
+        manifest: {
+          ...makeTask().manifest,
+          meta: {
+            visualReview: {
+              status: "reviewed",
+              verdict: "warn",
+              summary: "主画面压住人物，界面文字偏小。",
+              issues: [
+                { code: "face_occlusion", severity: "error", message: "人物只露半张脸。" },
+              ],
+            },
+          },
+        },
+      }),
+    );
+    render(<ExecutionTaskCard taskId="task-1" />);
+    await waitFor(() =>
+      expect(screen.getByText("视觉审核发现可优化项")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("主画面压住人物，界面文字偏小。")).toBeInTheDocument();
+    expect(screen.getByText("人物只露半张脸。")).toBeInTheDocument();
   });
 
   it("丢弃 → discardExecutionTask → 已丢弃态", async () => {

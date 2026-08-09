@@ -38,10 +38,7 @@ export interface CreativeContext {
   // topic.generate `knowledge` basis can出题 from accumulated material. Empty until the
   // knowledge reader is wired or when the library is empty.
   knowledgeBrief: string;
-  // 论点树 brief — a compact rendering of the project's ADOPTED thesis tree (核心论点 +
-  // 支撑/证据/反驳). The 策划 stage's downstream nodes (planning.contract / planning.outline)
-  // read it as the upstream 编导判断 they build on. Empty string until the thesis reader is
-  // wired or when the project has no adopted thesis tree yet.
+  // T-726：字段只为下游调用签名兼容而保留，新执行恒为空且不读取历史 thesis_tree。
   thesisBrief: string;
   // 内容合同 brief — a compact rendering of the project's ADOPTED content contract (受众定位/
   // 价值主张/核心节奏/行动召唤). planning.outline reads it as the constraint the structure
@@ -61,12 +58,12 @@ export interface CreativeContext {
   // (钦定主张,不得自创与之矛盾的论点)+ 内容目标(含『避免X』作负向硬约束)+ 内容形式定调 +
   // 目标观众锁定 + 成功标准」。**仅项目态注入**(projectId 存在 + brief reader 装配 + brief 非空);
   // 账号态(选题链)/ 无 project / brief 全空 → 空串(下游整段省略,不注空壳)。套用 formatUserMaterialBrief
-  // 的「必须遵守」硬约束范式。注进 script.draft / planning.thesis / hooks / 对话 system(项目态)。
+  // 的「必须遵守」硬约束范式。注进 script.draft / hooks / 对话 system(项目态)。
   projectBriefHard: string;
   // [T-284a] 复刻补链 G1 —— 「对标参照·复刻用」段(渲染好的 prompt 块):这条 project 若复刻自某爆款
   //   (briefDetail.benchmarkRef 存在),渲成「原爆款为什么爆 / 结构拆解 / 钩子拆解 / 可借鉴点 / 适配建议」
-  //   段,段头带**诚实门**「他号拆解·仅作结构参照,禁照搬原文案」。注进 script.draft / planning.thesis /
-  //   planning.outline,让写文案/立论点/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」。**仅复刻
+  //   段,段头带**诚实门**「他号拆解·仅作结构参照,禁照搬原文案」。注进 script.draft /
+  //   planning.outline,让写文案/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」。**仅复刻
   //   项目态**(deps.brief 装配 + projectId 有值 + briefDetail.benchmarkRef 非空);非复刻/账号态 → 空串
   //   (下游整段省略,不污染普通创作)。诚实门对齐 benchmark.teardown「绝不抄袭」硬约束。
   benchmarkRefBrief: string;
@@ -617,18 +614,8 @@ export async function assembleCreativeContext(
     }
   };
 
-  let thesisBrief = "";
-  if (deps.thesis && input.projectId) {
-    try {
-      const nodes = await deps.thesis.getThesisNodes(ctx, input.projectId);
-      thesisBrief = markReconstructedBrief(
-        formatThesisNodes(nodes),
-        await originOf(THESIS_ARTIFACT_TYPE),
-      );
-    } catch {
-      thesisBrief = ""; // 论点树 is best-effort context; never block a node on it
-    }
-  }
+  // T-726：历史 reader/type 继续兼容 generic artifact 读取，但创作上下文不再触发它。
+  const thesisBrief = "";
 
   let contractBrief = "";
   if (deps.contract && input.projectId) {
@@ -1117,7 +1104,7 @@ export function renderProjectIntelligence(
 // 复刻项目(从 benchmark 转化候选立项)的 briefDetail.benchmarkRef 存有原爆款的 5 段拆解要素
 // (他号作品 AI 拆解:钩子/结构/为什么爆/可借鉴点/适配本账号建议)。渲成一段给创作生成链的参照文本,
 // **段头带诚实门**:「他号拆解·仅作结构参照,禁照搬原文案」,对齐 benchmark.teardown 的「绝不抄袭」硬约束
-// —— 让写文案/立论点/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」,而非搬运原文。全字段空 → 空串
+// —— 让写文案/搭结构时能「照这条爆款的结构逻辑,换本账号定位重做」,而非搬运原文。全字段空 → 空串
 // (非复刻项目/账号态天然为空,下游整段省略,不污染普通创作)。纯函数,导出供单测。仅项目态调用
 // (assembleCreativeContext 内 deps.brief && projectId 时,从 brief reader 带出的 benchmarkRef 传入)。
 const BENCHMARK_REF_FIELD_MAX = 4000; // [T-431] 对标拆解段可能较长,1M 上下文下放宽
@@ -1169,7 +1156,7 @@ export function renderBenchmarkRef(
 // ── [T-240①] 项目阶段判据(「场景」一等机制的动态层)─────────────────────────────────
 // 把「这个项目处在创作前还是已发布」渲染成给编导的**明确阶段信号**,注进对话 system(chat-runner
 // 装配时调用;数据源 = contextReaders.getProjectDetail 的 stage + publish.published,不新造读端口)。
-// 治的实录病例:创作前选题(未写稿未发布)让编导立论点树,它按「复盘已发布作品」套路找逐字稿/指标
+// 治的实录病例:创作前选题(未写稿未发布)让编导起草,它按「复盘已发布作品」套路找逐字稿/指标
 // → 触发无稿门「脚下没土立不起来」要用户贴稿。根因 = 模型不知道当前项目处在哪个阶段。
 //   - published=false → 「创作前(未发布)」:立框架用定位+选题卡+素材,**没有逐字稿是正常状态**;
 //   - published=true  → 「已发布(可复盘)」:拆解/复盘必须读真逐字稿/真实指标。
@@ -1189,7 +1176,7 @@ export function formatProjectStageBlock(input: {
   return [
     "【当前项目阶段 —— 场景判据,决定你的工作方式】",
     `当前项目阶段:创作前(未发布)${stageNote}。`,
-    "这个阶段是从 0 把内容立起来:立论点/写大纲/起草脚本的依据是定位+选题卡+已搜集素材 —— **没有逐字稿是正常状态**,不要向用户索要逐字稿,也不要按「复盘已发布作品」的套路去找逐字稿/实绩指标。",
+    "这个阶段是从 0 把内容立起来:搭结构/起草脚本的依据是定位+选题卡+已搜集素材 —— **没有逐字稿是正常状态**,不要向用户索要逐字稿,也不要按「复盘已发布作品」的套路去找逐字稿/实绩指标。",
   ].join("\n");
 }
 

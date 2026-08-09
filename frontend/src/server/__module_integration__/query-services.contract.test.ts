@@ -31,6 +31,12 @@ const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext =>
   accountId,
 });
 
+const noAccountCtx = (userId: string): RequestContext => ({
+  userId,
+  requestId: "req-test-no-account",
+  source: "user",
+});
+
 const OWNER = canonicalDataset.user.id; // user-zyongzhu (seeded)
 const OTHER = "user-b"; // no seeded data
 // [T-050] demo 项目种子已退役 → 每个用例前自建一个 OWNER 项目当被读对象。
@@ -68,6 +74,18 @@ describe("query-services ops registered in the composite transport", () => {
     )) as { data: unknown };
     expect(() => dashboardPage.parse(res.data)).not.toThrow();
     expect((res.data as { kind: string }).kind).toBe("dashboard");
+  });
+
+  it("T-719 未绑定账号仍由页面边界接管，不伪装成排期服务故障", async () => {
+    await expect(
+      compositeTransport.request(
+        ep("pages.dashboard.get"),
+        { params: undefined, query: undefined, body: undefined } as never,
+        noAccountCtx(OWNER),
+      ),
+    ).rejects.toMatchObject({
+      code: "AccountRequiredError",
+    });
   });
 
   it("pages.projectOverview.get → valid projectOverviewPage echoing projectId", async () => {

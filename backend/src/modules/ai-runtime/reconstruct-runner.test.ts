@@ -9,8 +9,7 @@ import {
 
 // reconstruct.project runner 单测(T-030-D4,SPEC §4.5/§6/§7)。全 fake 端口(fake 模型经
 // runNode 注入、fake source/transcript/metrics/materialize),**不碰真模型/真 repo**。覆盖:
-//   测1(核心)imported 项目 + 逐字稿 → 产 research(trend_analysis) + planning(thesis_tree),
-//        **均 origin='reconstructed'**(materialize 收到的 artifactType + 强制 origin 断言)。
+//   测1(核心)imported 项目 + 逐字稿 → 只产 research(trend_analysis)，不再新建 thesis_tree。
 //   测2(§5 守卫)manual/新建项目 → auto-fill **不触发**(markFailed,materialize 0 次,断言仅 imported)。
 //   + 无逐字稿 → 失败不物化(没有事实依据不凭空编)。
 
@@ -30,14 +29,6 @@ const FAKE_PKG: ReconstructProjectOutput = {
     keyPoints: ["先拆输入输出", "端到端可视化"],
     cases: [{ title: "销售朋友案例", note: "3 天问清 + 2 小时实操" }],
     dataPoints: [{ stat: "装了 5 个工具只用 1 个", note: "需核实" }],
-  },
-  planning: {
-    targetAudience: "想用 AI 但卡在工具堆的普通人",
-    thesis: {
-      coreThesis: "AI 赋能不是再装工具，是跑通工作流",
-      supportingPoints: ["工具多≠会用", "工作流可复用"],
-    },
-    outline: ["开场钩子", "抛出问题", "四步方法", "收尾行动"],
   },
 };
 
@@ -117,8 +108,8 @@ const task: ReconstructTask = {
 };
 
 describe("reconstruct-runner — imported auto-fill (测1 核心)", () => {
-  it("imported 项目 + 逐字稿 → 产 research/planning artifacts,均 origin='reconstructed'", async () => {
-    const { deps, materialized, markRunning, markSucceeded, markFailed } =
+  it("[T-726] imported 项目 + 逐字稿 → 只重建 research，不物化 thesis_tree", async () => {
+    const { deps, materialized, markRunning, recordStep, markSucceeded, markFailed } =
       makeDeps({ source: "imported" });
 
     await runReconstruct(ctx, task, deps);
@@ -127,16 +118,15 @@ describe("reconstruct-runner — imported auto-fill (测1 核心)", () => {
     expect(markSucceeded).toHaveBeenCalledOnce();
     expect(markFailed).not.toHaveBeenCalled();
 
-    // 物化了两个产物:research(trend_analysis)+ planning(thesis_tree)。
-    expect(materialized).toHaveLength(2);
+    expect(materialized).toHaveLength(1);
     const research = materialized.find((m) => m.stage === "research");
     const planning = materialized.find((m) => m.stage === "planning");
     expect(research).toBeDefined();
-    expect(planning).toBeDefined();
+    expect(planning).toBeUndefined();
 
     // artifactType 落在 validateStageGate 白名单(research→trend_analysis;planning→thesis_tree)。
     expect(research!.artifactType).toBe("trend_analysis");
-    expect(planning!.artifactType).toBe("thesis_tree");
+    expect(materialized.some((m) => m.artifactType === "thesis_tree")).toBe(false);
 
     // F1 铁律:所有 auto-fill 产物必带 origin='reconstructed'。
     expect(materialized.every((m) => m.origin === "reconstructed")).toBe(true);
@@ -144,10 +134,11 @@ describe("reconstruct-runner — imported auto-fill (测1 核心)", () => {
     // 重建内容确实来自 fake 包(逐字稿反推的研究 + 策划),且 contentData 标 reconstructed。
     expect(research!.contentText).toContain("AI 工作流拆解");
     expect(research!.contentData.reconstructed).toBe(true);
-    expect(planning!.contentText).toContain(
-      "AI 赋能不是再装工具，是跑通工作流",
+    expect(recordStep).toHaveBeenCalledWith(
+      ctx,
+      task.id,
+      expect.objectContaining({ text: expect.not.stringContaining("策划") }),
     );
-    expect(planning!.contentData.reconstructed).toBe(true);
   });
 });
 

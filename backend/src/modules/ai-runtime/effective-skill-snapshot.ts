@@ -61,7 +61,6 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "material.match",
   "planning.contract",
   "planning.outline",
-  "planning.thesis",
   "platform.adapt",
   "positioning.generate",
   "reconstruct.project",
@@ -76,6 +75,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "trend.extract",
   "video.broll",
   "video.cards",
+  "video.director",
   "video.scenes",
   "video.subtitles",
 ] as const;
@@ -122,9 +122,11 @@ const NON_SKILL_TASK_TYPES = new Set([
 const VIDEO_SKILLS = [
   "video.broll",
   "video.cards",
+  "video.director",
   "video.scenes",
   "video.subtitles",
 ] as const;
+const VIDEO_DECISION_SKILLS = ["material.match", ...VIDEO_SKILLS] as const;
 const VIDEO_KIND_TO_SKILL: Readonly<Record<string, string>> = {
   broll: "video.broll",
   cards: "video.cards",
@@ -169,7 +171,10 @@ export function requiredSkillIdsForTask(
 
   if (taskType === "video.decisions") {
     if (inputData.kind === undefined && inputData.kinds === undefined) {
-      return [...VIDEO_SKILLS];
+      // video.broll 只负责产画面需求，真实项目素材统一由 material.match 选取。
+      // 两者必须冻结在同一 task snapshot；否则 runner 会在调用 material.match 前
+      // 因能力快照缺失而静默降级，表现为用户上传了素材却永远进不了时间线。
+      return [...VIDEO_DECISION_SKILLS];
     }
     const kinds = Array.isArray(inputData.kinds)
       ? inputData.kinds
@@ -183,9 +188,11 @@ export function requiredSkillIdsForTask(
     ) {
       return mappingMissing(taskType, "video kind 不在受控枚举内");
     }
-    return sortedUnique(
-      kinds.map((kind) => VIDEO_KIND_TO_SKILL[kind as string]!),
+    const required = kinds.map(
+      (kind) => VIDEO_KIND_TO_SKILL[kind as string]!,
     );
+    if (kinds.includes("broll")) required.push("material.match");
+    return sortedUnique(required);
   }
 
   if (taskType === "chat.sync") {

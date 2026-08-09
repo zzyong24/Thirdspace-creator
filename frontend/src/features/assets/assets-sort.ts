@@ -7,9 +7,12 @@ import type { AssetSummary } from "./assets-page";
 export function sortAssetsByNewest(
   rows: ReadonlyArray<AssetSummary>,
 ): ReadonlyArray<AssetSummary> {
-  return rows
-    .slice()
-    .sort((a, b) =>
-      (b.createdAt ?? b.updatedAt).localeCompare(a.createdAt ?? a.updatedAt),
+  return rows.slice().sort((a, b) => {
+    const byCreatedAt = (b.createdAt ?? b.updatedAt).localeCompare(
+      a.createdAt ?? a.updatedAt,
     );
+    // PostgreSQL 读侧同样以 id ASC 作为同一 createdAt 下的稳定次序。没有这个
+    // tie-breaker 时，恢复/分页/客户端重取只要输入顺序变化，素材墙就会看起来“每次都乱”。
+    return byCreatedAt || a.id.localeCompare(b.id);
+  });
 }

@@ -3,13 +3,11 @@ import "server-only";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
   loadScriptEditorData,
-  loadThesisSkeleton,
   resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
-  type ThesisSkeleton,
 } from "@/features/script/script-editor-data";
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
-import type { ScriptSectionView } from "@/types/view-models";
+import type { ScriptSectionView, ScriptViewModel } from "@/types/view-models";
 import type { ScriptReviewReportResource } from "@creatoros/contract";
 import {
   hasCurrentTranscriptForAweme,
@@ -233,6 +231,8 @@ export interface DraftWorkbenchVm {
     readonly editorHtml: string | null;
     readonly sections: ReadonlyArray<ScriptSectionView>;
     readonly versionCount: number;
+    readonly currentVersionId?: string | null;
+    readonly versions?: ScriptViewModel["versions"];
   };
   /** [T-642] 尚无正式 output_script 时，内容雷达已确认口播稿的直接初值。 */
   readonly radarDraftSeed: string | null;
@@ -296,13 +296,6 @@ export interface DraftWorkbenchVm {
    * 用它渲染 verdict/命中列表 + 软门提示(报告版本 < script.versionCount → 提示重审)。
    */
   readonly scriptReview: ScriptReviewReportResource | null;
-  /**
-   * [T-127] 项目已采纳的论点骨架(thesis_tree 当前版本 nodes:核心论点 + 支撑/证据/反驳分支);
-   * null = 还没立论点(稿面「论点骨架」面板渲染诚实空态 + 立论点 CTA)。让原本埋在 Copilot、
-   * 稿面看不到的论点显性化 —— 用户「不知道要先立论点」的根因。artifactId 供面板可编辑保存
-   * (createArtifactVersion 目标)。
-   */
-  readonly thesis: ThesisSkeleton | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -552,15 +545,12 @@ export async function buildDraftWorkbenchVm(
     { outputId, publishPack },
     ammo,
     linkedProjectCoverAssetId,
-    thesis,
     transcriptState,
   ] =
     await Promise.all([
     readPublishPack(client, project.id),
     readAmmo(client, project.id),
     readLinkedProjectCoverAssetId(client, project.id),
-    // [T-127] 读已采纳论点骨架(无 → null,面板显诚实空态)。与 script/ammo 并行。
-    loadThesisSkeleton(project.id, client),
     readProjectTranscriptState(client, project.id, douyinExternalId),
   ]);
 
@@ -606,6 +596,8 @@ export async function buildDraftWorkbenchVm(
       editorHtml: scriptData?.editorHtml ?? null,
       sections: scriptData?.sections ?? [],
       versionCount: scriptData?.versions.length ?? 0,
+      currentVersionId: scriptData?.currentVersionId ?? null,
+      versions: scriptData?.versions ?? [],
     },
     radarDraftSeed,
     publishPack,
@@ -617,7 +609,6 @@ export async function buildDraftWorkbenchVm(
     blindPrediction,
     ammo,
     scriptReview,
-    thesis,
   };
 }
 

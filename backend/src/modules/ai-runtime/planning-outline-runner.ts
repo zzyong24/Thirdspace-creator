@@ -8,7 +8,7 @@ import {
 } from "./creative-context";
 
 // 结构方案 runner (planning.outline node, 策划 stage — 脚本阶段的入口票). It reads the
-// creative context (内容合同 + 论点树 + 定位 + 选题) and DRAFTS ONE 结构方案: a structure
+// creative context (内容合同 + 定位 + 选题) and DRAFTS ONE 结构方案: a structure
 // type, an opening strategy, the ordered paragraph/段落 arrangement, an ending, and a CTA.
 // It records an `artifact_version` CANDIDATE; on 采纳, the AI service's EXISTING
 // artifact_version confirm branch appends a new ArtifactVersion (createdByType:"ai") onto
@@ -61,9 +61,6 @@ function outlineFacets(
       : "",
     contract: context.contractBrief
       ? `\n【已确认的内容合同】\n${context.contractBrief}`
-      : "",
-    thesis: context.thesisBrief
-      ? `\n【已搭好的论点树】\n${context.thesisBrief}`
       : "",
     topic: context.topic.title
       ? `\n【本期选题】${context.topic.title}${

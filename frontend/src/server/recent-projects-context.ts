@@ -56,6 +56,15 @@ export interface PositioningWorksContextPorts {
   >;
 }
 
+export interface ProjectSearchOptions {
+  query?: string;
+  publishedOnly?: boolean;
+  orderBy?: "publishedAt" | "updatedAt";
+  direction?: "asc" | "desc";
+  limit: number;
+  excludeProjectId?: string;
+}
+
 /**
  * Copilot 的近期作品投影。Project 提供 source/lifecycle，Publishing 的账号窄读端口
  * 提供 canonical publishedAt；两类事实并存，互不推断。
@@ -123,6 +132,79 @@ export async function listRecentProjectsWithPublicationFacts(
     };
   });
   return { rows, total: sorted.length };
+}
+
+/**
+ * [T-691] 历史项目检索必须先在完整的 user-scoped 项目集合上关联真实发布事实，再过滤、排序、
+ * 截断。不能复用“先按更新时间分页，再补发布时间”的近期列表，否则“前 3 期”会漏掉真正最近发布
+ * 但近期未编辑的项目。
+ */
+export async function searchProjectsWithPublicationFacts(
+  ctx: RequestContext,
+  opts: ProjectSearchOptions,
+  ports: RecentProjectsContextPorts,
+): Promise<{ rows: RecentProjectContextRow[]; total: number }> {
+  const projects = await ports.listProjects(ctx);
+  const outputRefs = await ports.listOutputRefsByProjects(
+    ctx,
+    projects.map((project) => project.id),
+  );
+  const publications = await ports.listPublicationsByOutputIds(
+    ctx,
+    outputRefs.map((ref) => ref.outputId),
+  );
+  const projectIdByOutputId = new Map(
+    outputRefs.map((ref) => [ref.outputId, ref.projectId] as const),
+  );
+  const latestPublishedAt = new Map<string, string>();
+  for (const publication of publications) {
+    if (
+      (publication.status !== "published" && publication.status !== "removed") ||
+      !publication.publishedAt
+    ) {
+      continue;
+    }
+    const projectId = projectIdByOutputId.get(publication.contentOutputId);
+    if (!projectId) continue;
+    const current = latestPublishedAt.get(projectId);
+    if (!current || publication.publishedAt.localeCompare(current) > 0) {
+      latestPublishedAt.set(projectId, publication.publishedAt);
+    }
+  }
+
+  const q = opts.query?.trim().toLocaleLowerCase("zh-CN") ?? "";
+  const direction = opts.direction === "asc" ? 1 : -1;
+  const orderBy = opts.orderBy ?? "publishedAt";
+  const rows = projects
+    .filter((project) => project.id !== opts.excludeProjectId)
+    .map((project): RecentProjectContextRow & { updatedAt: string } => ({
+      id: project.id,
+      title: project.title,
+      stage: project.currentStage,
+      status: project.status,
+      source: project.source,
+      publishedAt: latestPublishedAt.get(project.id) ?? null,
+      updatedAt: project.updatedAt ?? project.createdAt ?? "",
+    }))
+    .filter((project) => !q || project.title.toLocaleLowerCase("zh-CN").includes(q))
+    .filter((project) => !opts.publishedOnly || Boolean(project.publishedAt))
+    .sort((a, b) => {
+      const av = orderBy === "publishedAt" ? (a.publishedAt ?? "") : a.updatedAt;
+      const bv = orderBy === "publishedAt" ? (b.publishedAt ?? "") : b.updatedAt;
+      return av.localeCompare(bv) * direction || a.id.localeCompare(b.id);
+    });
+
+  return {
+    rows: rows.slice(0, Math.max(1, Math.min(opts.limit, 20))).map((project) => ({
+      id: project.id,
+      title: project.title,
+      stage: project.stage,
+      status: project.status,
+      source: project.source,
+      publishedAt: project.publishedAt,
+    })),
+    total: rows.length,
+  };
 }
 
 /**

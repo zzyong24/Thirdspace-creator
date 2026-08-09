@@ -59,6 +59,21 @@ export const artifactsOperations = {
     response: artifactVersionResource,
     fr: ["FR-ARTIFACTS-VERSION-CREATE"],
   }),
+  applyScriptPatch: defineEndpoint({
+    id: "artifacts.scriptPatches.apply",
+    method: "POST",
+    path: "/artifacts/:artifactId/script-patches/apply",
+    params: artifactParams,
+    body: z.object({
+      expectedVersionId: id,
+      sectionId: id,
+      expectedOriginalText: z.string().min(1).max(12_000),
+      replacementText: z.string().min(1).max(12_000),
+      changeSummary: z.string().default("Copilot 局部改稿"),
+    }),
+    response: artifactVersionResource,
+    fr: ["FR-ARTIFACTS-VERSION-CREATE"],
+  }),
   listArtifactVersions: defineEndpoint({
     id: "artifacts.versions.list",
     method: "GET",

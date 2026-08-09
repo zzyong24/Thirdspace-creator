@@ -15,7 +15,7 @@ import type {
   ArtifactRelationResource,
 } from "./artifacts.schema";
 
-// Artifacts transport (foundation §5.4) — the module's 7 contract ops served over
+// Artifacts transport (foundation §5.4) — the module's contract ops served over
 // REAL SQL behind the same /api/v1/dispatch route. Mirrors the realized
 // knowledge/assets transports: a `Transport` whose request(endpoint,input,ctx)
 // switches on endpoint.id, threads ctx into the service, and returns the SPEC §14
@@ -31,6 +31,7 @@ export const ARTIFACT_OP_IDS = [
   "artifacts.create",
   "artifacts.get",
   "artifacts.versions.create",
+  "artifacts.scriptPatches.apply",
   "artifacts.versions.list",
   "artifacts.restore",
   "artifacts.relations.create",
@@ -92,7 +93,7 @@ export function createArtifactsTransport(
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 7 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
+      // All owned ops are persisted. No ctx ⇒ unauthenticated dispatch ⇒
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
@@ -140,6 +141,21 @@ export function createArtifactsTransport(
             contentData?: Record<string, unknown>;
           };
           const row = await service.createVersion(ctx, p.artifactId ?? "", b);
+          return { data: toVersionResource(row), meta: { requestId } };
+        }
+        case "artifacts.scriptPatches.apply": {
+          const b = (body ?? {}) as {
+            expectedVersionId: string;
+            sectionId: string;
+            expectedOriginalText: string;
+            replacementText: string;
+            changeSummary?: string;
+          };
+          const row = await service.applyScriptPatch(
+            ctx,
+            p.artifactId ?? "",
+            b,
+          );
           return { data: toVersionResource(row), meta: { requestId } };
         }
         case "artifacts.versions.list": {

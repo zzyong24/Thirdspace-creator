@@ -20,6 +20,7 @@ import {
 import {
   AttemptIdInvalidError,
   AttemptPayloadMismatchError,
+  CapabilityRetiredError,
   ConflictError,
   ExecutionClaimInvalidError,
   ExecutionLeaseLostError,
@@ -526,7 +527,6 @@ function normalizeContentRole(
 // truth at runtime.
 const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
   "research.analyze": "claude-opus-4-8",
-  "planning.thesis": "claude-opus-4-8",
   "planning.contract": "claude-opus-4-8",
   "planning.outline": "claude-opus-4-8",
   "script.rewrite": "claude-fable-5",
@@ -787,6 +787,9 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async createTask(ctx, body) {
+      if (body.taskType === "planning.thesis") {
+        throw new CapabilityRetiredError();
+      }
       const accountId = requireAccountId(ctx.accountId, "ai.createTask");
       const repo = repoFor(ctx, "ai.createTask");
       const inputData = body.inputData ?? {};
@@ -1064,6 +1067,9 @@ export function createAiService(deps: ServiceDeps): AiService {
       const accountId = requireAccountId(ctx.accountId, "ai.confirmTask");
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
+      if (task.taskType === "planning.thesis") {
+        throw new CapabilityRetiredError();
+      }
       // [T-332 S2 · §4.6 AI 采纳/确认门] 二次校验:候选产物只能沿发起任务时的
       // ai_tasks.account_id 落库,确认 ctx 必须同号。requireTask 的 strict 门已保证跨号
       // 任务 404(结构性挡住);此断言是防御层——若门语义未来变化/数据被旁路写坏,

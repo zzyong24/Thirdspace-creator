@@ -1,17 +1,18 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, eq, type Db } from "@creatoros/backend";
 import {
   createArtifactRepository,
   resolveNextOrigin,
   type ArtifactRepository,
 } from "./artifacts.repository";
 import { OwnershipError } from "./artifacts.errors";
+import { timelineSegments } from "./artifacts.db-schema";
 
 // Step 1 (schema round-trip) + Step 2 (user-scoped repository) — pglite-backed.
 // Ownership is the sole boundary (foundation §2/§5): user A cannot read user B's
 // artifact; a cross-user id is indistinguishable from a missing one
 // (OwnershipError → 404). Plus: schema round-trips, version-number monotonicity,
-// restore clones content into a NEW version, replaceStructuredContent does
+// restore re-points to an existing immutable version, replaceStructuredContent does
 // delete-then-insert, getScriptSections is ordered by position.
 
 const A = "user-a";
@@ -130,7 +131,7 @@ describe("artifacts.repository — append-only versioning (Step 2)", () => {
     expect(v.aiTaskId).toBe("ai-task-1");
   });
 
-  it("restore clones the target version content into a NEW version (max+1)", async () => {
+  it("restore re-points to the selected immutable version without appending", async () => {
     const artifact = await makeArtifact(repoA);
     const v1Id = artifact.currentVersionId!;
     await repoA.createVersion(artifact.id, {
@@ -139,17 +140,85 @@ describe("artifacts.repository — append-only versioning (Step 2)", () => {
     });
 
     const restored = await repoA.restore(artifact.id, v1Id);
-    // currentVersionId is the NEW clone, never the old id.
-    expect(restored.currentVersionId).not.toBe(v1Id);
+    expect(restored.currentVersionId).toBe(v1Id);
 
     const versions = await repoA.listVersions(artifact.id);
-    expect(versions).toHaveLength(3);
-    const clone = versions[2]!;
-    expect(clone.versionNumber).toBe(3);
-    expect(clone.id).toBe(restored.currentVersionId);
-    // Cloned the v1 (empty) content text.
-    expect(clone.contentText).toBe(versions[0]!.contentText);
-    expect(clone.changeSummary).toContain("restore");
+    expect(versions).toHaveLength(2);
+  });
+
+  it("restore is idempotent when the selected snapshot is already the current content", async () => {
+    const artifact = await makeArtifact(repoA);
+    const v1Id = artifact.currentVersionId!;
+    await repoA.createVersion(artifact.id, {
+      contentText: "第二版",
+      changeSummary: "edit",
+    });
+
+    const firstRestore = await repoA.restore(artifact.id, v1Id);
+    const secondRestore = await repoA.restore(artifact.id, v1Id);
+
+    expect(secondRestore.currentVersionId).toBe(firstRestore.currentVersionId);
+    expect(await repoA.listVersions(artifact.id)).toHaveLength(2);
+  });
+
+  it("restore exposes the selected version's exact script sections and timeline segments", async () => {
+    const artifact = await makeArtifact(repoA);
+    const v1Id = artifact.currentVersionId!;
+    await repoA.replaceStructuredContent(v1Id, {
+      scriptSections: [
+        {
+          sectionType: "hook",
+          title: "开场",
+          content: "当下稿面里的开场",
+          position: 0,
+          startSeconds: 0,
+          endSeconds: 5,
+        },
+      ],
+    });
+    const sourceSections = await repoA.getScriptSections(v1Id);
+    await repoA.replaceStructuredContent(v1Id, {
+      timelineSegments: [
+        {
+          scriptSectionId: sourceSections[0]!.id,
+          title: "开场镜头",
+          position: 0,
+          startMs: 0,
+          endMs: 5000,
+          productionData: { kind: "talking_head" },
+        },
+      ],
+    });
+    await repoA.createVersion(artifact.id, {
+      contentText: "第二版",
+      changeSummary: "edit",
+    });
+
+    const restored = await repoA.restore(artifact.id, v1Id);
+    const restoredVersionId = restored.currentVersionId!;
+    const restoredSections = await repoA.getScriptSections(restoredVersionId);
+    const restoredTimeline = await db
+      .select()
+      .from(timelineSegments)
+      .where(eq(timelineSegments.artifactVersionId, restoredVersionId));
+
+    expect(restoredVersionId).toBe(v1Id);
+    expect(restoredSections).toHaveLength(1);
+    expect(restoredSections[0]!.id).toBe(sourceSections[0]!.id);
+    expect(restoredSections[0]).toMatchObject({
+      sectionType: "hook",
+      title: "开场",
+      content: "当下稿面里的开场",
+      position: 0,
+    });
+    expect(restoredTimeline).toHaveLength(1);
+    expect(restoredTimeline[0]).toMatchObject({
+      scriptSectionId: restoredSections[0]!.id,
+      title: "开场镜头",
+      startMs: 0,
+      endMs: 5000,
+      productionData: { kind: "talking_head" },
+    });
   });
 
   it("createRelation requires both ends owned by the caller", async () => {

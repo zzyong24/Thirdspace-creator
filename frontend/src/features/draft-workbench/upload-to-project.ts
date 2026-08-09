@@ -21,10 +21,24 @@ import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { classifyFile } from "./classify-asset";
 import { assignTagsBestEffort } from "./ammo-dump-zone";
 
-export async function uploadFileToProject(
-  projectId: string,
+export interface UploadedCreatorAsset {
+  assetId: string;
+  name: string;
+  mimeType: string;
+  assetType: string;
+  deduplicated?: boolean;
+}
+
+/**
+ * Copilot / 项目稿面共用的唯一上传入口。
+ *
+ * projectId 存在时同时挂到项目弹药；全局 Copilot 没有项目上下文时只进入素材库。
+ * 两种入口都复用同一份 asset 字节、抽取任务和安全归属，不在聊天模块复制文件。
+ */
+export async function uploadFileForCopilot(
   file: File,
-): Promise<{ assetId: string } | null> {
+  projectId?: string | null,
+): Promise<UploadedCreatorAsset | null> {
   const mimeType = file.type || "application/octet-stream";
   const { assetType, tags } = classifyFile(file.name, mimeType);
   const upload = (await client.createUpload({
@@ -34,10 +48,10 @@ export async function uploadFileToProject(
       assetType,
       mimeType,
       fileSize: Math.max(1, file.size),
-      projectId,
+      ...(projectId ? { projectId } : {}),
       fileName: file.name,
     },
-  })) as unknown as { uploadId: string; uploadUrl: string };
+  })) as unknown as { uploadId: string; uploadUrl: string; assetId: string };
   if (!upload.uploadUrl.startsWith("mock://")) {
     const put = await fetch(upload.uploadUrl, {
       method: "PUT",
@@ -52,20 +66,23 @@ export async function uploadFileToProject(
     body: { name: file.name },
   })) as unknown as { id: string };
   if (!asset?.id) return null;
-  await client.createMaterialLink({
-    params: undefined,
-    query: undefined,
-    body: {
-      projectId,
-      entityType: "asset",
-      entityId: asset.id,
-      role: "reference",
-      stage: "script",
-    },
-  });
-  await assignTagsBestEffort(asset.id, tags);
+  const deduplicated = Boolean(upload.assetId && upload.assetId !== asset.id);
+  if (projectId) {
+    await client.createMaterialLink({
+      params: undefined,
+      query: undefined,
+      body: {
+        projectId,
+        entityType: "asset",
+        entityId: asset.id,
+        role: "reference",
+        stage: "script",
+      },
+    });
+  }
+  if (!deduplicated) await assignTagsBestEffort(asset.id, tags);
   // AI 归类排队慢跑(未配视觉模型 → runner 诚实跳过)。
-  void client
+  if (!deduplicated) void client
     .createAITask({
       params: undefined,
       query: undefined,
@@ -78,7 +95,7 @@ export async function uploadFileToProject(
     .catch(() => undefined);
   // [T-146] document 上传完成 → fire-and-forget 文档抽取(抽全文 + AI 要点卡)。
   // 只对 document 触发;fileName 传给 runner 做 mimeType 分派兜底(File.type 常为空)。
-  if (assetType === "document") {
+  if (assetType === "document" && !deduplicated) {
     void client
       .createAITask({
         params: undefined,
@@ -91,5 +108,19 @@ export async function uploadFileToProject(
       })
       .catch(() => undefined);
   }
-  return { assetId: asset.id };
+  return {
+    assetId: asset.id,
+    name: file.name,
+    mimeType,
+    assetType,
+    deduplicated,
+  };
+}
+
+export async function uploadFileToProject(
+  projectId: string,
+  file: File,
+): Promise<{ assetId: string } | null> {
+  const uploaded = await uploadFileForCopilot(file, projectId);
+  return uploaded ? { assetId: uploaded.assetId } : null;
 }

@@ -38,6 +38,10 @@ export interface DraftChatRequest {
     readonly kind: string;
     readonly id: string;
     readonly title?: string;
+    readonly artifactId?: string;
+    readonly versionId?: string;
+    readonly sectionIndex?: number;
+    readonly excerpt?: string;
   };
   /**
    * 单调自增计数器 —— embed effect 据它变化预填/自动发(URL/props 变了也响应,且天然去重)。

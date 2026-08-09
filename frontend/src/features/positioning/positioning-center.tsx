@@ -8,13 +8,12 @@
  * renders a 「创建定位」 CTA (the draft drawer) instead of the version timeline.
  *
  * Layout (定位中心重建, two-column): 页头 + 新建定位母版 → 两栏 grid:
- *   - 左主栏: 英雄区 当前定位母版 (一句话放大 + 9-facet 图标 chip 网格) → AI 区
- *       (✨ AI 生成定位建议) → 版本历史表.
+ *   - 左主栏: 英雄区 当前定位母版 (一句话放大 + 9-facet 图标 chip 网格) → 版本历史表.
  *   - 右规则栏: 「定位规则（供下游模块使用）」 5 条规则卡 (彩色图标 chip + 短文),
  *       prominent / NOT collapsed (these are the constraints the downstream brief injects).
  * The mutating controls live in the client islands `positioning-interactive-region.tsx`
- * (drawer = upsertProfile + createStatement) and `generate-positioning-island.tsx`
- * (positioning.generate AI task → 采纳 = confirmTask). Built from real shadcn tokens.
+ * (drawer = upsertProfile + createStatement)。定位采集与生成统一进入 Copilot，候选仍须
+ * 用户采纳才落库。Built from real shadcn tokens.
  *
  * Determinism (C-5): no Date.now / Math.random / fetch in the render or selectors;
  * the timeline order comes from the version-desc `history` the server composed. Empty
@@ -51,7 +50,6 @@ import type {
   PositioningStatementResource,
 } from "@creatoros/backend/modules/positioning";
 
-import { GeneratePositioningIsland } from "./generate-positioning-island";
 import { PositioningDiscoveryWorkflow } from "./positioning-discovery-workflow";
 import {
   PositioningDraftDrawer,
@@ -180,22 +178,13 @@ export function PositioningCenterView({
                 productAnchors={productAnchors}
               />
 
-              <div data-testid="positioning-ai-band" className="shrink-0">
-                <GeneratePositioningIsland />
-              </div>
-
               <HistoryTable history={history} profile={profile} />
             </div>
 
             <DownstreamRules profile={profile} />
           </div>
 
-          <div
-            className={cn(
-              "shrink-0 scroll-mt-4",
-              activeDiscovery ? "min-h-[680px]" : "",
-            )}
-          >
+          <div className="shrink-0 scroll-mt-4">
             <PositioningDiscoveryWorkflow
               initialSession={activeDiscovery}
               hasCurrentProfile

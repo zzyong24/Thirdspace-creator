@@ -18,10 +18,17 @@ import { isTrustedLocalRequest } from "@/lib/loopback-core";
 //     新增路由天然被守。判定逻辑与 route handler 共用 `loopback-core`(同一份,防覆盖漂移)。
 
 // allowlist:缺 handshake 也放行的 /api 前缀。刻意最小化——只放「自带服务端校验」或「浏览器无法附头」的面:
-//   · /api/v1/blob —— <img>/<video> 子资源走浏览器原生请求,**无法附自定义头**,不放行会裂图/裂视频。
+//   · /api/v1/blob、/api/v1/local/execution-preview —— <img>/<video> 子资源走浏览器原生请求,
+//     **无法附自定义头**,不放行会裂图/裂视频。execution-preview 仍由 route + execution service
+//     双重校验当前用户、待确认状态和 manifest 精确路径，不是任意文件读取口。
 //   · /api/v1/activate、/api/v1/auth —— 授权/登录入口各有服务端校验(Ed25519 license / 凭据);放行以防
 //     bootstrap 期(token 全局尚未注入)激活页/登录页白屏(BACKLOG 明确「防又一个 /activate 白屏」)。
-const PUBLIC_API_PREFIXES = ["/api/v1/blob/", "/api/v1/activate", "/api/v1/auth/"];
+const PUBLIC_API_PREFIXES = [
+  "/api/v1/blob/",
+  "/api/v1/local/execution-preview/",
+  "/api/v1/activate",
+  "/api/v1/auth/",
+];
 
 // [T-451 gate-F1] activation-only 模式下的**页面路径**允许 GET 访问的 allowlist。
 //   sidecar 起来但 verdict-token 是 activation-only(licensed=false)时,只放行:

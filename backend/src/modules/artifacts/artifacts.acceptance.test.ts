@@ -52,7 +52,7 @@ describe("G1 — module-structure acceptance", () => {
 
   it("ArtifactVersion is immutable: repo never UPDATEs or DELETEs an artifact_versions row", () => {
     // SPEC §22 + data-model §9 rule 6 — grep the repo source. Versions are only
-    // ever INSERTed; edits/restores mint a NEW row and move artifacts.currentVersionId.
+    // ever INSERTed; edits mint a NEW row while restore only moves artifacts.currentVersionId.
     const src = readFileSync(join(HERE, "artifacts.repository.ts"), "utf8");
     expect(/update\(\s*artifactVersions\s*\)/.test(src)).toBe(false);
     expect(/delete\(\s*artifactVersions\s*\)/.test(src)).toBe(false);

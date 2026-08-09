@@ -33,4 +33,18 @@ describe("T-617 渠道模型可观测信息脱敏", () => {
     expect(output).not.toContain("private-model");
     expect(output).not.toContain("channel-model.internal");
   });
+
+  it("渠道额度耗尽保留为充值指引，不伪装成模型故障", () => {
+    const quotaError = Object.assign(new Error("upstream failed"), {
+      statusCode: 402,
+      responseBody: "insufficient quota SECRET_CHANNEL_KEY private-model",
+    });
+    const publicMessage = safeModelFailureMessage(quotaError, {
+      displayModelKey: "channel-managed",
+    });
+
+    expect(publicMessage).toBe("AI 额度不足，请充值后再试。");
+    expect(publicMessage).not.toContain("SECRET_CHANNEL_KEY");
+    expect(publicMessage).not.toContain("private-model");
+  });
 });

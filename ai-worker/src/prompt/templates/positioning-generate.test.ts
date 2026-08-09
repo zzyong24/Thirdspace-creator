@@ -8,19 +8,20 @@ import { POSITIONING_GENERATE_TEMPLATE } from "./positioning-generate";
 
 const CURRENT = "定位一句话：把论文落成代码";
 
-describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-081②)", () => {
-  it("works facet 传入 → 注入【我的真实作品(定位必须扎根于此)】整块", () => {
+describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-081②/T-707)", () => {
+  it("works facet 传入 → 明确只是历史作品证据，不替用户决定未来", () => {
     const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
       current: CURRENT,
       accounts: "\n【创作者抖音账号画像】\n· douyin | @硬核老王 | 粉丝 12000",
       works:
-        "\n\n【我的真实作品（定位必须扎根于此）】\n· 上下文工程实战（已发布）\n· AI 编导流程（planning）WORKS_MARKER",
+        "\n\n【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】\n· 上下文工程实战（已发布）\n· AI 编导流程（planning）WORKS_MARKER",
     });
-    expect(prompt).toContain("【我的真实作品（定位必须扎根于此）】");
+    expect(prompt).toContain("【历史作品证据");
     expect(prompt).toContain("上下文工程实战（已发布）");
     expect(prompt).toContain("WORKS_MARKER");
-    // 任务段提示模型结合真实作品列表。
-    expect(prompt).toContain("真实作品列表");
+    // 任务段明确把历史作品当作可用证据，而不是未来方向的裁判。
+    expect(prompt).toContain("可用作品证据");
+    expect(prompt).toContain("不能替用户决定未来");
   });
 
   it("works 不传 → 整段省略、无未替换占位(老调用路径行为不变)", () => {
@@ -28,7 +29,7 @@ describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-
       current: CURRENT,
       accounts: "\n（创作者尚未连接平台账号——按通用赛道判断即可）",
     });
-    expect(prompt).not.toContain("我的真实作品");
+    expect(prompt).not.toContain("历史作品证据");
     expect(prompt).not.toMatch(/\{\{[a-zA-Z]/);
     // 原有 facet 仍在。
     expect(prompt).toContain(CURRENT);
@@ -36,6 +37,16 @@ describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-
 
   it("requiredFacets 只有 current(works/accounts 保持选填)", () => {
     expect(POSITIONING_GENERATE_TEMPLATE.requiredFacets).toEqual(["current"]);
+  });
+
+  it("通版支持纯人设与产品型，且用户本轮意图高于旧作品", () => {
+    const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
+      current: CURRENT,
+    });
+    expect(prompt).toContain("纯人设/个人表达/作品集型账号");
+    expect(prompt).toContain("有产品/服务");
+    expect(prompt).toContain("用户本轮原话与明确选择优先于历史资料");
+    expect(prompt).toContain("什么人在什么场景下遇到什么问题");
   });
 });
 

@@ -29,6 +29,16 @@ export class ConflictError extends Error {
   }
 }
 
+/** T-726：已退役能力的稳定 fail-closed 错误；旧客户端据 reason 可停止重试。 */
+export class CapabilityRetiredError extends ConflictError {
+  readonly details = { reason: "capability_retired" } as const;
+
+  constructor() {
+    super("该能力已退役，请直接使用项目素材和写稿");
+    this.name = "CapabilityRetiredError";
+  }
+}
+
 export class AttemptIdInvalidError extends Error {
   readonly code = ErrorCode.AttemptIdInvalid;
   constructor() {

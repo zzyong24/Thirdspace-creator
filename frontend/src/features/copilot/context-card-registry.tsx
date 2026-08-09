@@ -28,8 +28,11 @@ import type {
   ContextPositioningDetailToolResult,
   ContextPredictionsToolResult,
   ContextProjectDetailToolResult,
+  ContextProjectLifecycleToolResult,
   ContextProjectsToolResult,
+  ContextProjectsSearchToolResult,
   ContextPublicationsToolResult,
+  ContextReviewReportToolResult,
 } from "@creatoros/backend/modules/ai-runtime";
 
 import {
@@ -46,8 +49,10 @@ import {
   ChatPositioningDetailCard,
   ChatPredictionsCard,
   ChatProjectDetailCard,
+  ChatProjectLifecycleCard,
   ChatProjectListCard,
   ChatPublicationListCard,
+  ChatReviewContextCard,
 } from "./chat-context-cards";
 import { ChatMaterialListCard } from "./chat-material-list-card";
 
@@ -68,6 +73,16 @@ export type ContextCardRenderer = (
 export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>> = {
   "context.projects": (out) => {
     const o = out as unknown as Partial<ContextProjectsToolResult>;
+    return (
+      <ChatProjectListCard
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+        hasMore={o.hasMore ?? false}
+      />
+    );
+  },
+  "context.projects.search": (out) => {
+    const o = out as unknown as Partial<ContextProjectsSearchToolResult>;
     return (
       <ChatProjectListCard
         items={o.items ?? []}
@@ -106,6 +121,14 @@ export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>
   "context.project.detail": (out) => {
     const o = out as unknown as Partial<ContextProjectDetailToolResult>;
     return <ChatProjectDetailCard project={o.project ?? null} />;
+  },
+  "context.project.lifecycle": (out) => {
+    const o = out as unknown as Partial<ContextProjectLifecycleToolResult>;
+    return <ChatProjectLifecycleCard lifecycle={o.lifecycle ?? null} />;
+  },
+  "context.review.report": (out) => {
+    const o = out as unknown as Partial<ContextReviewReportToolResult>;
+    return <ChatReviewContextCard report={o.report ?? null} />;
   },
   "context.positioning.detail": (out) => {
     const o = out as unknown as Partial<ContextPositioningDetailToolResult>;

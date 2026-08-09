@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "发现两处会使已确认的“随时生成”和“纯人设/信息不完整仍可采纳”产生不同实现结果的规格矛盾。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "已确认决策-10",
+        "quote": "用户任何时候要求“直接生成新版本定位卡”都先产候选"
+      },
+      "acceptance_anchor": {
+        "id": "AC-18",
+        "quote": "用户在任意阶段要求生成时，由当前 Copilot 直接调用 positioning.generate"
+      },
+      "where": "第 4.3 节“确定性场景路由算法”的固定路由顺序",
+      "failure_mode": "固定顺序把“没有可用逐字稿 -> 准备证据”置于“用户要求生成 -> 立即生成候选”之前。零逐字稿时，合理实现可能持续返回 PREPARE_EVIDENCE，而不进入 DRAFT_NOW，导致用户明确要求生成仍被证据准备拦截。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#43-确定性场景路由算法",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确用户生成意图在所有非安全硬门下优先于证据准备，并规定零逐字稿时也必须进入 DRAFT_NOW；证据准备只能作为并行或可跳过建议。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "产品原则-10",
+        "quote": "系统不得强迫纯人设补产品"
+      },
+      "acceptance_anchor": {
+        "id": "AC-20",
+        "quote": "至少形成一个核心人群和最多两个高潜人群；每个人群包含真实场景、问题、当前替代、未满足原因和期望结果"
+      },
+      "where": "第 4.5、8、12 节关于产品与人群字段、候选内容和采纳条件的组合规则",
+      "failure_mode": "第 4.5 节允许人群字段缺失时标记为待验证并先生成、采纳，第 8 节却要求每张方向卡都包含产品/服务及核心、高潜人群，第 12 节 AC-20 又要求至少形成完整核心人群。合理实现可能因此拒绝采纳信息不完整或纯人设候选，或者为通过验收而编造产品、高潜人群及未确认的场景字段；另一实现则允许空值，却无法满足 AC-20。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md#45-产品与人群独立模块对话采集结构化沉淀",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "统一候选与采纳验收：明确 AC-20 仅在用户已确认存在产品/服务或获客/成交目标时适用，并允许未确认字段保持空或待验证；纯人设候选不得为满足卡片结构而生成虚构产品或高潜人群。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

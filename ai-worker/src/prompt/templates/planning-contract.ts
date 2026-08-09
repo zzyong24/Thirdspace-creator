@@ -5,7 +5,7 @@ import type { PromptTemplate } from "../template";
  * 内容合同 skill 模板(planning.contract)—— 从 planning-contract-runner 的内联 buildContractPrompt 提取。
  * 策划阶段:从四个固定角度(受众定位/价值主张/核心节奏/行动召唤)写清这条内容对观众的承诺。
  * facets 由 CreativeContext 映射:
- *   positioning(必需,调用方已兜底)· learnings(选填)· thesis(已搭好的论点树,选填)· topic(本期选题,选填)
+ *   positioning(必需,调用方已兜底)· learnings(选填)· topic(本期选题,选填)
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  *
  * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
@@ -24,7 +24,7 @@ export const PLANNING_CONTRACT_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「策划 agent」，负责为一期内容产一份**内容合同**——也就是这条内容与观众立下的契约。
 
 【创作者定位】
-{{positioning}}{{learnings}}{{thesis}}{{topic}}
+{{positioning}}{{learnings}}{{topic}}
 
 【任务】基于定位(+论点树+选题)，从四个固定角度写清楚这条内容对观众的承诺：
 - 受众定位：目标人群是谁、他们的痛点与触发场景；
