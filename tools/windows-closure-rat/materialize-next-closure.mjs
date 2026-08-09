@@ -12,6 +12,8 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
+import { isNonRuntimeTracedAsset } from "./traced-asset-policy.mjs";
+
 const [reportArg, outputArg] = process.argv.slice(2);
 if (!reportArg || !outputArg) {
   throw new Error(
@@ -29,6 +31,7 @@ if (outputRoot !== safeOutputBase && !outputRoot.startsWith(`${safeOutputBase}${
 
 const report = JSON.parse(readFileSync(reportPath, "utf8"));
 const assetSources = new Map();
+const excludedNonRuntimeAssets = new Set();
 
 function assertRelativePath(value, label) {
   if (
@@ -44,6 +47,13 @@ function assertRelativePath(value, label) {
 function registerAsset(destination, source) {
   assertRelativePath(destination, "destination");
   assertRelativePath(source, "source");
+  if (
+    isNonRuntimeTracedAsset(destination) ||
+    isNonRuntimeTracedAsset(source)
+  ) {
+    excludedNonRuntimeAssets.add(destination.replaceAll("\\", "/"));
+    return;
+  }
   const prior = assetSources.get(destination);
   if (prior && prior !== source) {
     throw new Error(
@@ -559,6 +569,10 @@ const summary = {
   report: relative(repoRoot, reportPath).replaceAll("\\", "/"),
   output: relative(repoRoot, outputRoot).replaceAll("\\", "/"),
   registeredAssets: assetSources.size,
+  excludedNonRuntimeAssets: excludedNonRuntimeAssets.size,
+  excludedNonRuntimeAssetSamples: [...excludedNonRuntimeAssets]
+    .sort()
+    .slice(0, 12),
   externalRootEntries: externalRootEntries.size,
   externalClosureEntries: externalClosureEntries.size,
   externalHoistedPackages: entriesByName.size,
