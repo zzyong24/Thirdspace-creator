@@ -108,6 +108,13 @@ function makeDeps(opts: {
       _r: MultimodalProviderRegistry,
     ): Promise<GeneratedTranscript> => ({ text: "逐字稿X" }),
   );
+  const prepareTranscribeSpec = vi.fn(
+    async (
+      _c: RequestContext,
+      spec: MultimodalSpec,
+      _input: { audioBytes: Uint8Array; intentId: string },
+    ) => spec,
+  );
 
   // 只读幂等探测 fake(默认全 false → 都要真转写)。
   const hasTranscriptArtifact = vi.fn(
@@ -143,6 +150,7 @@ function makeDeps(opts: {
     fetchVideoUrl,
     streamAudio,
     resolveTranscribeSpec,
+    prepareTranscribeSpec,
     transcribeAudio,
     registry: FAKE_REGISTRY,
     hasTranscriptArtifact,
@@ -159,6 +167,7 @@ function makeDeps(opts: {
       fetchVideoUrl,
       streamAudio,
       resolveTranscribeSpec,
+      prepareTranscribeSpec,
       transcribeAudio,
       hasTranscriptArtifact,
       ensureTranscriptArtifact,
@@ -186,6 +195,11 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
     expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
     expect(spies.streamAudio).toHaveBeenCalledTimes(1);
     expect(spies.transcribeAudio).toHaveBeenCalledTimes(1);
+    expect(spies.prepareTranscribeSpec).toHaveBeenCalledWith(
+      ctx,
+      SPEC,
+      expect.objectContaining({ intentId: "task:task-1:aweme:7400000000000000001" }),
+    );
     expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
     expect(spies.markFailed).not.toHaveBeenCalled();
     // recordStep 至少一条(逐条)+ 末尾汇总。

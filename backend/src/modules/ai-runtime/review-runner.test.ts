@@ -47,7 +47,10 @@ function makeContext(over: Partial<CreativeContext> = {}): CreativeContext {
   };
 }
 
-function makeDeps(object: Record<string, unknown>) {
+function makeDeps(
+  object: Record<string, unknown>,
+  options: { withPostPublishEvidence?: boolean } = {},
+) {
   runStructuredNode.mockResolvedValue({ object } as never);
   const recordCandidate = vi.fn(
     async (
@@ -81,6 +84,13 @@ function makeDeps(object: Record<string, unknown>) {
         }),
       } as never,
       learnings: { getSuggestions: async () => [] } as never,
+      reviewSubject: {
+        getTitle: async () => "真实作品",
+        getScript: async () => "真实逐字稿",
+        getMetricsSummary: async () =>
+          options.withPostPublishEvidence === false ? "" : "播放：100",
+        getComments: async () => [],
+      },
       resolveModelSpec,
     },
     recordCandidate,
@@ -124,6 +134,24 @@ describe("runReviewAnalyze (runStructuredNode + 外置模板)", () => {
       { id: "t1", projectId: "p1", inputData: { topic: "复盘对象" } },
       deps,
     );
+    expect(recordCandidate).not.toHaveBeenCalled();
+    expect(cancelTask).toHaveBeenCalledTimes(1);
+  });
+
+  it("[T-739] 没有本项目发布后指标或评论时不调用模型、不产改稿偏好", async () => {
+    runStructuredNode.mockClear();
+    const { deps, recordCandidate, cancelTask, resolveModelSpec } = makeDeps(
+      { learnings: [{ title: "不应生成", insight: "无证据" }] },
+      { withPostPublishEvidence: false },
+    );
+    await runReviewAnalyze(
+      ctx,
+      { id: "t-no-evidence", projectId: "p1", inputData: { topic: "未发布项目" } },
+      deps,
+    );
+
+    expect(resolveModelSpec).not.toHaveBeenCalled();
+    expect(runStructuredNode).not.toHaveBeenCalled();
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });

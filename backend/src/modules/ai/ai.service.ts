@@ -55,6 +55,20 @@ export interface AiArtifactsPort {
       aiTaskId?: string | null;
     },
   ): Promise<unknown>;
+  /**
+   * T-730：论点候选的跨模块原子确认口。生产组合根必须在同一事务里完成：
+   * ensure thesis_tree、唯一 adopted version、current pointer 与 ai_task succeeded。
+   */
+  adoptThesisCandidate?(
+    ctx: RequestContext,
+    input: {
+      taskId: string;
+      projectId: string;
+      contentText: string;
+      changeSummary: string;
+      contentData: Record<string, unknown>;
+    },
+  ): Promise<void>;
 }
 
 // The Knowledge seam (机制③ candidate-confirm bus): confirmTask formalizes a
@@ -526,7 +540,6 @@ function normalizeContentRole(
 // truth at runtime.
 const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
   "research.analyze": "claude-opus-4-8",
-  "planning.thesis": "claude-opus-4-8",
   "planning.contract": "claude-opus-4-8",
   "planning.outline": "claude-opus-4-8",
   "script.rewrite": "claude-fable-5",
@@ -1064,6 +1077,10 @@ export function createAiService(deps: ServiceDeps): AiService {
       const accountId = requireAccountId(ctx.accountId, "ai.confirmTask");
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
+      // T-730：响应在事务提交后丢失时，用户重试同一确认应得到已成功真值，不再重复追加版本。
+      if (task.taskType === "planning.thesis" && task.status === "succeeded") {
+        return toTaskDto(task);
+      }
       // [T-332 S2 · §4.6 AI 采纳/确认门] 二次校验:候选产物只能沿发起任务时的
       // ai_tasks.account_id 落库,确认 ctx 必须同号。requireTask 的 strict 门已保证跨号
       // 任务 404(结构性挡住);此断言是防御层——若门语义未来变化/数据被旁路写坏,
@@ -1088,6 +1105,57 @@ export function createAiService(deps: ServiceDeps): AiService {
       const candidate = results[results.length - 1];
       if (!candidate) {
         throw new ConflictError(`AI task ${taskId} has no candidate result`);
+      }
+
+      if (task.taskType === "planning.thesis") {
+        if (candidate.resultType !== "artifact_version") {
+          throw new ConflictError(
+            `planning.thesis task ${taskId} has invalid resultType ${candidate.resultType}`,
+          );
+        }
+        const projectId =
+          typeof task.projectId === "string" && task.projectId
+            ? task.projectId
+            : "";
+        const data = (candidate.resultData ?? {}) as Record<string, unknown>;
+        const body = typeof data.body === "string" ? data.body : "";
+        const rawContentData =
+          data.contentData &&
+          typeof data.contentData === "object" &&
+          !Array.isArray(data.contentData)
+            ? (data.contentData as Record<string, unknown>)
+            : null;
+        const nodes = Array.isArray(rawContentData?.nodes)
+          ? rawContentData.nodes
+          : [];
+        if (!projectId || !body || nodes.length === 0) {
+          throw new ConflictError(
+            `planning.thesis task ${taskId} candidate is missing projectId, body or nodes`,
+          );
+        }
+        if (!deps.artifacts.adoptThesisCandidate) {
+          throw new ConflictError(
+            "planning.thesis adoption Unit of Work is not configured",
+          );
+        }
+        await deps.artifacts.adoptThesisCandidate(ctx, {
+          taskId,
+          projectId,
+          contentText: body,
+          changeSummary:
+            typeof data.summary === "string" ? data.summary : "AI 论点候选",
+          contentData: {
+            ...rawContentData,
+            scriptBasis: { status: "adopted" },
+          },
+        });
+        const updated = await repo.requireTask(taskId);
+        if (updated.status !== "succeeded") {
+          throw new ConflictError(
+            `planning.thesis task ${taskId} adoption did not commit task status`,
+          );
+        }
+        return toTaskDto(updated);
       }
 
       // [DATA-H06] 逐项幂等:候选行上已记的采纳键(上次 confirm 半途失败留下的进度)。批量

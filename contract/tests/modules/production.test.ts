@@ -57,14 +57,24 @@ describe("production contract", () => {
     );
     const parsed =
       productionOperations.exportProductionMaterials.response.parse({
-        assetId: "asset-zip-1",
+        assetId: null,
         downloadUrl: "http://localhost/blob/zip?token=t",
         fileName: "素材包-demo.zip",
         fileCount: 5,
         totalBytes: 1234,
         hasDecisions: false,
       });
-    expect(parsed).toMatchObject({ fileCount: 5, hasDecisions: false });
+    expect(parsed).toMatchObject({
+      assetId: null,
+      fileCount: 5,
+      hasDecisions: false,
+    });
+    expect(
+      productionOperations.exportProductionMaterials.response.parse({
+        ...parsed,
+        assetId: "asset-legacy-zip",
+      }).assetId,
+    ).toBe("asset-legacy-zip");
     // 空 downloadUrl 不合法(诚实:没有下载通道就是失败,不返回空壳)。
     expect(() =>
       productionOperations.exportProductionMaterials.response.parse({

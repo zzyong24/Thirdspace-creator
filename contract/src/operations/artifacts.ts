@@ -49,12 +49,30 @@ export const artifactsOperations = {
     path: "/artifacts/:artifactId/versions",
     params: artifactParams,
     body: z.object({
+      // 可选乐观并发门：需要基于当前版本编辑的调用方传入。服务端发现页面已落后时
+      // 拒绝追加，避免旧稿覆盖后来保存的 artifact version；旧调用保持兼容。
+      expectedCurrentVersionId: id.optional(),
       contentText: z.string().default(""),
       changeSummary: z.string().default(""),
       // Structured, editable payload (jsonb). The 脚本 editor serializes its
       // section id→text map here as { sections: [{ id, heading, body }] } so a
       // saved/AI-drafted version round-trips back into editable 分镜 sections.
       contentData: z.record(z.string(), z.unknown()).optional(),
+    }),
+    response: artifactVersionResource,
+    fr: ["FR-ARTIFACTS-VERSION-CREATE"],
+  }),
+  applyScriptPatch: defineEndpoint({
+    id: "artifacts.scriptPatches.apply",
+    method: "POST",
+    path: "/artifacts/:artifactId/script-patches/apply",
+    params: artifactParams,
+    body: z.object({
+      expectedVersionId: id,
+      sectionId: id,
+      expectedOriginalText: z.string().min(1).max(12_000),
+      replacementText: z.string().min(1).max(12_000),
+      changeSummary: z.string().default("Copilot 局部改稿"),
     }),
     response: artifactVersionResource,
     fr: ["FR-ARTIFACTS-VERSION-CREATE"],

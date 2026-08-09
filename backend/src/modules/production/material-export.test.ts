@@ -348,4 +348,57 @@ describe("aggregateMaterialExport", () => {
     const names = parseStoreZip(bundle.zipBytes).map((f) => f.name);
     expect(names).toContain("素材/别再写懂业务三个字了 · 封面.png");
   });
+
+  it("历史归档素材仍可存在，但 ZIP/7z/RAR/tar.gz 不会进入新素材包", async () => {
+    const archiveIds = ["old-zip", "old-7z", "old-rar", "old-targz"];
+    const namesById: Record<string, string> = {
+      "old-zip": "历史素材包.zip",
+      "old-7z": "旧归档.7z",
+      "old-rar": "旧归档.RAR",
+      "old-targz": "备份.tar.gz",
+      image: "仍需导出的图片.png",
+    };
+    const bundle = await aggregateMaterialExport(
+      CTX,
+      { projectId: "p1", nowIso: NOW },
+      makePorts({
+        listMaterialAssets: async () => [
+          ...archiveIds.map((assetId) => ({ assetId, role: "reference" })),
+          { assetId: "image", role: "broll" },
+        ],
+        getAssetName: async (_c, id) => namesById[id] ?? null,
+        getAssetBytes: async (_c, id) => ({
+          bytes: enc.encode(`bytes-${id}`),
+          mimeType: id === "old-zip" ? "application/zip" : "image/png",
+        }),
+      }),
+    );
+    const files = parseStoreZip(bundle.zipBytes).map((file) => file.name);
+    expect(files).toContain("素材/仍需导出的图片.png");
+    for (const archiveName of archiveIds.map((id) => namesById[id]!)) {
+      expect(files.join("\n")).not.toContain(archiveName);
+    }
+  });
+
+  it("无归档扩展名但 MIME 为归档类型时也会排除", async () => {
+    const bundle = await aggregateMaterialExport(
+      CTX,
+      { projectId: "p1", nowIso: NOW },
+      makePorts({
+        listMaterialAssets: async () => [
+          { assetId: "archive-by-mime", role: "reference" },
+        ],
+        getAssetName: async () => "没有后缀的旧导出包",
+        getAssetBytes: async () => ({
+          bytes: enc.encode("archive"),
+          mimeType: "application/x-tar",
+        }),
+      }),
+    );
+    expect(parseStoreZip(bundle.zipBytes).map((file) => file.name)).toEqual([
+      "口播稿.md",
+      "README-编导说明.md",
+      "manifest.txt",
+    ]);
+  });
 });

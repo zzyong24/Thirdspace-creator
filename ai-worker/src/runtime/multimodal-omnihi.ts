@@ -49,6 +49,69 @@ function authHeaders(spec: MultimodalSpec): Record<string, string> {
   };
 }
 
+function boundedNumber(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+function videoParameters(
+  spec: MultimodalSpec,
+  opts: GenerateVideoOptions,
+): {
+  mode: "t2v";
+  duration: number;
+  resolution: string;
+  aspect_ratio: string;
+  generate_audio: boolean;
+} {
+  const settings = spec.settings ?? {};
+  const resolution =
+    typeof settings.resolution === "string" && /^(480p|720p|1080p)$/.test(settings.resolution)
+      ? settings.resolution
+      : "480p";
+  const configuredAspectRatio =
+    typeof settings.aspect_ratio === "string" &&
+    /^(1:1|9:16|16:9|3:4|4:3)$/.test(settings.aspect_ratio)
+      ? settings.aspect_ratio
+      : "9:16";
+  const requestedAspectRatio =
+    typeof opts.aspectRatio === "string" &&
+    /^(1:1|9:16|16:9|3:4|4:3)$/.test(opts.aspectRatio)
+      ? opts.aspectRatio
+      : null;
+  return {
+    mode: "t2v",
+    duration: Math.round(
+      boundedNumber(
+        settings.duration ?? settings.durationSeconds,
+        4,
+        2,
+        10,
+      ),
+    ),
+    resolution,
+    aspect_ratio: requestedAspectRatio ?? configuredAspectRatio,
+    generate_audio:
+      typeof settings.generate_audio === "boolean"
+        ? settings.generate_audio
+        : typeof settings.audio === "boolean"
+          ? settings.audio
+          : false,
+  };
+}
+
+function promptForRequest(spec: MultimodalSpec, prompt: string): string {
+  const configured = spec.settings?.prompt_max_length;
+  const maxLength = Math.round(boundedNumber(configured, 5_000, 100, 20_000));
+  return prompt.slice(0, maxLength);
+}
+
 async function safeText(response: Response): Promise<string> {
   try {
     return (await response.text()).slice(0, 300);
@@ -148,16 +211,8 @@ async function submit(
     headers: authHeaders(spec),
     body: JSON.stringify({
       model: spec.model,
-      input: { prompt: opts.prompt },
-      parameters: {
-        mode: "t2v",
-        // Seedance 当前最短稳定档为 4 秒；用户要 2 秒时先生成最短片段，项目内再裁切。
-        duration: 4,
-        resolution: "480p",
-        aspect_ratio: opts.aspectRatio ?? "9:16",
-        // 渠道下发的 Seedance 省钱档关闭原生音频；口播音轨由项目制作链独立处理。
-        generate_audio: false,
-      },
+      input: { prompt: promptForRequest(spec, opts.prompt) },
+      parameters: videoParameters(spec, opts),
     }),
   });
   if (!response.ok) {

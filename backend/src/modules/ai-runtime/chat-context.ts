@@ -20,6 +20,12 @@ export interface ChatSelection {
   kind: string;
   ids: string[];
   label?: string;
+  /** T-716:稿面局部改写锚点；只在 script_section selection 使用。 */
+  artifactId?: string;
+  versionId?: string;
+  /** 当前稿面中的可见段落序号；只允许在请求版本仍是 currentVersion 时作为安全兜底。 */
+  sectionIndex?: number;
+  excerpt?: string;
 }
 
 /**
@@ -37,6 +43,11 @@ export interface ChatContext {
   selection?: ChatSelection;
   /** 当前对话中已完成生成卡的人类别名；只映射到真实 assetId，模型不得靠标题猜。 */
   assetAliases?: Readonly<Record<string, string>>;
+  /**
+   * 服务端生成的单轮安全诊断参考号。只用于把 route → runner 生命周期日志串起来；
+   * 不进入模型提示词、不由客户端决定，也不得承载用户正文、附件或任何凭据。
+   */
+  diagnosticRef?: string;
 }
 
 // [T-134 / T-147 P4①] prompt-injection 加固:注进 system 的**用户可控内容**(逐字稿、观众评论、
@@ -72,6 +83,7 @@ const SELECTION_KIND_LABEL: Record<string, string> = {
   artifact: "创作产出",
   candidate: "候选",
   topic: "选题",
+  script_section: "口播稿段落",
 };
 
 /**
@@ -81,17 +93,33 @@ const SELECTION_KIND_LABEL: Record<string, string> = {
  */
 export function assembleSelectionContext(
   selection: ChatSelection | undefined,
+  options: { readonly scriptPatchRequired?: boolean } = {},
 ): string {
   const label = selection?.label?.trim();
   if (!selection || !label) return "";
   const kindLabel = SELECTION_KIND_LABEL[selection.kind] ?? "内容";
+  const scriptAnchor =
+    selection.kind === "script_section" &&
+    selection.artifactId &&
+    selection.versionId &&
+    selection.ids[0] &&
+    selection.excerpt
+      ? [
+          "【局部改稿锚点】",
+          `原文:${wrapUserData(selection.excerpt)}`,
+          options.scriptPatchRequired
+            ? "系统已经锁定这段对应的稿件、版本和段落，不要向用户询问任何技术 ID，也不要要求用户重新选择。只允许围绕这段提出替换候选；不得把局部改写升级为整稿重写。立即使用系统提供的局部改稿能力产出候选卡。对用户只描述修改结果，不得暴露、猜测或讨论任何内部工具名、参数、路由和实现限制。"
+            : "这是上一轮保留的可继续修改段落，不代表本轮必须局部改稿。请理解用户本轮的完整语义：只有仍在修改这一段时才使用局部改稿能力；用户明确转向整稿或其他任务时，忽略这个旧锚点并执行本轮要求。不要向用户询问任何技术 ID，也不得暴露、猜测或讨论内部工具名、参数、路由和实现限制。",
+        ].join("\n")
+      : "";
   return [
     `【本次对话针对创作者选中的${kindLabel}】`,
     // [T-134] 标题是用户可控内容 → <user_data> 硬边界包裹(防标题里塞伪指令)。
     `标题:${wrapUserData(`《${label}》`)}`,
     `用户就是要你针对这条内容展开(诊断 / 讨论 / 优化);对话里的"这条""这个""它"默认都指它。` +
       `不要再问"你的标题是什么"——标题已在上方。若需要文稿/数据细节而用户尚未提供,可礼貌请用户补充,但绝不重复索要标题。`,
-  ].join("\n");
+    scriptAnchor,
+  ].filter(Boolean).join("\n");
 }
 
 /**

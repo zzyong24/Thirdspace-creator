@@ -71,7 +71,7 @@ export function resolveExecutablePath(
       if (existsSync(explicit)) return explicit;
       throw new ExecutablePathConfigurationError(
         `环境变量 ${opts.explicitEnvVar} 指向的文件不存在:${explicit}。` +
-          "请改成正确的可执行文件绝对路径，或删除该变量让 CreatorOS 自动查找。",
+          "请改成正确的可执行文件绝对路径，或删除该变量让应用自动查找。",
       );
     }
   }

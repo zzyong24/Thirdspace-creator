@@ -120,6 +120,11 @@ export async function runReviewAnalyze(
       { projectId: task.projectId, topic },
       deps,
     );
+    if (!context.reviewMetrics.trim() && !context.reviewComments.trim()) {
+      throw new Error(
+        "review-runner: missing current-project post-publish metrics/comments",
+      );
+    }
     // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 review.insights 模板
     // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让
     // 用户默认的 MiniMax 也稳定吐可解析经验列表(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。

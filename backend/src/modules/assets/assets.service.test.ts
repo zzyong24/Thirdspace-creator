@@ -208,6 +208,68 @@ describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
   });
 });
 
+describe("assets.service — 一次性下载产物", () => {
+  it("连续写入两个导出包只落对象存储，不增加素材记录", async () => {
+    const before = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    const first = await service.createTemporaryDownload(ctxA, {
+      name: "素材包-1.zip",
+      bytes: new Uint8Array([1, 2, 3]),
+      mimeType: "application/zip",
+    });
+    const second = await service.createTemporaryDownload(ctxA, {
+      name: "素材包-2.zip",
+      bytes: new Uint8Array([4, 5, 6]),
+      mimeType: "application/zip",
+    });
+    const after = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(first.url).toContain("signed");
+    expect(second.url).toContain("signed");
+    expect(after).toHaveLength(before.length);
+  });
+
+  it("对象写入失败不产生普通素材记录", async () => {
+    const failingStorage: ObjectStoragePort = {
+      ...storage,
+      async putObject() {
+        throw new Error("disk full");
+      },
+    };
+    const deps = deterministicDeps();
+    const isolated = createAssetsService(
+      createAssetRepository(db, deps),
+      async () => failingStorage,
+      deps,
+    );
+    await expect(
+      isolated.createTemporaryDownload(ctxA, {
+        name: "失败.zip",
+        bytes: new Uint8Array([1]),
+        mimeType: "application/zip",
+      }),
+    ).rejects.toThrow("disk full");
+    expect(
+      await isolated.listAssets(ctxA, { limit: 50, cursor: null }),
+    ).toEqual([]);
+  });
+
+  it("历史 ZIP 仍是普通素材，可见且可下载", async () => {
+    const historical = await service.createGeneratedAsset(ctxA, {
+      assetType: "document",
+      name: "历史素材包.zip",
+      bytes: new Uint8Array([1, 2, 3]),
+      mimeType: "application/zip",
+    });
+    const visible = await service.listAssets(ctxA, {
+      limit: 50,
+      cursor: null,
+    });
+    expect(visible.some((row) => row.id === historical.id)).toBe(true);
+    await expect(service.getDownloadUrl(ctxA, historical.id)).resolves.toMatchObject({
+      fileName: expect.stringContaining("zip"),
+    });
+  });
+});
+
 describe("assets.service — [T-219] pending 截图 → 确认门 commitPendingAsset", () => {
   it("createGeneratedAsset({pending:true}) 生 pending → 不进素材库 list;commit 后才进库", async () => {
     const asset = await service.createGeneratedAsset(ctxA, {

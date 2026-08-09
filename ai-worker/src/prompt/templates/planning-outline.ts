@@ -5,7 +5,7 @@ import type { PromptTemplate } from "../template";
  * 结构方案 skill 模板(planning.outline)—— 从 planning-outline-runner 的内联 buildOutlinePrompt 提取。
  * 策划阶段(脚本阶段入口票):把内容合同 + 论点树落成一份结构方案(结构类型/开头/段落/结尾/CTA)。
  * facets 由 CreativeContext 映射:
- *   positioning(必需,调用方已兜底)· contract(已确认的内容合同,选填)· thesis(已搭好的论点树,选填)· topic(本期选题,选填)
+ *   positioning(必需,调用方已兜底)· contract(已确认的内容合同,选填)· topic(本期选题,选填)
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  *
  * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
@@ -46,7 +46,7 @@ export const PLANNING_OUTLINE_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「策划 agent」，负责把内容合同 + 论点树落成一份**结构方案**——这是脚本阶段的入口票。
 
 【创作者定位】
-{{positioning}}{{benchmarkRef}}{{contract}}{{thesis}}{{topic}}
+{{positioning}}{{benchmarkRef}}{{contract}}{{topic}}
 
 【任务】产 **1 个**结构方案，让脚本作者照着就能写：
 - 结构类型：这条内容用哪种叙事结构(如 总分总 / 问题-解决 / 故事线 / 清单体)；

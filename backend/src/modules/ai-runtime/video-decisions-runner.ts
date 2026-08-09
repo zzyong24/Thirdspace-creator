@@ -6,6 +6,8 @@ import type {
   VideoCardsOutput,
   VideoBrollOutput,
   VideoSubtitlesOutput,
+  VideoDirectorReviewOutput,
+  MaterialMatchOutput,
   VideoCardKind,
   VideoCardMotion,
 } from "@creatoros/ai-worker";
@@ -13,7 +15,10 @@ import {
   videoScenesSchema,
   videoCardsSchema,
   videoBrollSchema,
+  normalizeVideoBrollOutput,
   videoSubtitlesSchema,
+  videoDirectorReviewSchema,
+  materialMatchSchema,
 } from "@creatoros/ai-worker";
 import {
   parseSrt,
@@ -29,11 +34,11 @@ import {
   type ChunkProgressListener,
 } from "./chunk-and-merge";
 
-// [T-254b] 制作视频「四决策」runner —— 执行层 video.render 管线的「脑」侧
+// [T-254b/T-712] 制作视频「四决策 + 总导演审片」runner —— 执行层 video.render 管线的「脑」侧
 // (SPEC 2026-07-11 §3.1 步骤 2-3):粗剪 SRT + 口播稿(+ 项目素材清单投影)→
-//   ① 语义分场 video.scenes ② 信息卡 video.cards ③ B-roll 匹配 video.broll
-//   ④ 双语字幕 video.subtitles
-// 四个 runStructuredNode 顺序编排(runVideoDecisions),产完整决策 JSON 记成
+//   ① 语义分场 video.scenes ② 信息卡 video.cards ③ video.broll 产画面需求
+//   + material.match 从项目真实素材中选料 ④ 双语字幕 video.subtitles
+// 五个 runStructuredNode 顺序编排(runVideoDecisions),产完整决策 JSON 记成
 // `video_decisions` 候选(awaiting_confirmation)→ 前端「分场预览卡」用户过目可改,
 // 确认才组装 props 交渲染(铁律②:决策不落库、不渲染,除非用户采纳)。
 //
@@ -77,6 +82,12 @@ export interface VideoBrollPick {
   assetId: string;
   at: number;
   durationSec: number;
+  /** AI 编导决定素材承担主画面还是辅助画面；渲染器据此执行。 */
+  presentation?: "full_frame" | "large_stage" | "overlay";
+  /** material.match 对素材内容的语义分类；渲染层据此守横竖版式边界。 */
+  visualRole?: "screen_recording" | "still_image" | "live_footage";
+  /** 素材的轻量镜头运动，由 material.match 统一决定。 */
+  motion?: "static" | "push_in" | "pan_left" | "pan_right";
 }
 
 export interface BilingualSubtitleLine {
@@ -88,16 +99,28 @@ export interface BilingualSubtitleLine {
 }
 
 /** [T-387c] B-roll 候选来源(自动聚合徽标):脚本画面点名 / 论点树挂载 / 项目弹药 / 手动上传。 */
-export type BrollSource = "script" | "thesis" | "ammo" | "manual";
+export type BrollSource = "script" | "ammo" | "manual";
 
 /** 素材清单投影(项目 material-links/assets 的 label+描述,B-roll 决策的唯一可选集)。
  *  [T-387c] additive source 字段:自动聚合来源徽标(缺省 = 旧投影/回退整库,UI 不渲徽标)。 */
 export interface BrollAssetRef {
   assetId: string;
+  /** 原始文件名是用户主动提供的语义线索；AI 与内容/场景一起判断，代码不做字符串猜测。 */
   label: string;
   kind: string;
   description: string;
   source?: BrollSource;
+  width?: number;
+  height?: number;
+  durationMs?: number;
+}
+
+/** 用户在预览卡中的明确选材。它是下一轮 AI 分镜的硬约束，而不是旧时间线上的 4 秒补丁。 */
+export interface ManualMaterialAssignment {
+  assetId: string;
+  sceneIdx: number;
+  sceneTitle: string;
+  sceneSummary: string;
 }
 
 /** [T-387c] 聚合去重(纯函数,server 端 listBrollInventory 与制作页 UI 共用同一逻辑):
@@ -116,6 +139,57 @@ export function dedupeBrollRefs(
   return out;
 }
 
+/**
+ * 把 AI/旧分镜产出的 B-roll 收口为可执行时间线。
+ *
+ * SEMANTIC_BOUNDARY_ALLOW: 这里只执行素材 ID 全片唯一、主视觉时间不重叠与场景边界
+ * 这些确定性协议；不根据文件名、内容或业务词判断“哪个素材更适合”，创作选择仍由
+ * material.match / video.director 完成。相同起点的多个主视觉是互斥候选，保留上游
+ * 已排序的第一项；前后相交则让上一项在下一项进场时结束。
+ */
+export function normalizeBrollTimeline(input: {
+  scenes: readonly VideoScene[];
+  broll: readonly VideoBrollPick[];
+}): { broll: VideoBrollPick[]; repairs: string[] } {
+  const repairs: string[] = [];
+  const seenAssets = new Set<string>();
+  const unique = input.broll
+    .map((pick, order) => ({ pick: { ...pick }, order }))
+    .filter(({ pick }) => {
+      if (seenAssets.has(pick.assetId)) {
+        repairs.push("重复素材已保留首次使用并从后续场景移除");
+        return false;
+      }
+      seenAssets.add(pick.assetId);
+      return true;
+    })
+    .sort((a, b) => a.pick.at - b.pick.at || a.order - b.order);
+
+  const normalized: VideoBrollPick[] = [];
+  const lastMainByScene = new Map<number, VideoBrollPick>();
+  for (const item of unique) {
+    const pick = item.pick;
+    const scene = input.scenes[pick.sceneIdx];
+    if (!scene) continue;
+    const isMain = pick.presentation !== "overlay";
+    const previousMain = lastMainByScene.get(pick.sceneIdx);
+    if (previousMain && isMain) {
+      if (Math.abs(previousMain.at - pick.at) < 0.1) {
+        repairs.push("同一时刻的互斥主视觉已只保留一项");
+        continue;
+      }
+      const previousEnd = previousMain.at + previousMain.durationSec;
+      if (previousEnd > pick.at) {
+        previousMain.durationSec = Math.max(0.1, pick.at - previousMain.at);
+        repairs.push("相邻主视觉的重叠时间已自动衔接");
+      }
+    }
+    normalized.push(pick);
+    if (isMain) lastMainByScene.set(pick.sceneIdx, pick);
+  }
+  return { broll: normalized, repairs: [...new Set(repairs)] };
+}
+
 /** 四决策完整产物(预览卡渲染 + 确认后组装 props 的单一输入)。 */
 export interface VideoDecisions {
   scenes: VideoScene[];
@@ -126,6 +200,103 @@ export interface VideoDecisions {
   subtitles: BilingualSubtitleLine[];
   /** 解析后的 SRT(时间真值,预览卡显示字幕样例/组 props 都要)。 */
   srtLines: SrtLine[];
+  /** authored 分镜点名素材无法进入时间线时的诚实原因，禁止静默丢素材。 */
+  unusedStoryboardAssets?: Array<{
+    assetId: string;
+    sectionIdx: number;
+    reason: "excluded" | "missing_or_unauthorized" | "no_unique_scene_match";
+  }>;
+  /** 五个候选节点汇总后的总导演审片结论；旧候选缺省时保持可确认兼容。 */
+  directorReview?: VideoDirectorReview;
+}
+
+export interface VideoDirectorIssue {
+  sceneIdx: number;
+  severity: "blocking" | "warning";
+  code:
+    | "visual_gap"
+    | "material_conflict"
+    | "timing_conflict"
+    | "narrative_gap"
+    | "subtitle_conflict";
+  message: string;
+}
+
+export interface VideoDirectorReview {
+  status: "ready" | "needs_attention";
+  summary: string;
+  issues: VideoDirectorIssue[];
+  /** 仅供运行时追踪，前端不展示实现术语。 */
+  source: "ai" | "auto_repaired" | "deterministic_fallback";
+}
+
+/** T-703：把 authored assetRefs 确定性落实为 B-roll；模型漏选也不能静默丢失。 */
+export function enforceStoryboardBroll(input: {
+  storyboard: readonly StoryboardSectionRef[];
+  scenes: readonly VideoScene[];
+  srtLines: readonly SrtLine[];
+  inventory: readonly BrollAssetRef[];
+  excludedAssetIds: ReadonlySet<string>;
+  modelBroll: readonly VideoBrollPick[];
+}): Pick<VideoDecisions, "broll" | "unusedStoryboardAssets"> {
+  const broll = [...input.modelBroll];
+  const unused: NonNullable<VideoDecisions["unusedStoryboardAssets"]> = [];
+  const inventoryIds = new Set(input.inventory.map((item) => item.assetId));
+  const usedAssetIds = new Set(broll.map((pick) => pick.assetId));
+  const equalCounts = input.storyboard.length === input.scenes.length;
+  for (const [sectionIdx, section] of input.storyboard.entries()) {
+    // 只有分镜段与场景一一对应时才做确定性落位；数量不一致属于语义判断，交给
+    // material.match，而不是在代码里用字符串相似度猜。
+    const sceneIdx: number | null = equalCounts ? sectionIdx : null;
+    const eligibleAssetIds: string[] = [];
+    for (const assetId of section.assetRefs) {
+      if (input.excludedAssetIds.has(assetId)) {
+        unused.push({ assetId, sectionIdx, reason: "excluded" });
+        continue;
+      }
+      if (!inventoryIds.has(assetId)) {
+        unused.push({ assetId, sectionIdx, reason: "missing_or_unauthorized" });
+        continue;
+      }
+      if (sceneIdx === null || !input.scenes[sceneIdx]) {
+        unused.push({ assetId, sectionIdx, reason: "no_unique_scene_match" });
+        continue;
+      }
+      if (!usedAssetIds.has(assetId)) eligibleAssetIds.push(assetId);
+    }
+
+    // assetRefs 是供 AI 选择的候选，不是要求同秒叠加的时间线。只有该场尚未有
+    // AI 选材且 authored 分镜唯一点名一项时，代码才执行这个无歧义的旧数据兜底。
+    if (
+      sceneIdx === null ||
+      broll.some((pick) => pick.sceneIdx === sceneIdx) ||
+      eligibleAssetIds.length !== 1
+    ) continue;
+    const assetId = eligibleAssetIds[0]!;
+    const scene = input.scenes[sceneIdx]!;
+    const at = input.srtLines.find(
+      (line) => line.startSec >= scene.startSec && line.startSec < scene.endSec,
+    )?.startSec ?? scene.startSec;
+    const available = Math.max(1, scene.endSec - at);
+    const assetDuration =
+      (input.inventory.find((item) => item.assetId === assetId)?.durationMs ?? 0) /
+      1000;
+    broll.push({
+      sceneIdx,
+      assetId,
+      at,
+      durationSec:
+        assetDuration > 0
+          ? Math.max(1, Math.min(assetDuration, available))
+          : available,
+      presentation: "large_stage",
+    });
+    usedAssetIds.add(assetId);
+  }
+  return {
+    broll: normalizeBrollTimeline({ scenes: input.scenes, broll }).broll,
+    unusedStoryboardAssets: unused,
+  };
 }
 
 // ── 动态输出契约(zod refine,绑定本次输入;runStructuredNode outputSchema 逃生口)──
@@ -176,6 +347,41 @@ export function buildBrollDecisionSchema(
       ),
     { message: "B-roll assetId 必须来自素材清单(禁编造),sceneIdx 必须在场景范围内" },
   );
+}
+
+/** 视频制作里的素材语义匹配必须由 material.match Skill 完成；动态 schema 只防编造与越界。 */
+export function buildVideoMaterialMatchSchema(
+  assetIds: readonly string[],
+  sceneCount: number,
+) {
+  const idSet = new Set(assetIds);
+  return materialMatchSchema.transform((output, ctx) => {
+    const validMatches = output.matches.filter(
+      (match) =>
+        idSet.has(match.assetId) &&
+        match.role !== "cover" &&
+        match.visualRole !== "cover" &&
+        typeof match.visualRole === "string" &&
+        (match.presentation !== "full_frame" ||
+          match.visualRole === "screen_recording") &&
+        typeof match.sceneIdx === "number" &&
+        match.sceneIdx >= 0 &&
+        match.sceneIdx < sceneCount,
+    );
+
+    // SEMANTIC_BOUNDARY_ALLOW: 这里只按真实 ID、枚举、场景范围和版式安全边界
+    // 逐条丢弃协议违约项，不判断素材是否适合场景。避免模型一条坏映射拖垮同批
+    // 其他合法素材；若整批非空却没有任何合法项，仍让结构化节点重试而不是假成功。
+    if (output.matches.length > 0 && validMatches.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "视频素材匹配必须使用清单内真实 assetId，并由 AI 返回 visualRole 与有效 sceneIdx；封面不能进入 B-roll，只有录屏可全屏",
+      });
+    }
+
+    return { matches: validMatches };
+  });
 }
 
 /** ④ 双语字幕:行数不变 + 序号集合与输入一致(时间轴由后处理强制回原值)。 */
@@ -243,7 +449,6 @@ export function scenesFacet(scenes: readonly VideoScene[]): string {
 export function libraryFacet(inventory: readonly BrollAssetRef[]): string {
   const sourceLabel: Record<BrollSource, string> = {
     script: "脚本分镜点名",
-    thesis: "论点树挂载",
     ammo: "项目弹药",
     manual: "用户手动上传",
   };
@@ -252,7 +457,41 @@ export function libraryFacet(inventory: readonly BrollAssetRef[]): string {
       (a) =>
         `· ${a.assetId} | ${a.label}${a.kind ? ` (${a.kind})` : ""}${
           a.description ? ` | ${a.description}` : ""
+        }${a.width && a.height ? ` | 尺寸:${a.width}×${a.height}` : ""}${
+          a.durationMs ? ` | 时长:${sec(a.durationMs / 1000)}s` : ""
         }${a.source ? ` | 来源:${sourceLabel[a.source]}` : ""}`,
+    )
+    .join("\n");
+}
+
+export function manualAssignmentsFacet(
+  assignments: readonly ManualMaterialAssignment[],
+  inventory: readonly BrollAssetRef[],
+): string {
+  if (assignments.length === 0) return "";
+  const byId = new Map(inventory.map((asset) => [asset.assetId, asset]));
+  return [
+    "【用户人工选材·硬约束】以下素材必须进入新分镜；原场景只提供叙事语义，不代表沿用旧起止时间。",
+    ...assignments.flatMap((assignment) => {
+      const asset = byId.get(assignment.assetId);
+      if (!asset) return [];
+      return [
+        `· ${asset.assetId} | 原始文件名:${asset.label} | 类型:${asset.kind || "未知"}${
+          asset.width && asset.height ? ` | 尺寸:${asset.width}×${asset.height}` : ""
+        }${asset.durationMs ? ` | 素材时长:${sec(asset.durationMs / 1000)}s` : ""} | 原场景:${assignment.sceneIdx} ${assignment.sceneTitle} | 叙事:${assignment.sceneSummary}`,
+      ];
+    }),
+    "必须据此重新计算场景边界、素材插点和有效展示时长，不得遗漏、替换或机械截成固定时长。",
+  ].join("\n");
+}
+
+export function visualSlotsFacet(slots: VideoBrollOutput["slots"]): string {
+  return slots
+    .map(
+      (slot) =>
+        `${slot.sceneIdx} | ${sec(slot.at)}s | ${slot.purpose} | 口播:${slot.spokenAnchor} | 画面:${slot.visualBrief}${
+          slot.searchQuery ? ` | 搜索:${slot.searchQuery}` : ""
+        }`,
     )
     .join("\n");
 }
@@ -352,7 +591,7 @@ export interface ProjectBrollInventoryDeps {
   readArtifactContentData(
     ctx: RequestContext,
     projectId: string,
-    artifactType: "output_script" | "thesis_tree",
+    artifactType: "output_script",
   ): Promise<Record<string, unknown> | null>;
   listProjectMaterialLinks(
     ctx: RequestContext,
@@ -368,13 +607,17 @@ export interface ProjectBrollInventoryDeps {
     name: string;
     assetType: string;
     description: string | null;
+    width?: number | null;
+    height?: number | null;
+    durationMs?: number | null;
   }>;
 }
 
 /**
  * [T-309] B-roll 决策唯一素材入口。先锁定当前账号下的项目，再聚合该项目的
- * authored refs + material-links；单条资产仍经账号域 getAsset 校验。禁止缺少项目时回退
- * 到账号整库，避免把别的项目素材送进模型。
+ * authored refs + material-links；material-links 是当前项目素材的唯一白名单，脚本点名
+ * 只能调整白名单内素材的优先级。单条资产仍经账号域 getAsset 校验。禁止缺少项目时
+ * 回退到账号整库，避免把别的项目素材送进模型。
  */
 export async function collectProjectBrollInventory(
   ctx: RequestContext,
@@ -386,12 +629,37 @@ export async function collectProjectBrollInventory(
   }
   await deps.assertProjectAccess(ctx, projectId);
 
+  const links = await deps.listProjectMaterialLinks(ctx, projectId);
+  const disallowedAssetIds = new Set(
+    links
+      .filter(
+        (link) =>
+          link.entityType === "asset" &&
+          (link.role === "cover" || link.role === "final"),
+      )
+      .map((link) => link.entityId),
+  );
+  const eligibleLinksByAssetId = new Map<
+    string,
+    Array<{ role: string | null }>
+  >();
+  for (const link of links) {
+    if (link.entityType !== "asset" || disallowedAssetIds.has(link.entityId)) {
+      continue;
+    }
+    const current = eligibleLinksByAssetId.get(link.entityId) ?? [];
+    current.push({ role: link.role });
+    eligibleLinksByAssetId.set(link.entityId, current);
+  }
   const rows: BrollAssetRef[] = [];
   const tryPush = async (
     assetId: string,
     source: BrollSource,
     options: { excludeVideoClip?: boolean } = {},
   ) => {
+    // 封面和既有成片是结构化角色，不是 B-roll 候选；无论它同时出现在旧脚本
+    // assetRefs 还是素材链接中，都必须在读取内容前统一排除。
+    if (disallowedAssetIds.has(assetId)) return;
     try {
       const asset = await deps.getAsset(ctx, assetId);
       if (asset.assetType !== "video" && asset.assetType !== "image") return;
@@ -404,6 +672,15 @@ export async function collectProjectBrollInventory(
         kind: asset.assetType,
         description: asset.description ?? "",
         source,
+        ...(typeof asset.width === "number" && asset.width > 0
+          ? { width: asset.width }
+          : {}),
+        ...(typeof asset.height === "number" && asset.height > 0
+          ? { height: asset.height }
+          : {}),
+        ...(typeof asset.durationMs === "number" && asset.durationMs > 0
+          ? { durationMs: asset.durationMs }
+          : {}),
       });
     } catch {
       // 越权、已删、知识条目或非当前账号资产都不进入模型输入。
@@ -418,37 +695,17 @@ export async function collectProjectBrollInventory(
     );
     for (const section of storyboardFromContentData(scriptData)) {
       for (const assetId of section.assetRefs) {
-        await tryPush(assetId, "script");
+        const projectLinks = eligibleLinksByAssetId.get(assetId);
+        if (!projectLinks) continue;
+        await tryPush(assetId, "script", {
+          excludeVideoClip: projectLinks.every((link) => link.role === "clip"),
+        });
       }
     }
   } catch {
     // authored 来源缺失不阻断项目 material-links 主链。
   }
 
-  try {
-    const thesisData = await deps.readArtifactContentData(
-      ctx,
-      projectId,
-      "thesis_tree",
-    );
-    const nodes = Array.isArray(thesisData?.nodes)
-      ? (thesisData.nodes as unknown[])
-      : [];
-    for (const raw of nodes) {
-      const refs = (raw as { materialRefs?: unknown } | null)?.materialRefs;
-      if (!Array.isArray(refs)) continue;
-      for (const ref of refs) {
-        const assetId = (ref as { id?: unknown } | null)?.id;
-        if (typeof assetId === "string" && assetId) {
-          await tryPush(assetId, "thesis");
-        }
-      }
-    }
-  } catch {
-    // 论点树来源缺失不阻断项目 material-links 主链。
-  }
-
-  const links = await deps.listProjectMaterialLinks(ctx, projectId);
   for (const link of links) {
     if (link.entityType !== "asset") continue;
     if (link.role === "cover" || link.role === "final") continue;
@@ -469,8 +726,572 @@ export interface StructuredCallInput<T> {
   facets: Readonly<Record<string, string | undefined>>;
   /** 动态输出契约(buildXxxDecisionSchema;逃生口压过 registry 静态 schema)。 */
   outputSchema: z.ZodType<T>;
+  /** 模型 JSON 在严格 schema 前的确定性整理；只修协议漂移，不补写创作事实。 */
+  normalizeObject?: (raw: unknown) => unknown;
 }
 export type StructuredCall = <T>(input: StructuredCallInput<T>) => Promise<T>;
+
+export type VideoOrientation = "portrait" | "landscape";
+
+/** T-703：把用户本次选择的画幅翻译成三个视觉决策 skill 都能执行的构图约束。 */
+export function orientationFacet(orientation?: VideoOrientation): string {
+  if (orientation === "portrait") {
+    return [
+      "【本次成片画幅】竖屏 9:16（1080×1920）。",
+      "构图按手机观看设计：人物与主要信息保持在中央安全区；同一时刻只放一个强视觉；截图和录屏完整 contain，不横向硬裁；字幕避开上下平台遮挡区。",
+      "竖屏不是让真人长期独占全屏：当口播正在讲界面、步骤或操作过程时，语义匹配的真实录屏应成为连续主视觉，完整展示到观众看清这一段操作，人物缩到左下角画中画；不要把一段可读录屏机械截成 3–4 秒后立刻退回真人。",
+    ].join("\n");
+  }
+  if (orientation === "landscape") {
+    return [
+      "【本次成片画幅】横屏 16:9（1920×1080）。",
+      "构图按宽屏观看设计：可使用人物与录屏左右分区或宽幅全屏素材；保持主体和字幕安全边距；素材完整 contain，不拉伸。",
+    ].join("\n");
+  }
+  return "";
+}
+
+/** 总导演读取的是已经组装好的候选时间线，而不是某一个节点的局部输出。 */
+export function directorPlanFacet(input: {
+  scenes: readonly VideoScene[];
+  cards: readonly VideoInfoCard[];
+  visualSlots: VideoBrollOutput["slots"];
+  broll: readonly VideoBrollPick[];
+  subtitles: readonly BilingualSubtitleLine[];
+  inventory: readonly BrollAssetRef[];
+}): string {
+  const assetById = new Map(
+    input.inventory.map((asset) => [asset.assetId, asset]),
+  );
+  return input.scenes
+    .map((scene, sceneIdx) => {
+      const cards = input.cards
+        .filter((card) => card.sceneIdx === sceneIdx)
+        .map(
+          (card) =>
+            `信息卡@${sec(card.at)}s:${card.kind}/${card.content}`,
+        );
+      const slots = input.visualSlots
+        .filter((slot) => slot.sceneIdx === sceneIdx)
+        .map(
+          (slot) =>
+            `画面需求@${sec(slot.at)}s:${slot.purpose}/${slot.visualBrief}`,
+        );
+      const broll = input.broll
+        .filter((pick) => pick.sceneIdx === sceneIdx)
+        .map((pick) => {
+          const asset = assetById.get(pick.assetId);
+          return `真实素材@${sec(pick.at)}s×${sec(pick.durationSec)}s:${
+            asset?.label ?? pick.assetId
+          }/${pick.presentation ?? "large_stage"}`;
+        });
+      const subtitleSample = input.subtitles
+        .filter(
+          (line) =>
+            line.startSec >= scene.startSec && line.startSec < scene.endSec,
+        )
+        .slice(0, 4)
+        .map((line) => line.zh)
+        .join(" / ");
+      const visuals = [...cards, ...slots, ...broll];
+      return [
+        `场景 ${sceneIdx} | ${sec(scene.startSec)}s-${sec(scene.endSec)}s | ${scene.title} | ${scene.summary}`,
+        `  视觉:${visuals.length > 0 ? visuals.join("；") : "（无信息卡或素材）"}`,
+        `  字幕摘录:${subtitleSample || "（无）"}`,
+      ].join("\n");
+    })
+    .join("\n");
+}
+
+function issueKey(issue: VideoDirectorIssue): string {
+  return `${issue.sceneIdx}:${issue.severity}:${issue.code}:${issue.message}`;
+}
+
+const DIRECTOR_MAX_VISUAL_GAP_SEC = 7;
+const DIRECTOR_CARD_VISIBLE_SEC = 5;
+
+function requiredInformationBeatCount(durationSec: number): number {
+  if (durationSec > 24) return 4;
+  if (durationSec >= 14) return 3;
+  if (durationSec >= 8) return 2;
+  return 0;
+}
+
+type VisualInterval = readonly [startSec: number, endSec: number];
+
+function mergeVisualIntervals(
+  scene: VideoScene,
+  intervals: readonly VisualInterval[],
+): VisualInterval[] {
+  const normalized = intervals
+    .map(([startSec, endSec]) => [
+      Math.max(scene.startSec, startSec),
+      Math.min(scene.endSec, endSec),
+    ] as const)
+    .filter(([startSec, endSec]) => endSec > startSec + 0.01)
+    .sort((a, b) => a[0] - b[0]);
+  const merged: Array<[number, number]> = [];
+  for (const [startSec, endSec] of normalized) {
+    const previous = merged.at(-1);
+    if (!previous || startSec > previous[1] + 0.01) {
+      merged.push([startSec, endSec]);
+      continue;
+    }
+    previous[1] = Math.max(previous[1], endSec);
+  }
+  return merged;
+}
+
+function sceneVisualIntervals(input: {
+  scene: VideoScene;
+  sceneIdx: number;
+  cards: readonly VideoInfoCard[];
+  broll: readonly VideoBrollPick[];
+}): VisualInterval[] {
+  return mergeVisualIntervals(input.scene, [
+    ...input.cards
+      .filter((card) => card.sceneIdx === input.sceneIdx)
+      .map((card) => [
+        card.at,
+        Math.min(input.scene.endSec, card.at + DIRECTOR_CARD_VISIBLE_SEC),
+      ] as const),
+    ...input.broll
+      .filter((pick) => pick.sceneIdx === input.sceneIdx)
+      .map((pick) => [
+        pick.at,
+        Math.min(input.scene.endSec, pick.at + pick.durationSec),
+      ] as const),
+  ]);
+}
+
+function maximumVisualGap(
+  scene: VideoScene,
+  intervals: readonly VisualInterval[],
+): number {
+  let cursor = scene.startSec;
+  let maximum = 0;
+  for (const [startSec, endSec] of intervals) {
+    maximum = Math.max(maximum, startSec - cursor);
+    cursor = Math.max(cursor, endSec);
+  }
+  return Math.max(maximum, scene.endSec - cursor);
+}
+
+/**
+ * 不依赖模型的片场安全检查：只检查时间线、真实素材 id 与视觉覆盖这些可确定事实，
+ * 不用代码猜创意语义。即使总导演模型暂时不可用，也不能让结构损坏的方案进入渲染。
+ */
+export function auditVideoDecisions(input: {
+  scenes: readonly VideoScene[];
+  cards: readonly VideoInfoCard[];
+  broll: readonly VideoBrollPick[];
+  subtitles: readonly BilingualSubtitleLine[];
+  srtLines: readonly SrtLine[];
+  inventory: readonly BrollAssetRef[];
+}): VideoDirectorIssue[] {
+  const issues: VideoDirectorIssue[] = [];
+  const assetIds = new Set(input.inventory.map((asset) => asset.assetId));
+  const totalDuration = srtTotalDurationSec(input.srtLines);
+
+  input.scenes.forEach((scene, sceneIdx) => {
+    const previous = input.scenes[sceneIdx - 1];
+    if (
+      scene.endSec <= scene.startSec ||
+      (previous && Math.abs(previous.endSec - scene.startSec) > 0.05) ||
+      scene.startSec < -0.05 ||
+      scene.endSec > totalDuration + 0.05
+    ) {
+      issues.push({
+        sceneIdx,
+        severity: "blocking",
+        code: "timing_conflict",
+        message: "场景时间线有重叠、空洞或越过口播时长，系统需在当前方案内自动收口。",
+      });
+    }
+
+    const intervals = sceneVisualIntervals({
+      scene,
+      sceneIdx,
+      cards: input.cards,
+      broll: input.broll,
+    });
+    const uncoveredSec = maximumVisualGap(scene, intervals);
+    const sceneCards = input.cards.filter((card) => card.sceneIdx === sceneIdx);
+    const sceneBroll = input.broll.filter((pick) => pick.sceneIdx === sceneIdx);
+    const requiredBeats = requiredInformationBeatCount(
+      scene.endSec - scene.startSec,
+    );
+    const lacksInformationBeats =
+      sceneBroll.length === 0 && sceneCards.length < requiredBeats;
+    if (
+      scene.endSec - scene.startSec > 8 &&
+      (uncoveredSec > DIRECTOR_MAX_VISUAL_GAP_SEC || lacksInformationBeats)
+    ) {
+      issues.push({
+        sceneIdx,
+        severity: "blocking",
+        code: "visual_gap",
+        message:
+          `本场仍有约 ${uncoveredSec.toFixed(1)} 秒连续视觉空档，且需要至少 ${requiredBeats} 个信息节拍；一张小标签不等于完整承接，系统需用真实素材或连续信息节拍补齐。`,
+      });
+    }
+  });
+
+  for (const card of input.cards) {
+    const scene = input.scenes[card.sceneIdx];
+    if (!scene || card.at < scene.startSec - 0.05 || card.at >= scene.endSec) {
+      issues.push({
+        sceneIdx: Math.max(0, card.sceneIdx),
+        severity: "blocking",
+        code: "timing_conflict",
+        message: "信息卡插点不在所属场景内，系统需自动吸附到当前场景。",
+      });
+    }
+  }
+
+  for (const pick of input.broll) {
+    const scene = input.scenes[pick.sceneIdx];
+    const end = pick.at + pick.durationSec;
+    if (!assetIds.has(pick.assetId)) {
+      issues.push({
+        sceneIdx: Math.max(0, pick.sceneIdx),
+        severity: "blocking",
+        code: "material_conflict",
+        message: "时间线引用了当前项目中不存在或无权限的素材。",
+      });
+    }
+    if (
+      !scene ||
+      pick.durationSec <= 0 ||
+      pick.at < scene.startSec - 0.05 ||
+      end > scene.endSec + 0.05
+    ) {
+      issues.push({
+        sceneIdx: Math.max(0, pick.sceneIdx),
+        severity: "blocking",
+        code: "timing_conflict",
+        message: "素材插点或展示时长越过所属场景，系统需保留绑定并自动重算时间线。",
+      });
+    }
+  }
+
+  const seenBrollAssets = new Set<string>();
+  for (const pick of input.broll) {
+    if (seenBrollAssets.has(pick.assetId)) {
+      issues.push({
+        sceneIdx: Math.max(0, pick.sceneIdx),
+        severity: "blocking",
+        code: "material_conflict",
+        message: "同一素材被自动重复用于多个时间段，系统需保留首次使用并移除重复绑定。",
+      });
+    }
+    seenBrollAssets.add(pick.assetId);
+  }
+  for (const [sceneIdx] of input.scenes.entries()) {
+    const mainVisuals = input.broll
+      .filter(
+        (pick) =>
+          pick.sceneIdx === sceneIdx && pick.presentation !== "overlay",
+      )
+      .sort((a, b) => a.at - b.at);
+    for (let index = 1; index < mainVisuals.length; index += 1) {
+      const previous = mainVisuals[index - 1]!;
+      const current = mainVisuals[index]!;
+      if (previous.at + previous.durationSec > current.at + 0.05) {
+        issues.push({
+          sceneIdx,
+          severity: "blocking",
+          code: "timing_conflict",
+          message: "同一时间出现了多个互斥主视觉，系统需只保留一个或顺序衔接。",
+        });
+      }
+    }
+  }
+
+  if (
+    input.subtitles.length !== input.srtLines.length ||
+    input.subtitles.some((line, index) => {
+      const source = input.srtLines[index];
+      return (
+        !source ||
+        line.index !== source.index ||
+        Math.abs(line.startSec - source.startSec) > 0.01 ||
+        Math.abs(line.endSec - source.endSec) > 0.01
+      );
+    })
+  ) {
+    issues.push({
+      sceneIdx: 0,
+      severity: "blocking",
+      code: "subtitle_conflict",
+      message: "字幕与原始口播时间轴不一致，系统需自动恢复原始口播时间线。",
+    });
+  }
+
+  return Array.from(new Map(issues.map((issue) => [issueKey(issue), issue])).values());
+}
+
+function compactDirectorCardText(text: string): string {
+  const normalized = text.trim().replace(/\s+/g, " ");
+  const chars = Array.from(normalized);
+  return chars.length <= 28
+    ? normalized
+    : `${chars.slice(0, 27).join("")}…`;
+}
+
+function groundedCard(input: {
+  scene: VideoScene;
+  at: number;
+  srtLines: readonly SrtLine[];
+}): Pick<VideoInfoCard, "kind" | "content" | "motion"> {
+  const sceneLines = input.srtLines.filter(
+    (item) =>
+      item.startSec >= input.scene.startSec - 0.05 &&
+      item.startSec < input.scene.endSec + 0.05,
+  );
+  const line = sceneLines.find(
+    (item) =>
+      item.startSec >= input.at - 0.05 &&
+      item.startSec < input.scene.endSec + 0.05,
+  ) ?? sceneLines.at(-1);
+  const lineIndex = line ? sceneLines.indexOf(line) : -1;
+  const exact = compactDirectorCardText(
+    line?.text || input.scene.summary || input.scene.title,
+  );
+  // 这是模型不可用时的确定性安全兜底，只做“原句如何排版”的结构判断，
+  // 不按业务词表猜语义：数字原样做大数卡；相邻两句原样做渐进清单；其余做金句卡。
+  if (/\d/.test(exact)) {
+    return { kind: "stat", content: exact, motion: "counter" };
+  }
+  const next = lineIndex >= 0 ? sceneLines[lineIndex + 1] : undefined;
+  if (next && next.startSec - (line?.startSec ?? input.at) <= DIRECTOR_CARD_VISIBLE_SEC) {
+    return {
+      kind: "list",
+      content: `${exact}、${compactDirectorCardText(next.text)}`,
+      motion: "reveal",
+    };
+  }
+  return { kind: "quote", content: exact, motion: "plain" };
+}
+
+/**
+ * 总导演的确定性修片层。
+ *
+ * 首轮分镜和素材匹配一旦产出，就视为当前方案的已绑定事实：这里不会重新跑分场、
+ * 不会按字符串猜素材、也不会删除仍然存在的用户素材。时间越界会在原场景内收口；
+ * 视觉承接不足则直接用口播原文生成信息卡补位。这样总导演负责把片修到可渲染，
+ * 而不是把“缺素材/重新分镜”的作业退回给用户。
+ */
+export function autoRepairVideoDecisions(input: {
+  scenes: readonly VideoScene[];
+  cards: readonly VideoInfoCard[];
+  broll: readonly VideoBrollPick[];
+  subtitles: readonly BilingualSubtitleLine[];
+  srtLines: readonly SrtLine[];
+  inventory: readonly BrollAssetRef[];
+  orientation?: VideoOrientation;
+  issues?: readonly VideoDirectorIssue[];
+}): {
+  cards: VideoInfoCard[];
+  broll: VideoBrollPick[];
+  subtitles: BilingualSubtitleLine[];
+  repairs: string[];
+} {
+  const repairs: string[] = [];
+  const starts = srtStartSet(input.srtLines);
+  const inventoryById = new Map(
+    input.inventory.map((asset) => [asset.assetId, asset] as const),
+  );
+
+  const cards = input.cards.flatMap((card) => {
+    const scene = input.scenes[card.sceneIdx];
+    if (!scene) return [];
+    const at = Math.min(
+      Math.max(nearestSrtStart(card.at, starts), scene.startSec),
+      Math.max(scene.startSec, scene.endSec - 0.01),
+    );
+    if (Math.abs(at - card.at) > 0.01) repairs.push("信息卡插点已收口到所属场景");
+    return [{ ...card, at }];
+  });
+
+  let broll = input.broll.flatMap((pick) => {
+    const scene = input.scenes[pick.sceneIdx];
+    const asset = inventoryById.get(pick.assetId);
+    if (!scene || !asset) {
+      repairs.push("失效素材引用已由信息卡接替");
+      return [];
+    }
+    const at = Math.min(
+      Math.max(pick.at, scene.startSec),
+      Math.max(scene.startSec, scene.endSec - 0.01),
+    );
+    const assetDurationSec = Math.max(0, (asset.durationMs ?? 0) / 1000);
+    const sceneAvailable = Math.max(0.1, scene.endSec - at);
+    const durationSec = Math.max(
+      0.1,
+      Math.min(
+        pick.durationSec > 0 ? pick.durationSec : sceneAvailable,
+        sceneAvailable,
+        assetDurationSec > 0 ? assetDurationSec : sceneAvailable,
+      ),
+    );
+    if (
+      Math.abs(at - pick.at) > 0.01 ||
+      Math.abs(durationSec - pick.durationSec) > 0.01
+    ) {
+      repairs.push("已绑定素材的插点与时长已在原场景内重算");
+    }
+    return [{ ...pick, at, durationSec }];
+  });
+
+  // 竖屏里，AI 已明确选为 full_frame 的录屏就是本段操作讲解的主视觉。把它延长到
+  // 当前场景/素材真实可用边界，后续 normalizeBrollTimeline 仍会在下一个主视觉开始处
+  // 截断，因此不会制造重叠。真人由渲染模板自动退到画中画，不再让录屏只闪 3–4 秒。
+  // SEMANTIC_BOUNDARY_ALLOW: 这里只落实 AI 已给出的 visualRole/presentation，按真实
+  // 场景和素材时长执行物理排版；不根据文件名、关键词或业务语义自行选择素材。
+  if (input.orientation === "portrait") {
+    for (const pick of broll) {
+      if (
+        pick.visualRole !== "screen_recording" ||
+        pick.presentation !== "full_frame"
+      ) {
+        continue;
+      }
+      const scene = input.scenes[pick.sceneIdx];
+      const asset = inventoryById.get(pick.assetId);
+      if (!scene || !asset) continue;
+      const sceneAvailable = Math.max(0.1, scene.endSec - pick.at);
+      const assetDurationSec = Math.max(0, (asset.durationMs ?? 0) / 1000);
+      const readableDurationSec = Math.max(
+        0.1,
+        Math.min(
+          sceneAvailable,
+          assetDurationSec > 0 ? assetDurationSec : sceneAvailable,
+        ),
+      );
+      if (readableDurationSec > pick.durationSec + 0.01) {
+        pick.durationSec = readableDurationSec;
+        repairs.push("竖屏录屏已延长为本段连续主视觉，真人改由画中画承接");
+      }
+    }
+  }
+
+  const normalizedTimeline = normalizeBrollTimeline({
+    scenes: input.scenes,
+    broll,
+  });
+  broll = normalizedTimeline.broll;
+  repairs.push(...normalizedTimeline.repairs);
+
+  // AI 若认为某场素材语义承接不足，仍保留已绑定素材；只有非录屏镜头才
+  // 收成短镜头并用信息卡接力。screen_recording + full_frame 是上游 AI 已作出的
+  // 创作选择，代码只守呈现边界：连续操作必须保留可读时长，不能被兜底统一截成 4 秒。
+  // SEMANTIC_BOUNDARY_ALLOW: 此处分支只依据 AI 已返回的视觉角色/版式执行物理时长策略，
+  // 不通过文件名、关键词或业务名称重新判断素材语义。
+  const conflictScenes = new Set(
+    (input.issues ?? [])
+      .filter(
+        (issue) =>
+          issue.severity === "blocking" &&
+          (issue.code === "material_conflict" ||
+            issue.code === "narrative_gap"),
+      )
+      .map((issue) => issue.sceneIdx),
+  );
+  for (const pick of broll) {
+    if (!conflictScenes.has(pick.sceneIdx)) continue;
+    if (
+      pick.visualRole === "screen_recording" &&
+      pick.presentation === "full_frame"
+    ) {
+      repairs.push("录屏主视觉已保留可读时长，语义空档由信息卡接力");
+      continue;
+    }
+    pick.durationSec = Math.min(pick.durationSec, 4);
+    repairs.push("语义承接不足的已绑定素材已改为短镜头并由信息卡接力");
+  }
+
+  const ensureCardAt = (sceneIdx: number, requestedAt: number) => {
+    const scene = input.scenes[sceneIdx];
+    if (!scene) return;
+    const at = Math.min(
+      Math.max(nearestSrtStart(requestedAt, starts), scene.startSec),
+      Math.max(scene.startSec, scene.endSec - 0.01),
+    );
+    if (
+      cards.some(
+        (card) =>
+          card.sceneIdx === sceneIdx && Math.abs(card.at - at) < 1.5,
+      )
+    ) return;
+    const fallback = groundedCard({ scene, at, srtLines: input.srtLines });
+    cards.push({
+      sceneIdx,
+      ...fallback,
+      at,
+    });
+    repairs.push("视觉空档已用口播原文信息节拍补齐");
+  };
+
+  for (const [sceneIdx, scene] of input.scenes.entries()) {
+    const sceneBroll = broll.filter((pick) => pick.sceneIdx === sceneIdx);
+    const requiredBeats = requiredInformationBeatCount(
+      scene.endSec - scene.startSec,
+    );
+    // 没有真实素材承接时，先按时长建立最低信息节拍。这里只决定“什么时候需要
+    // 一个视觉 beat”，卡片语义仍由 groundedCard 从当前口播逐句提取，绝不写死业务词。
+    if (sceneBroll.length === 0 && requiredBeats > 0) {
+      for (let index = 0; index < requiredBeats; index += 1) {
+        ensureCardAt(
+          sceneIdx,
+          scene.startSec +
+            ((scene.endSec - scene.startSec) * index) / requiredBeats,
+        );
+      }
+    }
+    const intervals = sceneVisualIntervals({ scene, sceneIdx, cards, broll });
+    let cursor = scene.startSec;
+    for (const [start, end] of intervals) {
+      while (start - cursor > DIRECTOR_MAX_VISUAL_GAP_SEC) {
+        ensureCardAt(sceneIdx, cursor);
+        cursor += DIRECTOR_CARD_VISIBLE_SEC;
+      }
+      cursor = Math.max(cursor, end);
+    }
+    while (scene.endSec - cursor > DIRECTOR_MAX_VISUAL_GAP_SEC) {
+      ensureCardAt(sceneIdx, cursor);
+      cursor += DIRECTOR_CARD_VISIBLE_SEC;
+    }
+  }
+
+  // 每个 AI 阻断项都必须在本轮自动修片中得到一个视觉承接，不留给用户处理。
+  for (const issue of input.issues ?? []) {
+    if (issue.severity !== "blocking") continue;
+    const scene = input.scenes[issue.sceneIdx];
+    if (scene) ensureCardAt(issue.sceneIdx, scene.startSec);
+  }
+
+  const translatedByIndex = new Map(
+    input.subtitles.map((line) => [line.index, line] as const),
+  );
+  const subtitles = input.srtLines.map((source) => ({
+    index: source.index,
+    startSec: source.startSec,
+    endSec: source.endSec,
+    zh: translatedByIndex.get(source.index)?.zh || source.text,
+    en: translatedByIndex.get(source.index)?.en || "",
+  }));
+  if (subtitles.length !== input.subtitles.length) {
+    repairs.push("字幕已恢复为口播原始时间轴");
+  }
+
+  return {
+    cards: cards.sort((a, b) => a.at - b.at),
+    broll: broll.sort((a, b) => a.at - b.at),
+    subtitles,
+    repairs: [...new Set(repairs)],
+  };
+}
 
 // ── 四决策函数(纯编排:调模型 → 后处理吸附/剔除;各自可独测)──────────────────
 
@@ -504,7 +1325,13 @@ function normalizeSceneTitle(
  *  [T-387c] storyboard(凝固分镜 facet,可选):有 authored 意图段 → scene 切分对齐段边界
  *  (仍吸附 SRT);空串/缺省 → 占位替换为空 = 现状(零回归)。 */
 export async function decideScenes(
-  input: { srtLines: readonly SrtLine[]; script: string; storyboard?: string },
+  input: {
+    srtLines: readonly SrtLine[];
+    script: string;
+    storyboard?: string;
+    orientation?: VideoOrientation;
+    manualAssignments?: string;
+  },
   call: StructuredCall,
 ): Promise<VideoScene[]> {
   const starts = srtStartSet(input.srtLines);
@@ -514,6 +1341,8 @@ export async function decideScenes(
       srt: srtFacet(input.srtLines),
       script: input.script,
       storyboard: input.storyboard ?? "",
+      orientation: orientationFacet(input.orientation),
+      manualAssignments: input.manualAssignments ?? "",
     },
     outputSchema: buildScenesDecisionSchema(starts),
   });
@@ -550,6 +1379,8 @@ export async function decideCards(
     script: string;
     /** [T-387c] 凝固分镜 facet(可选):cards 不与 authored 画面冲突;空 = 现状。 */
     storyboard?: string;
+    orientation?: VideoOrientation;
+    manualAssignments?: string;
   },
   call: StructuredCall,
 ): Promise<VideoInfoCard[]> {
@@ -561,6 +1392,8 @@ export async function decideCards(
       srt: srtFacet(input.srtLines),
       script: input.script,
       storyboard: input.storyboard ?? "",
+      orientation: orientationFacet(input.orientation),
+      manualAssignments: input.manualAssignments ?? "",
     },
     outputSchema: buildCardsDecisionSchema(input.scenes.length, starts),
   });
@@ -596,7 +1429,7 @@ export async function decideCards(
   return kept;
 }
 
-/** ③ B-roll:先产出视觉需求；素材存在时精确绑定，清单外 id 剔除。 */
+/** ③ B-roll:只产出视觉需求；真实素材绑定统一交给 material.match。 */
 export async function decideBroll(
   input: {
     scenes: readonly VideoScene[];
@@ -605,10 +1438,11 @@ export async function decideBroll(
     inventory: readonly BrollAssetRef[];
     /** [T-387c] 凝固分镜 facet(可选):点名素材的段 broll 必选点名素材;空 = 现状。 */
     storyboard?: string;
+    orientation?: VideoOrientation;
+    manualAssignments?: string;
   },
   call: StructuredCall,
 ): Promise<VideoBrollOutput> {
-  const starts = srtStartSet(input.srtLines);
   const ids = input.inventory.map((a) => a.assetId);
   const out = await call<VideoBrollOutput>({
     skillId: "video.broll",
@@ -617,31 +1451,174 @@ export async function decideBroll(
       script: input.script,
       library: libraryFacet(input.inventory),
       storyboard: input.storyboard ?? "",
+      orientation: orientationFacet(input.orientation),
+      manualAssignments: input.manualAssignments ?? "",
     },
     outputSchema: buildBrollDecisionSchema(ids, input.scenes.length),
+    normalizeObject: normalizeVideoBrollOutput,
   });
-  const idSet = new Set(ids);
   const slots = (out.slots ?? []).filter(
     (slot) => slot.sceneIdx >= 0 && slot.sceneIdx < input.scenes.length,
   );
-  const kept: VideoBrollPick[] = [];
-  for (const b of out.broll) {
-    if (!idSet.has(b.assetId)) continue; // 硬规则:清单外即编造,剔除
-    const scene = input.scenes[b.sceneIdx];
+  // 即使弱模型违约在 broll 字段里直接选了素材，也不允许越过
+  // material.match。否则模型会按文件名或旧 prompt 随意塞 4 秒占位片。
+  return { slots, broll: [] };
+}
+
+/**
+ * 用现有 material.match Skill 把“视觉需求”与当前项目真实素材做 AI 语义匹配。
+ * 这里不做关键词、文件名或向量相似度判断；代码只负责鉴权清单、场景索引与时间边界。
+ */
+export async function decideMaterialBroll(
+  input: {
+    scenes: readonly VideoScene[];
+    srtLines: readonly SrtLine[];
+    script: string;
+    inventory: readonly BrollAssetRef[];
+    visualSlots: VideoBrollOutput["slots"];
+    orientation?: VideoOrientation;
+    manualAssignments?: string;
+  },
+  call: StructuredCall,
+): Promise<VideoBrollPick[]> {
+  if (input.inventory.length === 0) return [];
+  const assetIds = input.inventory.map((asset) => asset.assetId);
+  const output = await call<MaterialMatchOutput>({
+    skillId: "material.match",
+    facets: {
+      positioning: "以本条口播、视频场景和视觉编导需求为准",
+      topic: input.script,
+      script: input.script,
+      scenes: scenesFacet(input.scenes),
+      visualSlots: visualSlotsFacet(input.visualSlots),
+      library: libraryFacet(input.inventory),
+      orientation: orientationFacet(input.orientation),
+      manualAssignments: input.manualAssignments ?? "",
+    },
+    outputSchema: buildVideoMaterialMatchSchema(
+      assetIds,
+      input.scenes.length,
+    ),
+  });
+
+  const idSet = new Set(assetIds);
+  const used = new Set<string>();
+  const starts = srtStartSet(input.srtLines);
+  const picks: VideoBrollPick[] = [];
+  for (const match of output.matches) {
+    if (
+      !idSet.has(match.assetId) ||
+      match.role === "cover" ||
+      typeof match.sceneIdx !== "number" ||
+      used.has(match.assetId)
+    ) {
+      continue;
+    }
+    const scene = input.scenes[match.sceneIdx];
     if (!scene) continue;
     const sceneStarts = starts.filter(
-      (s) => s >= scene.startSec && s < scene.endSec,
+      (start) => start >= scene.startSec && start < scene.endSec,
     );
+    const requestedAt =
+      typeof match.at === "number" && Number.isFinite(match.at)
+        ? match.at
+        : scene.startSec;
     const at = nearestSrtStart(
-      Math.min(Math.max(b.at, scene.startSec), scene.endSec),
+      Math.min(
+        Math.max(requestedAt, scene.startSec),
+        Math.max(scene.startSec, scene.endSec - 0.001),
+      ),
       sceneStarts.length > 0 ? sceneStarts : starts,
     );
-    // 时长:至少 1s,不越过场景末尾。
-    const maxDur = Math.max(1, scene.endSec - at);
-    const durationSec = Math.min(Math.max(b.durationSec, 1), maxDur);
-    kept.push({ sceneIdx: b.sceneIdx, assetId: b.assetId, at, durationSec });
+    const assetDuration =
+      (input.inventory.find((asset) => asset.assetId === match.assetId)
+        ?.durationMs ?? 0) / 1000;
+    const requestedDuration =
+      typeof match.durationSec === "number" &&
+      Number.isFinite(match.durationSec)
+        ? match.durationSec
+        : assetDuration > 0
+          ? assetDuration
+          : Math.max(1, scene.endSec - at);
+    picks.push({
+      sceneIdx: match.sceneIdx,
+      assetId: match.assetId,
+      at,
+      durationSec: Math.max(
+        1,
+        Math.min(requestedDuration, Math.max(1, scene.endSec - at)),
+      ),
+      // 老模型/旧 Skill 没返回 presentation 时采用可读性安全下限；不猜语义，
+      // 只确保用户选中的真实素材不会再次被渲染成小到看不清的卡片。
+      presentation: match.presentation ?? "large_stage",
+      visualRole:
+        match.visualRole === "screen_recording" ||
+        match.visualRole === "still_image" ||
+        match.visualRole === "live_footage"
+          ? match.visualRole
+          : undefined,
+      motion: match.motion ?? "static",
+    });
+    used.add(match.assetId);
   }
-  return { slots, broll: kept };
+  return picks.sort((a, b) => a.at - b.at);
+}
+
+/**
+ * 模型若漏掉人工选中的素材，代码只执行用户已明确的 assetId 与原场景序号，不做语义猜测。
+ * 正常路径仍以 material.match 的 AI 插点/时长为准；这里仅是“不丢用户选择”的安全兜底。
+ */
+export function enforceManualMaterialAssignments(input: {
+  assignments: readonly ManualMaterialAssignment[];
+  scenes: readonly VideoScene[];
+  srtLines: readonly SrtLine[];
+  inventory: readonly BrollAssetRef[];
+  modelBroll: readonly VideoBrollPick[];
+}): VideoBrollPick[] {
+  if (input.scenes.length === 0 || input.assignments.length === 0) {
+    return normalizeBrollTimeline({
+      scenes: input.scenes,
+      broll: input.modelBroll,
+    }).broll;
+  }
+  const byId = new Map(input.inventory.map((asset) => [asset.assetId, asset]));
+  const assignmentIds = new Set(input.assignments.map((item) => item.assetId));
+  const existingById = new Map(
+    input.modelBroll
+      .filter((pick) => assignmentIds.has(pick.assetId))
+      .map((pick) => [pick.assetId, pick] as const),
+  );
+  const out = input.modelBroll.filter((pick) => !assignmentIds.has(pick.assetId));
+  for (const assignment of input.assignments) {
+    if (!byId.has(assignment.assetId)) continue;
+    const sceneIdx = Math.min(
+      Math.max(assignment.sceneIdx, 0),
+      input.scenes.length - 1,
+    );
+    const scene = input.scenes[sceneIdx]!;
+    const existing = existingById.get(assignment.assetId);
+    if (existing?.sceneIdx === sceneIdx) {
+      out.push(existing);
+      continue;
+    }
+    const at =
+      input.srtLines.find(
+        (line) =>
+          line.startSec >= scene.startSec && line.startSec < scene.endSec,
+      )?.startSec ?? scene.startSec;
+    const available = Math.max(1, scene.endSec - at);
+    const assetDuration = (byId.get(assignment.assetId)?.durationMs ?? 0) / 1000;
+    out.push({
+      sceneIdx,
+      assetId: assignment.assetId,
+      at,
+      durationSec:
+        assetDuration > 0 ? Math.max(1, Math.min(assetDuration, available)) : available,
+      presentation: "large_stage",
+      motion: "static",
+    });
+  }
+  return normalizeBrollTimeline({ scenes: input.scenes, broll: out }).broll;
 }
 
 /** zh 校正「改动最小」守门阈值:与原行 token 相似度低于它 → 视为重写,退回原文。 */
@@ -658,6 +1635,26 @@ function lineSimilarity(a: string, b: string): number {
   let inter = 0;
   for (const t of sa) if (sb.has(t)) inter++;
   return (2 * inter) / (sa.size + sb.size);
+}
+
+function normalizeSubtitleEvidence(text: string): string {
+  return text
+    .normalize("NFKC")
+    .toLocaleLowerCase("zh-CN")
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+/** 中文一旦发生改动，校正后的整行必须能在已确认口播稿中找到连续依据。 */
+function correctionAnchoredInScript(
+  corrected: string,
+  original: string,
+  script: string,
+): boolean {
+  const normalizedCorrected = normalizeSubtitleEvidence(corrected);
+  const normalizedOriginal = normalizeSubtitleEvidence(original);
+  if (normalizedCorrected === normalizedOriginal) return true;
+  if (!normalizedCorrected) return false;
+  return normalizeSubtitleEvidence(script).includes(normalizedCorrected);
 }
 
 /** ④ 双语字幕:行数/时间轴不变(时间从原行回填);zh 改动过大退回原文(改动最小铁律)。
@@ -698,8 +1695,13 @@ export async function decideSubtitles(
   return input.srtLines.map((orig) => {
     const got = byIndex.get(orig.index);
     let zh = (got?.zh ?? "").trim() || orig.text;
-    // 「ASR 错字校正,改动最小」守门:改得面目全非(相似度 < 阈值)→ 退回原文。
-    if (lineSimilarity(zh, orig.text) < SUBTITLE_REWRITE_GUARD) zh = orig.text;
+    // 双守门：改动必须足够小，且校正后的文字必须在已确认口播稿中有依据。
+    if (
+      lineSimilarity(zh, orig.text) < SUBTITLE_REWRITE_GUARD ||
+      !correctionAnchoredInScript(zh, orig.text, input.script)
+    ) {
+      zh = orig.text;
+    }
     return {
       index: orig.index,
       startSec: orig.startSec, // 时间轴永远回填原值 —— 模型无权改时钟
@@ -708,6 +1710,222 @@ export async function decideSubtitles(
       en: (got?.en ?? "").trim(),
     };
   });
+}
+
+/**
+ * ⑤ 总导演统筹审核：AI 只做整体叙事/素材/构图判断，代码安全检查独立执行。
+ * AI 不可用时降级为确定性结构审核与自动补位；不会把审片作业退给用户，
+ * 也不会自动换 key 或无限重跑。
+ */
+export async function decideDirectorReview(
+  input: {
+    scenes: readonly VideoScene[];
+    cards: readonly VideoInfoCard[];
+    visualSlots: VideoBrollOutput["slots"];
+    broll: readonly VideoBrollPick[];
+    subtitles: readonly BilingualSubtitleLine[];
+    srtLines: readonly SrtLine[];
+    script: string;
+    inventory: readonly BrollAssetRef[];
+    orientation?: VideoOrientation;
+  },
+  call: StructuredCall,
+): Promise<VideoDirectorReview> {
+  const deterministicIssues = auditVideoDecisions(input);
+  let output: VideoDirectorReviewOutput;
+  try {
+    output = await call<VideoDirectorReviewOutput>({
+      skillId: "video.director",
+      facets: {
+        script: input.script,
+        orientation: orientationFacet(input.orientation),
+        plan: directorPlanFacet(input),
+        inventory: libraryFacet(input.inventory) || "（当前项目没有额外素材）",
+      },
+      outputSchema: videoDirectorReviewSchema,
+    });
+  } catch {
+    const fallbackIssues = [...deterministicIssues];
+    if (input.scenes.length > 0) {
+      fallbackIssues.push({
+        sceneIdx: 0,
+        severity: "warning",
+        code: "narrative_gap",
+        message:
+          "整体叙事审片暂不可用，系统已完成结构校验与信息卡自动补位。",
+      });
+    }
+    return {
+      status: fallbackIssues.some((issue) => issue.severity === "blocking")
+        ? "needs_attention"
+        : "ready",
+      summary:
+        deterministicIssues.length > 0
+          ? "结构审核发现的问题已交由系统在当前方案内自动修正。"
+          : "时间线与素材安全检查通过，系统已按当前方案完成自动补位。",
+      issues: fallbackIssues,
+      source: "deterministic_fallback",
+    };
+  }
+
+  const aiIssues: VideoDirectorIssue[] = output.issues.flatMap((issue) => {
+    if (
+      issue.sceneIdx < 0 ||
+      issue.sceneIdx >= input.scenes.length ||
+      !issue.message.trim()
+    ) {
+      return [];
+    }
+    return [{ ...issue, message: issue.message.trim() }];
+  });
+  if (
+    output.verdict === "revise" &&
+    !aiIssues.some((issue) => issue.severity === "blocking")
+  ) {
+    const first = aiIssues[0];
+    aiIssues.push({
+      sceneIdx: first?.sceneIdx ?? 0,
+      severity: "blocking",
+      code: first?.code ?? "narrative_gap",
+      message:
+        first?.message || "系统需在当前方案内自动修片并复审。",
+    });
+  }
+  const issues = Array.from(
+    new Map(
+      [...deterministicIssues, ...aiIssues].map((issue) => [
+        issueKey(issue),
+        issue,
+      ]),
+    ).values(),
+  );
+  const hasBlocking = issues.some((issue) => issue.severity === "blocking");
+  return {
+    status: hasBlocking ? "needs_attention" : "ready",
+    summary:
+      output.summary.trim() ||
+      (hasBlocking ? "总导演已进入自动修片与复审。" : "总导演审片通过。"),
+    issues,
+    source: "ai",
+  };
+}
+
+/**
+ * 总导演闭环：首审发现问题后在当前方案内自动修片并复审。
+ * 最终只向用户交付可渲染方案；首审/复审意见都是内部工作记录，不再成为用户门禁。
+ */
+export async function closeDirectorReview(
+  input: {
+    scenes: readonly VideoScene[];
+    cards: readonly VideoInfoCard[];
+    visualSlots: VideoBrollOutput["slots"];
+    broll: readonly VideoBrollPick[];
+    subtitles: readonly BilingualSubtitleLine[];
+    srtLines: readonly SrtLine[];
+    script: string;
+    inventory: readonly BrollAssetRef[];
+    orientation?: VideoOrientation;
+  },
+  call: StructuredCall,
+): Promise<{
+  cards: VideoInfoCard[];
+  broll: VideoBrollPick[];
+  subtitles: BilingualSubtitleLine[];
+  directorReview: VideoDirectorReview;
+  repairs: string[];
+  reviewPasses: number;
+}> {
+  const firstReview = await decideDirectorReview(input, call);
+  let lastReview = firstReview;
+  let reviewPasses = 1;
+  let current = {
+    cards: [...input.cards],
+    broll: [...input.broll],
+    subtitles: [...input.subtitles],
+  };
+  const allRepairs: string[] = [];
+
+  // 最多两轮“审片 → 自动修片”，每轮修片后都必须让总导演重新读取修后的当下
+  // 时间线。禁止第二次修片后沿用上一次的意见冒充复审通过。
+  for (let repairPass = 0; repairPass < 2; repairPass += 1) {
+    const repaired = autoRepairVideoDecisions({
+      ...input,
+      ...current,
+      issues: lastReview.issues,
+    });
+    current = {
+      cards: repaired.cards,
+      broll: repaired.broll,
+      subtitles: repaired.subtitles,
+    };
+    allRepairs.push(...repaired.repairs);
+
+    const changed = repaired.repairs.length > 0;
+    if (lastReview.status === "ready" && !changed) break;
+    lastReview = await decideDirectorReview(
+      { ...input, ...current },
+      call,
+    );
+    reviewPasses += 1;
+    if (lastReview.status === "ready") break;
+  }
+
+  const remainingStructuralIssues = auditVideoDecisions({
+    scenes: input.scenes,
+    cards: current.cards,
+    broll: current.broll,
+    subtitles: current.subtitles,
+    srtLines: input.srtLines,
+    inventory: input.inventory,
+  });
+  if (remainingStructuralIssues.some((issue) => issue.severity === "blocking")) {
+    // 这里代表代码层无法安全修复的结构损坏，不允许把半套候选或“请用户补素材”
+    // 落到界面。让任务明确失败，下一次运行重新产完整候选。
+    throw new Error("总导演自动修片后时间线仍未闭合，已停止生成半套候选");
+  }
+  const repeatedSubjectiveIssues =
+    lastReview.status === "needs_attention"
+      ? lastReview.issues.filter((issue) => issue.severity === "blocking")
+      : [];
+  if (repeatedSubjectiveIssues.length > 0) {
+    // SEMANTIC_BOUNDARY_ALLOW:导演模型负责创作判断，代码只在已通过确定性时间线/权限/
+    // 类型/覆盖审计后，终止“同一建议反复 revise”的非收敛循环。这里不猜新的创作方案，
+    // 也不改用户已绑定的素材；上一轮修片已把意见落实为当前分镜内的信息卡或安全时间线。
+    // 这些原始意见必须留在运行日志里方便复盘，但不能再作为用户必须手工重排的门禁。
+    console.warn(
+      "[video.director] 模型连续复审仍返回 revise；确定性时间线已闭合，采用当前自动修片结果",
+      repeatedSubjectiveIssues.map((issue) => ({
+        sceneIdx: issue.sceneIdx,
+        code: issue.code,
+        message: issue.message,
+      })),
+    );
+    allRepairs.push("终止重复审片建议循环，保留当前分镜与用户已绑定素材");
+  }
+
+  const repairs = [...new Set(allRepairs)];
+  return {
+    cards: current.cards,
+    broll: current.broll,
+    subtitles: current.subtitles,
+    repairs,
+    reviewPasses,
+    directorReview: {
+      status: "ready",
+      summary:
+        repairs.length > 0
+          ? `总导演已在当前分镜内自动完成 ${repairs.length} 类修正并复审，可进入渲染。`
+          : lastReview.summary || "总导演审片通过。",
+      // 通过态不再夹带“建议删除/请手动选择”等未执行意见；审片工作记录只留日志。
+      issues: [],
+      source:
+        repairs.length > 0 ||
+        firstReview.status === "needs_attention" ||
+        repeatedSubjectiveIssues.length > 0
+          ? "auto_repaired"
+          : lastReview.source,
+    },
+  };
 }
 
 // ── 编排入口 runVideoDecisions(live dispatch 范式:persistence-client void 调用)──
@@ -773,21 +1991,23 @@ function makeDefaultCall(
       template: getTemplate(input.skillId),
       facets: input.facets,
       outputSchema: input.outputSchema,
+      normalizeObject: input.normalizeObject,
     });
     return object;
   };
 }
 
-/** 四步中文名(步骤流/失败报错共用 —— 任一步失败诚实报是哪一步)。 */
+/** 五步中文名(步骤流/失败报错共用 —— 任一步失败诚实报是哪一步)。 */
 export const VIDEO_DECISION_STEPS = [
   "①语义分场",
   "②信息卡",
   "③B-roll 匹配",
   "④双语字幕",
+  "⑤总导演统筹审核",
 ] as const;
 
 /**
- * 编排入口:顺序跑四决策 → recordCandidate(video_decisions,awaiting_confirmation)。
+ * 编排入口:顺序跑四决策 + 总导演审核 → recordCandidate(video_decisions,awaiting_confirmation)。
  * 任一步失败:recordStep(kind:"failed",text 指明是哪一步)+ cancelTask(诚实终态,绝不卡
  * running、绝不落半套决策)。产物含素材清单快照(预览卡 B-roll 换选下拉直接用,免再取)。
  */
@@ -803,6 +2023,11 @@ export async function runVideoDecisions(
       typeof task.inputData.srtText === "string" ? task.inputData.srtText : "";
     const script =
       typeof task.inputData.script === "string" ? task.inputData.script : "";
+    const orientation: VideoOrientation | undefined =
+      task.inputData.orientation === "portrait" ||
+      task.inputData.orientation === "landscape"
+        ? task.inputData.orientation
+        : undefined;
     const srtLines = parseSrt(srtText);
     if (srtLines.length === 0) {
       throw new Error("SRT 解析不出任何字幕行(备料:请检查上传的 SRT 文件)");
@@ -828,27 +2053,18 @@ export async function runVideoDecisions(
     // 当**对齐硬约束**(四决策=对齐器)。best-effort:未绑 reader / 读失败 / 旧稿无 visual →
     // 空串 → 模板占位替换为空,行为=现状(零回归,测锚)。
     let storyboard = "";
+    let storyboardSections: StoryboardSectionRef[] = [];
     if (deps.readStoryboard) {
       try {
-        storyboard = storyboardFacet(
-          await deps.readStoryboard(ctx, task.projectId),
-        );
+        storyboardSections = await deps.readStoryboard(ctx, task.projectId);
+        storyboard = storyboardFacet(storyboardSections);
       } catch {
         storyboard = "";
       }
     }
 
-    stepIdx = 0;
-    const scenes = await decideScenes({ srtLines, script, storyboard }, call);
-    await step(0, `${VIDEO_DECISION_STEPS[0]}:${scenes.length} 场`);
-
-    stepIdx = 1;
-    const cards = await decideCards({ scenes, srtLines, script, storyboard }, call);
-    await step(1, `${VIDEO_DECISION_STEPS[1]}:${cards.length} 张(可溯校验后)`);
-
-    stepIdx = 2;
-    // [T-387c] 备料③「人可剔」:制作页聚合清单里被用户剔除的自动项经 inputData.excludedAssetIds
-    // 传入,这里从决策可选集里滤掉(手动上传/未剔除项照常)。缺省 = 不滤(旧任务零回归)。
+    // 素材清单与人工选材必须在分场前准备好：人工选择会改变场景边界，不能等旧分场
+    // 做完后再往时间线上硬塞。代码只鉴权/校验真实 assetId，语义与时长交给 AI。
     const excluded = new Set(
       Array.isArray(task.inputData.excludedAssetIds)
         ? (task.inputData.excludedAssetIds as unknown[]).filter(
@@ -859,21 +2075,148 @@ export async function runVideoDecisions(
     const inventory = (
       await deps.listBrollInventory(ctx, task.projectId)
     ).filter((a) => !excluded.has(a.assetId));
-    const brollResult = await decideBroll(
-      { scenes, srtLines, script, inventory, storyboard },
+    const inventoryIds = new Set(inventory.map((asset) => asset.assetId));
+    const manualMaterialAssignments = Array.from(
+      new Map(
+        (Array.isArray(task.inputData.manualMaterialAssignments)
+          ? task.inputData.manualMaterialAssignments
+          : []
+        ).flatMap((raw): Array<[string, ManualMaterialAssignment]> => {
+          if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+          const item = raw as Record<string, unknown>;
+          if (
+            typeof item.assetId !== "string" ||
+            !inventoryIds.has(item.assetId) ||
+            typeof item.sceneIdx !== "number" ||
+            !Number.isInteger(item.sceneIdx) ||
+            item.sceneIdx < 0
+          ) {
+            return [];
+          }
+          const assignment: ManualMaterialAssignment = {
+            assetId: item.assetId,
+            sceneIdx: item.sceneIdx,
+            sceneTitle:
+              typeof item.sceneTitle === "string" ? item.sceneTitle : "",
+            sceneSummary:
+              typeof item.sceneSummary === "string" ? item.sceneSummary : "",
+          };
+          return [[assignment.assetId, assignment]];
+        }),
+      ).values(),
+    );
+    const manualAssignmentBrief = manualAssignmentsFacet(
+      manualMaterialAssignments,
+      inventory,
+    );
+
+    stepIdx = 0;
+    const scenes = await decideScenes(
+      {
+        srtLines,
+        script,
+        storyboard,
+        orientation,
+        manualAssignments: manualAssignmentBrief,
+      },
       call,
     );
-    const broll = brollResult.broll;
+    await step(0, `${VIDEO_DECISION_STEPS[0]}:${scenes.length} 场`);
+
+    stepIdx = 1;
+    const cards = await decideCards(
+      {
+        scenes,
+        srtLines,
+        script,
+        storyboard,
+        orientation,
+        manualAssignments: manualAssignmentBrief,
+      },
+      call,
+    );
+    await step(1, `${VIDEO_DECISION_STEPS[1]}:${cards.length} 张(可溯校验后)`);
+
+    stepIdx = 2;
+    // [T-387c] 备料③「人可剔」:制作页聚合清单里被用户剔除的自动项经 inputData.excludedAssetIds
+    // 传入,这里从决策可选集里滤掉(手动上传/未剔除项照常)。缺省 = 不滤(旧任务零回归)。
+    const brollResult = await decideBroll(
+      {
+        scenes,
+        srtLines,
+        script,
+        inventory,
+        storyboard,
+        orientation,
+        manualAssignments: manualAssignmentBrief,
+      },
+      call,
+    );
+    let materialMatchedBroll: VideoBrollPick[] = [];
+    let materialMatchWarning = "";
+    try {
+      materialMatchedBroll = await decideMaterialBroll(
+        {
+          scenes,
+          srtLines,
+          script,
+          inventory,
+          visualSlots: brollResult.slots,
+          orientation,
+          manualAssignments: manualAssignmentBrief,
+        },
+        call,
+      );
+    } catch (error) {
+      // 素材匹配是质量增强，不是渲染硬门。失败时由确定性修片层用真人主画面/
+      // 信息卡补位，禁止拖垮成片或把作业退给用户。
+      materialMatchWarning =
+        error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[video.decisions] material.match degraded task=${task.id} project=${task.projectId}: ${materialMatchWarning}`,
+      );
+    }
+    const enforcedBroll = enforceStoryboardBroll({
+      storyboard: storyboardSections,
+      scenes,
+      srtLines,
+      inventory,
+      excludedAssetIds: excluded,
+      modelBroll: materialMatchedBroll,
+    });
+    const broll = enforceManualMaterialAssignments({
+      assignments: manualMaterialAssignments,
+      scenes,
+      srtLines,
+      inventory,
+      modelBroll: enforcedBroll.broll,
+    });
     const visualSlots = brollResult.slots;
     await step(
       2,
-      `${VIDEO_DECISION_STEPS[2]}:${visualSlots.length} 个画面需求 / ${broll.length} 条已匹配(清单 ${inventory.length} 项)`,
+      `${VIDEO_DECISION_STEPS[2]}:${visualSlots.length} 个画面需求 / ${broll.length} 条已匹配(清单 ${inventory.length} 项)` +
+        (materialMatchWarning
+          ? `；素材匹配暂不可用，系统已在当前方案内自动补位`
+          : ""),
       [
         {
           toolName: "video.broll",
           scope: { accountId: ctx.accountId ?? null, projectId: task.projectId },
           input: { inventory },
-          output: { slots: visualSlots, broll },
+          output: { slots: visualSlots },
+        },
+        {
+          toolName: "material.match",
+          scope: { accountId: ctx.accountId ?? null, projectId: task.projectId },
+          input: {
+            inventory,
+            visualSlots,
+            manualMaterialAssignments,
+          },
+          output: {
+            broll,
+            ...(materialMatchWarning ? { warning: materialMatchWarning } : {}),
+          },
         },
       ],
     );
@@ -902,13 +2245,57 @@ export async function runVideoDecisions(
           : ""),
     );
 
+    stepIdx = 4;
+    const directorClosure = await closeDirectorReview(
+      {
+        scenes,
+        cards,
+        visualSlots,
+        broll,
+        subtitles,
+        srtLines,
+        script,
+        inventory,
+        orientation,
+      },
+      call,
+    );
+    const directorReview = directorClosure.directorReview;
+    await step(
+      4,
+      `${VIDEO_DECISION_STEPS[4]}:通过` +
+        (directorClosure.repairs.length > 0
+          ? `（自动修片 ${directorClosure.repairs.length} 类 / 复审 ${directorClosure.reviewPasses} 次）`
+          : ""),
+      [
+        {
+          toolName: "video.director",
+          scope: { accountId: ctx.accountId ?? null, projectId: task.projectId },
+          input: {
+            scenes: scenes.length,
+            cards: cards.length,
+            broll: broll.length,
+            subtitles: subtitles.length,
+            inventory: inventory.length,
+          },
+          output: {
+            review: directorReview,
+            repairs: directorClosure.repairs,
+            reviewPasses: directorClosure.reviewPasses,
+          },
+        },
+      ],
+    );
+
     const decisions: VideoDecisions = {
       scenes,
-      cards,
+      cards: directorClosure.cards,
       visualSlots,
-      broll,
-      subtitles,
+      broll: directorClosure.broll,
+      subtitles: directorClosure.subtitles,
       srtLines,
+      unusedStoryboardAssets: enforcedBroll.unusedStoryboardAssets,
+      directorReview,
     };
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: VIDEO_DECISIONS_RESULT_TYPE,

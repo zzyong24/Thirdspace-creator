@@ -3,8 +3,10 @@
 import { describe, expect, it } from "vitest";
 import { videoRenderProps, type VideoRenderProps } from "@creatoros/contract";
 import {
+  assertVideoLayoutSafety,
   collectMediaFiles,
   estimateWrappedLines,
+  fitMediaRect,
   generateVideoRenderHtml,
   resolveSceneMode,
 } from "./template";
@@ -139,8 +141,8 @@ describe("generateVideoRenderHtml", () => {
     // root 画布随 delivery 竖版尺寸
     expect(html).toContain('data-width="1080" data-height="1920"');
     expect(html).toContain("width:1080px;height:1920px");
-    // 首场 hook(1 卡)→ right 态:竖版口播头居中 9:16 上半屏(thRight 竖版坐标)
-    expect(html).toContain("left:210px;top:200px;width:600px;height:1066px");
+    // 首场 hook(1 卡)→ right 态:人物真正铺满 9:16 主画布，不再缩成中间小卡。
+    expect(html).toContain("left:0px;top:0px;width:1080px;height:1920px");
     // 竖版不含横版口播头右侧坐标(1330)
     expect(html).not.toContain("left:1330px");
   });
@@ -163,9 +165,26 @@ describe("generateVideoRenderHtml", () => {
 
   it("B-roll 视频自身是 clip(帧捕获协议)且 durationSec 截断生效", () => {
     const html = generateVideoRenderHtml(fullProps());
-    expect(html).toContain('src="media/rec_site_click.mp4" muted data-start="9.00"');
+    expect(html).toContain('src="media/rec_site_click.mp4" aria-label="真实录屏 · 能点的网站" muted data-start="9.00"');
     // rec_codex_ui at=31 dur=5 → data-duration="5.00"(非播到场景尾 38-31=7)
-    expect(html).toMatch(/src="media\/rec_codex_ui\.mp4" muted data-start="31\.00" data-duration="5\.00"/);
+    expect(html).toMatch(/src="media\/rec_codex_ui\.mp4" aria-label="Codex 出 UI" muted data-start="31\.00" data-duration="5\.00"/);
+  });
+
+  it("B-roll 文件名与内部生成标签只作无障碍说明，绝不烧进成片画面", () => {
+    const html = generateVideoRenderHtml(fullProps());
+    expect(html).toContain('aria-label="真实录屏 · 能点的网站"');
+    expect(html).not.toContain("▶ 真实录屏 · 能点的网站");
+    expect(html).not.toContain("▣ 真实录屏 · 能点的网站");
+  });
+
+  it("场景编号、标题和概括只是编辑元数据，成片只渲染有视觉价值的卡片", () => {
+    const html = generateVideoRenderHtml(fullProps());
+    expect(html).not.toContain("REAL STORY");
+    expect(html).not.toContain("SIX KINDS");
+    expect(html).not.toContain("六种信息卡");
+    expect(html).not.toContain("和朋友瞎聊碰出来的");
+    expect(html).toContain("从想法到能用");
+    expect(html).toContain("最值钱的是想法本身");
   });
 
   it("special 只由预设枚举渲染,AI 不写模板代码(pipeline 箭头线/steps 序号)", () => {
@@ -173,6 +192,18 @@ describe("generateVideoRenderHtml", () => {
     expect(html).toContain("scaleX:0"); // pipeline 连接线动画
     expect(html).toContain(">VS<"); // comparison 中缝
     expect(html).toContain(">1</span>"); // steps 序号
+  });
+});
+
+describe("fitMediaRect(保留源素材比例)", () => {
+  it("横屏成片中的竖图保持竖版舞台并居中，不拉伸成横图", () => {
+    expect(
+      fitMediaRect(
+        { x: 100, y: 80, width: 1200, height: 700 },
+        1080,
+        1920,
+      ),
+    ).toEqual({ x: 503, y: 80, width: 394, height: 700 });
   });
 });
 
@@ -281,26 +312,349 @@ describe("generateVideoRenderHtml · [T-295] card.motion 富动画配方", () =>
   });
 });
 
-describe("resolveSceneMode(PiP 规则:≥3 视觉节点→圆;hook/cta 且 <3 →右大卡)", () => {
+describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素材窗口内切 PiP)", () => {
   const props = fullProps();
   it("hook 场景 1 张卡 → right;cta 场景 → right", () => {
     expect(resolveSceneMode(props.scenes[0]!, 0)).toBe("right");
     expect(resolveSceneMode(props.scenes[5]!, 0)).toBe("right");
   });
-  it("body 场景 ≥3 视觉节点(卡+B-roll)→ pip", () => {
-    expect(resolveSceneMode(props.scenes[1]!, 1)).toBe("pip");
+  it("body 场景即使有多个视觉节点仍保持右侧人物，避免卡片段大片空黑", () => {
+    expect(resolveSceneMode(props.scenes[1]!, 1)).toBe("right");
   });
-  it("special 场景视觉权重拉满 → pip(即使 hook/cta)", () => {
-    expect(resolveSceneMode({ ...props.scenes[2]!, role: "hook" }, 0)).toBe("pip");
+  it("special 场景仍使用左主舞台 + 右侧人物", () => {
+    expect(resolveSceneMode({ ...props.scenes[2]!, role: "hook" }, 0)).toBe("right");
   });
-  it("hook 场景凑满 3 节点 → 规则压过 role,进 pip", () => {
-    expect(resolveSceneMode(props.scenes[0]!, 2)).toBe("pip");
+  it("hook 场景多个节点也不提前缩成 PiP", () => {
+    expect(resolveSceneMode(props.scenes[0]!, 2)).toBe("right");
   });
-  it("显式 mode 覆盖规则", () => {
-    expect(resolveSceneMode({ ...props.scenes[1]!, mode: "right" }, 5)).toBe("right");
+  it("模型历史 mode=pip 不得覆盖确定性安全布局", () => {
+    expect(resolveSceneMode({ ...props.scenes[1]!, mode: "pip" }, 5)).toBe("right");
   });
-  it("body 少节点默认 pip(口播为主的正文段不抢右侧)", () => {
-    expect(resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 0)).toBe("pip");
+  it("body 无视觉节点进入居中主讲模式，禁止人物靠边后留下大片空黑底", () => {
+    expect(resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 0)).toBe("focus");
+  });
+  it("横屏 large_stage 强制人物留在右侧安全框，禁止素材盖脸后只露半张脸", () => {
+    expect(
+      resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 1, {
+        hasLargeStage: true,
+        portrait: false,
+      }),
+    ).toBe("right");
+  });
+  it("竖屏 large_stage 使用底部 PiP，把上方主舞台让给素材", () => {
+    expect(
+      resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 1, {
+        hasLargeStage: true,
+        portrait: true,
+      }),
+    ).toBe("pip");
+  });
+  it("竖屏只有普通卡片或 special 时仍保持人物主画面，不因节点数量退成角落小窗", () => {
+    expect(
+      resolveSceneMode(props.scenes[1]!, 1, {
+        hasLargeStage: false,
+        portrait: true,
+      }),
+    ).toBe("right");
+    expect(
+      resolveSceneMode(props.scenes[2]!, 0, {
+        hasLargeStage: false,
+        portrait: true,
+      }),
+    ).toBe("right");
+  });
+});
+
+describe("横屏无视觉节点的确定性画面兜底", () => {
+  it("用同源氛围层填满背景，并把竖版主讲画面置中放大", () => {
+    const props = fullProps();
+    const scene = {
+      ...props.scenes[1]!,
+      id: "empty-body",
+      startSec: 0,
+      endSec: props.talkingHead.durationSec,
+      cards: [],
+      special: undefined,
+      mode: undefined,
+    };
+    const html = generateVideoRenderHtml({
+      ...props,
+      scenes: [scene],
+      broll: [],
+    });
+
+    expect(html).toContain('id="thAmbient"');
+    expect(html).toContain('class="clip talking-head-ambient"');
+    expect(html).toContain('object-fit:cover;filter:blur(');
+    expect(html).toContain('id="th"');
+    expect(html).toContain("left:688px;top:56px;width:544px;height:968px");
+  });
+});
+
+describe("竖屏界面素材可读性", () => {
+  it("full_frame 横录屏保留完整前景，并用同源氛围层填满竖屏而非中央窄条加黑边", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      broll: [
+        {
+          at: 9,
+          file: "screen.mp4",
+          durationSec: 8,
+          label: "系统操作录屏",
+          big: false,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "pip_bottom_left",
+          sourceWidth: 1920,
+          sourceHeight: 1080,
+        },
+      ],
+    });
+    expect(html).toContain("left:0px;top:0px;z-index:940");
+    expect(html).toContain("width:1080px;height:1920px");
+    expect(html).toContain('class="clip portrait-ambient-fill"');
+    expect(html).toContain("object-fit:cover;filter:blur(28px) brightness(.34)");
+    // 1920×1080 完整前景按 contain 放在竖屏上半段，不能被 cover 裁切，也不能
+    // 机械居中后在顶部留下六百多像素空白。
+    expect(html).toContain("left:0px;top:176px;width:1080px;height:608px");
+    expect(html).toContain("object-fit:contain");
+    expect(html).toContain("z-index:942");
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
+    expect(html).toContain("left:54,top:902,width:410,height:729");
+    expect(html).toContain("bottom:56px;text-align:center;z-index:950");
+  });
+
+  it("竖屏 PiP 使用更大的 9:16 底部人物安全区，不再缩成左下角 300×533 小窗", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      scenes: [
+        {
+          ...props.scenes[0]!,
+          id: "portrait-stage",
+          startSec: 0,
+          endSec: props.talkingHead.durationSec,
+          cards: [],
+          special: undefined,
+        },
+      ],
+      broll: [
+        {
+          at: 1,
+          file: "portrait-stage.jpg",
+          durationSec: 8,
+          label: "竖屏主舞台",
+          big: false,
+          presentation: "large_stage",
+          sourceWidth: 1080,
+          sourceHeight: 1920,
+        },
+      ],
+    });
+    expect(html).toContain("left:500px;top:850px;width:530px;height:942px");
+  });
+
+  it("large_stage 横图在竖屏上半区保留完整前景并填充舞台背景", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml(
+      {
+        ...props,
+        delivery: { width: 1080, height: 1920, fps: 30 },
+        scenes: props.scenes.map((scene, index) =>
+          index === 1 ? { ...scene, cards: [], special: undefined } : scene,
+        ),
+        broll: [
+          {
+            at: 9,
+            file: "landscape-photo.jpg",
+            durationSec: 8,
+            label: "横版配图",
+            big: false,
+            presentation: "large_stage",
+            sourceWidth: 1920,
+            sourceHeight: 1080,
+          },
+        ],
+      },
+      { imageFiles: new Set(["landscape-photo.jpg"]) },
+    );
+    expect(html).toContain('class="clip portrait-ambient-fill"');
+    expect(html).toContain("left:54px;top:80px;width:972px;height:750px");
+    expect(html).toContain("left:64px;top:187px;width:952px;height:536px");
+    expect(html).toContain("object-fit:contain");
+  });
+});
+
+describe("B-roll 主视觉安全区", () => {
+  it("下一主素材进场会切断上一主素材，禁止横图与竖图同时叠放", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml(
+      {
+        ...props,
+        scenes: [
+          {
+            id: "s1",
+            label: "编辑标签",
+            title: "编辑标题",
+            startSec: 0,
+            endSec: 12,
+            role: "body",
+            cards: [],
+          },
+        ],
+        talkingHead: { ...props.talkingHead, durationSec: 12 },
+        captions: [],
+        broll: [
+          {
+            at: 1,
+            file: "landscape.png",
+            durationSec: 8,
+            label: "横图",
+            big: false,
+            presentation: "large_stage",
+            sourceWidth: 1920,
+            sourceHeight: 1080,
+          },
+          {
+            at: 4,
+            file: "portrait.png",
+            durationSec: 5,
+            label: "竖图",
+            big: false,
+            presentation: "large_stage",
+            sourceWidth: 1080,
+            sourceHeight: 1920,
+          },
+        ],
+      },
+      { imageFiles: new Set(["landscape.png", "portrait.png"]) },
+    );
+
+    expect(html).toMatch(
+      /src="media\/landscape\.png"[^>]+data-start="1\.00" data-duration="3\.00"/,
+    );
+    expect(html).toMatch(
+      /src="media\/portrait\.png"[^>]+data-start="4\.00" data-duration="5\.00"/,
+    );
+  });
+
+  it("主素材马上进场时不再保留旧信息卡，large_stage 先清空自己的安全舞台", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml(
+      {
+        ...props,
+        scenes: [
+          {
+            id: "s1",
+            label: "编辑标签",
+            title: "编辑标题",
+            startSec: 0,
+            endSec: 12,
+            role: "body",
+            cards: [
+              {
+                kind: "quote",
+                at: 1,
+                text: "不应残留在静态图片背后的旧标题",
+                tone: "accent",
+              },
+            ],
+          },
+        ],
+        talkingHead: { ...props.talkingHead, durationSec: 12 },
+        captions: [],
+        broll: [
+          {
+            at: 1.2,
+            file: "portrait.png",
+            durationSec: 5,
+            label: "竖图",
+            big: false,
+            presentation: "large_stage",
+            sourceWidth: 1080,
+            sourceHeight: 1920,
+          },
+        ],
+      },
+      { imageFiles: new Set(["portrait.png"]) },
+    );
+
+    expect(html).not.toContain("不应残留在静态图片背后的旧标题");
+    expect(html).toContain('class="clip main-visual-clear"');
+    expect(html).toContain("left:0px;top:0px;z-index:699;width:1330px;height:1080px");
+  });
+
+  it("横屏 full_frame 录屏覆盖画布，但人物始终保留为左下角画中画", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      broll: [
+        {
+          at: 9,
+          file: "screen.mp4",
+          durationSec: 8,
+          label: "系统操作录屏",
+          big: false,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "pip_bottom_left",
+        },
+      ],
+    });
+    expect(html).toContain("left:0px;top:0px;z-index:940");
+    expect(html).toContain("width:1920px;height:1080px");
+    expect(html).toContain("left:0px;top:0px;width:1920px;height:1080px;z-index:941");
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
+    expect(html).toContain("left:67,top:453,width:307,height:546");
+    expect(html).toContain("bottom:56px;text-align:center;z-index:950");
+  });
+
+  it("横屏 large_stage 固定在人物左侧，素材右边界 1300 小于人物左边界 1330", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      scenes: props.scenes.map((scene, index) =>
+        index === 1 ? { ...scene, cards: [], special: undefined } : scene,
+      ),
+      broll: [
+        {
+          at: 9,
+          file: "screen.mp4",
+          durationSec: 8,
+          label: "系统操作录屏",
+          big: false,
+          presentation: "large_stage",
+        },
+      ],
+    });
+    expect(html).toContain("left:50px;top:190px;z-index:700");
+    expect(html).toContain("width:1250px;height:760px");
+    expect(html).toContain("left:1330px;top:138px;width:500px;height:804px");
+    expect(html).not.toContain("left:240px;top:125px");
+  });
+
+  it("静态图即使 AI 误选 full_frame 也会被契约拒绝", () => {
+    const props = fullProps();
+    expect(() =>
+      assertVideoLayoutSafety({
+        ...props,
+        broll: [
+          {
+            at: 9,
+            file: "photo.jpg",
+            durationSec: 8,
+            label: "情绪画面",
+            big: false,
+            presentation: "full_frame",
+            visualRole: "still_image",
+            motion: "push_in",
+          },
+        ],
+      }),
+    ).toThrow("只有录屏素材可以全屏");
   });
 });
 
@@ -356,123 +710,67 @@ describe("estimateWrappedLines([T-320b] 确定性测高)", () => {
   });
 });
 
-// [T-320b] 各 kind 高度改用估算器:长内容显著大于旧硬编码(证明不再低估)、短内容不塌。
-// 走公开 API:竖版(1080×1920,rightEdge=1020)下放待测卡 + 一张会换行的卡,读第 2 张卡的
-// top(= contentY.pip 340 + 第 1 张卡真实高度 + GAP 18),间接验证第 1 张卡高度随内容增长。
-describe("各 kind 卡高随内容测高([T-320b] 不再低估)", () => {
-  const CONTENT_Y = 340; // 竖版 contentY.pip
-  const GAP = 18;
-
-  /** 竖版单场景 props(待测卡在前,后跟换行卡)。 */
+// [T-712] 信息卡不再沿旧 flow 向下堆成角落小标签，而是在同一主舞台按口播
+// 节拍接力。这里验证“大卡 + 大字 + 逐卡替换”的生成协议，防止重新退回大量空黑。
+describe("信息卡主舞台与高密度排版([T-712])", () => {
   function vProps(cards: unknown[]): VideoRenderProps {
     return videoRenderProps.parse({
-      meta: { title: "测高" },
+      meta: { title: "信息节拍" },
       talkingHead: { file: "th.mp4", durationSec: 30 },
       delivery: { width: 1080, height: 1920, fps: 30 },
       scenes: [{ id: "s1", label: "L", title: "T", startSec: 0, endSec: 30, cards }],
     });
   }
 
-  /** 第 2 张卡的 top(反推第 1 张卡真实高度 = top - CONTENT_Y - GAP)。 */
-  function secondCardTop(cards: unknown[]): number {
-    const html = generateVideoRenderHtml(vProps(cards));
-    const tops = [...html.matchAll(/id="c\d+"[^>]*top:(\d+)px/g)].map((m) => Number(m[1]));
-    expect(tops.length).toBeGreaterThanOrEqual(2);
-    return tops[1]!;
-  }
-
-  it("quote:金句换 3 行,高度 >> 旧固定 92(不再低估)且 > 单行短句", () => {
-    const long = "一二三四五六七八九十".repeat(4); // 40 全角 → 3 行
-    const longTop = secondCardTop([
-      { kind: "quote", at: 1, text: long },
-      { kind: "quote", at: 2, text: "占位" },
-    ]);
-    const shortTop = secondCardTop([
-      { kind: "quote", at: 1, text: "短" },
-      { kind: "quote", at: 2, text: "占位" },
-    ]);
-    const oldTop = CONTENT_Y + 92 + GAP; // 旧硬编码高度推的 top
-    expect(longTop).toBeGreaterThan(oldTop);
-    expect(longTop).toBeGreaterThan(shortTop);
-  });
-
-  it("stat:label 换 2 行,高度 > 旧固定 160(长 label 不再被吞)", () => {
-    const longLabel = "一二三四五六七八九十".repeat(3); // 30 全角 @17px 在 316 宽 → 2 行
-    const longTop = secondCardTop([
-      { kind: "stat", at: 1, value: "42", label: longLabel },
-      { kind: "quote", at: 2, text: "占位换行卡" },
-    ]);
-    const shortTop = secondCardTop([
-      { kind: "stat", at: 1, value: "42", label: "短" },
-      { kind: "quote", at: 2, text: "占位换行卡" },
-    ]);
-    const oldTop = CONTENT_Y + 160 + GAP;
-    expect(longTop).toBeGreaterThan(oldTop);
-    expect(longTop).toBeGreaterThan(shortTop);
-  });
-
-  it("list:3 条每条超一行,高度 >> 旧 60+items*50(每条单行的少算被修正)", () => {
-    const longItem = "一二三四五六七八九十".repeat(3); // 30 全角 @26px 在 480 宽 → 2 行
-    const longTop = secondCardTop([
+  it("不同类型都使用大面积信息舞台和清晰字号，不再渲染成 620px 小标签", () => {
+    const html = generateVideoRenderHtml(vProps([
+      { kind: "quote", at: 1, text: "先把流程压下来" },
+      { kind: "stat", at: 7, value: "10", unit: "分钟", label: "跑完完整流程" },
       {
         kind: "list",
-        at: 1,
-        items: [{ text: longItem }, { text: longItem }, { text: longItem }],
+        at: 13,
+        items: [{ text: "先确定选题" }, { text: "再完成写稿" }, { text: "最后安排发布" }],
       },
-      { kind: "list", at: 2, items: [{ text: "占位" }] },
-    ]);
-    const shortTop = secondCardTop([
-      {
-        kind: "list",
-        at: 1,
-        items: [{ text: "甲" }, { text: "乙" }, { text: "丙" }],
-      },
-      { kind: "list", at: 2, items: [{ text: "占位" }] },
-    ]);
-    const oldTop = CONTENT_Y + (60 + 3 * 50) + GAP; // 旧:3 条 × 50
-    expect(longTop).toBeGreaterThan(oldTop);
-    expect(longTop).toBeGreaterThan(shortTop);
-  });
-
-  it("compare:窄半栏 item 换行,高度 > 旧 96+rows*32(每半栏 ~328 宽的少算被修正)", () => {
-    const longItem = "一二三四五六七八九十".repeat(3); // 30 全角 @20px 在 328 宽 → 2 行
-    const longTop = secondCardTop([
       {
         kind: "compare",
-        at: 1,
-        left: { title: "左", items: [longItem, longItem] },
-        right: { title: "右", items: [longItem, longItem] },
+        at: 19,
+        left: { title: "以前", items: ["来回跳工具"] },
+        right: { title: "现在", items: ["一条流程跑完"] },
       },
-      { kind: "compare", at: 2, left: { title: "l", items: ["x"] }, right: { title: "r", items: ["y"] } },
-    ]);
-    const shortTop = secondCardTop([
-      {
-        kind: "compare",
-        at: 1,
-        left: { title: "左", items: ["甲", "乙"] },
-        right: { title: "右", items: ["丙", "丁"] },
-      },
-      { kind: "compare", at: 2, left: { title: "l", items: ["x"] }, right: { title: "r", items: ["y"] } },
-    ]);
-    // 旧:96 + rows(2)*32 + bar 18 = 178
-    const oldTop = CONTENT_Y + 178 + GAP;
-    expect(longTop).toBeGreaterThan(oldTop);
-    expect(longTop).toBeGreaterThan(shortTop);
+      { kind: "code", at: 25, code: "topic -> script -> publish" },
+    ]));
+
+    expect(html).toContain("width:1000px");
+    expect(html).toContain("height:420px");
+    expect(html).toContain("height:440px");
+    expect(html).toContain("height:400px");
+    expect(html).toContain("font-size:52px");
+    expect(html).toContain("font-size:132px");
+    expect(html).toContain("font-size:38px");
+    expect(html).toContain("width:920px");
+    expect(html).not.toContain("width:620px");
+    expect(html).not.toContain("font-size:30px;font-weight:800");
   });
 
-  it("code:pre-wrap 长行软换,高度 > 旧 64+lines*30(长行少算被修正)", () => {
-    const longLine = "x".repeat(200); // 200 半角 @20px×0.6=12 → 2400 宽,在 680 宽 → 4 行
-    const longTop = secondCardTop([
-      { kind: "code", at: 1, code: longLine },
-      { kind: "code", at: 2, code: "y" },
-    ]);
-    const shortTop = secondCardTop([
-      { kind: "code", at: 1, code: "y" },
-      { kind: "code", at: 2, code: "y" },
-    ]);
-    const oldTop = CONTENT_Y + (64 + 1 * 30) + GAP; // 旧:1 硬 \n 行 × 30
-    expect(longTop).toBeGreaterThan(oldTop);
-    expect(longTop).toBeGreaterThan(shortTop);
+  it("相邻信息卡复用同一舞台并持续承接到下一个主视觉，场内不留下黑屏空档", () => {
+    const html = generateVideoRenderHtml(vProps([
+      { kind: "quote", at: 1, text: "先抛出结论" },
+      { kind: "list", at: 6, items: [{ text: "第一步" }, { text: "第二步" }] },
+      { kind: "stat", at: 12, value: "3", unit: "步", label: "形成完整动作" },
+    ]));
+    const cards = [...html.matchAll(
+      /id="c\d+"[^>]*data-start="([\d.]+)" data-duration="([\d.]+)"[^>]*top:(\d+)px/g,
+    )].map((match) => ({
+      start: Number(match[1]),
+      duration: Number(match[2]),
+      top: Number(match[3]),
+    }));
+
+    expect(cards).toHaveLength(3);
+    expect(cards.every((card) => card.top >= 1300 && card.top <= 1550)).toBe(true);
+    expect(cards[0]).toMatchObject({ start: 1, duration: 5 });
+    expect(cards[1]).toMatchObject({ start: 6, duration: 6 });
+    expect(cards[2]).toMatchObject({ start: 12, duration: 18 });
   });
 });
 
@@ -515,5 +813,37 @@ describe("generateVideoRenderHtml · 图片 B-roll", () => {
     expect(html).toContain('<img id="');
     expect(html).toContain('src="media/shot.png"');
     expect(html).not.toMatch(/<video[^>]+src="media\/shot\.png"/);
+  });
+
+  it("携带源尺寸时生成的媒体框保持竖图比例", () => {
+    const imageBrollProps = videoRenderProps.parse({
+      ...fullProps(),
+      scenes: [
+        {
+          id: "s1",
+          label: "编辑标签",
+          title: "编辑标题",
+          startSec: 0,
+          endSec: 8,
+          cards: [],
+        },
+      ],
+      broll: [
+        {
+          at: 1,
+          file: "portrait.png",
+          label: "竖版图片",
+          durationSec: 4,
+          presentation: "large_stage",
+          sourceWidth: 1080,
+          sourceHeight: 1920,
+        },
+      ],
+    });
+    const html = generateVideoRenderHtml(imageBrollProps, {
+      imageFiles: new Set(["portrait.png"]),
+    });
+    expect(html).toContain('src="media/portrait.png"');
+    expect(html).toMatch(/src="media\/portrait\.png"[^>]+width:416px;height:740px/);
   });
 });

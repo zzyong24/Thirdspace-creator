@@ -9,6 +9,7 @@ import {
   type AiPositioningPort,
 } from "./ai.service";
 import { ConflictError } from "./ai.errors";
+import { createAiRepository } from "./ai.repository";
 
 // AI service test (Step 3) — the six cases: idempotent create, references persisted +
 // status queued, confirm state-machine guard (valid + invalid), confirm→createVersion(ai)
@@ -31,6 +32,20 @@ function makeService(
   let seq = 0;
   const port: AiArtifactsPort = {
     createVersion: artifactsPort?.createVersion ?? vi.fn(async () => ({})),
+    adoptThesisCandidate:
+      artifactsPort?.adoptThesisCandidate ??
+      vi.fn(async (_ctx, input) => {
+        const repo = createAiRepository(db, {
+          now: () => NOW,
+          nextId: (prefix) => `${prefix}-thesis-adopt`,
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+        });
+        await repo.updateTaskStatus(input.taskId, {
+          status: "succeeded",
+          completedAt: NOW,
+        });
+      }),
   };
   const knowledge: AiKnowledgePort = {
     createKnowledge:
@@ -83,6 +98,101 @@ describe("ai service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+  });
+
+  it("[T-730] createTask 恢复 planning.thesis，但创建任务本身不写 artifact version", async () => {
+    const { service } = makeService(db);
+
+    const task = await service.createTask(ctx, {
+        taskType: "planning.thesis",
+        inputData: { projectId: "project-a", topic: "复杂观点" },
+    });
+    expect(task).toMatchObject({ taskType: "planning.thesis", status: "queued" });
+    await expect(
+      service.listTasks(ctx, { taskType: "planning.thesis", limit: 20, offset: 0 }),
+    ).resolves.toMatchObject({ total: 1 });
+  });
+
+  it("[T-730] 明确确认 planning.thesis 才经原子端口追加 adopted version，响应丢失重试不重复", async () => {
+    const { service, port } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "planning.thesis",
+      inputData: { projectId: "project-a", topic: "复杂观点" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "artifact_version",
+      artifactId: null,
+      resultData: {
+        body: "# 论点骨架",
+        summary: "AI 论点候选",
+        contentData: {
+          nodes: [
+            { column: "core", title: "核心观点", summary: "说明" },
+          ],
+        },
+      },
+    });
+
+    const first = await service.confirmTask(ctx, task.id);
+    const retried = await service.confirmTask(ctx, task.id);
+    expect(first.status).toBe("succeeded");
+    expect(retried.status).toBe("succeeded");
+    expect(port.adoptThesisCandidate).toHaveBeenCalledTimes(1);
+    expect(port.adoptThesisCandidate).toHaveBeenCalledWith(ctx, {
+      taskId: task.id,
+      projectId: "project-a",
+      contentText: "# 论点骨架",
+      changeSummary: "AI 论点候选",
+      contentData: {
+        nodes: [{ column: "core", title: "核心观点", summary: "说明" }],
+        scriptBasis: { status: "adopted" },
+      },
+    });
+    expect(port.createVersion).not.toHaveBeenCalled();
+  });
+
+  it("[T-730] 原子采用端口失败时任务仍待确认，可原候选重试", async () => {
+    const adopt = vi
+      .fn<NonNullable<AiArtifactsPort["adoptThesisCandidate"]>>()
+      .mockRejectedValueOnce(new Error("transaction rolled back"))
+      .mockImplementationOnce(async (_ctx, input) => {
+        const repo = createAiRepository(db, {
+          now: () => NOW,
+          nextId: (prefix) => `${prefix}-retry`,
+          userId: ctx.userId,
+          accountId: ctx.accountId!,
+        });
+        await repo.updateTaskStatus(input.taskId, {
+          status: "succeeded",
+          completedAt: NOW,
+        });
+      });
+    const { service } = makeService(db, { adoptThesisCandidate: adopt });
+    const task = await service.createTask(ctx, {
+      taskType: "planning.thesis",
+      inputData: { projectId: "project-a" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "artifact_version",
+      artifactId: null,
+      resultData: {
+        body: "观点",
+        contentData: {
+          nodes: [{ column: "core", title: "观点", summary: "" }],
+        },
+      },
+    });
+
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow(
+      "transaction rolled back",
+    );
+    await expect(service.getTask(ctx, task.id)).resolves.toMatchObject({
+      status: "awaiting_confirmation",
+    });
+    await expect(service.confirmTask(ctx, task.id)).resolves.toMatchObject({
+      status: "succeeded",
+    });
+    expect(adopt).toHaveBeenCalledTimes(2);
   });
 
   it("createTask is idempotent: same idempotencyKey returns the existing task, no second row", async () => {

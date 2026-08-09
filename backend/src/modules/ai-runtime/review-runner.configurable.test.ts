@@ -65,7 +65,7 @@ const EMPTY_CONTEXT: CreativeContext = {
   benchmarkRefBrief: "",
   reviewTitle: "",
   reviewScript: "",
-  reviewMetrics: "",
+  reviewMetrics: "播放：100",
   reviewComments: "",
   topic: { title: "", angle: "" },
   projectId: null,

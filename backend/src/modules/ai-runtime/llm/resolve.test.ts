@@ -7,6 +7,66 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveLlmConfig — tier 1 DB row", () => {
+  it("T-679 内部文本能力沿用 default 模型池的用户选择", async () => {
+    const selectionReads: string[] = [];
+    const cfg = await resolveLlmConfig(ctx, "script.draft", {
+      getChannelModelConfig: async () => ({
+        services: [{
+          id: "omnihi-main",
+          name: "OmniHi 模型服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        }],
+        connections: [{
+          id: "relay-text",
+          serviceId: "omnihi-main",
+          provider: "openai-compatible",
+          baseURL: "https://api.omnihi.ai/openai",
+          apiFormat: "openai_chat",
+        }],
+        models: {
+          default: [
+            {
+              id: "minimax-m3",
+              name: "MiniMax M3",
+              connectionId: "relay-text",
+              model: "minimax-m3",
+              isDefault: true,
+              settings: {},
+            },
+            {
+              id: "claude-sonnet-4-6",
+              name: "Claude Sonnet 4.6",
+              connectionId: "relay-text",
+              model: "claude-sonnet-4.6",
+              isDefault: false,
+              settings: {},
+            },
+          ],
+        },
+      }),
+      getChannelModelSelection: async (capability) => {
+        selectionReads.push(capability);
+        return capability === "default" ? "claude-sonnet-4-6" : null;
+      },
+      getChannelModelCredential: async () => "omnihi-child-key",
+      getModelConfig: noRow,
+      env: {},
+    });
+
+    expect(selectionReads).toEqual(["default"]);
+    expect(cfg).toMatchObject({
+      model: "claude-sonnet-4.6",
+      token: "omnihi-child-key",
+      // 运行日志保持中性标签，真实展示名由设置页的 modelOptions 呈现。
+      displayModelKey: "channel-managed",
+    });
+  });
+
   it("T-645 渠道只配置 ASR 时，文本模型继续读取用户本地配置", async () => {
     let localReads = 0;
     const cfg = await resolveLlmConfig(ctx, "default", {

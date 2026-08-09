@@ -71,6 +71,8 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
     "script.hooks",
     // [T-057⑤] 整稿生成:分镜口播脚本候选(整稿「写入稿面」,替代已退役的 ScriptDraftIsland)。
     "script.draft",
+    // [T-730] 可选论点骨架：只在用户想先梳理观点时调用，不能成为 script.draft 前置。
+    "planning.thesis",
     // [T-057④] 搜素材:research.gather 引擎进对话(替代已退役的 GatherMaterialIsland)。
     "material.gather",
     // [T-062a] 对话手录经验:「记一条经验:…」→ 模型直接填参产结构化候选卡,

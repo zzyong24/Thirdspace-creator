@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db, UnsupportedOperationError } from "@creatoros/backend";
+import {
+  createDb,
+  type Db,
+  OwnershipError,
+  UnsupportedOperationError,
+} from "@creatoros/backend";
 import {
   ENDPOINTS,
   createClient,
@@ -286,16 +291,15 @@ describe("settings.transport (contract conformance)", () => {
     expect(after.length).toBe(3);
   });
 
-  it("settings.prompts.get → 未定制也返回 official/effective", async () => {
+  it("[T-726] settings.prompts.get → 退役 planning.thesis 不再作为可配置能力暴露", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
-    const got = await client.getPrompt({
-      params: { id: "planning.thesis" },
-      query: undefined,
-      body: undefined,
-    });
-    expect(() => accountSkillOverlayResource.parse(got)).not.toThrow();
-    expect(got.skillId).toBe("planning.thesis");
-    expect(got.overlay).toBeNull();
+    await expect(
+      client.getPrompt({
+        params: { id: "planning.thesis" },
+        query: undefined,
+        body: undefined,
+      }),
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 
   it("unknown op id → UnsupportedOperationError", async () => {

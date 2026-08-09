@@ -469,6 +469,31 @@ const MATERIAL_EXT_BY_MIME: Readonly<Record<string, string>> = {
   "text/markdown": ".md",
 };
 
+const ARCHIVE_MIME_TYPES = new Set([
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/x-7z-compressed",
+  "application/vnd.rar",
+  "application/x-rar-compressed",
+  "application/x-tar",
+  "application/x-gtar",
+  "application/gzip",
+  "application/x-gzip",
+  "application/x-bzip2",
+  "application/x-xz",
+]);
+const ARCHIVE_FILE_SUFFIX =
+  /\.(?:zip|7z|rar|tar|gz|tgz|tar\.gz|bz2|tbz2?|tar\.bz2|xz|txz|tar\.xz)$/i;
+
+// SEMANTIC_BOUNDARY_ALLOW: 归档 MIME/扩展名排除只防止导出容器自嵌套，不参与创作素材选择。
+export function isArchiveMaterial(name: string, mimeType?: string): boolean {
+  const normalizedMime = mimeType?.split(";")[0]?.trim().toLowerCase() ?? "";
+  return (
+    ARCHIVE_MIME_TYPES.has(normalizedMime) ||
+    ARCHIVE_FILE_SUFFIX.test(name.trim())
+  );
+}
+
 /** 展示名常常是「提示词 · 生成图」而没有后缀；ZIP 必须按真实 MIME 补扩展名。 */
 function materialFileName(display: string, mimeType?: string): string {
   const safe = sanitizeZipName(display);
@@ -514,6 +539,7 @@ export async function aggregateMaterialExport(
   for (const link of links) {
     const rawName = await ports.getAssetName(ctx, link.assetId);
     const display = rawName ?? link.assetId;
+    if (rawName && isArchiveMaterial(rawName)) continue;
     const blob = rawName ? await ports.getAssetBytes(ctx, link.assetId) : null;
     if (!blob) {
       missing.push({
@@ -522,6 +548,7 @@ export async function aggregateMaterialExport(
       });
       continue;
     }
+    if (isArchiveMaterial(display, blob.mimeType)) continue;
     const fileName = uniqueName(
       `素材/${materialFileName(display, blob.mimeType)}`,
     );

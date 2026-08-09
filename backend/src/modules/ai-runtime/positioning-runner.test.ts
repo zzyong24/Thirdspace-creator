@@ -279,11 +279,11 @@ describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", ()
     ...over,
   });
 
-  it("worksBrief 非空 → 注入【我的真实作品(定位必须扎根于此)】段", () => {
+  it("worksBrief 非空 → 注入只作证据的历史作品段", () => {
     const prompt = buildPositioningPrompt(makeContext(), {
       worksBrief: "· 上下文工程实战（已发布）\n· AI 编导流程（planning）",
     });
-    expect(prompt).toContain("【我的真实作品（定位必须扎根于此）】");
+    expect(prompt).toContain("【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】");
     expect(prompt).toContain("上下文工程实战（已发布）");
     expect(prompt).toContain("真实作品列表");
   });
@@ -299,7 +299,7 @@ describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", ()
 
   it("零参调用行为不变:无新段落(空则整段省略)", () => {
     const prompt = buildPositioningPrompt(makeContext());
-    expect(prompt).not.toContain("我的真实作品");
+    expect(prompt).not.toContain("历史作品证据");
     expect(prompt).not.toContain("本次生成指令");
     // 原有 facet 仍在。
     expect(prompt).toContain("把论文落成代码");
@@ -311,7 +311,7 @@ describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", ()
       extraBrief: "  ",
       worksBrief: "",
     });
-    expect(prompt).not.toContain("我的真实作品");
+    expect(prompt).not.toContain("历史作品证据");
     expect(prompt).not.toContain("本次生成指令");
   });
 });
@@ -361,7 +361,7 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
     await runPositioningGenerate(ctx, { id: "tw1", inputData: {} }, deps);
     const facets = lastFacets();
     const rendered = facets.works ?? "";
-    expect(facets.works).toContain("【我的真实作品（定位必须扎根于此）】");
+    expect(facets.works).toContain("【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】");
     expect(facets.works).toContain(`${longTitle.slice(0, 40)}…`);
     expect(facets.works).toContain("已发布");
     expect(rendered.indexOf("最新可见作品")).toBeLessThan(
@@ -408,7 +408,7 @@ describe("positioningFacets — works 段拼装", () => {
 
   it("worksBrief 非空 → 拼段头整块;空/空白 → 空串", () => {
     expect(positioningFacets(context, "· 作品A（已发布）").works).toBe(
-      "\n\n【我的真实作品（定位必须扎根于此）】\n· 作品A（已发布）",
+      "\n\n【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】\n· 作品A（已发布）",
     );
     expect(positioningFacets(context).works).toBe("");
     expect(positioningFacets(context, "  ").works).toBe("");

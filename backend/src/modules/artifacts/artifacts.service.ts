@@ -10,6 +10,10 @@ import {
   type StructuredContent,
 } from "./artifacts.repository";
 import { ConflictError } from "./artifacts.errors";
+import {
+  canonicalizeScriptContentData,
+  canonicalizeScriptSectionRecords,
+} from "./script-section-identity";
 
 // Artifacts service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into a user-scoped repository built per-call via `repoFor(ctx)`
@@ -19,7 +23,8 @@ import { ConflictError } from "./artifacts.errors";
 // rules 6–7), not status transitions:
 //   - createVersion appends + re-points (the repo enforces; the version row is
 //     never mutated).
-//   - restoreVersion clones to a NEW version (the repo enforces).
+//   - restoreVersion re-points to an existing immutable version without creating
+//     a duplicate revision (the repo enforces).
 //   - replaceStructuredContent is refused unless the target is the artifact's
 //     CURRENT version (immutable-plan guard, roadmap §5 callout 5) — and its
 //     evidence targets are validated via the injected Knowledge/Assets guards
@@ -94,6 +99,7 @@ export interface ArtifactsService {
     ctx: RequestContext,
     artifactId: string,
     input: {
+      expectedCurrentVersionId?: string;
       contentText?: string;
       changeSummary?: string;
       contentData?: Record<string, unknown>;
@@ -104,6 +110,21 @@ export interface ArtifactsService {
       // user-authored version (createdByType !== 'ai') flips a 'reconstructed'
       // artifact back to 'user'; an AI version leaves origin untouched.
       origin?: "user" | "reconstructed";
+    },
+  ): Promise<ArtifactVersionRow>;
+  /**
+   * T-716：确定性应用一个已经由 AI 生成、由用户明确采纳的段落补丁。
+   * 服务端重读当前真值并完成版本、段落和原文三重并发校验；AI 和前端都不拼整稿。
+   */
+  applyScriptPatch(
+    ctx: RequestContext,
+    artifactId: string,
+    input: {
+      expectedVersionId: string;
+      sectionId: string;
+      expectedOriginalText: string;
+      replacementText: string;
+      changeSummary?: string;
     },
   ): Promise<ArtifactVersionRow>;
   listVersions(
@@ -149,7 +170,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     });
   }
 
-  return {
+  const service: ArtifactsService = {
     async listProjectArtifacts(ctx, projectId) {
       return repoFor(ctx, "artifacts.listProjectArtifacts").listByProject(projectId);
     },
@@ -166,6 +187,26 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
     async createVersion(ctx, artifactId, input) {
       const repo = repoFor(ctx, "artifacts.createVersion");
+      const artifactForWrite = await repo.requireArtifact(artifactId);
+      if (input.expectedCurrentVersionId) {
+        if (
+          artifactForWrite.currentVersionId !== input.expectedCurrentVersionId
+        ) {
+          throw new ConflictError(
+            "内容已在其他页面更新，请刷新后基于当前版本重试",
+          );
+        }
+      }
+      const isScriptArtifact =
+        artifactForWrite.artifactType === "output_script" ||
+        artifactForWrite.artifactType === "master_script";
+      const versionInput =
+        isScriptArtifact && input.contentData
+          ? {
+              ...input,
+              contentData: canonicalizeScriptContentData(input.contentData),
+            }
+          : input;
       // [T-183] 改稿 delta 捕捉:在 append 重指针「前」先抓「前一版 = 当前版」快照(内容 +
       // createdByType),用于判定「AI 产出 → 用户手改」并算 before→after 差异。best-effort:
       // 仅在 recordEditDelta seam 已接线时才读,失败不影响主流程。
@@ -173,7 +214,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       let artifactBefore: ArtifactRow | null = null;
       if (deps.recordEditDelta) {
         try {
-          artifactBefore = await repo.requireArtifact(artifactId);
+          artifactBefore = artifactForWrite;
           if (artifactBefore.currentVersionId) {
             prevVersion = await repo.getVersion(artifactBefore.currentVersionId);
           }
@@ -185,7 +226,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
       // origin lifecycle (flip 'reconstructed'→'user' on user edit) is applied in
       // the repo's createVersion (F1, SPEC §4.5); input.origin passes through.
-      const version = await repo.createVersion(artifactId, input);
+      const version = await repo.createVersion(artifactId, versionInput);
       // Post-commit (SPEC §11): re-index best-effort. A failure never rolls back
       // the version write — the index is derived data.
       if (deps.searchUpsert) {
@@ -238,6 +279,77 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       return repoFor(ctx, "artifacts.restoreVersion").restore(artifactId, versionId);
     },
 
+    async applyScriptPatch(ctx, artifactId, input) {
+      const repo = repoFor(ctx, "artifacts.applyScriptPatch");
+      const artifact = await repo.requireArtifact(artifactId);
+      if (artifact.currentVersionId !== input.expectedVersionId) {
+        throw new ConflictError(
+          "脚本在补丁生成后已经更新，请基于当前稿面重新发起局部改稿",
+        );
+      }
+
+      const current = await repo.getVersion(input.expectedVersionId);
+      const data: Record<string, unknown> =
+        current.contentData &&
+        typeof current.contentData === "object" &&
+        !Array.isArray(current.contentData)
+          ? { ...(current.contentData as Record<string, unknown>) }
+          : {};
+      const rawSections = Array.isArray(data.sections) ? data.sections : [];
+      const sections = canonicalizeScriptSectionRecords(rawSections);
+      const targetIndex = sections.findIndex(
+        (section) => section.id === input.sectionId,
+      );
+      if (targetIndex < 0) {
+        throw new ConflictError("目标段落已不存在，请基于当前稿面重新选择段落");
+      }
+
+      const normalized = (value: unknown) =>
+        typeof value === "string" ? value.trim() : "";
+      if (
+        normalized(sections[targetIndex]?.body) !==
+        normalized(input.expectedOriginalText)
+      ) {
+        throw new ConflictError(
+          "目标段落在补丁生成后已经修改，请基于当前稿面重新发起局部改稿",
+        );
+      }
+
+      const replacementText = input.replacementText.trim();
+      if (!replacementText) {
+        throw new ConflictError("局部改稿候选为空，未写入稿面");
+      }
+      const nextSections = sections.map((section, index) =>
+        index === targetIndex
+          ? { ...section, body: replacementText }
+          : section,
+      );
+      const nextContentData: Record<string, unknown> = {
+        ...data,
+        sections: nextSections,
+      };
+      // html 是旧版派生展示，不得跨版本携带，否则会覆盖 sections 的当前真值。
+      delete nextContentData.html;
+      const contentText = nextSections
+        .map((section) =>
+          [section.heading, section.body]
+            .filter(
+              (value): value is string =>
+                typeof value === "string" && value.trim().length > 0,
+            )
+            .join("\n"),
+        )
+        .filter(Boolean)
+        .join("\n\n");
+
+      return service.createVersion(ctx, artifactId, {
+        contentText,
+        contentData: nextContentData,
+        changeSummary: input.changeSummary?.trim() || "Copilot 局部改稿",
+        createdByType: "user",
+      });
+    },
+
     async createRelation(ctx, artifactId, input) {
       // Both ends owned is enforced by the repo (cross-user → OwnershipError 404).
       return repoFor(ctx, "artifacts.createRelation").createRelation(artifactId, input);
@@ -267,4 +379,5 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       return repoFor(ctx, "artifacts.assertArtifactOwned").requireArtifact(artifactId);
     },
   };
+  return service;
 }

@@ -5,9 +5,17 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { videoRenderProps, type VideoRenderProps } from "@creatoros/contract";
+import {
+  videoRenderProps,
+  type RequestContext,
+  type VideoRenderProps,
+} from "@creatoros/contract";
 import type { ExecutorSandboxView } from "../executor-registry";
-import { createVideoRenderExecutor, type VideoRenderEngine } from "./executor";
+import {
+  createVideoRenderExecutor,
+  locateSystemChromium,
+  type VideoRenderEngine,
+} from "./executor";
 
 let root: string;
 let sandbox: ExecutorSandboxView;
@@ -117,6 +125,13 @@ function runOpts(steps: string[], controller = new AbortController()) {
   };
 }
 
+const requestContext: RequestContext = {
+  userId: "user-a",
+  accountId: "acct-a",
+  requestId: "request-a",
+  source: "user",
+};
+
 beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "video-render-exec-"));
   sandbox = await makeSandbox();
@@ -126,6 +141,19 @@ afterEach(async () => {
 });
 
 describe("createVideoRenderExecutor", () => {
+  it("源码回归可通过显式路径复用系统 Chrome，不依赖 @playwright/test", async () => {
+    const chrome = path.join(root, "chrome-for-regression");
+    await fs.writeFile(chrome, "fake chrome");
+    const before = process.env.CREATOROS_RENDER_CHROMIUM_PATH;
+    process.env.CREATOROS_RENDER_CHROMIUM_PATH = chrome;
+    try {
+      await expect(locateSystemChromium()).resolves.toBe(chrome);
+    } finally {
+      if (before === undefined) delete process.env.CREATOROS_RENDER_CHROMIUM_PATH;
+      else process.env.CREATOROS_RENDER_CHROMIUM_PATH = before;
+    }
+  });
+
   it("paramsSchema = { props } 契约(坏 props 被编排挡在执行前)", () => {
     const executor = createVideoRenderExecutor(fakeEngine({ ffmpegArgs: [], probed: [], rendered: [] }));
     expect(executor.taskType).toBe("video.render");
@@ -168,6 +196,61 @@ describe("createVideoRenderExecutor", () => {
     expect(steps.some((s) => s.includes("HyperFrames 渲染"))).toBe(true);
     expect(steps.some((s) => s.includes("捕帧 30/360"))).toBe(true);
     expect(steps.some((s) => s.includes("交付转码"))).toBe(true);
+  });
+
+  it("配置视觉模型时抽 8 帧接触表审核，并把遮脸/微缩等问题写入 manifest meta", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const steps: string[] = [];
+    const executor = createVideoRenderExecutor(fakeEngine(calls), {
+      reviewVisuals: async (_ctx, input) => {
+        expect(input.mimeType).toBe("image/jpeg");
+        expect(input.bytes.byteLength).toBeGreaterThan(0);
+        expect(input.prompt).toContain("遮挡或切掉人物脸");
+        return JSON.stringify({
+          verdict: "warn",
+          summary: "主画面压住人物，界面文字偏小。",
+          issues: [
+            { code: "face_occlusion", severity: "error", message: "人物只露半张脸。" },
+            { code: "tiny_visual", severity: "warning", message: "录屏文字无法阅读。" },
+          ],
+        });
+      },
+    });
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: props() },
+      { ...runOpts(steps), ctx: requestContext },
+    );
+
+    expect(executor.networkPosture).toBe("brain-ports");
+    expect(calls.ffmpegArgs.at(-1)?.join(" ")).toContain("tile=4x2");
+    expect(steps.some((step) => step.includes("视觉审核"))).toBe(true);
+    expect(result.meta?.visualReview).toMatchObject({
+      status: "reviewed",
+      verdict: "warn",
+    });
+    expect(
+      (result.meta?.visualReview as { issues?: unknown[] }).issues?.[0],
+    ).toMatchObject({ code: "face_occlusion", severity: "error" });
+  });
+
+  it("视觉审核不可用不阻断出片，只诚实记录 unavailable", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(fakeEngine(calls), {
+      reviewVisuals: async () => {
+        throw new Error("视觉模型超时");
+      },
+    });
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: props() },
+      { ...runOpts([]), ctx: requestContext },
+    );
+    await fs.access(path.join(sandbox.outDir, "final.mp4"));
+    expect(result.meta?.visualReview).toMatchObject({
+      status: "unavailable",
+      summary: expect.stringContaining("视觉模型超时"),
+    });
   });
 
   it("[T-546] 图片 B-roll 按已物化 MIME 直拷，不交给 ffprobe 当视频探测", async () => {
@@ -218,14 +301,14 @@ describe("createVideoRenderExecutor", () => {
     );
   });
 
-  it("随包 ffmpeg/ffprobe 缺失 → 先提示重装 CreatorOS，开发态保留安装引导", async () => {
+  it("随包 ffmpeg/ffprobe 缺失 → 先提示重装应用，开发态保留安装引导", async () => {
     const executor = createVideoRenderExecutor(
       fakeEngine({ ffmpegArgs: [], probed: [], rendered: [] }, { findBinary: async () => null }),
     );
     await expect(
       executor.run(sandbox, { props: props() }, runOpts([])),
     ).rejects.toThrow(
-      /随包渲染组件 ffmpeg\/ffprobe 缺失.*重新安装最新版 CreatorOS.*(brew install ffmpeg|apt install ffmpeg|ffmpeg\.org)/,
+      /随包渲染组件 ffmpeg\/ffprobe 缺失.*重新安装最新版应用.*(brew install ffmpeg|apt install ffmpeg|ffmpeg\.org)/,
     );
   });
 

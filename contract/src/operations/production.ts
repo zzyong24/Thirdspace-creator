@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
-import { id } from "../primitives";
+import { id, iso8601 } from "../primitives";
 import {
   productionResource,
   productionSegmentResource,
@@ -39,6 +39,27 @@ export const productionOperations = {
     }),
     response: productionResource,
     fr: ["FR-PRODUCTION-UPDATE"],
+  }),
+  confirmProductionEditingPlan: defineEndpoint({
+    id: "outputs.production.editingPlan.confirm",
+    method: "PUT",
+    path: "/outputs/:outputId/production/editing-plan",
+    params: outputParams,
+    body: z.object({
+      expectedRevision: z.number().int().nonnegative(),
+      plan: z.object({
+        sourceTaskId: id.nullable(),
+        sourceRenderTaskId: id.nullable().optional(),
+        // 复用项目统一 ISO 时间契约。禁止调用 Zod 4 的 deprecated `.datetime()`：
+        // Next 16 Turbopack 会在 client chunk 内触发 classic/schemas ↔ iso 的 TDZ 循环，
+        // 导致整个桌面页面在 hydration 时白屏。
+        confirmedAt: iso8601,
+        decisions: z.record(z.string(), z.unknown()),
+        renderProps: z.record(z.string(), z.unknown()),
+      }),
+    }),
+    response: productionResource,
+    fr: ["FR-703-EDITING-PLAN-CONFIRM"],
   }),
   createProductionSegment: defineEndpoint({
     id: "productions.segments.create",
@@ -81,7 +102,7 @@ export const productionOperations = {
     fr: ["FR-PRODUCTION-EXPORT-CREATE"],
   }),
   // [T-366b] 素材包统一导出:项目关联全部素材 + 口播稿 + 编导说明 readme + manifest
-  // 本地打包成 zip 落 asset(P-04 不出网),返回签名下载 URL。诚实门:包是「原素材+
+  // 本地打包成 zip 后只落对象存储的一次性下载产物，不创建 asset，返回签名下载 URL。诚实门:包是「原素材+
   // 编导说明」,不是可一键导入的剪映工程(VP-05,文案在前端与 readme 头)。
   exportProductionMaterials: defineEndpoint({
     id: "productions.exports.materials",

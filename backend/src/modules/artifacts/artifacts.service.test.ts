@@ -12,12 +12,15 @@ import { OwnershipError, ConflictError } from "./artifacts.errors";
 // ctx.userId into a user-scoped repo via repoFor(ctx) and enforces the append-only
 // version invariants (data-model §9 rules 6–7; SPEC §18):
 //   1. createVersion appends + re-points; the prior version row is byte-identical.
-//   2. restoreVersion creates a NEW version (max+1), never re-points to the old id.
+//   2. restoreVersion re-points to an existing immutable version and never
+//      manufactures a duplicate revision; repeating it is idempotent.
 //   3. createVersion with createdByType 'ai' + aiTaskId records candidate
 //      provenance (the AI-adopt seam).
 //   4. createRelation rejects a target the ctx.userId does not own (OwnershipError).
 //   5. replaceStructuredContent refuses a version id that is not the artifact's
 //      current one (immutable-plan guard, ConflictError).
+//   6. applyScriptPatch re-reads the current immutable version and appends one
+//      new version whose only changed section is the explicitly anchored target.
 
 const NOW = "2026-06-21T03:00:00.000Z";
 // [T-332 S2] strict 门下 ctx 必带号。
@@ -80,7 +83,7 @@ describe("artifacts.service — append-only versioning", () => {
     expect(afterVersions[0]).toEqual(v1);
   });
 
-  it("restoreVersion creates a NEW version (max+1), not a re-point to the old id", async () => {
+  it("restoreVersion points currentVersionId at the selected immutable version without appending", async () => {
     const artifact = await seedArtifact(ctxA);
     const v1Id = artifact.currentVersionId!;
     await service.createVersion(ctxA, artifact.id, {
@@ -89,11 +92,25 @@ describe("artifacts.service — append-only versioning", () => {
     });
 
     const restored = await service.restoreVersion(ctxA, artifact.id, v1Id);
-    expect(restored.currentVersionId).not.toBe(v1Id);
+    expect(restored.currentVersionId).toBe(v1Id);
 
     const versions = await service.listVersions(ctxA, artifact.id);
-    expect(versions).toHaveLength(3);
-    expect(versions[2]!.versionNumber).toBe(3);
+    expect(versions).toHaveLength(2);
+  });
+
+  it("restoreVersion does not append another version when the target snapshot is already current", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const v1Id = artifact.currentVersionId!;
+    await service.createVersion(ctxA, artifact.id, {
+      contentText: "第二版",
+      changeSummary: "edit",
+    });
+
+    const firstRestore = await service.restoreVersion(ctxA, artifact.id, v1Id);
+    const secondRestore = await service.restoreVersion(ctxA, artifact.id, v1Id);
+
+    expect(secondRestore.currentVersionId).toBe(firstRestore.currentVersionId);
+    expect(await service.listVersions(ctxA, artifact.id)).toHaveLength(2);
   });
 
   it("createVersion with createdByType 'ai' + aiTaskId records candidate provenance", async () => {
@@ -110,6 +127,152 @@ describe("artifacts.service — append-only versioning", () => {
     // The candidate is promoted to current (AI-adopt path, SPEC §18).
     const reread = await service.getArtifact(ctxA, artifact.id);
     expect(reread.currentVersionId).toBe(v.id);
+  });
+
+  it("applyScriptPatch changes only the anchored section and appends one immutable version", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const source = await service.createVersion(ctxA, artifact.id, {
+      contentText: "原文一\n\n原文二",
+      contentData: {
+        html: "<p>过期渲染缓存</p>",
+        sections: [
+          { id: "section-1", heading: "第一段", body: "原文一", visual: "画面一" },
+          { id: "section-2", heading: "第二段", body: "原文二", visual: "画面二" },
+        ],
+      },
+      changeSummary: "建立结构化稿面",
+    });
+    const beforeVersions = await service.listVersions(ctxA, artifact.id);
+
+    const patched = await service.applyScriptPatch(ctxA, artifact.id, {
+      expectedVersionId: source.id,
+      sectionId: "section-2",
+      expectedOriginalText: "原文二",
+      replacementText: "只改后的原文二",
+      changeSummary: "局部改写第二段",
+    });
+
+    expect(patched.versionNumber).toBe(source.versionNumber + 1);
+    const patchedData = patched.contentData as {
+      html?: unknown;
+      sections?: unknown[];
+    };
+    expect(patchedData.html).toBeUndefined();
+    expect(patchedData.sections).toEqual([
+      { id: "section-1", heading: "第一段", body: "原文一", visual: "画面一" },
+      { id: "section-2", heading: "第二段", body: "只改后的原文二", visual: "画面二" },
+    ]);
+    expect(patched.contentText).toContain("原文一");
+    expect(patched.contentText).toContain("只改后的原文二");
+
+    const afterVersions = await service.listVersions(ctxA, artifact.id);
+    expect(afterVersions).toHaveLength(beforeVersions.length + 1);
+    expect(afterVersions.find((row) => row.id === source.id)).toEqual(source);
+    expect((await service.getArtifact(ctxA, artifact.id)).currentVersionId).toBe(
+      patched.id,
+    );
+  });
+
+  it("[T-732] createVersion 为脚本的无 ID 段落持久化稳定锚点", async () => {
+    const artifact = await seedArtifact(ctxA);
+
+    const created = await service.createVersion(ctxA, artifact.id, {
+      contentText: "第一段\n\n第二段",
+      contentData: {
+        sections: [
+          { heading: "第一段", body: "正文一" },
+          { heading: "第二段", body: "正文二" },
+        ],
+      },
+      changeSummary: "AI 整稿",
+      createdByType: "ai",
+    });
+
+    const createdData = created.contentData as { sections?: unknown[] };
+    expect(createdData.sections).toEqual([
+      { id: "script-saved-0", heading: "第一段", body: "正文一" },
+      { id: "script-saved-1", heading: "第二段", body: "正文二" },
+    ]);
+  });
+
+  it("[T-732] 存量无 ID 脚本可按兼容锚点只改目标段，并在新版本中自愈 ID", async () => {
+    const artifact = await seedArtifact(ctxA);
+    let legacySeq = 0;
+    const legacyRepo = createArtifactRepository(db, {
+      userId: ctxA.userId,
+      accountId: "acct-a",
+      now: () => NOW,
+      nextId: (prefix) => `${prefix}-legacy-${++legacySeq}`,
+    });
+    const legacy = await legacyRepo.createVersion(artifact.id, {
+      contentText: "第一段\n\n第二段",
+      contentData: {
+        sections: [
+          { heading: "第一段", body: "正文一" },
+          { heading: "第二段", body: "正文二" },
+        ],
+      },
+      changeSummary: "历史 AI 整稿",
+      createdByType: "ai",
+    });
+
+    const patched = await service.applyScriptPatch(ctxA, artifact.id, {
+      expectedVersionId: legacy.id,
+      sectionId: "script-saved-1",
+      expectedOriginalText: "正文二",
+      replacementText: "只改后的正文二",
+    });
+
+    const healedData = patched.contentData as { sections?: unknown[] };
+    expect(healedData.sections).toEqual([
+      { id: "script-saved-0", heading: "第一段", body: "正文一" },
+      {
+        id: "script-saved-1",
+        heading: "第二段",
+        body: "只改后的正文二",
+      },
+    ]);
+  });
+
+  it("applyScriptPatch refuses a stale version anchor", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const source = await service.createVersion(ctxA, artifact.id, {
+      contentText: "原文",
+      contentData: { sections: [{ id: "section-1", body: "原文" }] },
+      changeSummary: "建立稿面",
+    });
+    await service.createVersion(ctxA, artifact.id, {
+      contentText: "更新后的整稿",
+      contentData: { sections: [{ id: "section-1", body: "更新后的整稿" }] },
+      changeSummary: "并发更新",
+    });
+
+    await expect(
+      service.applyScriptPatch(ctxA, artifact.id, {
+        expectedVersionId: source.id,
+        sectionId: "section-1",
+        expectedOriginalText: "原文",
+        replacementText: "局部改写",
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("applyScriptPatch refuses an original-text mismatch", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const source = await service.createVersion(ctxA, artifact.id, {
+      contentText: "原文",
+      contentData: { sections: [{ id: "section-1", body: "原文" }] },
+      changeSummary: "建立稿面",
+    });
+
+    await expect(
+      service.applyScriptPatch(ctxA, artifact.id, {
+        expectedVersionId: source.id,
+        sectionId: "section-1",
+        expectedOriginalText: "浏览器里的旧文本",
+        replacementText: "局部改写",
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 });
 

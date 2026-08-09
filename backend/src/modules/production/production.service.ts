@@ -61,8 +61,7 @@ export type RecordExportActivity = (
 
 // [T-366b] 素材包导出的组合根接线(全部经各模块公开 service,无跨模块 repo import)。
 // 数据取数缝在 MaterialExportPorts(material-export.ts);此外还需两个产物落点缝:
-// zip 字节 → asset(AssetsService.createGeneratedAsset)+ 签名下载 URL
-// (AssetsService.getDownloadUrl),以及 production → 属主项目的反查
+// zip 字节 → 一次性对象存储下载产物(不创建 asset)，以及 production → 属主项目的反查
 // (ProjectsService.getProjectIdByOutput)。未接线时该 op 诚实抛 Unsupported。
 export interface MaterialExportWiring {
   ports: MaterialExportPorts;
@@ -71,20 +70,15 @@ export interface MaterialExportWiring {
     ctx: RequestContext,
     outputId: string,
   ): Promise<string | null>;
-  /** zip 字节落成一个 asset(服务端直写,P-04 本地打包不出网)。 */
-  storeZipAsset(
+  /** zip 字节只落对象存储并返回短时签名下载 URL，不创建普通素材。 */
+  storeDownloadArtifact(
     ctx: RequestContext,
     input: { name: string; bytes: Uint8Array },
-  ): Promise<{ assetId: string }>;
-  /** 既有签名下载 URL 通道(assets.downloadUrl 同源)。 */
-  getDownloadUrl(
-    ctx: RequestContext,
-    assetId: string,
   ): Promise<{ url: string; fileName: string }>;
 }
 
 export interface MaterialExportResult {
-  assetId: string;
+  assetId: string | null;
   downloadUrl: string;
   fileName: string;
   fileCount: number;
@@ -118,6 +112,14 @@ export interface ProductionService {
       subtitleConfig?: Record<string, unknown>;
     },
   ): Promise<ProductionRow>;
+  confirmEditingPlan(
+    ctx: RequestContext,
+    outputId: string,
+    body: {
+      expectedRevision: number;
+      plan: Record<string, unknown>;
+    },
+  ): Promise<ProductionRow>;
   createSegment(
     ctx: RequestContext,
     productionId: string,
@@ -145,7 +147,7 @@ export interface ProductionService {
     body: { resultAssetId: string },
   ): Promise<ExportRecordRow>;
   // [T-366b] 素材包统一导出:聚合项目全部素材 + 口播稿 + 编导说明 → 本地 zip →
-  // 落 asset → 返回签名下载 URL(productions.exports.materials)。
+  // 只落对象存储的一次性产物 → 返回签名下载 URL(productions.exports.materials)。
   exportMaterials(
     ctx: RequestContext,
     productionId: string,
@@ -217,6 +219,22 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       }
 
       return repo.updateProduction(production.id, { ...patch, ...extra });
+    },
+
+    async confirmEditingPlan(ctx, outputId, body) {
+      const repo = repoFor(ctx);
+      const production = await repo.getProductionByOutput(outputId);
+      const updated = await repo.confirmEditingPlan(
+        production.id,
+        body.expectedRevision,
+        body.plan,
+      );
+      if (!updated) {
+        throw new ConflictError(
+          "分镜已被其他操作更新，请刷新后再确认，避免覆盖较新的剪辑方案",
+        );
+      }
+      return updated;
     },
 
     async createSegment(ctx, productionId, body) {
@@ -306,8 +324,8 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     // [T-366b] 素材包统一导出(SPEC §4.2)。所有权门:repo.getProductionById 按
     // ctx 收窄(跨用户/未知 → OwnershipError → 404);production → content_output →
     // 属主项目经注入的 Projects 公开缝反查(解析不出同 404,不泄露存在性)。聚合与
-    // 打包在 material-export.ts 纯函数层(可 stub 单测);zip 落 asset + 签名下载
-    // URL 走 Assets 公开缝 —— P-04 本地打包,全程不出网。
+    // 打包在 material-export.ts 纯函数层(可 stub 单测);zip 只落对象存储并换签名下载
+    // URL，跳过 asset 落库 —— P-04 本地打包,全程不出网。
     async exportMaterials(ctx, productionId) {
       const wiring = deps.materialExport;
       if (!wiring) {
@@ -328,16 +346,14 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
         { projectId, nowIso: deps.now() },
         wiring.ports,
       );
-      const stored = await wiring.storeZipAsset(ctx, {
+      const stored = await wiring.storeDownloadArtifact(ctx, {
         name: bundle.zipFileName,
         bytes: bundle.zipBytes,
       });
-      const { url } = await wiring.getDownloadUrl(ctx, stored.assetId);
       return {
-        assetId: stored.assetId,
-        downloadUrl: url,
-        // 文件名用打包时的人话名(素材包-<项目>-<日期>.zip);getDownloadUrl 的建议名
-        // 是 storageKey 末段(mock/对象存储下是机器名),对用户不诚实不采用。
+        assetId: null,
+        downloadUrl: stored.url,
+        // 文件名用打包时的人话名(素材包-<项目>-<日期>.zip)。
         fileName: bundle.zipFileName,
         fileCount: bundle.fileCount,
         totalBytes: bundle.totalBytes,

@@ -48,6 +48,8 @@ export interface RepoDeps {
 export interface ListAssetsQuery {
   limit: number;
   cursor: string | null;
+  /** page/pageSize transport 的稳定偏移；既有 cursor 调用缺省为 0。 */
+  offset?: number;
   // [T-248 批B] 可选状态过滤:缺省 "active"(既有调用不变);"deleted" = 回收站
   // 视图读回已回收素材(还原入口的读侧配套)。
   status?: "active" | "deleted";
@@ -315,7 +317,8 @@ export function createAssetRepository(
       const sliced = query.cursor
         ? rows.filter((r) => r.createdAt < query.cursor!)
         : rows;
-      return sliced.slice(0, query.limit);
+      const offset = Math.max(0, query.offset ?? 0);
+      return sliced.slice(offset, offset + query.limit);
     },
 
     async getAsset(userId, assetId, accountId) {
@@ -632,6 +635,65 @@ export function createAssetRepository(
           return existing[0] ?? null;
         }
         if (session.status !== "created") return null;
+
+        // Content-addressed dedupe: use the authoritative checksum reported by
+        // object storage, never the client filename.  Scope is deliberately
+        // user + account + asset type so one account can never learn about or
+        // reuse another account's private bytes.  Repointing the upload session
+        // makes retries return the same stable asset as well.
+        const duplicateRows = input.head.checksum
+          ? await tx
+              .select({ assetId: assets.id })
+              .from(assets)
+              .innerJoin(
+                assetFiles,
+                and(
+                  eq(assetFiles.id, assets.currentFileId),
+                  eq(assetFiles.checksum, input.head.checksum),
+                ),
+              )
+              .where(
+                and(
+                  eq(assets.userId, userId),
+                  eq(assets.accountId, accountId),
+                  eq(assets.assetType, session.assetType),
+                  eq(assets.status, "active"),
+                ),
+              )
+              .orderBy(desc(assets.createdAt), asc(assets.id))
+              .limit(1)
+          : [];
+        const duplicateAssetId = duplicateRows[0]?.assetId;
+        if (duplicateAssetId) {
+          const duplicateAssets = await tx
+            .select()
+            .from(assets)
+            .where(
+              and(
+                eq(assets.id, duplicateAssetId),
+                eq(assets.userId, userId),
+                eq(assets.accountId, accountId),
+              ),
+            );
+          const duplicate = duplicateAssets[0];
+          if (!duplicate) return null;
+          await tx
+            .update(assetUploads)
+            .set({
+              assetId: duplicate.id,
+              status: "completed",
+              completedAssetFileId: duplicate.currentFileId,
+            })
+            .where(
+              and(
+                eq(assetUploads.id, uploadId),
+                eq(assetUploads.userId, userId),
+                eq(assetUploads.accountId, accountId),
+                eq(assetUploads.status, "created"),
+              ),
+            );
+          return duplicate;
+        }
 
         const fileId = deps.nextId("afile");
         const now = deps.now();

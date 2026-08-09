@@ -86,7 +86,7 @@ export interface PositioningTask {
 // prompt + parse,不造影子)。chat-runner 用 runAgentNode 拿自由文本再 parseSuggestion。
 // [T-081] 新增可选第二参(签名 additive,零参调用行为不变):
 //   - worksBrief:真实作品画像(全部作品标题压缩列表,chat-runner formatWorksBrief 装配)——
-//     让「结合我实际发布的内容重新生成定位」有真材料可扎根,不依赖模型翻页;
+//     让「结合我实际发布的内容重新生成定位」有证据可参考,不依赖模型翻页;
 //   - extraBrief:对话中获得的补充指令/洞察,原样注入且**优先级高于既有档案**(修「模型翻完
 //     作品得出洞察却无通道传入 → 工具永远复读旧卡」的上下文断裂)。
 // 两段空则整段省略(不注空噪声,数据要真)。
@@ -101,7 +101,7 @@ export function buildPositioningPrompt(
     ? `\n【创作者抖音账号画像】\n${context.accountsBrief}`
     : "\n（创作者尚未连接平台账号——按通用赛道判断即可）";
   const works = opts?.worksBrief?.trim()
-    ? `\n\n【我的真实作品（定位必须扎根于此）】\n${opts.worksBrief.trim()}`
+    ? `\n\n【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】\n${opts.worksBrief.trim()}`
     : "";
   const extra = opts?.extraBrief?.trim()
     ? `\n\n【本次生成指令（来自对话，优先遵循）】\n${opts.extraBrief.trim()}`
@@ -111,13 +111,16 @@ export function buildPositioningPrompt(
 【创作者当前定位】
 ${current}${accounts}${works}${extra}
 
-【任务】像一个专业的 MCN 定位策划那样，结合「当前定位 + 抖音账号画像（粉丝量/赛道）${
+【任务】面向中国内容平台，结合「用户本轮明确意图 + 当前定位 + 账号画像${
     works ? " + 真实作品列表" : ""
   }」${
     extra ? "，并**优先遵循上方本次生成指令**" : ""
-  }，产出一份**清晰、差异化、能支撑信任与转化**的定位提案。
-- 若已有定位，做**进化**：保留有效内核，补差异化/收窄人群/强化变现锚点；不要推翻重来。
-- 若没有定位，做**从 0 到 1**：基于账号画像与赛道给出可立得住的定位。
+  }，产出一份**清晰、差异化、能直接支持选题与写稿**的定位提案。
+- optimize：保留被本轮目标和作品共同支持的内核，再补清受众场景、差异化、内容供给与信任来源。
+- pivot：旧定位和旧作品只用于识别可迁移能力、可信证明与自然表达，不得延续旧赛道、旧人群或旧商业目标。
+- scratch：只能使用本轮用户提供的信息，不读取、不引用、不延续旧定位、账号画像或旧作品。
+- 纯人设/个人表达/作品集型账号不强塞产品；只有用户明确有产品/服务或目标包含获客/成交时，才梳理主推产品、核心人群、真实场景、痛点与替代、顾虑、证明和内容承接，并分别落入 audience、facets 与 downstreamRules。
+- 用户本轮原话优先于历史资料。资料不足时照样生成可编辑候选，未知项留空或标“待验证”，绝不编造；目标人群要写具体场景和问题，不能只写年龄职业标签。
 
 【输出】只输出一个 JSON 对象（不要多余文字、不要代码块包裹），形如：
 {"persona":"人设（一句，TA 在受众心中是谁）",
@@ -160,7 +163,7 @@ export function positioningFacets(
       ? `\n【创作者抖音账号画像】\n${context.accountsBrief}`
       : "\n（创作者尚未连接平台账号——按通用赛道判断即可）",
     works: worksBrief.trim()
-      ? `\n\n【我的真实作品（定位必须扎根于此）】\n${worksBrief.trim()}`
+      ? `\n\n【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】\n${worksBrief.trim()}`
       : "",
   };
 }

@@ -29,12 +29,6 @@ const CATALOG: CapabilitySpec[] = [
     skills: ["research-analysis"],
   },
   {
-    capability: "planning.thesis",
-    modelName: "claude-opus-4-8",
-    effort: "high",
-    skills: ["planning-thesis"],
-  },
-  {
     capability: "planning.contract",
     modelName: "claude-opus-4-8",
     effort: "high",

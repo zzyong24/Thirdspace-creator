@@ -1,6 +1,38 @@
 import { classifyLlmError } from "./llm/retry-policy";
 
 const MAX_DIAGNOSTIC_MESSAGE_CHARS = 500;
+const MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE = "AI 额度不足，请充值后再试。";
+
+function isManagedAiCreditExhausted(err: unknown): boolean {
+  const e =
+    err && typeof err === "object"
+      ? (err as {
+          name?: unknown;
+          message?: unknown;
+          code?: unknown;
+          status?: unknown;
+          statusCode?: unknown;
+          responseBody?: unknown;
+          cause?: unknown;
+        })
+      : {};
+  const values = [
+    typeof err === "string" ? err : "",
+    e.name,
+    e.message,
+    e.code,
+    e.status,
+    e.statusCode,
+    e.responseBody,
+    e.cause instanceof Error ? e.cause.message : e.cause,
+  ]
+    .filter((value) => typeof value === "string" || typeof value === "number")
+    .map(String);
+  if (values.some((value) => value.trim() === "402")) return true;
+  return /\bAI_CREDIT_(?:EXHAUSTED|INSUFFICIENT)\b|ManagedAiCreditExhaustedError|insufficient[\s_-]*(?:balance|quota|credit)|(?:balance|quota|credit)[\s_-]*(?:exhausted|insufficient|depleted)|\b1008\b|余额不足|额度不足|积分不足/i.test(
+    values.join(" | "),
+  );
+}
 
 /** 诊断日志/任务失败原因共用的脱敏：保留可排障正文，但不记录 token、API key 或密码。 */
 export function safeErrorMessage(err: unknown): string {
@@ -41,9 +73,10 @@ export function safeModelFailureMessage(
   err: unknown,
   spec?: { displayModelKey?: "channel-managed" } | null,
 ): string {
-  return spec?.displayModelKey === "channel-managed"
-    ? "渠道模型调用失败，请稍后重试或联系官方处理"
-    : safeErrorMessage(err);
+  if (spec?.displayModelKey !== "channel-managed") return safeErrorMessage(err);
+  return isManagedAiCreditExhausted(err)
+    ? MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE
+    : "渠道模型调用失败，请稍后重试或联系官方处理";
 }
 
 /**

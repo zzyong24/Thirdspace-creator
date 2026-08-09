@@ -26,10 +26,11 @@ import type {
 export const PRODUCTION_OP_IDS = [
   "outputs.production.get",
   "outputs.production.put",
+  "outputs.production.editingPlan.confirm",
   "productions.segments.create",
   "productions.segments.list",
   "productions.exports.create",
-  // [T-366b] 素材包统一导出(本地 zip → asset → 签名下载 URL)。
+  // [T-721] 素材包统一导出(本地 zip → 一次性对象存储产物 → 签名下载 URL)。
   "productions.exports.materials",
   "exports.complete",
 ] as const;
@@ -91,7 +92,7 @@ export function createProductionTransport(
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 5 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
+      // All owned ops are persisted. No ctx ⇒ unauthenticated dispatch ⇒
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
@@ -117,6 +118,18 @@ export function createProductionTransport(
             subtitleConfig?: Record<string, unknown>;
           };
           const row = await service.updateProduction(ctx, p.outputId ?? "", b);
+          return { data: toProductionResource(row), meta: { requestId } };
+        }
+        case "outputs.production.editingPlan.confirm": {
+          const b = (body ?? {}) as {
+            expectedRevision: number;
+            plan: Record<string, unknown>;
+          };
+          const row = await service.confirmEditingPlan(
+            ctx,
+            p.outputId ?? "",
+            b,
+          );
           return { data: toProductionResource(row), meta: { requestId } };
         }
         case "productions.segments.create": {

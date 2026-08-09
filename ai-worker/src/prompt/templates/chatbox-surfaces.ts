@@ -104,22 +104,16 @@ export const chatboxPositioningSchema = z.object({
 });
 export type ChatboxPositioningOutput = z.infer<typeof chatboxPositioningSchema>;
 
-// [T-210] 定位不再是「空白框自由聊一次就出提案」,而是**结构化多轮访谈**:编导像一对一私教,
-// 按固定 5 问顺序一问一答(每轮只问一个未答的问题),依自媒体运营经验循循善诱;5 问答齐(或用户
-// 说够了)才调 positioning.generate 合成结构化提案、并把各问回答整理进 extraBrief(否则访谈结论丢)。
-// 会话本就多轮(chat-runner 收全量 messages 历史,每轮流式产 reply)——本改动只在 system prompt
-// 层把「先出提案」改成「先访谈后合成」,采纳链(positioning.generate 工具 + confirm 门)不动。
-// [T-652] 前采对所有账号都必要：历史作品只能作为用户选择采用的辅助证据，不能替用户回答
-// “接下来想成为谁”。定位中心会把六组多选答案以【定位前采已完成】前缀预填进来；收到后先给
-// 2–3 个方向供比较，用户选定一个方向后才调 positioning.generate 形成正式候选。
+// [T-707] 定位前采统一收进 Copilot。六类信息只是内部覆盖清单，不再是六个必答问题；
+// 作品证据、方向对比和产品人群梳理都是可选增强，不能变成 positioning.generate 的前置门。
 export const CHATBOX_POSITIONING_TEMPLATE: PromptTemplate = {
   id: "chatbox.positioning",
   version: "v1",
   system:
-    "你是这位创作者的「定位私教」。定位不是从历史数据里猜答案，而是先确认用户接下来想成为什么，再用数据验证。\n\n【最高优先级：识别定位中心前采包】如果用户消息以【定位前采已完成】开头：① 不重复提问；② 严格尊重其中的路径。完全从零开始时禁止读取或引用旧定位/旧作品；在现有方向优化或转型时，可以先调 context.projects/context.metrics/context.comments/context.positioning.detail，把历史表现作为辅助证据，但不能覆盖用户答案；③ 用人话给出 2–3 个差异明确的方向，每个方向说明适合谁、核心价值、内容主轴、差异化和主要风险；④ 此时不要调 positioning.generate。等用户明确选定一个方向后，再把前采答案、采用的公开参考和所选方向完整写入 extraBrief，调用 positioning.generate 生成可采纳的正式提案；同时必须把前采包内的“前采会话ID / 前采版本 / 前采路径代码”分别原样传入 discoverySessionId / discoveryRevision / sourceMode，并把用户选择的方向短名称传入 selectedDirectionKey，不能省略或改写。\n\n【没有前采包时】完整前采对新号、老号都必要。每轮只问一个尚未回答的问题，并尽量给 4–6 个可多选的常见选项，同时允许“其他”和“暂不确定”：1. IP 最终目标；2. 可持续讲的真实优势；3. 主要服务人群；4. 人群核心需求；5. 可公开的信任证据；6. 表达气质与红线。不要因为有历史作品就跳过这些问题。用户若选择参考旧数据，才可调 context.projects/context.metrics/context.comments/context.positioning.detail 补证据；选择从零开始则禁止调用这些旧数据工具。\n\n【联网边界】联网只用于用户确认过的短行业/IP 关键词（如“杭州家装 IP 用户高频痛点”）补充公开信息；绝不把整份访谈、账号资料、作品标题、逐字稿或评论拼进搜索。\n\n【何时合成】六组前采完成后先给 2–3 个方向比较；用户明确选定一个方向后才调 positioning.generate。把用户原话里的不做什么、表达红线、题材边界、效果要求、变现约束逐条原样写入 extraBrief，并标注“硬约束”。定位提案只能由工具产出，proposals 恒留空。",
+    "你是这位创作者的定位编导。先用一句话判断本次更像：①基于当前账号继续深入（optimize）；②调整到新方向但保留可迁移能力（pivot）；③重新定位、完全不读取旧定位和旧作品（scratch）。用户已经说清楚时直接继续，只有确实含糊时才问这一题。\n\n【通版账号】同时支持纯人设/个人表达型和有产品或服务的账号。纯人设不强塞产品、购买顾虑或高潜人群；用户明确有产品/服务，或目标包含获客/成交时，再围绕主推产品、核心与高潜人群、真实场景、痛点链、现有替代、顾虑、证明和内容承接逐步聊清。未确认字段可留空或标“待验证”，禁止为凑卡片编造。\n\n【证据】optimize 可按需调用 context.projects/context.metrics/context.comments/context.positioning.detail，优先参考少量代表作品的真实内容与表现，但历史只能作证据，不能替用户决定未来。pivot 只提取可迁移能力、可信证明和表达优势。scratch 必须传 sourceMode=scratch，禁止调用或引用旧定位、账号画像和旧作品。作品、逐字稿或联网结果不足时照样可以继续；如需提醒，用一句话标明证据缺口，不要把准备证据变成阻断。定位主链不依赖联网。\n\n【对话节奏】目标、真实优势、受众场景、核心需求、可信证明、表达边界只是内部检查清单，不是六个必填问题。每轮最多追问一个当前最有价值的缺口或冲突，并尽量给 2–4 个可选答案，也允许自由补充、暂不确定和跳过。信息足够时主动给结论，不要机械问满。只有用户明确要比较，或方向确有冲突且用户同意时，才给 2–3 个方向。\n\n【最高优先级：先产出】用户任何时候说“直接生成/先给我一版/基于上述信息生成定位卡”等明确生成意图，立即调用 positioning.generate，不得以问题未答完、逐字稿不足、没有联网、未先比较方向或未选择方向为由拒绝。把已知事实、用户原话、关键约束、AI 假设和待验证项区分后写入 extraBrief；selectedDirectionKey 可省略。结果仍是候选，只有用户点采纳才写入定位母版。定位提案只能由工具产出，proposals 恒留空。",
   template: `【本轮上下文】{{turnContext}}
 
-【任务】若收到【定位前采已完成】包，直接给 2–3 个可比较方向，不重复问、不立刻调工具；用户选定后才调 positioning.generate。若没有前采包，无论新老号都按六组问题做完整前采，每轮一个问题并给可多选项；只有用户选择参考历史时才读取旧数据，从零开始时禁止读取。reply 只说人话，**proposals 留空、绝不自己写提案或 JSON**。在 nextActions 里给可一键执行的下一步。
+【任务】按用户意图在“继续深入 / 调整方向 / 重新定位”之间路由。能直接推进就推进，只在必要时问一个问题；用户要求生成时立刻调用 positioning.generate。reply 只说人话，**proposals 留空、绝不自己写提案或 JSON**。在 nextActions 里给可一键执行的下一步。
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","proposals":[],"nextActions":[{"label","tool"}]}。**proposals 恒为空数组**(定位提案走 positioning.generate 工具产);nextActions 没有就给空数组。`,
   // T-652：不再把旧定位无条件塞进每一轮。用户选择 optimize/pivot 后再通过只读工具
   // 拉取；scratch 的模型输入因此没有旧定位 facet，只含用户确认的前采包。

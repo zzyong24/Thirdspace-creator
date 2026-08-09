@@ -5,6 +5,7 @@ import {
   type UIMessage,
   type ToolSet,
   type ToolApprovalStatus,
+  type ToolCallRepairFunction,
 } from "ai";
 // [T-263] HITL 授权门:从已挂工具装配 streamText 的 toolApproval 配置(单一真值在 chat-tool-gate)。
 import {
@@ -43,6 +44,8 @@ import {
   type ChatToolDeps,
   type PositioningDiscoverySnapshot,
   type ProjectDetailRaw,
+  type ProjectLifecycleRaw,
+  type ReviewReportRaw,
   type PositioningDetailRaw,
   type KnowledgeDetailRaw,
   type ArtifactListRaw,
@@ -67,6 +70,7 @@ import {
   resolveTruncateKeepTurns,
   resolveContextWindowTokens,
   dropAbandonedApprovalParts,
+  dropUnavailableScriptPatchParts,
 } from "./chat-history-window";
 import {
   enrichFacets,
@@ -311,14 +315,7 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
-  /**
-   * [T-265] planning.thesis 端口 —— dispatch 既有 planning.thesis ai_task(复活孤儿
-   * runPlanningThesis:persistence-client dispatch → 声明式 context 注入的接地模板),立即返回
-   * taskId(不阻塞对话回合;论点树生成重,同步会超时)。绑定层先 ensure 项目的 thesis_tree
-   * artifact 并把 artifactId 写进 task.inputData(采纳时 append 新版本挂进「论点骨架」面板)。
-   * 由 composition root 绑(ai transport 的 ai.tasks.create + artifactsService)。可选:未装配 →
-   * 工具报「论点树能力未接入」(诚实降级)。
-   */
+  /** T-730：可选论点候选异步分派；不预建 artifact/version。 */
   dispatchPlanningThesisPort?: (
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
@@ -366,6 +363,18 @@ export interface AssembleChatDeps extends ContextDeps {
       verbatimSourceSha256?: string;
     },
   ) => Promise<{ taskId: string }>;
+  /** 读取当前已确认剪辑方案并应用有界 patch，只返回候选，不写库。 */
+  prepareVideoEditPort?: (
+    ctx: RequestContext,
+    input: {
+      projectId: string;
+      instruction: string;
+      removeBrollAssetIds?: string[];
+      replaceBroll?: Array<{ sceneIdx: number; assetId: string }>;
+      moveBroll?: Array<{ assetId: string; at: number; durationSec?: number }>;
+      removeCardIndexes?: number[];
+    },
+  ) => Promise<import("./chat-tools").VideoEditToolResult>;
   /**
    * [T-350a] publish.package 端口 —— dispatch 既有 publish.platform_adapt runner(单平台抖音,
    * platform.adapt 模板已内嵌 cheat-package 发布审核 SOP)。绑定层先过空稿诚实门 + ensure 内容产出
@@ -398,6 +407,28 @@ export interface ContextReaders {
   listProjects: (
     ctx: RequestContext,
     opts: { limit: number; offset: number },
+  ) => Promise<{
+    rows: Array<{
+      id: string;
+      title: string;
+      stage: string;
+      status: string;
+      source?: string;
+      publishedAt?: string | null;
+    }>;
+    total: number;
+  }>;
+  /** [T-691] 显式历史意图使用的完整项目检索，发布时间来自 Publication 真值。 */
+  searchProjects?: (
+    ctx: RequestContext,
+    opts: {
+      query?: string;
+      publishedOnly?: boolean;
+      orderBy: "publishedAt" | "updatedAt";
+      direction: "asc" | "desc";
+      limit: number;
+      excludeProjectId?: string;
+    },
   ) => Promise<{
     rows: Array<{
       id: string;
@@ -469,6 +500,16 @@ export interface ContextReaders {
     ctx: RequestContext,
     opts: { projectId: string },
   ) => Promise<ProjectDetailRaw | null>;
+  /** [T-691] 当前项目跨模块生命周期索引；分区失败必须显式保留在 errors。 */
+  getProjectLifecycle?: (
+    ctx: RequestContext,
+    opts: { projectId: string },
+  ) => Promise<ProjectLifecycleRaw | null>;
+  /** [T-691] 当前或指定审核报告。 */
+  getReviewReport?: (
+    ctx: RequestContext,
+    opts: { projectId: string; reportId?: string },
+  ) => Promise<ReviewReportRaw | null>;
   /**
    * [T-099b] context.positioning.detail —— 定位母版全档(facets/downstreamRules/陈述/陈述版本数)
    * + 账号画像并入。composition root 复用 PositioningReader + AccountsReader。母版未建 → profile
@@ -867,11 +908,19 @@ export function isScratchPositioningConversation(messages: UIMessage[]): boolean
         part.type === "text" && typeof part.text === "string" ? part.text : "",
       )
       .join("\n");
-    if (!text.includes("【定位前采已完成】")) continue;
-    return (
-      /前采路径代码：scratch/u.test(text) ||
-      /路径：完全从零开始/u.test(text)
-    );
+    // T-707：定位已收敛到 Copilot，不再依赖旧问卷的「前采已完成」暗号。
+    // 只识别明确的 scratch 选择，不能把入口里“你可以选择重新定位”的说明误判为
+    // 已经选择 scratch，否则会错误隔离现有母版与作品证据。
+    if (
+      /(?:^|\n)定位路径：scratch(?:\s|$)/u.test(text) ||
+      /(?:^|\n)本次起点：重新定位[。\s]*(?:\n|$)/u.test(text) ||
+      /(?:^|\n)(?:我要|我想|选择|按)完全从零开始(?:重新)?定位[。！!\s]*(?:\n|$)/u.test(
+        text,
+      ) ||
+      /(?:^|\n)(?:我要|我想|选择)重新定位[。！!\s]*(?:\n|$)/u.test(text)
+    ) {
+      return true;
+    }
   }
   return false;
 }
@@ -1049,6 +1098,18 @@ export async function buildChatAssembly(
       : chatContext.projectId && chatContext.functionKey === "context.projects"
         ? undefined
         : chatContext.functionKey;
+  // [T-716] 局部改稿是一个已由 UI 明确锚定目标段落的原子动作，不是开放式 Copilot
+  // 对话。若继续把项目分析、联网、生成整稿等几十个工具一并发给模型，不仅浪费上下文，
+  // OpenAI-compatible 模型还可能在强制 tool_choice 后于流中途拒绝复杂 schema，最终只剩
+  // “局部改写中断”。这里把它收敛为单工具最小回合；段落锚点仍由服务端当下真值绑定。
+  const hasTrustedScriptPatchAnchor =
+    chatContext.selection?.kind === "script_section" &&
+    Boolean(chatContext.selection.artifactId?.trim()) &&
+    Boolean(chatContext.selection.versionId?.trim()) &&
+    Boolean(chatContext.selection.ids[0]?.trim()) &&
+    Boolean(chatContext.selection.excerpt?.trim());
+  const isScriptPatchAction =
+    effectiveFunctionKey === "script.patch" && hasTrustedScriptPatchAnchor;
   let allowedNames =
     effectiveFunctionKey &&
     ALL_CHAT_TOOL_NAMES.includes(effectiveFunctionKey) &&
@@ -1058,14 +1119,22 @@ export async function buildChatAssembly(
   if (routedTool && !allowedNames.includes(routedTool)) {
     allowedNames = [...allowedNames, routedTool];
   }
+  // [T-732] allChatTools 只会在可信段落锚点完整时真实挂载 script.patch。若仅从 surface
+  // skill 或失效 functionKey 把它留在白名单，技能简介会宣传一个不存在的工具，forcedTool
+  // 还会继续强制调用它。白名单必须与真实挂载条件使用同一真值。
+  if (!hasTrustedScriptPatchAnchor) {
+    allowedNames = allowedNames.filter((name) => name !== "script.patch");
+  }
   const preferredTools = applyFunctionKey(
     hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId),
     effectiveFunctionKey,
   ).filter((n) => allowedNames.includes(n));
-  const toolWhitelist = [
-    ...preferredTools,
-    ...allowedNames.filter((n) => !preferredTools.includes(n)),
-  ];
+  const toolWhitelist = isScriptPatchAction
+    ? ["script.patch"]
+    : [
+        ...preferredTools,
+        ...allowedNames.filter((n) => !preferredTools.includes(n)),
+      ];
 
   // 3) 解析 model。基础档按 skill 主能力解析(chatbox.topic/review/positioning 复用各自
   //    主工具的配置档);各工具 exec 内按自己的 capability 再解析(不同工具可配不同模型)。
@@ -1105,8 +1174,8 @@ export async function buildChatAssembly(
   // [T-058①B / T-240②] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
   // 写库只经工具产卡+用户点采纳;禁止假承诺;工具带分页限制时如实说明。
   // [T-240②] 规则带作用域:分「全局条款」(1-10,任何场景都生效:不假承诺/不编数字/指针权/
-  // 论点树铁律…)与「场景条款」(S1/S2,只对对应场景生效)。治的实录病例:原第 9 条无稿门不带
-  // 作用域 → 创作前项目立论点也被它压住,编导「脚下没土立不起来」要用户贴逐字稿。
+  // 直接写稿规则…)与「场景条款」(S1/S2,只对对应场景生效)。治的实录病例:原第 9 条无稿门不带
+  // 作用域 → 创作前起草也会被它压住,编导会错误要求用户先贴逐字稿。
   const honestyBlock = [
     "【能力边界 —— 全局条款,任何场景都必须遵守】",
     "1. 你对任何数据的写入都只有一条路径:调用对应工具产出候选卡,由用户点卡上的「采纳/写入」按钮完成。你自己没有直接写库能力。",
@@ -1123,43 +1192,41 @@ export async function buildChatAssembly(
     // [T-084a SPEC §1.3] 素材搜集诚实降级第 6 条(动态,按 resolveSearchSpec 探测结果注入):
     // 未配联网检索时,素材来自训练记忆,模型必须主动告知非实时检索,绝不假装搜过网。
     searchConfigured
-      ? "7. 素材搜集(material.gather)固定使用 CreatorOS 随包浏览器真实搜索，只返回带真实 URL 的结果；不得用模型记忆补齐数量。搜索失败或没有结果时如实说明，不要建议用户配置已经下线的“搜索模型”。"
+      ? "7. 素材搜集(material.gather)固定使用随包浏览器真实搜索，只返回带真实 URL 的结果；不得用模型记忆补齐数量。搜索失败或没有结果时如实说明，不要建议用户配置已经下线的“搜索模型”。"
       : "7. 当前宿主未装配浏览器搜索端口，material.gather 不可用。必须如实说明能力未接入，绝不从模型记忆伪造搜索结果，也不要引导用户配置已经下线的“搜索模型”。",
     // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
     // 真实浏览器能力(web.read),**禁止再自称办不到**。
-    "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。[T-251] web.read 结果按窗返回(window/hasMore 是真相字段):**hasMore=true 时必须带 offset 重调同一 URL 把正文读完再归纳**(重读不会重新抓取,直接按窗读已存全文)——绝不只读第一窗就下结论;确实读不完就如实告知「读了 X 字、还剩 Y 字没读」。",
+    "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。[T-708] web.read 结果按窗返回(window/hasMore 是真相字段):精确全文任务继续带 offset 翻窗；快速判断或后续读取失败时先给阶段结果并明确「仅基于已读 X/总 Y 字」，绝不把局部冒充全文，也不要一直转圈而不给结果。",
     // [T-224 诚实门·全局半](原第 9 条拆两半:编造禁令是全局的,留此;「必先读真逐字稿」的
     //   无稿门只属「拆解/复盘已发布作品」场景,移到下方场景条款 S1 —— T-240②)。
     "9. **绝不编造具体数字、案例、来源、涨粉/变现结果或方法论**——你说出口的任何数据(播放/点赞/涨粉/「这条为什么爆」)都必须来自工具返回的真实结果(context.metrics 的真实指标、context.artifact.text 读到的真文案等);拿不到就直说拿不到,**不许用「账号通用规律」「一般来说」这类空想推测充数**。",
-    // [T-240②/T-265] 论点树铁律(同定位铁律「文本写的无法被采纳」先例)。治实录病例:编导被纠正后
-    //   「直接写不走工具」产文本论点树 —— thesis_tree 只有 planning.thesis 工具产的才落 artifact,
-    //   文本树挂不进稿面论点骨架面板、写脚本时不会被引用。[T-265] 现在对话里**有** planning.thesis
-    //   工具了(此前是死链,编导误抓 topic.enrich 冒充):用户要立论点树就调它,别再只写文本树。
-    "10. **论点树铁律**:能挂进稿面「论点骨架」面板、写脚本时被引用的论点树,只能由**对话里的 planning.thesis 工具**产出、经用户采纳落成 thesis_tree 产物——**你在对话文本里写的论点树只是讨论稿,挂不进论点骨架面板、写脚本时不会被引用**。用户要立论点树时:**直接调 planning.thesis 工具**产出论点树候选卡(它会基于定位/选题/立项 brief/已搜素材构建),让 TA 点卡上「采纳」落进论点骨架面板;你可以在对话里先帮 TA 把核心论点/支撑/证据/反驳聊清楚(这有价值),但要落成成品必须走 planning.thesis 工具。**绝不用别的工具(如 topic.enrich 补全选题卡)冒充论点树,绝不谎称「论点树已立好/已写入骨架」**。",
+    "10. 论点骨架是**可选辅助，不是写稿前置**。正常路径始终允许「准备素材 → 直接写稿」：可直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本，不得要求先立论点。知识讲解、观点评论、测评对比、较长内容或需要证据/反驳，且用户明确想先梳理时，可调用 planning.thesis 给候选；已有完整逐字稿、简单通知、短口播、纯记录或用户要快速成稿时直接调用 script.draft。只有用户点击「采纳并用于写稿」的当前论点版本才能进入普通生成；verbatim 原文保真永远不读取论点。",
     // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
     // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
     "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①内容雷达中的网页/RSS 来源会保留真实条目、链接与抓取证据;②内容雷达的热点宝/黑马发现会保留官方榜单口径与原视频链接;③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**;若结果注明未拉到实时信号或用户还没登记来源,**引导 TA 去『内容雷达』登记网页/RSS、博主或分享链接**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动编造热点、更不是自称没能力。",
     // [T-253] 本机文件读取能力认知 + 授权协议 + 安全边界诚实(denylist 拒读时如实说明,绝不绕)。
-    "12. **你能读用户本机的文件**(local.read,支持 macOS/Linux 绝对路径、Windows 盘符路径和 UNC 网络路径，也支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件 / 读 E:\\资料\\稿子.md / 读 \\\\server\\share\\稿子.md」时直接调它,绝不自称「Windows 路径读不了」「我碰不到你的本地文件」或要求用户换到 macOS。授权协议:首次读某路径会弹**确认卡**(needApproval)——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」,TA 点允许后你**再调一次 local.read 传同一路径**;被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
+    "12. **你能读用户本机的文件**(local.read,支持 macOS/Linux 绝对路径、Windows 盘符路径和 UNC 网络路径，也支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件 / 读 E:\\资料\\稿子.md / 读 \\\\server\\share\\稿子.md」时直接调它,绝不自称「Windows 路径读不了」「我碰不到你的本地文件」或要求用户换到 macOS。授权协议:首次读某路径会弹**确认卡**(needApproval)并挂起当前调用——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」；允许后系统会在**同一回合自动续跑**，不要要求用户重发，也不要重复调用制造循环；被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
     // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
     // 铁律:探到什么报什么,缺工具诚实引导安装,绝不假装工具存在/编造版本号/臆造未授权目录。
     "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):要判断某能力能不能落地时先探——如用户要「抽音频/转码/渲染视频」前先看 ffmpeg 在不在,要跑脚本前看 node/python3 在不在。装了就说装了(可报版本),**没装就直说没装并给出安装命令**(如「ffmpeg 没装,装一下:brew install ffmpeg」),**绝不假装工具存在、绝不编造版本号**;你只能探内置白名单工具(ffmpeg/ffprobe/node/python3/git),传别的名字会被忽略并在结果里列出,照实说即可。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录(会返回文件清单)。清单为空就说还没授权过、引导 TA 去授权,**绝不臆造用户没授权过的目录**。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
-    // [T-265] 反工具冒充(治实录病例:论点树深链曾是死链 → 编导抓最近的 topic.enrich 冒充论点树)。
+    // [T-265] 反工具冒充:能力不存在时诚实说明，不能抓相邻工具冒充。
     //   工具清单(上方「你的技能清单」)是你能力的单一真值:清单没列的能力=你现在没有。
-    "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如立论点树、生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事——**绝不拿一个用途不同的工具(比如用『补全选题卡 topic.enrich』冒充『立论点树』)硬凑,更不把它的产物说成用户要的东西**。宁可诚实说没有,也不误接工具骗过去。",
+    "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事。宁可诚实说没有,也不误接工具骗过去。",
     // [T-380] 对话减摩擦:能力边界当场诚实 + 顺手的事直接做,不摆选项清单、不堆免责预防针。
     "15. **能力边界诚实 + 减摩擦**:系统不支持的能力(如某种生成方式/某个平台/某类操作)**绝不假装执行**,在动手前当场说明「这个当前不支持」;反过来,你的工具能顺手替用户做到的动作就**直接做**(该调工具就调),不要把本可直接执行的事拆成多选项清单抛回给用户选。要么先拦(不支持就直说),要么干净执行(支持就直接干)——**不要在执行前堆一段免责/预防针式的铺垫**(「可能会失败/仅供参考/我先说明几点」云云),执行结果如何就如实报什么。",
     // [T-386] 治实录病例:整稿卡已显「✓写入稿面」,编导下轮仍说「整稿还在后台跑,先审 brief
     // 草案」—— 凭对话记忆断言任务状态 + 凭记忆叙述稿面内容(其实已被采纳的新稿覆盖)。
-    "16. **后台任务状态绝不凭记忆断言**:整稿/发布物料/论点树/封面/审核/逐字稿这类后台任务的状态,**只信系统注入的【后台任务状态真值】块和界面卡片**——你上一轮说「在后台跑」不代表现在还在跑,任务状态在你回答之间随时变化。真值块显示已完成/已写入的任务,绝不再说「还在跑/还没好/先等等」;不确定时直说「以卡片显示的状态为准」,绝不猜。同理,**要评价/审核/引用稿面当前内容时,先调 context.artifact.text 读当前版本再叙述**——你记忆里的「草案」可能已被用户采纳的新稿覆盖,凭记忆叙述旧版本 = 对着不存在的东西发言。",
+    "16. **后台任务状态绝不凭记忆断言**:整稿/发布物料/封面/审核/逐字稿这类后台任务的状态,**只信系统注入的【后台任务状态真值】块和界面卡片**——你上一轮说「在后台跑」不代表现在还在跑,任务状态在你回答之间随时变化。真值块显示已完成/已写入的任务,绝不再说「还在跑/还没好/先等等」;不确定时直说「以卡片显示的状态为准」,绝不猜。同理,**要评价/审核/引用稿面当前内容时,先调 context.artifact.text 读当前版本再叙述**——你记忆里的「草案」可能已被用户采纳的新稿覆盖,凭记忆叙述旧版本 = 对着不存在的东西发言。",
+    // [T-708] 创作质量条件统一软化。权限/归属/真相仍由其它条款与执行层守住。
+    "17. **创作完整度不是拒绝服务的理由**:六问未答完、未先比较方向、逐字稿/素材不齐、联网失败、用户没指定长度或格式，都只能影响候选质量，不能阻止定位卡、选题卡或第一版整稿生成。用户明确说「直接生成/先给一版」时立即调用正确工具；用“待验证/待补证据/待补真实案例”标缺口，禁止编造事实。只有鉴权与数据归属、隐私安全、破坏性操作、幂等冲突、外部发送/发布，以及会把虚假事实沉淀进正式数据的情况可以硬拦。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
     // [T-224 诚实门·场景半] 无稿门只管「拆解/复盘已发布作品」;创作前立框架不适用(S2)。
     chatContext.projectId
-      ? `S1.(仅在拆解/复盘一条**已发布**作品时生效)当前作品已绑定 projectId="${chatContext.projectId}",**直接调 context.project.detail / context.artifact.text 读真档案与真逐字稿,绝不调 context.projects 拉全库找它**;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。`
-      : "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:账号级未引用具体作品时,先用 context.metrics / context.projects 找到 projectId,再调 context.artifact.text 读真文案;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。",
-    "S2.(仅在为**创作前(未发布)**的项目立框架时生效)立论点/写大纲/起草脚本的依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝立框架的理由。",
+      ? `S1.(仅在拆解/复盘一条**已发布**作品时生效)当前作品已绑定 projectId="${chatContext.projectId}",**先调 context.project.lifecycle 看全流程真状态,正文再调 context.artifact.text**,绝不调 context.projects 拉全库找它;拆经验再调 review.analyze。任何 lifecycle 分区是 error 都必须说“读取失败”,不能说“用户没生成/没采纳”。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。`
+      : "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:账号级未引用具体作品时,用户说“前几期/历史/之前发布/同系列”就用 context.projects.search 按真实发布时间找 projectId；普通最近项目才用 context.projects。拿到 id 后先调 context.project.lifecycle,正文再调 context.artifact.text;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。",
+    "S2.(仅在为**创作前(未发布)**的项目搭结构或起草脚本时生效)依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝起草的理由。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
@@ -1169,7 +1236,9 @@ export async function buildChatAssembly(
     "【你的技能清单 —— 本对话你能调用的全部工具,回答「你能干什么」时以此为准,不要编造清单外的能力】",
     buildSkillsBrief(toolWhitelist),
   ].join("\n");
-  const selectionBlock = assembleSelectionContext(chatContext.selection);
+  const selectionBlock = assembleSelectionContext(chatContext.selection, {
+    scriptPatchRequired: isScriptPatchAction,
+  });
   const assetAliasBlock = chatContext.assetAliases && Object.keys(chatContext.assetAliases).length
     ? [
         "【当前对话素材别名 —— 用户说图2/image2/视频1时必须按此表识别，绝不猜标题】",
@@ -1207,7 +1276,7 @@ export async function buildChatAssembly(
         `【当前项目 —— 你正在为这一个具体项目编导,projectId="${chatContext.projectId}"${
           currentProjectTitle ? `,标题《${currentProjectTitle}》` : ""
         }】`,
-        `要读这个项目的脚本/逐字稿/产物正文,直接调 context.artifact.text 或 context.project.detail 并传 projectId="${chatContext.projectId}";要读它的指标/发布,调 context.metrics / context.publications 传同一个 projectId。`,
+        `先调 context.project.lifecycle 读取这个项目从选题卡、稿件、素材、封面、发布、指标、审核到复盘的真状态；需要正文时再调 context.artifact.text,需要审核命中项时调 context.review.report。以上工具都使用可信 projectId="${chatContext.projectId}"。`,
         `你已经知道这条内容的 projectId 了,**绝不要用 context.projects 列出全站项目去找这一条**——那是全账号清单,不是当前项目。`,
       ].join("\n")
     : "";
@@ -1244,23 +1313,32 @@ export async function buildChatAssembly(
   );
   // [T-386] 后台任务状态真值块(recentTasks 上方已 best-effort 读取;空列表 → 空串不注)。
   const taskTruthBlock = formatRecentTasksBlock(recentTasks, Date.now());
-  const system = [
-    baseSystem,
-    honestyBlock,
-    skillsBriefBlock,
-    currentAccountBlock,
-    currentProjectBlock,
-    briefHardBlock,
-    currentInstructionPriorityBlock,
-    verbatimSourceBlock,
-    stageBlock,
-    taskTruthBlock,
-    reviewSubjectBlock,
-    selectionBlock,
-    assetAliasBlock,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const system = isScriptPatchAction
+    ? [
+        "【局部改稿专用回合】",
+        "用户已明确选中一个现有脚本段落。只根据用户本轮修改要求重写该段；不得改动、重写或补写其他段落，也不得要求用户提供 artifactId、versionId、sectionId 等技术字段。",
+        "必须调用 script.patch 提交 replacementText。技术锚点由服务端绑定；不要调用其他工具，不要只在对话中返回改写文案。",
+        selectionBlock,
+      ]
+        .filter(Boolean)
+        .join("\n\n")
+    : [
+        baseSystem,
+        honestyBlock,
+        skillsBriefBlock,
+        currentAccountBlock,
+        currentProjectBlock,
+        briefHardBlock,
+        currentInstructionPriorityBlock,
+        verbatimSourceBlock,
+        stageBlock,
+        taskTruthBlock,
+        reviewSubjectBlock,
+        selectionBlock,
+        assetAliasBlock,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
   // 选中态标题 —— 工具入参兜底(模型没显式传 title/subject 时用它,避免拿空标题去诊断)。
   const selectionTitle = chatContext.selection?.label?.trim() || "";
 
@@ -1308,6 +1386,23 @@ export async function buildChatAssembly(
               );
             }
             return decision;
+          },
+        }
+      : {}),
+    // [T-716] 局部改稿技术锚点来自受信 ChatContext，而不是让模型把 system 里的 id 再抄回
+    // tool args。模型只产 replacementText；工具 execute 强制封装此锚点，杜绝反问 sectionId
+    // 和伪造锚点改错段。字段不完整则不绑定，回落旧兼容契约。
+    ...(chatContext.selection?.kind === "script_section" &&
+    chatContext.selection.artifactId?.trim() &&
+    chatContext.selection.versionId?.trim() &&
+    chatContext.selection.ids[0]?.trim() &&
+    chatContext.selection.excerpt?.trim()
+      ? {
+          scriptPatchAnchor: {
+            artifactId: chatContext.selection.artifactId.trim(),
+            versionId: chatContext.selection.versionId.trim(),
+            sectionId: chatContext.selection.ids[0].trim(),
+            originalText: chatContext.selection.excerpt,
           },
         }
       : {}),
@@ -1589,6 +1684,38 @@ export async function buildChatAssembly(
         };
       }
     },
+    prepareVideoEdit: async (input) => {
+      const pid = chatContext.projectId || "";
+      if (!pid) {
+        return {
+          kind: "video.edit",
+          projectId: null,
+          outputId: null,
+          expectedRevision: null,
+          sourceRenderTaskId: null,
+          instruction: input.instruction,
+          summary: [],
+          decisions: null,
+          renderProps: null,
+          error: "剪辑调整必须在具体项目的编导对话中进行。",
+        };
+      }
+      if (!deps.prepareVideoEditPort) {
+        return {
+          kind: "video.edit",
+          projectId: pid,
+          outputId: null,
+          expectedRevision: null,
+          sourceRenderTaskId: null,
+          instruction: input.instruction,
+          summary: [],
+          decisions: null,
+          renderProps: null,
+          error: "剪辑调整能力尚未接入。",
+        };
+      }
+      return deps.prepareVideoEditPort(ctx, { ...input, projectId: pid });
+    },
     // [T-350a] 发布物料生成 —— 同 dispatchScriptDraft 范式:无项目上下文 / 端口未装配 → 诚实 error;
     // topic 缺省用工作台选中标题兜底。空稿门 / ensure outputId 在绑定层(dispatchPublishPackagePort)内。
     dispatchPublishPackage: async ({ projectId, topic }) => {
@@ -1675,7 +1802,7 @@ export async function buildChatAssembly(
       const materialTerms = context.userMaterialQueryTerms ?? [];
       const effQuery = [baseQuery, ...materialTerms].filter(Boolean).join(" ");
       if (!deps.searchWeb) {
-        throw new Error("CreatorOS 浏览器搜索能力未接入，暂时无法联网找素材。");
+        throw new Error("应用的浏览器搜索能力未接入，暂时无法联网找素材。");
       }
       const searchResults: Array<{
         title: string;
@@ -1806,13 +1933,11 @@ export async function buildChatAssembly(
         };
       }
     },
-    // [T-265] planning.thesis:论点树恒是「当前项目的」(要挂进该项目稿面论点骨架面板)。项目
-    // 从模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 → 不
-    // dispatch,诚实回 error(卡渲「去项目稿面立论点」);端口未装配 → 同样诚实 error(不抛裸码)。
-    // topic 缺省用工作台选中标题兜底(与写稿/复盘同款 selection.label 派生)。
     dispatchPlanningThesis: async ({ projectId, topic }) => {
       const pid =
-        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        (typeof projectId === "string" && projectId.trim()
+          ? projectId.trim()
+          : "") ||
         chatContext.projectId ||
         "";
       if (!pid) {
@@ -1820,38 +1945,38 @@ export async function buildChatAssembly(
           taskId: null,
           projectId: null,
           error:
-            "论点树要挂进具体项目的稿面「论点骨架」面板 —— 请在项目稿面右栏的编导对话里让我立论点。",
+            "论点骨架要绑定具体项目。请在项目稿面右栏使用；也可以跳过，直接写稿。",
         };
       }
       if (!deps.dispatchPlanningThesisPort) {
         return {
           taskId: null,
           projectId: pid,
-          error: "论点树能力当前未接入(服务端未装配论点树分派) —— 暂时无法立论点。",
+          error: "可选论点梳理能力当前未接入，请直接写稿或稍后重试。",
         };
       }
-      const effTopic =
+      const effectiveTopic =
         (typeof topic === "string" && topic.trim() ? topic.trim() : "") ||
         selectionTitle ||
         "";
       try {
         const { taskId } = await deps.dispatchPlanningThesisPort(ctx, {
           projectId: pid,
-          ...(effTopic ? { topic: effTopic } : {}),
+          ...(effectiveTopic ? { topic: effectiveTopic } : {}),
         });
         return { taskId, projectId: pid, error: null };
-      } catch (err) {
+      } catch (error) {
         return {
           taskId: null,
           projectId: pid,
-          error: err instanceof Error ? err.message : String(err),
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     },
     // [T-271] cover.generate:封面恒是「当前项目的」(封面文案要锚该项目的核心信息/口播稿)。项目从
     // 模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 → 不 dispatch,
     // 诚实回 error(卡渲「去项目稿面生成封面」);端口未装配 → 同样诚实 error(不抛裸码)。topic 缺省
-    // 用工作台选中标题兜底(与写稿/立论点同款 selection.label 派生)。
+    // 用工作台选中标题兜底(与写稿同款 selection.label 派生)。
     dispatchGenerateCover: async ({ projectId, topic, referenceAssetId }) => {
       const pid =
         (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
@@ -2069,6 +2194,16 @@ export async function buildChatAssembly(
             "我没读到这条作品的真实逐字稿,不能凭标题、指标或账号通用规律编方法论当经验。这条作品若关联了抖音,可直接调 project.transcribe 工具(传该作品 projectId)帮用户立即发起逐字稿抓取,约 1-3 分钟完成后重新拆解;或让用户把逐字稿贴进来,我再基于真稿拆。",
         };
       }
+      if (
+        !reviewContext.reviewMetrics?.trim() &&
+        !reviewContext.reviewComments?.trim()
+      ) {
+        return {
+          items: [],
+          error:
+            "这条作品还没有同步到真实指标或观众评论，不能把写稿过程或其他作品的编辑记录冒充发布复盘。请先发布并同步本作品数据，再重新复盘。",
+        };
+      }
       // subject 优先级:模型显式传 > 目标作品真标题 > 工作台选中标题(reviewFacets 内还有兜底)。
       const effSubject = subject?.trim()
         ? subject
@@ -2156,6 +2291,10 @@ export async function buildChatAssembly(
       if (!deps.contextReaders) return { rows: [], total: 0 };
       return deps.contextReaders.listProjects(ctx, { limit, offset });
     },
+    searchProjects: async (opts) => {
+      if (!deps.contextReaders?.searchProjects) return { rows: [], total: 0 };
+      return deps.contextReaders.searchProjects(ctx, opts);
+    },
     listComments: async ({ limit, offset }) => {
       if (!deps.contextReaders) return { rows: [], total: 0 };
       return deps.contextReaders.listComments(ctx, { limit, offset });
@@ -2174,6 +2313,14 @@ export async function buildChatAssembly(
     getProjectDetail: async ({ projectId }) => {
       if (!deps.contextReaders?.getProjectDetail) return null;
       return deps.contextReaders.getProjectDetail(ctx, { projectId });
+    },
+    getProjectLifecycle: async ({ projectId }) => {
+      if (!deps.contextReaders?.getProjectLifecycle) return null;
+      return deps.contextReaders.getProjectLifecycle(ctx, { projectId });
+    },
+    getReviewReport: async ({ projectId, reportId }) => {
+      if (!deps.contextReaders?.getReviewReport) return null;
+      return deps.contextReaders.getReviewReport(ctx, { projectId, reportId });
     },
     getPositioningDetail: async () => {
       if (!deps.contextReaders?.getPositioningDetail) {
@@ -2322,6 +2469,72 @@ export function buildForcedToolInstruction(safeToolName: string): string {
   ].join("");
 }
 
+type RepairableToolCall = Parameters<ToolCallRepairFunction<ToolSet>>[0]["toolCall"];
+
+function unwrapJsonFence(value: string): string {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return match?.[1]?.trim() ?? trimmed;
+}
+
+/**
+ * T-716:部分兼容模型会理解“只改本段”，但把 replacementText 输出成 text/newText，
+ * 或直接把新段落作为纯文本工具参数。这里仅修复这类可证明等价的字段别名，不生成任何
+ * artifact/version/section 技术锚点——真实锚点仍由服务端工具闭包绑定，避免 AI 猜 ID。
+ */
+export function repairScriptPatchToolCall(
+  toolCall: RepairableToolCall,
+): RepairableToolCall | null {
+  const safeToolName = sanitizeToolName("script.patch");
+  // SEMANTIC_BOUNDARY_ALLOW:这里只修复同一已注册工具的点号/下划线协议别名，
+  // 不根据用户文字判断创作意图，也不将其它工具猜成 script.patch。
+  if (toolCall.toolName !== "script.patch" && toolCall.toolName !== safeToolName) {
+    return null;
+  }
+  const rawInput = unwrapJsonFence(toolCall.input ?? "");
+  if (!rawInput) return null;
+
+  let replacementText = "";
+  let summary = "";
+  try {
+    const parsed = JSON.parse(rawInput) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const object = parsed as Record<string, unknown>;
+    const aliases = [
+      "replacementText",
+      "replacement_text",
+      "newText",
+      "new_text",
+      "text",
+      "content",
+      "rewrite",
+    ];
+    replacementText =
+      aliases
+        .map((key) => object[key])
+        .find((value): value is string =>
+          typeof value === "string" && value.trim().length > 0,
+        )
+        ?.trim() ?? "";
+    summary = typeof object.summary === "string" ? object.summary.trim() : "";
+  } catch {
+    // 只有明显不是 JSON 的纯文本才可安全解释为目标段落；疑似截断 JSON 必须失败，
+    // 不能把半截结构体写进稿面候选。
+    if (/^[{[]/.test(rawInput)) return null;
+    replacementText = rawInput;
+  }
+
+  if (!replacementText || replacementText.length > 12_000) return null;
+  return {
+    ...toolCall,
+    toolName: safeToolName,
+    input: JSON.stringify({
+      replacementText,
+      ...(summary ? { summary } : {}),
+    }),
+  };
+}
+
 /**
  * 串起 streamText(SPEC §3.3)—— 装配 + 把 UIMessage[] 转成 ModelMessage[] 喂模型,流式产出。
  * `onFinish` 由路由传入(落 ai_messages 的 assistant 文本)。返回 StreamTextResult,路由用
@@ -2367,7 +2580,10 @@ export async function runChatStream(
   // UIMessage 层按「轮」操作最薄;转 ModelMessage 后 tool-call/result 拆散成对,再截会拦腰断对。
   // [T-274] 先净化「被后续对话遗弃的未完成 tool 调用」(HITL 授权卡没点就发新消息 → 悬空
   // tool-call → convertToLanguageModelPrompt 抛 MissingToolResultsError 崩整流)。再投影窗口。
-  const sanitized = dropAbandonedApprovalParts(input.messages);
+  const sanitized = dropUnavailableScriptPatchParts(
+    dropAbandonedApprovalParts(input.messages),
+    Boolean(assembly.tools["script.patch"]),
+  );
   const projection = projectChatHistory(sanitized, {
     systemText: assembly.system,
     keepToolResultTurns: resolveToolResultKeepTurns(process.env),
@@ -2500,6 +2716,12 @@ export async function runChatStream(
     //   (2026-07-20 真机)。SDK 用同一 key 发出 + 匹配模型回传的 tool_call → **execute 零改动**;
     //   下面 toolApproval 必须走同一函数换名,否则回传时授权门键对不上 = HITL 形同虚设。
     tools: sanitizeToolNames(assembly.tools),
+    ...(assembly.forcedTool === "script.patch"
+      ? {
+          experimental_repairToolCall: async ({ toolCall }) =>
+            repairScriptPatchToolCall(toolCall),
+        }
+      : {}),
     // [T-117 确定性修] functionKey 命中真工具时,第 0 步 toolChoice 强制调它 → 必产 tool-result
     // → 前端渲真卡(弱 tool-calling 模型不再把卡当文本吐 + 谎称已渲卡);之后步恢复 auto,让模型
     // 据工具结果把话说完。[T-239f] 最后一步 toolChoice:'none' 禁工具,模型必须文字总结收尾。

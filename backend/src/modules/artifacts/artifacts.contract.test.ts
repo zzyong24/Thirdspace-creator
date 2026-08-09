@@ -15,7 +15,7 @@ import {
   artifactRelationResource,
 } from "./artifacts.schema";
 
-// Step 4 — drive each of the 7 ops through the transport against a real pglite db
+// Step 4 — drive each of the 8 ops through the transport against a real pglite db
 // and assert the envelope `data` validates against the op's contract response DTO
 // (foundation §5.4). Confirms currentVersionId/contentOutputId nullability,
 // integer versionNumber, record contentData, enum coercion, and the list meta
@@ -57,7 +57,7 @@ async function makeArtifact(title = "脚本"): Promise<string> {
   return (res as { data: { id: string } }).data.id;
 }
 
-describe("artifacts.transport — 7-op contract conformance", () => {
+describe("artifacts.transport — 8-op contract conformance", () => {
   it("artifacts.create / get → artifactResource", async () => {
     const created = await call("artifacts.create", {
       params: { projectId: "project-1" },
@@ -106,7 +106,7 @@ describe("artifacts.transport — 7-op contract conformance", () => {
     expect(parsedList.data.length).toBe(2);
   });
 
-  it("artifacts.restore → artifactResource (new current version)", async () => {
+  it("artifacts.restore → artifactResource (selected immutable version becomes current)", async () => {
     const artifactId = await makeArtifact();
     const got = await call("artifacts.get", { params: { artifactId } });
     const v1Id = (got as { data: { currentVersionId: string } }).data
@@ -120,7 +120,41 @@ describe("artifacts.transport — 7-op contract conformance", () => {
       body: { versionId: v1Id },
     });
     const parsed = successEnvelope(artifactResource).parse(restored);
-    expect(parsed.data.currentVersionId).not.toBe(v1Id);
+    expect(parsed.data.currentVersionId).toBe(v1Id);
+  });
+
+  it("artifacts.scriptPatches.apply → artifactVersionResource", async () => {
+    const artifactId = await makeArtifact();
+    const source = await call("artifacts.versions.create", {
+      params: { artifactId },
+      body: {
+        contentText: "原文一\n\n原文二",
+        contentData: {
+          sections: [
+            { id: "section-1", body: "原文一" },
+            { id: "section-2", body: "原文二" },
+          ],
+        },
+        changeSummary: "结构化稿面",
+      },
+    });
+    const sourceVersionId = (source as { data: { id: string } }).data.id;
+
+    const patched = await call("artifacts.scriptPatches.apply", {
+      params: { artifactId },
+      body: {
+        expectedVersionId: sourceVersionId,
+        sectionId: "section-2",
+        expectedOriginalText: "原文二",
+        replacementText: "新原文二",
+        changeSummary: "只改第二段",
+      },
+    });
+    const parsed = successEnvelope(artifactVersionResource).parse(patched);
+    expect(parsed.data.contentData?.sections).toEqual([
+      { id: "section-1", body: "原文一" },
+      { id: "section-2", body: "新原文二" },
+    ]);
   });
 
   it("artifacts.relations.create → artifactRelationResource", async () => {

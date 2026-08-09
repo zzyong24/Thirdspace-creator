@@ -2,8 +2,8 @@ import { z } from "zod";
 import type { PromptTemplate } from "../template";
 
 /**
- * [T-254b] 制作视频四决策 skill 模板(video.scenes / video.cards / video.broll /
- * video.subtitles)—— 执行层 video.render 管线的「脑」侧:粗剪人物视频 + SRT + 口播稿 →
+ * [T-254b/T-712] 制作视频四个候选节点 + 总导演审片模板(video.scenes / video.cards /
+ * video.broll / video.subtitles / video.director)—— 执行层 video.render 管线的「脑」侧。
  * 结构化决策 JSON(零代码生成,SPEC 2026-07-11 §3.1 步骤 2)。四个模板都走
  * runStructuredNode(generateObject 绑 outputSchema,落空→文本兜底),模型全由用户
  * model-config 可配(capability = skill id)。
@@ -81,12 +81,15 @@ export const VIDEO_SCENES_TEMPLATE: PromptTemplate = {
 【口播稿全文】
 {{script}}
 {{storyboard}}
+{{orientation}}
+{{manualAssignments}}
 【任务】按内容语义切场:开场事实/问题、每个论点/段落、结尾行动各自成场。一般 3-8 场。
 【硬约束】
 - 每场的 startSec **必须等于上面某一 SRT 行的起秒**(场景边界只能落在 SRT 行边界上,绝不能取行中间的时间)。
 - 第一场从第一行起;场景按时间顺序、不重叠、不留空洞;endSec = 下一场的 startSec(最后一场 = 最后一行的止秒)。
-- title 是给观众看的场景小标题(≤12 字)，必须写本场真实对象或结论；禁止把“新闻钩子 / 开场钩子 / 价值段 / 转折 / CTA / 总结”等内部编导结构词当标题。
+- title 是仅供编辑器回顾的场景名称(≤12 字)，不会烧进成片；必须写本场真实对象或结论，禁止“新闻钩子 / 开场钩子 / 价值段 / 转折 / CTA / 总结”等内部结构词。
 - summary 一句话概括本场讲了什么。只依据 SRT/口播稿原文,不要发挥。
+- 若存在“用户人工指定的素材”，必须围绕素材的真实时长和叙事作用重新切场；不能把素材硬塞进旧场景边界。
 【输出】只输出一个 JSON 对象 {"scenes": [...]}(不要多余文字、不要代码块),每场:
 {"title","startSec"(数字,秒),"endSec"(数字,秒),"summary"}。`,
   requiredFacets: ["srt", "script"],
@@ -125,7 +128,9 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 【口播稿全文】
 {{script}}
 {{storyboard}}
-【任务】挑口播里**值得可视化**的信息做卡片:数据→stat,金句→quote,要点清单→list,对比→compare,代码/命令→code,需要配图的对象→image。不是每场都必须有卡,宁缺毋滥。
+{{orientation}}
+{{manualAssignments}}
+【任务】把口播中**值得可视化**的信息编排成连续的「信息节拍」:数据→stat,金句→quote,要点清单/步骤→list,前后差异→compare,代码/命令→code,需要配图的对象→image。短情绪句可以留白；没有真实素材承接的长场景不能只放一张小标签，而要随着口播推进，让数字、步骤、对比和结论依次接力。
 【硬约束(诚实门,违反即废)】
 - 卡片上的**数值、文案只能从口播稿原文提取**,一个数字都不许编造、不许换算、不许"优化措辞"。
 - kind 只能是 stat/quote/list/compare/code/image 六选一。
@@ -139,10 +144,17 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
   5. **列举/步骤/接力**? → reveal(逐条依次揭示)
   6. 其它纯陈述 → plain(精炼进场)
   motion 是**可选**产出:拿不准就不填,系统会按卡类型派生兜底(stat→counter / compare→bar / list·code→reveal / quote·image→plain)。别硬凑。
-【构图约束(给成片留呼吸感,别把画面堆满)】
+【信息密度与节拍(这是成片主视觉，不是角落提示)】
+- 先按 SRT 划分语义 beat，再决定卡片：8–14 秒且没有真实素材的场景安排 2 个不同信息节拍；14–24 秒安排 3 个；超过 24 秒最多 4 个。相邻节拍分别落在对应原句的 SRT 起秒，不能把 3 张卡堆在同一时刻。
+- 同一长场景优先混用不同表达：数字/量级用 stat，过程/方法用 list，过去与现在用 compare，真正值得记住的结论才用 quote。除非原文确实只有一句金句，否则不要整场只产 quote。
+- 每张卡只承担一个认知动作：先给大数字或大结论，再逐项揭示支撑信息；不要把整段口播缩成一行小字，也不要重复上一张卡的同义内容。
+- 只要场景中任意连续视觉空档预计超过 7 秒，就必须在空档对应的原句起秒补一个新节拍；“已经有一张卡”不等于整场已覆盖。
+【构图约束(给成片留呼吸感,但信息主舞台要充分使用)】
 - 口播人物是画面主体,**不拉伸、不裁切**;用户上传的素材一律完整展示(contain),不裁。
 - **一个 beat 一个强视觉**:同一时刻别堆两张大卡/两个大动画;情绪句、重要陈述留白,不配卡。
 - 卡片是字幕的视觉摘要，不是把整段口播再抄一遍：quote≤28字，stat 的说明≤20字，list 每项≤12字，compare 每侧≤12字。
+- 场景 title/summary 只是编辑器元数据，绝不能把它们直接做成卡片；不要为了填空编造数字、对比或事实。
+- 超过 8 秒且没有已指定素材的场景，必须按上面的节拍数量从本场原文连续提取信息卡；不能复制整段口播，也不能让整个长场景只有黑底、一个靠边小人物或一张孤零零的小标签。
 - 开场若有明确的数字、岗位、人物或事实（例如“时薪 300 元”），优先提取一张 stat/quote 卡，不要只留内部“钩子”标签和空黑画面。
 【输出】只输出一个 JSON 对象 {"cards": [...]}(不要多余文字、不要代码块),每张:
 {"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一)}。没有值得做卡的就返回 {"cards": []}。`,
@@ -150,6 +162,121 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 };
 
 // ── ③ B-roll 选择与插点(video.broll)─────────────────────────────────────────
+
+export const VIDEO_BROLL_PURPOSES = [
+  "fact_evidence",
+  "analogy",
+  "process",
+  "contrast",
+  "mood",
+  "info_card",
+] as const;
+export type VideoBrollPurpose = (typeof VIDEO_BROLL_PURPOSES)[number];
+
+const VIDEO_BROLL_PURPOSE_SET = new Set<string>(VIDEO_BROLL_PURPOSES);
+const VIDEO_BROLL_PURPOSE_ALIASES: Readonly<Record<string, VideoBrollPurpose>> = {
+  factevidence: "fact_evidence",
+  factualevidence: "fact_evidence",
+  fact: "fact_evidence",
+  evidence: "fact_evidence",
+  proof: "fact_evidence",
+  dataevidence: "fact_evidence",
+  documentaryevidence: "fact_evidence",
+  事实证据: "fact_evidence",
+  事实依据: "fact_evidence",
+  数据证据: "fact_evidence",
+  真实证据: "fact_evidence",
+  截图证据: "fact_evidence",
+  证据: "fact_evidence",
+  analogy: "analogy",
+  analogyvisual: "analogy",
+  metaphor: "analogy",
+  metaphorical: "analogy",
+  association: "analogy",
+  associativevisual: "analogy",
+  类比联想: "analogy",
+  类比: "analogy",
+  比喻: "analogy",
+  隐喻: "analogy",
+  联想: "analogy",
+  process: "process",
+  processdemo: "process",
+  demonstration: "process",
+  demo: "process",
+  walkthrough: "process",
+  workflow: "process",
+  tutorial: "process",
+  operation: "process",
+  howto: "process",
+  过程演示: "process",
+  过程示意: "process",
+  流程: "process",
+  步骤: "process",
+  操作演示: "process",
+  录屏演示: "process",
+  contrast: "contrast",
+  beforeafter: "contrast",
+  contrastbeforeafter: "contrast",
+  comparison: "contrast",
+  difference: "contrast",
+  juxtaposition: "contrast",
+  前后对比: "contrast",
+  对比反差: "contrast",
+  对比: "contrast",
+  反差: "contrast",
+  差异: "contrast",
+  前后变化: "contrast",
+  mood: "mood",
+  atmosphere: "mood",
+  emotion: "mood",
+  ambiance: "mood",
+  ambience: "mood",
+  情绪氛围: "mood",
+  氛围: "mood",
+  情绪: "mood",
+  空镜: "mood",
+  环境: "mood",
+  infocard: "info_card",
+  card: "info_card",
+  datacard: "info_card",
+  textcard: "info_card",
+  infographic: "info_card",
+  信息卡: "info_card",
+  信息卡片: "info_card",
+  数据卡: "info_card",
+  文字卡: "info_card",
+  图表: "info_card",
+  列表: "info_card",
+};
+
+function compactPurposeToken(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u3400-\u9fff]+/g, "");
+}
+
+function normalizeVideoBrollPurpose(value: unknown): {
+  purpose: VideoBrollPurpose;
+  changed: boolean;
+  unknown: boolean;
+} {
+  if (typeof value === "string" && VIDEO_BROLL_PURPOSE_SET.has(value)) {
+    return {
+      purpose: value as VideoBrollPurpose,
+      changed: false,
+      unknown: false,
+    };
+  }
+  const token = typeof value === "string" ? compactPurposeToken(value) : "";
+  const aliased = VIDEO_BROLL_PURPOSE_ALIASES[token];
+  if (aliased) return { purpose: aliased, changed: true, unknown: false };
+
+  // purpose 是画面编辑标签而非事实字段。完全未知时保留用户仍可编辑的槽位，使用最不冒充
+  // 事实证据的 info_card；不得让一个标签漂移导致整批视觉计划丢失。
+  return { purpose: "info_card", changed: true, unknown: true };
+}
 
 export const videoBrollPickSchema = z.object({
   sceneIdx: z.number().int().default(0),
@@ -160,14 +287,7 @@ export const videoBrollPickSchema = z.object({
 export const videoBrollSlotSchema = z.object({
   sceneIdx: z.number().int().default(0),
   at: z.number().default(0),
-  purpose: z.enum([
-    "fact_evidence",
-    "analogy",
-    "process",
-    "contrast",
-    "mood",
-    "info_card",
-  ]),
+  purpose: z.enum(VIDEO_BROLL_PURPOSES),
   /** 必须能在口播稿里定位到的原话锚点，禁止用“新闻钩子”等内部标签。 */
   spokenAnchor: z.string().min(1),
   /** 给搜索/文生图/人工备料看的具体画面，不是抽象主题词。 */
@@ -180,13 +300,56 @@ export const videoBrollSchema = z.object({
 });
 export type VideoBrollOutput = z.infer<typeof videoBrollSchema>;
 
+/**
+ * 弱模型常把 schema 枚举翻译成中文、改成空格/连字符或换同义词。这个恢复只整理模型已经
+ * 表达的画面用途，不新增画面事实；每个槽位单独验静态 schema，坏一条只丢一条，不能拖垮
+ * 整批。动态 assetId/sceneIdx 约束仍由 backend 的 buildBrollDecisionSchema 最终裁决。
+ */
+export function normalizeVideoBrollOutput(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const rawSlots = Array.isArray(record.slots) ? record.slots : [];
+
+  let normalizedPurposeCount = 0;
+  let unknownPurposeCount = 0;
+  let droppedSlotCount = 0;
+  const slots = rawSlots.flatMap((rawSlot) => {
+    if (!rawSlot || typeof rawSlot !== "object" || Array.isArray(rawSlot)) {
+      droppedSlotCount += 1;
+      return [];
+    }
+    const slot = rawSlot as Record<string, unknown>;
+    const normalizedPurpose = normalizeVideoBrollPurpose(slot.purpose);
+    if (normalizedPurpose.changed) normalizedPurposeCount += 1;
+    if (normalizedPurpose.unknown) unknownPurposeCount += 1;
+    const parsed = videoBrollSlotSchema.safeParse({
+      ...slot,
+      purpose: normalizedPurpose.purpose,
+    });
+    if (!parsed.success) {
+      droppedSlotCount += 1;
+      return [];
+    }
+    return [parsed.data];
+  });
+
+  if (normalizedPurposeCount > 0 || droppedSlotCount > 0) {
+    console.info(
+      `[video.broll] purpose-normalized=${normalizedPurposeCount} unknown=${unknownPurposeCount} droppedSlots=${droppedSlotCount}`,
+    );
+  }
+  // video.broll 的责任到“画面需求”为止。弱模型即使违约返回了旧版
+  // broll 选料，也在严格 schema 前清空，真实素材只能由 material.match 选。
+  return { ...record, slots, broll: [] };
+}
+
 export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
   id: "video.broll",
-  version: "v2",
+  version: "v4",
   outputSchema: videoBrollSchema,
   tools: [],
   system:
-    "你是口播视频的视觉编导。先判断每段口播为什么需要画面，再从已有素材中精确匹配；没有现成素材时只产出可执行的画面需求，绝不编造素材 id。",
+    "你是口播视频的视觉编导，只负责判断每段口播为什么需要什么画面；真实素材的语义选择统一交给 material.match Skill。",
   template: `为下面这条口播视频规划 B-roll(叠画/空镜)。先读口播原文，再决定画面的叙事作用。
 
 【口播原文】
@@ -198,22 +361,22 @@ export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
 【可用素材清单】(每行: assetId | 名称 (类型) | 描述 | 来源)
 {{library}}
 {{storyboard}}
+{{orientation}}
+{{manualAssignments}}
 【任务】
 1. 先输出少而精的画面需求 slots。每个 slot 必须说明它服务于事实证据、类比联想、过程演示、前后对比、情绪氛围或信息卡中的哪一种。
-2. 如果已有素材清单里存在精确匹配，再把该 slot 绑定成 broll；没有就只保留 slot，等待联网搜索、文生图或人工上传。
+2. 本节点不选择素材，broll 固定返回空数组。后续 material.match Skill 会读取全部已有素材并完成 AI 语义匹配。
 【硬约束(违反即废)】
+- purpose 只能输出以下六个机器值，禁止翻译、加前后缀或自造枚举：fact_evidence（事实证据）/ analogy（类比联想）/ process（过程演示）/ contrast（前后对比）/ mood（情绪氛围）/ info_card（信息卡）。
 - spokenAnchor 必须摘自口播原文，不能写“新闻钩子”“价值段”“场景一”等内部标签。
 - visualBrief 要写成能直接搜索或生成的具体画面，例如“招聘网站上中文 AI 训练师时薪 300 元的岗位截图”，禁止“科技感背景”“抽象 AI 粒子”等万能素材。
 - 事实与数据优先真实截图/网页/图表；类比和情绪才允许生成画面。不得用 AI 图冒充新闻证据。
-- assetId **必须**是清单里出现过的真实 id,绝对不要编造。
-- 来源为「用户手动上传」代表创作者为这次制作明确备好的素材；来源为「脚本分镜点名」代表已采纳的 authored 意图。它们与口播对象精确匹配时必须优先，但来源本身不能替代语义匹配。
-- **精确匹配被讲对象**:讲的是 A 产品就只能配 A 产品的素材,**禁止**拿"看起来像/同类"的素材近似替代;没有精确匹配的素材就不配(宁缺毋滥)。
-- 引用素材时用它清单里的名称描述,**不要**输出文件路径、内部编号等内部词。
-- at(插入时刻,秒)落在所属场景时间范围内;durationSec 一般 2-6 秒,不超过场景长度。
+- 不要在本节点按文件名、关键词或 id 猜素材；素材匹配是 material.match 的职责。
+- 若存在“用户人工指定的素材”，先把它视为不可替换的叙事约束，画面需求与分场时长必须为它让位。
 【输出】只输出一个 JSON 对象 {"slots": [...], "broll": [...]}(不要多余文字、不要代码块)。
-slot: {"sceneIdx"(整数),"at"(数字,秒),"purpose"(六选一),"spokenAnchor"(口播原话),"visualBrief"(具体画面),"searchQuery"(中文搜索词)}。
+slot: {"sceneIdx"(整数),"at"(数字,秒),"purpose"(只能是 fact_evidence/analogy/process/contrast/mood/info_card),"spokenAnchor"(口播原话),"visualBrief"(具体画面),"searchQuery"(中文搜索词)}。
 broll: {"sceneIdx"(整数),"assetId"(清单真实 id),"at"(数字,秒),"durationSec"(数字,秒)}。
-清单为空或没有匹配时 broll 返回 [],但只要口播里存在值得视觉化的事实、过程、类比或对比，slots 仍应给出。`,
+无论清单是否为空，broll 都返回 []；只要口播里存在值得视觉化的事实、过程、类比或对比，slots 仍应给出。`,
   requiredFacets: ["scenes", "script", "library"],
 };
 
@@ -255,4 +418,73 @@ export const VIDEO_SUBTITLES_TEMPLATE: PromptTemplate = {
 【输出】只输出一个 JSON 对象 {"lines": [...]}(不要多余文字、不要代码块),每行:
 {"index"(整数,与输入序号一致),"zh"(校正后中文),"en"(英文翻译)}。`,
   requiredFacets: ["srt", "script"],
+};
+
+// ── ⑤ 总导演统筹审核(video.director)─────────────────────────────────────────
+
+export const VIDEO_DIRECTOR_ISSUE_CODES = [
+  "visual_gap",
+  "material_conflict",
+  "timing_conflict",
+  "narrative_gap",
+  "subtitle_conflict",
+] as const;
+export type VideoDirectorIssueCode =
+  (typeof VIDEO_DIRECTOR_ISSUE_CODES)[number];
+
+export const videoDirectorIssueSchema = z.object({
+  sceneIdx: z.number().int().default(0),
+  severity: z.enum(["blocking", "warning"]),
+  code: z.enum(VIDEO_DIRECTOR_ISSUE_CODES),
+  message: z.string().min(1),
+});
+export const videoDirectorReviewSchema = z.object({
+  verdict: z.enum(["ready", "revise"]),
+  summary: z.string().default(""),
+  issues: z.array(videoDirectorIssueSchema).default([]),
+});
+export type VideoDirectorReviewOutput = z.infer<
+  typeof videoDirectorReviewSchema
+>;
+
+export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
+  id: "video.director",
+  version: "v1",
+  outputSchema: videoDirectorReviewSchema,
+  tools: [],
+  system:
+    "你是一条真实短视频的总导演，负责把完整候选时间线审到能拍、能剪、能看。首轮已绑定素材是既定事实，不要求用户重新选材；你指出的内部修片项会由系统自动调时长、做素材接力或用信息卡补位后再次送审。",
+  template: `审核下面这条视频的完整候选方案。前面的分场、信息卡、真人主画面、用户素材、B-roll 和字幕都已经分别产出；你负责做整体统筹。首轮已进入时间线的素材视为已绑定，不得建议用户重新上传、重新指定场景或从零重做分镜。
+
+【口播原文】
+{{script}}
+
+【本次画幅】
+{{orientation}}
+
+【候选时间线】
+{{plan}}
+
+【当前项目真实素材】
+{{inventory}}
+
+【审核维度】
+1. 叙事连续：每个场景都承接口播，顺序和转折不跳跃；不能出现“素材很好但放错段”。
+2. 画面齐全：长场景不能只有黑底、角落小人物或大段无有效视觉；真人、用户素材、信息卡之间要轮换承接。
+3. 素材使用：用户上传素材若已进入本次时间线，就必须保留；语义或时长不完全匹配时，提出“缩短该镜头 + 由信息卡/同场素材接力”的内部修片建议，不得要求用户重选。
+   - 同一真实素材全片只能出现一次；不能因为它同时被脚本点名、项目挂载或模型选中就跨场景重复使用。
+   - 项目封面和既有成片不是 B-roll，绝不能进入时间线；封面只服务发布物料，不能拿来填充正文画面。
+4. 信息卡质量：卡片必须是短而有用的视觉摘要，不能照抄整段口播，不能出现“SCENE / 分镜一 / 新闻钩子 / CTA”等编辑器内部标签。超过 8 秒且没有真实主视觉的段落，不能用一张角落小标签敷衍：应有 2–4 个随口播推进的语义节拍，并优先用大数字、步骤清单、前后对比和强结论轮换承接；同义 quote 连续出现也视为视觉空档。
+5. 构图与时间：素材不得拉伸；竖图/竖视频在横屏里应完整展示并留出合理陪衬，不强行横裁；插点、时长和字幕不能越过所属场景。
+6. 整体可看：同一时刻只能有一个非 overlay 主视觉，不能让多个图片、录屏、真人主画面或旧标题互相重叠；所有视觉都应服务当前口播，而不是随机抽卡。
+
+【输出规则】
+- verdict=ready：没有 blocking 问题，并且 issues 必须为空；不能一边写“通过”一边继续列建议删除、挪动或补画面的事项。
+- verdict=revise：至少列出 1 条 blocking 内部修片项；系统会在当前方案内自动修正并复审，不得把作业退给用户。
+- sceneIdx 使用候选时间线里的 0 起场景序号；code 只能是 visual_gap/material_conflict/timing_conflict/narrative_gap/subtitle_conflict。
+- 只报告当前方案里需要自动修正的问题；不要要求用户补素材、重新绑定或从零重做。
+
+【输出】只输出 JSON：
+{"verdict":"ready|revise","summary":"一句总评","issues":[{"sceneIdx":0,"severity":"blocking|warning","code":"visual_gap|material_conflict|timing_conflict|narrative_gap|subtitle_conflict","message":"明确且可执行的修改意见"}]}`,
+  requiredFacets: ["script", "plan", "inventory"],
 };

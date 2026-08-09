@@ -1,4 +1,4 @@
-import { ChannelManagedProviderError } from "./provider-factory";
+import { toChannelManagedError } from "./provider-factory";
 
 // 多模态 provider 工厂(SPEC 2026-07-01 多模态 model-config §2.2 / §8 M1)—— 把「一次运行
 // 解析出来的多模态模型规格(MultimodalSpec)」变成统一契约的生成调用。与文本 `modelFor`
@@ -39,7 +39,12 @@ export interface MultimodalSpec {
   /** 该档位是图/视频/音频 —— 决定走 generateImage / generateVideo / transcribeAudio,
    *  并校验适配器能力。audio(T-030-D1)= ASR 逐字稿转写。 */
   kind: "image" | "video" | "audio" | "vision";
+  /** 已验签渠道模型参数；各 provider 适配器必须按白名单读取，不能原样透传未知字段。 */
+  settings?: Record<string, unknown>;
   displayModelKey?: "channel-managed";
+  credentialLifecycle?: "persistent" | "per_request";
+  serviceId?: string;
+  apiFormat?: string;
 }
 
 async function protectChannelCall<T>(
@@ -50,7 +55,7 @@ async function protectChannelCall<T>(
     return await call();
   } catch (error) {
     if (spec.displayModelKey === "channel-managed") {
-      throw new ChannelManagedProviderError();
+      throw toChannelManagedError(error);
     }
     throw error;
   }

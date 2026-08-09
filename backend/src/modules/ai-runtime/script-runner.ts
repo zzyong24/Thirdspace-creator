@@ -38,9 +38,6 @@ interface Storyboard {
   sections: ScriptShot[];
 }
 
-// Serialize the parsed storyboard into a readable Markdown table (the ArtifactVersion's
-// contentText) — one row per shot, plus the hook/CTA framing. This is what the editor
-// renders after 采纳.
 function renderBody(board: Storyboard): string {
   const lines: string[] = ["# 分镜脚本", ""];
   lines.push(
@@ -48,7 +45,8 @@ function renderBody(board: Storyboard): string {
     "| --- | --- | --- | --- | --- | --- |",
   );
   board.sections.forEach((shot, i) => {
-    const cell = (v: string) => v.replace(/\|/g, "\\|").replace(/\n/g, " ");
+    const cell = (value: string) =>
+      value.replace(/\|/g, "\\|").replace(/\n/g, " ");
     lines.push(
       `| ${i + 1} | ${cell(shot.role)} | ${cell(shot.口播)} | ${cell(shot.画面)} | ${cell(shot.字幕)} | ${cell(shot.时长)} |`,
     );
@@ -56,15 +54,10 @@ function renderBody(board: Storyboard): string {
   return lines.join("\n");
 }
 
-// Build the editable 分镜 sections the editor renders after 采纳 (Plan: 脚本编辑器做真).
-// One section per shot: heading = a short 时长/口播-derived label, body = 口播 + 画面 +
-// 字幕. These ride alongside the Markdown `body` as `contentData.sections` so the confirmed
-// ArtifactVersion carries editable structure (not only the flat contentText blob).
-// [T-387b] shot.visual(结构化视觉意图草稿)原样带进 section(缺省不带字段,旧稿零回归)——
-// 采纳时 ai.service confirm 的「分镜凝固 pass」对照真实素材库校验后,它凝固为分镜真源。
 function renderSections(
   board: Storyboard,
 ): Array<{
+  id: string;
   heading: string;
   body: string;
   visual?: { description: string; assetRefs: string[]; missing: string[] };
@@ -79,8 +72,9 @@ function renderSections(
       shot.口播 && `口播：${shot.口播}`,
       shot.画面 && `画面：${shot.画面}`,
       shot.字幕 && `字幕：${shot.字幕}`,
-    ].filter((l): l is string => Boolean(l));
+    ].filter((line): line is string => Boolean(line));
     return {
+      id: `script-saved-${i}`,
       heading,
       body: bodyLines.join("\n"),
       ...(shot.visual ? { visual: shot.visual } : {}),
@@ -161,7 +155,11 @@ export async function runScriptDraft(
           sourceLength: sourceText.length,
           sourceSha256: actualHash,
           sections: [{ heading: "", body: sourceText }],
-          contentData: { sections: [{ heading: "", body: sourceText }] },
+          contentData: {
+            sections: [
+              { id: "script-saved-0", heading: "", body: sourceText },
+            ],
+          },
           validationStatus: "valid",
           validationErrors: [],
           qualityWarnings: [],
@@ -222,8 +220,7 @@ export async function runScriptDraft(
           ? task.inputData.targetDurationSeconds
           : undefined,
       orientation: context.orientationHint || undefined,
-      // SEAM-01:把策划产物(论点树/内容合同/结构方案)注入写文案上下文,和 positioning+learnings 并列。
-      // 经 reader 端口装配(creative-context),非跨模块直连 repo;脚本据此铺策划的结构与论点。
+      // T-730：这里只透传 reader 已验证为当前项目、当前版本且显式 adopted 的论点。
       thesisBrief: context.thesisBrief || undefined,
       contractBrief: context.contractBrief || undefined,
       outlineBrief: context.outlineBrief || undefined,
@@ -276,9 +273,7 @@ export async function runScriptDraft(
         sections: board.sections,
         // Structured editable payload forwarded by the AI confirm branch to
         // createVersion as `contentData` (round-trips into the 脚本 editor).
-        contentData: {
-          sections: renderSections(board),
-        },
+        contentData: { sections: renderSections(board) },
         // schema 已经保证 sections 非空且字段合法。镜数、角色顺序、输出截断等
         // completion policy 问题降级成质量提醒，不能再让已有整稿消失或无法采纳。
         validationStatus: "valid",

@@ -8,13 +8,13 @@ import {
 } from "./creative-context";
 
 // 内容合同 runner (planning.contract node, 策划 stage). It reads the creative context
-// (定位 + 选题 + 已采纳的论点树) and DRAFTS a 内容合同 — the creator's contract with the
+// (定位 + 选题 + 过往复盘) and DRAFTS a 内容合同 — the creator's contract with the
 // audience across four fixed angles: 受众定位 / 价值主张 / 核心节奏 / 行动召唤(CTA). It
 // records an `artifact_version` CANDIDATE; on 采纳, the AI service's EXISTING
 // artifact_version confirm branch appends a new ArtifactVersion (createdByType:"ai") onto
 // the project's `content_contract` artifact — we REUSE that path (the candidate carries
 // `artifactId` + `resultData.body`/`summary`/`contentData`). No web tools: the draft is
-// grounded purely in positioningBrief + thesisBrief + topic.
+// grounded in positioningBrief + learningsBrief + topic.
 //
 // The contentData shape (writer ↔ reader contract):
 //   `{ cards: [{ id, title, body }] }`
@@ -62,9 +62,6 @@ function contractFacets(
       : "（创作者尚未设置定位——按通用爆款逻辑产内容合同）",
     learnings: context.learningsBrief
       ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-      : "",
-    thesis: context.thesisBrief
-      ? `\n【已搭好的论点树(策划判断)】\n${context.thesisBrief}`
       : "",
     topic: context.topic.title
       ? `\n【本期选题】${context.topic.title}${

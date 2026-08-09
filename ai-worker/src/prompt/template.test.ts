@@ -81,6 +81,7 @@ describe("registry", () => {
     expect(ids).toContain("script.draft");
     expect(ids).toContain("chatbox.topic");
     expect(ids).toContain("knowledge.classify");
+    expect(ids).toContain("planning.thesis");
     // 覆盖后再列 → 反映当前生效文本(管理面「当前生效值」语义)。
     overrideTemplatesFromConfig([
       { id: "script.draft", template: "自定义结构:{{positioning}}" },

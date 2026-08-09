@@ -6,6 +6,10 @@ import {
   decideCards,
   decideBroll,
   decideSubtitles,
+  auditVideoDecisions,
+  autoRepairVideoDecisions,
+  normalizeBrollTimeline,
+  closeDirectorReview,
   runVideoDecisions,
   buildScenesDecisionSchema,
   buildCardsDecisionSchema,
@@ -20,14 +24,20 @@ import {
   dedupeBrollRefs,
   collectProjectBrollInventory,
   libraryFacet,
+  manualAssignmentsFacet,
+  enforceStoryboardBroll,
+  enforceManualMaterialAssignments,
+  decideMaterialBroll,
+  buildVideoMaterialMatchSchema,
   type StructuredCall,
   type StructuredCallInput,
   type VideoScene,
   type BrollAssetRef,
   type VideoDecisionsDeps,
+  type ManualMaterialAssignment,
 } from "./video-decisions-runner";
 
-// [T-254b] 四决策 runner 单测 —— 全 fake 模型注入(callStructured 逃生口,不碰真 AI):
+// [T-254b/T-712] 四决策 + 总导演审片 runner 单测 —— 全 fake 模型注入(callStructured 逃生口,不碰真 AI):
 //   动态 refine(边界落 SRT start / assetId 清单内 / 字幕行数不变)、后处理吸附、
 //   可溯剔除(编造数值即废)、B-roll 清单外剔除/空清单跳过、字幕重写守门、
 //   编排成败(候选落 video_decisions / 任一步失败诚实报哪步 + cancelTask)。
@@ -152,6 +162,492 @@ describe("isCardContentTraceable(T-224 同源可溯校验)", () => {
   });
 });
 
+describe("auditVideoDecisions(总导演确定性安全检查)", () => {
+  it("超过 8 秒且既无卡片也无素材时阻断，避免黑底加角落小人物", () => {
+    const issues = auditVideoDecisions({
+      scenes: [{ title: "长口播", startSec: 0, endSec: 12, summary: "完整论点" }],
+      cards: [],
+      broll: [],
+      subtitles: srtLines.slice(0, 3).map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: srtLines.slice(0, 3),
+      inventory: INVENTORY,
+    });
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "blocking",
+          code: "visual_gap",
+          sceneIdx: 0,
+        }),
+      ]),
+    );
+  });
+
+  it("时间线完整且长场景有真实素材时通过确定性检查", () => {
+    const issues = auditVideoDecisions({
+      scenes: [
+        { title: "开场", startSec: 0, endSec: 3.5, summary: "开场" },
+        { title: "正文", startSec: 3.5, endSec: 15, summary: "正文" },
+      ],
+      cards: [],
+      broll: [
+        { sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 11.5 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines,
+      inventory: INVENTORY,
+    });
+    expect(issues).toEqual([]);
+  });
+
+  it("18 秒场景只有开头一张小卡仍然阻断，卡片数量不等于时间线覆盖", () => {
+    const longSrt = parseSrt(`1
+00:00:00,000 --> 00:00:06,000
+第一段先讲清楚问题
+
+2
+00:00:06,000 --> 00:00:12,000
+第二段补充解决方法
+
+3
+00:00:12,000 --> 00:00:18,000
+第三段给出最终结论
+`);
+    const issues = auditVideoDecisions({
+      scenes: [{ title: "完整论点", startSec: 0, endSec: 18, summary: "三段论证" }],
+      cards: [{ sceneIdx: 0, kind: "quote", content: "第一段先讲清楚问题", at: 0 }],
+      broll: [],
+      subtitles: longSrt.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: longSrt,
+      inventory: INVENTORY,
+    });
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "visual_gap", sceneIdx: 0 }),
+      ]),
+    );
+    expect(issues.find((issue) => issue.code === "visual_gap")?.message).toContain(
+      "连续视觉空档",
+    );
+  });
+
+  it("同一素材跨场景复用或同秒叠放多个主视觉都会阻断", () => {
+    const issues = auditVideoDecisions({
+      scenes: [
+        { title: "开场", startSec: 0, endSec: 3.5, summary: "开场" },
+        { title: "正文", startSec: 3.5, endSec: 15, summary: "正文" },
+      ],
+      cards: [],
+      broll: [
+        { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 3.5 },
+        { sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 4 },
+        { sceneIdx: 1, assetId: "asset-2", at: 3.5, durationSec: 4 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines,
+      inventory: INVENTORY,
+    });
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "material_conflict", severity: "blocking" }),
+        expect.objectContaining({ code: "timing_conflict", severity: "blocking" }),
+      ]),
+    );
+  });
+});
+
+describe("normalizeBrollTimeline(素材唯一 + 主视觉不重叠)", () => {
+  it("保留首次素材使用、移除同秒候选，并在下一主视觉进场时截断上一项", () => {
+    const scenes: VideoScene[] = [
+      { title: "正文", startSec: 0, endSec: 12, summary: "正文" },
+    ];
+    const result = normalizeBrollTimeline({
+      scenes,
+      broll: [
+        { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 8 },
+        { sceneIdx: 0, assetId: "asset-2", at: 0, durationSec: 4 },
+        { sceneIdx: 0, assetId: "asset-3", at: 4, durationSec: 4 },
+        { sceneIdx: 0, assetId: "asset-1", at: 8, durationSec: 4 },
+      ],
+    });
+
+    expect(result.broll).toEqual([
+      expect.objectContaining({ assetId: "asset-1", at: 0, durationSec: 4 }),
+      expect.objectContaining({ assetId: "asset-3", at: 4, durationSec: 4 }),
+    ]);
+    expect(result.repairs.join("；")).toMatch(/重复素材/);
+    expect(result.repairs.join("；")).toMatch(/互斥主视觉/);
+    expect(result.repairs.join("；")).toMatch(/重叠时间/);
+  });
+
+  it("overlay 穿插在两个主视觉之间时仍能修复主视觉重叠", () => {
+    const result = normalizeBrollTimeline({
+      scenes: [{ title: "正文", startSec: 0, endSec: 12, summary: "正文" }],
+      broll: [
+        { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 8 },
+        {
+          sceneIdx: 0,
+          assetId: "asset-overlay",
+          at: 2,
+          durationSec: 2,
+          presentation: "overlay",
+        },
+        { sceneIdx: 0, assetId: "asset-2", at: 4, durationSec: 4 },
+      ],
+    });
+
+    expect(result.broll).toEqual([
+      expect.objectContaining({ assetId: "asset-1", durationSec: 4 }),
+      expect.objectContaining({ assetId: "asset-overlay", presentation: "overlay" }),
+      expect.objectContaining({ assetId: "asset-2", at: 4 }),
+    ]);
+  });
+});
+
+describe("autoRepairVideoDecisions(总导演内部修片)", () => {
+  it("保留已绑定素材，并用口播原文信息卡自动补齐长场景空档", () => {
+    const repaired = autoRepairVideoDecisions({
+      scenes: [{ title: "完整论点", startSec: 0, endSec: 15, summary: "完整论点" }],
+      cards: [],
+      broll: [
+        { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 3 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines,
+      inventory: INVENTORY,
+      issues: [
+        {
+          sceneIdx: 0,
+          severity: "blocking",
+          code: "narrative_gap",
+          message: "尾段需要视觉接力",
+        },
+      ],
+    });
+
+    expect(repaired.broll).toEqual([
+      expect.objectContaining({ assetId: "asset-1", sceneIdx: 0 }),
+    ]);
+    expect(repaired.cards.length).toBeGreaterThan(0);
+    expect(
+      repaired.cards.every((card) =>
+        card.content
+          .split("、")
+          .map((part) => part.replace(/…$/, ""))
+          .filter(Boolean)
+          .every((part) => SCRIPT.includes(part)),
+      ),
+    ).toBe(true);
+    expect(
+      auditVideoDecisions({
+        scenes: [{ title: "完整论点", startSec: 0, endSec: 15, summary: "完整论点" }],
+        cards: repaired.cards,
+        broll: repaired.broll,
+        subtitles: repaired.subtitles,
+        srtLines,
+        inventory: INVENTORY,
+      }),
+    ).toEqual([]);
+  });
+
+  it("总导演判定承接不足时也不把已确认的全屏录屏统一截成 4 秒", () => {
+    const repaired = autoRepairVideoDecisions({
+      scenes: [{ title: "操作演示", startSec: 0, endSec: 12, summary: "看清完整步骤" }],
+      cards: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "screen-long",
+          at: 0,
+          durationSec: 10,
+          visualRole: "screen_recording",
+          presentation: "full_frame",
+        },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines,
+      inventory: [
+        {
+          assetId: "screen-long",
+          label: "操作过程",
+          description: "连续操作录屏",
+          kind: "video",
+          durationMs: 12_000,
+        },
+      ],
+      issues: [
+        {
+          sceneIdx: 0,
+          severity: "blocking",
+          code: "narrative_gap",
+          message: "尾段仍需信息卡接力",
+        },
+      ],
+      orientation: "portrait",
+    });
+
+    expect(repaired.broll).toEqual([
+      expect.objectContaining({
+        assetId: "screen-long",
+        durationSec: 12,
+        visualRole: "screen_recording",
+        presentation: "full_frame",
+      }),
+    ]);
+    expect(repaired.repairs.join("；")).toMatch(/竖屏录屏已延长为本段连续主视觉/);
+    expect(repaired.repairs.join("；")).toMatch(/录屏主视觉已保留可读时长/);
+  });
+
+  it("20 秒空镜会自动生成多个不同时间点的信息节拍，修后不再留下长空档", () => {
+    const longSrt = parseSrt(`1
+00:00:00,000 --> 00:00:04,000
+先把最重要的问题说清楚
+
+2
+00:00:04,000 --> 00:00:08,000
+接着列出第一步和第二步
+
+3
+00:00:08,000 --> 00:00:12,000
+效率从两小时压到十分钟
+
+4
+00:00:12,000 --> 00:00:16,000
+然后展示前后 3 个关键差别
+
+5
+00:00:16,000 --> 00:00:20,000
+最后给出可以执行的结论
+`);
+    const repaired = autoRepairVideoDecisions({
+      scenes: [{ title: "完整方法", startSec: 0, endSec: 20, summary: "方法与结果" }],
+      cards: [],
+      broll: [],
+      subtitles: longSrt.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: longSrt,
+      inventory: INVENTORY,
+      issues: [
+        {
+          sceneIdx: 0,
+          severity: "blocking",
+          code: "visual_gap",
+          message: "整场缺少连续视觉承接",
+        },
+      ],
+    });
+
+    expect(repaired.cards.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(repaired.cards.map((card) => card.at)).size).toBe(
+      repaired.cards.length,
+    );
+    expect(
+      auditVideoDecisions({
+        scenes: [{ title: "完整方法", startSec: 0, endSec: 20, summary: "方法与结果" }],
+        cards: repaired.cards,
+        broll: [],
+        subtitles: repaired.subtitles,
+        srtLines: longSrt,
+        inventory: INVENTORY,
+      }),
+    ).toEqual([]);
+  });
+
+  it.each([
+    { durationSec: 10, expectedBeats: 2 },
+    { durationSec: 18, expectedBeats: 3 },
+    { durationSec: 28, expectedBeats: 4 },
+  ])(
+    "$durationSec 秒无真实素材场景至少形成 $expectedBeats 个连续信息节拍",
+    ({ durationSec, expectedBeats }) => {
+      const generatedSrt = Array.from(
+        { length: Math.ceil(durationSec / 2) },
+        (_, index) => {
+          const start = index * 2;
+          const end = Math.min(durationSec, start + 2);
+          const time = (value: number) =>
+            `00:00:${String(value).padStart(2, "0")},000`;
+          return `${index + 1}\n${time(start)} --> ${time(end)}\n第 ${
+            index + 1
+          } 个当前口播信息点`;
+        },
+      ).join("\n\n");
+      const durationSrt = parseSrt(generatedSrt);
+      const scene: VideoScene = {
+        title: "连续信息表达",
+        startSec: 0,
+        endSec: durationSec,
+        summary: "按当前口播形成连续信息节拍",
+      };
+      const repaired = autoRepairVideoDecisions({
+        scenes: [scene],
+        cards: [],
+        broll: [],
+        subtitles: durationSrt.map((line) => ({
+          index: line.index,
+          startSec: line.startSec,
+          endSec: line.endSec,
+          zh: line.text,
+          en: "",
+        })),
+        srtLines: durationSrt,
+        inventory: INVENTORY,
+      });
+
+      expect(repaired.cards.length).toBeGreaterThanOrEqual(expectedBeats);
+      expect(new Set(repaired.cards.map((card) => card.at)).size).toBe(
+        repaired.cards.length,
+      );
+      expect(
+        auditVideoDecisions({
+          scenes: [scene],
+          cards: repaired.cards,
+          broll: repaired.broll,
+          subtitles: repaired.subtitles,
+          srtLines: durationSrt,
+          inventory: INVENTORY,
+        }),
+      ).toEqual([]);
+    },
+  );
+
+  it("同一真实素材误绑多个场景时只保留首次使用，后续场景由信息卡补位", () => {
+    const scenes: VideoScene[] = [
+      { title: "第一步", startSec: 0, endSec: 8, summary: "先选题" },
+      { title: "第二步", startSec: 8, endSec: 15, summary: "再写稿" },
+    ];
+    const repaired = autoRepairVideoDecisions({
+      scenes,
+      cards: [],
+      broll: [
+        { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 4 },
+        { sceneIdx: 1, assetId: "asset-1", at: 8, durationSec: 4 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines,
+      inventory: INVENTORY,
+      issues: [
+        {
+          sceneIdx: 1,
+          severity: "blocking",
+          code: "narrative_gap",
+          message: "系统在当前方案内自动补位",
+        },
+      ],
+    });
+
+    expect(repaired.broll).toEqual([
+      expect.objectContaining({ assetId: "asset-1", sceneIdx: 0 }),
+    ]);
+    expect(repaired.repairs.join("；")).toMatch(/重复素材/);
+    expect(repaired.cards.some((card) => card.sceneIdx === 1)).toBe(true);
+  });
+});
+
+describe("closeDirectorReview(修完再通过)", () => {
+  it("两轮复审仍重复提出主观修正时结束循环，保留当前分镜并交付已闭合方案", async () => {
+    const call = vi.fn(async <T>() => ({
+      verdict: "revise",
+      summary: "仍有未落实修正。",
+      issues: [
+        {
+          sceneIdx: 0,
+          severity: "blocking",
+          code: "narrative_gap",
+          message: "当前画面仍未承接口播。",
+        },
+      ],
+    }) as T) as unknown as StructuredCall;
+
+    const result = await closeDirectorReview(
+        {
+          scenes: [
+            { title: "完整论点", startSec: 0, endSec: 15, summary: "完整论点" },
+          ],
+          cards: [],
+          visualSlots: [],
+          broll: [
+            { sceneIdx: 0, assetId: "asset-1", at: 0, durationSec: 3 },
+          ],
+          subtitles: srtLines.map((line) => ({
+            index: line.index,
+            startSec: line.startSec,
+            endSec: line.endSec,
+            zh: line.text,
+            en: "",
+          })),
+          srtLines,
+          script: SCRIPT,
+          inventory: INVENTORY,
+        },
+        call,
+      );
+
+    expect(call).toHaveBeenCalledTimes(3);
+    expect(result.directorReview).toEqual(
+      expect.objectContaining({
+        status: "ready",
+        source: "auto_repaired",
+        issues: [],
+      }),
+    );
+    expect(result.broll).toEqual([
+      expect.objectContaining({ assetId: "asset-1", sceneIdx: 0 }),
+    ]);
+    expect(result.cards.length).toBeGreaterThan(0);
+    expect(result.repairs.join("；")).toMatch(/终止重复审片建议循环/);
+  });
+});
+
 describe("decideScenes(吸附与推导)", () => {
   it("边界吸附最近 SRT 行 start;endSec 一律推导;首场对齐首行", async () => {
     const call = fakeCall({
@@ -225,7 +721,240 @@ const INVENTORY: BrollAssetRef[] = [
 ];
 
 describe("decideBroll(清单硬门)", () => {
-  it("清单外 assetId 剔除;at 吸附;durationSec 钳进场景", async () => {
+  it("video.broll 即使违约返回真实素材，也只保留画面需求，素材选择统一交给 material.match", async () => {
+    const result = await decideBroll(
+      {
+        scenes: SCENES,
+        srtLines,
+        script: SCRIPT,
+        inventory: INVENTORY,
+      },
+      fakeCall({
+        "video.broll": {
+          slots: [
+            {
+              sceneIdx: 0,
+              at: 0,
+              purpose: "process",
+              spokenAnchor: "三个提示词技巧",
+              visualBrief: "展示真实操作过程",
+              searchQuery: "",
+            },
+          ],
+          broll: [
+            {
+              sceneIdx: 0,
+              assetId: "asset-1",
+              at: 0,
+              durationSec: 4,
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(result.slots).toHaveLength(1);
+    expect(result.broll).toEqual([]);
+  });
+
+  it("T-712 由 material.match AI Skill 给出素材与场景映射，代码只校验和吸附时间", async () => {
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      expect(input.skillId).toBe("material.match");
+      expect(input.facets.library).toContain("用户手动上传");
+      expect(input.facets.visualSlots).toContain("项目选题页面录屏");
+      return {
+        matches: [
+          {
+            assetId: "topic-video",
+            role: "clip",
+            reason: "AI 判断它与选题操作过程对应",
+            sceneIdx: 0,
+            at: 0.7,
+            durationSec: 5,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+          },
+        ],
+      } as T;
+    }) as unknown as StructuredCall;
+    const result = await decideMaterialBroll(
+      {
+        scenes: SCENES,
+        srtLines,
+        script: SCRIPT,
+        inventory: [
+          {
+            assetId: "topic-video",
+            label: "用户自定义文件.mov",
+            kind: "video",
+            description: "真实操作录屏",
+            source: "manual",
+          },
+        ],
+        visualSlots: [
+          {
+            sceneIdx: 0,
+            at: 0,
+            purpose: "process",
+            spokenAnchor: "三个提示词技巧",
+            visualBrief: "项目选题页面录屏",
+            searchQuery: "",
+          },
+        ],
+      },
+      call,
+    );
+    expect(result).toEqual([
+      {
+        sceneIdx: 0,
+        assetId: "topic-video",
+        at: 0,
+        durationSec: 3.5,
+        presentation: "full_frame",
+        visualRole: "screen_recording",
+        motion: "static",
+      },
+    ]);
+  });
+
+  it("material.match 编造 id、封面或越界场景会被动态 schema 拒绝", () => {
+    const schema = buildVideoMaterialMatchSchema(["real"], 2);
+    expect(
+      schema.safeParse({
+        matches: [{ assetId: "real", role: "clip", reason: "", sceneIdx: 1, visualRole: "still_image" }],
+      }).success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({
+        matches: [{ assetId: "fake", role: "clip", reason: "", sceneIdx: 1, visualRole: "still_image" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        matches: [{ assetId: "real", role: "cover", reason: "", sceneIdx: 0, visualRole: "cover" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        matches: [
+          {
+            assetId: "real",
+            role: "clip",
+            reason: "静态配图不得全屏",
+            sceneIdx: 0,
+            visualRole: "still_image",
+            presentation: "full_frame",
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("material.match 一条违约映射不会拖垮同批合法素材", () => {
+    const schema = buildVideoMaterialMatchSchema(["screen", "still"], 2);
+    const parsed = schema.safeParse({
+      matches: [
+        {
+          assetId: "screen",
+          role: "clip",
+          reason: "真实操作录屏",
+          sceneIdx: 0,
+          visualRole: "screen_recording",
+          presentation: "full_frame",
+        },
+        {
+          assetId: "missing",
+          role: "clip",
+          reason: "模型编造的素材",
+          sceneIdx: 1,
+          visualRole: "still_image",
+          presentation: "large_stage",
+        },
+        {
+          assetId: "still",
+          role: "cover",
+          reason: "封面不应进入时间线",
+          sceneIdx: 1,
+          visualRole: "cover",
+          presentation: "large_stage",
+        },
+      ],
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) throw parsed.error;
+    expect(parsed.data.matches).toEqual([
+      expect.objectContaining({ assetId: "screen", sceneIdx: 0 }),
+    ]);
+  });
+
+  it("authored 分镜点名的录屏即使模型漏选，也会按同序场景确定性进入时间线", () => {
+    const result = enforceStoryboardBroll({
+      storyboard: [
+        { narration: "开场", visualDescription: "展示后台", assetRefs: ["screen-1"] },
+        { narration: "结尾", visualDescription: "回到人物", assetRefs: [] },
+      ],
+      scenes: SCENES.slice(0, 2),
+      srtLines,
+      inventory: [
+        { assetId: "screen-1", label: "真实录屏", kind: "video", description: "" },
+      ],
+      excludedAssetIds: new Set(),
+      modelBroll: [],
+    });
+    expect(result.broll).toEqual([
+      expect.objectContaining({ sceneIdx: 0, assetId: "screen-1", at: 0 }),
+    ]);
+    expect(result.unusedStoryboardAssets).toEqual([]);
+  });
+
+  it("分镜点名多个候选时不能把它们全塞进同一秒，已有 AI 主视觉时也不追加", () => {
+    const result = enforceStoryboardBroll({
+      storyboard: [
+        {
+          narration: "开场",
+          visualDescription: "从两个真实候选中择一",
+          assetRefs: ["screen-1", "screen-2"],
+        },
+      ],
+      scenes: [SCENES[0]!],
+      srtLines,
+      inventory: [
+        { assetId: "screen-1", label: "录屏一", kind: "video", description: "" },
+        { assetId: "screen-2", label: "录屏二", kind: "video", description: "" },
+        { assetId: "screen-ai", label: "AI 已选录屏", kind: "video", description: "" },
+      ],
+      excludedAssetIds: new Set(),
+      modelBroll: [
+        { sceneIdx: 0, assetId: "screen-ai", at: 0, durationSec: 3.5 },
+      ],
+    });
+
+    expect(result.broll).toEqual([
+      expect.objectContaining({ assetId: "screen-ai", sceneIdx: 0 }),
+    ]);
+  });
+
+  it("同一 authored 素材被多段重复引用时只进入首次场景", () => {
+    const result = enforceStoryboardBroll({
+      storyboard: [
+        { narration: "开场", visualDescription: "同一素材", assetRefs: ["screen-1"] },
+        { narration: "正文", visualDescription: "重复引用", assetRefs: ["screen-1"] },
+      ],
+      scenes: SCENES.slice(0, 2),
+      srtLines,
+      inventory: [
+        { assetId: "screen-1", label: "真实录屏", kind: "video", description: "" },
+      ],
+      excludedAssetIds: new Set(),
+      modelBroll: [],
+    });
+
+    expect(result.broll).toEqual([
+      expect.objectContaining({ assetId: "screen-1", sceneIdx: 0 }),
+    ]);
+  });
+
+  it("video.broll 不再直接采用清单内/外 assetId，真实选料只走 material.match", async () => {
     const call = fakeCall({
       "video.broll": {
         broll: [
@@ -238,9 +967,7 @@ describe("decideBroll(清单硬门)", () => {
       { scenes: SCENES, srtLines, script: SCRIPT, inventory: INVENTORY },
       call,
     );
-    expect(result.broll).toHaveLength(1);
-    expect(result.broll[0]).toMatchObject({ assetId: "asset-2", at: 3.5 });
-    expect(result.broll[0]!.durationSec).toBeLessThanOrEqual(12 - 3.5);
+    expect(result.broll).toEqual([]);
   });
 
   it("素材清单为空 → 仍生成可执行的联想画面需求，但不编造已存在素材", async () => {
@@ -274,6 +1001,63 @@ describe("decideBroll(清单硬门)", () => {
     });
   });
 
+  it("purpose 的中英文别名在严格 schema 前逐槽归一化，不能整批失败", async () => {
+    const aliases = [
+      "事实证据",
+      "fact evidence",
+      "Fact-Evidence",
+      "factual_evidence",
+      "proof",
+      "类比联想",
+      "analogy_visual",
+      "过程演示",
+      "流程",
+      "process_demo",
+      "前后对比",
+      "contrast_before_after",
+      "情绪氛围",
+      "信息卡片",
+    ];
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      expect(input.normalizeObject).toBeTypeOf("function");
+      const raw = {
+        slots: aliases.map((purpose, index) => ({
+          sceneIdx: index % SCENES.length,
+          at: 0,
+          purpose,
+          spokenAnchor: `口播原话 ${index}`,
+          visualBrief: `具体画面 ${index}`,
+          searchQuery: `搜索词 ${index}`,
+        })),
+        broll: [],
+      };
+      return input.outputSchema.parse(input.normalizeObject!(raw));
+    }) as unknown as StructuredCall;
+
+    const result = await decideBroll(
+      { scenes: SCENES, srtLines, script: SCRIPT, inventory: [] },
+      call,
+    );
+
+    expect(result.slots).toHaveLength(14);
+    expect(result.slots.map((slot) => slot.purpose)).toEqual([
+      "fact_evidence",
+      "fact_evidence",
+      "fact_evidence",
+      "fact_evidence",
+      "fact_evidence",
+      "analogy",
+      "analogy",
+      "process",
+      "process",
+      "process",
+      "contrast",
+      "contrast",
+      "mood",
+      "info_card",
+    ]);
+  });
+
   it("手动上传来源与语义描述必须进入可观测 prompt，模型能识别用户明确意图", () => {
     const facet = libraryFacet([
       {
@@ -287,6 +1071,105 @@ describe("decideBroll(清单硬门)", () => {
     expect(facet).toContain("用户手动上传");
     expect(facet).toContain("产品后台录屏.mp4");
     expect(facet).toContain("展示发布按钮和成功提示");
+  });
+
+  it("原始文件名、尺寸与时长进入 AI 选料语义，人工选料成为重分镜硬约束", () => {
+    const inventory: BrollAssetRef[] = [
+      {
+        assetId: "asset-schedule",
+        label: "项目排期.mov",
+        kind: "video",
+        description: "周排期界面录屏",
+        source: "manual",
+        width: 1170,
+        height: 2532,
+        durationMs: 8_400,
+      },
+    ];
+    const library = libraryFacet(inventory);
+    expect(library).toContain("项目排期.mov");
+    expect(library).toContain("尺寸:1170×2532");
+    expect(library).toContain("时长:8.4s");
+
+    const assignments: ManualMaterialAssignment[] = [
+      {
+        assetId: "asset-schedule",
+        sceneIdx: 1,
+        sceneTitle: "第三步排期",
+        sceneSummary: "根据互动曲线安排发布时间",
+      },
+    ];
+    const brief = manualAssignmentsFacet(assignments, inventory);
+    expect(brief).toContain("原始文件名:项目排期.mov");
+    expect(brief).toContain("重新计算场景边界");
+    expect(brief).toContain("不得遗漏、替换或机械截成固定时长");
+  });
+});
+
+describe("enforceManualMaterialAssignments(人工选料不丢失)", () => {
+  it("模型遗漏时保留用户选的真实素材，使用素材真实时长而非固定 4 秒", () => {
+    const result = enforceManualMaterialAssignments({
+      assignments: [
+        {
+          assetId: "asset-manual",
+          sceneIdx: 1,
+          sceneTitle: "角色技巧",
+          sceneSummary: "给模型一个角色",
+        },
+      ],
+      scenes: SCENES,
+      srtLines,
+      inventory: [
+        {
+          assetId: "asset-manual",
+          label: "角色设置录屏.mov",
+          kind: "video",
+          description: "",
+          durationMs: 7_200,
+        },
+      ],
+      modelBroll: [],
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        assetId: "asset-manual",
+        sceneIdx: 1,
+        at: 3.5,
+        durationSec: 7.2,
+        presentation: "large_stage",
+      }),
+    ]);
+  });
+
+  it("人工指定的场景覆盖 AI 的旧场景，不能因为资产已出现就沿用错误位置", () => {
+    const result = enforceManualMaterialAssignments({
+      assignments: [
+        {
+          assetId: "asset-manual",
+          sceneIdx: 1,
+          sceneTitle: "第二步写稿",
+          sceneSummary: "写稿界面录屏",
+        },
+      ],
+      scenes: SCENES,
+      srtLines,
+      inventory: [
+        {
+          assetId: "asset-manual",
+          label: "项目制作.mov",
+          kind: "video",
+          description: "写稿界面录屏",
+          durationMs: 7_200,
+        },
+      ],
+      modelBroll: [
+        { sceneIdx: 0, assetId: "asset-manual", at: 0, durationSec: 3.5 },
+      ],
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({ assetId: "asset-manual", sceneIdx: 1, at: 3.5 }),
+    ]);
   });
 });
 
@@ -355,6 +1238,82 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
     ]);
   });
 
+  it("[T-739] 脚本点名只能提升当前项目已挂载素材的优先级，绝不跨项目取素材", async () => {
+    const readArtifactContentData = vi.fn(async (
+      _ctx: RequestContext,
+      _projectId: string,
+      artifactType: "output_script" | "thesis_tree",
+    ) => {
+      if (artifactType === "thesis_tree") {
+        return {
+          nodes: [{ materialRefs: [{ id: "thesis-only" }, { id: "shared" }] }],
+        };
+      }
+      return {
+        sections: [
+          {
+            heading: "演示",
+            body: "口播：展示产品",
+            visual: {
+              description: "产品录屏",
+              assetRefs: ["script-only", "shared"],
+              missing: [],
+            },
+          },
+        ],
+      };
+    });
+    const getAsset = vi.fn(async (_ctx, assetId: string) => ({
+      id: assetId,
+      name: assetId,
+      assetType: "image",
+      description: "",
+    }));
+
+    const result = await collectProjectBrollInventory(ctx, "proj-retired-thesis", {
+      assertProjectAccess: vi.fn(async () => undefined),
+      listProjectMaterialLinks: vi.fn(async () => [
+        { entityType: "asset", entityId: "shared", role: "reference" },
+        { entityType: "asset", entityId: "ammo-only", role: "reference" },
+      ]),
+      getAsset,
+      readArtifactContentData,
+    });
+
+    expect(readArtifactContentData).toHaveBeenCalledTimes(1);
+    expect(readArtifactContentData).toHaveBeenCalledWith(
+      ctx,
+      "proj-retired-thesis",
+      "output_script",
+    );
+    expect(result).toEqual([
+      expect.objectContaining({ assetId: "shared", source: "script" }),
+      expect.objectContaining({ assetId: "ammo-only", source: "ammo" }),
+    ]);
+    expect(getAsset).not.toHaveBeenCalledWith(ctx, "script-only");
+    expect(getAsset).not.toHaveBeenCalledWith(ctx, "thesis-only");
+  });
+
+  it("[T-739] 当前项目没有挂载素材时，旧脚本即使残留 assetRefs 也必须诚实为空", async () => {
+    const getAsset = vi.fn();
+    const result = await collectProjectBrollInventory(ctx, "proj-empty", {
+      assertProjectAccess: vi.fn(async () => undefined),
+      listProjectMaterialLinks: vi.fn(async () => []),
+      getAsset,
+      readArtifactContentData: vi.fn(async () => ({
+        sections: [
+          {
+            body: "口播：旧项目画面",
+            visual: { assetRefs: ["foreign-script-asset"] },
+          },
+        ],
+      })),
+    });
+
+    expect(result).toEqual([]);
+    expect(getAsset).not.toHaveBeenCalled();
+  });
+
   it("缺 projectId 直接失败，不得回退当前账号整库冒充项目素材", async () => {
     await expect(
       collectProjectBrollInventory(ctx, null, {
@@ -365,6 +1324,36 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
       }),
     ).rejects.toThrow(/缺少项目范围/);
   });
+
+  it("封面即使被旧脚本 assetRefs 点名也不能进入 B-roll 候选", async () => {
+    const getAsset = vi.fn(async (_ctx, assetId: string) => ({
+      id: assetId,
+      name: assetId === "project-cover" ? "视频封面.png" : "项目选题.mov",
+      assetType: assetId === "project-cover" ? "image" : "video",
+      description: "",
+    }));
+    const result = await collectProjectBrollInventory(ctx, "proj-cover", {
+      assertProjectAccess: vi.fn(async () => undefined),
+      listProjectMaterialLinks: vi.fn(async () => [
+        { entityType: "asset", entityId: "project-cover", role: "cover" },
+        { entityType: "asset", entityId: "topic-video", role: "broll" },
+      ]),
+      getAsset,
+      readArtifactContentData: vi.fn(async () => ({
+        kind: "script",
+        sections: [
+          {
+            narration: "展示选题",
+            visualDescription: "选题界面",
+            assetRefs: ["project-cover"],
+          },
+        ],
+      })),
+    });
+
+    expect(result.map((asset) => asset.assetId)).toEqual(["topic-video"]);
+    expect(getAsset).not.toHaveBeenCalledWith(ctx, "project-cover");
+  });
 });
 
 describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
@@ -374,7 +1363,7 @@ describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
         lines: [
           { index: 1, zh: "大家好,今天讲三个提示词技巧,效率提升 47%", en: "Hi, three prompt tips, +47% efficiency" },
           { index: 2, zh: "第一个技巧是给模型一个角色", en: "Tip 1: give the model a role" },
-          { index: 3, zh: "第二个技巧是提供实例", en: "Tip 2: provide examples" }, // 示→实 小改,保留
+          { index: 3, zh: "第二个技巧是提供实例", en: "Tip 2: provide examples" }, // 相近但口播稿无依据 → 退回
           { index: 4, zh: "完全跑题的重写句子在此", en: "Like and subscribe" }, // 重写 → 退回原文
         ],
       },
@@ -384,9 +1373,31 @@ describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
     expect(lines.map((l) => [l.startSec, l.endSec])).toEqual(
       srtLines.map((l) => [l.startSec, l.endSec]),
     );
-    expect(lines[2]!.zh).toBe("第二个技巧是提供实例");
+    expect(lines[2]!.zh).toBe("第二个技巧是提供示例");
     expect(lines[3]!.zh).toBe("记得点赞关注"); // 守门退回
     expect(lines[1]!.en).toBe("Tip 1: give the model a role");
+  });
+
+  it("只保留能在口播稿找到依据的 ASR 错字校正", async () => {
+    const typoLines = [
+      { index: 1, startSec: 0, endSec: 2, text: "先把账号定为说清楚" },
+    ];
+    const call = fakeCall({
+      "video.subtitles": {
+        lines: [{ index: 1, zh: "先把账号定位说清楚", en: "Clarify the positioning." }],
+      },
+    });
+    const lines = await decideSubtitles(
+      { srtLines: typoLines, script: "第一步，先把账号定位说清楚。" },
+      call,
+    );
+    expect(lines[0]).toEqual({
+      index: 1,
+      startSec: 0,
+      endSec: 2,
+      zh: "先把账号定位说清楚",
+      en: "Clarify the positioning.",
+    });
   });
 
   it("[T-320] 校正基准=口播稿:script 作为 facet 真喂进 video.subtitles skill", async () => {
@@ -507,10 +1518,28 @@ const HAPPY_OUTPUTS: Record<string, unknown> = {
     cards: [{ sceneIdx: 0, kind: "stat", content: "效率提升 47%", at: 0 }],
   },
   "video.broll": {
-    broll: [{ sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 3 }],
+    slots: [],
+    broll: [],
+  },
+  "material.match": {
+    matches: [
+      {
+        assetId: "asset-1",
+        role: "clip",
+        reason: "与正文操作对应",
+        sceneIdx: 1,
+        at: 3.5,
+        durationSec: 3,
+      },
+    ],
   },
   "video.subtitles": {
     lines: srtLines.map((l) => ({ index: l.index, zh: l.text, en: "en" })),
+  },
+  "video.director": {
+    verdict: "ready",
+    summary: "叙事、素材和时间线完整。",
+    issues: [],
   },
 };
 
@@ -521,12 +1550,12 @@ const TASK = {
 };
 
 describe("runVideoDecisions(编排)", () => {
-  it("四步顺序跑完 → recordCandidate(video_decisions,决策完整 + 清单快照),四条步骤留痕", async () => {
+  it("五步顺序跑完 → recordCandidate(video_decisions,含总导演结论 + 清单快照)", async () => {
     const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
     await runVideoDecisions(ctx, TASK, deps);
     expect(calls.markRunning).toHaveBeenCalledWith(ctx, "task-1");
     expect(calls.cancelTask).not.toHaveBeenCalled();
-    expect(calls.recordStep).toHaveBeenCalledTimes(4);
+    expect(calls.recordStep).toHaveBeenCalledTimes(5);
     expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
     const [, , result] = calls.recordCandidate.mock.calls[0]! as unknown as [
       unknown,
@@ -540,12 +1569,17 @@ describe("runVideoDecisions(编排)", () => {
       broll: unknown[];
       subtitles: unknown[];
       srtLines: unknown[];
+      directorReview: { status: string; summary: string };
     };
     expect(decisions.scenes).toHaveLength(3);
     expect(decisions.cards).toHaveLength(1);
     expect(decisions.broll).toHaveLength(1);
     expect(decisions.subtitles).toHaveLength(4);
     expect(decisions.srtLines).toHaveLength(4);
+    expect(decisions.directorReview).toMatchObject({
+      status: "ready",
+      summary: "叙事、素材和时间线完整。",
+    });
     expect(result.resultData.inventory).toEqual(INVENTORY);
     const brollStep = (calls.recordStep.mock.calls as unknown as Array<
       [unknown, string, { stepNo: number; toolCalls: unknown[] }]
@@ -557,12 +1591,99 @@ describe("runVideoDecisions(编排)", () => {
         toolName: "video.broll",
         scope: { accountId: "acc-1", projectId: "proj-1" },
         input: { inventory: INVENTORY },
-        output: expect.objectContaining({
-          slots: expect.any(Array),
-          broll: expect.any(Array),
-        }),
+        output: expect.objectContaining({ slots: expect.any(Array) }),
+      }),
+      expect.objectContaining({
+        toolName: "material.match",
+        scope: { accountId: "acc-1", projectId: "proj-1" },
+        output: expect.objectContaining({ broll: expect.any(Array) }),
       }),
     ]);
+    const directorStep = (calls.recordStep.mock.calls as unknown as Array<
+      [unknown, string, { stepNo: number; text: string; toolCalls: unknown[] }]
+    >)
+      .map((call) => call[2])
+      .find((step) => step.stepNo === 5);
+    expect(directorStep?.text).toContain("总导演统筹审核:通过");
+    expect(directorStep?.toolCalls).toEqual([
+      expect.objectContaining({ toolName: "video.director" }),
+    ]);
+  });
+
+  it("总导演首审提出问题时保留既有素材、自动补信息卡并复审后只交付可渲染候选", async () => {
+    const outputs = {
+      ...HAPPY_OUTPUTS,
+      "video.director": {
+        verdict: "revise",
+        summary: "第二场素材与口播不匹配。",
+        issues: [
+          {
+            sceneIdx: 1,
+            severity: "blocking",
+            code: "material_conflict",
+            message: "录屏内容与本场口播对象不一致。",
+          },
+        ],
+      },
+    };
+    const { deps, calls } = makeDeps(outputs);
+    const baseCall = fakeCall(outputs);
+    let directorPass = 0;
+    deps.callStructured = (async <T>(input: StructuredCallInput<T>) => {
+      if (input.skillId !== "video.director") return baseCall(input);
+      directorPass += 1;
+      return (directorPass === 1
+        ? outputs["video.director"]
+        : {
+            verdict: "ready",
+            summary: "修正后的时间线与口播一致。",
+            issues: [],
+          }) as T;
+    }) as StructuredCall;
+    await runVideoDecisions(ctx, TASK, deps);
+    expect(calls.cancelTask).not.toHaveBeenCalled();
+    const [, , result] = calls.recordCandidate.mock.calls[0]! as unknown as [
+      unknown,
+      string,
+      { resultData: Record<string, unknown> },
+    ];
+    const decisions = result.resultData.decisions as {
+      cards: unknown[];
+      broll: Array<{ assetId: string; sceneIdx: number }>;
+      directorReview: { status: string; source: string; issues: unknown[] };
+    };
+    expect(decisions.directorReview).toMatchObject({
+      status: "ready",
+      source: "auto_repaired",
+    });
+    expect(decisions.directorReview.issues).toHaveLength(0);
+    expect(decisions.broll).toEqual([
+      expect.objectContaining({ assetId: "asset-1", sceneIdx: 1 }),
+    ]);
+    expect(decisions.cards.length).toBeGreaterThan(1);
+  });
+
+  it("总导演模型暂不可用时执行确定性安全审核，不无限重试或取消整条任务", async () => {
+    const { deps, calls } = makeDeps({
+      ...HAPPY_OUTPUTS,
+      "video.director": new Error("审片模型暂不可用"),
+    });
+    await runVideoDecisions(ctx, TASK, deps);
+    expect(calls.cancelTask).not.toHaveBeenCalled();
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    const [, , result] = calls.recordCandidate.mock.calls[0]! as unknown as [
+      unknown,
+      string,
+      { resultData: Record<string, unknown> },
+    ];
+    const decisions = result.resultData.decisions as {
+      directorReview: { status: string; source: string; issues: Array<{ severity: string }> };
+    };
+    expect(decisions.directorReview).toMatchObject({
+      status: "ready",
+      source: "deterministic_fallback",
+    });
+    expect(decisions.directorReview.issues).toEqual([]);
   });
 
   it("第②步失败 → 诚实报「②信息卡」+ cancelTask,不落候选", async () => {
@@ -580,6 +1701,31 @@ describe("runVideoDecisions(编排)", () => {
       .find((s) => s.kind === "failed");
     expect(failStep?.text).toContain(VIDEO_DECISION_STEPS[1]);
     expect(failStep?.text).toContain("模型端点 500");
+  });
+
+  it("material.match 暂时失败时不阻断成片，并在当前方案内自动补位", async () => {
+    const { deps, calls } = makeDeps({
+      ...HAPPY_OUTPUTS,
+      "material.match": new Error("匹配模型暂不可用"),
+    });
+    await runVideoDecisions(ctx, TASK, deps);
+    expect(calls.cancelTask).not.toHaveBeenCalled();
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    const brollStep = (calls.recordStep.mock.calls as unknown as Array<
+      [unknown, string, { stepNo: number; text: string; toolCalls: unknown[] }]
+    >)
+      .map((call) => call[2])
+      .find((step) => step.stepNo === 3);
+    expect(brollStep?.text).toContain("系统已在当前方案内自动补位");
+    expect(brollStep?.text).not.toMatch(/手动指定|重新分镜|缺失素材/);
+    expect(brollStep?.toolCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          toolName: "material.match",
+          output: expect.objectContaining({ warning: "匹配模型暂不可用" }),
+        }),
+      ]),
+    );
   });
 
   it("缺项目范围 → 备料失败，不读取账号整库 B-roll", async () => {
@@ -631,6 +1777,36 @@ describe("runVideoDecisions(编排)", () => {
       expect(seen[id]).toContain("对齐硬约束");
     }
     // 字幕决策(文本校正)不吃 storyboard facet。
+    expect(seen["video.subtitles"]).toBeUndefined();
+  });
+
+  it("[T-703] 本次竖屏选择 → scenes/cards/broll 都收到 9:16 构图约束;字幕不受画幅干预", async () => {
+    const seen: Record<string, string | undefined> = {};
+    const call: StructuredCall = async <T>({
+      skillId,
+      facets,
+    }: {
+      skillId: string;
+      facets: Readonly<Record<string, string | undefined>>;
+    }) => {
+      seen[skillId] = facets.orientation;
+      return HAPPY_OUTPUTS[skillId] as T;
+    };
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
+    deps.callStructured = call;
+    await runVideoDecisions(
+      ctx,
+      {
+        ...TASK,
+        inputData: { ...TASK.inputData, orientation: "portrait" },
+      },
+      deps,
+    );
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    for (const id of ["video.scenes", "video.cards", "video.broll", "material.match"]) {
+      expect(seen[id]).toContain("竖屏 9:16");
+      expect(seen[id]).toContain("中央安全区");
+    }
     expect(seen["video.subtitles"]).toBeUndefined();
   });
 
@@ -773,11 +1949,11 @@ describe("[T-387c] dedupeBrollRefs(聚合去重,先到先得)", () => {
     const out = dedupeBrollRefs([
       { assetId: "a1", label: "脚本点名", kind: "image", description: "", source: "script" },
       { assetId: "a1", label: "弹药同款", kind: "image", description: "", source: "ammo" },
-      { assetId: "a2", label: "论点挂载", kind: "video", description: "", source: "thesis" },
+      { assetId: "a2", label: "项目弹药", kind: "video", description: "", source: "ammo" },
       { assetId: "", label: "坏行", kind: "image", description: "" },
     ]);
     expect(out).toHaveLength(2);
     expect(out[0]).toMatchObject({ assetId: "a1", source: "script" });
-    expect(out[1]).toMatchObject({ assetId: "a2", source: "thesis" });
+    expect(out[1]).toMatchObject({ assetId: "a2", source: "ammo" });
   });
 });

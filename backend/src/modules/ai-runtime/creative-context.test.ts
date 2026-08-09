@@ -102,48 +102,36 @@ function makeDeps(
   };
 }
 
-describe("creative-context F2 — reconstructed 论点树 brief 显式标注", () => {
-  it("origin='reconstructed' → thesisBrief 前缀「未经确认」标注", async () => {
+describe("creative-context T-730 — 只消费 reader 已放行的显式采用论点", () => {
+  it("项目态把 adopted reader 返回的四栏论点装入 thesisBrief", async () => {
+    const deps = makeDeps("user");
     const context = await assembleCreativeContext(
       ctx,
-      { projectId: "proj-imported-1", topic: "" },
-      makeDeps("reconstructed"),
-    );
-    expect(context.thesisBrief).toContain(RECONSTRUCTED_MARK);
-    // 原内容仍在(是「标注 + 内容」,不是「排除」——下游还能读到,但不当已确认)。
-    expect(context.thesisBrief).toContain("核心论点");
-  });
-
-  it("origin='user' → thesisBrief 不带「未经确认」标注(用户已确认前提)", async () => {
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-manual-1", topic: "" },
-      makeDeps("user"),
-    );
-    expect(context.thesisBrief).not.toContain(RECONSTRUCTED_MARK);
-    expect(context.thesisBrief).toContain("核心论点");
-  });
-
-  it("origin=null(legacy)→ thesisBrief 不带标注", async () => {
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-legacy-1", topic: "" },
-      makeDeps(null),
-    );
-    expect(context.thesisBrief).not.toContain(RECONSTRUCTED_MARK);
-  });
-
-  it("未装配 artifactOrigin reader → 降级为不标注(不阻塞节点)", async () => {
-    const deps = makeDeps("reconstructed");
-    delete deps.artifactOrigin;
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: "proj-1", topic: "" },
+      { projectId: "proj-adopted", topic: "当前选题" },
       deps,
     );
-    // 没有 origin reader 就退回 legacy 行为(不标注),但 brief 内容仍在。
-    expect(context.thesisBrief).not.toContain(RECONSTRUCTED_MARK);
-    expect(context.thesisBrief).toContain("核心论点");
+
+    expect(context.thesisBrief).toContain("[core] 核心论点");
+    expect(context.thesisBrief).toContain("[support] 支撑一");
+    expect(context.topic.title).toBe("当前选题");
+  });
+
+  it("无项目上下文不读取论点", async () => {
+    let reads = 0;
+    const deps = makeDeps("user");
+    deps.thesis = {
+      getThesisNodes: async () => {
+        reads += 1;
+        return [{ column: "core", title: "不应读取", summary: "" }];
+      },
+    };
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "账号态选题" },
+      deps,
+    );
+    expect(context.thesisBrief).toBe("");
+    expect(reads).toBe(0);
   });
 });
 

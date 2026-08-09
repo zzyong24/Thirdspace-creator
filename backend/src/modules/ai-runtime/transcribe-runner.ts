@@ -147,6 +147,13 @@ export interface TranscribeRunnerDeps {
    * resolveTranscribeSpec；旧 host 抛 TranscribeConfigError 时仍由 runner 兼容收口。
    */
   resolveTranscribeSpec: (ctx: RequestContext) => Promise<MultimodalSpec>;
+  /** 渠道按次凭据只能在音频完成本地校验后申请。旧 host 可省略；新 host 在这里把
+   * per_request 占位 spec 换成仅本次调用可用的内存 spec。 */
+  prepareTranscribeSpec?: (
+    ctx: RequestContext,
+    spec: MultimodalSpec,
+    input: { audioBytes: Uint8Array; intentId: string },
+  ) => Promise<MultimodalSpec>;
   /** 云端 ASR 转写(spec + 音频 bytes → 文本)。host 绑 ai-worker transcribeAudio;测试注 fake。 */
   transcribeAudio: (
     spec: MultimodalSpec,
@@ -307,8 +314,8 @@ export async function runTranscribe(
 
         // 先解析 ASR，再下载/抽取音频。正常路径会得到云端 spec 或本地 Whisper 回退；
         // 图集不需要 ASR，仍可在上面的分支诚实落锚。
-        const spec = await deps.resolveTranscribeSpec(ctx);
-        resolvedSpec = spec;
+        const baseSpec = await deps.resolveTranscribeSpec(ctx);
+        resolvedSpec = baseSpec;
 
         // [T-243] ffmpeg 失败单次重试:直链可能瞬时失效(CDN 签名过期)→ 重取直链再试一次;
         // 再失败照旧单作品失败继续(抛给外层 catch 分类计数)。
@@ -324,6 +331,13 @@ export async function runTranscribe(
           if (retrySrc.kind === "image-album") throw ffErr; // 重取竟变图集(极罕见)→ 按原错处理
           audioBytes = await deps.streamAudio(ctx, retrySrc.playUrl);
         }
+        const spec = deps.prepareTranscribeSpec
+          ? await deps.prepareTranscribeSpec(ctx, baseSpec, {
+              audioBytes,
+              intentId: `task:${task.id}:aweme:${awemeId}`,
+            })
+          : baseSpec;
+        resolvedSpec = spec;
         const { text } = await deps.transcribeAudio(
           spec,
           { audioBytes, language: deps.language ?? "zh" },

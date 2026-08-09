@@ -69,6 +69,11 @@ export interface ObjectStoragePort {
     mimeType: string;
     assetType: string;
   }): Promise<void>;
+  // Best-effort cleanup for an uploaded object that was found to be an exact
+  // byte-for-byte duplicate of an existing asset during phase 2.  The database
+  // asset is reused; the just-uploaded temporary object must not become an
+  // orphan.  Optional keeps third-party/test adapters source-compatible.
+  deleteObject?(storageKey: string): Promise<void>;
   // Inspect a stored object's metadata (phase-2 validation source).
   headObject(storageKey: string): Promise<HeadObjectResult>;
   // [T-055h asset.classify] SERVER-SIDE read: fetch the stored bytes for a key the
@@ -137,6 +142,10 @@ export function createMockObjectStorage(
     async getObject() {
       // Mock:无真字节(测试里 asset.classify 用 fake registry,不读真图)。
       return new Uint8Array(0);
+    },
+
+    async deleteObject(storageKey) {
+      objects.delete(storageKey);
     },
 
     async headObject(storageKey) {

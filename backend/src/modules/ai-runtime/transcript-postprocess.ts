@@ -91,6 +91,7 @@ export function normalizeForFidelity(text: string): string {
 }
 
 /**
+ * SEMANTIC_BOUNDARY_ALLOW: 仅用于 ASR 重叠片段去重/协议纠错，不参与内容归类、创作选择或素材匹配。
  * 带上限的编辑距离(banded Levenshtein):距离 ≤ maxDist 时返回真实距离,超过即早停返回
  * maxDist+1。只算 |i-j| ≤ maxDist 的带内格子,复杂度 O(n·maxDist) —— 逐字稿可达数千字,
  * 全量 O(n²) DP 会白烧;护栏只关心「是否超阈值」,带状 DP 足够且诚实。

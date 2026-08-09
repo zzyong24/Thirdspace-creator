@@ -160,6 +160,38 @@ describe("production.service — status machine (Step 3)", () => {
     expect(updated.recordingConfig).toEqual({ overlay: true });
     expect(updated.status).toBe("drafting"); // unchanged
   });
+
+  it("原子确认剪辑方案只窄写 videoEditingPlan，并用 revision 拒绝旧页面覆盖", async () => {
+    await service.getProduction(ctx, "output-1");
+    await service.updateProduction(ctx, "output-1", {
+      recordingConfig: { overlay: true, unrelated: { keep: 1 } },
+    });
+    const first = await service.confirmEditingPlan(ctx, "output-1", {
+      expectedRevision: 0,
+      plan: {
+        sourceTaskId: "ai-task-1",
+        confirmedAt: NOW,
+        decisions: { scenes: [{ id: "s1" }] },
+        renderProps: { meta: { title: "成片" } },
+      },
+    });
+    expect(first.recordingConfig).toMatchObject({
+      overlay: true,
+      unrelated: { keep: 1 },
+      videoEditingPlan: { revision: 1, sourceTaskId: "ai-task-1" },
+    });
+    await expect(
+      service.confirmEditingPlan(ctx, "output-1", {
+        expectedRevision: 0,
+        plan: {
+          sourceTaskId: "stale",
+          confirmedAt: NOW,
+          decisions: {},
+          renderProps: {},
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
 });
 
 describe("production.service — export lifecycle (Step 3)", () => {
@@ -230,21 +262,17 @@ describe("production.service — exportMaterials (T-366b)", () => {
   const enc = new TextEncoder();
 
   function makeWiring() {
-    const storeZipAsset = vi.fn(
+    const storeDownloadArtifact = vi.fn(
       async (_c: RequestContext, _input: { name: string; bytes: Uint8Array }) => ({
-        assetId: "asset-zip-1",
+        url: "http://localhost/blob/zip?token=t",
+        fileName: "素材包.zip",
       }),
     );
-    const getDownloadUrl = vi.fn(async () => ({
-      url: "http://localhost/blob/zip?token=t",
-      fileName: "素材包.zip",
-    }));
     const wiring = {
       resolveProjectIdByOutput: vi.fn(async (_c: RequestContext, outputId: string) =>
         outputId === "output-1" ? "proj-of-output-1" : null,
       ),
-      storeZipAsset,
-      getDownloadUrl,
+      storeDownloadArtifact,
       ports: {
         listMaterialAssets: vi.fn(async () => [
           { assetId: "a-clip", role: "clip" },
@@ -256,7 +284,7 @@ describe("production.service — exportMaterials (T-366b)", () => {
         getProjectTitle: vi.fn(async () => "宿主项目"),
       },
     };
-    return { wiring, storeZipAsset, getDownloadUrl };
+    return { wiring, storeDownloadArtifact };
   }
 
   function makeServiceWithWiring(wiring: unknown): ProductionService {
@@ -269,19 +297,30 @@ describe("production.service — exportMaterials (T-366b)", () => {
     });
   }
 
-  it("聚合 → zip 落 asset → 签名下载 URL,DTO 带诚实的 hasDecisions=false", async () => {
-    const { wiring, storeZipAsset } = makeWiring();
+  it("聚合 → zip 只落一次性对象 → 签名下载 URL，不创建普通素材", async () => {
+    const { wiring, storeDownloadArtifact } = makeWiring();
     const svc = makeServiceWithWiring(wiring);
     const prod = await svc.getProduction(ctx, "output-1");
     const res = await svc.exportMaterials(ctx, prod.id);
-    expect(res.assetId).toBe("asset-zip-1");
+    expect(res.assetId).toBeNull();
     expect(res.downloadUrl).toContain("token=t");
     expect(res.hasDecisions).toBe(false); // 没跑四决策 → 诚实 false
     // 素材 + 口播稿 + readme + manifest = 4 个文件。
     expect(res.fileCount).toBe(4);
-    const stored = storeZipAsset.mock.calls[0]![1];
+    const stored = storeDownloadArtifact.mock.calls[0]![1];
     expect(stored.name).toMatch(/^素材包-宿主项目-\d{8}\.zip$/);
     expect(stored.bytes.length).toBe(res.totalBytes);
+  });
+
+  it("连续导出两次都返回一次性下载，不产生可回流的 assetId", async () => {
+    const { wiring, storeDownloadArtifact } = makeWiring();
+    const svc = makeServiceWithWiring(wiring);
+    const prod = await svc.getProduction(ctx, "output-1");
+    const first = await svc.exportMaterials(ctx, prod.id);
+    const second = await svc.exportMaterials(ctx, prod.id);
+    expect(first.assetId).toBeNull();
+    expect(second.assetId).toBeNull();
+    expect(storeDownloadArtifact).toHaveBeenCalledTimes(2);
   });
 
   it("未接线 materialExport → UnsupportedOperationError(诚实拒,不静默空包)", async () => {
