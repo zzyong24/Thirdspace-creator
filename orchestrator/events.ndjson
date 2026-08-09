@@ -645,3 +645,4 @@
 {"ts":"2026-08-09T10:05:04.662Z","actor":"taskctl","action":"start","task":"T-736","sha_before":"f151e63f39c9","sha_after":"ab0ffadb942d"}
 {"ts":"2026-08-09T11:13:20.907Z","actor":"taskctl","action":"start","task":"T-737","sha_before":"6f86c56959ac","sha_after":"7ca1b43a011c"}
 {"ts":"2026-08-09T11:32:55.212Z","actor":"taskctl","action":"start","task":"T-738","sha_before":"f35b25249bb4","sha_after":"e5c6bec93f69"}
+{"ts":"2026-08-09T12:04:24.277Z","actor":"taskctl","action":"complete","task":"T-738","evidence":"commit 42ce38aa；GitHub Windows production closure RAT 31311906557 success：runtime 3102 of 3500，core 1078 of 1500，next-main-page 70061 bytes，stdin shutdown sentinel，node_modules 0；本地 closure 9 of 9、release 39 of 39、typecheck、boundary、orphan、diff/secret scan 通过；全局 reconcile 仅保留既有 T-731 两项漂移。","sha_before":"d5a2ff70d840","sha_after":"c3d18e64ef69"}
