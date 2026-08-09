@@ -25,6 +25,12 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
     expect(screen.queryByRole("button", { name: /立论点/ })).not.toBeInTheDocument();
   });
 
+  it("[T-726] 退役入口不以链接或第三个按钮残留", () => {
+    render(<CreationFlowCtas projectId="project-x" />);
+    expect(screen.getAllByRole("button")).toHaveLength(2);
+    expect(screen.queryByRole("link", { name: /立论点/ })).not.toBeInTheDocument();
+  });
+
   it("[T-146] 上传按钮在最前面(第一个 CTA 按钮)", () => {
     const { container } = render(<CreationFlowCtas projectId="project-x" />);
     const buttons = container.querySelectorAll("button");

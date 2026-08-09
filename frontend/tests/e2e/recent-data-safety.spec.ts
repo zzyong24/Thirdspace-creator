@@ -75,7 +75,7 @@ function writeVisibleCopy(
   );
 }
 
-test("已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文", async ({
+test("已有定位进入 Copilot 前采时，正式母版、历史和旧会话始终可见", async ({
   page,
   baseURL,
 }) => {
@@ -125,7 +125,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
   const checkIds = [
     "AC-POSITIONING-MASTER",
     "AC-POSITIONING-DRAFT",
-    "AC-POSITIONING-SEARCH-LOCALE",
+    "AC-POSITIONING-COPILOT-ENTRY",
   ];
 
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -136,19 +136,15 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
     "帮湖南餐饮老板把门店经验变成可信、可执行的内容",
   );
   await expect(center).toContainText("版本历史");
-  await expect(page.getByTestId("positioning-discovery-workflow")).toBeVisible();
-  await expect(page.getByLabel("搜索地区")).toHaveValue("cn");
-  await expect(page.getByLabel("搜索语言")).toHaveValue("zh-CN");
-  await expect(center).toContainText("二次搜索会替换上一批未采用结果");
-  const researchInput = page.getByPlaceholder("例如：杭州家装 IP 用户高频痛点");
-  await researchInput.fill("湖南餐饮行业 IP");
-  await page.getByRole("button", { name: "联网补充" }).click();
-  const researchCandidates = center.getByRole("button", { name: "采用" });
-  await expect(researchCandidates.first()).toBeVisible({ timeout: 45_000 });
-  await expect(center.locator('aside a[target="_blank"]').first()).toHaveAttribute(
-    "href",
-    /^https?:\/\//,
-  );
+  const copilotEntry = page.getByTestId("positioning-copilot-entry");
+  await expect(copilotEntry).toBeVisible();
+  await expect(copilotEntry).toContainText("用 Copilot 把定位聊清楚");
+  await expect(copilotEntry).toContainText("已恢复 0 条旧前采信息 · 重新定位");
+  await expect(copilotEntry).toContainText("未采纳前不改当前母版");
+  const copilotLink = page.getByTestId("positioning-open-copilot");
+  await expect(copilotLink).toHaveAttribute("href", /copilot=open/);
+  await expect(copilotLink).toHaveAttribute("href", /fn=positioning\.generate/);
+  await expect(copilotLink).toHaveAttribute("href", /scope=surface%3Apositioning/);
   await expect(center).toContainText("帮湖南餐饮老板把门店经验变成可信、可执行的内容");
   captures.push({
     checkpoint: "official-master-with-scratch-discovery",
@@ -159,7 +155,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
 
   await page.setViewportSize({ width: 1024, height: 720 });
   await expect(center).toContainText("当前定位母版");
-  await expect(page.getByTestId("positioning-discovery-workflow")).toBeVisible();
+  await expect(copilotEntry).toBeVisible();
   captures.push({
     checkpoint: "official-master-with-scratch-minimum-window",
     check_ids: checkIds,
@@ -169,14 +165,6 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，�
 
   writeVisibleCopy("T-657", captures);
   writeVisibleCopy("T-666", captures);
-  writeVisibleCopy("T-686", captures.map((capture) => ({
-    ...capture,
-    check_ids: [
-      "AC-POSITIONING-SEARCH-REAL",
-      "AC-POSITIONING-SEARCH-LOCALE",
-      "AC-POSITIONING-SEARCH-DRAFT-SAFE",
-    ],
-  })));
 });
 
 test("信源确认删除后从工作台消失，并展示真实级联清理结果", async ({

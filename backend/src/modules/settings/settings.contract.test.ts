@@ -300,6 +300,20 @@ describe("settings.transport (contract conformance)", () => {
         body: undefined,
       }),
     ).rejects.toBeInstanceOf(OwnershipError);
+    await expect(
+      client.getPrompt({
+        params: { id: "planning.thesis" },
+        query: undefined,
+        body: undefined,
+      }),
+    ).rejects.toMatchObject({ name: "OwnershipError" });
+    await expect(
+      client.getPrompt({
+        params: { id: "planning.thesis" },
+        query: undefined,
+        body: undefined,
+      }),
+    ).rejects.not.toBeInstanceOf(UnsupportedOperationError);
   });
 
   it("unknown op id → UnsupportedOperationError", async () => {

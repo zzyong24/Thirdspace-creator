@@ -24,14 +24,24 @@ import type {
   PresignedUpload,
 } from "./object-storage";
 import { accountKeyPrefix } from "./object-storage";
-import { safeJoin, signBlobToken } from "./blob-security";
+import {
+  blobStorageRootId,
+  signBlobToken,
+  safeJoin,
+  type BlobTrustRoot,
+} from "./blob-security";
 import { extForMime } from "../../lib/mime-ext";
+import { buildChildEnv } from "../execution";
 
 export interface LocalFsObjectStorageConfig {
   // The resolved absolute media root (the service resolves `~`/default first).
   rootPath: string;
   // The public base path the blob route serves, e.g. "/api/v1/blob" (relative).
   publicBaseUrl: string;
+  // Token 必须绑定签发用户；route 校验时从真实 session ctx 重新取得同一 userId。
+  userId: string;
+  // 测试显式注入；生产省略并使用 instrumentation 从 Rust fd 安装的启动级信任根。
+  trustRoot?: Readonly<BlobTrustRoot>;
   // Presigned URL TTL in ms (default 15 min).
   expiresInMs?: number;
 }
@@ -62,6 +72,12 @@ interface ProbedMedia {
 }
 const EMPTY_PROBE: ProbedMedia = { durationMs: null, width: null, height: null };
 
+export function localFsProbeEnv(
+  source: Record<string, string | undefined> = process.env,
+): NodeJS.ProcessEnv {
+  return buildChildEnv({}, source);
+}
+
 async function locateFfprobe(): Promise<string | null> {
   try {
     return resolveFfprobePath();
@@ -82,7 +98,12 @@ function probeMedia(ffprobe: string, absKey: string): Promise<ProbedMedia> {
       ffprobe,
       ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", absKey],
       // [T-372 W5] windowsHide 同上(ffprobe 黑窗抑制;mac/Linux 无操作)。
-      { maxBuffer: 8 * 1024 * 1024, timeout: 15000, windowsHide: true },
+      {
+        maxBuffer: 8 * 1024 * 1024,
+        timeout: 15000,
+        windowsHide: true,
+        env: localFsProbeEnv(),
+      },
       (err, stdout) => {
         if (err) return resolve(EMPTY_PROBE);
         try {
@@ -113,12 +134,21 @@ function blobUrl(
   storageKey: string,
   method: "PUT" | "GET",
   exp: number,
+  userId: string,
+  storageRootId: string,
+  trustRoot?: Readonly<BlobTrustRoot>,
 ): string {
   const encoded = storageKey
     .split("/")
     .map((seg) => encodeURIComponent(seg))
     .join("/");
-  const token = signBlobToken(method, storageKey, exp);
+  const token = signBlobToken(
+    method,
+    storageKey,
+    exp,
+    { userId, storageRootId },
+    trustRoot,
+  );
   return `${publicBaseUrl}/${encoded}?exp=${exp}&token=${token}`;
 }
 
@@ -128,6 +158,7 @@ export function createLocalFsObjectStorage(
 ): ObjectStoragePort {
   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
   const now = deps.now ?? (() => Date.now());
+  const storageRootId = blobStorageRootId(cfg.rootPath);
 
   function sidecarPath(absKey: string): string {
     return `${absKey}.meta.json`;
@@ -177,7 +208,15 @@ export function createLocalFsObjectStorage(
       const exp = now() + expiresInMs;
       return {
         storageKey,
-        uploadUrl: blobUrl(cfg.publicBaseUrl, storageKey, "PUT", exp),
+        uploadUrl: blobUrl(
+          cfg.publicBaseUrl,
+          storageKey,
+          "PUT",
+          exp,
+          cfg.userId,
+          storageRootId,
+          cfg.trustRoot,
+        ),
       } satisfies PresignedUpload;
     },
 
@@ -273,7 +312,15 @@ export function createLocalFsObjectStorage(
 
     async getSignedUrl(storageKey) {
       const exp = now() + expiresInMs;
-      return blobUrl(cfg.publicBaseUrl, storageKey, "GET", exp);
+      return blobUrl(
+        cfg.publicBaseUrl,
+        storageKey,
+        "GET",
+        exp,
+        cfg.userId,
+        storageRootId,
+        cfg.trustRoot,
+      );
     },
   };
 }

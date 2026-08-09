@@ -504,7 +504,7 @@ describe("SettingsPage", () => {
     expect(main).not.toBeNull();
   });
 
-  // [T-167] 激活状态卡(账户页签)。desktop 有激活态 → 四态徽章 + 授权类型/到期/机器码;
+  // [T-167] 激活状态卡(账户页签)。desktop 有激活态 → 四态徽章 + 授权类型/到期/支持编号;
   // web/未装配(activation undefined)→ 诚实空态「激活为桌面端功能」,绝不假装已激活。
   describe("ActivationStatusCard (T-167)", () => {
     it("web / 未装配(activation undefined)→ 诚实空态卡「桌面端专属」", async () => {
@@ -520,11 +520,11 @@ describe("SettingsPage", () => {
       expect(card!.textContent).toContain("激活为桌面端功能");
     });
 
-    it("已激活(active)→ 绿徽章 + 授权类型/到期/机器码/最后在线校验", async () => {
+    it("已激活(active)→ 绿徽章 + 授权类型/到期/支持编号/最后在线校验", async () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "MACHINE-abcdef0123456789-XYZ",
+          supportRef: "SUP-a1b2c3d4e5f6g7h8",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -539,7 +539,7 @@ describe("SettingsPage", () => {
       );
       expect(badge?.getAttribute("data-status")).toBe("active");
       expect(badge?.textContent).toContain("已激活");
-      // 授权类型:TIME → 时间型;到期显日期;机器码截断 + 完整码在 title。
+      // 授权类型:TIME → 时间型;到期显日期;客户端只收到不可逆支持编号。
       expect(
         document.querySelector('[data-slot="activation-license-mode"]')
           ?.textContent,
@@ -548,10 +548,11 @@ describe("SettingsPage", () => {
         document.querySelector('[data-slot="activation-expires-at"]')
           ?.textContent,
       ).toBe("2027-12-31");
-      const machine = document.querySelector(
-        '[data-slot="activation-machine-id"]',
+      const supportRef = document.querySelector(
+        '[data-slot="activation-support-ref"]',
       );
-      expect(machine?.getAttribute("title")).toBe("MACHINE-abcdef0123456789-XYZ");
+      expect(supportRef?.textContent).toBe("SUP-a1b2c3d4e5f6g7h8");
+      expect(supportRef?.hasAttribute("title")).toBe(false);
       // [T-372 L3] 上次在线确认:绝对日期 + 挂载后补相对天数(「X 天前」)。
       expect(
         document.querySelector('[data-slot="activation-last-check"]')
@@ -569,7 +570,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "M-ch",
+          supportRef: "SUP-channel0000001",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -599,7 +600,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "M-ch",
+          supportRef: "SUP-channel0000001",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -625,7 +626,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "M-perm",
+          supportRef: "SUP-permanent00001",
           licenseMode: "PERMANENT",
           expiresAt: null,
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -646,7 +647,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "grace",
-          machineId: "M-grace",
+          supportRef: "SUP-grace00000001",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -668,7 +669,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "expired",
-          machineId: "M-exp",
+          supportRef: "SUP-expired0000001",
           licenseMode: "TIME",
           expiresAt: "2026-01-01T00:00:00.000Z",
           activatedAt: "2025-07-06T00:00:00.000Z",
@@ -687,7 +688,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "M-l3",
+          supportRef: "SUP-l3active000001",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -706,7 +707,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "M-l3",
+          supportRef: "SUP-l3active000001",
           licenseMode: "TIME",
           expiresAt: null,
           activatedAt: null,
@@ -725,7 +726,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "grace",
-          machineId: "M-grace",
+          supportRef: "SUP-grace00000001",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",
@@ -747,7 +748,7 @@ describe("SettingsPage", () => {
       await renderSettings({
         activation: {
           status: "active",
-          machineId: "M-l3",
+          supportRef: "SUP-l3active000001",
           licenseMode: "TIME",
           expiresAt: "2027-12-31T00:00:00.000Z",
           activatedAt: "2026-07-06T00:00:00.000Z",

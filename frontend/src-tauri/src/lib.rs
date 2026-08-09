@@ -7,6 +7,9 @@
 //!
 //! 除 LLM API 外全本地:WebView ──HTTP──► sidecar 进程内库调 backend/ai-worker ──► PGlite 落盘。
 
+#[cfg(test)]
+use std::ffi::OsStr;
+use std::ffi::OsString;
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -37,6 +40,79 @@ use secrecy::{ExposeSecret, SecretString};
 use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 use zeroize::Zeroize as _;
+
+const SYSTEM_COMMAND_ENV_ALLOWLIST: &[&str] = &[
+    "HOME",
+    "USERPROFILE",
+    "USER",
+    "LOGNAME",
+    "TMPDIR",
+    "TMP",
+    "TEMP",
+    "SYSTEMROOT",
+    "WINDIR",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "TZ",
+];
+
+const SIDECAR_ENV_ALLOWLIST: &[&str] = &[
+    "PATH",
+    "HOME",
+    "USERPROFILE",
+    "USER",
+    "LOGNAME",
+    "TMPDIR",
+    "TMP",
+    "TEMP",
+    "SYSTEMROOT",
+    "WINDIR",
+    "COMSPEC",
+    "PATHEXT",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "PROGRAMDATA",
+    "XDG_CONFIG_HOME",
+    "XDG_CACHE_HOME",
+    "XDG_DATA_HOME",
+    "DISPLAY",
+    "WAYLAND_DISPLAY",
+    "XAUTHORITY",
+    "DBUS_SESSION_BUS_ADDRESS",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "TZ",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "NODE_EXTRA_CA_CERTS",
+];
+
+fn filter_child_env<I>(source: I, allowlist: &[&str]) -> Vec<(OsString, OsString)>
+where
+    I: IntoIterator<Item = (OsString, OsString)>,
+{
+    source
+        .into_iter()
+        .filter(|(key, _)| {
+            let Some(key) = key.to_str() else {
+                return false;
+            };
+            allowlist
+                .iter()
+                .any(|allowed| key.eq_ignore_ascii_case(allowed))
+        })
+        .collect()
+}
+
+fn allowlisted_system_command_env() -> Vec<(OsString, OsString)> {
+    filter_child_env(std::env::vars_os(), SYSTEM_COMMAND_ENV_ALLOWLIST)
+}
+
+fn allowlisted_sidecar_env() -> Vec<(OsString, OsString)> {
+    filter_child_env(std::env::vars_os(), SIDECAR_ENV_ALLOWLIST)
+}
 // [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
 //   macOS 走 std::process 直接 spawn server.app(Dock 隐身),不引这些,故按平台条件 import,免 macOS
 //   下 unused import / dead_code warning。
@@ -68,6 +144,24 @@ fn packaged_text(runtime_name: &str, built_in: &str) -> String {
     } else {
         built_in.trim().to_string()
     }
+}
+
+/// 每次壳启动生成独立 blob HMAC secret + bootId。值只经 sidecar 继承 stdin(fd 0)
+/// 传递，不进入 argv/env/log/file；bootId 使上一次启动签发的 URL 在重启后必然失效。
+fn generate_blob_trust_fd_line() -> String {
+    use rand::RngCore as _;
+    let mut secret = [0u8; 32];
+    let mut boot_id = [0u8; 16];
+    rand::rngs::OsRng.fill_bytes(&mut secret);
+    rand::rngs::OsRng.fill_bytes(&mut boot_id);
+    let line = format!(
+        "BLOBV2:{}:{}\n",
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(secret),
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(boot_id)
+    );
+    secret.zeroize();
+    boot_id.zeroize();
+    line
 }
 #[cfg(not(target_os = "macos"))]
 use tauri_plugin_shell::ShellExt;
@@ -134,8 +228,15 @@ fn runtime_system_info() -> RuntimeSystemInfo {
     }
 }
 
-/// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
-/// 不可少(否则每启动重生成 key → 激活码/model key 全解不开、每次重激活),但**不许明文落盘**。
+/// Remote WebView 只获得这个无参数、无路径、无命令字符串的窄重启入口；不暴露
+/// plugin-process 的整组 capability。
+#[tauri::command]
+fn relaunch_app(app: AppHandle) {
+    app.restart();
+}
+
+/// 旧版 `.master-key` 的只读迁移解码器。T-731 后正式桌面不再创建、重写或长期读取该文件；
+/// 数据库长期凭据迁入系统 Keychain 并留下完成标记后，下一次启动删除旧文件。
 ///
 /// 无 AEAD crate 可用(本任务 Cargo 只许加 secrecy/zeroize),故用**机器绑定的 SHA-256-CTR keystream
 /// XOR** 做混淆:keystream = SHA256(SALT ‖ machine_seed ‖ nonce ‖ counter_le) 逐块拼接。
@@ -168,8 +269,8 @@ fn master_key_keystream_xor(data: &mut [u8], machine_seed: &str, nonce: &[u8; 16
     }
 }
 
-/// 混淆 `.master-key` 内容:`v2:` + base64( nonce[16] ‖ (plaintext_b64_bytes XOR keystream) )。
-/// nonce 由调用方传入(真调用随机;测试可固定 → 断言往返)。
+/// 仅供旧文件迁移兼容测试生成夹具；正式桌面不再写 `.master-key`。
+#[cfg(test)]
 fn obfuscate_master_key_file(plaintext_b64: &str, machine_seed: &str, nonce: &[u8; 16]) -> String {
     let mut body = plaintext_b64.as_bytes().to_vec();
     master_key_keystream_xor(&mut body, machine_seed, nonce);
@@ -210,14 +311,21 @@ fn deobfuscate_master_key_file(stored: &str, machine_seed: &str) -> Option<Strin
     Some(out.trim().to_string())
 }
 
-/// 取/建 32B master key,`SecretString`(base64)返回,供**经 ChildStdin 注入** sidecar
-/// (T-391 H-key:不再走 env `CREATOROS_MASTER_KEY` 明文)。
-///
-/// 首启:keychain 无条目 → 随机生成 32 字节 → 存 keychain(best-effort)+ **混淆**文件兜底 → 返回。
-/// 后续:keychain 有条目 → 取出返回;否则读**混淆**文件兜底(校验解出 32 字节;损坏则重建)。
-///
-/// keychain 不可用(极端:无 Secret Service 的 headless Linux / 权限被拒)→ 返回 None,
-/// sidecar 侧 resolveMasterKey 会走**开发降级**(web 路径不崩,安全性弱,已在总纲认知)。
+const CREDENTIAL_KEYRING_READY_MARKER: &str = ".credential-keyring-v1-ready";
+
+fn retire_legacy_master_key_if_ready(app_data_dir: &std::path::Path) {
+    let key_file = app_data_dir.join(".master-key");
+    let ready_marker = app_data_dir.join(CREDENTIAL_KEYRING_READY_MARKER);
+    if ready_marker.is_file() && key_file.exists() {
+        if let Err(error) = std::fs::remove_file(&key_file) {
+            eprintln!("[shell] 旧 master key 文件删除失败，拒绝再读取: {error}");
+        }
+    }
+}
+
+/// T-731：正式桌面 master key 也只允许系统 Keychain / Credential Manager。
+/// 旧 `.master-key` 仅在迁移完成标记尚不存在时读取一次，用于把历史数据库密文迁入
+/// Keychain；写入后必须立即读回一致。标记存在后删除旧文件并永久禁止文件回退。
 fn resolve_or_create_master_key(app_data_dir: &std::path::Path) -> Option<SecretString> {
     let valid = |s: &str| {
         base64::engine::general_purpose::STANDARD
@@ -226,12 +334,11 @@ fn resolve_or_create_master_key(app_data_dir: &std::path::Path) -> Option<Secret
             .unwrap_or(false)
     };
     let key_file = app_data_dir.join(".master-key");
-    // 文件兜底的混淆密钥绑定本机平台标识(硬件稳定 → 同机重装/清 appDataDir 仍可解;换机不可解但
-    // 换机本就是新环境)。取不到(headless)→ 空串兜底(退化为固定 salt,弱但仍非明文)。
-    let machine_seed = machine_uid::get().unwrap_or_default();
+    let ready_marker = app_data_dir.join(CREDENTIAL_KEYRING_READY_MARKER);
 
-    // ① keychain 读(签名 app 上稳定 + 安全)。未签名 app 上 keychain 常不持久(macOS 把访问绑签名
-    //    身份,rebuild/未签名每次身份变 → set_password 不真持久),故失败不致命,下面走文件兜底。
+    retire_legacy_master_key_if_ready(app_data_dir);
+
+    // ① 只信任原生系统凭据库。
     if let Ok(entry) = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
         if let Ok(existing) = entry.get_password() {
             if valid(&existing) {
@@ -240,66 +347,50 @@ fn resolve_or_create_master_key(app_data_dir: &std::path::Path) -> Option<Secret
         }
     }
 
-    // ② 文件兜底读(<appDataDir>/.master-key,混淆存储)。未签名下 keychain 读不回时靠这个**稳定**
-    //    (否则每次启动重生成 key → 激活码/model key 全解不开、每次都要重激活,不可用)。
+    // 已迁移过却读不到 Keychain：失败关闭，禁止重建导致历史数据被静默判失效。
+    if ready_marker.is_file() {
+        eprintln!("[shell] 系统钥匙串不可用，已停止长期凭据能力");
+        return None;
+    }
+
+    // ② 兼容窗口：只为升级导入一次旧文件；导入失败保留唯一副本，绝不删除。
     if let Ok(raw_file) = std::fs::read_to_string(&key_file) {
+        let machine_seed = machine_uid::get().unwrap_or_default();
         if let Some(existing) = deobfuscate_master_key_file(&raw_file, &machine_seed) {
             if valid(&existing) {
                 let existing = existing.trim().to_string();
-                // 存量明文(无 v2: 前缀)读到 → 立即用混淆格式重写,自动升级(下次不再明文落盘)。
-                if !raw_file.trim().starts_with("v2:") {
-                    write_master_key_file(&key_file, &existing, &machine_seed);
-                }
-                // best-effort 回填 keychain(签名后即生效,自动升级回强安全路径)。
                 if let Ok(entry) = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
-                    let _ = entry.set_password(&existing);
+                    if entry.set_password(&existing).is_ok()
+                        && entry
+                            .get_password()
+                            .map(|read_back| read_back == existing)
+                            .unwrap_or(false)
+                    {
+                        return Some(SecretString::new(existing));
+                    }
                 }
-                return Some(SecretString::new(existing));
+                eprintln!("[shell] 旧 master key 导入系统钥匙串失败，保留旧文件并停止迁移");
+                return None;
             }
         }
+        eprintln!("[shell] 旧 master key 文件无法恢复，保留原文件并停止迁移");
+        return None;
     }
 
-    // ③ 都没有 → 生成随机 32B,双写:keychain(best-effort)+ **混淆**文件(chmod 600,稳定兜底)。
+    // ③ 干净安装：随机生成，只写 Keychain，写后读回不一致即失败关闭。
     use rand::RngCore as _;
     let mut raw = [0u8; 32];
     rand::rngs::OsRng.fill_bytes(&mut raw);
     let b64 = base64::engine::general_purpose::STANDARD.encode(raw);
     raw.zeroize(); // 原始 32B 抹除,不残留栈上。
-    if let Ok(entry) = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
-        let _ = entry.set_password(&b64);
-    }
-    if !write_master_key_file(&key_file, &b64, &machine_seed) {
-        // 连文件都写不了 → 降级(sidecar 用固定 dev key,弱安全但不崩)。
-        eprintln!("[shell] 写 master key 文件失败(降级 dev key)");
+    let entry = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME).ok()?;
+    entry.set_password(&b64).ok()?;
+    let read_back = entry.get_password().ok()?;
+    if read_back != b64 {
+        eprintln!("[shell] 系统钥匙串写入后读回不一致，已停止长期凭据能力");
         return None;
     }
-    // 安全说明:文件兜底把 master key **混淆**存 appDataDir(机器绑定 SHA-256-CTR)—— 强度弱于
-    //   keychain(读盘+知派生+同机可解),但**未签名 app keychain 不持久**下这是唯一可用方案
-    //   (签名后 ① 自动走 keychain)。较旧版明文落盘已灭静态靶点(见 obfuscate_master_key_file 注释)。
-    eprintln!("[shell] 生成 master key(keychain best-effort + 混淆文件兜底 .master-key)");
     Some(SecretString::new(b64))
-}
-
-/// 把 master key(明文 base64)以**混淆格式**写入 `.master-key`(chmod 600)。成功返回 true。
-fn write_master_key_file(
-    key_file: &std::path::Path,
-    plaintext_b64: &str,
-    machine_seed: &str,
-) -> bool {
-    use rand::RngCore as _;
-    let mut nonce = [0u8; 16];
-    rand::rngs::OsRng.fill_bytes(&mut nonce);
-    let obfuscated = obfuscate_master_key_file(plaintext_b64, machine_seed, &nonce);
-    if let Err(e) = std::fs::write(key_file, &obfuscated) {
-        eprintln!("[shell] 写 .master-key 失败 {}: {e}", key_file.display());
-        return false;
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt as _;
-        let _ = std::fs::set_permissions(key_file, std::fs::Permissions::from_mode(0o600));
-    }
-    true
 }
 
 /// [T-391 H-mac] 期望的签名 Team ID(证书采购后填)。为 `None` 时(内测不签名期)自校验只**如实
@@ -365,6 +456,8 @@ fn verify_self_code_signature() -> SelfSignature {
     };
     // --verify --strict:签名完整性 + 严格校验。退出码 0 = 通过。
     let verify_ok = std::process::Command::new("/usr/bin/codesign")
+        .env_clear()
+        .envs(allowlisted_system_command_env())
         .arg("--verify")
         .arg("--strict")
         .arg(&exe)
@@ -373,6 +466,8 @@ fn verify_self_code_signature() -> SelfSignature {
         .unwrap_or(false);
     // -dv --verbose=4:输出签名信息(TeamIdentifier/Authority 在 stderr)。
     let dv = std::process::Command::new("/usr/bin/codesign")
+        .env_clear()
+        .envs(allowlisted_system_command_env())
         .arg("-dv")
         .arg("--verbose=4")
         .arg(&exe)
@@ -648,6 +743,8 @@ fn wait_until_ready(
 // 最终只剩纯白窗口。静态文档在 Rust 慢启动/sidecar 失败前就有真实 DOM，不再依赖该竞态。
 #[cfg(test)]
 const SPLASH_HTML: &str = include_str!("../placeholder-dist/index.html");
+#[cfg(test)]
+const SPLASH_JS: &str = include_str!("../placeholder-dist/splash.js");
 
 fn json_for_eval(value: &str) -> String {
     serde_json::to_string(value)
@@ -1690,7 +1787,8 @@ pub fn run() {
             license::license_latest_version,
             // [T-568] 反馈诊断必须来自原生层，禁止 navigator.platform 把 Apple Silicon
             // 兼容性标识 `MacIntel` 当作实体芯片。
-            runtime_system_info
+            runtime_system_info,
+            relaunch_app
         ])
         .manage(SidecarHandle::default())
         .setup(|app| {
@@ -1701,12 +1799,29 @@ pub fn run() {
             //   cargo 加载 dylib …)。此前实现:先跑完 resolve_sidecar_dir(含解压)才建窗 →
             //   首启用户"看着像死机"(2026-07-21 真机反馈)。
             //   handshake_token 也提前生成 —— 注入 initialization_script,后续每次 navigate
-            //   都会重跑该脚本,token 常驻 window 全局。
+            //   都会重跑该脚本；token 只留在闭包，不挂 window/globalThis。
             // [T-562] 启动页使用随包静态 index.html。Windows WebView2 不再靠 about:blank
             // initialization_script 动态造 DOM，避免脚本竞态留下永久白窗。
             let handshake_token = license::gen_handshake_token();
-            let init_script =
-                format!("window.__CREATOROS_HANDSHAKE_TOKEN__={:?};", handshake_token);
+            let mut blob_trust_fd_line = generate_blob_trust_fd_line();
+            let init_script = format!(
+                r#"(function(token){{
+                  const header='x-creatoros-handshake';
+                  const origin=window.location.origin;
+                  const original=window.fetch.bind(window);
+                  const sameOrigin=(value)=>{{try{{return new URL(value,origin).origin===origin;}}catch{{return false;}}}};
+                  const headers=new Headers();headers.set(header,token);
+                  const ready=original('/api/v1/local/handshake-session',{{method:'POST',headers}})
+                    .then((response)=>{{if(!response.ok)throw new Error('loopback handshake rejected');}})
+                    .finally(()=>{{token='';}});
+                  window.fetch=async function(input,init){{
+                    const value=typeof input==='string'?input:(input instanceof URL?input.href:(input&&input.url)||'');
+                    if(sameOrigin(value))await ready;
+                    return original(input,init);
+                  }};
+                }})({:?});"#,
+                handshake_token
+            );
             let main_window_builder = WebviewWindowBuilder::new(
                 &handle,
                 "main",
@@ -1881,12 +1996,8 @@ pub fn run() {
             // sidecar/lib/;注入 DYLD_LIBRARY_PATH(mac)/ LD_LIBRARY_PATH(linux)指向它。
             let lib_dir = sidecar_dir.join("lib").to_string_lossy().to_string();
 
-            // T-147 P2 / [T-391 H-key] —— master key(base64 32B)做 model key / 激活码的 AES-256-GCM
-            //   加解密。keychain 优先(签名 app 稳定+安全),**混淆文件兜底**(未签名下 keychain 不持久
-            //   → <appDataDir>/.master-key,机器绑定混淆,稳定;避免每次启动重生成 key 致数据解不开)。
-            //   传递方式:**不再走 env 明文**,改经 ChildStdin(fd 0)传给 sidecar(见下方 spawn 后 write);
-            //   env 里只放非机密的 `CREATOROS_MASTER_KEY_FD=0`。取不到(连文件都写不了)→ 不传,sidecar 降级。
-            //   (app_data_dir 已在上方 [T-332] 归档步骤前算出,此处直接复用。)
+            // T-731：旧 master key 仅供非长期凭据兼容和一次迁移，经 ChildStdin(fd 0)传递；
+            // 正式桌面不再注入文件路径/MACHINE_SEED，也不允许 sidecar 文件回退。
 
             // [T-259] 桌面日志系统:初始化落盘日志(建 logs/ + 轮转上次会话 + 开新 sidecar.log)。
             //   sidecar 的 stdout/stderr 每行既 eprintln 给 app stderr(dev/终端可见),也 tee 到
@@ -1951,17 +2062,6 @@ pub fn run() {
                 .join(".license")
                 .to_string_lossy()
                 .to_string();
-            //   的单点:fd 竞态/挂起失败时 sidecar 会退随机 dev key,导致授权/模型密钥/登录态/激活码
-            //   **一起解不开**(静默失效)。给 sidecar 注入 `.master-key` 路径 + 反混淆种子,让它在
-            //   fd/env 都拿不到时自反混淆同一份 `.master-key` 拿真 key(算法与本壳
-            //   `deobfuscate_master_key_file` 同,见 backend secret-crypto.ts resolveMasterKey ②.5)。
-            //   `machine_uid` 是硬件 UUID(`ioreg` 本机任何进程可得,**非机密**),与
-            //   `resolve_or_create_master_key` 用的 machine_seed 同源;文件本身仍是机器绑定混淆存储。
-            let master_key_file_str = app_data_dir
-                .join(".master-key")
-                .to_string_lossy()
-                .to_string();
-            let master_key_seed = machine_uid::get().unwrap_or_default();
             // [gate-F2 / T-635] 强验签开关透传。**默认 "1" 强验签**(2026-07-18 翻回):翻回条件已达成
             //   —— L1s 服务端签名私钥已部署上线(license.aitongban.cloud)+ 用户真码 Ed25519
             //   深验通过。此前内测过渡期默认 "0"(L1s 未上线时 strict 全拒 → /activate 无限
@@ -2124,7 +2224,9 @@ pub fn run() {
                     .join("creatoros-server");
 
                 let mut cmd = std::process::Command::new(&inner_bin);
-                cmd.current_dir(&sidecar_frontend_dir);
+                cmd.env_clear()
+                    .envs(allowlisted_sidecar_env())
+                    .current_dir(&sidecar_frontend_dir);
                 // [T-365] 新进程组(组长=sidecar 自身 pid):退出时 killpg 整组带走 node +
                 //   Playwright Chrome + ffmpeg 全家;sidecar 侧孤儿自杀也按组清子进程。
                 #[cfg(target_os = "macos")]
@@ -2164,6 +2266,7 @@ pub fn run() {
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(见上方注释)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
+                    .env("CREATOROS_BLOB_SECRET_FD", "0")
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
                     .env("CREATOROS_PRODUCT_MANIFEST_JSON", product_manifest_json)
@@ -2224,9 +2327,6 @@ pub fn run() {
                 if let Some(m) = &machine_id {
                     cmd.env("CREATOROS_MACHINE_ID", m);
                 }
-                // [T-425] master key 文件兜底通道(非机密:路径 + 反混淆种子)。
-                cmd.env("CREATOROS_MASTER_KEY_FILE", &master_key_file_str)
-                    .env("CREATOROS_MACHINE_SEED", &master_key_seed);
                 // [T-451] verdict-bound token:仅当签发成功才注入(dev/未 CI 构建时私钥缺失即
                 //   None,sidecar 走 dev-mode marker 分支)。
                 if let Some(t) = &verdict_token {
@@ -2246,16 +2346,20 @@ pub fn run() {
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar,然后**关闭
                 //   stdin(drop → EOF)**,node 侧读到换行/ EOF 即停。写完立即 zeroize 临时明文 buffer。
-                if let Some(k) = &master_key {
-                    if let Some(mut stdin) = child.stdin.take() {
-                        use std::io::Write as _;
+                if let Some(mut stdin) = child.stdin.take() {
+                    use std::io::Write as _;
+                    if let Err(e) = stdin.write_all(blob_trust_fd_line.as_bytes()) {
+                        eprintln!("[shell] 写 blob trust root 到 sidecar fd 失败: {e}");
+                    }
+                    blob_trust_fd_line.zeroize();
+                    if let Some(k) = &master_key {
                         let mut payload = format!("{}\n", k.expose_secret());
                         if let Err(e) = stdin.write_all(payload.as_bytes()) {
                             eprintln!("[shell] 写 master key 到 sidecar stdin 失败: {e}");
                         }
                         payload.zeroize();
-                        // stdin(child.stdin 的 take 出的句柄)在此 drop → 关闭写端 → EOF。
                     }
+                    // stdin(child.stdin 的 take 出的句柄)在此 drop → 关闭写端 → EOF。
                 }
 
                 // 把 sidecar 的 stdout/stderr 各起线程读:每行 eprintln(dev 可见)+ tee 到 logs/sidecar.log
@@ -2315,6 +2419,8 @@ pub fn run() {
                     .shell()
                     .sidecar("creatoros-server")
                     .expect("sidecar `creatoros-server` 未在 tauri.conf.json externalBin 注册")
+                    .env_clear()
+                    .envs(allowlisted_sidecar_env())
                     // [T-562] verdict 公钥与 Next standalone 资源按 process.cwd() 解析。
                     // 快捷方式启动时 cwd 不可靠，必须固定到随包 frontend 目录。
                     .current_dir(&sidecar_frontend_dir)
@@ -2342,6 +2448,7 @@ pub fn run() {
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(与 macOS 分支一致)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
+                    .env("CREATOROS_BLOB_SECRET_FD", "0")
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
                     .env("CREATOROS_PRODUCT_MANIFEST_JSON", product_manifest_json)
@@ -2402,10 +2509,6 @@ pub fn run() {
                     Some(m) => sidecar.env("CREATOROS_MACHINE_ID", m),
                     None => sidecar,
                 };
-                // [T-425] master key 文件兜底通道(非机密:路径 + 反混淆种子)。
-                let sidecar = sidecar
-                    .env("CREATOROS_MASTER_KEY_FILE", &master_key_file_str)
-                    .env("CREATOROS_MACHINE_SEED", &master_key_seed);
                 // [T-451] verdict-bound token(win/linux 分支;签发失败即 None,不注入)。
                 let sidecar = match &verdict_token {
                     Some(t) => sidecar.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t),
@@ -2426,6 +2529,10 @@ pub fn run() {
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar。写完立即
                 //   zeroize 临时明文 buffer。注意:tauri-plugin-shell 的 CommandChild 不暴露关闭 stdin
                 //   的接口(stdin_writer 私有),故写端保持打开 → node 侧靠**读到换行符**即停(不依赖 EOF)。
+                if let Err(e) = child.write(blob_trust_fd_line.as_bytes()) {
+                    eprintln!("[shell] 写 blob trust root 到 sidecar fd 失败: {e}");
+                }
+                blob_trust_fd_line.zeroize();
                 if let Some(k) = &master_key {
                     let mut payload = format!("{}\n", k.expose_secret());
                     if let Err(e) = child.write(payload.as_bytes()) {
@@ -3025,7 +3132,7 @@ mod tests {
         assert!(!script.contains("</script>"));
         assert!(!script.contains("location.href"));
         assert!(!script.contains("location.reload"));
-        assert!(SPLASH_HTML.contains("plugin:opener|reveal_item_in_dir"));
+        assert!(SPLASH_JS.contains("plugin:opener|reveal_item_in_dir"));
         assert!(SPLASH_HTML.contains("打开诊断日志目录"));
         assert!(SIDECAR_STARTUP_SENTINEL.contains("SIDECAR_STARTUP_VERIFIED"));
     }
@@ -3090,6 +3197,38 @@ mod tests {
         base64::engine::general_purpose::STANDARD.encode([7u8; 32])
     }
 
+    #[test]
+    fn child_process_env_allowlists_drop_unlisted_secrets() {
+        let source = vec![
+            (OsString::from("PATH"), OsString::from("/usr/bin")),
+            (OsString::from("HOME"), OsString::from("/Users/test")),
+            (OsString::from("LANG"), OsString::from("zh_CN.UTF-8")),
+            (
+                OsString::from("CREATOROS_SENTINEL_SECRET"),
+                OsString::from("must-not-leak"),
+            ),
+            (
+                OsString::from("OPENAI_API_KEY"),
+                OsString::from("must-not-leak"),
+            ),
+        ];
+        let sidecar = filter_child_env(source.clone(), SIDECAR_ENV_ALLOWLIST);
+        let system = filter_child_env(source, SYSTEM_COMMAND_ENV_ALLOWLIST);
+
+        assert!(sidecar
+            .iter()
+            .any(|(key, value)| { key == OsStr::new("PATH") && value == OsStr::new("/usr/bin") }));
+        assert!(system.iter().any(|(key, value)| {
+            key == OsStr::new("HOME") && value == OsStr::new("/Users/test")
+        }));
+        assert!(sidecar
+            .iter()
+            .all(|(key, _)| key != OsStr::new("CREATOROS_SENTINEL_SECRET")));
+        assert!(system
+            .iter()
+            .all(|(key, _)| key != OsStr::new("OPENAI_API_KEY")));
+    }
+
     // ── H-key:.master-key 混淆文件往返 ──────────────────────────────────────
 
     #[test]
@@ -3136,6 +3275,33 @@ mod tests {
         let key = sample_key_b64();
         let back = deobfuscate_master_key_file(&key, "any-seed").unwrap();
         assert_eq!(back, key);
+    }
+
+    #[test]
+    fn keyring_ready_marker_retires_legacy_master_key_file() {
+        let dir = std::env::temp_dir().join(format!(
+            "creatoros-keyring-retire-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(".master-key"), "legacy-only-copy").unwrap();
+        retire_legacy_master_key_if_ready(&dir);
+        assert!(
+            dir.join(".master-key").exists(),
+            "迁移完成前必须保留唯一旧副本"
+        );
+
+        std::fs::write(dir.join(CREDENTIAL_KEYRING_READY_MARKER), "keyring_v1\n").unwrap();
+        retire_legacy_master_key_if_ready(&dir);
+        assert!(
+            !dir.join(".master-key").exists(),
+            "完成标记存在后必须删除可逆文件回退",
+        );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     // ── H-mac:codesign 输出解读(注入 fake 状态)────────────────────────────

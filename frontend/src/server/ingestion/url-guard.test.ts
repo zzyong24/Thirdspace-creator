@@ -4,6 +4,7 @@ import {
   assertUrlAllowed,
   blockedIpReason,
   collectRedirectChainUrls,
+  fetchUrlSafely,
   type LookupFn,
 } from "./url-guard";
 
@@ -134,13 +135,18 @@ describe("assertUrlAllowed — 域名黑名单与 DNS 解析复核", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("DNS 解析失败 → 放行(解析不到 ≠ 恶意;goto 会自己以「页面打不开」诚实失败)", async () => {
+  it("DNS 解析失败或空结果 → fail closed，不发请求", async () => {
     const lookup: LookupFn = async () => {
       throw Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" });
     };
     await expect(
       assertUrlAllowed("https://no-such-site.example.net/", { lookup }),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow(/无法确认目标.*是公网地址/);
+    await expect(
+      assertUrlAllowed("https://empty.example.net/", {
+        lookup: async () => [],
+      }),
+    ).rejects.toThrow(/无法确认目标.*是公网地址/);
   });
 });
 
@@ -208,22 +214,21 @@ describe("collectRedirectChainUrls — Playwright 重定向链鸭子类型收集
   });
 });
 
-// ── [T-438] fake-ip 代理例外:域名解析到 198.18.0.0/15 放行,其余保留段一律不变 ─────────
-describe("[T-438] fake-ip 代理例外(Clash/Surge 默认池 198.18.0.0/16)", () => {
-  it("域名解析到 198.18.x.x → 放行(否则开代理的用户网页截图全废)", async () => {
-    await expect(
-      assertUrlAllowed("https://www.kimi.com/", { lookup: fakeLookup(["198.18.2.233"]) }),
-    ).resolves.toBeUndefined();
-    await expect(
-      assertUrlAllowed("https://en.wikipedia.org/", { lookup: fakeLookup(["198.18.2.236"]) }),
-    ).resolves.toBeUndefined();
+// ── [T-731] fake-ip 不是公网证明:198.18.0.0/15 一律 fail closed ─────────────────
+describe("[T-731] fake-ip / proxy 不能绕过公网证明", () => {
+  it("域名解析到 198.18.x.x → fail closed", async () => {
+    await expectBlocked(
+      "https://www.kimi.com/",
+      "198.18.0.0/15",
+      fakeLookup(["198.18.2.233"]),
+    );
   });
 
-  it("直接写 198.18.x.x IP 字面量 → 仍阻断(可疑探测,不属 fake-ip 场景)", async () => {
+  it("直接写 198.18.x.x IP 字面量 → 仍阻断", async () => {
     await expectBlocked("http://198.18.2.1/", "198.18.0.0/15");
   });
 
-  it("其余保留段经 DNS 解析照样阻断(例外只针对 fake-ip 段)", async () => {
+  it("其余保留段经 DNS 解析照样阻断", async () => {
     await expectBlocked("https://a.example.com/", "127.0.0.0/8", fakeLookup(["127.0.0.1"]));
     await expectBlocked("https://b.example.com/", "192.168.0.0/16", fakeLookup(["192.168.1.1"]));
     await expectBlocked(
@@ -233,11 +238,71 @@ describe("[T-438] fake-ip 代理例外(Clash/Surge 默认池 198.18.0.0/16)", ()
     );
   });
 
-  it("多解析结果中混有真私网 → 仍阻断(fake-ip 例外不掩护真内网)", async () => {
+  it("多解析结果中混有保留段和真私网 → 仍阻断", async () => {
     await expectBlocked(
       "https://mixed.example.com/",
-      "10.0.0.0/8",
+      "198.18.0.0/15",
       fakeLookup(["198.18.2.5", "10.0.0.7"]),
     );
+  });
+});
+
+describe("fetchUrlSafely — 逐跳 preflight + pinned address", () => {
+  it("30x 到元数据地址在下一跳 request 前拒绝", async () => {
+    const request = vi.fn(async () => ({
+      status: 302,
+      headers: { location: "http://169.254.169.254/latest/meta-data/" },
+      body: Buffer.alloc(0),
+      remoteAddress: "93.184.216.34",
+    }));
+    await expect(
+      fetchUrlSafely("https://public.example.com/start", {
+        lookup: fakeLookup(),
+        request,
+      }),
+    ).rejects.toThrow(/元数据|链路本地/);
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it("连接地址和已校验结果不一致（重绑定/代理假 IP）→ 拒绝", async () => {
+    const request = vi.fn(async () => ({
+      status: 200,
+      headers: {},
+      body: Buffer.from("ok"),
+      remoteAddress: "10.0.0.9",
+    }));
+    await expect(
+      fetchUrlSafely("https://public.example.com/", {
+        lookup: fakeLookup(["93.184.216.34"]),
+        request,
+      }),
+    ).rejects.toThrow(/连接地址/);
+  });
+
+  it("合法公网 30x 每一跳先解析并固定连接 IP", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 302,
+        headers: { location: "https://cdn.example.com/final" },
+        body: Buffer.alloc(0),
+        remoteAddress: "93.184.216.34",
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: { "content-type": "text/html" },
+        body: Buffer.from("<h1>ok</h1>"),
+        remoteAddress: "93.184.216.35",
+      });
+    const lookup: LookupFn = async (host) => [
+      { address: host.startsWith("cdn") ? "93.184.216.35" : "93.184.216.34" },
+    ];
+    const result = await fetchUrlSafely("https://public.example.com/start", {
+      lookup,
+      request,
+    });
+    expect(result.finalUrl).toBe("https://cdn.example.com/final");
+    expect(result.body.toString()).toContain("ok");
+    expect(request).toHaveBeenCalledTimes(2);
   });
 });

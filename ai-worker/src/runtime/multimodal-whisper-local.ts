@@ -31,6 +31,7 @@ import {
   type TranscribeAudioOptions,
 } from "./multimodal-factory";
 import { resolveFfmpegPath } from "./ffmpeg-path";
+import { buildRuntimeChildEnv } from "./child-env";
 
 /** Whisper 级别(体积/速度/精度权衡)。默认 small(中文效果/体积平衡,SPEC §3.3)。
  *  spec.model 传 "tiny"/"base"/"small"/"medium" 之一;其它值 → 回退 small。 */
@@ -219,6 +220,7 @@ export interface FfmpegDecoderDeps {
   spawn: (
     command: string,
     args: string[],
+    options: { env: NodeJS.ProcessEnv; windowsHide: true },
   ) => {
     stdout: { on(event: "data", cb: (chunk: Uint8Array) => void): void };
     stderr: { on(event: "data", cb: (chunk: Uint8Array) => void): void };
@@ -234,11 +236,11 @@ export interface FfmpegDecoderDeps {
 
 function realFfmpegDeps(): FfmpegDecoderDeps {
   return {
-    spawn: (command, args) => {
+    spawn: (command, args, options) => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { spawn } = require("node:child_process") as typeof import("node:child_process");
       // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn ffmpeg 会闪黑窗。
-      return spawn(command, args, { windowsHide: true }) as unknown as ReturnType<
+      return spawn(command, args, options) as unknown as ReturnType<
         FfmpegDecoderDeps["spawn"]
       >;
     },
@@ -296,7 +298,10 @@ export function createFfmpegPcmDecoder(
         };
       };
       try {
-        child = deps.spawn(ffmpegPath, args) as typeof child;
+        child = deps.spawn(ffmpegPath, args, {
+          env: buildRuntimeChildEnv(),
+          windowsHide: true,
+        }) as typeof child;
       } catch (err) {
         reject(
           new Error(

@@ -7,6 +7,7 @@ import {
   managedAsrIdempotencyKey,
   prepareManagedTranscribeSpec,
   transcribeWithManagedFallback,
+  type ManagedAsrUsageTracker,
 } from "./managed-asr.server";
 
 const ctx: RequestContext = {
@@ -37,6 +38,7 @@ describe("prepareManagedTranscribeSpec", () => {
 
   it("每次调用只申请一次短效凭据并只放入返回的内存 spec", async () => {
     const requestLease = vi.fn(async () => ({
+      leaseRef: "lease-1",
       baseUrl: SPEC.baseUrl!,
       model: SPEC.model,
       token: "ephemeral-token",
@@ -88,5 +90,51 @@ describe("prepareManagedTranscribeSpec", () => {
       .resolves.toBe("本地逐字稿");
     expect(invoke).toHaveBeenCalledTimes(2);
     expect(invoke.mock.calls[1]?.[0]).toMatchObject({ provider: "whisper-local" });
+  });
+
+  it("先持久化 intent，再保存 leaseRef；provider 失败进入核对队列并明确报错，不用本地结果掩盖收费", async () => {
+    const events: string[] = [];
+    const tracker: ManagedAsrUsageTracker = {
+      begin: vi.fn(async () => { events.push("intent"); }),
+      recordLease: vi.fn(async () => { events.push("lease"); }),
+      recordLeaseUncertain: vi.fn(async () => { events.push("uncertain"); }),
+      recordLeaseRejected: vi.fn(async () => { events.push("rejected"); }),
+      recordProviderUsed: vi.fn(async () => { events.push("used"); }),
+      recordFallbackPending: vi.fn(async () => { events.push("fallback-pending"); }),
+    };
+    const requestLease = vi.fn(async () => {
+      events.push("request");
+      return {
+        leaseRef: "lease-support-ref",
+        baseUrl: SPEC.baseUrl!,
+        model: SPEC.model,
+        token: "ephemeral-token",
+        expiresAt: "2026-08-06T12:01:00.000Z",
+        chargedUnits: 25_000,
+      };
+    });
+    const prepared = await prepareManagedTranscribeSpec(ctx, SPEC, {
+      audioBytes: new Uint8Array(480_000),
+      intentId: "tracked-intent",
+    }, { requestLease, usageTracker: tracker });
+    expect(events).toEqual(["intent", "request", "lease"]);
+    expect(tracker.recordLease).toHaveBeenCalledWith(
+      ctx,
+      "tracked-intent",
+      expect.objectContaining({ leaseRef: "lease-support-ref", chargedUnits: 25_000 }),
+    );
+    expect(JSON.stringify(prepared)).not.toContain("lease-support-ref");
+
+    const invoke = vi.fn(async (current: MultimodalSpec) => {
+      if (current.credentialLifecycle === "per_request") throw new Error("timeout");
+      events.push("local-fallback");
+      return "本地逐字稿";
+    });
+    await expect(transcribeWithManagedFallback(prepared, invoke)).rejects.toMatchObject({
+      code: "ASR_PROVIDER_FAILED_RECONCILE_PENDING",
+      message: expect.stringContaining("费用核对中"),
+    });
+    expect(events.at(-1)).toBe("fallback-pending");
+    expect(events).not.toContain("local-fallback");
   });
 });

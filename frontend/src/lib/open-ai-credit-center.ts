@@ -1,4 +1,5 @@
 import { handshakeHeaders } from "@/lib/handshake-client";
+import { openExternalUrl } from "@/lib/open-external-url";
 
 const USER_CREDIT_PATHS = new Set(["/credits/connect", "/credits/launch"]);
 
@@ -39,8 +40,7 @@ export async function openAiCreditCenter(): Promise<void> {
   }
   const target = validateAiCreditCenterUrl(value.openUrl);
   try {
-    const { openUrl } = await import("@tauri-apps/plugin-opener");
-    await openUrl(target.toString());
+    await openExternalUrl(target.toString());
   } catch {
     const opened = window.open(target.toString(), "_blank", "noopener,noreferrer");
     if (!opened) throw new Error("没有打开额度页面，请稍后再试");

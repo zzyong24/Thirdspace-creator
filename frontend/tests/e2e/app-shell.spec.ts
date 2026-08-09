@@ -5,7 +5,7 @@ import { expect, test } from "../helpers/test-environment";
  *
  *  - the root route exposes the CreatorOS application shell,
  *  - exactly one Sidebar and one TopHeader are present,
- *  - the primary nav lists the seven approved items,
+ *  - the primary nav lists the ten current product areas,
  *  - the active item follows the current pathname,
  *  - keyboard focus order is TopHeader before PageContent.
  *
@@ -28,20 +28,31 @@ test.describe("AppShell", () => {
     await expect(page).toHaveTitle(/CreatorOS/);
   });
 
-  test("lists the seven approved primary nav items", async ({ page }) => {
+  test("lists the ten current primary nav items", async ({ page }) => {
     await page.goto("/");
 
     const nav = page.getByRole("navigation", { name: "主要导航" });
     const items = nav.getByRole("link");
 
-    await expect(items).toHaveCount(7);
-    await expect(items.nth(0)).toHaveText("首页");
-    await expect(items.nth(1)).toHaveText("项目");
-    await expect(items.nth(2)).toHaveText("知识库");
-    await expect(items.nth(3)).toHaveText("素材中心");
-    await expect(items.nth(4)).toHaveText("发布中心");
-    await expect(items.nth(5)).toHaveText("经验沉淀");
-    await expect(items.nth(6)).toHaveText("设置");
+    await expect(items).toHaveCount(10);
+    await expect(items).toHaveText([
+      "首页",
+      "定位中心",
+      "内容雷达",
+      "选题",
+      "项目",
+      "知识库",
+      "素材中心",
+      "发布中心",
+      "自动化",
+      "设置",
+    ]);
+    await expect(items.nth(0)).toHaveAttribute("href", "/");
+    await expect(items.nth(1)).toHaveAttribute("href", "/positioning");
+    await expect(items.nth(2)).toHaveAttribute("href", "/intelligence");
+    await expect(items.nth(4)).toHaveAttribute("href", "/projects");
+    await expect(items.nth(7)).toHaveAttribute("href", "/publishing");
+    await expect(items.nth(9)).toHaveAttribute("href", "/settings");
   });
 
   test("derives the active nav item from the pathname", async ({ page }) => {
@@ -64,7 +75,7 @@ test.describe("AppShell", () => {
     let attempts = 0;
     let inHeader = false;
     let inScroll = false;
-    while (attempts < 12 && !inHeader) {
+    while (attempts < 20 && !inHeader) {
       await page.keyboard.press("Tab");
       attempts += 1;
       const focused = await page.evaluate(() => {

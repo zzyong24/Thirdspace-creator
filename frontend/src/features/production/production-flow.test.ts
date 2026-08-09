@@ -165,4 +165,13 @@ describe("[T-726] assetRefsFromScriptContentData(宽容解析)", () => {
     ).toEqual([]);
     expect(assetRefsFromScriptContentData(null)).toEqual([]);
   });
+
+  it("忽略退役 thesis_tree 字段，只消费脚本 visual 引用", () => {
+    const result = assetRefsFromScriptContentData({
+      thesis_tree: { materialRefs: ["legacy-1"] },
+      sections: [{ heading: "正文", visual: { assetRefs: ["asset-live"] } }],
+    });
+    expect(result).toEqual(["asset-live"]);
+    expect(result).not.toContain("legacy-1");
+  });
 });

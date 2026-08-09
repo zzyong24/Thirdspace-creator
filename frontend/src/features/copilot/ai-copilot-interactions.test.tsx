@@ -28,8 +28,8 @@ const listProjects = vi.fn();
 const routerPush = vi.fn();
 const routerRefresh = vi.fn();
 const openExternalUrl = vi.fn();
-vi.mock("@tauri-apps/plugin-opener", () => ({
-  openUrl: (...args: unknown[]) => openExternalUrl(...args),
+vi.mock("@/lib/open-external-url", () => ({
+  openExternalUrl: (...args: unknown[]) => openExternalUrl(...args),
 }));
 // slice 2:面板读 ?surface & ?fn 装配 ChatContext + 预调工具。默认 query 无 fn(不自动预调),
 // 个别用例改 mockSearch 注入 fn 断言预调。

@@ -1,7 +1,7 @@
 import { expect, test } from "../helpers/test-environment";
 
 /**
- * E2E contract for the 经验裁决台 page (T-062a · SPEC 2026-07-03 §2.1).
+ * E2E contract for the retired 经验裁决台 route (T-118c).
  *
  *  - Direct visit to `/experience` renders the two-column adjudication
  *    workbench (裁决队列 + 已验证经验库) distinct from per-project pages.
@@ -16,95 +16,36 @@ import { expect, test } from "../helpers/test-environment";
  */
 
 test.describe("经验裁决台 page", () => {
-  test("renders the adjudication workbench on the /experience route", async ({
+  test("redirects legacy /experience links into the unified knowledge base", async ({
     page,
   }) => {
     await page.goto("/experience");
-
-    // Header in global mode with the page title.
-    const header = page.locator('[data-slot="app-top-header"]');
-    await expect(header).toHaveAttribute("data-mode", "global");
-    const heading = page.locator('[data-slot="header-page-heading"]');
-    await expect(heading).toContainText("经验沉淀");
-
-    // The Experience nav item is the active page in the sidebar.
+    await expect(page).toHaveURL(/\/knowledge$/);
     const nav = page.getByRole("navigation", { name: "主要导航" });
     const active = nav.locator('[aria-current="page"]');
-    await expect(active).toHaveAttribute("href", "/experience");
-
-    // Contextual card variant is `assistant` (D-003).
-    const assistant = page.locator(
-      '[data-slot="sidebar-contextual-card"][data-variant="assistant"]',
-    );
-    await expect(assistant).toBeVisible();
-
-    // Single AppShell with one Sidebar/TopHeader.
+    await expect(active).toHaveAttribute("href", "/knowledge");
     await expect(page.locator('[data-slot="app-shell"]')).toHaveCount(1);
+    await expect(page.locator('main[data-page="experience"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="experience-summary-cards"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="summary-card"]')).toHaveCount(0);
+    await expect(page.locator('[data-summary-id="exp-candidates"]')).toHaveCount(0);
+    await expect(page.locator('[data-summary-id="exp-validated"]')).toHaveCount(0);
+    await expect(page.locator('[data-summary-id="exp-reflowed"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="experience-workbench"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="learning-queue"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="validated-library"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="discarded-section"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="candidate-card"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="learning-queue-empty"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="learning-adopt"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="learning-discard"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="learning-edit"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="quick-record-actions"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="experience-capture-link"]')).toHaveCount(1);
+    await expect(page.locator('[data-slot="sidebar-contextual-card"][data-variant="assistant"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-sidebar"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-top-header"]')).toHaveCount(1);
-
-    // The page-internal main region exists exactly once.
-    const main = page.locator('main[data-page="experience"]');
-    await expect(main).toHaveCount(1);
-
-    // 3 truth summary cards in spec order.
-    const summary = main.locator('[data-slot="experience-summary-cards"]');
-    await expect(summary).toBeVisible();
-    await expect(summary.locator('[data-slot="summary-card"]')).toHaveCount(3);
-    await expect(
-      summary.locator('[data-summary-id="exp-candidates"]'),
-    ).toContainText("待裁决");
-    await expect(
-      summary.locator('[data-summary-id="exp-validated"]'),
-    ).toContainText("已验证");
-    await expect(
-      summary.locator('[data-summary-id="exp-reflowed"]'),
-    ).toContainText("已回流校准");
-
-    // Two-column workbench: 裁决队列 + 已验证库 (with the discarded fold).
-    const workbench = main.locator('[data-slot="experience-workbench"]');
-    await expect(workbench).toBeVisible();
-    await expect(
-      workbench.locator('[data-slot="learning-queue"]'),
-    ).toBeVisible();
-    await expect(
-      workbench.locator('[data-slot="validated-library"]'),
-    ).toBeVisible();
-    await expect(
-      workbench.locator('[data-slot="discarded-section"]'),
-    ).toBeVisible();
-
-    // Honest queue: either real candidate cards or the empty-state copy —
-    // never fixture rows.
-    const queue = workbench.locator('[data-slot="learning-queue"]');
-    const candidateCount = await queue
-      .locator('[data-slot="candidate-card"]')
-      .count();
-    if (candidateCount === 0) {
-      await expect(
-        queue.locator('[data-slot="learning-queue-empty"]'),
-      ).toContainText("还没有待确认的经验");
-    } else {
-      const firstCard = queue.locator('[data-slot="candidate-card"]').first();
-      await expect(
-        firstCard.locator('[data-slot="learning-adopt"]'),
-      ).toBeVisible();
-      await expect(
-        firstCard.locator('[data-slot="learning-discard"]'),
-      ).toBeVisible();
-      await expect(
-        firstCard.locator('[data-slot="learning-edit"]'),
-      ).toBeVisible();
-    }
-
-    // 快速记录 form retired → Copilot capture deep-link instead.
-    await expect(
-      main.locator('[data-slot="quick-record-actions"]'),
-    ).toHaveCount(0);
-    const capture = main.locator('[data-slot="experience-capture-link"]');
-    await expect(capture).toBeVisible();
-    const href = (await capture.getAttribute("href")) ?? "";
-    expect(href).toContain("copilot=open");
-    expect(href).toContain("surface=experience");
+    await expect(page.locator('main[data-page="knowledge"]')).toHaveCount(1);
+    await expect(active).toHaveText("知识库");
   });
 });

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   AssetRepository,
@@ -143,6 +144,11 @@ export interface AssetsService {
       //   确认门 commitPendingAsset 翻 active 才入库。缺省 false = 生 active(封面回填 / AI 生成
       //   素材等既有直落场景不变)。
       pending?: boolean;
+      /**
+       * 服务端稳定幂等键（不接受浏览器输入）。execution adoption 传 task+artifact 派生值；
+       * 相同 user/account/key 永远映射到同一 assets.id。
+       */
+      idempotencyKey?: string;
     },
   ): Promise<AssetRow>;
   // [T-219] 确认门:把某 pending asset 翻 active 进素材库 + stamp 当前号(ctx.accountId)。
@@ -576,6 +582,26 @@ export function createAssetsService(
       if (!(input.bytes.byteLength > 0)) {
         throw new UploadValidationError("generated asset has no bytes");
       }
+      const stableKey = input.idempotencyKey?.trim() ?? "";
+      const stableAssetId = stableKey
+        ? `asset_adopt_${createHash("sha256")
+            .update("creatoros-generated-asset-v1\n")
+            .update(ctx.userId)
+            .update("\n")
+            .update(accountId)
+            .update("\n")
+            .update(stableKey)
+            .digest("hex")
+            .slice(0, 40)}`
+        : null;
+      if (stableAssetId) {
+        const existing = await repo.getAsset(
+          ctx.userId,
+          stableAssetId,
+          accountId,
+        );
+        if (existing) return existing;
+      }
       const storage = await objectStorageForCtx(ctx);
       // Mint a key exactly like the presigned path would (assetType-prefixed) so the
       // on-disk / bucket layout is identical to a client upload.
@@ -596,6 +622,29 @@ export function createAssetsService(
         assetType: input.assetType,
       });
       const head = await storage.headObject(storageKey);
+      if (stableAssetId) {
+        return repo.materializeGeneratedAsset(
+          ctx.userId,
+          {
+            assetId: stableAssetId,
+            assetType: input.assetType,
+            name: input.name,
+            status: input.pending ? "pending" : "active",
+            storageKey,
+            mimeType: head.mimeType || input.mimeType,
+            fileSize: head.fileSize || input.bytes.byteLength,
+            checksum: head.checksum,
+            width: head.width,
+            height: head.height,
+            durationMs: head.durationMs,
+            mediaMetadata: {
+              ...head.mediaMetadata,
+              adoptionRef: stableAssetId,
+            },
+          },
+          accountId,
+        );
+      }
       // Materialize: asset (active) → first file (v1) → re-point currentFileId (mirror
       // completeUpload). The repo stamps userId + status='active'.
       const asset = await repo.insertAsset(

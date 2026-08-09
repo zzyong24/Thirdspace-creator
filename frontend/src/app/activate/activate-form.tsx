@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isDesktopRuntimeClient } from "@/lib/desktop-updater";
+import { isDesktopRuntimeClient, relaunchApp } from "@/lib/desktop-updater";
 
 const ACTIVATE_ENDPOINT = "/api/v1/activate";
 const EMPTY_ERROR = "请输入激活码。";
@@ -75,8 +75,7 @@ export function ActivateForm(): React.JSX.Element {
         //   (工程复杂且引入新信任边界模糊点)。
         setError(null); // 清错,进入 loading 语义
         try {
-          const { relaunch } = await import("@tauri-apps/plugin-process");
-          await relaunch();
+          if (!(await relaunchApp())) throw new Error("relaunch rejected");
           // relaunch 会立即杀本进程,后续代码不会执行;兜底 UX 语义靠 finally 的 submitting=false
           //   (relaunch 前 submitting 仍是 true,按钮显示"激活中…",等价于 loading)。
           return;

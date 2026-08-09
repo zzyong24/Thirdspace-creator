@@ -105,6 +105,10 @@ import {
 } from "./asset-aliases";
 import { ChatDouyinShareCard } from "./chat-douyin-share-card";
 import {
+  ChatEffectApprovalCard,
+  COPILOT_EFFECT_TOOL_NAMES,
+} from "./chat-effect-approval-card";
+import {
   ChatLearningCard,
   type ChatLearningSuggestion,
 } from "./chat-learning-card";
@@ -1037,8 +1041,8 @@ export function AICopilotContent({
 
   // [T-231⑩] regenerate:@ai-sdk/react 现成的「重发最后一轮」API(对话出错时的重试通路)。
   // [T-263] addToolApprovalResponse:HITL 授权卡「允许/拒绝」的回执口。sendAutomaticallyWhen 挂
-  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 授权响应齐了就**同回合自动
-  // resume 续跑** execute(读到文件),无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
+  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 或副作用工具的授权响应齐了就
+  // **同回合自动 resume** execute,无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
   const {
     messages,
     sendMessage,
@@ -1057,7 +1061,8 @@ export function AICopilotContent({
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
   useForegroundActivity("AI 编导正在生成回复", streaming);
 
-  // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑两件事:
+  // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑目录批量放行；下方另收集
+  // [T-731] 副作用审批，两类任一待决都阻止用户并发提交新一轮。
   //   ① 一次「总是允许该目录」批量放行同目录其它待决卡(读文件夹别逐个弹);
   //   ② 有待授权时提交排队(不并发触发新一轮,仿 Claude Code 的权限门)。
   const pendingLocalReads = React.useMemo(() => {
@@ -1075,7 +1080,22 @@ export function AICopilotContent({
     }
     return out;
   }, [messages]);
-  const hasPendingApproval = pendingLocalReads.length > 0;
+  const pendingEffectApprovals = React.useMemo(() => {
+    const out: string[] = [];
+    for (const message of messages) {
+      if (message.role !== "assistant") continue;
+      for (const part of message.parts) {
+        if (!isToolUIPart(part)) continue;
+        if (!COPILOT_EFFECT_TOOL_NAMES.has(getToolName(part))) continue;
+        if (part.state !== "approval-requested") continue;
+        const id = part.approval?.id ?? "";
+        if (id) out.push(id);
+      }
+    }
+    return out;
+  }, [messages]);
+  const hasPendingApproval =
+    pendingLocalReads.length > 0 || pendingEffectApprovals.length > 0;
 
   // [T-276] 目录授权批量放行:一张卡点「总是允许该目录」→ 服务端已把该文件所在目录落进授权表,
   //   把**直接父目录相同**的其它待决 local.read 卡一并批准(读文件夹的多文件读共享父目录)。
@@ -2162,6 +2182,28 @@ export function AICopilotContent({
                         />
                       );
                     }
+                    // [T-731] 付费/持久化工具统一先展示“规范化参数摘要 + 预计费用”，用户按
+                    // approvalId 明确确认后才续跑；未知工具不进此分支，继续走通用 trace。
+                    if (
+                      COPILOT_EFFECT_TOOL_NAMES.has(name) &&
+                      part.state === "approval-requested"
+                    ) {
+                      const approvalId = part.approval?.id ?? "";
+                      return (
+                        <ChatEffectApprovalCard
+                          key={`${message.id}-effect-approval-${idx}`}
+                          toolName={name}
+                          input={part.input ?? {}}
+                          approvalId={approvalId}
+                          onApprove={(id) =>
+                            void addToolApprovalResponse({ id, approved: true })
+                          }
+                          onDeny={(id) =>
+                            void addToolApprovalResponse({ id, approved: false })
+                          }
+                        />
+                      );
+                    }
                     // [T-263] local.read 用户已拒绝(output-denied)→ 渲「已拒绝」终态(execute 未跑,
                     // 无 output)。同样在通用 spinner 前拦掉,别渲成「正在调用…」死转。
                     if (name === "local.read" && part.state === "output-denied") {
@@ -2174,6 +2216,20 @@ export function AICopilotContent({
                           listing={null}
                           error={null}
                           deniedTerminal
+                        />
+                      );
+                    }
+                    if (
+                      COPILOT_EFFECT_TOOL_NAMES.has(name) &&
+                      part.state === "output-denied"
+                    ) {
+                      return (
+                        <ChatEffectApprovalCard
+                          key={`${message.id}-effect-denied-${idx}`}
+                          toolName={name}
+                          input={part.input ?? {}}
+                          approvalId={part.approval?.id ?? ""}
+                          denied
                         />
                       );
                     }

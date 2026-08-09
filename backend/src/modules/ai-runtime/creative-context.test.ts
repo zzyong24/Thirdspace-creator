@@ -103,9 +103,7 @@ function makeDeps(
 }
 
 describe("creative-context T-726 — 历史论点树只读保留但不进入新执行", () => {
-  it.each(["reconstructed", "user", null] as const)(
-    "origin=%s → thesis reader 与 origin reader 都不触发，thesisBrief 恒空",
-    async (origin) => {
+  async function expectRetiredThesisReader(origin: "reconstructed" | "user" | null) {
       const deps = makeDeps(origin);
       let thesisReads = 0;
       let thesisOriginReads = 0;
@@ -129,11 +127,35 @@ describe("creative-context T-726 — 历史论点树只读保留但不进入新�
       );
 
       expect(context.thesisBrief).toBe("");
+      expect(context.thesisBrief).not.toContain("历史核心论点");
+      expect(deps.thesis).toBeDefined();
       expect(thesisReads).toBe(0);
       expect(thesisOriginReads).toBe(0);
       expect(context.topic.title).toBe("当前选题");
-    },
-  );
+  }
+
+  it("reconstructed 历史论点不进入新执行", async () => {
+    await expectRetiredThesisReader("reconstructed");
+  });
+
+  it("user 历史论点不进入新执行", async () => {
+    await expectRetiredThesisReader("user");
+  });
+
+  it("legacy 历史论点不进入新执行", async () => {
+    await expectRetiredThesisReader(null);
+  });
+
+  it("未装配 artifactOrigin reader 也不回退读取历史论点", async () => {
+    const deps = makeDeps("reconstructed");
+    delete deps.artifactOrigin;
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-no-origin", topic: "当前选题" },
+      deps,
+    );
+    expect(context.thesisBrief).toBe("");
+  });
 });
 
 // ── T-039a:复盘对象注入(reviewSubject reader → CreativeContext 复盘字段)────────────

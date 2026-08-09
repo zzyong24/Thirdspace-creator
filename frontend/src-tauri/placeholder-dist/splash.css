@@ -1,0 +1,8 @@
+@keyframes creatoros-spin { to { transform: rotate(360deg); } }
+html, body { margin: 0; height: 100%; background: #0b0b0f; color: #e5e5ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { display: flex; align-items: center; justify-content: center; }
+main { display: flex; max-width: 680px; flex-direction: column; align-items: center; gap: 18px; padding: 32px; text-align: center; }
+#creatoros-splash-spinner { width: 38px; height: 38px; border: 3px solid #24242c; border-top-color: #6b8afd; border-radius: 50%; animation: creatoros-spin .8s linear infinite; }
+#creatoros-splash-status { max-width: 80vw; color: #e5e5ea; font-size: 16px; font-weight: 600; letter-spacing: .3px; }
+#creatoros-splash-detail { display: none; color: #9b9ba5; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+#creatoros-open-logs { display: none; margin-top: 8px; padding: 10px 16px; border: 1px solid #353540; border-radius: 9px; background: #202027; color: #f2f2f5; cursor: pointer; font-size: 13px; }

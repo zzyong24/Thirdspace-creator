@@ -1067,7 +1067,7 @@ function AccountBindingCard({
 // ---------------------------------------------------------------------------
 //
 // P5 已落地一机一码激活授权(activation-service 状态机)。本卡在「账户」页签展示激活态,
-// 让用户看到:激活状态(四态徽章)/ 授权类型 / 到期 / 机器码 / 最后在线校验 / 购买续期入口。
+// 让用户看到:激活状态(四态徽章)/ 授权类型 / 到期 / 不可逆支持编号 / 最后在线校验 / 购买续期入口。
 //
 // 数据源:route server 侧 `getActivationService().getStatus()` 本地读(**不打网络**,纯展示),
 // 结果作为 `activation` prop 传入。四态诚实映射(铁律:未激活/web 态如实展示,不假装已激活):
@@ -1153,12 +1153,6 @@ function formatCountdown(totalSeconds: number): string {
   const sec = s % 60;
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(h)}:${pad(m)}:${pad(sec)}`;
-}
-
-// 机器码截断显示:一机一码,完整码较长,前 8 + 后 6 中间省略(hover title 显全码)。
-function truncateMachineId(machineId: string): string {
-  if (machineId.length <= 18) return machineId;
-  return `${machineId.slice(0, 8)}…${machineId.slice(-6)}`;
 }
 
 // [T-396b] 原 T-168 官网 PURCHASE_URL 硬编码已删:购买/续期入口按激活码所属渠道运行时
@@ -1310,19 +1304,18 @@ function ActivationStatusCard({
             {expiryLabel(activation.status, activation.expiresAt)}
           </span>
         </SettingsFormRow>
-        {activation.machineId ? (
+        {activation.supportRef ? (
           <SettingsFormRow
-            label="机器码"
-            controlId="activation-machine-id"
-            help="一机一码,绑定当前设备。换机请联系作者迁移授权。"
+            label="支持编号"
+            controlId="activation-support-ref"
+            help="联系支持时提供此编号；它不能还原设备标识。"
           >
             <span
-              id="activation-machine-id"
-              data-slot="activation-machine-id"
-              title={activation.machineId}
+              id="activation-support-ref"
+              data-slot="activation-support-ref"
               className="font-mono text-xs text-muted-foreground"
             >
-              {truncateMachineId(activation.machineId)}
+              {activation.supportRef}
             </span>
           </SettingsFormRow>
         ) : null}

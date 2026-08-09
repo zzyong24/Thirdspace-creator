@@ -141,14 +141,10 @@ export interface ModelConfigInternal {
   settings: Record<string, unknown>;
 }
 
-// ── [T-363] 模型配置导出/导入(设置页兜底:重置/换机后一键找回)────────────────────
-//
-// 导出:secret_value 保持库中**存储形态**(enc:v1: 密文优先;仅无 master key 的存量明文
-// 行才是明文)——导出动作本身不解密、不落明文盘。secretForm 如实标注文件里密钥的形态,
-// UI 据此警示「文件含密钥,注意保管」。
-// 导入:走**既有 service 写路径** setModelConfiguration(按 (user_id, capability) upsert
-// 覆盖);enc 密文先经 repo.unwrapExportedSecret 解包(解不开 = 跨机器/换 key → 该行配置
-// 照导、密钥诚实标 unrecoverable 提示重填,绝不塞进库里假装可用)。
+// ── [T-363/T-731] 模型配置导出/导入────────────────────────────────────────────
+// 新版导出只携带不可逆 keyringRef，绝不读取或导出系统钥匙串中的密钥。同一 OS 用户重置
+// 数据库后可重新绑定该确定性引用；换机时引用仍可安全导入，但实际读取会因目标钥匙串无值而
+// fail closed。旧版 enc:v1/明文文件仍走一次性兼容导入，并立即写入系统钥匙串。
 export interface ModelConfigExportRow {
   capability: string;
   provider: string;
@@ -156,6 +152,8 @@ export interface ModelConfigExportRow {
   secretReference: string;
   /** 库中存储形态(enc:v1: 密文 / 存量明文 / null=未配 key)。 */
   secretValue: string | null;
+  /** 不可逆、按 userId + capability 确定性生成的系统钥匙串 account 引用。 */
+  keyringRef?: string | null;
   settings: Record<string, unknown>;
   baseUrl: string | null;
   apiFormat: string;
@@ -266,6 +264,7 @@ export interface SettingsService {
     scopeId: string,
     serviceId: string,
     secret: string,
+    serviceType?: "user_input" | "activation_managed" | "local_selection",
   ): Promise<ChannelModelCredentialStatus>;
   // [T-363] 模型配置导出/导入(见上方类型注释;导入走 setModelConfiguration 既有写路径)。
   exportModelConfigs(ctx: RequestContext): Promise<ModelConfigExportFile>;
@@ -642,22 +641,32 @@ export function createSettingsService(
       const rows = await repoForCtx(ctx).listChannelModelCredentials(ctx, scopeId);
       return rows.map((row) => ({
         serviceId: row.serviceId,
-        hasSecret: true,
+        hasSecret:
+          row.credentialStatus === "ready" &&
+          row.migrationState === "keyring_v1" &&
+          Boolean(row.keyringRef),
         updatedAt: row.updatedAt,
       }));
     },
 
-    async setChannelModelCredential(ctx, scopeId, serviceId, secret) {
+    async setChannelModelCredential(
+      ctx,
+      scopeId,
+      serviceId,
+      secret,
+      serviceType = "user_input",
+    ) {
       const row = await repoForCtx(ctx).putChannelModelCredential(
         ctx,
         scopeId,
         serviceId,
         secret,
+        serviceType,
       );
       return { serviceId: row.serviceId, hasSecret: true, updatedAt: row.updatedAt };
     },
 
-    // [T-363] 导出:原始读(不解密),密钥保持库中存储形态;secretForm 如实标注。
+    // [T-731] 导出只含数据库元数据和不可逆引用，不访问系统钥匙串。
     async exportModelConfigs(ctx) {
       const rows = await repoForCtx(ctx).listModelsRaw(ctx);
       const models: ModelConfigExportRow[] = rows.map((row) => ({
@@ -665,7 +674,10 @@ export function createSettingsService(
         provider: row.provider,
         modelName: row.modelName,
         secretReference: row.secretReference,
-        secretValue: row.secretValue ?? null,
+        // 即使该行仍处于旧密文迁移阻塞态，也不能把唯一恢复副本复制进普通导出文件。
+        secretValue: null,
+        keyringRef:
+          row.credentialMigrationState === "keyring_v1" ? row.keyringRef : null,
         settings: (row.settings as Record<string, unknown>) ?? {},
         baseUrl: row.baseUrl ?? null,
         apiFormat: (row.apiFormat as string) ?? "anthropic",
@@ -725,6 +737,9 @@ export function createSettingsService(
             settings: m.settings,
             isDefault: m.isDefault,
           });
+          if (!secret && m.keyringRef) {
+            await repo.bindExistingModelCredential(ctx, m.capability, m.keyringRef);
+          }
           rows.push({
             capability: m.capability,
             ok: true,
@@ -969,12 +984,23 @@ function parseModelConfigExportFile(file: unknown): {
         `models[${i}] 缺必填字段(capability/provider/modelName)`,
       );
     }
+    if (
+      r.keyringRef !== undefined &&
+      r.keyringRef !== null &&
+      (typeof r.keyringRef !== "string" || !/^[0-9a-f]{64}$/.test(r.keyringRef))
+    ) {
+      throw new ModelConfigImportError(`models[${i}].keyringRef 格式不合法`);
+    }
     models.push({
       capability,
       provider,
       modelName,
       secretReference: typeof r.secretReference === "string" ? r.secretReference : "",
       secretValue: typeof r.secretValue === "string" ? r.secretValue : null,
+      keyringRef:
+        typeof r.keyringRef === "string" && /^[0-9a-f]{64}$/.test(r.keyringRef)
+          ? r.keyringRef
+          : null,
       settings:
         typeof r.settings === "object" && r.settings !== null && !Array.isArray(r.settings)
           ? (r.settings as Record<string, unknown>)

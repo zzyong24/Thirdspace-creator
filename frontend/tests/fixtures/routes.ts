@@ -66,7 +66,8 @@ export const ROUTES: ReadonlyArray<RouteSpec> = [
     pathname: "/projects/ai-native-browser",
     pageTitle: "AI Native Browser 深度解析",
     sidebarActiveId: "projects",
-    headerMode: "project-overview",
+    // 项目总览已并入统一稿面工作台，项目根路由使用 workspace header。
+    headerMode: "project-workspace",
     imageSha256:
       "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa",
   },

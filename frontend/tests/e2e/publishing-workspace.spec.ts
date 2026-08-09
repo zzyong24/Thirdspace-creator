@@ -1,7 +1,70 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "../helpers/test-environment";
 
+const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
+const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
+
+async function createProject(
+  page: Page,
+  baseURL: string | undefined,
+): Promise<{ id: string; title: string }> {
+  const accountResponse = await page.request.post("/api/v1/dispatch", {
+    headers: { "content-type": "application/json" },
+    data: {
+      id: "accounts.create",
+      input: {
+        params: undefined,
+        query: undefined,
+        body: {
+          platform: "douyin",
+          accountHandle: `@e2e-publishing-workspace-${Date.now()}`,
+        },
+      },
+    },
+  });
+  expect(
+    accountResponse.ok(),
+    `accounts.create 应成功，实得 ${accountResponse.status()}`,
+  ).toBe(true);
+  const accountPayload = (await accountResponse.json()) as {
+    data: { id: string };
+  };
+  const accountId = accountPayload.data.id;
+  const title = `E2E 发布工作台 ${Date.now()}`;
+  const response = await page.request.post("/api/v1/dispatch", {
+    headers: {
+      "content-type": "application/json",
+      "x-account-id": accountId,
+    },
+    data: {
+      id: "projects.create",
+      input: {
+        params: undefined,
+        query: undefined,
+        body: { title, brief: "" },
+      },
+    },
+  });
+  expect(response.ok(), `projects.create 应成功，实得 ${response.status()}`).toBe(
+    true,
+  );
+  const payload = (await response.json()) as { data: { id: string } };
+  await page.context().addCookies([
+    {
+      name: CURRENT_ACCOUNT_COOKIE,
+      value: encodeURIComponent(accountId),
+      url: baseURL ?? "http://127.0.0.1",
+    },
+  ]);
+  await page.addInitScript(
+    ([key, id]) => window.localStorage.setItem(key!, id!),
+    [CURRENT_ACCOUNT_KEY, accountId],
+  );
+  return { id: payload.data.id, title };
+}
+
 /**
- * E2E smoke test for the Publishing Workspace page (Task 17).
+ * E2E contract for the retired Publishing stage route (T-055a).
  *
  * Validates the rendered DOM on the production
  * `/projects/:projectId/publishing` route against the structural
@@ -29,106 +92,34 @@ import { expect, test } from "../helpers/test-environment";
  */
 
 test.describe("Publishing Workspace page", () => {
-  test("renders the publishing workspace structure on the /projects/:projectId/publishing route", async ({
+  test("redirects the retired publishing route to the unified draft workbench", async ({
     page,
+    baseURL,
   }) => {
-    await page.goto("/projects/project-ainativebrowser/publishing");
+    const project = await createProject(page, baseURL);
+    await page.goto(`/projects/${project.id}/publishing`);
 
-    // TopHeader in project-workspace mode and the canonical project
-    // identity.
+    await expect(page).toHaveURL(`/projects/${project.id}#publish`);
     const header = page.locator('[data-slot="app-top-header"]');
     await expect(header).toHaveAttribute("data-mode", "project-workspace");
     const identity = page.locator(
       '[data-slot="header-project-identity"]',
     );
-    await expect(identity).toContainText("AI Native Browser 深度解析");
+    await expect(identity).toContainText(project.title);
 
-    // Primary action "查看数据" links to the review workspace.
-    const primaryAction = header.getByRole("link", { name: /查看数据/ });
-    await expect(primaryAction).toBeVisible();
-    await expect(primaryAction).toHaveAttribute(
-      "href",
-      "/projects/project-ainativebrowser/review",
-    );
-
-    // The six-stage stepper in canonical order with Publishing active.
-    const stepperItems = page.locator(
-      '[data-slot="header-stage-stepper"] li',
-    );
-    await expect(stepperItems).toHaveCount(6);
-    const activeStage = page.locator(
-      '[data-slot="header-stage-stepper"] [data-status="in_progress"]',
-    );
-    await expect(activeStage).toHaveCount(1);
-    await expect(activeStage).toContainText("发布");
-
-    // Publishing Tabs row.
-    const tabs = page.locator('[data-slot="publishing-tabs"]');
-    await expect(tabs).toBeVisible();
-
-    // Three-column PublishingGrid in spec order.
-    for (const slot of [
-      "basic-information-form",
-      "platform-publishing-panel",
-      "preview-rail",
-    ]) {
-      await expect(
-        page.locator(`[data-slot="publishing-grid"] [data-slot="${slot}"]`),
-      ).toBeVisible();
-    }
-
-    // BasicInformationForm fields in spec order.
-    for (const slot of [
-      "title-field",
-      "description-field",
-      "cover-selector",
-      "tags-field",
-      "category-field",
-      "publishing-options-field",
-    ]) {
-      await expect(
-        page.locator(
-          `[data-slot="basic-information-form"] [data-slot="${slot}"]`,
-        ),
-      ).toBeVisible();
-    }
-
-    // PlatformPublishingPanel: separate cards + controls.
-    const panel = page.locator('[data-slot="platform-publishing-panel"]');
-    const platformCards = panel.locator(
-      '[data-slot="platform-publish-card"]',
-    );
-    expect(await platformCards.count()).toBeGreaterThanOrEqual(2);
-    await expect(
-      panel.locator('[data-slot="batch-time-actions"]'),
-    ).toBeVisible();
-    await expect(
-      panel.locator('[data-slot="confirm-publish-button"]'),
-    ).toBeVisible();
-    await expect(
-      panel.locator('[data-slot="pre-publish-check"]'),
-    ).toBeVisible();
-
-    // PreviewRail in spec order.
-    for (const slot of [
-      "platform-preview",
-      "publish-checklist",
-      "publish-tips",
-    ]) {
-      await expect(
-        page.locator(`[data-slot="preview-rail"] [data-slot="${slot}"]`),
-      ).toBeVisible();
-    }
-
-    // Confirm Publish is fixture-only — visible but inert (no form
-    // action, no fetch).
-    const confirmButton = page.locator(
-      '[data-slot="confirm-publish-button"]',
-    );
-    await expect(confirmButton).toBeVisible();
-    await expect(confirmButton).toContainText(/确认发布/);
-    const confirmType = await confirmButton.getAttribute("type");
-    expect(confirmType).toBe("button");
+    await expect(page.locator('[data-page="draft-workbench"]')).toBeVisible();
+    await expect(page.locator('[data-slot="publishing-grid"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="publishing-tabs"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="basic-information-form"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="platform-publishing-panel"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="preview-rail"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="confirm-publish-button"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="pre-publish-check"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="batch-time-actions"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="platform-publish-card"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="publish-checklist"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="publish-tips"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="platform-preview"]')).toHaveCount(0);
 
     // Projects nav item remains active in the sidebar.
     const nav = page.getByRole("navigation", { name: "主要导航" });

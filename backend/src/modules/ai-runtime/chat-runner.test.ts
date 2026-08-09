@@ -281,20 +281,27 @@ describe("[T-523] Copilot 媒体意图确定性路由", () => {
       input: unknown,
       options: unknown,
     ) => Promise<unknown>;
-    await execute(
+    const mismatched = (await execute(
       {
         shareInput: "模型擅自换掉的链接",
         action: "archive_and_transcribe",
       },
       { toolCallId: "tc", messages: [], context: {} },
-    );
-    expect(dispatchDouyinSharePort).toHaveBeenCalledWith(
-      ctx,
-      expect.objectContaining({
+    )) as { error?: string };
+    expect(dispatchDouyinSharePort).not.toHaveBeenCalled();
+    expect(mismatched.error).toContain("参数与用户本轮确认内容不一致");
+
+    await execute(
+      {
         shareInput: "看看这个 https://v.douyin.com/abc/",
-        transcribe: false,
-      }),
+        action: "archive",
+      },
+      { toolCallId: "tc-2", messages: [], context: {} },
     );
+    expect(dispatchDouyinSharePort).toHaveBeenCalledWith(ctx, {
+      shareInput: "看看这个 https://v.douyin.com/abc/",
+      transcribe: false,
+    });
   });
 
   it("没有最新轮媒体路由授权时，即使模型调用专工具也不能升级成转写", async () => {
@@ -572,6 +579,10 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
 } {
   const resolveModelSpec = vi.fn(async () => FAKE_SPEC);
   const deps: AssembleChatDeps = {
+    sideEffectApprovalRegistry: {
+      request: () => ({ status: "user-approval" as const }),
+      consume: () => ({ approvalId: "test-approval", executionKey: "test-key" }),
+    },
     resolveModelSpec,
     // [T-163] humanizeError 端口(下沉后经注入);chat-runner 测试不走 distill 错误路径,回落 null。
     humanizeError: () => null,
@@ -2383,6 +2394,33 @@ describe("[T-239f] resolveChatMaxSteps — 步数上限可配", () => {
 });
 
 describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制工具兼容", () => {
+  it("[T-731] 外部正文进入下一模型调用后只暴露本地确定性只读工具", () => {
+    const prep = buildChatPrepareStep({
+      maxSteps: 6,
+      availableToolNames: [
+        "web_read",
+        "context_projects",
+        "local_tools",
+        "material_generate",
+        "intelligence_douyin_share",
+        "script_draft",
+      ],
+    });
+    expect(
+      prep({
+        stepNumber: 1,
+        steps: [{ toolResults: [{ toolName: "web_read" }] }],
+      }),
+    ).toEqual({
+      activeTools: ["context_projects", "local_tools"],
+    });
+    expect(
+      prep({
+        stepNumber: 1,
+        steps: [{ toolResults: [{ toolName: "context_projects" }] }],
+      }),
+    ).toEqual({});
+  });
   it("最后一步(stepNumber === maxSteps-1)→ toolChoice:'none'(模型必须文字总结,不再被 stopWhen 静默腰斩)", () => {
     const prep = buildChatPrepareStep({ maxSteps: 6 });
     expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });

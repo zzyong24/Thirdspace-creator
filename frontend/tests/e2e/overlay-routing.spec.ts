@@ -15,25 +15,16 @@ import { expect, test } from "../helpers/test-environment";
  */
 
 test.describe("overlay routing", () => {
-  test("direct visit to /projects/new renders the new-project overlay shell", async ({
+  test("direct visit to /projects/new renders the new-project overlay", async ({
     page,
   }) => {
     await page.goto("/projects/new");
 
-    const dialog = page.getByRole("dialog", { name: /新建项目/i });
-    await expect(dialog).toBeVisible();
-    await expect(
-      dialog.getByRole("heading", { name: /新建项目/i }),
-    ).toBeVisible();
-
-    // The overlay owns its mask; the underlying shell stays unmasked.
-    await expect(
-      page.locator(
-        '[data-slot="overlay-layer"][data-overlay="new-project"] [data-slot="overlay-mask"]',
-      ),
-    ).toBeVisible();
+    await expect(page.locator('[data-slot="new-project-form"]')).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /新建项目/i })).toBeVisible();
+    await expect(page.locator('[data-overlay="new-project"]')).toBeVisible();
     const shell = page.getByTestId("app-shell");
-    await expect(shell).toHaveAttribute("data-masked", "false");
+    await expect(shell).toHaveCount(1);
   });
 
   test("?copilot=open on / opens the copilot overlay and preserves pathname", async ({

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { randomBytes } from "node:crypto";
 import { isTrustedLocalRequest } from "@/lib/loopback-core";
 
 // Proxy / request middleware (Next 16 renamed the `middleware` file convention to
@@ -18,13 +19,14 @@ import { isTrustedLocalRequest } from "@/lib/loopback-core";
 //     新增路由天然被守。判定逻辑与 route handler 共用 `loopback-core`(同一份,防覆盖漂移)。
 
 // allowlist:缺 handshake 也放行的 /api 前缀。刻意最小化——只放「自带服务端校验」或「浏览器无法附头」的面:
-//   · /api/v1/blob、/api/v1/local/execution-preview —— <img>/<video> 子资源走浏览器原生请求,
+//   · /api/v1/local/execution-preview —— <img>/<video> 子资源走浏览器原生请求,
 //     **无法附自定义头**,不放行会裂图/裂视频。execution-preview 仍由 route + execution service
 //     双重校验当前用户、待确认状态和 manifest 精确路径，不是任意文件读取口。
+//   · blob 因大文件 body 不能经过 proxy clone，继续由 matcher 排除；但 route 自身执行同一
+//     isTrustedLocalRequest 校验，因此不属于公开 allowlist。
 //   · /api/v1/activate、/api/v1/auth —— 授权/登录入口各有服务端校验(Ed25519 license / 凭据);放行以防
 //     bootstrap 期(token 全局尚未注入)激活页/登录页白屏(BACKLOG 明确「防又一个 /activate 白屏」)。
 const PUBLIC_API_PREFIXES = [
-  "/api/v1/blob/",
   "/api/v1/local/execution-preview/",
   "/api/v1/activate",
   "/api/v1/auth/",
@@ -97,7 +99,28 @@ export function proxy(req: NextRequest): NextResponse {
   // [Module 00, Task 11] 页面路由:注解 x-pathname 供 session guard 构造 redirect。
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  // T-731：每个 HTML/RSC 响应独立 nonce。Next 从 request CSP 读取 nonce 并自动标到
+  // framework scripts；response CSP 由浏览器执行。应用自身不再渲染内联脚本。
+  const nonce = randomBytes(16).toString("base64");
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    "style-src 'self' 'unsafe-inline'",
+    "connect-src 'self'",
+    "img-src 'self' blob: data: asset:",
+    "media-src 'self' blob: data: asset:",
+    "font-src 'self' data:",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "frame-src 'none'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("content-security-policy", csp);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 }
 
 export const config = {

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "local-splash",
+  "description": "随包本地启动页仅可在启动失败时打开已知日志目录；不授权任何 remote origin。",
+  "windows": ["main"],
+  "permissions": ["core:default", "opener:default"]
+}

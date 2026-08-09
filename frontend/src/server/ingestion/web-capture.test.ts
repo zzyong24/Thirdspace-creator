@@ -275,6 +275,44 @@ describe("[T-239c] captureUrl — AbortSignal 提前退出", () => {
 
 // ── [T-326·RT-H04] SSRF 守卫接入 captureUrl:私网/元数据前置拒(不开浏览器)+ 重定向逐跳复检 ──
 describe("[T-326·RT-H04] captureUrl — SSRF 守卫", () => {
+  it("安全抓取后的截图只渲染本地 HTML，并阻断页面二次联网", async () => {
+    const goto = vi.fn();
+    const setContent = vi.fn(async () => undefined);
+    const route = vi.fn(async () => undefined);
+    const screenshot = vi.fn(async () => new Uint8Array([1, 2, 3]));
+    const page: CaptureCapablePage = {
+      goto,
+      setContent,
+      url: () => "about:blank",
+      title: async () => "安全截图",
+      content: async () => "<html><body>公开页</body></html>",
+      screenshot,
+    };
+    const ctx: CaptureCapableContext = {
+      newPage: async () => page,
+      route,
+      close: async () => undefined,
+    };
+    const result = await captureUrl(
+      "https://public.example.com/start",
+      {},
+      {
+        openContext: async () => ctx,
+        safeFetch: async () => ({
+          status: 200,
+          headers: { "content-type": "text/html" },
+          body: Buffer.from("<html><body>公开页</body></html>"),
+          finalUrl: "https://public.example.com/final",
+        }),
+      },
+    );
+    expect(goto).not.toHaveBeenCalled();
+    expect(setContent).toHaveBeenCalledTimes(1);
+    expect(route).toHaveBeenCalledWith("**/*", expect.any(Function));
+    expect(screenshot).toHaveBeenCalledTimes(1);
+    expect(result.finalUrl).toBe("https://public.example.com/final");
+  });
+
   it("私网/回环/元数据目标 → WebCaptureError(SSRF),且不开浏览器", async () => {
     for (const url of [
       "http://127.0.0.1:8080/admin",

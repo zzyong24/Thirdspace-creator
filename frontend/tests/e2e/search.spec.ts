@@ -10,7 +10,7 @@ import { expect, test } from "../helpers/test-environment";
  *    active item).
  *  - ResultTypeTabs render in the approved order
  *    (项目 / 知识 / 素材 / 视频).
- *  - ProjectResultSection shows three project cards.
+ *  - Fresh isolated accounts honestly show zero project cards.
  *  - SearchSideRail order: SearchFilters → QuickActions →
  *    SearchHistory → SearchTips.
  *  - The page is wrapped in exactly one AppShell.
@@ -67,37 +67,31 @@ test.describe("Global Search page", () => {
     expect(cleaned.indexOf("知识")).toBeLessThan(cleaned.indexOf("素材"));
     expect(cleaned.indexOf("素材")).toBeLessThan(cleaned.indexOf("视频"));
 
-    // ProjectResultSection: exactly three project cards.
+    // Fresh account: the project group exists, but it must not fabricate cards.
     const projectSection = main.locator(
       '[data-slot="project-result-section"]',
     );
-    await expect(projectSection).toBeVisible();
+    await expect(projectSection).toHaveCount(1);
     const projectCards = projectSection.locator(
       '[data-slot="project-result-card"]',
     );
-    await expect(projectCards).toHaveCount(3);
+    await expect(projectCards).toHaveCount(0);
 
     // SearchSideRail order.
     const rail = main.locator('[data-slot="search-side-rail"]');
     await expect(rail).toBeVisible();
-    for (const slot of [
-      "search-filters",
-      "search-quick-actions",
-      "search-history",
-      "search-tips",
-    ]) {
+    for (const slot of ["search-filters", "search-quick-actions", "search-tips"]) {
       await expect(rail.locator(`[data-slot="${slot}"]`)).toBeVisible();
     }
+    await expect(rail).toContainText("搜索历史");
+    await expect(rail).toContainText("暂无搜索历史");
   });
 
   test("URL ?q=... is reflected in the search input value", async ({
     page,
   }) => {
     await page.goto("/search?q=AI");
-    const main = page.locator('main[data-page="search"]');
-    const input = main.locator(
-      '[data-slot="search-page-input"]',
-    );
+    const input = page.locator('[data-slot="header-search-input"]');
     await expect(input).toHaveValue("AI");
   });
 });

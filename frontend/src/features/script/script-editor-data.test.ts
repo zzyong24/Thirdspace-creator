@@ -153,6 +153,145 @@ describe("loadPlanningOutline (SEAM-02)", () => {
   });
 });
 
+describe("[T-726] 退役 thesis_tree 不再进入稿面读取链", () => {
+  it("只有 thesis_tree artifact 时返回空", async () => {
+    const artifacts = [{ id: "thesis-1", artifactType: "thesis_tree" }];
+    expect(await loadPlanningOutline("project-x", makeClient({ artifacts }))).toBeNull();
+    expect(artifacts).toHaveLength(1);
+  });
+
+  it("thesis_tree 即使有 current version 也返回空", async () => {
+    const versions = [{ id: "v1", versionNumber: 1, contentData: { nodes: [] } }];
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v1",
+          versions,
+        }),
+      ),
+    ).toBeNull();
+    expect(versions[0]!.contentData).toEqual({ nodes: [] });
+  });
+
+  it("reconstructed thesis_tree 不会冒充 content_outline", async () => {
+    const contentData = { reconstructed: true, nodes: [{ title: "旧论点" }] };
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v1",
+          versions: [{ id: "v1", versionNumber: 1, contentData }],
+        }),
+      ),
+    ).toBeNull();
+    expect(contentData.reconstructed).toBe(true);
+  });
+
+  it("user thesis_tree 不会冒充 content_outline", async () => {
+    const contentData = { origin: "user", outline: ["旧段落"] };
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v1",
+          versions: [{ id: "v1", versionNumber: 1, contentData }],
+        }),
+      ),
+    ).toBeNull();
+    expect(contentData.origin).toBe("user");
+  });
+
+  it("legacy thesis_tree 中即使带 sections 也被忽略", async () => {
+    const contentData = { sections: [{ label: "旧结构", intent: "不应读取" }] };
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v1",
+          versions: [{ id: "v1", versionNumber: 1, contentData }],
+        }),
+      ),
+    ).toBeNull();
+    expect(contentData.sections).toHaveLength(1);
+  });
+
+  it("多个 thesis_tree 版本仍返回空", async () => {
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v2",
+          versions: [
+            { id: "v1", versionNumber: 1, contentData: { nodes: [] } },
+            { id: "v2", versionNumber: 2, contentData: { nodes: [] } },
+          ],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("thesis_tree 与无关 artifact 并存仍返回空", async () => {
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [
+            { id: "thesis-1", artifactType: "thesis_tree" },
+            { id: "trend-1", artifactType: "trend_analysis" },
+          ],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("空标题 thesis 节点不会生成稿面大纲", async () => {
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v1",
+          versions: [{ id: "v1", versionNumber: 1, contentData: { nodes: [{ title: "" }] } }],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("带素材引用的 thesis 节点不会生成稿面大纲", async () => {
+    expect(
+      await loadPlanningOutline(
+        "project-x",
+        makeClient({
+          artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }],
+          currentVersionId: "v1",
+          versions: [
+            {
+              id: "v1",
+              versionNumber: 1,
+              contentData: { nodes: [{ title: "旧论点", materialRefs: ["asset-1"] }] },
+            },
+          ],
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("无 projectId 时 thesis 历史同样不读取", async () => {
+    expect(
+      await loadPlanningOutline(
+        null,
+        makeClient({ artifacts: [{ id: "thesis-1", artifactType: "thesis_tree" }] }),
+      ),
+    ).toBeNull();
+  });
+});
+
 
 // ── [T-387b] 凝固分镜 visual 读回(loadScriptEditorSections)────────────────────
 

@@ -10,8 +10,16 @@ const rustShell = readFileSync(
   join(process.cwd(), "src-tauri", "src", "lib.rs"),
   "utf8",
 );
+const rustLicense = readFileSync(
+  join(process.cwd(), "src-tauri", "src", "license.rs"),
+  "utf8",
+);
 const splashHtml = readFileSync(
   join(process.cwd(), "src-tauri", "placeholder-dist", "index.html"),
+  "utf8",
+);
+const splashJs = readFileSync(
+  join(process.cwd(), "src-tauri", "placeholder-dist", "splash.js"),
   "utf8",
 );
 const verdictGate = readFileSync(
@@ -86,13 +94,32 @@ describe("T-535 desktop startup safety contract", () => {
       'WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败"))',
     );
     expect(splashHtml).toContain('id="creatoros-splash-status"');
-    expect(splashHtml).toContain("window.__creatorosSplashFailure");
-    expect(splashHtml).toContain("CreatorOS 启动失败");
+    expect(splashHtml).toContain('src="splash.js"');
+    expect(splashHtml).not.toMatch(/<script(?![^>]*\bsrc=)[^>]*>/i);
+    expect(splashJs).toContain("window.__creatorosSplashFailure");
+    expect(splashJs).toContain("CreatorOS 启动失败");
   });
 
   it("starts the packaged Next sidecar from its frontend directory on every platform", () => {
-    expect(rustShell).toContain("cmd.current_dir(&sidecar_frontend_dir)");
+    expect(rustShell).toMatch(
+      /cmd\.env_clear\(\)[\s\S]{0,120}\.current_dir\(&sidecar_frontend_dir\)/,
+    );
     expect(rustShell).toContain(".current_dir(&sidecar_frontend_dir)");
+  });
+
+  it("清空 Tauri 子进程继承环境，只回填明确 allowlist 与业务所需字段", () => {
+    expect(rustShell).toContain(
+      "cmd.env_clear()\n                    .envs(allowlisted_sidecar_env())",
+    );
+    expect(rustShell).toMatch(
+      /\.sidecar\("creatoros-server"\)[\s\S]{0,180}\.env_clear\(\)[\s\S]{0,80}\.envs\(allowlisted_sidecar_env\(\)\)/,
+    );
+    expect(rustShell.match(/\.envs\(allowlisted_system_command_env\(\)\)/g)).toHaveLength(2);
+    expect(rustLicense.match(/\.envs\(crate::allowlisted_system_command_env\(\)\)/g)).toHaveLength(2);
+    expect(rustLicense).not.toContain('Command::new("defaults")');
+    expect(rustLicense.match(/Command::new\("\/usr\/bin\/defaults"\)/g)).toHaveLength(2);
+    expect(rustShell).toContain("CREATOROS_SENTINEL_SECRET");
+    expect(rustShell).toContain("OPENAI_API_KEY");
   });
 
   it("turns runtime resolution failures into a visible diagnostic page instead of panicking", () => {

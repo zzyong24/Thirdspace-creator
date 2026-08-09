@@ -3,9 +3,11 @@ import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
 // 不再直调 tool() —— 信封元数据(kind 对齐 + 结构占位)单一真值在 CHAT_TOOL_ERROR_ENVELOPES。
 import {
+  bindChatToolApproval,
   defineChatTool,
   type ChatToolApprovalDecision,
 } from "./chat-tool-gate";
+import { SIDE_EFFECT_TOOL_NAMES } from "./chat-effect-approval";
 // [T-256a] 环境感知扩展:工具探测结果类型(纯函数层白名单/防注入在 local-env-probe,IO 在端口)。
 import type { DetectToolsResult } from "./local-env-probe";
 // [T-326·RT-H05] 不可信外部内容定界包裹(spotlighting 缓解提示词注入;非根治,见该模块头注释)。
@@ -30,6 +32,24 @@ import { wrapUntrustedContent } from "./untrusted-content";
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  /**
+   * [T-731] 付费/持久化工具的确定性审批账本。request 在模型调用后签发一次性审批，
+   * consume 在 execute 前原子消费；缺席时所有登记副作用工具失败关闭。
+   */
+  sideEffectApproval?: {
+    request: (input: {
+      toolName: string;
+      toolInput: unknown;
+      toolCallId: string;
+      messages: unknown[];
+    }) => Promise<ChatToolApprovalDecision> | ChatToolApprovalDecision;
+    consume: (input: {
+      toolName: string;
+      toolInput: unknown;
+      toolCallId: string;
+      messages: unknown[];
+    }) => Promise<void> | void;
+  };
   /**
    * [T-642] host 从可信 ChatContext 绑定的当前项目。存在时，所有“单项目”只读工具都优先
    * 使用这个 id，模型即使显式传入别的 projectId 也不能改绑；避免 @ 引用后再拉全库找标题，
@@ -4634,7 +4654,38 @@ export function buildChatTools(
   const out: Record<string, Tool> = {};
   for (const name of skillToolWhitelist) {
     const impl = impls[name];
-    if (impl) out[name] = impl;
+    if (!impl) continue;
+    if (SIDE_EFFECT_TOOL_NAMES.has(name)) {
+      bindChatToolApproval(
+        impl,
+        async (toolInput, options) => {
+          if (!deps.sideEffectApproval || !options) {
+            return {
+              status: "denied",
+              reason: "副作用审批组件未就绪，已阻止执行",
+            } as const;
+          }
+          return deps.sideEffectApproval.request({
+            toolName: name,
+            toolInput,
+            toolCallId: options.toolCallId,
+            messages: options.messages,
+          });
+        },
+        async (toolInput, options) => {
+          if (!deps.sideEffectApproval) {
+            throw new Error("副作用审批组件未就绪，已阻止执行");
+          }
+          await deps.sideEffectApproval.consume({
+            toolName: name,
+            toolInput,
+            toolCallId: options.toolCallId,
+            messages: options.messages,
+          });
+        },
+      );
+    }
+    out[name] = impl;
   }
   return out as ToolSet;
 }

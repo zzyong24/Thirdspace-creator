@@ -67,6 +67,14 @@ export interface InsertAssetFileInput {
   mediaMetadata: Record<string, unknown>;
 }
 
+export interface MaterializeGeneratedAssetInput extends InsertAssetFileInput {
+  /** 由调用方基于稳定 adoption/idempotency key 派生；assets.id 主键即唯一门。 */
+  assetId: string;
+  assetType: string;
+  name: string;
+  status: "active" | "pending";
+}
+
 export interface AssetRepository {
   seedAssets(rows: AssetRow[]): Promise<void>;
   seedAssetFiles(rows: AssetFileRow[]): Promise<void>;
@@ -115,6 +123,15 @@ export interface AssetRepository {
       //   才进素材库(list 按 active 过滤,pending 天然不显示)。
       status?: string;
     },
+    accountId: string,
+  ): Promise<AssetRow>;
+  /**
+   * 把稳定 assetId + 首文件在同一事务内落库。并发/重试命中同一主键时返回既有资产，
+   * 不再创建第二个 asset；供 execution adoption 消除 create→journal 崩溃窗口。
+   */
+  materializeGeneratedAsset(
+    userId: string,
+    input: MaterializeGeneratedAssetInput,
     accountId: string,
   ): Promise<AssetRow>;
   updateAssetStatus(
@@ -395,6 +412,78 @@ export function createAssetRepository(
       });
       const rows = await db.select().from(assets).where(eq(assets.id, id));
       return rows[0]!;
+    },
+
+    async materializeGeneratedAsset(userId, input, accountId) {
+      return db.transaction(async (tx) => {
+        const existing = await tx
+          .select()
+          .from(assets)
+          .where(
+            and(
+              eq(assets.id, input.assetId),
+              eq(assets.userId, userId),
+              eq(assets.accountId, accountId),
+            ),
+          );
+        if (existing[0]) return existing[0];
+
+        const fileId = deps.nextId("afile");
+        const now = deps.now();
+        const inserted = await tx
+          .insert(assets)
+          .values({
+            id: input.assetId,
+            userId,
+            accountId,
+            currentFileId: fileId,
+            assetType: input.assetType,
+            name: input.name,
+            description: "",
+            status: input.status,
+            isFavorite: false,
+            deletedAt: null,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .onConflictDoNothing()
+          .returning({ id: assets.id });
+        if (inserted.length === 0) {
+          const winner = await tx
+            .select()
+            .from(assets)
+            .where(
+              and(
+                eq(assets.id, input.assetId),
+                eq(assets.userId, userId),
+                eq(assets.accountId, accountId),
+              ),
+            );
+          if (!winner[0]) {
+            throw new OwnershipError("Generated asset id is already owned");
+          }
+          return winner[0];
+        }
+        await tx.insert(assetFiles).values({
+          id: fileId,
+          assetId: input.assetId,
+          versionNumber: 1,
+          storageKey: input.storageKey,
+          mimeType: input.mimeType,
+          fileSize: input.fileSize,
+          checksum: input.checksum,
+          width: input.width,
+          height: input.height,
+          durationMs: input.durationMs,
+          mediaMetadata: input.mediaMetadata,
+          createdAt: now,
+        });
+        const rows = await tx
+          .select()
+          .from(assets)
+          .where(eq(assets.id, input.assetId));
+        return rows[0]!;
+      });
     },
 
     async updateAssetStatus(userId, assetId, patch, accountId) {

@@ -169,7 +169,10 @@ export default defineConfig({
     // application-code ~51s)—— 旧值 120s 必超时(审计 B-04 根因之一)。按实测 + 余量设 300s;
     // 缓存热了以后远快于此,timeout 是上限不是等待时长。
     timeout: 300_000,
-    url: TEST_BASE_URL,
+    // 根路径属于受保护的 Creator route，空测试库冷启动期间可能先返回 404。
+    // 使用永远可公开渲染的登录页作为 readiness probe，避免 Playwright 在
+    // 已就绪的服务器上空等到 300 秒超时。
+    url: `${TEST_BASE_URL}/login`,
     stdout: "pipe",
     stderr: "pipe",
   },

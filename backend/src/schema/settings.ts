@@ -48,6 +48,12 @@ export const modelConfigurations = pgTable("model_configurations", {
   // app's end form is a local client — no leak surface). The public DTO masks
   // this to a `hasSecret` boolean and NEVER serializes the raw value.
   secretValue: text("secret_value"),
+  // T-731：长期用户模型 Key 只进入系统凭据库；数据库仅保留不可逆引用与迁移状态。
+  keyringRef: text("keyring_ref"),
+  credentialMigrationState: text("credential_migration_state")
+    .notNull()
+    .default("not_required"),
+  rotatedAt: text("rotated_at"),
   settings: jsonb("settings").notNull(),
   baseUrl: text("base_url"),
   apiFormat: text("api_format").notNull().default("anthropic"),
@@ -63,7 +69,13 @@ export const channelModelCredentials = pgTable(
     userId: text("user_id").notNull(),
     scopeId: text("scope_id").notNull(),
     serviceId: text("service_id").notNull(),
-    encryptedSecret: text("encrypted_secret").notNull(),
+    // 仅升级迁移失败时保留旧版唯一密文副本；生产读路径永不再消费本列。
+    encryptedSecret: text("encrypted_secret"),
+    keyringRef: text("keyring_ref"),
+    serviceType: text("service_type").notNull().default("legacy"),
+    credentialStatus: text("credential_status").notNull().default("migration_pending"),
+    migrationState: text("migration_state").notNull().default("pending"),
+    rotatedAt: text("rotated_at"),
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
@@ -233,6 +245,9 @@ CREATE TABLE IF NOT EXISTS model_configurations (
   model_name TEXT NOT NULL,
   secret_reference TEXT NOT NULL DEFAULT '',
   secret_value TEXT,
+  keyring_ref TEXT,
+  credential_migration_state TEXT NOT NULL DEFAULT 'not_required',
+  rotated_at TEXT,
   settings JSONB NOT NULL,
   base_url TEXT,
   api_format TEXT NOT NULL DEFAULT 'anthropic',
@@ -242,7 +257,12 @@ CREATE TABLE IF NOT EXISTS channel_model_credentials (
   user_id TEXT NOT NULL,
   scope_id TEXT NOT NULL,
   service_id TEXT NOT NULL,
-  encrypted_secret TEXT NOT NULL,
+  encrypted_secret TEXT,
+  keyring_ref TEXT,
+  service_type TEXT NOT NULL DEFAULT 'legacy',
+  credential_status TEXT NOT NULL DEFAULT 'migration_pending',
+  migration_state TEXT NOT NULL DEFAULT 'pending',
+  rotated_at TEXT,
   updated_at TEXT NOT NULL,
   UNIQUE (user_id, scope_id, service_id)
 );

@@ -81,6 +81,7 @@ export interface ExecutionAssetsWritePort {
       name: string;
       bytes: Uint8Array;
       mimeType: string;
+      idempotencyKey: string;
     },
   ): Promise<{ id: string }>;
 }
@@ -243,13 +244,14 @@ export function createExecutionService(
       // → createGeneratedAsset 入资产库(对象存储写入只经 AssetsService,G5 边界)。
       // 实体缺失 → 整单失败(诚实:不半采半丢;沙箱保留,可重试 confirm)。
       //
-      // [RT-H10] 逐项幂等(DATA-H06 adopted-keys 同款,稳定键 = 产物 out/ 相对路径,
+      // [T-731] 逐项幂等稳定键 = taskId + 产物 out/ 相对路径。资产服务把它散列为
+      // assets.id 主键，并在同一事务写 asset + 首文件；因此即便进程在资产返回后、下面
+      // journal 写入前崩溃，重试也只会回读同一 asset，不再产生第二份资产。
+      // [RT-H10] journal 仍负责批中断后的快速跳过与最终 DTO 投影。
       // 同一 manifest 内唯一):每采纳完一个产物立刻记 execution_adopted_item 结果行;
       // 第 N 个失败 → 任务留在 awaiting_confirmation,重试跳过前 N-1 个(复用已建
-      // assetId),不再重复入库。为什么不是整批 Drizzle 事务:落库走跨模块端口(assets/
-      // ai),端口实现绑根 db,与 PGlite transactionMutex 的组合已实测死锁(DATA-H06
-      // 探针),弃用。残余窗口:单个产物「asset 已建、日志行未记」之间崩溃 → 重试最多
-      // 重复**该一个**产物(旧行为重复前 N-1 个,收敛到常数),诚实标注于此。
+      // assetId),不再重复读取/上传。跨模块不拼大事务，靠资产主键唯一 upsert + journal
+      // 形成等价 outbox 语义。
       const journal = adoptedItemsOf(results);
       const adoptedAssetIds: string[] = [];
       for (const artifact of manifest.artifacts) {
@@ -273,6 +275,7 @@ export function createExecutionService(
           name: artifact.fileName,
           bytes,
           mimeType: artifact.mimeType ?? "application/octet-stream",
+          idempotencyKey: `execution-adoption:${task.id}:${artifact.path}`,
         });
         // 该产物落完立刻记日志行 —— 下一个产物失败时本条进度已持久化。
         await deps.ai.recordAuxResult(ctx, taskId, {

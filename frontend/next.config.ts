@@ -121,6 +121,9 @@ const nextConfig: NextConfig = {
     // 当前平台的原生 canvas 包；DOCX/Markdown 仍走各自的纯文本链路。
     "pdf-parse",
     "@napi-rs/canvas",
+    // T-731：长期模型凭据使用 macOS Keychain / Windows Credential Manager 原生后端。
+    // 保持外置，让 standalone tracing 连同当前平台 .node 二进制进入 sidecar。
+    "@napi-rs/keyring",
     // [T-173/T-469] 采集/扫码用 Playwright(douyin-cdp/web-capture 动态 import；CLI 只做确定性 fs 扫描)。
     //   保持外置:不让 Next 打包(playwright 有 ESM 入口 → 打包报 "require() resolves to a EcmaScript
     //   module")。运行时从 node_modules 解析(桌面包由 build-sidecar bundlePlaywright 实拷进去)。

@@ -11,15 +11,15 @@ test.describe("New Project dialog", () => {
     const dialog = page.getByRole("dialog", { name: "新建项目" });
     await expect(dialog).toBeVisible();
     const sections = dialog.locator("[data-form-section]");
-    await expect(sections).toHaveCount(5);
+    await expect(sections).toHaveCount(4);
     expect(
       await sections.evaluateAll((nodes) =>
         nodes.map((node) => node.getAttribute("data-section")),
       ),
-    ).toEqual(["name", "brief", "platform", "content-type", "creation-mode"]);
+    ).toEqual(["name", "brief", "orientation", "creation-mode"]);
   });
 
-  test("creates and enters the new project research workspace when requested", async ({
+  test("creates and enters the unified project workbench when requested", async ({
     page,
   }) => {
     await page.goto("/");
@@ -27,13 +27,12 @@ test.describe("New Project dialog", () => {
 
     const dialog = page.getByRole("dialog", { name: "新建项目" });
     await expect(dialog).toBeVisible();
-    await dialog.getByLabel(/项目名称/).fill("AI Native Browser 深度解析");
+    await dialog.getByLabel(/项目名称/).fill(`E2E 新项目 ${Date.now()}`);
+    await dialog.getByText("竖屏 9:16", { exact: true }).click();
     await dialog.getByRole("button", { name: /^创建$/ }).click();
 
-    await page.waitForURL("**/projects/ai-native-browser/research");
-    expect(new URL(page.url()).pathname).toBe(
-      "/projects/ai-native-browser/research",
-    );
+    await page.waitForURL(/\/projects\/[^/]+$/);
+    await expect(page).not.toHaveURL(/\/research$/);
     await expect(page.getByRole("dialog", { name: "新建项目" })).toHaveCount(0);
   });
 });

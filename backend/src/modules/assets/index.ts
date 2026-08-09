@@ -52,11 +52,15 @@ export {
   safeJoin,
   signBlobToken,
   verifyBlobToken,
-  blobSecret,
+  blobTrustRoot,
+  installBlobTrustRoot,
+  blobStorageRootId,
   rootPathLegalityReason,
   PathTraversalError,
   type BlobMethod,
   type VerifyResult,
+  type BlobTrustRoot,
+  type BlobTokenBinding,
 } from "./blob-security";
 
 export { createAssetsTransport, ASSET_OP_IDS } from "./assets.transport";

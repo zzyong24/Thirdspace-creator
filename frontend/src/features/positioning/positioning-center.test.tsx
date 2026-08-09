@@ -207,6 +207,8 @@ describe("PositioningCenterView", () => {
     const link = screen.getByTestId("positioning-open-copilot");
     expect(link.textContent).toContain("开始定位对话");
     expect(screen.queryByText(/AI 生成定位建议/)).toBeNull();
+    expect(screen.queryByLabelText("搜索地区")).toBeNull();
+    expect(screen.queryByRole("button", { name: "联网补充" })).toBeNull();
   });
 
   it("renders the right-rail 定位规则 with the 5 rule cards (downstream constraints)", () => {

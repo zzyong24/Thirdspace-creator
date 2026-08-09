@@ -11,8 +11,8 @@ import { expect, test } from "../helpers/test-environment";
  *    underlying pathname is preserved.
  *  - Escape closes the dialog.
  *  - Browser Back closes the dialog.
- *  - The submit button is `type="submit"` inside a `<form>` with no
- *    `action` and no `onSubmit` — no real network call.
+ *  - The submit button sends the message through the real same-origin
+ *    `/api/chat` stream; the shared network policy still forbids external calls.
  */
 
 test.describe("AI Copilot dialog", () => {
@@ -35,11 +35,11 @@ test.describe("AI Copilot dialog", () => {
     await expect(layer).toHaveAttribute("class", /justify-center/);
     await expect(layer).not.toHaveAttribute("class", /justify-end/);
 
-    // Page-specs §16 component tree.
+    // Current conversation surface. The retired dashboard/quick-entry cards
+    // are intentionally absent after Copilot converged on one chat flow.
     await expect(page.locator('[data-slot="prompt-composer"]')).toBeVisible();
-    await expect(page.locator('[data-slot="copilot-dashboard"]')).toBeVisible();
-    await expect(page.locator('[data-slot="quick-entries"]')).toBeVisible();
-    await expect(page.locator('[data-slot="smart-recommendation"]')).toBeVisible();
+    await expect(page.locator('[data-slot="copilot-dashboard"]')).toHaveCount(0);
+    await expect(page.locator('[data-slot="quick-entries"]')).toHaveCount(0);
   });
 
   test("close button removes only ?copilot=open and preserves the pathname", async ({
@@ -65,7 +65,7 @@ test.describe("AI Copilot dialog", () => {
     await expect(page).not.toHaveURL(/copilot=/);
   });
 
-  test("submit button does not post a real network request", async ({
+  test("submit button posts only to the same-origin chat endpoint", async ({
     page,
   }) => {
     const requests: string[] = [];
@@ -75,12 +75,13 @@ test.describe("AI Copilot dialog", () => {
       }
     });
     await page.goto("/?copilot=open");
-    // The composer disables submit while empty, so type first; the submit
-    // path is a local-only append and must still fire no network request.
+    // The composer disables submit while empty, so type first.
     await page.getByLabel("我能帮你做什么").fill("帮我分析这个选题");
     await page.getByTestId("submit-button").click();
     // Allow microtasks to settle.
     await page.waitForTimeout(50);
-    expect(requests).toEqual([]);
+    const chatRequests = requests.filter((url) => /\/api\/chat$/.test(url));
+    expect(chatRequests).toHaveLength(1);
+    expect(new URL(chatRequests[0]!).origin).toBe(new URL(page.url()).origin);
   });
 });

@@ -53,6 +53,17 @@ export function isLoopbackRequest(req: Request): boolean {
 
 /** [T-372 L2] 握手 token 请求头名(Rust sync_mirror_to_sidecar / 前端 handshake-client / proxy 共用)。 */
 export const HANDSHAKE_HEADER = "x-creatoros-handshake";
+export const HANDSHAKE_COOKIE = "creatoros_loopback_boot";
+
+function cookieValue(req: Request, name: string): string | null {
+  const raw = req.headers.get("cookie");
+  if (!raw) return null;
+  for (const part of raw.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return decodeURIComponent(rest.join("="));
+  }
+  return null;
+}
 
 /**
  * [T-372 L2 / T-415 P0-B] 启动级 nonce 握手校验:桌面态(env 有 token)要求请求头逐字节一致。
@@ -69,7 +80,12 @@ export function hasValidHandshake(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   const token = env.CREATOROS_SIDECAR_HANDSHAKE_TOKEN?.trim();
-  if (token) return req.headers.get(HANDSHAKE_HEADER) === token;
+  if (token) {
+    return (
+      req.headers.get(HANDSHAKE_HEADER) === token ||
+      cookieValue(req, HANDSHAKE_COOKIE) === token
+    );
+  }
   const required =
     (env.CREATOROS_HANDSHAKE_REQUIRED ??
       process.env.CREATOROS_HANDSHAKE_REQUIRED) === "1";

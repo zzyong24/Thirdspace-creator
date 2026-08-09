@@ -14,21 +14,47 @@
 //      the future. This prevents arbitrary write-to-disk / read-from-disk via the
 //      public route. The compare is constant-time (timingSafeEqual).
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import * as path from "node:path";
 
-// The process-wide HMAC secret for blob tokens. A fixed in-process dev default is
-// used when CREATOROS_BLOB_SECRET is unset so local dev works out of the box; a
-// real deployment MUST set the env (the default is not a secret). The default is
-// intentionally constant (not random) so a presigned URL minted in one request
-// still verifies in the next — randomizing per-process would break GET links
-// across restarts.
-const DEV_BLOB_SECRET =
-  "creatoros-dev-blob-secret-v1-do-not-use-in-production";
+export interface BlobTrustRoot {
+  secret: string;
+  bootId: string;
+}
 
-export function blobSecret(): string {
-  const env = process.env.CREATOROS_BLOB_SECRET;
-  return env && env.length > 0 ? env : DEV_BLOB_SECRET;
+export interface BlobTokenBinding {
+  userId: string;
+  storageRootId: string;
+}
+
+const TRUST_ROOT_KEY = Symbol.for("creatoros.blob-trust-root.v2");
+type TrustRootGlobal = typeof globalThis & {
+  [TRUST_ROOT_KEY]?: Readonly<BlobTrustRoot>;
+};
+
+/**
+ * Sidecar 启动最早期从 Rust 继承 fd 安装一次。重复安装（哪怕同值）视为启动异常，
+ * 防止运行中轮换后旧 URL 与新 URL 产生不可审计的混用窗口。
+ */
+export function installBlobTrustRoot(root: BlobTrustRoot): void {
+  if (root.secret.length < 32 || root.bootId.length < 16) {
+    throw new Error("invalid blob trust root");
+  }
+  const state = globalThis as TrustRootGlobal;
+  if (state[TRUST_ROOT_KEY]) throw new Error("blob trust root already installed");
+  state[TRUST_ROOT_KEY] = Object.freeze({ ...root });
+}
+
+/** 没有 Rust 注入的随机信任根就失败关闭；生产代码不存在源码固定回退。 */
+export function blobTrustRoot(): Readonly<BlobTrustRoot> {
+  const installed = (globalThis as TrustRootGlobal)[TRUST_ROOT_KEY];
+  if (installed) return installed;
+  throw new Error("blob trust root unavailable");
+}
+
+/** 仅暴露不可逆 root 身份，不把用户目录写入 URL/token payload。 */
+export function blobStorageRootId(rootPath: string): string {
+  return createHash("sha256").update(path.resolve(rootPath)).digest("hex");
 }
 
 // ---------------------------------------------------------------------------
@@ -82,15 +108,36 @@ export function safeJoin(rootPath: string, key: string): string {
 
 export type BlobMethod = "PUT" | "GET";
 
-/** Mint an HMAC token for (method, storageKey, exp). `exp` is epoch millis. */
+function tokenPayload(
+  method: BlobMethod,
+  storageKey: string,
+  exp: number,
+  binding: BlobTokenBinding,
+  bootId: string,
+): string {
+  // NUL 分隔 + 固定版本，避免冒号出现在 user/key 中造成拼接歧义。
+  return [
+    "blob-v2",
+    method,
+    binding.userId,
+    binding.storageRootId,
+    storageKey,
+    String(exp),
+    bootId,
+  ].join("\0");
+}
+
+/** Mint an HMAC token bound to tenant, storage root, method, expiry and boot. */
 export function signBlobToken(
   method: BlobMethod,
   storageKey: string,
   exp: number,
-  secret: string = blobSecret(),
+  binding: BlobTokenBinding,
+  trustRoot: Readonly<BlobTrustRoot> = blobTrustRoot(),
 ): string {
-  const payload = `${method}:${storageKey}:${exp}`;
-  return createHmac("sha256", secret).update(payload).digest("hex");
+  return createHmac("sha256", trustRoot.secret)
+    .update(tokenPayload(method, storageKey, exp, binding, trustRoot.bootId))
+    .digest("hex");
 }
 
 export interface VerifyResult {
@@ -108,12 +155,13 @@ export function verifyBlobToken(
   storageKey: string,
   exp: number,
   token: string | null | undefined,
+  binding: BlobTokenBinding,
   now: number = Date.now(),
-  secret: string = blobSecret(),
+  trustRoot: Readonly<BlobTrustRoot> = blobTrustRoot(),
 ): VerifyResult {
   if (!token || !Number.isFinite(exp)) return { ok: false, reason: "missing" };
   if (exp <= now) return { ok: false, reason: "expired" };
-  const expected = signBlobToken(method, storageKey, exp, secret);
+  const expected = signBlobToken(method, storageKey, exp, binding, trustRoot);
   // Length-guard before timingSafeEqual (it throws on length mismatch).
   if (token.length !== expected.length) {
     return { ok: false, reason: "bad-signature" };

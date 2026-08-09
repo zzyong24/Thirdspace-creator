@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 
 import { expect, test } from "../helpers/test-environment";
 
+test.use({ accountMode: "unselected" });
+
 const ONBOARDING_CHECKS = [
   "AC-ONB-REOPEN",
   "AC-ONB-FLOW",

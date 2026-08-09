@@ -123,6 +123,7 @@ describe("reconstruct-runner — imported auto-fill (测1 核心)", () => {
     const planning = materialized.find((m) => m.stage === "planning");
     expect(research).toBeDefined();
     expect(planning).toBeUndefined();
+    expect(materialized[0]).toBe(research);
 
     // artifactType 落在 validateStageGate 白名单(research→trend_analysis;planning→thesis_tree)。
     expect(research!.artifactType).toBe("trend_analysis");

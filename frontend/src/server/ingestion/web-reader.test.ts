@@ -524,6 +524,68 @@ describe("[T-239c] readUrl — AbortSignal 提前退出", () => {
 
 // ── [T-326·RT-H04] SSRF 守卫接入 readUrl:私网/元数据前置拒(不开浏览器)+ 重定向逐跳复检 ──
 describe("[T-326·RT-H04] readUrl — SSRF 守卫", () => {
+  it("生产安全抓取结果只经 setContent 渲染，绝不再 page.goto 外部 URL", async () => {
+    const goto = vi.fn();
+    const setContent = vi.fn(async () => undefined);
+    const route = vi.fn(async () => undefined);
+    const html = `<html><head><title>安全正文</title></head><body><article>${"<p>受控请求器取得的公开正文。</p>".repeat(12)}</article></body></html>`;
+    const ctx = makeCtx({
+      goto,
+      setContent,
+      content: async () => html,
+      title: async () => "安全正文",
+    });
+    ctx.route = route;
+    const result = await readUrl(
+      "https://public.example.com/start",
+      { authDir: "/tmp/x" },
+      {
+        openContext: async () => ctx,
+        safeFetch: async () => ({
+          status: 200,
+          headers: { "content-type": "text/html" },
+          body: Buffer.from(html),
+          finalUrl: "https://public.example.com/final",
+        }),
+      },
+    );
+    expect(goto).not.toHaveBeenCalled();
+    expect(setContent).toHaveBeenCalledWith(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    expect(route).toHaveBeenCalledWith("**/*", expect.any(Function));
+    expect(result.finalUrl).toBe("https://public.example.com/final");
+    expect(result.text).toContain("受控请求器取得");
+  });
+
+  it("安全抓取返回 567 时诚实失败，不走旧 challenge 的浏览器重载", async () => {
+    const goto = vi.fn();
+    const ctx = makeCtx({
+      goto,
+      setContent: vi.fn(async () => undefined),
+      content: async () => "<html><body>challenge</body></html>",
+    });
+    ctx.route = vi.fn(async () => undefined);
+
+    await expect(
+      readUrl(
+        "https://public.example.com/start",
+        { authDir: "/tmp/x" },
+        {
+          openContext: async () => ctx,
+          safeFetch: async () => ({
+            status: 567,
+            headers: { "content-type": "text/html" },
+            body: Buffer.from("<html><body>challenge</body></html>"),
+            finalUrl: "https://public.example.com/challenge",
+          }),
+        },
+      ),
+    ).rejects.toMatchObject({ status: 567, code: "HTTP_ERROR" });
+    expect(goto).not.toHaveBeenCalled();
+  });
+
   it("私网/回环/元数据目标 → WebCaptureError(SSRF),且不开浏览器", async () => {
     for (const url of [
       "http://127.0.0.1:8080/admin",

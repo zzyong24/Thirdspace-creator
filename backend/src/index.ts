@@ -225,6 +225,8 @@ export {
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
 export { activationState } from "./schema/activation";
 export type { ActivationStateRow } from "./schema/activation";
+export { asrUsageIntents } from "./schema/asr-usage";
+export type { AsrUsageIntentRow } from "./schema/asr-usage";
 export type { RequestContext } from "./request-context";
 // [T-363] 清库/重置保留表单一真值清单 + 「重置工作区」归档后的 user 级资产迁回。
 export { PRESERVE_TABLES, PRESERVE_TABLE_SET } from "./reset-preserve";

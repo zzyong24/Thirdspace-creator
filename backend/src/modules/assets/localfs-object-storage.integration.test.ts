@@ -2,14 +2,19 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { createLocalFsObjectStorage } from "./localfs-object-storage";
-import { verifyBlobToken } from "./blob-security";
+import {
+  createLocalFsObjectStorage,
+  localFsProbeEnv,
+} from "./localfs-object-storage";
+import { blobStorageRootId, verifyBlobToken } from "./blob-security";
 
 // Exercises the local-fs adapter against a REAL tmp dir: createPresignedUpload
 // writes a sidecar + mints a token URL, a manual byte-write simulates the FE PUT,
 // and headObject reads back the real size + sha256 checksum.
 
 let root: string;
+const TRUST = { secret: "localfs-test-secret", bootId: "localfs-test-boot" };
+const USER_ID = "localfs-test-user";
 
 beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "creatoros-localfs-"));
@@ -22,12 +27,30 @@ afterEach(async () => {
 function makeStorage() {
   let n = 0;
   return createLocalFsObjectStorage(
-    { rootPath: root, publicBaseUrl: "/api/v1/blob", expiresInMs: 60_000 },
+    {
+      rootPath: root,
+      publicBaseUrl: "/api/v1/blob",
+      expiresInMs: 60_000,
+      userId: USER_ID,
+      trustRoot: TRUST,
+    },
     { nextKey: () => `uploads/objkey-${++n}`, now: () => 1_000_000 },
   );
 }
 
 describe("localfs-object-storage", () => {
+  it("ffprobe 子进程环境只保留运行必需 allowlist，不继承 sentinel secret", () => {
+    const env = localFsProbeEnv({
+      PATH: "/usr/bin",
+      LANG: "zh_CN.UTF-8",
+      CREATOROS_SENTINEL_SECRET: "must-not-leak",
+      OPENAI_API_KEY: "must-not-leak",
+    });
+    expect(env.PATH).toBe("/usr/bin");
+    expect(env.LANG).toBe("zh_CN.UTF-8");
+    expect(env.CREATOROS_SENTINEL_SECRET).toBeUndefined();
+    expect(env.OPENAI_API_KEY).toBeUndefined();
+  });
   it("createPresignedUpload writes a sidecar + a token-gated PUT URL", async () => {
     const storage = makeStorage();
     const up = await storage.createPresignedUpload({
@@ -47,9 +70,17 @@ describe("localfs-object-storage", () => {
     const u = new URL(up.uploadUrl, "http://localhost");
     const exp = Number(u.searchParams.get("exp"));
     const token = u.searchParams.get("token");
-    expect(verifyBlobToken("PUT", up.storageKey, exp, token, 1_000_001).ok).toBe(
-      true,
-    );
+    expect(
+      verifyBlobToken(
+        "PUT",
+        up.storageKey,
+        exp,
+        token,
+        { userId: USER_ID, storageRootId: blobStorageRootId(root) },
+        1_000_001,
+        TRUST,
+      ).ok,
+    ).toBe(true);
 
     // The sidecar exists with the declared metadata.
     const sidecar = JSON.parse(
@@ -135,12 +166,28 @@ describe("localfs-object-storage", () => {
     const exp = Number(u.searchParams.get("exp"));
     const token = u.searchParams.get("token");
     expect(
-      verifyBlobToken("GET", "image/uploads/objkey-1", exp, token, 1_000_001)
+      verifyBlobToken(
+        "GET",
+        "image/uploads/objkey-1",
+        exp,
+        token,
+        { userId: USER_ID, storageRootId: blobStorageRootId(root) },
+        1_000_001,
+        TRUST,
+      )
         .ok,
     ).toBe(true);
     // A GET token must NOT validate as PUT.
     expect(
-      verifyBlobToken("PUT", "image/uploads/objkey-1", exp, token, 1_000_001)
+      verifyBlobToken(
+        "PUT",
+        "image/uploads/objkey-1",
+        exp,
+        token,
+        { userId: USER_ID, storageRootId: blobStorageRootId(root) },
+        1_000_001,
+        TRUST,
+      )
         .ok,
     ).toBe(false);
   });
@@ -149,7 +196,12 @@ describe("localfs-object-storage", () => {
     // nextKey is server-controlled, but assert the guard is wired: a malicious
     // key shape would throw before any fs write.
     const storage = createLocalFsObjectStorage(
-      { rootPath: root, publicBaseUrl: "/api/v1/blob" },
+      {
+        rootPath: root,
+        publicBaseUrl: "/api/v1/blob",
+        userId: USER_ID,
+        trustRoot: TRUST,
+      },
       { nextKey: () => "../../../etc/evil" },
     );
     await expect(

@@ -5,18 +5,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EntitlementClaimPanel } from "./entitlement-claim-panel";
 
 const invoke = vi.fn();
-const openUrl = vi.fn();
-const relaunch = vi.fn();
+const fetchMock = vi.fn();
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke }));
-vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl }));
-vi.mock("@tauri-apps/plugin-process", () => ({ relaunch }));
 
 describe("EntitlementClaimPanel", () => {
   beforeEach(() => {
+    (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ = {};
     invoke.mockReset();
-    openUrl.mockReset();
-    relaunch.mockReset();
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
     invoke.mockImplementation(async (command: string) => {
       if (command === "entitlement_claim_resume") return null;
       return {
@@ -44,7 +43,11 @@ describe("EntitlementClaimPanel", () => {
 
     expect(await screen.findByText("ABCD-EFGH")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "去官方页面确认" }));
-    expect(openUrl).toHaveBeenCalledWith("https://growth.example.com/claim");
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/local/open-url", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ url: "https://growth.example.com/claim" }),
+    });
     expect(document.body.textContent).not.toMatch(/deviceSecret|claimToken|codeVerifier/);
   });
 
@@ -108,9 +111,9 @@ describe("EntitlementClaimPanel", () => {
     await user.click(screen.getByRole("button", { name: "我已确认，继续" }));
 
     expect(await screen.findByText("产品已领取")).toBeInTheDocument();
-    expect(relaunch).not.toHaveBeenCalled();
+    expect(invoke).not.toHaveBeenCalledWith("relaunch_app");
     await user.click(screen.getByRole("button", { name: "进入应用" }));
-    expect(relaunch).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledWith("relaunch_app");
   });
 
   it("[T-575] native 技术错误不进入普通页面，失败后仍可重试", async () => {

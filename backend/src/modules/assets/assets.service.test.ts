@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createAssetRepository } from "./assets.repository";
@@ -163,6 +163,25 @@ describe("assets.service — completeUpload (C4)", () => {
 });
 
 describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
+  it("稳定 idempotencyKey 原子物化并在 journal 崩溃重试时复用同一 asset", async () => {
+    const putSpy = vi.spyOn(storage, "putObject");
+    const input = {
+      assetType: "document",
+      name: "执行产物.txt",
+      bytes: new Uint8Array([1, 2, 3]),
+      mimeType: "text/plain",
+      idempotencyKey: "execution-adoption:task-1:out/a.txt",
+    };
+    const first = await service.createGeneratedAsset(ctxA, input);
+    const replay = await service.createGeneratedAsset(ctxA, input);
+    expect(first.id).toMatch(/^asset_adopt_[a-f0-9]{40}$/);
+    expect(replay.id).toBe(first.id);
+    expect(replay.currentFileId).toBe(first.currentFileId);
+    expect(putSpy).toHaveBeenCalledTimes(1);
+    const list = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(list.filter((asset) => asset.id === first.id)).toHaveLength(1);
+  });
+
   it("direct-writes server bytes + materializes asset (active) with a first file, listable", async () => {
     const bytes = new Uint8Array([1, 2, 3, 4]);
     const asset = await service.createGeneratedAsset(ctxA, {

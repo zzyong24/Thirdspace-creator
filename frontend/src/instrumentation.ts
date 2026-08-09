@@ -30,6 +30,14 @@ export async function register(): Promise<void> {
   const { verifyVerdictTokenOrExit } = await import("@/server/verdict-token-gate");
   verifyVerdictTokenOrExit();
 
+  if (process.env.CREATOROS_DESKTOP === "1") {
+    // 必须早于任何 storage service / route 创建；失败直接拒绝 sidecar 启动。
+    const { installBlobTrustRootFromInheritedFd } = await import(
+      "@/server/blob-trust-bootstrap"
+    );
+    installBlobTrustRootFromInheritedFd();
+  }
+
   // [T-365/T-362] 桌面态装 sidecar 生命周期守护:SIGTERM 优雅退出(flush PGlite)+ 孤儿自检
   //   (ppid==1 自杀,盖壳崩溃/强退)。dev(next dev)不装——ppid 是终端 shell,SIGINT 归 next 管。
   if (process.env.CREATOROS_DESKTOP === "1") {

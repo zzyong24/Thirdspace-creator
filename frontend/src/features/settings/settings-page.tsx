@@ -119,7 +119,7 @@ export interface SettingsPageProps {
   readonly skills?: readonly SkillItem[];
   /**
    * [T-167] 桌面激活状态(route server 侧经 `getActivationService().getStatus()` 本地读,
-   * **不打网络**)。「账户」页签的激活卡据此显四态徽章 + 授权类型 / 到期 / 机器码 / 最后在线校验。
+   * **不打网络**)。「账户」页签的激活卡据此显四态徽章 + 授权类型 / 到期 / 支持编号 / 最后在线校验。
    * web / 未装配 / 读失败 → undefined:激活卡显「激活为桌面端功能」诚实空态,绝不假装已激活。
    */
   readonly activation?: ActivationState;
@@ -136,7 +136,8 @@ export interface SettingsPageProps {
  */
 export interface ActivationState {
   readonly status: "inactive" | "active" | "grace" | "expired";
-  readonly machineId: string | null;
+  /** 服务端以启动期随机 secret 派生的不可逆短引用；完整设备标识不得序列化到客户端。 */
+  readonly supportRef: string | null;
   readonly licenseMode: string | null;
   /** ISO;null = 永久激活。 */
   readonly expiresAt: string | null;
