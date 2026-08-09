@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { shouldResumeToolApprovalOnce } from "./tool-approval-resume-guard";
+import {
+  restoreToolApprovalSignatures,
+  shouldResumeToolApprovalOnce,
+} from "./tool-approval-resume-guard";
 
 type TestPart = {
   type: string;
@@ -7,7 +10,12 @@ type TestPart = {
   state?: string;
   input?: unknown;
   output?: unknown;
-  approval?: { id?: string; approved?: boolean };
+  approval?: {
+    id?: string;
+    approved?: boolean;
+    reason?: string;
+    signature?: string;
+  };
 };
 
 function messageWithPart(part: TestPart) {
@@ -86,5 +94,34 @@ describe("[T-673] tool approval resume guard", () => {
     expect(
       shouldResumeToolApprovalOnce(completed, attempted, sdkComplete),
     ).toBe(false);
+  });
+});
+
+describe("[T-736] tool approval signature resume", () => {
+  it("SDK 覆盖 approval 后，发请求前按同 approvalId 恢复原签名", () => {
+    const messages = approvedMessage();
+    expect(messages[0]!.parts[1]!.approval?.signature).toBeUndefined();
+
+    const restored = restoreToolApprovalSignatures(
+      messages,
+      new Map([["approval-1", "server-hmac-signature"]]),
+    );
+
+    expect(restored[0]!.parts[1]!.approval).toEqual({
+      id: "approval-1",
+      approved: true,
+      signature: "server-hmac-signature",
+    });
+    expect(messages[0]!.parts[1]!.approval?.signature).toBeUndefined();
+  });
+
+  it("未知 approvalId 不补签名，也不改写原消息", () => {
+    const messages = approvedMessage("approval-unknown");
+    const restored = restoreToolApprovalSignatures(
+      messages,
+      new Map([["approval-1", "server-hmac-signature"]]),
+    );
+    expect(restored[0]).toBe(messages[0]);
+    expect(restored[0]!.parts[1]!.approval?.signature).toBeUndefined();
   });
 });

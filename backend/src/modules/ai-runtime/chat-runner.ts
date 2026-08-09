@@ -16,7 +16,6 @@ import {
 } from "./chat-tool-gate";
 import {
   CHAT_TOOL_APPROVAL_SECRET,
-  chatEffectApprovalRegistry,
   isReadOnlyToolAfterUntrustedContent,
   UNTRUSTED_CONTENT_TOOL_NAMES,
 } from "./chat-effect-approval";
@@ -117,11 +116,6 @@ import {
 // (别内联);工具结果 = 候选(execute 复用现有 runner 核心,不直接写实体)。
 
 export interface AssembleChatDeps extends ContextDeps {
-  /** [T-731] 聚焦测试可注入的审批账本；生产缺省使用进程级一次性账本。 */
-  sideEffectApprovalRegistry?: Pick<
-    typeof chatEffectApprovalRegistry,
-    "request" | "consume"
-  >;
   /** [T-163] 错误→人话端口,透传给 chat-tools(host=route 传前端 humanizeAiError;该 lib 含
    *  ArtifactType 依赖故留前端,经端口注入不跨包)。 */
   humanizeError: (
@@ -1351,25 +1345,6 @@ export async function buildChatAssembly(
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
-    sideEffectApproval: {
-      request: ({ toolName, toolInput, toolCallId, messages }) =>
-        (deps.sideEffectApprovalRegistry ?? chatEffectApprovalRegistry).request({
-          userId: ctx.userId,
-          toolName,
-          toolInput,
-          toolCallId,
-          messages,
-        }),
-      consume: ({ toolName, toolInput, toolCallId, messages }) => {
-        (deps.sideEffectApprovalRegistry ?? chatEffectApprovalRegistry).consume({
-          userId: ctx.userId,
-          toolName,
-          toolInput,
-          toolCallId,
-          messages,
-        });
-      },
-    },
     // [T-642] 单项目只读工具使用可信 ChatContext 绑定，不让模型靠标题/自造 id 改绑。
     boundProjectId: chatContext.projectId ?? undefined,
     verbatimSources: options.verbatimSources ?? [],
@@ -2427,8 +2402,8 @@ export async function buildChatAssembly(
         ? effectiveFunctionKey
         : undefined;
 
-  // [T-263/T-731] HITL 授权门:从本轮已挂工具收录登记了授权判定器的工具,装配 streamText
-  // 的 toolApproval 配置。副作用工具默认全纳入；local.read 仍由其授权端口决定。
+  // [T-263/T-736] HITL 授权门只用于读取本机文件；买断产品中的模型、转写、归档和
+  // 持久化工具不设置二次确认，用户当前指令即授权执行。
   const toolApproval = buildChatToolApproval(tools);
 
   return { skillId, system, tools, modelSpec, forcedTool, toolApproval };
@@ -2776,8 +2751,9 @@ export async function runChatStream(
       maxSteps,
       availableToolNames: Object.keys(assembly.tools).map(sanitizeToolName),
     }),
-    // [T-731] SDK 对每个 approvalId 用进程随机 HMAC 绑定 toolCallId + 工具名 + 精确参数。
-    // 重启后旧审批签名不可复用，未知/改参/伪造在 execute 前失败关闭。
+    // [T-736] 本机文件读取确认仍由进程随机 HMAC 绑定 approvalId、toolCallId、工具名与
+    // 精确参数。ai@7.0.4 会在点击后漏带 signature，前端 transport 仅按 approvalId 补回
+    // 服务端原签名；后端继续验签。模型/转写/归档/持久化工具不进入这层确认。
     experimental_toolApprovalSecret: CHAT_TOOL_APPROVAL_SECRET,
     // [T-263/T-731] 原生工具授权(HITL):未授权调用 → SDK 挂起并 surface approval-requested；
     // 用户回执后同回合 resume。副作用执行前还会消费一次性账本，未知/改参/重放/超时均拒绝。

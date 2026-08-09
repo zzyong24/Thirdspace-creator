@@ -105,10 +105,6 @@ import {
 } from "./asset-aliases";
 import { ChatDouyinShareCard } from "./chat-douyin-share-card";
 import {
-  ChatEffectApprovalCard,
-  COPILOT_EFFECT_TOOL_NAMES,
-} from "./chat-effect-approval-card";
-import {
   ChatLearningCard,
   type ChatLearningSuggestion,
 } from "./chat-learning-card";
@@ -223,7 +219,10 @@ import {
   type MentionedProject,
 } from "./project-mention";
 import { ProjectMentionMenu } from "./project-mention-menu";
-import { shouldResumeToolApprovalOnce } from "./tool-approval-resume-guard";
+import {
+  restoreToolApprovalSignatures,
+  shouldResumeToolApprovalOnce,
+} from "./tool-approval-resume-guard";
 import {
   CopilotAttachmentPicker,
   type CopilotAttachmentPickerHandle,
@@ -958,6 +957,9 @@ export function AICopilotContent({
   // 在实际发送瞬间仍读到最新段落锚点。服务端随后还会再重读当前稿面版本与正文。
   const chatContextBodyRef = React.useRef(chatContextBody);
   chatContextBodyRef.current = chatContextBody;
+  // [T-736] ai@7.0.4 点击审批后会覆盖 approval 对象并丢掉服务端 HMAC；只在本组件
+  // 生命周期内按 approvalId 暂存，transport 发续跑请求时补回。服务端仍负责验签与防重放。
+  const approvalSignaturesRef = React.useRef(new Map<string, string>());
   // [T-231⑨] 快捷 chip / 推荐指令的一次性 functionKey:点按钮只**预填**完整话术(T-055b
   // 铁律:绝不自动发),同时把语义对应的专用工具记在 ref 里;下一次发送时注入
   // chatContext.functionKey(服务端 applyFunctionKey 置顶 + forcedTool 第 0 步强制),
@@ -1015,6 +1017,30 @@ export function AICopilotContent({
               : {}),
           };
         },
+        prepareSendMessagesRequest: ({
+          id,
+          messages: outgoingMessages,
+          body,
+          trigger,
+          messageId,
+          headers,
+          credentials,
+          api,
+        }) => ({
+          api,
+          headers,
+          credentials,
+          body: {
+            ...body,
+            id,
+            messages: restoreToolApprovalSignatures(
+              outgoingMessages,
+              approvalSignaturesRef.current,
+            ),
+            trigger,
+            messageId,
+          },
+        }),
         // useChat 不直接暴露响应头 → 在 transport 的 fetch 层包一层,读 `x-conversation-id`
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
@@ -1045,7 +1071,7 @@ export function AICopilotContent({
 
   // [T-231⑩] regenerate:@ai-sdk/react 现成的「重发最后一轮」API(对话出错时的重试通路)。
   // [T-263] addToolApprovalResponse:HITL 授权卡「允许/拒绝」的回执口。sendAutomaticallyWhen 挂
-  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 或副作用工具的授权响应齐了就
+  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 的授权响应齐了就
   // **同回合自动 resume** execute,无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
   const {
     messages,
@@ -1061,16 +1087,32 @@ export function AICopilotContent({
     sendAutomaticallyWhen: resumeApprovedToolsOnce,
   });
   const streaming = status === "streaming" || status === "submitted";
+  const respondToToolApproval = React.useCallback(
+    (input: {
+      id: string;
+      approved: boolean;
+      signature?: string;
+    }) => {
+      if (input.signature) {
+        approvalSignaturesRef.current.set(input.id, input.signature);
+      }
+      void addToolApprovalResponse({
+        id: input.id,
+        approved: input.approved,
+      });
+    },
+    [addToolApprovalResponse],
+  );
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
   useForegroundActivity("AI 编导正在生成回复", streaming);
 
   // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑目录批量放行；下方另收集
-  // [T-731] 副作用审批，两类任一待决都阻止用户并发提交新一轮。
+  // 待读取授权会阻止用户并发提交新一轮。
   //   ① 一次「总是允许该目录」批量放行同目录其它待决卡(读文件夹别逐个弹);
   //   ② 有待授权时提交排队(不并发触发新一轮,仿 Claude Code 的权限门)。
   const pendingLocalReads = React.useMemo(() => {
-    const out: Array<{ approvalId: string; path: string }> = [];
+    const out: Array<{ approvalId: string; path: string; signature?: string }> = [];
     for (const m of messages) {
       if (m.role !== "assistant") continue;
       for (const p of m.parts) {
@@ -1079,27 +1121,12 @@ export function AICopilotContent({
         if (p.state !== "approval-requested") continue;
         const id = p.approval?.id ?? "";
         const path = ((p.input ?? {}) as { path?: string }).path ?? "";
-        if (id) out.push({ approvalId: id, path });
+        if (id) out.push({ approvalId: id, path, signature: p.approval?.signature });
       }
     }
     return out;
   }, [messages]);
-  const pendingEffectApprovals = React.useMemo(() => {
-    const out: string[] = [];
-    for (const message of messages) {
-      if (message.role !== "assistant") continue;
-      for (const part of message.parts) {
-        if (!isToolUIPart(part)) continue;
-        if (!COPILOT_EFFECT_TOOL_NAMES.has(getToolName(part))) continue;
-        if (part.state !== "approval-requested") continue;
-        const id = part.approval?.id ?? "";
-        if (id) out.push(id);
-      }
-    }
-    return out;
-  }, [messages]);
-  const hasPendingApproval =
-    pendingLocalReads.length > 0 || pendingEffectApprovals.length > 0;
+  const hasPendingApproval = pendingLocalReads.length > 0;
 
   // [T-276] 目录授权批量放行:一张卡点「总是允许该目录」→ 服务端已把该文件所在目录落进授权表,
   //   把**直接父目录相同**的其它待决 local.read 卡一并批准(读文件夹的多文件读共享父目录)。
@@ -1107,18 +1134,27 @@ export function AICopilotContent({
   //   sendAutomaticallyWhen 一次性 resume 续跑各读取。
   const approveDirBatch = React.useCallback(
     (approvalId: string) => {
-      void addToolApprovalResponse({ id: approvalId, approved: true });
+      const own = pendingLocalReads.find((x) => x.approvalId === approvalId);
+      respondToToolApproval({
+        id: approvalId,
+        approved: true,
+        signature: own?.signature,
+      });
       const self = pendingLocalReads.find((x) => x.approvalId === approvalId);
       const dir = self?.path ? parentDirOf(self.path) : "";
       if (!dir) return;
       for (const pr of pendingLocalReads) {
         if (pr.approvalId === approvalId || !pr.path) continue;
         if (parentDirOf(pr.path) === dir) {
-          void addToolApprovalResponse({ id: pr.approvalId, approved: true });
+          respondToToolApproval({
+            id: pr.approvalId,
+            approved: true,
+            signature: pr.signature,
+          });
         }
       }
     },
-    [pendingLocalReads, addToolApprovalResponse],
+    [pendingLocalReads, respondToToolApproval],
   );
 
   // [T-105] 自动滚到最新:发消息/回复开始(条数增)强制跟随到底;流式增长按「跟随态」滚;
@@ -2177,33 +2213,19 @@ export function AICopilotContent({
                           listing={null}
                           error={null}
                           onApprove={(id) =>
-                            void addToolApprovalResponse({ id, approved: true })
+                            respondToToolApproval({
+                              id,
+                              approved: true,
+                              signature: part.approval?.signature,
+                            })
                           }
                           onApproveDir={(id) => approveDirBatch(id)}
                           onDeny={(id) =>
-                            void addToolApprovalResponse({ id, approved: false })
-                          }
-                        />
-                      );
-                    }
-                    // [T-731] 付费/持久化工具统一先展示“规范化参数摘要 + 预计费用”，用户按
-                    // approvalId 明确确认后才续跑；未知工具不进此分支，继续走通用 trace。
-                    if (
-                      COPILOT_EFFECT_TOOL_NAMES.has(name) &&
-                      part.state === "approval-requested"
-                    ) {
-                      const approvalId = part.approval?.id ?? "";
-                      return (
-                        <ChatEffectApprovalCard
-                          key={`${message.id}-effect-approval-${idx}`}
-                          toolName={name}
-                          input={part.input ?? {}}
-                          approvalId={approvalId}
-                          onApprove={(id) =>
-                            void addToolApprovalResponse({ id, approved: true })
-                          }
-                          onDeny={(id) =>
-                            void addToolApprovalResponse({ id, approved: false })
+                            respondToToolApproval({
+                              id,
+                              approved: false,
+                              signature: part.approval?.signature,
+                            })
                           }
                         />
                       );
@@ -2220,20 +2242,6 @@ export function AICopilotContent({
                           listing={null}
                           error={null}
                           deniedTerminal
-                        />
-                      );
-                    }
-                    if (
-                      COPILOT_EFFECT_TOOL_NAMES.has(name) &&
-                      part.state === "output-denied"
-                    ) {
-                      return (
-                        <ChatEffectApprovalCard
-                          key={`${message.id}-effect-denied-${idx}`}
-                          toolName={name}
-                          input={part.input ?? {}}
-                          approvalId={part.approval?.id ?? ""}
-                          denied
                         />
                       );
                     }

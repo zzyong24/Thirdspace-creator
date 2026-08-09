@@ -579,10 +579,6 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
 } {
   const resolveModelSpec = vi.fn(async () => FAKE_SPEC);
   const deps: AssembleChatDeps = {
-    sideEffectApprovalRegistry: {
-      request: () => ({ status: "user-approval" as const }),
-      consume: () => ({ approvalId: "test-approval", executionKey: "test-key" }),
-    },
     resolveModelSpec,
     // [T-163] humanizeError 端口(下沉后经注入);chat-runner 测试不走 distill 错误路径,回落 null。
     humanizeError: () => null,

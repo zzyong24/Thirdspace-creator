@@ -5,9 +5,41 @@ type ApprovalResumeMessage = {
   parts: Array<{
     type: string;
     state?: string;
-    approval?: { id?: string };
+    approval?: {
+      id?: string;
+      approved?: boolean;
+      reason?: string;
+      signature?: string;
+    };
   }>;
 };
+
+/**
+ * [T-736] ai@7.0.4 的 addToolApprovalResponse 会把 approval 对象替换为
+ * `{ id, approved, reason }`，因此服务端签发的 HMAC signature 在续跑请求中丢失。
+ *
+ * 只在网络请求副本上按 approvalId 恢复先前收到的签名；不修改界面状态，也不接受未知签名。
+ * 后端仍会校验签名绑定的 toolCallId、工具名与精确输入，随后再消费一次性审批账本。
+ */
+export function restoreToolApprovalSignatures<T extends ApprovalResumeMessage>(
+  messages: T[],
+  signatures: ReadonlyMap<string, string>,
+): T[] {
+  return messages.map((message) => {
+    let changed = false;
+    const parts = message.parts.map((part) => {
+      const approvalId = part.approval?.id ?? "";
+      const signature = approvalId ? signatures.get(approvalId) : undefined;
+      if (!signature || part.approval?.signature === signature) return part;
+      changed = true;
+      return {
+        ...part,
+        approval: { ...part.approval, signature },
+      };
+    });
+    return changed ? ({ ...message, parts } as T) : message;
+  });
+}
 
 /**
  * [T-673] AI SDK 的授权恢复谓词在“续跑流在 tool-output 前损坏”时仍会持续返回 true：

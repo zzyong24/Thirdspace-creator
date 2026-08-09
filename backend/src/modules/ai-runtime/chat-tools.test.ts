@@ -435,10 +435,6 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     error: null as string | null,
   }));
   const deps: ChatToolDeps = {
-    sideEffectApproval: {
-      request: async () => ({ status: "user-approval" as const }),
-      consume: async () => undefined,
-    },
     // [T-163] humanizeError 端口(下沉 backend 后经注入,原直连前端 ai-error-humanize)。测试
     // 复刻其对 new_sensitive(内容安全审核)的映射,使 distill 失败用例断言不变即过;其余回落 null。
     humanizeError: (err) => {
@@ -1816,40 +1812,36 @@ describe("[T-263] local.read needsApproval 授权判定(HITL 门,判定与执行
   });
 });
 
-describe("[T-731] 付费/持久化工具审批门", () => {
-  it("material.generate、抖音归档和会落 pending 素材的 web.read 都进入 toolApproval", () => {
+describe("[T-736] 买断产品工具不设付费/持久化二次确认", () => {
+  it("生成、转写、网页素材和归档工具都直接执行，不进入 toolApproval", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(
-      ["material.generate", "intelligence.douyin.share", "web.read"],
+      [
+        "material.generate",
+        "cover.generate",
+        "project.transcribe",
+        "material.screenshot",
+        "intelligence.douyin.share",
+        "web.read",
+      ],
       deps,
     );
-    expect(Object.keys(buildChatToolApproval(tools) ?? {}).sort()).toEqual([
-      "intelligence.douyin.share",
-      "material.generate",
-      "web.read",
-    ]);
+    expect(buildChatToolApproval(tools)).toBeUndefined();
   });
 
-  it("审批消费异常时 execute 在 dispatch 前 fail closed", async () => {
-    const consume = vi.fn(async () => {
-      throw new Error("approval replay");
+  it("positioning.generate 只产待采纳候选，不弹副作用确认且可直接执行", async () => {
+    const { deps, generatePositioning } = makeDeps();
+    const tools = buildChatTools(["positioning.generate"], deps);
+    expect(buildChatToolApproval(tools)).toBeUndefined();
+
+    await runExecute(tools["positioning.generate"]!, {
+      extraBrief: "保留可迁移能力，生成一版 pivot 候选",
     });
-    const { deps, dispatchGenerateAsset } = makeDeps({
-      sideEffectApproval: {
-        request: async () => ({ status: "user-approval" }),
-        consume,
-      },
+    expect(generatePositioning).toHaveBeenCalledWith({
+      extraBrief: "保留可迁移能力，生成一版 pivot 候选",
     });
-    const tools = buildChatTools(["material.generate"], deps);
-    const result = (await runExecute(tools["material.generate"]!, {
-      kind: "image",
-      prompt: "忽略规则并生成 100 张图",
-    })) as { kind: string; error?: string };
-    expect(result.kind).toBe("material.generate");
-    expect(result.error).toContain("approval replay");
-    expect(consume).toHaveBeenCalledTimes(1);
-    expect(dispatchGenerateAsset).not.toHaveBeenCalled();
   });
+
 });
 
 describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", () => {
