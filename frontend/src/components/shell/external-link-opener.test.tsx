@@ -6,11 +6,15 @@ import { ExternalLinkOpener } from "./external-link-opener";
 describe("ExternalLinkOpener 桌面可信外链降级（TEST-TSB-009）", () => {
   afterEach(() => {
     document.documentElement.dataset.desktop = "0";
+    delete (window as unknown as Record<string, unknown>)
+      .__CREATOROS_HANDSHAKE_TOKEN__;
     vi.restoreAllMocks();
   });
 
-  it("页面代码不持有握手 token；403/失败不绕过 adapter 调 window.open", async () => {
+  it("桌面请求带握手头；403/失败不绕过 adapter 调 window.open", async () => {
     document.documentElement.dataset.desktop = "1";
+    (window as unknown as Record<string, unknown>)
+      .__CREATOROS_HANDSHAKE_TOKEN__ = "launch-token";
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(
@@ -28,6 +32,7 @@ describe("ExternalLinkOpener 桌面可信外链降级（TEST-TSB-009）", () => 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock.mock.calls[0]?.[1]?.headers).toEqual({
       "content-type": "application/json",
+      "x-creatoros-handshake": "launch-token",
     });
     expect(openMock).not.toHaveBeenCalled();
   });

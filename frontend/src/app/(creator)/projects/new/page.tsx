@@ -16,35 +16,11 @@
 
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import { NewProjectDialog } from "@/components/overlays/new-project-dialog";
-import { zeroAccountDashboardViewModel } from "@/features/dashboard/zero-account-dashboard";
-import { resolveSession } from "@/lib/session.server";
-import { createServerClient } from "@/lib/contract-client.server";
-import { isAccountRequiredError } from "@/lib/http-transport";
-import type { DashboardViewModel } from "@/types/view-models";
 
-export default async function NewProjectPage() {
-  const session = await resolveSession();
-  let viewModel: DashboardViewModel | undefined;
-
-  if (session) {
-    try {
-      viewModel = await createServerClient(session.ctx).getDashboard({
-        params: undefined,
-        query: undefined,
-        body: undefined,
-      });
-    } catch (error) {
-      if (!isAccountRequiredError(error)) throw error;
-      viewModel = zeroAccountDashboardViewModel();
-    }
-  }
-
+export default function NewProjectPage() {
   return (
     <>
-      <DashboardPage
-        viewModel={viewModel}
-        greetingName={session?.user.displayName}
-      />
+      <DashboardPage />
       <NewProjectDialog />
     </>
   );

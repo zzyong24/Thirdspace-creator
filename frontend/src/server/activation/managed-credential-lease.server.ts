@@ -10,7 +10,6 @@ const CONTRACT = "growth-managed-model-credential-lease-v1";
 const MAX_RESPONSE_BYTES = 32_768;
 
 export type ManagedAsrLease = {
-  readonly leaseRef: string;
   readonly baseUrl: string;
   readonly model: string;
   readonly token: string;
@@ -221,7 +220,6 @@ export async function requestManagedAsrLease(
     return fail("ASR_LEASE_RESPONSE_INVALID", "语音转文字服务响应无法验证");
   }
   return {
-    leaseRef: value.leaseRef as string,
     baseUrl: value.baseURL as string,
     model: value.model as string,
     token: credential.token,

@@ -16,6 +16,7 @@ const EXPECTED_SCRIPT_DRAFT_KEYS = [
   "positioning",
   "learnings",
   "knowledge",
+  "thesis",
   "contract",
   "outline",
   "artifactOrigin",
@@ -75,11 +76,11 @@ describe("[T-184] resolveContextDeps — 声明式 context 注入", () => {
     expect(resolveContextDeps(undefined, fullRegistry)).toEqual({});
   });
 
-  it("[T-726] script.draft 不再声明或注入退役 thesis reader", () => {
+  it("[T-730] script.draft 注入已恢复的可选 thesis reader", () => {
     const requirements = SCRIPT_DRAFT_TEMPLATE.contextRequirements ?? [];
     const deps = resolveContextDeps(requirements, fullRegistry);
-    expect(requirements).not.toContain("thesis");
-    expect(deps).not.toHaveProperty("thesis");
+    expect(requirements).toContain("thesis");
+    expect(deps).toHaveProperty("thesis");
     expect(deps).toHaveProperty("brief");
     expect(deps).toHaveProperty("projectMaterials");
   });

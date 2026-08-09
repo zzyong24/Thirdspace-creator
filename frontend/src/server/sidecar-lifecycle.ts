@@ -45,8 +45,6 @@ export interface LifecycleProcess {
   /** [W4] Windows 分支读 stdin:壳侧停机哨兵 + 管道断开(父死)检测。POSIX 分支不读。 */
   stdin?: {
     on(event: string, handler: (chunk?: unknown) => void): void;
-    /** 启动密钥读取器会先 pause；生命周期接管停机哨兵后必须显式恢复流。 */
-    resume?(): void;
   } | null;
 }
 
@@ -138,7 +136,6 @@ export function installSidecarLifecycle(
       stdin.on("error", () => {
         void beginGracefulExit(proc, "stdin 管道错误(父进程已退出,Win 孤儿自检)", log);
       });
-      stdin.resume?.();
     }
   }
   const timer = setInterval(() => {

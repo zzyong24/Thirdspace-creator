@@ -9,11 +9,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockInvoke = vi.fn();
+const mockRelaunch = vi.fn();
 const mockGetVersion = vi.fn();
 const mockFetch = vi.fn();
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: (...args: unknown[]) => mockInvoke(...args),
+}));
+vi.mock("@tauri-apps/plugin-process", () => ({
+  relaunch: () => mockRelaunch(),
 }));
 vi.mock("@tauri-apps/api/app", () => ({
   getVersion: () => mockGetVersion(),
@@ -38,6 +42,7 @@ function unmarkDesktop() {
 
 beforeEach(() => {
   mockInvoke.mockReset();
+  mockRelaunch.mockReset();
   mockGetVersion.mockReset();
   mockFetch.mockReset();
   vi.stubGlobal("fetch", mockFetch);
@@ -83,7 +88,7 @@ describe("web degradation (no Tauri) — never throws, honest downgrade", () => 
   });
   it("relaunchApp → false", async () => {
     await expect(relaunchApp()).resolves.toBe(false);
-    expect(mockInvoke).not.toHaveBeenCalledWith("relaunch_app");
+    expect(mockRelaunch).not.toHaveBeenCalled();
   });
 });
 
@@ -181,13 +186,12 @@ describe("versionNewer", () => {
 describe("relaunchApp / getAppVersion (desktop)", () => {
   it("relaunchApp → true when plugin resolves", async () => {
     markDesktop();
-    mockInvoke.mockResolvedValue(undefined);
+    mockRelaunch.mockResolvedValue(undefined);
     await expect(relaunchApp()).resolves.toBe(true);
-    expect(mockInvoke).toHaveBeenCalledWith("relaunch_app");
   });
   it("relaunchApp → false when plugin rejects (honest, no throw)", async () => {
     markDesktop();
-    mockInvoke.mockRejectedValue(new Error("nope"));
+    mockRelaunch.mockRejectedValue(new Error("nope"));
     await expect(relaunchApp()).resolves.toBe(false);
   });
   it("getAppVersion → version string", async () => {

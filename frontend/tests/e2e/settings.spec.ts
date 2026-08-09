@@ -46,40 +46,71 @@ test.describe("Settings page", () => {
   }) => {
     await page.goto("/settings");
 
-    // 设置已收敛为盖在单一 AppShell 上的弹窗，不再伪装成第二个完整页面。
+    // Header in global mode with the page title.
+    const header = page.locator('[data-slot="app-top-header"]');
+    await expect(header).toHaveAttribute("data-mode", "global");
+    const heading = page.locator('[data-slot="header-page-heading"]');
+    await expect(heading).toContainText("设置");
+    await expect(heading).toContainText("账号、偏好与系统");
+
+    // The Settings nav item is the active page in the sidebar.
+    const nav = page.getByRole("navigation", { name: "主要导航" });
+    const active = nav.locator('[aria-current="page"]');
+    await expect(active).toHaveAttribute("href", "/settings");
+
+    // Contextual card variant is `assistant` (D-003).
+    const assistant = page.locator(
+      '[data-slot="sidebar-contextual-card"][data-variant="assistant"]',
+    );
+    await expect(assistant).toBeVisible();
+
+    // Single AppShell with one Sidebar/TopHeader.
     await expect(page.locator('[data-slot="app-shell"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-sidebar"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-top-header"]')).toHaveCount(1);
-    const dialog = page.locator('[data-slot="settings-dialog"]');
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "设置" })).toBeVisible();
-    await expect(dialog).toContainText("账号、偏好与系统");
 
-    // 当前六个分类按真实产品顺序呈现。
-    const tabs = dialog.locator('[data-slot="settings-tabs"]');
+    // The page-internal main region exists exactly once.
+    const main = page.locator('main[data-page="settings"]');
+    await expect(main).toHaveCount(1);
+
+    // SettingsTabs in spec order (8 tabs).
+    const tabs = main.locator('[data-slot="settings-tabs"]');
     await expect(tabs).toBeVisible();
     const tabLabels = await tabs.locator('[role="tab"]').allTextContents();
     expect(tabLabels.map((l) => l.trim())).toEqual([
       "账户",
       "偏好",
+      "通知",
       "外观",
-      "模型配置",
-      "技能",
+      "集成",
       "存储",
+      "数据",
+      "关于",
     ]);
-    await expect(tabs.getByRole("tab", { name: "账户" })).toBeVisible();
-    await expect(tabs.getByRole("tab", { name: "偏好" })).toBeVisible();
-    await expect(tabs.getByRole("tab", { name: "外观" })).toBeVisible();
-    await expect(tabs.getByRole("tab", { name: "模型配置" })).toBeVisible();
-    await expect(tabs.getByRole("tab", { name: "技能" })).toBeVisible();
-    await expect(tabs.getByRole("tab", { name: "存储" })).toBeVisible();
-    await expect(page.locator('main[data-page="settings"]')).toHaveCount(1);
-    await expect(page.locator('[data-slot="settings-grid"]')).toHaveCount(0);
 
-    const accountCard = dialog.locator(
+    // MainSettings: Account → Preference → System.
+    const accountCard = main.locator(
       '[data-slot="account-information-card"]',
     );
+    const preferenceCard = main.locator(
+      '[data-slot="preference-settings-card"]',
+    );
+    const systemCard = main.locator(
+      '[data-slot="system-settings-card"]',
+    );
     await expect(accountCard).toBeVisible();
+    await expect(preferenceCard).toBeVisible();
+    await expect(systemCard).toBeVisible();
+
+    // SettingsRail: Storage → Model → Other.
+    const storageCard = main.locator('[data-slot="storage-usage-card"]');
+    const modelCard = main.locator(
+      '[data-slot="model-configuration-card"]',
+    );
+    const otherCard = main.locator('[data-slot="other-settings-card"]');
+    await expect(storageCard).toBeVisible();
+    await expect(modelCard).toBeVisible();
+    await expect(otherCard).toBeVisible();
 
     // No team / permission / subscription detail routes.
     await expect(

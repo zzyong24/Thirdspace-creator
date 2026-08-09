@@ -49,23 +49,6 @@ export {
 } from "./settings.repository";
 
 export {
-  CHANNEL_CREDENTIAL_SERVICE,
-  CredentialVaultUnavailableError,
-  channelCredentialRef,
-  storeCredentialVerified,
-  createNativeCredentialVault,
-  createUnavailableCredentialVault,
-  createMemoryCredentialVaultForTest,
-  type CredentialVault,
-} from "./credential-vault";
-
-export {
-  migrateLongTermCredentialsToKeyring,
-  type CredentialKeyringMigrationDeps,
-  type CredentialKeyringMigrationResult,
-} from "./credential-keyring-migration";
-
-export {
   createSettingsTransport,
   SETTINGS_OP_IDS,
 } from "./settings.transport";

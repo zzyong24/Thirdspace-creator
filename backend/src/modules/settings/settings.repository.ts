@@ -1,8 +1,7 @@
 import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
 import { ErrorCode } from "@creatoros/contract";
 import { assets, assetFiles } from "@creatoros/backend";
-import { decryptSecret, encryptSecret, isEncrypted } from "@creatoros/backend";
-import { randomBytes } from "node:crypto";
+import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
 import {
   userPreferences,
   modelConfigurations,
@@ -14,14 +13,6 @@ import {
   accountSkillOverlays,
   accountSkillOverlayVersions,
 } from "./settings.db-schema";
-import {
-  CHANNEL_CREDENTIAL_SERVICE,
-  CredentialVaultUnavailableError,
-  createMemoryCredentialVaultForTest,
-  channelCredentialRef,
-  storeCredentialVerified,
-  type CredentialVault,
-} from "./credential-vault";
 
 // Settings repository (foundation §5.2) — user-scoped queries ONLY. Every method
 // takes a RequestContext and filters/stamps on `ctx.userId` (foundation §1/§2,
@@ -36,11 +27,12 @@ import {
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
-  /** 用户自填模型 Key 的本机 AES-GCM 密钥；由桌面受保护启动通道提供。 */
+  // T-147 P2 本地加密 —— 注入 32B master key 后,model_configurations.secret_value
+  // 在 putModel 写库前加密(AES-256-GCM,enc:v1: 前缀)、getModel/listModels 读出后解密
+  // (透明:service/resolve 拿到明文,无感)。**缺省(不注入)= 明文路径**(向后兼容,
+  // 现有集成测试/旧调用不变)。master key 来源见 secret-crypto.resolveMasterKey
+  // (桌面 keychain via env / web-dev 降级)。装配处 persistence-client 传入。
   masterKey?: Buffer;
-  credentialVault?: CredentialVault;
-  /** 兼容既有装配名；同一密钥也用于读取旧 enc:v1 密文。 */
-  legacyMasterKey?: Buffer | null;
 }
 
 export type UserPreferenceRow = typeof userPreferences.$inferSelect;
@@ -176,12 +168,6 @@ export interface SettingsRepository {
     capability: string,
     body: ModelPutBody,
   ): Promise<ModelConfigurationRow>;
-  /** @deprecated T-739 后不再重绑旧用户模型 Keychain 引用；调用恒定要求重新填写。 */
-  bindExistingModelCredential(
-    ctx: RequestContext,
-    capability: string,
-    keyringRef: string,
-  ): Promise<void>;
   listModels(ctx: RequestContext): Promise<ModelConfigurationRow[]>;
   getChannelModelCredential(
     ctx: RequestContext,
@@ -193,7 +179,6 @@ export interface SettingsRepository {
     scopeId: string,
     serviceId: string,
     secret: string,
-    serviceType?: "user_input" | "activation_managed" | "local_selection",
   ): Promise<ChannelModelCredentialRow>;
   listChannelModelCredentials(
     ctx: RequestContext,
@@ -291,16 +276,17 @@ function definedOnly(patch: PreferencePatch): Partial<PreferencePatch> {
   return out as Partial<PreferencePatch>;
 }
 
-// 旧 API 兼容标记仍由 resolve/UI 识别。T-731 后 repository 遇到 Keychain 缺失或旧密文
-// 未迁移会直接抛出明确错误、fail closed，不再把可逆解密失败伪装成空配置。
+// [T-453] Master key 换了/丢了(ad-hoc 签名 rebuild / keychain 不持久 / .master-key 丢)时,
+// decRow 曾静默返 secretValue=null → 前端"配置消失"、用户以为要重填(**这是用户 07-21 报的
+// "配置不上模型"根因**——旧签名的 CDHash 换了 → keychain 读不回 → 走 .master-key 文件 →
+// 若文件也没了/machine_uid 变了 → 生成新 key → 旧密文全解不开)。改为写入 sentinel
+// 值(SECRET_DECRYPT_FAIL_SENTINEL),resolve.ts 认这个 → 抛「密钥失效需重填」明确错;
+// UI 也据此区分「未配」vs「曾配但失效」两态。
 export const SECRET_DECRYPT_FAIL_SENTINEL = "dec-fail:v1";
 
 export function isDecryptFailSentinel(v: string | null | undefined): boolean {
   return v === SECRET_DECRYPT_FAIL_SENTINEL;
 }
-
-// 仅让没有显式提供加密依赖的旧自动化夹具继续工作；每进程随机，不进入桌面/开发生产路径。
-const TEST_LOCAL_MODEL_SECRET_KEY = randomBytes(32);
 
 export function createSettingsRepository(
   db: Db,
@@ -329,47 +315,30 @@ export function createSettingsRepository(
       .limit(1);
     return rows[0] ?? null;
   };
-  const localSecretKey = Object.prototype.hasOwnProperty.call(
-    deps,
-    "legacyMasterKey",
-  )
-    ? (deps.legacyMasterKey ?? null)
-    : (deps.masterKey ??
-      (process.env.NODE_ENV === "test" || process.env.VITEST
-        ? TEST_LOCAL_MODEL_SECRET_KEY
-        : null));
-  const configuredVault =
-    deps.credentialVault ??
-    (process.env.NODE_ENV === "test" || process.env.VITEST
-      ? createMemoryCredentialVaultForTest()
-      : undefined);
-  const requireVault = (): CredentialVault => {
-    if (!configuredVault) throw new CredentialVaultUnavailableError();
-    return configuredVault;
-  };
-  const decRow = async (
-    row: ModelConfigurationRow,
-  ): Promise<ModelConfigurationRow> => {
-    if (row.secretValue) {
-      if (!localSecretKey) {
-        return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
-      }
-      try {
-        return {
-          ...row,
-          secretValue: decryptSecret(row.secretValue, localSecretKey),
-        };
-      } catch {
-        return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
-      }
-    }
-    // DEC-SEC-043：旧版本曾把用户模型 Key 写进 sidecar Keychain service。
-    // 这里故意不读、不删该条目，避免启动/设置/模型调用再次弹系统密码框；用户重填后
-    // putModel 会用本地密文覆盖数据库引用。
-    if (row.keyringRef && row.credentialMigrationState === "keyring_v1") {
+  // T-147 P2 — 透明加解密收口。masterKey 缺省 = 无操作(明文路径,向后兼容)。
+  //   encSecret: 写库前加密一个非空明文 secret;null/空 → 原样(不加密 NULL/空列)。
+  //   decRow: 读出一行后就地解密其 secretValue(密文→明文;存量明文无前缀→透传)。
+  const key = deps.masterKey;
+  const encSecret = (plain: string): string =>
+    key ? encryptSecret(plain, key) : plain;
+  const decRow = (row: ModelConfigurationRow): ModelConfigurationRow => {
+    if (!key || row.secretValue == null) return row;
+    // [T-453] 已被上一次 decRow 标记为解密失败 → 透传 sentinel(避免二次解密尝试)。
+    if (row.secretValue === SECRET_DECRYPT_FAIL_SENTINEL) return row;
+    try {
+      return { ...row, secretValue: decryptSecret(row.secretValue, key) };
+    } catch (e) {
+      // [T-171 / T-453] master key 换了/丢了(keychain 重置 / 未签名 app 换签名 / .master-key
+      //   丢)→ 密文解不开(AES-256-GCM auth tag 校验失败)。**绝不硬崩**——否则 getModel/
+      //   listModels 抛错 → 任何读模型配置的 SSR 页 500。
+      // [T-453] 从「静默 null(视为未配)」改为「sentinel `dec-fail:v1`」:保住"曾配"信号,
+      //   让 resolve 抛清楚错("已配但密钥不可用,请重填")、UI 也能提示。
+      console.warn(
+        `[settings] model secret 解密失败(master key 不符?)capability=${row.capability} → 标记 sentinel,提示用户重填`,
+        e instanceof Error ? e.message : e,
+      );
       return { ...row, secretValue: SECRET_DECRYPT_FAIL_SENTINEL };
     }
-    return row;
   };
   return {
     async getPreferences(ctx) {
@@ -424,7 +393,8 @@ export function createSettingsRepository(
           ),
         )
         .limit(1);
-      return rows[0] ? await decRow(rows[0]) : null;
+      // T-147 P2 — 读出即解密(密文→明文;存量明文透传)。
+      return rows[0] ? decRow(rows[0]) : null;
     },
 
     async putModel(ctx, capability, body) {
@@ -439,14 +409,32 @@ export function createSettingsRepository(
       // (provider/model only) never clobbers an existing stored key.
       const secretProvided =
         typeof body.secret === "string" && body.secret.length > 0;
-      let encryptedSecret: string | null = null;
+      // T-147 P2 — 写库前加密(masterKey 缺省 = 明文,向后兼容)。存量明文列不受影响
+      // (只有 provided 的新 secret 才加密写入)。
+      // [T-453] Round-trip 校验:加密后立即用同一 masterKey 解密回明文,断言一致。捕获
+      //   两类 bug:①masterKey 生成/持久化路径异常(rare);②encryptSecret/decryptSecret
+      //   实现回归。**失败即抛**——比让用户以为保存成功、下次读回来空空如也强得多。
+      let secretToStore: string | null = null;
       if (secretProvided) {
-        if (!localSecretKey) {
-          throw new Error("本机加密密钥不可用，未保存模型密钥");
-        }
-        encryptedSecret = encryptSecret(body.secret!, localSecretKey);
-        if (decryptSecret(encryptedSecret, localSecretKey) !== body.secret) {
-          throw new Error("本机模型密钥加密后核对失败，未保存模型密钥");
+        secretToStore = encSecret(body.secret!);
+        if (key && secretToStore !== body.secret) {
+          // 仅当 key 存在(真加密路径)且加密结果 !== 原文(即真加密了)时校验。
+          try {
+            const roundTripped = decryptSecret(secretToStore, key);
+            if (roundTripped !== body.secret) {
+              throw new Error(
+                `[T-453] secret round-trip 校验失败:加密→解密后 ${
+                  roundTripped.length
+                }B ≠ 原文 ${body.secret!.length}B(不落库,让上层报错以免"看似保存成功、下次读回空"迷惑用户)`,
+              );
+            }
+          } catch (e) {
+            throw new Error(
+              `[T-453] secret 保存前 round-trip 校验失败 capability=${capability}:${
+                e instanceof Error ? e.message : String(e)
+              }`,
+            );
+          }
         }
       }
       const updateSet: Record<string, unknown> = {
@@ -458,12 +446,7 @@ export function createSettingsRepository(
         apiFormat,
         isDefault,
       };
-      if (secretProvided) {
-        updateSet.secretValue = encryptedSecret;
-        updateSet.keyringRef = null;
-        updateSet.credentialMigrationState = "encrypted_v1";
-        updateSet.rotatedAt = deps.now();
-      }
+      if (secretProvided) updateSet.secretValue = secretToStore;
       const inserted = await db
         .insert(modelConfigurations)
         .values({
@@ -473,10 +456,7 @@ export function createSettingsRepository(
           provider: body.provider,
           modelName: body.modelName,
           secretReference,
-          secretValue: encryptedSecret,
-          keyringRef: null,
-          credentialMigrationState: secretProvided ? "encrypted_v1" : "not_required",
-          rotatedAt: secretProvided ? deps.now() : null,
+          secretValue: secretToStore,
           settings,
           baseUrl,
           apiFormat,
@@ -487,6 +467,7 @@ export function createSettingsRepository(
           set: updateSet,
         })
         .returning();
+      // Decrypt on the way out so the caller (service→resolve) sees plaintext.
       return decRow(inserted[0]!);
     },
 
@@ -495,11 +476,8 @@ export function createSettingsRepository(
         .select()
         .from(modelConfigurations)
         .where(eq(modelConfigurations.userId, ctx.userId));
-      return Promise.all(rows.map(decRow));
-    },
-
-    async bindExistingModelCredential() {
-      throw new Error("旧系统钥匙串模型密钥不再自动读取，请重新填写模型密钥");
+      // T-147 P2 — 每行读出即解密。
+      return rows.map(decRow);
     },
 
     async getChannelModelCredential(ctx, scopeId, serviceId) {
@@ -514,81 +492,43 @@ export function createSettingsRepository(
           ),
         )
         .limit(1);
-      const row = rows[0];
-      if (!row) return null;
-      if (
-        row.credentialStatus !== "ready" ||
-        row.migrationState !== "keyring_v1" ||
-        !row.keyringRef
-      ) {
-        throw new CredentialVaultUnavailableError("受管凭据尚未迁入系统钥匙串，受管能力已停止");
+      const stored = rows[0]?.encryptedSecret;
+      if (!stored) return null;
+      if (!key) {
+        throw new Error("channel model credential requires desktop master key");
       }
-      const secret = await requireVault().get(CHANNEL_CREDENTIAL_SERVICE, row.keyringRef);
-      if (secret === null) {
-        throw new CredentialVaultUnavailableError("系统钥匙串中的受管凭据不存在，受管能力已停止");
-      }
-      return secret;
+      return decryptSecret(stored, key);
     },
 
-    async putChannelModelCredential(
-      ctx,
-      scopeId,
-      serviceId,
-      secret,
-      serviceType = "user_input",
-    ) {
+    async putChannelModelCredential(ctx, scopeId, serviceId, secret) {
+      if (!key) {
+        throw new Error("channel model credential requires desktop master key");
+      }
       const plain = secret.trim();
       if (!plain) throw new Error("channel model credential secret is required");
-      const ref = channelCredentialRef(scopeId, serviceId);
-      const keyVault = requireVault();
-      const previous = await keyVault.get(CHANNEL_CREDENTIAL_SERVICE, ref);
-      await storeCredentialVerified(
-        keyVault,
-        CHANNEL_CREDENTIAL_SERVICE,
-        ref,
-        plain,
-      );
-      try {
-        const rows = await db
-          .insert(channelModelCredentials)
-          .values({
-            userId: ctx.userId,
-            scopeId,
-            serviceId,
-            encryptedSecret: null,
-            keyringRef: ref,
-            serviceType,
-            credentialStatus: "ready",
-            migrationState: "keyring_v1",
-            rotatedAt: deps.now(),
-            updatedAt: deps.now(),
-          })
-          .onConflictDoUpdate({
-            target: [
-              channelModelCredentials.userId,
-              channelModelCredentials.scopeId,
-              channelModelCredentials.serviceId,
-            ],
-            set: {
-              encryptedSecret: null,
-              keyringRef: ref,
-              serviceType,
-              credentialStatus: "ready",
-              migrationState: "keyring_v1",
-              rotatedAt: deps.now(),
-              updatedAt: deps.now(),
-            },
-          })
-          .returning();
-        return rows[0]!;
-      } catch (error) {
-        if (previous === null) {
-          await keyVault.delete(CHANNEL_CREDENTIAL_SERVICE, ref).catch(() => {});
-        } else {
-          await keyVault.set(CHANNEL_CREDENTIAL_SERVICE, ref, previous).catch(() => {});
-        }
-        throw error;
+      const encryptedSecret = encryptSecret(plain, key);
+      if (decryptSecret(encryptedSecret, key) !== plain) {
+        throw new Error("channel model credential encryption round-trip failed");
       }
+      const rows = await db
+        .insert(channelModelCredentials)
+        .values({
+          userId: ctx.userId,
+          scopeId,
+          serviceId,
+          encryptedSecret,
+          updatedAt: deps.now(),
+        })
+        .onConflictDoUpdate({
+          target: [
+            channelModelCredentials.userId,
+            channelModelCredentials.scopeId,
+            channelModelCredentials.serviceId,
+          ],
+          set: { encryptedSecret, updatedAt: deps.now() },
+        })
+        .returning();
+      return rows[0]!;
     },
 
     async listChannelModelCredentials(ctx, scopeId) {
@@ -603,8 +543,9 @@ export function createSettingsRepository(
         );
     },
 
-    // 导出用原始读 —— **不过 decRow/不访问 Keychain**。用户自填模型 Key 只以 enc:v1
-    // 密文形态进入导出；存量 keyring-only 行没有可导出的密钥，要求用户重新填写。
+    // [T-363] 导出用原始读 —— **不过 decRow**,secret_value 保持库中存储形态(密文/存量
+    // 明文/NULL)。导出文件默认只含密文;明文只在「无 master key 的存量明文行」出现,
+    // 由 service 层如实标注 secretForm 供 UI 警示。
     async listModelsRaw(ctx) {
       return db
         .select()
@@ -612,12 +553,12 @@ export function createSettingsRepository(
         .where(eq(modelConfigurations.userId, ctx.userId));
     },
 
-    // 解包同机 enc:v1 导出；成功后 putModel 会用新 IV 重新加密落本地数据库。
+    // [T-363] 导入侧解包(与 decRow 同一把 key、同款「解不开不硬崩」姿态)。
     unwrapExportedSecret(stored) {
       if (!isEncrypted(stored)) return stored; // 明文(手编文件/存量明文导出)透传
-      if (!localSecretKey) return null; // 密文但本环境无本机 key → 诚实解不开
+      if (!key) return null; // 密文但本环境无 key → 诚实解不开
       try {
-        return decryptSecret(stored, localSecretKey);
+        return decryptSecret(stored, key);
       } catch {
         // auth tag 校验失败 = 非本机导出(master key 不符)→ null,调用方提示重填。
         return null;

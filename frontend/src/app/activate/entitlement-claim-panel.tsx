@@ -2,8 +2,6 @@
 
 import { ExternalLink, Loader2 } from "lucide-react";
 import * as React from "react";
-import { relaunchApp } from "@/lib/desktop-updater";
-import { openExternalUrl } from "@/lib/open-external-url";
 
 import { Button } from "@/components/ui/button";
 
@@ -88,7 +86,8 @@ export function EntitlementClaimPanel({
     setBusy(true);
     setError(null);
     try {
-      if (!(await relaunchApp())) throw new Error("relaunch rejected");
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      await relaunch();
     } catch {
       setError("授权已保存，但应用未能自动重新进入，请手动重启应用");
       setBusy(false);
@@ -109,7 +108,8 @@ export function EntitlementClaimPanel({
       return;
     }
     try {
-      await openExternalUrl(parsed.toString());
+      const { openUrl } = await import("@tauri-apps/plugin-opener");
+      await openUrl(parsed.toString());
     } catch {
       setError("没有打开官方页面，请稍后再试。");
     }

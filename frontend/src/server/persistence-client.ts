@@ -105,10 +105,6 @@ import {
   createSettingsRepository,
   createSettingsService,
   createSettingsTransport,
-  createNativeCredentialVault,
-  createUnavailableCredentialVault,
-  createMemoryCredentialVaultForTest,
-  migrateLongTermCredentialsToKeyring,
   SETTINGS_OP_IDS,
   type SettingsService,
   // [T-135] ModelConfigurationRow / UserPreferenceRow / AgentConfigurationRow 已随
@@ -495,7 +491,6 @@ import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 import { runCoverGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
-import { createAsrUsageRepository } from "@creatoros/backend/modules/ai-runtime";
 // [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
 import { runTranscriptPostprocess } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetClassify } from "@creatoros/backend/modules/ai-runtime";
@@ -1803,76 +1798,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: persistent ? () => new Date().toISOString() : () => FIXED_NOW_ISO,
     nextId: (prefix: string) => `${prefix}-${idBase}-${++createSeq}`,
   };
-  // T-731 FR-08：所有生产 ASR lease 都在请求前先写本地非敏感 intent；短效 token 从不进仓库。
-  const asrUsageRepo = createAsrUsageRepository(db, deps);
-  const prepareTrackedManagedTranscribeSpec = (
-    ...args: Parameters<typeof prepareManagedTranscribeSpec>
-  ) =>
-    prepareManagedTranscribeSpec(args[0], args[1], args[2], {
-      usageTracker: asrUsageRepo,
-    });
   // Identity 是排期三个表面的唯一时区来源；组合根提前构造同一个 service，
   // 后续 calendar/dashboard/settings 全部复用，避免各自猜浏览器或本机时区。
   const identityRepo = createIdentityRepository(db, deps);
   const identity = createIdentityService(identityRepo, deps);
 
-  // DEC-SEC-043：master key 继续用于用户自填模型 Key 与本机非长期数据的静态加密；
-  // Growth 渠道受管长期 Key 仍只进入系统凭据库，不得回退到该路径。
+  // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
+  // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
+  // browser_sessions(web 登录态密文)与 settings(模型 key)共用同一把 key/同一 crypto。
   const { key: masterKey, degraded: masterKeyDegraded } = resolveMasterKey(
     process.env,
   );
   if (masterKeyDegraded) {
     console.warn(
-      "[persistence] 非长期会话数据使用降级 master key(未取到系统钥匙串 key)。" +
-        "用户模型 Key 将拒绝新写，受管凭据不会回退到该路径。",
+      "[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。" +
+        "桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。",
     );
   }
-
-  // T-731 FR-05：Growth 渠道受管长期 Key 只进入原生系统凭据库。用户自填模型 Key
-  // 不使用该 vault；测试仍显式走内存桩，桌面原生组件缺失时受管路径 fail closed。
-  const credentialVault =
-    process.env.NODE_ENV === "test" || process.env.VITEST
-      ? createMemoryCredentialVaultForTest()
-      : process.env.CREATOROS_DESKTOP === "1"
-        ? (() => {
-            try {
-              return createNativeCredentialVault();
-            } catch {
-              return createUnavailableCredentialVault();
-            }
-          })()
-        : createUnavailableCredentialVault(
-            "系统凭据库只在 CreatorOS 桌面端可用，未保存凭据",
-          );
-
-  if (process.env.CREATOROS_DESKTOP === "1") {
-    const migration = await migrateLongTermCredentialsToKeyring(db, {
-      vault: credentialVault,
-      legacyMasterKey: masterKeyDegraded ? null : masterKey,
-      now: deps.now,
-    });
-    if (migration.blocked > 0) {
-      console.error(
-        `[credentials] 系统钥匙串迁移未完成，已停止受管能力；blocked=${migration.blocked}`,
-      );
-    } else {
-      const appDataDir = process.env.CREATOROS_APP_DATA_DIR?.trim();
-      if (appDataDir) {
-        const { writeFile } = await import("node:fs/promises");
-        try {
-          await writeFile(
-            nodePath.join(appDataDir, ".credential-keyring-v1-ready"),
-            "keyring_v1\n",
-            { encoding: "utf8", mode: 0o600 },
-          );
-        } catch {
-          // 标记落盘失败时不删除旧 `.master-key`，下次启动重新核对；迁移后的 DB 已是幂等状态。
-          console.error("[credentials] 无法写入迁移完成标记，旧 master key 文件将继续保留");
-        }
-      }
-    }
-  }
-
   // [T-370a] 浏览器登录态系统化:web 域 storageState 加密单一真值(host 内部 service,
   // 无契约 op —— web-session 保管库 / browser-pool 经端口闭包用它,不暴露 API)。
   // gate F-3:service 内 master-key 不可用/加密失败 → 抛人话错拒存,绝不明文落库。
@@ -2176,7 +2118,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (localFsEnabled) {
       const rootPath = await svc.resolveStorageRoot(ctx);
       return createLocalFsObjectStorage(
-        { rootPath, publicBaseUrl: "/api/v1/blob", userId: ctx.userId },
+        { rootPath, publicBaseUrl: "/api/v1/blob" },
         { nextKey },
       );
     }
@@ -5082,7 +5024,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     getChannelModelSelection(c, capability),
                 }),
               prepareTranscribeSpec: (c, spec, input) =>
-                prepareTrackedManagedTranscribeSpec(c, spec, input),
+                prepareManagedTranscribeSpec(c, spec, input),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
               transcribeAudio: (spec, opts, registry) =>
                 transcribeWithManagedFallback(spec, (current) =>
@@ -6820,7 +6762,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelSelection: (capability) =>
         getChannelModelSelection(c, capability),
     });
-    const spec = await prepareTrackedManagedTranscribeSpec(c, baseSpec, {
+    const spec = await prepareManagedTranscribeSpec(c, baseSpec, {
       audioBytes,
       intentId: `aweme:${awemeId}`,
     });
@@ -6908,7 +6850,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             getChannelModelSelection: (selectedCapability) =>
               getChannelModelSelection(c, selectedCapability),
           });
-          const spec = await prepareTrackedManagedTranscribeSpec(c, baseSpec, {
+          const spec = await prepareManagedTranscribeSpec(c, baseSpec, {
             audioBytes,
             intentId: `intelligence:${input.itemId}:aweme:${awemeId}`,
           });
@@ -9658,12 +9600,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // T-147 P2 本地加密 —— master key 已在工厂前段解析([T-370a] 与 browser_sessions 共用),
   // 注入 settings repo 后 model_configurations.secret_value 静态加密(AES-256-GCM),
   // 读出透明解密。web 路径永不崩(降级 key)。
-  const settingsRepo = createSettingsRepository(db, {
-    ...deps,
-    credentialVault,
-    masterKey: masterKeyDegraded ? undefined : masterKey,
-    legacyMasterKey: masterKeyDegraded ? null : masterKey,
-  });
+  const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
   const settingsService = createSettingsService(
     () => settingsRepo,
     (ctx) => identity.getCurrentUser(ctx),
@@ -10405,7 +10342,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           scopeId,
           serviceId,
           secret,
-          "user_input",
         ),
     });
   // [T-235b] 已登记信源信号端口(热点多源证据主路)—— trend 出题(topic.generate trend basis /

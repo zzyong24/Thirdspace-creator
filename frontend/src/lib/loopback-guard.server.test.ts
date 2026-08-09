@@ -7,7 +7,6 @@ vi.mock("server-only", () => ({}));
 
 import {
   HANDSHAKE_HEADER,
-  HANDSHAKE_COOKIE,
   hasValidHandshake,
   isLoopbackRequest,
   isTrustedLocalRequest,
@@ -147,22 +146,6 @@ describe("hasValidHandshake / isTrustedLocalRequest —— 握手 token", () => 
     expect(
       hasValidHandshake(
         mkReq(okUrl, { ...okHeaders, [HANDSHAKE_HEADER]: "b".repeat(64) }),
-        env,
-      ),
-    ).toBe(false);
-  });
-
-  it("HttpOnly 启动 cookie 可服务原生 img/video；缺失或错 boot 仍拒", () => {
-    const env = { CREATOROS_SIDECAR_HANDSHAKE_TOKEN: TOKEN };
-    expect(
-      hasValidHandshake(
-        mkReq(okUrl, { ...okHeaders, cookie: `${HANDSHAKE_COOKIE}=${TOKEN}` }),
-        env,
-      ),
-    ).toBe(true);
-    expect(
-      hasValidHandshake(
-        mkReq(okUrl, { ...okHeaders, cookie: `${HANDSHAKE_COOKIE}=old-boot` }),
         env,
       ),
     ).toBe(false);

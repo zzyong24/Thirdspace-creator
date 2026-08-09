@@ -58,15 +58,6 @@ describe("proxy default-deny (T-415)", () => {
     ).toBe(true);
   });
 
-  it("页面响应带逐请求 nonce CSP，脚本不允许 unsafe-inline", () => {
-    const response = proxy(makeReq("/") as NextRequest);
-    const csp = response.headers.get("content-security-policy") ?? "";
-    expect(csp).toContain("default-src 'self'");
-    expect(csp).toMatch(/script-src 'self' 'nonce-[^']+'/);
-    expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
-    expect(csp).toContain("connect-src 'self'");
-  });
-
   describe("桌面打包态(REQUIRED 烘焙=1,Rust 注入 token)", () => {
     beforeEach(() => {
       process.env.CREATOROS_HANDSHAKE_REQUIRED = "1";
@@ -104,7 +95,8 @@ describe("proxy default-deny (T-415)", () => {
       expect(denied(makeReq("/projects/new", { method: "POST", nextAction: "abc123", handshake: TOKEN }))).toBe(false);
     });
 
-    it("allowlist(execution-preview/activate/auth)缺握手也放行；blob 由专用 route 门校验", () => {
+    it("allowlist(blob/execution-preview/activate/auth)缺握手也放行", () => {
+      expect(denied(makeReq("/api/v1/blob/xyz.png"))).toBe(false);
       expect(
         denied(
           makeReq(

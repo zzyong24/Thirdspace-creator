@@ -143,14 +143,14 @@ export function versionNewer(latest: string, current: string): boolean {
 }
 
 /**
- * 重启应用。只调用 Rust 暴露的无参窄 command，不授予 remote WebView plugin-process。
+ * 重启应用(安装完更新后生效)。走 `@tauri-apps/plugin-process` 的 relaunch。
  * 非桌面态或插件不可用 → 返回 false(调用方据此提示「请手动重启」),不 throw。
  */
 export async function relaunchApp(): Promise<boolean> {
   if (!isDesktopRuntimeClient()) return false;
   try {
-    const { invoke } = await import("@tauri-apps/api/core");
-    await invoke("relaunch_app");
+    const { relaunch } = await import("@tauri-apps/plugin-process");
+    await relaunch();
     return true;
   } catch {
     return false;

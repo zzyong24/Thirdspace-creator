@@ -1,8 +1,8 @@
 // [T-363] 模型配置导出/导入(设置页兜底)—— service 层 round-trip + 敏感值处理单测。
 //
 // 关键不变式:
-//   - 导出**不访问 Keychain**:文件只携带本机加密密文，不含明文密钥;
-//   - 同一 OS 用户重置数据库后可用同一 master key 解包并重新加密;
+//   - 导出**不解密**:文件里的 secretValue = 库中存储形态(masterKey 注入时恒为 enc:v1: 密文);
+//   - 导入走既有 setModelConfiguration 写路径(capability 冲突覆盖),密钥解包后重加密落库;
 //   - 跨机器密文(别的 key 加密)→ 配置照导 + secret 诚实标 unrecoverable,绝不写坏值;
 //   - 文件行无密钥 → putModel 既有语义保留库中已存密钥(kept-existing);
 //   - 结构不对 → ModelConfigImportError(→400),不半吞。
@@ -14,7 +14,6 @@ import {
   type RequestContext,
 } from "@creatoros/backend";
 import { createSettingsRepository } from "./settings.repository";
-import { modelConfigurations } from "./settings.db-schema";
 import {
   createSettingsService,
   ModelConfigImportError,
@@ -58,7 +57,7 @@ describe("model config export/import (T-363)", () => {
     service = buildService(db);
   });
 
-  it("round-trip:导出本机密文 → 清空数据库后用同一 master key 恢复", async () => {
+  it("round-trip:导出密文不解密 → 清空后导入 → 配置与密钥完整还原", async () => {
     await service.setModelConfiguration(ctx, "default", {
       provider: "new-api",
       modelName: "gpt-5",
@@ -77,16 +76,15 @@ describe("model config export/import (T-363)", () => {
     const file = await service.exportModelConfigs(ctx);
     expect(file.kind).toBe("creatoros.model-config-export");
     expect(file.models).toHaveLength(2);
-    // 导出只含本机 AES-GCM 密文，不含明文，也不携带 Keychain 引用。
+    // 导出的密钥是密文(不含明文 key)。
     expect(file.secretForm).toBe("encrypted");
     for (const m of file.models) {
-      expect(m.secretValue).toMatch(/^enc:v1:/);
-      expect(m.keyringRef ?? null).toBeNull();
+      expect(m.secretValue!.startsWith("enc:v1:")).toBe(true);
       expect(JSON.stringify(m)).not.toContain("sk-live-123");
       expect(JSON.stringify(m)).not.toContain("sk-image-456");
     }
 
-    // 模拟重置后的空库（同一台机器、同一 master key）。
+    // 模拟重置后的空库(同 master key —— keychain/.master-key 重置不丢)。
     ({ db } = await createDb());
     service = buildService(db);
     const report = await service.importModelConfigs(ctx, file);
@@ -95,7 +93,7 @@ describe("model config export/import (T-363)", () => {
     expect(report.failed).toBe(0);
     expect(report.rows.every((r) => r.secret === "imported")).toBe(true);
 
-    // 配置和密钥均从密文恢复；整个过程不需要 Keychain 条目。
+    // 配置还原;密钥经解包→重加密,内部读能拿回明文。
     const restored = await service.getModelConfig(ctx, "default");
     expect(restored?.provider).toBe("new-api");
     expect(restored?.baseUrl).toBe("https://new-api.example.com/v1");
@@ -199,32 +197,5 @@ describe("model config export/import (T-363)", () => {
     const file = await service.exportModelConfigs(ctx);
     expect(file.models).toHaveLength(0);
     expect(file.secretForm).toBe("none");
-  });
-
-  it("既有本机 enc:v1 密文可安全复制到普通导出，不泄露明文", async () => {
-    await db.insert(modelConfigurations).values({
-      id: "legacy-blocked",
-      userId: ctx.userId,
-      capability: "default",
-      provider: "minimax",
-      modelName: "legacy",
-      secretReference: "",
-      secretValue: encryptSecret("sk-legacy-only", KEY),
-      keyringRef: null,
-      credentialMigrationState: "keyring_unavailable",
-      rotatedAt: null,
-      settings: {},
-      baseUrl: null,
-      apiFormat: "anthropic",
-      isDefault: false,
-    });
-
-    const file = await service.exportModelConfigs(ctx);
-    expect(file.secretForm).toBe("encrypted");
-    expect(file.models[0]).toMatchObject({
-      keyringRef: null,
-    });
-    expect(file.models[0]!.secretValue).toMatch(/^enc:v1:/);
-    expect(JSON.stringify(file)).not.toContain("sk-legacy-only");
   });
 });

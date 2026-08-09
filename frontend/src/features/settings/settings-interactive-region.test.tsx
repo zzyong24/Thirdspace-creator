@@ -20,8 +20,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => mockRouter,
   useSearchParams: () => mockSearchParams,
 }));
-vi.mock("@/lib/open-external-url", () => ({
-  openExternalUrl: (url: string) => mockOpenExternalUrl(url),
+vi.mock("@tauri-apps/plugin-opener", () => ({
+  openUrl: (url: string) => mockOpenExternalUrl(url),
 }));
 
 const mockClient = {

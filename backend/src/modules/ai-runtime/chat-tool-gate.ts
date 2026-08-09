@@ -342,8 +342,8 @@ export function enforceChatToolResultBudget<T>(result: T, budgetChars: number): 
 
 // ─────────────────────────────────────────────────────────────────────────────
 // [T-263] 统一「人在环工具授权」门(HITL)—— 把 needApproval 从「工具完整输出」升级为「未决工具
-// 调用」的通用能力,抽进本门(defineChatTool),local.read 与所有付费/持久化工具复用同一阻塞
-// 范式,不各写一遍。副作用工具还会在 execute 前消费一次性审批,阻断改参、重放与超时回执。
+// 调用」的通用能力,抽进本门(defineChatTool),后续任何 needApproval 类工具(将来 local.write /
+// T-262 多命中选择等)复用同一阻塞范式,不各写一遍。当前仅 local.read 用。
 //
 // 走 **Vercel AI SDK 原生工具授权**(ai@7.0.4:streamText 的 `toolApproval` 配置,非已废弃的
 // tool-level needsApproval)。判定器返回我们自己的三态,buildChatToolApproval 映射到 SDK
@@ -363,28 +363,12 @@ export type ChatToolApprovalDecision =
 /** [T-263] 工具的授权判定器(闭包已 ctx-bound 端口;入参 = 该工具入参)。 */
 export type ChatToolApprovalDecider<INPUT> = (
   input: INPUT,
-  options?: {
-    toolCallId: string;
-    messages: unknown[];
-  },
 ) => Promise<ChatToolApprovalDecision> | ChatToolApprovalDecision;
-
-export type ChatToolApprovalExecutionGuard<INPUT> = (
-  input: INPUT,
-  options: {
-    toolCallId: string;
-    messages: unknown[];
-  },
-) => Promise<void> | void;
 
 // tool → 授权判定器 的旁挂表(WeakMap,不污染 tool 对象可枚举字段;tool GC 时自动清)。
 const CHAT_TOOL_APPROVAL_DECIDERS = new WeakMap<
   Tool,
   ChatToolApprovalDecider<unknown>
->();
-const CHAT_TOOL_APPROVAL_EXECUTION_GUARDS = new WeakMap<
-  Tool,
-  ChatToolApprovalExecutionGuard<unknown>
 >();
 
 /** 取某 tool 登记的授权判定器(无 = 该工具无需授权门)。buildChatToolApproval 内部用。 */
@@ -394,27 +378,12 @@ export function getChatToolApprovalDecider(
   return CHAT_TOOL_APPROVAL_DECIDERS.get(t);
 }
 
-/** 给已构造工具追加审批判定与执行前一次性消费门。 */
-export function bindChatToolApproval<INPUT>(
-  t: Tool,
-  decider: ChatToolApprovalDecider<INPUT>,
-  executionGuard: ChatToolApprovalExecutionGuard<INPUT>,
-): void {
-  CHAT_TOOL_APPROVAL_DECIDERS.set(
-    t,
-    decider as ChatToolApprovalDecider<unknown>,
-  );
-  CHAT_TOOL_APPROVAL_EXECUTION_GUARDS.set(
-    t,
-    executionGuard as ChatToolApprovalExecutionGuard<unknown>,
-  );
-}
-
 /**
  * [T-263] 从一组已挂工具装配 streamText 的 `toolApproval` 配置(per-tool 判定函数映射)。
- * 只收录登记了判定器的工具;全无 → 返回 undefined(streamText 不传该配置)。
+ * 只收录登记了判定器的工具(当前仅 local.read);全无 → 返回 undefined(streamText 不传该配置)。
  * 我们的三态映射:denied → { type:'denied', reason };user-approval → 'user-approval';其它 →
- * 'not-applicable'。判定器抛错 → 失败关闭为 denied,避免审批组件异常时副作用穿透。
+ * 'not-applicable'。判定器抛错 → 保守回 'not-applicable'(让 execute 自己按既有四态诚实处理,
+ * 不因判定器抖动误挂授权门)。
  */
 /**
  * [T-439] 工具名合规化 —— 主流模型 API(DeepSeek/OpenAI/Anthropic)对 `tools[].function.name`
@@ -507,34 +476,19 @@ export function sanitizeSystemToolReferences(
 
 export function buildChatToolApproval(
   tools: ToolSet,
-): Record<
-  string,
-  (
-    input: unknown,
-    options?: { toolCallId: string; messages: unknown[] },
-  ) => Promise<ToolApprovalStatus>
-> | undefined {
-  const out: Record<
-    string,
-    (
-      input: unknown,
-      options?: { toolCallId: string; messages: unknown[] },
-    ) => Promise<ToolApprovalStatus>
-  > = {};
+): Record<string, (input: unknown) => Promise<ToolApprovalStatus>> | undefined {
+  const out: Record<string, (input: unknown) => Promise<ToolApprovalStatus>> = {};
   for (const [name, t] of Object.entries(tools)) {
     const decider = getChatToolApprovalDecider(t as Tool);
     if (!decider) continue;
-    out[name] = async (input, options): Promise<ToolApprovalStatus> => {
+    out[name] = async (input: unknown): Promise<ToolApprovalStatus> => {
       try {
-        const d = await decider(input, options);
+        const d = await decider(input);
         if (d.status === "denied") return { type: "denied", reason: d.reason };
         if (d.status === "user-approval") return "user-approval";
         return "not-applicable";
       } catch {
-        return {
-          type: "denied",
-          reason: "审批组件异常，已阻止副作用操作",
-        };
+        return "not-applicable";
       }
     };
   }
@@ -566,26 +520,9 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     throw new Error(`[chat-tool-gate] 工具 ${name} 未登记 CHAT_TOOL_ERROR_ENVELOPES —— 新增工具须同步登记错误信封(kind 与正常结果一致 + 结构占位)`);
   }
   const budget = envelope.budgetChars ?? CHAT_TOOL_RESULT_BUDGET_CHARS;
-  let built: Tool;
   const gatedExecute = async (input: INPUT, callOptions?: unknown): Promise<unknown> => {
     const startedAt = Date.now();
     try {
-      const guard = CHAT_TOOL_APPROVAL_EXECUTION_GUARDS.get(built);
-      if (guard) {
-        const options = callOptions as
-          | { toolCallId?: unknown; messages?: unknown }
-          | undefined;
-        if (
-          typeof options?.toolCallId !== "string" ||
-          !Array.isArray(options.messages)
-        ) {
-          throw new Error("审批执行上下文缺失，已阻止副作用操作");
-        }
-        await guard(input, {
-          toolCallId: options.toolCallId,
-          messages: options.messages,
-        });
-      }
       const result = await config.execute(input, callOptions);
       const bounded = enforceChatToolResultBudget(result, budget);
       // 【T-239e 挂点】usage 归因扩展字段(tokens/费用)加在这行日志上,别另起打点层。
@@ -618,7 +555,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     }
   };
   // 内部仍是官方 tool()(schema/描述原样透传);类型上收窄为 Tool 供 allChatTools 表使用。
-  built = tool({
+  const built = tool({
     description: config.description,
     inputSchema: config.inputSchema,
     execute: gatedExecute,

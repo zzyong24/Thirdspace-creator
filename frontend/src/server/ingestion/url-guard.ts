@@ -7,17 +7,26 @@ import "server-only";
 // 截成图(SSRF)。本模块提供:
 //   ① assertUrlAllowed —— 导航前置检查:协议白名单 http/https;hostname 是 IP 字面量
 //      (含 IPv6、8 进制/16 进制/纯整数等绕过形式,WHATWG URL 解析会把这些归一化成标准
-//      点分十进制,与 Node 连接器使用同一套解析语义)直接按解析结果判;是域名则先过黑名单
-//      (localhost/.internal/.local/无点单标签/云元数据域名),再 DNS 解析全部地址逐个判。
-//   ② fetchUrlSafely —— 禁用自动重定向；每一跳先完成全部 DNS 地址检查，再把连接固定到
-//      已验证 IP，并核对 socket.remoteAddress。解析失败、空结果、混入保留地址、连接地址
-//      不一致一律 fail closed，正文只在整条链通过后交给渲染/抽取层。
-//   ③ collectRedirectChainUrls —— 仅为旧测试注入的浏览器导航兼容路径保留；生产路径不依赖
-//      事后链审计，也不允许浏览器直接访问外部 URL。
+//      点分十进制,与 Chromium 同一套解析语义,不会「守卫看到的」≠「浏览器实际去的」)
+//      直接按解析结果判;是域名则先过黑名单(localhost/.internal/.local/无点单标签/云元数据
+//      域名),再 DNS 解析全部地址逐个判。
+//   ② collectRedirectChainUrls —— 从 Playwright Response 沿 request().redirectedFrom()
+//      往回收整条重定向链的每一跳 URL,供导航后逐跳复检(选型见下)。
+//
+// 重定向复检选型(如实):Playwright 的 page.route **不会**在重定向跳转上再次触发
+// (route 只拦截链条的首个请求,redirect 由浏览器自动跟随),所以做不到「逐跳事前阻断」。
+// 采用的方案 = 事后链审计:goto 完成后用 response.request().redirectedFrom() 拿到全部跳转
+// 请求,对每一跳 URL 重跑 assertUrlAllowed —— 命中即抛错,**内容绝不返回给模型/落素材**。
+// 残留(诚实):被重定向指向的内网地址,那个 HTTP 请求本身已被浏览器发出(GET 的副作用无法
+// 撤销);以及 DNS rebinding(浏览器解析到的 IP 与我们复核解析到的 IP 可能不同)无法根治。
+//
+// DNS 失败语义(用户是本机装机版、目标是公开网页,**别误杀正常公网站**):
+//   · 解析失败(ENOTFOUND/超时)→ **放行**:解析不到 ≠ 恶意,后续 page.goto 自己会以
+//     「页面打不开」诚实失败;若是重定向跳复检时解析失败,说明我们复核不了,但浏览器已经
+//     打开过它 —— 同样放行(保守起见不误杀 CDN 多级跳)。
+//   · 解析成功但任一地址命中阻断段 → 拒绝(fail-closed:公网域名混挂内网 IP 也挡)。
 
 import { isIP } from "node:net";
-import * as http from "node:http";
-import * as https from "node:https";
 
 /** SSRF 阻断错误 —— message 已是人话(可直接进工具结果转述)。调用方(web-reader/web-capture)
  *  会把它转成各自的 WebCaptureError 以保持三墙错误分类;这里不 import 它们(避免循环依赖)。 */
@@ -33,26 +42,6 @@ export type LookupFn = (hostname: string) => Promise<{ address: string }[]>;
 
 export interface UrlGuardOptions {
   lookup?: LookupFn;
-}
-
-export interface SafeHttpResponse {
-  status: number;
-  headers: Record<string, string | undefined>;
-  body: Buffer;
-  remoteAddress: string | undefined;
-}
-
-export type SafeHttpRequest = (
-  url: URL,
-  pinnedAddress: string,
-  signal?: AbortSignal,
-) => Promise<SafeHttpResponse>;
-
-export interface SafeFetchResult {
-  status: number;
-  headers: Record<string, string | undefined>;
-  body: Buffer;
-  finalUrl: string;
 }
 
 const realLookup: LookupFn = async (hostname) => {
@@ -78,7 +67,14 @@ function parseDottedIpv4(s: string): number[] | null {
   return out;
 }
 
-/** RFC2544 基准测试保留段；无论 IP 字面量还是 DNS 结果都拒绝，代理 fake-ip 不构成公网证明。 */
+/**
+ * [T-438] RFC2544 基准测试段(198.18.0.0/15)的阻断原因 —— 单独抽常量,因为它在两种场景下判定不同:
+ *   · **直接 IP 字面量**(`http://198.18.2.1`)→ 仍阻断(没有正当理由直接访问该段 = 可疑探测);
+ *   · **域名 DNS 解析结果**命中它 → **例外放行**(见 assertPublicUrl)。原因:Clash/Surge 等代理的
+ *     **fake-ip 模式默认池正是 198.18.0.0/16**,开代理时所有公网域名(kimi.com/wikipedia.org…)
+ *     都解析到这里,一刀切会让**网页截图对所有代理用户全废**(2026-07-20 真机 4 连失败);且 fake-ip
+ *     下这个地址根本不代表真实连接目标 —— 实际连接由代理发起,本机不会真连内网,该层检查已失去意义。
+ */
 export const FAKE_IP_BENCH_REASON = "198.18.0.0/15 基准测试保留地址";
 
 /** IPv4 阻断段判定:命中返回原因(人话),否则 null。 */
@@ -93,7 +89,6 @@ function blockedIpv4Reason(bytes: number[]): string | null {
   if (a === 172 && b >= 16 && b <= 31) return "172.16.0.0/12 私网地址";
   if (a === 192 && b === 168) return "192.168.0.0/16 私网地址";
   if (a === 198 && (b === 18 || b === 19)) return FAKE_IP_BENCH_REASON;
-  if (a >= 224 && a <= 239) return "224.0.0.0/4 组播地址";
   if (a >= 240) return "240.0.0.0/4 保留/广播地址";
   return null;
 }
@@ -167,15 +162,6 @@ function blockedIpv6Reason(bytes: number[]): string | null {
   if (bytes[0] === 0xfe && (bytes[1] & 0xc0) === 0x80)
     return "fe80::/10 链路本地地址";
   if ((bytes[0] & 0xfe) === 0xfc) return "fc00::/7 私有(ULA)地址";
-  if (bytes[0] === 0xff) return "ff00::/8 组播地址";
-  if (
-    bytes[0] === 0x20 &&
-    bytes[1] === 0x01 &&
-    bytes[2] === 0x0d &&
-    bytes[3] === 0xb8
-  ) {
-    return "2001:db8::/32 文档保留地址";
-  }
   return null;
 }
 
@@ -215,7 +201,7 @@ function blockedHostnameReason(hostname: string): string | null {
 /**
  * 判一个 URL 是否允许服务端浏览器访问;不允许则抛 UrlBlockedError(message 人话)。
  * 判定顺序:URL 合法性 → 协议白名单 → IP 字面量直接判 → 域名黑名单 → DNS 解析逐地址判。
- * DNS 解析失败或空结果 → fail closed；无法证明是公网就不发请求。
+ * DNS 解析失败 → 放行(解析不到 ≠ 恶意,page.goto 会自己诚实失败;语义详见文件头注释)。
  */
 export async function assertUrlAllowed(
   rawUrl: string,
@@ -259,133 +245,21 @@ export async function assertUrlAllowed(
   try {
     addrs = await lookup(host);
   } catch {
-    throw new UrlBlockedError(
-      `无法确认目标「${host}」是公网地址，已阻止访问。`,
-    );
-  }
-  if (addrs.length === 0) {
-    throw new UrlBlockedError(
-      `无法确认目标「${host}」是公网地址，已阻止访问。`,
-    );
+    return; // DNS 解析失败放行:page.goto 会以「页面打不开」诚实失败(解析不到 ≠ 恶意)
   }
   for (const a of addrs) {
     const reason = blockedIpReason(a.address);
+    // [T-438] fake-ip 例外:域名解析到 198.18.0.0/15 时放行 —— 那几乎必然是 Clash/Surge 的 fake-ip
+    //   假地址(其默认池就是 198.18.0.0/16),不是真的内网目标;实际连接由代理发起。不放行则所有开
+    //   代理的用户网页截图全废。**其余保留段(回环/私网/链路本地/云元数据)一律照拦**,上面两层
+    //   (IP 字面量、hostname)也全部保留 —— 那才是防内网探测的真防线。
+    if (reason === FAKE_IP_BENCH_REASON) continue;
     if (reason) {
       throw new UrlBlockedError(
         `「${host}」解析到「${a.address}」(${reason})——为防内网探测(SSRF)已阻止访问,只支持公网网页。`,
       );
     }
   }
-}
-
-async function resolvePinnedTarget(
-  rawUrl: string,
-  lookup: LookupFn,
-): Promise<{ url: URL; addresses: string[] }> {
-  await assertUrlAllowed(rawUrl, { lookup });
-  const url = new URL(rawUrl);
-  const host = url.hostname.replace(/^\[|\]$/g, "");
-  if (isIP(host)) return { url, addresses: [host] };
-  const rows = await lookup(host).catch(() => []);
-  if (rows.length === 0) {
-    throw new UrlBlockedError(`无法确认目标「${host}」是公网地址，已阻止访问。`);
-  }
-  const addresses = rows.map((row) => row.address);
-  // 第二次解析也必须完整通过，避免第一次检查后 rebinding 到内网。
-  for (const address of addresses) {
-    const reason = blockedIpReason(address);
-    if (reason) {
-      throw new UrlBlockedError(
-        `「${host}」解析到「${address}」(${reason})——为防内网探测(SSRF)已阻止访问,只支持公网网页。`,
-      );
-    }
-  }
-  return { url, addresses };
-}
-
-const realSafeHttpRequest: SafeHttpRequest = (url, pinnedAddress, signal) =>
-  new Promise((resolve, reject) => {
-    const transport = url.protocol === "https:" ? https : http;
-    const req = transport.request(
-      {
-        protocol: url.protocol,
-        hostname: pinnedAddress,
-        port: url.port || undefined,
-        path: `${url.pathname}${url.search}`,
-        method: "GET",
-        headers: {
-          host: url.host,
-          accept: "text/html,application/xhtml+xml",
-          "accept-encoding": "identity",
-          "user-agent": "CreatorOS/1.0 safe-web-reader",
-        },
-        servername: url.hostname,
-        signal,
-      },
-      (response) => {
-        const chunks: Buffer[] = [];
-        let size = 0;
-        response.on("data", (chunk: Buffer) => {
-          size += chunk.length;
-          if (size > 12 * 1024 * 1024) {
-            req.destroy(new Error("网页响应超过 12 MiB 安全上限"));
-            return;
-          }
-          chunks.push(Buffer.from(chunk));
-        });
-        response.on("end", () => {
-          const headers: Record<string, string | undefined> = {};
-          for (const [key, value] of Object.entries(response.headers)) {
-            headers[key] = Array.isArray(value) ? value[0] : value;
-          }
-          resolve({
-            status: response.statusCode ?? 0,
-            headers,
-            body: Buffer.concat(chunks),
-            remoteAddress: response.socket.remoteAddress,
-          });
-        });
-      },
-    );
-    req.on("error", reject);
-    req.end();
-  });
-
-/**
- * 不使用浏览器自动重定向。每一跳先解析全部 IP 并拒绝混合/保留地址，再把真实连接固定到
- * 已验证 IP；socket.remoteAddress 不匹配也拒绝。最多 10 跳，正文才交给渲染/抽取层。
- */
-export async function fetchUrlSafely(
-  rawUrl: string,
-  opts: {
-    lookup?: LookupFn;
-    request?: SafeHttpRequest;
-    signal?: AbortSignal;
-    maxRedirects?: number;
-  } = {},
-): Promise<SafeFetchResult> {
-  const lookup = opts.lookup ?? realLookup;
-  const request = opts.request ?? realSafeHttpRequest;
-  const maxRedirects = opts.maxRedirects ?? 10;
-  let current = rawUrl;
-  for (let hop = 0; hop <= maxRedirects; hop += 1) {
-    const { url, addresses } = await resolvePinnedTarget(current, lookup);
-    const response = await request(url, addresses[0]!, opts.signal);
-    const connected = response.remoteAddress?.replace(/^::ffff:/, "");
-    const allowed = addresses.map((address) => address.replace(/^::ffff:/, ""));
-    if (!connected || !allowed.includes(connected)) {
-      throw new UrlBlockedError("实际连接地址不在已校验公网结果中，已阻止访问。");
-    }
-    if ([301, 302, 303, 307, 308].includes(response.status)) {
-      const location = response.headers.location;
-      if (!location) throw new UrlBlockedError("重定向响应缺少 Location，已阻止访问。");
-      if (hop === maxRedirects) throw new UrlBlockedError("网页重定向超过 10 次，已阻止访问。");
-      current = new URL(location, url).toString();
-      continue;
-    }
-    return { ...response, finalUrl: url.toString() };
-  }
-  throw new UrlBlockedError("网页重定向超过安全上限，已阻止访问。");
 }
 
 // ── 重定向链收集(Playwright Response → 每一跳 URL)──────────────────────────

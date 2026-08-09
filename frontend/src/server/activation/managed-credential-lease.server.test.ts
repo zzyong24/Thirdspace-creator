@@ -54,7 +54,6 @@ describe("requestManagedAsrLease", () => {
       now: () => NOW,
     });
     expect(lease).toMatchObject({
-      leaseRef: "lease-1",
       token: "temporary-secret-token",
       chargedUnits: 25_000,
       model: "qwen3-asr-flash",

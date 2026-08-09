@@ -115,13 +115,7 @@ export async function POST(request: Request): Promise<Response> {
   const settings = await getSettingsService();
   return refreshClientConfig({
     putManagedCredential: async (scopeId, serviceId, token) => {
-      await settings.setChannelModelCredential(
-        ctx,
-        scopeId,
-        serviceId,
-        token,
-        "activation_managed",
-      );
+      await settings.setChannelModelCredential(ctx, scopeId, serviceId, token);
     },
   }).then(
     (result) => {

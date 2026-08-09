@@ -10,7 +10,7 @@ import {
   isEncrypted,
   ENC_PREFIX,
   __resetFdKeyCacheForTest,
-  primeMasterKeyFromInheritedFd,
+  deobfuscateMasterKeyFile,
 } from "./secret-crypto";
 
 // A deterministic 32-byte key (base64) for round-trip tests.
@@ -124,21 +124,6 @@ describe("resolveMasterKey — desktop keychain env vs web/dev fallback", () => 
 });
 
 describe("[T-391 H-key] master key via ChildStdin fd channel", () => {
-  it("启动协议可先缓存同一 stdin 的 master key，后续解析不再二次争抢管道", () => {
-    primeMasterKeyFromInheritedFd(0, KEY_B64);
-    const res = resolveMasterKey({ CREATOROS_MASTER_KEY_FD: "0" });
-    expect(res.source).toBe("fd");
-    expect(res.degraded).toBe(false);
-    expect(res.key.equals(KEY)).toBe(true);
-  });
-
-  it("启动协议拒绝非法 fd 与非 32 字节 master key", () => {
-    expect(() => primeMasterKeyFromInheritedFd(-1, KEY_B64)).toThrow(/fd/i);
-    expect(() =>
-      primeMasterKeyFromInheritedFd(0, Buffer.alloc(31).toString("base64")),
-    ).toThrow(/32/);
-  });
-
   it("reads the key from the injected fd reader (desktop path), source='fd'", () => {
     const res = resolveMasterKey(
       { CREATOROS_MASTER_KEY_FD: "0" },
@@ -217,97 +202,67 @@ describe("end-to-end: encrypt under resolved key, decrypt under the same resolve
   });
 });
 
-describe("T-731 正式桌面拒绝可逆文件/MACHINE_SEED 回退", () => {
-  it("即使旧 .master-key 文件存在，Node 解析器也完全忽略旧路径与 seed", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const dir = mkdtempSync(join(tmpdir(), "mk-retired-"));
+describe("[T-425] .master-key 文件兜底 —— 与 Rust 同源反混淆", () => {
+  // 合成金标向量(**非用户真密钥**;由 Rust 同算法离线产出,锚定字节级一致)。
+  //   KEY = 32×0x2a → base64;SEED / nonce 固定。
+  const SEED = "TEST-MACHINE-SEED-0001";
+  const SYNTH_KEY_B64 = Buffer.alloc(32, 0x2a).toString("base64");
+  const V2_BLOB =
+    "v2:AAcOFRwjKjE4P0ZNVFtiaepG6Gz+0lp0Bg09ig3rcnI7DxKNHDKjrBm4353mFLVi8QG52ESbM91zWhdK";
+
+  it("golden vector:v2 blob + 正确 seed → 明文 key 串(字节级锚)", () => {
+    expect(deobfuscateMasterKeyFile(V2_BLOB, SEED)).toBe(SYNTH_KEY_B64);
+  });
+
+  it("错 seed → 不是原 key(反混淆机器绑定)", () => {
+    expect(deobfuscateMasterKeyFile(V2_BLOB, "WRONG-SEED")).not.toBe(
+      SYNTH_KEY_B64,
+    );
+  });
+
+  it("存量明文(无 v2: 前缀)→ 原样返回", () => {
+    expect(deobfuscateMasterKeyFile(`  ${KEY_B64}  `, SEED)).toBe(KEY_B64);
+  });
+
+  it("resolveMasterKey:fd/env 都缺 → 走文件兜底(source=file,拿到真 key)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mk-file-"));
     const file = join(dir, ".master-key");
-    writeFileSync(file, KEY_B64);
-
+    writeFileSync(file, V2_BLOB);
     const res = resolveMasterKey({
-      NODE_ENV: "production",
       CREATOROS_MASTER_KEY_FILE: file,
-      CREATOROS_MACHINE_SEED: "legacy-machine-seed",
+      CREATOROS_MACHINE_SEED: SEED,
     });
-    expect(res.source).toBe("dev-fallback");
-    expect(res.degraded).toBe(true);
-    expect(res.key.length).toBe(32);
-    expect(warn).toHaveBeenCalled();
+    expect(res.source).toBe("file");
+    expect(res.degraded).toBe(false);
+    expect(res.key).toEqual(Buffer.from(SYNTH_KEY_B64, "base64"));
   });
 
-  it("旧文件变量不能覆盖显式 web master key", () => {
+  it("env CREATOROS_MASTER_KEY 优先于文件兜底(② 早于 ②.5)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mk-file-"));
+    const file = join(dir, ".master-key");
+    writeFileSync(file, V2_BLOB);
     const res = resolveMasterKey({
-      CREATOROS_MASTER_KEY: KEY_B64,
-      CREATOROS_MASTER_KEY_FILE: "/tmp/should-never-be-read",
-      CREATOROS_MACHINE_SEED: "ignored",
+      CREATOROS_MASTER_KEY: KEY_B64, // 0x07 key
+      CREATOROS_MASTER_KEY_FILE: file, // 0x2a key
+      CREATOROS_MACHINE_SEED: SEED,
     });
     expect(res.source).toBe("env");
-    expect(res.degraded).toBe(false);
-    expect(res.key.equals(KEY)).toBe(true);
+    expect(res.key).toEqual(Buffer.alloc(32, 7));
   });
 
-  it("旧文件变量不能覆盖桌面 fd 通道", () => {
-    const res = resolveMasterKey(
-      {
-        CREATOROS_MASTER_KEY_FD: "0",
-        CREATOROS_MASTER_KEY_FILE: "/tmp/should-never-be-read",
-        CREATOROS_MACHINE_SEED: "ignored",
-      },
-      { readFd: () => KEY_B64 },
-    );
-    expect(res.source).toBe("fd");
-    expect(res.degraded).toBe(false);
-    expect(res.key.equals(KEY)).toBe(true);
-  });
-
-  it("负数 fd 被拒绝且不会尝试读取任意文件描述符", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const readFd = vi.fn(() => KEY_B64);
-    const res = resolveMasterKey(
-      { CREATOROS_MASTER_KEY_FD: "-1", NODE_ENV: "development" },
-      { readFd },
-    );
-    expect(readFd).not.toHaveBeenCalled();
+  it("无文件 env(dev/web)→ 兜底休眠,退降级 dev key(零影响)", () => {
+    const res = resolveMasterKey({ NODE_ENV: "development" });
     expect(res.source).toBe("dev-fallback");
-    expect(warn).toHaveBeenCalled();
   });
 
-  it("非整数 fd 被拒绝且不会截断后误读", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const readFd = vi.fn(() => KEY_B64);
-    const res = resolveMasterKey(
-      { CREATOROS_MASTER_KEY_FD: "1.5", NODE_ENV: "development" },
-      { readFd },
-    );
-    expect(readFd).not.toHaveBeenCalled();
-    expect(res.degraded).toBe(true);
-    expect(warn).toHaveBeenCalled();
-  });
-
-  it("fd 读取器抛错时仅回退到显式 env，不接触文件路径", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const res = resolveMasterKey(
-      {
-        CREATOROS_MASTER_KEY_FD: "0",
-        CREATOROS_MASTER_KEY: KEY_B64,
-        CREATOROS_MASTER_KEY_FILE: "/tmp/should-never-be-read",
-      },
-      {
-        readFd: () => {
-          throw new Error("fd closed");
-        },
-      },
-    );
-    expect(res.source).toBe("env");
-    expect(res.key.equals(KEY)).toBe(true);
-    expect(warn).toHaveBeenCalled();
-  });
-
-  it("加密拒绝非 32 字节 key，不产生可误判的密文", () => {
-    expect(() => encryptSecret("secret", Buffer.alloc(31))).toThrow(/32/);
-  });
-
-  it("损坏的 enc:v1 载荷必须认证失败，不能当旧明文透传", () => {
-    expect(() => decryptSecret("enc:v1:not-valid-ciphertext", KEY)).toThrow();
+  it("文件路径存在但反混淆坏(seed 不符致非 32B)→ 不误用,退降级", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mk-file-"));
+    const file = join(dir, ".master-key");
+    writeFileSync(file, V2_BLOB);
+    const res = resolveMasterKey({
+      CREATOROS_MASTER_KEY_FILE: file,
+      CREATOROS_MACHINE_SEED: "WRONG-SEED", // 反混淆出非 32B → toKeyResult 拒 → 降级
+    });
+    expect(res.source).toBe("dev-fallback");
   });
 });

@@ -336,61 +336,6 @@ describe("confirm (采纳)", () => {
     expect(await fs.stat(path.join(root, "task-1")).catch(() => null)).toBeNull();
   });
 
-  it("资产已创建但 journal 写入前崩溃，重试复用稳定 adoptionId 只保留一份资产 (T-731 H-05)", async () => {
-    const outDir = path.join(root, "task-1", "out");
-    await fs.mkdir(outDir, { recursive: true });
-    await fs.writeFile(path.join(outDir, "only.txt"), "ok");
-    const state = baseState();
-    state.results = [
-      manifestResult([
-        {
-          path: "only.txt",
-          fileName: "only.txt",
-          size: 2,
-          mimeType: "text/plain",
-        },
-      ]),
-    ];
-    const physicallyCreated = new Map<string, string>();
-    const baseAi = makeAiPort(state);
-    let crashBeforeJournal = true;
-    const { service } = makeService(state, {
-      ai: {
-        ...baseAi,
-        async recordAuxResult(c, taskId, input) {
-          if (
-            crashBeforeJournal &&
-            input.resultType === "execution_adopted_item"
-          ) {
-            crashBeforeJournal = false;
-            throw new Error("模拟 create 返回后进程在 journal 前崩溃");
-          }
-          return baseAi.recordAuxResult(c, taskId, input);
-        },
-      },
-      assets: {
-        async createGeneratedAsset(_c, input) {
-          const prior = physicallyCreated.get(input.idempotencyKey);
-          if (prior) return { id: prior };
-          const id = `asset-stable-${physicallyCreated.size + 1}`;
-          physicallyCreated.set(input.idempotencyKey, id);
-          return { id };
-        },
-      },
-    });
-
-    await expect(service.confirm(ctx, "task-1")).rejects.toThrow(/journal 前崩溃/);
-    expect(physicallyCreated.size).toBe(1);
-    expect(state.aux).toEqual([]);
-
-    const dto = await service.confirm(ctx, "task-1");
-    expect(physicallyCreated.size).toBe(1);
-    expect([...physicallyCreated.keys()]).toEqual([
-      "execution-adoption:task-1:only.txt",
-    ]);
-    expect(dto.adoptedAssetIds).toEqual(["asset-stable-1"]);
-  });
-
   it("409s when not awaiting confirmation or when an artifact is missing on disk", async () => {
     const state = baseState();
     state.task = makeTask({ status: "running" });

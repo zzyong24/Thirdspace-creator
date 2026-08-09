@@ -10,20 +10,16 @@ const rustShell = readFileSync(
   join(process.cwd(), "src-tauri", "src", "lib.rs"),
   "utf8",
 );
-const rustLicense = readFileSync(
-  join(process.cwd(), "src-tauri", "src", "license.rs"),
-  "utf8",
-);
 const splashHtml = readFileSync(
   join(process.cwd(), "src-tauri", "placeholder-dist", "index.html"),
   "utf8",
 );
-const splashJs = readFileSync(
-  join(process.cwd(), "src-tauri", "placeholder-dist", "splash.js"),
-  "utf8",
-);
 const verdictGate = readFileSync(
   join(process.cwd(), "src", "server", "verdict-token-gate.ts"),
+  "utf8",
+);
+const douyinCdp = readFileSync(
+  join(process.cwd(), "src", "server", "ingestion", "douyin-cdp.ts"),
   "utf8",
 );
 
@@ -76,6 +72,12 @@ describe("T-535 desktop startup safety contract", () => {
     expect(instrumentation).toContain(
       "process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;",
     );
+    expect(instrumentation).toMatch(
+      /CREATOROS_DESKTOP === "1"[\s\S]*process\.env\.PLAYWRIGHT_BROWSERS_PATH = bundled;/,
+    );
+    expect(instrumentation).not.toMatch(
+      /if \(!process\.env\.PLAYWRIGHT_BROWSERS_PATH\) \{[\s\S]*CREATOROS_BROWSERS_DIR/,
+    );
     expect(rustShell).toContain(
       'const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";',
     );
@@ -88,38 +90,36 @@ describe("T-535 desktop startup safety contract", () => {
     expect(rustShell).toContain("startup_failure_script(");
   });
 
+  it("T-742 抖音登录先走 Chrome 与随包 Chromium，不做 CLI 前置检查", () => {
+    const openContext = douyinCdp.match(
+      /async function openContext\([\s\S]*?\n}\n\nasync function isLoggedIn/,
+    )?.[0];
+    expect(openContext).toBeTruthy();
+    expect(openContext).toContain("launchWithBrowser((selection)");
+    expect(openContext).not.toContain("ensureChromiumInstalled()");
+
+    const ensureChromium = douyinCdp.match(
+      /export async function ensureChromiumInstalled\([\s\S]*?\n}\n\n\/\/ 自起 Chromium/,
+    )?.[0];
+    expect(ensureChromium).toContain('process.env.CREATOROS_DESKTOP === "1"');
+    expect(ensureChromium?.indexOf("BrowserRuntimeUnavailableError")).toBeLessThan(
+      ensureChromium?.indexOf("locatePlaywrightCli") ?? -1,
+    );
+  });
+
   it("uses a packaged splash document instead of racing JavaScript against about:blank", () => {
     expect(rustShell).toContain('WebviewUrl::App("index.html".into())');
     expect(rustShell).not.toContain(
       'WebviewUrl::External("about:blank".parse().expect("about:blank 解析失败"))',
     );
     expect(splashHtml).toContain('id="creatoros-splash-status"');
-    expect(splashHtml).toContain('src="splash.js"');
-    expect(splashHtml).not.toMatch(/<script(?![^>]*\bsrc=)[^>]*>/i);
-    expect(splashJs).toContain("window.__creatorosSplashFailure");
-    expect(splashJs).toContain("CreatorOS 启动失败");
+    expect(splashHtml).toContain("window.__creatorosSplashFailure");
+    expect(splashHtml).toContain("CreatorOS 启动失败");
   });
 
   it("starts the packaged Next sidecar from its frontend directory on every platform", () => {
-    expect(rustShell).toMatch(
-      /cmd\.env_clear\(\)[\s\S]{0,120}\.current_dir\(&sidecar_frontend_dir\)/,
-    );
+    expect(rustShell).toContain("cmd.current_dir(&sidecar_frontend_dir)");
     expect(rustShell).toContain(".current_dir(&sidecar_frontend_dir)");
-  });
-
-  it("清空 Tauri 子进程继承环境，只回填明确 allowlist 与业务所需字段", () => {
-    expect(rustShell).toContain(
-      "cmd.env_clear()\n                    .envs(allowlisted_sidecar_env())",
-    );
-    expect(rustShell).toMatch(
-      /\.sidecar\("creatoros-server"\)[\s\S]{0,180}\.env_clear\(\)[\s\S]{0,80}\.envs\(allowlisted_sidecar_env\(\)\)/,
-    );
-    expect(rustShell.match(/\.envs\(allowlisted_system_command_env\(\)\)/g)).toHaveLength(2);
-    expect(rustLicense.match(/\.envs\(crate::allowlisted_system_command_env\(\)\)/g)).toHaveLength(2);
-    expect(rustLicense).not.toContain('Command::new("defaults")');
-    expect(rustLicense.match(/Command::new\("\/usr\/bin\/defaults"\)/g)).toHaveLength(2);
-    expect(rustShell).toContain("CREATOROS_SENTINEL_SECRET");
-    expect(rustShell).toContain("OPENAI_API_KEY");
   });
 
   it("turns runtime resolution failures into a visible diagnostic page instead of panicking", () => {

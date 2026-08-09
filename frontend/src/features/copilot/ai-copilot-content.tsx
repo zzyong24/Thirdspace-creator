@@ -219,10 +219,7 @@ import {
   type MentionedProject,
 } from "./project-mention";
 import { ProjectMentionMenu } from "./project-mention-menu";
-import {
-  restoreToolApprovalSignatures,
-  shouldResumeToolApprovalOnce,
-} from "./tool-approval-resume-guard";
+import { shouldResumeToolApprovalOnce } from "./tool-approval-resume-guard";
 import {
   CopilotAttachmentPicker,
   type CopilotAttachmentPickerHandle,
@@ -974,9 +971,6 @@ export function AICopilotContent({
   // 在实际发送瞬间仍读到最新段落锚点。服务端随后还会再重读当前稿面版本与正文。
   const chatContextBodyRef = React.useRef(chatContextBody);
   chatContextBodyRef.current = chatContextBody;
-  // [T-736] ai@7.0.4 点击审批后会覆盖 approval 对象并丢掉服务端 HMAC；只在本组件
-  // 生命周期内按 approvalId 暂存，transport 发续跑请求时补回。服务端仍负责验签与防重放。
-  const approvalSignaturesRef = React.useRef(new Map<string, string>());
   // [T-231⑨] 快捷 chip / 推荐指令的一次性 functionKey:点按钮只**预填**完整话术(T-055b
   // 铁律:绝不自动发),同时把语义对应的专用工具记在 ref 里;下一次发送时注入
   // chatContext.functionKey(服务端 applyFunctionKey 置顶 + forcedTool 第 0 步强制),
@@ -1034,30 +1028,6 @@ export function AICopilotContent({
               : {}),
           };
         },
-        prepareSendMessagesRequest: ({
-          id,
-          messages: outgoingMessages,
-          body,
-          trigger,
-          messageId,
-          headers,
-          credentials,
-          api,
-        }) => ({
-          api,
-          headers,
-          credentials,
-          body: {
-            ...body,
-            id,
-            messages: restoreToolApprovalSignatures(
-              outgoingMessages,
-              approvalSignaturesRef.current,
-            ),
-            trigger,
-            messageId,
-          },
-        }),
         // useChat 不直接暴露响应头 → 在 transport 的 fetch 层包一层,读 `x-conversation-id`
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
@@ -1104,32 +1074,15 @@ export function AICopilotContent({
     sendAutomaticallyWhen: resumeApprovedToolsOnce,
   });
   const streaming = status === "streaming" || status === "submitted";
-  const respondToToolApproval = React.useCallback(
-    (input: {
-      id: string;
-      approved: boolean;
-      signature?: string;
-    }) => {
-      if (input.signature) {
-        approvalSignaturesRef.current.set(input.id, input.signature);
-      }
-      void addToolApprovalResponse({
-        id: input.id,
-        approved: input.approved,
-      });
-    },
-    [addToolApprovalResponse],
-  );
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
   useForegroundActivity("AI 编导正在生成回复", streaming);
 
-  // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑目录批量放行；下方另收集
-  // 待读取授权会阻止用户并发提交新一轮。
+  // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑两件事:
   //   ① 一次「总是允许该目录」批量放行同目录其它待决卡(读文件夹别逐个弹);
   //   ② 有待授权时提交排队(不并发触发新一轮,仿 Claude Code 的权限门)。
   const pendingLocalReads = React.useMemo(() => {
-    const out: Array<{ approvalId: string; path: string; signature?: string }> = [];
+    const out: Array<{ approvalId: string; path: string }> = [];
     for (const m of messages) {
       if (m.role !== "assistant") continue;
       for (const p of m.parts) {
@@ -1138,7 +1091,7 @@ export function AICopilotContent({
         if (p.state !== "approval-requested") continue;
         const id = p.approval?.id ?? "";
         const path = ((p.input ?? {}) as { path?: string }).path ?? "";
-        if (id) out.push({ approvalId: id, path, signature: p.approval?.signature });
+        if (id) out.push({ approvalId: id, path });
       }
     }
     return out;
@@ -1151,27 +1104,18 @@ export function AICopilotContent({
   //   sendAutomaticallyWhen 一次性 resume 续跑各读取。
   const approveDirBatch = React.useCallback(
     (approvalId: string) => {
-      const own = pendingLocalReads.find((x) => x.approvalId === approvalId);
-      respondToToolApproval({
-        id: approvalId,
-        approved: true,
-        signature: own?.signature,
-      });
+      void addToolApprovalResponse({ id: approvalId, approved: true });
       const self = pendingLocalReads.find((x) => x.approvalId === approvalId);
       const dir = self?.path ? parentDirOf(self.path) : "";
       if (!dir) return;
       for (const pr of pendingLocalReads) {
         if (pr.approvalId === approvalId || !pr.path) continue;
         if (parentDirOf(pr.path) === dir) {
-          respondToToolApproval({
-            id: pr.approvalId,
-            approved: true,
-            signature: pr.signature,
-          });
+          void addToolApprovalResponse({ id: pr.approvalId, approved: true });
         }
       }
     },
-    [pendingLocalReads, respondToToolApproval],
+    [pendingLocalReads, addToolApprovalResponse],
   );
 
   // [T-105] 自动滚到最新:发消息/回复开始(条数增)强制跟随到底;流式增长按「跟随态」滚;
@@ -2368,19 +2312,11 @@ export function AICopilotContent({
                           listing={null}
                           error={null}
                           onApprove={(id) =>
-                            respondToToolApproval({
-                              id,
-                              approved: true,
-                              signature: part.approval?.signature,
-                            })
+                            void addToolApprovalResponse({ id, approved: true })
                           }
                           onApproveDir={(id) => approveDirBatch(id)}
                           onDeny={(id) =>
-                            respondToToolApproval({
-                              id,
-                              approved: false,
-                              signature: part.approval?.signature,
-                            })
+                            void addToolApprovalResponse({ id, approved: false })
                           }
                         />
                       );

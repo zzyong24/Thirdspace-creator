@@ -126,24 +126,6 @@ describe("materializeInputs", () => {
       materializeInputs(sandbox, [{ assetId: "gone", mountAs: "a.txt" }], async () => null),
     ).rejects.toThrow(/输入资产读取失败/);
   });
-
-  it("rejects a parent symlink before materializing outside input/", async () => {
-    const sandbox = await createSandbox(root, "t-parent-link");
-    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "exec-outside-"));
-    try {
-      await fs.symlink(outside, path.join(sandbox.inputDir, "linked"), "dir");
-      await expect(
-        materializeInputs(
-          sandbox,
-          [{ assetId: "a", mountAs: "linked/escape.txt" }],
-          async () => ({ bytes: bytesOf("blocked"), mimeType: "text/plain" }),
-        ),
-      ).rejects.toThrow(SandboxPathViolation);
-      expect(await fs.readdir(outside)).toEqual([]);
-    } finally {
-      await fs.rm(outside, { recursive: true, force: true });
-    }
-  });
 });
 
 describe("harvestArtifacts", () => {
@@ -184,20 +166,6 @@ describe("readArtifactBytes / cleanupSandbox / sweepOrphanSandboxes", () => {
     await cleanupSandbox(root, "t6");
     expect(await fs.stat(sandbox.dir).catch(() => null)).toBeNull();
     await cleanupSandbox(root, "t6"); // 幂等
-  });
-
-  it("rejects parent symlinks and never reads a root-external artifact", async () => {
-    const sandbox = await createSandbox(root, "t-read-link");
-    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "exec-read-outside-"));
-    try {
-      await fs.writeFile(path.join(outside, "secret.txt"), "sentinel");
-      await fs.symlink(outside, path.join(sandbox.outDir, "linked"), "dir");
-      await expect(
-        readArtifactBytes(root, "t-read-link", "linked/secret.txt"),
-      ).rejects.toThrow(SandboxPathViolation);
-    } finally {
-      await fs.rm(outside, { recursive: true, force: true });
-    }
   });
 
   it("sweeps only stale sandboxes (>maxAge)", async () => {

@@ -57,7 +57,6 @@ export async function POST(request: Request): Promise<Response> {
     authority.scopeId,
     `__model_selection__:${capability}`,
     JSON.stringify({ id: signedOption.id, model: signedOption.model }),
-    "local_selection",
   );
   return json(
     { ok: true, capability, optionId: signedOption.id, model: signedOption.model },

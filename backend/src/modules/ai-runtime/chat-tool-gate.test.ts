@@ -303,7 +303,7 @@ describe("defineChatTool needsApproval + buildChatToolApproval(HITL 通用门)",
     });
   });
 
-  it("判定器抛错 → denied fail closed（审批组件异常不得放行副作用）", async () => {
+  it("判定器抛错 → 保守回 'not-applicable'(不因判定器抖动误挂授权门)", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const t = defineChatTool("local.read", {
       description: "d",
@@ -314,10 +314,9 @@ describe("defineChatTool needsApproval + buildChatToolApproval(HITL 通用门)",
       },
     });
     const approval = buildChatToolApproval({ "local.read": t } as unknown as ToolSet);
-    await expect(approval!["local.read"]!({ path: "x" })).resolves.toEqual({
-      type: "denied",
-      reason: "审批组件异常，已阻止副作用操作",
-    });
+    await expect(approval!["local.read"]!({ path: "x" })).resolves.toBe(
+      "not-applicable",
+    );
   });
 });
 

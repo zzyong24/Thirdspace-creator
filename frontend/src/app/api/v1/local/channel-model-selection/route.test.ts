@@ -127,7 +127,6 @@ describe("POST /api/v1/local/channel-model-selection", () => {
       "scope-1",
       "__model_selection__:default",
       JSON.stringify({ id: "gpt-5-6-terra", model: "gpt-5.6-terra" }),
-      "local_selection",
     );
   });
 

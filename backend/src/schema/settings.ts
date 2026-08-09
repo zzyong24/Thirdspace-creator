@@ -44,16 +44,10 @@ export const modelConfigurations = pgTable("model_configurations", {
   provider: text("provider").notNull(),
   modelName: text("model_name").notNull(),
   secretReference: text("secret_reference").notNull().default(""),
-  // 用户自填模型 Key 的本机 AES-256-GCM 密文（enc:v1）；公有 DTO 只返回 hasSecret，
-  // 永不序列化明文。Growth 渠道受管 Key 不得写入本列。
+  // Inline secret value (the actual key), stored directly in the LOCAL db (the
+  // app's end form is a local client — no leak surface). The public DTO masks
+  // this to a `hasSecret` boolean and NEVER serializes the raw value.
   secretValue: text("secret_value"),
-  // 仅用于识别 T-731 曾迁入用户模型 Keychain 的存量行；T-739 后生产路径不再读取
-  // 或写入该引用，用户重填时清空。
-  keyringRef: text("keyring_ref"),
-  credentialMigrationState: text("credential_migration_state")
-    .notNull()
-    .default("not_required"),
-  rotatedAt: text("rotated_at"),
   settings: jsonb("settings").notNull(),
   baseUrl: text("base_url"),
   apiFormat: text("api_format").notNull().default("anthropic"),
@@ -69,13 +63,7 @@ export const channelModelCredentials = pgTable(
     userId: text("user_id").notNull(),
     scopeId: text("scope_id").notNull(),
     serviceId: text("service_id").notNull(),
-    // 仅升级迁移失败时保留旧版唯一密文副本；生产读路径永不再消费本列。
-    encryptedSecret: text("encrypted_secret"),
-    keyringRef: text("keyring_ref"),
-    serviceType: text("service_type").notNull().default("legacy"),
-    credentialStatus: text("credential_status").notNull().default("migration_pending"),
-    migrationState: text("migration_state").notNull().default("pending"),
-    rotatedAt: text("rotated_at"),
+    encryptedSecret: text("encrypted_secret").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
@@ -245,9 +233,6 @@ CREATE TABLE IF NOT EXISTS model_configurations (
   model_name TEXT NOT NULL,
   secret_reference TEXT NOT NULL DEFAULT '',
   secret_value TEXT,
-  keyring_ref TEXT,
-  credential_migration_state TEXT NOT NULL DEFAULT 'not_required',
-  rotated_at TEXT,
   settings JSONB NOT NULL,
   base_url TEXT,
   api_format TEXT NOT NULL DEFAULT 'anthropic',
@@ -257,12 +242,7 @@ CREATE TABLE IF NOT EXISTS channel_model_credentials (
   user_id TEXT NOT NULL,
   scope_id TEXT NOT NULL,
   service_id TEXT NOT NULL,
-  encrypted_secret TEXT,
-  keyring_ref TEXT,
-  service_type TEXT NOT NULL DEFAULT 'legacy',
-  credential_status TEXT NOT NULL DEFAULT 'migration_pending',
-  migration_state TEXT NOT NULL DEFAULT 'pending',
-  rotated_at TEXT,
+  encrypted_secret TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE (user_id, scope_id, service_id)
 );

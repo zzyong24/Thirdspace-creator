@@ -477,20 +477,6 @@
       "when": 1785628800000,
       "tag": "0067_channel_model_credentials",
       "breakpoints": true
-    },
-    {
-      "idx": 68,
-      "version": "7",
-      "when": 1786233600000,
-      "tag": "0068_keyring_only_credentials",
-      "breakpoints": true
-    },
-    {
-      "idx": 69,
-      "version": "7",
-      "when": 1786237200000,
-      "tag": "0069_asr_usage_intents",
-      "breakpoints": true
     }
   ]
 }

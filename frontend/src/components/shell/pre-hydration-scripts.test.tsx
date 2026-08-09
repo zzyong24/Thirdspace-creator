@@ -1,60 +1,57 @@
 import { cleanup, render } from "@testing-library/react";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import type { ComponentProps } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import RootLayout from "@/app/layout";
-import { handshakeHeaders } from "@/lib/handshake-client";
-import { HANDSHAKE_HEADER } from "@/lib/handshake-client";
-
-const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8");
-const handshakeSource = readFileSync(
-  join(process.cwd(), "src/lib/handshake-client.ts"),
-  "utf8",
-);
-const rustSource = readFileSync(
-  join(process.cwd(), "src-tauri/src/lib.rs"),
-  "utf8",
-);
-const tauriConfig = JSON.parse(
-  readFileSync(join(process.cwd(), "src-tauri/tauri.conf.json"), "utf8"),
-) as { app: { security: { csp: string | null } } };
-const remoteCapability = JSON.parse(
-  readFileSync(
-    join(process.cwd(), "src-tauri/capabilities/remote-sidecar.json"),
-    "utf8",
+vi.mock("next/script", () => ({
+  default: ({
+    id,
+    strategy,
+    dangerouslySetInnerHTML,
+  }: ComponentProps<"script"> & {
+    strategy?: string;
+  }) => (
+    <script
+      data-script-id={id}
+      data-strategy={strategy}
+      dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+    />
   ),
-) as { permissions: string[] };
+}));
+
+import { PreHydrationScripts } from "@/app/layout";
 
 afterEach(() => cleanup());
 
-describe("RootLayout CSP contract", () => {
-  it("does not render application-owned inline scripts", () => {
-    const { container } = render(<RootLayout>content</RootLayout>);
-    expect(container.querySelectorAll("script")).toHaveLength(0);
-    expect(layoutSource).not.toContain("next/script");
-    expect(layoutSource).not.toContain("dangerouslySetInnerHTML");
-    expect(layoutSource).not.toContain("__CREATOROS_HANDSHAKE_TOKEN__");
+describe("PreHydrationScripts", () => {
+  it("uses Next beforeInteractive scripts in theme-then-handshake order", () => {
+    const { container } = render(<PreHydrationScripts />);
+    const scripts = Array.from(container.querySelectorAll("script"));
+
+    expect(scripts).toHaveLength(2);
+    expect(scripts.map((script) => script.dataset.scriptId)).toEqual([
+      "creatoros-theme-init",
+      "creatoros-handshake-fetch",
+    ]);
+    expect(
+      scripts.every(
+        (script) => script.dataset.strategy === "beforeInteractive",
+      ),
+    ).toBe(true);
   });
 
-  it("does not expose handshake credentials through a page-readable API", () => {
-    expect(handshakeHeaders()).toEqual({});
-    expect("__CREATOROS_HANDSHAKE_TOKEN__" in globalThis).toBe(false);
-    expect(HANDSHAKE_HEADER).toBe("x-creatoros-handshake");
-    expect(handshakeSource).not.toContain(".__CREATOROS_HANDSHAKE_TOKEN__");
-    expect(rustSource).not.toContain("window.__CREATOROS_HANDSHAKE_TOKEN__");
-    expect(rustSource).toContain("/api/v1/local/handshake-session");
-  });
+  it("keeps theme initialization and guarded same-origin handshake semantics", () => {
+    const { container } = render(<PreHydrationScripts />);
+    const [theme, handshake] = Array.from(
+      container.querySelectorAll("script"),
+    ).map((script) => script.textContent ?? "");
 
-  it("pins non-empty CSP and keeps remote capability minimal", () => {
-    const csp = tauriConfig.app.security.csp;
-    expect(typeof csp).toBe("string");
-    expect(csp).toContain("default-src 'self'");
-    expect(csp).toContain("script-src 'self'");
-    expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
-    expect(remoteCapability.permissions).not.toContain("updater:default");
-    expect(remoteCapability.permissions).not.toContain("process:default");
-    expect(remoteCapability.permissions).not.toContain("opener:default");
-    expect(remoteCapability.permissions).toContain("allow-relaunch-app");
+    expect(theme).toContain("creatoros.settings.theme");
+    expect(theme).toContain("classList.toggle('dark'");
+    expect(theme).toContain("dataset.theme");
+
+    expect(handshake).toContain("__CREATOROS_HANDSHAKE_TOKEN__");
+    expect(handshake).toContain("x-creatoros-handshake");
+    expect(handshake).toContain("new URL(u,O).origin===O");
+    expect(handshake).toContain("__CREATOROS_FETCH_PATCHED__");
   });
 });

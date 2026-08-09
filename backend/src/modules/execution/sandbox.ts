@@ -10,7 +10,6 @@
 // NUL;收割时 lstat 跳过 symlink(拦「out/ 里放一个指向 /etc 的软链」)。敏感文件
 // denylist 见 sensitive-files.ts(T-253 共库)。
 import * as fs from "node:fs/promises";
-import { constants as fsConstants } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExecutionArtifact, ExecutionTaskInput } from "@creatoros/contract";
@@ -93,78 +92,16 @@ export function resolveInsideDir(baseDir: string, key: string): string {
   return abs;
 }
 
-function isInside(root: string, candidate: string): boolean {
-  const rel = path.relative(root, candidate);
-  return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
-}
-
-async function assertCanonicalInside(
-  rootDir: string,
-  target: string,
-  opts: { allowMissingLeaf?: boolean } = {},
-): Promise<void> {
-  const root = await fs.realpath(rootDir).catch(() => {
-    throw new SandboxPathViolation("sandbox root is unavailable");
-  });
-  const abs = path.resolve(target);
-  if (!isInside(root, abs)) throw new SandboxPathViolation("path escapes canonical root");
-
-  const rel = path.relative(root, abs);
-  const parts = rel.split(path.sep).filter(Boolean);
-  let cursor = root;
-  for (const [index, part] of parts.entries()) {
-    cursor = path.join(cursor, part);
-    const stat = await fs.lstat(cursor).catch((error: NodeJS.ErrnoException) => {
-      if (error.code === "ENOENT" && opts.allowMissingLeaf && index === parts.length - 1) {
-        return null;
-      }
-      throw new SandboxPathViolation("sandbox path component is unavailable");
-    });
-    if (!stat) continue;
-    if (stat.isSymbolicLink()) {
-      throw new SandboxPathViolation("symlink/reparse component rejected");
-    }
-    const canonical = await fs.realpath(cursor);
-    if (!isInside(root, canonical)) {
-      throw new SandboxPathViolation("canonical path escapes sandbox");
-    }
-  }
-}
-
-async function ensureSafeDirectories(rootDir: string, targetDir: string): Promise<void> {
-  const root = await fs.realpath(rootDir);
-  const rel = path.relative(root, path.resolve(targetDir));
-  if (rel.startsWith("..") || path.isAbsolute(rel)) {
-    throw new SandboxPathViolation("directory escapes sandbox");
-  }
-  let cursor = root;
-  for (const part of rel.split(path.sep).filter(Boolean)) {
-    cursor = path.join(cursor, part);
-    try {
-      await fs.mkdir(cursor);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    }
-    await assertCanonicalInside(root, cursor);
-    const stat = await fs.lstat(cursor);
-    if (!stat.isDirectory()) {
-      throw new SandboxPathViolation("sandbox parent is not a directory");
-    }
-  }
-}
-
 /** 建沙箱目录骨架(input/ + out/)。幂等(recursive mkdir)。 */
 export async function createSandbox(
   root: string,
   taskId: string,
 ): Promise<SandboxPaths> {
-  await fs.mkdir(root, { recursive: true });
-  const canonicalRoot = await fs.realpath(root);
-  const dir = sandboxDirFor(canonicalRoot, taskId);
+  const dir = sandboxDirFor(root, taskId);
   const inputDir = path.join(dir, "input");
   const outDir = path.join(dir, "out");
-  await ensureSafeDirectories(canonicalRoot, inputDir);
-  await ensureSafeDirectories(canonicalRoot, outDir);
+  await fs.mkdir(inputDir, { recursive: true });
+  await fs.mkdir(outDir, { recursive: true });
   return { taskId, dir, inputDir, outDir };
 }
 
@@ -192,22 +129,8 @@ export async function materializeInputs(
     if (!loaded || loaded.bytes.byteLength === 0) {
       throw new Error(`输入资产读取失败(assetId=${input.assetId})`);
     }
-    await ensureSafeDirectories(sandbox.inputDir, path.dirname(abs));
-    await assertCanonicalInside(sandbox.inputDir, abs, { allowMissingLeaf: true });
-    const handle = await fs.open(
-      abs,
-      fsConstants.O_WRONLY |
-        fsConstants.O_CREAT |
-        fsConstants.O_EXCL |
-        (fsConstants.O_NOFOLLOW ?? 0),
-      0o444,
-    );
-    try {
-      await handle.writeFile(loaded.bytes);
-      await handle.sync();
-    } finally {
-      await handle.close();
-    }
+    await fs.mkdir(path.dirname(abs), { recursive: true });
+    await fs.writeFile(abs, loaded.bytes, { mode: 0o444 });
     materialized.push({
       assetId: input.assetId,
       mountAs: input.mountAs,
@@ -265,7 +188,6 @@ export async function harvestArtifacts(
   const maxBytes = opts.maxOutputMB * 1024 * 1024;
 
   async function walk(dir: string): Promise<void> {
-    await assertCanonicalInside(sandbox.outDir, dir);
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const abs = path.join(dir, entry.name);
@@ -313,31 +235,14 @@ export async function readArtifactBytes(
   taskId: string,
   relPath: string,
 ): Promise<Uint8Array | null> {
-  const canonicalRoot = await fs.realpath(root).catch(() => null);
-  if (!canonicalRoot) return null;
-  const outDir = path.join(sandboxDirFor(canonicalRoot, taskId), "out");
+  const outDir = path.join(sandboxDirFor(root, taskId), "out");
   const abs = resolveInsideDir(outDir, relPath);
   if (isSensitiveFileName(path.basename(abs))) {
     throw new SandboxPathViolation(`敏感文件名拒绝读取: ${relPath}`);
   }
   const stat = await fs.lstat(abs).catch(() => null);
   if (!stat || !stat.isFile()) return null; // symlink/目录/缺失都不读
-  await assertCanonicalInside(outDir, abs);
-  const handle = await fs
-    .open(abs, fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0))
-    .catch((error: NodeJS.ErrnoException) => {
-      if (error.code === "ENOENT") return null;
-      throw new SandboxPathViolation("artifact no-follow open rejected");
-    });
-  if (!handle) return null;
-  try {
-    const openedStat = await handle.stat();
-    if (!openedStat.isFile()) return null;
-    await assertCanonicalInside(outDir, path.dirname(abs));
-    return await handle.readFile();
-  } finally {
-    await handle.close();
-  }
+  return fs.readFile(abs);
 }
 
 /** 清理沙箱(丢弃/采纳后)。幂等:目录不存在 → no-op。 */

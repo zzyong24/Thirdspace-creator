@@ -14,11 +14,6 @@ import {
   sanitizeToolName,
   sanitizeToolNames,
 } from "./chat-tool-gate";
-import {
-  CHAT_TOOL_APPROVAL_SECRET,
-  isReadOnlyToolAfterUntrustedContent,
-  UNTRUSTED_CONTENT_TOOL_NAMES,
-} from "./chat-effect-approval";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   ModelSpec,
@@ -708,17 +703,11 @@ export interface ChatAssembly {
    */
   forcedTool?: string;
   /**
-   * [T-263/T-731] SDK 原生工具授权(HITL)配置 —— 从已挂工具收录登记了授权判定器的工具
-   * 装配 per-tool 判定映射,喂给 streamText 的 `toolApproval`。undefined = 本轮无
+   * [T-263] SDK 原生工具授权(HITL)配置 —— 从已挂工具收录登记了授权判定器的工具(当前仅
+   * local.read)装配的 per-tool 判定映射,喂给 streamText 的 `toolApproval`。undefined = 本轮无
    * 需授权门的工具(streamText 不传该配置,行为与旧一致)。
    */
-  toolApproval?: Record<
-    string,
-    (
-      input: unknown,
-      options?: { toolCallId: string; messages: unknown[] },
-    ) => Promise<ToolApprovalStatus>
-  >;
+  toolApproval?: Record<string, (input: unknown) => Promise<ToolApprovalStatus>>;
 }
 
 export type CopilotMediaRoute =
@@ -2081,25 +2070,18 @@ export async function buildChatAssembly(
         };
       }
     },
-    dispatchDouyinShare: async ({ shareInput, transcribe }) => {
-      if (
-        mediaRoute?.kind === "douyin.share" &&
-        (shareInput.trim() !== mediaRoute.shareInput.trim() ||
-          transcribe !== mediaRoute.transcribe)
-      ) {
-        return {
-          taskId: null,
-          ownerId: null,
-          transcribe: false,
-          error: "模型提交的归档参数与用户本轮确认内容不一致，已阻止执行，请重新确认。",
-        };
-      }
-      const effective = {
-        shareInput,
-        // 转写是高成本派生任务；最新轮确定性路由与工具参数必须同时明确授权。
-        transcribe:
-          mediaRoute?.kind === "douyin.share" ? transcribe : false,
-      };
+    dispatchDouyinShare: async ({ shareInput }) => {
+      const effective =
+        mediaRoute?.kind === "douyin.share"
+          ? {
+              shareInput: mediaRoute.shareInput,
+              transcribe: mediaRoute.transcribe,
+            }
+          : {
+              shareInput,
+              // 转写是高成本派生任务；没有最新轮确定性路由的明确授权时，模型不能自行升级。
+              transcribe: false,
+            };
       if (!deps.dispatchDouyinSharePort) {
         return {
           taskId: null,
@@ -2412,8 +2394,8 @@ export async function buildChatAssembly(
         ? effectiveFunctionKey
         : undefined;
 
-  // [T-263/T-736] HITL 授权门只用于读取本机文件；买断产品中的模型、转写、归档和
-  // 持久化工具不设置二次确认，用户当前指令即授权执行。
+  // [T-263] HITL 授权门:从本轮已挂工具收录登记了授权判定器的工具(当前仅 local.read),装配
+  // streamText 的 toolApproval 配置。工具不在白名单 / decideLocalRead 端口未装配 → 自然缺席。
   const toolApproval = buildChatToolApproval(tools);
 
   return { skillId, system, tools, modelSpec, forcedTool, toolApproval };
@@ -2442,19 +2424,10 @@ export function resolveChatMaxSteps(
 export function buildChatPrepareStep(opts: {
   forcedTool?: string;
   maxSteps: number;
-  /** 发给模型的合规工具名；不可信正文进入历史后据此收敛为只读子集。 */
-  availableToolNames?: readonly string[];
-}): (step: {
-  stepNumber: number;
-  steps?: Array<{
-    toolResults?: Array<{ toolName?: string }>;
-    toolCalls?: Array<{ toolName?: string }>;
-  }>;
-}) => {
+}): (step: { stepNumber: number }) => {
   toolChoice?: "none" | { type: "tool"; toolName: string };
-  activeTools?: string[];
 } {
-  return ({ stepNumber, steps = [] }) => {
+  return ({ stepNumber }) => {
     // [T-117] 第 0 步强制调 forcedTool —— 这是「点按钮/深链后卡片秒出」的关键:模型**直接执行**,
     //   省掉它自己纠结要不要调工具(用户实测:MiniMax 带强制时"一下就出来")。
     // [T-443] 曾因 DeepSeek thinking 对此 400 而一刀切改成 prompt 指令 —— 那让**所有**模型都变慢
@@ -2468,26 +2441,6 @@ export function buildChatPrepareStep(opts: {
     }
     if (stepNumber >= opts.maxSteps - 1) {
       return { toolChoice: "none" as const };
-    }
-    const hasUntrustedResult = steps.some((step) =>
-      (step.toolResults ?? []).some((result) => {
-        const original = result.toolName?.replaceAll("_", ".") ?? "";
-        return (
-          UNTRUSTED_CONTENT_TOOL_NAMES.has(result.toolName ?? "") ||
-          UNTRUSTED_CONTENT_TOOL_NAMES.has(original)
-        );
-      }),
-    );
-    if (hasUntrustedResult && opts.availableToolNames) {
-      return {
-        activeTools: opts.availableToolNames.filter((safeName) => {
-          const original = safeName.replaceAll("_", ".");
-          return (
-            isReadOnlyToolAfterUntrustedContent(safeName) ||
-            isReadOnlyToolAfterUntrustedContent(original)
-          );
-        }),
-      };
     }
     return {};
   };
@@ -2767,14 +2720,10 @@ export async function runChatStream(
     prepareStep: buildChatPrepareStep({
       forcedTool: assembly.forcedTool ? sanitizeToolName(assembly.forcedTool) : undefined,
       maxSteps,
-      availableToolNames: Object.keys(assembly.tools).map(sanitizeToolName),
     }),
-    // [T-736] 本机文件读取确认仍由进程随机 HMAC 绑定 approvalId、toolCallId、工具名与
-    // 精确参数。ai@7.0.4 会在点击后漏带 signature，前端 transport 仅按 approvalId 补回
-    // 服务端原签名；后端继续验签。模型/转写/归档/持久化工具不进入这层确认。
-    experimental_toolApprovalSecret: CHAT_TOOL_APPROVAL_SECRET,
-    // [T-263/T-731] 原生工具授权(HITL):未授权调用 → SDK 挂起并 surface approval-requested；
-    // 用户回执后同回合 resume。副作用执行前还会消费一次性账本，未知/改参/重放/超时均拒绝。
+    // [T-263] 原生工具授权(HITL):local.read 未授权 → SDK 挂起该工具调用、以 approval-requested
+    // 态 surface 前端确认卡(execute 暂不跑),用户「允许」写 grant + addToolApprovalResponse →
+    // sendAutomaticallyWhen 同回合 resume 续跑 execute 读到内容。无需授权门时 undefined(行为不变)。
     // [T-439] 与上面 tools 走**同一套换名**——键必须一致,否则 SDK 用合规名回传 tool_call 时
     //   在授权门里查不到判定器 → 该弹确认的工具被直接放行。
     ...(assembly.toolApproval

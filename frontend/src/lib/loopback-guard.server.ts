@@ -11,7 +11,6 @@ import { NextResponse } from "next/server";
 
 export {
   HANDSHAKE_HEADER,
-  HANDSHAKE_COOKIE,
   isLoopbackRequest,
   hasValidHandshake,
   isTrustedLocalRequest,

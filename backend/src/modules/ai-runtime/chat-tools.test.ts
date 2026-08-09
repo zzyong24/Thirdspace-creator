@@ -1812,38 +1812,6 @@ describe("[T-263] local.read needsApproval 授权判定(HITL 门,判定与执行
   });
 });
 
-describe("[T-736] 买断产品工具不设付费/持久化二次确认", () => {
-  it("生成、转写、网页素材和归档工具都直接执行，不进入 toolApproval", () => {
-    const { deps } = makeDeps();
-    const tools = buildChatTools(
-      [
-        "material.generate",
-        "cover.generate",
-        "project.transcribe",
-        "material.screenshot",
-        "intelligence.douyin.share",
-        "web.read",
-      ],
-      deps,
-    );
-    expect(buildChatToolApproval(tools)).toBeUndefined();
-  });
-
-  it("positioning.generate 只产待采纳候选，不弹副作用确认且可直接执行", async () => {
-    const { deps, generatePositioning } = makeDeps();
-    const tools = buildChatTools(["positioning.generate"], deps);
-    expect(buildChatToolApproval(tools)).toBeUndefined();
-
-    await runExecute(tools["positioning.generate"]!, {
-      extraBrief: "保留可迁移能力，生成一版 pivot 候选",
-    });
-    expect(generatePositioning).toHaveBeenCalledWith({
-      extraBrief: "保留可迁移能力，生成一版 pivot 候选",
-    });
-  });
-
-});
-
 describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", () => {
   const CONTEXT_WHITELIST = [
     "context.projects",

@@ -69,29 +69,48 @@ test.describe("Assets Center page", () => {
       page.locator('input[type="search"]').first(),
     ).toBeVisible();
 
-    // Fresh account: gallery exists but must not invent fixture assets.
-    await expect(page.locator('[data-slot="asset-card-grid"]')).toHaveCount(0);
-    await expect(page.locator('[data-slot="asset-card"]')).toHaveCount(0);
-    await expect(page.locator('[data-slot="assets-gallery-empty"]')).toBeVisible();
+    // Asset gallery: three-column grid.
+    const grid = page.locator('[data-slot="asset-card-grid"]');
+    await expect(grid).toBeVisible();
+    const cards = grid.locator('[data-slot="asset-card"]');
+    const cardCount = await cards.count();
+    expect(cardCount).toBeGreaterThanOrEqual(4);
 
-    // 详情栏保留布局，但没有伪造选中素材。
+    // Detail panel is fixed right-rail (NOT a dialog).
     const panel = page.locator('[data-slot="asset-detail-panel"]:visible');
-    await expect(panel).toHaveCount(1);
-    await expect(panel).toHaveAttribute("data-asset-id", "");
+    await expect(panel).toBeVisible();
+    expect(
+      await panel.evaluate((el) => el.closest('[role="dialog"]') !== null),
+    ).toBe(false);
 
     // Storage usage card is below the gallery.
     const storageUsage = page.locator('[data-slot="storage-usage-card"]');
     await expect(storageUsage).toBeVisible();
   });
 
-  test("fresh account keeps asset gallery and detail panel honestly empty", async ({
+  test("clicking a different card updates the AssetDetailPanel", async ({
     page,
   }) => {
     await page.goto("/assets");
-    await expect(page.locator('[data-slot="asset-card"]')).toHaveCount(0);
     const panel = page.locator('[data-slot="asset-detail-panel"]:visible');
-    await expect(panel).toHaveCount(1);
-    await expect(panel).toHaveAttribute("data-asset-id", "");
-    await expect(page.locator('[data-slot="assets-gallery-empty"]')).toBeVisible();
+    await expect(panel).toBeVisible();
+    const initialAssetId = await panel.getAttribute("data-asset-id");
+    expect(initialAssetId).not.toBeNull();
+
+    // Click the first card whose asset-id differs from the initial one.
+    const cards = page.locator('[data-slot="asset-card"]');
+    const count = await cards.count();
+    let clicked = false;
+    for (let i = 0; i < count; i += 1) {
+      const id = await cards.nth(i).getAttribute("data-asset-id");
+      if (id !== null && id !== initialAssetId) {
+        await cards.nth(i).locator("button").first().click();
+        clicked = true;
+        break;
+      }
+    }
+    expect(clicked).toBe(true);
+
+    await expect(panel).not.toHaveAttribute("data-asset-id", initialAssetId!);
   });
 });

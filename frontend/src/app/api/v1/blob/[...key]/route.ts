@@ -3,7 +3,6 @@ import * as fs from "node:fs/promises";
 import {
   safeJoin,
   verifyBlobToken,
-  blobStorageRootId,
   PathTraversalError,
   type BlobMethod,
 } from "@creatoros/backend/modules/assets";
@@ -11,10 +10,6 @@ import { getStorageRootForRequest } from "@/server/persistence-client";
 import { readSessionCookie } from "../../auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
 import { streamBlobToFile } from "@/server/blob-upload";
-import {
-  isTrustedLocalRequest,
-  loopbackForbidden,
-} from "@/lib/loopback-guard.server";
 
 // Local-fs blob route (item B). The local-fs object-storage adapter mints
 // token-gated URLs at `/api/v1/blob/<key>?exp=&token=`; this route is where the
@@ -38,17 +33,13 @@ function decodeKey(segments: string[]): string {
   return segments.map((s) => decodeURIComponent(s)).join("/");
 }
 
-async function resolveIdentityAndRoot(
-  req: Request,
-): Promise<{ userId: string; root: string } | null> {
-  // CreatorOS 桌面端是单机免登录产品：没有 session 时仍必须通过统一 ctx 解析器取得
-  // 本机主用户；有效 session 则解析为其真实用户。无论哪条路径，后续 HMAC 都绑定这里
-  // 得到的 userId + storageRootId，且 route 前面仍有启动级 loopback 握手，不能把“免登录”
-  // 误写成“免身份”。库内无用户、无效显式 session 或 DB 异常继续失败关闭。
+async function resolveRoot(req: Request): Promise<string | null> {
+  // [T-046 单机免登录] 有 session cookie 验 token,无/失效 cookie 以本机主用户直通,
+  // 解析其配置的 media root。HMAC token + path-traversal 两道硬门不变(仍是唯一真门)。
   const rawToken = readSessionCookie(req);
   try {
     const ctx = await resolveRequestContext(rawToken);
-    return { userId: ctx.userId, root: await getStorageRootForRequest(ctx) };
+    return await getStorageRootForRequest(ctx);
   } catch {
     return null;
   }
@@ -68,28 +59,21 @@ async function gate(
   routeCtx: RouteCtx,
   method: BlobMethod,
 ): Promise<{ absKey: string } | NextResponse> {
-  // blob 绕过 proxy 是为了不让大文件 body 被 clone/截断，不代表绕过启动级握手。
-  // 在 route 内专门校验 header，不读取或复制 body。
-  if (!isTrustedLocalRequest(req)) return loopbackForbidden();
-
   const { key } = await routeCtx.params;
   const storageKey = decodeKey(key);
   const url = new URL(req.url);
   const exp = Number(url.searchParams.get("exp"));
   const token = url.searchParams.get("token");
 
-  const identity = await resolveIdentityAndRoot(req);
-  if (!identity) return forbidden("not authenticated");
-
-  const verdict = verifyBlobToken(method, storageKey, exp, token, {
-    userId: identity.userId,
-    storageRootId: blobStorageRootId(identity.root),
-  });
+  const verdict = verifyBlobToken(method, storageKey, exp, token);
   if (!verdict.ok) return forbidden(`blob token rejected: ${verdict.reason}`);
+
+  const root = await resolveRoot(req);
+  if (!root) return forbidden("not authenticated");
 
   let absKey: string;
   try {
-    absKey = safeJoin(identity.root, storageKey);
+    absKey = safeJoin(root, storageKey);
   } catch (err) {
     if (err instanceof PathTraversalError) {
       return forbidden(err.message);

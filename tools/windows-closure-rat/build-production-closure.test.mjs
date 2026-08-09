@@ -63,14 +63,6 @@ test("runtime smoke uses a real short-lived verdict instead of the removed bypas
   assert.doesNotMatch(source, /layerSummary\.core\.files > 1_000/);
   assert.match(source, /HYPERFRAMES_FFMPEG_PATH:\s*ffmpegPath/);
   assert.match(source, /HYPERFRAMES_FFPROBE_PATH:\s*ffprobePath/);
-  assert.match(source, /CREATOROS_BLOB_SECRET_FD:\s*["']0["']/);
-  assert.match(source, /CREATOROS_MASTER_KEY_FD:\s*["']0["']/);
-  assert.match(source, /BLOBV2:/);
-  assert.match(source, /new AggregateError/);
-  assert.ok(
-    source.indexOf("BLOBV2:") < source.indexOf("const deadline = Date.now() + 120_000"),
-    "RAT 必须在等待主页面前按正式壳契约写入启动密钥帧",
-  );
 });
 
 test("official Windows release and RAT are wired to the same guarded closure", () => {

@@ -210,13 +210,11 @@ describe("createFfmpegPcmDecoder —— f32le 解析(fake spawn,不跑真 ffmpeg
     const bytes = new Uint8Array(src.buffer.slice(0));
 
     let capturedArgs: string[] = [];
-    let capturedEnv: NodeJS.ProcessEnv | undefined;
     const written: Uint8Array[] = [];
     const decode = createFfmpegPcmDecoder({
       ffmpegPath: "ffmpeg",
-      spawn: (_cmd, args, options) => {
+      spawn: (_cmd, args) => {
         capturedArgs = args;
-        capturedEnv = options.env;
         const handlers: Record<string, ((arg: unknown) => void)[]> = {};
         const stdout = {
           on: (ev: string, cb: (c: Uint8Array) => void) => {
@@ -255,10 +253,6 @@ describe("createFfmpegPcmDecoder —— f32le 解析(fake spawn,不跑真 ffmpeg
     expect(capturedArgs).toContain("1"); // -ac 1 单声道
     expect(capturedArgs).toContain("pipe:0");
     expect(capturedArgs).toContain("pipe:1");
-    expect(capturedEnv).toBeDefined();
-    expect(capturedEnv).not.toHaveProperty("CREATOROS_MASTER_KEY");
-    expect(capturedEnv).not.toHaveProperty("DATABASE_URL");
-    expect(capturedEnv).not.toHaveProperty("OPENAI_API_KEY");
   });
 
   it("ffmpeg 非 0 退出 → reject", async () => {

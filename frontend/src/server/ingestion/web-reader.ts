@@ -26,8 +26,6 @@ import {
   UrlBlockedError,
   assertUrlAllowed,
   collectRedirectChainUrls,
-  fetchUrlSafely,
-  type SafeFetchResult,
 } from "./url-guard";
 
 /** 无有效会话 / 会话过期 —— 结构化降级信号(不截登录页糊弄)。携带 domain 供编导引导用户
@@ -89,16 +87,11 @@ export interface ReaderCapablePage {
   ): Promise<unknown>;
   /** 页内求值:滚动/收集轮次(fn 会被序列化进页面执行,须自包含);注入 fake 时可 noop。 */
   evaluate<R, A = unknown>(fn: (arg: A) => R | Promise<R>, arg?: A): Promise<R>;
-  setContent?(html: string, opts?: { waitUntil?: string; timeout?: number }): Promise<void>;
 }
 export interface ReaderCapableContext {
   pages(): ReaderCapablePage[];
   newPage(): Promise<ReaderCapablePage>;
   close(): Promise<void>;
-  route?(
-    pattern: string,
-    handler: (route: { abort(): Promise<void> }) => Promise<void> | void,
-  ): Promise<void>;
 }
 
 /** readUrl 的可注入依赖(单测注 fake ctx)。
@@ -110,7 +103,6 @@ export interface ReadUrlDeps {
   /** [T-326·RT-H04] SSRF 守卫(默认真 assertUrlAllowed:协议白名单 + 私网/回环/链路本地/
    *  云元数据阻断 + DNS 解析复核);单测可注 fake lookup 的守卫,不打真 DNS。 */
   guardUrl?: (url: string) => Promise<void>;
-  safeFetch?: (url: string, opts?: { signal?: AbortSignal }) => Promise<SafeFetchResult>;
 }
 
 /** UrlBlockedError → WebCaptureError(保持三墙错误分类通路;message 已是人话原样带过)。 */
@@ -515,8 +507,8 @@ export async function readUrl(
       { code: "UNSAFE_URL" },
     );
   }
-  // [T-326·RT-H04] SSRF 前置守卫:私网/回环/链路本地/云元数据地址在**起浏览器之前**就拒；
-  // DNS 失败或空结果同样 fail closed，无法证明是公网就不发请求。
+  // [T-326·RT-H04] SSRF 前置守卫:私网/回环/链路本地/云元数据地址在**起浏览器之前**就拒
+  // (协议白名单 + IP 字面量直接判 + 域名 DNS 解析逐地址判;DNS 解析失败放行,goto 会诚实失败)。
   const guardUrl = deps.guardUrl ?? assertUrlAllowed;
   try {
     await guardUrl(target);
@@ -526,16 +518,6 @@ export async function readUrl(
   // [T-239c] 入口即断:已中断的信号不再起浏览器。
   const signal = opts.signal;
   if (signal?.aborted) throw makeAbortError("网页读取");
-  // 生产路径必须由逐跳手动 fetch 固定到已验证 IP；测试桩只有显式注入 safeFetch 才走此分支。
-  // 这让旧 fake page 单测保持离线，同时生产不再调用会自动跟随重定向的 page.goto(http)。
-  let safelyFetched: SafeFetchResult | null = null;
-  if (process.env.NODE_ENV !== "test" || deps.safeFetch) {
-    try {
-      safelyFetched = await (deps.safeFetch ?? fetchUrlSafely)(target, { signal });
-    } catch (err) {
-      throw toReaderError(err);
-    }
-  }
   const domain = webDomainFromUrl(target);
   const openContext = deps.openContext ?? realOpenReaderContext;
   const ctx = await openContext(opts.authDir);
@@ -546,28 +528,13 @@ export async function readUrl(
   };
   signal?.addEventListener("abort", onAbort, { once: true });
   try {
-    if (safelyFetched && ctx.route) {
-      await ctx.route("**/*", (route) => route.abort());
-    }
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     let resp: ReaderNavResponse | null;
     try {
-      if (safelyFetched) {
-        if (!page.setContent) throw new Error("安全静态渲染接口不可用");
-        await page.setContent(safelyFetched.body.toString("utf8"), {
-          waitUntil: "domcontentloaded",
-          timeout: NAV_TIMEOUT_MS,
-        });
-        resp = {
-          status: () => safelyFetched!.status,
-          url: () => safelyFetched!.finalUrl,
-        };
-      } else {
-        resp = await page.goto(target, {
-          waitUntil: "domcontentloaded",
-          timeout: NAV_TIMEOUT_MS,
-        });
-      }
+      resp = await page.goto(target, {
+        waitUntil: "domcontentloaded",
+        timeout: NAV_TIMEOUT_MS,
+      });
     } catch (err) {
       if (signal?.aborted) throw makeAbortError("网页读取");
       throw new WebCaptureError(
@@ -588,7 +555,7 @@ export async function readUrl(
     // 只对 567 做最多两次有界重载；最终仍非 2xx 时继续诚实报 HTTP_ERROR。
     for (
       let challengeAttempt = 0;
-      !safelyFetched && resp?.status() === 567 && challengeAttempt < 2;
+      resp?.status() === 567 && challengeAttempt < 2;
       challengeAttempt += 1
     ) {
       await page.waitForTimeout(1_500);
@@ -607,8 +574,9 @@ export async function readUrl(
       );
     }
     const finalUrl = (resp ? resp.url() : "") || page.url();
-    // 生产安全路径的逐跳检查已在 fetchUrlSafely 发请求前完成；这里仅复核测试注入的旧浏览器
-    // 导航路径及最终 URL，避免兼容桩绕过原有判据。
+    // [T-326·RT-H04] 重定向逐跳复检(事后链审计,选型见 url-guard 文件头):goto 已跟随的每一跳
+    // + 最终 URL 逐个重过守卫 —— 命中私网/元数据即抛错,正文绝不抽取返回。残留:命中跳的 HTTP
+    // 请求本身已被浏览器发出(无法事前拦,Playwright route 不触发于 redirect 跳)。
     {
       const checked = new Set<string>([target]);
       for (const hop of [...collectRedirectChainUrls(resp), finalUrl]) {

@@ -737,9 +737,7 @@ pub struct DefaultsLastSeen {
 #[cfg(target_os = "macos")]
 impl LastSeenStore for DefaultsLastSeen {
     fn read(&self) -> Option<i64> {
-        let out = std::process::Command::new("/usr/bin/defaults")
-            .env_clear()
-            .envs(crate::allowlisted_system_command_env())
+        let out = std::process::Command::new("defaults")
             .args(["read", &self.domain, &self.key])
             .output()
             .ok()?;
@@ -752,9 +750,7 @@ impl LastSeenStore for DefaultsLastSeen {
             .ok()
     }
     fn write(&self, ms: i64) {
-        let r = std::process::Command::new("/usr/bin/defaults")
-            .env_clear()
-            .envs(crate::allowlisted_system_command_env())
+        let r = std::process::Command::new("defaults")
             .args(["write", &self.domain, &self.key, "-string", &ms.to_string()])
             .status();
         if !matches!(r, Ok(s) if s.success()) {

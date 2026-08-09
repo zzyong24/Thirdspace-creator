@@ -5,7 +5,6 @@ import {
   PathTraversalError,
   signBlobToken,
   verifyBlobToken,
-  blobStorageRootId,
   rootPathLegalityReason,
 } from "./blob-security";
 
@@ -49,91 +48,45 @@ describe("signBlobToken / verifyBlobToken — HMAC token gate", () => {
   const NOW = 1_000_000;
   const EXP = NOW + 900_000; // 15 min ahead
   const SECRET = "unit-test-secret";
-  const TRUST = { secret: SECRET, bootId: "boot-a" };
-  const BINDING = {
-    userId: "user-a",
-    storageRootId: blobStorageRootId(ROOT),
-  };
 
   it("a freshly minted token verifies for the same (method,key,exp)", () => {
-    const token = signBlobToken("PUT", KEY, EXP, BINDING, TRUST);
+    const token = signBlobToken("PUT", KEY, EXP, SECRET);
     expect(
-      verifyBlobToken("PUT", KEY, EXP, token, BINDING, NOW, TRUST).ok,
+      verifyBlobToken("PUT", KEY, EXP, token, NOW, SECRET).ok,
     ).toBe(true);
   });
 
   it("rejects an expired token", () => {
-    const token = signBlobToken("GET", KEY, EXP, BINDING, TRUST);
-    const r = verifyBlobToken("GET", KEY, EXP, token, BINDING, EXP + 1, TRUST);
+    const token = signBlobToken("GET", KEY, EXP, SECRET);
+    const r = verifyBlobToken("GET", KEY, EXP, token, EXP + 1, SECRET);
     expect(r.ok).toBe(false);
     expect(r.reason).toBe("expired");
   });
 
   it("rejects a tampered token (forged signature)", () => {
-    const token = signBlobToken("PUT", KEY, EXP, BINDING, TRUST);
+    const token = signBlobToken("PUT", KEY, EXP, SECRET);
     const tampered = token.slice(0, -1) + (token.endsWith("a") ? "b" : "a");
-    const r = verifyBlobToken("PUT", KEY, EXP, tampered, BINDING, NOW, TRUST);
+    const r = verifyBlobToken("PUT", KEY, EXP, tampered, NOW, SECRET);
     expect(r.ok).toBe(false);
     expect(r.reason).toBe("bad-signature");
   });
 
   it("rejects a token signed for a different method / key (cross-binding)", () => {
-    const putToken = signBlobToken("PUT", KEY, EXP, BINDING, TRUST);
+    const putToken = signBlobToken("PUT", KEY, EXP, SECRET);
     // Same token replayed as GET must fail (method is bound into the payload).
-    expect(verifyBlobToken("GET", KEY, EXP, putToken, BINDING, NOW, TRUST).ok).toBe(
+    expect(verifyBlobToken("GET", KEY, EXP, putToken, NOW, SECRET).ok).toBe(
       false,
     );
     // Token for a different key must fail.
     expect(
-      verifyBlobToken("PUT", "image/other-key", EXP, putToken, BINDING, NOW, TRUST).ok,
+      verifyBlobToken("PUT", "image/other-key", EXP, putToken, NOW, SECRET).ok,
     ).toBe(false);
   });
 
   it("rejects a missing token", () => {
-    const r = verifyBlobToken("PUT", KEY, EXP, null, BINDING, NOW, TRUST);
+    const r = verifyBlobToken("PUT", KEY, EXP, null, NOW, SECRET);
     expect(r.ok).toBe(false);
     expect(r.reason).toBe("missing");
-  });
-
-  it("binds user, storage root and boot id; old-boot and cross-tenant replay fail", () => {
-    const token = signBlobToken("GET", KEY, EXP, BINDING, TRUST);
-    expect(
-      verifyBlobToken(
-        "GET",
-        KEY,
-        EXP,
-        token,
-        { ...BINDING, userId: "user-b" },
-        NOW,
-        TRUST,
-      ).ok,
-    ).toBe(false);
-    expect(
-      verifyBlobToken(
-        "GET",
-        KEY,
-        EXP,
-        token,
-        { ...BINDING, storageRootId: blobStorageRootId("/tmp/other") },
-        NOW,
-        TRUST,
-      ).ok,
-    ).toBe(false);
-    expect(
-      verifyBlobToken("GET", KEY, EXP, token, BINDING, NOW, {
-        secret: SECRET,
-        bootId: "boot-b",
-      }).ok,
-    ).toBe(false);
-  });
-
-  it("has no source-known fallback: absent trust root fails closed", () => {
-    expect(() => signBlobToken("GET", KEY, EXP, BINDING)).toThrow(
-      /blob trust root unavailable/i,
-    );
-    expect(() =>
-      verifyBlobToken("GET", KEY, EXP, "00", BINDING, NOW),
-    ).toThrow(/blob trust root unavailable/i);
   });
 });
 

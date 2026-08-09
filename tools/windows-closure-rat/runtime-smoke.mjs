@@ -8,7 +8,6 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:net";
-import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { delimiter, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -293,9 +292,6 @@ async function freePort() {
 
 const port = await freePort();
 const verdictToken = createBuildSmokeVerdictToken({ sidecarPort: port });
-const smokeBlobSecret = randomBytes(32).toString("base64url");
-const smokeBootId = randomBytes(16).toString("base64url");
-const smokeMasterKey = randomBytes(32).toString("base64");
 const serverLogs = [];
 const sidecarEnv = {
   ...process.env,
@@ -305,8 +301,6 @@ const sidecarEnv = {
   CREATOROS_BIN_DIR: mediaBin,
   CREATOROS_DESKTOP: "1",
   CREATOROS_SIDECAR_VERDICT_TOKEN: verdictToken,
-  CREATOROS_BLOB_SECRET_FD: "0",
-  CREATOROS_MASTER_KEY_FD: "0",
   PGLITE_DATA_DIR: resolve(tempRoot, "db"),
   HOSTNAME: "127.0.0.1",
   PORT: String(port),
@@ -323,16 +317,9 @@ const sidecar = spawn(smokeNode, [resolve(runtimeRoot, "frontend", "server.js")]
   // RAT 必须复现同一契约；`ignore` 会立即产生 EOF，让正确的孤儿防护主动退出。
   stdio: ["pipe", "pipe", "pipe"],
 });
-if (!sidecar.stdin?.writable) {
-  throw new Error("[closure-rat] sidecar stdin 不可写，无法复现正式壳启动协议");
-}
-sidecar.stdin.write(
-  `BLOBV2:${smokeBlobSecret}:${smokeBootId}\n${smokeMasterKey}\n`,
-);
 sidecar.stdout.on("data", (chunk) => serverLogs.push(`${chunk}`));
 sidecar.stderr.on("data", (chunk) => serverLogs.push(`${chunk}`));
 let mainHtml = "";
-let mainPageError = null;
 try {
   const deadline = Date.now() + 120_000;
   while (Date.now() < deadline) {
@@ -354,8 +341,6 @@ try {
     );
   }
   record("next-main-page", `${mainHtml.length} bytes`);
-} catch (error) {
-  mainPageError = error instanceof Error ? error : new Error(String(error));
 } finally {
   let requestedWindowsShutdown = false;
   let gracefulShutdownCompleted = true;
@@ -380,22 +365,14 @@ try {
   if (sidecar.exitCode === null) sidecar.kill("SIGKILL");
   rmSync(tempRoot, { recursive: true, force: true });
   if (requestedWindowsShutdown && !gracefulShutdownCompleted) {
-    const shutdownError = new Error(
+    throw new Error(
       "[closure-rat] Windows sidecar 未在停机哨兵后 10 秒内优雅退出",
     );
-    if (mainPageError) {
-      throw new AggregateError(
-        [mainPageError, shutdownError],
-        "[closure-rat] Next 主页面与 Windows 优雅停机均失败",
-      );
-    }
-    throw shutdownError;
   }
   if (requestedWindowsShutdown) {
     record("windows-stdin-shutdown", "sentinel");
   }
 }
-if (mainPageError) throw mainPageError;
 
 const layerSummary = JSON.parse(
   readFileSync(resolve(runtimeRoot, "layer-summary.json"), "utf8"),

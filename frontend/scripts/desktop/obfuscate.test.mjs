@@ -40,7 +40,6 @@ describe("打包冒烟 verdict 环境隔离", () => {
     expect(childEnv.CREATOROS_SIDECAR_VERDICT_TOKEN).toBe(
       "payload.signature",
     );
-    expect(childEnv.CREATOROS_BLOB_SECRET_FD).toBe("0");
     expect(childEnv.CREATOROS_VERDICT_SIGNING_KEY_B64).toBeUndefined();
     expect(childEnv.CREATOROS_ALLOW_VERDICT_SIGNING_KEY).toBeUndefined();
     expect(childEnv.CREATOROS_SMOKE_BYPASS_VERDICT).toBeUndefined();

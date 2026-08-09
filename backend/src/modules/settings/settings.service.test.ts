@@ -108,9 +108,6 @@ function makeFakeRepo(
         modelName: body.modelName,
         secretReference: body.secretReference ?? "",
         secretValue: secretProvided ? body.secret! : (prev?.secretValue ?? null),
-        keyringRef: prev?.keyringRef ?? null,
-        credentialMigrationState: secretProvided ? "keyring_v1" : "not_required",
-        rotatedAt: secretProvided ? NOW : null,
         baseUrl: body.baseUrl ?? null,
         apiFormat: body.apiFormat ?? "anthropic",
         settings: body.settings ?? {},
@@ -120,17 +117,6 @@ function makeFakeRepo(
       if (i >= 0) state._models[i] = row;
       else state._models.push(row);
       return row;
-    },
-    async bindExistingModelCredential(
-      _c: RequestContext,
-      capability: string,
-      keyringRef: string,
-    ) {
-      const row = state._models.find((m) => m.capability === capability);
-      if (!row) throw new Error("模型配置不存在");
-      row.secretValue = null;
-      row.keyringRef = keyringRef;
-      row.credentialMigrationState = "keyring_v1";
     },
     async listModels() {
       return state._models;
@@ -148,11 +134,6 @@ function makeFakeRepo(
         scopeId,
         serviceId,
         encryptedSecret: secret,
-        keyringRef: null,
-        serviceType: "user_input",
-        credentialStatus: "ready",
-        migrationState: "keyring_v1",
-        rotatedAt: NOW,
         updatedAt: NOW,
       };
       const index = state._channelCredentials.findIndex(

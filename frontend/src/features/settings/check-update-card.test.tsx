@@ -227,7 +227,7 @@ describe("CheckUpdateCard — 桌面态", () => {
 describe("CheckUpdateCard — 与授权状态解耦", () => {
   const baseActivation = {
     status: "active" as const,
-    supportRef: "SUP-permanent00001",
+    machineId: "M-perp",
     licenseMode: "TIME",
     activatedAt: "2026-07-06T00:00:00.000Z",
     lastOnlineCheckAt: "2026-07-16T00:00:00.000Z",

@@ -1,130 +1,94 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
+import { createDb, type Db, type RequestContext } from "@creatoros/backend";
 import { eq } from "drizzle-orm";
-import {
-  createDb,
-  decryptSecret,
-  encryptSecret,
-  type Db,
-  type RequestContext,
-} from "@creatoros/backend";
-
-import { modelConfigurations } from "./settings.db-schema";
 import { createSettingsRepository } from "./settings.repository";
-import {
-  type CredentialVault,
-} from "./credential-vault";
+import { modelConfigurations } from "./settings.db-schema";
+import { ENC_PREFIX, isEncrypted } from "@creatoros/backend";
 
-const LEGACY_KEY = Buffer.alloc(32, 7);
+// T-147 P2 — 透明加解密插在 repository 层的验证。注入 masterKey 后:
+//   - putModel 写库前把 secret 加密(DB 底层列 = enc:v1: 密文,不再明文)。
+//   - getModel / listModels 读出后解密(调用方拿到明文,无感)。
+//   - 存量明文行(无前缀)透传(向后兼容,过渡期未迁移的旧行)。
+// 不注入 masterKey → 保持明文路径(现有集成测试的行为不变)。
+
+const KEY = Buffer.alloc(32, 7);
+
+const DEPS_ENC = {
+  now: () => "2026-07-06T00:00:00.000Z",
+  nextId: (() => {
+    let n = 0;
+    return (prefix: string) => `${prefix}-c-${++n}`;
+  })(),
+  masterKey: KEY,
+};
+
 const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user" };
 
-class FakeVault implements CredentialVault {
-  readonly values = new Map<string, string>();
-  readonly calls: string[] = [];
-  denied = false;
-  async get(service: string, account: string): Promise<string | null> {
-    this.calls.push(`get:${service}:${account}`);
-    if (this.denied) throw new Error("keychain denied");
-    return this.values.get(`${service}:${account}`) ?? null;
-  }
-  async set(service: string, account: string, secret: string): Promise<void> {
-    this.calls.push(`set:${service}:${account}`);
-    if (this.denied) throw new Error("keychain denied");
-    this.values.set(`${service}:${account}`, secret);
-  }
-  async delete(service: string, account: string): Promise<void> {
-    this.calls.push(`delete:${service}:${account}`);
-    this.values.delete(`${service}:${account}`);
-  }
-}
-
-function buildRepo(db: Db, vault?: CredentialVault) {
-  let n = 0;
-  return createSettingsRepository(db, {
-    now: () => "2026-08-08T00:00:00.000Z",
-    nextId: (prefix) => `${prefix}-c-${++n}`,
-    credentialVault: vault,
-    legacyMasterKey: LEGACY_KEY,
-  });
-}
-
-describe("T-739 用户模型 Key 本地加密保存", () => {
+describe("settings.repository transparent encryption (masterKey injected)", () => {
   let db: Db;
-  let vault: FakeVault;
+
   beforeEach(async () => {
     ({ db } = await createDb());
-    vault = new FakeVault();
   });
 
-  it("数据库只保存 enc:v1 密文，保存与读取都不访问系统凭据库", async () => {
-    const repo = buildRepo(db, vault);
+  it("stores the secret ENCRYPTED at rest but getModel returns plaintext", async () => {
+    const repo = createSettingsRepository(db, DEPS_ENC);
     await repo.putModel(ctxA, "default", {
       provider: "minimax",
       modelName: "MiniMax-M3",
       secret: "sk-real-live-key",
     });
 
+    // Raw DB column = ciphertext (enc:v1:), NOT the plaintext key.
     const raw = await db
       .select()
       .from(modelConfigurations)
       .where(eq(modelConfigurations.capability, "default"));
-    expect(raw[0]!.secretValue).toMatch(/^enc:v1:/);
-    expect(decryptSecret(raw[0]!.secretValue!, LEGACY_KEY)).toBe("sk-real-live-key");
-    expect(raw[0]!.keyringRef).toBeNull();
-    expect(raw[0]!.credentialMigrationState).toBe("encrypted_v1");
-    expect(JSON.stringify(raw[0])).not.toContain("sk-real-live-key");
-    await expect(repo.getModel(ctxA, "default")).resolves.toMatchObject({
-      secretValue: "sk-real-live-key",
-    });
-    expect(vault.calls).toEqual([]);
+    expect(raw[0]!.secretValue).toBeTruthy();
+    expect(raw[0]!.secretValue!.startsWith(ENC_PREFIX)).toBe(true);
+    expect(raw[0]!.secretValue).not.toContain("sk-real-live-key");
+
+    // But the repo read decrypts transparently → callers see plaintext.
+    const row = await repo.getModel(ctxA, "default");
+    expect(row?.secretValue).toBe("sk-real-live-key");
   });
 
-  it("部分更新不覆盖本地密文；多模型分别透明解密", async () => {
-    const repo = buildRepo(db, vault);
+  it("listModels decrypts each row's secret", async () => {
+    const repo = createSettingsRepository(db, DEPS_ENC);
     await repo.putModel(ctxA, "default", {
       provider: "minimax",
-      modelName: "m1",
+      modelName: "MiniMax-M3",
       secret: "sk-aaa",
     });
     await repo.putModel(ctxA, "image.default", {
       provider: "minimax",
-      modelName: "m2",
+      modelName: "img",
       secret: "sk-bbb",
+    });
+    const list = await repo.listModels(ctxA);
+    const secrets = list.map((r) => r.secretValue).sort();
+    expect(secrets).toEqual(["sk-aaa", "sk-bbb"]);
+  });
+
+  it("a partial update (no secret) preserves the encrypted key and still reads plaintext", async () => {
+    const repo = createSettingsRepository(db, DEPS_ENC);
+    await repo.putModel(ctxA, "default", {
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      secret: "sk-keep",
     });
     await repo.putModel(ctxA, "default", {
       provider: "minimax",
-      modelName: "m1-new",
+      modelName: "MiniMax-M3-v2",
     });
-    const list = await repo.listModels(ctxA);
-    expect(list.map((row) => row.secretValue).sort()).toEqual(["sk-aaa", "sk-bbb"]);
-    expect(list.find((row) => row.capability === "default")?.modelName).toBe("m1-new");
-    expect(vault.calls).toEqual([]);
+    const row = await repo.getModel(ctxA, "default");
+    expect(row?.modelName).toBe("MiniMax-M3-v2");
+    expect(row?.secretValue).toBe("sk-keep");
   });
 
-  it("未配置 Key 可保存普通模型元数据；缺少本机 master key 时拒绝保存明文", async () => {
-    let n = 0;
-    const noKeyRepo = createSettingsRepository(db, {
-      now: () => "2026-08-08T00:00:00.000Z",
-      nextId: (prefix) => `${prefix}-no-key-${++n}`,
-      credentialVault: vault,
-      legacyMasterKey: null,
-    });
-    await expect(
-      noKeyRepo.putModel(ctxA, "default", { provider: "minimax", modelName: "no-key" }),
-    ).resolves.toMatchObject({ secretValue: null });
-
-    await expect(
-      noKeyRepo.putModel(ctxA, "image.default", {
-        provider: "minimax",
-        modelName: "image",
-        secret: "sk-no-master-key",
-      }),
-    ).rejects.toThrow(/本机加密密钥/);
-    const rows = await db.select().from(modelConfigurations);
-    expect(rows.map((row) => row.capability)).toEqual(["default"]);
-    expect(vault.calls).toEqual([]);
-  });
-
-  it("旧 enc:v1 密文继续透明解密，不再强制迁入系统钥匙串", async () => {
+  it("legacy PLAINTEXT rows (no prefix) are passed through on read (backward compat)", async () => {
+    const repo = createSettingsRepository(db, DEPS_ENC);
+    // Simulate a pre-encryption row: write raw plaintext directly to the column.
     await db.insert(modelConfigurations).values({
       id: "legacy-1",
       userId: ctxA.userId,
@@ -132,100 +96,47 @@ describe("T-739 用户模型 Key 本地加密保存", () => {
       provider: "minimax",
       modelName: "old",
       secretReference: "",
-      secretValue: encryptSecret("sk-legacy", LEGACY_KEY),
-      credentialMigrationState: "keyring_unavailable",
+      secretValue: "sk-legacy-plaintext", // no enc:v1: prefix
       settings: {},
       apiFormat: "anthropic",
       isDefault: false,
     });
-    const repo = buildRepo(db, vault);
-    await expect(repo.getModel(ctxA, "default")).resolves.toMatchObject({
-      secretValue: "sk-legacy",
-    });
-    const raw = (await db.select().from(modelConfigurations))[0]!;
-    expect(raw.secretValue).toMatch(/^enc:v1:/);
-    expect(vault.calls).toEqual([]);
+    expect(isEncrypted("sk-legacy-plaintext")).toBe(false);
+    const row = await repo.getModel(ctxA, "default");
+    expect(row?.secretValue).toBe("sk-legacy-plaintext");
   });
 
-  it("存量 Keyring-only 行不读取系统条目，明确进入需重新填写状态", async () => {
-    await db.insert(modelConfigurations).values({
-      id: "keyring-only-1",
-      userId: ctxA.userId,
-      capability: "default",
-      provider: "minimax",
-      modelName: "m1",
-      secretReference: "",
-      secretValue: null,
-      keyringRef: "a".repeat(64),
-      credentialMigrationState: "keyring_v1",
-      settings: {},
-      apiFormat: "anthropic",
-      isDefault: false,
-    });
-    const repo = buildRepo(db, vault);
-
-    await expect(repo.getModel(ctxA, "default")).resolves.toMatchObject({
-      secretValue: "dec-fail:v1",
-    });
-    const raw = (await db.select().from(modelConfigurations))[0]!;
-    expect(raw.secretValue).toBeNull();
-    expect(raw.keyringRef).toBe("a".repeat(64));
-    expect(vault.calls).toEqual([]);
-  });
-
-  it("同一 capability 在不同用户下使用不同不可逆引用，不能串读 Key", async () => {
-    const repo = buildRepo(db, vault);
-    const ctxB: RequestContext = {
-      userId: "user-b",
-      requestId: "req-b",
-      source: "user",
-    };
+  it("NULL secret (no key configured) round-trips as null", async () => {
+    const repo = createSettingsRepository(db, DEPS_ENC);
     await repo.putModel(ctxA, "default", {
       provider: "minimax",
-      modelName: "m-a",
-      secret: "sk-user-a",
+      modelName: "no-key",
     });
-    await repo.putModel(ctxB, "default", {
-      provider: "minimax",
-      modelName: "m-b",
-      secret: "sk-user-b",
-    });
+    const row = await repo.getModel(ctxA, "default");
+    expect(row?.secretValue).toBeNull();
+  });
+});
 
-    await expect(repo.getModel(ctxA, "default")).resolves.toMatchObject({
-      secretValue: "sk-user-a",
-    });
-    await expect(repo.getModel(ctxB, "default")).resolves.toMatchObject({
-      secretValue: "sk-user-b",
-    });
-    expect(vault.calls).toEqual([]);
+describe("settings.repository WITHOUT masterKey (legacy path unchanged)", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
   });
 
-  it("用户重新保存后以本地密文覆盖存量 Keyring 引用，但不删除系统条目", async () => {
-    await db.insert(modelConfigurations).values({
-      id: "keyring-only-1",
-      userId: ctxA.userId,
-      capability: "default",
-      provider: "minimax",
-      modelName: "old",
-      secretReference: "",
-      secretValue: null,
-      keyringRef: "b".repeat(64),
-      credentialMigrationState: "keyring_v1",
-      settings: {},
-      apiFormat: "anthropic",
-      isDefault: false,
+  it("stores plaintext when no masterKey is injected (backward compat)", async () => {
+    const repo = createSettingsRepository(db, {
+      now: () => "2026-07-06T00:00:00.000Z",
+      nextId: (p: string) => `${p}-x`,
     });
-    const repo = buildRepo(db, vault);
     await repo.putModel(ctxA, "default", {
       provider: "minimax",
-      modelName: "new",
-      secret: "sk-re-entered",
+      modelName: "m",
+      secret: "sk-plain",
     });
-
-    const raw = (await db.select().from(modelConfigurations))[0]!;
-    expect(decryptSecret(raw.secretValue!, LEGACY_KEY)).toBe("sk-re-entered");
-    expect(raw.keyringRef).toBeNull();
-    expect(raw.credentialMigrationState).toBe("encrypted_v1");
-    expect(vault.calls).toEqual([]);
+    const raw = await db
+      .select()
+      .from(modelConfigurations)
+      .where(eq(modelConfigurations.capability, "default"));
+    expect(raw[0]!.secretValue).toBe("sk-plain"); // stored as-is, no encryption
   });
 });

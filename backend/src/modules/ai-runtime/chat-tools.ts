@@ -4697,8 +4697,7 @@ export function buildChatTools(
   const out: Record<string, Tool> = {};
   for (const name of skillToolWhitelist) {
     const impl = impls[name];
-    if (!impl) continue;
-    out[name] = impl;
+    if (impl) out[name] = impl;
   }
   return out as ToolSet;
 }

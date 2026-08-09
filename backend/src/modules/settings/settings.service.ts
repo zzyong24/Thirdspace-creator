@@ -141,9 +141,14 @@ export interface ModelConfigInternal {
   settings: Record<string, unknown>;
 }
 
-// ── [T-363/T-739] 模型配置导出/导入────────────────────────────────────────────
-// 导出只携带数据库中的 enc:v1 本机密文，绝不访问系统钥匙串。同一台机器可用 master key
-// 解包后重新加密；换机或密钥已更换时诚实提示重填。旧版 keyringRef 只作输入兼容，绝不读取。
+// ── [T-363] 模型配置导出/导入(设置页兜底:重置/换机后一键找回)────────────────────
+//
+// 导出:secret_value 保持库中**存储形态**(enc:v1: 密文优先;仅无 master key 的存量明文
+// 行才是明文)——导出动作本身不解密、不落明文盘。secretForm 如实标注文件里密钥的形态,
+// UI 据此警示「文件含密钥,注意保管」。
+// 导入:走**既有 service 写路径** setModelConfiguration(按 (user_id, capability) upsert
+// 覆盖);enc 密文先经 repo.unwrapExportedSecret 解包(解不开 = 跨机器/换 key → 该行配置
+// 照导、密钥诚实标 unrecoverable 提示重填,绝不塞进库里假装可用)。
 export interface ModelConfigExportRow {
   capability: string;
   provider: string;
@@ -151,8 +156,6 @@ export interface ModelConfigExportRow {
   secretReference: string;
   /** 库中存储形态(enc:v1: 密文 / 存量明文 / null=未配 key)。 */
   secretValue: string | null;
-  /** 旧版 keyring-only 导出兼容字段；新导出恒为 null。 */
-  keyringRef?: string | null;
   settings: Record<string, unknown>;
   baseUrl: string | null;
   apiFormat: string;
@@ -263,7 +266,6 @@ export interface SettingsService {
     scopeId: string,
     serviceId: string,
     secret: string,
-    serviceType?: "user_input" | "activation_managed" | "local_selection",
   ): Promise<ChannelModelCredentialStatus>;
   // [T-363] 模型配置导出/导入(见上方类型注释;导入走 setModelConfiguration 既有写路径)。
   exportModelConfigs(ctx: RequestContext): Promise<ModelConfigExportFile>;
@@ -640,32 +642,22 @@ export function createSettingsService(
       const rows = await repoForCtx(ctx).listChannelModelCredentials(ctx, scopeId);
       return rows.map((row) => ({
         serviceId: row.serviceId,
-        hasSecret:
-          row.credentialStatus === "ready" &&
-          row.migrationState === "keyring_v1" &&
-          Boolean(row.keyringRef),
+        hasSecret: true,
         updatedAt: row.updatedAt,
       }));
     },
 
-    async setChannelModelCredential(
-      ctx,
-      scopeId,
-      serviceId,
-      secret,
-      serviceType = "user_input",
-    ) {
+    async setChannelModelCredential(ctx, scopeId, serviceId, secret) {
       const row = await repoForCtx(ctx).putChannelModelCredential(
         ctx,
         scopeId,
         serviceId,
         secret,
-        serviceType,
       );
       return { serviceId: row.serviceId, hasSecret: true, updatedAt: row.updatedAt };
     },
 
-    // [T-739] 导出数据库中的本机密文，不访问系统钥匙串。
+    // [T-363] 导出:原始读(不解密),密钥保持库中存储形态;secretForm 如实标注。
     async exportModelConfigs(ctx) {
       const rows = await repoForCtx(ctx).listModelsRaw(ctx);
       const models: ModelConfigExportRow[] = rows.map((row) => ({
@@ -673,8 +665,7 @@ export function createSettingsService(
         provider: row.provider,
         modelName: row.modelName,
         secretReference: row.secretReference,
-        secretValue: row.secretValue,
-        keyringRef: null,
+        secretValue: row.secretValue ?? null,
         settings: (row.settings as Record<string, unknown>) ?? {},
         baseUrl: row.baseUrl ?? null,
         apiFormat: (row.apiFormat as string) ?? "anthropic",
@@ -719,9 +710,6 @@ export function createSettingsService(
               secret = plain;
               secretOutcome = "imported";
             }
-          } else if (m.keyringRef) {
-            // 旧版只导出了不可逆引用；T-739 明确禁止为恢复它而访问 sidecar Keychain。
-            secretOutcome = "unrecoverable";
           }
           await service.setModelConfiguration(ctx, m.capability, {
             provider: m.provider,
@@ -981,23 +969,12 @@ function parseModelConfigExportFile(file: unknown): {
         `models[${i}] 缺必填字段(capability/provider/modelName)`,
       );
     }
-    if (
-      r.keyringRef !== undefined &&
-      r.keyringRef !== null &&
-      (typeof r.keyringRef !== "string" || !/^[0-9a-f]{64}$/.test(r.keyringRef))
-    ) {
-      throw new ModelConfigImportError(`models[${i}].keyringRef 格式不合法`);
-    }
     models.push({
       capability,
       provider,
       modelName,
       secretReference: typeof r.secretReference === "string" ? r.secretReference : "",
       secretValue: typeof r.secretValue === "string" ? r.secretValue : null,
-      keyringRef:
-        typeof r.keyringRef === "string" && /^[0-9a-f]{64}$/.test(r.keyringRef)
-          ? r.keyringRef
-          : null,
       settings:
         typeof r.settings === "object" && r.settings !== null && !Array.isArray(r.settings)
           ? (r.settings as Record<string, unknown>)

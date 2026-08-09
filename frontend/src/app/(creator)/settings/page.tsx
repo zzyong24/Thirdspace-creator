@@ -36,7 +36,6 @@ import {
 } from "@/features/settings/settings-page";
 import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
-import { createMachineSupportRef } from "@/server/activation/machine-support-ref.server";
 import { resolveChannelCapabilityRoute } from "@creatoros/backend/modules/ai-runtime";
 import {
   buildSkillItems,
@@ -297,7 +296,7 @@ export default async function SettingsRoutePage() {
       const status = await (await getActivationService()).getStatus();
       activation = {
         status: status.status,
-        supportRef: createMachineSupportRef(status.machineId),
+        machineId: status.machineId,
         licenseMode: status.licenseMode,
         expiresAt: status.expiresAt,
         activatedAt: status.activatedAt,
