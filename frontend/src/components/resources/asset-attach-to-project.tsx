@@ -40,6 +40,7 @@ export function AssetAttachToProject({
 
   // Reset the success affordance + default selection when the asset changes.
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 外部选中素材切换时必须原子复位本地反馈与默认项目
     setAttached(false);
     setProjectId(projects[0]?.id ?? "");
   }, [assetId, projects]);

@@ -28,6 +28,55 @@ export interface PaginationProps {
   readonly hrefForPage?: (page: number) => string;
 }
 
+interface PaginationControlProps {
+  readonly page: number;
+  readonly slot: string;
+  readonly ariaLabel: string;
+  readonly className: string;
+  readonly disabled?: boolean;
+  readonly current?: boolean;
+  readonly hrefForPage?: (page: number) => string;
+  readonly children: React.ReactNode;
+}
+
+// One control = a Link (when hrefForPage is set and the target is enabled) or
+// an inert button. Declared outside Pagination so React keeps a stable component
+// identity across renders.
+function PaginationControl({
+  page,
+  slot,
+  ariaLabel,
+  className,
+  disabled,
+  current,
+  hrefForPage,
+  children,
+}: PaginationControlProps) {
+  const attrs = {
+    "data-slot": slot,
+    "aria-label": ariaLabel,
+    className,
+    ...(current !== undefined
+      ? {
+          "data-page-current": current ? "true" : "false",
+          "aria-current": current ? ("page" as const) : undefined,
+        }
+      : {}),
+  };
+  if (hrefForPage && !disabled) {
+    return (
+      <Link href={hrefForPage(page)} {...attrs}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" disabled={disabled} {...attrs}>
+      {children}
+    </button>
+  );
+}
+
 export function Pagination({
   currentPage,
   totalPages,
@@ -48,51 +97,6 @@ export function Pagination({
   const hasPrev = currentPage > 1;
   const hasNext = currentPage < totalPages;
 
-  // One control = a Link (when hrefForPage is set and the target is enabled) or
-  // an inert button (legacy baseline / disabled edges). Keeps every data-slot +
-  // aria attribute identical so existing tests still match.
-  const Ctrl = ({
-    page,
-    slot,
-    ariaLabel,
-    className,
-    disabled,
-    current,
-    children,
-  }: {
-    page: number;
-    slot: string;
-    ariaLabel: string;
-    className: string;
-    disabled?: boolean;
-    current?: boolean;
-    children: React.ReactNode;
-  }) => {
-    const attrs = {
-      "data-slot": slot,
-      "aria-label": ariaLabel,
-      className,
-      ...(current !== undefined
-        ? {
-            "data-page-current": current ? "true" : "false",
-            "aria-current": current ? ("page" as const) : undefined,
-          }
-        : {}),
-    };
-    if (hrefForPage && !disabled) {
-      return (
-        <Link href={hrefForPage(page)} {...attrs}>
-          {children}
-        </Link>
-      );
-    }
-    return (
-      <button type="button" disabled={disabled} {...attrs}>
-        {children}
-      </button>
-    );
-  };
-
   return (
     <div className="flex items-center justify-between gap-4 pt-2 text-sm">
       <span className="text-xs text-muted-foreground">{totalLabel}</span>
@@ -101,19 +105,20 @@ export function Pagination({
         aria-label="项目分页"
         className="flex items-center gap-1"
       >
-        <Ctrl
+        <PaginationControl
           page={currentPage - 1}
           slot="pagination-prev"
           ariaLabel="上一页"
           disabled={!hasPrev}
           className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-40"
+          hrefForPage={hrefForPage}
         >
           <span aria-hidden="true">‹</span>
-        </Ctrl>
+        </PaginationControl>
         {pages.map((page) => {
           const isCurrent = page === currentPage;
           return (
-            <Ctrl
+            <PaginationControl
               key={page}
               page={page}
               slot="pagination-page"
@@ -126,9 +131,10 @@ export function Pagination({
                     "bg-brand-soft font-semibold text-brand ring-1 ring-inset ring-brand/30"
                   : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
               )}
+              hrefForPage={hrefForPage}
             >
               {page}
-            </Ctrl>
+            </PaginationControl>
           );
         })}
         {showTrailingEllipsis ? (
@@ -136,26 +142,28 @@ export function Pagination({
             <span aria-hidden="true" className="px-1 text-muted-foreground">
               …
             </span>
-            <Ctrl
+            <PaginationControl
               page={totalPages}
               slot="pagination-page"
               current={false}
               ariaLabel={`第 ${totalPages} 页`}
               className="inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-muted-foreground hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              hrefForPage={hrefForPage}
             >
               {totalPages}
-            </Ctrl>
+            </PaginationControl>
           </>
         ) : null}
-        <Ctrl
+        <PaginationControl
           page={currentPage + 1}
           slot="pagination-next"
           ariaLabel="下一页"
           disabled={!hasNext}
           className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-40"
+          hrefForPage={hrefForPage}
         >
           <span aria-hidden="true">›</span>
-        </Ctrl>
+        </PaginationControl>
       </nav>
       <span className="text-xs text-muted-foreground">{perPageLabel}</span>
     </div>

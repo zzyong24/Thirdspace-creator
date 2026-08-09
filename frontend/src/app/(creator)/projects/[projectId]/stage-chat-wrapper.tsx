@@ -63,6 +63,7 @@ export function StageChatWrapper({
   React.useEffect(() => {
     try {
       const v = window.localStorage.getItem(RAIL_WIDTH_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时从 localStorage 同步宽度偏好，SSR 首帧必须保持默认值以避免 hydration mismatch
       if (v) setRailWidth(clampRail(parseInt(v, 10)));
     } catch {
       /* storage 不可用 → 用默认宽(最大 640) */
@@ -107,7 +108,6 @@ export function StageChatWrapper({
     const prev = lastNonceRef.current;
     lastNonceRef.current = nonce;
     if (nonce !== null && nonce !== prev) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- 订阅外部请求 nonce 变化→展开
       setCollapsed(false);
     }
   }, [nonce]);

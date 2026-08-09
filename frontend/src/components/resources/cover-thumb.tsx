@@ -46,6 +46,7 @@ export function CoverThumb({
   React.useEffect(() => {
     if (!assetId) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 外部素材或重试轮次变化时先清旧 URL，避免短暂显示错误封面
     setUrl(null);
     setBroken(false);
     void resolveAssetPreviewUrl(assetId).then((u) => {

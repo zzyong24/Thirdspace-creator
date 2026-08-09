@@ -213,6 +213,7 @@ export function AccountRow({
 
   // 弹窗关闭即清空已输入的确认文字(下次打开须重新键入,防"记忆残留"绕过友情摩擦)。
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 外部弹窗关闭时清除破坏性确认词，防止下次打开复用
     if (!open) setConfirmText("");
   }, [open]);
 

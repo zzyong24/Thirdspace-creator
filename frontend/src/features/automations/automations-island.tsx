@@ -993,6 +993,7 @@ export function CreateJobDialog({
       if (isEdit && job) {
         // 编辑:从被编辑作业预填。频率用 compileCronToCadence 反解;反解失败(null)诚实
         // 降级:编辑器落回缺省值 + 标记 unresolved(UI 提示重选,重选前禁保存)。
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 弹窗由关闭转打开时按外部 job/prefill 快照初始化表单
         setName(job.name);
         setPrompt(job.prompt ?? "");
         const known = SOURCE_META[job.sourceKind as SourceKind];
@@ -1295,6 +1296,7 @@ export function RunDetailDialog({
   // 打开或换作业 → 首读历史 run。
   React.useEffect(() => {
     if (!open || !job) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 切换外部作业时先清除上一作业的运行明细，避免串行展示
     setRuns([]);
     setSelectedRunId(null);
     setSteps([]);

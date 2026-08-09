@@ -30,6 +30,7 @@ export function AssetsToolbarSearch({
   // Keep the input in sync if the URL-driven query changes underneath us
   // (e.g. a type-filter navigation that preserves `q`).
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- URL 是输入框的外部真相源，导航后需同步受控值
     setValue(query);
   }, [query]);
 

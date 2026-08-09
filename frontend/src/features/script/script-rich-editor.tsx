@@ -199,6 +199,7 @@ export function ScriptRichEditor({
   const [wordCount, setWordCount] = React.useState(0);
   // saveStatus 的 ref 镜像 —— flush 闭包读最新态(dirty 才真存,saved 则 no-op)。
   const saveStatusRef = React.useRef<SaveStatus>("saved");
+  // eslint-disable-next-line react-hooks/refs -- latest-value ref 供事件/卸载回调读取，不参与渲染
   saveStatusRef.current = saveStatus;
   // 订阅 editor 的事务,强制工具栏 aria-pressed 随选区刷新。
   const [, forceTick] = React.useReducer((n: number) => n + 1, 0);

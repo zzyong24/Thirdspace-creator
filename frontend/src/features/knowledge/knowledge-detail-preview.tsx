@@ -57,10 +57,12 @@ export function KnowledgeDetailPreview({
 }) {
   const [state, setState] = React.useState<PreviewState>(INITIAL);
   const onContentLoadedRef = React.useRef(onContentLoaded);
+  // eslint-disable-next-line react-hooks/refs -- latest-callback ref 不参与渲染，避免回调身份变化触发重复拉取
   onContentLoadedRef.current = onContentLoaded;
 
   React.useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- knowledgeId 是外部选择，切换时必须立即清除旧预览状态
     setState(INITIAL);
     void (async () => {
       try {
@@ -333,4 +335,3 @@ function LessonProse({ text }: { text: string }) {
     </div>
   );
 }
-

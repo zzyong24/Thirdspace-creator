@@ -60,6 +60,7 @@ export function CalibrationSuggestionsCard() {
   }, []);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载触发异步外部数据加载，状态更新发生在 Promise 回调
     void load();
   }, [load]);
 

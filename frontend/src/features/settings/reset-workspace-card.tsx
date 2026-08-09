@@ -80,6 +80,7 @@ export function ResetWorkspaceCard() {
   >("idle");
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 桌面运行态只能在挂载后的浏览器环境探测，SSR 首帧保持 false
     setIsDesktop(isDesktopRuntimeClient());
   }, []);
 
