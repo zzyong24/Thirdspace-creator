@@ -122,7 +122,12 @@ export function findInstallerArtifacts(bundleDir) {
   return artifacts.sort();
 }
 
-export function findShellBinary({ targetDir, bundleDir, platform }) {
+export function findShellBinary({
+  targetDir,
+  bundleDir,
+  platform,
+  binaryName = "CreatorOS",
+}) {
   if (platform === "darwin") {
     const macosDir = join(bundleDir, "macos");
     if (existsSync(macosDir)) {
@@ -133,7 +138,7 @@ export function findShellBinary({ targetDir, bundleDir, platform }) {
           entry.name,
           "Contents",
           "MacOS",
-          "CreatorOS",
+          binaryName,
         );
         if (existsSync(binary)) return binary;
       }
@@ -141,7 +146,7 @@ export function findShellBinary({ targetDir, bundleDir, platform }) {
   }
   const binary = join(
     targetDir,
-    platform === "win32" ? "CreatorOS.exe" : "CreatorOS",
+    platform === "win32" ? `${binaryName}.exe` : binaryName,
   );
   if (existsSync(binary)) return binary;
   throw new Error(`[T-635] 无法定位 ${platform} CreatorOS 主二进制`);

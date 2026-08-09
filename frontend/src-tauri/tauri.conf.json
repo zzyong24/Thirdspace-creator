@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "CreatorOS",
   "mainBinaryName": "CreatorOS",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "identifier": "cloud.aitongban.creatoros",
   "build": {
     "frontendDist": "./placeholder-dist",

@@ -18,6 +18,10 @@ const verdictGate = readFileSync(
   join(process.cwd(), "src", "server", "verdict-token-gate.ts"),
   "utf8",
 );
+const douyinCdp = readFileSync(
+  join(process.cwd(), "src", "server", "ingestion", "douyin-cdp.ts"),
+  "utf8",
+);
 
 describe("T-535 desktop startup safety contract", () => {
   it("生产 sidecar 不存在构建冒烟旁路，只有非生产开发模式可跳过 token", () => {
@@ -68,6 +72,12 @@ describe("T-535 desktop startup safety contract", () => {
     expect(instrumentation).toContain(
       "process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;",
     );
+    expect(instrumentation).toMatch(
+      /CREATOROS_DESKTOP === "1"[\s\S]*process\.env\.PLAYWRIGHT_BROWSERS_PATH = bundled;/,
+    );
+    expect(instrumentation).not.toMatch(
+      /if \(!process\.env\.PLAYWRIGHT_BROWSERS_PATH\) \{[\s\S]*CREATOROS_BROWSERS_DIR/,
+    );
     expect(rustShell).toContain(
       'const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";',
     );
@@ -78,6 +88,23 @@ describe("T-535 desktop startup safety contract", () => {
     expect(rustShell).toContain("page not found");
     expect(rustShell).toContain("StartupWaitOutcome::Exited(reason)");
     expect(rustShell).toContain("startup_failure_script(");
+  });
+
+  it("T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight", () => {
+    const openContext = douyinCdp.match(
+      /async function openContext\([\s\S]*?\n}\n\nasync function isLoggedIn/,
+    )?.[0];
+    expect(openContext).toBeTruthy();
+    expect(openContext).toContain("launchWithBrowser((selection)");
+    expect(openContext).not.toContain("ensureChromiumInstalled()");
+
+    const ensureChromium = douyinCdp.match(
+      /export async function ensureChromiumInstalled\([\s\S]*?\n}\n\n\/\/ 自起 Chromium/,
+    )?.[0];
+    expect(ensureChromium).toContain('process.env.CREATOROS_DESKTOP === "1"');
+    expect(ensureChromium?.indexOf("BrowserRuntimeUnavailableError")).toBeLessThan(
+      ensureChromium?.indexOf("locatePlaywrightCli") ?? -1,
+    );
   });
 
   it("uses a packaged splash document instead of racing JavaScript against about:blank", () => {

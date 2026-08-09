@@ -7,6 +7,7 @@ describe("T-640 macOS 公证凭据", () => {
     const cfg = notarizeConfig(
       {
         APPLE_NOTARY_KEYCHAIN_PROFILE: "CreatorOS-Notary",
+        APPLE_NOTARY_KEYCHAIN_PATH: "/tmp/creatoros-ci.keychain-db",
         APPLE_ID: "legacy@example.com",
         APPLE_TEAM_ID: "TEAM123",
         APPLE_APP_PASSWORD: "must-not-leak",
@@ -18,6 +19,7 @@ describe("T-640 macOS 公证凭据", () => {
       configured: true,
       method: "keychain-profile",
       keychainProfile: "CreatorOS-Notary",
+      keychainPath: "/tmp/creatoros-ci.keychain-db",
     });
     const args = notarytoolSubmitArgs("CreatorOS.dmg", cfg);
     expect(args).toEqual([
@@ -26,9 +28,26 @@ describe("T-640 macOS 公证凭据", () => {
       "CreatorOS.dmg",
       "--keychain-profile",
       "CreatorOS-Notary",
+      "--keychain",
+      "/tmp/creatoros-ci.keychain-db",
       "--wait",
     ]);
     expect(args.join(" ")).not.toContain("must-not-leak");
+  });
+
+  it("本机登录钥匙串 profile 未指定路径时保持原有调用", () => {
+    const cfg = notarizeConfig(
+      { APPLE_NOTARY_KEYCHAIN_PROFILE: "CreatorOS-Notary" },
+      "darwin",
+    );
+    expect(notarytoolSubmitArgs("CreatorOS.dmg", cfg)).toEqual([
+      "notarytool",
+      "submit",
+      "CreatorOS.dmg",
+      "--keychain-profile",
+      "CreatorOS-Notary",
+      "--wait",
+    ]);
   });
 
   it("继续兼容 Apple ID + app-specific password", () => {

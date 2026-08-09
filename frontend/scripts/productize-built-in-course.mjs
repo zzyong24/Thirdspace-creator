@@ -254,8 +254,10 @@ function productizeCopy(value) {
     [/不像老师的老师/g, "不像传统教师的教师"],
     [/老师范/g, "讲授感"],
     [/老师训话/g, "居高临下的训话"],
-    [/交给老师\/AI/g, "交给 CreatorOS 或同行"],
-    [/老师\/AI/g, "CreatorOS 或同行"],
+    [/交给 CreatorOS 或同行/g, "交给同行或目标用户"],
+    [/CreatorOS 或同行/g, "同行或目标用户"],
+    [/交给老师\/AI/g, "交给同行或目标用户"],
+    [/老师\/AI/g, "同行或目标用户"],
     [/老师我是一农村宝妈/g, "我是一名农村宝妈"],
     [/为什么老师/g, "为什么"],
     [/老师为什么/g, "为什么"],
@@ -694,7 +696,7 @@ async function main() {
     module.title = MODULE_TITLES.get(module.id) ?? module.title;
   }
 
-  manifest.title = "CreatorOS IP 创作实战课";
+  manifest.title = "创作实战课";
   manifest.subtitle = "22 讲走通定位、选题、脚本、拍摄、运营与变现";
   manifest.description =
     "从商业定位出发，把选题、素材、表达、拍摄和变现接成一条能反复练习的创作路径。";
@@ -705,7 +707,7 @@ async function main() {
       manifest.source.originalPackageSha256 ?? manifest.source.packageSha256,
     packageSha256: sha256(`${packageLines.join("\n")}\n`),
     editorialVersion: "creatoros-course-copy/v2",
-    attribution: "基于已获授权的短视频实战课程整理，并由 CreatorOS 方法论知识库完成产品化编辑。",
+    attribution: "基于已获授权的短视频实战课程整理，并结合实战方法论完成产品化编辑。",
     editorialSources: [
       "七步做自媒体完整体系",
       "3 个月合格博主学习方案",

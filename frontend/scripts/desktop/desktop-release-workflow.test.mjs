@@ -8,7 +8,7 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
-  it("桌面版本权威统一为 0.3.0，且不直接覆盖公共更新清单", () => {
+  it("桌面版本权威统一为 1.0.0，且不直接覆盖公共更新清单", () => {
     const frontendPackage = JSON.parse(
       readFileSync(join(process.cwd(), "package.json"), "utf8"),
     );
@@ -19,9 +19,16 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "Cargo.toml"),
       "utf8",
     );
-    expect(frontendPackage.version).toBe("0.3.0");
-    expect(tauriConfig.version).toBe("0.3.0");
-    expect(cargoToml).toContain('version = "0.3.0"');
+    const cargoLock = readFileSync(
+      join(process.cwd(), "src-tauri", "Cargo.lock"),
+      "utf8",
+    );
+    expect(frontendPackage.version).toBe("1.0.0");
+    expect(tauriConfig.version).toBe("1.0.0");
+    expect(cargoToml).toContain('version = "1.0.0"');
+    expect(cargoLock).toMatch(
+      /name = "creatoros-desktop"\nversion = "1\.0\.0"/,
+    );
     expect(workflow).not.toContain("sites/creatoros/updates/latest.json");
   });
 
@@ -119,6 +126,12 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     }
     expect(shellSource).not.toContain(
       "NEXT_PUBLIC_CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64",
+    );
+    expect(workflow).toMatch(
+      /name:\s*打包\(release\.mjs 全链\)[\s\S]*?CREATOROS_CLIENT_CONFIG_PULL_ENABLED:\s*"1"[\s\S]*?CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64:\s*\$\{\{ secrets\.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 \}\}[\s\S]*?CREATOROS_GROWTH_CONFIG_KEY_ID:\s*\$\{\{ vars\.CREATOROS_GROWTH_CONFIG_KEY_ID \}\}/,
+    );
+    expect(workflow).toMatch(
+      /name:\s*构建真实 NSIS 候选包（不发布）[\s\S]*?CREATOROS_CLIENT_CONFIG_PULL_ENABLED:\s*"1"[\s\S]*?CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN:\s*"https:\/\/growth\.aitongban\.cloud"[\s\S]*?CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64:\s*\$\{\{ secrets\.CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 \}\}[\s\S]*?CREATOROS_GROWTH_CONFIG_KEY_ID:\s*\$\{\{ vars\.CREATOROS_GROWTH_CONFIG_KEY_ID \}\}/,
     );
   });
 
@@ -233,9 +246,10 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
   it("缓存键隔离平台、架构、Node ABI 和所有 runtime 输入", () => {
     expect(workflow).toContain("${{ runner.os }}");
     expect(workflow).toContain("${{ runner.arch }}");
-    expect(workflow).toContain("creatoros-runtime-v2-");
+    expect(workflow).toContain("creatoros-runtime-v3-");
     expect(workflow).toContain("steps.runtime-inputs.outputs.fingerprint");
     expect(workflow).toContain("steps.runtime-inputs.outputs.pubkey");
+    expect(workflow).toContain("steps.mac-signing.outputs.certificate_fingerprint");
     expect(workflow).toContain("process.versions.v8");
     expect(workflow).toContain("process.versions.modules");
     expect(workflow).not.toContain("CREATOROS_VERDICT_KEY_VERSION");
@@ -341,6 +355,75 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow.indexOf("actions/upload-artifact@v4")).toBeLessThan(
       workflow.indexOf("Windows 安装后真启动与主页面加载冒烟(T-562)"),
     );
+  });
+
+  it("macOS 按用户机语义回放 sidecar 归档，真启动通过后才允许上传", () => {
+    const archiveGate = workflow.indexOf(
+      "macOS sidecar 可搬运归档与解压后签名门(T-705)",
+    );
+    const startupGate = workflow.indexOf(
+      "macOS 真启动与主页面加载冒烟(T-663)",
+    );
+    const uploadGate = workflow.indexOf(
+      "上传已通过 T-705 真启动验证的 macOS 安装包",
+    );
+    expect(archiveGate).toBeGreaterThan(-1);
+    expect(startupGate).toBeGreaterThan(archiveGate);
+    expect(uploadGate).toBeGreaterThan(startupGate);
+    expect(workflow).toContain("COPYFILE_DISABLE=1 tar -tzf");
+    expect(workflow).toContain("COPYFILE_DISABLE=1 tar -xzf");
+    expect(workflow).toContain(
+      'codesign --verify --deep --strict --verbose=2 "$replay/server.app"',
+    );
+    expect(workflow).toContain(
+      'runtime_root="$HOME/Library/Application Support/cloud.aitongban.creatoros/runtime"',
+    );
+    expect(workflow).toContain(
+      'codesign --verify --deep --strict --verbose=2 "$extracted_app"',
+    );
+    expect(workflow).toContain("runner.os == 'macOS' && success()");
+  });
+
+  it("macOS 正式 job 从 Secrets 建一次性钥匙串，签名公证验收后清理", () => {
+    const credentialStep = workflow.indexOf(
+      "导入 macOS Developer ID 与公证凭据(T-709)",
+    );
+    const releaseStep = workflow.indexOf("打包(release.mjs 全链)");
+    const trustGate = workflow.indexOf(
+      "macOS Developer ID、公证与 Gatekeeper 门(T-709)",
+    );
+    const uploadGate = workflow.indexOf(
+      "上传已通过 T-705 真启动验证的 macOS 安装包",
+    );
+    const cleanupStep = workflow.indexOf(
+      "清理 macOS 一次性签名钥匙串(T-709)",
+    );
+    expect(credentialStep).toBeGreaterThan(-1);
+    expect(releaseStep).toBeGreaterThan(credentialStep);
+    expect(trustGate).toBeGreaterThan(releaseStep);
+    expect(uploadGate).toBeGreaterThan(trustGate);
+    expect(cleanupStep).toBeGreaterThan(uploadGate);
+    for (const secret of [
+      "secrets.APPLE_CERTIFICATE_P12_B64",
+      "secrets.APPLE_CERTIFICATE_PASSWORD",
+      "secrets.APPLE_ID",
+      "secrets.APPLE_APP_PASSWORD",
+    ]) {
+      expect(workflow).toContain(secret);
+    }
+    expect(workflow).toContain("vars.APPLE_TEAM_ID");
+    expect(workflow).toContain("vars.APPLE_SIGNING_IDENTITY");
+    expect(workflow).toContain("security import");
+    expect(workflow).toContain("security set-key-partition-list");
+    expect(workflow).toContain("notarytool store-credentials");
+    expect(workflow).toContain("APPLE_NOTARY_KEYCHAIN_PATH");
+    expect(workflow).toContain(".codesign.signed == true");
+    expect(workflow).toContain(".notarize.notarized == true");
+    expect(workflow).toContain('xcrun stapler validate "$dmg"');
+    expect(workflow).toContain("spctl -a -vv -t open");
+    expect(workflow).toContain("spctl -a -vv -t exec");
+    expect(workflow).toContain("security delete-keychain");
+    expect(workflow).not.toContain("must-not-leak");
   });
 
   it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，通过后才上传 setup", () => {

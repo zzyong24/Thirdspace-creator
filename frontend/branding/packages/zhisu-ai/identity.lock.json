@@ -1,0 +1,12 @@
+{
+  "schema": "creatoros-package-identity-lock/v1",
+  "packageRef": "zhisu-ai",
+  "appIdentifier": "com.zhisunet.zhisuai",
+  "keychainService": "com.zhisunet.zhisuai.desktop",
+  "windowsUpgradeCode": "249CE044-BB7E-4AC3-9D98-4BE1BD4AD818",
+  "releaseTrustRootKeyId": "creatoros-update-root-20260805-01",
+  "releaseTrustRootSha256": "54f51d62d88b4bf429acef9a21d869a9a0957e1695d79938c00bff7e869f8a4c",
+  "confirmedAt": "2026-08-07",
+  "confirmationSource": "user: OK，你构建一下，你试试。"
+}
+

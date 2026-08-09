@@ -1,0 +1,11 @@
+{
+  "status": "confirmed",
+  "packageRef": "zhisu-ai",
+  "displayName": "智溯AI",
+  "binaryName": "ZhisuAI",
+  "appIdentifier": "com.zhisunet.zhisuai",
+  "keychainService": "com.zhisunet.zhisuai.desktop",
+  "windowsUpgradeCode": "249CE044-BB7E-4AC3-9D98-4BE1BD4AD818",
+  "target": "macos-aarch64",
+  "confirmedAt": "2026-08-07"
+}

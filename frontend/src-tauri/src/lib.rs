@@ -75,7 +75,7 @@ use tauri_plugin_shell::ShellExt;
 /// T-147 P2 本地加密 —— master key 在 OS keychain 里的服务名/账号。keyring 用这对
 /// (service, user) 定位条目(macOS Keychain / Windows Credential Manager / Linux
 /// Secret Service 各自的原生存储)。
-const KEYCHAIN_SERVICE: &str = "com.creatoros.desktop";
+const KEYCHAIN_SERVICE: &str = env!("CREATOROS_BUILTIN_KEYCHAIN_SERVICE");
 const KEYCHAIN_KEY_NAME: &str = "master-key";
 
 // [T-181] Skill 远程下发(prompt-bundle):sidecar 的 remote-prompt-bundle.ts 拉签名 bundle.json
@@ -629,8 +629,7 @@ fn wait_until_ready(
                 StartupSignal::Exited(reason) => exit_reason = Some(reason),
             }
         }
-        let rendered_page_ready =
-            instrumentation_verified && probe_sidecar_rendered_page(port);
+        let rendered_page_ready = instrumentation_verified && probe_sidecar_rendered_page(port);
         let outcome = classify_startup_probe(
             rendered_page_ready,
             instrumentation_verified,
@@ -802,17 +801,62 @@ fn verify_direct_sidecar_dir_with_hash(
             render(&layered_missing)
         ));
     }
+    let legacy_browser_ready =
+        legacy_missing.is_empty() && contains_browser_executable(&frontend.join("browsers"));
+    let layered_browser_ready = layered_missing.is_empty()
+        && contains_browser_executable(&dir.join("layers").join("browser").join("browsers"));
+    if !legacy_browser_ready && !layered_browser_ready {
+        return Err(
+            "Windows 安装目录中的内置浏览器可执行文件缺失。请重新安装 CreatorOS。".to_string(),
+        );
+    }
     verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
+}
+
+#[cfg(any(windows, test))]
+fn contains_browser_executable(root: &std::path::Path) -> bool {
+    if !root.is_dir() {
+        return false;
+    }
+    let mut pending = vec![root.to_path_buf()];
+    let mut visited = 0usize;
+    while let Some(dir) = pending.pop() {
+        visited += 1;
+        if visited > 4_096 {
+            return false;
+        }
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return false;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
+            if file_type.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if !file_type.is_file() {
+                continue;
+            }
+            let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
+            if name == "chrome.exe" || name == "chrome-headless-shell.exe" {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// [T-487] 读取 Windows 安装期写入的 runtime 指针。指针只允许构建生成的安全 ID，
 /// 禁止路径分隔符和 `..`，避免安装目录中的文本文件把运行路径引到目录外。
 #[cfg(any(windows, test))]
 fn resolve_installed_runtime_with_hash(
-    install_dir: &std::path::Path,
+    data_root: &std::path::Path,
     expected_entry_hash: &str,
 ) -> Result<Option<PathBuf>, String> {
-    let runtime_root = install_dir.join("runtime-images");
+    let runtime_root = data_root.join("runtime-images");
     let resolve_pointer = |name: &str| -> Result<Option<PathBuf>, String> {
         let pointer = runtime_root.join(name);
         if !pointer.is_file() {
@@ -838,6 +882,73 @@ fn resolve_installed_runtime_with_hash(
     };
 
     resolve_pointer("runtime-current.txt")
+}
+
+#[cfg(any(windows, test))]
+fn copy_runtime_tree(source: &std::path::Path, dest: &std::path::Path) -> Result<(), String> {
+    std::fs::create_dir_all(dest).map_err(|e| format!("创建 runtime 迁移目录失败: {e}"))?;
+    for entry in std::fs::read_dir(source).map_err(|e| format!("读取旧 runtime 失败: {e}"))? {
+        let entry = entry.map_err(|e| format!("读取旧 runtime 条目失败: {e}"))?;
+        let kind = entry
+            .file_type()
+            .map_err(|e| format!("读取 runtime 类型失败: {e}"))?;
+        let target = dest.join(entry.file_name());
+        if kind.is_symlink() {
+            return Err("runtime 迁移拒绝符号链接".to_string());
+        }
+        if kind.is_dir() {
+            copy_runtime_tree(&entry.path(), &target)?;
+        } else if kind.is_file() {
+            std::fs::copy(entry.path(), target)
+                .map_err(|e| format!("复制 runtime 文件失败: {e}"))?;
+        } else {
+            return Err("runtime 迁移拒绝设备文件".to_string());
+        }
+    }
+    Ok(())
+}
+
+/// T-694: 把旧 NSIS 安装目录 runtime 安全迁到包级 appDataDir。旧目录仅在新目录完整
+/// 落盘且 current 指针可解析后删除；中断时继续保留旧副本。
+#[cfg(any(windows, test))]
+fn migrate_windows_runtime_to_app_data(
+    install_dir: &std::path::Path,
+    app_data_dir: &std::path::Path,
+    expected_entry_hash: &str,
+) -> Result<(), String> {
+    let legacy = install_dir.join("runtime-images");
+    let current = app_data_dir.join("runtime-images");
+    if current.exists() || !legacy.exists() {
+        return Ok(());
+    }
+    std::fs::create_dir_all(app_data_dir).map_err(|e| format!("创建 appDataDir 失败: {e}"))?;
+    let staging = app_data_dir.join(format!(".runtime-images-migration-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&staging);
+    copy_runtime_tree(&legacy, &staging)?;
+    let runtime_id = std::fs::read_to_string(staging.join("runtime-current.txt"))
+        .map_err(|e| format!("迁移副本缺 current 指针: {e}"))?;
+    let runtime_id = runtime_id.trim();
+    if runtime_id.is_empty()
+        || runtime_id == "."
+        || runtime_id == ".."
+        || !runtime_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+    {
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err("迁移副本 current 指针非法".to_string());
+    }
+    verify_direct_sidecar_dir_with_hash(
+        &staging.join(runtime_id).join("sidecar"),
+        expected_entry_hash,
+    )
+    .inspect_err(|_| {
+        let _ = std::fs::remove_dir_all(&staging);
+    })?;
+    std::fs::rename(&staging, &current).map_err(|e| format!("提交 runtime 迁移失败: {e}"))?;
+    std::fs::remove_dir_all(&legacy)
+        .map_err(|e| format!("新 runtime 已可用，但清理旧安装目录失败: {e}"))?;
+    Ok(())
 }
 
 /// [T-487] NSIS 安装期事务：校验 bundle tar → 同盘 staging 解压 → 校验入口与关键结构
@@ -1335,18 +1446,25 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     {
         if let Ok(exe) = std::env::current_exe() {
             if let Some(install_dir) = exe.parent() {
-                match resolve_installed_runtime_with_hash(
+                let data_dir = app
+                    .path()
+                    .app_data_dir()
+                    .map_err(|e| format!("appDataDir 不可用: {e}"))?;
+                migrate_windows_runtime_to_app_data(
                     install_dir,
+                    &data_dir,
+                    env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+                )?;
+                match resolve_installed_runtime_with_hash(
+                    &data_dir,
                     env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
                 ) {
                     Ok(Some(dest)) => {
                         let machine_id = resolve_machine_id(app).unwrap_or_default();
                         integrity_sample_verify(&dest, &machine_id)?;
-                        if let Ok(data_dir) = app.path().app_data_dir() {
-                            let _ = cleanup_legacy_runtime_root(&data_dir);
-                        }
+                        let _ = cleanup_legacy_runtime_root(&data_dir);
                         eprintln!(
-                            "[shell] Windows 使用安装期 runtime（首次启动零解压）→ {}",
+                            "[shell] Windows 使用包级 appDataDir runtime → {}",
                             dest.display()
                         );
                         return Ok(dest);
@@ -1571,7 +1689,19 @@ pub fn run() {
     // [T-399b] 强制蜜罐门符号+明文 bait 进最终二进制(Tauri rlib 结构下 #[used] 不够,见 decoy_gate.rs)。
     //   只取诱饵函数地址做 XOR、不调用其逻辑 → 零执行/零功能影响;black_box 防优化掉。
     std::hint::black_box(decoy_gate::decoy_gate_keepalive());
-    tauri::Builder::default()
+    let app_builder = tauri::Builder::default();
+    #[cfg(target_os = "macos")]
+    let app_builder = app_builder.on_web_content_process_terminate(|webview| {
+        let current_url = webview
+            .url()
+            .map(|url| url.to_string())
+            .unwrap_or_else(|error| format!("<url unavailable: {error}>"));
+        eprintln!(
+            "[CreatorOS] WEB_CONTENT_PROCESS_TERMINATED label={} url={current_url}",
+            webview.label()
+        );
+    });
+    app_builder
         // [T-446] 官方要求 single-instance 必须第一个注册。用户重复点击时第二进程立即退出，
         // 已有窗口存在则恢复并聚焦；即使首实例仍在 setup，也不会再跑第二份启动链。
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -1627,13 +1757,17 @@ pub fn run() {
                 "main",
                 WebviewUrl::App("index.html".into()),
             )
-            .title("CreatorOS")
+            .title(product_identity::package_display_name())
             .inner_size(1440.0, 900.0)
             .min_inner_size(1024.0, 680.0)
             // Tauri 默认原生 drag-drop handler 会先于 WebView 截获 Finder/Explorer 文件，
             // React 的 onDrop 因而在真包完全收不到事件。禁用壳层拦截后，知识蒸馏和项目
             // 素材区统一走已有 HTML5 DataTransfer 上传链；窗口本身不消费文件路径。
             .disable_drag_drop_handler()
+            .on_navigation(|url| {
+                eprintln!("[CreatorOS] MAIN_NAVIGATION_REQUEST {url}");
+                true
+            })
             .initialization_script(&init_script);
             // Wry 会通过 CoreWebView2EnvironmentOptions 显式写入自己的默认参数，Windows
             // WebView2 的同名环境变量因此不会自动生效。显式合并官方变量，供真包 RAT 打开
@@ -2603,6 +2737,14 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            root.join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(root.join("layers").join("media").join("bin")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
@@ -2623,6 +2765,24 @@ mod runtime_cleanup_tests {
         let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
         assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_ok());
         std::fs::remove_file(
+            root.join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+        )
+        .unwrap();
+        let browser_error =
+            super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).unwrap_err();
+        assert!(browser_error.contains("浏览器可执行文件"));
+        std::fs::write(
+            root.join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
+        std::fs::remove_file(
             root.join("backend")
                 .join("drizzle")
                 .join("meta")
@@ -2640,6 +2800,11 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(root.join("frontend").join("node_modules")).unwrap();
         std::fs::create_dir_all(root.join("frontend").join("bin")).unwrap();
         std::fs::create_dir_all(root.join("frontend").join("browsers")).unwrap();
+        std::fs::write(
+            root.join("frontend").join("browsers").join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
         std::fs::write(root.join("frontend").join("server.js"), "hello").unwrap();
         std::fs::write(
@@ -2671,6 +2836,15 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            sidecar
+                .join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("media").join("bin")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
@@ -2705,6 +2879,72 @@ mod runtime_cleanup_tests {
             Some(sidecar)
         );
         let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn windows_旧安装目录_runtime_迁到_app_data_后才删除旧副本() {
+        let install_dir = temp_runtime_root("runtime-migrate-install");
+        let app_data = temp_runtime_root("runtime-migrate-appdata");
+        let sidecar = install_dir
+            .join("runtime-images")
+            .join("0.3.0-abc")
+            .join("sidecar");
+        std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            sidecar
+                .join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("media").join("bin")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("local-ai").join("vendor")).unwrap();
+        std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
+        std::fs::write(sidecar.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            sidecar
+                .join("frontend")
+                .join("creatoros-module-resolver.cjs"),
+            "module.exports={}",
+        )
+        .unwrap();
+        std::fs::write(
+            sidecar
+                .join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+            "{}",
+        )
+        .unwrap();
+        std::fs::write(
+            install_dir
+                .join("runtime-images")
+                .join("runtime-current.txt"),
+            "0.3.0-abc\n",
+        )
+        .unwrap();
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+        super::migrate_windows_runtime_to_app_data(&install_dir, &app_data, hello_sha).unwrap();
+
+        assert!(!install_dir.join("runtime-images").exists());
+        assert!(app_data
+            .join("runtime-images")
+            .join("0.3.0-abc")
+            .join("sidecar")
+            .exists());
+        assert!(
+            super::resolve_installed_runtime_with_hash(&app_data, hello_sha)
+                .unwrap()
+                .is_some()
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+        let _ = std::fs::remove_dir_all(&app_data);
     }
 
     #[test]

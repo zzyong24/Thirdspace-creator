@@ -28,6 +28,7 @@ const BUNDLE_DIR = join(
 export function notarizeConfig(env = process.env, plat = platform) {
   if (plat !== "darwin") return { platform: plat, applicable: false, configured: false };
   const keychainProfile = env.APPLE_NOTARY_KEYCHAIN_PROFILE?.trim();
+  const keychainPath = env.APPLE_NOTARY_KEYCHAIN_PATH?.trim();
   const appleId = env.APPLE_ID;
   const teamId = env.APPLE_TEAM_ID;
   const appPassword = env.APPLE_APP_PASSWORD;
@@ -38,6 +39,7 @@ export function notarizeConfig(env = process.env, plat = platform) {
       configured: true,
       method: "keychain-profile",
       keychainProfile,
+      keychainPath: keychainPath || null,
       appleId: null,
       teamId: null,
       appPassword: null,
@@ -49,6 +51,7 @@ export function notarizeConfig(env = process.env, plat = platform) {
     configured: Boolean(appleId && teamId && appPassword),
     method: "apple-id",
     keychainProfile: null,
+    keychainPath: null,
     appleId: appleId ?? null,
     teamId: teamId ?? null,
     appPassword: appPassword ?? null,
@@ -60,6 +63,7 @@ export function notarytoolSubmitArgs(artifact, cfg) {
   const args = ["notarytool", "submit", artifact];
   if (cfg.method === "keychain-profile") {
     args.push("--keychain-profile", cfg.keychainProfile);
+    if (cfg.keychainPath) args.push("--keychain", cfg.keychainPath);
   } else {
     args.push(
       "--apple-id", cfg.appleId,

@@ -27,13 +27,13 @@
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { platform, arch } from "node:process";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 // [T-326/T-485] 静态 ffmpeg+ffprobe 拉取(缓存 + GitHub release 下载 + 冒烟)并实拷进 sidecar。
 import { ensureFfmpegStatic, ensureFfprobeStatic } from "./fetch-ffmpeg.mjs";
 // [T-372 W2] Playwright 浏览器缓存根目录按平台映射(mac/win/linux;纯函数,平台分支可单测)。
@@ -126,6 +126,107 @@ export function assertNoPackagedBuildArtifacts(runtimeRoot) {
     throw new Error(
       `[build-sidecar] [T-487] 拒绝递归打包壳构建产物：${forbidden.slice(0, 8).join(", ")}`,
     );
+  }
+}
+
+/** macOS copyfile/bsdtar 会把 xattr 编成 `._*` AppleDouble 条目；Rust tar 解压后这些条目
+ * 会变成 signed `server.app` 内的新增文件，AMFI 随即用 SIGKILL 拦截 sidecar。 */
+export function portableTarEnv(baseEnv = process.env, targetPlatform = platform) {
+  return targetPlatform === "darwin"
+    ? { ...baseEnv, COPYFILE_DISABLE: "1" }
+    : { ...baseEnv };
+}
+
+function collectPortableMetadataFiles(root) {
+  const found = [];
+  const visit = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      const rel = relative(root, path).replaceAll("\\", "/");
+      let stat;
+      try {
+        stat = lstatSync(path);
+      } catch {
+        continue;
+      }
+      if (name === ".DS_Store" || name.startsWith("._")) {
+        found.push(rel);
+        continue;
+      }
+      if (stat.isDirectory() && !stat.isSymbolicLink()) visit(path);
+    }
+  };
+  visit(root);
+  return found;
+}
+
+export function prunePortableMetadataFiles(root) {
+  const found = collectPortableMetadataFiles(root);
+  for (const rel of found) rmSync(join(root, rel), { recursive: true, force: true });
+  return found;
+}
+
+export function assertNoPortableMetadataFiles(root) {
+  const found = collectPortableMetadataFiles(root);
+  if (found.length > 0) {
+    throw new Error(
+      `[build-sidecar] 拒绝把 macOS AppleDouble/Finder 元数据打进 runtime：${found.slice(0, 12).join(", ")}`,
+    );
+  }
+}
+
+export function assertNoAppleDoubleTarEntries(tarball, tarBin = "tar") {
+  // COPYFILE_DISABLE=1 对“读取”同样重要：否则 macOS bsdtar 会把 `._*` 当 xattr 隐藏，
+  // 普通 `tar -tzf` 看起来是干净的，Rust tar 却会把它们真实展开。
+  const listed = spawnSync(tarBin, ["-tzf", tarball], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+    env: portableTarEnv(process.env, "darwin"),
+  });
+  if (listed.status !== 0) {
+    throw new Error(
+      `[build-sidecar] 无法校验 sidecar.tar.gz AppleDouble 条目(exit ${listed.status ?? "null"})\n${listed.stderr ?? ""}`,
+    );
+  }
+  const bad = listed.stdout
+    .split("\n")
+    .map((entry) => entry.replace(/^\.\//, ""))
+    .filter((entry) => entry && entry.split("/").some((part) => part === ".DS_Store" || part.startsWith("._")));
+  if (bad.length > 0) {
+    throw new Error(
+      `[build-sidecar] sidecar.tar.gz 含 AppleDouble/Finder 条目，解压后会破坏签名：${bad.slice(0, 12).join(", ")}`,
+    );
+  }
+}
+
+function verifyMacSidecarSignatureAfterTar(tarball, tarBin) {
+  if (platform !== "darwin") return;
+  const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-signature-"));
+  try {
+    // 用 COPYFILE_DISABLE=1 模拟 Rust tar：AppleDouble 不会被“聪明地”还原成 xattr，
+    // 而会像用户机一样成为真实文件；只解 server.app，门禁成本很低。
+    const extracted = spawnSync(
+      tarBin,
+      ["-xzf", tarball, "-C", root, "./server.app"],
+      { encoding: "utf8", env: portableTarEnv(process.env, "darwin") },
+    );
+    if (extracted.status !== 0) {
+      throw new Error(
+        `[build-sidecar] 无法回放解压 server.app(exit ${extracted.status ?? "null"})\n${extracted.stderr ?? ""}`,
+      );
+    }
+    const app = join(root, "server.app");
+    const verified = spawnSync("codesign", ["--verify", "--deep", "--strict", "--verbose=2", app], {
+      encoding: "utf8",
+    });
+    if (verified.status !== 0) {
+      throw new Error(
+        `[build-sidecar] tar 解压后的 server.app 签名失效；拒绝出包\n${verified.stderr ?? verified.stdout ?? ""}`,
+      );
+    }
+    console.log("[build-sidecar]   ✓ tar 回放：解压后的 server.app 仍通过 codesign --deep --strict");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 }
 
@@ -332,6 +433,13 @@ export function shouldPackSidecarTarball(_targetPlatform = platform) {
 
 function packSidecarTarball() {
   assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
+  const prunedPortableMetadata = prunePortableMetadataFiles(SIDECAR_RUNTIME);
+  if (prunedPortableMetadata.length > 0) {
+    console.log(
+      `[build-sidecar]   ✂ tar 前删除 ${prunedPortableMetadata.length} 个 AppleDouble/.DS_Store 元数据文件`,
+    );
+  }
+  assertNoPortableMetadataFiles(SIDECAR_RUNTIME);
   // [T-441] 打包前最后一道闸(两个调用点都覆盖):清掉指向构建机的 symlink。
   fixOutOfTreeSymlinks();
   const tarball = join(SRC_TAURI, "sidecar.tar.gz");
@@ -371,8 +479,13 @@ function packSidecarTarball() {
     platform === "win32"
       ? join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe")
       : "tar";
-  const r = spawnSync(tarBin, ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], { stdio: "inherit" });
+  const r = spawnSync(tarBin, ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], {
+    stdio: "inherit",
+    env: portableTarEnv(process.env),
+  });
   if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);
+  assertNoAppleDoubleTarEntries(tarball, tarBin);
+  verifyMacSidecarSignatureAfterTar(tarball, tarBin);
   console.log(`[build-sidecar]   → ${tarball}`);
 }
 
@@ -899,6 +1012,123 @@ export function materializeHoistedEntryClosure(
     }
   }
   return { closure, hoisted, nested };
+}
+
+// Next 对 serverExternalPackages 只追踪「本次构建实际看见的入口」。pdf-parse 在运行时还会
+// 动态加载 @napi-rs/canvas 及平台原生包；开发机 node_modules 完整时不会暴露问题，但 standalone
+// 可能只留下 pdf-parse 的 JS，安装包读 PDF 才报模块/原生 binding 缺失。这里从 pnpm 的真实依赖
+// 图补齐整个闭包，并给 sidecar/frontend 建立 Node 可解析的顶层锚点。不是按版本硬编码文件名，
+// 依赖升级后仍从 package.json 真身识别。
+export function findPnpmEntryForPackage(srcPnpm, packageName) {
+  if (!existsSync(srcPnpm)) return null;
+  for (const entry of readdirSync(srcPnpm)) {
+    try {
+      if (resolveEntryPackage(srcPnpm, entry).name === packageName) return entry;
+    } catch {
+      // .pnpm 中允许存在 lock/元数据目录；它们不是包 entry，跳过即可。
+    }
+  }
+  return null;
+}
+
+export function materializeRuntimePackageClosure({
+  srcPnpm,
+  runtimeRoot,
+  packageName,
+  targetPlatform = platform,
+}) {
+  const rootEntry = findPnpmEntryForPackage(srcPnpm, packageName);
+  if (!rootEntry) {
+    throw new Error(`[build-sidecar] 源 .pnpm 缺 ${packageName}，无法补齐桌面运行时依赖`);
+  }
+
+  const frontendNodeModules = join(runtimeRoot, "frontend", "node_modules");
+  mkdirSync(frontendNodeModules, { recursive: true });
+  if (targetPlatform === "win32") {
+    return {
+      rootEntry,
+      ...materializeHoistedEntryClosure(srcPnpm, [rootEntry], frontendNodeModules),
+    };
+  }
+
+  const destPnpm = join(runtimeRoot, "node_modules", ".pnpm");
+  mkdirSync(destPnpm, { recursive: true });
+  const closure = copyPnpmClosureVerbatim(srcPnpm, destPnpm, [rootEntry]);
+  // 不只锚定根包。pdf-parse 的运行时会动态 import @napi-rs/canvas，而 canvas
+  // 又会动态加载目标平台的原生包；这些动态依赖不会沿静态 import trace 自动获得
+  // frontend/node_modules 顶层入口。为整个闭包建立相对 symlink，既保留 pnpm 的
+  // 单份真身，也保证 standalone 里的任一动态 import 都能按 Node 规则解析。
+  for (const entry of closure) {
+    const entryPackage = resolveEntryPackage(destPnpm, entry);
+    const anchor = join(
+      frontendNodeModules,
+      ...entryPackage.name.split("/"),
+    );
+    rmSync(anchor, { recursive: true, force: true });
+    mkdirSync(dirname(anchor), { recursive: true });
+    symlinkSync(relative(dirname(anchor), entryPackage.dir), anchor, "dir");
+  }
+  return { rootEntry, closure };
+}
+
+export function canvasNativePackageFor(
+  targetPlatform = platform,
+  targetArch = arch,
+) {
+  const key = `${targetPlatform}-${targetArch}`;
+  return {
+    "darwin-arm64": "@napi-rs/canvas-darwin-arm64",
+    "darwin-x64": "@napi-rs/canvas-darwin-x64",
+    "win32-x64": "@napi-rs/canvas-win32-x64-msvc",
+    "linux-x64": "@napi-rs/canvas-linux-x64-gnu",
+    "linux-arm64": "@napi-rs/canvas-linux-arm64-gnu",
+  }[key] ?? null;
+}
+
+function bundlePdfAttachmentRuntime() {
+  console.log(
+    "[build-sidecar] 补齐 PDF/Word 附件解析运行时(pdf-parse → canvas 原生闭包)…",
+  );
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  const result = materializeRuntimePackageClosure({
+    srcPnpm,
+    runtimeRoot: SIDECAR_RUNTIME,
+    packageName: "pdf-parse",
+    targetPlatform: platform,
+  });
+  const nativePackage = canvasNativePackageFor(platform, arch);
+  if (!nativePackage) {
+    throw new Error(
+      `[build-sidecar] @napi-rs/canvas 暂未声明 ${platform}/${arch} 的随包原生闭包`,
+    );
+  }
+
+  const frontendNodeModules = join(SIDECAR_RUNTIME, "frontend", "node_modules");
+  for (const packageName of ["pdf-parse", "@napi-rs/canvas", nativePackage]) {
+    const packageJson = join(frontendNodeModules, ...packageName.split("/"), "package.json");
+    if (!existsSync(packageJson)) {
+      throw new Error(`[build-sidecar] PDF 运行时闭包缺 ${packageName}/package.json`);
+    }
+  }
+
+  // 真 import，而不是只看文件存在：会连带加载平台 .node binding。缺原生包时构建当场失败，
+  // 不把“开发环境能读 PDF、安装包不能读”的假绿包交给用户。
+  const probe = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      "await import('pdf-parse'); await import('@napi-rs/canvas'); process.stdout.write('PDF-RUNTIME-OK')",
+    ],
+    { cwd: join(SIDECAR_RUNTIME, "frontend"), encoding: "utf8" },
+  );
+  if (probe.status !== 0 || !probe.stdout.includes("PDF-RUNTIME-OK")) {
+    throw new Error(
+      `[build-sidecar] PDF 运行时真加载失败:\n${probe.stderr || probe.stdout}`,
+    );
+  }
+  const count = result.closure?.size ?? result.hoisted ?? 0;
+  console.log(`[build-sidecar]   ✓ PDF 附件解析闭包 ${count} 个包，原生加载通过`);
 }
 
 // CreatorOS 的 transformers 运行在 Node sidecar，后端会固定选择 onnxruntime-node。
@@ -2053,6 +2283,10 @@ function main() {
     materializeStandaloneWin();
   }
 
+  // [T-716] Copilot 附件支持不能只在源码开发环境成立。pdf-parse 是 external package，且会
+  // 动态加载 canvas 原生 binding；显式补齐并真 import 自检，确保安装包可读 PDF。
+  bundlePdfAttachmentRuntime();
+
   // [T-392 安全] 剥离 standalone trace 混进的源码/文档/测试产物(2026-07-18 实包盘点:
   //   src/ 269 个 .ts 明文源码 + docs/ 47MB 设计文档截图 + specs/ + SPEC.md 等 —— 源码进包
   //   = 混淆白做,设计文档 = 给逆向者的地图)。已验运行时零引用(编译产物 grep 这些路径
@@ -2179,6 +2413,12 @@ function main() {
   // 否则 codesign 会把链接目标解析回构建机缓存，并以“framework 根目录含未封装内容”拒签。
   // packSidecarTarball 内仍保留同一道闸作为最终防线；此处提前执行是签名前置条件。
   fixOutOfTreeSymlinks();
+  const prunedPortableMetadata = prunePortableMetadataFiles(SIDECAR_RUNTIME);
+  if (prunedPortableMetadata.length > 0) {
+    console.log(
+      `[build-sidecar]   ✂ 删除 ${prunedPortableMetadata.length} 个 AppleDouble/.DS_Store 元数据文件（签名前）`,
+    );
+  }
   signMacRuntimePayloadForNotarization(SIDECAR_RUNTIME, {
     identity: process.env.APPLE_SIGNING_IDENTITY,
     jitEntitlementsPath: join(SRC_TAURI, "runtime-jit-entitlements.plist"),
