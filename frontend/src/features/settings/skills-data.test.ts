@@ -99,7 +99,7 @@ describe("分组(按 id 前缀)", () => {
 });
 
 describe("中文词表", () => {
-  it("SKILL_LABELS 覆盖全部 19 个内置 skill id(中文名 + 一句话用途非空)", () => {
+  it("SKILL_LABELS 覆盖全部仍在服务的内置 skill id(中文名 + 一句话用途非空)", () => {
     const ids = [
       "chatbox.topic",
       "chatbox.calibration",
@@ -108,7 +108,6 @@ describe("中文词表", () => {
       "topic.generate",
       "topic.enrich",
       "script.draft",
-      "planning.thesis",
       "planning.contract",
       "planning.outline",
       "platform.adapt",
@@ -127,6 +126,7 @@ describe("中文词表", () => {
       expect(label!.name.length).toBeGreaterThan(0);
       expect(label!.purpose.length).toBeGreaterThan(0);
     }
+    expect(SKILL_LABELS["planning.thesis"]).toBeUndefined();
   });
 
   it("skillLabelOf:缺词表回退显 id(诚实,不编)", () => {

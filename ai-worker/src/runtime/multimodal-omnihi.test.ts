@@ -109,6 +109,46 @@ describe("OmniHi / Seedance 文生视频适配器", () => {
     expect(out.assetBytes).toEqual(new Uint8Array([7, 8, 9]));
   });
 
+  it("读取 Growth 下发的视频参数并做范围校验，用户画幅优先于渠道默认", async () => {
+    const calls: RequestInit[] = [];
+    const fetchImpl = vi
+      .fn(async (_url: string, init?: RequestInit) => {
+        calls.push(init ?? {});
+        if (calls.length === 1) return jsonResponse({ id: "job-settings" });
+        if (calls.length === 2) {
+          return jsonResponse({ status: "completed", output_url: "https://cdn.example/settings.mp4" });
+        }
+        return bytesResponse(new Uint8Array([1]));
+      }) as unknown as typeof fetch;
+    await createOmnihiVideoAdapter(deps(fetchImpl)).generateVideo!(
+      {
+        ...spec,
+        settings: {
+          mode: "ignored-unknown-mode",
+          duration: 6,
+          resolution: "720p",
+          aspect_ratio: "1:1",
+          generate_audio: true,
+          prompt_max_length: 100,
+          unsafe_unknown: "must-not-pass-through",
+        },
+      },
+      { prompt: "长".repeat(120), aspectRatio: "16:9" },
+    );
+
+    expect(JSON.parse(String(calls[0]!.body))).toEqual({
+      model: "seedance/seedance-2.0-fast",
+      input: { prompt: "长".repeat(100) },
+      parameters: {
+        mode: "t2v",
+        duration: 6,
+        resolution: "720p",
+        aspect_ratio: "16:9",
+        generate_audio: true,
+      },
+    });
+  });
+
   it("兼容 data.id 与 data.outputs[0].url 的中转响应包裹", async () => {
     const sequence: Response[] = [
       jsonResponse({ data: { id: "job-nested" } }),

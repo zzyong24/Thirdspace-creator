@@ -13,11 +13,15 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
+const mockOpenExternalUrl = vi.fn();
 // [T-132] SettingsDialog 读 ?highlight;默认无 query(highlight 相关测试各自覆盖 mock)。
 let mockSearchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
   useRouter: () => mockRouter,
   useSearchParams: () => mockSearchParams,
+}));
+vi.mock("@tauri-apps/plugin-opener", () => ({
+  openUrl: (url: string) => mockOpenExternalUrl(url),
 }));
 
 const mockClient = {
@@ -187,6 +191,7 @@ beforeEach(() => {
     ok: true,
     detail: "已发 1 token 真实补全,连通。",
   });
+  mockOpenExternalUrl.mockReset();
 });
 
 afterEach(() => {
@@ -207,7 +212,7 @@ function renderDialog(vm: SettingsViewModel = VM) {
 }
 
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
-  it("[T-645] 渠道服务 Key 按 service 保存并刷新，不提交 scopeId", async () => {
+  it("[T-645] 用户自行填写的模型访问密钥按 service 保存且不展示技术服务名", async () => {
     render(
       <SettingsDialog
         viewModel={VM}
@@ -220,6 +225,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
             {
               serviceId: "relay-a",
               serviceName: "统一中转",
+              credentialSource: "user_input",
               hasSecret: false,
               portalUrl: null,
               purchaseUrl: null,
@@ -231,9 +237,12 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       />,
     );
     fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
-    const input = screen.getByLabelText("统一中转 API Key");
+    const input = document.querySelector(
+      '[data-slot="channel-model-service-secret"]',
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
     await userEvent.type(input, "sk-local");
-    fireEvent.click(screen.getByRole("button", { name: "保存 Key" }));
+    fireEvent.click(screen.getByRole("button", { name: "保存密钥" }));
     await waitFor(() =>
       expect(mockClient.putChannelModelCredential).toHaveBeenCalledWith({
         params: { serviceId: "relay-a" },
@@ -246,6 +255,236 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       | undefined;
     expect(JSON.stringify(body)).not.toContain("scopeId");
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+    expect(document.body.textContent).not.toContain("统一中转");
+  });
+
+  it("[T-715] 受管模型只显示 AI 额度入口，安全打开 fragment 且不暴露服务技术信息", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            openUrl: "https://growth.example/credits/connect#ONE_TIME_123",
+            expiresAt: "2026-08-06T12:10:00.000Z",
+            expiresIn: 600,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        modelAuthority={{
+          authority: "channel",
+          outcome: "configured",
+          action: "模型已由当前权益配置",
+          capabilities: {
+            default: {
+              capability: "default",
+              authority: "channel",
+              serviceId: "omnihi-main",
+              serviceName: "OmniHi Relay",
+              provider: "openai-compatible",
+              modelName: "MiniMax M3",
+              model: "minimax-m3",
+              baseUrl: "https://secret-provider.example/v1",
+              hasSecret: true,
+            },
+          },
+          services: [
+            {
+              serviceId: "omnihi-main",
+              serviceName: "OmniHi Relay",
+              credentialSource: "activation_managed",
+              hasSecret: true,
+              portalUrl: "https://secret-provider.example",
+              purchaseUrl: null,
+              rechargeUrl: null,
+              helpUrl: null,
+            },
+          ],
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
+    expect(screen.getByText("AI 额度与消耗")).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("OmniHi");
+    expect(document.body.textContent).not.toContain("openai-compatible");
+    expect(document.body.textContent).not.toContain("secret-provider");
+    expect(document.body.textContent).not.toContain("受管 Key");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "查看 AI 额度与消耗" }),
+    );
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/v1/local/ai-credits/connect",
+        { method: "POST", headers: {} },
+      ),
+    );
+    await waitFor(() =>
+      expect(mockOpenExternalUrl).toHaveBeenCalledWith(
+        "https://growth.example/credits/connect#ONE_TIME_123",
+      ),
+    );
+  });
+
+  it("[T-679] 受管权益缺少语音路由时提示重新同步，不回退为用户填写 ASR Key", () => {
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        modelAuthority={{
+          authority: "channel",
+          outcome: "configured",
+          action: "当前权益已同步 1/4 类模型，缺失能力请重新同步",
+          capabilities: {
+            default: {
+              capability: "default",
+              authority: "channel",
+              serviceId: "managed-main",
+              serviceName: "隐藏服务",
+              provider: "openai-compatible",
+              modelName: "MiniMax M3",
+              model: "minimax-m3",
+              baseUrl: "https://provider.example/v1",
+              hasSecret: true,
+            },
+          },
+          services: [
+            {
+              serviceId: "managed-main",
+              serviceName: "隐藏服务",
+              credentialSource: "activation_managed",
+              hasSecret: true,
+              portalUrl: null,
+              purchaseUrl: null,
+              rechargeUrl: null,
+              helpUrl: null,
+            },
+          ],
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
+    const audio = document.querySelector(
+      '[data-slot="asr-model"][data-capability="transcribe.audio"]',
+    );
+    expect(audio).not.toBeNull();
+    expect(audio?.textContent).toContain("重新校验并同步当前权益");
+    expect(
+      document.querySelector('[data-slot="multimodal-audio-card"]'),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-slot="channel-model-service-secret"]'),
+    ).toBeNull();
+    expect(document.body.textContent).not.toContain("ASR 供应商");
+    expect(document.body.textContent).toContain(
+      "无需填写服务商、接口地址或密钥",
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "重新校验激活权益并重试配置同步",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("[T-715] 即使本地接口异常返回管理端地址，也不会打开任何非用户额度页面", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            openUrl: "https://growth.example/admin/credits#ONE_TIME_123",
+            expiresAt: "2026-08-06T12:10:00.000Z",
+            expiresIn: 600,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        modelAuthority={{
+          authority: "channel",
+          outcome: "configured",
+          action: "模型已由当前权益配置",
+          capabilities: {},
+          services: [
+            {
+              serviceId: "omnihi-main",
+              serviceName: "hidden-service",
+              credentialSource: "activation_managed",
+              hasSecret: true,
+              portalUrl: null,
+              purchaseUrl: null,
+              rechargeUrl: null,
+              helpUrl: null,
+            },
+          ],
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "查看 AI 额度与消耗" }),
+    );
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/v1/local/ai-credits/connect",
+        { method: "POST", headers: {} },
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByText("额度页面地址未通过安全校验")).toBeInTheDocument(),
+    );
+    expect(mockOpenExternalUrl).not.toHaveBeenCalled();
+    expect(document.body.textContent).not.toContain("管理员端");
+    expect(document.body.textContent).not.toContain("渠道端");
+  });
+
+  it("[T-715] 已绑定后允许固定打开 Growth 用户端 launch", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            openUrl: "https://growth.example/credits/launch#PORTAL_CODE_123",
+            expiresAt: "2026-08-06T12:01:00.000Z",
+            expiresIn: 60,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    render(
+      <SettingsDialog
+        viewModel={VM}
+        modelAuthority={{
+          authority: "channel",
+          outcome: "configured",
+          action: "模型已由当前权益配置",
+          capabilities: {},
+          services: [
+            {
+              serviceId: "managed-service",
+              serviceName: "hidden-service",
+              credentialSource: "activation_managed",
+              hasSecret: true,
+              portalUrl: null,
+              purchaseUrl: null,
+              rechargeUrl: null,
+              helpUrl: null,
+            },
+          ],
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "模型配置" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "查看 AI 额度与消耗" }),
+    );
+    await waitFor(() =>
+      expect(mockOpenExternalUrl).toHaveBeenCalledWith(
+        "https://growth.example/credits/launch#PORTAL_CODE_123",
+      ),
+    );
   });
 
   it("toggling 自动保存 calls patchPreferences({ autosaveEnabled }) then router.refresh()", async () => {
@@ -556,25 +795,24 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
 
   // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
 
-  // [T-379] 生图去 MiniMax 唯一:provider 候选加 openai(OpenAI 兼容 images API,中转站
-  // 通用),帮助文案如实列内置适配;生视频列出 MiniMax + OmniHi/Seedance。
-  it("文生图 provider 候选含 openai；文生视频列出 OmniHi/Seedance 适配", () => {
+  // [T-379/T-715] 生图支持 OpenAI 兼容 images API；生视频只展示中性的模型能力。
+  it("文生图 provider 候选含 openai；文生视频不暴露受管服务品牌", () => {
     const doc = renderDialog();
     const imageOptions = Array.from(
       doc.querySelectorAll("#multimodal-image-provider-suggestions option"),
     ).map((o) => (o as HTMLOptionElement).value);
     expect(imageOptions).toEqual(["openai", "minimax"]);
-    expect(doc.body.textContent).toContain(
-      "内置适配:minimax / openai 兼容(中转站通用)",
-    );
+    expect(doc.body.textContent).toContain("OpenAI 兼容图片接口");
+    expect(doc.body.textContent).not.toContain("中转站");
 
     const videoOptions = Array.from(
       doc.querySelectorAll("#multimodal-video-provider-suggestions option"),
     ).map((o) => (o as HTMLOptionElement).value);
-    expect(videoOptions).toEqual(["omnihi", "minimax"]);
+    expect(videoOptions).toEqual(["seedance", "minimax"]);
     expect(doc.body.textContent).toContain(
-      "内置适配:OmniHi / Seedance、MiniMax",
+      "支持已接入的视频生成接口",
     );
+    expect(doc.body.textContent).not.toContain("OmniHi");
   });
 
   it("saving the 文生图 form PUTs the image.generate capability (provider/model/baseUrl/secret, no apiFormat/temperature)", async () => {
@@ -733,7 +971,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     expect(manual.textContent).toContain("接口地址");
     expect(manual.textContent).toContain("接口格式");
     expect(manual.textContent).toContain("API 密钥");
-    expect(manual.textContent).toContain("New API / 自建中转站");
+    expect(manual.textContent).toContain("自定义 API");
+    expect(manual.textContent).not.toContain("中转站");
     expect(manual.textContent).toContain("保存并测试");
     expect(manual.textContent).toContain("语音转文字");
     expect(manual.textContent).toContain("建议配置 ASR 转录模型");

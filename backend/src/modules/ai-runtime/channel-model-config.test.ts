@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  channelMultimodalSpecFromRoute,
   channelRouteToken,
   resolveChannelCapabilityRoute,
 } from "./channel-model-config";
@@ -210,10 +211,165 @@ describe("T-645 渠道模型逐 capability parser", () => {
       model: "seedance/seedance-2.0-fast",
       settings: { resolution: "480p", durationSeconds: 4, audio: false },
     });
+    expect(
+      channelMultimodalSpecFromRoute(
+        resolveChannelCapabilityRoute(payload, "video.generate")!,
+        "managed-child-key",
+      ),
+    ).toMatchObject({
+      model: "seedance/seedance-2.0-fast",
+      token: "managed-child-key",
+      settings: { resolution: "480p", durationSeconds: 4, audio: false },
+    });
     expect(resolveChannelCapabilityRoute(payload, "transcribe.audio")).toBeNull();
     expect(() => channelRouteToken(selected!, null)).toThrow(
       "渠道托管的 omnihi-main 凭据尚未同步，请确认激活权益后重试",
     );
+  });
+
+  it("T-679 拒绝签名配置把 activation_managed 扩成非 omnihi-main 服务", () => {
+    const payload = graph({
+      services: [
+        {
+          id: "unexpected-managed-service",
+          name: "未登记受管服务",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [
+        {
+          id: "text-connection",
+          serviceId: "unexpected-managed-service",
+          provider: "openai-compatible",
+          baseURL: "https://api.omnihi.ai/openai",
+          apiFormat: "openai_chat",
+        },
+      ],
+      models: {
+        default: [
+          {
+            id: "minimax-m3",
+            name: "MiniMax M3",
+            connectionId: "text-connection",
+            model: "minimax-m3",
+            isDefault: true,
+            settings: {},
+          },
+        ],
+      },
+    });
+
+    expect(resolveChannelCapabilityRoute(payload, "default")).toBeNull();
+  });
+
+  it("T-679 接受 Growth 下发的按次语音转文字能力，且解析阶段不要求用户 Key", () => {
+    const payload = {
+      services: [
+        {
+          id: "omnihi-main",
+          name: "AI 能力",
+          provider: "omnihi",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            lifecycle: "persistent",
+            allowMultiple: false,
+          },
+        },
+        {
+          id: "qwen-asr-main",
+          name: "语音转文字",
+          provider: "qwen",
+          credential: {
+            type: "api_key",
+            source: "activation_managed",
+            lifecycle: "per_request",
+            allowMultiple: false,
+          },
+        },
+      ],
+      connections: [
+        {
+          id: "qwen-asr",
+          serviceId: "qwen-asr-main",
+          provider: "qwen",
+          baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+          apiFormat: "qwen_chat_audio",
+        },
+      ],
+      models: {
+        "transcribe.audio": [
+          {
+            id: "qwen3-asr-flash",
+            name: "语音转文字",
+            connectionId: "qwen-asr",
+            model: "qwen3-asr-flash",
+            isDefault: true,
+            settings: {
+              maxDurationSeconds: 300,
+              maxBytes: 10_485_760,
+              chargeUnits: 25_000,
+            },
+          },
+        ],
+      },
+    };
+
+    const route = resolveChannelCapabilityRoute(payload, "transcribe.audio");
+    expect(route).toMatchObject({
+      kind: "audio",
+      serviceId: "qwen-asr-main",
+      credentialSource: "activation_managed",
+      credentialLifecycle: "per_request",
+      provider: "qwen",
+      apiFormat: "qwen_chat_audio",
+      model: "qwen3-asr-flash",
+      modelName: "语音转文字",
+    });
+    expect(channelMultimodalSpecFromRoute(route!, null)).toMatchObject({
+      token: "",
+      credentialLifecycle: "per_request",
+      serviceId: "qwen-asr-main",
+      apiFormat: "qwen_chat_audio",
+    });
+  });
+
+  it("T-679 对旧受管 bundle 缺 lifecycle 继续按 persistent 兼容", () => {
+    const payload = {
+      services: [{
+        id: "omnihi-main",
+        name: "AI 能力",
+        provider: "omnihi",
+        credential: {
+          type: "api_key",
+          source: "activation_managed",
+          allowMultiple: false,
+        },
+      }],
+      connections: [{
+        id: "relay-image",
+        serviceId: "omnihi-main",
+        provider: "openai-compatible",
+        baseURL: "https://api.example.com/openai",
+        apiFormat: "openai_images",
+      }],
+      models: { "image.generate": [{
+        id: "image",
+        name: "生成图片",
+        connectionId: "relay-image",
+        model: "image-model",
+        isDefault: true,
+        settings: {},
+      }] },
+    };
+    expect(resolveChannelCapabilityRoute(payload, "image.generate")).toMatchObject({
+      credentialLifecycle: "persistent",
+    });
   });
 
   it("允许渠道为 transcribe.audio 下发 Qwen ASR 适配器", () => {

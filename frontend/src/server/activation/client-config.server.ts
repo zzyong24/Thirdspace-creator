@@ -32,7 +32,7 @@ import {
   ProductIdentitySecurityError,
 } from "./product-identity.server";
 
-const TICKET_CONTRACT = "config-access-ticket-v2";
+const TICKET_CONTRACT = "config-access-ticket-v3";
 const BUNDLE_CONTRACT = "growth-client-config-bundle-v1";
 const CLIENT_ID = "creatoros.desktop";
 const EXTENSION_KEY = "creatoros.model-config";
@@ -234,6 +234,13 @@ type TicketResponse = {
   readonly nonce: string;
 };
 
+export type FreshClientConfigAccess = {
+  /** 仅限 server-only 调用链使用；不得写日志、普通缓存或返回给 Web。 */
+  readonly configAccessTicket: string;
+  readonly expiresAt: string;
+  readonly growthOrigin: string;
+};
+
 function activationManagedServiceIds(payload: unknown): readonly string[] {
   const row = payload && typeof payload === "object" && !Array.isArray(payload)
     ? (payload as Record<string, unknown>)
@@ -247,8 +254,7 @@ function activationManagedServiceIds(payload: unknown): readonly string[] {
     if (!credential || typeof credential !== "object" || Array.isArray(credential)) continue;
     const credentialRow = credential as Record<string, unknown>;
     if (
-      typeof service.id === "string" &&
-      service.id.trim() &&
+      service.id === "omnihi-main" &&
       service.provider === "omnihi" &&
       credentialRow.type === "api_key" &&
       credentialRow.source === "activation_managed" &&
@@ -796,7 +802,7 @@ function parseBundleShape(value: unknown): SignedClientConfigBundle {
   if (extension.protocolVersion !== PROTOCOL_VERSION) {
     fail(
       "CLIENT_PROTOCOL_NOT_SUPPORTED",
-      "当前渠道配置需要更新 CreatorOS 后才能使用",
+      "当前渠道配置需要更新应用后才能使用",
       false,
     );
   }
@@ -1412,6 +1418,106 @@ function defaultStore(
   );
 }
 
+async function requestTicketForVerdict(input: {
+  readonly env: Record<string, string | undefined>;
+  readonly now: Date;
+  readonly nonce: string;
+  readonly fetchImpl: typeof fetch;
+  readonly verdict: ActiveVerdict;
+  readonly amOrigin: URL;
+  readonly growthOrigin: URL;
+}): Promise<FreshClientConfigAccess> {
+  const amUrl = new URL(AM_PATH, input.amOrigin).toString();
+  const amHttp = await fetchNoRedirect(input.fetchImpl, amUrl, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contractVersion: TICKET_CONTRACT,
+      projectKey: input.verdict.projectKey,
+      code: input.verdict.code,
+      machineId: input.verdict.machineId,
+      nonce: input.nonce,
+    }),
+  });
+  if (amHttp.status >= 500) {
+    fail(
+      "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE",
+      "授权服务暂时不可用，请稍后重试",
+      true,
+    );
+  }
+  const ticket = parseTicket(
+    await verifyAmResponse(
+      amHttp,
+      amUrl,
+      input.env.CREATOROS_LICENSE_PUBLIC_KEY_B64!,
+      input.now,
+    ),
+    input.nonce,
+    input.now,
+  );
+  return {
+    configAccessTicket: ticket.configAccessTicket,
+    expiresAt: ticket.expiresAt,
+    growthOrigin: input.growthOrigin.toString(),
+  };
+}
+
+/**
+ * 为 Growth 的短时 server-only 操作申请一张新的 config access ticket。
+ * 票据不缓存、不写日志，也不跨越本地可信 API 边界。
+ */
+export async function requestFreshClientConfigAccess(
+  dependencies: Pick<
+    Dependencies,
+    "env" | "now" | "nonce" | "fetchImpl" | "readVerdict"
+  > = {},
+): Promise<FreshClientConfigAccess> {
+  const env = dependencies.env ?? process.env;
+  if (env.CREATOROS_CLIENT_CONFIG_PULL_ENABLED?.trim() !== "1") {
+    fail("CLIENT_CONFIG_PENDING", "权益配置同步尚未启用", false);
+  }
+  const amOrigin = resolveHttpsOrigin(
+    resolveActivationConfig(env).baseUrl,
+    "授权服务",
+  );
+  const growthOrigin = resolveHttpsOrigin(
+    env.CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN,
+    "权益服务",
+  );
+  if (!env.CREATOROS_LICENSE_PUBLIC_KEY_B64?.trim()) {
+    fail("CLIENT_CONFIG_PENDING", "授权校验材料尚未就绪", false);
+  }
+  const now = (dependencies.now ?? (() => new Date()))();
+  const readVerdict =
+    dependencies.readVerdict ?? (() => readLicenseVerdictDetailed());
+  const verdict = activeVerdict(await readVerdict());
+  try {
+    assertVerdictProductIdentity(verdict.projectKey!, env);
+  } catch (error) {
+    if (!(error instanceof ProductIdentitySecurityError)) throw error;
+    fail(
+      "CLIENT_CONFIG_PRODUCT_IDENTITY_INVALID",
+      "当前安装包产品身份校验未通过",
+      false,
+    );
+  }
+  return requestTicketForVerdict({
+    env,
+    now,
+    nonce: (
+      dependencies.nonce ?? (() => randomBytes(16).toString("base64url"))
+    )(),
+    fetchImpl: dependencies.fetchImpl ?? fetch,
+    verdict,
+    amOrigin,
+    growthOrigin,
+  });
+}
+
 /**
  * API-575-002（Growth 跨仓编号 API-CREATOR-002）server-only refresh。所有 identity 来自当前加密授权；请求不接受
  * channelRef/projectKey override，Web 永远拿不到 code/machineId/ticket。Creator 不向 Activity
@@ -1478,38 +1584,15 @@ export async function refreshClientConfig(
   )();
 
   try {
-    const amUrl = new URL(AM_PATH, amOrigin).toString();
-    const amHttp = await fetchNoRedirect(fetchImpl, amUrl, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contractVersion: TICKET_CONTRACT,
-        projectKey: verdict.projectKey,
-        code: verdict.code,
-        machineId: verdict.machineId,
-        nonce,
-      }),
-    });
-    if (amHttp.status >= 500) {
-      fail(
-        "CLIENT_CONFIG_AUTHORITY_UNAVAILABLE",
-        "授权服务暂时不可用，请稍后重试",
-        true,
-      );
-    }
-    const ticket = parseTicket(
-      await verifyAmResponse(
-        amHttp,
-        amUrl,
-        env.CREATOROS_LICENSE_PUBLIC_KEY_B64,
-        now,
-      ),
-      nonce,
+    const ticket = await requestTicketForVerdict({
+      env,
       now,
-    );
+      nonce,
+      fetchImpl,
+      verdict,
+      amOrigin,
+      growthOrigin,
+    });
 
     const growthUrl = new URL(GROWTH_PATH, growthOrigin);
     growthUrl.searchParams.set("clientVersion", packageJson.version);

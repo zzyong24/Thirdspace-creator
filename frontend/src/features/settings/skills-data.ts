@@ -113,10 +113,6 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "合规审核编导",
     purpose: "发布前审核文案的抖音合规风险(L1 违禁词 + L2 语义审),给可撤销的逐条改写建议。",
   },
-  "planning.thesis": {
-    name: "论点树",
-    purpose: "围绕选题生成中心论点与支撑论点结构。",
-  },
   "cover.brief": {
     name: "封面方案",
     purpose:

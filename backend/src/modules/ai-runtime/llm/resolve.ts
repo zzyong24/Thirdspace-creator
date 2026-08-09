@@ -29,9 +29,21 @@ async function channelConfigFor(
   capability: string,
   allowDefaultFallback: boolean,
 ): Promise<ResolvedLlmConfig | null> {
+  const models = payload.models;
+  const selectionCapability =
+    models &&
+    typeof models === "object" &&
+    !Array.isArray(models) &&
+    Object.prototype.hasOwnProperty.call(models, capability)
+      ? capability
+      : allowDefaultFallback
+        ? "default"
+        : capability;
   const route = resolveChannelCapabilityRoute(payload, capability, {
     allowDefaultFallback,
-    selectedOptionId: await deps.getChannelModelSelection?.(capability),
+    // 内部写稿/选题/审核等文本能力通常复用 Growth 的 default 模型池。模型选择也必须
+    // 从同一个池读取，否则设置页选了 Claude，运行时仍会回到唯一默认 MiniMax。
+    selectedOptionId: await deps.getChannelModelSelection?.(selectionCapability),
   });
   if (!route) return null;
   const credential = route.serviceId

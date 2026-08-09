@@ -123,6 +123,27 @@ describe("OpenAI 兼容生图适配器 —— generateImage(同步一次请求)"
     expect(bodies[3]!.size).toBeUndefined(); // 未给比例 → 省略
   });
 
+  it("未指定画幅时采用 Growth 下发的生图尺寸，未知字段不透传", async () => {
+    let body: Record<string, unknown> = {};
+    const fakeFetch = (async (_url: string, init?: RequestInit) => {
+      body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return jsonResponse({ data: [{ b64_json: PNG_B64 }] });
+    }) as unknown as typeof fetch;
+    await createOpenaiImagesAdapter({ fetch: fakeFetch }).generateImage!(
+      {
+        ...spec,
+        settings: { size: "1024x1024", n: 9, unsafe_unknown: "must-not-pass-through" },
+      },
+      { prompt: "p" },
+    );
+    expect(body).toEqual({
+      model: "gpt-image-2-4K",
+      prompt: "p",
+      n: 1,
+      size: "1024x1024",
+    });
+  });
+
   // [T-380] 以图生图:带 referenceImage → 走 /v1/images/edits multipart(image+prompt+
   // model+size),与 generations 的 JSON 是两种编码;无参考图路径完全不变(上面各测已覆盖)。
   it("referenceImage → POST /v1/images/edits,multipart form(image/prompt/model/size),不发 JSON", async () => {

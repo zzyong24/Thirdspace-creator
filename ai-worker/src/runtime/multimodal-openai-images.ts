@@ -87,6 +87,19 @@ function sizeFromAspectRatio(aspectRatio?: string): string | undefined {
   }
 }
 
+function configuredImageSize(spec: MultimodalSpec): string | undefined {
+  const value = spec.settings?.size;
+  if (typeof value !== "string") return undefined;
+  if (value === "auto") return value;
+  const matched = /^(\d{2,5})x(\d{2,5})$/.exec(value);
+  if (!matched) return undefined;
+  const width = Number(matched[1]);
+  const height = Number(matched[2]);
+  return width >= 256 && width <= 4096 && height >= 256 && height <= 4096
+    ? value
+    : undefined;
+}
+
 // 错误分类成人话(与 T-376 describeMultimodalFailure 的分层配合:这里给出可判读的原因,
 // 上层统一包「已配置,但调用失败:<原因>」)。401/403=鉴权;其余 4xx=参数/模型名;5xx=服务端。
 function classifyHttpError(status: number, bodyHead: string): string {
@@ -107,7 +120,10 @@ async function generateImage(
   opts: GenerateImageOptions,
   deps: OpenaiImagesAdapterDeps,
 ): Promise<GeneratedAsset> {
-  const size = sizeFromAspectRatio(opts.aspectRatio);
+  // 用户在项目里明确选择画幅时优先；未指定时才采用 Growth 下发的默认尺寸。
+  const size = opts.aspectRatio
+    ? sizeFromAspectRatio(opts.aspectRatio)
+    : configuredImageSize(spec);
   // [T-380] 带参考图 → 走 image-to-image(`POST /v1/images/edits`,multipart form:
   // image+prompt+model+size —— 注意与 generations 的 JSON body 是两种编码);无参考图 →
   // 原 generations JSON 路径,行为完全不变(零回归)。两路响应形状相同,统一在下方解析。

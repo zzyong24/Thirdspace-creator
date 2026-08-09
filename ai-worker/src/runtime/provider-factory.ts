@@ -51,8 +51,76 @@ export class ChannelManagedProviderError extends Error {
   }
 }
 
-function channelError(): ChannelManagedProviderError {
-  return new ChannelManagedProviderError();
+export const MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE =
+  "AI 额度不足，请充值后再试。";
+
+/**
+ * 受管权益的额度耗尽是一个产品状态，不是“模型配置错误”。这个错误只携带稳定、安全的
+ * 用户文案；上游响应正文只用于边界内分类，绝不挂到 cause 或公开字段，避免泄露服务细节。
+ */
+export class ManagedAiCreditExhaustedError extends Error {
+  readonly code = "AI_CREDIT_EXHAUSTED";
+
+  constructor() {
+    super(MANAGED_AI_CREDIT_EXHAUSTED_MESSAGE);
+    this.name = "ManagedAiCreditExhaustedError";
+  }
+}
+
+function collectProviderErrorSignals(error: unknown, depth = 0): string[] {
+  if (depth > 2 || error == null) return [];
+  if (typeof error === "string" || typeof error === "number") {
+    return [String(error)];
+  }
+  if (error instanceof Error) {
+    const record = error as Error & {
+      code?: unknown;
+      status?: unknown;
+      statusCode?: unknown;
+      responseBody?: unknown;
+      body?: unknown;
+    };
+    return [
+      error.name,
+      error.message,
+      ...collectProviderErrorSignals(record.code, depth + 1),
+      ...collectProviderErrorSignals(record.status, depth + 1),
+      ...collectProviderErrorSignals(record.statusCode, depth + 1),
+      ...collectProviderErrorSignals(record.responseBody, depth + 1),
+      ...collectProviderErrorSignals(record.body, depth + 1),
+      ...collectProviderErrorSignals(error.cause, depth + 1),
+    ];
+  }
+  if (typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    return [
+      ...collectProviderErrorSignals(record.code, depth + 1),
+      ...collectProviderErrorSignals(record.status, depth + 1),
+      ...collectProviderErrorSignals(record.statusCode, depth + 1),
+      ...collectProviderErrorSignals(record.message, depth + 1),
+      ...collectProviderErrorSignals(record.responseBody, depth + 1),
+      ...collectProviderErrorSignals(record.body, depth + 1),
+      ...collectProviderErrorSignals(record.error, depth + 1),
+      ...collectProviderErrorSignals(record.cause, depth + 1),
+    ];
+  }
+  return [];
+}
+
+/** 只识别明确余额语义；普通 429/超时不能被误报成“额度不足”。 */
+export function isManagedAiCreditExhaustedError(error: unknown): boolean {
+  if (error instanceof ManagedAiCreditExhaustedError) return true;
+  const signals = collectProviderErrorSignals(error);
+  if (signals.some((value) => value.trim() === "402")) return true;
+  return /\bAI_CREDIT_(?:EXHAUSTED|INSUFFICIENT)\b|insufficient[\s_-]*(?:balance|quota|credit)|(?:balance|quota|credit)[\s_-]*(?:exhausted|insufficient|depleted)|\b(?:1008)\b|余额不足|额度不足|积分不足/i.test(
+    signals.join(" | "),
+  );
+}
+
+export function toChannelManagedError(error: unknown): Error {
+  return isManagedAiCreditExhaustedError(error)
+    ? new ManagedAiCreditExhaustedError()
+    : new ChannelManagedProviderError();
 }
 
 function sanitizeChannelStream<T>(stream: ReadableStream<T>): ReadableStream<T> {
@@ -73,13 +141,15 @@ function sanitizeChannelStream<T>(stream: ReadableStream<T>): ReadableStream<T> 
         ) {
           controller.enqueue({
             ...(value as Record<string, unknown>),
-            error: channelError(),
+            error: toChannelManagedError(
+              (value as { error?: unknown }).error,
+            ),
           } as T);
           return;
         }
         controller.enqueue(value);
-      } catch {
-        controller.error(channelError());
+      } catch (error) {
+        controller.error(toChannelManagedError(error));
       }
     },
     cancel(reason) {
@@ -98,8 +168,8 @@ export function protectChannelModel(model: LanguageModel): LanguageModel {
       wrapGenerate: async ({ doGenerate }) => {
         try {
           return await doGenerate();
-        } catch {
-          throw channelError();
+        } catch (error) {
+          throw toChannelManagedError(error);
         }
       },
       wrapStream: async ({ doStream }) => {
@@ -109,8 +179,8 @@ export function protectChannelModel(model: LanguageModel): LanguageModel {
             ...result,
             stream: sanitizeChannelStream(result.stream),
           };
-        } catch {
-          throw channelError();
+        } catch (error) {
+          throw toChannelManagedError(error);
         }
       },
     },
@@ -128,8 +198,8 @@ export function protectChannelEmbeddingModel(
       wrapEmbed: async ({ doEmbed }) => {
         try {
           return await doEmbed();
-        } catch {
-          throw channelError();
+        } catch (error) {
+          throw toChannelManagedError(error);
         }
       },
     },
@@ -234,7 +304,7 @@ export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
       : model;
   } catch (error) {
     if (spec.displayModelKey === "channel-managed") {
-      throw channelError();
+      throw toChannelManagedError(error);
     }
     throw error;
   }

@@ -19,6 +19,7 @@ export interface ChannelCapabilityRoute {
   readonly serviceId: string | null;
   readonly serviceName: string;
   readonly credentialSource: "user_input" | "activation_managed" | null;
+  readonly credentialLifecycle: "persistent" | "per_request" | null;
   readonly links: ChannelServiceLinks;
   readonly provider: string;
   readonly baseUrl: string | null;
@@ -144,6 +145,7 @@ function adapterSupported(
     );
   }
   if (kind === "audio") {
+    if (provider === "qwen") return apiFormat === "qwen_chat_audio";
     return new Set([
       "qwen-asr",
       "xiaomi-mimo",
@@ -162,6 +164,28 @@ function hasUniqueIds(rows: readonly ChannelModelPayload[]): boolean {
   return ids.every(Boolean) && new Set(ids).size === ids.length;
 }
 
+function validManagedServiceSet(
+  services: readonly ChannelModelPayload[],
+): boolean {
+  const sources = services.map((service) => {
+    const credential = object(field(service, "credential"));
+    return nonEmptyString(field(credential ?? {}, "source"));
+  });
+  if (!sources.includes("activation_managed")) return true;
+  // 受管配置是一张完整签名图，不能与用户自行填写的服务混搭。旧图仅含
+  // omnihi-main；新图精确增加 qwen-asr-main，拒绝第三个受管服务。
+  if (sources.some((source) => source !== "activation_managed")) return false;
+  const ids = services.map((service) => nonEmptyString(field(service, "id")));
+  if (ids.some((id) => id === null)) return false;
+  const sorted = [...(ids as string[])].sort();
+  return (
+    (sorted.length === 1 && sorted[0] === "omnihi-main") ||
+    (sorted.length === 2 &&
+      sorted[0] === "omnihi-main" &&
+      sorted[1] === "qwen-asr-main")
+  );
+}
+
 function exactlyOne<T>(rows: readonly T[], predicate: (row: T) => boolean): T | null {
   const matches = rows.filter(predicate);
   return matches.length === 1 ? matches[0]! : null;
@@ -178,6 +202,7 @@ function modernGraphRoute(
   const models = object(field(payload, "models"));
   if (!services || !connections || !models) return null;
   if (!hasUniqueIds(services) || !hasUniqueIds(connections)) return null;
+  if (!validManagedServiceSet(services)) return null;
 
   const selectedCapability = Object.prototype.hasOwnProperty.call(models, capability)
     ? capability
@@ -223,18 +248,51 @@ function modernGraphRoute(
   const serviceName = nonEmptyString(field(service, "name"));
   const credential = object(field(service, "credential"));
   const credentialSource = nonEmptyString(field(credential ?? {}, "source"));
+  const rawLifecycle = nonEmptyString(field(credential ?? {}, "lifecycle"));
+  const credentialLifecycle =
+    credentialSource === "activation_managed"
+      ? rawLifecycle === null
+        ? "persistent"
+        : rawLifecycle === "persistent" || rawLifecycle === "per_request"
+          ? rawLifecycle
+          : null
+      : null;
   if (
     !serviceName ||
     !credential ||
     field(credential, "type") !== "api_key" ||
-    (credentialSource !== "user_input" && credentialSource !== "activation_managed")
+    (credentialSource !== "user_input" && credentialSource !== "activation_managed") ||
+    (credentialSource === "user_input" && rawLifecycle !== null) ||
+    (credentialSource === "activation_managed" && credentialLifecycle === null)
   ) {
     return null;
   }
   if (
     credentialSource === "activation_managed" &&
-    (field(service, "provider") !== "omnihi" ||
-      field(credential, "allowMultiple") !== false)
+    (field(credential, "allowMultiple") !== false ||
+      !(
+        (serviceId === "omnihi-main" &&
+          field(service, "provider") === "omnihi" &&
+          credentialLifecycle === "persistent") ||
+        (serviceId === "qwen-asr-main" &&
+          field(service, "provider") === "qwen" &&
+          credentialLifecycle === "per_request")
+      ))
+  ) {
+    return null;
+  }
+  if (
+    serviceId === "qwen-asr-main" &&
+    (capability !== "transcribe.audio" ||
+      connectionId !== "qwen-asr" ||
+      provider !== "qwen" ||
+      apiFormat !== "qwen_chat_audio" ||
+      model !== "qwen3-asr-flash" ||
+      optionName !== "语音转文字" ||
+      field(option, "isDefault") !== true ||
+      settings.maxDurationSeconds !== 300 ||
+      settings.maxBytes !== 10_485_760 ||
+      settings.chargeUnits !== 25_000)
   ) {
     return null;
   }
@@ -254,6 +312,7 @@ function modernGraphRoute(
     serviceId,
     serviceName,
     credentialSource,
+    credentialLifecycle,
     links: serviceLinks(service),
     provider,
     baseUrl,
@@ -344,6 +403,7 @@ function legacyInlineRoute(
     serviceId: null,
     serviceName: "渠道模型",
     credentialSource: null,
+    credentialLifecycle: null,
     links: { portalUrl: null, purchaseUrl: null, rechargeUrl: null, helpUrl: null },
     provider,
     baseUrl,
@@ -422,13 +482,21 @@ export function channelMultimodalSpecFromRoute(
   credential?: string | null,
 ): MultimodalSpec {
   if (route.kind === "llm") throw new ChannelModelConfigurationError();
+  const token =
+    route.credentialLifecycle === "per_request"
+      ? ""
+      : channelRouteToken(route, credential);
   return {
     provider: route.provider,
     baseUrl: route.baseUrl,
     model: route.model,
-    token: channelRouteToken(route, credential),
+    token,
     kind: route.kind,
+    settings: route.settings,
     displayModelKey: "channel-managed",
+    credentialLifecycle: route.credentialLifecycle ?? undefined,
+    serviceId: route.serviceId ?? undefined,
+    apiFormat: route.apiFormat,
   };
 }
 

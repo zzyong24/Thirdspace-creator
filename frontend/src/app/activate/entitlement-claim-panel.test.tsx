@@ -107,9 +107,9 @@ describe("EntitlementClaimPanel", () => {
     await user.click(screen.getByRole("button", { name: "领取产品" }));
     await user.click(screen.getByRole("button", { name: "我已确认，继续" }));
 
-    expect(await screen.findByText("CreatorOS 已领取")).toBeInTheDocument();
+    expect(await screen.findByText("产品已领取")).toBeInTheDocument();
     expect(relaunch).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "进入 CreatorOS" }));
+    await user.click(screen.getByRole("button", { name: "进入应用" }));
     expect(relaunch).toHaveBeenCalledTimes(1);
   });
 

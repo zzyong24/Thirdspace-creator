@@ -45,7 +45,6 @@ import {
 const REGISTERED_SKILL_IDS: ReadonlySet<string> = new Set([
   "topic.generate",
   "script.draft",
-  "planning.thesis",
   // [T-271] 制作封面链的结构化封面方案 skill(cover.brief)。
   "cover.brief",
   "planning.contract",
@@ -943,7 +942,7 @@ function parseModelConfigExportFile(file: unknown): {
   const o = file as Record<string, unknown>;
   if (o.kind !== "creatoros.model-config-export") {
     throw new ModelConfigImportError(
-      "不是 CreatorOS 模型配置导出文件(kind 不匹配)",
+      "不是受支持的模型配置导出文件(kind 不匹配)",
     );
   }
   if (o.version !== 1) {

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  ManagedAiCreditExhaustedError,
   ModelConfigurationError,
   modelFor,
   normalizeAnthropicBaseUrl,
@@ -113,6 +114,41 @@ describe("modelFor", () => {
     expect(chunk.error.message).not.toContain("SECRET_CHANNEL_KEY");
     expect(chunk.error.message).not.toContain("private-model");
     expect(chunk.error.message).not.toContain("channel-model.internal");
+  });
+
+  it("渠道托管额度耗尽保留为安全产品状态，且不泄露上游正文", async () => {
+    const quotaError = Object.assign(new Error("request failed"), {
+      status: 402,
+      responseBody:
+        '{"error":"insufficient balance","provider":"private","secret":"DO_NOT_LEAK"}',
+    });
+    const model = protectChannelModel({
+      specificationVersion: "v4",
+      provider: "private-provider",
+      modelId: "private-model",
+      supportedUrls: {},
+      doGenerate: async () => {
+        throw quotaError;
+      },
+      doStream: async () => {
+        throw quotaError;
+      },
+    } as never);
+    if (typeof model === "string") throw new Error("预期模型对象");
+
+    let error: unknown;
+    try {
+      await model.doGenerate({} as never);
+    } catch (cause) {
+      error = cause;
+    }
+    expect(error).toBeInstanceOf(ManagedAiCreditExhaustedError);
+    expect(error).toMatchObject({
+      code: "AI_CREDIT_EXHAUSTED",
+      message: "AI 额度不足，请充值后再试。",
+    });
+    expect(JSON.stringify(error)).not.toContain("DO_NOT_LEAK");
+    expect(JSON.stringify(error)).not.toContain("private-provider");
   });
 
   it("openai_chat(官方 OpenAI)", () => {

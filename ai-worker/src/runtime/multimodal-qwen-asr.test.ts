@@ -131,4 +131,39 @@ describe("Qwen ASR adapter", () => {
       ),
     ).rejects.toThrow(/Qwen ASR HTTP 401: invalid api key/);
   });
+
+  it("受管按次凭据只发一次请求，不拆分且不在错误中暴露服务正文", async () => {
+    const fetchMock = vi.fn(
+      async (_input: Parameters<typeof fetch>[0], _init?: RequestInit) =>
+        new Response(JSON.stringify({ message: "token=should-not-leak" }), {
+        status: 503,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const managedSpec: MultimodalSpec = {
+      provider: "qwen",
+      baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      model: "qwen3-asr-flash",
+      token: "ephemeral-token",
+      kind: "audio",
+      credentialLifecycle: "per_request",
+      serviceId: "qwen-asr-main",
+      apiFormat: "qwen_chat_audio",
+      displayModelKey: "channel-managed",
+    };
+    await expect(
+      transcribeAudio(
+        managedSpec,
+        { audioBytes: new Uint8Array([1, 2, 3, 4]), language: "zh" },
+        {
+          qwen: createQwenAsrAdapter({
+            fetch: fetchMock as typeof fetch,
+            maxEncodedBytes: 2,
+          }),
+        },
+      ),
+    ).rejects.toThrow("渠道模型调用失败，请稍后重试或联系官方处理");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ redirect: "error" });
+  });
 });

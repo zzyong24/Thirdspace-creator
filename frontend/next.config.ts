@@ -115,6 +115,12 @@ const nextConfig: NextConfig = {
     "@ai-sdk/anthropic",
     "@ai-sdk/deepseek",
     "@ai-sdk/openai-compatible",
+    // [T-716] Copilot/PDF 素材抽取需要 pdf-parse 的完整 Node 运行时闭包。若让 Next
+    // 内联 pdf-parse，会漏掉 pdfjs 动态加载的 @napi-rs/canvas，安装包里解析 PDF 时
+    // 只剩 DOMMatrix/ImageData 缺失警告。保持两者外置，让 standalone tracing 带齐
+    // 当前平台的原生 canvas 包；DOCX/Markdown 仍走各自的纯文本链路。
+    "pdf-parse",
+    "@napi-rs/canvas",
     // [T-173/T-469] 采集/扫码用 Playwright(douyin-cdp/web-capture 动态 import；CLI 只做确定性 fs 扫描)。
     //   保持外置:不让 Next 打包(playwright 有 ESM 入口 → 打包报 "require() resolves to a EcmaScript
     //   module")。运行时从 node_modules 解析(桌面包由 build-sidecar bundlePlaywright 实拷进去)。

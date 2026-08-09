@@ -106,6 +106,89 @@ describe("SettingsPage", () => {
     cleanup();
   });
 
+  it("[T-715] 下发到设置页前移除受管服务品牌、协议和接口地址", async () => {
+    const { sanitizeModelAuthorityForClient } = await import("./settings-page");
+    const projected = sanitizeModelAuthorityForClient({
+      authority: "channel",
+      outcome: "configured",
+      action: "当前权益已配置 3/4 类模型，其余由你配置",
+      capabilities: {
+        default: {
+          capability: "default",
+          authority: "channel",
+          serviceId: "omnihi-main",
+          serviceName: "OmniHi 模型服务",
+          provider: "openai-compatible",
+          modelName: "MiniMax M3",
+          model: "minimax-m3",
+          baseUrl: "https://api.omnihi.ai/openai",
+          hasSecret: true,
+          optionId: "minimax-m3",
+          modelOptions: [
+            { id: "minimax-m3", name: "MiniMax M3", model: "minimax-m3" },
+          ],
+        },
+      },
+      services: [
+        {
+          serviceId: "omnihi-main",
+          serviceName: "OmniHi 模型服务",
+          hasSecret: true,
+          credentialSource: "activation_managed",
+          portalUrl: "https://omnihi.ai",
+          purchaseUrl: "https://omnihi.ai/buy",
+          rechargeUrl: "https://omnihi.ai/recharge",
+          helpUrl: "https://omnihi.ai/help",
+        },
+      ],
+    });
+
+    const serialized = JSON.stringify(projected);
+    expect(serialized).not.toContain("OmniHi");
+    expect(serialized).not.toContain("omnihi-main");
+    expect(serialized).not.toContain("openai-compatible");
+    expect(serialized).not.toContain("api.omnihi.ai");
+    expect(serialized).toContain("MiniMax M3");
+    expect(serialized).toContain("managed-ai-credits");
+  });
+
+  it("[T-679] 受管语音转文字只向页面投影业务名称，不暴露实现模型", async () => {
+    const { sanitizeModelAuthorityForClient } = await import("./settings-page");
+    const projected = sanitizeModelAuthorityForClient({
+      authority: "channel",
+      outcome: "configured",
+      action: "当前权益已提供语音转文字",
+      capabilities: {
+        "transcribe.audio": {
+          capability: "transcribe.audio",
+          authority: "channel",
+          serviceId: "qwen-asr-main",
+          serviceName: "internal-service",
+          provider: "qwen",
+          modelName: "语音转文字",
+          model: "qwen3-asr-flash",
+          baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+          hasSecret: true,
+          optionId: "qwen3-asr-flash",
+          modelOptions: [
+            {
+              id: "qwen3-asr-flash",
+              name: "语音转文字",
+              model: "qwen3-asr-flash",
+            },
+          ],
+        },
+      },
+      services: [],
+    });
+
+    const serialized = JSON.stringify(projected);
+    expect(serialized).toContain("语音转文字");
+    expect(serialized.toLowerCase()).not.toContain("qwen");
+    expect(serialized).not.toContain("dashscope");
+    expect(serialized).not.toContain("qwen-asr-main");
+  });
+
   it("mounts the TopHeader in global mode with the settings title", async () => {
     const { container } = await renderSettings();
     const header = container.querySelector('[data-slot="app-top-header"]');
@@ -234,7 +317,7 @@ describe("SettingsPage", () => {
     expect(status).not.toBeNull();
     expect(status).toHaveAttribute("data-authority", "channel");
     expect(status).toHaveTextContent("渠道已接管 1/4 类模型");
-    expect(status).toHaveTextContent("每类模型独立判断");
+    expect(status).toHaveTextContent("当前渠道已提供的模型可以直接使用");
     expect(
       document.querySelector('[data-slot="model-configuration-card"]'),
     ).toBeNull();
@@ -303,8 +386,8 @@ describe("SettingsPage", () => {
     ) as HTMLSelectElement | null;
     expect(select).not.toBeNull();
     expect(Array.from(select!.options).map((option) => option.textContent)).toEqual([
-      "MiniMax M3 · minimax-m3",
-      "GPT 5.6 Terra · gpt-5.6-terra",
+      "MiniMax M3",
+      "GPT 5.6 Terra",
     ]);
     expect(select!.value).toBe("minimax-m3");
     expect(document.body.textContent).toContain("原模型已不再提供");

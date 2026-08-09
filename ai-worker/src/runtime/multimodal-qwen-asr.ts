@@ -13,6 +13,8 @@ const DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 // 16kHz、单声道、64kbps MP3；3.1MB data URL 约对应 2.32MB 原始 MP3（约 4分50秒），
 // 同时为 JSON 开销留余量。更长音频按 MP3 帧边界依次转写，不做危险字节截断。
 const DEFAULT_MAX_ENCODED_BYTES = 3_100_000;
+const MANAGED_MAX_BYTES = 10_485_760;
+const MANAGED_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 
 export interface QwenAsrAdapterDeps {
   fetch: typeof fetch;
@@ -58,6 +60,7 @@ async function transcribeChunk(
       : undefined;
   const res = await fetchImpl(completionsUrl(spec), {
     method: "POST",
+    redirect: spec.credentialLifecycle === "per_request" ? "error" : "follow",
     headers: {
       Authorization: `Bearer ${spec.token}`,
       "Content-Type": "application/json",
@@ -77,6 +80,9 @@ async function transcribeChunk(
     }),
   });
   if (!res.ok) {
+    if (spec.credentialLifecycle === "per_request") {
+      throw new MultimodalGenerationError("语音转文字服务暂时不可用");
+    }
     throw new MultimodalGenerationError(
       `Qwen ASR HTTP ${res.status}: ${await safeText(res)}`,
     );
@@ -84,7 +90,11 @@ async function transcribeChunk(
   const json = (await res.json()) as QwenAsrResponse;
   const text = json.choices?.[0]?.message?.content;
   if (typeof text !== "string" || !text.trim()) {
-    throw new MultimodalGenerationError("Qwen ASR 未返回逐字稿正文");
+    throw new MultimodalGenerationError(
+      spec.credentialLifecycle === "per_request"
+        ? "语音转文字服务暂时不可用"
+        : "Qwen ASR 未返回逐字稿正文",
+    );
   }
   return text.trim();
 }
@@ -94,6 +104,27 @@ async function transcribeAudio(
   opts: TranscribeAudioOptions,
   deps: QwenAsrAdapterDeps,
 ): Promise<GeneratedTranscript> {
+  if (spec.credentialLifecycle === "per_request") {
+    if (
+      spec.provider !== "qwen" ||
+      spec.apiFormat !== "qwen_chat_audio" ||
+      spec.baseUrl?.replace(/\/$/, "") !== MANAGED_BASE_URL ||
+      spec.model !== "qwen3-asr-flash" ||
+      !spec.token ||
+      opts.audioBytes.byteLength < 1 ||
+      opts.audioBytes.byteLength > MANAGED_MAX_BYTES
+    ) {
+      throw new MultimodalGenerationError("语音转文字服务暂时不可用");
+    }
+    const text = await transcribeChunk(
+      spec,
+      opts.audioBytes,
+      opts.language,
+      deps.fetch,
+    );
+    const language = opts.language?.trim();
+    return { text, ...(language ? { language } : {}) };
+  }
   const chunks = splitMp3ForDataUrl(
     opts.audioBytes,
     deps.maxEncodedBytes ?? DEFAULT_MAX_ENCODED_BYTES,

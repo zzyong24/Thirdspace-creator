@@ -35,7 +35,16 @@ export interface MultimodalSpec {
   model: string;
   token: string;
   kind: "image" | "video" | "audio" | "vision";
+  /** 已验签渠道配置里的模型参数；适配器只读取各自认识且通过范围校验的字段。 */
+  settings?: Record<string, unknown>;
   displayModelKey?: "channel-managed";
+  /** 渠道受管凭据生命周期。persistent 继续从系统密钥库读取；per_request 必须在
+   * 每次真实调用前向权益服务领取短效凭据，且只允许停留在本次调用内存中。 */
+  credentialLifecycle?: "persistent" | "per_request";
+  /** 仅供可信 server 组合层申请短效凭据，绝不进入用户界面或日志。 */
+  serviceId?: string;
+  /** 受管连接的签名协议族；适配器据此 fail-closed，禁止把未知协议当兼容接口调用。 */
+  apiFormat?: string;
 }
 
 export interface ResolveMultimodalDeps {

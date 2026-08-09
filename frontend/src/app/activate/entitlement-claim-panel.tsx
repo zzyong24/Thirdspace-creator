@@ -89,7 +89,7 @@ export function EntitlementClaimPanel({
       const { relaunch } = await import("@tauri-apps/plugin-process");
       await relaunch();
     } catch {
-      setError("授权已保存，但应用未能自动重新进入，请手动重启 CreatorOS");
+      setError("授权已保存，但应用未能自动重新进入，请手动重启应用");
       setBusy(false);
     }
   }
@@ -121,9 +121,9 @@ export function EntitlementClaimPanel({
       className="grid gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4"
     >
       <div className="grid gap-1">
-        <h2 className="text-sm font-semibold">已经购买 CreatorOS？</h2>
+        <h2 className="text-sm font-semibold">已经购买产品？</h2>
         <p className="text-xs text-muted-foreground">
-          在官方页面确认后，就能把已购买的 CreatorOS 领到这台电脑。
+          在官方页面确认后，就能在这台电脑上使用已购买的产品。
         </p>
       </div>
 
@@ -135,7 +135,7 @@ export function EntitlementClaimPanel({
       ) : view.state === "activated" ? (
         <div className="grid gap-2">
           <p className="text-sm font-medium text-emerald-700">
-            CreatorOS 已领取
+            产品已领取
           </p>
           <p className="text-xs text-muted-foreground">
             重新进入应用后就可以使用。
@@ -146,7 +146,7 @@ export function EntitlementClaimPanel({
             onClick={() => void enterCreatorOs()}
           >
             {busy ? <Loader2 className="animate-spin" /> : null}
-            进入 CreatorOS
+            进入应用
           </Button>
         </div>
       ) : view.state === "restartRequired" ? (
