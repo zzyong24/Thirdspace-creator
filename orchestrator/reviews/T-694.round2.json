@@ -1,0 +1,49 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "Round 2 定向复核确认两个既有缺口均已被当前 SPEC 收敛。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "blocker",
+      "category": "security",
+      "requirement_anchor": { "id": "FR-694-08", "quote": "在线 release key、Tauri updater key 或 CDN 任一单点失陷不能绕过离线 root envelope" },
+      "acceptance_anchor": { "id": "AC-694-08", "quote": "只持有 Tauri updater 私钥但没有 root envelope 时拒绝安装" },
+      "where": "§6.2 信任链；§10 PackageIdentity 定义",
+      "failure_mode": "SPEC 未定义客户端初始信任的 root 公钥/指纹、其与 PackageIdentity 的不可变绑定，或 root 与 Tauri updater key 的独立性。合理实现可以从 package latest/keyset 获取 root 或复用 updater key；此时 CDN 或 updater 私钥失陷即可同时替换验证根与 envelope，无法证明 AC 要求的拒绝行为。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md#L176-L194,L365-L369",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定每个包在安装物中已固定、且不经在线元数据引入的初始 root 验证材料与 package 绑定；明确其不得与 updater 验证键共用，以及轮换和 root recovery 只能如何改变该信任材料。",
+      "resolution_evidence": "§6.2 要求 Tauri/Rust 二进制只读编译期常量内置 releaseTrustRootPublicKey、keyId 和公钥摘要，并与 PackageIdentity、identity.lock.json、release attestation 三方一致；禁止从在线元数据首次引入 root。root 与 Tauri minisign key 独立生成、保管和用途隔离；计划轮换要求旧/新 root 双签过渡壳，疑似 root 失陷只能由完整安装包迁移。§10 将 root keyId 和公钥摘要纳入 PackageIdentity。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": { "id": "FR-694-04", "quote": "壳和 runtime 分离；只下载缺失 chunk；失败不破坏 current" },
+      "acceptance_anchor": { "id": "AC-694-04", "quote": "断网、坏块、磁盘不足、manifest 篡改、健康检查失败均保持旧版可启动" },
+      "where": "§6.2 安装验签条件；§6.3 客户端状态机",
+      "failure_mode": "runtime-only 路径直接进入 ReadyToRestart，未下载 Tauri artifact，但 §6.2 又要求 envelope root signature 与 Tauri artifact signature 均有效才允许安装。组合更新中 runtime 已进入 Pending 后再下载 shell，状态机没有 shell 下载或安装失败的转移，也未把 pending runtime 与所需 shell/protocol 绑定；重启时实现可能激活与旧 shell 不兼容的 pending runtime。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md#L176-L186,L201-L216,L234-L237",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "为 runtime-only、shell-only 与组合更新分别规定唯一的验签条件、pending 激活谓词和失败后状态；组合更新的 pending 必须绑定目标 shell 兼容条件，shell 下载或安装失败时不得激活它且 current 保持可启动。",
+      "resolution_evidence": "§6.3 将状态拆为 PendingCurrentShell 与 PendingTargetShell，并以三路径表分别规定 runtime-only、shell-only、组合更新的验证材料、版本/protocol/artifact 绑定和失败回退。组合更新在目标壳下载验签完成前不激活 pending；新壳先以 current runtime 握手，兼容后才原子切换；壳失败恢复 previous shell 并保留 current runtime。",
+      "parent_id": ""
+    }
+  ]
+}

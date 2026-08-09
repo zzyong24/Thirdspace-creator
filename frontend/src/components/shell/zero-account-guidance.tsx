@@ -10,6 +10,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 /**
  * user 级页面前缀白名单 —— 0 号也放行(绑号入口 / 共享配置 / 激活)。
@@ -59,23 +60,23 @@ export function ZeroAccountGuidance() {
         先绑定一个抖音号,再开始创作
       </h1>
       <p className="max-w-md text-sm text-muted-foreground">
-        CreatorOS 的工作区按抖音号完全隔离:定位、选题、项目、知识库、素材、发布数据都归属于具体账号。绑定后系统会自动建好该号的日常采集任务。
+        工作区按抖音号完全隔离：定位、选题、项目、知识库、素材和发布数据都归属于具体账号。绑定后系统会自动建好该账号的日常采集任务。
       </p>
-      <a
+      <Link
         href="/accounts"
         data-testid="zero-account-bind-link"
         className="mt-2 inline-flex h-10 items-center justify-center rounded-card bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
       >
         去绑定抖音号
-      </a>
+      </Link>
       {/* [T-348] 次级动作:回首页看完整上手引导(0 号首页已恢复 OnboardingCard 有序引导流)。 */}
-      <a
+      <Link
         href="/"
         data-testid="zero-account-home-link"
         className="text-xs font-medium text-brand underline-offset-4 hover:underline"
       >
         或回首页看完整上手引导
-      </a>
+      </Link>
     </main>
   );
 }

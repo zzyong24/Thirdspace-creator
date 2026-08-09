@@ -35,6 +35,10 @@ import { LicenseHeartbeatBridge } from "@/components/shell/license-heartbeat-bri
 import { ChannelConfigBootstrap } from "@/components/shell/channel-config-bootstrap";
 // [T-530/T-534] 渠道品牌名：只读 Rust 已验证并写入加密 .license 的 runtime 投影。
 import { SidebarBrandNameProvider } from "@/components/shell/sidebar";
+import {
+  PACKAGE_BRAND_ICON_DATA_URL,
+  PACKAGE_BRAND_NAME,
+} from "@/lib/package-brand";
 import { readChannelRuntime } from "@/server/activation/channel-runtime.server";
 import { isDesktopRuntime } from "@/server/activation/is-desktop";
 import {
@@ -156,9 +160,8 @@ export default async function CreatorLayout({
   }
 
   // [T-530/T-534] 渠道品牌名只从已验证加密 runtime 读取。
-  // 读失败/未激活/官方码/未配置 → null,Sidebar 回官方名「CreatorOS」(品牌名回退
-  // 不涉密;与渠道链接「null 不回退」红线不同)。读端设计上不 throw,这里仍兜一层
-  // —— 品牌字样绝不能拖垮整个登录后布局。
+  // 读失败/未激活/未配置 → runtime 为 null，Sidebar 使用构建期包品牌；Growth 已验签
+  // brandName 到位后优先覆盖名称。业务链接仍保持 null 不回退，不能把包级品牌兜底误扩成链接兜底。
   let brandName: string | null = null;
   let bugFeedbackUrl: string | null = null;
   try {
@@ -186,6 +189,8 @@ export default async function CreatorLayout({
       <SidebarBrandNameProvider
         brandName={brandName}
         bugFeedbackUrl={bugFeedbackUrl}
+        packageBrandName={PACKAGE_BRAND_NAME}
+        packageBrandIconDataUrl={PACKAGE_BRAND_ICON_DATA_URL}
       >
         <ShellRouter user={user} notifications={notifications}>
           {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页

@@ -1,0 +1,6 @@
+interface:
+  display_name: "CreatorOS 渠道专属包"
+  short_description: "校验品牌与渠道身份，安全生成隔离的桌面安装包和更新证明"
+  default_prompt: "Use $packaging-creatoros-channel to preflight and build a CreatorOS channel package without publishing it."
+policy:
+  allow_implicit_invocation: true

@@ -188,7 +188,7 @@ export function buildReviewReportHtml(
   ${aiBlock}
   ${learningsBlock}
   ${historyBlock}
-  <footer>由 CreatorOS 复盘页导出 · ${escapeHtml(timeStamp(now))}</footer>
+  <footer>由复盘页导出 · ${escapeHtml(timeStamp(now))}</footer>
 </main>
 </body>
 </html>`;

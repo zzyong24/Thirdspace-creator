@@ -33,6 +33,7 @@ import {
 import { assertVerdictKeyMaterial } from "./verdict-key-material.mjs";
 import { verifyPackagedVerdictHardening } from "./verdict-artifact-hardening.mjs";
 import { assertClientConfigBuildEnv } from "./client-config-release.mjs";
+import { tauriMacSigningOverride } from "./tauri-signing-config.mjs";
 
 // 必须早于预清 DMG、写构建报告和任何重型构建步骤。Homebrew node@22 抢 PATH 时，
 // 入口会自动重启到已验证的 Node 25；找不到则硬失败，禁止继续产错 V8 字节码包。
@@ -45,6 +46,11 @@ console.log(
 );
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const packageIdentity = process.env.CREATOROS_PACKAGE_IDENTITY_PATH?.trim()
+  ? JSON.parse(readFileSync(process.env.CREATOROS_PACKAGE_IDENTITY_PATH.trim(), "utf8"))
+  : null;
+const packagedDisplayName = packageIdentity?.displayName ?? "CreatorOS";
+const packagedBinaryName = packageIdentity?.binaryName ?? "CreatorOS";
 const CARGO_PROFILE_DIR =
   process.env.CREATOROS_RELEASE === "1" ? "release" : "release-fast";
 const BUILD_TIMING_REPORT = join(
@@ -140,11 +146,11 @@ function verifyPackagedTlsRuntime() {
     CARGO_PROFILE_DIR,
     "bundle",
     "macos",
-    "CreatorOS.app",
+    `${packagedDisplayName}.app`,
   );
   const tarball = join(app, "Contents", "Resources", "sidecar.tar.gz");
   const sourceTarball = join(FRONTEND, "src-tauri", "sidecar.tar.gz");
-  const shellBin = join(app, "Contents", "MacOS", "CreatorOS");
+  const shellBin = join(app, "Contents", "MacOS", packagedBinaryName);
   const bundledNode = join(
     FRONTEND,
     "src-tauri",
@@ -451,6 +457,20 @@ const tauriBuildArgs = [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
 ];
+const macSigningOverride = tauriMacSigningOverride();
+if (macSigningOverride) {
+  tauriBuildArgs.push("--config", JSON.stringify(macSigningOverride));
+  const signingLabel = process.env.APPLE_SIGNING_IDENTITY?.trim()
+    ? `Developer ID ${process.env.APPLE_SIGNING_IDENTITY.trim()}`
+    : "本地 ad-hoc (-)";
+  console.log(
+    `[desktop:package] macOS ${signingLabel} 将由 Tauri 在 DMG 封盘前签入。`,
+  );
+}
+if (process.env.CREATOROS_TAURI_PACKAGE_CONFIG?.trim()) {
+  tauriBuildArgs.push("--config", process.env.CREATOROS_TAURI_PACKAGE_CONFIG.trim());
+  console.log(`[desktop:package] 渠道包 Tauri override: ${process.env.CREATOROS_TAURI_PACKAGE_CONFIG.trim()}`);
+}
 if (!process.env.TAURI_SIGNING_PRIVATE_KEY?.trim()) {
   // 本地支持包只需要 .app/.dmg。缺 updater 私钥时关闭本轮 updater tar/signature 生成，
   // 但不改 tauri.conf.json 中烘焙进应用的正式 updater 公钥，后续正式更新能力仍保留。
@@ -485,14 +505,19 @@ await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
   if (platform !== "darwin" && platform !== "win32") return;
   const targetDir = join(FRONTEND, "src-tauri", "target", CARGO_PROFILE_DIR);
   const bundleDir = join(targetDir, "bundle");
-  const shellPath = findShellBinary({ targetDir, bundleDir, platform });
+  const shellPath = findShellBinary({
+    targetDir,
+    bundleDir,
+    platform,
+    binaryName: packagedBinaryName,
+  });
   const canonicalTarball = join(FRONTEND, "src-tauri", "sidecar.tar.gz");
   const packagedTarball =
     platform === "darwin"
       ? join(
           bundleDir,
           "macos",
-          "CreatorOS.app",
+          `${packagedDisplayName}.app`,
           "Contents",
           "Resources",
           "sidecar.tar.gz",
@@ -539,6 +564,7 @@ const productIdentityEvidence = measured(
       targetDir,
       bundleDir,
       platform,
+      binaryName: packagedBinaryName,
     });
     const creatorCommit =
       process.env.CREATOROS_CREATOR_RELEASE_COMMIT?.trim() ||

@@ -148,7 +148,7 @@ export function requiresSerializableFunctionSource(code) {
  * @param {string} [relPath] 相对靶目录路径(判 chunks/)
  * @param {"server"|"client"} [targetKind] 当前遍历靶目录；真实 client 根是 `.next/static`，
  *   所以相对路径只有 `chunks/**`，不能靠 relPath 猜测运行环境。
- * @returns {"rename-only"|"full"}
+ * @returns {"rename-only"|"chunk-stringarray"|"full"}
  */
 export function pickPreset(code, relPath = "", targetKind = "server") {
   const parts = relPath.split(/[\\/]/).filter(Boolean);
@@ -156,11 +156,10 @@ export function pickPreset(code, relPath = "", targetKind = "server") {
   const hasDynLiteral = dynLiteral.test(code);
   // [T-459] 必须在 chunks/stringArray 判定之前拦截，保住 pageFunction 的独立源码。
   if (requiresSerializableFunctionSource(code)) return "rename-only";
-  // [T-544] 浏览器端 chunks 在 WKWebView 下不得执行 RC4 stringArray。
-  // targetKind 由遍历根显式传入；真实相对路径是 `chunks/**`，与 server chunk 同形。
-  if (targetKind === "client" && parts[0] === "chunks") {
-    return "rename-only";
-  }
+  // [T-544] 客户端业务 chunk 只允许 rename-only，不启用 RC4/stringArray/control-flow。
+  // T-705 的白屏经 clean client 产物复现，根因是业务 schema 调用了 Zod `.datetime()`，
+  // 并非 rename-only；真实浏览器 hydration 门禁负责持续验证这条安全边界。
+  if (targetKind === "client" && parts[0] === "chunks") return "rename-only";
   // turbopack server chunk 树(chunks/ 或 chunks/ssr/ 下):
   //    · 含字面 require/import → rename-only(编码模块名字面量会 ChunkLoadError)。
   //    · 否则 → [T-417 L1] chunk-stringarray:rc4 加密**业务字符串**(prompt/端点),reservedStrings
@@ -301,7 +300,7 @@ export const RENAME_ONLY_OPTIONS = Object.freeze({
 /**
  * 混淆单个文件内容(纯函数,便于测)。返回混淆后代码。
  * @param {string} code
- * @param {"rename-only"|"full"} preset
+ * @param {"rename-only"|"chunk-stringarray"|"full"} preset
  */
 export function obfuscateCode(code, preset) {
   const opts =
@@ -660,12 +659,13 @@ export function buildSmokeSidecarEnv(
 
 /**
  * 混淆后真起 sidecar 冒烟。spawn node server.js → TCP ready-probe → GET / 200 →
+ * Playwright 真浏览器完成 hydration 且无 pageerror →
  * POST /api/v1/dispatch(经 backend/modules/ai-runtime 的 composite transport;不崩即证
  * 混淆没让运行时动态 require 崩。返回 401/400/200 都算「没崩」——我们只验运行时不因混淆炸,
  * 不验业务鉴权)。任一硬失败(server 起不来 / GET / 非 200 / 路由 500 且 body 含 require 崩)→ throw。
  *
  * @param {{timeoutMs?:number}} opts
- * @returns {Promise<{ready:boolean, rootStatus:number, dispatchStatus:number}>}
+ * @returns {Promise<{ready:boolean, rootStatus:number, dispatchStatus:number,browserHydrated:boolean}>}
  */
 export async function smokeBootAfterObfuscation(opts = {}) {
   const { spawn } = await import("node:child_process");
@@ -781,7 +781,22 @@ export async function smokeBootAfterObfuscation(opts = {}) {
       );
     }
 
-    return { ready: true, rootStatus, renderedStatus, dispatchStatus };
+    // [T-705] HTTP 200 只证明 SSR/sidecar 活着，不能证明客户端能运行。真实故障就是
+    // GET / = 200，但 Zod `.datetime()` 在 Turbopack 客户端 chunk 中触发循环依赖 TDZ，
+    // hydration 时抛 `Cannot access '<binding>' before initialization`，Next 随后显示全页错误。
+    // 因此可分发包必须用真实 Chromium 跑一遍客户端，任何 pageerror 都 fail-fast。
+    const browserProbe = await browserHydrationProbe({
+      url: `http://127.0.0.1:${port}/`,
+      timeoutMs: Math.min(timeoutMs, 30_000),
+    });
+
+    return {
+      ready: true,
+      rootStatus,
+      renderedStatus,
+      dispatchStatus,
+      browserHydrated: browserProbe.hydrated,
+    };
   } catch (e) {
     // httpProbe 的网络错(如 ECONNRESET=进程处理请求中途崩)会不带 sidecar 输出直接冒泡,
     // 只见「read ECONNRESET」无从诊断(win 首跑实测)——统一附上 stderr/stdout 尾部。
@@ -790,6 +805,35 @@ export async function smokeBootAfterObfuscation(opts = {}) {
     throw new Error(`${e?.message ?? e}${tail("stderr", stderr)}${tail("stdout", stdout)}`);
   } finally {
     cleanup();
+  }
+}
+
+/**
+ * 用真实浏览器验证 Next 客户端完成 hydration。只检查运行时正确性，不依赖具体业务页面文案。
+ * @param {{url:string,timeoutMs:number}} opts
+ */
+export async function browserHydrationProbe({ url, timeoutMs }) {
+  const { chromium } = await import("@playwright/test");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (error) => pageErrors.push(error?.stack ?? error?.message ?? String(error)));
+    await page.goto(url, { waitUntil: "networkidle", timeout: timeoutMs });
+    // 给 React effect / 动态 chunk 一次事件循环窗口，避免只验到首屏 HTML。
+    await page.waitForTimeout(750);
+    const bodyText = await page.locator("body").innerText({ timeout: timeoutMs });
+    const genericErrorVisible = /This page couldn['’]t load|Reload to try again,? or go back/i.test(bodyText);
+    if (pageErrors.length > 0 || genericErrorVisible) {
+      throw new Error(
+        `[obfuscate:smoke] 浏览器 hydration 失败` +
+          (genericErrorVisible ? "：页面落入 Next 全页错误边界" : "") +
+          (pageErrors.length > 0 ? `\npageerror:\n${pageErrors.join("\n---\n").slice(-5000)}` : ""),
+      );
+    }
+    return { hydrated: true };
+  } finally {
+    await browser.close();
   }
 }
 
@@ -836,6 +880,7 @@ if (isMain()) {
         console.log(
           `[obfuscate] ✅ 冒烟通过:ready · GET / = ${r.rootStatus}` +
             (r.renderedStatus !== r.rootStatus ? ` → 渲染 ${r.renderedStatus}` : "") +
+            ` · browser hydration = ${r.browserHydrated ? "PASS" : "FAIL"}` +
             ` · dispatch = ${r.dispatchStatus}(非崩即过)。`,
         );
       })
@@ -877,6 +922,7 @@ if (isMain()) {
         console.log(
           `[obfuscate] ✅ 冒烟通过:ready · GET / = ${r.rootStatus}` +
             (r.renderedStatus !== r.rootStatus ? ` → 渲染 ${r.renderedStatus}` : "") +
+            ` · browser hydration = ${r.browserHydrated ? "PASS" : "FAIL"}` +
             ` · dispatch = ${r.dispatchStatus}(非崩即过)。`,
         );
       })

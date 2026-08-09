@@ -115,9 +115,9 @@ fn main() {
         "cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED={}",
         build_flag("CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED")
     );
+    let client_config_pull_enabled = build_flag("CREATOROS_CLIENT_CONFIG_PULL_ENABLED");
     println!(
-        "cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED={}",
-        build_flag("CREATOROS_CLIENT_CONFIG_PULL_ENABLED")
+        "cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED={client_config_pull_enabled}"
     );
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
     let requested_authority = std::env::var("CREATOROS_MODEL_CONFIGURATION_AUTHORITY")
@@ -177,6 +177,19 @@ fn main() {
     if growth_config_public_key.contains('\r') || growth_config_public_key.contains('\n') {
         panic!("CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64 不得包含换行");
     }
+    if client_config_pull_enabled == "1" {
+        if client_config_origin != "https://growth.aitongban.cloud" {
+            panic!("T-679: 开启渠道配置拉取时必须配置正式 Growth origin");
+        }
+        let mut decoded = base64::engine::general_purpose::STANDARD
+            .decode(&growth_config_public_key)
+            .unwrap_or_else(|_| panic!("T-679: Growth 配置验签公钥不是合法标准 base64"));
+        if decoded.len() != 32 {
+            decoded.zeroize();
+            panic!("T-679: Growth 配置验签公钥必须解码为 32B Ed25519 公钥");
+        }
+        decoded.zeroize();
+    }
     println!(
         "cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_PUBLIC_KEY_B64={growth_config_public_key}"
     );
@@ -190,6 +203,9 @@ fn main() {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
     {
         panic!("CREATOROS_GROWTH_CONFIG_KEY_ID 只能使用 ASCII locator");
+    }
+    if client_config_pull_enabled == "1" && growth_config_key_id.is_empty() {
+        panic!("T-679: 开启渠道配置拉取时 CREATOROS_GROWTH_CONFIG_KEY_ID 不能为空");
     }
     println!("cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID={growth_config_key_id}");
 
@@ -225,9 +241,35 @@ fn main() {
     let product_ref = product_manifest["productRef"]
         .as_str()
         .expect("T-635: ProductManifest productRef 必须为 string");
-    let app_identifier = product_manifest["appIdentifier"]
+    let canonical_app_identifier = product_manifest["appIdentifier"]
         .as_str()
         .expect("T-635: ProductManifest appIdentifier 必须为 string");
+    println!("cargo:rerun-if-env-changed=CREATOROS_PACKAGE_IDENTITY_PATH");
+    let package_identity_json = std::env::var("CREATOROS_PACKAGE_IDENTITY_PATH")
+        .ok()
+        .filter(|path| !path.trim().is_empty())
+        .map(|path| {
+            println!("cargo:rerun-if-changed={path}");
+            std::fs::read_to_string(path).expect("T-694: 无法读取渠道 PackageIdentity")
+        });
+    let package_identity: Option<serde_json::Value> = package_identity_json
+        .as_deref()
+        .map(|json| serde_json::from_str(json).expect("T-694: PackageIdentity 必须是合法 JSON"));
+    let package_text = |key: &str, fallback: &str| -> String {
+        package_identity
+            .as_ref()
+            .and_then(|value| value.get(key))
+            .and_then(|value| value.as_str())
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .unwrap_or(fallback)
+            .to_string()
+    };
+    let app_identifier = package_text("appIdentifier", canonical_app_identifier);
+    let package_display_name = package_text("displayName", "CreatorOS");
+    let keychain_service = package_text("keychainService", "com.creatoros.desktop");
+    let package_ref = package_text("packageRef", "creatoros-official");
+    let expected_channel_ref = package_text("expectedChannelRef", "official");
 
     // [T-635] projectKey 是产品级 identity（不是渠道 identity）。任何关闭 debug
     // assertions 的构建都属于可分发边界（含 release/release-fast/NSIS candidate），必须 exact
@@ -258,6 +300,10 @@ fn main() {
     println!("cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY={built_in_project_key}");
     println!("cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_REF={product_ref}");
     println!("cargo:rustc-env=CREATOROS_BUILTIN_APP_IDENTIFIER={app_identifier}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_PACKAGE_DISPLAY_NAME={package_display_name}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_KEYCHAIN_SERVICE={keychain_service}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_PACKAGE_REF={package_ref}");
+    println!("cargo:rustc-env=CREATOROS_BUILTIN_EXPECTED_CHANNEL_REF={expected_channel_ref}");
     println!("cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_MANIFEST_JSON={product_manifest_json}");
     let out_dir =
         std::path::PathBuf::from(std::env::var_os("OUT_DIR").expect("Cargo 必须提供 OUT_DIR"));

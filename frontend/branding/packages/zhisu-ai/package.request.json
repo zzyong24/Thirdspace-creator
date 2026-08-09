@@ -1,0 +1,44 @@
+{
+  "status": "local-test-built",
+  "packageRef": "zhisu-ai",
+  "displayName": "智溯AI",
+  "proposedBinaryName": "ZhisuAI",
+  "proposedAppIdentifier": "com.zhisunet.zhisuai",
+  "proposedKeychainService": "com.zhisunet.zhisuai.desktop",
+  "providedLinks": {
+    "purchaseUrl": "https://zhisunet.com/buy/",
+    "renewalUrl": "https://zhisunet.com/renew/",
+    "downloadUrl": "https://zhisunet.com/download/",
+    "bugFeedbackUrl": "https://zhisunet.com/feedback/",
+    "channelSupportUrl": "https://zhisunet.com/support/"
+  },
+  "importedAssets": {
+    "sourcePng": {
+      "sha256": "5d44ad41ed09e8fc89ddb97b46732dd099629a0641cbac1c085a07afad81f797",
+      "dimensions": "1024x1024",
+      "receivedAt": "2026-08-07"
+    },
+    "macos": { "path": "assets/icon.icns", "sha256": "07cb90723cd0bdebfc1670cfa2fd90d4b2706a9b9333c44ed59e05664196d37e" },
+    "windows": { "path": "assets/icon.ico", "sha256": "ea6d16f89f3250fd437fd8d196a006c861dfb54a3eadef6f12884ee0436f1f7b" }
+  },
+  "proposedWindowsUpgradeCode": "249CE044-BB7E-4AC3-9D98-4BE1BD4AD818",
+  "target": "macos-aarch64",
+  "resolved": {
+    "expectedChannelRef": "partner-p501444c",
+    "packageUpdateOrigin": "https://creatoros.aitongban.cloud",
+    "sharedRuntimeOrigin": "https://creatoros.aitongban.cloud",
+    "immutableIdentityConfirmedAt": "2026-08-07"
+  },
+  "localTestBuild": {
+    "artifactPath": "/Users/zyongzhu/Downloads/智溯AI-0.3.0.dmg",
+    "artifactSizeBytes": 427176453,
+    "artifactSha256": "da5c1c10ea5ade35925d563d3702cd5ac84895fa6ad022bd09912c0b6e598913",
+    "installedAppPath": "/Applications/智溯AI.app",
+    "codesign": "adhoc",
+    "developerIdSigned": false,
+    "notarized": false,
+    "realProcessVerified": true,
+    "builtAt": "2026-08-07"
+  },
+  "requiredToFinalize": []
+}

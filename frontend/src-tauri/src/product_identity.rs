@@ -14,6 +14,10 @@ pub fn product_ref() -> &'static str {
     env!("CREATOROS_BUILTIN_PRODUCT_REF")
 }
 
+pub fn package_display_name() -> &'static str {
+    env!("CREATOROS_BUILTIN_PACKAGE_DISPLAY_NAME")
+}
+
 pub fn built_in_project_key() -> &'static str {
     option_env!("CREATOROS_BUILTIN_LICENSE_PROJECT_KEY").unwrap_or("")
 }
@@ -93,6 +97,7 @@ mod tests {
             "{\"schema\":\"thirdspace-product-manifest/v1\",\"productRef\":\"creatoros\",\"appIdentifier\":\"cloud.aitongban.creatoros\",\"projectKey\":\"creatoros\"}"
         );
         assert_eq!(product_ref(), "creatoros");
+        assert_eq!(package_display_name(), "CreatorOS");
         assert_eq!(
             env!("CREATOROS_BUILTIN_APP_IDENTIFIER"),
             "cloud.aitongban.creatoros"

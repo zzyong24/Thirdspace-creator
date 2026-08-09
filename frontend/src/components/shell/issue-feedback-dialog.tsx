@@ -366,7 +366,7 @@ export function IssueFeedbackDialog({
         <DialogHeader>
           <DialogTitle>帮助与反馈</DialogTitle>
           <DialogDescription>
-            这里处理 CreatorOS 使用问题；购买、续费或交付问题，请到设置里的“产品与服务”联系服务方。请先检查下方内容；不会发送日志、附件、截图、激活码或其他内容。
+            这里处理软件使用问题；购买、续费或交付问题，请到设置里的“产品与服务”联系服务方。请先检查下方内容；不会发送日志、附件、截图、激活码或其他内容。
           </DialogDescription>
         </DialogHeader>
 

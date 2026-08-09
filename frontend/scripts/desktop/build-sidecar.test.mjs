@@ -24,7 +24,13 @@ import {
   pruneStandaloneLeaks,
   resolveEntryPackage,
   assertNoPackagedBuildArtifacts,
+  assertNoPortableMetadataFiles,
+  portableTarEnv,
+  prunePortableMetadataFiles,
   copyPortableBundleTree,
+  canvasNativePackageFor,
+  findPnpmEntryForPackage,
+  materializeRuntimePackageClosure,
 } from "./build-sidecar.mjs";
 
 describe("macOS bundle 可搬运复制", () => {
@@ -94,6 +100,33 @@ describe("sidecar 构建产物递归污染哨兵", () => {
       writeFileSync(join(root, "frontend", "cache", "CreatorOS.app.tar.gz"), "nested-package");
 
       expect(() => assertNoPackagedBuildArtifacts(root)).toThrow(/CreatorOS\.app\.tar\.gz/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("macOS AppleDouble 打包防线", () => {
+  it("macOS tar 强制关闭 copyfile 元数据编码", () => {
+    expect(portableTarEnv({ MARKER: "kept" }, "darwin")).toEqual({
+      MARKER: "kept",
+      COPYFILE_DISABLE: "1",
+    });
+    expect(portableTarEnv({ MARKER: "kept" }, "linux")).toEqual({ MARKER: "kept" });
+  });
+
+  it("签名前清理并拒绝残留的 ._* 与 .DS_Store", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-appledouble-"));
+    try {
+      mkdirSync(join(root, "server.app", "Contents", "MacOS"), { recursive: true });
+      writeFileSync(join(root, "server.app", "Contents", "._Info.plist"), "appledouble");
+      writeFileSync(join(root, ".DS_Store"), "finder");
+      expect(() => assertNoPortableMetadataFiles(root)).toThrow(/AppleDouble/);
+      expect(prunePortableMetadataFiles(root).sort()).toEqual([
+        ".DS_Store",
+        "server.app/Contents/._Info.plist",
+      ]);
+      expect(() => assertNoPortableMetadataFiles(root)).not.toThrow();
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -290,6 +323,130 @@ describe("生产依赖闭包去重", () => {
 
       expect(lstatSync(anchor).isSymbolicLink()).toBe(true);
       expect(realpathSync(anchor)).toBe(realpathSync(target));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("PDF 附件解析桌面运行时闭包", () => {
+  it("按目标平台选择 canvas 原生包，不把开发机架构写死", () => {
+    expect(canvasNativePackageFor("darwin", "arm64")).toBe(
+      "@napi-rs/canvas-darwin-arm64",
+    );
+    expect(canvasNativePackageFor("win32", "x64")).toBe(
+      "@napi-rs/canvas-win32-x64-msvc",
+    );
+    expect(canvasNativePackageFor("plan9", "x64")).toBeNull();
+  });
+
+  it("macOS/Linux 从 pdf-parse 根 entry 带齐 canvas 与原生依赖并建立解析锚", () => {
+    const { root, pnpm } = makeStore();
+    try {
+      const pdfEntry = "pdf-parse@2.4.5";
+      const canvasEntry = "@napi-rs+canvas@0.1.80";
+      const nativeEntry = "@napi-rs+canvas-darwin-arm64@0.1.80";
+      const pdfDir = makeEntry(pnpm, pdfEntry, "pdf-parse", "pdf");
+      const canvasDir = makeEntry(pnpm, canvasEntry, "@napi-rs/canvas", "canvas");
+      const nativeDir = makeEntry(
+        pnpm,
+        nativeEntry,
+        "@napi-rs/canvas-darwin-arm64",
+        "native",
+      );
+
+      const linkDep = (entry, name, target) => {
+        const link = join(pnpm, entry, "node_modules", ...name.split("/"));
+        mkdirSync(dirname(link), { recursive: true });
+        symlinkSync(relative(dirname(link), target), link, "dir");
+      };
+      linkDep(pdfEntry, "@napi-rs/canvas", canvasDir);
+      linkDep(canvasEntry, "@napi-rs/canvas-darwin-arm64", nativeDir);
+
+      expect(findPnpmEntryForPackage(pnpm, "pdf-parse")).toBe(pdfEntry);
+      const runtimeRoot = join(root, "runtime");
+      const result = materializeRuntimePackageClosure({
+        srcPnpm: pnpm,
+        runtimeRoot,
+        packageName: "pdf-parse",
+        targetPlatform: "darwin",
+      });
+
+      expect(result.closure).toEqual(new Set([pdfEntry, canvasEntry, nativeEntry]));
+      const anchor = join(runtimeRoot, "frontend", "node_modules", "pdf-parse");
+      expect(lstatSync(anchor).isSymbolicLink()).toBe(true);
+      expect(readFileSync(join(anchor, "marker.txt"), "utf8")).toBe("pdf");
+      const canvasAnchor = join(
+        runtimeRoot,
+        "frontend",
+        "node_modules",
+        "@napi-rs",
+        "canvas",
+      );
+      const nativeAnchor = join(
+        runtimeRoot,
+        "frontend",
+        "node_modules",
+        "@napi-rs",
+        "canvas-darwin-arm64",
+      );
+      expect(lstatSync(canvasAnchor).isSymbolicLink()).toBe(true);
+      expect(lstatSync(nativeAnchor).isSymbolicLink()).toBe(true);
+      expect(readFileSync(join(canvasAnchor, "marker.txt"), "utf8")).toBe("canvas");
+      expect(readFileSync(join(nativeAnchor, "marker.txt"), "utf8")).toBe("native");
+      expect(
+        readFileSync(
+          join(
+            runtimeRoot,
+            "node_modules",
+            ".pnpm",
+            nativeEntry,
+            "node_modules",
+            "@napi-rs",
+            "canvas-darwin-arm64",
+            "marker.txt",
+          ),
+          "utf8",
+        ),
+      ).toBe("native");
+      expect(readFileSync(join(pdfDir, "marker.txt"), "utf8")).toBe("pdf");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("Windows 将 external 闭包物化为无 junction 的顶层真目录", () => {
+    const { root, pnpm } = makeStore();
+    try {
+      const pdfEntry = "pdf-parse@2.4.5";
+      const canvasEntry = "@napi-rs+canvas@0.1.80";
+      const pdfDir = makeEntry(pnpm, pdfEntry, "pdf-parse", "pdf-win");
+      const canvasDir = makeEntry(pnpm, canvasEntry, "@napi-rs/canvas", "canvas-win");
+      const link = join(pnpm, pdfEntry, "node_modules", "@napi-rs", "canvas");
+      mkdirSync(dirname(link), { recursive: true });
+      symlinkSync(relative(dirname(link), canvasDir), link, "dir");
+
+      const runtimeRoot = join(root, "runtime-win");
+      materializeRuntimePackageClosure({
+        srcPnpm: pnpm,
+        runtimeRoot,
+        packageName: "pdf-parse",
+        targetPlatform: "win32",
+      });
+
+      const pdf = join(runtimeRoot, "frontend", "node_modules", "pdf-parse");
+      const canvas = join(
+        runtimeRoot,
+        "frontend",
+        "node_modules",
+        "@napi-rs",
+        "canvas",
+      );
+      expect(lstatSync(pdf).isSymbolicLink()).toBe(false);
+      expect(lstatSync(canvas).isSymbolicLink()).toBe(false);
+      expect(readFileSync(join(pdf, "marker.txt"), "utf8")).toBe("pdf-win");
+      expect(readFileSync(join(canvas, "marker.txt"), "utf8")).toBe("canvas-win");
+      expect(readFileSync(join(pdfDir, "marker.txt"), "utf8")).toBe("pdf-win");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

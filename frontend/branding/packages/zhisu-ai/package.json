@@ -1,0 +1,35 @@
+{
+  "schema": "creatoros-desktop-package/v1",
+  "packageRef": "zhisu-ai",
+  "productRef": "creatoros",
+  "projectKey": "creatoros",
+  "expectedChannelRef": "partner-p501444c",
+  "displayName": "智溯AI",
+  "binaryName": "ZhisuAI",
+  "appIdentifier": "com.zhisunet.zhisuai",
+  "keychainService": "com.zhisunet.zhisuai.desktop",
+  "windowsUpgradeCode": "249CE044-BB7E-4AC3-9D98-4BE1BD4AD818",
+  "icons": {
+    "macos": {
+      "path": "assets/icon.icns",
+      "sha256": "07cb90723cd0bdebfc1670cfa2fd90d4b2706a9b9333c44ed59e05664196d37e"
+    },
+    "windows": {
+      "path": "assets/icon.ico",
+      "sha256": "ea6d16f89f3250fd437fd8d196a006c861dfb54a3eadef6f12884ee0436f1f7b"
+    }
+  },
+  "growthExpectations": {
+    "brandName": "智溯AI",
+    "purchaseUrl": "https://zhisunet.com/buy/",
+    "renewalUrl": "https://zhisunet.com/renew/",
+    "downloadUrl": "https://zhisunet.com/download/",
+    "bugFeedbackUrl": "https://zhisunet.com/feedback/",
+    "channelSupportUrl": "https://zhisunet.com/support/"
+  },
+  "updates": {
+    "channel": "stable",
+    "packageUpdateOrigin": "https://creatoros.aitongban.cloud",
+    "sharedRuntimeOrigin": "https://creatoros.aitongban.cloud"
+  }
+}
