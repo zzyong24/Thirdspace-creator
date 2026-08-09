@@ -128,7 +128,10 @@ describe("T-482 内容雷达转为我的选题", () => {
       nextId: (prefix: string) => `${prefix}-${++serial}`,
     };
     const tasks = createPersistentTaskService(db, d);
-    const createTopic = vi.fn().mockResolvedValue({ id: "topic-1" });
+    const createTopic = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "topic-1" })
+      .mockResolvedValueOnce({ id: "topic-2" });
     const intelligence = createIntelligenceService(db, {
       ...d,
       tasks,
@@ -301,7 +304,17 @@ describe("T-482 内容雷达转为我的选题", () => {
         positioningVersionId: "positioning-v1",
         idempotencyKey: "topic-preview-2",
       });
+      const replayedRegeneration = await intelligence.startTopicPreview(ctx, {
+        itemId: detail.item.id,
+        sourceSnapshotId: detail.snapshots[0]!.id,
+        positioningVersionId: "positioning-v1",
+        idempotencyKey: "topic-preview-2",
+      });
+      expect(replayedRegeneration.transform.id).toBe(regenerated.transform.id);
+      expect(replayedRegeneration.task.id).toBe(regenerated.task.id);
       let reusedDecomposition: unknown = null;
+      let reusedCandidate: unknown = null;
+      let activeConfirmationRejected = false;
       await runIntelligenceTopicPreviewTask(
         ctx,
         { taskId: regenerated.task.id },
@@ -310,30 +323,69 @@ describe("T-482 内容雷达转为我的选题", () => {
           intelligence,
           workerId: () => "topic-worker-repeat",
           generator: {
-            generate: async (_ctx, input) => {
+            generate: async (_ctx, input, onCheckpoint) => {
               reusedDecomposition = input.reusableDecomposition;
-              return {
+              reusedCandidate = input.reusableCandidate;
+              const next = {
                 hook: "沿用首轮拆解钩子",
                 structureSteps: ["指出常见误区", "给出判断顺序"],
                 coreClaims: ["工作流优先于参数选择"],
                 reusablePattern: "反常识开场—给判断顺序",
                 factRisks: [],
-                title: "重新生成的选题",
-                angle: "换一个业务落地切口",
-                differentiation: "改用失败复盘案例",
-                targetAudience: "正在落地 AI 的业务负责人",
-                audiencePain: "方案看起来先进但交付不稳定",
-                coreConflict: "模型能力与工作流责任边界冲突",
-                format: "复盘口播",
-                adaptationStrategy: {
-                  keep: ["判断顺序"],
-                  replace: ["替换来源案例"],
-                  add: ["加入失败复盘"],
-                  avoid: ["不照搬叙事顺序"],
-                },
+                ...(input.reusableCandidate ?? {
+                  title: "不应重新生成的选题",
+                  angle: "不应重新生成的角度",
+                  differentiation: "不应重新生成的差异化",
+                  targetAudience: "不应重新生成的受众",
+                  audiencePain: "不应重新生成的痛点",
+                  coreConflict: "不应重新生成的冲突",
+                  format: "不应重新生成的形式",
+                  adaptationStrategy: {
+                    keep: ["不应重新生成"],
+                    replace: ["不应重新生成"],
+                    add: ["不应重新生成"],
+                    avoid: ["不应重新生成"],
+                  },
+                  sourceSummary: "不应重新生成的摘要",
+                }),
                 adaptedDraft: "这次我们不聊参数榜单，只复盘一个交付失败的现场。模型能答对问题，但流程里没人负责确认输入，最后每一步看似完成，结果却无法上线。",
-                sourceSummary: "复用同一来源拆解证据",
               };
+              await onCheckpoint({
+                stage: "decomposition",
+                value: {
+                  hook: next.hook,
+                  structureSteps: next.structureSteps,
+                  coreClaims: next.coreClaims,
+                  reusablePattern: next.reusablePattern,
+                  factRisks: next.factRisks,
+                },
+              });
+              await onCheckpoint({
+                stage: "topic",
+                value: {
+                  title: next.title,
+                  angle: next.angle,
+                  differentiation: next.differentiation,
+                  sourceSummary: next.sourceSummary,
+                  targetAudience: next.targetAudience,
+                  audiencePain: next.audiencePain,
+                  coreConflict: next.coreConflict,
+                  format: next.format,
+                  adaptationStrategy: next.adaptationStrategy,
+                },
+              });
+              await onCheckpoint({
+                stage: "draft",
+                value: { contentText: next.adaptedDraft },
+              });
+              await expect(
+                intelligence.confirmTopic(ctx, regenerated.transform.id, {
+                  editedCandidate: next,
+                  idempotencyKey: "confirm-active-retry",
+                }),
+              ).rejects.toThrow("TOPIC_PREVIEW_NOT_READY");
+              activeConfirmationRejected = true;
+              return next;
             },
           },
         },
@@ -349,6 +401,17 @@ describe("T-482 内容雷达转为我的选题", () => {
         reusablePattern: "反常识开场—拆必要条件—给判断顺序",
         factRisks: [],
       });
+      expect(reusedCandidate).toMatchObject({
+        title: "参数不重要，工作流才是 AI 落地的分水岭",
+        angle: expect.stringContaining("帮助中小团队"),
+        adaptationStrategy: {
+          keep: ["反常识开场"],
+          replace: ["替换来源案例"],
+          add: ["加入本账号实战判断"],
+          avoid: ["不照搬原句"],
+        },
+      });
+      expect(activeConfirmationRejected).toBe(true);
 
       const confirmed = await intelligence.confirmTopic(
         ctx,
@@ -446,6 +509,60 @@ describe("T-482 内容雷达转为我的选题", () => {
           }
         ).transcriptHash,
       ).toMatch(/^sha256:[a-f0-9]{64}$/);
+
+      const regeneratedReady = await intelligence.getItem(ctx, detail.item.id);
+      const regeneratedSnapshot = regeneratedReady.transforms.find(
+        (entry) => entry.id === regenerated.transform.id,
+      )?.outputSnapshot;
+      if (!regeneratedSnapshot) throw new Error("expected regenerated snapshot");
+      const reconfirmed = await intelligence.confirmTopic(
+        ctx,
+        regenerated.transform.id,
+        {
+          editedCandidate: regeneratedSnapshot as Parameters<
+            typeof intelligence.confirmTopic
+          >[2]["editedCandidate"],
+          idempotencyKey: "confirm-2",
+        },
+      );
+      expect(reconfirmed.topicId).toBe("topic-2");
+      expect(createTopic).toHaveBeenCalledTimes(2);
+      const afterReconfirm = await intelligence.getItem(ctx, detail.item.id);
+      expect(
+        afterReconfirm.transforms.find(
+          (entry) => entry.id === transform.transform.id,
+        ),
+      ).toMatchObject({ status: "confirmed", targetTopicId: "topic-1" });
+      expect(
+        afterReconfirm.transforms.find(
+          (entry) => entry.id === regenerated.transform.id,
+        ),
+      ).toMatchObject({ status: "confirmed", targetTopicId: "topic-2" });
+
+      await db.insert(sourceSnapshots).values({
+        id: "snapshot-newer-than-open-page",
+        userId: ctx.userId,
+        accountId: ctx.accountId!,
+        sourceId: source.source.id,
+        runId: source.run.id,
+        itemId: detail.item.id,
+        capturedAt: "2026-07-23T12:01:00.000Z",
+        finalUrl: detail.item.canonicalUrl,
+        title: "更新后的来源快照",
+        contentHash: "sha256:newer-source-snapshot",
+        safeExtract: "来源页面已经出现更新。",
+        storageRef: null,
+        retentionUntil: null,
+        privacyClass: "public",
+      });
+      await expect(
+        intelligence.startTopicPreview(ctx, {
+          itemId: detail.item.id,
+          sourceSnapshotId: detail.snapshots[0]!.id,
+          positioningVersionId: "positioning-v1",
+          idempotencyKey: "stale-source-snapshot-retry",
+        }),
+      ).rejects.toThrow("SOURCE_SNAPSHOT_STALE");
     } finally {
       await client.close();
     }

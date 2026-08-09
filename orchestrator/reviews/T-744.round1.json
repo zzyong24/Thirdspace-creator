@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "方向与复用边界成立且无需新增契约或数据表，但检查点复用尚未绑定来源快照，活动任务中的陈旧稿也缺少服务端采纳门。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "BR-744-03",
+        "quote": "新尝试必须复用同一作品、最新来源快照、当前定位版本，以及逐字稿 hash 相同的已完成拆解和选题策略。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-744-01",
+        "quote": "后端证明复用拆解和选题，只执行 draft。"
+      },
+      "where": "第 2、3、5 节的历史检查点复用条件",
+      "failure_mode": "startTopicPreview 只验证 snapshot 属于作品，历史 transform 检索又没有比较 sourceSnapshotId；来源最新快照变化但逐字稿 hash 未变时，可能复用旧来源证据生成新稿。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/modules/intelligence/intelligence.service.ts:4173-4179,4316-4351",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 independent full review",
+      "suggestion": "规定复用 tuple 同时匹配当前最新 sourceSnapshotId、逐字稿 hash 与定位版本；不匹配时不得只跑 draft，并补负向测试。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "BR-744-06",
+        "quote": "活动重试期间保留旧内容用于阅读，但重试按钮和采纳按钮均不可用。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-744-05",
+        "quote": "重试任务处于 queued/running 时，旧稿可读但确认与再次重试不可点击。"
+      },
+      "where": "第 3、5 节的活动任务确认门",
+      "failure_mode": "前端确认按钮只检查本地 busy 和字段完整性，服务端 confirmTopic 也不读取目标 transform 的任务状态；迟到或陈旧客户端请求可在重试仍运行时把旧 draft 当作新结果创建 Candidate。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/src/features/intelligence/intelligence-workbench.tsx:3566-3584; backend/src/modules/intelligence/intelligence.service.ts:4644-4658,4739-4818",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 independent full review",
+      "suggestion": "前端按持久任务活动状态禁用确认；服务端确认前要求目标任务成功且 draft 检查点完整，补活动任务确认被拒绝测试。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

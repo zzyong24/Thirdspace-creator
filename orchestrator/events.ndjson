@@ -654,3 +654,4 @@
 {"ts":"2026-08-09T13:54:33.593Z","actor":"taskctl","action":"complete","task":"T-741","evidence":"client-config/settings 聚焦已纳入前端 9 files/202 tests PASS；frontend typecheck PASS；ESLint 0 error；真实安全错误仍失败关闭；无视觉样式修改；reconcile 旧收据漂移如实保留。","sha_before":"9516829242c6","sha_after":"180fb00634d6"}
 {"ts":"2026-08-09T15:38:55.870Z","actor":"taskctl","action":"start","task":"T-743","sha_before":"46cb916f8951","sha_after":"af295f273a27"}
 {"ts":"2026-08-09T15:46:16.336Z","actor":"taskctl","action":"start","task":"T-742","sha_before":"6039152b32a5","sha_after":"666d55b37f24"}
+{"ts":"2026-08-09T16:08:58.059Z","actor":"taskctl","action":"start","task":"T-744","sha_before":"c3a2f5b2d0c3","sha_after":"8e714d54590f"}
