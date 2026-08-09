@@ -5,6 +5,29 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-AI-727
+Date: 2026-08-08
+Stage: T-727 BUILD
+Type: contract-and-execution-shape
+Decision: `script.draft` 保留现有异步任务与候选确认链，但增加 `verbatim` 模式。模型只从本轮
+          受信用户消息/文本附件清单选择 `sourceRef` 与可选精确锚点；服务端恢复原字符、计算
+          hash 并写入 task input，runner 直接产 artifact_version 候选，不装配创作上下文、
+          不调用写稿模型。普通 generate 模式零行为变化。
+Rationale: PAT-004 CF-001/CF-004 命中：工具→组合根→任务 runner 是跨包、需端到端可追溯的协议，
+           因此先在工具 schema 和任务输入形状中明确模式/引用/hash，不能仅加提示词。PAT-003
+           AF-003 命中：保真导入也需要刷新可恢复、执行审计和统一确认门，继续复用持久异步任务，
+           不另造同步写稿旁路。MOD-002 已核对但不借入保真路径：它适合普通非工具 LLM 调用，
+           本需求恰恰要在 `verbatim` 模式彻底绕开 LLM；既有 generate 路径继续复用现有 provider。
+Pattern-Ref: PAT-003, PAT-004
+Asset-Ref: MOD-002（已评估；仅保留既有 generate 使用，verbatim 明确不使用）
+Affected Artifacts: T-727 SPEC、chat-runner/chat-tools、script-runner、persistence-client、原文候选卡与测试。
+Explicit Limits: 代码不用关键词/相似度猜创作语义，语义分界只由配置模型完成；不直接写稿面；不覆盖历史版本；
+                 来源不唯一或已截断时 fail-closed，不退回模型重写。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-WEB-672
 Date: 2026-08-03
 Stage: T-672 PLAN

@@ -1965,6 +1965,7 @@ export function AICopilotContent({
                     // dispatch 失败/无项目上下文 → 卡渲诚实错误态(去项目稿面写脚本)。
                     if (name === "script.draft" && out.kind === "script.draft") {
                       const o = out as {
+                        draftMode?: "generate" | "verbatim";
                         taskId?: string | null;
                         projectId?: string | null;
                         error?: string | null;
@@ -1973,6 +1974,7 @@ export function AICopilotContent({
                         <React.Fragment key={key}>
                           {traceRow}
                           <ChatScriptDraftCard
+                            draftMode={o.draftMode}
                             taskId={o.taskId ?? null}
                             projectId={o.projectId ?? activeProjectChip?.id ?? null}
                             error={o.error ?? null}

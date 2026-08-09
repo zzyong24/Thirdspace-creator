@@ -33,6 +33,7 @@ import type {
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 整稿生成可达分钟级(弱模型更慢)
+const VERBATIM_PREVIEW_CHARS = 1_200;
 
 type Phase = "running" | "review" | "done" | "error";
 
@@ -104,11 +105,14 @@ function sectionsToEditorHtml(sections: ReadonlyArray<ChatScriptSection>): strin
 }
 
 export function ChatScriptDraftCard({
+  draftMode: initialDraftMode = "generate",
   taskId,
   projectId,
   error,
   pollIntervalMs = POLL_INTERVAL_MS,
 }: {
+  /** 工具 dispatch 时即返回；旧持久消息缺省为普通生成。 */
+  draftMode?: "generate" | "verbatim";
   taskId: string | null;
   /** 目标项目 id(采纳/局部刷新定位;无项目上下文为 null → 只渲错误态)。 */
   projectId: string | null;
@@ -128,6 +132,10 @@ export function ChatScriptDraftCard({
   const [validationErrors, setValidationErrors] = React.useState<string[]>([]);
   const [qualityWarnings, setQualityWarnings] = React.useState<string[]>([]);
   const [terminalError, setTerminalError] = React.useState<string | null>(null);
+  const [draftMode, setDraftMode] = React.useState<"generate" | "verbatim">(
+    initialDraftMode,
+  );
+  const [sourceLength, setSourceLength] = React.useState<number | null>(null);
 
   // 轮询 task/candidate(仿 ChatThesisCard,从已 dispatch 的 taskId 起)。取消只靠本效应闭包内
   // 的 abandoned(effect cleanup 置真)—— **不用 mount-unmount ref**:React StrictMode(dev 默认开)
@@ -174,6 +182,15 @@ export function ChatScriptDraftCard({
               ? readAdoptionGate(last.resultData)
               : { canAdopt: false, errors: [LEGACY_VALIDATION_ERROR] };
             if (abandoned) return;
+            const resultMode = last?.resultData.draftMode;
+            if (resultMode === "verbatim") {
+              setDraftMode("verbatim");
+              setSourceLength(
+                typeof last.resultData.sourceLength === "number"
+                  ? last.resultData.sourceLength
+                  : got[0]?.body.length ?? null,
+              );
+            }
             setSections(got);
             setCanAdopt(gate.canAdopt && got.length > 0);
             setValidationErrors(
@@ -248,7 +265,9 @@ export function ChatScriptDraftCard({
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        整稿分镜脚本 · 采纳后写入稿面
+        {draftMode === "verbatim"
+          ? "原文保真候选 · 采纳后写入稿面"
+          : "整稿分镜脚本 · 采纳后写入稿面"}
       </span>
 
       {phase === "running" ? (
@@ -257,12 +276,23 @@ export function ChatScriptDraftCard({
           className="flex items-center gap-2 text-[12px] text-muted-foreground"
         >
           <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-          正在基于定位/选题/立项 brief/已搜素材写整稿分镜…（后台跑，不占用这轮对话）
+          {draftMode === "verbatim"
+            ? "正在校验原文字符与来源…（不调用写稿模型）"
+            : "正在基于定位/选题/立项 brief/已搜素材写整稿分镜…（后台跑，不占用这轮对话）"}
         </div>
       ) : null}
 
       {phase === "review" ? (
         <div data-slot="chat-script-review" className="flex flex-col gap-1.5">
+          {draftMode === "verbatim" ? (
+            <p
+              data-slot="chat-script-verbatim-proof"
+              className="rounded-md border border-success/30 bg-success/5 px-2.5 py-1.5 text-[11px] leading-relaxed text-success"
+            >
+              原文保真候选 · 已校验 {sourceLength ?? sections[0]?.body.length ?? 0} 字符 ·
+              未调用写稿模型
+            </p>
+          ) : null}
           {shown.length > 0 ? (
             <ol className="flex flex-col gap-1">
               {shown.map((s, i) => (
@@ -271,11 +301,16 @@ export function ChatScriptDraftCard({
                   data-slot="chat-script-section"
                   className="rounded-md border border-border/70 bg-surface-subtle/50 px-2.5 py-1.5"
                 >
-                  <p className="text-[11px] font-semibold text-foreground">
-                    {s.heading}
-                  </p>
+                  {s.heading ? (
+                    <p className="text-[11px] font-semibold text-foreground">
+                      {s.heading}
+                    </p>
+                  ) : null}
                   <p className="mt-0.5 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">
-                    {s.body}
+                    {draftMode === "verbatim" &&
+                    s.body.length > VERBATIM_PREVIEW_CHARS
+                      ? `${s.body.slice(0, VERBATIM_PREVIEW_CHARS)}\n…（卡片仅预览前 ${VERBATIM_PREVIEW_CHARS} 字符，采纳仍使用完整原文）`
+                      : s.body}
                   </p>
                 </li>
               ))}
@@ -348,7 +383,9 @@ export function ChatScriptDraftCard({
 
       {phase === "done" ? (
         <p data-slot="chat-script-done" className="text-[12px] text-success">
-          ✓ 整稿已写入稿面（新版本已保存，可在编辑器里直接改；保存即新版本、可回滚）。
+          {draftMode === "verbatim"
+            ? "✓ 原文已按校验内容写入稿面（新版本已保存，可回滚）。"
+            : "✓ 整稿已写入稿面（新版本已保存，可在编辑器里直接改；保存即新版本、可回滚）。"}
         </p>
       ) : null}
 
@@ -357,7 +394,8 @@ export function ChatScriptDraftCard({
           <p className="text-[12px] leading-relaxed text-destructive">
             {error || terminalError || "本次整稿生成没有完成，请重新生成。"}
           </p>
-          {error ||
+          {draftMode === "verbatim" ||
+          error ||
           !/未配置|尚未配置|api\s*key|密钥|credential|鉴权|401|403/i.test(
             terminalError ?? "",
           ) ? null : (

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
@@ -289,6 +290,114 @@ describe("runScriptDraft 失败可观测性 (T-486)", () => {
       ctx,
       "task-script-empty",
       "script-node: agent 未产出可解析分镜（结构校验与重试均失败）",
+    );
+  });
+});
+
+describe("[T-727] runScriptDraft 原文保真模式", () => {
+  it("逐字符产候选且完全不装配创作上下文、不解析模型、不调用 runScriptNode", async () => {
+    const sourceText = "  今天给大家演示。\n\n错别子、100% 和 **Markdown** 都不改。  ";
+    const runtimeDeps = deps();
+    runtimeDeps.resolveModelSpec = vi.fn(async () => {
+      throw new Error("模型未配置也不应影响原文导入");
+    });
+    runtimeDeps.positioning.getPositioningCenter = vi.fn(async () => {
+      throw new Error("保真模式不应装配 CreativeContext");
+    });
+
+    await runScriptDraft(
+      ctx,
+      {
+        id: "task-verbatim",
+        projectId: "project-1",
+        inputData: {
+          artifactId: "artifact-script",
+          draftMode: "verbatim",
+          verbatimSourceRef: "user:3:0",
+          verbatimSourceText: sourceText,
+          verbatimSourceLength: sourceText.length,
+          verbatimSourceSha256: createHash("sha256").update(sourceText).digest("hex"),
+        },
+      },
+      runtimeDeps,
+    );
+
+    expect(runtimeDeps.resolveModelSpec).not.toHaveBeenCalled();
+    expect(runtimeDeps.positioning.getPositioningCenter).not.toHaveBeenCalled();
+    expect(worker.runScriptNode).not.toHaveBeenCalled();
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledWith(
+      ctx,
+      "task-verbatim",
+      expect.objectContaining({
+        resultType: "artifact_version",
+        artifactId: "artifact-script",
+        resultData: expect.objectContaining({
+          body: sourceText,
+          draftMode: "verbatim",
+          sourceRef: "user:3:0",
+          sourceLength: sourceText.length,
+          sourceSha256: createHash("sha256").update(sourceText).digest("hex"),
+          validationStatus: "valid",
+          validationErrors: [],
+          canAdopt: true,
+          contentData: {
+            sections: [{ heading: "", body: sourceText }],
+          },
+        }),
+      }),
+    );
+    expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("80,000 字以上长稿不截断；hash 或长度不一致时取消且零候选", async () => {
+    const longText = `${"长稿。\n".repeat(20_001)}尾部唯一标记`;
+    const okDeps = deps();
+    await runScriptDraft(
+      ctx,
+      {
+        id: "task-verbatim-long",
+        projectId: "project-1",
+        inputData: {
+          artifactId: "artifact-script",
+          draftMode: "verbatim",
+          verbatimSourceRef: "user:8:0",
+          verbatimSourceText: longText,
+          verbatimSourceLength: longText.length,
+          verbatimSourceSha256: createHash("sha256").update(longText).digest("hex"),
+        },
+      },
+      okDeps,
+    );
+    expect(okDeps.ai.recordCandidate).toHaveBeenCalledWith(
+      ctx,
+      "task-verbatim-long",
+      expect.objectContaining({
+        resultData: expect.objectContaining({ body: longText }),
+      }),
+    );
+
+    const badDeps = deps();
+    await runScriptDraft(
+      ctx,
+      {
+        id: "task-verbatim-corrupt",
+        projectId: "project-1",
+        inputData: {
+          artifactId: "artifact-script",
+          draftMode: "verbatim",
+          verbatimSourceRef: "user:8:0",
+          verbatimSourceText: longText,
+          verbatimSourceLength: longText.length - 1,
+          verbatimSourceSha256: "0".repeat(64),
+        },
+      },
+      badDeps,
+    );
+    expect(badDeps.ai.recordCandidate).not.toHaveBeenCalled();
+    expect(badDeps.ai.cancelTask).toHaveBeenCalledWith(
+      ctx,
+      "task-verbatim-corrupt",
+      expect.stringMatching(/原文校验失败/),
     );
   });
 });

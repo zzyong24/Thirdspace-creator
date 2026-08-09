@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
 // [T-263] HITL 授权门装配(local.read needsApproval → toolApproval 映射)。
@@ -26,6 +27,7 @@ import {
   MATERIAL_SCREENSHOT_SERP_ERROR,
   WEB_READ_BLOCKED_ALTERNATES_NOTE,
   WEB_READ_BLOCKED_NO_ALTERNATES_NOTE,
+  resolveVerbatimSource,
   type ChatToolDeps,
 } from "./chat-tools";
 
@@ -1489,6 +1491,188 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
     expect(result.error).toContain("未接入");
+  });
+
+  it("[T-727] verbatim 只传 sourceRef，由服务端恢复完整原文/hash 后 dispatch，绝不塞 extraBrief 摘要", async () => {
+    const sourceText = "  今天给大家演示。\n\n错别子也保持，100% 不改。  ";
+    const { deps } = makeDeps({
+      verbatimSources: [
+        {
+          ref: "user:2:0",
+          label: "用户消息 2",
+          text: sourceText,
+          truncated: false,
+        },
+      ],
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+
+    const result = (await runExecute(tools["script.draft"]!, {
+      mode: "verbatim",
+      sourceRef: "user:2:0",
+      extraBrief: "模型擅自摘要的十点",
+    })) as { taskId: string | null; error: string | null };
+
+    expect(deps.dispatchScriptDraft).toHaveBeenCalledWith({
+      draftMode: "verbatim",
+      verbatimSourceRef: "user:2:0",
+      verbatimSourceText: sourceText,
+      verbatimSourceLength: sourceText.length,
+      verbatimSourceSha256: createHash("sha256").update(sourceText).digest("hex"),
+    });
+    expect(result.taskId).toBe("task-draft-1");
+    expect(result.error).toBeNull();
+  });
+
+  it("[T-727] 精确锚点按包含边界切片；未知引用、重复锚点和截断附件都 fail-closed", async () => {
+    const dispatch = vi.fn(async () => ({
+      taskId: "task-verbatim",
+      projectId: "proj-1",
+      error: null,
+    }));
+    const { deps } = makeDeps({
+      dispatchScriptDraft: dispatch,
+      verbatimSources: [
+        {
+          ref: "user:1:0",
+          label: "用户消息 1",
+          text: "视频已经录好，主要是录屏。下面是我写好的稿子：\n第一段原文\n第二段原文\n这句是稿件之后的追问",
+          truncated: false,
+        },
+        {
+          ref: "attachment:0",
+          label: "附件：长稿.txt",
+          text: "只拿到了附件前部",
+          truncated: true,
+        },
+        {
+          ref: "user:3:0",
+          label: "用户消息 3",
+          text: "重复锚点 / 重复锚点",
+          truncated: false,
+        },
+      ],
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+
+    await runExecute(tools["script.draft"]!, {
+      mode: "verbatim",
+      sourceRef: "user:1:0",
+      startAnchor: "第一段原文",
+      endAnchor: "第二段原文",
+    });
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        verbatimSourceText: "第一段原文\n第二段原文",
+      }),
+    );
+
+    for (const input of [
+      { mode: "verbatim", sourceRef: "missing" },
+      { mode: "verbatim", sourceRef: "attachment:0" },
+      {
+        mode: "verbatim",
+        sourceRef: "user:3:0",
+        startAnchor: "重复锚点",
+      },
+    ]) {
+      dispatch.mockClear();
+      const result = (await runExecute(tools["script.draft"]!, input)) as {
+        taskId: string | null;
+        error: string | null;
+      };
+      expect(result.taskId).toBeNull();
+      expect(result.error).toBeTruthy();
+      expect(dispatch).not.toHaveBeenCalled();
+    }
+  });
+
+  it("[T-727] 专用 AI 语义门决定是否授权及正文边界，工具只按返回锚点恢复原字符", async () => {
+    const sourceText =
+      "视频已经录好了，主要是录屏。然后我把稿子发给你。我们的编导智能体支持写稿。\n正文第二段。";
+    const dispatch = vi.fn(async () => ({
+      taskId: "task-semantic-verbatim",
+      projectId: "proj-1",
+      error: null,
+    }));
+    const selectVerbatimSource = vi.fn(async () => ({
+      authorized: true,
+      startAnchor: "我们的编导智能体支持写稿。",
+      endAnchor: null,
+      reason: "最新一轮已明确要求写入稿面",
+    }));
+    const { deps } = makeDeps({
+      dispatchScriptDraft: dispatch,
+      latestUserInstruction: "把我刚才发的完整稿子一字不改写进稿面",
+      selectVerbatimSource,
+      verbatimSources: [
+        {
+          ref: "user:0:0",
+          label: "用户消息 1",
+          text: sourceText,
+          truncated: false,
+        },
+      ],
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+
+    await runExecute(tools["script.draft"]!, {
+      mode: "verbatim",
+      sourceRef: "user:0:0",
+      // 上游通用对话模型即使漏给/错给锚点，专用语义门仍是权威选择。
+      startAnchor: "视频已经录好了",
+    });
+
+    expect(selectVerbatimSource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({ ref: "user:0:0", text: sourceText }),
+        latestUserInstruction: "把我刚才发的完整稿子一字不改写进稿面",
+      }),
+    );
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        verbatimSourceText: "我们的编导智能体支持写稿。\n正文第二段。",
+      }),
+    );
+
+    selectVerbatimSource.mockResolvedValueOnce({
+      authorized: false,
+      startAnchor: "我们的编导智能体支持写稿。",
+      endAnchor: null,
+      reason: "当前只是在发送稿件，还没有要求写入稿面。",
+    });
+    dispatch.mockClear();
+    const denied = (await runExecute(tools["script.draft"]!, {
+      mode: "verbatim",
+      sourceRef: "user:0:0",
+    })) as { taskId: string | null; error: string | null };
+    expect(denied.taskId).toBeNull();
+    expect(denied.error).toContain("还没有要求写入稿面");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+});
+
+describe("[T-727] resolveVerbatimSource 协议边界", () => {
+  it("保留首尾空格、空行、标点与错别字，空白和 200,000 字符以上拒绝", () => {
+    const exact = "  原 文。\n\n错别子  ";
+    expect(
+      resolveVerbatimSource(
+        [{ ref: "s", label: "消息", text: exact, truncated: false }],
+        { sourceRef: "s" },
+      ).text,
+    ).toBe(exact);
+    expect(() =>
+      resolveVerbatimSource(
+        [{ ref: "blank", label: "消息", text: " \n ", truncated: false }],
+        { sourceRef: "blank" },
+      ),
+    ).toThrow(/没有可导入/);
+    expect(() =>
+      resolveVerbatimSource(
+        [{ ref: "huge", label: "消息", text: "长".repeat(200_001), truncated: false }],
+        { sourceRef: "huge" },
+      ),
+    ).toThrow(/200,000/);
   });
 });
 

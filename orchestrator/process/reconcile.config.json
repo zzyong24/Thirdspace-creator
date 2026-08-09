@@ -54,6 +54,12 @@
       "what": "授权放行被误当成渠道作用域完整，缺 identity 时静默回退或继续出网",
       "check": "pnpm --dir frontend exec vitest run src/server/activation/client-config.server.test.ts src/app/api/v1/local/client-config/route.test.ts src/components/shell/channel-config-bootstrap.test.tsx src/features/settings/settings-page.test.tsx",
       "onFail": "渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。"
+    },
+    {
+      "led": "LED-017",
+      "what": "用户明确要求原文不改时，系统仍把完整原稿压成摘要后交给写稿模型重写",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/script-runner.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts",
+      "onFail": "逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。"
     }
   ],
   "program_completion_required": false,
@@ -67,6 +73,7 @@
     "recent-data-safety:e2e": "CREATOROS_TEST_PORT=3432 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/recent-data-safety.spec.ts --project=e2e",
     "recent-data-safety-fixed:e2e": "node orchestrator/process/run-recent-data-safety-fixed.mjs",
     "website-pricing:test": "node --test website/pricing.test.mjs",
-    "project-publication-convergence:test": "pnpm --dir frontend exec vitest run src/features/projects/projects-page.test.tsx src/features/draft-workbench/register-published-form.test.tsx src/app/api/v1/dispatch/route.test.ts"
+    "project-publication-convergence:test": "pnpm --dir frontend exec vitest run src/features/projects/projects-page.test.tsx src/features/draft-workbench/register-published-form.test.tsx src/app/api/v1/dispatch/route.test.ts",
+    "verbatim-script-import:test": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/server/script-draft-task-input.test.ts"
   }
 }

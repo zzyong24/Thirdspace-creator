@@ -16,6 +16,7 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
+import { buildScriptDraftTaskInputData } from "@/server/script-draft-task-input";
 import {
   contentRadarDraftSeedOf,
   selectReadableProjectScriptArtifact,
@@ -1545,6 +1546,11 @@ export interface ChatRuntime {
       angle?: string;
       targetDurationSeconds?: number;
       extraBrief?: string;
+      draftMode?: "verbatim";
+      verbatimSourceRef?: string;
+      verbatimSourceText?: string;
+      verbatimSourceLength?: number;
+      verbatimSourceSha256?: string;
     },
   ) => Promise<{ taskId: string }>;
   // [T-350a] publish.package 端口 —— ensure 内容产出挂点(outputId)+ 读整稿正文(空稿诚实门)
@@ -12116,6 +12122,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         angle?: string;
         targetDurationSeconds?: number;
         extraBrief?: string;
+        draftMode?: "verbatim";
+        verbatimSourceRef?: string;
+        verbatimSourceText?: string;
+        verbatimSourceLength?: number;
+        verbatimSourceSha256?: string;
       },
     ) => {
       // ensure output_script artifact(读写同一目标:采纳 append 版本、稿面编辑器读当前版本)。
@@ -12145,16 +12156,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           body: {
             taskType: "script.draft",
             attemptId: createAiTaskAttemptId(),
-            inputData: {
+            inputData: buildScriptDraftTaskInputData({
+              ...input,
               artifactId,
-              projectId: input.projectId,
-              ...(input.topic ? { topic: input.topic } : {}),
-              ...(input.angle ? { angle: input.angle } : {}),
-              ...(typeof input.targetDurationSeconds === "number"
-                ? { targetDurationSeconds: input.targetDurationSeconds }
-                : {}),
-              ...(input.extraBrief ? { extraBrief: input.extraBrief } : {}),
-            },
+            }),
           },
         },
         ctx,

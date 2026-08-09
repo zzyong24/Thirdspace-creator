@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import type { ModelSpec, ScriptShot } from "@creatoros/ai-worker";
@@ -107,6 +108,67 @@ export async function runScriptDraft(
       // The confirm path appends a NEW ArtifactVersion onto this artifact; without it the
       // candidate cannot be materialized. Fail loud (caught below → cancelTask).
       throw new Error("script-runner: inputData.artifactId is required");
+    }
+    if (task.inputData.draftMode === "verbatim") {
+      const sourceText =
+        typeof task.inputData.verbatimSourceText === "string"
+          ? task.inputData.verbatimSourceText
+          : "";
+      const sourceRef =
+        typeof task.inputData.verbatimSourceRef === "string"
+          ? task.inputData.verbatimSourceRef
+          : "";
+      const expectedLength = task.inputData.verbatimSourceLength;
+      const expectedHash = task.inputData.verbatimSourceSha256;
+      const actualHash = createHash("sha256").update(sourceText).digest("hex");
+      if (
+        !sourceRef ||
+        !sourceText.trim() ||
+        sourceText.length > 200_000 ||
+        typeof expectedLength !== "number" ||
+        expectedLength !== sourceText.length ||
+        typeof expectedHash !== "string" ||
+        expectedHash !== actualHash
+      ) {
+        throw new Error(
+          "原文校验失败：来源内容、字符数或 SHA-256 与任务输入不一致，已停止生成候选。",
+        );
+      }
+
+      // [T-727] 原文保真是确定性数据恢复，不是创作生成：不得装配 Brief/定位、不得解析模型、
+      // 不得让 completion policy “修复”原文。AI 仍只产候选，用户采纳后才追加版本。
+      await deps.ai.recordStep(ctx, task.id, {
+        stepNo: 1,
+        kind: "validation",
+        text: JSON.stringify({
+          taskId: task.id,
+          draftMode: "verbatim",
+          sourceRef,
+          sourceLength: sourceText.length,
+          sourceSha256: actualHash,
+          validationStatus: "valid",
+        }),
+        toolCalls: [],
+      });
+      await deps.ai.recordCandidate(ctx, task.id, {
+        resultType: "artifact_version",
+        artifactId,
+        resultData: {
+          body: sourceText,
+          summary: `原文保真导入 · ${sourceText.length} 字符`,
+          draftMode: "verbatim",
+          sourceRef,
+          sourceLength: sourceText.length,
+          sourceSha256: actualHash,
+          sections: [{ heading: "", body: sourceText }],
+          contentData: { sections: [{ heading: "", body: sourceText }] },
+          validationStatus: "valid",
+          validationErrors: [],
+          qualityWarnings: [],
+          canAdopt: true,
+        },
+      });
+      return;
     }
     const topic =
       typeof task.inputData.topic === "string" ? task.inputData.topic : "";

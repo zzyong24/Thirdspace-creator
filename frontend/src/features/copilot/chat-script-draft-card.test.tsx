@@ -129,6 +129,47 @@ describe("ChatScriptDraftCard(对话内整稿卡,T-268 异步)", () => {
     expect(screen.getByText("采纳写入稿面")).toBeTruthy();
   });
 
+  it("[T-727] 原文保真候选显示字符校验与有界预览，但采纳事件携带完整长稿", async () => {
+    const sourceText = `${"原文段落。".repeat(1_000)}尾部唯一标记`;
+    listTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          draftMode: "verbatim",
+          sourceLength: sourceText.length,
+          sourceSha256: "a".repeat(64),
+          validationStatus: "valid",
+          validationErrors: [],
+          canAdopt: true,
+          contentData: { sections: [{ heading: "", body: sourceText }] },
+        },
+      },
+    ]);
+    const onWrite = vi.fn();
+    window.addEventListener(SCRIPT_WRITE_EVENT, onWrite);
+
+    render(
+      <ChatScriptDraftCard
+        taskId="task-verbatim"
+        projectId="proj-1"
+        error={null}
+        pollIntervalMs={0}
+      />,
+    );
+
+    expect((await screen.findAllByText(/原文保真候选/)).length).toBeGreaterThan(0);
+    expect(screen.getByText(new RegExp(`${sourceText.length} 字符`))).toBeTruthy();
+    expect(screen.getByText(/未调用写稿模型/)).toBeTruthy();
+    expect(document.querySelector('[data-slot="chat-script-review"]')?.textContent).not.toContain(
+      "尾部唯一标记",
+    );
+
+    fireEvent.click(screen.getByText("采纳写入稿面"));
+    await waitFor(() => expect(onWrite).toHaveBeenCalled());
+    const event = onWrite.mock.calls[0]![0] as CustomEvent<{ html: string }>;
+    expect(event.detail.html).toContain("尾部唯一标记");
+    window.removeEventListener(SCRIPT_WRITE_EVENT, onWrite);
+  });
+
   it("质量提醒不阻断已有整稿采纳", async () => {
     listTaskResults.mockResolvedValueOnce([
       {

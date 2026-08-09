@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
 // 不再直调 tool() —— 信封元数据(kind 对齐 + 结构占位)单一真值在 CHAT_TOOL_ERROR_ENVELOPES。
@@ -35,6 +36,28 @@ export interface ChatToolDeps {
    * 同时防止模型幻觉/伪造 id 越过当前对象边界。
    */
   boundProjectId?: string;
+  /**
+   * [T-727] 本轮受信原文来源。正文来自用户消息或已过归属门的文本附件抽取结果；模型只能
+   * 选择 ref/精确锚点，不能重抄正文。清单只活在当前请求内存，不是持久实体。
+   */
+  verbatimSources?: readonly VerbatimSource[];
+  /** 最新一轮用户原文，仅供上面的语义门判断是否已有本轮执行授权。 */
+  latestUserInstruction?: string;
+  /**
+   * [T-727] 专用语义门：由配置模型判断“最新一轮是否真的授权写稿面”以及混合消息中哪段
+   * 是完整稿件。代码不猜业务语义，只校验模型返回的精确锚点并恢复原字符。
+   */
+  selectVerbatimSource?: (input: {
+    source: VerbatimSource;
+    latestUserInstruction: string;
+    suggestedStartAnchor?: string;
+    suggestedEndAnchor?: string;
+  }) => Promise<{
+    authorized: boolean;
+    startAnchor?: string | null;
+    endAnchor?: string | null;
+    reason?: string;
+  }>;
   /**
    * [T-163] 错误→人话端口。humanizeAiError 所在 lib 含 ArtifactType(前端 domain 类型)依赖,
    * 故留前端;此处经端口注入(host=chat-runner deps→route 传 humanizeAiError),backend 不跨包
@@ -129,6 +152,12 @@ export interface ChatToolDeps {
     targetDurationSeconds?: number;
     /** [T-081] 对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。 */
     extraBrief?: string;
+    /** [T-727] 保真模式由服务端恢复原文后注入，普通生成不携带这些字段。 */
+    draftMode?: "verbatim";
+    verbatimSourceRef?: string;
+    verbatimSourceText?: string;
+    verbatimSourceLength?: number;
+    verbatimSourceSha256?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
    * [T-350a] publish.package 核心 —— 稿面「生成发布物料」:复用既有 publish.platform_adapt runner
@@ -898,6 +927,8 @@ export interface ScriptHooksToolResult {
 // 读回)。projectId 供卡兜底(采纳/局部刷新定位)。dispatch 失败 / 无项目上下文 → error 非 null。
 export interface ScriptDraftToolResult {
   kind: "script.draft";
+  /** additive：让卡片在任务完成前也能显示真实执行模式。旧持久消息缺省按 generate。 */
+  draftMode?: "generate" | "verbatim";
   /** dispatch 出的 script.draft 任务 id(卡据此轮询 getTask;失败为 null)。 */
   taskId: string | null;
   /** 目标项目 id(卡兜底 + 局部刷新定位;无项目上下文为 null)。 */
@@ -1664,6 +1695,100 @@ export interface ContextPredictionsToolResult {
 
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
 
+export const MAX_VERBATIM_SOURCE_CHARS = 200_000;
+
+/** 当前请求内、已经过宿主归属/抽取边界的原文来源。 */
+export interface VerbatimSource {
+  ref: string;
+  label: string;
+  text: string;
+  /** 附件/读源只拿到前部时为 true；这种来源禁止宣称全文保真。 */
+  truncated: boolean;
+}
+
+export interface ResolvedVerbatimSource {
+  ref: string;
+  text: string;
+  length: number;
+  sha256: string;
+}
+
+/**
+ * 从模型已经选定的受信来源中恢复原字符。这里只做精确协议解析：不做关键词、相似度、主题判断
+ * 或创作选择；任何不唯一都 fail-closed，绝不回退到模型摘要。
+ *
+ * SEMANTIC_BOUNDARY_ALLOW: 精确锚点仅用于从模型已选定的受信用户来源恢复原字符，不判断创作语义或内容质量。
+ */
+export function resolveVerbatimSource(
+  sources: readonly VerbatimSource[],
+  input: {
+    sourceRef?: unknown;
+    startAnchor?: unknown;
+    endAnchor?: unknown;
+  },
+): ResolvedVerbatimSource {
+  const sourceRef =
+    typeof input.sourceRef === "string" ? input.sourceRef.trim() : "";
+  if (!sourceRef) {
+    throw new Error("原文保真需要选择一条受信来源，请重新指定原稿。");
+  }
+  const source = sources.find((item) => item.ref === sourceRef);
+  if (!source) {
+    throw new Error("原稿引用已失效，请在当前对话中重新选择或粘贴原文。");
+  }
+  if (source.truncated) {
+    throw new Error(
+      "当前只拿到这份附件的前部，不能宣称全文保真。请拆分附件或直接粘贴完整原文。",
+    );
+  }
+
+  const uniqueAnchorIndex = (raw: unknown, label: string): number | null => {
+    if (typeof raw !== "string" || raw.length === 0) return null;
+    const first = source.text.indexOf(raw);
+    if (first < 0) {
+      throw new Error(`${label}在原稿中找不到，请重新选择精确边界。`);
+    }
+    if (source.text.indexOf(raw, first + 1) >= 0) {
+      throw new Error(`${label}在原稿中出现多次，无法唯一确定边界。`);
+    }
+    return first;
+  };
+
+  const startAnchor =
+    typeof input.startAnchor === "string" && input.startAnchor.length > 0
+      ? input.startAnchor
+      : null;
+  const endAnchor =
+    typeof input.endAnchor === "string" && input.endAnchor.length > 0
+      ? input.endAnchor
+      : null;
+  const startIndex = uniqueAnchorIndex(startAnchor, "起始锚点") ?? 0;
+  const endAnchorIndex = uniqueAnchorIndex(endAnchor, "结束锚点");
+  const endIndex =
+    endAnchorIndex === null
+      ? source.text.length
+      : endAnchorIndex + (endAnchor?.length ?? 0);
+  if (endIndex < startIndex || (endAnchorIndex !== null && endAnchorIndex < startIndex)) {
+    throw new Error("原稿的结束锚点位于起始锚点之前，请重新选择边界。");
+  }
+
+  const text = source.text.slice(startIndex, endIndex);
+  if (!text.trim()) {
+    throw new Error("所选来源没有可导入的正文，请重新选择原稿。");
+  }
+  if (text.length > MAX_VERBATIM_SOURCE_CHARS) {
+    throw new Error(
+      `原稿超过 200,000 字符，请拆分后分次导入（当前 ${text.length} 字符）。`,
+    );
+  }
+  return {
+    ref: source.ref,
+    text,
+    length: text.length,
+    sha256: createHash("sha256").update(text).digest("hex"),
+  };
+}
+
 // [T-081] 产内容工具统一的 extraBrief 入参(对齐 topic.generate deps 先例):对话里翻真数据/
 // 讨论得出的洞察经它进入生成 prompt —— 修「模型有洞察、工具零入参无通道」的上下文断裂。
 const EXTRA_BRIEF_PROPERTY = {
@@ -1741,13 +1866,23 @@ const SCRIPT_HOOKS_PARAMS = jsonSchema<{
 });
 
 const SCRIPT_DRAFT_PARAMS = jsonSchema<{
+  mode?: "generate" | "verbatim";
   topic?: string;
   angle?: string;
   targetDurationSeconds?: number;
   extraBrief?: string;
+  sourceRef?: string;
+  startAnchor?: string;
+  endAnchor?: string;
 }>({
   type: "object",
   properties: {
+    mode: {
+      type: "string",
+      enum: ["generate", "verbatim"],
+      description:
+        "generate=根据用户提供的主题、骨架或补充要求创作；verbatim=把用户已经交付的完整稿件正文逐字作为候选。完整稿件是一等输入，但仅发送/粘贴稿件不是执行授权；只有最新用户指令明确要求写入稿面、导入原稿或给保真候选时才调用。用户明确要求原文不改/一字不改时必须选 verbatim。",
+    },
     topic: { type: "string", description: "内容主题/标题(缺省用当前项目标题)" },
     angle: { type: "string", description: "切入角度/风格要求,可选" },
     targetDurationSeconds: {
@@ -1758,6 +1893,24 @@ const SCRIPT_DRAFT_PARAMS = jsonSchema<{
         "用户明确要求的目标口播时长（秒），如 3 分钟传 180；用户未指定则不要猜、不要传",
     },
     extraBrief: EXTRA_BRIEF_PROPERTY,
+    sourceRef: {
+      type: "string",
+      maxLength: 128,
+      description:
+        "仅 mode=verbatim 使用：从 system 的【本轮受信原文来源】中选择 sourceRef。禁止把原文重抄或压缩进 extraBrief。",
+    },
+    startAnchor: {
+      type: "string",
+      maxLength: 500,
+      description:
+        "仅 mode=verbatim 使用：原稿内精确且唯一的正文起始文字，切片会包含它。同一来源含有对话说明/背景和稿件正文时必须传；只有整份来源全是稿件正文时才省略。正文边界由你理解语义后选择，不按固定关键词猜。",
+    },
+    endAnchor: {
+      type: "string",
+      maxLength: 500,
+      description:
+        "仅 mode=verbatim 使用：原稿内精确且唯一的正文结束文字，切片会包含它。稿件后还有对话说明/追问时必须传；稿件一直延续到来源末尾时可省略。正文边界由你理解语义后选择。",
+    },
   },
   additionalProperties: false,
 });
@@ -2610,28 +2763,100 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 无项目上下文 / dispatch 失败 → error 非 null(卡渲诚实错误态,提示去项目稿面写脚本)。
     "script.draft": defineChatTool("script.draft", {
       description:
-        "为**当前项目**生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。当用户要写脚本/起草整稿/重写脚本、点「生成脚本」时调用。用户明确说了时长（如 3 分钟）就传 targetDurationSeconds=180；没说时长不要替用户猜，按资料密度自然生成，绝不靠重复或空话凑长度。整稿生成在后台跑(不阻塞对话,整稿较重、分钟级),结果渲成整稿候选卡;用户点卡上「采纳写入稿面」才落成脚本新版本、写进稿面编辑器(铁律②确认门)——你没有直接写稿的能力,绝不口头宣称「脚本已写好/已写入稿面」,也**绝不因为整稿重就退回只给几组钩子**(整稿是后台异步跑的,不会占用你这回合)。只能为当前项目对话写整稿;没有项目上下文时会诚实提示去项目稿面里写。\n\n**整稿前必须先接地,否则会写出「像编的、没前因后果」的 AI 体空稿**:① 如果你已读过用户的一手资料(local.read/web.read/素材)或聊出了真实的**触发场景**(创作者为什么做这件事、当时遇到什么具体问题),把这些**真实细节 + 触发场景 + 出现的专有概念该怎么讲清**提炼进 extraBrief 传下去;② 如果还不清楚创作者的真实故事/一手细节,**先在对话里问清楚触发场景再整稿**,不要凭空开写。extraBrief 是你把「读到的真实资料」喂进整稿的唯一通道——别把它留空然后指望模型自己编。",
+        "为**当前项目**产一版完整稿件候选，支持两类一等输入。① 用户给主题、骨架或补充要求并要求创作：使用 mode=generate，按项目上下文创作分镜口播整稿。② 用户已经给了完整稿件并明确要求写入稿面、导入原稿或先给原文候选：必须使用 mode=verbatim，从 system 的【本轮受信原文来源】选择 sourceRef。仅粘贴/发送稿件不是调用授权，不要自动创建候选。若来源同时含有对助手说的视频状态、背景、操作要求和面向视频观众的稿件，必须由你理解语义后用 startAnchor/endAnchor 只框住完整稿件正文；不能把对话说明写入，也不能因为正文第一句像过渡、产品介绍或不是理想 hook 就漏掉它。禁止把原文压缩、摘要或重抄进 extraBrief。verbatim 由服务端按你选定的精确边界恢复原字符并校验，不调用写稿模型、不按 Brief/定位/归因建议改写。两种模式都只产候选卡，用户点「采纳写入稿面」才追加脚本版本；你没有直接写稿能力，绝不口头宣称已写入。\n\nmode=generate 时：用户明确说了时长（如 3 分钟）就传 targetDurationSeconds=180；没说不要猜。**真实资料优先，但不是整稿门禁**：缺少一手故事时，用户要求生成仍应基于当前项目 brief 先给可编辑稿；不得编造个人经历、案例或数字，可把缺口标成“待补真实案例”。整稿后台异步运行，不能因较重退回只给 hooks。只能为当前项目写稿，没有项目上下文时如实提示。",
       inputSchema: SCRIPT_DRAFT_PARAMS,
       execute: async ({
+        mode,
         topic,
         angle,
         targetDurationSeconds,
         extraBrief,
+        sourceRef,
+        startAnchor,
+        endAnchor,
       }): Promise<ScriptDraftToolResult> => {
         try {
-          const { taskId, projectId: pid, error } = await deps.dispatchScriptDraft({
-            topic: typeof topic === "string" && topic.trim() ? topic.trim() : undefined,
-            angle: typeof angle === "string" && angle.trim() ? angle.trim() : undefined,
-            targetDurationSeconds:
-              typeof targetDurationSeconds === "number"
-                ? targetDurationSeconds
-                : undefined,
-            extraBrief: clampExtraBrief(extraBrief),
-          });
-          return { kind: "script.draft", taskId, projectId: pid, error };
+          const dispatchInput =
+            mode === "verbatim"
+              ? await (async () => {
+                  const selectedRef =
+                    typeof sourceRef === "string" ? sourceRef.trim() : "";
+                  const selectedSource = (deps.verbatimSources ?? []).find(
+                    (item) => item.ref === selectedRef,
+                  );
+                  if (!selectedSource) {
+                    throw new Error(
+                      selectedRef
+                        ? "原稿引用已失效，请在当前对话中重新选择或粘贴原文。"
+                        : "原文保真需要选择一条受信来源，请重新指定原稿。",
+                    );
+                  }
+                  const semanticSelection = deps.selectVerbatimSource
+                    ? await deps.selectVerbatimSource({
+                        source: selectedSource,
+                        latestUserInstruction: deps.latestUserInstruction ?? "",
+                        ...(typeof startAnchor === "string" && startAnchor
+                          ? { suggestedStartAnchor: startAnchor }
+                          : {}),
+                        ...(typeof endAnchor === "string" && endAnchor
+                          ? { suggestedEndAnchor: endAnchor }
+                          : {}),
+                      })
+                    : null;
+                  if (semanticSelection && !semanticSelection.authorized) {
+                    throw new Error(
+                      semanticSelection.reason?.trim() ||
+                        "这轮只收到了稿件，还没有明确要求写入稿面；请确认后再生成候选。",
+                    );
+                  }
+                  const resolved = resolveVerbatimSource(
+                    deps.verbatimSources ?? [],
+                    {
+                      sourceRef: selectedRef,
+                      startAnchor: semanticSelection
+                        ? semanticSelection.startAnchor
+                        : startAnchor,
+                      endAnchor: semanticSelection
+                        ? semanticSelection.endAnchor
+                        : endAnchor,
+                    },
+                  );
+                  return {
+                    draftMode: "verbatim" as const,
+                    verbatimSourceRef: resolved.ref,
+                    verbatimSourceText: resolved.text,
+                    verbatimSourceLength: resolved.length,
+                    verbatimSourceSha256: resolved.sha256,
+                  };
+                })()
+              : {
+                  topic:
+                    typeof topic === "string" && topic.trim()
+                      ? topic.trim()
+                      : undefined,
+                  angle:
+                    typeof angle === "string" && angle.trim()
+                      ? angle.trim()
+                      : undefined,
+                  targetDurationSeconds:
+                    typeof targetDurationSeconds === "number"
+                      ? targetDurationSeconds
+                      : undefined,
+                  extraBrief: clampExtraBrief(extraBrief),
+                };
+          const { taskId, projectId: pid, error } =
+            await deps.dispatchScriptDraft(dispatchInput);
+          return {
+            kind: "script.draft",
+            draftMode: mode === "verbatim" ? "verbatim" : "generate",
+            taskId,
+            projectId: pid,
+            error,
+          };
         } catch (err) {
           return {
             kind: "script.draft",
+            draftMode: mode === "verbatim" ? "verbatim" : "generate",
             taskId: null,
             projectId: null,
             error: err instanceof Error ? err.message : String(err),

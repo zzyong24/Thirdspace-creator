@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "上一轮为 PASS；当前 SPEC 已将语义边界交给配置模型、代码限制为受信引用与精确保真校验，并保持确认门与失败闭锁，未发现可合法新增的 finding。",
+  "findings": []
+}
