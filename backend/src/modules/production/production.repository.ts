@@ -1,4 +1,4 @@
-import { and, asc, eq, type Db } from "@creatoros/backend";
+import { and, asc, eq, sql, type Db } from "@creatoros/backend";
 // [T-332 S2] 父锚闭合(SPEC §3.2):production 域自身无 account 列,唯一合法入口是
 // content_output → project(project 门 strict)。此前实现只按 userId 收窄 —— 同一 user
 // 换号后仍能 by-id 读/建别号项目下的 production(绕过父锚的真洞)。这里引用共享基座的
@@ -54,6 +54,11 @@ export interface ProductionRepository {
       completedAt?: string | null;
     },
   ): Promise<ProductionRow>;
+  confirmEditingPlan(
+    productionId: string,
+    expectedRevision: number,
+    plan: Record<string, unknown>,
+  ): Promise<ProductionRow | null>;
   createSegment(
     productionId: string,
     input: {
@@ -224,6 +229,26 @@ export function createProductionRepository(
           and(eq(productions.id, productionId), eq(productions.userId, userId)),
         );
       return getProductionRowById(productionId);
+    },
+
+    async confirmEditingPlan(productionId, expectedRevision, plan) {
+      await getProductionRowById(productionId);
+      const next = { ...plan, revision: expectedRevision + 1 };
+      const rows = await db
+        .update(productions)
+        .set({
+          recordingConfig: sql`jsonb_set(coalesce(${productions.recordingConfig}, '{}'::jsonb), '{videoEditingPlan}', ${JSON.stringify(next)}::jsonb, true)`,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(productions.id, productionId),
+            eq(productions.userId, userId),
+            sql`coalesce((${productions.recordingConfig}->'videoEditingPlan'->>'revision')::int, 0) = ${expectedRevision}`,
+          ),
+        )
+        .returning();
+      return rows[0] ?? null;
     },
 
     async createSegment(productionId, input) {

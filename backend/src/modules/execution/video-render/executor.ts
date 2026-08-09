@@ -19,11 +19,19 @@ import { execFile, spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { resolveExecutablePath } from "@creatoros/ai-worker";
-import { videoRenderParams, type VideoRenderProps } from "@creatoros/contract";
+import {
+  videoRenderParams,
+  type RequestContext,
+  type VideoRenderProps,
+} from "@creatoros/contract";
 import { buildChildEnv } from "../child-env";
 import type { ExecutionExecutor, ExecutorRunOpts, ExecutorSandboxView } from "../executor-registry";
 import { resolveInsideDir } from "../sandbox";
-import { collectMediaFiles, generateVideoRenderHtml } from "./template";
+import {
+  assertVideoLayoutSafety,
+  collectMediaFiles,
+  generateVideoRenderHtml,
+} from "./template";
 
 // ── 可注入的引擎面(测试 fake 掉,不碰真 ffmpeg/真浏览器/真渲染)────────────────────
 export interface VideoRenderEngine {
@@ -132,6 +140,46 @@ async function locateBundledChromium(): Promise<string | null> {
 }
 
 /**
+ * 本地开发 / 回归脚本兜底：复用机器上已经安装的 Chromium 系浏览器。
+ *
+ * 正式安装包仍优先使用随包浏览器；这里只解决源码运行时并未安装
+ * `@playwright/test`、但系统 Chrome/Edge 明明可用却被误报“Chromium 未就绪”的问题。
+ */
+export async function locateSystemChromium(): Promise<string | null> {
+  const candidates = [
+    process.env.CREATOROS_RENDER_CHROMIUM_PATH,
+    process.env.CHROME_PATH,
+    ...(process.platform === "darwin"
+      ? [
+          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+          "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+          "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        ]
+      : process.platform === "win32"
+        ? [
+            process.env.PROGRAMFILES
+              ? path.join(process.env.PROGRAMFILES, "Google/Chrome/Application/chrome.exe")
+              : undefined,
+            process.env["PROGRAMFILES(X86)"]
+              ? path.join(process.env["PROGRAMFILES(X86)"], "Microsoft/Edge/Application/msedge.exe")
+              : undefined,
+          ]
+        : [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+          ]),
+  ].filter((candidate): candidate is string => Boolean(candidate));
+
+  for (const candidate of candidates) {
+    const stat = await fs.stat(candidate).catch(() => null);
+    if (stat?.isFile()) return candidate;
+  }
+  return null;
+}
+
+/**
  * 渲染用 Chromium 定位:先确定性扫随包目录(T-284,打包版稳),再回落 playwright
  * `executablePath()`(dev / 系统缓存路径)。都拿不到 → null(调用方走注入下载兜底)。
  */
@@ -139,7 +187,10 @@ async function locatePlaywrightChromium(): Promise<string | null> {
   // ① 随包目录确定性命中(打包版主路径,不依赖 bundle runtime 的 playwright registry)。
   const bundled = await locateBundledChromium();
   if (bundled) return bundled;
-  // ② 回落 playwright executablePath(dev 装在系统缓存;混淆 runtime 里可能失效,故仅兜底)。
+  // ② 源码开发 / 回归脚本复用系统 Chrome；不要求额外安装一份 Playwright 浏览器。
+  const system = await locateSystemChromium();
+  if (system) return system;
+  // ③ 回落 playwright executablePath(dev 装在系统缓存;混淆 runtime 里可能失效,故仅兜底)。
   try {
     const modName = ["@playwright", "/test"].join("");
     const { chromium } = (await import(/* webpackIgnore: true */ modName)) as {
@@ -171,6 +222,66 @@ async function locatePlaywrightChromium(): Promise<string | null> {
 export type ChromiumDownloader = (
   onProgress?: (line: string) => void,
 ) => Promise<void>;
+
+/**
+ * 可选成片视觉审核端口。模型调用只发生在组合根注入的 brain port；executor 自身不持有
+ * provider/key，也不让渲染子进程联网。未配置或调用失败只记录审核状态，不阻断出片。
+ */
+export type VideoVisualReviewer = (
+  ctx: RequestContext,
+  input: { bytes: Uint8Array; mimeType: "image/jpeg"; prompt: string },
+) => Promise<string | null>;
+
+export interface VideoVisualReview {
+  status: "reviewed" | "skipped" | "unavailable";
+  verdict?: "pass" | "warn";
+  summary: string;
+  issues: Array<{
+    code: string;
+    message: string;
+    severity: "warning" | "error";
+  }>;
+}
+
+export function parseVideoVisualReview(raw: string): VideoVisualReview | null {
+  const match = raw.replace(/```(?:json)?/g, "").match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    const value = JSON.parse(match[0]) as Record<string, unknown>;
+    const verdict = value.verdict === "pass" ? "pass" : value.verdict === "warn" ? "warn" : null;
+    const summary = typeof value.summary === "string" ? value.summary.trim().slice(0, 240) : "";
+    const issues = Array.isArray(value.issues)
+      ? value.issues
+          .map((item) => {
+            if (!item || typeof item !== "object") return null;
+            const issue = item as Record<string, unknown>;
+            const code = typeof issue.code === "string" ? issue.code.trim().slice(0, 60) : "";
+            const message =
+              typeof issue.message === "string" ? issue.message.trim().slice(0, 240) : "";
+            if (!code || !message) return null;
+            return {
+              code,
+              message,
+              severity: issue.severity === "error" ? ("error" as const) : ("warning" as const),
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null)
+          .slice(0, 8)
+      : [];
+    if (!verdict || !summary) return null;
+    return { status: "reviewed", verdict, summary, issues };
+  } catch {
+    return null;
+  }
+}
+
+const VIDEO_VISUAL_REVIEW_PROMPT = [
+  "你是短视频成片质检员。下面是一张按时间顺序排列的 4×2 成片抽帧接触表。",
+  "只检查可直接从画面判断的问题：B-roll 是否过小、黑边是否过大、是否遮挡或切掉人物脸、界面文字是否不可读、主画面与人物是否重叠、布局是否像静态大卡而缺少剪辑层次。",
+  "不要评价脚本文案，不要猜测没有出现在抽帧里的内容。",
+  "只输出 JSON：",
+  '{"verdict":"pass|warn","summary":"一句中文结论","issues":[{"code":"face_occlusion|tiny_visual|excessive_letterbox|unreadable_ui|layout_overlap|static_editing","severity":"warning|error","message":"具体中文问题"}]}',
+].join("\n");
 
 async function resolvePlaywrightChromium(
   onProgress?: (line: string) => void,
@@ -421,6 +532,7 @@ function imageNameFor(mountAs: string, mimeType?: string | null): string {
 
 export function createVideoRenderExecutor(
   engine: VideoRenderEngine = createDefaultVideoRenderEngine(),
+  options?: { reviewVisuals?: VideoVisualReviewer },
 ): ExecutionExecutor {
   return {
     taskType: "video.render",
@@ -428,7 +540,7 @@ export function createVideoRenderExecutor(
     // 不主动出网(模板只引用 work/media/ 本地文件 + 本地 gsap)。诚实边界:无 OS 级
     // 网络沙箱,Chromium 理论上能访问网络 —— 但子进程 env 已收窄,进程树里没有任何
     // 密钥可外传(见编排 network 门 + child-env.ts)。
-    networkPosture: "none",
+    networkPosture: options?.reviewVisuals ? "brain-ports" : "none",
     paramsSchema: videoRenderParams, // spec.params = { props };goal 由编排 parse 后才混入
     async run(sandbox: ExecutorSandboxView, params, opts: ExecutorRunOpts) {
       const { signal, reportStep } = opts;
@@ -442,8 +554,8 @@ export function createVideoRenderExecutor(
       ]);
       if (!ffmpeg || !ffprobe) {
         throw new Error(
-          "CreatorOS 随包渲染组件 ffmpeg/ffprobe 缺失或不可用。" +
-            "请先重新安装最新版 CreatorOS；开发环境可安装后重试:" +
+          "随包渲染组件 ffmpeg/ffprobe 缺失或不可用。" +
+            "请先重新安装最新版应用；开发环境可安装后重试:" +
             FFMPEG_INSTALL_HINT,
         );
       }
@@ -530,6 +642,8 @@ export function createVideoRenderExecutor(
           cards: s.cards.map((c) => (c.kind === "image" ? { ...c, file: rename(c.file) } : c)),
         })),
       };
+      await reportStep("检查主画面可读面积与人物遮挡安全区");
+      assertVideoLayoutSafety(renamedProps);
       const html = generateVideoRenderHtml(renamedProps, {
         mediaPrefix: "media/",
         imageFiles: new Set(media.images.map(rename)),
@@ -594,6 +708,52 @@ export function createVideoRenderExecutor(
         signal,
       );
 
+      let visualReview: VideoVisualReview = {
+        status: "skipped",
+        summary: "未配置视觉模型，已完成确定性布局与遮挡校验。",
+        issues: [],
+      };
+      if (options?.reviewVisuals && opts.ctx) {
+        try {
+          await reportStep("抽帧进行成片视觉审核(不阻断出片)");
+          const contactSheet = path.join(workDir, "visual-review.jpg");
+          const interval = Math.max(1, props.talkingHead.durationSec / 8);
+          await engine.runFfmpeg(
+            ffmpeg,
+            [
+              "-y",
+              "-i",
+              finalFile,
+              "-vf",
+              `fps=1/${interval.toFixed(3)},scale=480:-2,tile=4x2:padding=0:margin=0`,
+              "-frames:v",
+              "1",
+              contactSheet,
+            ],
+            signal,
+          );
+          const raw = await options.reviewVisuals(opts.ctx, {
+            bytes: await fs.readFile(contactSheet),
+            mimeType: "image/jpeg",
+            prompt: VIDEO_VISUAL_REVIEW_PROMPT,
+          });
+          if (raw) {
+            visualReview =
+              parseVideoVisualReview(raw) ?? {
+                status: "unavailable",
+                summary: "视觉模型返回格式不可解析，成片仍已正常生成。",
+                issues: [],
+              };
+          }
+        } catch (err) {
+          visualReview = {
+            status: "unavailable",
+            summary: `视觉审核暂不可用：${err instanceof Error ? err.message : String(err)}`.slice(0, 260),
+            issues: [],
+          };
+        }
+      }
+
       return {
         summary: `成片 final.mp4(${props.talkingHead.durationSec.toFixed(1)}s,${props.delivery.width}x${props.delivery.height}/${props.delivery.fps}fps,${props.scenes.length} 场景)`,
         meta: {
@@ -601,6 +761,7 @@ export function createVideoRenderExecutor(
           sceneCount: props.scenes.length,
           brollCount: props.broll.length,
           captionCount: props.captions.length,
+          visualReview,
         },
       };
     },

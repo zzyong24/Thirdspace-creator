@@ -115,6 +115,12 @@ export interface ExecutionService {
   confirm(ctx: RequestContext, taskId: string): Promise<ExecutionTaskResource>;
   /** 丢弃:中止在跑 executor → cancelled(可转时)→ 清沙箱。 */
   discard(ctx: RequestContext, taskId: string): Promise<ExecutionTaskResource>;
+  /** 待确认视频的临时预览；严格复用任务属主门与 manifest 白名单，不产生资产。 */
+  previewArtifact(
+    ctx: RequestContext,
+    taskId: string,
+    artifactPath: string,
+  ): Promise<{ bytes: Uint8Array; mimeType: string }>;
 }
 
 export function createExecutionService(
@@ -194,6 +200,29 @@ export function createExecutionService(
       const dtos: ExecutionTaskResource[] = [];
       for (const row of rows) dtos.push(await toDto(ctx, row));
       return { rows: dtos, total };
+    },
+
+    async previewArtifact(ctx, taskId, artifactPath) {
+      const task = await requireExecTask(ctx, taskId);
+      if (task.status !== "awaiting_confirmation") {
+        throw new OwnershipError("Execution preview not found");
+      }
+      const results = await deps.ai.listResults(ctx, taskId);
+      const manifest = latestManifest(results);
+      const artifact = manifest?.artifacts.find(
+        (item) => item.path === artifactPath,
+      );
+      const mimeType = (artifact?.mimeType ?? "").toLowerCase();
+      if (!artifact || !mimeType.startsWith("video/")) {
+        throw new OwnershipError("Execution preview not found");
+      }
+      const bytes = await readArtifactBytes(
+        deps.workspacesRoot,
+        taskId,
+        artifact.path,
+      );
+      if (!bytes) throw new OwnershipError("Execution preview not found");
+      return { bytes, mimeType };
     },
 
     async confirm(ctx, taskId) {

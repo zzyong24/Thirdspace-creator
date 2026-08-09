@@ -203,18 +203,43 @@ export function assembleVideoRenderProps(
 
   const labelOf = (assetId: string) =>
     opts.inventory?.find((a) => a.assetId === assetId)?.label ?? assetId;
+  const inventoryItem = (assetId: string) =>
+    opts.inventory?.find((a) => a.assetId === assetId);
 
   const broll = decisions.broll
     .filter((b: VideoBrollPick) => inScene(b.sceneIdx))
     .slice()
     .sort((a, b) => a.at - b.at)
-    .map((b) => ({
-      at: b.at,
-      // mountAs=assetId 约定(与 talkingHead.file 同域,T-254c dispatch 对齐)。
-      file: b.assetId,
-      durationSec: b.durationSec,
-      label: labelOf(b.assetId),
-    }));
+    .map((b) => {
+      const asset = inventoryItem(b.assetId);
+      // SEMANTIC_BOUNDARY_ALLOW:这里只落实 material.match 已产出的 visualRole，
+      // 不用文件名、媒体扩展名或业务词猜素材语义。旧计划缺 visualRole 时采用
+      // large_stage 安全下限，绝不再把“任意 video”误升为全屏录屏。
+      const requestedPresentation = b.presentation ?? "large_stage";
+      const presentation =
+        b.visualRole === "screen_recording" &&
+        requestedPresentation !== "overlay"
+          ? "full_frame"
+          : requestedPresentation === "full_frame"
+            ? "large_stage"
+            : requestedPresentation;
+      return {
+        at: b.at,
+        // mountAs=assetId 约定(与 talkingHead.file 同域,T-254c dispatch 对齐)。
+        file: b.assetId,
+        durationSec: b.durationSec,
+        label: labelOf(b.assetId),
+        presentation,
+        ...(b.visualRole ? { visualRole: b.visualRole } : {}),
+        ...(presentation === "full_frame" &&
+        b.visualRole === "screen_recording"
+          ? { speakerMode: "pip_bottom_left" as const }
+          : {}),
+        motion: b.motion ?? "static",
+        ...(asset?.width ? { sourceWidth: asset.width } : {}),
+        ...(asset?.height ? { sourceHeight: asset.height } : {}),
+      };
+    });
 
   return videoRenderProps.parse({
     meta: { title: opts.title?.trim() || "未命名成片" },

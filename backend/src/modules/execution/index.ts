@@ -73,6 +73,9 @@ export { isSensitiveFileName } from "./sensitive-files";
 // [T-254a] video.render executor(HyperFrames 模板工程 + 确定性渲染)。
 export {
   createVideoRenderExecutor,
+  type VideoVisualReviewer,
+  type VideoVisualReview,
+  parseVideoVisualReview,
   createDefaultVideoRenderEngine,
   type VideoRenderEngine,
 } from "./video-render/executor";
@@ -80,6 +83,8 @@ export {
   generateVideoRenderHtml,
   collectMediaFiles,
   resolveSceneMode,
+  resolveMainBrollGeometry,
+  assertVideoLayoutSafety,
   type TemplateOptions,
 } from "./video-render/template";
 

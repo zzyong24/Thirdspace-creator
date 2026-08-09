@@ -113,6 +113,22 @@ describe("assets.transport — 7-op contract conformance", () => {
     expect(parsed.data[0]!.deletedAt).toBeNull();
   });
 
+  it("assets.list 的 page>1 返回下一页，不重复第一页", async () => {
+    await uploadAsset("A1");
+    await uploadAsset("A2");
+    await uploadAsset("A3");
+    const first = listEnvelope(assetResource).parse(
+      await call("assets.list", { query: { page: 1, pageSize: 2 } }, true),
+    );
+    const second = listEnvelope(assetResource).parse(
+      await call("assets.list", { query: { page: 2, pageSize: 2 } }, true),
+    );
+    expect(first.data).toHaveLength(2);
+    expect(second.data).toHaveLength(1);
+    expect(second.data[0]!.id).not.toBe(first.data[0]!.id);
+    expect(second.data[0]!.id).not.toBe(first.data[1]!.id);
+  });
+
   it("assets.files.create → assetFileResource (numeric fields)", async () => {
     const assetId = await uploadAsset();
     const file = await call("assets.files.create", {

@@ -88,18 +88,18 @@ export function humanizeRenderError(message: string | null): string | null {
       lower.includes("not found") ||
       lower.includes("enoent"))
   ) {
-    return "CreatorOS 的随包渲染组件 ffmpeg/ffprobe 缺失或不可用。请重新安装最新版 CreatorOS 后重试；开发环境可自行安装 ffmpeg，或配置 CREATOROS_FFMPEG_PATH / CREATOROS_FFPROBE_PATH。";
+    return "随包渲染组件 ffmpeg/ffprobe 缺失或不可用。请重新安装最新版应用后重试；开发环境可自行安装 ffmpeg，或配置 CREATOROS_FFMPEG_PATH / CREATOROS_FFPROBE_PATH。";
   }
   if (lower.includes("chromium") || lower.includes("playwright")) {
-    return "CreatorOS 随包的 Chromium 浏览器缺失或不可用。请重新安装最新版 CreatorOS 后重试；开发环境可执行 `npx playwright install chromium`。";
+    return "随包的 Chromium 浏览器缺失或不可用。请重新安装最新版应用后重试；开发环境可执行 `npx playwright install chromium`。";
   }
   return null;
 }
 
 // ── [T-387c] B-roll 自动聚合(备料③;纯函数,workbench 客户端岛与单测共用)────────
 //
-// 数据源扩为自动列入:脚本凝固分镜点名素材(visual.assetRefs)+ 论点树 materialRefs +
-// 项目弹药 image/video 资产;统一按 assetId 去重(先到先得,调用方按 script → thesis →
+// T-726：数据源只含脚本凝固分镜点名素材(visual.assetRefs)+ 项目弹药 image/video 资产；
+// 统一按 assetId 去重(先到先得,调用方按 script →
 // ammo 优先级传入),已手动上传为 B-roll(role=broll)的素材不重复列(手动列表单独渲)。
 // 「人可剔」= 剔除集只进本次决策任务的 inputData.excludedAssetIds,不动用料链。
 
@@ -108,12 +108,11 @@ export interface AutoBrollItem {
   assetId: string;
   name: string;
   kind: string;
-  source: "script" | "thesis" | "ammo";
+  source: "script" | "ammo";
 }
 
 export const BROLL_SOURCE_LABEL: Record<AutoBrollItem["source"], string> = {
   script: "脚本画面",
-  thesis: "论点",
   ammo: "弹药",
 };
 
@@ -146,22 +145,6 @@ export function assetRefsFromScriptContentData(
     const v = (raw as { visual?: { assetRefs?: unknown } } | null)?.visual;
     if (!v || !Array.isArray(v.assetRefs)) continue;
     for (const id of v.assetRefs) {
-      if (typeof id === "string" && id.trim()) out.push(id.trim());
-    }
-  }
-  return out;
-}
-
-/** 从论点树 artifact 当前版本 contentData 宽容抽出各节点 materialRefs 的 id(无 → [])。 */
-export function refIdsFromThesisContentData(contentData: unknown): string[] {
-  const data = (contentData ?? {}) as { nodes?: unknown };
-  const nodes = Array.isArray(data.nodes) ? data.nodes : [];
-  const out: string[] = [];
-  for (const raw of nodes) {
-    const refs = (raw as { materialRefs?: unknown } | null)?.materialRefs;
-    if (!Array.isArray(refs)) continue;
-    for (const r of refs) {
-      const id = (r as { id?: unknown } | null)?.id;
       if (typeof id === "string" && id.trim()) out.push(id.trim());
     }
   }

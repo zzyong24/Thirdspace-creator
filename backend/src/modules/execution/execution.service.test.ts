@@ -187,6 +187,53 @@ describe("get / namespace gate", () => {
   });
 });
 
+describe("previewArtifact (先预览后采纳)", () => {
+  it("只读取 awaiting_confirmation manifest 中声明的视频，且不产生资产", async () => {
+    const outDir = path.join(root, "task-1", "out");
+    await fs.mkdir(outDir, { recursive: true });
+    await fs.writeFile(path.join(outDir, "clip.mp4"), "video-bytes");
+    const state = baseState();
+    state.results = [
+      manifestResult([
+        { path: "clip.mp4", fileName: "clip.mp4", size: 11, mimeType: "video/mp4" },
+      ]),
+    ];
+    const { service, adopted } = makeService(state);
+
+    const preview = await service.previewArtifact(ctx, "task-1", "clip.mp4");
+    expect(new TextDecoder().decode(preview.bytes)).toBe("video-bytes");
+    expect(preview.mimeType).toBe("video/mp4");
+    expect(adopted).toEqual([]);
+    expect(state.task.status).toBe("awaiting_confirmation");
+  });
+
+  it("拒绝非待确认状态、非 manifest 路径和非视频产物", async () => {
+    const outDir = path.join(root, "task-1", "out");
+    await fs.mkdir(outDir, { recursive: true });
+    await fs.writeFile(path.join(outDir, "clip.mp4"), "vv");
+    await fs.writeFile(path.join(outDir, "notes.txt"), "nn");
+    const state = baseState();
+    state.results = [
+      manifestResult([
+        { path: "clip.mp4", fileName: "clip.mp4", size: 2, mimeType: "video/mp4" },
+        { path: "notes.txt", fileName: "notes.txt", size: 2, mimeType: "text/plain" },
+      ]),
+    ];
+    const { service } = makeService(state);
+
+    await expect(service.previewArtifact(ctx, "task-1", "other.mp4")).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+    await expect(service.previewArtifact(ctx, "task-1", "notes.txt")).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+    state.task = makeTask({ status: "succeeded" });
+    await expect(service.previewArtifact(ctx, "task-1", "clip.mp4")).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+  });
+});
+
 describe("confirm (采纳)", () => {
   it("adopts out/ artifacts into the asset library, records adopted ids, succeeds, cleans sandbox", async () => {
     // 真沙箱:out/ 里放两个产物。

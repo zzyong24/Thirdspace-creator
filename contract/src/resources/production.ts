@@ -77,11 +77,11 @@ export const exportRecordResource = z.object({
 });
 export type ExportRecordResource = z.infer<typeof exportRecordResource>;
 
-// [T-366b] 素材包统一导出的返回:zip 已本地打包落成一个 asset(P-04 不出网),
-// 前端拿 downloadUrl 直接触发下载。fileCount/totalBytes 供 UI 诚实呈现包内容量;
+// [T-721] 素材包是一次性下载产物，不创建普通 asset。assetId 为 nullable 以兼容
+// 既有响应；新导出固定返回 null，前端继续只用 downloadUrl 下载。fileCount/totalBytes 供 UI 诚实呈现包内容量;
 // hasDecisions=false 表示项目未跑四决策(readme 内已按 §5.1② 写明空态,不冒充)。
 export const materialExportResource = z.object({
-  assetId: id,
+  assetId: id.nullable(),
   downloadUrl: z.string().min(1),
   fileName: z.string().min(1),
   fileCount: z.number().int(),

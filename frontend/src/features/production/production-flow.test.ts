@@ -10,7 +10,6 @@ import {
   humanizeRenderError,
   aggregateAutoBroll,
   assetRefsFromScriptContentData,
-  refIdsFromThesisContentData,
   type AutoBrollItem,
 } from "./production-flow";
 
@@ -85,7 +84,7 @@ describe("humanizeRenderError(环境错误人话化)", () => {
   it("ffmpeg/ffprobe 缺失 → 桌面用户先重装随包组件", () => {
     expect(
       humanizeRenderError("渲染依赖系统 ffmpeg:未检测到,请先安装"),
-    ).toContain("重新安装最新版 CreatorOS");
+    ).toContain("重新安装最新版应用");
     expect(
       humanizeRenderError("渲染依赖系统 ffprobe:未检测到,请先安装"),
     ).toContain("CREATOROS_FFPROBE_PATH");
@@ -96,7 +95,7 @@ describe("humanizeRenderError(环境错误人话化)", () => {
       humanizeRenderError(
         "渲染用 Chromium 未就绪:请先在「采集/扫码」功能触发一次浏览器下载",
       ),
-    ).toContain("重新安装最新版 CreatorOS");
+    ).toContain("重新安装最新版应用");
   });
 
   it("[T-546] 素材不是视频流时给素材提示，不误报随包 ffprobe 缺失", () => {
@@ -132,14 +131,14 @@ describe("[T-387c] aggregateAutoBroll(去重 + 手动项不重复列)", () => {
     source: AutoBrollItem["source"],
   ): AutoBrollItem => ({ assetId, name: assetId, kind: "image", source });
 
-  it("同 assetId 保留先出现的(script → thesis → ammo 优先级由调用方排序)", () => {
+  it("同 assetId 保留先出现的(script → ammo 优先级由调用方排序)", () => {
     const out = aggregateAutoBroll(
-      [item("a1", "script"), item("a1", "ammo"), item("a2", "thesis")],
+      [item("a1", "script"), item("a1", "ammo"), item("a2", "ammo")],
       [],
     );
     expect(out.map((i) => [i.assetId, i.source])).toEqual([
       ["a1", "script"],
-      ["a2", "thesis"],
+      ["a2", "ammo"],
     ]);
   });
 
@@ -151,7 +150,7 @@ describe("[T-387c] aggregateAutoBroll(去重 + 手动项不重复列)", () => {
   });
 });
 
-describe("[T-387c] assetRefsFromScriptContentData / refIdsFromThesisContentData(宽容解析)", () => {
+describe("[T-726] assetRefsFromScriptContentData(宽容解析)", () => {
   it("脚本 sections[].visual.assetRefs 抽取;旧稿无 visual → []", () => {
     expect(
       assetRefsFromScriptContentData({
@@ -165,17 +164,5 @@ describe("[T-387c] assetRefsFromScriptContentData / refIdsFromThesisContentData(
       assetRefsFromScriptContentData({ sections: [{ heading: "旧" }] }),
     ).toEqual([]);
     expect(assetRefsFromScriptContentData(null)).toEqual([]);
-  });
-
-  it("论点树 nodes[].materialRefs 的 id 抽取;无 → []", () => {
-    expect(
-      refIdsFromThesisContentData({
-        nodes: [
-          { column: "evidence", materialRefs: [{ id: "k1" }, { id: "" }] },
-          { column: "core" },
-        ],
-      }),
-    ).toEqual(["k1"]);
-    expect(refIdsFromThesisContentData({})).toEqual([]);
   });
 });

@@ -234,6 +234,25 @@ export const videoRenderScene = z.object({
 });
 export type VideoRenderScene = z.infer<typeof videoRenderScene>;
 
+export const videoBrollMotion = z.enum([
+  "static",
+  "push_in",
+  "pan_left",
+  "pan_right",
+]);
+export type VideoBrollMotion = z.infer<typeof videoBrollMotion>;
+
+/**
+ * 素材的视觉角色由 material.match 的模型语义判断产出。渲染器只据此执行确定性版式边界，
+ * 不得用文件名、业务词或“video=image?”一类媒体类型猜测创作语义。
+ */
+export const videoBrollVisualRole = z.enum([
+  "screen_recording",
+  "still_image",
+  "live_footage",
+]);
+export type VideoBrollVisualRole = z.infer<typeof videoBrollVisualRole>;
+
 // B-roll 插点(素材来自项目资产,决策侧硬规则:精确匹配被讲对象禁近似替代)。
 export const videoRenderBroll = z.object({
   /** 插入时刻(绝对秒)。 */
@@ -246,6 +265,22 @@ export const videoRenderBroll = z.object({
   label: z.string().min(1),
   /** 大幅展示(证据主角);否则中幅卡。 */
   big: z.boolean().default(false),
+  /**
+   * AI 编导给出的画面层级。旧计划可缺字段，渲染器按 large_stage 保证录屏/截图可读；
+   * big 仅为旧计划兼容，渲染时等价于 full_frame。
+   */
+  presentation: z
+    .enum(["full_frame", "large_stage", "overlay"])
+    .optional(),
+  /** AI 识别出的视觉角色；旧成片计划可缺省，新计划必须由 material.match 产出。 */
+  visualRole: videoBrollVisualRole.optional(),
+  /** full_frame 录屏期间人物的确定性承接方式。 */
+  speakerMode: z.enum(["hidden", "pip_bottom_left"]).optional(),
+  /** AI 编导给出的轻量镜头运动；界面截图/录屏应优先 static，避免破坏可读性。 */
+  motion: videoBrollMotion.optional(),
+  /** 原素材像素尺寸。渲染器据此保持比例，竖图/竖视频不得被强行铺成横版。 */
+  sourceWidth: z.number().int().positive().optional(),
+  sourceHeight: z.number().int().positive().optional(),
 });
 export type VideoRenderBroll = z.infer<typeof videoRenderBroll>;
 
@@ -304,6 +339,48 @@ export const videoRenderProps = z
           code: "custom",
           path: ["broll", i, "at"],
           message: `B-roll at=${b.at} 超出口播时长 ${dur}s`,
+        });
+      }
+      // 旧计划只有 big，无法证明素材是真录屏；缺视觉角色时降级安全舞台。
+      // 新计划以 material.match 的显式 presentation + visualRole 为准。
+      const presentation =
+        b.presentation ??
+        (b.big && b.visualRole === "screen_recording"
+          ? "full_frame"
+          : "large_stage");
+      if (
+        presentation === "full_frame" &&
+        b.visualRole &&
+        b.visualRole !== "screen_recording"
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["broll", i, "presentation"],
+          message: "只有录屏素材可以全屏；静态图片与真人素材必须保留安全舞台",
+        });
+      }
+      if (
+        presentation === "full_frame" &&
+        b.visualRole === "screen_recording" &&
+        b.speakerMode !== "pip_bottom_left"
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["broll", i, "speakerMode"],
+          message: "全屏录屏必须保留左下角人物画中画",
+        });
+      }
+      if (
+        b.speakerMode === "pip_bottom_left" &&
+        !(
+          presentation === "full_frame" &&
+          b.visualRole === "screen_recording"
+        )
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["broll", i, "speakerMode"],
+          message: "人物画中画只用于全屏录屏",
         });
       }
     });

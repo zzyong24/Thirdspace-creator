@@ -78,7 +78,9 @@ export function AssetsInteractiveRegion({
   // (already newest-first per [T-381]); otherwise (tests) fall back to the
   // whole view-model list, sorted newest-first for the same 统一新旧序。
   const allAssets = React.useMemo(
-    () => gallery?.assets ?? sortAssetsByNewest(viewModel.assets),
+    // 不信任上游输入顺序：服务端分页、客户端刷新和测试 seam 都在这里经过同一个
+    // createdAt DESC + id ASC 规则，避免 gallery 存在时绕过排序导致每次进来顺序变化。
+    () => sortAssetsByNewest(gallery?.assets ?? viewModel.assets),
     [gallery?.assets, viewModel.assets],
   );
   // [T-060③b] 视图切换:全部 | 按项目(项目=文件夹,点进去看该项目素材)。

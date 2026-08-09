@@ -7,6 +7,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  DeleteObjectCommand,
   CreateBucketCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl as presign } from "@aws-sdk/s3-request-presigner";
@@ -87,6 +88,12 @@ export function createS3ObjectStorage(
           Body: bytes,
           ContentType: mimeType,
         }),
+      );
+    },
+
+    async deleteObject(storageKey) {
+      await s3.send(
+        new DeleteObjectCommand({ Bucket: cfg.bucket, Key: storageKey }),
       );
     },
 

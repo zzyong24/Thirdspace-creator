@@ -292,6 +292,96 @@ describe("assets.repository — upload sessions user-scoped (B6)", () => {
       "completed",
     );
   });
+
+  it("reuses a byte-identical active asset instead of creating a duplicate", async () => {
+    const firstSession = await repo.createUploadSession(A, {
+      accountId: "acct-a",
+      assetId: "asset-original",
+      assetType: "document",
+      mimeType: "application/pdf",
+      fileSize: 321,
+      storageKey: "uploads/original.pdf",
+      expiresAt: NOW,
+    });
+    const duplicateSession = await repo.createUploadSession(A, {
+      accountId: "acct-a",
+      assetId: "asset-duplicate-candidate",
+      assetType: "document",
+      mimeType: "application/pdf",
+      fileSize: 321,
+      storageKey: "uploads/renamed.pdf",
+      expiresAt: NOW,
+    });
+    const head = {
+      mimeType: "application/pdf",
+      fileSize: 321,
+      checksum: "sha256-same-bytes",
+      width: null,
+      height: null,
+      durationMs: null,
+      mediaMetadata: {},
+    };
+
+    const original = await repo.completeUploadSession(
+      A,
+      firstSession.id,
+      "acct-a",
+      { name: "原名.pdf", head },
+    );
+    const reused = await repo.completeUploadSession(
+      A,
+      duplicateSession.id,
+      "acct-a",
+      { name: "改名后再次上传.pdf", head },
+    );
+
+    expect(reused?.id).toBe(original?.id);
+    expect(
+      (await repo.getUploadSession(A, duplicateSession.id, "acct-a"))?.assetId,
+    ).toBe(original?.id);
+    expect(
+      await repo.listAssets(A, { limit: 50, cursor: null }, "acct-a"),
+    ).toHaveLength(1);
+  });
+
+  it("never deduplicates identical checksums across accounts", async () => {
+    const head = {
+      mimeType: "application/pdf",
+      fileSize: 50,
+      checksum: "sha256-private-bytes",
+      width: null,
+      height: null,
+      durationMs: null,
+      mediaMetadata: {},
+    };
+    const first = await repo.createUploadSession(A, {
+      accountId: "acct-a",
+      assetId: "asset-a-private",
+      assetType: "document",
+      mimeType: "application/pdf",
+      fileSize: 50,
+      storageKey: "acct-a/private.pdf",
+      expiresAt: NOW,
+    });
+    const second = await repo.createUploadSession(A, {
+      accountId: "acct-b",
+      assetId: "asset-b-private",
+      assetType: "document",
+      mimeType: "application/pdf",
+      fileSize: 50,
+      storageKey: "acct-b/private.pdf",
+      expiresAt: NOW,
+    });
+    const a = await repo.completeUploadSession(A, first.id, "acct-a", {
+      name: "a.pdf",
+      head,
+    });
+    const b = await repo.completeUploadSession(A, second.id, "acct-b", {
+      name: "b.pdf",
+      head,
+    });
+    expect(a?.id).not.toBe(b?.id);
+  });
 });
 
 // [T-332 S2] 同一 user 下按号(account_id)strict 隔离:双账号数据互不可见;by-id

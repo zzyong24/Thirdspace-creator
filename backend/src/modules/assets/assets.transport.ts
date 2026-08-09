@@ -158,6 +158,7 @@ export function createAssetsTransport(
           const rows = await service.listAssets(ctx, {
             limit: pageSize,
             cursor: null,
+            offset: (page - 1) * pageSize,
             // [T-248 批B] "deleted" = 回收站视图读回已回收素材(供还原)。
             status: q.status,
           });

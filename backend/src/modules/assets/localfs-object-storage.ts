@@ -215,6 +215,14 @@ export function createLocalFsObjectStorage(
       return new Uint8Array(buf);
     },
 
+    async deleteObject(storageKey) {
+      const absKey = safeJoin(cfg.rootPath, storageKey);
+      await Promise.all([
+        fs.rm(absKey, { force: true }),
+        fs.rm(sidecarPath(absKey), { force: true }),
+      ]);
+    },
+
     async headObject(storageKey) {
       const absKey = safeJoin(cfg.rootPath, storageKey);
       // Real on-disk size (the bytes the FE PUT) is the source of truth.

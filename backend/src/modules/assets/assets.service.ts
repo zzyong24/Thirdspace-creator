@@ -98,6 +98,14 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
   ): Promise<{ url: string; fileName: string }>;
+  /**
+   * 服务端已有字节的一次性下载产物：只写对象存储并换短时签名 URL，不创建
+   * assets / asset_files 行。素材包、诊断包等非创作容器必须走此端口。
+   */
+  createTemporaryDownload(
+    ctx: RequestContext,
+    input: { name: string; bytes: Uint8Array; mimeType: string },
+  ): Promise<{ url: string; fileName: string }>;
   // [T-055h asset.classify] VLM 归类的两个端口:读当前文件字节(看图)+ 回写 AI 注解
   // (一句话描述进 mediaMetadata.aiDescription)。runner 经这里,service 仍是唯一 storage 调用方。
   getAssetBytes(
@@ -497,7 +505,58 @@ export function createAssetsService(
         },
       );
       if (!asset) throw new OwnershipError("Upload session not found");
+      if (asset.id !== session.assetId) {
+        // The repository reused an existing byte-identical asset.  Remove the
+        // newly uploaded object so dedupe does not leave invisible disk/bucket
+        // garbage. Cleanup failure must not corrupt the already-committed asset.
+        await storage.deleteObject?.(session.storageKey).catch(() => undefined);
+      }
       return asset;
+    },
+
+    async createTemporaryDownload(ctx, input) {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "assets.createTemporaryDownload",
+      );
+      if (!input.name.trim()) {
+        throw new UploadValidationError("download name is required");
+      }
+      if (!input.mimeType.trim()) {
+        throw new UploadValidationError("mimeType is required");
+      }
+      if (!(input.bytes.byteLength > 0)) {
+        throw new UploadValidationError("temporary download has no bytes");
+      }
+
+      const storage = await objectStorageForCtx(ctx);
+      let storageKey: string | null = null;
+      try {
+        const created = await storage.createPresignedUpload({
+          assetType: "document",
+          mimeType: input.mimeType,
+          fileSize: input.bytes.byteLength,
+          accountId,
+          folder: "exports",
+          fileName: input.name,
+        });
+        storageKey = created.storageKey;
+        await storage.putObject({
+          storageKey,
+          bytes: input.bytes,
+          mimeType: input.mimeType,
+          assetType: "document",
+        });
+        return {
+          url: await storage.getSignedUrl(storageKey),
+          fileName: input.name,
+        };
+      } catch (error) {
+        if (storageKey) {
+          await storage.deleteObject?.(storageKey).catch(() => undefined);
+        }
+        throw error;
+      }
     },
 
     async createGeneratedAsset(ctx, input) {

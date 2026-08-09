@@ -14,6 +14,7 @@ import type {
   StorageUsage,
 } from "./assets-page";
 import type { ViewModelError } from "@/types/view-models";
+import { collectAllPages } from "@/lib/complete-pagination";
 
 /**
  * Assets Center READ-side data assembly ("素材中心读侧做真", GAP-AST-1).
@@ -284,11 +285,16 @@ export async function buildAssetsViewModelReal(
   // --- Gallery summaries (REAL assets.list) -------------------------------
   let summaries: ReadonlyArray<AssetSummary>;
   try {
-    const rows = (await client.listAssets({
-      params: undefined,
-      query: { page: 1, pageSize: 200 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<AssetListRow>;
+    const rows = await collectAllPages<AssetListRow>({
+      pageSize: 200,
+      getKey: (row) => row.id,
+      fetchPage: async (page, pageSize) =>
+        (await client.listAssets({
+          params: undefined,
+          query: { page, pageSize },
+          body: undefined,
+        })) as ReadonlyArray<AssetListRow>,
+    });
     summaries = buildAssetSummariesFromResources(rows);
   } catch (err) {
     // Assets read FAILED → honest error tri-state. We do NOT fabricate a
@@ -309,11 +315,16 @@ export async function buildAssetsViewModelReal(
   // read:失败只降级为空回收站(画廊三态不受影响),绝不编造行。
   let trashedAssets: ReadonlyArray<AssetSummary>;
   try {
-    const trashedRows = (await client.listAssets({
-      params: undefined,
-      query: { page: 1, pageSize: 200, status: "deleted" },
-      body: undefined,
-    })) as unknown as ReadonlyArray<AssetListRow>;
+    const trashedRows = await collectAllPages<AssetListRow>({
+      pageSize: 200,
+      getKey: (row) => row.id,
+      fetchPage: async (page, pageSize) =>
+        (await client.listAssets({
+          params: undefined,
+          query: { page, pageSize, status: "deleted" },
+          body: undefined,
+        })) as ReadonlyArray<AssetListRow>,
+    });
     trashedAssets = buildAssetSummariesFromResources(trashedRows);
   } catch {
     trashedAssets = [];
@@ -322,11 +333,16 @@ export async function buildAssetsViewModelReal(
   // --- Projects (REAL projects.list) — picker + usage-history walk ---------
   let projects: ReadonlyArray<ProjectDto>;
   try {
-    projects = (await client.listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as ReadonlyArray<ProjectDto>;
+    projects = await collectAllPages<ProjectDto>({
+      pageSize: 100,
+      getKey: (row) => row.id,
+      fetchPage: async (page, pageSize) =>
+        (await client.listProjects({
+          params: undefined,
+          query: { page, pageSize },
+          body: undefined,
+        })) as ReadonlyArray<ProjectDto>,
+    });
   } catch {
     projects = [];
   }

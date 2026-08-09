@@ -6,9 +6,11 @@
 
 ## 1. 一句话定义
 
-不另建第二套视频管线，升级现有 `video.broll` 为「口播联想画面」Skill：以口播稿为语义真源，
-先产画面槽位，再在项目已有素材中精确匹配；没有合适素材时产可生成的视觉方案。用户采纳生成
-候选后，素材经现有 `material_links` 绑定项目，再重跑同一 `video.decisions → video.render` 主链。
+不另建第二套视频管线：`video.broll` 以口播稿为语义真源，只产画面槽位；现有
+`material.match` 读取口播、场景、画面槽位与项目真实素材清单，由 AI 完成素材语义匹配。代码只做
+真实 assetId、归属、场景索引和时间边界校验，禁止用写死词表或字符串相似度代替 AI 选素材。
+没有合适素材时保留可生成的视觉方案与人工指定入口。用户采纳生成候选后，素材经现有
+`material_links` 绑定项目，再重跑同一 `video.decisions → video.render` 主链。
 
 ## 2. AS-IS 证据
 
@@ -26,7 +28,7 @@
 2. 生成卡没有稳定别名，也没有把 `图1 / 图2` 等别名写回对话上下文；`image2` 无法确定解析。
 3. `material.generate` 接受裸 prompt，不读取口播语义、段落作用、目标观众和视觉功能，因此容易产
    出通用图库感画面。
-4. `video.broll` 只从清单里精确匹配，不负责设计缺失画面；无匹配返回空数组是合法结果。
+4. `video.broll` 同时规划画面并挑素材，职责混杂；独立 `material.match` 未接入视频分场主链。
 5. 渲染器会严格物化已经写进 `renderProps.broll` 的素材，但上游若得到空 B-roll，渲染器仍会正常
    出片，所以“素材没进入成片”的主要断点在候选时序、项目绑定和决策重跑，而不是模板忽略文件。
 
@@ -68,7 +70,8 @@
 
 ## 4. Skill 契约
 
-沿用并升级 official Skill `video.broll`，不新增平行渲染器。输出从单一 `broll[]` 扩为：
+沿用并协作两个 official Skill，不新增平行渲染器：`video.broll` 输出画面需求，
+`material.match` 输出真实素材到场景的 AI 匹配结果：
 
 ```json
 {
@@ -79,7 +82,6 @@
       "purpose": "analogy",
       "visualConcept": "观众看见的具体画面",
       "reason": "它如何帮助理解这一句",
-      "matchedAssetId": null,
       "generationPrompt": "只描述画面，不复述口播文字",
       "at": 3.2,
       "durationSec": 3
@@ -89,14 +91,19 @@
 }
 ```
 
+`material.match` 在视频模式下返回 `assetId / sceneIdx / at / durationSec / reason / presentation`；其中
+`assetId` 必须来自当前项目清单，场景与时间由动态 schema 校验。
+
 约束：
 
-- `matchedAssetId` 只能来自当前项目真实素材清单；没有精确素材就留空。
+- 素材语义选择只由 `material.match` 完成；`video.broll` 和确定性代码不得再次猜素材。
 - `generationPrompt` 只在缺素材时提供，必须把抽象主张转为具体人物、动作、空间、物件或关系。
 - 默认不在图片上塞文字；需要文字表达时转为 `video.cards` 信息卡，不让生图模型画乱码。
 - 禁止“商务人士看电脑、发光大脑、机器人握手”等与任何稿子都能套用的通用 AI 图。
 - 事实性内容优先真实截图/资料；AI 图只用于联想、示意和氛围，不冒充新闻证据。
 - 一个语义节拍只安排一个强视觉，避免卡片、B-roll 和字幕互相打架。
+- `presentation` 由 AI 在 `full_frame / large_stage / overlay` 中选择：需要阅读文字或观察操作的界面截图/录屏只能使用前两种，持续操作必须给足可读时长；代码不得按文件名或行业词表猜呈现方式。
+- 渲染器对 AI 结果施加物理可读性下限：旧候选缺字段时按 `large_stage`，`full_frame/large_stage` 始终 `contain` 且占据画布主要区域；这属于播放器可读性，不替代 AI 的素材与构图语义判断。
 
 ## 5. 确定性代码边界
 

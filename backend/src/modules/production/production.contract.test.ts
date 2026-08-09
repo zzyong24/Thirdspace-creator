@@ -14,7 +14,7 @@ import {
   exportRecordResource,
 } from "./production.schema";
 
-// Step 4 — drive each of the 5 ops through the transport against a real pglite db
+// Step 4 — drive each production op through the transport against a real pglite db
 // and assert the envelope `data` validates against the op's contract response DTO
 // (foundation §5.4). Confirms record configs, non-null id coercion (queued export
 // resultAssetId → ""), enum coercion, and the exports.complete happy path
@@ -109,7 +109,7 @@ async function productionId(): Promise<string> {
   return (res as { data: { id: string } }).data.id;
 }
 
-describe("production.transport — 5-op contract conformance", () => {
+describe("production.transport — contract conformance", () => {
   it("outputs.production.get → productionResource (get-or-create)", async () => {
     const res = await call("outputs.production.get", {
       params: { outputId: "output-1" },
@@ -129,6 +129,31 @@ describe("production.transport — 5-op contract conformance", () => {
     const parsed = successEnvelope(productionResource).parse(res);
     expect(parsed.data.productionMode).toBe("screen_capture");
     expect(parsed.data.recordingConfig).toEqual({ overlay: true });
+  });
+
+  it("outputs.production.editingPlan.confirm → productionResource with durable revision", async () => {
+    await productionId();
+    const res = await call("outputs.production.editingPlan.confirm", {
+      params: { outputId: "output-1" },
+      body: {
+        expectedRevision: 0,
+        plan: {
+          sourceTaskId: "ai-task-1",
+          sourceRenderTaskId: null,
+          confirmedAt: NOW,
+          decisions: { scenes: [{ id: "scene-1" }] },
+          renderProps: { meta: { title: "测试片" } },
+        },
+      },
+    });
+    const parsed = successEnvelope(productionResource).parse(res);
+    expect(parsed.data.recordingConfig).toMatchObject({
+      videoEditingPlan: {
+        revision: 1,
+        sourceTaskId: "ai-task-1",
+        decisions: { scenes: [{ id: "scene-1" }] },
+      },
+    });
   });
 
   it("productions.segments.create → productionSegmentResource", async () => {
