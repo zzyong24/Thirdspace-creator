@@ -1,0 +1,4 @@
+interface:
+  display_name: "CreatorOS 官方打包"
+  short_description: "冻结代码后构建 CreatorOS 本地或双平台官方安装包"
+  default_prompt: "使用 $packaging-creatoros-release 为 CreatorOS 构建官方安装包。"
