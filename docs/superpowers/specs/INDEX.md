@@ -1,6 +1,6 @@
 # SPEC 顶层索引(docs/superpowers/specs/)
 
-> 本目录 **全部 104 份 design spec + 关键评审记录**的导航索引(2026-07-26 T-529 补齐至全量覆盖)。每条 = 文件名 + 一句话摘要(取自各 spec 头部,非编造)+ 审核状态。
+> 本目录 **design spec + 关键评审记录**的导航索引(2026-07-26 T-529 建立全量索引，后续随新 SPEC 持续更新)。每条 = 文件名 + 一句话摘要(取自各 spec 头部,非编造)+ 审核状态。
 > `.review.md` / `.contract.md` / `.page-spec.md` 等评审/契约/页面附件与其 design 母 spec 同名同目录,随母条查阅,不再逐一单列。
 > **状态权威源 = [REVIEW_LEDGER.md](REVIEW_LEDGER.md)**(gate durable 台账);本索引状态列是它的摘要视图,冲突时以 LEDGER 为准。
 > **定位是否合宪的唯一对照 = [../../产品定位.md](../../产品定位.md)**;文档总导航见 [../../INDEX.md](../../INDEX.md)。
@@ -46,6 +46,7 @@
 | [2026-07-25-model-configuration-experience-redesign.page-spec.md](2026-07-25-model-configuration-experience-redesign.page-spec.md) | T-501 PAGE SPEC:沿用现有 Settings 外壳做增量,用"证据轨"呈现分项测试结果 | —(page-spec·内部 PASS) |
 | [2026-07-26-model-configuration-lightweight-optimization.md](2026-07-26-model-configuration-lightweight-optimization.md) | 替代范围:只做收字段进高级+"保存并测试"复用正式 streamText 通路+更新教程(收窄 T-501) | 用户已确认·可进 BUILD |
 | [2026-07-31-gradual-transcript-backfill-and-mimo-asr.md](2026-07-31-gradual-transcript-backfill-and-mimo-asr.md) | 历史作品全量入库但逐字稿每轮小批补齐；ASR 改必配并接小米 MiMo 独立协议(T-639) | 用户已确认·BUILD 中 |
+| [2026-08-04-copilot-project-lifecycle-tool-closure.md](2026-08-04-copilot-project-lifecycle-tool-closure.md) | T-691：补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环，并根治“页面有稿、Context 读空” | 📋 待独立评审 |
 
 ## 数据管线与采集
 
@@ -83,6 +84,8 @@
 | [2026-07-13-video-production-overhaul-design.md](2026-07-13-video-production-overhaul-design.md) | 视频产出补全:竖版+富动画+成片预览+朝向必填+素材真用上(T-290~295) | — |
 | [2026-07-17-structure-script-storyboard-consistency-design.md](2026-07-17-structure-script-storyboard-consistency-design.md) | 四决策从再创作降为对齐器,分层单一真源;素材 AI 预挂+自动进 B-roll(T-387) | 📋 待过 gate |
 | [2026-07-17-video-stage-three-paths-and-material-export-design.md](2026-07-17-video-stage-three-paths-and-material-export-design.md) | 制作阶段成片放开三路(受控成片/上传成品/导出素材包 zip)(T-366) | 📋 待过 gate |
+| [2026-08-08-project-publication-identity-convergence.md](2026-08-08-project-publication-identity-convergence.md) | T-724：补登记与自动导入撞上同一平台作品时，以 publication 外部事实为锚收敛唯一项目归属，被替代 imported 投影只做可逆归档；未完成复盘项目闭锁排期 | ✅ PASS[REV:15546b832da7] |
+| [2026-08-08-thesis-skeleton-retirement.md](2026-08-08-thesis-skeleton-retirement.md) | T-726：退役项目“论点骨架”，新创作链改为 Brief/素材直接进入写稿、重建与制作；历史 `thesis_tree` 只读保留且不再影响新结果 | ✅ PASS[REV:2809820bf64a] |
 
 ## 知识库与经验沉淀
 
@@ -156,6 +159,7 @@
 | [2026-07-18-channel-links-and-update-distribution-design.md](2026-07-18-channel-links-and-update-distribution-design.md) | 对外商业跳转按激活码渠道运行时下发+更新改版本检查跳渠道下载(T-396) | 📋 待过 gate |
 | [2026-07-21-license-verdict-native-verdict-design.md](2026-07-21-license-verdict-native-verdict-design.md) | 授权判定消费点迁 Rust,verdict-bound token 签发,sidecar 无 token 起不来(T-451) | ⚠️ CONCERNS(已处置)可开工 T-451 |
 | [2026-08-02-desktop-verdict-basic-hardening.md](2026-08-02-desktop-verdict-basic-hardening.md) | 删除生产冒烟旁路、消除 verdict 私钥 base64 静态靶点并增加双平台产物扫描(T-656) | ✅ PASS 可实施；Windows 真安装扫描待下次候选包执行 |
+| [2026-08-04-channel-package-factory-and-incremental-update.md](2026-08-04-channel-package-factory-and-incremental-update.md) | N 渠道 PackageManifest 出包工厂、项目级 Skill 与轻壳 + runtime 内容寻址安全增量更新(T-694) | 📝 草案·待独立评审与用户确认 |
 | [2026-07-23-desktop-packaging-first-launch-design.md](2026-07-23-desktop-packaging-first-launch-design.md) | T-487 跨平台打包、运行时去重与零白屏首启候选架构 | ✅ macOS/Windows 双端打包与真机首启验收完成（用户 2026-07-26 确认） |
 | [2026-07-24-account-scoped-skill-isolation-design.md](2026-07-24-account-scoped-skill-isolation-design.md) | T-513 账号级 Skill 隔离、并发安全解析与存量迁移 | ⛔ FAIL(三轮·回 PLAN 重做) |
 | [2026-07-24-account-skill-overlay-contract.md](2026-07-24-account-skill-overlay-contract.md) | T-513 账号增量 Skill 覆盖服务契约 | —(契约·Contract Gate PASS) |

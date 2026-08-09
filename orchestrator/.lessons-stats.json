@@ -33,5 +33,82 @@
     "firstRedAt": null,
     "registeredAt": "2026-07-27T11:13:42.552Z",
     "deterrence": false
+  },
+  "LED-008": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-05T13:08:57.724Z",
+    "deterrence": false
+  },
+  "LED-009": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-06T07:34:25.651Z",
+    "deterrence": false
+  },
+  "LED-010": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-06T10:01:55.168Z",
+    "deterrence": false
+  },
+  "LED-011": {
+    "fireCount": 9,
+    "lastFiredAt": "2026-08-09T01:03:05.824Z",
+    "firstRedAt": "2026-08-07T17:14:45.220Z",
+    "registeredAt": "2026-08-06T10:01:55.168Z",
+    "deterrence": false
+  },
+  "LED-012": {
+    "fireCount": 1,
+    "lastFiredAt": "2026-08-07T17:14:45.220Z",
+    "firstRedAt": "2026-08-07T17:14:45.220Z",
+    "registeredAt": "2026-08-06T12:20:53.566Z",
+    "deterrence": false
+  },
+  "LED-013": {
+    "fireCount": 1,
+    "lastFiredAt": "2026-08-07T17:14:45.220Z",
+    "firstRedAt": "2026-08-07T17:14:45.220Z",
+    "registeredAt": "2026-08-06T15:00:32.124Z",
+    "deterrence": false
+  },
+  "LED-014": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-07T04:32:02.587Z",
+    "deterrence": false
+  },
+  "LED-015": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-07T07:34:34.720Z",
+    "deterrence": false
+  },
+  "LED-016": {
+    "fireCount": 1,
+    "lastFiredAt": "2026-08-07T17:14:45.220Z",
+    "firstRedAt": "2026-08-07T17:14:45.220Z",
+    "registeredAt": "2026-08-07T07:34:34.720Z",
+    "deterrence": false
+  },
+  "LED-017": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-09T04:29:39.765Z",
+    "deterrence": false
+  },
+  "LED-018": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-09T15:10:13.259Z",
+    "deterrence": false
   }
 }

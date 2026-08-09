@@ -2,6 +2,8 @@
 
 > 日期：2026-08-02  
 > 状态：用户已确认；T-679 受管子 Key 增量已覆盖旧版 `user_input` 模板口径并进入 BUILD
+> 2026-08-06 补充：Growth API-282 合同稳定后，CreatorOS 已按正式合同实现 Qwen ASR 单次临时授权
+> 消费端与聚焦测试；真实 Activity → Growth → 直连转写 → 扣减回执仍待真机验证。
 > 取代范围：只取代 `2026-07-29-creatoros-channel-model-authority.contract.md` 中“只要存在
 > extension 就由渠道接管全部模型能力”的 §2、§4、§5 与 §8 多模型回退语义；票据、bundle
 > 验签、缓存、locator、防降级和脱敏边界保持不变。
@@ -302,3 +304,85 @@ settings 当成权威。
   错误冒充渠道身份错误；无效 token 仍须拒绝。验收覆盖：缺身份零出网、route 脱敏映射、Bootstrap
   非静默错误与成功刷新、设置页提示/真实重试、无 session/无 account，以及已签名 status 补身份后
   拉 bundle/credential 的跨层闭环。
+
+## 11. T-679 / T-715 语音转文字增量契约（2026-08-06，消费端已实现）
+
+本节引用 Growth 的唯一权威契约
+`/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-135-qwen-asr-direct-client.md`。消费端复用既有
+T-679 / T-715，**不创建第二套模型配置任务**；API-282 已稳定，CreatorOS 只按正式 closed schema
+申请单次临时授权，不自行扩展接口。
+
+### 11.1 兼容读取边界
+
+- `creatoros-model-config-v1` 不升 v2。`activation_managed.credential.lifecycle` 是可选 exact
+  字段；旧 bundle 缺失时只解释为 `persistent`，新 bundle 只接受显式
+  `persistent | per_request`。
+- 旧受管 bundle 的 service 集合精确为仅 `omnihi-main`；新 bundle 精确为
+  `omnihi-main + qwen-asr-main`。禁止第三个受管 service，也禁止与 `user_input` 混用。
+- `qwen-asr-main` 只允许 `provider=qwen,lifecycle=per_request`，connection 只允许
+  `provider=qwen,apiFormat=qwen_chat_audio`，能力只允许 `transcribe.audio`，唯一模型为签名 bundle
+  中的“语音转文字”。客户端不得展示 Qwen、OmniHi、serviceId、provider、Base URL、长期 Key、
+  临时 token 或 ticket。
+- `omnihi-main` 继续走本机安全保存的 `persistent` 权益凭据；`qwen-asr-main` 的 `per_request`
+  凭据永不进入数据库、系统密钥库、URL、日志、埋点、错误或崩溃报告。
+
+### 11.2 API-282 就绪后的消费语义
+
+- 文件格式、时长 `<=300s`、大小 `<=10MB` 必须在申请 lease 前本地完成；超限不拆分收费，直接
+  提示或走本地 Whisper。
+- 同一次转写意图生成并复用稳定 `Idempotency-Key`。网络断连、响应丢失或重进页面不得换 key
+  绕过单 active lease；同 key 重试只允许按 Growth 合同重放。
+- `ASR_LEASE_EXPIRED` 表示原授权已过期，不能隐式重签；`ASR_LEASE_PROVIDER_UNKNOWN` 表示
+  provider 结果未知且处于隔离期，不能换新 key 再申请。两者都可以明确改走本地 Whisper，但不得
+  再申请另一枚 token 或造成二次扣费。
+- 临时 token 只在单次调用内存中使用，只向签名 bundle 允许的精确 HTTPS origin/model 发送音频，
+  成功或失败即丢弃。Growth 不接收音频、音频 URL、Base64 或转写文本。
+- 产品文案只允许“语音转文字”“本次消耗 25,000 AI 额度”“连接 AI 额度账户/额度不足”。未绑定或
+  额度不足统一复用 T-715 的 Growth 用户端入口，不显示“配置模型”。
+
+### 11.3 已实现写集
+
+实现严格对照 Growth 已发布的 request/response schema 与错误枚举，写集锁定在：
+
+- `frontend/src/server/activation/client-config.server.ts` 及测试：验签并解析 lifecycle 与精确双 service；
+- 新增 server-only lease client 及测试：只传合同允许的 closed body，持有稳定幂等键，响应
+  `no-store`，不把 token 投影到 Web DTO；
+- `backend/src/modules/ai-runtime/channel-model-config.ts`、`multimodal/resolve.ts`、
+  `transcribe-runner.ts` 及测试：区分 persistent/per_request、前置限额、错误分流与 Whisper 回退；
+- `ai-worker/src/runtime/multimodal-factory.ts`、`multimodal-qwen-asr.ts` 及测试：只接收单次内存凭据并
+  固定签名 origin/model，禁止自行续租；
+- `frontend/src/features/settings/*` 与逐字稿入口测试：删除受管 ASR Key/provider/Base URL 配置，
+  仅显示用户态额度与可理解提示。
+
+### 11.4 验收状态
+
+- 旧 bundle 缺 lifecycle 仍按 persistent 兼容；新 bundle 只接受精确双 service，非法第三 service、
+  mixed `user_input`、错误 provider/apiFormat 全部失败关闭。
+- 超限文件在 lease 前拒绝；同一 intent 的所有重试复用同一个 `Idempotency-Key`；
+  `provider_unknown/expired` 不生成新 key、不重复申请。
+- token 只在内存；UI、HTML、日志、数据库、系统密钥库、URL、埋点与崩溃报告扫描不到实现术语和
+  临时 token。
+- 上述解析、文件先验、幂等、单次授权、错误分流、设置页脱敏和适配器聚焦测试已通过；测试证据不
+  冒充真实额度链路。
+- 最终真机回执仍必须证明 Activity ticket → Growth 签名双 service bundle → API-282 lease →
+  CreatorOS 直连语音转文字服务 → Growth 总额度减少 25,000，且 Growth 零音频。Growth API-282
+  与服务端合同虽已稳定，但这条跨仓真机回执当前仍为“待验证”。
+
+### 11.5 真实联调门
+
+CreatorOS 已从 Growth 正式合同确认 API-282 精确响应和错误字段、签名 HTTPS origin/model 校验
+规则以及稳定转写 intent 的幂等约束。真机联调必须使用真实激活权益与额度账户；不得用 fixture、
+聊天口径或自拟字段替代正式回执。
+
+## 12. T-733 票据不适用与本地模型提示收口（2026-08-09）
+
+- Activity 对 `config-access-ticket-v3` 返回已验签的 `CONFIG_TICKET_REQUEST_INVALID`，表示当前
+  激活单元不适用这类渠道配置票据；CreatorOS 必须将其投影为 `local / not_configured`，不得写成
+  `authorization_changed`、`blocked` 或 `security_error`，也不得继续请求 Growth。
+- 上述兼容只覆盖这个精确、已验签错误码。坏签名、响应结构漂移、撤权、过期、绑定变化、locator
+  不一致、版本降级与碰撞仍按原安全规则失败关闭，不得因本地模型存在而吞掉真实安全事件。
+- 已保存本地文本模型凭据且当前 authority 为 `local` 时，设置页不再渲染渠道状态提示；模型卡自身
+  继续显示并允许编辑、保存和测试。本地文本模型尚未配置，或当前 authority 确为 `channel` 时，仍
+  显示对当前操作有帮助的真实状态。
+- 回归必须覆盖：不适用票据从既有误阻断态恢复为 `not_configured` 且不触达 Growth；真正撤权仍保存
+  blocked 并抛错；本地模型有凭据时两行误报警均不存在，本地未配置或渠道已接管时状态仍可见。

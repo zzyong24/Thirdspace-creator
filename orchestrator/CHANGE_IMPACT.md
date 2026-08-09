@@ -529,8 +529,52 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   和“T-679 不实现受管子 Key”的范围描述，不再适用于该生产模板；历史 `user_input` 配置兼容不删。
 - **重新派生**：CreatorOS 消费 Growth API-265，Key 只进本机密文凭据库；设置页无托管 Key输入；
   模型下拉完全渲染 Growth 已验签数组，保存 `id/model`，无效旧选择回唯一默认项。
+- **运行参数**：文本、图片和视频都必须消费选中模型的已验签 `settings`；多模态适配器只读取
+  自己认识且通过范围校验的字段，不能把未知渠道字段原样发给上游。项目中显式选择的画幅优先于
+  渠道默认值，其余默认尺寸、时长、分辨率、音频开关和提示词长度由 Growth 动态下发。
 - **测试影响**：补 no-store/脱敏、单 service 共用、动态 13 项顺序、id/model 分离、白名单篡改拒绝、
   桌面自动同步与 web 零请求测试；真实 Growth/Activity/OmniHi HTTPS 仍是独立 live Gate。
+
+## CI-REL-697 — Growth 配置签名材料正式生成（2026-08-05）
+
+- **变更源**：用户授权由 Agent 生成 CreatorOS 渠道配置验签所需的 `keyId` 与 key。
+- **安全决策**：项目文档只登记公开 `keyId`、Ed25519 公钥和仓库外私钥引用；私钥内容不得进入
+  Git、项目文档、CI artifact、聊天或安装包。
+- **运行影响**：Growth 生产环境使用 `THIRDSPACE_CLIENT_CONFIG_SIGNING_*` 读取私钥并签名；
+  CreatorOS 正式构建只注入 `CREATOROS_GROWTH_CONFIG_KEY_ID` 与公开公钥。
+- **验证影响**：增加真实签名/验签、私钥权限、两仓私钥内容扫描和 CreatorOS 正式构建材料解析证据。
+- **不受影响**：Activity 票据、渠道业务配置、模型清单、受管子 Key、数据库和用户界面均未改变。
+
+## CI-CREATION-726 — 退役独立“论点骨架”（2026-08-08）
+
+- **变更源**：用户确认 DEC-CREATION-040；T-726 取代 T-127 原 SPEC 中把“论点骨架”作为
+  用户可见独立步骤、可新建能力和下游上下文的现行方向。
+- **立即失效**：原设计 §A、§C、§D、§E、§F、§G 中的论点面板、“立论点” CTA、
+  `planning.thesis` 新建/确认、重建物化、写稿上下文与制作素材读取；历史事实与历史数据不改写。
+- **重新派生**：项目创作链改为“准备素材 → 直接写稿”；新写稿、策划、重建和制作不再生成或
+  消费 `thesis_tree`，项目素材仍经 `materialLinks` 与脚本点名进入 B-roll。
+- **契约与界面影响**：移除 Copilot 工具注册/标签/候选卡、稿面组件绑定、设置能力声明和现行教程；
+  旧客户端直调与历史候选确认统一 fail closed，reason=`capability_retired`。
+- **数据影响**：不删 `thesis_tree` 枚举、artifact/version、旧任务、旧脚本或旧成片；不做数据库
+  迁移，generic artifact 只读解析继续兼容。
+- **验证影响**：需覆盖稿面普通/最小视口、旧入口零写入、CreativeContext 零读取、B-roll 项目素材
+  不丢、历史 hash 不变和退役 runner 不可达；T-127 其余写稿、审核、版本与历史兼容语义保持。
+
+## CI-CREATION-730 — 恢复可选“立论点”UI与显式采用（2026-08-09）
+
+- **变更源**：用户确认 DEC-CREATION-041；T-730 重新开放 T-726 已退役的用户入口和新建链，但不
+  恢复强制前置或无提示消费。
+- **局部失效**：T-726 的 FR-726-01“用户表面完全退役”、FR-726-02“停止所有新写入”以及
+  `capability_retired` 新建门需要按 T-730 重新派生；T-726 的历史数据保留、制作零 thesis 读取、
+  项目重建零自动写入和语义边界继续有效。
+- **重新派生**：恢复 `planning.thesis` candidate、固定四栏面板和编辑保存；新 version 以
+  `scriptBasis.status=adopted|inactive` 显式表达是否进入 `script.draft(generate)`，历史无标记版本
+  默认不消费。
+- **不受影响**：T-727 `verbatim` 保真导入、脚本版本、审核、发布、制作与 B-roll 数据源；不新增
+  数据表或迁移，不删除任何历史 artifact/version。
+- **后续拆分**：电商等分场景模板、字段改名和任意结构自定义移入 T-731，不属于 T-730 验收。
+- **验证影响**：更新 T-726 的退役测试为可选入口与标记门测试；新增未采用/采用/停止使用三态、
+  MiniMax 路由、保存刷新、逐字稿优先级、无词面素材预挂和真实稿面普通/最小视口旅程。
 
 ---
 

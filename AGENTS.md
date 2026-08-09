@@ -57,6 +57,10 @@ node orchestrator/process/taskctl.mjs complete <T-id> --evidence "<commit / test
 - **严禁假按钮**:UI 控件要么真实有效,要么删掉。
 - **前后端分离**:后端业务模块不准放 `frontend/`;AI/Agent SDK 只准在 worker/ai-runtime;worker 写库经 backend service port,不直连 PG。(门卫 LED-003 执行)
 - **AI 不直接写库**:只产候选,用户采纳后由 backend service 落库。
+- **语义归 AI，代码守边界**:理解意图、内容归类、素材/场景匹配、创作取舍必须由可配置的
+  Skill/模型完成；代码只做权限、真实 ID、类型、范围、时间、幂等、安全和用户明确选择的落实。
+  禁止用写死词表、关键词计分、字符串相似度或业务名称分支冒充“智能判断”。确需确定性算法做
+  去重、协议纠错或安全校验时，必须写明 `SEMANTIC_BOUNDARY_ALLOW:`、说明其不做创作选择并有测试。
 - **大白话 + 配图**:给人看的设计/解释,必须有人能懂的版本 + 一张图,不只堆术语。
 - **诚实置 0**:数据缺就显示真实的 0 / 空,绝不编。
 - 语言：面向用户与项目工件一律使用简体中文；代码标识符、路径、命令、ID 保留英文。

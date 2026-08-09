@@ -1,0 +1,30 @@
+{
+  "schema": "browser-observation/v1",
+  "task_id": "T-726",
+  "observed_at": "2026-08-09T03:24:00.000Z",
+  "surface": "CreatorOS 本机稿面",
+  "runtime": "本机 Next.js 运行态、隔离 PGlite、真实 Chrome",
+  "data_mode": "non-fixture",
+  "data_note": "通过真实服务端口创建隔离验收账号与空项目；未读取、写入或删除用户原数据库。隔离库已移入废纸篓，可恢复。",
+  "witness": {
+    "account": "@t726-browser-current",
+    "project": "浏览器验收项目"
+  },
+  "checks": [
+    {
+      "viewport": { "width": 1440, "height": 900 },
+      "result": "pass",
+      "visible": ["上传 / 管理素材", "联网找资料", "创作素材", "口播脚本"],
+      "absent": ["论点骨架", "立论点", "采纳进论点骨架"],
+      "horizontal_overflow": false
+    },
+    {
+      "viewport": { "width": 1024, "height": 768 },
+      "result": "pass",
+      "visible": ["上传 / 管理素材", "联网找资料", "创作素材", "口播脚本"],
+      "absent": ["论点骨架", "立论点", "采纳进论点骨架"],
+      "horizontal_overflow": false,
+      "reload_result": "pass"
+    }
+  ]
+}

@@ -1,7 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { neverFiredFindings, selfRefFindings, quarantineFindings, parseLedgerRules, computeMetrics, buildReuseCandidate, emitDeadLetterWarn } from './evolution-guards.mjs';
+import {
+  neverFiredFindings,
+  selfRefFindings,
+  quarantineFindings,
+  parseLedgerRules,
+  computeMetrics,
+  buildReuseCandidate,
+  emitDeadLetterWarn,
+  partitionEvolutionEvents,
+  buildLessonObservation,
+  lessonLifecycleFindings,
+  selectInjectableLessons,
+} from './evolution-guards.mjs';
 const schema = JSON.parse(readFileSync(new URL('./reuse-candidate.schema.json', import.meta.url)));
 function validate(obj, s) {
   for (const k of s.required) if (!(k in obj)) return `missing ${k}`;
@@ -109,4 +121,61 @@ test('断链可观测:OUTBOX 只增 N 轮无消费回执 → WARN', () => {
   const f = emitDeadLetterWarn({ outboxLines: 12, consumedMarker: 0, rounds: 5 });
   assert.equal(f.level, 'WARN');
   assert.match(f.m, /接缝可能断/);
+});
+
+test('consolidate 对全部事件一次分流，eval_red 不再被丢弃或错位归档', () => {
+  const events = [
+    { kind: 'eval_red', runId: 'wf_1', stage: '4-build', detail: '真机启动白屏' },
+    { kind: 'reuse_candidate', runId: 'wf_1', stage: '4-build', description: '可复用启动探针', evidence: { command: 'pnpm test' } },
+    { kind: 'unknown', runId: 'wf_1', stage: '4-build' },
+  ];
+  const result = partitionEvolutionEvents(events);
+  assert.deepEqual(result.lessonEvents, [events[0]]);
+  assert.deepEqual(result.reuseEvents, [events[1]]);
+  assert.deepEqual(result.ignoredEvents, [events[2]]);
+  assert.equal(result.consumedCount, 3);
+});
+
+test('eval_red 生成稳定的 observation 收件箱记录，不直接晋升 rule', () => {
+  const item = buildLessonObservation(
+    { kind: 'eval_red', runId: 'wf_1', stage: '4-build', detail: '真实应用启动后白屏', evidence: { command: 'pnpm test', commit: 'abc' } },
+    { project: 'creatoros' },
+  );
+  assert.equal(item.schema, 'lesson-observation/v1');
+  assert.equal(item.id, 'wf_1:4-build');
+  assert.equal(item.lifecycle, 'observation');
+  assert.equal(item.project, 'creatoros');
+  assert.equal(item.detail, '真实应用启动后白屏');
+  assert.equal(item.evidence.command, 'pnpm test');
+});
+
+test('旧 active 生命周期会被明确报告，不再被自检假绿掩盖', () => {
+  const ledger = [{ id: 'LED-006', status: 'active', check: 'pnpm test', stage: 'BUILD', severity: 'high' }];
+  const config = [{ led: 'LED-006', check: 'pnpm test' }];
+  const findings = lessonLifecycleFindings(ledger, config);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].code, 'legacy_lifecycle');
+  assert.match(findings[0].m, /active/);
+});
+
+test('旧 active 仅在已有同 ID 可执行守卫时作为 legacy rule 注入', () => {
+  const ledger = parseLedgerRules.fromString(`
+## LED-006 — 桌面包必须真启动
+- **Date**: 2026-07-27 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: active
+- **WhatFailed**: 安装文件存在但 GUI 白屏。
+- **GuardRule**: 必须真启动 GUI 与 WebView。
+- **GuardCheck**: \`pnpm test startup\`
+`);
+  const injected = selectInjectableLessons({
+    ledger,
+    lessonsCfg: [{ led: 'LED-006', check: 'pnpm test startup' }],
+    stage: 'BUILD',
+    limit: 7,
+  });
+  assert.equal(injected.length, 1);
+  assert.equal(injected[0].id, 'LED-006');
+  assert.equal(injected[0].effectiveLifecycle, 'legacy-rule');
+
+  const withoutGuard = selectInjectableLessons({ ledger, lessonsCfg: [], stage: 'BUILD', limit: 7 });
+  assert.equal(withoutGuard.length, 0);
 });

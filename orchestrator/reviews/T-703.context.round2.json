@@ -1,0 +1,165 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-703",
+  "previous_round": 1,
+  "previous_verdict": "FAIL",
+  "previous_spec_sha256": "6e8a8e739c3f222eb3a093ac2ab070a10e5095584d3efc877b09b262533d0e14",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "首轮审核发现 4 项实现前必须收敛的问题：确认方案存在并发覆盖与先渲染后持久化的数据丢失风险；Copilot 剪辑调整缺少可执行契约；临时预览安全边界缺少可验收的负向契约；分镜文本对齐的唯一性规则尚不确定。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "blocker",
+        "category": "data-integrity",
+        "requirement_anchor": {
+          "id": "FR-703-5",
+          "quote": "确认后的 VideoDecisions、inventory 快照、render props、确认时间与来源任务 id 写入当前 Production 的持久配置；更新时必须与现有配置合并，不能覆盖录制配置"
+        },
+        "acceptance_anchor": {
+          "id": "AC-703-3",
+          "quote": "刷新后从 Production 回读相同 scenes/cards/broll/subtitles"
+        },
+        "where": "§3 recordingConfig.videoEditingPlan 的写入语义与§4 用户确认后的状态转换",
+        "failure_mode": "现有 outputs.production.put 接收完整 recordingConfig，repository 也直接替换整块 JSON，没有 namespaced 原子合并或版本前置条件；客户端即使先读后合并再 PUT，也可能被并发或滞后的录制配置写入覆盖，导致已确认方案刷新后消失，或反向覆盖现有录制配置。现有确认流程还会先创建 video.render，再把 Production 记账作为 best-effort 执行，因此合理实现可以让渲染继续而确认方案未持久化，直接破坏回顾与 Copilot 同源读取。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:28,36,41,62; contract/src/operations/production.ts:25-41; backend/src/modules/production/production.repository.ts:207-225; frontend/src/features/production/production-workbench.tsx:1224-1294",
+        "risk_class": "data-loss",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "规定 videoEditingPlan 的写入必须在服务端保留 recordingConfig 其他键，并以原子 namespaced merge 或等价的版本冲突门防止滞后写覆盖；确认方案成功写入并读回应成为创建渲染任务的前置条件，失败时保留确认卡并明确可重试。验收补充并发 sibling 更新及持久化失败不得启动渲染的用例。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-002",
+        "status": "open",
+        "severity": "major",
+        "category": "completeness",
+        "requirement_anchor": {
+          "id": "FR-703-3",
+          "quote": "工具返回可确认的剪辑调整候选；确认后复用既有 Production/Execution 服务更新并重跑，AI 不直接写库"
+        },
+        "acceptance_anchor": {
+          "id": "AC-703-6",
+          "quote": "针对“第 2 段换成录屏 A”产生真实可确认候选/重跑动作"
+        },
+        "where": "§3 对话调整数据闭环与§4 项目 Copilot 交互",
+        "failure_mode": "SPEC 没有定义 Copilot 调整工具的输入、候选输出、确认身份、基准 plan/task 版本或确认后的更新与重跑结果。现有 ALL_CHAT_TOOL_NAMES 没有视频剪辑调整工具；现有“按意见重跑”只是把 retryFeedback 附加到原 execution spec，而 videoRenderParams 只解析 props，executor 继续使用原 props。合理实现可以展示一个看似真实的重跑动作却原样重渲染，或者绕过候选确认直接更新 Production，二者都会失败 AC-703-6 或违反 AI 不直接写库。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:26,39,48,56,65; backend/src/modules/ai-runtime/chat-tools.ts:4109-4170; frontend/src/features/copilot/execution-task-card.tsx:198-222; contract/src/resources/video-render.ts:323-326; backend/src/modules/execution/video-render/executor.ts:432-435",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "补齐唯一的剪辑调整候选契约：绑定当前项目、当前 plan 版本、原 taskId 和明确的 props 差异；模型调用只生成候选，用户确认后才由 backend service 校验基准、持久化新 current plan、创建带 lineage 的 video.render，并返回可读回的新 plan/task 状态。验收必须确认 props 实际改变而非只携带未消费的文字意见。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-003",
+        "status": "open",
+        "severity": "major",
+        "category": "security",
+        "requirement_anchor": {
+          "id": "FR-703-6",
+          "quote": "通过受账号/项目归属校验、路径防穿越、仅允许 manifest 内文件的临时 URL 播放视频；丢弃后临时 URL 失效"
+        },
+        "acceptance_anchor": {
+          "id": "AC-703-5",
+          "quote": "execution 为 awaiting_confirmation 时播放器可 Range 播放临时 MP4、Assets 列表仍无该文件"
+        },
+        "where": "§3 临时成片读取 route、§5 预览约束与 AC-703-5",
+        "failure_mode": "AC-703-5 只验证合法任务的成功播放，没有验证跨账号、跨项目、非 manifest 路径、目录穿越或 symlink、非 video artifact、非 awaiting_confirmation 状态及丢弃后的失效；SPEC 也未固定 route 如何选择 task/artifact、如何从 RequestContext 派生归属以及缓存如何服从失效。实现可以通过成功路径测试，同时泄露其他项目沙箱文件或让已丢弃 URL 继续从缓存播放。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:29,37,41,55,64; contract/src/operations/execution.ts:62-85; backend/src/modules/execution/sandbox.ts:177-255",
+        "risk_class": "security",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "定义临时预览的最小服务契约和唯一授权顺序：任务归属及项目归属、awaiting_confirmation 状态、manifest 成员、sandbox/out 实体与 video MIME 全部成立后才流式返回，失败不得泄露存在性；缓存语义必须保证丢弃后失效。为上述每个拒绝条件以及 Range 的 200/206/416 行为增加 contract/backend 测试。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-004",
+        "status": "open",
+        "severity": "major",
+        "category": "correctness",
+        "requirement_anchor": {
+          "id": "FR-703-1",
+          "quote": "AI 漏选时，确定性对齐器必须补入对应场景；无法对齐时显示未采用原因，禁止静默丢失"
+        },
+        "acceptance_anchor": {
+          "id": "AC-703-1",
+          "quote": "分镜第 2 段点名录屏的 fixture，最终 render props 仍含该 asset，且落在第 2 场合法时间内；无法对齐时确认卡显示原因"
+        },
+        "where": "§5 段数不一致时的口播摘要与 scene/SRT 文本匹配",
+        "failure_mode": "SPEC 只规定段数不一致时进行文本匹配，却没有规定权威文本字段、规范化方式、命中阈值、并列判定或一段与多场的映射约束；AC-703-1 只覆盖可按序号映射的第 2 段。面对多个场景都包含相同关键词时，两个合理的“确定性”实现可分别选中不同场景，或一个补入、另一个判未采用，产生不同的用户可见时间线且都能通过当前 AC。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/superpowers/specs/2026-08-05-video-production-editing-loop.md:24,52-53,60",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "clarify",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "为段数不一致路径规定可复现的文本来源、规范化、唯一命中和并列失败条件；无法达到唯一结果必须进入未采用原因而不是猜时间。AC-703-1 增加段数不一致的唯一命中、并列冲突及零命中 fixture。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:41:595a1ed28f7e0712",
+      "text": "`recordingConfig` 是现有 Production 的自由 JSON 配置字段，本任务只增加 namespaced 键，不改表、不迁移。新增窄写操作 `productions.editing-plan.confirm`，入参含 `outputId`、`expectedRevision`、完整 plan；后端在同一条带 revision 条件的更新中只替换 `recordingConfig.videoEditingPlan`，保留全部 sibling keys，成功后 revision +1。revision 不匹配返回 conflict，零写入；禁止客户端用“先 GET、整块合并、再 PUT”模拟原子更新。用户首次确认和对话调整都走此窄写口。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:43:0babd9e8b27cfcca",
+      "text": "确认顺序唯一：① `editing-plan.confirm` 成功；② 立即 `outputs.production.get` 读回并核对 revision/sourceTaskId/renderProps 摘要；③ 才创建 `video.render`。任一步失败都保留确认卡并显示可重试，绝不先渲染后 best-effort 记账。临时预览不得返回绝对路径，不得允许任意 workspace 文件读取。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:45:4221da5fc054d4bb",
+      "text": "对话调整工具固定为 `video.edit.render`：输入 `{projectId?, expectedPlanRevision, sourceRenderTaskId?, instruction, patch}`；`patch` 仅允许对现有 plan 做有界差异（替换/移除某场 B-roll、移除信息卡、调整素材出现时刻），不能携带整份新项目真值。工具先读取当前 Production plan，校验项目/账号与 revision，将 patch 确定性应用并用 `videoRenderProps.parse` 验证；随后记录 `video_edit_plan` AI 候选并返回 taskId。候选卡展示具体差异；用户点“确认调整并重渲染”后才调用 `productions.editing-plan.confirm` 写新 revision，再创建带 `retryOf/sourceRenderTaskId` 的 `video.render`。确认响应必须返回新 plan revision 与新 render taskId，页面和 lifecycle 可读回。仅带 `retryFeedback` 而 props 未变化不算调整成功。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:57:6b35e2cd7e2dd750",
+      "text": "- 对齐优先用分镜段序号映射 scene 序号。段数不一致时，权威文本固定为 storyboard `narration` 与每个 scene 时间窗内拼接的原始 `srtLines.text`；两边统一 Unicode NFKC、转小写、去空白和标点后，按连续中文 2-gram + ASCII token 计算 Jaccard。唯一最高分且分数 `>=0.35` 才命中；最高分并列、低于阈值或零 token 均标记“无法唯一对齐”，不猜时间。一段最多命中一场，一场可承接多个按原段序排列的素材。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:59:a8996837c2c12de2",
+      "text": "- 临时预览 route 的唯一输入为 taskId + manifest artifact path；依次校验 RequestContext 用户/账号、task.projectId 归属、task.status=`awaiting_confirmation`、path 精确属于最新 manifest、MIME 为 `video/*`、sandbox/out 内真实常规文件且 realpath 不逃逸（含 symlink 拒绝），全部成立才流式返回。任一失败统一 404，不泄露存在性；响应 `Cache-Control: no-store`。支持 Range：合法区间 206，完整读取 200，越界/非法区间 416。discard/confirm 清沙箱后旧 URL 必须 404。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:64:9dcf901645496e5e",
+      "text": "- **AC-703-1**：构造 AI 返回空 broll、分镜第 2 段点名录屏的 fixture，最终 render props 仍含该 asset，且落在第 2 场合法时间内；另覆盖段数不一致的唯一命中、并列冲突、低分/零命中、被剔除，不能对齐时确认卡显示原因。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:66:d87dbbeadab8483f",
+      "text": "- **AC-703-3**：确认方案后 UI 仍可展开查看；刷新后从 Production 回读相同 scenes/cards/broll/subtitles。并发 sibling 配置更新仍保留 plan，陈旧 expectedRevision 返回 conflict；plan 写入或读回失败时不得创建 render 任务。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:68:0d9787a6787e0223",
+      "text": "- **AC-703-5**：execution 为 `awaiting_confirmation` 时播放器可 Range 播放临时 MP4、Assets 列表仍无该文件；采纳后同一成片进入素材库并关联项目。逐项覆盖跨用户/跨账号/跨项目、非 manifest path、路径穿越、symlink、非视频、非 awaiting 状态、discard 后旧 URL，以及 200/206/416。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:69:570452fe351d99c2",
+      "text": "- **AC-703-6**：项目对话读取 current editing plan 后，针对“第 2 段换成录屏 A”产生绑定 revision 的真实候选；确认后新 render 的 props 中该场 assetId 确实变化，并可回读新 plan/task。无计划时明确引导先完成分场，不虚构已剪辑。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

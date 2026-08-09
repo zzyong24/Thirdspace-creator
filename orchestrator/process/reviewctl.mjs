@@ -691,7 +691,6 @@ export function verifyReviewReceipt({
   documentCell = "",
   requirePass = true,
   allowSpecChange = false,
-  allowConstitutionChange = false,
 }) {
   const value = cleanText(reviewCell);
   const policy = readReviewConfig(root).receipt_policy;
@@ -764,7 +763,7 @@ export function verifyReviewReceipt({
   const constitutionFile = resolveInside(root, state.constitution_path, "constitution");
   if (!existsSync(constitutionFile)) throw new Error(`constitution 不存在: ${state.constitution_path}`);
   const currentConstitutionSha = sha(readFileSync(constitutionFile, "utf8"));
-  if (!allowConstitutionChange && state.constitution_sha256 !== currentConstitutionSha) {
+  if (state.constitution_sha256 !== currentConstitutionSha) {
     throw new Error("review receipt 已过期：constitution hash 已变化");
   }
   if (requirePass && match[1] !== "PASS") {
@@ -797,6 +796,15 @@ function record(args) {
     ["review input", inputFile],
   ]) {
     if (!existsSync(file)) throw new Error(`${label} 不存在: ${relativePortable(root, file)}`);
+  }
+  const constitutionText = readFileSync(constitutionFile, "utf8");
+  if (
+    relativePortable(root, constitutionFile) === "PROJECT.md" &&
+    /本文件由\s*`?node orchestrator\/process\/pmem\.mjs sync`?\s*生成/.test(constitutionText)
+  ) {
+    throw new Error(
+      "PROJECT.md 是 pmem 自动生成的项目记忆，不能绑定为 constitution；请改用稳定的产品/架构规范（如 SYSTEM_ARCHITECTURE.md 或任务上游 SPEC）",
+    );
   }
 
   let packet;
@@ -835,10 +843,6 @@ function record(args) {
       documentCell: backlogTask[0].document,
       requirePass: false,
       allowSpecChange: true,
-      // record 会立刻用本轮输入重新校验当前 constitution 并签发新 receipt；这里仅验证
-      // 上一轮 snapshot/event/receipt 的链完整性。否则 constitution 一旦合法演进，旧 receipt
-      // 先过期、record 又拒绝刷新，任务将永久无法复审。
-      allowConstitutionChange: true,
     });
     if (previousEvent.spec_path !== relativePortable(root, specFile)) {
       throw new Error(
@@ -851,7 +855,6 @@ function record(args) {
     );
   }
   const specText = readFileSync(specFile, "utf8");
-  const constitutionText = readFileSync(constitutionFile, "utf8");
   const specSha = sha(specText);
   const packetErrors = validatePacket(packet, previousEvent, {
     root,
@@ -958,8 +961,23 @@ function record(args) {
   }
 }
 
-export function auditReviewReceipts({ root, backlogFile }) {
+const transientReceiptDrift = /review receipt 已过期：(SPEC hash .* != .*|constitution hash 已变化)/;
+
+export function auditReviewReceiptFindings({ root, backlogFile, inProgressDrift = "error" }) {
+  root = realpathSync(root);
+  backlogFile = realpathSync(backlogFile);
   const errors = [];
+  const warnings = [];
+  const reportTaskError = (task, message) => {
+    const rendered = `${task.id}: ${message}`;
+    const inProgressHashDrift = /🔨/.test(task.status) && transientReceiptDrift.test(message);
+    const canonicalPendingReview = /📋|🔨/.test(task.status) && /审核列为「待审」/.test(message);
+    if (inProgressDrift === "warn" && (inProgressHashDrift || canonicalPendingReview)) {
+      warnings.push(rendered);
+    } else {
+      errors.push(rendered);
+    }
+  };
   const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
   let events = [];
   try {
@@ -974,12 +992,12 @@ export function auditReviewReceipts({ root, backlogFile }) {
     if (!active.test(task.status)) continue;
     const value = cleanText(task.review);
     if (task.columns.review < 0) {
-      if (policy === "required") errors.push(`${task.id}: strict 项目 BACKLOG 缺少「审核」列`);
+      if (policy === "required") reportTaskError(task, "strict 项目 BACKLOG 缺少「审核」列");
       else if (
         /🔨|✅/.test(task.status) &&
         (/待审|FAIL/.test(task.status) || (/CONCERNS/.test(task.status) && !/已处理/.test(task.status)))
       ) {
-        errors.push(`${task.id}: legacy 状态中仍含未放行审核标记`);
+        reportTaskError(task, "legacy 状态中仍含未放行审核标记");
       }
       continue;
     }
@@ -994,7 +1012,7 @@ export function auditReviewReceipts({ root, backlogFile }) {
         requirePass: false,
       });
       if (/🔨|✅/.test(task.status) && verified.kind === "receipt" && verified.verdict !== "PASS") {
-        errors.push(`${task.id}: 状态 ${task.status} 但审核 verdict=${verified.verdict}`);
+        reportTaskError(task, `状态 ${task.status} 但审核 verdict=${verified.verdict}`);
       }
     } catch (error) {
       if (
@@ -1002,7 +1020,7 @@ export function auditReviewReceipts({ root, backlogFile }) {
         receiptPattern.test(value) ||
         (policy === "required" && value !== "待审")
       ) {
-        errors.push(`${task.id}: ${error.message}`);
+        reportTaskError(task, error.message);
       }
     }
   }
@@ -1014,7 +1032,11 @@ export function auditReviewReceipts({ root, backlogFile }) {
       if (!existsSync(reviewFile)) errors.push(`${event.task_id}: review snapshot 缺失 ${event.review_path}`);
     }
   }
-  return errors;
+  return { errors, warnings };
+}
+
+export function auditReviewReceipts({ root, backlogFile }) {
+  return auditReviewReceiptFindings({ root, backlogFile, inProgressDrift: "error" }).errors;
 }
 
 function audit(args) {

@@ -189,8 +189,7 @@ function cmdSync() {
   lines.push(`## 模块地图(生成自 ${dir})`);
   lines.push("");
   lines.push(mods.length ? mods.map((m) => `\`${m}\``).join(" · ") : "(空)");
-  lines.push("");
-  fs.writeFileSync(PROJECT, lines.join("\n") + "\n");
+  fs.writeFileSync(PROJECT, `${lines.join("\n").trimEnd()}\n`);
   console.log(`✓ pmem sync 完成 → PROJECT.md (${branch} @ ${sha}) · 边界剩余 ${b.total} · 开放任务 ${open.length} · codegraph ${cg ? "已刷新" : "跳过"}`);
 }
 

@@ -298,6 +298,28 @@ test("可见文案证据出现 T106 / API-203 时，即使旅程全绿也必须 
   assert.match(r.stderr + r.stdout, /API-203/);
 });
 
+test("可见文案出现实现术语或原始错误暗号时，即使没有控制编号也必须 FAIL", () => {
+  const root = setup();
+  enableVisibleCopyGuard(root);
+  const visibleCopy = writeVisibleCopyArtifact(root, [
+    "充值失败，请提供 Trace ID",
+    "IDEMPOTENCY_KEY_REQUIRED",
+    "provider schema enum 配置错误",
+  ]);
+  writeBlock(
+    path.join(root, "FRONTEND_VALIDATION_REPORT.md"),
+    "frontend-validation",
+    baseReport({ checks: passingChecks(), visible_copy: visibleCopy }),
+  );
+  const r = run(
+    VALIDATOR,
+    ["validate", "--report", "FRONTEND_VALIDATION_REPORT.md", "--task", "T-RADAR"],
+    root,
+  );
+  assert.equal(r.status, 1, "实现术语和机器错误码不得成为用户文案");
+  assert.match(r.stderr + r.stdout, /Trace ID|IDEMPOTENCY_KEY_REQUIRED|provider/i);
+});
+
 test("声明可见文案 guard 后，缺浏览器文本证据不能 PASS；正常文案可以 PASS", () => {
   const root = setup();
   enableVisibleCopyGuard(root);
@@ -485,20 +507,31 @@ test("strict 项目删除验收列不能绕过 UI receipt audit", () => {
   assert.match(r.stderr + r.stdout, /缺少「验收」列|缺.*验收/i);
 });
 
-test("strict receipt audit 忽略不含状态列的暂停池", () => {
-  const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
-  fs.appendFileSync(
+test("strict audit 只检查执行任务表，暂停池的旧格式索引不要求验收列", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "frontend-validation-paused-"));
+  fs.mkdirSync(path.join(root, "orchestrator", "process"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "orchestrator", "process", "reconcile.config.json"),
+    JSON.stringify({ receipt_policy: "required" }),
+  );
+  fs.writeFileSync(
     path.join(root, "BACKLOG.md"),
     [
+      "| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |",
+      "|---|---|---|---|---|---|---|",
+      "| T-ACTIVE | 非 UI 控制面 | 🔨 | — | — | [SPEC](SPEC.md) | 实现中 |",
+      "",
+      "## ⏸️ 暂停池",
       "",
       "| ID | 任务 | 搁置 | 文档 | 恢复条件 |",
       "|---|---|---|---|---|",
-      "| T-PAUSED | 暂停任务 | ⏸️ | — | 用户重启 |",
+      "| T-PAUSED | 历史暂停任务 | ⏸️ | [详情](PAUSED.md) | 等用户恢复 |",
       "",
     ].join("\n"),
   );
-  const r = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
-  assert.equal(r.status, 0, r.stderr || r.stdout);
+  fs.writeFileSync(path.join(root, "SPEC.md"), "# SPEC\n");
+  const result = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 });
 
 test("strict UI complete 只持久化命令输出摘要，不泄漏 stdout/stderr", () => {

@@ -101,6 +101,7 @@ test("sync 生成的 PROJECT 开放任务来自 BACKLOG，不再引用 legacy le
     assert.match(project, /T-901.*真实进行中/);
     assert.match(project, /T-904 S2.*带子阶段的真实待办/);
     assert.doesNotMatch(project, /T-007|T-902|T-903/);
+    assert.doesNotMatch(project, /\n\n$/, "生成文件只保留一个 EOF 换行，避免每次 sync 制造空白漂移");
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

@@ -1,5 +1,10 @@
 # CreatorOS 渠道模型收敛与激活后白标调研
 
+> 更新提示（2026-08-04）：关于“智溯AI”专属应用名/图标、授权商品、渠道锁定与 DIY
+> 出包流程，请以
+> [CreatorOS 白标运行时与专属安装包责任边界](./2026-08-04-white-label-runtime-vs-package-boundary.md)
+> 为准。当前客户端更新检查已经固定走 CreatorOS 官方更新源，专属 OEM 包必须另行隔离更新通道。
+
 日期：2026-08-01  
 关联任务：T-649  
 结论性质：跨 Growth / Activation Manager / CreatorOS 的产品与契约调研；尚未进入实现。

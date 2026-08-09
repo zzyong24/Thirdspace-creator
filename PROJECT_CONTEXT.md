@@ -10,7 +10,7 @@
 - 状态转换：`orchestrator/process/taskctl.mjs`，事件写入 `orchestrator/events.ndjson`。
 - 项目记忆同步：`orchestrator/process/pmem.mjs sync`；`pmem` 不负责 BACKLOG 状态。
 - 物理架构：`orchestrator/SYSTEM_ARCHITECTURE.md` 与 `boundary-scan.mjs`。
-- 代码检索：当前环境无 `codegraph`，按技能规则降级为 `rg` / TypeScript 引用检索，禁止自动安装。
+- 代码检索：已安装 `/opt/homebrew/bin/codegraph`（当前版本 `0.9.4`）；跨层需求先执行 `codegraph index --force --quiet .` 刷新索引，再用 CodeGraph 查调用图并以 `rg` / TypeScript 引用核对动态装配。不得因旧会话记忆误判为未安装。
 
 ## 会话路由
 

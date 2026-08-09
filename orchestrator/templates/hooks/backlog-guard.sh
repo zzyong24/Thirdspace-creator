@@ -8,12 +8,12 @@
 #           "hooks": [ { "type":"command",
 #           "command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/backlog-guard.sh\"" } ] } ] } }
 #
-# 作用(即时 guard,不靠模型记忆):拦截「把 BACKLOG.md 任务标 🔨 开工,但审核列
+# 作用(即时 guard,不靠模型记忆):拦截「把 BACKLOG.md 任务标 🔨 开工或 ✅ 完成,但审核列
 # 不是放行值」的 Edit/Write。receipt 的 hash/spec 完整性由 taskctl + reconcile 校验;
 # 直接 shell/IDE 写可绕过本 hook,但 CI reconcile 会检出漂移。
 # 判定方式:先把本次编辑套用到磁盘内容上算出**编辑后的完整文件状态**(所以局部替换、只改
 # emoji 的最小编辑也拦得住),再找其中新出现的违规行。
-# 放行采用 allowlist:— / 新式 PASS[REV:<12hex>]；legacy 项目兼容 PASS / CONCERNS(已处理)。
+# 放行采用 allowlist:— / 新式 PASS[REV:<12hex>]；legacy 项目必须先迁移，不能直接开工。
 # 待审、FAIL、CONCERNS、未知值一律不是开工授权。
 # 已存在于磁盘的违规行不拦(只拦增量违规,避免误伤无关编辑)。
 # 依赖:python3(缺失则放行降级,宁可漏拦不可误伤)。
@@ -88,7 +88,6 @@ def legacy_blocked(text: str) -> bool:
 def allowed_review(value: str) -> bool:
     if value == "—": return True
     if re.fullmatch(r"PASS\[REV:[a-f0-9]{12}\]", value): return True
-    if policy == "legacy" and value in ("PASS", "CONCERNS(已处理)"): return True
     return False
 
 def violations(text: str):
@@ -105,7 +104,7 @@ def violations(text: str):
                 "review": next((i for i, value in enumerate(row) if "审核" in value), -1),
             }
             continue
-        if "🔨" not in line:
+        if "🔨" not in line and "✅" not in line:
             continue
         if not columns or columns["review"] < 0:
             if policy in ("required", "invalid") or legacy_blocked(" ".join(row)):
@@ -122,11 +121,12 @@ if not fresh:
     sys.exit(0)
 
 sys.stderr.write(
-    "BACKLOG guard(阻断):任务被标 🔨 开工,但审核列不在 allowlist:\n"
+    "BACKLOG guard(阻断):任务被标 🔨 开工或 ✅ 完成,但审核列不在 allowlist:\n"
     + "\n".join("  " + l.strip() for l in fresh[:3])
     + "\n改方向/架构/数据归属的 SPEC 必须先过 spec-review(prompts/spec-reviewer.md「执行契约」),"
     "评审后用 reviewctl 写入 PASS[REV:<receipt>] 再标 🔨;FAIL/CONCERNS 表示仍有未销账问题。\n"
-    "若该任务确属免审琐碎项,请把审核列改为 —(并对得起这个判断)。\n"
+    + ("当前 receipt_policy=legacy，必须先迁移到 required，旧式 PASS 不能直接开工。\n" if policy == "legacy" else "")
+    + "若该任务确属免审琐碎项,请把审核列改为 —(并对得起这个判断)。\n"
 )
 sys.exit(2)
 PY
