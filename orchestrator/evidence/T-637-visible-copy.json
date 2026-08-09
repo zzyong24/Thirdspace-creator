@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-637",
-  "commit_sha": "727cbf67552c5ba2ce6f5a9cf9ec8c5cc3dffb22",
+  "commit_sha": "5f931f78acebcb942a11c9ab46fbd675c64f8bde",
   "captures": [
     {
       "checkpoint": "reopen-fresh-account",
