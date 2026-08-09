@@ -1,0 +1,46 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-727",
+  "commit_sha": "ce2c308b5619a140951dd87a0090348e5f08d601",
+  "captures": [
+    {
+      "checkpoint": "常规窗口下的原文保真候选",
+      "check_ids": [
+        "AC-VERBATIM-SEMANTIC-BOUNDARY",
+        "AC-VERBATIM-RESPONSIVE-COPY"
+      ],
+      "viewport": { "width": 1100, "height": 908 },
+      "text": "原文保真候选。已校验 771 字符。未调用写稿模型。正文从‘我们的这个编导智能体除了能够写脚本’开始。采纳写入稿面。"
+    },
+    {
+      "checkpoint": "常规窗口下采纳并刷新后的稿面",
+      "check_ids": [
+        "AC-VERBATIM-EXACT-PERSISTENCE"
+      ],
+      "viewport": { "width": 1100, "height": 908 },
+      "text": "口播脚本。当前版本。纯文本稿。771 字。已保存。"
+    },
+    {
+      "checkpoint": "最小支持窗口下的未采纳候选",
+      "check_ids": [
+        "AC-VERBATIM-UNADOPTED-NO-MUTATION",
+        "AC-VERBATIM-RESPONSIVE-COPY"
+      ],
+      "viewport": { "width": 1024, "height": 720 },
+      "text": "原文保真候选。已校验 771 字符。未调用写稿模型。采纳写入稿面。"
+    },
+    {
+      "checkpoint": "最小支持窗口下候选未采纳时的当前稿面",
+      "check_ids": [
+        "AC-VERBATIM-EXACT-PERSISTENCE",
+        "AC-VERBATIM-UNADOPTED-NO-MUTATION"
+      ],
+      "viewport": { "width": 1024, "height": 720 },
+      "text": "口播脚本。当前版本。纯文本稿。771 字。已保存。"
+    }
+  ],
+  "observed_at": "2026-08-09T04:39:02.000Z",
+  "surface": "CreatorOS 本机项目稿面与项目编导",
+  "data_mode": "non-fixture",
+  "data_note": "使用隔离临时数据库创建真实账号与真实项目，并用已配置 MiniMax 完成语义分界、候选、采纳、刷新与未采纳重复候选旅程；原用户数据库零写入。"
+}
