@@ -108,6 +108,12 @@
       "what": "用户明确要求原文不改时，系统仍把完整原稿压成摘要后交给写稿模型重写",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/script-runner.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/app/api/chat/route.test.ts",
       "onFail": "逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。"
+    },
+    {
+      "led": "LED-018",
+      "what": "渠道包用户入口在降级时串回 CreatorOS 官方，或自动反馈 API 从人工页面 URL 推导",
+      "check": "pnpm --dir frontend exec vitest run scripts/desktop/package-flavor.test.mjs src/lib/package-brand.test.ts src/lib/desktop-updater.test.ts src/features/settings/check-update-card.test.tsx src/components/shell/issue-feedback-dialog.test.tsx src/server/feedback/product-feedback.server.test.ts",
+      "onFail": "渠道白标入口回归：包官网、包下载、人工反馈、更新 manifest 必须分字段且渠道缺值不回退官方；更新响应不得提供跳转目标；自动反馈只认固定 Growth API authority/path。"
     }
   ],
   "program_completion_required": false,

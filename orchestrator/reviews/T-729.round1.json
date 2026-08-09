@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "发现 1 个需在实现前收口的更新源重定向边界，以及 1 个不阻断的发布文档配置矛盾。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "T-729",
+        "quote": "远端 manifest 不得形成开放重定向"
+      },
+      "acceptance_anchor": {
+        "id": "T-729-AC",
+        "quote": "继续保证只接受 allowlist/签名 URL"
+      },
+      "where": "frontend/src/lib/desktop-updater.ts:83-93，包级 update manifest 请求",
+      "failure_mode": "当前包级 manifest 返回 30x 指向外部 origin 时，fetch 未指定 redirect 策略而按默认 follow 继续请求外站；外站的 version/notes 会被当作更新结果展示。渠道包因此实际请求并采纳了非当前包可信 origin 的 manifest，违背‘不形成开放重定向’边界。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "评审时 frontend/src/lib/desktop-updater.ts 的 manifest fetch 仅传 method/cache，未设 redirect:'manual'/'error'；docs/superpowers/specs/2026-08-09-channel-package-public-link-authority.md:31,42-43,56 要求只请求当前 manifest 且拒绝 redirect。可用当前 manifest 的跨 origin 302 响应反驳或复现。",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把 manifest 请求约束为任意 30x 或最终 URL 越出编译期 packageUpdateOrigin 即 fail-closed，并补跨 origin 30x 的单元测试；远端仍只可贡献 version/notes。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T-729",
+        "quote": "固定的 Growth feedback API authority 分离"
+      },
+      "acceptance_anchor": {
+        "id": "T-729-AC",
+        "quote": "反馈 API 成功与拒绝"
+      },
+      "where": "docs/RELEASING.md:42-46，正式发布环境变量说明",
+      "failure_mode": "发布文档仍要求‘逗号分隔’的 CREATOROS_FEEDBACK_OFFICIAL_ORIGINS；当前构建配置已明确拒绝任何逗号。操作人员按文档配置多个 origin 会在构建时失败，且与唯一固定 Growth authority 的新边界相矛盾。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/RELEASING.md:42-46；frontend/next.config.ts:12-30；frontend/src-tauri/build.rs:150-160。",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "将发布说明改为‘唯一的 Growth HTTPS origin’，并保留仅允许 https://host 的格式约束。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

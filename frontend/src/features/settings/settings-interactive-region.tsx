@@ -94,13 +94,13 @@ import {
   FolderOpen,
   type LucideIcon,
 } from "lucide-react";
-// [T-180 → T-396c → T-459] 桌面软件更新薄封装(client-only,web/SSR 安全降级)。
-// T-459 后只读官网公开 manifest,与激活/白标渠道完全解耦。
+// 桌面软件更新薄封装：只读当前包编译期入口，与激活态解耦且不跨渠道回退。
 import {
   checkLatestVersion,
   getAppVersion,
   isDesktopRuntimeClient,
-  OFFICIAL_DOWNLOAD_URL,
+  PACKAGE_DOWNLOAD_URL,
+  PACKAGE_WEBSITE_URL,
   type LatestVersionInfo,
 } from "@/lib/desktop-updater";
 // [T-372 L3] Rust 壳授权判定薄封装:内测离线宽限倒计时的实时数据源(零网络,读缓存+订阅事件)。
@@ -1590,19 +1590,18 @@ function CheckUpdateCard() {
           </Button>
         </div>
 
-        {/* [T-465] 永久展示"访问官网"入口 —— 无论有没有新版,用户点击可跳产品官网看最新说明/
-              下载最新版。**永远指向 OFFICIAL_DOWNLOAD_URL 常量**(与 check-update-download
-              同源;后续官网维护更新链接,常量改一处即可)。 */}
-        <a
-          href={OFFICIAL_DOWNLOAD_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-slot="check-update-official-link"
-          className="inline-flex items-center gap-1.5 self-start text-xs text-brand underline-offset-4 hover:underline"
-        >
-          <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
-          访问产品官网（查看最新版本与更新说明）
-        </a>
+        {PACKAGE_WEBSITE_URL ? (
+          <a
+            href={PACKAGE_WEBSITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-slot="check-update-official-link"
+            className="inline-flex items-center gap-1.5 self-start text-xs text-brand underline-offset-4 hover:underline"
+          >
+            <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
+            访问产品官网（查看最新版本与更新说明）
+          </a>
+        ) : null}
 
         {/* [T-459] 有新版:显版本号 + releaseNotes；下载入口永远固定产品官网。 */}
         {phase === "available" && available ? (
@@ -1621,19 +1620,21 @@ function CheckUpdateCard() {
                 {available.releaseNotes}
               </p>
             ) : null}
-            <div className="flex justify-end">
-              <Button asChild size="sm">
-                <a
-                  href={OFFICIAL_DOWNLOAD_URL}
-                  data-slot="check-update-download"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download aria-hidden="true" className="size-4 shrink-0" />
-                  去官网下载
-                </a>
-              </Button>
-            </div>
+            {PACKAGE_DOWNLOAD_URL ? (
+              <div className="flex justify-end">
+                <Button asChild size="sm">
+                  <a
+                    href={PACKAGE_DOWNLOAD_URL}
+                    data-slot="check-update-download"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download aria-hidden="true" className="size-4 shrink-0" />
+                    去官网下载
+                  </a>
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

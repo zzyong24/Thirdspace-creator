@@ -32,7 +32,8 @@ const mockIsDesktop = vi.fn<() => boolean>();
 const mockCheck = vi.fn();
 const mockGetVersion = vi.fn();
 vi.mock("@/lib/desktop-updater", () => ({
-  OFFICIAL_DOWNLOAD_URL: "https://creatoros.aitongban.cloud/",
+  PACKAGE_WEBSITE_URL: "https://brand.example.com/",
+  PACKAGE_DOWNLOAD_URL: "https://brand.example.com/download/",
   isDesktopRuntimeClient: () => mockIsDesktop(),
   getAppVersion: () => mockGetVersion(),
   checkLatestVersion: () => mockCheck(),
@@ -93,7 +94,7 @@ function availableResult(over: Record<string, unknown> = {}) {
       currentVersion: "0.1.0",
       latestVersion: "0.2.0",
       releaseNotes: "修复若干问题",
-      downloadUrl: "https://creatoros.aitongban.cloud/",
+      downloadUrl: "https://brand.example.com/download/",
       updateAvailable: true,
       ...over,
     },
@@ -140,7 +141,7 @@ describe("CheckUpdateCard — 桌面态", () => {
     expect(doc.querySelector('[data-slot="check-update-action"]')).not.toBeNull();
   });
 
-  it("[T-459] 有新版 → 「去官网下载」固定产品官网", async () => {
+  it("[T-729] 有新版 → 下载入口固定为当前包下载页", async () => {
     mockIsDesktop.mockReturnValue(true);
     mockCheck.mockResolvedValue(availableResult());
     const doc = renderDialog();
@@ -155,7 +156,7 @@ describe("CheckUpdateCard — 桌面态", () => {
       '[data-slot="check-update-download"]',
     ) as HTMLAnchorElement;
     expect(dl).not.toBeNull();
-    expect(dl.getAttribute("href")).toBe("https://creatoros.aitongban.cloud/");
+    expect(dl.getAttribute("href")).toBe("https://brand.example.com/download/");
     expect(dl.getAttribute("target")).toBe("_blank");
     expect(dl.textContent).toContain("官网下载");
     // 旧「下载并安装」入口已退役。
@@ -175,8 +176,23 @@ describe("CheckUpdateCard — 桌面态", () => {
     const dl = doc.querySelector(
       '[data-slot="check-update-download"]',
     ) as HTMLAnchorElement;
-    expect(dl.getAttribute("href")).toBe("https://creatoros.aitongban.cloud/");
+    expect(dl.getAttribute("href")).toBe("https://brand.example.com/download/");
     expect(dl.getAttribute("href")).not.toContain("evil.example.com");
+  });
+
+  it("[T-729] 常驻官网入口只指向当前包官网，不渗漏 CreatorOS 官方域名", async () => {
+    mockIsDesktop.mockReturnValue(true);
+    const doc = renderDialog();
+    await waitFor(() =>
+      expect(doc.querySelector('[data-slot="check-update-official-link"]')).not.toBeNull(),
+    );
+    const website = doc.querySelector(
+      '[data-slot="check-update-official-link"]',
+    ) as HTMLAnchorElement;
+    expect(website.getAttribute("href")).toBe("https://brand.example.com/");
+    expect(website.getAttribute("href")).not.toContain(
+      "creatoros.aitongban.cloud",
+    );
   });
 
   it("点检查 → 已最新 → 「已是最新版」", async () => {

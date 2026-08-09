@@ -5,6 +5,31 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 ---
 
 ```text
+ID: DEC-PACKAGE-729
+Date: 2026-08-09
+Stage: T-729 BUILD
+Type: package-public-link-authority
+Decision: PackageManifest 分别声明包官网、包下载页、包人工反馈页和更新 manifest；构建入口将四者
+          固化为当前包的公开配置。激活后的同类业务链接仍优先使用 Growth 已验签 runtime，缺失时
+          只能回退当前包对应值，渠道包不得跨回 CreatorOS 官方。更新响应只提供 version/notes；
+          自动反馈 API 只认构建期固定的唯一 Growth HTTPS authority 与固定 path，不从人工页面推导。
+Rationale: PAT-004 CF-001/CF-004 命中：PackageManifest→构建环境→WebView/服务端反馈是跨脚本、前端
+           与 Growth 边界且必须可追溯的协议，因此先修订清单契约并用解析、DOM 与服务端安全测试
+           锁定，不允许散落硬编码或运行时猜测。资产索引没有 package-link authority 的可复用模块，
+           本轮复用既有 PackageManifest 与 URL 校验入口，不新增依赖。
+Pattern-Ref: PAT-004
+Affected Artifacts: T-729、渠道包工厂 SPEC、PackageManifest、package-flavor、package-brand、
+                    desktop-updater、问题反馈服务与设置/反馈入口测试。
+Explicit Limits: 不改视觉样式、布局、图标或视觉快照；不把 machineId、激活码、ticket、Key 暴露给
+                 Web/日志；不部署 Growth，不发布渠道包，不创建 tag 或 GitHub Release。
+Audit Note: 候选分支早期曾把“前端零错误发布门”占用为 T-729；BACKLOG 已将该任务稳定别名为
+            T-732。既有 `events.ndjson` 与 `GATE-T729-BUILD.md` 作为历史收据保持只读；本次渠道任务
+            使用新的 SPEC/review 和 `GATE-T729-CHANNEL-LINKS-BUILD.md`，不篡改旧回执洗绿。
+Owner: user+agent
+Status: active
+```
+
+```text
 ID: DEC-AI-727
 Date: 2026-08-08
 Stage: T-727 BUILD

@@ -40,8 +40,8 @@ V1.0 发布说明草案见 [CreatorOS 1.0.0 发布说明](RELEASE_NOTES_V1.0.0.m
 `RELEASE_REVIEW.md` 中仍为 `未验证` / `NO-GO` 的条目逐项关闭或由用户明确接受风险。
 
 1. **出包**:先在 GitHub Actions Variables 配置
-   `CREATOROS_FEEDBACK_OFFICIAL_ORIGINS`（逗号分隔的 Growth 正式 HTTPS origin，只写
-   `https://host`）；再运行 `desktop-release` workflow(手动 dispatch 或 push `v*` tag)→
+   `CREATOROS_FEEDBACK_OFFICIAL_ORIGINS`（唯一的 Growth 正式 HTTPS origin，只写
+   `https://host`，不得逗号分隔多个地址）；再运行 `desktop-release` workflow(手动 dispatch 或 push `v*` tag)→
    双端安装包 + `.sig` + `latest.json`(仅内部记录)。缺少或写成带 path/query/hash 的地址时
    workflow 必须失败，不能产出可误投反馈的正式包。产物在 workflow artifact / draft Release,
    **不对外公开**。
@@ -96,16 +96,17 @@ Variables
 3. **后台配置**(activation-manager 后台,`https://license.aitongban.cloud`):
    - 更新全局版本公告:`latestVersion`(如 `0.2.0`)+ `releaseNotes`(人话更新说明);
    - 逐渠道更新 `Channel.downloadUrl` 为该渠道新包链接(只收 `https://`)。
-4. **生效**:客户端设置页「检查更新」调 `POST /api/app/latest-version`(带激活码,Ed25519 验签)→ 语义比较版本 → 显「发现新版本 vX.Y」+「去下载」跳**该码渠道**的 downloadUrl。用户下载后手动重装(mac 拖 Applications / win 跑安装器)。
+4. **生效**:客户端设置页「检查更新」只 GET 当前包编译期固定的公开 manifest，并只读取
+   `version/notes`；发现新版后跳当前包 `packageLinks.downloadUrl`。远端 manifest 的 URL 不进入
+   DOM，用户下载后手动重装(mac 拖 Applications / win 跑安装器)。
 
 ## 红线与语义(勿破坏)
 
-- **无码/无效码请求 latest-version 只回版本号,downloadUrl=null**(不泄默认渠道);客户端 downloadUrl=null → 显「请联系你的授权方获取新版」,**绝不回退官方链接**。
-- **revoked/过期内测码不提示更新**(T-372 L3「停更新」语义;买断签名撤销 = updatesBlocked 停用检查入口)。
+- **当前包入口缺失即诚实为空**；渠道包不得回退 CreatorOS 官网、下载或飞书反馈页。
 - **包内官方链接零命中**:发布前跑字符串扫描(`#buy` / `creatoros.aitongban.cloud/#buy`,sidecar + 前端 bundle 双查,SPEC §8-1)。
-- 产品反馈只从已验签 `bugFeedbackUrl` 取 origin，再与包内
-  `CREATOROS_FEEDBACK_OFFICIAL_ORIGINS` 逐字匹配；提交 path 固定
-  `/api/v2/product-feedback`，不接受 redirect。公钥或 allowlist 缺失时反馈发送 fail-closed，
+- 人工反馈优先使用已验签 `bugFeedbackUrl`，缺失时只回退当前包 `humanFeedbackUrl`。自动提交不从
+  人工页面推导 API origin，而只使用包内固定的唯一 Growth authority；提交 path 固定
+  `/api/v2/product-feedback`，不接受 redirect。公钥或 authority 缺失时反馈发送 fail-closed，
   复制与本地文字保留仍可用。
 - 检查失败一律人话文案(并入 T-412),`error sending request…` 这类技术报错只进日志。
 

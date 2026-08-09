@@ -17,14 +17,6 @@ export interface ProductFeedbackPreviewInput {
   readonly locale: string;
 }
 
-/**
- * T-546 发布前降级入口：Growth/AM 尚未下发 bugFeedbackUrl 时，仍允许用户
- * 主动打开 CreatorOS 官方飞书反馈表并手动上传日志压缩包。
- * 这里不上传任何数据，也不承担商业/渠道配置；签名地址存在时仍优先使用签名值。
- */
-export const CREATOROS_FEISHU_FEEDBACK_URL =
-  "https://my.feishu.cn/share/base/form/shrcnJlbt9gDcaohA9iLmbPLQqh";
-
 const ENTITY_COLLECTIONS = new Set([
   "projects",
   "assets",

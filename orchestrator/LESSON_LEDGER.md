@@ -13,6 +13,20 @@
 
 ---
 
+## LED-018 — 渠道包把用户入口和服务 API 混成一条 URL，白标会在降级时串回官方
+- **Date**: 2026-08-09 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: active
+- **WhatFailed**: 渠道包的软件更新、官网和问题反馈沿用 CreatorOS 官方常量；自动反馈又把面向人的
+  `bugFeedbackUrl` origin 当成 Growth API authority。渠道 runtime 缺失或异常时，智溯AI 会跨跳
+  CreatorOS 官网/飞书，人工页面变更也可能错误改变自动提交目标。
+- **RootCause**: PackageManifest 没有分别声明包官网、包下载、人工反馈和更新 manifest；用户页面
+  与服务 API 没有独立 authority，代码只能靠官方常量和 URL 推导补洞。
+- **GuardRule**: 四类包级公开入口必须分字段、构建期固化并分别校验；渠道包缺值保持空，绝不回退
+  CreatorOS 官方。更新 JSON 只提供 version/notes；自动反馈只认固定 Growth API authority/path，
+  不从任何人工页面 URL 推导。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run scripts/desktop/package-flavor.test.mjs src/lib/package-brand.test.ts src/lib/desktop-updater.test.ts src/features/settings/check-update-card.test.tsx src/components/shell/issue-feedback-dialog.test.tsx src/server/feedback/product-feedback.server.test.ts`
+- **Outcome(T+N)**: 待正式 CreatorOS V1 工作流与下一份智溯AI真机包分别回填安装后点击证据。
+- **Ref**: T-729；DEC-PACKAGE-729；用户 2026-08-09 明确要求不改视觉。
+
 ## LED-017 — “原文不改”只写进提示词，模型仍把原稿压成摘要后重新生成
 - **Date**: 2026-08-08 · **Stage**: BUILD · **Severity**: high · **Status**: active
 - **WhatFailed**: 用户已经提供完整口播稿并多次要求一字不改，编导仍把项目 Brief/归因里的创作

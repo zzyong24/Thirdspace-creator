@@ -119,46 +119,37 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
     expect(readVerdict).not.toHaveBeenCalled();
   });
 
-  it.each([
-    null,
-    "http://growth.example.com/feedback",
-    "https://user:pass@growth.example.com/feedback",
-    "https://growth.example.com:8443/feedback",
-  ])("签名 bugFeedbackUrl 缺失或不安全时在 AM/Growth 出网前关闭（%s）", async (bugFeedbackUrl) => {
-    const fetchImpl = vi.fn();
-    await expect(
-      submitProductFeedback(
-        request,
-        "11111111-1111-4111-8111-111111111111",
-        {
-          fetchImpl,
-          readVerdict: async () => ({
-            state: "ready",
-            verdict: {
-              v: 1,
-              allowed: true,
-              status: "active",
-              code: "ACTIVATION-SECRET",
-              machineId: "machine-secret",
-              projectKey: "creatoros",
-              channelRuntime: { bugFeedbackUrl },
-            },
-          }),
-          env: {
-            CREATOROS_LICENSE_BASE_URL: "https://license.example.com",
-            CREATOROS_FEEDBACK_OFFICIAL_ORIGINS:
-              "https://growth.example.com",
-            CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
+  it("人工反馈页缺失不改变固定 Growth API authority", async () => {
+    const dependencies = dependenciesWithGrowthResponse(
+      jsonResponse(202, {
+        publicRef: "FDB-01J7K0T2AB",
+        status: "new",
+        channelBinding: "verified",
+      }),
+    );
+    const result = await submitProductFeedback(
+      request,
+      "11111111-1111-4111-8111-111111111111",
+      {
+        ...dependencies,
+        readVerdict: async () => ({
+          state: "ready",
+          verdict: {
+            v: 1,
+            allowed: true,
+            status: "active",
+            code: "ACTIVATION-SECRET",
+            machineId: "machine-secret",
+            projectKey: "creatoros",
+            channelRuntime: { bugFeedbackUrl: null },
           },
-        },
-      ),
-    ).rejects.toMatchObject({
-      code:
-        bugFeedbackUrl === null
-          ? "FEEDBACK_CHANNEL_UNAVAILABLE"
-          : "FEEDBACK_ORIGIN_NOT_ALLOWED",
-    });
-    expect(fetchImpl).not.toHaveBeenCalled();
+        }),
+      },
+    );
+    expect(result.ok).toBe(true);
+    expect(dependencies.fetchImpl.mock.calls[1]?.[0]).toBe(
+      "https://growth.example.com/api/v2/product-feedback",
+    );
   });
 
   it("逐字验证 AM body digest/Ed25519/nonce，篡改即拒绝", async () => {
@@ -224,7 +215,7 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
           projectKey: "creatoros",
           channelRuntime: {
             bugFeedbackUrl:
-              "https://growth.example.com/creatoros/feedback?source=desktop#form",
+              "https://human-feedback.example.net/form?source=desktop#form",
           },
         },
       }),
@@ -275,7 +266,7 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
     });
   });
 
-  it("origin 不在 allowlist、redirect 或上游失败时 fail-closed", async () => {
+  it("固定 Growth API authority 配置非法、redirect 或上游失败时 fail-closed", async () => {
     const baseDeps = {
       readVerdict: async () => ({
         state: "ready" as const,
@@ -287,13 +278,14 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
           machineId: "machine",
           projectKey: "creatoros",
           channelRuntime: {
-            bugFeedbackUrl: "https://evil.example/feedback",
+            bugFeedbackUrl: "https://human-feedback.example.net/form",
           },
         },
       }),
       env: {
         CREATOROS_LICENSE_BASE_URL: "https://license.example.com",
-        CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.example.com",
+        CREATOROS_FEEDBACK_OFFICIAL_ORIGINS:
+          "https://growth.example.com,https://other.example.com",
         CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1",
       },
       nonce: () => "fixed-nonce",
@@ -313,11 +305,14 @@ describe("CreatorOS 渠道绑定反馈 sidecar（TC-CBF-11）", () => {
           ...(await baseDeps.readVerdict()),
           verdict: {
             ...(await baseDeps.readVerdict()).verdict,
-            channelRuntime: {
-              bugFeedbackUrl: "https://growth.example.com/feedback",
-            },
+            channelRuntime: { bugFeedbackUrl: null },
           },
         }),
+        env: {
+          ...baseDeps.env,
+          CREATOROS_FEEDBACK_OFFICIAL_ORIGINS:
+            "https://growth.example.com",
+        },
       }),
     ).rejects.toMatchObject({ code: "FEEDBACK_AUTHORITY_UNAVAILABLE" });
   });

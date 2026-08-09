@@ -27,6 +27,11 @@
     "bugFeedbackUrl": "https://zhisunet.com/feedback/",
     "channelSupportUrl": "https://zhisunet.com/support/"
   },
+  "packageLinks": {
+    "websiteUrl": "https://zhisunet.com/",
+    "downloadUrl": "https://zhisunet.com/download/",
+    "humanFeedbackUrl": "https://zhisunet.com/feedback/"
+  },
   "updates": {
     "channel": "stable",
     "packageUpdateOrigin": "https://creatoros.aitongban.cloud",

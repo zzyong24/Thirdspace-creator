@@ -29,6 +29,11 @@ const fixture = {
     bugFeedbackUrl: "https://example.com/feedback/",
     channelSupportUrl: "https://example.com/support/",
   },
+  packageLinks: {
+    websiteUrl: "https://brand.example.com/",
+    downloadUrl: "https://brand.example.com/download/",
+    humanFeedbackUrl: "https://brand.example.com/feedback/",
+  },
   updates: {
     channel: "stable",
     packageUpdateOrigin: "https://updates.example.com",
@@ -40,6 +45,18 @@ describe("渠道包清单", () => {
   it("拒绝未知字段和秘密字段", () => {
     expect(() => validatePackageManifest({ ...fixture, apiKey: "secret" })).toThrow();
     expect(() => validatePackageManifest({ ...fixture, surprise: true })).toThrow();
+  });
+
+  it("拒绝渠道包把用户可见入口指向 CreatorOS 官方域名", () => {
+    expect(() =>
+      validatePackageManifest({
+        ...fixture,
+        packageLinks: {
+          ...fixture.packageLinks,
+          downloadUrl: "https://creatoros.aitongban.cloud/",
+        },
+      }),
+    ).toThrow(/不得把渠道包指向 CreatorOS 官方域名/);
   });
 
   it("生成隔离的包身份和更新命名空间", () => {
@@ -59,9 +76,18 @@ describe("渠道包清单", () => {
     });
 
     expect(env).toEqual({
+      NEXT_PUBLIC_CREATOROS_PACKAGE_REF: "test-channel",
       NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: "测试品牌",
       NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL:
         "data:image/x-icon;base64,AAECAw==",
+      NEXT_PUBLIC_CREATOROS_PACKAGE_WEBSITE_URL:
+        "https://brand.example.com/",
+      NEXT_PUBLIC_CREATOROS_PACKAGE_DOWNLOAD_URL:
+        "https://brand.example.com/download/",
+      NEXT_PUBLIC_CREATOROS_PACKAGE_HUMAN_FEEDBACK_URL:
+        "https://brand.example.com/feedback/",
+      NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL:
+        "https://updates.example.com/updates/v2/packages/test-channel/stable/latest.json",
     });
   });
 });

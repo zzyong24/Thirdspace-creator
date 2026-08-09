@@ -5,7 +5,7 @@ import { dirname, relative, resolve } from "node:path";
 const TOP_LEVEL = new Set([
   "schema", "packageRef", "productRef", "projectKey", "expectedChannelRef",
   "displayName", "binaryName", "appIdentifier", "keychainService",
-  "windowsUpgradeCode", "icons", "growthExpectations", "updates",
+  "windowsUpgradeCode", "icons", "growthExpectations", "packageLinks", "updates",
 ]);
 const SECRET = /(secret|private.?key|password|token|api.?key|activation.?code)/i;
 const REF = /^[a-z0-9][a-z0-9-]{1,62}$/;
@@ -36,6 +36,17 @@ function httpsOrigin(value, label) {
   if (url.port) fail(`${label} 不允许非默认端口`);
   return url.origin;
 }
+function httpsUrl(value, label) {
+  const url = new URL(text(value, label));
+  if (url.protocol !== "https:" || url.username || url.password || url.port) {
+    fail(`${label} 必须是无凭据、无非默认端口的 HTTPS URL`);
+  }
+  return url.toString();
+}
+
+function packageLatestUrl(manifest) {
+  return `${manifest.updates.packageUpdateOrigin}/updates/v2/packages/${manifest.packageRef}/${manifest.updates.channel}/latest.json`;
+}
 
 export function validatePackageManifest(input) {
   exactKeys(input, TOP_LEVEL, "manifest");
@@ -65,6 +76,18 @@ export function validatePackageManifest(input) {
       if (url.protocol !== "https:" || url.username || url.password || url.hash) fail(`growthExpectations.${key} 必须是安全 HTTPS URL`);
     }
   }
+  const packageLinkKeys = new Set(["websiteUrl", "downloadUrl", "humanFeedbackUrl"]);
+  exactKeys(input.packageLinks, packageLinkKeys, "packageLinks");
+  for (const key of packageLinkKeys) {
+    const value = httpsUrl(input.packageLinks[key], `packageLinks.${key}`);
+    if (
+      input.packageRef !== "creatoros" &&
+      new URL(value).hostname === "creatoros.aitongban.cloud"
+    ) {
+      fail(`packageLinks.${key} 不得把渠道包指向 CreatorOS 官方域名`);
+    }
+    input.packageLinks[key] = value;
+  }
   exactKeys(input.updates, new Set(["channel", "packageUpdateOrigin", "sharedRuntimeOrigin"]), "updates");
   if (!REF.test(text(input.updates.channel, "updates.channel"))) fail("updates.channel 格式非法");
   input.updates.packageUpdateOrigin = httpsOrigin(input.updates.packageUpdateOrigin, "updates.packageUpdateOrigin");
@@ -85,9 +108,18 @@ export function compilePackageBrandBuildEnv({ manifest, iconBytes, iconMimeType 
     fail("WebView 品牌图标只接受已校验的 ICO");
   }
   return {
+    NEXT_PUBLIC_CREATOROS_PACKAGE_REF: manifest.packageRef,
     NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: manifest.displayName,
     NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL:
       `data:${iconMimeType};base64,${iconBytes.toString("base64")}`,
+    NEXT_PUBLIC_CREATOROS_PACKAGE_WEBSITE_URL:
+      manifest.packageLinks.websiteUrl,
+    NEXT_PUBLIC_CREATOROS_PACKAGE_DOWNLOAD_URL:
+      manifest.packageLinks.downloadUrl,
+    NEXT_PUBLIC_CREATOROS_PACKAGE_HUMAN_FEEDBACK_URL:
+      manifest.packageLinks.humanFeedbackUrl,
+    NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL:
+      packageLatestUrl(manifest),
   };
 }
 
@@ -119,7 +151,7 @@ export function compilePackagePlan(input, { target }) {
       releaseTrustRootSha256: "54f51d62d88b4bf429acef9a21d869a9a0957e1695d79938c00bff7e869f8a4c",
     },
     iconKey,
-    latestUrl: `${manifest.updates.packageUpdateOrigin}/updates/v2/packages/${manifest.packageRef}/${manifest.updates.channel}/latest.json`,
+    latestUrl: packageLatestUrl(manifest),
     runtimeBaseUrl: `${manifest.updates.sharedRuntimeOrigin}/updates/v2/runtime/creatoros/${target}`,
   };
 }
