@@ -321,8 +321,8 @@ jobs:
           output(String(valid));
           NODE
 
-      - name: 安装 Playwright Chromium(T-284,仅 cache miss)
-        if: runner.os != 'Windows' && (steps.runtime-cache.outputs.cache-hit != 'true' || steps.runtime-abi.outputs.valid != 'true')
+      - name: 安装 macOS host Playwright Chromium(T-749)
+        if: runner.os != 'Windows'
         run: pnpm -C frontend exec playwright install chromium
 
       - name: 构建 clean Runtime Image(T-487,仅 cache miss)

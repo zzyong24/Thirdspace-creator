@@ -333,6 +333,22 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
+  it("macOS 即使命中 clean runtime 缓存也会在冒烟前安装 host Chromium", () => {
+    const installStep = workflow.match(
+      /- name: 安装 macOS host Playwright Chromium\(T-749\)[\s\S]*?(?=\n\s*- name:)/,
+    )?.[0];
+    expect(installStep).toBeDefined();
+    expect(installStep).toContain("if: runner.os != 'Windows'");
+    expect(installStep).toContain(
+      "run: pnpm -C frontend exec playwright install chromium",
+    );
+    expect(installStep).not.toContain("runtime-cache.outputs.cache-hit");
+    expect(installStep).not.toContain("runtime-abi.outputs.valid");
+    expect(workflow.indexOf(installStep)).toBeLessThan(
+      workflow.indexOf("name: 打包(release.mjs 全链)"),
+    );
+  });
+
   it("release 复用已恢复的 clean sidecar，不再重复跑 Next/闭包组装", () => {
     expect(workflow).toMatch(
       /name:\s*打包\(release\.mjs 全链\)[\s\S]*CREATOROS_SKIP_SIDECAR_REBUILD:\s*"1"/,

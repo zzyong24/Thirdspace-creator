@@ -648,3 +648,4 @@
 {"ts":"2026-08-10T05:29:07.982Z","actor":"taskctl","action":"complete","task":"T-746","evidence":"PASS[REV:ebc8dce5c4c3] GATE=orchestrator/GATE-T746-BUILD.md cargo=160/0/1 settings=33/33 typecheck+build+boundary+orphan+integrity=PASS reconcile_only_existing_T727_T722_receipts","sha_before":"3bc644da9c94","sha_after":"356fa75c5eb3"}
 {"ts":"2026-08-10T05:29:08.098Z","actor":"taskctl","action":"complete","task":"T-747","evidence":"GATE=orchestrator/GATE-T747-BUILD.md startup=10/10 cargo=160/0/1 typecheck+build+boundary+orphan+integrity=PASS reconcile_only_existing_T727_T722_receipts","sha_before":"356fa75c5eb3","sha_after":"6f7b3bfa68f4"}
 {"ts":"2026-08-10T06:22:30.585Z","actor":"taskctl","action":"start","task":"T-748","sha_before":"66929cd6b391","sha_after":"40eca6c78cf0"}
+{"ts":"2026-08-10T07:05:53.689Z","actor":"taskctl","action":"start","task":"T-749","sha_before":"3049c39561e4","sha_after":"6c3d4856fdb4"}
