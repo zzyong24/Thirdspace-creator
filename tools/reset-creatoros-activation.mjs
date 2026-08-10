@@ -7,8 +7,8 @@
  * - appDataDir/.license（Rust 激活放行权威）
  * - appDataDir/.license-seen（激活防回拨冗余点）
  * - appDataDir/.channel-model-config（当前渠道签名配置缓存，存在时）
- * - macOS license Preferences 域
- * - 未完成的渠道权益领取 Keychain 日志
+ * - macOS license Preferences 域 / Windows 用户目录防回拨冗余点
+ * - 未完成的权益领取 Keychain / Credential Manager 日志
  *
  * 特意不处理：db/、.auth/、machine-id、.master-key、logs/、~/CreatorOS、
  * 主应用 Preferences 和授权服务端的消费/绑定记录。
@@ -45,7 +45,7 @@ const IDENTITY_FIELDS = [
 ];
 
 function usage() {
-  console.log(`CreatorOS 仅重置激活码工具（macOS）
+  console.log(`CreatorOS 仅重置激活码工具（macOS / Windows）
 
 用法：
   node tools/reset-creatoros-activation.mjs
@@ -55,15 +55,26 @@ function usage() {
       显示清单并要求输入“${CONFIRM_TEXT}”后执行。
 
   node tools/reset-creatoros-activation.mjs --execute --yes
-      跳过交互确认，供本机重复测试渠道激活码。
+      跳过交互确认，只供已明确授权的内部重复验收。
 
   node tools/reset-creatoros-activation.mjs --package-manifest frontend/branding/packages/<packageRef>/package.json
-      预览仓库内已锁定渠道包的精确激活白名单；配合 --execute --yes 执行。
+      仅在 macOS 预览仓库内已锁定渠道包的精确激活白名单。
 
 说明：
-  - 激活文件会移入废纸篓，可恢复；不会删除数据库或内容目录。
+  - 激活文件会移入废纸篓或回收站，可恢复；不会删除数据库或内容目录。
   - 必须先完全退出目标应用，脚本不会杀进程。
   - 只退出本机当前激活码，不会撤销服务端的消费、绑定或吊销记录。`);
+}
+
+function resolvePlatform() {
+  const platform =
+    TEST_MODE && process.env.CREATOROS_ACTIVATION_RESET_PLATFORM_OVERRIDE
+      ? process.env.CREATOROS_ACTIVATION_RESET_PLATFORM_OVERRIDE
+      : process.platform;
+  if (platform !== "darwin" && platform !== "win32") {
+    throw new Error("此工具目前只支持 macOS 和 Windows");
+  }
+  return platform;
 }
 
 function parseArgs(argv) {
@@ -105,9 +116,28 @@ function resolveHome() {
   if (
     normalized === "/" ||
     normalized === parent ||
-    normalized.split("/").filter(Boolean).length < 2
+    normalized.split(/[\\/]/).filter(Boolean).length < 2
   ) {
     throw new Error(`拒绝使用不安全的 HOME：${normalized}`);
+  }
+  return normalized;
+}
+
+function resolveWindowsAppData() {
+  const candidate =
+    TEST_MODE && process.env.CREATOROS_ACTIVATION_RESET_APPDATA_OVERRIDE
+      ? process.env.CREATOROS_ACTIVATION_RESET_APPDATA_OVERRIDE
+      : process.env.APPDATA;
+  if (!candidate || !isAbsolute(candidate)) {
+    throw new Error("Windows APPDATA 不可用或不是绝对路径");
+  }
+  const normalized = resolve(candidate);
+  const parent = resolve(normalized, "..");
+  if (
+    normalized === parent ||
+    normalized.split(/[\\/]/).filter(Boolean).length < 2
+  ) {
+    throw new Error(`拒绝使用不安全的 Windows APPDATA：${normalized}`);
   }
   return normalized;
 }
@@ -162,6 +192,7 @@ async function resolveTarget(packageManifestArg) {
         "creatoros-desktop",
         `${OFFICIAL_APP_ID}/runtime/`,
       ],
+      runningImages: ["CreatorOS.exe", "creatoros-server.exe", "creatoros-desktop.exe"],
     };
   }
   if (isAbsolute(packageManifestArg)) {
@@ -175,7 +206,7 @@ async function resolveTarget(packageManifestArg) {
   } catch {
     throw new Error("拒绝使用仓库渠道包目录外的 package manifest");
   }
-  const segments = relative(packagesRoot, manifestPath).split("/");
+  const segments = relative(packagesRoot, manifestPath).split(/[\\/]/);
   if (segments.length !== 2 || segments[1] !== "package.json") {
     throw new Error("拒绝使用仓库渠道包目录外的 package manifest");
   }
@@ -210,6 +241,11 @@ async function resolveTarget(packageManifestArg) {
       `${manifest.displayName}.app/Contents/MacOS/${manifest.binaryName}`,
       `${manifest.appIdentifier}/runtime/`,
     ],
+    runningImages: [
+      `${manifest.binaryName}.exe`,
+      "creatoros-server.exe",
+      "creatoros-desktop.exe",
+    ],
   };
 }
 
@@ -221,10 +257,11 @@ function commandPath(name, fallback) {
   );
 }
 
-function runCommand(bin, args) {
+function runCommand(bin, args, extraEnv) {
   const result = spawnSync(bin, args, {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    env: extraEnv ? { ...process.env, ...extraEnv } : undefined,
   });
   if (result.error) throw new Error(`无法执行 ${bin}：${result.error.message}`);
   return {
@@ -250,23 +287,51 @@ function assertInside(parent, target) {
   }
 }
 
-function materializePlan(home, target) {
-  const appDataDir = join(home, "Library", "Application Support", target.appIdentifier);
+function materializePlan(home, target, platform) {
+  const appDataDir = platform === "darwin"
+    ? join(home, "Library", "Application Support", target.appIdentifier)
+    : join(resolveWindowsAppData(), target.appIdentifier);
   const files = ACTIVATION_FILE_NAMES.map(([label, name]) => {
     const path = join(appDataDir, name);
     assertInside(appDataDir, path);
     return { label, path };
   });
+  if (platform === "win32") {
+    const homeSeen = join(home, ".creatoros-seen");
+    assertInside(home, homeSeen);
+    files.push({ label: "激活防回拨用户目录冗余点", path: homeSeen });
+  }
   return {
+    platform,
     home,
     appDataDir,
     files,
     target,
-    licensePreferenceDomain: `${target.appIdentifier}.license`,
+    licensePreferenceDomain:
+      platform === "darwin" ? `${target.appIdentifier}.license` : null,
+    pendingCredentialTarget:
+      platform === "win32" && target.pendingEntitlement
+        ? `${target.pendingEntitlement.account}.${target.pendingEntitlement.service}`
+        : null,
   };
 }
 
-function findRunningTarget(target) {
+function findRunningTarget(target, platform) {
+  if (platform === "win32") {
+    const tasklist = commandPath("tasklist", "tasklist.exe");
+    const result = runCommand(tasklist, ["/FO", "CSV", "/NH"]);
+    if (result.status !== 0) {
+      throw new Error(`检查 ${target.displayName} 进程失败：${result.stderr.trim()}`);
+    }
+    const names = new Set(target.runningImages.map((name) => name.toLowerCase()));
+    return result.stdout
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => {
+        const match = /^"([^"]+)"/.exec(line);
+        return Boolean(match && names.has(match[1].toLowerCase()));
+      });
+  }
   const pgrep = commandPath("pgrep", "/usr/bin/pgrep");
   const rows = new Set();
   for (const pattern of target.runningPatterns) {
@@ -334,8 +399,123 @@ function pendingEntitlementIsAbsent(target) {
   return result.status !== 0 && isMissingSystemItem(result);
 }
 
+const WINDOWS_CREDENTIAL_SCRIPT = String.raw`
+$source = @'
+using System;
+using System.Runtime.InteropServices;
+public static class LocalCredential {
+  [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+  public static extern bool CredDelete(string target, int type, int flags);
+  [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+  public static extern bool CredRead(string target, int type, int flags, out IntPtr credential);
+  [DllImport("advapi32.dll", SetLastError = false)]
+  public static extern void CredFree(IntPtr credential);
+}
+'@
+Add-Type -TypeDefinition $source
+$action = $env:CREATOROS_ACTIVATION_RESET_WIN_CREDENTIAL_ACTION
+$target = $env:CREATOROS_ACTIVATION_RESET_WIN_CREDENTIAL_TARGET
+if ($action -eq "delete") {
+  if ([LocalCredential]::CredDelete($target, 1, 0)) { exit 0 }
+  $code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+  if ($code -eq 1168) { exit 44 }
+  exit 1
+}
+$credential = [IntPtr]::Zero
+if ([LocalCredential]::CredRead($target, 1, 0, [ref]$credential)) {
+  [LocalCredential]::CredFree($credential)
+  exit 0
+}
+$code = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+if ($code -eq 1168) { exit 44 }
+exit 1
+`;
+
+function encodedPowerShell(source) {
+  return Buffer.from(source, "utf16le").toString("base64");
+}
+
+function runWindowsCredential(action, target) {
+  const powershell = commandPath("powershell", "powershell.exe");
+  return runCommand(powershell, [
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-EncodedCommand",
+    encodedPowerShell(WINDOWS_CREDENTIAL_SCRIPT),
+  ], {
+    CREATOROS_ACTIVATION_RESET_WIN_CREDENTIAL_ACTION: action,
+    CREATOROS_ACTIVATION_RESET_WIN_CREDENTIAL_TARGET: target,
+  });
+}
+
+function deleteWindowsCredential(target) {
+  const result = runWindowsCredential("delete", target);
+  if (result.status !== 0 && result.status !== 44) {
+    throw new Error(
+      `删除 Windows 待恢复领取记录失败：${result.stderr.trim() || result.stdout.trim()}`,
+    );
+  }
+}
+
+function windowsCredentialIsAbsent(target) {
+  const result = runWindowsCredential("exists", target);
+  if (result.status === 44) return true;
+  if (result.status === 0) return false;
+  throw new Error(
+    `验证 Windows 待恢复领取记录失败：${result.stderr.trim() || result.stdout.trim()}`,
+  );
+}
+
+function recycleFiles(platform, paths) {
+  if (paths.length === 0) return;
+  if (platform === "darwin") {
+    const trash = commandPath("trash", "/usr/bin/trash");
+    const result = runCommand(trash, paths);
+    if (result.status !== 0) {
+      throw new Error(
+        `激活文件移入废纸篓失败：${result.stderr.trim() || result.stdout.trim()}`,
+      );
+    }
+    return;
+  }
+  const powershell = commandPath("powershell", "powershell.exe");
+  const recycleScript = String.raw`
+$ErrorActionPreference = "Stop"
+Add-Type -AssemblyName Microsoft.VisualBasic
+$count = [int]$env:CREATOROS_ACTIVATION_RESET_WIN_RECYCLE_COUNT
+for ($index = 0; $index -lt $count; $index += 1) {
+  $path = [Environment]::GetEnvironmentVariable("CREATOROS_ACTIVATION_RESET_WIN_RECYCLE_PATH_$index")
+  [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(
+    $path,
+    [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs,
+    [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin
+  )
+}
+`;
+  const recycleEnv = {
+    CREATOROS_ACTIVATION_RESET_WIN_RECYCLE_COUNT: String(paths.length),
+  };
+  paths.forEach((path, index) => {
+    recycleEnv[`CREATOROS_ACTIVATION_RESET_WIN_RECYCLE_PATH_${index}`] = path;
+  });
+  const result = runCommand(powershell, [
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-EncodedCommand",
+    encodedPowerShell(recycleScript),
+  ], recycleEnv);
+  if (result.status !== 0) {
+    throw new Error(
+      `激活文件移入回收站失败：${result.stderr.trim() || result.stdout.trim()}`,
+    );
+  }
+}
+
 async function printPlan(plan, running) {
-  console.log(`\n${plan.target.displayName} 仅重置激活码（DRY-RUN）`);
+  const platformLabel = plan.platform === "darwin" ? "macOS" : "Windows";
+  console.log(`\n${plan.target.displayName} 仅重置激活码（${platformLabel} · DRY-RUN）`);
   console.log(`已锁定应用身份：${plan.target.appIdentifier}`);
   console.log("会退出当前本机激活码：");
   for (const target of plan.files) {
@@ -343,11 +523,15 @@ async function printPlan(plan, running) {
     console.log(`  ${exists ? "●" : "○"} ${target.label}`);
     console.log(`    ${target.path}${exists ? "" : "（不存在，跳过）"}`);
   }
-  console.log(`  • Preferences：${plan.licensePreferenceDomain}`);
-  if (plan.target.pendingEntitlement) {
+  if (plan.licensePreferenceDomain) {
+    console.log(`  • Preferences：${plan.licensePreferenceDomain}`);
+  }
+  if (plan.platform === "darwin" && plan.target.pendingEntitlement) {
     console.log(
       `  • Keychain：${plan.target.pendingEntitlement.service}/${plan.target.pendingEntitlement.account}`,
     );
+  } else if (plan.pendingCredentialTarget) {
+    console.log(`  • Windows Credential Manager：${plan.pendingCredentialTarget}`);
   } else {
     console.log("  • Keychain：渠道模型凭据及官方共享领取日志均保留");
   }
@@ -386,38 +570,43 @@ async function executeReset(plan) {
   for (const target of plan.files) {
     if (await pathExists(target.path)) existing.push(target.path);
   }
-  if (existing.length > 0) {
-    const trash = commandPath("trash", "/usr/bin/trash");
-    const result = runCommand(trash, existing);
-    if (result.status !== 0) {
-      throw new Error(
-        `激活文件移入废纸篓失败：${result.stderr.trim() || result.stdout.trim()}`,
-      );
-    }
+  recycleFiles(plan.platform, existing);
+  if (plan.licensePreferenceDomain) {
+    deletePreferenceDomain(plan.licensePreferenceDomain);
   }
-  deletePreferenceDomain(plan.licensePreferenceDomain);
-  if (plan.target.pendingEntitlement) {
+  if (plan.platform === "darwin" && plan.target.pendingEntitlement) {
     deletePendingEntitlement(plan.target.pendingEntitlement);
+  } else if (plan.pendingCredentialTarget) {
+    deleteWindowsCredential(plan.pendingCredentialTarget);
   }
 
   const residualFiles = [];
   for (const target of plan.files) {
     if (await pathExists(target.path)) residualFiles.push(target.path);
   }
-  const preferenceAbsent = preferenceDomainIsAbsent(plan.licensePreferenceDomain);
-  const pendingEntitlementAbsent = plan.target.pendingEntitlement
-    ? pendingEntitlementIsAbsent(plan.target.pendingEntitlement)
+  const preferenceAbsent = plan.licensePreferenceDomain
+    ? preferenceDomainIsAbsent(plan.licensePreferenceDomain)
     : true;
+  const pendingEntitlementAbsent =
+    plan.platform === "darwin" && plan.target.pendingEntitlement
+      ? pendingEntitlementIsAbsent(plan.target.pendingEntitlement)
+      : plan.pendingCredentialTarget
+        ? windowsCredentialIsAbsent(plan.pendingCredentialTarget)
+        : true;
   if (residualFiles.length > 0 || !preferenceAbsent || !pendingEntitlementAbsent) {
     throw new Error(
       [
         "重置后验真失败：",
         ...residualFiles.map((path) => `激活文件仍存在 ${path}`),
-        ...(!preferenceAbsent
+        ...(!preferenceAbsent && plan.licensePreferenceDomain
           ? [`Preferences 仍存在 ${plan.licensePreferenceDomain}`]
           : []),
         ...(!pendingEntitlementAbsent
-          ? [`Keychain 仍存在 ${plan.target.pendingEntitlement.service}`]
+          ? [
+              plan.platform === "darwin"
+                ? `Keychain 仍存在 ${plan.target.pendingEntitlement.service}`
+                : `Windows Credential Manager 仍存在 ${plan.pendingCredentialTarget}`,
+            ]
           : []),
       ].join("\n"),
     );
@@ -425,15 +614,16 @@ async function executeReset(plan) {
 }
 
 async function main() {
-  if (process.platform !== "darwin") {
-    throw new Error("此脚本目前只支持 macOS");
-  }
+  const platform = resolvePlatform();
   const args = parseArgs(process.argv.slice(2));
   if (args.help) return usage();
+  if (platform === "win32" && args.packageManifest) {
+    throw new Error("Windows 激活重置目前只支持官方 CreatorOS");
+  }
   const home = resolveHome();
   const target = await resolveTarget(args.packageManifest);
-  const plan = materializePlan(home, target);
-  const running = findRunningTarget(target);
+  const plan = materializePlan(home, target, platform);
+  const running = findRunningTarget(target, platform);
   await printPlan(plan, running);
   if (!args.execute) return;
   if (running.length > 0) {
@@ -447,7 +637,7 @@ async function main() {
   }
   await executeReset(plan);
   console.log(`\n✓ ${target.displayName} 当前本机激活码已退出。项目、定位、知识库、素材、账号与日志均已保留。`);
-  console.log(`  下次启动 ${target.displayName} 会进入激活页，可输入新的渠道激活码。`);
+  console.log(`  下次启动 ${target.displayName} 会进入激活页，可输入新的激活码。`);
 }
 
 main().catch((error) => {

@@ -1,4 +1,4 @@
 interface:
   display_name: "仅重置 CreatorOS 激活码"
   short_description: "安全退出本机 CreatorOS 激活码并完整保留项目、素材及全部用户内容"
-  default_prompt: "Use $reset-creatoros-activation to clear only this Mac’s CreatorOS activation state while preserving all user data."
+  default_prompt: "Use $reset-creatoros-activation to clear only this macOS or Windows device’s local CreatorOS activation state while preserving all user data."
