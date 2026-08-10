@@ -41,7 +41,7 @@ writeFileSync(resolve(staging, "package-identity.json"), `${JSON.stringify(plan.
 writeFileSync(resolve(staging, "tauri.override.json"), `${JSON.stringify(tauriOverride, null, 2)}\n`);
 const attestation = {
   schema: "creatoros-channel-package-attestation/v1",
-  stable: { ...plan, mode, signed: mode === "release" },
+  stable: { ...plan, mode, releaseRequested: mode === "release" },
   volatile: { generatedAt: new Date().toISOString(), staging },
 };
 writeFileSync(resolve(staging, "attestation.json"), `${JSON.stringify(attestation, null, 2)}\n`);
@@ -60,11 +60,27 @@ if (!planOnly) {
     env: {
       ...packageEnv,
       ...packageBrandEnv,
+      CREATOROS_RELEASE: mode === "release" ? "1" : "0",
       CREATOROS_PACKAGE_IDENTITY_PATH: resolve(staging, "package-identity.json"),
       CREATOROS_TAURI_PACKAGE_CONFIG: resolve(staging, "tauri.override.json"),
       CREATOROS_CHANNEL_PACKAGE_MODE: mode,
     },
   });
+  const profile = mode === "release" ? "release" : "release-fast";
+  const releaseManifestPath = resolve(
+    frontend,
+    "src-tauri/target",
+    profile,
+    "bundle/creatoros-release-manifest.json",
+  );
+  const releaseManifest = JSON.parse(readFileSync(releaseManifestPath, "utf8"));
+  attestation.observed = {
+    codesign: releaseManifest.codesign ?? null,
+    notarize: releaseManifest.notarize ?? null,
+    publishAuthorized: false,
+    published: false,
+  };
+  writeFileSync(resolve(staging, "attestation.json"), `${JSON.stringify(attestation, null, 2)}\n`);
   if (mode === "local-test") {
     const artifactPath = publishCanonicalLocalArtifact({
       frontendDir: frontend,

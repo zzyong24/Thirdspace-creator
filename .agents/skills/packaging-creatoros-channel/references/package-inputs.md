@@ -7,11 +7,13 @@
 - `channel-partners/<合作伙伴公司名>/growth-channel-service.input.json`（六字段精简输入）；
 - `channel-partners/<合作伙伴公司名>/growth-product-config.json`（`channelService + productConfig` 完整配置）。
 
-白标视觉验收固定检查：系统应用图标与名称、原生窗口标题、HTML 页面标题、侧边栏品牌名与品牌图标，并保留实际安装应用截图。只有 Finder/Dock 图标改变不算完成。
+用户已取消渠道打包的截图、像素与视觉回归。当前只执行静态品牌 surface 契约、系统应用名/identifier/
+图标清单、安装身份与真实进程检查；不得借打包任务修改 UI。
 
 更新必需：包级更新 HTTPS origin、共享 runtime HTTPS origin。二者可使用同一域名；阿里云 OSS 可作对象存储源站，Edge CDN 可作加速层，但上线前必须通过 HTTPS、Range、ETag、Content-Length、跨域重定向和缓存不可变性探针。
 
-发布时另需：macOS Developer ID 与公证凭据，Windows Authenticode 证书，Tauri updater 私钥。以上材料不写 PackageManifest、不提交 Git。
+GitHub 正式构建另需：macOS Developer ID 与公证凭据、Tauri updater 私钥。Windows Authenticode
+证书当前可缺省，但必须标记 `unsigned-accepted-risk`；以上材料不写 PackageManifest、不提交 Git。
 
 集中 release root：
 

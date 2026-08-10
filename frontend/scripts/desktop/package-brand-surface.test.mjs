@@ -23,11 +23,11 @@ describe("渠道包应用内部品牌 Gate", () => {
     );
   });
 
-  it("项目级渠道打包 Skill 强制完整 Growth 配置与真机内部截图验收", () => {
+  it("项目级渠道打包 Skill 保留品牌契约但不再运行视觉校验", () => {
     const skill = read(".agents/skills/packaging-creatoros-channel/SKILL.md");
     expect(skill).toContain("growth-product-config.json");
-    expect(skill).toContain("原生窗口标题");
-    expect(skill).toContain("侧边栏品牌图标");
-    expect(skill).toContain("实际安装应用截图");
+    expect(skill).toContain("package-brand-surface");
+    expect(skill).toContain("不得新增或运行截图/像素/视觉回归");
+    expect(skill).toContain("不借打包任务改 UI");
   });
 });
