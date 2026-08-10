@@ -3,9 +3,12 @@ name: reset-creatoros-activation
 description: Safely clear only the current macOS or Windows machine's local CreatorOS activation state, plus locked white-label activation state on macOS, while preserving projects, positioning versions, accounts, knowledge, assets, radar data, collection snapshots, logs, machine identity, master key, database, workspace, and channel-scoped model credentials. Use when the user asks to reset, clear, switch, or re-enter an activation code without deleting any content.
 ---
 
-# 仅重置 CreatorOS / 白标渠道包激活码
+# 重新输入 CreatorOS 激活码
 
-复用项目已测试的白名单脚本，退出当前 macOS / Windows 设备的本机激活权益。不要另写删除命令，也不要把“清激活”扩展成“清数据”。工具纯本地运行，不包含激活服务器地址，不发起网络请求。
+正式版优先引导用户从“设置 → 当前激活信息 → 重新输入激活码”操作。产品会先确认旧 sidecar
+已经退出，再按原生固定白名单退出当前 macOS / Windows 设备的本机激活权益，并整体重启到既有
+激活页。不要另写删除命令，也不要把“清激活”扩展成“清数据”。整个动作纯本地运行，不包含激活
+服务器地址，不发起网络请求。
 
 ## 固定边界
 
@@ -14,6 +17,7 @@ description: Safely clear only the current macOS or Windows machine's local Crea
 - `.license`
 - `.license-seen`
 - `.channel-model-config`
+- `.channel-links`
 - macOS：目标包自己的 Preferences 域 `<appIdentifier>.license`
 - Windows：当前用户目录下的 `.creatoros-seen` 防回拨冗余点
 - 仅官方包可处理待恢复领取记录：macOS Keychain `com.creatoros.desktop.entitlement-consume/pending-consume-v1`，或 Windows Credential Manager 精确目标 `pending-consume-v1.com.creatoros.desktop.entitlement-consume`；白标包必须保留这条共享日志，禁止把它当成渠道专属记录
@@ -29,7 +33,17 @@ description: Safely clear only the current macOS or Windows machine's local Crea
 
 禁止运行宽泛删除命令，禁止删除整个应用数据目录、主 Preferences 域或 Keychain 中其他条目。
 
-## 执行流程
+## 产品内执行流程
+
+1. 用户打开 CreatorOS 设置中的当前激活信息。
+2. 点击“重新输入激活码”，核对确认框明确写明的保留项和“服务端不解绑”边界。
+3. 点击“确认并重新启动”。不得要求普通用户运行脚本、终端或独立 EXE。
+4. 等待 CreatorOS 整体重启并进入既有激活页，再输入新码。
+
+产品入口报错时如实报告，不能扩大删除范围。只有旧版本无法进入设置页或维护验收场景，才使用下方
+备用脚本。
+
+## 维护者备用脚本流程
 
 1. 定位仓库根目录，并确认以下文件存在：
 

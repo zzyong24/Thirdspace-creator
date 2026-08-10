@@ -14,6 +14,8 @@ use std::time::Duration;
 
 // [T-372 L2] Rust 校验门纵切:激活校验决策链(验签/防重放/防回拨/.license 放行权威)见 license.rs。
 mod license;
+// [T-746] 产品内只清本机激活态：固定白名单、无网络、保留全部业务数据。
+mod activation_reset;
 // [T-635] 编译期 ProductManifest / projectKey / strict verify 的统一产品身份入口。
 mod product_identity;
 // [T-575] Growth device authorization → OS protected pending-consume → AM signed consume。
@@ -470,6 +472,10 @@ enum SidecarChild {
 
 impl SidecarChild {
     fn kill(self) {
+        let _ = self.kill_confirmed();
+    }
+
+    fn kill_confirmed(self) -> Result<(), String> {
         match self {
             #[cfg(target_os = "macos")]
             SidecarChild::Std(c) => {
@@ -486,7 +492,7 @@ impl SidecarChild {
                 let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
                 loop {
                     match c.try_wait() {
-                        Ok(Some(_)) => break, // sidecar 已优雅退出
+                        Ok(Some(_)) => return Ok(()), // sidecar 已优雅退出
                         Ok(None) if std::time::Instant::now() < deadline => {
                             std::thread::sleep(std::time::Duration::from_millis(150));
                         }
@@ -494,8 +500,10 @@ impl SidecarChild {
                             unsafe {
                                 let _ = libc::killpg(pid, libc::SIGKILL);
                             }
-                            let _ = c.wait();
-                            break;
+                            return c
+                                .wait()
+                                .map(|_| ())
+                                .map_err(|error| format!("等待 sidecar 退出失败：{error}"));
                         }
                     }
                 }
@@ -514,13 +522,22 @@ impl SidecarChild {
                 match job {
                     Some(job) => job.shutdown(5_000),
                     None => {
-                        let _ = child.kill();
+                        child
+                            .kill()
+                            .map_err(|error| format!("停止 sidecar 失败：{error}"))?;
+                        Err(
+                            "Windows Job Object 不可用，无法确认 sidecar 进程树已完全退出"
+                                .to_string(),
+                        )
                     }
                 }
             }
             #[cfg(all(not(target_os = "macos"), not(windows)))]
             SidecarChild::Shell { child } => {
-                let _ = child.kill();
+                child
+                    .kill()
+                    .map_err(|error| format!("停止 sidecar 失败：{error}"))?;
+                Err("当前平台无法确认 sidecar 进程树已完全退出".to_string())
             }
         }
     }
@@ -528,6 +545,54 @@ impl SidecarChild {
 
 #[derive(Default)]
 struct SidecarHandle(Mutex<Option<SidecarChild>>);
+
+/// [T-746] 设置页“重新输入激活码”的原生唯一入口。
+///
+/// 安全时序固定为：授权链互斥 → 优雅停止旧 sidecar（使 licensed token 与在途配置刷新失效）
+/// → 清固定本地白名单 → 进程内判定收敛为 inactive → 原生壳请求整体重启。命令不接收任何
+/// 路径、激活码或服务器信息；若拿不到 sidecar 句柄则 fail closed，不做部分清理。
+#[tauri::command]
+async fn license_reset_local(
+    app: AppHandle,
+    state: tauri::State<'_, license::LicenseState>,
+) -> Result<activation_reset::LocalActivationResetResult, String> {
+    let ctx = state.0.clone();
+    let worker_app = app.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let _chain_guard = ctx
+            .chain_lock
+            .lock()
+            .map_err(|_| "激活状态正在被其他操作占用，请稍后重试".to_string())?;
+        let result = activation_reset::execute_local_reset(
+            &ctx.app_data_dir,
+            || {
+                let child = worker_app
+                    .state::<SidecarHandle>()
+                    .0
+                    .lock()
+                    .map_err(|_| "无法锁定本机服务进程，请重启应用后重试".to_string())?
+                    .take()
+                    .ok_or_else(|| "未能确认本机服务进程已停止，未清理激活状态".to_string())?;
+                child.kill_confirmed()?;
+                Ok(())
+            },
+            activation_reset::clear_platform_seen,
+        )?;
+
+        let inactive = license::derive_local_verdict(ctx.as_ref(), 0);
+        *ctx.last_decision
+            .lock()
+            .map_err(|_| "本机激活状态已清理，请手动重启 CreatorOS".to_string())? = Some(inactive);
+        Ok::<activation_reset::LocalActivationResetResult, String>(result)
+    })
+    .await
+    .map_err(|error| format!("本机激活重置任务失败：{error}"))??;
+
+    // request_restart 不把前端 relaunch 当安全依赖：走到这里时旧 sidecar 已经退出，即使平台
+    // 重启事件异常，当前页面也无法继续访问受保护服务，用户手动重开后会进入 activation-only。
+    app.request_restart();
+    Ok(result)
+}
 
 /// 找一个空闲 TCP 端口(绑 127.0.0.1:0 让 OS 分配后立即释放)。sidecar 用它启 Next server,
 /// WebView 指向同一端口。避免固定端口在多实例/占用时冲突。
@@ -543,9 +608,14 @@ fn find_free_port() -> u16 {
 /// 只有“完成哨兵 + 首页（含激活重定向）真实渲染 2xx HTML”才返回 Ready；仅 TCP
 /// 监听不代表 Next 路由已可用，不能拿它驱动 WebView 导航。
 const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
+// [T-747] 60 秒固定截止会误伤首次启动和低性能电脑。改成“连续无进展 5 分钟”软看门狗；
+// sidecar 只要持续输出真实进展就续期，但仍保留 30 分钟最终上限，避免异常刷日志无限挂起。
+const STARTUP_IDLE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
+const STARTUP_MAX_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 #[derive(Clone, Debug)]
 enum StartupSignal {
+    Progress,
     Verified,
     Exited(String),
 }
@@ -575,6 +645,15 @@ fn classify_startup_probe(
         return StartupWaitOutcome::TimedOut;
     }
     StartupWaitOutcome::Pending
+}
+
+fn startup_watchdog_elapsed(
+    elapsed: Duration,
+    since_progress: Duration,
+    idle_timeout: Duration,
+    max_timeout: Duration,
+) -> bool {
+    since_progress >= idle_timeout || elapsed >= max_timeout
 }
 
 fn probe_sidecar_rendered_page(port: u16) -> bool {
@@ -616,25 +695,37 @@ fn probe_sidecar_rendered_page(port: u16) -> bool {
 /// 同时等待 instrumentation 完成哨兵、稳定 TCP 与子进程存活。
 fn wait_until_ready(
     port: u16,
-    timeout: Duration,
+    idle_timeout: Duration,
+    max_timeout: Duration,
     signals: std::sync::mpsc::Receiver<StartupSignal>,
 ) -> StartupWaitOutcome {
-    let deadline = std::time::Instant::now() + timeout;
+    let started_at = std::time::Instant::now();
+    let mut last_progress_at = started_at;
     let mut instrumentation_verified = false;
     loop {
         let mut exit_reason = None;
         for signal in signals.try_iter() {
             match signal {
-                StartupSignal::Verified => instrumentation_verified = true,
+                StartupSignal::Progress => last_progress_at = std::time::Instant::now(),
+                StartupSignal::Verified => {
+                    instrumentation_verified = true;
+                    last_progress_at = std::time::Instant::now();
+                }
                 StartupSignal::Exited(reason) => exit_reason = Some(reason),
             }
         }
         let rendered_page_ready = instrumentation_verified && probe_sidecar_rendered_page(port);
+        let now = std::time::Instant::now();
         let outcome = classify_startup_probe(
             rendered_page_ready,
             instrumentation_verified,
             exit_reason.as_deref(),
-            std::time::Instant::now() >= deadline,
+            startup_watchdog_elapsed(
+                now.duration_since(started_at),
+                now.duration_since(last_progress_at),
+                idle_timeout,
+                max_timeout,
+            ),
         );
         if outcome != StartupWaitOutcome::Pending {
             return outcome;
@@ -1726,6 +1817,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             license::license_activate,
             license::license_check,
+            license_reset_local,
             entitlement_claim::entitlement_claim_start,
             entitlement_claim::entitlement_claim_poll,
             entitlement_claim::entitlement_claim_resume,
@@ -2314,6 +2406,9 @@ pub fn run() {
                             if let Some(l) = &logger {
                                 l.log("sidecar", &line);
                             }
+                            if !line.trim().is_empty() {
+                                let _ = startup_tx.send(StartupSignal::Progress);
+                            }
                             if line.contains(SIDECAR_STARTUP_SENTINEL) {
                                 let _ = startup_tx.send(StartupSignal::Verified);
                             }
@@ -2322,11 +2417,15 @@ pub fn run() {
                 }
                 if let Some(err) = child.stderr.take() {
                     let logger = logger.clone();
+                    let startup_tx = startup_tx.clone();
                     std::thread::spawn(move || {
                         for line in BufReader::new(err).lines().map_while(Result::ok) {
                             eprintln!("[sidecar:err] {line}");
                             if let Some(l) = &logger {
                                 l.log("sidecar:err", &line);
+                            }
+                            if !line.trim().is_empty() {
+                                let _ = startup_tx.send(StartupSignal::Progress);
                             }
                         }
                     });
@@ -2515,6 +2614,9 @@ pub fn run() {
                                 if let Some(l) = &logger {
                                     l.log("sidecar", s);
                                 }
+                                if !s.trim().is_empty() {
+                                    let _ = startup_tx_events.send(StartupSignal::Progress);
+                                }
                                 if s.contains(SIDECAR_STARTUP_SENTINEL) {
                                     let _ = startup_tx_events.send(StartupSignal::Verified);
                                 }
@@ -2525,6 +2627,9 @@ pub fn run() {
                                 eprintln!("[sidecar:err] {s}");
                                 if let Some(l) = &logger {
                                     l.log("sidecar:err", s);
+                                }
+                                if !s.trim().is_empty() {
+                                    let _ = startup_tx_events.send(StartupSignal::Progress);
                                 }
                             }
                             CommandEvent::Terminated(payload) => {
@@ -2561,8 +2666,12 @@ pub fn run() {
                 .get_webview_window("main")
                 .expect("[T-457] main window 缺失 —— setup 头部已建过怎会失踪?");
             std::thread::spawn(move || {
-                let outcome =
-                    wait_until_ready(port, Duration::from_secs(60), startup_rx);
+                let outcome = wait_until_ready(
+                    port,
+                    STARTUP_IDLE_TIMEOUT,
+                    STARTUP_MAX_TIMEOUT,
+                    startup_rx,
+                );
                 match outcome {
                     StartupWaitOutcome::Ready => match sidecar_url.parse::<tauri::Url>() {
                         Ok(u) => {
@@ -2593,8 +2702,7 @@ pub fn run() {
                         });
                     }
                     StartupWaitOutcome::TimedOut => {
-                        let detail =
-                            "本地服务在 60 秒内没有完成启动，应用已停止继续加载。\n数据没有丢失。";
+                        let detail = "本地服务长时间没有完成启动，应用已停止继续加载。\n数据没有丢失。";
                         let script = startup_failure_script(
                             "CreatorOS 启动超时",
                             detail,
@@ -2603,7 +2711,7 @@ pub fn run() {
                         if let Some(l) = &ready_logger {
                             l.log(
                                 "shell",
-                                "sidecar 60s 内未就绪，保留启动失败页，不导航死端口",
+                                "sidecar 软看门狗超时（连续无进展或达到最终上限），保留启动失败页，不导航死端口",
                             );
                         }
                         let win2 = main_win.clone();
@@ -3151,6 +3259,33 @@ mod tests {
             classify_startup_probe(false, false, None, false),
             StartupWaitOutcome::Pending
         );
+    }
+
+    #[test]
+    fn startup_soft_watchdog_allows_slow_but_progressing_machines() {
+        assert!(STARTUP_IDLE_TIMEOUT >= Duration::from_secs(5 * 60));
+        assert!(STARTUP_MAX_TIMEOUT >= Duration::from_secs(30 * 60));
+        assert!(
+            !startup_watchdog_elapsed(
+                Duration::from_secs(61),
+                Duration::from_secs(1),
+                STARTUP_IDLE_TIMEOUT,
+                STARTUP_MAX_TIMEOUT,
+            ),
+            "超过旧 60 秒但刚有真实进展时必须继续等"
+        );
+        assert!(startup_watchdog_elapsed(
+            Duration::from_secs(6 * 60),
+            Duration::from_secs(5 * 60),
+            STARTUP_IDLE_TIMEOUT,
+            STARTUP_MAX_TIMEOUT,
+        ));
+        assert!(startup_watchdog_elapsed(
+            Duration::from_secs(30 * 60),
+            Duration::ZERO,
+            STARTUP_IDLE_TIMEOUT,
+            STARTUP_MAX_TIMEOUT,
+        ));
     }
 
     #[test]

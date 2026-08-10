@@ -1,0 +1,210 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-746",
+  "previous_round": 1,
+  "previous_verdict": "FAIL",
+  "previous_spec_sha256": "1ae8ced53a10efea16124f9f3643adcc089e1e9afe4fa9836c05ab2ead8d8172",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "发现 1 个 blocker、2 个 major：旧 sidecar 的 licensed token 未被重置时序可靠失效；旧渠道模型缓存可被并发写回；Windows 防回拨点路径与现有真实解析不一致。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "blocker",
+        "category": "security",
+        "requirement_anchor": {
+          "id": "DEC-SUPPORT-043-4",
+          "quote": "不能在仍持有 licensed token 的旧 sidecar 会话中假装已经切换。"
+        },
+        "acceptance_anchor": {
+          "id": "AC-2",
+          "quote": "确认只调用 license_reset_local，随后重启。"
+        },
+        "where": "SPEC §2（第31–32行）与 §4（第58–59行）的“广播 inactive 后由前端 relaunchApp() 重启”时序",
+        "failure_mode": "若 relaunchApp() 失败，规格只要求提示用户手动退出；已启动的 sidecar 不会因此退出，仍保有启动时写入的 licensed verdict token。该 token 的 mode 是进程环境变量，token TTL 为 24 小时，代理会继续把主应用页面当作 licensed 放行；前端事件仅 router.replace('/activate')，不能撤销 sidecar 放行。用户可在未退出前继续访问受保护主应用，违反已确认的旧 token 不可绕过要求。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md:31-32,58-60；orchestrator/DECISION_LOG.md:2213-2214；frontend/src-tauri/src/license.rs:2803-2806,2814-2815,2841-2842,2882-2888；frontend/src/server/verdict-token-gate.ts:58-66,126-128；frontend/src/proxy.ts:50-80；frontend/src/components/shell/license-heartbeat-bridge.tsx:37-45",
+        "risk_class": "security",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "规定原生命令成功返回的前置条件：旧 sidecar 已被终止或被不可逆地切换到 activation-only，不能依赖前端 relaunch 成功；重启失败也必须使当前 sidecar 不再放行主应用。验收补充“重启调用失败后，旧 token 不能访问受保护页面/API，随后手动重启进入激活页”的双平台测试。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-002",
+        "status": "open",
+        "severity": "major",
+        "category": "security",
+        "requirement_anchor": {
+          "id": "SPEC-§3",
+          "quote": "允许清除 .channel-model-config：旧激活渠道的模型配置缓存。"
+        },
+        "acceptance_anchor": {
+          "id": "AC-3",
+          "quote": "原生测试证明六类白名单项被清除。"
+        },
+        "where": "SPEC §4 第57行只将清理与授权心跳纳入 chain_lock",
+        "failure_mode": "旧 sidecar 的渠道配置刷新不持有 chain_lock：它可在重置前读取仍有效的 .license，异步完成网络拉取后原子写回 .channel-model-config。于是 reset 已删除的旧渠道缓存可在旧进程退出前重新出现；若新码属于同一 projectKey/channelRef，现有 locator 不含 activation code，重启后的读取会接受该旧缓存，无法满足“清除旧激活渠道缓存”。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md:38-43,55-60；frontend/src-tauri/src/license.rs:2502-2526,2641-2695；frontend/src/app/api/v1/local/client-config/route.ts:115-120；frontend/src/server/activation/client-config.server.ts:1357-1395,1534-1574,1743-1781,1020-1048,1843-1886",
+        "risk_class": "security",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "把“旧会话不得在 reset 后写回渠道缓存”明确为时序约束；清理必须与 sidecar 配置刷新共同围栏，或使旧会话的写入在 reset 后失效。验收补充“已读旧授权的 in-flight 配置刷新与 reset 交错”测试，断言重启前后均无可消费的旧缓存。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-003",
+        "status": "open",
+        "severity": "major",
+        "category": "correctness",
+        "requirement_anchor": {
+          "id": "SPEC-§3",
+          "quote": "Windows 当前用户目录的 .creatoros-seen。"
+        },
+        "acceptance_anchor": {
+          "id": "AC-3",
+          "quote": "原生测试证明六类白名单项被清除。"
+        },
+        "where": "SPEC §3 第43行的 Windows 路径定义",
+        "failure_mode": "现有生产读端并不固定使用 %USERPROFILE%：它优先取 HOME，只有 HOME 缺失才取 USERPROFILE。若两者不同，按规格的“当前用户目录”实现可能清除 USERPROFILE 下文件，却留下实际参与防回拨判定的 HOME/.creatoros-seen；新码激活仍会读到旧防回拨点，导致重置结果不完整或试用码被错误判回拨。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md:38-43,64-68；frontend/src-tauri/src/license.rs:2481-2499,762-778",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "clarify",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "规定 reset 必须复用或抽取授权读端同一套平台路径解析，不能自行以 %USERPROFILE% 推导；Windows 测试需显式覆盖 HOME 与 USERPROFILE 不同，断言实际被 prod_points() 消费的防回拨点被删除且工作区未触及。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:5:f0196a8fa0a58f7c",
+      "text": "状态：独立评审修订中（Round 1：FAIL，3 项已按最小约束处置）"
+    },
+    {
+      "origin_ref": "SPEC-LINE:23:0797a890ed8d2b9e",
+      "text": "C -->|确认| D[原生壳优雅停止旧 sidecar]"
+    },
+    {
+      "origin_ref": "SPEC-LINE:24:2adaed0523d2dfe1",
+      "text": "D --> E[清除本机激活态]"
+    },
+    {
+      "origin_ref": "SPEC-LINE:25:a20c656381c35395",
+      "text": "E --> F[原生壳请求整体重启]"
+    },
+    {
+      "origin_ref": "SPEC-LINE:26:001d1be975e6208a",
+      "text": "F --> G[既有激活页]"
+    },
+    {
+      "origin_ref": "SPEC-LINE:27:6aeee726ffa42289",
+      "text": "G --> H[输入新的激活码]"
+    },
+    {
+      "origin_ref": "SPEC-LINE:32:536c69d9bc29479a",
+      "text": "- 原生命令必须先优雅停止旧 sidecar，确认旧进程及其 licensed token 已失效，才允许清理和请求"
+    },
+    {
+      "origin_ref": "SPEC-LINE:33:0ed14270c51d21a0",
+      "text": "整体重启；不能只在当前已放行的 sidecar 会话里换路由伪装完成。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:34:d1df5754176dd033",
+      "text": "- 整体重启由原生壳请求，不依赖前端 `relaunchApp()` 作为安全条件。若重启动作异常，旧 sidecar"
+    },
+    {
+      "origin_ref": "SPEC-LINE:35:fb717675b1a126ae",
+      "text": "已停止，当前页面也不得继续访问受保护页面 / API；用户手动退出并重新打开后进入激活页。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:46:a3721ea1ce49fc38",
+      "text": "- 非 macOS 的 `.creatoros-seen` 必须复用授权读端 `prod_points()` 的同一解析结果：先取 `HOME`，"
+    },
+    {
+      "origin_ref": "SPEC-LINE:47:9f560be0f5dede13",
+      "text": "缺失时才取 `USERPROFILE`；禁止在重置端另写一套“Windows 用户目录”推导。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:61:1a3c7e411c8a4481",
+      "text": "- 原生命令与授权心跳共用 `chain_lock`；持锁后从壳层 `SidecarHandle` 取出并执行既有优雅停机"
+    },
+    {
+      "origin_ref": "SPEC-LINE:62:e308d2f5fffcc72b",
+      "text": "序列（macOS 进程组 SIGTERM→等待→兜底；Windows 停机哨兵→Job 等待→兜底）。只有旧 sidecar"
+    },
+    {
+      "origin_ref": "SPEC-LINE:63:9521ddf262f6f2a8",
+      "text": "确认退出后才清理文件，因此旧 licensed token 和已读取旧授权的在途渠道配置刷新一起失效，"
+    },
+    {
+      "origin_ref": "SPEC-LINE:64:7fc2f3d527ba9351",
+      "text": "`.channel-model-config` 不得在 reset 后被旧会话写回。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:65:d23260ce0a64bf6f",
+      "text": "- 清理完成后把进程内最近授权判定更新为 `inactive`，并由原生壳调用 `request_restart()`；重启后"
+    },
+    {
+      "origin_ref": "SPEC-LINE:66:110848cda420c567",
+      "text": "新 sidecar 只能从已缺失的 `.license` 签发 activation-only token。前端 relaunch 不是安全依赖。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:72:ac754d728bbf6d49",
+      "text": "2. 取消确认不调用原生命令；确认只调用 `license_reset_local`。旧 sidecar 必须先退出，随后才清理并"
+    },
+    {
+      "origin_ref": "SPEC-LINE:73:6b1ecc33cc325d21",
+      "text": "由原生壳请求重启。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:76:8036751e187db0e1",
+      "text": "5. 停机/重启故障测试证明：即使整体重启请求没有完成，旧 sidecar 已失效，受保护页面 / API 不再"
+    },
+    {
+      "origin_ref": "SPEC-LINE:77:075e593ee53fec1f",
+      "text": "可用；手动重启后进入激活页。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:78:3afab159cac0920b",
+      "text": "6. 并发测试覆盖“sidecar 已读取旧授权、渠道配置刷新仍在途”与 reset 交错；reset 返回后旧缓存"
+    },
+    {
+      "origin_ref": "SPEC-LINE:79:d3d243bb11d8722a",
+      "text": "不能写回或被新会话消费。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:80:dcafe08f8bd1ac16",
+      "text": "7. Windows 测试显式设置不同的 `HOME` 与 `USERPROFILE`，断言 reset 删除的正是"
+    },
+    {
+      "origin_ref": "SPEC-LINE:81:4686cd42008bd1d2",
+      "text": "`prod_points()` 实际读取的 `.creatoros-seen`，且两个根目录下的工作区均未触及。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:82:20512d5715b61293",
+      "text": "8. macOS 与 Windows 编译检查通过；正式包仍需各平台实际点击一次验证重启后进入激活页。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

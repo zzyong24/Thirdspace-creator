@@ -2489,12 +2489,13 @@ fn prod_points(ctx: &ShellLicenseCtx) -> Vec<Box<dyn LastSeenStore>> {
     }));
     #[cfg(not(target_os = "macos"))]
     {
-        let home = std::env::var("HOME")
-            .or_else(|_| std::env::var("USERPROFILE"))
-            .unwrap_or_else(|_| ".".to_string());
-        points.push(Box::new(HomeFileLastSeen {
-            path: PathBuf::from(home).join(".creatoros-seen"),
-        }));
+        match crate::activation_reset::resolve_non_macos_seen_path(
+            std::env::var_os("HOME"),
+            std::env::var_os("USERPROFILE"),
+        ) {
+            Ok(path) => points.push(Box::new(HomeFileLastSeen { path })),
+            Err(error) => eprintln!("[license] {error}，跳过第二防回拨点"),
+        }
     }
     points
 }

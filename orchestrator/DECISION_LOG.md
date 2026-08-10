@@ -2196,3 +2196,31 @@ AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，
 **Asset-Ref**：`.agents/skills/reset-creatoros-activation/`、`tools/reset-creatoros-activation.mjs`。
 
 **Status**：用户已确认；纳入 T-746 BUILD。
+
+## DEC-SUPPORT-043 (2026-08-09) — 激活重置从独立工具改为产品内入口
+
+**来源**：在确认普通 Windows 电脑需要独立 EXE 后，用户改变交付方向并明确要求“把这个做到产品
+功能里”。本决策取代 DEC-SUPPORT-042 中“不进入产品 UI”的交付形态，但保留其纯本地与最小清理
+边界。
+
+**决策**：
+
+1. 不再新增独立 EXE 或工具构建流水线；入口放在官方 CreatorOS 的“设置 → 账户 → 激活”卡内。
+2. 用户点击“重新输入激活码”后只进行一次范围确认；原生层只接受无参数的固定白名单命令，清除
+   本机激活快照、防回拨点和旧渠道缓存，不访问网络，也不接收或记录服务器地址与激活码。
+3. `db/.auth/logs/machine-id/.master-key`、CreatorOS 工作区、系统密钥库模型凭据与全部业务数据必须
+   保留；服务端消费、绑定、换绑和吊销状态不变。
+4. 清理与授权心跳串行；原生命令持锁后必须先优雅停止旧 sidecar，使其 licensed token 与在途渠道
+   配置刷新一起失效，再清白名单并由原生壳请求整体重启。即使重启动作异常，旧 sidecar 也不得继续
+   放行；只有新启动的 activation-only sidecar 与既有激活页可输入新码。
+5. 非 macOS 防回拨文件必须复用授权读端同一套 `HOME → USERPROFILE` 路径解析，重置端不得另行
+   推导“Windows 用户目录”。
+6. 不改激活页视觉、不新增服务端 API、不修改正式发布流水线；双平台正式包内的真实点击验证仍是
+   发布前验收项。
+
+**Pattern-Ref**：none（复用既有 Tauri 授权命令与 relaunch 能力，不引入远端机制）。
+
+**Asset-Ref**：`frontend/src-tauri/src/license.rs`、`frontend/src/lib/shell-license.ts`、
+`frontend/src/lib/desktop-updater.ts`、既有设置激活卡。
+
+**Status**：用户已确认；T-746 SPEC 独立评审通过后进入 BUILD。

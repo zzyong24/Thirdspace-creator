@@ -97,13 +97,24 @@ impl SidecarJob {
     /// 停机:等 sidecar 在 `grace_timeout_ms` 内自行优雅退出(调用方已写停机哨兵)→
     /// 超时/等待异常则 TerminateJobObject 硬杀 Job 内整树 → 关句柄(关闭本身对残存进程
     /// 再触发一次 KILL_ON_JOB_CLOSE,幂等)。与 macOS killpg SIGTERM→5s→SIGKILL 同构。
-    pub fn shutdown(self, grace_timeout_ms: u32) {
+    pub fn shutdown(self, grace_timeout_ms: u32) -> Result<(), String> {
         unsafe {
-            if WaitForSingleObject(self.process, grace_timeout_ms) != WAIT_OBJECT_0 {
-                let _ = TerminateJobObject(self.job, 1);
-            }
+            let initial_wait = WaitForSingleObject(self.process, grace_timeout_ms);
+            let result = if initial_wait == WAIT_OBJECT_0 {
+                Ok(())
+            } else if TerminateJobObject(self.job, 1) == 0 {
+                Err(format!(
+                    "TerminateJobObject 失败(GetLastError={})",
+                    GetLastError()
+                ))
+            } else if WaitForSingleObject(self.process, 5_000) == WAIT_OBJECT_0 {
+                Ok(())
+            } else {
+                Err("sidecar Job 已请求终止，但 5 秒内未确认进程退出".to_string())
+            };
             CloseHandle(self.process);
             CloseHandle(self.job);
+            result
         }
     }
 }

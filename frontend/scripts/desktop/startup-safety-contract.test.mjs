@@ -90,6 +90,15 @@ describe("T-535 desktop startup safety contract", () => {
     expect(rustShell).toContain("startup_failure_script(");
   });
 
+  it("uses a progress-aware startup watchdog instead of the old 60-second hard cutoff", () => {
+    expect(rustShell).toContain("StartupSignal::Progress");
+    expect(rustShell).toContain("STARTUP_IDLE_TIMEOUT");
+    expect(rustShell).toContain("STARTUP_MAX_TIMEOUT");
+    expect(rustShell).toContain("startup_watchdog_elapsed(");
+    expect(rustShell).not.toContain("Duration::from_secs(60), startup_rx");
+    expect(rustShell).not.toContain("本地服务在 60 秒内没有完成启动");
+  });
+
   it("T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight", () => {
     const openContext = douyinCdp.match(
       /async function openContext\([\s\S]*?\n}\n\nasync function isLoggedIn/,

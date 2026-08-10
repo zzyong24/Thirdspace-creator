@@ -124,6 +124,7 @@ import type {
 import { SkillsSection } from "./skills-section";
 import type { SkillItem } from "./skills-data";
 import { requestOnboardingReopen } from "@/features/onboarding/onboarding-card";
+import { ActivationResetControl } from "./activation-reset-control";
 
 // ---------------------------------------------------------------------------
 // useSettingsMutation — the shared island mutation seam (plan Step 5)
@@ -1435,6 +1436,7 @@ function ActivationStatusCard({
             ) : null}
           </div>
         </div>
+        <ActivationResetControl visible={activation.status !== "inactive"} />
       </div>
     </SectionCard>
   );
