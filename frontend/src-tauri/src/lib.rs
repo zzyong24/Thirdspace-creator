@@ -943,6 +943,16 @@ fn contains_browser_executable(root: &std::path::Path) -> bool {
 /// [T-487] 读取 Windows 安装期写入的 runtime 指针。指针只允许构建生成的安全 ID，
 /// 禁止路径分隔符和 `..`，避免安装目录中的文本文件把运行路径引到目录外。
 #[cfg(any(windows, test))]
+fn is_safe_windows_runtime_id(runtime_id: &str) -> bool {
+    !runtime_id.is_empty()
+        && runtime_id != "."
+        && runtime_id != ".."
+        && runtime_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+}
+
+#[cfg(any(windows, test))]
 fn resolve_installed_runtime_with_hash(
     data_root: &std::path::Path,
     expected_entry_hash: &str,
@@ -956,13 +966,7 @@ fn resolve_installed_runtime_with_hash(
         let runtime_id = std::fs::read_to_string(&pointer)
             .map_err(|e| format!("读取 Windows runtime 指针失败 {}: {e}", pointer.display()))?;
         let runtime_id = runtime_id.trim();
-        if runtime_id.is_empty()
-            || runtime_id == "."
-            || runtime_id == ".."
-            || !runtime_id
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
-        {
+        if !is_safe_windows_runtime_id(runtime_id) {
             return Err(format!(
                 "Windows runtime 指针非法（仅允许字母、数字、点、下划线和短横线）: {runtime_id:?}"
             ));
@@ -999,8 +1003,41 @@ fn copy_runtime_tree(source: &std::path::Path, dest: &std::path::Path) -> Result
     Ok(())
 }
 
+/// T-751: 部分旧安装留下了完整 runtime，却没有安装期 current 指针。这里只接受唯一且能
+/// 通过当前壳入口哈希与目录结构校验的直接子目录；零个或多个都不猜，由上层走打包资源兜底。
+#[cfg(any(windows, test))]
+fn find_unique_verified_windows_runtime(
+    runtime_root: &std::path::Path,
+    expected_entry_hash: &str,
+) -> Result<Option<String>, String> {
+    let entries = std::fs::read_dir(runtime_root)
+        .map_err(|e| format!("读取待恢复 Windows runtime 目录失败: {e}"))?;
+    let mut verified = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("读取待恢复 Windows runtime 条目失败: {e}"))?;
+        let file_type = entry
+            .file_type()
+            .map_err(|e| format!("读取待恢复 Windows runtime 类型失败: {e}"))?;
+        if !file_type.is_dir() || file_type.is_symlink() {
+            continue;
+        }
+        let Some(runtime_id) = entry.file_name().to_str().map(str::to_owned) else {
+            continue;
+        };
+        if !is_safe_windows_runtime_id(&runtime_id) {
+            continue;
+        }
+        let sidecar = entry.path().join("sidecar");
+        if verify_direct_sidecar_dir_with_hash(&sidecar, expected_entry_hash).is_ok() {
+            verified.push(runtime_id);
+        }
+    }
+    Ok((verified.len() == 1).then(|| verified.remove(0)))
+}
+
 /// T-694: 把旧 NSIS 安装目录 runtime 安全迁到包级 appDataDir。旧目录仅在新目录完整
-/// 落盘且 current 指针可解析后删除；中断时继续保留旧副本。
+/// 落盘且 current 指针可解析后删除；T-751 兼容“完整副本但指针缺失”的历史状态。
+/// 无法唯一恢复或迁移中断时继续保留旧副本。
 #[cfg(any(windows, test))]
 fn migrate_windows_runtime_to_app_data(
     install_dir: &std::path::Path,
@@ -1016,21 +1053,42 @@ fn migrate_windows_runtime_to_app_data(
     let staging = app_data_dir.join(format!(".runtime-images-migration-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&staging);
     copy_runtime_tree(&legacy, &staging)?;
-    let runtime_id = std::fs::read_to_string(staging.join("runtime-current.txt"))
-        .map_err(|e| format!("迁移副本缺 current 指针: {e}"))?;
-    let runtime_id = runtime_id.trim();
-    if runtime_id.is_empty()
-        || runtime_id == "."
-        || runtime_id == ".."
-        || !runtime_id
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
-    {
+    let pointer = staging.join("runtime-current.txt");
+    let runtime_id = match std::fs::read_to_string(&pointer) {
+        Ok(runtime_id) => runtime_id.trim().to_string(),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            let Some(runtime_id) =
+                find_unique_verified_windows_runtime(&staging, expected_entry_hash).inspect_err(
+                    |_| {
+                        let _ = std::fs::remove_dir_all(&staging);
+                    },
+                )?
+            else {
+                let _ = std::fs::remove_dir_all(&staging);
+                eprintln!(
+                    "[shell] 旧 Windows runtime 缺 current 指针且无法唯一验证，保留旧副本并进入安装资源兜底"
+                );
+                return Ok(());
+            };
+            write_windows_runtime_pointer(&staging, &runtime_id).inspect_err(|_| {
+                let _ = std::fs::remove_dir_all(&staging);
+            })?;
+            eprintln!(
+                "[shell] 旧 Windows runtime 缺 current 指针，已从唯一完整副本恢复: {runtime_id}"
+            );
+            runtime_id
+        }
+        Err(error) => {
+            let _ = std::fs::remove_dir_all(&staging);
+            return Err(format!("读取迁移副本 current 指针失败: {error}"));
+        }
+    };
+    if !is_safe_windows_runtime_id(&runtime_id) {
         let _ = std::fs::remove_dir_all(&staging);
         return Err("迁移副本 current 指针非法".to_string());
     }
     verify_direct_sidecar_dir_with_hash(
-        &staging.join(runtime_id).join("sidecar"),
+        &staging.join(&runtime_id).join("sidecar"),
         expected_entry_hash,
     )
     .inspect_err(|_| {
@@ -2770,6 +2828,42 @@ mod runtime_cleanup_tests {
         dir
     }
 
+    fn write_valid_layered_windows_runtime(runtime_root: &std::path::Path, runtime_id: &str) {
+        let sidecar = runtime_root.join(runtime_id).join("sidecar");
+        std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            sidecar
+                .join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("media").join("bin")).unwrap();
+        std::fs::create_dir_all(sidecar.join("layers").join("local-ai").join("vendor")).unwrap();
+        std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
+        std::fs::write(sidecar.join("frontend").join("server.js"), "hello").unwrap();
+        std::fs::write(
+            sidecar
+                .join("frontend")
+                .join("creatoros-module-resolver.cjs"),
+            "module.exports={}",
+        )
+        .unwrap();
+        std::fs::write(
+            sidecar
+                .join("backend")
+                .join("drizzle")
+                .join("meta")
+                .join("_journal.json"),
+            "{}",
+        )
+        .unwrap();
+    }
+
     #[test]
     fn 删非当前版本目录且保留当前版本与杂散文件() {
         let root = temp_runtime_root("basic");
@@ -3051,6 +3145,55 @@ mod runtime_cleanup_tests {
                 .unwrap()
                 .is_some()
         );
+        let _ = std::fs::remove_dir_all(&install_dir);
+        let _ = std::fs::remove_dir_all(&app_data);
+    }
+
+    #[test]
+    fn windows_旧安装目录缺指针时从唯一完整_runtime_恢复后迁移() {
+        let install_dir = temp_runtime_root("runtime-migrate-missing-pointer-install");
+        let app_data = temp_runtime_root("runtime-migrate-missing-pointer-appdata");
+        let legacy_root = install_dir.join("runtime-images");
+        write_valid_layered_windows_runtime(&legacy_root, "1.0.0-recoverable");
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+        super::migrate_windows_runtime_to_app_data(&install_dir, &app_data, hello_sha).unwrap();
+
+        assert!(!legacy_root.exists());
+        assert_eq!(
+            std::fs::read_to_string(app_data.join("runtime-images").join("runtime-current.txt"))
+                .unwrap(),
+            "1.0.0-recoverable\n"
+        );
+        assert!(
+            super::resolve_installed_runtime_with_hash(&app_data, hello_sha)
+                .unwrap()
+                .is_some()
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+        let _ = std::fs::remove_dir_all(&app_data);
+    }
+
+    #[test]
+    fn windows_旧安装目录缺指针且有多个完整_runtime_时保留旧目录走兜底() {
+        let install_dir = temp_runtime_root("runtime-migrate-ambiguous-install");
+        let app_data = temp_runtime_root("runtime-migrate-ambiguous-appdata");
+        let legacy_root = install_dir.join("runtime-images");
+        write_valid_layered_windows_runtime(&legacy_root, "1.0.0-first");
+        write_valid_layered_windows_runtime(&legacy_root, "1.0.0-second");
+        let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+        super::migrate_windows_runtime_to_app_data(&install_dir, &app_data, hello_sha).unwrap();
+
+        assert!(legacy_root.exists());
+        assert!(!app_data.join("runtime-images").exists());
+        assert!(std::fs::read_dir(&app_data)
+            .unwrap()
+            .flatten()
+            .all(|entry| !entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".runtime-images-migration-")));
         let _ = std::fs::remove_dir_all(&install_dir);
         let _ = std::fs::remove_dir_all(&app_data);
     }

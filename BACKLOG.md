@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-751 | 根治 Windows v1.0 缺 runtime current 指针时启动硬失败【正式版回归·用户确认 2026-08-10】 | 🔨 待办 | — | — | 既有 Windows runtime migration 与 startup safety 契约 | 旧安装目录 `runtime-images` 存在但 `runtime-current.txt` 缺失时，只从唯一且通过现有完整性校验的 runtime 恢复安全指针；无法唯一恢复则保留旧目录并进入既有安装资源兜底，禁止删除 AppData 用户数据；补健康迁移、缺指针恢复、歧义兜底测试后先做本地与 Windows 契约验证。 |
 | T-750 | 排查 Windows v1.0 启动校验报“迁移副本缺 current 指针”【正式版真机·用户 2026-08-10】 | ✅ 待办 | — | — | 既有 Windows runtime migration 与 startup safety 契约 | 基于用户提供的两份加密 sidecar 日志、正式包 SHA 和当前启动校验代码，锁定 `current` 指针为何在迁移副本中缺失，区分安装包缺文件、旧 runtime 残留、迁移时序或 Windows 路径语义；本任务只诊断和保全证据，不修改产品代码。 |
 | T-749 | 根治 macOS 正式流水线缓存命中时跳过 Playwright 浏览器安装【官方包回归·用户确认 2026-08-10】 | ✅ 待办 | — | — | 既有 `desktop-release.yml` 与运行时冒烟契约 | exact runtime cache 命中时，macOS runner 仍必须在运行混淆后冒烟前准备 host Playwright Chromium；只修安装条件并补缓存命中回归，不改产品代码、视觉或发布范围；通过四项打包测试后重新跑同一 SHA 的 Windows 与 macOS 官方包。 |
 | T-748 | 补齐“重新输入激活码”原生命令 ACL 并重打官方包【正式版回归·用户真机 2026-08-09】 | 🔨 待办 | — | — | [T-746 SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) | 正式包点击“重新输入激活码”不得再出现 `Command license_reset_local not allowed by ACL`；只为无参数命令 `license_reset_local` 增加最小 remote-sidecar 放行权限，并补齐“前端 invoke ↔ handler ↔ build command ↔ capability”一致性回归，不改 UI、清理边界或发布流程；验证后重跑官方 macOS/Windows 打包。 |
