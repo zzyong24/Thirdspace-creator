@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-license-reset-local"
+description = "Enables the license_reset_local command without any pre-configured scope."
+commands.allow = ["license_reset_local"]
+
+[[permission]]
+identifier = "deny-license-reset-local"
+description = "Denies the license_reset_local command without any pre-configured scope."
+commands.deny = ["license_reset_local"]

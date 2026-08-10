@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-748 | 补齐“重新输入激活码”原生命令 ACL 并重打官方包【正式版回归·用户真机 2026-08-09】 | 🔨 待办 | — | — | [T-746 SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) | 正式包点击“重新输入激活码”不得再出现 `Command license_reset_local not allowed by ACL`；只为无参数命令 `license_reset_local` 增加最小 remote-sidecar 放行权限，并补齐“前端 invoke ↔ handler ↔ build command ↔ capability”一致性回归，不改 UI、清理边界或发布流程；验证后重跑官方 macOS/Windows 打包。 |
 | T-746 | 在 CreatorOS 设置中提供“重新输入激活码”【正式版产品功能·用户变更确认 2026-08-09】 | ✅ 待办 | PASS[REV:ebc8dce5c4c3] | — | [SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) · [使用说明](docs/testing/creatoros-activation-only-reset.md) | 放弃独立 EXE，改为官方桌面版设置内的本地激活重置入口：用户确认后只清本机激活快照、防回拨点和旧渠道缓存，完整保留项目、素材、数据库、账号、模型密钥、机器身份和工作区；不联网、不含服务端地址、不做解绑，整体重启后进入既有激活页输入新码。 |
 | T-747 | 把 CreatorOS 60 秒启动硬超时改为进展感知软看门狗【正式版启动可靠性·用户确认 2026-08-09】 | ✅ 待办 | — | — | 既有桌面启动安全契约 | 首次解压、迁移或低性能电脑启动时，不再到 60 秒直接判失败；sidecar 只要持续输出真实启动进展就续期等待，无任何进展的等待窗口放宽到 5 分钟，并保留 30 分钟最终安全上限；退出与真实失败仍立即展示诊断页，文案不得再写死“60 秒”。 |
 | T-744 | 为 CreatorOS 内测群生成 v1.0 正式版感谢与能力升级通知【发布传播·用户 2026-08-09】 | ✅ 待办 | — | — | [v1.0 发布图文案](docs/marketing/CreatorOS-v1.0-产品功能与版本迭代图.md#内测群正式版通知) | 面向约 330 位内测群成员撰写不催购的正式版通知，感谢所有成员通过测试与反馈帮助产品持续变好；突出模型配置已统一集成、支持国内外主流模型，并接入语音转文字、图片生成与视频生成能力；不公开约 30 位购买者的内部统计。 |

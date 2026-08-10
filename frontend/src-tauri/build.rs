@@ -386,11 +386,13 @@ fn main() {
     // origin 的 app 自定义命令**默认全拒**("Command license_activate not allowed by ACL",
     // 2026-07-18 真机实锤)。app 命令的权限不会自动存在——必须在此声明,tauri-build 才会
     // 自动生成 `allow-<command>` / `deny-<command>` 权限,供 capabilities/remote-sidecar.json
-    // 显式引用放行。三个命令 = generate_handler 全集(license 决策链 IPC,SPEC §9)。
+    // 显式引用放行。此处命令集必须与 generate_handler 的远程页可调用子集保持一致。
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "license_activate",
             "license_check",
+            // [T-748] 设置页在 remote sidecar origin 调用的本地激活重置。
+            "license_reset_local",
             "entitlement_claim_start",
             "entitlement_claim_poll",
             "entitlement_claim_resume",

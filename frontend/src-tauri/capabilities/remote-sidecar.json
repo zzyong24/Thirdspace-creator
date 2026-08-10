@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "remote-sidecar",
-  "description": "[T-408] 主窗口加载的是 sidecar 的远程 http origin(http://127.0.0.1:<动态端口>/)。Tauri v2 默认只放行本地 origin 调 invoke;远程 origin 必须由此 capability 的 remote.urls 显式授权,否则 license_activate 等 IPC 全被 ACL 拒(激活直接失败、Rust 零执行)。刻意只授最小集:授权决策命令 + 更新/重启/开链接,绝不含 shell:execute/kill(那是 Rust 侧 spawn sidecar 用,前端不碰)——即便远程页被投毒也拿不到执行外部进程的能力。",
+  "description": "[T-408/T-748] 主窗口加载的是 sidecar 的远程 http origin(http://127.0.0.1:<动态端口>/)。Tauri v2 默认只放行本地 origin 调 invoke;远程 origin 必须由此 capability 的 remote.urls 显式授权,否则 license_activate 等 IPC 全被 ACL 拒(前端报错、Rust 零执行)。刻意只授最小集:授权决策、无参数本地激活重置 + 更新/重启/开链接,绝不含 shell:execute/kill(那是 Rust 侧 spawn sidecar 用,前端不碰)——即便远程页被投毒也拿不到执行外部进程的能力。",
   "windows": ["main"],
   "remote": {
     "urls": ["http://127.0.0.1:*", "http://localhost:*"]
@@ -13,6 +13,7 @@
     "opener:default",
     "allow-license-activate",
     "allow-license-check",
+    "allow-license-reset-local",
     "allow-entitlement-claim-start",
     "allow-entitlement-claim-poll",
     "allow-entitlement-claim-resume",
