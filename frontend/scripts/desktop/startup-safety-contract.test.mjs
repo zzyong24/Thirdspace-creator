@@ -84,19 +84,28 @@ describe("T-535 desktop startup safety contract", () => {
     expect(rustShell).toMatch(
       /if rendered_page_ready && instrumentation_verified \{\s*return StartupWaitOutcome::Ready;/,
     );
-    expect(rustShell).toContain("probe_sidecar_rendered_page(port)");
+    expect(rustShell).toContain("probe_sidecar_rendered_page(&probe_client, port)");
     expect(rustShell).toContain("page not found");
     expect(rustShell).toContain("StartupWaitOutcome::Exited(reason)");
     expect(rustShell).toContain("startup_failure_script(");
   });
 
-  it("uses a progress-aware startup watchdog instead of the old 60-second hard cutoff", () => {
-    expect(rustShell).toContain("StartupSignal::Progress");
+  it("uses a phase-aware startup watchdog instead of arbitrary log output or the old 60-second cutoff", () => {
+    expect(rustShell).not.toContain("StartupSignal::Progress");
     expect(rustShell).toContain("STARTUP_IDLE_TIMEOUT");
     expect(rustShell).toContain("STARTUP_MAX_TIMEOUT");
+    expect(rustShell).toContain("STARTUP_PROBE_TIMEOUT");
+    expect(rustShell).toContain("STARTUP_PROBE_INTERVAL");
+    expect(rustShell).toContain("build_sidecar_probe_client(");
     expect(rustShell).toContain("startup_watchdog_elapsed(");
     expect(rustShell).not.toContain("Duration::from_secs(60), startup_rx");
     expect(rustShell).not.toContain("本地服务在 60 秒内没有完成启动");
+  });
+
+  it("turns sidecar URL parsing, scheduling, and navigation failures into visible diagnostics", () => {
+    expect(rustShell).toContain("CreatorOS 页面加载失败");
+    expect(rustShell).toMatch(/sidecar url 解析失败[\s\S]*show_startup_failure\(/);
+    expect(rustShell).toMatch(/run_on_main_thread[\s\S]*navigate[\s\S]*startup_failure_script/);
   });
 
   it("T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight", () => {

@@ -608,14 +608,17 @@ fn find_free_port() -> u16 {
 /// 只有“完成哨兵 + 首页（含激活重定向）真实渲染 2xx HTML”才返回 Ready；仅 TCP
 /// 监听不代表 Next 路由已可用，不能拿它驱动 WebView 导航。
 const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
-// [T-747] 60 秒固定截止会误伤首次启动和低性能电脑。改成“连续无进展 5 分钟”软看门狗；
-// sidecar 只要持续输出真实进展就续期，但仍保留 30 分钟最终上限，避免异常刷日志无限挂起。
+// [T-747/T-754] 60 秒固定截止会误伤首次启动和低性能电脑。保留“连续无阶段进展
+// 5 分钟”软看门狗与 30 分钟最终上限，但普通 stdout/stderr 不是启动阶段进展，不能靠
+// 重复告警续命。首页冷渲染会包含迁移/seed，给单次请求 15 秒并降频复用同一 client，
+// 避免旧实现每 2 秒取消并重发完整 SSR 请求，把慢机器拖成永久转圈。
 const STARTUP_IDLE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 const STARTUP_MAX_TIMEOUT: Duration = Duration::from_secs(30 * 60);
+const STARTUP_PROBE_TIMEOUT: Duration = Duration::from_secs(15);
+const STARTUP_PROBE_INTERVAL: Duration = Duration::from_millis(750);
 
 #[derive(Clone, Debug)]
 enum StartupSignal {
-    Progress,
     Verified,
     Exited(String),
 }
@@ -656,15 +659,16 @@ fn startup_watchdog_elapsed(
     since_progress >= idle_timeout || elapsed >= max_timeout
 }
 
-fn probe_sidecar_rendered_page(port: u16) -> bool {
-    let client = match reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(2))
+fn build_sidecar_probe_client(
+    timeout: Duration,
+) -> Result<reqwest::blocking::Client, reqwest::Error> {
+    reqwest::blocking::Client::builder()
+        .timeout(timeout)
         .redirect(reqwest::redirect::Policy::limited(2))
         .build()
-    {
-        Ok(client) => client,
-        Err(_) => return false,
-    };
+}
+
+fn probe_sidecar_rendered_page(client: &reqwest::blocking::Client, port: u16) -> bool {
     let response = match client.get(format!("http://127.0.0.1:{port}/")).send() {
         Ok(response) => response,
         Err(_) => return false,
@@ -702,11 +706,17 @@ fn wait_until_ready(
     let started_at = std::time::Instant::now();
     let mut last_progress_at = started_at;
     let mut instrumentation_verified = false;
+    let mut next_probe_at = started_at;
+    let probe_client = match build_sidecar_probe_client(STARTUP_PROBE_TIMEOUT) {
+        Ok(client) => client,
+        Err(error) => {
+            return StartupWaitOutcome::Exited(format!("无法初始化本地页面探测器({error})"));
+        }
+    };
     loop {
         let mut exit_reason = None;
         for signal in signals.try_iter() {
             match signal {
-                StartupSignal::Progress => last_progress_at = std::time::Instant::now(),
                 StartupSignal::Verified => {
                     instrumentation_verified = true;
                     last_progress_at = std::time::Instant::now();
@@ -714,7 +724,14 @@ fn wait_until_ready(
                 StartupSignal::Exited(reason) => exit_reason = Some(reason),
             }
         }
-        let rendered_page_ready = instrumentation_verified && probe_sidecar_rendered_page(port);
+        let now = std::time::Instant::now();
+        let rendered_page_ready = if instrumentation_verified && now >= next_probe_at {
+            let ready = probe_sidecar_rendered_page(&probe_client, port);
+            next_probe_at = std::time::Instant::now() + STARTUP_PROBE_INTERVAL;
+            ready
+        } else {
+            false
+        };
         let now = std::time::Instant::now();
         let outcome = classify_startup_probe(
             rendered_page_ready,
@@ -2464,9 +2481,6 @@ pub fn run() {
                             if let Some(l) = &logger {
                                 l.log("sidecar", &line);
                             }
-                            if !line.trim().is_empty() {
-                                let _ = startup_tx.send(StartupSignal::Progress);
-                            }
                             if line.contains(SIDECAR_STARTUP_SENTINEL) {
                                 let _ = startup_tx.send(StartupSignal::Verified);
                             }
@@ -2475,15 +2489,11 @@ pub fn run() {
                 }
                 if let Some(err) = child.stderr.take() {
                     let logger = logger.clone();
-                    let startup_tx = startup_tx.clone();
                     std::thread::spawn(move || {
                         for line in BufReader::new(err).lines().map_while(Result::ok) {
                             eprintln!("[sidecar:err] {line}");
                             if let Some(l) = &logger {
                                 l.log("sidecar:err", &line);
-                            }
-                            if !line.trim().is_empty() {
-                                let _ = startup_tx.send(StartupSignal::Progress);
                             }
                         }
                     });
@@ -2672,9 +2682,6 @@ pub fn run() {
                                 if let Some(l) = &logger {
                                     l.log("sidecar", s);
                                 }
-                                if !s.trim().is_empty() {
-                                    let _ = startup_tx_events.send(StartupSignal::Progress);
-                                }
                                 if s.contains(SIDECAR_STARTUP_SENTINEL) {
                                     let _ = startup_tx_events.send(StartupSignal::Verified);
                                 }
@@ -2685,9 +2692,6 @@ pub fn run() {
                                 eprintln!("[sidecar:err] {s}");
                                 if let Some(l) = &logger {
                                     l.log("sidecar:err", s);
-                                }
-                                if !s.trim().is_empty() {
-                                    let _ = startup_tx_events.send(StartupSignal::Progress);
                                 }
                             }
                             CommandEvent::Terminated(payload) => {
@@ -2734,13 +2738,51 @@ pub fn run() {
                     StartupWaitOutcome::Ready => match sidecar_url.parse::<tauri::Url>() {
                         Ok(u) => {
                             let win2 = main_win.clone();
-                            let _ = main_win.run_on_main_thread(move || {
+                            let navigation_logger = ready_logger.clone();
+                            let navigation_logs_dir = startup_logs_dir.clone();
+                            let scheduled = main_win.run_on_main_thread(move || {
                                 if let Err(e) = win2.navigate(u) {
-                                    eprintln!("[shell] navigate 到 sidecar 失败: {e}");
+                                    let detail = format!(
+                                        "本地服务已经启动，但页面未能打开。\n数据没有丢失。\n\n技术信息：{e}"
+                                    );
+                                    if let Some(l) = &navigation_logger {
+                                        l.log("shell", &format!("navigate 到 sidecar 失败: {e}"));
+                                    }
+                                    let script = startup_failure_script(
+                                        "CreatorOS 页面加载失败",
+                                        &detail,
+                                        &navigation_logs_dir,
+                                    );
+                                    let _ = win2.eval(&script);
                                 }
                             });
+                            if let Err(e) = scheduled {
+                                if let Some(l) = &ready_logger {
+                                    l.log("shell", &format!("调度 sidecar 页面导航失败: {e}"));
+                                }
+                                show_startup_failure(
+                                    main_win.clone(),
+                                    "CreatorOS 页面加载失败",
+                                    &format!(
+                                        "本地服务已经启动，但页面加载任务未能执行。\n数据没有丢失。\n\n技术信息：{e}"
+                                    ),
+                                    &startup_logs_dir,
+                                );
+                            }
                         }
-                        Err(e) => eprintln!("[shell] sidecar url 解析失败: {e}"),
+                        Err(e) => {
+                            if let Some(l) = &ready_logger {
+                                l.log("shell", &format!("sidecar url 解析失败: {e}"));
+                            }
+                            show_startup_failure(
+                                main_win.clone(),
+                                "CreatorOS 页面加载失败",
+                                &format!(
+                                    "本地服务地址无效，应用已停止继续加载。\n数据没有丢失。\n\n技术信息：{e}"
+                                ),
+                                &startup_logs_dir,
+                            );
+                        }
                     },
                     StartupWaitOutcome::Exited(reason) => {
                         let detail = format!(
@@ -3408,6 +3450,8 @@ mod tests {
     fn startup_soft_watchdog_allows_slow_but_progressing_machines() {
         assert!(STARTUP_IDLE_TIMEOUT >= Duration::from_secs(5 * 60));
         assert!(STARTUP_MAX_TIMEOUT >= Duration::from_secs(30 * 60));
+        assert!(STARTUP_PROBE_TIMEOUT >= Duration::from_secs(15));
+        assert!(STARTUP_PROBE_INTERVAL >= Duration::from_millis(500));
         assert!(
             !startup_watchdog_elapsed(
                 Duration::from_secs(61),
@@ -3448,13 +3492,33 @@ mod tests {
         }
 
         let ready_port = serve_once("200 OK", "<main>CreatorOS</main>");
-        assert!(probe_sidecar_rendered_page(ready_port));
+        let client = build_sidecar_probe_client(Duration::from_secs(1)).unwrap();
+        assert!(probe_sidecar_rendered_page(&client, ready_port));
 
         let not_found_port = serve_once("404 Not Found", "Page Not Found");
         assert!(
-            !probe_sidecar_rendered_page(not_found_port),
+            !probe_sidecar_rendered_page(&client, not_found_port),
             "sidecar 只监听端口但首页仍是 404 时，壳层绝不能导航"
         );
+    }
+
+    #[test]
+    fn sidecar_http_probe_allows_a_cold_page_to_finish_within_its_budget() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            std::thread::sleep(Duration::from_millis(250));
+            let body = "<main>CreatorOS cold page ready</main>";
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            std::io::Write::write_all(&mut stream, response.as_bytes()).unwrap();
+        });
+
+        let client = build_sidecar_probe_client(Duration::from_secs(1)).unwrap();
+        assert!(probe_sidecar_rendered_page(&client, port));
     }
 
     // 一个合法的 32B key 的 base64(测试用)。
