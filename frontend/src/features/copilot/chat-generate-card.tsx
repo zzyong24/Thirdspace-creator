@@ -146,6 +146,11 @@ export function ChatGenerateCard({
   // [T-376] 任务终败时 runner 写进步骤流末条的真实原因(「未配置」vs「配置了但调用失败」);
   // null = 没读到 → 兜底老文案。此前一切失败都渲「很可能是还没配置生图模型」,用户配了也被冤枉。
   const [failDetail, setFailDetail] = React.useState<string | null>(null);
+  const showModelSettingsLink =
+    !failDetail ||
+    failDetail.includes("未配置") ||
+    failDetail.includes("已配置,但调用失败") ||
+    failDetail.includes("API key");
   // [T-272] 只用 effect 局部 abandoned 标志控轮询;不再用 mount-cleanup 的 cancelledRef——
   // 它在 React StrictMode(Next dev 默认双挂)下 remount 不重置 → 轮询恒被 bail 卡死(与 T-265
   // ChatThesisCard 同款隐患同款修法)。
@@ -434,15 +439,17 @@ export function ChatGenerateCard({
                 ? `没能生成${kindLabel}素材 —— ${failDetail}`
                 : `没能生成${kindLabel}素材 —— 很可能是还没配置生${kindLabel}模型。`}
           </p>
-          <a
-            href="/settings?tab=models"
-            data-slot="chat-generate-settings-link"
-            className="text-[11px] font-medium text-brand underline underline-offset-2"
-          >
-            {failDetail && !failDetail.includes("未配置")
-              ? "去设置检查模型配置 →"
-              : `去设置配生${kindLabel}模型 →`}
-          </a>
+          {showModelSettingsLink ? (
+            <a
+              href="/settings?tab=models"
+              data-slot="chat-generate-settings-link"
+              className="text-[11px] font-medium text-brand underline underline-offset-2"
+            >
+              {failDetail && !failDetail.includes("未配置")
+                ? "去设置检查模型配置 →"
+                : `去设置配生${kindLabel}模型 →`}
+            </a>
+          ) : null}
         </div>
       ) : null}
     </div>

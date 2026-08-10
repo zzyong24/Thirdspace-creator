@@ -170,6 +170,66 @@ describe("runAssetGenerate — image(同步)装配", () => {
     expect((cand.resultData as { assetId: string }).assetId).toBe("asset-img-42");
     expect((cand.resultData as { aspectRatio?: string }).aspectRatio).toBe("9:16");
   });
+
+  it("[T-735] 生图响应已收到但本地落盘失败时，重试不再发第二次计费请求", async () => {
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    const firstGenerateImage = vi.fn(async () => ({
+      assetBytes: new Uint8Array([4, 5, 6]),
+    }));
+    const first = makeDeps({
+      registry: {
+        fake: {
+          generateImage: firstGenerateImage,
+        } as unknown as MultimodalProviderRegistry[string],
+      },
+      kind: "image",
+      runtimeByTask,
+    });
+    first.createGeneratedAsset.mockRejectedValueOnce(
+      new Error("local object storage unavailable"),
+    );
+
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-image-received",
+        projectId: "p1",
+        inputData: { prompt: "同一张付费图片", kind: "image" },
+      },
+      first.deps,
+    );
+
+    expect(firstGenerateImage).toHaveBeenCalledOnce();
+    expect(runtimeByTask.get("t-image-received")).toMatchObject({
+      multimodalProviderCheckpoint: { state: "response_received" },
+    });
+
+    const retryGenerateImage = vi.fn(async () => ({
+      assetBytes: new Uint8Array([7, 8, 9]),
+    }));
+    const retry = makeDeps({
+      registry: {
+        fake: {
+          generateImage: retryGenerateImage,
+        } as unknown as MultimodalProviderRegistry[string],
+      },
+      kind: "image",
+      runtimeByTask,
+    });
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-image-received-retry",
+        retryOfTaskId: "t-image-received",
+        projectId: "p1",
+        inputData: { prompt: "同一张付费图片", kind: "image" },
+      },
+      retry.deps,
+    );
+
+    expect(retryGenerateImage).not.toHaveBeenCalled();
+    expect(retry.cancelTask).toHaveBeenCalledOnce();
+  });
 });
 
 describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [gate-F2]", () => {
@@ -333,6 +393,90 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
       retry.deps,
     );
     expect(generateVideo).toHaveBeenCalledOnce();
+    expect(retry.cancelTask).toHaveBeenCalledOnce();
+  });
+
+  it("[T-735] 计费调用前先持久化 submitting，任务号检查点写失败也禁止重试二次提交", async () => {
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    let submitCount = 0;
+    const first = makeDeps({
+      registry: {},
+      kind: "video",
+      runtimeByTask,
+    });
+    first.putMultimodalProviderCheckpoint.mockImplementation(
+      async (
+        _ctx: RequestContext,
+        taskId: string,
+        checkpoint: Record<string, unknown>,
+      ) => {
+        if (checkpoint.state === "submitted") {
+          throw new Error("checkpoint storage unavailable after provider accepted job");
+        }
+        runtimeByTask.set(taskId, {
+          ...(runtimeByTask.get(taskId) ?? {}),
+          multimodalProviderCheckpoint: { ...checkpoint },
+        });
+      },
+    );
+    const generateVideo = vi.fn(
+      async (
+        _spec: unknown,
+        options: { onJobSubmitted?: (jobId: string) => Promise<void> },
+      ) => {
+        expect(runtimeByTask.get("t-submit-checkpoint")).toMatchObject({
+          multimodalProviderCheckpoint: { state: "submitting" },
+        });
+        submitCount += 1;
+        await options.onJobSubmitted?.("provider-job-checkpoint-lost");
+        return { assetBytes: new Uint8Array([1, 2, 3]) };
+      },
+    );
+    first.deps.registry = {
+      fake: {
+        generateVideo,
+      } as unknown as MultimodalProviderRegistry[string],
+    };
+
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-submit-checkpoint",
+        projectId: "p1",
+        inputData: { prompt: "只允许提交一次", kind: "video" },
+      },
+      first.deps,
+    );
+
+    expect(submitCount).toBe(1);
+    expect(runtimeByTask.get("t-submit-checkpoint")).toMatchObject({
+      multimodalProviderCheckpoint: { state: "submitting" },
+    });
+
+    const retryGenerateVideo = vi.fn(async () => ({
+      assetBytes: new Uint8Array([9, 9, 9]),
+    }));
+    const retry = makeDeps({
+      registry: {
+        fake: {
+          generateVideo: retryGenerateVideo,
+        } as unknown as MultimodalProviderRegistry[string],
+      },
+      kind: "video",
+      runtimeByTask,
+    });
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "t-submit-checkpoint-retry",
+        retryOfTaskId: "t-submit-checkpoint",
+        projectId: "p1",
+        inputData: { prompt: "只允许提交一次", kind: "video" },
+      },
+      retry.deps,
+    );
+
+    expect(retryGenerateVideo).not.toHaveBeenCalled();
     expect(retry.cancelTask).toHaveBeenCalledOnce();
   });
 });

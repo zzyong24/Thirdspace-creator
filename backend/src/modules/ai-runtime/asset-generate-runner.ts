@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import {
+  MultimodalConfigError,
   MultimodalGenerationError,
   type GenerateVideoOptions,
   type MultimodalProviderRegistry,
@@ -92,9 +93,14 @@ export interface AssetGenerateTask {
 
 interface ProviderCheckpoint {
   schemaVersion: 1;
-  capability: "video.generate";
+  capability: "image.generate" | "video.generate";
   inputFingerprint: string;
-  state: "submitted" | "submit_unknown";
+  state:
+    | "submitting"
+    | "submitted"
+    | "submit_unknown"
+    | "response_received"
+    | "rejected";
   jobId?: string;
 }
 
@@ -127,9 +133,14 @@ function parseProviderCheckpoint(
   const row = value as Record<string, unknown>;
   if (
     row.schemaVersion !== 1 ||
-    row.capability !== "video.generate" ||
+    (row.capability !== "image.generate" &&
+      row.capability !== "video.generate") ||
     row.inputFingerprint !== fingerprint ||
-    (row.state !== "submitted" && row.state !== "submit_unknown")
+    (row.state !== "submitting" &&
+      row.state !== "submitted" &&
+      row.state !== "submit_unknown" &&
+      row.state !== "response_received" &&
+      row.state !== "rejected")
   ) {
     return null;
   }
@@ -163,6 +174,10 @@ export async function runAssetGenerate(
   let createdAssetId: string | null = null;
   let resolvedSpec: ResolvedMultimodalSpec | null = null;
   let inputFingerprint: string | null = null;
+  const kind: "image" | "video" =
+    task.inputData.kind === "video" ? "video" : "image";
+  const capability =
+    kind === "image" ? "image.generate" : "video.generate";
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while生成(可能数十秒~分钟)
 
@@ -171,16 +186,12 @@ export async function runAssetGenerate(
     if (!prompt.trim()) {
       throw new Error("asset-generate-runner: inputData.prompt is required");
     }
-    const kind: "image" | "video" =
-      task.inputData.kind === "video" ? "video" : "image";
     const aspectRatio =
       typeof task.inputData.aspectRatio === "string"
         ? task.inputData.aspectRatio
         : undefined;
 
     // 1) 解析用户配的多模态 model(未配 → MultimodalConfigError,下方 catch → cancelTask)。
-    const capability =
-      kind === "image" ? "image.generate" : "video.generate";
     const spec = await deps.resolveMultimodalSpec(ctx, capability);
     resolvedSpec = spec;
     inputFingerprint = generationFingerprint({
@@ -191,20 +202,39 @@ export async function runAssetGenerate(
     });
 
     let resumeJobId: string | undefined;
-    if (kind === "video" && typeof deps.ai.getTaskRuntimeData === "function") {
+    if (typeof deps.ai.getTaskRuntimeData === "function") {
       const checkpointTaskId = task.retryOfTaskId ?? task.id;
       const runtimeData = await deps.ai.getTaskRuntimeData(ctx, checkpointTaskId);
       const checkpoint = parseProviderCheckpoint(
         runtimeData.multimodalProviderCheckpoint,
         inputFingerprint,
       );
-      if (checkpoint?.state === "submit_unknown") {
+      if (
+        checkpoint?.capability === capability &&
+        (checkpoint.state === "submitting" ||
+          checkpoint.state === "submit_unknown")
+      ) {
         throw new MultimodalGenerationError(
-          "视频生成请求的提交结果未知，禁止自动重复提交",
+          `${kind === "video" ? "视频" : "图片"}生成请求的提交结果未知，禁止自动重复提交`,
           { reason: "network", stage: "submit", retryable: false },
         );
       }
-      if (checkpoint?.state === "submitted" && checkpoint.jobId) {
+      if (
+        kind === "image" &&
+        checkpoint?.capability === capability &&
+        checkpoint.state === "response_received"
+      ) {
+        throw new MultimodalGenerationError(
+          "图片已由模型生成，但本地保存未完成，禁止自动重复生成",
+          { reason: "unknown", stage: "local_persist", retryable: false },
+        );
+      }
+      if (
+        kind === "video" &&
+        checkpoint?.capability === capability &&
+        checkpoint.state === "submitted" &&
+        checkpoint.jobId
+      ) {
         resumeJobId = checkpoint.jobId;
       }
     }
@@ -214,6 +244,19 @@ export async function runAssetGenerate(
     //    下方 catch。工厂按 spec.provider 分派;从 ai-worker 动态引入(与其它 runner 同款)。
     const { generateImage, generateVideo } = await import("@creatoros/ai-worker");
     const idempotencyKey = inputFingerprint;
+    if (
+      !resumeJobId &&
+      typeof deps.ai.putMultimodalProviderCheckpoint === "function"
+    ) {
+      // T-735：先落“即将提交”再触碰计费接口。进程若在 POST 与 provider job id
+      // 回写之间退出，重试会看到 submitting 并停止，不能把同一意图再计费一次。
+      await deps.ai.putMultimodalProviderCheckpoint(ctx, task.id, {
+        schemaVersion: 1,
+        capability,
+        inputFingerprint,
+        state: "submitting",
+      });
+    }
     const videoOptions: GenerateVideoOptions = {
       prompt,
       aspectRatio,
@@ -240,6 +283,19 @@ export async function runAssetGenerate(
         : await generateVideo(spec, videoOptions, deps.registry);
     if (!assetBytes || assetBytes.byteLength === 0) {
       throw new Error("asset-generate-runner: provider returned no bytes");
+    }
+    if (
+      kind === "image" &&
+      typeof deps.ai.putMultimodalProviderCheckpoint === "function"
+    ) {
+      // 同步生图没有可恢复的 provider job id。先记录响应已收到，再落本地资产；
+      // 后续本地失败只能人工恢复，绝不自动再发一次计费 POST。
+      await deps.ai.putMultimodalProviderCheckpoint(ctx, task.id, {
+        schemaVersion: 1,
+        capability,
+        inputFingerprint,
+        state: "response_received",
+      });
     }
 
     // 3) 落对象存储 + 建 asset。[DATA-H07] 资产生为 **pending 候选态**(采纳前不进素材库
@@ -272,24 +328,40 @@ export async function runAssetGenerate(
       err && typeof err === "object"
         ? (err as { reason?: unknown; stage?: unknown })
         : null;
-    if (
+    const status =
+      typeof (err as { status?: unknown })?.status === "number"
+        ? (err as { status: number }).status
+        : undefined;
+    const submitResultUnknown =
       resolvedSpec &&
       inputFingerprint &&
-      task.inputData.kind === "video" &&
       failure?.stage === "submit" &&
       (failure.reason === "network" ||
         failure.reason === "response_contract" ||
         (failure.reason === "upstream" &&
-          typeof (err as { status?: unknown }).status === "number" &&
-          (err as { status: number }).status >= 500)) &&
+          typeof status === "number" &&
+          status >= 500));
+    const submitKnownRejected =
+      resolvedSpec &&
+      inputFingerprint &&
+      (err instanceof MultimodalConfigError ||
+        (failure?.stage === "submit" &&
+          typeof status === "number" &&
+          status >= 400 &&
+          status < 500 &&
+          status !== 408));
+    if (
+      resolvedSpec &&
+      inputFingerprint &&
+      (submitResultUnknown || submitKnownRejected) &&
       typeof deps.ai.putMultimodalProviderCheckpoint === "function"
     ) {
       try {
         await deps.ai.putMultimodalProviderCheckpoint(ctx, task.id, {
           schemaVersion: 1,
-          capability: "video.generate",
+          capability,
           inputFingerprint,
-          state: "submit_unknown",
+          state: submitResultUnknown ? "submit_unknown" : "rejected",
         });
       } catch {
         /* 原提交未知错误优先；checkpoint 失败由同一诊断链暴露。 */

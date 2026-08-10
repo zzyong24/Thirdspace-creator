@@ -81,6 +81,12 @@ export function safeModelFailureMessage(
     err && typeof err === "object" && typeof (err as { code?: unknown }).code === "string"
       ? (err as { code: string }).code
       : "";
+  const stage =
+    err &&
+    typeof err === "object" &&
+    typeof (err as { stage?: unknown }).stage === "string"
+      ? (err as { stage: string }).stage
+      : "";
   const safeMessages: Record<string, string> = {
     CHANNEL_MODEL_AUTHENTICATION:
       "模型服务授权已失效，请重新校验激活权益后重试。",
@@ -99,7 +105,23 @@ export function safeModelFailureMessage(
     CHANNEL_MODEL_TIMEOUT:
       "生成仍在处理中或查询超时，系统没有重复发起生成，请稍后重试。",
   };
-  return safeMessages[code] ?? "模型调用失败，请稍后重试或联系官方处理";
+  const message =
+    safeMessages[code] ??
+    (stage === "submit"
+      ? "生成请求的提交结果未知，为避免重复计费已停止自动重试，请联系官方处理。"
+      : stage === "local_persist"
+        ? "内容已经生成，但本地保存未完成。为避免重复计费已停止自动重试，请联系官方处理。"
+        : "模型调用失败，请稍后重试或联系官方处理");
+  const reference =
+    err &&
+    typeof err === "object" &&
+    typeof (err as { reference?: unknown }).reference === "string" &&
+    /^[a-z][a-z0-9-]{4,40}$/i.test(
+      (err as { reference: string }).reference,
+    )
+      ? (err as { reference: string }).reference
+      : null;
+  return reference ? `${message}（参考号：${reference}）` : message;
 }
 
 /**

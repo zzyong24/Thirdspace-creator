@@ -134,6 +134,29 @@ describe("ChatGenerateCard — T-376 失败态诚实呈现", () => {
     );
     expect(link?.textContent ?? "").toContain("去设置配生图模型");
   });
+
+  it("[T-735] 受管生成响应异常展示脱敏参考号，不误导用户去改本地模型配置", async () => {
+    mockClient.listTaskSteps.mockResolvedValueOnce([
+      {
+        kind: "error",
+        text: "生成服务已经返回结果，但当前版本无法识别该结果，请联系官方处理。（参考号：media-12ab34cd56）",
+      },
+    ]);
+    const { container } = render(
+      <ChatGenerateCard taskId="t-managed-result" kindOf="video" error={null} />,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4100);
+    });
+
+    const text =
+      container.querySelector('[data-slot="chat-generate-error"]')?.textContent ??
+      "";
+    expect(text).toContain("参考号：media-12ab34cd56");
+    expect(
+      container.querySelector('[data-slot="chat-generate-settings-link"]'),
+    ).toBeNull();
+  });
 });
 
 describe("ChatGenerateCard — T-523 参考图使用真相", () => {

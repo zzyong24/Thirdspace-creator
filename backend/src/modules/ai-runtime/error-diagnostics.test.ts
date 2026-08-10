@@ -66,7 +66,9 @@ describe("T-617 渠道模型可观测信息脱敏", () => {
       safeModelFailureMessage(contractError, {
         displayModelKey: "channel-managed",
       }),
-    ).toBe("生成服务已经返回结果，但当前版本无法识别该结果，请联系官方处理。");
+    ).toBe(
+      "生成服务已经返回结果，但当前版本无法识别该结果，请联系官方处理。（参考号：media-12ab34cd56）",
+    );
     const diagnostic = formatErrorDiagnostic(contractError, {
       omitMessage: true,
     });
@@ -76,5 +78,22 @@ describe("T-617 渠道模型可观测信息脱敏", () => {
     expect(diagnostic).toContain("retryable=false");
     expect(diagnostic).not.toContain("provider.internal");
     expect(diagnostic).not.toContain("SECRET");
+  });
+
+  it("[T-735] 本地保存失败明确说明已停止自动重试，不把它误报成普通模型失败", () => {
+    const persistError = Object.assign(new Error("private local detail"), {
+      name: "MultimodalGenerationError",
+      reason: "unknown",
+      stage: "local_persist",
+      retryable: false,
+    });
+
+    expect(
+      safeModelFailureMessage(persistError, {
+        displayModelKey: "channel-managed",
+      }),
+    ).toBe(
+      "内容已经生成，但本地保存未完成。为避免重复计费已停止自动重试，请联系官方处理。",
+    );
   });
 });
