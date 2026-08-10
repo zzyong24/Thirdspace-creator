@@ -143,6 +143,9 @@ describe("production.transport — contract conformance", () => {
           confirmedAt: NOW,
           decisions: { scenes: [{ id: "scene-1" }] },
           renderProps: { meta: { title: "测试片" } },
+          inventory: [
+            { assetId: "asset-broll-1", label: "项目录屏", kind: "video" },
+          ],
         },
       },
     });
@@ -152,6 +155,9 @@ describe("production.transport — contract conformance", () => {
         revision: 1,
         sourceTaskId: "ai-task-1",
         decisions: { scenes: [{ id: "scene-1" }] },
+        inventory: [
+          { assetId: "asset-broll-1", label: "项目录屏", kind: "video" },
+        ],
       },
     });
   });

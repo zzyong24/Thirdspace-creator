@@ -210,6 +210,143 @@ export interface VideoDecisions {
   directorReview?: VideoDirectorReview;
 }
 
+/**
+ * 局部选材只能建立在本任务同一份 SRT 的完整候选上。这里仅校验结构、真实时间轴和
+ * 枚举边界，不做任何创作判断；无效/陈旧候选直接拒绝，绝不偷偷退回整链重跑。
+ */
+function parseMaterialAdjustmentBase(
+  raw: unknown,
+  srtLines: readonly SrtLine[],
+): VideoDecisions {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("补充选材缺少当前分镜，未重新运行完整分镜");
+  }
+  const value = raw as Record<string, unknown>;
+  const starts = srtStartSet(srtLines);
+  const parsedScenes = buildScenesDecisionSchema(starts).safeParse({
+    scenes: value.scenes,
+  });
+  if (!parsedScenes.success) {
+    throw new Error("当前分镜结构无效，未重新运行完整分镜");
+  }
+  const scenes = parsedScenes.data.scenes;
+  const parsedCards = buildCardsDecisionSchema(scenes.length, starts).safeParse({
+    cards: value.cards,
+  });
+  if (!parsedCards.success) {
+    throw new Error("当前信息卡结构无效，未重新运行完整分镜");
+  }
+  const parsedSlots = videoBrollSchema.safeParse({
+    slots: Array.isArray(value.visualSlots) ? value.visualSlots : [],
+    broll: [],
+  });
+  if (!parsedSlots.success) {
+    throw new Error("当前画面需求结构无效，未重新运行完整分镜");
+  }
+  if (!Array.isArray(value.broll)) {
+    throw new Error("当前素材时间线无效，未重新运行完整分镜");
+  }
+  const broll: VideoBrollPick[] = value.broll.flatMap((rawPick) => {
+    if (!rawPick || typeof rawPick !== "object" || Array.isArray(rawPick)) return [];
+    const pick = rawPick as Record<string, unknown>;
+    if (
+      typeof pick.sceneIdx !== "number" ||
+      !Number.isInteger(pick.sceneIdx) ||
+      typeof pick.assetId !== "string" ||
+      typeof pick.at !== "number" ||
+      !Number.isFinite(pick.at) ||
+      typeof pick.durationSec !== "number" ||
+      !Number.isFinite(pick.durationSec)
+    ) {
+      return [];
+    }
+    return [{
+      sceneIdx: pick.sceneIdx,
+      assetId: pick.assetId,
+      at: pick.at,
+      durationSec: pick.durationSec,
+      ...(pick.presentation === "full_frame" ||
+      pick.presentation === "large_stage" ||
+      pick.presentation === "overlay"
+        ? { presentation: pick.presentation }
+        : {}),
+      ...(pick.visualRole === "screen_recording" ||
+      pick.visualRole === "still_image" ||
+      pick.visualRole === "live_footage"
+        ? { visualRole: pick.visualRole }
+        : {}),
+      ...(pick.motion === "static" ||
+      pick.motion === "push_in" ||
+      pick.motion === "pan_left" ||
+      pick.motion === "pan_right"
+        ? { motion: pick.motion }
+        : {}),
+    }];
+  });
+  if (broll.length !== value.broll.length) {
+    throw new Error("当前素材时间线含无效条目，未重新运行完整分镜");
+  }
+  if (!Array.isArray(value.srtLines) || !Array.isArray(value.subtitles)) {
+    throw new Error("当前字幕时间线无效，未重新运行完整分镜");
+  }
+  const baseSrt = value.srtLines as Array<Record<string, unknown>>;
+  const subtitles = value.subtitles as Array<Record<string, unknown>>;
+  const sameSrt =
+    baseSrt.length === srtLines.length &&
+    baseSrt.every((line, index) => {
+      const source = srtLines[index];
+      return Boolean(
+        source &&
+        line.index === source.index &&
+        line.startSec === source.startSec &&
+        line.endSec === source.endSec &&
+        line.text === source.text,
+      );
+    });
+  if (!sameSrt || subtitles.length !== srtLines.length) {
+    throw new Error("当前分镜与本次 SRT 不一致，未重新运行完整分镜");
+  }
+  const parsedSubtitles: BilingualSubtitleLine[] = subtitles.flatMap(
+    (line, index) => {
+      const source = srtLines[index];
+      if (
+        !source ||
+        line.index !== source.index ||
+        line.startSec !== source.startSec ||
+        line.endSec !== source.endSec ||
+        typeof line.zh !== "string" ||
+        typeof line.en !== "string"
+      ) {
+        return [];
+      }
+      return [{
+        index: source.index,
+        startSec: source.startSec,
+        endSec: source.endSec,
+        zh: line.zh,
+        en: line.en,
+      }];
+    },
+  );
+  if (parsedSubtitles.length !== subtitles.length) {
+    throw new Error("当前字幕内容无效，未重新运行完整分镜");
+  }
+  return {
+    scenes,
+    cards: parsedCards.data.cards,
+    visualSlots: parsedSlots.data.slots,
+    broll,
+    subtitles: parsedSubtitles,
+    srtLines: [...srtLines],
+    directorReview: {
+      status: "ready",
+      summary: "当前稳定分镜已保留，仅更新补充素材与时间线。",
+      issues: [],
+      source: "auto_repaired",
+    },
+  };
+}
+
 export interface VideoDirectorIssue {
   sceneIdx: number;
   severity: "blocking" | "warning";
@@ -2063,8 +2200,8 @@ export async function runVideoDecisions(
       }
     }
 
-    // 素材清单与人工选材必须在分场前准备好：人工选择会改变场景边界，不能等旧分场
-    // 做完后再往时间线上硬塞。代码只鉴权/校验真实 assetId，语义与时长交给 AI。
+    // 素材清单与人工选材先做项目范围鉴权；局部补充选材会冻结既有分场/卡片/字幕，
+    // 只由 material.match 在当前方案内重算素材与时间线，绝不偷偷退回完整五节点。
     const excluded = new Set(
       Array.isArray(task.inputData.excludedAssetIds)
         ? (task.inputData.excludedAssetIds as unknown[]).filter(
@@ -2109,6 +2246,85 @@ export async function runVideoDecisions(
       manualMaterialAssignments,
       inventory,
     );
+
+    if (task.inputData.adjustmentMode === "materials") {
+      stepIdx = 2;
+      const base = parseMaterialAdjustmentBase(
+        task.inputData.baseDecisions,
+        srtLines,
+      );
+      let matchedBroll = base.broll;
+      let materialMatchWarning = "";
+      try {
+        matchedBroll = await decideMaterialBroll(
+          {
+            scenes: base.scenes,
+            srtLines,
+            script,
+            inventory,
+            visualSlots: base.visualSlots ?? [],
+            orientation,
+            manualAssignments: manualAssignmentBrief,
+          },
+          call,
+        );
+      } catch (error) {
+        // 一次局部语义匹配失败时保留现有素材时间线，并落实用户明确选中的 assetId；
+        // 不再调用分场/卡片/字幕/导演，也不再发第二次模型请求。
+        materialMatchWarning =
+          error instanceof Error ? error.message : String(error);
+      }
+      const broll = enforceManualMaterialAssignments({
+        assignments: manualMaterialAssignments,
+        scenes: base.scenes,
+        srtLines,
+        inventory,
+        modelBroll: matchedBroll,
+      });
+      const structuralIssues = auditVideoDecisions({
+        scenes: base.scenes,
+        cards: base.cards,
+        broll,
+        subtitles: base.subtitles,
+        srtLines,
+        inventory,
+      }).filter(
+        (issue) =>
+          issue.severity === "blocking" &&
+          (issue.code === "material_conflict" ||
+            issue.code === "timing_conflict" ||
+            issue.code === "subtitle_conflict"),
+      );
+      if (structuralIssues.length > 0) {
+        throw new Error("补充选材后的素材时间线未能安全收口");
+      }
+      await step(
+        2,
+        `补充选材：保留 ${base.scenes.length} 个场景，只调整 ${broll.length} 条素材时间线` +
+          (materialMatchWarning ? "；语义匹配暂不可用，已保留当前绑定" : ""),
+        [{
+          toolName: "material.match",
+          scope: { accountId: ctx.accountId ?? null, projectId: task.projectId },
+          input: { inventory, manualMaterialAssignments },
+          output: {
+            broll,
+            ...(materialMatchWarning ? { warning: materialMatchWarning } : {}),
+          },
+        }],
+      );
+      const decisions: VideoDecisions = {
+        ...base,
+        broll,
+      };
+      await deps.ai.recordCandidate(ctx, task.id, {
+        resultType: VIDEO_DECISIONS_RESULT_TYPE,
+        resultData: {
+          decisions: decisions as unknown as Record<string, unknown>,
+          inventory,
+        },
+      });
+      return;
+    }
 
     stepIdx = 0;
     const scenes = await decideScenes(

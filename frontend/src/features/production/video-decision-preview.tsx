@@ -46,7 +46,7 @@ export interface VideoDecisionPreviewProps {
     decisions: VideoDecisions;
     renderProps: VideoRenderProps;
   }) => void;
-  /** 人工选材会改变镜头节奏：保留原方案与全部既有绑定，在其上自动优化插点和时长。 */
+  /** 保留原方案与全部既有绑定，只局部调整素材插点和时长。 */
   onRestoryboard?: (assignments: readonly ManualMaterialAssignment[]) => void;
   onDiscard?: () => void;
   /** 渲染 props meta.title(通常 = 项目标题;T-254c 接线传)。 */
@@ -61,6 +61,8 @@ export interface VideoDecisionPreviewProps {
   readOnly?: boolean;
   /** 正在保存方案/创建渲染任务：锁住入口，避免重复提交并立即反馈进度。 */
   confirming?: boolean;
+  /** 正在应用局部补充选材：锁住入口，避免重复创建调整任务。 */
+  adjustingMaterials?: boolean;
 }
 
 export interface ManualMaterialAssignment {
@@ -82,6 +84,7 @@ export function VideoDecisionPreview({
   orientation,
   readOnly = false,
   confirming = false,
+  adjustingMaterials = false,
 }: VideoDecisionPreviewProps) {
   // 可编辑的两轴:删卡(cards)/ B-roll 换选与移除(broll)。场景/字幕本期只读展示。
   const [cards, setCards] = React.useState(decisions.cards);
@@ -196,11 +199,11 @@ export function VideoDecisionPreview({
           }`}
         >
           <p className="font-medium">
-            {directorNeedsAttention ? "总导演将自动修片并复审" : "总导演审片通过"}
+            {directorNeedsAttention ? "旧候选审片记录" : "总导演审片通过"}
           </p>
           <p className="mt-1 opacity-80">
             {directorNeedsAttention
-              ? "系统会保留当前分场和全部已绑定素材，在原方案内自动调整时长、素材接力与信息卡，再输出可渲染版本。"
+              ? "当前完整分镜可直接确认进入渲染；只有你主动补充选材时，系统才会局部调整素材和时间线。"
               : decisions.directorReview.summary}
           </p>
           {!directorNeedsAttention && decisions.directorReview.issues.length > 0 ? (
@@ -411,11 +414,6 @@ export function VideoDecisionPreview({
               已记录你的选材；系统会保留原分镜，在当前方案内自动调整插点、接力和展示时长。
             </p>
           ) : null}
-          {directorNeedsAttention && !hasManualChanges ? (
-            <p className="text-right text-xs text-amber-700 dark:text-amber-300">
-              这份旧候选尚未经过自动修片；系统会保留已绑定素材，在当前方案内补齐并复审。
-            </p>
-          ) : null}
           <div className="flex items-center justify-end gap-2">
             {onDiscard ? (
               <button
@@ -429,18 +427,14 @@ export function VideoDecisionPreview({
             <button
               type="button"
               disabled={
-                confirming || (directorNeedsAttention && !onRestoryboard)
+                confirming || adjustingMaterials
               }
               className="h-8 rounded-control bg-primary px-3 text-sm text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => {
-                if (confirming) return;
+                if (confirming || adjustingMaterials) return;
                 if (hasManualChanges) {
                   // 人工只改一个素材时，也要把首轮已经绑定的全部素材作为硬约束
                   // 传回去，只优化当前方案，禁止把之前的绑定洗掉。
-                  onRestoryboard?.(allBoundAssignments);
-                  return;
-                }
-                if (directorNeedsAttention) {
                   onRestoryboard?.(allBoundAssignments);
                   return;
                 }
@@ -458,10 +452,10 @@ export function VideoDecisionPreview({
             >
               {confirming
                 ? "正在保存分镜并创建渲染任务…"
+                : adjustingMaterials
+                ? "正在应用补充选材…"
                 : hasManualChanges
-                ? "应用选材并自动优化"
-                : directorNeedsAttention
-                ? "自动修片并复审"
+                ? "应用补充选材"
                 : "确认决策,进入渲染"}
             </button>
           </div>

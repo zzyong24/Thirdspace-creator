@@ -80,20 +80,27 @@ function kindLabel(mimeType: string | null): string {
   return "文件";
 }
 
-export function ExecutionTaskCard({
-  taskId: initialTaskId,
-  projectId,
-  onTaskIdChange,
-  onTaskUpdate,
-}: {
+interface ExecutionTaskCardProps {
   taskId: string;
   /** 重试新建执行任务时继续保留项目归属，避免新任务脱离制作页恢复查询。 */
   projectId?: string;
   /** 卡片内部重试会换 taskId；通知外层一起改跟踪目标。 */
   onTaskIdChange?: (taskId: string) => void;
-  /** 采纳/丢弃动作的终态回传；外层可立即收口关联，不必等下一轮轮询。 */
+  /** 轮询和动作的状态回传；外层可立即更新，不必等自己的下一轮轮询。 */
   onTaskUpdate?: (task: ExecutionTaskUpdate) => void;
-}) {
+}
+
+export function ExecutionTaskCard(props: ExecutionTaskCardProps) {
+  // 外层切换 taskId 时以 key 物理重建内部跟踪状态，避免旧任务状态滞留。
+  return <ExecutionTaskCardBody key={props.taskId} {...props} />;
+}
+
+function ExecutionTaskCardBody({
+  taskId: initialTaskId,
+  projectId,
+  onTaskIdChange,
+  onTaskUpdate,
+}: ExecutionTaskCardProps) {
   // 重试会重建任务 —— 卡内部切换跟踪新 taskId。
   const [taskId, setTaskId] = React.useState(initialTaskId);
   const [task, setTask] = React.useState<WireExecutionTask | null>(null);
@@ -113,11 +120,12 @@ export function ExecutionTaskCard({
         body: undefined,
       })) as unknown as WireExecutionTask;
       setTask(t);
+      onTaskUpdate?.(t);
       return t;
     } catch {
       return null; // 单次拉取失败不清空已有状态(下轮再试)
     }
-  }, [taskId]);
+  }, [taskId, onTaskUpdate]);
 
   // 轮询:进行中每 4s 拉任务 + 最新步骤;到终态/待确认即停。
   React.useEffect(() => {
@@ -187,6 +195,7 @@ export function ExecutionTaskCard({
         body: undefined,
       })) as unknown as WireExecutionTask;
       setTask(t);
+      onTaskUpdate?.(t);
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "丢弃失败,请重试",
@@ -194,7 +203,7 @@ export function ExecutionTaskCard({
     } finally {
       setBusy("");
     }
-  }, [taskId]);
+  }, [taskId, onTaskUpdate]);
 
   // 重试 = 带修改意见重建任务(同 spec + retryFeedback/retryOf 进 params),卡切换跟踪新任务。
   const retry = React.useCallback(async () => {

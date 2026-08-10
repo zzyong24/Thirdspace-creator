@@ -56,6 +56,8 @@ export const productionOperations = {
         confirmedAt: iso8601,
         decisions: z.record(z.string(), z.unknown()),
         renderProps: z.record(z.string(), z.unknown()),
+        // 与本次分镜同源的项目素材快照；刷新后 B-roll 下拉不得只剩 assetId。
+        inventory: z.array(z.record(z.string(), z.unknown())).optional(),
       }),
     }),
     response: productionResource,

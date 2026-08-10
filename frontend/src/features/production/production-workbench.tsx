@@ -83,6 +83,23 @@ function pollDelay(attempt: number): number {
   return Math.min(backed, POLL_MAX_MS);
 }
 
+/**
+ * 局部选材动作的稳定 attemptId：同一项目、同一稳定分镜、同一选择只能创建一条任务。
+ * SEMANTIC_BOUNDARY_ALLOW: 该哈希只做请求幂等，不参与任何素材/场景创作判断。
+ */
+function materialAdjustmentAttemptId(input: unknown): string {
+  const text = JSON.stringify(input);
+  const hash = (seed: number) => {
+    let value = seed >>> 0;
+    for (let index = 0; index < text.length; index += 1) {
+      value ^= text.charCodeAt(index);
+      value = Math.imul(value, 0x01000193) >>> 0;
+    }
+    return value.toString(16).padStart(8, "0");
+  };
+  return `materials-${hash(0x811c9dc5)}-${hash(0x9e3779b9)}-${hash(0x85ebca6b)}-${hash(0xc2b2ae35)}`;
+}
+
 // ── wire 形状(只声明本组件读的字段;服务端 zod 是单一真值)────────────────────
 
 interface WireAsset {
@@ -427,6 +444,7 @@ export function ProductionWorkbench({
     null,
   );
   const [decisionsBusy, setDecisionsBusy] = React.useState(false);
+  const materialAdjustmentInFlight = React.useRef(false);
   const [decisionsError, setDecisionsError] = React.useState<string | null>(
     null,
   );
@@ -593,6 +611,7 @@ export function ProductionWorkbench({
               revision?: unknown;
               decisions?: unknown;
               renderProps?: unknown;
+              inventory?: unknown;
               sourceRenderTaskId?: unknown;
             }
           | undefined;
@@ -602,6 +621,9 @@ export function ProductionWorkbench({
           setDecisions(plan.decisions as VideoDecisions);
           setDecisionsConfirmed(true);
           setRecoveredDecisions(true);
+        }
+        if (Array.isArray(plan.inventory)) {
+          setInventory(plan.inventory as BrollAssetRef[]);
         }
         const delivery = (plan.renderProps as { delivery?: unknown } | null)
           ?.delivery as { width?: unknown; height?: unknown } | undefined;
@@ -888,6 +910,37 @@ export function ProductionWorkbench({
     }, 0);
     return () => window.clearTimeout(id);
   }, [loadBroll]);
+
+  // 兼容 1.0 已保存但尚未携带 inventory 的旧方案：只从当前项目用料链重建下拉清单，
+  // 不读取全局素材、不重新跑 AI，也不改既有 assetId/时间线。
+  React.useEffect(() => {
+    if (!recoveredDecisions || !decisions || inventory.length > 0) return;
+    const fallback = new Map<string, BrollAssetRef>();
+    for (const item of brollItems) {
+      fallback.set(item.assetId, {
+        assetId: item.assetId,
+        label: item.name,
+        kind: item.kind,
+        description: "",
+        source: "manual",
+      });
+    }
+    for (const item of autoBroll) {
+      if (fallback.has(item.assetId)) continue;
+      fallback.set(item.assetId, {
+        assetId: item.assetId,
+        label: item.name,
+        kind: item.kind,
+        description: "",
+        source: item.source,
+      });
+    }
+    if (fallback.size === 0) return;
+    const id = window.setTimeout(() => {
+      setInventory([...fallback.values()]);
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [autoBroll, brollItems, decisions, inventory.length, recoveredDecisions]);
 
   const invalidateDecisionsForBrollChange = React.useCallback(async () => {
     if (decisionsTaskId) {
@@ -1279,6 +1332,66 @@ export function ProductionWorkbench({
     [],
   );
 
+  const adjustMaterials = React.useCallback(
+    async (assignments: readonly ManualMaterialAssignment[]) => {
+      if (
+        materialAdjustmentInFlight.current ||
+        !srt ||
+        !voiceoverText ||
+        !decisions
+      ) {
+        return;
+      }
+      materialAdjustmentInFlight.current = true;
+      setDecisionsBusy(true);
+      setDecisionsError(null);
+      try {
+        const attemptId = materialAdjustmentAttemptId({
+          projectId,
+          baseDecisions: decisions,
+          assignments,
+        });
+        const task = (await client.createAITask({
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "video.decisions",
+            // 不使用随机 attemptId：双击/重放只能命中同一任务。
+            attemptId,
+            inputData: {
+              projectId,
+              srtText: srt.text,
+              script: voiceoverText,
+              orientation: renderOrientation,
+              excludedAssetIds: Array.from(excludedAuto),
+              adjustmentMode: "materials",
+              baseDecisions: decisions,
+              manualMaterialAssignments: assignments,
+            },
+          },
+        })) as unknown as WireAITask;
+        setDecisionsConfirmed(false);
+        setDecisions(null);
+        setRecoveredDecisions(false);
+        setDecisionsTaskId(task.id);
+      } catch (err) {
+        setDecisionsError(
+          err instanceof Error ? err.message : "补充选材应用失败,请重试",
+        );
+      } finally {
+        materialAdjustmentInFlight.current = false;
+        setDecisionsBusy(false);
+      }
+    }, [
+      decisions,
+      excludedAuto,
+      projectId,
+      renderOrientation,
+      srt,
+      voiceoverText,
+    ],
+  );
+
   React.useEffect(() => {
     if (!decisionsTaskId || decisions) return;
     let abandoned = false;
@@ -1295,6 +1408,10 @@ export function ProductionWorkbench({
           })) as unknown as WireAITask;
           if (abandoned) return;
           if (task.status === "awaiting_confirmation") {
+            await loadDecisionResult(decisionsTaskId);
+            return;
+          }
+          if (task.status === "succeeded") {
             await loadDecisionResult(decisionsTaskId);
             return;
           }
@@ -1351,6 +1468,7 @@ export function ProductionWorkbench({
               confirmedAt: new Date().toISOString(),
               decisions: payload.decisions as unknown as Record<string, unknown>,
               renderProps: payload.renderProps as unknown as Record<string, unknown>,
+              inventory: inventory as unknown as Record<string, unknown>[],
             },
           },
         })) as unknown as WireProduction;
@@ -1399,6 +1517,7 @@ export function ProductionWorkbench({
               confirmedAt: new Date().toISOString(),
               decisions: payload.decisions as unknown as Record<string, unknown>,
               renderProps: payload.renderProps as unknown as Record<string, unknown>,
+              inventory: inventory as unknown as Record<string, unknown>[],
             },
           },
         })) as unknown as WireProduction;
@@ -1476,6 +1595,7 @@ export function ProductionWorkbench({
       editingPlanRevision,
       renderDispatchBusy,
       segmentCount,
+      inventory,
     ],
   );
 
@@ -1508,9 +1628,9 @@ export function ProductionWorkbench({
 
   const restoryboardWithManualAssignments = React.useCallback(
     (assignments: readonly ManualMaterialAssignment[]) => {
-      void dispatchDecisions(assignments);
+      void adjustMaterials(assignments);
     },
-    [dispatchDecisions],
+    [adjustMaterials],
   );
 
   const onDiscardDecisions = React.useCallback(() => {
@@ -1625,6 +1745,7 @@ export function ProductionWorkbench({
           // + 重试。状态机不推进(诚实停在 rendering 前),失败可见可恢复。
           if (task.status === "failed") return;
           if (task.status === "cancelled") return;
+          if (task.status === "awaiting_confirmation") return;
         } catch {
           /* 单次拉取失败下轮再试 */
         }
@@ -2430,6 +2551,7 @@ export function ProductionWorkbench({
               orientation={renderOrientation}
               readOnly={decisionsConfirmed}
               confirming={renderDispatchBusy}
+              adjustingMaterials={decisionsBusy}
               onConfirm={(payload) => void onConfirmDecisions(payload)}
               onRestoryboard={restoryboardWithManualAssignments}
               onDiscard={onDiscardDecisions}

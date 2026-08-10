@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -61,7 +61,10 @@ function makeTask(over: Record<string, unknown> = {}) {
   };
 }
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 beforeEach(() => {
   vi.clearAllMocks();
   getExecutionTask.mockResolvedValue(makeTask());
@@ -69,6 +72,49 @@ beforeEach(() => {
 });
 
 describe("ExecutionTaskCard", () => {
+  it("运行中任务原地进入待确认，无需切换页面", async () => {
+    vi.useFakeTimers();
+    const onTaskUpdate = vi.fn();
+    getExecutionTask
+      .mockResolvedValueOnce(makeTask({ status: "running", manifest: null }))
+      .mockResolvedValueOnce(makeTask());
+
+    render(
+      <ExecutionTaskCard taskId="task-1" onTaskUpdate={onTaskUpdate} />,
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(getExecutionTask).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+
+    expect(screen.getByText("采纳进素材库")).toBeInTheDocument();
+    expect(onTaskUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: "task-1", status: "awaiting_confirmation" }),
+    );
+    vi.useRealTimers();
+  });
+
+  it("外层切换到新任务后同步跟踪新 taskId", async () => {
+    const { rerender } = render(<ExecutionTaskCard taskId="task-1" />);
+    await waitFor(() =>
+      expect(getExecutionTask).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { taskId: "task-1" } }),
+      ),
+    );
+
+    rerender(<ExecutionTaskCard taskId="task-2" />);
+
+    await waitFor(() =>
+      expect(getExecutionTask).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { taskId: "task-2" } }),
+      ),
+    );
+  });
+
   it("待确认:渲产物清单(文件名/大小/类型)+ 三动作", async () => {
     render(<ExecutionTaskCard taskId="task-1" />);
     await waitFor(() =>

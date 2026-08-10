@@ -105,7 +105,7 @@ describe("VideoDecisionPreview", () => {
     const select = getByTestId("broll-0").querySelector("select")!;
     fireEvent.change(select, { target: { value: "asset-2" } });
     expect(getByText(/系统会保留原分镜/)).toBeTruthy();
-    fireEvent.click(getByText("应用选材并自动优化"));
+    fireEvent.click(getByText("应用补充选材"));
     expect(onConfirm).not.toHaveBeenCalled();
     expect(onRestoryboard).toHaveBeenCalledWith([
       {
@@ -146,7 +146,7 @@ describe("VideoDecisionPreview", () => {
       target: { value: "0" },
     });
     expect(queryByText("可选补充素材 · 1 个")).toBeNull();
-    fireEvent.click(getByText("应用选材并自动优化"));
+    fireEvent.click(getByText("应用补充选材"));
     expect(onConfirm).not.toHaveBeenCalled();
     expect(onRestoryboard).toHaveBeenCalledWith([
       {
@@ -215,7 +215,7 @@ describe("VideoDecisionPreview", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
-  it("兼容旧候选时不再把阻断甩给用户，并携带全部既有绑定进入自动修片", () => {
+  it("兼容旧候选时审片记录不再阻断，可直接确认进入渲染", () => {
     const onConfirm = vi.fn();
     const onRestoryboard = vi.fn();
     const decisions: VideoDecisions = {
@@ -240,22 +240,16 @@ describe("VideoDecisionPreview", () => {
         inventory={INVENTORY}
         onConfirm={onConfirm}
         onRestoryboard={onRestoryboard}
+        talkingHeadAssetId="asset-video-raw"
       />,
     );
 
-    expect(getByText("总导演将自动修片并复审")).toBeTruthy();
+    expect(getByText("旧候选审片记录")).toBeTruthy();
     expect(queryByText(/长场景没有有效信息卡或真实素材/)).toBeNull();
     expect(queryByText(/阻断|缺失|请手动选择|重新分镜/)).toBeNull();
-    fireEvent.click(getByText("自动修片并复审"));
-    expect(onConfirm).not.toHaveBeenCalled();
-    expect(onRestoryboard).toHaveBeenCalledWith([
-      {
-        assetId: "asset-1",
-        sceneIdx: 1,
-        sceneTitle: "角色技巧",
-        sceneSummary: "给模型一个角色",
-      },
-    ]);
+    fireEvent.click(getByText("确认决策,进入渲染"));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onRestoryboard).not.toHaveBeenCalled();
   });
 
   it("同一素材被绑定到多个场景时，应用补充选材不会丢掉任一既有绑定", () => {
@@ -289,7 +283,7 @@ describe("VideoDecisionPreview", () => {
     fireEvent.change(getByLabelText("将 用户补充录屏.mov 放入场景"), {
       target: { value: "1" },
     });
-    fireEvent.click(getByText("应用选材并自动优化"));
+    fireEvent.click(getByText("应用补充选材"));
 
     expect(onRestoryboard).toHaveBeenCalledWith([
       {

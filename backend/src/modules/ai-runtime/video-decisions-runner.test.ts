@@ -1550,6 +1550,79 @@ const TASK = {
 };
 
 describe("runVideoDecisions(编排)", () => {
+  it("补充选材只局部调用 material.match，冻结既有分场/信息卡/字幕", async () => {
+    const baseDecisions = {
+      scenes: SCENES_OK.scenes,
+      cards: (HAPPY_OUTPUTS["video.cards"] as { cards: unknown[] }).cards,
+      visualSlots: [
+        {
+          sceneIdx: 1,
+          at: 3.5,
+          purpose: "process",
+          spokenAnchor: "给模型一个角色",
+          visualBrief: "展示真实操作",
+          searchQuery: "",
+        },
+      ],
+      broll: [
+        { sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 3 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "en",
+      })),
+      srtLines,
+      directorReview: {
+        status: "ready",
+        summary: "既有方案已通过",
+        issues: [],
+        source: "ai",
+      },
+    };
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
+    const skillCalls: string[] = [];
+    const baseCall = fakeCall(HAPPY_OUTPUTS);
+    deps.callStructured = async <T>(input: StructuredCallInput<T>) => {
+      skillCalls.push(input.skillId);
+      return baseCall(input);
+    };
+
+    await runVideoDecisions(
+      ctx,
+      {
+        ...TASK,
+        inputData: {
+          ...TASK.inputData,
+          adjustmentMode: "materials",
+          baseDecisions,
+          manualMaterialAssignments: [
+            {
+              assetId: "asset-1",
+              sceneIdx: 1,
+              sceneTitle: "角色技巧",
+              sceneSummary: "给模型角色",
+            },
+          ],
+        },
+      },
+      deps,
+    );
+
+    expect(skillCalls).toEqual(["material.match"]);
+    expect(calls.recordStep).toHaveBeenCalledTimes(1);
+    const [, , result] = calls.recordCandidate.mock.calls[0]! as unknown as [
+      unknown,
+      string,
+      { resultData: { decisions: typeof baseDecisions } },
+    ];
+    expect(result.resultData.decisions.scenes).toEqual(baseDecisions.scenes);
+    expect(result.resultData.decisions.cards).toEqual(baseDecisions.cards);
+    expect(result.resultData.decisions.subtitles).toEqual(baseDecisions.subtitles);
+  });
+
   it("五步顺序跑完 → recordCandidate(video_decisions,含总导演结论 + 清单快照)", async () => {
     const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
     await runVideoDecisions(ctx, TASK, deps);

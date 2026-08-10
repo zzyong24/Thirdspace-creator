@@ -87,4 +87,28 @@ describe("production contract", () => {
       }),
     ).toThrow();
   });
+
+  it("确认剪辑方案保留同源 B-roll inventory 快照", () => {
+    const parsed = productionOperations.confirmProductionEditingPlan.body.parse({
+      expectedRevision: 0,
+      plan: {
+        sourceTaskId: "task-1",
+        confirmedAt: "2026-08-10T17:00:00.000Z",
+        decisions: { scenes: [] },
+        renderProps: { delivery: { width: 1920, height: 1080 } },
+        inventory: [
+          {
+            assetId: "asset-1",
+            label: "项目录屏",
+            kind: "video",
+            description: "",
+          },
+        ],
+      },
+    });
+
+    expect(parsed.plan.inventory).toEqual([
+      expect.objectContaining({ assetId: "asset-1", label: "项目录屏" }),
+    ]);
+  });
 });

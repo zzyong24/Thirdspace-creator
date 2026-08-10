@@ -499,6 +499,17 @@ describe("ProductionWorkbench", () => {
     await waitFor(() =>
       expect(mockClient.createExecutionTask).toHaveBeenCalledTimes(1),
     );
+    expect(mockClient.confirmProductionEditingPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          plan: expect.objectContaining({
+            inventory: expect.arrayContaining([
+              expect.objectContaining({ assetId: "asset-broll-1" }),
+            ]),
+          }),
+        }),
+      }),
+    );
     const call = (
       mockClient.createExecutionTask.mock.calls as unknown as unknown[][]
     )[0]![0] as {
@@ -587,6 +598,86 @@ describe("ProductionWorkbench", () => {
     );
     await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(1));
     expect(mockClient.discardExecutionTask).not.toHaveBeenCalled();
+  });
+
+  it("补充选材只创建局部素材调整任务，并携带当前稳定分镜", async () => {
+    const stableDecisions = {
+      scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "开场介绍" }],
+      cards: [{ sceneIdx: 0, kind: "quote", content: "大家好", at: 0 }],
+      visualSlots: [],
+      broll: [],
+      subtitles: [{ index: 1, startSec: 0, endSec: 6, zh: "大家好", en: "Hello" }],
+      srtLines: [{ index: 1, startSec: 0, endSec: 6, text: "大家好" }],
+      directorReview: {
+        status: "ready",
+        summary: "当前方案可渲染",
+        issues: [],
+        source: "ai",
+      },
+    };
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "ai-adjust-base", status: "awaiting_confirmation" },
+    ]);
+    mockClient.listTaskResults.mockResolvedValueOnce([
+      {
+        resultType: "video_decisions",
+        resultData: {
+          decisions: stableDecisions,
+          inventory: [
+            {
+              assetId: "asset-project-extra",
+              label: "项目补充录屏.mov",
+              kind: "video",
+              description: "",
+              source: "manual",
+            },
+          ],
+        },
+      },
+    ]);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() => expect(container.textContent).toContain("分场预览"));
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+
+    fireEvent.change(
+      container.querySelector(
+        '[aria-label="将 项目补充录屏.mov 放入场景"]',
+      )!,
+      { target: { value: "0" } },
+    );
+    fireEvent.click(
+      Array.from(container.querySelectorAll("button")).find(
+        (button) => button.textContent === "应用补充选材",
+      )!,
+    );
+
+    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(1));
+    const request = (mockClient.createAITask.mock.calls as unknown as Array<[
+      {
+        body: {
+          attemptId?: string;
+          inputData: Record<string, unknown>;
+        };
+      },
+    ]>)[0]![0] as {
+      body: {
+        attemptId?: string;
+        inputData: Record<string, unknown>;
+      };
+    };
+    expect(request.body.attemptId).toMatch(/^materials-/);
+    expect(request.body.inputData).toMatchObject({
+      adjustmentMode: "materials",
+      baseDecisions: stableDecisions,
+      manualMaterialAssignments: [
+        expect.objectContaining({
+          assetId: "asset-project-extra",
+          sceneIdx: 0,
+        }),
+      ],
+    });
   });
 
   it("点击确认后不等任务 ID 就立即展示保存/建任务进度，任务创建后原地接上执行卡", async () => {
@@ -687,7 +778,9 @@ describe("ProductionWorkbench", () => {
     const recoveredDecisions = {
       scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "开场介绍" }],
       cards: [],
-      broll: [],
+      broll: [
+        { sceneIdx: 0, assetId: "asset-saved", at: 0, durationSec: 3 },
+      ],
       subtitles: [{ index: 1, startSec: 0, endSec: 6, zh: "大家好", en: "Hello" }],
       srtLines: [{ index: 1, startSec: 0, endSec: 6, text: "大家好" }],
     };
@@ -698,6 +791,14 @@ describe("ProductionWorkbench", () => {
         videoEditingPlan: {
           revision: 3,
           decisions: recoveredDecisions,
+          inventory: [
+            {
+              assetId: "asset-saved",
+              label: "恢复后的项目录屏",
+              kind: "video",
+              description: "",
+            },
+          ],
           renderProps: { delivery: { width: 1920, height: 1080, fps: 30 } },
           sourceRenderTaskId: "exec-running",
         },
@@ -742,6 +843,12 @@ describe("ProductionWorkbench", () => {
     expect(
       container.querySelector('[data-slot="confirmed-decisions-notice"]'),
     ).not.toBeNull();
+    const recoveredSelect = container.querySelector(
+      '[data-testid="broll-0"] select',
+    ) as HTMLSelectElement;
+    expect(recoveredSelect.options[0]?.textContent).toContain(
+      "恢复后的项目录屏",
+    );
   });
 
   // ── [FE-H01] 「后台运行,可离开」承诺:进度不丢、不重复付费、失败可见可恢复 ──────────
