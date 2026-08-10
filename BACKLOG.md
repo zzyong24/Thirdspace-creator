@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-749 | 根治 macOS 正式流水线缓存命中时跳过 Playwright 浏览器安装【官方包回归·用户确认 2026-08-10】 | 🔨 待办 | — | — | 既有 `desktop-release.yml` 与运行时冒烟契约 | exact runtime cache 命中时，macOS runner 仍必须在运行混淆后冒烟前准备 host Playwright Chromium；只修安装条件并补缓存命中回归，不改产品代码、视觉或发布范围；通过四项打包测试后重新跑同一 SHA 的 Windows 与 macOS 官方包。 |
+| T-749 | 根治 macOS 正式流水线缓存命中时跳过 Playwright 浏览器安装【官方包回归·用户确认 2026-08-10】 | ✅ 待办 | — | — | 既有 `desktop-release.yml` 与运行时冒烟契约 | exact runtime cache 命中时，macOS runner 仍必须在运行混淆后冒烟前准备 host Playwright Chromium；只修安装条件并补缓存命中回归，不改产品代码、视觉或发布范围；通过四项打包测试后重新跑同一 SHA 的 Windows 与 macOS 官方包。 |
 | T-748 | 补齐“重新输入激活码”原生命令 ACL 并重打官方包【正式版回归·用户真机 2026-08-09】 | 🔨 待办 | — | — | [T-746 SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) | 正式包点击“重新输入激活码”不得再出现 `Command license_reset_local not allowed by ACL`；只为无参数命令 `license_reset_local` 增加最小 remote-sidecar 放行权限，并补齐“前端 invoke ↔ handler ↔ build command ↔ capability”一致性回归，不改 UI、清理边界或发布流程；验证后重跑官方 macOS/Windows 打包。 |
 | T-746 | 在 CreatorOS 设置中提供“重新输入激活码”【正式版产品功能·用户变更确认 2026-08-09】 | ✅ 待办 | PASS[REV:ebc8dce5c4c3] | — | [SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) · [使用说明](docs/testing/creatoros-activation-only-reset.md) | 放弃独立 EXE，改为官方桌面版设置内的本地激活重置入口：用户确认后只清本机激活快照、防回拨点和旧渠道缓存，完整保留项目、素材、数据库、账号、模型密钥、机器身份和工作区；不联网、不含服务端地址、不做解绑，整体重启后进入既有激活页输入新码。 |
 | T-747 | 把 CreatorOS 60 秒启动硬超时改为进展感知软看门狗【正式版启动可靠性·用户确认 2026-08-09】 | ✅ 待办 | — | — | 既有桌面启动安全契约 | 首次解压、迁移或低性能电脑启动时，不再到 60 秒直接判失败；sidecar 只要持续输出真实启动进展就续期等待，无任何进展的等待窗口放宽到 5 分钟，并保留 30 分钟最终安全上限；退出与真实失败仍立即展示诊断页，文案不得再写死“60 秒”。 |
