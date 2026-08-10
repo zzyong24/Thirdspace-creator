@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-750 | 排查 Windows v1.0 启动校验报“迁移副本缺 current 指针”【正式版真机·用户 2026-08-10】 | ✅ 待办 | — | — | 既有 Windows runtime migration 与 startup safety 契约 | 基于用户提供的两份加密 sidecar 日志、正式包 SHA 和当前启动校验代码，锁定 `current` 指针为何在迁移副本中缺失，区分安装包缺文件、旧 runtime 残留、迁移时序或 Windows 路径语义；本任务只诊断和保全证据，不修改产品代码。 |
 | T-749 | 根治 macOS 正式流水线缓存命中时跳过 Playwright 浏览器安装【官方包回归·用户确认 2026-08-10】 | ✅ 待办 | — | — | 既有 `desktop-release.yml` 与运行时冒烟契约 | exact runtime cache 命中时，macOS runner 仍必须在运行混淆后冒烟前准备 host Playwright Chromium；只修安装条件并补缓存命中回归，不改产品代码、视觉或发布范围；通过四项打包测试后重新跑同一 SHA 的 Windows 与 macOS 官方包。 |
 | T-748 | 补齐“重新输入激活码”原生命令 ACL 并重打官方包【正式版回归·用户真机 2026-08-09】 | 🔨 待办 | — | — | [T-746 SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) | 正式包点击“重新输入激活码”不得再出现 `Command license_reset_local not allowed by ACL`；只为无参数命令 `license_reset_local` 增加最小 remote-sidecar 放行权限，并补齐“前端 invoke ↔ handler ↔ build command ↔ capability”一致性回归，不改 UI、清理边界或发布流程；验证后重跑官方 macOS/Windows 打包。 |
 | T-746 | 在 CreatorOS 设置中提供“重新输入激活码”【正式版产品功能·用户变更确认 2026-08-09】 | ✅ 待办 | PASS[REV:ebc8dce5c4c3] | — | [SPEC](docs/superpowers/specs/2026-08-09-in-product-activation-reset-design.md) · [使用说明](docs/testing/creatoros-activation-only-reset.md) | 放弃独立 EXE，改为官方桌面版设置内的本地激活重置入口：用户确认后只清本机激活快照、防回拨点和旧渠道缓存，完整保留项目、素材、数据库、账号、模型密钥、机器身份和工作区；不联网、不含服务端地址、不做解绑，整体重启后进入既有激活页输入新码。 |
