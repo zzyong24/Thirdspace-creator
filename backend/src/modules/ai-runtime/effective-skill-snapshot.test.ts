@@ -100,6 +100,11 @@ function deps(
 
 describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
   it("同名、别名、video/chat 受控输入与非 Skill task 映射固定", () => {
+    // T-730 恢复的可选论点骨架是真实 official Skill task；若遗漏这个
+    // 同名映射，用户点“先梳理观点”会在创建任务前被 fail-closed 拦截。
+    expect(requiredSkillIdsForTask("planning.thesis", {})).toEqual([
+      "planning.thesis",
+    ]);
     expect(requiredSkillIdsForTask("script.draft", {})).toEqual([
       "script.draft",
     ]);

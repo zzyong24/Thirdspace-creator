@@ -61,6 +61,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "material.match",
   "planning.contract",
   "planning.outline",
+  "planning.thesis",
   "platform.adapt",
   "positioning.generate",
   "reconstruct.project",

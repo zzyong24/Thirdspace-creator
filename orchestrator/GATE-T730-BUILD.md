@@ -31,7 +31,13 @@ flowchart LR
 - `boundary-scan`：无新增违规，5 条既有基线不变。
 - `semantic-boundary-scan`：通过；未恢复 token、Dice、关键词或业务名素材匹配。
 - `orphan-scan`：0 error，保留既有 PLANNED/未追踪 warning。
-- Backend 全量 typecheck 仍被共享工作区的 `artifacts.service.test.ts:156-157` 两处既有类型错误阻断；T-730 新增服务测试和相关模块测试均已编译通过。
+- 初次实现时 Backend 全量 typecheck 曾被共享工作区的 `artifacts.service.test.ts:156-157` 两处并行改动类型错误阻断；下方正式包回归时已在收口后的工作树重跑通过。
+
+### 2026-08-09 正式包回归补充
+
+- 用户真机复现 `[SKILL_TASK_MAPPING_MISSING] taskType "planning.thesis"`；根因是 T-730 恢复了 official Skill、runner 和前端入口，但 `REGISTERED_SKILL_TASK_TYPES` 仍停留在 T-726 退役后状态。
+- 先增加确定性映射回归并复现 2 项红测，再恢复 `planning.thesis → planning.thesis` 同名受控映射；未放宽未知 taskType 的 fail-closed。
+- Backend 聚焦 5 文件 382/382，Frontend 入口/卡片 4 文件 17/17，AI Worker 2 文件 19/19；Backend/Frontend typecheck 通过；`semantic-boundary-scan` 通过，`boundary-scan` 无新增违规。
 
 ## 真实页面检查
 

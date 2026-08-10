@@ -56,8 +56,8 @@ describe("[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发)
 
   it("扫到至少一个 functionKey 字面量(否则正则失效 = 假绿)", () => {
     expect(occurrences.length).toBeGreaterThan(0);
-    // T-726:退役能力不得残留为前端深链。
-    expect(occurrences.some((o) => o.key === "planning.thesis")).toBe(false);
+    // T-730 已按用户确认恢复可选论点骨架；至少一个真实生产入口必须保留。
+    expect(occurrences.some((o) => o.key === "planning.thesis")).toBe(true);
   });
 
   it("每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链)", () => {
