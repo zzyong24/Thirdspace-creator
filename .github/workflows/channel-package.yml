@@ -249,9 +249,10 @@ jobs:
           CREATOROS_RELEASE: "1"
           CREATOROS_SKIP_SIDECAR_REBUILD: ${{ runner.os == 'Windows' && '1' || '' }}
           CREATOROS_PRODUCTION_CLOSURE: ${{ runner.os == 'Windows' && '1' || '0' }}
-        run: pnpm desktop:package-channel -- \
-          --manifest "branding/packages/${PACKAGE_REF}/package.json" \
-          --target "$TARGET" --mode release
+        run: |
+          pnpm desktop:package-channel -- \
+            --manifest "branding/packages/${PACKAGE_REF}/package.json" \
+            --target "$TARGET" --mode release
 
       - name: 验证 macOS Developer ID、公证、staple、Gatekeeper 与真实启动
         if: runner.os == 'macOS'

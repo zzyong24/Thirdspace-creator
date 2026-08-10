@@ -31,6 +31,9 @@ describe("T-753 可复用渠道 GitHub 正式构建契约", () => {
     expect(workflow).toContain("CREATOROS_RELEASE: \"1\"");
     expect(workflow).toContain('"macos-aarch64"');
     expect(workflow).toContain('"windows-x86_64"');
+    expect(workflow).toMatch(
+      /name: 构建渠道正式安装包[\s\S]*?run: \|\n\s+pnpm desktop:package-channel -- \\/,
+    );
   });
 
   it("macOS 缺签名凭据必须失败，并验证公证、staple 与 Gatekeeper", () => {
