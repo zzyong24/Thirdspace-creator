@@ -120,7 +120,13 @@ jobs:
 
       - id: version
         name: 读取桌面版本
-        run: echo "version=$(node -p \"require('./frontend/src-tauri/tauri.conf.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          node <<'NODE'
+          const { appendFileSync } = require("node:fs");
+          const { version } = require("./frontend/src-tauri/tauri.conf.json");
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("桌面版本格式非法");
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
+          NODE
 
       - name: 校验渠道输入仍来自当前提交
         run: |

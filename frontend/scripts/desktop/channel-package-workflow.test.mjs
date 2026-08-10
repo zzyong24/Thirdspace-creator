@@ -34,6 +34,10 @@ describe("T-753 可复用渠道 GitHub 正式构建契约", () => {
     expect(workflow).toMatch(
       /name: 构建渠道正式安装包[\s\S]*?run: \|\n\s+pnpm desktop:package-channel -- \\/,
     );
+    expect(workflow).not.toContain("version=$(node -p");
+    expect(workflow).toContain(
+      "appendFileSync(process.env.GITHUB_OUTPUT",
+    );
   });
 
   it("macOS 缺签名凭据必须失败，并验证公证、staple 与 Gatekeeper", () => {
