@@ -4,9 +4,10 @@ import type { MultimodalSpec } from "@creatoros/backend/modules/ai-runtime";
 
 import { ManagedCredentialLeaseError } from "./managed-credential-lease.server";
 import {
+  LocalWhisperTranscribeError,
   managedAsrIdempotencyKey,
   prepareManagedTranscribeSpec,
-  transcribeWithManagedFallback,
+  transcribeWithLocalFallback,
 } from "./managed-asr.server";
 
 const ctx: RequestContext = {
@@ -79,14 +80,130 @@ describe("prepareManagedTranscribeSpec", () => {
     expect(prepared.provider).toBe("whisper-local");
   });
 
+  it.each([
+    ["未绑定额度账户", "AI_CREDIT_ACCOUNT_LINK_REQUIRED", true],
+    ["额度不足", "AI_CREDIT_INSUFFICIENT", true],
+    ["权益拒绝", "ASR_LEASE_DENIED", false],
+  ])("%s 也必须回退本地 Whisper", async (_label, code, openCredits) => {
+    const requestLease = vi.fn(async () => {
+      throw new ManagedCredentialLeaseError(
+        code,
+        "在线语音转文字不可用",
+        false,
+        openCredits,
+      );
+    });
+    const prepared = await prepareManagedTranscribeSpec(ctx, SPEC, {
+      audioBytes: new Uint8Array(8_000),
+      intentId: `fallback-${code}`,
+    }, { requestLease });
+    expect(requestLease).toHaveBeenCalledTimes(1);
+    expect(prepared).toMatchObject({ provider: "whisper-local", token: "" });
+  });
+
+  it("普通异常同样回退本地，不把票据或网络异常变成阻断", async () => {
+    const requestLease = vi.fn(async () => {
+      throw new TypeError("fetch failed: secret-ticket");
+    });
+    const prepared = await prepareManagedTranscribeSpec(ctx, SPEC, {
+      audioBytes: new Uint8Array(8_000),
+      intentId: "generic-error",
+    }, { requestLease });
+    expect(prepared.provider).toBe("whisper-local");
+  });
+});
+
+describe("transcribeWithLocalFallback", () => {
   it("短效凭据调用失败后只改走本地，不再次申请凭据", async () => {
     const invoke = vi.fn(async (current: MultimodalSpec) => {
       if (current.credentialLifecycle === "per_request") throw new Error("timeout");
-      return "本地逐字稿";
+      return { text: "本地逐字稿" };
     });
-    await expect(transcribeWithManagedFallback({ ...SPEC, token: "temporary" }, invoke))
-      .resolves.toBe("本地逐字稿");
+    const result = await transcribeWithLocalFallback(
+      { ...SPEC, token: "temporary" },
+      invoke,
+    );
+    expect(result.transcript.text).toBe("本地逐字稿");
+    expect(result.mode).toBe("whisper-local");
+    expect(result.effectiveSpec.provider).toBe("whisper-local");
     expect(invoke).toHaveBeenCalledTimes(2);
     expect(invoke.mock.calls[1]?.[0]).toMatchObject({ provider: "whisper-local" });
+  });
+
+  it("用户自配云端 ASR 失败也回退本地", async () => {
+    const configuredCloud: MultimodalSpec = {
+      provider: "siliconflow",
+      baseUrl: "https://api.example.com/v1",
+      model: "asr-model",
+      token: "user-secret",
+      kind: "audio",
+    };
+    const invoke = vi.fn(async (current: MultimodalSpec) => {
+      if (current.provider !== "whisper-local") throw new Error("HTTP 401");
+      return { text: "本地结果" };
+    });
+    const result = await transcribeWithLocalFallback(configuredCloud, invoke);
+    expect(result.mode).toBe("whisper-local");
+    expect(result.transcript.text).toBe("本地结果");
+    expect(invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it("在线返回空文本也计为失败并只回退一次", async () => {
+    const invoke = vi.fn(async (current: MultimodalSpec) =>
+      current.provider === "whisper-local"
+        ? { text: "本地补回的逐字稿" }
+        : { text: "   " });
+    const result = await transcribeWithLocalFallback(SPEC, invoke);
+    expect(result.transcript.text).toBe("本地补回的逐字稿");
+    expect(result.mode).toBe("whisper-local");
+    expect(invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it("在线成功不调用本地，并返回真实在线执行模式", async () => {
+    const invoke = vi.fn(async () => ({ text: "在线逐字稿" }));
+    const result = await transcribeWithLocalFallback(SPEC, invoke);
+    expect(result.transcript.text).toBe("在线逐字稿");
+    expect(result.mode).toBe("channel-managed");
+    expect(result.effectiveSpec).toBe(SPEC);
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("用户自配云端成功记录 configured-cloud，而不是渠道或本地", async () => {
+    const configuredCloud: MultimodalSpec = {
+      provider: "siliconflow",
+      baseUrl: "https://api.example.com/v1",
+      model: "asr-model",
+      token: "user-secret",
+      kind: "audio",
+    };
+    const invoke = vi.fn(async () => ({ text: "用户云端逐字稿" }));
+    const result = await transcribeWithLocalFallback(configuredCloud, invoke);
+    expect(result.mode).toBe("configured-cloud");
+    expect(result.effectiveSpec).toBe(configuredCloud);
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("本地 Whisper 自身失败不递归，且不泄露底层路径和 stderr", async () => {
+    const invoke = vi.fn(async () => {
+      throw new Error(
+        "ffmpeg /Users/private/bin/ffmpeg stderr=token-secret; ONNX worker crashed",
+      );
+    });
+    await expect(
+      transcribeWithLocalFallback(
+        {
+          provider: "whisper-local",
+          baseUrl: null,
+          model: "small",
+          token: "",
+          kind: "audio",
+        },
+        invoke,
+      ),
+    ).rejects.toEqual(expect.objectContaining({
+      name: "LocalWhisperTranscribeError",
+      message: "本地转写失败，请重试。",
+    } satisfies Partial<LocalWhisperTranscribeError>));
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
 });

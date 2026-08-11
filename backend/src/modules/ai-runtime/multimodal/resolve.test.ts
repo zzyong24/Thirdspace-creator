@@ -56,10 +56,9 @@ describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
     expect(spec).toMatchObject({ provider: "siliconflow", token: "local-asr-key" });
   });
 
-  it("T-645 完整渠道 ASR 缺 service Key 时明确报错，不回退本地或 Whisper", async () => {
+  it("T-768 完整渠道 ASR 缺 service Key 时丢弃在线配置并回退本地 Whisper", async () => {
     let localReads = 0;
-    await expect(
-      resolveTranscribeSpec(ctx, {
+    const spec = await resolveTranscribeSpec(ctx, {
         getChannelModelConfig: async () => ({
           services: [{
             id: "asr-service",
@@ -88,8 +87,14 @@ describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
           return null;
         },
         env: {},
-      }),
-    ).rejects.toMatchObject({ name: "ChannelModelCredentialRequiredError" });
+    });
+    expect(spec).toEqual({
+      provider: "whisper-local",
+      baseUrl: null,
+      model: "small",
+      token: "",
+      kind: "audio",
+    });
     expect(localReads).toBe(0);
   });
 
@@ -416,6 +421,23 @@ describe("resolveTranscribeSpec — 云端优先、本地兜底(kind=audio)", ()
     });
     expect(spec.provider).toBe("whisper-local");
     expect(spec.model).toBe("small");
+  });
+
+  it("渠道配置解析抛出任意异常时也丢弃在线配置并回退本地", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: noRow,
+      getChannelModelConfig: async () => {
+        throw new Error("bad signed config: should-not-leak");
+      },
+      env: {},
+    });
+    expect(spec).toEqual({
+      provider: "whisper-local",
+      baseUrl: null,
+      model: "small",
+      token: "",
+      kind: "audio",
+    });
   });
 
   it("配了云端 ASR 走用户 spec", async () => {

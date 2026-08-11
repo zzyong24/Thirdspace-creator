@@ -45,6 +45,10 @@ function makeDeps(opts: {
   /** [T-243] 自定义 fetchVideoUrl 返回(图集 / kind 显式 video);缺省裸 { playUrl }(旧行为)。 */
   videoSourceFor?: (awemeId: string) => DouyinVideoSource;
   resolveThrows?: Error | null;
+  transcribeResult?: GeneratedTranscript & {
+    effectiveSpec?: MultimodalSpec;
+    executionMode?: "channel-managed" | "configured-cloud" | "whisper-local";
+  };
   /** 只读幂等探测:哪些 aweme 已有逐字稿(→ 跳过 fetch/ASR)。默认全 false。 */
   alreadyHas?: (awemeId: string) => boolean;
   /** 写入 ensure 时返回什么(默认 bound)。 */
@@ -106,7 +110,10 @@ function makeDeps(opts: {
       _spec: MultimodalSpec,
       _o: { audioBytes: Uint8Array; language?: string },
       _r: MultimodalProviderRegistry,
-    ): Promise<GeneratedTranscript> => ({ text: "逐字稿X" }),
+    ): Promise<GeneratedTranscript & {
+      effectiveSpec?: MultimodalSpec;
+      executionMode?: "channel-managed" | "configured-cloud" | "whisper-local";
+    }> => opts.transcribeResult ?? ({ text: "逐字稿X" }),
   );
   const prepareTranscribeSpec = vi.fn(
     async (
@@ -239,6 +246,36 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
       expect.stringContaining("逐字稿已就绪，但重建排队失败"),
       expect.any(String),
     );
+  });
+
+  it("在线失败后本地成功时接受 host 回传的真实 whisper-local 执行规格", async () => {
+    const localSpec: MultimodalSpec = {
+      provider: "whisper-local",
+      baseUrl: null,
+      model: "small",
+      token: "",
+      kind: "audio",
+    };
+    const { deps, spies, ensureCalls } = makeDeps({
+      awemeIds: ["fallback-local"],
+      transcribeResult: {
+        text: "本地真实逐字稿",
+        effectiveSpec: localSpec,
+        executionMode: "whisper-local",
+      },
+    });
+    await runTranscribe(
+      ctx,
+      {
+        id: "task-local-fallback",
+        taskType: "transcribe.douyin",
+        inputData: { awemeIds: ["fallback-local"] },
+      },
+      deps,
+    );
+    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1);
+    expect(ensureCalls.find((c) => c.transcript)?.transcript).toBe("本地真实逐字稿");
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
   });
 
   it("F7-a:ASR 未配置 → 整批立即停止并给设置指引，不继续逐条调用", async () => {

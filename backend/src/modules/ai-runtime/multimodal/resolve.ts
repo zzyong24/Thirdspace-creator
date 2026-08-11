@@ -281,16 +281,15 @@ export async function resolveTranscribeSpec(
 ): Promise<MultimodalSpec> {
   try {
     return await resolveMultimodalSpec(ctx, "transcribe.audio", deps);
-  } catch (err) {
-    if (err instanceof MultimodalConfigError) {
-      return {
-        provider: WHISPER_LOCAL_PROVIDER,
-        baseUrl: null,
-        model: resolveWhisperLevel(deps.env),
-        token: "",
-        kind: "audio",
-      };
-    }
-    throw err;
+  } catch {
+    // T-768：任何在线/渠道配置解析失败都丢弃不可信路径并使用本地 Whisper。
+    // 这里不继续使用异常携带的配置，也不把底层错误投影到用户表面。
+    return {
+      provider: WHISPER_LOCAL_PROVIDER,
+      baseUrl: null,
+      model: resolveWhisperLevel(deps.env),
+      token: "",
+      kind: "audio",
+    };
   }
 }

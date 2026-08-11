@@ -2295,3 +2295,30 @@ AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，
 **Asset-Ref**：none。
 
 **Status**：用户已确认，进入 BUILD。
+
+## DEC-ASR-014 (2026-08-11) — 所有在线 ASR 故障统一回退本地 Whisper
+
+**来源**：用户明确确认“不管出什么问题，Whisper 都要兜底”；
+`docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md`。
+
+**决策**：
+
+1. 没配置、未绑定、额度不足、lease 失败、鉴权、限流、网络、超时、服务异常、坏响应以及在线调用
+   失败都不能阻断逐字稿；不可信在线配置直接丢弃并改用本地，不放宽在线安全校验。
+2. 每段音频最多一次在线尝试和一次本地尝试；回退不得重领 lease、换幂等键或重复产生在线消耗。
+3. 复用现有 `whisper-local` adapter、Transformers.js/ONNX worker 与随包 ffmpeg，只增加薄路由和运行时
+   验收，不再创建第二套转写实现。
+4. 本地 Whisper 自身失败时诚实显示本地失败并允许重试；不得伪造成功。正式发布前必须补双平台
+   安装版短音频真转写，开发机 `require()` 通过不能代替真实推理。
+5. 不新增弹窗、不修改视觉布局；额度入口可保留，但不再成为 ASR 转写门禁。
+
+**理由**：现有按能力 adapter 已完整覆盖本地 Whisper，采用 PAT-001 T1 薄适配即可；新造 ASR 引擎会
+增加包体、原生依赖和维护面，没有必要。
+
+**Pattern-Ref**：PAT-001 T1（BG-005/BG-006：现有 adapter 覆盖解码、模型与统一结果合同且已被工厂隔离）。
+
+**Asset-Ref**：none（技能资产索引无 ASR 专用模块，复用仓内既有实现）。
+
+**Invalidates**：T-679/T-715 中“未绑定/额度不足作为 ASR 用户阻断”的既有消费语义。
+
+**Status**：用户已确认；T-768 SPEC 独立复审通过后进入 BUILD。

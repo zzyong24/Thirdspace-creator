@@ -87,8 +87,8 @@ export {
   createQwenAsrAdapter,
   type QwenAsrAdapterDeps,
 } from "./runtime/multimodal-qwen-asr";
-// 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— 保留给旧配置与
-// 明确选择本地运行的开发场景；T-639 起未配置 ASR 时不再隐式回退到本 provider。
+// 本地 Whisper 适配器(T-160/T-768)—— 保留给显式本地配置，并作为所有在线 ASR
+// 解析、授权或调用失败后的统一单次兜底。
 // 用 Transformers.js(@xenova/transformers)本地跑 Whisper(Xenova/whisper-<level>,默认 small),
 // 音频用 ffmpeg 解成 16kHz mono f32le PCM。host 用 createDefaultWhisperLocalAdapter() 装配;
 // 单测注 fake deps(不真下模型/不 spawn 真 ffmpeg)。免 key、免外部 API、桌面化零 Python。

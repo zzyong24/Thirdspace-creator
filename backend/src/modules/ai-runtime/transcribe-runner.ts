@@ -159,7 +159,11 @@ export interface TranscribeRunnerDeps {
     spec: MultimodalSpec,
     opts: { audioBytes: Uint8Array; language?: string },
     registry: MultimodalProviderRegistry,
-  ) => Promise<GeneratedTranscript>;
+  ) => Promise<GeneratedTranscript & {
+    /** T-768：实际成功的执行规格；host 统一回退 wrapper 填写，旧 host 可省略。 */
+    effectiveSpec?: MultimodalSpec;
+    executionMode?: "channel-managed" | "configured-cloud" | "whisper-local";
+  }>;
   /** ASR provider 适配器注册表(host 装 { siliconflow/openai: createOpenaiAsrAdapter() })。 */
   registry: MultimodalProviderRegistry;
   /** 幂等**探测**(只读,不写):该 aweme 是否已有 transcript artifact。true → 跳过 fetch/ASR(省流)。
@@ -338,11 +342,13 @@ export async function runTranscribe(
             })
           : baseSpec;
         resolvedSpec = spec;
-        const { text } = await deps.transcribeAudio(
+        const transcriptResult = await deps.transcribeAudio(
           spec,
           { audioBytes, language: deps.language ?? "zh" },
           deps.registry,
         );
+        resolvedSpec = transcriptResult.effectiveSpec ?? spec;
+        const { text } = transcriptResult;
         if (!text || !text.trim()) {
           throw new Error("ASR 返回空逐字稿");
         }

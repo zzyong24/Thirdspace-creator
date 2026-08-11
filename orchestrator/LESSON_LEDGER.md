@@ -238,3 +238,15 @@
 - **Outcome(T+N)**: 10/18/28 秒三组无素材分镜分别验证至少 2/3/4 个信息节拍；横竖屏渲染
   快照与类型检查通过。待新包用同一 109 秒实拍再次真机渲染并抽帧复验。
 - **Ref**: T-712；`objkey-5d35239f-1740.mp4`；`video-decisions-runner.ts`；`video-render/template.ts`。
+
+## LED-019 — 在线 ASR 的额度或授权错误不应让已有本地能力失效
+- **Date**: 2026-08-11 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
+- **WhatFailed**: CreatorOS 已有本地 Whisper，但受管 ASR 对未绑定、额度不足、坏响应等部分错误仍
+  直接阻断，用户实际拥有的本地转写能力没有成为统一安全网。
+- **RootCause**: 回退条件按在线错误枚举逐项放行，并且只包裹 `per_request` 渠道调用；解析、用户自配
+  云端 ASR 和部分 lease 错误各有不同终态。
+- **GuardRule**: 所有非本地 ASR 的解析、授权和调用错误都必须丢弃在线凭据，对同一音频只尝试一次
+  `whisper-local`；本地失败不递归、不伪造成功。正式包必须验证本地运行时与安装版短音频推理。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts src/server/activation/managed-credential-lease.server.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/multimodal/resolve.test.ts src/modules/ai-runtime/transcribe-runner.test.ts && pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts`。
+- **Outcome(T+N)**: 待 T-768 双平台安装候选各完成一条本地短音频转写后回填。
+- **Ref**: DEC-ASR-014；T-768；PAT-001 T1。

@@ -44,10 +44,7 @@ const INPUT = {
 
 describe("requestManagedAsrLease", () => {
   it("使用当前权益 ticket 和稳定幂等键换取单次内存凭据", async () => {
-    const fetchImpl = vi.fn(
-      async (_input: Parameters<typeof fetch>[0], _init?: RequestInit) =>
-        okResponse(),
-    );
+    const fetchImpl = vi.fn(async () => okResponse());
     const lease = await requestManagedAsrLease(INPUT, {
       fetchImpl: fetchImpl as typeof fetch,
       requestAccess,
@@ -83,7 +80,7 @@ describe("requestManagedAsrLease", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("额度不足只给用户额度入口，不暴露服务实现", async () => {
+  it("额度不足保留用户额度入口标记，同时允许回退本地且不暴露服务实现", async () => {
     const fetchImpl = vi.fn(async () => new Response(
       JSON.stringify({ code: "AI_CREDIT_INSUFFICIENT" }),
       { status: 409, headers: {
@@ -99,8 +96,33 @@ describe("requestManagedAsrLease", () => {
       name: "ManagedCredentialLeaseError",
       code: "AI_CREDIT_INSUFFICIENT",
       message: "AI 额度不足，请充值后再试。",
+      fallbackLocal: true,
       openCredits: true,
     } satisfies Partial<ManagedCredentialLeaseError>));
+  });
+
+  it("未连接额度账户、权益拒绝和坏响应均标记为可回退本地", async () => {
+    for (const [status, body, headers] of [
+      [409, { code: "AI_CREDIT_ACCOUNT_LINK_REQUIRED" }, {
+        "cache-control": "private, no-store", pragma: "no-cache", "content-type": "application/json",
+      }],
+      [403, { code: "ASR_LEASE_DENIED" }, {
+        "cache-control": "private, no-store", pragma: "no-cache", "content-type": "application/json",
+      }],
+      [200, { broken: true }, {
+        "cache-control": "private, no-store", pragma: "no-cache", "content-type": "application/json",
+      }],
+    ] as const) {
+      const fetchImpl = vi.fn(async () => new Response(JSON.stringify(body), {
+        status,
+        headers,
+      }));
+      await expect(requestManagedAsrLease(INPUT, {
+        fetchImpl: fetchImpl as typeof fetch,
+        requestAccess,
+        now: () => NOW,
+      })).rejects.toMatchObject({ fallbackLocal: true });
+    }
   });
 
   it("服务状态不确定时允许明确回退本地但不另领一枚 token", async () => {

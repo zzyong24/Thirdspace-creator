@@ -21,7 +21,7 @@ import { isLegacyIncompleteReview } from "@/lib/script-review-status";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
 import {
   prepareManagedTranscribeSpec,
-  transcribeWithManagedFallback,
+  transcribeWithLocalFallback,
 } from "@/server/activation/managed-asr.server";
 import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
 import { buildScriptDraftTaskInputData } from "@/server/script-draft-task-input";
@@ -5031,10 +5031,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               prepareTranscribeSpec: (c, spec, input) =>
                 prepareManagedTranscribeSpec(c, spec, input),
               // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
-              transcribeAudio: (spec, opts, registry) =>
-                transcribeWithManagedFallback(spec, (current) =>
+              transcribeAudio: async (spec, opts, registry) => {
+                const execution = await transcribeWithLocalFallback(spec, (current) =>
                   transcribeAudioFn(current, opts, registry),
-                ),
+                );
+                return {
+                  ...execution.transcript,
+                  effectiveSpec: execution.effectiveSpec,
+                  executionMode: execution.mode,
+                };
+              },
               // ASR provider 适配器注册表 —— OpenAI 兼容 adapter 一件覆盖 SiliconFlow/OpenAI/Groq
               // (同形状转写端点);按用户所配 provider 名归一到同一适配器,加 provider 只需在此注册。
               registry: asrRegistry,
@@ -6771,13 +6777,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       audioBytes,
       intentId: `aweme:${awemeId}`,
     });
-    const { text } = await transcribeWithManagedFallback(spec, (current) =>
+    const execution = await transcribeWithLocalFallback(spec, (current) =>
       transcribeAudioFn(
         current,
         { audioBytes, language: "zh" },
         asrRegistry,
       ),
     );
+    const { text } = execution.transcript;
     return text && text.trim() ? text : null;
   };
   intelligenceTranscriptRunnerDeps = {
@@ -6859,16 +6866,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             audioBytes,
             intentId: `intelligence:${input.itemId}:aweme:${awemeId}`,
           });
-          const observableModel =
+          const requestedMode =
             spec.displayModelKey === "channel-managed"
               ? "channel-managed"
-              : spec.model;
-          logStage("done", { model: observableModel });
+              : spec.provider === "whisper-local"
+                ? "whisper-local"
+                : "configured-cloud";
+          logStage("done", { model: requestedMode });
 
           stage = "asr";
           stageStartedAt = Date.now();
-          logStage("start", { model: observableModel });
-          const result = await transcribeWithManagedFallback(spec, (current) =>
+          logStage("start", { model: requestedMode });
+          const execution = await transcribeWithLocalFallback(spec, (current) =>
             transcribeAudioFn(
               current,
               { audioBytes, language: "zh" },
@@ -6876,13 +6885,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             ),
           );
           logStage("done", {
-            model: observableModel,
+            model: execution.mode,
             totalDurationMs: Date.now() - totalStartedAt,
           });
           return {
-            text: result.text,
-            provider: observableModel,
-            model: observableModel,
+            text: execution.transcript.text,
+            provider: execution.mode,
+            model: execution.mode,
             language: "zh",
           };
         } catch (error) {

@@ -38,7 +38,7 @@ type Dependencies = {
 function fail(
   code: string,
   message: string,
-  fallbackLocal = false,
+  fallbackLocal = true,
   openCredits = false,
 ): never {
   throw new ManagedCredentialLeaseError(
@@ -91,10 +91,10 @@ function responseErrorCode(value: unknown): string | null {
 
 function mapHttpError(status: number, code: string | null): never {
   if (code === "AI_CREDIT_ACCOUNT_LINK_REQUIRED") {
-    return fail(code, "请先连接 AI 额度账户", false, true);
+    return fail(code, "请先连接 AI 额度账户", true, true);
   }
   if (code === "AI_CREDIT_INSUFFICIENT") {
-    return fail(code, "AI 额度不足，请充值后再试。", false, true);
+    return fail(code, "AI 额度不足，请充值后再试。", true, true);
   }
   if (code === "ASR_LEASE_EXPIRED" || code === "ASR_LEASE_PROVIDER_UNKNOWN") {
     return fail(code, "语音转文字服务暂时不可用，已改用本地转写", true);
@@ -105,7 +105,7 @@ function mapHttpError(status: number, code: string | null): never {
   if (status >= 500 || status === 429) {
     return fail(code ?? "ASR_LEASE_UNAVAILABLE", "语音转文字服务暂时不可用，已改用本地转写", true);
   }
-  return fail(code ?? "ASR_LEASE_DENIED", "当前激活权益暂时无法使用语音转文字");
+  return fail(code ?? "ASR_LEASE_DENIED", "当前激活权益暂时无法使用语音转文字", true);
 }
 
 /**

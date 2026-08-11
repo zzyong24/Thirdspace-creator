@@ -72,6 +72,21 @@ describe("Pi 打包协议自检", () => {
   });
 });
 
+describe("T-768 本地 Whisper 双平台兜底运行时", () => {
+  it("构建脚本强制物化 Transformers/ONNX、随包 ffmpeg，并在缺依赖时硬失败", () => {
+    const source = readFileSync(
+      join(process.cwd(), "scripts", "desktop", "build-sidecar.mjs"),
+      "utf8",
+    );
+    expect(source).toContain('const PKG = "@xenova/transformers"');
+    expect(source).toContain("打包版 whisper-local 必崩,不出包");
+    expect(source).toContain("onnxruntime_binding.node");
+    expect(source).toContain('platform === "win32"');
+    expect(source).toContain("ensureFfmpegStatic");
+    expect(source).toContain("ensureFfprobeStatic");
+  });
+});
+
 describe("sidecar 构建产物递归污染哨兵", () => {
   it("主动剥离 Next trace 混入的 src-tauri 构建树", () => {
     const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-prune-"));

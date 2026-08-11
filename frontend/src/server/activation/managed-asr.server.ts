@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
 
 import type { RequestContext } from "@creatoros/contract";
 import type { MultimodalSpec } from "@creatoros/backend/modules/ai-runtime";
+import type { GeneratedTranscript } from "@creatoros/ai-worker";
 
 import {
-  ManagedCredentialLeaseError,
   requestManagedAsrLease,
   type ManagedAsrLease,
 } from "./managed-credential-lease.server";
@@ -42,8 +42,8 @@ export function managedAsrIdempotencyKey(
 }
 
 /**
- * 把已验签的 per_request 语音规格换成当前一次调用可用的内存规格。超限、服务状态未知
- * 或短效授权过期都只回退本地 Whisper；额度不足/未连接账户保留为用户可行动错误。
+ * 把已验签的 per_request 语音规格换成当前一次调用可用的内存规格。超限、未绑定、
+ * 额度不足、服务状态未知、短效授权过期或任意在线准备失败都只回退本地 Whisper。
  */
 export async function prepareManagedTranscribeSpec(
   ctx: RequestContext,
@@ -82,11 +82,10 @@ export async function prepareManagedTranscribeSpec(
       expectedBaseUrl: spec.baseUrl,
       expectedModel: "qwen3-asr-flash",
     });
-  } catch (error) {
-    if (error instanceof ManagedCredentialLeaseError && error.fallbackLocal) {
-      return localWhisperSpec();
-    }
-    throw error;
+  } catch {
+    // T-768：在线配置、票据、额度、lease、网络或合同验证任一步失败，都只丢弃
+    // 在线路径并回退本地。坏签名/坏响应不会被使用；回退不代表放宽在线校验。
+    return localWhisperSpec();
   }
   return {
     ...spec,
@@ -96,16 +95,70 @@ export async function prepareManagedTranscribeSpec(
   };
 }
 
-/** 短效凭据已经签发后 provider 仍失败时，只允许同一次音频改走本地 Whisper；不得
- * 生成新幂等键或再申请一枚凭据，避免重复扣费。 */
-export async function transcribeWithManagedFallback<T>(
-  spec: MultimodalSpec,
-  invoke: (current: MultimodalSpec) => Promise<T>,
-): Promise<T> {
+export type TranscribeExecutionMode =
+  | "channel-managed"
+  | "configured-cloud"
+  | "whisper-local";
+
+export type TranscribeWithFallbackResult = {
+  readonly transcript: GeneratedTranscript;
+  readonly effectiveSpec: MultimodalSpec;
+  readonly mode: TranscribeExecutionMode;
+};
+
+/** 本地推理失败的稳定用户面错误。底层 ffmpeg/ONNX/worker 信息不得进入 message。 */
+export class LocalWhisperTranscribeError extends Error {
+  constructor() {
+    super("本地转写失败，请重试。");
+    this.name = "LocalWhisperTranscribeError";
+  }
+}
+
+function hasTranscriptText(value: GeneratedTranscript): boolean {
+  return typeof value?.text === "string" && value.text.trim().length > 0;
+}
+
+function executionModeFor(spec: MultimodalSpec): TranscribeExecutionMode {
+  if (spec.provider === "whisper-local") return "whisper-local";
+  return spec.displayModelKey === "channel-managed"
+    ? "channel-managed"
+    : "configured-cloud";
+}
+
+async function invokeLocalWhisper(
+  invoke: (current: MultimodalSpec) => Promise<GeneratedTranscript>,
+): Promise<TranscribeWithFallbackResult> {
+  const effectiveSpec = localWhisperSpec();
   try {
-    return await invoke(spec);
-  } catch (error) {
-    if (spec.credentialLifecycle !== "per_request") throw error;
-    return invoke(localWhisperSpec());
+    const transcript = await invoke(effectiveSpec);
+    if (!hasTranscriptText(transcript)) throw new Error("empty local transcript");
+    return { transcript, effectiveSpec, mode: "whisper-local" };
+  } catch {
+    // 不附带 cause，避免调用方把绝对路径、stderr、token 或 worker 细节序列化到用户面。
+    throw new LocalWhisperTranscribeError();
+  }
+}
+
+/**
+ * 任意非本地 ASR 失败（含空文本/坏结果）后，同一音频只改走一次本地 Whisper。
+ * 本函数不申请凭据，因此不会换幂等键或重复扣费；本地失败不会递归。
+ */
+export async function transcribeWithLocalFallback(
+  spec: MultimodalSpec,
+  invoke: (current: MultimodalSpec) => Promise<GeneratedTranscript>,
+): Promise<TranscribeWithFallbackResult> {
+  if (spec.provider === "whisper-local") {
+    return invokeLocalWhisper(invoke);
+  }
+  try {
+    const transcript = await invoke(spec);
+    if (!hasTranscriptText(transcript)) throw new Error("empty online transcript");
+    return {
+      transcript,
+      effectiveSpec: spec,
+      mode: executionModeFor(spec),
+    };
+  } catch {
+    return invokeLocalWhisper(invoke);
   }
 }
