@@ -44,7 +44,7 @@ const INPUT = {
 
 describe("requestManagedAsrLease", () => {
   it("使用当前权益 ticket 和稳定幂等键换取单次内存凭据", async () => {
-    const fetchImpl = vi.fn(async () => okResponse());
+    const fetchImpl = vi.fn<typeof fetch>(async () => okResponse());
     const lease = await requestManagedAsrLease(INPUT, {
       fetchImpl: fetchImpl as typeof fetch,
       requestAccess,
