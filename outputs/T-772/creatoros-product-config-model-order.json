@@ -1,0 +1,267 @@
+{
+  "productConfig": {
+    "payload": {
+      "models": {
+        "default": [
+          {
+            "id": "glm-5-2",
+            "name": "GLM 5.2",
+            "model": "glm-5.2",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "gpt-5-6-luna",
+            "name": "GPT 5.6 Luna",
+            "model": "gpt-5.6-luna",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "gpt-5-6-terra",
+            "name": "GPT 5.6 Terra",
+            "model": "gpt-5.6-terra",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "gpt-5-6-sol",
+            "name": "GPT 5.6 Sol",
+            "model": "gpt-5.6-sol",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "deepseek-v4-flash",
+            "name": "DeepSeek V4 Flash",
+            "model": "deepseek-v4-flash",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "claude-haiku-4-5",
+            "name": "Claude Haiku 4.5",
+            "model": "claude-haiku-4.5",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "claude-sonnet-4-6",
+            "name": "Claude Sonnet 4.6",
+            "model": "claude-sonnet-4.6",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "claude-opus-4-8",
+            "name": "Claude Opus 4.8",
+            "model": "claude-opus-4.8",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "gemini-3-5-flash",
+            "name": "Gemini 3.5 Flash",
+            "model": "gemini-3.5-flash",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "gemini-3-1-pro",
+            "name": "Gemini 3.1 Pro",
+            "model": "gemini-3.1-pro-preview",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "kimi-k2-6",
+            "name": "Kimi K2.6",
+            "model": "kimi-k2.6",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "minimax-m3",
+            "name": "MiniMax M3",
+            "model": "minimax-m3",
+            "settings": {
+              "timeoutMs": 3000000,
+              "temperature": 0.6
+            },
+            "isDefault": true,
+            "connectionId": "relay-text"
+          },
+          {
+            "id": "deepseek-v4-pro",
+            "name": "DeepSeek V4 Pro",
+            "model": "deepseek-v4-pro",
+            "settings": {
+              "temperature": 0.6
+            },
+            "isDefault": false,
+            "connectionId": "relay-text"
+          }
+        ],
+        "image.generate": [
+          {
+            "id": "gpt-image-2-text-to-image",
+            "name": "GPT Image 2",
+            "model": "openai/gpt-image-2-text-to-image",
+            "settings": {
+              "n": 1,
+              "size": "1024x1024"
+            },
+            "isDefault": true,
+            "connectionId": "relay-image"
+          }
+        ],
+        "video.generate": [
+          {
+            "id": "seedance-2-fast-economy",
+            "name": "Seedance 2.0 Fast",
+            "model": "seedance/seedance-2.0-fast",
+            "settings": {
+              "mode": "t2v",
+              "duration": 4,
+              "resolution": "480p",
+              "aspect_ratio": "9:16",
+              "generate_audio": false,
+              "prompt_max_length": 500
+            },
+            "isDefault": true,
+            "connectionId": "relay-video"
+          }
+        ],
+        "transcribe.audio": [
+          {
+            "id": "qwen3-asr-flash",
+            "name": "语音转文字",
+            "model": "qwen3-asr-flash",
+            "settings": {
+              "maxBytes": 10485760,
+              "chargeUnits": 25000,
+              "maxDurationSeconds": 300
+            },
+            "isDefault": true,
+            "connectionId": "qwen-asr"
+          }
+        ]
+      },
+      "services": [
+        {
+          "id": "omnihi-main",
+          "name": "模型服务",
+          "provider": "omnihi",
+          "credential": {
+            "type": "api_key",
+            "links": {
+              "helpUrl": "https://growth.aitongban.cloud/app/help",
+              "portalUrl": "https://growth.aitongban.cloud/app/ai-credits",
+              "purchaseUrl": "https://growth.aitongban.cloud/app/ai-credits",
+              "rechargeUrl": "https://growth.aitongban.cloud/app/ai-credits"
+            },
+            "source": "activation_managed",
+            "lifecycle": "persistent",
+            "allowMultiple": false
+          }
+        },
+        {
+          "id": "qwen-asr-main",
+          "name": "语音转文字服务",
+          "provider": "qwen",
+          "credential": {
+            "type": "api_key",
+            "links": {
+              "helpUrl": null,
+              "portalUrl": null,
+              "purchaseUrl": null,
+              "rechargeUrl": null
+            },
+            "source": "activation_managed",
+            "lifecycle": "per_request",
+            "allowMultiple": false
+          }
+        }
+      ],
+      "connections": [
+        {
+          "id": "relay-text",
+          "name": "文本模型连接",
+          "baseURL": "https://api.omnihi.ai/openai",
+          "provider": "openai-compatible",
+          "apiFormat": "openai_chat",
+          "serviceId": "omnihi-main"
+        },
+        {
+          "id": "relay-image",
+          "name": "图片模型连接",
+          "baseURL": "https://api.omnihi.ai/openai",
+          "provider": "openai-compatible",
+          "apiFormat": "openai_images",
+          "serviceId": "omnihi-main"
+        },
+        {
+          "id": "relay-video",
+          "name": "视频模型连接",
+          "baseURL": "https://api.omnihi.ai/media/v1",
+          "provider": "omnihi",
+          "apiFormat": "omnihi_media",
+          "serviceId": "omnihi-main"
+        },
+        {
+          "id": "qwen-asr",
+          "name": "语音转文字连接",
+          "baseURL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+          "provider": "qwen",
+          "apiFormat": "qwen_chat_audio",
+          "serviceId": "qwen-asr-main"
+        }
+      ]
+    },
+    "clientId": "creatoros.desktop",
+    "extensionKey": "creatoros.model-config",
+    "protocolVersion": "creatoros-model-config-v1"
+  },
+  "channelService": {
+    "brandName": "CreatorOS",
+    "renewalUrl": "https://growth.aitongban.cloud/renew",
+    "downloadUrl": "https://creatoros.aitongban.cloud",
+    "purchaseUrl": "https://growth.aitongban.cloud/app/store",
+    "bugFeedbackUrl": "https://growth.aitongban.cloud/feedback",
+    "channelSupportUrl": "https://growth.aitongban.cloud/app/help"
+  },
+  "contractVersion": "growth-product-config-v1"
+}
