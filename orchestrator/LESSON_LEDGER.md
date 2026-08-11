@@ -13,6 +13,22 @@
 
 ---
 
+## LED-019 — `per_request` ASR 先读本机密钥库并用作品永久幂等键，导致临时租约误报与无法重试
+- **Date**: 2026-08-10 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 渠道 ASR 的临时租约不需要本机 Key，但通用 resolver 仍先调用 credential reader；
+  作品/item 级永久 intent 又让过期 lease 在用户明确重试时继续重放，既可能误报“本机密钥不可用”，
+  也可能让云端转写永久卡在 `ASR_LEASE_EXPIRED`。
+- **RootCause**: 凭据生命周期判断晚于密钥读取；幂等边界绑定长期实体而不是一次可恢复的转写
+  operation；ticket、lease、扣费和 provider 失败被粗糙归到同一错误桶。
+- **GuardRule**: `per_request` 路由对 credential reader 必须保持零调用；每次转写先创建可持久恢复的
+  operation，同操作复用同 key，确定终态后的明确新动作才创建新 key；各阶段使用 closed safe code，
+  已签发与未签发不可混写。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/ai-runtime/multimodal/resolve.test.ts src/modules/ai-runtime/managed-asr.test.ts && pnpm --dir frontend exec vitest run src/server/activation/managed-credential-lease.server.test.ts src/server/activation/managed-asr.server.test.ts`
+- **Outcome(T+N)**: 待 T-763 实现、故障注入与一次性测试码真实跨仓回执后回填。
+- **Ref**: T-762；T-763；DEC-ASR-045；`docs/research/2026-08-10-channel-asr-credential-root-fix.md`。
+
+---
+
 ## LED-018 — 渠道包把用户入口和服务 API 混成一条 URL，白标会在降级时串回官方
 - **Date**: 2026-08-09 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: active
 - **WhatFailed**: 渠道包的软件更新、官网和问题反馈沿用 CreatorOS 官方常量；自动反馈又把面向人的

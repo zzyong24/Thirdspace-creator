@@ -388,3 +388,148 @@ CreatorOS 已从 Growth 正式合同确认 API-282 精确响应和错误字段�
   显示对当前操作有帮助的真实状态。
 - 回归必须覆盖：不适用票据从既有误阻断态恢复为 `not_configured` 且不触达 Growth；真正撤权仍保存
   blocked 并抛错；本地模型有凭据时两行误报警均不存在，本地未配置或渠道已接管时状态仍可见。
+
+## 13. T-763 渠道 ASR 短时租约与转写操作根治（2026-08-10）
+
+本节落实用户已确认的 T-762 根治报告，覆盖 §11 中“同一 intent 复用同一 key”的不完整定义。
+它不改变 T-715 额度账户入口、不让 CreatorOS 决定套餐或金额，也不重新引入模型 Key 配置；只把
+已经存在的 Activity v3 ticket → Growth lease → Qwen ASR 消费链变成可恢复、可核对且不重复扣费的
+正式能力。
+
+### 13.1 FR-763-01 · 凭据生命周期必须先于密钥读取
+
+- `persistent` 受管能力可以按既有边界读取系统密钥库；读取失败按长期受管凭据错误处理。
+- `per_request` 能力在解析、测试、调度、转写和失败恢复的所有路径都不得调用本机 credential
+  reader，不得查询 `qwen-asr-main` 的 Keyring/Windows Credential Manager 条目，也不得把其失败
+  映射为“本机密钥不可用”。resolver 只生成不含 token 的待租约路由。
+- 生命周期字段无效、service/provider/apiFormat 不符合 §11 精确 allowlist 时继续 fail closed，不能
+  为绕过密钥库而把非法配置解释成 `per_request`。
+
+### 13.2 FR-763-02 · 一次转写必须有可恢复 operation
+
+每次真实转写先持久化非敏感 `transcriptionOperationId`，再做任何 Activity/Growth 出网。operation
+至少绑定 `userId + sourceRef + inputFingerprint + trigger + createdAt`，并派生唯一稳定
+`Idempotency-Key`；`inputFingerprint` 固定为抽取后音频 bytes 的 SHA-256，只保留
+`sha256:<64 位小写十六进制>`，不能只用文件名、时长或大小代替。operation 不保存音频、ticket、
+machineId、临时 token 或 provider 原文。
+
+首次出网前还必须原子持久化并冻结下面唯一 canonical lease request：
+
+```json
+{
+  "serviceId": "qwen-asr-main",
+  "capability": "transcribe.audio",
+  "durationSeconds": 1,
+  "byteLength": 1
+}
+```
+
+实际 `durationSeconds/byteLength` 取首次本地先验的整数值；同时保存这四个字段按 UTF-8 canonical
+JSON 计算的 `requestFingerprint=sha256:<64hex>`。响应丢失或重启恢复时只能从 operation 读取原
+`Idempotency-Key + canonical request` 重放，禁止重新估算后改 body。恢复时重新读取的音频 bytes
+若与 `inputFingerprint` 不同，或当前已验签 ASR route 的 authority digest 与 operation 创建时不同，
+必须以冲突/配置变化终止旧 operation，不得用旧 key 发送新音频，也不得静默改写冻结字段。
+
+- 持久任务使用真实 task/run ID 作为 operation 边界；同一任务的进程重启、网络重试、页面重进和
+  runner 续跑必须恢复原 operation 与原 key。
+- 同步入口在首次请求时创建 operation；POST 响应丢失、进程中断或状态仍为非终态时，后续请求必须
+  先恢复同一 operation，不能因新 HTTP requestId 换 key。
+- 只有旧 operation 进入确定终态后，用户再次明确点击“重新转写”，或系统观察到一条新的调度/run
+  事实，才创建新 operation。用户的明确重试动作本身即授权，不新增费用确认弹窗；后台网络重试、
+  应用重启、页面刷新和定时恢复不得自行创建新的收费 operation。
+- 同一 source 的并发请求必须由唯一约束/事务收敛到同一个 active operation。不同音频指纹不得复用
+  旧 operation；旧输入仍在进行时返回冲突，不得静默改绑。
+
+### 13.3 FR-763-03 · 阶段、扣费事实与恢复语义唯一
+
+CreatorOS 的非敏感状态机固定为：
+
+`preflight → ticket_acquiring → lease_requesting → lease_issued → provider_calling → used`
+
+失败必须落到下面唯一语义：
+
+| 失败位置/合同结果 | 本地事实 | 允许的下一步 |
+| --- | --- | --- |
+| 文件先验或 ticket 取得前失败 | `not_issued` | 修复输入/连接后，以同一 operation 继续；未向 Growth 申请 lease |
+| Growth 明确返回未绑定、额度不足、输入拒绝 | `not_issued` | 打开 T-715 对应入口或修复输入；原 operation 继续，不换 key |
+| lease POST 已发出但响应丢失 | `lease_unknown` | 只能以原 `Idempotency-Key` 重放核对，禁止创建新 operation |
+| Growth 返回 `provider_unknown` | `provider_unknown` | 等待隔离/核对；禁止换 key、禁止自动新租约 |
+| Growth 证明 lease 已签发或返回 `leaseRef` | `charged` | 保存 `leaseRef/chargedUnits`，不得把后续 Qwen 失败写成“费用未知” |
+| token 已过期 | `charged_expired` | 当前 operation 终止；只有新的用户动作/调度事实可创建新 operation |
+| Qwen 调用失败 | `charged_provider_failed` | 原 operation 不再领 token；向用户提供本地转写真实动作，不自动二次收费 |
+
+Growth 对同一 key 的重放必须能安全区分“从未签发/已释放”与“已签发但 token 已过期”。API-282
+保持同一个 POST authority，不新增查询接口，并返回下面 closed union：
+
+1. `growth-managed-model-credential-lease-v1`：仅 token 仍有效时返回；包含原 `leaseRef/token/
+   expiresAt/chargedUnits=25000`，同 key 重放必须是同一枚 token。
+2. `growth-managed-model-credential-lease-status-v1`：不含 `credential/token`，exact 字段只有
+   `contractVersion、result、leaseRef、chargeState、chargedUnits、terminalStatus`：
+
+| `result` | `leaseRef` | `chargeState` | `chargedUnits` | `terminalStatus` | CreatorOS 唯一动作 |
+| --- | --- | --- | --- | --- | --- |
+| `not_issued` | `null` 或已创建的安全引用 | `none` | `0` | `released` | 本 operation 未扣费；按明确错误修复后可结束，自动恢复不得换 key |
+| `provider_unknown` | 安全引用 | `reserved` | `0` | `pending` | 保持原 operation 等待/同 key 核对，不新建、不宣称已扣费 |
+| `released` | 安全引用 | `none` | `0` | `released` | 隔离核对或 provider 拒绝后已释放；本 operation 终止且未扣费 |
+| `charged_expired` | 安全引用 | `committed` | `25000` | `expired` | 本 operation 终止且已扣费；不得再领 token |
+
+初次请求在创建 lease row 前就因未绑定、额度不足、输入或权限被明确拒绝时，可以继续使用既有
+closed error envelope，但 code 必须唯一映射 `not_issued` 且不能携带 `leaseRef/chargedUnits` 假值；
+同 key 以后若条件恢复，仍可进入唯一 lease 创建路径。已经创建 row 的任何重放必须返回上述 status
+union，`released` 与 `charged_expired` 不得再共同映射为 `ASR_LEASE_EXPIRED`；历史
+`ASR_LEASE_EXPIRED` 只作旧服务兼容错误，当前合同不再产生。`provider_unknown` 隔离结束后必须先
+收敛为 `released` 或 `charged_expired` 再响应，不能永远停在 pending。
+
+CreatorOS 只按该 union 更新 operation，不把 status 响应伪装成 token 成功，也不另造第二个查询
+authority。Growth 合同 header 必须从历史 `config-access-ticket-v2` 统一为当前生产使用的
+`config-access-ticket-v3`。
+
+### 13.4 FR-763-04 · 临时 token 只在最窄调用闭包内可达
+
+lease client 只通过 `withManagedAsrLease(operation, callback)`（或等价的单次回调接口）把 token
+交给 Qwen adapter。通用 `MultimodalSpec`、持久任务 payload、候选、数据库、系统密钥库、Web DTO、
+HTML、URL、日志、埋点和崩溃报告不得持有 token。回调结束后不得保留可重用引用；JavaScript 字符串
+不声称可原地清零，安全目标是少复制、短可达、无持久化。
+
+adapter 仍只允许签名 bundle 中精确的 HTTPS origin/model，并保持 Growth 零音频、零音频 URL、
+零逐字稿。任何异常对象在记录前必须投影为白名单安全字段。
+
+### 13.5 FR-763-05 · 错误可行动且不暴露内部实现
+
+日志白名单只允许 `operationRef、phase、safeCode、leaseRef、outcome`；其中 operationRef/leaseRef
+必须使用安全引用，不记录完整幂等键。用户态只显示：连接 AI 额度账户、AI 额度不足、云端语音转
+文字暂时不可用并可改用本地转写、本次云端费用正在核对及参考编号。不得显示 Qwen、provider、
+serviceId、Base URL、ticket、machineId、token、“填写 ASR Key”或“本机 ASR 密钥不可用”。
+
+### 13.6 契约、实现与验证边界
+
+- CreatorOS/Growth 各自任务只能证明本仓实现；父旅程完成仍取决于当前 release set 上的跨仓真实
+  Gate，不得把单仓单测写成生产联调已完成。
+- 聚焦验证必须使用故障注入覆盖 ticket 前失败、POST 响应丢失、有效 token 重放、签发后过期、
+  provider_unknown、Qwen 失败、进程重启和并发双请求；每例断言 Growth lease 数/扣费数和本地
+  operation 数，而不只断言错误文案。
+- 真实 Gate会产生一笔真实额度和临时 Key，必须在执行前取得用户当次确认与全新一次性测试码。
+  在此之前只允许测试夹具/本地安全验证，证据必须写“真实经济联调待验”。
+- 本任务不修改视觉、不新增费用确认弹窗、不自动部署 Activity/Growth、不触发正式包或用户放量。
+
+### 13.7 验收
+
+- `TC-T763-01`：将 credential reader 设为一调用即抛；合法 `qwen-asr-main/per_request` 仍解析成功，
+  reader 调用 0 次；`persistent` 路由真实读取且失败关闭。
+- `TC-T763-02`：同一持久 task 或同步 active operation 经网络失败、页面重进和进程重启后，
+  `transcriptionOperationId/Idempotency-Key` 不变，并从数据库重放首次冻结的 canonical body；即使
+  恢复时重新估算出不同 duration/byteLength 也不得改 body，Growth 最多创建一笔 lease/扣费。
+- `TC-T763-03`：旧 operation 确定终态后，用户明确重新转写创建新 operation；后台恢复、页面刷新和
+  定时重试不会创建新收费 operation，也不会弹费用确认。
+- `TC-T763-04`：ticket 取得前失败记 `not_issued`；POST 响应丢失记 `lease_unknown` 并只用原 key
+  重放；已签发后过期可恢复 `leaseRef/chargedUnits/charged_expired`，不再把费用写成未知。
+- `TC-T763-05`：Qwen 调用失败记录 `charged_provider_failed`，不请求第二枚 token；用户可真实改用
+  本地 Whisper，渠道 ASR错误不要求保存本机 Key。
+- `TC-T763-06`：并发相同 source/input 只有一个 active operation；不同 inputFingerprint 不会复用
+  或覆盖旧 operation；相同大小/时长但不同音频 bytes 的 SHA-256 不同，恢复时必须冲突而非重放。
+- `TC-T763-07`：token 仅在单次 callback 中可见；DB、Keyring/Credential Manager、任务 payload、
+  Web/HTML/URL、日志、埋点、错误与崩溃报告秘密扫描为 0。
+- `TC-T763-08`：Growth 合同只接受 `config-access-ticket-v3`；同 key 在有效期内重放同一 token，
+  签发后过期返回 `charged_expired/committed/25000/expired`，provider_unknown 隔离中返回
+  `provider_unknown/reserved/0/pending`，隔离后未签发收敛为 `released/none/0/released`，创建 row
+  前的明确拒绝映射 `not_issued`；四者不可混为一个 expired 错误。

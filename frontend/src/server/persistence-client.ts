@@ -6802,6 +6802,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const transcribeOneAweme = async (
     c: RequestContext,
     awemeId: string,
+    operationId: string,
   ): Promise<string | null> => {
     const cdp = await loadDouyinCdp();
     const src = await cdp.fetchDouyinVideoSource({
@@ -6822,7 +6823,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     });
     const spec = await prepareTrackedManagedTranscribeSpec(c, baseSpec, {
       audioBytes,
-      intentId: `aweme:${awemeId}`,
+      intentId: operationId,
+      sourceRef: `douyin:aweme:${awemeId}`,
+      trigger: operationId,
     });
     const { text } = await transcribeWithManagedFallback(spec, (current) =>
       transcribeAudioFn(
@@ -6910,7 +6913,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           });
           const spec = await prepareTrackedManagedTranscribeSpec(c, baseSpec, {
             audioBytes,
-            intentId: `intelligence:${input.itemId}:aweme:${awemeId}`,
+            intentId: `intelligence:${input.operationId}:aweme:${awemeId}`,
+            sourceRef: `douyin:aweme:${awemeId}`,
+            trigger: `intelligence-task:${input.operationId}`,
           });
           const observableModel =
             spec.displayModelKey === "channel-managed"
@@ -8277,7 +8282,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             favoritesService.saveDistillVerdict(c, itemId, v),
           // 取逐字稿:复用 [T-349] 抽出的公共原语 transcribeOneAweme(iesdouyin 直链 → ffmpeg
           //   抽音 → 云 ASR)。图集/无口播 → 返 null(runner 诚实 skip)。行为零变(原内联段抽出)。
-          transcribeOne: (c, awemeId) => transcribeOneAweme(c, awemeId),
+          transcribeOne: (c, awemeId) =>
+            transcribeOneAweme(
+              c,
+              awemeId,
+              `favorites:${c.requestId}:aweme:${awemeId}`,
+            ),
           // 判库(favorites.triage)+ 知识蒸馏(knowledge.distill)—— capability 经 model-config 解析,不写死。
           triage: createFavoritesTriagePort({ resolveModelSpec }),
           distillKnowledge: (c, content) =>
@@ -8834,7 +8844,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 标记抓取中(前端可渲 pending)。
         await benchmarkService.saveWorkTranscript(ctx, workId, null, "pending");
         try {
-          const text = await transcribeOneAweme(ctx, work.awemeId);
+          const text = await transcribeOneAweme(
+            ctx,
+            work.awemeId,
+            `benchmark:${work.id}:request:${ctx.requestId}`,
+          );
           if (!text) {
             // 图集/无口播 → transcribeOne 返 null → skipped(诚实,非失败)。
             await benchmarkService.saveWorkTranscript(ctx, workId, null, "skipped");

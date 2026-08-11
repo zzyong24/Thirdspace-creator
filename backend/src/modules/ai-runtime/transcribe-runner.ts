@@ -152,7 +152,12 @@ export interface TranscribeRunnerDeps {
   prepareTranscribeSpec?: (
     ctx: RequestContext,
     spec: MultimodalSpec,
-    input: { audioBytes: Uint8Array; intentId: string },
+    input: {
+      audioBytes: Uint8Array;
+      intentId: string;
+      sourceRef: string;
+      trigger: string;
+    },
   ) => Promise<MultimodalSpec>;
   /** 云端 ASR 转写(spec + 音频 bytes → 文本)。host 绑 ai-worker transcribeAudio;测试注 fake。 */
   transcribeAudio: (
@@ -335,6 +340,8 @@ export async function runTranscribe(
           ? await deps.prepareTranscribeSpec(ctx, baseSpec, {
               audioBytes,
               intentId: `task:${task.id}:aweme:${awemeId}`,
+              sourceRef: `douyin:aweme:${awemeId}`,
+              trigger: `task:${task.id}`,
             })
           : baseSpec;
         resolvedSpec = spec;

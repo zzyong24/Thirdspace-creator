@@ -43,6 +43,31 @@ const INPUT = {
 };
 
 describe("requestManagedAsrLease", () => {
+  it("ticket 获取失败明确标记为尚未申请 lease", async () => {
+    await expect(requestManagedAsrLease(INPUT, {
+      requestAccess: async () => {
+        throw new Error("activity unavailable");
+      },
+    })).rejects.toMatchObject({
+      code: "ASR_TICKET_UNAVAILABLE",
+      phase: "ticket_acquiring",
+      leaseResult: "not_issued",
+    });
+  });
+
+  it("POST 响应丢失标记 lease_unknown，调用方只能同 key 重放", async () => {
+    await expect(requestManagedAsrLease(INPUT, {
+      requestAccess,
+      fetchImpl: vi.fn(async () => {
+        throw new Error("socket reset");
+      }) as typeof fetch,
+    })).rejects.toMatchObject({
+      code: "ASR_LEASE_UNAVAILABLE",
+      phase: "lease_requesting",
+      leaseResult: "lease_unknown",
+    });
+  });
+
   it("使用当前权益 ticket 和稳定幂等键换取单次内存凭据", async () => {
     const fetchImpl = vi.fn(
       async (_input: Parameters<typeof fetch>[0], _init?: RequestInit) =>
@@ -118,5 +143,30 @@ describe("requestManagedAsrLease", () => {
       requestAccess,
     })).rejects.toMatchObject({ fallbackLocal: true });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("解析无 token 的签发后过期终态，不再混成通用 expired", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      contractVersion: "growth-managed-model-credential-lease-status-v1",
+      result: "charged_expired",
+      leaseRef: "lease-safe-ref",
+      chargeState: "committed",
+      chargedUnits: 25_000,
+      terminalStatus: "expired",
+    }), { status: 200, headers: {
+      "cache-control": "private, no-store",
+      pragma: "no-cache",
+      "content-type": "application/json",
+    } }));
+    await expect(requestManagedAsrLease(INPUT, {
+      fetchImpl: fetchImpl as typeof fetch,
+      requestAccess,
+    })).rejects.toMatchObject({
+      code: "ASR_LEASE_CHARGED_EXPIRED",
+      phase: "lease_status",
+      leaseResult: "charged_expired",
+      leaseRef: "lease-safe-ref",
+      chargedUnits: 25_000,
+    });
   });
 });

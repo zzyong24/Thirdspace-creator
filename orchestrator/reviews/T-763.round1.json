@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "发现 2 个阻断可验收性的既有范围缺口：同 key 的无秘密终态回放未形成闭合契约，且 operation 未规定持久化并重放不可变的 Growth 请求体。其余 lifecycle-first、闭包 token、v3 迁移和真实经济 Gate 边界均有明确方向与验收锚点。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-763-03",
+        "quote": "同一 key 的重放必须能安全区分‘从未签发/已释放’与‘已签发但 token 已过期’"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T763-08",
+        "quote": "签发后过期返回安全扣费终态，从未签发返回明确 not_issued，两者不可混为一个 expired 错误"
+      },
+      "where": "§13.3 同 key 回放与 provider_unknown 隔离结束后的终态收敛",
+      "failure_mode": "文本只强制为‘签发后过期’返回 leaseRef/chargeState/chargedUnits/terminalStatus，未定义已释放（包括 provider_unknown 隔离并核对后释放）及从未签发的闭合无秘密响应变体、chargeState/terminalStatus 枚举和 CreatorOS 映射。两端均可合理实现为笼统 expired 错误，导致 CreatorOS 无法在不重发 lease 或把未收费误记为已收费之间确定恢复路径。现有 Growth 实现正是将 replay.status 为 released/expired 一并抛出 ASR_LEASE_EXPIRED。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:432-446,492-493; /Users/zyongzhu/Workbase/Thirdspace-growth/server/application/asr_lease_service.py:235-249,538-603; /Users/zyongzhu/Workbase/Thirdspace-growth/server/transport/http/client_config.py:642-692",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在既有 API-282 同 key 回放范围内规定版本化、无秘密的闭合结果代数：至少覆盖有效 token、not_issued、charged_expired、provider_unknown 隔离中及隔离核对后 released，并为每种结果规定可持久化的 chargeState/terminalStatus 与 CreatorOS 的继续/等待/终止映射；验收需覆盖 released 不得与 charged_expired 混淆。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-763-02",
+        "quote": "POST 响应丢失、进程中断或状态仍为非终态时，后续请求必须先恢复同一 operation，不能因新 HTTP requestId 换 key"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T763-02",
+        "quote": "经网络失败、页面重进和进程重启后，transcriptionOperationId/Idempotency-Key 不变，Growth 最多创建一笔 lease/扣费"
+      },
+      "where": "§13.2 operation 持久化后对 Growth lease POST 的恢复",
+      "failure_mode": "operation 只要求绑定 sourceRef/inputFingerprint/trigger 等元数据，未要求持久化第一次 lease POST 的不可变请求值并从该记录重放。恢复时若重新计算 durationSeconds、byteLength 或受签名 bundle 约束的 service/capability，仍会用原 Idempotency-Key 携带不同 body；Growth 当前按 body digest 检测同 key 冲突，恢复既不能核对原租约，也不得换 key，于是已确认的响应丢失/重启恢复路径失败。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:410-420,480-485; /Users/zyongzhu/Workbase/Thirdspace-growth/server/application/asr_lease_service.py:84-102,224-249; frontend/src/server/activation/managed-credential-lease.server.ts:154-159; backend/src/schema/asr-usage.ts:12-24",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定 operation 在首次出网前持久化并冻结同 key 要重放的非敏感 canonical lease request（至少 serviceId、capability、durationSeconds、byteLength 及其完整性指纹），恢复只能复用该值；增加一次‘恢复时重新计算值不同仍以原 body 重放’的故障注入断言。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

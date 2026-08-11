@@ -301,6 +301,73 @@ describe("resolveMultimodalSpec — tier 3 未配抛错(诚实禁用)", () => {
 // ── ASR 逐字稿(transcribe.audio,T-030-D1/T-641)—— 用户配置 → 环境变量两层；都没有
 //    自动回退本地 Whisper，保证未配置云端也能完成转录。──────────────────────────────
 describe("resolveTranscribeSpec — 云端优先、本地兜底(kind=audio)", () => {
+  it("T-763 per_request 渠道 ASR 不读取本机长期凭据", async () => {
+    let credentialReads = 0;
+    const spec = await resolveTranscribeSpec(ctx, {
+      getChannelModelConfig: async () => ({
+        services: [
+          {
+            id: "omnihi-main",
+            name: "统一模型服务",
+            provider: "omnihi",
+            credential: {
+              type: "api_key",
+              source: "activation_managed",
+              lifecycle: "persistent",
+              allowMultiple: false,
+            },
+          },
+          {
+            id: "qwen-asr-main",
+            name: "语音转文字",
+            provider: "qwen",
+            credential: {
+              type: "api_key",
+              source: "activation_managed",
+              lifecycle: "per_request",
+              allowMultiple: false,
+            },
+          },
+        ],
+        connections: [{
+          id: "qwen-asr",
+          serviceId: "qwen-asr-main",
+          provider: "qwen",
+          baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+          apiFormat: "qwen_chat_audio",
+        }],
+        models: {
+          "transcribe.audio": [{
+            id: "qwen-asr-flash",
+            name: "语音转文字",
+            connectionId: "qwen-asr",
+            model: "qwen3-asr-flash",
+            isDefault: true,
+            settings: {
+              maxDurationSeconds: 300,
+              maxBytes: 10_485_760,
+              chargeUnits: 25_000,
+            },
+          }],
+        },
+      }),
+      getChannelModelCredential: async () => {
+        credentialReads += 1;
+        throw new Error("本机受管密钥不可用");
+      },
+      getModelConfig: noRow,
+      env: {},
+    });
+
+    expect(credentialReads).toBe(0);
+    expect(spec).toMatchObject({
+      provider: "qwen",
+      token: "",
+      credentialLifecycle: "per_request",
+      serviceId: "qwen-asr-main",
+    });
+  });
+
   it("tier 1:Qwen ASR 用户配置可原样解析到运行时 spec", async () => {
     const spec = await resolveTranscribeSpec(ctx, {
       getModelConfig: async (_c, cap) =>

@@ -10,6 +10,11 @@ export const asrUsageIntents = pgTable(
     accountScope: text("account_scope").notNull(),
     intentId: text("intent_id").notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
+    sourceRef: text("source_ref").notNull(),
+    inputFingerprint: text("input_fingerprint").notNull(),
+    trigger: text("trigger").notNull(),
+    authorityDigest: text("authority_digest").notNull(),
+    activeOperationKey: text("active_operation_key"),
     requestFingerprint: text("request_fingerprint").notNull(),
     serviceId: text("service_id").notNull(),
     durationSeconds: integer("duration_seconds").notNull(),
@@ -18,6 +23,7 @@ export const asrUsageIntents = pgTable(
     chargedUnits: integer("charged_units"),
     expiresAt: text("expires_at"),
     providerOutcome: text("provider_outcome").notNull().default("not_started"),
+    phase: text("phase").notNull().default("preflight"),
     fallbackReason: text("fallback_reason"),
     reconcileState: text("reconcile_state").notNull().default("requesting"),
     createdAt: text("created_at").notNull(),
@@ -30,13 +36,16 @@ export const asrUsageIntents = pgTable(
       table.accountScope,
       table.intentId,
     ),
+    uniqueIndex("asr_usage_intents_active_operation_unique").on(
+      table.activeOperationKey,
+    ),
     index("asr_usage_intents_reconcile_idx").on(
       table.reconcileState,
       table.updatedAt,
     ),
     check(
       "asr_usage_intents_no_token_columns",
-      sql`${table.serviceId} = 'qwen-asr-main' AND (${table.chargedUnits} IS NULL OR ${table.chargedUnits} = 25000)`,
+      sql`${table.serviceId} = 'qwen-asr-main' AND (${table.chargedUnits} IS NULL OR ${table.chargedUnits} IN (0, 25000))`,
     ),
   ],
 );

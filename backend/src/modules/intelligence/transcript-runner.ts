@@ -12,6 +12,7 @@ export interface IntelligenceTranscriptPort {
       itemId: string;
       canonicalUrl: string;
       externalId: string | null;
+      operationId: string;
     },
   ): Promise<{
     text: string | null;
@@ -84,7 +85,10 @@ export async function runIntelligenceTranscriptTask(
       input.taskId,
     );
     await deps.intelligence.markTranscriptRunning(ctx, input.taskId);
-    const result = await deps.transcript.transcribe(ctx, target);
+    const result = await deps.transcript.transcribe(ctx, {
+      ...target,
+      operationId: input.taskId,
+    });
     const text = result.text?.trim() || null;
     if (!text) {
       await deps.intelligence.finishTranscript(ctx, {

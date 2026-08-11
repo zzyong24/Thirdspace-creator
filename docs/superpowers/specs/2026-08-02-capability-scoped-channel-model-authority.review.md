@@ -1,46 +1,46 @@
 # SPEC Review — current
 
-- Task: T-645
+- Task: T-763
 - Verdict: PASS
-- Round: 3/3 (recheck)
-- Spec receipt: c693c9a4ad11
-- Review receipt: 5dfe24b42eb7
+- Round: 2/3 (recheck)
+- Spec receipt: c1722fb6a617
+- Review receipt: 5c4dfd741b23
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (§6（SPEC-LINE:157:a8c300fbf6cef521 至 SPEC-LINE:161:0aab1dd004b39784）已将切换前未终态任务的唯一语义限定为：在 provider 调用前比较创建时 digest 与当前 digest，不一致即取消，禁止读取旧 scope Key 或调用 provider；TC-T645-12（SPEC-LINE:192:75fe16d9ddd5f102 至 SPEC-LINE:194:befe5970396df0ab）锁定 provider 调用次数为 0、重新发起按新 scope 裁决，且公开 scope/task 参数不参与授权并被 schema 拒绝。)；REV-002 (FR-645-05 已固定 v1 域分隔、非空/C0 校验、保留精确 Unicode code point、RFC 8785 数组序列化、UTF-8 SHA-256 小写十六进制，并要求所有调用复用同一函数；TC-T645-11 锁定跨调用一致性与身份字段差异不串 Key。)
+已销账：REV-001 (SPEC-LINE:462:7029bd6e4f803ff2 与 SPEC-LINE:466:e0ee752c3ea2f5d9--SPEC-LINE:474:825184ec5adbc011 定义同 POST authority 的闭合无秘密 union、exact 字段、四种结果和唯一动作；SPEC-LINE:478:d2c22a5bd5460f89--SPEC-LINE:481:8433c54222a2f23e 禁止 released/charged_expired 复用 ASR_LEASE_EXPIRED，并要求 provider_unknown 隔离后收敛；SPEC-LINE:533:4a2ab75f622cd67e--SPEC-LINE:535:f1de22e463f78dc5 将四类结果纳入 TC-T763-08。)；REV-002 (SPEC-LINE:416:6fa203319f6b9445--SPEC-LINE:424:d10b36aa74a59bcf 明确首次出网前原子持久化并冻结唯一 canonical lease request；SPEC-LINE:427:618d642d8ce4f9b1--SPEC-LINE:431:c2eae25034f42c52 要求保存 requestFingerprint、只从 operation 重放原 body，并将音频或 authority 不一致收敛为冲突；SPEC-LINE:520:6817cf8f97971e73--SPEC-LINE:521:765a6d5f39277e02 将重新估算不得改 body和最多一笔 lease/扣费写入 TC-T763-02。)
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
-  "task_id": "T-645",
-  "round": 3,
+  "task_id": "T-763",
+  "round": 2,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "本轮变更将渠道切换前在途任务统一为 provider 调用前安全取消；REV-001 与 REV-002 均保持已解决，未发现 changed-lines 引入的合法新问题。",
+  "summary": "REV-001 与 REV-002 均已由当前 SPEC 的增量约束和验收行销账；未新增 finding。",
   "spec_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
-  "spec_sha256": "c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b",
-  "constitution_path": "PROJECT.md",
-  "constitution_sha256": "76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca",
+  "spec_sha256": "c1722fb6a61722721acc2157ffe10a87568626a4f9c3d7e117d90762ff8a9e68",
+  "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+  "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
   "review_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
   "review_mode": "cross-model-same-family",
   "model": "gpt-5.6-terra",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "ab61c3442f05c73c4febe511fa559717089235b244baad5920bd2186229eb6ac",
+  "latest_event_hash": "57f93e47e93a90822e6549e890be572c7d10acbdbffb2d7baa462d63a9932f4a",
   "open_findings": [],
   "resolved_findings": [
     {
       "id": "REV-001",
-      "resolution_evidence": "§6（SPEC-LINE:157:a8c300fbf6cef521 至 SPEC-LINE:161:0aab1dd004b39784）已将切换前未终态任务的唯一语义限定为：在 provider 调用前比较创建时 digest 与当前 digest，不一致即取消，禁止读取旧 scope Key 或调用 provider；TC-T645-12（SPEC-LINE:192:75fe16d9ddd5f102 至 SPEC-LINE:194:befe5970396df0ab）锁定 provider 调用次数为 0、重新发起按新 scope 裁决，且公开 scope/task 参数不参与授权并被 schema 拒绝。"
+      "resolution_evidence": "SPEC-LINE:462:7029bd6e4f803ff2 与 SPEC-LINE:466:e0ee752c3ea2f5d9--SPEC-LINE:474:825184ec5adbc011 定义同 POST authority 的闭合无秘密 union、exact 字段、四种结果和唯一动作；SPEC-LINE:478:d2c22a5bd5460f89--SPEC-LINE:481:8433c54222a2f23e 禁止 released/charged_expired 复用 ASR_LEASE_EXPIRED，并要求 provider_unknown 隔离后收敛；SPEC-LINE:533:4a2ab75f622cd67e--SPEC-LINE:535:f1de22e463f78dc5 将四类结果纳入 TC-T763-08。"
     },
     {
       "id": "REV-002",
-      "resolution_evidence": "FR-645-05 已固定 v1 域分隔、非空/C0 校验、保留精确 Unicode code point、RFC 8785 数组序列化、UTF-8 SHA-256 小写十六进制，并要求所有调用复用同一函数；TC-T645-11 锁定跨调用一致性与身份字段差异不串 Key。"
+      "resolution_evidence": "SPEC-LINE:416:6fa203319f6b9445--SPEC-LINE:424:d10b36aa74a59bcf 明确首次出网前原子持久化并冻结唯一 canonical lease request；SPEC-LINE:427:618d642d8ce4f9b1--SPEC-LINE:431:c2eae25034f42c52 要求保存 requestFingerprint、只从 operation 重放原 body，并将音频或 authority 不一致收敛为冲突；SPEC-LINE:520:6817cf8f97971e73--SPEC-LINE:521:765a6d5f39277e02 将重新估算不得改 body和最多一笔 lease/扣费写入 TC-T763-02。"
     }
   ],
-  "receipt": "5dfe24b42eb7"
+  "receipt": "5c4dfd741b23"
 }
 ```

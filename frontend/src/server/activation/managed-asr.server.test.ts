@@ -36,7 +36,7 @@ describe("prepareManagedTranscribeSpec", () => {
     );
   });
 
-  it("每次调用只申请一次短效凭据并只放入返回的内存 spec", async () => {
+  it("prepare 不领取或返回 token，只有 provider 回调内短时可见", async () => {
     const requestLease = vi.fn(async () => ({
       leaseRef: "lease-1",
       baseUrl: SPEC.baseUrl!,
@@ -49,8 +49,16 @@ describe("prepareManagedTranscribeSpec", () => {
       audioBytes: new Uint8Array(480_000),
       intentId: "task:t1:aweme:w1",
     }, { requestLease });
+    expect(requestLease).not.toHaveBeenCalled();
+    expect(prepared.token).toBe("");
+    expect(JSON.stringify(prepared)).not.toContain("ephemeral-token");
+
+    const invoke = vi.fn(async (current: MultimodalSpec) => current.token);
+    await expect(transcribeWithManagedFallback(prepared, invoke)).resolves.toBe(
+      "ephemeral-token",
+    );
     expect(requestLease).toHaveBeenCalledTimes(1);
-    expect(prepared.token).toBe("ephemeral-token");
+    expect(invoke).toHaveBeenCalledTimes(1);
     expect(SPEC.token).toBe("");
   });
 
@@ -77,30 +85,34 @@ describe("prepareManagedTranscribeSpec", () => {
       audioBytes: new Uint8Array(8_000),
       intentId: "provider-unknown",
     }, { requestLease });
+    const invoke = vi.fn(async () => "本地逐字稿");
+    await expect(transcribeWithManagedFallback(prepared, invoke)).rejects.toMatchObject({
+      code: "ASR_LEASE_PROVIDER_UNKNOWN",
+    });
     expect(requestLease).toHaveBeenCalledTimes(1);
-    expect(prepared.provider).toBe("whisper-local");
+    expect(invoke).not.toHaveBeenCalled();
   });
 
-  it("短效凭据调用失败后只改走本地，不再次申请凭据", async () => {
-    const invoke = vi.fn(async (current: MultimodalSpec) => {
-      if (current.credentialLifecycle === "per_request") throw new Error("timeout");
-      return "本地逐字稿";
-    });
+  it("拒绝绕过 operation 直接把短效 token 塞进通用 spec", async () => {
+    const invoke = vi.fn();
     await expect(transcribeWithManagedFallback({ ...SPEC, token: "temporary" }, invoke))
-      .resolves.toBe("本地逐字稿");
-    expect(invoke).toHaveBeenCalledTimes(2);
-    expect(invoke.mock.calls[1]?.[0]).toMatchObject({ provider: "whisper-local" });
+      .rejects.toMatchObject({ code: "ASR_OPERATION_REQUIRED" });
+    expect(invoke).not.toHaveBeenCalled();
   });
 
   it("先持久化 intent，再保存 leaseRef；provider 失败进入核对队列并明确报错，不用本地结果掩盖收费", async () => {
     const events: string[] = [];
     const tracker: ManagedAsrUsageTracker = {
-      begin: vi.fn(async () => { events.push("intent"); }),
+      begin: vi.fn(async (_ctx, input) => {
+        events.push("intent");
+        return input;
+      }),
       recordLease: vi.fn(async () => { events.push("lease"); }),
       recordLeaseUncertain: vi.fn(async () => { events.push("uncertain"); }),
       recordLeaseRejected: vi.fn(async () => { events.push("rejected"); }),
+      recordLeaseStatus: vi.fn(async () => { events.push("status"); }),
       recordProviderUsed: vi.fn(async () => { events.push("used"); }),
-      recordFallbackPending: vi.fn(async () => { events.push("fallback-pending"); }),
+      recordProviderFailed: vi.fn(async () => { events.push("provider-failed"); }),
     };
     const requestLease = vi.fn(async () => {
       events.push("request");
@@ -117,24 +129,69 @@ describe("prepareManagedTranscribeSpec", () => {
       audioBytes: new Uint8Array(480_000),
       intentId: "tracked-intent",
     }, { requestLease, usageTracker: tracker });
-    expect(events).toEqual(["intent", "request", "lease"]);
+    expect(events).toEqual(["intent"]);
+    expect(JSON.stringify(prepared)).not.toContain("ephemeral-token");
+
+    const invoke = vi.fn(async () => {
+      throw new Error("timeout");
+    });
+    await expect(transcribeWithManagedFallback(prepared, invoke)).rejects.toMatchObject({
+      code: "ASR_PROVIDER_FAILED",
+      message: expect.not.stringContaining("费用核对中"),
+    });
+    expect(events).toEqual(["intent", "request", "lease", "provider-failed"]);
     expect(tracker.recordLease).toHaveBeenCalledWith(
       ctx,
       "tracked-intent",
       expect.objectContaining({ leaseRef: "lease-support-ref", chargedUnits: 25_000 }),
     );
     expect(JSON.stringify(prepared)).not.toContain("lease-support-ref");
+    expect(invoke).toHaveBeenCalledTimes(1);
+  });
 
-    const invoke = vi.fn(async (current: MultimodalSpec) => {
-      if (current.credentialLifecycle === "per_request") throw new Error("timeout");
-      events.push("local-fallback");
-      return "本地逐字稿";
+  it("签发后过期状态写回原 operation，不再记录为费用未知", async () => {
+    const tracker: ManagedAsrUsageTracker = {
+      begin: vi.fn(async (_ctx, input) => input),
+      recordLease: vi.fn(async () => {}),
+      recordLeaseUncertain: vi.fn(async () => {}),
+      recordLeaseRejected: vi.fn(async () => {}),
+      recordLeaseStatus: vi.fn(async () => {}),
+      recordProviderUsed: vi.fn(async () => {}),
+      recordProviderFailed: vi.fn(async () => {}),
+    };
+    const requestLease = vi.fn(async () => {
+      throw new ManagedCredentialLeaseError(
+        "ASR_LEASE_CHARGED_EXPIRED",
+        "本次云端转写授权已结束",
+        true,
+        false,
+        {
+          phase: "lease_status",
+          leaseResult: "charged_expired",
+          leaseRef: "lease-safe-ref",
+          chargedUnits: 25_000,
+        },
+      );
     });
-    await expect(transcribeWithManagedFallback(prepared, invoke)).rejects.toMatchObject({
-      code: "ASR_PROVIDER_FAILED_RECONCILE_PENDING",
-      message: expect.stringContaining("费用核对中"),
+    const prepared = await prepareManagedTranscribeSpec(ctx, SPEC, {
+      audioBytes: new Uint8Array(8_000),
+      intentId: "expired-operation",
+      sourceRef: "douyin:aweme:expired",
+      trigger: "task:expired",
+    }, { requestLease, usageTracker: tracker });
+
+    await expect(transcribeWithManagedFallback(prepared, vi.fn())).rejects.toMatchObject({
+      leaseResult: "charged_expired",
     });
-    expect(events.at(-1)).toBe("fallback-pending");
-    expect(events).not.toContain("local-fallback");
+    expect(tracker.recordLeaseStatus).toHaveBeenCalledWith(
+      ctx,
+      "expired-operation",
+      {
+        result: "charged_expired",
+        leaseRef: "lease-safe-ref",
+        chargedUnits: 25_000,
+      },
+    );
+    expect(tracker.recordLeaseUncertain).not.toHaveBeenCalled();
   });
 });

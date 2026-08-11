@@ -357,6 +357,27 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
+  it("T-775 将 45 秒冷启超时记为性能警告，120 秒未加载主页仍硬失败", () => {
+    expect(workflow).toContain(
+      'Write-Warning "[T-775] Windows 首次启动超过 45 秒',
+    );
+    expect(workflow).toContain(
+      'Write-Warning "[T-775] Windows 候选首次启动超过 45 秒',
+    );
+    expect(workflow).not.toContain(
+      'throw "[T-675] Windows 首次启动超过 45 秒',
+    );
+    expect(workflow).not.toContain(
+      'throw "[T-675] Windows 候选首次启动超过 45 秒',
+    );
+    expect(workflow).toContain(
+      'throw "[T-562] CreatorOS 120 秒内未完成 sidecar 启动与 WebView 主页面加载"',
+    );
+    expect(workflow).toContain(
+      'throw "[T-565] 断网首启 120 秒内未进入本地主页面"',
+    );
+  });
+
   it("macOS 按用户机语义回放 sidecar 归档，真启动通过后才允许上传", () => {
     const archiveGate = workflow.indexOf(
       "macOS sidecar 可搬运归档与解压后签名门(T-705)",

@@ -4,6 +4,62 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-ASR-045 (2026-08-10) — 渠道 ASR 以可恢复 operation 驱动短时租约，不读取本机 Key
+
+**来源**：T-762 对智溯AI正式包真实日志和 CreatorOS/Growth 当前实现的复盘确认：同一安装包在
+配置恢复后可以连续取得临时授权并完成转写，故障不属于长期渠道 Key丢失；用户确认继续落实完整
+根治方案，不接受要求渠道用户手填或保存 ASR Key。
+
+**决策**：
+
+1. `per_request` ASR 生命周期先于 credential reader 分流，任何路径都不得访问本机长期凭据库。
+2. 每次真实转写先持久化 operation；同一 operation 的重试/重启复用同一幂等键，只有明确用户
+   重试或新的调度 run 才能创建新 operation，且不新增费用确认弹窗。
+3. ticket、lease、扣费、provider 调用分别记账；POST 响应未知只用原 key 核对，已取得 leaseRef
+   即记录已扣费，provider 失败不自动申请第二枚 token。
+4. 临时 token 只经单次回调进入 Qwen adapter，不进入通用模型规格、DB、系统密钥库、Web 或日志。
+5. CreatorOS 与 Growth 的跨边界恢复结果以合同 closed schema 固定；Growth 票据统一使用当前
+   `config-access-ticket-v3`。真实经济联调继续要求当次用户确认和全新一次性测试码。
+
+**Rationale**：PAT-004 `CF-001/CF-004` 命中：Activity、Growth、CreatorOS resolver/runner 是跨仓
+安全与计费边界，恢复状态必须先写入契约并以合同测试锁定，不能靠两个仓库各自猜错误含义。
+PAT-002 `RF-002/RF-004` 命中：operation 是需跨重启留存并随正式迁移演进的用户操作事实，复用
+现有 Drizzle/PGlite 迁移体系，不用进程内 Map。PAT-003 `AF-003/AF-004` 命中：转写需要重试、
+续跑和审计，继续走持久任务/operation，不塞进一次 HTTP 生命周期。
+
+**Pattern-Ref**：PAT-002、PAT-003、PAT-004。
+
+**Asset-Ref**：现有 `asr_usage_intents`、PersistentTask、Activity v3 ticket client、Growth API-282
+与 T-715 额度入口；资产索引无可直接替代的 ASR lease 模块，不新增第三方依赖。
+
+**Explicit Limits**：不改视觉；不新增费用确认；不保存渠道 ASR 长期/临时 Key；不自动部署、打包、
+发布或消费真实额度。
+
+**Status**：用户已确认；T-763 须经独立 SPEC 复审 PASS 后进入 BUILD。
+
+---
+
+## DEC-REL-044 (2026-08-09) — Windows 45 秒首启改为性能观测，真实可用性仍失败关闭
+
+**来源**：正式双平台 run `31318986792` 的 Windows 包在托管 runner 上用
+51.752 秒成功加载主页，却被旧的 45 秒固定阈值判为失败。用户明确要求不对
+偶发冷启超时作强硬限制，并要求提交后重跑正式 Windows + macOS 流水线。
+
+**决策**：
+
+1. 45 秒继续作为首启性能目标，超出时输出 `Write-Warning` 并保留
+   `firstLaunchMilliseconds`，不单独阻断工件。
+2. 120 秒内未出现 `MAIN_PAGE_LOAD_FINISHED`、进程提前退出、白屏、运行资源缺失、
+   安装或卸载失败继续作为硬失败，不得上传为通过工件。
+3. 本决策只改发布性能观测的阻断性，不放宽结构、安全、签名、公证、安装、
+   真启动或非白屏门，不修改视觉。
+
+**Status**：用户已确认；纳入 T-775 与 T-675 正式流水线口径。该工作最初在并行
+会话中以 `T-742` 开工；合并前发现 main 已占用该 ID，保留原始事件并将当前任务重编号为
+`T-775`，不改需求、实现或验收口径。
+
+---
+
 ## DEC-SEC-043 (2026-08-09) — 用户自填模型 Key 不直接使用系统钥匙串
 
 **来源**：V1 正式候选把用户在设置页填写的模型 API Key 迁入 macOS Keychain，导致捆绑的

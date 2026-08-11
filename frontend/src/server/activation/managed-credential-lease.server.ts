@@ -19,14 +19,29 @@ export type ManagedAsrLease = {
 };
 
 export class ManagedCredentialLeaseError extends Error {
+  readonly phase: "preflight" | "ticket_acquiring" | "lease_requesting" | "lease_status" | "provider_calling";
+  readonly leaseResult: "not_issued" | "lease_unknown" | "provider_unknown" | "released" | "charged_expired" | null;
+  readonly leaseRef: string | null;
+  readonly chargedUnits: number | null;
+
   constructor(
     readonly code: string,
     message: string,
     readonly fallbackLocal: boolean,
     readonly openCredits: boolean,
+    meta: {
+      readonly phase?: ManagedCredentialLeaseError["phase"];
+      readonly leaseResult?: ManagedCredentialLeaseError["leaseResult"];
+      readonly leaseRef?: string | null;
+      readonly chargedUnits?: number | null;
+    } = {},
   ) {
     super(message);
     this.name = "ManagedCredentialLeaseError";
+    this.phase = meta.phase ?? "preflight";
+    this.leaseResult = meta.leaseResult ?? null;
+    this.leaseRef = meta.leaseRef ?? null;
+    this.chargedUnits = meta.chargedUnits ?? null;
   }
 }
 
@@ -41,12 +56,14 @@ function fail(
   message: string,
   fallbackLocal = false,
   openCredits = false,
+  meta: ConstructorParameters<typeof ManagedCredentialLeaseError>[4] = {},
 ): never {
   throw new ManagedCredentialLeaseError(
     code,
     message,
     fallbackLocal,
     openCredits,
+    meta,
   );
 }
 
@@ -91,22 +108,82 @@ function responseErrorCode(value: unknown): string | null {
 }
 
 function mapHttpError(status: number, code: string | null): never {
+  const notIssued = {
+    phase: "lease_status" as const,
+    leaseResult: "not_issued" as const,
+  };
   if (code === "AI_CREDIT_ACCOUNT_LINK_REQUIRED") {
-    return fail(code, "请先连接 AI 额度账户", false, true);
+    return fail(code, "请先连接 AI 额度账户", false, true, notIssued);
   }
   if (code === "AI_CREDIT_INSUFFICIENT") {
-    return fail(code, "AI 额度不足，请充值后再试。", false, true);
+    return fail(code, "AI 额度不足，请充值后再试。", false, true, notIssued);
   }
   if (code === "ASR_LEASE_EXPIRED" || code === "ASR_LEASE_PROVIDER_UNKNOWN") {
     return fail(code, "语音转文字服务暂时不可用，已改用本地转写", true);
   }
   if (status === 422 || code === "ASR_LEASE_INPUT_INVALID") {
-    return fail(code ?? "ASR_LEASE_INPUT_INVALID", "音频不符合在线转写要求", true);
+    return fail(code ?? "ASR_LEASE_INPUT_INVALID", "音频不符合在线转写要求", true, false, notIssued);
   }
   if (status >= 500 || status === 429) {
     return fail(code ?? "ASR_LEASE_UNAVAILABLE", "语音转文字服务暂时不可用，已改用本地转写", true);
   }
-  return fail(code ?? "ASR_LEASE_DENIED", "当前激活权益暂时无法使用语音转文字");
+  return fail(code ?? "ASR_LEASE_DENIED", "当前激活权益暂时无法使用语音转文字", false, false, notIssued);
+}
+
+function parseLeaseStatus(value: unknown): never | void {
+  if (
+    !exactObject(value, [
+      "chargeState",
+      "chargedUnits",
+      "contractVersion",
+      "leaseRef",
+      "result",
+      "terminalStatus",
+    ]) ||
+    value.contractVersion !== "growth-managed-model-credential-lease-status-v1" ||
+    !["not_issued", "provider_unknown", "released", "charged_expired"].includes(
+      String(value.result),
+    ) ||
+    (value.leaseRef !== null && (typeof value.leaseRef !== "string" || !value.leaseRef.trim()))
+  ) {
+    return;
+  }
+  const expected = {
+    not_issued: ["none", 0, "released"],
+    provider_unknown: ["reserved", 0, "pending"],
+    released: ["none", 0, "released"],
+    charged_expired: ["committed", 25_000, "expired"],
+  } as const;
+  const result = value.result as keyof typeof expected;
+  const [chargeState, chargedUnits, terminalStatus] = expected[result];
+  if (
+    value.chargeState !== chargeState ||
+    value.chargedUnits !== chargedUnits ||
+    value.terminalStatus !== terminalStatus ||
+    (result !== "not_issued" && typeof value.leaseRef !== "string")
+  ) {
+    return;
+  }
+  const code = {
+    not_issued: "ASR_LEASE_NOT_ISSUED",
+    provider_unknown: "ASR_LEASE_PROVIDER_UNKNOWN",
+    released: "ASR_LEASE_RELEASED",
+    charged_expired: "ASR_LEASE_CHARGED_EXPIRED",
+  }[result];
+  return fail(
+    code,
+    result === "charged_expired"
+      ? "本次云端转写授权已结束，请重新发起或改用本地转写"
+      : "语音转文字服务暂时不可用，可以改用本地转写",
+    result !== "not_issued",
+    false,
+    {
+      phase: "lease_status",
+      leaseResult: result,
+      leaseRef: value.leaseRef as string | null,
+      chargedUnits,
+    },
+  );
 }
 
 /**
@@ -135,7 +212,18 @@ export async function requestManagedAsrLease(
   ) {
     return fail("ASR_LEASE_INPUT_INVALID", "音频不符合在线转写要求", true);
   }
-  const access = await (dependencies.requestAccess ?? requestFreshClientConfigAccess)();
+  let access: FreshClientConfigAccess;
+  try {
+    access = await (dependencies.requestAccess ?? requestFreshClientConfigAccess)();
+  } catch {
+    return fail(
+      "ASR_TICKET_UNAVAILABLE",
+      "暂时无法验证当前权益，请稍后重试",
+      false,
+      false,
+      { phase: "ticket_acquiring", leaseResult: "not_issued" },
+    );
+  }
   const endpoint = new URL(LEASE_PATH, access.growthOrigin);
   let response: Response;
   try {
@@ -159,7 +247,13 @@ export async function requestManagedAsrLease(
       }),
     });
   } catch {
-    return fail("ASR_LEASE_UNAVAILABLE", "语音转文字服务暂时不可用，已改用本地转写", true);
+    return fail(
+      "ASR_LEASE_UNAVAILABLE",
+      "语音转文字服务暂时不可用，可以改用本地转写",
+      true,
+      false,
+      { phase: "lease_requesting", leaseResult: "lease_unknown" },
+    );
   }
   const cacheControl = response.headers.get("cache-control") ?? "";
   const pragma = response.headers.get("pragma") ?? "";
@@ -174,6 +268,16 @@ export async function requestManagedAsrLease(
   const value = await readJson(response);
   if (response.status !== 201 && response.status !== 200) {
     mapHttpError(response.status, responseErrorCode(value));
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    (value as Record<string, unknown>).contractVersion ===
+      "growth-managed-model-credential-lease-status-v1"
+  ) {
+    parseLeaseStatus(value);
+    return fail("ASR_LEASE_RESPONSE_INVALID", "语音转文字服务响应无法验证");
   }
   if (
     !exactObject(value, [

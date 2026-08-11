@@ -224,7 +224,9 @@ export async function resolveMultimodalSpec(
       selectedOptionId: await deps.getChannelModelSelection?.(capability),
     });
     if (route && route.kind === kind) {
-      const credential = route.serviceId
+      // T-763：per_request 路由的短时凭据只在真实 provider 调用前领取；解析阶段
+      // 绝不能触碰 Keyring / Windows Credential Manager 的长期凭据读取器。
+      const credential = route.credentialLifecycle !== "per_request" && route.serviceId
         ? await deps.getChannelModelCredential?.(route.serviceId)
         : null;
       return channelMultimodalSpecFromRoute(route, credential);

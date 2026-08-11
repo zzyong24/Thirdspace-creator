@@ -491,6 +491,13 @@
       "when": 1786237200000,
       "tag": "0069_asr_usage_intents",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1786395600000,
+      "tag": "0070_asr_transcription_operations",
+      "breakpoints": true
     }
   ]
 }

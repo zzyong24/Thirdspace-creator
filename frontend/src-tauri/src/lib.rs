@@ -898,7 +898,54 @@ fn verify_direct_sidecar_dir_with_hash(
             render(&layered_missing)
         ));
     }
+    // 目录存在不等于浏览器可用。正式闭包必须真实携带 Windows 浏览器
+    // 可执行文件，否则扫码等能力会在用户点击时才报错。
+    let legacy_browser_ready =
+        legacy_missing.is_empty() && contains_browser_executable(&frontend.join("browsers"));
+    let layered_browser_ready = layered_missing.is_empty()
+        && contains_browser_executable(&dir.join("layers").join("browser").join("browsers"));
+    if !legacy_browser_ready && !layered_browser_ready {
+        return Err(
+            "Windows 安装目录中的内置浏览器可执行文件缺失。请重新安装 CreatorOS。".to_string(),
+        );
+    }
     verify_file_sha256(&entry, expected_entry_hash, "Windows sidecar 入口")
+}
+
+#[cfg(any(windows, test))]
+fn contains_browser_executable(root: &std::path::Path) -> bool {
+    if !root.is_dir() {
+        return false;
+    }
+    let mut pending = vec![root.to_path_buf()];
+    let mut visited = 0usize;
+    while let Some(dir) = pending.pop() {
+        visited += 1;
+        if visited > 4_096 {
+            return false;
+        }
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return false;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
+            if file_type.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if !file_type.is_file() {
+                continue;
+            }
+            let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
+            if name == "chrome.exe" || name == "chrome-headless-shell.exe" {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// [T-487] 读取 Windows 安装期写入的 runtime 指针。指针只允许构建生成的安全 ID，
@@ -2799,6 +2846,14 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            root.join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(root.join("layers").join("media").join("bin")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
@@ -2819,6 +2874,24 @@ mod runtime_cleanup_tests {
         let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
         assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_ok());
         std::fs::remove_file(
+            root.join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+        )
+        .unwrap();
+        let browser_error =
+            super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).unwrap_err();
+        assert!(browser_error.contains("浏览器可执行文件"));
+        std::fs::write(
+            root.join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
+        std::fs::remove_file(
             root.join("backend")
                 .join("drizzle")
                 .join("meta")
@@ -2836,6 +2909,11 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(root.join("frontend").join("node_modules")).unwrap();
         std::fs::create_dir_all(root.join("frontend").join("bin")).unwrap();
         std::fs::create_dir_all(root.join("frontend").join("browsers")).unwrap();
+        std::fs::write(
+            root.join("frontend").join("browsers").join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(root.join("backend").join("drizzle").join("meta")).unwrap();
         std::fs::write(root.join("frontend").join("server.js"), "hello").unwrap();
         std::fs::write(
@@ -2867,6 +2945,15 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            sidecar
+                .join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("media").join("bin")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();
@@ -2914,6 +3001,15 @@ mod runtime_cleanup_tests {
         std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
+        std::fs::write(
+            sidecar
+                .join("layers")
+                .join("browser")
+                .join("browsers")
+                .join("chrome.exe"),
+            "browser",
+        )
+        .unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("media").join("bin")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("local-ai").join("vendor")).unwrap();
         std::fs::create_dir_all(sidecar.join("backend").join("drizzle").join("meta")).unwrap();

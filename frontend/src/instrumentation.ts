@@ -51,19 +51,21 @@ export async function register(): Promise<void> {
       /* 装不上不阻塞启动(守护是兜底,主线在壳侧 killpg) */
     }
   }
-  if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
-    try {
-      // 正式桌面包只接受 Rust 壳注入的绝对资源目录。开发态未设置时继续使用
-      // Playwright 默认缓存；不要用 process.cwd() 回退，否则 Next output tracing 会把
-      // 整个工作区误判为运行时资源，连源码、测试和 src-tauri 一起带入发布闭包。
-      const bundled = process.env.CREATOROS_BROWSERS_DIR?.trim();
-      if (bundled) {
-        process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
-        console.log("[instrumentation] bundled Chromium path configured");
-      }
-    } catch {
-      // 设不上就用默认路径,不阻塞启动。
+  try {
+    // 正式桌面包只接受 Rust 壳注入的绝对资源目录，必须覆盖 runner/父进程
+    // 遗留的 PLAYWRIGHT_BROWSERS_PATH；否则 Windows 会绕过已验证的随包 Chromium。
+    // 开发态仍尊重显式设置，未设置时继续使用 Playwright 默认缓存。
+    const bundled = process.env.CREATOROS_BROWSERS_DIR?.trim();
+    if (
+      bundled &&
+      (process.env.CREATOROS_DESKTOP === "1" ||
+        !process.env.PLAYWRIGHT_BROWSERS_PATH)
+    ) {
+      process.env.PLAYWRIGHT_BROWSERS_PATH = bundled;
+      console.log("[instrumentation] bundled Chromium path configured");
     }
+  } catch {
+    // 壳层还会验证正式 runtime；这里不阻塞 Next，由浏览器调用给出可行动错误。
   }
 
   // [T-535] 壳不能再把 Next 短暂 TCP listen 当成“业务已可用”。只有 verdict 校验、
