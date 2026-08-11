@@ -1,0 +1,99 @@
+{
+  "schema": "creatoros-tool-routing-eval/v1",
+  "taskId": "T-770",
+  "skillId": "creatoros.guide",
+  "surface": "topics",
+  "cases": [
+    {
+      "id": "positive-explain-flywheel",
+      "prompt": "CreatorOS 是怎么让下一条内容比上一条更准的？",
+      "expectedCalls": ["creatoros.guide"],
+      "forbiddenCalls": []
+    },
+    {
+      "id": "positive-create-video",
+      "prompt": "帮我做一期介绍 CreatorOS 数据飞轮的视频。",
+      "expectedCalls": ["creatoros.guide"],
+      "expectedFollowupCapability": "script.draft",
+      "forbiddenCalls": []
+    },
+    {
+      "id": "positive-candidate-principle",
+      "prompt": "CreatorOS 为什么强调 AI 只产候选？",
+      "expectedCalls": ["creatoros.guide"],
+      "forbiddenCalls": []
+    },
+    {
+      "id": "positive-project-continuation",
+      "prompt": "这个项目就是讲 CreatorOS，本轮帮我把工作流说清楚。",
+      "expectedCalls": ["creatoros.guide"],
+      "forbiddenCalls": []
+    },
+    {
+      "id": "positive-fact-check",
+      "prompt": "用 CreatorOS 产品说明帮我校对这段介绍有没有吹过头。",
+      "expectedCalls": ["creatoros.guide"],
+      "forbiddenCalls": []
+    },
+    {
+      "id": "negative-generic-ai-topics",
+      "prompt": "给我 5 个 AI 工具相关选题。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-rewrite",
+      "prompt": "帮我把这段稿子缩短 20%。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-other-products",
+      "prompt": "研究一下其他内容创作系统。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-incidental-mention",
+      "prompt": "我的素材里提到了 CreatorOS，把全部素材按时间列出来。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-translation",
+      "prompt": "翻译：CreatorOS is a creator operating system.",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-build-generic-system",
+      "prompt": "我也想做一个创作系统，先分析受众。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-review-video",
+      "prompt": "复盘刚发布的这条视频。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-agent-knowledge",
+      "prompt": "找一下知识库里关于智能体的内容。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-ambiguous-bug",
+      "prompt": "这个功能为什么报错？",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    },
+    {
+      "id": "negative-continue-writing",
+      "prompt": "继续写稿。",
+      "expectedCalls": [],
+      "forbiddenCalls": ["creatoros.guide"]
+    }
+  ]
+}

@@ -833,12 +833,129 @@ describe("buildChatAssembly — 三层注入装配", () => {
               completionPolicyAdapter: null,
             },
           },
+          {
+            skillId: "creatoros.guide",
+            baseVersion: "v1",
+            overlayRevision: null,
+            overlayVersion: null,
+            effective: {
+              methodSystem: "官方 CreatorOS 产品说明",
+              template: "只读",
+              tools: [],
+              requiredFacets: [],
+              contextRequirements: [],
+              outputSchema: null,
+              completionPolicy: null,
+              completionPolicyAdapter: null,
+            },
+          },
         ],
       },
       () => buildChatAssembly(ctx, { surface: "topics" }, deps),
     );
     expect(a.system).toContain("账号 A 的专属选题方法");
     expect(Object.keys(a.tools)).toContain("topic.generate");
+  });
+
+  it("[T-770] 批准 surface 从同一 effective snapshot 按需读取 guide，未调用前正文不进 system", async () => {
+    const { deps } = makeDeps();
+    const productGuide = "CreatorOS 元 Skill 正文只在工具调用后出现。";
+    const a = await runWithEffectiveSkillSnapshot(
+      {
+        snapshotVersion: 1,
+        userId: "u-1",
+        accountId: "account-a",
+        resolvedAt: "2026-08-11T00:00:00.000Z",
+        platformPolicyVersion: "policy-v1",
+        platformPolicy: "平台规则",
+        skills: [
+          {
+            skillId: "chatbox.topic",
+            baseVersion: "v1",
+            overlayRevision: null,
+            overlayVersion: null,
+            effective: {
+              methodSystem: "选题编导",
+              template: "{{positioning}}",
+              tools: ["topic.generate"],
+              requiredFacets: ["positioning"],
+              contextRequirements: [],
+              outputSchema: null,
+              completionPolicy: null,
+              completionPolicyAdapter: null,
+            },
+          },
+          {
+            skillId: "creatoros.guide",
+            baseVersion: "v1",
+            overlayRevision: null,
+            overlayVersion: null,
+            effective: {
+              methodSystem: productGuide,
+              template: "只读",
+              tools: [],
+              requiredFacets: [],
+              contextRequirements: [],
+              outputSchema: null,
+              completionPolicy: null,
+              completionPolicyAdapter: null,
+            },
+          },
+        ],
+      },
+      () => buildChatAssembly(ctx, { surface: "topics" }, deps),
+    );
+
+    expect(a.system).not.toContain(productGuide);
+    const execute = a.tools["creatoros.guide"]!.execute as unknown as (
+      input: unknown,
+      options: unknown,
+    ) => Promise<unknown>;
+    const result = await execute(
+      { purpose: "explain" },
+      { toolCallId: "guide-1", messages: [], context: {} },
+    );
+    expect(result).toMatchObject({
+      kind: "creatoros.guide",
+      skillId: "creatoros.guide",
+      version: "v1",
+      guide: productGuide,
+    });
+  });
+
+  it("[T-770] 批准 surface 的 snapshot 缺 guide 时整轮显式失败", async () => {
+    const { deps } = makeDeps();
+    await expect(
+      runWithEffectiveSkillSnapshot(
+        {
+          snapshotVersion: 1,
+          userId: "u-1",
+          accountId: "account-a",
+          resolvedAt: "2026-08-11T00:00:00.000Z",
+          platformPolicyVersion: "policy-v1",
+          platformPolicy: "平台规则",
+          skills: [
+            {
+              skillId: "chatbox.topic",
+              baseVersion: "v1",
+              overlayRevision: null,
+              overlayVersion: null,
+              effective: {
+                methodSystem: "选题编导",
+                template: "{{positioning}}",
+                tools: ["topic.generate"],
+                requiredFacets: ["positioning"],
+                contextRequirements: [],
+                outputSchema: null,
+                completionPolicy: null,
+                completionPolicyAdapter: null,
+              },
+            },
+          ],
+        },
+        () => buildChatAssembly(ctx, { surface: "topics" }, deps),
+      ),
+    ).rejects.toThrow("SKILL_SNAPSHOT_INCOMPLETE");
   });
 
   it("未知 surface → 回落 chatbox.topic(路由不崩)", async () => {
@@ -1210,6 +1327,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "context.review.report",
       // [T-271] 制作封面链(创作产出工具;'context.*' < 'cover.*' < 'knowledge.*')。
       "cover.generate",
+      "creatoros.guide",
       "knowledge.distill",
       "learning.capture",
       // [T-253] 本机文件读取(素材类,全场景保留;'lo' > 'le')。
@@ -1584,7 +1702,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(37);
+    expect(names.length).toBe(38);
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -1689,7 +1807,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("project.transcribe");
       expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
       expect(names).toContain("video.edit.render");
-      expect(names.length).toBe(38);
+      expect(names.length).toBe(39);
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -1712,7 +1830,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("video.edit.render");
       expect(Object.keys(a.tools)).not.toContain("context.projects");
-      expect(Object.keys(a.tools).length).toBe(40);
+      expect(Object.keys(a.tools).length).toBe(41);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -1724,7 +1842,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
       expect(Object.keys(b.tools)).not.toContain("context.projects");
-      expect(Object.keys(b.tools).length).toBe(40); // 阶段未知仍保留复盘工具，但项目库无需摸索
+      expect(Object.keys(b.tools).length).toBe(41); // 阶段未知仍保留复盘工具，但项目库无需摸索
     });
 
     it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)", async () => {
@@ -1733,6 +1851,25 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(Object.keys(a.tools).length).toBe(41);
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
+      expect(Object.keys(a.tools)).not.toContain("creatoros.guide");
+    });
+
+    it("[T-770] 元 Skill 工具仅在 topics/project 暴露，聚焦 surface 均不暴露", async () => {
+      const { deps } = makeDeps();
+      for (const surface of ["topics", "project"]) {
+        const a = await buildChatAssembly(ctx, { surface }, deps);
+        expect(Object.keys(a.tools)).toContain("creatoros.guide");
+      }
+      for (const surface of [
+        "calibration",
+        "positioning",
+        "review",
+        "knowledge-distill",
+        "global",
+      ]) {
+        const a = await buildChatAssembly(ctx, { surface }, deps);
+        expect(Object.keys(a.tools)).not.toContain("creatoros.guide");
+      }
     });
 
     it("③ functionKey 命中真工具但被场景砍掉 → 补回白名单且 forcedTool 生效(T-231⑨ 强制置顶不受收窄影响)", async () => {
@@ -1745,7 +1882,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(38);
+      expect(Object.keys(a.tools).length).toBe(39);
     });
   });
 

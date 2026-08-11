@@ -31,6 +31,17 @@ import { wrapUntrustedContent } from "./untrusted-content";
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
   /**
+   * [T-770] 从本轮 effective snapshot 读取代码随版的 CreatorOS 产品说明。
+   * 只读内存端口：不得访问 repository、网络、文件系统或可变全局 registry。
+   */
+  readCreatorOsGuide?: () => Readonly<{
+    skillId: "creatoros.guide";
+    version: "v1";
+    verifiedAt: string;
+    guide: string;
+    limitations: readonly string[];
+  }>;
+  /**
    * [T-642] host 从可信 ChatContext 绑定的当前项目。存在时，所有“单项目”只读工具都优先
    * 使用这个 id，模型即使显式传入别的 projectId 也不能改绑；避免 @ 引用后再拉全库找标题，
    * 同时防止模型幻觉/伪造 id 越过当前对象边界。
@@ -2953,6 +2964,49 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       }, deps.humanizeError)
     : null;
   return {
+    "creatoros.guide": defineChatTool("creatoros.guide", {
+      description:
+        "严格调用门：仅满足以下任一条件时必须调用一次：①用户直接询问 CreatorOS 的产品事实、功能、工作流或设计理念；②用户明确要围绕 CreatorOS 创作或校对产品介绍、教程、方法论、复盘内容，包括明确说当前项目/选题就是讲 CreatorOS。第二类必须先读本工具，再继续选题、研究或写稿工具。除此之外一律不要调用：普通选题、改稿、审核、素材搜索、翻译、压缩或格式化；只泛称 AI/Agent/智能体/工作流/创作系统；只研究、比较或介绍其他产品且未要求与 CreatorOS 对比；引用材料偶然出现 CreatorOS。不要为补背景主动调用。本工具只读、不写库、不替代创作工具。",
+      inputSchema: jsonSchema<{ purpose: "explain" | "create" }>({
+        type: "object",
+        properties: {
+          purpose: { type: "string", enum: ["explain", "create"] },
+        },
+        required: ["purpose"],
+        additionalProperties: false,
+      }),
+      execute: async (): Promise<{
+        kind: "creatoros.guide";
+        skillId: "creatoros.guide";
+        version: "v1";
+        verifiedAt: string;
+        guide: string;
+        limitations: readonly string[];
+        next: string;
+      }> => {
+        if (!deps.readCreatorOsGuide) {
+          throw new Error(
+            "[CREATOROS_GUIDE_UNAVAILABLE] 当前对话没有冻结 creatoros.guide@v1",
+          );
+        }
+        const value = deps.readCreatorOsGuide();
+        if (
+          value.skillId !== "creatoros.guide" ||
+          value.version !== "v1" ||
+          value.verifiedAt.trim().length === 0 ||
+          value.guide.trim().length === 0
+        ) {
+          throw new Error(
+            "[CREATOROS_GUIDE_UNAVAILABLE] creatoros.guide 版本或内容不完整",
+          );
+        }
+        return {
+          kind: "creatoros.guide",
+          ...value,
+          next: "直接解释，或把依据交给既有创作 Skill",
+        };
+      },
+    }, deps.humanizeError),
     "topic.generate": defineChatTool("topic.generate", {
       // [T-245] 热点能力认知:明说 basis=trend 会自动拉真实热点信号(T-235b 信源系统 + web 搜索),
       // 治编导自称「没有实时热点拉取能力」的认知错位(prompt 没告诉它,能力其实在)。
@@ -4497,6 +4551,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
  * drift 由 chat-tools.test.ts 的 guard 用例锁(必须 === Object.keys(allChatTools(deps)))。
  */
 export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
+  "creatoros.guide",
   "topic.generate",
   "topic.enrich",
   "script.hooks",
@@ -4617,9 +4672,15 @@ const CREATION_TOOL_NAMES: readonly string[] = [
  */
 export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = {
   // 选题页:创作产出 + 素材 + 全量只读。无单条作品语境 → 不给 review.analyze/review.script。
-  topics: [...CREATION_TOOL_NAMES, ...MATERIAL_TOOL_NAMES, ...CONTEXT_TOOL_NAMES],
+  topics: [
+    "creatoros.guide",
+    ...CREATION_TOOL_NAMES,
+    ...MATERIAL_TOOL_NAMES,
+    ...CONTEXT_TOOL_NAMES,
+  ],
   // 项目对话:创作 + 审核 + 复盘双场景全量(阶段感知收窄见 getSurfaceToolScope)。
   project: [
+    "creatoros.guide",
     ...CREATION_TOOL_NAMES,
     // 只有稿面明确选择段落时实现表才会实际挂载该工具。
     "script.patch",

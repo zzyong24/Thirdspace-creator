@@ -9635,12 +9635,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           : null;
       },
       list() {
-        return listOfficialSkillBases().map((base) => ({
-          ...base,
-          system: base.methodSystem,
-          supportsCompletionPolicySchema: () =>
-            base.completionPolicyAdapter !== null,
-        }));
+        // T-770:设置页是“账号可定制 Skill”管理面。editableFields=[] 的系统元 Skill 不在此
+        // 暴露，避免渲出可编辑 textarea/保存按钮后再由服务端拒绝的假交互；运行时 official
+        // provider 仍使用下方未过滤的 listOfficialSkillBases，snapshot 能正常冻结它。
+        return listOfficialSkillBases()
+          .filter((base) => base.editableFields.length > 0)
+          .map((base) => ({
+            ...base,
+            system: base.methodSystem,
+            supportsCompletionPolicySchema: () =>
+              base.completionPolicyAdapter !== null,
+          }));
       },
     },
   );

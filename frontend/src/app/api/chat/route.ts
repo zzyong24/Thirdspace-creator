@@ -8,7 +8,7 @@ import {
   type ChatRuntime,
 } from "@/server/persistence-client";
 import {
-  resolveSkillForSurface,
+  requiredSkillIdsForTask,
   runChatStream,
   formatErrorDiagnostic,
   type ChatContext,
@@ -357,7 +357,7 @@ export async function POST(req: Request): Promise<Response> {
       )
     : undefined;
   // surface 必填(页面层注入);缺省回落 topics(当前唯一落地的 ChatBox skill)—— 路由不因
-  // 缺 surface 崩,resolveSkillForSurface 也会兜底。
+  // 缺 surface 崩,受控 chat.sync 映射也会把 topics 冻结为基础 Skill + 产品元 Skill。
   // 每轮生成一个不含业务/用户信息的短参考号。流式错误经 AI SDK 异步抵达，HTTP 状态已无法
   // 改写；参考号同时进入安全日志和用户提示，才能把“请重试”与真实根因对应起来。
   const diagnosticRef = `chat-${randomUUID().replaceAll("-", "").slice(0, 10)}`;
@@ -674,9 +674,12 @@ export async function POST(req: Request): Promise<Response> {
   try {
     // [T-513] 对话同样走 account-scoped immutable snapshot。surface → official skill
     // 的映射由服务端控制，客户端不能注入 prompt / policy；ALS 隔离并发账号。
-    const skillSnapshot = await runtime.resolveEffectiveSkillSnapshot(ctx, [
-      resolveSkillForSurface(chatContext.surface),
-    ]);
+    const skillSnapshot = await runtime.resolveEffectiveSkillSnapshot(
+      ctx,
+      requiredSkillIdsForTask("chat.sync", {
+        surface: chatContext.surface,
+      }),
+    );
     const result = await runWithEffectiveSkillSnapshot(skillSnapshot, () =>
       runChatStream(
         ctx,

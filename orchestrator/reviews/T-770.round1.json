@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "现有运行时未提供元 Skill 所需的可调用、快照化和受控暴露链路；已签远程更新也尚未进入 effective snapshot。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-770-01",
+        "quote": "回答必须基于 Skill 当前版本的产品事实。"
+      },
+      "acceptance_anchor": {
+        "id": "G-770-03",
+        "quote": "调用后结果才出现对应版本知识。"
+      },
+      "where": "4.1–4.4 的 registry、effective snapshot 与 Chat 工具衔接",
+      "failure_mode": "只把 creatoros.guide 加入 official registry 时，聊天请求仍只为 surface 的 chatbox.* Skill 创建 snapshot；Chat 工具又只从 allChatTools 中按白名单挂载。现有表中没有 guide 执行工具，因此模型既不能调用 guide，也不能得到其版本化工具结果，正向触发与渐进加载验收无法成立。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "ai-worker/src/prompt/registry.ts:103-172；frontend/src/app/api/chat/route.ts:675-680；backend/src/modules/ai-runtime/chat-runner.ts:985-1004,1128-1137；backend/src/modules/ai-runtime/chat-tools.ts:4692-4702",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确 guide 的只读 Chat-tool 执行契约，并规定批准 surface 的单轮 snapshot 必须同时包含该 guide；工具只能从该 snapshot 读取版本化知识并形成工具步骤。为正向调用、未调用不加载和零写入分别加端到端断言。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-770-03",
+        "quote": "普通请求的 trace 中不得出现该工具调用。"
+      },
+      "acceptance_anchor": {
+        "id": "G-770-02",
+        "quote": "只在批准 surface 暴露；蒸馏、复盘、定位、校准不暴露。"
+      },
+      "where": "4.3 暴露范围与现有 ChatContext surface 路由",
+      "failure_mode": "SPEC 使用“全局 Copilot”等产品名称，但没有映射到现有 transport surface。当前 route 接受任意 surface；未知值会回退为 chatbox.topic，而 surface 工具范围的未知值又回退全量。若 guide 随 chatbox.topic 暴露，未列出的 surface 也可能取得它，无法确定性证明“只在批准 surface 暴露”。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/modules/ai-runtime/chat-context.ts:131-149；frontend/src/app/api/chat/route.ts:359-374；backend/src/modules/ai-runtime/effective-skill-snapshot.ts:137-205；backend/src/modules/ai-runtime/chat-tools.ts:4613-4685",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把批准与禁止范围写成现有 ChatContext.surface 的闭集，并明确“全局 Copilot”对应的真实 transport 值；未知 surface 必须不暴露 guide。测试按该闭集断言工具可见性和 trace。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-770-01",
+        "quote": "回答必须基于 Skill 当前版本的产品事实。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-770-05",
+        "quote": "工具无法取得完整、验签有效的当前 Skill 时返回显式 error，不得回退模型记忆冒充官方说明。"
+      },
+      "where": "3 与 4.1 的已签远程 prompt bundle 到 effective snapshot 链路",
+      "failure_mode": "现有远程 bundle 验签/获取失败时返回空 override 并回退纯本地；成功 override 也只写可变 REGISTRY。聊天 effective snapshot 的 official provider 却从 getOfficialSkillBase/ OFFICIAL_REGISTRY 取 base。因而一个已签产品事实更新既不必进入聊天 snapshot，也没有为 guide 定义“当前、缓存或 error”的唯一行为，可能返回旧内置说明而被当作当前版本。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/modules/ai-runtime/remote-prompt-bundle.ts:103-141；backend/src/modules/ai-runtime/skill-config-overrides.ts:126-178；frontend/src/server/persistence-client.ts:9624-9665；ai-worker/src/prompt/registry.ts:82-84,237-265",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定验签后的 guide 内容、版本和核对日期进入 effective snapshot 的唯一来源，以及缺少该有效版本时的显式 error 语义；验收须证明签名 v2 会进入新会话 snapshot，坏签/缺失版本不会以旧或模型记忆伪装为当前说明。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

@@ -605,6 +605,75 @@ describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
     const { deps } = makeDeps();
     expect(Object.keys(buildChatTools([], deps))).toEqual([]);
   });
+
+  it("[T-770] creatoros.guide 只读返回当前 snapshot 中的版本化产品说明", async () => {
+    const readCreatorOsGuide = vi.fn(() => ({
+      skillId: "creatoros.guide" as const,
+      version: "v1" as const,
+      verifiedAt: "2026-08-11",
+      guide: "CreatorOS 是围绕创作者个人飞轮工作的本地优先创作系统。",
+      limitations: ["资料未确认的能力不得当成已上线事实"],
+    }));
+    const {
+      deps,
+      generateTopics,
+      dispatchPublishPackage,
+      dispatchGenerateAsset,
+      dispatchScriptReview,
+      dispatchGenerateCover,
+      dispatchPlanningThesis,
+    } = makeDeps({ readCreatorOsGuide });
+    const tools = buildChatTools(["creatoros.guide"], deps);
+
+    expect(tools["creatoros.guide"]?.description).toContain("必须调用一次");
+    expect(tools["creatoros.guide"]?.description).toContain("必须先读本工具");
+    expect(tools["creatoros.guide"]?.description).toContain("一律不要调用");
+
+    const result = await runExecute(tools["creatoros.guide"]!, {
+      purpose: "explain",
+    });
+
+    expect(readCreatorOsGuide).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({
+      kind: "creatoros.guide",
+      skillId: "creatoros.guide",
+      version: "v1",
+      verifiedAt: "2026-08-11",
+      guide: "CreatorOS 是围绕创作者个人飞轮工作的本地优先创作系统。",
+      limitations: ["资料未确认的能力不得当成已上线事实"],
+      next: "直接解释，或把依据交给既有创作 Skill",
+    });
+    for (const writeOrDispatch of [
+      generateTopics,
+      dispatchPublishPackage,
+      dispatchGenerateAsset,
+      dispatchScriptReview,
+      dispatchGenerateCover,
+      dispatchPlanningThesis,
+    ]) {
+      expect(writeOrDispatch).not.toHaveBeenCalled();
+    }
+  });
+
+  it("[T-770] creatoros.guide 缺失或错版本时显式失败，不用模型记忆兜底", async () => {
+    const { deps } = makeDeps({
+      readCreatorOsGuide: vi.fn(() => {
+        throw new Error(
+          "[CREATOROS_GUIDE_UNAVAILABLE] creatoros.guide@v1 不可用",
+        );
+      }),
+    });
+    const tools = buildChatTools(["creatoros.guide"], deps);
+
+    const result = await runExecute(tools["creatoros.guide"]!, {
+      purpose: "create",
+    });
+
+    expect(result).toMatchObject({
+      kind: "creatoros.guide",
+      error: expect.stringContaining("CREATOROS_GUIDE_UNAVAILABLE"),
+    });
+  });
 });
 
 describe("工具 execute — 复用 runner 产候选(非实体)", () => {

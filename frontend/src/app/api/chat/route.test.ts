@@ -68,8 +68,12 @@ vi.mock("@/server/persistence-client", () => ({
 }));
 
 vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
-  resolveSkillForSurface: (surface: string) =>
-    surface === "review" ? "chatbox.review" : "chatbox.topic",
+  requiredSkillIdsForTask: (_taskType: string, input: { surface?: string }) =>
+    input.surface === "review"
+      ? ["chatbox.review"]
+      : input.surface === "topics" || input.surface === "project"
+        ? ["chatbox.topic", "creatoros.guide"]
+        : ["chatbox.topic"],
   runChatStream: (...args: unknown[]) => runChatStream(...args),
   formatErrorDiagnostic: () => "class=Error reason=unknown",
 }));
@@ -587,7 +591,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     // 委派装配:runChatStream 收到 messages + chatContext(surface)。
     expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
       { userId: "u-1" },
-      ["chatbox.topic"],
+      ["chatbox.topic", "creatoros.guide"],
     );
     expect(runChatStream).toHaveBeenCalledTimes(1);
     const [, input] = runChatStream.mock.calls[0];

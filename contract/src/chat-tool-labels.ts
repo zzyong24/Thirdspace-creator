@@ -19,6 +19,10 @@ export interface ChatToolLabel {
 
 /** 全部 chatbox 白名单工具的中文名 + 一句话用途。 */
 export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
+  "creatoros.guide": {
+    name: "CreatorOS 产品说明",
+    purpose: "按需读取 CreatorOS 当前官方产品事实与边界",
+  },
   "video.edit.render": {
     name: "调整剪辑",
     purpose: "读取当前已确认分镜，按意见生成可确认的局部调整与重渲染候选",

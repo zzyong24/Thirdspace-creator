@@ -988,6 +988,8 @@ export async function buildChatAssembly(
   // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
   const {
     getEffectiveTemplate,
+    getEffectiveSkill,
+    CREATOROS_GUIDE_VERIFIED_AT,
     getEffectiveTools,
     getTemplate,
     getTools,
@@ -1002,6 +1004,36 @@ export async function buildChatAssembly(
   const skill = hasEffectiveScope
     ? getEffectiveTemplate(skillId)
     : getTemplate(skillId);
+  // [T-770] 在当前 ALS scope 内一次性校验并冻结代码随版的产品说明。正文只留在服务端闭包，
+  // 不拼进 system；模型真正调用 creatoros.guide 时才进入 tool result。批准 surface 缺失/
+  // 错版本/账号 overlay 一律让本轮显式失败，不等工具调用后再用模型记忆兜底。
+  const creatorOsGuideSnapshot =
+    hasEffectiveScope &&
+    (chatContext.surface === "topics" || chatContext.surface === "project")
+      ? (() => {
+          const guide = getEffectiveSkill("creatoros.guide");
+          if (
+            guide.baseVersion !== "v1" ||
+            guide.overlayRevision !== null ||
+            guide.overlayVersion !== null ||
+            guide.effective.methodSystem.trim().length === 0
+          ) {
+            throw new Error(
+              "[CREATOROS_GUIDE_UNAVAILABLE] creatoros.guide@v1 不可用",
+            );
+          }
+          return {
+            skillId: "creatoros.guide" as const,
+            version: "v1" as const,
+            verifiedAt: CREATOROS_GUIDE_VERIFIED_AT,
+            guide: guide.effective.methodSystem,
+            limitations: [
+              "资料未确认、可能变化或尚未交付的能力不得当成当前事实",
+              "不得编造指标、用户规模、发布时间、平台支持或商业成绩",
+            ],
+          };
+        })()
+      : null;
 
   // [T-240①] 阶段判据(动态层):项目对话读该项目的 stage + 发布状态(getProjectDetail 读端口
   // 已在 composition root 绑好,不新造)。best-effort:读不到/端口未装配 → null(不注阶段块、
@@ -1050,6 +1082,11 @@ export async function buildChatAssembly(
     projectPublished: projectStage ? projectStage.published : null,
   });
   let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+  // [T-770] `creatoros.guide` 是低误触发元 Skill，不继承未知 surface 的“全量工具”兼容回退。
+  // 只有产品协议明确批准的 topics/project 能看到短工具描述；其它已知或未来 surface 一律物理排除。
+  if (chatContext.surface !== "topics" && chatContext.surface !== "project") {
+    baseAllowed = baseAllowed.filter((name) => name !== "creatoros.guide");
+  }
   if (options.positioningScratch && chatContext.surface === "positioning") {
     baseAllowed = baseAllowed.filter(
       (name) =>
@@ -1344,6 +1381,9 @@ export async function buildChatAssembly(
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
+    readCreatorOsGuide: creatorOsGuideSnapshot
+      ? () => creatorOsGuideSnapshot
+      : undefined,
     // [T-642] 单项目只读工具使用可信 ChatContext 绑定，不让模型靠标题/自造 id 改绑。
     boundProjectId: chatContext.projectId ?? undefined,
     verbatimSources: options.verbatimSources ?? [],

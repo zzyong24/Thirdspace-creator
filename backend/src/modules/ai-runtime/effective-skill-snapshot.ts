@@ -51,6 +51,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "chatbox.topic",
   "comment.qa-sift",
   "cover.brief",
+  "creatoros.guide",
   "favorites.triage",
   "intelligence.topic-adapted-draft",
   "intelligence.topic-decompose",
@@ -201,7 +202,9 @@ export function requiredSkillIdsForTask(
     if (typeof surface !== "string" || !CHAT_SURFACE_TO_SKILL[surface]) {
       return mappingMissing(taskType, "chat surface 不在受控枚举内");
     }
-    return [CHAT_SURFACE_TO_SKILL[surface]!];
+    return surface === "topics" || surface === "project"
+      ? [CHAT_SURFACE_TO_SKILL[surface]!, "creatoros.guide"]
+      : [CHAT_SURFACE_TO_SKILL[surface]!];
   }
 
   return mappingMissing(taskType);

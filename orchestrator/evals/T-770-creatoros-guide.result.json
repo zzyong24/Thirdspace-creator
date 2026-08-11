@@ -1,0 +1,189 @@
+{
+  "schema": "creatoros-tool-routing-eval-result/v1",
+  "taskId": "T-770",
+  "skillId": "creatoros.guide",
+  "surface": "topics",
+  "model": "MiniMax-M3",
+  "temperature": 0,
+  "toolsExposed": 39,
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "evaluatedAt": "2026-08-11T13:57:57.403Z",
+  "cases": [
+    {
+      "id": "positive-explain-flywheel",
+      "expectedCalls": [
+        "creatoros.guide"
+      ],
+      "forbiddenCalls": [],
+      "actualCalls": [
+        "creatoros.guide"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "positive-create-video",
+      "expectedCalls": [
+        "creatoros.guide"
+      ],
+      "forbiddenCalls": [],
+      "actualCalls": [
+        "creatoros.guide",
+        "topic.generate"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "positive-candidate-principle",
+      "expectedCalls": [
+        "creatoros.guide"
+      ],
+      "forbiddenCalls": [],
+      "actualCalls": [
+        "creatoros.guide"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "positive-project-continuation",
+      "expectedCalls": [
+        "creatoros.guide"
+      ],
+      "forbiddenCalls": [],
+      "actualCalls": [
+        "creatoros.guide",
+        "topic.generate"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "positive-fact-check",
+      "expectedCalls": [
+        "creatoros.guide"
+      ],
+      "forbiddenCalls": [],
+      "actualCalls": [
+        "creatoros.guide"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-generic-ai-topics",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [
+        "topic.generate"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-rewrite",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-other-products",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-incidental-mention",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [
+        "context.materials"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-translation",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-build-generic-system",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [
+        "topic.generate"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-review-video",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [
+        "context.project.lifecycle",
+        "context.metrics"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-agent-knowledge",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [
+        "context.knowledge",
+        "context.knowledge"
+      ],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-ambiguous-bug",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [],
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "negative-continue-writing",
+      "expectedCalls": [],
+      "forbiddenCalls": [
+        "creatoros.guide"
+      ],
+      "actualCalls": [],
+      "passed": true,
+      "failures": []
+    }
+  ]
+}

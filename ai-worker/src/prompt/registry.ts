@@ -78,6 +78,7 @@ import {
   CHATBOX_REVIEW_TEMPLATE,
   CHATBOX_DISTILL_TEMPLATE,
 } from "./templates/chatbox-surfaces";
+import { CREATOROS_GUIDE_TEMPLATE } from "./templates/creatoros-guide";
 
 const REGISTRY = new Map<string, PromptTemplate>();
 // T-513 official management truth: account/runtime overrides never mutate this map.
@@ -102,6 +103,7 @@ const SCHEMA_OVERRIDES = new Map<string, SchemaValidator>();
 
 /** 全部内置 skill(三位一体)。 */
 const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
+  CREATOROS_GUIDE_TEMPLATE,
   TOPIC_GENERATE_TEMPLATE,
   SCRIPT_DRAFT_TEMPLATE,
   PLANNING_THESIS_TEMPLATE,

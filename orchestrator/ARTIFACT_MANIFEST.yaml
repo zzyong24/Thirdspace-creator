@@ -87,6 +87,8 @@ stages:
       - existing: "orchestrator/GATE-T766-BUILD.md (通用文本模型审核、fail-closed 与历史残缺报告中性化证据)"
       - existing: "docs/superpowers/specs/2026-08-11-script-review-prediction-freshness.md (T-767 用户确认的僵尸状态根治范围)"
       - existing: "orchestrator/GATE-T767-BUILD.md (同版本重审同步与改稿后重新盲预测证据)"
+      - existing: "docs/superpowers/specs/2026-08-11-creatoros-meta-skill.md (T-770 PASS[REV:74f673ffb555])"
+      - existing: "orchestrator/GATE-T770-BUILD.md (低误触发元 Skill、真实模型 15/15 与聚焦门禁证据)"
     notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-726 与 T-730 均已完成各自业务实现与真实页面验收，但共享工作区 watched_paths 仍存在并行任务漂移，保持 draft 且不伪造 strict receipt。"
 
   "5-ship":
