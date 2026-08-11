@@ -38,7 +38,9 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 3. 本决策只改发布性能观测的阻断性，不放宽结构、安全、签名、公证、安装、
    真启动或非白屏门，不修改视觉。
 
-**Status**：用户已确认；纳入 T-742 与 T-675 正式流水线口径。
+**Status**：用户已确认；纳入 T-775 与 T-675 正式流水线口径。该实现最初与并行
+会话中的飞书下载文档任务重用了 `T-742`；合并审计后保留原始事件，将 Windows 发布实现
+重新登记为 `T-775`，不改变业务逻辑或验收口径。
 
 ---
 

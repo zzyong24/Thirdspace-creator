@@ -857,7 +857,7 @@ const CREATOR_DATA_CENTER_CONTENT =
 // [T-369] 启动预检/并发防抖/超时报错统一收进 chromium-guard.guardedLaunch(原地清锁的
 // clearSingletonLocks 升级为「杀残留进程+清锁+同 profile 串行+15s 超时人话报错」共享 helper)。
 
-// [T-742] 正式桌面包已随包携带 Chromium，不得依赖 Playwright CLI、全局
+// [T-775] 正式桌面包已随包携带 Chromium，不得依赖 Playwright CLI、全局
 // Node/npm 或联网下载。ensureChromiumInstalled 只保留给本地开发/诊断环境；正式桌面端
 // 缺少系统 Chrome 和内置 Chromium 时必须人话失败。
 let chromiumEnsured = false;
