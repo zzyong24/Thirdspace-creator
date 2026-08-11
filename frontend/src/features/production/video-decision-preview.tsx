@@ -41,6 +41,11 @@ export interface VideoDecisionPreviewProps {
   decisions: VideoDecisions;
   /** 素材清单快照(runner 决策同源投影)—— B-roll 换选下拉的选项集。 */
   inventory: readonly BrollAssetRef[];
+  /**
+   * 已绑定但已不属于当前项目素材清单的旧快照名称。只用于诚实展示与解除绑定，
+   * 不会把旧 assetId 重新加入可选清单，也不会触发模型重跑。
+   */
+  unavailableAssetLabels?: Readonly<Record<string, string>>;
   /** 确认:编辑后的决策 + 组装好的渲染 props(contract videoRenderProps 单一真值)。 */
   onConfirm: (payload: {
     decisions: VideoDecisions;
@@ -75,6 +80,7 @@ export interface ManualMaterialAssignment {
 export function VideoDecisionPreview({
   decisions,
   inventory,
+  unavailableAssetLabels = {},
   onConfirm,
   onRestoryboard,
   onDiscard,
@@ -97,10 +103,23 @@ export function VideoDecisionPreview({
   const directorNeedsAttention =
     decisions.directorReview?.status === "needs_attention";
 
+  const unresolvedUnavailableCount = React.useMemo(
+    () =>
+      broll.filter((pick) =>
+        Object.prototype.hasOwnProperty.call(
+          unavailableAssetLabels,
+          pick.assetId,
+        ),
+      ).length,
+    [broll, unavailableAssetLabels],
+  );
+
   const labelOf = React.useCallback(
     (assetId: string) =>
-      inventory.find((a) => a.assetId === assetId)?.label ?? assetId,
-    [inventory],
+      inventory.find((a) => a.assetId === assetId)?.label ??
+      unavailableAssetLabels[assetId] ??
+      assetId,
+    [inventory, unavailableAssetLabels],
   );
 
   const edited: VideoDecisions = React.useMemo(
@@ -361,6 +380,14 @@ export function VideoDecisionPreview({
                           }
                         }}
                       >
+                        {Object.prototype.hasOwnProperty.call(
+                          unavailableAssetLabels,
+                          pick.assetId,
+                        ) ? (
+                          <option value={pick.assetId} disabled>
+                            {labelOf(pick.assetId)}（素材已不可用）
+                          </option>
+                        ) : null}
                         {inventory.map((a) => (
                           <option key={a.assetId} value={a.assetId}>
                             {a.label}
@@ -409,6 +436,11 @@ export function VideoDecisionPreview({
 
       {!readOnly ? (
         <footer className="flex flex-col gap-2">
+          {unresolvedUnavailableCount > 0 ? (
+            <p className="text-right text-xs text-destructive">
+              请先移除或重新选择 {unresolvedUnavailableCount} 条已不可用素材。
+            </p>
+          ) : null}
           {hasManualChanges ? (
             <p className="text-right text-xs text-amber-700 dark:text-amber-300">
               已记录你的选材；系统会保留原分镜，在当前方案内自动调整插点、接力和展示时长。
@@ -427,11 +459,17 @@ export function VideoDecisionPreview({
             <button
               type="button"
               disabled={
-                confirming || adjustingMaterials
+                confirming ||
+                adjustingMaterials ||
+                unresolvedUnavailableCount > 0
               }
               className="h-8 rounded-control bg-primary px-3 text-sm text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => {
-                if (confirming || adjustingMaterials) return;
+                if (
+                  confirming ||
+                  adjustingMaterials ||
+                  unresolvedUnavailableCount > 0
+                ) return;
                 if (hasManualChanges) {
                   // 人工只改一个素材时，也要把首轮已经绑定的全部素材作为硬约束
                   // 传回去，只优化当前方案，禁止把之前的绑定洗掉。

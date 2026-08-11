@@ -460,6 +460,9 @@ export function ProductionWorkbench({
   const [brollItems, setBrollItems] = React.useState<
     ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
   >([]);
+  const [brollInventoryStatus, setBrollInventoryStatus] = React.useState<
+    "loading" | "ready" | "error"
+  >("loading");
   const [brollBusy, setBrollBusy] = React.useState(false);
   const [brollDragActive, setBrollDragActive] = React.useState(false);
   // [T-387c] 自动聚合的 B-roll 候选(脚本画面点名/论点树挂载/项目弹药,带来源徽标)+
@@ -756,6 +759,7 @@ export function ProductionWorkbench({
   // image/video 资产自动列入；脚本凝固分镜点名只调整当前项目已挂载素材的来源和优先级。
   // 服务端决策的 listBrollInventory 用同一批来源;这里的剔除经 inputData.excludedAssetIds 传给决策。
   const loadBroll = React.useCallback(async () => {
+    setBrollInventoryStatus("loading");
     try {
       const links = (await client.listMaterialLinks({
         params: undefined,
@@ -899,8 +903,9 @@ export function ProductionWorkbench({
           manual.map((m) => m.assetId),
         ),
       );
+      setBrollInventoryStatus("ready");
     } catch {
-      /* 读失败静默(可重传) */
+      setBrollInventoryStatus("error");
     }
   }, [projectId]);
 
@@ -941,6 +946,76 @@ export function ProductionWorkbench({
     }, 0);
     return () => window.clearTimeout(id);
   }, [autoBroll, brollItems, decisions, inventory.length, recoveredDecisions]);
+
+  const currentProjectInventory = React.useMemo(() => {
+    const current = new Map<string, BrollAssetRef>();
+    for (const item of brollItems) {
+      current.set(item.assetId, {
+        assetId: item.assetId,
+        label: item.name,
+        kind: item.kind,
+        description: "",
+        source: "manual",
+      });
+    }
+    for (const item of autoBroll) {
+      if (current.has(item.assetId)) continue;
+      current.set(item.assetId, {
+        assetId: item.assetId,
+        label: item.name,
+        kind: item.kind,
+        description: "",
+        source: item.source,
+      });
+    }
+    return [...current.values()];
+  }, [autoBroll, brollItems]);
+
+  // 已恢复方案的 inventory 是“当时快照”，不能继续冒充“当前仍可用”。当前项目清单加载
+  // 成功后，以当前清单作为唯一可选集；旧快照只负责给失效绑定提供可读名称。
+  const selectableInventory = React.useMemo(
+    () =>
+      recoveredDecisions && brollInventoryStatus === "ready"
+        ? currentProjectInventory
+        : inventory,
+    [
+      brollInventoryStatus,
+      currentProjectInventory,
+      inventory,
+      recoveredDecisions,
+    ],
+  );
+  const unavailableAssetLabels = React.useMemo(() => {
+    if (
+      !recoveredDecisions ||
+      brollInventoryStatus !== "ready" ||
+      !decisions
+    ) {
+      return {} as Readonly<Record<string, string>>;
+    }
+    const availableIds = new Set(
+      selectableInventory.map((item) => item.assetId),
+    );
+    const historicalLabels = new Map(
+      inventory.map((item) => [item.assetId, item.label]),
+    );
+    return Object.fromEntries(
+      decisions.broll
+        .filter((pick) => !availableIds.has(pick.assetId))
+        .map((pick) => [
+          pick.assetId,
+          historicalLabels.get(pick.assetId) ?? pick.assetId,
+        ]),
+    );
+  }, [
+    brollInventoryStatus,
+    decisions,
+    inventory,
+    recoveredDecisions,
+    selectableInventory,
+  ]);
+  const hasUnavailableBroll =
+    Object.keys(unavailableAssetLabels).length > 0;
 
   const invalidateDecisionsForBrollChange = React.useCallback(async () => {
     if (decisionsTaskId) {
@@ -1468,7 +1543,7 @@ export function ProductionWorkbench({
               confirmedAt: new Date().toISOString(),
               decisions: payload.decisions as unknown as Record<string, unknown>,
               renderProps: payload.renderProps as unknown as Record<string, unknown>,
-              inventory: inventory as unknown as Record<string, unknown>[],
+              inventory: selectableInventory as unknown as Record<string, unknown>[],
             },
           },
         })) as unknown as WireProduction;
@@ -1517,7 +1592,7 @@ export function ProductionWorkbench({
               confirmedAt: new Date().toISOString(),
               decisions: payload.decisions as unknown as Record<string, unknown>,
               renderProps: payload.renderProps as unknown as Record<string, unknown>,
-              inventory: inventory as unknown as Record<string, unknown>[],
+              inventory: selectableInventory as unknown as Record<string, unknown>[],
             },
           },
         })) as unknown as WireProduction;
@@ -1595,7 +1670,7 @@ export function ProductionWorkbench({
       editingPlanRevision,
       renderDispatchBusy,
       segmentCount,
-      inventory,
+      selectableInventory,
     ],
   );
 
@@ -1607,13 +1682,13 @@ export function ProductionWorkbench({
         title: projectTitle,
         talkingHeadAssetId: video.assetId,
         talkingHeadDurationSec: video.durationSec ?? undefined,
-        inventory,
+        inventory: selectableInventory,
         orientation: renderOrientation,
       }),
     });
   }, [
     decisions,
-    inventory,
+    selectableInventory,
     onConfirmDecisions,
     projectTitle,
     renderOrientation,
@@ -2544,18 +2619,24 @@ export function ProductionWorkbench({
             ) : null}
             <VideoDecisionPreview
               decisions={decisions}
-              inventory={inventory}
+              inventory={selectableInventory}
+              unavailableAssetLabels={unavailableAssetLabels}
               title={projectTitle}
               talkingHeadAssetId={video?.assetId ?? null}
               talkingHeadDurationSec={video?.durationSec ?? undefined}
               orientation={renderOrientation}
-              readOnly={decisionsConfirmed}
+              readOnly={decisionsConfirmed && !hasUnavailableBroll}
               confirming={renderDispatchBusy}
               adjustingMaterials={decisionsBusy}
               onConfirm={(payload) => void onConfirmDecisions(payload)}
               onRestoryboard={restoryboardWithManualAssignments}
               onDiscard={onDiscardDecisions}
             />
+            {recoveredDecisions && brollInventoryStatus === "error" ? (
+              <p className="text-xs text-destructive">
+                当前项目素材清单读取失败，暂时保留上次方案且不允许静默改绑；请重试刷新素材清单。
+              </p>
+            ) : null}
           </>
         ) : null}
         {flowError ? (

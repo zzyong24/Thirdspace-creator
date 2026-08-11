@@ -2224,3 +2224,35 @@ AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，
 `frontend/src/lib/desktop-updater.ts`、既有设置激活卡。
 
 **Status**：用户已确认；T-746 SPEC 独立评审通过后进入 BUILD。
+
+## DEC-VIDEO-038 (2026-08-10) — 正式成片只保留一次受控视频编码
+
+**来源**：用户确认继续根治真实抖音作品的清晰度问题；
+`docs/research/2026-08-10-video-delivery-industry-solutions.md`。
+
+**决策**：
+
+1. H.264 输入无损 remux，其他编码只做一次高质量 mezzanine；HyperFrames 以 high、PNG 抽帧和
+   目标码率负责唯一一次正式交付编码，`final.mp4` 只 stream-copy。
+2. 只有 H.264 安全 profile/像素格式/SDR 色彩 allowlist、全流 ffmpeg decode 与本次随包 Chromium
+   metadata/首帧 smoke 同时通过才保留 remux；任一步失败自动切一次 mezzanine，mezzanine smoke
+   仍失败才结束。HDR 必须真实 tone map 或失败关闭。ffprobe 对 H.264、用户已确认宽高、fps、`yuv420p`、BT.709、
+   时长与精确最低交付码率失败关闭。
+3. 失败只写现有任务安全错误字段并按 runner 现状清理沙箱，不承诺保留失败视频，也绝不进入可确认
+   或可采纳状态。
+4. 保持既有画幅与 fps 契约，不新增视觉或平台 preset。本轮不把缺少逐像素等价 reference 的 VMAF
+   误用为运行时硬门。
+
+**理由**：真实作品在上传前经历最多三代有损编码；仓库已锁定的 HyperFrames 0.7.54 原生支持所需
+参数，无需更换框架。合成成片增加了字幕、卡片与裁切，直接对源视频跑 VMAF 会制造伪失败。
+
+**Pattern-Ref**：PAT-001 T1（复用 HyperFrames/FFmpeg，CreatorOS 只加薄策略与质量 Gate）。
+
+**Asset-Ref**：none（复用现有本地渲染依赖，不新增资产包）。
+
+**Invalidates**：原 `video.render` 中“全部 CRF18 proxy 入链 + render_raw 再次 CRF18 转码”的实现
+假设。
+
+**Revisit Trigger**：需要新增平台 preset、让用户选择帧率，或建立有等价 reference 的 VMAF 固定样片。
+
+**Status**：用户已确认；T-765 SPEC 独立评审通过后进入 BUILD。

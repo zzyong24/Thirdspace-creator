@@ -117,6 +117,55 @@ describe("VideoDecisionPreview", () => {
     ]);
   });
 
+  it("T-759 已绑定素材不再属于当前项目时显示真实旧名称和不可用状态，不渲染空白下拉", () => {
+    const onConfirm = vi.fn();
+    const { getByTestId, getByRole, getByText } = render(
+      <VideoDecisionPreview
+        decisions={DECISIONS}
+        inventory={[INVENTORY[1]!]}
+        unavailableAssetLabels={{ "asset-1": "已删除的项目录屏.mov" }}
+        onConfirm={onConfirm}
+        talkingHeadAssetId="asset-video-raw"
+      />,
+    );
+
+    const select = getByTestId("broll-0").querySelector("select")!;
+    expect(select.value).toBe("asset-1");
+    expect(select.options[0]?.textContent).toBe(
+      "已删除的项目录屏.mov（素材已不可用）",
+    );
+    expect(getByText("请先移除或重新选择 1 条已不可用素材。"))
+      .toBeTruthy();
+    const confirm = getByRole("button", { name: "确认决策,进入渲染" });
+    expect((confirm as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(confirm);
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("T-759 移除不可用素材后可直接确认，换选时只允许当前项目清单里的真实素材", () => {
+    const onConfirm = vi.fn();
+    const { getByLabelText, getByRole, getByTestId } = render(
+      <VideoDecisionPreview
+        decisions={DECISIONS}
+        inventory={[INVENTORY[1]!]}
+        unavailableAssetLabels={{ "asset-1": "已删除的项目录屏.mov" }}
+        onConfirm={onConfirm}
+        talkingHeadAssetId="asset-video-raw"
+      />,
+    );
+
+    const select = getByTestId("broll-0").querySelector("select")!;
+    expect(Array.from(select.options).map((option) => option.value)).toEqual([
+      "asset-1",
+      "asset-2",
+    ]);
+    fireEvent.click(getByLabelText("移除 B-roll:已删除的项目录屏.mov"));
+    const confirm = getByRole("button", { name: "确认决策,进入渲染" });
+    expect((confirm as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(confirm);
+    expect(onConfirm.mock.calls[0]![0].decisions.broll).toEqual([]);
+  });
+
   it("T-712 AI 未采用的用户项目素材不会静默丢失，可明确分配到任意场景", () => {
     const onConfirm = vi.fn();
     const onRestoryboard = vi.fn();

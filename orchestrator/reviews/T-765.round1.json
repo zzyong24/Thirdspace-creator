@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立审核两轮收敛后 PASS：三项 major 均已用确定性兼容 smoke、精确码率算法与真实失败清理边界销账，无剩余 blocker、major 或 minor。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "SPEC-2.2",
+        "quote": "浏览器可安全读取的 H.264 才允许无损 remux"
+      },
+      "acceptance_anchor": {
+        "id": "AC-H264-SMOKE",
+        "quote": "不兼容 remux 自动切换一次 mezzanine，仍不可解码才失败"
+      },
+      "where": "SPEC §2 第 2–3 条的 H.264 安全判定与 HDR 边界",
+      "failure_mode": "只以 codec_name=h264 放行会让 10-bit、4:2:2、HDR 或随包 Chromium 不支持的 profile 进入正式合成并产生黑屏；只做 ffmpeg decode 也不能证明实际 Chromium 可消费。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "T-765 独立审核：现有 HyperFrames 由随包 Chromium 消费视频，codec 名称不足以证明 profile/pix_fmt/色彩与浏览器解码能力。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "增加 profile/pix_fmt/SDR allowlist、全流 ffmpeg decode 与随包 Chromium metadata/首帧 smoke；remux smoke 失败自动切一次 mezzanine，HDR 必须真实 tone map 或失败关闭。",
+      "resolution_evidence": "SPEC-LINE:33:a354e8364ea8e16b、SPEC-LINE:35:49672fef3d91e9da、SPEC-LINE:36:3e7ec31ecb5d3b7b 明确 FFmpeg+随包 Chromium smoke、单次 mezzanine fallback 与最终失败边界。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-2.4",
+        "quote": "正式交付必须有明确目标码率和最低质量门"
+      },
+      "acceptance_anchor": {
+        "id": "AC-BITRATE",
+        "quote": "不同实现计算出相同目标、最低值与真实视频平均码率"
+      },
+      "where": "SPEC §2 第 4、6、7 条的码率公式与 ffprobe 缺字段处理",
+      "failure_mode": "若没有单位、取整、clamp、视频流字段和缺失 fallback 的精确定义，容器总码率会混入音频，合法成片可能伪失败，低码率视频也可能伪通过。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "T-765 独立审核：ffprobe stream.bit_rate 可缺失，format.bit_rate 含音频且 fps 为有理数，必须定义逐包视频码率与误差。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "固定 targetKbps 整数公式、最低比例、逐包 v:0 fallback、探针字段、fps/时长误差和稳定错误码。",
+      "resolution_evidence": "SPEC-LINE:43:0dea9861fedd1b84、SPEC-LINE:44:0e451fb4be827e82、SPEC-LINE:52:71d954228aab1512、SPEC-LINE:54:1e257938f897c09a、SPEC-LINE:55:c8021cbf29057a85 已精确定义计算、逐包 fallback 与失败码。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-2.7",
+        "quote": "交付 Gate 失败必须诚实诊断且不能成为可发布资产"
+      },
+      "acceptance_anchor": {
+        "id": "AC-FAILURE",
+        "quote": "失败行为与现有 execution runner 的清理语义一致"
+      },
+      "where": "SPEC 原失败产物保留承诺与现有 runner 清理沙箱的冲突",
+      "failure_mode": "现有 executor 抛错后 runner 会 markFailed 并删除沙箱；若规格承诺保留失败视频，实现会在没有诊断产物归属、访问面和清理期的情况下失信。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "backend/src/modules/execution/run-execution-task.ts 的失败路径会清理任务沙箱，失败任务不进入 awaiting_confirmation。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "删除保留失败视频承诺，只把脱敏探针值写入既有安全错误字段，按 runner 现状清理沙箱且禁止采纳。",
+      "resolution_evidence": "SPEC-LINE:57:db4f2c718036c6e4、SPEC-LINE:58:8cd879826deef090、SPEC-LINE:71:a46836e784bf37f3、SPEC-LINE:72:90b6edd8b57e0267 明确失败安全字段、沙箱清理与不可采纳边界。",
+      "parent_id": ""
+    }
+  ]
+}

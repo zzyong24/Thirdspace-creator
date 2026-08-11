@@ -1,5 +1,5 @@
 // [T-254a] video.render executor 编排单测(fake 引擎,不真渲):步骤流顺序、
-// 素材预处理→模板落盘→渲染→交付转码链路、ffmpeg 缺失诚实报错、abort 贯通、
+// 素材预处理→模板落盘→渲染→交付无损整理链路、ffmpeg 缺失诚实报错、abort 贯通、
 // props 引用未物化素材报错。
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
@@ -12,6 +12,7 @@ import {
 } from "@creatoros/contract";
 import type { ExecutorSandboxView } from "../executor-registry";
 import {
+  calculateDeliveryBitrate,
   createVideoRenderExecutor,
   locateSystemChromium,
   type VideoRenderEngine,
@@ -47,6 +48,9 @@ interface EngineCalls {
     projectDir: string;
     outputFile: string;
     fps: number;
+    quality: string;
+    videoBitrate: string;
+    videoFrameFormat: string;
     ffmpegPath: string;
     ffprobePath: string;
   }>;
@@ -62,7 +66,42 @@ function fakeEngine(
     },
     async probeVideo(_ffprobe, file) {
       calls.probed.push(path.basename(file));
-      return { codec: "hevc", durationSec: 12 };
+      return {
+        codec: "hevc",
+        profile: "Main 10",
+        width: 1920,
+        height: 1080,
+        pixFmt: "yuv420p10le",
+        avgFrameRate: "30/1",
+        rFrameRate: "30/1",
+        colorSpace: "bt2020nc",
+        colorPrimaries: "bt2020",
+        colorTransfer: "smpte2084",
+        bitRate: 20_000_000,
+        durationSec: 12,
+      };
+    },
+    async probeDelivery() {
+      return {
+        codec: "h264",
+        profile: "High",
+        width: 1920,
+        height: 1080,
+        pixFmt: "yuv420p",
+        avgFrameRate: "30/1",
+        rFrameRate: "30/1",
+        colorSpace: "bt709",
+        colorPrimaries: "bt709",
+        colorTransfer: "bt709",
+        bitRate: 8_000_000,
+        durationSec: 12,
+      };
+    },
+    async verifyFfmpegDecode() {
+      return true;
+    },
+    async verifyChromiumDecode() {
+      return true;
     },
     async runFfmpeg(_ffmpeg, args) {
       calls.ffmpegArgs.push(args);
@@ -81,6 +120,9 @@ function fakeEngine(
         projectDir: opts.projectDir,
         outputFile: opts.outputFile,
         fps: opts.fps,
+        quality: opts.quality,
+        videoBitrate: opts.videoBitrate,
+        videoFrameFormat: opts.videoFrameFormat,
         ffmpegPath: opts.ffmpegPath,
         ffprobePath: opts.ffprobePath,
       });
@@ -161,18 +203,25 @@ describe("createVideoRenderExecutor", () => {
     expect(executor.paramsSchema!.safeParse({ props: { meta: {} } }).success).toBe(false);
   });
 
-  it("全链路:预处理(全视频 h264 proxy -g 30)→ 模板落盘 → 渲染 → 交付转码 out/final.mp4", async () => {
+  it("全链路:非兼容视频只转一次高质量 mezzanine → HyperFrames 高码率编码 → final 无损 remux", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const steps: string[] = [];
     const executor = createVideoRenderExecutor(fakeEngine(calls));
     const result = await executor.run(sandbox, { goal: "渲染", props: props() }, runOpts(steps));
 
-    // 素材预处理:两个视频都过 proxy(hevc→h264),短 GOP -g 30
+    // 素材预处理:两个 HEVC/HDR 视频只做一次高质量 SDR mezzanine，不再用 CRF18 proxy。
     expect(calls.probed).toEqual(["th.mp4", "b1.mp4"]);
-    const proxyArgs = calls.ffmpegArgs.slice(0, 2);
-    for (const args of proxyArgs) {
+    const preparationArgs = calls.ffmpegArgs.slice(0, 2);
+    for (const args of preparationArgs) {
       expect(args).toContain("libx264");
-      expect(args.join(" ")).toContain("-g 30");
+      expect(args.join(" ")).toContain("-preset slow");
+      expect(args.join(" ")).toContain("-crf 10");
+      expect(args.join(" ")).toContain("zscale");
+      expect(args.join(" ")).toContain("tonemap");
+      expect(args.join(" ")).toContain(
+        "-x264-params colorprim=bt709:transfer=bt709:colormatrix=bt709",
+      );
+      expect(args.join(" ")).not.toContain("veryfast");
     }
     // 模板真落沙箱 work/
     const html = await fs.readFile(path.join(sandbox.dir, "work", "index.html"), "utf8");
@@ -181,21 +230,281 @@ describe("createVideoRenderExecutor", () => {
     // 渲染指向 work/,输出 raw
     expect(calls.rendered).toHaveLength(1);
     expect(calls.rendered[0]!.fps).toBe(30);
+    expect(calls.rendered[0]!.quality).toBe("high");
+    expect(calls.rendered[0]!.videoBitrate).toBe("10000k");
+    expect(calls.rendered[0]!.videoFrameFormat).toBe("png");
     expect(calls.rendered[0]!.ffmpegPath).toBe("/fake/ffmpeg");
     expect(calls.rendered[0]!.ffprobePath).toBe("/fake/ffprobe");
-    // 交付转码固定命令(bt709/yuv420p/faststart)→ out/final.mp4
+    // final 只整理容器，不再发生第二次视频编码。
     const delivery = calls.ffmpegArgs.at(-1)!;
-    expect(delivery.join(" ")).toContain("-pix_fmt yuv420p");
-    expect(delivery.join(" ")).toContain("-colorspace bt709");
+    expect(delivery.join(" ")).toContain("-c copy");
+    expect(delivery.join(" ")).not.toContain("libx264");
+    expect(delivery.join(" ")).not.toContain("libx265");
     expect(delivery.join(" ")).toContain("-movflags +faststart");
     await fs.access(path.join(sandbox.outDir, "final.mp4"));
     expect(result.summary).toContain("final.mp4");
     // 步骤流:工具链→预处理→模板→渲染→捕帧进度→转码
     expect(steps.some((s) => s.includes("检测工具链"))).toBe(true);
-    expect(steps.some((s) => s.includes("预处理 th.mp4"))).toBe(true);
-    expect(steps.some((s) => s.includes("HyperFrames 渲染"))).toBe(true);
+    expect(steps.some((s) => s.includes("准备 th.mp4"))).toBe(true);
+    expect(steps.some((s) => s.includes("HyperFrames 高质量渲染"))).toBe(true);
     expect(steps.some((s) => s.includes("捕帧 30/360"))).toBe(true);
-    expect(steps.some((s) => s.includes("交付转码"))).toBe(true);
+    expect(steps.some((s) => s.includes("无损整理"))).toBe(true);
+    expect(result.meta?.deliveryQuality).toMatchObject({
+      targetKbps: 10000,
+      minimumKbps: 5000,
+      actualKbps: 8000,
+    });
+  });
+
+  it("安全 H.264 通过 FFmpeg 与随包 Chromium smoke 后只 remux，不生成 mezzanine", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeVideo(_ffprobe, file) {
+          calls.probed.push(path.basename(file));
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1920,
+            height: 1080,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: 12_000_000,
+            durationSec: 12,
+          };
+        },
+      }),
+    );
+
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: props() },
+      runOpts([]),
+    );
+
+    const preparationArgs = calls.ffmpegArgs.slice(0, 2);
+    expect(preparationArgs).toHaveLength(2);
+    for (const args of preparationArgs) {
+      expect(args.join(" ")).toContain("-c copy");
+      expect(args.join(" ")).not.toContain("libx264");
+    }
+    expect(result.meta?.inputPreparation).toEqual([
+      expect.objectContaining({ file: "th.mp4", strategy: "remux" }),
+      expect.objectContaining({ file: "b1.mp4", strategy: "remux" }),
+    ]);
+  });
+
+  it("H.264 remux 的 Chromium 首帧 smoke 失败时只回退一次 mezzanine", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    let chromiumChecks = 0;
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeVideo(_ffprobe, file) {
+          calls.probed.push(path.basename(file));
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1920,
+            height: 1080,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: 12_000_000,
+            durationSec: 12,
+          };
+        },
+        async verifyChromiumDecode() {
+          chromiumChecks += 1;
+          return chromiumChecks !== 1;
+        },
+      }),
+    );
+
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: { ...props(), broll: [] } },
+      runOpts([]),
+    );
+
+    expect(calls.ffmpegArgs[0]!.join(" ")).toContain("-c copy");
+    expect(calls.ffmpegArgs[1]!.join(" ")).toContain("libx264");
+    expect(calls.ffmpegArgs[1]!.join(" ")).toContain("-crf 10");
+    expect(result.meta?.inputPreparation).toEqual([
+      expect.objectContaining({ file: "th.mp4", strategy: "mezzanine" }),
+    ]);
+  });
+
+  it("回退后的高质量 mezzanine 仍无法被 Chromium 解码时失败关闭", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeVideo(_ffprobe, file) {
+          calls.probed.push(path.basename(file));
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1920,
+            height: 1080,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: 12_000_000,
+            durationSec: 12,
+          };
+        },
+        async verifyChromiumDecode() {
+          return false;
+        },
+      }),
+    );
+
+    await expect(
+      executor.run(
+        sandbox,
+        { goal: "渲染", props: { ...props(), broll: [] } },
+        runOpts([]),
+      ),
+    ).rejects.toThrow(/INPUT_DECODE_UNSUPPORTED/);
+    expect(calls.ffmpegArgs).toHaveLength(2);
+    expect(calls.rendered).toHaveLength(0);
+  });
+
+  it("交付码率低于硬门时失败关闭，不能把低清成片冒充可发布", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeDelivery() {
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1920,
+            height: 1080,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: 3_250_000,
+            durationSec: 12,
+          };
+        },
+      }),
+    );
+
+    await expect(
+      executor.run(sandbox, { goal: "渲染", props: props() }, runOpts([])),
+    ).rejects.toThrow(/BITRATE_BELOW_MIN.*3250.*5000/);
+  });
+
+  it("stream.bit_rate 缺失时只用 v:0 packet bytes 计算视频平均码率", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeDelivery() {
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1920,
+            height: 1080,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: null,
+            videoPacketBytes: 12_000_000,
+            durationSec: 12,
+          };
+        },
+      }),
+    );
+
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: props() },
+      runOpts([]),
+    );
+    expect(result.meta?.deliveryQuality).toMatchObject({ actualKbps: 8000 });
+  });
+
+  it("交付尺寸或色彩标签与项目契约不一致时失败关闭", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeDelivery() {
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1280,
+            height: 720,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: null,
+            colorTransfer: null,
+            bitRate: 8_000_000,
+            durationSec: 12,
+          };
+        },
+      }),
+    );
+
+    await expect(
+      executor.run(sandbox, { goal: "渲染", props: props() }, runOpts([])),
+    ).rejects.toThrow(/DELIVERY_MISMATCH.*size=1280x720.*color=bt709\/\?\/\?/);
+  });
+
+  it("既无流码率也无 v:0 packet bytes 时报 PROBE_INVALID", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeDelivery() {
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1920,
+            height: 1080,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: null,
+            videoPacketBytes: null,
+            durationSec: 12,
+          };
+        },
+      }),
+    );
+
+    await expect(
+      executor.run(sandbox, { goal: "渲染", props: props() }, runOpts([])),
+    ).rejects.toThrow(/PROBE_INVALID.*v:0 packet bytes/);
+  });
+
+  it("目标码率公式按画幅和 fps 确定性缩放并限制在 4–24 Mbps", () => {
+    expect(calculateDeliveryBitrate({ width: 1920, height: 1080, fps: 30 }))
+      .toEqual({ targetKbps: 10000, minimumKbps: 5000 });
+    expect(calculateDeliveryBitrate({ width: 1920, height: 1080, fps: 60 }))
+      .toEqual({ targetKbps: 20000, minimumKbps: 10000 });
+    expect(calculateDeliveryBitrate({ width: 640, height: 360, fps: 24 }))
+      .toEqual({ targetKbps: 4000, minimumKbps: 2000 });
+    expect(calculateDeliveryBitrate({ width: 7680, height: 4320, fps: 60 }))
+      .toEqual({ targetKbps: 24000, minimumKbps: 12000 });
   });
 
   it("配置视觉模型时抽 8 帧接触表审核，并把遮脸/微缩等问题写入 manifest meta", async () => {
@@ -343,7 +652,7 @@ describe("createVideoRenderExecutor", () => {
     const executor = createVideoRenderExecutor(
       fakeEngine(calls, {
         async runFfmpeg(_f, args) {
-          // 第一条 proxy 命令期间用户丢弃任务
+          // 第一条正式输入准备命令期间用户丢弃任务
           controller.abort(new Error("用户丢弃任务,执行已中止"));
           await fs.writeFile(args[args.length - 1]!, "fake");
         },

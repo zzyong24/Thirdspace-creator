@@ -127,7 +127,10 @@ const mockClient = vi.hoisted(() => ({
   getDownloadUrl: vi.fn(async () => ({
     url: "http://localhost/blob/final.mp4?token=test",
   })),
-  getAsset: vi.fn(async () => ({ fileSize: null as number | null })),
+  getAsset: vi.fn(async (input?: unknown) => {
+    void input;
+    return { fileSize: null as number | null };
+  }),
   listPublications: vi.fn(async (): Promise<unknown[]> => []),
   // [T-387c] B-roll 自动聚合读脚本/论点树 artifact(缺省空 → 无自动项,老用例零影响)。
   listArtifacts: vi.fn(async (): Promise<unknown[]> => []),
@@ -481,6 +484,20 @@ describe("ProductionWorkbench", () => {
         },
       },
     ]);
+    mockClient.listMaterialLinks.mockResolvedValue([
+      {
+        id: "link-broll-1",
+        entityType: "asset",
+        entityId: "asset-broll-1",
+        role: "broll",
+      },
+    ]);
+    mockClient.getAsset.mockImplementation(async (input: unknown) => {
+      const assetId = (input as { params?: { assetId?: string } }).params?.assetId;
+      return assetId === "asset-broll-1"
+        ? { assetType: "video", name: "演示画面", fileSize: null }
+        : { fileSize: null };
+    });
 
     const { container } = render(<ProductionWorkbench {...makeProps()} />);
     await waitFor(() =>
@@ -635,6 +652,24 @@ describe("ProductionWorkbench", () => {
         },
       },
     ]);
+    mockClient.listMaterialLinks.mockResolvedValue([
+      {
+        id: "link-project-extra",
+        entityType: "asset",
+        entityId: "asset-project-extra",
+        role: "broll",
+      },
+    ]);
+    mockClient.getAsset.mockImplementation(async (input: unknown) => {
+      const assetId = (input as { params?: { assetId?: string } }).params?.assetId;
+      return assetId === "asset-project-extra"
+        ? {
+            assetType: "video",
+            name: "项目补充录屏.mov",
+            fileSize: null,
+          }
+        : { fileSize: null };
+    });
 
     const { container } = render(<ProductionWorkbench {...makeProps()} />);
     await waitFor(() => expect(container.textContent).toContain("分场预览"));
@@ -848,6 +883,40 @@ describe("ProductionWorkbench", () => {
     ) as HTMLSelectElement;
     expect(recoveredSelect.options[0]?.textContent).toContain(
       "恢复后的项目录屏",
+    );
+    expect(recoveredSelect.options[0]?.textContent).toContain("素材已不可用");
+    expect(recoveredSelect.value).toBe("asset-saved");
+    expect(
+      container.querySelector('[aria-label="移除 B-roll:恢复后的项目录屏"]'),
+    ).not.toBeNull();
+    expect(container.textContent).toContain(
+      "请先移除或重新选择 1 条已不可用素材",
+    );
+
+    fireEvent.click(
+      container.querySelector(
+        '[aria-label="移除 B-roll:恢复后的项目录屏"]',
+      )!,
+    );
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+    fireEvent.click(
+      Array.from(container.querySelectorAll("button")).find(
+        (button) => button.textContent === "确认决策,进入渲染",
+      )!,
+    );
+    await waitFor(() =>
+      expect(mockClient.confirmProductionEditingPlan).toHaveBeenCalled(),
+    );
+    expect(mockClient.confirmProductionEditingPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          plan: expect.objectContaining({
+            decisions: expect.objectContaining({ broll: [] }),
+            inventory: [],
+          }),
+        }),
+      }),
     );
   });
 

@@ -1,9 +1,9 @@
 // [T-254a] video.render executor(HyperFrames 确定性渲染,SPEC 2026-07-11
 // execution-layer-video-pipeline §3.1 步骤4)。
 //
-// 步骤流:素材预处理(ffprobe 探针 → 统一 H.264 proxy,短 GOP `-g 30`,skill 坑单全防)
-// → 模板生成 index.html 落沙箱 work/ → hyperframes CLI 渲染(帧捕获,puppeteer 指向
-// playwright 已装 Chromium)→ 交付转码(H.264/yuv420p/bt709/faststart 固定命令)
+// 步骤流:素材预处理(ffprobe 探针 → 安全 H.264 无损 remux /其他格式一次高质量 mezzanine)
+// → 模板生成 index.html 落沙箱 work/ → HyperFrames CLI 进行唯一一次正式视频编码
+// → 最终文件只做 stream-copy faststart remux → ffprobe 交付硬门
 // → out/final.mp4(经确认卡采纳才入库)。
 //
 // 依赖策略(与 SPEC §3.2 一致):
@@ -18,6 +18,7 @@
 import { execFile, spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { pathToFileURL } from "node:url";
 import { resolveExecutablePath } from "@creatoros/ai-worker";
 import {
   videoRenderParams,
@@ -34,15 +35,52 @@ import {
 } from "./template";
 
 // ── 可注入的引擎面(测试 fake 掉,不碰真 ffmpeg/真浏览器/真渲染)────────────────────
+export interface VideoProbe {
+  codec: string;
+  profile: string | null;
+  width: number | null;
+  height: number | null;
+  pixFmt: string | null;
+  avgFrameRate: string | null;
+  rFrameRate: string | null;
+  colorSpace: string | null;
+  colorPrimaries: string | null;
+  colorTransfer: string | null;
+  bitRate: number | null;
+  durationSec: number;
+  streamDurationSec?: number | null;
+  formatDurationSec?: number | null;
+  formatSizeBytes?: number | null;
+  videoPacketBytes?: number | null;
+}
+
 export interface VideoRenderEngine {
   /** 系统 ffmpeg/ffprobe 检测(which);缺失 → null(executor 诚实报错引导安装)。 */
   findBinary(name: "ffmpeg" | "ffprobe"): Promise<string | null>;
-  /** ffprobe 探针:视频流 codec + 时长。 */
+  /** ffprobe 探针:正式输入兼容判断所需的视频流元数据。 */
   probeVideo(
     ffprobe: string,
     file: string,
     signal: AbortSignal,
-  ): Promise<{ codec: string; durationSec: number }>;
+  ): Promise<VideoProbe>;
+  /** 最终交付探针；stream.bit_rate 缺失时额外统计 v:0 packet bytes。 */
+  probeDelivery(
+    ffprobe: string,
+    file: string,
+    signal: AbortSignal,
+  ): Promise<VideoProbe>;
+  /** FFmpeg 全流解码 smoke；坏流返回 false，中止仍抛出。 */
+  verifyFfmpegDecode(
+    ffmpeg: string,
+    file: string,
+    signal: AbortSignal,
+  ): Promise<boolean>;
+  /** 用本次实际随包 Chromium 的 video 元素完成 metadata + 首帧解码 smoke。 */
+  verifyChromiumDecode(
+    chromiumPath: string,
+    file: string,
+    signal: AbortSignal,
+  ): Promise<boolean>;
   /** 跑一条 ffmpeg 命令(转码);非 0 退出 → throw。 */
   runFfmpeg(ffmpeg: string, args: string[], signal: AbortSignal): Promise<void>;
   /**
@@ -58,6 +96,9 @@ export interface VideoRenderEngine {
     projectDir: string;
     outputFile: string;
     fps: number;
+    quality: "high";
+    videoBitrate: string;
+    videoFrameFormat: "png";
     chromiumPath: string;
     ffmpegPath: string;
     ffprobePath: string;
@@ -381,6 +422,9 @@ async function renderWithHyperframesCli(opts: {
   projectDir: string;
   outputFile: string;
   fps: number;
+  quality: "high";
+  videoBitrate: string;
+  videoFrameFormat: "png";
   chromiumPath: string;
   ffmpegPath: string;
   ffprobePath: string;
@@ -391,7 +435,21 @@ async function renderWithHyperframesCli(opts: {
   await new Promise<void>((resolve, reject) => {
     const child = spawn(
       process.execPath,
-      [cliJs, "render", opts.projectDir, "--output", opts.outputFile, "--fps", String(opts.fps)],
+      [
+        cliJs,
+        "render",
+        opts.projectDir,
+        "--output",
+        opts.outputFile,
+        "--fps",
+        String(opts.fps),
+        "--quality",
+        opts.quality,
+        "--video-bitrate",
+        opts.videoBitrate,
+        "--video-frame-format",
+        opts.videoFrameFormat,
+      ],
       {
         // [RT-H06] env 收窄(修「子进程继承全量 process.env」):hyperframes CLI 及其
         // 再起的 Chromium 只拿运行必需变量 + 两个任务级显式变量;模型 key/DB/S3/
@@ -446,6 +504,307 @@ async function renderWithHyperframesCli(opts: {
   });
 }
 
+function finiteNumber(value: unknown): number | null {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+async function probeVideoMetadata(
+  ffprobe: string,
+  file: string,
+  signal: AbortSignal,
+): Promise<VideoProbe> {
+  const { stdout } = await execFileAsync(
+    ffprobe,
+    [
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_entries",
+      "stream=codec_name,profile,width,height,pix_fmt,avg_frame_rate,r_frame_rate,color_space,color_primaries,color_transfer,bit_rate,duration:format=duration,size",
+      "-of",
+      "json",
+      file,
+    ],
+    signal,
+  );
+  const parsed = JSON.parse(stdout) as {
+    streams?: Array<Record<string, unknown>>;
+    format?: Record<string, unknown>;
+  };
+  const stream = parsed.streams?.[0];
+  const codec = typeof stream?.codec_name === "string" ? stream.codec_name : "";
+  const streamDurationSec = finiteNumber(stream?.duration);
+  const formatDurationSec = finiteNumber(parsed.format?.duration);
+  const durationSec = streamDurationSec ?? formatDurationSec;
+  if (!codec || durationSec == null || durationSec <= 0) {
+    throw new Error(`PROBE_INVALID: ffprobe 未识别出有效视频流 ${path.basename(file)}`);
+  }
+  const text = (value: unknown): string | null =>
+    typeof value === "string" && value.trim() ? value.trim() : null;
+  return {
+    codec,
+    profile: text(stream?.profile),
+    width: finiteNumber(stream?.width),
+    height: finiteNumber(stream?.height),
+    pixFmt: text(stream?.pix_fmt),
+    avgFrameRate: text(stream?.avg_frame_rate),
+    rFrameRate: text(stream?.r_frame_rate),
+    colorSpace: text(stream?.color_space),
+    colorPrimaries: text(stream?.color_primaries),
+    colorTransfer: text(stream?.color_transfer),
+    bitRate: finiteNumber(stream?.bit_rate),
+    durationSec,
+    streamDurationSec,
+    formatDurationSec,
+    formatSizeBytes: finiteNumber(parsed.format?.size),
+    videoPacketBytes: null,
+  };
+}
+
+async function countVideoPacketBytes(
+  ffprobe: string,
+  file: string,
+  signal: AbortSignal,
+): Promise<number | null> {
+  const { stdout } = await execFileAsync(
+    ffprobe,
+    [
+      "-v",
+      "error",
+      "-select_streams",
+      "v:0",
+      "-show_packets",
+      "-show_entries",
+      "packet=size",
+      "-of",
+      "csv=p=0",
+      file,
+    ],
+    signal,
+  );
+  let total = 0;
+  let count = 0;
+  for (const line of stdout.split(/\r?\n/)) {
+    const value = Number(line.trim().replace(/^"|"$/g, ""));
+    if (!Number.isFinite(value) || value < 0) continue;
+    total += value;
+    count += 1;
+  }
+  return count > 0 && Number.isSafeInteger(total) && total > 0 ? total : null;
+}
+
+async function verifyChromiumVideoFrame(
+  chromiumPath: string,
+  file: string,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const smokeDir = await fs.mkdtemp(path.join(path.dirname(file), ".chromium-video-smoke-"));
+  const htmlFile = path.join(smokeDir, "index.html");
+  await fs.writeFile(htmlFile, "<!doctype html><meta charset=\"utf-8\"><body></body>", "utf8");
+  const videoUrl = pathToFileURL(file).href;
+  const child = spawn(
+    chromiumPath,
+    [
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-extensions",
+      "--disable-sync",
+      "--no-first-run",
+      "--mute-audio",
+      "--allow-file-access-from-files",
+      "--remote-debugging-address=127.0.0.1",
+      "--remote-debugging-port=0",
+      `--user-data-dir=${path.join(smokeDir, "profile")}`,
+      "about:blank",
+    ],
+    {
+      env: buildChildEnv(),
+      stdio: ["ignore", "ignore", "pipe"],
+      windowsHide: true,
+    },
+  );
+  const killChild = () => {
+    if (!child.killed) child.kill("SIGKILL");
+  };
+  signal.addEventListener("abort", killChild, { once: true });
+  try {
+    const webSocketUrl = await new Promise<string>((resolve, reject) => {
+      let stderr = "";
+      const timer = setTimeout(
+        () => reject(new Error("Chromium DevTools 启动超时")),
+        8_000,
+      );
+      const finish = (fn: () => void) => {
+        clearTimeout(timer);
+        fn();
+      };
+      child.once("error", (error) => finish(() => reject(error)));
+      child.once("exit", (code) =>
+        finish(() => reject(new Error(`Chromium 提前退出(code=${code ?? "?"})`))),
+      );
+      child.stderr?.on("data", (chunk: Buffer) => {
+        stderr = (stderr + chunk.toString("utf8")).slice(-16_384);
+        const match = stderr.match(/DevTools listening on (ws:\/\/[^\s]+)/);
+        const endpoint = match?.[1];
+        if (endpoint) finish(() => resolve(endpoint));
+      });
+    });
+
+    const socket = new WebSocket(webSocketUrl);
+    const opened = new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error("Chromium DevTools 连接超时")),
+        5_000,
+      );
+      socket.addEventListener("open", () => {
+        clearTimeout(timer);
+        resolve();
+      }, { once: true });
+      socket.addEventListener("error", () => {
+        clearTimeout(timer);
+        reject(new Error("Chromium DevTools 连接失败"));
+      }, { once: true });
+    });
+    await opened;
+
+    let nextId = 0;
+    const pending = new Map<number, {
+      resolve: (value: Record<string, unknown>) => void;
+      reject: (error: Error) => void;
+    }>();
+    const eventWaiters = new Map<string, Array<() => void>>();
+    const rejectPending = (reason: string) => {
+      const error = new Error(reason);
+      for (const waiter of pending.values()) waiter.reject(error);
+      pending.clear();
+    };
+    socket.addEventListener("close", () => {
+      rejectPending("Chromium DevTools 连接已关闭");
+    }, { once: true });
+    socket.addEventListener("message", (event) => {
+      const message = JSON.parse(String(event.data)) as {
+        id?: number;
+        method?: string;
+        sessionId?: string;
+        result?: Record<string, unknown>;
+        error?: { message?: string };
+      };
+      if (message.id == null) {
+        if (!message.method) return;
+        const key = `${message.sessionId ?? "browser"}:${message.method}`;
+        const waiters = eventWaiters.get(key);
+        if (!waiters) return;
+        eventWaiters.delete(key);
+        for (const resolve of waiters) resolve();
+        return;
+      }
+      const waiter = pending.get(message.id);
+      if (!waiter) return;
+      pending.delete(message.id);
+      if (message.error) {
+        waiter.reject(new Error(message.error.message ?? "Chromium DevTools 调用失败"));
+      } else {
+        waiter.resolve(message.result ?? {});
+      }
+    });
+    const send = (
+      method: string,
+      params: Record<string, unknown>,
+      sessionId?: string,
+    ) => new Promise<Record<string, unknown>>((resolve, reject) => {
+      const id = ++nextId;
+      pending.set(id, { resolve, reject });
+      socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
+    });
+    const waitForEvent = (method: string, sessionId: string) =>
+      new Promise<void>((resolve, reject) => {
+        const key = `${sessionId}:${method}`;
+        const timer = setTimeout(() => {
+          eventWaiters.delete(key);
+          reject(new Error(`Chromium DevTools 等待 ${method} 超时`));
+        }, 5_000);
+        const finish = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+        eventWaiters.set(key, [...(eventWaiters.get(key) ?? []), finish]);
+      });
+
+    const target = await send("Target.createTarget", { url: "about:blank" });
+    const attached = await send("Target.attachToTarget", {
+      targetId: target.targetId,
+      flatten: true,
+    });
+    const sessionId = typeof attached.sessionId === "string" ? attached.sessionId : null;
+    if (!sessionId) throw new Error("Chromium DevTools 未返回页面 session");
+    await send("Page.enable", {}, sessionId);
+    const pageLoaded = waitForEvent("Page.loadEventFired", sessionId);
+    await send(
+      "Page.navigate",
+      { url: pathToFileURL(htmlFile).href },
+      sessionId,
+    );
+    await pageLoaded;
+    const expression = `new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.muted = true; video.preload = "auto"; document.body.append(video);
+      const finish = (value) => resolve(value);
+      const paint = () => {
+        try {
+          if (!(video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2)) return finish("error");
+          const canvas = document.createElement("canvas"); canvas.width = 1; canvas.height = 1;
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          if (!context) return finish("error");
+          context.drawImage(video, 0, 0, 1, 1); context.getImageData(0, 0, 1, 1);
+          finish("ok");
+        } catch { finish("error"); }
+      };
+      video.addEventListener("loadeddata", () => {
+        const play = video.play(); if (play && typeof play.catch === "function") play.catch(() => {});
+        if (typeof video.requestVideoFrameCallback === "function") video.requestVideoFrameCallback(paint);
+        else setTimeout(paint, 100);
+      }, { once: true });
+      video.addEventListener("error", () => finish("error"), { once: true });
+      setTimeout(() => finish("timeout"), 5000);
+      video.src = ${JSON.stringify(videoUrl)}; video.load();
+    })`;
+    const evaluated = await send(
+      "Runtime.evaluate",
+      { expression, awaitPromise: true, returnByValue: true },
+      sessionId,
+    );
+    const remoteResult = evaluated.result as { value?: unknown } | undefined;
+    socket.close();
+    const outcome = remoteResult?.value;
+    if (outcome !== "ok") {
+      console.warn(
+        `[video-render] Chromium 解码 smoke 未通过: ${typeof outcome === "string" ? outcome : "no-result"}`,
+      );
+    }
+    return outcome === "ok";
+  } catch (error) {
+    if (signal.aborted) throw error;
+    console.warn(
+      `[video-render] Chromium 解码 smoke 异常: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return false;
+  } finally {
+    signal.removeEventListener("abort", killChild);
+    killChild();
+    if (child.exitCode == null && child.signalCode == null) {
+      await Promise.race([
+        new Promise<void>((resolve) => child.once("exit", () => resolve())),
+        new Promise<void>((resolve) => setTimeout(resolve, 1_000)),
+      ]);
+    }
+    await fs.rm(smokeDir, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
 export function createDefaultVideoRenderEngine(
   // [T-281] Chromium 下载器由组合根(frontend)注入(见 ChromiumDownloader 注释);缺省 =
   //   不注入 → resolveChromium 未装时诚实报错引导(不在 backend 里 resolve playwright)。
@@ -454,33 +813,42 @@ export function createDefaultVideoRenderEngine(
   return {
     findBinary: resolveMediaBinary,
     async probeVideo(ffprobe, file, signal) {
-      const { stdout } = await execFileAsync(
-        ffprobe,
-        [
-          "-v",
-          "error",
-          "-select_streams",
-          "v:0",
-          "-show_entries",
-          "stream=codec_name",
-          "-show_entries",
-          "format=duration",
-          "-of",
-          "json",
-          file,
-        ],
-        signal,
-      );
-      const parsed = JSON.parse(stdout) as {
-        streams?: Array<{ codec_name?: string }>;
-        format?: { duration?: string };
+      return probeVideoMetadata(ffprobe, file, signal);
+    },
+    async probeDelivery(ffprobe, file, signal) {
+      const probe = await probeVideoMetadata(ffprobe, file, signal);
+      if (probe.bitRate != null && probe.bitRate > 0) return probe;
+      return {
+        ...probe,
+        videoPacketBytes: await countVideoPacketBytes(ffprobe, file, signal),
       };
-      const codec = parsed.streams?.[0]?.codec_name;
-      const durationSec = Number(parsed.format?.duration ?? NaN);
-      if (!codec || !Number.isFinite(durationSec)) {
-        throw new Error(`ffprobe 未识别出视频流: ${path.basename(file)}`);
+    },
+    async verifyFfmpegDecode(ffmpeg, file, signal) {
+      try {
+        await execFileAsync(
+          ffmpeg,
+          [
+            "-v",
+            "error",
+            "-xerror",
+            "-i",
+            file,
+            "-map",
+            "0:v:0",
+            "-f",
+            "null",
+            "-",
+          ],
+          signal,
+        );
+        return true;
+      } catch (error) {
+        if (signal.aborted) throw error;
+        return false;
       }
-      return { codec, durationSec };
+    },
+    async verifyChromiumDecode(chromiumPath, file, signal) {
+      return verifyChromiumVideoFrame(chromiumPath, file, signal);
     },
     async runFfmpeg(ffmpeg, args, signal) {
       await execFileAsync(ffmpeg, args, signal);
@@ -508,8 +876,139 @@ function throwIfAborted(signal: AbortSignal): void {
   }
 }
 
-/** 媒体文件名 → work/media/ 下的安全落名(保留原名;proxy 统一 .mp4)。 */
-function proxyNameFor(mountAs: string): string {
+export function calculateDeliveryBitrate(delivery: {
+  width: number;
+  height: number;
+  fps: number;
+}): { targetKbps: number; minimumKbps: number } {
+  const raw =
+    (10_000 * delivery.width * delivery.height * delivery.fps) /
+    (1920 * 1080 * 30);
+  const targetKbps = Math.min(
+    24_000,
+    Math.max(4_000, Math.round(raw / 100) * 100),
+  );
+  return { targetKbps, minimumKbps: Math.floor(targetKbps * 0.5) };
+}
+
+function normalized(value: string | null | undefined): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
+const SAFE_H264_PROFILES = new Set([
+  "baseline",
+  "constrained baseline",
+  "main",
+  "high",
+]);
+
+function isHdrProbe(probe: VideoProbe): boolean {
+  const transfer = normalized(probe.colorTransfer);
+  const primaries = normalized(probe.colorPrimaries);
+  const space = normalized(probe.colorSpace);
+  return (
+    transfer === "smpte2084" ||
+    transfer === "arib-std-b67" ||
+    transfer === "hlg" ||
+    primaries.startsWith("bt2020") ||
+    space.startsWith("bt2020")
+  );
+}
+
+function isStaticSafeH264(probe: VideoProbe): boolean {
+  return (
+    normalized(probe.codec) === "h264" &&
+    SAFE_H264_PROFILES.has(normalized(probe.profile)) &&
+    normalized(probe.pixFmt) === "yuv420p" &&
+    normalized(probe.colorSpace) === "bt709" &&
+    normalized(probe.colorPrimaries) === "bt709" &&
+    normalized(probe.colorTransfer) === "bt709" &&
+    !isHdrProbe(probe)
+  );
+}
+
+function parseFrameRate(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const [numeratorText, denominatorText] = value.split("/", 2);
+  const numerator = Number(numeratorText);
+  const denominator = denominatorText == null ? 1 : Number(denominatorText);
+  if (
+    !Number.isFinite(numerator) ||
+    !Number.isFinite(denominator) ||
+    numerator <= 0 ||
+    denominator <= 0
+  ) {
+    return null;
+  }
+  return numerator / denominator;
+}
+
+function assertDeliveryQuality(
+  probe: VideoProbe,
+  delivery: { width: number; height: number; fps: number },
+  expectedDurationSec: number,
+  bitrate: { targetKbps: number; minimumKbps: number },
+): { actualKbps: number; fps: number; durationSec: number } {
+  const fps = parseFrameRate(probe.avgFrameRate ?? probe.rFrameRate);
+  const durationSec = probe.streamDurationSec ?? probe.durationSec;
+  const formatDurationSec = probe.formatDurationSec ?? probe.durationSec;
+  if (
+    fps == null ||
+    !Number.isFinite(durationSec) ||
+    durationSec <= 0 ||
+    !Number.isFinite(formatDurationSec) ||
+    formatDurationSec <= 0
+  ) {
+    throw new Error("PROBE_INVALID: 最终成片缺少有效 fps 或时长");
+  }
+  const actualKbps =
+    probe.bitRate != null && probe.bitRate > 0
+      ? Math.floor(probe.bitRate / 1000)
+      : probe.videoPacketBytes != null && probe.videoPacketBytes > 0
+        ? Math.floor((probe.videoPacketBytes * 8) / durationSec / 1000)
+        : null;
+  if (actualKbps == null || !Number.isFinite(actualKbps)) {
+    throw new Error("PROBE_INVALID: 最终成片缺少视频流码率与 v:0 packet bytes");
+  }
+  const fpsTolerance = Math.max(0.01, delivery.fps / 1000);
+  const durationTolerance = Math.max(0.25, 2 / delivery.fps);
+  const mismatches: string[] = [];
+  if (normalized(probe.codec) !== "h264") mismatches.push(`codec=${probe.codec}`);
+  if (probe.width !== delivery.width || probe.height !== delivery.height) {
+    mismatches.push(`size=${probe.width ?? "?"}x${probe.height ?? "?"}`);
+  }
+  if (normalized(probe.pixFmt) !== "yuv420p") mismatches.push(`pix_fmt=${probe.pixFmt ?? "?"}`);
+  if (
+    normalized(probe.colorSpace) !== "bt709" ||
+    normalized(probe.colorPrimaries) !== "bt709" ||
+    normalized(probe.colorTransfer) !== "bt709"
+  ) {
+    mismatches.push(
+      `color=${probe.colorSpace ?? "?"}/${probe.colorPrimaries ?? "?"}/${probe.colorTransfer ?? "?"}`,
+    );
+  }
+  if (Math.abs(fps - delivery.fps) > fpsTolerance) mismatches.push(`fps=${fps.toFixed(3)}`);
+  if (
+    Math.abs(durationSec - expectedDurationSec) > durationTolerance ||
+    Math.abs(formatDurationSec - expectedDurationSec) > durationTolerance
+  ) {
+    mismatches.push(
+      `duration=${durationSec.toFixed(3)}/${formatDurationSec.toFixed(3)}`,
+    );
+  }
+  if (mismatches.length > 0) {
+    throw new Error(`DELIVERY_MISMATCH: ${mismatches.join(", ")}`);
+  }
+  if (actualKbps < bitrate.minimumKbps) {
+    throw new Error(
+      `BITRATE_BELOW_MIN: actualKbps=${actualKbps}, minimumKbps=${bitrate.minimumKbps}, targetKbps=${bitrate.targetKbps}`,
+    );
+  }
+  return { actualKbps, fps, durationSec };
+}
+
+/** 视频文件名 → work/media/ 下的安全正式渲染输入名(统一 .mp4)。 */
+function renderInputNameFor(mountAs: string): string {
   const base = path.basename(mountAs).replace(/[^A-Za-z0-9._-]/g, "_");
   return base.replace(/\.[^.]*$/, "") + ".mp4";
 }
@@ -585,44 +1084,126 @@ export function createVideoRenderExecutor(
       const mediaDir = path.join(workDir, "media");
       await fs.mkdir(mediaDir, { recursive: true });
 
-      // 3) 素材预处理:视频统一转 H.264 proxy(短 GOP -g 30,捕帧 seek 稳定;HEVC 等
-      //    非 h264 编码这里一并归一)。图片直拷。文件名映射喂给模板。
+      // 3) 正式渲染输入准备：安全 H.264 只 remux；其他编码或 Chromium smoke 失败时
+      //    只生成一次高质量 mezzanine。预览 proxy 绝不进入正式合成。
       const nameMap = new Map<string, string>();
+      const inputPreparation: Array<{
+        file: string;
+        sourceCodec: string;
+        strategy: "remux" | "mezzanine";
+      }> = [];
       for (const f of media.videos) {
         throwIfAborted(signal);
         const src = resolveInsideDir(sandbox.inputDir, f);
         const probe = await engine.probeVideo(ffprobe, src, signal);
-        const outName = proxyNameFor(f);
+        const outName = renderInputNameFor(f);
+        const preparedFile = path.join(mediaDir, outName);
         nameMap.set(f, outName);
-        await reportStep(
-          `预处理 ${f}(${probe.codec} ${probe.durationSec.toFixed(1)}s → h264 proxy,-g 30)`,
-        );
-        await engine.runFfmpeg(
-          ffmpeg,
-          [
-            "-y",
-            "-i",
-            src,
-            "-c:v",
-            "libx264",
-            "-preset",
-            "veryfast",
-            "-crf",
-            "18",
-            "-g",
-            "30",
-            "-pix_fmt",
-            "yuv420p",
-            "-c:a",
-            "aac",
-            "-b:a",
-            "192k",
-            "-movflags",
-            "+faststart",
-            path.join(mediaDir, outName),
-          ],
-          signal,
-        );
+        let strategy: "remux" | "mezzanine" = "mezzanine";
+        if (
+          isStaticSafeH264(probe) &&
+          (await engine.verifyFfmpegDecode(ffmpeg, src, signal))
+        ) {
+          await reportStep(
+            `准备 ${f}(${probe.codec} ${probe.durationSec.toFixed(1)}s → 无损 remux + Chromium 首帧校验)`,
+          );
+          try {
+            await engine.runFfmpeg(
+              ffmpeg,
+              [
+                "-y",
+                "-i",
+                src,
+                "-map",
+                "0:v:0",
+                "-map",
+                "0:a?",
+                "-c",
+                "copy",
+                "-movflags",
+                "+faststart",
+                preparedFile,
+              ],
+              signal,
+            );
+            if (
+              await engine.verifyChromiumDecode(
+                chromiumPath,
+                preparedFile,
+                signal,
+              )
+            ) {
+              strategy = "remux";
+            }
+          } catch (error) {
+            if (signal.aborted) throw error;
+          }
+        }
+        if (strategy !== "remux") {
+          const hdr = isHdrProbe(probe);
+          const needsSdrConversion =
+            hdr ||
+            normalized(probe.colorSpace) !== "bt709" ||
+            normalized(probe.colorPrimaries) !== "bt709" ||
+            normalized(probe.colorTransfer) !== "bt709";
+          await reportStep(
+            `准备 ${f}(${probe.codec} ${probe.durationSec.toFixed(1)}s → 高质量 mezzanine${hdr ? ",HDR→SDR" : ""})`,
+          );
+          const colorFilter = hdr
+            ? "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+            : "colorspace=all=bt709:fast=0,format=yuv420p";
+          await engine.runFfmpeg(
+            ffmpeg,
+            [
+              "-y",
+              "-i",
+              src,
+              ...(needsSdrConversion ? ["-vf", colorFilter] : []),
+              "-c:v",
+              "libx264",
+              "-preset",
+              "slow",
+              "-crf",
+              "10",
+              "-g",
+              "30",
+              "-pix_fmt",
+              "yuv420p",
+              "-colorspace",
+              "bt709",
+              "-color_primaries",
+              "bt709",
+              "-color_trc",
+              "bt709",
+              "-x264-params",
+              "colorprim=bt709:transfer=bt709:colormatrix=bt709",
+              "-c:a",
+              "aac",
+              "-b:a",
+              "192k",
+              "-movflags",
+              "+faststart",
+              preparedFile,
+            ],
+            signal,
+          );
+          if (
+            !(await engine.verifyChromiumDecode(
+              chromiumPath,
+              preparedFile,
+              signal,
+            ))
+          ) {
+            throw new Error(
+              `INPUT_DECODE_UNSUPPORTED: ${path.basename(f)} 的高质量中间文件仍无法由随包 Chromium 解码`,
+            );
+          }
+        }
+        inputPreparation.push({
+          file: path.basename(f),
+          sourceCodec: probe.codec,
+          strategy,
+        });
       }
       for (const f of media.images) {
         const outName = imageNameFor(f, inputMimeTypes.get(f));
@@ -653,8 +1234,9 @@ export function createVideoRenderExecutor(
 
       // 5) HyperFrames 渲染(帧捕获;abort → kill 子进程)
       throwIfAborted(signal);
+      const deliveryBitrate = calculateDeliveryBitrate(props.delivery);
       await reportStep(
-        `HyperFrames 渲染(${props.delivery.width}x${props.delivery.height}/${props.delivery.fps}fps,${props.talkingHead.durationSec.toFixed(1)}s)`,
+        `HyperFrames 高质量渲染(${props.delivery.width}x${props.delivery.height}/${props.delivery.fps}fps,${deliveryBitrate.targetKbps}kbps,${props.talkingHead.durationSec.toFixed(1)}s)`,
       );
       const rawFile = path.join(workDir, "render_raw.mp4");
       let lastReported = "";
@@ -662,6 +1244,9 @@ export function createVideoRenderExecutor(
         projectDir: workDir,
         outputFile: rawFile,
         fps: props.delivery.fps,
+        quality: "high",
+        videoBitrate: `${deliveryBitrate.targetKbps}k`,
+        videoFrameFormat: "png",
         chromiumPath,
         ffmpegPath: ffmpeg,
         ffprobePath: ffprobe,
@@ -673,9 +1258,9 @@ export function createVideoRenderExecutor(
         },
       });
 
-      // 6) 交付转码(固定命令:H.264/yuv420p/bt709/faststart —— 平台兼容基线)
+      // 6) HyperFrames 已完成唯一一次正式视频编码；final 只做 MP4 faststart remux。
       throwIfAborted(signal);
-      await reportStep("交付转码(H.264/yuv420p/bt709/faststart)");
+      await reportStep("交付文件无损整理(stream copy + faststart)");
       const finalFile = path.join(sandbox.outDir, "final.mp4");
       await engine.runFfmpeg(
         ffmpeg,
@@ -683,29 +1268,26 @@ export function createVideoRenderExecutor(
           "-y",
           "-i",
           rawFile,
-          "-c:v",
-          "libx264",
-          "-preset",
-          "medium",
-          "-crf",
-          "18",
-          "-pix_fmt",
-          "yuv420p",
-          "-colorspace",
-          "bt709",
-          "-color_primaries",
-          "bt709",
-          "-color_trc",
-          "bt709",
-          "-c:a",
-          "aac",
-          "-b:a",
-          "192k",
+          "-c",
+          "copy",
           "-movflags",
           "+faststart",
           finalFile,
         ],
         signal,
+      );
+
+      await reportStep("校验正式成片(codec/尺寸/fps/色彩/码率)");
+      const deliveryProbe = await engine.probeDelivery(
+        ffprobe,
+        finalFile,
+        signal,
+      );
+      const deliveryQuality = assertDeliveryQuality(
+        deliveryProbe,
+        props.delivery,
+        props.talkingHead.durationSec,
+        deliveryBitrate,
       );
 
       let visualReview: VideoVisualReview = {
@@ -761,6 +1343,22 @@ export function createVideoRenderExecutor(
           sceneCount: props.scenes.length,
           brollCount: props.broll.length,
           captionCount: props.captions.length,
+          inputPreparation,
+          deliveryQuality: {
+            targetKbps: deliveryBitrate.targetKbps,
+            minimumKbps: deliveryBitrate.minimumKbps,
+            actualKbps: deliveryQuality.actualKbps,
+            codec: deliveryProbe.codec,
+            profile: deliveryProbe.profile,
+            width: deliveryProbe.width,
+            height: deliveryProbe.height,
+            fps: deliveryQuality.fps,
+            pixFmt: deliveryProbe.pixFmt,
+            colorSpace: deliveryProbe.colorSpace,
+            colorPrimaries: deliveryProbe.colorPrimaries,
+            colorTransfer: deliveryProbe.colorTransfer,
+            durationSec: deliveryQuality.durationSec,
+          },
           visualReview,
         },
       };
