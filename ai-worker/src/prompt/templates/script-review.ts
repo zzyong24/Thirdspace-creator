@@ -16,7 +16,7 @@ import type { PromptTemplate } from "../template";
  *   { verdict, summary, findings: [{ quote, category, severity, reason, suggestion, ruleRef }] }。
  * prompt 铁律:只审注入文本、逐条给原文引用(quote 必为原文子串防幻觉命中)、区分官方硬规则
  *   与经验建议、不复述 lint 已报条目、suggestion 给最小改写而非重写全文。
- * 注:resolveModelSpec 按 "script.review" capability 解析模型(预设推荐豆包 Ark;未配回退默认)。
+ * 注:`script.review` 只是任务/Skill ID；运行时始终解析通用文本模型 `default`。
  */
 export const llmFindingSchema = z.object({
   quote: z.string().default(""),
@@ -28,9 +28,9 @@ export const llmFindingSchema = z.object({
 });
 // 顶层输出契约:一个报告对象(findings 数组包一层;裸数组在部分 provider 不可靠)。
 export const scriptReviewSchema = z.object({
-  verdict: z.enum(["pass", "risk", "block"]).default("pass"),
-  summary: z.string().default(""),
-  findings: z.array(llmFindingSchema).default([]),
+  verdict: z.enum(["pass", "risk", "block"]),
+  summary: z.string().min(1),
+  findings: z.array(llmFindingSchema),
 });
 export type ScriptReviewOutput = z.infer<typeof scriptReviewSchema>;
 

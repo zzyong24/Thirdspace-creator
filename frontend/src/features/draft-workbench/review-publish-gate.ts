@@ -12,6 +12,8 @@
  */
 
 import type { ScriptReviewReportResource } from "@creatoros/contract";
+export { isLegacyIncompleteReview } from "@/lib/script-review-status";
+import { isLegacyIncompleteReview } from "@/lib/script-review-status";
 
 export interface ReviewPublishGate {
   /** true = 发布/登记动作硬禁用(仅 verdict=block 且非 stale)。 */
@@ -33,7 +35,7 @@ export function deriveReviewPublishGate(
   currentVersion: number,
 ): ReviewPublishGate {
   // 无报告 → 放行(首次不强制先审)。
-  if (report === null) {
+  if (report === null || isLegacyIncompleteReview(report)) {
     return { hardBlocked: false, softWarn: false, reason: null };
   }
   // stale:脚本改过、旧 verdict 不作数 → 软提醒,绝不硬拦(即便旧报告是 block)。

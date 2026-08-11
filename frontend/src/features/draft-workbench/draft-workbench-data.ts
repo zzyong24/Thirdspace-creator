@@ -11,6 +11,7 @@ import {
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
 import type { ScriptSectionView, ScriptViewModel } from "@/types/view-models";
 import type { ScriptReviewReportResource } from "@creatoros/contract";
+import { isBlindPredictionStale } from "./script-result-freshness";
 import {
   hasCurrentTranscriptForAweme,
   type TranscriptArtifactSummary,
@@ -272,6 +273,9 @@ export interface DraftWorkbenchVm {
     readonly status: "draft" | "locked";
     readonly predictedScore: number;
     readonly lockedAt: string | null;
+    readonly createdAt: string;
+    /** true = 预测早于当前脚本版本，只作为历史结果，不锁当前稿。 */
+    readonly stale: boolean;
   } | null;
   readonly ammo: ReadonlyArray<{
     /**
@@ -384,6 +388,7 @@ async function readBlindPrediction(
       status: string;
       predictedScore: number;
       lockedAt: string | null;
+      createdAt: string;
     }>;
     const hit = rows.find(
       (p) => p.subjectType === "content_output" && p.subjectId === outputId,
@@ -394,6 +399,9 @@ async function readBlindPrediction(
       status: hit.status === "locked" ? "locked" : "draft",
       predictedScore: hit.predictedScore,
       lockedAt: hit.lockedAt,
+      createdAt: hit.createdAt,
+      // 当前脚本时间在 buildDraftWorkbenchVm 拿到后再派生。
+      stale: false,
     };
   } catch {
     return null;
@@ -566,6 +574,19 @@ export async function buildDraftWorkbenchVm(
 
   // [T-063e] 盲预测读依赖 outputId,故在发布包读之后串行。
   const blindPrediction = await readBlindPrediction(client, outputId);
+  const currentScriptVersionCreatedAt =
+    scriptData?.versions.find(
+      (version) => version.id === scriptData.currentVersionId,
+    )?.createdAt ?? null;
+  const currentBlindPrediction = blindPrediction
+    ? {
+        ...blindPrediction,
+        stale: isBlindPredictionStale(
+          blindPrediction.createdAt,
+          currentScriptVersionCreatedAt,
+        ),
+      }
+    : null;
 
   // [T-086] 稿面审核门首屏报告(404=未审吞成 null,桩不带 op → null,诚实)。
   const scriptReview = await readScriptReview(client, project.id);
@@ -617,7 +638,7 @@ export async function buildDraftWorkbenchVm(
     // 空格制造“第一个版本”才能继续。正式版本存在时仍由正式稿接管。
     publishUnlocked:
       (scriptData?.versions.length ?? 0) > 0 || Boolean(radarDraftSeed),
-    blindPrediction,
+    blindPrediction: currentBlindPrediction,
     ammo,
     scriptReview,
   };

@@ -107,15 +107,6 @@ export function buildSettingsViewModel(): SettingsViewModel {
       baseUrl: "",
       hasSecret: false as const,
     },
-    // [T-086] 文案审核模型。缺省未配 —— 编导文案审用默认模型并标注非专用,直到用户在此
-    // 绑豆包/火山方舟(或任意 OpenAI 兼容端点)provider/model/key。
-    review: {
-      capability: "script.review" as const,
-      provider: "",
-      modelName: "",
-      baseUrl: "",
-      hasSecret: false as const,
-    },
     // [T-084a] 联网搜索。缺省未配 —— 素材搜集来自模型记忆(卡片黄条+需核实徽标),直到
     // 用户在此绑博查/Tavily/SerpApi(或任意搜索 provider)provider/key。
     search: {

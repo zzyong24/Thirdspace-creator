@@ -17,6 +17,7 @@ import { videoRenderProps, type Endpoint, type Transport, type RequestContext } 
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
+import { isLegacyIncompleteReview } from "@/lib/script-review-status";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
 import {
   prepareManagedTranscribeSpec,
@@ -9843,8 +9844,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (aiService/positioningService/settingsService/artifactsService/reviewGateService/
   // resolveModelSpec)。两条起任务路径共用它:① 审核门 op(reviewGateService.createTask 直起
   // → 该 port 调用本函数)② ai.tasks.create 拦截分支(下方 ai transport)。后台跑
-  // runScriptReview → L1 违禁词 lint(active 词表)+ L2 语义审(script.review capability,
-  // 预设豆包,未配回退默认并标注非专用)→ 落 script_review_reports(绑 artifactVersion)。
+  // runScriptReview → L1 违禁词 lint(active 词表)+ 通用文本模型的 L2 语义审
+  // → 落 script_review_reports(绑 artifactVersion)。script.review 仅是任务/Skill ID。
   const dispatchScriptReview = (
     ctx: RequestContext,
     task: {
@@ -9861,21 +9862,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           positioningService.getPositioningCenter(c),
       },
       resolveModelSpec,
-      // 只有专用审核行本身具备可用凭据才标“专用”。空 key / 解密失败时实际由
-      // resolveModelSpec 回退普通默认模型，标签也必须如实显示为非专用。
-      hasDedicatedReviewModel: async (c) =>
-        Boolean(
-          await resolveDedicatedLlmConfig(c, "script.review", {
-            getModelConfig: (ctx, capability) =>
-              settingsService.getModelConfig(ctx, capability),
-            env: process.env,
-            getChannelModelConfig,
-            getChannelModelCredential: (serviceId) =>
-              getChannelModelCredential(c, serviceId),
-            getChannelModelSelection: (selectedCapability) =>
-              getChannelModelSelection(c, selectedCapability),
-          }),
-        ),
       // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
       // 文本 + 版本号(与 script-editor-data 同口径)。
       scriptSource: {
@@ -11227,6 +11213,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const reviewPromise = (async () => {
           try {
             const report = await reviewGateService.getLatestReport(c, project.id);
+            if (isLegacyIncompleteReview(report)) return null;
             return {
               reportId: report.id,
               verdict: report.verdict,
@@ -11432,6 +11419,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }
           throw error;
         }
+        if (isLegacyIncompleteReview(report)) return null;
         // 当前 service 只有 latest 窄读；指定过期 reportId 时明确查不到，绝不拿最新冒充。
         if (opts.reportId && opts.reportId !== report.id) return null;
 

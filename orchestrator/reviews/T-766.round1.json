@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立审核两轮收敛后 PASS：历史 L1-only 报告的全派生排除与 reasoning JSON 的严格恢复资格均已补齐，无剩余 blocker、major 或 minor。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "SPEC-2.7",
+        "quote": "旧版 L1-only 报告不再参与当前稿件的审核结论"
+      },
+      "acceptance_anchor": {
+        "id": "AC-5",
+        "quote": "同版本旧 L1-only pass、risk、block 都统一视为未完成"
+      },
+      "where": "SPEC §2.7、§4 前端边界与 §5.5 的历史报告派生规则",
+      "failure_mode": "旧报告若只在稿面隐藏 pass，但发布派生仍读取 raw verdict，同版本的历史 block 会继续硬阻断，risk 也会继续制造错误状态；不同消费者还可能各自解释出不同结论。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "frontend/src/features/draft-workbench/review-publish-gate.ts 原实现直接读取 raw verdict；独立评审 Round 1 REV-766-001。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "用同一个纯确定性 helper 识别已知残缺报告，并从稿面、发布、成熟度和所有审核状态派生中统一排除 raw pass/risk/block。",
+      "resolution_evidence": "SPEC-LINE:34:0fdd0a0a31d37139、SPEC-LINE:35:ba6b37b5e8030ecd、SPEC-LINE:36:956b673349906eb7、SPEC-LINE:37:ebe55256b624798f、SPEC-LINE:38:f7fa5c5bb600cda9、SPEC-LINE:67:44b752ea971fa998、SPEC-LINE:68:b4f4d0773b1450ff、SPEC-LINE:69:521af23043bf4aca、SPEC-LINE:85:d2cb52b49e63e545、SPEC-LINE:86:f360798c951300f7、SPEC-LINE:87:c468cbe46a881fb1 已明确三种 raw verdict 全派生排除并复用唯一 helper。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "SPEC-2.6",
+        "quote": "L2 结构化输出或解析失败时不写新报告"
+      },
+      "acceptance_anchor": {
+        "id": "AC-4",
+        "quote": "只有正文为空且 reasoning 含显式完整合法报告 JSON 才可恢复"
+      },
+      "where": "SPEC §4 的 reasoning 恢复来源、原始完整性门与 §5.4 的反例矩阵",
+      "failure_mode": "现有 schema 对 verdict、summary、findings 有默认值；若只要求通过 schema，reasoning 中偶然出现的空对象可能被补成 pass，重新制造语义审核假成功。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "ai-worker/src/prompt/templates/script-review.ts 的默认字段与 structured-node JSON 抽取路径；独立评审 Round 1 REV-766-002。",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "只在正文为空时读取同一响应 reasoningText；调用方显式 opt-in；原始对象先要求合法 verdict、非空 summary、findings 数组，再执行 schema 校验，且不暴露原始 reasoning。",
+      "resolution_evidence": "SPEC-LINE:57:c944e01cd849732c、SPEC-LINE:58:b45029afcf66c6e0、SPEC-LINE:59:cb1fd7e184e62013、SPEC-LINE:60:252c395a1c3dd3a0、SPEC-LINE:61:c496db6e17ebc9f4、SPEC-LINE:62:7e9a7cf5bff9d953、SPEC-LINE:63:ffefb2bbe0597410、SPEC-LINE:64:129540a7fe5d9ff2、SPEC-LINE:65:3f179f240e90cd35、SPEC-LINE:66:85fc5de8659f87da、SPEC-LINE:82:8b40e702244f966a、SPEC-LINE:83:b067186ac4065354、SPEC-LINE:84:b6872af8b59508eb 已限定恢复源、显式开关、原始字段门、无泄露与失败矩阵。",
+      "parent_id": ""
+    }
+  ]
+}

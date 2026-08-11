@@ -29,9 +29,15 @@ const TEMPLATE: PromptTemplate = {
   outputSchema: schema,
 };
 
-function textResult(text: string): LanguageModelV4GenerateResult {
+function textResult(
+  text: string,
+  reasoning?: string,
+): LanguageModelV4GenerateResult {
   return {
-    content: [{ type: "text", text }],
+    content: [
+      ...(reasoning ? [{ type: "reasoning" as const, text: reasoning }] : []),
+      { type: "text", text },
+    ],
     finishReason: { unified: "stop", raw: undefined },
     usage: {
       inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
@@ -40,6 +46,27 @@ function textResult(text: string): LanguageModelV4GenerateResult {
     warnings: [],
   };
 }
+
+const reviewSchema = z.object({
+  verdict: z.enum(["pass", "risk", "block"]).default("pass"),
+  summary: z.string().default(""),
+  findings: z.array(z.object({ quote: z.string() })).default([]),
+});
+const REVIEW_TEMPLATE: PromptTemplate = {
+  ...TEMPLATE,
+  id: "script.review",
+  outputSchema: reviewSchema,
+};
+const isCompleteReview = (raw: unknown): boolean => {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const record = raw as Record<string, unknown>;
+  return (
+    ["pass", "risk", "block"].includes(String(record.verdict)) &&
+    typeof record.summary === "string" &&
+    record.summary.trim().length > 0 &&
+    Array.isArray(record.findings)
+  );
+};
 
 describe("runStructuredNode 跨模型健壮性", () => {
   it("generateObject 落空(端点吐纯文本不调工具)→ 文本兜底抽 JSON + 同一 schema 校验", async () => {
@@ -124,6 +151,85 @@ describe("runStructuredNode 跨模型健壮性", () => {
       }),
     ).rejects.toThrow();
     expect(calls).toBe(2);
+  });
+});
+
+describe("runStructuredNode reasoning 恢复边界", () => {
+  it("正文为空且调用方显式开启时，只恢复原始字段完整的审核 JSON", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: async () =>
+        textResult(
+          "",
+          '分析过程。最终：{"verdict":"pass","summary":"语义审核已完成。","findings":[]}',
+        ),
+    });
+    const { object } = await runStructuredNode({
+      model,
+      template: REVIEW_TEMPLATE,
+      facets: { t: "go" },
+      outputSchema: reviewSchema,
+      reasoningFallback: { acceptRaw: isCompleteReview },
+    });
+    expect(object).toEqual({
+      verdict: "pass",
+      summary: "语义审核已完成。",
+      findings: [],
+    });
+  });
+
+  it.each(["{}", "先想想 {} 后面没有报告", "完全没有 JSON"])(
+    "原始 reasoning 不完整时失败：%s",
+    async (reasoning) => {
+      const model = new MockLanguageModelV4({
+        doGenerate: async () => textResult("", reasoning),
+      });
+      await expect(
+        runStructuredNode({
+          model,
+          template: REVIEW_TEMPLATE,
+          facets: { t: "go" },
+          outputSchema: reviewSchema,
+          reasoningFallback: { acceptRaw: isCompleteReview },
+        }),
+      ).rejects.toThrow();
+    },
+  );
+
+  it("正文非空但无合法 JSON 时不回读 reasoning", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: async () =>
+        textResult(
+          "正文不是 JSON",
+          '{"verdict":"pass","summary":"不应采用。","findings":[]}',
+        ),
+    });
+    await expect(
+      runStructuredNode({
+        model,
+        template: REVIEW_TEMPLATE,
+        facets: { t: "go" },
+        outputSchema: reviewSchema,
+        reasoningFallback: { acceptRaw: isCompleteReview },
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("未显式开启的结构化任务不读取 reasoning", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: async () =>
+        textResult(
+          "",
+          '{"verdict":"pass","summary":"不应采用。","findings":[]}',
+        ),
+    });
+    await expect(
+      runStructuredNode({
+        model,
+        template: REVIEW_TEMPLATE,
+        facets: { t: "go" },
+        outputSchema: reviewSchema,
+      }),
+    ).rejects.toThrow();
   });
 });
 

@@ -10,7 +10,10 @@
 
 import { describe, expect, it } from "vitest";
 import type { ScriptReviewReportResource } from "@creatoros/contract";
-import { deriveReviewPublishGate } from "./review-publish-gate";
+import {
+  deriveReviewPublishGate,
+  isLegacyIncompleteReview,
+} from "./review-publish-gate";
 
 function report(
   verdict: ScriptReviewReportResource["verdict"],
@@ -73,4 +76,20 @@ describe("deriveReviewPublishGate", () => {
     expect(g.softWarn).toBe(true);
     expect(g.reason).toMatch(/脚本已改/);
   });
+
+  it.each(["pass", "risk", "block"] as const)(
+    "同版本旧 L1-only %s 一律视为未完成，不参与发布派生",
+    (verdict) => {
+      const legacy = {
+        ...report(verdict, 3),
+        summary: "语义审核暂未完成，本报告仅包含基础规则检查。",
+      };
+      expect(isLegacyIncompleteReview(legacy)).toBe(true);
+      expect(deriveReviewPublishGate(legacy, 3)).toEqual({
+        hardBlocked: false,
+        softWarn: false,
+        reason: null,
+      });
+    },
+  );
 });

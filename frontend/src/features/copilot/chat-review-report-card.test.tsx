@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // [T-103b] 对话内审核报告卡:review.script 工具 dispatch script.review 后返回 { taskId, projectId }。
 // 卡据 taskId 轮询 getTask → succeeded 后读 getLatestScriptReview 渲报告(verdict + L1/L2 命中);
 // 改写建议逐条走 createArtifactVersion append-only 应用门(复用稿面审核门链)。
-//   - dispatch 失败态(error 非 null / 无 taskId / 无 projectId)→ 卡渲诚实错误 +「去设置」。
+//   - dispatch 失败态(error 非 null / 无 taskId / 无 projectId)→ 卡渲诚实错误，不伪造模型配置门。
 //   - 轮询到 succeeded → 渲报告卡(verdict 徽标 + findings + 改写 apply 按钮)。
 //   - 点「应用改写」→ readCurrentVersion → createArtifactVersion(不自动改稿)。
 
@@ -61,7 +61,7 @@ const REPORT = {
       ruleRef: null,
     },
   ],
-  modelLabel: "MiniMax-M3（通用文本模型）",
+  modelLabel: "MiniMax-M3",
   reviewedAt: "2026-07-04T00:00:00.000Z",
 };
 
@@ -84,7 +84,7 @@ beforeEach(() => {
 });
 
 describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
-  it("dispatch 失败(error 非 null)→ 诚实错误态 +「去设置」,不轮询", () => {
+  it("dispatch 失败(error 非 null)→ 诚实错误态，不展示过时的模型设置门", () => {
     render(
       <ChatReviewReportCard
         taskId={null}
@@ -99,7 +99,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     ).toContain("稿面里进行");
     expect(
       document.querySelector('[data-slot="chat-review-settings-link"]'),
-    ).toBeTruthy();
+    ).toBeNull();
     expect(getTask).not.toHaveBeenCalled();
   });
 
@@ -129,7 +129,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     expect(findings.textContent).toContain("私信我");
     // 只展示实际使用的通用文本模型。
     expect(screen.getByTestId("chat-review-model").textContent).toContain(
-      "通用文本模型",
+      "MiniMax-M3",
     );
     // 两条命中各带 replacement/suggestion → 两个应用按钮。
     const apply = document.querySelectorAll(
@@ -177,7 +177,7 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     });
   });
 
-  it("轮询 failed → 只提示检查通用文本模型", async () => {
+  it("轮询 failed → 提示本次语义审核未完成并允许重试，不制造独立配置门", async () => {
     getTask.mockResolvedValue({ status: "failed" });
     render(
       <ChatReviewReportCard
@@ -190,12 +190,11 @@ describe("ChatReviewReportCard(对话内审核报告卡,T-103b)", () => {
     await waitFor(() => {
       expect(
         document.querySelector('[data-slot="chat-review-error"]')?.textContent,
-      ).toContain("通用文本模型");
+      ).toContain("语义审核");
     });
     expect(
-      document.querySelector('[data-slot="chat-review-settings-link"]')
-        ?.textContent,
-    ).toContain("检查模型配置");
+      document.querySelector('[data-slot="chat-review-settings-link"]'),
+    ).toBeNull();
     expect(getLatestScriptReview).not.toHaveBeenCalled();
   });
 });

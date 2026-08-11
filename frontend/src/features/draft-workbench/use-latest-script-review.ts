@@ -38,7 +38,16 @@ export function useLatestScriptReview(
   initialReport: ScriptReviewReportResource | null,
   currentVersion: number,
 ): ScriptReviewReportResource | null {
-  const [report, setReport] = React.useState(initialReport);
+  // T-767：轮询结果只作为第二真值保存，渲染时与 router.refresh 带回的新 props 比较真实
+  // artifactVersion/reviewedAt 取较新者。这样不靠 effect 抄 props，也不会让同版本的新 report id
+  // 被首屏 useState 永久冻住。
+  const [fetched, setFetched] = React.useState<{
+    projectId: string;
+    report: ScriptReviewReportResource;
+  } | null>(null);
+  const fetchedReport = fetched?.projectId === projectId ? fetched.report : null;
+  const report = newerReport(initialReport, fetchedReport);
+
   const stale = report !== null && report.artifactVersion < currentVersion;
   const needsFresh = report === null || stale;
 
@@ -48,13 +57,7 @@ export function useLatestScriptReview(
     const pull = async () => {
       const latest = await fetchLatest(projectId);
       if (stopped || latest === null) return;
-      setReport((prev) =>
-        prev === null ||
-        latest.id !== prev.id ||
-        latest.artifactVersion > prev.artifactVersion
-          ? latest
-          : prev,
-      );
+      setFetched({ projectId, report: latest });
     };
     // 从未审核是正常空态，不应无限请求一个必定 404 的资源。已有报告变旧时才需要
     // T-393 的短周期自愈；null 仍保留 focus/visibility 唤醒，审核完成后回到稿面即可追上。
@@ -71,4 +74,22 @@ export function useLatestScriptReview(
   }, [needsFresh, projectId, stale]);
 
   return report;
+}
+
+function newerReport(
+  initial: ScriptReviewReportResource | null,
+  fetched: ScriptReviewReportResource | null,
+): ScriptReviewReportResource | null {
+  if (initial === null) return fetched;
+  if (fetched === null) return initial;
+  if (fetched.artifactVersion !== initial.artifactVersion) {
+    return fetched.artifactVersion > initial.artifactVersion ? fetched : initial;
+  }
+  const initialTime = Date.parse(initial.reviewedAt);
+  const fetchedTime = Date.parse(fetched.reviewedAt);
+  if (Number.isFinite(initialTime) && Number.isFinite(fetchedTime)) {
+    return fetchedTime >= initialTime ? fetched : initial;
+  }
+  // 时间异常时不靠 id 猜新旧；服务端 refresh 的当前报告优先。
+  return initial;
 }

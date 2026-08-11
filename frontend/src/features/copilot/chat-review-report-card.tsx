@@ -7,14 +7,14 @@
  * T-086,不重造)后立即返回 { taskId, projectId }。本卡:
  *   1. 据 taskId 轮询 getTask(与旧 script-review-gate 同款 3s 轮询)→ succeeded 后读
  *      getLatestScriptReview(projectId)拿结构化报告。
- *   2. 渲**审核报告卡**:verdict 徽标(pass 绿 / risk 黄 / block 红)+ summary + modelLabel
- *      诚实标注(含「非专用」字样醒目提示去设置)+ L1/L2 命中列表(带来源标签 + 命中片段)。
+ *   2. 渲**审核报告卡**:verdict 徽标(pass 绿 / risk 黄 / block 红)+ summary + 实际文本模型名
+ *      + L1/L2 命中列表(带来源标签 + 命中片段)。
  *   3. 改写建议逐条走**应用门**:人点「应用改写」才把命中片段(quote)在脚本当前版本单点替换成
  *      suggestion,经 createArtifactVersion(append-only)物化新版本;写后「已应用 · 撤销」
  *      (restoreArtifact 回写前版本)。AI 绝不自动改稿(铁律②),与稿面审核门同一条应用门链。
  *
- * 诚实(铁律):报告全来自真实 script_review_reports 行;dispatch 失败 / 无项目上下文 / 未配模型 →
- * 卡内诚实错误态(不假装审过);L1 违禁词 lint 是确定性的照常跑,即便没配 L2 语义审模型。
+ * 诚实(铁律):报告全来自真实 script_review_reports 行;dispatch 失败 / 无项目上下文 / 文本模型
+ * 调用失败 → 卡内诚实错误态(不假装审过)。
  */
 
 import * as React from "react";
@@ -109,9 +109,7 @@ export function ChatReviewReportCard({
           if (status.status === "failed" || status.status === "cancelled") {
             if (!cancelledRef.current) {
               setPhase("error");
-              setError(
-                "审核失败——请检查「设置 → 模型配置」的通用文本模型后重试。",
-              );
+              setError("这次语义审核没有完成，请重试。");
             }
             return;
           }
@@ -158,13 +156,6 @@ export function ChatReviewReportCard({
           className="flex flex-col gap-1 text-[12px] text-destructive"
         >
           <span>{error ?? "审核出错,请重试。"}</span>
-          <a
-            href="/settings"
-            data-slot="chat-review-settings-link"
-            className="self-start text-[11px] font-medium text-brand underline underline-offset-2"
-          >
-            去设置检查模型配置 →
-          </a>
         </div>
       ) : null}
 

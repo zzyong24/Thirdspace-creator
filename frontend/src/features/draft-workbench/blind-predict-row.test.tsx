@@ -224,6 +224,7 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
           status: "draft",
           predictedScore: 3.6,
           lockedAt: null,
+          stale: false,
         }}
       />,
     );
@@ -249,6 +250,7 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
           status: "locked",
           predictedScore: 4.2,
           lockedAt: "2026-07-02T00:00:00.000Z",
+          stale: false,
         }}
       />,
     );
@@ -259,6 +261,30 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
     expect(
       screen.getByTestId("blind-predict-result-trigger").textContent,
     ).toContain("看盲预测结果");
+  });
+
+  it("T-767 锁定预测早于当前稿时保留历史结果，但恢复重新盲预测入口", async () => {
+    renderWithProvider(
+      <BlindPredictRow
+        projectId="proj-1"
+        projectTitle="AI 原生浏览器实测"
+        outputId="out-1"
+        prediction={{
+          predictionId: "pred-old",
+          status: "locked",
+          predictedScore: 4.2,
+          lockedAt: "2026-07-02T00:00:00.000Z",
+          stale: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("稿已改动")).toBeInTheDocument();
+    expect(screen.queryByText("已锁定")).toBeNull();
+    expect(screen.getByTestId("blind-predict-result-trigger")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("blind-predict-button"));
+    await waitFor(() => expect(flushSaveMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(capturedRequest?.functionKey).toBe("calibration.diagnose"));
   });
 
   it("详情缺失维度分不伪装 0，并可按建议生成修订稿候选再采纳写回", async () => {
@@ -274,6 +300,7 @@ describe("BlindPredictRow(稿面发布包区盲预测入口,T-103a → T-108 预
           status: "locked",
           predictedScore: 4,
           lockedAt: "2026-07-02T00:00:00.000Z",
+          stale: false,
         }}
       />,
     );

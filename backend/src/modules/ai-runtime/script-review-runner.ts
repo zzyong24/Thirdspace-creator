@@ -68,8 +68,6 @@ export interface ScriptReviewDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
-  /** @deprecated 仅保留组装兼容；审核已统一使用通用文本模型。 */
-  hasDedicatedReviewModel: (ctx: RequestContext) => Promise<boolean>;
 }
 
 export interface ScriptReviewTask {
@@ -126,6 +124,18 @@ function positioningBriefOf(pc: unknown): string {
   return parts || "（未设置定位——按通用合规标准审核）";
 }
 
+/** reasoning 恢复前的原始完整性门；不能依靠 schema 默认值把空对象补成通过。 */
+export function isCompleteRawScriptReview(raw: unknown): boolean {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const value = raw as Record<string, unknown>;
+  return (
+    ["pass", "risk", "block"].includes(String(value.verdict)) &&
+    typeof value.summary === "string" &&
+    value.summary.trim().length > 0 &&
+    Array.isArray(value.findings)
+  );
+}
+
 export async function runScriptReview(
   ctx: RequestContext,
   task: ScriptReviewTask,
@@ -152,28 +162,10 @@ export async function runScriptReview(
     const lintFindings = lintScript(script.text, rules);
     // [T-124] 违禁词表本身注进语义审 prompt(词表确定 → 让模型也照表复核变体),不再是独立两阶段。
 
-    // ── 语义审统一走通用文本模型(default)。script.review 只保留为任务/模板语义，
-    // 不再要求用户理解或配置一套「专用审核模型」。
-    // [Bug-9 T-022] resolveModelSpec 失败 → 降级为「仅 L1」报告(整次审核不崩)。
-    // 触发场景(T-171 已知):用户的 model_configurations secret_value 因 master key 不匹配解不开
-    // → resolveModelSpec tier1 落空 → tier2/3 全无 → 抛 LlmCredentialError。旧代码此处 try 块
-    // 外 → 外层 catch 把整次审核 markFailed,用户面前冒「没有配置审核模型Key」——其实只是 secret
-    // 解不开,**默认模型完全可降级**(本次先给 L1 报告,模型补好后再跑 L2)。
-    let spec: ModelSpec | null = null;
-    let resolveErr: unknown = null;
-    try {
-      spec = await deps.resolveModelSpec(ctx, "default");
-    } catch (e) {
-      resolveErr = e;
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[script-review-runner] resolveModelSpec(default) 失败 ${task.id}:`,
-        e instanceof Error ? e.message : e,
-      );
-    }
-    const modelLabel = spec
-      ? `${spec.model}（通用文本模型）`
-      : "通用文本模型不可用（仅完成基础规则检查）";
+    // `script.review` 只保留为任务/Skill ID；审核始终使用当前通用文本模型。
+    // 解析失败进入外层 markFailed，不能再落一份 L1-only 假成功报告。
+    const spec: ModelSpec = await deps.resolveModelSpec(ctx, "default");
+    const modelLabel = spec.model;
 
     let positioningBrief = "（未设置定位——按通用合规标准审核）";
     if (deps.positioning) {
@@ -202,47 +194,24 @@ export async function runScriptReview(
             .join("\n")
         : "（L1 无命中）";
 
-    let llmFindings: ScriptReviewOutput["findings"] = [];
-    let llmVerdict: "pass" | "risk" | "block" = "pass";
-    let summary = "";
-    if (spec) {
-      try {
-        const { object } = await runStructuredNode<ScriptReviewOutput>({
-          model: modelFor(spec),
-          template: getTemplate("script.review"),
-          facets: {
-            script: script.text,
-            lexicon: buildLexiconBlock(rules),
-            lintFindings: lintBlock,
-            officialRules: DEFAULT_OFFICIAL_RULES,
-            positioning: positioningBrief,
-          },
-        });
-        // quote 必为原文子串(防幻觉命中):滤掉不在原文里的 finding(诚实数据)。
-        llmFindings = (object.findings ?? []).filter(
-          (f) => typeof f.quote === "string" && script.text.includes(f.quote),
-        );
-        llmVerdict = object.verdict ?? "pass";
-        summary = object.summary ?? "";
-      } catch (err) {
-        // L2 失败(模型不可用/超时)不让整次审核崩:降级为「仅 L1」报告,summary 如实标注。
-        // eslint-disable-next-line no-console
-        console.error(`[script-review-runner] L2 语义审失败 ${task.id}:`, err);
-        summary =
-          "语义审核暂未完成，本报告仅包含基础规则检查。请检查「设置 → 模型配置」的通用文本模型后重试。";
-      }
-    } else {
-      // [Bug-9 T-022] resolveModelSpec 失败 + L2 跳跑 → 整报告退到 L1-only。
-      // 诚实:不假装语义审跑过，引导用户检查唯一的通用文本模型配置。
-      // 同时 verdict 仍按 L1 命中给出(pass/risk/block),不让用户卡在「没审核」。
-      summary =
-        "语义审核暂未运行，本报告仅包含基础规则检查。请在「设置 → 模型配置」补齐通用文本模型的模型名和 API 密钥。";
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[script-review-runner] L2 跳过(无 spec) → 仅 L1 报告 ${task.id}, 原因:`,
-        resolveErr instanceof Error ? resolveErr.message : resolveErr,
-      );
-    }
+    const { object } = await runStructuredNode<ScriptReviewOutput>({
+      model: modelFor(spec),
+      template: getTemplate("script.review"),
+      facets: {
+        script: script.text,
+        lexicon: buildLexiconBlock(rules),
+        lintFindings: lintBlock,
+        officialRules: DEFAULT_OFFICIAL_RULES,
+        positioning: positioningBrief,
+      },
+      reasoningFallback: { acceptRaw: isCompleteRawScriptReview },
+    });
+    // quote 必为原文子串(防幻觉命中):滤掉不在原文里的 finding(诚实数据)。
+    const llmFindings = object.findings.filter(
+      (f) => typeof f.quote === "string" && script.text.includes(f.quote),
+    );
+    const llmVerdict = object.verdict;
+    const summary = object.summary;
     // [T-124] 合并为一次审核的单条完成日志(不再「L1 完成 → L2 完成」两阶段观感):
     // 违禁词表精筛(确定性)+ 语义复核(含照表复核变体)= 一份统一合规审核报告。
     await deps.ai.recordStep(ctx, task.id, {
@@ -265,11 +234,7 @@ export async function runScriptReview(
       artifactId: script.artifactId,
       artifactVersion: script.version,
       verdict,
-      summary:
-        summary ||
-        (verdict === "pass"
-          ? "未发现明显合规风险。"
-          : "发现合规风险,详见命中列表。"),
+      summary,
       lintFindings,
       llmFindings,
       modelLabel,

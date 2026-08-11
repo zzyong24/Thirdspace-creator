@@ -46,7 +46,7 @@ export const scriptReviewReports = pgTable("script_review_reports", {
   lintFindings: jsonb("lint_findings").notNull().default([]),
   /** L2 语义审命中项(LlmFinding[],quote 已运行时校验为原文子串)。 */
   llmFindings: jsonb("llm_findings").notNull().default([]),
-  /** 实际用的模型标注(诚实数据:未配专用审核模型时含「非专用审核模型」)。 */
+  /** 实际使用的通用文本模型名。 */
   modelLabel: text("model_label").notNull().default(""),
   reviewedAt: text("reviewed_at").notNull(),
 });

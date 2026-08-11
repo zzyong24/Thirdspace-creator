@@ -44,6 +44,9 @@ export interface BlindPredictionInfo {
   readonly status: "draft" | "locked";
   readonly predictedScore: number;
   readonly lockedAt: string | null;
+  readonly createdAt?: string;
+  /** 预测属于旧脚本版本；历史记录保留，但不再锁当前稿。 */
+  readonly stale: boolean;
 }
 
 // [T-103a] 稿面盲预测的预填话术 —— 只填不发(T-055b),编导据此优先调 calibration.diagnose。
@@ -228,16 +231,34 @@ export function BlindPredictRow({
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[10px]",
-                prediction.status === "locked"
+                prediction.stale
+                  ? "bg-warning-soft text-warning"
+                  : prediction.status === "locked"
                   ? "bg-surface-subtle text-muted-foreground"
                   : "bg-warning-soft text-warning",
               )}
             >
-              {prediction.status === "locked" ? "已锁定" : "草稿 · 未锁定"}
+              {prediction.stale
+                ? "稿已改动"
+                : prediction.status === "locked"
+                  ? "已锁定"
+                  : "草稿 · 未锁定"}
             </span>
           </span>
           <span className="flex items-center gap-2">
-            {prediction.status === "draft" ? (
+            {prediction.stale ? (
+              <Button
+                type="button"
+                size="sm"
+                data-testid="blind-predict-button"
+                className="h-7 gap-1 bg-brand px-2.5 text-[11px] text-brand-foreground hover:bg-brand/90"
+                disabled={phase === "opening"}
+                onClick={openCopilot}
+              >
+                <MessagesSquare className="size-3.5" />
+                {phase === "opening" ? "打开对话中…" : "重新盲预测"}
+              </Button>
+            ) : prediction.status === "draft" ? (
               <Button
                 type="button"
                 size="sm"

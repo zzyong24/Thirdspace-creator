@@ -179,8 +179,6 @@ export default async function SettingsRoutePage() {
         vision: multimodalRow("asset.classify"),
         // [T-093] 知识库语义搜索 embedding(未配 = AI 搜索诚实降级关键词)。
         embed: multimodalRow("knowledge.search.embed"),
-        // [T-086] 文案审核模型(未配 = 用默认模型审核,报告标注非专用)。
-        review: multimodalRow("script.review"),
         // [T-084a] 联网搜索(未配 = 素材来自模型记忆,卡片黄条+需核实徽标)。
         search: multimodalRow("web.search"),
         // [T-239b] 备用对话模型(未配 = 主模型重试耗尽后现状报错,不静默换模型)。

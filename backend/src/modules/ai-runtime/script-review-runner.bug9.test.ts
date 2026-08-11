@@ -1,23 +1,24 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import {
+  isCompleteRawScriptReview,
   runScriptReview,
   type ScriptReviewDeps,
   type ScriptReviewTask,
 } from "./script-review-runner";
 
-// [Bug-9 T-022] resolveModelSpec 失败(T-171 master key 解不开 / 真没配 / 等) → 整次审核
-// 不崩,降级为「仅 L1」报告 + 诚实 summary 告诉用户去配 key。覆盖 4 个分支:
-//   ① 有 spec 且 L2 成功 → 老路径
-//   ② 有 spec 但 L2 模型调用抛 → 老路径(L1 + summary 标「模型不可用」)
-//   ③ resolveModelSpec 抛 → 降级到 L1-only + summary 标「未配置审核模型 / 请去设置配」
-//   ④ verdict 仍按 L1 命中给(pass/risk/block),不让用户卡在「没审核」
+// [T-766] 文案审核是通用文本模型的一项任务；L1 + L2 才是一份完整报告。
+// 解析或语义调用失败必须失败关闭，禁止再落 L1-only 假成功报告。
 
 const baseTask: ScriptReviewTask = {
   id: "task-bug9",
   projectId: "p-1",
   inputData: { projectId: "p-1" },
 };
+
+beforeEach(() => {
+  vi.resetModules();
+});
 
 // [T-022 测试] 简化 ai mock:只覆写 runner 用的 4 个方法,其余不关心(用 Pick + as unknown as 强转,
 function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
@@ -33,6 +34,7 @@ function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
   failed: Array<{ reason: string }>;
   /** counter ref — read .current after runScriptReview completes。 */
   counters: { succeedCount: number };
+  resolvedCapabilities: string[];
 } {
   const reports: Array<{
     verdict: string;
@@ -44,6 +46,7 @@ function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
   const steps: Array<{ text: string }> = [];
   const failed: Array<{ reason: string }> = [];
   const counters = { succeedCount: 0 };
+  const resolvedCapabilities: string[] = [];
   // 简化 ai mock:只覆写 runner 用到的 4 个方法,其余方法 `as never` 占位(测试不调,类型也能过)。
   const deps: ScriptReviewDeps = {
     ai: {
@@ -91,22 +94,23 @@ function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
         return { id: "rep-1" };
       },
     },
-    resolveModelSpec: async () =>
-      ({
+    resolveModelSpec: async (_ctx, capability) => {
+      resolvedCapabilities.push(capability);
+      return {
         apiFormat: "anthropic",
         baseUrl: null,
         model: "minimax-mock",
         authStyle: "bearer",
         token: "sk-mock",
         settings: {},
-      }) as Awaited<ReturnType<NonNullable<ScriptReviewDeps["resolveModelSpec"]>>>,
-    hasDedicatedReviewModel: async () => false,
+      } as Awaited<ReturnType<NonNullable<ScriptReviewDeps["resolveModelSpec"]>>>;
+    },
     ...overrides,
   };
-  return { deps, reports, steps, failed, counters };
+  return { deps, reports, steps, failed, counters, resolvedCapabilities };
 }
 
-describe("runScriptReview — Bug-9 T-022 降级路径", () => {
+describe("runScriptReview — T-766 通用文本模型与失败关闭", () => {
   it("有 spec 且 L2 成功 → 老路径:verdict=block + summary 显 L2 结果", async () => {
     // mock ai-worker:runStructuredNode 返 block verdict
     vi.doMock("@creatoros/ai-worker", async () => {
@@ -132,14 +136,15 @@ describe("runScriptReview — Bug-9 T-022 降级路径", () => {
         }),
       };
     });
-    const { deps, reports, counters } = makeDeps();
+    const { deps, reports, counters, resolvedCapabilities } = makeDeps();
     await runScriptReview({} as never, baseTask, deps);
     expect(counters.succeedCount).toBe(1);
     expect(reports[0]?.verdict).toBe("block");
-    expect(reports[0]?.modelLabel).toContain("minimax-mock");
+    expect(reports[0]?.modelLabel).toBe("minimax-mock");
+    expect(resolvedCapabilities).toEqual(["default"]);
   });
 
-  it("resolveModelSpec 抛(LlmCredentialError 等)→ 不 markFailed,降级 L1-only + summary 诚实", async () => {
+  it("resolveModelSpec 抛 → markFailed，且不落 L1-only 报告", async () => {
     // resolveModelSpec 永远抛(T-171 master key 解不开 / 真没配 / 真没 key)。
     const { deps, reports, failed, counters } = makeDeps({
       resolveModelSpec: async () => {
@@ -162,28 +167,48 @@ describe("runScriptReview — Bug-9 T-022 降级路径", () => {
       };
     });
     await runScriptReview({} as never, baseTask, deps);
-    // [Bug-9 T-022] 关键:不 markFailed,反而 markSucceeded + 落一份 L1-only 报告。
-    expect(failed).toHaveLength(0);
-    expect(counters.succeedCount).toBe(1);
-    expect(reports).toHaveLength(1);
-    expect(reports[0]?.summary).toMatch(/语义审核暂未运行|基础规则检查/);
-    expect(reports[0]?.summary).toMatch(/通用文本模型/);
-    // verdict 仍按 L1 命中给:block(official_hard 命中)。
-    expect(reports[0]?.verdict).toBe("block");
+    expect(failed).toHaveLength(1);
+    expect(counters.succeedCount).toBe(0);
+    expect(reports).toHaveLength(0);
   });
 
-  it("resolveModelSpec 返 null(包装层已静默)→ 同样降级 L1-only", async () => {
-    // resolveModelSpec 显式返 null 的情况(某些降级实现可能这么做)。
-    const { deps, reports, failed, counters } = makeDeps({
-      resolveModelSpec: async () => null as never,
+  it("L2 调用失败 → markFailed，且不落 L1-only 报告", async () => {
+    vi.doMock("@creatoros/ai-worker", async () => {
+      const actual =
+        await vi.importActual<typeof import("@creatoros/ai-worker")>(
+          "@creatoros/ai-worker",
+        );
+      return {
+        ...actual,
+        runStructuredNode: async () => {
+          throw new Error("模型未返回完整语义审核结果");
+        },
+      };
     });
+    const { deps, reports, failed, counters } = makeDeps();
     await runScriptReview({} as never, baseTask, deps);
-    expect(failed).toHaveLength(0);
-    expect(counters.succeedCount).toBe(1);
-    expect(reports[0]?.summary).toMatch(/语义审核暂未运行/);
+    expect(failed).toHaveLength(1);
+    expect(counters.succeedCount).toBe(0);
+    expect(reports).toHaveLength(0);
   });
 
   it("内容雷达首存前的口播稿可在没有正式 artifact 时先完成审核", async () => {
+    vi.doMock("@creatoros/ai-worker", async () => {
+      const actual =
+        await vi.importActual<typeof import("@creatoros/ai-worker")>(
+          "@creatoros/ai-worker",
+        );
+      return {
+        ...actual,
+        runStructuredNode: async () => ({
+          object: {
+            verdict: "pass" as const,
+            findings: [],
+            summary: "语义审核完成。",
+          },
+        }),
+      };
+    });
     const { deps, reports, failed, counters } = makeDeps({
       scriptSource: {
         getLatestScript: async () => ({
@@ -192,7 +217,6 @@ describe("runScriptReview — Bug-9 T-022 降级路径", () => {
           text: "这是内容雷达已经确认并带进项目的口播稿。",
         }),
       },
-      resolveModelSpec: async () => null as never,
     });
 
     await runScriptReview({} as never, baseTask, deps);
@@ -202,5 +226,21 @@ describe("runScriptReview — Bug-9 T-022 降级路径", () => {
     expect(reports[0]).toEqual(
       expect.objectContaining({ artifactId: null, artifactVersion: 0 }),
     );
+  });
+});
+
+describe("isCompleteRawScriptReview", () => {
+  it("拒绝依靠 schema 默认值的空对象，只接受显式完整报告", () => {
+    expect(isCompleteRawScriptReview({})).toBe(false);
+    expect(
+      isCompleteRawScriptReview({ verdict: "pass", summary: "", findings: [] }),
+    ).toBe(false);
+    expect(
+      isCompleteRawScriptReview({
+        verdict: "pass",
+        summary: "语义审核完成。",
+        findings: [],
+      }),
+    ).toBe(true);
   });
 });

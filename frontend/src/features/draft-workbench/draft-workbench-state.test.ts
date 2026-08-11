@@ -161,4 +161,47 @@ describe("draft workbench project state", () => {
       tags: ["AI提效", "编导智能体"],
     });
   });
+
+  it("T-767 当前脚本版本晚于最新锁定预测时，VM 把预测标为过期", async () => {
+    const client = makeClient({ outputs: [{ id: "out-1" }] });
+    client.listArtifacts = vi.fn(async () => [
+      { id: "script-1", artifactType: "output_script", stage: "script" },
+    ]);
+    client.getArtifact = vi.fn(async () => ({ currentVersionId: "v2" }));
+    client.listArtifactVersions = vi.fn(async () => [
+      {
+        id: "v1",
+        versionNumber: 1,
+        createdAt: "2026-08-11T08:00:00.000Z",
+        contentText: "旧稿",
+        contentData: { html: "<p>旧稿</p>", sections: [] },
+      },
+      {
+        id: "v2",
+        versionNumber: 2,
+        createdAt: "2026-08-11T08:02:00.000Z",
+        contentText: "新稿",
+        contentData: { html: "<p>新稿</p>", sections: [] },
+      },
+    ]);
+    client.listPredictions = vi.fn(async () => [
+      {
+        id: "pred-v1",
+        subjectType: "content_output",
+        subjectId: "out-1",
+        status: "locked",
+        predictedScore: 4.2,
+        lockedAt: "2026-08-11T08:01:00.000Z",
+        createdAt: "2026-08-11T08:01:00.000Z",
+      },
+    ]);
+
+    const vm = await buildDraftWorkbenchVm("p-1", client);
+
+    expect(vm.blindPrediction).toMatchObject({
+      predictionId: "pred-v1",
+      status: "locked",
+      stale: true,
+    });
+  });
 });

@@ -72,6 +72,13 @@ export interface RunStructuredNodeInput<T> {
    * 判断/控制型任务默认不传，继续严格 fail-closed。
    */
   normalizeObject?: (raw: unknown) => unknown;
+  /**
+   * 少数 reasoning 模型会把最终 JSON 留在 reasoningText、正文为空。默认关闭；调用方必须
+   * 提供原始对象完整性门，只有正文严格为空时才会读取同一响应的 reasoningText。
+   */
+  reasoningFallback?: {
+    acceptRaw: (raw: unknown) => boolean;
+  };
 }
 
 export interface RunStructuredNodeResult<T> {
@@ -201,8 +208,8 @@ export function isStructuredResponseParseError(error: unknown): boolean {
 // [T-122] 单次模型调用硬超时(ms)。Vercel SDK 的 generateObject/generateText 默认**无超时**:
 // 模型端点挂起(不响应也不报错)→ `await` 永不 settle → 调它的 AI 任务(script.review 审核 /
 // topic.enrich 补全 / calibration.diagnose 等)永远卡 running,前端一直转圈。加 AbortSignal.timeout
-// 把「挂起」变成「reject(TimeoutError)」→ 调用方的 try/catch 接住 → 任务进终态(审核降级 L1-only
-// + markSucceeded)。任何有限超时都能抓住挂起;90s 给正常慢模型足够余量,又不至于让用户无限等。
+// 把「挂起」变成「reject(TimeoutError)」→ 调用方的 try/catch 接住 → 任务进入真实失败终态。
+// 任何有限超时都能抓住挂起;90s 给正常慢模型足够余量,又不至于让用户无限等。
 const MODEL_CALL_TIMEOUT_MS = 90_000;
 
 function normalizeUsage(usage: LanguageModelUsage | undefined): StructuredNodeUsage {
@@ -409,7 +416,24 @@ export async function runStructuredNode<T>(
           abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
         });
         fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
-        const raw = extractJsonObject(result.text);
+        let raw = extractJsonObject(result.text);
+        // T-766：只在正文为空且调用方显式开启时读取同一响应的 reasoningText。
+        // 不读 error cause/provider metadata，不把原始 reasoning 写日志或返回给调用方。
+        if (
+          raw === null &&
+          result.text.trim() === "" &&
+          input.reasoningFallback
+        ) {
+          const reasoningRaw = extractJsonObject(result.reasoningText ?? "");
+          if (
+            reasoningRaw !== null &&
+            input.reasoningFallback.acceptRaw(reasoningRaw)
+          ) {
+            raw = reasoningRaw;
+          } else {
+            lastError = new Error("reasoning 中没有完整合法的结构化对象");
+          }
+        }
         if (raw !== null) {
           const validated = await validateRaw(raw);
           if (validated.success) {

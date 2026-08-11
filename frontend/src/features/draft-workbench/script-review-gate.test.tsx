@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 // 稿面编导文案审核门(T-086 SPEC §3 · T-103b 对话化 · **T-108 修真**)测试:
 //  - 未审:显「未审」提示 +「审核」按钮(不报错)。
-//  - 有报告:verdict 徽章 + summary + modelLabel(非专用醒目)+ L1/L2 命中列表。
+//  - 有报告:verdict 徽章 + summary + 实际文本模型名 + L1/L2 命中列表。
 //  - 报告版本 < 当前脚本版本:显「稿已改动,建议重审」+ 软门提示条。
 //  - [T-108]「审核」→ **先 flush 保存编辑器最新** → **自动发进稿面右栏常驻 rail**
 //    (onOpenChat: fn=review.script + selection=content_output + autoSend),不再 router.push
@@ -87,7 +87,7 @@ const passReport: ScriptReviewReportResource = {
       ruleRef: null,
     },
   ],
-  modelLabel: "MiniMax-M3（通用文本模型）",
+  modelLabel: "MiniMax-M3",
   reviewedAt: "2026-07-03T00:00:00.000Z",
 };
 
@@ -161,9 +161,9 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b · T-108 自动发+fl
     );
     // 报告 v2 < 当前 v3 → 过期提示。
     expect(screen.getByTestId("script-review-stale")).toBeTruthy();
-    // 审核统一使用通用文本模型。
+    // 审核报告只展示实际文本模型名。
     const model = screen.getByTestId("script-review-model");
-    expect(model.textContent).toContain("通用文本模型");
+    expect(model.textContent).toContain("MiniMax-M3");
     // L1 + L2 命中各一条。
     const findings = screen.getByTestId("script-review-findings");
     expect(findings.textContent).toContain("第一");
@@ -174,6 +174,30 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b · T-108 自动发+fl
     );
     expect(apply.length).toBe(2);
     expect((apply[0] as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("旧版残缺报告不渲染三态、模型或命中，只提示重新审核", () => {
+    render(
+      <ScriptReviewGate
+        projectId="p1"
+        projectTitle="标题"
+        outputId="co-1"
+        currentVersion={2}
+        initialReport={{
+          ...passReport,
+          verdict: "block",
+          summary: "语义审核暂未完成，本报告仅包含基础规则检查。",
+        }}
+      />,
+    );
+    expect(screen.getByTestId("script-review-incomplete").textContent).toContain(
+      "上次审核未完成",
+    );
+    expect(screen.queryByTestId("script-review-verdict")).toBeNull();
+    expect(screen.queryByTestId("script-review-model")).toBeNull();
+    expect(screen.getByTestId("script-review-trigger").textContent).toContain(
+      "重试审核",
+    );
   });
 
   it("[T-108]「审核」→ flush 保存最新 → 自动发进稿面右栏常驻 rail(fn=review.script + autoSend,不再 router.push 深链/后台轮询)", async () => {

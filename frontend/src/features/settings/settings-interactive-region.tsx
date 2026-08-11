@@ -3118,26 +3118,6 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 素材归类只跑确定性第一层。",
   },
-  // [T-086 SPEC §2] 文案审核模型 —— 编导文案发布前 L2 语义审专用。豆包/火山方舟(Ark =
-  // OpenAI 兼容端点)为预设,用户可整卡改成任何端点(绝不写死)。apiFormat 显式存
-  // openai_chat(Ark 走 OpenAI 兼容协议);未配 → 用默认模型审核,报告标注非专用。
-  review: {
-    capability: "script.review" as const,
-    title: "文案审核模型",
-    icon: Cpu,
-    description:
-      "编导文案发布前合规审核用(L2 语义审);未配则用默认模型并标注非专用审核模型。",
-    providerSuggestions: ["doubao"] as ReadonlyArray<string>,
-    providerPlaceholder: "doubao",
-    providerHelp:
-      "火山方舟 Ark = OpenAI 兼容端点,provider 可自定义。",
-    modelHelp:
-      "豆包模型 id 或 Ark 推理接入点,如 doubao-seed-1-6-* 或 ep-*。",
-    modelPlaceholder: "",
-    baseUrlPlaceholder:
-      "https://ark.cn-beijing.volces.com/api/v3(留空=provider 默认)",
-    disabledHint: "未配 → 用默认模型审核,报告标注非专用。",
-  },
   // [T-084a SPEC §1.1] 联网搜索 —— 素材搜集(material.gather)前置真检索用。provider 用户可配
   // (博查/Tavily/SerpApi 首发);未配 → 素材来自模型记忆(卡片黄条 + 需核实徽标 + honestyBlock
   // 声明非实时检索)。model 对搜索多选填(serpapi 用它当 engine,默认 google)。
@@ -3255,7 +3235,6 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   | "audio"
   | "embed"
   | "vision"
-  | "review"
   | "search"
   | "fallback",
   string | undefined
@@ -3263,7 +3242,6 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   image: "image-model",
   video: "video-model",
   audio: "asr-model",
-  review: "review-model",
   search: "web-search",
   embed: undefined,
   vision: undefined,
@@ -3281,7 +3259,6 @@ function MultimodalModelCard({
     | "audio"
     | "embed"
     | "vision"
-    | "review"
     | "search"
     | "fallback";
   state: MultimodalModelState;
@@ -3362,11 +3339,11 @@ function MultimodalModelCard({
             modelName: modelName.trim(),
             baseUrl: baseUrl.trim() || undefined,
             secret: secret.length > 0 ? secret : undefined,
-            // [T-093/T-086] embedding 与文案审核卡显式存 openai_chat(缺省会被落成
-            // anthropic;embedding 无 anthropic 协议,火山方舟 Ark 走 OpenAI 兼容协议)。
+            // [T-093] embedding 显式存 openai_chat(缺省会被落成 anthropic；
+            // embedding 无 anthropic 协议)。
             // [T-239b] 备用对话模型卡存用户选的接口格式(resolveModelSpec 按它分派适配器)。
             // 其余多模态卡不带 apiFormat 不变。
-            ...(kind === "embed" || kind === "review"
+            ...(kind === "embed"
               ? { apiFormat: "openai_chat" as const }
               : isFallback
                 ? { apiFormat }

@@ -3759,7 +3759,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // dispatch 失败 → error 非 null(卡渲错误态,诚实提示),不假装审过。
     "review.script": defineChatTool("review.script", {
       description:
-        "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。语义审核统一使用通用文本模型，无需专用审核模型。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。通用文本模型不可用时，L1 基础规则检查仍会运行并如实标注降级。",
+        "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。语义审核使用当前通用文本模型。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。通用文本模型调用没有完成时整次审核失败并允许重试，不生成残缺报告。",
       inputSchema: REVIEW_SCRIPT_PARAMS,
       execute: async ({ projectId }): Promise<ReviewScriptToolResult> => {
         try {

@@ -34,4 +34,28 @@ describe("T-585 稿面审核空态轮询", () => {
     });
     expect(getLatestScriptReview).toHaveBeenCalledTimes(1);
   });
+
+  it("T-767 同一脚本版本重新审核后，服务端新 report id 会替换本地旧结论", () => {
+    const oldReport = {
+      id: "review-old",
+      artifactVersion: 2,
+      verdict: "block",
+      reviewedAt: "2026-08-11T08:00:00.000Z",
+    } as never;
+    const newReport = {
+      id: "review-new",
+      artifactVersion: 2,
+      verdict: "pass",
+      reviewedAt: "2026-08-11T08:01:00.000Z",
+    } as never;
+    const { result, rerender } = renderHook(
+      ({ initial }) => useLatestScriptReview("project-1", initial, 2),
+      { initialProps: { initial: oldReport } },
+    );
+
+    expect(result.current?.id).toBe("review-old");
+    rerender({ initial: newReport });
+    expect(result.current?.id).toBe("review-new");
+    expect(result.current?.verdict).toBe("pass");
+  });
 });

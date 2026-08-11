@@ -72,7 +72,7 @@ export const scriptReviewReportResource = z.object({
   summary: z.string(),
   lintFindings: z.array(lintFindingResource),
   llmFindings: z.array(llmFindingResource),
-  /** 实际用的模型标注(诚实数据:未配专用审核模型时含「非专用审核模型」字样)。 */
+  /** 实际使用的通用文本模型名。 */
   modelLabel: z.string(),
   reviewedAt: iso8601,
 });

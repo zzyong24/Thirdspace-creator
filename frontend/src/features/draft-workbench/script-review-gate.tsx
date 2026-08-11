@@ -14,14 +14,14 @@
  *    违禁词 lint + L2 语义审)→ **审核报告卡**(ChatReviewReportCard:verdict + findings)+ 改写
  *    建议逐条「应用」门。退役后台 trigger+poll 死码。
  *  - 结构化报告(**保留**,真值展示):verdict 徽章(pass 绿 / risk 黄 / block 红)+ summary +
- *    modelLabel(含「非专用审核模型」字样时醒目标注,诚实数据)+ lintFindings/llmFindings 命中列表。
+ *    modelLabel(实际通用文本模型名)+ lintFindings/llmFindings 命中列表。
  *    首屏 initialReport(服务端读 getLatestScriptReview)—— 这是稿面门的真值面,不是 AI 触发。
  *  - 软门([gate-F1] 缺省软门):无报告 / verdict≠pass / 报告版本 < 当前脚本版本 →
  *    内联醒目提示 +「先去审核」一键触发,**但不禁用**「先盲预测」「登记已发布」——
  *    operations 不阻断(硬门切换点见 blind-predict-row 注释)。
  *
  * 诚实(铁律):报告全部来自真实 script_review_reports 行;无报告显「未审」不报错;
- * 报告版本过期显式提示;modelLabel 非专用如实标注。
+ * 报告版本过期显式提示；旧版残缺报告统一显示“未完成”。
  *
  * 改写建议确认门(SPEC §3 铁律,已真做):改写只是候选 —— 人点「应用改写」才把命中片段
  * (quote)按 suggestion 单点替换,经 createArtifactVersion(append-only)物化成脚本新版本,
@@ -46,6 +46,7 @@ import { useDraftChatRequest } from "./draft-chat-request";
 import { useLatestScriptReview } from "./use-latest-script-review";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isLegacyIncompleteReview } from "@/lib/script-review-status";
 import type {
   ScriptReviewReportResource,
   LintFindingResource,
@@ -220,13 +221,17 @@ export function ScriptReviewGate({
   }, [phase, outputId, projectId, projectTitle, openChat, flushSave]);
 
   const opening = phase === "opening";
-  const stale = report !== null && report.artifactVersion < currentVersion;
+  const legacyIncomplete = report !== null && isLegacyIncompleteReview(report);
+  const stale =
+    report !== null &&
+    !legacyIncomplete &&
+    report.artifactVersion < currentVersion;
 
   return (
     <div
       data-slot="script-review-gate"
       data-testid="script-review-gate"
-      data-verdict={report?.verdict ?? "none"}
+      data-verdict={legacyIncomplete ? "none" : (report?.verdict ?? "none")}
       tabIndex={-1}
       className="mt-3 flex flex-col gap-2 rounded-card border border-border bg-surface px-3.5 py-3 outline-none transition-[border-color,background-color,box-shadow] duration-300 motion-reduce:transition-none data-[attention=true]:border-brand/70 data-[attention=true]:bg-brand-soft data-[attention=true]:ring-4 data-[attention=true]:ring-brand/20"
     >
@@ -249,13 +254,22 @@ export function ScriptReviewGate({
             ? "打开对话中…"
             : phase === "error"
               ? "重试审核"
-              : report
+              : report && !legacyIncomplete
                 ? "重新审核"
+                : legacyIncomplete
+                  ? "重试审核"
                 : "审核"}
         </Button>
       </div>
 
-      {report === null ? (
+      {legacyIncomplete ? (
+        <p
+          data-testid="script-review-incomplete"
+          className="text-[12px] text-muted-foreground"
+        >
+          上次审核未完成，请重新审核。
+        </p>
+      ) : report === null ? (
         <p
           data-testid="script-review-unreviewed"
           className="text-[12px] text-muted-foreground"
@@ -642,7 +656,7 @@ export function ReviewSoftGateHint({
   // 无论 verdict、无论采纳与否。verdict=block 的后果由硬门(review-publish-gate hardBlocked
   // 禁用登记/发布)管,不在此重复提示。
   const reason =
-    report === null
+    report === null || isLegacyIncompleteReview(report)
       ? "当前稿未过合规审核"
       : report.artifactVersion < currentVersion
         ? "脚本已改动,当前稿未重新审核"
