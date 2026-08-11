@@ -695,3 +695,4 @@
 {"ts":"2026-08-11T15:24:03.992Z","actor":"taskctl","action":"complete","task":"T-775","evidence":"当前 main 已包含 Windows 45 秒软门、120 秒真实主页硬门与系统 Chrome/随包 Chromium 回落；聚焦 3 files 154 tests PASS；本次只修正并行任务 ID 冲突","sha_before":"4e522d0bcf5b","sha_after":"f7e8ae1597d9"}
 {"ts":"2026-08-11T16:41:42.783Z","actor":"taskctl","action":"start","task":"T-776","sha_before":"c262326597c4","sha_after":"32675b664b9d"}
 {"ts":"2026-08-11T16:44:43.858Z","actor":"taskctl","action":"complete","task":"T-776","evidence":"GitHub channel-package run 31383743588（SHA 7263a81d）日志确认 Windows 先以缺失品牌变量构建 production closure，后因 CREATOROS_SKIP_SIDECAR_REBUILD=1 跳过渠道重编译；定向契约测试 3 files/11 tests PASS 但不覆盖最终 WebView 品牌；诊断报告 docs/research/2026-08-11-zhisu-ai-github-channel-brand-regression.md","sha_before":"10b1ed860cfc","sha_after":"d719210c8eca"}
+{"ts":"2026-08-11T17:04:36.923Z","actor":"taskctl","action":"start","task":"T-777","sha_before":"ff0fed30f92a","sha_after":"25b7d260c5d3"}

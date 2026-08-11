@@ -100,9 +100,6 @@ function fakeEngine(
     async verifyFfmpegDecode() {
       return true;
     },
-    async verifyChromiumDecode() {
-      return true;
-    },
     async runFfmpeg(_ffmpeg, args) {
       calls.ffmpegArgs.push(args);
       await fs.writeFile(args[args.length - 1]!, "fake-mp4");
@@ -256,29 +253,35 @@ describe("createVideoRenderExecutor", () => {
     });
   });
 
-  it("安全 H.264 通过 FFmpeg 与随包 Chromium smoke 后只 remux，不生成 mezzanine", async () => {
+  it("安全 H.264 通过 FFmpeg 全流解码后只 remux，不再调用重复的 Chromium 首帧预检", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
-    const executor = createVideoRenderExecutor(
-      fakeEngine(calls, {
-        async probeVideo(_ffprobe, file) {
-          calls.probed.push(path.basename(file));
-          return {
-            codec: "h264",
-            profile: "High",
-            width: 1920,
-            height: 1080,
-            pixFmt: "yuv420p",
-            avgFrameRate: "30/1",
-            rFrameRate: "30/1",
-            colorSpace: "bt709",
-            colorPrimaries: "bt709",
-            colorTransfer: "bt709",
-            bitRate: 12_000_000,
-            durationSec: 12,
-          };
-        },
-      }),
-    );
+    let chromiumChecks = 0;
+    const engine = fakeEngine(calls, {
+      async probeVideo(_ffprobe, file) {
+        calls.probed.push(path.basename(file));
+        return {
+          codec: "h264",
+          profile: "High",
+          width: 1920,
+          height: 1080,
+          pixFmt: "yuv420p",
+          avgFrameRate: "30/1",
+          rFrameRate: "30/1",
+          colorSpace: "bt709",
+          colorPrimaries: "bt709",
+          colorTransfer: "bt709",
+          bitRate: 12_000_000,
+          durationSec: 12,
+        };
+      },
+    });
+    Object.assign(engine, {
+      verifyChromiumDecode: async () => {
+        chromiumChecks += 1;
+        return false;
+      },
+    });
+    const executor = createVideoRenderExecutor(engine);
 
     const result = await executor.run(
       sandbox,
@@ -296,11 +299,11 @@ describe("createVideoRenderExecutor", () => {
       expect.objectContaining({ file: "th.mp4", strategy: "remux" }),
       expect.objectContaining({ file: "b1.mp4", strategy: "remux" }),
     ]);
+    expect(chromiumChecks).toBe(0);
   });
 
-  it("H.264 remux 的 Chromium 首帧 smoke 失败时只回退一次 mezzanine", async () => {
+  it("H.264 未通过 FFmpeg 全流解码时只回退一次高质量 mezzanine", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
-    let chromiumChecks = 0;
     const executor = createVideoRenderExecutor(
       fakeEngine(calls, {
         async probeVideo(_ffprobe, file) {
@@ -320,9 +323,8 @@ describe("createVideoRenderExecutor", () => {
             durationSec: 12,
           };
         },
-        async verifyChromiumDecode() {
-          chromiumChecks += 1;
-          return chromiumChecks !== 1;
+        async verifyFfmpegDecode() {
+          return false;
         },
       }),
     );
@@ -333,50 +335,28 @@ describe("createVideoRenderExecutor", () => {
       runOpts([]),
     );
 
-    expect(calls.ffmpegArgs[0]!.join(" ")).toContain("-c copy");
-    expect(calls.ffmpegArgs[1]!.join(" ")).toContain("libx264");
-    expect(calls.ffmpegArgs[1]!.join(" ")).toContain("-crf 10");
+    expect(calls.ffmpegArgs).toHaveLength(2);
+    expect(calls.ffmpegArgs[0]!.join(" ")).toContain("libx264");
+    expect(calls.ffmpegArgs[0]!.join(" ")).toContain("-crf 10");
     expect(result.meta?.inputPreparation).toEqual([
       expect.objectContaining({ file: "th.mp4", strategy: "mezzanine" }),
     ]);
   });
 
-  it("回退后的高质量 mezzanine 仍无法被 Chromium 解码时失败关闭", async () => {
+  it("高质量 mezzanine 直接进入真实渲染，不再被额外浏览器预检误阻断", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
-    const executor = createVideoRenderExecutor(
-      fakeEngine(calls, {
-        async probeVideo(_ffprobe, file) {
-          calls.probed.push(path.basename(file));
-          return {
-            codec: "h264",
-            profile: "High",
-            width: 1920,
-            height: 1080,
-            pixFmt: "yuv420p",
-            avgFrameRate: "30/1",
-            rFrameRate: "30/1",
-            colorSpace: "bt709",
-            colorPrimaries: "bt709",
-            colorTransfer: "bt709",
-            bitRate: 12_000_000,
-            durationSec: 12,
-          };
-        },
-        async verifyChromiumDecode() {
-          return false;
-        },
-      }),
+    const executor = createVideoRenderExecutor(fakeEngine(calls));
+
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: { ...props(), broll: [] } },
+      runOpts([]),
     );
 
-    await expect(
-      executor.run(
-        sandbox,
-        { goal: "渲染", props: { ...props(), broll: [] } },
-        runOpts([]),
-      ),
-    ).rejects.toThrow(/INPUT_DECODE_UNSUPPORTED/);
-    expect(calls.ffmpegArgs).toHaveLength(2);
-    expect(calls.rendered).toHaveLength(0);
+    expect(result.meta?.inputPreparation).toEqual([
+      expect.objectContaining({ file: "th.mp4", strategy: "mezzanine" }),
+    ]);
+    expect(calls.rendered).toHaveLength(1);
   });
 
   it("交付码率低于硬门时失败关闭，不能把低清成片冒充可发布", async () => {

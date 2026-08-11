@@ -18,7 +18,6 @@
 import { execFile, spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { pathToFileURL } from "node:url";
 import { resolveExecutablePath } from "@creatoros/ai-worker";
 import {
   videoRenderParams,
@@ -72,12 +71,6 @@ export interface VideoRenderEngine {
   /** FFmpeg 全流解码 smoke；坏流返回 false，中止仍抛出。 */
   verifyFfmpegDecode(
     ffmpeg: string,
-    file: string,
-    signal: AbortSignal,
-  ): Promise<boolean>;
-  /** 用本次实际随包 Chromium 的 video 元素完成 metadata + 首帧解码 smoke。 */
-  verifyChromiumDecode(
-    chromiumPath: string,
     file: string,
     signal: AbortSignal,
   ): Promise<boolean>;
@@ -595,216 +588,6 @@ async function countVideoPacketBytes(
   return count > 0 && Number.isSafeInteger(total) && total > 0 ? total : null;
 }
 
-async function verifyChromiumVideoFrame(
-  chromiumPath: string,
-  file: string,
-  signal: AbortSignal,
-): Promise<boolean> {
-  const smokeDir = await fs.mkdtemp(path.join(path.dirname(file), ".chromium-video-smoke-"));
-  const htmlFile = path.join(smokeDir, "index.html");
-  await fs.writeFile(htmlFile, "<!doctype html><meta charset=\"utf-8\"><body></body>", "utf8");
-  const videoUrl = pathToFileURL(file).href;
-  const child = spawn(
-    chromiumPath,
-    [
-      "--headless=new",
-      "--no-sandbox",
-      "--disable-gpu",
-      "--disable-background-networking",
-      "--disable-extensions",
-      "--disable-sync",
-      "--no-first-run",
-      "--mute-audio",
-      "--allow-file-access-from-files",
-      "--remote-debugging-address=127.0.0.1",
-      "--remote-debugging-port=0",
-      `--user-data-dir=${path.join(smokeDir, "profile")}`,
-      "about:blank",
-    ],
-    {
-      env: buildChildEnv(),
-      stdio: ["ignore", "ignore", "pipe"],
-      windowsHide: true,
-    },
-  );
-  const killChild = () => {
-    if (!child.killed) child.kill("SIGKILL");
-  };
-  signal.addEventListener("abort", killChild, { once: true });
-  try {
-    const webSocketUrl = await new Promise<string>((resolve, reject) => {
-      let stderr = "";
-      const timer = setTimeout(
-        () => reject(new Error("Chromium DevTools 启动超时")),
-        8_000,
-      );
-      const finish = (fn: () => void) => {
-        clearTimeout(timer);
-        fn();
-      };
-      child.once("error", (error) => finish(() => reject(error)));
-      child.once("exit", (code) =>
-        finish(() => reject(new Error(`Chromium 提前退出(code=${code ?? "?"})`))),
-      );
-      child.stderr?.on("data", (chunk: Buffer) => {
-        stderr = (stderr + chunk.toString("utf8")).slice(-16_384);
-        const match = stderr.match(/DevTools listening on (ws:\/\/[^\s]+)/);
-        const endpoint = match?.[1];
-        if (endpoint) finish(() => resolve(endpoint));
-      });
-    });
-
-    const socket = new WebSocket(webSocketUrl);
-    const opened = new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(
-        () => reject(new Error("Chromium DevTools 连接超时")),
-        5_000,
-      );
-      socket.addEventListener("open", () => {
-        clearTimeout(timer);
-        resolve();
-      }, { once: true });
-      socket.addEventListener("error", () => {
-        clearTimeout(timer);
-        reject(new Error("Chromium DevTools 连接失败"));
-      }, { once: true });
-    });
-    await opened;
-
-    let nextId = 0;
-    const pending = new Map<number, {
-      resolve: (value: Record<string, unknown>) => void;
-      reject: (error: Error) => void;
-    }>();
-    const eventWaiters = new Map<string, Array<() => void>>();
-    const rejectPending = (reason: string) => {
-      const error = new Error(reason);
-      for (const waiter of pending.values()) waiter.reject(error);
-      pending.clear();
-    };
-    socket.addEventListener("close", () => {
-      rejectPending("Chromium DevTools 连接已关闭");
-    }, { once: true });
-    socket.addEventListener("message", (event) => {
-      const message = JSON.parse(String(event.data)) as {
-        id?: number;
-        method?: string;
-        sessionId?: string;
-        result?: Record<string, unknown>;
-        error?: { message?: string };
-      };
-      if (message.id == null) {
-        if (!message.method) return;
-        const key = `${message.sessionId ?? "browser"}:${message.method}`;
-        const waiters = eventWaiters.get(key);
-        if (!waiters) return;
-        eventWaiters.delete(key);
-        for (const resolve of waiters) resolve();
-        return;
-      }
-      const waiter = pending.get(message.id);
-      if (!waiter) return;
-      pending.delete(message.id);
-      if (message.error) {
-        waiter.reject(new Error(message.error.message ?? "Chromium DevTools 调用失败"));
-      } else {
-        waiter.resolve(message.result ?? {});
-      }
-    });
-    const send = (
-      method: string,
-      params: Record<string, unknown>,
-      sessionId?: string,
-    ) => new Promise<Record<string, unknown>>((resolve, reject) => {
-      const id = ++nextId;
-      pending.set(id, { resolve, reject });
-      socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
-    });
-    const waitForEvent = (method: string, sessionId: string) =>
-      new Promise<void>((resolve, reject) => {
-        const key = `${sessionId}:${method}`;
-        const timer = setTimeout(() => {
-          eventWaiters.delete(key);
-          reject(new Error(`Chromium DevTools 等待 ${method} 超时`));
-        }, 5_000);
-        const finish = () => {
-          clearTimeout(timer);
-          resolve();
-        };
-        eventWaiters.set(key, [...(eventWaiters.get(key) ?? []), finish]);
-      });
-
-    const target = await send("Target.createTarget", { url: "about:blank" });
-    const attached = await send("Target.attachToTarget", {
-      targetId: target.targetId,
-      flatten: true,
-    });
-    const sessionId = typeof attached.sessionId === "string" ? attached.sessionId : null;
-    if (!sessionId) throw new Error("Chromium DevTools 未返回页面 session");
-    await send("Page.enable", {}, sessionId);
-    const pageLoaded = waitForEvent("Page.loadEventFired", sessionId);
-    await send(
-      "Page.navigate",
-      { url: pathToFileURL(htmlFile).href },
-      sessionId,
-    );
-    await pageLoaded;
-    const expression = `new Promise((resolve) => {
-      const video = document.createElement("video");
-      video.muted = true; video.preload = "auto"; document.body.append(video);
-      const finish = (value) => resolve(value);
-      const paint = () => {
-        try {
-          if (!(video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2)) return finish("error");
-          const canvas = document.createElement("canvas"); canvas.width = 1; canvas.height = 1;
-          const context = canvas.getContext("2d", { willReadFrequently: true });
-          if (!context) return finish("error");
-          context.drawImage(video, 0, 0, 1, 1); context.getImageData(0, 0, 1, 1);
-          finish("ok");
-        } catch { finish("error"); }
-      };
-      video.addEventListener("loadeddata", () => {
-        const play = video.play(); if (play && typeof play.catch === "function") play.catch(() => {});
-        if (typeof video.requestVideoFrameCallback === "function") video.requestVideoFrameCallback(paint);
-        else setTimeout(paint, 100);
-      }, { once: true });
-      video.addEventListener("error", () => finish("error"), { once: true });
-      setTimeout(() => finish("timeout"), 5000);
-      video.src = ${JSON.stringify(videoUrl)}; video.load();
-    })`;
-    const evaluated = await send(
-      "Runtime.evaluate",
-      { expression, awaitPromise: true, returnByValue: true },
-      sessionId,
-    );
-    const remoteResult = evaluated.result as { value?: unknown } | undefined;
-    socket.close();
-    const outcome = remoteResult?.value;
-    if (outcome !== "ok") {
-      console.warn(
-        `[video-render] Chromium 解码 smoke 未通过: ${typeof outcome === "string" ? outcome : "no-result"}`,
-      );
-    }
-    return outcome === "ok";
-  } catch (error) {
-    if (signal.aborted) throw error;
-    console.warn(
-      `[video-render] Chromium 解码 smoke 异常: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return false;
-  } finally {
-    signal.removeEventListener("abort", killChild);
-    killChild();
-    if (child.exitCode == null && child.signalCode == null) {
-      await Promise.race([
-        new Promise<void>((resolve) => child.once("exit", () => resolve())),
-        new Promise<void>((resolve) => setTimeout(resolve, 1_000)),
-      ]);
-    }
-    await fs.rm(smokeDir, { recursive: true, force: true }).catch(() => {});
-  }
-}
-
 export function createDefaultVideoRenderEngine(
   // [T-281] Chromium 下载器由组合根(frontend)注入(见 ChromiumDownloader 注释);缺省 =
   //   不注入 → resolveChromium 未装时诚实报错引导(不在 backend 里 resolve playwright)。
@@ -846,9 +629,6 @@ export function createDefaultVideoRenderEngine(
         if (signal.aborted) throw error;
         return false;
       }
-    },
-    async verifyChromiumDecode(chromiumPath, file, signal) {
-      return verifyChromiumVideoFrame(chromiumPath, file, signal);
     },
     async runFfmpeg(ffmpeg, args, signal) {
       await execFileAsync(ffmpeg, args, signal);
@@ -1084,8 +864,9 @@ export function createVideoRenderExecutor(
       const mediaDir = path.join(workDir, "media");
       await fs.mkdir(mediaDir, { recursive: true });
 
-      // 3) 正式渲染输入准备：安全 H.264 只 remux；其他编码或 Chromium smoke 失败时
-      //    只生成一次高质量 mezzanine。预览 proxy 绝不进入正式合成。
+      // 3) 正式渲染输入准备：安全 H.264 经 FFmpeg 全流解码后只 remux；
+      //    其他编码只生成一次高质量 mezzanine。预览 proxy 绝不进入正式合成。
+      //    不在真实渲染前重复启动 Chromium 做首帧预检；HyperFrames 自己负责实际解码。
       const nameMap = new Map<string, string>();
       const inputPreparation: Array<{
         file: string;
@@ -1105,7 +886,7 @@ export function createVideoRenderExecutor(
           (await engine.verifyFfmpegDecode(ffmpeg, src, signal))
         ) {
           await reportStep(
-            `准备 ${f}(${probe.codec} ${probe.durationSec.toFixed(1)}s → 无损 remux + Chromium 首帧校验)`,
+            `准备 ${f}(${probe.codec} ${probe.durationSec.toFixed(1)}s → 无损 remux)`,
           );
           try {
             await engine.runFfmpeg(
@@ -1126,15 +907,7 @@ export function createVideoRenderExecutor(
               ],
               signal,
             );
-            if (
-              await engine.verifyChromiumDecode(
-                chromiumPath,
-                preparedFile,
-                signal,
-              )
-            ) {
-              strategy = "remux";
-            }
+            strategy = "remux";
           } catch (error) {
             if (signal.aborted) throw error;
           }
@@ -1187,17 +960,6 @@ export function createVideoRenderExecutor(
             ],
             signal,
           );
-          if (
-            !(await engine.verifyChromiumDecode(
-              chromiumPath,
-              preparedFile,
-              signal,
-            ))
-          ) {
-            throw new Error(
-              `INPUT_DECODE_UNSUPPORTED: ${path.basename(f)} 的高质量中间文件仍无法由随包 Chromium 解码`,
-            );
-          }
         }
         inputPreparation.push({
           file: path.basename(f),
