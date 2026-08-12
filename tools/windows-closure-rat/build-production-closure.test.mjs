@@ -52,6 +52,26 @@ test("production closure pins target and adapter evidence", () => {
   });
 });
 
+test("channel closure forwards one trusted package brand input into Next and verifies final closure", () => {
+  const brandInputPath = resolve(REPO_ROOT, "frontend/src-tauri/target/package-flavors/test/windows-x86_64/package-brand-build-input.json");
+  const brandEnv = {
+    NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: "测试品牌",
+    NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL: "data:image/x-icon;base64,AAECAw==",
+  };
+  const plan = productionClosurePlan({
+    preparePackage: true,
+    packageBrandInputPath: brandInputPath,
+    packageBrandBuildEnv: brandEnv,
+  });
+  const next = plan.find((step) => step.name === "Next adapter production build");
+  assert.equal(next.env.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME, "测试品牌");
+  assert.equal(next.env.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL, brandEnv.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL);
+  const verify = plan.find((step) => step.name === "verify packaged WebView brand");
+  assert.ok(verify);
+  assert.ok(verify.args.includes(brandInputPath));
+  assert.ok(verify.args.includes(resolve(HERE, "out", "closure")));
+});
+
 test("runtime smoke uses a real short-lived verdict instead of the removed bypass", () => {
   const source = readFileSync(resolve(HERE, "runtime-smoke.mjs"), "utf8");
   assert.match(source, /createBuildSmokeVerdictToken/);

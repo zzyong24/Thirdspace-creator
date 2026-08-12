@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { assertIdentityLock, compilePackageBrandBuildEnv, compilePackagePlan, validateManifestFiles, validatePackageManifest } from "./package-flavor.mjs";
+import { assertIdentityLock, compilePackageBrandBuildInput, compilePackagePlan, readPackageBrandBuildEnv, validateManifestFiles, validatePackageManifest } from "./package-flavor.mjs";
 import {
   buildLocalPackageEnv,
   installAndLaunchLocalMacApp,
@@ -30,6 +30,12 @@ const plan = compilePackagePlan(manifest, { target });
 const staging = resolve(frontend, "src-tauri/target/package-flavors", manifest.packageRef, target);
 mkdirSync(staging, { recursive: true });
 const icon = resolve(dirname(manifestPath), manifest.icons[plan.iconKey].path);
+const packageBrandBuildInput = compilePackageBrandBuildInput({
+  manifest,
+  iconBytes: readFileSync(resolve(dirname(manifestPath), manifest.icons.windows.path)),
+  iconMimeType: "image/x-icon",
+});
+const packageBrandInputPath = resolve(staging, "package-brand-build-input.json");
 const tauriOverride = {
   productName: manifest.displayName,
   mainBinaryName: manifest.binaryName,
@@ -39,6 +45,7 @@ const tauriOverride = {
 };
 writeFileSync(resolve(staging, "package-identity.json"), `${JSON.stringify(plan.packageIdentity, null, 2)}\n`);
 writeFileSync(resolve(staging, "tauri.override.json"), `${JSON.stringify(tauriOverride, null, 2)}\n`);
+writeFileSync(packageBrandInputPath, `${JSON.stringify(packageBrandBuildInput, null, 2)}\n`);
 const attestation = {
   schema: "creatoros-channel-package-attestation/v1",
   stable: { ...plan, mode, releaseRequested: mode === "release" },
@@ -49,11 +56,7 @@ console.log(`[package-channel] ✓ preflight ${manifest.packageRef}/${target}`);
 console.log(`[package-channel] staging: ${staging}`);
 if (!planOnly) {
   const packageEnv = buildLocalPackageEnv({ baseEnv: process.env });
-  const packageBrandEnv = compilePackageBrandBuildEnv({
-    manifest,
-    iconBytes: readFileSync(resolve(dirname(manifestPath), manifest.icons.windows.path)),
-    iconMimeType: "image/x-icon",
-  });
+  const packageBrandEnv = readPackageBrandBuildEnv(packageBrandBuildInput);
   execFileSync(process.execPath, [resolve(frontend, "scripts/desktop/package.mjs")], {
     cwd: frontend,
     stdio: "inherit",
@@ -62,6 +65,7 @@ if (!planOnly) {
       ...packageBrandEnv,
       CREATOROS_RELEASE: mode === "release" ? "1" : "0",
       CREATOROS_PACKAGE_IDENTITY_PATH: resolve(staging, "package-identity.json"),
+      CREATOROS_PACKAGE_BRAND_INPUT_PATH: packageBrandInputPath,
       CREATOROS_TAURI_PACKAGE_CONFIG: resolve(staging, "tauri.override.json"),
       CREATOROS_CHANNEL_PACKAGE_MODE: mode,
     },

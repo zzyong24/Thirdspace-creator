@@ -223,6 +223,7 @@ jobs:
       - name: 准备 Windows 少文件 production closure
         if: runner.os == 'Windows'
         env:
+          CREATOROS_PACKAGE_BRAND_INPUT_PATH: frontend/src-tauri/target/package-flavors/${{ inputs.package_ref }}/windows-x86_64/package-brand-build-input.json
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
@@ -412,6 +413,7 @@ jobs:
             frontend/src-tauri/target/package-flavors/${{ inputs.package_ref }}/windows-x86_64/attestation.json
             frontend/src-tauri/target/release/bundle/creatoros-release-manifest.json
             frontend/src-tauri/target/release/bundle/creatoros-release-attestation.json
+            tools/windows-closure-rat/out/package-brand-closure-proof.json
             channel-package-evidence.json
           if-no-files-found: error
           compression-level: 0

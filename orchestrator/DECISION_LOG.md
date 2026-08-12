@@ -4,6 +4,14 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-REL-045 (2026-08-11) — Windows 渠道 closure 必须消费同一 Package Brand 输入
+
+- **状态**：Accepted（用户明确允许修复，智溯AI本轮只构建 Windows）
+- **背景**：T-776 证明旧渠道 workflow 在 Windows 上先按官方默认值构建 production closure，随后才读取渠道清单并设置 `CREATOROS_SKIP_SIDECAR_REBUILD=1`。结果原生标题、图标和安装身份是渠道品牌，WebView 内编译常量仍是 CreatorOS。
+- **决策**：渠道 plan-only 必须从仓库内已提交、已校验的 PackageManifest 与 ICO 生成一份 staging 品牌编译输入。Windows production closure 的唯一一次 Next 构建通过显式文件路径消费该输入；构建完成后执行非视觉闭包证明，核对最终编译产物中同时存在预期品牌名与图标摘要。workflow 不硬编码任何渠道名，不把大图标 data URL 塞进 Windows 环境变量。
+- **边界**：不改变运行时 Growth 验签品牌优先级，不修改产品 UI，不改官方 `desktop-release.yml`，不运行视觉截图校验。渠道 macOS 现有路径不因本次智溯AI Windows 重跑而触发。
+- **复验**：两端 plan-only、渠道 workflow/brand 契约、Windows closure 计划测试必须通过；智溯AI Windows Actions artifact 必须完成 NSIS 真安装、主页面真启动、卸载与 `unsigned-accepted-risk` 证据。
+
 ## DEC-RADAR-046 (2026-08-09) — 内容雷达成功改写与选题淘汰后均可主动重试
 
 **来源**：用户在正式发布候选收口时明确提出：内容雷达一键改写生成的文案不满意时需要支持重试；

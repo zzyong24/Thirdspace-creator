@@ -40,6 +40,13 @@ describe("T-753 可复用渠道 GitHub 正式构建契约", () => {
     );
   });
 
+  it("Windows closure 消费 plan-only 生成的同一品牌输入并上传非视觉闭包证明", () => {
+    expect(packageChannel).toContain("package-brand-build-input.json");
+    expect(workflow).toContain("CREATOROS_PACKAGE_BRAND_INPUT_PATH");
+    expect(workflow).toContain("package-brand-closure-proof.json");
+    expect(workflow).not.toContain("NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: 智溯AI");
+  });
+
   it("macOS 缺签名凭据必须失败，并验证公证、staple 与 Gatekeeper", () => {
     for (const name of [
       "APPLE_CERTIFICATE_P12_B64",

@@ -77,6 +77,12 @@ export function sha256File(path) {
 }
 
 export function compilePackageBrandBuildEnv({ manifest, iconBytes, iconMimeType }) {
+  return readPackageBrandBuildEnv(
+    compilePackageBrandBuildInput({ manifest, iconBytes, iconMimeType }),
+  );
+}
+
+export function compilePackageBrandBuildInput({ manifest, iconBytes, iconMimeType }) {
   validatePackageManifest(structuredClone(manifest));
   if (!Buffer.isBuffer(iconBytes) || iconBytes.length === 0) {
     fail("WebView 品牌图标必须是非空 Buffer");
@@ -85,9 +91,41 @@ export function compilePackageBrandBuildEnv({ manifest, iconBytes, iconMimeType 
     fail("WebView 品牌图标只接受已校验的 ICO");
   }
   return {
-    NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: manifest.displayName,
+    schema: "creatoros-package-brand-build-input/v1",
+    packageRef: manifest.packageRef,
+    brandName: manifest.displayName,
+    iconMimeType,
+    iconBase64: iconBytes.toString("base64"),
+    iconSha256: createHash("sha256").update(iconBytes).digest("hex"),
+  };
+}
+
+export function readPackageBrandBuildEnv(input) {
+  if (!input || input.schema !== "creatoros-package-brand-build-input/v1") {
+    fail("WebView 品牌编译输入 schema 不受支持");
+  }
+  if (!REF.test(text(input.packageRef, "packageRef"))) {
+    fail("WebView 品牌编译输入 packageRef 格式非法");
+  }
+  const brandName = text(input.brandName, "brandName");
+  if (!["image/x-icon", "image/vnd.microsoft.icon"].includes(input.iconMimeType)) {
+    fail("WebView 品牌编译输入只接受已校验的 ICO");
+  }
+  if (typeof input.iconBase64 !== "string" || !input.iconBase64) {
+    fail("WebView 品牌编译输入缺图标内容");
+  }
+  const iconBytes = Buffer.from(input.iconBase64, "base64");
+  if (!iconBytes.length || iconBytes.toString("base64") !== input.iconBase64) {
+    fail("WebView 品牌编译输入图标 base64 非法");
+  }
+  const actualSha256 = createHash("sha256").update(iconBytes).digest("hex");
+  if (actualSha256 !== input.iconSha256) {
+    fail("WebView 品牌编译输入图标摘要不匹配");
+  }
+  return {
+    NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: brandName,
     NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL:
-      `data:${iconMimeType};base64,${iconBytes.toString("base64")}`,
+      `data:${input.iconMimeType};base64,${input.iconBase64}`,
   };
 }
 

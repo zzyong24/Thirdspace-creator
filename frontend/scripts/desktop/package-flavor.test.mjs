@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   compilePackageBrandBuildEnv,
+  compilePackageBrandBuildInput,
   compilePackagePlan,
+  readPackageBrandBuildEnv,
   validatePackageManifest,
 } from "./package-flavor.mjs";
 
@@ -63,5 +65,24 @@ describe("渠道包清单", () => {
       NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL:
         "data:image/x-icon;base64,AAECAw==",
     });
+  });
+
+  it("生成可供 Windows closure 复用且可验真的品牌编译输入", () => {
+    const input = compilePackageBrandBuildInput({
+      manifest: fixture,
+      iconBytes: Buffer.from([0, 1, 2, 3]),
+      iconMimeType: "image/x-icon",
+    });
+    expect(input.schema).toBe("creatoros-package-brand-build-input/v1");
+    expect(input.packageRef).toBe("test-channel");
+    expect(input.iconSha256).toHaveLength(64);
+    expect(readPackageBrandBuildEnv(input)).toEqual({
+      NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: "测试品牌",
+      NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL:
+        "data:image/x-icon;base64,AAECAw==",
+    });
+    expect(() =>
+      readPackageBrandBuildEnv({ ...input, iconSha256: "0".repeat(64) }),
+    ).toThrow(/图标摘要/);
   });
 });

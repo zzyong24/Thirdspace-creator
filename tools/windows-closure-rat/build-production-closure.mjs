@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readPackageBrandBuildEnv } from "../../frontend/scripts/desktop/package-flavor.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, "..", "..");
 const OUT_ROOT = resolve(SCRIPT_DIR, "out");
 const CLOSURE_ROOT = resolve(OUT_ROOT, "closure");
 const NEXT_REPORT = resolve(OUT_ROOT, "next-adapter-outputs.json");
+const PACKAGE_BRAND_PROOF = resolve(OUT_ROOT, "package-brand-closure-proof.json");
 
-export function productionClosurePlan({ preparePackage = false } = {}) {
+export function productionClosurePlan({
+  preparePackage = false,
+  packageBrandInputPath,
+  packageBrandBuildEnv = {},
+} = {}) {
   const steps = [
     {
       name: "Next adapter production build",
@@ -21,6 +27,7 @@ export function productionClosurePlan({ preparePackage = false } = {}) {
         CREATOROS_DESKTOP: "1",
         NEXT_ADAPTER_PATH: resolve(SCRIPT_DIR, "next-output-adapter.mjs"),
         CREATOROS_NEXT_OUTPUT_REPORT: NEXT_REPORT,
+        ...packageBrandBuildEnv,
       },
     },
     {
@@ -84,6 +91,18 @@ export function productionClosurePlan({ preparePackage = false } = {}) {
         CREATOROS_TARGET_ARCH: "x64",
       },
     },
+    ...(packageBrandInputPath
+      ? [{
+          name: "verify packaged WebView brand",
+          command: process.execPath,
+          args: [
+            resolve(SCRIPT_DIR, "verify-package-brand-closure.mjs"),
+            packageBrandInputPath,
+            CLOSURE_ROOT,
+            PACKAGE_BRAND_PROOF,
+          ],
+        }]
+      : []),
     {
       name: "bake verdict public key",
       command: process.execPath,
@@ -139,14 +158,36 @@ function runStep(step) {
   }
 }
 
+function loadPackageBrandInput(pathValue) {
+  if (!pathValue?.trim()) return null;
+  const inputPath = resolve(REPO_ROOT, pathValue);
+  const allowedRoot = resolve(REPO_ROOT, "frontend/src-tauri/target/package-flavors");
+  const relativePath = relative(allowedRoot, inputPath);
+  if (relativePath.startsWith("..") || relativePath === "") {
+    throw new Error("[T-781] 渠道品牌输入必须位于 package-flavors staging 内");
+  }
+  if (!existsSync(inputPath)) {
+    throw new Error(`[T-781] 渠道品牌输入不存在:${inputPath}`);
+  }
+  const input = JSON.parse(readFileSync(inputPath, "utf8"));
+  return { inputPath, buildEnv: readPackageBrandBuildEnv(input) };
+}
+
 export function buildProductionClosure({ preparePackage = false } = {}) {
   if (process.platform !== "win32" || process.arch !== "x64") {
     throw new Error(
       `[T-675] Windows production closure 只能在 win32-x64 构建，当前=${process.platform}-${process.arch}`,
     );
   }
+  const packageBrand = loadPackageBrandInput(
+    process.env.CREATOROS_PACKAGE_BRAND_INPUT_PATH,
+  );
   rmSync(OUT_ROOT, { recursive: true, force: true });
-  for (const step of productionClosurePlan({ preparePackage })) runStep(step);
+  for (const step of productionClosurePlan({
+    preparePackage,
+    packageBrandInputPath: packageBrand?.inputPath,
+    packageBrandBuildEnv: packageBrand?.buildEnv,
+  })) runStep(step);
   if (!existsSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json"))) {
     throw new Error("[T-675] production closure 缺 runtime smoke 证据");
   }
