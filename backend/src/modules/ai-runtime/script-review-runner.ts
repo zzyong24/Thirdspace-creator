@@ -155,6 +155,27 @@ export async function runScriptReview(
     if (!script || !script.text.trim()) {
       throw new Error("script-review-runner: 项目暂无可审脚本");
     }
+    const hasExpectedVersion =
+      typeof task.inputData.artifactVersion === "number" &&
+      Number.isInteger(task.inputData.artifactVersion);
+    if (hasExpectedVersion) {
+      const expectedVersion = task.inputData.artifactVersion as number;
+      const expectedArtifactId = Object.prototype.hasOwnProperty.call(
+        task.inputData,
+        "artifactId",
+      )
+        ? typeof task.inputData.artifactId === "string"
+          ? task.inputData.artifactId
+          : null
+        : undefined;
+      if (
+        script.version !== expectedVersion ||
+        (expectedArtifactId !== undefined &&
+          script.artifactId !== expectedArtifactId)
+      ) {
+        throw new Error("稿件已更新，本次旧版本审核已停止，请重新发起审核。");
+      }
+    }
 
     // ── L1:确定性违禁词/模式 lint(纯函数,消费 active 词表)──
     const rules = await deps.lintRules.listActiveLintRules(ctx);

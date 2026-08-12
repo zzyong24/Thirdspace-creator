@@ -1169,6 +1169,20 @@ describe("[T-217c] web.read 工具 — 带登录态读网页正文", () => {
 describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () => {
   const WHITELIST = ["material.generate"] as const;
 
+  it("[T-792] 工具说明要求配图先服务内容认知，再写成可见画面而非泛化海报", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const desc = (tools["material.generate"]! as { description?: string })
+      .description!;
+
+    expect(desc).toContain("替哪一句内容完成什么认知任务");
+    expect(desc).toContain("事实证据");
+    expect(desc).toContain("主体、动作或关系、环境、构图");
+    expect(desc).toContain("默认不要文字");
+    expect(desc).toContain("定位只影响视觉语言");
+    expect(desc).toContain("万能 AI 海报");
+  });
+
   it("execute 调注入的 dispatchGenerateAsset,返回 taskId + queued(kind=material.generate)", async () => {
     const { deps, dispatchGenerateAsset } = makeDeps();
     const tools = buildChatTools(WHITELIST, deps);
@@ -1621,6 +1635,92 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
     expect(result.error).toBeNull();
     // 关键回归:结果**不再**带 sections(前端改轮询 taskId 拿整稿候选,非同步回 sections)。
     expect(result.sections).toBeUndefined();
+  });
+
+  it("[T-791] generate 把本轮指令和多份受信资料按选择顺序完整冻结后 dispatch", async () => {
+    const first = "这是用户直接粘贴的完整原稿。\n第二段。";
+    const second = "附件里的访谈事实：用户先试了 A，后来改成 B。";
+    const { deps } = makeDeps({
+      verbatimSources: [
+        {
+          ref: "message:msg-1",
+          label: "用户消息 1",
+          text: first,
+          truncated: false,
+          sourceType: "message",
+          sourceId: "msg-1",
+        },
+        {
+          ref: "attachment:asset-1",
+          label: "文本附件：访谈.txt",
+          text: second,
+          truncated: false,
+          sourceType: "attachment",
+          sourceId: "asset-1",
+        },
+      ],
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+
+    const result = (await runExecute(tools["script.draft"]!, {
+      mode: "generate",
+      instruction: "保留事实，重写成逻辑更强的口播",
+      sourceRefs: ["attachment:asset-1", "message:msg-1"],
+    })) as { taskId: string | null; error: string | null };
+
+    expect(deps.dispatchScriptDraft).toHaveBeenCalledWith({
+      topic: undefined,
+      angle: undefined,
+      targetDurationSeconds: undefined,
+      extraBrief: undefined,
+      instruction: "保留事实，重写成逻辑更强的口播",
+      sourceSnapshots: [
+        expect.objectContaining({
+          sourceType: "attachment",
+          sourceId: "asset-1",
+          order: 0,
+          charCount: second.length,
+          sha256: createHash("sha256").update(second).digest("hex"),
+          body: second,
+          complete: true,
+        }),
+        expect.objectContaining({
+          sourceType: "message",
+          sourceId: "msg-1",
+          order: 1,
+          charCount: first.length,
+          sha256: createHash("sha256").update(first).digest("hex"),
+          body: first,
+          complete: true,
+        }),
+      ],
+    });
+    expect(result).toMatchObject({ taskId: "task-draft-1", error: null });
+  });
+
+  it("[T-791] 多来源任一引用失效或截断时整次拒绝，不用剩余资料继续生成", async () => {
+    const { deps } = makeDeps({
+      verbatimSources: [
+        {
+          ref: "message:msg-1",
+          label: "用户消息 1",
+          text: "完整来源",
+          truncated: false,
+          sourceType: "message",
+          sourceId: "msg-1",
+        },
+      ],
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+    const result = (await runExecute(tools["script.draft"]!, {
+      mode: "generate",
+      instruction: "基于两份资料写",
+      sourceRefs: ["message:msg-1", "attachment:missing"],
+    })) as { taskId: string | null; error: string | null };
+
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("资料引用已失效");
+    expect(deps.dispatchScriptDraft).not.toHaveBeenCalled();
   });
 
   it("端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装写好)", async () => {

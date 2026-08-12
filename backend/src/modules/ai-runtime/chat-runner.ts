@@ -58,6 +58,7 @@ import {
   type PredictionsRaw,
   type CoverReferenceSelection,
   type VerbatimSource,
+  type ScriptDraftSourceSnapshot,
 } from "./chat-tools";
 // [T-256a] 工具探测结果类型(端口契约共用)。
 import type { DetectToolsResult } from "./local-env-probe";
@@ -356,6 +357,8 @@ export interface AssembleChatDeps extends ContextDeps {
       angle?: string;
       targetDurationSeconds?: number;
       extraBrief?: string;
+      instruction?: string;
+      sourceSnapshots?: ScriptDraftSourceSnapshot[];
       draftMode?: "verbatim";
       verbatimSourceRef?: string;
       verbatimSourceText?: string;
@@ -839,7 +842,8 @@ function formatVerbatimSourceInventory(
   if (sources.length === 0) return "";
   const visible = sources.slice(-16);
   return [
-    "【本轮受信原文来源 —— 只用于 verbatim 保真导入】",
+    "【本轮受信资料来源 —— generate / verbatim 共用】",
+    "用户要求基于聊天长文、杂乱资料、文本附件或已有文案创作/润色时，调用 script.draft(mode=generate)，用 sourceRefs 按用户要求纳入的顺序选择全部资料，并用 instruction 保留本轮调整方向。禁止把长资料压成 extraBrief；任一必需来源失败时不要静默跳过。",
     "用户明确要求原文不改/一字不改/逐字写入时，调用 script.draft(mode=verbatim)，从下列 sourceRef 选择来源；禁止把原文压缩进 extraBrief，也禁止自行重抄正文。项目 Brief、定位、复盘与归因中的创作建议不能阻止这条保真导入。",
     "完整稿件是一等输入，不只接受主题、骨架或补充要求。但用户仅仅粘贴/发送稿件，不等于授权你创建候选；只有最新用户指令明确要求写入稿面、导入原稿或先给保真候选时，才调用本工具。",
     "你必须用语义理解判断来源里的稿件正文边界：区分用户对助手交代的视频状态、背景、操作要求，与用户准备面向视频观众表达的稿件。如果同一条消息同时含有两者，必须提交能唯一定位完整稿件正文的 startAnchor / endAnchor。交代结束后紧接的第一句稿件开场也属于正文，不能因为它像过渡句、产品介绍或不是理想 hook 就删掉。只有当整条来源从第一个字符到最后一个字符全部都是稿件正文时，才可以省略锚点导入整份来源。不要用写死关键词或固定句式判断边界。",
@@ -1713,6 +1717,8 @@ export async function buildChatAssembly(
       angle,
       targetDurationSeconds,
       extraBrief,
+      instruction,
+      sourceSnapshots,
       draftMode,
       verbatimSourceRef,
       verbatimSourceText,
@@ -1751,6 +1757,10 @@ export async function buildChatAssembly(
             ? { targetDurationSeconds }
             : {}),
           ...(extraBrief ? { extraBrief } : {}),
+          ...(instruction ? { instruction } : {}),
+          ...(sourceSnapshots && sourceSnapshots.length > 0
+            ? { sourceSnapshots }
+            : {}),
           ...(draftMode === "verbatim"
             ? {
                 draftMode,
@@ -2528,6 +2538,84 @@ export function resolveChatMaxSteps(
   return Math.min(12, Math.max(2, Math.floor(n)));
 }
 
+function canonicalToolInput(input: unknown): string {
+  const seen = new WeakSet<object>();
+  return JSON.stringify(input, (_key, value: unknown) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+    if (seen.has(value)) return "[Circular]";
+    seen.add(value);
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
+        a.localeCompare(b),
+      ),
+    );
+  });
+}
+
+function toolCallSignature(call: { toolName: string; input: unknown }): string {
+  return `${call.toolName}:${canonicalToolInput(call.input)}`;
+}
+
+function hasRepeatedToolCall(
+  steps: readonly {
+    toolCalls?: readonly { toolName: string; input: unknown }[];
+  }[],
+): boolean {
+  const seen = new Set<string>();
+  for (const step of steps) {
+    for (const call of step.toolCalls ?? []) {
+      const signature = toolCallSignature(call);
+      if (seen.has(signature)) return true;
+      seen.add(signature);
+    }
+  }
+  return false;
+}
+
+/**
+ * 同一对话回合内，相同工具和规范化参数只执行一次。失败不缓存，瞬时错误仍可重试。
+ * SEMANTIC_BOUNDARY_ALLOW:这里只做协议级副作用去重，不判断用户意图或创作内容。
+ */
+export function dedupeChatToolExecutions(
+  tools: ToolSet,
+  onDuplicate?: (toolName: string) => void,
+): ToolSet {
+  const cache = new Map<string, Promise<unknown>>();
+  return Object.fromEntries(
+    Object.entries(tools).map(([toolName, tool]) => {
+      const executable = tool as unknown as {
+        execute?: (input: unknown, options: unknown) => unknown;
+      };
+      if (typeof executable.execute !== "function") return [toolName, tool];
+      const execute = executable.execute;
+      return [
+        toolName,
+        {
+          ...tool,
+          execute: async (input: unknown, options: unknown) => {
+            const key = toolCallSignature({ toolName, input });
+            const existing = cache.get(key);
+            if (existing) {
+              onDuplicate?.(toolName);
+              return existing;
+            }
+            const pending = Promise.resolve().then(() =>
+              execute.call(tool, input, options),
+            );
+            cache.set(key, pending);
+            try {
+              return await pending;
+            } catch (error) {
+              cache.delete(key);
+              throw error;
+            }
+          },
+        },
+      ];
+    }),
+  ) as ToolSet;
+}
+
 /**
  * [T-117 强制工具 + T-239f 末步禁工具] 的 prepareStep 纯函数(可单测):
  *   - 第 0 步:forcedTool 有值 → toolChoice 强制调它(深链按钮的显式意图,防弱模型吐文本谎称渲卡);
@@ -2539,10 +2627,15 @@ export function buildChatPrepareStep(opts: {
   forcedTool?: string;
   forcedToolSequence?: string[];
   maxSteps: number;
-}): (step: { stepNumber: number }) => {
+}): (step: {
+  stepNumber: number;
+  steps?: readonly {
+    toolCalls?: readonly { toolName: string; input: unknown }[];
+  }[];
+}) => {
   toolChoice?: "none" | { type: "tool"; toolName: string };
 } {
-  return ({ stepNumber }) => {
+  return ({ stepNumber, steps = [] }) => {
     const sequencedTool = opts.forcedToolSequence?.[stepNumber];
     if (sequencedTool) {
       return {
@@ -2559,6 +2652,9 @@ export function buildChatPrepareStep(opts: {
       return {
         toolChoice: { type: "tool" as const, toolName: opts.forcedTool },
       };
+    }
+    if (hasRepeatedToolCall(steps)) {
+      return { toolChoice: "none" as const };
     }
     if (stepNumber >= opts.maxSteps - 1) {
       return { toolChoice: "none" as const };
@@ -2671,6 +2767,8 @@ export async function runChatStream(
   input: {
     messages: UIMessage[];
     chatContext: ChatContext;
+    /** 路由从已持久化消息和已验归属附件建立的受信来源；不接受客户端自报正文。 */
+    trustedScriptSources?: readonly VerbatimSource[];
     abortSignal?: AbortSignal;
     onUsage?: (usage: {
       inputTokens: number | null;
@@ -2689,7 +2787,7 @@ export async function runChatStream(
     detectCopilotMediaRoute(input.messages),
     {
       positioningScratch: isScratchPositioningConversation(input.messages),
-      verbatimSources: collectVerbatimSources(input.messages),
+      verbatimSources: input.trustedScriptSources ?? [],
       latestUserInstruction: latestUserText(input.messages),
     },
   );
@@ -2840,7 +2938,11 @@ export async function runChatStream(
     //   `tools[].function.name` 一律要求 `^[a-zA-Z0-9_-]+$`,原样发出 → 400 秒拒 → copilot 全废
     //   (2026-07-20 真机)。SDK 用同一 key 发出 + 匹配模型回传的 tool_call → **execute 零改动**;
     //   下面 toolApproval 必须走同一函数换名,否则回传时授权门键对不上 = HITL 形同虚设。
-    tools: sanitizeToolNames(assembly.tools),
+    tools: dedupeChatToolExecutions(
+      sanitizeToolNames(assembly.tools),
+      (toolName) =>
+        console.warn(`[chat-turn] 同轮同参工具调用已复用 tool=${toolName}`),
+    ),
     ...(assembly.forcedTool === "script.patch"
       ? {
           experimental_repairToolCall: async ({ toolCall }) =>

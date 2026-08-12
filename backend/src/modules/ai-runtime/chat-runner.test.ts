@@ -20,6 +20,7 @@ import {
   resolveUniqueCoverReference,
   collectVerbatimSources,
   parseSemanticVerbatimSelection,
+  dedupeChatToolExecutions,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import {
@@ -2702,6 +2703,23 @@ describe("[T-239f] resolveChatMaxSteps — 步数上限可配", () => {
 });
 
 describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制工具兼容", () => {
+  it("同一轮相同工具和参数第二次出现后，下一步立即禁工具收尾", () => {
+    const prep = buildChatPrepareStep({ maxSteps: 6 });
+    const repeated = {
+      toolName: "material_gather",
+      input: { query: "维生素D 镁" },
+    };
+    expect(
+      prep({
+        stepNumber: 2,
+        steps: [
+          { toolCalls: [repeated] },
+          { toolCalls: [{ input: { query: "维生素D 镁" }, toolName: "material_gather" }] },
+        ],
+      }),
+    ).toEqual({ toolChoice: "none" });
+  });
+
   it("最后一步(stepNumber === maxSteps-1)→ toolChoice:'none'(模型必须文字总结,不再被 stopWhen 静默腰斩)", () => {
     const prep = buildChatPrepareStep({ maxSteps: 6 });
     expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
@@ -2756,6 +2774,36 @@ describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制
     expect(s).not.toContain("topic.enrich"); // 不能漏用原名
     expect(s).toMatch(/必须首先调用/); // 强制语义仍在(T-117 的意图不丢)
     expect(s).toMatch(/不要用文字描述/); // 防「谎称已渲卡」
+  });
+});
+
+describe("dedupeChatToolExecutions — 同轮同参只执行一次", () => {
+  it("成功结果复用，失败结果不缓存，避免瞬时错误被永久粘住", async () => {
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [1] })
+      .mockRejectedValueOnce(new Error("瞬时失败"))
+      .mockResolvedValueOnce({ rows: [2] });
+    const tools = dedupeChatToolExecutions({
+      "material.gather": { execute },
+    } as never);
+    const call = (
+      tools["material.gather"] as unknown as {
+        execute: (input: unknown, options?: unknown) => Promise<unknown>;
+      }
+    ).execute;
+
+    await expect(call({ query: "同一查询", filters: { b: 2, a: 1 } })).resolves.toEqual({
+      rows: [1],
+    });
+    await expect(call({ filters: { a: 1, b: 2 }, query: "同一查询" })).resolves.toEqual({
+      rows: [1],
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+
+    await expect(call({ query: "另一个查询" })).rejects.toThrow("瞬时失败");
+    await expect(call({ query: "另一个查询" })).resolves.toEqual({ rows: [2] });
+    expect(execute).toHaveBeenCalledTimes(3);
   });
 });
 

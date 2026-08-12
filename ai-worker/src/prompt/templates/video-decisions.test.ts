@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  VIDEO_BROLL_TEMPLATE,
   VIDEO_CARDS_TEMPLATE,
   VIDEO_DIRECTOR_TEMPLATE,
   normalizeVideoBrollOutput,
@@ -106,6 +107,40 @@ describe("normalizeVideoBrollOutput", () => {
 
     expect(parsed.slots).toHaveLength(1);
     expect(parsed.broll).toEqual([]);
+  });
+});
+
+describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
+  it("画面槽位同时给出认知任务、选图理由和可直接生图的 prompt", () => {
+    const parsed = videoBrollSchema.parse({
+      slots: [
+        {
+          ...slot("analogy", 0),
+          visualClaim: "工具变了，模糊流程没有变",
+          reason: "把抽象的工作流问题变成观众一眼能看懂的因果关系",
+          generationPrompt:
+            "竖屏纪实插画，同一个未拆解的纸箱任务从一台机器传到另一台机器，箱内仍是一团乱线，人物停在两台机器之间观察，中央构图，冷暖对比，画面内无文字",
+        },
+      ],
+      broll: [],
+    });
+
+    expect(parsed.slots[0]).toMatchObject({
+      visualClaim: "工具变了，模糊流程没有变",
+      reason: expect.stringContaining("一眼能看懂"),
+      generationPrompt: expect.stringContaining("画面内无文字"),
+    });
+  });
+
+  it("提示词先定画面在论证中的职责，再落成一个可见关系而不是复述口播", () => {
+    expect(VIDEO_BROLL_TEMPLATE.version).toBe("v5");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("观众看完这张图应多理解什么");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("一个画面只完成一个认知动作");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("主体、动作或关系、环境、构图");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("默认不生成文字");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("generationPrompt 必须留空");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("定位只影响视觉语言");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("万能 AI 海报");
   });
 });
 

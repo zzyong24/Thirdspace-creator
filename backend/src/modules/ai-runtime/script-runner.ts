@@ -86,6 +86,85 @@ function renderSummary(board: Storyboard): string {
   return `AI 分镜脚本 · ${board.sections.length} 镜`;
 }
 
+interface FrozenScriptSource {
+  sourceType: "message" | "attachment" | "project_text";
+  sourceId: string;
+  label: string;
+  order: number;
+  charCount: number;
+  sha256: string;
+  body: string;
+  complete: true;
+}
+
+function readFrozenScriptSources(inputData: Record<string, unknown>): {
+  instruction?: string;
+  sources: FrozenScriptSource[];
+  brief?: string;
+  metadata: Array<Omit<FrozenScriptSource, "body">>;
+} {
+  const raw = inputData.sourceSnapshots;
+  if (raw === undefined) return { sources: [], metadata: [] };
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 16) {
+    throw new Error("资料快照校验失败：来源清单为空或数量异常。");
+  }
+  const instruction =
+    typeof inputData.instruction === "string" ? inputData.instruction.trim() : "";
+  if (!instruction || instruction.length > 4_000) {
+    throw new Error("资料快照校验失败：本轮写作方向缺失或过长。");
+  }
+  let totalChars = 0;
+  const sources = raw.map((value, order): FrozenScriptSource => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("资料快照校验失败：来源格式无效。");
+    }
+    const item = value as Record<string, unknown>;
+    const body = typeof item.body === "string" ? item.body : "";
+    const sourceType = item.sourceType;
+    const sourceId = typeof item.sourceId === "string" ? item.sourceId.trim() : "";
+    const label = typeof item.label === "string" ? item.label.trim() : "";
+    const sha256 = typeof item.sha256 === "string" ? item.sha256 : "";
+    totalChars += body.length;
+    if (
+      !["message", "attachment", "project_text"].includes(String(sourceType)) ||
+      !sourceId ||
+      item.order !== order ||
+      item.complete !== true ||
+      !body.trim() ||
+      item.charCount !== body.length ||
+      sha256 !== createHash("sha256").update(body).digest("hex") ||
+      totalChars > 200_000
+    ) {
+      throw new Error("资料快照校验失败：正文、顺序、字符数或 SHA-256 不一致。");
+    }
+    return {
+      sourceType: sourceType as FrozenScriptSource["sourceType"],
+      sourceId,
+      label: label || `来源 ${order + 1}`,
+      order,
+      charCount: body.length,
+      sha256,
+      body,
+      complete: true,
+    };
+  });
+  const brief = sources
+    .map(
+      (source) =>
+        `【受信资料 ${source.order + 1}｜${source.sourceType}｜${source.label}｜${source.charCount} 字符｜sha256=${source.sha256}】\n` +
+        "<user_source_data>\n" +
+        source.body +
+        "\n</user_source_data>",
+    )
+    .join("\n\n");
+  return {
+    instruction,
+    sources,
+    brief,
+    metadata: sources.map(({ body: _body, ...metadata }) => metadata),
+  };
+}
+
 export async function runScriptDraft(
   ctx: RequestContext,
   task: ScriptTask,
@@ -168,6 +247,7 @@ export async function runScriptDraft(
       });
       return;
     }
+    const frozenSources = readFrozenScriptSources(task.inputData);
     const topic =
       typeof task.inputData.topic === "string" ? task.inputData.topic : "";
     const context = await assembleCreativeContext(
@@ -213,6 +293,8 @@ export async function runScriptDraft(
         task.inputData.extraBrief.trim()
           ? task.inputData.extraBrief.trim()
           : undefined,
+      sourceInstruction: frozenSources.instruction,
+      sourceMaterialsBrief: frozenSources.brief,
       targetDurationSeconds:
         typeof task.inputData.targetDurationSeconds === "number" &&
         Number.isFinite(task.inputData.targetDurationSeconds) &&
@@ -305,6 +387,9 @@ export async function runScriptDraft(
         finishReason: generation.finishReason,
         usage: generation.usage,
         generationAttempts: generation.attempts,
+        ...(frozenSources.metadata.length > 0
+          ? { sourceSnapshots: frozenSources.metadata }
+          : {}),
       },
     });
   } catch (err) {

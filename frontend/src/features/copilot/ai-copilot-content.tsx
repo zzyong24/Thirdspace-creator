@@ -78,6 +78,7 @@ import { ChatScriptDraftCard } from "./chat-script-draft-card";
 import { ChatVideoEditCard, type ChatVideoEditCandidate } from "./chat-video-edit-card";
 import { ChatPublishPackageCard } from "./chat-publish-package-card";
 import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
+import { joinCopilotMessageText } from "./copilot-message-text";
 import { CopilotUserMessageText } from "./copilot-user-message";
 // [T-084b/c] 截图卡(公开页真截图 → 加入弹药)+ 生成卡(dispatch asset.generate → 轮询采纳)。
 import {
@@ -2268,10 +2269,9 @@ export function AICopilotContent({
                   {/* 文本 part:用户消息纯文本气泡;AI 回复走 markdown 富呈现(T-029:标题/列表/
                       表格/代码/加粗,替掉纯文本直出)。 */}
                   {(() => {
-                    const text = message.parts
-                      .filter((p) => p.type === "text")
-                      .map((p) => p.text)
-                      .join("");
+                    const text = joinCopilotMessageText(message.parts, {
+                      dedupeConsecutive: message.role === "assistant",
+                    });
                     if (!text.trim()) return null;
                     return message.role === "user" ? (
                       <CopilotUserMessageText text={text} />

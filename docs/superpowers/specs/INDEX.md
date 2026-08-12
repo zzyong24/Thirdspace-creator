@@ -47,6 +47,9 @@
 | [2026-07-26-model-configuration-lightweight-optimization.md](2026-07-26-model-configuration-lightweight-optimization.md) | 替代范围:只做收字段进高级+"保存并测试"复用正式 streamText 通路+更新教程(收窄 T-501) | 用户已确认·可进 BUILD |
 | [2026-07-31-gradual-transcript-backfill-and-mimo-asr.md](2026-07-31-gradual-transcript-backfill-and-mimo-asr.md) | 历史作品全量入库但逐字稿每轮小批补齐；ASR 改必配并接小米 MiMo 独立协议(T-639) | 用户已确认·BUILD 中 |
 | [2026-08-04-copilot-project-lifecycle-tool-closure.md](2026-08-04-copilot-project-lifecycle-tool-closure.md) | T-691：补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环，并根治“页面有稿、Context 读空” | 📋 待独立评审 |
+| [2026-08-12-material-driven-script-draft-tool.md](2026-08-12-material-driven-script-draft-tool.md) | T-791：让聊天长文、杂乱资料、文本文件和已有文案作为受信一等输入进入 `script.draft generate` | ✅ 独立评审 PASS，已正式开工 |
+| [2026-08-12-script-draft-skill-iteration.md](2026-08-12-script-draft-skill-iteration.md) | T-790：对现有 `script.draft` 做单变量人工 A/B 迭代；loop 是 Skill 开发方法，不是产品功能 | ✅ Skill-only 独立评审 PASS，已与工具任务拆分 |
+| [2026-08-12-copywriting-quality-evaluation-loop.md](2026-08-12-copywriting-quality-evaluation-loop.md) | T-790 旧方向：曾将文案评估 loop 设计为产品功能 | ⛔ 已被用户纠偏，仅作历史 |
 
 ## 数据管线与采集
 

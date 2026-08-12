@@ -9,6 +9,17 @@ export interface ScriptDraftTaskInput {
   angle?: string;
   targetDurationSeconds?: number;
   extraBrief?: string;
+  instruction?: string;
+  sourceSnapshots?: Array<{
+    sourceType: "message" | "attachment" | "project_text";
+    sourceId: string;
+    label: string;
+    order: number;
+    charCount: number;
+    sha256: string;
+    body: string;
+    complete: true;
+  }>;
   draftMode?: "verbatim";
   verbatimSourceRef?: string;
   verbatimSourceText?: string;
@@ -52,6 +63,33 @@ export function buildScriptDraftTaskInputData(
       verbatimSourceSha256: sourceSha256,
     };
   }
+  const sourceSnapshots = input.sourceSnapshots ?? [];
+  if (sourceSnapshots.length > 0) {
+    const instruction = input.instruction?.trim() ?? "";
+    let totalChars = 0;
+    const valid =
+      instruction.length > 0 &&
+      instruction.length <= 4_000 &&
+      sourceSnapshots.length <= 16 &&
+      sourceSnapshots.every((source, index) => {
+        totalChars += source.body.length;
+        return (
+          ["message", "attachment", "project_text"].includes(source.sourceType) &&
+          Boolean(source.sourceId.trim()) &&
+          source.order === index &&
+          source.complete === true &&
+          Boolean(source.body.trim()) &&
+          source.charCount === source.body.length &&
+          /^[a-f0-9]{64}$/.test(source.sha256) &&
+          source.sha256 ===
+            createHash("sha256").update(source.body).digest("hex")
+        );
+      }) &&
+      totalChars <= 200_000;
+    if (!valid) {
+      throw new Error("资料快照校验失败，请重新选择完整资料后生成。");
+    }
+  }
   return {
     ...base,
     ...(input.topic ? { topic: input.topic } : {}),
@@ -60,5 +98,11 @@ export function buildScriptDraftTaskInputData(
       ? { targetDurationSeconds: input.targetDurationSeconds }
       : {}),
     ...(input.extraBrief ? { extraBrief: input.extraBrief } : {}),
+    ...(sourceSnapshots.length > 0
+      ? {
+          instruction: input.instruction!.trim(),
+          sourceSnapshots,
+        }
+      : {}),
   };
 }

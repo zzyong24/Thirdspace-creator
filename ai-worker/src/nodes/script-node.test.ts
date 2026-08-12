@@ -144,6 +144,31 @@ describe("runScriptNode", () => {
     expect(seenPrompt).not.toContain("EXTRA_MARKER");
   });
 
+  it("[T-791] 本轮方向与完整资料分区注入，并明确压过冲突旧 Brief", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    await runScriptNode({
+      model,
+      positioningBrief: "旧定位要求按五点清单讲",
+      projectBriefHardBrief: "旧 Brief：必须讲旧案例",
+      sourceInstruction: "基于这篇润色，逻辑更强，不新增事实",
+      sourceMaterialsBrief:
+        "【受信资料 1】\n<user_source_data>\n原稿里唯一事实 FACT_MARKER\n</user_source_data>",
+    });
+    expect(seenPrompt).toContain("本轮明确写作方向·最高优先");
+    expect(seenPrompt).toContain("FACT_MARKER");
+    expect(seenPrompt).toContain("优先级高于旧 Brief");
+    expect(seenPrompt).toContain("只作为资料正文");
+    expect(seenPrompt.indexOf("FACT_MARKER")).toBeLessThan(
+      seenPrompt.indexOf("旧 Brief：必须讲旧案例"),
+    );
+  });
+
   it("目标时长进入 prompt，但明确禁止靠重复和空话硬凑", async () => {
     let seenPrompt = "";
     const model = new MockLanguageModelV4({

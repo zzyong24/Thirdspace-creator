@@ -38,6 +38,12 @@ function makeService(
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     ai: aiPort,
+    script: {
+      getCurrentScriptRef: async () => ({
+        artifactId: "artifact-1",
+        artifactVersion: 3,
+      }),
+    },
   });
   return { service, ai: aiPort };
 }
@@ -307,6 +313,9 @@ describe("review-gate service", () => {
         now: () => times[Math.min(clockIdx, times.length - 1)]!,
         nextId: (p: string) => `${p}-${++seq}`,
         ai: fakeAi(),
+        script: {
+          getCurrentScriptRef: async () => ({ artifactId: "art-1", artifactVersion: 3 }),
+        },
       });
       clockIdx = 0;
       const first = await service.saveReport(ctxA, {
@@ -365,13 +374,39 @@ describe("review-gate service", () => {
       expect(ai.createTask).not.toHaveBeenCalled();
     });
 
-    it("正常 → 起 script.review ai_task,projectId 进 inputData,透传 ctx", async () => {
+    it("正常 → 当前稿件版本进入 inputData，且每次显式重审使用新的 attempt", async () => {
       const { service, ai } = makeService(db);
       await service.triggerReview(ctxA, "project-1");
-      expect(ai.createTask).toHaveBeenCalledWith(ctxA, {
-        taskType: "script.review",
-        inputData: { projectId: "project-1" },
-      });
+      await service.triggerReview(ctxA, "project-1");
+      expect(ai.createTask).toHaveBeenNthCalledWith(
+        1,
+        ctxA,
+        expect.objectContaining({
+          taskType: "script.review",
+          attemptId: expect.any(String),
+          inputData: {
+            projectId: "project-1",
+            artifactId: "artifact-1",
+            artifactVersion: 3,
+          },
+        }),
+      );
+      expect(ai.createTask).toHaveBeenNthCalledWith(
+        2,
+        ctxA,
+        expect.objectContaining({
+          taskType: "script.review",
+          attemptId: expect.any(String),
+          inputData: {
+            projectId: "project-1",
+            artifactId: "artifact-1",
+            artifactVersion: 3,
+          },
+        }),
+      );
+      const first = ai.createTask.mock.calls[0]?.[1] as { attemptId?: string };
+      const second = ai.createTask.mock.calls[1]?.[1] as { attemptId?: string };
+      expect(first.attemptId).not.toBe(second.attemptId);
     });
   });
 });

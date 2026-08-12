@@ -584,6 +584,9 @@ export function scenesFacet(scenes: readonly VideoScene[]): string {
 }
 
 export function libraryFacet(inventory: readonly BrollAssetRef[]): string {
+  if (inventory.length === 0) {
+    return "（当前项目没有可用素材；请继续生成画面需求，素材绑定保持为空）";
+  }
   const sourceLabel: Record<BrollSource, string> = {
     script: "脚本分镜点名",
     ammo: "项目弹药",
@@ -626,7 +629,9 @@ export function visualSlotsFacet(slots: VideoBrollOutput["slots"]): string {
   return slots
     .map(
       (slot) =>
-        `${slot.sceneIdx} | ${sec(slot.at)}s | ${slot.purpose} | 口播:${slot.spokenAnchor} | 画面:${slot.visualBrief}${
+        `${slot.sceneIdx} | ${sec(slot.at)}s | ${slot.purpose} | 口播:${slot.spokenAnchor}${
+          slot.visualClaim ? ` | 认知:${slot.visualClaim}` : ""
+        }${slot.reason ? ` | 理由:${slot.reason}` : ""} | 画面:${slot.visualBrief}${
           slot.searchQuery ? ` | 搜索:${slot.searchQuery}` : ""
         }`,
     )

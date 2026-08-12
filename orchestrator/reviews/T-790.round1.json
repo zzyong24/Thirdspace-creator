@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "当前确认范围存在两处会让合理实现产生不同用户结果的缺口：Round 0 的展示语义自相矛盾，且既有生产配置写入契约无法表示全部已确认优化旋钮。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "DEC-COPY-02",
+        "quote": "Round 0 生成当前配置的 baseline，成为 incumbent"
+      },
+      "acceptance_anchor": {
+        "id": "AC-COPY-01",
+        "quote": "Round 0 和后续 challenger 页面只出现两篇完整文案与 A/B/平局选择"
+      },
+      "where": "DEC-COPY-02、4.2 每轮交互与 AC-COPY-01 的 Round 0 状态转换",
+      "failure_mode": "Round 0 按产品裁决只生成一篇 baseline，但验收又要求 Round 0 展示两篇文案并允许 A/B/平局。实现者可能让 Round 0 只有一篇、在同轮额外生成未声明变量的 challenger，或把首个 challenger 记为 Round 0；三种实现会产生不同轮数、预算、停止条件和偏好记录，无法唯一验收。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-12-copywriting-quality-evaluation-loop.md#DEC-COPY-02；同文件#AC-COPY-01",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定唯一编号与展示语义：明确 Round 0 是仅生成且不评判的 incumbent，首个 A/B 比较从 Round 1 开始；或明确 Round 0 如何同时产生两篇且仍满足唯一主变量约束，并同步轮数与停止验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "DEC-COPY-03",
+        "quote": "本产品把板块权重落实为四种可复现控制：是否进入、约束级别、上下文预算、工作流位置"
+      },
+      "acceptance_anchor": {
+        "id": "AC-COPY-09",
+        "quote": "确认新配置后，旧运行保持旧 snapshot，新任务使用新 revision"
+      },
+      "where": "6. 生产升级与回滚、7. 实现边界与现有 settings.prompts.put 契约",
+      "failure_mode": "SPEC 要求 proposal 能升级板块预算、工作流位置以及模型生成参数，却指定复用现有 settings.prompts.put/account overlay。当前该操作只能写 system、template、tools、requiredFacets、outputSchema 和 completionPolicy，不能表示 provider、temperature、top_p、reasoning、节点超时、板块上下文预算或节点顺序。若挑战方案由这些旋钮获胜，用户即使确认，也可能只保存 prompt 文本而未升级实际工作流或模型配置；新任务因此无法读取与实验 winner 等价的 revision，AC-COPY-09 失败。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "contract/src/operations/settings.ts:163-177；contract/src/resources/settings.ts:152-159；docs/superpowers/specs/2026-08-12-copywriting-quality-evaluation-loop.md:98-116,182-188",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在 CONTRACT 前规定每类可调旋钮的现有真相来源、可版本化写入目标和新任务读取方式，并要求 proposal diff 只能包含可落入这些目标的字段；settings.prompts.put 可复用其能表达的部分，但不得被声明为全部生产配置的唯一写入口。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

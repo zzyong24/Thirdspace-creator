@@ -1105,6 +1105,21 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
       content: "结合资料给建议",
       attachments: ["asset-doc"],
     });
+    expect(input.trustedScriptSources).toEqual([
+      expect.objectContaining({
+        ref: "message:m-1",
+        sourceType: "message",
+        sourceId: "m-1",
+        text: "结合资料给建议",
+      }),
+      expect.objectContaining({
+        ref: "attachment:asset-doc",
+        sourceType: "attachment",
+        sourceId: "asset-doc",
+        text: "目标用户是国内餐饮老板。",
+        truncated: false,
+      }),
+    ]);
   });
 
   it("Markdown 无预抽取结果时仍直接读取原始字节", async () => {

@@ -24,6 +24,7 @@ import {
   dedupeBrollRefs,
   collectProjectBrollInventory,
   libraryFacet,
+  visualSlotsFacet,
   manualAssignmentsFacet,
   enforceStoryboardBroll,
   enforceManualMaterialAssignments,
@@ -145,6 +146,29 @@ describe("动态 refine schema(zod,绑定本次输入)", () => {
         lines: [...ok.lines.slice(0, 3), { index: 99, zh: "x", en: "y" }],
       }).success,
     ).toBe(false); // 序号漂移
+  });
+});
+
+describe("[T-792] 内容辅助型画面需求向下游传递", () => {
+  it("真实素材匹配能看到认知增量和选图理由，但不接收仅供文生图的 prompt", () => {
+    const facet = visualSlotsFacet([
+      {
+        sceneIdx: 0,
+        at: 1.2,
+        purpose: "contrast",
+        spokenAnchor: "保存记录不等于理解",
+        visualClaim: "档案已满，理解连接仍断开",
+        reason: "断桥比口头解释更容易看见两者的缺口",
+        visualBrief: "聊天档案柜与人物之间的桥断开",
+        generationPrompt: "竖屏概念插画，不要文字",
+        searchQuery: "",
+      },
+    ]);
+
+    expect(facet).toContain("认知:档案已满，理解连接仍断开");
+    expect(facet).toContain("理由:断桥比口头解释更容易看见两者的缺口");
+    expect(facet).toContain("画面:聊天档案柜与人物之间的桥断开");
+    expect(facet).not.toContain("竖屏概念插画");
   });
 });
 
@@ -742,6 +766,39 @@ const INVENTORY: BrollAssetRef[] = [
 ];
 
 describe("decideBroll(清单硬门)", () => {
+  it("标准版项目没有素材时仍把诚实空清单喂给 B-roll Skill，并生成画面需求", async () => {
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      expect(input.skillId).toBe("video.broll");
+      expect(input.facets.library).toContain("当前项目没有可用素材");
+      return {
+        slots: [
+          {
+            sceneIdx: 0,
+            at: 0,
+            purpose: "process",
+            spokenAnchor: "三个提示词技巧",
+            visualBrief: "展示真实操作过程",
+            searchQuery: "提示词操作界面",
+          },
+        ],
+        broll: [],
+      } as T;
+    }) as unknown as StructuredCall;
+
+    const result = await decideBroll(
+      {
+        scenes: SCENES,
+        srtLines,
+        script: SCRIPT,
+        inventory: [],
+      },
+      call,
+    );
+
+    expect(result.slots).toHaveLength(1);
+    expect(result.broll).toEqual([]);
+  });
+
   it("video.broll 即使违约返回真实素材，也只保留画面需求，素材选择统一交给 material.match", async () => {
     const result = await decideBroll(
       {

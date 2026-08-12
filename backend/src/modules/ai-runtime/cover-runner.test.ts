@@ -371,6 +371,10 @@ describe("[T-271] composeCoverImagePrompt —— 生图 prompt 由结构化 face
     expect(prompt).toContain("副标题「判断力才稀缺」");
     expect(prompt).toContain("色调风格：暖色高对比");
     expect(prompt).toContain("竖版短视频封面（9:16）"); // 竖屏 → 9:16
+    expect(prompt).toContain("第一眼看懂");
+    expect(prompt).toContain("只保留一个主视觉冲突或关系");
+    expect(prompt).toContain("除指定封面文案外，不生成任何额外文字");
+    expect(prompt).toContain("无水印、无无关 logo");
   });
 
   it("横屏 → 16:9;无方向 → 通用封面(画幅自适应)", () => {

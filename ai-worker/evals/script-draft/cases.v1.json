@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "skillId": "script.draft",
+  "baselineVersion": "v7",
+  "presentation": "只按 shots 原顺序拼接口播，不展示画面、字幕、时长、参数和版本身份",
+  "cases": [
+    {
+      "id": "SD-EVAL-001",
+      "contentType": "观点+经历",
+      "positioning": "面向想用 AI 改造业务的中小企业主和创作者，以有实际搭建经验的 AI 工作流实践者身份讲",
+      "topic": "AI 产出差不是工具的锅",
+      "facts": [
+        "和两位朋友（自媒体+电商）聊了3小时",
+        "发现 AI 产出差卡的不是工具，是没拆解工作流",
+        "可用输入/处理/输出+端到端可视化四步法定位卡点"
+      ],
+      "targetDurationSeconds": 90,
+      "forbidden": ["编造两位朋友的公司规模、成绩或使用的具体 AI 工具", "编造方法的效果数字"]
+    },
+    {
+      "id": "SD-EVAL-002",
+      "contentType": "反常识论证",
+      "positioning": "面向知识工作者，以软件/知识系统实践者身份讲",
+      "topic": "Markdown 不会淘汰，HTML 也替代不了它",
+      "facts": [
+        "存储层用 Markdown，展示层用 HTML，不是非此即彼",
+        "Thariq 用传播层标准评判存储层工具，犯了层级混淆"
+      ],
+      "targetDurationSeconds": 75,
+      "forbidden": ["编造 Thariq 原文中未提供的引语或立场", "宣称任一格式在所有场景绝对更优"]
+    },
+    {
+      "id": "SD-EVAL-003",
+      "contentType": "产品案例",
+      "positioning": "面向想让 AI 长期理解自己的知识工作者，以做过 Obsidian AI 插件的产品实践者身份讲",
+      "topic": "存下对话 ≠ AI 真正认识你",
+      "facts": [
+        "上个月做了一个 Obsidian AI 插件，把对话自动存下来",
+        "很多人安装并使用",
+        "收到最多的反馈是‘它还是不认识我’"
+      ],
+      "targetDurationSeconds": 75,
+      "forbidden": ["编造用户数、留存率或已经实现的新功能", "把未提供的产品解法写成既成事实"]
+    }
+  ],
+  "humanPreference": {
+    "choice": ["A", "B", "tie"],
+    "requiredReason": "说出最刺眼或最打动你的一点",
+    "observerDimensions": ["单一主张", "具体开头", "因果推进", "连续口播", "事实忠实", "非模板化收束"]
+  }
+}

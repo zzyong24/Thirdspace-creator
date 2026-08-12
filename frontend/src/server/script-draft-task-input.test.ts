@@ -58,4 +58,40 @@ describe("[T-727] script.draft 任务输入装配", () => {
       extraBrief: "补充要求",
     });
   });
+
+  it("[T-791] generate 冻结 instruction 与完整来源快照，hash/顺序任一异常整次拒绝", () => {
+    const body = "访谈原文第一段。\n访谈原文第二段。";
+    const snapshot = {
+      sourceType: "attachment" as const,
+      sourceId: "asset-1",
+      label: "访谈.txt",
+      order: 0,
+      charCount: body.length,
+      sha256: createHash("sha256").update(body).digest("hex"),
+      body,
+      complete: true as const,
+    };
+    expect(
+      buildScriptDraftTaskInputData({
+        artifactId: "artifact-1",
+        projectId: "project-1",
+        instruction: "只用原文事实，重写逻辑",
+        sourceSnapshots: [snapshot],
+      }),
+    ).toEqual({
+      artifactId: "artifact-1",
+      projectId: "project-1",
+      instruction: "只用原文事实，重写逻辑",
+      sourceSnapshots: [snapshot],
+    });
+
+    expect(() =>
+      buildScriptDraftTaskInputData({
+        artifactId: "artifact-1",
+        projectId: "project-1",
+        instruction: "重写",
+        sourceSnapshots: [{ ...snapshot, sha256: "0".repeat(64) }],
+      }),
+    ).toThrow(/资料快照校验失败/);
+  });
 });

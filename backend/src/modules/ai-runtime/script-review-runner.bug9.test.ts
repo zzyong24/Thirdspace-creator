@@ -111,6 +111,46 @@ function makeDeps(overrides: Partial<ScriptReviewDeps> = {}): {
 }
 
 describe("runScriptReview — T-766 通用文本模型与失败关闭", () => {
+  it("任务绑定的稿件版本已变化时真实失败，不拿新稿冒充旧 attempt 的审核结果", async () => {
+    vi.doMock("@creatoros/ai-worker", async () => {
+      const actual =
+        await vi.importActual<typeof import("@creatoros/ai-worker")>(
+          "@creatoros/ai-worker",
+        );
+      return {
+        ...actual,
+        runStructuredNode: vi.fn(async () => ({
+          object: { verdict: "pass", findings: [], summary: "不应执行" },
+        })),
+      };
+    });
+    const { deps, reports, failed, counters, resolvedCapabilities } = makeDeps({
+      scriptSource: {
+        getLatestScript: async () => ({
+          artifactId: "art-1",
+          version: 4,
+          text: "这是改稿后的第四版文案。",
+        }),
+      },
+    });
+    await runScriptReview(
+      {} as never,
+      {
+        ...baseTask,
+        inputData: {
+          projectId: "p-1",
+          artifactId: "art-1",
+          artifactVersion: 3,
+        },
+      },
+      deps,
+    );
+    expect(failed[0]?.reason).toContain("稿件已更新");
+    expect(counters.succeedCount).toBe(0);
+    expect(reports).toHaveLength(0);
+    expect(resolvedCapabilities).toHaveLength(0);
+  });
+
   it("有 spec 且 L2 成功 → 老路径:verdict=block + summary 显 L2 结果", async () => {
     // mock ai-worker:runStructuredNode 返 block verdict
     vi.doMock("@creatoros/ai-worker", async () => {

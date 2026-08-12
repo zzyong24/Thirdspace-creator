@@ -11,6 +11,33 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-COPY-792 资料驱动生成从 T-790 拆为独立工具任务 T-791（2026-08-12）
+
+- **上游变化**：用户确认乱资料、文件、长文本和既有文案都应成为写稿 Skill 的一等输入，Skill 负责按正式结构产出；当前仅 `generate(topic/extraBrief)` 与 `verbatim` 的二分不完整。
+- **失效工件**：上一轮把工具输入链并入 T-790 的合并版 SPEC、看板描述和“Skill-only PASS 失效”判断失效；用户明确两者不是同一任务。
+- **重新派生**：T-790 恢复 Skill-only SPEC 与原独立评审；T-791 另建 SPEC，现有 `script.draft` 增量扩展受信多源引用与本轮 instruction，任务冻结来源长度/hash/正文，runner 把原文数据块交给 Skill；不新建页面、数据库、第二文档库或改变采纳门。
+- **兼容边界**：T-727 `verbatim`、现有项目上下文读链、account overlay、模型解析、`shots[]` 和 artifact version 语义保持；普通资料驱动 `generate` 不得削弱保真导入。
+- **验证影响**：新增真实对话回归，覆盖消息长文、文本附件、已有文案润色、多源杂乱资料、旧 Brief 冲突和一字不改兼容；需重跑 chat tools/runner/API/card 与语义边界门卫。
+- **当前 Gate**：T-790 按既有 Skill-only PASS 继续；T-791 必须取得自己的独立评审回执后才能由 `taskctl start` 开工，两个回执不得互相复用。
+
+## CI-COPY-791 文案 loop 从产品功能改为 `script.draft` Skill 迭代方法（2026-08-12）
+
+- **上游变化**：用户明确指出任务是迭代现有写文案 Skill，不是新增文案实验功能。
+- **失效工件**：旧 T-790 产品功能 SPEC 及其 PASS 回执不再授权实施；已起步的 UI、contract、backend module、migration、runtime profile 与模型参数传递全部撤回。
+- **重新派生**：新 SPEC 只允许现版基线、Skill 单变量挑战、用户盲评与跨主题回归；自动 loop 若后续出现也只是仓内 eval 工具。
+- **下游影响**：不新增产品交互、数据归属、服务契约或发布范围；T-790 的 `script.draft` schema、runner、account overlay 与合规审核保持不变。资料输入链变化只在 T-791 重新派生和验证。
+- **当前 Gate**：新 Skill 迭代 SPEC 完成独立评审之前，只能建立基线与评估场景，不修改正式 `script.draft`。
+
+## CI-COPY-790 文案优化从声音指纹改为板块权重与单主题人工 loop（2026-08-12）
+
+- **上游变化**：用户否决 T-790 草案中的声音指纹，确认实验面只出文案、一个主题逐轮微调、前期人工评判、后期才启用自动 loop，最终目标改为优化产品各板块权重与工作流。
+- **失效工件**：T-790 旧草案中声音样稿、像本人评分、48-case-first 和先拆多 Skill 的方向失效；旧文档为未确认草案，尚无生产代码、契约、数据迁移、页面或测试据此实施。
+- **重新派生**：T-790 研究与 SPEC v2 改为冠军挑战制；权重落为进入与否、约束级别、上下文预算和工作流位置；新增 `human_calibration / assisted_loop / auto_experiment` 运行状态及跨主题证据门。
+- **下游影响**：不作废已上线 `script.draft`、T-642/T-727/T-730、合规审核或 account overlay；T-790 在参数门确认和独立评审前仍禁止 BUILD，因此无下游代码需要回滚。
+- **确认结果**：用户于 2026-08-12 确认 SPEC v2 推荐默认门槛并要求启动；当前进入独立评审，PASS 前不进入 BUILD。
+
+---
+
 ## CI-WEB-672 官网撤下公开价盘与个人直营入口（2026-08-03）
 
 - **上游变化**：用户确认保护代理利润优先于官网公开定价；DEC-PRICE-668 与 DEC-AGENT-671 的

@@ -174,7 +174,10 @@ export function composeCoverImagePrompt(
   plan: ClampedCoverPlan,
   opts: { orientation?: string } = {},
 ): string {
-  const parts: string[] = ["为一条短视频/图文内容设计**封面图**："];
+  const parts: string[] = [
+    "为一条短视频/图文内容设计封面图。视觉任务：让目标观众第一眼看懂这条内容最核心的冲突、关系、变化或后果，而不是只看到一张漂亮背景。",
+    "主视觉约束：只保留一个主视觉冲突或关系，用具体主体、动作、环境和空间关系呈现；不要拼贴多个隐喻，不使用发光大脑、AI 粒子、机器人握手、商务人士看电脑等万能 AI 海报元素。",
+  ];
   if (plan.visualConcept) parts.push(`主视觉：${plan.visualConcept}`);
   if (plan.composition) parts.push(`构图：${plan.composition}`);
   const overlay = [
@@ -186,7 +189,7 @@ export function composeCoverImagePrompt(
     .join("；");
   if (overlay) {
     parts.push(
-      `画面上叠加醒目中文文案 —— ${overlay}（文字清晰、排版精美、无错别字、突出可读）`,
+      `画面上只叠加以下指定中文文案 —— ${overlay}（逐字准确、只出现一次、排版清晰、突出可读）`,
     );
   }
   if (plan.palette) parts.push(`色调风格：${plan.palette}`);
@@ -197,7 +200,9 @@ export function composeCoverImagePrompt(
         ? "横版封面（16:9）"
         : "短视频封面",
   );
-  parts.push("高清、主体突出、专业的封面视觉");
+  parts.push(
+    "输出约束：除指定封面文案外，不生成任何额外文字、数字、界面、新闻截图或数据图；无水印、无无关 logo。画面必须以主视觉关系为中心，风格和质感只服务理解，不抢主张。",
+  );
   return parts.join("\n");
 }
 

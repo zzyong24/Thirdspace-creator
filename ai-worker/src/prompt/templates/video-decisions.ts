@@ -290,8 +290,14 @@ export const videoBrollSlotSchema = z.object({
   purpose: z.enum(VIDEO_BROLL_PURPOSES),
   /** 必须能在口播稿里定位到的原话锚点，禁止用“新闻钩子”等内部标签。 */
   spokenAnchor: z.string().min(1),
+  /** 观众看完画面后应多理解的一件事；不得只是复述 spokenAnchor。 */
+  visualClaim: z.string().optional(),
+  /** 这张画面为什么比继续看口播人物更能帮助理解当前一句。 */
+  reason: z.string().optional(),
   /** 给搜索/文生图/人工备料看的具体画面，不是抽象主题词。 */
   visualBrief: z.string().min(1),
+  /** 缺少真实素材且允许 AI 生成时，可直接交给跨供应商生图模型的画面描述。 */
+  generationPrompt: z.string().optional(),
   searchQuery: z.string().default(""),
 });
 export const videoBrollSchema = z.object({
@@ -345,11 +351,11 @@ export function normalizeVideoBrollOutput(value: unknown): unknown {
 
 export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
   id: "video.broll",
-  version: "v4",
+  version: "v5",
   outputSchema: videoBrollSchema,
   tools: [],
   system:
-    "你是口播视频的视觉编导，只负责判断每段口播为什么需要什么画面；真实素材的语义选择统一交给 material.match Skill。",
+    "你是口播视频的视觉编导。文字负责提出判断，画面负责让观众看见证据、关系、机制、反差或后果；你不做装饰性配图，真实素材的语义选择统一交给 material.match Skill。",
   template: `为下面这条口播视频规划 B-roll(叠画/空镜)。先读口播原文，再决定画面的叙事作用。
 
 【口播原文】
@@ -364,17 +370,22 @@ export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
 {{orientation}}
 {{manualAssignments}}
 【任务】
-1. 先输出少而精的画面需求 slots。每个 slot 必须说明它服务于事实证据、类比联想、过程演示、前后对比、情绪氛围或信息卡中的哪一种。
+1. 先输出少而精的画面需求 slots。每个 slot 先回答“观众看完这张图应多理解什么”，再判断它服务于事实证据、类比联想、过程演示、前后对比、情绪氛围或信息卡中的哪一种。一个画面只完成一个认知动作，不把整段口播塞进一张图。
 2. 本节点不选择素材，broll 固定返回空数组。后续 material.match Skill 会读取全部已有素材并完成 AI 语义匹配。
 【硬约束(违反即废)】
 - purpose 只能输出以下六个机器值，禁止翻译、加前后缀或自造枚举：fact_evidence（事实证据）/ analogy（类比联想）/ process（过程演示）/ contrast（前后对比）/ mood（情绪氛围）/ info_card（信息卡）。
 - spokenAnchor 必须摘自口播原文，不能写“新闻钩子”“价值段”“场景一”等内部标签。
-- visualBrief 要写成能直接搜索或生成的具体画面，例如“招聘网站上中文 AI 训练师时薪 300 元的岗位截图”，禁止“科技感背景”“抽象 AI 粒子”等万能素材。
-- 事实与数据优先真实截图/网页/图表；类比和情绪才允许生成画面。不得用 AI 图冒充新闻证据。
+- visualClaim 写观众从画面获得的新增理解，不能照抄 spokenAnchor；reason 写为什么此处需要画面，不能只说“更生动”“增强吸引力”。
+- visualBrief 要写成能直接搜索或生成的具体画面，必须出现主体、动作或关系、环境、构图中的关键项。例如“同一个未拆解的纸箱任务从一台机器传到另一台机器，箱内仍是一团乱线”，禁止“科技感背景”“抽象 AI 粒子”“商务人士看电脑”等万能 AI 海报。
+- 事实与数据优先真实截图/网页/图表；purpose=fact_evidence 时 searchQuery 指向真实来源，generationPrompt 必须留空。不得用 AI 图冒充新闻截图、数据图、产品界面或真实人物事件。
+- purpose=info_card 时交给 video.cards，generationPrompt 必须留空，不让生图模型烧大段文字。
+- 只有 analogy/process/contrast/mood 中不冒充事实的画面才可填写 generationPrompt。它必须是可直接交给生图模型的 2–4 句自然画面描述：依次说清视觉媒介、主体、动作或关系、环境、构图、光线或色彩，以及当前画幅和安全区；只描述最终要看见什么，不写“这张图用来说明……”等元话语。
+- generationPrompt 默认不生成文字、数字、logo、水印、产品界面或新闻截图；若信息必须靠文字才能成立，改用真实截图或 video.cards，不能把口播原句画进图片。
+- 若调用上下文带有创作者定位，定位只影响视觉语言、熟悉场景、信息密度和审美语气，不得改变 visualClaim、杜撰身份/成绩或替代事实证据。
 - 不要在本节点按文件名、关键词或 id 猜素材；素材匹配是 material.match 的职责。
 - 若存在“用户人工指定的素材”，先把它视为不可替换的叙事约束，画面需求与分场时长必须为它让位。
 【输出】只输出一个 JSON 对象 {"slots": [...], "broll": [...]}(不要多余文字、不要代码块)。
-slot: {"sceneIdx"(整数),"at"(数字,秒),"purpose"(只能是 fact_evidence/analogy/process/contrast/mood/info_card),"spokenAnchor"(口播原话),"visualBrief"(具体画面),"searchQuery"(中文搜索词)}。
+slot: {"sceneIdx"(整数),"at"(数字,秒),"purpose"(只能是 fact_evidence/analogy/process/contrast/mood/info_card),"spokenAnchor"(口播原话),"visualClaim"(观众从画面新增理解的一件事),"reason"(为什么此处需要画面),"visualBrief"(具体可见画面),"generationPrompt"(允许 AI 生图时的完整自然语言 prompt；不允许则空字符串),"searchQuery"(需要真实素材时的中文搜索词)}。
 broll: {"sceneIdx"(整数),"assetId"(清单真实 id),"at"(数字,秒),"durationSec"(数字,秒)}。
 无论清单是否为空，broll 都返回 []；只要口播里存在值得视觉化的事实、过程、类比或对比，slots 仍应给出。`,
   requiredFacets: ["scenes", "script", "library"],

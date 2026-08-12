@@ -50,7 +50,7 @@ export type CoverBriefOutput = z.infer<typeof coverBriefSchema>;
 export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
   id: "cover.brief",
   outputRecovery: "creative-partial",
-  version: "v1",
+  version: "v2",
   outputSchema: coverBriefSchema,
   tools: [],
   system:
@@ -67,9 +67,11 @@ export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
 - headline(封面主标题):压在封面正中的大字,一句话勾住人,**≤14 字**。必须紧扣上方核心信息/口播稿主张,**不得自创与之矛盾的主张**。
 - subheadline(副标题):可空,补一句钩子或利益点,**≤20 字**。
 - keyPoints(信息点):0-3 条封面可露出的短信息点/卖点,每条**≤10 字**;只写上方素材/立项资料里**真出现过**的点(如「3 个方法」只在正文真有 3 个方法时才写)。
-- visualConcept(主视觉建议):画面主体/场景/隐喻(给生图用的画面描述,不含叠加文字)。
-- composition(构图建议):主体位置、文案排布、层次(如「主体居中偏下,主标题占上 1/3」)。
+- visualConcept(主视觉建议):先把核心信息/口播主张转成**一个观众第一眼能看懂的可见冲突、关系、变化或后果**，再写具体主体、动作和环境；它负责补足标题没有展示的那一层，不能只是把标题换成同义画面。禁止“发光大脑、AI 粒子、机器人握手、商务人士看电脑”等万能 AI 海报，不含叠加文字，不用虚构截图/数据冒充证据。
+- composition(构图建议):围绕这个单一视觉关系安排主体位置、视线、前后景和文案留白(如「主体居中偏下,主标题占上 1/3」)，不能把多个隐喻和卖点塞成拼贴画。
 - palette(色调/风格):可空,一句话定调(如「高对比暖色、大字号无衬线」)。
+
+【定位边界】创作者定位只用于选择目标观众熟悉的场景、视觉语言、信息密度和审美语气；不得因此改变本条核心主张、杜撰身份/成绩或添加素材中不存在的事实。
 
 **封面文案铁律(诚实门)**:headline / subheadline / keyPoints 里出现的任何**数字、成绩、榜单名、机构/人物名**,都必须能在上方【立项硬约束】/口播稿/素材里找到出处;找不到就**别写这个数字**,换成不含具体数字的说法。封面不是靠编数字博眼球的地方——一个假数字压在封面上,比不吸引更糟。
 ${ANTI_FABRICATION_CLAUSE}

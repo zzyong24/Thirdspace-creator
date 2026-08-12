@@ -39,8 +39,20 @@ export interface LintRuleDto {
 export interface ReviewGateAiPort {
   createTask(
     ctx: RequestContext,
-    body: { taskType: string; inputData?: Record<string, unknown> },
+    body: {
+      taskType: string;
+      attemptId?: string;
+      inputData?: Record<string, unknown>;
+    },
   ): Promise<unknown>;
+}
+
+/** 当前稿件引用端口；审核任务创建时冻结版本，避免排队期间拿新稿冒充旧 attempt。 */
+export interface ReviewGateScriptPort {
+  getCurrentScriptRef(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{ artifactId: string | null; artifactVersion: number }>;
 }
 
 export interface ServiceDeps {
@@ -48,6 +60,7 @@ export interface ServiceDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   ai: ReviewGateAiPort;
+  script: ReviewGateScriptPort;
 }
 
 export interface ReviewGateService {
@@ -100,7 +113,7 @@ export interface ReviewGateService {
 }
 
 export function createReviewGateService(deps: ServiceDeps): ReviewGateService {
-  const { db, now, nextId, ai } = deps;
+  const { db, now, nextId, ai, script } = deps;
 
   function repoFor(ctx: RequestContext): ReviewGateRepository {
     const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
@@ -194,11 +207,20 @@ export function createReviewGateService(deps: ServiceDeps): ReviewGateService {
       if (!projectId) {
         throw new ValidationError("ValidationError: projectId 必填");
       }
+      const current = await script.getCurrentScriptRef(ctx, projectId);
       // 起 script.review ai_task —— dispatch 后台跑 L1 lint + L2 语义审后 saveReport。
       // 项目归属门在 aiService.createTask 内(user-scoped),与 review.analyze 一致。
       return ai.createTask(ctx, {
         taskType: "script.review",
-        inputData: { projectId },
+        // 每次明确点击/对话调用都是一个新 attempt；同版本失败后可真正重试，不再永久命中旧任务。
+        // 传输层若未来开放直接调用，应由请求 body 携带动作 attempt；当前所有生产入口均为
+        // 服务端一次性执行，nextId 在本次动作边界只生成一次。
+        attemptId: nextId("review-attempt"),
+        inputData: {
+          projectId,
+          artifactId: current.artifactId,
+          artifactVersion: current.artifactVersion,
+        },
       });
     },
   };

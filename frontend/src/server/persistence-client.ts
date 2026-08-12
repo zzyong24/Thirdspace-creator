@@ -1606,6 +1606,8 @@ export interface ChatRuntime {
       angle?: string;
       targetDurationSeconds?: number;
       extraBrief?: string;
+      instruction?: string;
+      sourceSnapshots?: import("@creatoros/backend/modules/ai-runtime").ScriptDraftSourceSnapshot[];
       draftMode?: "verbatim";
       verbatimSourceRef?: string;
       verbatimSourceText?: string;
@@ -3369,6 +3371,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
   const aiBase = createAiTransport(() => aiService);
 
+  const readCurrentScriptRefForReview = async (
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{ artifactId: string | null; artifactVersion: number }> => {
+    const artifacts = await artifactsService.listProjectArtifacts(ctx, projectId);
+    const target = selectReadableProjectScriptArtifact(artifacts);
+    if (!target) return { artifactId: null, artifactVersion: 0 };
+    const versions = await artifactsService.listVersions(ctx, target.id);
+    const current = versions
+      .slice()
+      .sort((a, b) => b.versionNumber - a.versionNumber)[0];
+    return {
+      artifactId: target.id,
+      artifactVersion: current?.versionNumber ?? 0,
+    };
+  };
+
   // T-086 审核门 service + transport(reviewRules.* + scriptReviews.*)。scriptReviews.trigger
   // 经注入的 AI 端口起 script.review ai_task。**关键**:审核门 op 不经 ai transport 的
   // ai.tasks.create 拦截(它直调 aiService.createTask),故 createTask 起任务后必须在此显式
@@ -3379,6 +3398,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     db,
     now: deps.now,
     nextId: deps.nextId,
+    script: { getCurrentScriptRef: readCurrentScriptRefForReview },
     ai: {
       createTask: async (ctx, body) => {
         const task = await aiService.createTask(ctx, body);
@@ -12899,6 +12919,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         angle?: string;
         targetDurationSeconds?: number;
         extraBrief?: string;
+        instruction?: string;
+        sourceSnapshots?: import("@creatoros/backend/modules/ai-runtime").ScriptDraftSourceSnapshot[];
         draftMode?: "verbatim";
         verbatimSourceRef?: string;
         verbatimSourceText?: string;

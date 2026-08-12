@@ -142,6 +142,65 @@ beforeEach(() => {
 });
 
 describe("runScriptDraft 完整性闭环 (T-512)", () => {
+  it("[T-791] 校验冻结来源后把指令与有边界原文交给 script.draft，遥测只记录元数据", async () => {
+    worker.runScriptNode.mockResolvedValueOnce(successResult());
+    const runtimeDeps = deps();
+    const body = "完整原稿里有一个不能丢的真实事实。";
+    const sha256 = createHash("sha256").update(body).digest("hex");
+
+    await runScriptDraft(
+      ctx,
+      {
+        id: "task-material-driven",
+        projectId: null,
+        inputData: {
+          artifactId: "artifact-script",
+          instruction: "基于这篇润色，逻辑更强，不新增事实",
+          sourceSnapshots: [
+            {
+              sourceType: "message",
+              sourceId: "msg-1",
+              label: "用户消息 1",
+              order: 0,
+              charCount: body.length,
+              sha256,
+              body,
+              complete: true,
+            },
+          ],
+        },
+      },
+      runtimeDeps,
+    );
+
+    expect(worker.runScriptNode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceInstruction: "基于这篇润色，逻辑更强，不新增事实",
+        sourceMaterialsBrief: expect.stringContaining(body),
+      }),
+    );
+    const stepPayloads = vi
+      .mocked(runtimeDeps.ai.recordStep)
+      .mock.calls.map((call) => JSON.stringify(call[2]));
+    expect(stepPayloads.join("\n")).not.toContain(body);
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledWith(
+      ctx,
+      "task-material-driven",
+      expect.objectContaining({
+        resultData: expect.objectContaining({
+          sourceSnapshots: [
+            expect.objectContaining({
+              sourceType: "message",
+              sourceId: "msg-1",
+              charCount: body.length,
+              sha256,
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
   it("透传 extraBrief，候选携带采纳门、冻结 skill/policy、原始/最终段数与真实终态", async () => {
     const result = successResult();
     worker.runScriptNode.mockImplementationOnce(async (input) => {

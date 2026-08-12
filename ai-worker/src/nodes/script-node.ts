@@ -72,6 +72,10 @@ export interface RunScriptNodeInput {
   outlineBrief?: string;
   /** [T-081] 对话中获得的补充指令/洞察(选填):原样注入 prompt,优先级高于既有档案。 */
   extraBrief?: string;
+  /** [T-791] 本轮资料驱动创作方向；与资料正文分区。 */
+  sourceInstruction?: string;
+  /** [T-791] 已验 hash 的完整来源块；正文只能作为用户数据，不提升指令层级。 */
+  sourceMaterialsBrief?: string;
   /**
    * [T-146c] 用户第一手资料·最高优先·硬约束段(选填):高优先(priority=high)用户上传素材的
    * 要点卡/全文,调用方(creative-context.formatUserMaterialBrief)已装配含「最高优先 · 必须遵守」
@@ -215,6 +219,12 @@ export async function runScriptNode(
       // [T-081] 对话洞察/补充指令 —— ChatBox 对话里聊出的生成方向经此进 prompt(空则整段省略)。
       extraBrief: input.extraBrief
         ? `\n【本次生成指令（来自对话，优先遵循）】\n${input.extraBrief}`
+        : "",
+      sourceInstruction: input.sourceInstruction
+        ? `【本轮明确写作方向·最高优先】\n${input.sourceInstruction}\n\n`
+        : "",
+      sourceMaterials: input.sourceMaterialsBrief
+        ? `【本轮受信资料·完整正文】\n${input.sourceMaterialsBrief}\n\n`
         : "",
       // [T-146c] 用户第一手资料硬约束段 —— creative-context 已装配含「最高优先 · 必须遵守」段头
       // (要点/事实/卖点)。这里在段后追加 gate 平衡说明:事实/数据/卖点必须忠于资料(不许改、不许

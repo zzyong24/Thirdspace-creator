@@ -12,6 +12,7 @@ import {
   runChatStream,
   formatErrorDiagnostic,
   type ChatContext,
+  type VerbatimSource,
 } from "@creatoros/backend/modules/ai-runtime";
 import { runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
 import { readSessionCookie } from "../v1/auth/_session";
@@ -223,6 +224,9 @@ export async function withAttachmentContext(
         `附件“${attachment.name}”没有可读取的文字内容。`,
       );
     }
+    // 同一轮后续建立 script.draft 受信来源时复用这份确定性抽取结果，避免 PDF/DOCX 重解析
+    // 或只把预抽取字段非空的附件当成可写稿资料。
+    attachment.extractedText = extracted;
     const slice = extracted.slice(0, Math.max(0, remainingText));
     remainingText -= slice.length;
     extraParts.push({
@@ -585,6 +589,7 @@ export async function POST(req: Request): Promise<Response> {
     (chatContext.projectId ? `project:${chatContext.projectId}` : "global");
 
   let conversationId = body.conversationId ?? "";
+  let persistedUserMessageId = "";
   // [T-239f] 是否续接既有会话(user 去重只对续接轮做:首轮新会话不可能有旧行)。
   const isExistingConversation = Boolean(conversationId);
 
@@ -651,14 +656,70 @@ export async function POST(req: Request): Promise<Response> {
         }
       }
       if (!skipInsert) {
-        await runtime.ai.createMessage(ctx, conversationId, {
+        const persisted = await runtime.ai.createMessage(ctx, conversationId, {
           content: userText,
           ...(attachmentIds.length > 0 ? { attachments: attachmentIds } : {}),
         });
+        persistedUserMessageId = persisted.id;
+      } else {
+        const history = await runtime.ai.listMessages(ctx, conversationId);
+        const last = history[history.length - 1];
+        if (last?.role === "user" && last.content === userText) {
+          persistedUserMessageId = last.id;
+        }
       }
     }
   } catch (err) {
     console.error("[api/chat] persist user turn failed:", err);
+  }
+
+  // [T-791] 写稿资料引用只从已持久化消息与本轮已验归属/确定性抽取的附件建立。
+  // 浏览器传来的 UIMessage 正文只负责表达本轮对话，不再直接成为 script.draft 执行真值。
+  const trustedScriptSources: VerbatimSource[] = [];
+  if (conversationId) {
+    try {
+      if (!isExistingConversation && persistedUserMessageId && userText) {
+        trustedScriptSources.push({
+          ref: `message:${persistedUserMessageId}`,
+          label: "本轮用户消息",
+          text: userText,
+          truncated: false,
+          sourceType: "message",
+          sourceId: persistedUserMessageId,
+        });
+      } else {
+        const persistedMessages = await runtime.ai.listMessages(ctx, conversationId);
+        for (const message of persistedMessages
+          .filter((item) => item.role === "user" && item.content.trim())
+          .slice(-16)) {
+          trustedScriptSources.push({
+            ref: `message:${message.id}`,
+            label: `用户消息 ${message.createdAt}`,
+            text: message.content,
+            truncated: false,
+            sourceType: "message",
+            sourceId: message.id,
+          });
+        }
+      }
+      if (persistedUserMessageId) {
+        for (const attachment of attachments) {
+          if (!attachment.extractedText?.trim()) continue;
+          trustedScriptSources.push({
+            ref: `attachment:${attachment.assetId}`,
+            label: `文本附件：${attachment.name}`,
+            text: attachment.extractedText,
+            truncated: false,
+            sourceType: "attachment",
+            sourceId: attachment.assetId,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[api/chat] trusted script sources unavailable", {
+        errorName: err instanceof Error ? err.name : "UnknownError",
+      });
+    }
   }
 
   // [T-239e] 本轮 token 用量(runChatStream 每步累计回报,finish 以 totalUsage 权威值覆盖)。
@@ -688,6 +749,7 @@ export async function POST(req: Request): Promise<Response> {
         {
           messages: messagesForModel,
           chatContext,
+          trustedScriptSources,
           abortSignal: req.signal,
           // [T-239e] 用量回报口:持最新累计值(闭包变量,onFinish 落库时读)。
           onUsage: (u) => {

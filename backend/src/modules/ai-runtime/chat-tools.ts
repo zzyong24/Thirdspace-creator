@@ -174,6 +174,10 @@ export interface ChatToolDeps {
     targetDurationSeconds?: number;
     /** [T-081] 对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。 */
     extraBrief?: string;
+    /** [T-791] 本轮资料驱动创作方向；与来源正文分区进入写稿 Skill。 */
+    instruction?: string;
+    /** [T-791] 服务端从受信 ref 完整恢复并冻结的来源快照。 */
+    sourceSnapshots?: ScriptDraftSourceSnapshot[];
     /** [T-727] 保真模式由服务端恢复原文后注入，普通生成不携带这些字段。 */
     draftMode?: "verbatim";
     verbatimSourceRef?: string;
@@ -1847,6 +1851,80 @@ export interface VerbatimSource {
   text: string;
   /** 附件/读源只拿到前部时为 true；这种来源禁止宣称全文保真。 */
   truncated: boolean;
+  /** [T-791] 权威来源家族；旧 T-727 测试/调用可由 ref 前缀兼容推导。 */
+  sourceType?: "message" | "attachment" | "project_text";
+  /** [T-791] 服务端稳定实体 id；绝不采用模型自报正文。 */
+  sourceId?: string;
+}
+
+export interface ScriptDraftSourceSnapshot {
+  sourceType: "message" | "attachment" | "project_text";
+  sourceId: string;
+  label: string;
+  order: number;
+  charCount: number;
+  sha256: string;
+  body: string;
+  complete: true;
+}
+
+export const MAX_SCRIPT_DRAFT_SOURCE_COUNT = 16;
+export const MAX_SCRIPT_DRAFT_SOURCE_CHARS = 200_000;
+
+/**
+ * 按模型已经选择的 opaque refs 从宿主受信来源精确恢复多源快照。代码只守引用、完整性、
+ * 顺序与容量，不判断资料相关性或如何写作；任一项失败即整批失败。
+ *
+ * SEMANTIC_BOUNDARY_ALLOW:这里只做受信引用解析与完整性校验，不做创作选择。
+ */
+export function resolveScriptDraftSourceSnapshots(
+  sources: readonly VerbatimSource[],
+  refs: readonly unknown[],
+): ScriptDraftSourceSnapshot[] {
+  if (refs.length === 0) return [];
+  if (refs.length > MAX_SCRIPT_DRAFT_SOURCE_COUNT) {
+    throw new Error(`本轮最多选择 ${MAX_SCRIPT_DRAFT_SOURCE_COUNT} 份资料，请拆分后重试。`);
+  }
+  const normalized = refs.map((value) =>
+    typeof value === "string" ? value.trim() : "",
+  );
+  if (normalized.some((ref) => !ref) || new Set(normalized).size !== normalized.length) {
+    throw new Error("资料引用为空或重复，请重新选择本轮资料。");
+  }
+  let totalChars = 0;
+  return normalized.map((ref, order) => {
+    const source = sources.find((item) => item.ref === ref);
+    if (!source) throw new Error(`资料引用已失效：${ref}。请重新选择或上传。`);
+    if (source.truncated) {
+      throw new Error(`资料未完整抽取：${source.label}。本轮不会跳过它继续生成。`);
+    }
+    if (!source.text.trim()) throw new Error(`资料内容为空：${source.label}。`);
+    totalChars += source.text.length;
+    if (totalChars > MAX_SCRIPT_DRAFT_SOURCE_CHARS) {
+      throw new Error(
+        `本轮资料合计超过 ${MAX_SCRIPT_DRAFT_SOURCE_CHARS.toLocaleString()} 字符，请减少来源后重试。`,
+      );
+    }
+    const sourceType =
+      source.sourceType ??
+      (ref.startsWith("attachment:")
+        ? "attachment"
+        : ref.startsWith("project:")
+          ? "project_text"
+          : "message");
+    const sourceId = source.sourceId?.trim() || ref.split(":").slice(1).join(":");
+    if (!sourceId) throw new Error(`资料缺少稳定来源标识：${source.label}。`);
+    return {
+      sourceType,
+      sourceId,
+      label: source.label,
+      order,
+      charCount: source.text.length,
+      sha256: createHash("sha256").update(source.text).digest("hex"),
+      body: source.text,
+      complete: true,
+    };
+  });
 }
 
 export interface ResolvedVerbatimSource {
@@ -2040,6 +2118,8 @@ const SCRIPT_DRAFT_PARAMS = jsonSchema<{
   angle?: string;
   targetDurationSeconds?: number;
   extraBrief?: string;
+  instruction?: string;
+  sourceRefs?: string[];
   sourceRef?: string;
   startAnchor?: string;
   endAnchor?: string;
@@ -2062,6 +2142,19 @@ const SCRIPT_DRAFT_PARAMS = jsonSchema<{
         "用户明确要求的目标口播时长（秒），如 3 分钟传 180；用户未指定则不要猜、不要传",
     },
     extraBrief: EXTRA_BRIEF_PROPERTY,
+    instruction: {
+      type: "string",
+      maxLength: 4000,
+      description:
+        "mode=generate 且基于本轮资料创作/润色时必填：准确保留用户本轮写作方向，不把资料正文重抄到这里。",
+    },
+    sourceRefs: {
+      type: "array",
+      maxItems: MAX_SCRIPT_DRAFT_SOURCE_COUNT,
+      items: { type: "string", maxLength: 180 },
+      description:
+        "mode=generate 使用：按用户要求纳入的顺序，从 system 的受信资料清单选择全部 sourceRef。任一必需来源不可读时整次失败，不静默跳过。",
+    },
     sourceRef: {
       type: "string",
       maxLength: 128,
@@ -2297,7 +2390,7 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<{
     prompt: {
       type: "string",
       description:
-        "生成描述(画面内容/主体/氛围)。生成的是 AI 素材、非真实拍摄,尽量具体让画面可用。",
+        "生成描述。用于内容配图时必须写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩、画幅和不应出现的额外元素；默认不在图里生成文字。生成的是 AI 素材、非真实拍摄。",
     },
     style: {
       type: "string",
@@ -3096,7 +3189,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 无项目上下文 / dispatch 失败 → error 非 null(卡渲诚实错误态,提示去项目稿面写脚本)。
     "script.draft": defineChatTool("script.draft", {
       description:
-        "为**当前项目**产一版完整稿件候选，支持两类一等输入。① 用户给主题、骨架或补充要求并要求创作：使用 mode=generate，按项目上下文创作分镜口播整稿。② 用户已经给了完整稿件并明确要求写入稿面、导入原稿或先给原文候选：必须使用 mode=verbatim，从 system 的【本轮受信原文来源】选择 sourceRef。仅粘贴/发送稿件不是调用授权，不要自动创建候选。若来源同时含有对助手说的视频状态、背景、操作要求和面向视频观众的稿件，必须由你理解语义后用 startAnchor/endAnchor 只框住完整稿件正文；不能把对话说明写入，也不能因为正文第一句像过渡、产品介绍或不是理想 hook 就漏掉它。禁止把原文压缩、摘要或重抄进 extraBrief。verbatim 由服务端按你选定的精确边界恢复原字符并校验，不调用写稿模型、不按 Brief/定位/归因建议改写。两种模式都只产候选卡，用户点「采纳写入稿面」才追加脚本版本；你没有直接写稿能力，绝不口头宣称已写入。\n\nmode=generate 时：用户明确说了时长（如 3 分钟）就传 targetDurationSeconds=180；没说不要猜。**真实资料优先，但不是整稿门禁**：缺少一手故事时，用户要求生成仍应基于当前项目 brief 先给可编辑稿；不得编造个人经历、案例或数字，可把缺口标成“待补真实案例”。整稿后台异步运行，不能因较重退回只给 hooks。只能为当前项目写稿，没有项目上下文时如实提示。",
+        "为**当前项目**产一版完整稿件候选，支持两类一等输入。① 用户给主题、杂乱资料、聊天长文、文本附件或已有文案并要求创作/润色：使用 mode=generate；有资料时必须同时传 instruction 与完整 sourceRefs，不能把长文压成 extraBrief。② 用户明确要求一字不改、逐字导入：使用 mode=verbatim，从受信来源选择 sourceRef。仅粘贴/发送稿件不是调用授权。generate 会由服务端按 ref 恢复完整正文、冻结长度/hash/顺序，再交给写稿 Skill；本轮指令和资料优先于旧 Brief、定位与历史建议。verbatim 仍由服务端恢复精确字符且不调用模型。两种模式都只产候选，用户采纳后才写入稿面。\n\nmode=generate 时：用户明确说了时长（如 3 分钟）就传 targetDurationSeconds=180；没说不要猜。**真实资料优先，但不是整稿门禁**：没有本轮资料时，用户要求生成仍应基于当前项目 brief 先给可编辑稿；不得编造个人经历、案例或数字，可把缺口标成“待补真实案例”。整稿后台异步运行，不能退回只给 hooks。",
       inputSchema: SCRIPT_DRAFT_PARAMS,
       execute: async ({
         mode,
@@ -3104,6 +3197,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         angle,
         targetDurationSeconds,
         extraBrief,
+        instruction,
+        sourceRefs,
         sourceRef,
         startAnchor,
         endAnchor,
@@ -3176,6 +3271,22 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                       ? targetDurationSeconds
                       : undefined,
                   extraBrief: clampExtraBrief(extraBrief),
+                  ...(Array.isArray(sourceRefs) && sourceRefs.length > 0
+                    ? {
+                        instruction:
+                          typeof instruction === "string" && instruction.trim()
+                            ? instruction.trim().slice(0, 4000)
+                            : (() => {
+                                throw new Error(
+                                  "基于资料创作时需要保留用户本轮调整方向，请重新发起。",
+                                );
+                              })(),
+                        sourceSnapshots: resolveScriptDraftSourceSnapshots(
+                          deps.verbatimSources ?? [],
+                          sourceRefs,
+                        ),
+                      }
+                    : {}),
                 };
           const { taskId, projectId: pid, error } =
             await deps.dispatchScriptDraft(dispatchInput);
@@ -3636,7 +3747,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
     "material.generate": defineChatTool("material.generate", {
       description:
-        "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。**注意:要「生成封面」请改用 cover.generate 工具**(它会硬锚立项核心信息 + 口播稿产结构化封面文案并过诚实门,不会在封面上编数字);本工具是裸 prompt 通用生成,别拿它生成封面。",
+        "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。若画面服务一条内容，调用前先判断它要替哪一句内容完成什么认知任务：事实证据、机制/过程、类比、对比、后果或情绪。事实证据优先真实截图/网页/图表，不得用 AI 图冒充；只有类比、示意、对比和氛围缺口适合生成。prompt 必须把一个认知任务落实为一个可见关系，写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩与画幅；默认不要文字、数字、logo、水印、假产品界面或假新闻截图，禁止“科技感背景、AI 粒子、商务人士看电脑”等万能 AI 海报。创作者定位只影响视觉语言、熟悉场景、信息密度和审美语气，不得改变内容主张或杜撰事实。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。**注意:要「生成封面」请改用 cover.generate 工具**(它会硬锚立项核心信息 + 口播稿产结构化封面文案并过诚实门,不会在封面上编数字);本工具不拿来生成封面。",
       inputSchema: MATERIAL_GENERATE_PARAMS,
       execute: async ({ kind, prompt, style }): Promise<MaterialGenerateToolResult> => {
         const effKind: "image" | "video" = kind === "video" ? "video" : "image";
