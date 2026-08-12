@@ -643,7 +643,13 @@ export interface ChatToolDeps {
   listPublications?: (input: {
     limit: number;
     offset: number;
+    view?: "published_cover_candidates";
   }) => Promise<PublicationsListRaw>;
+  /**
+   * [T-779] 参考历史作品生成封面时，把通用发布清单收窄为近期合格参考候选。
+   * 这里只守状态、时间与真实 coverAssetId；“哪个最关联”仍由编导模型判断。
+   */
+  publicationView?: "published_cover_candidates";
   /**
    * [T-099 切片四] context.metrics 只读端口 —— 给 projectId → 单作品指标快照(播放/点赞/评论/分享
    * + 留存点);不给 → 账号级最近 N 作品指标行。composition root 复用 analytics(snapshot 口径复用
@@ -2324,7 +2330,7 @@ const COVER_GENERATE_PARAMS = jsonSchema<{
     referenceAssetId: {
       type: "string",
       description:
-        "[以图生图]风格参考图的素材 id(可选)。用户给了参考封面、或要「延续历史封面风格/照着这张做」时:先用 context.materials 在素材库找到那张参考图,把它的 asset id 传进来——生图会以它为风格参考(image-to-image)。不传 = 纯文生图。",
+        "[以图生图]风格参考图的素材 id(可选)。用户明确指定素材时从 context.materials 取 asset id；要延续已发布作品封面风格时从 context.publications 的合格作品取 coverAssetId。原样传入后生图会以它为参考。用户要求参考图但拿不到真实 id 时不得省略本参数并降级纯文生图。",
     },
   },
   additionalProperties: false,
@@ -3587,7 +3593,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 命令。请求里的非法/非白名单名经端口 resolveToolsToProbe 落 rejected,编导如实回报、绝不绕。
     "local.tools": defineChatTool("local.tools", {
       description:
-        "探测用户**本机**装了哪些系统工具(ffmpeg / ffprobe / node / python3 / git)。当需要判断某个能力能不能落地时调用——例如用户要「抽音频/转码/渲染」前先看 ffmpeg 在不在;要跑脚本前看 node/python 在不在。返回每个工具是否已装、路径、版本;**缺失的工具会给出安装命令**(如 ffmpeg 缺 → brew install ffmpeg),你要**诚实转述**:装了就说装了(可报版本),没装就明说没装并给出安装引导,**绝不假装某工具存在、绝不编造版本号**。只读探测,不会执行任何其他命令;只支持内置白名单工具,你传的白名单外/含特殊字符的名字会被忽略(结果 rejected 里列出),照实告诉用户即可。",
+        "只探测用户本机的操作系统可执行文件(ffmpeg / ffprobe / node / python3 / git)，适用于抽音频、转码或本机脚本等明确依赖这些程序的动作。**不得用它探测 CreatorOS 的生图/文生视频/文本模型配置、provider、发布能力或其它应用内服务**；这类能力直接调用对应工具，由对应任务返回真实错误。返回系统工具是否已装、路径、版本和缺失时的安装提示；只读、白名单外名字会被拒绝。",
       inputSchema: LOCAL_TOOLS_PARAMS,
       execute: async ({ tools }): Promise<LocalToolsToolResult> => {
         try {
@@ -3675,7 +3681,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 文案诚实门(数字/成绩只从内容提取禁编造),生图 prompt 由结构化方案组装(非裸自由文本)。
     "cover.generate": defineChatTool("cover.generate", {
       description:
-        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。若未配置生图模型,任务会失败并在卡上提示去设置(不假装能生成)。支持以图生图:用户给了参考封面、或要延续历史封面风格时,先用 context.materials 找到那张参考图的 asset id,经 referenceAssetId 传入(生图以它为风格参考)。",
+        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。直接调用本工具即可，生图配置由任务自行检查并在卡上返回真实结果，**不得先用 local.tools 探测模型**。支持以图生图:用户明确给素材时从 context.materials 取 asset id；要延续已发布作品封面时从 context.publications 取真实 coverAssetId，经 referenceAssetId 传入。",
       inputSchema: COVER_GENERATE_PARAMS,
       execute: async ({
         projectId,
@@ -4413,14 +4419,18 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    默认 20/封顶 50(clampContextLimit),带 total/offset/hasMore 真相字段。
     "context.publications": defineChatTool("context.publications", {
       description:
-        "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题/当前封面 coverAssetId),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答；要参考历史作品封面风格生成新封面时，先从这里取 coverAssetId，再原样传给 cover.generate.referenceAssetId。纯读取上下文,不产候选、不写库。",
+        deps.publicationView === "published_cover_candidates"
+          ? "只读:返回当前账号近期真实已发布且有封面的作品候选，按发布时间从新到旧。结合当前内容语义自动选择‘最新且最关联’的一条：相关性优先，相关程度相当时取更新作品；把所选 coverAssetId 原样传给 cover.generate.referenceAssetId。不要把选择抛回用户，不要调用 local.tools 探测生图模型。"
+          : "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题/当前封面 coverAssetId),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答；要参考历史作品封面风格生成新封面时，先从这里取 coverAssetId，再原样传给 cover.generate.referenceAssetId。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PUBLICATIONS_PARAMS,
       execute: async ({
         limit,
         offset,
       }): Promise<ContextPublicationsToolResult> => {
-        const eff = clampContextLimit(limit);
-        const effOffset = Math.max(0, offset ?? 0);
+        const isCoverCandidateView =
+          deps.publicationView === "published_cover_candidates";
+        const eff = isCoverCandidateView ? 50 : clampContextLimit(limit);
+        const effOffset = isCoverCandidateView ? 0 : Math.max(0, offset ?? 0);
         if (!deps.listPublications) {
           return {
             kind: "context.publications",
@@ -4433,7 +4443,29 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const { rows, total } = await deps.listPublications({
           limit: eff,
           offset: effOffset,
+          ...(isCoverCandidateView
+            ? { view: "published_cover_candidates" as const }
+            : {}),
         });
+        if (isCoverCandidateView) {
+          const candidates = rows
+            .filter(
+              (row) =>
+                row.status === "published" &&
+                Boolean(row.publishedAt) &&
+                Boolean(row.coverAssetId),
+            )
+            .sort((a, b) =>
+              (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+            );
+          return {
+            kind: "context.publications",
+            items: candidates,
+            total: candidates.length,
+            offset: 0,
+            hasMore: false,
+          };
+        }
         return {
           kind: "context.publications",
           items: rows,

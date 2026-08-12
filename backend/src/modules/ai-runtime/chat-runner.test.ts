@@ -233,6 +233,23 @@ describe("[T-523] Copilot 媒体意图确定性路由", () => {
     ).toBeNull();
   });
 
+  it("参考最新发布作品生成封面进入发布作品语义选择链，而不是全素材库唯一图链", () => {
+    expect(
+      detectCopilotMediaRoute([
+        {
+          id: "latest-published-cover",
+          role: "user",
+          parts: [
+            {
+              type: "text",
+              text: "先找到我最新的且最关联的已发布作品，以它的封面为参考图生成这条内容的新封面",
+            },
+          ],
+        },
+      ] as never),
+    ).toEqual({ kind: "cover.publication_reference" });
+  });
+
   it("只有确认全库图片 total===1 才自动选择，不能把分页首屏的一张当唯一", () => {
     const firstPage = [
       { id: "a1", title: "第一页唯一可见", kind: "image" },
@@ -396,6 +413,50 @@ describe("[T-523] Copilot 媒体意图确定性路由", () => {
       total: 2,
     });
     expect(result.error).toContain("2 张");
+  });
+
+  it("发布作品参考链先强制读取合格候选、再强制生成，并物理排除 local.tools", async () => {
+    const { deps } = makeDeps();
+    const assembly = await buildChatAssembly(
+      ctx,
+      {
+        surface: "project",
+        projectId: "project-1",
+        selection: { kind: "project", ids: ["project-1"], label: "多账号素材结构化" },
+      },
+      deps,
+      { kind: "cover.publication_reference" },
+    );
+
+    expect(assembly.forcedToolSequence).toEqual([
+      "context.publications",
+      "cover.generate",
+    ]);
+    expect(assembly.tools).toHaveProperty("context.publications");
+    expect(assembly.tools).toHaveProperty("cover.generate");
+    expect(assembly.tools).not.toHaveProperty("local.tools");
+    expect(assembly.system).toContain("最新且最关联");
+    expect(assembly.system).toContain("相关性优先");
+    expect(assembly.system).toContain("不得调用 local.tools");
+    expect(assembly.system).toContain("不要把 A/B 选择抛回用户");
+  });
+
+  it("发布作品参考链第二步没拿到真实 coverAssetId 时不降级纯文封面", async () => {
+    const dispatchGenerateCoverPort = vi.fn(async () => ({ taskId: "must-not-run" }));
+    const { deps } = makeDeps({ dispatchGenerateCoverPort });
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "project-1" },
+      deps,
+      { kind: "cover.publication_reference" },
+    );
+    const result = (await runToolExecute(
+      assembly.tools["cover.generate"]!,
+      {},
+    )) as { error?: string | null };
+
+    expect(dispatchGenerateCoverPort).not.toHaveBeenCalled();
+    expect(result.error).toContain("已发布且有封面的作品");
   });
 });
 
@@ -2675,6 +2736,20 @@ describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制
     expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
   });
 
+  it("[T-779] 参考历史作品封面按只读候选→真实生成的顺序强制执行", () => {
+    const prep = buildChatPrepareStep({
+      forcedToolSequence: ["context_publications", "cover_generate"],
+      maxSteps: 6,
+    });
+    expect(prep({ stepNumber: 0 })).toEqual({
+      toolChoice: { type: "tool", toolName: "context_publications" },
+    });
+    expect(prep({ stepNumber: 1 })).toEqual({
+      toolChoice: { type: "tool", toolName: "cover_generate" },
+    });
+    expect(prep({ stepNumber: 2 })).toEqual({});
+  });
+
   it("[T-443] 强制意图改由 system 指令承担,且必须用**合规工具名**(与发给模型的 tools key 一致)", () => {
     const s = buildForcedToolInstruction("topic_enrich");
     expect(s).toContain("topic_enrich"); // 用合规名,否则模型按名找不到工具
@@ -2754,6 +2829,7 @@ describe("[T-256a] 环境感知能力认知 — honesty 第 13 条", () => {
     // 工具探测认知 + 缺失诚实引导 + 反编造铁律。
     expect(a.system).toContain("local.tools");
     expect(a.system).toContain("绝不假装工具存在、绝不编造版本号");
+    expect(a.system).toContain("绝不能用 local.tools 探测 CreatorOS 的生图/文生视频/文本模型配置");
     // 工作区目录认知(复用 T-253 授权表)+ 反臆造。
     expect(a.system).toContain("local.workspace");
     expect(a.system).toContain("绝不臆造用户没授权过的目录");

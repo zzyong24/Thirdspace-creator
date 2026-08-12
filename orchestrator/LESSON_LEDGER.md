@@ -250,3 +250,18 @@
 - **GuardCheck**: `pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts src/server/activation/managed-credential-lease.server.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/multimodal/resolve.test.ts src/modules/ai-runtime/transcribe-runner.test.ts && pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts`。
 - **Outcome(T+N)**: 待 T-768 双平台安装候选各完成一条本地短音频转写后回填。
 - **Ref**: DEC-ASR-014；T-768；PAT-001 T1。
+
+## LED-020 — 用系统工具探测代替应用能力调用，导致可用的生图链被对话自己拦截
+- **Date**: 2026-08-11 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
+- **WhatFailed**: 用户明确要求参考历史作品生成封面，真实日志只调用了 `context.publications` 与
+  `local.tools`，随后文本回复“探测不到生图模型”并结束；真正的 `cover.generate` 一次都未调用。
+  同时“生成封面”入口仍绑定通用 `material.generate`，发布清单还把 draft 混进参考候选。
+- **RootCause**: 将“需要判断能力能不能落地时先探系统工具”的通用说明扩大到了 CreatorOS 内部
+  模型能力；组合工具没有确定性只读→执行顺序，按钮 functionKey 与专用封面工具长期漂移。
+- **GuardRule**: `local.tools` 仅用于 ffmpeg/node/python/git 等系统可执行文件，禁止探测模型配置、
+  provider 或 CreatorOS 服务能力。明确参考历史作品生成封面时，必须先读取真实已发布且有封面的
+  候选，由模型判断“最新且最关联”，再把真实 `coverAssetId` 传入 `cover.generate`；入口必须绑定
+  专用封面工具，缺参考或生成失败不得静默降级。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts`。
+- **Outcome(T+N)**: 代码聚焦回归已通过；待用户在本地包对同一项目发起真实封面生成后回填。
+- **Ref**: DEC-AI-043；T-779；本机日志 2026-08-12T02:37:46Z。

@@ -559,7 +559,11 @@ export interface ContextReaders {
    */
   listPublications?: (
     ctx: RequestContext,
-    opts: { limit: number; offset: number },
+    opts: {
+      limit: number;
+      offset: number;
+      view?: "published_cover_candidates";
+    },
   ) => Promise<PublicationsListRaw>;
   /**
    * [T-099 切片四] context.metrics —— 给 projectId → 单作品指标快照 + 留存点;不给 → 账号级最近 N
@@ -702,6 +706,8 @@ export interface ChatAssembly {
    * 强制它,之后步恢复 auto。undefined = 不强制(自由对话)。
    */
   forcedTool?: string;
+  /** [T-779] 明确的只读→生成组合请求需要按顺序执行的工具。 */
+  forcedToolSequence?: string[];
   /**
    * [T-263] SDK 原生工具授权(HITL)配置 —— 从已挂工具收录登记了授权判定器的工具(当前仅
    * local.read)装配的 per-tool 判定映射,喂给 streamText 的 `toolApproval`。undefined = 本轮无
@@ -712,7 +718,8 @@ export interface ChatAssembly {
 
 export type CopilotMediaRoute =
   | { kind: "douyin.share"; shareInput: string; transcribe: boolean }
-  | { kind: "cover.reference" };
+  | { kind: "cover.reference" }
+  | { kind: "cover.publication_reference" };
 
 const DOUYIN_URL_RE =
   /https?:\/\/(?:(?:www|v)\.)?douyin\.com\/\S+|https?:\/\/(?:www\.)?iesdouyin\.com\/\S+/i;
@@ -735,6 +742,13 @@ function hasReferenceCoverIntent(text: string): boolean {
   // “不要参考图，直接生成封面”中的“参考图”是拒绝，不是 image-to-image 授权。
   if (REFERENCE_COVER_NEGATION_RE.test(text)) return false;
   return /封面/i.test(text) && REFERENCE_COVER_INTENT_RE.test(text);
+}
+
+function hasPublishedCoverReferenceIntent(text: string): boolean {
+  if (!hasReferenceCoverIntent(text)) return false;
+  return /(?:已发布|发布作品|历史作品|最近发布|最新发布|最新的且最关联)/i.test(
+    text,
+  );
 }
 
 function latestUserText(messages: UIMessage[]): string {
@@ -892,6 +906,9 @@ export function detectCopilotMediaRoute(
       shareInput: text,
       transcribe: hasExplicitTranscribeAuthorization(text),
     };
+  }
+  if (hasPublishedCoverReferenceIntent(text)) {
+    return { kind: "cover.publication_reference" };
   }
   if (hasReferenceCoverIntent(text)) {
     return { kind: "cover.reference" };
@@ -1111,12 +1128,27 @@ export async function buildChatAssembly(
       (name) => name !== "intelligence.douyin.share",
     );
   }
+  if (mediaRoute?.kind === "cover.publication_reference") {
+    // 系统级可执行文件探测与 CreatorOS 的模型配置无关。该组合请求物理排除 local.tools，
+    // 避免模型再次用 ffmpeg/node 探测结果臆断生图模型是否可用。
+    baseAllowed = baseAllowed.filter((name) => name !== "local.tools");
+  }
   const routedTool =
     mediaRoute?.kind === "douyin.share"
       ? "intelligence.douyin.share"
-      : mediaRoute?.kind === "cover.reference"
+      : mediaRoute?.kind === "cover.reference" ||
+          mediaRoute?.kind === "cover.publication_reference"
         ? "cover.generate"
         : null;
+  const forcedToolSequence =
+    mediaRoute?.kind === "cover.publication_reference"
+      ? ["context.publications", "cover.generate"]
+      : undefined;
+  if (forcedToolSequence) {
+    for (const toolName of forcedToolSequence) {
+      if (!baseAllowed.includes(toolName)) baseAllowed = [...baseAllowed, toolName];
+    }
+  }
   const scratchForbiddenTools = new Set([
     "context.projects",
     "context.metrics",
@@ -1245,7 +1277,7 @@ export async function buildChatAssembly(
     "12. **你能读用户本机的文件**(local.read,支持 macOS/Linux 绝对路径、Windows 盘符路径和 UNC 网络路径，也支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件 / 读 E:\\资料\\稿子.md / 读 \\\\server\\share\\稿子.md」时直接调它,绝不自称「Windows 路径读不了」「我碰不到你的本地文件」或要求用户换到 macOS。授权协议:首次读某路径会弹**确认卡**(needApproval)并挂起当前调用——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」；允许后系统会在**同一回合自动续跑**，不要要求用户重发，也不要重复调用制造循环；被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
     // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
     // 铁律:探到什么报什么,缺工具诚实引导安装,绝不假装工具存在/编造版本号/臆造未授权目录。
-    "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):要判断某能力能不能落地时先探——如用户要「抽音频/转码/渲染视频」前先看 ffmpeg 在不在,要跑脚本前看 node/python3 在不在。装了就说装了(可报版本),**没装就直说没装并给出安装命令**(如「ffmpeg 没装,装一下:brew install ffmpeg」),**绝不假装工具存在、绝不编造版本号**;你只能探内置白名单工具(ffmpeg/ffprobe/node/python3/git),传别的名字会被忽略并在结果里列出,照实说即可。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录(会返回文件清单)。清单为空就说还没授权过、引导 TA 去授权,**绝不臆造用户没授权过的目录**。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
+    "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):只在动作确实依赖操作系统可执行文件时探——如用户要「抽音频/转码」前看 ffmpeg，在本机跑脚本前看 node/python3。**绝不能用 local.tools 探测 CreatorOS 的生图/文生视频/文本模型配置、provider、发布能力或其它应用内服务**；这类能力直接调用对应工具，由对应任务返回真实配置或调用错误。系统工具装了就说装了(可报版本),没装就直说并给安装命令；只支持 ffmpeg/ffprobe/node/python3/git，绝不假装工具存在、绝不编造版本号。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录。清单为空就说还没授权过、引导 TA 去授权,绝不臆造用户没授权过的目录。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
     // [T-265] 反工具冒充:能力不存在时诚实说明，不能抓相邻工具冒充。
     //   工具清单(上方「你的技能清单」)是你能力的单一真值:清单没列的能力=你现在没有。
     "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事。宁可诚实说没有,也不误接工具骗过去。",
@@ -1265,6 +1297,16 @@ export async function buildChatAssembly(
       : "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:账号级未引用具体作品时,用户说“前几期/历史/之前发布/同系列”就用 context.projects.search 按真实发布时间找 projectId；普通最近项目才用 context.projects。拿到 id 后先调 context.project.lifecycle,正文再调 context.artifact.text;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。",
     "S2.(仅在为**创作前(未发布)**的项目搭结构或起草脚本时生效)依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝起草的理由。",
   ].join("\n");
+  const coverPublicationReferenceBlock =
+    mediaRoute?.kind === "cover.publication_reference"
+      ? [
+          "【参考历史作品生成封面】",
+          "先调用 context.publications 读取当前账号真实已发布且有封面的近期候选；再结合当前项目标题、Brief、稿件与候选标题，自动选择‘最新且最关联’的一条。相关性优先，相关程度相当时选择发布时间更新的作品。",
+          "选定后必须把该条真实 coverAssetId 原样传给 cover.generate.referenceAssetId 并直接发起封面任务。不要把 A/B 选择抛回用户，不要因为候选不绝对最新而停下追问。",
+          "不得调用 local.tools 探测生图模型；它只探测 ffmpeg/node/python/git 等系统可执行文件。生图配置由 cover.generate 自己检查并通过任务卡返回真实结果。",
+          "若没有任何合格候选或候选都没有真实 coverAssetId，诚实说明拿不到参考封面并停止；不得降级成无参考图生成。",
+        ].join("\n")
+      : "";
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
   // 让模型能如实回答「你能干什么」,并在对话中主动建议(「这个我可以用『记录经验』帮你存下来」)。
@@ -1362,6 +1404,7 @@ export async function buildChatAssembly(
     : [
         baseSystem,
         honestyBlock,
+        coverPublicationReferenceBlock,
         skillsBriefBlock,
         currentAccountBlock,
         currentProjectBlock,
@@ -1381,6 +1424,9 @@ export async function buildChatAssembly(
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
+    ...(mediaRoute?.kind === "cover.publication_reference"
+      ? { publicationView: "published_cover_candidates" as const }
+      : {}),
     readCreatorOsGuide: creatorOsGuideSnapshot
       ? () => creatorOsGuideSnapshot
       : undefined,
@@ -2055,9 +2101,17 @@ export async function buildChatAssembly(
               }
             : undefined;
         if (
-          mediaRoute?.kind === "cover.reference" &&
+          mediaRoute?.kind === "cover.publication_reference" &&
           !resolvedReferenceAssetId
         ) {
+          return {
+            taskId: null,
+            projectId: pid,
+            error:
+              "没有收到已发布且有封面的作品引用。请先从发布作品候选中选择真实 coverAssetId，本次不会降级为无参考图生成。",
+          };
+        }
+        if (mediaRoute?.kind === "cover.reference" && !resolvedReferenceAssetId) {
           if (!deps.contextReaders?.listCoverReferenceImages) {
             reference = {
               status: "needs_clarification",
@@ -2395,11 +2449,11 @@ export async function buildChatAssembly(
     // [T-099 切片四/五] 指标/发布/经验/候选/校准类 context 工具 —— execute 调注入的 user-scoped
     // 清单读端口。端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(空数组 /
     // rows 空 / rubric:null),绝不塞假数据。全部按 ctx.userId 收窄(读端口内部据 ctx 收窄)。
-    listPublications: async ({ limit, offset }) => {
+    listPublications: async ({ limit, offset, view }) => {
       if (!deps.contextReaders?.listPublications) {
         return { rows: [], total: 0 };
       }
-      return deps.contextReaders.listPublications(ctx, { limit, offset });
+      return deps.contextReaders.listPublications(ctx, { limit, offset, view });
     },
     getMetrics: async ({ projectId, limit }) => {
       if (!deps.contextReaders?.getMetrics) {
@@ -2438,7 +2492,9 @@ export async function buildChatAssembly(
   // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
   // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
   const forcedTool =
-    routedTool && toolWhitelist.includes(routedTool)
+    forcedToolSequence?.[0] && toolWhitelist.includes(forcedToolSequence[0])
+      ? forcedToolSequence[0]
+      : routedTool && toolWhitelist.includes(routedTool)
       ? routedTool
       : effectiveFunctionKey && toolWhitelist.includes(effectiveFunctionKey)
         ? effectiveFunctionKey
@@ -2448,7 +2504,15 @@ export async function buildChatAssembly(
   // streamText 的 toolApproval 配置。工具不在白名单 / decideLocalRead 端口未装配 → 自然缺席。
   const toolApproval = buildChatToolApproval(tools);
 
-  return { skillId, system, tools, modelSpec, forcedTool, toolApproval };
+  return {
+    skillId,
+    system,
+    tools,
+    modelSpec,
+    forcedTool,
+    ...(forcedToolSequence ? { forcedToolSequence } : {}),
+    toolApproval,
+  };
 }
 
 // ── [T-239f S6] 步数收尾 ────────────────────────────────────────────────────
@@ -2473,11 +2537,18 @@ export function resolveChatMaxSteps(
  */
 export function buildChatPrepareStep(opts: {
   forcedTool?: string;
+  forcedToolSequence?: string[];
   maxSteps: number;
 }): (step: { stepNumber: number }) => {
   toolChoice?: "none" | { type: "tool"; toolName: string };
 } {
   return ({ stepNumber }) => {
+    const sequencedTool = opts.forcedToolSequence?.[stepNumber];
+    if (sequencedTool) {
+      return {
+        toolChoice: { type: "tool" as const, toolName: sequencedTool },
+      };
+    }
     // [T-117] 第 0 步强制调 forcedTool —— 这是「点按钮/深链后卡片秒出」的关键:模型**直接执行**,
     //   省掉它自己纠结要不要调工具(用户实测:MiniMax 带强制时"一下就出来")。
     // [T-443] 曾因 DeepSeek thinking 对此 400 而一刀切改成 prompt 指令 —— 那让**所有**模型都变慢
@@ -2506,6 +2577,16 @@ export function buildForcedToolInstruction(safeToolName: string): string {
     `你**必须首先调用 \`${safeToolName}\` 工具**来完成它。`,
     "不要用文字描述你「将要做」或「已经做了」——必须真正发起这次工具调用,让结果以卡片呈现;",
     "只有在该工具返回结果之后,才继续做后续说明。",
+  ].join("");
+}
+
+export function buildForcedToolSequenceInstruction(
+  safeToolNames: readonly string[],
+): string {
+  return [
+    "【本轮硬性顺序】用户已明确要求执行一个组合操作。",
+    `必须依次调用 ${safeToolNames.map((name) => `\`${name}\``).join(" → ")}；后一步必须读取前一步的真实结果填写参数。`,
+    "不要跳过中间读取，不要改用相邻工具，不要只给文字建议，也不要把系统已有事实再抛回用户选择。",
   ].join("");
 }
 
@@ -2745,9 +2826,13 @@ export async function runChatStream(
     //   模型按 prompt 字面吐 tool_call,tools 侧 sanitize 后只认下划线名,不 sanitize prompt
     //   会 AI_NoSuchToolError → chat aborted(2026-07-21 用户 log(4) 真机)。
     system: sanitizeSystemToolReferences(
-      assembly.forcedTool
-        ? `${assembly.system}\n\n${buildForcedToolInstruction(sanitizeToolName(assembly.forcedTool))}`
-        : assembly.system,
+      assembly.forcedToolSequence?.length
+        ? `${assembly.system}\n\n${buildForcedToolSequenceInstruction(
+            assembly.forcedToolSequence.map(sanitizeToolName),
+          )}`
+        : assembly.forcedTool
+          ? `${assembly.system}\n\n${buildForcedToolInstruction(sanitizeToolName(assembly.forcedTool))}`
+          : assembly.system,
       assembly.tools,
     ),
     messages: modelMessages,
@@ -2769,6 +2854,7 @@ export async function runChatStream(
     //   prepareStep 现在只负责末步 toolChoice:'none' 收尾。
     prepareStep: buildChatPrepareStep({
       forcedTool: assembly.forcedTool ? sanitizeToolName(assembly.forcedTool) : undefined,
+      forcedToolSequence: assembly.forcedToolSequence?.map(sanitizeToolName),
       maxSteps,
     }),
     // [T-263] 原生工具授权(HITL):local.read 未授权 → SDK 挂起该工具调用、以 approval-requested

@@ -114,6 +114,12 @@
       "what": "桌面浏览器消费入口再次被 Playwright CLI 或默认缓存前置阻断，或安装 runtime 只有空 browsers 目录",
       "check": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_",
       "onFail": "桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。"
+    },
+    {
+      "led": "LED-020",
+      "what": "参考历史作品生成封面再次误用 local.tools 探测模型、入口绑错通用生图或只读清单后不继续生成",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts",
+      "onFail": "封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。"
     }
   ],
   "program_completion_required": false,

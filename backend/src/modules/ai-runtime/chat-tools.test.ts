@@ -2568,6 +2568,75 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     });
   });
 
+  it("[T-779] 封面参考候选只保留真实已发布、有发布时间且有封面的作品，并按发布时间倒序", async () => {
+    const listPublications = vi.fn(async () => ({
+      rows: [
+        {
+          id: "draft-new",
+          platform: "douyin",
+          url: null,
+          publishedAt: null,
+          projectTitle: "当前草稿",
+          coverAssetId: null,
+          status: "draft",
+        },
+        {
+          id: "published-older",
+          platform: "douyin",
+          url: "https://example.com/older",
+          publishedAt: "2026-08-10T08:00:00.000Z",
+          projectTitle: "编导智能体项目",
+          coverAssetId: "cover-older",
+          status: "published",
+        },
+        {
+          id: "published-newer",
+          platform: "douyin",
+          url: "https://example.com/newer",
+          publishedAt: "2026-08-11T09:00:00.000Z",
+          projectTitle: "Vibe Coding",
+          coverAssetId: "cover-newer",
+          status: "published",
+        },
+        {
+          id: "published-no-cover",
+          platform: "douyin",
+          url: "https://example.com/no-cover",
+          publishedAt: "2026-08-11T10:00:00.000Z",
+          projectTitle: "无封面作品",
+          coverAssetId: null,
+          status: "published",
+        },
+      ],
+      total: 4,
+    }));
+    const { deps } = makeDeps({
+      listPublications,
+      publicationView: "published_cover_candidates",
+    });
+    const tools = buildChatTools(["context.publications"], deps);
+    const result = (await runExecute(
+      tools["context.publications"]!,
+      {},
+    )) as {
+      items: Array<{ id: string; coverAssetId: string | null }>;
+      total: number;
+      hasMore: boolean;
+    };
+
+    expect(listPublications).toHaveBeenCalledWith({
+      limit: 50,
+      offset: 0,
+      view: "published_cover_candidates",
+    });
+    expect(result.items.map((item) => item.id)).toEqual([
+      "published-newer",
+      "published-older",
+    ]);
+    expect(result.total).toBe(2);
+    expect(result.hasMore).toBe(false);
+  });
+
   it("[切片四] context.publications limit 封顶 50、offset 兜 0", async () => {
     const { deps, listPublications } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);

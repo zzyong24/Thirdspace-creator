@@ -26,6 +26,7 @@
 import * as React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { buildCopilotViewModel } from "@/fixtures/selectors/copilot";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -123,6 +124,15 @@ describe("AI Copilot dialog (Task 24)", () => {
     expect(
       dialog.querySelectorAll('[data-slot="smart-recommendation-item"]'),
     ).toHaveLength(0);
+  });
+
+  it("生成封面入口绑定专用封面工具，并要求自动选择最新且最关联的已发布作品", () => {
+    const viewModel = buildCopilotViewModel();
+    const cover = viewModel.chips.find((chip) => chip.id === "cover");
+
+    expect(cover?.functionKey).toBe("cover.generate");
+    expect(cover?.prefill).toContain("最新且最关联");
+    expect(cover?.prefill).toContain("直接生成");
   });
 
   it("renders the close button with data-overlay-close so the controller's delegated click handler closes the dialog", () => {

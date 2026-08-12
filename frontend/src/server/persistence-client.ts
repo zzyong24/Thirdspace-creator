@@ -11806,9 +11806,55 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // (不新造 count op;分页真相 hasMore 精确,total 为下界近似,前端脚注不谎称已看全)。
       listPublications: async (
         c: RequestContext,
-        opts: { limit: number; offset: number },
+        opts: {
+          limit: number;
+          offset: number;
+          view?: "published_cover_candidates";
+        },
       ) => {
         try {
+          if (opts.view === "published_cover_candidates") {
+            // SEMANTIC_BOUNDARY_ALLOW:这里只筛真实状态/时间/coverAssetId 并按时间排序；
+            // “哪个最关联”由编导模型结合当前创作上下文判断，不在代码里做关键词相似度。
+            const eligible: Awaited<
+              ReturnType<typeof publishingService.getRecentPublicationsWithTitle>
+            > = [];
+            let offset = 0;
+            const pageSize = 50;
+            while (eligible.length < opts.limit) {
+              const page = await publishingService.getRecentPublicationsWithTitle(c, {
+                limit: pageSize,
+                offset,
+              });
+              eligible.push(
+                ...page.filter(
+                  (publication) =>
+                    publication.status === "published" &&
+                    Boolean(publication.publishedAt) &&
+                    Boolean(publication.coverAssetId),
+                ),
+              );
+              if (page.length < pageSize) break;
+              offset += page.length;
+            }
+            const rows = eligible
+              .sort((a, b) =>
+                (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+              )
+              .slice(0, opts.limit);
+            return {
+              rows: rows.map((p) => ({
+                id: p.id,
+                platform: p.platform,
+                url: p.externalUrl ?? null,
+                publishedAt: p.publishedAt ?? null,
+                projectTitle: p.title ?? "",
+                coverAssetId: p.coverAssetId ?? null,
+                status: p.status,
+              })),
+              total: rows.length,
+            };
+          }
           const probe = await publishingService.getRecentPublicationsWithTitle(c, {
             limit: opts.limit + 1,
             offset: opts.offset,

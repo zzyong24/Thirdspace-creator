@@ -2324,3 +2324,28 @@ AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，
 **Invalidates**：T-679/T-715 中“未绑定/额度不足作为 ASR 用户阻断”的既有消费语义。
 
 **Status**：用户已确认；T-768 SPEC 独立复审通过后进入 BUILD。
+
+## DEC-AI-043 (2026-08-11) — 参考封面按“最新且最关联”自动选择并直接生成
+
+**来源**：用户提供正式版真实对话与本机日志，明确指出“最新发布作品”语义过弱，要求改为
+“最新的且最关联的作品”，并恢复此前顺畅的文生图体验。
+
+**决策**：
+
+1. 参考历史作品生成封面时，候选只包含当前账号真实 `published`、有真实 `publishedAt` 且有
+   `coverAssetId` 的作品；draft、无发布时间和无封面记录不得进入参考候选。
+2. 创作相关性由编导模型结合当前项目标题、Brief、稿件和真实候选语义判断，相关性优先；只有
+   相关程度相当时才用 `publishedAt DESC` 取更新作品。代码只负责属主、状态、真实 ID、排序和范围，
+   不用关键词/字符串相似度冒充语义判断。
+3. 用户已明确要求生成时，系统自动选择最佳候选并继续调用 `cover.generate`，不再把 A/B 选择抛回
+   用户；没有合格参考封面时诚实停止，不静默改成无参考图生成。
+4. `local.tools` 只探测 ffmpeg/node/python/git 等操作系统可执行文件，绝不用于探测 CreatorOS 的
+   模型配置、服务端能力或 provider；生图配置与真实错误由 `cover.generate` 自己检查并通过任务卡返回。
+5. 本次不新增视觉、不修改生图 provider/密钥存储、不改变用户采纳确认门。
+
+**Pattern-Ref**：DEC-AI-039（语义归 AI，代码只守边界）。
+
+**Asset-Ref**：既有 `context.publications`、`cover.generate(referenceAssetId)`、封面 runner 与生图
+adapter。
+
+**Status**：用户已确认，T-779 进入 BUILD。
