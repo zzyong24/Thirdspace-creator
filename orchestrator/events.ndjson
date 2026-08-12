@@ -698,3 +698,4 @@
 {"ts":"2026-08-11T17:04:36.923Z","actor":"taskctl","action":"start","task":"T-777","sha_before":"ff0fed30f92a","sha_after":"25b7d260c5d3"}
 {"ts":"2026-08-11T17:11:59.207Z","actor":"taskctl","action":"complete","task":"T-777","evidence":"commit 9022a002；红测复现误报；video-render 18 tests PASS；execution 169 tests PASS；两端 typecheck PASS；test-integrity、boundary、orphan、reconcile 均无新增错误","sha_before":"b4c707e34312","sha_after":"93df588a45aa"}
 {"ts":"2026-08-12T01:51:03.144Z","actor":"taskctl","action":"start","task":"T-778","sha_before":"e4b4628e8530","sha_after":"b9453b4e85a6"}
+{"ts":"2026-08-12T02:38:54.752Z","actor":"taskctl","action":"complete","task":"T-778","evidence":"commit 32952f39；真实 54.9 秒工程随包组件完整渲染成功；backend/frontend typecheck PASS；聚焦测试 61/61、42/42、打包测试 41/41 PASS；本地 DMG caa685430550ad23d54429864af1baa28d7a09edcd82f05b432eb5ee6f522379；用户 2026-08-11 实测确认没什么问题","sha_before":"1d7ddf6dd3e3","sha_after":"a8802616627e"}
