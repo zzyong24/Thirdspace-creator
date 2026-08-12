@@ -469,7 +469,10 @@ const IN_PROCESS_RUNNER_TASK_TYPES: ReadonlySet<string> = new Set([
 export function isInProcessRunnerTaskType(taskType: string): boolean {
   return (
     IN_PROCESS_RUNNER_TASK_TYPES.has(taskType) ||
-    taskType.startsWith("scheduled.")
+    taskType.startsWith("scheduled.") ||
+    // execution.tasks.create 的旧执行层同样由本进程 fire-and-forget 跑 executor；
+    // 进程退出后没有外部 worker 会接管，遗留 running 必然是孤儿任务。
+    taskType.startsWith("exec.")
   );
 }
 

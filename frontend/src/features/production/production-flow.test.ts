@@ -98,6 +98,14 @@ describe("humanizeRenderError(环境错误人话化)", () => {
     ).toContain("重新安装最新版应用");
   });
 
+  it("仅含 Chromium 的运行异常不伪装成浏览器缺失", () => {
+    expect(
+      humanizeRenderError(
+        "Chromium DevTools 启动超时:浏览器进程已启动但调试端口尚未响应",
+      ),
+    ).toBeNull();
+  });
+
   it("[T-546] 素材不是视频流时给素材提示，不误报随包 ffprobe 缺失", () => {
     const message = humanizeRenderError(
       "ffprobe 未识别出视频流: asset-bc671a6f-155",

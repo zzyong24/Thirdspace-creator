@@ -1879,7 +1879,9 @@ export function ProductionWorkbench({
               t.status === "awaiting_confirmation"),
         );
         if (live && !abandoned) {
-          setRenderTaskId((prev) => prev ?? live.id);
+          // 项目任务列表按 requestedAt 新→旧返回，是当前执行真值。已保存方案里的
+          // sourceRenderTaskId 只是恢复线索，不能抢占更新的在途任务并反复展示旧错误。
+          setRenderTaskId(live.id);
           setRenderTaskStatus(live.status as RenderFlowStatus);
           return; // 渲染在途优先;决策候选不再恢复(已消费)
         }

@@ -603,6 +603,8 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
         { id: "cover", accountId: "acct-sweep", taskType: "cover.generate", startedAt: "2026-07-11T11:59:00.000Z" },
         // scheduled.* 前缀整族也是进程内(dispatchScheduledCollection)
         { id: "sched", accountId: "acct-sweep", taskType: "scheduled.self.metrics", startedAt: "2026-07-11T11:59:00.000Z" },
+        // execution live dispatch 同样随 app 进程退出，重启后不可能仍真实运行。
+        { id: "render", accountId: "acct-sweep", taskType: "exec.video.render", startedAt: "2026-07-11T11:59:30.000Z" },
         // 进程内类型无时间锚也判死(启动扫语义:重启即死不需要锚)
         { id: "thesis-no-anchor", accountId: "acct-sweep", taskType: "script.draft", startedAt: null },
         // 转录 30min 前(<2h)→ 合法长活,放过
@@ -614,8 +616,8 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
       ctx,
       now: () => NOW,
     });
-    expect(swept).toBe(4);
-    for (const id of ["thesis", "cover", "sched", "thesis-no-anchor"]) {
+    expect(swept).toBe(5);
+    for (const id of ["thesis", "cover", "sched", "render", "thesis-no-anchor"]) {
       expect(markFailed).toHaveBeenCalledWith(
         { ...ctx, accountId: "acct-sweep" },
         id,

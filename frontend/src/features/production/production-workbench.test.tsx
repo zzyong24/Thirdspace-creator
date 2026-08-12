@@ -920,6 +920,62 @@ describe("ProductionWorkbench", () => {
     );
   });
 
+  it("项目最新执行任务覆盖方案里保存的旧 sourceRenderTaskId", async () => {
+    mockClient.getOutputProduction.mockResolvedValue({
+      id: "prod-1",
+      status: "rendering",
+      recordingConfig: {
+        videoEditingPlan: {
+          revision: 4,
+          decisions: { scenes: [], cards: [], broll: [], subtitles: [], srtLines: [] },
+          inventory: [],
+          renderProps: { delivery: { width: 1920, height: 1080, fps: 30 } },
+          sourceRenderTaskId: "exec-old-failed",
+        },
+      },
+    });
+    mockClient.listExecutionTasks.mockResolvedValue([
+      {
+        id: "exec-latest-running",
+        execType: "video.render",
+        status: "running",
+        adoptedAssetIds: [],
+        errorMessage: null,
+      },
+      {
+        id: "exec-old-failed",
+        execType: "video.render",
+        status: "failed",
+        adoptedAssetIds: [],
+        errorMessage: "Chromium DevTools 启动超时",
+      },
+    ]);
+    mockClient.getExecutionTask.mockImplementation(async (input?: unknown) => {
+      const taskId = (input as { params: { taskId: string } }).params.taskId;
+      return {
+        id: taskId,
+        execType: "video.render",
+        status: taskId === "exec-latest-running" ? "running" : "failed",
+        spec: { taskType: "video.render", goal: "渲染成片", inputs: [], params: {}, constraints: {} },
+        manifest: null,
+        adoptedAssetIds: [],
+        errorMessage: taskId === "exec-old-failed" ? "Chromium DevTools 启动超时" : null,
+      };
+    });
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    await waitFor(() =>
+      expect(mockClient.getExecutionTask).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { taskId: "exec-latest-running" } }),
+      ),
+    );
+    expect(
+      container.querySelector('[data-slot="execution-task-card"]')?.getAttribute("data-status"),
+    ).toBe("running");
+    expect(container.textContent).not.toContain("随包的 Chromium 浏览器缺失");
+  });
+
   // ── [FE-H01] 「后台运行,可离开」承诺:进度不丢、不重复付费、失败可见可恢复 ──────────
 
   it("[FE-H01] 刷新恢复:渲染已 failed → 接回跟踪(失败可见:卡内显错误 + 环境引导 + 重试)", async () => {

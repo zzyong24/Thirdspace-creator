@@ -90,7 +90,13 @@ export function humanizeRenderError(message: string | null): string | null {
   ) {
     return "随包渲染组件 ffmpeg/ffprobe 缺失或不可用。请重新安装最新版应用后重试；开发环境可自行安装 ffmpeg，或配置 CREATOROS_FFMPEG_PATH / CREATOROS_FFPROBE_PATH。";
   }
-  if (lower.includes("chromium") || lower.includes("playwright")) {
+  if (
+    lower.includes("chromium 未就绪") ||
+    lower.includes("chromium executable is missing") ||
+    lower.includes("playwright cli 未找到") ||
+    (lower.includes("executable doesn't exist") &&
+      (lower.includes("chromium") || lower.includes("playwright")))
+  ) {
     return "随包的 Chromium 浏览器缺失或不可用。请重新安装最新版应用后重试；开发环境可执行 `npx playwright install chromium`。";
   }
   return null;
