@@ -192,6 +192,43 @@ describe("Assets needs-backend wiring", () => {
     ).toBeNull();
   });
 
+  it("[T-788] 素材定位使用跨平台文件管理器文案，并在 route 成功后给出完成反馈", async () => {
+    const fetchSpy = vi.fn((input: RequestInfo | URL) => {
+      if (String(input).includes("/api/v1/local/reveal")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ ok: true, revealed: "asset" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+      return Promise.reject(new Error(`unexpected fetch: ${String(input)}`));
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const { container } = await renderIsland();
+    const button = container.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-action-reveal"]',
+    );
+
+    expect(button).not.toBeNull();
+    expect(button).toHaveAttribute("aria-label", "在文件管理器中显示");
+    expect(button?.textContent).toContain("打开位置");
+    expect(button?.textContent).not.toMatch(/Finder|访达/);
+
+    fireEvent.click(button!);
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="asset-action-status"]')
+          ?.textContent,
+      ).toContain("已在文件管理器中显示"),
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "/api/v1/local/reveal",
+      expect.objectContaining({ method: "POST" }),
+    );
+    vi.unstubAllGlobals();
+  });
+
   it("E5 收藏 calls assets.favorite.toggle then refresh (not the addAssetFile hack)", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(

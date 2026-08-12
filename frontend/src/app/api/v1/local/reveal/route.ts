@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import * as fs from "node:fs/promises";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 
 import {
   getLocalFileRuntime,
@@ -17,17 +15,17 @@ import {
   realpathInsideRoot,
   resolveInsideRoot,
 } from "../local-reveal-security";
+import { launchRevealPlan } from "../reveal-logs/launcher";
+import { planRevealTarget } from "./plan";
 
-// [T-055d SPEC §7.2] 「在 Finder 打开/显示」route。单机产品:Next server 与用户同机,
-// 这里对解析出的安全路径执行 macOS `open`(素材 → `open -R` 定位文件;项目 → `open` 目录)。
+// [T-055d/T-788 SPEC §7.2] 「在文件管理器中打开/显示」route。单机产品:Next server 与用户同机,
+// 对解析出的安全路径按平台执行 Explorer / open / xdg-open。
 //   - 归属:assetId/projectId 都经用户 scoped 服务解析(越权 → 404,不泄露存在性);
 //   - 路径:gate-F1 三重防护(resolveInsideRoot 纯函数 + realpath 复检),见
 //     ../local-reveal-security.ts 与其 payload 测试;
 //   - 项目目录可能还没建(没倒过素材)→ mkdir -p 后再开(用户预期:总能打开)。
 
 export const dynamic = "force-dynamic";
-
-const execFileAsync = promisify(execFile);
 
 interface RevealBody {
   assetId?: string;
@@ -67,7 +65,7 @@ export async function POST(req: Request): Promise<Response> {
           { status: 404 },
         );
       }
-      await execFileAsync("open", ["-R", real]);
+      await launchRevealPlan(planRevealTarget(real, "asset", process.platform));
       return NextResponse.json({ ok: true, revealed: "asset" });
     }
 
@@ -83,7 +81,7 @@ export async function POST(req: Request): Promise<Response> {
       if (!real) {
         return NextResponse.json({ error: "directory unavailable" }, { status: 404 });
       }
-      await execFileAsync("open", [real]);
+      await launchRevealPlan(planRevealTarget(real, "project", process.platform));
       return NextResponse.json({ ok: true, revealed: "project" });
     }
 

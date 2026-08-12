@@ -45,7 +45,7 @@ export interface AssetDetailPanelProps {
   readonly onCopyPath?: (assetId: string) => void;
   readonly onFavorite?: (assetId: string) => void;
   readonly onTrash?: (assetId: string) => void;
-  // [T-055d SPEC §7.2] 在 Finder 显示(open -R 定位文件;单机产品 server 与用户同机)。
+  // [T-055d/T-788 SPEC §7.2] 在系统文件管理器中显示。
   readonly onReveal?: (assetId: string) => void;
   // [T-060③a] 「附到项目」已退役:素材只两条来路(素材中心=通用,项目内上传=项目素材)。
   readonly actionsPending?: boolean;
@@ -120,7 +120,7 @@ export function AssetDetailPanel({
                 <span>下载</span>
               </button>
               {/* [T-360②] 「复制链接」已下架(原 T-231③ 规划中占位):单机本地产品无对象存储/
-                  签名链接语义(用户拍板去掉),本地文件定位走「Finder」。 */}
+                  签名链接语义(用户拍板去掉),本地文件走系统文件管理器定位。 */}
               <button
                 type="button"
                 data-slot="asset-action-favorite"
@@ -133,11 +133,11 @@ export function AssetDetailPanel({
                 </svg>
                 <span>收藏</span>
               </button>
-              {/* [T-055d SPEC §7.2] local-fs 单机:在 Finder 定位这份原始文件。 */}
+              {/* [T-055d/T-788 SPEC §7.2] local-fs 单机:在系统文件管理器定位原始文件。 */}
               <button
                 type="button"
                 data-slot="asset-action-reveal"
-                aria-label="在 Finder 显示"
+                aria-label="在文件管理器中显示"
                 disabled={actionsPending}
                 onClick={onReveal ? () => onReveal(asset.id) : undefined}
                 className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
@@ -145,7 +145,7 @@ export function AssetDetailPanel({
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
                   <path d="M2 5 H6 L7.5 6.5 H14 V12.5 H2 Z" />
                 </svg>
-                <span>Finder</span>
+                <span>打开位置</span>
               </button>
               {/* [T-055d/T-056⑥] 危险操作显式命名(原「更多」实为删除,误导);确认在 handler。 */}
               <button
@@ -264,4 +264,3 @@ export function AssetDetailPanel({
     </aside>
   );
 }
-

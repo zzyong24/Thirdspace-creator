@@ -120,6 +120,12 @@
       "what": "参考历史作品生成封面再次误用 local.tools 探测模型、入口绑错通用生图或只读清单后不继续生成",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts",
       "onFail": "封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。"
+    },
+    {
+      "led": "LED-022",
+      "what": "跨平台桌面能力再次在调用点内联单平台命令，或素材中心文案写死 Finder/访达",
+      "check": "pnpm --dir frontend exec vitest run src/app/api/v1/local/reveal/plan.test.ts src/app/api/v1/local/reveal/route.contract.test.ts src/app/api/v1/local/reveal-logs/launcher.test.ts src/features/assets/assets-interactions.test.tsx",
+      "onFail": "跨平台文件定位门回归：win32/darwin/linux 必须各有 command/API、shell-free argv/path、completion 和中性 user copy；route 必须消费 plan + launcher，禁止直接执行单平台命令。"
     }
   ],
   "program_completion_required": false,

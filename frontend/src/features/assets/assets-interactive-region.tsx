@@ -215,8 +215,8 @@ export function AssetsInteractiveRegion({
     [],
   );
 
-  // [T-055d SPEC §7.2] 在 Finder 显示:本地 route 对安全解析后的真实文件执行 open -R
-  // (gate-F1 三重路径防护在 route 侧)。
+  // [T-055d/T-788 SPEC §7.2] 在系统文件管理器中显示；route 先做 gate-F1 三重路径防护，
+  // 再按平台选择 Explorer / open / xdg-open。
   const handleReveal = React.useCallback(
     (assetId: string) => {
       startTransition(async () => {
@@ -233,19 +233,18 @@ export function AssetsInteractiveRegion({
               | { error?: string }
               | null;
             if (process.env.NODE_ENV !== "production") {
-              // eslint-disable-next-line no-console
               console.error("[reveal] failed:", res.status, data?.error);
             }
             setActionStatus(
               res.status === 404
-                ? "Finder 定位失败：文件已不存在或不可访问。"
-                : "Finder 定位失败，请重试。",
+                ? "定位失败：文件已不存在或不可访问。"
+                : "没能在文件管理器中显示，请重试。",
             );
             return;
           }
-          setActionStatus("已在 Finder 中显示。");
+          setActionStatus("已在文件管理器中显示。");
         } catch {
-          setActionStatus("没能在访达中打开,请稍后重试。");
+          setActionStatus("没能在文件管理器中显示，请稍后重试。");
         }
       });
     },

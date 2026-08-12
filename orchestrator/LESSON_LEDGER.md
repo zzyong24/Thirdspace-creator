@@ -277,3 +277,20 @@
 - **GuardCheck**: `pnpm --dir backend exec vitest run src/lib/copy-file-copy-on-write.test.ts src/modules/assets/localfs-object-storage.integration.test.ts src/modules/assets/assets.service.test.ts src/modules/execution/sandbox.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/video-render/executor.test.ts`，并在 APFS 对 `256 MiB` 临时文件运行 T-782 物理块探针，副本增量应接近元数据量而非文件逻辑大小。
 - **Outcome(T+N)**: 当前 APFS 实测副本逻辑大小 `256 MiB`，新增物理空间 `4 KiB`；待 Windows 安装包真实任务确认普通复制回退后回填。
 - **Ref**: DEC-STO-001；T-780；T-782。
+
+## LED-022 — 单平台命令混入跨平台桌面能力，旧审计提醒没有形成门卫
+- **Date**: 2026-08-12 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: rule
+- **WhatFailed**: Windows 用户在素材中心打开两个真实存在的文件时，桌面应用连续 7 次执行 macOS
+  `open -R`，全部报 `spawn open ENOENT`。2026-07-15 上线前审计已指出非 macOS 页面仍显示 Finder
+  操作，但该发现只停留在报告中，没有变成归属任务、失败测试和发布守卫，最终同一形态进入正式包。
+- **RootCause**: 素材打开链路在调用点内联单平台命令；契约没有同时约束系统 API/命令、参数与路径、
+  进程完成时机和用户文案，也没有要求 Windows 最终安装物上的真实操作证据。审计发现与工程门禁断链。
+- **GuardRule**: 所有桌面本机能力必须先形成支持平台矩阵，逐平台明确 command/native API、独立 argv
+  与路径编码、spawn/exit/callback 完成语义、用户文案和不支持行为；纯 planner 测全平台，SHIP 在每个
+  目标 OS 的最终安装物上验证真实动作。审计 Blocker/High 必须同时进入 BACKLOG，并以红测或守卫闭环。
+- **GuardCheck**: `pnpm --dir frontend exec vitest run src/app/api/v1/local/reveal/plan.test.ts src/app/api/v1/local/reveal/route.contract.test.ts src/app/api/v1/local/reveal-logs/launcher.test.ts src/features/assets/assets-interactions.test.tsx`（已登记进 `reconcile.config.json` lessons[]）。
+- **Outcome(T+N)**: T-788 已将素材与项目目录的打开行为收敛为 win32/darwin/linux 纯 plan，route
+  统一消费现有 launcher；平台计划、路径含空格/中文、spawn/exit、route 接线和平台中性文案回归通过。
+  Windows 最终安装物的 Explorer 真机回执仍属于后续出包验收，不能由 macOS 单测替代。
+- **Ref**: T-786；T-787；T-788；`docs/research/2026-08-12-windows-assets-reveal-open-command-diagnosis.md`；
+  `docs/research/2026-07-15-prelaunch-full-engineering-data-audit-research.md` FE-L01。
