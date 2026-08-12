@@ -128,6 +128,24 @@ describe("localfs-object-storage", () => {
     expect(head.checksum).toMatch(/^[0-9a-f]{64}$/);
   });
 
+  it("[T-782] copyObjectToFile 生成独立可写副本，不污染素材原文件", async () => {
+    const storage = makeStorage();
+    const up = await storage.createPresignedUpload({
+      assetType: "video",
+      mimeType: "video/mp4",
+      fileSize: 1024 * 1024,
+    });
+    const sourceBytes = Buffer.alloc(1024 * 1024, 7);
+    await fs.writeFile(path.join(root, up.storageKey), sourceBytes);
+    const destination = path.join(root, "workspace", "input.mp4");
+    await fs.mkdir(path.dirname(destination), { recursive: true });
+
+    await storage.copyObjectToFile!(up.storageKey, destination);
+    await fs.writeFile(destination, Buffer.from("task changed its private copy"));
+
+    expect(await fs.readFile(path.join(root, up.storageKey))).toEqual(sourceBytes);
+  });
+
   it("getSignedUrl mints a GET-bound token URL", async () => {
     const storage = makeStorage();
     const url = await storage.getSignedUrl("image/uploads/objkey-1");

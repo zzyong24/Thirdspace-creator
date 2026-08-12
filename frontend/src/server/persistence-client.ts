@@ -6388,8 +6388,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               {
                 ai: aiService,
                 assets: {
-                  getAssetBytes: (c, assetId) =>
-                    assetsService.getAssetBytes(c, assetId),
+                  materializeAsset: (c, assetId, destinationPath) =>
+                    assetsService.materializeAsset(c, assetId, destinationPath),
                 },
                 registry: executorRegistry,
                 workspacesRoot: executionWorkspacesRoot,

@@ -93,7 +93,10 @@ describe("materializeInputs", () => {
     const materialized = await materializeInputs(
       sandbox,
       [{ assetId: "a1", mountAs: "clips/raw.mp4" }],
-      async () => ({ bytes: bytesOf("fake-video"), mimeType: "video/mp4" }),
+      async (_assetId, destinationPath) => {
+        await fs.writeFile(destinationPath, bytesOf("fake-video"));
+        return { size: 10, mimeType: "video/mp4" };
+      },
     );
     expect(materialized).toEqual([
       { assetId: "a1", mountAs: "clips/raw.mp4", size: 10, mimeType: "video/mp4" },
@@ -108,13 +111,13 @@ describe("materializeInputs", () => {
     const sandbox = await createSandbox(root, "t2");
     await expect(
       materializeInputs(sandbox, [{ assetId: "a", mountAs: "../../evil" }], async () => ({
-        bytes: bytesOf("x"),
+        size: 1,
         mimeType: "text/plain",
       })),
     ).rejects.toThrow(SandboxPathViolation);
     await expect(
       materializeInputs(sandbox, [{ assetId: "a", mountAs: "api-key.txt" }], async () => ({
-        bytes: bytesOf("x"),
+        size: 1,
         mimeType: "text/plain",
       })),
     ).rejects.toThrow(SandboxPathViolation);

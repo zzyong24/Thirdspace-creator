@@ -59,7 +59,7 @@ function makeFakeAi(): FakeAi {
 }
 
 const assets = {
-  async getAssetBytes() {
+  async materializeAsset() {
     return null;
   },
 };

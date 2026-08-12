@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createAssetRepository } from "./assets.repository";
@@ -205,6 +208,66 @@ describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
         mimeType: "",
       }),
     ).rejects.toBeInstanceOf(UploadValidationError);
+  });
+});
+
+describe("assets.service — [T-782] execution workspace materialization", () => {
+  it("优先使用存储适配器的独立文件复制能力", async () => {
+    const asset = await service.createGeneratedAsset(ctxA, {
+      assetType: "video",
+      name: "口播原片.mp4",
+      bytes: new Uint8Array([1, 2, 3, 4]),
+      mimeType: "video/mp4",
+    });
+    const targetRoot = await fs.mkdtemp(path.join(os.tmpdir(), "asset-materialize-"));
+    const target = path.join(targetRoot, "input.mp4");
+    let copied = false;
+    storage.copyObjectToFile = async (_storageKey, destinationPath) => {
+      copied = true;
+      await fs.writeFile(destinationPath, new Uint8Array([1, 2, 3, 4]));
+    };
+    try {
+      await expect(service.materializeAsset(ctxA, asset.id, target)).resolves.toEqual({
+        size: 4,
+        mimeType: "video/mp4",
+      });
+      expect(copied).toBe(true);
+    } finally {
+      await fs.rm(targetRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("没有本地复制能力时回退读取字节写入", async () => {
+    const fallbackStorage: ObjectStoragePort = {
+      ...storage,
+      copyObjectToFile: undefined,
+      async getObject() {
+        return new Uint8Array([9, 8, 7]);
+      },
+    };
+    const deps = deterministicDeps();
+    const isolated = createAssetsService(
+      createAssetRepository(db, deps),
+      async () => fallbackStorage,
+      deps,
+    );
+    const asset = await isolated.createGeneratedAsset(ctxA, {
+      assetType: "video",
+      name: "远端素材.mp4",
+      bytes: new Uint8Array([1]),
+      mimeType: "video/mp4",
+    });
+    const targetRoot = await fs.mkdtemp(path.join(os.tmpdir(), "asset-fallback-"));
+    const target = path.join(targetRoot, "input.mp4");
+    try {
+      await expect(isolated.materializeAsset(ctxA, asset.id, target)).resolves.toEqual({
+        size: 3,
+        mimeType: "video/mp4",
+      });
+      expect(await fs.readFile(target)).toEqual(Buffer.from([9, 8, 7]));
+    } finally {
+      await fs.rm(targetRoot, { recursive: true, force: true });
+    }
   });
 });
 

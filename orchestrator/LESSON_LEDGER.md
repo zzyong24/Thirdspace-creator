@@ -265,3 +265,15 @@
 - **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts`。
 - **Outcome(T+N)**: 代码聚焦回归已通过；待用户在本地包对同一项目发起真实封面生成后回填。
 - **Ref**: DEC-AI-043；T-779；本机日志 2026-08-12T02:37:46Z。
+
+## LED-021 — Node 声称支持 reflink 不等于 macOS 真正使用了 APFS clonefile
+- **Date**: 2026-08-11 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
+- **WhatFailed**: 首版使用 `COPYFILE_FICLONE_FORCE`，单测只验证副本独立和兼容回退；真实 `256 MiB`
+  磁盘探针却显示新增约 `256 MiB`，重复占盘并未解决。
+- **RootCause**: 把跨平台 API 名称当作物理占用证据，没有在目标 APFS 卷比较复制前后的可用块。
+- **GuardRule**: 所有宣称“稀疏、去重、压缩、reflink/clone、零拷贝”的存储优化，必须在目标文件系统
+  用大于元数据噪声的真实文件核对物理增量；macOS clone 使用系统 `cp -c`，保持 execFile 参数隔离，
+  不支持时普通复制。禁止 hardlink/symlink 冒充独立副本。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/lib/copy-file-copy-on-write.test.ts src/modules/assets/localfs-object-storage.integration.test.ts src/modules/assets/assets.service.test.ts src/modules/execution/sandbox.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/video-render/executor.test.ts`，并在 APFS 对 `256 MiB` 临时文件运行 T-782 物理块探针，副本增量应接近元数据量而非文件逻辑大小。
+- **Outcome(T+N)**: 当前 APFS 实测副本逻辑大小 `256 MiB`，新增物理空间 `4 KiB`；待 Windows 安装包真实任务确认普通复制回退后回填。
+- **Ref**: DEC-STO-001；T-780；T-782。

@@ -106,16 +106,18 @@ export async function createSandbox(
 }
 
 /**
- * 输入物化:assetId → 对象存储读字节 → input/<mountAs> 只读文件(0o444)。
+ * 输入物化:assetId → Assets service 写入 input/<mountAs> → 只读文件(0o444)。
+ * local-fs 由资产模块优先用 CoW/reflink；远端存储仍可下载后普通写入。
  *   - mountAs 路径穿越防护(resolveInsideDir)+ 敏感文件名 denylist;
  *   - 资产读不到(越权/无文件)→ throw(诚实失败,不静默空跑)。
  */
 export async function materializeInputs(
   sandbox: SandboxPaths,
   inputs: readonly ExecutionTaskInput[],
-  readAsset: (
+  materializeAsset: (
     assetId: string,
-  ) => Promise<{ bytes: Uint8Array; mimeType: string } | null>,
+    destinationPath: string,
+  ) => Promise<{ size: number; mimeType: string } | null>,
 ): Promise<MaterializedInput[]> {
   const materialized: MaterializedInput[] = [];
   for (const input of inputs) {
@@ -125,16 +127,17 @@ export async function materializeInputs(
         `敏感文件名被拒绝物化: ${input.mountAs}`,
       );
     }
-    const loaded = await readAsset(input.assetId);
-    if (!loaded || loaded.bytes.byteLength === 0) {
+    await fs.mkdir(path.dirname(abs), { recursive: true });
+    const loaded = await materializeAsset(input.assetId, abs);
+    const stat = await fs.lstat(abs).catch(() => null);
+    if (!loaded || !stat || !stat.isFile() || stat.size === 0) {
       throw new Error(`输入资产读取失败(assetId=${input.assetId})`);
     }
-    await fs.mkdir(path.dirname(abs), { recursive: true });
-    await fs.writeFile(abs, loaded.bytes, { mode: 0o444 });
+    await fs.chmod(abs, 0o444);
     materialized.push({
       assetId: input.assetId,
       mountAs: input.mountAs,
-      size: loaded.bytes.byteLength,
+      size: stat.size,
       mimeType: loaded.mimeType || null,
     });
   }

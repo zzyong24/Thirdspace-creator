@@ -27,6 +27,7 @@ import {
 import { buildChildEnv } from "../child-env";
 import type { ExecutionExecutor, ExecutorRunOpts, ExecutorSandboxView } from "../executor-registry";
 import { resolveInsideDir } from "../sandbox";
+import { copyFileCopyOnWrite } from "../../../lib/copy-file-copy-on-write";
 import {
   assertVideoLayoutSafety,
   collectMediaFiles,
@@ -970,7 +971,10 @@ export function createVideoRenderExecutor(
       for (const f of media.images) {
         const outName = imageNameFor(f, inputMimeTypes.get(f));
         nameMap.set(f, outName);
-        await fs.copyFile(resolveInsideDir(sandbox.inputDir, f), path.join(mediaDir, outName));
+        await copyFileCopyOnWrite(
+          resolveInsideDir(sandbox.inputDir, f),
+          path.join(mediaDir, outName),
+        );
       }
 
       // 4) 模板生成 index.html(props 内文件引用替换为 media/ 落名)+ gsap 落盘

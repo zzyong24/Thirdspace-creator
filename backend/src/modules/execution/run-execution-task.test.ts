@@ -63,12 +63,15 @@ function makeFakeAi(): FakeAi {
 }
 
 const assets = {
-  async getAssetBytes(_c: RequestContext, assetId: string) {
+  async materializeAsset(
+    _c: RequestContext,
+    assetId: string,
+    destinationPath: string,
+  ) {
     if (assetId === "missing") return null;
-    return {
-      bytes: new TextEncoder().encode(`bytes-of-${assetId}`),
-      mimeType: "text/plain",
-    };
+    const bytes = new TextEncoder().encode(`bytes-of-${assetId}`);
+    await fs.writeFile(destinationPath, bytes);
+    return { size: bytes.byteLength, mimeType: "text/plain" };
   },
 };
 

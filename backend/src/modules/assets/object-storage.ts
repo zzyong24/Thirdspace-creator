@@ -80,6 +80,9 @@ export interface ObjectStoragePort {
   // service already owns (VLM 归类要看图)。与 putObject 对称;keeps AssetsService
   // the SOLE storage caller —— runner 经 service 端口拿字节,不直接 fs.readFile。
   getObject(storageKey: string): Promise<Uint8Array>;
+  // [T-782] 本地文件系统可直接把对象物化到任务工作区。可选是为了让 S3/mock
+  // 继续走 getObject 字节回退；实现方必须生成独立文件，禁止 hardlink/symlink。
+  copyObjectToFile?(storageKey: string, destinationPath: string): Promise<void>;
   // A short-lived, read-only signed URL for download / copy-link. Never logged
   // (SPEC §20). Deterministic in the mock so download/copy-link tests are stable.
   getSignedUrl(storageKey: string): Promise<string>;

@@ -26,6 +26,7 @@ import type {
 import { accountKeyPrefix } from "./object-storage";
 import { safeJoin, signBlobToken } from "./blob-security";
 import { extForMime } from "../../lib/mime-ext";
+import { copyFileCopyOnWrite } from "../../lib/copy-file-copy-on-write";
 
 export interface LocalFsObjectStorageConfig {
   // The resolved absolute media root (the service resolves `~`/default first).
@@ -213,6 +214,13 @@ export function createLocalFsObjectStorage(
       const absKey = safeJoin(cfg.rootPath, storageKey);
       const buf = await fs.readFile(absKey);
       return new Uint8Array(buf);
+    },
+
+    async copyObjectToFile(storageKey, destinationPath) {
+      // APFS/Linux reflink 共享未修改数据块；目标仍是独立 inode。跨卷或不支持的
+      // Windows/文件系统由 helper 只对明确的“不支持”错误回退普通复制。
+      const absKey = safeJoin(cfg.rootPath, storageKey);
+      await copyFileCopyOnWrite(absKey, destinationPath);
     },
 
     async deleteObject(storageKey) {

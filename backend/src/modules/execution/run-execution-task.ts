@@ -35,10 +35,11 @@ export interface ExecutionAiPort {
 }
 
 export interface ExecutionAssetsReadPort {
-  getAssetBytes(
+  materializeAsset(
     ctx: RequestContext,
     assetId: string,
-  ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
+    destinationPath: string,
+  ): Promise<{ size: number; mimeType: string } | null>;
 }
 
 export interface RunExecutionTaskDeps {
@@ -186,8 +187,11 @@ export async function runExecutionTask(
     const sandbox = await createSandbox(deps.workspacesRoot, taskId);
     sandboxCreated = true;
     await step(`物化输入 ${spec.inputs.length} 项(只读)`);
-    const inputs = await materializeInputs(sandbox, spec.inputs, (assetId) =>
-      deps.assets.getAssetBytes(ctx, assetId),
+    const inputs = await materializeInputs(
+      sandbox,
+      spec.inputs,
+      (assetId, destinationPath) =>
+        deps.assets.materializeAsset(ctx, assetId, destinationPath),
     );
 
     // 4) executor 执行(超时 + abort 贯通)。goal 透传进 params 供 demo/日志用,

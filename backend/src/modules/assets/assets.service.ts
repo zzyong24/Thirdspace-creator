@@ -1,4 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
+import * as fs from "node:fs/promises";
 import type {
   AssetRepository,
   AssetRow,
@@ -112,6 +113,15 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
   ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
+  /**
+   * [T-782] 将当前素材文件安全物化到执行工作区。本地存储优先 CoW/reflink，
+   * S3/mock 自动回退取字节写文件；目标路径由 execution 沙箱在边界内生成。
+   */
+  materializeAsset(
+    ctx: RequestContext,
+    assetId: string,
+    destinationPath: string,
+  ): Promise<{ size: number; mimeType: string } | null>;
   mergeAiAnnotation(
     ctx: RequestContext,
     assetId: string,
@@ -392,6 +402,31 @@ export function createAssetsService(
       const bytes = await storage.getObject(current.storageKey);
       if (!bytes || bytes.byteLength === 0) return null;
       return { bytes, mimeType: current.mimeType };
+    },
+
+    async materializeAsset(ctx, assetId, destinationPath) {
+      const accountId = requireAccountId(
+        ctx.accountId,
+        "assets.materializeAsset",
+      );
+      const asset = await requireAsset(ctx, assetId);
+      const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
+      const current =
+        files.find((file) => file.id === asset.currentFileId) ??
+        files[files.length - 1];
+      if (!current) return null;
+
+      const storage = await objectStorageForCtx(ctx);
+      if (storage.copyObjectToFile) {
+        await storage.copyObjectToFile(current.storageKey, destinationPath);
+      } else {
+        const bytes = await storage.getObject(current.storageKey);
+        if (!bytes || bytes.byteLength === 0) return null;
+        await fs.writeFile(destinationPath, bytes);
+      }
+      const stat = await fs.stat(destinationPath);
+      if (!stat.isFile() || stat.size === 0) return null;
+      return { size: stat.size, mimeType: current.mimeType };
     },
 
     async mergeAiAnnotation(ctx, assetId, patch) {

@@ -2349,3 +2349,28 @@ AI task、写稿上下文、制作素材和历史 artifact 的影响调研后，
 adapter。
 
 **Status**：用户已确认，T-779 进入 BUILD。
+
+## DEC-STO-001 (2026-08-11) — 任务素材副本优先使用文件系统写时复制
+
+**来源**：T-780 本机磁盘审计确认，同一 `310,112,367` 字节素材在 7 个编导任务工作区中重复物化，
+仅这一组就额外占用约 `2.02 GiB`；用户要求根治重复占盘。
+
+**决策**：
+
+1. 本地素材进入 execution sandbox 时，由 Assets service 在完成属主和当前版本校验后直接物化到
+   受控目标；macOS 使用系统 `/bin/cp -c` 调用 APFS clonefile，Linux 优先 Node reflink。
+2. 副本必须是独立 inode、可被任务单独修改，禁止 hardlink/symlink；不支持 clone/reflink、跨卷或
+   远端 S3 时回退普通复制。权限、源丢失和磁盘满等真实错误继续失败，不伪装成兼容回退。
+3. 视频 executor 将只读输入整理到 `work/media` 时复用同一薄适配，避免任务内部再次完整复制。
+4. 本轮只阻止新任务继续产生物理重复；既有等待确认候选不静默删除或重写，仍由采纳/丢弃生命周期
+   收口。若后续迁移存量，必须逐文件确认内容相同并原子替换，另行授权。
+
+**理由**：Node 自带 `COPYFILE_FICLONE_FORCE` 在当前 macOS 实测回退为完整复制；系统 `cp -c` 对
+`256 MiB` 文件只新增 `4 KiB` 物理空间，因此采用 PAT-001 T1 的平台薄适配，而不是引入原生依赖。
+
+**Pattern-Ref**：PAT-001 T1（BG-003：macOS 系统能力；BG-005：覆盖 APFS clone，薄适配补 Node 缺口；
+BG-006：统一 helper 隔离平台差异）。
+
+**Asset-Ref**：none（资产索引的 MOD-001 面向 S3 presigned upload，不覆盖本地文件 CoW）。
+
+**Status**：用户已确认，T-782 进入 BUILD。
