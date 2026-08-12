@@ -1,6 +1,6 @@
 # T-793 SHIP Gate：最新内容 Skill 本地安装包
 
-日期：2026-08-12  
+日期：2026-08-12
 状态：本地 macOS 测试包已构建、校验、安装并真实启动；未上传 GitHub，未发布渠道包。
 
 ```frontend-validation
@@ -9,7 +9,7 @@
   "task_id": "T-793",
   "contract_path": "orchestrator/T793-FRONTEND-JOURNEY.md",
   "contract_sha": "65b788b3f008",
-  "commit_sha": "2f1a813f3588aaf3f2b2a793a76ae94bb0701825",
+  "commit_sha": "c0679e36cddba25156171e9a2de2003937587ff0",
   "observed_at": "2026-08-12T17:51:35.000Z",
   "run": {
     "verify_key": "creatoros-local-package:test",
@@ -55,7 +55,7 @@
   ],
   "visible_copy": {
     "artifact_path": "orchestrator/evidence/T-793-visible-copy.json",
-    "artifact_sha256": "70cf83734d3161c5d8f59146b0da673f4e0c78f10e7783e043f97d39f7b98cb4"
+    "artifact_sha256": "e931a1263a3db8c6cc4525815aa6be0a80a9e4f88cb7860d95f88c786abbe4c7"
   },
   "tdd_red_ref": "首次进入发布冻结时，门卫因源码仍有未提交的同日内容链改动而拒绝打包；完成 T-790、T-791、T-792 验收并冻结为干净提交后，固定打包预检与真实安装旅程才转绿。",
   "open_defects": [],

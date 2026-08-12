@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-793",
-  "commit_sha": "2f1a813f3588aaf3f2b2a793a76ae94bb0701825",
+  "commit_sha": "c0679e36cddba25156171e9a2de2003937587ff0",
   "captures": [
     {
       "checkpoint": "installed-desktop-normal-window",
