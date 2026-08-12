@@ -1,0 +1,29 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-793",
+  "commit_sha": "2f1a813f3588aaf3f2b2a793a76ae94bb0701825",
+  "captures": [
+    {
+      "checkpoint": "installed-desktop-normal-window",
+      "check_ids": [
+        "AC-LOCAL-PACKAGE-IDENTITY",
+        "AC-LOCAL-PACKAGE-CONTENT-SKILLS",
+        "AC-LOCAL-PACKAGE-DMG-INTEGRITY",
+        "AC-LOCAL-PACKAGE-INSTALL-LAUNCH"
+      ],
+      "viewport": { "width": 1280, "height": 800 },
+      "text": "CreatorOS"
+    },
+    {
+      "checkpoint": "installed-desktop-minimum-window",
+      "check_ids": [
+        "AC-LOCAL-PACKAGE-IDENTITY",
+        "AC-LOCAL-PACKAGE-CONTENT-SKILLS",
+        "AC-LOCAL-PACKAGE-DMG-INTEGRITY",
+        "AC-LOCAL-PACKAGE-INSTALL-LAUNCH"
+      ],
+      "viewport": { "width": 1024, "height": 720 },
+      "text": "CreatorOS"
+    }
+  ]
+}
