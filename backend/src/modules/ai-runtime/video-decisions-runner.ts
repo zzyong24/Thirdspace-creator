@@ -865,8 +865,12 @@ export interface StructuredCallInput<T> {
   outputSchema: z.ZodType<T>;
   /** 模型 JSON 在严格 schema 前的确定性整理；只修协议漂移，不补写创作事实。 */
   normalizeObject?: (raw: unknown) => unknown;
+  /** 该结构节点的单次模型请求时限；由 shared runner 统一限幅。 */
+  timeoutMs?: number;
 }
 export type StructuredCall = <T>(input: StructuredCallInput<T>) => Promise<T>;
+
+const VIDEO_LONG_STRUCTURED_TIMEOUT_MS = 120_000;
 
 export type VideoOrientation = "portrait" | "landscape";
 
@@ -1482,6 +1486,7 @@ export async function decideScenes(
       manualAssignments: input.manualAssignments ?? "",
     },
     outputSchema: buildScenesDecisionSchema(starts),
+    timeoutMs: VIDEO_LONG_STRUCTURED_TIMEOUT_MS,
   });
   const total = srtTotalDurationSec(input.srtLines);
   // 吸附 → 按 start 排序 → 同一 start 去重(保留先出现的)。
@@ -1533,6 +1538,7 @@ export async function decideCards(
       manualAssignments: input.manualAssignments ?? "",
     },
     outputSchema: buildCardsDecisionSchema(input.scenes.length, starts),
+    timeoutMs: VIDEO_LONG_STRUCTURED_TIMEOUT_MS,
   });
   const kept: VideoInfoCard[] = [];
   for (const c of out.cards) {
@@ -2129,6 +2135,7 @@ function makeDefaultCall(
       facets: input.facets,
       outputSchema: input.outputSchema,
       normalizeObject: input.normalizeObject,
+      timeoutMs: input.timeoutMs,
     });
     return object;
   };

@@ -67,6 +67,11 @@ export interface RunStructuredNodeInput<T> {
   /** 限制单次响应 token，避免小型结构化任务被超长输出拖慢。 */
   maxOutputTokens?: number;
   /**
+   * 单次模型请求时限。默认 90 秒；长结构节点可显式放宽，运行时仍会限制在
+   * 15–180 秒，防止端点挂起让任务永久 running。
+   */
+  timeoutMs?: number;
+  /**
    * 创作型业务的确定性归一化钩子。只允许把同一次模型输出整理成业务 schema
    * （如单值转数组、裁掉超长尾部、兼容包装层），不得补造模型没有表达的事实。
    * 判断/控制型任务默认不传，继续严格 fail-closed。
@@ -198,6 +203,37 @@ export function isStructuredResponseParseError(error: unknown): boolean {
 }
 
 /**
+ * 只识别 provider 明确拒绝 response_format / json_schema / structured outputs
+ * 的协议兼容错误。这类错误可安全改走“纯文本 JSON + 同 schema 校验”；
+ * 鉴权、网络、限流和超时仍原样失败，不掩盖真实故障。
+ */
+export function isStructuredResponseCompatibilityError(
+  error: unknown,
+): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  for (let depth = 0; depth < 6 && current != null; depth += 1) {
+    if (seen.has(current)) break;
+    seen.add(current);
+    if (typeof current !== "object") break;
+    const record = current as Record<string, unknown>;
+    const message =
+      typeof record.message === "string" ? record.message : "";
+    const namesStructuredProtocol =
+      /response[_\s-]?format|json[_\s-]?schema|structured\s+outputs?/i.test(
+        message,
+      );
+    const declaresUnsupported =
+      /not\s+support(?:ed)?|unsupported|does\s+not\s+support|不支持/i.test(
+        message,
+      );
+    if (namesStructuredProtocol && declaresUnsupported) return true;
+    current = record.cause;
+  }
+  return false;
+}
+
+/**
  * 跑一次结构化模板节点 —— 解析 outputSchema(registry 收口,或显式覆盖)→ bindPrompt(模板,facets)
  * → generateObject(绑 outputSchema)。模型吐的 JSON 不合 schema 时 Vercel SDK 自动重试。
  *
@@ -209,8 +245,22 @@ export function isStructuredResponseParseError(error: unknown): boolean {
 // 模型端点挂起(不响应也不报错)→ `await` 永不 settle → 调它的 AI 任务(script.review 审核 /
 // topic.enrich 补全 / calibration.diagnose 等)永远卡 running,前端一直转圈。加 AbortSignal.timeout
 // 把「挂起」变成「reject(TimeoutError)」→ 调用方的 try/catch 接住 → 任务进入真实失败终态。
-// 任何有限超时都能抓住挂起;90s 给正常慢模型足够余量,又不至于让用户无限等。
-const MODEL_CALL_TIMEOUT_MS = 90_000;
+// 默认 90s；少数长结构节点可在调用处显式放宽，但不允许无界挂起。
+const DEFAULT_MODEL_CALL_TIMEOUT_MS = 90_000;
+const MIN_MODEL_CALL_TIMEOUT_MS = 15_000;
+const MAX_MODEL_CALL_TIMEOUT_MS = 180_000;
+
+export function resolveStructuredNodeTimeoutMs(
+  requestedMs: number | undefined,
+): number {
+  if (requestedMs === undefined || !Number.isFinite(requestedMs)) {
+    return DEFAULT_MODEL_CALL_TIMEOUT_MS;
+  }
+  return Math.min(
+    MAX_MODEL_CALL_TIMEOUT_MS,
+    Math.max(MIN_MODEL_CALL_TIMEOUT_MS, Math.round(requestedMs)),
+  );
+}
 
 function normalizeUsage(usage: LanguageModelUsage | undefined): StructuredNodeUsage {
   const inputTokens =
@@ -304,6 +354,7 @@ export async function runStructuredNode<T>(
   // DEC-AI-025:默认一次结构化尝试 + 一次文本协议降级。继续自动重试会让所有
   // 交互工具在同一坏输出上成倍等待；离线任务如确有需要必须由调用方显式声明。
   const maxRetries = input.maxRetries ?? 0;
+  const modelCallTimeoutMs = resolveStructuredNodeTimeoutMs(input.timeoutMs);
   const policy = hasEffectiveScope
     ? getEffectiveSkill(template.id).effective.completionPolicy
     : null;
@@ -340,8 +391,8 @@ export async function runStructuredNode<T>(
         schema,
         maxRetries,
         maxOutputTokens: input.maxOutputTokens,
-        // [T-122] 防端点挂起把任务永远卡 running(见 MODEL_CALL_TIMEOUT_MS 注释)。
-        abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
+        // [T-122/T-789] 防端点挂起；长节点可显式放宽，但仍有硬上界。
+        abortSignal: AbortSignal.timeout(modelCallTimeoutMs),
       });
       return {
         object: result.object as T,
@@ -353,7 +404,8 @@ export async function runStructuredNode<T>(
       // 只对「模型没产出结构化对象」降级(端点 tool-mode flaky);其它错误(鉴权/网络)照常抛。
       if (
         !NoObjectGeneratedError.isInstance(err) &&
-        !isStructuredResponseParseError(err)
+        !isStructuredResponseParseError(err) &&
+        !isStructuredResponseCompatibilityError(err)
       ) {
         throw err;
       }
@@ -413,7 +465,7 @@ export async function runStructuredNode<T>(
           prompt: currentPrompt,
           maxRetries: 0,
           maxOutputTokens: input.maxOutputTokens,
-          abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
+          abortSignal: AbortSignal.timeout(modelCallTimeoutMs),
         });
         fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
         let raw = extractJsonObject(result.text);

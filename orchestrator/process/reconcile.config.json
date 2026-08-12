@@ -126,6 +126,12 @@
       "what": "跨平台桌面能力再次在调用点内联单平台命令，或素材中心文案写死 Finder/访达",
       "check": "pnpm --dir frontend exec vitest run src/app/api/v1/local/reveal/plan.test.ts src/app/api/v1/local/reveal/route.contract.test.ts src/app/api/v1/local/reveal-logs/launcher.test.ts src/features/assets/assets-interactions.test.tsx",
       "onFail": "跨平台文件定位门回归：win32/darwin/linux 必须各有 command/API、shell-free argv/path、completion 和中性 user copy；route 必须消费 plan + launcher，禁止直接执行单平台命令。"
+    },
+    {
+      "led": "LED-023",
+      "what": "结构化 AI 任务再次被统一超时误杀，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙",
+      "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
+      "onFail": "外部能力稳定性门回归：长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。"
     }
   ],
   "program_completion_required": false,

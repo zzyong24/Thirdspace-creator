@@ -8,10 +8,43 @@ export interface BundledBrowserSearchHit {
 
 export interface BrowserSearchAttempt {
   readonly engine: "baidu" | "bing";
-  readonly status: "ok" | "empty" | "error";
+  readonly status: "ok" | "empty" | "error" | "skipped";
   readonly resultCount: number;
   readonly durationMs: number;
   readonly error?: string;
+}
+
+export interface BrowserSearchFallbackState {
+  baiduLoginWallBlockedUntil: number;
+}
+
+export interface BrowserSearchFallbackRuntime {
+  readonly state: BrowserSearchFallbackState;
+  readonly now?: () => number;
+  readonly loginWallCooldownMs?: number;
+}
+
+const DEFAULT_LOGIN_WALL_COOLDOWN_MS = 5 * 60_000;
+const MIN_LOGIN_WALL_COOLDOWN_MS = 30_000;
+const MAX_LOGIN_WALL_COOLDOWN_MS = 10 * 60_000;
+
+export function createBrowserSearchFallbackState(): BrowserSearchFallbackState {
+  return { baiduLoginWallBlockedUntil: 0 };
+}
+
+function resolveLoginWallCooldownMs(requestedMs: number | undefined): number {
+  if (requestedMs === undefined || !Number.isFinite(requestedMs)) {
+    return DEFAULT_LOGIN_WALL_COOLDOWN_MS;
+  }
+  return Math.min(
+    MAX_LOGIN_WALL_COOLDOWN_MS,
+    Math.max(MIN_LOGIN_WALL_COOLDOWN_MS, Math.round(requestedMs)),
+  );
+}
+
+function isConfirmedLoginWall(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /登录墙|反爬验证|captcha|人机验证/i.test(message);
 }
 
 const ENGINES = [
@@ -33,10 +66,26 @@ export async function searchBundledBrowserWithFallback(
     options?: { count?: number },
   ) => Promise<readonly BundledBrowserSearchHit[]>,
   onAttempt?: (attempt: BrowserSearchAttempt) => void,
+  runtime?: BrowserSearchFallbackRuntime,
 ): Promise<BundledBrowserSearchHit[]> {
   const failures: string[] = [];
   let completedEngine = false;
+  const now = runtime?.now ?? Date.now;
   for (const engine of ENGINES) {
+    if (
+      engine.name === "baidu" &&
+      runtime &&
+      runtime.state.baiduLoginWallBlockedUntil > now()
+    ) {
+      onAttempt?.({
+        engine: "baidu",
+        status: "skipped",
+        resultCount: 0,
+        durationMs: 0,
+        error: "已确认登录墙，冷却期内跳过",
+      });
+      continue;
+    }
     const startedAt = Date.now();
     try {
       const rows = [...(await runEngine(engine.baseUrl, query, options))];
@@ -50,6 +99,10 @@ export async function searchBundledBrowserWithFallback(
       if (rows.length > 0) return rows;
     } catch (error) {
       const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+      if (engine.name === "baidu" && runtime && isConfirmedLoginWall(error)) {
+        runtime.state.baiduLoginWallBlockedUntil =
+          now() + resolveLoginWallCooldownMs(runtime.loginWallCooldownMs);
+      }
       failures.push(`${engine.name}: ${message}`);
       onAttempt?.({
         engine: engine.name,

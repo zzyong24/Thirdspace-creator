@@ -14,8 +14,8 @@ import path from "node:path";
 //
 // ── 诚实边界 ──────────────────────────────────────────────────────────────────
 // 搜索引擎 SERP 结构会变、有反爬,本适配器天生**较脆弱**(SPEC §9 R2 标 ★★):导航失败 / HTTP 4xx-5xx
-// / 命中登录墙·验证码 / 解析不出结果 → 抛 SearchExecutionError,上层 catch 成 model_memory 诚实降级
-// (不产垃圾素材、不假装联网)。真链路(真 Bing 抓取)留用户环境验;解析/降级逻辑单测锁。
+// / 命中登录墙·验证码 / 解析不出结果 → 抛 SearchExecutionError，上层只能切换
+// 其他真实搜索引擎或诚实返回失败，不用模型记忆冒充联网结果。
 
 import {
   SearchExecutionError,
@@ -194,7 +194,8 @@ export function createBrowserScrapeAdapter(
         let resp;
         try {
           resp = await page.goto(url, {
-            waitUntil: "networkidle",
+            // 搜索页有广告/统计长连接，networkidle 会把已可用的 SERP 拖到超时。
+            waitUntil: "domcontentloaded",
             timeout: Math.max(opts.timeoutMs, NAV_TIMEOUT_MS),
           });
         } catch (err) {

@@ -580,7 +580,10 @@ import {
 import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
-import { searchBundledBrowserWithFallback } from "@/server/ai/search/browser-search-fallback";
+import {
+  createBrowserSearchFallbackState,
+  searchBundledBrowserWithFallback,
+} from "@/server/ai/search/browser-search-fallback";
 import {
   discoverSameOriginFeedUrl,
   isSyndicationFeed,
@@ -10178,6 +10181,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // [T-126b] 浏览器采集 —— provider "browser",真开无头 Chromium 搜(默认 Bing,baseUrl 可换)+ 自截图存证,免 key。
     browser: createBrowserScrapeAdapter(),
   };
+  // T-789：当前桌面运行期内共享百度登录墙冷却状态。只跳过已确认的登录墙，
+  // 普通断网/鉴权错误不封禁；冷却有上界，到期后会真实重试。
+  const browserSearchFallbackState = createBrowserSearchFallbackState();
+  const browserSearchFallbackRuntime = { state: browserSearchFallbackState };
   // [T-684] ChatBox 素材搜索固定走随包 Chromium（中国大陆/简体中文默认百度）。
   // 不再读取已经从 UI 下线的 web.search/search.default 配置，也不回落模型记忆。
   const searchWebPort = async (
@@ -10200,6 +10207,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         if (attempt.status === "error") console.warn(log, attempt.error);
         else console.info(log);
       },
+      browserSearchFallbackRuntime,
     );
   };
 
@@ -10232,6 +10240,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           if (attempt.status === "error") console.warn(log, attempt.error);
           else console.info(log);
         },
+        browserSearchFallbackRuntime,
       );
       console.info(
         `[positioning-research] provider=browser engine=baidu status=ok durationMs=${Date.now() - startedAt} resultCount=${results.length} queryLength=${query.trim().length}`,

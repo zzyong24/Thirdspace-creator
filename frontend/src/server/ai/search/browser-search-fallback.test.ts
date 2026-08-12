@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { searchBundledBrowserWithFallback } from "./browser-search-fallback";
+import {
+  createBrowserSearchFallbackState,
+  searchBundledBrowserWithFallback,
+} from "./browser-search-fallback";
 
 describe("内置浏览器检索双引擎降级", () => {
   it("百度有结果时直接返回，不启动备用引擎", async () => {
@@ -36,5 +39,57 @@ describe("内置浏览器检索双引擎降级", () => {
         throw new Error("blocked");
       }),
     ).rejects.toThrow(/baidu.*blocked.*bing.*blocked/);
+  });
+
+  it("同一运行轮次已确认百度登录墙后有界跳过，冷却到期再真实重试", async () => {
+    let now = 1_000;
+    const state = createBrowserSearchFallbackState();
+    const runtime = {
+      state,
+      now: () => now,
+      loginWallCooldownMs: 60_000,
+    };
+    const calls: Array<string | null> = [];
+    const attempts: string[] = [];
+    const run = async (baseUrl: string | null) => {
+      calls.push(baseUrl);
+      if (baseUrl) throw new Error("检索命中登录墙 / 反爬验证");
+      return [{ title: "Bing", url: "https://example.com", snippet: "真实结果" }];
+    };
+
+    await searchBundledBrowserWithFallback("第一次", undefined, run, undefined, runtime);
+    await searchBundledBrowserWithFallback("第二次", undefined, run, (attempt) => {
+      attempts.push(`${attempt.engine}:${attempt.status}`);
+    }, runtime);
+
+    expect(calls).toEqual([
+      expect.stringContaining("baidu.com"),
+      null,
+      null,
+    ]);
+    expect(attempts).toEqual(["baidu:skipped", "bing:ok"]);
+
+    now += 60_001;
+    await searchBundledBrowserWithFallback("冷却后", undefined, run, undefined, runtime);
+    expect(calls.at(-2)).toEqual(expect.stringContaining("baidu.com"));
+    expect(calls.at(-1)).toBeNull();
+  });
+
+  it("普通网络失败不会误封百度", async () => {
+    const state = createBrowserSearchFallbackState();
+    let baiduCalls = 0;
+    const run = async (baseUrl: string | null) => {
+      if (baseUrl) {
+        baiduCalls += 1;
+        throw new Error("ECONNRESET");
+      }
+      return [{ title: "Bing", url: "https://example.com", snippet: "真实结果" }];
+    };
+    const runtime = { state, now: () => 1_000 };
+
+    await searchBundledBrowserWithFallback("a", undefined, run, undefined, runtime);
+    await searchBundledBrowserWithFallback("b", undefined, run, undefined, runtime);
+
+    expect(baiduCalls).toBe(2);
   });
 });

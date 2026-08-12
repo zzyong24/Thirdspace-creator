@@ -688,6 +688,27 @@ const SCENES: VideoScene[] = [
 ];
 
 describe("decideCards(吸附 + 可溯剔除)", () => {
+  it("分场与信息卡属于长结构任务，显式使用有上界的 120 秒节点时限", async () => {
+    const seen: Array<{ skillId: string; timeoutMs?: number }> = [];
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      seen.push({ skillId: input.skillId, timeoutMs: input.timeoutMs });
+      if (input.skillId === "video.scenes") {
+        return {
+          scenes: [{ title: "全文", startSec: 0, endSec: 15, summary: "要点" }],
+        } as T;
+      }
+      return { cards: [] } as T;
+    }) as unknown as StructuredCall;
+
+    const scenes = await decideScenes({ srtLines, script: SCRIPT }, call);
+    await decideCards({ scenes, srtLines, script: SCRIPT }, call);
+
+    expect(seen).toEqual([
+      { skillId: "video.scenes", timeoutMs: 120_000 },
+      { skillId: "video.cards", timeoutMs: 120_000 },
+    ]);
+  });
+
   it("编造数值的卡被剔除;合法卡 at 吸附到场景内 SRT 行 start", async () => {
     const call = fakeCall({
       "video.cards": {

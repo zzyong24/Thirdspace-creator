@@ -2382,3 +2382,32 @@ BG-006：统一 helper 隔离平台差异）。
 **Asset-Ref**：none（资产索引的 MOD-001 面向 S3 presigned upload，不覆盖本地文件 CoW）。
 
 **Status**：用户已确认，T-782 进入 BUILD。
+
+## DEC-AI-044 (2026-08-12) — 外部 AI 与搜索采用节点级有界等待与可恢复错误分类
+
+**来源**：T-784 标准版真实日志：分场/信息卡在约 90 秒失败，同端点曾于 83.86 秒成功；
+Bing 存在等待 `networkidle` 超时，百度多次快速命中登录墙。用户确认继续优化剩余两项。
+
+**决策**：
+
+1. shared structured runner 保留 90 秒默认，只允许有真实耗时证据的节点显式覆盖，并在
+   15–180 秒间统一限幅。本次仅 `video.scenes` / `video.cards` 放宽至 120 秒，不全局放宽。
+2. provider 明确拒绝 `response_format` / `json_schema` / structured outputs 时，允许转入已有的
+   `generateText → JSON 提取 → 同一 schema 校验` 路径。鉴权、网络、限流、超时原样失败；
+   不绕过 schema，不把坏输出写成成功。
+3. 搜索页导航改为 `domcontentloaded`，不再用可被广告/统计长连接永久拖住的
+   `networkidle`。百度明确命中登录墙后，桌面当前运行期做默认 5 分钟、最长 10 分钟的冷却；
+   冷却内直接尝试 Bing，到期重试百度。普通网络失败不进入冷却。
+4. 两路引擎不引入完整断路器状态机；只保留有界登录墙记忆和真实 Bing 回退。
+   两路都不可用时诚实失败，不用模型记忆伪造 URL 或联网证据。
+
+**理由**：问题是外部能力耗时与错误语义不同，不是通用模型不可用。节点级限幅和明确协议分类
+能减少误杀，又不会把真鉴权/网络故障吞掉。
+
+**Pattern-Ref**：MOD-005（只对已分类的可恢复协议失败修复，致命错误 fail-closed）。双引擎数量少于 3，
+根据 MOD-003 不使用全量断路器，仅采用有界冷却。
+
+**Asset-Ref**：`product-to-code-orchestrator/decisions/assets/modules/MOD-005-structured-output-retry-loop`；
+`product-to-code-orchestrator/decisions/assets/modules/MOD-003-circuit-breaker-3state`。
+
+**Status**：用户已确认，T-789 进入 BUILD 并完成实现。

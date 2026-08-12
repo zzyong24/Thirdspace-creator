@@ -294,3 +294,20 @@
   Windows 最终安装物的 Explorer 真机回执仍属于后续出包验收，不能由 macOS 单测替代。
 - **Ref**: T-786；T-787；T-788；`docs/research/2026-08-12-windows-assets-reveal-open-command-diagnosis.md`；
   `docs/research/2026-07-15-prelaunch-full-engineering-data-audit-research.md` FE-L01。
+
+## LED-023 — 外部模型与搜索引擎被统一等待策略误杀
+- **Date**: 2026-08-12 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: 用户自配文本模型的分场和信息卡在约 90 秒被统一超时杀掉，而同端点
+  曾在 83.86 秒真实成功；兼容端点明确不支持 `response_format/json_schema` 时直接失败。
+  搜索页则因广告/统计长连接等不到 `networkidle`，并且已确认的百度登录墙在后续请求里重复浪费时间。
+- **RootCause**: 把“防永久挂起”简化成所有结构节点同一 90 秒，没有区分已知协议不兼容与
+  鉴权/网络等致命错误；浏览器把“整页网络完全静默”误当成“搜索结果可读”，双引擎回退又无运行期失败记忆。
+- **GuardRule**: 结构化模型调用必须保留有界默认超时；只有经真实耗时证据确认的长节点才可在调用处
+  显式放宽，且统一限幅。只对明确的结构化响应协议不支持改走“文本 JSON + 同 schema 验收”，
+  鉴权、网络、限流和超时不降级。SERP 导航用可读的 DOM 就绪条件；已确认登录墙只做有上界冷却，
+  到期真实重试，普通网络错误不误封。任何回退都不得用模型记忆冒充联网证据。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts`
+  （已登记进 `reconcile.config.json` lessons[]）。
+- **Outcome(T+N)**: 分场/信息卡显式放宽至 120 秒，shared runner 仍限制在 15–180 秒；
+  协议不兼容使用同 schema 的受控 JSON 修复；Bing 不再被长连接拖到 `networkidle`，百度登录墙默认冷却 5 分钟后重试。
+- **Ref**: DEC-AI-044；T-784；T-789。

@@ -30,10 +30,16 @@ function fakeDeps(opts: {
   status?: number;
   finalUrl?: string;
   gotoThrows?: boolean;
-}): { deps: BrowserScrapeDeps; savedSlugs: string[] } {
+}): {
+  deps: BrowserScrapeDeps;
+  savedSlugs: string[];
+  gotoOptions: Array<{ waitUntil?: string; timeout?: number }>;
+} {
   const savedSlugs: string[] = [];
+  const gotoOptions: Array<{ waitUntil?: string; timeout?: number }> = [];
   const page = {
-    goto: async () => {
+    goto: async (_url: string, navigationOptions?: { waitUntil?: string; timeout?: number }) => {
+      gotoOptions.push(navigationOptions ?? {});
       if (opts.gotoThrows) throw new Error("net::ERR_TIMED_OUT");
       return {
         status: () => opts.status ?? 200,
@@ -57,6 +63,7 @@ function fakeDeps(opts: {
       },
     },
     savedSlugs,
+    gotoOptions,
   };
 }
 
@@ -91,7 +98,7 @@ describe("parseBingResults(T-126b) —— 纯函数 SERP 解析", () => {
 
 describe("createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图→降级", () => {
   it("正常:导航成功 → 解析结果 + 触发自截图存证", async () => {
-    const { deps, savedSlugs } = fakeDeps({});
+    const { deps, savedSlugs, gotoOptions } = fakeDeps({});
     const results = await createBrowserScrapeAdapter(deps).search(
       browserSpec(null),
       "抖音运营",
@@ -102,6 +109,9 @@ describe("createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图�
       "https://b.com/2",
     ]);
     expect(savedSlugs.length).toBe(1); // 截图存证被调用
+    expect(gotoOptions).toEqual([
+      { waitUntil: "domcontentloaded", timeout: 20_000 },
+    ]);
   });
 
   it("命中登录墙/验证码 → SearchExecutionError(上层降级)", async () => {

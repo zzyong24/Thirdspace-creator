@@ -5,7 +5,9 @@ import { z } from "zod";
 import {
   runStructuredNode,
   extractJsonObject,
+  isStructuredResponseCompatibilityError,
   isStructuredResponseParseError,
+  resolveStructuredNodeTimeoutMs,
 } from "./structured-node";
 import type { PromptTemplate } from "../prompt/template";
 
@@ -69,6 +71,31 @@ const isCompleteReview = (raw: unknown): boolean => {
 };
 
 describe("runStructuredNode 跨模型健壮性", () => {
+  it("兼容端点明确拒绝 response_format 时改走文本 JSON，仍用同一 schema 验收", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        if (calls === 1) {
+          throw new Error("response_format json_schema is not supported");
+        }
+        return textResult(
+          '{"hooks":[{"text":"可恢复","why":"兼容协议"}],"cases":[],"dataPoints":[],"quotes":[]}',
+        );
+      },
+    });
+
+    const { object } = await runStructuredNode({
+      model,
+      template: TEMPLATE,
+      facets: { t: "go" },
+      outputSchema: schema,
+    });
+
+    expect(object.hooks[0]?.text).toBe("可恢复");
+    expect(calls).toBe(2);
+  });
+
   it("generateObject 落空(端点吐纯文本不调工具)→ 文本兜底抽 JSON + 同一 schema 校验", async () => {
     // 该 mock 永远只回 fenced JSON 文本,不产 tool call —— generateObject 的 tool-mode 抽不出
     // 对象(模拟 MiniMax-M3 的 flaky 行为),触发文本兜底路径。
@@ -308,5 +335,34 @@ describe("isStructuredResponseParseError", () => {
     ).toBe(true);
     expect(isStructuredResponseParseError(new Error("401 unauthorized"))).toBe(false);
     expect(isStructuredResponseParseError(new Error("ECONNRESET"))).toBe(false);
+  });
+});
+
+describe("isStructuredResponseCompatibilityError", () => {
+  it("只识别明确的结构化响应协议不兼容，不把鉴权和网络失败降级", () => {
+    expect(
+      isStructuredResponseCompatibilityError(
+        new Error("response_format json_schema is not supported"),
+      ),
+    ).toBe(true);
+    expect(
+      isStructuredResponseCompatibilityError(
+        new Error("provider failed", {
+          cause: new Error("structured outputs are unsupported"),
+        }),
+      ),
+    ).toBe(true);
+    expect(isStructuredResponseCompatibilityError(new Error("401 unauthorized"))).toBe(false);
+    expect(isStructuredResponseCompatibilityError(new Error("ECONNRESET"))).toBe(false);
+  });
+});
+
+describe("resolveStructuredNodeTimeoutMs", () => {
+  it("默认 90 秒，允许节点级放宽，但始终有上下界", () => {
+    expect(resolveStructuredNodeTimeoutMs(undefined)).toBe(90_000);
+    expect(resolveStructuredNodeTimeoutMs(120_000)).toBe(120_000);
+    expect(resolveStructuredNodeTimeoutMs(1)).toBe(15_000);
+    expect(resolveStructuredNodeTimeoutMs(999_999)).toBe(180_000);
+    expect(resolveStructuredNodeTimeoutMs(Number.NaN)).toBe(90_000);
   });
 });
