@@ -123,7 +123,12 @@ export function productionClosurePlan({
         resolve(SCRIPT_DIR, "runtime-smoke.mjs"),
         "tools/windows-closure-rat/out/closure",
       ],
-      env: { CREATOROS_RUNTIME_ROOT: CLOSURE_ROOT },
+      env: {
+        CREATOROS_RUNTIME_ROOT: CLOSURE_ROOT,
+        CREATOROS_EXPECTED_PACKAGE_BRAND_NAME:
+          packageBrandBuildEnv.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME ??
+          "CreatorOS",
+      },
     },
   ];
 

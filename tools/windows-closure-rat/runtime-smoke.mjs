@@ -27,6 +27,12 @@ if (!runtimeRoot.startsWith(`${safeOutputBase}${sep}`)) {
 
 const target = `${process.platform}-${process.arch}`;
 const suffix = process.platform === "win32" ? ".exe" : "";
+const expectedPackageBrandName =
+  process.env.CREATOROS_EXPECTED_PACKAGE_BRAND_NAME?.trim() || "CreatorOS";
+const expectedMainTitle = `<title>${expectedPackageBrandName
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")}</title>`;
 const runtimeNode = resolve(
   runtimeRoot,
   "layers",
@@ -328,19 +334,22 @@ try {
       const response = await fetch(`http://127.0.0.1:${port}/`);
       if (response.ok) {
         mainHtml = await response.text();
-        if (mainHtml.includes("<title>CreatorOS</title>")) break;
+        if (mainHtml.includes(expectedMainTitle)) break;
       }
     } catch {
       // Server is still initializing.
     }
     await new Promise((resolveWait) => setTimeout(resolveWait, 200));
   }
-  if (!mainHtml.includes("<title>CreatorOS</title>")) {
+  if (!mainHtml.includes(expectedMainTitle)) {
     throw new Error(
-      `[closure-rat] Next 主页面 120 秒内未就绪(exit=${sidecar.exitCode})\n${serverLogs.join("").slice(-8000)}`,
+      `[closure-rat] Next 主页面 120 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").slice(-8000)}`,
     );
   }
-  record("next-main-page", `${mainHtml.length} bytes`);
+  record(
+    "next-main-page",
+    `${expectedPackageBrandName}, ${mainHtml.length} bytes`,
+  );
 } finally {
   let requestedWindowsShutdown = false;
   let gracefulShutdownCompleted = true;

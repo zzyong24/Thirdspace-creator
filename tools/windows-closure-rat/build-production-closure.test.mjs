@@ -70,6 +70,22 @@ test("channel closure forwards one trusted package brand input into Next and ver
   assert.ok(verify);
   assert.ok(verify.args.includes(brandInputPath));
   assert.ok(verify.args.includes(resolve(HERE, "out", "closure")));
+  const runtimeSmoke = plan.find((step) => step.name === "runtime consumer smoke");
+  assert.equal(
+    runtimeSmoke.env.CREATOROS_EXPECTED_PACKAGE_BRAND_NAME,
+    "测试品牌",
+    "渠道运行时自检必须消费同一受信品牌名，不能写死 CreatorOS",
+  );
+});
+
+test("official runtime smoke keeps the official brand default", () => {
+  const runtimeSmoke = productionClosurePlan().find(
+    (step) => step.name === "runtime consumer smoke",
+  );
+  assert.equal(
+    runtimeSmoke.env.CREATOROS_EXPECTED_PACKAGE_BRAND_NAME,
+    "CreatorOS",
+  );
 });
 
 test("runtime smoke uses a real short-lived verdict instead of the removed bypass", () => {
@@ -83,6 +99,11 @@ test("runtime smoke uses a real short-lived verdict instead of the removed bypas
   assert.doesNotMatch(source, /layerSummary\.core\.files > 1_000/);
   assert.match(source, /HYPERFRAMES_FFMPEG_PATH:\s*ffmpegPath/);
   assert.match(source, /HYPERFRAMES_FFPROBE_PATH:\s*ffprobePath/);
+  assert.match(source, /CREATOROS_EXPECTED_PACKAGE_BRAND_NAME/);
+  assert.doesNotMatch(
+    source,
+    /mainHtml\.includes\(["']<title>CreatorOS<\/title>["']\)/,
+  );
 });
 
 test("official Windows release and RAT are wired to the same guarded closure", () => {
