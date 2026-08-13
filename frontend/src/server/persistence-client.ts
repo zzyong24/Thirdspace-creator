@@ -9858,6 +9858,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       baseUrl: cfg.baseUrl,
       model: cfg.model,
       token: cfg.token,
+      ...(typeof cfg.settings.structuredOutputs === "boolean"
+        ? { structuredOutputs: cfg.settings.structuredOutputs }
+        : {}),
       ...(cfg.displayModelKey
         ? { displayModelKey: cfg.displayModelKey }
         : {}),
@@ -9880,6 +9883,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       baseUrl: cfg.baseUrl,
       model: cfg.model,
       token: cfg.token,
+      ...(typeof cfg.settings.structuredOutputs === "boolean"
+        ? { structuredOutputs: cfg.settings.structuredOutputs }
+        : {}),
       ...(cfg.displayModelKey
         ? { displayModelKey: cfg.displayModelKey }
         : {}),

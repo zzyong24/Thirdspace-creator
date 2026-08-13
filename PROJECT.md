@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t793-local-package @ c8d8088d
+LAST_SYNCED: codex/t793-local-package @ 1140592a
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-808 给整稿分镜脚本 150 秒长调用上限并让不支持结构化响应的模型直走兼容模式【用户确认·2026-08-13】
 - [wip] T-779 根治参考历史作品生成封面时误探本机工具并中断生图【v1.0 回归·用户确认 2026-08-11】
 - [wip] T-773 更新 CreatorOS 1.0 最新使用教程、匿名化截图并新建成交型测试版教程【教程交付·用户 2026-08-11】
 - [wip] T-768 任何云端 ASR 故障都必须自动回退本地 Whisper【逐字稿可靠性·用户确认 2026-08-11】

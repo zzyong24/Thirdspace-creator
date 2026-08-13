@@ -33,6 +33,34 @@ export interface ModelSpec {
   /** 用户自带的 API key。 */
   token: string;
   displayModelKey?: "channel-managed";
+  /**
+   * 端点是否明确支持原生结构化响应。自定义 OpenAI Chat 端点默认按不支持处理；
+   * 只有配置明确为 true 才发送 json_schema，避免兼容端点先失败再重试。
+   */
+  structuredOutputs?: boolean;
+}
+
+export type StructuredOutputMode = "native" | "text";
+
+const structuredOutputModes = new WeakMap<object, StructuredOutputMode>();
+
+function markStructuredOutputMode(
+  model: LanguageModel,
+  mode: StructuredOutputMode,
+): LanguageModel {
+  if (typeof model === "object" && model !== null) {
+    structuredOutputModes.set(model, mode);
+  }
+  return model;
+}
+
+/** 读取 modelFor 在模型实例上记录的协议能力；未知模型维持原生结构化旧行为。 */
+export function structuredOutputModeFor(
+  model: LanguageModel,
+): StructuredOutputMode {
+  return typeof model === "object" && model !== null
+    ? structuredOutputModes.get(model) ?? "native"
+    : "native";
 }
 
 type ChannelEmbeddingInput = EmbeddingModelV3 | EmbeddingModelV4;
@@ -365,6 +393,8 @@ export function normalizeAnthropicBaseUrl(baseUrl: string): string {
 /** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
   let model: LanguageModel;
+  let structuredOutputMode: StructuredOutputMode =
+    spec.structuredOutputs === false ? "text" : "native";
   switch (spec.apiFormat) {
     case "anthropic": {
       const provider = createAnthropic({
@@ -389,10 +419,14 @@ export function modelFor(spec: ModelSpec): LanguageModel {
     case "openai_chat": {
       // openai_chat 必须显式选 Chat，不能依赖 SDK 默认 callable。
       if (spec.baseUrl) {
+        // OpenAI-compatible 只描述 wire shape，不保证端点实现 json_schema。
+        // 默认走文本 JSON + 本地 schema 校验；明确 opt-in 后才发送原生结构化响应。
+        structuredOutputMode = spec.structuredOutputs === true ? "native" : "text";
         const provider = createOpenAICompatible({
           name: "creatoros-custom",
           apiKey: spec.token,
           baseURL: spec.baseUrl,
+          supportsStructuredOutputs: spec.structuredOutputs === true,
         });
         model = provider.chatModel(spec.model);
         break;
@@ -404,9 +438,10 @@ export function modelFor(spec: ModelSpec): LanguageModel {
     default:
       throw new ModelConfigurationError();
   }
-  return spec.displayModelKey === "channel-managed"
+  const protectedModel = spec.displayModelKey === "channel-managed"
     ? protectChannelModel(model)
     : model;
+  return markStructuredOutputMode(protectedModel, structuredOutputMode);
 }
 
 /**

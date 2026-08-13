@@ -10,6 +10,7 @@ import {
   resolveStructuredNodeTimeoutMs,
 } from "./structured-node";
 import type { PromptTemplate } from "../prompt/template";
+import { modelFor } from "../runtime/provider-factory";
 
 // 一个最小四类 schema(模仿 research.gather 形状)+ 模板,验结构化节点的跨模型健壮性。
 const schema = z.object({
@@ -71,6 +72,37 @@ const isCompleteReview = (raw: unknown): boolean => {
 };
 
 describe("runStructuredNode 跨模型健壮性", () => {
+  it("模型已声明不支持结构化输出时直接走文本兼容协议，不先发送结构化请求", async () => {
+    let calls = 0;
+    const model = modelFor({
+      apiFormat: "openai_chat",
+      baseUrl: "https://compat.example/v1",
+      model: "compat-model",
+      token: "sk-test",
+    });
+    if (typeof model === "string") throw new Error("预期模型对象");
+    Object.defineProperty(model, "doGenerate", {
+      configurable: true,
+      value: async (options: unknown) => {
+        calls += 1;
+        expect((options as { responseFormat?: unknown }).responseFormat).toBeUndefined();
+        return textResult(
+          '{"hooks":[{"text":"直接兼容","why":"只调用一次"}],"cases":[],"dataPoints":[],"quotes":[]}',
+        );
+      },
+    });
+
+    const { object } = await runStructuredNode({
+      model,
+      template: TEMPLATE,
+      facets: { t: "go" },
+      outputSchema: schema,
+    });
+
+    expect(object.hooks[0]?.text).toBe("直接兼容");
+    expect(calls).toBe(1);
+  });
+
   it("兼容端点明确拒绝 response_format 时改走文本 JSON，仍用同一 schema 验收", async () => {
     let calls = 0;
     const model = new MockLanguageModelV4({

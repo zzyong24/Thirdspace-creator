@@ -7,6 +7,7 @@ import {
   normalizeAnthropicBaseUrl,
   protectChannelEmbeddingModel,
   protectChannelModel,
+  structuredOutputModeFor,
   toChannelManagedError,
 } from "./provider-factory";
 
@@ -96,6 +97,18 @@ describe("modelFor", () => {
     });
     expect(typeof m).toBe("object");
     expect(providerOf(m)).toBe("creatoros-custom.chat");
+    expect(structuredOutputModeFor(m)).toBe("text");
+  });
+
+  it("自定义 OpenAI Chat 只有明确声明支持时才启用原生结构化输出", () => {
+    const m = modelFor({
+      apiFormat: "openai_chat",
+      baseUrl: "https://structured.example/v1",
+      model: "structured-model",
+      token: "sk-test",
+      structuredOutputs: true,
+    });
+    expect(structuredOutputModeFor(m)).toBe("native");
   });
 
   it("渠道托管模型对外只暴露统一 provider/model identity", () => {
@@ -208,6 +221,7 @@ describe("modelFor", () => {
     });
     expect(typeof m).toBe("object");
     expect(providerOf(m)).toBe("openai.chat");
+    expect(structuredOutputModeFor(m)).toBe("native");
   });
 
   it("openai_responses + 自定义 baseURL(New API/relay)", () => {

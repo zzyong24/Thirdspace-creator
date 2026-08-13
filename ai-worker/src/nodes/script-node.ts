@@ -6,6 +6,10 @@ import {
 } from "./structured-node";
 import { SCRIPT_DRAFT_TEMPLATE } from "../prompt/templates/script-draft";
 
+// T-808：真实日志中长稿成功已接近 82 秒、失败集中在默认 90 秒上限。
+// 只给 script.draft 放宽到 150 秒；其它结构化节点继续使用全局 90 秒默认值。
+export const SCRIPT_DRAFT_MODEL_TIMEOUT_MS = 150_000;
+
 // 分镜脚本节点(写文案,跑在 Vercel AI SDK 上,弃旧 LlmCompleter)。一个分镜 = 爆款公式的一拍。
 // 产物是结构化 ScriptShot[](口播/画面/字幕/时长 四字段独立,不压扁 —— 配合 CollabField 逐字段可改),
 // 由上层渲染成 artifact_version 候选。提示词走外置模板(script.draft),换方法论不动本文件。
@@ -243,6 +247,7 @@ export async function runScriptNode(
         : "",
       },
       maxRetries: input.maxRetries,
+      timeoutMs: SCRIPT_DRAFT_MODEL_TIMEOUT_MS,
     });
   } catch (err) {
     if (

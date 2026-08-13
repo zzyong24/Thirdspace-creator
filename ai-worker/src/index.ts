@@ -21,6 +21,8 @@ export {
   embeddingModelFor,
   type ModelSpec,
   type ApiFormat,
+  type StructuredOutputMode,
+  structuredOutputModeFor,
 } from "./runtime/provider-factory";
 // 多模态 provider 工厂(SPEC 2026-07-01 §2.2 / §8 M1/M2)—— 生图/生视频用户可配 provider
 // 抽象,与文本 modelFor 并列。host(persistence-client)解析 MultimodalSpec(resolveMultimodalSpec)

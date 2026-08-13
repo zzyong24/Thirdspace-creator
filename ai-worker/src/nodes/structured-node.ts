@@ -30,6 +30,10 @@ import {
   type CompletionPolicyViolation,
 } from "../prompt/completion-policy";
 import type { CompletionPolicyV1 } from "../prompt/effective-skill-types";
+import {
+  structuredOutputModeFor,
+  type StructuredOutputMode,
+} from "../runtime/provider-factory";
 
 // 结构化模板节点(每轮 schema 约束脊梁,SPEC §4.2)—— 任何「装配上下文 → 跑一次模型 →
 // 拿一个被 schema 卡死的结构化对象」的节点共用一条路。与 templated-node(generateText 拿自由
@@ -71,6 +75,11 @@ export interface RunStructuredNodeInput<T> {
    * 15–180 秒，防止端点挂起让任务永久 running。
    */
   timeoutMs?: number;
+  /**
+   * 原生结构化响应或文本 JSON 兼容模式。缺省读取 modelFor 记录的端点能力；
+   * `text` 会在第一次请求前直接选择 generateText，仍由同一 outputSchema 验收。
+   */
+  structuredOutputMode?: StructuredOutputMode;
   /**
    * 创作型业务的确定性归一化钩子。只允许把同一次模型输出整理成业务 schema
    * （如单值转数组、裁掉超长尾部、兼容包装层），不得补造模型没有表达的事实。
@@ -325,7 +334,7 @@ export async function runStructuredNode<T>(
 ): Promise<RunStructuredNodeResult<T>> {
   const startedAt = Date.now();
   let modelCalls = 0;
-  let lastPath: "structured" | "text_fallback" | "unknown" = "unknown";
+  let lastPath: "structured" | "text_compat" | "text_fallback" | "unknown" = "unknown";
   const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
   // T-513:只要声明了 completionPolicy/adapter，就不允许从无 snapshot 的 legacy 路径
   // 启动模型调用；普通旧 Skill 在宿主逐入口迁移期间仍走 official registry。
@@ -355,6 +364,8 @@ export async function runStructuredNode<T>(
   // 交互工具在同一坏输出上成倍等待；离线任务如确有需要必须由调用方显式声明。
   const maxRetries = input.maxRetries ?? 0;
   const modelCallTimeoutMs = resolveStructuredNodeTimeoutMs(input.timeoutMs);
+  const structuredOutputMode =
+    input.structuredOutputMode ?? structuredOutputModeFor(input.model);
   const policy = hasEffectiveScope
     ? getEffectiveSkill(template.id).effective.completionPolicy
     : null;
@@ -366,7 +377,7 @@ export async function runStructuredNode<T>(
   const repairReasons: CompletionPolicyViolation[] = [];
   const logPerformance = (
     status: "ok" | "error",
-    path: "structured" | "text_fallback" | "unknown",
+    path: "structured" | "text_compat" | "text_fallback" | "unknown",
   ) => {
     console.info(
       `[structured-node] template=${template.id} status=${status} durationMs=${Date.now() - startedAt} path=${path} modelCalls=${modelCalls} inputTokens=${totalUsage.inputTokens ?? 0} outputTokens=${totalUsage.outputTokens ?? 0}`,
@@ -379,8 +390,113 @@ export async function runStructuredNode<T>(
     object: T;
     finishReason: string;
     usage: StructuredNodeUsage;
-    path: "structured" | "text_fallback";
+    path: "structured" | "text_compat" | "text_fallback";
   }> => {
+    const validator = asSchema(schema);
+    const validate = validator.validate?.bind(validator);
+
+    const validateRaw = async (raw: unknown) => {
+      let lastValidationError: unknown = new Error("没有可校验的结构化候选");
+      if (!validate) return { success: false as const, error: lastValidationError };
+      for (const candidate of structuredProtocolCandidates(raw)) {
+        try {
+          const normalized = input.normalizeObject
+            ? input.normalizeObject(candidate)
+            : normalizeOfficialOutput(template.id, candidate);
+          const result = await validate(normalized);
+          if (result.success) return result;
+          lastValidationError = result.error;
+        } catch (normalizationError) {
+          lastValidationError = normalizationError;
+        }
+      }
+      return { success: false as const, error: lastValidationError };
+    };
+
+    const generateTextJson = async (
+      path: "text_compat" | "text_fallback",
+      initialError?: unknown,
+    ) => {
+      if (!validate) throw initialError ?? new Error("结构化节点缺少 schema validator");
+      lastPath = path;
+      let lastError: unknown =
+        initialError ?? new Error("模型配置声明不支持原生结构化响应");
+      const textAttempts = Math.max(maxRetries, 0) + 1;
+      let fallbackUsage = normalizeUsage(
+        (initialError as { usage?: LanguageModelUsage } | undefined)?.usage,
+      );
+
+      if (NoObjectGeneratedError.isInstance(initialError) && initialError.text) {
+        const raw = extractJsonObject(initialError.text);
+        if (raw !== null) {
+          const validated = await validateRaw(raw);
+          if (validated.success) {
+            return {
+              object: validated.value as T,
+              finishReason: String(initialError.finishReason ?? "unknown"),
+              usage: fallbackUsage,
+              path,
+            };
+          }
+          lastError = validated.error;
+        }
+      }
+
+      for (let i = 0; i < textAttempts; i++) {
+        modelCalls += 1;
+        const result = await generateText({
+          model: input.model,
+          system,
+          prompt: currentPrompt,
+          maxRetries: 0,
+          maxOutputTokens: input.maxOutputTokens,
+          abortSignal: AbortSignal.timeout(modelCallTimeoutMs),
+        });
+        fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
+        let raw = extractJsonObject(result.text);
+        if (
+          raw === null &&
+          result.text.trim() === "" &&
+          input.reasoningFallback
+        ) {
+          const reasoningRaw = extractJsonObject(result.reasoningText ?? "");
+          if (
+            reasoningRaw !== null &&
+            input.reasoningFallback.acceptRaw(reasoningRaw)
+          ) {
+            raw = reasoningRaw;
+          } else {
+            lastError = new Error("reasoning 中没有完整合法的结构化对象");
+          }
+        }
+        if (raw !== null) {
+          const validated = await validateRaw(raw);
+          if (validated.success) {
+            return {
+              object: validated.value as T,
+              finishReason: String(result.finishReason),
+              usage: fallbackUsage,
+              path,
+            };
+          }
+          lastError = validated.error;
+        }
+      }
+      const failurePrefix =
+        path === "text_compat"
+          ? "结构化节点:文本兼容模式未得到合 schema 的对象"
+          : "结构化节点:generateObject 落空,文本兜底仍未得到合 schema 的对象";
+      throw new Error(
+        failurePrefix +
+          (lastError instanceof Error ? ` (${lastError.message})` : ""),
+        { cause: lastError },
+      );
+    };
+
+    if (structuredOutputMode === "text") {
+      return generateTextJson("text_compat");
+    }
+
     try {
       lastPath = "structured";
       modelCalls += 1;
@@ -410,100 +526,7 @@ export async function runStructuredNode<T>(
         throw err;
       }
 
-      // 文本兜底:把模型当成「只输出 JSON」用,宽容抽 JSON,再用同一 schema 校验。
-      const validator = asSchema(schema);
-      const validate = validator.validate?.bind(validator);
-      if (!validate) throw err;
-      lastPath = "text_fallback";
-      let lastError: unknown = err;
-      const textAttempts = Math.max(maxRetries, 0) + 1;
-      let fallbackUsage = normalizeUsage(
-        (err as { usage?: LanguageModelUsage }).usage,
-      );
-
-      const validateRaw = async (raw: unknown) => {
-        let lastValidationError: unknown = new Error("没有可校验的结构化候选");
-        for (const candidate of structuredProtocolCandidates(raw)) {
-          try {
-            const normalized = input.normalizeObject
-              ? input.normalizeObject(candidate)
-              : normalizeOfficialOutput(template.id, candidate);
-            const result = await validate(normalized);
-            if (result.success) return result;
-            lastValidationError = result.error;
-          } catch (normalizationError) {
-            lastValidationError = normalizationError;
-          }
-        }
-        return { success: false as const, error: lastValidationError };
-      };
-
-      // generateObject 校验失败时 SDK 会把已经生成的原文保存在 NoObjectGeneratedError.text。
-      // 旧实现无视这份结果，再完整调用一次模型；创作型调用传 normalizer 后先在本地抢救，
-      // 成功即一轮结束，既降低延迟，也避免第二次输出继续出现同类格式偏差。
-      if (NoObjectGeneratedError.isInstance(err) && err.text) {
-        const raw = extractJsonObject(err.text);
-        if (raw !== null) {
-          const validated = await validateRaw(raw);
-          if (validated.success) {
-            return {
-              object: validated.value as T,
-              finishReason: String(err.finishReason ?? "unknown"),
-              usage: fallbackUsage,
-              path: "text_fallback",
-            };
-          }
-          lastError = validated.error;
-        }
-      }
-
-      for (let i = 0; i < textAttempts; i++) {
-        modelCalls += 1;
-        const result = await generateText({
-          model: input.model,
-          system,
-          prompt: currentPrompt,
-          maxRetries: 0,
-          maxOutputTokens: input.maxOutputTokens,
-          abortSignal: AbortSignal.timeout(modelCallTimeoutMs),
-        });
-        fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
-        let raw = extractJsonObject(result.text);
-        // T-766：只在正文为空且调用方显式开启时读取同一响应的 reasoningText。
-        // 不读 error cause/provider metadata，不把原始 reasoning 写日志或返回给调用方。
-        if (
-          raw === null &&
-          result.text.trim() === "" &&
-          input.reasoningFallback
-        ) {
-          const reasoningRaw = extractJsonObject(result.reasoningText ?? "");
-          if (
-            reasoningRaw !== null &&
-            input.reasoningFallback.acceptRaw(reasoningRaw)
-          ) {
-            raw = reasoningRaw;
-          } else {
-            lastError = new Error("reasoning 中没有完整合法的结构化对象");
-          }
-        }
-        if (raw !== null) {
-          const validated = await validateRaw(raw);
-          if (validated.success) {
-            return {
-              object: validated.value as T,
-              finishReason: String(result.finishReason),
-              usage: fallbackUsage,
-              path: "text_fallback",
-            };
-          }
-          lastError = validated.error;
-        }
-      }
-      throw new Error(
-        "结构化节点:generateObject 落空,文本兜底仍未得到合 schema 的对象" +
-          (lastError instanceof Error ? ` (${lastError.message})` : ""),
-        { cause: lastError },
-      );
+      return generateTextJson("text_fallback", err);
     }
   };
 

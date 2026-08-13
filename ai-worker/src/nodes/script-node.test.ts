@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
 import {
@@ -78,6 +78,19 @@ function runScriptNode(
 }
 
 describe("runScriptNode", () => {
+  it("script.draft 单次模型调用使用 150 秒长任务上限", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => finalText(SHOTS_OBJECT_JSON),
+    });
+    try {
+      await runScriptNode({ model, positioningBrief: "AI 工程科普" });
+      expect(timeout).toHaveBeenCalledWith(150_000);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
   it("在 Vercel AI SDK 上产出可解析分镜(4 字段独立)+ 步骤事件", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => finalText(SHOTS_OBJECT_JSON),
