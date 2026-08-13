@@ -10,7 +10,7 @@
   "observed_at": "2026-08-13T12:02:24Z",
   "run": {
     "verify_key": "ai-reliability-recovery:e2e",
-    "command": "CREATOROS_TEST_PORT=3438 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-reliability-recovery.spec.ts --project=e2e",
+    "command": "CREATOROS_TEST_PORT=3434 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-reliability-recovery.spec.ts --project=e2e",
     "exit_code": 0,
     "output_ref": "Playwright：1 passed（真实 Chrome，隔离 PGlite，17.9s）"
   },
