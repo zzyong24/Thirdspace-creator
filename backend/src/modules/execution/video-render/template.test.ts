@@ -387,8 +387,83 @@ describe("generateVideoRenderHtml · [T-794] 内容驱动视觉句子", () => {
       { text: "输出", role: "step" },
     ]);
     expect(html).toContain("stroke-dasharray=%223%207%22");
-    expect(html).toContain("background-size:64px 64px");
+    expect(html).toContain("background-size:48px 48px");
     expect(html).toContain('id="grid"');
+  });
+
+  it("无人物视觉专场把主舞台上移放大，且网格达到实际可见强度", () => {
+    const props = videoRenderProps.parse({
+      meta: { title: "视觉专场", brandLabel: "CreatorOS" },
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      talkingHead: { file: "placeholder.mp4", durationSec: 5, hasAudio: false },
+      captions: [{ start: 0, end: 5, cn: "字幕" }],
+      broll: [],
+      scenes: [
+        {
+          id: "visual-only",
+          label: "视觉专场",
+          title: "视觉专场",
+          startSec: 0,
+          endSec: 5,
+          cards: [
+            {
+              kind: "list",
+              at: 0,
+              items: [{ text: "输入" }, { text: "输出" }],
+              visualPlan: {
+                relation: "cause_effect",
+                parts: [
+                  { text: "输入", role: "cause" },
+                  { text: "处理", role: "process" },
+                  { text: "输出", role: "result" },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const html = generateVideoRenderHtml(props, { visualOnly: true });
+    expect(html).not.toContain('id="th"');
+    expect(html).toContain("top:578px");
+    expect(html).toContain("background-size:48px 48px");
+    expect(html).toContain("opacity:.9");
+
+    const landscapeHtml = generateVideoRenderHtml(
+      { ...props, delivery: { width: 1920, height: 1080, fps: 30 } },
+      { visualOnly: true },
+    );
+    expect(landscapeHtml).toContain("transform:scale(1.34)");
+  });
+
+  it("v3 的因果/步骤/替换使用场景物件运动，不再退化成圆角框加 PPT 连线", () => {
+    const causeHtml = visualPlanHtml("cause_effect", [
+      { text: "输入变长", role: "cause" },
+      { text: "要求变多", role: "process" },
+      { text: "没有更好", role: "result" },
+    ]);
+    expect(causeHtml).toContain("scene-scroll");
+    expect(causeHtml).toContain("scene-machine");
+    expect(causeHtml).toContain("scene-output-sheet");
+    expect(causeHtml).toContain("scene-pressure");
+
+    const sequenceHtml = visualPlanHtml("sequence", [
+      { text: "冻结事实", role: "step" },
+      { text: "只改一处", role: "step" },
+      { text: "盲评", role: "step" },
+      { text: "留下赢家", role: "step" },
+    ]);
+    expect(sequenceHtml).toContain("scene-runner");
+    expect(sequenceHtml).toContain("scene-calibration-gate");
+    expect(sequenceHtml).toContain("scene-loop-path");
+
+    const replacementHtml = visualPlanHtml("replacement", [
+      { text: "越来越长的说明书", role: "old" },
+      { text: "可验证的假设", role: "new" },
+    ]);
+    expect(replacementHtml).toContain("scene-manual");
+    expect(replacementHtml).toContain("scene-hypothesis");
+    expect(replacementHtml).toContain("scene-scan-beam");
   });
 });
 

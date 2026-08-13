@@ -1,14 +1,17 @@
-/** 用 CreatorOS 当前 video.cards v2 渲染同题竖屏动效小样。 */
+/** 用 CreatorOS 当前 video.cards v3 渲染同题竖屏动效小样。 */
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { generateVideoRenderHtml } from "../../../backend/src/modules/execution/video-render/template";
 import type { VideoRenderProps } from "@creatoros/contract";
 
-const output = resolve(process.argv[2] ?? "./motion-preview.html");
+const output = resolve(process.argv[2] ?? "./motion-preview-v3.html");
+const landscape = process.argv[3] === "landscape";
 
 const props: VideoRenderProps = {
   meta: { title: "提示词越写越长，文案为什么还是模板味？", brandLabel: "CreatorOS" },
-  delivery: { width: 1080, height: 1920, fps: 30 },
+  delivery: landscape
+    ? { width: 1920, height: 1080, fps: 30 }
+    : { width: 1080, height: 1920, fps: 30 },
   talkingHead: {
     file: "data:video/mp4;base64,",
     durationSec: 15,
@@ -82,16 +85,14 @@ const props: VideoRenderProps = {
   ],
 };
 
-const html = generateVideoRenderHtml(props, {
+  const html = generateVideoRenderHtml(props, {
     gsapSrc: new URL("../../../backend/node_modules/gsap/dist/gsap.min.js", import.meta.url).href,
     mediaPrefix: "",
+    visualOnly: true,
   })
-  // 这是无真人素材的动效专场小样，移除占位视频层，保留正式渲染器的卡片与时间线。
-  .replace(/<video id="th"[^>]*><\/video>/, "")
-  // 浏览器直接打开即可播放，方便用户无需渲染器验看三种内容关系。
   .replace(
-    'window.__timelines["main"] = tl;',
-    'window.__timelines["main"] = tl; const seek = Number(new URLSearchParams(location.search).get("t")); requestAnimationFrame(() => Number.isFinite(seek) && seek > 0 ? tl.seek(seek, false) : tl.play(0));',
+    '<style>',
+    '<style>@font-face{font-family:"PingFang SC";src:local("PingFang SC")}@font-face{font-family:"Microsoft YaHei";src:local("Microsoft YaHei")}',
   );
 
 writeFileSync(output, html, "utf8");

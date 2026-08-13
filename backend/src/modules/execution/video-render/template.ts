@@ -44,7 +44,7 @@ const TK = {
 // [T-794] 信息型视频统一使用低对比度虚线网格。SVG 只画每个 64px 单元的上/左边，
 // stroke-dasharray 让网格保持“工作台/推演纸”质感；opacity 足够低，不与字幕和卡片争夺注意力。
 const DASHED_GRID_DATA_URL =
-  "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2264%22%20height=%2264%22%20viewBox=%220%200%2064%2064%22%3E%3Cpath%20d=%22M64%200H0V64%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.075%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2248%22%20viewBox=%220%200%2048%2048%22%3E%3Cpath%20d=%22M48%200H0V48%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.14%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E";
 
 function col(tone: VideoRenderTone): string {
   return TK[tone];
@@ -77,6 +77,8 @@ export interface TemplateOptions {
    * executor 在物化输入处持有 MIME，重命名后把图片集合显式传进模板。
    */
   imageFiles?: ReadonlySet<string>;
+  /** 无真人视觉专场：不渲染口播头，信息舞台使用完整画布安全区。仅用于动效验看/纯动画导出。 */
+  visualOnly?: boolean;
 }
 
 /** 场景口播头形态(规则 + 显式覆盖;快照测试锚定)。 */
@@ -488,19 +490,39 @@ function motionTween(
     const lineSelector = `#${id} [data-relation-line]`;
     // [T-794] 关系已由 AI 明确声明；这里仅执行固定视觉语法，不从文案猜语义。
     t.push(`tl.set("#${id}",{autoAlpha:1},${S});`);
-    t.push(
-      `tl.fromTo("${partSelector}",{autoAlpha:0,y:24,scale:.96},{autoAlpha:1,y:0,scale:1,duration:.52,stagger:.32,ease:"power3.out"},${S});`,
-    );
-    t.push(
-      `tl.fromTo("${lineSelector}",{scaleX:0,autoAlpha:0,transformOrigin:"left center"},{scaleX:1,autoAlpha:1,duration:.55,stagger:.32,ease:"power2.out"},${fmt(at + 0.32)});`,
-    );
-    if (relation === "replacement") {
-      const swapAt = at + Math.min(1.4, Math.max(0.8, (endAt - at) * 0.34));
+    if (relation === "cause_effect") {
       t.push(
-        `tl.to("#${id} [data-role='old']",{x:-72,autoAlpha:.22,filter:"blur(2px)",duration:.5,ease:"power2.inOut"},${fmt(swapAt)});`,
+        `tl.fromTo("#${id} .scene-scroll",{scaleX:.12},{scaleX:1,duration:1.2,ease:"power2.inOut",transformOrigin:"right center"},${S});`,
+        `tl.fromTo("#${id} .scene-paper-mark",{x:-220,rotation:-4},{x:74,rotation:0,duration:1.15,ease:"power1.inOut"},${S});`,
+        `tl.fromTo("#${id} .scene-pressure",{scaleX:.08},{scaleX:1,duration:.9,ease:"power2.in",transformOrigin:"left center"},${fmt(at + 0.55)});`,
+        `tl.fromTo("#${id} .scene-machine-core",{scale:.96},{scale:1.04,duration:.14,yoyo:true,repeat:5,ease:"sine.inOut"},${fmt(at + 0.72)});`,
+        `tl.fromTo("#${id} .scene-output-sheet",{x:-82,autoAlpha:0,rotation:-3},{x:0,autoAlpha:1,rotation:0,duration:.7,stagger:.22,ease:"power3.out"},${fmt(at + 1.12)});`,
+        `tl.fromTo("#${id} .scene-result-seal",{scale:1.35,autoAlpha:0},{scale:1,autoAlpha:1,duration:.45,ease:"back.out(1.8)"},${fmt(at + 2.05)});`,
+      );
+    } else if (relation === "sequence") {
+      t.push(
+        `tl.fromTo("#${id} .scene-loop-path",{strokeDashoffset:820,autoAlpha:.25},{strokeDashoffset:0,autoAlpha:1,duration:2.8,ease:"power1.inOut"},${S});`,
+        `tl.fromTo("#${id} .scene-calibration-gate",{autoAlpha:.28,scale:.92},{autoAlpha:1,scale:1,duration:.32,stagger:.58,ease:"power2.out"},${fmt(at + 0.35)});`,
+        `tl.fromTo("#${id} .scene-runner",{offsetDistance:"0%",scale:.82},{offsetDistance:"76%",scale:1,duration:2.35,ease:"power1.inOut"},${fmt(at + 0.22)});`,
+        `tl.to("#${id} .scene-reject",{y:90,rotation:16,autoAlpha:0,duration:.55,stagger:.2,ease:"power2.in"},${fmt(at + 1.18)});`,
+        `tl.to("#${id} .scene-runner",{offsetDistance:"100%",duration:.78,ease:"power2.inOut"},${fmt(at + 2.62)});`,
+        `tl.fromTo("#${id} .scene-winner-pulse",{scale:.7,autoAlpha:0},{scale:1.2,autoAlpha:0,duration:.7,ease:"power2.out"},${fmt(at + 2.35)});`,
+      );
+    } else if (relation === "replacement") {
+      const orbitDuration = Math.min(1.9, Math.max(0.5, endAt - at - 2.12));
+      t.push(
+        `tl.fromTo("#${id} .scene-manual-page",{x:-36,y:-18,rotation:-4,autoAlpha:0},{x:0,y:0,rotation:0,autoAlpha:1,duration:.38,stagger:.1,ease:"power2.out"},${S});`,
+        `tl.fromTo("#${id} .scene-scan-beam",{scaleX:0},{scaleX:1,duration:.72,ease:"power2.inOut",transformOrigin:"left center"},${fmt(at + 0.65)});`,
+        `tl.to("#${id} .scene-manual",{scaleX:.08,rotation:-7,x:-310,autoAlpha:0,duration:.82,ease:"power3.in"},${fmt(at + 1.28)});`,
+        `tl.fromTo("#${id} .scene-hypothesis",{x:250,scale:.72,autoAlpha:0},{x:0,scale:1,autoAlpha:1,duration:.82,ease:"power3.out"},${fmt(at + 1.65)});`,
+        `tl.fromTo("#${id} .scene-orbit-dot",{rotation:0},{rotation:360,duration:${fmt(orbitDuration)},ease:"none",transformOrigin:"center center"},${fmt(at + 1.82)});`,
+      );
+    } else {
+      t.push(
+        `tl.fromTo("${partSelector}",{autoAlpha:0,y:24,scale:.96},{autoAlpha:1,y:0,scale:1,duration:.52,stagger:.32,ease:"power3.out"},${S});`,
       );
       t.push(
-        `tl.fromTo("#${id} [data-role='new']",{x:84,autoAlpha:0},{x:0,autoAlpha:1,duration:.58,ease:"power3.out"},${fmt(swapAt + 0.18)});`,
+        `tl.fromTo("${lineSelector}",{scaleX:0,autoAlpha:0,transformOrigin:"left center"},{scaleX:1,autoAlpha:1,duration:.55,stagger:.32,ease:"power2.out"},${fmt(at + 0.32)});`,
       );
     }
     t.push(`tl.to("#${id}",{autoAlpha:0,duration:.3},${fmt(Math.max(at, endAt - 0.3))});`);
@@ -734,29 +756,43 @@ function renderVisualSentence(card: VideoRenderCard): CardBox | null {
       );
     }
     case "sequence": {
-      const inner = parts
+      const gateGap = Math.min(205, Math.floor(760 / Math.max(1, parts.length - 1)));
+      const gateLabelWidth = Math.min(176, gateGap + 24);
+      const gateLabelSize = parts.length > 4 ? 19 : 23;
+      const gates = parts
         .map(
           (part, index) =>
-            `${index > 0 ? `<div style="flex:0 0 58px">${line("sequence-link")}</div>` : ""}` +
-            `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:20px">` +
-            `<div style="width:58px;height:58px;border-radius:50%;background:${TK.accent}24;border:2px solid ${TK.accent};color:${TK.accentH};font-size:26px;font-weight:900;display:flex;align-items:center;justify-content:center">${index + 1}</div>` +
-            node(part, `font-size:32px;text-align:center`, "sequence-node") +
-            `</div>`,
+            `<div class="scene-calibration-gate" style="position:absolute;left:${92 + index * gateGap - Math.round((gateLabelWidth - 112) / 2)}px;top:${index % 2 === 0 ? 110 : 215}px;width:${gateLabelWidth}px;height:180px;display:flex;flex-direction:column;align-items:center;z-index:3"><div style="width:112px;height:112px;flex:0 0 auto;border:3px solid ${index === parts.length - 1 ? TK.green : TK.accent}cc;clip-path:polygon(14% 0,86% 0,100% 50%,86% 100%,14% 100%,0 50%);background:radial-gradient(circle,${index === parts.length - 1 ? TK.green : TK.accent}30 0 42%,${TK.bg} 44%);box-shadow:0 0 26px ${index === parts.length - 1 ? TK.green : TK.accent}33"></div><div style="width:${gateLabelWidth}px;margin-top:10px;text-align:center">${node(part, `font-size:${gateLabelSize}px;text-align:center`, "sequence-node")}</div></div>`,
         )
         .join("");
-      return shell("visual-sequence", `<div style="width:100%;display:flex;align-items:center">${inner}</div>`);
+      return shell(
+        "visual-sequence",
+        `<div style="position:relative;width:100%;height:100%">` +
+          `<svg viewBox="0 0 964 404" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><path class="scene-loop-path" d="M80 180 C210 30 385 55 470 190 S720 330 875 170 C930 110 910 40 790 36" fill="none" stroke="${TK.accentH}" stroke-width="8" stroke-linecap="round" stroke-dasharray="16 18" stroke-dashoffset="820"/><path d="M790 36 C630 -25 350 10 130 116" fill="none" stroke="${TK.green}" stroke-width="3" stroke-dasharray="8 14" opacity=".62"/></svg>` +
+          gates +
+          `<div class="scene-runner" style="position:absolute;left:0;top:0;width:74px;height:92px;border-radius:8px;background:${TK.fg};box-shadow:0 16px 32px #0008, inset 0 -12px 0 #d6d2c8;offset-path:path('M80 180 C210 30 385 55 470 190 S720 330 875 170 C930 110 910 40 790 36 C630 -25 350 10 130 116');offset-distance:0%;z-index:8" data-layout-allow-occlusion><span style="position:absolute;left:13px;right:13px;top:22px;height:5px;background:${TK.accent};box-shadow:0 16px 0 ${TK.muted},0 32px 0 ${TK.muted}"></span></div>` +
+          `<div class="scene-winner-pulse" style="position:absolute;right:78px;top:34px;width:92px;height:92px;border:4px solid ${TK.green};border-radius:50%;z-index:2"></div>` +
+          `<div class="scene-reject" style="position:absolute;left:372px;top:294px;width:42px;height:54px;background:${TK.muted};opacity:.7;transform:rotate(-10deg)"></div>` +
+          `<div class="scene-reject" style="position:absolute;left:602px;top:308px;width:42px;height:54px;background:${TK.muted};opacity:.55;transform:rotate(12deg)"></div>` +
+          `</div>`,
+      );
     }
     case "cause_effect": {
       const cause = byRole("cause", 0);
       const process = byRole("process", Math.min(1, parts.length - 1));
       const result = byRole("result", parts.length - 1);
-      const causalNode = (part: typeof cause, tone: string, cls: string) =>
-        `<div style="flex:1;min-width:0;padding:30px 24px;border-radius:24px;background:${tone}18;border:1px solid ${tone}66;display:flex;align-items:center;justify-content:center">${node(part, `font-size:32px;text-align:center`, cls)}</div>`;
       return shell(
         "visual-cause-effect",
-        `<div style="width:100%;display:flex;align-items:center;gap:18px">${causalNode(cause, TK.amber, "cause-node")}` +
-          `<div style="flex:0 0 56px">${line("cause-link")}</div>${causalNode(process, TK.accent, "process-node")}` +
-          `<div style="flex:0 0 56px">${line("result-link")}</div>${causalNode(result, TK.green, "result-node")}</div>`,
+        `<div style="position:relative;width:100%;height:100%;overflow:hidden">` +
+          `<div class="scene-scroll" style="position:absolute;left:10px;top:82px;width:410px;height:150px;transform-origin:right center;background:repeating-linear-gradient(90deg,#d9d3c8 0 42px,#c8c1b5 42px 44px);box-shadow:0 18px 20px #0008"><div class="scene-paper-mark" style="position:absolute;right:32px;top:46px">${node(cause, `color:#24211d;font-size:30px;white-space:nowrap`, "cause-node")}</div></div>` +
+          `<div class="scene-machine" style="position:absolute;left:390px;top:56px;width:260px;height:258px;clip-path:polygon(12% 0,88% 0,100% 16%,100% 84%,88% 100%,12% 100%,0 84%,0 16%);background:linear-gradient(145deg,#30333a,#15171b);border:2px solid ${TK.accent}88;box-shadow:0 20px 34px #0009;z-index:4"><div class="scene-machine-core" style="position:absolute;left:56px;top:38px;width:148px;height:148px;border:12px solid ${TK.accent};border-radius:50%;box-shadow:inset 0 0 0 12px #111,0 0 30px ${TK.accent}55"></div><div style="position:absolute;left:32px;right:32px;bottom:30px;text-align:center">${node(process, `font-size:27px;color:${TK.fg2}`, "process-node")}</div></div>` +
+          `<div style="position:absolute;left:430px;top:18px;width:180px;height:12px;background:${TK.border};border-radius:99px;overflow:hidden"><div class="scene-pressure" style="width:100%;height:100%;background:linear-gradient(90deg,${TK.amber},${TK.danger})"></div></div>` +
+          `<div style="position:absolute;left:680px;top:78px;width:250px;height:250px">` +
+            `<div class="scene-output-sheet" style="position:absolute;left:16px;top:18px;width:170px;height:210px;background:#d7d3ca;box-shadow:0 14px 28px #0008"></div>` +
+            `<div class="scene-output-sheet" style="position:absolute;left:42px;top:34px;width:170px;height:210px;background:#e5e1d8;box-shadow:0 14px 28px #0008"></div>` +
+            `<div class="scene-output-sheet" style="position:absolute;left:68px;top:50px;width:170px;height:210px;background:#f2efe8;box-shadow:0 14px 28px #0008"><span style="position:absolute;left:24px;right:24px;top:40px;height:8px;background:${TK.muted};box-shadow:0 28px 0 ${TK.muted},0 56px 0 ${TK.muted},0 84px 0 ${TK.muted}"></span></div>` +
+            `<div class="scene-result-seal" style="position:absolute;right:-2px;bottom:18px;padding:12px 18px;border:4px solid ${TK.danger};color:${TK.danger};font-size:28px;font-weight:900;transform:rotate(-8deg);background:${TK.bg}dd">${esc(result.text)}</div>` +
+          `</div></div>`,
       );
     }
     case "replacement": {
@@ -764,10 +800,16 @@ function renderVisualSentence(card: VideoRenderCard): CardBox | null {
       const newPart = byRole("new", parts.length - 1);
       return shell(
         "visual-replacement",
-        `<div style="width:100%;display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:20px">` +
-          `<div style="position:relative;padding:34px 24px;border-radius:24px;background:${TK.danger}0d;border:1px solid ${TK.danger}55">${node(oldPart, `color:${TK.muted};text-align:center`, "replacement-old")}<div data-relation-line style="position:absolute;left:20px;right:20px;top:50%;height:6px;border-radius:3px;background:${TK.danger};transform:rotate(-5deg)"></div></div>` +
-          `<div style="display:flex;flex-direction:column;gap:18px;align-items:center"><div style="color:${TK.danger};font-size:42px;font-weight:900">×</div><div style="color:${TK.accentH};font-size:48px;font-weight:900">→</div></div>` +
-          `<div style="padding:34px 24px;border-radius:24px;background:${TK.accent}1c;border:1px solid ${TK.accent}88">${node(newPart, `color:${TK.fg};text-align:center`, "replacement-new")}</div></div>`,
+        `<div style="position:relative;width:100%;height:100%;overflow:hidden">` +
+          `<div class="scene-manual" style="position:absolute;left:44px;top:24px;width:430px;height:350px;transform-origin:left center">` +
+            [0, 1, 2, 3, 4].map((index) => `<div class="scene-manual-page" style="position:absolute;left:${index * 18}px;top:${index * 12}px;width:330px;height:250px;background:${index === 4 ? "#eee9df" : "#bcb6aa"};box-shadow:0 18px 32px #0009;clip-path:polygon(0 0,90% 0,100% 12%,100% 100%,0 100%)"><span style="position:absolute;left:30px;right:30px;top:38px;height:7px;background:#3b3833;box-shadow:0 30px 0 #777168,0 60px 0 #777168,0 90px 0 #777168,0 120px 0 #777168"></span></div>`).join("") +
+            `<div style="position:absolute;left:48px;top:160px;width:330px">${node(oldPart, `font-size:31px;color:#24211d;text-align:center`, "replacement-old")}</div>` +
+          `</div>` +
+          `<div class="scene-scan-beam" style="position:absolute;left:82px;top:206px;width:375px;height:7px;background:${TK.danger};box-shadow:0 0 24px ${TK.danger};z-index:5"></div>` +
+          `<div class="scene-hypothesis" style="position:absolute;right:60px;top:62px;width:350px;height:282px;display:flex;align-items:center;justify-content:center">` +
+            `<div class="scene-orbit-dot" style="position:absolute;inset:6px;border:2px dashed ${TK.accentH};border-radius:50%"><span style="position:absolute;left:50%;top:-12px;width:24px;height:24px;border-radius:50%;background:${TK.green};box-shadow:0 0 24px ${TK.green}"></span></div>` +
+            `<div style="width:226px;height:226px;border-radius:50%;background:radial-gradient(circle at 38% 32%,${TK.accentH},${TK.accent} 42%,#171923 74%);box-shadow:0 0 0 12px ${TK.accent}22,0 26px 60px #0009;display:flex;align-items:center;justify-content:center;padding:32px">${node(newPart, `font-size:31px;text-align:center`, "replacement-new")}</div>` +
+          `</div></div>`,
       );
     }
     case "statement": {
@@ -1080,6 +1122,7 @@ export function generateVideoRenderHtml(
   const imageFiles = options.imageFiles ?? new Set<string>();
   const DUR = f2(props.talkingHead.durationSec);
   const { width, height, fps } = props.delivery;
+  const visualOnly = options.visualOnly === true;
   void fps; // fps 由渲染命令行控制;合成本身以秒为时钟
   const L = resolveLayout(width, height); // [T-290] 布局随画幅(横/竖版)
 
@@ -1093,7 +1136,7 @@ export function generateVideoRenderHtml(
     1,
     0,
     DUR,
-    `inset:0;opacity:.72;background-image:url(${DASHED_GRID_DATA_URL});background-size:64px 64px;`,
+    `inset:0;opacity:.9;background-image:url(${DASHED_GRID_DATA_URL});background-size:48px 48px;`,
   );
   clip(
     ctx,
@@ -1135,17 +1178,19 @@ export function generateVideoRenderHtml(
         `style="position:absolute;left:0;top:0;width:${width}px;height:${height}px;object-fit:cover;filter:blur(42px) brightness(.28) saturate(.82);transform:scale(1.08);opacity:.9;"></video>`,
     );
   }
-  ctx.clips.push(
-    `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
+  if (!visualOnly) {
+    ctx.clips.push(
+      `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
       // [T-291] 口播头改 object-fit:contain(完整不裁,治「脸没在框」)+ 深色底补边。
       // 原 cover+object-position:center 20% 会裁掉竖屏源上下大半、位置写死猜测无人脸检测 → 脸出框。
       // 合 video-editing skill 铁律「不随意裁切口播画面」。深色 letterbox 是「保完整」的可接受代价。
       `style="position:absolute;left:${initPos.left}px;top:${initPos.top}px;width:${initPos.width}px;height:${initPos.height}px;border-radius:${initPos.borderRadius}px;object-fit:contain;background:#08090a;` +
-      `z-index:900;border:2px solid ${TK.accent};box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px ${TK.accent}1f;"></video>`,
-  );
+        `z-index:900;border:2px solid ${TK.accent};box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px ${TK.accent}1f;"></video>`,
+    );
+  }
   // 形态切换 tween:在模式变化的场景边界前 0.7s 开始(首场景不切)
   for (let i = 1; i < props.scenes.length; i++) {
-    if (modes[i] === modes[i - 1]) continue;
+    if (visualOnly || modes[i] === modes[i - 1]) continue;
     const to = resolveHeadBox(L, modes[i]!);
     const at = Math.max(0, props.scenes[i]!.startSec - 0.7);
     ctx.tweens.push(
@@ -1175,7 +1220,7 @@ export function generateVideoRenderHtml(
       })),
     ].sort((a, b) => a.at - b.at);
 
-    const rightEdge = L.rightEdge[mode];
+    const rightEdge = visualOnly ? width - 60 : L.rightEdge[mode];
     let px = L.contentX;
     let py = L.contentY[mode];
     let rowH = 0;
@@ -1217,15 +1262,23 @@ export function generateVideoRenderHtml(
         // 信息卡是当前口播 beat 的主视觉，不是左上角的小标签。每个 beat 复用同一
         // 信息舞台并替换上一个，避免卡片沿 flow 越堆越散、大片区域仍然空黑。
         const stageWidth = Math.max(1, rightEdge - L.contentX);
-        const stageHeight =
-          props.delivery.height > props.delivery.width
+        const stageHeight = visualOnly
+          ? props.delivery.height > props.delivery.width
+            ? 1120
+            : 760
+          : props.delivery.height > props.delivery.width
             ? mode === "pip"
               ? 650
               : 520
             : 640;
+        const stageTop = visualOnly
+          ? props.delivery.height > props.delivery.width
+            ? 248
+            : 120
+          : L.contentY[mode];
         const pos = {
           x: L.contentX + Math.max(0, Math.round((stageWidth - box.width) / 2)),
-          y: L.contentY[mode] + Math.max(0, Math.round((stageHeight - box.height) / 2)),
+          y: stageTop + Math.max(0, Math.round((stageHeight - box.height) / 2)),
         };
         // 信息卡承担两段真实素材之间的视觉接力，必须一直保持到下一个主视觉/信息卡
         // 进场或本场结束。旧的 5.8 秒硬上限会在长口播中制造 4~10 秒纯黑空档，
@@ -1239,13 +1292,14 @@ export function generateVideoRenderHtml(
         // 该时间段会由后续真实素材承接；信息卡只服务真正的空镜与语义节拍。
         if (cardEnd - item.at < 1.2) continue;
         const id = `c${nextTrack(ctx)}`;
+        const visualOnlyScale = visualOnly && width > height && item.card.visualPlan ? 1.34 : 1;
         clip(
           ctx,
           id,
           nextTrack(ctx),
           item.at,
           f2(cardEnd - item.at),
-          `left:${pos.x}px;top:${pos.y}px;width:${box.width}px;height:${box.height}px;z-index:420;${box.style}`,
+          `left:${pos.x}px;top:${pos.y}px;width:${box.width}px;height:${box.height}px;z-index:420;transform:scale(${visualOnlyScale});transform-origin:center center;${box.style}`,
           box.inner,
         );
         // [T-295] 富动画:按 card.motion(缺省按 kind 派生)落配方,替换整块 appear。

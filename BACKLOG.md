@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-798 | 修正动效样片的网格可见度、横竖版验收与无人物布局【用户反馈·2026-08-12】 | ✅ 待办 | — | — | [沿用 SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [v3 样片](output/content-samples/ai-copy-eval-loop/README.md) | 用户指出 v3 实看仍有三处未验收：虚线网格几乎不可见、只展示竖屏没有横屏实际成片、无人物样片仍沿用人物避让坐标导致上方大面积空置。保持已验收配图不变，提升静态网格可见度，为正式渲染器增加仅供无人物验看的视觉专场布局，输出同题横竖双版实际成片并做布局检查。 |
+| T-797 | 把内容动效从“动态 PPT”升级为场景化运动叙事【用户反馈·2026-08-12】 | ✅ 待办 | — | — | [沿用 SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [上一版样片](output/content-samples/ai-copy-eval-loop/README.md) | 用户确认图片素材方向无误，但实际动效仍差：现有 `cause_effect / sequence / replacement` 虽有关系，视觉仍是多个圆角框、编号和连线，像动态 PPT。沿用现有 `video.cards` 契约与渲染链，迭代 Skill、评尺和 GSAP 配方，使因果表现为“输入膨胀但输出不变”、Loop 表现为候选经过校准后赢家回流、替换表现为旧说明书被折叠退出且新假设接管；输出同题 v3 实际预览，不改已验收配图。 |
 | T-796 | 用最新内容 Skill 生成脚本、配图与动效小样【用户验看·2026-08-12】 | ✅ 待办 | — | — | [样片说明](output/content-samples/ai-copy-eval-loop/README.md) | 以“AI 文案差往往不是提示词不够长，而是没有判断标准”为冻结主题，使用当前 `script.draft v9`、内容职责型配图提示词和 `video.cards v2` 产一套可直接验看的口播稿、实际配图与内容关系动效预览；只做样片，不改产品功能。 |
 | T-795 | 封面生成支持用户画面要求作为独立硬约束【用户确认·2026-08-12】 | ✅ 待办 | — | — | [SPEC](docs/superpowers/specs/2026-08-12-cover-user-visual-requirements.md) | 在现有封面生成入口增加可选的用户画面要求，例如“图里要有某个人物、物体、场景或动作”；该要求作为独立参数贯穿工具契约、生成 Skill 与任务执行链，优先于系统自动构图但不得绕过事实、版权与安全边界，留空时保持现有生成行为。 |
 | T-794 | 让动效卡片从“文字冒出来”升级为内容驱动的视觉句子【用户确认·2026-08-12】 | ✅ 待办 | — | PASS:4359e7c23fcb | [SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [浏览器旅程](orchestrator/T794-FRONTEND-JOURNEY.md) | 迭代现有 `video.cards` Skill、内部卡片决策契约和 HyperFrames/GSAP 渲染配方：让数字、对比、步骤、因果与“建立→推翻”按内容关系逐步发生，减少整块淡入、通用绿线和重复圆角卡；沿用现有制作确认、预览与渲染链，不新建页面或第二套视频引擎，并用同题前后样本与聚焦回归完成一轮评分 Loop。 |

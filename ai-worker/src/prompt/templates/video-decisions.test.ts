@@ -164,12 +164,15 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     );
   });
 
-  it("v2 先声明内容关系和原文部件，拒绝把整卡淡入当作视觉化", () => {
-    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v2");
+  it("v3 先声明内容关系和原文部件，拒绝把框和连线当作视觉化", () => {
+    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v3");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("观众需要看见什么关系");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("cause_effect");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("replacement");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("整卡淡入");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("动态 PPT");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("对象真的发生变化");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("默认不能使用三个并排圆角框");
 
     expect(
       videoCardsSchema.parse({
