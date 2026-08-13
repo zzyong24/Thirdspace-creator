@@ -10,7 +10,7 @@
   "task_id": "T-794",
   "contract_path": "orchestrator/T794-FRONTEND-JOURNEY.md",
   "contract_sha": "5331b21b16b1",
-  "commit_sha": "c0da9e29ab2bc2ace26b287efef78828076dcf8e",
+  "commit_sha": "beb5b8a79aba1426273e43b384273b57ac61cb51",
   "observed_at": "2026-08-12T19:31:00.000Z",
   "run": {
     "verify_key": "motion-card-preview:e2e",
@@ -55,7 +55,7 @@
   ],
   "visible_copy": {
     "artifact_path": "orchestrator/evidence/T-794-visible-copy.json",
-    "artifact_sha256": "27e09a0723cb8cba96312107821d7c27d18c2d08932be29e72570c9feb6bd37e"
+    "artifact_sha256": "b55129f1511529de23bc5e0d2e1fcea4b39bb030673414f471898aeda1e951dd"
   },
   "tdd_red_ref": "v2 测试先失败于旧模板仍为 v1 且 visualPlan 不存在；实现后聚焦测试转绿。",
   "open_defects": [],
