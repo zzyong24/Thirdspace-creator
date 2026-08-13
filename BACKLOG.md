@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-796 | 用最新内容 Skill 生成脚本、配图与动效小样【用户验看·2026-08-12】 | ✅ 待办 | — | — | [样片说明](output/content-samples/ai-copy-eval-loop/README.md) | 以“AI 文案差往往不是提示词不够长，而是没有判断标准”为冻结主题，使用当前 `script.draft v9`、内容职责型配图提示词和 `video.cards v2` 产一套可直接验看的口播稿、实际配图与内容关系动效预览；只做样片，不改产品功能。 |
 | T-795 | 封面生成支持用户画面要求作为独立硬约束【用户确认·2026-08-12】 | ✅ 待办 | — | — | [SPEC](docs/superpowers/specs/2026-08-12-cover-user-visual-requirements.md) | 在现有封面生成入口增加可选的用户画面要求，例如“图里要有某个人物、物体、场景或动作”；该要求作为独立参数贯穿工具契约、生成 Skill 与任务执行链，优先于系统自动构图但不得绕过事实、版权与安全边界，留空时保持现有生成行为。 |
 | T-794 | 让动效卡片从“文字冒出来”升级为内容驱动的视觉句子【用户确认·2026-08-12】 | ✅ 待办 | — | PASS:4359e7c23fcb | [SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [浏览器旅程](orchestrator/T794-FRONTEND-JOURNEY.md) | 迭代现有 `video.cards` Skill、内部卡片决策契约和 HyperFrames/GSAP 渲染配方：让数字、对比、步骤、因果与“建立→推翻”按内容关系逐步发生，减少整块淡入、通用绿线和重复圆角卡；沿用现有制作确认、预览与渲染链，不新建页面或第二套视频引擎，并用同题前后样本与聚焦回归完成一轮评分 Loop。 |
 | T-792 | 让文生图提示词承担内容论证而非装饰【用户确认·2026-08-12】 | ✅ 待办 | — | — | [既有口播联想画面 SPEC](docs/superpowers/specs/2026-08-04-voiceover-associative-visual-skill.md) · [公开调研与评尺](docs/research/2026-08-12-content-supporting-image-prompt-research.md) | 只迭代现有 `video.broll`、通用 `material.generate` 与封面方案中的生图提示词：先判断画面在当前内容里承担事实证据、机制解释、类比、对比、后果或情绪中的哪一种职责，再把它落实为单一可见关系、具体主体/动作/环境/构图与必要约束；默认不复述口播、不烧大段文字、不产万能 AI 海报，不用 AI 图冒充事实。沿用现有模型配置、生成任务、候选采纳和成片链，不新建页面、接口、数据表或第二套生图功能。 |
