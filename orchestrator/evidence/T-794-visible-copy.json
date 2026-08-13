@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-794",
-  "commit_sha": "697d1307760804a25e0323e5303878c7e3671f1c",
+  "commit_sha": "260334e359dc2142858bd6b022c2a8253a2cc3e5",
   "captures": [
     {
       "checkpoint": "横版五种内容关系",
