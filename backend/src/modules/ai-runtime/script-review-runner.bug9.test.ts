@@ -232,6 +232,48 @@ describe("runScriptReview — T-766 通用文本模型与失败关闭", () => {
     expect(reports).toHaveLength(0);
   });
 
+  it("结构化模型漏掉 finding.category 时只做协议补全，不让整次审核空转", async () => {
+    vi.doMock("@creatoros/ai-worker", async () => {
+      const actual =
+        await vi.importActual<typeof import("@creatoros/ai-worker")>(
+          "@creatoros/ai-worker",
+        );
+      return {
+        ...actual,
+        runStructuredNode: async (input: {
+          outputSchema?: { parse(value: unknown): unknown };
+          normalizeObject?: (value: unknown) => unknown;
+        }) => {
+          if (!input.outputSchema || !input.normalizeObject) {
+            throw new Error("审核节点未绑定稳定输出契约");
+          }
+          const raw = {
+            verdict: "block",
+            summary: "存在导流风险。",
+            findings: [
+              {
+                quote: "加微信",
+                severity: "block",
+                reason: "引导站外联系",
+                suggestion: "改为关注主页",
+                ruleRef: "公约34",
+              },
+            ],
+          };
+          const normalized = input.normalizeObject(raw);
+          return { object: input.outputSchema.parse(normalized) };
+        },
+      };
+    });
+    const { deps, reports, failed, counters } = makeDeps();
+
+    await runScriptReview({} as never, baseTask, deps);
+
+    expect(failed).toHaveLength(0);
+    expect(counters.succeedCount).toBe(1);
+    expect(reports).toHaveLength(1);
+  });
+
   it("内容雷达首存前的口播稿可在没有正式 artifact 时先完成审核", async () => {
     vi.doMock("@creatoros/ai-worker", async () => {
       const actual =

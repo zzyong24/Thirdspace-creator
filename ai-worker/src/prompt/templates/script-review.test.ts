@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { bindPrompt } from "../template";
-import { SCRIPT_REVIEW_TEMPLATE } from "./script-review";
+import {
+  SCRIPT_REVIEW_TEMPLATE,
+  normalizeScriptReviewOutput,
+  scriptReviewSchema,
+} from "./script-review";
 
 // T-124:违禁词表(创作者确定词表)注进语义审 prompt,让模型照表复核 lint 精确匹配漏掉的变体。
 describe("SCRIPT_REVIEW_TEMPLATE — 违禁词表注入(T-124)", () => {
@@ -24,5 +28,31 @@ describe("SCRIPT_REVIEW_TEMPLATE — 违禁词表注入(T-124)", () => {
     });
     expect(prompt).toContain("只给 script");
     expect(prompt).not.toContain("{{lexicon}}");
+  });
+});
+
+describe("normalizeScriptReviewOutput", () => {
+  it("只补漏掉的协议字段，不改变审核结论、风险等级和条目数量", () => {
+    const normalized = normalizeScriptReviewOutput({
+      verdict: "block",
+      summary: "存在导流风险。",
+      findings: [
+        {
+          quote: "加微信",
+          severity: "block",
+          reason: "引导站外联系",
+          suggestion: "改为关注主页",
+          ruleRef: "公约34",
+        },
+      ],
+    });
+    const parsed = scriptReviewSchema.parse(normalized);
+    expect(parsed.verdict).toBe("block");
+    expect(parsed.findings).toHaveLength(1);
+    expect(parsed.findings[0]).toMatchObject({
+      category: "公约34",
+      severity: "block",
+      quote: "加微信",
+    });
   });
 });

@@ -2510,3 +2510,28 @@ Skill、契约、渲染与评分 Loop 的迭代。
 **Asset-Ref**：既有 `cover.generate`、`cover.brief`、cover runner 与 image adapter。
 
 **Status**：用户已确认，T-795 进入 BUILD。
+
+## DEC-AI-047 (2026-08-13) — AI 可靠性恢复只复用已验证协议状态，不重放未知提交
+
+**来源**：T-804 用户日志显示三类可靠性缺口：审核模型返回完整结论但 finding 漏字段导致整次失败；
+视频决策后续节点失败后重试会重复执行已完成的分场/信息卡；封面方案完成后图片提交收到明确 503
+仍直接失败。用户要求继续修复，并明确本轮不处理扣费。
+
+**决策**：
+
+1. 审核报告绑定产品固定 schema，对模型已返回的 finding 只做有界协议补全；不得新增 finding、改变
+   verdict/severity 或用默认值把空报告伪装成成功。
+2. 视频决策在任务 server-only `runtimeData` 固定键保存分场与信息卡断点。只有用户显式重试且来源
+   任务、SRT、口播稿、画幅、素材清单、人工选择和凝固分镜指纹全部一致时才复用；语义选择仍由 Skill。
+3. 封面生图仅对 provider 已明确返回且标记可重试的 submit HTTP 状态做一次短重试，并沿用同一
+   幂等键。网络中断、超时等可能已受理但响应丢失的未知提交绝不重放。
+4. 不修改积分、扣费、退款、计价或外部发布链路。
+
+**理由**：三类问题都属于“可证明的协议恢复”，不是创作语义或计费策略。固定输出契约、输入指纹和
+明确提交拒绝分类能减少空转与重复执行，同时保持失败关闭和数据真实性。
+
+**Pattern-Ref**：MOD-005（结构化输出有界修复）；DEC-AI-039（语义归 AI，代码守协议边界）。
+
+**Asset-Ref**：`product-to-code-orchestrator/decisions/assets/modules/MOD-005-structured-output-retry-loop`。
+
+**Status**：用户已确认，T-804 BUILD 已实现并进入验证。

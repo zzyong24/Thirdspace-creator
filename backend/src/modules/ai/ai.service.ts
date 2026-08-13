@@ -420,6 +420,12 @@ export interface AiService {
     taskId: string,
     checkpoint: Record<string, unknown>,
   ): Promise<void>;
+  /** T-804 server-only：保存视频决策断点；固定键合并，绝不覆盖 Skill/model 快照。 */
+  putVideoDecisionsCheckpoint(
+    ctx: RequestContext,
+    taskId: string,
+    checkpoint: Record<string, unknown>,
+  ): Promise<void>;
   // The composition-layer runner flips queued→running when the agent STARTS (so the UI's
   // status is honest while the agent works), before recordCandidate flips it to
   // awaiting_confirmation. No-op if already past queued. (机制④ async exec.)
@@ -1791,6 +1797,16 @@ export function createAiService(deps: ServiceDeps): AiService {
       await repo.updateTaskRuntimeData(taskId, {
         ...current,
         multimodalProviderCheckpoint: { ...checkpoint },
+      });
+    },
+
+    async putVideoDecisionsCheckpoint(ctx, taskId, checkpoint) {
+      const repo = repoFor(ctx, "ai.putVideoDecisionsCheckpoint");
+      const task = await repo.requireTask(taskId);
+      const current = (task.runtimeData ?? {}) as Record<string, unknown>;
+      await repo.updateTaskRuntimeData(taskId, {
+        ...current,
+        videoDecisionsCheckpoint: { ...checkpoint },
       });
     },
 

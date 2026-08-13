@@ -157,6 +157,7 @@
     "verbatim-script-import:test": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/server/script-draft-task-input.test.ts",
     "creatoros-local-package:test": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
     "motion-card-preview:e2e": "node orchestrator/process/verify-t794-motion-card-preview.mjs",
-    "scene-graph-loop:e2e": "node orchestrator/process/verify-t802-scene-graph.mjs"
+    "scene-graph-loop:e2e": "node orchestrator/process/verify-t802-scene-graph.mjs",
+    "ai-reliability-recovery:e2e": "CREATOROS_TEST_PORT=3434 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-reliability-recovery.spec.ts --project=e2e"
   }
 }

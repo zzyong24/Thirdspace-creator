@@ -1737,12 +1737,31 @@ describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
 
 // ── 编排入口 ────────────────────────────────────────────────────────────────
 
-function makeDeps(outputs: Record<string, unknown>, inventory = INVENTORY) {
+function makeDeps(
+  outputs: Record<string, unknown>,
+  inventory = INVENTORY,
+  runtimeByTask = new Map<string, Record<string, unknown>>(),
+) {
   const calls = {
     markRunning: vi.fn(async () => undefined),
     recordStep: vi.fn(async () => undefined),
     recordCandidate: vi.fn(async () => undefined),
     cancelTask: vi.fn(async () => undefined),
+    getTaskRuntimeData: vi.fn(async (_ctx: RequestContext, taskId: string) =>
+      runtimeByTask.get(taskId) ?? {},
+    ),
+    putVideoDecisionsCheckpoint: vi.fn(
+      async (
+        _ctx: RequestContext,
+        taskId: string,
+        checkpoint: Record<string, unknown>,
+      ) => {
+        runtimeByTask.set(taskId, {
+          ...(runtimeByTask.get(taskId) ?? {}),
+          videoDecisionsCheckpoint: checkpoint,
+        });
+      },
+    ),
   };
   const deps: VideoDecisionsDeps = {
     ai: calls,
@@ -2017,6 +2036,66 @@ describe("runVideoDecisions(编排)", () => {
       .find((s) => s.kind === "failed");
     expect(failStep?.text).toContain(VIDEO_DECISION_STEPS[1]);
     expect(failStep?.text).toContain("模型端点 500");
+  });
+
+  it("显式重试复用同输入已完成的分场，不从第①步重新扣一遍执行", async () => {
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    const first = makeDeps(
+      { ...HAPPY_OUTPUTS, "video.cards": new Error("模型端点 500") },
+      INVENTORY,
+      runtimeByTask,
+    );
+    const firstSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runVideoDecisions(ctx, TASK, first.deps);
+    firstSpy.mockRestore();
+    expect(runtimeByTask.get(TASK.id)?.videoDecisionsCheckpoint).toBeTruthy();
+
+    const retry = makeDeps(HAPPY_OUTPUTS, INVENTORY, runtimeByTask);
+    const retrySkills: string[] = [];
+    const baseCall = fakeCall(HAPPY_OUTPUTS);
+    retry.deps.callStructured = async <T>(input: StructuredCallInput<T>) => {
+      retrySkills.push(input.skillId);
+      return baseCall(input);
+    };
+    await runVideoDecisions(
+      ctx,
+      { ...TASK, id: "task-2", retryOfTaskId: TASK.id },
+      retry.deps,
+    );
+
+    expect(retrySkills).not.toContain("video.scenes");
+    expect(retrySkills).toContain("video.cards");
+    expect(retry.calls.recordCandidate).toHaveBeenCalledTimes(1);
+  });
+
+  it("第③步失败后的显式重试同时复用分场和信息卡", async () => {
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    const first = makeDeps(
+      { ...HAPPY_OUTPUTS, "video.broll": new Error("provider 503") },
+      INVENTORY,
+      runtimeByTask,
+    );
+    const firstSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runVideoDecisions(ctx, TASK, first.deps);
+    firstSpy.mockRestore();
+
+    const retry = makeDeps(HAPPY_OUTPUTS, INVENTORY, runtimeByTask);
+    const retrySkills: string[] = [];
+    const baseCall = fakeCall(HAPPY_OUTPUTS);
+    retry.deps.callStructured = async <T>(input: StructuredCallInput<T>) => {
+      retrySkills.push(input.skillId);
+      return baseCall(input);
+    };
+    await runVideoDecisions(
+      ctx,
+      { ...TASK, id: "task-3", retryOfTaskId: TASK.id },
+      retry.deps,
+    );
+
+    expect(retrySkills).not.toContain("video.scenes");
+    expect(retrySkills).not.toContain("video.cards");
+    expect(retrySkills).toContain("video.broll");
+    expect(retry.calls.recordCandidate).toHaveBeenCalledTimes(1);
   });
 
   it("material.match 暂时失败时不阻断成片，并在当前方案内自动补位", async () => {

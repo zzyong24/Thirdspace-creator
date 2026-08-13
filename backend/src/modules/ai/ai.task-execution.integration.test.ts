@@ -140,6 +140,34 @@ describe("T-513 AI task idempotency and atomic execution ownership", () => {
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 
+  it("视频决策断点只写 server-only 固定键，并保留 Skill 快照", async () => {
+    const service = makeService(db, clock);
+    const task = await service.createTask(ctx, {
+      taskType: "video.decisions",
+      attemptId: "018f8d8a-90ab-7def-8123-video-check01",
+      inputData: { projectId: "project-1" },
+    });
+
+    await service.putVideoDecisionsCheckpoint(ctx, task.id, {
+      schemaVersion: 1,
+      inputFingerprint: "sha256:test",
+      scenes: [],
+    });
+
+    await expect(service.getTaskRuntimeData(ctx, task.id)).resolves.toEqual({
+      skillSnapshot: expect.objectContaining({
+        snapshotVersion: 1,
+        taskType: "video.decisions",
+      }),
+      videoDecisionsCheckpoint: {
+        schemaVersion: 1,
+        inputFingerprint: "sha256:test",
+        scenes: [],
+      },
+    });
+    expect(await service.getTask(ctx, task.id)).not.toHaveProperty("runtimeData");
+  });
+
   it("渠道 authority 的异步任务只记录 channel-managed，不把本地或真实渠道 model 当展示真值", async () => {
     const service = makeService(db, clock, undefined, "channel-managed");
     const task = await service.createTask(ctx, {

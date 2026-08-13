@@ -109,6 +109,7 @@ interface WireAsset {
 interface WireAITask {
   id: string;
   status: string;
+  retryOfTaskId?: string | null;
 }
 
 interface WireTaskResult {
@@ -443,6 +444,9 @@ export function ProductionWorkbench({
   const [decisionsTaskId, setDecisionsTaskId] = React.useState<string | null>(
     null,
   );
+  const [decisionsRetryOfTaskId, setDecisionsRetryOfTaskId] = React.useState<
+    string | null
+  >(null);
   const [decisionsBusy, setDecisionsBusy] = React.useState(false);
   const materialAdjustmentInFlight = React.useRef(false);
   const [decisionsError, setDecisionsError] = React.useState<string | null>(
@@ -1028,6 +1032,7 @@ export function ProductionWorkbench({
     setDecisions(null);
     setDecisionsConfirmed(false);
     setDecisionsTaskId(null);
+    setDecisionsRetryOfTaskId(null);
     setInventory([]);
     setRecoveredDecisions(false);
     setBrollRevisionNotice("素材已更新，请重新运行 AI 分场决策。");
@@ -1346,6 +1351,9 @@ export function ProductionWorkbench({
           body: {
             taskType: "video.decisions",
             attemptId: createAiTaskAttemptId(),
+            ...(decisionsRetryOfTaskId
+              ? { retryOfTaskId: decisionsRetryOfTaskId }
+              : {}),
             inputData: {
               projectId,
               srtText: srt.text,
@@ -1368,6 +1376,7 @@ export function ProductionWorkbench({
         setInventory([]);
         setRecoveredDecisions(false);
         setDecisionsTaskId(task.id);
+        setDecisionsRetryOfTaskId(null);
       } catch (err) {
         setDecisionsError(
           err instanceof Error ? err.message : "决策任务创建失败,请重试",
@@ -1376,7 +1385,14 @@ export function ProductionWorkbench({
         setDecisionsBusy(false);
       }
     },
-    [projectId, srt, voiceoverText, excludedAuto, renderOrientation],
+    [
+      projectId,
+      srt,
+      voiceoverText,
+      excludedAuto,
+      renderOrientation,
+      decisionsRetryOfTaskId,
+    ],
   );
 
   const loadDecisionResult = React.useCallback(
@@ -1504,6 +1520,7 @@ export function ProductionWorkbench({
               /* 步骤读取失败不影响错误主信息 */
             }
             setDecisionsError(detail || "AI 分场决策失败,可重新发起");
+            setDecisionsRetryOfTaskId(decisionsTaskId);
             setDecisionsTaskId(null);
             return;
           }
@@ -1721,6 +1738,7 @@ export function ProductionWorkbench({
     setDecisions(null);
     setDecisionsConfirmed(false);
     setDecisionsTaskId(null);
+    setDecisionsRetryOfTaskId(null);
     setRecoveredDecisions(false);
   }, [decisionsTaskId]);
 

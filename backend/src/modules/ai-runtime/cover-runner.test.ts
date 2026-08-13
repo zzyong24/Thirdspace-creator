@@ -303,6 +303,46 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
 
+  it("provider 明确返回可重试 503 时使用同一幂等键短重试，不重复生成封面方案", async () => {
+    const made = makeDeps(FULL_PLAN);
+    const structuredCallsBefore = runStructuredNode.mock.calls.length;
+    const explicit503 = Object.assign(new Error("HTTP 503"), {
+      status: 503,
+      stage: "submit",
+      retryable: true,
+    });
+    generateImage
+      .mockRejectedValueOnce(explicit503)
+      .mockResolvedValueOnce({ assetBytes: new Uint8Array([1, 2, 3]) } as never);
+    const sleep = vi.fn(async () => undefined);
+    (made.deps as Record<string, unknown>).sleep = sleep;
+
+    await runCoverGenerate(
+      ctx,
+      { id: "t-503", projectId: "p1", inputData: {} },
+      made.deps,
+    );
+
+    expect(runStructuredNode.mock.calls.length - structuredCallsBefore).toBe(1);
+    expect(generateImage).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledTimes(1);
+    const imageCalls = generateImage.mock.calls as unknown as Array<[
+      unknown,
+      { idempotencyKey?: string },
+      unknown,
+    ]>;
+    const firstOptions = imageCalls[0]?.[1] as {
+      idempotencyKey?: string;
+    };
+    const secondOptions = imageCalls[1]?.[1] as {
+      idempotencyKey?: string;
+    };
+    expect(firstOptions.idempotencyKey).toBeTruthy();
+    expect(secondOptions.idempotencyKey).toBe(firstOptions.idempotencyKey);
+    expect(made.recordCandidate).toHaveBeenCalledTimes(1);
+    expect(made.cancelTask).not.toHaveBeenCalled();
+  });
+
   // ── [T-380] 以图生图风格参考 ────────────────────────────────────────────
   it("inputData.referenceAssetId → host 端口读素材字节 → referenceImage 喂进 generateImage", async () => {
     const made = makeDeps(FULL_PLAN);

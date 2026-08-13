@@ -298,6 +298,7 @@ export {
 export {
   SCRIPT_REVIEW_TEMPLATE,
   scriptReviewSchema,
+  normalizeScriptReviewOutput,
   type ScriptReviewOutput,
   DEFAULT_OFFICIAL_RULES,
 } from "./prompt/templates/script-review";

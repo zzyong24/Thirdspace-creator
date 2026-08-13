@@ -34,6 +34,43 @@ export const scriptReviewSchema = z.object({
 });
 export type ScriptReviewOutput = z.infer<typeof scriptReviewSchema>;
 
+/**
+ * 跨 provider 的有界协议修复：只补结构化响应里缺失的描述字段，不改变 verdict、
+ * severity 或 finding 数量，也不新增审核事实。部分只支持文本 JSON 的模型会漏掉
+ * `category`，这里用同一 finding 已给出的 ruleRef 作标签，否则落中性标签。
+ */
+export function normalizeScriptReviewOutput(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const report = value as Record<string, unknown>;
+  if (!Array.isArray(report.findings)) return value;
+  return {
+    ...report,
+    findings: report.findings.map((raw) => {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
+      const finding = raw as Record<string, unknown>;
+      const ruleRef =
+        typeof finding.ruleRef === "string" && finding.ruleRef.trim()
+          ? finding.ruleRef.trim()
+          : null;
+      return {
+        ...finding,
+        quote: typeof finding.quote === "string" ? finding.quote : "",
+        category:
+          typeof finding.category === "string" && finding.category.trim()
+            ? finding.category.trim()
+            : ruleRef ?? "语义风险",
+        severity: ["block", "warn", "info"].includes(String(finding.severity))
+          ? finding.severity
+          : "warn",
+        reason: typeof finding.reason === "string" ? finding.reason : "",
+        suggestion:
+          typeof finding.suggestion === "string" ? finding.suggestion : null,
+        ruleRef,
+      };
+    }),
+  };
+}
+
 // 公约 Tier1 条文摘要默认值(可被 overrides 换;来自 douyin-compliance.md 主源)。
 const DEFAULT_OFFICIAL_RULES = `- 公约34 恶意导流:禁站外联络方式(微信/QQ/手机号/二维码及谐音变体)、禁引导跳转其他平台。
 - 公约33 不当营销:禁无合理依据的断言、夸大功效、诱导性收益承诺。

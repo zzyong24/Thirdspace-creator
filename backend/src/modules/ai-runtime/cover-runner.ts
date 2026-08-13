@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import type {
@@ -81,6 +82,8 @@ export interface CoverGenerateDeps extends ContextDeps {
       assetId: string,
     ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
   };
+  /** 测试注入；生产默认短退避。 */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export interface CoverGenerateTask {
@@ -222,6 +225,17 @@ function deriveCoverName(headline: string): string {
   return head ? `${head} · 封面` : "AI 封面";
 }
 
+function isExplicitRetryableSubmitRejection(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const value = error as Record<string, unknown>;
+  const status = typeof value.status === "number" ? value.status : 0;
+  return (
+    value.stage === "submit" &&
+    value.retryable === true &&
+    [408, 425, 429, 500, 502, 503, 504].includes(status)
+  );
+}
+
 /**
  * 跑一条 cover.generate 任务:结构化封面方案(文案接地)→ 文案诚实门 → 结构化组装生图 prompt →
  * 生图(image.generate 可配)→ 落 asset → 记 generated_asset 候选(复用既有采纳门)。任一步失败
@@ -346,16 +360,27 @@ export async function runCoverGenerate(
     // 4) 生图(image.generate 用户可配;上层统一 { assetBytes };未配/超时/审核 → 抛 → 下方 catch）。
     const imgSpec = await deps.resolveMultimodalSpec(ctx, "image.generate");
     channelManaged ||= imgSpec.displayModelKey === "channel-managed";
-    const { assetBytes } = await generateImage(
-      imgSpec,
-      {
-        prompt: imagePrompt,
-        ...(aspectRatio ? { aspectRatio } : {}),
-        // [T-380] 有参考图才带(adapter 走 images/edits / subject_reference);无则纯文生图零回归。
-        ...(referenceImage ? { referenceImage } : {}),
-      },
-      deps.registry,
-    );
+    const idempotencyKey = `sha256:${createHash("sha256")
+      .update(JSON.stringify({ taskId: task.id, imagePrompt, aspectRatio, model: imgSpec.model }))
+      .digest("hex")}`;
+    const generateOptions = {
+      prompt: imagePrompt,
+      ...(aspectRatio ? { aspectRatio } : {}),
+      // [T-380] 有参考图才带(adapter 走 images/edits / subject_reference);无则纯文生图零回归。
+      ...(referenceImage ? { referenceImage } : {}),
+      idempotencyKey,
+    };
+    let generated: Awaited<ReturnType<typeof generateImage>>;
+    try {
+      generated = await generateImage(imgSpec, generateOptions, deps.registry);
+    } catch (error) {
+      // 只重试 provider 已明确拒绝受理的瞬时 HTTP 响应；断网/超时等“可能已受理但响应
+      // 丢失”的未知提交绝不重放。重试沿用同一幂等键，避免渠道侧重复创建。
+      if (!isExplicitRetryableSubmitRejection(error)) throw error;
+      await (deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))))(250);
+      generated = await generateImage(imgSpec, generateOptions, deps.registry);
+    }
+    const { assetBytes } = generated;
     if (!assetBytes || assetBytes.byteLength === 0) {
       throw new Error("cover-runner: provider returned no bytes");
     }

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { RequestContext } from "@creatoros/contract";
 import type {
@@ -2240,6 +2241,7 @@ export async function closeDirectorReview(
 export interface VideoDecisionsTask {
   id: string;
   projectId: string | null;
+  retryOfTaskId?: string | null;
   /** { srtText: string; script: string } —— T-254c 创建任务时装入。 */
   inputData: Record<string, unknown>;
 }
@@ -2258,6 +2260,15 @@ export interface VideoDecisionsDeps {
       result: { resultType: string; resultData: Record<string, unknown> },
     ): Promise<unknown>;
     cancelTask(ctx: RequestContext, taskId: string): Promise<unknown>;
+    getTaskRuntimeData(
+      ctx: RequestContext,
+      taskId: string,
+    ): Promise<Record<string, unknown>>;
+    putVideoDecisionsCheckpoint(
+      ctx: RequestContext,
+      taskId: string,
+      checkpoint: Record<string, unknown>,
+    ): Promise<void>;
   };
   /** 按 capability 解析用户配的 model(video.scenes 等;未配回退 default)。 */
   resolveModelSpec: (
@@ -2313,6 +2324,48 @@ export const VIDEO_DECISION_STEPS = [
   "④双语字幕",
   "⑤总导演统筹审核",
 ] as const;
+
+interface VideoDecisionsCheckpoint {
+  schemaVersion: 1;
+  inputFingerprint: string;
+  scenes: VideoScene[];
+  cards?: VideoInfoCard[];
+}
+
+function videoDecisionsInputFingerprint(input: unknown): string {
+  return `sha256:${createHash("sha256").update(JSON.stringify(input)).digest("hex")}`;
+}
+
+function readVideoDecisionsCheckpoint(
+  runtimeData: Record<string, unknown>,
+  inputFingerprint: string,
+  srtLines: readonly SrtLine[],
+): VideoDecisionsCheckpoint | null {
+  const raw = runtimeData.videoDecisionsCheckpoint;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const value = raw as Record<string, unknown>;
+  if (value.schemaVersion !== 1 || value.inputFingerprint !== inputFingerprint) {
+    return null;
+  }
+  const starts = srtStartSet(srtLines);
+  const parsedScenes = buildScenesDecisionSchema(starts).safeParse({
+    scenes: value.scenes,
+  });
+  if (!parsedScenes.success) return null;
+  const checkpoint: VideoDecisionsCheckpoint = {
+    schemaVersion: 1,
+    inputFingerprint,
+    scenes: parsedScenes.data.scenes,
+  };
+  if (Array.isArray(value.cards)) {
+    const parsedCards = buildCardsDecisionSchema(
+      checkpoint.scenes.length,
+      starts,
+    ).safeParse({ cards: value.cards });
+    if (parsedCards.success) checkpoint.cards = parsedCards.data.cards;
+  }
+  return checkpoint;
+}
 
 /**
  * 编排入口:顺序跑四决策 + 总导演审核 → recordCandidate(video_decisions,awaiting_confirmation)。
@@ -2418,6 +2471,25 @@ export async function runVideoDecisions(
       inventory,
     );
 
+    // SEMANTIC_BOUNDARY_ALLOW: 指纹只确认重试输入是否与来源任务完全一致；它不判断
+    // 场景/信息卡好坏，也不做任何创作选择。只有显式 retryOfTaskId 才读取旧断点。
+    const inputFingerprint = videoDecisionsInputFingerprint({
+      srtText,
+      script,
+      orientation: orientation ?? null,
+      excludedAssetIds: [...excluded].sort(),
+      manualMaterialAssignments,
+      inventory,
+      storyboardSections,
+    });
+    const checkpoint = task.retryOfTaskId
+      ? readVideoDecisionsCheckpoint(
+          await deps.ai.getTaskRuntimeData(ctx, task.retryOfTaskId),
+          inputFingerprint,
+          srtLines,
+        )
+      : null;
+
     if (task.inputData.adjustmentMode === "materials") {
       stepIdx = 2;
       const base = parseMaterialAdjustmentBase(
@@ -2498,31 +2570,56 @@ export async function runVideoDecisions(
     }
 
     stepIdx = 0;
-    const scenes = await decideScenes(
-      {
-        srtLines,
-        script,
-        storyboard,
-        orientation,
-        manualAssignments: manualAssignmentBrief,
-      },
-      call,
+    const scenes =
+      checkpoint?.scenes ??
+      (await decideScenes(
+        {
+          srtLines,
+          script,
+          storyboard,
+          orientation,
+          manualAssignments: manualAssignmentBrief,
+        },
+        call,
+      ));
+    if (!checkpoint?.scenes) {
+      await deps.ai.putVideoDecisionsCheckpoint(ctx, task.id, {
+        schemaVersion: 1,
+        inputFingerprint,
+        scenes,
+      });
+    }
+    await step(
+      0,
+      `${VIDEO_DECISION_STEPS[0]}:${scenes.length} 场${checkpoint?.scenes ? "（复用上次已完成结果）" : ""}`,
     );
-    await step(0, `${VIDEO_DECISION_STEPS[0]}:${scenes.length} 场`);
 
     stepIdx = 1;
-    const cards = await decideCards(
-      {
+    const cards =
+      checkpoint?.cards ??
+      (await decideCards(
+        {
+          scenes,
+          srtLines,
+          script,
+          storyboard,
+          orientation,
+          manualAssignments: manualAssignmentBrief,
+        },
+        call,
+      ));
+    if (!checkpoint?.cards) {
+      await deps.ai.putVideoDecisionsCheckpoint(ctx, task.id, {
+        schemaVersion: 1,
+        inputFingerprint,
         scenes,
-        srtLines,
-        script,
-        storyboard,
-        orientation,
-        manualAssignments: manualAssignmentBrief,
-      },
-      call,
+        cards,
+      });
+    }
+    await step(
+      1,
+      `${VIDEO_DECISION_STEPS[1]}:${cards.length} 张(可溯校验后)${checkpoint?.cards ? "（复用上次已完成结果）" : ""}`,
     );
-    await step(1, `${VIDEO_DECISION_STEPS[1]}:${cards.length} 张(可溯校验后)`);
 
     stepIdx = 2;
     // [T-387c] 备料③「人可剔」:制作页聚合清单里被用户剔除的自动项经 inputData.excludedAssetIds

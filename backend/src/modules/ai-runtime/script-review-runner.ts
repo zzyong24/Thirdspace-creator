@@ -199,8 +199,14 @@ export async function runScriptReview(
       }
     }
 
-    const { modelFor, runStructuredNode, getTemplate, DEFAULT_OFFICIAL_RULES } =
-      await import("@creatoros/ai-worker");
+    const {
+      modelFor,
+      runStructuredNode,
+      getTemplate,
+      DEFAULT_OFFICIAL_RULES,
+      scriptReviewSchema,
+      normalizeScriptReviewOutput,
+    } = await import("@creatoros/ai-worker");
 
     // L1 命中注入 L2(让语义审不复述已报条目、可交叉确认)。
     const lintBlock =
@@ -225,6 +231,10 @@ export async function runScriptReview(
         officialRules: DEFAULT_OFFICIAL_RULES,
         positioning: positioningBrief,
       },
+      // 审核报告是产品固定协议；运行时 Skill 可改提示词，但不能让旧快照/渠道模型漏字段
+      // 后把任务卡死。normalizer 只补协议字段，不增加或改写审核语义。
+      outputSchema: scriptReviewSchema,
+      normalizeObject: normalizeScriptReviewOutput,
       reasoningFallback: { acceptRaw: isCompleteRawScriptReview },
     });
     // quote 必为原文子串(防幻觉命中):滤掉不在原文里的 finding(诚实数据)。

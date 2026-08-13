@@ -449,6 +449,42 @@ describe("ProductionWorkbench", () => {
     );
   });
 
+  it("分场任务失败后重新运行会显式携带来源任务，供后端复用断点", async () => {
+    mockClient.createAITask.mockResolvedValue({
+      id: "ai-task-1",
+      status: "queued",
+    });
+    mockClient.getTask.mockResolvedValue({
+      id: "ai-task-1",
+      status: "failed",
+    });
+    mockClient.listTaskSteps.mockResolvedValue([
+      { text: "③B-roll 匹配 失败:provider 503" },
+    ]);
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+
+    fireEvent.click(dispatchButton(container));
+    await waitFor(() =>
+      expect(container.textContent).toContain("③B-roll 匹配 失败"),
+    );
+    fireEvent.click(dispatchButton(container));
+    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(2));
+
+    const createCalls = mockClient.createAITask.mock.calls as unknown as Array<[
+      { body: Record<string, unknown> },
+    ]>;
+    expect(createCalls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          taskType: "video.decisions",
+          retryOfTaskId: "ai-task-1",
+        }),
+      }),
+    );
+  });
+
   it("决策确认 → video.render dispatch(mountAs=assetId 闭环)+ 状态机步进 + 分场/export 建档", async () => {
     // 恢复路径注入决策候选(等价于四决策任务跑完):预览卡直接渲出。
     mockClient.listAITasks.mockResolvedValueOnce([
