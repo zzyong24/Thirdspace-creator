@@ -6,6 +6,10 @@
 
 ## 结果
 
+- T-803 按用户实看反馈重做了比例：横屏使用宽构图，竖屏不再整体缩放，而是按上下层级重新排版。
+- 6 个主题的实测视觉联合宽度为主舞台的 64.9%–98.1%，高度为 53.4%–84.0%；最大单体面积不低于 9.1%。
+- 放大没有用遮挡换占比：计划态主体间最大相交比例为 12.6%，低于 18% 硬门；24fps 全输出帧仍是 0 文字碰撞、0 越界、0 降级。
+
 - 冻结 6 个跨主题案例，每题 2 个候选；首轮 11/12 个候选通过结构门，1 个 MiniMax 候选经 5 次协议返修仍失败，诚实记为硬失败。
 - 独立 Codex judge 与 MiniMax 生成模型隔离。首轮内容评分发现 `customer-evidence` 胜者虽有 83 分，
   但非套版感仅 9/15；自动把这条反馈回灌同一 Skill 再生成 2 个候选，复判后晋级到 93 分、13/15。
@@ -19,6 +23,8 @@
 
 - [横屏六主题总览](./landscape-midpoint-contact-sheet.jpg)
 - [竖屏六主题总览](./portrait-midpoint-contact-sheet.jpg)
+- [横屏四时点分镜](./meeting-overload.landscape.storyboard.jpg)
+- [竖屏四时点分镜](./meeting-overload.portrait.storyboard.jpg)
 - [独立评分](./judge-results.json)
 - [第二轮薄弱题评分](./customer-loop-round-2-judge.json)
 - [逐帧审计与实际轨迹指纹](./render-audit.json)

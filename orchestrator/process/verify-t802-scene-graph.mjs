@@ -55,11 +55,74 @@ try {
         layouts: [...document.querySelectorAll(".visual-scene-graph")].map((node) => node.dataset.sceneLayout),
         objectKinds: [...document.querySelectorAll(".scene-entity")].map((node) => node.dataset.entityKind).sort(),
         motionTraces: [...document.querySelectorAll("[data-motion-trace]")].map((node) => node.dataset.motionTrace).sort(),
+        visualOccupancy: [...document.querySelectorAll(".visual-scene-graph")].map((scene) => {
+          const sceneRect = scene.getBoundingClientRect();
+          const thoughtRail = scene.querySelector(".scene-thought-rail")?.getBoundingClientRect();
+          const entities = [...scene.querySelectorAll(".scene-entity")]
+            .map((entity) => entity.getBoundingClientRect())
+            .filter((rect) => rect.width > 2 && rect.height > 2);
+          if (!entities.length || sceneRect.width <= 0 || sceneRect.height <= 0) return null;
+          const union = entities.reduce(
+            (box, rect) => ({
+              left: Math.min(box.left, rect.left),
+              top: Math.min(box.top, rect.top),
+              right: Math.max(box.right, rect.right),
+              bottom: Math.max(box.bottom, rect.bottom),
+            }),
+            { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity },
+          );
+          const stageTop = thoughtRail ? thoughtRail.bottom + 16 : sceneRect.top;
+          const safeHeight = Math.max(1, sceneRect.bottom - stageTop);
+          const planned = [...scene.querySelectorAll(".scene-entity")].map((entity) => ({
+            left: entity.offsetLeft,
+            top: entity.offsetTop,
+            right: entity.offsetLeft + entity.offsetWidth,
+            bottom: entity.offsetTop + entity.offsetHeight,
+            area: entity.offsetWidth * entity.offsetHeight,
+          }));
+          let maxEntityOverlapRatio = 0;
+          for (let leftIndex = 0; leftIndex < planned.length; leftIndex += 1) {
+            for (let rightIndex = leftIndex + 1; rightIndex < planned.length; rightIndex += 1) {
+              const left = planned[leftIndex];
+              const right = planned[rightIndex];
+              const overlapWidth = Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left));
+              const overlapHeight = Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
+              maxEntityOverlapRatio = Math.max(
+                maxEntityOverlapRatio,
+                (overlapWidth * overlapHeight) / Math.max(1, Math.min(left.area, right.area)),
+              );
+            }
+          }
+          return {
+            widthRatio: (union.right - union.left) / sceneRect.width,
+            heightRatio: (union.bottom - union.top) / safeHeight,
+            areaRatio: ((union.right - union.left) * (union.bottom - union.top)) / (sceneRect.width * safeHeight),
+            largestEntityAreaRatio: Math.max(...entities.map((rect) => (rect.width * rect.height) / (sceneRect.width * safeHeight))),
+            maxEntityOverlapRatio,
+          };
+        }).filter(Boolean),
       }));
       assert.equal(staticAudit.duration, 12);
       assert.equal(staticAudit.width, orientation.width);
       assert.equal(staticAudit.height, orientation.height);
       if (staticAudit.sceneCount === 0) hardFailures.push({ theme, orientation: orientation.name, type: "fallback" });
+      for (const occupancy of staticAudit.visualOccupancy) {
+        // 多个对象的联合视觉需要真正使用主舞台；一轴很长、另一轴极薄仍属于小图标/小卡。
+        if (
+          occupancy.widthRatio < 0.55 ||
+          occupancy.heightRatio < 0.46 ||
+          occupancy.areaRatio < 0.28 ||
+          occupancy.largestEntityAreaRatio < 0.085 ||
+          occupancy.maxEntityOverlapRatio > 0.18
+        ) {
+          hardFailures.push({
+            theme,
+            orientation: orientation.name,
+            type: occupancy.maxEntityOverlapRatio > 0.18 ? "entity_overlap" : "undersized_visual",
+            occupancy,
+          });
+        }
+      }
 
       const frames = [];
       for (const time of times) {

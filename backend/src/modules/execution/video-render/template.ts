@@ -833,13 +833,66 @@ function sceneGlyph(entity: SceneEntity): string {
   }
 }
 
-function sceneEntitySize(kind: SceneEntity["kind"], portrait: boolean) {
-  const base = portrait ? { width: 300, height: 240 } : { width: 300, height: 230 };
-  if (kind === "path") return portrait ? { width: 400, height: 190 } : { width: 480, height: 190 };
-  if (kind === "tile_collection") return portrait ? { width: 390, height: 300 } : { width: 420, height: 290 };
-  if (kind === "device") return portrait ? { width: 300, height: 360 } : { width: 310, height: 340 };
-  if (kind === "text") return { width: portrait ? 420 : 440, height: 190 };
-  return base;
+function sceneEntitySize(
+  kind: SceneEntity["kind"],
+  portrait: boolean,
+  entityCount: number,
+) {
+  // [T-803] 两个主体要成为画面主角；对象变多时再按密度收敛，不能让所有题都沿用
+  // “多对象安全小卡”尺寸。这里仅按数量与画幅做几何分档，不读取 relation/semantic。
+  const density = entityCount <= 2 ? "hero" : entityCount === 3 ? "medium" : "dense";
+  const sizes = portrait
+    ? {
+        hero: {
+          base: { width: 580, height: 460 },
+          path: { width: 720, height: 330 },
+          tile_collection: { width: 640, height: 490 },
+          device: { width: 560, height: 560 },
+          text: { width: 660, height: 320 },
+        },
+        medium: {
+          base: { width: 390, height: 300 },
+          path: { width: 460, height: 230 },
+          tile_collection: { width: 420, height: 320 },
+          device: { width: 400, height: 390 },
+          text: { width: 460, height: 240 },
+        },
+        dense: {
+          base: { width: 350, height: 275 },
+          path: { width: 440, height: 225 },
+          tile_collection: { width: 380, height: 290 },
+          device: { width: 360, height: 340 },
+          text: { width: 420, height: 230 },
+        },
+      }
+    : {
+        hero: {
+          base: { width: 580, height: 450 },
+          path: { width: 720, height: 340 },
+          tile_collection: { width: 640, height: 480 },
+          device: { width: 560, height: 540 },
+          text: { width: 660, height: 320 },
+        },
+        medium: {
+          base: { width: 430, height: 320 },
+          path: { width: 560, height: 260 },
+          tile_collection: { width: 490, height: 360 },
+          device: { width: 360, height: 270 },
+          text: { width: 520, height: 270 },
+        },
+        dense: {
+          base: { width: 380, height: 290 },
+          path: { width: 500, height: 230 },
+          tile_collection: { width: 430, height: 320 },
+          device: { width: 330, height: 240 },
+          text: { width: 460, height: 250 },
+        },
+      };
+  const table = sizes[density];
+  if (kind === "path" || kind === "tile_collection" || kind === "device" || kind === "text") {
+    return table[kind];
+  }
+  return table.base;
 }
 
 function scenePosition(
@@ -852,57 +905,63 @@ function scenePosition(
   entityHeight: number,
   portrait: boolean,
 ) {
-  const pad = portrait ? 42 : 54;
-  const headingSpace = portrait ? 270 : 190;
-  const usableW = width - pad * 2 - entityWidth;
-  const usableH = height - headingSpace - pad * 2 - entityHeight;
+  const pad = portrait ? 38 : 48;
+  const headingSpace = portrait ? 210 : 150;
+  const bodyTop = headingSpace + pad;
+  const bodyHeight = height - bodyTop - pad;
   const ratio = count <= 1 ? 0.5 : index / (count - 1);
+  const place = (centerX: number, centerY: number) => ({
+    left: Math.max(pad, Math.min(width - pad - entityWidth, centerX * width - entityWidth / 2)),
+    top: Math.max(bodyTop, Math.min(height - pad - entityHeight, bodyTop + centerY * bodyHeight - entityHeight / 2)),
+  });
   if (layout === "path" || layout === "flow") {
-    if (portrait) return { left: pad + (index % 2) * Math.max(0, usableW), top: headingSpace + pad + usableH * ratio };
-    return { left: pad + usableW * ratio, top: headingSpace + pad + (index % 2) * Math.max(0, usableH) };
+    if (portrait) return place(index % 2 === 0 ? 0.26 : 0.74, 0.18 + ratio * 0.64);
+    return place(0.14 + ratio * 0.72, index % 2 === 0 ? 0.3 : 0.7);
   }
   if (layout === "stack") {
-    const step = Math.min(
-      portrait ? 78 : 88,
-      Math.max(28, usableH / Math.max(1, count - 1)),
-    );
+    const step = Math.min(portrait ? 78 : 88, Math.max(28, bodyHeight * 0.2 / Math.max(1, count - 1)));
     const offset = (index - (count - 1) / 2) * step;
-    return { left: (width - entityWidth) / 2 + offset * 0.42, top: headingSpace + (height - headingSpace - entityHeight) / 2 + offset };
+    const center = place(0.5, 0.5);
+    return { left: center.left + offset * 0.42, top: center.top + offset };
   }
   if (layout === "field") {
     const cols = portrait ? 2 : Math.min(3, Math.max(2, Math.ceil(Math.sqrt(count))));
     const rows = Math.ceil(count / cols);
     const colIndex = index % cols;
     const rowIndex = Math.floor(index / cols);
-    return {
-      left: pad + (cols === 1 ? usableW / 2 : (usableW * colIndex) / (cols - 1)),
-      top: headingSpace + pad + (rows === 1 ? usableH / 2 : (usableH * rowIndex) / (rows - 1)),
-    };
+    return place(
+      cols === 1 ? 0.5 : 0.24 + (0.52 * colIndex) / (cols - 1),
+      rows === 1 ? 0.5 : 0.2 + (0.6 * rowIndex) / (rows - 1),
+    );
   }
   if (layout === "orbit") {
     const angle = -Math.PI / 2 + (Math.PI * 2 * index) / Math.max(1, count);
-    const rx = Math.max(0, usableW * 0.42);
-    const ry = Math.max(0, usableH * 0.42);
-    return { left: (width - entityWidth) / 2 + Math.cos(angle) * rx, top: headingSpace + (height - headingSpace - entityHeight) / 2 + Math.sin(angle) * ry };
+    return place(
+      0.5 + Math.cos(angle) * (portrait ? 0.24 : 0.34),
+      0.5 + Math.sin(angle) * (portrait ? 0.3 : 0.28),
+    );
   }
   if (layout === "split") {
     const firstCount = Math.ceil(count / 2);
     const first = index < firstCount;
     const localIndex = first ? index : index - firstCount;
     const localCount = first ? firstCount : count - firstCount;
-    const localRatio = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
-    return portrait
-      ? { left: pad + usableW * localRatio, top: headingSpace + pad + (first ? 0 : usableH) }
-      : { left: pad + (first ? 0 : usableW), top: headingSpace + pad + usableH * localRatio };
+    if (portrait) {
+      if (count === 2) return place(0.5, first ? 0.24 : 0.76);
+      const localX = localCount <= 1 ? 0.5 : 0.26 + (0.48 * localIndex) / (localCount - 1);
+      return place(localX, first ? 0.27 : 0.76);
+    }
+    const localY = localCount <= 1 ? 0.5 : 0.27 + (0.46 * localIndex) / (localCount - 1);
+    return place(first ? 0.25 : 0.75, localY);
   }
   const cols = portrait ? 2 : Math.min(4, count);
   const colIndex = index % cols;
   const rowIndex = Math.floor(index / cols);
   const rows = Math.ceil(count / cols);
-  return {
-    left: pad + (cols === 1 ? usableW / 2 : (usableW * colIndex) / (cols - 1)),
-    top: headingSpace + pad + (rows === 1 ? usableH / 2 : (usableH * rowIndex) / (rows - 1)),
-  };
+  return place(
+    cols === 1 ? 0.5 : 0.2 + (0.6 * colIndex) / (cols - 1),
+    rows === 1 ? 0.5 : 0.2 + (0.6 * rowIndex) / (rows - 1),
+  );
 }
 
 function isRenderableSceneGraph(
@@ -943,12 +1002,12 @@ function renderSceneGraph(card: VideoRenderCard, portrait: boolean): CardBox | n
   const plan = card.visualPlan;
   const scene = plan?.scene;
   if (!plan || !scene || !isRenderableSceneGraph(plan)) return null;
-  const width = portrait ? 920 : 1480;
-  const height = portrait ? 1080 : 700;
+  const width = portrait ? 960 : 1640;
+  const height = portrait ? 1240 : 760;
   const partForRole = (role?: string) =>
     role ? plan.parts.find((part) => part.role === role)?.text : undefined;
   const entities = scene.entities.map((entity, index) => {
-    const size = sceneEntitySize(entity.kind, portrait);
+    const size = sceneEntitySize(entity.kind, portrait, scene.entities.length);
     const pos = scenePosition(scene.layout, index, scene.entities.length, width, height, size.width, size.height, portrait);
     const label = partForRole(entity.textRole);
     return `<div class="scene-entity scene-kind-${esc(entity.kind)}" data-entity-id="${esc(entity.id)}" data-entity-kind="${esc(entity.kind)}" data-entity-glyph="${esc(entity.glyph)}" style="position:absolute;left:${Math.round(pos.left)}px;top:${Math.round(pos.top)}px;width:${size.width}px;height:${size.height}px;z-index:${20 + index};transform-origin:center center">` +
@@ -969,7 +1028,7 @@ function renderSceneGraph(card: VideoRenderCard, portrait: boolean): CardBox | n
     width,
     height,
     style: `background:radial-gradient(520px 300px at 50% 45%,${TK.accent}18,transparent 72%);border:0;border-radius:0;box-shadow:none;padding:0;overflow:hidden;`,
-    inner: `<div class="visual-scene-graph" data-scene-layout="${esc(scene.layout)}" data-aspect-strategy="reflow" style="position:relative;width:100%;height:100%"><div class="scene-thought-rail" data-text-safe style="position:absolute;left:5%;right:5%;top:24px;min-height:72px;z-index:120;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap">${thoughtRail}</div>${entities}${traces}</div>`,
+    inner: `<div class="visual-scene-graph" data-scene-layout="${esc(scene.layout)}" data-aspect-strategy="reflow" data-scene-scale="hero" style="position:relative;width:100%;height:100%"><div class="scene-thought-rail" data-text-safe style="position:absolute;left:4%;right:4%;top:18px;min-height:72px;z-index:120;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap">${thoughtRail}</div>${entities}${traces}</div>`,
   };
 }
 

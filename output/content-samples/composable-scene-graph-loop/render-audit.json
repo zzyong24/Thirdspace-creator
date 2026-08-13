@@ -113,6 +113,15 @@
           "opacity:0>1",
           "opacity:1>0",
           "scale:0.6>1.2"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.75,
+            "heightRatio": 0.7333333333333333,
+            "areaRatio": 0.55,
+            "largestEntityAreaRatio": 0.22916666666666666,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -1868,6 +1877,15 @@
           "opacity:0>1",
           "opacity:1>0",
           "scale:0.6>1.2"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.8365853658536585,
+            "heightRatio": 0.5341712490180676,
+            "areaRatio": 0.44687984978828577,
+            "largestEntityAreaRatio": 0.23451420688598087,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -3628,6 +3646,22 @@
           "scale:0.6>1.4",
           "scale:0.9>1.2",
           "scale:1.2>0.5"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.725,
+            "heightRatio": 0.800705467372134,
+            "areaRatio": 0.5805114638447971,
+            "largestEntityAreaRatio": 0.3529100529100529,
+            "maxEntityOverlapRatio": 0
+          },
+          {
+            "widthRatio": 0.8822916666666667,
+            "heightRatio": 0.7592592592592593,
+            "areaRatio": 0.6698881172839506,
+            "largestEntityAreaRatio": 0.09093915343915344,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -5388,6 +5422,22 @@
           "scale:0.6>1.4",
           "scale:0.9>1.2",
           "scale:1.2>0.5"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.8182926829268292,
+            "heightRatio": 0.8256880733944955,
+            "areaRatio": 0.6756545088386664,
+            "largestEntityAreaRatio": 0.35041396285522486,
+            "maxEntityOverlapRatio": 0
+          },
+          {
+            "widthRatio": 0.9414634146341463,
+            "heightRatio": 0.7584097859327217,
+            "areaRatio": 0.7140150667561721,
+            "largestEntityAreaRatio": 0.10722010889833669,
+            "maxEntityOverlapRatio": 0.09130434782608696
+          }
         ]
       },
       "frames": [
@@ -7148,6 +7198,15 @@
           "opacity:0>1",
           "progress:0>1",
           "scale:1>1.3"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.8875,
+            "heightRatio": 0.6834215167548501,
+            "areaRatio": 0.6065365961199295,
+            "largestEntityAreaRatio": 0.11243386243386243,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -8908,6 +8967,15 @@
           "opacity:0>1",
           "progress:0>1",
           "scale:1>1.3"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.7530487804878049,
+            "heightRatio": 0.7568807339449541,
+            "areaRatio": 0.5699681136719624,
+            "largestEntityAreaRatio": 0.10722010889833669,
+            "maxEntityOverlapRatio": 0.10344827586206896
+          }
         ]
       },
       "frames": [
@@ -10672,6 +10740,22 @@
           "scale:0.4>1",
           "scale:0.8>1.2",
           "x:-0.6>0|y:0.4>0"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.7770833333333333,
+            "heightRatio": 0.6190476190476191,
+            "areaRatio": 0.4810515873015873,
+            "largestEntityAreaRatio": 0.09718547912992358,
+            "maxEntityOverlapRatio": 0.0782608695652174
+          },
+          {
+            "widthRatio": 0.98125,
+            "heightRatio": 0.8395061728395061,
+            "areaRatio": 0.8237654320987654,
+            "largestEntityAreaRatio": 0.14329805996472664,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -12436,6 +12520,22 @@
           "scale:0.4>1",
           "scale:0.8>1.2",
           "x:-0.6>0|y:0.4>0"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.775609756097561,
+            "heightRatio": 0.6391437308868502,
+            "areaRatio": 0.495726113224435,
+            "largestEntityAreaRatio": 0.13574998135302455,
+            "maxEntityOverlapRatio": 0.09230769230769231
+          },
+          {
+            "widthRatio": 0.8975609756097561,
+            "heightRatio": 0.7568807339449541,
+            "areaRatio": 0.6793466099798613,
+            "largestEntityAreaRatio": 0.1644663235623182,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -14202,6 +14302,22 @@
           "scale:0.5>1",
           "x:-0.4>0|y:0.3>0",
           "x:-0.5>-0.1|y:-0.2>0"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.9322916666666666,
+            "heightRatio": 0.7380952380952381,
+            "areaRatio": 0.6881200396825397,
+            "largestEntityAreaRatio": 0.09093915343915344,
+            "maxEntityOverlapRatio": 0
+          },
+          {
+            "widthRatio": 0.9479166666666666,
+            "heightRatio": 0.7504409171075838,
+            "areaRatio": 0.7113554526748971,
+            "largestEntityAreaRatio": 0.10747354497354497,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -15968,6 +16084,22 @@
           "scale:0.5>1",
           "x:-0.4>0|y:0.3>0",
           "x:-0.5>-0.1|y:-0.2>0"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.9707317073170731,
+            "heightRatio": 0.7584097859327217,
+            "areaRatio": 0.736212426344447,
+            "largestEntityAreaRatio": 0.10722010889833669,
+            "maxEntityOverlapRatio": 0.05635208711433757
+          },
+          {
+            "widthRatio": 0.9125,
+            "heightRatio": 0.8103975535168195,
+            "areaRatio": 0.7394877675840978,
+            "largestEntityAreaRatio": 0.12829119116879242,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -17730,6 +17862,22 @@
           "progress:0>1",
           "scale:0.3>1",
           "scale:0.5>1.2"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.8958333333333334,
+            "heightRatio": 0.6546296296296297,
+            "areaRatio": 0.5864390432098765,
+            "largestEntityAreaRatio": 0.15046296296296297,
+            "maxEntityOverlapRatio": 0
+          },
+          {
+            "widthRatio": 0.903125,
+            "heightRatio": 0.736331569664903,
+            "areaRatio": 0.6649994488536155,
+            "largestEntityAreaRatio": 0.10747354497354497,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [
@@ -19492,6 +19640,22 @@
           "progress:0>1",
           "scale:0.3>1",
           "scale:0.5>1.2"
+        ],
+        "visualOccupancy": [
+          {
+            "widthRatio": 0.6490853658536585,
+            "heightRatio": 0.7949725058915946,
+            "areaRatio": 0.5160050198302454,
+            "largestEntityAreaRatio": 0.09311593508708065,
+            "maxEntityOverlapRatio": 0.1259259259259259
+          },
+          {
+            "widthRatio": 0.8759146341463414,
+            "heightRatio": 0.7492354740061162,
+            "areaRatio": 0.656266316103528,
+            "largestEntityAreaRatio": 0.13574998135302455,
+            "maxEntityOverlapRatio": 0
+          }
         ]
       },
       "frames": [

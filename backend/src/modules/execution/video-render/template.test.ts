@@ -546,6 +546,48 @@ describe("generateVideoRenderHtml · [T-794] 内容驱动视觉句子", () => {
     expect(blockedPath).not.toContain("scene-machine");
     expect(sleepErosion).not.toContain("scene-machine");
   });
+
+  it("[T-803 RED] 无人物横竖舞台的核心视觉主体不能缩成中部小图标", () => {
+    const make = (width: number, height: number) => generateVideoRenderHtml(videoRenderProps.parse({
+      meta: { title: "主体比例" },
+      talkingHead: { file: "th.mp4", durationSec: 8 },
+      delivery: { width, height, fps: 24 },
+      scenes: [{
+        id: "s1", label: "L", title: "T", startSec: 0, endSec: 8,
+        cards: [{
+          kind: "quote", at: 0, text: "功能越堆越多，任务越来越难",
+          visualPlan: {
+            relation: "contrast",
+            parts: [
+              { text: "功能越堆越多", role: "old" },
+              { text: "任务越来越难", role: "new" },
+            ],
+            scene: {
+              cognitiveGoal: "看见功能堆积压住路径",
+              layout: "split",
+              aspectStrategy: "reflow",
+              entities: [
+                { id: "features", kind: "tile_collection", glyph: "feature", semantic: "功能堆积" },
+                { id: "route", kind: "path", glyph: "route", semantic: "任务路径" },
+              ],
+              beats: [
+                { action: "overflow", target: "features", start: 0, duration: 0.5, from: { count: 2 }, to: { count: 9 } },
+                { action: "compress", target: "route", start: 0.45, duration: 0.4, from: { scale: 1 }, to: { scale: 0.45 } },
+              ],
+            },
+          },
+        }],
+      }],
+    }), { visualOnly: true });
+
+    const landscape = make(1920, 1080);
+    expect(landscape).toMatch(/data-entity-id="features"[^>]+width:[6-9]\d{2}px;height:4\d{2}px/);
+    expect(landscape).toMatch(/data-entity-id="route"[^>]+width:[7-9]\d{2}px;height:3\d{2}px/);
+
+    const portrait = make(1080, 1920);
+    expect(portrait).toMatch(/data-entity-id="features"[^>]+width:[6-9]\d{2}px;height:4\d{2}px/);
+    expect(portrait).toMatch(/data-entity-id="route"[^>]+width:[7-9]\d{2}px;height:3\d{2}px/);
+  });
 });
 
 describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素材窗口内切 PiP)", () => {
