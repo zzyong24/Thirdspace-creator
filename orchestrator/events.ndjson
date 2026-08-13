@@ -760,3 +760,4 @@
 {"ts":"2026-08-13T12:45:00.271Z","actor":"taskctl","action":"complete","task":"T-807","evidence":"docs/research/2026-08-13-startup-60s-and-script-draft-timeout-log-diagnosis.md; commit c8d8088d; source/history/log timing cross-check","sha_before":"f070fc691492","sha_after":"7678c919fb41"}
 {"ts":"2026-08-13T13:09:55.955Z","actor":"taskctl","action":"start","task":"T-808","sha_before":"e326530f4993","sha_after":"75e4a5664382"}
 {"ts":"2026-08-13T13:40:41.906Z","actor":"taskctl","action":"complete","task":"T-808","evidence":"orchestrator/T808-VALIDATION.md; commit 5c42487a; ai-worker 361 tests; backend affected 82 tests; worker/backend/frontend typecheck; boundary and semantic guards","sha_before":"30cbd6d156bd","sha_after":"f4e7d2278a55"}
+{"ts":"2026-08-13T13:54:33.817Z","actor":"taskctl","action":"start","task":"T-809","sha_before":"e8e358113a92","sha_after":"fe7d4d7e586f"}
