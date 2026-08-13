@@ -52,6 +52,45 @@ export const VIDEO_CARD_MOTIONS = [
 ] as const;
 export type VideoCardMotion = (typeof VIDEO_CARD_MOTIONS)[number];
 
+export const VIDEO_CARD_VISUAL_RELATIONS = [
+  "magnitude",
+  "contrast",
+  "sequence",
+  "cause_effect",
+  "replacement",
+  "statement",
+] as const;
+export type VideoCardVisualRelation = (typeof VIDEO_CARD_VISUAL_RELATIONS)[number];
+
+export const VIDEO_CARD_VISUAL_ROLES = [
+  "subject",
+  "measure",
+  "old",
+  "new",
+  "step",
+  "cause",
+  "process",
+  "result",
+  "claim",
+  "evidence",
+  "conclusion",
+] as const;
+export type VideoCardVisualRole = (typeof VIDEO_CARD_VISUAL_ROLES)[number];
+
+export const videoCardVisualPlanSchema = z.object({
+  relation: z.enum(VIDEO_CARD_VISUAL_RELATIONS),
+  parts: z
+    .array(
+      z.object({
+        text: z.string().min(1),
+        role: z.enum(VIDEO_CARD_VISUAL_ROLES),
+      }),
+    )
+    .min(1)
+    .max(6),
+});
+export type VideoCardVisualPlan = z.infer<typeof videoCardVisualPlanSchema>;
+
 // ── ① 语义分场(video.scenes)────────────────────────────────────────────────
 
 export const videoSceneSchema = z.object({
@@ -104,6 +143,8 @@ export const videoCardSchema = z.object({
   at: z.number().default(0),
   // [T-295] 动画意图(可选;弱模型不产 → template 按 kind 派生)。
   motion: z.enum(VIDEO_CARD_MOTIONS).optional(),
+  // [T-794] AI 声明内容关系与原文部件；renderer 只执行，不猜创作语义。
+  visualPlan: videoCardVisualPlanSchema.optional(),
 });
 export const videoCardsSchema = z.object({
   cards: z.array(videoCardSchema).default([]),
@@ -112,7 +153,7 @@ export type VideoCardsOutput = z.infer<typeof videoCardsSchema>;
 
 export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
   id: "video.cards",
-  version: "v1",
+  version: "v2",
   outputSchema: videoCardsSchema,
   tools: [],
   system:
@@ -131,6 +172,14 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 {{orientation}}
 {{manualAssignments}}
 【任务】把口播中**值得可视化**的信息编排成连续的「信息节拍」:数据→stat,金句→quote,要点清单/步骤→list,前后差异→compare,代码/命令→code,需要配图的对象→image。短情绪句可以留白；没有真实素材承接的长场景不能只放一张小标签，而要随着口播推进，让数字、步骤、对比和结论依次接力。
+【先做语义判断，再选动画】每张卡先回答：**观众需要看见什么关系**，而不是“这句话配什么特效”。只有原文真的成立时才填写 visualPlan：
+- magnitude：对象与数字/量级；parts 用 subject/measure。
+- contrast：两个并存状态的差异；parts 用 old/new。
+- sequence：有先后顺序的步骤；parts 用 step。
+- cause_effect：原因经过过程导向结果；parts 用 cause/process/result。
+- replacement：旧判断先建立、随后被推翻并由新判断接管；parts 用 old/new。
+- statement：结论与依据/收束分拍出现；parts 用 claim/evidence/conclusion。
+visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括、不补字。关系拿不准就不填 visualPlan，禁止为了动效硬凑因果、对比或推翻。
 【硬约束(诚实门,违反即废)】
 - 卡片上的**数值、文案只能从口播稿原文提取**,一个数字都不许编造、不许换算、不许"优化措辞"。
 - kind 只能是 stat/quote/list/compare/code/image 六选一。
@@ -154,10 +203,11 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 - **一个 beat 一个强视觉**:同一时刻别堆两张大卡/两个大动画;情绪句、重要陈述留白,不配卡。
 - 卡片是字幕的视觉摘要，不是把整段口播再抄一遍：quote≤28字，stat 的说明≤20字，list 每项≤12字，compare 每侧≤12字。
 - 场景 title/summary 只是编辑器元数据，绝不能把它们直接做成卡片；不要为了填空编造数字、对比或事实。
+- **不算视觉化**：整卡淡入/弹出、所有字同时冒出来、通用发光或绿线、只换颜色但信息过程不变。visualPlan 必须让对象、连接、差异或替代按观众理解顺序发生。
 - 超过 8 秒且没有已指定素材的场景，必须按上面的节拍数量从本场原文连续提取信息卡；不能复制整段口播，也不能让整个长场景只有黑底、一个靠边小人物或一张孤零零的小标签。
 - 开场若有明确的数字、岗位、人物或事实（例如“时薪 300 元”），优先提取一张 stat/quote 卡，不要只留内部“钩子”标签和空黑画面。
 【输出】只输出一个 JSON 对象 {"cards": [...]}(不要多余文字、不要代码块),每张:
-{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一)}。没有值得做卡的就返回 {"cards": []}。`,
+{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一),"visualPlan"(可选,{"relation"(六选一),"parts":[{"text"(原文片段),"role"(十一选一)}]})}。没有值得做卡的就返回 {"cards": []}。`,
   requiredFacets: ["scenes", "srt", "script"],
 };
 

@@ -312,6 +312,86 @@ describe("generateVideoRenderHtml · [T-295] card.motion 富动画配方", () =>
   });
 });
 
+describe("generateVideoRenderHtml · [T-794] 内容驱动视觉句子", () => {
+  function visualPlanHtml(relation: string, parts: Array<{ text: string; role: string }>) {
+    const props = videoRenderProps.parse({
+      meta: { title: "视觉句子" },
+      talkingHead: { file: "th.mp4", durationSec: 12 },
+      scenes: [
+        {
+          id: "s1",
+          label: "L",
+          title: "T",
+          startSec: 0,
+          endSec: 12,
+          cards: [
+            {
+              kind: "quote",
+              at: 1,
+              text: parts.map((part) => part.text).join(" → "),
+              visualPlan: { relation, parts },
+            },
+          ],
+        },
+      ],
+    });
+    return generateVideoRenderHtml(props);
+  }
+
+  it.each([
+    ["magnitude", [{ text: "47%", role: "measure" }], "visual-magnitude"],
+    [
+      "contrast",
+      [
+        { text: "旧流程", role: "old" },
+        { text: "新流程", role: "new" },
+      ],
+      "visual-contrast",
+    ],
+    [
+      "sequence",
+      [
+        { text: "输入", role: "step" },
+        { text: "处理", role: "step" },
+        { text: "输出", role: "step" },
+      ],
+      "visual-sequence",
+    ],
+    [
+      "cause_effect",
+      [
+        { text: "输入", role: "cause" },
+        { text: "处理", role: "process" },
+        { text: "输出", role: "result" },
+      ],
+      "visual-cause-effect",
+    ],
+    [
+      "replacement",
+      [
+        { text: "保存对话", role: "old" },
+        { text: "理解用户", role: "new" },
+      ],
+      "visual-replacement",
+    ],
+  ])("%s 有独立 DOM 与渐进动画，不退化为整卡淡入", (relation, parts, marker) => {
+    const html = visualPlanHtml(relation as string, parts as Array<{ text: string; role: string }>);
+    expect(html).toContain(`class=\"${marker}`);
+    expect(html).toContain("data-visual-part");
+    expect(html).toContain("stagger:");
+  });
+
+  it("全片底层使用低对比虚线网格，不靠大块纯黑填空", () => {
+    const html = visualPlanHtml("sequence", [
+      { text: "输入", role: "step" },
+      { text: "输出", role: "step" },
+    ]);
+    expect(html).toContain("stroke-dasharray=%223%207%22");
+    expect(html).toContain("background-size:64px 64px");
+    expect(html).toContain('id="grid"');
+  });
+});
+
 describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素材窗口内切 PiP)", () => {
   const props = fullProps();
   it("hook 场景 1 张卡 → right;cta 场景 → right", () => {

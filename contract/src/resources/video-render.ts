@@ -41,6 +41,36 @@ export const videoCardMotion = z.enum([
 ]);
 export type VideoCardMotion = z.infer<typeof videoCardMotion>;
 
+export const videoCardVisualRelation = z.enum([
+  "magnitude",
+  "contrast",
+  "sequence",
+  "cause_effect",
+  "replacement",
+  "statement",
+]);
+export const videoCardVisualRole = z.enum([
+  "subject",
+  "measure",
+  "old",
+  "new",
+  "step",
+  "cause",
+  "process",
+  "result",
+  "claim",
+  "evidence",
+  "conclusion",
+]);
+export const videoCardVisualPlan = z.object({
+  relation: videoCardVisualRelation,
+  parts: z
+    .array(z.object({ text: z.string().min(1), role: videoCardVisualRole }))
+    .min(1)
+    .max(6),
+});
+export type VideoCardVisualPlan = z.infer<typeof videoCardVisualPlan>;
+
 // 交付规格:v1 固定 1920x1080 / 30fps(默认值即规格;留字段是为了将来竖版/60fps
 // 不改契约形状)。
 export const videoRenderDelivery = z.object({
@@ -90,6 +120,8 @@ const cardBase = {
   at: z.number().nonnegative(),
   /** [T-295] 动画意图(决策层可选产出;缺省 template 按 kind 派生富动画)。 */
   motion: videoCardMotion.optional(),
+  /** [T-794] AI 已声明的内容关系与原文部件；渲染器不得二次猜语义。 */
+  visualPlan: videoCardVisualPlan.optional(),
 };
 
 export const videoRenderStatCard = z.object({

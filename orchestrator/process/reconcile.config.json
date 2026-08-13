@@ -132,6 +132,12 @@
       "what": "结构化 AI 任务再次被统一超时误杀，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙",
       "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
       "onFail": "外部能力稳定性门回归：长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。"
+    },
+    {
+      "led": "LED-024",
+      "what": "信息卡再次只产单字符串与通用进场，不同内容关系退化为同一张圆角卡和文字冒出",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && node orchestrator/process/verify-t794-motion-card-preview.mjs",
+      "onFail": "内容动效门回归：关系选择归 video.cards Skill，代码只校验可溯原文和安全边界；数字、对比、步骤、因果、替换必须有独立渐进配方，坏计划兼容降级，虚线网格保持静态低对比。"
     }
   ],
   "program_completion_required": false,
@@ -149,6 +155,7 @@
     "channel-skill-no-account:test": "pnpm --dir frontend exec vitest run src/features/settings/skills-section.test.tsx -t \"未选择账号时\"",
     "project-publication-convergence:test": "pnpm --dir frontend exec vitest run src/features/projects/projects-page.test.tsx src/features/draft-workbench/register-published-form.test.tsx src/app/api/v1/dispatch/route.test.ts",
     "verbatim-script-import:test": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/server/script-draft-task-input.test.ts",
-    "creatoros-local-package:test": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs"
+    "creatoros-local-package:test": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
+    "motion-card-preview:e2e": "node orchestrator/process/verify-t794-motion-card-preview.mjs"
   }
 }

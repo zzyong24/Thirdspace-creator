@@ -4,6 +4,7 @@ import {
   VIDEO_CARDS_TEMPLATE,
   VIDEO_DIRECTOR_TEMPLATE,
   normalizeVideoBrollOutput,
+  videoCardsSchema,
   videoBrollSchema,
   videoDirectorReviewSchema,
 } from "./video-decisions";
@@ -161,6 +162,35 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     expect(VIDEO_CARDS_TEMPLATE.template).toContain(
       "已经有一张卡”不等于整场已覆盖",
     );
+  });
+
+  it("v2 先声明内容关系和原文部件，拒绝把整卡淡入当作视觉化", () => {
+    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v2");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("观众需要看见什么关系");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("cause_effect");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("replacement");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("整卡淡入");
+
+    expect(
+      videoCardsSchema.parse({
+        cards: [
+          {
+            sceneIdx: 0,
+            kind: "list",
+            content: "输入、处理、输出",
+            at: 0,
+            visualPlan: {
+              relation: "cause_effect",
+              parts: [
+                { text: "输入", role: "cause" },
+                { text: "处理", role: "process" },
+                { text: "输出", role: "result" },
+              ],
+            },
+          },
+        ],
+      }).cards[0]?.visualPlan,
+    ).toMatchObject({ relation: "cause_effect" });
   });
 });
 

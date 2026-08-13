@@ -273,6 +273,33 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     });
   });
 
+  it("AI 已声明的 visualPlan 原样进入渲染契约，不再靠标点猜内容关系", () => {
+    const visualPlan = {
+      relation: "cause_effect" as const,
+      parts: [
+        { text: "输入", role: "cause" as const },
+        { text: "处理", role: "process" as const },
+        { text: "输出", role: "result" as const },
+      ],
+    };
+    const props = assembleVideoRenderProps(
+      {
+        ...DECISIONS,
+        cards: [
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "输入、处理、输出",
+            at: 3.5,
+            visualPlan,
+          },
+        ],
+      },
+      OPTS,
+    );
+    expect(props.scenes[1]?.cards[0]).toMatchObject({ visualPlan });
+  });
+
   it("`.parse()` 硬校验不合即抛:缺 talkingHead assetId(file min 1)/场景重叠", () => {
     expect(() =>
       assembleVideoRenderProps(DECISIONS, { ...OPTS, talkingHeadAssetId: null }),

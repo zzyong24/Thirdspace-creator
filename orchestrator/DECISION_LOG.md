@@ -2461,3 +2461,27 @@ Bing 存在等待 `networkidle` 超时，百度多次快速命中登录墙。用
 `product-to-code-orchestrator/decisions/assets/modules/MOD-003-circuit-breaker-3state`。
 
 **Status**：用户已确认，T-789 进入 BUILD 并完成实现。
+
+## DEC-AI-045 (2026-08-12) — 信息卡用可溯语义关系驱动既有 GSAP 视觉句子
+
+**来源**：用户指出现有动效卡片视觉粗糙，主要表现为“一个字就冒出来了”，并确认由 Agent 完成一轮
+Skill、契约、渲染与评分 Loop 的迭代。
+
+**决策**：
+
+1. `video.cards` 在既有 `kind/content/at/motion` 上新增可选 `visualPlan`，只表达 magnitude、contrast、
+   sequence、cause_effect、replacement、statement 六种内容关系及 1–6 个原文片段。
+2. 关系与片段的选择归 AI/Skill；代码只校验枚举、数量、时间、原文溯源与版式安全，并把明确关系
+   落成固定 HyperFrames/GSAP 配方。禁止用关键词计分或字符串相似度替 AI 猜创作语义。
+3. 坏计划只丢计划、不丢可溯旧卡；弱模型与历史候选继续按 `kind/motion` 兼容渲染。
+4. 不新增页面、数据库、公开 API、第二套视频引擎或音效；继续沿用制作确认、主视觉互斥、人物完整
+   展示和字幕安全区。
+
+**理由**：当前问题不是缺少动画枚举，而是语义被压成单字符串后只能做通用容器动画。增加一个
+向后兼容的内部语义计划，能让 AI 做创作判断、代码做可验证执行，同时不扩大产品表面与数据面。
+
+**Pattern-Ref**：DEC-AI-039（语义归 AI，代码守边界）。
+
+**Asset-Ref**：既有 `video.cards`、`videoRenderCard` 与 HyperFrames/GSAP renderer。
+
+**Status**：用户已确认，T-794 进入 BUILD。

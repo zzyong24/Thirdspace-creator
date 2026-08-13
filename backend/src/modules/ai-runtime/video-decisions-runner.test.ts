@@ -758,6 +758,55 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     const cards = await decideCards({ scenes: SCENES, srtLines, script: SCRIPT }, call);
     expect(cards[0]!.at).toBe(12);
   });
+
+  it("visualPlan 的 role 结构和每个部件都合法可溯才透传；坏计划只降级计划，不误删合法旧卡", async () => {
+    const call = fakeCall({
+      "video.cards": {
+        cards: [
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "sequence",
+              parts: [
+                { text: "给模型", role: "step" },
+                { text: "一个角色", role: "step" },
+              ],
+            },
+          },
+          {
+            sceneIdx: 0,
+            kind: "stat",
+            content: "效率提升 47%",
+            at: 0,
+            visualPlan: {
+              relation: "magnitude",
+              parts: [{ text: "效率提升 99%", role: "measure" }],
+            },
+          },
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "sequence",
+              parts: [{ text: "给模型一个角色", role: "claim" }],
+            },
+          },
+        ],
+      },
+    });
+
+    const cards = await decideCards({ scenes: SCENES, srtLines, script: SCRIPT }, call);
+    expect(cards[0]?.visualPlan).toMatchObject({ relation: "sequence" });
+    expect(cards[1]).toMatchObject({ kind: "stat", content: "效率提升 47%" });
+    expect(cards[1]?.visualPlan).toBeUndefined();
+    expect(cards[2]).toMatchObject({ content: "给模型一个角色" });
+    expect(cards[2]?.visualPlan).toBeUndefined();
+  });
 });
 
 const INVENTORY: BrollAssetRef[] = [

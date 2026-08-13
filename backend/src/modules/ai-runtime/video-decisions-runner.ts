@@ -10,6 +10,7 @@ import type {
   MaterialMatchOutput,
   VideoCardKind,
   VideoCardMotion,
+  VideoCardVisualPlan,
 } from "@creatoros/ai-worker";
 import {
   videoScenesSchema,
@@ -75,6 +76,8 @@ export interface VideoInfoCard {
   at: number;
   /** [T-295] 动画意图(决策层可选产出;缺省组装器/template 按 kind 派生)。 */
   motion?: VideoCardMotion;
+  /** [T-794] AI 选定的内容关系；代码只做溯源校验与渲染执行。 */
+  visualPlan?: VideoCardVisualPlan;
 }
 
 export interface VideoBrollPick {
@@ -562,6 +565,40 @@ export function isCardContentTraceable(
   if (anchors.length === 0) return numbers.length > 0;
   const scriptLower = script.toLowerCase();
   return anchors.some((a) => scriptLower.includes(a));
+}
+
+/**
+ * [T-794] visualPlan 只做协议形状检查，不判断创作关系是否选得好。
+ * SEMANTIC_BOUNDARY_ALLOW: 必需 role、部件数与上屏长度都是渲染协议/版式边界；
+ * “这段口播是不是因果”仍完全由 video.cards Skill 决定。
+ */
+export function isVideoCardVisualPlanStructurallyValid(
+  plan: VideoCardVisualPlan,
+): boolean {
+  if (
+    plan.parts.length < 1 ||
+    plan.parts.length > 6 ||
+    plan.parts.some(
+      (part) => !part.text.trim() || Array.from(part.text.trim()).length > 32,
+    )
+  ) {
+    return false;
+  }
+  const has = (role: VideoCardVisualPlan["parts"][number]["role"]) =>
+    plan.parts.some((part) => part.role === role);
+  switch (plan.relation) {
+    case "magnitude":
+      return has("measure");
+    case "contrast":
+    case "replacement":
+      return has("old") && has("new");
+    case "sequence":
+      return plan.parts.filter((part) => part.role === "step").length >= 2;
+    case "cause_effect":
+      return has("cause") && has("result");
+    case "statement":
+      return has("claim") || has("conclusion");
+  }
 }
 
 // ── facet 序列化(模板占位块)────────────────────────────────────────────────
@@ -1566,12 +1603,22 @@ export async function decideCards(
       sceneStarts.length > 0 ? sceneStarts : starts,
     );
     // [T-295] motion 原样透传(模型不产就不带;缺省由 template 按 kind 派生)。
+    const visualPlan = c.visualPlan;
+    // SEMANTIC_BOUNDARY_ALLOW: 不判断关系是否“适合”，只检查每个模型所选部件都来自原文；
+    // 任一部件不可溯就丢计划，保留合法旧卡，兼容弱模型与历史候选。
+    const traceableVisualPlan =
+      visualPlan &&
+      isVideoCardVisualPlanStructurallyValid(visualPlan) &&
+      visualPlan.parts.every((part) => isCardContentTraceable(part.text.trim(), input.script))
+        ? visualPlan
+        : undefined;
     kept.push({
       sceneIdx: c.sceneIdx,
       kind: c.kind,
       content,
       at,
       ...(c.motion ? { motion: c.motion } : {}),
+      ...(traceableVisualPlan ? { visualPlan: traceableVisualPlan } : {}),
     });
   }
   return kept;

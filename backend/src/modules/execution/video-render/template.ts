@@ -41,6 +41,11 @@ const TK = {
   danger: "#dc2626",
 } as const;
 
+// [T-794] 信息型视频统一使用低对比度虚线网格。SVG 只画每个 64px 单元的上/左边，
+// stroke-dasharray 让网格保持“工作台/推演纸”质感；opacity 足够低，不与字幕和卡片争夺注意力。
+const DASHED_GRID_DATA_URL =
+  "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2264%22%20height=%2264%22%20viewBox=%220%200%2064%2064%22%3E%3Cpath%20d=%22M64%200H0V64%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.075%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E";
+
 function col(tone: VideoRenderTone): string {
   return TK[tone];
 }
@@ -475,9 +480,34 @@ function motionTween(
   at: number,
   endAt: number,
 ): void {
-  const motion = resolveMotion(card);
   const t = ctx.tweens;
   const S = fmt(at);
+  if (card.visualPlan) {
+    const relation = card.visualPlan.relation;
+    const partSelector = `#${id} [data-visual-part]`;
+    const lineSelector = `#${id} [data-relation-line]`;
+    // [T-794] 关系已由 AI 明确声明；这里仅执行固定视觉语法，不从文案猜语义。
+    t.push(`tl.set("#${id}",{autoAlpha:1},${S});`);
+    t.push(
+      `tl.fromTo("${partSelector}",{autoAlpha:0,y:24,scale:.96},{autoAlpha:1,y:0,scale:1,duration:.52,stagger:.32,ease:"power3.out"},${S});`,
+    );
+    t.push(
+      `tl.fromTo("${lineSelector}",{scaleX:0,autoAlpha:0,transformOrigin:"left center"},{scaleX:1,autoAlpha:1,duration:.55,stagger:.32,ease:"power2.out"},${fmt(at + 0.32)});`,
+    );
+    if (relation === "replacement") {
+      const swapAt = at + Math.min(1.4, Math.max(0.8, (endAt - at) * 0.34));
+      t.push(
+        `tl.to("#${id} [data-role='old']",{x:-72,autoAlpha:.22,filter:"blur(2px)",duration:.5,ease:"power2.inOut"},${fmt(swapAt)});`,
+      );
+      t.push(
+        `tl.fromTo("#${id} [data-role='new']",{x:84,autoAlpha:0},{x:0,autoAlpha:1,duration:.58,ease:"power3.out"},${fmt(swapAt + 0.18)});`,
+      );
+    }
+    t.push(`tl.to("#${id}",{autoAlpha:0,duration:.3},${fmt(Math.max(at, endAt - 0.3))});`);
+    t.push(`tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`);
+    return;
+  }
+  const motion = resolveMotion(card);
   const kids = `#${id} > *:not(.ovl)`;
 
   // 精炼进场(plain / counter 降级 / 兜底):容器轻淡入 + 直接子元素 .08s 错峰(非整块闷淡入)。
@@ -657,6 +687,101 @@ interface CardBox {
   inner: string;
 }
 
+function renderVisualSentence(card: VideoRenderCard): CardBox | null {
+  const plan = card.visualPlan;
+  if (!plan) return null;
+  const parts = plan.parts;
+  const byRole = (role: string, fallbackIndex: number) =>
+    parts.find((part) => part.role === role) ?? parts[fallbackIndex] ?? parts[0]!;
+  const node = (
+    part: (typeof parts)[number],
+    extraStyle = "",
+    extraClass = "",
+  ) =>
+    `<div class="visual-part ${extraClass}" data-visual-part data-role="${esc(part.role)}" ` +
+    `style="color:${TK.fg};font-size:38px;line-height:1.15;font-weight:780;letter-spacing:-.025em;${extraStyle}">${esc(part.text)}</div>`;
+  const line = (extraClass = "") =>
+    `<div class="relation-line ${extraClass}" data-relation-line style="height:6px;border-radius:999px;background:linear-gradient(90deg,${TK.accent},${TK.accentH});"></div>`;
+  const shell = (relationClass: string, inner: string, background = "transparent") => ({
+    width: 1000,
+    height: 460,
+    style: `background:${background};border:none;border-radius:0;box-shadow:none;padding:28px 18px;overflow:visible;display:flex;align-items:center;`,
+    inner: `<div class="${relationClass} visual-sentence" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center">${inner}</div>`,
+  });
+
+  switch (plan.relation) {
+    case "magnitude": {
+      const subject = byRole("subject", 0);
+      const measure = byRole("measure", parts.length > 1 ? 1 : 0);
+      return shell(
+        "visual-magnitude",
+        `<div style="width:100%;display:grid;grid-template-columns:1fr auto;gap:20px 36px;align-items:end">` +
+          node(subject, `color:${TK.fg2};font-size:34px;align-self:center`) +
+          node(measure, `color:${TK.accentH};font-size:112px;font-weight:900;line-height:.9;text-align:right`) +
+          `<div style="grid-column:1/-1">${line("magnitude-track")}</div></div>`,
+        `radial-gradient(540px 260px at 76% 50%,${TK.accent}1f,transparent 72%)`,
+      );
+    }
+    case "contrast": {
+      const oldPart = byRole("old", 0);
+      const newPart = byRole("new", parts.length > 1 ? 1 : 0);
+      return shell(
+        "visual-contrast",
+        `<div style="width:100%;display:grid;grid-template-columns:1fr 100px 1fr;align-items:stretch;gap:20px">` +
+          `<div style="display:flex;align-items:center;justify-content:center;padding:30px;border:1px solid ${TK.border};border-radius:24px;background:${TK.bg}99">${node(oldPart, `color:${TK.muted};text-align:center`, "contrast-old")}</div>` +
+          `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px"><div style="color:${TK.accentH};font-size:48px;font-weight:900">→</div>${line("contrast-bridge")}</div>` +
+          `<div style="display:flex;align-items:center;justify-content:center;padding:30px;border:1px solid ${TK.accent}88;border-radius:24px;background:${TK.accent}18">${node(newPart, `color:${TK.fg};text-align:center`, "contrast-new")}</div></div>`,
+      );
+    }
+    case "sequence": {
+      const inner = parts
+        .map(
+          (part, index) =>
+            `${index > 0 ? `<div style="flex:0 0 58px">${line("sequence-link")}</div>` : ""}` +
+            `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:20px">` +
+            `<div style="width:58px;height:58px;border-radius:50%;background:${TK.accent}24;border:2px solid ${TK.accent};color:${TK.accentH};font-size:26px;font-weight:900;display:flex;align-items:center;justify-content:center">${index + 1}</div>` +
+            node(part, `font-size:32px;text-align:center`, "sequence-node") +
+            `</div>`,
+        )
+        .join("");
+      return shell("visual-sequence", `<div style="width:100%;display:flex;align-items:center">${inner}</div>`);
+    }
+    case "cause_effect": {
+      const cause = byRole("cause", 0);
+      const process = byRole("process", Math.min(1, parts.length - 1));
+      const result = byRole("result", parts.length - 1);
+      const causalNode = (part: typeof cause, tone: string, cls: string) =>
+        `<div style="flex:1;min-width:0;padding:30px 24px;border-radius:24px;background:${tone}18;border:1px solid ${tone}66;display:flex;align-items:center;justify-content:center">${node(part, `font-size:32px;text-align:center`, cls)}</div>`;
+      return shell(
+        "visual-cause-effect",
+        `<div style="width:100%;display:flex;align-items:center;gap:18px">${causalNode(cause, TK.amber, "cause-node")}` +
+          `<div style="flex:0 0 56px">${line("cause-link")}</div>${causalNode(process, TK.accent, "process-node")}` +
+          `<div style="flex:0 0 56px">${line("result-link")}</div>${causalNode(result, TK.green, "result-node")}</div>`,
+      );
+    }
+    case "replacement": {
+      const oldPart = byRole("old", 0);
+      const newPart = byRole("new", parts.length - 1);
+      return shell(
+        "visual-replacement",
+        `<div style="width:100%;display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:20px">` +
+          `<div style="position:relative;padding:34px 24px;border-radius:24px;background:${TK.danger}0d;border:1px solid ${TK.danger}55">${node(oldPart, `color:${TK.muted};text-align:center`, "replacement-old")}<div data-relation-line style="position:absolute;left:20px;right:20px;top:50%;height:6px;border-radius:3px;background:${TK.danger};transform:rotate(-5deg)"></div></div>` +
+          `<div style="display:flex;flex-direction:column;gap:18px;align-items:center"><div style="color:${TK.danger};font-size:42px;font-weight:900">×</div><div style="color:${TK.accentH};font-size:48px;font-weight:900">→</div></div>` +
+          `<div style="padding:34px 24px;border-radius:24px;background:${TK.accent}1c;border:1px solid ${TK.accent}88">${node(newPart, `color:${TK.fg};text-align:center`, "replacement-new")}</div></div>`,
+      );
+    }
+    case "statement": {
+      const inner = parts
+        .map((part, index) => node(part, `${index === 0 ? "font-size:54px;color:" + TK.fg : "font-size:28px;color:" + TK.fg2};text-align:left`, "statement-line"))
+        .join("");
+      return shell(
+        "visual-statement",
+        `<div style="width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:24px">${inner}${line("statement-rule")}</div>`,
+      );
+    }
+  }
+}
+
 // ── 六 kind 卡片渲染(尺寸为 flow 排布的预估占位)─────────────────────────────────
 // [T-295] 接受 motion:renderCardBase 产 kind 专属结构,renderCard 再叠加 motion 动画钩子。
 function renderCardBase(
@@ -819,6 +944,8 @@ function renderCardBase(
  * (compare 的两条在 renderCardBase 各侧内)。motionTween 按 motion 选中这些钩子做 GSAP 动画。
  */
 function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
+  const visualSentence = renderVisualSentence(card);
+  if (visualSentence) return visualSentence;
   const motion = resolveMotion(card);
   const box = renderCardBase(card, mediaPrefix, motion);
   let inner = box.inner;
@@ -966,7 +1093,7 @@ export function generateVideoRenderHtml(
     1,
     0,
     DUR,
-    `inset:0;opacity:.5;background:linear-gradient(${TK.borderSoft} 1px,transparent 1px),linear-gradient(90deg,${TK.borderSoft} 1px,transparent 1px);background-size:64px 64px;`,
+    `inset:0;opacity:.72;background-image:url(${DASHED_GRID_DATA_URL});background-size:64px 64px;`,
   );
   clip(
     ctx,

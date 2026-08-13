@@ -605,6 +605,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-VIDEO-794 — 信息卡内部决策新增可选内容关系（2026-08-12）
+
+- **变更源**：用户确认 DEC-AI-045，要求把粗糙的“文字冒出来”升级为内容驱动动效。
+- **受影响契约**：内部 `video.cards` 候选与 `videoRenderCard` 新增可选 `visualPlan`；字段缺省时旧候选
+  继续按 `kind/motion` 解释，无公开 API、数据表或迁移。
+- **重新派生**：组装器透传已校验关系，HyperFrames/GSAP 按 magnitude、contrast、sequence、
+  cause_effect、replacement、statement 落固定配方；不再依赖标点猜这些新关系。
+- **安全边界**：关系选择归 AI；代码只校验原文溯源、必要 role、部件数、长度、画幅和字幕/人物边界。
+- **验证影响**：新增 prompt、runner、contract/assembler、renderer 聚焦测试；同题 v1/v2 评分与横竖版浏览器预览。
+- **不受影响**：制作确认、真实素材优先级、用户采纳、主视觉互斥、数据库、模型配置与视频执行器入口。
+
 ### How to use this file going forward
 
 1. Any confirmed change to an **approved** upstream artifact (FR/NFR/FLOW/ENT/IA/PAGE/COMP/contract/security/

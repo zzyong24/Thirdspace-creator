@@ -101,7 +101,11 @@ function uniqueVisibleCards(cards: readonly VideoInfoCard[]): VideoInfoCard[] {
 function toContractCard(card: VideoInfoCard): Record<string, unknown> {
   const rawContent = card.content.trim();
   // [T-295] motion 透传:有则随卡走(compare/image 降级 quote 时 base 已含 motion,一并带走)。
-  const base = { at: card.at, ...(card.motion ? { motion: card.motion } : {}) };
+  const base = {
+    at: card.at,
+    ...(card.motion ? { motion: card.motion } : {}),
+    ...(card.visualPlan ? { visualPlan: card.visualPlan } : {}),
+  };
   switch (card.kind) {
     case "stat": {
       const value = rawContent.match(FIRST_NUMBER_RE)?.[0]?.trim() ?? rawContent;

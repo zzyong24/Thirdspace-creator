@@ -311,3 +311,17 @@
 - **Outcome(T+N)**: 分场/信息卡显式放宽至 120 秒，shared runner 仍限制在 15–180 秒；
   协议不兼容使用同 schema 的受控 JSON 修复；Bing 不再被长连接拖到 `networkidle`，百度登录墙默认冷却 5 分钟后重试。
 - **Ref**: DEC-AI-044；T-784；T-789。
+
+## LED-024 — 动画枚举不等于内容可视化，单字符串会把不同关系压成同一张卡
+- **Date**: 2026-08-12 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: 信息卡已有 counter/bar/reveal/strike 等动画，但模型只返回一段 `content`，组装器
+  按标点拆分，渲染器主要让整卡淡入、上移或补通用色条；不同主题看起来仍是“字冒出来”。
+- **RootCause**: 把“选择动画标签”误当成“把认知关系画出来”，AI 的语义结构在进入渲染前丢失，
+  确定性代码只能用同一容器表达数字、步骤、因果和推翻。
+- **GuardRule**: `video.cards` 必须可选声明内容关系与原文部件；关系选择归 AI，代码只做溯源、role、
+  数量、长度和安全区校验，再落独立 DOM/GSAP 配方。没有合法计划就兼容降级，禁止关键词猜语义。
+  信息型视频底层可用静态低对比虚线网格建立空间秩序，但不能用高亮或持续运动与内容竞争。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && node orchestrator/process/verify-t794-motion-card-preview.mjs`。
+- **Outcome(T+N)**: 五种核心关系横竖版真实 Chromium PASS；三题自评平均 `68.67→96.33`。待用户
+  下一条真实稿件端到端出片后，复核模型 visualPlan 产出率和实际观看节奏。
+- **Ref**: DEC-AI-045；T-794；`content-driven-motion-rubric.md`。
