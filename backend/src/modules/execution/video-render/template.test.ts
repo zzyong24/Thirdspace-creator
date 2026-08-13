@@ -465,6 +465,35 @@ describe("generateVideoRenderHtml · [T-794] 内容驱动视觉句子", () => {
     expect(replacementHtml).toContain("scene-hypothesis");
     expect(replacementHtml).toContain("scene-scan-beam");
   });
+
+  it("场景文字使用独立安全层，运动物件和装饰线不得穿过文字", () => {
+    const causeHtml = visualPlanHtml("cause_effect", [
+      { text: "把提示词从三行补到三页", role: "cause" },
+      { text: "要求越来越多", role: "process" },
+      { text: "没有更好", role: "result" },
+    ]);
+    expect(causeHtml).toContain("scene-process-label");
+    expect(causeHtml).toContain("data-text-safe");
+    expect(causeHtml).not.toContain("white-space:nowrap");
+    expect(causeHtml).toContain('.scene-paper-mark",{x:-60');
+    expect(causeHtml).toContain("{x:0,rotation:0");
+
+    const sequenceHtml = visualPlanHtml("sequence", [
+      { text: "冻结同一个选题和事实", role: "step" },
+      { text: "只改一个变量", role: "step" },
+      { text: "盲评", role: "step" },
+      { text: "留下赢家", role: "step" },
+    ]);
+    expect(sequenceHtml).toContain("scene-safe-label");
+    expect(sequenceHtml).toContain("z-index:10");
+
+    const replacementHtml = visualPlanHtml("replacement", [
+      { text: "提示词才不是一份越来越长的说明书", role: "old" },
+      { text: "可以被验证、被淘汰、被升级的假设", role: "new" },
+    ]);
+    expect(replacementHtml).toContain("scene-manual-label");
+    expect(replacementHtml).toContain("top:132px;width:375px");
+  });
 });
 
 describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素材窗口内切 PiP)", () => {

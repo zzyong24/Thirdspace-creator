@@ -152,3 +152,4 @@ AI 写出来一股模板味。
 - `motion-frame-cause.png` / `motion-frame-loop.png` / `motion-frame-reframe.png`：三段动效的关键帧。
 - `motion-preview-v3.html` / `motion-preview-v3.mp4`：根据用户“动效仍差”反馈重做的场景化运动版；保留关系判断，但废弃圆角框、编号和 PPT 连线作为主画面。
 - `motion-preview-v4-portrait.mp4` / `motion-preview-v4-landscape.mp4`：根据用户对网格、横屏和顶部空置的复核反馈，重排无人物视觉专场并实际输出横竖双版。
+- `motion-preview-v5-portrait.mp4` / `motion-preview-v5-landscape.mp4`：根据用户对文字重叠的复核反馈，为正文建立独立安全层，并以横竖各 20 个运动中间态验证装饰/物件不穿字。

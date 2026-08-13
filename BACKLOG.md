@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-799 | 消除场景化动效中文字与装饰/物件的运动碰撞【用户反馈·2026-08-12】 | ✅ 待办 | — | — | [沿用 SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [横竖样片](output/content-samples/ai-copy-eval-loop/README.md) | 用户在横竖 v4 实看中发现文字有重叠。修正纸卷文字侵入机器、过程文字压住机芯、替换扫描线穿过旧判断、Loop 运动物件侵入步骤标签等碰撞；文字使用独立安全层，装饰与运动轨迹不得穿字；补运动中间态检查并重出横竖实际成片，不改配图与内容。 |
 | T-798 | 修正动效样片的网格可见度、横竖版验收与无人物布局【用户反馈·2026-08-12】 | ✅ 待办 | — | — | [沿用 SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [v3 样片](output/content-samples/ai-copy-eval-loop/README.md) | 用户指出 v3 实看仍有三处未验收：虚线网格几乎不可见、只展示竖屏没有横屏实际成片、无人物样片仍沿用人物避让坐标导致上方大面积空置。保持已验收配图不变，提升静态网格可见度，为正式渲染器增加仅供无人物验看的视觉专场布局，输出同题横竖双版实际成片并做布局检查。 |
 | T-797 | 把内容动效从“动态 PPT”升级为场景化运动叙事【用户反馈·2026-08-12】 | ✅ 待办 | — | — | [沿用 SPEC](docs/superpowers/specs/2026-08-12-content-driven-motion-card-iteration.md) · [上一版样片](output/content-samples/ai-copy-eval-loop/README.md) | 用户确认图片素材方向无误，但实际动效仍差：现有 `cause_effect / sequence / replacement` 虽有关系，视觉仍是多个圆角框、编号和连线，像动态 PPT。沿用现有 `video.cards` 契约与渲染链，迭代 Skill、评尺和 GSAP 配方，使因果表现为“输入膨胀但输出不变”、Loop 表现为候选经过校准后赢家回流、替换表现为旧说明书被折叠退出且新假设接管；输出同题 v3 实际预览，不改已验收配图。 |
 | T-796 | 用最新内容 Skill 生成脚本、配图与动效小样【用户验看·2026-08-12】 | ✅ 待办 | — | — | [样片说明](output/content-samples/ai-copy-eval-loop/README.md) | 以“AI 文案差往往不是提示词不够长，而是没有判断标准”为冻结主题，使用当前 `script.draft v9`、内容职责型配图提示词和 `video.cards v2` 产一套可直接验看的口播稿、实际配图与内容关系动效预览；只做样片，不改产品功能。 |
